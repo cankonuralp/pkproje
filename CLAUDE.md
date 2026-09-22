@@ -88,31 +88,6 @@ ETKİ ALANI). Bir teslimde **BİR kalem**. Reisim'e test ödevi verilmez.
 (üretim) doğrulaması. **Açık:** `git push` (uzak depo bağlanınca her teslim push ile biter, 0.3) · GitHub Pages
 önizleme yayını (bkz. §8).
 
-## 8 · Git ve GitHub (reisim 2026-09-22: "önce git kurulumlarını, GitHub bağlantılarını kurgulayıp tamamlayalım")
-- Uzak depo: **https://github.com/cankonuralp/pkproje — HERKESE AÇIK (public)**. Reisim kararı: ücretsiz planda
-  GitHub Pages yalnız açık depoda çalışıyor, Pro yok. ⛔⛔ **Bu depoya giren her satırı dünya okur.** Her teslimde,
-  commit'ten ÖNCE eklenen dosyalar gerçek veri taraması yapılır: firma/müşteri/tesis/kişi adı · e-posta · telefon ·
-  SGK, EKİPNET, sözleşme numarası · gerçek rapor içeriği · anahtar/parola/jeton. Şüpheli tek satır varsa commit
-  yapılmaz, reisim'e sorulur (anayasa 5.8 + 10.3, bu depoda sertleşti).
-- Sırlar koda YAZILMAZ: `.env` (git dışı) + yayında ortam değişkeni; `.env.example` yalnız boş alan adlarını taşır.
-- Yerel depo: `main` dalı; çalışma dalı `kalem/<konu>`; her teslim `main`'e fast-forward + iki dalı da push.
-  ⛔ **Her iş bittiğinde: yerel commit + `git push`** (reisim 2026-09-22: *"her işten sonra github yayınlaması
-  yapacağız ve yerel kayıt olacak"*) → anayasa 0.3 push kuralı bu projede AÇIK.
-- Satır sonu: ağaç **LF** (`.gitattributes` `* text=auto eol=lf`, `core.autocrlf=false`; sistem ayarı `true`);
-  `git checkout --` / `git restore` sonrası `git ls-files --eol` ile `w/lf` doğrulanır (anayasa 13.11).
-- Commit mesajı: ne istendi (reisim'in sözü) · ne değişti · nerede/nasıl doğrulandı; sonunda o oturumda çalışan
-  modelin `Co-Authored-By:` satırı. Bir commit = bir kalem.
-- `data/`, `.env*`, `node_modules/`, derleme çıktıları depoya girmez (`.gitignore`). Gerçek veri hiçbir zaman.
-- **Kural dosyaları artık kökte ve depoda** (2026-09-22, reisim kararı): `AKTARIM-KITI/` klasörü kaldırıldı.
-  Yayımlamadan önce önceki ürünün **alan adı ve gerçek müşteri adı** metinden çıkarıldı; kuralların gerekçeleri,
-  tarihleri ve olayları olduğu gibi duruyor. Bu dosyalara bir daha gerçek ad yazılmaz.
-- **GitHub Pages = statik ÖNİZLEME ortamı** (maket, prototip ekran, örnek veriyle kontrol): reisim buradan bakar,
-  ben tarayıcı bölmemde ölçerim. Pages **sunucu tarafını çalıştıramaz** (veritabanı, giriş, PDF üretimi) ve kiracı
-  başına alt alan adı vermez → gerçek uygulama **Türkiye'de sunucuda** (pkproje.md §8.8).
-- Yayın: GitHub Actions iş akışı `main`'e her push'ta test + derleme koşar, statik çıktıyı Pages'e yayınlar
-  (Eksikler §1 CI ile aynı iş akışı). Yayınlanacak bir çıktı doğduğunda kurulur (iskelet kalemi).
-- OneDrive: reisim'de kapalı, klasör adı Windows 10'dan kalma; dosyalar yerelde. Yedek = GitHub.
-
 ## 6 · Kalıp ve kilitler (bu projede)
 - Referans ekran henüz YOK. İlk onaylanan gerçek ekran ölçülür, sayılar `TASARIM-KALIBI.md` yöntemiyle
   `tests/tasarim-kalibi.test.ts` içine kabul/ret örneğiyle yazılır. O güne kadar kaynak projenin sayıları
@@ -141,3 +116,28 @@ ETKİ ALANI). Bir teslimde **BİR kalem**. Reisim'e test ödevi verilmez.
 - Otomatik silme: yalnız reisim'in verdiği **5 yıl arşiv** kuralı (pkproje.md §3), o da geri alınabilir pencereyle.
 - Testi susturma/gevşetme; kırılan test tarih + gerekçeyle güncellenir.
 - "Kapandı" demeden kalem kalem sayım (0.10); ölçmeden "bitti" (11.7–11.8); tahmin yazma, "ölçemedim" yaz.
+
+## 8 · Git ve GitHub (reisim 2026-09-22: "önce git kurulumlarını, GitHub bağlantılarını kurgulayıp tamamlayalım")
+- Uzak depo: **https://github.com/cankonuralp/pkproje — HERKESE AÇIK (public)**. Reisim kararı: ücretsiz planda
+  GitHub Pages yalnız açık depoda çalışıyor, Pro yok. ⛔⛔ **Bu depoya giren her satırı dünya okur.** Her teslimde,
+  commit'ten ÖNCE eklenen dosyalar gerçek veri taraması yapılır: firma/müşteri/tesis/kişi adı · e-posta · telefon ·
+  SGK, EKİPNET, sözleşme numarası · gerçek rapor içeriği · anahtar/parola/jeton. Şüpheli tek satır varsa commit
+  yapılmaz, reisim'e sorulur (anayasa 5.8 + 10.3, bu depoda sertleşti).
+- Sırlar koda YAZILMAZ: `.env` (git dışı) + yayında ortam değişkeni; `.env.example` yalnız boş alan adlarını taşır.
+- Yerel depo: `main` dalı; çalışma dalı `kalem/<konu>`; her teslim `main`'e fast-forward + iki dalı da push.
+  ⛔ **Her iş bittiğinde: yerel commit + `git push`** (reisim 2026-09-22: *"her işten sonra github yayınlaması
+  yapacağız ve yerel kayıt olacak"*) → anayasa 0.3 push kuralı bu projede AÇIK.
+- Satır sonu: ağaç **LF** (`.gitattributes` `* text=auto eol=lf`, `core.autocrlf=false`; sistem ayarı `true`);
+  `git checkout --` / `git restore` sonrası `git ls-files --eol` ile `w/lf` doğrulanır (anayasa 13.11).
+- Commit mesajı: ne istendi (reisim'in sözü) · ne değişti · nerede/nasıl doğrulandı; sonunda o oturumda çalışan
+  modelin `Co-Authored-By:` satırı. Bir commit = bir kalem.
+- `data/`, `.env*`, `node_modules/`, derleme çıktıları depoya girmez (`.gitignore`). Gerçek veri hiçbir zaman.
+- **Kural dosyaları artık kökte ve depoda** (2026-09-22, reisim kararı): `AKTARIM-KITI/` klasörü kaldırıldı.
+  Yayımlamadan önce önceki ürünün **alan adı ve gerçek müşteri adı** metinden çıkarıldı; kuralların gerekçeleri,
+  tarihleri ve olayları olduğu gibi duruyor. Bu dosyalara bir daha gerçek ad yazılmaz.
+- **GitHub Pages = statik ÖNİZLEME ortamı** (maket, prototip ekran, örnek veriyle kontrol): reisim buradan bakar,
+  ben tarayıcı bölmemde ölçerim. Pages **sunucu tarafını çalıştıramaz** (veritabanı, giriş, PDF üretimi) ve kiracı
+  başına alt alan adı vermez → gerçek uygulama **Türkiye'de sunucuda** (pkproje.md §8.8).
+- Yayın: GitHub Actions iş akışı `main`'e her push'ta test + derleme koşar, statik çıktıyı Pages'e yayınlar
+  (Eksikler §1 CI ile aynı iş akışı). Yayınlanacak bir çıktı doğduğunda kurulur (iskelet kalemi).
+- OneDrive: reisim'de kapalı, klasör adı Windows 10'dan kalma; dosyalar yerelde. Yedek = GitHub.
