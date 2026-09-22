@@ -16,22 +16,35 @@
 3. Kalıcı hafızadaki `pkproje-durum` notunu güncel tut; `pkproje.md`'ye giren her bilgi yerinde düzenlenir (12.1).
 
 ## 1 · Ne yapıyoruz
-Periyodik kontrol (iş ekipmanı muayene) firmaları için çok kiracılı web uygulaması. Akış: **planlama →
-sahada tablet (ekipman → rapor → kontrol listesi → uygunluk → fotoğraf) → teknik yönetici onayı → e-imza →
-müşteri portalı** (müşteri yalnız kendi raporlarını görür/indirir). Ayrıntı, mevzuat, kararlar: `pkproje.md`.
+Periyodik kontrol (iş ekipmanı muayene) firmaları için çok kiracılı web uygulaması. Tam akış:
+**teklif → kabul → sözleşmeler (firmalar arası + İSG-KATİP) → plan açıldı → inspector'ın "Planlarım" ekranına
+düştü → kabul/red → plan günü denetim → rapor taslak → branş yöneticisi onayında → onaylandı/geri gönderildi →
+inspector son imza → müşteriye açıldı → fatura → tahsilat → iş kapandı → arşiv.**
+**Modül haritası ve modüller arası bağlantı kuralları: `pkproje.md` §3.1–3.2.** Ayrıntı, mevzuat, kararlar:
+`pkproje.md`.
 **Durum (2026-09-22): kurgu aşaması, kod YOK.** Reisim: *"tam kurgu bitmeden tek satır kod yazma"*,
 *"şu an iskelet oluşturmalıyız"* → ilk kod kalemi = proje iskeleti; reisim'in onayıyla açılır.
 
-## 2 · Yığın (pkproje.md §8; reisim onayı bekliyor)
-- **TypeScript + SvelteKit** (tarayıcı uygulaması; masaüstü ofis, sahada tablet/telefon = aynı uygulama, ayrı
-  tasarım; PWA + çevrimdışı kuyruk sonraki fazda, şema ilk günden buna göre).
+## 2 · Yığın (pkproje.md §8 — **reisim 2026-09-22'de onayladı**)
+- **TypeScript + Next.js (App Router), standalone çıktı — onaylı 2026-09-22** (SvelteKit düştü). Tarayıcı
+  uygulaması; masaüstü ofis, sahada tablet/telefon = aynı uygulama, ayrı tasarım; PWA + çevrimdışı kuyruk
+  sonraki fazda, şema ilk günden buna göre.
+- **Modüler mimari — onaylı (pkproje.md §8.11):** her iş modülü `src/modules/<modül>/` içinde; modül başka
+  modülün tablosuna doğrudan dokunmaz, o modülün dışa açtığı fonksiyonları kullanır; ortak çekirdek
+  `src/server/`; sayfalar iş mantığı taşımaz. ⛔ Tek dosya derleme ve tek küresel ad alanı YOK.
+- **Barındırma — onaylı (§8.8):** gerçek uygulama Türkiye'de sunucuda, her firma kendi alt alan adında
+  (`*.<ürün>.com.tr`), joker SSL; veri yurt dışına çıkmaz.
+- **Arka plan işleri — onaylı (§8.9):** PostgreSQL üstünde iş kuyruğu (pg-boss); ayrı servis yok.
+- **Sigorta okuma — onaylı (§8.10):** pano fotoğrafından okuma görsel yapay zekâ ile; değer **öneri** olarak
+  düşer, inspector onaylamadan kaydedilmez.
+- **Rapor şablonları — onaylı (§8.3):** firma × ekipman türü başına **kodda**; site içi düzenleyici yok.
 - **PostgreSQL**: yerelde projeyle gelen **gömülü sürüm** (npm paketi, kurulum yok, veri `data/` altında);
   yayında yönetilen PostgreSQL. Satır seviyesi kiracı izolasyonu veritabanında; her sorgu kiracı süzgeçli tek veri
   erişim katmanından geçer (anayasa 7, 07-YETKI §1).
 - **Dosyalar**: yerelde `data/depo/`, yayında S3 uyumlu depo; tek adaptör, iki ayar. Kalıcı herkese açık bağlantı
   ÜRETİLMEZ (anayasa 5.1'in karşılığı: kısa ömürlü, yetkili indirme).
 - **Kimlik/giriş** bizim kodumuzda (firma kullanıcıları + müşteri hesapları e-posta ile); kiracı = alt alan adı.
-- **PDF** sunucuda üretilir; şablon firma künyesi + form kodu + bölüm iskeleti taşır (`pkproje.md`).
+- **PDF** sunucuda üretilir; şablon firma künyesi + form kodu + bölüm iskeleti taşır (`pkproje.md` §4.2, §4.8).
 - **Test**: Node 24 yerleşik koşucu `node --test` (TypeScript'i doğrudan koşar). Tarayıcı uçtan uca: Playwright
   (ilk ekranlar çıkınca). Docker YOK, Supabase YOK (2026-09-18 kararı).
 
@@ -42,12 +55,12 @@ pkproje/
   pkproje.md                alan bilgisi · kurgu · kararlar · açık sorular
   ANAYASA.md · TASARIM-KALIBI.md · 00–08-*.md · EKSIKLER-VE-ONERILER.md
                             kural dosyaları (ANAYASA/KALIP'a madde yalnız reisim onayıyla eklenir)
-  src/lib/server/db/        şema + göçler (her göç idempotent, 05-VERI §5)
-  src/lib/server/           veri erişimi (kiracı süzgeci zorunlu) · yetki (tek `canDo`) · güvenli yazıcılar (`…Safe`)
-  src/lib/components/       TEK ÜRETİCİLER: liste (tablo↔kart), süzgeç satırı, seçim alanı, uzun tuş, boş durum
-  src/lib/styles/           token'lar (`:root` + koyu tema + `color-scheme`), adlandırılmış 2–3 eşik
-  src/routes/               ekranlar: firma paneli · saha · müşteri portalı
-  static/vendor/            üçüncü parti kütüphaneler kendi kökenimizden, dosya adında sürüm
+  src/app/                  sayfalar: firma paneli · saha · müşteri portalı (iş mantığı YOK)
+  src/modules/<modül>/      her iş modülü: server/ (veri erişimi + iş kuralları, dışa açılan fonksiyonlar) · ui/ · şema · testler
+  src/server/               ortak çekirdek: db (bağlantı, göçler — her göç idempotent) · kiracı çözümleme · yetki (tek `canDo`) · güvenli yazıcılar (`…Safe`)
+  src/components/           TEK ÜRETİCİLER: liste (tablo↔kart), süzgeç satırı, seçim alanı, uzun tuş, boş durum
+  src/styles/               token'lar (`:root` + koyu tema + `color-scheme`), adlandırılmış 2–3 eşik
+  public/vendor/            üçüncü parti kütüphaneler kendi kökenimizden, dosya adında sürüm
   tests/                    `*.test.ts` kilit testleri (başında "NEREDEN GELDİ")
   tests/bozan/              olumsuz kanıt betikleri (kaynağı diskte DEĞİŞTİRMEDEN bellekte bozar)
   tools/                    salt okunur denetim betikleri (öksüz dosya, bütünlük)
@@ -57,7 +70,7 @@ pkproje/
 ## 4 · Komutlar (PLANLANAN; iskelet kurulunca gerçek hâli buraya yazılır)
 ```bash
 npm install          # gömülü PostgreSQL ikilileri burada iner; başka kurulum yok
-npm run dev          # localde çalıştır → http://localhost:5173
+npm run dev          # localde çalıştır → http://localhost:3000 (firma denemesi: http://<firma>.localhost:3000)
 npm test             # node --test; çıktıda "fail 0" yoksa zincir DURUR
 npm run test:negatif # tests/bozan/ — her kilit gerçekten yakalıyor mu (N/N)
 npm run check        # tip denetimi
@@ -95,7 +108,7 @@ ETKİ ALANI). Bir teslimde **BİR kalem**. Reisim'e test ödevi verilmez.
   tarihleri ve olayları olduğu gibi duruyor. Bu dosyalara bir daha gerçek ad yazılmaz.
 - **GitHub Pages = statik ÖNİZLEME ortamı** (maket, prototip ekran, örnek veriyle kontrol): reisim buradan bakar,
   ben tarayıcı bölmemde ölçerim. Pages **sunucu tarafını çalıştıramaz** (veritabanı, giriş, PDF üretimi) ve kiracı
-  başına alt alan adı vermez → gerçek uygulamanın barındırması ayrı karar (pkproje.md §8.8).
+  başına alt alan adı vermez → gerçek uygulama **Türkiye'de sunucuda** (pkproje.md §8.8).
 - Yayın: GitHub Actions iş akışı `main`'e her push'ta test + derleme koşar, statik çıktıyı Pages'e yayınlar
   (Eksikler §1 CI ile aynı iş akışı). Yayınlanacak bir çıktı doğduğunda kurulur (iskelet kalemi).
 - OneDrive: reisim'de kapalı, klasör adı Windows 10'dan kalma; dosyalar yerelde. Yedek = GitHub.

@@ -1,6 +1,6 @@
 # Bağımlılıklar ve derleme çıktıları
 node_modules/
-.svelte-kit/
+.next/
 build/
 dist/
 # Yerel veritabanı, dosya deposu, sırlar (asla depoya girmez)
@@ -21,3 +21,6 @@ desktop.ini
 
 # Yerel calisma notlari - depoya GITMEZ (reisim 2026-09-22: emsal uygulama incelemesi paylasilmaz)
 yerel/
+
+# Sohbet ciktilari - depoya GIRMEZ (reisim 2026-09-22)
+Claude outputs/
