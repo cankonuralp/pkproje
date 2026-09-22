@@ -1,0 +1,9 @@
+# Ağaç LF'dir (anayasa 13.11: CRLF sessiz bozucudur). Metin dosyaları depoda ve çalışma ağacında LF.
+* text=auto eol=lf
+*.pdf binary
+*.png binary
+*.jpg binary
+*.jpeg binary
+*.webp binary
+*.woff binary
+*.woff2 binary

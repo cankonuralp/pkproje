@@ -1,0 +1,23 @@
+# Bağımlılıklar ve derleme çıktıları
+node_modules/
+.svelte-kit/
+build/
+dist/
+# Yerel veritabanı, dosya deposu, sırlar (asla depoya girmez)
+data/
+.env
+.env.*
+!.env.example
+# Geçici ölçüm/deneme klasörleri (anayasa 2.10)
+.domtest/
+_*/
+# İşletim sistemi / editör
+Thumbs.db
+desktop.ini
+.DS_Store
+.vscode/
+# Claude yerel ayarları (kişisel)
+.claude/settings.local.json
+
+# Yerel calisma notlari - depoya GITMEZ (reisim 2026-09-22: emsal uygulama incelemesi paylasilmaz)
+yerel/
