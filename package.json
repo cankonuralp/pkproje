@@ -1,0 +1,42 @@
+{
+  "name": "probata",
+  "version": "0.1.0",
+  "private": true,
+  "description": "probata — periyodik kontrol firmaları için çok kiracılı web uygulaması",
+  "license": "UNLICENSED",
+  "type": "module",
+  "engines": {
+    "node": ">=24"
+  },
+  "scripts": {
+    "dev": "node scripts/gelistir.ts",
+    "test": "node --test \"tests/**/*.test.ts\"",
+    "test:negatif": "node --test \"tests/bozan/**/*.bozan.ts\"",
+    "check": "node scripts/next.ts typegen && tsc --noEmit",
+    "lint": "eslint .",
+    "build": "npm test && node scripts/next.ts build",
+    "build:onizleme": "npm test && node scripts/onizleme.ts",
+    "onizle": "node scripts/onizleme-sun.ts"
+  },
+  "dependencies": {
+    "embedded-postgres": "18.4.0-beta.17",
+    "next": "16.3.6",
+    "pg": "8.23.0",
+    "react": "19.3.0",
+    "react-dom": "19.3.0"
+  },
+  "devDependencies": {
+    "@types/node": "24.13.6",
+    "@types/pg": "8.23.1",
+    "@types/react": "19.3.0",
+    "@types/react-dom": "19.3.0",
+    "eslint": "9.39.5",
+    "eslint-config-next": "16.3.6",
+    "typescript": "6.0.3"
+  },
+  "allowScripts": {
+    "@embedded-postgres/windows-x64@18.4.0-beta.17": true,
+    "@embedded-postgres/linux-x64@18.4.0-beta.17": true,
+    "unrs-resolver@1.12.2": true
+  }
+}

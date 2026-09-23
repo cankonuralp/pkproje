@@ -1,0 +1,78 @@
+/* ══ KABUK — maketin onaylı kabuk kuralları (docs/assets/maket.css, 5. tur) ═════════════════════════════════
+   ⛔ Sıra: taban kurallar ÖNCE, bant (medya) kuralları DOSYA SONUNDA (anayasa 3.2). ⛔ Çıplak renk yok (2.9).
+   Eşikler kalıbın bantları: orta < 1280, dar < 768 (src/styles/kalip.ts; tests/kalip-sayilari.test.ts). */
+
+.kabuk { display: grid; grid-template-columns: var(--cubuk-gen) minmax(0, 1fr); min-height: 100vh; }
+
+.cubuk {
+  position: sticky; top: 0; height: 100vh; overflow: hidden;
+  display: flex; flex-direction: column;
+  background: var(--cubuk-zemin); color: var(--cubuk-yazi);
+}
+.cubukBas { height: var(--ust-y); flex: none; display: flex; align-items: center; justify-content: space-between; gap: 8px; padding: 0 16px 0 20px; }
+.logo { width: 132px; height: auto; display: block; }
+/* menüde bütün modüller (17) gruplar hâlinde; sığmayan yükseklikte YALNIZ menü kayar */
+.menu { flex: 1 1 auto; min-height: 0; overflow-y: auto; padding: 4px 12px 12px; scrollbar-width: thin; }
+.menuGrup { margin: 12px 0 4px; padding: 0 12px; font-size: var(--boy-etiket); font-weight: var(--kal-etiket); color: var(--cubuk-yazi2); letter-spacing: .02em; }
+.menu > div:first-child .menuGrup { margin-top: 4px; }
+.menuListe { list-style: none; margin: 0; padding: 0; display: flex; flex-direction: column; gap: 2px; }
+.menuBaglanti {
+  display: flex; align-items: center; gap: 12px;
+  min-height: var(--tus-y); padding: 0 12px;
+  border-radius: var(--r-orta);
+  color: var(--cubuk-yazi2); text-decoration: none; font-weight: 500;
+  transition: background var(--sure) var(--egri), color var(--sure) var(--egri);
+}
+.menuBaglanti:hover { color: var(--cubuk-yazi); background: var(--cubuk-secili); }
+.menuBaglanti[aria-current="page"] { color: var(--cubuk-yazi); background: var(--cubuk-secili); box-shadow: inset 3px 0 0 var(--marka-onay); }
+.menuAd { min-width: 0; overflow: hidden; text-overflow: ellipsis; white-space: nowrap; }
+.perde { display: none; }
+
+.govde { min-width: 0; display: flex; flex-direction: column; }
+.ust {
+  position: sticky; top: 0; z-index: 20;
+  height: var(--ust-y); flex: none;
+  display: flex; align-items: center; gap: 12px;
+  padding: 0 var(--bosluk-sayfa);
+  background: var(--kart); border-bottom: 1px solid var(--kenar);
+}
+.ikonTus {
+  width: var(--tus-y); height: var(--tus-y); flex: none;
+  display: inline-flex; align-items: center; justify-content: center;
+  border: 1px solid transparent; border-radius: var(--r-orta);
+  background: transparent; color: var(--yazi);
+}
+.ikonTus:hover { background: var(--zemin2); }
+/* ⛔ ÖZGÜLLÜK TUZAĞI (maket, 2026-09-23): tek sınıflı gizleme aynı özgüllükteki .ikonTus'a yenilir → iki sınıfla */
+.ikonTus.menuTus { display: none; }
+.ikonTus.cubukKapat { display: none; color: var(--cubuk-yazi); }
+.ustIsaret { display: none; height: 32px; width: auto; }
+.ustBosluk { flex: 1 1 auto; }
+.icerik { padding: var(--bosluk-sayfa); min-width: 0; }
+
+/* ══ BANTLAR — taban kuralların ARDINDA (anayasa 3.2) ══════════════════════════════════════════════════ */
+
+/* orta + dar (< 1280): yan menü çekmece, üst çubukta ☰ + işaret */
+@media (max-width: 1279.98px) {
+  .kabuk { grid-template-columns: minmax(0, 1fr); }
+  /* ⛔ 2026-09-23 (iskelet, klavyeyle): kapalı çekmece yalnız kaydırılınca bağlantıları odaklanabiliyordu — Sekme tuşu
+     görünmeyen menüye gidiyordu (maketten gelen açık). Kapalıyken görünmez (odak dışı); görünürlük kayma bitince düşer. */
+  .cubuk {
+    position: fixed; left: 0; top: 0; bottom: 0; z-index: 60; width: min(86vw, 300px);
+    transform: translateX(-100%); visibility: hidden;
+    transition: transform var(--sure) var(--egri), visibility 0s linear var(--sure);
+  }
+  .cekmeceAcik .cubuk { transform: none; visibility: visible; box-shadow: var(--golge-2); transition: transform var(--sure) var(--egri), visibility 0s; }
+  .ikonTus.cubukKapat { display: inline-flex; }
+  .ikonTus.cubukKapat:hover { background: var(--cubuk-secili); }
+  .perde {
+    display: block; position: fixed; inset: 0; z-index: 50; background: var(--perde);
+    opacity: 0; pointer-events: none; transition: opacity var(--sure) var(--egri);
+  }
+  .cekmeceAcik .perde { opacity: 1; pointer-events: auto; }
+  .ikonTus.menuTus { display: inline-flex; }
+  /* işaretin temaya göre seçimi YALNIZ bu bantta (maket, 2026-09-23) */
+  .ustIsaret.isaretAcik { display: block; }
+  :global([data-tema="koyu"]) .ustIsaret.isaretAcik { display: none; }
+  :global([data-tema="koyu"]) .ustIsaret.isaretKoyu { display: block; }
+}

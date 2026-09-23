@@ -1,0 +1,64 @@
+# CI + GitHub Pages önizlemesi (EKSIKLER 1; reisim 2026-09-23: "ilk yayını yap" → Pages önizlemesi).
+# · Her push'ta: tip denetimi · lint · test (fail 0) · olumsuz kanıt · üretim derlemesi. Biri düşerse iş durur.
+# · main'e push'ta ve denetim geçtiyse: önizleme kurulur (npm run build:onizleme — o da önce testi koşar) ve Pages'e
+#   yayınlanır. Site kökünde maket ve sunum (docs/), /uygulama/ altında uygulamanın statik önizlemesi.
+# · Next.js anonim kullanım bildirimi kapalı (anayasa 5.2: üçüncü tarafa veri gitmez).
+name: ci
+
+on:
+  push:
+    branches: ["**"]
+  workflow_dispatch:
+
+permissions:
+  contents: read
+
+env:
+  NEXT_TELEMETRY_DISABLED: "1"
+
+jobs:
+  denetim:
+    name: Denetim
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v7
+      - uses: actions/setup-node@v7
+        with:
+          node-version: 24
+          cache: npm
+      - run: npm ci
+      - run: npm run check
+      - run: npm run lint
+      - run: npm test
+      - run: npm run test:negatif
+      - run: node scripts/next.ts build
+
+  yayin:
+    name: Pages önizlemesi
+    needs: denetim
+    if: github.ref == 'refs/heads/main'
+    runs-on: ubuntu-latest
+    permissions:
+      contents: read
+      pages: write
+      id-token: write
+    environment:
+      name: github-pages
+      url: ${{ steps.dagit.outputs.page_url }}
+    concurrency:
+      group: pages
+      cancel-in-progress: false
+    steps:
+      - uses: actions/checkout@v7
+      - uses: actions/setup-node@v7
+        with:
+          node-version: 24
+          cache: npm
+      - run: npm ci
+      - run: npm run build:onizleme
+      - uses: actions/configure-pages@v6
+      - uses: actions/upload-pages-artifact@v5
+        with:
+          path: site
+      - id: dagit
+        uses: actions/deploy-pages@v5

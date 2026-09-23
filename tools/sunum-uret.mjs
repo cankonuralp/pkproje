@@ -127,7 +127,7 @@ const n1 = sayfa({
   dosya: "index.html",
   baslik: "probata · Görsel sistem",
   ust: `<b>Görsel sistem</b><span>Kararlar işlendi · ${O.tarih} · <a href="plan-ici.html">Plan içi sunumu (${O.tur}. tur) →</a></span>`,
-  alt: `<a class="s-tus" href="plan-ici.html">${ikon("file-text")}Plan içi sunumu</a><a class="s-tus" href="maket/planlarim.html" target="_blank" rel="noopener">${ikon("calendar-check")}Maketi aç</a>`,
+  alt: `<a class="s-tus" href="plan-ici.html">${ikon("file-text")}Plan içi sunumu</a><a class="s-tus" href="maket/planlarim.html" target="_blank" rel="noopener">${ikon("calendar-check")}Maketi aç</a><a class="s-tus" href="uygulama/" target="_blank" rel="noopener">${ikon("house")}Uygulama önizlemesi</a>`,
   icindekiler: [["karar", "Kararlar"], ["olcum", "Ölçüm"], ["renk", "Renk sistemi"], ["birincil", "Birincil tuş"], ["yazi", "Yazı ve ikon"], ["esik", "Eşikler"], ["ekran", "Referans ekran"], ["kurallar", "Ekranın kuralları"], ["faz", "Faz 1"]],
   govde: [
     bolum(1, "karar", "Kararlar (reisim 2026-09-23)", "Marka renkleri, logo, Sora ve iki tema reisim'in kararıydı; üstüne kurulan görsel sistemin sekiz sorusu da cevaplandı.",
@@ -264,7 +264,7 @@ const n2 = sayfa({
   dosya: "plan-ici.html",
   baslik: "probata · Plan içi akışı",
   ust: `<b>Plan içi ve yan menü</b><span>${O.tarih} · ${O.tur}. tur · reisim'in onayına sunulur · <a href="index.html">Görsel sistem →</a></span>`,
-  alt: `<a class="s-tus" href="index.html">${ikon("book-open")}Görsel sistem</a><a class="s-tus" href="maket/planlarim.html#/plan/1" target="_blank" rel="noopener">${ikon("calendar-check")}Maketi aç</a>`,
+  alt: `<a class="s-tus" href="index.html">${ikon("book-open")}Görsel sistem</a><a class="s-tus" href="maket/planlarim.html#/plan/1" target="_blank" rel="noopener">${ikon("calendar-check")}Maketi aç</a><a class="s-tus" href="uygulama/" target="_blank" rel="noopener">${ikon("house")}Uygulama önizlemesi</a>`,
   icindekiler: [["cevaplar", "İsteklerin"], ["menu", "Yan menü"], ["akis", "Akış"], ["olcum", "Ölçüm"], ["ekle", "Ekipman ekle"], ["numara", "Numara sistemi"], ["kararlar", "17–28 kararları"], ["kurallar", "Ekranın kuralları"], ["faz", "Faz 1"], ["sorular", "Karar soruları"]],
   govde: [
     bolum(1, "cevaplar", "İsteklerin ve ne yaptım", `${O.tur}. tur. Önceki turların kararları (akış, eşsiz kod, numara sistemi) aynen duruyor.`,

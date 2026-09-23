@@ -4,8 +4,34 @@
     {
       "name": "maket",
       "runtimeExecutable": "python",
-      "runtimeArgs": ["-m", "http.server", "8765", "--bind", "127.0.0.1", "--directory", "docs"],
+      "runtimeArgs": [
+        "-m",
+        "http.server",
+        "8765",
+        "--bind",
+        "127.0.0.1",
+        "--directory",
+        "docs"
+      ],
       "port": 8765
+    },
+    {
+      "name": "onizleme",
+      "runtimeExecutable": "node",
+      "runtimeArgs": [
+        "scripts/onizleme-sun.ts",
+        "8780"
+      ],
+      "port": 8780
+    },
+    {
+      "name": "uygulama",
+      "runtimeExecutable": "npm",
+      "runtimeArgs": [
+        "run",
+        "dev"
+      ],
+      "port": 3000
     }
   ]
 }

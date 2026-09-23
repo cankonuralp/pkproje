@@ -1,0 +1,159 @@
+/* ══ probata DEĞİŞKENLERİ — TEK KAYNAK (iskelet, 2026-09-23) ═════════════════════════════════════════════
+   Uygulama bu dosyayı kullanır; docs/assets/tokens.css (maket ve sunum) aynı gövdeyi taşır, tests/tokens-tek-kaynak
+   ikisinin :root'tan sonrasını bayt bayt karşılaştırır. Yazı tipi tanımı ayrı: src/styles/yazi.css.
+   Renkleri reisim onayladı (pkproje.md §8.12); palet değiştirilmez (anayasa 2.4). */
+
+:root {
+  /* marka — dokunulmaz */
+  --marka-petrol: #0F2A3D;
+  --marka-onay: #1FA37A;
+  --marka-kagit: #F5F3EE;
+  --marka-slogan: #4E5F6C;
+
+  /* yazı tipi ve ölçü */
+  --yazi-tipi: "Sora", system-ui, -apple-system, "Segoe UI", sans-serif;
+  /* 4. tur (reisim 2026-09-23: "bizim maketimizde her şey çok büyük"): yoğunluk küçüldü. 3. turda gövde 15 px Sora,
+     satır 66–69 px, tuş 40 px idi. Yeni: gövde 14 · başlık 20 · denetim 34 (fare) / 44 (dokunmatik; dokunma hedefi için
+     44'ün altına inilmez). Ölçülen sonuç: satır 54 px (liste), 46 px (plan içi) — docs/assets/olcum.json. */
+  --boy-baslik: 20px;   --kal-baslik: 700;
+  --boy-bolum: 15px;    --kal-bolum: 600;
+  --boy-govde: 14px;
+  --boy-kucuk: 12.5px;
+  --boy-etiket: 11.5px; --kal-etiket: 600;
+  --r-kucuk: 5px; --r-orta: 8px; --r-buyuk: 12px; --r-tam: 999px;
+  --sure: .18s; --egri: cubic-bezier(.4, 0, .2, 1);
+  /* denetim yüksekliği: fare ile 34, dokunmatikte 44 (aşağıda eşiklerle değişir) */
+  --tus-y: 34px;
+  --bosluk-sayfa: 20px;
+  --cubuk-gen: 232px;
+  --ust-y: 52px;
+}
+
+/* AÇIK tema (varsayılan) */
+:root, :root[data-tema="acik"] {
+  color-scheme: light;
+  --zemin: #F5F3EE;
+  --zemin2: #ECE9E1;
+  --kart: #FFFFFF;
+  --kenar: #DEDAD0;
+  --kenar-alan: #7E8C96;
+  --yazi: #0F2A3D;
+  --yazi2: #4E5F6C;
+  --yazi3: #56646E;
+  --vurgu: #0F2A3D;
+  --vurgu-uzeri: #FFFFFF;
+  --vurgu-2: #1B4461;
+  --onay: #1FA37A;
+  --onay-uzeri: #0F2A3D;
+  --onay-2: #2BB98B;
+  --onay-yazi: #137050;
+  --onay-zemin: #DCF1E7;
+  --uyari-yazi: #7F4F00;
+  --uyari-zemin: #FAEACB;
+  --hata-yazi: #9E2A22;
+  --hata-zemin: #F9DFDA;
+  --bilgi-yazi: #0F2A3D;
+  --bilgi-zemin: #E1EAF0;
+  --odak: #137050;
+  --cubuk-zemin: #0F2A3D;
+  --cubuk-yazi: #F5F3EE;
+  --cubuk-yazi2: #A8B7C1;
+  --cubuk-secili: #18405A;
+  --golge-1: 0 1px 2px rgba(15, 42, 61, .06), 0 1px 1px rgba(15, 42, 61, .04);
+  --golge-2: 0 8px 28px rgba(15, 42, 61, .16);
+  --perde: rgba(15, 42, 61, .42);
+}
+
+/* KOYU tema — aynı adlar, yeni değerler */
+:root[data-tema="koyu"] {
+  color-scheme: dark;
+  --zemin: #081925;
+  --zemin2: #0B2130;
+  --kart: #0F2A3D;
+  --kenar: #21445B;
+  --kenar-alan: #6F8C9F;
+  --yazi: #F5F3EE;
+  --yazi2: #C4CED4;
+  --yazi3: #9AACB8;
+  --vurgu: #F5F3EE;
+  --vurgu-uzeri: #0F2A3D;
+  --vurgu-2: #FFFFFF;
+  --onay: #1FA37A;
+  --onay-uzeri: #0F2A3D;
+  --onay-2: #26B386;
+  --onay-yazi: #45CC9E;
+  --onay-zemin: #123F35;
+  --uyari-yazi: #F2C46B;
+  --uyari-zemin: #3A2D0F;
+  --hata-yazi: #F4A59C;
+  --hata-zemin: #44201B;
+  --bilgi-yazi: #D2E3EE;
+  --bilgi-zemin: #17394F;
+  --odak: #45CC9E;
+  --cubuk-zemin: #061520;
+  --cubuk-yazi: #F5F3EE;
+  --cubuk-yazi2: #93A6B3;
+  --cubuk-secili: #0F2A3D;
+  --golge-1: 0 1px 2px rgba(0, 0, 0, .35);
+  --golge-2: 0 10px 32px rgba(0, 0, 0, .55);
+  --perde: rgba(3, 10, 16, .66);
+}
+/* sistem koyu ise ve kullanıcı açığı seçmediyse koyu */
+@media (prefers-color-scheme: dark) {
+  :root:not([data-tema="acik"]) {
+    color-scheme: dark;
+    --zemin: #081925;
+    --zemin2: #0B2130;
+    --kart: #0F2A3D;
+    --kenar: #21445B;
+    --kenar-alan: #6F8C9F;
+    --yazi: #F5F3EE;
+    --yazi2: #C4CED4;
+    --yazi3: #9AACB8;
+    --vurgu: #F5F3EE;
+    --vurgu-uzeri: #0F2A3D;
+    --vurgu-2: #FFFFFF;
+    --onay: #1FA37A;
+    --onay-uzeri: #0F2A3D;
+    --onay-2: #26B386;
+    --onay-yazi: #45CC9E;
+    --onay-zemin: #123F35;
+    --uyari-yazi: #F2C46B;
+    --uyari-zemin: #3A2D0F;
+    --hata-yazi: #F4A59C;
+    --hata-zemin: #44201B;
+    --bilgi-yazi: #D2E3EE;
+    --bilgi-zemin: #17394F;
+    --odak: #45CC9E;
+    --cubuk-zemin: #061520;
+    --cubuk-yazi: #F5F3EE;
+    --cubuk-yazi2: #93A6B3;
+    --cubuk-secili: #0F2A3D;
+    --golge-1: 0 1px 2px rgba(0, 0, 0, .35);
+    --golge-2: 0 10px 32px rgba(0, 0, 0, .55);
+    --perde: rgba(3, 10, 16, .66);
+  }
+}
+
+/* BİRİNCİL TUŞ — KARAR (reisim 2026-09-23): A · yeşil zemin + petrol yazı (4,64:1, iki temada aynı; ölçüm palet-olc).
+   Elenenler: B petrol zemin + beyaz yazı · C koyu yeşil + beyaz yazı.
+   ⛔ Marka yeşili + BEYAZ yazı 3,19:1 → AA'nın altında, kullanılmaz. */
+:root {
+  --birincil: var(--onay); --birincil-uzeri: var(--onay-uzeri); --birincil-2: var(--onay-2);
+}
+
+/* ══ EŞİKLER — ADLANDIRILMIŞ ÜÇ BANT (EKSIKLER 13: eşik eklemek karar gerektirir) ══════════════════════
+   dar   : < 768 px        telefon          — yan menü çekmece, liste kart, denetim 44 px
+   orta  : 768 – 1279 px   tablet           — yan menü çekmece, liste kaba göre, denetim 44 px
+   geniş : ≥ 1280 px       masaüstü         — yan menü sabit, liste kaba göre, denetim 34 px
+   Dokunmatik geniş ekran (pointer: coarse) da 44 px alır. Liste tablo↔kart kararı EKRANA değil KABA göre
+   (@container, anayasa 3.3); eşik maket.css'te, ölçümle. */
+@media (max-width: 1279.98px) {
+  :root { --tus-y: 44px; --boy-govde: 15px; --bosluk-sayfa: 16px; }
+}
+@media (max-width: 767.98px) {
+  :root { --bosluk-sayfa: 12px; --boy-baslik: 18px; }
+}
+@media (pointer: coarse) {
+  :root { --tus-y: 44px; --boy-govde: 15px; }
+}

@@ -3,6 +3,10 @@ node_modules/
 .next/
 build/
 dist/
+out/
+site/
+next-env.d.ts
+*.tsbuildinfo
 # Yerel veritabanı, dosya deposu, sırlar (asla depoya girmez)
 data/
 .env

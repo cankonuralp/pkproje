@@ -23,8 +23,10 @@ düştü → kabul/red → plan günü denetim → rapor taslak → branş yöne
 inspector son imza → müşteriye açıldı → fatura → tahsilat → iş kapandı → arşiv.**
 **Modül haritası ve modüller arası bağlantı kuralları: `pkproje.md` §3.1–3.2.** Ayrıntı, mevzuat, kararlar:
 `pkproje.md`.
-**Durum (2026-09-22): kurgu aşaması, kod YOK.** Reisim: *"tam kurgu bitmeden tek satır kod yazma"*,
-*"şu an iskelet oluşturmalıyız"* → ilk kod kalemi = proje iskeleti; reisim'in onayıyla açılır.
+**Durum (2026-09-23): İSKELET KURULDU** (reisim: *"tüm önerilerin uygun kodlamaya başla ilk yayını yap"*). Kabuk
+(17 modüllü yan menü, tema), kiracı izolasyonlu veri katmanı (gömülü PostgreSQL + RLS), kilit testleri, CI ve Pages
+önizlemesi var; modül ekranları YOK — faz 1 sırasıyla (pkproje.md §3.3), her biri önce maket + onay. Referans ekran
+(Planlar + plan içi) dondu: `src/styles/kalip.ts`.
 
 ## 2 · Yığın (pkproje.md §8 — **reisim 2026-09-22'de onayladı**)
 - **TypeScript + Next.js (App Router), standalone çıktı — onaylı 2026-09-22** (SvelteKit düştü). Tarayıcı
@@ -49,50 +51,60 @@ inspector son imza → müşteriye açıldı → fatura → tahsilat → iş kap
 - **Test**: Node 24 yerleşik koşucu `node --test` (TypeScript'i doğrudan koşar). Tarayıcı uçtan uca: Playwright
   (ilk ekranlar çıkınca). Docker YOK, Supabase YOK (2026-09-18 kararı).
 
-## 3 · Dizin haritası (PLANLANAN — iskelet kalemi onaylanınca kurulur)
+## 3 · Dizin haritası (iskelet 2026-09-23; ★ = henüz boş, modüllerle dolar)
 ```
 pkproje/
   CLAUDE.md                 bu dosya
   pkproje.md                alan bilgisi · kurgu · kararlar · açık sorular
   ANAYASA.md · TASARIM-KALIBI.md · 00–08-*.md · EKSIKLER-VE-ONERILER.md
                             kural dosyaları (ANAYASA/KALIP'a madde yalnız reisim onayıyla eklenir)
-  src/app/                  sayfalar: firma paneli · saha · müşteri portalı (iş mantığı YOK)
-  src/modules/<modül>/      her iş modülü: server/ (veri erişimi + iş kuralları, dışa açılan fonksiyonlar) · ui/ · şema · testler
-  src/server/               ortak çekirdek: db (bağlantı, göçler — her göç idempotent) · kiracı çözümleme · yetki (tek `canDo`) · güvenli yazıcılar (`…Safe`)
-  src/components/           TEK ÜRETİCİLER: liste (tablo↔kart), süzgeç satırı, seçim alanı, uzun tuş, boş durum
-  src/styles/               token'lar (`:root` + koyu tema + `color-scheme`), adlandırılmış 2–3 eşik
-  public/vendor/            üçüncü parti kütüphaneler kendi kökenimizden, dosya adında sürüm
-  tests/                    `*.test.ts` kilit testleri (başında "NEREDEN GELDİ")
-  tests/bozan/              olumsuz kanıt betikleri (kaynağı diskte DEĞİŞTİRMEDEN bellekte bozar)
-  tools/                    salt okunur denetim betikleri (öksüz dosya, bütünlük)
+  src/app/                  sayfalar (iş mantığı YOK): Planlar ana sayfa + modül başına bir rota klasörü (kayıtla birebir)
+  src/modules/moduller.ts   MODÜL KAYDI — yan menünün ve rotaların tek kaynağı (17 modül, 6 grup, onaylı maketle aynı)
+  src/modules/<modül>/      ★ her iş modülü: server/ (veri erişimi + iş kuralları, dışa açılan fonksiyonlar) · ui/ · şema · testler
+  src/server/db/            gömülü PostgreSQL (gomulu.ts) · göç koşucusu (goc.ts, gocler/NNNN_ad.sql, her göç idempotent) ·
+                            kiracı süzgeçli TEK erişim katmanı (kiraci.ts: kiraciIcinde) — pg YALNIZ burada içe aktarılır
+  src/server/kiraci/        kiracı çözümleme (alt alan adı → firma kısa adı) · ★ yetki (tek `canDo`) · ★ güvenli yazıcılar
+  src/components/           TEK ÜRETİCİLER: kabuk (yan menü + üst çubuk) · ikon · boş durum · ★ liste (tablo↔kart) ·
+                            ★ süzgeç satırı · ★ seçim alanı · ★ uzun tuş
+  src/styles/               tokens.css (TEK KAYNAK; docs kopyası testle aynı) · yazi.css (Sora) · temel.css · kalip.ts
+  public/vendor/            üçüncü parti kendi kökenimizden, adında sürüm (lucide-1.47.0 ikonları)
+  scripts/                  next.ts (telemetri kapalı + webpack) · gelistir.ts (npm run dev) · onizleme.ts + onizleme-sun.ts
+  tests/                    `*.test.ts` kilit testleri (başında "NEREDEN GELDİ"); yardimci/denetimler.ts saf denetim işlevleri
+  tests/bozan/              olumsuz kanıt (`*.bozan.ts`; kaynağı diskte DEĞİŞTİRMEDEN bellekte bozar)
+  tools/                    salt okunur araçlar: palet-olc.mjs · sunum-uret.mjs · olc-maket.js · olc-uygulama.js
+  .github/workflows/ci.yml  her push: tip · lint · test · olumsuz kanıt · derleme; main'de Pages önizlemesi
+  docs/                     maket + sunum (Pages sitesinin kökü)
   data/                     yerel veritabanı + dosya deposu (git dışı)
 ```
 
 ## 4 · Komutlar
-**Şu an çalışanlar (iskelet öncesi, 2026-09-23):**
+**Uygulama (iskelet, 2026-09-23 — hepsi çalışıyor):**
+```bash
+npm install              # gömülü PostgreSQL ikilileri burada iner; başka kurulum yok
+npm run dev              # gömülü PostgreSQL (127.0.0.1:54320, data/pg) + Next → http://127.0.0.1:3000
+npm test                 # node --test; çıktıda "fail 0" yoksa zincir DURUR (gerçek PostgreSQL testi dahil)
+npm run test:negatif     # tests/bozan/ — her kilit gerçekten yakalıyor mu (N/N)
+npm run check            # next typegen + tsc (tip denetimi)
+npm run lint             # eslint (Next + TypeScript kuralları)
+npm run build            # ÖNCE test; düşerse derleme yok (standalone çıktı)
+npm run build:onizleme   # ÖNCE test; Pages sitesi site/ (kök: docs, /uygulama/: uygulamanın statik önizlemesi)
+npm run onizle           # site/'yi Pages'teki gibi /pkproje/ altında sunar → http://127.0.0.1:8780/pkproje/uygulama/
+```
+⛔ Next'i çıplak `next` ile değil `scripts/next.ts` üzerinden çalıştır: telemetri kapalı (anayasa 5.2) ve **webpack** —
+reisim'in Windows'unda Uygulama Denetimi Next'in yerel derleyicisini engelliyor, Turbopack çalışmıyor (2026-09-23).
+Yerelde önizleme (`.claude/launch.json`): "uygulama" (npm run dev) · "onizleme" (site/) · "maket" (docs/).
+Uygulama ölçümü: `tools/olc-uygulama.js` tarayıcıda koşar, salt okunur.
+
+**Maket ve sunum:**
 ```bash
 node tools/palet-olc.mjs
 ```
 ```bash
 node tools/sunum-uret.mjs
 ```
-```bash
-python -m http.server 8765 --bind 127.0.0.1 --directory docs
-```
-İlki `docs/assets/tokens.css`'teki gerçek renkleri okuyup bütün çiftlerin (şu an 62) WCAG kontrastını ölçer (geçmeyen varsa çıkış 1).
-İkincisi sunumu (`docs/index.html`) tokens.css + `docs/assets/olcum.json`'dan yeniden üretir; sunum elle düzenlenmez.
-Üçüncüsü yerel önizleme (`.claude/launch.json` "maket"). Maket ölçümü: `tools/olc-maket.js` tarayıcıda koşar, salt okunur.
-
-**Planlanan (iskelet kurulunca gerçek hâli buraya yazılır):**
-```bash
-npm install          # gömülü PostgreSQL ikilileri burada iner; başka kurulum yok
-npm run dev          # localde çalıştır → http://localhost:3000 (firma denemesi: http://<firma>.localhost:3000)
-npm test             # node --test; çıktıda "fail 0" yoksa zincir DURUR
-npm run test:negatif # tests/bozan/ — her kilit gerçekten yakalıyor mu (N/N)
-npm run check        # tip denetimi
-npm run lint         # statik çözümleme
-npm run build        # ÖNCE test koşar; test düşerse derleme yapmaz (mekanik kapı)
-```
+İlki `src/styles/tokens.css`'teki (tek kaynak) gerçek renklerle bütün çiftlerin (şu an 62) WCAG kontrastını ölçer; aynı
+ölçüm `tests/kontrast.test.ts` kilidinde. İkincisi sunumu tokens + `docs/assets/olcum.json`'dan üretir; sunum elle
+düzenlenmez. Maket ölçümü: `tools/olc-maket.js`.
 
 ## 5 · Teslim zinciri (anayasa 0.3'ün bu projedeki hâli)
 `npm test` (fail 0) → `npm run check` + `npm run lint` → `npm run build` → `npm run dev` ile **localde aç ve
@@ -100,24 +112,28 @@ GÖZLE doğrula** (masaüstü 1920 · tablet 1080 · telefon 375; açık + koyu 
 → `git diff --stat` + her parçayı **oku** (13.5) → commit (mesaj: ne istendi · ne değişti · **nerede/nasıl
 doğrulandı**; ölçülemeyen "ölçemedim") → **kanıt özeti** ("ne baktım · nerede · ne gördüm"; ilk iki satır UYUM ve
 ETKİ ALANI). Bir teslimde **BİR kalem**. Reisim'e test ödevi verilmez.
-**Askıda (yayına çıkınca açılır):** canlı veriye elle dokunma (anayasa 6) · gerçek cihaz teyidi (11.2) · canlı
-(üretim) doğrulaması. **Açık:** `git push` (uzak depo bağlanınca her teslim push ile biter, 0.3) · GitHub Pages
-önizleme yayını (bkz. §8).
+CI aynı zinciri her push'ta koşar (`.github/workflows/ci.yml`); main'de denetim geçmeden Pages'e yayın olmaz.
+**Askıda (gerçek sunucuya çıkınca açılır):** canlı veriye elle dokunma (anayasa 6) · gerçek cihaz teyidi (11.2) ·
+üretim doğrulaması. **Açık:** `git push` (her teslim push ile biter, 0.3) · GitHub Pages önizlemesi (bkz. §8).
 
 ## 6 · Kalıp ve kilitler (bu projede)
-- Referans ekran henüz YOK. İlk onaylanan gerçek ekran ölçülür, sayılar `TASARIM-KALIBI.md` yöntemiyle
-  `tests/tasarim-kalibi.test.ts` içine kabul/ret örneğiyle yazılır. O güne kadar kaynak projenin sayıları
-  **kopyalanmaz**.
+- **Referans ekran DONDU (2026-09-23): Planlar + plan içi** (maket 5. tur). Sayılar `src/styles/kalip.ts`'te
+  (denetim 34/44 · bantlar 768/1280 · kart eşiği 960 · sayfa ekipman 10 / rapor 20 · yazı ölçeği · kabuk 232/52),
+  kilidi `tests/kalip-sayilari.test.ts` (değişkenler + kabuk + onaylı maket). Kabul/ret örneği dosyada. Kaynak
+  projenin sayıları kopyalanmadı.
 - ⛔ **ANAYASA ve KALIP = site yapma yöntemimiz** (reisim 2026-09-22: *"anayasada siteye ait kararlar değil
   bizim site yapma yöntemlerimiz ile alakalı şeyler olmalı"*). Ürün/site kararı (rapor akışı, imza, arşiv,
   ekran içeriği) oraya yazılmaz; yeri `pkproje.md`. Kalıba yeni madde yalnız **yöntem** ise ve reisim onayıyla
   girer (kalıp 16).
 - Görsel iş: **önce maket (masaüstü + mobil AYRI), onay, sonra kod**; palet ve token'lar kurulduktan sonra
   dokunulmaz; kullanılan her `var(--x)` tanımlı mı testi ilk günden.
-- İlk gün kurulacak kilitler: tip denetimi · lint · `fail 0` kapısı · olumsuz kanıt betikleri · CSS değişken
-  bütünlüğü · aynı id/seçici taraması · kiracı süzgeci testi (her sorgu kiracı kimliği taşır).
-- Sonra: CI (uzak depo kurulunca) · Playwright + erişilebilirlik (ilk ekranlar) · görsel regresyon (referans
-  ekran) · hata alarmı (yayında; kayıt yapısı ilk günden).
+- **Kurulu kilitler (iskelet):** tip denetimi · lint · `fail 0` kapısı (betik + CI) · olumsuz kanıt (`tests/bozan/`,
+  her kilide bir bozan) · CSS parantez / tanımsız değişken / çift seçici (cırcır) / değişken ezmesi · çift id · değişken
+  tek kaynağı (src ↔ docs) · kalıp sayıları · ikonlar · menü = onaylı maket · rota = modül kaydı · kontrast (62 çift) ·
+  kiracı süzgeci (pg yalnız src/server/db; her kiracı tablosunda ENABLE + FORCE RLS + politika) · kiracı izolasyonu
+  GERÇEK PostgreSQL'de (iki firma, WITH CHECK, uygulama rolü süper kullanıcı değil, göç idempotent).
+- Sonra: Playwright + erişilebilirlik (ilk ekranlar) · görsel regresyon (referans ekran) · hata alarmı (yayında;
+  kayıt yapısı ilk günden).
 
 ## 7 · ASLA (bu projeye özgü; anayasadaki yasaklar ayrıca geçerli)
 - Kurgu bitmeden ve reisim "başla" demeden **kod yazma**; kapsam dışı işi yapma, `pkproje.md`'ye not et.
@@ -154,8 +170,10 @@ ETKİ ALANI). Bir teslimde **BİR kalem**. Reisim'e test ödevi verilmez.
 - **GitHub Pages = statik ÖNİZLEME ortamı** (maket, prototip ekran, örnek veriyle kontrol): reisim buradan bakar,
   ben tarayıcı bölmemde ölçerim. Pages **sunucu tarafını çalıştıramaz** (veritabanı, giriş, PDF üretimi) ve kiracı
   başına alt alan adı vermez → gerçek uygulama **Türkiye'de sunucuda** (pkproje.md §8.8).
-- **Yayın (2026-09-23): GitHub Pages `main` dalının `docs/` klasöründen** yayınlar: https://cankonuralp.github.io/pkproje/
+- **Yayın (2026-09-23, iskelet): GitHub Pages GitHub Actions'tan** yayınlar (reisim: *"ilk yayını yap"* → Pages önizlemesi):
+  sitenin kökü `docs/` (maket + sunum, adresler aynı), `…/uygulama/` uygulamanın statik önizlemesi (sunucu, veritabanı,
+  giriş orada ÇALIŞMAZ). Önceki düzen (main `/docs` doğrudan) kalktı. https://cankonuralp.github.io/pkproje/
   (görsel sistem) · `…/plan-ici.html` (plan içi ve yan menü sunumu) · `…/maket/planlarim.html` (maket; `#/plan/<id>` plan içi,
-  `#/plan/<id>/ekle` ekipman ekle). İki sunum `tools/sunum-uret.mjs` ile üretilir, elle düzenlenmez. Sayfalar `noindex`; veri uydurma. İskelet kurulunca GitHub Actions iş
-  akışına geçilir: her push'ta test + derleme, statik önizleme çıktısı Pages'e (Eksikler §1 CI ile aynı iş akışı).
+  `#/plan/<id>/ekle` ekipman ekle). İki sunum `tools/sunum-uret.mjs` ile üretilir, elle düzenlenmez. Sayfalar `noindex`; veri uydurma. İş akışı
+  `.github/workflows/ci.yml` (Eksikler §1): her push'ta denetim; main'de denetim geçerse önizleme kurulur ve yayınlanır.
 - OneDrive: reisim'de kapalı, klasör adı Windows 10'dan kalma; dosyalar yerelde. Yedek = GitHub.

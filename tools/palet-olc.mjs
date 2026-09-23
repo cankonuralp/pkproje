@@ -1,4 +1,5 @@
-/* SALT OKUNUR — docs/assets/tokens.css içindeki GERÇEK renk değişkenlerini okur ve WCAG kontrastını ölçer.
+/* SALT OKUNUR — src/styles/tokens.css (TEK KAYNAK; docs/assets/tokens.css aynı gövdeyi taşır, tests/tokens-tek-kaynak)
+   içindeki GERÇEK renk değişkenlerini okur ve WCAG kontrastını ölçer.
    Neden: sunumdaki ve ileride uygulamadaki kontrast iddiası elle kopyalanmış sayıya değil, dosyanın kendisine dayansın
    (anayasa 0.6: ölç, tahmin etme). İskelet kaleminde bu işlev node --test kilidine dönüşür.
    Kullanım: node tools/palet-olc.mjs            → tablo basar; eşiği geçmeyen çift varsa çıkış kodu 1
@@ -53,7 +54,7 @@ function blokDegiskenleri(css, secici) {
   return T;
 }
 
-export function paletOlc(yol = fileURLToPath(new URL("docs/assets/tokens.css", KOK))) {
+export function paletOlc(yol = fileURLToPath(new URL("src/styles/tokens.css", KOK))) {
   const css = readFileSync(yol, "utf8").replace(/\/\*[\s\S]*?\*\//g, "");
   const acik = blokDegiskenleri(css, ':root, :root[data-tema="acik"]');
   const koyu = blokDegiskenleri(css, ':root[data-tema="koyu"]');

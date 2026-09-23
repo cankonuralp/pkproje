@@ -1,0 +1,3 @@
+/* maketteki .a-sayfa-bas */
+.sayfaBas { display: flex; align-items: baseline; flex-wrap: wrap; gap: 4px 12px; margin: 0 0 12px; }
+.sayfaBas h1 { margin: 0; font-size: var(--boy-baslik); font-weight: var(--kal-baslik); letter-spacing: -.01em; }

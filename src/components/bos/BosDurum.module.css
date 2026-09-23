@@ -1,0 +1,20 @@
+/* maketteki .a-bos (docs/assets/maket.css, 4. tur yoğunluğu) */
+.bos {
+  display: flex; flex-direction: column; align-items: center; text-align: center;
+  padding: 32px 20px; background: var(--kart); border: 1px solid var(--kenar); border-radius: var(--r-buyuk);
+}
+.ikon {
+  width: 52px; height: 52px; margin-bottom: 10px; border-radius: var(--r-tam);
+  display: flex; align-items: center; justify-content: center; background: var(--zemin2); color: var(--yazi2);
+}
+.ikon svg { width: 28px; height: 28px; }
+.baslik { margin: 0 0 4px; font-size: var(--boy-bolum); font-weight: var(--kal-bolum); }
+.metin { margin: 0; color: var(--yazi2); }
+/* maketteki .a-tus .a-tus-ikincil: içerik kadar geniş, denetim yüksekliğinde */
+.eylem {
+  margin-top: 16px; height: var(--tus-y); padding: 0 12px;
+  display: inline-flex; align-items: center; justify-content: center; gap: 6px;
+  border: 1px solid var(--kenar-alan); border-radius: var(--r-orta);
+  background: var(--kart); color: var(--yazi); font-weight: 600; white-space: nowrap; text-decoration: none;
+}
+.eylem:hover { background: var(--zemin2); }
