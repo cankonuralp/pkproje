@@ -707,21 +707,27 @@
   }
   /* Yan menü daraltma (reisim 2026-09-23: "sol taraf açılıp kapanabilir olsun kapatılınca sadece logolar kalsın").
      Yalnız geniş bantta (≥ 1280) etkili — CSS daralmış hâli o banda bağlar; orta/dar bantta çekmece aynen (anayasa 2.11).
-     Daralmışken ad görünmez (ekran okuyucu okur), üstüne gelince ipucu (title). Tercih bu cihazda saklanır. */
-  var MENU_DAR = false;
+     Daralmışken ad görünmez (ekran okuyucu okur), üstüne gelince ipucu (title). Tercih bu cihazda saklanır.
+     İpucu YALNIZ daralmış şerit görünürken: orta/dar bantta çekmece adı zaten yazar, ipucu aynı adı tekrarlardı
+     (canlı ölçümde 1080'de 17 çift ad yakalandı, 2026-09-23) → bant değişince yeniden hesaplanır. */
+  var MENU_DAR = false, GENIS_BANT = window.matchMedia("(min-width: 1280px)");
   try { MENU_DAR = localStorage.getItem("probata-menu") === "dar"; } catch (x) {}
+  function menuIpucu() {
+    var serit = MENU_DAR && GENIS_BANT.matches;
+    document.querySelectorAll("#a-menu a").forEach(function (a) {
+      if (serit) a.setAttribute("title", a.querySelector(".a-menu-ad").textContent); else a.removeAttribute("title");
+    });
+  }
   function menuDar(dar) {
     MENU_DAR = dar;
     $("a-kabuk").classList.toggle("a-kabuk-dar", dar);
     var tus = document.querySelector(".a-daralt-tus");
     tus.setAttribute("aria-expanded", String(!dar));
     tus.setAttribute("aria-label", dar ? "Menüyü genişlet" : "Menüyü daralt");
-    document.querySelectorAll("#a-menu a").forEach(function (a) {
-      var ad = a.querySelector(".a-menu-ad").textContent;
-      if (dar) a.setAttribute("title", ad); else a.removeAttribute("title");
-    });
+    menuIpucu();
     try { localStorage.setItem("probata-menu", dar ? "dar" : "genis"); } catch (x) {}
   }
+  GENIS_BANT.addEventListener("change", menuIpucu);
   function cekmece(ac) {
     $("a-kabuk").classList.toggle("a-cekmece-acik", ac);
     document.querySelector(".a-menu-tus").setAttribute("aria-expanded", String(ac));
