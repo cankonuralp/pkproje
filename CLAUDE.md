@@ -16,7 +16,8 @@
 3. Kalıcı hafızadaki `pkproje-durum` notunu güncel tut; `pkproje.md`'ye giren her bilgi yerinde düzenlenir (12.1).
 
 ## 1 · Ne yapıyoruz
-Periyodik kontrol (iş ekipmanı muayene) firmaları için çok kiracılı web uygulaması. Tam akış:
+**probata** — periyodik kontrol (iş ekipmanı muayene) firmaları için çok kiracılı web uygulaması. Görsel kimlik
+(logo, marka renkleri, Sora, açık + koyu tema): `pkproje.md` §8.12 ve `probata-logo/`. Tam akış:
 **teklif → kabul → sözleşmeler (firmalar arası + İSG-KATİP) → plan açıldı → inspector'ın "Planlarım" ekranına
 düştü → kabul/red → plan günü denetim → rapor taslak → branş yöneticisi onayında → onaylandı/geri gönderildi →
 inspector son imza → müşteriye açıldı → fatura → tahsilat → iş kapandı → arşiv.**

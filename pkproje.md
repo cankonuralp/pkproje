@@ -5,7 +5,7 @@
 > ekleme tarih taşır. Buradaki hiçbir madde reisim onaylamadan **yapılacak iş** değildir; onay durumu her
 > bölümde ayrıca yazar. Gerçek müşteri/firma adı bu dosyaya girmez (anayasa 5.8, 10.3).
 
-Oluşturma: 2026-09-18 · Son güncelleme: 2026-09-22
+Oluşturma: 2026-09-18 · Son güncelleme: 2026-09-23
 
 ---
 
@@ -194,6 +194,24 @@ Sonradan gelen modül eskileri bozmasın diye **veri modeline ilk günden** yans
    değişseler de imzalı rapor değişmez.
 9. *Öneri:* önceki raporun **giderilmemiş hafif kusurları** sonraki kontrolde otomatik listelenir (Ek-III 1.9.1).
 10. *Öneri:* listede görünen tarih/saat ile rapordaki başlangıç/bitiş **aynı alandan** okunur.
+
+### 3.3 · Faz planı (reisim 2026-09-23: ilk faz omurgası *"uygun"*)
+**Faz 1 — onaylı omurga:** 1 Kullanıcı & Rol · 3 Müşteri & Tesis · 7 Ekipman · 8 Ölçüm Cihazı · 9 Zimmet ·
+13 Planlama · 14 Saha & Rapor · 15 Onay & İmza · 16 PDF Üretimi · 17 Müşteri Paneli.
+**Faz 1 — bağımlılık gereği girmesi gerekenler (öneri — onay bekliyor):** omurga önerimi yaparken §3.2'deki
+bağlantı kurallarının istediği modülleri atlamışım; bunlar olmadan omurga çalışmaz:
+· **2 Personel** — plan kabulü inspector'ın EKİPNET numarasını ve mesleğini denetler (§3.2 madde 2b–2c).
+· **12 Sözleşme'nin İSG-KATİP kısmı** — plan kabulü İSG-KATİP kaydını ve onay tarihini denetler (§3.2 madde 2a).
+  Firmalar arası iş sözleşmesi kısmı faz 2'ye kalabilir.
+· **5 Ekipman Türü Kataloğu** — ekipman türe bağlı doğar, onay branşı ve yetkili meslekler buradan gelir.
+· **6 Rapor Şablonları** — rapor, firma × tür şablon sürümüyle açılır; en az bir tür için bir şablon gerekir.
+· **4 Standart Kütüphanesi** — kontrol metodu standardı buradan seçilir (Ek-III 1.7.1.1).
+· **20 Uyarılar'ın kalibrasyon kısmı** — 30 gün uyarısı 8 Ölçüm Cihazı ile birlikte gelir.
+**Faz 2:** 11 Teklif · 12 Sözleşme'nin iş sözleşmesi kısmı · 18 Muhasebe · 19 Performans & Raporlama ·
+10 Eğitim Takibi · 20 Uyarılar'ın eğitim kısmı.
+**Referans ekran (reisim 2026-09-23: *"uygun"*):** **Planlarım** (13 Planlama). Liste, süzgeç satırı, durum rozeti,
+birincil/ikincil tuş, boş durum ve dürüst sayaç gibi ortak parçaları doğurur; ölçüleri tasarım kalıbının bu
+projedeki sayıları olur. Ardından saha rapor ekranı (14).
 
 ---
 
@@ -387,6 +405,21 @@ tarih-saat, fotoğraflar, form) · **Eğitim kaydı** (personel, eğitim, belge,
    (b) modül **başka modülün tablosuna doğrudan dokunmaz**, o modülün dışa açtığı fonksiyonları kullanır;
    (c) ortak çekirdek (veritabanı, kiracı çözümleme, yetki) `src/server/`'da; (d) sayfalar (`src/app/`) **iş
    mantığı taşımaz**.
+12. **8.12 Görsel kimlik — KARAR (reisim 2026-09-23):**
+   · **Ürün adı: probata.** Slogan: *Periyodik Kontrol Yönetimi*. Firma alt alan adları `<firma>.probata.com.tr`
+     biçiminde düşünülür (alan adının alınması ayrı iş).
+   · **Logo paketi:** `probata-logo/` (reisim hazırladı). SVG'ler yalnız yol/şekil taşır, yazılar eğriye çevrili;
+     dört renk (renkli · koyu zemin · siyah · beyaz) × dört yerleşim (işaret · yatay · yatay sloganlı · dikey) +
+     favicon, iOS ve PWA ikonları. Kullanım kuralları paketteki `OKU-BENI.md`'de: site üst çubuğu yatay-renkli
+     (koyu zeminde koyu-zemin), PDF üst bilgisi yatay-sloganlı, koruma alanı işaret yüksekliğinin ¼'ü, ekranda
+     en küçük yatay logo 120 px; renk değiştirme, esnetme, gölge YASAK.
+   · **Renkler (marka):** Petrol **#0F2A3D** · Onay yeşili **#1FA37A** · Kâğıt (zemin) **#F5F3EE** · Slogan
+     grisi **#4E5F6C** (son ikisi logo paketinin rehberinden). Bunlar dokunulmaz marka renkleridir (anayasa 2.4);
+     ekranın geri kalan tonları (zemin kademeleri, metin kademeleri, kenarlık, uyarı/hata renkleri, koyu tema)
+     bunlardan **türetilir** ve reisim onayıyla dondurulur → görsel sistem önerisi (öneri — onay bekliyor).
+   · **Yazı tipi: Sora** (SIL OFL 1.1). Logo SemiBold, slogan Medium. Uygulamada **kendi sunucumuzdan** sunulur,
+     dış kaynaktan çekilmez (anayasa 5.2).
+   · **Tema: açık ve koyu eş zamanlı** — ikisi ilk günden birlikte tasarlanır ve her ekran ikisinde ölçülür.
 
 ## 9 · Sorular ve reisim'in cevapları (2026-09-22; kararlar 2, 3, 6, 7, 8'e işlendi)
 1. Roller → bir kişinin birden fazla rolü olabilir; kendi raporunu onaylama engellenmez.
@@ -412,7 +445,11 @@ tarih-saat, fotoğraflar, form) · **Eğitim kaydı** (personel, eğitim, belge,
 sunucu**, joker SSL alt alan adları. 19. Arka plan işleri → **pg-boss**. 20. Sigorta okuma → görsel yapay zekâ,
 **insan onayı şart**. 21. Yönetici → **branşa göre ikiye** ayrılır.
 
-**Açık kalanlar:** ürün adı ve alan adı · e-imza yöntemi (8.4) · v1 ekipman grupları · 5 yıl sonrası silme
+**Üçüncü tur cevapları (2026-09-23):** 22. Ürün adı → **probata**, logo paketi `probata-logo/`. 23. Renk →
+Petrol #0F2A3D + Onay yeşili #1FA37A; yazı tipi **Sora**. 24. Tema → açık ve koyu **eş zamanlı**. 25. İlk faz →
+önerdiğim omurga **uygun** (bağımlılıklar §3.3'te ayrıca onaya sunuldu). 26. Referans ekran → **Planlarım uygun**.
+
+**Açık kalanlar:** alan adının alınması · e-imza yöntemi (8.4) · v1 ekipman grupları · 5 yıl sonrası silme
 mekanizması · **zimmette birden çok cihaz varsa süzgeç** (§3) · **kontrol metodu standardının seçim yeri**
 (rapor anı mı, ekipman türü mü — §3) · **§3.1 ve §3.2'deki "öneri" maddeleri** (planlama saat dağıtımı,
 revizyon, alan kopyalama, hafif kusur devri, meslek eşleşme denetimi).
@@ -454,6 +491,9 @@ revizyon, alan kopyalama, hafif kusur devri, meslek eşleşme denetimi).
   aktarıldığı hâline döndü. Ürün kararları bu dosyada tutulur. (b) Fotoğraf konumu/EXIF gibi şeylere
   **dokunulmayacak**. (c) Emsal uygulama incelemesi **GitHub'da paylaşılmaz** → bölüm 6 `yerel/` klasörüne
   taşındı, depo geçmişi bu içerikten temizlendi. Ana hedef: **müşterimizin işini kolaylaştırmak.**
+- 2026-09-23: reisim'in üçüncü tur cevapları işlendi: ürün adı **probata**, logo paketi, marka renkleri, Sora,
+  açık + koyu tema eş zamanlı (§8.12); faz 1 omurgası ve referans ekran Planlarım onaylı (§3.3). Omurga önerimde
+  atladığım bağımlı modüller (Personel, İSG-KATİP, Ekipman Türü, Şablon, Standart) §3.3'te onaya sunuldu.
 - 2026-09-22 (5): reisim'in **ikinci tarifi** işlendi (§1.1 birebir). Yeni: §3 tam akış (teklif → tahsilat),
   §3.1 **20 modüllük modül haritası**, §3.2 **modüller arası bağlantı kuralları**, §2 branş yöneticileri,
   §7 genişletilmiş veri modeli (teklif, sözleşme, zimmet, eğitim, muhasebe, uygunsuzluk), §8 kararları
