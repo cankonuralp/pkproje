@@ -30,7 +30,7 @@
       </button>
     </div>
     <nav class="a-menu">
-      <a href="#" aria-current="page">
+      <a href="#/" aria-current="page">
         <svg class="a-ikon" aria-hidden="true"><use href="../vendor/lucide-1.47.0/ikonlar.svg#i-calendar-check"/></svg>
         Planlarım <span class="a-menu-sayi" id="a-menu-sayi" title="Kabul bekleyen plan"></span>
       </a>
@@ -66,8 +66,10 @@
     </header>
 
     <main class="a-icerik" id="a-icerik">
+      <!-- GÖRÜNÜM 1 · liste (adres #/ ya da boş). GÖRÜNÜM 2 · plan içi (#/plan/<id>), maket.js planCiz() doldurur. -->
+      <div id="a-liste-gorunum">
       <div class="a-sayfa-bas">
-        <h1>Planlarım</h1>
+        <h1 tabindex="-1">Planlarım</h1>
         <span class="a-sayac" id="a-sayac" aria-live="polite"></span>
       </div>
 
@@ -78,7 +80,7 @@
           <label class="a-ara" id="a-ara">
             <span class="a-gizli">Planlarda ara</span>
             <svg class="a-ikon" aria-hidden="true"><use href="../vendor/lucide-1.47.0/ikonlar.svg#i-search"/></svg>
-            <input type="search" id="a-ara-girdi" placeholder="Müşteri, tesis, il" autocomplete="off">
+            <input type="search" id="a-ara-girdi" placeholder="Proje, müşteri, il" autocomplete="off">
             <button class="a-ara-sil" type="button" data-eylem="ara-sil" aria-label="Aramayı temizle">
               <svg class="a-ikon a-ikon-kucuk" aria-hidden="true"><use href="../vendor/lucide-1.47.0/ikonlar.svg#i-x"/></svg>
             </button>
@@ -99,6 +101,9 @@
       </div>
 
       <div class="a-liste-kap" id="a-liste"></div>
+      </div>
+
+      <section class="a-plan" id="a-plan" aria-label="Plan" hidden></section>
     </main>
   </div>
 </div>

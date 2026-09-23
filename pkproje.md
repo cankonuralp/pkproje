@@ -213,6 +213,33 @@ bağlantı kurallarının istediği modülleri atlamışım; bunlar olmadan omur
 birincil/ikincil tuş, boş durum ve dürüst sayaç gibi ortak parçaları doğurur; ölçüleri tasarım kalıbının bu
 projedeki sayıları olur. Ardından saha rapor ekranı (14).
 
+### 3.4 · Planlarım ve plan içi (reisim 2026-09-23, maketin 2. turu)
+Reisim, kullandığı bir uygulamanın plan listesinin ekran görüntüsünü örnek gösterdi (görüntü ve içindeki veri depoya
+girmez) ve dedi ki (birebir): *"bundan örnek al ama, mesaii iş türü, rapor durumu sütunları gereksiz, aksiyon tuşu
+gereksiz, kabul et denetime başla ve devam et diye değişmeli , planın içerisinden tamamla dendiğinde tamamlandı olmalı
+ama girip içeriden eski haline getirebilir rapor düzenleyebilir vs olmamız lazım burdan anladığın kadaryıla maketi
+düzenle tekrar konuşalım"*
+**Karar (reisim):**
+· **Liste sütunları:** Proje no · Proje adı · Müşteri · Adres · Inspector (örnekte "Kullanıcı") · Başlangıç · Durum.
+  **Yok:** Mesai, İş türü, Rapor durumu, açılır "İşlemler" tuşu.
+· **Satırda tek eylem tuşu, durumla değişir:** Kabul et → Denetime başla → Devam et.
+· **Plan içi:** "Tamamla" ile plan **Tamamlandı** olur; plana girip **geri alınabilir** (plan yeniden denetime açılır);
+  raporlar düzenlenebilir kalır.
+**Maketteki yorumlarım (öneri — onay bekliyor; sunumda 9–16. sorular):**
+· Plan durumları: Kabul bekliyor · Kabul edildi · **Denetimde** (yeni: Denetime başla ile) · Tamamlandı · Reddedildi.
+· **Reddet** satırdan kalktı, plan içinde (gerekçe zorunlu).
+· **Denetime başla** plan gününe kadar kapalı ("Plan gününde başlar"); İSG-KATİP onayı kontrol tarihine bağlı (§4.4).
+· **Tamamla** raporu başlamamış ekipman varken engellenmez, yalnız sayısını bildirir.
+· Tamamlandı planda raporlar düzenlenir (taslak düzenle · onaydaki aç · eksik oluştur); **ekipman ekleme kapalı**,
+  eklemek için önce geri alınır.
+· Örnekteki **Takvim** görünümü eklenmedi (yeni görünüm, ayrı karar; anayasa 9.13).
+· **Ekipman sayısı** örnekte yok → listeden kalktı, plan içinde duruyor.
+· Örnekteki katlanır "Filtreler" çubuğu alınmadı: süzgeç her zaman açık kalır (tasarım kalıbı 14).
+· Sütun başlığıyla sıralama örnekten alındı; kart kipinde "Sıralama" seçicisi.
+· **Proje no biçimi** `P-AAYY-SIRA` (makette P-0926-031), rapor numarasıyla aynı mantık (§3).
+· Sekiz sütun ölçüldü: tablo, liste kabı **≥ 1.180 px** iken (≈ 1.495 px ve üstü ekran); dizüstü 1.280–1.494 ve tablette
+  kart. Dizüstünde de tablo istenirse Proje no + Proje adı tek sütunda birleşir.
+
 ---
 
 ## 4 · Mevzuat bulguları (2026-09-18 araştırması; kaynaklar bölüm 10)
@@ -422,12 +449,14 @@ tarih-saat, fotoğraflar, form) · **Eğitim kaydı** (personel, eğitim, belge,
    · **Tema: açık ve koyu eş zamanlı** — ikisi ilk günden birlikte tasarlanır ve her ekran ikisinde ölçülür.
    · **Görsel sistem önerisi + referans ekran maketi (2026-09-23, öneri — onay bekliyor):** GitHub Pages'te
      `docs/index.html` (sunum) ve `docs/maket/planlarim.html` (Planlarım maketi). İçerik: marka renklerinden türetilen
-     27 değişken × 2 tema (`docs/assets/tokens.css`), 46 yazı/zemin çiftinin hepsi WCAG AA geçer (ölçüm aracı
-     `tools/palet-olc.mjs` gerçek dosyayı okur); **bulgu: marka yeşili + beyaz yazı 3,19 : 1, eşiğin altında** → birincil
-     tuş için A/B/C seçenekleri; Sora 5.3.0 ve Lucide 1.47.0 kendi sunucumuzdan; üç adlandırılmış bant (dar < 768 ·
-     orta 768–1279 · geniş ≥ 1280), denetim yüksekliği 40 / 48 px; liste kap ≥ 980 px tablo, altı kart. Maket 1920 ·
-     1080 · 375 × açık/koyu ölçüldü, 6/6 durumda taşma, kırpma, çakışma, küçük hedef 0; ölçerken 11 hata bulunup
-     düzeltildi (`docs/assets/olcum.json`). Sekiz karar sorusu sunumun sonunda.
+     27 değişken × 2 tema (`docs/assets/tokens.css`), 54 yazı/zemin çiftinin hepsi WCAG AA geçer (ölçüm aracı
+     `tools/palet-olc.mjs` gerçek dosyayı okur; 2. turda 4 çift eklendi); **bulgu: marka yeşili + beyaz yazı 3,19 : 1,
+     eşiğin altında** → birincil tuş için A/B/C seçenekleri; Sora 5.3.0 ve Lucide 1.47.0 (42 ikon) kendi sunucumuzdan;
+     üç adlandırılmış bant (dar < 768 · orta 768–1279 · geniş ≥ 1280), denetim yüksekliği 40 / 48 px; liste kap
+     ≥ 1.180 px tablo, altı kart (2. tur ölçümü; 1. turda 5 sütunla 980 px). Maket 2. turda Planlarım + plan içi:
+     1920 · 1080 · 375 × açık/koyu × (liste + 3 plan içi durumu) = 24 ölçümün hepsinde taşma, kırpma, çakışma, gizli
+     tuş, küçük hedef 0; iki turda ölçerken 21 hata bulunup düzeltildi (`docs/assets/olcum.json`). Karar soruları
+     sunumun sonunda (1–8 görsel sistem, 9–16 Planlarım 2. tur).
 
 ## 9 · Sorular ve reisim'in cevapları (2026-09-22; kararlar 2, 3, 6, 7, 8'e işlendi)
 1. Roller → bir kişinin birden fazla rolü olabilir; kendi raporunu onaylama engellenmez.
@@ -457,8 +486,14 @@ sunucu**, joker SSL alt alan adları. 19. Arka plan işleri → **pg-boss**. 20.
 Petrol #0F2A3D + Onay yeşili #1FA37A; yazı tipi **Sora**. 24. Tema → açık ve koyu **eş zamanlı**. 25. İlk faz →
 önerdiğim omurga **uygun** (bağımlılıklar §3.3'te ayrıca onaya sunuldu). 26. Referans ekran → **Planlarım uygun**.
 
+**Dördüncü tur (2026-09-23, maket üzerine):** 27. Planlarım sütunları → örnek listeden, Mesai / İş türü / Rapor durumu /
+"İşlemler" tuşu **yok**. 28. Satır tuşu → **Kabul et → Denetime başla → Devam et**. 29. Tamamla → plan içinden;
+**geri alınabilir**, raporlar düzenlenebilir (§3.4).
+
 **Açık kalanlar:** **görsel sistem sunumundaki sekiz karar sorusu** (birincil tuş A/B/C · açık tema zemini · yan menü ·
 bantlar ve 40/48 px · iki satırlı süzgeç · 520 px karar penceresi · Planlarım'ın dondurulması · faz 1 sırası) ·
+**Planlarım 2. tur soruları 9–16** (§3.4: Reddet yeri · Denetime başla plan günü · Tamamla engeli · tamamlanmış planda
+açık kalanlar · takvim · ekipman sayısı · dizüstünde tablo · proje no biçimi) ·
 alan adının alınması · e-imza yöntemi (8.4) · v1 ekipman grupları · 5 yıl sonrası silme
 mekanizması · **zimmette birden çok cihaz varsa süzgeç** (§3) · **kontrol metodu standardının seçim yeri**
 (rapor anı mı, ekipman türü mü — §3) · **§3.1 ve §3.2'deki "öneri" maddeleri** (planlama saat dağıtımı,
@@ -501,6 +536,10 @@ revizyon, alan kopyalama, hafif kusur devri, meslek eşleşme denetimi).
   aktarıldığı hâline döndü. Ürün kararları bu dosyada tutulur. (b) Fotoğraf konumu/EXIF gibi şeylere
   **dokunulmayacak**. (c) Emsal uygulama incelemesi **GitHub'da paylaşılmaz** → bölüm 6 `yerel/` klasörüne
   taşındı, depo geçmişi bu içerikten temizlendi. Ana hedef: **müşterimizin işini kolaylaştırmak.**
+- 2026-09-23 (3): reisim'in örnek listesiyle Planlarım maketi 2. tur (§3.4): yeni sütunlar, satırda tek eylem tuşu
+  (Kabul et → Denetime başla → Devam et), **plan içi** ekranı (Tamamla ↔ Tamamlamayı geri al, ekipman listesi, bilgi
+  kutuları), sütun başlığıyla sıralama. 24 ölçüm temiz, kontrast 54/54, bu turda 10 hata bulunup düzeltildi; iki yeni
+  ölçüm denetimi (gizli kapta tuş, kesik ipucu). Sekiz yeni karar sorusu (9–16) reisim'de.
 - 2026-09-23 (2): görsel sistem önerisi ve Planlarım maketi GitHub Pages'te yayımlandı (`docs/`, §8.12). Kontrast 46/46,
   maket 6/6 durumda temiz, 11 hata ölçerken bulunup düzeltildi. Sekiz karar sorusu reisim'de.
 - 2026-09-23: reisim'in üçüncü tur cevapları işlendi: ürün adı **probata**, logo paketi, marka renkleri, Sora,

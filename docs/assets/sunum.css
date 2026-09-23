@@ -67,6 +67,7 @@ table.s-tablo { width: 100%; border-collapse: collapse; font-size: var(--boy-kuc
 .s-tablo .s-hayir { color: var(--hata-yazi); font-weight: 700; }
 .s-min-600 { min-width: 600px; }
 .s-min-900 { min-width: 900px; }
+.s-min-1400 { min-width: 1400px; }   /* 2. tur ölçüm tablosu: 19 sütun */
 
 /* renk örnekleri */
 .s-renkler { display: grid; gap: 12px; grid-template-columns: repeat(auto-fill, minmax(min(100%, 200px), 1fr)); }
@@ -120,6 +121,8 @@ table.s-tablo { width: 100%; border-collapse: collapse; font-size: var(--boy-kuc
 .s-kurallar span { color: var(--yazi2); font-size: var(--boy-kucuk); }
 
 .s-sorular { margin: 0; padding: 0; list-style: none; display: grid; gap: 12px; counter-reset: soru; }
+/* 2. tur soruları 9'dan devam eder (CSS sayacı her listede sıfırlanıyordu) */
+.s-sorular-devam { counter-reset: soru 8; }
 .s-sorular li { counter-increment: soru; display: grid; grid-template-columns: 36px minmax(0, 1fr); gap: 12px; padding: 16px; border: 1px solid var(--kenar); border-radius: var(--r-orta); }
 .s-sorular li::before { content: counter(soru); width: 32px; height: 32px; border-radius: var(--r-tam); display: flex; align-items: center; justify-content: center; background: var(--onay); color: var(--onay-uzeri); font-weight: 700; }
 .s-sorular b { display: block; margin-bottom: 4px; }

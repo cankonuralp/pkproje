@@ -1,4 +1,4 @@
-/* ══ probata MAKET — Planlarım (referans ekran önerisi · 2026-09-23) ══════════════════════════════════════
+/* ══ probata MAKET — Planlarım + plan içi (referans ekran önerisi · 2026-09-23, 2. tur) ═══════════════════
    ⛔ Bütün sınıflar `a-` önekli (anayasa 2.10: maketli sunumda iki ad alanı; sunum sınıfları `s-`).
    ⛔ Çıplak renk yok; her renk tokens.css'teki var(--x)'ten (anayasa 2.9).
    ⛔ max-width YOK: her yüzey kabını doldurur (anayasa 0.9, kalıp 10).
@@ -191,39 +191,71 @@ button { cursor: pointer; }
   background: var(--vurgu); color: var(--vurgu-uzeri); font-size: var(--boy-etiket); font-weight: 700;
 }
 
-/* ── LİSTE: TEK ÜRETİCİ (aynı işaretleme; kap ≥ 980 px tablo, altı kart) ───────────────────────────── */
+/* ── LİSTE: TEK ÜRETİCİ (aynı işaretleme; kap eşiğin üstünde tablo, altında kart — eşik dosya sonunda) ───────── */
 .a-liste-kap { container-type: inline-size; container-name: liste; min-width: 0; }
 .a-tablo {
   width: 100%; table-layout: fixed; border-collapse: separate; border-spacing: 0;
   background: var(--kart); border: 1px solid var(--kenar); border-radius: var(--r-buyuk);
 }
 .a-tablo th {
-  padding: 12px 16px; text-align: left;
+  height: calc(var(--tus-y) + 8px); padding: 0 12px; text-align: left; vertical-align: middle;
   font-size: var(--boy-etiket); font-weight: var(--kal-etiket); letter-spacing: .02em;
   color: var(--yazi3); background: var(--zemin2);
   border-bottom: 1px solid var(--kenar);
 }
 .a-tablo th:first-child { border-top-left-radius: var(--r-buyuk); }
-.a-tablo th:last-child { border-top-right-radius: var(--r-buyuk); text-align: right; }
-.a-tablo td { padding: 14px 16px; vertical-align: middle; border-top: 1px solid var(--kenar); min-width: 0; }
+.a-tablo th:last-child { border-top-right-radius: var(--r-buyuk); }
+.a-tablo td { padding: 12px; vertical-align: middle; border-top: 1px solid var(--kenar); min-width: 0; }
 .a-tablo tbody tr:first-child td { border-top: 0; }
+.a-tablo tbody tr[data-href] { cursor: pointer; }
 .a-tablo tbody tr:hover td { background: var(--zemin); }
-/* sütun oranları (anayasa 3.4: oran; px+% karışımı yok) */
-/* 2026-09-23 ölçümü: 1080'de İşlem %24 = 214 px iç genişlik, Reddet+Kabul et 218 px istedi → alt alta düştü. %26'ya çıktı. */
-.a-k-tarih { width: 13%; } .a-k-musteri { width: 31%; } .a-k-ekipman { width: 16%; } .a-k-durum { width: 14%; } .a-k-eylem { width: 26%; }
+/* sıralanır başlık: başlığın tamamı bir tuş (dokunma hedefi denetim yüksekliği kadar); sıralı sütun koyu + yön oku */
+.a-sirala {
+  min-height: var(--tus-y); margin: 0 -6px; padding: 0 6px;
+  display: inline-flex; align-items: center; gap: 6px; max-width: calc(100% + 12px);
+  border: 0; border-radius: var(--r-kucuk); background: transparent; color: inherit;
+  font: inherit; letter-spacing: inherit; text-align: left;
+}
+.a-sirala:hover { color: var(--yazi); background: var(--kenar); }
+.a-sirala .a-ikon { opacity: .6; }
+.a-tablo th[aria-sort] .a-sirala { color: var(--yazi); }
+.a-tablo th[aria-sort] .a-sirala .a-ikon { opacity: 1; }
+/* sütun oranları (anayasa 3.4: oran; px+% karışımı yok). 2. tur: sütunlar reisim'in örnek listesinden.
+   2026-09-23 ölçümü (1920, gerçek içerik): kırpılmayan içeriğin istediği en küçük sütun (12 px iç boşluk dahil) →
+   proje no 120 · başlangıç 114 · durum 134 · eylem 202 ("Denetime başla" + ikon) · inspector 110; serbest metin
+   (ad, müşteri, adres) için taban 120–130. İlk oranlarla (9/13/16/16/10/10/11/15) eşik 1.344 px çıkıyordu; oranlar
+   ihtiyaca göre dengelendi → en dar sütunun sığdığı kap 1.165 px → kart eşiği 1.180 px (dosya sonu). */
+.a-tablo-plan .a-k-no { width: 10.5%; } .a-tablo-plan .a-k-ad { width: 12.5%; } .a-tablo-plan .a-k-musteri { width: 14%; }
+.a-tablo-plan .a-k-adres { width: 14.5%; } .a-tablo-plan .a-k-ekip { width: 9.5%; } .a-tablo-plan .a-k-baslangic { width: 10%; }
+.a-tablo-plan .a-k-durum { width: 11.5%; } .a-tablo-plan .a-k-eylem { width: 17.5%; }
+.a-tablo-ekipman .a-k-ekipman { width: 40%; } .a-tablo-ekipman .a-k-brans { width: 20%; }
+.a-tablo-ekipman .a-k-rapor { width: 18%; } .a-tablo-ekipman .a-k-eylem { width: 22%; }
 
 /* kırpma zinciri (kalıp 4): min-width:0 → blok yaprak + ellipsis → tam metin title'da */
 .a-kirp { display: block; min-width: 0; overflow: hidden; text-overflow: ellipsis; white-space: nowrap; }
-/* ⛔ 2026-09-23 (1080, taşan-metin denetimi): nowrap iken "Çar 23 Eyl Bugün" 24 px taşıp müşteri sütununa yaslanıyordu.
+/* ⛔ 2026-09-23 (1080, taşan-metin denetimi): nowrap iken "Çar 23 Eyl Bugün" 24 px taşıp komşu sütuna yaslanıyordu.
    Tarih JS'te bölünmez boşlukla birleşik; satır yalnız "Bugün"den önce kırılır. */
 .a-tarih-gun { display: block; font-weight: 600; }
 .a-tarih-saat { display: block; color: var(--yazi2); font-size: var(--boy-kucuk); font-variant-numeric: tabular-nums; white-space: nowrap; }
-.a-bugun { display: inline-block; margin-left: 6px; font-size: var(--boy-etiket); font-weight: 700; color: var(--onay-yazi); }
-.a-musteri-ad { font-weight: 600; }
-.a-tesis { color: var(--yazi2); font-size: var(--boy-kucuk); display: flex; align-items: center; gap: 6px; min-width: 0; }
-.a-ekipman-sayi { display: block; font-weight: 600; }
-/* ⛔ sayı taşır → KIRPILMAZ, sarar (anayasa 3.11: başlık/etiket/sayı kırpılmaz; kırpma yalnız serbest metin) */
-.a-ekipman-alt { display: block; color: var(--yazi2); font-size: var(--boy-kucuk); }
+.a-bugun { display: inline-block; font-size: var(--boy-etiket); font-weight: 700; color: var(--onay-yazi); }
+/* proje no = plana giriş bağlantısı; kimlik KIRPILMAZ (anayasa 3.11), dokunma hedefi denetim yüksekliği */
+.a-no {
+  display: inline-flex; align-items: center; min-height: var(--tus-y);
+  color: var(--onay-yazi); font-weight: 600; font-variant-numeric: tabular-nums; white-space: nowrap;
+  text-decoration: underline; text-decoration-color: transparent; text-underline-offset: 3px;
+}
+.a-no:hover { text-decoration-color: currentColor; }
+.a-proje-ad { font-weight: 600; }
+.a-hucre-satir { display: flex; align-items: flex-start; gap: 6px; min-width: 0; }
+.a-hucre-satir > .a-kirp, .a-adres, .a-ekip { flex: 1 1 auto; min-width: 0; }
+.a-kart-ikon { display: none; margin-top: 3px; color: var(--yazi3); }
+.a-adres { display: block; }
+/* ⛔ ilçe / il satırın en önemli yer bilgisi → kırpılmaz, sarar; sokak satırı serbest metin → üç nokta + başlık */
+.a-adres-il { display: block; color: var(--yazi2); font-size: var(--boy-kucuk); }
+.a-ekip-ad { display: block; }
+.a-ekip-fazla { color: var(--yazi3); font-size: var(--boy-kucuk); font-weight: 600; }
+.a-ekipman-ad { font-weight: 600; }
+.a-ekipman-kod { display: block; color: var(--yazi2); font-size: var(--boy-kucuk); font-variant-numeric: tabular-nums; }
 
 .a-rozet {
   display: inline-flex; align-items: center; gap: 6px; height: 26px; padding: 0 10px; max-width: 100%;
@@ -231,14 +263,21 @@ button { cursor: pointer; }
 }
 .a-rozet-bekliyor { background: var(--uyari-zemin); color: var(--uyari-yazi); }
 .a-rozet-kabul { background: var(--bilgi-zemin); color: var(--bilgi-yazi); }
+/* Denetimde = şu an süren iş: dolu petrol (koyu temada kâğıt); ölçülen çift vurgu-uzeri / vurgu */
+.a-rozet-denetimde { background: var(--vurgu); color: var(--vurgu-uzeri); }
 .a-rozet-tamam { background: var(--onay-zemin); color: var(--onay-yazi); }
 .a-rozet-red { background: var(--hata-zemin); color: var(--hata-yazi); }
+.a-rozet-notr { background: var(--zemin2); color: var(--yazi2); }
 
 .a-eylem { display: flex; flex-direction: column; align-items: flex-end; gap: 6px; }
 .a-eylem-tuslar { display: flex; justify-content: flex-end; gap: 8px; flex-wrap: nowrap; }
 .a-sebep { display: flex; align-items: flex-start; gap: 6px; color: var(--uyari-yazi); font-size: var(--boy-etiket); font-weight: 600; text-align: right; }
 .a-sebep .a-ikon { margin-top: 1px; }
 .a-not { color: var(--yazi2); font-size: var(--boy-etiket); text-align: right; }
+
+/* Sıralama seçicisi satırda yalnız KART kipinde (tabloda başlık sıralar); kip JS'te CSS'in kendi kararından okunur */
+.a-secici-sira { display: none; }
+.a-suzgec[data-liste-kip="kart"] .a-secici-sira { display: block; }
 
 /* ── TUŞLAR (kalıp 1: içerik kadar geniş) ──────────────────────────────────────────────────────────── */
 .a-tus {
@@ -289,6 +328,46 @@ button { cursor: pointer; }
 .a-levha-grup { margin: 0 0 18px; }
 .a-levha-grup-ad { margin: 0 0 8px; font-size: var(--boy-kucuk); font-weight: 600; color: var(--yazi2); }
 .a-levha-secenekler { display: flex; flex-wrap: wrap; gap: 8px; }
+
+/* ── PLAN İÇİ (nesne sayfası, anayasa 2.7: kırıntı + kimlik + bilgi yüzleri + tek birincil tuş + araç çubuğu) ── */
+.a-plan h1:focus, .a-sayfa-bas h1:focus { outline: none; }
+.a-kirinti { display: flex; align-items: center; flex-wrap: wrap; gap: 2px 6px; margin: -8px 0 8px; color: var(--yazi3); font-size: var(--boy-kucuk); }
+.a-kirinti a {
+  display: inline-flex; align-items: center; gap: 6px; min-height: var(--tus-y); margin-left: -8px; padding: 0 10px 0 8px;
+  border-radius: var(--r-orta); color: var(--yazi); font-weight: 600; text-decoration: none;
+}
+.a-kirinti a:hover { background: var(--zemin2); }
+.a-kirinti [aria-current] { color: var(--yazi2); font-variant-numeric: tabular-nums; }
+.a-nesne-bas { display: flex; align-items: flex-start; flex-wrap: wrap; gap: 12px 24px; margin: 0 0 16px; }
+.a-nesne-kimlik { flex: 1 1 320px; min-width: 0; }
+.a-nesne-baslik { display: flex; align-items: center; flex-wrap: wrap; gap: 6px 12px; }
+.a-nesne-baslik h1 { margin: 0; font-size: var(--boy-baslik); font-weight: var(--kal-baslik); letter-spacing: -.01em; overflow-wrap: anywhere; }
+.a-nesne-alt { display: flex; align-items: center; gap: 8px; margin: 6px 0 0; color: var(--yazi2); }
+/* eylem çubuğu (kalıp 2): masaüstü ve tablette başlığın sağında, içerik genişliğinde; telefonda altta yapışkan (bant kuralı) */
+.a-eylem-cubugu { display: flex; align-items: center; justify-content: flex-end; flex-wrap: wrap; gap: 8px; margin-left: auto; }
+.a-eylem-cubugu-alt { display: none; }
+.a-serit {
+  display: flex; align-items: flex-start; gap: 10px; margin: 0 0 16px; padding: 12px 14px;
+  border-radius: var(--r-orta); font-size: var(--boy-kucuk); font-weight: 500;
+}
+.a-serit .a-ikon { margin-top: 2px; }
+.a-serit-bilgi { background: var(--bilgi-zemin); color: var(--bilgi-yazi); }
+.a-serit-uyari { background: var(--uyari-zemin); color: var(--uyari-yazi); }
+.a-serit-onay { background: var(--onay-zemin); color: var(--onay-yazi); }
+.a-serit-hata { background: var(--hata-zemin); color: var(--hata-yazi); }
+/* ⛔ 2026-09-23 (1920'de gözle): auto-fill beş kutuya altı iz açıp sağda boş sütun bırakıyordu (kalıp 10) → auto-fit.
+   (375'te gözle) 240 px tabanla telefonda beş kutu alt alta bir ekran boyu tutuyordu → taban 160 px, telefonda iki sütun. */
+.a-yuzler { display: grid; grid-template-columns: repeat(auto-fit, minmax(min(100%, 160px), 1fr)); gap: 12px; margin: 0 0 24px; }
+.a-yuz { min-width: 0; padding: 14px 16px; background: var(--kart); border: 1px solid var(--kenar); border-radius: var(--r-buyuk); }
+.a-yuz-etiket { display: flex; align-items: center; gap: 6px; margin: 0 0 6px; color: var(--yazi3); font-size: var(--boy-etiket); font-weight: var(--kal-etiket); }
+.a-yuz-deger { font-weight: 600; overflow-wrap: anywhere; }
+.a-yuz-alt { display: block; color: var(--yazi2); font-size: var(--boy-kucuk); font-weight: 400; }
+.a-yuz-satir { display: block; }
+.a-yuz-ek { color: var(--yazi2); font-size: var(--boy-kucuk); font-weight: 400; }
+.a-yuz-uyari { color: var(--uyari-yazi); font-weight: 600; }
+.a-bolum-bas { display: flex; align-items: center; flex-wrap: wrap; gap: 8px 14px; margin: 0 0 12px; }
+.a-bolum-bas h2 { margin: 0; font-size: var(--boy-bolum); font-weight: var(--kal-bolum); }
+.a-bolum-tus { margin-left: auto; }
 
 /* ── BİLDİRİM ─────────────────────────────────────────────────────────────────────────────────────── */
 .a-bildirim {
@@ -350,26 +429,47 @@ button { cursor: pointer; }
   }
   .a-pencere-alt { position: sticky; bottom: 0; background: var(--kart); }
   .a-pencere-alt .a-tus { flex: 1 1 0; }
+  /* plan içi: eylem çubuğunun TAMAMI altta yapışkan, opak zemin (kalıp 2; tek tuş değil çubuk) */
+  .a-eylem-cubugu-ust { display: none; }
+  .a-eylem-cubugu-alt {
+    display: flex; flex-wrap: nowrap; position: sticky; bottom: 0; z-index: 10;
+    margin: 16px calc(var(--bosluk-sayfa) * -1) calc(var(--bosluk-sayfa) * -1);
+    padding: 12px var(--bosluk-sayfa) calc(12px + env(safe-area-inset-bottom));
+    background: var(--kart); border-top: 1px solid var(--kenar);
+  }
+  .a-eylem-cubugu-alt .a-tus { flex: 1 1 0; }
+  .a-bildirim { bottom: calc(var(--tus-y) + 40px); }
 }
 
-/* kap < 980 px: aynı tablo KARTA döner (tek üretici; anayasa 3.3 kap sorgusu) */
-@container liste (max-width: 979.98px) {
+/* kap < ESİK: aynı tablo KARTA döner (tek üretici; anayasa 3.3 kap sorgusu). Kartta yerleşim sütunun `data-kart`
+   rolünden: ust (sol üst) · rozet (sağ üst) · govde (tam genişlik, --sira ile dizilir) · eylem (altta, çizgiyle). */
+@container liste (max-width: 1179.98px) {
   .a-tablo, .a-tablo tbody, .a-tablo tr, .a-tablo td { display: block; }
   .a-tablo { background: transparent; border: 0; }
-  .a-tablo thead { position: absolute; width: 1px; height: 1px; overflow: hidden; clip: rect(0 0 0 0); }
+  /* ⛔ 2026-09-23 (2. tur, ölçüm "çakışma 2"): başlık kırpılarak gizlenince içindeki SIRALAMA TUŞLARI görünmez ama
+     odaklanabilir/tıklanabilir kalıyordu (1. turdaki görünmez × tuşuyla aynı sınıf). Kartta başlık tamamen kalkar;
+     kartta sıralamayı "Sıralama" seçicisi yapar. */
+  .a-tablo thead { display: none; }
   .a-tablo tbody { display: grid; gap: 12px; grid-template-columns: repeat(auto-fill, minmax(min(100%, 340px), 1fr)); }
   .a-tablo tr {
-    display: grid; grid-template-columns: minmax(0, 1fr) auto; gap: 8px 12px; align-content: start;
+    display: grid; grid-template-columns: minmax(0, 1fr) auto; gap: 6px 12px; align-content: start;
     padding: 16px; background: var(--kart); border: 1px solid var(--kenar); border-radius: var(--r-buyuk);
   }
+  .a-tablo tbody tr[data-href]:hover { border-color: var(--kenar-alan); }
   .a-tablo tbody tr:hover td { background: transparent; }
-  .a-tablo td { padding: 0; border: 0; }
-  .a-tablo td[data-alan="tarih"] { grid-column: 1; grid-row: 1; }
-  .a-tablo td[data-alan="durum"] { grid-column: 2; grid-row: 1; justify-self: end; }
-  .a-tablo td[data-alan="musteri"], .a-tablo td[data-alan="ekipman"] { grid-column: 1 / -1; }
-  .a-tablo td[data-alan="eylem"] { grid-column: 1 / -1; margin-top: 4px; padding-top: 12px; border-top: 1px solid var(--kenar); }
+  .a-tablo td { grid-column: 1 / -1; order: var(--sira, 5); padding: 0; border: 0; }
+  .a-tablo td[data-kart="ust"] { grid-column: 1; grid-row: 1; align-self: center; }
+  .a-tablo td[data-kart="rozet"] { grid-column: 2; grid-row: 1; justify-self: end; align-self: center; }
+  .a-tablo td[data-kart="eylem"] { margin-top: 6px; padding-top: 12px; border-top: 1px solid var(--kenar); }
+  .a-tablo td[data-kart="eylem"]:empty { display: none; }
+  .a-kart-ikon { display: block; }
+  .a-tablo-plan .a-proje-ad { font-size: var(--boy-bolum); }
+  .a-tablo-plan .a-no { font-size: var(--boy-kucuk); }
+  /* kartta kişiler yan yana, noktayla ayrılır */
+  .a-ekip { display: flex; flex-wrap: wrap; column-gap: 6px; }
+  .a-ekip-ad + .a-ekip-ad::before { content: "· "; color: var(--yazi3); }
   /* ⛔ 2026-09-23 (375'te gözle): tarih + saat tek satıra zorlanınca rozetin ALTINDA kalıp "12:3" diye kesiliyordu.
-     Kartta da iki satır kalır; rozet tarihin yanında durur. */
+     Kartta da iki satır kalır. */
   /* kartta: sebep/not solda tam genişlik, tuşlar sağda İÇERİK KADAR (kalıp 1; telefonda @media dar gerer) */
   .a-eylem { align-items: stretch; }
   .a-eylem-tuslar { flex-wrap: nowrap; justify-content: flex-end; }

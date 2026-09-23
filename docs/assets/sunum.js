@@ -8,7 +8,7 @@
 
   function cerceveleriYukle() {
     document.querySelectorAll(".s-cihaz-ic iframe").forEach(function (f) {
-      var hedef = f.getAttribute("data-src") + "?tema=" + tema();
+      var hedef = f.getAttribute("data-src") + "?tema=" + tema() + (f.getAttribute("data-hash") || "");   /* #/plan/<id> sorgudan SONRA */
       if (f.getAttribute("src") !== hedef) f.setAttribute("src", hedef);
     });
   }
