@@ -5,6 +5,8 @@
    görünen birincil tuş sayısı (nesne sayfası: tek birincil, anayasa 2.7) ve telefonda yapışkan eylem çubuğu.
    3. tur (2026-09-23): kalıcı pencere (modal) açıksa etkileşim ölçüleri YALNIZ pencerenin içinde yapılır (arka plan
    etkisizdir); pencerenin içindeki her blok pencereyi doldurur mu (kalıp 10, reisim sorusu 6) → pencereKenar.
+   4. tur (2026-09-23): plan içi bir adım çizelgesi; listeler adımın içeriğinde durur (solda adım çizgisi) → kenarFarki
+   listenin durduğu adım içeriğiyle kıyaslanır. Süzgeç satır sayısı sabit değil (kalıp 15: sığmayınca seçiciler alta).
    ⛔ Eş zamanlı yazılır (anayasa 11.8): gizli bölmede rAF/setTimeout beklemesi zaman aşımına düşer. */
 (() => {
   const r = {};
@@ -15,7 +17,9 @@
   r.tusY = parseFloat(cs.getPropertyValue("--tus-y"));
   r.yatayTasma = kok.scrollWidth - innerWidth;
   /* 1 px ve altı: ekran okuyucu için bilerek gizlenmiş öğe (a-gizli, kart kipinde tablo başlığı) — görünür sayılmaz */
-  const gorunur = e => { const b = e.getBoundingClientRect(); const s = getComputedStyle(e); return b.width > 1 && b.height > 1 && s.visibility !== "hidden" && s.display !== "none"; };
+  /* 4. tur (2026-09-23): kapalı <details>in içeriği kutu döndürür (313×1010 px ölçüldü) ama çizilmez → checkVisibility()
+     ile ayıklanır; ilk sürüm katlı kapsam tablosunu görünür sayıp satır yüksekliğini ve kenar farkını ondan ölçüyordu. */
+  const gorunur = e => { const b = e.getBoundingClientRect(); const s = getComputedStyle(e); return b.width > 1 && b.height > 1 && s.visibility !== "hidden" && s.display !== "none" && (!e.checkVisibility || e.checkVisibility()); };
   const kirpik = [];
   for (const e of document.querySelectorAll("body *")) {
     if (!gorunur(e) || !e.textContent.trim()) continue;
@@ -94,7 +98,8 @@
   const li = [...document.querySelectorAll(".a-liste-kap")].filter(gorunur)[0];
   const pad = parseFloat(getComputedStyle(document.querySelector(".a-icerik")).paddingLeft);
   r.icerik = Math.round(ic.width); r.liste = li ? Math.round(li.getBoundingClientRect().width) : null;
-  r.kenarFarki = li ? Math.round(ic.width - 2 * pad - li.getBoundingClientRect().width) : null;
+  const cerceve = li && li.closest(".a-adim-icerik");
+  r.kenarFarki = li ? Math.round((cerceve ? cerceve.getBoundingClientRect().width : ic.width - 2 * pad) - li.getBoundingClientRect().width) : null;
   const th = li && li.querySelector(".a-tablo thead");
   r.listeKipi = !th ? "(liste yok)" : getComputedStyle(th).display === "none" ? "kart" : "tablo";
   const sz = document.querySelector(".a-suzgec");
@@ -113,6 +118,21 @@
     r.pencereKenar = Math.max(0, ...[...g.children, ...kaplar.flatMap(c => [...c.children])].filter(c => gorunur(c) && (c.tagName === "TEXTAREA" || ["block", "grid", "flex", "list-item"].includes(getComputedStyle(c).display)))
       .map(c => Math.round(Math.abs(ic - c.getBoundingClientRect().width))));
   }
+  /* 4. tur (2026-09-23, gözle): hareket listesinde her satır kendi ızgarasını kurunca ikinci sütun "9 Eyl" / "21 Eyl"
+     satırlarında kayıyordu. Aynı listenin satırlarında ikinci sütunun sol kenarı tek olmalı (1 px tolerans). */
+  r.hizaKaymasi = [...document.querySelectorAll(".a-gecmis")].filter(gorunur).map(ol => {
+    const x = [...ol.children].map(li => li.children[1]).filter(e => e && gorunur(e)).map(e => Math.round(e.getBoundingClientRect().left));
+    return x.length ? Math.max(...x) - Math.min(...x) : 0;
+  }).reduce((a, b) => Math.max(a, b), 0);
+  /* 4. tur (2026-09-23, 375'te gözle): tablonun "ilk satırın üst kenarı yok" kuralı kart kipinde de işleyip İLK kartın tuş
+     ayırıcısını siliyordu (3. turdan beri; kartlar tek tek bakılmadığı için görülmemişti). Kart kipinde aynı roldeki
+     dolu hücrelerin üst kenarı ve iç boşluğu bütün kartlarda aynı olmalı. */
+  r.kartTutarsiz = [...document.querySelectorAll(".a-tablo")].filter(gorunur).filter(tb => { const h = tb.querySelector("thead"); return h && getComputedStyle(h).display === "none"; })
+    .reduce((n, tb) => { const gor = {};
+      for (const td of tb.querySelectorAll("tbody td[data-kart]")) { if (!td.textContent.trim() || !gorunur(td)) continue;
+        const s = getComputedStyle(td), k = td.dataset.kart + "|" + (td.className || ""), v = s.borderTopWidth + " " + s.paddingTop + " " + s.marginTop;
+        (gor[k] = gor[k] || new Set()).add(v); }
+      return n + Object.values(gor).filter(x => x.size > 1).length; }, 0);
   r.gorunenGizli = [...document.querySelectorAll("[hidden]")].filter(e => e.getBoundingClientRect().width > 0).map(e => e.id || e.className);
   if (r.gorunum === "plan") {
     r.birincilSayisi = [...document.querySelectorAll("#a-plan .a-tus-birincil")].filter(gorunur).length;

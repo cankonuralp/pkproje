@@ -49,10 +49,6 @@
       </button>
       <img class="a-ust-isaret a-isaret-acik" src="../marka/probata-isaret-renkli.svg" alt="probata" width="25" height="32">
       <img class="a-ust-isaret a-isaret-koyu" src="../marka/probata-isaret-koyu-zemin.svg" alt="probata" width="25" height="32">
-      <div class="a-firma">
-        <svg class="a-ikon" aria-hidden="true"><use href="../vendor/lucide-1.47.0/ikonlar.svg#i-building-2"/></svg>
-        <span class="a-firma-ad" title="Kalkan Muayene Ltd.">Kalkan Muayene Ltd.</span>
-      </div>
       <div class="a-ust-bosluk"></div>
       <button class="a-ikon-tus" type="button" data-eylem="tema" id="a-tema-tus" aria-label="Temayı değiştir">
         <svg class="a-ikon a-tema-ay" aria-hidden="true"><use href="../vendor/lucide-1.47.0/ikonlar.svg#i-moon"/></svg>
@@ -72,31 +68,9 @@
         <span class="a-sayac" id="a-sayac" aria-live="polite"></span>
       </div>
 
-      <!-- SÜZGEÇ (kalıp 15, reisim 2026-09-23 "kurallara göre düzenle"): TEK akış, kuralın sırasıyla —
-           arama → durum çipleri → ve/veya → (boşluk) → seçiciler + Temizle sağda. Sığmayınca seçiciler + Temizle BİRLİKTE
-           alt satıra sağa kayar (Temizle yalnız kalmaz). Telefon: arama + Süzgeç üstte, çipler yana kayar, seçiciler levhada. -->
-      <div class="a-suzgec" id="a-suzgec">
-        <label class="a-ara" id="a-ara">
-          <span class="a-gizli">Planlarda ara</span>
-          <svg class="a-ikon" aria-hidden="true"><use href="../vendor/lucide-1.47.0/ikonlar.svg#i-search"/></svg>
-          <input type="search" id="a-ara-girdi" placeholder="Proje, müşteri, il" autocomplete="off">
-          <button class="a-ara-sil" type="button" data-eylem="ara-sil" aria-label="Aramayı temizle">
-            <svg class="a-ikon a-ikon-kucuk" aria-hidden="true"><use href="../vendor/lucide-1.47.0/ikonlar.svg#i-x"/></svg>
-          </button>
-        </label>
-        <button class="a-suzgec-tus" type="button" data-eylem="levha-ac" aria-haspopup="dialog">
-          <svg class="a-ikon" aria-hidden="true"><use href="../vendor/lucide-1.47.0/ikonlar.svg#i-sliders-horizontal"/></svg>
-          Süzgeç <span class="a-suzgec-rozet" id="a-suzgec-rozet" hidden></span>
-        </button>
-        <div class="a-cipler" id="a-cipler" role="group" aria-label="Durum süzgeci"></div>
-        <div class="a-suzgec-sag">
-          <div class="a-seciciler" id="a-seciciler"></div>
-          <button class="a-temizle" type="button" data-eylem="temizle" id="a-temizle">
-            <svg class="a-ikon a-ikon-kucuk" aria-hidden="true"><use href="../vendor/lucide-1.47.0/ikonlar.svg#i-filter-x"/></svg>
-            Temizle
-          </button>
-        </div>
-      </div>
+      <!-- SÜZGEÇ (kalıp 15): TEK ÜRETİCİ — maket.js suzgecHtml("l") doldurur; plan içindeki ekipman ve rapor süzgeçleri de
+           aynı üreticiden. Sıra: arama → çipler → ve/veya → seçiciler + Temizle sağda; telefonda seçiciler levhada. -->
+      <div id="a-suzgec-kap"></div>
 
       <div class="a-liste-kap" id="a-liste"></div>
       </div>

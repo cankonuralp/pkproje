@@ -198,7 +198,8 @@ Sonradan gelen modül eskileri bozmasın diye **veri modeline ilk günden** yans
 ### 3.3 · Faz planı (reisim 2026-09-23: ilk faz omurgası *"uygun"*)
 **Faz 1 — onaylı omurga:** 1 Kullanıcı & Rol · 3 Müşteri & Tesis · 7 Ekipman · 8 Ölçüm Cihazı · 9 Zimmet ·
 13 Planlama · 14 Saha & Rapor · 15 Onay & İmza · 16 PDF Üretimi · 17 Müşteri Paneli.
-**Faz 1 — bağımlılık gereği girmesi gerekenler (öneri — onay bekliyor):** omurga önerimi yaparken §3.2'deki
+**Faz 1 — bağımlılık gereği girmesi gerekenler (karar — reisim 2026-09-23, 4. tur: *"tüm sorularda senin önerilerini
+kabul ediyorum"*; faz 1 o turda onaya sunulan öneriydi, "tüm sorular"a dahil saydım — yorum, reisim'e söylendi):** omurga önerimi yaparken §3.2'deki
 bağlantı kurallarının istediği modülleri atlamışım; bunlar olmadan omurga çalışmaz:
 · **2 Personel** — plan kabulü inspector'ın EKİPNET numarasını ve mesleğini denetler (§3.2 madde 2b–2c).
 · **12 Sözleşme'nin İSG-KATİP kısmı** — plan kabulü İSG-KATİP kaydını ve onay tarihini denetler (§3.2 madde 2a).
@@ -209,11 +210,16 @@ bağlantı kurallarının istediği modülleri atlamışım; bunlar olmadan omur
 · **20 Uyarılar'ın kalibrasyon kısmı** — 30 gün uyarısı 8 Ölçüm Cihazı ile birlikte gelir.
 **Faz 2:** 11 Teklif · 12 Sözleşme'nin iş sözleşmesi kısmı · 18 Muhasebe · 19 Performans & Raporlama ·
 10 Eğitim Takibi · 20 Uyarılar'ın eğitim kısmı.
+**Faz 1 sırası (karar, 4. tur):** 1 İskelet → 2 Kullanıcı ve Rol · Personel → 3 Müşteri ve Tesis → 4 Ekipman Türü
+Kataloğu · Ekipman → 5 Ölçüm Cihazı · Zimmet · kalibrasyon uyarısı → 6 İSG-KATİP kaydı → 7 Planlama · Planlarım · plan
+içi → 8 Standart Kütüphanesi · ilk Rapor Şablonu → 9 Saha ve Rapor → 10 Onay ve İmza · PDF → 11 Müşteri Paneli.
 **Referans ekran (reisim 2026-09-23: *"uygun"*):** **Planlarım** (13 Planlama). Liste, süzgeç satırı, durum rozeti,
 birincil/ikincil tuş, boş durum ve dürüst sayaç gibi ortak parçaları doğurur; ölçüleri tasarım kalıbının bu
-projedeki sayıları olur. Ardından saha rapor ekranı (14).
+projedeki sayıları olur. Ardından saha rapor ekranı (14). **Dondurma (karar 25, 4. tur — önerim kabul):** plan içi
+sunumunun 4. turu onaylanınca Planlarım + plan içi dondurulur: sayıları (34 / 44 px, kart eşiği 960 px, sayfa 10)
+tasarım kalıbının bu projedeki sayıları olarak yazılır, iskelet kaleminde testle kilitlenir; sonra iskelet.
 
-### 3.4 · Planlarım ve plan içi (reisim 2026-09-23, maketin 2. ve 3. turu)
+### 3.4 · Planlarım ve plan içi (reisim 2026-09-23, maketin 2., 3. ve 4. turu)
 Reisim, kullandığı bir uygulamanın plan listesinin ekran görüntüsünü örnek gösterdi (görüntü ve içindeki veri depoya
 girmez) ve dedi ki (birebir): *"bundan örnek al ama, mesaii iş türü, rapor durumu sütunları gereksiz, aksiyon tuşu
 gereksiz, kabul et denetime başla ve devam et diye değişmeli , planın içerisinden tamamla dendiğinde tamamlandı olmalı
@@ -245,9 +251,9 @@ girdiğinde eğer çakışan ekipman adı var ise uyarmalı izin vermemeli"* (bi
   plan yalnız hangi ekipmanlara bakılacağını tutar; rapor her plan için ayrı açılır → seneye aynı ekipmana yeni rapor.
   "Ekipman ekle" ile "Rapor oluştur" ayrı iştir.
 · **Ekipman kodu**: ekipman eklenirken verilir, **personel elle girer**, **eşsizdir**; çakışan kod varsa **uyarı + kayıt
-  yok**. (Reisim "çakışan ekipman adı" dedi; ad (tür) tekrar eder, eşsiz olan koddur — yorum, soru 17–19'da.)
-· Takvim: *"takvimi göremedim"* → maketi yapılmadı, soru yeniden soruldu (23).
-**Maketteki yorumlarım (öneri — onay bekliyor; plan içi sunumunda 17–25):**
+  yok**. (Reisim "çakışan ekipman adı" dedi; ad (tür) tekrar eder, eşsiz olan koddur — yorum; 17–19 4. turda kabul.)
+· Takvim: *"takvimi göremedim"* → maketi yapılmadı, soru yeniden soruldu (23) → 4. tur: **takvim yok**.
+**Maketteki yorumlarım (3. tur) — reisim 4. turda kabul etti (17–25, takvim hariç):**
 · Plan durumları: Kabul bekliyor · Kabul edildi · **Denetimde** · Tamamlandı · Reddedildi. Rapor durumları (maket):
   Taslak · Onayda · Onaylandı.
 · **Ekipman ekle iki yol**: (a) tesiste kayıtlı ama plana alınmamış ekipmanı seç (önceki kontrolüyle gelir), (b) yeni
@@ -257,19 +263,50 @@ girdiğinde eğer çakışan ekipman adı var ise uyarmalı izin vermemeli"* (bi
   (yeni kayıt açılmaz, "Kayıtlı ekipmanı seç") · başka tesiste kayıtlı · kullanılabilir. Yazarken ve kaydederken
   denetlenir; gerçek uygulamada sunucuda ve veritabanında benzersizlik kısıtıyla da. Çevrimdışı: iki kişi aynı kodu
   girerse eşitlemede ikincisi reddedilir, düzeltmesi istenir (sessiz birleşme yok).
-· **Kabul et'in İSG-KATİP kilidi durur** (§3.2 madde 2, mevzuat 4.4); kaldırılan yalnız tarih kilidi (24'te soruldu).
+· **Kabul et'in İSG-KATİP kilidi durur** (§3.2 madde 2, mevzuat 4.4); kaldırılan yalnız tarih kilidi (24, kabul).
+· **Tesiste kayıtlı ekipmanı plana** hem planlama ekibi (plan açarken) hem inspector (sahada) alır (22, kabul).
 · Örnekteki katlanır "Filtreler" alınmadı (kalıp 14: süzgeç her zaman açık); sütun başlığıyla sıralama alındı, kart
   kipinde "Sıralama" seçicisi.
 · Tablo, liste kabı **≥ 1.180 px** iken (≈ 1.495 px ekran); altında kart. Plan içindeki iki liste aynı üreticiden.
+  → 4. turda yoğunlukla yeniden ölçüldü: **960 px** (aşağıda).
+
+**Karar (reisim 2026-09-23, 4. tur):** reisim kullandığı bir uygulamanın plan sayfasını gösterdi (sayfa ve içindeki veri
+depoya girmez; inceleme yerel dosyada, §6) ve dedi ki (birebir; emsal sayfanın adresi alınmadı): *"… planlandı, plan
+onaylandı , kontrol listesi, ne güzel akışta takip edilebilir iş te yapılabilir böyle senin yaptığın gibi takibi çok zor,
+buradan esinlen düzgün bi akış tasarla, tüm sorularda senin önerilerini kabul ediyorum, takvim hariç onu istemiyorum yapma
+tekrar maket yap ve incelediğin sayfadaki gibi ekipmanlar ve raporlar 10 taneden sonra diğer sayfaya geçsin sayfalı sistem
+olsun ve bizim maketimizde her şey çok büyük, filtreleme yok , ayrıca muayene kuruluşu ismi sol üstte yazmasın."*
+· **Plan içi bir akıştır**: dikey adım çizelgesi **Planlandı → Kabul → Denetim → Tamamlama**. Her adımda durum
+  (tamamlandı ✓ · şu an · sırada · reddedildi ×), kim + ne zaman. Şu anki adımın tuşları adımın içinde, sağda; telefonda
+  altta yapışkan çubukta.
+  – **Planlandı**: plan bilgisi (proje no · başlangıç · adres · inspector · İSG-KATİP · açıklama) + **kapsam** (tür
+    başına planlanan ve plandaki ekipman sayısı; kabul bekleyen planda açık, sonra katlı).
+  – **Kabul**: **tarafsızlık ve çıkar çatışması beyanı** (TS EN ISO/IEC 17020, §4.9); Kabul et beyanı onaylar ve
+    hareket kaydına yazılır. Reddet gerekçe ister. İSG-KATİP kilidi durur.
+  – **Denetim**: **kontrol listesi** = Ekipmanlar + Raporlar (3. turdaki ayrım aynen). Ekipman ekle yalnız Denetimde.
+  – **Tamamlama**: Tamamla / Tamamlamayı geri al (11 ve 12 aynen).
+  – Altta **Notlar ve hareketler**: proje notu + hareket kaydı; son 6, "Tümünü göster".
+· **Sayfalama**: ekipman ve rapor listeleri **10'ar** kayıt ("1–10 / 12" + sayfa tuşları); süzgeç değişince 1. sayfa;
+  eklenen ekipmanın sayfasına geçilir, süzgeç gizliyorsa bildirim söyler.
+· **Süzgeç**: ekipman ve rapor listelerine arama + çipler (ve / veya) + seçiciler (ekipman: branş, tür); Planlarım'la
+  tek üretici (kalıp 15). Telefonda seçiciler levhada.
+· **Yoğunluk**: denetim yüksekliği 40 / 48 → **34 / 44 px**, gövde yazısı 15 / 16 → **14 / 15 px**, başlık 20, bölüm 15;
+  kart eşiği yeniden ölçüldü → liste kabı **≥ 960 px** tablo (1.080 tablette listede ve plan içinde tablo; 1.280 ve
+  1.024'te plan içi kart) (§8.12).
+· **Firma adı** üst çubuktan kalktı.
+· **17–25**: önerilerim kabul, **takvim hariç** → §3.3 (faz 1 sırası, dondurma), §3.5 (numaralar). **Takvim yok.**
+**Yorumlarım (öneri — onay bekliyor; plan içi sunumunda 26–28):** tarafsızlık beyanının metni firma ayarı (kalite el
+kitabındaki metin; boşsa varsayılan), kabul anındaki sürüm hareket kaydına yazılır · proje notunu plandaki inspector'lar
+ve planlama ekibi yazar ve görür, müşteri görmez, not silinmez · bu tur uygunsa referans ekran dondurulur ve iskelet açılır.
 
 ### 3.5 · Numara sistemi (reisim 2026-09-23: *"mantıklı şekilde proje numarası atama sistemi kur, aynı şekilde raporlar için de eşsiz isimlendirmeler olmalı"*)
-**Karar:** üç numara da **firmada eşsizdir**; veritabanında benzersizlik kısıtı taşır. Ayrıntılar **öneri — onay
-bekliyor** (soru 17–21):
+**Karar:** üç numara da **firmada eşsizdir**; veritabanında benzersizlik kısıtı taşır. Ayrıntılar **karar** (17–21,
+reisim 2026-09-23, 4. tur: önerilerim kabul):
 | Numara | Biçim | Örnek | Kim, ne zaman | Kural |
 |---|---|---|---|---|
 | Proje no | `P-AAYY-SIRA` | P-0926-031 | sunucu, plan açılırken | AAYY planın **açıldığı** ay+yıl (kontrol tarihi değişse de numara değişmez) · SIRA firmada o ayın kaçıncı planı, her ay 001'den · iptal planın numarası yeniden verilmez |
 | Rapor no | `XX-AAYY-SIRA-EK` | KM-0926-772-3416f | sunucu, rapor oluşturulurken | reisim kararı (§3, örnek ME-0626-767-224d1) · XX firma kısa kodu · AAYY raporun açıldığı ay+yıl · SIRA firmada **kesintisiz** artan (ayla sıfırlanmaz) · EK 5 hane rasgele, tahmin edilemez; çakışırsa yeniden üretilir · düzeltme revizyonla (öneri: aynı numara + R1, §3.2 madde 7) |
-| Ekipman kodu | A–Z, 0–9, tire · 3–20 | HT-1001 | **personel, etiketten elle** | firma genelinde eşsiz · çakışan kod kaydedilmez · değiştirme yalnız yönetici, eski kod geçmişte kalır (öneri) |
+| Ekipman kodu | A–Z, 0–9, tire · 3–20 · önek serbest (18) | HT-1001 | **personel, etiketten elle** | firma genelinde eşsiz (17) · çakışan kod kaydedilmez · değiştirme yalnız yönetici, eski kod geçmişte kalır (19) |
 Proje ve rapor numarasını kimse elle yazmaz; ekipman kodunu personel yazar, sistem eşsizliğini korur.
 
 ---
@@ -481,12 +518,17 @@ tarih-saat, fotoğraflar, form) · **Eğitim kaydı** (personel, eğitim, belge,
    · **Tema: açık ve koyu eş zamanlı** — ikisi ilk günden birlikte tasarlanır ve her ekran ikisinde ölçülür.
    · **Görsel sistem kararları (reisim 2026-09-23):** (1) birincil tuş **A** — yeşil zemin + petrol yazı, iki temada aynı
      (B ve C elendi; `tokens.css`'te tek seçenek) · (2) açık tema zemini **kâğıt** #F5F3EE, kartlar beyaz · (3) yan menü
-     **iki temada petrol** · (4) **üç bant** (< 768 · 768–1279 · ≥ 1280) ve **40 / 48 px** denetim yüksekliği · (5) süzgeç
+     **iki temada petrol** · (4) **üç bant** (< 768 · 768–1279 · ≥ 1280) ve **40 / 48 px** denetim yüksekliği — 4. turda
+     reisim *"her şey çok büyük"* → **34 / 44 px**, gövde yazısı 14 / 15 px (bantlar aynı) · (5) süzgeç
      **kurallara göre** (kalıp 15 sırası: arama → çipler → ve/veya → seçiciler + Temizle sağda; sığmayınca seçiciler +
      Temizle birlikte alt satıra) · (6) pencere **kurallara uydurulur** (içindeki her kutu pencereyi doldurur, tuşlar içerik
      kadar, × ve Esc, telefonda alttan levha + yapışkan tuş çubuğu; genişlik işin içeriğinden: karar 520, form 760) ·
-     (7) referans ekranın dondurulması: reisim *"anlamadım"* → plan içi sunumunda açıklandı, soru açık · (8) faz 1 sırası
-     sohbete yazıldı, onay bekliyor.
+     (7) referans ekranın dondurulması: reisim *"anlamadım"* → açıklandı; 4. turda önerim kabul (§3.3) · (8) faz 1 sırası:
+     4. turda kabul (§3.3).
+   · **4. tur (2026-09-23):** yoğunluk 34 / 44 px; yazı ölçeği başlık 20 (telefonda 18) · bölüm 15 · gövde 14 (dokunmatikte
+     15) · küçük 12,5 · etiket 11,5; yan menü 232 px, üst çubuk 52 px. Kart eşiği tablet bandında ölçülüp **960 px**
+     (liste 933, ekipman 891, rapor 891 px'de bozuluyor). 54 ölçüm temiz, kontrast 62 / 62 (adım çizgisi, şu anki adım,
+     seçili sayfa için 3 çift eklendi); ölçüm aracına iki denetim eklendi (hiza kayması, kart tutarlılığı).
    · **Görsel sistem önerisi + referans ekran maketi (2026-09-23; 1–6 onaylandı):** GitHub Pages'te
      `docs/index.html` (sunum) ve `docs/maket/planlarim.html` (Planlarım maketi). İçerik: marka renklerinden türetilen
      27 değişken × 2 tema (`docs/assets/tokens.css`), 54 yazı/zemin çiftinin hepsi WCAG AA geçer (ölçüm aracı
@@ -534,9 +576,11 @@ Petrol #0F2A3D + Onay yeşili #1FA37A; yazı tipi **Sora**. 24. Tema → açık 
 5 → süzgeç kurallara göre · 6 → pencere kurallara uydurulsun · 7 → *"anlamadım"* · 8 → *"faz 1'i buradan bana yaz"* ·
 Planlarım 9–16 ve ekipman/rapor ayrımı → §3.4, §3.5.
 
-**Açık kalanlar:** **plan içi sunumunun 17–25. soruları** (ekipman kodu eşsizlik alanı · kod biçimi · kod değiştirme ·
-rapor sırası ayla sıfırlanır mı · proje sırası aylık mı · kayıtlı ekipmanı plana kim alır · İSG-KATİP kilidi · takvim ·
-referans ekranın dondurulması) · **faz 1 sırası** (sohbete yazıldı) ·
+**Altıncı tur (2026-09-23):** 17–25 → **önerilerim kabul, takvim hariç** (takvim yok) · faz 1 sırası → kabul (§3.3) ·
+plan içi bir akış, 10'ar sayfa, ekipman ve rapor süzgeci, yoğunluk 34 / 44 px, firma adı üst çubuktan kalktı (§3.4).
+
+**Açık kalanlar:** **plan içi sunumunun 26–28. soruları** (tarafsızlık beyanı metninin kaynağı · proje notunu kim
+yazar, kim görür · 4. tur uygun mu → dondurma ve iskelet) ·
 alan adının alınması · e-imza yöntemi (8.4) · v1 ekipman grupları · 5 yıl sonrası silme
 mekanizması · **zimmette birden çok cihaz varsa süzgeç** (§3) · **kontrol metodu standardının seçim yeri**
 (rapor anı mı, ekipman türü mü — §3) · **§3.1 ve §3.2'deki "öneri" maddeleri** (planlama saat dağıtımı,
@@ -579,6 +623,11 @@ revizyon, alan kopyalama, hafif kusur devri, meslek eşleşme denetimi).
   aktarıldığı hâline döndü. Ürün kararları bu dosyada tutulur. (b) Fotoğraf konumu/EXIF gibi şeylere
   **dokunulmayacak**. (c) Emsal uygulama incelemesi **GitHub'da paylaşılmaz** → bölüm 6 `yerel/` klasörüne
   taşındı, depo geçmişi bu içerikten temizlendi. Ana hedef: **müşterimizin işini kolaylaştırmak.**
+- 2026-09-23 (5): reisim bir plan sayfasını örnek gösterdi (inceleme yerelde) ve 17–25'te önerilerimi kabul etti (takvim
+  hariç). Plan içi 4. tur (§3.4): **Planlandı → Kabul → Denetim → Tamamlama** adım çizelgesi, tarafsızlık beyanı, kapsam,
+  kontrol listesi, **10'ar sayfa**, ekipman ve rapor **süzgeci**, proje notu; yoğunluk **34 / 44 px**, kart eşiği
+  **960 px**; firma adı üst çubuktan kalktı. Faz 1 sırası ve dondurma kararı §3.3. 54 ölçüm temiz, kontrast 62 / 62,
+  49 etkileşim denemesi geçti; bu turda 9 hata bulunup düzeltildi, ölçüm aracına 2 denetim eklendi. Sorular 26–28 reisim'de.
 - 2026-09-23 (4): reisim'in 16 cevabı + ek isteği işlendi: görsel sistem 1–6 karar (§8.12; birincil tuş A, petrol seçeneği
   değişkenlerden kalktı), süzgeç kalıp 15 sırasına, pencereler kurallara uyduruldu. Plan içi 3. tur (§3.4): **üstte
   Ekipmanlar, altta Raporlar**, ekipman ekle ayrı pencere (kayıtlı / yeni), **ekipman kodu firmada eşsiz, çakışan kod

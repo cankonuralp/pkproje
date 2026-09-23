@@ -70,7 +70,7 @@ table.s-tablo { width: 100%; border-collapse: collapse; font-size: var(--boy-kuc
 .s-min-600 { min-width: 600px; }
 .s-min-900 { min-width: 900px; }
 .s-min-1400 { min-width: 1400px; }   /* numara sistemi tablosu: 7 sütun */
-.s-min-1800 { min-width: 1800px; }   /* 3. tur ölçüm tablosu: 21 sütun */
+.s-min-2000 { min-width: 2000px; }   /* 4. tur ölçüm tablosu: 23 sütun (hiza kayması, kart tutarsız eklendi) */
 
 /* renk örnekleri */
 .s-renkler { display: grid; gap: 12px; grid-template-columns: repeat(auto-fill, minmax(min(100%, 200px), 1fr)); }

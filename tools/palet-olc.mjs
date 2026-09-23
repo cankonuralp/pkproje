@@ -39,6 +39,9 @@ export const CIFTLER = [
   ["uyari-yazi", "kart", 4.5, "ön koşul notu / kart"], ["yazi", "kenar", 4.5, "sıralanır başlık üzerine gelince"],
   /* 3. tur: kod çakışma mesajı ve "Kusurlu" önceki kontrol sonucu */
   ["hata-yazi", "kart", 4.5, "kod çakışma mesajı · Kusurlu sonuç / kart"],
+  /* 4. tur: adım çizelgesi ve sayfalayıcı — grafik öğe, eşik 3 (WCAG 1.4.11); işaretin içindeki yazılar rozet çiftleriyle aynı */
+  ["onay-yazi", "zemin", 3.0, "biten adımın çizgisi ve işareti / zemin"], ["vurgu", "zemin", 3.0, "şu anki adım işareti / zemin"],
+  ["vurgu", "kart", 3.0, "seçili sayfa tuşu / kart"],
 ];
 
 function blokDegiskenleri(css, secici) {

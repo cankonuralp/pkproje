@@ -1,94 +1,269 @@
 {
   "tarih": "2026-09-23",
-  "tur": 3,
-  "yontem": "Yerel sunucu, uygulama içi tarayıcı bölmesi, görünüm taklidi 1920×1080 · 1080×810 · 375×812, iki tema. Ölçüm betiği tools/olc-maket.js (salt okunur, eş zamanlı). Her genişlik ve temada 7 durum: liste · plan içi (Denetimde, ön koşulu eksik, Tamamlandı) · ekipman ekle penceresi (çakışan kodla, tesiste kayıtlı sekmesi) · reddet penceresi. Pencere açıkken etkileşim ölçüleri yalnız pencerenin içinde. Olumsuz kanıt: pencere doldurma 0 → 287 → 0 · sona kaydırınca çakışma pencerede 2/2, plan içinde 1/1 (kaynağa dokunmadan bellekte bozuldu, yakalandı, kaldırıldı).",
-  "esik": {"kap": 1180, "not": "Sekiz sütunun kırpılmayan içeriği (12 px iç boşluk dahil) 1920'de ölçüldü: proje no 120 · başlangıç 114 · durum 134 · eylem 202 · inspector 110 px; serbest metin tabanı 120–130 px. İlk oranlarla eşik 1.344 px çıkıyordu; oranlar ihtiyaca göre dengelenince en dar sütunun sığdığı kap 1.165 px → eşik 1.180 px. Tablo 1.495 px ve üstü ekranda (dikey kaydırma çubuğu 15 px dahil); 1.280–1.494 dizüstü ve tablette kart."},
+  "tur": 4,
+  "yontem": "Yerel sunucu, uygulama içi tarayıcı bölmesi, görünüm taklidi 1920×1080 · 1080×810 · 375×812, iki tema; her genişlik taze yüklemeyle (gizli bölmede CSS geçişi ilerlemiyor: genişten daraltınca yan menünün kapanma geçişi 0 ms'de takılıp 11 yanlış çakışma verdi). Ölçüm betiği tools/olc-maket.js (salt okunur, eş zamanlı). Her genişlik ve temada 9 durum: liste · plan içi (ön koşulu eksik, Kabul edildi, Denetimde, Tamamlandı, Reddedildi) · ekipman ekle penceresi (çakışan kod, tesiste kayıtlı) · reddet penceresi. Bu turda eklenen iki ölçü: hizaKaymasi (aynı listede ikinci sütunun sol kenarı) ve kartTutarsiz (kartlarda aynı roldeki hücrenin kenarı ve boşluğu). Olumsuz kanıt: hizaKaymasi 0 → 9 → 0 · kenarFarki 0 → 318 → 0 · kartTutarsiz düzeltmeden önce 1 / 2 / 1, sonra 0 (kaynağa dokunmadan bellekte bozuldu, yakalandı, kaldırıldı).",
+  "esik": {
+    "kap": 960,
+    "not": "4. tur yoğunluğunda ölçüldü (tuş 34 / 44 px, yazı 14 / 15 px): kart kuralı kapatılıp kap 5 px adımlarla daraltıldı, ilk bozulma (hücre taşması) tablet bandında liste 933 · ekipman 891 · rapor 891 px, masaüstü bandında 933 · 851 · 831 px. Sütun oranları sarmayan içeriğin ihtiyacına göre (liste: proje no 106 · durum 104 · eylem 186 px; serbest metin tabanı 116) 960 px'e dağıtıldı → eşik 960. Ölçülen: 1.920'de her yerde tablo · 1.280'de listede tablo (kap 993), plan içinde kart (951) · 1.080 tablette ikisinde de tablo (1.033 / 991) · 1.024'te listede tablo (977), plan içinde kart (935) · telefonda kart. Eski eşik 1.180 (3. tur, 40 / 48 px)."
+  },
   "durumlar": [
-    {"gen":1920,"tema":"acik","liste":"tablo","tasma":0,"sertKirpma":0,"tasanMetin":0,"cakisma":0,"sonCakisma":null,"gizliEtkilesimli":0,"ekranDisi":0,"kucukHedef":0,"basliksizKirpma":0,"ipucuKesik":0,"kenarFarki":0,"gorunenGizli":0,"pencereKenar":null,"tusY":40,"tusGen":[121,178],"satirY":69,"birincil":null,"pencereGen":null,"gorunum":"liste"},
-    {"gen":1920,"tema":"acik","liste":"tablo","tasma":0,"sertKirpma":0,"tasanMetin":0,"cakisma":0,"sonCakisma":null,"gizliEtkilesimli":0,"ekranDisi":0,"kucukHedef":0,"basliksizKirpma":0,"ipucuKesik":0,"kenarFarki":0,"gorunenGizli":0,"pencereKenar":null,"tusY":40,"tusGen":[127,178],"satirY":66,"birincil":1,"pencereGen":null,"gorunum":"plan · denetimde"},
-    {"gen":1920,"tema":"acik","liste":"tablo","tasma":0,"sertKirpma":0,"tasanMetin":0,"cakisma":0,"sonCakisma":null,"gizliEtkilesimli":0,"ekranDisi":0,"kucukHedef":0,"basliksizKirpma":0,"ipucuKesik":0,"kenarFarki":0,"gorunenGizli":0,"pencereKenar":null,"tusY":40,"tusGen":[91,121],"satirY":66,"birincil":1,"pencereGen":null,"gorunum":"plan · ön koşul eksik"},
-    {"gen":1920,"tema":"acik","liste":"tablo","tasma":0,"sertKirpma":0,"tasanMetin":0,"cakisma":0,"sonCakisma":null,"gizliEtkilesimli":0,"ekranDisi":0,"kucukHedef":0,"basliksizKirpma":0,"ipucuKesik":0,"kenarFarki":0,"gorunenGizli":0,"pencereKenar":null,"tusY":40,"tusGen":[135,214],"satirY":66,"birincil":0,"pencereGen":null,"gorunum":"plan · tamamlandı"},
-    {"gen":1920,"tema":"acik","liste":"tablo","tasma":0,"sertKirpma":0,"tasanMetin":0,"cakisma":0,"sonCakisma":0,"gizliEtkilesimli":0,"ekranDisi":0,"kucukHedef":0,"basliksizKirpma":0,"ipucuKesik":0,"kenarFarki":0,"gorunenGizli":0,"pencereKenar":0,"tusY":40,"tusGen":[89,214],"satirY":66,"birincil":1,"pencereGen":760,"gorunum":"pencere · yeni ekipman, çakışan kod"},
-    {"gen":1920,"tema":"acik","liste":"tablo","tasma":0,"sertKirpma":0,"tasanMetin":0,"cakisma":0,"sonCakisma":0,"gizliEtkilesimli":0,"ekranDisi":0,"kucukHedef":0,"basliksizKirpma":0,"ipucuKesik":0,"kenarFarki":0,"gorunenGizli":0,"pencereKenar":0,"tusY":40,"tusGen":[89,178],"satirY":66,"birincil":1,"pencereGen":760,"gorunum":"pencere · tesiste kayıtlı"},
-    {"gen":1920,"tema":"acik","liste":"tablo","tasma":0,"sertKirpma":0,"tasanMetin":0,"cakisma":0,"sonCakisma":0,"gizliEtkilesimli":0,"ekranDisi":0,"kucukHedef":0,"basliksizKirpma":0,"ipucuKesik":0,"kenarFarki":0,"gorunenGizli":0,"pencereKenar":0,"tusY":40,"tusGen":[89,121],"satirY":66,"birincil":1,"pencereGen":520,"gorunum":"pencere · reddet"},
-    {"gen":1920,"tema":"koyu","liste":"tablo","tasma":0,"sertKirpma":0,"tasanMetin":0,"cakisma":0,"sonCakisma":null,"gizliEtkilesimli":0,"ekranDisi":0,"kucukHedef":0,"basliksizKirpma":0,"ipucuKesik":0,"kenarFarki":0,"gorunenGizli":0,"pencereKenar":null,"tusY":40,"tusGen":[121,178],"satirY":69,"birincil":null,"pencereGen":null,"gorunum":"liste"},
-    {"gen":1920,"tema":"koyu","liste":"tablo","tasma":0,"sertKirpma":0,"tasanMetin":0,"cakisma":0,"sonCakisma":null,"gizliEtkilesimli":0,"ekranDisi":0,"kucukHedef":0,"basliksizKirpma":0,"ipucuKesik":0,"kenarFarki":0,"gorunenGizli":0,"pencereKenar":null,"tusY":40,"tusGen":[127,178],"satirY":66,"birincil":1,"pencereGen":null,"gorunum":"plan · denetimde"},
-    {"gen":1920,"tema":"koyu","liste":"tablo","tasma":0,"sertKirpma":0,"tasanMetin":0,"cakisma":0,"sonCakisma":null,"gizliEtkilesimli":0,"ekranDisi":0,"kucukHedef":0,"basliksizKirpma":0,"ipucuKesik":0,"kenarFarki":0,"gorunenGizli":0,"pencereKenar":null,"tusY":40,"tusGen":[91,121],"satirY":66,"birincil":1,"pencereGen":null,"gorunum":"plan · ön koşul eksik"},
-    {"gen":1920,"tema":"koyu","liste":"tablo","tasma":0,"sertKirpma":0,"tasanMetin":0,"cakisma":0,"sonCakisma":null,"gizliEtkilesimli":0,"ekranDisi":0,"kucukHedef":0,"basliksizKirpma":0,"ipucuKesik":0,"kenarFarki":0,"gorunenGizli":0,"pencereKenar":null,"tusY":40,"tusGen":[135,214],"satirY":66,"birincil":0,"pencereGen":null,"gorunum":"plan · tamamlandı"},
-    {"gen":1920,"tema":"koyu","liste":"tablo","tasma":0,"sertKirpma":0,"tasanMetin":0,"cakisma":0,"sonCakisma":0,"gizliEtkilesimli":0,"ekranDisi":0,"kucukHedef":0,"basliksizKirpma":0,"ipucuKesik":0,"kenarFarki":0,"gorunenGizli":0,"pencereKenar":0,"tusY":40,"tusGen":[89,214],"satirY":66,"birincil":1,"pencereGen":760,"gorunum":"pencere · yeni ekipman, çakışan kod"},
-    {"gen":1920,"tema":"koyu","liste":"tablo","tasma":0,"sertKirpma":0,"tasanMetin":0,"cakisma":0,"sonCakisma":0,"gizliEtkilesimli":0,"ekranDisi":0,"kucukHedef":0,"basliksizKirpma":0,"ipucuKesik":0,"kenarFarki":0,"gorunenGizli":0,"pencereKenar":0,"tusY":40,"tusGen":[89,178],"satirY":66,"birincil":1,"pencereGen":760,"gorunum":"pencere · tesiste kayıtlı"},
-    {"gen":1920,"tema":"koyu","liste":"tablo","tasma":0,"sertKirpma":0,"tasanMetin":0,"cakisma":0,"sonCakisma":0,"gizliEtkilesimli":0,"ekranDisi":0,"kucukHedef":0,"basliksizKirpma":0,"ipucuKesik":0,"kenarFarki":0,"gorunenGizli":0,"pencereKenar":0,"tusY":40,"tusGen":[89,121],"satirY":66,"birincil":1,"pencereGen":520,"gorunum":"pencere · reddet"},
-    {"gen":1080,"tema":"acik","liste":"kart","tasma":0,"sertKirpma":0,"tasanMetin":0,"cakisma":0,"sonCakisma":null,"gizliEtkilesimli":0,"ekranDisi":0,"kucukHedef":0,"basliksizKirpma":0,"ipucuKesik":0,"kenarFarki":0,"gorunenGizli":0,"pencereKenar":null,"tusY":48,"tusGen":[126,186],"satirY":346,"birincil":null,"pencereGen":null,"gorunum":"liste"},
-    {"gen":1080,"tema":"acik","liste":"kart","tasma":0,"sertKirpma":0,"tasanMetin":0,"cakisma":0,"sonCakisma":null,"gizliEtkilesimli":0,"ekranDisi":0,"kucukHedef":0,"basliksizKirpma":0,"ipucuKesik":0,"kenarFarki":0,"gorunenGizli":0,"pencereKenar":null,"tusY":48,"tusGen":[132,186],"satirY":207,"birincil":1,"pencereGen":null,"gorunum":"plan · denetimde"},
-    {"gen":1080,"tema":"acik","liste":"kart","tasma":0,"sertKirpma":0,"tasanMetin":0,"cakisma":0,"sonCakisma":null,"gizliEtkilesimli":0,"ekranDisi":0,"kucukHedef":0,"basliksizKirpma":0,"ipucuKesik":0,"kenarFarki":0,"gorunenGizli":0,"pencereKenar":null,"tusY":48,"tusGen":[94,126],"satirY":207,"birincil":1,"pencereGen":null,"gorunum":"plan · ön koşul eksik"},
-    {"gen":1080,"tema":"acik","liste":"kart","tasma":0,"sertKirpma":0,"tasanMetin":0,"cakisma":0,"sonCakisma":null,"gizliEtkilesimli":0,"ekranDisi":0,"kucukHedef":0,"basliksizKirpma":0,"ipucuKesik":0,"kenarFarki":0,"gorunenGizli":0,"pencereKenar":null,"tusY":48,"tusGen":[141,225],"satirY":207,"birincil":0,"pencereGen":null,"gorunum":"plan · tamamlandı"},
-    {"gen":1080,"tema":"acik","liste":"kart","tasma":0,"sertKirpma":0,"tasanMetin":0,"cakisma":0,"sonCakisma":0,"gizliEtkilesimli":0,"ekranDisi":0,"kucukHedef":0,"basliksizKirpma":0,"ipucuKesik":0,"kenarFarki":0,"gorunenGizli":0,"pencereKenar":0,"tusY":48,"tusGen":[93,225],"satirY":207,"birincil":1,"pencereGen":760,"gorunum":"pencere · yeni ekipman, çakışan kod"},
-    {"gen":1080,"tema":"acik","liste":"kart","tasma":0,"sertKirpma":0,"tasanMetin":0,"cakisma":0,"sonCakisma":0,"gizliEtkilesimli":0,"ekranDisi":0,"kucukHedef":0,"basliksizKirpma":0,"ipucuKesik":0,"kenarFarki":0,"gorunenGizli":0,"pencereKenar":0,"tusY":48,"tusGen":[93,186],"satirY":207,"birincil":1,"pencereGen":760,"gorunum":"pencere · tesiste kayıtlı"},
-    {"gen":1080,"tema":"acik","liste":"kart","tasma":0,"sertKirpma":0,"tasanMetin":0,"cakisma":0,"sonCakisma":0,"gizliEtkilesimli":0,"ekranDisi":0,"kucukHedef":0,"basliksizKirpma":0,"ipucuKesik":0,"kenarFarki":0,"gorunenGizli":0,"pencereKenar":0,"tusY":48,"tusGen":[93,126],"satirY":207,"birincil":1,"pencereGen":520,"gorunum":"pencere · reddet"},
-    {"gen":1080,"tema":"koyu","liste":"kart","tasma":0,"sertKirpma":0,"tasanMetin":0,"cakisma":0,"sonCakisma":null,"gizliEtkilesimli":0,"ekranDisi":0,"kucukHedef":0,"basliksizKirpma":0,"ipucuKesik":0,"kenarFarki":0,"gorunenGizli":0,"pencereKenar":null,"tusY":48,"tusGen":[126,186],"satirY":346,"birincil":null,"pencereGen":null,"gorunum":"liste"},
-    {"gen":1080,"tema":"koyu","liste":"kart","tasma":0,"sertKirpma":0,"tasanMetin":0,"cakisma":0,"sonCakisma":null,"gizliEtkilesimli":0,"ekranDisi":0,"kucukHedef":0,"basliksizKirpma":0,"ipucuKesik":0,"kenarFarki":0,"gorunenGizli":0,"pencereKenar":null,"tusY":48,"tusGen":[132,186],"satirY":207,"birincil":1,"pencereGen":null,"gorunum":"plan · denetimde"},
-    {"gen":1080,"tema":"koyu","liste":"kart","tasma":0,"sertKirpma":0,"tasanMetin":0,"cakisma":0,"sonCakisma":null,"gizliEtkilesimli":0,"ekranDisi":0,"kucukHedef":0,"basliksizKirpma":0,"ipucuKesik":0,"kenarFarki":0,"gorunenGizli":0,"pencereKenar":null,"tusY":48,"tusGen":[94,126],"satirY":207,"birincil":1,"pencereGen":null,"gorunum":"plan · ön koşul eksik"},
-    {"gen":1080,"tema":"koyu","liste":"kart","tasma":0,"sertKirpma":0,"tasanMetin":0,"cakisma":0,"sonCakisma":null,"gizliEtkilesimli":0,"ekranDisi":0,"kucukHedef":0,"basliksizKirpma":0,"ipucuKesik":0,"kenarFarki":0,"gorunenGizli":0,"pencereKenar":null,"tusY":48,"tusGen":[141,225],"satirY":207,"birincil":0,"pencereGen":null,"gorunum":"plan · tamamlandı"},
-    {"gen":1080,"tema":"koyu","liste":"kart","tasma":0,"sertKirpma":0,"tasanMetin":0,"cakisma":0,"sonCakisma":0,"gizliEtkilesimli":0,"ekranDisi":0,"kucukHedef":0,"basliksizKirpma":0,"ipucuKesik":0,"kenarFarki":0,"gorunenGizli":0,"pencereKenar":0,"tusY":48,"tusGen":[93,225],"satirY":207,"birincil":1,"pencereGen":760,"gorunum":"pencere · yeni ekipman, çakışan kod"},
-    {"gen":1080,"tema":"koyu","liste":"kart","tasma":0,"sertKirpma":0,"tasanMetin":0,"cakisma":0,"sonCakisma":0,"gizliEtkilesimli":0,"ekranDisi":0,"kucukHedef":0,"basliksizKirpma":0,"ipucuKesik":0,"kenarFarki":0,"gorunenGizli":0,"pencereKenar":0,"tusY":48,"tusGen":[93,186],"satirY":207,"birincil":1,"pencereGen":760,"gorunum":"pencere · tesiste kayıtlı"},
-    {"gen":1080,"tema":"koyu","liste":"kart","tasma":0,"sertKirpma":0,"tasanMetin":0,"cakisma":0,"sonCakisma":0,"gizliEtkilesimli":0,"ekranDisi":0,"kucukHedef":0,"basliksizKirpma":0,"ipucuKesik":0,"kenarFarki":0,"gorunenGizli":0,"pencereKenar":0,"tusY":48,"tusGen":[93,126],"satirY":207,"birincil":1,"pencereGen":520,"gorunum":"pencere · reddet"},
-    {"gen":375,"tema":"acik","liste":"kart","tasma":0,"sertKirpma":0,"tasanMetin":0,"cakisma":0,"sonCakisma":null,"gizliEtkilesimli":0,"ekranDisi":0,"kucukHedef":0,"basliksizKirpma":0,"ipucuKesik":0,"kenarFarki":0,"gorunenGizli":0,"pencereKenar":null,"tusY":48,"tusGen":[309,309],"satirY":345,"birincil":null,"pencereGen":null,"gorunum":"liste"},
-    {"gen":375,"tema":"acik","liste":"kart","tasma":0,"sertKirpma":0,"tasanMetin":0,"cakisma":0,"sonCakisma":0,"gizliEtkilesimli":0,"ekranDisi":0,"kucukHedef":0,"basliksizKirpma":0,"ipucuKesik":0,"kenarFarki":0,"gorunenGizli":0,"pencereKenar":null,"tusY":48,"tusGen":[167,343],"satirY":207,"birincil":1,"pencereGen":null,"gorunum":"plan · denetimde"},
-    {"gen":375,"tema":"acik","liste":"kart","tasma":0,"sertKirpma":0,"tasanMetin":0,"cakisma":0,"sonCakisma":0,"gizliEtkilesimli":0,"ekranDisi":0,"kucukHedef":0,"basliksizKirpma":0,"ipucuKesik":0,"kenarFarki":0,"gorunenGizli":0,"pencereKenar":null,"tusY":48,"tusGen":[168,168],"satirY":207,"birincil":1,"pencereGen":null,"gorunum":"plan · ön koşul eksik"},
-    {"gen":375,"tema":"acik","liste":"kart","tasma":0,"sertKirpma":0,"tasanMetin":0,"cakisma":0,"sonCakisma":0,"gizliEtkilesimli":0,"ekranDisi":0,"kucukHedef":0,"basliksizKirpma":0,"ipucuKesik":0,"kenarFarki":0,"gorunenGizli":0,"pencereKenar":null,"tusY":48,"tusGen":[309,343],"satirY":207,"birincil":0,"pencereGen":null,"gorunum":"plan · tamamlandı"},
-    {"gen":375,"tema":"acik","liste":"kart","tasma":0,"sertKirpma":0,"tasanMetin":0,"cakisma":0,"sonCakisma":0,"gizliEtkilesimli":0,"ekranDisi":0,"kucukHedef":0,"basliksizKirpma":0,"ipucuKesik":0,"kenarFarki":0,"gorunenGizli":0,"pencereKenar":0,"tusY":48,"tusGen":[100,343],"satirY":207,"birincil":1,"pencereGen":375,"gorunum":"pencere · yeni ekipman, çakışan kod"},
-    {"gen":375,"tema":"acik","liste":"kart","tasma":0,"sertKirpma":0,"tasanMetin":0,"cakisma":0,"sonCakisma":0,"gizliEtkilesimli":0,"ekranDisi":0,"kucukHedef":0,"basliksizKirpma":0,"ipucuKesik":0,"kenarFarki":0,"gorunenGizli":0,"pencereKenar":0,"tusY":48,"tusGen":[163,343],"satirY":207,"birincil":1,"pencereGen":375,"gorunum":"pencere · tesiste kayıtlı"},
-    {"gen":375,"tema":"acik","liste":"kart","tasma":0,"sertKirpma":0,"tasanMetin":0,"cakisma":0,"sonCakisma":0,"gizliEtkilesimli":0,"ekranDisi":0,"kucukHedef":0,"basliksizKirpma":0,"ipucuKesik":0,"kenarFarki":0,"gorunenGizli":0,"pencereKenar":0,"tusY":48,"tusGen":[163,168],"satirY":207,"birincil":1,"pencereGen":375,"gorunum":"pencere · reddet"},
-    {"gen":375,"tema":"koyu","liste":"kart","tasma":0,"sertKirpma":0,"tasanMetin":0,"cakisma":0,"sonCakisma":null,"gizliEtkilesimli":0,"ekranDisi":0,"kucukHedef":0,"basliksizKirpma":0,"ipucuKesik":0,"kenarFarki":0,"gorunenGizli":0,"pencereKenar":null,"tusY":48,"tusGen":[309,309],"satirY":345,"birincil":null,"pencereGen":null,"gorunum":"liste"},
-    {"gen":375,"tema":"koyu","liste":"kart","tasma":0,"sertKirpma":0,"tasanMetin":0,"cakisma":0,"sonCakisma":0,"gizliEtkilesimli":0,"ekranDisi":0,"kucukHedef":0,"basliksizKirpma":0,"ipucuKesik":0,"kenarFarki":0,"gorunenGizli":0,"pencereKenar":null,"tusY":48,"tusGen":[167,343],"satirY":207,"birincil":1,"pencereGen":null,"gorunum":"plan · denetimde"},
-    {"gen":375,"tema":"koyu","liste":"kart","tasma":0,"sertKirpma":0,"tasanMetin":0,"cakisma":0,"sonCakisma":0,"gizliEtkilesimli":0,"ekranDisi":0,"kucukHedef":0,"basliksizKirpma":0,"ipucuKesik":0,"kenarFarki":0,"gorunenGizli":0,"pencereKenar":null,"tusY":48,"tusGen":[168,168],"satirY":207,"birincil":1,"pencereGen":null,"gorunum":"plan · ön koşul eksik"},
-    {"gen":375,"tema":"koyu","liste":"kart","tasma":0,"sertKirpma":0,"tasanMetin":0,"cakisma":0,"sonCakisma":0,"gizliEtkilesimli":0,"ekranDisi":0,"kucukHedef":0,"basliksizKirpma":0,"ipucuKesik":0,"kenarFarki":0,"gorunenGizli":0,"pencereKenar":null,"tusY":48,"tusGen":[309,343],"satirY":207,"birincil":0,"pencereGen":null,"gorunum":"plan · tamamlandı"},
-    {"gen":375,"tema":"koyu","liste":"kart","tasma":0,"sertKirpma":0,"tasanMetin":0,"cakisma":0,"sonCakisma":0,"gizliEtkilesimli":0,"ekranDisi":0,"kucukHedef":0,"basliksizKirpma":0,"ipucuKesik":0,"kenarFarki":0,"gorunenGizli":0,"pencereKenar":0,"tusY":48,"tusGen":[100,343],"satirY":207,"birincil":1,"pencereGen":375,"gorunum":"pencere · yeni ekipman, çakışan kod"},
-    {"gen":375,"tema":"koyu","liste":"kart","tasma":0,"sertKirpma":0,"tasanMetin":0,"cakisma":0,"sonCakisma":0,"gizliEtkilesimli":0,"ekranDisi":0,"kucukHedef":0,"basliksizKirpma":0,"ipucuKesik":0,"kenarFarki":0,"gorunenGizli":0,"pencereKenar":0,"tusY":48,"tusGen":[163,343],"satirY":207,"birincil":1,"pencereGen":375,"gorunum":"pencere · tesiste kayıtlı"},
-    {"gen":375,"tema":"koyu","liste":"kart","tasma":0,"sertKirpma":0,"tasanMetin":0,"cakisma":0,"sonCakisma":0,"gizliEtkilesimli":0,"ekranDisi":0,"kucukHedef":0,"basliksizKirpma":0,"ipucuKesik":0,"kenarFarki":0,"gorunenGizli":0,"pencereKenar":0,"tusY":48,"tusGen":[163,168],"satirY":207,"birincil":1,"pencereGen":375,"gorunum":"pencere · reddet"}
+    {"gen":1920,"tema":"acik","liste":"tablo","tasma":0,"sertKirpma":0,"tasanMetin":0,"cakisma":0,"sonCakisma":null,"gizliEtkilesimli":0,"ekranDisi":0,"kucukHedef":0,"basliksizKirpma":0,"ipucuKesik":0,"kenarFarki":0,"gorunenGizli":0,"pencereKenar":null,"hizaKaymasi":0,"kartTutarsiz":0,"tusY":34,"tusGen":[107,160],"satirY":54,"birincil":null,"pencereGen":null,"gorunum":"liste"},
+    {"gen":1920,"tema":"acik","liste":"tablo","tasma":0,"sertKirpma":0,"tasanMetin":0,"cakisma":0,"sonCakisma":null,"gizliEtkilesimli":0,"ekranDisi":0,"kucukHedef":0,"basliksizKirpma":0,"ipucuKesik":0,"kenarFarki":0,"gorunenGizli":0,"pencereKenar":null,"hizaKaymasi":0,"kartTutarsiz":0,"tusY":34,"tusGen":[79,118],"satirY":46,"birincil":1,"pencereGen":null,"gorunum":"plan · ön koşul eksik"},
+    {"gen":1920,"tema":"acik","liste":"tablo","tasma":0,"sertKirpma":0,"tasanMetin":0,"cakisma":0,"sonCakisma":null,"gizliEtkilesimli":0,"ekranDisi":0,"kucukHedef":0,"basliksizKirpma":0,"ipucuKesik":0,"kenarFarki":0,"gorunenGizli":0,"pencereKenar":null,"hizaKaymasi":0,"kartTutarsiz":0,"tusY":34,"tusGen":[118,160],"satirY":46,"birincil":1,"pencereGen":null,"gorunum":"plan · kabul edildi"},
+    {"gen":1920,"tema":"acik","liste":"tablo","tasma":0,"sertKirpma":0,"tasanMetin":0,"cakisma":0,"sonCakisma":null,"gizliEtkilesimli":0,"ekranDisi":0,"kucukHedef":0,"basliksizKirpma":0,"ipucuKesik":0,"kenarFarki":0,"gorunenGizli":0,"pencereKenar":null,"hizaKaymasi":0,"kartTutarsiz":0,"tusY":34,"tusGen":[112,164],"satirY":46,"birincil":1,"pencereGen":null,"gorunum":"plan · denetimde"},
+    {"gen":1920,"tema":"acik","liste":"tablo","tasma":0,"sertKirpma":0,"tasanMetin":0,"cakisma":0,"sonCakisma":null,"gizliEtkilesimli":0,"ekranDisi":0,"kucukHedef":0,"basliksizKirpma":0,"ipucuKesik":0,"kenarFarki":0,"gorunenGizli":0,"pencereKenar":null,"hizaKaymasi":0,"kartTutarsiz":0,"tusY":34,"tusGen":[118,194],"satirY":46,"birincil":0,"pencereGen":null,"gorunum":"plan · tamamlandı"},
+    {"gen":1920,"tema":"acik","liste":"(liste yok)","tasma":0,"sertKirpma":0,"tasanMetin":0,"cakisma":0,"sonCakisma":null,"gizliEtkilesimli":0,"ekranDisi":0,"kucukHedef":0,"basliksizKirpma":0,"ipucuKesik":0,"kenarFarki":null,"gorunenGizli":0,"pencereKenar":null,"hizaKaymasi":0,"kartTutarsiz":0,"tusY":34,"tusGen":[118,118],"satirY":null,"birincil":0,"pencereGen":null,"gorunum":"plan · reddedildi"},
+    {"gen":1920,"tema":"acik","liste":"tablo","tasma":0,"sertKirpma":0,"tasanMetin":0,"cakisma":0,"sonCakisma":0,"gizliEtkilesimli":0,"ekranDisi":0,"kucukHedef":0,"basliksizKirpma":0,"ipucuKesik":0,"kenarFarki":0,"gorunenGizli":0,"pencereKenar":0,"hizaKaymasi":0,"kartTutarsiz":0,"tusY":34,"tusGen":[78,194],"satirY":46,"birincil":1,"pencereGen":760,"gorunum":"pencere · yeni ekipman, çakışan kod"},
+    {"gen":1920,"tema":"acik","liste":"tablo","tasma":0,"sertKirpma":0,"tasanMetin":0,"cakisma":0,"sonCakisma":0,"gizliEtkilesimli":0,"ekranDisi":0,"kucukHedef":0,"basliksizKirpma":0,"ipucuKesik":0,"kenarFarki":0,"gorunenGizli":0,"pencereKenar":0,"hizaKaymasi":0,"kartTutarsiz":0,"tusY":34,"tusGen":[78,164],"satirY":46,"birincil":1,"pencereGen":760,"gorunum":"pencere · tesiste kayıtlı"},
+    {"gen":1920,"tema":"acik","liste":"tablo","tasma":0,"sertKirpma":0,"tasanMetin":0,"cakisma":0,"sonCakisma":0,"gizliEtkilesimli":0,"ekranDisi":0,"kucukHedef":0,"basliksizKirpma":0,"ipucuKesik":0,"kenarFarki":0,"gorunenGizli":0,"pencereKenar":0,"hizaKaymasi":0,"kartTutarsiz":0,"tusY":34,"tusGen":[78,118],"satirY":46,"birincil":1,"pencereGen":520,"gorunum":"pencere · reddet"},
+    {"gen":1920,"tema":"koyu","liste":"tablo","tasma":0,"sertKirpma":0,"tasanMetin":0,"cakisma":0,"sonCakisma":null,"gizliEtkilesimli":0,"ekranDisi":0,"kucukHedef":0,"basliksizKirpma":0,"ipucuKesik":0,"kenarFarki":0,"gorunenGizli":0,"pencereKenar":null,"hizaKaymasi":0,"kartTutarsiz":0,"tusY":34,"tusGen":[107,160],"satirY":54,"birincil":null,"pencereGen":null,"gorunum":"liste"},
+    {"gen":1920,"tema":"koyu","liste":"tablo","tasma":0,"sertKirpma":0,"tasanMetin":0,"cakisma":0,"sonCakisma":null,"gizliEtkilesimli":0,"ekranDisi":0,"kucukHedef":0,"basliksizKirpma":0,"ipucuKesik":0,"kenarFarki":0,"gorunenGizli":0,"pencereKenar":null,"hizaKaymasi":0,"kartTutarsiz":0,"tusY":34,"tusGen":[79,118],"satirY":46,"birincil":1,"pencereGen":null,"gorunum":"plan · ön koşul eksik"},
+    {"gen":1920,"tema":"koyu","liste":"tablo","tasma":0,"sertKirpma":0,"tasanMetin":0,"cakisma":0,"sonCakisma":null,"gizliEtkilesimli":0,"ekranDisi":0,"kucukHedef":0,"basliksizKirpma":0,"ipucuKesik":0,"kenarFarki":0,"gorunenGizli":0,"pencereKenar":null,"hizaKaymasi":0,"kartTutarsiz":0,"tusY":34,"tusGen":[118,160],"satirY":46,"birincil":1,"pencereGen":null,"gorunum":"plan · kabul edildi"},
+    {"gen":1920,"tema":"koyu","liste":"tablo","tasma":0,"sertKirpma":0,"tasanMetin":0,"cakisma":0,"sonCakisma":null,"gizliEtkilesimli":0,"ekranDisi":0,"kucukHedef":0,"basliksizKirpma":0,"ipucuKesik":0,"kenarFarki":0,"gorunenGizli":0,"pencereKenar":null,"hizaKaymasi":0,"kartTutarsiz":0,"tusY":34,"tusGen":[112,164],"satirY":46,"birincil":1,"pencereGen":null,"gorunum":"plan · denetimde"},
+    {"gen":1920,"tema":"koyu","liste":"tablo","tasma":0,"sertKirpma":0,"tasanMetin":0,"cakisma":0,"sonCakisma":null,"gizliEtkilesimli":0,"ekranDisi":0,"kucukHedef":0,"basliksizKirpma":0,"ipucuKesik":0,"kenarFarki":0,"gorunenGizli":0,"pencereKenar":null,"hizaKaymasi":0,"kartTutarsiz":0,"tusY":34,"tusGen":[118,194],"satirY":46,"birincil":0,"pencereGen":null,"gorunum":"plan · tamamlandı"},
+    {"gen":1920,"tema":"koyu","liste":"(liste yok)","tasma":0,"sertKirpma":0,"tasanMetin":0,"cakisma":0,"sonCakisma":null,"gizliEtkilesimli":0,"ekranDisi":0,"kucukHedef":0,"basliksizKirpma":0,"ipucuKesik":0,"kenarFarki":null,"gorunenGizli":0,"pencereKenar":null,"hizaKaymasi":0,"kartTutarsiz":0,"tusY":34,"tusGen":[118,118],"satirY":null,"birincil":0,"pencereGen":null,"gorunum":"plan · reddedildi"},
+    {"gen":1920,"tema":"koyu","liste":"tablo","tasma":0,"sertKirpma":0,"tasanMetin":0,"cakisma":0,"sonCakisma":0,"gizliEtkilesimli":0,"ekranDisi":0,"kucukHedef":0,"basliksizKirpma":0,"ipucuKesik":0,"kenarFarki":0,"gorunenGizli":0,"pencereKenar":0,"hizaKaymasi":0,"kartTutarsiz":0,"tusY":34,"tusGen":[78,194],"satirY":46,"birincil":1,"pencereGen":760,"gorunum":"pencere · yeni ekipman, çakışan kod"},
+    {"gen":1920,"tema":"koyu","liste":"tablo","tasma":0,"sertKirpma":0,"tasanMetin":0,"cakisma":0,"sonCakisma":0,"gizliEtkilesimli":0,"ekranDisi":0,"kucukHedef":0,"basliksizKirpma":0,"ipucuKesik":0,"kenarFarki":0,"gorunenGizli":0,"pencereKenar":0,"hizaKaymasi":0,"kartTutarsiz":0,"tusY":34,"tusGen":[78,164],"satirY":46,"birincil":1,"pencereGen":760,"gorunum":"pencere · tesiste kayıtlı"},
+    {"gen":1920,"tema":"koyu","liste":"tablo","tasma":0,"sertKirpma":0,"tasanMetin":0,"cakisma":0,"sonCakisma":0,"gizliEtkilesimli":0,"ekranDisi":0,"kucukHedef":0,"basliksizKirpma":0,"ipucuKesik":0,"kenarFarki":0,"gorunenGizli":0,"pencereKenar":0,"hizaKaymasi":0,"kartTutarsiz":0,"tusY":34,"tusGen":[78,118],"satirY":46,"birincil":1,"pencereGen":520,"gorunum":"pencere · reddet"},
+    {"gen":1080,"tema":"acik","liste":"tablo","tasma":0,"sertKirpma":0,"tasanMetin":0,"cakisma":0,"sonCakisma":null,"gizliEtkilesimli":0,"ekranDisi":0,"kucukHedef":0,"basliksizKirpma":0,"ipucuKesik":0,"kenarFarki":0,"gorunenGizli":0,"pencereKenar":null,"hizaKaymasi":0,"kartTutarsiz":0,"tusY":44,"tusGen":[111,168],"satirY":76,"birincil":null,"pencereGen":null,"gorunum":"liste"},
+    {"gen":1080,"tema":"acik","liste":"tablo","tasma":0,"sertKirpma":0,"tasanMetin":0,"cakisma":0,"sonCakisma":null,"gizliEtkilesimli":0,"ekranDisi":0,"kucukHedef":0,"basliksizKirpma":0,"ipucuKesik":0,"kenarFarki":0,"gorunenGizli":0,"pencereKenar":null,"hizaKaymasi":0,"kartTutarsiz":0,"tusY":44,"tusGen":[83,123],"satirY":56,"birincil":1,"pencereGen":null,"gorunum":"plan · ön koşul eksik"},
+    {"gen":1080,"tema":"acik","liste":"tablo","tasma":0,"sertKirpma":0,"tasanMetin":0,"cakisma":0,"sonCakisma":null,"gizliEtkilesimli":0,"ekranDisi":0,"kucukHedef":0,"basliksizKirpma":0,"ipucuKesik":0,"kenarFarki":0,"gorunenGizli":0,"pencereKenar":null,"hizaKaymasi":0,"kartTutarsiz":0,"tusY":44,"tusGen":[123,168],"satirY":56,"birincil":1,"pencereGen":null,"gorunum":"plan · kabul edildi"},
+    {"gen":1080,"tema":"acik","liste":"tablo","tasma":0,"sertKirpma":0,"tasanMetin":0,"cakisma":0,"sonCakisma":null,"gizliEtkilesimli":0,"ekranDisi":0,"kucukHedef":0,"basliksizKirpma":0,"ipucuKesik":0,"kenarFarki":0,"gorunenGizli":0,"pencereKenar":null,"hizaKaymasi":0,"kartTutarsiz":0,"tusY":44,"tusGen":[117,174],"satirY":56,"birincil":1,"pencereGen":null,"gorunum":"plan · denetimde"},
+    {"gen":1080,"tema":"acik","liste":"tablo","tasma":0,"sertKirpma":0,"tasanMetin":0,"cakisma":0,"sonCakisma":null,"gizliEtkilesimli":0,"ekranDisi":0,"kucukHedef":0,"basliksizKirpma":0,"ipucuKesik":0,"kenarFarki":0,"gorunenGizli":0,"pencereKenar":null,"hizaKaymasi":0,"kartTutarsiz":0,"tusY":44,"tusGen":[123,204],"satirY":56,"birincil":0,"pencereGen":null,"gorunum":"plan · tamamlandı"},
+    {"gen":1080,"tema":"acik","liste":"(liste yok)","tasma":0,"sertKirpma":0,"tasanMetin":0,"cakisma":0,"sonCakisma":null,"gizliEtkilesimli":0,"ekranDisi":0,"kucukHedef":0,"basliksizKirpma":0,"ipucuKesik":0,"kenarFarki":null,"gorunenGizli":0,"pencereKenar":null,"hizaKaymasi":0,"kartTutarsiz":0,"tusY":44,"tusGen":[123,123],"satirY":null,"birincil":0,"pencereGen":null,"gorunum":"plan · reddedildi"},
+    {"gen":1080,"tema":"acik","liste":"tablo","tasma":0,"sertKirpma":0,"tasanMetin":0,"cakisma":0,"sonCakisma":0,"gizliEtkilesimli":0,"ekranDisi":0,"kucukHedef":0,"basliksizKirpma":0,"ipucuKesik":0,"kenarFarki":0,"gorunenGizli":0,"pencereKenar":0,"hizaKaymasi":0,"kartTutarsiz":0,"tusY":44,"tusGen":[81,204],"satirY":56,"birincil":1,"pencereGen":760,"gorunum":"pencere · yeni ekipman, çakışan kod"},
+    {"gen":1080,"tema":"acik","liste":"tablo","tasma":0,"sertKirpma":0,"tasanMetin":0,"cakisma":0,"sonCakisma":0,"gizliEtkilesimli":0,"ekranDisi":0,"kucukHedef":0,"basliksizKirpma":0,"ipucuKesik":0,"kenarFarki":0,"gorunenGizli":0,"pencereKenar":0,"hizaKaymasi":0,"kartTutarsiz":0,"tusY":44,"tusGen":[81,174],"satirY":56,"birincil":1,"pencereGen":760,"gorunum":"pencere · tesiste kayıtlı"},
+    {"gen":1080,"tema":"acik","liste":"tablo","tasma":0,"sertKirpma":0,"tasanMetin":0,"cakisma":0,"sonCakisma":0,"gizliEtkilesimli":0,"ekranDisi":0,"kucukHedef":0,"basliksizKirpma":0,"ipucuKesik":0,"kenarFarki":0,"gorunenGizli":0,"pencereKenar":0,"hizaKaymasi":0,"kartTutarsiz":0,"tusY":44,"tusGen":[81,123],"satirY":56,"birincil":1,"pencereGen":520,"gorunum":"pencere · reddet"},
+    {"gen":1080,"tema":"koyu","liste":"tablo","tasma":0,"sertKirpma":0,"tasanMetin":0,"cakisma":0,"sonCakisma":null,"gizliEtkilesimli":0,"ekranDisi":0,"kucukHedef":0,"basliksizKirpma":0,"ipucuKesik":0,"kenarFarki":0,"gorunenGizli":0,"pencereKenar":null,"hizaKaymasi":0,"kartTutarsiz":0,"tusY":44,"tusGen":[111,168],"satirY":76,"birincil":null,"pencereGen":null,"gorunum":"liste"},
+    {"gen":1080,"tema":"koyu","liste":"tablo","tasma":0,"sertKirpma":0,"tasanMetin":0,"cakisma":0,"sonCakisma":null,"gizliEtkilesimli":0,"ekranDisi":0,"kucukHedef":0,"basliksizKirpma":0,"ipucuKesik":0,"kenarFarki":0,"gorunenGizli":0,"pencereKenar":null,"hizaKaymasi":0,"kartTutarsiz":0,"tusY":44,"tusGen":[83,123],"satirY":56,"birincil":1,"pencereGen":null,"gorunum":"plan · ön koşul eksik"},
+    {"gen":1080,"tema":"koyu","liste":"tablo","tasma":0,"sertKirpma":0,"tasanMetin":0,"cakisma":0,"sonCakisma":null,"gizliEtkilesimli":0,"ekranDisi":0,"kucukHedef":0,"basliksizKirpma":0,"ipucuKesik":0,"kenarFarki":0,"gorunenGizli":0,"pencereKenar":null,"hizaKaymasi":0,"kartTutarsiz":0,"tusY":44,"tusGen":[123,168],"satirY":56,"birincil":1,"pencereGen":null,"gorunum":"plan · kabul edildi"},
+    {"gen":1080,"tema":"koyu","liste":"tablo","tasma":0,"sertKirpma":0,"tasanMetin":0,"cakisma":0,"sonCakisma":null,"gizliEtkilesimli":0,"ekranDisi":0,"kucukHedef":0,"basliksizKirpma":0,"ipucuKesik":0,"kenarFarki":0,"gorunenGizli":0,"pencereKenar":null,"hizaKaymasi":0,"kartTutarsiz":0,"tusY":44,"tusGen":[117,174],"satirY":56,"birincil":1,"pencereGen":null,"gorunum":"plan · denetimde"},
+    {"gen":1080,"tema":"koyu","liste":"tablo","tasma":0,"sertKirpma":0,"tasanMetin":0,"cakisma":0,"sonCakisma":null,"gizliEtkilesimli":0,"ekranDisi":0,"kucukHedef":0,"basliksizKirpma":0,"ipucuKesik":0,"kenarFarki":0,"gorunenGizli":0,"pencereKenar":null,"hizaKaymasi":0,"kartTutarsiz":0,"tusY":44,"tusGen":[123,204],"satirY":56,"birincil":0,"pencereGen":null,"gorunum":"plan · tamamlandı"},
+    {"gen":1080,"tema":"koyu","liste":"(liste yok)","tasma":0,"sertKirpma":0,"tasanMetin":0,"cakisma":0,"sonCakisma":null,"gizliEtkilesimli":0,"ekranDisi":0,"kucukHedef":0,"basliksizKirpma":0,"ipucuKesik":0,"kenarFarki":null,"gorunenGizli":0,"pencereKenar":null,"hizaKaymasi":0,"kartTutarsiz":0,"tusY":44,"tusGen":[123,123],"satirY":null,"birincil":0,"pencereGen":null,"gorunum":"plan · reddedildi"},
+    {"gen":1080,"tema":"koyu","liste":"tablo","tasma":0,"sertKirpma":0,"tasanMetin":0,"cakisma":0,"sonCakisma":0,"gizliEtkilesimli":0,"ekranDisi":0,"kucukHedef":0,"basliksizKirpma":0,"ipucuKesik":0,"kenarFarki":0,"gorunenGizli":0,"pencereKenar":0,"hizaKaymasi":0,"kartTutarsiz":0,"tusY":44,"tusGen":[81,204],"satirY":56,"birincil":1,"pencereGen":760,"gorunum":"pencere · yeni ekipman, çakışan kod"},
+    {"gen":1080,"tema":"koyu","liste":"tablo","tasma":0,"sertKirpma":0,"tasanMetin":0,"cakisma":0,"sonCakisma":0,"gizliEtkilesimli":0,"ekranDisi":0,"kucukHedef":0,"basliksizKirpma":0,"ipucuKesik":0,"kenarFarki":0,"gorunenGizli":0,"pencereKenar":0,"hizaKaymasi":0,"kartTutarsiz":0,"tusY":44,"tusGen":[81,174],"satirY":56,"birincil":1,"pencereGen":760,"gorunum":"pencere · tesiste kayıtlı"},
+    {"gen":1080,"tema":"koyu","liste":"tablo","tasma":0,"sertKirpma":0,"tasanMetin":0,"cakisma":0,"sonCakisma":0,"gizliEtkilesimli":0,"ekranDisi":0,"kucukHedef":0,"basliksizKirpma":0,"ipucuKesik":0,"kenarFarki":0,"gorunenGizli":0,"pencereKenar":0,"hizaKaymasi":0,"kartTutarsiz":0,"tusY":44,"tusGen":[81,123],"satirY":56,"birincil":1,"pencereGen":520,"gorunum":"pencere · reddet"},
+    {"gen":375,"tema":"acik","liste":"kart","tasma":0,"sertKirpma":0,"tasanMetin":0,"cakisma":0,"sonCakisma":null,"gizliEtkilesimli":0,"ekranDisi":0,"kucukHedef":0,"basliksizKirpma":0,"ipucuKesik":0,"kenarFarki":0,"gorunenGizli":0,"pencereKenar":null,"hizaKaymasi":0,"kartTutarsiz":0,"tusY":44,"tusGen":[325,325],"satirY":303,"birincil":null,"pencereGen":null,"gorunum":"liste"},
+    {"gen":375,"tema":"acik","liste":"kart","tasma":0,"sertKirpma":0,"tasanMetin":0,"cakisma":0,"sonCakisma":0,"gizliEtkilesimli":0,"ekranDisi":0,"kucukHedef":0,"basliksizKirpma":0,"ipucuKesik":0,"kenarFarki":0,"gorunenGizli":0,"pencereKenar":null,"hizaKaymasi":0,"kartTutarsiz":0,"tusY":44,"tusGen":[172,351],"satirY":75,"birincil":1,"pencereGen":null,"gorunum":"plan · ön koşul eksik"},
+    {"gen":375,"tema":"acik","liste":"kart","tasma":0,"sertKirpma":0,"tasanMetin":0,"cakisma":0,"sonCakisma":0,"gizliEtkilesimli":0,"ekranDisi":0,"kucukHedef":0,"basliksizKirpma":0,"ipucuKesik":0,"kenarFarki":0,"gorunenGizli":0,"pencereKenar":null,"hizaKaymasi":0,"kartTutarsiz":0,"tusY":44,"tusGen":[351,351],"satirY":173,"birincil":1,"pencereGen":null,"gorunum":"plan · kabul edildi"},
+    {"gen":375,"tema":"acik","liste":"kart","tasma":0,"sertKirpma":0,"tasanMetin":0,"cakisma":0,"sonCakisma":0,"gizliEtkilesimli":0,"ekranDisi":0,"kucukHedef":0,"basliksizKirpma":0,"ipucuKesik":0,"kenarFarki":0,"gorunenGizli":0,"pencereKenar":null,"hizaKaymasi":0,"kartTutarsiz":0,"tusY":44,"tusGen":[150,351],"satirY":173,"birincil":1,"pencereGen":null,"gorunum":"plan · denetimde"},
+    {"gen":375,"tema":"acik","liste":"kart","tasma":0,"sertKirpma":0,"tasanMetin":0,"cakisma":0,"sonCakisma":0,"gizliEtkilesimli":0,"ekranDisi":0,"kucukHedef":0,"basliksizKirpma":0,"ipucuKesik":0,"kenarFarki":0,"gorunenGizli":0,"pencereKenar":null,"hizaKaymasi":0,"kartTutarsiz":0,"tusY":44,"tusGen":[173,351],"satirY":173,"birincil":0,"pencereGen":null,"gorunum":"plan · tamamlandı"},
+    {"gen":375,"tema":"acik","liste":"(liste yok)","tasma":0,"sertKirpma":0,"tasanMetin":0,"cakisma":0,"sonCakisma":null,"gizliEtkilesimli":0,"ekranDisi":0,"kucukHedef":0,"basliksizKirpma":0,"ipucuKesik":0,"kenarFarki":null,"gorunenGizli":0,"pencereKenar":null,"hizaKaymasi":0,"kartTutarsiz":0,"tusY":44,"tusGen":[351,351],"satirY":null,"birincil":0,"pencereGen":null,"gorunum":"plan · reddedildi"},
+    {"gen":375,"tema":"acik","liste":"kart","tasma":0,"sertKirpma":0,"tasanMetin":0,"cakisma":0,"sonCakisma":0,"gizliEtkilesimli":0,"ekranDisi":0,"kucukHedef":0,"basliksizKirpma":0,"ipucuKesik":0,"kenarFarki":0,"gorunenGizli":0,"pencereKenar":0,"hizaKaymasi":0,"kartTutarsiz":0,"tusY":44,"tusGen":[129,351],"satirY":173,"birincil":1,"pencereGen":375,"gorunum":"pencere · yeni ekipman, çakışan kod"},
+    {"gen":375,"tema":"acik","liste":"kart","tasma":0,"sertKirpma":0,"tasanMetin":0,"cakisma":0,"sonCakisma":0,"gizliEtkilesimli":0,"ekranDisi":0,"kucukHedef":0,"basliksizKirpma":0,"ipucuKesik":0,"kenarFarki":0,"gorunenGizli":0,"pencereKenar":0,"hizaKaymasi":0,"kartTutarsiz":0,"tusY":44,"tusGen":[150,351],"satirY":173,"birincil":1,"pencereGen":375,"gorunum":"pencere · tesiste kayıtlı"},
+    {"gen":375,"tema":"acik","liste":"kart","tasma":0,"sertKirpma":0,"tasanMetin":0,"cakisma":0,"sonCakisma":0,"gizliEtkilesimli":0,"ekranDisi":0,"kucukHedef":0,"basliksizKirpma":0,"ipucuKesik":0,"kenarFarki":0,"gorunenGizli":0,"pencereKenar":0,"hizaKaymasi":0,"kartTutarsiz":0,"tusY":44,"tusGen":[167,351],"satirY":75,"birincil":1,"pencereGen":375,"gorunum":"pencere · reddet"},
+    {"gen":375,"tema":"koyu","liste":"kart","tasma":0,"sertKirpma":0,"tasanMetin":0,"cakisma":0,"sonCakisma":null,"gizliEtkilesimli":0,"ekranDisi":0,"kucukHedef":0,"basliksizKirpma":0,"ipucuKesik":0,"kenarFarki":0,"gorunenGizli":0,"pencereKenar":null,"hizaKaymasi":0,"kartTutarsiz":0,"tusY":44,"tusGen":[325,325],"satirY":303,"birincil":null,"pencereGen":null,"gorunum":"liste"},
+    {"gen":375,"tema":"koyu","liste":"kart","tasma":0,"sertKirpma":0,"tasanMetin":0,"cakisma":0,"sonCakisma":0,"gizliEtkilesimli":0,"ekranDisi":0,"kucukHedef":0,"basliksizKirpma":0,"ipucuKesik":0,"kenarFarki":0,"gorunenGizli":0,"pencereKenar":null,"hizaKaymasi":0,"kartTutarsiz":0,"tusY":44,"tusGen":[172,351],"satirY":75,"birincil":1,"pencereGen":null,"gorunum":"plan · ön koşul eksik"},
+    {"gen":375,"tema":"koyu","liste":"kart","tasma":0,"sertKirpma":0,"tasanMetin":0,"cakisma":0,"sonCakisma":0,"gizliEtkilesimli":0,"ekranDisi":0,"kucukHedef":0,"basliksizKirpma":0,"ipucuKesik":0,"kenarFarki":0,"gorunenGizli":0,"pencereKenar":null,"hizaKaymasi":0,"kartTutarsiz":0,"tusY":44,"tusGen":[351,351],"satirY":173,"birincil":1,"pencereGen":null,"gorunum":"plan · kabul edildi"},
+    {"gen":375,"tema":"koyu","liste":"kart","tasma":0,"sertKirpma":0,"tasanMetin":0,"cakisma":0,"sonCakisma":0,"gizliEtkilesimli":0,"ekranDisi":0,"kucukHedef":0,"basliksizKirpma":0,"ipucuKesik":0,"kenarFarki":0,"gorunenGizli":0,"pencereKenar":null,"hizaKaymasi":0,"kartTutarsiz":0,"tusY":44,"tusGen":[150,351],"satirY":173,"birincil":1,"pencereGen":null,"gorunum":"plan · denetimde"},
+    {"gen":375,"tema":"koyu","liste":"kart","tasma":0,"sertKirpma":0,"tasanMetin":0,"cakisma":0,"sonCakisma":0,"gizliEtkilesimli":0,"ekranDisi":0,"kucukHedef":0,"basliksizKirpma":0,"ipucuKesik":0,"kenarFarki":0,"gorunenGizli":0,"pencereKenar":null,"hizaKaymasi":0,"kartTutarsiz":0,"tusY":44,"tusGen":[173,351],"satirY":173,"birincil":0,"pencereGen":null,"gorunum":"plan · tamamlandı"},
+    {"gen":375,"tema":"koyu","liste":"(liste yok)","tasma":0,"sertKirpma":0,"tasanMetin":0,"cakisma":0,"sonCakisma":null,"gizliEtkilesimli":0,"ekranDisi":0,"kucukHedef":0,"basliksizKirpma":0,"ipucuKesik":0,"kenarFarki":null,"gorunenGizli":0,"pencereKenar":null,"hizaKaymasi":0,"kartTutarsiz":0,"tusY":44,"tusGen":[351,351],"satirY":null,"birincil":0,"pencereGen":null,"gorunum":"plan · reddedildi"},
+    {"gen":375,"tema":"koyu","liste":"kart","tasma":0,"sertKirpma":0,"tasanMetin":0,"cakisma":0,"sonCakisma":0,"gizliEtkilesimli":0,"ekranDisi":0,"kucukHedef":0,"basliksizKirpma":0,"ipucuKesik":0,"kenarFarki":0,"gorunenGizli":0,"pencereKenar":0,"hizaKaymasi":0,"kartTutarsiz":0,"tusY":44,"tusGen":[129,351],"satirY":173,"birincil":1,"pencereGen":375,"gorunum":"pencere · yeni ekipman, çakışan kod"},
+    {"gen":375,"tema":"koyu","liste":"kart","tasma":0,"sertKirpma":0,"tasanMetin":0,"cakisma":0,"sonCakisma":0,"gizliEtkilesimli":0,"ekranDisi":0,"kucukHedef":0,"basliksizKirpma":0,"ipucuKesik":0,"kenarFarki":0,"gorunenGizli":0,"pencereKenar":0,"hizaKaymasi":0,"kartTutarsiz":0,"tusY":44,"tusGen":[150,351],"satirY":173,"birincil":1,"pencereGen":375,"gorunum":"pencere · tesiste kayıtlı"},
+    {"gen":375,"tema":"koyu","liste":"kart","tasma":0,"sertKirpma":0,"tasanMetin":0,"cakisma":0,"sonCakisma":0,"gizliEtkilesimli":0,"ekranDisi":0,"kucukHedef":0,"basliksizKirpma":0,"ipucuKesik":0,"kenarFarki":0,"gorunenGizli":0,"pencereKenar":0,"hizaKaymasi":0,"kartTutarsiz":0,"tusY":44,"tusGen":[167,351],"satirY":75,"birincil":1,"pencereGen":375,"gorunum":"pencere · reddet"}
   ],
   "etkilesim": [
-    ["Ekipman kodu: boş · “ht 20 40” · “HŞ-2040” · “-HT”","ipucu · HT2040'a çevrilir (boşluk atılır, küçük harf büyür) · Türkçe harf reddi · tire kuralı; hepsinde Kaydet kapalı"],
-    ["Kod bu planda var (HT-1001)","“HT-1001 bu planda zaten var: Hava tankı · Kompresör odası. Aynı kod iki ekipmana verilemez.” · Kaydet kapalı"],
-    ["Kod bu tesiste kayıtlı, planda değil (TP-1013)","yeni kayıt açılmaz · “Kayıtlı ekipmanı seç” tuşu → Tesiste kayıtlı sekmesi, TP-1013 işaretli"],
-    ["Kod başka tesiste kayıtlı (FL-1016)","“FL-1016 başka bir tesiste kayıtlı: Forklift · Yıldız Ambalaj A.Ş. / Depo 2.” · Kaydet kapalı"],
-    ["Tür arama “hava”","Hava tankı süzülür · Enter seçer, odak Seri no'ya geçer · “Branş: Mekanik · onay Mekanik yöneticisine gider.”"],
-    ["Kaydet ve plana ekle (HT-2040)","ekipman listesinde “Yeni · İlk kontrol · Rapor yok” · 13 ekipman · 8 raporsuz · geçmişe “Ekipman eklendi”"],
-    ["Rapor oluştur (HT-2040)","Raporlar'da KM-0926-777-8e4a2 Taslak · ekipman satırında Taslak, tuş kalkar · geçmişte en üstte “Rapor oluşturuldu”"],
-    ["Aynı kodu tekrar ekleme","“HT-2040 bu planda zaten var” · kayıt yok"],
-    ["Tesiste kayıtlıyı plana alma (TP-1013)","“Plana ekle (1)” · önceki kontrolüyle girer (Eyl 2025 · Uygun) · 14 ekipman · geçmişe yazılır"],
-    ["Tamamla (plan içi)","Ekipman ekle kalkar · 8 Rapor oluştur ve 5 Raporu düzenle açık kalır (12. karar) · #/ekle adresi pencere açmaz"],
-    ["Gelecek tarihli planda Denetime başla (29 Eyl)","tuş açık (10. karar) · Denetimde · geçmişe “Denetime başlandı · Mert Kaya”"],
-    ["Liste: çip, ve/veya, sıralama","Kabul bekliyor 4 / 9 · + Ön koşul eksik veya 4 / 9 · ve 2 / 9 · Müşteri A → Z Türkçe harf sırası"],
-    ["Süzgeç yerleşimi (kalıp 15)","arama → çipler → ve/veya; seçiciler + Temizle sağda, sığmayınca birlikte alt satıra (1920 ve 1080)"]
+    [
+      "Ekipmanlar 12 kayıt, 10'ar sayfa (plan 1)",
+      "sayfa 1: 10 satır, “1–10 / 12”, Önceki kapalı · sayfa 2: 2 satır, seçili sayfa “2”, Sonraki kapalı, odak seçili sayfa tuşunda"
+    ],
+    [
+      "Raporlar 12 kayıt (Değirmen, tamamlandı)",
+      "iki sayfa “1–10 / 12”; ekipmanlar 13 kayıt, iki sayfa"
+    ],
+    [
+      "Ekipman süzgeci: “Raporu yok” çipi",
+      "7 satır · sayaç “7 / 12 ekipman” · sayfalayıcı “1–7 / 7”, tek sayfa"
+    ],
+    [
+      "Aynı gruptan iki çip (Raporu yok + Raporu var)",
+      "veya (varsayılan): 12, iki sayfa · ve: “aynı gruptan…” boş durumu; içindeki “veya”ya geç tuşu listeyi geri getirir"
+    ],
+    [
+      "Arama “kompresör” · Branş: Elektrik · Temizle",
+      "yalnız tür ya da konumunda geçenler, odak kutuda kalır · yalnız elektrik ekipmanları · Temizle → “12 ekipman”"
+    ],
+    [
+      "Rapor süzgeci: “Taslak” çipi",
+      "4 satır"
+    ],
+    [
+      "Ekipman ekle (HT-2040) sayfalı listede",
+      "kod denetimi 3. turdaki gibi (bu planda var · başka tesiste · kullanılabilir) · kaydedince liste eklenenin sayfasına geçer “11–13 / 13”, satır “Yeni” rozetli"
+    ],
+    [
+      "Süzgeç açıkken kayıtlı ekipmanı plana alma",
+      "bildirim “süzgeç yüzünden listede görünmüyor” der (sessizce kaybolmaz)"
+    ],
+    [
+      "Rapor oluştur",
+      "rapor listesinin başına Taslak olarak düşer (5 → 6)"
+    ],
+    [
+      "Proje notu",
+      "3 harften kısayken “Notu ekle” kapalı · eklenince hareketlerin en üstünde"
+    ],
+    [
+      "Tamamla → Tamamlamayı geri al",
+      "rozet Tamamlandı, Ekipman ekle kalkar · geri alınca Denetimde, hareketlerde “Tamamlama geri alındı”"
+    ],
+    [
+      "Kabul et → Denetime başla (plan 2)",
+      "şu anki adım Kabul → Denetim; ekipman listesi görünür, rapor listesi yok · başlayınca rapor listesi açılır"
+    ],
+    [
+      "Ön koşulu eksik plan (plan 5)",
+      "Kabul et kapalı, nedeni aria-describedby ile bağlı"
+    ],
+    [
+      "Telefon 375: süzgeç levhası ve yapışkan çubuk",
+      "ekipman seçicileri (Branş, Tür) levhada, Elektrik → rozet 1, sayaç “4 / 12” · rapor süzgecinde levha yok, Temizle satırda · adımdaki tuşlar gizli, şu anki adımın tuşu altta; Tamamla → çubukta “Tamamlamayı geri al”"
+    ]
   ],
   "duzeltilen": [
-    ["Süzgeç tek satıra sığmıyordu, Temizle yalnız başına alta düşüyordu","1920'de 1.696 px gerek, kap 1.624 px → sabit iki satır"],
-    ["Tablette kart tuşları 384 px'e geriliyordu","tuşlar yalnız telefonda gerilir"],
-    ["Masaüstünde görünmez ama tıklanır × tuşu (koyu temada gözle)","özgüllük tuzağı → iki sınıflı gizleme"],
-    ["Koyu temada masaüstünde P işareti (gözle)","tema kuralı bant kuralını eziyordu → yalnız bantta"],
-    ["1080'de Reddet ve Kabul et alt alta düşüyordu","214 px iç genişlik, 218 px gerek → İşlem sütunu %24 → %26"],
-    ["Sayı taşıyan ekipman dökümü kırpılıyordu","kırpılmaz, sarar (anayasa 3.11)"],
-    ["Sararken “Elektrik” ile “4” ayrılıyordu","ad ile sayı arasında bölünmez boşluk"],
-    ["Telefonda saat rozetin altında “12:3” diye kesiliyordu","kartta tarih ve saat iki satır"],
-    ["Telefonda avatar 7 px taşıyordu","kullanıcı kutusu küçülmez, firma adı kısalır"],
-    ["1080'de “Bugün” 24 px taşıyordu","tarih bölünmez, “Bugün” alt satıra geçebilir"],
-    ["hidden özniteliği sınıfın display kuralıyla eziliyordu (boş listede içi boş rozet)","hata sınıfı → tek genel [hidden] kuralı"],
-    ["2. tur · İlk sütun oranlarıyla tablo eşiği 1.344 px çıkıyordu","kırpılmayan içerik ölçüldü, oranlar dengelendi → eşik 1.180 px"],
-    ["2. tur · Kartta gizlenen başlıktaki sıralama tuşları görünmez ama odaklanır/tıklanır kalıyordu (çakışma 2)","kartta başlık tamamen kalkar · yeni denetim “gizli kapta etkileşimli öğe”, olumsuz kanıt 7 → 0"],
-    ["2. tur · Kartta proje no bağlantısı 20 px'e iniyordu (küçük hedef 9)","denetim yüksekliği kartta da korunur"],
-    ["2. tur · Telefonda arama ipucu “Proje, müşteri, adres” kesiliyordu (gözle)","“Proje, müşteri, il” · yeni denetim “kesik ipucu”, olumsuz kanıt 2/2"],
-    ["2. tur · 1920'de bilgi kutuları sağda boş sütun bırakıyordu (gözle)","auto-fill → auto-fit (kalıp 10)"],
-    ["2. tur · Telefonda beş bilgi kutusu alt alta bir ekran boyu tutuyordu (gözle)","taban 160 px → iki sütun"],
-    ["2. tur · Saatin ardına sabit ek (“16:40'te” yanlış olurdu)","metin eksiz: “Denetim başladı: 23 Eyl 16:40.”"],
-    ["2. tur · Yükleme hatasında plan içi “Plan bulunamadı” diyordu","“Plan yüklenemedi” + Tekrar dene (anayasa 2.8)"],
-    ["2. tur · Ölçüm betiği telefonda bilerek taşmayı (çip şeridi, yapışkan çubuk) taşan metin sayıyordu","muafiyet adla değil kaynakla · olumsuz kanıt 3/3"],
-    ["2. tur · Ön koşul notu (uyarı yazısı / kart) 1. turda kullanılıp ölçülmemişti","kontrast ölçümüne eklendi, 4 yeni çiftle 54 / 54"],
-    ["3. tur · Sabit iki satırlı süzgeç kalıp 15'in sırasını bozuyordu (seçiciler çiplerden önce)","tek akış, kuralın sırası (reisim: “kurallara göre düzenle”)"],
-    ["3. tur · Aynı dakikadaki hareketler plan geçmişinde ters sırada çıkıyordu","eşit zamanda kayıt sırasıyla, en yeni üstte"],
-    ["3. tur · Kartta “Eyl 2025 · Uygun” satırının ne olduğu anlaşılmıyordu (1080'de gözle)","kart kipinde “Önceki kontrol” etiketi (tabloda sütun başlığı var)"],
-    ["3. tur · Ölçüm: yapışkan çubuk muafiyeti ada bağlıydı; pencerenin alt tuş çubuğu yanlış alarm verdi (375, çakışma 2)","muafiyet kaynakla (yapışkan ata) + sona kaydırınca çakışma denetimi"],
-    ["3. tur · Ölçüm: kısa pencerede yapışkan çubuğun kalıcı örtmesi sayılmıyordu","sona kaydırma denetimi kaydırılamayan kapta da sayar · olumsuz kanıt 3/3"],
-    ["3. tur · Ölçüm: pencere doldurma denetimi sekme düğmelerini blok sandı (583 px yanlış alarm)","yalnız düz blok kaplar · olumsuz kanıt 0 → 287 → 0"]
+    [
+      "Süzgeç tek satıra sığmıyordu, Temizle yalnız başına alta düşüyordu",
+      "1920'de 1.696 px gerek, kap 1.624 px → sabit iki satır"
+    ],
+    [
+      "Tablette kart tuşları 384 px'e geriliyordu",
+      "tuşlar yalnız telefonda gerilir"
+    ],
+    [
+      "Masaüstünde görünmez ama tıklanır × tuşu (koyu temada gözle)",
+      "özgüllük tuzağı → iki sınıflı gizleme"
+    ],
+    [
+      "Koyu temada masaüstünde P işareti (gözle)",
+      "tema kuralı bant kuralını eziyordu → yalnız bantta"
+    ],
+    [
+      "1080'de Reddet ve Kabul et alt alta düşüyordu",
+      "214 px iç genişlik, 218 px gerek → İşlem sütunu %24 → %26"
+    ],
+    [
+      "Sayı taşıyan ekipman dökümü kırpılıyordu",
+      "kırpılmaz, sarar (anayasa 3.11)"
+    ],
+    [
+      "Sararken “Elektrik” ile “4” ayrılıyordu",
+      "ad ile sayı arasında bölünmez boşluk"
+    ],
+    [
+      "Telefonda saat rozetin altında “12:3” diye kesiliyordu",
+      "kartta tarih ve saat iki satır"
+    ],
+    [
+      "Telefonda avatar 7 px taşıyordu",
+      "kullanıcı kutusu küçülmez, firma adı kısalır"
+    ],
+    [
+      "1080'de “Bugün” 24 px taşıyordu",
+      "tarih bölünmez, “Bugün” alt satıra geçebilir"
+    ],
+    [
+      "hidden özniteliği sınıfın display kuralıyla eziliyordu (boş listede içi boş rozet)",
+      "hata sınıfı → tek genel [hidden] kuralı"
+    ],
+    [
+      "2. tur · İlk sütun oranlarıyla tablo eşiği 1.344 px çıkıyordu",
+      "kırpılmayan içerik ölçüldü, oranlar dengelendi → eşik 1.180 px"
+    ],
+    [
+      "2. tur · Kartta gizlenen başlıktaki sıralama tuşları görünmez ama odaklanır/tıklanır kalıyordu (çakışma 2)",
+      "kartta başlık tamamen kalkar · yeni denetim “gizli kapta etkileşimli öğe”, olumsuz kanıt 7 → 0"
+    ],
+    [
+      "2. tur · Kartta proje no bağlantısı 20 px'e iniyordu (küçük hedef 9)",
+      "denetim yüksekliği kartta da korunur"
+    ],
+    [
+      "2. tur · Telefonda arama ipucu “Proje, müşteri, adres” kesiliyordu (gözle)",
+      "“Proje, müşteri, il” · yeni denetim “kesik ipucu”, olumsuz kanıt 2/2"
+    ],
+    [
+      "2. tur · 1920'de bilgi kutuları sağda boş sütun bırakıyordu (gözle)",
+      "auto-fill → auto-fit (kalıp 10)"
+    ],
+    [
+      "2. tur · Telefonda beş bilgi kutusu alt alta bir ekran boyu tutuyordu (gözle)",
+      "taban 160 px → iki sütun"
+    ],
+    [
+      "2. tur · Saatin ardına sabit ek (“16:40'te” yanlış olurdu)",
+      "metin eksiz: “Denetim başladı: 23 Eyl 16:40.”"
+    ],
+    [
+      "2. tur · Yükleme hatasında plan içi “Plan bulunamadı” diyordu",
+      "“Plan yüklenemedi” + Tekrar dene (anayasa 2.8)"
+    ],
+    [
+      "2. tur · Ölçüm betiği telefonda bilerek taşmayı (çip şeridi, yapışkan çubuk) taşan metin sayıyordu",
+      "muafiyet adla değil kaynakla · olumsuz kanıt 3/3"
+    ],
+    [
+      "2. tur · Ön koşul notu (uyarı yazısı / kart) 1. turda kullanılıp ölçülmemişti",
+      "kontrast ölçümüne eklendi, 4 yeni çiftle 54 / 54"
+    ],
+    [
+      "3. tur · Sabit iki satırlı süzgeç kalıp 15'in sırasını bozuyordu (seçiciler çiplerden önce)",
+      "tek akış, kuralın sırası (reisim: “kurallara göre düzenle”)"
+    ],
+    [
+      "3. tur · Aynı dakikadaki hareketler plan geçmişinde ters sırada çıkıyordu",
+      "eşit zamanda kayıt sırasıyla, en yeni üstte"
+    ],
+    [
+      "3. tur · Kartta “Eyl 2025 · Uygun” satırının ne olduğu anlaşılmıyordu (1080'de gözle)",
+      "kart kipinde “Önceki kontrol” etiketi (tabloda sütun başlığı var)"
+    ],
+    [
+      "3. tur · Ölçüm: yapışkan çubuk muafiyeti ada bağlıydı; pencerenin alt tuş çubuğu yanlış alarm verdi (375, çakışma 2)",
+      "muafiyet kaynakla (yapışkan ata) + sona kaydırınca çakışma denetimi"
+    ],
+    [
+      "3. tur · Ölçüm: kısa pencerede yapışkan çubuğun kalıcı örtmesi sayılmıyordu",
+      "sona kaydırma denetimi kaydırılamayan kapta da sayar · olumsuz kanıt 3/3"
+    ],
+    [
+      "3. tur · Ölçüm: pencere doldurma denetimi sekme düğmelerini blok sandı (583 px yanlış alarm)",
+      "yalnız düz blok kaplar · olumsuz kanıt 0 → 287 → 0"
+    ],
+    [
+      "4. tur · Kapsam tablosu “Planlandı” adımında 12 satır yer kaplayıp asıl işi (Denetim) ekranın altına itiyordu",
+      "kabul bekleyen planda açık (inspector kabulden önce görür), sonra katlı: “Kapsam · 12 tür, 12 ekipman”"
+    ],
+    [
+      "4. tur · Tuşlu satır tuşsuz satırdan 12 px uzundu (ekipman tablosu, 1920'de gözle)",
+      "hücre yüksekliği tuş + 12 px; bütün satırlar eşit (46 px)"
+    ],
+    [
+      "4. tur · Hareket listesinde ikinci sütun “9 Eyl” / “21 Eyl” satırlarında kayıyordu",
+      "satırlar listenin ızgarasını paylaşıyor · yeni ölçü hizaKaymasi: bozunca 9 px, düzeltince 0"
+    ],
+    [
+      "4. tur · İlk kartta tuş ayırıcısı yoktu (3. turdan beri; taban kuralın özgüllüğü kart kuralını eziyordu)",
+      "seçici düzeltildi · yeni ölçü kartTutarsiz: önce 1 / 2 / 1, sonra 0"
+    ],
+    [
+      "4. tur · Ölçüm: kapalı <details> içeriğini görünür sayıyordu (313 × 1010 px kutu)",
+      "checkVisibility() ile ayıklanıyor · telefonda satır ölçüsü 75 → 173 px (gerçek ekipman kartı)"
+    ],
+    [
+      "4. tur · Telefonda plan bilgisi ilk ekranın tamamını kaplıyordu",
+      "iki sütun: proje no ve İSG-KATİP yan yana, uzun değerler tam satır · kapsam kartı iki satır"
+    ],
+    [
+      "4. tur · Eklenen ekipman sayfalı listenin 2. sayfasına düşüp görünmüyordu",
+      "kaydedince liste eklenenin sayfasına geçer; süzgeç gizliyorsa bildirim söyler"
+    ],
+    [
+      "4. tur · Not alanının ipucu telefonda sığmıyordu (ipucuKesik)",
+      "“Proje notu ekleyin”"
+    ],
+    [
+      "4. tur · “Bu plandaki rapor” başlığı tablette iki satıra kırılıyordu",
+      "“Rapor” (adım zaten planın içinde)"
+    ]
   ]
 }

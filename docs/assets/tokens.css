@@ -26,17 +26,21 @@
 
   /* yazı tipi ve ölçü */
   --yazi-tipi: "Sora", system-ui, -apple-system, "Segoe UI", sans-serif;
-  --boy-baslik: 22px;   --kal-baslik: 700;
-  --boy-bolum: 17px;    --kal-bolum: 600;
-  --boy-govde: 15px;
-  --boy-kucuk: 13px;
-  --boy-etiket: 12px;   --kal-etiket: 600;
-  --r-kucuk: 6px; --r-orta: 10px; --r-buyuk: 14px; --r-tam: 999px;
+  /* 4. tur (reisim 2026-09-23: "bizim maketimizde her şey çok büyük"): yoğunluk küçüldü. 3. turda gövde 15 px Sora,
+     satır 66–69 px, tuş 40 px idi. Yeni: gövde 14 · başlık 20 · denetim 34 (fare) / 44 (dokunmatik; dokunma hedefi için
+     44'ün altına inilmez). Ölçülen sonuç: satır 54 px (liste), 46 px (plan içi) — docs/assets/olcum.json. */
+  --boy-baslik: 20px;   --kal-baslik: 700;
+  --boy-bolum: 15px;    --kal-bolum: 600;
+  --boy-govde: 14px;
+  --boy-kucuk: 12.5px;
+  --boy-etiket: 11.5px; --kal-etiket: 600;
+  --r-kucuk: 5px; --r-orta: 8px; --r-buyuk: 12px; --r-tam: 999px;
   --sure: .18s; --egri: cubic-bezier(.4, 0, .2, 1);
-  /* denetim yüksekliği: fare ile 40, dokunmatikte 48 (aşağıda eşiklerle değişir) */
-  --tus-y: 40px;
-  --bosluk-sayfa: 24px;
-  --cubuk-gen: 248px;
+  /* denetim yüksekliği: fare ile 34, dokunmatikte 44 (aşağıda eşiklerle değişir) */
+  --tus-y: 34px;
+  --bosluk-sayfa: 20px;
+  --cubuk-gen: 232px;
+  --ust-y: 52px;
 }
 
 /* AÇIK tema (varsayılan) */
@@ -153,17 +157,17 @@
 }
 
 /* ══ EŞİKLER — ADLANDIRILMIŞ ÜÇ BANT (EKSIKLER 13: eşik eklemek karar gerektirir) ══════════════════════
-   dar   : < 768 px        telefon          — yan menü çekmece, liste kart, denetim 48 px
-   orta  : 768 – 1279 px   tablet           — yan menü çekmece, liste kaba göre, denetim 48 px
-   geniş : ≥ 1280 px       masaüstü         — yan menü sabit, liste kaba göre, denetim 40 px
-   Dokunmatik geniş ekran (pointer: coarse) da 48 px alır. Liste tablo↔kart kararı EKRANA değil KABA göre
-   (@container, anayasa 3.3): kap ≥ 980 px tablo, altı kart. */
+   dar   : < 768 px        telefon          — yan menü çekmece, liste kart, denetim 44 px
+   orta  : 768 – 1279 px   tablet           — yan menü çekmece, liste kaba göre, denetim 44 px
+   geniş : ≥ 1280 px       masaüstü         — yan menü sabit, liste kaba göre, denetim 34 px
+   Dokunmatik geniş ekran (pointer: coarse) da 44 px alır. Liste tablo↔kart kararı EKRANA değil KABA göre
+   (@container, anayasa 3.3); eşik maket.css'te, ölçümle. */
 @media (max-width: 1279.98px) {
-  :root { --tus-y: 48px; --boy-govde: 16px; --bosluk-sayfa: 20px; }
+  :root { --tus-y: 44px; --boy-govde: 15px; --bosluk-sayfa: 16px; }
 }
 @media (max-width: 767.98px) {
-  :root { --bosluk-sayfa: 16px; --boy-baslik: 20px; }
+  :root { --bosluk-sayfa: 12px; --boy-baslik: 18px; }
 }
 @media (pointer: coarse) {
-  :root { --tus-y: 48px; --boy-govde: 16px; }
+  :root { --tus-y: 44px; --boy-govde: 15px; }
 }
