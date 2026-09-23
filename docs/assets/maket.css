@@ -81,11 +81,8 @@ button { cursor: pointer; }
 /* ⛔ ÖZGÜLLÜK TUZAĞI (2026-09-23, koyu temada gözle yakalandı): `.a-ikon-tus` aynı özgüllükte ve SONRA geldiği için
    tek sınıflı `.a-cubuk-kapat{display:none}` eziliyordu → masaüstünde görünmez ama tıklanır × tuşu. İki sınıfla yazılır. */
 .a-ikon-tus.a-cubuk-kapat { display: none; color: var(--cubuk-yazi); }
-/* daraltma tuşu yalnız geniş bantta görünür (dosya sonu); ikonu hâle göre değişir */
+/* daraltma tuşu yalnız geniş bantta görünür (dosya sonu); simgesi her iki hâlde standart ☰ (reisim 2026-09-24) */
 .a-ikon-tus.a-daralt-tus { display: none; }
-.a-daralt-ac { display: none; }
-.a-kabuk-dar .a-daralt-kapat { display: none; }
-.a-kabuk-dar .a-daralt-ac { display: block; }
 .a-ust-isaret { display: none; height: 32px; width: auto; }
 /* 4. tur (reisim 2026-09-23): "muayene kuruluşu ismi sol üstte yazmasın" → firma adı üst çubuktan kalktı */
 .a-ust-bosluk { flex: 1 1 auto; }

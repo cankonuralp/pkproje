@@ -324,6 +324,10 @@ logolar kalsın"*) — makette, ONAY BEKLİYOR (anayasa 2.1; onaylanınca uygula
 probata işareti, grup başlıkları yerine ince çizgi, sayaç simgenin köşesinde, ad üstüne gelince ipucu (yalnız şerit görünürken; ekran okuyucu adı okur)
 · tercih bu cihazda saklanır · tablet ve telefonda çekmece aynen (anayasa 2.11: ikon rayına dönüşmez). "Logolar" =
 menü simgeleri + probata işareti diye yorumlandı. Daralınca içerik 1.648 → 1.816 px (1920'de).
+**2. deneme (reisim 2026-09-24, birebir: *"onaylamıyorum standart üç alt alta çizgi görünümü olsun"*):** ilk denemedeki
+panel simgesi (sol kenarı çizili kutu + ok) reddedildi → daraltma düğmesinin simgesi her iki hâlde **standart ☰**;
+tablet/telefondaki çekmece düğmesiyle aynı simge, aynı yer (üst çubuğun solu). Şerit, ipucu ve tercih aynen. Panel
+simgeleri ikon dosyalarından çıktı (51). ONAY BEKLİYOR.
 **Yorumlarım (5. tur; 29–31) — reisim kabul etti (*"tüm önerilerin uygun"*, 2026-09-23):** menü grupları ve sırası yukarıdaki gibi (her gün
 kullanılan üstte, tanımlar altta) · hareket kaydı plan içinde değil, rol × modül belirlenirken yöneticiye "Hareket kaydı"
 (denetim izi) olarak açılsın · bu tur uygunsa Planlar + plan içi dondurulur ve iskelet kalemi açılır.
@@ -687,6 +691,9 @@ revizyon, alan kopyalama, hafif kusur devri, meslek eşleşme denetimi).
   1920'de 20/20 temiz (daralmış + geniş × iki tema × liste/plan içi/pencereler); 1080 ve 375'te çekmece etkilenmiyor.
   Canlı ölçümde kusur yakalandı: "dar" kayıtlıyken tablette de 17 bağlantıya ipucu konuyordu (ad zaten yazılıyken çift
   ad) → ipucu yalnız geniş bantta, bant değişince yeniden hesaplanıyor. Onay bekliyor; onaylanınca uygulamaya geçer.
+- 2026-09-24 (9): reisim ilk denemeyi onaylamadı: *"standart üç alt alta çizgi görünümü olsun"* → daraltma düğmesi
+  standart ☰ (tabletteki çekmece düğmesiyle aynı simge ve yer), panel simgeleri kalktı (ikon dosyası 51). Maket ölçümü
+  1920'de 8/8 temiz (liste + plan içi × geniş + daralmış × iki tema); 1080 ve 375'te çekmece aynen. Onay bekliyor.
 - 2026-09-23 (7): reisim 29–31'i kabul etti ve *"kodlamaya başla ilk yayını yap"* dedi. **İlk kod kalemi: iskelet** (§8.13):
   Next.js + TypeScript, kabuk (17 modüllü yan menü, tema, çekmece), gömülü PostgreSQL + RLS'li kiracı katmanı + göç
   koşucusu, kalıp sayıları dondu (`src/styles/kalip.ts`), 36 kilit testi + 13 olumsuz kanıt, CI, Pages önizlemesi
