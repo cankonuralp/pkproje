@@ -18,7 +18,7 @@
 ## 1 · Ne yapıyoruz
 **probata** — periyodik kontrol (iş ekipmanı muayene) firmaları için çok kiracılı web uygulaması. Görsel kimlik
 (logo, marka renkleri, Sora, açık + koyu tema): `pkproje.md` §8.12 ve `probata-logo/`. Tam akış:
-**teklif → kabul → sözleşmeler (firmalar arası + İSG-KATİP) → plan açıldı → inspector'ın "Planlarım" ekranına
+**teklif → kabul → sözleşmeler (firmalar arası + İSG-KATİP) → plan açıldı → inspector'ın "Planlar" ekranına
 düştü → kabul/red → plan günü denetim → rapor taslak → branş yöneticisi onayında → onaylandı/geri gönderildi →
 inspector son imza → müşteriye açıldı → fatura → tahsilat → iş kapandı → arşiv.**
 **Modül haritası ve modüller arası bağlantı kuralları: `pkproje.md` §3.1–3.2.** Ayrıntı, mevzuat, kararlar:
@@ -79,7 +79,7 @@ node tools/sunum-uret.mjs
 ```bash
 python -m http.server 8765 --bind 127.0.0.1 --directory docs
 ```
-İlki `docs/assets/tokens.css`'teki gerçek renkleri okuyup 46 çiftin WCAG kontrastını ölçer (geçmeyen varsa çıkış 1).
+İlki `docs/assets/tokens.css`'teki gerçek renkleri okuyup bütün çiftlerin (şu an 62) WCAG kontrastını ölçer (geçmeyen varsa çıkış 1).
 İkincisi sunumu (`docs/index.html`) tokens.css + `docs/assets/olcum.json`'dan yeniden üretir; sunum elle düzenlenmez.
 Üçüncüsü yerel önizleme (`.claude/launch.json` "maket"). Maket ölçümü: `tools/olc-maket.js` tarayıcıda koşar, salt okunur.
 
@@ -155,7 +155,7 @@ ETKİ ALANI). Bir teslimde **BİR kalem**. Reisim'e test ödevi verilmez.
   ben tarayıcı bölmemde ölçerim. Pages **sunucu tarafını çalıştıramaz** (veritabanı, giriş, PDF üretimi) ve kiracı
   başına alt alan adı vermez → gerçek uygulama **Türkiye'de sunucuda** (pkproje.md §8.8).
 - **Yayın (2026-09-23): GitHub Pages `main` dalının `docs/` klasöründen** yayınlar: https://cankonuralp.github.io/pkproje/
-  (görsel sistem) · `…/plan-ici.html` (plan içi sunumu, 3. tur) · `…/maket/planlarim.html` (maket; `#/plan/<id>` plan içi,
+  (görsel sistem) · `…/plan-ici.html` (plan içi ve yan menü sunumu) · `…/maket/planlarim.html` (maket; `#/plan/<id>` plan içi,
   `#/plan/<id>/ekle` ekipman ekle). İki sunum `tools/sunum-uret.mjs` ile üretilir, elle düzenlenmez. Sayfalar `noindex`; veri uydurma. İskelet kurulunca GitHub Actions iş
   akışına geçilir: her push'ta test + derleme, statik önizleme çıktısı Pages'e (Eksikler §1 CI ile aynı iş akışı).
 - OneDrive: reisim'de kapalı, klasör adı Windows 10'dan kalma; dosyalar yerelde. Yedek = GitHub.

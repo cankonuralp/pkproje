@@ -108,7 +108,7 @@ tekrar teyit etti).
 
 **Tam akış (reisim 2026-09-22):**
 **Teklif → kabul → sözleşmeler (firmalar arası iş sözleşmesi + İSG-KATİP) → plan açıldı → inspector'ın
-"Planlarım" ekranına düştü → inspector kabul etti / gerekçeyle reddetti → plan günü denetim → rapor taslak →
+"Planlar" ekranına düştü → inspector kabul etti / gerekçeyle reddetti → plan günü denetim → rapor taslak →
 yönetici onayında → onaylandı / geri gönderildi → inspector son imza → müşteriye açıldı → fatura → tahsilat →
 iş kapandı → arşiv.**
 
@@ -163,7 +163,7 @@ Kurallar (reisim'in sözünden türeyen, ürün kuralı olarak):
 | 10 | Eğitim Takibi | Personel eğitimleri, belge, tekrar süresi, bitmeden uyarı |
 | 11 | Teklif | Müşteri, tesis, kalemler (ekipman türü × adet × birim fiyat), durum |
 | 12 | Sözleşme | Firmalar arası iş sözleşmesi + İSG-KATİP kayıtları (no, onay tarihi, yetkili kişi, tesis) |
-| 13 | Planlama | Plan açma, inspector atama, ekipman listesi, "Planlarım", kabul/red, durumlar |
+| 13 | Planlama | Plan açma, inspector atama, ekipman listesi, "Planlar" ekranı (5. turda genel ad; eski "Planlarım"), kabul/red, durumlar |
 | 14 | Saha & Rapor | Rapor girişi, ölçüm, kriter, kusur (hafif/ağır), fotoğraf (en az 1), cihazlar zimmetten; pano fotoğrafından sigorta okuma |
 | 15 | Onay & İmza | Branş yöneticisi onayı, geri gönderme gerekçesi, inspector son imzası; yöntem firma seçer (§8.4) |
 | 16 | PDF Üretimi | Kodlu şablonla sunucuda |
@@ -211,15 +211,15 @@ bağlantı kurallarının istediği modülleri atlamışım; bunlar olmadan omur
 **Faz 2:** 11 Teklif · 12 Sözleşme'nin iş sözleşmesi kısmı · 18 Muhasebe · 19 Performans & Raporlama ·
 10 Eğitim Takibi · 20 Uyarılar'ın eğitim kısmı.
 **Faz 1 sırası (karar, 4. tur):** 1 İskelet → 2 Kullanıcı ve Rol · Personel → 3 Müşteri ve Tesis → 4 Ekipman Türü
-Kataloğu · Ekipman → 5 Ölçüm Cihazı · Zimmet · kalibrasyon uyarısı → 6 İSG-KATİP kaydı → 7 Planlama · Planlarım · plan
+Kataloğu · Ekipman → 5 Ölçüm Cihazı · Zimmet · kalibrasyon uyarısı → 6 İSG-KATİP kaydı → 7 Planlama · Planlar · plan
 içi → 8 Standart Kütüphanesi · ilk Rapor Şablonu → 9 Saha ve Rapor → 10 Onay ve İmza · PDF → 11 Müşteri Paneli.
-**Referans ekran (reisim 2026-09-23: *"uygun"*):** **Planlarım** (13 Planlama). Liste, süzgeç satırı, durum rozeti,
+**Referans ekran (reisim 2026-09-23: *"uygun"*):** **Planlar** (13 Planlama; 5. turda eski "Planlarım" adı genel ada çevrildi). Liste, süzgeç satırı, durum rozeti,
 birincil/ikincil tuş, boş durum ve dürüst sayaç gibi ortak parçaları doğurur; ölçüleri tasarım kalıbının bu
 projedeki sayıları olur. Ardından saha rapor ekranı (14). **Dondurma (karar 25, 4. tur — önerim kabul):** plan içi
-sunumunun 4. turu onaylanınca Planlarım + plan içi dondurulur: sayıları (34 / 44 px, kart eşiği 960 px, sayfa 10)
+sunumunun son turu onaylanınca Planlar + plan içi dondurulur: sayıları (34 / 44 px, kart eşiği 960 px, sayfa ekipman 10 · rapor 20)
 tasarım kalıbının bu projedeki sayıları olarak yazılır, iskelet kaleminde testle kilitlenir; sonra iskelet.
 
-### 3.4 · Planlarım ve plan içi (reisim 2026-09-23, maketin 2., 3. ve 4. turu)
+### 3.4 · Planlar (eski adı Planlarım) ve plan içi (reisim 2026-09-23, maketin 2.–5. turu)
 Reisim, kullandığı bir uygulamanın plan listesinin ekran görüntüsünü örnek gösterdi (görüntü ve içindeki veri depoya
 girmez) ve dedi ki (birebir): *"bundan örnek al ama, mesaii iş türü, rapor durumu sütunları gereksiz, aksiyon tuşu
 gereksiz, kabul et denetime başla ve devam et diye değişmeli , planın içerisinden tamamla dendiğinde tamamlandı olmalı
@@ -295,9 +295,29 @@ olsun ve bizim maketimizde her şey çok büyük, filtreleme yok , ayrıca muaye
   1.024'te plan içi kart) (§8.12).
 · **Firma adı** üst çubuktan kalktı.
 · **17–25**: önerilerim kabul, **takvim hariç** → §3.3 (faz 1 sırası, dondurma), §3.5 (numaralar). **Takvim yok.**
-**Yorumlarım (öneri — onay bekliyor; plan içi sunumunda 26–28):** tarafsızlık beyanının metni firma ayarı (kalite el
-kitabındaki metin; boşsa varsayılan), kabul anındaki sürüm hareket kaydına yazılır · proje notunu plandaki inspector'lar
-ve planlama ekibi yazar ve görür, müşteri görmez, not silinmez · bu tur uygunsa referans ekran dondurulur ve iskelet açılır.
+**Yorumlarım (4. tur; 26–28) — reisim 5. turda kabul etti (*"önerilerin uygundur"*):** tarafsızlık beyanının metni firma
+ayarı (kalite el kitabındaki metin; boşsa varsayılan), kabul anındaki sürüm kayda yazılır · proje notunu plandaki
+inspector'lar ve planlama ekibi yazar ve görür, müşteri görmez, not silinmez · 4. tur uygun, değişiklik istekleriyle.
+
+**Karar (reisim 2026-09-23, 5. tur; birebir):** *"önerilerin uygundur, hareketler kısmını kaldır, raporlarda 5 değil 20
+rapor alt alta durabilsin 5 çok az , sol tarafdaki bar da çok az modül var , diğer modüller nerde onlarda gözüksün kim
+hangi modülü görebilecek sonradan belirleriz onları"* · *"sekmelerin adı da öznellik içermesin planlar raporlar zimmetler
+gibi genel isimler olsun"*
+· **Hareket listesi plan içinden kalktı**; yerinde yalnız **Proje notları** (karar 27). Hareket kaydı **tutulmaya devam
+  eder** (3. tur: *"bu hareketler kayıt altında kalsın"*) ama plan içinde gösterilmez; nerede görüneceği soru 30.
+· **Raporlar 20'şer** sayfa; ekipman 10'ar kaldı. (Reisim'in gördüğü "5": örnek planda 5 rapor vardı, hepsi görünüyordu;
+  örnek plan 10 rapora, tamamlanmış örnek 22 rapora çıkarıldı.)
+· **Yan menüde firma panelindeki bütün modüller** (§3.1'in 17'si), 6 grupta: İş takibi (Planlar · Raporlar · Onaylar ·
+  Uyarılar) · Müşteri (Müşteriler · Teklifler · Sözleşmeler) · Varlık (Ekipmanlar · Ölçüm cihazları · Zimmetler) ·
+  Personel (Personel · Eğitimler) · Finans (Muhasebe · Performans) · Tanımlar (Ekipman türleri · Standartlar ·
+  Kullanıcılar). Menüde yok: 6 Rapor Şablonları (kodda), 16 PDF Üretimi (sunucu işi), 17 Müşteri Paneli (müşterinin
+  kendi girişi). Sığmayan yükseklikte yalnız menü kayar.
+· **Menü ve ekran adları genel**, kişiye bağlı değil: Planlarım → **Planlar**, Raporlarım → **Raporlar**, Zimmetim →
+  **Zimmetler**; sayfa başlığı, kırıntı ve sekme adı da.
+· **Kim hangi modülü görecek: sonra** (reisim). Maket herkese bütün menüyü gösteriyor.
+**Yorumlarım (öneri — onay bekliyor; plan içi sunumunda 29–31):** menü grupları ve sırası yukarıdaki gibi (her gün
+kullanılan üstte, tanımlar altta) · hareket kaydı plan içinde değil, rol × modül belirlenirken yöneticiye "Hareket kaydı"
+(denetim izi) olarak açılsın · bu tur uygunsa Planlar + plan içi dondurulur ve iskelet kalemi açılır.
 
 ### 3.5 · Numara sistemi (reisim 2026-09-23: *"mantıklı şekilde proje numarası atama sistemi kur, aynı şekilde raporlar için de eşsiz isimlendirmeler olmalı"*)
 **Karar:** üç numara da **firmada eşsizdir**; veritabanında benzersizlik kısıtı taşır. Ayrıntılar **karar** (17–21,
@@ -579,8 +599,12 @@ Planlarım 9–16 ve ekipman/rapor ayrımı → §3.4, §3.5.
 **Altıncı tur (2026-09-23):** 17–25 → **önerilerim kabul, takvim hariç** (takvim yok) · faz 1 sırası → kabul (§3.3) ·
 plan içi bir akış, 10'ar sayfa, ekipman ve rapor süzgeci, yoğunluk 34 / 44 px, firma adı üst çubuktan kalktı (§3.4).
 
-**Açık kalanlar:** **plan içi sunumunun 26–28. soruları** (tarafsızlık beyanı metninin kaynağı · proje notunu kim
-yazar, kim görür · 4. tur uygun mu → dondurma ve iskelet) ·
+**Yedinci tur (2026-09-23):** 26–28 → **önerilerim kabul** (beyan metni firma ayarı · proje notu inspector + planlama
+ekibi, müşteri görmez, silinmez · 4. tur değişikliklerle uygun) · hareket listesi plan içinden kalktı · raporlar 20'şer ·
+yan menüde bütün modüller, genel adlar · rol × modül görünürlüğü sonra (§3.4).
+
+**Açık kalanlar:** **plan içi sunumunun 29–31. soruları** (menü grupları · hareket kaydının yeri · 5. tur uygun mu →
+dondurma ve iskelet) · **rol × modül görünürlüğü** (reisim: *"sonradan belirleriz"*) ·
 alan adının alınması · e-imza yöntemi (8.4) · v1 ekipman grupları · 5 yıl sonrası silme
 mekanizması · **zimmette birden çok cihaz varsa süzgeç** (§3) · **kontrol metodu standardının seçim yeri**
 (rapor anı mı, ekipman türü mü — §3) · **§3.1 ve §3.2'deki "öneri" maddeleri** (planlama saat dağıtımı,
@@ -623,6 +647,10 @@ revizyon, alan kopyalama, hafif kusur devri, meslek eşleşme denetimi).
   aktarıldığı hâline döndü. Ürün kararları bu dosyada tutulur. (b) Fotoğraf konumu/EXIF gibi şeylere
   **dokunulmayacak**. (c) Emsal uygulama incelemesi **GitHub'da paylaşılmaz** → bölüm 6 `yerel/` klasörüne
   taşındı, depo geçmişi bu içerikten temizlendi. Ana hedef: **müşterimizin işini kolaylaştırmak.**
+- 2026-09-23 (6): reisim 26–28'de önerilerimi kabul etti. Plan içi 5. tur (§3.4): hareket listesi kalktı (kayıt tutulur),
+  yerinde **Proje notları**; raporlar **20'şer**; yan menüde firma panelinin **bütün modülleri** (17, 6 grup); menü ve
+  ekran adları genel (**Planlar**, Raporlar, Zimmetler). İkon dosyasına 10 ikon (51). 54 ölçüm temiz, kontrast 62 / 62,
+  41 etkileşim denemesi geçti; bu turda ölçerken hata bulunmadı. Sorular 29–31 reisim'de; rol × modül görünürlüğü sonra.
 - 2026-09-23 (5): reisim bir plan sayfasını örnek gösterdi (inceleme yerelde) ve 17–25'te önerilerimi kabul etti (takvim
   hariç). Plan içi 4. tur (§3.4): **Planlandı → Kabul → Denetim → Tamamlama** adım çizelgesi, tarafsızlık beyanı, kapsam,
   kontrol listesi, **10'ar sayfa**, ekipman ve rapor **süzgeci**, proje notu; yoğunluk **34 / 44 px**, kart eşiği

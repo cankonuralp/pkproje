@@ -3,7 +3,7 @@
 <head>
 <meta charset="utf-8">
 <meta name="viewport" content="width=device-width, initial-scale=1">
-<title>Planlarım · probata maket</title>
+<title>Planlar · probata maket</title>
 <meta name="robots" content="noindex">
 <link rel="icon" href="../marka/favicon.svg" type="image/svg+xml">
 <script>
@@ -28,16 +28,8 @@
         <svg class="a-ikon" aria-hidden="true"><use href="../vendor/lucide-1.47.0/ikonlar.svg#i-x"/></svg>
       </button>
     </div>
-    <nav class="a-menu">
-      <a href="#/" aria-current="page">
-        <svg class="a-ikon" aria-hidden="true"><use href="../vendor/lucide-1.47.0/ikonlar.svg#i-calendar-check"/></svg>
-        Planlarım <span class="a-menu-sayi" id="a-menu-sayi" title="Kabul bekleyen plan"></span>
-      </a>
-      <a href="#"><svg class="a-ikon" aria-hidden="true"><use href="../vendor/lucide-1.47.0/ikonlar.svg#i-file-text"/></svg>Raporlarım</a>
-      <a href="#"><svg class="a-ikon" aria-hidden="true"><use href="../vendor/lucide-1.47.0/ikonlar.svg#i-wrench"/></svg>Ekipmanlar</a>
-      <a href="#"><svg class="a-ikon" aria-hidden="true"><use href="../vendor/lucide-1.47.0/ikonlar.svg#i-package"/></svg>Zimmetim</a>
-      <a href="#"><svg class="a-ikon" aria-hidden="true"><use href="../vendor/lucide-1.47.0/ikonlar.svg#i-book-open"/></svg>Standartlar</a>
-    </nav>
+    <!-- YAN MENÜ (5. tur): firma panelindeki bütün modüller, genel adlarla; maket.js menuHtml() MENU'den doldurur -->
+    <nav class="a-menu" id="a-menu" aria-label="Modüller"></nav>
     <div class="a-cubuk-alt">Maket · uydurma veri</div>
   </aside>
   <div class="a-perde" data-eylem="cekmece-kapat"></div>
@@ -64,7 +56,7 @@
       <!-- GÖRÜNÜM 1 · liste (adres #/ ya da boş). GÖRÜNÜM 2 · plan içi (#/plan/<id>), maket.js planCiz() doldurur. -->
       <div id="a-liste-gorunum">
       <div class="a-sayfa-bas">
-        <h1 tabindex="-1">Planlarım</h1>
+        <h1 tabindex="-1">Planlar</h1>
         <span class="a-sayac" id="a-sayac" aria-live="polite"></span>
       </div>
 

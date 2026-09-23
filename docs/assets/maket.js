@@ -1,4 +1,4 @@
-/* ══ probata MAKET — Planlarım + plan içi (2026-09-23 · 4. tur) ═══════════════════════════════════════════
+/* ══ probata MAKET — Planlar + plan içi (2026-09-23 · 5. tur) ════════════════════════════════════════════
    ⛔ Tüm veri UYDURMADIR (anayasa 10.3); gerçek firma, kişi, tesis, adres, sözleşme ve ekipman kodu yok.
    ⛔ "Bugün" sabit: 2026-09-23, saat 16:40 — ölçüm her açılışta aynı sonucu versin.
    Adres: ?veri=dolu|bos|hata · ?tema=acik|koyu · #/plan/<id> = plan içi ·
@@ -8,7 +8,10 @@
    kayda geçer; numara sistemi.
    4. tur (reisim 2026-09-23): plan içi bir AKIŞ — dikey adım çizelgesi: Planlandı → Kabul (tarafsızlık beyanı) →
    Denetim (kontrol listesi: ekipmanlar + raporlar) → Tamamlama; her adım kim/ne zaman gösterir, iş adımın içinde yapılır.
-   Ekipman ve rapor listeleri SÜZGEÇLİ ve 10'ar kayıtla SAYFALI. Süzgeç satırları tek üreticiden (kalıp 15). */
+   Ekipman ve rapor listeleri SÜZGEÇLİ ve 10'ar kayıtla SAYFALI. Süzgeç satırları tek üreticiden (kalıp 15).
+   5. tur (reisim 2026-09-23): hareket listesi plan içinden kalktı (kayıt tutulur, gösterilmez), yerinde yalnız proje
+   notları · raporlar 20'şer · yan menüde firma panelindeki BÜTÜN modüller, genel adlarla (Planlar, Raporlar, Zimmetler…);
+   kimin hangi modülü göreceği sonra belirlenecek. */
 (function () {
   "use strict";
   var IKON = "../vendor/lucide-1.47.0/ikonlar.svg#i-";
@@ -16,7 +19,9 @@
   var HAFTA = ["2026-09-21", "2026-09-27"];
   var YEDI = ["2026-09-23", "2026-09-29"];
   var FIRMA_KOD = "KM";   /* rapor numarasının başındaki firma kısa kodu (firma ayarı) */
-  var SAYFA = 10;          /* reisim 2026-09-23: "10 taneden sonra diğer sayfaya geçsin" */
+  /* sayfa boyu listeye göre (reisim 2026-09-23): ekipman 10 ("10 taneden sonra diğer sayfaya geçsin"), rapor 20
+     ("raporlarda 5 değil 20 rapor alt alta durabilsin") */
+  var SAYFA = { e: 10, r: 20 };
 
   var KISI = {
     mk: { ad: "Mert Kaya", brans: "Mekanik", rol: "Inspector" },
@@ -25,6 +30,17 @@
     za: { ad: "Zeynep Arslan", brans: "", rol: "Planlama" }
   };
   var BEN = "mk";
+  /* Yan menü (reisim 2026-09-23: "diğer modüller nerde onlarda gözüksün"; ad: "planlar raporlar zimmetler gibi genel isimler").
+     pkproje.md §3.1'in firma panelinde ekranı olan 17 modülü; ekranı olmayanlar yok: 6 Rapor Şablonları (kodda), 16 PDF
+     Üretimi (sunucu işi), 17 Müşteri Paneli (müşterinin kendi girişi). Rol × modül görünürlüğü sonra belirlenecek. */
+  var MENU = [
+    { grup: "İş takibi", ogeler: [["Planlar", "calendar-check", 13], ["Raporlar", "file-text", 14], ["Onaylar", "badge-check", 15], ["Uyarılar", "alarm-clock", 20]] },
+    { grup: "Müşteri", ogeler: [["Müşteriler", "building-2", 3], ["Teklifler", "file-pen-line", 11], ["Sözleşmeler", "scroll-text", 12]] },
+    { grup: "Varlık", ogeler: [["Ekipmanlar", "wrench", 7], ["Ölçüm cihazları", "gauge", 8], ["Zimmetler", "package", 9]] },
+    { grup: "Personel", ogeler: [["Personel", "users", 2], ["Eğitimler", "graduation-cap", 10]] },
+    { grup: "Finans", ogeler: [["Muhasebe", "wallet", 18], ["Performans", "chart-column", 19]] },
+    { grup: "Tanımlar", ogeler: [["Ekipman türleri", "layers", 5], ["Standartlar", "book-open", 4], ["Kullanıcılar", "user-cog", 1]] }
+  ];
   /* Ekipman türü kataloğu (modül 5'in maketteki karşılığı). 14 tür > 8 → seçim alanında arama (kalıp 19). */
   var KATALOG = [
     { k: "HT", ad: "Hava tankı", b: "m" }, { k: "FL", ad: "Forklift", b: "m" }, { k: "KK", ad: "Köprülü kren", b: "m" },
@@ -41,7 +57,7 @@
   var BEYAN = "Bu planı TS EN ISO/IEC 17020 kurallarına uygun, bağımsız ve tarafsız yürüteceğimi; muayene edilen kuruluşla tarafsızlığımı etkileyecek ticari, mali ya da kişisel bir ilişkim ve çıkar çatışmam olmadığını; sonuçları yalnız teknik bulgulara dayanarak doğru ve eksiksiz raporlayacağımı beyan ederim.";
 
   var PLANLAR = [
-    { id: 1, no: "P-0926-031", ad: "Merkez Fabrika", musteri: "Ada Makina San. ve Tic. A.Ş.", adres: "Organize Sanayi Bölgesi 4. Cadde No: 12", ilce: "Gebze", il: "Kocaeli", tarih: "2026-09-23", bas: "09:00", bit: "12:30", ekip: ["mk", "ea"], m: 8, e: 4, yeni: 2, disarida: 2, durum: "denetimde", acildi: "2026-09-15T10:12", kabul: "2026-09-16T08:31", basladi: "2026-09-23T09:04", isg: { no: "S-2026-0412", onay: "2026-09-16" }, rap: { onayda: 1, taslak: 4 }, aciklama: "Kompresör odasına giriş için tesis güvenliğinden refakat istenecek." },
+    { id: 1, no: "P-0926-031", ad: "Merkez Fabrika", musteri: "Ada Makina San. ve Tic. A.Ş.", adres: "Organize Sanayi Bölgesi 4. Cadde No: 12", ilce: "Gebze", il: "Kocaeli", tarih: "2026-09-23", bas: "09:00", bit: "12:30", ekip: ["mk", "ea"], m: 8, e: 4, yeni: 2, disarida: 2, durum: "denetimde", acildi: "2026-09-15T10:12", kabul: "2026-09-16T08:31", basladi: "2026-09-23T09:04", isg: { no: "S-2026-0412", onay: "2026-09-16" }, rap: { onayda: 3, taslak: 7 }, aciklama: "Kompresör odasına giriş için tesis güvenliğinden refakat istenecek." },
     { id: 2, no: "P-0926-034", ad: "Depo 2", musteri: "Yıldız Ambalaj A.Ş.", adres: "Liman Caddesi No: 7", ilce: "Tuzla", il: "İstanbul", tarih: "2026-09-23", bas: "14:00", bit: "17:00", ekip: ["mk"], m: 5, e: 0, durum: "bekliyor", acildi: "2026-09-17T11:40", isg: { no: "S-2026-0431", onay: "2026-09-19" } },
     { id: 3, no: "P-0926-036", ad: "Aktarma Merkezi ve Soğuk Hava Deposu", musteri: "Kuzey Lojistik ve Depolama Hizmetleri A.Ş.", adres: "Sanayi Caddesi No: 48, Aktarma Merkezi Girişi", ilce: "Çorlu", il: "Tekirdağ", tarih: "2026-09-24", bas: "08:30", bit: "16:30", ekip: ["mk", "ea", "bs"], m: 14, e: 6, disarida: 1, durum: "bekliyor", acildi: "2026-09-18T09:05", isg: { no: "S-2026-0440", onay: "2026-09-15" } },
     { id: 4, no: "P-0926-038", ad: "Boyahane", musteri: "Mavi Tekstil Ltd.", adres: "Organize Sanayi Bölgesi 2. Sokak No: 5", ilce: "Çerkezköy", il: "Tekirdağ", tarih: "2026-09-25", bas: "09:00", bit: "13:00", ekip: ["mk", "ea"], m: 2, e: 7, durum: "bekliyor", acildi: "2026-09-19T14:22", isg: { no: "S-2026-0447", onay: "2026-09-25" }, eksik: "İSG-KATİP onayı 25 Eyl'de verilmiş; en geç 24 Eyl olmalı." },
@@ -49,7 +65,7 @@
     { id: 6, no: "P-0926-035", ad: "Üretim Tesisi", musteri: "Ege Plastik A.Ş.", adres: "Organize Sanayi Bölgesi 1. Kısım No: 9", ilce: "Yunusemre", il: "Manisa", tarih: "2026-09-29", bas: "09:00", bit: "15:00", ekip: ["mk", "ea"], m: 7, e: 3, durum: "kabul", acildi: "2026-09-17T15:30", kabul: "2026-09-18T09:12", isg: { no: "S-2026-0436", onay: "2026-09-20" } },
     { id: 7, no: "P-0926-037", ad: "Şantiye Deposu", musteri: "Kaya Yapı Malzemeleri Ltd.", adres: "Çevre Yolu Caddesi No: 3", ilce: "Başakşehir", il: "İstanbul", tarih: "2026-09-30", bas: "09:00", bit: "12:00", ekip: ["mk"], m: 2, e: 0, durum: "red", acildi: "2026-09-18T16:02", reddedildi: "2026-09-19T08:47", isg: { no: "S-2026-0444", onay: "2026-09-21" }, gerekce: "Aynı saatte başka tesiste denetimim var." },
     { id: 8, no: "P-0926-028", ad: "Soğuk Hava Deposu", musteri: "Deniz Gıda Ltd.", adres: "Liman Yolu No: 15", ilce: "Pendik", il: "İstanbul", tarih: "2026-09-22", bas: "09:00", bit: "11:30", ekip: ["mk"], m: 4, e: 0, durum: "tamam", acildi: "2026-09-10T13:15", kabul: "2026-09-11T08:05", basladi: "2026-09-22T09:02", bitti: "2026-09-22T11:52", isg: { no: "S-2026-0405", onay: "2026-09-12" }, rap: { onayda: 3, taslak: 1 } },
-    { id: 9, no: "P-0926-025", ad: "Değirmen", musteri: "Başak Un Değirmenleri A.Ş.", adres: "İstasyon Caddesi No: 30", ilce: "Lüleburgaz", il: "Kırklareli", tarih: "2026-09-21", bas: "13:00", bit: "16:00", ekip: ["mk", "ea"], m: 9, e: 4, durum: "tamam", acildi: "2026-09-08T10:30", kabul: "2026-09-09T07:58", basladi: "2026-09-21T13:05", bitti: "2026-09-21T16:20", isg: { no: "S-2026-0398", onay: "2026-09-10" }, rap: { onaylandi: 8, onayda: 4 } }
+    { id: 9, no: "P-0926-025", ad: "Değirmen", musteri: "Başak Un Değirmenleri A.Ş.", adres: "İstasyon Caddesi No: 30", ilce: "Lüleburgaz", il: "Kırklareli", tarih: "2026-09-21", bas: "13:00", bit: "16:00", ekip: ["mk", "ea"], m: 16, e: 8, durum: "tamam", acildi: "2026-09-08T10:30", kabul: "2026-09-09T07:58", basladi: "2026-09-21T13:05", bitti: "2026-09-21T16:20", isg: { no: "S-2026-0398", onay: "2026-09-10" }, rap: { onaylandi: 14, onayda: 8 } }
   ];
 
   /* ── NUMARA SİSTEMİ (pkproje.md §3.5, reisim kararı 2026-09-23) ────────────────────────────────────────
@@ -96,6 +112,7 @@
     p.rapor.forEach(function (r) { kaydet(p, r.olustu, BEN, "Rapor oluşturuldu", r.no + " · " + r.kod); });
     if (p.bitti) kaydet(p, p.bitti, BEN, "Plan tamamlandı");
   });
+  kaydet(PLANLAR[0], "2026-09-22T15:20", "za", "Not", "Tesis 12:00–13:00 arası öğle arası veriyor; bu saatte üretim holüne girilmiyor.");
 
   var DURUM = {
     bekliyor: { ad: "Kabul bekliyor", rozet: "a-rozet-bekliyor", sira: 0 },
@@ -137,7 +154,7 @@
   var NOTLAR_ACIK = false;
 
   /* ══ SÜZGEÇ — TEK ÜRETİCİ (kalıp 15) ════════════════════════════════════════════════════════════════
-     Üç süzgeç aynı üreticiden: l = Planlarım listesi · e = plan içi ekipmanlar · r = plan içi raporlar.
+     Üç süzgeç aynı üreticiden: l = Planlar listesi · e = plan içi ekipmanlar · r = plan içi raporlar.
      Satır: arama → yüklem çipleri + ve/veya (kalıp 8) → seçiciler + Temizle sağda. Telefonda seçiciler levhada.
      Çiplerin `grup`u aynıysa birbirini dışlar: "ve" ile ikisi seçilince sonuç imkânsızdır, sebebi söylenir. */
   var CIP_L = [
@@ -159,7 +176,7 @@
     { k: "onayda", ad: "Onayda", grup: "durum", test: function (r) { return r.durum === "onayda"; } },
     { k: "onaylandi", ad: "Onaylandı", grup: "durum", test: function (r) { return r.durum === "onaylandi"; } }
   ];
-  /* Sıralama (yalnız Planlarım): tabloda sütun başlığı, kart kipinde "Sıralama" seçicisi; ikisi de aynı değeri yazar. */
+  /* Sıralama (yalnız Planlar): tabloda sütun başlığı, kart kipinde "Sıralama" seçicisi; ikisi de aynı değeri yazar. */
   var SIRA_ANAHTAR = {
     no: function (p) { return p.no; }, ad: function (p) { return p.ad; }, musteri: function (p) { return p.musteri; },
     adres: function (p) { return p.il + " " + p.ilce + " " + p.adres; }, ekip: function (p) { return KISI[p.ekip[0]].ad; },
@@ -312,7 +329,7 @@
   }
   function sayfalayici(on, toplam, sayfa) {
     if (!toplam) return "";
-    var n = Math.ceil(toplam / SAYFA), bas = (sayfa - 1) * SAYFA + 1, son = Math.min(toplam, sayfa * SAYFA);
+    var boy = SAYFA[on], n = Math.ceil(toplam / boy), bas = (sayfa - 1) * boy + 1, son = Math.min(toplam, sayfa * boy);
     var h = '<nav class="a-sayfalar" aria-label="' + SZ_TANIM[on].birim + ' sayfaları"><span class="a-sayfa-bilgi">' + bas + "–" + son + " / " + toplam + "</span>";
     if (n > 1) {
       h += '<div class="a-sayfa-tuslar"><button class="a-sayfa" type="button" data-sayfa="' + (sayfa - 1) + '" aria-label="Önceki sayfa"' + (sayfa === 1 ? " disabled" : "") + ">" + ikon("chevron-left", "a-ikon-kucuk") + "</button>";
@@ -331,7 +348,7 @@
       suzgec: ["search", "Süzgece uyan " + (on ? SZ_TANIM[on].birim : "plan") + " yok", "Arama ya da süzgeç değiştirilince liste yeniden dolar.", '<button class="a-tus a-tus-ikincil" type="button" data-eylem="temizle">Süzgeci temizle</button>'],
       imkansiz: ["circle-alert", on ? SZ_TANIM[on].imkansiz : "", "“ve” seçiliyken aynı gruptan iki çip birlikte hiçbir kayda uymaz. “veya” ile ikisine uyanlar birlikte listelenir.", '<button class="a-tus a-tus-ikincil" type="button" data-kip="veya">“veya”ya geç</button>'],
       hata: ["refresh-cw", "Planlar yüklenemedi", "Sunucuya bağlanılamadı; liste eski hâliyle gösterilmiyor.", '<button class="a-tus a-tus-ikincil" type="button" data-eylem="tekrar">' + ikon("refresh-cw", "a-ikon-kucuk") + "Tekrar dene</button>"],
-      plan: ["circle-alert", "Plan bulunamadı", "Bu adresteki plan listede yok ya da artık size atanmış değil.", '<a class="a-tus a-tus-ikincil" href="#/">' + ikon("arrow-left", "a-ikon-kucuk") + "Planlarım'a dön</a>"],
+      plan: ["circle-alert", "Plan bulunamadı", "Bu adresteki plan listede yok ya da artık size atanmış değil.", '<a class="a-tus a-tus-ikincil" href="#/">' + ikon("arrow-left", "a-ikon-kucuk") + "Planlara dön</a>"],
       /* yükleme hatasında "bulunamadı" denmez — plan var olabilir, yüklenemedi (anayasa 2.8 dürüstlük) */
       planHata: ["refresh-cw", "Plan yüklenemedi", "Sunucuya bağlanılamadı; plan eski hâliyle gösterilmiyor.", '<button class="a-tus a-tus-ikincil" type="button" data-eylem="tekrar">' + ikon("refresh-cw", "a-ikon-kucuk") + "Tekrar dene</button>"]
     }[tur];
@@ -390,6 +407,17 @@
     { k: "durum", baslik: "Durum", kart: "rozet", sira: 1, hucre: function (p) { return rozet(DURUM[p.durum]); } },
     { k: "eylem", baslik: "İşlem", gizliBaslik: true, kart: "eylem", sira: 9, hucre: listeEylem }
   ];
+  /* yan menü tek kaynaktan (MENU); ekranı henüz tasarlanmamış modül tıklanınca bildirim — maket dışına gidilmez */
+  function menuHtml() {
+    return MENU.map(function (g, i) {
+      return '<p class="a-menu-grup" id="a-menu-grup-' + i + '">' + g.grup + '</p><ul class="a-menu-liste" aria-labelledby="a-menu-grup-' + i + '">' +
+        g.ogeler.map(function (o) {
+          var plan = o[2] === 13;
+          return "<li><a " + (plan ? 'href="#/" aria-current="page"' : 'href="#" data-eylem="modul" data-ne="' + o[0] + '"') + ">" + ikon(o[1]) + '<span class="a-menu-ad">' + o[0] + "</span>" +
+            (plan ? '<span class="a-menu-sayi" id="a-menu-sayi" title="Kabul bekleyen plan"></span>' : "") + "</a></li>";
+        }).join("") + "</ul>";
+    }).join("");
+  }
   function menuSayi() {
     var ms = PLANLAR.filter(function (p) { return p.durum === "bekliyor"; }).length;
     $("a-menu-sayi").textContent = ms || ""; $("a-menu-sayi").hidden = !ms || VERI !== "dolu";
@@ -406,7 +434,7 @@
     $("a-sayac").innerHTML = suzgecVar("l") ? "<b>" + liste.length + "</b> / " + hepsi.length + " plan" : "<b>" + hepsi.length + "</b> plan";
     if (!hepsi.length) { $("a-liste").innerHTML = bos("yok"); return; }
     if (!liste.length) { $("a-liste").innerHTML = bos(imkansiz("l") ? "imkansiz" : "suzgec", "l"); return; }
-    $("a-liste").innerHTML = tabloHtml({ baslik: "Planlarım", sinif: "a-tablo-plan", sutunlar: PLAN_SUTUN, kayitlar: liste, siralanir: true,
+    $("a-liste").innerHTML = tabloHtml({ baslik: "Planlar", sinif: "a-tablo-plan", sutunlar: PLAN_SUTUN, kayitlar: liste, siralanir: true,
       href: function (p) { return "#/plan/" + p.id; } });
     listeKipi();
   }
@@ -487,12 +515,12 @@
     cipCiz(on, tb);
     var birim = SZ_TANIM[on].birim;
     $("a-sayac-" + on).innerHTML = suzgecVar(on) ? "<b>" + liste.length + "</b> / " + hepsi.length + " " + birim : "<b>" + hepsi.length + "</b> " + birim;
-    var n = Math.max(1, Math.ceil(liste.length / SAYFA)); if (s.sayfa > n) s.sayfa = n;
+    var n = Math.max(1, Math.ceil(liste.length / SAYFA[on])); if (s.sayfa > n) s.sayfa = n;
     var ic = "";
     if (!hepsi.length) ic = '<p class="a-bos-satir">' + (on === "r" ? (calisir(p) ? "Bu planda henüz rapor yok. Rapor, ekipmanın satırındaki “Rapor oluştur” ile açılır." : "Rapor, denetime başlanınca ekipmanın satırından oluşturulur.") : "Bu planda ekipman yok.") + "</p>";
     else if (!liste.length) ic = bos(imkansiz(on) ? "imkansiz" : "suzgec", on);
     else ic = tabloHtml({ baslik: on === "e" ? "Plandaki ekipmanlar" : "Bu plandaki raporlar", sinif: on === "e" ? "a-tablo-ekipman" : "a-tablo-rapor",
-      sutunlar: on === "e" ? ekpSutun(p) : RAP_SUTUN, kayitlar: liste.slice((s.sayfa - 1) * SAYFA, s.sayfa * SAYFA) });
+      sutunlar: on === "e" ? ekpSutun(p) : RAP_SUTUN, kayitlar: liste.slice((s.sayfa - 1) * SAYFA[on], s.sayfa * SAYFA[on]) });
     $("a-liste-" + on).innerHTML = ic;
     $("a-sayfa-" + on).innerHTML = liste.length ? sayfalayici(on, liste.length, s.sayfa) : "";
   }
@@ -500,12 +528,12 @@
   function kaydaGit(kod) {
     var liste = taban("e", AKTIF.ekp.map(function (k) { return SICIL[k]; })).filter(function (e) { return cipGecer("e", e); });
     var i = liste.map(function (e) { return e.kod; }).indexOf(kod);
-    if (i >= 0) SZ.e.sayfa = Math.floor(i / SAYFA) + 1;
+    if (i >= 0) SZ.e.sayfa = Math.floor(i / SAYFA.e) + 1;
     return i >= 0;
   }
   function planCiz(p) {
     menuSayi();
-    if (!p) { AKTIF = null; $("a-plan").innerHTML = '<nav class="a-kirinti" aria-label="Konum"><a href="#/">' + ikon("arrow-left", "a-ikon-kucuk") + "Planlarım</a></nav>" +
+    if (!p) { AKTIF = null; $("a-plan").innerHTML = '<nav class="a-kirinti" aria-label="Konum"><a href="#/">' + ikon("arrow-left", "a-ikon-kucuk") + "Planlar</a></nav>" +
       '<h1 class="a-gizli" tabindex="-1">' + (VERI === "hata" ? "Plan yüklenemedi" : "Plan bulunamadı") + "</h1>" + bos(VERI === "hata" ? "planHata" : "plan"); return; }
     if (!AKTIF || AKTIF.id !== p.id) { SZ.e = yeniSz("e"); SZ.r = yeniSz("r"); NOTLAR_ACIK = false; }   /* başka plana geçince süzgeçler sıfırlanır */
     AKTIF = p;
@@ -553,24 +581,27 @@
       d === "denetimde" ? '<div class="a-adim-eylem"><p class="a-adim-not">' + (raporsuz ? raporsuz + " ekipmanın bu planda raporu yok; tamamlamak engellenmez." : "Bütün ekipmanların raporu açıldı.") + '</p><div class="a-adim-tuslar">' + eylem + "</div></div>"
       : d === "tamam" ? '<div class="a-adim-eylem"><p class="a-adim-not">Raporlar düzenlenebilir; ekipman eklemek için tamamlama geri alınır.</p><div class="a-adim-tuslar">' + eylem + "</div></div>"
       : '<p class="a-adim-not">Denetim bitince buradan tamamlanır.</p>');
-    /* Notlar ve hareketler (reisim: hareketler kayıt altında) — proje notu da hareket olarak yazılır */
-    var gecmis = p.gecmis.slice().sort(function (a, b) { return a.z < b.z ? 1 : a.z > b.z ? -1 : b.s - a.s; });
-    var gorunen = NOTLAR_ACIK ? gecmis : gecmis.slice(0, 6);
+    /* Proje notları (5. tur, reisim: "hareketler kısmını kaldır"): hareket kaydı tutulmaya devam eder (p.gecmis, denetim
+       izi) ama plan içinde gösterilmez; burada yalnız notlar. Kim yazar/görür: plandaki inspector'lar + planlama ekibi;
+       müşteri görmez; not silinmez (karar 27). */
+    var notlar = p.gecmis.filter(function (g) { return g.ne === "Not"; }).sort(function (a, b) { return a.z < b.z ? 1 : a.z > b.z ? -1 : b.s - a.s; });
+    var gorunen = NOTLAR_ACIK ? notlar : notlar.slice(0, 6);
     $("a-plan").innerHTML =
-      '<nav class="a-kirinti" aria-label="Konum"><a href="#/">' + ikon("arrow-left", "a-ikon-kucuk") + "Planlarım</a>" +
+      '<nav class="a-kirinti" aria-label="Konum"><a href="#/">' + ikon("arrow-left", "a-ikon-kucuk") + "Planlar</a>" +
         ikon("chevron-right", "a-ikon-kucuk") + '<span aria-current="page">' + p.no + "</span></nav>" +
       '<div class="a-nesne-bas"><div class="a-nesne-kimlik"><div class="a-nesne-baslik"><h1 tabindex="-1">' + kacis(p.ad) + "</h1>" + rozet(DURUM[d]) + "</div>" +
         '<p class="a-nesne-alt">' + ikon("building-2", "a-ikon-kucuk") + "<span>" + kacis(p.musteri) + "</span></p></div></div>" +
       '<ol class="a-akis" aria-label="Plan akışı">' + a1 + a2 + a3 + a4 + "</ol>" +
-      '<section class="a-bolum a-notlar" aria-labelledby="a-not-baslik"><div class="a-alt-bas"><h2 class="a-alt-baslik" id="a-not-baslik">Notlar ve hareketler</h2>' +
-        '<span class="a-sayac">' + gecmis.length + " hareket</span></div>" +
-        '<div class="a-not-form"><label class="a-gizli" for="a-not-girdi">Proje notu</label><textarea class="a-alan a-alan-ince" id="a-not-girdi" maxlength="500" placeholder="Proje notu ekleyin"></textarea>' +
+      '<section class="a-bolum a-notlar" aria-labelledby="a-not-baslik"><div class="a-alt-bas"><h2 class="a-alt-baslik" id="a-not-baslik">Proje notları</h2>' +
+        '<span class="a-sayac"><b>' + notlar.length + "</b>\u00a0not</span></div>" +
+        '<div class="a-not-form"><label class="a-gizli" for="a-not-girdi">Proje notu</label><textarea class="a-alan a-alan-ince" id="a-not-girdi" maxlength="500" placeholder="Proje notu ekleyin" aria-describedby="a-not-ipucu"></textarea>' +
         '<button class="a-tus a-tus-ikincil" type="button" data-eylem="not-ekle" data-id="' + p.id + '" id="a-not-ekle" disabled>' + ikon("plus", "a-ikon-kucuk") + "Notu ekle</button></div>" +
-        '<ol class="a-gecmis">' + gorunen.map(function (g) {
-          return '<li><span class="a-gecmis-zaman">' + zamanYaz(g.z) + '</span><span class="a-gecmis-ne"><b>' + g.ne + "</b> · " + KISI[g.kim].ad +
-            ' <span class="a-gecmis-rol">' + KISI[g.kim].rol + "</span>" + (g.ayrinti ? '<span class="a-alt-satir">' + kacis(g.ayrinti) + "</span>" : "") + "</span></li>";
-        }).join("") + "</ol>" +
-        (gecmis.length > 6 ? '<button class="a-tus a-tus-ikincil a-hepsi-tus" type="button" data-eylem="notlar-hepsi">' + (NOTLAR_ACIK ? "Son 6 hareketi göster" : "Tümünü göster (" + gecmis.length + ")") + "</button>" : "") +
+        '<p class="a-ipucu a-not-ipucu" id="a-not-ipucu">Planlama ekibi ve plandaki inspector\u2019lar görür; müşteri görmez. Not silinmez.</p>' +
+        (notlar.length ? '<ol class="a-gecmis">' + gorunen.map(function (g) {
+          return '<li><span class="a-gecmis-zaman">' + zamanYaz(g.z) + '</span><span class="a-gecmis-ne"><b>' + KISI[g.kim].ad + "</b>" +
+            ' <span class="a-gecmis-rol">' + KISI[g.kim].rol + '</span><span class="a-not-metin">' + kacis(g.ayrinti) + "</span></span></li>";
+        }).join("") + "</ol>" : "") +
+        (notlar.length > 6 ? '<button class="a-tus a-tus-ikincil a-hepsi-tus" type="button" data-eylem="notlar-hepsi">' + (NOTLAR_ACIK ? "Son 6 notu göster" : "Tümünü göster (" + notlar.length + ")") + "</button>" : "") +
       "</section>" +
       (eylem ? '<div class="a-eylem-cubugu a-eylem-cubugu-alt">' + eylem + "</div>" : "");
     ["e", "r"].forEach(function (on) {
@@ -652,7 +683,7 @@
     var r = rota(), planda = !!r, p = planda && VERI === "dolu" ? bul(r.id) : null;
     $("a-liste-gorunum").hidden = planda; $("a-plan").hidden = !planda;
     if (planda) planCiz(p); else ciz();
-    document.title = (p ? p.no + " · " + p.ad : "Planlarım") + " · probata maket";
+    document.title = (p ? p.no + " · " + p.ad : "Planlar") + " · probata maket";
     if (odakla) {
       window.scrollTo(0, 0);
       var h = document.querySelector(planda ? "#a-plan h1" : "#a-liste-gorunum h1");
@@ -719,6 +750,7 @@
     if (el.dataset.sec) { SZ[on].sec[el.dataset.sec] = el.dataset.deger; SZ[on].sayfa = 1; seciciCiz(on); if ($("a-levha").open) levhaCiz(on); yenile(on); return; }
     if (el.dataset.sekme) { E.sekme = el.dataset.sekme; ekleCiz(); return; }
     if (el.dataset.tur) { E.tur = KATALOG.filter(function (t) { return t.k === el.dataset.tur; })[0]; E.turAcik = false; E.turAra = ""; ekleCiz("a-ekle-seri"); return; }
+    if (el.tagName === "A" && el.dataset.eylem) e.preventDefault();   /* maket içi bağlantı adresi (#) değiştirmez */
     var id = +el.dataset.id, p = bul(id);
     switch (el.dataset.eylem) {
       case "cekmece-ac": cekmece(true); break;
@@ -779,6 +811,7 @@
         $("a-red-ipucu").className = "a-ipucu"; $("a-red-ipucu").hidden = false; $("a-red-pencere").showModal(); $("a-red-gerekce").focus(); break;
       case "pencere-kapat": $("a-red-pencere").close(); break;
       case "kapsam-disi": bildir("Maket: " + el.dataset.ne + " bu maketin kapsamında değil."); break;
+      case "modul": cekmece(false); bildir("Maket: " + el.dataset.ne + " ekranı henüz tasarlanmadı."); break;
     }
   });
   document.addEventListener("change", function (e) {
@@ -839,6 +872,7 @@
     $("a-tema-tus").setAttribute("aria-label", k ? "Açık temaya geç" : "Koyu temaya geç");
   }
 
-  $("a-suzgec-kap").innerHTML = suzgecHtml("l");   /* Planlarım süzgeci de aynı üreticiden (kalıp 15) */
+  $("a-menu").innerHTML = menuHtml();
+  $("a-suzgec-kap").innerHTML = suzgecHtml("l");   /* Planlar süzgeci de aynı üreticiden (kalıp 15) */
   temaEtiketi(); seciciCiz("l"); goster(false);
 })();

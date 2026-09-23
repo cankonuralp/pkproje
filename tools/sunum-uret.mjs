@@ -1,6 +1,6 @@
-/* SUNUM ÜRETİCİSİ — iki sayfa (2026-09-23, 4. tur):
+/* SUNUM ÜRETİCİSİ — iki sayfa (2026-09-23, 5. tur):
      docs/index.html     görsel sistem (reisim'in 1–8 kararları işlenmiş hâli; 4. turda yükseklik ve yazı ölçeği)
-     docs/plan-ici.html  plan içi akışı: adımlar, kontrol listesi, sayfalama, süzgeç, numara sistemi (4. tur sunumu)
+     docs/plan-ici.html  plan içi akışı ve yan menü: adımlar, kontrol listesi, sayfalama, süzgeç, numara sistemi (5. tur)
    ⛔ Sayfadaki ölçüm sayıları ELLE YAZILMAZ: kontrast tools/palet-olc.mjs ile GERÇEK tokens.css'ten ölçülür,
       maket ölçümleri docs/assets/olcum.json'dan, ikon listesi docs/vendor/lucide-<sürüm>/ikonlar.svg'den okunur.
    ⛔ Depo herkese açık: emsal uygulamanın adı ve çözümlemesi buraya yazılmaz (pkproje.md §6); yalnız bizim kararlarımız.
@@ -60,7 +60,7 @@ const FAZ = [
   ["Ekipman Türü Kataloğu · Ekipman", "Ekipman kodla kalıcı kayıt (firmada eşsiz); onay branşı ve yetkili meslekler türden gelir."],
   ["Ölçüm Cihazı · Zimmet · kalibrasyon uyarısı", "Rapordaki cihazlar zimmetten gelir."],
   ["İSG-KATİP kaydı", "Plan kabulünün ön koşulu."],
-  ["Planlama · <b>Planlarım</b> · plan içi", "Referans ekran gerçek veriye bağlanır; proje numarası, plan geçmişi."],
+  ["Planlama · <b>Planlar</b> · plan içi", "Referans ekran gerçek veriye bağlanır; proje numarası, plan geçmişi."],
   ["Standart Kütüphanesi · ilk Rapor Şablonu", "Rapor, firma × tür şablon sürümüyle açılır; rapor numarası."],
   ["Saha ve Rapor", "Sahadaki asıl iş; ikinci referans ekran."],
   ["Onay ve İmza · PDF", "Branş yöneticisi onayı, son imza, sunucuda PDF."],
@@ -120,7 +120,7 @@ const KARAR_GORSEL = [
   ["Üç bant ve 40 / 48 px denetim yüksekliği?", "Telefon < 768 · tablet 768–1279 · masaüstü ≥ 1280.", "Karar: uygun. 4. turda reisim: “her şey çok büyük” → 34 / 44 px, gövde yazısı 14 / 15 px (bantlar aynı)."],
   ["Süzgeç düzeni", "Reisim: “kurallara göre düzenle”.", "Uygulandı: kalıp 15'in sırası — arama → çipler → ve/veya → seçiciler + Temizle sağda; sığmayınca seçiciler + Temizle birlikte alt satıra."],
   ["Karar penceresi 520 px", "Reisim: “anayasa ve kuralların dışına çıkmadan uydur”.", "Uygulandı: pencerenin içindeki her kutu pencereyi doldurur (ölçüldü, kenar 0); tuşlar içerik kadar; × ve Esc; telefonda alttan levha, tuş çubuğu yapışkan. Genişlik işin içeriğinden: karar 520, iki sütunlu form 760."],
-  ["Planlarım referans olarak dondurulsun mu?", "Reisim: “anlamadım” → açıklandı, 25. soru olarak yeniden soruldu.", "Karar (4. tur, önerim kabul): bu tur onaylanınca Planlarım + plan içi dondurulur, sonra iskelet."],
+  ["Planlar (eski adı Planlarım) referans olarak dondurulsun mu?", "Reisim: “anlamadım” → açıklandı, 25. soru olarak yeniden soruldu.", "Karar (4. tur, önerim kabul): plan içi turu onaylanınca Planlar + plan içi dondurulur, sonra iskelet."],
   ["Faz 1 sırası", "Reisim: “faz 1'i buradan bana yaz” → yazıldı.", "Karar (4. tur): “tüm sorularda senin önerilerini kabul ediyorum” → aşağıdaki sıra."]
 ];
 const n1 = sayfa({
@@ -131,13 +131,13 @@ const n1 = sayfa({
   icindekiler: [["karar", "Kararlar"], ["olcum", "Ölçüm"], ["renk", "Renk sistemi"], ["birincil", "Birincil tuş"], ["yazi", "Yazı ve ikon"], ["esik", "Eşikler"], ["ekran", "Referans ekran"], ["kurallar", "Ekranın kuralları"], ["faz", "Faz 1"]],
   govde: [
     bolum(1, "karar", "Kararlar (reisim 2026-09-23)", "Marka renkleri, logo, Sora ve iki tema reisim'in kararıydı; üstüne kurulan görsel sistemin sekiz sorusu da cevaplandı.",
-      sorular(KARAR_GORSEL) + `<p class="s-oran" style="margin-top:12px">Planlarım ve plan içiyle ilgili 9–25. cevaplar ve 4. turdaki akış: <a href="plan-ici.html">plan içi sunumu</a>.</p>`),
+      sorular(KARAR_GORSEL) + `<p class="s-oran" style="margin-top:12px">Planlar ve plan içiyle ilgili 9–28. cevaplar, akış ve yan menü: <a href="plan-ici.html">plan içi sunumu</a>.</p>`),
     bolum(2, "olcum", "Ölçüm", "Tahmin yok. Kontrast gerçek değişken dosyasından hesaplandı; maket yerel sunucuda, üç genişlik ve iki temada ölçüldü.",
       `<div class="s-karolar">
     <div class="s-karo s-iyi"><b>${gecen} / ${P.sonuc.length}</b><span>yazı ve zemin çifti WCAG AA eşiğini geçiyor (iki tema)</span></div>
     <div class="s-karo s-iyi"><b>${tamSifir} / ${O.durumlar.length}</b><span>maket ölçümünde taşma, kırpma, çakışma, gizli tuş, küçük hedef sıfır</span></div>
     <div class="s-karo s-iyi"><b>${TR.length} / ${TR.length}</b><span>Türkçe harf Sora'da var</span></div>
-    <div class="s-karo"><b>${O.duzeltilen.length}</b><span>dört turda ölçerken bulunup düzeltilen hata</span></div>
+    <div class="s-karo"><b>${O.duzeltilen.length}</b><span>beş turda ölçerken bulunup düzeltilen hata</span></div>
   </div>
   <div class="s-bulgu">${ikon("triangle-alert")}<div><b>Bulgu: marka yeşili üstüne beyaz yazı ${sayi(beyazYesil.toFixed(2))} : 1.</b> Normal metin için eşik 4,5. Bu yüzden birincil tuş yeşil zemin + petrol yazı (karar A).</div></div>
   <p class="s-oran">Maket ölçüm tablosu, etkileşim denemeleri ve düzeltilenlerin tamamı <a href="plan-ici.html#olcum">plan içi sunumunda</a>.</p>`),
@@ -160,7 +160,7 @@ const n1 = sayfa({
   </div>`),
     bolum(5, "yazi", "Yazı ve ikon", "Sora 5.3.0, değişken kalınlık 100–800, SIL OFL 1.1, kendi sunucumuzdan. Lucide 1.47.0 ikonları, ISC lisansı, SVG, kendi sunucumuzdan; emoji yok.",
       `<div class="s-olcek">
-    <div class="s-olcek-satir"><code>Sayfa başlığı · 20 / 700 (telefonda 18)</code><span style="font-size:20px;font-weight:700">Planlarım</span></div>
+    <div class="s-olcek-satir"><code>Sayfa başlığı · 20 / 700 (telefonda 18)</code><span style="font-size:20px;font-weight:700">Planlar</span></div>
     <div class="s-olcek-satir"><code>Bölüm · 15 / 600</code><span style="font-size:15px;font-weight:600">Denetim · Ekipmanlar</span></div>
     <div class="s-olcek-satir"><code>Gövde · 14 (dokunmatikte 15)</code><span style="font-size:14px">Kuzey Lojistik ve Depolama Hizmetleri A.Ş. · Çorlu / Tekirdağ</span></div>
     <div class="s-olcek-satir"><code>Küçük · 12,5</code><span style="font-size:12.5px">KM-0926-772-3416f · 23 Eyl 09:10</span></div>
@@ -175,15 +175,15 @@ const n1 = sayfa({
     <tr><td><b>geniş</b></td><td class="s-sayi">≥ 1280 px</td><td>masaüstü</td><td>sabit, 232 px</td><td class="s-sayi">34 px (dokunmatik ekranda 44)</td><td class="s-sayi">1920</td></tr>
   </tbody></table></div>
   <p class="s-oran" style="margin-top:10px">Liste tablo mu kart mı, ekrana değil <b>liste kabına</b> bakar: kap ≥ ${O.esik.kap.toLocaleString("tr-TR")} px tablo, altı kart. ${K(O.esik.not)}</p>`),
-    bolum(7, "ekran", "Referans ekran: Planlarım", "Çerçeveler maketin kendisi, gerçek boyutunda; kaba sığmayan küçültülür. Plan içi ve ekipman ekleme: <a href=\"plan-ici.html\">plan içi sunumu</a>.",
+    bolum(7, "ekran", "Referans ekran: Planlar", "Çerçeveler maketin kendisi, gerçek boyutunda; kaba sığmayan küçültülür. Plan içi ve ekipman ekleme: <a href=\"plan-ici.html\">plan içi sunumu</a>.",
       `<div class="s-baglantilar">
     <a class="s-tus" href="maket/planlarim.html?tema=acik" target="_blank" rel="noopener">Açık tema</a>
     <a class="s-tus" href="maket/planlarim.html?tema=koyu" target="_blank" rel="noopener">Koyu tema</a>
     <a class="s-tus" href="maket/planlarim.html?veri=bos" target="_blank" rel="noopener">Veri yok</a>
     <a class="s-tus" href="maket/planlarim.html?veri=hata" target="_blank" rel="noopener">Yükleme hatası</a>
   </div>
-  ${cerceveler("", "Planlarım maketi")}`),
-    bolum(8, "kurallar", "Ekranın kuralları (görsel sistem)", "Planlarım dondurulunca bunlar tasarım kalıbının bu projedeki sayıları olur ve iskelet kaleminde testle kilitlenir.",
+  ${cerceveler("", "Planlar maketi")}`),
+    bolum(8, "kurallar", "Ekranın kuralları (görsel sistem)", "Planlar dondurulunca bunlar tasarım kalıbının bu projedeki sayıları olur ve iskelet kaleminde testle kilitlenir.",
       `<ul class="s-kurallar">
     <li><b>Kap tam genişlik</b><span>Liste kabı ve pencere içi kabı doldurur; ölçülen kap farkı ve pencere kenarı 0 px.</span></li>
     <li><b>Tuş içerik kadar</b><span>Masaüstünde ve tablette içerik genişliğinde; yalnız telefonda kart tuşu ve yapışkan tuş çubuğu eşit genişliğe gerilir.</span></li>
@@ -194,30 +194,37 @@ const n1 = sayfa({
     <li><b>Kırpma</b><span>Serbest metin üç nokta + tam metin başlıkta; kimlik (proje no, rapor no, ekipman kodu), sayı ve etiket kırpılmaz.</span></li>
     <li><b>Pencere</b><span>İçindeki her kutu pencereyi doldurur; × ve Esc kapatır; telefonda alttan levha, tuş çubuğu yapışkan ve sonda hiçbir alanı örtmez.</span></li>
     <li><b>Seçim alanı (kalıp 19)</b><span>Cihazın kendi açılır listesi yok; sekizi aşan listede yazarak arama (ekipman türü: 14).</span></li>
+    <li><b>Yan menü</b><span>Firma panelinin bütün modülleri, gruplu, genel adlarla; sığmayan yükseklikte yalnız menü kayar.</span></li>
     <li><b>Durum rozeti</b><span>Beş plan durumu ve üç rapor durumu; hepsi 4,5 : 1 üstü.</span></li>
   </ul>`),
     bolum(9, "faz", "Faz 1 sırası (karar — 4. tur)", "Her adım kendinden öncekine dayanır; bağlantı kuralları (pkproje.md §3.2) bu sırayı zorunlu kılıyor.", fazTablo)
   ].join("\n\n")
 });
 
-/* ══ 2 · PLAN İÇİ (plan-ici.html) — 4. tur sunumu: akış ═════════════════════════════════════════════════ */
-/* ölçülen satır yüksekliği olcum.json'dan (elle yazılmaz); 69 / 66 / 1.180 3. turun kayıtlı ölçüsü */
-const satirY = gor => O.durumlar.find(d => d.gen === 1920 && d.tema === "acik" && d.gorunum === gor).satirY;
+/* ══ 2 · PLAN İÇİ (plan-ici.html) — 5. tur sunumu: akış + yan menü ═══════════════════════════════════════ */
+/* buradaki sayfa sayıları (“1–20 / 22” gibi) maketin uydurma verisinden; ölçüm sayıları olcum.json'dan okunur */
 const CEVAPLAR = [
-  ["Akış", "planlandı, plan onaylandı, kontrol listesi… akışta takip edilebilir, iş de yapılabilir", "Plan içi dikey adım çizelgesi: Planlandı → Kabul → Denetim (kontrol listesi) → Tamamlama. Her adımda durum, kim, ne zaman; şu anki adımın tuşları adımın içinde."],
-  ["17–25", "tüm sorularda senin önerilerini kabul ediyorum", "Kararlar bölüm 7'de, pkproje.md'ye işlendi."],
-  ["Takvim", "takvim hariç, onu istemiyorum, yapma", "Yapılmadı; sorulardan çıktı."],
-  ["Sayfalama", "ekipmanlar ve raporlar 10 taneden sonra diğer sayfaya geçsin", "İki listede 10'ar kayıt; “1–10 / 12” ve sayfa tuşları. Eklenen ekipmanın sayfasına geçilir."],
-  ["Boyut", "bizim maketimizde her şey çok büyük", `Denetim yüksekliği 40 / 48 → 34 / 44 px; gövde yazısı 15 / 16 → 14 / 15 px; satır 69 → ${satirY("liste")} px (liste), 66 → ${satirY("plan · denetimde")} px (plan içi, 1920'de ölçüldü). Kart eşiği 1.180 → ${O.esik.kap.toLocaleString("tr-TR")} px: tablette de tablo.`],
-  ["Süzgeç", "filtreleme yok", "Ekipman ve rapor listelerine süzgeç: arama + çipler (ve / veya) + seçiciler. Planlarım'la aynı üretici (kalıp 15)."],
-  ["Firma adı", "muayene kuruluşu ismi sol üstte yazmasın", "Üst çubuktan kalktı."]
+  ["26–28", "önerilerin uygundur", "Beyan metni firma ayarı (boşsa varsayılan). Proje notunu plandaki inspector'lar ve planlama ekibi yazar ve görür, müşteri görmez, not silinmez. Bu tur uygunsa dondurma ve iskelet (soru 31)."],
+  ["Hareketler", "hareketler kısmını kaldır", "Plan içindeki hareket listesi kalktı; yerinde yalnız <b>Proje notları</b>. Hareket kaydı arka planda tutulmaya devam ediyor (3. turdaki “kayıt altında kalsın”); nerede görüneceği soru 30."],
+  ["Raporlar", "raporlarda 5 değil 20 rapor alt alta durabilsin 5 çok az", "Rapor listesi <b>20'şer</b> (ekipman 10'ar kaldı). Merkez Fabrika'da zaten 5 rapor vardı ve hepsi görünüyordu; örnek 10 rapora çıktı. Değirmen'de 22 rapor: 20 alt alta, 2'si ikinci sayfada."],
+  ["Yan menü", "sol taraftaki bar da çok az modül var, diğer modüller nerde onlarda gözüksün", "Firma panelinde ekranı olan <b>17 modül</b>, 6 grupta (bölüm 2). Ekranı henüz tasarlanmamış modüle tıklanınca bildirim çıkar, sayfa değişmez."],
+  ["Kim neyi görür", "kim hangi modülü görebilecek sonradan belirleriz", "Maket herkese bütün menüyü gösteriyor; rol × modül görünürlüğü sonra (Kullanıcılar modülüyle birlikte)."],
+  ["Menü adları", "sekmelerin adı da öznellik içermesin planlar raporlar zimmetler gibi genel isimler olsun", "Planlarım → <b>Planlar</b>, Raporlarım → <b>Raporlar</b>, Zimmetim → <b>Zimmetler</b>; sayfa başlığı, kırıntı ve sekme adı da Planlar."]
+];
+const MENU_TABLO = [
+  ["İş takibi", "Planlar · Raporlar · Onaylar · Uyarılar", "13 Planlama · 14 Saha & Rapor · 15 Onay & İmza · 20 Uyarılar"],
+  ["Müşteri", "Müşteriler · Teklifler · Sözleşmeler", "3 Müşteri & Tesis · 11 Teklif · 12 Sözleşme"],
+  ["Varlık", "Ekipmanlar · Ölçüm cihazları · Zimmetler", "7 Ekipman · 8 Ölçüm Cihazı · 9 Zimmet"],
+  ["Personel", "Personel · Eğitimler", "2 Personel · 10 Eğitim Takibi"],
+  ["Finans", "Muhasebe · Performans", "18 Muhasebe · 19 Performans & Raporlama"],
+  ["Tanımlar", "Ekipman türleri · Standartlar · Kullanıcılar", "5 Ekipman Türü Kataloğu · 4 Standart Kütüphanesi · 1 Kullanıcı & Rol"]
 ];
 const ADIMLAR = [
   ["1 · Planlandı", "Plan bilgisi tek listede: proje no · başlangıç · adres · inspector · İSG-KATİP · açıklama. <b>Kapsam</b>: tür başına planlanan ve plandaki ekipman sayısı; kabul bekleyen planda açık, sonra katlı."],
-  ["2 · Kabul", "<b>Tarafsızlık ve çıkar çatışması beyanı</b> (TS EN ISO/IEC 17020); Kabul et beyanı onaylar. Reddet gerekçe ister. İSG-KATİP ön koşulu eksikse Kabul et kapalı, nedeni yanında (karar 24)."],
-  ["3 · Denetim", "<b>Kontrol listesi</b>: Ekipmanlar (kod · tür · konum · branş · önceki kontrol · rapor · Rapor oluştur) ve Raporlar (no · ekipman · sonuç · durum · oluşturuldu). İkisinde süzgeç ve 10'ar sayfa. Ekipman ekle yalnız Denetimde."],
-  ["4 · Tamamlama", "Tamamla; raporu olmayan ekipman engel değil, sayısı yazılır (karar 11). Tamamlanınca raporlar düzenlenir, ekipman eklemek için tamamlama geri alınır (karar 12)."],
-  ["Notlar ve hareketler", "Proje notu (planlama ekibi görür) ve her hareket: kim, ne zaman, ne. Son 6, “Tümünü göster”."]
+  ["2 · Kabul", "<b>Tarafsızlık ve çıkar çatışması beyanı</b> (TS EN ISO/IEC 17020; metin firma ayarından, karar 26); Kabul et beyanı onaylar. Reddet gerekçe ister. İSG-KATİP ön koşulu eksikse Kabul et kapalı, nedeni yanında."],
+  ["3 · Denetim", "<b>Kontrol listesi</b>: Ekipmanlar (kod · tür · konum · branş · önceki kontrol · rapor · Rapor oluştur) <b>10'ar</b> sayfa; Raporlar (no · ekipman · sonuç · durum · oluşturuldu) <b>20'şer</b> sayfa. İkisinde süzgeç. Ekipman ekle yalnız Denetimde."],
+  ["4 · Tamamlama", "Tamamla; raporu olmayan ekipman engel değil, sayısı yazılır. Tamamlanınca raporlar düzenlenir, ekipman eklemek için tamamlama geri alınır."],
+  ["Proje notları", "Planlama ekibi ve plandaki inspector'lar yazar ve görür; müşteri görmez; not silinmez (karar 27). Hareket kaydı tutulur, burada gösterilmez."]
 ];
 const SENARYO = [
   ["(boş)", "“Etiketteki kodu yazın…” ipucu", "kapalı"],
@@ -243,70 +250,69 @@ const KARARLAR17 = [
   ["Tesiste kayıtlı ekipmanı plana kim alır?", "İkisi de: planlama ekibi plan açarken, inspector sahada.", "Karar: önerim kabul."],
   ["Kabul et'teki İSG-KATİP kilidi kalsın mı?", "Kalsın (§3.2 madde 2, mevzuat).", "Karar: önerim kabul."],
   ["Takvim görünümü", "Reisim: “takvim hariç, onu istemiyorum, yapma”.", "Karar: takvim yok."],
-  ["Referans ekran dondurulsun mu?", "Bu tur onaylanınca Planlarım + plan içi dondurulur, sonra iskelet.", "Karar: önerim kabul (onay soru 28'de)."]
+  ["Referans ekran dondurulsun mu?", "Bu tur onaylanınca Planlar + plan içi dondurulur, sonra iskelet.", "Karar: önerim kabul (onay soru 31'de)."],
+  ["Tarafsızlık beyanının metni nereden gelsin?", "Firma ayarı (kalite el kitabındaki metin); boşsa varsayılan. Kabul anındaki sürüm kayda yazılır.", "Karar (5. tur): önerim kabul."],
+  ["Proje notunu kimler yazar, kimler görür?", "Plandaki inspector'lar ve planlama ekibi; müşteri görmez; not silinmez.", "Karar (5. tur): önerim kabul."],
+  ["4. tur uygun mu?", "Reisim: “önerilerin uygundur” + bu turdaki değişiklik istekleri.", "Karar (5. tur): değişikliklerle uygun; onay soru 31'de."]
 ];
-const SORULAR4 = [
-  ["Tarafsızlık beyanının metni nereden gelsin?", "Önerim: firma ayarı (kalite el kitabındaki metin); boşsa maketteki varsayılan metin. Kabul anında metnin o sürümü hareket kaydına yazılır."],
-  ["Proje notunu kimler yazar, kimler görür?", "Önerim: plandaki inspector'lar ve planlama ekibi yazar ve görür; müşteri görmez. Not silinmez, düzeltme yeni notla."],
-  ["Bu tur uygun mu?", "Uygunsa Planlarım + plan içi referans ekran olarak dondurulur (34 / 44 px, kap 960, sayfa 10 kalıba yazılır) ve iskelet kalemi açılır (karar 25)."]
+const SORULAR5 = [
+  ["Menü grupları ve adları uygun mu?", "İş takibi · Müşteri · Varlık · Personel · Finans · Tanımlar. Önerim bu sıra: her gün kullanılan üstte, bir kez kurulan tanımlar altta."],
+  ["Hareket kaydı nerede görünsün?", "Önerim: plan içinde değil. Kim hangi modülü görecek belirlenirken yöneticiye “Hareket kaydı” (denetim izi) olarak açılsın; kayıt şimdiden tutuluyor."],
+  ["Bu tur uygun mu?", "Uygunsa Planlar + plan içi referans ekran olarak dondurulur (34 / 44 px, kap 960, ekipman 10 · rapor 20 kalıba yazılır) ve iskelet kalemi açılır."]
 ];
 const n2 = sayfa({
   dosya: "plan-ici.html",
   baslik: "probata · Plan içi akışı",
-  ust: `<b>Plan içi: akış, kontrol listesi, sayfalama</b><span>${O.tarih} · ${O.tur}. tur · reisim'in onayına sunulur · <a href="index.html">Görsel sistem →</a></span>`,
+  ust: `<b>Plan içi ve yan menü</b><span>${O.tarih} · ${O.tur}. tur · reisim'in onayına sunulur · <a href="index.html">Görsel sistem →</a></span>`,
   alt: `<a class="s-tus" href="index.html">${ikon("book-open")}Görsel sistem</a><a class="s-tus" href="maket/planlarim.html#/plan/1" target="_blank" rel="noopener">${ikon("calendar-check")}Maketi aç</a>`,
-  icindekiler: [["cevaplar", "İsteklerin"], ["neden", "Neden akış"], ["akis", "Akış"], ["olcum", "Ölçüm"], ["ekle", "Ekipman ekle"], ["numara", "Numara sistemi"], ["kararlar", "17–25 kararları"], ["kurallar", "Ekranın kuralları"], ["faz", "Faz 1"], ["sorular", "Karar soruları"]],
+  icindekiler: [["cevaplar", "İsteklerin"], ["menu", "Yan menü"], ["akis", "Akış"], ["olcum", "Ölçüm"], ["ekle", "Ekipman ekle"], ["numara", "Numara sistemi"], ["kararlar", "17–28 kararları"], ["kurallar", "Ekranın kuralları"], ["faz", "Faz 1"], ["sorular", "Karar soruları"]],
   govde: [
-    bolum(1, "cevaplar", "İsteklerin ve ne yaptım", "4. tur. 9–16 cevapları ve 3. tur (ekipman / rapor ayrımı, eşsiz kod) bu turda aynen duruyor.",
-      cokluTablo(["Konu", "Senin sözün", "Makette"], CEVAPLAR.map(([n, c, m]) => [`<b>${n}</b>`, `<i>${K(c)}</i>`, K(m)]), "s-min-900")),
-    bolum(2, "neden", "Neden akış", "3. turdaki plan içi doğru bilgiyi taşıyordu ama takibi zordu.",
-      `<ul class="s-kurallar">
-    <li><b>Aşama görünmüyordu</b><span>Planın hangi aşamada olduğu ve sırada ne olduğu yalnız rozetten anlaşılıyordu. Şimdi dört adım yukarıdan aşağı; biten ✓, şu anki dolu numara, sıradaki boş.</span></li>
-    <li><b>Tuş bağlamsızdı</b><span>Birincil tuş sayfanın üstündeydi. Şimdi ait olduğu adımın içinde, sağda: Kabul adımında Kabul et / Reddet, Denetim'de Denetime başla, Tamamlama'da Tamamla.</span></li>
-    <li><b>Kontrol listesi dağınıktı</b><span>Ekipmanlar ve raporlar ayrı bölümlerdeydi. Şimdi ikisi Denetim adımının içinde, alt alta.</span></li>
-    <li><b>Uzun listeler, süzgeç yok</b><span>20 ekipmanlı planda sayfa uzuyordu. Şimdi 10'ar sayfa ve her listede süzgeç.</span></li>
-  </ul>`),
+    bolum(1, "cevaplar", "İsteklerin ve ne yaptım", `${O.tur}. tur. Önceki turların kararları (akış, eşsiz kod, numara sistemi) aynen duruyor.`,
+      cokluTablo(["Konu", "Senin sözün", "Makette"], CEVAPLAR.map(([n, c, m]) => [`<b>${n}</b>`, `<i>${K(c)}</i>`, m]), "s-min-900")),
+    bolum(2, "menu", "Yan menü: bütün modüller, genel adlar", "pkproje.md §3.1'deki 20 modülden firma panelinde ekranı olan 17'si. Adlar kişiye bağlı değil (Planlar, Raporlar, Zimmetler). Masaüstünde 1080 px yükseklikte kaydırmadan sığar; tablet ve telefonda çekmecede yalnız menü kayar.",
+      cokluTablo(["Grup", "Menüde", "Modül (§3.1)"], MENU_TABLO.map(([g, m, k]) => [`<b>${g}</b>`, m, K(k)]), "s-min-600") +
+      `<p class="s-oran" style="margin-top:10px">Menüde olmayanlar: <b>6 Rapor Şablonları</b> (kodda, site içi düzenleyici yok) · <b>16 PDF Üretimi</b> (sunucu işi) · <b>17 Müşteri Paneli</b> (müşterinin kendi girişi). Kim hangi modülü görecek: sonra.</p>`),
     bolum(3, "akis", "Akış: dört adım", "Adım durumu: ✓ tamamlandı · dolu numara şu an · boş numara sırada · × reddedildi. Telefonda şu anki adımın tuşları altta yapışkan çubukta.",
       cokluTablo(["Adım", "İçinde ne var"], ADIMLAR.map(([a, b]) => [`<b>${a}</b>`, b]), "s-min-600") +
       `<div class="s-baglantilar">
     <a class="s-tus" href="maket/planlarim.html#/plan/2" target="_blank" rel="noopener">Kabul bekliyor</a>
     <a class="s-tus" href="maket/planlarim.html#/plan/4" target="_blank" rel="noopener">Ön koşul eksik</a>
     <a class="s-tus" href="maket/planlarim.html#/plan/6" target="_blank" rel="noopener">Kabul edildi</a>
-    <a class="s-tus" href="maket/planlarim.html#/plan/1" target="_blank" rel="noopener">Denetimde (12 ekipman, iki sayfa)</a>
-    <a class="s-tus" href="maket/planlarim.html#/plan/9" target="_blank" rel="noopener">Tamamlandı (13 ekipman, 12 rapor)</a>
+    <a class="s-tus" href="maket/planlarim.html#/plan/1" target="_blank" rel="noopener">Denetimde (12 ekipman, 10 rapor)</a>
+    <a class="s-tus" href="maket/planlarim.html#/plan/9" target="_blank" rel="noopener">Tamamlandı (24 ekipman, 22 rapor)</a>
     <a class="s-tus" href="maket/planlarim.html#/plan/7" target="_blank" rel="noopener">Reddedildi</a>
   </div>
-  ${cerceveler("#/plan/1", "Plan içi maketi")}`),
+  ${cerceveler("#/plan/9", "Plan içi maketi, 22 raporlu plan")}`),
     bolum(4, "olcum", "Ölçüm", `${K(O.yontem)}`,
       `<div class="s-karolar">
     <div class="s-karo s-iyi"><b>${tamSifir} / ${O.durumlar.length}</b><span>ölçümde taşma, kırpma, çakışma, gizli tuş, küçük hedef, pencere kenarı, hiza, kart tutarlılığı sıfır</span></div>
     <div class="s-karo s-iyi"><b>${gecen} / ${P.sonuc.length}</b><span>yazı ve zemin çifti AA geçiyor (iki tema)</span></div>
     <div class="s-karo"><b>${O.duzeltilen.filter(d => d[0].startsWith(O.tur + ". tur")).length}</b><span>bu turda ölçerken bulunup düzeltilen</span></div>
-    <div class="s-karo"><b>${O.duzeltilen.length}</b><span>dört turda toplam</span></div>
+    <div class="s-karo"><b>${O.duzeltilen.length}</b><span>beş turda toplam</span></div>
   </div>
   <p class="s-oran">Kart eşiği: kap ≥ ${O.esik.kap.toLocaleString("tr-TR")} px tablo, altı kart. ${K(O.esik.not)}</p>
   <h3>Maket ölçümü</h3>${olcumTablo}
   <h3>Etkileşim denemeleri</h3>${ikiliTablo(O.etkilesim, "Deneme", "Sonuç")}
   <h3>Ölçerken bulunup düzeltilenler</h3>${ikiliTablo(O.duzeltilen, "Bulgu", "Düzeltme")}`),
-    bolum(5, "ekle", "Ekipman ekle: kod eşsiz, çakışan kod kaydedilmez", "3. turdaki gibi; bu turda eklenen ekipman sayfalı listede kendi sayfasında açılır. Kod yazılırken ve kaydederken denetlenir (gerçek uygulamada sunucuda ve veritabanında da).",
+    bolum(5, "ekle", "Ekipman ekle: kod eşsiz, çakışan kod kaydedilmez", "3. turdaki gibi; eklenen ekipman sayfalı listede kendi sayfasında açılır. Kod yazılırken ve kaydederken denetlenir (gerçek uygulamada sunucuda ve veritabanında da).",
       cokluTablo(["Yazılan", "Pencerenin söylediği", "Kaydet"], SENARYO.map(([a, b, c]) => [`<code>${K(a)}</code>`, b, K(c)]), "s-min-600") +
       `<p class="s-oran" style="margin-top:10px">Çevrimdışı çalışma geldiğinde (sonraki faz): iki inspector aynı kodu çevrimdışı girerse eşitlemede ikincisi reddedilir ve düzeltmesi istenir; kayıt sessizce birleşmez.</p>` +
       cerceveler("#/plan/1/ekle/FL-1016", "Ekipman ekle penceresi")),
     bolum(6, "numara", "Numara sistemi (karar 16, 17–21)", "Proje ve rapor numarasını sunucu verir, kimse elle yazmaz; ekipman kodunu personel etiketten yazar, sistem eşsizliğini korur.",
       cokluTablo(["Numara", "Biçim", "Örnek", "Kim verir", "Parçalar", "Eşsizlik", "Değişir mi"], NUMARA, "s-min-1400")),
-    bolum(7, "kararlar", "17–25: önerilerim kabul", "Reisim: “tüm sorularda senin önerilerini kabul ediyorum, takvim hariç”.", sorular(KARARLAR17, 17)),
-    bolum(8, "kurallar", "Ekranın kuralları (plan içi)", "",
+    bolum(7, "kararlar", "17–28: önerilerim kabul", "Reisim: “tüm sorularda senin önerilerini kabul ediyorum, takvim hariç” (4. tur) · “önerilerin uygundur” (5. tur).", sorular(KARARLAR17, 17)),
+    bolum(8, "kurallar", "Ekranın kuralları (plan içi ve menü)", "",
       `<ul class="s-kurallar">
     <li><b>Nesne sayfası (anayasa 2.7)</b><span>Kırıntı · kimlik (ad, durum, müşteri) · adım çizelgesi. Birincil tuş yalnız şu anki adımda ve tek; Tamamlandı ve Reddedildi'de birincil yok.</span></li>
     <li><b>Adım tuşları sağda (kalıp 2)</b><span>Adımın notu solda, tuşları sağda, içerik kadar; telefonda altta yapışkan çubukta eşit genişlikte.</span></li>
-    <li><b>İki liste, tek üretici</b><span>Ekipmanlar ve Raporlar Planlarım'la aynı tablo ↔ kart üreticisinden; kap ${O.esik.kap.toLocaleString("tr-TR")} px altında kart. Süzgeç de aynı üreticiden (kalıp 15).</span></li>
-    <li><b>Sayfalama</b><span>10'ar kayıt; “1–10 / 12”; süzgeç değişince 1. sayfaya döner; eklenen kaydın sayfasına geçilir.</span></li>
+    <li><b>İki liste, tek üretici</b><span>Ekipmanlar ve Raporlar Planlar listesiyle aynı tablo ↔ kart üreticisinden; kap ${O.esik.kap.toLocaleString("tr-TR")} px altında kart. Süzgeç de aynı üreticiden (kalıp 15).</span></li>
+    <li><b>Sayfalama</b><span>Ekipman 10'ar, rapor 20'şer; “1–20 / 22”; süzgeç değişince 1. sayfaya döner; eklenen kaydın sayfasına geçilir.</span></li>
     <li><b>Kimlik kırpılmaz</b><span>Ekipman kodu, rapor no, proje no bölünmez ve üç noktaya düşmez.</span></li>
-    <li><b>Hareket kaydı</b><span>Her durum değişikliği, ekipman ve rapor işlemi, proje notu kim + ne zaman ile yazılır; aynı dakikadakiler kayıt sırasıyla.</span></li>
-    <li><b>Eşit satır</b><span>Tuşlu ve tuşsuz satır aynı yükseklikte; kartlarda aynı roldeki hücre aynı kenar ve boşlukta (ölçüldü).</span></li>
+    <li><b>Hareket kaydı tutulur, gösterilmez</b><span>Durum değişikliği, ekipman ve rapor işlemi kim + ne zaman ile kaydedilir; plan içinde yalnız proje notları görünür.</span></li>
+    <li><b>Yan menü tek kaynaktan</b><span>Gruplar ve adlar tek listeden üretilir; adlar genel (kişiye bağlı değil); sığmayan yükseklikte logo ve alt satır yerinde, yalnız menü kayar.</span></li>
   </ul>`),
     bolum(9, "faz", "Faz 1 sırası (karar — 4. tur)", "“tüm sorularda senin önerilerini kabul ediyorum” → sıra kabul edildi.", fazTablo),
-    bolum(10, "sorular", "Karar soruları", "Cevaplar pkproje.md'ye işlenir.", sorular(SORULAR4.map(([s, a]) => [s, a]), 26))
+    bolum(10, "sorular", "Karar soruları", "Cevaplar pkproje.md'ye işlenir.", sorular(SORULAR5.map(([s, a]) => [s, a]), 29))
   ].join("\n\n")
 });
 
