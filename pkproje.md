@@ -318,6 +318,12 @@ gibi genel isimler olsun"*
 · **Menü ve ekran adları genel**, kişiye bağlı değil: Planlarım → **Planlar**, Raporlarım → **Raporlar**, Zimmetim →
   **Zimmetler**; sayfa başlığı, kırıntı ve sekme adı da.
 · **Kim hangi modülü görecek: sonra** (reisim). Maket herkese bütün menüyü gösteriyor.
+**Maket 6. tur — yan menü daraltma (reisim 2026-09-23, birebir: *"sol taraf açılıp kapanabilir olsun kapatılınca sadece
+logolar kalsın"*) — makette, ONAY BEKLİYOR (anayasa 2.1; onaylanınca uygulamaya geçer):** masaüstünde (≥ 1280) üst
+çubuğun solunda (tablet/telefondaki ☰ ile aynı yerde) daralt/genişlet düğmesi · daralınca 64 px simge şeridi, üstte
+probata işareti, grup başlıkları yerine ince çizgi, sayaç simgenin köşesinde, ad üstüne gelince ipucu (ekran okuyucu okur)
+· tercih bu cihazda saklanır · tablet ve telefonda çekmece aynen (anayasa 2.11: ikon rayına dönüşmez). "Logolar" =
+menü simgeleri + probata işareti diye yorumlandı. Daralınca içerik 1.648 → 1.816 px (1920'de).
 **Yorumlarım (5. tur; 29–31) — reisim kabul etti (*"tüm önerilerin uygun"*, 2026-09-23):** menü grupları ve sırası yukarıdaki gibi (her gün
 kullanılan üstte, tanımlar altta) · hareket kaydı plan içinde değil, rol × modül belirlenirken yöneticiye "Hareket kaydı"
 (denetim izi) olarak açılsın · bu tur uygunsa Planlar + plan içi dondurulur ve iskelet kalemi açılır.
@@ -632,7 +638,7 @@ yan menüde bütün modüller, genel adlar · rol × modül görünürlüğü so
 modül belirlenirken yöneticiye "Hareket kaydı" · 5. tur uygun) → referans ekran dondu, **iskelet kuruldu ve ilk yayın
 yapıldı** (Pages önizlemesi, §8.13).
 
-**Açık kalanlar:** **rol × modül görünürlüğü** (reisim: *"sonradan belirleriz"*) · **gerçek sunucunun sağlayıcısı**
+**Açık kalanlar:** **yan menü daraltma maketinin onayı** (§3.4, 6. tur) · **rol × modül görünürlüğü** (reisim: *"sonradan belirleriz"*) · **gerçek sunucunun sağlayıcısı**
 (Türkiye, §8.8) ·
 alan adının alınması · e-imza yöntemi (8.4) · v1 ekipman grupları · 5 yıl sonrası silme
 mekanizması · **zimmette birden çok cihaz varsa süzgeç** (§3) · **kontrol metodu standardının seçim yeri**
@@ -676,6 +682,10 @@ revizyon, alan kopyalama, hafif kusur devri, meslek eşleşme denetimi).
   aktarıldığı hâline döndü. Ürün kararları bu dosyada tutulur. (b) Fotoğraf konumu/EXIF gibi şeylere
   **dokunulmayacak**. (c) Emsal uygulama incelemesi **GitHub'da paylaşılmaz** → bölüm 6 `yerel/` klasörüne
   taşındı, depo geçmişi bu içerikten temizlendi. Ana hedef: **müşterimizin işini kolaylaştırmak.**
+- 2026-09-23 (8): reisim yan menünün daraltılabilmesini istedi → önce makette (anayasa 2.1): masaüstünde üst çubuğun
+  solundaki düğmeyle 64 px simge şeridi; tablet/telefonda çekmece aynen. İkon dosyalarına 2 ikon (53). Maket ölçümü
+  1920'de 20/20 temiz (daralmış + geniş × iki tema × liste/plan içi/pencereler); 1080 ve 375'te çekmece etkilenmiyor.
+  Onay bekliyor; onaylanınca uygulamaya geçer.
 - 2026-09-23 (7): reisim 29–31'i kabul etti ve *"kodlamaya başla ilk yayını yap"* dedi. **İlk kod kalemi: iskelet** (§8.13):
   Next.js + TypeScript, kabuk (17 modüllü yan menü, tema, çekmece), gömülü PostgreSQL + RLS'li kiracı katmanı + göç
   koşucusu, kalıp sayıları dondu (`src/styles/kalip.ts`), 36 kilit testi + 13 olumsuz kanıt, CI, Pages önizlemesi

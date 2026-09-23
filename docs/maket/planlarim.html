@@ -23,7 +23,8 @@
 <div class="a-kabuk" id="a-kabuk">
   <aside class="a-cubuk" id="a-cubuk" aria-label="Ana menü">
     <div class="a-cubuk-bas">
-      <img src="../marka/probata-yatay-koyu-zemin.svg" alt="probata" width="148" height="37">
+      <img class="a-cubuk-logo" src="../marka/probata-yatay-koyu-zemin.svg" alt="probata" width="148" height="37">
+      <img class="a-cubuk-isaret" src="../marka/probata-isaret-koyu-zemin.svg" alt="probata" width="25" height="32">
       <button class="a-ikon-tus a-cubuk-kapat" type="button" data-eylem="cekmece-kapat" aria-label="Menüyü kapat">
         <svg class="a-ikon" aria-hidden="true"><use href="../vendor/lucide-1.47.0/ikonlar.svg#i-x"/></svg>
       </button>
@@ -38,6 +39,11 @@
     <header class="a-ust">
       <button class="a-menu-tus" type="button" data-eylem="cekmece-ac" aria-label="Menüyü aç" aria-controls="a-cubuk" aria-expanded="false">
         <svg class="a-ikon" aria-hidden="true"><use href="../vendor/lucide-1.47.0/ikonlar.svg#i-menu"/></svg>
+      </button>
+      <!-- masaüstünde (≥ 1280) yan menüyü daraltır/genişletir; ☰ ile aynı yerde (reisim 2026-09-23) -->
+      <button class="a-ikon-tus a-daralt-tus" type="button" data-eylem="menu-daralt" aria-label="Menüyü daralt" aria-controls="a-cubuk" aria-expanded="true">
+        <svg class="a-ikon a-daralt-kapat" aria-hidden="true"><use href="../vendor/lucide-1.47.0/ikonlar.svg#i-panel-left-close"/></svg>
+        <svg class="a-ikon a-daralt-ac" aria-hidden="true"><use href="../vendor/lucide-1.47.0/ikonlar.svg#i-panel-left-open"/></svg>
       </button>
       <img class="a-ust-isaret a-isaret-acik" src="../marka/probata-isaret-renkli.svg" alt="probata" width="25" height="32">
       <img class="a-ust-isaret a-isaret-koyu" src="../marka/probata-isaret-koyu-zemin.svg" alt="probata" width="25" height="32">

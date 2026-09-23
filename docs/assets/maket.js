@@ -705,6 +705,23 @@
       s.querySelector(".a-secici-liste").hidden = true; s.querySelector(".a-secici-tus").setAttribute("aria-expanded", "false");
     });
   }
+  /* Yan menü daraltma (reisim 2026-09-23: "sol taraf açılıp kapanabilir olsun kapatılınca sadece logolar kalsın").
+     Yalnız geniş bantta (≥ 1280) etkili — CSS daralmış hâli o banda bağlar; orta/dar bantta çekmece aynen (anayasa 2.11).
+     Daralmışken ad görünmez (ekran okuyucu okur), üstüne gelince ipucu (title). Tercih bu cihazda saklanır. */
+  var MENU_DAR = false;
+  try { MENU_DAR = localStorage.getItem("probata-menu") === "dar"; } catch (x) {}
+  function menuDar(dar) {
+    MENU_DAR = dar;
+    $("a-kabuk").classList.toggle("a-kabuk-dar", dar);
+    var tus = document.querySelector(".a-daralt-tus");
+    tus.setAttribute("aria-expanded", String(!dar));
+    tus.setAttribute("aria-label", dar ? "Menüyü genişlet" : "Menüyü daralt");
+    document.querySelectorAll("#a-menu a").forEach(function (a) {
+      var ad = a.querySelector(".a-menu-ad").textContent;
+      if (dar) a.setAttribute("title", ad); else a.removeAttribute("title");
+    });
+    try { localStorage.setItem("probata-menu", dar ? "dar" : "genis"); } catch (x) {}
+  }
   function cekmece(ac) {
     $("a-kabuk").classList.toggle("a-cekmece-acik", ac);
     document.querySelector(".a-menu-tus").setAttribute("aria-expanded", String(ac));
@@ -754,6 +771,7 @@
     var id = +el.dataset.id, p = bul(id);
     switch (el.dataset.eylem) {
       case "cekmece-ac": cekmece(true); break;
+      case "menu-daralt": menuDar(!MENU_DAR); break;
       case "cekmece-kapat": cekmece(false); break;
       case "tema":
         var tema = document.documentElement.getAttribute("data-tema") === "koyu" ? "acik" : "koyu";
@@ -873,6 +891,7 @@
   }
 
   $("a-menu").innerHTML = menuHtml();
+  menuDar(MENU_DAR);
   $("a-suzgec-kap").innerHTML = suzgecHtml("l");   /* Planlar süzgeci de aynı üreticiden (kalıp 15) */
   temaEtiketi(); seciciCiz("l"); goster(false);
 })();
