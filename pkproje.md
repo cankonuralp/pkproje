@@ -213,32 +213,64 @@ bağlantı kurallarının istediği modülleri atlamışım; bunlar olmadan omur
 birincil/ikincil tuş, boş durum ve dürüst sayaç gibi ortak parçaları doğurur; ölçüleri tasarım kalıbının bu
 projedeki sayıları olur. Ardından saha rapor ekranı (14).
 
-### 3.4 · Planlarım ve plan içi (reisim 2026-09-23, maketin 2. turu)
+### 3.4 · Planlarım ve plan içi (reisim 2026-09-23, maketin 2. ve 3. turu)
 Reisim, kullandığı bir uygulamanın plan listesinin ekran görüntüsünü örnek gösterdi (görüntü ve içindeki veri depoya
 girmez) ve dedi ki (birebir): *"bundan örnek al ama, mesaii iş türü, rapor durumu sütunları gereksiz, aksiyon tuşu
 gereksiz, kabul et denetime başla ve devam et diye değişmeli , planın içerisinden tamamla dendiğinde tamamlandı olmalı
 ama girip içeriden eski haline getirebilir rapor düzenleyebilir vs olmamız lazım burdan anladığın kadaryıla maketi
 düzenle tekrar konuşalım"*
-**Karar (reisim):**
+**Karar (reisim, 2. tur):**
 · **Liste sütunları:** Proje no · Proje adı · Müşteri · Adres · Inspector (örnekte "Kullanıcı") · Başlangıç · Durum.
   **Yok:** Mesai, İş türü, Rapor durumu, açılır "İşlemler" tuşu.
 · **Satırda tek eylem tuşu, durumla değişir:** Kabul et → Denetime başla → Devam et.
 · **Plan içi:** "Tamamla" ile plan **Tamamlandı** olur; plana girip **geri alınabilir** (plan yeniden denetime açılır);
   raporlar düzenlenebilir kalır.
-**Maketteki yorumlarım (öneri — onay bekliyor; sunumda 9–16. sorular):**
-· Plan durumları: Kabul bekliyor · Kabul edildi · **Denetimde** (yeni: Denetime başla ile) · Tamamlandı · Reddedildi.
-· **Reddet** satırdan kalktı, plan içinde (gerekçe zorunlu).
-· **Denetime başla** plan gününe kadar kapalı ("Plan gününde başlar"); İSG-KATİP onayı kontrol tarihine bağlı (§4.4).
-· **Tamamla** raporu başlamamış ekipman varken engellenmez, yalnız sayısını bildirir.
-· Tamamlandı planda raporlar düzenlenir (taslak düzenle · onaydaki aç · eksik oluştur); **ekipman ekleme kapalı**,
-  eklemek için önce geri alınır.
-· Örnekteki **Takvim** görünümü eklenmedi (yeni görünüm, ayrı karar; anayasa 9.13).
-· **Ekipman sayısı** örnekte yok → listeden kalktı, plan içinde duruyor.
-· Örnekteki katlanır "Filtreler" çubuğu alınmadı: süzgeç her zaman açık kalır (tasarım kalıbı 14).
-· Sütun başlığıyla sıralama örnekten alındı; kart kipinde "Sıralama" seçicisi.
-· **Proje no biçimi** `P-AAYY-SIRA` (makette P-0926-031), rapor numarasıyla aynı mantık (§3).
-· Sekiz sütun ölçüldü: tablo, liste kabı **≥ 1.180 px** iken (≈ 1.495 px ve üstü ekran); dizüstü 1.280–1.494 ve tablette
-  kart. Dizüstünde de tablo istenirse Proje no + Proje adı tek sütunda birleşir.
+**Karar (reisim 2026-09-23, 3. tur — 9–16 cevapları ve ek istek):**
+*"9. uygun/10.hayır istediği zaman istediği tepkiyi verebilsin denetçi bu hareketler kayıt altında kalsın yeterli/11 hayır
+şu anki gibi kalsın/12önerin makul kabul ediyorum/13 takvimi göremedim/14 gerek yok böyle iyi/15 hayır birleştirme/16. olur
+mantıklı şekilde proje numarası atama sistemi kur aynı şekilde raporlar içinde eşsiz isimlendirmeler olmalı/// ek olarak
+ekipman ekle ve rapor oluşturma ayrı olmalı ki aynı ekipman için seneye gidildiğinde yeni rapor oluşturukabilsin aynı
+ekipman için, ekipman karışmasın yukarıda ekipmanlar aşağıda raporlar olarak ayrılmalı ekran ve ekipman eklenerek
+ekipmana kod verilmeli ekipman kodu da yine eşisiz olmalı bu kod personel tarafından girileceği için personel el ile
+girdiğinde eğer çakışan ekipman adı var ise uyarmalı izin vermemeli"* (birebir; emsal uygulamayı anan son cümle, depo açık olduğu için alınmadı).
+· **Reddet** satırda yok, **plan içinde** (gerekçe zorunlu). (9)
+· **Denetime başla tarihe bağlı DEĞİL**: denetçi istediği an basar. **Her hareket kayıt altında**: plan açıldı · kabul ·
+  red (gerekçe) · denetime başlandı · ekipman eklendi / plana alındı · rapor oluşturuldu · tamamlandı · tamamlama geri
+  alındı → kim + ne zaman, plan içinde "Plan geçmişi". (10)
+· **Tamamla** raporu olmayan ekipman varken **engellenmez**, yalnız sayısını söyler. (11)
+· **Tamamlanmış planda** raporlar düzenlenir ve oluşturulur; **ekipman ekleme kapalı**, önce tamamlama geri alınır. (12)
+· **Ekipman sayısı** listede yok (14). Proje no ile Proje adı **birleşmez**; dar kapta kart (15).
+· **Numara sistemi kurulur**: proje ve rapor numaraları eşsiz (16) → §3.5.
+· **Ekipman ile rapor ayrı**: plan içinde **üstte Ekipmanlar, altta Raporlar**. Ekipman tesisin **kalıcı** kaydıdır;
+  plan yalnız hangi ekipmanlara bakılacağını tutar; rapor her plan için ayrı açılır → seneye aynı ekipmana yeni rapor.
+  "Ekipman ekle" ile "Rapor oluştur" ayrı iştir.
+· **Ekipman kodu**: ekipman eklenirken verilir, **personel elle girer**, **eşsizdir**; çakışan kod varsa **uyarı + kayıt
+  yok**. (Reisim "çakışan ekipman adı" dedi; ad (tür) tekrar eder, eşsiz olan koddur — yorum, soru 17–19'da.)
+· Takvim: *"takvimi göremedim"* → maketi yapılmadı, soru yeniden soruldu (23).
+**Maketteki yorumlarım (öneri — onay bekliyor; plan içi sunumunda 17–25):**
+· Plan durumları: Kabul bekliyor · Kabul edildi · **Denetimde** · Tamamlandı · Reddedildi. Rapor durumları (maket):
+  Taslak · Onayda · Onaylandı.
+· **Ekipman ekle iki yol**: (a) tesiste kayıtlı ama plana alınmamış ekipmanı seç (önceki kontrolüyle gelir), (b) yeni
+  ekipman: kod + tür (katalogdan, yazarak arama) + seri no + konum. Branş türden gelir.
+· **Kod kuralı**: A–Z (Türkçe harf yok), 0–9, tire; 3–20 hane; boşluk atılır, küçük harf büyüğe çevrilir (yalnız A–Z;
+  dile bağlı harf katlama yok, anayasa 5.5); **firma genelinde eşsiz** (17). Mesajlar: bu planda var · bu tesiste kayıtlı
+  (yeni kayıt açılmaz, "Kayıtlı ekipmanı seç") · başka tesiste kayıtlı · kullanılabilir. Yazarken ve kaydederken
+  denetlenir; gerçek uygulamada sunucuda ve veritabanında benzersizlik kısıtıyla da. Çevrimdışı: iki kişi aynı kodu
+  girerse eşitlemede ikincisi reddedilir, düzeltmesi istenir (sessiz birleşme yok).
+· **Kabul et'in İSG-KATİP kilidi durur** (§3.2 madde 2, mevzuat 4.4); kaldırılan yalnız tarih kilidi (24'te soruldu).
+· Örnekteki katlanır "Filtreler" alınmadı (kalıp 14: süzgeç her zaman açık); sütun başlığıyla sıralama alındı, kart
+  kipinde "Sıralama" seçicisi.
+· Tablo, liste kabı **≥ 1.180 px** iken (≈ 1.495 px ekran); altında kart. Plan içindeki iki liste aynı üreticiden.
+
+### 3.5 · Numara sistemi (reisim 2026-09-23: *"mantıklı şekilde proje numarası atama sistemi kur, aynı şekilde raporlar için de eşsiz isimlendirmeler olmalı"*)
+**Karar:** üç numara da **firmada eşsizdir**; veritabanında benzersizlik kısıtı taşır. Ayrıntılar **öneri — onay
+bekliyor** (soru 17–21):
+| Numara | Biçim | Örnek | Kim, ne zaman | Kural |
+|---|---|---|---|---|
+| Proje no | `P-AAYY-SIRA` | P-0926-031 | sunucu, plan açılırken | AAYY planın **açıldığı** ay+yıl (kontrol tarihi değişse de numara değişmez) · SIRA firmada o ayın kaçıncı planı, her ay 001'den · iptal planın numarası yeniden verilmez |
+| Rapor no | `XX-AAYY-SIRA-EK` | KM-0926-772-3416f | sunucu, rapor oluşturulurken | reisim kararı (§3, örnek ME-0626-767-224d1) · XX firma kısa kodu · AAYY raporun açıldığı ay+yıl · SIRA firmada **kesintisiz** artan (ayla sıfırlanmaz) · EK 5 hane rasgele, tahmin edilemez; çakışırsa yeniden üretilir · düzeltme revizyonla (öneri: aynı numara + R1, §3.2 madde 7) |
+| Ekipman kodu | A–Z, 0–9, tire · 3–20 | HT-1001 | **personel, etiketten elle** | firma genelinde eşsiz · çakışan kod kaydedilmez · değiştirme yalnız yönetici, eski kod geçmişte kalır (öneri) |
+Proje ve rapor numarasını kimse elle yazmaz; ekipman kodunu personel yazar, sistem eşsizliğini korur.
 
 ---
 
@@ -447,7 +479,15 @@ tarih-saat, fotoğraflar, form) · **Eğitim kaydı** (personel, eğitim, belge,
    · **Yazı tipi: Sora** (SIL OFL 1.1). Logo SemiBold, slogan Medium. Uygulamada **kendi sunucumuzdan** sunulur,
      dış kaynaktan çekilmez (anayasa 5.2).
    · **Tema: açık ve koyu eş zamanlı** — ikisi ilk günden birlikte tasarlanır ve her ekran ikisinde ölçülür.
-   · **Görsel sistem önerisi + referans ekran maketi (2026-09-23, öneri — onay bekliyor):** GitHub Pages'te
+   · **Görsel sistem kararları (reisim 2026-09-23):** (1) birincil tuş **A** — yeşil zemin + petrol yazı, iki temada aynı
+     (B ve C elendi; `tokens.css`'te tek seçenek) · (2) açık tema zemini **kâğıt** #F5F3EE, kartlar beyaz · (3) yan menü
+     **iki temada petrol** · (4) **üç bant** (< 768 · 768–1279 · ≥ 1280) ve **40 / 48 px** denetim yüksekliği · (5) süzgeç
+     **kurallara göre** (kalıp 15 sırası: arama → çipler → ve/veya → seçiciler + Temizle sağda; sığmayınca seçiciler +
+     Temizle birlikte alt satıra) · (6) pencere **kurallara uydurulur** (içindeki her kutu pencereyi doldurur, tuşlar içerik
+     kadar, × ve Esc, telefonda alttan levha + yapışkan tuş çubuğu; genişlik işin içeriğinden: karar 520, form 760) ·
+     (7) referans ekranın dondurulması: reisim *"anlamadım"* → plan içi sunumunda açıklandı, soru açık · (8) faz 1 sırası
+     sohbete yazıldı, onay bekliyor.
+   · **Görsel sistem önerisi + referans ekran maketi (2026-09-23; 1–6 onaylandı):** GitHub Pages'te
      `docs/index.html` (sunum) ve `docs/maket/planlarim.html` (Planlarım maketi). İçerik: marka renklerinden türetilen
      27 değişken × 2 tema (`docs/assets/tokens.css`), 54 yazı/zemin çiftinin hepsi WCAG AA geçer (ölçüm aracı
      `tools/palet-olc.mjs` gerçek dosyayı okur; 2. turda 4 çift eklendi); **bulgu: marka yeşili + beyaz yazı 3,19 : 1,
@@ -490,10 +530,13 @@ Petrol #0F2A3D + Onay yeşili #1FA37A; yazı tipi **Sora**. 24. Tema → açık 
 "İşlemler" tuşu **yok**. 28. Satır tuşu → **Kabul et → Denetime başla → Devam et**. 29. Tamamla → plan içinden;
 **geri alınabilir**, raporlar düzenlenebilir (§3.4).
 
-**Açık kalanlar:** **görsel sistem sunumundaki sekiz karar sorusu** (birincil tuş A/B/C · açık tema zemini · yan menü ·
-bantlar ve 40/48 px · iki satırlı süzgeç · 520 px karar penceresi · Planlarım'ın dondurulması · faz 1 sırası) ·
-**Planlarım 2. tur soruları 9–16** (§3.4: Reddet yeri · Denetime başla plan günü · Tamamla engeli · tamamlanmış planda
-açık kalanlar · takvim · ekipman sayısı · dizüstünde tablo · proje no biçimi) ·
+**Beşinci tur (2026-09-23):** görsel sistem 1 → **A** · 2 → kâğıt zemin · 3 → yan menü petrol · 4 → üç bant, 40/48 px ·
+5 → süzgeç kurallara göre · 6 → pencere kurallara uydurulsun · 7 → *"anlamadım"* · 8 → *"faz 1'i buradan bana yaz"* ·
+Planlarım 9–16 ve ekipman/rapor ayrımı → §3.4, §3.5.
+
+**Açık kalanlar:** **plan içi sunumunun 17–25. soruları** (ekipman kodu eşsizlik alanı · kod biçimi · kod değiştirme ·
+rapor sırası ayla sıfırlanır mı · proje sırası aylık mı · kayıtlı ekipmanı plana kim alır · İSG-KATİP kilidi · takvim ·
+referans ekranın dondurulması) · **faz 1 sırası** (sohbete yazıldı) ·
 alan adının alınması · e-imza yöntemi (8.4) · v1 ekipman grupları · 5 yıl sonrası silme
 mekanizması · **zimmette birden çok cihaz varsa süzgeç** (§3) · **kontrol metodu standardının seçim yeri**
 (rapor anı mı, ekipman türü mü — §3) · **§3.1 ve §3.2'deki "öneri" maddeleri** (planlama saat dağıtımı,
@@ -536,6 +579,11 @@ revizyon, alan kopyalama, hafif kusur devri, meslek eşleşme denetimi).
   aktarıldığı hâline döndü. Ürün kararları bu dosyada tutulur. (b) Fotoğraf konumu/EXIF gibi şeylere
   **dokunulmayacak**. (c) Emsal uygulama incelemesi **GitHub'da paylaşılmaz** → bölüm 6 `yerel/` klasörüne
   taşındı, depo geçmişi bu içerikten temizlendi. Ana hedef: **müşterimizin işini kolaylaştırmak.**
+- 2026-09-23 (4): reisim'in 16 cevabı + ek isteği işlendi: görsel sistem 1–6 karar (§8.12; birincil tuş A, petrol seçeneği
+  değişkenlerden kalktı), süzgeç kalıp 15 sırasına, pencereler kurallara uyduruldu. Plan içi 3. tur (§3.4): **üstte
+  Ekipmanlar, altta Raporlar**, ekipman ekle ayrı pencere (kayıtlı / yeni), **ekipman kodu firmada eşsiz, çakışan kod
+  kaydedilmez**, Denetime başla tarihe bağlı değil, **plan geçmişi**; **numara sistemi** §3.5. Yeni sunum
+  `docs/plan-ici.html`; 42 ölçüm temiz, kontrast 56/56; bu turda 6 hata bulunup düzeltildi. Sorular 17–25 reisim'de.
 - 2026-09-23 (3): reisim'in örnek listesiyle Planlarım maketi 2. tur (§3.4): yeni sütunlar, satırda tek eylem tuşu
   (Kabul et → Denetime başla → Devam et), **plan içi** ekranı (Tamamla ↔ Tamamlamayı geri al, ekipman listesi, bilgi
   kutuları), sütun başlığıyla sıralama. 24 ölçüm temiz, kontrast 54/54, bu turda 10 hata bulunup düzeltildi; iki yeni

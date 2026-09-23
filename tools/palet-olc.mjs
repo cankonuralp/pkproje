@@ -24,7 +24,7 @@ export const CIFTLER = [
   ["yazi", "kart", 4.5, "ana metin / kart"], ["yazi", "zemin", 4.5, "ana metin / zemin"],
   ["yazi2", "kart", 4.5, "ikincil metin / kart"], ["yazi2", "zemin", 4.5, "ikincil metin / zemin"],
   ["yazi3", "kart", 4.5, "ipucu metni / kart"], ["yazi3", "zemin", 4.5, "ipucu metni / zemin"], ["yazi3", "zemin2", 4.5, "ipucu metni / zemin2"],
-  ["vurgu-uzeri", "vurgu", 4.5, "birincil tuş B (petrol) · Denetimde rozeti"], ["onay-uzeri", "onay", 4.5, "birincil tuş A (yeşil) yazısı"],
+  ["vurgu-uzeri", "vurgu", 4.5, "Denetimde rozeti (petrol zemin)"], ["onay-uzeri", "onay", 4.5, "birincil tuş (karar A: yeşil zemin, petrol yazı)"],
   ["onay-uzeri", "onay-2", 4.5, "yeşil tuş üzerine gelince"],
   ["onay-yazi", "kart", 4.5, "yeşil metin / kart"], ["onay-yazi", "onay-zemin", 4.5, "Tamamlandı rozeti"],
   ["uyari-yazi", "uyari-zemin", 4.5, "Kabul bekliyor rozeti"], ["hata-yazi", "hata-zemin", 4.5, "Reddedildi rozeti"],
@@ -37,6 +37,8 @@ export const CIFTLER = [
   /* 2. tur (2026-09-23): yeni yüzeyler + 1. turda kullanılıp ölçülmemiş çıkan bir çift (ön koşul notu: uyari-yazi / kart) */
   ["yazi2", "zemin2", 4.5, "Başlanmadı rozeti (nötr)"], ["onay-yazi", "zemin", 4.5, "proje no / satır üzerine gelince"],
   ["uyari-yazi", "kart", 4.5, "ön koşul notu / kart"], ["yazi", "kenar", 4.5, "sıralanır başlık üzerine gelince"],
+  /* 3. tur: kod çakışma mesajı ve "Kusurlu" önceki kontrol sonucu */
+  ["hata-yazi", "kart", 4.5, "kod çakışma mesajı · Kusurlu sonuç / kart"],
 ];
 
 function blokDegiskenleri(css, secici) {

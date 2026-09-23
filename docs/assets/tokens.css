@@ -145,14 +145,11 @@
   }
 }
 
-/* BİRİNCİL TUŞ — iki seçenek (karar reisim'de). A: yeşil zemin + petrol yazı (4,64:1, iki temada aynı).
-   B: petrol zemin + beyaz yazı (14,80:1); koyu temada kâğıt zemin + petrol yazı (13,35:1).
+/* BİRİNCİL TUŞ — KARAR (reisim 2026-09-23): A · yeşil zemin + petrol yazı (4,64:1, iki temada aynı; ölçüm palet-olc).
+   Elenenler: B petrol zemin + beyaz yazı · C koyu yeşil + beyaz yazı.
    ⛔ Marka yeşili + BEYAZ yazı 3,19:1 → AA'nın altında, kullanılmaz. */
-:root, :root[data-birincil="yesil"] {
+:root {
   --birincil: var(--onay); --birincil-uzeri: var(--onay-uzeri); --birincil-2: var(--onay-2);
-}
-:root[data-birincil="petrol"] {
-  --birincil: var(--vurgu); --birincil-uzeri: var(--vurgu-uzeri); --birincil-2: var(--vurgu-2);
 }
 
 /* ══ EŞİKLER — ADLANDIRILMIŞ ÜÇ BANT (EKSIKLER 13: eşik eklemek karar gerektirir) ══════════════════════

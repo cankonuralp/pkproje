@@ -65,9 +65,12 @@ table.s-tablo { width: 100%; border-collapse: collapse; font-size: var(--boy-kuc
 .s-tablo td.s-sayi { font-variant-numeric: tabular-nums; white-space: nowrap; }
 .s-tablo .s-evet { color: var(--onay-yazi); font-weight: 700; }
 .s-tablo .s-hayir { color: var(--hata-yazi); font-weight: 700; }
+/* ⛔ 2026-09-23 (3. tur, 1080'de gözle): numara tablosunda "KM-0926-" / "772-3416f" diye bölünüyordu. Kimlik bölünmez (anayasa 3.11). */
+.s-tablo code { white-space: nowrap; }
 .s-min-600 { min-width: 600px; }
 .s-min-900 { min-width: 900px; }
-.s-min-1400 { min-width: 1400px; }   /* 2. tur ölçüm tablosu: 19 sütun */
+.s-min-1400 { min-width: 1400px; }   /* numara sistemi tablosu: 7 sütun */
+.s-min-1800 { min-width: 1800px; }   /* 3. tur ölçüm tablosu: 21 sütun */
 
 /* renk örnekleri */
 .s-renkler { display: grid; gap: 12px; grid-template-columns: repeat(auto-fill, minmax(min(100%, 200px), 1fr)); }
@@ -127,6 +130,9 @@ table.s-tablo { width: 100%; border-collapse: collapse; font-size: var(--boy-kuc
 .s-sorular li::before { content: counter(soru); width: 32px; height: 32px; border-radius: var(--r-tam); display: flex; align-items: center; justify-content: center; background: var(--onay); color: var(--onay-uzeri); font-weight: 700; }
 .s-sorular b { display: block; margin-bottom: 4px; }
 .s-sorular span { color: var(--yazi2); }
+/* 3. tur: cevaplanan sorunun altında karar satırı */
+.s-sorular .s-karar { display: flex; align-items: flex-start; gap: 6px; margin-top: 8px; color: var(--onay-yazi); font-weight: 600; font-size: var(--boy-kucuk); }
+.s-sorular .s-karar .s-ikon { flex: none; margin-top: 1px; }
 
 .s-alt-bilgi { padding: 18px var(--bosluk-sayfa) 28px; color: var(--yazi3); font-size: var(--boy-etiket); }
 

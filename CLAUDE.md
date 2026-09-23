@@ -155,6 +155,7 @@ ETKİ ALANI). Bir teslimde **BİR kalem**. Reisim'e test ödevi verilmez.
   ben tarayıcı bölmemde ölçerim. Pages **sunucu tarafını çalıştıramaz** (veritabanı, giriş, PDF üretimi) ve kiracı
   başına alt alan adı vermez → gerçek uygulama **Türkiye'de sunucuda** (pkproje.md §8.8).
 - **Yayın (2026-09-23): GitHub Pages `main` dalının `docs/` klasöründen** yayınlar: https://cankonuralp.github.io/pkproje/
-  (sunum) · `…/maket/planlarim.html` (maket). Sayfalar `noindex`; veri uydurma. İskelet kurulunca GitHub Actions iş
+  (görsel sistem) · `…/plan-ici.html` (plan içi sunumu, 3. tur) · `…/maket/planlarim.html` (maket; `#/plan/<id>` plan içi,
+  `#/plan/<id>/ekle` ekipman ekle). İki sunum `tools/sunum-uret.mjs` ile üretilir, elle düzenlenmez. Sayfalar `noindex`; veri uydurma. İskelet kurulunca GitHub Actions iş
   akışına geçilir: her push'ta test + derleme, statik önizleme çıktısı Pages'e (Eksikler §1 CI ile aynı iş akışı).
 - OneDrive: reisim'de kapalı, klasör adı Windows 10'dan kalma; dosyalar yerelde. Yedek = GitHub.

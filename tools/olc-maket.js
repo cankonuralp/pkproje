@@ -3,6 +3,8 @@
    Kalıp 10: liste kabı içeriği doldurur. Süzgeç bu projede sabit İKİ satır (üst: arama+seçiciler, alt: çipler).
    2. tur (2026-09-23): görünen görünüm ölçülür — liste (#/) ya da plan içi (#/plan/<id>). Plan içinde ek ölçü:
    görünen birincil tuş sayısı (nesne sayfası: tek birincil, anayasa 2.7) ve telefonda yapışkan eylem çubuğu.
+   3. tur (2026-09-23): kalıcı pencere (modal) açıksa etkileşim ölçüleri YALNIZ pencerenin içinde yapılır (arka plan
+   etkisizdir); pencerenin içindeki her blok pencereyi doldurur mu (kalıp 10, reisim sorusu 6) → pencereKenar.
    ⛔ Eş zamanlı yazılır (anayasa 11.8): gizli bölmede rAF/setTimeout beklemesi zaman aşımına düşer. */
 (() => {
   const r = {};
@@ -42,22 +44,39 @@
     .map(e => (e.className || e.id || e.tagName) + ":" + (e.scrollWidth - e.clientWidth) + "px");
   r.ucNoktaKirpma = kirpik.filter(k => k.ellipsis).length;
   r.ucNoktaBasliksiz = kirpik.filter(k => k.ellipsis && !k.baslik).map(k => k.ad);
-  const et = [...document.querySelectorAll("button, a[href], input, textarea")].filter(e => gorunur(e) && !e.closest("dialog:not([open])"));
+  const modal = document.querySelector("dialog[open]");
+  r.pencere = modal ? modal.id : null;
+  const et = [...(modal || document).querySelectorAll("button, a[href], input, textarea")].filter(e => gorunur(e) && !e.closest("dialog:not([open])"));
   const esik = Math.min(r.tusY, 40) - 0.5;
-  r.kucukHedef = et.filter(e => !e.closest(".a-kip") && !e.classList.contains("a-ara-sil") && e.getBoundingClientRect().height < esik)
-    .map(e => (e.className || e.tagName) + ":" + Math.round(e.getBoundingClientRect().height));
-  let cakisma = 0; const bs = et.map(e => [e, e.getBoundingClientRect()]);
-  for (let i = 0; i < bs.length; i++) for (let j = i + 1; j < bs.length; j++) {
-    const [a, A] = bs[i], [b, B] = bs[j]; if (a.contains(b) || b.contains(a)) continue;
-    /* telefonda yapışkan alt çubuk içeriğin ÜSTÜNDE durur (tasarım gereği); altında kalan öğe kaydırınca açılır */
-    if (a.closest(".a-eylem-cubugu-alt") !== b.closest(".a-eylem-cubugu-alt")) continue;
-    const x = Math.min(A.right, B.right) - Math.max(A.left, B.left), y = Math.min(A.bottom, B.bottom) - Math.max(A.top, B.top);
-    if (x > 1 && y > 1) cakisma++;
+  /* etiketin içindeki onay kutusu: dokunma hedefi etiketin tamamıdır (tıklama kutuyu işaretler) */
+  const hedef = e => (e.type === "checkbox" || e.type === "radio") && e.closest("label") ? e.closest("label") : e;
+  r.kucukHedef = et.filter(e => !e.closest(".a-kip") && !e.classList.contains("a-ara-sil") && hedef(e).getBoundingClientRect().height < esik)
+    .map(e => (e.className || e.tagName) + ":" + Math.round(hedef(e).getBoundingClientRect().height));
+  /* 3. tur (2026-09-23): yapışkan çubuk (üst çubuk, plan içinin ve pencerenin alt tuş çubuğu) kaydırılan içeriğin ÜSTÜNDEN
+     geçer — tasarım gereği. Muafiyet adla değil kaynakla: farklı yapışkan atası olan iki öğe karşılaştırılmaz. Muafiyetin
+     gerçek örtmeyi gizlemediği ayrıca ölçülür: sona kaydırınca (sonCakisma) çakışma 0 olmalı, yoksa son öğe hiç açılmaz. */
+  const yapiskanAta = e => { for (let a = e; a && a !== document.body; a = a.parentElement) if (getComputedStyle(a).position === "sticky") return a; return null; };
+  const cakismaSay = muaf => { let n = 0; const bs = et.map(e => [e, e.getBoundingClientRect(), yapiskanAta(e)]);
+    for (let i = 0; i < bs.length; i++) for (let j = i + 1; j < bs.length; j++) {
+      const [a, A, ya] = bs[i], [b, B, yb] = bs[j]; if (a.contains(b) || b.contains(a)) continue;
+      if (muaf && ya !== yb) continue;
+      const x = Math.min(A.right, B.right) - Math.max(A.left, B.left), y = Math.min(A.bottom, B.bottom) - Math.max(A.top, B.top);
+      if (x > 1 && y > 1) n++;
+    } return n; };
+  r.cakisma = cakismaSay(true);
+  /* sonCakisma: ALT tuş çubuğu (plan içi telefonda, pencere altı) varsa kabı sona kaydır; çubuğun içindeki bir öğe ile
+     dışındaki bir öğe hâlâ örtüşüyorsa son öğe hiç açılmıyor demektir. Kap kaydırılamıyorsa da sayılır (2026-09-23: ilk
+     sürüm yalnız kaydırılabilen kapta sayıyordu; çubuğun kalıcı örtmesi kısa pencerede görünmez kalıyordu). */
+  const altCubuk = modal ? modal.querySelector(".a-pencere-alt") : document.querySelector(".a-eylem-cubugu-alt");
+  if (altCubuk && gorunur(altCubuk)) {
+    const kap = modal || document.scrollingElement, eski = kap.scrollTop; kap.scrollTop = kap.scrollHeight;
+    const ic = et.filter(e => altCubuk.contains(e)).map(e => e.getBoundingClientRect()), dis = et.filter(e => !altCubuk.contains(e)).map(e => e.getBoundingClientRect());
+    r.sonCakisma = ic.reduce((n, A) => n + dis.filter(B => Math.min(A.right, B.right) - Math.max(A.left, B.left) > 1 && Math.min(A.bottom, B.bottom) - Math.max(A.top, B.top) > 1).length, 0);
+    kap.scrollTop = eski;
   }
-  r.cakisma = cakisma;
   /* 2026-09-23 (2. tur) hata sınıfı: kırpılarak gizlenmiş kabın (a-gizli deseni) içinde etkileşimli öğe = görünmez ama
      odaklanır/tıklanır. Kart kipinde gizlenen tablo başlığındaki sıralama tuşları böyle kalmıştı. */
-  r.gizliEtkilesimli = [...document.querySelectorAll("button, a[href], input, textarea")]
+  r.gizliEtkilesimli = [...(modal || document).querySelectorAll("button, a[href], input, textarea")]
     .filter(e => !e.closest("dialog:not([open])") && getComputedStyle(e).display !== "none" && e.getClientRects().length && gizliAtada(e))
     .map(e => (e.className || e.tagName) + "[" + e.textContent.trim().slice(0, 20) + "]");
   /* 2026-09-23 (2. tur, 375'te gözle): arama ipucu "Proje, müşteri, adres" kutuya sığmayıp "adr" diye kesildi; giriş
@@ -84,6 +103,16 @@
   const tr = li && li.querySelector(".a-tablo tbody tr");
   r.satirYukseklik = tr ? Math.round(tr.getBoundingClientRect().height) : null;
   /* 2026-09-23 hata sınıfı: `hidden` özniteliği sınıfın display kuralıyla ezilebilir → gizli sanılan öğe görünür kalır */
+  if (modal) {
+    const g = modal.querySelector(".a-pencere-govde"), gs = getComputedStyle(g);
+    const ic = g.clientWidth - parseFloat(gs.paddingLeft) - parseFloat(gs.paddingRight);
+    r.pencereGenislik = Math.round(modal.getBoundingClientRect().width);
+    /* gövdenin çocukları + düz BLOK kapların (ör. #a-ekle-govde) çocukları; esnek kutunun öğeleri (sekme anahtarı) içerik
+       kadardır, sayılmaz (2026-09-23: ilk sürüm iki sekme düğmesini blok sanıp 583 px yanlış alarm verdi) */
+    const kaplar = [...g.children].filter(c => c.tagName === "DIV" && getComputedStyle(c).display === "block");
+    r.pencereKenar = Math.max(0, ...[...g.children, ...kaplar.flatMap(c => [...c.children])].filter(c => gorunur(c) && (c.tagName === "TEXTAREA" || ["block", "grid", "flex", "list-item"].includes(getComputedStyle(c).display)))
+      .map(c => Math.round(Math.abs(ic - c.getBoundingClientRect().width))));
+  }
   r.gorunenGizli = [...document.querySelectorAll("[hidden]")].filter(e => e.getBoundingClientRect().width > 0).map(e => e.id || e.className);
   if (r.gorunum === "plan") {
     r.birincilSayisi = [...document.querySelectorAll("#a-plan .a-tus-birincil")].filter(gorunur).length;

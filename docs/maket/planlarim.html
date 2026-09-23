@@ -7,14 +7,13 @@
 <meta name="robots" content="noindex">
 <link rel="icon" href="../marka/favicon.svg" type="image/svg+xml">
 <script>
-  /* Tema ve birincil tuş seçimi çizimden ÖNCE uygulanır (yanıp sönme olmasın).
-     Öncelik: adres (?tema=, ?birincil=) → bu tarayıcıda seçilen → sistem tercihi. */
+  /* Tema çizimden ÖNCE uygulanır (yanıp sönme olmasın).
+     Öncelik: adres (?tema=) → bu tarayıcıda seçilen → sistem tercihi. Birincil tuş rengi kararlı (A), seçenek yok. */
   (function () {
     var q = new URLSearchParams(location.search), d = document.documentElement, t = q.get("tema");
     try { if (!t) t = localStorage.getItem("probata-tema"); } catch (e) {}
     if (t === "acik" || t === "koyu") d.setAttribute("data-tema", t);
     else d.setAttribute("data-tema", matchMedia("(prefers-color-scheme: dark)").matches ? "koyu" : "acik");
-    var b = q.get("birincil"); d.setAttribute("data-birincil", b === "petrol" ? "petrol" : "yesil");
   })();
 </script>
 <link rel="stylesheet" href="../assets/tokens.css">
@@ -73,31 +72,30 @@
         <span class="a-sayac" id="a-sayac" aria-live="polite"></span>
       </div>
 
-      <!-- SÜZGEÇ: sabit iki satır. Üst: arama (sol) · seçiciler + Temizle (sağ). Alt: çipler + ve/veya.
-           Tek satıra sığmıyor: 1920'de gereken 1.696 px, kap 1.624 px (2026-09-23 ölçümü). -->
+      <!-- SÜZGEÇ (kalıp 15, reisim 2026-09-23 "kurallara göre düzenle"): TEK akış, kuralın sırasıyla —
+           arama → durum çipleri → ve/veya → (boşluk) → seçiciler + Temizle sağda. Sığmayınca seçiciler + Temizle BİRLİKTE
+           alt satıra sağa kayar (Temizle yalnız kalmaz). Telefon: arama + Süzgeç üstte, çipler yana kayar, seçiciler levhada. -->
       <div class="a-suzgec" id="a-suzgec">
-        <div class="a-suzgec-ust">
-          <label class="a-ara" id="a-ara">
-            <span class="a-gizli">Planlarda ara</span>
-            <svg class="a-ikon" aria-hidden="true"><use href="../vendor/lucide-1.47.0/ikonlar.svg#i-search"/></svg>
-            <input type="search" id="a-ara-girdi" placeholder="Proje, müşteri, il" autocomplete="off">
-            <button class="a-ara-sil" type="button" data-eylem="ara-sil" aria-label="Aramayı temizle">
-              <svg class="a-ikon a-ikon-kucuk" aria-hidden="true"><use href="../vendor/lucide-1.47.0/ikonlar.svg#i-x"/></svg>
-            </button>
-          </label>
-          <button class="a-suzgec-tus" type="button" data-eylem="levha-ac" aria-haspopup="dialog">
-            <svg class="a-ikon" aria-hidden="true"><use href="../vendor/lucide-1.47.0/ikonlar.svg#i-sliders-horizontal"/></svg>
-            Süzgeç <span class="a-suzgec-rozet" id="a-suzgec-rozet" hidden></span>
+        <label class="a-ara" id="a-ara">
+          <span class="a-gizli">Planlarda ara</span>
+          <svg class="a-ikon" aria-hidden="true"><use href="../vendor/lucide-1.47.0/ikonlar.svg#i-search"/></svg>
+          <input type="search" id="a-ara-girdi" placeholder="Proje, müşteri, il" autocomplete="off">
+          <button class="a-ara-sil" type="button" data-eylem="ara-sil" aria-label="Aramayı temizle">
+            <svg class="a-ikon a-ikon-kucuk" aria-hidden="true"><use href="../vendor/lucide-1.47.0/ikonlar.svg#i-x"/></svg>
           </button>
-          <div class="a-suzgec-sag">
-            <div class="a-seciciler" id="a-seciciler"></div>
-            <button class="a-temizle" type="button" data-eylem="temizle" id="a-temizle">
-              <svg class="a-ikon a-ikon-kucuk" aria-hidden="true"><use href="../vendor/lucide-1.47.0/ikonlar.svg#i-filter-x"/></svg>
-              Temizle
-            </button>
-          </div>
-        </div>
+        </label>
+        <button class="a-suzgec-tus" type="button" data-eylem="levha-ac" aria-haspopup="dialog">
+          <svg class="a-ikon" aria-hidden="true"><use href="../vendor/lucide-1.47.0/ikonlar.svg#i-sliders-horizontal"/></svg>
+          Süzgeç <span class="a-suzgec-rozet" id="a-suzgec-rozet" hidden></span>
+        </button>
         <div class="a-cipler" id="a-cipler" role="group" aria-label="Durum süzgeci"></div>
+        <div class="a-suzgec-sag">
+          <div class="a-seciciler" id="a-seciciler"></div>
+          <button class="a-temizle" type="button" data-eylem="temizle" id="a-temizle">
+            <svg class="a-ikon a-ikon-kucuk" aria-hidden="true"><use href="../vendor/lucide-1.47.0/ikonlar.svg#i-filter-x"/></svg>
+            Temizle
+          </button>
+        </div>
       </div>
 
       <div class="a-liste-kap" id="a-liste"></div>
@@ -141,6 +139,23 @@
     <button class="a-tus a-tus-ikincil" type="button" data-eylem="temizle">Temizle</button>
     <button class="a-tus a-tus-birincil" type="button" data-eylem="levha-kapat" id="a-levha-uygula">Sonuçları göster</button>
   </div>
+</dialog>
+
+<!-- EKİPMAN EKLE (3. tur): iki yol — yeni ekipman (kod elle, firmada eşsiz) · tesiste kayıtlı ekipmanı plana al.
+     Form penceresi iki sütunlu; içindeki her kutu pencereyi doldurur, alanlar veri tipine göre (kalıp 3, 10). -->
+<dialog class="a-pencere a-pencere-form" id="a-ekle-pencere" aria-labelledby="a-ekle-baslik">
+  <div class="a-pencere-bas">
+    <h2 id="a-ekle-baslik">Ekipman ekle</h2>
+    <button class="a-ikon-tus" type="button" data-eylem="ekle-kapat" aria-label="Kapat">
+      <svg class="a-ikon" aria-hidden="true"><use href="../vendor/lucide-1.47.0/ikonlar.svg#i-x"/></svg>
+    </button>
+  </div>
+  <div class="a-pencere-govde">
+    <p class="a-pencere-ozet" id="a-ekle-ozet"></p>
+    <div class="a-sekmeler" id="a-ekle-sekmeler" role="group" aria-label="Ekleme yolu"></div>
+    <div id="a-ekle-govde"></div>
+  </div>
+  <div class="a-pencere-alt" id="a-ekle-alt"></div>
 </dialog>
 
 <div class="a-bildirim" id="a-bildirim" role="status" aria-live="polite">
