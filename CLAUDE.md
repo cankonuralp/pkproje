@@ -68,7 +68,22 @@ pkproje/
   data/                     yerel veritabanı + dosya deposu (git dışı)
 ```
 
-## 4 · Komutlar (PLANLANAN; iskelet kurulunca gerçek hâli buraya yazılır)
+## 4 · Komutlar
+**Şu an çalışanlar (iskelet öncesi, 2026-09-23):**
+```bash
+node tools/palet-olc.mjs
+```
+```bash
+node tools/sunum-uret.mjs
+```
+```bash
+python -m http.server 8765 --bind 127.0.0.1 --directory docs
+```
+İlki `docs/assets/tokens.css`'teki gerçek renkleri okuyup 46 çiftin WCAG kontrastını ölçer (geçmeyen varsa çıkış 1).
+İkincisi sunumu (`docs/index.html`) tokens.css + `docs/assets/olcum.json`'dan yeniden üretir; sunum elle düzenlenmez.
+Üçüncüsü yerel önizleme (`.claude/launch.json` "maket"). Maket ölçümü: `tools/olc-maket.js` tarayıcıda koşar, salt okunur.
+
+**Planlanan (iskelet kurulunca gerçek hâli buraya yazılır):**
 ```bash
 npm install          # gömülü PostgreSQL ikilileri burada iner; başka kurulum yok
 npm run dev          # localde çalıştır → http://localhost:3000 (firma denemesi: http://<firma>.localhost:3000)
@@ -139,6 +154,7 @@ ETKİ ALANI). Bir teslimde **BİR kalem**. Reisim'e test ödevi verilmez.
 - **GitHub Pages = statik ÖNİZLEME ortamı** (maket, prototip ekran, örnek veriyle kontrol): reisim buradan bakar,
   ben tarayıcı bölmemde ölçerim. Pages **sunucu tarafını çalıştıramaz** (veritabanı, giriş, PDF üretimi) ve kiracı
   başına alt alan adı vermez → gerçek uygulama **Türkiye'de sunucuda** (pkproje.md §8.8).
-- Yayın: GitHub Actions iş akışı `main`'e her push'ta test + derleme koşar, statik çıktıyı Pages'e yayınlar
-  (Eksikler §1 CI ile aynı iş akışı). Yayınlanacak bir çıktı doğduğunda kurulur (iskelet kalemi).
+- **Yayın (2026-09-23): GitHub Pages `main` dalının `docs/` klasöründen** yayınlar: https://cankonuralp.github.io/pkproje/
+  (sunum) · `…/maket/planlarim.html` (maket). Sayfalar `noindex`; veri uydurma. İskelet kurulunca GitHub Actions iş
+  akışına geçilir: her push'ta test + derleme, statik önizleme çıktısı Pages'e (Eksikler §1 CI ile aynı iş akışı).
 - OneDrive: reisim'de kapalı, klasör adı Windows 10'dan kalma; dosyalar yerelde. Yedek = GitHub.

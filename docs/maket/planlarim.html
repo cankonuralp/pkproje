@@ -1,0 +1,148 @@
+<!doctype html>
+<html lang="tr">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1">
+<title>Planlarım · probata maket</title>
+<meta name="robots" content="noindex">
+<link rel="icon" href="../marka/favicon.svg" type="image/svg+xml">
+<script>
+  /* Tema ve birincil tuş seçimi çizimden ÖNCE uygulanır (yanıp sönme olmasın).
+     Öncelik: adres (?tema=, ?birincil=) → bu tarayıcıda seçilen → sistem tercihi. */
+  (function () {
+    var q = new URLSearchParams(location.search), d = document.documentElement, t = q.get("tema");
+    try { if (!t) t = localStorage.getItem("probata-tema"); } catch (e) {}
+    if (t === "acik" || t === "koyu") d.setAttribute("data-tema", t);
+    else d.setAttribute("data-tema", matchMedia("(prefers-color-scheme: dark)").matches ? "koyu" : "acik");
+    var b = q.get("birincil"); d.setAttribute("data-birincil", b === "petrol" ? "petrol" : "yesil");
+  })();
+</script>
+<link rel="stylesheet" href="../assets/tokens.css">
+<link rel="stylesheet" href="../assets/maket.css">
+</head>
+<body>
+<div class="a-kabuk" id="a-kabuk">
+  <aside class="a-cubuk" id="a-cubuk" aria-label="Ana menü">
+    <div class="a-cubuk-bas">
+      <img src="../marka/probata-yatay-koyu-zemin.svg" alt="probata" width="148" height="37">
+      <button class="a-ikon-tus a-cubuk-kapat" type="button" data-eylem="cekmece-kapat" aria-label="Menüyü kapat">
+        <svg class="a-ikon" aria-hidden="true"><use href="../vendor/lucide-1.47.0/ikonlar.svg#i-x"/></svg>
+      </button>
+    </div>
+    <nav class="a-menu">
+      <a href="#" aria-current="page">
+        <svg class="a-ikon" aria-hidden="true"><use href="../vendor/lucide-1.47.0/ikonlar.svg#i-calendar-check"/></svg>
+        Planlarım <span class="a-menu-sayi" id="a-menu-sayi" title="Kabul bekleyen plan"></span>
+      </a>
+      <a href="#"><svg class="a-ikon" aria-hidden="true"><use href="../vendor/lucide-1.47.0/ikonlar.svg#i-file-text"/></svg>Raporlarım</a>
+      <a href="#"><svg class="a-ikon" aria-hidden="true"><use href="../vendor/lucide-1.47.0/ikonlar.svg#i-wrench"/></svg>Ekipmanlar</a>
+      <a href="#"><svg class="a-ikon" aria-hidden="true"><use href="../vendor/lucide-1.47.0/ikonlar.svg#i-package"/></svg>Zimmetim</a>
+      <a href="#"><svg class="a-ikon" aria-hidden="true"><use href="../vendor/lucide-1.47.0/ikonlar.svg#i-book-open"/></svg>Standartlar</a>
+    </nav>
+    <div class="a-cubuk-alt">Maket · uydurma veri</div>
+  </aside>
+  <div class="a-perde" data-eylem="cekmece-kapat"></div>
+
+  <div class="a-govde">
+    <header class="a-ust">
+      <button class="a-menu-tus" type="button" data-eylem="cekmece-ac" aria-label="Menüyü aç" aria-controls="a-cubuk" aria-expanded="false">
+        <svg class="a-ikon" aria-hidden="true"><use href="../vendor/lucide-1.47.0/ikonlar.svg#i-menu"/></svg>
+      </button>
+      <img class="a-ust-isaret a-isaret-acik" src="../marka/probata-isaret-renkli.svg" alt="probata" width="25" height="32">
+      <img class="a-ust-isaret a-isaret-koyu" src="../marka/probata-isaret-koyu-zemin.svg" alt="probata" width="25" height="32">
+      <div class="a-firma">
+        <svg class="a-ikon" aria-hidden="true"><use href="../vendor/lucide-1.47.0/ikonlar.svg#i-building-2"/></svg>
+        <span class="a-firma-ad" title="Kalkan Muayene Ltd.">Kalkan Muayene Ltd.</span>
+      </div>
+      <div class="a-ust-bosluk"></div>
+      <button class="a-ikon-tus" type="button" data-eylem="tema" id="a-tema-tus" aria-label="Temayı değiştir">
+        <svg class="a-ikon a-tema-ay" aria-hidden="true"><use href="../vendor/lucide-1.47.0/ikonlar.svg#i-moon"/></svg>
+        <svg class="a-ikon a-tema-gunes" aria-hidden="true"><use href="../vendor/lucide-1.47.0/ikonlar.svg#i-sun"/></svg>
+      </button>
+      <div class="a-kullanici">
+        <span class="a-avatar" aria-hidden="true">MK</span>
+        <span class="a-kullanici-yazi"><span class="a-kullanici-ad">Mert Kaya</span><span class="a-kullanici-rol">Inspector · Makine Mühendisi</span></span>
+      </div>
+    </header>
+
+    <main class="a-icerik" id="a-icerik">
+      <div class="a-sayfa-bas">
+        <h1>Planlarım</h1>
+        <span class="a-sayac" id="a-sayac" aria-live="polite"></span>
+      </div>
+
+      <!-- SÜZGEÇ: sabit iki satır. Üst: arama (sol) · seçiciler + Temizle (sağ). Alt: çipler + ve/veya.
+           Tek satıra sığmıyor: 1920'de gereken 1.696 px, kap 1.624 px (2026-09-23 ölçümü). -->
+      <div class="a-suzgec" id="a-suzgec">
+        <div class="a-suzgec-ust">
+          <label class="a-ara" id="a-ara">
+            <span class="a-gizli">Planlarda ara</span>
+            <svg class="a-ikon" aria-hidden="true"><use href="../vendor/lucide-1.47.0/ikonlar.svg#i-search"/></svg>
+            <input type="search" id="a-ara-girdi" placeholder="Müşteri, tesis, il" autocomplete="off">
+            <button class="a-ara-sil" type="button" data-eylem="ara-sil" aria-label="Aramayı temizle">
+              <svg class="a-ikon a-ikon-kucuk" aria-hidden="true"><use href="../vendor/lucide-1.47.0/ikonlar.svg#i-x"/></svg>
+            </button>
+          </label>
+          <button class="a-suzgec-tus" type="button" data-eylem="levha-ac" aria-haspopup="dialog">
+            <svg class="a-ikon" aria-hidden="true"><use href="../vendor/lucide-1.47.0/ikonlar.svg#i-sliders-horizontal"/></svg>
+            Süzgeç <span class="a-suzgec-rozet" id="a-suzgec-rozet" hidden></span>
+          </button>
+          <div class="a-suzgec-sag">
+            <div class="a-seciciler" id="a-seciciler"></div>
+            <button class="a-temizle" type="button" data-eylem="temizle" id="a-temizle">
+              <svg class="a-ikon a-ikon-kucuk" aria-hidden="true"><use href="../vendor/lucide-1.47.0/ikonlar.svg#i-filter-x"/></svg>
+              Temizle
+            </button>
+          </div>
+        </div>
+        <div class="a-cipler" id="a-cipler" role="group" aria-label="Durum süzgeci"></div>
+      </div>
+
+      <div class="a-liste-kap" id="a-liste"></div>
+    </main>
+  </div>
+</div>
+
+<dialog class="a-pencere" id="a-red-pencere" aria-labelledby="a-red-baslik">
+  <form method="dialog" id="a-red-form">
+    <div class="a-pencere-bas">
+      <h2 id="a-red-baslik">Planı reddet</h2>
+      <button class="a-ikon-tus" type="button" data-eylem="pencere-kapat" aria-label="Kapat">
+        <svg class="a-ikon" aria-hidden="true"><use href="../vendor/lucide-1.47.0/ikonlar.svg#i-x"/></svg>
+      </button>
+    </div>
+    <div class="a-pencere-govde">
+      <p class="a-pencere-ozet" id="a-red-ozet"></p>
+      <label class="a-etiket" for="a-red-gerekce">Gerekçe</label>
+      <textarea class="a-alan" id="a-red-gerekce" maxlength="500" placeholder="Planlama ekibi bu gerekçeyi görür."></textarea>
+      <p class="a-ipucu" id="a-red-ipucu">Gerekçe yazılmadan plan reddedilemez.</p>
+    </div>
+    <div class="a-pencere-alt">
+      <button class="a-tus a-tus-ikincil" type="button" data-eylem="pencere-kapat">Vazgeç</button>
+      <button class="a-tus a-tus-tehlike" type="submit" id="a-red-onay" disabled>Reddet</button>
+    </div>
+  </form>
+</dialog>
+
+<dialog class="a-pencere" id="a-levha" aria-labelledby="a-levha-baslik">
+  <div class="a-pencere-bas">
+    <h2 id="a-levha-baslik">Süzgeç</h2>
+    <button class="a-ikon-tus" type="button" data-eylem="levha-kapat" aria-label="Kapat">
+      <svg class="a-ikon" aria-hidden="true"><use href="../vendor/lucide-1.47.0/ikonlar.svg#i-x"/></svg>
+    </button>
+  </div>
+  <div class="a-pencere-govde" id="a-levha-govde"></div>
+  <div class="a-pencere-alt">
+    <button class="a-tus a-tus-ikincil" type="button" data-eylem="temizle">Temizle</button>
+    <button class="a-tus a-tus-birincil" type="button" data-eylem="levha-kapat" id="a-levha-uygula">Sonuçları göster</button>
+  </div>
+</dialog>
+
+<div class="a-bildirim" id="a-bildirim" role="status" aria-live="polite">
+  <svg class="a-ikon" aria-hidden="true"><use href="../vendor/lucide-1.47.0/ikonlar.svg#i-circle-check"/></svg>
+  <span id="a-bildirim-metin"></span>
+</div>
+
+<script src="../assets/maket.js"></script>
+</body>
+</html>
