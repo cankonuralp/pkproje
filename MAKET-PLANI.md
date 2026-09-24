@@ -85,4 +85,5 @@ tek mesaj: sayfanın bağlantısı + kaç maket + kaç soru + ölçülemeyen var
   `maket-veri.js`. **M1 bitti** (108/108 · çekmece 2/2 · etkileşim 17/17; sorular 32–43).
 - **M2 bitti** (48/48 · çekmece 2/2 · etkileşim 11/11; sorular 44–50).
 - **M3 bitti** (60/60 · çekmece 2/2 · etkileşim 14/14; sorular 51–57).
-- **M4 bitti** (60/60 · çekmece 2/2 · etkileşim 12/12; sorular 58–65). Sırada: M5.
+- **M4 bitti** (60/60 · çekmece 2/2 · etkileşim 12/12; sorular 58–65).
+- **M5 bitti** (66/66 · çekmece 2/2 · etkileşim 14/14; sorular 66–73). Sırada: M6.

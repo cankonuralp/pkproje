@@ -95,6 +95,19 @@ export const DURUMLAR = {
     { ad: "teslim · kalibrasyonu geçmiş cihaz uyarısı", hash: "#/teslim/v3", adim: [["tikla", "#w-alan"], ["tikla", '[data-secim="w-alan"][data-deger="mk"]']] },
     { ad: "teslim · araç, boş gönderildi", hash: "#/teslim/a3", adim: [["tikla", '[data-eylem="pencere-kaydet"]']] },
   ] },
+  m5: { sayfa: "maket/sozlesmeler.html", durumlar: [
+    { ad: "İSG-KATİP · liste + plan kabulünü durduran eksikler", hash: "#/" },
+    { ad: "kişiye göre (personel kartından)", hash: "#/isg?kisi=mk" },
+    { ad: "tesise göre, kayıt yok (tesis sayfasından)", hash: "#/isg?tesis=t8" },
+    { ad: "görünüm · hepsi (önceki kayıtlar dahil)", hash: "#/", adim: [["js", 'MK.SZ.i.sec.gorunum = "hepsi"; MK.suzgecKur("i")']] },
+    { ad: "kayıt ekle · eksikten (tesis + kişi dolu)", hash: "#/isg/yeni?tesis=t8&kisi=mk" },
+    { ad: "kayıt ekle · geç onay canlı denetimi", hash: "#/isg/yeni?tesis=t8&kisi=mk", adim: [["yaz", "#w-onay", "26.09.2026"]] },
+    { ad: "kayıt ekle · güncel kaydı olan kişi × tesis", hash: "#/isg/yeni?tesis=t12&kisi=mk" },
+    { ad: "kayıt ekle · boş gönderildi", hash: "#/isg/yeni", adim: [["tikla", '[data-eylem="pencere-kaydet"]']] },
+    { ad: "kayıt · geç onay (P-0926-038)", hash: "#/isg/i8" },
+    { ad: "kayıt · kabul edilmiş planın dayanağı", hash: "#/isg/i1" },
+    { ad: "önceki kayıt · salt okunur", hash: "#/isg/i90" },
+  ] },
 };
 
 /* ── ETKİLEŞİM DENEMELERİ (--etkilesim): adımlar koşar, sonra `bekle` ifadesi sayfada doğru dönmeli. Gen verilmezse 1920. ── */
@@ -177,6 +190,22 @@ export const DENEMELER = {
     { ad: "teslim: fotoğrafsız ve kilometresiz araç teslimi reddedilir", hash: "#/teslim/a3", adim: [["tikla", "#w-alan"], ["tikla", '[data-secim="w-alan"][data-deger="bs"]'], ["tikla", '[data-eylem="pencere-kaydet"]']], bekle: '/en az bir fotoğraf/i.test(document.querySelector("#a-pencere-govde").textContent) && document.querySelector("#w-km").getAttribute("aria-invalid") === "true"' },
     { ad: "teslim: kalibrasyonu geçmiş cihaz depoya alınır, onay gerekmez", hash: "#/teslim/v3", adim: [["tikla", "#w-alan"], ["tikla", '[data-secim="w-alan"][data-deger="depo"]'], ["tikla", '[data-eylem="foto-ekle"]'], ["tikla", '[data-eylem="pencere-kaydet"]']], bekle: 'location.hash === "#/v/v3" && MV.kimde("v3") === "depo" && /İade alındı/.test(document.querySelector(".a-gecmis").textContent)' },
     { ad: "teslim: kişiye teslim onay bekler", hash: "#/teslim/d5", adim: [["tikla", "#w-alan"], ["tikla", '[data-secim="w-alan"][data-deger="ok"]'], ["tikla", '[data-eylem="foto-ekle"]'], ["tikla", '[data-eylem="pencere-kaydet"]']], bekle: 'MV.kimde("d5") === "ok" && /Onay bekliyor/.test(document.querySelector(".a-gecmis li").textContent)' },
+  ],
+  m5: [
+    { ad: "eksikler: iki plan kabulü durur (kayıt yok · geç onay)", hash: "#/", bekle: 'document.querySelectorAll("#a-uyari .a-serit").length === 2 && /kayıt yok/.test(document.querySelector("#a-uyari").textContent) && /en geç 24 Eyl/.test(document.querySelector("#a-uyari").textContent)' },
+    { ad: "personel kartından kişiye göre (9 / 17)", hash: "#/isg?kisi=mk", bekle: 'document.querySelector("#a-sayac").textContent === "9 / 17 kayıt"' },
+    { ad: "Geç onay çipi (1 / 17)", hash: "#/", adim: [["tikla", '[data-sz="i"] [data-cip="gec"]']], bekle: 'document.querySelector("#a-sayac").textContent === "1 / 17 kayıt" && /S-2026-0447/.test(document.querySelector("#a-liste").textContent)' },
+    { ad: "görünüm: önceki kayıtlar (2), süzgeç sayılmaz", hash: "#/", adim: [["tikla", '[data-secici-ac="gorunum"]'], ["tikla", '[data-sec="gorunum"][data-deger="onceki"]']], bekle: 'document.querySelector("#a-sayac").textContent === "2 kayıt" && document.querySelector(\'[data-sz="i"] .a-temizle\').disabled' },
+    { ad: "tesisten gelince Kayıt ekle tesisi doldurur", hash: "#/isg?tesis=t8", adim: [["tikla", '.a-sayfa-bas [data-eylem="isg-ekle"]']], bekle: 'document.querySelector("#a-pencere").open && document.querySelector("#w-tesis .a-kirp").textContent === "Döküm Hattı"' },
+    { ad: "boş gönderildi: dört alan hatası", hash: "#/isg/yeni", adim: [["tikla", '[data-eylem="pencere-kaydet"]']], bekle: 'document.querySelectorAll(\'#a-pencere [aria-invalid="true"]\').length === 4 && document.activeElement.id === "w-tesis"' },
+    { ad: "aynı sözleşme no reddedilir", hash: "#/isg/yeni?tesis=t8&kisi=mk", adim: [["yaz", "#w-no", "S-2026-0412"], ["yaz", "#w-onay", "20.09.2026"], ["tikla", '[data-eylem="pencere-kaydet"]']], bekle: '/başka bir kayıtta/.test(document.querySelector("#w-no-ipucu").textContent)' },
+    { ad: "olmayan tarih (31.02.2026) reddedilir", hash: "#/isg/yeni?tesis=t8&kisi=mk", adim: [["yaz", "#w-no", "S-2026-0450"], ["yaz", "#w-onay", "31.02.2026"], ["tikla", '[data-eylem="pencere-kaydet"]']], bekle: 'document.querySelector("#w-onay").getAttribute("aria-invalid") === "true"' },
+    { ad: "geç onay canlı denetlenir (26.09 → kabul edemez)", hash: "#/isg/yeni?tesis=t8&kisi=mk", adim: [["yaz", "#w-onay", "26.09.2026"]], bekle: '/kabul edemez/.test(document.querySelector("#w-seritler").textContent) && document.activeElement.id === "w-onay"' },
+    { ad: "eksikten kayıt eklenir → P-0926-039 eksikten düşer", hash: "#/", adim: [["tikla", '[data-eylem="isg-ekle"][data-tesis="t8"]'], ["yaz", "#w-no", "S-2026-0450"], ["yaz", "#w-onay", "22.09.2026"], ["tikla", '[data-eylem="pencere-kaydet"]']], bekle: '!document.querySelector("#a-pencere").open && document.querySelectorAll("#a-uyari .a-serit").length === 1 && location.hash === "#/" && /kabul için uygun/.test(document.querySelector("#a-bildirim-metin").textContent)' },
+    { ad: "geç onay düzeltilir → P-0926-038 eksikten düşer", hash: "#/isg/i8", adim: [["yaz", "#w-onay", "23.09.2026"], ["tikla", '[data-eylem="pencere-kaydet"]']], bekle: 'document.querySelectorAll("#a-uyari .a-serit").length === 1 && !/P-0926-038/.test(document.querySelector("#a-uyari").textContent)' },
+    { ad: "yenileme: eski kayıt önceki kayda geçer", hash: "#/isg/yeni?tesis=t12&kisi=mk", adim: [["yaz", "#w-no", "S-2026-0460"], ["yaz", "#w-onay", "20.09.2026"], ["tikla", '[data-eylem="pencere-kaydet"]']], bekle: 'MV.isgTesis("t12").filter(x => x.k === "mk").length === 1 && MV.ISG.filter(x => x.id === "i14")[0].onceki === true' },
+    { ad: "önceki kayıt salt okunur (Kaydet yok)", hash: "#/isg/i90", bekle: '!document.querySelector(\'[data-eylem="pencere-kaydet"]\') && document.querySelector("#w-no").readOnly' },
+    { ad: "Esc pencereyi kapatır, adres listeye döner", hash: "#/isg/i1", adim: [["tus", "Escape"]], bekle: '!document.querySelector("#a-pencere").open && location.hash === "#/"' },
   ],
 };
 

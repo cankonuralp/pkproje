@@ -130,8 +130,8 @@
       { k: "no", baslik: "Sözleşme no", kart: "govde", sira: 2, hucre: function (x) { return '<span class="a-kart-etiket">Sözleşme no</span><span class="a-kod">' + x.no + "</span>"; } },
       { k: "onay", baslik: "Onay tarihi", kart: "govde", sira: 3, hucre: function (x) { return '<span class="a-kart-etiket">Onay tarihi</span>' + MK.tarihYaz(x.onay); } },
       { k: "durum", baslik: "Açık plan için", kart: "rozet", sira: 1, hucre: function (x) {
-        if (!t.pid || ["bekliyor", "kabul", "denetimde"].indexOf(t.pdurum) < 0) return '<span class="a-deger-yok">—</span>';
-        var uygun = MK.gunFarki(x.onay, t.ptarih) >= 1;   /* onay ≤ kontrol − 1 gün (§4.4) */
+        if (!MV.acikPlan(t)) return '<span class="a-deger-yok">—</span>';
+        var uygun = MV.isgUygun(x.onay, t.ptarih);   /* onay ≤ kontrol − 1 gün (§4.4); İSG-KATİP sayfasıyla tek kural */
         return rozet(uygun ? { ad: "Uygun", rozet: "a-rozet-tamam" } : { ad: "Geç onay", rozet: "a-rozet-bekliyor" }) + (uygun ? "" : '<span class="a-uyari-metin">en geç ' + MK.gunKisa(new Date(new Date(t.ptarih + "T12:00:00") - 864e5).toISOString()) + "</span>");
       } }
     ];

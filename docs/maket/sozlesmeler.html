@@ -1,0 +1,44 @@
+<!doctype html>
+<html lang="tr">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1">
+<title>İSG-KATİP kayıtları · probata maket</title>
+<meta name="robots" content="noindex">
+<link rel="icon" href="../marka/favicon.svg" type="image/svg+xml">
+<script src="../assets/maket-tema.js"></script>
+<link rel="stylesheet" href="../assets/tokens.css">
+<link rel="stylesheet" href="../assets/maket.css">
+</head>
+<body>
+<!-- MAKET M5 · Sözleşmeler (modül 12), İSG-KATİP kısmı — ONAY BEKLİYOR. Kayıt kişi × tesis: sözleşme no + onay tarihi.
+     Adres: #/ ya da #/isg liste (?kisi=<id> · ?tesis=<id>) · #/isg/yeni[?tesis=&kisi=] kayıt ekle · #/isg/<id> kayıt penceresi -->
+<main class="a-icerik" id="a-icerik">
+  <div id="a-liste-gorunum">
+    <div class="a-sayfa-bas">
+      <h1 tabindex="-1">İSG-KATİP kayıtları</h1>
+      <span class="a-sayac" id="a-sayac" aria-live="polite"></span>
+      <button class="a-tus a-tus-birincil a-bolum-tus" type="button" data-eylem="isg-ekle"><svg class="a-ikon a-ikon-kucuk" aria-hidden="true"><use href="../vendor/lucide-1.47.0/ikonlar.svg#i-plus"/></svg>Kayıt ekle</button>
+    </div>
+    <div id="a-uyari"></div>
+    <div id="a-suzgec-kap"></div>
+    <div class="a-liste-kap" id="a-liste"></div>
+  </div>
+</main>
+
+<!-- kayıt penceresi: ekle · düzenle · önceki kaydı görüntüle (içerik maket-isg.js) -->
+<dialog class="a-pencere a-pencere-form" id="a-pencere" aria-labelledby="a-pencere-baslik">
+  <div class="a-pencere-bas">
+    <h2 id="a-pencere-baslik"></h2>
+    <button class="a-ikon-tus" type="button" data-eylem="pencere-kapat" aria-label="Kapat">
+      <svg class="a-ikon" aria-hidden="true"><use href="../vendor/lucide-1.47.0/ikonlar.svg#i-x"/></svg>
+    </button>
+  </div>
+  <div class="a-pencere-govde" id="a-pencere-govde"></div>
+  <div class="a-pencere-alt" id="a-pencere-alt"></div>
+</dialog>
+<script src="../assets/maket-ortak.js"></script>
+<script src="../assets/maket-veri.js"></script>
+<script src="../assets/maket-isg.js"></script>
+</body>
+</html>

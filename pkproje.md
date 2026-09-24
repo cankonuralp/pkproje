@@ -519,6 +519,43 @@ cihaz ekle · kalibrasyon kaydı · ara kontrol) · **zimmetler** (`maket/zimmet
 Ölçerken düzeltilen: `list-checks` ikonu dosyada yoktu (M3'te kurulan çalışma anı ikon denetimi yakaladı) · telefonda iki arama ipucu
 kesikti · seçim alanında kırpılan değerin tam metni (title) yoktu (ortak üreticide, bütün maketler için).
 
+#### Maket M5 — İSG-KATİP kaydı (modül 12, kısım) — ONAY BEKLİYOR
+Ekran: **İSG-KATİP kayıtları** (`maket/sozlesmeler.html`; menüde Sözleşmeler — iş sözleşmesi sekmesi M13'te gelir). Liste üstünde
+**plan kabulünü durduran eksikler** (kabul bekleyen planda atanmış inspector için kayıt yok ya da onay geç; "Kayıt ekle" tesis ve
+kişi dolu açar, "Kaydı aç") · liste: tesis · inspector · sözleşme no · onay tarihi · açık plan · plan kabulü için (Uygun · Geç onay +
+en geç tarih · —) · çipler: açık plana bağlı · geç onay · seçiciler: inspector · müşteri → tesis · görünüm (güncel · önceki · hepsi) ·
+adresten kişiye (personel kartındaki yüz) ve tesise göre (tesis sayfasındaki yüz) · **kayıt penceresi**: ekle (tesis, inspector,
+sözleşme no, onay tarihi; seçilen tesiste kabul bekleyen plan varsa canlı denetim) · düzenle (kişi × tesis sabit) · önceki kayıt salt okunur.
+**Varsayımlar:**
+- Kayıt **kişi × tesis** (§4.6). Kişi × tesis için **tek güncel kayıt**: yeni sözleşme girilince eskisi "önceki kayıt" olur, silinmez.
+- Kuralın **tek kaynağı** plan kabul kilidi (§3.2 2a): onay tarihi ≤ kontrol − 1 gün. Tesis sayfasının "açık plan için" sütunu ve bu
+  sayfa aynı işlevi okur. Denetim yalnız kişinin **atandığı** planda; kabul edilmiş planda kilit şeridi gösterilir.
+- Sözleşme no **zorunlu, biçimi serbest** (makette S-YYYY-NNNN uydurma), iki kayıtta aynı numara olamaz; onay tarihi GG.AA.YYYY, geçerli
+  tarih. **Belge yüklenmez, geçerlilik aralığı yok** (reisim 2026-09-22) — pencerede bilgi şeridiyle söylenir.
+- Inspector listesi: etkin personelden **mesleği yetkili kişi olabilenler** (inspector rolü şart değil; sözleşme yetkili kişiyle).
+- Kaydı **planlama ekibi girer** (Zeynep Arslan); inspector kendi kayıtlarını görür (rol × modül önerisi "kendi", M1).
+- Kabul edilmiş planın dayanağı olan kayıt düzenlenebilir: değişiklik hareket kaydına yazılır, **yapılmış kabul geri alınmaz**.
+- Kişi × tesis kaydın kimliğidir, eklendikten sonra değişmez (yanlışsa yeni kayıt). Makette silme yok.
+- Eksik uyarısı **yalnız ekranda** (anayasa 1.3); M10 Uyarılar'da toplanır.
+**Sorular (M5):**
+66. **Kaydı kim girer**: planlama ekibi mi (öneri), inspector kendi sözleşmesini mi, ikisi de mi?
+67. **Yenileme**: kişi × tesis için yeni sözleşme girilince eskisi "önceki kayıt" olsun mu (öneri), yoksa aynı anda birden çok güncel
+    kayıt tutulabilsin mi?
+68. **Sözleşme no biçimi**: İSG-KATİP'in verdiği numaranın biçimini doğrulayamadım — serbest metin mi kalsın (öneri), biçim denetimi mi?
+69. **Onay tarihi ileri olabilir mi?** Öneri: bugünden ileri tarih girilemez. Not: Planlar maketindeki P-0926-038 örneğinde onay 25 Eyl,
+    maketin "bugün"ü 23 Eyl — örnek kendi içinde tutarsız; öneri onaylanırsa örnek, onayı bugünü geçmeyen bir geç onayla değiştirilir.
+70. Kabul edilmiş planın dayanağı olan kayıt **değiştirilebilsin mi** (öneri: evet, hareket kaydına yazılır, kabul geri alınmaz), kilitlensin mi?
+71. **Silme**: yanlış girilen kayıt silinebilsin mi (öneri: hiçbir planın dayanağı olmayan kayıt silinebilir, dayanak olan silinemez)?
+72. Sözleşmenin **azami 6 ay geçerliliği** (§4.4; birincil metinde doğrulanmadı): aralık denetimi yok kararı durur; yalnız bilgi olarak
+    "onaydan 6 ay geçti" işareti istenir mi?
+73. Planlar'daki kabul kilidi sebebi ("Bu tesis için İSG-KATİP kaydı yok") bu sayfaya **bağlansın mı** (inspector'a görüntüleme, planlamaya
+    "Kayıt ekle")? Planlar dondurulduğu için makette dokunulmadı.
+**Ölçüm (2026-09-24, bulut):** 11 durum × 1920 · 1080 · 375 × açık/koyu = **66/66 temiz**, çekmece 2/2; etkileşim **14/14**; olumsuz
+kanıt 2/2. Ölçerken düzeltilen: telefonda arama ipucu kesikti (kısaltıldı) · `#/isg/yeni?tesis=…` adresindeki ön dolgu liste süzgecine
+de uygulanıyordu · sözleşme no şerit içinde satır sonunda bölünüyordu · telefonda kart beş satırdan "etiket: değer" satırlarına indi
+(matris kartıyla aynı desen). Personel kartındaki İSG-KATİP sayısı artık önceki kayıtları saymıyor (M1 yeniden ölçüldü: 108/108, 17/17);
+tesis sayfasının sütunu bu kuralı okuyor (M2 yeniden ölçüldü: 48/48, 11/11).
+
 ---
 
 ## 4 · Mevzuat bulguları (2026-09-18 araştırması; kaynaklar bölüm 10)
@@ -860,6 +897,8 @@ revizyon, alan kopyalama, hafif kusur devri, meslek eşleşme denetimi).
 - Emsal ürünler: https://opwire.app/iso-17020-periyodik-kontrol-yazilimi/ · https://17020muayene.vidco.com.tr/ · https://akuple.com/asansor-kontrol-yazilimi/ · https://ensyazilim.com/
 
 ## 11 · Değişiklik günlüğü
+- 2026-09-24 (17): **toplu maket M5 İSG-KATİP kaydı** (§3.6): kayıt listesi, plan kabulünü durduran eksikler, ekle/düzenle/önceki kayıt
+  penceresi; kural tek kaynakta (`MV.isgUygun`, `MV.acikPlan`), tesis sayfası ve personel kartı buna bağlandı. Sorular 66–73.
 - 2026-09-24 (16): **toplu maket M4 Ölçüm Cihazı · Zimmet · kalibrasyon uyarısı** (§3.6): 20 cihaz, 3 araç, 5 diğer varlık, 29
   teslim hareketi; cihaz ve varlık sayfaları, dört pencere; personel kartındaki zimmet sayısı kayıtlardan. Sorular 58–65.
 - 2026-09-24 (15): **toplu maket M3 Ekipman Türü Kataloğu · Ekipman** (§3.6): 24 türlük katalog, standart kütüphanesi verisi,

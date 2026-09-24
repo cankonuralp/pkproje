@@ -138,18 +138,18 @@
   ];
   var SGK = function (n) { var s = ""; for (var i = 0; i < 26; i++) s += ((n * 7 + i * 3 + (i % 5) * n) % 10); return "2" + s.slice(1); };
   MV.TESISLER = [
-    { id: "t1", m: "m1", ad: "Merkez Fabrika", adres: "Organize Sanayi Bölgesi 4. Cadde No: 12", ilce: "Gebze", il: "Kocaeli", ekipman: 14, son: "2025-09-24", sonraki: "2026-09-23", plan: "P-0926-031", pid: 1, pdurum: "denetimde", ptarih: "2026-09-23" },
+    { id: "t1", m: "m1", ad: "Merkez Fabrika", adres: "Organize Sanayi Bölgesi 4. Cadde No: 12", ilce: "Gebze", il: "Kocaeli", ekipman: 14, son: "2025-09-24", sonraki: "2026-09-23", plan: "P-0926-031", pid: 1, pdurum: "denetimde", ptarih: "2026-09-23", pekip: ["mk", "ea"] },
     { id: "t2", m: "m1", ad: "Depo", adres: "Organize Sanayi Bölgesi 7. Cadde No: 3", ilce: "Dilovası", il: "Kocaeli", ekipman: 6, son: "2025-10-14", sonraki: "2026-10-14" },
     { id: "t3", m: "m1", ad: "Ar-Ge Binası", adres: "Bilişim Vadisi Yolu No: 18", ilce: "Gebze", il: "Kocaeli", ekipman: 3, son: "2026-02-10", sonraki: "2027-02-10" },
-    { id: "t4", m: "m2", ad: "Depo 2", adres: "Liman Caddesi No: 7", ilce: "Tuzla", il: "İstanbul", ekipman: 5, son: "2025-09-23", sonraki: "2026-09-23", plan: "P-0926-034", pid: 2, pdurum: "bekliyor", ptarih: "2026-09-23" },
-    { id: "t5", m: "m3", ad: "Aktarma Merkezi ve Soğuk Hava Deposu", adres: "Sanayi Caddesi No: 48, Aktarma Merkezi Girişi", ilce: "Çorlu", il: "Tekirdağ", ekipman: 21, son: "2025-09-25", sonraki: "2026-09-24", plan: "P-0926-036", pid: 3, pdurum: "bekliyor", ptarih: "2026-09-24" },
+    { id: "t4", m: "m2", ad: "Depo 2", adres: "Liman Caddesi No: 7", ilce: "Tuzla", il: "İstanbul", ekipman: 5, son: "2025-09-23", sonraki: "2026-09-23", plan: "P-0926-034", pid: 2, pdurum: "bekliyor", ptarih: "2026-09-23", pekip: ["mk"] },
+    { id: "t5", m: "m3", ad: "Aktarma Merkezi ve Soğuk Hava Deposu", adres: "Sanayi Caddesi No: 48, Aktarma Merkezi Girişi", ilce: "Çorlu", il: "Tekirdağ", ekipman: 21, son: "2025-09-25", sonraki: "2026-09-24", plan: "P-0926-036", pid: 3, pdurum: "bekliyor", ptarih: "2026-09-24", pekip: ["mk", "ea", "bs"] },
     { id: "t6", m: "m3", ad: "Liman Deposu", adres: "Rıhtım Yolu No: 22", ilce: "Avcılar", il: "İstanbul", ekipman: 9, son: "2025-10-02", sonraki: "2026-10-02" },
-    { id: "t7", m: "m4", ad: "Boyahane", adres: "Organize Sanayi Bölgesi 2. Sokak No: 5", ilce: "Çerkezköy", il: "Tekirdağ", ekipman: 9, son: "2025-09-26", sonraki: "2026-09-25", plan: "P-0926-038", pid: 4, pdurum: "bekliyor", ptarih: "2026-09-25" },
-    { id: "t8", m: "m5", ad: "Döküm Hattı", adres: "Demir Çelik Caddesi No: 21", ilce: "Dilovası", il: "Kocaeli", ekipman: 3, son: "", sonraki: "2026-09-26", plan: "P-0926-039", pid: 5, pdurum: "bekliyor", ptarih: "2026-09-26" },
-    { id: "t9", m: "m6", ad: "Üretim Tesisi", adres: "Organize Sanayi Bölgesi 1. Kısım No: 9", ilce: "Yunusemre", il: "Manisa", ekipman: 10, son: "2025-09-30", sonraki: "2026-09-29", plan: "P-0926-035", pid: 6, pdurum: "kabul", ptarih: "2026-09-29" },
-    { id: "t10", m: "m7", ad: "Şantiye Deposu", adres: "Çevre Yolu Caddesi No: 3", ilce: "Başakşehir", il: "İstanbul", ekipman: 2, son: "", sonraki: "2026-09-30", plan: "P-0926-037", pid: 7, pdurum: "red", ptarih: "2026-09-30" },
-    { id: "t11", m: "m8", ad: "Soğuk Hava Deposu", adres: "Liman Yolu No: 15", ilce: "Pendik", il: "İstanbul", ekipman: 4, son: "2026-09-22", sonraki: "2027-09-22", plan: "P-0926-028", pid: 8, pdurum: "tamam", ptarih: "2026-09-22" },
-    { id: "t12", m: "m9", ad: "Değirmen", adres: "İstasyon Caddesi No: 30", ilce: "Lüleburgaz", il: "Kırklareli", ekipman: 24, son: "2026-09-21", sonraki: "2027-03-21", plan: "P-0926-025", pid: 9, pdurum: "tamam", ptarih: "2026-09-21" },
+    { id: "t7", m: "m4", ad: "Boyahane", adres: "Organize Sanayi Bölgesi 2. Sokak No: 5", ilce: "Çerkezköy", il: "Tekirdağ", ekipman: 9, son: "2025-09-26", sonraki: "2026-09-25", plan: "P-0926-038", pid: 4, pdurum: "bekliyor", ptarih: "2026-09-25", pekip: ["mk", "ea"] },
+    { id: "t8", m: "m5", ad: "Döküm Hattı", adres: "Demir Çelik Caddesi No: 21", ilce: "Dilovası", il: "Kocaeli", ekipman: 3, son: "", sonraki: "2026-09-26", plan: "P-0926-039", pid: 5, pdurum: "bekliyor", ptarih: "2026-09-26", pekip: ["mk"] },
+    { id: "t9", m: "m6", ad: "Üretim Tesisi", adres: "Organize Sanayi Bölgesi 1. Kısım No: 9", ilce: "Yunusemre", il: "Manisa", ekipman: 10, son: "2025-09-30", sonraki: "2026-09-29", plan: "P-0926-035", pid: 6, pdurum: "kabul", ptarih: "2026-09-29", pekip: ["mk", "ea"] },
+    { id: "t10", m: "m7", ad: "Şantiye Deposu", adres: "Çevre Yolu Caddesi No: 3", ilce: "Başakşehir", il: "İstanbul", ekipman: 2, son: "", sonraki: "2026-09-30", plan: "P-0926-037", pid: 7, pdurum: "red", ptarih: "2026-09-30", pekip: ["mk"] },
+    { id: "t11", m: "m8", ad: "Soğuk Hava Deposu", adres: "Liman Yolu No: 15", ilce: "Pendik", il: "İstanbul", ekipman: 4, son: "2026-09-22", sonraki: "2027-09-22", plan: "P-0926-028", pid: 8, pdurum: "tamam", ptarih: "2026-09-22", pekip: ["mk"] },
+    { id: "t12", m: "m9", ad: "Değirmen", adres: "İstasyon Caddesi No: 30", ilce: "Lüleburgaz", il: "Kırklareli", ekipman: 24, son: "2026-09-21", sonraki: "2027-03-21", plan: "P-0926-025", pid: 9, pdurum: "tamam", ptarih: "2026-09-21", pekip: ["mk", "ea"] },
     { id: "t13", m: "m10", ad: "Fabrika", adres: "Mobilyacılar Sitesi 3. Blok No: 14", ilce: "İnegöl", il: "Bursa", ekipman: 11, son: "2025-10-20", sonraki: "2026-10-20" },
     { id: "t14", m: "m11", ad: "Pres Atölyesi", adres: "Organize Sanayi Bölgesi Mavi Cadde No: 6", ilce: "Nilüfer", il: "Bursa", ekipman: 16, son: "2025-11-05", sonraki: "2026-11-05" },
     { id: "t15", m: "m11", ad: "Kaynakhane", adres: "Organize Sanayi Bölgesi Mavi Cadde No: 8", ilce: "Nilüfer", il: "Bursa", ekipman: 7, son: "2025-11-05", sonraki: "2026-11-05" }
@@ -176,7 +176,13 @@
     { t: "t12", k: "mk", no: "S-2026-0398", onay: "2026-09-10" }, { t: "t12", k: "ea", no: "S-2026-0399", onay: "2026-09-10" },
     { t: "t14", k: "hp", no: "S-2025-0361", onay: "2025-10-28" }, { t: "t15", k: "hp", no: "S-2025-0362", onay: "2025-10-28" }
   ];
-  MV.isgTesis = function (tid) { return MV.ISG.filter(function (x) { return x.t === tid; }); };
+  MV.ISG.forEach(function (x, i) { x.id = "i" + (i + 1); x.girdi = "za"; });
+  /* önceki yılın sözleşmeleri (geçmişte kalır; yeni kayıt kişi × tesis için güncel olanı olur) */
+  MV.ISG.push({ id: "i90", t: "t12", k: "mk", no: "S-2025-0211", onay: "2025-09-12", girdi: "za", onceki: true }, { id: "i91", t: "t11", k: "mk", no: "S-2025-0230", onay: "2025-09-15", girdi: "za", onceki: true });
+  MV.isgTesis = function (tid) { return MV.ISG.filter(function (x) { return x.t === tid && !x.onceki; }); };
+  /* plan kabul kuralı (§3.2 2a, §4.4): onay tarihi ≤ kontrol tarihi − 1 gün */
+  MV.isgUygun = function (onay, kontrol) { return MK.gunFarki(onay, kontrol) >= 1; };
+  MV.acikPlan = function (t) { return t.pid && ["bekliyor", "kabul", "denetimde"].indexOf(t.pdurum) >= 0; };
   /* müşteri (portal) kullanıcıları: e-postayla hesap (reisim 2026-09-22); tesis: "hepsi" ya da tesis kimlikleri (soru) */
   MV.MUSTERI_KULLANICI = [
     { m: "m1", ad: "Serkan Ateş", eposta: "serkan.ates@ada-makina.example", tesis: "hepsi", durum: "etkin", son: "2026-09-20T09:14" },

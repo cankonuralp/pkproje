@@ -631,6 +631,9 @@ a.a-yuz:hover { border-color: var(--kenar-alan); background: var(--zemin); }
 .a-tablo-hareket .a-k-tarih { width: 14%; } .a-tablo-hareket .a-k-varlik { width: 26%; } .a-tablo-hareket .a-k-kim { width: 28%; }
 .a-tablo-hareket .a-k-foto { width: 10%; } .a-tablo-hareket .a-k-form { width: 22%; }
 .a-tablo-isg .a-k-kisi { width: 28%; } .a-tablo-isg .a-k-no { width: 22%; } .a-tablo-isg .a-k-onay { width: 20%; } .a-tablo-isg .a-k-durum { width: 30%; }
+/* M5 (İSG-KATİP kaydı) */
+.a-tablo-isgkayit .a-k-tesis { width: 22%; } .a-tablo-isgkayit .a-k-kisi { width: 17%; } .a-tablo-isgkayit .a-k-no { width: 15%; }
+.a-tablo-isgkayit .a-k-onay { width: 13%; } .a-tablo-isgkayit .a-k-plan { width: 15%; } .a-tablo-isgkayit .a-k-durum { width: 18%; }
 
 /* kayda giden kırpılabilir ad bağlantısı (ünvan, tesis adı, kişi): dokunma hedefi denetim yüksekliği, kırpma zinciri (kalıp 4) */
 .a-ad-bag { display: flex; align-items: center; min-height: var(--tus-y); min-width: 0; color: var(--onay-yazi); font-weight: 600; text-decoration: none; }
@@ -818,9 +821,10 @@ a.a-yuz:hover { border-color: var(--kenar-alan); background: var(--zemin); }
   .a-eylem { align-items: stretch; }
   .a-eylem-tuslar { flex-wrap: nowrap; justify-content: flex-end; }
   .a-sebep, .a-not { text-align: left; order: -1; }
-  /* toplu maket (2026-09-24): matris ve yetkinlik kartında etiket değerin solunda, satır satır (rol: düzey) */
-  .a-tablo-matris td[data-kart="govde"], .a-tablo-yetkinlik td[data-kart="govde"] { display: flex; align-items: center; justify-content: space-between; gap: 8px; }
-  .a-tablo-matris .a-kart-etiket, .a-tablo-yetkinlik .a-kart-etiket { display: inline; }
+  /* toplu maket (2026-09-24): matris, yetkinlik ve İSG-KATİP kartında etiket değerin solunda, satır satır (etiket: değer) */
+  .a-tablo-matris td[data-kart="govde"], .a-tablo-yetkinlik td[data-kart="govde"], .a-tablo-isgkayit td[data-kart="govde"] { display: flex; align-items: center; justify-content: space-between; gap: 8px; }
+  .a-tablo-matris .a-kart-etiket, .a-tablo-yetkinlik .a-kart-etiket, .a-tablo-isgkayit .a-kart-etiket { display: inline; }
+  .a-tablo-isgkayit td[data-kart="govde"] { text-align: right; }   /* değerin ikinci satırı (ör. "kontrol 25 Eyl") değere hizalı */
 }
 
 /* ══ DARALTILMIŞ YAN MENÜ — yalnız geniş bant (reisim 2026-09-23: "sol taraf açılıp kapanabilir olsun kapatılınca sadece
