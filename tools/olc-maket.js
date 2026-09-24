@@ -101,8 +101,10 @@
   const li = [...document.querySelectorAll(".a-liste-kap")].filter(gorunur)[0];
   const pad = parseFloat(getComputedStyle(icEl).paddingLeft);
   r.icerik = Math.round(ic.width); r.liste = li ? Math.round(li.getBoundingClientRect().width) : null;
-  const cerceve = li && li.closest(".a-adim-icerik");
-  r.kenarFarki = li ? Math.round((cerceve ? cerceve.getBoundingClientRect().width : ic.width - 2 * pad) - li.getBoundingClientRect().width) : null;
+  /* 2026-09-24 (toplu maket, M6): liste form bölümünün (.a-form-bolum, kenarlı kart) içindeyse çerçeve bölümün İÇ genişliği */
+  const cerceve = li && li.closest(".a-adim-icerik, .a-form-bolum");
+  const icGen = e => { const c = getComputedStyle(e); return e.clientWidth - parseFloat(c.paddingLeft) - parseFloat(c.paddingRight); };
+  r.kenarFarki = li ? Math.round((cerceve ? icGen(cerceve) : ic.width - 2 * pad) - li.getBoundingClientRect().width) : null;
   const th = li && li.querySelector(".a-tablo thead");
   r.listeKipi = !th ? "(liste yok)" : getComputedStyle(th).display === "none" ? "kart" : "tablo";
   const sz = document.querySelector(".a-suzgec");

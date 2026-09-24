@@ -155,6 +155,15 @@
     { id: "t15", m: "m11", ad: "Kaynakhane", adres: "Organize Sanayi Bölgesi Mavi Cadde No: 8", ilce: "Nilüfer", il: "Bursa", ekipman: 7, son: "2025-11-05", sonraki: "2026-11-05" }
   ];
   MV.TESISLER.forEach(function (t, i) { t.sgk = SGK(i + 3); });
+  /* plan saatleri — Planlar maketindeki başlangıç–bitiş (M6 plan açmada aynı gün çakışma denetimi) */
+  var PSAAT = { t1: ["09:00", "12:30"], t4: ["14:00", "17:00"], t5: ["08:30", "16:30"], t7: ["09:00", "13:00"], t8: ["10:00", "12:00"],
+    t9: ["09:00", "15:00"], t10: ["09:00", "12:00"], t11: ["09:00", "11:30"], t12: ["13:00", "16:00"] };
+  MV.TESISLER.forEach(function (t) { if (PSAAT[t.id]) t.psaat = PSAAT[t.id]; });
+  /* sıradaki proje no (§3.5: P-AAYY-SIRA, sunucu verir; maket: eylülün en büyük sırası + 1) */
+  MV.sonrakiProjeNo = function () {
+    var n = MV.TESISLER.filter(function (t) { return t.plan && t.plan.indexOf("P-0926-") === 0; }).reduce(function (m, t) { return Math.max(m, +t.plan.slice(7)); }, 0);
+    return "P-0926-" + ("00" + (n + 1)).slice(-3);
+  };
   /* plan durumları — Planlar maketiyle aynı ad ve rozet (onaylı 4. tur) */
   MV.PLAN_DURUM = {
     bekliyor: { ad: "Kabul bekliyor", rozet: "a-rozet-bekliyor" }, kabul: { ad: "Kabul edildi", rozet: "a-rozet-kabul" },
@@ -292,6 +301,7 @@
       var ilk = i >= toplam - yeni && i < toplam;
       ekipmanEkle(tesis, havuz[j % havuz.length], KONUM[(i + p[0]) % KONUM.length],
         ilk ? null : { tarih: "2025-09-" + p[5], sonuc: SONUC[(i + p[0]) % SONUC.length], rapor: MV.raporNo("0925", eskiSira++), kisi: i % 3 === 2 ? "ea" : "mk" }, ilk, i);
+      if (i < toplam) MV.EKIPMAN[MV.EKIPMAN.length - 1].plan = p[0];   /* planın kapsamında (toplamın ötesi: tesiste, plana alınmamış) */
     }
   });
   /* plan dışındaki tesisler: son kontrol tesisin son tarihiyle; türler sırayla (öteki türler de görünsün) */

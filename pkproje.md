@@ -556,6 +556,44 @@ de uygulanıyordu · sözleşme no şerit içinde satır sonunda bölünüyordu 
 (matris kartıyla aynı desen). Personel kartındaki İSG-KATİP sayısı artık önceki kayıtları saymıyor (M1 yeniden ölçüldü: 108/108, 17/17);
 tesis sayfasının sütunu bu kuralı okuyor (M2 yeniden ölçüldü: 48/48, 11/11).
 
+#### Maket M6 — Plan aç (modül 13, planlama ekibi) — ONAY BEKLİYOR
+Ekran: **Plan aç** (`maket/plan-ac.html`; müşteri ve tesis sayfalarındaki "Plan aç" buraya gelir, müşteri/tesis dolu). Tek sayfa, beş
+bölüm sırayla dolar: **1 Müşteri ve tesis** (açık plan ve İSG-KATİP kaydı olmayan tesis uyarısı) · **2 Tarih ve saat** (başlangıç,
+saat aralığı, kapsamın tahmini süresi, açıklama) · **3 Inspector** (adaylar tablosu: bu tesis ve tarih için İSG-KATİP, EKİPNET,
+kapsamda yetkili ekipman sayısı, aynı gün başka plan / saat çakışması, "Kabul edebilir / Kabul edemez" + sebep) · **4 Kapsam**
+(tesisin kayıtlı ekipmanı: süzgeç, 10'ar sayfa, "Kontrolü gelenleri seç", başka açık plandaki ekipman seçilemez; **sahada kaydedilecek
+yeni ekipman** tür × adet) · **5 Özet ve kabul ön koşulları** (proje no önizlemesi, tür başına kapsam ve ekipte yetkili kişi, kişi
+kişi kabul koşulları + İSG-KATİP kaydına bağlantı) · **plan açıldı** ekranı (eksikli kişi şeridi, "Yeni plan aç").
+**Varsayımlar:**
+- **Sihirbaz değil tek sayfa**: ön koşullar birbirine bağlı (tarih İSG uygunluğunu, kapsam yetki eşleşmesini değiştirir), hepsi aynı
+  anda görünsün. Bölüm tesis seçilmeden boş durum söyler ("Önce tesis seçin").
+- Tesis seçilince tarih = tesisin **sonraki kontrolü** (geçmişse bugün); kontrolü **30 gün** içinde gelen ve ilk kontrolü yapılacak
+  ekipman **seçili gelir**. Başka **açık planın** kapsamındaki ekipman seçilemez (aynı ekipman iki açık planda olmaz).
+- Adaylar: inspector rolü olan etkin kişiler. Kabul koşulları Planlar'daki kilidin aynısı (§3.2 madde 2): İSG-KATİP (M5, tek kural),
+  EKİPNET, firma yetkilendirmesi (M1); ek olarak giriş daveti kabul edilmemişse. **Eksikler planı açmayı engellemez**, kabulü durdurur;
+  özet ve plan açıldı ekranı eksik kişiyi adıyla ve düzeltme bağlantısıyla söyler.
+- Türe yetkili = meslek Ek-III grubuna izin veriyor **ve** firma o gruba yetkilendirmiş (2c öneri); kapsamdaki bir türe ekipte yetkili
+  kimse yoksa özet uyarır (ekip düzeyinde; kişi tüm türlere yetkili olmak zorunda değil).
+- Aynı gün başka plan bilgi, **saat çakışması uyarı**; engel değil. Tahmini süre tür sürelerinden (M3), yalnız ipucu.
+- Kapsam tür başına **planlanan = seçili kayıtlı + sahada kaydedilecek yeni** (Planlar'daki "planlanan / planda" sayıları buradan doğar).
+- Proje no kaydedince sunucu verir (§3.5); ekranda önizleme (P-0926-040). Plan açılınca ekipteki inspector'ların Planlar'ına "Kabul
+  bekliyor" düşer, hareket kaydına yazılır; bildirim yok (anayasa 1.3). Açıklama plan içinde görünür, müşteri görmez.
+- Makette sayfalar arası kayıt taşınmaz: açılan plan Planlar maketinin listesinde görünmez (ekranda yazılı).
+**Sorular (M6):**
+74. Plan açma **tek sayfa** mı (öneri, makette) yoksa adım adım sihirbaz mı?
+75. Eksiği olan inspector (İSG-KATİP, EKİPNET, yetki) plana **atanabilsin mi** (öneri: evet, kabul durur) yoksa seçim engellensin mi?
+76. Aynı inspector'ın **aynı saatte** başka planı varsa: uyarı (öneri) mı, engel mi?
+77. Tesiste **açık plan varken** ikinci plan açılabilsin mi (ör. ayrı branş)? Öneri: açılabilir, aynı ekipman iki açık planda olamaz.
+78. Kontrolü gelen ekipman **otomatik seçili** gelsin mi, eşik **30 gün** mü (öneri)?
+79. Ekipte **sorumlu inspector** ayrımı olsun mu (öneri: hayır, Planlar'daki gibi ekip eşit)?
+80. Planlar ekranına planlama ekibi için **"Plan aç" tuşu** eklensin mi? (Planlar dondu; makette giriş müşteri ve tesis sayfalarından.)
+81. Plan açılırken **müşteri** bilgilendirilsin mi (ör. müşteri panelinde "planlanan kontrol" satırı)? Bildirim kurulmadı. *(Bağımlılık: M11.)*
+**Ölçüm (2026-09-24, bulut):** 10 durum × 1920 · 1080 · 375 × açık/koyu = **60/60 temiz**, çekmece 2/2; etkileşim **12/12**; olumsuz kanıt
+2/2. Ölçerken düzeltilen: telefonda açıklama ipucu kesikti · üstteki iki kısa bölüm geniş ekranda kabı doldurmuyordu (üç sütunlu
+ızgarada üçüncü sütun boş kalıyordu; iç ızgaraya alındı) · ölçüm aracı form bölümündeki listeyi sayfa kenarıyla kıyaslıyordu
+(`tools/olc-maket.js`: çerçeve artık bölümün iç genişliği; Planlar 54/54, M1 108/108 yeniden ölçüldü). M2'nin "Plan aç" denemesi artık
+bu sayfaya gider (48/48, 11/11).
+
 ---
 
 ## 4 · Mevzuat bulguları (2026-09-18 araştırması; kaynaklar bölüm 10)
@@ -897,6 +935,8 @@ revizyon, alan kopyalama, hafif kusur devri, meslek eşleşme denetimi).
 - Emsal ürünler: https://opwire.app/iso-17020-periyodik-kontrol-yazilimi/ · https://17020muayene.vidco.com.tr/ · https://akuple.com/asansor-kontrol-yazilimi/ · https://ensyazilim.com/
 
 ## 11 · Değişiklik günlüğü
+- 2026-09-24 (18): **toplu maket M6 Plan aç** (§3.6): planlama ekibinin plan açma sayfası (müşteri → tesis → tarih → inspector →
+  kapsam → özet), plan açıldı ekranı; müşteri ve tesis sayfalarındaki "Plan aç" bağlandı. Sorular 74–81.
 - 2026-09-24 (17): **toplu maket M5 İSG-KATİP kaydı** (§3.6): kayıt listesi, plan kabulünü durduran eksikler, ekle/düzenle/önceki kayıt
   penceresi; kural tek kaynakta (`MV.isgUygun`, `MV.acikPlan`), tesis sayfası ve personel kartı buna bağlandı. Sorular 66–73.
 - 2026-09-24 (16): **toplu maket M4 Ölçüm Cihazı · Zimmet · kalibrasyon uyarısı** (§3.6): 20 cihaz, 3 araç, 5 diğer varlık, 29

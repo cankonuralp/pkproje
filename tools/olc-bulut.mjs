@@ -108,6 +108,18 @@ export const DURUMLAR = {
     { ad: "kayıt · kabul edilmiş planın dayanağı", hash: "#/isg/i1" },
     { ad: "önceki kayıt · salt okunur", hash: "#/isg/i90" },
   ] },
+  m6: { sayfa: "maket/plan-ac.html", durumlar: [
+    { ad: "plan aç · boş form", hash: "#/" },
+    { ad: "müşteriden gelince (tesis bekliyor)", hash: "#/?musteri=m1" },
+    { ad: "tesisten gelince: tarih + kontrolü gelen seçili", hash: "#/?tesis=t2" },
+    { ad: "ekip seçili: kabul eksiği + yetki boşluğu", hash: "#/?tesis=t2", adim: [["tikla", "#p-a-mk"], ["tikla", "#p-a-ea"]] },
+    { ad: "açık planlı tesis: kapsam açık planda, aynı saat", hash: "#/?tesis=t8", adim: [["tikla", "#p-a-mk"]] },
+    { ad: "sahada kaydedilecek yeni ekipman eklendi", hash: "#/?tesis=t8", adim: [["tikla", "#p-yeniTur"], ["tikla", '[data-secim="p-yeniTur"][data-deger="FL"]'], ["yaz", "#p-yeniAdet", "2"], ["tikla", '[data-eylem="yeni-ekle"]']] },
+    { ad: "kapsam listesi 2. sayfa (24 ekipman)", hash: "#/?tesis=t12", adim: [["tikla", '[data-sz="k"] [data-sayfa="2"]']] },
+    { ad: "boş gönderildi", hash: "#/", adim: [["tikla", '[data-eylem="plani-ac"]']] },
+    { ad: "tesisli, ekipsiz gönderildi", hash: "#/?tesis=t6", adim: [["tikla", '[data-eylem="plani-ac"]']] },
+    { ad: "plan açıldı · eksikli ekip", hash: "#/?tesis=t2", adim: [["tikla", "#p-a-mk"], ["tikla", "#p-a-ea"], ["tikla", '[data-eylem="plani-ac"]']] },
+  ] },
 };
 
 /* ── ETKİLEŞİM DENEMELERİ (--etkilesim): adımlar koşar, sonra `bekle` ifadesi sayfada doğru dönmeli. Gen verilmezse 1920. ── */
@@ -158,7 +170,8 @@ export const DENEMELER = {
     { ad: "tesis ekle: geçerli → tesis sayfası", hash: "#/m/m10/tesis-ekle", adim: [["yaz", "#w-ad", "Depo"], ["yaz", "#w-adres", "Sanayi Sitesi 5. Sokak No: 2"], ["yaz", "#w-ilce", "İnegöl"], ["yaz", "#w-il", "Bursa"], ["yaz", "#w-sgk", "21234567890123456789012345"], ["tikla", '[data-eylem="pencere-kaydet"]']], bekle: 'location.hash === "#/t/t16" && document.querySelector("#a-nesne h1").textContent === "Depo"' },
     { ad: "portal kullanıcısı: seçili tesis seçilmeden gönderilmez", hash: "#/m/m3/kullanici-ekle", adim: [["yaz", "#w-ad", "Ali Veli"], ["yaz", "#w-eposta", "ali.veli@kuzey-lojistik.example"], ["tikla", '[data-kapsam="secili"]'], ["tikla", '[data-eylem="pencere-kaydet"]']], bekle: '/En az bir tesis/.test(document.querySelector("#w-tesis-ipucu").textContent)' },
     { ad: "portal kullanıcısı: davet edilir, listede Davet bekliyor", hash: "#/m/m5/kullanici-ekle", adim: [["yaz", "#w-ad", "Levent Akın"], ["yaz", "#w-eposta", "levent@akin-dokum.example"], ["tikla", '[data-eylem="pencere-kaydet"]']], bekle: 'location.hash === "#/m/m5" && /Davet bekliyor/.test(document.querySelector(".a-tablo-mkullanici").textContent)' },
-    { ad: "Plan aç (henüz maketi yok) → bildirim", hash: "#/t/t1", adim: [["tikla", '#a-nesne .a-eylem-cubugu [data-ne="Plan açma"]']], bekle: '/henüz tasarlanmadı/.test(document.querySelector("#a-bildirim-metin").textContent)' },
+    /* 2026-09-24 (M6): plan açma maketi geldi — "henüz tasarlanmadı" denemesi yerine gerçek geçiş (tesis dolu gelir) */
+    { ad: "Plan aç → plan açma maketi, tesis dolu", hash: "#/t/t6", adim: [["tikla", '#a-nesne .a-eylem-cubugu a[href^="plan-ac.html"]']], bekle: '/plan-ac\\.html$/.test(location.pathname) && !!document.querySelector("#p-tesis .a-kirp") && document.querySelector("#p-tesis .a-kirp").textContent === "Liman Deposu"' },
     { ad: "tesis sayfası: inspector personel kartına bağlanır", hash: "#/t/t7", bekle: 'document.querySelector(\'.a-tablo-isg a[href="personel.html#/p/mk"]\') !== null' },
   ],
   m3: [
@@ -206,6 +219,20 @@ export const DENEMELER = {
     { ad: "yenileme: eski kayıt önceki kayda geçer", hash: "#/isg/yeni?tesis=t12&kisi=mk", adim: [["yaz", "#w-no", "S-2026-0460"], ["yaz", "#w-onay", "20.09.2026"], ["tikla", '[data-eylem="pencere-kaydet"]']], bekle: 'MV.isgTesis("t12").filter(x => x.k === "mk").length === 1 && MV.ISG.filter(x => x.id === "i14")[0].onceki === true' },
     { ad: "önceki kayıt salt okunur (Kaydet yok)", hash: "#/isg/i90", bekle: '!document.querySelector(\'[data-eylem="pencere-kaydet"]\') && document.querySelector("#w-no").readOnly' },
     { ad: "Esc pencereyi kapatır, adres listeye döner", hash: "#/isg/i1", adim: [["tus", "Escape"]], bekle: '!document.querySelector("#a-pencere").open && location.hash === "#/"' },
+  ],
+  m6: [
+    { ad: "tesisten gelince: tarih sonraki kontrol, 6 / 6 seçili", hash: "#/?tesis=t2", bekle: 'document.querySelector("#p-tarih").value === "14.10.2026" && /^6 \\/ 6 kayıtlı seçili/.test(document.querySelector("#p-secili").textContent)' },
+    { ad: "müşteri değişince tesis ve kapsam sıfırlanır", hash: "#/?tesis=t2", adim: [["tikla", "#p-musteri"], ["tikla", '[data-secim="p-musteri"][data-deger="m3"]']], bekle: 'document.querySelector("#p-tesis .a-kirp").textContent === "Tesis seçin" && !document.querySelector("#p-secili") && document.activeElement.id === "p-musteri"' },
+    { ad: "tarih değişince İSG uygunluğu yeniden hesaplanır (odak yerinde)", hash: "#/?tesis=t7", adim: [["yaz", "#p-tarih", "30.09.2026"]], bekle: '/Kabul edebilir/.test(document.querySelector("#p-a-mk").closest("tr").textContent) && document.activeElement.id === "p-tarih"' },
+    { ad: "aynı saatte başka plan yazılır", hash: "#/?tesis=t8", adim: [["tikla", "#p-a-mk"]], bekle: '/aynı saatte P-0926-039/.test(document.querySelector("#p-ozet-kap").textContent) && document.activeElement.id === "p-a-mk"' },
+    { ad: "saat değişince çakışma kalkar", hash: "#/?tesis=t8", adim: [["tikla", "#p-a-mk"], ["yaz", "#p-bas", "13:00"], ["yaz", "#p-bit", "15:00"]], bekle: '!/aynı saatte/.test(document.querySelector("#p-ozet-kap").textContent) && /çakışıyor/.test(document.querySelector("#p-a-mk").closest("tr").textContent) === false' },
+    { ad: "açık plandaki ekipman seçilemez", hash: "#/?tesis=t8", bekle: '[...document.querySelectorAll("[data-ekp]")].every(e => e.disabled) && /^0 \\/ 3/.test(document.querySelector("#p-secili").textContent)' },
+    { ad: "yeni ekipman kapsama eklenir, özet tür başına", hash: "#/?tesis=t8", adim: [["tikla", "#p-yeniTur"], ["tikla", '[data-secim="p-yeniTur"][data-deger="FL"]'], ["yaz", "#p-yeniAdet", "2"], ["tikla", '[data-eylem="yeni-ekle"]']], bekle: '/Forklift/.test(document.querySelector(".a-tablo-kapsamozet").textContent) && /2 yeni/.test(document.querySelector("#p-secili").textContent)' },
+    { ad: "seçim temizlenince kapsam hatası, odak ilk ekipmanda", hash: "#/?tesis=t2", adim: [["tikla", '[data-eylem="secimi-temizle"]'], ["tikla", "#p-a-mk"], ["tikla", '[data-eylem="plani-ac"]']], bekle: '/Kapsamda en az bir/.test(document.querySelector("#a-form-gorunum").textContent) && !!document.activeElement.dataset.ekp' },
+    { ad: "geçmiş tarih reddedilir", hash: "#/?tesis=t2", adim: [["yaz", "#p-tarih", "01.09.2026"], ["tikla", "#p-a-mk"], ["tikla", '[data-eylem="plani-ac"]']], bekle: '/Geçmiş tarihe/.test(document.querySelector("#p-tarih-ipucu").textContent) && document.activeElement.id === "p-tarih"' },
+    { ad: "boş gönderildi: odak müşteride", hash: "#/", adim: [["tikla", '[data-eylem="plani-ac"]']], bekle: 'document.activeElement.id === "p-musteri" && /eksik düzeltilmeli/.test(document.querySelector("#p-ozet-hata").textContent)' },
+    { ad: "plan açılır: P-0926-040, eksikli kişi yazılır", hash: "#/?tesis=t2", adim: [["tikla", "#p-a-mk"], ["tikla", "#p-a-ea"], ["tikla", '[data-eylem="plani-ac"]']], bekle: 'location.hash === "#/acildi" && /P-0926-040/.test(document.querySelector("#a-nesne h1").textContent) && /Elif Aydın kabul edemez: İSG-KATİP kaydı yok/.test(document.querySelector("#a-nesne").textContent)' },
+    { ad: "telefonda ekipman süzgeci levhada (tür)", gen: 375, hash: "#/?tesis=t12", adim: [["tikla", '[data-sz="k"] [data-eylem="levha-ac"]'], ["tikla", '#a-levha [data-sec="tur"][data-deger="HT"]'], ["tikla", '#a-levha [data-eylem="levha-kapat"]']], bekle: 'document.querySelector(\'[data-sz="k"] .a-suzgec-rozet\').textContent === "1" && !document.querySelector("#a-levha").open' },
   ],
 };
 
