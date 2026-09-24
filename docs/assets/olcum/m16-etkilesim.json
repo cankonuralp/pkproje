@@ -1,0 +1,79 @@
+{
+ "maket": "m16",
+ "tarih": "2026-09-24",
+ "arac": "tools/olc-bulut.mjs --etkilesim (başsız tarayıcı, 1920 açık tema; gen verilen denemede o genişlik)",
+ "toplam": 10,
+ "gecen": 10,
+ "denemeler": [
+  {
+   "ad": "liste: 34 kayıt, tekrarı geçen üstte, şerit",
+   "gen": 1920,
+   "sayfa": "maket/egitimler.html",
+   "hash": "#/",
+   "gecti": true
+  },
+  {
+   "ad": "Tekrarı geçti çipi (1 / 34)",
+   "gen": 1920,
+   "sayfa": "maket/egitimler.html",
+   "hash": "#/",
+   "gecti": true
+  },
+  {
+   "ad": "sayfalayıcı 2. sayfa (21–34 / 34)",
+   "gen": 1920,
+   "sayfa": "maket/egitimler.html",
+   "hash": "#/",
+   "gecti": true
+  },
+  {
+   "ad": "personel kartındaki eğitim yüzü → kişinin kayıtları (4 / 34)",
+   "gen": 1920,
+   "sayfa": "maket/personel.html",
+   "hash": "#/p/mk",
+   "gecti": true
+  },
+  {
+   "ad": "Uyarılar'daki eğitim satırı → kişinin kayıtları",
+   "gen": 1920,
+   "sayfa": "maket/uyarilar.html",
+   "hash": "#/",
+   "gecti": true
+  },
+  {
+   "ad": "tekrarı kaydet: geçen kayıt önceki olur, geçti çipi 0",
+   "gen": 1920,
+   "sayfa": "maket/egitimler.html",
+   "hash": "#/k/g31",
+   "gecti": true
+  },
+  {
+   "ad": "kayıt ekle: boş kaydedilmez, odak kişide",
+   "gen": 1920,
+   "sayfa": "maket/egitimler.html",
+   "hash": "#/yeni",
+   "gecti": true
+  },
+  {
+   "ad": "kayıt ekle: ileri tarih reddedilir",
+   "gen": 1920,
+   "sayfa": "maket/egitimler.html",
+   "hash": "#/yeni?kisi=by",
+   "gecti": true
+  },
+  {
+   "ad": "kayıt eklenir: tekrar tarihi türden (35 kayıt)",
+   "gen": 1920,
+   "sayfa": "maket/egitimler.html",
+   "hash": "#/yeni?kisi=by",
+   "gecti": true
+  },
+  {
+   "ad": "eğitim türleri → türe süzülü kayıtlar",
+   "gen": 1920,
+   "sayfa": "maket/egitimler.html",
+   "hash": "#/turler",
+   "gecti": true
+  }
+ ]
+}

@@ -1,0 +1,128 @@
+{
+ "maket": "m1",
+ "tarih": "2026-09-24",
+ "arac": "tools/olc-bulut.mjs --etkilesim (başsız tarayıcı, 1920 açık tema; gen verilen denemede o genişlik)",
+ "toplam": 17,
+ "gecen": 17,
+ "denemeler": [
+  {
+   "ad": "personel: sayaç görünüme dürüst (15 çalışan)",
+   "gen": 1920,
+   "sayfa": "maket/personel.html",
+   "hash": "#/",
+   "gecti": true
+  },
+  {
+   "ad": "personel: Inspector çipi 9 / 15",
+   "gen": 1920,
+   "sayfa": "maket/personel.html",
+   "hash": "#/",
+   "gecti": true
+  },
+  {
+   "ad": "personel: Ayrılanlar görünümü süzgeç sayılmaz, Temizle korur",
+   "gen": 1920,
+   "sayfa": "maket/personel.html",
+   "hash": "#/",
+   "gecti": true
+  },
+  {
+   "ad": "personel: Mekanik ve Elektrik → imkânsız, sebep",
+   "gen": 1920,
+   "sayfa": "maket/personel.html",
+   "hash": "#/",
+   "gecti": true
+  },
+  {
+   "ad": "personel: satır tıklanınca kart açılır",
+   "gen": 1920,
+   "sayfa": "maket/personel.html",
+   "hash": "#/",
+   "gecti": true
+  },
+  {
+   "ad": "personel formu: teknikerde oda sicil zorunlu değil, iskele seçilemez",
+   "gen": 1920,
+   "sayfa": "maket/personel.html",
+   "hash": "#/yeni",
+   "gecti": true
+  },
+  {
+   "ad": "personel formu: teknisyen → uyarı, hiçbir yetki seçilemez",
+   "gen": 1920,
+   "sayfa": "maket/personel.html",
+   "hash": "#/yeni",
+   "gecti": true
+  },
+  {
+   "ad": "personel formu: geçerli kayıt karta düşer",
+   "gen": 1920,
+   "sayfa": "maket/personel.html",
+   "hash": "#/yeni",
+   "gecti": true
+  },
+  {
+   "ad": "kullanıcılar: Inspector ve Planlama → yalnız çift rollü (1 / 13)",
+   "gen": 1920,
+   "sayfa": "maket/kullanicilar.html",
+   "hash": "#/",
+   "gecti": true
+  },
+  {
+   "ad": "kullanıcı: rol eklenir, kaydedilir",
+   "gen": 1920,
+   "sayfa": "maket/kullanicilar.html",
+   "hash": "#/k/mk",
+   "gecti": true
+  },
+  {
+   "ad": "kullanıcı: teknisyen olmayan planlamacıya Inspector verilemez",
+   "gen": 1920,
+   "sayfa": "maket/kullanicilar.html",
+   "hash": "#/k/za",
+   "gecti": true
+  },
+  {
+   "ad": "davet: kişi + rol → davet bekliyor",
+   "gen": 1920,
+   "sayfa": "maket/kullanicilar.html",
+   "hash": "#/davet/by",
+   "gecti": true
+  },
+  {
+   "ad": "davet: rolsüz gönderilemez",
+   "gen": 1920,
+   "sayfa": "maket/kullanicilar.html",
+   "hash": "#/davet/by",
+   "gecti": true
+  },
+  {
+   "ad": "giriş: boş gönderim alanları işaretler",
+   "gen": 1920,
+   "sayfa": "maket/giris.html",
+   "hash": "#/",
+   "gecti": true
+  },
+  {
+   "ad": "giriş: yanlış parola → hesap var mı söylenmez",
+   "gen": 1920,
+   "sayfa": "maket/giris.html",
+   "hash": "#/",
+   "gecti": true
+  },
+  {
+   "ad": "giriş: parola göster/gizle",
+   "gen": 1920,
+   "sayfa": "maket/giris.html",
+   "hash": "#/",
+   "gecti": true
+  },
+  {
+   "ad": "giriş: sıfırlama gönderildi",
+   "gen": 1920,
+   "sayfa": "maket/giris.html",
+   "hash": "#/unuttum",
+   "gecti": true
+  }
+ ]
+}

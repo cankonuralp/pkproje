@@ -12,7 +12,9 @@
    Olumsuz kanıt (--olumsuz): bilerek taşan / sert kırpılan / küçük / üst üste binen öğe eklenir, bulgu ÇIKMALI; çıkmazsa
    ölçüm yalancı demektir ve sürücü hata koduyla biter.
    Kullanım:  node tools/olc-bulut.mjs <maket> [--goruntu <klasör>] [--yazma]      (maket adları: DURUMLAR)
+              node tools/olc-bulut.mjs <maket> --etkilesim [--yazma]   (sonuç docs/assets/olcum/<maket>-etkilesim.json)
               node tools/olc-bulut.mjs --olumsuz
+   --yazma: "yazma" — sonuç dosyası yazılmaz, yalnız ekrana (deneme koşuları için).
    Komutlar Node 24 ile: PATH=/opt/node24/bin:$PATH. */
 import { spawn } from "node:child_process";
 import { createRequire } from "node:module";
@@ -215,6 +217,12 @@ export const DURUMLAR = {
     { ad: "kişi · Mert Kaya, bu ay", hash: "#/p/mk" },
     { ad: "kişi · Hakan Polat, geçen yıl", hash: "#/p/hp", adim: [["tikla", '[data-donem="gecen"]']] },
     { ad: "kişi · bu ay raporu yok", hash: "#/p/bs" },
+  ] },
+  /* toplu bakış sayfası (tools/sunum-uret.mjs üretir; maket değil, sunum): kabuksuz, taşma / kırpma / çakışma / hedef ölçülür */
+  toplu: { sayfa: "toplu-bakis.html", durumlar: [
+    { ad: "toplu bakış · baş ve özet", hash: "", kabuksuz: true },
+    { ad: "toplu bakış · M14 bölümü", hash: "#m14", kabuksuz: true },
+    { ad: "toplu bakış · bağımlılıklar", hash: "#bagimli", kabuksuz: true },
   ] },
   m16: { sayfa: "maket/egitimler.html", durumlar: [
     { ad: "kayıtlar · liste, tekrarı geçen şeridi", hash: "#/" },
@@ -585,8 +593,8 @@ async function olc(ad, { goruntu, yazma }) {
   return temiz === durumlar.length && iyiCekmece === cekmece.length;
 }
 
-async function etkilesim(ad) {
-  const t = DURUMLAR[ad], l = DENEMELER[ad] || [];
+async function etkilesim(ad, { yazma } = {}) {
+  const t = DURUMLAR[ad], l = DENEMELER[ad] || [], sonuclar = [];
   const sv = await sunucu(), taban = `http://127.0.0.1:${sv.kapi}`;
   const tar = await puppeteer.launch({ executablePath: tarayici(), headless: true, args: ["--no-sandbox"] });
   let gecen = 0;
@@ -599,10 +607,17 @@ async function etkilesim(ad) {
       try { await adimlar(s, d.adim); ok = !!(await s.waitForFunction(`(() => { try { return ${d.bekle}; } catch (x) { return false; } })()`, { timeout: 2000 }).catch(() => null)); } catch (e) { hata = String(e.message || e); }
       ok = ok && !hatalar.length;
       if (ok) gecen++;
+      sonuclar.push({ ad: d.ad, gen, sayfa: d.sayfa || t.sayfa, hash: d.hash, gecti: ok, hata: ok ? undefined : (hata || hatalar.join(" | ") || "beklenen sonuç yok") });
       console.log(`${ok ? "✓" : "✗"} ${gen} ${d.ad}${ok ? "" : " → " + (hata || hatalar.join(" | ") || "beklenen sonuç yok")}`);
       if (ctx) await ctx.close();
     }
   } finally { await tar.close(); sv.kapat(); }
+  /* 2026-09-24 (toplu bakış): sonuç dosyaya da yazılır — toplu bakış sayfası sayıyı buradan okur, elle yazılmaz */
+  if (!yazma) {
+    mkdirSync(join(KOK, "docs/assets/olcum"), { recursive: true });
+    writeFileSync(join(KOK, `docs/assets/olcum/${ad}-etkilesim.json`), JSON.stringify({ maket: ad, tarih: new Date().toISOString().slice(0, 10),
+      arac: "tools/olc-bulut.mjs --etkilesim (başsız tarayıcı, 1920 açık tema; gen verilen denemede o genişlik)", toplam: l.length, gecen, denemeler: sonuclar }, null, 1) + "\n");
+  }
   console.log(`\n${ad}: etkileşim ${gecen}/${l.length}`);
   return gecen === l.length;
 }
@@ -642,5 +657,5 @@ const gi = arg.indexOf("--goruntu"); if (gi >= 0) { secenek.goruntu = arg[gi + 1
 const adlar = arg.filter((a, i) => !a.startsWith("--") && arg[i - 1] !== "--goruntu");
 let tamam = true;
 if (arg.includes("--olumsuz")) tamam = await olumsuz();
-for (const ad of adlar) tamam = (arg.includes("--etkilesim") ? await etkilesim(ad) : await olc(ad, secenek)) && tamam;
+for (const ad of adlar) tamam = (arg.includes("--etkilesim") ? await etkilesim(ad, secenek) : await olc(ad, secenek)) && tamam;
 process.exit(tamam ? 0 : 1);

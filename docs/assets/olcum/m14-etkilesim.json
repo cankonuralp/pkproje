@@ -1,0 +1,107 @@
+{
+ "maket": "m14",
+ "tarih": "2026-09-24",
+ "arac": "tools/olc-bulut.mjs --etkilesim (başsız tarayıcı, 1920 açık tema; gen verilen denemede o genişlik)",
+ "toplam": 14,
+ "gecen": 14,
+ "denemeler": [
+  {
+   "ad": "liste: 16 iş, vadesi geçen üstte; iki şerit",
+   "gen": 1920,
+   "sayfa": "maket/muhasebe.html",
+   "hash": "#/",
+   "gecti": true
+  },
+  {
+   "ad": "Kapandı çipi (12 / 16)",
+   "gen": 1920,
+   "sayfa": "maket/muhasebe.html",
+   "hash": "#/",
+   "gecti": true
+  },
+  {
+   "ad": "şeritteki Faturalar → vadesi geçenler süzülü (1 / 13)",
+   "gen": 1920,
+   "sayfa": "maket/muhasebe.html",
+   "hash": "#/",
+   "gecti": true
+  },
+  {
+   "ad": "şeritteki İş → faturaya hazır iş",
+   "gen": 1920,
+   "sayfa": "maket/muhasebe.html",
+   "hash": "#/",
+   "gecti": true
+  },
+  {
+   "ad": "işin raporları: Faturaya hazır çipi (10 / 22)",
+   "gen": 1920,
+   "sayfa": "maket/muhasebe.html",
+   "hash": "#/is/P-0926-025",
+   "gecti": true
+  },
+  {
+   "ad": "işin raporları: 2. sayfa (21–22 / 22)",
+   "gen": 1920,
+   "sayfa": "maket/muhasebe.html",
+   "hash": "#/is/P-0926-025",
+   "gecti": true
+  },
+  {
+   "ad": "fatura kaydet: no yazılmadan kaydedilmez, odak no'da",
+   "gen": 1920,
+   "sayfa": "maket/muhasebe.html",
+   "hash": "#/is/P-0926-025/fatura",
+   "gecti": true
+  },
+  {
+   "ad": "fatura kaydet: kayıtlı no reddedilir",
+   "gen": 1920,
+   "sayfa": "maket/muhasebe.html",
+   "hash": "#/is/P-0926-025/fatura",
+   "gecti": true
+  },
+  {
+   "ad": "fatura kaydedilir → Tahsilat bekliyor, 10 rapor faturalı",
+   "gen": 1920,
+   "sayfa": "maket/muhasebe.html",
+   "hash": "#/is/P-0926-025/fatura",
+   "gecti": true
+  },
+  {
+   "ad": "tahsilat: kalandan fazlası reddedilir",
+   "gen": 1920,
+   "sayfa": "maket/muhasebe.html",
+   "hash": "#/f/KMF2026000000017/tahsilat",
+   "gecti": true
+  },
+  {
+   "ad": "tahsilat: yöntem seçilir (odak yerinde)",
+   "gen": 1920,
+   "sayfa": "maket/muhasebe.html",
+   "hash": "#/f/KMF2026000000017/tahsilat",
+   "gecti": true
+  },
+  {
+   "ad": "tahsilat kalanı kapatır → fatura ödendi, iş kapandı",
+   "gen": 1920,
+   "sayfa": "maket/muhasebe.html",
+   "hash": "#/f/KMF2026000000017/tahsilat",
+   "gecti": true
+  },
+  {
+   "ad": "rapor no → Raporlar maketinde rapor",
+   "gen": 1920,
+   "sayfa": "maket/muhasebe.html",
+   "hash": "#/is/P-0926-025",
+   "gecti": true
+  },
+  {
+   "ad": "menüde Muhasebe hazır maketi açar (Planlar'dan)",
+   "gen": 1920,
+   "sayfa": "maket/planlarim.html",
+   "hash": "#/",
+   "gecti": true
+  }
+ ]
+}

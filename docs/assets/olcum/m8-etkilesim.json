@@ -1,0 +1,114 @@
+{
+ "maket": "m8",
+ "tarih": "2026-09-24",
+ "arac": "tools/olc-bulut.mjs --etkilesim (başsız tarayıcı, 1920 açık tema; gen verilen denemede o genişlik)",
+ "toplam": 15,
+ "gecen": 15,
+ "denemeler": [
+  {
+   "ad": "kriter cevaplanınca sayaç güncellenir, odak basılan seçimde",
+   "gen": 1920,
+   "sayfa": "maket/rapor.html",
+   "hash": "#/r/ET-1009",
+   "gecti": true
+  },
+  {
+   "ad": "yapılmadı seçilince sonuç sorulmaz",
+   "gen": 1920,
+   "sayfa": "maket/rapor.html",
+   "hash": "#/r/ET-1009",
+   "gecti": true
+  },
+  {
+   "ad": "hafif kusurda açıklama istenir",
+   "gen": 1920,
+   "sayfa": "maket/rapor.html",
+   "hash": "#/r/ET-1009",
+   "gecti": true
+  },
+  {
+   "ad": "sınır dışı test değeri: işaretlenir, öneri kullanılamaz (odak yerinde)",
+   "gen": 1920,
+   "sayfa": "maket/rapor.html",
+   "hash": "#/r/ET-1009",
+   "gecti": true
+  },
+  {
+   "ad": "sigortalar okunur: 10 satır, emin olunmayan 2 toplu onaya girmez",
+   "gen": 1920,
+   "sayfa": "maket/rapor.html",
+   "hash": "#/r/ET-1009",
+   "gecti": true
+  },
+  {
+   "ad": "emin olunmayan satır düzeltilince onaylanır",
+   "gen": 1920,
+   "sayfa": "maket/rapor.html",
+   "hash": "#/r/ET-1009",
+   "gecti": true
+  },
+  {
+   "ad": "kalibrasyonu geçmiş cihaz: gönder kapalı, sebebi yazılı",
+   "gen": 1920,
+   "sayfa": "maket/rapor.html",
+   "hash": "#/r/ET-1009",
+   "gecti": true
+  },
+  {
+   "ad": "ağır kusurda Kullanılabilir seçilemez",
+   "gen": 1920,
+   "sayfa": "maket/rapor.html",
+   "hash": "#/r/ET-1009",
+   "gecti": true
+  },
+  {
+   "ad": "onaya gönderilir → Onayda, salt okunur, yönetici adı",
+   "gen": 1920,
+   "sayfa": "maket/rapor.html",
+   "hash": "#/r/KP-1004",
+   "gecti": true
+  },
+  {
+   "ad": "geri gönderilen rapor: test girilince hazır",
+   "gen": 1920,
+   "sayfa": "maket/rapor.html",
+   "hash": "#/r/ZV-1007",
+   "gecti": true
+  },
+  {
+   "ad": "sonraki kontrol: gerekçesiz kaydedilmez",
+   "gen": 1920,
+   "sayfa": "maket/rapor.html",
+   "hash": "#/r/KP-1004",
+   "gecti": true
+  },
+  {
+   "ad": "sonraki kontrol gerekçeyle değişir",
+   "gen": 1920,
+   "sayfa": "maket/rapor.html",
+   "hash": "#/r/KP-1004",
+   "gecti": true
+  },
+  {
+   "ad": "Git: bölüme kayar, başlığa odaklanır",
+   "gen": 1920,
+   "sayfa": "maket/rapor.html",
+   "hash": "#/r/ET-1009",
+   "gecti": true
+  },
+  {
+   "ad": "telefonda Onaya gönder altta yapışkan",
+   "gen": 375,
+   "sayfa": "maket/rapor.html",
+   "hash": "#/r/ET-1009",
+   "gecti": true
+  },
+  {
+   "ad": "Planlar'dan Raporu düzenle → saha rapor ekranı",
+   "gen": 1920,
+   "sayfa": "maket/planlarim.html",
+   "hash": "#/plan/1",
+   "gecti": true
+  }
+ ]
+}

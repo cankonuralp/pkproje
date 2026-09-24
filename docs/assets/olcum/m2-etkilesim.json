@@ -1,0 +1,107 @@
+{
+ "maket": "m2",
+ "tarih": "2026-09-24",
+ "arac": "tools/olc-bulut.mjs --etkilesim (başsız tarayıcı, 1920 açık tema; gen verilen denemede o genişlik)",
+ "toplam": 14,
+ "gecen": 14,
+ "denemeler": [
+  {
+   "ad": "müşteriler: Portal kullanıcısı yok → 3 / 11",
+   "gen": 1920,
+   "sayfa": "maket/musteriler.html",
+   "hash": "#/",
+   "gecti": true
+  },
+  {
+   "ad": "müşteriler: İl = Bursa → 2 müşteri",
+   "gen": 1920,
+   "sayfa": "maket/musteriler.html",
+   "hash": "#/",
+   "gecti": true
+  },
+  {
+   "ad": "müşteriler: tesis adıyla arama (Kaynakhane → Poyraz)",
+   "gen": 1920,
+   "sayfa": "maket/musteriler.html",
+   "hash": "#/",
+   "gecti": true
+  },
+  {
+   "ad": "müşteri ekle: aynı vergi no kaydedilmez",
+   "gen": 1920,
+   "sayfa": "maket/musteriler.html",
+   "hash": "#/",
+   "gecti": true
+  },
+  {
+   "ad": "müşteri ekle: geçerli → müşteri sayfası",
+   "gen": 1920,
+   "sayfa": "maket/musteriler.html",
+   "hash": "#/",
+   "gecti": true
+  },
+  {
+   "ad": "tesis ekle: çakışan SGK sicil kaydedilmez",
+   "gen": 1920,
+   "sayfa": "maket/musteriler.html",
+   "hash": "#/m/m1/tesis-ekle",
+   "gecti": true
+  },
+  {
+   "ad": "tesis ekle: geçerli → tesis sayfası",
+   "gen": 1920,
+   "sayfa": "maket/musteriler.html",
+   "hash": "#/m/m10/tesis-ekle",
+   "gecti": true
+  },
+  {
+   "ad": "portal kullanıcısı: seçili tesis seçilmeden gönderilmez",
+   "gen": 1920,
+   "sayfa": "maket/musteriler.html",
+   "hash": "#/m/m3/kullanici-ekle",
+   "gecti": true
+  },
+  {
+   "ad": "portal kullanıcısı: davet edilir, listede Davet bekliyor",
+   "gen": 1920,
+   "sayfa": "maket/musteriler.html",
+   "hash": "#/m/m5/kullanici-ekle",
+   "gecti": true
+  },
+  {
+   "ad": "Plan aç → plan açma maketi, tesis dolu",
+   "gen": 1920,
+   "sayfa": "maket/musteriler.html",
+   "hash": "#/t/t6",
+   "gecti": true
+  },
+  {
+   "ad": "tesis sayfası: inspector personel kartına bağlanır",
+   "gen": 1920,
+   "sayfa": "maket/musteriler.html",
+   "hash": "#/t/t7",
+   "gecti": true
+  },
+  {
+   "ad": "müşteri sayfası: Teklif yüzü → müşterinin teklifleri (3 / 15)",
+   "gen": 1920,
+   "sayfa": "maket/musteriler.html",
+   "hash": "#/m/m1",
+   "gecti": true
+  },
+  {
+   "ad": "müşteri sayfası: İş sözleşmesi yüzü → 1 / 12",
+   "gen": 1920,
+   "sayfa": "maket/musteriler.html",
+   "hash": "#/m/m1",
+   "gecti": true
+  },
+  {
+   "ad": "müşteri sayfası: Açık alacak yüzü → müşterinin faturaları (3 / 13)",
+   "gen": 1920,
+   "sayfa": "maket/musteriler.html",
+   "hash": "#/m/m1",
+   "gecti": true
+  }
+ ]
+}

@@ -99,3 +99,7 @@ tek mesaj: sayfanın bağlantısı + kaç maket + kaç soru + ölçülemeyen var
 - **M15 bitti** (36/36 · çekmece 2/2 · etkileşim 9/9; sorular 144–151).
 - **M16 bitti** (36/36 · çekmece 2/2 · etkileşim 10/10; sorular 152–158; M1, M10, Planlar yeniden ölçüldü). **Faz 1 + faz 2 maketleri
   bitti.** Sırada: toplu bakış sayfası.
+- Toplu bakış öncesi tutarlılık: müşteri sayfasına (M2) faz 2 yüzleri (teklif, iş sözleşmesi, açık alacak); M2 48/48 · 14/14.
+- **Toplu bakış bitti** (`docs/toplu-bakis.html`, `tools/sunum-uret.mjs` üretir; `docs/index.html`'den bağlantı): 16 maket · 127 soru
+  (32–158) · durum 900/900 temiz · çekmece 32/32 · etkileşim 188/188 (sonuçlar `docs/assets/olcum/<maket>-etkilesim.json`); sayfanın
+  kendi ölçümü 18/18. **Reisim'in toplu cevabı bekleniyor**; cevaplar pkproje.md'ye işlenir, sonra faz 1 sırasıyla kod.

@@ -1,0 +1,93 @@
+{
+ "maket": "m4",
+ "tarih": "2026-09-24",
+ "arac": "tools/olc-bulut.mjs --etkilesim (başsız tarayıcı, 1920 açık tema; gen verilen denemede o genişlik)",
+ "toplam": 12,
+ "gecen": 12,
+ "denemeler": [
+  {
+   "ad": "cihazlar: uyarı şeridindeki Göster çipi uygular (2 / 20)",
+   "gen": 1920,
+   "sayfa": "maket/olcum-cihazlari.html",
+   "hash": "#/",
+   "gecti": true
+  },
+  {
+   "ad": "cihaz ekle: aynı envanter no reddedilir",
+   "gen": 1920,
+   "sayfa": "maket/olcum-cihazlari.html",
+   "hash": "#/yeni",
+   "gecti": true
+  },
+  {
+   "ad": "cihaz ekle: geçerli → depoda cihaz sayfası",
+   "gen": 1920,
+   "sayfa": "maket/olcum-cihazlari.html",
+   "hash": "#/yeni",
+   "gecti": true
+  },
+  {
+   "ad": "kalibrasyon kaydı: dosyasız kaydedilmez",
+   "gen": 1920,
+   "sayfa": "maket/olcum-cihazlari.html",
+   "hash": "#/c/v1/kalibrasyon",
+   "gecti": true
+  },
+  {
+   "ad": "kalibrasyon kaydı: laboratuvardaki cihaz döner, depoya girer",
+   "gen": 1920,
+   "sayfa": "maket/olcum-cihazlari.html",
+   "hash": "#/c/v14/kalibrasyon",
+   "gecti": true
+  },
+  {
+   "ad": "ara kontrol eklenir",
+   "gen": 1920,
+   "sayfa": "maket/olcum-cihazlari.html",
+   "hash": "#/c/v9",
+   "gecti": true
+  },
+  {
+   "ad": "zimmetler: personel kartından kişiye göre (6 / 28)",
+   "gen": 1920,
+   "sayfa": "maket/zimmetler.html",
+   "hash": "#/?kisi=mk",
+   "gecti": true
+  },
+  {
+   "ad": "hareketler: 20'şer sayfa (1–20 / 29)",
+   "gen": 1920,
+   "sayfa": "maket/zimmetler.html",
+   "hash": "#/hareketler",
+   "gecti": true
+  },
+  {
+   "ad": "teslim: aynı kişiye teslim reddedilir",
+   "gen": 1920,
+   "sayfa": "maket/zimmetler.html",
+   "hash": "#/teslim/v7",
+   "gecti": true
+  },
+  {
+   "ad": "teslim: fotoğrafsız ve kilometresiz araç teslimi reddedilir",
+   "gen": 1920,
+   "sayfa": "maket/zimmetler.html",
+   "hash": "#/teslim/a3",
+   "gecti": true
+  },
+  {
+   "ad": "teslim: kalibrasyonu geçmiş cihaz depoya alınır, onay gerekmez",
+   "gen": 1920,
+   "sayfa": "maket/zimmetler.html",
+   "hash": "#/teslim/v3",
+   "gecti": true
+  },
+  {
+   "ad": "teslim: kişiye teslim onay bekler",
+   "gen": 1920,
+   "sayfa": "maket/zimmetler.html",
+   "hash": "#/teslim/d5",
+   "gecti": true
+  }
+ ]
+}

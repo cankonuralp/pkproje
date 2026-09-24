@@ -1,0 +1,51 @@
+{
+ "maket": "m11",
+ "tarih": "2026-09-24",
+ "arac": "tools/olc-bulut.mjs --etkilesim (başsız tarayıcı, 1920 açık tema; gen verilen denemede o genişlik)",
+ "toplam": 6,
+ "gecen": 6,
+ "denemeler": [
+  {
+   "ad": "yalnız imzalı ve kendi raporları (21)",
+   "gen": 1920,
+   "sayfa": "maket/musteri.html",
+   "hash": "#/",
+   "gecti": true
+  },
+  {
+   "ad": "Uygunsuz çipi (6 / 21)",
+   "gen": 1920,
+   "sayfa": "maket/musteri.html",
+   "hash": "#/",
+   "gecti": true
+  },
+  {
+   "ad": "uygunsuzluklar sekmesi: 6 açık, Excel tuşu görünür",
+   "gen": 1920,
+   "sayfa": "maket/musteri.html",
+   "hash": "#/",
+   "gecti": true
+  },
+  {
+   "ad": "Excel önizlemesi: açık başına satır; rapor bağlantısı paneli açar",
+   "gen": 1920,
+   "sayfa": "maket/musteri.html",
+   "hash": "#/uygunsuz",
+   "gecti": true
+  },
+  {
+   "ad": "başka müşterinin raporu açılmaz",
+   "gen": 1920,
+   "sayfa": "maket/musteri.html",
+   "hash": "#/r/KM-0925-466-70a71",
+   "gecti": true
+  },
+  {
+   "ad": "müşteri sayfasından uygunsuzluk yüzü → o müşterinin paneli",
+   "gen": 1920,
+   "sayfa": "maket/musteriler.html",
+   "hash": "#/m/m9",
+   "gecti": true
+  }
+ ]
+}

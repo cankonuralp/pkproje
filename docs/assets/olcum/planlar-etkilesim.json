@@ -1,0 +1,114 @@
+{
+ "maket": "planlar",
+ "tarih": "2026-09-24",
+ "arac": "tools/olc-bulut.mjs --etkilesim (başsız tarayıcı, 1920 açık tema; gen verilen denemede o genişlik)",
+ "toplam": 15,
+ "gecen": 15,
+ "denemeler": [
+  {
+   "ad": "çip süzer, sayaç dürüst (4 / 9)",
+   "gen": 1920,
+   "sayfa": "maket/planlarim.html",
+   "hash": "#/",
+   "gecti": true
+  },
+  {
+   "ad": "ve + aynı grup → imkânsız, sebep yazılır",
+   "gen": 1920,
+   "sayfa": "maket/planlarim.html",
+   "hash": "#/",
+   "gecti": true
+  },
+  {
+   "ad": "sütun başlığı sıralar (Proje no artan)",
+   "gen": 1920,
+   "sayfa": "maket/planlarim.html",
+   "hash": "#/",
+   "gecti": true
+  },
+  {
+   "ad": "arama süzer, kutu yerinde kalır",
+   "gen": 1920,
+   "sayfa": "maket/planlarim.html",
+   "hash": "#/",
+   "gecti": true
+  },
+  {
+   "ad": "rapor sayfalayıcı 2. sayfa (21–22 / 22)",
+   "gen": 1920,
+   "sayfa": "maket/planlarim.html",
+   "hash": "#/plan/9",
+   "gecti": true
+  },
+  {
+   "ad": "telefonda levha: seçici değişir, rozet 1",
+   "gen": 375,
+   "sayfa": "maket/planlarim.html",
+   "hash": "#/",
+   "gecti": true
+  },
+  {
+   "ad": "levhada Temizle doğru süzgeci temizler (plan içi)",
+   "gen": 375,
+   "sayfa": "maket/planlarim.html",
+   "hash": "#/plan/1",
+   "gecti": true
+  },
+  {
+   "ad": "tablette çekmece açılır, Esc kapatır",
+   "gen": 1080,
+   "sayfa": "maket/planlarim.html",
+   "hash": "#/",
+   "gecti": true
+  },
+  {
+   "ad": "masaüstünde menü 64 px şeride daralır",
+   "gen": 1920,
+   "sayfa": "maket/planlarim.html",
+   "hash": "#/",
+   "gecti": true
+  },
+  {
+   "ad": "kabul et → Kabul edildi",
+   "gen": 1920,
+   "sayfa": "maket/planlarim.html",
+   "hash": "#/plan/3",
+   "gecti": true
+  },
+  {
+   "ad": "reddet: gerekçesiz gönderilmez, gerekçeyle reddedilir",
+   "gen": 1920,
+   "sayfa": "maket/planlarim.html",
+   "hash": "#/plan/3",
+   "gecti": true
+  },
+  {
+   "ad": "ekipman ekle: çakışan kod kaydedilmez",
+   "gen": 1920,
+   "sayfa": "maket/planlarim.html",
+   "hash": "#/plan/1/ekle",
+   "gecti": true
+  },
+  {
+   "ad": "ekipman ekle: yeni kod + tür → plana eklenir",
+   "gen": 1920,
+   "sayfa": "maket/planlarim.html",
+   "hash": "#/plan/1",
+   "gecti": true
+  },
+  {
+   "ad": "menüdeki 17 modülün hepsi maketi açar (bildirim tuşu yok)",
+   "gen": 1920,
+   "sayfa": "maket/planlarim.html",
+   "hash": "#/",
+   "gecti": true
+  },
+  {
+   "ad": "menüden hazır maket → bağlantı (Personel)",
+   "gen": 1920,
+   "sayfa": "maket/planlarim.html",
+   "hash": "#/",
+   "gecti": true
+  }
+ ]
+}

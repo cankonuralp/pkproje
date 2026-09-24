@@ -1,0 +1,107 @@
+{
+ "maket": "m5",
+ "tarih": "2026-09-24",
+ "arac": "tools/olc-bulut.mjs --etkilesim (başsız tarayıcı, 1920 açık tema; gen verilen denemede o genişlik)",
+ "toplam": 14,
+ "gecen": 14,
+ "denemeler": [
+  {
+   "ad": "eksikler: iki plan kabulü durur (kayıt yok · geç onay)",
+   "gen": 1920,
+   "sayfa": "maket/sozlesmeler.html",
+   "hash": "#/",
+   "gecti": true
+  },
+  {
+   "ad": "personel kartından kişiye göre (9 / 17)",
+   "gen": 1920,
+   "sayfa": "maket/sozlesmeler.html",
+   "hash": "#/isg?kisi=mk",
+   "gecti": true
+  },
+  {
+   "ad": "Geç onay çipi (1 / 17)",
+   "gen": 1920,
+   "sayfa": "maket/sozlesmeler.html",
+   "hash": "#/",
+   "gecti": true
+  },
+  {
+   "ad": "görünüm: önceki kayıtlar (2), süzgeç sayılmaz",
+   "gen": 1920,
+   "sayfa": "maket/sozlesmeler.html",
+   "hash": "#/",
+   "gecti": true
+  },
+  {
+   "ad": "tesisten gelince Kayıt ekle tesisi doldurur",
+   "gen": 1920,
+   "sayfa": "maket/sozlesmeler.html",
+   "hash": "#/isg?tesis=t8",
+   "gecti": true
+  },
+  {
+   "ad": "boş gönderildi: dört alan hatası",
+   "gen": 1920,
+   "sayfa": "maket/sozlesmeler.html",
+   "hash": "#/isg/yeni",
+   "gecti": true
+  },
+  {
+   "ad": "aynı sözleşme no reddedilir",
+   "gen": 1920,
+   "sayfa": "maket/sozlesmeler.html",
+   "hash": "#/isg/yeni?tesis=t8&kisi=mk",
+   "gecti": true
+  },
+  {
+   "ad": "olmayan tarih (31.02.2026) reddedilir",
+   "gen": 1920,
+   "sayfa": "maket/sozlesmeler.html",
+   "hash": "#/isg/yeni?tesis=t8&kisi=mk",
+   "gecti": true
+  },
+  {
+   "ad": "geç onay canlı denetlenir (26.09 → kabul edemez)",
+   "gen": 1920,
+   "sayfa": "maket/sozlesmeler.html",
+   "hash": "#/isg/yeni?tesis=t8&kisi=mk",
+   "gecti": true
+  },
+  {
+   "ad": "eksikten kayıt eklenir → P-0926-039 eksikten düşer",
+   "gen": 1920,
+   "sayfa": "maket/sozlesmeler.html",
+   "hash": "#/",
+   "gecti": true
+  },
+  {
+   "ad": "geç onay düzeltilir → P-0926-038 eksikten düşer",
+   "gen": 1920,
+   "sayfa": "maket/sozlesmeler.html",
+   "hash": "#/isg/i8",
+   "gecti": true
+  },
+  {
+   "ad": "yenileme: eski kayıt önceki kayda geçer",
+   "gen": 1920,
+   "sayfa": "maket/sozlesmeler.html",
+   "hash": "#/isg/yeni?tesis=t12&kisi=mk",
+   "gecti": true
+  },
+  {
+   "ad": "önceki kayıt salt okunur (Kaydet yok)",
+   "gen": 1920,
+   "sayfa": "maket/sozlesmeler.html",
+   "hash": "#/isg/i90",
+   "gecti": true
+  },
+  {
+   "ad": "Esc pencereyi kapatır, adres listeye döner",
+   "gen": 1920,
+   "sayfa": "maket/sozlesmeler.html",
+   "hash": "#/isg/i1",
+   "gecti": true
+  }
+ ]
+}

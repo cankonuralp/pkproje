@@ -1,0 +1,93 @@
+{
+ "maket": "m6",
+ "tarih": "2026-09-24",
+ "arac": "tools/olc-bulut.mjs --etkilesim (başsız tarayıcı, 1920 açık tema; gen verilen denemede o genişlik)",
+ "toplam": 12,
+ "gecen": 12,
+ "denemeler": [
+  {
+   "ad": "tesisten gelince: tarih sonraki kontrol, 6 / 6 seçili",
+   "gen": 1920,
+   "sayfa": "maket/plan-ac.html",
+   "hash": "#/?tesis=t2",
+   "gecti": true
+  },
+  {
+   "ad": "müşteri değişince tesis ve kapsam sıfırlanır",
+   "gen": 1920,
+   "sayfa": "maket/plan-ac.html",
+   "hash": "#/?tesis=t2",
+   "gecti": true
+  },
+  {
+   "ad": "tarih değişince İSG uygunluğu yeniden hesaplanır (odak yerinde)",
+   "gen": 1920,
+   "sayfa": "maket/plan-ac.html",
+   "hash": "#/?tesis=t7",
+   "gecti": true
+  },
+  {
+   "ad": "aynı saatte başka plan yazılır",
+   "gen": 1920,
+   "sayfa": "maket/plan-ac.html",
+   "hash": "#/?tesis=t8",
+   "gecti": true
+  },
+  {
+   "ad": "saat değişince çakışma kalkar",
+   "gen": 1920,
+   "sayfa": "maket/plan-ac.html",
+   "hash": "#/?tesis=t8",
+   "gecti": true
+  },
+  {
+   "ad": "açık plandaki ekipman seçilemez",
+   "gen": 1920,
+   "sayfa": "maket/plan-ac.html",
+   "hash": "#/?tesis=t8",
+   "gecti": true
+  },
+  {
+   "ad": "yeni ekipman kapsama eklenir, özet tür başına",
+   "gen": 1920,
+   "sayfa": "maket/plan-ac.html",
+   "hash": "#/?tesis=t8",
+   "gecti": true
+  },
+  {
+   "ad": "seçim temizlenince kapsam hatası, odak ilk ekipmanda",
+   "gen": 1920,
+   "sayfa": "maket/plan-ac.html",
+   "hash": "#/?tesis=t2",
+   "gecti": true
+  },
+  {
+   "ad": "geçmiş tarih reddedilir",
+   "gen": 1920,
+   "sayfa": "maket/plan-ac.html",
+   "hash": "#/?tesis=t2",
+   "gecti": true
+  },
+  {
+   "ad": "boş gönderildi: odak müşteride",
+   "gen": 1920,
+   "sayfa": "maket/plan-ac.html",
+   "hash": "#/",
+   "gecti": true
+  },
+  {
+   "ad": "plan açılır: P-0926-040, eksikli kişi yazılır",
+   "gen": 1920,
+   "sayfa": "maket/plan-ac.html",
+   "hash": "#/?tesis=t2",
+   "gecti": true
+  },
+  {
+   "ad": "telefonda ekipman süzgeci levhada (tür)",
+   "gen": 375,
+   "sayfa": "maket/plan-ac.html",
+   "hash": "#/?tesis=t12",
+   "gecti": true
+  }
+ ]
+}

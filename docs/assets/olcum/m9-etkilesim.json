@@ -1,0 +1,93 @@
+{
+ "maket": "m9",
+ "tarih": "2026-09-24",
+ "arac": "tools/olc-bulut.mjs --etkilesim (başsız tarayıcı, 1920 açık tema; gen verilen denemede o genişlik)",
+ "toplam": 12,
+ "gecen": 12,
+ "denemeler": [
+  {
+   "ad": "imza şeridi ve menü sayacı: 4 rapor",
+   "gen": 1920,
+   "sayfa": "maket/raporlar.html",
+   "hash": "#/",
+   "gecti": true
+  },
+  {
+   "ad": "İmza bekliyor çipi (4 / 90)",
+   "gen": 1920,
+   "sayfa": "maket/raporlar.html",
+   "hash": "#/",
+   "gecti": true
+  },
+  {
+   "ad": "toplu imza (servis) → 4 rapor müşteriye açık",
+   "gen": 1920,
+   "sayfa": "maket/raporlar.html",
+   "hash": "#/",
+   "gecti": true
+  },
+  {
+   "ad": "indir-imzala-yükle: yüklemeden tamamlanmaz",
+   "gen": 1920,
+   "sayfa": "maket/raporlar.html",
+   "hash": "#/imza",
+   "gecti": true
+  },
+  {
+   "ad": "rapor sayfasından tekli imza",
+   "gen": 1920,
+   "sayfa": "maket/raporlar.html",
+   "hash": "#/r/KM-0926-770-a99c1",
+   "gecti": true
+  },
+  {
+   "ad": "geri gönderilmiş taslak → saha rapor ekranı",
+   "gen": 1920,
+   "sayfa": "maket/raporlar.html",
+   "hash": "#/r/KM-0926-792-9ce3b",
+   "gecti": true
+  },
+  {
+   "ad": "onay kuyruğu: 8 mekanik rapor, elektrik ayrı",
+   "gen": 1920,
+   "sayfa": "maket/onaylar.html",
+   "hash": "#/",
+   "gecti": true
+  },
+  {
+   "ad": "Onayla → sıradaki rapor açılır, sayaç 7",
+   "gen": 1920,
+   "sayfa": "maket/onaylar.html",
+   "hash": "#/r/KM-0926-774-be91d",
+   "gecti": true
+  },
+  {
+   "ad": "geri gönder: kısa gerekçe reddedilir",
+   "gen": 1920,
+   "sayfa": "maket/onaylar.html",
+   "hash": "#/r/KM-0926-787-42b08/geri",
+   "gecti": true
+  },
+  {
+   "ad": "geri gönder gerekçeyle → taslağa döner",
+   "gen": 1920,
+   "sayfa": "maket/onaylar.html",
+   "hash": "#/r/KM-0926-787-42b08",
+   "gecti": true
+  },
+  {
+   "ad": "kuyrukta olmayan (elektrik) rapor: boş durum",
+   "gen": 1920,
+   "sayfa": "maket/onaylar.html",
+   "hash": "#/r/KM-0926-776-490cb",
+   "gecti": true
+  },
+  {
+   "ad": "telefonda onay tuşları altta yapışkan",
+   "gen": 375,
+   "sayfa": "maket/onaylar.html",
+   "hash": "#/r/KM-0926-786-fd731",
+   "gecti": true
+  }
+ ]
+}

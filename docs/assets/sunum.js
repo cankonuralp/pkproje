@@ -31,7 +31,9 @@
     try { localStorage.setItem("probata-tema", yeni); } catch (e) {}
     cerceveleriYukle();
   });
-  if ("ResizeObserver" in window) new ResizeObserver(olcekle).observe(document.querySelector(".s-cihazlar"));
+  /* 2026-09-24: toplu bakış sayfasında çerçeve yok → gözlenecek kap yoksa gözlemci kurulmaz (observe(null) hata verip betiği durduruyordu) */
+  var cihazlar = document.querySelector(".s-cihazlar");
+  if (cihazlar && "ResizeObserver" in window) new ResizeObserver(olcekle).observe(cihazlar);
   window.addEventListener("resize", olcekle);
   cerceveleriYukle(); olcekle();
 })();

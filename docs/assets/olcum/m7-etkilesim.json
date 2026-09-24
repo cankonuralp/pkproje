@@ -1,0 +1,93 @@
+{
+ "maket": "m7",
+ "tarih": "2026-09-24",
+ "arac": "tools/olc-bulut.mjs --etkilesim (başsız tarayıcı, 1920 açık tema; gen verilen denemede o genişlik)",
+ "toplam": 12,
+ "gecen": 12,
+ "denemeler": [
+  {
+   "ad": "görünüm: önceki sürümler (1)",
+   "gen": 1920,
+   "sayfa": "maket/standartlar.html",
+   "hash": "#/",
+   "gecti": true
+  },
+  {
+   "ad": "Türe atanmamış çipi (1 / 22)",
+   "gen": 1920,
+   "sayfa": "maket/standartlar.html",
+   "hash": "#/",
+   "gecti": true
+  },
+  {
+   "ad": "tür sayfasından gelince türe göre süzülür",
+   "gen": 1920,
+   "sayfa": "maket/standartlar.html",
+   "hash": "#/?tur=HT",
+   "gecti": true
+  },
+  {
+   "ad": "önceki sürümün rapor sayısı yeni sürümde değil",
+   "gen": 1920,
+   "sayfa": "maket/standartlar.html",
+   "hash": "#/s/s1e",
+   "gecti": true
+  },
+  {
+   "ad": "yükle: boş gönderildi, dört eksik, odak numarada",
+   "gen": 1920,
+   "sayfa": "maket/standartlar.html",
+   "hash": "#/yukle",
+   "gecti": true
+  },
+  {
+   "ad": "yükle: kütüphanedeki numara yazılınca yeni sürüm uyarısı",
+   "gen": 1920,
+   "sayfa": "maket/standartlar.html",
+   "hash": "#/yukle",
+   "gecti": true
+  },
+  {
+   "ad": "yükle: aynı sürüm reddedilir",
+   "gen": 1920,
+   "sayfa": "maket/standartlar.html",
+   "hash": "#/yukle",
+   "gecti": true
+  },
+  {
+   "ad": "yeni standart yüklenir → standart sayfası",
+   "gen": 1920,
+   "sayfa": "maket/standartlar.html",
+   "hash": "#/yukle",
+   "gecti": true
+  },
+  {
+   "ad": "yeni sürüm: eski sürüm saklanır, türler yeni sürümde",
+   "gen": 1920,
+   "sayfa": "maket/standartlar.html",
+   "hash": "#/s/s5/surum",
+   "gecti": true
+  },
+  {
+   "ad": "şablon: tür değişir (seçim alanı)",
+   "gen": 1920,
+   "sayfa": "maket/sablon.html",
+   "hash": "#/HT",
+   "gecti": true
+  },
+  {
+   "ad": "şablon: alanların kaynağı yazılı, örnekte değer",
+   "gen": 1920,
+   "sayfa": "maket/sablon.html",
+   "hash": "#/HT",
+   "gecti": true
+  },
+  {
+   "ad": "şablonu olmayan tür: boş durum",
+   "gen": 1920,
+   "sayfa": "maket/sablon.html",
+   "hash": "#/BK",
+   "gecti": true
+  }
+ ]
+}

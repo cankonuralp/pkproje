@@ -127,7 +127,7 @@ const n1 = sayfa({
   dosya: "index.html",
   baslik: "probata · Görsel sistem",
   ust: `<b>Görsel sistem</b><span>Kararlar işlendi · ${O.tarih} · <a href="plan-ici.html">Plan içi sunumu (${O.tur}. tur) →</a></span>`,
-  alt: `<a class="s-tus" href="plan-ici.html">${ikon("file-text")}Plan içi sunumu</a><a class="s-tus" href="maket/planlarim.html" target="_blank" rel="noopener">${ikon("calendar-check")}Maketi aç</a><a class="s-tus" href="uygulama/" target="_blank" rel="noopener">${ikon("house")}Uygulama önizlemesi</a>`,
+  alt: `<a class="s-tus" href="toplu-bakis.html">${ikon("layers")}Toplu bakış (16 maket)</a><a class="s-tus" href="plan-ici.html">${ikon("file-text")}Plan içi sunumu</a><a class="s-tus" href="maket/planlarim.html" target="_blank" rel="noopener">${ikon("calendar-check")}Maketi aç</a><a class="s-tus" href="uygulama/" target="_blank" rel="noopener">${ikon("house")}Uygulama önizlemesi</a>`,
   icindekiler: [["karar", "Kararlar"], ["olcum", "Ölçüm"], ["renk", "Renk sistemi"], ["birincil", "Birincil tuş"], ["yazi", "Yazı ve ikon"], ["esik", "Eşikler"], ["ekran", "Referans ekran"], ["kurallar", "Ekranın kuralları"], ["faz", "Faz 1"]],
   govde: [
     bolum(1, "karar", "Kararlar (reisim 2026-09-23)", "Marka renkleri, logo, Sora ve iki tema reisim'in kararıydı; üstüne kurulan görsel sistemin sekiz sorusu da cevaplandı.",
@@ -316,4 +316,102 @@ const n2 = sayfa({
   ].join("\n\n")
 });
 
-console.log(`index.html ${n1} bayt · plan-ici.html ${n2} bayt · kontrast ${gecen}/${P.sonuc.length} · ölçüm ${tamSifir}/${O.durumlar.length} temiz · ${IKONLAR.length} ikon · düzeltilen ${O.duzeltilen.length}`);
+/* ══ 3 · TOPLU BAKIŞ (toplu-bakis.html; MAKET-PLANI.md §2 SON + §6, 2026-09-24) ═══════════════════════════════════════════
+   Reisim bütün maketlere burada birlikte bakar (ara onay yok). ⛔ METİN burada yazılmaz: her maketin ekranı, varsayımları, soruları ve
+   ölçüm notu pkproje.md §3.6'dan OKUNUR; sayılar docs/assets/olcum/<maket>.json (durum) ve <maket>-etkilesim.json (etkileşim
+   denemeleri) dosyalarından; sayfa adları maket sayfalarının <title>'ından. Soru numarası pkproje.md'deki numaradır. */
+const PK = readFileSync(yol("pkproje.md"), "utf8");
+const b36bas = PK.indexOf("### 3.6");
+const b36 = PK.slice(b36bas, Math.min(...["\n### ", "\n## "].map(x => PK.indexOf(x, b36bas + 5)).filter(i => i > 0)));
+const md = t => K(t).replace(/\*\*([^*]+)\*\*/g, "<b>$1</b>").replace(/\*([^*]+)\*/g, "<i>$1</i>").replace(/`([^`]+)`/g, "<code>$1</code>");
+const oku = f => JSON.parse(readFileSync(yol("docs/assets/olcum/" + f), "utf8"));
+const sayfaAdi = f => (/<title>([^<]+)<\/title>/.exec(readFileSync(yol("docs/maket/" + f), "utf8")) || [, f])[1].replace(/ · probata maket$/, "");
+/* madde listesi: "- " yeni madde, girintili satır öncekine eklenir · soru listesi: "NN. " yeni soru */
+const maddeler = (satirlar, bas) => satirlar.reduce((l, x) => { const m = bas.exec(x); if (m) l.push({ no: m[1], metin: m[2] }); else if (l.length && x.trim()) l[l.length - 1].metin += " " + x.trim(); return l; }, []);
+const MAKETLER = b36.split(/\n(?=#### Maket M\d+ )/).slice(1).map(parca => {
+  const satir = parca.trim().split("\n"), bas = /^#### Maket (M(\d+)) — (.+) — ONAY BEKLİYOR/.exec(satir[0]);
+  const bloklar = [{ ad: "Ekran", satirlar: [] }];
+  for (const x of satir.slice(1)) {
+    const m = /^\*\*((?:Varsayımlar|Sorular \(M\d+\)|Ölçüm|Yeni desen)[^*]*?):?\*\*\s*(.*)$/.exec(x);
+    if (m) bloklar.push({ ad: m[1], satirlar: m[2] ? [m[2]] : [] }); else bloklar[bloklar.length - 1].satirlar.push(x);
+  }
+  const blok = on => bloklar.find(b => b.ad.startsWith(on));
+  const ad = /^(.*) \((modül [^)]*)\)$/.exec(bas[3]) || [, bas[3], ""];
+  const key = "m" + bas[2], dur = oku(key + ".json"), etk = oku(key + "-etkilesim.json");
+  return { id: bas[1], no: +bas[2], key, ad: ad[1], modul: ad[2], faz: /faz 2/.test(ad[2]) ? 2 : 1,
+    ekran: blok("Ekran").satirlar.join(" ").trim(), desen: blok("Yeni desen") && { ad: blok("Yeni desen").ad, metin: blok("Yeni desen").satirlar.join(" ") },
+    varsayim: maddeler(blok("Varsayımlar").satirlar, /^()- (.*)$/),
+    sorular: maddeler(blok("Sorular").satirlar, /^(\d+)\. (.*)$/),
+    olcumNot: blok("Ölçüm") ? blok("Ölçüm").satirlar.join(" ") : "",
+    sayfalar: [...new Set([...parca.matchAll(/maket\/([a-z-]+\.html)/g)].map(m => m[1]))], dur, etk };
+});
+const TS = MAKETLER.flatMap(m => m.sorular.map(q => ({ ...q, m })));
+const top = (f) => MAKETLER.reduce((t, m) => t + f(m), 0);
+const DURUM = { temiz: top(m => m.dur.temiz), toplam: top(m => m.dur.toplam), cekTemiz: top(m => m.dur.cekmece.temiz), cekToplam: top(m => m.dur.cekmece.toplam),
+  etkGecen: top(m => m.etk.gecen), etkToplam: top(m => m.etk.toplam) };
+const PLANLAR = { dur: oku("planlar.json"), etk: oku("planlar-etkilesim.json") };
+const olcumYaz = m => `durum ${m.dur.temiz}/${m.dur.toplam} temiz · çekmece ${m.dur.cekmece.temiz}/${m.dur.cekmece.toplam} · etkileşim ${m.etk.gecen}/${m.etk.toplam}`;
+const soruAraligi = m => m.sorular.length ? `${m.sorular[0].no}–${m.sorular[m.sorular.length - 1].no}` : "—";
+const baglantilar = m => `<div class="s-baglantilar">${m.sayfalar.map(f => `<a class="s-tus" href="maket/${f}" target="_blank" rel="noopener">${ikon("arrow-right")}${K(sayfaAdi(f))}</a>`).join("")}</div>`;
+const soruListesi = l => `<ol class="s-tsorular">${l.map(q => `<li id="soru-${q.no}"><span class="s-tsoru-no">${q.no}</span><div>${md(q.metin)}</div></li>`).join("")}</ol>`;
+const maketBolumu = m => `<section class="s-bolum" id="${m.key}">
+  <h2><span class="s-no s-no-genis">${m.id}</span>${K(m.ad)}</h2>
+  <p class="s-alt">${K(m.modul)}${m.faz === 1 ? " · faz 1" : ""} · <b>ONAY BEKLİYOR</b> · ${olcumYaz(m)}</p>
+  ${baglantilar(m)}
+  <p>${md(m.ekran)}</p>
+  ${m.desen ? `<div class="s-bulgu">${ikon("layers")}<div><b>${md(m.desen.ad)}:</b> ${md(m.desen.metin)}</div></div>` : ""}
+  <details class="s-ayrinti" open><summary>Varsayımlar (${m.varsayim.length})</summary><ul class="s-maddeler">${m.varsayim.map(v => `<li>${md(v.metin)}</li>`).join("")}</ul></details>
+  <h3>Sorular ${soruAraligi(m)} (${m.sorular.length})</h3>
+  ${soruListesi(m.sorular)}
+  <details class="s-ayrinti"><summary>Ölçüm ayrıntısı</summary><p>${md(m.olcumNot)}</p>
+    <p class="s-oran">Etkileşim denemeleri (${m.etk.tarih}):</p><ul class="s-denemeler">${m.etk.denemeler.map(d => `<li class="${d.gecti ? "s-evet" : "s-hayir"}">${d.gecti ? "geçti" : "KALDI"} · ${K(d.ad)}${d.gen !== 1920 ? ` (${d.gen})` : ""}</li>`).join("")}</ul></details>
+</section>`;
+const OLCULEMEYEN = [
+  ["Gerçek cihaz", "Tablet ve telefonda dokunma, klavye, ekran kenarı: bütün maketler başsız tarayıcıda 1080 ve 375 genişlikte ölçüldü, gerçek cihazda değil."],
+  ["Kamera", "Fotoğraf çekme (M4 teslim fotoğrafı, M8 rapor ve pano fotoğrafı): makette dosya seçimi taklit."],
+  ["Gerçek görsel okuma", "Pano fotoğrafından sigorta okuma (M8): maketteki okuma sonucu uydurma."],
+  ["Gerçek e-imza", "Son imza (M9): imza servisi ve indir-imzala-yükle akışı taklit."],
+  ["PDF'in kendisi", "Sunucuda üretilen belge (M7 şablon, M9 rapor, M11 müşteri paneli, M12 teklif, M13 sözleşme): makette HTML önizleme."],
+  ["Gerçek Excel dosyası", "“Uygunsuzları indir” (M11): makette önizleme tablosu."],
+  ["Gerçek e-Fatura / e-Arşiv", "Fatura (M14): makette yalnız numara ve tarih kaydı."],
+  ["E-posta gönderimi", "Davet ve parola sıfırlama (M1): makette gönderildi bildirimi."]
+];
+const bagimli = TS.filter(q => /Bağımlılık|ile bağlı/.test(q.metin));
+const on36 = b36.split(/\n(?=#### Maket M\d+ )/)[0].split("\n").slice(1).join(" ").trim();
+const faz = f => MAKETLER.filter(m => m.faz === f);
+const n3 = sayfa({
+  dosya: "toplu-bakis.html",
+  baslik: "probata · Toplu bakış",
+  ust: `<b>Toplu bakış</b><span>${MAKETLER.length} maket · ${TS.length} soru · faz 1 + faz 2 · hepsi ONAY BEKLİYOR</span>`,
+  alt: `<a class="s-tus" href="index.html">${ikon("book-open")}Görsel sistem</a><a class="s-tus" href="maket/planlarim.html" target="_blank" rel="noopener">${ikon("calendar-check")}Planlar'dan başla</a>`,
+  icindekiler: [["nasil", "Nasıl bakılır"], ["ozet", "Özet"], ["faz1", "Faz 1 · M1–M" + faz(1).length], ["faz2", "Faz 2 · M" + (faz(1).length + 1) + "–M" + MAKETLER.length], ["bagimli", "Bağımlılıklar"], ["olculemeyen", "Ölçülemeyenler"]],
+  govde: [
+    bolum(1, "nasil", "Nasıl bakılır", "Reisim: “tüm maketleri sırayla bulutta yapılsın en son hepsine toplu bakar ona göre ilerleriz” (2026-09-24). Maketler onaylanana kadar kod yok.",
+      `<ul class="s-kurallar">
+    <li><b>Maketler birbirine bağlı</b><span>Her bağlantı yeni sekmede açılır. Yan menüdeki 17 modülün hepsinin maketi var; ekranlar arası geçişler (teklif → sözleşme → plan aç, plan → rapor → onay → muhasebe, uyarı → eğitim) tıklanır.</span></li>
+    <li><b>Masaüstü, tablet, telefon</b><span>Aynı sayfa telefonda açılınca telefon tasarımı görünür (tablo yerine kart, süzgeç levhası, altta yapışkan tuş). Tema üst çubuktaki düğmeyle.</span></li>
+    <li><b>Veri uydurma, gün sabit</b><span>Bütün firma, kişi, tesis ve numaralar uydurmadır; maketin “bugün”ü 23 Eylül 2026. Yapılan değişiklik sayfa yenilenince geri gelir.</span></li>
+    <li><b>Cevap numarayla</b><span>Sorular pkproje.md'deki numarayla (${TS[0].no}–${TS[TS.length - 1].no}). “45: evet · 46: hayır, şöyle olsun” biçiminde yazılabilir; cevaplar pkproje.md'ye işlenir, sonra faz 1 sırasıyla koda geçilir.</span></li>
+  </ul><p class="s-oran" style="margin-top:12px">${md(on36)}</p>`),
+    bolum(2, "ozet", "Özet", `Sayılar ölçüm dosyalarından (${K(MAKETLER[0].dur.arac)}); elle yazılmadı.`,
+      `<div class="s-karolar">
+    <div class="s-karo"><b>${MAKETLER.length}</b><span>maket · faz 1: ${faz(1).length}, faz 2: ${faz(2).length}</span></div>
+    <div class="s-karo"><b>${TS.length}</b><span>karar sorusu (${TS[0].no}–${TS[TS.length - 1].no})</span></div>
+    <div class="s-karo s-iyi"><b>${DURUM.temiz}/${DURUM.toplam}</b><span>durum temiz (1920 · 1080 · 375 × açık/koyu) · çekmece ${DURUM.cekTemiz}/${DURUM.cekToplam}</span></div>
+    <div class="s-karo s-iyi"><b>${DURUM.etkGecen}/${DURUM.etkToplam}</b><span>etkileşim denemesi geçti</span></div>
+  </div>
+  <p class="s-oran">Onaylı referans ekran Planlar da bu çalışmada ortak parçalar değiştikçe yeniden ölçüldü: durum ${PLANLAR.dur.temiz}/${PLANLAR.dur.toplam}, çekmece ${PLANLAR.dur.cekmece.temiz}/${PLANLAR.dur.cekmece.toplam}, etkileşim ${PLANLAR.etk.gecen}/${PLANLAR.etk.toplam}. Ölçüm tarihi ${MAKETLER[0].dur.tarih}.</p>
+  <ul class="s-kurallar">${MAKETLER.map(m => `<li><a class="s-ozet-bag" href="#${m.key}">${m.id} · ${K(m.ad)}</a><span>${K(m.modul)} · sorular ${soruAraligi(m)} (${m.sorular.length})<br>${olcumYaz(m)}<br>${
+    m.sayfalar.map(f => K(sayfaAdi(f))).join(" · ")}</span></li>`).join("")}</ul>`),
+    `<section class="s-bolum s-faz" id="faz1"><h2>Faz 1 · M1–M${faz(1).length}</h2><p class="s-alt">Onaylı omurga ve bağımlılık gereği girenler (pkproje.md §3.3). Faz 1 sırası koda geçiş sırasıdır.</p></section>`,
+    ...faz(1).map(maketBolumu),
+    `<section class="s-bolum s-faz" id="faz2"><h2>Faz 2 · M${faz(1).length + 1}–M${MAKETLER.length}</h2><p class="s-alt">Teklif, iş sözleşmesi, muhasebe, performans, eğitim (pkproje.md §3.3). Veri bağları faz 1 maketleriyle aynı kayıtlar.</p></section>`,
+    ...faz(2).map(maketBolumu),
+    bolum(3, "bagimli", "Bağımlılıklar", "Cevabı başka maketi de değiştiren sorular (MAKET-PLANI.md §4). Metinde “Bağımlılık” ya da “ile bağlı” yazanlar.",
+      `<ol class="s-tsorular">${bagimli.map(q => `<li><span class="s-tsoru-no">${q.no}</span><div><b>${q.m.id} · ${K(q.m.ad)}</b> — ${md(q.metin)}</div></li>`).join("")}</ol>`),
+    bolum(4, "olculemeyen", "Ölçülemeyenler", "Bulutta ölçülemedi; tahmin yazılmadı. Gerçek uygulamada ya da gerçek cihazda ayrıca doğrulanır.",
+      `<ul class="s-kurallar">${OLCULEMEYEN.map(([a, b]) => `<li><b>${a}</b><span>${b}</span></li>`).join("")}</ul>`)
+  ].join("\n\n")
+});
+
+console.log(`index.html ${n1} bayt · plan-ici.html ${n2} bayt · toplu-bakis.html ${n3} bayt (${MAKETLER.length} maket, ${TS.length} soru, durum ${DURUM.temiz}/${DURUM.toplam}, etkileşim ${DURUM.etkGecen}/${DURUM.etkToplam}) · kontrast ${gecen}/${P.sonuc.length} · ölçüm ${tamSifir}/${O.durumlar.length} temiz · ${IKONLAR.length} ikon · düzeltilen ${O.duzeltilen.length}`);

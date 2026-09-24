@@ -30,6 +30,7 @@ inspector son imza → müşteriye açıldı → fatura → tahsilat → iş kap
 **Toplu maket çalışması (2026-09-24, reisim: *"tüm maketleri sırayla bulutta yapılsın en son hepsine toplu bakar ona göre
 ilerleriz"*):** faz 1 + faz 2'nin bütün maketleri sırayla, tek bulut oturumunda; reisim en sonda toplu bakar. ⛔ Talimat ve
 durum **`MAKET-PLANI.md`** — bu çalışma sürerken oturum başında o da TAM okunur. Maketler onaylanana kadar kod yok.
+**2026-09-24 bitti:** 16 maket + toplu bakış (`docs/toplu-bakis.html`; 127 soru, 32–158) — reisim'in toplu cevabı bekleniyor.
 
 ## 2 · Yığın (pkproje.md §8 — **reisim 2026-09-22'de onayladı**)
 - **TypeScript + Next.js (App Router), standalone çıktı — onaylı 2026-09-22** (SvelteKit düştü). Tarayıcı
@@ -183,6 +184,7 @@ CI aynı zinciri her push'ta koşar (`.github/workflows/ci.yml`); main'de deneti
   sitenin kökü `docs/` (maket + sunum, adresler aynı), `…/uygulama/` uygulamanın statik önizlemesi (sunucu, veritabanı,
   giriş orada ÇALIŞMAZ). Önceki düzen (main `/docs` doğrudan) kalktı. https://cankonuralp.github.io/pkproje/
   (görsel sistem) · `…/plan-ici.html` (plan içi ve yan menü sunumu) · `…/maket/planlarim.html` (maket; `#/plan/<id>` plan içi,
-  `#/plan/<id>/ekle` ekipman ekle). İki sunum `tools/sunum-uret.mjs` ile üretilir, elle düzenlenmez. Sayfalar `noindex`; veri uydurma. İş akışı
+  `#/plan/<id>/ekle` ekipman ekle) · `…/toplu-bakis.html` (16 maketin toplu bakışı, 2026-09-24). Üç sunum `tools/sunum-uret.mjs` ile
+  üretilir, elle düzenlenmez (toplu bakış metni pkproje.md §3.6'dan, sayıları `docs/assets/olcum/`'dan okur). Sayfalar `noindex`; veri uydurma. İş akışı
   `.github/workflows/ci.yml` (Eksikler §1): her push'ta denetim; main'de denetim geçerse önizleme kurulur ve yayınlanır.
 - OneDrive: reisim'de kapalı, klasör adı Windows 10'dan kalma; dosyalar yerelde. Yedek = GitHub.

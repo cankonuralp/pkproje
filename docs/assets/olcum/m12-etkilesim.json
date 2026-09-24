@@ -1,0 +1,79 @@
+{
+ "maket": "m12",
+ "tarih": "2026-09-24",
+ "arac": "tools/olc-bulut.mjs --etkilesim (başsız tarayıcı, 1920 açık tema; gen verilen denemede o genişlik)",
+ "toplam": 10,
+ "gecen": 10,
+ "denemeler": [
+  {
+   "ad": "liste: 15 teklif, en yenisi üstte",
+   "gen": 1920,
+   "sayfa": "maket/teklifler.html",
+   "hash": "#/",
+   "gecti": true
+  },
+  {
+   "ad": "kabul edilmiş teklif: raporlanan adet ve tutar",
+   "gen": 1920,
+   "sayfa": "maket/teklifler.html",
+   "hash": "#/t/T-0926-001",
+   "gecti": true
+  },
+  {
+   "ad": "kabul → Plan aç tesisle açılır",
+   "gen": 1920,
+   "sayfa": "maket/teklifler.html",
+   "hash": "#/t/T-0926-001",
+   "gecti": true
+  },
+  {
+   "ad": "gönderilen teklif kabul edilir",
+   "gen": 1920,
+   "sayfa": "maket/teklifler.html",
+   "hash": "#/t/T-0926-010",
+   "gecti": true
+  },
+  {
+   "ad": "red: gerekçesiz kaydedilmez, gerekçeyle reddedilir",
+   "gen": 1920,
+   "sayfa": "maket/teklifler.html",
+   "hash": "#/t/T-0926-009/red",
+   "gecti": true
+  },
+  {
+   "ad": "form: tür seçilince fiyat listeden, tutar ve toplam canlı",
+   "gen": 1920,
+   "sayfa": "maket/teklifler.html",
+   "hash": "#/yeni?tesis=t13",
+   "gecti": true
+  },
+  {
+   "ad": "form: tesisteki ekipmandan doldur (11 ekipman)",
+   "gen": 1920,
+   "sayfa": "maket/teklifler.html",
+   "hash": "#/yeni?tesis=t13",
+   "gecti": true
+  },
+  {
+   "ad": "form: aynı tür iki kez reddedilir",
+   "gen": 1920,
+   "sayfa": "maket/teklifler.html",
+   "hash": "#/yeni?tesis=t13",
+   "gecti": true
+  },
+  {
+   "ad": "yeni teklif kaydedilir → taslak teklif sayfası",
+   "gen": 1920,
+   "sayfa": "maket/teklifler.html",
+   "hash": "#/yeni?tesis=t13",
+   "gecti": true
+  },
+  {
+   "ad": "gönderilmiş teklif düzenlenemez",
+   "gen": 1920,
+   "sayfa": "maket/teklifler.html",
+   "hash": "#/t/T-0926-010/duzenle",
+   "gecti": true
+  }
+ ]
+}

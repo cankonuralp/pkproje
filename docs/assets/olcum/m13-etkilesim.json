@@ -1,0 +1,86 @@
+{
+ "maket": "m13",
+ "tarih": "2026-09-24",
+ "arac": "tools/olc-bulut.mjs --etkilesim (başsız tarayıcı, 1920 açık tema; gen verilen denemede o genişlik)",
+ "toplam": 11,
+ "gecen": 11,
+ "denemeler": [
+  {
+   "ad": "liste: 12 sözleşme, imza bekleyen üstte; biten şeridi yenileme teklifini gösterir",
+   "gen": 1920,
+   "sayfa": "maket/is-sozlesmeleri.html",
+   "hash": "#/",
+   "gecti": true
+  },
+  {
+   "ad": "Bitişi 60 gün içinde çipi (2 / 12)",
+   "gen": 1920,
+   "sayfa": "maket/is-sozlesmeleri.html",
+   "hash": "#/",
+   "gecti": true
+  },
+  {
+   "ad": "sekme: iş sözleşmelerinden İSG-KATİP kayıtlarına",
+   "gen": 1920,
+   "sayfa": "maket/is-sozlesmeleri.html",
+   "hash": "#/",
+   "gecti": true
+  },
+  {
+   "ad": "sekme: İSG-KATİP kayıtlarından iş sözleşmelerine",
+   "gen": 1920,
+   "sayfa": "maket/sozlesmeler.html",
+   "hash": "#/",
+   "gecti": true
+  },
+  {
+   "ad": "imzalı sözleşme yüklenir → yürürlükte",
+   "gen": 1920,
+   "sayfa": "maket/is-sozlesmeleri.html",
+   "hash": "#/s/IS-0926-007",
+   "gecti": true
+  },
+  {
+   "ad": "teklif sayfasından İş sözleşmesi → form teklifle dolu",
+   "gen": 1920,
+   "sayfa": "maket/teklifler.html",
+   "hash": "#/t/T-0926-001",
+   "gecti": true
+  },
+  {
+   "ad": "müşteri değişince teklif ve tesisler sıfırlanır (odak yerinde)",
+   "gen": 1920,
+   "sayfa": "maket/is-sozlesmeleri.html",
+   "hash": "#/yeni?teklif=T-0926-001",
+   "gecti": true
+  },
+  {
+   "ad": "tesis seçilmeden kaydedilmez, odak tesiste",
+   "gen": 1920,
+   "sayfa": "maket/is-sozlesmeleri.html",
+   "hash": "#/yeni?teklif=T-0926-001",
+   "gecti": true
+  },
+  {
+   "ad": "sözleşme hazırlanır: IS-0926-008, imza bekliyor, bitiş 12 ay",
+   "gen": 1920,
+   "sayfa": "maket/is-sozlesmeleri.html",
+   "hash": "#/yeni?teklif=T-0926-001",
+   "gecti": true
+  },
+  {
+   "ad": "biten sözleşme: yenileme teklifi tuşu o teklifi açar",
+   "gen": 1920,
+   "sayfa": "maket/is-sozlesmeleri.html",
+   "hash": "#/s/IS-1025-001",
+   "gecti": true
+  },
+  {
+   "ad": "kapsam: İSG-KATİP kaydı olmayan tesis yazılır; plan bağlantısı plan içine",
+   "gen": 1920,
+   "sayfa": "maket/is-sozlesmeleri.html",
+   "hash": "#/s/IS-0926-006",
+   "gecti": true
+  }
+ ]
+}

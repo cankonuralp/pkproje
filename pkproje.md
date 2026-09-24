@@ -1252,6 +1252,9 @@ revizyon, alan kopyalama, hafif kusur devri, meslek eşleşme denetimi).
 - Emsal ürünler: https://opwire.app/iso-17020-periyodik-kontrol-yazilimi/ · https://17020muayene.vidco.com.tr/ · https://akuple.com/asansor-kontrol-yazilimi/ · https://ensyazilim.com/
 
 ## 11 · Değişiklik günlüğü
+- 2026-09-24 (30): **toplu bakış sayfası** (`docs/toplu-bakis.html`, MAKET-PLANI.md SON): §3.6'daki her maketin ekranı, varsayımları ve
+  soruları (metin buradan okunur) + ölçüm dosyalarındaki sayılar; bağımlılıklar ve ölçülemeyenler. Etkileşim sonuçları artık dosyaya
+  yazılıyor. 16 maket, 127 soru; reisim'in toplu cevabı bekleniyor.
 - 2026-09-24 (29): toplu bakış öncesi tutarlılık — müşteri sayfasına (M2) faz 2 yüzleri: teklif, iş sözleşmesi, açık alacak (o müşteriye
   süzülü Teklifler / İş sözleşmeleri / Muhasebe faturaları); M1 ve M2 varsayımlarındaki "maketler gelince bağlanır" notları güncellendi.
 - 2026-09-24 (28): **toplu maket M16 Eğitimler** (§3.6, faz 2): kayıtlar (tekrar durumu, belge, görünüm güncel/önceki), eğitim türleri,

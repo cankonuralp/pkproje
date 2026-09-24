@@ -1,0 +1,51 @@
+{
+ "maket": "m10",
+ "tarih": "2026-09-24",
+ "arac": "tools/olc-bulut.mjs --etkilesim (başsız tarayıcı, 1920 açık tema; gen verilen denemede o genişlik)",
+ "toplam": 6,
+ "gecen": 6,
+ "denemeler": [
+  {
+   "ad": "11 uyarı, menü sayacı 11, en yakın tarih üstte",
+   "gen": 1920,
+   "sayfa": "maket/uyarilar.html",
+   "hash": "#/",
+   "gecti": true
+  },
+  {
+   "ad": "Eğitim tekrarı çipi (5 / 11)",
+   "gen": 1920,
+   "sayfa": "maket/uyarilar.html",
+   "hash": "#/",
+   "gecti": true
+  },
+  {
+   "ad": "Süresi geçmiş (3): iki cihaz + Kaan Er",
+   "gen": 1920,
+   "sayfa": "maket/uyarilar.html",
+   "hash": "#/",
+   "gecti": true
+  },
+  {
+   "ad": "adresten kalibrasyon süzgeci (6)",
+   "gen": 1920,
+   "sayfa": "maket/uyarilar.html",
+   "hash": "#/?tur=kalibrasyon",
+   "gecti": true
+  },
+  {
+   "ad": "uyarıdan cihaz sayfasına",
+   "gen": 1920,
+   "sayfa": "maket/uyarilar.html",
+   "hash": "#/",
+   "gecti": true
+  },
+  {
+   "ad": "personel kartı eğitim yüzü kayıttan (Kaan Er: tekrarı geçti)",
+   "gen": 1920,
+   "sayfa": "maket/personel.html",
+   "hash": "#/p/ke",
+   "gecti": true
+  }
+ ]
+}

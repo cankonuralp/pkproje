@@ -1,0 +1,72 @@
+{
+ "maket": "m15",
+ "tarih": "2026-09-24",
+ "arac": "tools/olc-bulut.mjs --etkilesim (başsız tarayıcı, 1920 açık tema; gen verilen denemede o genişlik)",
+ "toplam": 9,
+ "gecen": 9,
+ "denemeler": [
+  {
+   "ad": "bu ay: 28 rapor, gün başı 3 gün, kazanç en çok olan üstte",
+   "gen": 1920,
+   "sayfa": "maket/performans.html",
+   "hash": "#/",
+   "gecti": true
+  },
+  {
+   "ad": "dönem: geçen yıl → 12 ay satırı, odak tuşta",
+   "gen": 1920,
+   "sayfa": "maket/performans.html",
+   "hash": "#/",
+   "gecti": true
+  },
+  {
+   "ad": "branş: elektrik → yalnız elektrik personeli",
+   "gen": 1920,
+   "sayfa": "maket/performans.html",
+   "hash": "#/",
+   "gecti": true
+  },
+  {
+   "ad": "sütun başlığı sıralar (Ad artan)",
+   "gen": 1920,
+   "sayfa": "maket/performans.html",
+   "hash": "#/",
+   "gecti": true
+  },
+  {
+   "ad": "görünüm: rapor yazanlar (2) → bütün inspector'lar (9)",
+   "gen": 1920,
+   "sayfa": "maket/performans.html",
+   "hash": "#/",
+   "gecti": true
+  },
+  {
+   "ad": "arama süzer (1 / 9 kişi)",
+   "gen": 1920,
+   "sayfa": "maket/performans.html",
+   "hash": "#/",
+   "gecti": true
+  },
+  {
+   "ad": "kişiye geçiş: günlük iş, muhasebe iş bağlantısı",
+   "gen": 1920,
+   "sayfa": "maket/performans.html",
+   "hash": "#/",
+   "gecti": true
+  },
+  {
+   "ad": "kişide dönem korunur (panodan geçen yıl → kişi)",
+   "gen": 1920,
+   "sayfa": "maket/performans.html",
+   "hash": "#/",
+   "gecti": true
+  },
+  {
+   "ad": "menüde Performans hazır maketi açar (Muhasebe'den)",
+   "gen": 1920,
+   "sayfa": "maket/muhasebe.html",
+   "hash": "#/",
+   "gecti": true
+  }
+ ]
+}
