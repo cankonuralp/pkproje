@@ -289,6 +289,30 @@
     { k: "s22", no: "TS EN 60204-1", konu: "Makinelerde güvenlik — makinelerin elektrik donanımı", surum: "2018", yukleyen: "co", tarih: "2026-09-18",
       dosya: { ad: "TS-EN-60204-1_2018.pdf", kb: 5120 } });
   MV.standartTurleri = function (k) { return MV.KATALOG.filter(function (t) { return t.std.indexOf(k) >= 0; }); };
+  /* ── RAPOR İÇERİĞİ (M7 şablon önizlemesi + M8 saha raporu; TEK KAYNAK) — grup başına ÖRNEK kriter ve test listesi.
+     Gerçek şablonda tür ve format başına kodda yazılır (§3, §8.3). Test: op + sınır sayısal (ekranda otomatik değerlendirme). */
+  MV.KRITER = {
+    kaldirma: ["Taşıyıcı konstrüksiyon: çatlak, deformasyon, korozyon", "Kaldırma elemanları (zincir, halat, çatal): aşınma ve uzama", "Kanca ve emniyet mandalı",
+      "Frenler: fonksiyon deneyi", "Sınır anahtarları ve acil durdurma", "Yük diyagramı, etiket ve uyarı işaretleri", "Yük deneyi (dinamik ve statik)"],
+    basincli: ["Gövde ve kaynaklar: gözle muayene (korozyon, ezik)", "Emniyet ventili: ayar basıncı ve fonksiyon", "Manometre: okunabilirlik ve kalibrasyon işareti",
+      "Tahliye düzeni", "Etiket plakası ve izlenebilirlik", "Hidrostatik deney (deney basıncı)"],
+    elektrik: ["Koruma iletkeni sürekliliği", "Topraklama direnci ölçümü", "Kaçak akım koruma: açma akımı ve süresi", "Yalıtım direnci ölçümü",
+      "Pano: işaretleme, kapak, kilit, kablo girişleri", "Çevrim (döngü) empedansı"],
+    iskele: ["Taban plakaları ve zemin", "Dikme, yatay ve çapraz bağlantılar", "Korkuluk ve topuk levhası", "Ankraj ve duvar bağlantıları", "Erişim merdivenleri"],
+    diger: ["Koruyucular ve kilitleme düzenleri", "Acil durdurma", "Kumanda elemanları ve işaretler", "Elektrik donanımı: gözle muayene"]
+  };
+  MV.TESTLER = {
+    kaldirma: [{ ad: "Dinamik yük deneyi", birim: "kg", op: ">=", sinir: 1100, not: "%110 × 1.000 kg anma", ornek: "1100" }, { ad: "Statik yük deneyi", birim: "kg", op: ">=", sinir: 1250, not: "%125 × 1.000 kg anma", ornek: "1250" }],
+    basincli: [{ ad: "Hidrostatik deney basıncı", birim: "bar", op: ">=", sinir: 16.5, not: "1,5 × 11 bar çalışma", ornek: "16,5" }, { ad: "Emniyet ventili açma basıncı", birim: "bar", op: "<=", sinir: 11, not: "çalışma basıncı", ornek: "10,8" }],
+    elektrik: [{ ad: "Topraklama direnci", birim: "Ω", op: "<=", sinir: 2, ornek: "0,8" }, { ad: "Yalıtım direnci", birim: "MΩ", op: ">=", sinir: 1, ornek: "240" }, { ad: "RCD açma süresi (30 mA)", birim: "ms", op: "<=", sinir: 300, ornek: "22" }],
+    iskele: [{ ad: "Dikme düşeylik sapması", birim: "mm/m", op: "<=", sinir: 5, ornek: "4" }],
+    diger: [{ ad: "Acil durdurma tepki süresi", birim: "s", op: "<=", sinir: 0.5, ornek: "0,3" }]
+  };
+  MV.kriterler = function (t) { return MV.KRITER[t.g] || MV.KRITER.diger; };
+  MV.testler = function (t) { return MV.TESTLER[t.g] || MV.TESTLER.diger; };
+  MV.sinirYaz = function (x) { return (x.op === "<=" ? "≤ " : "≥ ") + String(x.sinir).replace(".", ",") + " " + x.birim + (x.not ? " (" + x.not + ")" : ""); };
+  /* hafif / ağır kusur yalnız Bakanlık formatı YÜRÜRLÜKTE olan türde (§4.5, Ek-III 1.9.1) */
+  MV.kusurSinifli = function (t) { return !!t.format && t.formatDurum === "zorunlu"; };
   /* kiracı firmanın künyesi (rapor başlığı, §4.2 ve §4.8: akredite kuruluş logosu + ticari ad + TÜRKAK markası) — UYDURMA */
   MV.FIRMA = { ad: "Örnek Muayene ve Kontrol Ltd. Şti.", kisa: "KM", adres: "Örnek Mahallesi Deneme Caddesi No: 1, Gebze / Kocaeli",
     eposta: "rapor@firma.example", akr: "AB-0000-M", nusha: 2 };

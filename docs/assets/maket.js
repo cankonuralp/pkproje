@@ -333,8 +333,8 @@
     { k: "olustu", baslik: "Oluşturuldu", kart: "govde", sira: 4, hucre: function (r) { return '<span class="a-tarih-saat">' + zamanYaz(r.olustu) + "</span>"; } },
     { k: "eylem", baslik: "İşlem", gizliBaslik: true, kart: "eylem", sira: 9, hucre: function (r) {
       var d = r.durum === "taslak" ? ["pencil", "Raporu düzenle"] : ["file-text", "Raporu aç"];
-      return '<div class="a-eylem"><div class="a-eylem-tuslar"><button class="a-tus a-tus-ikincil" type="button" data-eylem="kapsam-disi" data-ne="Saha rapor ekranı">' +
-        ikon(d[0], "a-ikon-kucuk") + d[1] + "</button></div></div>";
+      /* 2026-09-24 (toplu maket M8): saha rapor ekranı maketi geldi — tuş o ekrana gider (numara ve durum adresle taşınır) */
+      return '<div class="a-eylem"><div class="a-eylem-tuslar">' + MK.git({ hedef: "rapor", hash: "#/r/" + r.kod + "?no=" + r.no + "&durum=" + r.durum, ad: d[1], ikon: d[0], ne: "Saha rapor ekranı" }) + "</div></div>";
     } }
   ];
   function listeCiz(on) {   /* yalnız liste, çipler, sayaç ve sayfalayıcı çizilir; arama kutusu yerinde kalır (odak çalınmaz) */
@@ -531,7 +531,7 @@
     if (p && calisir(p) && !raporuVar(p, el.dataset.kod)) {
       var r = { no: raporNo("0926", raporSira++), kod: el.dataset.kod, durum: "taslak", olustu: simdi(), sonuc: null };
       p.rapor.push(r); kaydet(p, simdi(), BEN, "Rapor oluşturuldu", r.no + " · " + r.kod); SZ.r.sayfa = 1;
-      goster(false); MK.bildir("Rapor oluşturuldu: " + r.no + ". Saha rapor ekranı bu maketin kapsamında değil.");
+      goster(false); MK.bildir("Rapor oluşturuldu: " + r.no + ". Satırındaki “Raporu düzenle” saha rapor ekranını açar.");
     }
   };
   X["ekle-ac"] = function (el) { var p = pl(el); if (p && p.durum === "denetimde") ekleAc(p); };

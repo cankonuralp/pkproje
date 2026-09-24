@@ -631,6 +631,45 @@ logoların arasına sıkışıp e-posta ve akreditasyon no bölünüyordu (küny
 yılın şablon sürümüyle gösteriyordu (örnek bugün tarihli yapıldı). Ekipman türü sayfasındaki "Standart kütüphanesi" artık türe göre
 süzülmüş listeye gider (M3 60/60, 14/14 yeniden).
 
+#### Maket M8 — Saha ve Rapor (modül 14) — ONAY BEKLİYOR
+Ekran: **saha rapor ekranı** (`maket/rapor.html#/r/<ekipman kodu>`; Planlar'daki "Raporu düzenle / Raporu aç" buraya gelir). Önce tablet ve
+telefon: bölümler alt alta, Ek-III 1.7 sırasıyla — **1 Genel bilgiler** (işyeri, SGK, İSG-KATİP no, başlangıç, bitiş, sonraki kontrol +
+"değiştir", kontrol metodu seçimi) · **2 Ekipman** (etiket kayıttan, önceki kontrol, kullanım amacı) · **3 Ölçüm aletleri** (zimmetten,
+seçilmez) · **4 Muayene kriterleri** (madde başına "yapıldı mı" + "sonuç", kusur açıklaması) · **5 Test değerleri** (sınırla canlı
+karşılaştırma) · **6 Pano sigortaları** (elektrik: fotoğraftan okuma önerisi) · **7 Fotoğraflar** · **8 Sonuç ve kanaat** (kriterlerden
+öneri) · **9 Notlar**; üstte **"Onaya göndermeden önce"** listesi (eksik başına "Git"), telefonda **"Onaya gönder" altta yapışkan**.
+Durumlar: taslak · geri gönderilmiş (yöneticinin gerekçesi üstte) · onayda (salt okunur).
+**Varsayımlar:**
+- Örnekler Planlar'daki **plan 1'in raporları**, aynı numara ve durumla: ET-1009 (elektrik iç tesisatı, yarıda) · KP-1004 (kaldırma platformu,
+  onaya hazır) · ZV-1007 (zincirli vinç, geri gönderildi) · HT-1001 (onayda). Raporu yazan türün branşından: elektrik **Elif Aydın**, mekanik
+  **Mert Kaya** (Planlar maketinin hareket kaydı hepsini Mert Kaya'ya yazıyor — maket tutarsızlığı, kodda kayıttan gelir).
+- Kriter: **yapıldı / yapılmadı / uygulanamaz** + sonuç: Bakanlık formatı yürürlükteyse **uygun / hafif / ağır**, değilse **uygun / kusurlu**
+  (§4.5). Kusurlu her madde **ayrı açıklama** ister. Maddeler **tek tek** işaretlenir; "hepsi uygun" kısayolu yok (14/A-1-ç).
+- Test değeri sayısal, sınırla karşılaştırılır; **sınır dışı ya da ağır kusur varken "Kullanılabilir" seçilemez**; sonuç önerisi kriterlerden,
+  karar inspector'da.
+- Ölçüm aletleri **zimmetten, türün grubuna uygun olanlar** (soru 58 önerisi); **kalibrasyonu geçmiş cihaz** varsa rapor doldurulur ama
+  onaya gönderilemez (§3), çıkış yolu zimmet ekranı.
+- **Sigorta okuma** (§8.10): "Fotoğraftan oku" → sigortalar **öneri** olarak düşer; okuması **emin olunmayan** satırlar ayrı işaretlenir ve
+  toplu onaya girmez; onaylanmayan değer rapora yazılmaz; elle satır eklenebilir. Makette okuma uydurma 10 satır.
+- **Onaya gönder** eksik varken pasif (Planlar'daki kabul kilidiyle aynı desen); gönderilince bitiş saati yazılır, rapor salt okunur olur ve türün
+  branş yöneticisine gider (mekanik Selin Yıldız, elektrik Can Öztürk). Bildirim yok; yöneticinin Onaylar ekranında görünür (M9).
+- Sonraki kontrol varsayılanı bugün + tür periyodu; değiştirmek **gerekçe** ister, gerekçe raporda görünür (§4.7).
+- Taslak her değişiklikte kaydedilir (makette "son kayıt" satırı); çevrimdışı kuyruk sonraki fazda (§8.1).
+- Planlar maketinde tek değişiklik: rapor satırındaki "Raporu düzenle / aç" tuşu bu ekrana giden bağlantı oldu (görünüş aynı).
+**Sorular (M8):**
+90. Onaya gönderme: eksik varken **tuş pasif + eksik listesi** (öneri) mi, tuş açık ve basınca eksikleri göstermek mi?
+91. Kalibrasyonu geçmiş cihaz kilidi: yalnız **bu gruba uygun** cihaz mı kilitler (öneri), zimmetteki herhangi bir geçmiş cihaz mı? *(soru 58–59 ile bağlı)*
+92. Sigorta okuma: **emin olunmayan satırlar toplu onaya girmesin** (öneri) mi? Okunan pano fotoğrafı rapora ek olarak saklansın mı?
+93. Pano sigortaları bölümü hangi türlerde: **elektrik grubunun tamamı** (makette) mı, yalnız pano ve iç tesisat mı?
+94. Her kusurlu maddeye **ayrı fotoğraf** bağlansın mı?
+95. Sonraki kontrol tarihini değiştirmek: **gerekçe yeter** (öneri) mi, yönetici onayı da mı?
+96. Geri gönderilen raporda yöneticinin gerekçesi üstte kalır; yeniden gönderilince **gerekçe geçmişi** raporda saklansın mı (öneri: evet)?
+97. Sahada bağlantı durumu (çevrimdışı / eşitlendi) ekranda **ayrıca** gösterilsin mi, yoksa "son kayıt" satırı yeter mi?
+**Ölçüm (2026-09-24, bulut):** 10 durum × 1920 · 1080 · 375 × açık/koyu = **60/60 temiz**, çekmece 2/2; etkileşim **15/15** (Planlar'dan
+geçiş dahil). Ölçerken düzeltilen: 375'te üç seçenekli seçim satırı 8 px, "Giderilene kadar kullanılamaz" seçeneği 66 px taşıyordu
+(telefonda seçenek iç boşluğu daraldı; seçenek "Kullanılamaz" oldu, açıklaması altında) · önceki raporun numarası satır sonunda bölünüyordu.
+Planlar (54/54, 15/15) ve M7 (66/66, 12/12; kriter ve test listesi ortak veriye taşındı) yeniden ölçüldü.
+
 ---
 
 ## 4 · Mevzuat bulguları (2026-09-18 araştırması; kaynaklar bölüm 10)
@@ -972,6 +1011,8 @@ revizyon, alan kopyalama, hafif kusur devri, meslek eşleşme denetimi).
 - Emsal ürünler: https://opwire.app/iso-17020-periyodik-kontrol-yazilimi/ · https://17020muayene.vidco.com.tr/ · https://akuple.com/asansor-kontrol-yazilimi/ · https://ensyazilim.com/
 
 ## 11 · Değişiklik günlüğü
+- 2026-09-24 (20): **toplu maket M8 Saha ve Rapor** (§3.6): saha rapor ekranı (kriter, test, sigorta okuma önerisi, fotoğraf, sonuç,
+  onaya gönderme kontrolleri; geri gönderilmiş ve onaydaki hâller); Planlar'daki "Raporu düzenle" bu ekrana bağlandı. Sorular 90–97.
 - 2026-09-24 (19): **toplu maket M7 Standart Kütüphanesi · Rapor şablonu önizlemesi** (§3.6): standart listesi, standart sayfası,
   yükle / yeni sürüm (sürüm geçmişi, rapor kullandığı sürümü saklar); rapor şablonu belge önizlemesi (Ek-III 1.7, alan kaynakları,
   örnek rapor). Sorular 82–89.

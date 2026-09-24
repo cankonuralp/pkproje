@@ -1,0 +1,36 @@
+<!doctype html>
+<html lang="tr">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1">
+<title>Rapor · probata maket</title>
+<meta name="robots" content="noindex">
+<link rel="icon" href="../marka/favicon.svg" type="image/svg+xml">
+<script src="../assets/maket-tema.js"></script>
+<link rel="stylesheet" href="../assets/tokens.css">
+<link rel="stylesheet" href="../assets/maket.css">
+</head>
+<body>
+<!-- MAKET M8 · Saha ve Rapor (modül 14) — ONAY BEKLİYOR. Önce tablet ve telefon; masaüstünde aynı ekran.
+     Adres: #/r/<ekipman kodu> (plan 1 raporları: ET-1009 taslak · KP-1004 onaya hazır · ZV-1007 geri gönderildi · HT-1001 onayda)
+            Planlar'dan gelinirken ?no=<rapor no>&durum=<durum> taşınır. -->
+<main class="a-icerik" id="a-icerik">
+  <div id="a-rapor"></div>
+</main>
+
+<!-- pencere: sigorta satırı düzelt/ekle · sonraki kontrol tarihini değiştir (içerik maket-rapor.js) -->
+<dialog class="a-pencere a-pencere-form" id="a-pencere" aria-labelledby="a-pencere-baslik">
+  <div class="a-pencere-bas">
+    <h2 id="a-pencere-baslik"></h2>
+    <button class="a-ikon-tus" type="button" data-eylem="pencere-kapat" aria-label="Kapat">
+      <svg class="a-ikon" aria-hidden="true"><use href="../vendor/lucide-1.47.0/ikonlar.svg#i-x"/></svg>
+    </button>
+  </div>
+  <div class="a-pencere-govde" id="a-pencere-govde"></div>
+  <div class="a-pencere-alt" id="a-pencere-alt"></div>
+</dialog>
+<script src="../assets/maket-ortak.js"></script>
+<script src="../assets/maket-veri.js"></script>
+<script src="../assets/maket-rapor.js"></script>
+</body>
+</html>

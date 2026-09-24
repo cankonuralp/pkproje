@@ -732,6 +732,22 @@ a.a-yuz:hover { border-color: var(--kenar-alan); background: var(--zemin); }
 }
 .a-belge-alt { display: flex; justify-content: space-between; flex-wrap: wrap; gap: 8px; margin-top: 16px; padding-top: 8px; border-top: 1px solid var(--kenar); color: var(--yazi2); font-size: var(--boy-etiket); }
 
+/* M8 — saha raporu: bölümler alt alta; kriter satırı = madde + iki bölümlü seçim (yapıldı mı · sonuç). Seçim, ekle penceresindeki
+   a-sekmeler ailesi (ikinci aile yok); sonuç seçiminin basılı hâli durum rengini taşır (şeritlerle aynı renk çiftleri). */
+.a-bolum-rapor { margin: 0 0 16px; }
+.a-kriter { display: grid; gap: 8px; padding: 12px 0; border-top: 1px solid var(--kenar); }
+.a-kriter-ad { display: flex; gap: 8px; margin: 0; font-weight: 600; }
+.a-kriter-no { flex: none; min-width: 20px; color: var(--yazi2); font-variant-numeric: tabular-nums; }
+.a-kriter-cevap { display: flex; flex-wrap: wrap; align-items: center; gap: 8px 12px; }
+.a-kriter-cevap .a-sekmeler { margin: 0; }
+.a-sekme-onay[aria-pressed="true"] { background: var(--onay-zemin); color: var(--onay-yazi); }
+.a-sekme-uyari[aria-pressed="true"] { background: var(--uyari-zemin); color: var(--uyari-yazi); }
+.a-sekme-hata[aria-pressed="true"] { background: var(--hata-zemin); color: var(--hata-yazi); }
+.a-sekme:disabled { cursor: default; }
+.a-kosullar .a-serit-tus { margin-left: auto; }
+.a-tablo-sigorta .a-k-no { width: 30%; } .a-tablo-sigorta .a-k-deger { width: 14%; } .a-tablo-sigorta .a-k-kutup { width: 10%; }
+.a-tablo-sigorta .a-k-rcd { width: 14%; } .a-tablo-sigorta .a-k-durum { width: 14%; } .a-tablo-sigorta .a-k-eylem { width: 18%; }
+
 /* ══ BANTLAR — taban kuralların ARDINDA (anayasa 3.2) ══════════════════════════════════════════════════ */
 
 /* orta + dar (< 1280): yan menü çekmece, üst çubukta ☰ + işaret */
@@ -831,6 +847,9 @@ a.a-yuz:hover { border-color: var(--kenar-alan); background: var(--zemin); }
   .a-belge-bas { flex-wrap: wrap; justify-content: space-between; gap: 10px; }
   .a-belge-logo { width: 84px; }
   .a-belge-kunye { order: 3; flex-basis: 100%; }
+  /* saha raporu telefonda: iki seçim alt alta, her biri tam satır (başparmak hedefi 44) */
+  .a-kriter-cevap .a-sekmeler { flex: 1 1 100%; }
+  .a-kriter-cevap .a-sekme { padding: 0 8px; }
 }
 
 /* kap < ESİK: aynı tablo KARTA döner (tek üretici; anayasa 3.3 kap sorgusu). Kartta yerleşim sütunun `data-kart`

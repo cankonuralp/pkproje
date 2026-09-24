@@ -133,6 +133,18 @@ export const DURUMLAR = {
     { ad: "şablon · örnek rapor (elektrik iç tesisatı, zorunlu format)", sayfa: "maket/sablon.html", hash: "#/ET/ornek" },
     { ad: "şablon · şablonu olmayan tür", sayfa: "maket/sablon.html", hash: "#/BK" },
   ] },
+  m8: { sayfa: "maket/rapor.html", durumlar: [
+    { ad: "elektrik raporu yarıda · kalibrasyonu geçmiş cihaz", hash: "#/r/ET-1009" },
+    { ad: "pano sigortaları okundu (öneri + emin değil)", hash: "#/r/ET-1009", adim: [["tikla", '[data-eylem="sigorta-oku"]']] },
+    { ad: "sigorta kontrol penceresi (emin değil)", hash: "#/r/ET-1009", adim: [["tikla", '[data-eylem="sigorta-oku"]'], ["tikla", '[data-eylem="sigorta-ac"][data-no="F4"]']] },
+    { ad: "ağır kusur + sonuç kuralı", hash: "#/r/ET-1009", adim: [["tikla", '[data-segmen="d3"][data-deger="yapildi"]'], ["tikla", '[data-segmen="s3"][data-deger="agir"]'], ["tikla", '[data-segmen="sonuc"][data-deger="kullanilir"]']] },
+    { ad: "mekanik raporu onaya hazır", hash: "#/r/KP-1004" },
+    { ad: "onaya gönderildi (salt okunur)", hash: "#/r/KP-1004", adim: [["tikla", '[data-eylem="onaya-gonder"]']] },
+    { ad: "geri gönderilmiş rapor", hash: "#/r/ZV-1007" },
+    { ad: "onaydaki rapor", hash: "#/r/HT-1001" },
+    { ad: "sonraki kontrol penceresi · gerekçesiz", hash: "#/r/KP-1004", adim: [["tikla", '[data-eylem="sonraki-ac"]'], ["yaz", "#w-tarih", "23.03.2027"], ["tikla", '[data-eylem="pencere-kaydet"]']] },
+    { ad: "raporu olmayan ekipman", hash: "#/r/YK-1011" },
+  ] },
 };
 
 /* ── ETKİLEŞİM DENEMELERİ (--etkilesim): adımlar koşar, sonra `bekle` ifadesi sayfada doğru dönmeli. Gen verilmezse 1920. ── */
@@ -246,6 +258,23 @@ export const DENEMELER = {
     { ad: "şablon: tür değişir (seçim alanı)", sayfa: "maket/sablon.html", hash: "#/HT", adim: [["tikla", "#s-tur"], ["tikla", '[data-secim="s-tur"][data-deger="ET"]']], bekle: 'location.hash === "#/ET" && /Elektrik iç tesisatı/.test(document.querySelector("h1").textContent) && /ZPKR02/.test(document.querySelector(".a-belge").textContent)' },
     { ad: "şablon: alanların kaynağı yazılı, örnekte değer", sayfa: "maket/sablon.html", hash: "#/HT", adim: [["tikla", 'a.a-sekme[href="#/HT/ornek"]']], bekle: 'location.hash === "#/HT/ornek" && !document.querySelector(".a-belge-kaynak") && /S-2026-0412/.test(document.querySelector(".a-belge").textContent)' },
     { ad: "şablonu olmayan tür: boş durum", sayfa: "maket/sablon.html", hash: "#/BK", bekle: '!document.querySelector(".a-belge") && /rapor açılamaz/.test(document.querySelector("#a-sablon").textContent)' },
+  ],
+  m8: [
+    { ad: "kriter cevaplanınca sayaç güncellenir, odak basılan seçimde", hash: "#/r/ET-1009", adim: [["tikla", '[data-segmen="d3"][data-deger="yapildi"]'], ["tikla", '[data-segmen="s3"][data-deger="uygun"]']], bekle: '/^4 \\/ 6/.test(document.querySelector("#r-kriter-say").textContent) && document.activeElement.dataset.segmen === "s3"' },
+    { ad: "yapılmadı seçilince sonuç sorulmaz", hash: "#/r/ET-1009", adim: [["tikla", '[data-segmen="d4"][data-deger="yapilmadi"]']], bekle: '!document.querySelector(\'[data-segmen="s4"]\') && /^4 \\/ 6/.test(document.querySelector("#r-kriter-say").textContent)' },
+    { ad: "hafif kusurda açıklama istenir", hash: "#/r/ET-1009", adim: [["tikla", '[data-segmen="d3"][data-deger="yapildi"]'], ["tikla", '[data-segmen="s3"][data-deger="hafif"]']], bekle: '!!document.querySelector("#r-kn3") && /kusurun açıklaması yazılmadı/.test(document.querySelector("#r-kontrol").textContent)' },
+    { ad: "sınır dışı test değeri: işaretlenir, öneri kullanılamaz (odak yerinde)", hash: "#/r/ET-1009", adim: [["yaz", "#r-t1", "0,5"]], bekle: 'document.querySelector("#r-t1").getAttribute("aria-invalid") === "true" && /kullanılamaz/.test(document.querySelector("#r-oneri").textContent) && document.activeElement.id === "r-t1"' },
+    { ad: "sigortalar okunur: 10 satır, emin olunmayan 2 toplu onaya girmez", hash: "#/r/ET-1009", adim: [["tikla", '[data-eylem="sigorta-oku"]']], bekle: 'document.querySelectorAll(".a-tablo-sigorta tbody tr").length === 10 && /Önerileri onayla \\(8\\)/.test(document.querySelector("#r-b6").textContent)' },
+    { ad: "emin olunmayan satır düzeltilince onaylanır", hash: "#/r/ET-1009", adim: [["tikla", '[data-eylem="sigorta-oku"]'], ["tikla", '[data-eylem="sigorta-ac"][data-no="F4"]'], ["yaz", "#w-akim", "20"], ["tikla", '[data-eylem="pencere-kaydet"]']], bekle: '!document.querySelector("#a-pencere").open && [...document.querySelectorAll(".a-tablo-sigorta tbody tr")].some(tr => /F4/.test(tr.textContent) && /C20/.test(tr.textContent) && /Onaylı/.test(tr.textContent))' },
+    { ad: "kalibrasyonu geçmiş cihaz: gönder kapalı, sebebi yazılı", hash: "#/r/ET-1009", bekle: 'document.querySelector(\'[data-eylem="onaya-gonder"]\').disabled && /OC-003/.test(document.querySelector("#r-kontrol").textContent)' },
+    { ad: "ağır kusurda Kullanılabilir seçilemez", hash: "#/r/ET-1009", adim: [["tikla", '[data-segmen="d3"][data-deger="yapildi"]'], ["tikla", '[data-segmen="s3"][data-deger="agir"]'], ["tikla", '[data-segmen="sonuc"][data-deger="kullanilir"]']], bekle: '/Kullanılabilir. seçilemez/.test(document.querySelector("#r-kontrol").textContent)' },
+    { ad: "onaya gönderilir → Onayda, salt okunur, yönetici adı", hash: "#/r/KP-1004", adim: [["tikla", '[data-eylem="onaya-gonder"]']], bekle: '/Onayda/.test(document.querySelector(".a-nesne-baslik").textContent) && document.querySelector("[data-segmen]").disabled && /Selin Yıldız/.test(document.querySelector("#a-bildirim-metin").textContent)' },
+    { ad: "geri gönderilen rapor: test girilince hazır", hash: "#/r/ZV-1007", adim: [["yaz", "#r-t0", "1100"], ["yaz", "#r-t1", "1250"]], bekle: 'document.querySelector("#r-eksik-say").textContent === "Hazır" && !document.querySelector(\'[data-eylem="onaya-gonder"]\').disabled' },
+    { ad: "sonraki kontrol: gerekçesiz kaydedilmez", hash: "#/r/KP-1004", adim: [["tikla", '[data-eylem="sonraki-ac"]'], ["yaz", "#w-tarih", "23.03.2027"], ["tikla", '[data-eylem="pencere-kaydet"]']], bekle: '/gerekçe ister/.test(document.querySelector("#w-gerekce-ipucu").textContent) && document.activeElement.id === "w-gerekce"' },
+    { ad: "sonraki kontrol gerekçeyle değişir", hash: "#/r/KP-1004", adim: [["tikla", '[data-eylem="sonraki-ac"]'], ["yaz", "#w-tarih", "23.03.2027"], ["yaz", "#w-gerekce", "Üretici altı ayda bir kontrol istiyor"], ["tikla", '[data-eylem="pencere-kaydet"]']], bekle: '/23 Mar 2027/.test(document.querySelector("#r-b1").textContent) && /değiştirildi/.test(document.querySelector("#r-b1").textContent)' },
+    { ad: "Git: bölüme kayar, başlığa odaklanır", hash: "#/r/ET-1009", adim: [["tikla", '[data-eylem="bolume-git"][data-hedef="r-b8"]']], bekle: 'document.activeElement.id === "r-b8-b"' },
+    { ad: "telefonda Onaya gönder altta yapışkan", gen: 375, hash: "#/r/ET-1009", bekle: 'getComputedStyle(document.querySelector(".a-form-eylem")).position === "sticky"' },
+    { ad: "Planlar'dan Raporu düzenle → saha rapor ekranı", sayfa: "maket/planlarim.html", hash: "#/plan/1", adim: [["tikla", '#a-liste-r a[href*="#/r/ET-1009"]']], bekle: '/rapor\\.html$/.test(location.pathname) && /ET-1009/.test(document.querySelector("h1") ? document.querySelector("h1").textContent : "")' },
   ],
   m6: [
     { ad: "tesisten gelince: tarih sonraki kontrol, 6 / 6 seçili", hash: "#/?tesis=t2", bekle: 'document.querySelector("#p-tarih").value === "14.10.2026" && /^6 \\/ 6 kayıtlı seçili/.test(document.querySelector("#p-secili").textContent)' },

@@ -8,24 +8,7 @@
   "use strict";
   var $ = MK.$, kacis = MK.kacis, ikon = MK.ikon, rozet = MK.rozet, bilgi = MK.bilgi;
   var FORMAT = { zorunlu: "Bakanlık formatı (zorunlu)", taslak: "Bakanlık formatı taslak — firma formatı" };
-  /* kontrol kriterleri (Ek-III 1.7.5) — grup başına ÖRNEK madde listesi; gerçek şablonda tür ve format başına kodda yazılır */
-  var KRITER = {
-    kaldirma: ["Taşıyıcı konstrüksiyon: çatlak, deformasyon, korozyon", "Kaldırma elemanları (zincir, halat, çatal): aşınma ve uzama", "Kanca ve emniyet mandalı",
-      "Frenler: fonksiyon deneyi", "Sınır anahtarları ve acil durdurma", "Yük diyagramı, etiket ve uyarı işaretleri", "Yük deneyi (dinamik ve statik)"],
-    basincli: ["Gövde ve kaynaklar: gözle muayene (korozyon, ezik)", "Emniyet ventili: ayar basıncı ve fonksiyon", "Manometre: okunabilirlik ve kalibrasyon işareti",
-      "Tahliye düzeni", "Etiket plakası ve izlenebilirlik", "Hidrostatik deney (deney basıncı)"],
-    elektrik: ["Koruma iletkeni sürekliliği", "Topraklama direnci ölçümü", "Kaçak akım koruma: açma akımı ve süresi", "Yalıtım direnci ölçümü",
-      "Pano: işaretleme, kapak, kilit, kablo girişleri", "Çevrim (döngü) empedansı"],
-    iskele: ["Taban plakaları ve zemin", "Dikme, yatay ve çapraz bağlantılar", "Korkuluk ve topuk levhası", "Ankraj ve duvar bağlantıları", "Erişim merdivenleri"],
-    diger: ["Koruyucular ve kilitleme düzenleri", "Acil durdurma", "Kumanda elemanları ve işaretler", "Elektrik donanımı: gözle muayene"]
-  };
-  var TEST = {
-    kaldirma: [["Dinamik yük deneyi", "1.100 kg", "≥ %110 anma yükü"], ["Statik yük deneyi", "1.250 kg", "≥ %125 anma yükü"]],
-    basincli: [["Hidrostatik deney basıncı", "16,5 bar", "≥ 1,5 × çalışma basıncı"], ["Emniyet ventili açma basıncı", "10,8 bar", "≤ 11 bar"]],
-    elektrik: [["Topraklama direnci", "0,8 Ω", "≤ 2 Ω"], ["Yalıtım direnci", "240 MΩ", "≥ 1 MΩ"], ["RCD açma süresi (30 mA)", "22 ms", "≤ 300 ms"]],
-    iskele: [["Dikme düşeylik sapması", "4 mm/m", "≤ 5 mm/m"]],
-    diger: [["Acil durdurma tepki süresi", "0,3 s", "≤ 0,5 s"]]
-  };
+  /* kriter ve test listesi ortak veriden (MV.KRITER, MV.TESTLER; M8 saha raporuyla tek kaynak) */
   var kaynak = function (k) { return '<span class="a-belge-kaynak">' + ikon("arrow-left", "a-ikon-kucuk") + k + "</span>"; };
   var bos = '<span class="a-deger-yok">—</span>';
 
@@ -42,15 +25,15 @@
     var ts = MV.tesis(e.tesis), m = MV.musteri(ts.m), p = MV.kisi(e.onceki.kisi), isg = MV.isgTesis(ts.id).filter(function (x) { return x.k === p.id; })[0];
     var cihaz = MV.VARLIKLAR.filter(function (v) { return v.tur === "cihaz" && MV.kimde(v.id) === p.id && MV.cihazTuru(v.cihazTur).g.indexOf(t.g) >= 0; });
     var s = new Date(MK.BUGUN + "T12:00:00"); s.setMonth(s.getMonth() + t.periyot);
-    return { e: e, ts: ts, m: m, p: p, isg: isg, cihaz: cihaz, tarih: MK.BUGUN, sonraki: s.toISOString().slice(0, 10), no: MV.raporNo("0926", 790 + MV.KATALOG.indexOf(t)) };
+    return { e: e, ts: ts, m: m, p: p, isg: isg, cihaz: cihaz, tarih: MK.BUGUN, sonraki: s.toISOString().slice(0, 10), no: MV.raporNo("0926", 900 + MV.KATALOG.indexOf(t)) };
   }
   function belge(t, o) {
-    var f = MV.FIRMA, std = t.std.map(MV.standart), zorunlu = t.format && t.formatDurum === "zorunlu", grup = MV.grup(t.g);
+    var f = MV.FIRMA, std = t.std.map(MV.standart), zorunlu = MV.kusurSinifli(t), grup = MV.grup(t.g);
     var d = function (deger, kay) { return o ? deger : bos + kaynak(kay); };
     var sonraki = o ? o.sonraki : null, hafif = o && /Hafif/.test(o.e.onceki.sonuc), kusurlu = o && /^Kusurlu/.test(o.e.onceki.sonuc);
     /* hafif / ağır yalnız Bakanlık formatı yürürlükte olan türde (§4.5, Ek-III 1.9.1); öteki türde "Kusurlu" */
     var hafifAd = zorunlu ? "Hafif kusur" : "Kusurlu", agirAd = zorunlu ? "Ağır kusur" : "Kusurlu";
-    var kriter = KRITER[t.g] || KRITER.diger, test = TEST[t.g] || TEST.diger;
+    var kriter = MV.kriterler(t), test = MV.testler(t);
     var formKod = zorunlu ? t.format : f.kisa + "-FR-" + t.k + "-" + t.sablon.split(" · ")[0].slice(1);
     return '<article class="a-belge" aria-label="Rapor önizlemesi">' +
       '<header class="a-belge-bas"><div class="a-belge-logo" role="img" aria-label="Firma logosu yeri">Logo</div>' +
@@ -76,7 +59,7 @@
         bilgi("Marka / model", d(o && kacis(o.e.marka + " " + o.e.model), "ekipman etiketi")) + bilgi("İmal yılı", d(o && o.e.imal, "ekipman etiketi")) +
         bilgi("Seri no", d(o && '<span class="a-kod">' + o.e.seri + "</span>", "ekipman etiketi")) + bilgi("Kullanım yeri", d(o && kacis(o.e.konum), "ekipman konumu")) +
         bilgi("Kullanım amacı", d(o && "Üretim ve sevkiyat", "saha")) + "</dl>") +
-      bolum("3", "Test değerleri", "Ek-III 1.7.3", tablo(["Ölçüm", "Değer", "Sınır"], test.map(function (x) { return [x[0], o ? x[1] : bos, x[2]]; }), o ? "" : "saha: inspector ölçer")) +
+      bolum("3", "Test değerleri", "Ek-III 1.7.3", tablo(["Ölçüm", "Değer", "Sınır"], test.map(function (x) { return [x.ad, o ? x.ornek + " " + x.birim : bos, MV.sinirYaz(x)]; }), o ? "" : "saha: inspector ölçer")) +
       bolum("4", "Ölçüm aletleri", "Ek-III 1.7.4", o ? tablo(["Cihaz", "Seri no", "Kalibrasyon geçerlilik"], o.cihaz.length ? o.cihaz.map(function (v) { return [kacis(v.ad + " " + v.env), '<span class="a-kod">' + v.seri + "</span>", MK.tarihYaz(v.bitis)]; }) : [[bos, bos, bos]])
         : '<p class="a-bolum-aciklama">' + kaynak("inspector'ın zimmetindeki, bu grup için uygun cihazlar otomatik gelir (seçilmez)") + "</p>") +
       bolum("5", "Muayene kriterleri ve testler", "Ek-III 1.7.5", tablo(["No", "Kriter", "Yapıldı", "Sonuç"], kriter.map(function (k, i) {
