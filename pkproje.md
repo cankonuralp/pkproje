@@ -882,6 +882,33 @@ gün başı, kazanç, geri gönderilen, son rapor; sütundan sıralanır; görü
 sütun sıralama, görünüm, arama, kişiye geçiş, dönemin korunması, menüden açılış). Planlar ("hazır olmayan modül" artık Eğitimler) 15/15,
 M14 14/14 yeniden.
 
+#### Maket M16 — Eğitim Takibi (modül 10, faz 2) — ONAY BEKLİYOR
+Ekran: **Eğitimler** (`maket/egitimler.html`, Ayşe Demir, firma yöneticisi): iki sekme — **Kayıtlar** (personel, eğitim + veren, alındı,
+tekrar + kalan gün, belge, durum; çipler: tekrarı geçti · 60 gün içinde · geçerli · belgesi yok; seçiciler: kişi, eğitim, görünüm güncel /
+önceki / hepsi; tekrarı geçen ve yaklaşan şeridi; 20'şer sayfa) · **Eğitim türleri** (tür, tekrar süresi, kişi sayısı, tekrarı yaklaşan;
+türe süzülü kayıtlara gider) · **kayıt penceresi** (ayrıntı, sertifika, aynı eğitimin öteki kayıtları, "Tekrarı kaydet") · **kayıt ekle**
+penceresi (personel, eğitim, tarih → tekrar tarihi türden, veren, sertifika).
+**Varsayımlar:**
+- Kayıt = kişi × eğitim türü × tarih; **tekrar tarihi = tarih + türün tekrar süresi**. Kişi × tür için **tek güncel kayıt**; tekrar
+  kaydedilince eskisi "önceki kayıt" olur (İSG-KATİP'teki görünüm deseni: güncel / önceki / hepsi).
+- Durum: tekrarı geçti · 60 gün içinde · geçerli — Uyarılar (M10) ile aynı eşik; yalnız ekranda (anayasa 1.3).
+- Sertifika PDF **isteğe bağlı** ("Belgesi yok" çipi); yalnız firma içinde, kısa ömürlü bağlantı. Veren: firma içi / dış kurum.
+- Eğitim adları ve tekrar süreleri **örnek** (mevzuat karşılığı doğrulanmadı); türlerin düzenlenmesi makette yok.
+- Personel kartındaki eğitim yüzü ve Uyarılar'daki eğitim satırı bu ekranı **kişiye süzülü** açar (M1 ve M10 yeniden ölçüldü).
+- Bütün modüllerin maketi hazır: Planlar'daki "hazır olmayan modül" denemesi "menüdeki 17 modülün hepsi maketi açar" oldu.
+**Sorular (M16):**
+152. Eğitim kaydını **kim girer**: yönetici (makette) mi; personel kendi eğitimini belgesiyle girip yönetici **onaylasın** mı?
+153. Eğitim türleri ve **tekrar süreleri** (makette örnek: temel İSG 12 ay, yüksekte çalışma 12, ilk yardım 36, 17020 bilgilendirme 24,
+     elektrikte güvenli çalışma 12, yangın 12): firmanın gerçek listesi nedir; süreler kodda mı, firma ayarı mı?
+154. **Kim hangi eğitimi almalı** (rol / meslek / branş başına zorunlu eğitim) tanımlansın mı; eksik zorunlu eğitim listede ayrıca görünsün mü?
+155. Sertifika **zorunlu** mu (makette isteğe bağlı)?
+156. Tekrar eşiği **60 gün** (makette, M10 ile aynı) uygun mu; tür başına farklı olsun mu?
+157. Tekrarı geçen eğitim **plan kabulünü engellesin** mi (makette yalnız uyarı; §3.2 madde 2'deki koşullara eklenir)?
+158. Bakanlık **yetkili kişi eğitimi** belgesi personel kartında (M1) kalsın mı, burada eğitim türü olarak da izlensin mi?
+**Ölçüm (2026-09-24, bulut):** 6 durum × 1920 · 1080 · 375 × açık/koyu = **36/36 temiz**, çekmece 2/2; etkileşim **10/10** (personel
+kartından ve Uyarılar'dan geçiş, tekrarı kaydet → önceki kayıt, ileri tarih reddi, türden tekrar tarihi, türe süzme). M1 108/108 + 17/17,
+M10 30/30 + 6/6, Planlar 15/15 yeniden. **Faz 2 maketleri bitti.**
+
 ---
 
 ## 4 · Mevzuat bulguları (2026-09-18 araştırması; kaynaklar bölüm 10)
@@ -1223,6 +1250,9 @@ revizyon, alan kopyalama, hafif kusur devri, meslek eşleşme denetimi).
 - Emsal ürünler: https://opwire.app/iso-17020-periyodik-kontrol-yazilimi/ · https://17020muayene.vidco.com.tr/ · https://akuple.com/asansor-kontrol-yazilimi/ · https://ensyazilim.com/
 
 ## 11 · Değişiklik günlüğü
+- 2026-09-24 (28): **toplu maket M16 Eğitimler** (§3.6, faz 2): kayıtlar (tekrar durumu, belge, görünüm güncel/önceki), eğitim türleri,
+  kayıt ve kayıt ekle / tekrarı kaydet pencereleri; personel kartı ve Uyarılar buraya kişiye süzülü bağlanır. Sorular 152–158.
+  **M1–M16 bitti**; sırada toplu bakış sayfası.
 - 2026-09-24 (27): **toplu maket M15 Performans** (§3.6, faz 2): pano (dönem + branş anahtarı, yüzler, gün başı rapor ve kazanç grafiği,
   personel başına kazanç, personel tablosu) ve kişi sayfası (günlük iş); sayılar raporlardan, kazanç birim fiyattan. Sorular 144–151.
 - 2026-09-24 (26): **toplu maket M14 Muhasebe** (§3.6, faz 2): işler (plan başına) ve faturalar, iş sayfası (rapor × birim fiyat × fatura),

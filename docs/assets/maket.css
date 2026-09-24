@@ -824,6 +824,11 @@ a.a-yuz:hover { border-color: var(--kenar-alan); background: var(--zemin); }
 .a-tablo-gunluk .a-k-gun { width: 18%; } .a-tablo-gunluk .a-k-is { width: 34%; } .a-tablo-gunluk .a-k-rapor { width: 12%; }
 .a-tablo-gunluk .a-k-kazanc { width: 18%; } .a-tablo-gunluk .a-k-durum { width: 18%; }
 
+/* M16 — eğitim kayıtları ve eğitim türleri */
+.a-tablo-egitim .a-k-kisi { width: 20%; } .a-tablo-egitim .a-k-egitim { width: 26%; } .a-tablo-egitim .a-k-tarih { width: 12%; }
+.a-tablo-egitim .a-k-tekrar { width: 16%; } .a-tablo-egitim .a-k-belge { width: 10%; } .a-tablo-egitim .a-k-durum { width: 16%; }
+.a-tablo-egitimtur .a-k-ad { width: 40%; } .a-tablo-egitimtur .a-k-tekrar { width: 20%; } .a-tablo-egitimtur .a-k-kisi { width: 16%; } .a-tablo-egitimtur .a-k-durum { width: 24%; }
+
 /* ══ BANTLAR — taban kuralların ARDINDA (anayasa 3.2) ══════════════════════════════════════════════════ */
 
 /* orta + dar (< 1280): yan menü çekmece, üst çubukta ☰ + işaret */
@@ -981,17 +986,19 @@ a.a-yuz:hover { border-color: var(--kenar-alan); background: var(--zemin); }
   .a-tablo-uyari td[data-kart="govde"], .a-tablo-issoz td[data-kart="govde"]:has(.a-kart-etiket),
   .a-tablo-iskapsam td[data-kart="govde"], .a-tablo-is td[data-kart="govde"]:has(.a-kart-etiket), .a-tablo-fatura td[data-kart="govde"]:has(.a-kart-etiket),
   .a-tablo-isfatura td[data-kart="govde"], .a-tablo-israpor td[data-kart="govde"]:has(.a-kart-etiket), .a-tablo-tahsilat td[data-kart="govde"],
-  .a-tablo-fkalem td[data-kart="govde"], .a-tablo-perf td[data-kart="govde"], .a-tablo-gunluk td[data-kart="govde"]:has(.a-kart-etiket) { display: flex; align-items: center; justify-content: space-between; gap: 8px; }
+  .a-tablo-fkalem td[data-kart="govde"], .a-tablo-perf td[data-kart="govde"], .a-tablo-gunluk td[data-kart="govde"]:has(.a-kart-etiket),
+  .a-tablo-egitim td[data-kart="govde"]:has(.a-kart-etiket), .a-tablo-egitimtur td[data-kart="govde"] { display: flex; align-items: center; justify-content: space-between; gap: 8px; }
   .a-tablo-matris .a-kart-etiket, .a-tablo-yetkinlik .a-kart-etiket, .a-tablo-isgkayit .a-kart-etiket,
   .a-tablo-planekp .a-kart-etiket, .a-tablo-aday .a-kart-etiket, .a-tablo-kapsamozet .a-kart-etiket, .a-tablo-uyari .a-kart-etiket,
   .a-tablo-issoz .a-kart-etiket, .a-tablo-iskapsam .a-kart-etiket, .a-tablo-is .a-kart-etiket, .a-tablo-fatura .a-kart-etiket,
   .a-tablo-isfatura .a-kart-etiket, .a-tablo-israpor .a-kart-etiket, .a-tablo-tahsilat .a-kart-etiket, .a-tablo-fkalem .a-kart-etiket,
-  .a-tablo-perf .a-kart-etiket, .a-tablo-gunluk .a-kart-etiket { display: inline; }
+  .a-tablo-perf .a-kart-etiket, .a-tablo-gunluk .a-kart-etiket, .a-tablo-egitim .a-kart-etiket, .a-tablo-egitimtur .a-kart-etiket { display: inline; }
   .a-tablo-isgkayit td[data-kart="govde"], .a-tablo-planekp td[data-kart="govde"], .a-tablo-aday td[data-kart="govde"],
   .a-tablo-kapsamozet td[data-kart="govde"], .a-tablo-uyari td[data-kart="govde"], .a-tablo-issoz td[data-kart="govde"]:has(.a-kart-etiket),
   .a-tablo-iskapsam td[data-kart="govde"], .a-tablo-is td[data-kart="govde"]:has(.a-kart-etiket), .a-tablo-fatura td[data-kart="govde"]:has(.a-kart-etiket),
   .a-tablo-isfatura td[data-kart="govde"], .a-tablo-israpor td[data-kart="govde"]:has(.a-kart-etiket), .a-tablo-tahsilat td[data-kart="govde"],
-  .a-tablo-fkalem td[data-kart="govde"], .a-tablo-perf td[data-kart="govde"], .a-tablo-gunluk td[data-kart="govde"]:has(.a-kart-etiket) { text-align: right; }   /* değerin ikinci satırı (ör. "kontrol 25 Eyl") değere hizalı */
+  .a-tablo-fkalem td[data-kart="govde"], .a-tablo-perf td[data-kart="govde"], .a-tablo-gunluk td[data-kart="govde"]:has(.a-kart-etiket),
+  .a-tablo-egitim td[data-kart="govde"]:has(.a-kart-etiket), .a-tablo-egitimtur td[data-kart="govde"] { text-align: right; }   /* değerin ikinci satırı (ör. "kontrol 25 Eyl") değere hizalı */
 }
 
 /* ══ DARALTILMIŞ YAN MENÜ — yalnız geniş bant (reisim 2026-09-23: "sol taraf açılıp kapanabilir olsun kapatılınca sadece

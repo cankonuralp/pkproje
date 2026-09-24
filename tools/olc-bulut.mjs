@@ -216,6 +216,14 @@ export const DURUMLAR = {
     { ad: "kişi · Hakan Polat, geçen yıl", hash: "#/p/hp", adim: [["tikla", '[data-donem="gecen"]']] },
     { ad: "kişi · bu ay raporu yok", hash: "#/p/bs" },
   ] },
+  m16: { sayfa: "maket/egitimler.html", durumlar: [
+    { ad: "kayıtlar · liste, tekrarı geçen şeridi", hash: "#/" },
+    { ad: "kayıtlar · kişiye süzülü (personel kartından)", hash: "#/?kisi=mk" },
+    { ad: "eğitim türleri", hash: "#/turler" },
+    { ad: "kayıt penceresi · tekrarı geçti", hash: "#/k/g31" },
+    { ad: "kayıt ekle · boş gönderildi", hash: "#/yeni", adim: [["tikla", '[data-eylem="kaydet"]']] },
+    { ad: "tekrarı kaydet · güncel kayıt uyarısı, sertifika seçildi", hash: "#/yeni?kisi=mk&tur=isg", adim: [["tikla", '[data-eylem="dosya-sec"]']] },
+  ] },
 };
 
 /* ── ETKİLEŞİM DENEMELERİ (--etkilesim): adımlar koşar, sonra `bekle` ifadesi sayfada doğru dönmeli. Gen verilmezse 1920. ── */
@@ -234,8 +242,9 @@ export const DENEMELER = {
     { ad: "reddet: gerekçesiz gönderilmez, gerekçeyle reddedilir", hash: "#/plan/3", adim: [["tikla", '#a-plan .a-adim-tuslar [data-eylem="reddet"]'], ["yaz", "#a-red-gerekce", "Aynı gün başka denetim"], ["tikla", "#a-red-onay"]], bekle: '/Reddedildi/.test(document.querySelector("#a-plan .a-nesne-baslik").textContent)' },
     { ad: "ekipman ekle: çakışan kod kaydedilmez", hash: "#/plan/1/ekle", adim: [["yaz", "#a-ekle-kod", "ht-1001"]], bekle: 'document.querySelector("#a-ekle-kod").value === "HT-1001" && document.querySelector(\'[data-eylem="yeni-kaydet"]\').disabled' },
     { ad: "ekipman ekle: yeni kod + tür → plana eklenir", hash: "#/plan/1", adim: [["tikla", '[data-eylem="ekle-ac"]'], ["yaz", "#a-ekle-kod", "ZZ-9001"], ["tikla", "#a-ekle-tur"], ["tikla", '[data-tur="FL"]'], ["tikla", '[data-eylem="yeni-kaydet"]']], bekle: '!document.querySelector("#a-ekle-pencere").open && [...document.querySelectorAll("#a-liste-e .a-kod")].some(e => e.textContent === "ZZ-9001")' },
-    /* 2026-09-24 (M15): Performans maketi geldi → denemede hâlâ maketi olmayan bir modül (Eğitimler, M16) */
-    { ad: "menüden hazır olmayan modül → bildirim", hash: "#/", adim: [["tikla", '#a-menu [data-ne="Eğitimler"]']], bekle: '/henüz tasarlanmadı/.test(document.querySelector("#a-bildirim-metin").textContent)' },
+    /* 2026-09-24 (M16): bütün modüllerin maketi geldi → "hazır olmayan modül" denemesi yerine: menüdeki 17 modülün hepsi maket sayfasına
+       bağlantı, "henüz tasarlanmadı" bildirimi veren tuş kalmadı */
+    { ad: "menüdeki 17 modülün hepsi maketi açar (bildirim tuşu yok)", hash: "#/", bekle: 'document.querySelectorAll("#a-menu [data-eylem=modul]").length === 0 && document.querySelectorAll("#a-menu a[href]").length === 17' },
     { ad: "menüden hazır maket → bağlantı (Personel)", hash: "#/", bekle: 'document.querySelector(\'#a-menu a[href="personel.html"]\') !== null' },
   ],
   m1: [
@@ -429,6 +438,18 @@ export const DENEMELER = {
     { ad: "kişiye geçiş: günlük iş, muhasebe iş bağlantısı", hash: "#/", adim: [["tikla", '#a-p-liste a[href="#/p/mk"]']], bekle: 'location.hash === "#/p/mk" && document.querySelectorAll(".a-tablo-gunluk tbody tr").length === 3 && !!document.querySelector(\'.a-tablo-gunluk a[href^="muhasebe.html#/is/"]\')' },
     { ad: "kişide dönem korunur (panodan geçen yıl → kişi)", hash: "#/", adim: [["tikla", '[data-donem="gecen"]'], ["tikla", '#a-p-liste a[href="#/p/hp"]']], bekle: 'document.querySelector(\'[data-donem="gecen"]\').getAttribute("aria-pressed") === "true" && document.querySelectorAll(".a-tablo-gunluk tbody tr").length > 0' },
     { ad: "menüde Performans hazır maketi açar (Muhasebe'den)", sayfa: "maket/muhasebe.html", hash: "#/", adim: [["tikla", '#a-menu a[href="performans.html"]']], bekle: '/performans\\.html$/.test(location.pathname) && !!document.querySelector(".a-grafik")' },
+  ],
+  m16: [
+    { ad: "liste: 34 kayıt, tekrarı geçen üstte, şerit", hash: "#/", bekle: 'document.querySelector("#a-sayac").textContent === "34 kayıt" && /Kaan Er/.test(document.querySelector("#a-liste tbody tr").textContent) && /tekrarı geçti/.test(document.querySelector("#a-uyari").textContent)' },
+    { ad: "Tekrarı geçti çipi (1 / 34)", hash: "#/", adim: [["tikla", '[data-sz="g"] [data-cip="gecti"]']], bekle: 'document.querySelector("#a-sayac").textContent === "1 / 34 kayıt"' },
+    { ad: "sayfalayıcı 2. sayfa (21–34 / 34)", hash: "#/", adim: [["tikla", '[data-sz="g"] [data-sayfa="2"]']], bekle: 'document.querySelector(\'.a-sayfalar[data-sz="g"] .a-sayfa-bilgi\').textContent === "21–34 / 34"' },
+    { ad: "personel kartındaki eğitim yüzü → kişinin kayıtları (4 / 34)", sayfa: "maket/personel.html", hash: "#/p/mk", adim: [["tikla", 'a.a-yuz[href^="egitimler.html"]']], bekle: '/egitimler\\.html$/.test(location.pathname) && document.querySelector("#a-sayac").textContent === "4 / 34 kayıt"' },
+    { ad: "Uyarılar'daki eğitim satırı → kişinin kayıtları", sayfa: "maket/uyarilar.html", hash: "#/", adim: [["tikla", '#a-liste a[href="egitimler.html#/?kisi=ke"]']], bekle: '/egitimler\\.html$/.test(location.pathname) && document.querySelector("#a-sayac").textContent === "1 / 34 kayıt"' },
+    { ad: "tekrarı kaydet: geçen kayıt önceki olur, geçti çipi 0", hash: "#/k/g31", adim: [["tikla", '[data-eylem="tekrar"]'], ["tikla", '[data-eylem="kaydet"]']], bekle: '!document.querySelector("#a-pencere").open && document.querySelector(\'[data-cip="gecti"] .a-cip-sayi\').textContent === "0" && document.querySelector("#a-sayac").textContent === "34 kayıt"' },
+    { ad: "kayıt ekle: boş kaydedilmez, odak kişide", hash: "#/yeni", adim: [["tikla", '[data-eylem="kaydet"]']], bekle: '/seçilmeli/.test(document.querySelector("#w-kisi-ipucu").textContent) && document.activeElement.id === "w-kisi"' },
+    { ad: "kayıt ekle: ileri tarih reddedilir", hash: "#/yeni?kisi=by", adim: [["tikla", "#w-k"], ["tikla", '[data-secim="w-k"][data-deger="isg"]'], ["yaz", "#w-tarih", "01.10.2026"], ["tikla", '[data-eylem="kaydet"]']], bekle: '/İleri tarihli/.test(document.querySelector("#w-tarih-ipucu").textContent) && document.activeElement.id === "w-tarih"' },
+    { ad: "kayıt eklenir: tekrar tarihi türden (35 kayıt)", hash: "#/yeni?kisi=by", adim: [["tikla", "#w-k"], ["tikla", '[data-secim="w-k"][data-deger="yangin"]'], ["tikla", '[data-eylem="kaydet"]']], bekle: 'document.querySelector("#a-sayac").textContent === "35 kayıt" && /tekrar 23 Eyl 2027/.test(document.querySelector("#a-bildirim-metin").textContent)' },
+    { ad: "eğitim türleri → türe süzülü kayıtlar", hash: "#/turler", adim: [["tikla", '#a-liste a[href="#/?tur=isg"]']], bekle: 'location.hash === "#/?tur=isg" && /^\\d+ \\/ 34 kayıt$/.test(document.querySelector("#a-sayac").textContent) && document.querySelector("#a-sekme-kayit").getAttribute("aria-current") === "page"' },
   ],
   m6: [
     { ad: "tesisten gelince: tarih sonraki kontrol, 6 / 6 seçili", hash: "#/?tesis=t2", bekle: 'document.querySelector("#p-tarih").value === "14.10.2026" && /^6 \\/ 6 kayıtlı seçili/.test(document.querySelector("#p-secili").textContent)' },
