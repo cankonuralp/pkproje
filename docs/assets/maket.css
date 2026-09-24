@@ -772,6 +772,18 @@ a.a-yuz:hover { border-color: var(--kenar-alan); background: var(--zemin); }
 .a-tablo-uygunsuz .a-k-ekipman { width: 20%; } .a-tablo-uygunsuz .a-k-kusur { width: 32%; } .a-tablo-uygunsuz .a-k-rapor { width: 20%; }
 .a-tablo-uygunsuz .a-k-tarih { width: 12%; } .a-tablo-uygunsuz .a-k-durum { width: 16%; }
 
+/* M12 — teklifler; kalem satırı (form): tür · adet · birim fiyat · tutar · kaldır, telefonda iki sütun */
+.a-tablo-teklif .a-k-no { width: 18%; } .a-tablo-teklif .a-k-musteri { width: 24%; } .a-tablo-teklif .a-k-kalem { width: 16%; }
+.a-tablo-teklif .a-k-tutar { width: 16%; } .a-tablo-teklif .a-k-gecerlilik { width: 12%; } .a-tablo-teklif .a-k-durum { width: 14%; }
+.a-tablo-kalem .a-k-tur { width: 40%; } .a-tablo-kalem .a-k-adet { width: 12%; } .a-tablo-kalem .a-k-fiyat { width: 24%; } .a-tablo-kalem .a-k-tutar { width: 24%; }
+.a-tablo-kalem-rapor .a-k-tur { width: 34%; } .a-tablo-kalem-rapor .a-k-adet { width: 10%; } .a-tablo-kalem-rapor .a-k-fiyat { width: 20%; }
+.a-tablo-kalem-rapor .a-k-tutar { width: 20%; } .a-tablo-kalem-rapor .a-k-rapor { width: 16%; }
+.a-kalem {
+  display: grid; grid-template-columns: minmax(0, 2fr) minmax(0, 1fr) minmax(0, 1fr) minmax(0, 1fr) auto; gap: 8px 12px; align-items: end;
+  padding: 10px 0; border-top: 1px solid var(--kenar);
+}
+.a-kalem-tutar { margin: 0; min-height: var(--tus-y); display: flex; align-items: center; font-weight: 600; font-variant-numeric: tabular-nums; }
+
 /* ══ BANTLAR — taban kuralların ARDINDA (anayasa 3.2) ══════════════════════════════════════════════════ */
 
 /* orta + dar (< 1280): yan menü çekmece, üst çubukta ☰ + işaret */
@@ -874,6 +886,9 @@ a.a-yuz:hover { border-color: var(--kenar-alan); background: var(--zemin); }
   /* saha raporu telefonda: iki seçim alt alta, her biri tam satır (başparmak hedefi 44) */
   .a-kriter-cevap .a-sekmeler { flex: 1 1 100%; }
   .a-kriter-cevap .a-sekme { padding: 0 8px; }
+  /* teklif kalemi telefonda: tür tam satır, altında adet · fiyat, tutar · kaldır */
+  .a-kalem { grid-template-columns: minmax(0, 1fr) minmax(0, 1fr); }
+  .a-kalem > :first-child { grid-column: 1 / -1; }
 }
 
 /* kap < ESİK: aynı tablo KARTA döner (tek üretici; anayasa 3.3 kap sorgusu). Kartta yerleşim sütunun `data-kart`

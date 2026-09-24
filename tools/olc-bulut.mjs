@@ -175,6 +175,17 @@ export const DURUMLAR = {
     { ad: "giderilmiş uygunsuzluklar (firma ekranından önizleme)", hash: "#/uygunsuz?musteri=m9", kabuksuz: true },
     { ad: "müşteri kartı · açık uygunsuzluk kayıtlardan", sayfa: "maket/musteriler.html", hash: "#/m/m9" },
   ] },
+  m12: { sayfa: "maket/teklifler.html", durumlar: [
+    { ad: "teklifler · liste", hash: "#/" },
+    { ad: "teklif · kabul edildi, raporlanan adet", hash: "#/t/T-0926-001" },
+    { ad: "teklif · gönderildi", hash: "#/t/T-0926-010" },
+    { ad: "teklif · reddedildi", hash: "#/t/T-0926-008" },
+    { ad: "red gerekçesi penceresi · boş", hash: "#/t/T-0926-009/red", adim: [["tikla", '[data-eylem="red-kaydet"]']] },
+    { ad: "yeni teklif · boş", hash: "#/yeni" },
+    { ad: "yeni teklif · tesisteki ekipmandan dolduruldu", hash: "#/yeni?tesis=t13", adim: [["tikla", '[data-eylem="doldur"]']] },
+    { ad: "yeni teklif · boş gönderildi", hash: "#/yeni", adim: [["tikla", '[data-eylem="kaydet"]']] },
+    { ad: "taslak teklif · düzenle", hash: "#/t/T-0926-012/duzenle" },
+  ] },
 };
 
 /* ── ETKİLEŞİM DENEMELERİ (--etkilesim): adımlar koşar, sonra `bekle` ifadesi sayfada doğru dönmeli. Gen verilmezse 1920. ── */
@@ -336,6 +347,18 @@ export const DENEMELER = {
     { ad: "Excel önizlemesi: açık başına satır; rapor bağlantısı paneli açar", hash: "#/uygunsuz", adim: [["tikla", '[data-eylem="excel-ac"]'], ["tikla", "#a-pencere .a-belge-tablo a.a-no"]], bekle: '/^#\\/r\\//.test(location.hash) && !document.querySelector("#a-pencere").open && !!document.querySelector("#a-nesne .a-belge")' },
     { ad: "başka müşterinin raporu açılmaz", hash: "#/r/KM-0925-466-70a71", bekle: '/bulunamadı/.test(document.querySelector("#a-nesne").textContent) && !document.querySelector(".a-belge")' },
     { ad: "müşteri sayfasından uygunsuzluk yüzü → o müşterinin paneli", sayfa: "maket/musteriler.html", hash: "#/m/m9", adim: [["tikla", 'a.a-yuz[href^="musteri.html"]']], bekle: '/musteri\\.html$/.test(location.pathname) && /Başak Un/.test(document.querySelector("#a-alt").textContent) && document.querySelector("#a-sayac").textContent === "10 uygunsuzluk"' },
+  ],
+  m12: [
+    { ad: "liste: 15 teklif, en yenisi üstte", hash: "#/", bekle: 'document.querySelector("#a-sayac").textContent === "15 teklif" && /T-0926-011|T-0926-012/.test(document.querySelector("#a-liste tbody tr").textContent)' },
+    { ad: "kabul edilmiş teklif: raporlanan adet ve tutar", hash: "#/t/T-0926-001", bekle: '/Raporlanan tutar/.test(document.querySelector("#a-nesne").textContent) && document.querySelectorAll(".a-tablo-kalem-rapor tbody tr").length === 12' },
+    { ad: "kabul → Plan aç tesisle açılır", hash: "#/t/T-0926-001", adim: [["tikla", '#a-nesne a[href^="plan-ac.html"]']], bekle: '/plan-ac\\.html$/.test(location.pathname) && document.querySelector("#p-tesis .a-kirp").textContent === "Merkez Fabrika"' },
+    { ad: "gönderilen teklif kabul edilir", hash: "#/t/T-0926-010", adim: [["tikla", '[data-eylem="kabul"]']], bekle: '/Kabul edildi/.test(document.querySelector(".a-nesne-baslik").textContent) && !!document.querySelector(\'#a-nesne a[href^="plan-ac.html"]\')' },
+    { ad: "red: gerekçesiz kaydedilmez, gerekçeyle reddedilir", hash: "#/t/T-0926-009/red", adim: [["tikla", '[data-eylem="red-kaydet"]'], ["yaz", "#w-gerekce", "Başka firmayla çalışılacak"], ["tikla", '[data-eylem="red-kaydet"]']], bekle: '/Reddedildi/.test(document.querySelector(".a-nesne-baslik").textContent) && /Başka firmayla/.test(document.querySelector("#a-nesne").textContent)' },
+    { ad: "form: tür seçilince fiyat listeden, tutar ve toplam canlı", hash: "#/yeni?tesis=t13", adim: [["tikla", "#f-tur-0"], ["tikla", '[data-secim="f-tur-0"][data-deger="FL"]'], ["yaz", "#f-adet-0", "3"]], bekle: 'document.querySelector("#f-fiyat-0").value === "1.250,00" && document.querySelector("#f-tutar-0").textContent === "3.750,00 TL" && /4.500,00 TL/.test(document.querySelector("#f-toplam").textContent) && document.activeElement.id === "f-adet-0"' },
+    { ad: "form: tesisteki ekipmandan doldur (11 ekipman)", hash: "#/yeni?tesis=t13", adim: [["tikla", '[data-eylem="doldur"]']], bekle: 'document.querySelectorAll(".a-kalem").length > 1 && /22.400,00 TL/.test(document.querySelector("#f-toplam").textContent)' },
+    { ad: "form: aynı tür iki kez reddedilir", hash: "#/yeni?tesis=t13", adim: [["tikla", "#f-tur-0"], ["tikla", '[data-secim="f-tur-0"][data-deger="FL"]'], ["tikla", '[data-eylem="kalem-ekle"]'], ["tikla", "#f-tur-1"], ["tikla", '[data-secim="f-tur-1"][data-deger="FL"]'], ["tikla", '[data-eylem="kaydet"]']], bekle: '/yukarıda var/.test(document.querySelector("#f-tur-1-ipucu").textContent)' },
+    { ad: "yeni teklif kaydedilir → taslak teklif sayfası", hash: "#/yeni?tesis=t13", adim: [["tikla", '[data-eylem="doldur"]'], ["tikla", '[data-eylem="kaydet"]']], bekle: 'location.hash === "#/t/T-0926-013" && /Taslak/.test(document.querySelector(".a-nesne-baslik").textContent)' },
+    { ad: "gönderilmiş teklif düzenlenemez", hash: "#/t/T-0926-010/duzenle", bekle: 'location.hash === "#/t/T-0926-010" && !document.querySelector(\'#a-nesne a[href$="/duzenle"]\')' },
   ],
   m6: [
     { ad: "tesisten gelince: tarih sonraki kontrol, 6 / 6 seçili", hash: "#/?tesis=t2", bekle: 'document.querySelector("#p-tarih").value === "14.10.2026" && /^6 \\/ 6 kayıtlı seçili/.test(document.querySelector("#p-secili").textContent)' },

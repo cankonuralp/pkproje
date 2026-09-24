@@ -751,6 +751,33 @@ sonraki kontrol 60 gün içinde; seçiciler: tesis, yıl) · **Uygunsuzluklar** 
 Gözle bulunup düzeltilen (ölçüm yakalamıyor): telefonda **belge tablolarında kelimeler harf ortasından bölünüyordu** ("Yap ıldı") — ortak
 belge stili düzeltildi, M7 (66/66) ve M9 (60/60) yeniden ölçüldü; Excel önizlemesi telefonda iki sütuna indi.
 
+#### Maket M12 — Teklifler (modül 11, faz 2) — ONAY BEKLİYOR
+Ekran: **Teklifler** (`maket/teklifler.html`, planlama Zeynep Arslan): liste (no, müşteri / tesis, kalem, tutar, geçerlilik, durum; çipler:
+taslak · gönderildi · kabul · red ya da süresi doldu · geçerliliği 7 gün içinde bitiyor; seçici müşteri) · **teklif sayfası** (kalemler:
+tür × adet × birim fiyat, ara toplam, KDV, genel toplam; kabul edilmişte **raporlanan adet** ve **raporlanan tutar**; duruma göre eylem:
+gönderildi işaretle · kabul / red (gerekçe) · iş sözleşmesi · plan aç · kopyala) · **form** (müşteri, tesis, geçerlilik, not; kalem satırları,
+fiyat listesinden birim fiyat, "tesisteki ekipmandan doldur", tutar ve toplam canlı).
+**Varsayımlar:**
+- Teklif **tesis başına**; kalem = **ekipman türü × adet × birim fiyat** (§3.1). Birim fiyat **firmanın fiyat listesinden** gelir, teklife özel
+  değiştirilebilir. Tutarlar örnek, TL, KDV hariç; **KDV %20**.
+- No **T-AAYY-SIRA** (proje no'nun düzeni; ay içinde sıra). Yalnız **taslak** düzenlenir; gönderilen teklif değişmez (yenisi kopyalanır).
+- Durumlar: taslak · gönderildi · kabul edildi · reddedildi (müşterinin gerekçesi) · süresi doldu (geçerlilik gönderilişten sayılır).
+- **Rapor ↔ teklif kalemi** (§3.2 madde 5): tesisin teklif sonrası raporları kaleme **türüyle** bağlanır; "raporlanan tutar" muhasebe (M14)
+  ve performansın (M15) kaynağı.
+- Plan açılan her tesisin kabul edilmiş teklifi var (örnek veri); kabulden sonra sıra: iş sözleşmesi (M13) + İSG-KATİP (M5) → plan (M6).
+- Teklif müşteriye makette **elle iletilir** (PDF indir, "gönderildi olarak işaretle"); sistemden e-posta yok.
+**Sorular (M12):**
+118. Teklif no biçimi **T-AAYY-SIRA** (öneri) uygun mu?
+119. Fiyat listesi **firma ayarı** (öneri) mı; müşteriye özel fiyat / iskonto olsun mu?
+120. KDV %20 sabit mi; tevkifat, iskonto gibi muhasebe kalemleri gerekir mi? *(M14 ile bağlı)*
+121. Teklif müşteriye **nasıl iletilir**: PDF indirip elle (makette) mi, sistemden e-posta mı? Müşteri **panelden kabul** edebilsin mi?
+122. Kabul edilen teklifin adedini **aşan rapor** (sahada eklenen ekipman): ek teklif mi, aynı birim fiyatla otomatik mi (öneri: aynı fiyat,
+     muhasebede "teklif dışı" işaretli)?
+123. Teklif **tesis başına** (makette) mı, çok tesisli tek teklif mi?
+124. Geçerliliği biten gönderilmiş teklif **kendiliğinden "süresi doldu"** olsun mu (öneri: evet)?
+**Ölçüm (2026-09-24, bulut):** 9 durum × 1920 · 1080 · 375 × açık/koyu = **54/54 temiz**, çekmece 2/2; etkileşim **10/10** (teklif → plan aç
+geçişi dahil).
+
 ---
 
 ## 4 · Mevzuat bulguları (2026-09-18 araştırması; kaynaklar bölüm 10)
@@ -1092,6 +1119,8 @@ revizyon, alan kopyalama, hafif kusur devri, meslek eşleşme denetimi).
 - Emsal ürünler: https://opwire.app/iso-17020-periyodik-kontrol-yazilimi/ · https://17020muayene.vidco.com.tr/ · https://akuple.com/asansor-kontrol-yazilimi/ · https://ensyazilim.com/
 
 ## 11 · Değişiklik günlüğü
+- 2026-09-24 (24): **toplu maket M12 Teklifler** (§3.6, faz 2): liste, teklif sayfası (kalemler, KDV, raporlanan adet/tutar), form (fiyat
+  listesi, tesisten doldur), red gerekçesi; teklif → plan aç bağlantısı. Sorular 118–124.
 - 2026-09-24 (23): **toplu maket M11 Müşteri Paneli** (§3.6): müşteri kabuğu, imzalı raporlar, uygunsuzluk kayıtları (açık / giderildi),
   "Uygunsuzları indir" önizlemesi, rapor PDF'i; müşteri kartındaki açık uygunsuzluk sayısı kayıtlardan. Sorular 111–117. Faz 1 maketleri bitti.
 - 2026-09-24 (22): **toplu maket M10 Uyarılar** (§3.6): kalibrasyon bitişi ve eğitim tekrarı uyarıları (yalnız ekranda, koşuldan türeyen);

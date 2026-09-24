@@ -543,6 +543,36 @@
     return l;
   };
   MV.acikUygunsuz = function (mid) { return MV.uygunsuzluklar(mid).filter(function (u) { return u.durum === "acik"; }).length; };
+  /* ── TEKLİFLER (modül 11; M12, faz 2, 2026-09-24) — müşteri, tesis, kalem (ekipman türü × adet × birim fiyat), durum (§3.1).
+     Fiyat listesi firma ayarı (ÖRNEK tutarlar, TL, KDV hariç); KDV %20. No T-AAYY-SIRA (proje no'nun düzeni; öneri). Plan açılan her tesisin
+     kabul edilmiş teklifi var; kalemler tesisin kayıtlı ekipmanından (tür başına adet). Raporlar kalemlere türüyle bağlanır (§3.2 madde 5). */
+  MV.FIYAT = { HT: 900, FL: 1250, KK: 2200, KP: 1400, TP: 450, KS: 850, ZV: 1100, YA: 2400, BK: 3200, ET: 3500, AT: 1500, YK: 1500, DP: 650, JN: 1200,
+    KU: 4800, LP: 1800, YG: 2600, TR: 2900, IS: 1600, MB: 3900, YM: 2500, AE: 2700, SP: 2300, PR: 1300 };
+  MV.KDV = 20;
+  var tesisKalemleri = function (tid) {
+    var m = {}; MV.EKIPMAN.filter(function (e) { return e.tesis === tid; }).forEach(function (e) { m[e.tur] = (m[e.tur] || 0) + 1; });
+    return Object.keys(m).map(function (k) { return { tur: k, adet: m[k], fiyat: MV.FIYAT[k] }; });
+  };
+  MV.tesisKalemleri = tesisKalemleri;
+  /* [tesis, durum, tarih, gönderildi, sonuç tarihi, not] */
+  var TK = [["t12", "kabul", "2026-08-10", "2026-08-11", "2026-08-18"], ["t11", "kabul", "2026-08-14", "2026-08-14", "2026-08-21"],
+    ["t1", "kabul", "2026-09-01", "2026-09-01", "2026-09-04"], ["t4", "kabul", "2026-09-03", "2026-09-03", "2026-09-08"], ["t5", "kabul", "2026-09-04", "2026-09-05", "2026-09-09"],
+    ["t9", "kabul", "2026-09-05", "2026-09-05", "2026-09-10"], ["t7", "kabul", "2026-09-08", "2026-09-08", "2026-09-12"], ["t10", "kabul", "2026-09-09", "2026-09-09", "2026-09-11"],
+    ["t8", "kabul", "2026-09-10", "2026-09-10", "2026-09-15"], ["t6", "red", "2026-09-11", "2026-09-11", "2026-09-17", "Fiyat bütçenin üstünde; gelecek yıl yeniden değerlendirilecek."],
+    ["t2", "suresi", "2026-08-05", "2026-08-06", null], ["t13", "gonderildi", "2026-09-17", "2026-09-17", null], ["t14", "gonderildi", "2026-09-21", "2026-09-22", null],
+    ["t15", "taslak", "2026-09-23", null, null], ["t3", "taslak", "2026-09-22", null, null]];
+  var tkSira = {};
+  MV.TEKLIFLER = TK.map(function (x) {
+    var ay = x[2].slice(5, 7) + x[2].slice(2, 4); tkSira[ay] = (tkSira[ay] || 0) + 1;
+    return { no: "T-" + ay + "-" + ("00" + tkSira[ay]).slice(-3), tesis: x[0], m: MV.tesis(x[0]).m, durum: x[1], tarih: x[2], gonderildi: x[3], sonuc: x[4], gerekce: x[5] || "",
+      gecerlilik: 30, hazirlayan: "za", kalemler: tesisKalemleri(x[0]) };
+  });
+  MV.teklif = function (no) { return MV.TEKLIFLER.filter(function (t) { return t.no === no; })[0]; };
+  MV.teklifTutar = function (t) { return t.kalemler.reduce(function (n, k) { return n + k.adet * k.fiyat; }, 0); };
+  /* teklif kalemine bağlı raporlar: tesisin bu yılki (teklif sonrası) raporları, türüyle (§3.2 madde 5) */
+  MV.kalemRaporlari = function (t, tur) { return MV.RAPORLAR.filter(function (r) { return r.tesis === t.tesis && r.olustu.slice(0, 10) >= t.tarih && MV.ekipman(r.kod).tur === tur; }); };
+  MV.para = function (n) { return n.toLocaleString("tr-TR", { minimumFractionDigits: 2, maximumFractionDigits: 2 }) + " TL"; };
+
   /* belge (MB.belge) için raporun dolu verisi; İSG-KATİP kaydı rapor tarihinde geçerli olan (önceki kayıtlar dahil) */
   MV.raporBelge = function (r) {
     var e = MV.ekipman(r.kod), t = MV.tur(e.tur), ts = MV.tesis(r.tesis), p = MV.kisi(r.kisi), gun = r.olustu.slice(0, 10);
