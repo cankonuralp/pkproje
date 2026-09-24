@@ -82,4 +82,5 @@ tek mesaj: sayfanın bağlantısı + kaç maket + kaç soru + ölçülemeyen var
 - 2026-09-24 (bulut): hazırlık doğrulandı ve düzeltildi (Chromium hazır → `/opt/pw-browsers`; testler root olmayan `bulut`
   kullanıcısıyla: `su bulut -s /bin/bash -c 'cd <depo> && PATH=/opt/node24/bin:$PATH npm test'`). Ölçüm `tools/olc-bulut.mjs <maket>`
   (+ `--etkilesim`, `--olumsuz`); sonuç `docs/assets/olcum/<maket>.json`. Ortak kabuk `docs/assets/maket-ortak.js`, ortak veri
-  `maket-veri.js`. **M1 bitti** (108/108 · çekmece 2/2 · etkileşim 17/17; sorular 32–43). Sırada: M2.
+  `maket-veri.js`. **M1 bitti** (108/108 · çekmece 2/2 · etkileşim 17/17; sorular 32–43).
+- **M2 bitti** (48/48 · çekmece 2/2 · etkileşim 11/11; sorular 44–50). Sırada: M3.

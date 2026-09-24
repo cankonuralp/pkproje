@@ -416,6 +416,38 @@ parola göster düğmesi alanın üstüne biniyordu (yanına alındı) · **saya
 "16 kişi"; üreticide düzeltildi, bütün listeler için) · görünüm anahtarı Temizle ile sıfırlanıyordu · bilgi yüzleri masaüstünde
 kabı doldurmuyordu · yeni kişinin adresi (rakamlı kimlik) listeye düşüyordu.
 
+#### Maket M2 — Müşteri ve Tesis (modül 3) — ONAY BEKLİYOR
+Ekranlar (`maket/musteriler.html`): **liste** (tesis sayısı ve illeri, ekipman, portal kullanıcısı, en yakın kontrol, açık
+uygunsuzluk; çipler: kontrolü 30 gün içinde · İSG-KATİP kaydı olmayan tesis · portal kullanıcısı yok · açık uygunsuzluk; il
+seçicisi; arama tesis adını da bulur) · **müşteri sayfası** (bilgi yüzleri, müşteri bilgileri, tesisler, portal kullanıcıları) ·
+**tesis sayfası** (işyeri bilgileri — raporun işyeri bölümü buradan dolar, İSG-KATİP kayıtları ve açık plan için uygun / geç
+onay, plan) · pencereler: **müşteri ekle / düzenle · tesis ekle / düzenle · portal kullanıcısı ekle**.
+**Varsayımlar:**
+- Bakış **planlama ekibi** (öneri tablosunda Müşteriler'i değiştirir). Planlar maketindeki 9 müşteri ve tesis aynı adlarla.
+- Müşteri **vergi no ile eşsiz** (aynı müşteri iki kez açılmaz; şahıs şirketinde 11 hane). Tesis **SGK işyeri sicil no ile eşsiz**
+  (26 hane rakam; biçim birincil kaynakta doğrulanmadı). SGK no tesiste (reisim 2026-09-22).
+- Tesisin adresi **raporun adresi**; il ve ilçe şimdilik serbest metin.
+- İSG-KATİP kayıtları tesis sayfasında görünür, girişi M5'te; "açık plan için" sütunu plan kabulündeki kuralın aynısı
+  (onay ≤ kontrol − 1 gün).
+- **Portal kullanıcısı** müşteriye bağlı, e-postayla davet edilir; kapsam **bütün tesisler** (varsayılan) ya da **seçili tesisler**.
+  Başka müşterinin hiçbir kaydı görünmez (§3).
+- "En yakın kontrol" tesislerin sonraki kontrol tarihlerinin en yakını (sonradan ekipmanlardan hesaplanır, M3); 30 gün içi uyarı.
+- Açık uygunsuzluk sayısı müşteride (M9 / M11'den beslenir). Müşteri ve tesis **silme** makette yok (soru 48).
+- Faz 2 bağlantıları (teklif, sözleşme) müşteri sayfasına o maketler gelince eklenir (boş yüz gösterilmez, anayasa 2.6).
+**Sorular (M2):**
+44. Portal kullanıcısının kapsamı: **bütün tesisler** mi, **tesis başına** da kısıtlanabilsin mi (öneri: ikisi de, varsayılan bütün
+    tesisler)? *(Bağımlılık: M11 Müşteri Paneli, soru 35.)*
+45. Müşteride **vergi no zorunlu** ve eşsiz olsun mu? Şahıs şirketinde 11 haneli numara kişisel veri — saklansın mı?
+46. Tesiste **SGK işyeri sicil no zorunlu** ve eşsiz olsun mu (raporda zorunlu alan, Ek-III 1.7.1)?
+47. Bir tesis **tek müşteriye** mi ait (öneri), yoksa aynı adreste birden çok müşteri (ortak alan, kiracı işletme) olabilir mi?
+48. Raporu olan müşteri / tesis **silinmez, pasif olur** (öneri) — uygun mu?
+49. "Kontrolü yaklaşan" eşiği **30 gün** mü (kalibrasyon uyarısıyla aynı), firma ayarı mı?
+50. İl / ilçe **seçim listesi** mi (81 il, aramalı), serbest metin mi?
+**Ölçüm (2026-09-24, bulut):** 8 durum × 1920 · 1080 · 375 × açık/koyu = **48/48 temiz**, çekmece 2/2; etkileşim **11/11**.
+Ölçerken düzeltilen: 1080'de tesis bilgisindeki 26 haneli SGK no (bölünmez kimlik) 26 px taşıyordu → bilgi listesinde iki sütun
+genişlik ("cift") · boş değerli "Teklif ve sözleşme" yüzü kaldırıldı. Form alanı üreticisi ortak dosyaya alındı (Personel formu da
+ona geçti, M1 yeniden ölçüldü 108/108).
+
 ---
 
 ## 4 · Mevzuat bulguları (2026-09-18 araştırması; kaynaklar bölüm 10)
@@ -757,6 +789,8 @@ revizyon, alan kopyalama, hafif kusur devri, meslek eşleşme denetimi).
 - Emsal ürünler: https://opwire.app/iso-17020-periyodik-kontrol-yazilimi/ · https://17020muayene.vidco.com.tr/ · https://akuple.com/asansor-kontrol-yazilimi/ · https://ensyazilim.com/
 
 ## 11 · Değişiklik günlüğü
+- 2026-09-24 (14): **toplu maket M2 Müşteri ve Tesis** (§3.6): liste, müşteri ve tesis sayfaları, üç form penceresi; ortak veriye
+  11 müşteri, 15 tesis, İSG-KATİP kayıtları, portal kullanıcıları. Form alanı üreticisi ortak. Sorular 44–50.
 - 2026-09-24 (13): **toplu maket M1** (bulut oturumu): bulut hazırlığı doğrulandı (Chrome indirmesi vekilde 403 → VM'deki
   Chromium; root'ta gömülü PostgreSQL → testler root olmayan kullanıcıyla), ölçüm sürücüsü `tools/olc-bulut.mjs` (olumsuz kanıt
   2/2, etkileşim kipi), ikon ekleme aracı `tools/ikon-ekle.mjs` (Lucide 1.47.0, iki kopya birlikte; +12 ikon, 63). Planlar

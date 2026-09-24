@@ -74,7 +74,7 @@
     return '<div class="a-yuzler">' +
       yuz({ ikon: "user-cog", ad: "Giriş hesabı", sayi: h ? h.roller.length + " rol" : "Yok", href: h ? "kullanicilar.html#/k/" + p.id : "kullanicilar.html#/davet/" + p.id,
         not: h ? (h.durum === "davet" ? "Davet bekliyor" : h.durum === "pasif" ? "Pasif" : h.roller.map(function (r) { return MV.rol(r).kisa; }).join(" · ")) : "Davet et", uyari: h && h.durum === "davet" }) +
-      yuz({ ikon: "scroll-text", ad: "İSG-KATİP kaydı", sayi: s.isg, modul: "Sözleşmeler · İSG-KATİP", href: sayfa(12) && sayfa(12) + "#/isg?kisi=" + p.id, not: "tesis başına" }) +
+      yuz({ ikon: "scroll-text", ad: "İSG-KATİP kaydı", sayi: MV.ISG.filter(function (x) { return x.k === p.id; }).length, modul: "Sözleşmeler · İSG-KATİP", href: sayfa(12) && sayfa(12) + "#/isg?kisi=" + p.id, not: "tesis başına" }) +
       yuz({ ikon: "package", ad: "Zimmetinde", sayi: s.zimmet, modul: "Zimmetler", href: sayfa(9) && sayfa(9) + "#/?kisi=" + p.id, not: "cihaz ve varlık" }) +
       yuz({ ikon: "graduation-cap", ad: "Eğitim", sayi: s.egitim, modul: "Eğitimler", href: sayfa(10) && sayfa(10) + "#/?kisi=" + p.id,
         not: s.egitimYakin ? s.egitimYakin + " tekrarı 60 gün içinde" : "tekrarı yakın yok", uyari: s.egitimYakin > 0 }) +
@@ -143,14 +143,9 @@
     F = p ? { id: p.id, ad: p.ad, eposta: p.eposta, basla: p.basla.split("-").reverse().join("."), meslek: p.meslek, meslekMetin: p.meslekMetin || "", diploma: p.diploma, oda: p.oda, ekipnet: p.ekipnet, yetki: Object.assign({}, p.yetki), hata: {} }
       : { id: null, ad: "", eposta: "", basla: "", meslek: "", meslekMetin: "", diploma: "", oda: "", ekipnet: "", yetki: {}, hata: {} };
   }
-  function alan(id, etiket, girdi, ipucu, zorunlu, genis) {
-    var h = F.hata[id];
-    return '<div class="a-alan-grup' + (genis ? " a-alan-genis" : "") + '"><label class="a-etiket" for="f-' + id + '">' + etiket + (zorunlu ? ' <span class="a-zorunlu">zorunlu</span>' : "") + "</label>" + girdi +
-      (h ? '<p class="a-ipucu a-ipucu-uyari" id="f-' + id + '-ipucu">' + h + "</p>" : ipucu ? '<p class="a-ipucu" id="f-' + id + '-ipucu">' + ipucu + "</p>" : "") + "</div>";
-  }
-  function girdi(id, sinif, deger, ek) {
-    return '<input class="a-girdi ' + (sinif || "") + '" id="f-' + id + '" data-f="' + id + '" autocomplete="off" value="' + kacis(deger) + '"' + (F.hata[id] ? ' aria-invalid="true"' : "") + ' aria-describedby="f-' + id + '-ipucu"' + (ek || "") + ">";
-  }
+  /* ortak form üreticisi (MK.alan / MK.girdi); kimlik "f-" önekli, hata F.hata'dan */
+  function alan(id, etiket, girdi, ipucu, zorunlu, genis) { return MK.alan({ id: "f-" + id, etiket: etiket, girdi: girdi, ipucu: ipucu, hata: F.hata[id], zorunlu: zorunlu, genis: genis }); }
+  function girdi(id, sinif, deger, ek) { return MK.girdi({ id: "f-" + id, alan: id, deger: deger, sinif: sinif, ek: ek, hata: F.hata[id] }); }
   function formCiz(odak) {
     var p = F.id ? MV.kisi(F.id) : null, m = F.meslek ? MV.meslek(F.meslek) : null, tekniker = /tek$/.test(F.meslek);
     var baslik = p ? p.ad + " · düzenle" : "Yeni personel";
@@ -232,7 +227,7 @@
       formCiz();
     }
   };
-  MK.onGirdi = function (e) { var k = e.target.dataset && e.target.dataset.f; if (k) { F[k] = e.target.value; } };
+  MK.onGirdi = function (e) { var k = e.target.dataset && e.target.dataset.alan; if (k) { F[k] = e.target.value; } };
   document.addEventListener("change", function (e) {
     var g = e.target.dataset && e.target.dataset.yetki; if (!g) return;
     if (e.target.checked) F.yetki[g] = F.yetki[g] || "yeni"; else delete F.yetki[g];

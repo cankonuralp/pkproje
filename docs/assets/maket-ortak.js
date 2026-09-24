@@ -35,7 +35,8 @@
   MK.serit = function (tur, ik, metin, id) {
     return '<div class="a-serit a-serit-' + tur + '"' + (id ? ' id="' + id + '"' : "") + ">" + ikon(ik, "a-ikon-kucuk") + "<span>" + metin + "</span></div>";
   };
-  MK.bilgi = function (etiket, deger, genis) { return '<div class="a-bilgi-oge' + (genis ? " a-bilgi-genis" : "") + '"><dt>' + etiket + "</dt><dd>" + deger + "</dd></div>"; };
+  /* genis: true → telefonda tam satır · "cift" → her bantta iki sütun (bölünmez uzun kimlik, ör. 26 haneli SGK sicil no) */
+  MK.bilgi = function (etiket, deger, genis) { return '<div class="a-bilgi-oge' + (genis === "cift" ? " a-bilgi-genis a-bilgi-cift" : genis ? " a-bilgi-genis" : "") + '"><dt>' + etiket + "</dt><dd>" + deger + "</dd></div>"; };
   /* genel tuş: o = { eylem, ad, ikon, sinif (varsayılan birincil), kapali, sebepId, veri: { id: … } → data-id } */
   MK.tus = function (o) {
     var veri = Object.keys(o.veri || {}).map(function (k) { return " data-" + k + '="' + kacis(o.veri[k]) + '"'; }).join("");
@@ -65,8 +66,17 @@
     { grup: "Tanımlar", ogeler: [["Ekipman türleri", "layers", 5], ["Standartlar", "book-open", 4], ["Kullanıcılar", "user-cog", 1]] }
   ];
   /* hazır maketler: menüden tıklanınca gidilir (toplu bakışta tıklanır prototip, MAKET-PLANI §3.3); olmayan → bildirim */
-  var SAYFALAR = { 13: "planlarim.html", 1: "kullanicilar.html", 2: "personel.html" };
+  var SAYFALAR = { 13: "planlarim.html", 1: "kullanicilar.html", 2: "personel.html", 3: "musteriler.html" };
   MK.sayfaAdresi = function (no) { return SAYFALAR[no] || null; };
+  /* menü dışı maket ekranları (ör. plan açma); hazır olunca buraya yazılır, bağlantılar kendiliğinden açılır */
+  var EK_SAYFALAR = { giris: "giris.html" };
+  MK.adres = function (anahtar, hash) { var a = SAYFALAR[anahtar] || EK_SAYFALAR[anahtar]; return a ? a + (hash || "") : null; };
+  /* hazırsa bağlantı-tuş, değilse "henüz tasarlanmadı" bildirimi veren tuş (maket dışına gidilmez) */
+  MK.git = function (o) {
+    var h = MK.adres(o.hedef, o.hash), ic = (o.ikon ? ikon(o.ikon, "a-ikon-kucuk") : "") + o.ad, sinif = "a-tus " + (o.sinif || "a-tus-ikincil");
+    return h ? '<a class="' + sinif + '" href="' + h + '">' + ic + "</a>"
+      : '<button class="' + sinif + '" type="button" data-eylem="modul" data-ne="' + kacis(o.ne || o.ad) + '">' + ic + "</button>";
+  };
   MK.MENU = MENU;   /* salt okunur: rol yetkileri tablosu modülleri menünün kendisinden sayar (ikinci liste yok) */
 
   function menuHtml(o) {
@@ -298,6 +308,19 @@
     if (o.sayfaId) $(o.sayfaId).innerHTML = boy && liste.length ? MK.sayfalayici(o.on, liste.length, s.sayfa) : "";
     if (o.tablo.sz) MK.listeKipi(o.on, o.listeId);
     return liste;
+  };
+
+  /* ── FORM ALANI — TEK ÜRETİCİ (kalıp 3: alan veri tipine göre, sınıfla; hata ipucunun yerine yazılır) ─────────────
+     alan({ id, etiket, girdi (html), ipucu, hata, zorunlu (true | metin), genis }) · girdi({ id, alan (veri anahtarı), deger,
+     sinif, ek (öznitelikler), hata }) — girdi `data-alan` taşır; sayfa MK.onGirdi'de e.target.dataset.alan'ı okur. */
+  MK.alan = function (o) {
+    return '<div class="a-alan-grup' + (o.genis ? " a-alan-genis" : "") + '"><label class="a-etiket" for="' + o.id + '">' + o.etiket +
+      (o.zorunlu ? ' <span class="a-zorunlu">' + (o.zorunlu === true ? "zorunlu" : o.zorunlu) + "</span>" : "") + "</label>" + o.girdi +
+      (o.hata ? '<p class="a-ipucu a-ipucu-uyari" id="' + o.id + '-ipucu">' + o.hata + "</p>" : o.ipucu ? '<p class="a-ipucu" id="' + o.id + '-ipucu">' + o.ipucu + "</p>" : "") + "</div>";
+  };
+  MK.girdi = function (o) {
+    return '<input class="a-girdi' + (o.sinif ? " " + o.sinif : "") + '" id="' + o.id + '"' + (o.alan ? ' data-alan="' + o.alan + '"' : "") + ' autocomplete="off" value="' + kacis(o.deger || "") + '"' +
+      (o.hata ? ' aria-invalid="true"' : "") + ' aria-describedby="' + o.id + '-ipucu"' + (o.ek || "") + ">";
   };
 
   /* ── SEÇİM ALANI (kalıp 19: yerli açılır liste YOK) — formdaki tek seçim: düğme + temalı liste ──────────────

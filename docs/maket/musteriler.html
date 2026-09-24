@@ -1,0 +1,44 @@
+<!doctype html>
+<html lang="tr">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1">
+<title>Müşteriler · probata maket</title>
+<meta name="robots" content="noindex">
+<link rel="icon" href="../marka/favicon.svg" type="image/svg+xml">
+<script src="../assets/maket-tema.js"></script>
+<link rel="stylesheet" href="../assets/tokens.css">
+<link rel="stylesheet" href="../assets/maket.css">
+</head>
+<body>
+<!-- MAKET M2 · Müşteri ve Tesis (modül 3) — ONAY BEKLİYOR. Kabuk maket-ortak.js MK.kabuk() ile kurulur.
+     Adres: #/ liste · #/m/<id> müşteri · #/t/<id> tesis · #/yeni müşteri ekle · #/m/<id>/tesis-ekle · #/m/<id>/kullanici-ekle -->
+<main class="a-icerik" id="a-icerik">
+  <div id="a-liste-gorunum">
+    <div class="a-sayfa-bas">
+      <h1 tabindex="-1">Müşteriler</h1>
+      <span class="a-sayac" id="a-sayac" aria-live="polite"></span>
+      <button class="a-tus a-tus-birincil a-bolum-tus" type="button" data-eylem="musteri-ac"><svg class="a-ikon a-ikon-kucuk" aria-hidden="true"><use href="../vendor/lucide-1.47.0/ikonlar.svg#i-plus"/></svg>Müşteri ekle</button>
+    </div>
+    <div id="a-suzgec-kap"></div>
+    <div class="a-liste-kap" id="a-liste"></div>
+  </div>
+  <section id="a-nesne" aria-label="Müşteri ya da tesis" hidden></section>
+</main>
+
+<!-- tek form penceresi: müşteri · tesis · müşteri kullanıcısı (içerik maket-musteriler.js'ten) -->
+<dialog class="a-pencere a-pencere-form" id="a-pencere" aria-labelledby="a-pencere-baslik">
+  <div class="a-pencere-bas">
+    <h2 id="a-pencere-baslik"></h2>
+    <button class="a-ikon-tus" type="button" data-eylem="pencere-kapat" aria-label="Kapat">
+      <svg class="a-ikon" aria-hidden="true"><use href="../vendor/lucide-1.47.0/ikonlar.svg#i-x"/></svg>
+    </button>
+  </div>
+  <div class="a-pencere-govde" id="a-pencere-govde"></div>
+  <div class="a-pencere-alt" id="a-pencere-alt"></div>
+</dialog>
+<script src="../assets/maket-ortak.js"></script>
+<script src="../assets/maket-veri.js"></script>
+<script src="../assets/maket-musteriler.js"></script>
+</body>
+</html>

@@ -58,6 +58,17 @@ export const DURUMLAR = {
     { ad: "personel · yeni form, boş gönderildi (hatalar)", hash: "#/yeni", adim: [["tikla", '[data-eylem="kaydet"]']] },
     { ad: "personel · düzenle (teknisyen seçildi)", hash: "#/p/ke/duzenle" },
   ] },
+  /* M2 Müşteri ve Tesis (2026-09-24) */
+  m2: { sayfa: "maket/musteriler.html", durumlar: [
+    { ad: "müşteriler · liste", hash: "#/" },
+    { ad: "müşteri · üç tesis, portal kullanıcıları", hash: "#/m/m1" },
+    { ad: "müşteri · portal kullanıcısı yok, İSG-KATİP'siz tesis", hash: "#/m/m5" },
+    { ad: "tesis · İSG-KATİP geç onay (açık plan)", hash: "#/t/t7" },
+    { ad: "tesis · İSG-KATİP kaydı yok", hash: "#/t/t6" },
+    { ad: "müşteri ekle · boş gönderildi", hash: "#/yeni", adim: [["tikla", '[data-eylem="pencere-kaydet"]']] },
+    { ad: "tesis ekle · çakışan SGK sicil", hash: "#/m/m1/tesis-ekle", adim: [["js", 'const e = document.querySelector("#w-sgk"); e.value = MV.tesis("t1").sgk; e.dispatchEvent(new Event("input", { bubbles: true }))'], ["tikla", '[data-eylem="pencere-kaydet"]']] },
+    { ad: "portal kullanıcısı ekle · seçili tesisler", hash: "#/m/m3/kullanici-ekle", adim: [["tikla", '[data-kapsam="secili"]']] },
+  ] },
 };
 
 /* ── ETKİLEŞİM DENEMELERİ (--etkilesim): adımlar koşar, sonra `bekle` ifadesi sayfada doğru dönmeli. Gen verilmezse 1920. ── */
@@ -97,6 +108,19 @@ export const DENEMELER = {
     { ad: "giriş: yanlış parola → hesap var mı söylenmez", sayfa: "maket/giris.html", hash: "#/", adim: [["yaz", "#g-eposta", "biri@firma.example"], ["yaz", "#g-parola", "hata123"], ["tikla", '[data-eylem="gir"]']], bekle: 'location.hash === "#/hata" && /E-posta ya da parola yanlış/.test(document.querySelector(".a-serit").textContent)' },
     { ad: "giriş: parola göster/gizle", sayfa: "maket/giris.html", hash: "#/", adim: [["yaz", "#g-parola", "gizli1"], ["tikla", '[data-eylem="goster"]']], bekle: 'document.querySelector("#g-parola").type === "text" && document.querySelector("#g-parola").value === "gizli1"' },
     { ad: "giriş: sıfırlama gönderildi", sayfa: "maket/giris.html", hash: "#/unuttum", adim: [["yaz", "#g-eposta", "biri@firma.example"], ["tikla", '[data-eylem="sifirla"]']], bekle: 'location.hash === "#/gonderildi" && /kayıtlıysa/.test(document.querySelector(".a-serit").textContent)' },
+  ],
+  m2: [
+    { ad: "müşteriler: Portal kullanıcısı yok → 3 / 11", hash: "#/", adim: [["tikla", '[data-cip="portalsiz"]']], bekle: 'document.querySelector("#a-sayac").textContent === "3 / 11 müşteri"' },
+    { ad: "müşteriler: İl = Bursa → 2 müşteri", hash: "#/", adim: [["tikla", '[data-secici-ac="il"]'], ["tikla", '[data-sec="il"][data-deger="Bursa"]']], bekle: 'document.querySelectorAll("#a-liste tbody tr").length === 2' },
+    { ad: "müşteriler: tesis adıyla arama (Kaynakhane → Poyraz)", hash: "#/", adim: [["yaz", '[data-ara="m"]', "kaynakhane"]], bekle: '/Poyraz/.test(document.querySelector("#a-liste tbody").textContent) && document.querySelectorAll("#a-liste tbody tr").length === 1' },
+    { ad: "müşteri ekle: aynı vergi no kaydedilmez", hash: "#/", adim: [["tikla", '[data-eylem="musteri-ac"]'], ["yaz", "#w-unvan", "Deneme Ltd."], ["yaz", "#w-vno", "0480215736"], ["tikla", '[data-eylem="pencere-kaydet"]']], bekle: '/Ada Makina müşterisinde kayıtlı/.test(document.querySelector("#w-vno-ipucu").textContent) && document.querySelector("#a-pencere").open' },
+    { ad: "müşteri ekle: geçerli → müşteri sayfası", hash: "#/", adim: [["tikla", '[data-eylem="musteri-ac"]'], ["yaz", "#w-unvan", "Deneme Kalıp San. Ltd."], ["yaz", "#w-vno", "1234567890"], ["tikla", '[data-eylem="pencere-kaydet"]']], bekle: 'location.hash === "#/m/m12" && document.querySelector("#a-nesne h1").textContent === "Deneme Kalıp San. Ltd."' },
+    { ad: "tesis ekle: çakışan SGK sicil kaydedilmez", hash: "#/m/m1/tesis-ekle", adim: [["js", 'const e = document.querySelector("#w-sgk"); e.value = MV.tesis("t1").sgk; e.dispatchEvent(new Event("input", { bubbles: true }))'], ["tikla", '[data-eylem="pencere-kaydet"]']], bekle: '/Ada Makina \\/ Merkez Fabrika tesisinde kayıtlı/.test(document.querySelector("#w-sgk-ipucu").textContent)' },
+    { ad: "tesis ekle: geçerli → tesis sayfası", hash: "#/m/m10/tesis-ekle", adim: [["yaz", "#w-ad", "Depo"], ["yaz", "#w-adres", "Sanayi Sitesi 5. Sokak No: 2"], ["yaz", "#w-ilce", "İnegöl"], ["yaz", "#w-il", "Bursa"], ["yaz", "#w-sgk", "21234567890123456789012345"], ["tikla", '[data-eylem="pencere-kaydet"]']], bekle: 'location.hash === "#/t/t16" && document.querySelector("#a-nesne h1").textContent === "Depo"' },
+    { ad: "portal kullanıcısı: seçili tesis seçilmeden gönderilmez", hash: "#/m/m3/kullanici-ekle", adim: [["yaz", "#w-ad", "Ali Veli"], ["yaz", "#w-eposta", "ali.veli@kuzey-lojistik.example"], ["tikla", '[data-kapsam="secili"]'], ["tikla", '[data-eylem="pencere-kaydet"]']], bekle: '/En az bir tesis/.test(document.querySelector("#w-tesis-ipucu").textContent)' },
+    { ad: "portal kullanıcısı: davet edilir, listede Davet bekliyor", hash: "#/m/m5/kullanici-ekle", adim: [["yaz", "#w-ad", "Levent Akın"], ["yaz", "#w-eposta", "levent@akin-dokum.example"], ["tikla", '[data-eylem="pencere-kaydet"]']], bekle: 'location.hash === "#/m/m5" && /Davet bekliyor/.test(document.querySelector(".a-tablo-mkullanici").textContent)' },
+    { ad: "Plan aç (henüz maketi yok) → bildirim", hash: "#/t/t1", adim: [["tikla", '#a-nesne .a-eylem-cubugu [data-ne="Plan açma"]']], bekle: '/henüz tasarlanmadı/.test(document.querySelector("#a-bildirim-metin").textContent)' },
+    { ad: "tesis sayfası: inspector personel kartına bağlanır", hash: "#/t/t7", bekle: 'document.querySelector(\'.a-tablo-isg a[href="personel.html#/p/mk"]\') !== null' },
   ],
 };
 
@@ -142,6 +166,7 @@ async function adimlar(sayfa, liste) {
     if (ne === "tikla") await sayfa.evaluate(s => { const e = [...document.querySelectorAll(s)].find(x => x.getClientRects().length); if (!e) throw new Error("yok: " + s); if (e.focus) e.focus(); e.click(); }, secici);   /* gerçek tıklama gibi: önce odak */
     else if (ne === "yaz") await sayfa.evaluate((s, m) => { const e = document.querySelector(s); e.focus(); e.value = m; e.dispatchEvent(new Event("input", { bubbles: true })); }, secici, metin);
     else if (ne === "tus") await sayfa.keyboard.press(secici);
+    else if (ne === "js") await sayfa.evaluate(secici);   /* sayfanın kendi verisinden değer gerektiren adım */
   }
 }
 
