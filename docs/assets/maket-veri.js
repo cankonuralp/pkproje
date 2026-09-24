@@ -272,6 +272,27 @@
   /* türün yetkili meslekleri: grubuna izin veren meslekler (§4.6, birebir) */
   MV.yetkiliMeslekler = function (t) { return MV.MESLEKLER.filter(function (m) { return m.g.indexOf(t.g) >= 0; }); };
 
+  /* ── STANDART KÜTÜPHANESİ bilgisi (M7, 2026-09-24): sürüm, dosya, yükleyen — ÖRNEK (numaralar gerçek standart numaraları,
+     sürüm yılları ve atamalar doğrulanmadı; firma kendi satın aldığı kopyayı yükler, dosya firma dışına açılmaz, anayasa 5.1).
+     Yükleyen: standardı kullanan türün branş yöneticisi. Yeni sürüm yüklenince eskisi "önceki sürüm" olur; o tarihten önceki
+     raporlar eski sürümü gösterir (rapor kullandığı sürümü saklar). */
+  var SURUM = ["2014", "2016", "2012", "2018", "2019", "2021", "2023"];
+  MV.STANDARTLAR.forEach(function (s, i) {
+    var elk = MV.KATALOG.some(function (t) { return t.b === "e" && t.std.indexOf(s.k) >= 0; });
+    s.surum = SURUM[i % SURUM.length]; s.yukleyen = elk ? "co" : "sy"; s.tarih = "2025-0" + (1 + i % 8) + "-" + (10 + i % 18);
+    s.dosya = { ad: s.no.replace(/\s+/g, "-") + "_" + s.surum + ".pdf", kb: 900 + (i * 437) % 4200 };
+  });
+  MV.standart("s1").tarih = "2026-03-02";   /* yeni sürüm bu tarihte yüklendi; önceki sürüm aşağıda */
+  MV.STANDARTLAR.push(
+    { k: "s1e", no: "TS EN 286-1", konu: "Basit basınçlı kaplar — hava ve azot için", surum: "2002", yukleyen: "sy", tarih: "2021-05-10",
+      dosya: { ad: "TS-EN-286-1_2002.pdf", kb: 2710 }, yerine: "s1", bitti: "2026-03-02" },
+    { k: "s22", no: "TS EN 60204-1", konu: "Makinelerde güvenlik — makinelerin elektrik donanımı", surum: "2018", yukleyen: "co", tarih: "2026-09-18",
+      dosya: { ad: "TS-EN-60204-1_2018.pdf", kb: 5120 } });
+  MV.standartTurleri = function (k) { return MV.KATALOG.filter(function (t) { return t.std.indexOf(k) >= 0; }); };
+  /* kiracı firmanın künyesi (rapor başlığı, §4.2 ve §4.8: akredite kuruluş logosu + ticari ad + TÜRKAK markası) — UYDURMA */
+  MV.FIRMA = { ad: "Örnek Muayene ve Kontrol Ltd. Şti.", kisa: "KM", adres: "Örnek Mahallesi Deneme Caddesi No: 1, Gebze / Kocaeli",
+    eposta: "rapor@firma.example", akr: "AB-0000-M", nusha: 2 };
+
   /* ── EKİPMAN SİCİLİ (modül 7; M3) — kalıcı, tesise bağlı, kod firmada eşsiz (§3.5) ─────────────────────────────
      Planlar maketinin plan tesislerindeki ekipmanlar AYNI algoritmayla üretilir (kod HT-1001…, konum, önceki kontrol, rapor no);
      öteki tesisler aynı düzenle devam eder. "Son kontrol" = son İMZALI rapor (2026 planlarının raporları henüz onayda). */

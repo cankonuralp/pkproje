@@ -120,6 +120,19 @@ export const DURUMLAR = {
     { ad: "tesisli, ekipsiz gönderildi", hash: "#/?tesis=t6", adim: [["tikla", '[data-eylem="plani-ac"]']] },
     { ad: "plan açıldı · eksikli ekip", hash: "#/?tesis=t2", adim: [["tikla", "#p-a-mk"], ["tikla", "#p-a-ea"], ["tikla", '[data-eylem="plani-ac"]']] },
   ] },
+  m7: { sayfa: "maket/standartlar.html", durumlar: [
+    { ad: "standartlar · liste", hash: "#/" },
+    { ad: "standartlar · önceki sürümler", hash: "#/", adim: [["js", 'MK.SZ.s.sec.gorunum = "hepsi"; MK.suzgecKur("s")']] },
+    { ad: "standart · güncel, çok türde", hash: "#/s/s1" },
+    { ad: "standart · önceki sürüm", hash: "#/s/s1e" },
+    { ad: "standart · türe atanmamış", hash: "#/s/s22" },
+    { ad: "standart yükle · var olan numara (yeni sürüm uyarısı)", hash: "#/yukle", adim: [["yaz", "#w-no", "TS EN 280"]] },
+    { ad: "standart yükle · boş gönderildi", hash: "#/yukle", adim: [["tikla", '[data-eylem="pencere-kaydet"]']] },
+    { ad: "şablon · elektrik, Bakanlık formatı zorunlu", sayfa: "maket/sablon.html", hash: "#/ET" },
+    { ad: "şablon · örnek rapor (hava tankı, taslak format)", sayfa: "maket/sablon.html", hash: "#/HT/ornek" },
+    { ad: "şablon · örnek rapor (elektrik iç tesisatı, zorunlu format)", sayfa: "maket/sablon.html", hash: "#/ET/ornek" },
+    { ad: "şablon · şablonu olmayan tür", sayfa: "maket/sablon.html", hash: "#/BK" },
+  ] },
 };
 
 /* ── ETKİLEŞİM DENEMELERİ (--etkilesim): adımlar koşar, sonra `bekle` ifadesi sayfada doğru dönmeli. Gen verilmezse 1920. ── */
@@ -219,6 +232,20 @@ export const DENEMELER = {
     { ad: "yenileme: eski kayıt önceki kayda geçer", hash: "#/isg/yeni?tesis=t12&kisi=mk", adim: [["yaz", "#w-no", "S-2026-0460"], ["yaz", "#w-onay", "20.09.2026"], ["tikla", '[data-eylem="pencere-kaydet"]']], bekle: 'MV.isgTesis("t12").filter(x => x.k === "mk").length === 1 && MV.ISG.filter(x => x.id === "i14")[0].onceki === true' },
     { ad: "önceki kayıt salt okunur (Kaydet yok)", hash: "#/isg/i90", bekle: '!document.querySelector(\'[data-eylem="pencere-kaydet"]\') && document.querySelector("#w-no").readOnly' },
     { ad: "Esc pencereyi kapatır, adres listeye döner", hash: "#/isg/i1", adim: [["tus", "Escape"]], bekle: '!document.querySelector("#a-pencere").open && location.hash === "#/"' },
+  ],
+  m7: [
+    { ad: "görünüm: önceki sürümler (1)", hash: "#/", adim: [["tikla", '[data-secici-ac="gorunum"]'], ["tikla", '[data-sec="gorunum"][data-deger="onceki"]']], bekle: 'document.querySelector("#a-sayac").textContent === "1 standart" && /2002/.test(document.querySelector("#a-liste").textContent)' },
+    { ad: "Türe atanmamış çipi (1 / 22)", hash: "#/", adim: [["tikla", '[data-sz="s"] [data-cip="bos"]']], bekle: 'document.querySelector("#a-sayac").textContent === "1 / 22 standart" && /60204-1/.test(document.querySelector("#a-liste").textContent)' },
+    { ad: "tür sayfasından gelince türe göre süzülür", hash: "#/?tur=HT", bekle: 'document.querySelector("#a-sayac").textContent === "2 / 22 standart"' },
+    { ad: "önceki sürümün rapor sayısı yeni sürümde değil", hash: "#/s/s1e", bekle: '+document.querySelectorAll(".a-yuz-sayi")[1].textContent > 0 && /Önceki sürüm/.test(document.querySelector(".a-nesne-baslik").textContent) && !document.querySelector(\'[data-eylem="surum-ac"]\')' },
+    { ad: "yükle: boş gönderildi, dört eksik, odak numarada", hash: "#/yukle", adim: [["tikla", '[data-eylem="pencere-kaydet"]']], bekle: 'document.querySelectorAll(\'#a-pencere [aria-invalid="true"]\').length === 3 && /PDF dosyası/.test(document.querySelector("#w-dosya-ipucu").textContent) && document.activeElement.id === "w-no"' },
+    { ad: "yükle: kütüphanedeki numara yazılınca yeni sürüm uyarısı", hash: "#/yukle", adim: [["yaz", "#w-no", "TS EN 280"]], bekle: '/önceki sürüm olur/.test(document.querySelector("#w-seritler").textContent) && document.activeElement.id === "w-no"' },
+    { ad: "yükle: aynı sürüm reddedilir", hash: "#/yukle", adim: [["yaz", "#w-no", "TS EN 286-1"], ["yaz", "#w-surum", "2014"], ["yaz", "#w-konu", "Basit basınçlı kaplar"], ["tikla", '[data-eylem="dosya-sec"]'], ["tikla", '[data-eylem="pencere-kaydet"]']], bekle: '/kütüphanede var/.test(document.querySelector("#w-surum-ipucu").textContent)' },
+    { ad: "yeni standart yüklenir → standart sayfası", hash: "#/yukle", adim: [["yaz", "#w-no", "TS EN 474-1"], ["yaz", "#w-surum", "2022"], ["yaz", "#w-konu", "Toprak işleme makineleri — güvenlik"], ["tikla", '[data-eylem="dosya-sec"]'], ["tikla", '[data-eylem="pencere-kaydet"]']], bekle: '/^#\\/s\\/y/.test(location.hash) && /TS EN 474-1:2022/.test(document.querySelector("#a-nesne h1").textContent) && /Türe atanmamış/.test(document.querySelector(".a-nesne-baslik").textContent)' },
+    { ad: "yeni sürüm: eski sürüm saklanır, türler yeni sürümde", hash: "#/s/s5/surum", adim: [["yaz", "#w-surum", "2023"], ["tikla", '[data-eylem="dosya-sec"]'], ["tikla", '[data-eylem="pencere-kaydet"]']], bekle: 'location.hash === "#/s/s5" && /TS EN 15011:2023/.test(document.querySelector("#a-nesne h1").textContent) && document.querySelectorAll(".a-gecmis li").length === 2' },
+    { ad: "şablon: tür değişir (seçim alanı)", sayfa: "maket/sablon.html", hash: "#/HT", adim: [["tikla", "#s-tur"], ["tikla", '[data-secim="s-tur"][data-deger="ET"]']], bekle: 'location.hash === "#/ET" && /Elektrik iç tesisatı/.test(document.querySelector("h1").textContent) && /ZPKR02/.test(document.querySelector(".a-belge").textContent)' },
+    { ad: "şablon: alanların kaynağı yazılı, örnekte değer", sayfa: "maket/sablon.html", hash: "#/HT", adim: [["tikla", 'a.a-sekme[href="#/HT/ornek"]']], bekle: 'location.hash === "#/HT/ornek" && !document.querySelector(".a-belge-kaynak") && /S-2026-0412/.test(document.querySelector(".a-belge").textContent)' },
+    { ad: "şablonu olmayan tür: boş durum", sayfa: "maket/sablon.html", hash: "#/BK", bekle: '!document.querySelector(".a-belge") && /rapor açılamaz/.test(document.querySelector("#a-sablon").textContent)' },
   ],
   m6: [
     { ad: "tesisten gelince: tarih sonraki kontrol, 6 / 6 seçili", hash: "#/?tesis=t2", bekle: 'document.querySelector("#p-tarih").value === "14.10.2026" && /^6 \\/ 6 kayıtlı seçili/.test(document.querySelector("#p-secili").textContent)' },

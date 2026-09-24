@@ -594,6 +594,43 @@ kişi kabul koşulları + İSG-KATİP kaydına bağlantı) · **plan açıldı**
 (`tools/olc-maket.js`: çerçeve artık bölümün iç genişliği; Planlar 54/54, M1 108/108 yeniden ölçüldü). M2'nin "Plan aç" denemesi artık
 bu sayfaya gider (48/48, 11/11).
 
+#### Maket M7 — Standart Kütüphanesi · Rapor şablonu önizlemesi (modül 4, 6) — ONAY BEKLİYOR
+Ekranlar: **standartlar** (`maket/standartlar.html`: liste — standart, sürüm, kullanan türler, bu sürümle rapor sayısı, yükleyen; çipler:
+türe atanmamış · mekanik · elektrik; seçiciler: tür (tür sayfasındaki "Standart kütüphanesi" süzgeçli gelir) · görünüm (güncel · önceki
+sürümler · hepsi) · **standart sayfası**: kullanan türler, sürümler, raporda nasıl yazıldığı, "Oku", "Yeni sürüm yükle" · **yükle / yeni
+sürüm penceresi**) · **rapor şablonu önizlemesi** (`maket/sablon.html#/<tür>`: tür seçimi, sürüm, yürürlük, biçim, standartlar; iki görünüm
+— **Şablon**: Ek-III 1.7'nin dokuz bölümü + fotoğraf eki, her alanın **nereden dolduğu** · **Örnek rapor**: aynı şablon uydurma kayıtlarla;
+şablonu olmayan türde boş durum).
+**Varsayımlar:**
+- Standart = firmanın satın aldığı kopya (PDF); **yalnız firma içinde** okunur (inspector sahada dahil), kalıcı herkese açık bağlantı yok
+  (anayasa 5.1). Yükleyen/değiştiren branş yöneticisi (rol × modül önerisi, M1).
+- **Sürüm**: aynı numaranın yeni sürümü yüklenince eskisi "önceki sürüm" olur, silinmez; türler yeni sürüme geçer, **yazılmış raporlar
+  kullandıkları sürümü gösterir**. Aynı numara + sürüm ikinci kez yüklenemez. Numara ve yıllar **örnek** (doğrulanmadı).
+- Kontrol metodu: standart **tür düzeyinde** atanır (M3), inspector rapor anında türün standartlarından seçer; türde standart yoksa üretici
+  talimatı / risk değerlendirmesi (Ek-III 1.7.1.1) — §3'teki açık soruya öneri.
+- Şablon **kodda**, site içinde düzenlenmez; önizleme salt okunur. PDF sunucuda üretilir (§8.3); önizleme onun iskeleti, ekrana göre akar.
+- Rapor başlığı: firma logosu, ticari ad, adres, akreditasyon no, akreditasyon markası yeri (§4.8); form: Bakanlık formatı zorunlu türde
+  format kodu (ör. ZPKR02), öteki türde firma form kodu (makette `KM-FR-<tür>-<sürüm>`).
+- Alan kaynakları (rapor zinciri §3.2 madde 1): işyeri ünvanı ← müşteri · SGK sicil ve adres ← tesis · sözleşme no ← İSG-KATİP kaydı (M5) ·
+  başlangıç/bitiş ← saha · sonraki kontrol ← kontrol + tür periyodu · metot ← türün standartları · ekipman ← etiket ve kayıt (M3) ·
+  ölçüm aletleri ← inspector'ın zimmeti (M4, seçilmez) · yetkili kişi ← personel (M1) · nüsha ← firma ayarı · imza ← e-imza / ıslak imza.
+- Hafif / ağır kusur yalnız Bakanlık formatı yürürlükte olan türde; öteki türde "Kusurlu" (§4.5). Kriter maddeleri **örnek** (grup başına).
+**Sorular (M7):**
+82. Kontrol metodu standardı: **tür düzeyinde atanıp rapor anında türün standartlarından seçilsin** (öneri) mi, yalnız biri mi? *(§3 açık soru.)*
+83. Standart yükleme ve yeni sürüm yetkisi: **branş yöneticisi + firma yöneticisi** (öneri) mi? Okuma herkese açık mı?
+84. Yeni sürüm yüklenince türler **kendiliğinden yeni sürüme** geçsin mi (öneri), yoksa tür tür onaylansın mı?
+85. Standart dosyasının açılması **kayda geçsin mi** (kim, ne zaman; telifli belge)?
+86. **Belge önizlemesi** yeni desen (kalıp 16): kâğıt ortada, en çok 880 px, metin bir basamak küçük, telefonda akar — uygun mu? (M9 PDF de
+    bu desenle.)
+87. Akreditasyon markası rapor başlığında **her raporda** mı, yalnız **akreditasyon kapsamındaki türlerde** mi?
+88. Bakanlık formatı olmayan türlerde firma formatı Ek-III 1.7 sırasıyla (makette) yeterli mi; firma **kendi form kodunu** mu kullanır?
+89. Şablon önizlemesini **inspector** da görsün mü (sahada neyi dolduracağını görmek için), yoksa yalnız yöneticiler mi?
+**Ölçüm (2026-09-24, bulut):** 11 durum × 1920 · 1080 · 375 × açık/koyu = **66/66 temiz**, çekmece 2/2; etkileşim **12/12**. Ölçerken
+düzeltilen: telefonda akreditasyon markası yeri ve 26 haneli SGK sicil no taşıyordu (belge metni bir basamak küçüldü) · telefonda künye
+logoların arasına sıkışıp e-posta ve akreditasyon no bölünüyordu (künye alta alındı, no bölünmez) · örnek rapor geçen yılın tarihini bu
+yılın şablon sürümüyle gösteriyordu (örnek bugün tarihli yapıldı). Ekipman türü sayfasındaki "Standart kütüphanesi" artık türe göre
+süzülmüş listeye gider (M3 60/60, 14/14 yeniden).
+
 ---
 
 ## 4 · Mevzuat bulguları (2026-09-18 araştırması; kaynaklar bölüm 10)
@@ -935,6 +972,9 @@ revizyon, alan kopyalama, hafif kusur devri, meslek eşleşme denetimi).
 - Emsal ürünler: https://opwire.app/iso-17020-periyodik-kontrol-yazilimi/ · https://17020muayene.vidco.com.tr/ · https://akuple.com/asansor-kontrol-yazilimi/ · https://ensyazilim.com/
 
 ## 11 · Değişiklik günlüğü
+- 2026-09-24 (19): **toplu maket M7 Standart Kütüphanesi · Rapor şablonu önizlemesi** (§3.6): standart listesi, standart sayfası,
+  yükle / yeni sürüm (sürüm geçmişi, rapor kullandığı sürümü saklar); rapor şablonu belge önizlemesi (Ek-III 1.7, alan kaynakları,
+  örnek rapor). Sorular 82–89.
 - 2026-09-24 (18): **toplu maket M6 Plan aç** (§3.6): planlama ekibinin plan açma sayfası (müşteri → tesis → tarih → inspector →
   kapsam → özet), plan açıldı ekranı; müşteri ve tesis sayfalarındaki "Plan aç" bağlandı. Sorular 74–81.
 - 2026-09-24 (17): **toplu maket M5 İSG-KATİP kaydı** (§3.6): kayıt listesi, plan kabulünü durduran eksikler, ekle/düzenle/önceki kayıt

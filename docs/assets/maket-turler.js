@@ -79,7 +79,7 @@
         bilgi("Akreditasyon", t.akr === "zorunlu" ? "Zorunlu (Ek-2)" : t.akr === "2027" ? "1 Ocak 2027'den zorunlu (Ek-2)" : '<span class="a-deger-yok">Gerekmez</span>') +
       "</dl></section>" +
       '<section class="a-bolum" aria-labelledby="a-b-std"><div class="a-alt-bas"><h2 class="a-alt-baslik" id="a-b-std">Kontrol metodu standartları</h2><span class="a-sayac"><b>' + t.std.length + "</b> standart</span>" +
-        MK.git({ hedef: 4, hash: "", ad: "Standart kütüphanesi", ikon: "book-open", sinif: "a-tus-ikincil a-bolum-tus", ne: "Standartlar" }) + "</div>" +
+        MK.git({ hedef: 4, hash: "#/?tur=" + t.k, ad: "Standart kütüphanesi", ikon: "book-open", sinif: "a-tus-ikincil a-bolum-tus", ne: "Standartlar" }) + "</div>" +
         (t.std.length ? '<ul class="a-kosullar">' + t.std.map(function (k) { var s = MV.standart(k); return '<li class="a-kosul-bilgi">' + ikon("book-open", "a-ikon-kucuk") + '<span><span class="a-kod">' + s.no + "</span> · " + kacis(s.konu) + "</span></li>"; }).join("") + "</ul>"
           : '<div class="a-serit-kap">' + MK.serit("uyari", "triangle-alert", "Standart seçilmemiş: raporun kontrol metodu üretici talimatı ya da risk değerlendirmesi olarak yazılır (Ek-III 1.7.1.1).") + "</div>") +
       "</section>" +

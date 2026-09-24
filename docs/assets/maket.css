@@ -694,6 +694,44 @@ a.a-yuz:hover { border-color: var(--kenar-alan); background: var(--zemin); }
 .a-giris-ayrac { width: min(100%, 360px); margin: 6px 0 0; padding-top: 12px; border-top: 1px solid var(--kenar); color: var(--yazi2); font-size: var(--boy-kucuk); }
 :root[data-tema="koyu"] .a-giris { background: var(--zemin); }
 
+/* M7 — standart kütüphanesi listesi */
+.a-tablo-standart .a-k-std { width: 30%; } .a-tablo-standart .a-k-surum { width: 9%; } .a-tablo-standart .a-k-tur { width: 20%; }
+.a-tablo-standart .a-k-rapor { width: 8%; } .a-tablo-standart .a-k-yuklendi { width: 15%; } .a-tablo-standart .a-k-durum { width: 18%; }
+/* BELGE ÖNİZLEMESİ (M7 rapor şablonu; M9 PDF): sunucuda üretilen PDF'in iskeleti, ekrana göre akar (A4 değil). Kâğıt ortada, en çok
+   880 px — belge okunur satır boyunda kalsın (kalıp 10'un istisnası: belge kabı doldurmaz; soru). Yeni desen → onay sorusu (kalıp 16). */
+.a-belge {
+  max-width: 880px; margin: 0 auto 20px; padding: 24px; font-size: var(--boy-kucuk);   /* belge metni gövdeden bir basamak küçük */
+  background: var(--kart); border: 1px solid var(--kenar); border-radius: var(--r-orta); box-shadow: var(--golge-1);
+}
+.a-belge-bas { display: flex; align-items: center; gap: 16px; padding-bottom: 12px; border-bottom: 2px solid var(--yazi); }
+.a-belge-logo {
+  width: 96px; min-height: 56px; flex: none; display: flex; align-items: center; justify-content: center; padding: 4px;
+  border: 1px dashed var(--kenar-alan); border-radius: var(--r-kucuk); color: var(--yazi2); font-size: var(--boy-etiket); font-weight: 700; text-align: center;
+}
+.a-belge-kunye { flex: 1 1 auto; min-width: 0; display: grid; gap: 2px; font-size: var(--boy-kucuk); overflow-wrap: anywhere; }
+.a-belge-baslik { margin: 16px 0 12px; text-align: center; }
+.a-belge-baslik h2 { margin: 0; font-size: var(--boy-baslik); font-weight: var(--kal-baslik); }
+.a-belge-baslik p { margin: 2px 0 0; color: var(--yazi2); }
+.a-belge-bolum { margin: 16px 0 0; }
+.a-belge-bolum h3 {
+  display: flex; justify-content: space-between; align-items: baseline; flex-wrap: wrap; gap: 4px 12px; margin: 0 0 8px; padding: 6px 10px;
+  background: var(--zemin2); border-radius: var(--r-kucuk); font-size: var(--boy-govde); font-weight: var(--kal-bolum);
+}
+.a-belge-madde { color: var(--yazi2); font-size: var(--boy-etiket); font-weight: 500; }
+.a-belge-tablo { width: 100%; border-collapse: collapse; font-size: var(--boy-kucuk); }
+.a-belge-tablo th, .a-belge-tablo td { padding: 6px 8px; border: 1px solid var(--kenar); text-align: left; vertical-align: top; overflow-wrap: anywhere; }
+.a-belge-tablo th { background: var(--zemin2); color: var(--yazi2); font-weight: 600; }
+/* şablon görünümünde alanın nereden dolduğu (rapor zinciri, §3.2 madde 1) */
+.a-belge-kaynak { display: flex; align-items: center; gap: 4px; margin-top: 4px; color: var(--yazi2); font-size: var(--boy-etiket); font-weight: 500; }
+.a-belge-kutu { display: inline-block; width: 14px; height: 14px; margin-right: 8px; vertical-align: -2px; border: 2px solid var(--yazi2); border-radius: 2px; }
+.a-belge-kutu-dolu { background: var(--yazi); border-color: var(--yazi); }
+.a-belge-secenek { margin: 6px 0; }
+.a-belge-imza {
+  display: flex; align-items: center; justify-content: center; min-height: 64px; margin-top: 10px; padding: 8px;
+  border: 1px dashed var(--kenar-alan); border-radius: var(--r-kucuk); color: var(--yazi2); font-size: var(--boy-kucuk); text-align: center;
+}
+.a-belge-alt { display: flex; justify-content: space-between; flex-wrap: wrap; gap: 8px; margin-top: 16px; padding-top: 8px; border-top: 1px solid var(--kenar); color: var(--yazi2); font-size: var(--boy-etiket); }
+
 /* ══ BANTLAR — taban kuralların ARDINDA (anayasa 3.2) ══════════════════════════════════════════════════ */
 
 /* orta + dar (< 1280): yan menü çekmece, üst çubukta ☰ + işaret */
@@ -788,6 +826,11 @@ a.a-yuz:hover { border-color: var(--kenar-alan); background: var(--zemin); }
   .a-giris-slogan, .a-giris-alt { display: none; }
   .a-giris-form { justify-content: flex-start; padding-top: 24px; }
   .a-giris-tuslar .a-tus { flex: 1 1 100%; }
+  /* belge önizlemesi telefonda: iç boşluk daralır; iki logo üstte iki uçta, künye altında tam satır (e-posta bölünmesin) */
+  .a-belge { padding: 12px; }
+  .a-belge-bas { flex-wrap: wrap; justify-content: space-between; gap: 10px; }
+  .a-belge-logo { width: 84px; }
+  .a-belge-kunye { order: 3; flex-basis: 100%; }
 }
 
 /* kap < ESİK: aynı tablo KARTA döner (tek üretici; anayasa 3.3 kap sorgusu). Kartta yerleşim sütunun `data-kart`
