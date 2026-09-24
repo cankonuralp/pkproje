@@ -6,8 +6,8 @@ import { test } from "node:test";
 import { KALIP } from "../../src/styles/kalip.ts";
 import { MODUL_GRUPLARI } from "../../src/modules/moduller.ts";
 import {
-  ciftIdler, ciftSeciciler, ciftTanimliDegiskenler, degiskenDegeri, dosyalar, eksikIkonlar, kiraciDisiErisim, kullanilanIkonlar, maketMenusu, oku,
-  parantezHatasi, rlsEksikTablolar, tanimsizDegiskenler, testKapisiEksikleri, tokenGovdesi,
+  bantDisiDaraltma, ciftIdler, ciftSeciciler, ciftTanimliDegiskenler, daralmisSerit, degiskenDegeri, dosyalar, eksikIkonlar, kalipDisiEsikler,
+  kiraciDisiErisim, kullanilanIkonlar, maketMenusu, oku, parantezHatasi, rlsEksikTablolar, tanimsizDegiskenler, testKapisiEksikleri, tokenGovdesi,
 } from "../yardimci/denetimler.ts";
 
 const kabuk = oku("src/components/kabuk/Kabuk.module.css");
@@ -47,6 +47,28 @@ test("tek kaynak: maketteki kopyada tek değer değişince yakalanır", () => {
 test("kalıp sayısı: denetim yüksekliği 40'a dönünce yakalanır", () => {
   assert.equal(degiskenDegeri(tokens, "--tus-y", null), `${KALIP.tusY.fare}px`);
   assert.notEqual(degiskenDegeri(tokens.replace("--tus-y: 34px", "--tus-y: 40px"), "--tus-y", null), `${KALIP.tusY.fare}px`);
+});
+
+test("kalıp bandı: kabuğa kalıp dışı bir eşik (min-width 1200) eklenince yakalanır", () => {
+  assert.deepEqual(kalipDisiEsikler(kabuk, KALIP.bant), []);
+  assert.deepEqual(kalipDisiEsikler(kabuk + "\n@media (min-width: 1200px) { .logo { width: 120px; } }\n", KALIP.bant), ["min-width: 1200px"]);
+});
+
+test("daraltılmış şerit: 64 px 72'ye dönünce yakalanır (uygulama ve maket)", () => {
+  const genis = `(min-width: ${KALIP.bant.genis}px)`;
+  const maketCss = oku("docs/assets/maket.css");
+  assert.equal(daralmisSerit(kabuk, genis), KALIP.kabuk.cubukDar);
+  assert.notEqual(daralmisSerit(kabuk.replace("grid-template-columns: 64px", "grid-template-columns: 72px"), genis), KALIP.kabuk.cubukDar);
+  assert.notEqual(daralmisSerit(maketCss.replace("grid-template-columns: 64px", "grid-template-columns: 72px"), genis), KALIP.kabuk.cubukDar);
+});
+
+test("anayasa 2.11: daraltma kuralı tablet bandına (geniş bant dışına) sızınca yakalanır", () => {
+  const genis = `(min-width: ${KALIP.bant.genis}px)`;
+  assert.equal(bantDisiDaraltma(kabuk, "data-menu", genis), 0);
+  const sizan = kabuk + '\n@media (max-width: 1279.98px) { :global([data-menu="dar"]) .kabuk { grid-template-columns: 64px minmax(0, 1fr); } }\n';
+  assert.equal(bantDisiDaraltma(sizan, "data-menu", genis), 1);
+  const maketCss = oku("docs/assets/maket.css");
+  assert.equal(bantDisiDaraltma(maketCss + "\n.a-kabuk-dar .a-menu-ad { display: none; }\n", ".a-kabuk-dar", genis), 1);
 });
 
 test("ikon: dosyada olmayan ikon kullanılınca yakalanır", () => {

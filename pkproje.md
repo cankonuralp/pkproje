@@ -5,7 +5,7 @@
 > ekleme tarih taşır. Buradaki hiçbir madde reisim onaylamadan **yapılacak iş** değildir; onay durumu her
 > bölümde ayrıca yazar. Gerçek müşteri/firma adı bu dosyaya girmez (anayasa 5.8, 10.3).
 
-Oluşturma: 2026-09-18 · Son güncelleme: 2026-09-23
+Oluşturma: 2026-09-18 · Son güncelleme: 2026-09-24
 
 ---
 
@@ -319,7 +319,7 @@ gibi genel isimler olsun"*
   **Zimmetler**; sayfa başlığı, kırıntı ve sekme adı da.
 · **Kim hangi modülü görecek: sonra** (reisim). Maket herkese bütün menüyü gösteriyor.
 **Maket 6. tur — yan menü daraltma (reisim 2026-09-23, birebir: *"sol taraf açılıp kapanabilir olsun kapatılınca sadece
-logolar kalsın"*) — makette, ONAY BEKLİYOR (anayasa 2.1; onaylanınca uygulamaya geçer):** masaüstünde (≥ 1280) üst
+logolar kalsın"*) — ONAYLANDI (reisim 2026-09-24: *"uygun"*, 2. deneme) ve uygulamaya geçti (§8.13):** masaüstünde (≥ 1280) üst
 çubuğun solunda (tablet/telefondaki ☰ ile aynı yerde) daralt/genişlet düğmesi · daralınca 64 px simge şeridi, üstte
 probata işareti, grup başlıkları yerine ince çizgi, sayaç simgenin köşesinde, ad üstüne gelince ipucu (yalnız şerit görünürken; ekran okuyucu adı okur)
 · tercih bu cihazda saklanır · tablet ve telefonda çekmece aynen (anayasa 2.11: ikon rayına dönüşmez). "Logolar" =
@@ -327,7 +327,8 @@ menü simgeleri + probata işareti diye yorumlandı. Daralınca içerik 1.648 �
 **2. deneme (reisim 2026-09-24, birebir: *"onaylamıyorum standart üç alt alta çizgi görünümü olsun"*):** ilk denemedeki
 panel simgesi (sol kenarı çizili kutu + ok) reddedildi → daraltma düğmesinin simgesi her iki hâlde **standart ☰**;
 tablet/telefondaki çekmece düğmesiyle aynı simge, aynı yer (üst çubuğun solu). Şerit, ipucu ve tercih aynen. Panel
-simgeleri ikon dosyalarından çıktı (51). ONAY BEKLİYOR.
+simgeleri ikon dosyalarından çıktı (51). **Onaylandı** (*"uygun"*) → uygulamada aynısı: 64 px kalıp sayısı oldu
+(`src/styles/kalip.ts` kabuk.cubukDar), daraltma kuralları yalnız geniş bantta testle kilitli.
 **Yorumlarım (5. tur; 29–31) — reisim kabul etti (*"tüm önerilerin uygun"*, 2026-09-23):** menü grupları ve sırası yukarıdaki gibi (her gün
 kullanılan üstte, tanımlar altta) · hareket kaydı plan içinde değil, rol × modül belirlenirken yöneticiye "Hareket kaydı"
 (denetim izi) olarak açılsın · bu tur uygunsa Planlar + plan içi dondurulur ve iskelet kalemi açılır.
@@ -594,6 +595,9 @@ tarih-saat, fotoğraflar, form) · **Eğitim kaydı** (personel, eğitim, belge,
      doğru; `node_modules`'a yama yapılmadı).
    · **Yayın:** Pages artık GitHub Actions'tan: kök = `docs/` (maket + sunum), `/uygulama/` = uygulamanın statik önizlemesi
      (sunucu, veritabanı, giriş orada ÇALIŞMAZ). Gerçek yayın Türkiye'deki sunucuda (§8.8) — sağlayıcı ve alan adı açık.
+   · **Yan menü daraltma (2026-09-24, maket 6. tur onaylı):** durum `<html data-menu="dar">` özniteliğinde (tema deseni:
+     layout'taki betik ilk boyamadan önce kurar, kabuk özniteliğe abone olur) → sayfa açılırken menü açık görünüp sonra
+     kapanmaz, sunucu ve istemci çıktısı aynı kalır. Kurallar yalnız `@media (min-width: 1280px)` bloğunda.
 
 ## 9 · Sorular ve reisim'in cevapları (2026-09-22; kararlar 2, 3, 6, 7, 8'e işlendi)
 1. Roller → bir kişinin birden fazla rolü olabilir; kendi raporunu onaylama engellenmez.
@@ -642,7 +646,10 @@ yan menüde bütün modüller, genel adlar · rol × modül görünürlüğü so
 modül belirlenirken yöneticiye "Hareket kaydı" · 5. tur uygun) → referans ekran dondu, **iskelet kuruldu ve ilk yayın
 yapıldı** (Pages önizlemesi, §8.13).
 
-**Açık kalanlar:** **yan menü daraltma maketinin onayı** (§3.4, 6. tur) · **rol × modül görünürlüğü** (reisim: *"sonradan belirleriz"*) · **gerçek sunucunun sağlayıcısı**
+**Dokuzuncu tur (2026-09-24):** yan menü daraltma → panel simgesi reddedildi (*"standart üç alt alta çizgi görünümü
+olsun"*), ☰ ile 2. deneme **onaylandı** (*"uygun"*) → uygulamaya geçti (§3.4).
+
+**Açık kalanlar:** **rol × modül görünürlüğü** (reisim: *"sonradan belirleriz"*) · **gerçek sunucunun sağlayıcısı**
 (Türkiye, §8.8) ·
 alan adının alınması · e-imza yöntemi (8.4) · v1 ekipman grupları · 5 yıl sonrası silme
 mekanizması · **zimmette birden çok cihaz varsa süzgeç** (§3) · **kontrol metodu standardının seçim yeri**
@@ -686,14 +693,20 @@ revizyon, alan kopyalama, hafif kusur devri, meslek eşleşme denetimi).
   aktarıldığı hâline döndü. Ürün kararları bu dosyada tutulur. (b) Fotoğraf konumu/EXIF gibi şeylere
   **dokunulmayacak**. (c) Emsal uygulama incelemesi **GitHub'da paylaşılmaz** → bölüm 6 `yerel/` klasörüne
   taşındı, depo geçmişi bu içerikten temizlendi. Ana hedef: **müşterimizin işini kolaylaştırmak.**
+- 2026-09-24 (10): reisim 2. denemeyi onayladı (*"uygun"*) → **daraltma uygulamada**: geniş bantta üst çubuğun solundaki
+  ☰ menüyü 64 px şeride indirir (işaret, çizgi ayraçlar, ipucu yalnız şeritte), tercih `probata-menu`; ilk boyamadan önce
+  `<html data-menu="dar">` kurulur (tema gibi, yanıp sönme yok). Kalıba `kabuk.cubukDar: 64`; kilitler: şerit 64 (uygulama +
+  maket), daraltma kuralı geniş bant dışında yok (anayasa 2.11), kabuk eşikleri yalnız kalıp bantları (min-width dahil);
+  olumsuz kanıt 3 yeni (16/16). Yerelde 1920 (Planlar · Personel · 404; geniş + daralmış × iki tema) · 1080 (çekmece kapalı /
+  açık) · 375 (iki tema × çekmece) ölçüldü, hepsi temiz; makette ölçülen sayıların aynısı (içerik 1.688 ↔ 1.856 px).
+- 2026-09-24 (9): reisim ilk denemeyi onaylamadı: *"standart üç alt alta çizgi görünümü olsun"* → daraltma düğmesi
+  standart ☰ (tabletteki çekmece düğmesiyle aynı simge ve yer), panel simgeleri kalktı (ikon dosyası 51). Maket ölçümü
+  1920'de 8/8 temiz (liste + plan içi × geniş + daralmış × iki tema); 1080 ve 375'te çekmece aynen. Onay bekliyor.
 - 2026-09-23 (8): reisim yan menünün daraltılabilmesini istedi → önce makette (anayasa 2.1): masaüstünde üst çubuğun
   solundaki düğmeyle 64 px simge şeridi; tablet/telefonda çekmece aynen. İkon dosyalarına 2 ikon (53). Maket ölçümü
   1920'de 20/20 temiz (daralmış + geniş × iki tema × liste/plan içi/pencereler); 1080 ve 375'te çekmece etkilenmiyor.
   Canlı ölçümde kusur yakalandı: "dar" kayıtlıyken tablette de 17 bağlantıya ipucu konuyordu (ad zaten yazılıyken çift
   ad) → ipucu yalnız geniş bantta, bant değişince yeniden hesaplanıyor. Onay bekliyor; onaylanınca uygulamaya geçer.
-- 2026-09-24 (9): reisim ilk denemeyi onaylamadı: *"standart üç alt alta çizgi görünümü olsun"* → daraltma düğmesi
-  standart ☰ (tabletteki çekmece düğmesiyle aynı simge ve yer), panel simgeleri kalktı (ikon dosyası 51). Maket ölçümü
-  1920'de 8/8 temiz (liste + plan içi × geniş + daralmış × iki tema); 1080 ve 375'te çekmece aynen. Onay bekliyor.
 - 2026-09-23 (7): reisim 29–31'i kabul etti ve *"kodlamaya başla ilk yayını yap"* dedi. **İlk kod kalemi: iskelet** (§8.13):
   Next.js + TypeScript, kabuk (17 modüllü yan menü, tema, çekmece), gömülü PostgreSQL + RLS'li kiracı katmanı + göç
   koşucusu, kalıp sayıları dondu (`src/styles/kalip.ts`), 36 kilit testi + 13 olumsuz kanıt, CI, Pages önizlemesi

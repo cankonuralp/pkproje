@@ -116,23 +116,49 @@ export function tokenGovdesi(css: string): string {
   return i < 0 ? "" : css.slice(i).replace(/\r\n/g, "\n");
 }
 
+/** verilen medya sorgusunun gövdesi (yorumsuz; parantez SAYILARAK bulunur — anayasa 3.1 / 3.9, lastIndexOf değil) */
+export function medyaBlogu(css: string, medya: string): string | null {
+  const temiz = cssTemizle(css);
+  const i = temiz.indexOf(`@media ${medya}`);
+  if (i < 0) return null;
+  let derinlik = 0, j = temiz.indexOf("{", i);
+  const bas = j;
+  for (; j < temiz.length; j++) { if (temiz[j] === "{") derinlik++; else if (temiz[j] === "}" && --derinlik === 0) break; }
+  return temiz.slice(bas, j);
+}
+
 /** bir blokta (:root taban kuralı ya da verilen medya sorgusu) değişkenin değeri */
 export function degiskenDegeri(css: string, degisken: string, medya: string | null): string | null {
-  const temiz = cssTemizle(css);
-  let alan = temiz;
-  if (medya) {
-    const i = temiz.indexOf(`@media ${medya}`);
-    if (i < 0) return null;
-    let derinlik = 0, j = temiz.indexOf("{", i);
-    const bas = j;
-    for (; j < temiz.length; j++) { if (temiz[j] === "{") derinlik++; else if (temiz[j] === "}" && --derinlik === 0) break; }
-    alan = temiz.slice(bas, j);
-  } else {
+  let alan: string | null;
+  if (medya) alan = medyaBlogu(css, medya);
+  else {
+    const temiz = cssTemizle(css);
     const i = temiz.indexOf(":root {");
     alan = temiz.slice(i, temiz.indexOf("}", i));
   }
-  const m = alan.match(new RegExp(`${degisken}\\s*:\\s*([^;]+);`));
+  const m = alan?.match(new RegExp(`${degisken}\\s*:\\s*([^;]+);`));
   return m ? m[1]!.trim() : null;
+}
+
+/** kalıbın üç bandı dışında kalan genişlik eşikleri: izinli olanlar max-width (genis|orta) − 0,02 ve min-width genis|orta */
+export function kalipDisiEsikler(css: string, bant: { orta: number; genis: number }): string[] {
+  const izinli = new Set([`max-width: ${bant.genis - 0.02}px`, `max-width: ${bant.orta - 0.02}px`, `min-width: ${bant.genis}px`, `min-width: ${bant.orta}px`]);
+  return [...cssTemizle(css).matchAll(/\((max|min)-width:\s*([\d.]+)px\)/g)].map((m) => `${m[1]}-width: ${m[2]}px`).filter((e) => !izinli.has(e));
+}
+
+/** daraltılmış yan menü şeridinin genişliği: verilen medya bloğundaki ilk "grid-template-columns: Npx minmax(0, 1fr)" */
+export function daralmisSerit(css: string, medya: string): number | null {
+  const m = medyaBlogu(css, medya)?.match(/grid-template-columns:\s*(\d+)px\s+minmax\(0,\s*1fr\)/);
+  return m ? Number(m[1]) : null;
+}
+
+/** anayasa 2.11: daraltma işaretini (ör. data-menu="dar") taşıyan kural, izin verilen medya bloğunun DIŞINDA — tablet
+ *  ve telefonda menü ikon şeridine dönüşmesin. Bulgu: blok dışındaki işaret sayısı. */
+export function bantDisiDaraltma(css: string, isaret: string, medya: string): number {
+  const temiz = cssTemizle(css);
+  const blok = medyaBlogu(css, medya) ?? "";
+  const say = (metin: string) => metin.split(isaret).length - 1;
+  return say(temiz) - say(blok);
 }
 
 /* ── İKONLAR ──────────────────────────────────────────────────────────────────────────────────────────── */

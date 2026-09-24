@@ -15,6 +15,8 @@ export const KALIP = {
   sayfa: { ekipman: 10, rapor: 20 },
   /** yazı ölçeği px — başlık 20 (telefonda 18) · bölüm 15 · gövde 14 (dokunmatikte 15) · küçük 12,5 · etiket 11,5 */
   yazi: { baslik: 20, baslikTelefon: 18, bolum: 15, govde: 14, govdeDokunmatik: 15, kucuk: 12.5, etiket: 11.5 },
-  /** kabuk: yan menü genişliği ve üst çubuk yüksekliği */
-  kabuk: { cubukGenislik: 232, ustYukseklik: 52 },
+  /** kabuk: yan menü genişliği, daraltılmış simge şeridi (yalnız geniş bant) ve üst çubuk yüksekliği.
+   *  cubukDar 64 = 12 + 40 (simge tuşu) + 12 — maket 6. tur, reisim 2026-09-24 "uygun" (1920'de içerik 1.648 → 1.816 px);
+   *  reddedilen: sayı değil düğme simgesi (panel simgesi → standart ☰, "standart üç alt alta çizgi görünümü olsun") */
+  kabuk: { cubukGenislik: 232, cubukDar: 64, ustYukseklik: 52 },
 } as const;

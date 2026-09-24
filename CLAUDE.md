@@ -118,7 +118,8 @@ CI aynı zinciri her push'ta koşar (`.github/workflows/ci.yml`); main'de deneti
 
 ## 6 · Kalıp ve kilitler (bu projede)
 - **Referans ekran DONDU (2026-09-23): Planlar + plan içi** (maket 5. tur). Sayılar `src/styles/kalip.ts`'te
-  (denetim 34/44 · bantlar 768/1280 · kart eşiği 960 · sayfa ekipman 10 / rapor 20 · yazı ölçeği · kabuk 232/52),
+  (denetim 34/44 · bantlar 768/1280 · kart eşiği 960 · sayfa ekipman 10 / rapor 20 · yazı ölçeği · kabuk 232/52 ·
+  daraltılmış yan menü 64, yalnız geniş bant — 2026-09-24),
   kilidi `tests/kalip-sayilari.test.ts` (değişkenler + kabuk + onaylı maket). Kabul/ret örneği dosyada. Kaynak
   projenin sayıları kopyalanmadı.
 - ⛔ **ANAYASA ve KALIP = site yapma yöntemimiz** (reisim 2026-09-22: *"anayasada siteye ait kararlar değil
@@ -129,7 +130,8 @@ CI aynı zinciri her push'ta koşar (`.github/workflows/ci.yml`); main'de deneti
   dokunulmaz; kullanılan her `var(--x)` tanımlı mı testi ilk günden.
 - **Kurulu kilitler (iskelet):** tip denetimi · lint · `fail 0` kapısı (betik + CI) · olumsuz kanıt (`tests/bozan/`,
   her kilide bir bozan) · CSS parantez / tanımsız değişken / çift seçici (cırcır) / değişken ezmesi · çift id · değişken
-  tek kaynağı (src ↔ docs) · kalıp sayıları · ikonlar · menü = onaylı maket · rota = modül kaydı · kontrast (62 çift) ·
+  tek kaynağı (src ↔ docs) · kalıp sayıları (kabuk eşikleri yalnız kalıp bantları; daraltma yalnız geniş bantta, uygulama +
+  maket) · ikonlar · menü = onaylı maket · rota = modül kaydı · kontrast (62 çift) ·
   kiracı süzgeci (pg yalnız src/server/db; her kiracı tablosunda ENABLE + FORCE RLS + politika) · kiracı izolasyonu
   GERÇEK PostgreSQL'de (iki firma, WITH CHECK, uygulama rolü süper kullanıcı değil, göç idempotent).
 - Sonra: Playwright + erişilebilirlik (ilk ekranlar) · görsel regresyon (referans ekran) · hata alarmı (yayında;

@@ -19,15 +19,16 @@ export const viewport: Viewport = {
   ],
 };
 
-/* tema ilk boyamadan ÖNCE kurulur (yanıp sönme yok): kayıtlı tercih, yoksa cihazın teması. Maketle aynı anahtar. */
-const TEMA_BETIGI = `(function(){var d=document.documentElement,t;try{t=localStorage.getItem("probata-tema")}catch(e){}
-d.setAttribute("data-tema",t==="acik"||t==="koyu"?t:(matchMedia("(prefers-color-scheme: dark)").matches?"koyu":"acik"))})()`;
+/* tema ve yan menü daraltması ilk boyamadan ÖNCE kurulur (yanıp sönme yok): kayıtlı tercih, yoksa cihazın teması;
+   menü yalnız "dar" kayıtlıysa daralır (kural yalnız geniş bantta etkili, Kabuk.module.css). Maketle aynı anahtarlar. */
+const ILK_BOYAMA_BETIGI = `(function(){var d=document.documentElement,t,m;try{t=localStorage.getItem("probata-tema");m=localStorage.getItem("probata-menu")}catch(e){}
+d.setAttribute("data-tema",t==="acik"||t==="koyu"?t:(matchMedia("(prefers-color-scheme: dark)").matches?"koyu":"acik"));if(m==="dar")d.setAttribute("data-menu","dar")})()`;
 
 export default function KokDuzen({ children }: { children: ReactNode }) {
   return (
     <html lang="tr" suppressHydrationWarning>
       <head>
-        <script dangerouslySetInnerHTML={{ __html: TEMA_BETIGI }} />
+        <script dangerouslySetInnerHTML={{ __html: ILK_BOYAMA_BETIGI }} />
       </head>
       <body>
         <Kabuk>{children}</Kabuk>
