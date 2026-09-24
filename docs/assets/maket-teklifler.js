@@ -58,7 +58,7 @@
     var eylem = MK.tus({ eylem: "pdf", ad: "PDF", ikon: "file-text", sinif: "a-tus-ikincil" }) +
       (t.durum === "taslak" ? '<a class="a-tus a-tus-ikincil" href="#/t/' + t.no + '/duzenle">' + ikon("pencil", "a-ikon-kucuk") + "Düzenle</a>" + MK.tus({ eylem: "gonder", ad: "Gönderildi olarak işaretle", ikon: "send" }) : "") +
       (t.durum === "gonderildi" ? '<a class="a-tus a-tus-ikincil" href="#/t/' + t.no + '/red">' + ikon("ban", "a-ikon-kucuk") + "Reddedildi</a>" + MK.tus({ eylem: "kabul", ad: "Kabul edildi", ikon: "check" }) : "") +
-      (kabul ? MK.git({ hedef: "is-sozlesmesi", hash: "#/is/yeni?teklif=" + t.no, ad: "İş sözleşmesi", ikon: "file-signature", ne: "İş sözleşmesi" }) +
+      (kabul ? MK.git({ hedef: "is-sozlesmesi", hash: "#/yeni?teklif=" + t.no, ad: "İş sözleşmesi", ikon: "file-signature", ne: "İş sözleşmesi" }) +
         MK.git({ hedef: "plan-ac", hash: "#/?tesis=" + t.tesis, ad: "Plan aç", ikon: "calendar-check", sinif: "a-tus-birincil", ne: "Plan açma" }) : "") +
       (t.durum === "suresi" || t.durum === "red" ? '<a class="a-tus a-tus-birincil" href="#/yeni?kopya=' + t.no + '">' + ikon("plus", "a-ikon-kucuk") + "Yeni teklif (kopyala)</a>" : "");
     var KS = [

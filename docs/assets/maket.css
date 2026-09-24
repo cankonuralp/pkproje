@@ -784,6 +784,11 @@ a.a-yuz:hover { border-color: var(--kenar-alan); background: var(--zemin); }
 }
 .a-kalem-tutar { margin: 0; min-height: var(--tus-y); display: flex; align-items: center; font-weight: 600; font-variant-numeric: tabular-nums; }
 
+/* M13 — iş sözleşmeleri listesi ve sözleşme kapsamı (tesis × İSG-KATİP × plan) */
+.a-tablo-issoz .a-k-no { width: 16%; } .a-tablo-issoz .a-k-musteri { width: 30%; } .a-tablo-issoz .a-k-sure { width: 24%; }
+.a-tablo-issoz .a-k-teklif { width: 14%; } .a-tablo-issoz .a-k-durum { width: 16%; }
+.a-tablo-iskapsam .a-k-tesis { width: 40%; } .a-tablo-iskapsam .a-k-isg { width: 18%; } .a-tablo-iskapsam .a-k-plan { width: 22%; } .a-tablo-iskapsam .a-k-durum { width: 20%; }
+
 /* ══ BANTLAR — taban kuralların ARDINDA (anayasa 3.2) ══════════════════════════════════════════════════ */
 
 /* orta + dar (< 1280): yan menü çekmece, üst çubukta ☰ + işaret */
@@ -932,11 +937,14 @@ a.a-yuz:hover { border-color: var(--kenar-alan); background: var(--zemin); }
   /* toplu maket (2026-09-24): matris, yetkinlik ve İSG-KATİP kartında etiket değerin solunda, satır satır (etiket: değer) */
   .a-tablo-matris td[data-kart="govde"], .a-tablo-yetkinlik td[data-kart="govde"], .a-tablo-isgkayit td[data-kart="govde"],
   .a-tablo-planekp td[data-kart="govde"], .a-tablo-aday td[data-kart="govde"], .a-tablo-kapsamozet td[data-kart="govde"],
-  .a-tablo-uyari td[data-kart="govde"] { display: flex; align-items: center; justify-content: space-between; gap: 8px; }
+  .a-tablo-uyari td[data-kart="govde"], .a-tablo-issoz td[data-kart="govde"]:has(.a-kart-etiket),
+  .a-tablo-iskapsam td[data-kart="govde"] { display: flex; align-items: center; justify-content: space-between; gap: 8px; }
   .a-tablo-matris .a-kart-etiket, .a-tablo-yetkinlik .a-kart-etiket, .a-tablo-isgkayit .a-kart-etiket,
-  .a-tablo-planekp .a-kart-etiket, .a-tablo-aday .a-kart-etiket, .a-tablo-kapsamozet .a-kart-etiket, .a-tablo-uyari .a-kart-etiket { display: inline; }
+  .a-tablo-planekp .a-kart-etiket, .a-tablo-aday .a-kart-etiket, .a-tablo-kapsamozet .a-kart-etiket, .a-tablo-uyari .a-kart-etiket,
+  .a-tablo-issoz .a-kart-etiket, .a-tablo-iskapsam .a-kart-etiket { display: inline; }
   .a-tablo-isgkayit td[data-kart="govde"], .a-tablo-planekp td[data-kart="govde"], .a-tablo-aday td[data-kart="govde"],
-  .a-tablo-kapsamozet td[data-kart="govde"], .a-tablo-uyari td[data-kart="govde"] { text-align: right; }   /* değerin ikinci satırı (ör. "kontrol 25 Eyl") değere hizalı */
+  .a-tablo-kapsamozet td[data-kart="govde"], .a-tablo-uyari td[data-kart="govde"], .a-tablo-issoz td[data-kart="govde"]:has(.a-kart-etiket),
+  .a-tablo-iskapsam td[data-kart="govde"] { text-align: right; }   /* değerin ikinci satırı (ör. "kontrol 25 Eyl") değere hizalı */
 }
 
 /* ══ DARALTILMIŞ YAN MENÜ — yalnız geniş bant (reisim 2026-09-23: "sol taraf açılıp kapanabilir olsun kapatılınca sadece

@@ -778,6 +778,41 @@ fiyat listesinden birim fiyat, "tesisteki ekipmandan doldur", tutar ve toplam ca
 **Ölçüm (2026-09-24, bulut):** 9 durum × 1920 · 1080 · 375 × açık/koyu = **54/54 temiz**, çekmece 2/2; etkileşim **10/10** (teklif → plan aç
 geçişi dahil).
 
+#### Maket M13 — Sözleşmeler: firmalar arası iş sözleşmesi (modül 12, faz 2) — ONAY BEKLİYOR
+Ekran: **İş sözleşmeleri** (`maket/is-sozlesmeleri.html`, planlama Zeynep Arslan): modül 12 tek menü öğesi, **iki sekme** — İSG-KATİP
+kayıtları (M5, `sozlesmeler.html`) · iş sözleşmeleri. Liste (no, müşteri / tesis, süre + kalan gün, dayanak teklif, durum; çipler: imza
+bekliyor · yürürlükte · süresi doldu · bitişi 60 gün içinde; seçici müşteri; bitişi yaklaşan sözleşme için şerit + yenileme teklifi
+bağlantısı) · **sözleşme sayfası** (taraflar ve koşullar, kapsam: tesis × İSG-KATİP kaydı × plan, geçmiş; eylem: sözleşme metni ·
+imzalı sözleşmeyi yükle · yenileme teklifi / yeni teklif) · **form** (müşteri, dayanak teklif, kapsamdaki tesisler, başlangıç, süre, ödeme
+vadesi, yenileme).
+**Varsayımlar:**
+- İş sözleşmesi **muayene firması ile müşteri** arasında; İSG-KATİP sözleşmesinden (işveren ile yetkili kişi, M5) **ayrı**. Kapsam
+  tablosu her tesisin İSG-KATİP kaydını ve planını yan yana gösterir; plan kabulünü denetleyen yine İSG-KATİP kaydıdır.
+- Kabul edilen tekliften hazırlanır: teklif sayfasındaki "İş sözleşmesi" formu teklif ve tesisiyle doldurur; kapsama başka tesis eklenebilir.
+- No **IS-AAYY-SIRA** (başlangıç ayı). Durumlar: **imza bekliyor** (firma imzaladı) → **yürürlükte** (müşterinin imzaladığı sözleşme
+  yüklendi) → **süresi doldu**. Fesih ve değişiklik (ek protokol) makette yok.
+- Varsayılan süre **12 ay**, ödeme vadesi **30 gün**, yenileme **yeni teklifle** (seçenek: kendiliğinden, fesih bildirimi yoksa).
+- Bitişe **60 gün** kala listede şerit + çip; o tesis için yenileme teklifi varsa ona bağlantı, yoksa "Teklif hazırla". Yalnız ekranda
+  (bildirim yok, anayasa 1.3).
+- İmzalı sözleşme PDF olarak **yüklenir**, yalnız firma içinde görünür (kısa ömürlü bağlantı). Sözleşme metni firmanın şablonundan
+  üretilir; makette metin yok.
+- Örnek veride sistem öncesi sözleşmeler (dayanak teklifsiz) ve bir çok tesisli sözleşme var.
+**Sorular (M13):**
+125. Firmalar arası iş sözleşmesi **sistemde kayıt + imzalı PDF** (makette) olarak mı tutulsun, yalnız "imzalandı" işareti mi yeter?
+126. Sözleşme no biçimi **IS-AAYY-SIRA** (öneri) uygun mu?
+127. Sözleşme metni **firmanın şablonundan kodda** üretilsin mi (rapor şablonu gibi, §8.3), yoksa firma kendi metnini yükleyip yalnız
+     imzalısını mı saklasın?
+128. Sözleşme **teklif başına** mı (makette; kapsam teklifin tesisi), müşteri başına **çerçeve sözleşme** (bütün tesisler, yıllık) mı?
+129. Varsayılan **12 ay** ve **kendiliğinden yenileme** seçeneği uygun mu?
+130. Plan, iş sözleşmesi **müşteri imzası beklerken açılabilir** mi (makette IS-0926-007 bekliyor, P-0926-039 açılmış), yoksa plan açma
+     bunu da **engellesin** mi (İSG-KATİP kaydı gibi)?
+131. İmzalı iş sözleşmesi **yüklensin** (makette), İSG-KATİP kaydında dosya **yüklenmesin** (M5) — ikisi farklı kalsın mı?
+132. Bitişe **60 gün** kala şerit + çip (öneri) uygun mu; **Uyarılar**'a (M10) da düşsün mü?
+133. Ödeme vadesi **sözleşmede** mi (makette), müşteri kartında mı? *(M14 ile bağlı)*
+134. Müşteri paneli (M11) **sözleşmeyi göstersin** mi; müşteri panelden imzalayabilsin mi?
+**Ölçüm (2026-09-24, bulut):** 8 durum × 1920 · 1080 · 375 × açık/koyu = **48/48 temiz**, çekmece 2/2; etkileşim **11/11** (sekme geçişi,
+teklif → sözleşme formu, yenileme teklifi bağlantısı dahil). M5 (başlık + sekme) yeniden: 66/66, 14/14; M12 (bağlantı) yeniden: 54/54, 10/10.
+
 ---
 
 ## 4 · Mevzuat bulguları (2026-09-18 araştırması; kaynaklar bölüm 10)
@@ -1119,6 +1154,9 @@ revizyon, alan kopyalama, hafif kusur devri, meslek eşleşme denetimi).
 - Emsal ürünler: https://opwire.app/iso-17020-periyodik-kontrol-yazilimi/ · https://17020muayene.vidco.com.tr/ · https://akuple.com/asansor-kontrol-yazilimi/ · https://ensyazilim.com/
 
 ## 11 · Değişiklik günlüğü
+- 2026-09-24 (25): **toplu maket M13 İş sözleşmeleri** (§3.6, faz 2): modül 12 iki sekme (İSG-KATİP kayıtları · iş sözleşmeleri), liste,
+  sözleşme sayfası (taraflar, kapsam: tesis × İSG-KATİP × plan, geçmiş), imzalı sözleşme yükleme, form (tekliften), bitişi yaklaşan
+  sözleşme şeridi. Sorular 125–134.
 - 2026-09-24 (24): **toplu maket M12 Teklifler** (§3.6, faz 2): liste, teklif sayfası (kalemler, KDV, raporlanan adet/tutar), form (fiyat
   listesi, tesisten doldur), red gerekçesi; teklif → plan aç bağlantısı. Sorular 118–124.
 - 2026-09-24 (23): **toplu maket M11 Müşteri Paneli** (§3.6): müşteri kabuğu, imzalı raporlar, uygunsuzluk kayıtları (açık / giderildi),

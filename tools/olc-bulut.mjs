@@ -186,6 +186,16 @@ export const DURUMLAR = {
     { ad: "yeni teklif · boş gönderildi", hash: "#/yeni", adim: [["tikla", '[data-eylem="kaydet"]']] },
     { ad: "taslak teklif · düzenle", hash: "#/t/T-0926-012/duzenle" },
   ] },
+  m13: { sayfa: "maket/is-sozlesmeleri.html", durumlar: [
+    { ad: "iş sözleşmeleri · liste, biten sözleşme şeridi", hash: "#/" },
+    { ad: "sözleşme · müşteri imzası bekliyor", hash: "#/s/IS-0926-007" },
+    { ad: "sözleşme · yürürlükte, 7 gün sonra bitiyor", hash: "#/s/IS-1025-001" },
+    { ad: "sözleşme · iki tesis, kendiliğinden yenilenir", hash: "#/s/IS-1125-001" },
+    { ad: "sözleşme · süresi doldu", hash: "#/s/IS-1024-001" },
+    { ad: "sözleşme hazırla · kabul edilen tekliften", hash: "#/yeni?teklif=T-0926-001" },
+    { ad: "sözleşme hazırla · boş gönderildi", hash: "#/yeni", adim: [["tikla", '[data-eylem="kaydet"]']] },
+    { ad: "İSG-KATİP sekmesi · aynı menü", sayfa: "maket/sozlesmeler.html", hash: "#/" },
+  ] },
 };
 
 /* ── ETKİLEŞİM DENEMELERİ (--etkilesim): adımlar koşar, sonra `bekle` ifadesi sayfada doğru dönmeli. Gen verilmezse 1920. ── */
@@ -359,6 +369,19 @@ export const DENEMELER = {
     { ad: "form: aynı tür iki kez reddedilir", hash: "#/yeni?tesis=t13", adim: [["tikla", "#f-tur-0"], ["tikla", '[data-secim="f-tur-0"][data-deger="FL"]'], ["tikla", '[data-eylem="kalem-ekle"]'], ["tikla", "#f-tur-1"], ["tikla", '[data-secim="f-tur-1"][data-deger="FL"]'], ["tikla", '[data-eylem="kaydet"]']], bekle: '/yukarıda var/.test(document.querySelector("#f-tur-1-ipucu").textContent)' },
     { ad: "yeni teklif kaydedilir → taslak teklif sayfası", hash: "#/yeni?tesis=t13", adim: [["tikla", '[data-eylem="doldur"]'], ["tikla", '[data-eylem="kaydet"]']], bekle: 'location.hash === "#/t/T-0926-013" && /Taslak/.test(document.querySelector(".a-nesne-baslik").textContent)' },
     { ad: "gönderilmiş teklif düzenlenemez", hash: "#/t/T-0926-010/duzenle", bekle: 'location.hash === "#/t/T-0926-010" && !document.querySelector(\'#a-nesne a[href$="/duzenle"]\')' },
+  ],
+  m13: [
+    { ad: "liste: 12 sözleşme, imza bekleyen üstte; biten şeridi yenileme teklifini gösterir", hash: "#/", bekle: 'document.querySelector("#a-sayac").textContent === "12 sözleşme" && /IS-0926-007/.test(document.querySelector("#a-liste tbody tr").textContent) && /IS-1025-001[\\s\\S]*yenileme teklifi T-0926-0/.test(document.querySelector("#a-uyari").textContent)' },
+    { ad: "Bitişi 60 gün içinde çipi (2 / 12)", hash: "#/", adim: [["tikla", '[data-sz="s"] [data-cip="biten"]']], bekle: 'document.querySelector("#a-sayac").textContent === "2 / 12 sözleşme"' },
+    { ad: "sekme: iş sözleşmelerinden İSG-KATİP kayıtlarına", hash: "#/", adim: [["tikla", 'a.a-sekme[href="sozlesmeler.html#/"]']], bekle: '/sozlesmeler\\.html$/.test(location.pathname) && /İSG-KATİP kayıtları/.test(document.querySelector(".a-sekme[aria-current]").textContent)' },
+    { ad: "sekme: İSG-KATİP kayıtlarından iş sözleşmelerine", sayfa: "maket/sozlesmeler.html", hash: "#/", adim: [["tikla", 'a.a-sekme[href="is-sozlesmeleri.html#/"]']], bekle: '/is-sozlesmeleri\\.html$/.test(location.pathname) && document.querySelector("#a-sayac").textContent === "12 sözleşme"' },
+    { ad: "imzalı sözleşme yüklenir → yürürlükte", hash: "#/s/IS-0926-007", adim: [["tikla", '[data-eylem="imzali-yukle"]']], bekle: '/Yürürlükte/.test(document.querySelector(".a-nesne-baslik").textContent) && /IS-0926-007\\.pdf/.test(document.querySelector("#a-nesne").textContent) && !document.querySelector(\'[data-eylem="imzali-yukle"]\')' },
+    { ad: "teklif sayfasından İş sözleşmesi → form teklifle dolu", sayfa: "maket/teklifler.html", hash: "#/t/T-0926-001", adim: [["tikla", '#a-nesne a[href^="is-sozlesmeleri.html"]']], bekle: '/is-sozlesmeleri\\.html$/.test(location.pathname) && document.querySelector("#f-teklif .a-kirp").textContent === "T-0926-001" && document.querySelector("[data-tesis=t1]").checked' },
+    { ad: "müşteri değişince teklif ve tesisler sıfırlanır (odak yerinde)", hash: "#/yeni?teklif=T-0926-001", adim: [["tikla", "#f-m"], ["tikla", '[data-secim="f-m"][data-deger="m3"]']], bekle: '!document.querySelector("[data-tesis]:checked") && document.querySelector("#f-teklif .a-kirp").textContent === "Teklif seçin" && document.activeElement.id === "f-m"' },
+    { ad: "tesis seçilmeden kaydedilmez, odak tesiste", hash: "#/yeni?teklif=T-0926-001", adim: [["tikla", "[data-tesis=t1]"], ["tikla", '[data-eylem="kaydet"]']], bekle: '/En az bir tesis/.test(document.querySelector("#a-form-gorunum").textContent) && !!document.activeElement.dataset.tesis' },
+    { ad: "sözleşme hazırlanır: IS-0926-008, imza bekliyor, bitiş 12 ay", hash: "#/yeni?teklif=T-0926-001", adim: [["tikla", '[data-yenileme="otomatik"]'], ["tikla", '[data-eylem="kaydet"]']], bekle: 'location.hash === "#/s/IS-0926-008" && /İmza bekliyor/.test(document.querySelector(".a-nesne-baslik").textContent) && /23 Eyl 2027/.test(document.querySelector("#a-nesne").textContent) && /Kendiliğinden/.test(document.querySelector("#a-nesne").textContent)' },
+    { ad: "biten sözleşme: yenileme teklifi tuşu o teklifi açar", hash: "#/s/IS-1025-001", adim: [["tikla", '.a-eylem-cubugu a[href*="#/t/"]']], bekle: '/teklifler\\.html$/.test(location.pathname) && location.hash === "#/t/T-0926-009"' },
+    { ad: "kapsam: İSG-KATİP kaydı olmayan tesis yazılır; plan bağlantısı plan içine", hash: "#/s/IS-0926-006", adim: [["tikla", '.a-tablo-iskapsam a.a-no']], bekle: '/planlarim\\.html$/.test(location.pathname) && /^#\\/plan\\//.test(location.hash)' },
   ],
   m6: [
     { ad: "tesisten gelince: tarih sonraki kontrol, 6 / 6 seçili", hash: "#/?tesis=t2", bekle: 'document.querySelector("#p-tarih").value === "14.10.2026" && /^6 \\/ 6 kayıtlı seçili/.test(document.querySelector("#p-secili").textContent)' },

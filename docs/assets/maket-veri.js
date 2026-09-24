@@ -573,6 +573,28 @@
   MV.kalemRaporlari = function (t, tur) { return MV.RAPORLAR.filter(function (r) { return r.tesis === t.tesis && r.olustu.slice(0, 10) >= t.tarih && MV.ekipman(r.kod).tur === tur; }); };
   MV.para = function (n) { return n.toLocaleString("tr-TR", { minimumFractionDigits: 2, maximumFractionDigits: 2 }) + " TL"; };
 
+  /* ── İŞ SÖZLEŞMELERİ (modül 12, firmalar arası; M13, faz 2, 2026-09-24) — muayene firması ile müşteri arasında. İSG-KATİP sözleşmesinden
+     AYRI (o, işveren ile yetkili kişi arasında; M5). Makette kabul edilen her teklife bir sözleşme (kapsam: teklifin tesisi), süre 12 ay, ödeme
+     vadesi 30 gün (VARSAYIM). İmzalı sözleşme dosyası yüklenir (İSG-KATİP'teki "yüklenmez" kararı yalnız onun için; soru). No IS-AAYY-SIRA. */
+  var isSira = {};
+  var isEkle = function (o) {
+    var ay = o.baslangic.slice(5, 7) + o.baslangic.slice(2, 4); isSira[ay] = (isSira[ay] || 0) + 1;
+    o.no = "IS-" + ay + "-" + ("00" + isSira[ay]).slice(-3); o.m = MV.tesis(o.tesisler[0]).m; o.vade = o.vade || 30; o.yenileme = o.yenileme || "yok";
+    MV.IS_SOZLESMELERI.push(o); return o;
+  };
+  MV.IS_SOZLESMELERI = [];
+  isEkle({ tesisler: ["t6"], teklif: null, baslangic: "2024-10-02", bitis: "2025-10-01", imza: { firma: "2024-09-30", musteri: "2024-10-01" }, dosya: true });
+  isEkle({ tesisler: ["t13"], teklif: null, baslangic: "2025-10-01", bitis: "2026-09-30", imza: { firma: "2025-09-26", musteri: "2025-09-29" }, dosya: true });
+  isEkle({ tesisler: ["t14", "t15"], teklif: null, baslangic: "2025-11-01", bitis: "2026-10-31", imza: { firma: "2025-10-28", musteri: "2025-10-30" }, dosya: true, yenileme: "otomatik" });
+  MV.TEKLIFLER.filter(function (t) { return t.durum === "kabul"; }).forEach(function (t, i) {
+    var bas = new Date(t.sonuc + "T12:00:00"); bas.setDate(bas.getDate() + 1 + i % 2);
+    var b = bas.toISOString().slice(0, 10), bit = new Date(b + "T12:00:00"); bit.setFullYear(bit.getFullYear() + 1); bit.setDate(bit.getDate() - 1);
+    var bekliyor = t.tesis === "t8";   /* en son kabul: müşteri imzası bekleniyor */
+    isEkle({ tesisler: [t.tesis], teklif: t.no, baslangic: b, bitis: bit.toISOString().slice(0, 10), imza: { firma: b, musteri: bekliyor ? null : b }, dosya: !bekliyor });
+  });
+  MV.isDurum = function (x) { return !x.imza.musteri ? "imza" : x.bitis < MK.BUGUN ? "suresi" : "yururlukte"; };
+  MV.isSozlesmesi = function (no) { return MV.IS_SOZLESMELERI.filter(function (x) { return x.no === no; })[0]; };
+
   /* belge (MB.belge) için raporun dolu verisi; İSG-KATİP kaydı rapor tarihinde geçerli olan (önceki kayıtlar dahil) */
   MV.raporBelge = function (r) {
     var e = MV.ekipman(r.kod), t = MV.tur(e.tur), ts = MV.tesis(r.tesis), p = MV.kisi(r.kisi), gun = r.olustu.slice(0, 10);
