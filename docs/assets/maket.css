@@ -789,6 +789,17 @@ a.a-yuz:hover { border-color: var(--kenar-alan); background: var(--zemin); }
 .a-tablo-issoz .a-k-teklif { width: 14%; } .a-tablo-issoz .a-k-durum { width: 16%; }
 .a-tablo-iskapsam .a-k-tesis { width: 40%; } .a-tablo-iskapsam .a-k-isg { width: 18%; } .a-tablo-iskapsam .a-k-plan { width: 22%; } .a-tablo-iskapsam .a-k-durum { width: 20%; }
 
+/* M14 — muhasebe: işler, faturalar, işin raporları ve faturaları, tahsilatlar */
+.a-tablo-is .a-k-no { width: 14%; } .a-tablo-is .a-k-musteri { width: 24%; } .a-tablo-is .a-k-rapor { width: 14%; }
+.a-tablo-is .a-k-tutar { width: 17%; } .a-tablo-is .a-k-kalan { width: 15%; } .a-tablo-is .a-k-durum { width: 16%; }
+.a-tablo-fatura .a-k-no { width: 19%; } .a-tablo-fatura .a-k-musteri { width: 23%; } .a-tablo-fatura .a-k-vade { width: 15%; }
+.a-tablo-fatura .a-k-tutar { width: 15%; } .a-tablo-fatura .a-k-kalan { width: 14%; } .a-tablo-fatura .a-k-durum { width: 14%; }
+.a-tablo-isfatura .a-k-no { width: 26%; } .a-tablo-isfatura .a-k-vade { width: 20%; } .a-tablo-isfatura .a-k-tutar { width: 20%; }
+.a-tablo-isfatura .a-k-kalan { width: 17%; } .a-tablo-isfatura .a-k-durum { width: 17%; }
+.a-tablo-israpor .a-k-no { width: 24%; } .a-tablo-israpor .a-k-ekipman { width: 24%; } .a-tablo-israpor .a-k-fiyat { width: 18%; }
+.a-tablo-israpor .a-k-fatura { width: 18%; } .a-tablo-israpor .a-k-durum { width: 16%; }
+.a-tablo-tahsilat .a-k-tarih { width: 22%; } .a-tablo-tahsilat .a-k-tutar { width: 22%; } .a-tablo-tahsilat .a-k-yontem { width: 32%; } .a-tablo-tahsilat .a-k-kaydeden { width: 24%; }
+
 /* ══ BANTLAR — taban kuralların ARDINDA (anayasa 3.2) ══════════════════════════════════════════════════ */
 
 /* orta + dar (< 1280): yan menü çekmece, üst çubukta ☰ + işaret */
@@ -822,6 +833,9 @@ a.a-yuz:hover { border-color: var(--kenar-alan); background: var(--zemin); }
   .a-suzgec-sag { display: none; }
   /* seçicisi olmayan süzgeçte (raporlar) levha yok → Temizle satırda kalır */
   .a-suzgec[data-secicisiz] .a-suzgec-sag { display: flex; }
+  /* 2026-09-24 (M14 ölçümü): Süzgeç tuşu olmayan satırda arama kendi satırında kalır — adım dışındaki süzgeçte çip şeridinin
+     eksi kenar payı arama + şeridi aynı satıra sığdırıyor, arama 0'a eziliyordu (Planlar plan içinde zaten tek satırdı) */
+  .a-suzgec[data-secicisiz] .a-ara { flex-basis: 100%; }
   .a-cipler {
     flex: 1 0 100%; flex-wrap: nowrap; overflow-x: auto;
     margin: 0 calc(var(--bosluk-sayfa) * -1); padding: 0 var(--bosluk-sayfa);
@@ -938,13 +952,18 @@ a.a-yuz:hover { border-color: var(--kenar-alan); background: var(--zemin); }
   .a-tablo-matris td[data-kart="govde"], .a-tablo-yetkinlik td[data-kart="govde"], .a-tablo-isgkayit td[data-kart="govde"],
   .a-tablo-planekp td[data-kart="govde"], .a-tablo-aday td[data-kart="govde"], .a-tablo-kapsamozet td[data-kart="govde"],
   .a-tablo-uyari td[data-kart="govde"], .a-tablo-issoz td[data-kart="govde"]:has(.a-kart-etiket),
-  .a-tablo-iskapsam td[data-kart="govde"] { display: flex; align-items: center; justify-content: space-between; gap: 8px; }
+  .a-tablo-iskapsam td[data-kart="govde"], .a-tablo-is td[data-kart="govde"]:has(.a-kart-etiket), .a-tablo-fatura td[data-kart="govde"]:has(.a-kart-etiket),
+  .a-tablo-isfatura td[data-kart="govde"], .a-tablo-israpor td[data-kart="govde"]:has(.a-kart-etiket), .a-tablo-tahsilat td[data-kart="govde"],
+  .a-tablo-fkalem td[data-kart="govde"] { display: flex; align-items: center; justify-content: space-between; gap: 8px; }
   .a-tablo-matris .a-kart-etiket, .a-tablo-yetkinlik .a-kart-etiket, .a-tablo-isgkayit .a-kart-etiket,
   .a-tablo-planekp .a-kart-etiket, .a-tablo-aday .a-kart-etiket, .a-tablo-kapsamozet .a-kart-etiket, .a-tablo-uyari .a-kart-etiket,
-  .a-tablo-issoz .a-kart-etiket, .a-tablo-iskapsam .a-kart-etiket { display: inline; }
+  .a-tablo-issoz .a-kart-etiket, .a-tablo-iskapsam .a-kart-etiket, .a-tablo-is .a-kart-etiket, .a-tablo-fatura .a-kart-etiket,
+  .a-tablo-isfatura .a-kart-etiket, .a-tablo-israpor .a-kart-etiket, .a-tablo-tahsilat .a-kart-etiket, .a-tablo-fkalem .a-kart-etiket { display: inline; }
   .a-tablo-isgkayit td[data-kart="govde"], .a-tablo-planekp td[data-kart="govde"], .a-tablo-aday td[data-kart="govde"],
   .a-tablo-kapsamozet td[data-kart="govde"], .a-tablo-uyari td[data-kart="govde"], .a-tablo-issoz td[data-kart="govde"]:has(.a-kart-etiket),
-  .a-tablo-iskapsam td[data-kart="govde"] { text-align: right; }   /* değerin ikinci satırı (ör. "kontrol 25 Eyl") değere hizalı */
+  .a-tablo-iskapsam td[data-kart="govde"], .a-tablo-is td[data-kart="govde"]:has(.a-kart-etiket), .a-tablo-fatura td[data-kart="govde"]:has(.a-kart-etiket),
+  .a-tablo-isfatura td[data-kart="govde"], .a-tablo-israpor td[data-kart="govde"]:has(.a-kart-etiket), .a-tablo-tahsilat td[data-kart="govde"],
+  .a-tablo-fkalem td[data-kart="govde"] { text-align: right; }   /* değerin ikinci satırı (ör. "kontrol 25 Eyl") değere hizalı */
 }
 
 /* ══ DARALTILMIŞ YAN MENÜ — yalnız geniş bant (reisim 2026-09-23: "sol taraf açılıp kapanabilir olsun kapatılınca sadece

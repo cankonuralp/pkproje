@@ -813,6 +813,45 @@ vadesi, yenileme).
 **Ölçüm (2026-09-24, bulut):** 8 durum × 1920 · 1080 · 375 × açık/koyu = **48/48 temiz**, çekmece 2/2; etkileşim **11/11** (sekme geçişi,
 teklif → sözleşme formu, yenileme teklifi bağlantısı dahil). M5 (başlık + sekme) yeniden: 66/66, 14/14; M12 (bağlantı) yeniden: 54/54, 10/10.
 
+#### Maket M14 — Muhasebe (modül 18, faz 2) — ONAY BEKLİYOR
+Ekran: **Muhasebe** (`maket/muhasebe.html`, Ayşe Demir, firma yöneticisi): iki sekme — **İşler** (proje no, müşteri / tesis, imzalı ve
+faturalı rapor sayısı, raporlanan tutar, açık alacak, durum; çipler: vadesi geçti · faturaya hazır · tahsilat bekliyor · rapor sürüyor ·
+kapandı; seçici müşteri; şerit: vadesi geçen alacak + faturaya hazır işler) · **Faturalar** (no, müşteri / iş, vade, tutar, kalan,
+durum) · **iş sayfası** (raporlanan · faturalanan · tahsil edilen · açık alacak; birim fiyatın kaynağı, iş sözleşmesi, vade; raporlar ×
+birim fiyat × fatura, sayfa 20; faturalar; geçmiş) · **fatura sayfası** (alıcı, tarih, vade, kalemler, KDV, tahsilatlar, kalan) ·
+**fatura kaydet** ve **tahsilat ekle** pencereleri.
+**Varsayımlar:**
+- **İş = plan** (proje no). Listede raporu olan planlar; geçen yılın işleri raporlardan türetildi (örnek veri). Müşteri kaydından önce
+  tarihli iki tesisin eski raporları (Planlar maketinden gelen) muhasebeye alınmadı.
+- **Birim fiyat** (§3.2 madde 5): raporun tesisinde, rapor tarihinde geçerli kabul edilmiş teklifin kalemi; teklif yoksa firmanın fiyat
+  listesi; kalemin adedini aşan rapor **"teklif dışı"** (fiyat listesinden, faturada işaretli; soru 122).
+- **Fatura** imzalı (müşteriye açık) ve faturalanmamış raporlardan kaydedilir: kalem = ekipman türü × rapor sayısı × birim fiyat, KDV %20.
+  e-Fatura / e-Arşiv **firmanın muhasebe programında** kesilir; buraya numarası (16 karakter) ve tarihi yazılır. Vade = iş sözleşmesindeki
+  ödeme vadesi (M13; yoksa 30 gün).
+- **Tahsilat**: tarih, tutar (kısmi olabilir, kalanı aşamaz), yöntem (havale / EFT · çek · kredi kartı · nakit), açıklama.
+- Durumlar — iş: rapor sürüyor → faturaya hazır → tahsilat bekliyor (vadesi geçti) → **kapandı**; fatura: bekliyor · kısmi ödendi ·
+  vadesi geçti · ödendi. İş, plan tamamlanıp bütün raporları imzalanınca, faturalanınca ve tahsil edilince **kendiliğinden kapanır**;
+  kayıt 5 yıl arşivde (§3).
+- Vadesi geçen alacak yalnız ekranda (şerit + çip); bildirim yok (anayasa 1.3). Muhasebeyi rol × modül önerisinde yalnız firma yöneticisi
+  görür (soru 33). Performans'taki kazanç (M15) buradaki birim fiyattan.
+- Ortak süzgeç düzeltmesi: seçicisi olmayan süzgeçte arama telefonda kendi satırında (adım dışında 0'a eziliyordu; Planlar'da görünüm
+  aynı, yeniden ölçüldü). M13 örnek verisinde IS-1024-001'in tarihleri bir gün kaydırıldı (geçen yılın denetimi sözleşme kapsamında).
+**Sorular (M14):**
+135. Fatura **probata'da mı kesilsin** (e-Fatura / e-Arşiv entegratörüne bağlanarak), yoksa firmanın muhasebe programında kesilip
+     **numarası mı yazılsın** (makette)? Muhasebe programına aktarım dosyası gerekir mi?
+136. Faturalama **iş (plan) başına** mı (makette), müşteri başına **aylık toplu fatura** mı?
+137. Muhasebeyi kim görür ve yazar: firma yöneticisi (öneri) mi, ayrı bir **"Muhasebe" rolü** mü? *(soru 33 ile bağlı)*
+138. Fatura **imzalı raporlarla kısmen** kesilebilsin mi (makette: imzası sürenler sonraki faturaya kalır), yoksa **bütün raporlar
+     imzalanınca tek fatura** mı?
+139. İş **tahsilat tamamlanınca kendiliğinden** mi kapansın (makette), elle "İşi kapat" ile mi?
+140. Vadesi geçen alacak **Uyarılar**'a (M10) ve **müşteri kartına** (M2) da düşsün mü? *(yalnız ekranda, bildirim yok)*
+141. Tahsilat yöntemleri yeterli mi; **çekin vadesi** ayrıca izlensin mi?
+142. Müşteri paneli (M11) **faturaları ve açık alacağı** göstersin mi?
+143. Teklifi olmayan işte **fiyat listesi**, teklif dışı rapor faturada **ayrı işaretli kalem** (makette) — uygun mu? *(soru 122 ile bağlı)*
+**Ölçüm (2026-09-24, bulut):** 10 durum × 1920 · 1080 · 375 × açık/koyu = **60/60 temiz**, çekmece 2/2; etkileşim **14/14** (fatura kaydet,
+kayıtlı no reddi, tahsilat fazlası reddi, tahsilat → iş kapandı, Raporlar'a geçiş dahil). Planlar yeniden 54/54, 15/15 (süzgeç düzeltmesi;
+"hazır olmayan modül" denemesi artık Performans); M13 yeniden 48/48, 11/11.
+
 ---
 
 ## 4 · Mevzuat bulguları (2026-09-18 araştırması; kaynaklar bölüm 10)
@@ -1154,6 +1193,9 @@ revizyon, alan kopyalama, hafif kusur devri, meslek eşleşme denetimi).
 - Emsal ürünler: https://opwire.app/iso-17020-periyodik-kontrol-yazilimi/ · https://17020muayene.vidco.com.tr/ · https://akuple.com/asansor-kontrol-yazilimi/ · https://ensyazilim.com/
 
 ## 11 · Değişiklik günlüğü
+- 2026-09-24 (26): **toplu maket M14 Muhasebe** (§3.6, faz 2): işler (plan başına) ve faturalar, iş sayfası (rapor × birim fiyat × fatura),
+  fatura sayfası (kalemler, KDV, tahsilatlar), fatura kaydet ve tahsilat pencereleri; iş tahsilatla kendiliğinden kapanır. Ortak süzgeçte
+  seçicisiz satır düzeltmesi. Sorular 135–143.
 - 2026-09-24 (25): **toplu maket M13 İş sözleşmeleri** (§3.6, faz 2): modül 12 iki sekme (İSG-KATİP kayıtları · iş sözleşmeleri), liste,
   sözleşme sayfası (taraflar, kapsam: tesis × İSG-KATİP × plan, geçmiş), imzalı sözleşme yükleme, form (tekliften), bitişi yaklaşan
   sözleşme şeridi. Sorular 125–134.

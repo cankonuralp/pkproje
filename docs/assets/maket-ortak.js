@@ -66,7 +66,7 @@
     { grup: "Tanımlar", ogeler: [["Ekipman türleri", "layers", 5], ["Standartlar", "book-open", 4], ["Kullanıcılar", "user-cog", 1]] }
   ];
   /* hazır maketler: menüden tıklanınca gidilir (toplu bakışta tıklanır prototip, MAKET-PLANI §3.3); olmayan → bildirim */
-  var SAYFALAR = { 13: "planlarim.html", 1: "kullanicilar.html", 2: "personel.html", 3: "musteriler.html", 5: "ekipman-turleri.html", 7: "ekipmanlar.html", 8: "olcum-cihazlari.html", 9: "zimmetler.html", 12: "sozlesmeler.html", 4: "standartlar.html", 14: "raporlar.html", 15: "onaylar.html", 20: "uyarilar.html", 11: "teklifler.html" };
+  var SAYFALAR = { 13: "planlarim.html", 1: "kullanicilar.html", 2: "personel.html", 3: "musteriler.html", 5: "ekipman-turleri.html", 7: "ekipmanlar.html", 8: "olcum-cihazlari.html", 9: "zimmetler.html", 12: "sozlesmeler.html", 4: "standartlar.html", 14: "raporlar.html", 15: "onaylar.html", 20: "uyarilar.html", 11: "teklifler.html", 18: "muhasebe.html" };
   MK.sayfaAdresi = function (no) { return SAYFALAR[no] || null; };
   /* menü dışı maket ekranları (ör. plan açma); hazır olunca buraya yazılır, bağlantılar kendiliğinden açılır */
   var EK_SAYFALAR = { giris: "giris.html", "plan-ac": "plan-ac.html", sablon: "sablon.html", rapor: "rapor.html", musteri: "musteri.html", "is-sozlesmesi": "is-sozlesmeleri.html" };

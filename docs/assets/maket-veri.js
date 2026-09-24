@@ -583,7 +583,7 @@
     MV.IS_SOZLESMELERI.push(o); return o;
   };
   MV.IS_SOZLESMELERI = [];
-  isEkle({ tesisler: ["t6"], teklif: null, baslangic: "2024-10-02", bitis: "2025-10-01", imza: { firma: "2024-09-30", musteri: "2024-10-01" }, dosya: true });
+  isEkle({ tesisler: ["t6"], teklif: null, baslangic: "2024-10-03", bitis: "2025-10-02", imza: { firma: "2024-09-30", musteri: "2024-10-01" }, dosya: true });
   isEkle({ tesisler: ["t13"], teklif: null, baslangic: "2025-10-01", bitis: "2026-09-30", imza: { firma: "2025-09-26", musteri: "2025-09-29" }, dosya: true });
   isEkle({ tesisler: ["t14", "t15"], teklif: null, baslangic: "2025-11-01", bitis: "2026-10-31", imza: { firma: "2025-10-28", musteri: "2025-10-30" }, dosya: true, yenileme: "otomatik" });
   MV.TEKLIFLER.filter(function (t) { return t.durum === "kabul"; }).forEach(function (t, i) {
@@ -594,6 +594,77 @@
   });
   MV.isDurum = function (x) { return !x.imza.musteri ? "imza" : x.bitis < MK.BUGUN ? "suresi" : "yururlukte"; };
   MV.isSozlesmesi = function (no) { return MV.IS_SOZLESMELERI.filter(function (x) { return x.no === no; })[0]; };
+  /* tesisin o tarihte geçerli iş sözleşmesi (ödeme vadesi buradan; yoksa 30 gün) */
+  MV.tesisSozlesmesi = function (tid, gun) { return MV.IS_SOZLESMELERI.filter(function (x) { return x.tesisler.indexOf(tid) >= 0 && x.baslangic <= gun && x.bitis >= gun; })[0]; };
+
+  /* ── MUHASEBE (modül 18; M14, faz 2, 2026-09-24) — İŞ = plan (proje no). Akış: rapor imzalandı → müşteriye açıldı → FATURA → TAHSİLAT →
+     iş kapandı → arşiv (§3). Rapor birim fiyatı teklif kaleminden (§3.2 madde 5; teklif yoksa fiyat listesi, kalemin adedini aşan rapor
+     "teklif dışı"). Fatura imzalı raporlarla kaydedilir (e-Fatura / e-Arşiv firmanın muhasebe programında kesilir, buraya no + tarih;
+     VARSAYIM). Geçen yılın işleri raporlardan türer (Planlar'daki eski raporlar; müşteri kaydından önceki iki tesis alınmadı). UYDURMA. */
+  var fGun = function (iso, n) { var d = new Date(iso + "T12:00:00"); d.setDate(d.getDate() + n); return d.toISOString().slice(0, 10); };
+  var kurus = function (n) { return Math.round(n * 100) / 100; };
+  MV.raporFiyat = function (r) {
+    var gun = r.olustu.slice(0, 10), tur = MV.ekipman(r.kod).tur;
+    var t = MV.TEKLIFLER.filter(function (x) { return x.durum === "kabul" && x.tesis === r.tesis && x.tarih <= gun; }).sort(function (a, b) { return a.tarih < b.tarih ? 1 : -1; })[0];
+    var k = t && t.kalemler.filter(function (x) { return x.tur === tur; })[0];
+    if (!k) return { fiyat: MV.FIYAT[tur], kaynak: t ? "disi" : "liste", teklif: t || null };
+    var sira = MV.kalemRaporlari(t, tur).sort(function (a, b) { return a.olustu < b.olustu ? -1 : 1; }).indexOf(r);
+    return sira >= k.adet ? { fiyat: MV.FIYAT[tur], kaynak: "disi", teklif: t } : { fiyat: k.fiyat, kaynak: "teklif", teklif: t };
+  };
+  /* fatura kalemleri: faturadaki raporlar türe ve birim fiyata göre toplanır; KDV %20 */
+  MV.faturaKalemleri = function (raporlar) {
+    var g = {};
+    raporlar.forEach(function (no) { var r = MV.rapor(no), f = MV.raporFiyat(r), tur = MV.ekipman(r.kod).tur, k = tur + "|" + f.fiyat;
+      g[k] = g[k] || { tur: tur, fiyat: f.fiyat, adet: 0, disi: f.kaynak === "disi" }; g[k].adet++; });
+    return Object.keys(g).map(function (k) { return g[k]; }).sort(function (a, b) { return MV.tur(a.tur).ad.localeCompare(MV.tur(b.tur).ad, "tr"); });
+  };
+  MV.faturaTutar = function (f) {
+    var ara = kurus(MV.faturaKalemleri(f.raporlar).reduce(function (n, k) { return n + k.adet * k.fiyat; }, 0)), kdv = kurus(ara * MV.KDV / 100);
+    return { ara: ara, kdv: kdv, toplam: kurus(ara + kdv) };
+  };
+  MV.ISLER = []; MV.FATURALAR = [];
+  var isGrup = {};
+  MV.RAPORLAR.filter(function (r) { return !r.plan; }).forEach(function (r) { var k = r.tesis + "|" + r.olustu.slice(0, 10); (isGrup[k] = isGrup[k] || []).push(r); });
+  var fSira = { 2025: 212, 2026: 14 }, pSira = {};
+  /* tahsilat örnekleri (tesis → [gün farkı faturadan ya da tarih, oran]); verilmeyen: vadeden 3 gün önce, tamamı, havale */
+  var TAHSILAT = { t13: [["2025-12-15", 1, "Havale / EFT"]], t14: [[20, 0.5, "Çek"], [33, 1, "Havale / EFT"]], t3: [["2026-03-20", 3000, "Havale / EFT"]] };
+  Object.keys(isGrup).sort(function (a, b) { return a.split("|")[1] < b.split("|")[1] ? -1 : a.split("|")[1] > b.split("|")[1] ? 1 : 0; }).forEach(function (k) {
+    var tid = k.split("|")[0], gun = k.split("|")[1], ts = MV.tesis(tid), m = MV.musteri(ts.m), rl = isGrup[k];
+    if (m.acilis > gun) return;   /* müşteri kaydından önceki rapor (Planlar maketinden; tutarsızlık) → muhasebeye alınmaz */
+    var ay = gun.slice(5, 7) + gun.slice(2, 4); pSira[ay] = pSira[ay] ? pSira[ay] + 2 : 11;
+    var is = { no: "P-" + ay + "-" + ("00" + pSira[ay]).slice(-3), tesis: tid, m: ts.m, tarih: gun, pid: null, pdurum: "tamam",
+      ekip: rl.map(function (r) { return r.kisi; }).filter(function (x, i, a) { return a.indexOf(x) === i; }), raporlar: rl.map(function (r) { return r.no; }), faturalar: [] };
+    var soz = MV.tesisSozlesmesi(tid, gun), vade = soz ? soz.vade : 30, yil = +gun.slice(0, 4), ft = fGun(gun, 3);
+    var f = { no: "KMF" + yil + ("00000000" + (fSira[yil] += 3)).slice(-9), is: is.no, m: ts.m, tarih: ft, vadeGun: vade, vade: fGun(ft, vade), raporlar: is.raporlar.slice(), kaydeden: "ad", tahsilatlar: [] };
+    var top = MV.faturaTutar(f).toplam, odenen = 0;
+    (TAHSILAT[tid] || [[vade - 3, 1, "Havale / EFT"]]).forEach(function (x) {
+      var tutar = x[1] === 1 ? kurus(top - odenen) : x[1] < 1 ? kurus(top * x[1]) : x[1]; odenen = kurus(odenen + tutar);
+      f.tahsilatlar.push({ tarih: typeof x[0] === "number" ? fGun(ft, x[0]) : x[0], tutar: tutar, yontem: x[2], kaydeden: "ad" });
+    });
+    is.faturalar.push(f.no); MV.FATURALAR.push(f); MV.ISLER.push(is);
+  });
+  /* bu ayın planları: raporu olanlar (Planlar maketindeki plan 9 · 8 · 1) */
+  MV.TESISLER.filter(function (t) { return t.pid && MV.RAPORLAR.some(function (r) { return r.plan === t.pid; }); }).forEach(function (t) {
+    MV.ISLER.push({ no: t.plan, tesis: t.id, m: t.m, tarih: t.ptarih, pid: t.pid, pdurum: t.pdurum, ekip: t.pekip.slice(),
+      raporlar: MV.RAPORLAR.filter(function (r) { return r.plan === t.pid; }).map(function (r) { return r.no; }), faturalar: [] });
+  });
+  MV.isKaydi = function (no) { return MV.ISLER.filter(function (x) { return x.no === no; })[0]; };
+  MV.fatura = function (no) { return MV.FATURALAR.filter(function (f) { return f.no === no; })[0]; };
+  MV.tahsil = function (f) { return kurus(f.tahsilatlar.reduce(function (n, t) { return n + t.tutar; }, 0)); };
+  MV.faturaKalan = function (f) { return kurus(MV.faturaTutar(f).toplam - MV.tahsil(f)); };
+  MV.faturaDurum = function (f) { var k = MV.faturaKalan(f); return k <= 0 ? "odendi" : f.vade < MK.BUGUN ? "gecikti" : MV.tahsil(f) > 0 ? "kismi" : "bekliyor"; };
+  /* işin muhasebe özeti ve durumu: gecikti > hazir (imzalı, faturasız rapor var) > tahsilat > rapor (imza süreci) > kapandi */
+  MV.isOzet = function (x) {
+    var rl = x.raporlar.map(MV.rapor), fl = x.faturalar.map(MV.fatura), faturali = {};
+    fl.forEach(function (f) { f.raporlar.forEach(function (no) { faturali[no] = f.no; }); });
+    var hazir = rl.filter(function (r) { return r.durum === "imzali" && !faturali[r.no]; }), surec = rl.filter(function (r) { return r.durum !== "imzali"; });
+    var o = { raporlanan: kurus(rl.reduce(function (n, r) { return n + MV.raporFiyat(r).fiyat; }, 0)), imzali: rl.length - surec.length, toplam: rl.length, hazir: hazir, surec: surec, faturali: faturali,
+      faturalanan: kurus(fl.reduce(function (n, f) { return n + MV.faturaTutar(f).toplam; }, 0)), tahsil: kurus(fl.reduce(function (n, f) { return n + MV.tahsil(f); }, 0)) };
+    o.kalan = kurus(o.faturalanan - o.tahsil);
+    o.durum = fl.some(function (f) { return MV.faturaDurum(f) === "gecikti"; }) ? "gecikti" : hazir.length ? "hazir" : o.kalan > 0 ? "tahsilat" : surec.length || x.pdurum !== "tamam" ? "rapor" : "kapandi";
+    if (o.durum === "kapandi") o.kapandi = fl.reduce(function (s, f) { return f.tahsilatlar.reduce(function (t, y) { return y.tarih > t ? y.tarih : t; }, s); }, "");
+    return o;
+  };
 
   /* belge (MB.belge) için raporun dolu verisi; İSG-KATİP kaydı rapor tarihinde geçerli olan (önceki kayıtlar dahil) */
   MV.raporBelge = function (r) {
