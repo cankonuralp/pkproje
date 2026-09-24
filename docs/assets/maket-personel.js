@@ -76,8 +76,10 @@
         not: h ? (h.durum === "davet" ? "Davet bekliyor" : h.durum === "pasif" ? "Pasif" : h.roller.map(function (r) { return MV.rol(r).kisa; }).join(" · ")) : "Davet et", uyari: h && h.durum === "davet" }) +
       yuz({ ikon: "scroll-text", ad: "İSG-KATİP kaydı", sayi: MV.ISG.filter(function (x) { return x.k === p.id && !x.onceki; }).length, modul: "Sözleşmeler · İSG-KATİP", href: sayfa(12) && sayfa(12) + "#/isg?kisi=" + p.id, not: "tesis başına" }) +
       yuz({ ikon: "package", ad: "Zimmetinde", sayi: MV.VARLIKLAR.filter(function (v) { return MV.kimde(v.id) === p.id; }).length, modul: "Zimmetler", href: sayfa(9) && sayfa(9) + "#/?kisi=" + p.id, not: "cihaz, araç ve diğer" }) +
-      yuz({ ikon: "graduation-cap", ad: "Eğitim", sayi: s.egitim, modul: "Eğitimler", href: sayfa(10) && sayfa(10) + "#/?kisi=" + p.id,
-        not: s.egitimYakin ? s.egitimYakin + " tekrarı 60 gün içinde" : "tekrarı yakın yok", uyari: s.egitimYakin > 0 }) +
+      /* 2026-09-24 (M10): eğitim sayıları eğitim kayıtlarından (MV.EGITIMLER); tekrarı geçen ayrıca söylenir */
+      (function () { var eg = MV.egitimleri(p.id), gecti = eg.filter(function (x) { return MV.egitimDurum(x) === "gecti"; }).length, yakin = eg.filter(function (x) { return MV.egitimDurum(x) === "yakin"; }).length;
+        return yuz({ ikon: "graduation-cap", ad: "Eğitim", sayi: eg.length, modul: "Eğitimler", href: sayfa(10) && sayfa(10) + "#/?kisi=" + p.id,
+          not: gecti ? gecti + " tekrarı geçti" : yakin ? yakin + " tekrarı 60 gün içinde" : "tekrarı yakın yok", uyari: gecti + yakin > 0 }); })() +
       (inspector(p) ? yuz({ ikon: "calendar-check", ad: "Açık plan", sayi: s.plan, href: "planlarim.html", not: "kabul bekleyen ve süren" }) : "") +
       "</div>";
   }

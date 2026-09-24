@@ -703,6 +703,26 @@ mekanik branş yöneticisi Selin Yıldız: kuyruk en eski üstte, bekleme süres
 düzeltilen: rapor numarasındaki küçük harfli ek, sayfa adresinde tanınmıyordu (rapor ve onay ekranı açılmıyordu). M7 şablon önizlemesi
 belge üreticisine bağlandı (66/66, 12/12), Planlar denemesi hâlâ maketi olmayan modüle çevrildi (15/15), M8 yeniden (15/15).
 
+#### Maket M10 — Uyarılar (modül 20) — ONAY BEKLİYOR
+Ekran: **Uyarılar** (`maket/uyarilar.html`, firma yöneticisi Ayşe Demir): yalnız reisim'in istedikleri — **kalibrasyon bitişi** (30 gün)
+ve **eğitim tekrarı** (60 gün); en yakın tarih üstte; uyarı → cihaz sayfası ya da kişinin eğitimleri; çipler: kalibrasyon · eğitim tekrarı ·
+süresi geçmiş; seçici: kişi; adresten türe göre (`?tur=kalibrasyon|egitim`); menüde sayaç.
+**Varsayımlar:**
+- **Yalnız ekranda** (anayasa 1.3): liste, menü sayacı ve ilgili sayfalardaki şeritler; e-posta, SMS, anlık bildirim yok.
+- Uyarı ayrı bir kayıt değil, **koşuldan türetilir**: kalibrasyon yenilenince / eğitim tekrarlanınca kendiliğinden düşer; "okundu" yok.
+- Kalibrasyonu geçen cihaz uyarısı sonucu da söyler ("X raporlarını onaya gönderemez", M8 kilidi).
+- **Eğitim kayıtları** ortak veride (M16 ekranı bunları kullanır); eğitim adları ve tekrar süreleri örnek. Personel kartındaki eğitim yüzü
+  artık kayıtlardan sayılır ve "tekrarı geçti"yi de söyler (M1 yeniden ölçüldü: 108/108, 17/17).
+- Firma yöneticisi hepsini görür; inspector yalnız kendisininkini (rol × modül önerisi).
+**Sorular (M10):**
+107. Uyarı **yalnız ekranda** (öneri) mı kalsın; e-posta ya da anlık bildirim istenirse kime, hangi uyarı için?
+108. Başka uyarılar eklensin mi: ara kontrol gecikmesi (M4) · İSG-KATİP eksikleri (M5) · müşterinin **kontrolü yaklaşan ekipmanı** (planlama
+     için) · 24 saati geçen onay (M9) · imza bekleyen rapor (M9)?
+109. Eğitim tekrarı eşiği **60 gün** (öneri) mi; eğitim türü başına ayrı mı?
+110. "Okundu / gizle" olmasın, **koşul kalkınca düşsün** (öneri) — uygun mu?
+**Ölçüm (2026-09-24, bulut):** 5 durum × 1920 · 1080 · 375 × açık/koyu = **30/30 temiz**, çekmece 2/2; etkileşim **6/6**. Telefonda kart
+"etiket: değer" satırlarına indirildi (M5 deseni).
+
 ---
 
 ## 4 · Mevzuat bulguları (2026-09-18 araştırması; kaynaklar bölüm 10)
@@ -1044,6 +1064,8 @@ revizyon, alan kopyalama, hafif kusur devri, meslek eşleşme denetimi).
 - Emsal ürünler: https://opwire.app/iso-17020-periyodik-kontrol-yazilimi/ · https://17020muayene.vidco.com.tr/ · https://akuple.com/asansor-kontrol-yazilimi/ · https://ensyazilim.com/
 
 ## 11 · Değişiklik günlüğü
+- 2026-09-24 (22): **toplu maket M10 Uyarılar** (§3.6): kalibrasyon bitişi ve eğitim tekrarı uyarıları (yalnız ekranda, koşuldan türeyen);
+  eğitim kayıtları ortak veride, personel kartı onlardan sayar. Sorular 107–110.
 - 2026-09-24 (21): **toplu maket M9 Raporlar · Onaylar · İmza · PDF** (§3.6): inspector'ın rapor listesi ve rapor sayfası (durum
   geçmişi, PDF önizlemesi), son imza (servis / indir-imzala-yükle, toplu), branş yöneticisinin onay kuyruğu ve onay ekranı; rapor belgesi
   tek üreticide (`maket-belge.js`). Sorular 98–106.

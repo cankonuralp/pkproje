@@ -467,6 +467,31 @@
     return e;
   };
 
+  /* ── EĞİTİMLER (modül 10; M10 uyarıları + M16 ekranı, 2026-09-24) — personelin eğitim kayıtları ve tekrar tarihleri.
+     Eğitim adları ve tekrar süreleri ÖRNEK (mevzuat karşılığı doğrulanmadı; M16 sorusu). Bakanlık yetkili kişi eğitimi burada değil,
+     personelin belgesi (M1). Sayılar personel kartındaki eski sabit sayılarla aynı; bir kişide (Kaan Er) tekrar tarihi geçmiş örnek. */
+  MV.EGITIM_TURLERI = [
+    { k: "isg", ad: "Temel İSG eğitimi", tekrar: 12 }, { k: "yuksek", ad: "Yüksekte çalışma eğitimi", tekrar: 12 },
+    { k: "ilkyardim", ad: "İlk yardım", tekrar: 36 }, { k: "17020", ad: "TS EN ISO/IEC 17020 bilgilendirme", tekrar: 24 },
+    { k: "elektrik", ad: "Elektrikte güvenli çalışma", tekrar: 12 }, { k: "yangin", ad: "Yangın söndürme ve tahliye", tekrar: 12 }
+  ];
+  MV.egitimTuru = function (k) { return MV.EGITIM_TURLERI.filter(function (t) { return t.k === k; })[0]; };
+  var gunEkle = function (iso, n) { var d = new Date(iso + "T12:00:00"); d.setDate(d.getDate() + n); return d.toISOString().slice(0, 10); };
+  var ayEkle = function (iso, n) { var d = new Date(iso + "T12:00:00"); d.setMonth(d.getMonth() + n); return d.toISOString().slice(0, 10); };
+  MV.EGITIMLER = [];
+  MV.PERSONEL.forEach(function (p, pi) {
+    var n = p.sayilar.egitim, y = p.sayilar.egitimYakin;
+    for (var i = 0; i < n; i++) {
+      var t = MV.EGITIM_TURLERI[(i + pi) % MV.EGITIM_TURLERI.length], kalan = p.id === "ke" ? -6 : i < y ? 14 + i * 19 + (pi % 5) * 3 : 95 + ((pi * 37 + i * 53) % 200);
+      var tekrar = gunEkle("2026-09-23", kalan);
+      MV.EGITIMLER.push({ id: "g" + (MV.EGITIMLER.length + 1), kisi: p.id, k: t.k, tarih: ayEkle(tekrar, -t.tekrar), tekrar: tekrar, belge: (pi + i) % 4 !== 3,
+        kurum: i % 2 ? "Dış eğitim kurumu" : "Firma içi" });
+    }
+  });
+  /* tekrar: geçti · 60 gün içinde · geçerli (eşik 60 gün — personel kartındaki "tekrarı 60 gün içinde"le aynı; soru) */
+  MV.egitimDurum = function (x) { var k = Math.round((new Date(x.tekrar + "T12:00:00") - new Date("2026-09-23T12:00:00")) / 864e5); return k < 0 ? "gecti" : k <= 60 ? "yakin" : "gecerli"; };
+  MV.egitimleri = function (kid) { return MV.EGITIMLER.filter(function (x) { return x.kisi === kid; }); };
+
   /* ── RAPORLAR (modül 14–16; M9, 2026-09-24) — firma geneli rapor kaydı. Planlar maketindeki plan raporları AYNI numarayla
      (sıra 760'tan: plan 9 → 8 → 1; Planlar'daki dağılım ve sonuç kuralı), geçen yılın imzalı raporları ekipman kaydından.
      Durum: taslak → onayda → onaylandı (son imza bekliyor) → imzalı (müşteriye açık). Planlar'ın "Onaylandı"sı burada onaylandı + imzalı.

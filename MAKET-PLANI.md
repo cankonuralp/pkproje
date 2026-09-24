@@ -90,4 +90,5 @@ tek mesaj: sayfanın bağlantısı + kaç maket + kaç soru + ölçülemeyen var
 - **M6 bitti** (60/60 · çekmece 2/2 · etkileşim 12/12; sorular 74–81).
 - **M7 bitti** (66/66 · çekmece 2/2 · etkileşim 12/12; sorular 82–89).
 - **M8 bitti** (60/60 · çekmece 2/2 · etkileşim 15/15; sorular 90–97).
-- **M9 bitti** (60/60 · çekmece 2/2 · etkileşim 12/12; sorular 98–106). Sırada: M10.
+- **M9 bitti** (60/60 · çekmece 2/2 · etkileşim 12/12; sorular 98–106).
+- **M10 bitti** (30/30 · çekmece 2/2 · etkileşim 6/6; sorular 107–110). Sırada: M11.
