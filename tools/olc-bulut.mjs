@@ -145,6 +145,18 @@ export const DURUMLAR = {
     { ad: "sonraki kontrol penceresi · gerekçesiz", hash: "#/r/KP-1004", adim: [["tikla", '[data-eylem="sonraki-ac"]'], ["yaz", "#w-tarih", "23.03.2027"], ["tikla", '[data-eylem="pencere-kaydet"]']] },
     { ad: "raporu olmayan ekipman", hash: "#/r/YK-1011" },
   ] },
+  m9: { sayfa: "maket/raporlar.html", durumlar: [
+    { ad: "raporlar · inspector'ın listesi + imza şeridi", hash: "#/" },
+    { ad: "raporlar · imza bekleyen çipi", hash: "#/", adim: [["tikla", '[data-sz="r"] [data-cip="imza"]']] },
+    { ad: "rapor · imza bekliyor (PDF önizlemesi)", hash: "#/r/KM-0926-770-a99c1" },
+    { ad: "rapor · müşteriye açık, imzalı", hash: "#/r/KM-0926-760-f535b" },
+    { ad: "rapor · geri gönderilmiş taslak", hash: "#/r/KM-0926-792-9ce3b" },
+    { ad: "son imza penceresi · toplu, imza servisi", hash: "#/imza" },
+    { ad: "son imza penceresi · indir, imzala, yükle", hash: "#/imza", adim: [["tikla", '[data-yontem="dosya"]']] },
+    { ad: "onaylar · mekanik kuyruk", sayfa: "maket/onaylar.html", hash: "#/" },
+    { ad: "onay ekranı · hafif kusurlu rapor", sayfa: "maket/onaylar.html", hash: "#/r/KM-0926-787-42b08" },
+    { ad: "geri gönder penceresi · kısa gerekçe", sayfa: "maket/onaylar.html", hash: "#/r/KM-0926-787-42b08/geri", adim: [["yaz", "#w-gerekce", "eksik"], ["tikla", '[data-eylem="geri-gonder"]']] },
+  ] },
 };
 
 /* ── ETKİLEŞİM DENEMELERİ (--etkilesim): adımlar koşar, sonra `bekle` ifadesi sayfada doğru dönmeli. Gen verilmezse 1920. ── */
@@ -163,7 +175,8 @@ export const DENEMELER = {
     { ad: "reddet: gerekçesiz gönderilmez, gerekçeyle reddedilir", hash: "#/plan/3", adim: [["tikla", '#a-plan .a-adim-tuslar [data-eylem="reddet"]'], ["yaz", "#a-red-gerekce", "Aynı gün başka denetim"], ["tikla", "#a-red-onay"]], bekle: '/Reddedildi/.test(document.querySelector("#a-plan .a-nesne-baslik").textContent)' },
     { ad: "ekipman ekle: çakışan kod kaydedilmez", hash: "#/plan/1/ekle", adim: [["yaz", "#a-ekle-kod", "ht-1001"]], bekle: 'document.querySelector("#a-ekle-kod").value === "HT-1001" && document.querySelector(\'[data-eylem="yeni-kaydet"]\').disabled' },
     { ad: "ekipman ekle: yeni kod + tür → plana eklenir", hash: "#/plan/1", adim: [["tikla", '[data-eylem="ekle-ac"]'], ["yaz", "#a-ekle-kod", "ZZ-9001"], ["tikla", "#a-ekle-tur"], ["tikla", '[data-tur="FL"]'], ["tikla", '[data-eylem="yeni-kaydet"]']], bekle: '!document.querySelector("#a-ekle-pencere").open && [...document.querySelectorAll("#a-liste-e .a-kod")].some(e => e.textContent === "ZZ-9001")' },
-    { ad: "menüden hazır olmayan modül → bildirim", hash: "#/", adim: [["tikla", '#a-menu [data-ne="Raporlar"]']], bekle: '/henüz tasarlanmadı/.test(document.querySelector("#a-bildirim-metin").textContent)' },
+    /* 2026-09-24 (M9): Raporlar maketi geldi → denemede hâlâ maketi olmayan bir modül (Muhasebe, M14) */
+    { ad: "menüden hazır olmayan modül → bildirim", hash: "#/", adim: [["tikla", '#a-menu [data-ne="Muhasebe"]']], bekle: '/henüz tasarlanmadı/.test(document.querySelector("#a-bildirim-metin").textContent)' },
     { ad: "menüden hazır maket → bağlantı (Personel)", hash: "#/", bekle: 'document.querySelector(\'#a-menu a[href="personel.html"]\') !== null' },
   ],
   m1: [
@@ -275,6 +288,20 @@ export const DENEMELER = {
     { ad: "Git: bölüme kayar, başlığa odaklanır", hash: "#/r/ET-1009", adim: [["tikla", '[data-eylem="bolume-git"][data-hedef="r-b8"]']], bekle: 'document.activeElement.id === "r-b8-b"' },
     { ad: "telefonda Onaya gönder altta yapışkan", gen: 375, hash: "#/r/ET-1009", bekle: 'getComputedStyle(document.querySelector(".a-form-eylem")).position === "sticky"' },
     { ad: "Planlar'dan Raporu düzenle → saha rapor ekranı", sayfa: "maket/planlarim.html", hash: "#/plan/1", adim: [["tikla", '#a-liste-r a[href*="#/r/ET-1009"]']], bekle: '/rapor\\.html$/.test(location.pathname) && /ET-1009/.test(document.querySelector("h1") ? document.querySelector("h1").textContent : "")' },
+  ],
+  m9: [
+    { ad: "imza şeridi ve menü sayacı: 4 rapor", hash: "#/", bekle: '/4 rapor son imzanızı/.test(document.querySelector("#a-uyari").textContent) && document.querySelector("#a-menu-sayi-14").textContent === "4"' },
+    { ad: "İmza bekliyor çipi (4 / 90)", hash: "#/", adim: [["tikla", '[data-sz="r"] [data-cip="imza"]']], bekle: 'document.querySelector("#a-sayac").textContent === "4 / 90 rapor"' },
+    { ad: "toplu imza (servis) → 4 rapor müşteriye açık", hash: "#/", adim: [["tikla", '[data-eylem="imza-ac"]'], ["tikla", '[data-eylem="imzala"]']], bekle: '!document.querySelector("#a-pencere").open && !document.querySelector("#a-uyari .a-serit") && /4 rapor imzalandı/.test(document.querySelector("#a-bildirim-metin").textContent)' },
+    { ad: "indir-imzala-yükle: yüklemeden tamamlanmaz", hash: "#/imza", adim: [["tikla", '[data-yontem="dosya"]'], ["tikla", '[data-eylem="imzala"]']], bekle: '/Önce imzalı PDF/.test(document.querySelector("#a-pencere-govde").textContent) && document.activeElement.dataset.eylem === "imzali-yukle"' },
+    { ad: "rapor sayfasından tekli imza", hash: "#/r/KM-0926-770-a99c1", adim: [["tikla", '#a-nesne .a-eylem-cubugu [data-eylem="imza-ac"]'], ["tikla", '[data-eylem="imzala"]']], bekle: '/Müşteriye açık/.test(document.querySelector(".a-nesne-baslik").textContent) && /İmzalandı/.test(document.querySelector(".a-gecmis").textContent)' },
+    { ad: "geri gönderilmiş taslak → saha rapor ekranı", hash: "#/r/KM-0926-792-9ce3b", adim: [["tikla", '#a-nesne a[href^="rapor.html"]']], bekle: '/rapor\\.html$/.test(location.pathname) && /ZV-1007/.test(document.querySelector("h1") ? document.querySelector("h1").textContent : "")' },
+    { ad: "onay kuyruğu: 8 mekanik rapor, elektrik ayrı", sayfa: "maket/onaylar.html", hash: "#/", bekle: 'document.querySelector("#a-sayac").textContent === "8 rapor" && document.querySelector("#a-menu-sayi-15").textContent === "8" && /Elektrik raporları \\(6\\)/.test(document.querySelector("#a-uyari").textContent)' },
+    { ad: "Onayla → sıradaki rapor açılır, sayaç 7", sayfa: "maket/onaylar.html", hash: "#/r/KM-0926-774-be91d", adim: [["tikla", '#a-nesne .a-nesne-bas [data-eylem="onayla"]']], bekle: 'location.hash === "#/r/KM-0926-775-03cf4" && document.querySelector("#a-menu-sayi-15").textContent === "7" && /Sıradaki rapor/.test(document.querySelector("#a-bildirim-metin").textContent)' },
+    { ad: "geri gönder: kısa gerekçe reddedilir", sayfa: "maket/onaylar.html", hash: "#/r/KM-0926-787-42b08/geri", adim: [["yaz", "#w-gerekce", "eksik"], ["tikla", '[data-eylem="geri-gonder"]']], bekle: '/en az 10/.test(document.querySelector("#w-gerekce-ipucu").textContent) && document.activeElement.id === "w-gerekce"' },
+    { ad: "geri gönder gerekçeyle → taslağa döner", sayfa: "maket/onaylar.html", hash: "#/r/KM-0926-787-42b08", adim: [["tikla", '#a-nesne .a-nesne-bas [data-eylem="geri-ac"]'], ["yaz", "#w-gerekce", "Kusur açıklamasına kanca mandalının durumu yazılmamış."], ["tikla", '[data-eylem="geri-gonder"]']], bekle: 'MV.rapor("KM-0926-787-42b08").durum === "taslak" && /kanca/.test(MV.rapor("KM-0926-787-42b08").geri.gerekce) && location.hash !== "#/r/KM-0926-787-42b08"' },
+    { ad: "kuyrukta olmayan (elektrik) rapor: boş durum", sayfa: "maket/onaylar.html", hash: "#/r/KM-0926-776-490cb", bekle: '/kuyrukta değil/i.test(document.querySelector("#a-nesne").textContent)' },
+    { ad: "telefonda onay tuşları altta yapışkan", gen: 375, sayfa: "maket/onaylar.html", hash: "#/r/KM-0926-786-fd731", bekle: 'getComputedStyle(document.querySelector(".a-eylem-cubugu-alt")).position === "sticky"' },
   ],
   m6: [
     { ad: "tesisten gelince: tarih sonraki kontrol, 6 / 6 seçili", hash: "#/?tesis=t2", bekle: 'document.querySelector("#p-tarih").value === "14.10.2026" && /^6 \\/ 6 kayıtlı seçili/.test(document.querySelector("#p-secili").textContent)' },

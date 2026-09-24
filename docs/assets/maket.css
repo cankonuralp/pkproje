@@ -748,6 +748,12 @@ a.a-yuz:hover { border-color: var(--kenar-alan); background: var(--zemin); }
 .a-tablo-sigorta .a-k-no { width: 30%; } .a-tablo-sigorta .a-k-deger { width: 14%; } .a-tablo-sigorta .a-k-kutup { width: 10%; }
 .a-tablo-sigorta .a-k-rcd { width: 14%; } .a-tablo-sigorta .a-k-durum { width: 14%; } .a-tablo-sigorta .a-k-eylem { width: 18%; }
 
+/* M9 — raporlar ve onay kuyruğu */
+.a-tablo-raporlar .a-k-no { width: 24%; } .a-tablo-raporlar .a-k-ekipman { width: 24%; } .a-tablo-raporlar .a-k-tesis { width: 22%; }
+.a-tablo-raporlar .a-k-sonuc { width: 12%; } .a-tablo-raporlar .a-k-durum { width: 18%; }
+.a-tablo-onay .a-k-no { width: 26%; } .a-tablo-onay .a-k-ekipman { width: 22%; } .a-tablo-onay .a-k-kisi { width: 14%; }
+.a-tablo-onay .a-k-gonderildi { width: 20%; } .a-tablo-onay .a-k-sonuc { width: 18%; }
+
 /* ══ BANTLAR — taban kuralların ARDINDA (anayasa 3.2) ══════════════════════════════════════════════════ */
 
 /* orta + dar (< 1280): yan menü çekmece, üst çubukta ☰ + işaret */

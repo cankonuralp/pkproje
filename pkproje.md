@@ -670,6 +670,39 @@ geçiş dahil). Ölçerken düzeltilen: 375'te üç seçenekli seçim satırı 8
 (telefonda seçenek iç boşluğu daraldı; seçenek "Kullanılamaz" oldu, açıklaması altında) · önceki raporun numarası satır sonunda bölünüyordu.
 Planlar (54/54, 15/15) ve M7 (66/66, 12/12; kriter ve test listesi ortak veriye taşındı) yeniden ölçüldü.
 
+#### Maket M9 — Raporlar · Onaylar · İmza · PDF (modül 14, 15, 16) — ONAY BEKLİYOR
+Ekranlar: **Raporlar** (`maket/raporlar.html`, inspector Mert Kaya: kendi raporları, 20'şer; çipler: taslak · onayda · imza bekliyor ·
+müşteriye açık · geri gönderildi · kusurlu; seçiciler: müşteri, yıl; üstte **"N rapor son imzanızı bekliyor"** şeridi · **rapor sayfası**:
+durum geçmişi, müşteri erişimi, **PDF önizlemesi** · **son imza penceresi**: tekli ya da toplu, iki yol) · **Onaylar** (`maket/onaylar.html`,
+mekanik branş yöneticisi Selin Yıldız: kuyruk en eski üstte, bekleme süresi, menü sayacı · **onay ekranı**: gözden geçirme özeti + PDF
+önizlemesi, **Onayla** / **Geri gönder** (gerekçe zorunlu); onaylayınca sıradaki rapor açılır).
+**Varsayımlar:**
+- Rapor kaydı Planlar'daki plan raporlarıyla **aynı numara ve dağılım** (plan 9: 14 onaylandı + 8 onayda; plan 8: 3 + 1; plan 1: 3 + 7) +
+  geçen yılın imzalı raporları (ekipman kaydından). Durumlar: **Taslak · Geri gönderildi · Onayda · İmza bekliyor · Müşteriye açık**;
+  Planlar'ın "Onaylandı"sı burada ikiye ayrıldı (plan 9'da 10 imzalı, 4 imza bekliyor).
+- Inspector **kendi** raporlarını görür (rol × modül önerisi); planlama ve yönetici tümünü görür (makette gösterilmedi).
+- Onay **türün branşına** gider (§3.2 madde 3): mekanik → Selin Yıldız, elektrik → Can Öztürk; kuyruk en eski üstte.
+- Onay ekranı: İSG-KATİP, kontrol metodu, kriterler, test değerleri, ölçüm aletlerinin kalibrasyonu, fotoğraf, sonuç özeti + raporun PDF
+  önizlemesi. PDF önizlemesi **M7 şablonuyla tek üretici** (`maket-belge.js`).
+- Geri gönder: **gerekçe zorunlu** (en az 10 karakter); rapor taslağa döner, gerekçe saha rapor ekranında üstte (M8).
+- Son imza (§1.1: yöntem modül tasarımında konuşulacak): **aracı imza servisi** ya da **indir, imzala, yükle** (imza ve dosya bütünlüğü
+  doğrulanır); **toplu imza**; imzalanınca rapor **müşteriye açılır** (portal kullanıcıları indirir; bildirim yok). İmzasız yayın yok.
+- PDF indirme kısa ömürlü yetkili bağlantıyla (anayasa 5.1). Sonuç adı §4.5'e göre: taslak formatlı türde "Hafif kusurlu" yerine "Kusurlu"
+  (Planlar maketinin verisinde tutarsızlık).
+**Sorular (M9):**
+98. Son imza yöntemi: **aracı imza servisi**, **indir-imzala-yükle**, ikisi de (firma ayarı, makette ikisi) mi?
+99. **Toplu imza** (birden çok raporu tek seferde) olsun mu (öneri: evet)?
+100. Branş yöneticisi yokken **vekil** (başka yönetici) onaylayabilsin mi?
+101. Geri gönderirken **hangi bölümün** hatalı olduğu işaretlensin mi, yoksa serbest gerekçe (makette) yeter mi?
+102. Onaylanan rapor imzalanana kadar **düzenlenemez** (öneri); değişiklik gerekirse yönetici "onayı geri al" mı?
+103. İmzalı raporun düzeltmesi: **revizyon** (aynı numara + R1, eski sürüm saklanır; §3.2 madde 7 önerisi) uygun mu?
+104. Müşteriye açılma **imza anında** (öneri) mı, planın bütün raporları bitince toplu mu?
+105. Onaylayan yöneticinin adı **PDF'te** yer alsın mı (Ek-III istemiyor; 17020 gözden geçirme kaydı sistemde tutuluyor)?
+106. Planlar'daki rapor rozeti de **İmza bekliyor / Müşteriye açık** diye ayrılsın mı?
+**Ölçüm (2026-09-24, bulut):** 10 durum × 1920 · 1080 · 375 × açık/koyu = **60/60 temiz**, çekmece 2/2; etkileşim **12/12**. Ölçerken
+düzeltilen: rapor numarasındaki küçük harfli ek, sayfa adresinde tanınmıyordu (rapor ve onay ekranı açılmıyordu). M7 şablon önizlemesi
+belge üreticisine bağlandı (66/66, 12/12), Planlar denemesi hâlâ maketi olmayan modüle çevrildi (15/15), M8 yeniden (15/15).
+
 ---
 
 ## 4 · Mevzuat bulguları (2026-09-18 araştırması; kaynaklar bölüm 10)
@@ -1011,6 +1044,9 @@ revizyon, alan kopyalama, hafif kusur devri, meslek eşleşme denetimi).
 - Emsal ürünler: https://opwire.app/iso-17020-periyodik-kontrol-yazilimi/ · https://17020muayene.vidco.com.tr/ · https://akuple.com/asansor-kontrol-yazilimi/ · https://ensyazilim.com/
 
 ## 11 · Değişiklik günlüğü
+- 2026-09-24 (21): **toplu maket M9 Raporlar · Onaylar · İmza · PDF** (§3.6): inspector'ın rapor listesi ve rapor sayfası (durum
+  geçmişi, PDF önizlemesi), son imza (servis / indir-imzala-yükle, toplu), branş yöneticisinin onay kuyruğu ve onay ekranı; rapor belgesi
+  tek üreticide (`maket-belge.js`). Sorular 98–106.
 - 2026-09-24 (20): **toplu maket M8 Saha ve Rapor** (§3.6): saha rapor ekranı (kriter, test, sigorta okuma önerisi, fotoğraf, sonuç,
   onaya gönderme kontrolleri; geri gönderilmiş ve onaydaki hâller); Planlar'daki "Raporu düzenle" bu ekrana bağlandı. Sorular 90–97.
 - 2026-09-24 (19): **toplu maket M7 Standart Kütüphanesi · Rapor şablonu önizlemesi** (§3.6): standart listesi, standart sayfası,

@@ -466,4 +466,51 @@
     if (!Object.keys(p.yetki).length) e.push("Hiçbir gruba yetkilendirilmemiş");
     return e;
   };
+
+  /* ── RAPORLAR (modül 14–16; M9, 2026-09-24) — firma geneli rapor kaydı. Planlar maketindeki plan raporları AYNI numarayla
+     (sıra 760'tan: plan 9 → 8 → 1; Planlar'daki dağılım ve sonuç kuralı), geçen yılın imzalı raporları ekipman kaydından.
+     Durum: taslak → onayda → onaylandı (son imza bekliyor) → imzalı (müşteriye açık). Planlar'ın "Onaylandı"sı burada onaylandı + imzalı.
+     Raporu yazan türün branşından (elektrik Elif Aydın, mekanik Mert Kaya; M8 ile aynı); onaylayan branş yöneticisi. */
+  MV.YONETICI = { m: "sy", e: "co" };
+  var dk = function (iso, n) { var d = new Date(iso + ":00Z"); d.setUTCMinutes(d.getUTCMinutes() + n); return d.toISOString().slice(0, 16); };
+  MV.RAPORLAR = [];
+  MV.EKIPMAN.filter(function (e) { return e.onceki; }).forEach(function (e) {   /* geçen yılın imzalı raporları */
+    var b = MV.tur(e.tur).b, o = e.onceki.tarih + "T10:00";
+    MV.RAPORLAR.push({ no: e.onceki.rapor, kod: e.kod, tesis: e.tesis, plan: null, kisi: e.onceki.kisi, olustu: o, durum: "imzali", sonuc: e.onceki.sonuc,
+      gonderildi: dk(o, 50), onay: { kim: MV.YONETICI[b], zaman: dk(o, 300) }, imza: { zaman: dk(o, 420) } });
+  });
+  var PLAN_RAP = [[9, "2026-09-21T13:05", { onaylandi: 14, onayda: 8 }], [8, "2026-09-22T09:02", { onayda: 3, taslak: 1 }], [1, "2026-09-23T09:04", { onayda: 3, taslak: 7 }]];
+  var raporSira = 760;
+  PLAN_RAP.forEach(function (pr) {
+    var id = pr[0], ekp = MV.EKIPMAN.filter(function (e) { return e.plan === id; }), tesis = ekp[0].tesis, dag = [];
+    ["onaylandi", "onayda", "taslak"].forEach(function (d) { for (var i = 0; i < (pr[2][d] || 0); i++) dag.push(d); });
+    dag.forEach(function (d, k) {
+      var e = ekp[k], b = MV.tur(e.tur).b, o = dk(pr[1], 10 + k * 6), r = { no: MV.raporNo("0926", raporSira++), kod: e.kod, tesis: tesis, plan: id, kisi: b === "e" ? "ea" : "mk",
+        olustu: o, durum: d, sonuc: d === "taslak" ? null : SONUC[(k + id) % SONUC.length], gonderildi: d === "taslak" ? null : dk(o, 30 + (k % 4) * 7), onay: null, imza: null };
+      if (d === "onaylandi") {   /* plan 9: ilk 10'u imzalandı ve müşteriye açıldı, son 4'ü son imzayı bekliyor */
+        r.onay = { kim: MV.YONETICI[b], zaman: k < 10 ? dk("2026-09-22T09:40", k * 11) : dk("2026-09-23T11:20", k * 4) };
+        if (k < 10) { r.durum = "imzali"; r.imza = { zaman: dk("2026-09-22T15:05", k * 3) }; }
+      }
+      MV.RAPORLAR.push(r);
+    });
+  });
+  /* geri gönderilmiş taslak (M8'deki ZV-1007 ile aynı) */
+  MV.RAPORLAR.filter(function (r) { return r.kod === "ZV-1007" && r.plan === 1; })[0].geri = { kim: "sy", zaman: "2026-09-23T15:10", gerekce: "Yük deneyi değerleri yazılmamış: dinamik ve statik deney yüklerini girin." };
+  MV.rapor = function (no) { return MV.RAPORLAR.filter(function (r) { return r.no === no; })[0]; };
+  /* rapor durumunun adı ve rozeti (Planlar'daki Taslak · Onayda · Onaylandı; onaylandı burada "İmza bekliyor" + "Müşteriye açık") */
+  MV.RAPOR_DURUM = { taslak: { ad: "Taslak", rozet: "a-rozet-bekliyor" }, geri: { ad: "Geri gönderildi", rozet: "a-rozet-red" }, onayda: { ad: "Onayda", rozet: "a-rozet-kabul" },
+    onaylandi: { ad: "İmza bekliyor", rozet: "a-rozet-denetimde" }, imzali: { ad: "Müşteriye açık", rozet: "a-rozet-tamam" } };
+  /* sonuç adı §4.5'e göre: hafif / ağır yalnız format yürürlükteki türde; Planlar maketi taslak formatlı türde de "Hafif kusurlu" yazıyor
+     (maket tutarsızlığı) → burada "Kusurlu"ya çevrilir */
+  MV.sonucAd = function (r) { if (!r.sonuc) return null; return r.sonuc === "Uygun" || MV.kusurSinifli(MV.tur(MV.ekipman(r.kod).tur)) ? r.sonuc : "Kusurlu"; };
+  MV.raporDurum = function (r) { return MV.RAPOR_DURUM[r.durum === "taslak" && r.geri ? "geri" : r.durum]; };
+  /* belge (MB.belge) için raporun dolu verisi; İSG-KATİP kaydı rapor tarihinde geçerli olan (önceki kayıtlar dahil) */
+  MV.raporBelge = function (r) {
+    var e = MV.ekipman(r.kod), t = MV.tur(e.tur), ts = MV.tesis(r.tesis), p = MV.kisi(r.kisi), gun = r.olustu.slice(0, 10);
+    var isg = MV.ISG.filter(function (x) { return x.t === ts.id && x.k === p.id && x.onay <= gun; }).sort(function (a, b) { return a.onay < b.onay ? 1 : -1; })[0];
+    var s = new Date(gun + "T12:00:00"); s.setMonth(s.getMonth() + t.periyot);
+    return { e: e, ts: ts, m: MV.musteri(ts.m), p: p, isg: isg, tarih: gun, bas: r.olustu.slice(11, 16), bit: r.gonderildi ? r.gonderildi.slice(11, 16) : null,
+      cihaz: MV.VARLIKLAR.filter(function (v) { return v.tur === "cihaz" && MV.kimde(v.id) === p.id && MV.cihazTuru(v.cihazTur).g.indexOf(t.g) >= 0; }),
+      sonraki: s.toISOString().slice(0, 10), no: r.no, sonuc: MV.sonucAd(r) || "Uygun", metot: t.std[0] || "uretici", imza: r.imza };
+  };
 })();
