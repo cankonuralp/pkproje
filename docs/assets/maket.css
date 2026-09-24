@@ -620,6 +620,16 @@ a.a-yuz:hover { border-color: var(--kenar-alan); background: var(--zemin); }
 .a-tablo-ekipmanlar .a-k-durum { width: 16%; }
 .a-tablo-gecmis .a-k-no { width: 26%; } .a-tablo-gecmis .a-k-tarih { width: 18%; } .a-tablo-gecmis .a-k-kisi { width: 18%; } .a-tablo-gecmis .a-k-sonuc { width: 16%; }
 .a-tablo-gecmis .a-k-eylem { width: 22%; }
+/* M4 (ölçüm cihazı · zimmet) */
+.a-tablo-cihaz .a-k-env { width: 11%; } .a-tablo-cihaz .a-k-ad { width: 25%; } .a-tablo-cihaz .a-k-kimde { width: 15%; }
+.a-tablo-cihaz .a-k-bitis { width: 15%; } .a-tablo-cihaz .a-k-ara { width: 16%; } .a-tablo-cihaz .a-k-durum { width: 18%; }
+.a-tablo-kal .a-k-tarih { width: 15%; } .a-tablo-kal .a-k-bitis { width: 15%; } .a-tablo-kal .a-k-lab { width: 25%; } .a-tablo-kal .a-k-sertifika { width: 14%; }
+.a-tablo-kal .a-k-sonuc { width: 11%; } .a-tablo-kal .a-k-eylem { width: 20%; }
+.a-tablo-ara .a-k-tarih { width: 20%; } .a-tablo-ara .a-k-kim { width: 25%; } .a-tablo-ara .a-k-yontem { width: 40%; } .a-tablo-ara .a-k-sonuc { width: 15%; }
+.a-tablo-kimde .a-k-varlik { width: 30%; } .a-tablo-kimde .a-k-tur { width: 14%; } .a-tablo-kimde .a-k-kimde { width: 18%; }
+.a-tablo-kimde .a-k-teslim { width: 20%; } .a-tablo-kimde .a-k-durum { width: 18%; }
+.a-tablo-hareket .a-k-tarih { width: 14%; } .a-tablo-hareket .a-k-varlik { width: 26%; } .a-tablo-hareket .a-k-kim { width: 28%; }
+.a-tablo-hareket .a-k-foto { width: 10%; } .a-tablo-hareket .a-k-form { width: 22%; }
 .a-tablo-isg .a-k-kisi { width: 28%; } .a-tablo-isg .a-k-no { width: 22%; } .a-tablo-isg .a-k-onay { width: 20%; } .a-tablo-isg .a-k-durum { width: 30%; }
 
 /* kayda giden kırpılabilir ad bağlantısı (ünvan, tesis adı, kişi): dokunma hedefi denetim yüksekliği, kırpma zinciri (kalıp 4) */
@@ -628,6 +638,23 @@ a.a-yuz:hover { border-color: var(--kenar-alan); background: var(--zemin); }
 .a-kod-uzun { letter-spacing: 0; }
 .a-bilgi-cift { grid-column: span 2; }
 .a-girdi-sgk { width: min(100%, 300px); font-variant-numeric: tabular-nums; }
+
+/* uyarı şeridi yığını (liste üstü; ör. kalibrasyon): şerit + sağda uygulanabilir tuş. Uyarı yalnız ekranda (anayasa 1.3) */
+.a-uyari-serit { display: grid; gap: 8px; margin: 0 0 12px; }
+.a-serit > span { flex: 1 1 auto; min-width: 0; }
+.a-serit .a-serit-tus { flex: none; margin: -3px -4px -3px 0; }
+.a-uyari-metin.a-hata-metin { color: var(--hata-yazi); }
+/* dosya alanı (ör. sertifika): tuş + dosya adı */
+.a-dosya { display: flex; align-items: center; flex-wrap: wrap; gap: 8px 12px; min-width: 0; }
+.a-dosya-ad { min-width: 0; overflow-wrap: anywhere; font-size: var(--boy-kucuk); }
+/* FOTOĞRAF (makette yer tutucu; uygulamada küçük önizleme ~240 px, anayasa 4.9) */
+.a-fotolar { display: flex; flex-wrap: wrap; align-items: center; gap: 8px; margin-top: 6px; }
+.a-foto {
+  position: relative; width: 64px; height: 64px; flex: none; display: inline-flex; align-items: center; justify-content: center;
+  border: 1px solid var(--kenar); border-radius: var(--r-orta); background: var(--zemin2); color: var(--yazi3);
+}
+.a-foto-no { position: absolute; right: 4px; bottom: 2px; font-size: var(--boy-etiket); font-weight: 700; color: var(--yazi2); }
+.a-gecmis-zimmet .a-not-metin { margin-top: 4px; }
 
 /* GİRİŞ EKRANI (kabuksuz): iki pano — marka (petrol, yan menüyle aynı zemin) · form. Kap dolar; alanlar veri tipine göre. */
 .a-giris { min-height: 100vh; display: grid; grid-template-columns: minmax(0, 1fr) minmax(0, 1fr); background: var(--kart); }

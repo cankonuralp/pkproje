@@ -82,6 +82,19 @@ export const DURUMLAR = {
     { ad: "ekipman ekle · çakışan kod", hash: "#/yeni", adim: [["yaz", "#w-kod", "ht-1001"]] },
     { ad: "kodu değiştir · eski kod yeniden verilemez", hash: "#/e/TP-1005/kod", adim: [["yaz", "#w-kod", "TP-05"]] },
   ] },
+  /* M4 Ölçüm Cihazı · Zimmet · kalibrasyon uyarısı (2026-09-24) */
+  m4: { sayfa: "maket/zimmetler.html", durumlar: [
+    { ad: "ölçüm cihazları · liste + uyarı şeridi", sayfa: "maket/olcum-cihazlari.html", hash: "#/" },
+    { ad: "cihaz · kalibrasyonu geçmiş, zimmette", sayfa: "maket/olcum-cihazlari.html", hash: "#/c/v3" },
+    { ad: "cihaz · kalibrasyonda", sayfa: "maket/olcum-cihazlari.html", hash: "#/c/v14" },
+    { ad: "kalibrasyon kaydı · boş gönderildi", sayfa: "maket/olcum-cihazlari.html", hash: "#/c/v1/kalibrasyon", adim: [["tikla", '[data-eylem="pencere-kaydet"]']] },
+    { ad: "zimmetler · kimde", hash: "#/" },
+    { ad: "zimmetler · kişiye göre (adresten)", hash: "#/?kisi=mk" },
+    { ad: "zimmetler · hareketler", hash: "#/hareketler" },
+    { ad: "varlık · araç, fotoğraflı geçmiş", hash: "#/v/a1" },
+    { ad: "teslim · kalibrasyonu geçmiş cihaz uyarısı", hash: "#/teslim/v3", adim: [["tikla", "#w-alan"], ["tikla", '[data-secim="w-alan"][data-deger="mk"]']] },
+    { ad: "teslim · araç, boş gönderildi", hash: "#/teslim/a3", adim: [["tikla", '[data-eylem="pencere-kaydet"]']] },
+  ] },
 };
 
 /* ── ETKİLEŞİM DENEMELERİ (--etkilesim): adımlar koşar, sonra `bekle` ifadesi sayfada doğru dönmeli. Gen verilmezse 1920. ── */
@@ -150,6 +163,20 @@ export const DENEMELER = {
     { ad: "kodu değiştir: eski kod yeniden verilmez", hash: "#/e/TP-1005/kod", adim: [["yaz", "#w-kod", "TP-05"]], bekle: '/eski kodlar yeniden verilmez/.test(document.querySelector("#w-kod-ipucu").textContent)' },
     { ad: "kodu değiştir: yeni kod + gerekçe → geçmişte eski kod", hash: "#/e/TP-1005/kod", adim: [["yaz", "#w-kod", "TP-9005"], ["yaz", "#w-gerekce", "Etiket yenilendi"], ["tikla", '[data-eylem="pencere-kaydet"]']], bekle: 'location.hash === "#/e/TP-9005" && /TP-1005 → TP-9005/.test(document.querySelector("#a-nesne").textContent)' },
     { ad: "ekipman sayfası: tesis müşteriler maketine bağlanır", hash: "#/e/HT-1001", bekle: 'document.querySelector(\'#a-nesne .a-nesne-alt a[href="musteriler.html#/t/t1"]\') !== null' },
+  ],
+  m4: [
+    { ad: "cihazlar: uyarı şeridindeki Göster çipi uygular (2 / 20)", sayfa: "maket/olcum-cihazlari.html", hash: "#/", adim: [["tikla", '[data-eylem="cip-uygula"][data-deger="gecti"]']], bekle: 'document.querySelector("#a-sayac").textContent === "2 / 20 cihaz" && document.querySelector(\'[data-cip="gecti"]\').getAttribute("aria-pressed") === "true"' },
+    { ad: "cihaz ekle: aynı envanter no reddedilir", sayfa: "maket/olcum-cihazlari.html", hash: "#/yeni", adim: [["yaz", "#w-env", "oc-001"], ["tikla", '[data-eylem="pencere-kaydet"]']], bekle: '/başka bir cihazda kayıtlı/.test(document.querySelector("#w-env-ipucu").textContent)' },
+    { ad: "cihaz ekle: geçerli → depoda cihaz sayfası", sayfa: "maket/olcum-cihazlari.html", hash: "#/yeni", adim: [["yaz", "#w-env", "OC-099"], ["tikla", "#w-cihazTur"], ["tikla", '[data-secim="w-cihazTur"][data-deger="pens"]'], ["yaz", "#w-seri", "CS1"], ["yaz", "#w-bitis", "01.09.2027"], ["tikla", '[data-eylem="pencere-kaydet"]']], bekle: '/^#\\/c\\/v/.test(location.hash) && /OC-099/.test(document.querySelector("#a-nesne h1").textContent) && /Depo/.test(document.querySelector(".a-yuzler").textContent)' },
+    { ad: "kalibrasyon kaydı: dosyasız kaydedilmez", sayfa: "maket/olcum-cihazlari.html", hash: "#/c/v1/kalibrasyon", adim: [["yaz", "#w-bitis", "23.09.2027"], ["yaz", "#w-sertifika", "KL-2026-900"], ["tikla", '[data-eylem="pencere-kaydet"]']], bekle: '/Sertifika dosyası eklenmeli/.test(document.querySelector("#a-pencere-govde").textContent)' },
+    { ad: "kalibrasyon kaydı: laboratuvardaki cihaz döner, depoya girer", sayfa: "maket/olcum-cihazlari.html", hash: "#/c/v14/kalibrasyon", adim: [["yaz", "#w-bitis", "23.09.2027"], ["yaz", "#w-sertifika", "KL-2026-901"], ["tikla", '[data-eylem="dosya-sec"]'], ["tikla", '[data-eylem="pencere-kaydet"]']], bekle: 'MV.kimde("v14") === "depo" && MV.kalDurum(MV.varlik("v14")) === "gecerli" && /Geçerli/.test(document.querySelector("#a-nesne .a-nesne-baslik").textContent)' },
+    { ad: "ara kontrol eklenir", sayfa: "maket/olcum-cihazlari.html", hash: "#/c/v9", adim: [["tikla", '[data-eylem="ara-ac"]'], ["tikla", '[data-eylem="pencere-kaydet"]']], bekle: 'document.querySelectorAll(".a-tablo-ara tbody tr").length === 2' },
+    { ad: "zimmetler: personel kartından kişiye göre (6 / 28)", hash: "#/?kisi=mk", bekle: 'document.querySelector("#a-sayac").textContent === "6 / 28 varlık"' },
+    { ad: "hareketler: 20'şer sayfa (1–20 / 29)", hash: "#/hareketler", bekle: 'document.querySelector(".a-sayfa-bilgi").textContent === "1–20 / " + MV.ZIMMET.length' },
+    { ad: "teslim: aynı kişiye teslim reddedilir", hash: "#/teslim/v7", adim: [["tikla", "#w-alan"], ["tikla", '[data-secim="w-alan"][data-deger="mk"]'], ["tikla", '[data-eylem="pencere-kaydet"]']], bekle: '/zaten Mert Kaya/.test(document.querySelector("#w-alan-ipucu").textContent)' },
+    { ad: "teslim: fotoğrafsız ve kilometresiz araç teslimi reddedilir", hash: "#/teslim/a3", adim: [["tikla", "#w-alan"], ["tikla", '[data-secim="w-alan"][data-deger="bs"]'], ["tikla", '[data-eylem="pencere-kaydet"]']], bekle: '/en az bir fotoğraf/i.test(document.querySelector("#a-pencere-govde").textContent) && document.querySelector("#w-km").getAttribute("aria-invalid") === "true"' },
+    { ad: "teslim: kalibrasyonu geçmiş cihaz depoya alınır, onay gerekmez", hash: "#/teslim/v3", adim: [["tikla", "#w-alan"], ["tikla", '[data-secim="w-alan"][data-deger="depo"]'], ["tikla", '[data-eylem="foto-ekle"]'], ["tikla", '[data-eylem="pencere-kaydet"]']], bekle: 'location.hash === "#/v/v3" && MV.kimde("v3") === "depo" && /İade alındı/.test(document.querySelector(".a-gecmis").textContent)' },
+    { ad: "teslim: kişiye teslim onay bekler", hash: "#/teslim/d5", adim: [["tikla", "#w-alan"], ["tikla", '[data-secim="w-alan"][data-deger="ok"]'], ["tikla", '[data-eylem="foto-ekle"]'], ["tikla", '[data-eylem="pencere-kaydet"]']], bekle: 'MV.kimde("d5") === "ok" && /Onay bekliyor/.test(document.querySelector(".a-gecmis li").textContent)' },
   ],
 };
 

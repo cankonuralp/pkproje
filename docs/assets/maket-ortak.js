@@ -66,7 +66,7 @@
     { grup: "Tanımlar", ogeler: [["Ekipman türleri", "layers", 5], ["Standartlar", "book-open", 4], ["Kullanıcılar", "user-cog", 1]] }
   ];
   /* hazır maketler: menüden tıklanınca gidilir (toplu bakışta tıklanır prototip, MAKET-PLANI §3.3); olmayan → bildirim */
-  var SAYFALAR = { 13: "planlarim.html", 1: "kullanicilar.html", 2: "personel.html", 3: "musteriler.html", 5: "ekipman-turleri.html", 7: "ekipmanlar.html" };
+  var SAYFALAR = { 13: "planlarim.html", 1: "kullanicilar.html", 2: "personel.html", 3: "musteriler.html", 5: "ekipman-turleri.html", 7: "ekipmanlar.html", 8: "olcum-cihazlari.html", 9: "zimmetler.html" };
   MK.sayfaAdresi = function (no) { return SAYFALAR[no] || null; };
   /* menü dışı maket ekranları (ör. plan açma); hazır olunca buraya yazılır, bağlantılar kendiliğinden açılır */
   var EK_SAYFALAR = { giris: "giris.html" };
@@ -336,14 +336,14 @@
     var gor = o.secenekler.filter(function (x) { return x[0] === o.deger; })[0];
     return '<div class="a-secici a-secim" data-secim-kap="' + o.id + '"><button class="a-girdi a-secim-tus" type="button" id="' + o.id + '" aria-haspopup="listbox" aria-expanded="false" data-secim-ac="' + o.id + '"' +
       (o.gecersiz ? ' aria-invalid="true"' : "") + (o.tanim ? ' aria-describedby="' + o.tanim + '"' : "") + ">" +
-      '<span class="a-kirp' + (gor ? "" : " a-secim-bos") + '">' + kacis(gor ? gor[1] : o.ipucu || "Seçin") + "</span>" + ikon("chevron-down", "a-ikon-kucuk") + "</button>" +
+      '<span class="a-kirp' + (gor ? "" : " a-secim-bos") + '" title="' + kacis(gor ? gor[1] : o.ipucu || "Seçin") + '">' + kacis(gor ? gor[1] : o.ipucu || "Seçin") + "</span>" + ikon("chevron-down", "a-ikon-kucuk") + "</button>" +
       '<div class="a-secici-liste a-secim-liste" role="listbox" aria-label="' + kacis(o.ad) + '" hidden>' +
       /* kalıp 19: 8'den fazla seçenekte arama kutusu (yazdıkça süzer; eşleşme yoksa söyler) */
       (o.secenekler.length > 8 ? '<input class="a-girdi a-secim-ara" type="search" data-secim-ara="' + o.id + '" placeholder="Ara" aria-label="' + kacis(o.ad) + ' içinde ara" autocomplete="off">' +
         '<p class="a-bos-satir a-secim-yok" hidden>Bu adla seçenek yok.</p>' : "") +
       o.secenekler.map(function (x) {
         return '<button class="a-secenek" type="button" role="option" aria-selected="' + (x[0] === o.deger) + '" data-secim="' + o.id + '" data-deger="' + kacis(x[0]) + '">' +
-          ikon("check", "a-ikon-kucuk") + '<span class="a-kirp">' + kacis(x[1]) + "</span>" + (x[2] ? '<span class="a-secenek-ek">' + kacis(x[2]) + "</span>" : "") + "</button>";
+          ikon("check", "a-ikon-kucuk") + '<span class="a-kirp" title="' + kacis(x[1]) + '">' + kacis(x[1]) + "</span>" + (x[2] ? '<span class="a-secenek-ek">' + kacis(x[2]) + "</span>" : "") + "</button>";
       }).join("") + "</div></div>";
   };
 

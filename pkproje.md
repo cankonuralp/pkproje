@@ -487,6 +487,38 @@ düzenle · kodu değiştir).
 eklendi; iki yeni kilit: maket betiklerindeki her ikon adı dosyada olmalı + ölçümde çizilen her ikonun karşılığı) · raporu onayda
 olan ekipman "Kontrolü geçti" görünüyordu · müşteri değişince başka müşterinin tesisi seçili kalıyordu (liste sessizce boşalıyordu).
 
+#### Maket M4 — Ölçüm Cihazı · Zimmet · kalibrasyon uyarısı (modül 8, 9, 20 kısmı) — ONAY BEKLİYOR
+Ekranlar: **ölçüm cihazları** (`maket/olcum-cihazlari.html`: liste üstünde kalibrasyon uyarı şeridi — geçenler kişi adıyla, 30 gün
+içinde bitenler; "Göster" çipi uygular · çipler: kalibrasyonu geçmiş · 30 gün içinde · kalibrasyonda · ara kontrol gecikti · depoda ·
+**cihaz sayfası**: cihaz bilgileri (rapora dolar, Ek-III 1.7.4), kalibrasyon kayıtları + sertifika, ara kontroller · pencereler:
+cihaz ekle · kalibrasyon kaydı · ara kontrol) · **zimmetler** (`maket/zimmetler.html`: **Kimde** (anlık; kişiye göre adresten) ·
+**Hareketler** (tam geçmiş, 20'şer) · **varlık sayfası**: fotoğraflı teslim geçmişi · **teslim penceresi**).
+**Varsayımlar:**
+- Varlık = **cihaz · araç · diğer** (saha tableti, KKD seti). Kimde = son teslimin alanı: kişi · **Depo** · **Kalibrasyonda**.
+  Depo tarafında yetkili planlama ekibinden (Zeynep Arslan); kalibrasyona gönderim de bir hareket.
+- Kalibrasyon geçerliliği sertifikadaki bitiş; **ara kontrol 6 ayda bir** (yapan branş yöneticisi) — ikisi de varsayım.
+- Kalibrasyon durumları: Geçerli · 30 gün içinde · Kalibrasyonu geçti · Kalibrasyonda. **Uyarı yalnız ekranda** (liste şeridi, çip,
+  cihaz ve varlık sayfasında şerit); e-posta ya da anlık bildirim YOK (anayasa 1.3). M10 Uyarılar'da toplanır.
+- Kalibrasyonu geçen cihaz zimmette kalabilir; o kişinin raporları onaya **gönderilemez** (§3) — şerit bunu kişi adıyla söyler.
+- **Cihaz türü → ekipman grupları**: rapora yalnız ilgili gruptaki zimmetli cihazlar gelir (§3'teki açık soruya öneri).
+- Teslimde **en az 1 fotoğraf**, araçta **kilometre** zorunlu; kaydedince zimmet formu oluşur, **teslim alan kendi ekranından onaylar**
+  (o zamana kadar "Onay bekliyor"); depoya iade ve laboratuvara gönderim onay istemez. Kişiye aynı varlık yeniden teslim edilemez.
+- Sertifika dosyası (PDF) zorunlu; sonuç "Uygun değil" ise cihaz kullanımdan çekilir. Laboratuvardan dönen cihaz depoya girer.
+- Ayrılan personelin zimmeti iadeyle depoya döner. Plaka il kodu **00** (gerçek olamaz), laboratuvar adları uydurma.
+**Sorular (M4):**
+58. Zimmette birden çok cihaz varsa rapora hangileri gelir: **hepsi** mi, **cihaz türünün ekipman gruplarına göre süzülmüş** mü (öneri),
+    inspector rapor anında çıkarabilir mi? *(§3 açık soru; bağımlılık: M8 Saha ve Rapor.)*
+59. Kalibrasyonu geçen cihaz **zimmette kalabilir** mi (öneri), yoksa bitiş günü teslim / kullanım mı engellensin?
+60. **Ara kontrol** periyodu (öneri 6 ay) ve yapan kişi: firma ayarı mı, cihaz başına mı?
+61. Zimmet formunun onayı: **uygulama içi onay** (öneri) mı, ıslak imzalı form mu, ikisi de mi?
+62. Teslimde **fotoğraf zorunlu** mu (öneri: en az 1; araçta dört yönden önerilir)?
+63. **Depo sorumlusu** kim: planlama ekibi mi, ayrı bir rol mü? *(Bağımlılık: soru 32 rol tablosu.)*
+64. Araçlar için ek takip (muayene, sigorta, bakım tarihi) istenir mi, yoksa yalnız "kimde"?
+65. Kalibrasyon uyarı eşiği 30 gün: **cihaz başına** değişebilsin mi?
+**Ölçüm (2026-09-24, bulut):** 10 durum × 1920 · 1080 · 375 × açık/koyu = **60/60 temiz**, çekmece 2/2; etkileşim **12/12**.
+Ölçerken düzeltilen: `list-checks` ikonu dosyada yoktu (M3'te kurulan çalışma anı ikon denetimi yakaladı) · telefonda iki arama ipucu
+kesikti · seçim alanında kırpılan değerin tam metni (title) yoktu (ortak üreticide, bütün maketler için).
+
 ---
 
 ## 4 · Mevzuat bulguları (2026-09-18 araştırması; kaynaklar bölüm 10)
@@ -828,6 +860,8 @@ revizyon, alan kopyalama, hafif kusur devri, meslek eşleşme denetimi).
 - Emsal ürünler: https://opwire.app/iso-17020-periyodik-kontrol-yazilimi/ · https://17020muayene.vidco.com.tr/ · https://akuple.com/asansor-kontrol-yazilimi/ · https://ensyazilim.com/
 
 ## 11 · Değişiklik günlüğü
+- 2026-09-24 (16): **toplu maket M4 Ölçüm Cihazı · Zimmet · kalibrasyon uyarısı** (§3.6): 20 cihaz, 3 araç, 5 diğer varlık, 29
+  teslim hareketi; cihaz ve varlık sayfaları, dört pencere; personel kartındaki zimmet sayısı kayıtlardan. Sorular 58–65.
 - 2026-09-24 (15): **toplu maket M3 Ekipman Türü Kataloğu · Ekipman** (§3.6): 24 türlük katalog, standart kütüphanesi verisi,
   143 ekipmanlık sicil (Planlar'daki kodlarla aynı), tür ve ekipman sayfaları, üç pencere. Planlar'ın boş "önceki sayfa" ikonu
   düzeltildi, iki ikon kilidi. Sorular 51–57.

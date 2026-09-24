@@ -313,6 +313,79 @@
     if (eski) return { tur: "hata", metin: kod + " daha önce " + eski.kod + " ekipmanının koduydu; eski kodlar yeniden verilmez." };
     return { tur: "tamam", metin: "Kod kullanılabilir; bu firmada başka ekipmanda yok." };
   };
+  /* ── ÖLÇÜM CİHAZI · ZİMMET (modül 8, 9; M4, 2026-09-24) ──────────────────────────────────────────────────────
+     Varlık = cihaz · araç · diğer (§3.1 modül 9). Kimde = son teslim hareketinin alanı: kişi · "depo" · "lab" (kalibrasyonda).
+     Cihaz türünün ekipman grupları: rapora yalnız ilgili gruptaki zimmetli cihazlar gelsin (açık soru §3'e ÖNERİ).
+     Marka, envanter no, sertifika no, plaka UYDURMA (plaka il kodu 00: gerçek olamaz). Laboratuvar adları uydurma. */
+  MV.CIHAZ_TURLERI = [
+    { k: "topraklama", ad: "Topraklama ölçer", g: ["elektrik"] }, { k: "izolasyon", ad: "İzolasyon direnci ölçer", g: ["elektrik"] },
+    { k: "tesisat", ad: "Tesisat test cihazı (çevrim / RCD)", g: ["elektrik"] }, { k: "pens", ad: "Pens ampermetre", g: ["elektrik"] },
+    { k: "multimetre", ad: "Multimetre", g: ["elektrik"] }, { k: "termal", ad: "Termal kamera", g: ["elektrik", "basincli"] },
+    { k: "kalinlik", ad: "Ultrasonik kalınlık ölçer", g: ["basincli", "kaldirma"] }, { k: "manometre", ad: "Dijital manometre", g: ["basincli"] },
+    { k: "dinamometre", ad: "Dinamometre / yük hücresi", g: ["kaldirma"] }, { k: "mesafe", ad: "Lazer mesafe ölçer", g: ["kaldirma", "iskele"] },
+    { k: "luksmetre", ad: "Lüksmetre", g: ["elektrik"] }, { k: "kumpas", ad: "Dijital kumpas", g: ["kaldirma", "diger"] }
+  ];
+  MV.cihazTuru = function (k) { return MV.CIHAZ_TURLERI.filter(function (t) { return t.k === k; })[0]; };
+  var LAB = ["Kalibrasyon Laboratuvarı A (akredite)", "Kalibrasyon Laboratuvarı B (akredite)"];
+  /* [envanter, tür, marka, bitiş, ara kontrol son, ölçüm aralığı] — kalibrasyon geçerliliği 12 ay, ara kontrol 6 ay (varsayım) */
+  var C = [
+    ["OC-001", "topraklama", "Vega", "2026-10-10", "2026-04-12", "0–2 kΩ"], ["OC-002", "izolasyon", "Orion", "2027-03-02", "2026-09-01", "0,1 MΩ–10 GΩ"],
+    ["OC-003", "tesisat", "Delta", "2026-09-18", "2026-03-20", "0,01–2 kΩ · 10–500 mA"], ["OC-004", "pens", "Pars", "2027-01-15", "2026-07-15", "0–1000 A"],
+    ["OC-005", "multimetre", "Vega", "2026-12-20", "2026-06-22", "0–1000 V"], ["OC-006", "termal", "Orion", "2026-10-01", "2026-04-03", "−20…650 °C"],
+    ["OC-007", "kalinlik", "Delta", "2027-02-11", "2026-08-10", "1–300 mm"], ["OC-008", "manometre", "Pars", "2026-11-30", "2026-05-28", "0–400 bar"],
+    ["OC-009", "dinamometre", "Vega", "2027-04-20", "2026-01-18", "0–5 t"], ["OC-010", "mesafe", "Orion", "2027-05-05", "2026-08-02", "0,05–100 m"],
+    ["OC-011", "manometre", "Delta", "2026-10-12", "2026-04-14", "0–250 bar"], ["OC-012", "dinamometre", "Pars", "2027-01-30", "2026-07-29", "0–10 t"],
+    ["OC-013", "izolasyon", "Vega", "2026-09-05", "2026-03-06", "0,1 MΩ–10 GΩ"], ["OC-014", "topraklama", "Orion", "2026-09-20", "2026-03-22", "0–2 kΩ"],
+    ["OC-015", "luksmetre", "Delta", "2027-06-01", "2026-06-01", "0–200 000 lx"], ["OC-016", "kumpas", "Pars", "2027-02-28", "2026-08-27", "0–300 mm"],
+    ["OC-017", "kalinlik", "Vega", "2026-10-20", "2026-04-21", "1–300 mm"], ["OC-018", "multimetre", "Orion", "2027-03-15", "2026-09-14", "0–1000 V"],
+    ["OC-019", "tesisat", "Delta", "2027-07-01", "2026-07-01", "0,01–2 kΩ · 10–500 mA"], ["OC-020", "pens", "Pars", "2027-02-02", "2026-08-03", "0–1000 A"]
+  ];
+  MV.VARLIKLAR = C.map(function (c, i) {
+    var t = MV.cihazTuru(c[1]), bit = c[3], y = +bit.slice(0, 4);
+    return { id: "v" + (i + 1), tur: "cihaz", ad: t.ad, cihazTur: c[1], env: c[0], marka: c[2], model: c[0].replace("OC-", "M") + "0", seri: "CS" + (48213 + i * 977),
+      aralik: c[5], bitis: bit, araSon: c[4], araPeriyot: 6,
+      kal: [{ tarih: (y - 1) + bit.slice(4), bitis: bit, lab: LAB[i % 2], sertifika: "KL-" + (y - 1) + "-" + (410 + i * 13), sonuc: "Uygun" },
+            { tarih: (y - 2) + bit.slice(4), bitis: (y - 1) + bit.slice(4), lab: LAB[(i + 1) % 2], sertifika: "KL-" + (y - 2) + "-" + (300 + i * 11), sonuc: "Uygun" }],
+      ara: [{ tarih: c[4], kim: i % 2 ? "co" : "sy", yontem: "Referans değerle karşılaştırma", sonuc: "Uygun" }], rapor: 12 + (i * 7) % 40 };
+  }).concat([
+    { id: "a1", tur: "arac", ad: "Hafif ticari araç", plaka: "00 MAK 001", marka: "Delta", model: "Van", yil: 2022 },
+    { id: "a2", tur: "arac", ad: "Hafif ticari araç", plaka: "00 MAK 002", marka: "Delta", model: "Van", yil: 2023 },
+    { id: "a3", tur: "arac", ad: "Binek araç", plaka: "00 MAK 003", marka: "Orion", model: "Sedan", yil: 2021 },
+    { id: "d1", tur: "diger", ad: "Saha tableti", env: "TB-01", marka: "Pars", model: "10 inç" }, { id: "d2", tur: "diger", ad: "Saha tableti", env: "TB-02", marka: "Pars", model: "10 inç" },
+    { id: "d3", tur: "diger", ad: "Saha tableti", env: "TB-03", marka: "Pars", model: "10 inç" },
+    { id: "d4", tur: "diger", ad: "Yüksekte çalışma emniyet seti", env: "KKD-11", marka: "Vega", model: "Tam vücut kemeri + lanyard" },
+    { id: "d5", tur: "diger", ad: "Baret ve KKD seti", env: "KKD-12", marka: "Orion", model: "Baret, gözlük, eldiven" }
+  ]);
+  MV.varlik = function (id) { return MV.VARLIKLAR.filter(function (v) { return v.id === id; })[0]; };
+  MV.varlikAdi = function (v) { return v.tur === "arac" ? v.plaka + " · " + v.ad : (v.env ? v.env + " · " : "") + v.ad; };
+  /* ZİMMET HAREKETLERİ — her teslim ayrı kayıt: tarih-saat, teslim eden → alan, fotoğraf, not, zimmet formu (onay) */
+  var H = [   /* [varlık, tarih, eden, alan, foto, not] ; "depo" / "lab" yer; depo tarafında yetkili Zeynep Arslan (za) */
+    ["v1", "2025-10-14T09:10", "depo", "ea", 2, "Çanta, problar ve kazıklar tam."], ["v2", "2026-03-05T08:40", "depo", "ea", 2, "Problar tam."],
+    ["v3", "2025-09-22T10:05", "depo", "ea", 2, "Adaptör seti tam."], ["v4", "2026-01-20T09:00", "depo", "dk", 1, ""], ["v5", "2026-01-20T09:02", "depo", "dk", 1, ""],
+    ["v6", "2025-10-06T11:30", "depo", "dk", 2, "Kılıf ve şarj aleti tam."], ["v7", "2026-02-16T08:15", "depo", "mk", 1, "Jel ve prob tam."],
+    ["v8", "2025-12-05T13:20", "depo", "mk", 1, ""], ["v9", "2026-04-27T08:30", "depo", "mk", 2, "Kalibrasyon etiketi sağlam."],
+    ["v10", "2026-05-11T09:45", "depo", "bs", 1, ""], ["v11", "2025-10-15T10:00", "depo", "bs", 1, ""],
+    ["v13", "2025-09-08T09:30", "depo", "ok", 1, ""], ["v15", "2026-06-03T14:10", "depo", "ea", 1, ""], ["v16", "2026-03-03T09:00", "depo", "hp", 1, ""],
+    ["v17", "2025-10-24T08:50", "depo", "hp", 1, ""], ["v18", "2026-03-18T10:20", "depo", "ta", 1, ""],
+    ["v14", "2025-09-24T09:00", "depo", "sy", 1, ""], ["v14", "2026-09-15T16:40", "sy", "lab", 2, "Kalibrasyona gönderildi; kargo takip no formda."],
+    ["v20", "2025-02-05T09:00", "depo", "ns", 1, ""], ["v20", "2026-06-30T16:30", "ns", "depo", 2, "Ayrılışta iade; kılıf yıpranmış."],
+    ["a1", "2025-06-02T08:00", "depo", "ea", 4, "Km 21.480 · hasar yok."], ["a1", "2026-01-05T08:10", "ea", "mk", 4, "Km 34.905 · arka tamponda çizik (fotoğraf 3)."],
+    ["a2", "2026-02-02T08:05", "depo", "ea", 4, "Km 12.310 · hasar yok."], ["a3", "2026-05-18T17:30", "bs", "depo", 3, "Km 58.742 · lastikler değişmeli."],
+    ["d1", "2025-11-03T09:00", "depo", "mk", 2, "Kılıf, kalem, şarj aleti."], ["d2", "2025-11-03T09:05", "depo", "ea", 2, "Kılıf, kalem, şarj aleti."],
+    ["d3", "2026-05-11T09:50", "depo", "bs", 2, ""], ["d4", "2026-04-01T08:30", "depo", "mk", 3, "Son muayene etiketi 03/2026."], ["d5", "2026-01-20T09:10", "depo", "dk", 1, ""]
+  ];
+  MV.ZIMMET = H.map(function (h, i) { return { id: "z" + (i + 1), v: h[0], tarih: h[1], eden: h[2], alan: h[3], foto: h[4], not: h[5], onay: h[3] !== "lab" && h[3] !== "depo" ? h[1].slice(0, 10) : null, yetkili: "za" }; });
+  MV.hareketler = function (vid) { return MV.ZIMMET.filter(function (z) { return z.v === vid; }).sort(function (a, b) { return a.tarih < b.tarih ? 1 : -1; }); };
+  MV.kimde = function (vid) { var h = MV.hareketler(vid)[0]; return h ? h.alan : "depo"; };
+  MV.yerAdi = function (k) { return k === "depo" ? "Depo" : k === "lab" ? "Kalibrasyonda" : MV.kisi(k).ad; };
+  /* kalibrasyon durumu: gecti (bitiş geçti) · yakin (30 gün içinde) · lab (laboratuvarda) · gecerli */
+  MV.kalDurum = function (v) {
+    if (v.tur !== "cihaz") return null;
+    if (MV.kimde(v.id) === "lab") return "lab";
+    var k = Math.round((new Date(v.bitis + "T12:00:00") - new Date("2026-09-23T12:00:00")) / 864e5);
+    return k < 0 ? "gecti" : k <= 30 ? "yakin" : "gecerli";
+  };
+
   /* sonraki kontrol = son imzalı kontrol + türün periyodu (inspector gerekçeyle değiştirebilir, §4.7) */
   MV.sonrakiKontrol = function (e) {
     if (!e.onceki) return null;
