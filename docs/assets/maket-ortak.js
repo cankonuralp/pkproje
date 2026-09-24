@@ -45,8 +45,9 @@
   /* kırıntı: [["Personel", "#/"], ["Mert Kaya"]] — son öge bulunulan yer */
   MK.kirinti = function (l) {
     return '<nav class="a-kirinti" aria-label="Konum">' + l.map(function (x, i) {
-      if (i === l.length - 1 && l.length > 1) return ikon("chevron-right", "a-ikon-kucuk") + '<span aria-current="page">' + kacis(x[0]) + "</span>";
-      return '<a href="' + x[1] + '">' + (i === 0 ? ikon("arrow-left", "a-ikon-kucuk") : "") + kacis(x[0]) + "</a>";
+      var ayrac = i ? ikon("chevron-right", "a-ikon-kucuk") : "";   /* her ara öğeden önce ayraç (bağlantılar bitişmez) */
+      if (i === l.length - 1 && l.length > 1) return ayrac + '<span aria-current="page">' + kacis(x[0]) + "</span>";
+      return ayrac + '<a href="' + x[1] + '">' + (i === 0 ? ikon("arrow-left", "a-ikon-kucuk") : "") + kacis(x[0]) + "</a>";
     }).join("") + "</nav>";
   };
 
@@ -66,6 +67,7 @@
   /* hazır maketler: menüden tıklanınca gidilir (toplu bakışta tıklanır prototip, MAKET-PLANI §3.3); olmayan → bildirim */
   var SAYFALAR = { 13: "planlarim.html", 1: "kullanicilar.html", 2: "personel.html" };
   MK.sayfaAdresi = function (no) { return SAYFALAR[no] || null; };
+  MK.MENU = MENU;   /* salt okunur: rol yetkileri tablosu modülleri menünün kendisinden sayar (ikinci liste yok) */
 
   function menuHtml(o) {
     return MENU.map(function (g, i) {
@@ -129,7 +131,7 @@
   var SZ_TANIM = {}, SZ = MK.SZ = {}, YENILE = {};
   function yeniSz(on) {
     var s = { ara: "", secili: [], kip: "veya", sec: {}, sayfa: 1 };
-    SZ_TANIM[on].seciciler.forEach(function (x) { s.sec[x.k] = x.siralama ? "varsayilan" : "tumu"; });
+    SZ_TANIM[on].seciciler.forEach(function (x) { s.sec[x.k] = x.siralama ? "varsayilan" : x.bas || "tumu"; });
     return s;
   }
   MK.suzgecTanimla = function (on, tanim, yenile) { SZ_TANIM[on] = tanim; SZ[on] = yeniSz(on); YENILE[on] = yenile; };
@@ -148,7 +150,9 @@
       '<div class="a-suzgec-sag"><div class="a-seciciler"></div>' +
         '<button class="a-temizle" type="button" data-eylem="temizle">' + ikon("filter-x", "a-ikon-kucuk") + "Temizle</button></div></div>";
   };
-  var aktifSecici = function (on) { return SZ_TANIM[on].seciciler.filter(function (x) { return !x.siralama && SZ[on].sec[x.k] !== "tumu"; }).length; };
+  /* seçicinin başlangıç değeri `bas` (verilmezse "tumu"). `bas` taşıyan seçici GÖRÜNÜM ANAHTARIDIR (ör. Çalışanlar /
+     Ayrılanlar / Hepsi, kalıp 8: "süzgeç değil görünüm anahtarı"): süzgeç sayılmaz, Temizle onu sıfırlamaz (sıralama gibi) */
+  var aktifSecici = function (on) { return SZ_TANIM[on].seciciler.filter(function (x) { return !x.siralama && !x.bas && SZ[on].sec[x.k] !== "tumu"; }).length; };
   var suzgecVar = MK.suzgecVar = function (on) { var s = SZ[on]; return !!s.ara.trim() || s.secili.length > 0 || aktifSecici(on) > 0; };
   MK.taban = function (on, kayitlar) {   /* çipler HARİÇ her şey; çip sayıları buradan (dürüst sayaç, anayasa 2.8) */
     var t = SZ_TANIM[on], s = SZ[on], a = MK.tr(s.ara.trim());
@@ -207,7 +211,8 @@
     }).join("");
   }
   function temizle(on) {
-    var eski = SZ[on].sec.sira; SZ[on] = yeniSz(on); if (eski) SZ[on].sec.sira = eski;   /* sıralama süzgeç değildir, kalır */
+    var eski = SZ[on].sec, t = SZ_TANIM[on]; SZ[on] = yeniSz(on);
+    t.seciciler.forEach(function (x) { if (x.siralama || x.bas) SZ[on].sec[x.k] = eski[x.k]; });   /* sıralama ve görünüm süzgeç değildir, kalır */
     var k = kap(on); if (k) { k.querySelector("[data-ara]").value = ""; k.querySelector(".a-ara").classList.remove("a-dolu"); }
   }
   /* süzgeç satırını durumdan yeniden kurar (sayfa yeniden çizilince arama kutusu değeri, seçiciler ve liste) */
@@ -278,10 +283,15 @@
     var s = SZ[o.on], tb = MK.taban(o.on, o.kayitlar), liste = tb.filter(function (k) { return MK.cipGecer(o.on, k); });
     if (o.sirala) liste = o.sirala(liste);
     MK.cipCiz(o.on, tb);
-    if (o.sayacId) $(o.sayacId).innerHTML = MK.sayac(o.on, liste.length, o.kayitlar.length);
+    /* dürüst sayaç (anayasa 2.8): toplam, görünüm anahtarının (başlangıç değerli seçici, ör. Çalışanlar) İÇİNDEKİ kayıtlar —
+       2026-09-24 ölçümde yakalandı: 15 kişi listelenirken "16 kişi" yazıyordu (ayrılan kişi de sayılıyordu) */
+    var gorunum = SZ_TANIM[o.on].seciciler.filter(function (x) { return x.bas; });
+    var toplam = o.kayitlar.filter(function (k) { return gorunum.every(function (x) { return x.gecer(k, s.sec[x.k]); }); }).length;
+    if (o.sayacId) $(o.sayacId).innerHTML = MK.sayac(o.on, liste.length, toplam);
     var boy = SZ_TANIM[o.on].sayfa, ic;
     if (boy) { var n = Math.max(1, Math.ceil(liste.length / boy)); if (s.sayfa > n) s.sayfa = n; }
     if (!o.kayitlar.length) ic = typeof o.bosVeri === "string" ? o.bosVeri : MK.bos(o.bosVeri);
+    else if (!toplam) ic = MK.bos({ ikon: "inbox", baslik: "Bu görünümde " + SZ_TANIM[o.on].birim + " yok", metin: "Görünüm değiştirilince liste yeniden dolar." }, o.on);
     else if (!liste.length) ic = MK.bosSuzgec(o.on);
     else { var t = Object.assign({}, o.tablo, { kayitlar: boy ? liste.slice((s.sayfa - 1) * boy, s.sayfa * boy) : liste }); ic = MK.tablo(t); }
     $(o.listeId).innerHTML = ic;

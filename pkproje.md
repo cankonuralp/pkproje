@@ -354,6 +354,68 @@ reisim 2026-09-23, 4. tur: önerilerim kabul):
 | Ekipman kodu | A–Z, 0–9, tire · 3–20 · önek serbest (18) | HT-1001 | **personel, etiketten elle** | firma genelinde eşsiz (17) · çakışan kod kaydedilmez · değiştirme yalnız yönetici, eski kod geçmişte kalır (19) |
 Proje ve rapor numarasını kimse elle yazmaz; ekipman kodunu personel yazar, sistem eşsizliğini korur.
 
+### 3.6 · Toplu maket çalışması (2026-09-24; `MAKET-PLANI.md`) — her maket ONAY BEKLİYOR
+Reisim en sonda toplu bakış sayfasından hepsine birlikte bakar; aradaki maketlere onay verilmez. Her maketin **varsayımları**
+(neyi neden böyle kurdum) ve **soruları** (reisim'in karar vereceği ürün davranışı; numara 32'den) burada. Ölçüm sonuçları
+`docs/assets/olcum/<maket>.json` (bulutta başsız Chromium, `tools/olc-bulut.mjs`); etkileşim denemeleri aynı araçta.
+**Ortak altyapı (M1'de kuruldu):** Planlar maketinin kabuğu, süzgeç satırı, liste (tablo ↔ kart), sayfalayıcı, boş durum ve
+bildirim `docs/assets/maket-ortak.js`'e AYNEN taşındı (Planlar ayrımdan önce ve sonra 54/54 temiz, ekran görüntüleri piksel
+karşılaştırıldı); ortak uydurma veri `docs/assets/maket-veri.js`; menüdeki hazır maketler tıklanınca açılır.
+
+#### Maket M1 — Kullanıcı ve Rol · Personel (modül 1, 2) — ONAY BEKLİYOR
+Ekranlar: **giriş** (`maket/giris.html`: giriş · yanlış bilgi · parola sıfırlama · davet bağlantısından parola belirleme) ·
+**kullanıcılar** (`maket/kullanicilar.html`: liste, rollere göre çip + ve/veya · **rol yetkileri** tablosu · kullanıcı sayfası:
+roller, görebildiği modüller, parola sıfırlama, pasifleştirme · **davet penceresi**) · **personel** (`maket/personel.html`: liste ·
+personel kartı: bilgi yüzleri, kimlik ve sicil, plan kabul ön koşulları, 17020 yetkinlik tablosu, belgeler · form).
+**Varsayımlar:**
+- Bakış **firma yöneticisi** (§2'de taslak rol); menü herkese tam (rol × modül henüz karar değil).
+- **Kullanıcı hesabı personel kaydına bağlı:** önce Personel'de kişi açılır, sonra Kullanıcılar'dan davet edilir; hesabı olmayan
+  personel olabilir (ör. teknisyen). Hesap **davet e-postasıyla** açılır, kişi parolasını kendisi belirler.
+- Meslek listesi ve Ek-III grupları §4.6'dan **birebir**; yalnız iskele yetkisi veren meslekler (inşaat) **mekanik** branş sayıldı.
+  **Teknisyen** personel olarak kaydedilir ama Inspector rolü ve yetkinlik verilemez (arayüzde seçilemez, sebebi yazar).
+- **Yetkinlik = firmanın kişiyi Ek-III GRUBUNA yetkilendirmesi** (tarihli; 17020 yetkinlik matrisi, §4.9); meslek izin vermeyen
+  grup seçilemez.
+- Oda sicil no **teknikerde zorunlu değil** (§3.1), mühendis ve teknik öğretmende zorunlu; diploma no yetkili meslekte zorunlu.
+  EKİPNET, diploma ve oda sicil **biçimleri bilinmiyor** — maketteki numaralar rasgele; EKİPNET formda "4–12 rakam" yer tutucu.
+- Plan kabulünün **kişi** ön koşulları kartta: EKİPNET dolu + meslek yetkili + en az bir gruba yetkilendirilmiş (§3.2 2b–2c;
+  üçüncüsü öneri). İSG-KATİP (2a) plan × tesis başına denetlenir, kartta yalnız bilgi.
+- Rol tablosu (**öneri**): Değiştirir · Görür · Branşı · Kendi · —; kişinin birden çok rolü varsa en geniş düzey. **Hareket kaydı**
+  yalnız firma yöneticisine (karar 30). Rol değişikliği **bir sonraki girişte** geçerli (anayasa 7.5).
+- **Ayrılan personel silinmez:** "Ayrılanlar" görünümünde kalır, hesabı pasifleşir; imzaladığı raporlar yerinde.
+- Giriş: hangi hesabın var olduğu **söylenmez** (yanlış e-posta ve yanlış parola aynı ileti; sıfırlamada "kayıtlıysa gönderildi");
+  parola en az 10 karakter, harf + rakam; 5 hatalı denemede 15 dk kilit; sıfırlama bağlantısı 30 dk — **hepsi varsayım**.
+- Telefon numarası alanı yok (KVKK: en az veri); tarih alanı metin (GG.AA.YYYY) — tarih seçici ayrı iş (kalıp 19).
+- Kişi kartındaki İSG-KATİP, zimmet, eğitim sayıları şimdilik sabit; o modüllerin maketleri gelince oradan bağlanır.
+**Yeni desenler (kalıp 16 gereği önce soru — soru 42):** tıklanır **bilgi yüzleri** (anayasa 2.7'nin nesne sayfası kalıbı) ·
+**form sayfası** (bölüm kartları en az 440 px, telefonda alttaki tuş çubuğu yapışkan — plan içi çubuğuyla aynı karar) ·
+**seçim alanı** formda (kalıp 19: yerli açılır liste yok) · **koşul listesi** (✓ / ⚠) · **giriş ekranı** (iki pano) · sekmeler bağlantı
+olarak (Kullanıcılar | Rol yetkileri; ekle penceresindeki sekmeyle aynı sınıf).
+**Sorular (M1):**
+32. **Rol × modül görünürlüğü:** Kullanıcılar › Rol yetkileri'ndeki öneri tablosu başlangıç olarak uygun mu? *(Bağımlılık: her
+    maketin menüsü ve tuşları bu cevaba göre daralır.)*
+33. Kullanıcı hesabı her zaman bir **personel kaydına** mı bağlı olsun? Dış muhasebeci gibi personel olmayan kişi için ayrı bir rol
+    (ör. "Muhasebe") gerekir mi? *(Bağımlılık: M14 Muhasebe.)*
+34. Hesap açma **davet e-postası + kişi kendi parolasını belirler** (öneri) mi, yoksa yönetici geçici parola mı verir?
+35. Firma kullanıcıları ile **müşteri kullanıcıları aynı giriş ekranından** mı girsin (öneri: aynı alt alan adı, e-postadan ayrılır)?
+    *(Bağımlılık: M11 Müşteri Paneli.)*
+36. Giriş ekranında **firmanın logosu ve adı** görünsün mü (firma ayarı)? Şu an yalnız probata ve alt alan adı; masaüstünde form
+    panosunda boşluk kalıyor.
+37. Parola ve kilit kuralları (10 karakter harf + rakam · 5 hatada 15 dk kilit · sıfırlama 30 dk · davet 72 saat) uygun mu?
+38. **Yetkilendirme düzeyi:** Ek-III **grubu** mu (öneri), ekipman **türü** mü? *(Bağımlılık: M3 Ekipman Türü Kataloğu ve plan
+    kabulündeki meslek denetimi.)*
+39. Plan kabulünde **kişi** ön koşulları (EKİPNET + yetkili meslek + en az bir grup yetkisi) sağlanmazsa kabul düğmesi pasif ve
+    eksik yazılı olsun mu (§3.2 2c'nin genişletilmişi)?
+40. Personel **belgeleri** (diploma, oda kaydı, EKİPNET belgesi, Bakanlık eğitim sertifikası) sisteme yüklensin mi? Eğitim
+    sertifikası M16 Eğitimler'le mi yürüsün?
+41. Girişten sonraki **ilk ekran** herkes için Planlar mı, rolüne göre mi (inspector → Planlar · yönetici → Onaylar)?
+42. Yukarıdaki **yeni desenler** kalıba madde olarak girsin mi (kalıp 16)?
+43. Ayrılan personel **silinmez**, "Ayrılanlar" görünümünde kalır ve hesabı pasifleşir (öneri) — uygun mu?
+**Ölçüm (2026-09-24, bulut):** 18 durum × 1920 · 1080 · 375 × açık/koyu = **108/108 temiz**, 1080'de çekmece açık 2/2; etkileşim
+**17/17**. Ölçerken bulunup düzeltilen: kırıntıda ayraçsız bitişik bağlantılar üst üste biniyordu · bağlantı olan tuşun altı çiziliydi ·
+parola göster düğmesi alanın üstüne biniyordu (yanına alındı) · **sayaç dürüst değildi** ("Çalışanlar" görünümünde 15 kişi listelenirken
+"16 kişi"; üreticide düzeltildi, bütün listeler için) · görünüm anahtarı Temizle ile sıfırlanıyordu · bilgi yüzleri masaüstünde
+kabı doldurmuyordu · yeni kişinin adresi (rakamlı kimlik) listeye düşüyordu.
+
 ---
 
 ## 4 · Mevzuat bulguları (2026-09-18 araştırması; kaynaklar bölüm 10)
@@ -665,7 +727,7 @@ olsun"*), ☰ ile 2. deneme **onaylandı** (*"uygun"*) → uygulamaya geçti (§
 **On birinci tur (2026-09-24):** maket çalışma biçimi → **bütün maketler (faz 1 + faz 2) sırayla bulutta, sonda toplu
 bakış** (§3.3, `MAKET-PLANI.md`).
 
-**Açık kalanlar:** **toplu maket çalışması** (M1–M16 + toplu bakış, `MAKET-PLANI.md`) · **önizlemede örnek veri kipi** (öneri, §3.3) · **rol × modül görünürlüğü** (reisim: *"sonradan belirleriz"*) · **gerçek sunucunun sağlayıcısı**
+**Açık kalanlar:** **toplu maket çalışması** (M1–M16 + toplu bakış, `MAKET-PLANI.md`; sorular §3.6'da, 32'den) · **önizlemede örnek veri kipi** (öneri, §3.3) · **rol × modül görünürlüğü** (reisim: *"sonradan belirleriz"*) · **gerçek sunucunun sağlayıcısı**
 (Türkiye, §8.8) ·
 alan adının alınması · e-imza yöntemi (8.4) · v1 ekipman grupları · 5 yıl sonrası silme
 mekanizması · **zimmette birden çok cihaz varsa süzgeç** (§3) · **kontrol metodu standardının seçim yeri**
@@ -695,6 +757,11 @@ revizyon, alan kopyalama, hafif kusur devri, meslek eşleşme denetimi).
 - Emsal ürünler: https://opwire.app/iso-17020-periyodik-kontrol-yazilimi/ · https://17020muayene.vidco.com.tr/ · https://akuple.com/asansor-kontrol-yazilimi/ · https://ensyazilim.com/
 
 ## 11 · Değişiklik günlüğü
+- 2026-09-24 (13): **toplu maket M1** (bulut oturumu): bulut hazırlığı doğrulandı (Chrome indirmesi vekilde 403 → VM'deki
+  Chromium; root'ta gömülü PostgreSQL → testler root olmayan kullanıcıyla), ölçüm sürücüsü `tools/olc-bulut.mjs` (olumsuz kanıt
+  2/2, etkileşim kipi), ikon ekleme aracı `tools/ikon-ekle.mjs` (Lucide 1.47.0, iki kopya birlikte; +12 ikon, 63). Planlar
+  maketinin kabuğu ve ortak parçaları `maket-ortak.js`'e ayrıldı (görünüm aynı). **M1 Kullanıcı ve Rol · Personel** maketi:
+  giriş, kullanıcılar, rol yetkileri (öneri), davet, personel liste/kart/form (§3.6). Sorular 32–43.
 - 2026-09-18: dosya oluşturuldu (reisim'in tarifi, mevzuat araştırması, emsaller, teknik karar taslağı, açık sorular).
 - 2026-09-18 (2): emsal uygulama incelendi (yerel dosya); teknik karar 8.2/8.6 revize:
   Docker/Supabase kalktı, yerelde kurulumsuz gömülü PostgreSQL; iki öncelikli yenilik (çevrimdışı, görselden veri) not edildi.

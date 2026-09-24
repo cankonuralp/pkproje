@@ -309,7 +309,7 @@ button { cursor: pointer; }
   height: var(--tus-y); padding: 0 12px;
   display: inline-flex; align-items: center; justify-content: center; gap: 6px;
   border: 1px solid transparent; border-radius: var(--r-orta);
-  font-weight: 600; white-space: nowrap;
+  font-weight: 600; white-space: nowrap; text-decoration: none;   /* bağlantı olan tuş (a.a-tus) da tuş gibi görünür (2026-09-24) */
   transition: background var(--sure) var(--egri), border-color var(--sure) var(--egri);
 }
 .a-tus-birincil { background: var(--birincil); color: var(--birincil-uzeri); }
@@ -525,6 +525,113 @@ button { cursor: pointer; }
 .a-bildirim.a-gorunur { opacity: 1; transform: translate(-50%, 0); }
 .a-bildirim .a-ikon { color: var(--marka-onay); }
 
+/* ══ TOPLU MAKET EKLERİ (2026-09-24, M1–M16) — ONAY BEKLİYOR ═══════════════════════════════════════════════
+   Planlar'da karşılığı olmayan desenler (kalıp 16: önce soru — pkproje.md "Maket M1" soruları). Aynı işi yapan ikinci
+   aile açılmaz: tuş, çip, rozet, liste, süzgeç, pencere, bilgi listesi (a-bilgi) ve şerit Planlar'daki sınıflar. */
+
+/* sayfa başında birincil tuş (ör. "Personel ekle"): başlığın sağına yaslı (kalıp 2); a-bolum-tus margin-left:auto.
+   .a-sayfa-bas yeniden yazılmaz (anayasa 13.2: ikinci blok sessizce ezer) — taban hizası tuşla da doğru */
+/* sekmeler bağlantı olarak (ör. Kullanıcılar | Rol yetkileri): ekle penceresindeki a-sekme ile AYNI sınıf */
+a.a-sekme { text-decoration: none; }
+.a-sekme[aria-current="page"] { background: var(--zemin2); color: var(--yazi); }
+.a-sekmeler-sayfa { margin: 0 0 12px; }
+
+/* nesne sayfasının eylem çubuğu başlığın sağında (anayasa 2.7: tek birincil tuş + araç çubuğu) */
+.a-nesne-bas .a-eylem-cubugu { flex: none; }
+
+/* TIKLANIR BİLGİ YÜZLERİ (anayasa 2.7 nesne sayfası kalıbı): öteki modüllere geçen sayılar. Kap dolar (kalıp 10). */
+.a-yuzler { display: grid; grid-template-columns: repeat(auto-fit, minmax(min(100%, 200px), 1fr)); gap: 10px; margin: 0 0 20px; }
+.a-yuz {
+  display: flex; flex-direction: column; gap: 2px; min-height: calc(var(--tus-y) * 2); padding: 10px 12px;
+  background: var(--kart); border: 1px solid var(--kenar); border-radius: var(--r-buyuk);
+  color: var(--yazi); text-decoration: none; min-width: 0;
+}
+a.a-yuz:hover { border-color: var(--kenar-alan); background: var(--zemin); }
+.a-yuz-ust { display: flex; align-items: center; gap: 8px; color: var(--yazi2); font-size: var(--boy-kucuk); font-weight: 600; }
+.a-yuz-sayi { font-size: var(--boy-baslik); font-weight: var(--kal-baslik); font-variant-numeric: tabular-nums; line-height: 1.2; }
+.a-yuz-not { color: var(--yazi2); font-size: var(--boy-etiket); }
+.a-yuz-not.a-yuz-uyari { color: var(--uyari-yazi); font-weight: 600; }
+
+/* koşul listesi (ör. plan kabul ön koşulları): her satır ✓ ya da ⚠ + metin */
+.a-kosullar { list-style: none; margin: 0; padding: 8px 12px; background: var(--kart); border: 1px solid var(--kenar); border-radius: var(--r-orta); display: grid; gap: 6px; }
+.a-kosullar li { display: flex; align-items: flex-start; gap: 8px; min-width: 0; }
+.a-kosullar .a-ikon { margin-top: 2px; }
+.a-kosul-tamam .a-ikon { color: var(--onay-yazi); }
+.a-kosul-eksik { color: var(--uyari-yazi); font-weight: 600; }
+.a-kosul-bilgi .a-ikon { color: var(--yazi3); }
+
+/* FORM SAYFASI (kalıp 10: genişlik alanlara değil BÖLÜMLERE gider; bölüm en az 440 px, sığmazsa tek sütun) */
+.a-form-sayfa { display: grid; grid-template-columns: repeat(auto-fit, minmax(min(100%, 440px), 1fr)); gap: 16px; align-items: start; }
+.a-form-bolum { min-width: 0; padding: 12px 14px 14px; background: var(--kart); border: 1px solid var(--kenar); border-radius: var(--r-buyuk); }
+.a-form-bolum > h2 { margin: 0 0 10px; font-size: var(--boy-bolum); font-weight: var(--kal-bolum); }
+.a-form-bolum > .a-serit { margin: 0 0 10px; }
+.a-alan-genis { grid-column: 1 / -1; }
+.a-bolum-aciklama { margin: 0 0 8px; color: var(--yazi2); font-size: var(--boy-kucuk); }
+.a-lejant { margin: 10px 0 12px; line-height: 2; }
+.a-bolum-serit { margin: 10px 0 0; }
+.a-serit-kap { margin: 0 0 16px; }
+/* alan veri tipine göre (kalıp 3): e-posta ~360, sicil / EKİPNET / diploma ~200 */
+.a-girdi-eposta { width: min(100%, 360px); }
+.a-girdi-sicil { width: min(100%, 200px); font-variant-numeric: tabular-nums; }
+.a-girdi-oku { background: var(--zemin2); color: var(--yazi2); }
+.a-form-eylem { display: flex; justify-content: flex-end; align-items: center; flex-wrap: wrap; gap: 8px; margin: 16px 0 0; }
+.a-form-eylem .a-adim-not { margin-right: auto; }
+.a-onay-kutusu { display: flex; align-items: flex-start; gap: 10px; min-height: var(--tus-y); padding: 6px 0; cursor: pointer; }
+.a-onay-kutusu input { width: 20px; height: 20px; margin: 2px 0 0; flex: none; accent-color: var(--onay-yazi); }
+.a-onay-kutusu input:disabled + span { color: var(--yazi3); }
+
+/* SEÇİM ALANI (kalıp 19: yerli açılır liste yok) — form alanı görünümünde düğme + temalı liste */
+.a-secim { position: relative; min-width: 0; }
+.a-secim-tus { display: flex; align-items: center; justify-content: space-between; gap: 8px; text-align: left; }
+.a-secim-tus[aria-expanded="true"] .a-ikon { transform: rotate(180deg); }
+.a-secim-bos { color: var(--yazi3); }
+.a-secim .a-secici-liste { left: 0; right: auto; width: 100%; min-width: 0; }
+/* pencerede liste akış içinde açılır (telefonda pencere kayar; kayan liste kesilmesin — tür kutusuyla aynı karar) */
+.a-pencere .a-secim .a-secici-liste { position: static; margin-top: 6px; box-shadow: none; max-height: 240px; }
+
+/* rozet dizisi (ör. roller): sarar, rozetler bölünmez */
+.a-rozetler { display: flex; flex-wrap: wrap; gap: 4px; min-width: 0; }
+.a-deger-yok { color: var(--yazi3); }
+.a-uyari-metin { display: block; color: var(--uyari-yazi); font-size: var(--boy-etiket); font-weight: 600; }
+
+/* sütun oranları (anayasa 3.4: oran) — yeni listeler; her liste 960 px kapta ölçüldü (olcum/<maket>.json) */
+.a-tablo-personel .a-k-ad { width: 19%; } .a-tablo-personel .a-k-meslek { width: 20%; } .a-tablo-personel .a-k-brans { width: 10%; }
+.a-tablo-personel .a-k-ekipnet { width: 12%; } .a-tablo-personel .a-k-roller { width: 22%; } .a-tablo-personel .a-k-durum { width: 17%; }
+.a-tablo-kullanici .a-k-ad { width: 27%; } .a-tablo-kullanici .a-k-roller { width: 30%; } .a-tablo-kullanici .a-k-son { width: 18%; }
+.a-tablo-kullanici .a-k-durum { width: 25%; }
+.a-tablo-matris .a-k-modul { width: 25%; } .a-tablo-matris .a-k-r0, .a-tablo-matris .a-k-r1, .a-tablo-matris .a-k-r2,
+.a-tablo-matris .a-k-r3, .a-tablo-matris .a-k-r4 { width: 15%; }
+.a-tablo-yetkinlik .a-k-grup { width: 40%; } .a-tablo-yetkinlik .a-k-meslek { width: 28%; } .a-tablo-yetkinlik .a-k-yetki { width: 32%; }
+.a-tablo-belge .a-k-belge { width: 45%; } .a-tablo-belge .a-k-durum { width: 25%; } .a-tablo-belge .a-k-eylem { width: 30%; }
+
+/* GİRİŞ EKRANI (kabuksuz): iki pano — marka (petrol, yan menüyle aynı zemin) · form. Kap dolar; alanlar veri tipine göre. */
+.a-giris { min-height: 100vh; display: grid; grid-template-columns: minmax(0, 1fr) minmax(0, 1fr); background: var(--kart); }
+.a-giris-marka {
+  display: flex; flex-direction: column; justify-content: space-between; gap: 24px; padding: 32px var(--bosluk-sayfa);
+  background: var(--cubuk-zemin); color: var(--cubuk-yazi);
+}
+.a-giris-marka img { width: 180px; height: auto; display: block; }
+.a-giris-slogan { margin: 12px 0 0; color: var(--cubuk-yazi2); font-size: var(--boy-bolum); }
+.a-giris-alt { margin: 0; color: var(--cubuk-yazi2); font-size: var(--boy-etiket); }
+.a-giris-form { display: flex; flex-direction: column; justify-content: center; gap: 14px; padding: 32px var(--bosluk-sayfa); min-width: 0; }
+.a-giris-form h1 { margin: 0; font-size: var(--boy-baslik); font-weight: var(--kal-baslik); }
+.a-giris-adres { margin: 2px 0 0; color: var(--yazi2); font-size: var(--boy-kucuk); overflow-wrap: anywhere; }
+.a-giris-form .a-serit { width: min(100%, 360px); }
+/* göster/gizle düğmesi alanın YANINDA (içinde değil: etkileşimli öğeler üst üste binmez, anayasa 11.7) */
+.a-parola { display: flex; gap: 6px; width: min(100%, 360px); }
+.a-parola .a-girdi { flex: 1 1 auto; min-width: 0; }
+.a-parola-goster {
+  width: var(--tus-y); height: var(--tus-y); flex: none;
+  display: inline-flex; align-items: center; justify-content: center;
+  border: 1px solid var(--kenar-alan); border-radius: var(--r-orta); background: var(--kart); color: var(--yazi2);
+}
+.a-parola-goster:hover { color: var(--yazi); background: var(--zemin2); }
+.a-giris-tuslar { display: flex; align-items: center; flex-wrap: wrap; gap: 8px 16px; }
+.a-baglanti { display: inline-flex; align-items: center; min-height: var(--tus-y); color: var(--onay-yazi); font-weight: 600; text-decoration: none; }
+.a-baglanti:hover { text-decoration: underline; }
+.a-giris-ayrac { width: min(100%, 360px); margin: 6px 0 0; padding-top: 12px; border-top: 1px solid var(--kenar); color: var(--yazi2); font-size: var(--boy-kucuk); }
+:root[data-tema="koyu"] .a-giris { background: var(--zemin); }
+
 /* ══ BANTLAR — taban kuralların ARDINDA (anayasa 3.2) ══════════════════════════════════════════════════ */
 
 /* orta + dar (< 1280): yan menü çekmece, üst çubukta ☰ + işaret */
@@ -597,6 +704,27 @@ button { cursor: pointer; }
   .a-sekmeler { display: flex; }
   .a-sekme { flex: 1 1 0; justify-content: center; }
   .a-gecmis { grid-template-columns: minmax(0, 1fr); }
+  /* toplu maket (2026-09-24): form sayfasının tuş çubuğu telefonda altta yapışkan — plan içi çubuğuyla aynı karar (kalıp 2) */
+  .a-form-eylem {
+    position: sticky; bottom: 0; z-index: 10; flex-wrap: nowrap;
+    margin: 16px calc(var(--bosluk-sayfa) * -1) calc(var(--bosluk-sayfa) * -1);
+    padding: 8px var(--bosluk-sayfa) calc(8px + env(safe-area-inset-bottom));
+    background: var(--kart); border-top: 1px solid var(--kenar);
+  }
+  .a-form-eylem .a-tus { flex: 1 1 0; }
+  .a-form-eylem .a-adim-not { display: none; }
+  /* nesne sayfası: tuşlar başlığın altında tam satır; sayfa başı tuşu başlığın altına iner */
+  .a-nesne-bas .a-eylem-cubugu { flex: 1 1 100%; justify-content: stretch; }
+  .a-nesne-bas .a-eylem-cubugu .a-tus { flex: 1 1 0; }
+  .a-sayfa-bas .a-bolum-tus { margin-left: 0; flex: 1 1 100%; }
+  .a-yuzler { grid-template-columns: repeat(2, minmax(0, 1fr)); gap: 8px; }
+  /* giriş: marka panosu üstte ince şerit, form altında */
+  .a-giris { grid-template-columns: minmax(0, 1fr); grid-template-rows: auto 1fr; }
+  .a-giris-marka { flex-direction: row; align-items: center; padding: 14px var(--bosluk-sayfa); }
+  .a-giris-marka img { width: 132px; }
+  .a-giris-slogan, .a-giris-alt { display: none; }
+  .a-giris-form { justify-content: flex-start; padding-top: 24px; }
+  .a-giris-tuslar .a-tus { flex: 1 1 100%; }
 }
 
 /* kap < ESİK: aynı tablo KARTA döner (tek üretici; anayasa 3.3 kap sorgusu). Kartta yerleşim sütunun `data-kart`
@@ -637,6 +765,9 @@ button { cursor: pointer; }
   .a-eylem { align-items: stretch; }
   .a-eylem-tuslar { flex-wrap: nowrap; justify-content: flex-end; }
   .a-sebep, .a-not { text-align: left; order: -1; }
+  /* toplu maket (2026-09-24): matris ve yetkinlik kartında etiket değerin solunda, satır satır (rol: düzey) */
+  .a-tablo-matris td[data-kart="govde"], .a-tablo-yetkinlik td[data-kart="govde"] { display: flex; align-items: center; justify-content: space-between; gap: 8px; }
+  .a-tablo-matris .a-kart-etiket, .a-tablo-yetkinlik .a-kart-etiket { display: inline; }
 }
 
 /* ══ DARALTILMIŞ YAN MENÜ — yalnız geniş bant (reisim 2026-09-23: "sol taraf açılıp kapanabilir olsun kapatılınca sadece

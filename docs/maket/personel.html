@@ -1,0 +1,33 @@
+<!doctype html>
+<html lang="tr">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1">
+<title>Personel · probata maket</title>
+<meta name="robots" content="noindex">
+<link rel="icon" href="../marka/favicon.svg" type="image/svg+xml">
+<script src="../assets/maket-tema.js"></script>
+<link rel="stylesheet" href="../assets/tokens.css">
+<link rel="stylesheet" href="../assets/maket.css">
+</head>
+<body>
+<!-- MAKET M1 · Personel (modül 2) — ONAY BEKLİYOR. Kabuk maket-ortak.js MK.kabuk() ile kurulur.
+     Adres: #/ liste · #/p/<id> personel kartı · #/yeni ve #/p/<id>/duzenle form. -->
+<main class="a-icerik" id="a-icerik">
+  <div id="a-liste-gorunum">
+    <div class="a-sayfa-bas">
+      <h1 tabindex="-1">Personel</h1>
+      <span class="a-sayac" id="a-sayac" aria-live="polite"></span>
+      <a class="a-tus a-tus-birincil a-bolum-tus" href="#/yeni"><svg class="a-ikon a-ikon-kucuk" aria-hidden="true"><use href="../vendor/lucide-1.47.0/ikonlar.svg#i-plus"/></svg>Personel ekle</a>
+    </div>
+    <div id="a-suzgec-kap"></div>
+    <div class="a-liste-kap" id="a-liste"></div>
+  </div>
+  <section id="a-nesne" aria-label="Personel kartı" hidden></section>
+  <section id="a-form-gorunum" aria-label="Personel formu" hidden></section>
+</main>
+<script src="../assets/maket-ortak.js"></script>
+<script src="../assets/maket-veri.js"></script>
+<script src="../assets/maket-personel.js"></script>
+</body>
+</html>

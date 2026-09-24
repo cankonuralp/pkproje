@@ -37,3 +37,19 @@ test("medya dışında yeni çift seçici bloğu yok (cırcır)", () => {
 test("aynı seçicinin bloklarında hiçbir değişken iki kez tanımlanmamış", () => {
   assert.deepEqual(CSS.flatMap((d) => ciftTanimliDegiskenler(oku(d)).map((s) => `${d}: ${s}`)), []);
 });
+
+/* 2026-09-24 (toplu maket, MAKET-PLANI §3): 16 maket tek CSS dosyasını (docs/assets/maket.css) paylaşıyor; uygulamayla aynı
+   denetimler makette de. Çalışma anında satır içi verilen değişken (--sira: kart sırası, var(--sira, 5) yedekli) tanımsız
+   sayılmaz. Maket betikleri de taranır (satır içi var() kullanımı). */
+const MAKET_CSS = "docs/assets/maket.css";
+const MAKET_JS = dosyalar("docs/assets", [".js"]);
+const CALISMA_ANINDA = ["--sira"];
+
+test("maket CSS: parantez dengeli, tanımsız değişken yok, çift seçici ve değişken ezmesi yok", () => {
+  const css = oku(MAKET_CSS);
+  assert.equal(parantezHatasi(css), null);
+  const eksik = tanimsizDegiskenler([css, ...MAKET_JS.map(oku)], [oku("docs/assets/tokens.css"), css]).filter((d) => !CALISMA_ANINDA.includes(d));
+  assert.deepEqual(eksik, []);
+  assert.deepEqual(ciftSeciciler(css), []);
+  assert.deepEqual(ciftTanimliDegiskenler(css), []);
+});

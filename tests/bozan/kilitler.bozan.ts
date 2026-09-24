@@ -33,6 +33,13 @@ test("değişken ezmesi: ikinci :root bloğu var olan değişkeni yeniden tanım
   assert.deepEqual(ciftTanimliDegiskenler(`${tokens}\n:root { --tus-y: 40px; }\n`), [":root --tus-y"]);
 });
 
+test("maket CSS (2026-09-24): Planlar'ın .a-sayfa-bas kuralı ikinci blokta yazılınca ve tanımsız değişken eklenince yakalanır", () => {
+  const maket = oku("docs/assets/maket.css"), tok = oku("docs/assets/tokens.css");
+  assert.deepEqual(ciftSeciciler(maket), []);
+  assert.deepEqual(ciftSeciciler(maket + "\n.a-sayfa-bas { align-items: center; }\n"), [".a-sayfa-bas"]);
+  assert.deepEqual(tanimsizDegiskenler([maket + "\n.a-yuz { color: var(--olmayan); }\n"], [tok, maket]).filter((d) => d !== "--sira"), ["--olmayan"]);
+});
+
 test("çift id: aynı sabit id iki dosyada geçince yakalanır", () => {
   const metinler = dosyalar("src", [".tsx"]).map((ad) => ({ ad, metin: oku(ad) }));
   assert.equal(ciftIdler([...metinler, { ad: "bozuk.tsx", metin: '<aside id="ana-menu" />' }]).length, 1);

@@ -1,0 +1,54 @@
+<!doctype html>
+<html lang="tr">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1">
+<title>Kullanıcılar · probata maket</title>
+<meta name="robots" content="noindex">
+<link rel="icon" href="../marka/favicon.svg" type="image/svg+xml">
+<script src="../assets/maket-tema.js"></script>
+<link rel="stylesheet" href="../assets/tokens.css">
+<link rel="stylesheet" href="../assets/maket.css">
+</head>
+<body>
+<!-- MAKET M1 · Kullanıcı ve Rol (modül 1) — ONAY BEKLİYOR. Kabuk maket-ortak.js MK.kabuk() ile kurulur.
+     Adres: #/ kullanıcılar · #/roller rol yetkileri · #/k/<id> kullanıcı · #/davet[/<personel id>] davet penceresi. -->
+<main class="a-icerik" id="a-icerik">
+  <div id="a-liste-gorunum">
+    <div class="a-sayfa-bas">
+      <h1 tabindex="-1">Kullanıcılar</h1>
+      <span class="a-sayac" id="a-sayac" aria-live="polite"></span>
+      <button class="a-tus a-tus-birincil a-bolum-tus" type="button" data-eylem="davet-ac"><svg class="a-ikon a-ikon-kucuk" aria-hidden="true"><use href="../vendor/lucide-1.47.0/ikonlar.svg#i-user-plus"/></svg>Kullanıcı davet et</button>
+    </div>
+    <nav class="a-sekmeler a-sekmeler-sayfa" aria-label="Kullanıcılar bölümleri">
+      <a class="a-sekme" href="#/" aria-current="page">Kullanıcılar</a><a class="a-sekme" href="#/roller">Rol yetkileri</a>
+    </nav>
+    <div id="a-suzgec-kap"></div>
+    <div class="a-liste-kap" id="a-liste"></div>
+  </div>
+  <div id="a-roller-gorunum" hidden>
+    <div class="a-sayfa-bas"><h1 tabindex="-1">Kullanıcılar</h1></div>
+    <nav class="a-sekmeler a-sekmeler-sayfa" aria-label="Kullanıcılar bölümleri">
+      <a class="a-sekme" href="#/">Kullanıcılar</a><a class="a-sekme" href="#/roller" aria-current="page">Rol yetkileri</a>
+    </nav>
+    <div id="a-roller"></div>
+  </div>
+  <section id="a-nesne" aria-label="Kullanıcı" hidden></section>
+</main>
+
+<!-- DAVET (form penceresi, kalıp 6: × ve Esc; telefonda alttan levha) -->
+<dialog class="a-pencere a-pencere-form" id="a-davet-pencere" aria-labelledby="a-davet-baslik">
+  <div class="a-pencere-bas">
+    <h2 id="a-davet-baslik">Kullanıcı davet et</h2>
+    <button class="a-ikon-tus" type="button" data-eylem="pencere-kapat" aria-label="Kapat">
+      <svg class="a-ikon" aria-hidden="true"><use href="../vendor/lucide-1.47.0/ikonlar.svg#i-x"/></svg>
+    </button>
+  </div>
+  <div class="a-pencere-govde" id="a-davet-govde"></div>
+  <div class="a-pencere-alt" id="a-davet-alt"></div>
+</dialog>
+<script src="../assets/maket-ortak.js"></script>
+<script src="../assets/maket-veri.js"></script>
+<script src="../assets/maket-kullanicilar.js"></script>
+</body>
+</html>

@@ -37,6 +37,27 @@ export const DURUMLAR = {
     { ad: "ekipman ekle · tesiste kayıtlı", hash: "#/plan/1/ekle/FL-1013" },
     { ad: "reddet penceresi", hash: "#/plan/3", adim: [["tikla", '#a-plan .a-adim-tuslar [data-eylem="reddet"], #a-plan .a-eylem-cubugu-alt [data-eylem="reddet"]']] },
   ] },
+  /* M1 Kullanıcı ve Rol · Personel (2026-09-24) */
+  m1: { sayfa: "maket/personel.html", durumlar: [
+    { ad: "giriş", sayfa: "maket/giris.html", hash: "#/", kabuksuz: true },
+    { ad: "giriş · boş gönderildi", sayfa: "maket/giris.html", hash: "#/", kabuksuz: true, adim: [["tikla", '[data-eylem="gir"]']] },
+    { ad: "giriş · yanlış bilgi", sayfa: "maket/giris.html", hash: "#/hata", kabuksuz: true },
+    { ad: "giriş · parola sıfırlama", sayfa: "maket/giris.html", hash: "#/unuttum", kabuksuz: true },
+    { ad: "giriş · parola belirle, kural dışı", sayfa: "maket/giris.html", hash: "#/parola", kabuksuz: true, adim: [["yaz", "#g-p1", "kisa1"], ["tikla", '[data-eylem="belirle"]']] },
+    { ad: "kullanıcılar · liste", sayfa: "maket/kullanicilar.html", hash: "#/" },
+    { ad: "kullanıcılar · rol yetkileri", sayfa: "maket/kullanicilar.html", hash: "#/roller" },
+    { ad: "kullanıcı · iki rol, plan kabulü eksik", sayfa: "maket/kullanicilar.html", hash: "#/k/ec" },
+    { ad: "kullanıcı · rol değişti, kaydedilmedi", sayfa: "maket/kullanicilar.html", hash: "#/k/mk", adim: [["tikla", '[data-rol="planlama"]']] },
+    { ad: "kullanıcı · davet bekliyor", sayfa: "maket/kullanicilar.html", hash: "#/k/ok" },
+    { ad: "kullanıcı · pasif", sayfa: "maket/kullanicilar.html", hash: "#/k/ns" },
+    { ad: "davet penceresi", sayfa: "maket/kullanicilar.html", hash: "#/davet/by", adim: [["tikla", '[data-davet-rol="inspector"]']] },
+    { ad: "personel · liste", hash: "#/" },
+    { ad: "personel · kart (inspector, eksiksiz)", hash: "#/p/mk" },
+    { ad: "personel · kart (EKİPNET eksik)", hash: "#/p/ec" },
+    { ad: "personel · kart (planlama, yetkili meslek değil)", hash: "#/p/za" },
+    { ad: "personel · yeni form, boş gönderildi (hatalar)", hash: "#/yeni", adim: [["tikla", '[data-eylem="kaydet"]']] },
+    { ad: "personel · düzenle (teknisyen seçildi)", hash: "#/p/ke/duzenle" },
+  ] },
 };
 
 /* ── ETKİLEŞİM DENEMELERİ (--etkilesim): adımlar koşar, sonra `bekle` ifadesi sayfada doğru dönmeli. Gen verilmezse 1920. ── */
@@ -56,6 +77,26 @@ export const DENEMELER = {
     { ad: "ekipman ekle: çakışan kod kaydedilmez", hash: "#/plan/1/ekle", adim: [["yaz", "#a-ekle-kod", "ht-1001"]], bekle: 'document.querySelector("#a-ekle-kod").value === "HT-1001" && document.querySelector(\'[data-eylem="yeni-kaydet"]\').disabled' },
     { ad: "ekipman ekle: yeni kod + tür → plana eklenir", hash: "#/plan/1", adim: [["tikla", '[data-eylem="ekle-ac"]'], ["yaz", "#a-ekle-kod", "ZZ-9001"], ["tikla", "#a-ekle-tur"], ["tikla", '[data-tur="FL"]'], ["tikla", '[data-eylem="yeni-kaydet"]']], bekle: '!document.querySelector("#a-ekle-pencere").open && [...document.querySelectorAll("#a-liste-e .a-kod")].some(e => e.textContent === "ZZ-9001")' },
     { ad: "menüden hazır olmayan modül → bildirim", hash: "#/", adim: [["tikla", '#a-menu [data-ne="Raporlar"]']], bekle: '/henüz tasarlanmadı/.test(document.querySelector("#a-bildirim-metin").textContent)' },
+    { ad: "menüden hazır maket → bağlantı (Personel)", hash: "#/", bekle: 'document.querySelector(\'#a-menu a[href="personel.html"]\') !== null' },
+  ],
+  m1: [
+    { ad: "personel: sayaç görünüme dürüst (15 çalışan)", sayfa: "maket/personel.html", hash: "#/", bekle: 'document.querySelector("#a-sayac").textContent === "15 kişi" && document.querySelectorAll("#a-liste tbody tr").length === 15' },
+    { ad: "personel: Inspector çipi 9 / 15", sayfa: "maket/personel.html", hash: "#/", adim: [["tikla", '[data-cip="inspector"]']], bekle: 'document.querySelector("#a-sayac").textContent === "9 / 15 kişi"' },
+    { ad: "personel: Ayrılanlar görünümü süzgeç sayılmaz, Temizle korur", sayfa: "maket/personel.html", hash: "#/", adim: [["tikla", '[data-secici-ac="durum"]'], ["tikla", '[data-sec="durum"][data-deger="ayrilan"]']], bekle: 'document.querySelector("#a-sayac").textContent === "1 kişi" && document.querySelector(".a-temizle").disabled' },
+    { ad: "personel: Mekanik ve Elektrik → imkânsız, sebep", sayfa: "maket/personel.html", hash: "#/", adim: [["tikla", '[data-cip="m"]'], ["tikla", '[data-cip="e"]'], ["tikla", '[data-kip="ve"]']], bekle: '/hem mekanik hem elektrik/.test(document.querySelector("#a-liste .a-bos-baslik").textContent)' },
+    { ad: "personel: satır tıklanınca kart açılır", sayfa: "maket/personel.html", hash: "#/", adim: [["tikla", '#a-liste tr[data-href="#/p/mk"] td[data-alan="meslek"]']], bekle: 'location.hash === "#/p/mk" && document.querySelector("#a-nesne h1").textContent === "Mert Kaya"' },
+    { ad: "personel formu: teknikerde oda sicil zorunlu değil, iskele seçilemez", sayfa: "maket/personel.html", hash: "#/yeni", adim: [["tikla", "#f-meslek"], ["tikla", '[data-secim="f-meslek"][data-deger="mak-tek"]']], bekle: '/Teknikerde boş/.test(document.querySelector("#f-oda-ipucu").textContent) && document.querySelector(\'[data-yetki="iskele"]\').disabled && !document.querySelector(\'[data-yetki="kaldirma"]\').disabled' },
+    { ad: "personel formu: teknisyen → uyarı, hiçbir yetki seçilemez", sayfa: "maket/personel.html", hash: "#/yeni", adim: [["tikla", "#f-meslek"], ["tikla", '[data-secim="f-meslek"][data-deger="teknisyen"]']], bekle: '/Teknisyen yetkili kişi olamaz/.test(document.querySelector("#a-form-gorunum .a-serit-uyari").textContent) && [...document.querySelectorAll("[data-yetki]")].every(e => e.disabled)' },
+    { ad: "personel formu: geçerli kayıt karta düşer", sayfa: "maket/personel.html", hash: "#/yeni", adim: [["yaz", "#f-ad", "Deniz Er"], ["yaz", "#f-basla", "01.10.2026"], ["tikla", "#f-meslek"], ["tikla", '[data-secim="f-meslek"][data-deger="elk-tek"]'], ["yaz", "#f-diploma", "2020/11111"], ["tikla", '[data-yetki="elektrik"]'], ["tikla", '[data-eylem="kaydet"]']], bekle: '/^#\\/p\\//.test(location.hash) && document.querySelector("#a-nesne h1").textContent === "Deniz Er"' },
+    { ad: "kullanıcılar: Inspector ve Planlama → yalnız çift rollü (1 / 13)", sayfa: "maket/kullanicilar.html", hash: "#/", adim: [["tikla", '[data-cip="inspector"]'], ["tikla", '[data-cip="planlama"]'], ["tikla", '[data-kip="ve"]']], bekle: 'document.querySelector("#a-sayac").textContent === "1 / 13 kullanıcı"' },
+    { ad: "kullanıcı: rol eklenir, kaydedilir", sayfa: "maket/kullanicilar.html", hash: "#/k/mk", adim: [["tikla", '[data-rol="planlama"]'], ["tikla", '[data-eylem="rol-kaydet"]']], bekle: 'MV.kisi("mk").hesap.roller.join() === "planlama,inspector" && /Roller kaydedildi/.test(document.querySelector("#a-bildirim-metin").textContent)' },
+    { ad: "kullanıcı: teknisyen olmayan planlamacıya Inspector verilemez", sayfa: "maket/kullanicilar.html", hash: "#/k/za", bekle: 'document.querySelector(\'[data-rol="inspector"]\').disabled' },
+    { ad: "davet: kişi + rol → davet bekliyor", sayfa: "maket/kullanicilar.html", hash: "#/davet/by", adim: [["tikla", '[data-davet-rol="inspector"]'], ["tikla", '[data-eylem="davet-gonder"]']], bekle: 'location.hash === "#/k/by" && /Davet bekliyor/.test(document.querySelector("#a-nesne .a-nesne-baslik").textContent)' },
+    { ad: "davet: rolsüz gönderilemez", sayfa: "maket/kullanicilar.html", hash: "#/davet/by", bekle: 'document.querySelector(\'[data-eylem="davet-gonder"]\').disabled' },
+    { ad: "giriş: boş gönderim alanları işaretler", sayfa: "maket/giris.html", hash: "#/", adim: [["tikla", '[data-eylem="gir"]']], bekle: 'document.querySelector("#g-eposta").getAttribute("aria-invalid") === "true" && document.activeElement.id === "g-eposta"' },
+    { ad: "giriş: yanlış parola → hesap var mı söylenmez", sayfa: "maket/giris.html", hash: "#/", adim: [["yaz", "#g-eposta", "biri@firma.example"], ["yaz", "#g-parola", "hata123"], ["tikla", '[data-eylem="gir"]']], bekle: 'location.hash === "#/hata" && /E-posta ya da parola yanlış/.test(document.querySelector(".a-serit").textContent)' },
+    { ad: "giriş: parola göster/gizle", sayfa: "maket/giris.html", hash: "#/", adim: [["yaz", "#g-parola", "gizli1"], ["tikla", '[data-eylem="goster"]']], bekle: 'document.querySelector("#g-parola").type === "text" && document.querySelector("#g-parola").value === "gizli1"' },
+    { ad: "giriş: sıfırlama gönderildi", sayfa: "maket/giris.html", hash: "#/unuttum", adim: [["yaz", "#g-eposta", "biri@firma.example"], ["tikla", '[data-eylem="sifirla"]']], bekle: 'location.hash === "#/gonderildi" && /kayıtlıysa/.test(document.querySelector(".a-serit").textContent)' },
   ],
 };
 
@@ -148,7 +189,7 @@ async function olc(ad, { goruntu, yazma }) {
       if (goruntu) await s.screenshot({ path: join(goruntu, dosya), fullPage: true });
       console.log(`${temizMi(o) ? "✓" : "✗"} ${gen} ${tema.padEnd(4)} ${d.ad}${temizMi(o) ? "" : "  → " + JSON.stringify(Object.fromEntries(Object.entries(o).filter(([k, v]) => (SIFIR.includes(k) && v) || (k === "hata" && v) || k === "ayrinti" && Object.keys(v).length || k === "hatalar" && v.length || (k === "yaziTipi" && v !== "Sora yüklü"))))}`);
       /* 1080'de çekmece AÇIK (yalnız ilk durumda: kabuk her sayfada aynı üreticiden) */
-      if (gen === 1080 && d === t.durumlar[0] && !d.kabuksuz) {
+      if (gen === 1080 && d === t.durumlar.filter(x => !x.kabuksuz)[0]) {
         await s.click(".a-menu-tus");
         const c = await s.evaluate(CEKMECE); c.tema = tema; cekmece.push(c);
         if (goruntu) await s.screenshot({ path: join(goruntu, `${ad}-cekmece-${tema}.png`) });
@@ -182,7 +223,8 @@ async function etkilesim(ad) {
       const gen = d.gen || 1920, yuk = { 1920: 1080, 1080: 810, 375: 812 }[gen];
       let ok = false, hata = "";
       const { s, ctx, hatalar } = await ac(tar, taban, d.sayfa || t.sayfa, d.hash, gen, yuk, "acik", []).catch(e => ({ hatalar: [String(e)] }));
-      try { await adimlar(s, d.adim); ok = await s.evaluate(d.bekle); } catch (e) { hata = String(e.message || e); }
+      /* adres değişimi (hashchange) eşzamansız: sonuç en çok 2 sn beklenir */
+      try { await adimlar(s, d.adim); ok = !!(await s.waitForFunction(`(() => { try { return ${d.bekle}; } catch (x) { return false; } })()`, { timeout: 2000 }).catch(() => null)); } catch (e) { hata = String(e.message || e); }
       ok = ok && !hatalar.length;
       if (ok) gecen++;
       console.log(`${ok ? "✓" : "✗"} ${gen} ${d.ad}${ok ? "" : " → " + (hata || hatalar.join(" | ") || "beklenen sonuç yok")}`);

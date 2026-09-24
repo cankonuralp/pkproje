@@ -76,9 +76,11 @@ pkproje/
   tests/                    `*.test.ts` kilit testleri (başında "NEREDEN GELDİ"); yardimci/denetimler.ts saf denetim işlevleri
   tests/bozan/              olumsuz kanıt (`*.bozan.ts`; kaynağı diskte DEĞİŞTİRMEDEN bellekte bozar)
   tools/                    salt okunur araçlar: palet-olc.mjs · sunum-uret.mjs · olc-maket.js · olc-uygulama.js ·
-                            bulut-hazirla.sh (yalnız bulut VM'i: Node 24 + başsız Chrome + npm ci)
+                            bulut-hazirla.sh (yalnız bulut VM'i: Node 24 + başsız Chrome + npm ci) · olc-bulut.mjs (başsız
+                            ölçüm + etkileşim + olumsuz kanıt, 2026-09-24) · ikon-ekle.mjs (Lucide 1.47.0 → iki ikon kopyası)
   .github/workflows/ci.yml  her push: tip · lint · test · olumsuz kanıt · derleme; main'de Pages önizlemesi
-  docs/                     maket + sunum (Pages sitesinin kökü)
+  docs/                     maket + sunum (Pages sitesinin kökü); maketlerin ortak kabuğu assets/maket-ortak.js, ortak uydurma
+                            veri assets/maket-veri.js, ölçüm sonuçları assets/olcum/<maket>.json (2026-09-24)
   data/                     yerel veritabanı + dosya deposu (git dışı)
 ```
 

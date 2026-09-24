@@ -38,7 +38,8 @@
      çubuğu negatif kenar boşluğuyla ekran kenarına uzanır; ilk sürüm yalnız `.a-suzgec`i muaf tutuyordu, yeni kaplar
      (#a-liste-gorunum, #a-plan) aynı yanlış alarmı verdi. Kural: taşma, bilerek taşan öğeler DIŞINDAKİ bir torundan
      geliyorsa sayılır. */
-  const BILEREK = ".a-cipler, .a-eylem-cubugu-alt";
+  /* 2026-09-24 (toplu maket): form sayfasının telefondaki yapışkan tuş çubuğu (.a-form-eylem) aynı desen, aynı muafiyet */
+  const BILEREK = ".a-cipler, .a-eylem-cubugu-alt, .a-form-eylem";
   const metinSag = n => { const x = document.createRange(); x.selectNodeContents(n); return x.getBoundingClientRect().right; };
   const gercekTasma = e => { const sag = e.getBoundingClientRect().left + e.clientLeft + e.clientWidth + 1;
     return [...e.childNodes].some(n => n.nodeType === 3 && n.textContent.trim() && metinSag(n) > sag)
@@ -71,7 +72,7 @@
   /* sonCakisma: ALT tuş çubuğu (plan içi telefonda, pencere altı) varsa kabı sona kaydır; çubuğun içindeki bir öğe ile
      dışındaki bir öğe hâlâ örtüşüyorsa son öğe hiç açılmıyor demektir. Kap kaydırılamıyorsa da sayılır (2026-09-23: ilk
      sürüm yalnız kaydırılabilen kapta sayıyordu; çubuğun kalıcı örtmesi kısa pencerede görünmez kalıyordu). */
-  const altCubuk = modal ? modal.querySelector(".a-pencere-alt") : document.querySelector(".a-eylem-cubugu-alt");
+  const altCubuk = modal ? modal.querySelector(".a-pencere-alt") : [...document.querySelectorAll(".a-eylem-cubugu-alt, .a-form-eylem")].find(e => getComputedStyle(e).position === "sticky");
   if (altCubuk && gorunur(altCubuk)) {
     const kap = modal || document.scrollingElement, eski = kap.scrollTop; kap.scrollTop = kap.scrollHeight;
     const ic = et.filter(e => altCubuk.contains(e)).map(e => e.getBoundingClientRect()), dis = et.filter(e => !altCubuk.contains(e)).map(e => e.getBoundingClientRect());
@@ -94,9 +95,11 @@
   const tus = [...document.querySelectorAll(".a-tus")].filter(gorunur).map(e => e.getBoundingClientRect());
   r.tusGenislik = tus.length ? [Math.round(Math.min(...tus.map(b => b.width))), Math.round(Math.max(...tus.map(b => b.width)))] : null;
   r.tusYukseklik = tus.length ? Math.round(tus[0].height) : null;
-  const ic = document.querySelector(".a-icerik").getBoundingClientRect();
+  /* 2026-09-24 (toplu maket): kabuksuz sayfa (giriş ekranı) .a-icerik taşımaz → gövde kap sayılır */
+  const icEl = document.querySelector(".a-icerik") || document.body;
+  const ic = icEl.getBoundingClientRect();
   const li = [...document.querySelectorAll(".a-liste-kap")].filter(gorunur)[0];
-  const pad = parseFloat(getComputedStyle(document.querySelector(".a-icerik")).paddingLeft);
+  const pad = parseFloat(getComputedStyle(icEl).paddingLeft);
   r.icerik = Math.round(ic.width); r.liste = li ? Math.round(li.getBoundingClientRect().width) : null;
   const cerceve = li && li.closest(".a-adim-icerik");
   r.kenarFarki = li ? Math.round((cerceve ? cerceve.getBoundingClientRect().width : ic.width - 2 * pad) - li.getBoundingClientRect().width) : null;
