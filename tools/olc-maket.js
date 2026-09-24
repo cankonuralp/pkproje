@@ -143,5 +143,13 @@
     r.altCubuk = alt && gorunur(alt) ? getComputedStyle(alt).position + ":" + Math.round(innerHeight - alt.getBoundingClientRect().bottom) + "px" : "yok";
   }
   r.yaziTipi = document.fonts.check("600 15px Sora") ? "Sora yüklü" : "Sora YOK";
+  /* 2026-09-24 (toplu maket M3): onaylı Planlar maketinde "önceki sayfa" ikonu dosyada yoktu, tuş boş çiziliyordu. Çizilen her
+     <use> ikonunun dosyada karşılığı var mı — dosya eş zamanlı okunur (ölçüm betiği eş zamanlı, anayasa 11.8). */
+  const kaynaklar = {};
+  r.eksikIkon = [...document.querySelectorAll("use")].filter(u => gorunur(u.closest("svg") || u)).map(u => u.getAttribute("href") || "").filter(h => {
+    const [dosya, id] = h.split("#"); if (!dosya || !id) return false;
+    if (!(dosya in kaynaklar)) { const x = new XMLHttpRequest(); x.open("GET", dosya, false); try { x.send(); kaynaklar[dosya] = x.responseText; } catch (e) { kaynaklar[dosya] = ""; } }
+    return !kaynaklar[dosya].includes('id="' + id + '"');
+  }).map(h => h.split("#")[1]).filter((v, i, a) => a.indexOf(v) === i);
   return r;
 })()

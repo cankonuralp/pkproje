@@ -31,14 +31,9 @@
     za: { ad: "Zeynep Arslan", brans: "", rol: "Planlama" }
   };
   var BEN = "mk";
-  /* Ekipman türü kataloğu (modül 5'in maketteki karşılığı). 14 tür > 8 → seçim alanında arama (kalıp 19). */
-  var KATALOG = [
-    { k: "HT", ad: "Hava tankı", b: "m" }, { k: "FL", ad: "Forklift", b: "m" }, { k: "KK", ad: "Köprülü kren", b: "m" },
-    { k: "KP", ad: "Kaldırma platformu", b: "m" }, { k: "TP", ad: "Transpalet", b: "m" }, { k: "KS", ad: "Kompresör", b: "m" },
-    { k: "ZV", ad: "Zincirli vinç", b: "m" }, { k: "YA", ad: "Yük asansörü", b: "m" }, { k: "BK", ad: "Buhar kazanı", b: "m" },
-    { k: "ET", ad: "Elektrik iç tesisatı", b: "e" }, { k: "AT", ad: "AG topraklama", b: "e" }, { k: "YK", ad: "Yıldırımdan korunma", b: "e" },
-    { k: "DP", ad: "Dağıtım panosu", b: "e" }, { k: "JN", ad: "Jeneratör", b: "e" }
-  ];
+  /* Ekipman türü kataloğu (modül 5'in maketteki karşılığı). 14 tür > 8 → seçim alanında arama (kalıp 19).
+     2026-09-24 (M3): türler ortak katalogdan (maket-veri.js MV.PLAN_KATALOG) — aynı 14 tür, aynı kod, ad, branş ve sıra. */
+  var KATALOG = MV.PLAN_KATALOG;
   var MEK = KATALOG.filter(function (t) { return t.b === "m" && t.k !== "BK"; });
   var ELK = KATALOG.filter(function (t) { return t.b === "e" && t.k !== "JN"; });
   var KONUM = ["Üretim holü", "Kompresör odası", "Sevkiyat alanı", "Depo girişi", "Bakım atölyesi", "Ana dağıtım odası", "Yükleme rampası", "Hat 2", "Kazan dairesi", "Çatı"];

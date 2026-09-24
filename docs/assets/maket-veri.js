@@ -192,6 +192,133 @@
     { m: "m11", ad: "Kerem Sezer", eposta: "kerem.sezer@poyraz-metal.example", tesis: "hepsi", durum: "etkin", son: "2026-06-18T09:40" }
   ];
   MV.musteriKullanicilari = function (mid) { return MV.MUSTERI_KULLANICI.filter(function (x) { return x.m === mid; }); };
+
+  /* ── STANDART KÜTÜPHANESİ (modül 4; M3'te tür kataloğu için, M7'de ekranı) ────────────────────────────────────
+     Her firma kendi standardını yükler (reisim 2026-09-22). Numara ve konular ÖRNEKTİR; türlere atanışları doğrulanmadı —
+     firma kendi kütüphanesinden seçer. */
+  MV.STANDARTLAR = [
+    { k: "s1", no: "TS EN 286-1", konu: "Basit basınçlı kaplar — hava ve azot için" },
+    { k: "s2", no: "TS EN 13445-5", konu: "Yakılmayan basınçlı kaplar — muayene ve deney" },
+    { k: "s3", no: "TS ISO 5057", konu: "Endüstriyel kamyonlar — kullanımdaki çatal kolların muayenesi" },
+    { k: "s4", no: "TS EN ISO 3691-1", konu: "Endüstriyel kamyonlar — güvenlik kuralları ve doğrulama" },
+    { k: "s5", no: "TS EN 15011", konu: "Köprülü ve portal krenler" },
+    { k: "s6", no: "TS EN 280", konu: "Mobil yükseltilebilir çalışma platformları" },
+    { k: "s7", no: "TS EN 14492-2", konu: "Motorlu vinçler ve kaldırma donanımları" },
+    { k: "s8", no: "TS EN 81-31", konu: "Yalnız yük taşıyan asansörler" },
+    { k: "s9", no: "TS EN 12953", konu: "Silindirik kazanlar" },
+    { k: "s10", no: "TS HD 60364-6", konu: "Alçak gerilim tesisleri — doğrulama" },
+    { k: "s11", no: "TS HD 60364-5-54", konu: "Alçak gerilim tesisleri — topraklama düzenleri" },
+    { k: "s12", no: "TS EN 62305-3", konu: "Yıldırımdan korunma — yapılarda fiziksel hasar" },
+    { k: "s13", no: "TS EN 61439-1", konu: "Alçak gerilim anahtarlama ve kontrol düzenleri (panolar)" },
+    { k: "s14", no: "TS EN 14439", konu: "Kule krenler" },
+    { k: "s15", no: "TS EN 13000", konu: "Mobil krenler" },
+    { k: "s16", no: "TS EN 12811-1", konu: "Geçici iş donanımları — iskeleler" },
+    { k: "s17", no: "TS EN 115-1", konu: "Yürüyen merdivenler ve yürüyen yollar" },
+    { k: "s18", no: "TS EN 1808", konu: "Asılı erişim donanımı" },
+    { k: "s19", no: "TS EN 1495", konu: "Direğe tırmanan çalışma platformları" },
+    { k: "s20", no: "TS EN 54-14", konu: "Yangın algılama ve alarm sistemleri — planlama, tesis, bakım" },
+    { k: "s21", no: "TS EN 60076-1", konu: "Güç transformatörleri — genel" }
+  ];
+  MV.standart = function (k) { return MV.STANDARTLAR.filter(function (s) { return s.k === k; })[0]; };
+
+  /* ── EKİPMAN TÜRÜ KATALOĞU (modül 5; M3) ─────────────────────────────────────────────────────────────────────
+     Planlar maketinin 14 türü aynı kod, ad ve branşla (Planlar bunlardan okur); diğerleri Ek-III ve §4.8'den.
+     g: Ek-III grubu (yetkili meslekler buradan, §4.6) · periyot: ay (§4.7: çoğu 12, iskele 6) · std: standart kimlikleri (örnek) ·
+     format: Bakanlık rapor formatı (§4.8; zorunlu | taslak) · akr: akreditasyon (Ek-2: zorunlu | 2027) · sablon: rapor şablonu
+     sürümü (kodda, §8.3; yoksa rapor açılamaz) · sure: tahmini kontrol süresi, dk (öneri §3.1). */
+  MV.KATALOG = [
+    { k: "HT", ad: "Hava tankı", b: "m", g: "basincli", periyot: 12, std: ["s1", "s2"], format: "KR11", formatDurum: "taslak", sablon: "v3 · 1 Mar 2026", sure: 20 },
+    { k: "FL", ad: "Forklift", b: "m", g: "kaldirma", periyot: 12, std: ["s3", "s4"], format: "KR05", formatDurum: "taslak", sablon: "v2 · 15 Oca 2026", sure: 40 },
+    { k: "KK", ad: "Köprülü kren", b: "m", g: "kaldirma", periyot: 12, std: ["s5"], format: "KR09", formatDurum: "taslak", sablon: "v2 · 15 Oca 2026", sure: 60 },
+    { k: "KP", ad: "Kaldırma platformu", b: "m", g: "kaldirma", periyot: 12, std: ["s6"], sablon: "v1 · 1 Eyl 2025", sure: 45 },
+    { k: "TP", ad: "Transpalet", b: "m", g: "kaldirma", periyot: 12, std: ["s4"], format: "KR05", formatDurum: "taslak", sablon: "v2 · 15 Oca 2026", sure: 15 },
+    { k: "KS", ad: "Kompresör", b: "m", g: "basincli", periyot: 12, std: ["s1"], sablon: "v1 · 1 Eyl 2025", sure: 25 },
+    { k: "ZV", ad: "Zincirli vinç", b: "m", g: "kaldirma", periyot: 12, std: ["s7"], sablon: "v1 · 1 Eyl 2025", sure: 30 },
+    { k: "YA", ad: "Yük asansörü", b: "m", g: "kaldirma", periyot: 12, std: ["s8"], sablon: "v1 · 1 Eyl 2025", sure: 60 },
+    { k: "BK", ad: "Buhar kazanı", b: "m", g: "basincli", periyot: 12, std: ["s9"], format: "KR07", formatDurum: "taslak", akr: "2027", sure: 90 },
+    { k: "ET", ad: "Elektrik iç tesisatı", b: "e", g: "elektrik", periyot: 12, std: ["s10"], format: "ZPKR02", formatDurum: "zorunlu", sablon: "v4 · 1 Eyl 2025", sure: 90 },
+    { k: "AT", ad: "AG topraklama", b: "e", g: "elektrik", periyot: 12, std: ["s11"], format: "ZPKR01", formatDurum: "zorunlu", sablon: "v3 · 1 Eyl 2025", sure: 45 },
+    { k: "YK", ad: "Yıldırımdan korunma", b: "e", g: "elektrik", periyot: 12, std: ["s12"], format: "ZPKR03", formatDurum: "zorunlu", sablon: "v2 · 1 Eyl 2025", sure: 45 },
+    { k: "DP", ad: "Dağıtım panosu", b: "e", g: "elektrik", periyot: 12, std: ["s13"], sablon: "v2 · 1 Eyl 2025", sure: 30 },
+    { k: "JN", ad: "Jeneratör", b: "e", g: "elektrik", periyot: 12, std: [], sure: 40 },
+    { k: "KU", ad: "Kule kren", b: "m", g: "kaldirma", periyot: 12, std: ["s14"], format: "ZPKR06", formatDurum: "zorunlu", akr: "zorunlu", sablon: "v1 · 1 Oca 2026", sure: 120 },
+    { k: "LP", ad: "LPG tankı", b: "m", g: "basincli", periyot: 12, std: [], format: "ZPMR01", formatDurum: "zorunlu", akr: "zorunlu", sure: 60 },
+    { k: "YG", ad: "Yangın algılama sistemi", b: "e", g: "elektrik", periyot: 12, std: ["s20"], format: "ZPKR04", formatDurum: "zorunlu", sure: 60 },
+    { k: "TR", ad: "Transformatör (1–36 kV)", b: "e", g: "elektrik", periyot: 12, std: ["s21"], format: "ZPKR05", formatDurum: "zorunlu", sure: 60 },
+    { k: "IS", ad: "Yapı iskelesi", b: "m", g: "iskele", periyot: 6, std: ["s16"], sure: 60 },
+    { k: "MB", ad: "Mobil kren", b: "m", g: "kaldirma", periyot: 12, std: ["s15"], format: "KR02", formatDurum: "taslak", sure: 90 },
+    { k: "YM", ad: "Yürüyen merdiven", b: "m", g: "kaldirma", periyot: 12, std: ["s17"], akr: "zorunlu", sure: 60 },
+    { k: "AE", ad: "Asılı erişim donanımı", b: "m", g: "kaldirma", periyot: 12, std: ["s18"], format: "ZPKR07", formatDurum: "zorunlu", akr: "zorunlu", sure: 60 },
+    { k: "SP", ad: "Sütunlu çalışma platformu", b: "m", g: "kaldirma", periyot: 12, std: ["s19"], format: "KR03", formatDurum: "taslak", akr: "2027", sure: 60 },
+    { k: "PR", ad: "Mekanik pres", b: "m", g: "diger", periyot: 12, std: [], sure: 45 }
+  ];
+  MV.tur = function (k) { return MV.KATALOG.filter(function (t) { return t.k === k; })[0]; };
+  MV.grup = function (k) { return MV.GRUPLAR.filter(function (g) { return g.k === k; })[0]; };
+  /* türün yetkili meslekleri: grubuna izin veren meslekler (§4.6, birebir) */
+  MV.yetkiliMeslekler = function (t) { return MV.MESLEKLER.filter(function (m) { return m.g.indexOf(t.g) >= 0; }); };
+
+  /* ── EKİPMAN SİCİLİ (modül 7; M3) — kalıcı, tesise bağlı, kod firmada eşsiz (§3.5) ─────────────────────────────
+     Planlar maketinin plan tesislerindeki ekipmanlar AYNI algoritmayla üretilir (kod HT-1001…, konum, önceki kontrol, rapor no);
+     öteki tesisler aynı düzenle devam eder. "Son kontrol" = son İMZALI rapor (2026 planlarının raporları henüz onayda). */
+  var PLAN_TUR = ["HT", "FL", "KK", "KP", "TP", "KS", "ZV", "YA", "BK", "ET", "AT", "YK", "DP", "JN"];
+  MV.PLAN_KATALOG = PLAN_TUR.map(MV.tur);   /* Planlar maketinin 14 türü, aynı sırayla */
+  var MEK = MV.PLAN_KATALOG.filter(function (t) { return t.b === "m" && t.k !== "BK"; });
+  var ELK = MV.PLAN_KATALOG.filter(function (t) { return t.b === "e" && t.k !== "JN"; });
+  var KONUM = ["Üretim holü", "Kompresör odası", "Sevkiyat alanı", "Depo girişi", "Bakım atölyesi", "Ana dağıtım odası", "Yükleme rampası", "Hat 2", "Kazan dairesi", "Çatı"];
+  var SONUC = ["Uygun", "Uygun", "Hafif kusurlu", "Uygun", "Uygun", "Kusurlu", "Uygun"];
+  var ekHex = function (n) { return ("0000" + ((Math.imul(n, 2654435761) >>> 0) % 1048576).toString(16)).slice(-5); };
+  MV.raporNo = function (aayy, sira) { return "KM-" + aayy + "-" + sira + "-" + ekHex(sira * 7 + 3); };
+  /* Planlar'daki planların ekipman parametreleri (id, mekanik, elektrik, bu planda ilk kez kaydedilen, tesiste plana alınmamış, gün) */
+  var PLAN_EKP = [[1, 8, 4, 2, 2, "23"], [2, 5, 0, 0, 0, "23"], [3, 14, 6, 1, 0, "24"], [4, 2, 7, 0, 0, "25"], [5, 3, 0, 0, 0, "26"],
+    [6, 7, 3, 0, 0, "29"], [7, 2, 0, 0, 0, "30"], [8, 4, 0, 0, 0, "22"], [9, 16, 8, 0, 0, "21"]];
+  var MARKA = ["Atlas", "Kuzey Makina", "Delta", "Orion", "Pars", "Vega"];   /* uydurma marka adları */
+  MV.EKIPMAN = [];
+  var kodSira = 1001, eskiSira = 402;
+  function ekipmanEkle(tesis, tur, konum, onceki, ilk, i) {
+    var kod = tur.k + "-" + (kodSira++);
+    MV.EKIPMAN.push({ kod: kod, tur: tur.k, tesis: tesis, konum: konum, onceki: onceki, ilk: ilk,
+      marka: MARKA[(i + kodSira) % MARKA.length], model: tur.k + "-" + (100 + (kodSira * 7) % 900), imal: 2008 + (kodSira * 3) % 16, seri: "SN" + (kodSira * 7919 % 900000 + 100000) });
+  }
+  PLAN_EKP.forEach(function (p) {
+    var tesis = MV.TESISLER.filter(function (t) { return t.pid === p[0]; })[0].id, toplam = p[1] + p[2], yeni = p[3];
+    for (var i = 0; i < toplam + p[4]; i++) {
+      var b = i < p[1] ? "m" : i < toplam ? "e" : "m", havuz = b === "m" ? MEK : ELK, j = b === "m" ? i : i - p[1];
+      var ilk = i >= toplam - yeni && i < toplam;
+      ekipmanEkle(tesis, havuz[j % havuz.length], KONUM[(i + p[0]) % KONUM.length],
+        ilk ? null : { tarih: "2025-09-" + p[5], sonuc: SONUC[(i + p[0]) % SONUC.length], rapor: MV.raporNo("0925", eskiSira++), kisi: i % 3 === 2 ? "ea" : "mk" }, ilk, i);
+    }
+  });
+  /* plan dışındaki tesisler: son kontrol tesisin son tarihiyle; türler sırayla (öteki türler de görünsün) */
+  var DIS_TUR = ["KU", "HT", "FL", "ET", "AT", "PR", "YG", "IS", "TR", "LP", "KS", "DP"];
+  MV.TESISLER.filter(function (t) { return !t.pid; }).forEach(function (t, n) {
+    for (var i = 0; i < t.ekipman; i++) {
+      var tur = MV.tur(DIS_TUR[(i + n * 5) % DIS_TUR.length]);
+      ekipmanEkle(t.id, tur, KONUM[(i + n) % KONUM.length], { tarih: t.son, sonuc: SONUC[(i + n + 2) % SONUC.length], rapor: MV.raporNo(t.son.slice(5, 7) + t.son.slice(2, 4), eskiSira++), kisi: tur.b === "e" ? "ea" : "hp" }, false, i);
+    }
+  });
+  /* kod değiştirme yalnız yöneticide, eski kod geçmişte kalır (§3.5 karar 19) — bir örnek */
+  MV.EKIPMAN[4].eskiKod = [{ kod: "TP-05", tarih: "2024-02-12", kim: "sy", gerekce: "Etiket yenilendi, firma kod düzenine geçildi" }];   /* TP-1005 */
+  MV.ekipman = function (kod) { return MV.EKIPMAN.filter(function (e) { return e.kod === kod; })[0]; };
+  /* EKİPMAN KODU KURALI (§3.4–3.5, reisim 17–19): A–Z (Türkçe harf yok), 0–9, tire; 3–20 hane; firmada eşsiz. Planlar'daki
+     ekipman ekle penceresiyle aynı kural ve iletiler (orada plan bağlamıyla). */
+  MV.kodNormal = function (v) { return v.replace(/\s+/g, "").replace(/[a-z]/g, function (c) { return c.toUpperCase(); }); };
+  MV.kodDurum = function (kod, haric) {
+    if (!kod) return { tur: "bos", metin: "Etiketteki kodu yazın: harf (A–Z), rakam ve tire. Kod firmada eşsiz olmalı." };
+    if (/[^A-Z0-9-]/.test(kod)) return { tur: "hata", metin: "Kodda yalnız A–Z, 0–9 ve tire olabilir (Türkçe harf ve boşluk yok)." };
+    if (kod.length < 3 || kod.length > 20) return { tur: "hata", metin: "Kod 3 ile 20 hane arasında olmalı." };
+    if (!/^[A-Z0-9]+(-[A-Z0-9]+)*$/.test(kod)) return { tur: "hata", metin: "Tire başta, sonda ya da art arda olamaz." };
+    var v = MV.ekipman(kod);
+    if (v && v.kod !== haric) { var t = MV.tesis(v.tesis); return { tur: "hata", metin: kod + " kayıtlı: " + MV.tur(v.tur).ad + " · " + MV.musteri(t.m).kisa + " / " + t.ad + ". Aynı kod iki ekipmana verilemez." }; }
+    var eski = MV.EKIPMAN.filter(function (e) { return (e.eskiKod || []).some(function (x) { return x.kod === kod; }); })[0];
+    if (eski) return { tur: "hata", metin: kod + " daha önce " + eski.kod + " ekipmanının koduydu; eski kodlar yeniden verilmez." };
+    return { tur: "tamam", metin: "Kod kullanılabilir; bu firmada başka ekipmanda yok." };
+  };
+  /* sonraki kontrol = son imzalı kontrol + türün periyodu (inspector gerekçeyle değiştirebilir, §4.7) */
+  MV.sonrakiKontrol = function (e) {
+    if (!e.onceki) return null;
+    var d = new Date(e.onceki.tarih + "T12:00:00"); d.setMonth(d.getMonth() + MV.tur(e.tur).periyot);
+    return d.toISOString().slice(0, 10);
+  };
   MV.meslekAd = function (p) { return p.meslek === "diger" ? p.meslekMetin : MV.meslek(p.meslek).ad; };
   MV.bas = function (ad) { return ad.split(" ").map(function (x) { return x.charAt(0); }).join("").slice(0, 2).toLocaleUpperCase("tr"); };
   /* yetkili kişi (inspector) olabilir mi: meslek en az bir gruba izin veriyor (teknisyen/diğer değil) */

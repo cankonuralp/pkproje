@@ -448,6 +448,45 @@ onay, plan) · pencereler: **müşteri ekle / düzenle · tesis ekle / düzenle 
 genişlik ("cift") · boş değerli "Teklif ve sözleşme" yüzü kaldırıldı. Form alanı üreticisi ortak dosyaya alındı (Personel formu da
 ona geçti, M1 yeniden ölçüldü 108/108).
 
+#### Maket M3 — Ekipman Türü Kataloğu · Ekipman (modül 5, 7) — ONAY BEKLİYOR
+Ekranlar: **ekipman türleri** (`maket/ekipman-turleri.html`: katalog — Ek-III grubu, branş, periyot, Bakanlık formatı, rapor
+şablonu, akreditasyon; çipler: format zorunlu · akreditasyon · şablonu yok · standart seçilmemiş · **tür sayfası**: kontrol
+kuralları, kontrol metodu standartları, yetkili meslekler, rapor şablonu · tür ekle / düzenle) · **ekipmanlar**
+(`maket/ekipmanlar.html`: firma geneli sicil, 10'ar sayfa; çipler: kullanılamaz · hafif kusurlu · kontrolü geçmiş · 30 gün içinde ·
+ilk kontrol bekliyor; müşteri / tesis / tür seçicileri; tesis, müşteri ve tür sayfalarındaki yüzlerden süzgeçli gelinir ·
+**ekipman sayfası**: etiket bilgileri (Ek-III 1.7.2.1), tür kuralları, rapor geçmişi, kod geçmişi · ekipman ekle · etiket
+düzenle · kodu değiştir).
+**Varsayımlar:**
+- Katalog 24 tür: Planlar maketinin 14 türü (aynı kod ve ad; Planlar artık ortak katalogdan okur) + §4.8 ve Ek-2'den kule kren, LPG
+  tankı, yangın algılama, transformatör, yapı iskelesi, mobil kren, yürüyen merdiven, asılı erişim donanımı, sütunlu çalışma
+  platformu, mekanik pres. **Standart atamaları örnektir** (doğrulanmadı; firma kendi kütüphanesinden seçer).
+- **Yetkili meslekler türün Ek-III grubundan türetilir** (§4.6 birebir); tür başına ayrıca daraltma yok.
+- Periyot tür düzeyinde (çoğu 12 ay, iskele 6); **sonraki kontrol = son imzalı kontrol + periyot** (inspector gerekçeyle değiştirir —
+  ekranı M8).
+- Kusur sınıflandırması (hafif / ağır) yalnız Bakanlık formatı **yürürlükte** olan türde (§4.5, Ek-III 1.9.1); taslak formatta yok.
+- Rapor şablonu kodda (sürüm + yürürlük); **şablonu olmayan türde ekipman eklenir ama rapor açılamaz**.
+- Ekipman ekranındaki kodlar Planlar maketindeki kodların **aynısı** (aynı algoritma; HT-1001 …); ortak veride 143 ekipman.
+- Ekipman durumu son **imzalı** rapora göre: Kullanılabilir · **Kullanılamaz** (ağır kusur, giderilene kadar) · Kontrolü geçti ·
+  İlk kontrol bekliyor · **Raporu onayda** (bu yılın kontrolü yapıldı, imza bekleniyor — "geçti" denmez).
+- **Kodu değiştir** yalnız yönetici, gerekçe zorunlu, eski kod geçmişte kalır ve **yeniden verilmez** (karar 19'un genişletilmesi).
+- Ekipman firma genelindeki listeden de eklenebilir (planlama); silme yok.
+**Sorular (M3):**
+51. Tür kataloğu **her firmanın kendisinin** mi (firma tür ekler), yoksa **bizim tuttuğumuz ortak katalog** mu? Rapor şablonu kodda
+    olduğundan yeni tür de fiilen bizim işimiz — "Tür ekle" firmaya açık kalsın mı?
+52. Yetkili meslekler **grup düzeyinde** mi (öneri), tür başına daraltılabilsin mi? *(soru 38 ile bağlı)*
+53. Periyot yalnız tür düzeyinde mi; ekipman düzeyinde **istisna** (3 yılda bir test basıncı, 10 yılda yeniden değerlendirme, §4.7)
+    gerekir mi?
+54. **Tahmini kontrol süresi** türde tutulsun mu (plan saat önerisi için, §3.1 öneri)?
+55. Ekipman **firma genelindeki Ekipmanlar ekranından** da eklenebilsin mi, yoksa yalnız plan açarken (planlama) ve sahada (inspector)?
+56. Eski ekipman kodu **yeniden verilmesin** (öneri) — uygun mu?
+57. Ekipman sökülünce / satılınca: **"Hizmet dışı"** durumu (raporları kalır, plana alınamaz) önerisi uygun mu?
+**Ölçüm (2026-09-24, bulut):** 10 durum × 1920 · 1080 · 375 × açık/koyu = **60/60 temiz**, çekmece 2/2; etkileşim **14/14**.
+Ölçerken bulunup düzeltilen: 1080'de akreditasyon rozeti sığmıyordu (listede kısa ad) · pencerede iç içe kaydırma alttaki tuş
+çubuğunun altında kalıyordu (kaldırıldı) · 143 ekipmanda sayfalayıcı 15 tuşla iki satıra taşıyordu (7'den fazla sayfada "1 … 7 8 9 …
+15", telefonda "1 … 8 … 15") · **onaylı Planlar maketinden beri "önceki sayfa" tuşu boştu** (`chevron-left` ikon dosyasında yoktu →
+eklendi; iki yeni kilit: maket betiklerindeki her ikon adı dosyada olmalı + ölçümde çizilen her ikonun karşılığı) · raporu onayda
+olan ekipman "Kontrolü geçti" görünüyordu · müşteri değişince başka müşterinin tesisi seçili kalıyordu (liste sessizce boşalıyordu).
+
 ---
 
 ## 4 · Mevzuat bulguları (2026-09-18 araştırması; kaynaklar bölüm 10)
@@ -789,6 +828,9 @@ revizyon, alan kopyalama, hafif kusur devri, meslek eşleşme denetimi).
 - Emsal ürünler: https://opwire.app/iso-17020-periyodik-kontrol-yazilimi/ · https://17020muayene.vidco.com.tr/ · https://akuple.com/asansor-kontrol-yazilimi/ · https://ensyazilim.com/
 
 ## 11 · Değişiklik günlüğü
+- 2026-09-24 (15): **toplu maket M3 Ekipman Türü Kataloğu · Ekipman** (§3.6): 24 türlük katalog, standart kütüphanesi verisi,
+  143 ekipmanlık sicil (Planlar'daki kodlarla aynı), tür ve ekipman sayfaları, üç pencere. Planlar'ın boş "önceki sayfa" ikonu
+  düzeltildi, iki ikon kilidi. Sorular 51–57.
 - 2026-09-24 (14): **toplu maket M2 Müşteri ve Tesis** (§3.6): liste, müşteri ve tesis sayfaları, üç form penceresi; ortak veriye
   11 müşteri, 15 tesis, İSG-KATİP kayıtları, portal kullanıcıları. Form alanı üreticisi ortak. Sorular 44–50.
 - 2026-09-24 (13): **toplu maket M1** (bulut oturumu): bulut hazırlığı doğrulandı (Chrome indirmesi vekilde 403 → VM'deki

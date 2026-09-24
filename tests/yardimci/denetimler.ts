@@ -176,6 +176,18 @@ export function kullanilanIkonlar(): string[] {
   return [...adlar].sort();
 }
 
+/** maket betik/sayfalarındaki ikon adları: ikon("x") / I("x") çağrılarının içindeki dizeler (üçlü koşuldaki seçenekler dahil,
+ *  karşılaştırılan değerler ve a- önekli sınıflar hariç), ikon: "x" alanları ve #i-x bağlantıları (2026-09-24) */
+export function maketIkonlari(metinler: readonly string[]): string[] {
+  const adlar = new Set<string>();
+  for (const m of metinler) {
+    for (const x of m.matchAll(/\b(?:ikon|I)\(([^)]*)\)/g)) for (const y of x[1]!.matchAll(/(===\s*)?"([a-z0-9-]+)"/g)) if (!y[1] && !y[2]!.startsWith("a-")) adlar.add(y[2]!);
+    for (const x of m.matchAll(/\bikon:\s*"([a-z0-9-]+)"/g)) adlar.add(x[1]!);
+    for (const x of m.matchAll(/#i-([a-z0-9-]+)/g)) adlar.add(x[1]!);
+  }
+  return [...adlar].sort();
+}
+
 /** ikon dosyasında olmayan adlar */
 export function eksikIkonlar(adlar: readonly string[], ikonDosyasi: string): string[] {
   return adlar.filter((a) => !ikonDosyasi.includes(`id="i-${a}"`));

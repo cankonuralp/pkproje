@@ -69,6 +69,19 @@ export const DURUMLAR = {
     { ad: "tesis ekle · çakışan SGK sicil", hash: "#/m/m1/tesis-ekle", adim: [["js", 'const e = document.querySelector("#w-sgk"); e.value = MV.tesis("t1").sgk; e.dispatchEvent(new Event("input", { bubbles: true }))'], ["tikla", '[data-eylem="pencere-kaydet"]']] },
     { ad: "portal kullanıcısı ekle · seçili tesisler", hash: "#/m/m3/kullanici-ekle", adim: [["tikla", '[data-kapsam="secili"]']] },
   ] },
+  /* M3 Ekipman Türü Kataloğu · Ekipman (2026-09-24) */
+  m3: { sayfa: "maket/ekipmanlar.html", durumlar: [
+    { ad: "ekipman türleri · katalog", sayfa: "maket/ekipman-turleri.html", hash: "#/" },
+    { ad: "tür · zorunlu format, şablon var", sayfa: "maket/ekipman-turleri.html", hash: "#/tur/ET" },
+    { ad: "tür · şablon ve standart yok", sayfa: "maket/ekipman-turleri.html", hash: "#/tur/LP" },
+    { ad: "tür ekle · boş gönderildi", sayfa: "maket/ekipman-turleri.html", hash: "#/yeni", adim: [["tikla", '[data-eylem="pencere-kaydet"]']] },
+    { ad: "ekipmanlar · liste (10'ar)", hash: "#/" },
+    { ad: "ekipmanlar · tesis süzgeci (adresten)", hash: "#/?tesis=t1" },
+    { ad: "ekipman · kullanılamaz, kod geçmişi", hash: "#/e/TP-1005" },
+    { ad: "ekipman · ilk kontrol bekliyor", hash: "#/e/YK-1011" },
+    { ad: "ekipman ekle · çakışan kod", hash: "#/yeni", adim: [["yaz", "#w-kod", "ht-1001"]] },
+    { ad: "kodu değiştir · eski kod yeniden verilemez", hash: "#/e/TP-1005/kod", adim: [["yaz", "#w-kod", "TP-05"]] },
+  ] },
 };
 
 /* ── ETKİLEŞİM DENEMELERİ (--etkilesim): adımlar koşar, sonra `bekle` ifadesi sayfada doğru dönmeli. Gen verilmezse 1920. ── */
@@ -122,11 +135,27 @@ export const DENEMELER = {
     { ad: "Plan aç (henüz maketi yok) → bildirim", hash: "#/t/t1", adim: [["tikla", '#a-nesne .a-eylem-cubugu [data-ne="Plan açma"]']], bekle: '/henüz tasarlanmadı/.test(document.querySelector("#a-bildirim-metin").textContent)' },
     { ad: "tesis sayfası: inspector personel kartına bağlanır", hash: "#/t/t7", bekle: 'document.querySelector(\'.a-tablo-isg a[href="personel.html#/p/mk"]\') !== null' },
   ],
+  m3: [
+    { ad: "türler: Rapor şablonu yok çipi", sayfa: "maket/ekipman-turleri.html", hash: "#/", adim: [["tikla", '[data-cip="sablonsuz"]']], bekle: 'document.querySelector("#a-sayac").textContent === MV.KATALOG.filter(t => !t.sablon).length + " / " + MV.KATALOG.length + " tür"' },
+    { ad: "türler: branş Elektrik", sayfa: "maket/ekipman-turleri.html", hash: "#/", adim: [["tikla", '[data-secici-ac="brans"]'], ["tikla", '[data-sec="brans"][data-deger="e"]']], bekle: 'document.querySelectorAll("#a-liste tbody tr").length === MV.KATALOG.filter(t => t.b === "e").length' },
+    { ad: "tür ekle: kullanılan kod reddedilir", sayfa: "maket/ekipman-turleri.html", hash: "#/yeni", adim: [["yaz", "#w-ad", "Deneme"], ["yaz", "#w-k", "HT"], ["tikla", '[data-eylem="pencere-kaydet"]']], bekle: '/Hava tankı türünde kullanılıyor/.test(document.querySelector("#w-k-ipucu").textContent)' },
+    { ad: "tür ekle: geçerli → tür sayfası, şablon yok uyarısı", sayfa: "maket/ekipman-turleri.html", hash: "#/yeni", adim: [["yaz", "#w-ad", "Kaldırma aparatı"], ["yaz", "#w-k", "ka"], ["tikla", "#w-g"], ["tikla", '[data-secim="w-g"][data-deger="kaldirma"]'], ["tikla", '[data-eylem="pencere-kaydet"]']], bekle: 'location.hash === "#/tur/KA" && /şablonu yok/.test(document.querySelector("#a-nesne").textContent)' },
+    { ad: "ekipmanlar: adresten tesis süzgeci (14 / 143)", hash: "#/?tesis=t1", bekle: 'document.querySelector("#a-sayac").textContent === "14 / 143 ekipman"' },
+    { ad: "ekipmanlar: müşteri değişince başka müşterinin tesisi seçili kalmaz", hash: "#/?tesis=t1", adim: [["tikla", '[data-secici-ac="musteri"]'], ["tikla", '[data-sec="musteri"][data-deger="m2"]']], bekle: 'MK.SZ.e.sec.tesis === "tumu" && document.querySelectorAll("#a-liste tbody tr").length === 5' },
+    { ad: "ekipmanlar: son sayfa (141–143 / 143)", hash: "#/", adim: [["tikla", '.a-sayfalar [data-sayfa="15"]']], bekle: 'document.querySelector(".a-sayfa-bilgi").textContent === "141–143 / 143"' },
+    { ad: "ekipmanlar: geçmiş ve 30 gün içinde birlikte → imkânsız", hash: "#/", adim: [["tikla", '[data-cip="gecikti"]'], ["tikla", '[data-cip="yakin"]'], ["tikla", '[data-kip="ve"]']], bekle: '/hem geçmiş hem yaklaşıyor/.test(document.querySelector("#a-liste .a-bos-baslik").textContent)' },
+    { ad: "ekipman ekle: çakışan kod söylenir, kaydedilmez", hash: "#/yeni", adim: [["yaz", "#w-kod", "ht-1001"], ["tikla", '[data-eylem="pencere-kaydet"]']], bekle: '/HT-1001 kayıtlı/.test(document.querySelector("#w-kod-ipucu").textContent) && document.querySelector("#a-pencere").open' },
+    { ad: "ekipman ekle: geçerli → ilk kontrol bekliyor", hash: "#/yeni", adim: [["tikla", "#w-tesis"], ["tikla", '[data-secim="w-tesis"][data-deger="t13"]'], ["yaz", "#w-kod", "zz-9001"], ["tikla", "#w-tur"], ["yaz", '[data-secim-ara="w-tur"]', "pres"], ["tikla", '[data-secim="w-tur"][data-deger="PR"]'], ["tikla", '[data-eylem="pencere-kaydet"]']], bekle: 'location.hash === "#/e/ZZ-9001" && /İlk kontrol bekliyor/.test(document.querySelector("#a-nesne .a-nesne-baslik").textContent)' },
+    { ad: "seçim alanı araması: eşleşmeyen yazı → seçenek yok", hash: "#/yeni", adim: [["tikla", "#w-tur"], ["yaz", '[data-secim-ara="w-tur"]', "qqq"]], bekle: '!document.querySelector(\'[data-secim-ara="w-tur"]\').parentNode.querySelector(".a-secim-yok").hidden' },
+    { ad: "kodu değiştir: eski kod yeniden verilmez", hash: "#/e/TP-1005/kod", adim: [["yaz", "#w-kod", "TP-05"]], bekle: '/eski kodlar yeniden verilmez/.test(document.querySelector("#w-kod-ipucu").textContent)' },
+    { ad: "kodu değiştir: yeni kod + gerekçe → geçmişte eski kod", hash: "#/e/TP-1005/kod", adim: [["yaz", "#w-kod", "TP-9005"], ["yaz", "#w-gerekce", "Etiket yenilendi"], ["tikla", '[data-eylem="pencere-kaydet"]']], bekle: 'location.hash === "#/e/TP-9005" && /TP-1005 → TP-9005/.test(document.querySelector("#a-nesne").textContent)' },
+    { ad: "ekipman sayfası: tesis müşteriler maketine bağlanır", hash: "#/e/HT-1001", bekle: 'document.querySelector(\'#a-nesne .a-nesne-alt a[href="musteriler.html#/t/t1"]\') !== null' },
+  ],
 };
 
 const GENISLIK = [[1920, 1080], [1080, 810], [375, 812]];
 const TEMA = ["acik", "koyu"];
-const SIFIR = ["tasma", "sertKirpma", "tasanMetin", "cakisma", "sonCakisma", "gizliEtkilesimli", "ekranDisi", "kucukHedef", "basliksizKirpma", "ipucuKesik", "kenarFarki", "gorunenGizli", "pencereKenar", "hizaKaymasi", "kartTutarsiz"];
+const SIFIR = ["tasma", "sertKirpma", "tasanMetin", "cakisma", "sonCakisma", "gizliEtkilesimli", "ekranDisi", "kucukHedef", "basliksizKirpma", "ipucuKesik", "kenarFarki", "gorunenGizli", "pencereKenar", "hizaKaymasi", "kartTutarsiz", "eksikIkon"];
 
 function tarayici() {
   const aday = ["/opt/pw-browsers", "/opt/olcum"].filter(existsSync).flatMap(function ara(d) {
@@ -192,9 +221,9 @@ function ozet(ad, gen, tema, r, hatalar) {
     tasma: r.yatayTasma, sertKirpma: say(r.sertKirpma), tasanMetin: say(r.tasanMetin), cakisma: r.cakisma, sonCakisma: say(r.sonCakisma),
     gizliEtkilesimli: say(r.gizliEtkilesimli), ekranDisi: r.ekranDisi, kucukHedef: say(r.kucukHedef), basliksizKirpma: say(r.ucNoktaBasliksiz),
     ipucuKesik: say(r.ipucuKesik), kenarFarki: r.kenarFarki, gorunenGizli: say(r.gorunenGizli), pencereKenar: say(r.pencereKenar),
-    hizaKaymasi: r.hizaKaymasi, kartTutarsiz: r.kartTutarsiz, tusY: r.tusY, tusGen: r.tusGenislik, satirY: r.satirYukseklik,
+    hizaKaymasi: r.hizaKaymasi, kartTutarsiz: r.kartTutarsiz, eksikIkon: say(r.eksikIkon), tusY: r.tusY, tusGen: r.tusGenislik, satirY: r.satirYukseklik,
     birincil: r.birincilSayisi ?? null, pencereGen: r.pencereGenislik ?? null, icerik: r.icerik, listeGen: r.liste, yaziTipi: r.yaziTipi,
-    hata: hatalar.length, ayrinti: Object.fromEntries(["sertKirpma", "tasanMetin", "kucukHedef", "gizliEtkilesimli", "ucNoktaBasliksiz", "ipucuKesik", "gorunenGizli"].filter(k => Array.isArray(r[k]) && r[k].length).map(k => [k, r[k]])),
+    hata: hatalar.length, ayrinti: Object.fromEntries(["sertKirpma", "tasanMetin", "kucukHedef", "gizliEtkilesimli", "ucNoktaBasliksiz", "ipucuKesik", "gorunenGizli", "eksikIkon"].filter(k => Array.isArray(r[k]) && r[k].length).map(k => [k, r[k]])),
     hatalar };
 }
 const temizMi = d => SIFIR.every(k => d[k] === 0 || d[k] === null) && d.hata === 0 && d.yaziTipi === "Sora yüklü";
@@ -276,9 +305,10 @@ async function olumsuz() {
         const ust = document.createElement("button"); ust.textContent = "üst"; ust.className = "a-tus";
         const t = document.querySelector(".a-ara input").getBoundingClientRect();
         ust.style.cssText = `position:absolute;left:${t.left + window.scrollX}px;top:${t.top + window.scrollY}px`; document.body.appendChild(ust);
+        ic.insertAdjacentHTML("beforeend", '<svg class="a-ikon"><use href="../vendor/lucide-1.47.0/ikonlar.svg#i-olmayan-ikon"/></svg>');
       });
       const r = await s.evaluate(OLC);
-      const bulgu = { tasma: r.yatayTasma, sertKirpma: r.sertKirpma.length, kucukHedef: r.kucukHedef.length, cakisma: r.cakisma };
+      const bulgu = { tasma: r.yatayTasma, sertKirpma: r.sertKirpma.length, kucukHedef: r.kucukHedef.length, cakisma: r.cakisma, eksikIkon: r.eksikIkon.length };
       const hepsi = Object.values(bulgu).every(v => v > 0);
       gecti = gecti && hepsi;
       console.log(`${hepsi ? "✓" : "✗"} ${gen}: bozulmuş sayfada bulgu → ${JSON.stringify(bulgu)} (hepsi > 0 olmalı)`);

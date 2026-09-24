@@ -454,6 +454,7 @@ button { cursor: pointer; }
 .a-sayfa:hover:not(:disabled) { background: var(--zemin2); }
 .a-sayfa[aria-current="page"] { background: var(--vurgu); border-color: var(--vurgu); color: var(--vurgu-uzeri); }
 .a-sayfa:disabled { opacity: .45; cursor: default; }
+.a-sayfa-ara { display: inline-flex; align-items: center; justify-content: center; min-width: 20px; color: var(--yazi3); }
 .a-sayi { font-weight: 600; font-variant-numeric: tabular-nums; }
 /* notlar ve hareketler */
 .a-not-form { display: flex; align-items: flex-start; gap: 8px; margin: 0 0 10px; }
@@ -588,6 +589,8 @@ a.a-yuz:hover { border-color: var(--kenar-alan); background: var(--zemin); }
 .a-secim .a-secici-liste { left: 0; right: auto; width: 100%; min-width: 0; }
 /* pencerede liste akış içinde açılır (telefonda pencere kayar; kayan liste kesilmesin — tür kutusuyla aynı karar) */
 .a-pencere .a-secim .a-secici-liste { position: static; margin-top: 6px; box-shadow: none; max-height: 240px; }
+.a-secim-ara { margin: 0 0 6px; }
+.a-secim-yok { margin: 0 0 6px; }
 
 /* rozet dizisi (ör. roller): sarar, rozetler bölünmez */
 .a-rozetler { display: flex; flex-wrap: wrap; gap: 4px; min-width: 0; }
@@ -610,6 +613,13 @@ a.a-yuz:hover { border-color: var(--kenar-alan); background: var(--zemin); }
 .a-tablo-tesis .a-k-isg { width: 11%; } .a-tablo-tesis .a-k-ekipman { width: 9%; } .a-tablo-tesis .a-k-sonraki { width: 14%; }
 .a-tablo-mkullanici .a-k-ad { width: 32%; } .a-tablo-mkullanici .a-k-tesis { width: 30%; } .a-tablo-mkullanici .a-k-son { width: 20%; }
 .a-tablo-mkullanici .a-k-durum { width: 18%; }
+.a-tablo-tur .a-k-tur { width: 19%; } .a-tablo-tur .a-k-grup { width: 19%; } .a-tablo-tur .a-k-brans { width: 10%; } .a-tablo-tur .a-k-periyot { width: 8%; }
+.a-tablo-tur .a-k-format { width: 15%; } .a-tablo-tur .a-k-sablon { width: 15%; } .a-tablo-tur .a-k-akr { width: 14%; }
+.a-tablo-ekipmanlar .a-k-kod { width: 11%; } .a-tablo-ekipmanlar .a-k-tur { width: 14%; } .a-tablo-ekipmanlar .a-k-tesis { width: 18%; }
+.a-tablo-ekipmanlar .a-k-konum { width: 13%; } .a-tablo-ekipmanlar .a-k-son { width: 14%; } .a-tablo-ekipmanlar .a-k-sonraki { width: 14%; }
+.a-tablo-ekipmanlar .a-k-durum { width: 16%; }
+.a-tablo-gecmis .a-k-no { width: 26%; } .a-tablo-gecmis .a-k-tarih { width: 18%; } .a-tablo-gecmis .a-k-kisi { width: 18%; } .a-tablo-gecmis .a-k-sonuc { width: 16%; }
+.a-tablo-gecmis .a-k-eylem { width: 22%; }
 .a-tablo-isg .a-k-kisi { width: 28%; } .a-tablo-isg .a-k-no { width: 22%; } .a-tablo-isg .a-k-onay { width: 20%; } .a-tablo-isg .a-k-durum { width: 30%; }
 
 /* kayda giden kırpılabilir ad bağlantısı (ünvan, tesis adı, kişi): dokunma hedefi denetim yüksekliği, kırpma zinciri (kalıp 4) */
@@ -719,6 +729,7 @@ a.a-yuz:hover { border-color: var(--kenar-alan); background: var(--zemin); }
   .a-sekmeler { display: flex; }
   .a-sekme { flex: 1 1 0; justify-content: center; }
   .a-gecmis { grid-template-columns: minmax(0, 1fr); }
+  .a-sayfa-komsu { display: none; }
   /* toplu maket (2026-09-24): form sayfasının tuş çubuğu telefonda altta yapışkan — plan içi çubuğuyla aynı karar (kalıp 2) */
   .a-form-eylem {
     position: sticky; bottom: 0; z-index: 10; flex-wrap: nowrap;

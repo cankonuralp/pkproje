@@ -66,7 +66,7 @@
     { grup: "Tanımlar", ogeler: [["Ekipman türleri", "layers", 5], ["Standartlar", "book-open", 4], ["Kullanıcılar", "user-cog", 1]] }
   ];
   /* hazır maketler: menüden tıklanınca gidilir (toplu bakışta tıklanır prototip, MAKET-PLANI §3.3); olmayan → bildirim */
-  var SAYFALAR = { 13: "planlarim.html", 1: "kullanicilar.html", 2: "personel.html", 3: "musteriler.html" };
+  var SAYFALAR = { 13: "planlarim.html", 1: "kullanicilar.html", 2: "personel.html", 3: "musteriler.html", 5: "ekipman-turleri.html", 7: "ekipmanlar.html" };
   MK.sayfaAdresi = function (no) { return SAYFALAR[no] || null; };
   /* menü dışı maket ekranları (ör. plan açma); hazır olunca buraya yazılır, bağlantılar kendiliğinden açılır */
   var EK_SAYFALAR = { giris: "giris.html" };
@@ -265,7 +265,14 @@
     var h = '<nav class="a-sayfalar" data-sz="' + on + '" aria-label="' + SZ_TANIM[on].birim + ' sayfaları"><span class="a-sayfa-bilgi">' + bas + "–" + son + " / " + toplam + "</span>";
     if (n > 1) {
       h += '<div class="a-sayfa-tuslar"><button class="a-sayfa" type="button" data-sayfa="' + (sayfa - 1) + '" aria-label="Önceki sayfa"' + (sayfa === 1 ? " disabled" : "") + ">" + ikon("chevron-left", "a-ikon-kucuk") + "</button>";
-      for (var i = 1; i <= n; i++) h += '<button class="a-sayfa" type="button" data-sayfa="' + i + '"' + (i === sayfa ? ' aria-current="page"' : "") + ' aria-label="Sayfa ' + i + '">' + i + "</button>";
+      /* 7'den fazla sayfada: ilk · … · bulunulan ±1 · … · son; telefonda ±1 komşular gizlenir → tek satır
+         (2026-09-24: 143 ekipman = 15 sayfa, 15 tuş iki satıra taşıyordu). 7 ve altı sayfada hepsi (Planlar aynen). */
+      var goster = function (i) { return n <= 7 || i === 1 || i === n || Math.abs(i - sayfa) <= 1; };
+      for (var i = 1; i <= n; i++) {
+        var komsu = n > 7 && Math.abs(i - sayfa) === 1 && i !== 1 && i !== n;
+        if (goster(i)) h += '<button class="a-sayfa' + (komsu ? " a-sayfa-komsu" : "") + '" type="button" data-sayfa="' + i + '"' + (i === sayfa ? ' aria-current="page"' : "") + ' aria-label="Sayfa ' + i + '">' + i + "</button>";
+        else if (goster(i - 1)) h += '<span class="a-sayfa-ara" aria-hidden="true">…</span>';
+      }
       h += '<button class="a-sayfa" type="button" data-sayfa="' + (sayfa + 1) + '" aria-label="Sonraki sayfa"' + (sayfa === n ? " disabled" : "") + ">" + ikon("chevron-right", "a-ikon-kucuk") + "</button></div>";
     }
     return h + "</nav>";
@@ -331,6 +338,9 @@
       (o.gecersiz ? ' aria-invalid="true"' : "") + (o.tanim ? ' aria-describedby="' + o.tanim + '"' : "") + ">" +
       '<span class="a-kirp' + (gor ? "" : " a-secim-bos") + '">' + kacis(gor ? gor[1] : o.ipucu || "Seçin") + "</span>" + ikon("chevron-down", "a-ikon-kucuk") + "</button>" +
       '<div class="a-secici-liste a-secim-liste" role="listbox" aria-label="' + kacis(o.ad) + '" hidden>' +
+      /* kalıp 19: 8'den fazla seçenekte arama kutusu (yazdıkça süzer; eşleşme yoksa söyler) */
+      (o.secenekler.length > 8 ? '<input class="a-girdi a-secim-ara" type="search" data-secim-ara="' + o.id + '" placeholder="Ara" aria-label="' + kacis(o.ad) + ' içinde ara" autocomplete="off">' +
+        '<p class="a-bos-satir a-secim-yok" hidden>Bu adla seçenek yok.</p>' : "") +
       o.secenekler.map(function (x) {
         return '<button class="a-secenek" type="button" role="option" aria-selected="' + (x[0] === o.deger) + '" data-secim="' + o.id + '" data-deger="' + kacis(x[0]) + '">' +
           ikon("check", "a-ikon-kucuk") + '<span class="a-kirp">' + kacis(x[1]) + "</span>" + (x[2] ? '<span class="a-secenek-ek">' + kacis(x[2]) + "</span>" : "") + "</button>";
@@ -421,7 +431,7 @@
     if (el.dataset.seciciAc || el.dataset.secimAc) {
       var kp = el.closest(".a-secici"), l = kp.querySelector(".a-secici-liste"), acik = l.hidden;
       listeleriKapat(kp); l.hidden = !acik; el.setAttribute("aria-expanded", String(acik));
-      if (acik) (l.querySelector('[aria-selected="true"]') || l.firstElementChild).focus();
+      if (acik) (l.querySelector(".a-secim-ara") || l.querySelector('[aria-selected="true"]') || l.querySelector(".a-secenek")).focus();
       return;
     }
     if (el.dataset.secim) {
@@ -459,6 +469,11 @@
     var t = e.target;
     if (t.dataset && t.dataset.ara) {   /* arama: yalnız liste yeniden çizilir, kutu yerinde kalır (odak çalınmaz) */
       var on = t.dataset.ara; SZ[on].ara = t.value; SZ[on].sayfa = 1; t.closest(".a-ara").classList.toggle("a-dolu", !!t.value); yenile(on); return;
+    }
+    if (t.dataset && t.dataset.secimAra) {   /* seçim alanının arama kutusu: seçenekleri süzer */
+      var q = MK.tr(t.value.trim()), l = t.closest(".a-secici-liste"), n = 0;
+      l.querySelectorAll(".a-secenek").forEach(function (b) { var g = !q || MK.tr(b.textContent).indexOf(q) >= 0; b.hidden = !g; if (g) n++; });
+      l.querySelector(".a-secim-yok").hidden = n > 0; return;
     }
     if (MK.onGirdi) MK.onGirdi(e);
   });

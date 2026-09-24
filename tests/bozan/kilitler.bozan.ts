@@ -7,7 +7,7 @@ import { KALIP } from "../../src/styles/kalip.ts";
 import { MODUL_GRUPLARI } from "../../src/modules/moduller.ts";
 import {
   bantDisiDaraltma, ciftIdler, ciftSeciciler, ciftTanimliDegiskenler, daralmisSerit, degiskenDegeri, dosyalar, eksikIkonlar, kalipDisiEsikler,
-  kiraciDisiErisim, kullanilanIkonlar, maketMenusu, oku, parantezHatasi, rlsEksikTablolar, tanimsizDegiskenler, testKapisiEksikleri, tokenGovdesi,
+  kiraciDisiErisim, kullanilanIkonlar, maketIkonlari, maketMenusu, oku, parantezHatasi, rlsEksikTablolar, tanimsizDegiskenler, testKapisiEksikleri, tokenGovdesi,
 } from "../yardimci/denetimler.ts";
 
 const kabuk = oku("src/components/kabuk/Kabuk.module.css");
@@ -82,6 +82,13 @@ test("ikon: dosyada olmayan ikon kullanılınca yakalanır", () => {
   const ikonDosyasi = oku("public/vendor/lucide-1.47.0/ikonlar.svg");
   assert.deepEqual(eksikIkonlar(kullanilanIkonlar(), ikonDosyasi), []);
   assert.deepEqual(eksikIkonlar([...kullanilanIkonlar(), "olmayan-ikon"], ikonDosyasi), ["olmayan-ikon"]);
+});
+
+test("maket ikonu (2026-09-24): üçlü koşulda dosyada olmayan ikon kullanılınca yakalanır, karşılaştırılan değer ikon sayılmaz", () => {
+  const svg = oku("docs/vendor/lucide-1.47.0/ikonlar.svg");
+  const adlar = maketIkonlari(['ikon(d === "tamam" ? "circle-check" : "olmayan-ikon", "a-ikon-kucuk")']);
+  assert.deepEqual(adlar, ["circle-check", "olmayan-ikon"]);
+  assert.deepEqual(eksikIkonlar(adlar, svg), ["olmayan-ikon"]);
 });
 
 test("menü: 'Planlar' kişiye bağlı ada ('Planlarım') dönünce maketle ayrışır", () => {
