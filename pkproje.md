@@ -852,6 +852,36 @@ birim fiyat × fatura, sayfa 20; faturalar; geçmiş) · **fatura sayfası** (al
 kayıtlı no reddi, tahsilat fazlası reddi, tahsilat → iş kapandı, Raporlar'a geçiş dahil). Planlar yeniden 54/54, 15/15 (süzgeç düzeltmesi;
 "hazır olmayan modül" denemesi artık Performans); M13 yeniden 48/48, 11/11.
 
+#### Maket M15 — Performans ve Raporlama (modül 19, faz 2) — ONAY BEKLİYOR
+Ekran: **Performans** (`maket/performans.html`, Ayşe Demir, firma yöneticisi): **pano** — dönem (bu ay · bu yıl · geçen yıl) ve branş
+(tümü · mekanik · elektrik) anahtarı; yüzler (rapor · çalışılan gün · gün başı rapor · kazanç · geri gönderilen); **gün başı rapor ve
+kazanç** grafiği (bu ayda gün gün, yılda ay ay; mekanik / elektrik yığılı); **personel başına kazanç** grafiği; personel tablosu (rapor, gün,
+gün başı, kazanç, geri gönderilen, son rapor; sütundan sıralanır; görünüm: rapor yazanlar / bütün inspector'lar) · **kişi sayfası** — aynı
+ölçüler yalnız o kişi için + **günlük iş** (gün × tesis: iş no → Muhasebe, rapor, kazanç, imzalı sayısı) ve personel kartına bağlantı.
+**Varsayımlar:**
+- Sayılar raporlardan türer (Raporlar, Planlar, Muhasebe ile aynı kayıtlar). **Sayılan rapor:** onaya gönderilmiş ya da imzalı; hiç
+  gönderilmemiş taslak sayılmaz; tarih raporun oluşturulduğu gün.
+- **Kazanç:** raporun birim fiyatı (M14 ile aynı kaynak: teklif kalemi, yoksa fiyat listesi), KDV hariç, **raporu yazan inspector'a**.
+- **Gün başı rapor** = rapor ÷ çalışılan gün (kişi × gün); gün başı kazanç da aynı bölmeyle.
+- Geri gönderilen: yönetici onayından dönen rapor (geri gönderme tarihi dönemin içinde).
+- Dönem ve branş **görünüm anahtarı** (kalıp 8: süzgeç değil); kişi sayfasında branş anahtarı yok, dönem panodan gelir.
+- Grafik **dış kütüphanesiz**, HTML yatay çubuk (telefonda da okunur); renkler var olan değişkenler (mekanik onay yeşili, elektrik vurgu);
+  ekran okuyucu aynı veriyi gizli tabloda okur. *Yeni desen (kalıp 16) → soru 151.*
+- Örnek veride yalnız 15 tesisin raporları var (geçen yıl eylül–kasım, bu yıl şubat ve eylül); grafikler bu yüzden seyrek.
+**Sorular (M15):**
+144. **Gün başı** ölçüsü rapor ÷ çalışılan gün (makette) uygun mu; kişi ya da branş için **günlük hedef** (ör. 8 rapor) tanımlansın mı?
+145. **Kazanç** hangisi: raporlanan (makette, birim fiyat), faturalanan mı, tahsil edilen mi?
+146. **Sayılan rapor:** onaya gönderilen + imzalı (makette) mı, yalnız imzalı mı?
+147. Çok kişili planda kazanç **raporu yazana** (makette) mı, **ekibe paylaştırılsın** mı?
+148. Kim neyi görür: yönetici hepsini, branş yöneticisi kendi branşını, inspector yalnız kendini (rol × modül önerisi) — **inspector kazancı
+     görsün** mü?
+149. Ek ölçüler gerekir mi: kabul / red edilen plan, ortalama onay süresi, geri gönderme oranı, uygunsuzluk oranı?
+150. Dönemler (bu ay · bu yıl · geçen yıl) yeterli mi; **tarih aralığı** ve **Excel'e aktarma** gerekir mi?
+151. Grafik biçimi: **yatay çubuk** (makette, yeni desen) uygun mu; zaman çizgisi (dikey sütun / çizgi) ister misiniz?
+**Ölçüm (2026-09-24, bulut):** 6 durum × 1920 · 1080 · 375 × açık/koyu = **36/36 temiz**, çekmece 2/2; etkileşim **9/9** (dönem, branş,
+sütun sıralama, görünüm, arama, kişiye geçiş, dönemin korunması, menüden açılış). Planlar ("hazır olmayan modül" artık Eğitimler) 15/15,
+M14 14/14 yeniden.
+
 ---
 
 ## 4 · Mevzuat bulguları (2026-09-18 araştırması; kaynaklar bölüm 10)
@@ -1193,6 +1223,8 @@ revizyon, alan kopyalama, hafif kusur devri, meslek eşleşme denetimi).
 - Emsal ürünler: https://opwire.app/iso-17020-periyodik-kontrol-yazilimi/ · https://17020muayene.vidco.com.tr/ · https://akuple.com/asansor-kontrol-yazilimi/ · https://ensyazilim.com/
 
 ## 11 · Değişiklik günlüğü
+- 2026-09-24 (27): **toplu maket M15 Performans** (§3.6, faz 2): pano (dönem + branş anahtarı, yüzler, gün başı rapor ve kazanç grafiği,
+  personel başına kazanç, personel tablosu) ve kişi sayfası (günlük iş); sayılar raporlardan, kazanç birim fiyattan. Sorular 144–151.
 - 2026-09-24 (26): **toplu maket M14 Muhasebe** (§3.6, faz 2): işler (plan başına) ve faturalar, iş sayfası (rapor × birim fiyat × fatura),
   fatura sayfası (kalemler, KDV, tahsilatlar), fatura kaydet ve tahsilat pencereleri; iş tahsilatla kendiliğinden kapanır. Ortak süzgeçte
   seçicisiz satır düzeltmesi. Sorular 135–143.

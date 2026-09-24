@@ -800,6 +800,30 @@ a.a-yuz:hover { border-color: var(--kenar-alan); background: var(--zemin); }
 .a-tablo-israpor .a-k-fatura { width: 18%; } .a-tablo-israpor .a-k-durum { width: 16%; }
 .a-tablo-tahsilat .a-k-tarih { width: 22%; } .a-tablo-tahsilat .a-k-tutar { width: 22%; } .a-tablo-tahsilat .a-k-yontem { width: 32%; } .a-tablo-tahsilat .a-k-kaydeden { width: 24%; }
 
+/* M15 — performans panosu: dönem + branş anahtarı, yatay çubuk grafik (dış kütüphane yok; renkler var olan değişkenler), iki tablo */
+.a-pano-anahtar { display: flex; flex-wrap: wrap; align-items: center; gap: 8px 12px; margin: 0 0 16px; }
+.a-pano-anahtar .a-sekmeler { margin: 0; }
+.a-pano-donem { margin: 0; color: var(--yazi2); font-size: var(--boy-kucuk); }
+.a-grafikler { display: grid; grid-template-columns: repeat(auto-fit, minmax(min(100%, 420px), 1fr)); gap: 12px; margin: 0 0 20px; }
+.a-grafikler-tek { grid-template-columns: minmax(0, 1fr); }
+.a-grafik { margin: 0; padding: 14px 16px; min-width: 0; border: 1px solid var(--kenar); border-radius: var(--r-buyuk); background: var(--kart); }
+.a-grafik-bas { display: flex; flex-wrap: wrap; align-items: baseline; justify-content: space-between; gap: 4px 12px; margin: 0 0 10px; }
+.a-grafik-baslik { font-weight: 600; }
+.a-grafik-lejant { display: flex; flex-wrap: wrap; gap: 4px 12px; margin: 0; padding: 0; list-style: none; color: var(--yazi2); font-size: var(--boy-kucuk); }
+.a-grafik-lejant li { display: inline-flex; align-items: center; gap: 6px; }
+.a-grafik-renk { width: 10px; height: 10px; border-radius: 2px; }
+.a-seri-m, .a-seri-k { background: var(--onay); }
+.a-seri-e { background: var(--vurgu-2); }
+.a-grafik-satirlar { display: grid; gap: 6px; }
+.a-grafik-satir { display: grid; grid-template-columns: minmax(0, 120px) minmax(0, 1fr) 128px; align-items: center; gap: 10px; min-height: 36px; }
+.a-grafik-etiket { min-width: 0; color: var(--yazi2); font-size: var(--boy-kucuk); }
+.a-grafik-cubuk { display: flex; height: 14px; min-width: 0; border-radius: 3px; background: var(--zemin2); overflow: hidden; }
+.a-grafik-deger { text-align: right; font-weight: 600; font-variant-numeric: tabular-nums; white-space: nowrap; }
+.a-tablo-perf .a-k-ad { width: 24%; } .a-tablo-perf .a-k-rapor { width: 9%; } .a-tablo-perf .a-k-gun { width: 9%; } .a-tablo-perf .a-k-ort { width: 11%; }
+.a-tablo-perf .a-k-kazanc { width: 18%; } .a-tablo-perf .a-k-geri { width: 15%; } .a-tablo-perf .a-k-son { width: 14%; }
+.a-tablo-gunluk .a-k-gun { width: 18%; } .a-tablo-gunluk .a-k-is { width: 34%; } .a-tablo-gunluk .a-k-rapor { width: 12%; }
+.a-tablo-gunluk .a-k-kazanc { width: 18%; } .a-tablo-gunluk .a-k-durum { width: 18%; }
+
 /* ══ BANTLAR — taban kuralların ARDINDA (anayasa 3.2) ══════════════════════════════════════════════════ */
 
 /* orta + dar (< 1280): yan menü çekmece, üst çubukta ☰ + işaret */
@@ -836,6 +860,9 @@ a.a-yuz:hover { border-color: var(--kenar-alan); background: var(--zemin); }
   /* 2026-09-24 (M14 ölçümü): Süzgeç tuşu olmayan satırda arama kendi satırında kalır — adım dışındaki süzgeçte çip şeridinin
      eksi kenar payı arama + şeridi aynı satıra sığdırıyor, arama 0'a eziliyordu (Planlar plan içinde zaten tek satırdı) */
   .a-suzgec[data-secicisiz] .a-ara { flex-basis: 100%; }
+  /* M15: grafik satırında etiket dar, değer içerik kadar */
+  .a-grafik { padding: 12px; }
+  .a-grafik-satir { grid-template-columns: minmax(0, 84px) minmax(0, 1fr) 108px; gap: 8px; }
   .a-cipler {
     flex: 1 0 100%; flex-wrap: nowrap; overflow-x: auto;
     margin: 0 calc(var(--bosluk-sayfa) * -1); padding: 0 var(--bosluk-sayfa);
@@ -954,16 +981,17 @@ a.a-yuz:hover { border-color: var(--kenar-alan); background: var(--zemin); }
   .a-tablo-uyari td[data-kart="govde"], .a-tablo-issoz td[data-kart="govde"]:has(.a-kart-etiket),
   .a-tablo-iskapsam td[data-kart="govde"], .a-tablo-is td[data-kart="govde"]:has(.a-kart-etiket), .a-tablo-fatura td[data-kart="govde"]:has(.a-kart-etiket),
   .a-tablo-isfatura td[data-kart="govde"], .a-tablo-israpor td[data-kart="govde"]:has(.a-kart-etiket), .a-tablo-tahsilat td[data-kart="govde"],
-  .a-tablo-fkalem td[data-kart="govde"] { display: flex; align-items: center; justify-content: space-between; gap: 8px; }
+  .a-tablo-fkalem td[data-kart="govde"], .a-tablo-perf td[data-kart="govde"], .a-tablo-gunluk td[data-kart="govde"]:has(.a-kart-etiket) { display: flex; align-items: center; justify-content: space-between; gap: 8px; }
   .a-tablo-matris .a-kart-etiket, .a-tablo-yetkinlik .a-kart-etiket, .a-tablo-isgkayit .a-kart-etiket,
   .a-tablo-planekp .a-kart-etiket, .a-tablo-aday .a-kart-etiket, .a-tablo-kapsamozet .a-kart-etiket, .a-tablo-uyari .a-kart-etiket,
   .a-tablo-issoz .a-kart-etiket, .a-tablo-iskapsam .a-kart-etiket, .a-tablo-is .a-kart-etiket, .a-tablo-fatura .a-kart-etiket,
-  .a-tablo-isfatura .a-kart-etiket, .a-tablo-israpor .a-kart-etiket, .a-tablo-tahsilat .a-kart-etiket, .a-tablo-fkalem .a-kart-etiket { display: inline; }
+  .a-tablo-isfatura .a-kart-etiket, .a-tablo-israpor .a-kart-etiket, .a-tablo-tahsilat .a-kart-etiket, .a-tablo-fkalem .a-kart-etiket,
+  .a-tablo-perf .a-kart-etiket, .a-tablo-gunluk .a-kart-etiket { display: inline; }
   .a-tablo-isgkayit td[data-kart="govde"], .a-tablo-planekp td[data-kart="govde"], .a-tablo-aday td[data-kart="govde"],
   .a-tablo-kapsamozet td[data-kart="govde"], .a-tablo-uyari td[data-kart="govde"], .a-tablo-issoz td[data-kart="govde"]:has(.a-kart-etiket),
   .a-tablo-iskapsam td[data-kart="govde"], .a-tablo-is td[data-kart="govde"]:has(.a-kart-etiket), .a-tablo-fatura td[data-kart="govde"]:has(.a-kart-etiket),
   .a-tablo-isfatura td[data-kart="govde"], .a-tablo-israpor td[data-kart="govde"]:has(.a-kart-etiket), .a-tablo-tahsilat td[data-kart="govde"],
-  .a-tablo-fkalem td[data-kart="govde"] { text-align: right; }   /* değerin ikinci satırı (ör. "kontrol 25 Eyl") değere hizalı */
+  .a-tablo-fkalem td[data-kart="govde"], .a-tablo-perf td[data-kart="govde"], .a-tablo-gunluk td[data-kart="govde"]:has(.a-kart-etiket) { text-align: right; }   /* değerin ikinci satırı (ör. "kontrol 25 Eyl") değere hizalı */
 }
 
 /* ══ DARALTILMIŞ YAN MENÜ — yalnız geniş bant (reisim 2026-09-23: "sol taraf açılıp kapanabilir olsun kapatılınca sadece

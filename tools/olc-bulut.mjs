@@ -208,6 +208,14 @@ export const DURUMLAR = {
     { ad: "fatura kaydet penceresi · boş gönderildi", hash: "#/is/P-0926-025/fatura", adim: [["tikla", '[data-eylem="fatura-kaydet"]']] },
     { ad: "tahsilat penceresi", hash: "#/f/KMF2026000000017/tahsilat" },
   ] },
+  m15: { sayfa: "maket/performans.html", durumlar: [
+    { ad: "pano · bu ay (gün başı)", hash: "#/" },
+    { ad: "pano · geçen yıl (aylık)", hash: "#/", adim: [["tikla", '[data-donem="gecen"]']] },
+    { ad: "pano · bu yıl, elektrik", hash: "#/", adim: [["tikla", '[data-donem="yil"]'], ["tikla", '[data-brans="e"]']] },
+    { ad: "kişi · Mert Kaya, bu ay", hash: "#/p/mk" },
+    { ad: "kişi · Hakan Polat, geçen yıl", hash: "#/p/hp", adim: [["tikla", '[data-donem="gecen"]']] },
+    { ad: "kişi · bu ay raporu yok", hash: "#/p/bs" },
+  ] },
 };
 
 /* ── ETKİLEŞİM DENEMELERİ (--etkilesim): adımlar koşar, sonra `bekle` ifadesi sayfada doğru dönmeli. Gen verilmezse 1920. ── */
@@ -226,8 +234,8 @@ export const DENEMELER = {
     { ad: "reddet: gerekçesiz gönderilmez, gerekçeyle reddedilir", hash: "#/plan/3", adim: [["tikla", '#a-plan .a-adim-tuslar [data-eylem="reddet"]'], ["yaz", "#a-red-gerekce", "Aynı gün başka denetim"], ["tikla", "#a-red-onay"]], bekle: '/Reddedildi/.test(document.querySelector("#a-plan .a-nesne-baslik").textContent)' },
     { ad: "ekipman ekle: çakışan kod kaydedilmez", hash: "#/plan/1/ekle", adim: [["yaz", "#a-ekle-kod", "ht-1001"]], bekle: 'document.querySelector("#a-ekle-kod").value === "HT-1001" && document.querySelector(\'[data-eylem="yeni-kaydet"]\').disabled' },
     { ad: "ekipman ekle: yeni kod + tür → plana eklenir", hash: "#/plan/1", adim: [["tikla", '[data-eylem="ekle-ac"]'], ["yaz", "#a-ekle-kod", "ZZ-9001"], ["tikla", "#a-ekle-tur"], ["tikla", '[data-tur="FL"]'], ["tikla", '[data-eylem="yeni-kaydet"]']], bekle: '!document.querySelector("#a-ekle-pencere").open && [...document.querySelectorAll("#a-liste-e .a-kod")].some(e => e.textContent === "ZZ-9001")' },
-    /* 2026-09-24 (M14): Muhasebe maketi geldi → denemede hâlâ maketi olmayan bir modül (Performans, M15) */
-    { ad: "menüden hazır olmayan modül → bildirim", hash: "#/", adim: [["tikla", '#a-menu [data-ne="Performans"]']], bekle: '/henüz tasarlanmadı/.test(document.querySelector("#a-bildirim-metin").textContent)' },
+    /* 2026-09-24 (M15): Performans maketi geldi → denemede hâlâ maketi olmayan bir modül (Eğitimler, M16) */
+    { ad: "menüden hazır olmayan modül → bildirim", hash: "#/", adim: [["tikla", '#a-menu [data-ne="Eğitimler"]']], bekle: '/henüz tasarlanmadı/.test(document.querySelector("#a-bildirim-metin").textContent)' },
     { ad: "menüden hazır maket → bağlantı (Personel)", hash: "#/", bekle: 'document.querySelector(\'#a-menu a[href="personel.html"]\') !== null' },
   ],
   m1: [
@@ -410,6 +418,17 @@ export const DENEMELER = {
     { ad: "tahsilat kalanı kapatır → fatura ödendi, iş kapandı", hash: "#/f/KMF2026000000017/tahsilat", adim: [["tikla", '[data-eylem="tahsilat-kaydet"]']], bekle: '/Ödendi/.test(document.querySelector(".a-nesne-baslik").textContent) && /P-0226-011 kapandı/.test(document.querySelector("#a-bildirim-metin").textContent)' },
     { ad: "rapor no → Raporlar maketinde rapor", hash: "#/is/P-0926-025", adim: [["tikla", '#a-r-liste a[href^="raporlar.html"]']], bekle: '/raporlar\\.html$/.test(location.pathname) && /^#\\/r\\//.test(location.hash)' },
     { ad: "menüde Muhasebe hazır maketi açar (Planlar'dan)", sayfa: "maket/planlarim.html", hash: "#/", adim: [["tikla", '#a-menu a[href="muhasebe.html"]']], bekle: '/muhasebe\\.html$/.test(location.pathname) && document.querySelector("#a-sayac").textContent === "16 iş"' },
+  ],
+  m15: [
+    { ad: "bu ay: 28 rapor, gün başı 3 gün, kazanç en çok olan üstte", hash: "#/", bekle: '/^Rapor28/.test(document.querySelector(".a-yuz").textContent.replace(/\\s/g, "")) && document.querySelectorAll(".a-grafik")[0].querySelectorAll(".a-grafik-satir").length === 3 && document.querySelector("#a-p-liste tbody tr .a-ad-bag").textContent === "Mert Kaya"' },
+    { ad: "dönem: geçen yıl → 12 ay satırı, odak tuşta", hash: "#/", adim: [["tikla", '[data-donem="gecen"]']], bekle: 'document.querySelectorAll(".a-grafik")[0].querySelectorAll(".a-grafik-satir").length === 12 && document.activeElement.dataset.donem === "gecen" && /Aylık/.test(document.querySelector(".a-grafik-baslik").textContent)' },
+    { ad: "branş: elektrik → yalnız elektrik personeli", hash: "#/", adim: [["tikla", '[data-brans="e"]']], bekle: '[...document.querySelectorAll("#a-p-liste tbody .a-alt-satir")].every(e => /Elektrik|elektrik/.test(e.textContent)) && document.activeElement.dataset.brans === "e"' },
+    { ad: "sütun başlığı sıralar (Ad artan)", hash: "#/", adim: [["tikla", '[data-sirala="ad"]']], bekle: 'document.querySelector("#a-p-liste tbody tr .a-ad-bag").textContent === "Elif Aydın" && document.querySelector("#a-p-liste th[aria-sort]") !== null' },
+    { ad: "görünüm: rapor yazanlar (2) → bütün inspector'lar (9)", hash: "#/", adim: [["tikla", '[data-secici-ac="gorunum"]'], ["tikla", '[data-sec="gorunum"][data-deger="hepsi"]']], bekle: 'document.querySelector("#a-p-sayac").textContent === "9 kişi" && document.querySelectorAll("#a-p-liste tbody tr").length === 9' },
+    { ad: "arama süzer (1 / 9 kişi)", hash: "#/", adim: [["tikla", '[data-secici-ac="gorunum"]'], ["tikla", '[data-sec="gorunum"][data-deger="hepsi"]'], ["yaz", '[data-ara="p"]', "hakan"]], bekle: 'document.querySelector("#a-p-sayac").textContent === "1 / 9 kişi" && document.activeElement.dataset.ara === "p"' },
+    { ad: "kişiye geçiş: günlük iş, muhasebe iş bağlantısı", hash: "#/", adim: [["tikla", '#a-p-liste a[href="#/p/mk"]']], bekle: 'location.hash === "#/p/mk" && document.querySelectorAll(".a-tablo-gunluk tbody tr").length === 3 && !!document.querySelector(\'.a-tablo-gunluk a[href^="muhasebe.html#/is/"]\')' },
+    { ad: "kişide dönem korunur (panodan geçen yıl → kişi)", hash: "#/", adim: [["tikla", '[data-donem="gecen"]'], ["tikla", '#a-p-liste a[href="#/p/hp"]']], bekle: 'document.querySelector(\'[data-donem="gecen"]\').getAttribute("aria-pressed") === "true" && document.querySelectorAll(".a-tablo-gunluk tbody tr").length > 0' },
+    { ad: "menüde Performans hazır maketi açar (Muhasebe'den)", sayfa: "maket/muhasebe.html", hash: "#/", adim: [["tikla", '#a-menu a[href="performans.html"]']], bekle: '/performans\\.html$/.test(location.pathname) && !!document.querySelector(".a-grafik")' },
   ],
   m6: [
     { ad: "tesisten gelince: tarih sonraki kontrol, 6 / 6 seçili", hash: "#/?tesis=t2", bekle: 'document.querySelector("#p-tarih").value === "14.10.2026" && /^6 \\/ 6 kayıtlı seçili/.test(document.querySelector("#p-secili").textContent)' },
