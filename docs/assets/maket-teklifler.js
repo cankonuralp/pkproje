@@ -174,7 +174,11 @@
   function goster(odakla) {
     var r = rota(), t = r.no ? MV.teklif(r.no) : null;
     $("a-liste-gorunum").hidden = r.v !== "liste"; $("a-nesne").hidden = r.v !== "teklif"; $("a-form-gorunum").hidden = r.v !== "form";
-    if (r.v === "liste") { $("a-suzgec-kap").innerHTML = MK.suzgecHtml("t"); MK.suzgecKur("t"); }
+    if (r.v === "liste") {
+      /* 2026-09-24: müşteri sayfasındaki "Teklif" yüzü → o müşterinin teklifleri */
+      var mq = /[?&]musteri=(m\d+)/.exec(location.hash); if (mq && MV.musteri(mq[1])) { MK.suzgecSifirla("t"); SZ.t.sec.musteri = mq[1]; }
+      $("a-suzgec-kap").innerHTML = MK.suzgecHtml("t"); MK.suzgecKur("t");
+    }
     else if (r.v === "teklif") teklifCiz(t);
     else {
       if (t && t.durum !== "taslak") { location.replace("#/t/" + t.no); return; }   /* yalnız taslak düzenlenir */

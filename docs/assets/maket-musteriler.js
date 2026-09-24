@@ -108,6 +108,18 @@
         yuz({ ikon: "wrench", ad: "Ekipman", sayi: ekipmanSayisi(m), hedef: 7, hash: "#/?musteri=" + m.id, ne: "Ekipmanlar" }) +
         yuz({ ikon: "calendar-check", ad: "Açık plan", sayi: acikPlan, hedef: 13, hash: "", ne: "Planlar", not: "kabul bekleyen ve süren" }) +
         yuz({ ikon: "triangle-alert", ad: "Açık uygunsuzluk", sayi: MV.acikUygunsuz(m.id), hedef: "musteri", hash: "#/uygunsuz?musteri=" + m.id, ne: "Müşteri paneli", uyari: MV.acikUygunsuz(m.id) > 0, not: MV.acikUygunsuz(m.id) ? "müşteri panelinde gördüğü" : "yok" }) +
+        /* 2026-09-24 (toplu bakış öncesi): faz 2 maketleri geldi → teklif, iş sözleşmesi ve açık alacak yüzleri (M2 varsayımında "o maketler
+           gelince eklenir" diye bekliyordu) */
+        (function () {
+          var tk = MV.TEKLIFLER.filter(function (x) { return x.m === m.id; }), sz = MV.IS_SOZLESMELERI.filter(function (x) { return x.m === m.id; });
+          var fl = MV.FATURALAR.filter(function (f) { return f.m === m.id; }), kalan = fl.reduce(function (n, f) { return n + MV.faturaKalan(f); }, 0);
+          var gec = fl.filter(function (f) { return MV.faturaDurum(f) === "gecikti"; }).length, yur = sz.filter(function (x) { return MV.isDurum(x) === "yururlukte"; }).length;
+          return yuz({ ikon: "file-text", ad: "Teklif", sayi: tk.length, hedef: 11, hash: "#/?musteri=" + m.id, ne: "Teklifler", not: tk.filter(function (x) { return x.durum === "kabul"; }).length + " kabul edildi" }) +
+            yuz({ ikon: "file-signature", ad: "İş sözleşmesi", sayi: sz.length, hedef: "is-sozlesmesi", hash: "#/?musteri=" + m.id, ne: "İş sözleşmeleri",
+              not: sz.some(function (x) { return MV.isDurum(x) === "imza"; }) ? "imza bekleyen var" : yur ? yur + " yürürlükte" : "yürürlükte yok", uyari: sz.some(function (x) { return MV.isDurum(x) === "imza"; }) }) +
+            yuz({ ikon: "wallet", ad: "Açık alacak", sayi: kalan > 0 ? MV.para(kalan) : "—", hedef: fl.length ? 18 : null, hash: "#/faturalar?musteri=" + m.id, ne: "Muhasebe",
+              not: gec ? gec + " faturanın vadesi geçti" : fl.length ? fl.length + " fatura" : "fatura yok", uyari: gec > 0 });
+        })() +
       "</div>" +
       '<section class="a-bolum" aria-labelledby="a-b-bilgi"><div class="a-alt-bas"><h2 class="a-alt-baslik" id="a-b-bilgi">Müşteri bilgileri</h2></div><dl class="a-bilgi">' +
         bilgi("Ünvan", kacis(m.unvan), true) + bilgi("Kısa ad", kacis(m.kisa)) + bilgi("Vergi dairesi", kacis(m.vd)) + bilgi("Vergi no", '<span class="a-kod">' + m.vno + "</span>") +

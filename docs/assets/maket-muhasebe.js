@@ -292,6 +292,8 @@
     $("a-liste-gorunum").hidden = !liste; $("a-nesne").hidden = liste;
     if (liste) {
       var on = r.v === "liste" ? "i" : "f";
+      /* müşteri sayfasındaki "Açık alacak" yüzü → o müşterinin faturaları */
+      var mq = /[?&]musteri=(m\d+)/.exec(location.hash); if (mq && MV.musteri(mq[1])) { MK.suzgecSifirla(on); SZ[on].sec.musteri = mq[1]; }
       $("a-sekme-is").removeAttribute("aria-current"); $("a-sekme-fatura").removeAttribute("aria-current"); $(on === "i" ? "a-sekme-is" : "a-sekme-fatura").setAttribute("aria-current", "page");
       uyariCiz(); $("a-suzgec-kap").innerHTML = MK.suzgecHtml(on); MK.suzgecKur(on);
     } else if (r.v === "is") {

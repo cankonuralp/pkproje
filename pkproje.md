@@ -385,7 +385,7 @@ personel kartı: bilgi yüzleri, kimlik ve sicil, plan kabul ön koşulları, 17
 - Giriş: hangi hesabın var olduğu **söylenmez** (yanlış e-posta ve yanlış parola aynı ileti; sıfırlamada "kayıtlıysa gönderildi");
   parola en az 10 karakter, harf + rakam; 5 hatalı denemede 15 dk kilit; sıfırlama bağlantısı 30 dk — **hepsi varsayım**.
 - Telefon numarası alanı yok (KVKK: en az veri); tarih alanı metin (GG.AA.YYYY) — tarih seçici ayrı iş (kalıp 19).
-- Kişi kartındaki İSG-KATİP, zimmet, eğitim sayıları şimdilik sabit; o modüllerin maketleri gelince oradan bağlanır.
+- Kişi kartındaki İSG-KATİP, zimmet, eğitim sayıları o modüllerin kayıtlarından (M5, M4, M10/M16 gelince bağlandı; 2026-09-24).
 **Yeni desenler (kalıp 16 gereği önce soru — soru 42):** tıklanır **bilgi yüzleri** (anayasa 2.7'nin nesne sayfası kalıbı) ·
 **form sayfası** (bölüm kartları en az 440 px, telefonda alttaki tuş çubuğu yapışkan — plan içi çubuğuyla aynı karar) ·
 **seçim alanı** formda (kalıp 19: yerli açılır liste yok) · **koşul listesi** (✓ / ⚠) · **giriş ekranı** (iki pano) · sekmeler bağlantı
@@ -433,7 +433,8 @@ onay, plan) · pencereler: **müşteri ekle / düzenle · tesis ekle / düzenle 
   Başka müşterinin hiçbir kaydı görünmez (§3).
 - "En yakın kontrol" tesislerin sonraki kontrol tarihlerinin en yakını (sonradan ekipmanlardan hesaplanır, M3); 30 gün içi uyarı.
 - Açık uygunsuzluk sayısı müşteride (M9 / M11'den beslenir). Müşteri ve tesis **silme** makette yok (soru 48).
-- Faz 2 bağlantıları (teklif, sözleşme) müşteri sayfasına o maketler gelince eklenir (boş yüz gösterilmez, anayasa 2.6).
+- Faz 2 bağlantıları müşteri sayfasında (2026-09-24, M12–M14 gelince): **Teklif** · **İş sözleşmesi** · **Açık alacak** yüzleri o müşteriye
+  süzülü listeyi açar; faturası olmayan müşteride alacak yüzü tıklanmaz (boş liste gösterilmez, anayasa 2.6).
 **Sorular (M2):**
 44. Portal kullanıcısının kapsamı: **bütün tesisler** mi, **tesis başına** da kısıtlanabilsin mi (öneri: ikisi de, varsayılan bütün
     tesisler)? *(Bağımlılık: M11 Müşteri Paneli, soru 35.)*
@@ -443,7 +444,8 @@ onay, plan) · pencereler: **müşteri ekle / düzenle · tesis ekle / düzenle 
 48. Raporu olan müşteri / tesis **silinmez, pasif olur** (öneri) — uygun mu?
 49. "Kontrolü yaklaşan" eşiği **30 gün** mü (kalibrasyon uyarısıyla aynı), firma ayarı mı?
 50. İl / ilçe **seçim listesi** mi (81 il, aramalı), serbest metin mi?
-**Ölçüm (2026-09-24, bulut):** 8 durum × 1920 · 1080 · 375 × açık/koyu = **48/48 temiz**, çekmece 2/2; etkileşim **11/11**.
+**Ölçüm (2026-09-24, bulut):** 8 durum × 1920 · 1080 · 375 × açık/koyu = **48/48 temiz**, çekmece 2/2; etkileşim **11/11** (toplu bakış
+öncesi faz 2 yüzleriyle yeniden: 48/48, **14/14**).
 Ölçerken düzeltilen: 1080'de tesis bilgisindeki 26 haneli SGK no (bölünmez kimlik) 26 px taşıyordu → bilgi listesinde iki sütun
 genişlik ("cift") · boş değerli "Teklif ve sözleşme" yüzü kaldırıldı. Form alanı üreticisi ortak dosyaya alındı (Personel formu da
 ona geçti, M1 yeniden ölçüldü 108/108).
@@ -1250,6 +1252,8 @@ revizyon, alan kopyalama, hafif kusur devri, meslek eşleşme denetimi).
 - Emsal ürünler: https://opwire.app/iso-17020-periyodik-kontrol-yazilimi/ · https://17020muayene.vidco.com.tr/ · https://akuple.com/asansor-kontrol-yazilimi/ · https://ensyazilim.com/
 
 ## 11 · Değişiklik günlüğü
+- 2026-09-24 (29): toplu bakış öncesi tutarlılık — müşteri sayfasına (M2) faz 2 yüzleri: teklif, iş sözleşmesi, açık alacak (o müşteriye
+  süzülü Teklifler / İş sözleşmeleri / Muhasebe faturaları); M1 ve M2 varsayımlarındaki "maketler gelince bağlanır" notları güncellendi.
 - 2026-09-24 (28): **toplu maket M16 Eğitimler** (§3.6, faz 2): kayıtlar (tekrar durumu, belge, görünüm güncel/önceki), eğitim türleri,
   kayıt ve kayıt ekle / tekrarı kaydet pencereleri; personel kartı ve Uyarılar buraya kişiye süzülü bağlanır. Sorular 152–158.
   **M1–M16 bitti**; sırada toplu bakış sayfası.

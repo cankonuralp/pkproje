@@ -159,7 +159,11 @@
   function goster(odakla) {
     var r = rota();
     $("a-liste-gorunum").hidden = r.v !== "liste"; $("a-nesne").hidden = r.v !== "soz"; $("a-form-gorunum").hidden = r.v !== "form";
-    if (r.v === "liste") { $("a-suzgec-kap").innerHTML = MK.suzgecHtml("s"); MK.suzgecKur("s"); }
+    if (r.v === "liste") {
+      /* müşteri sayfasındaki "İş sözleşmesi" yüzü → o müşterinin sözleşmeleri */
+      var mq = /[?&]musteri=(m\d+)/.exec(location.hash); if (mq && MV.musteri(mq[1])) { MK.suzgecSifirla("s"); SZ.s.sec.musteri = mq[1]; }
+      $("a-suzgec-kap").innerHTML = MK.suzgecHtml("s"); MK.suzgecKur("s");
+    }
     else if (r.v === "soz") sozlesmeCiz(MV.isSozlesmesi(r.no));
     else { if (!F || odakla) formAc(); formCiz(); }
     document.title = (r.v === "soz" ? r.no : r.v === "form" ? "Yeni iş sözleşmesi" : "İş sözleşmeleri") + " · probata maket";

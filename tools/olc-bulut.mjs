@@ -279,6 +279,10 @@ export const DENEMELER = {
     /* 2026-09-24 (M6): plan açma maketi geldi — "henüz tasarlanmadı" denemesi yerine gerçek geçiş (tesis dolu gelir) */
     { ad: "Plan aç → plan açma maketi, tesis dolu", hash: "#/t/t6", adim: [["tikla", '#a-nesne .a-eylem-cubugu a[href^="plan-ac.html"]']], bekle: '/plan-ac\\.html$/.test(location.pathname) && !!document.querySelector("#p-tesis .a-kirp") && document.querySelector("#p-tesis .a-kirp").textContent === "Liman Deposu"' },
     { ad: "tesis sayfası: inspector personel kartına bağlanır", hash: "#/t/t7", bekle: 'document.querySelector(\'.a-tablo-isg a[href="personel.html#/p/mk"]\') !== null' },
+    /* 2026-09-24 (toplu bakış öncesi): faz 2 yüzleri — müşteri sayfasından o müşterinin teklif, sözleşme ve faturalarına */
+    { ad: "müşteri sayfası: Teklif yüzü → müşterinin teklifleri (3 / 15)", hash: "#/m/m1", adim: [["tikla", 'a.a-yuz[href^="teklifler.html"]']], bekle: '/teklifler\\.html$/.test(location.pathname) && document.querySelector("#a-sayac").textContent === "3 / 15 teklif"' },
+    { ad: "müşteri sayfası: İş sözleşmesi yüzü → 1 / 12", hash: "#/m/m1", adim: [["tikla", 'a.a-yuz[href^="is-sozlesmeleri.html"]']], bekle: '/is-sozlesmeleri\\.html$/.test(location.pathname) && document.querySelector("#a-sayac").textContent === "1 / 12 sözleşme"' },
+    { ad: "müşteri sayfası: Açık alacak yüzü → müşterinin faturaları (3 / 13)", hash: "#/m/m1", adim: [["tikla", 'a.a-yuz[href^="muhasebe.html"]']], bekle: '/muhasebe\\.html$/.test(location.pathname) && document.querySelector("#a-sayac").textContent === "3 / 13 fatura" && /3.600,00 TL/.test(document.querySelector("#a-liste").textContent)' },
   ],
   m3: [
     { ad: "türler: Rapor şablonu yok çipi", sayfa: "maket/ekipman-turleri.html", hash: "#/", adim: [["tikla", '[data-cip="sablonsuz"]']], bekle: 'document.querySelector("#a-sayac").textContent === MV.KATALOG.filter(t => !t.sablon).length + " / " + MV.KATALOG.length + " tür"' },
