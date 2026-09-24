@@ -78,7 +78,7 @@ test("ikon: dosyada olmayan ikon kullanılınca yakalanır", () => {
 });
 
 test("menü: 'Planlar' kişiye bağlı ada ('Planlarım') dönünce maketle ayrışır", () => {
-  const maket = maketMenusu(oku("docs/assets/maket.js"));
+  const maket = maketMenusu(oku("docs/assets/maket-ortak.js"));   /* 2026-09-24: menü ortak üreticiye taşındı */
   const uygulama = MODUL_GRUPLARI.map((g) => ({ grup: g.grup, ogeler: g.moduller.map((m) => [m.ad, m.ikon, m.no]) }));
   assert.deepEqual(uygulama, maket);
   const bozuk = structuredClone(uygulama);

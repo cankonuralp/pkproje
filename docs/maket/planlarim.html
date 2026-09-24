@@ -6,77 +6,31 @@
 <title>Planlar · probata maket</title>
 <meta name="robots" content="noindex">
 <link rel="icon" href="../marka/favicon.svg" type="image/svg+xml">
-<script>
-  /* Tema çizimden ÖNCE uygulanır (yanıp sönme olmasın).
-     Öncelik: adres (?tema=) → bu tarayıcıda seçilen → sistem tercihi. Birincil tuş rengi kararlı (A), seçenek yok. */
-  (function () {
-    var q = new URLSearchParams(location.search), d = document.documentElement, t = q.get("tema");
-    try { if (!t) t = localStorage.getItem("probata-tema"); } catch (e) {}
-    if (t === "acik" || t === "koyu") d.setAttribute("data-tema", t);
-    else d.setAttribute("data-tema", matchMedia("(prefers-color-scheme: dark)").matches ? "koyu" : "acik");
-  })();
-</script>
+<!-- tema çizimden ÖNCE (tek kaynak: bütün maketler) -->
+<script src="../assets/maket-tema.js"></script>
 <link rel="stylesheet" href="../assets/tokens.css">
 <link rel="stylesheet" href="../assets/maket.css">
 </head>
 <body>
-<div class="a-kabuk" id="a-kabuk">
-  <aside class="a-cubuk" id="a-cubuk" aria-label="Ana menü">
-    <div class="a-cubuk-bas">
-      <img class="a-cubuk-logo" src="../marka/probata-yatay-koyu-zemin.svg" alt="probata" width="148" height="37">
-      <img class="a-cubuk-isaret" src="../marka/probata-isaret-koyu-zemin.svg" alt="probata" width="25" height="32">
-      <button class="a-ikon-tus a-cubuk-kapat" type="button" data-eylem="cekmece-kapat" aria-label="Menüyü kapat">
-        <svg class="a-ikon" aria-hidden="true"><use href="../vendor/lucide-1.47.0/ikonlar.svg#i-x"/></svg>
-      </button>
-    </div>
-    <!-- YAN MENÜ (5. tur): firma panelindeki bütün modüller, genel adlarla; maket.js menuHtml() MENU'den doldurur -->
-    <nav class="a-menu" id="a-menu" aria-label="Modüller"></nav>
-    <div class="a-cubuk-alt">Maket · uydurma veri</div>
-  </aside>
-  <div class="a-perde" data-eylem="cekmece-kapat"></div>
-
-  <div class="a-govde">
-    <header class="a-ust">
-      <button class="a-menu-tus" type="button" data-eylem="cekmece-ac" aria-label="Menüyü aç" aria-controls="a-cubuk" aria-expanded="false">
-        <svg class="a-ikon" aria-hidden="true"><use href="../vendor/lucide-1.47.0/ikonlar.svg#i-menu"/></svg>
-      </button>
-      <!-- masaüstünde (≥ 1280) yan menüyü daraltır/genişletir; tablet/telefondaki ☰ ile aynı yer, aynı simge
-           (reisim 2026-09-24: "standart üç alt alta çizgi görünümü olsun" → panel simgesi kalktı) -->
-      <button class="a-ikon-tus a-daralt-tus" type="button" data-eylem="menu-daralt" aria-label="Menüyü daralt" aria-controls="a-cubuk" aria-expanded="true">
-        <svg class="a-ikon" aria-hidden="true"><use href="../vendor/lucide-1.47.0/ikonlar.svg#i-menu"/></svg>
-      </button>
-      <img class="a-ust-isaret a-isaret-acik" src="../marka/probata-isaret-renkli.svg" alt="probata" width="25" height="32">
-      <img class="a-ust-isaret a-isaret-koyu" src="../marka/probata-isaret-koyu-zemin.svg" alt="probata" width="25" height="32">
-      <div class="a-ust-bosluk"></div>
-      <button class="a-ikon-tus" type="button" data-eylem="tema" id="a-tema-tus" aria-label="Temayı değiştir">
-        <svg class="a-ikon a-tema-ay" aria-hidden="true"><use href="../vendor/lucide-1.47.0/ikonlar.svg#i-moon"/></svg>
-        <svg class="a-ikon a-tema-gunes" aria-hidden="true"><use href="../vendor/lucide-1.47.0/ikonlar.svg#i-sun"/></svg>
-      </button>
-      <div class="a-kullanici">
-        <span class="a-avatar" aria-hidden="true">MK</span>
-        <span class="a-kullanici-yazi"><span class="a-kullanici-ad">Mert Kaya</span><span class="a-kullanici-rol">Inspector · Makine Mühendisi</span></span>
-      </div>
-    </header>
-
-    <main class="a-icerik" id="a-icerik">
-      <!-- GÖRÜNÜM 1 · liste (adres #/ ya da boş). GÖRÜNÜM 2 · plan içi (#/plan/<id>), maket.js planCiz() doldurur. -->
-      <div id="a-liste-gorunum">
-      <div class="a-sayfa-bas">
-        <h1 tabindex="-1">Planlar</h1>
-        <span class="a-sayac" id="a-sayac" aria-live="polite"></span>
-      </div>
-
-      <!-- SÜZGEÇ (kalıp 15): TEK ÜRETİCİ — maket.js suzgecHtml("l") doldurur; plan içindeki ekipman ve rapor süzgeçleri de
-           aynı üreticiden. Sıra: arama → çipler → ve/veya → seçiciler + Temizle sağda; telefonda seçiciler levhada. -->
-      <div id="a-suzgec-kap"></div>
-
-      <div class="a-liste-kap" id="a-liste"></div>
-      </div>
-
-      <section class="a-plan" id="a-plan" aria-label="Plan" hidden></section>
-    </main>
+<!-- Kabuk (yan menü, üst çubuk, çekmece, süzgeç levhası, bildirim) maket-ortak.js MK.kabuk() ile bu <main>'in etrafına kurulur
+     (2026-09-24: bütün maketler aynı üreticiden, MAKET-PLANI §3.2). -->
+<main class="a-icerik" id="a-icerik">
+  <!-- GÖRÜNÜM 1 · liste (adres #/ ya da boş). GÖRÜNÜM 2 · plan içi (#/plan/<id>), maket.js planCiz() doldurur. -->
+  <div id="a-liste-gorunum">
+  <div class="a-sayfa-bas">
+    <h1 tabindex="-1">Planlar</h1>
+    <span class="a-sayac" id="a-sayac" aria-live="polite"></span>
   </div>
-</div>
+
+  <!-- SÜZGEÇ (kalıp 15): TEK ÜRETİCİ — MK.suzgecHtml("l") doldurur; plan içindeki ekipman ve rapor süzgeçleri de
+       aynı üreticiden. Sıra: arama → çipler → ve/veya → seçiciler + Temizle sağda; telefonda seçiciler levhada. -->
+  <div id="a-suzgec-kap"></div>
+
+  <div class="a-liste-kap" id="a-liste"></div>
+  </div>
+
+  <section class="a-plan" id="a-plan" aria-label="Plan" hidden></section>
+</main>
 
 <dialog class="a-pencere" id="a-red-pencere" aria-labelledby="a-red-baslik">
   <form method="dialog" id="a-red-form">
@@ -99,20 +53,6 @@
   </form>
 </dialog>
 
-<dialog class="a-pencere" id="a-levha" aria-labelledby="a-levha-baslik">
-  <div class="a-pencere-bas">
-    <h2 id="a-levha-baslik">Süzgeç</h2>
-    <button class="a-ikon-tus" type="button" data-eylem="levha-kapat" aria-label="Kapat">
-      <svg class="a-ikon" aria-hidden="true"><use href="../vendor/lucide-1.47.0/ikonlar.svg#i-x"/></svg>
-    </button>
-  </div>
-  <div class="a-pencere-govde" id="a-levha-govde"></div>
-  <div class="a-pencere-alt">
-    <button class="a-tus a-tus-ikincil" type="button" data-eylem="temizle">Temizle</button>
-    <button class="a-tus a-tus-birincil" type="button" data-eylem="levha-kapat" id="a-levha-uygula">Sonuçları göster</button>
-  </div>
-</dialog>
-
 <!-- EKİPMAN EKLE (3. tur): iki yol — yeni ekipman (kod elle, firmada eşsiz) · tesiste kayıtlı ekipmanı plana al.
      Form penceresi iki sütunlu; içindeki her kutu pencereyi doldurur, alanlar veri tipine göre (kalıp 3, 10). -->
 <dialog class="a-pencere a-pencere-form" id="a-ekle-pencere" aria-labelledby="a-ekle-baslik">
@@ -130,11 +70,7 @@
   <div class="a-pencere-alt" id="a-ekle-alt"></div>
 </dialog>
 
-<div class="a-bildirim" id="a-bildirim" role="status" aria-live="polite">
-  <svg class="a-ikon" aria-hidden="true"><use href="../vendor/lucide-1.47.0/ikonlar.svg#i-circle-check"/></svg>
-  <span id="a-bildirim-metin"></span>
-</div>
-
+<script src="../assets/maket-ortak.js"></script>
 <script src="../assets/maket.js"></script>
 </body>
 </html>

@@ -1,19 +1,28 @@
 /* NEREDEN GELDİ: reisim 2026-09-23 "diğer modüller nerde onlarda gözüksün" + "sekmelerin adı da öznellik içermesin
    planlar raporlar zimmetler gibi genel isimler olsun" — onaylı maketin (5. tur) menüsü. Uygulamanın menüsü (MODÜL
    KAYDI) makettekiyle birebir: grup, sıra, ad, ikon, §3.1 numarası. Her modülün kendi rota klasörü var, fazlası yok.
-   Olumsuz kanıt: tests/bozan/kilitler.bozan.ts ("Planlar" → "Planlarım" yakalanır). */
+   Olumsuz kanıt: tests/bozan/kilitler.bozan.ts ("Planlar" → "Planlarım" yakalanır).
+   2026-09-24 (toplu maket, MAKET-PLANI §3.2): maketin menüsü bütün maket sayfalarında tek üreticiden gelsin diye
+   docs/assets/maket.js'ten docs/assets/maket-ortak.js'e taşındı → okunan dosya değişti, denetim aynı; ayrıca menü sabiti
+   maket betiklerinde TEK yerde (ikinci kopya sessizce ayrışırdı). */
 import assert from "node:assert/strict";
-import { existsSync, readdirSync, statSync } from "node:fs";
+import { existsSync, readdirSync, readFileSync, statSync } from "node:fs";
 import { join } from "node:path";
 import { test } from "node:test";
 import { MODULLER, MODUL_GRUPLARI } from "../src/modules/moduller.ts";
 import { KOK, maketMenusu, oku } from "./yardimci/denetimler.ts";
 
 test("menü onaylı maketle birebir (grup · sıra · ad · ikon · §3.1 no)", () => {
-  const maket = maketMenusu(oku("docs/assets/maket.js"));
+  const maket = maketMenusu(oku("docs/assets/maket-ortak.js"));
   const uygulama = MODUL_GRUPLARI.map((g) => ({ grup: g.grup, ogeler: g.moduller.map((m) => [m.ad, m.ikon, m.no]) }));
   assert.equal(maket.length, 6);
   assert.deepEqual(uygulama, maket);
+});
+
+test("maket menüsü tek kaynakta: menü sabiti yalnız maket-ortak.js'te", () => {
+  const assets = join(KOK, "docs", "assets");
+  const tasiyan = readdirSync(assets).filter((ad) => ad.endsWith(".js") && readFileSync(join(assets, ad), "utf8").includes("var MENU = ["));
+  assert.deepEqual(tasiyan, ["maket-ortak.js"]);
 });
 
 test("17 modül, numaralar tekil; menüde olmayanlar 6, 16, 17", () => {

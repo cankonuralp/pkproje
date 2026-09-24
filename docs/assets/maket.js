@@ -1,4 +1,4 @@
-/* ══ probata MAKET — Planlar + plan içi (2026-09-23 · 5. tur) ════════════════════════════════════════════
+/* ══ probata MAKET — Planlar + plan içi (2026-09-23 · 5. tur; 2026-09-24 ortak üreticilere bağlandı) ════════════
    ⛔ Tüm veri UYDURMADIR (anayasa 10.3); gerçek firma, kişi, tesis, adres, sözleşme ve ekipman kodu yok.
    ⛔ "Bugün" sabit: 2026-09-23, saat 16:40 — ölçüm her açılışta aynı sonucu versin.
    Adres: ?veri=dolu|bos|hata · ?tema=acik|koyu · #/plan/<id> = plan içi ·
@@ -11,11 +11,12 @@
    Ekipman ve rapor listeleri SÜZGEÇLİ ve 10'ar kayıtla SAYFALI. Süzgeç satırları tek üreticiden (kalıp 15).
    5. tur (reisim 2026-09-23): hareket listesi plan içinden kalktı (kayıt tutulur, gösterilmez), yerinde yalnız proje
    notları · raporlar 20'şer · yan menüde firma panelindeki BÜTÜN modüller, genel adlarla (Planlar, Raporlar, Zimmetler…);
-   kimin hangi modülü göreceği sonra belirlenecek. */
+   kimin hangi modülü göreceği sonra belirlenecek.
+   2026-09-24 (toplu maket): kabuk, yan menü (MENU), süzgeç satırı, liste, sayfalayıcı, boş durum, bildirim ve olay dağıtıcısı
+   docs/assets/maket-ortak.js'e taşındı (tek üretici, MAKET-PLANI §3.2); burada yalnız Planlar'a özgü veri ve ekranlar. */
 (function () {
   "use strict";
-  var IKON = "../vendor/lucide-1.47.0/ikonlar.svg#i-";
-  var BUGUN = "2026-09-23", SAAT = "16:40";
+  var BUGUN = MK.BUGUN;   /* 2026-09-23; saat MK.SAAT (ortak) */
   var HAFTA = ["2026-09-21", "2026-09-27"];
   var YEDI = ["2026-09-23", "2026-09-29"];
   var FIRMA_KOD = "KM";   /* rapor numarasının başındaki firma kısa kodu (firma ayarı) */
@@ -30,17 +31,6 @@
     za: { ad: "Zeynep Arslan", brans: "", rol: "Planlama" }
   };
   var BEN = "mk";
-  /* Yan menü (reisim 2026-09-23: "diğer modüller nerde onlarda gözüksün"; ad: "planlar raporlar zimmetler gibi genel isimler").
-     pkproje.md §3.1'in firma panelinde ekranı olan 17 modülü; ekranı olmayanlar yok: 6 Rapor Şablonları (kodda), 16 PDF
-     Üretimi (sunucu işi), 17 Müşteri Paneli (müşterinin kendi girişi). Rol × modül görünürlüğü sonra belirlenecek. */
-  var MENU = [
-    { grup: "İş takibi", ogeler: [["Planlar", "calendar-check", 13], ["Raporlar", "file-text", 14], ["Onaylar", "badge-check", 15], ["Uyarılar", "alarm-clock", 20]] },
-    { grup: "Müşteri", ogeler: [["Müşteriler", "building-2", 3], ["Teklifler", "file-pen-line", 11], ["Sözleşmeler", "scroll-text", 12]] },
-    { grup: "Varlık", ogeler: [["Ekipmanlar", "wrench", 7], ["Ölçüm cihazları", "gauge", 8], ["Zimmetler", "package", 9]] },
-    { grup: "Personel", ogeler: [["Personel", "users", 2], ["Eğitimler", "graduation-cap", 10]] },
-    { grup: "Finans", ogeler: [["Muhasebe", "wallet", 18], ["Performans", "chart-column", 19]] },
-    { grup: "Tanımlar", ogeler: [["Ekipman türleri", "layers", 5], ["Standartlar", "book-open", 4], ["Kullanıcılar", "user-cog", 1]] }
-  ];
   /* Ekipman türü kataloğu (modül 5'in maketteki karşılığı). 14 tür > 8 → seçim alanında arama (kalıp 19). */
   var KATALOG = [
     { k: "HT", ad: "Hava tankı", b: "m" }, { k: "FL", ad: "Forklift", b: "m" }, { k: "KK", ad: "Köprülü kren", b: "m" },
@@ -128,21 +118,9 @@
     yok: { ad: "Rapor yok", rozet: "a-rozet-notr" }
   };
 
-  var $ = function (id) { return document.getElementById(id); };
-  var kacis = function (s) { return String(s).replace(/[&<>"']/g, function (c) { return { "&": "&amp;", "<": "&lt;", ">": "&gt;", '"': "&quot;", "'": "&#39;" }[c]; }); };
-  var ikon = function (ad, sinif) { return '<svg class="a-ikon' + (sinif ? " " + sinif : "") + '" aria-hidden="true"><use href="' + IKON + ad + '"/></svg>'; };
-  var GUN = ["Paz", "Pzt", "Sal", "Çar", "Per", "Cum", "Cmt"];
-  var AY = ["Oca", "Şub", "Mar", "Nis", "May", "Haz", "Tem", "Ağu", "Eyl", "Eki", "Kas", "Ara"];
-  /* tarih bölünmez (gün adı · gün · ay birlikte kalır); "Bugün" dar sütunda alt satıra geçebilir */
-  var gunYaz = function (iso) { var d = new Date(iso.slice(0, 10) + "T12:00:00"); return GUN[d.getDay()] + " " + d.getDate() + " " + AY[d.getMonth()]; };
-  var gunKisa = function (iso) { var d = new Date(iso.slice(0, 10) + "T12:00:00"); return d.getDate() + " " + AY[d.getMonth()]; };
-  var ayYil = function (iso) { var d = new Date(iso.slice(0, 10) + "T12:00:00"); return AY[d.getMonth()] + " " + d.getFullYear(); };
-  var zamanYaz = function (z) { return gunKisa(z) + " " + z.slice(11, 16); };
-  var simdi = function () { return BUGUN + "T" + SAAT; };
-  var tr = function (s) { return String(s).toLocaleLowerCase("tr"); };
-  /* kırpma zinciri (kalıp 4): yaprak blok + üç nokta + tam metin title'da */
-  var kirp = function (metin, sinif, baslik) { return '<span class="a-kirp' + (sinif ? " " + sinif : "") + '" title="' + kacis(baslik || metin) + '">' + kacis(metin) + "</span>"; };
-  var rozet = function (d) { return '<span class="a-rozet ' + d.rozet + '">' + d.ad + "</span>"; };
+  /* ortak üreticiler (docs/assets/maket-ortak.js) — yerel adlar aynı kalsın diye */
+  var $ = MK.$, kacis = MK.kacis, ikon = MK.ikon, gunYaz = MK.gunYaz, gunKisa = MK.gunKisa, ayYil = MK.ayYil, zamanYaz = MK.zamanYaz;
+  var simdi = MK.simdi, tr = MK.tr, kirp = MK.kirp, rozet = MK.rozet, bilgi = MK.bilgi, serit = MK.serit, SZ = MK.SZ;
   var bul = function (id) { return PLANLAR.filter(function (x) { return x.id === id; })[0]; };
   var bransAd = function (b) { return b === "m" ? "Mekanik" : "Elektrik"; };
   var raporuVar = function (p, kod) { return p.rapor.filter(function (r) { return r.kod === kod; })[0]; };
@@ -153,10 +131,8 @@
   var AKTIF = null;   /* açık plan (plan içi süzgeçleri bu plana bakar) */
   var NOTLAR_ACIK = false;
 
-  /* ══ SÜZGEÇ — TEK ÜRETİCİ (kalıp 15) ════════════════════════════════════════════════════════════════
-     Üç süzgeç aynı üreticiden: l = Planlar listesi · e = plan içi ekipmanlar · r = plan içi raporlar.
-     Satır: arama → yüklem çipleri + ve/veya (kalıp 8) → seçiciler + Temizle sağda. Telefonda seçiciler levhada.
-     Çiplerin `grup`u aynıysa birbirini dışlar: "ve" ile ikisi seçilince sonuç imkânsızdır, sebebi söylenir. */
+  /* ══ SÜZGEÇ TANIMLARI (üretici ortak: kalıp 15) ═══════════════════════════════════════════════════════════
+     Üç süzgeç: l = Planlar listesi · e = plan içi ekipmanlar · r = plan içi raporlar. */
   var CIP_L = [
     { k: "bekliyor", ad: "Kabul bekliyor", grup: "durum", test: function (p) { return p.durum === "bekliyor"; } },
     { k: "kabul", ad: "Kabul edildi", grup: "durum", test: function (p) { return p.durum === "kabul"; } },
@@ -212,151 +188,32 @@
         .sort(function (a, b) { return a.localeCompare(b, "tr"); }).map(function (x) { return [x, x]; }));
     }, gecer: function (e, v) { return v === "tumu" || e.tur.ad === v; } }
   ];
-  var SZ_TANIM = {
-    l: { ad: "Planlarda ara", ipucu: "Proje, müşteri, il", birim: "plan", cipler: CIP_L, seciciler: SEC_L,
-      metin: function (p) { return [p.no, p.ad, p.musteri, p.adres, p.ilce, p.il].join(" "); },
-      imkansiz: "Bir plan aynı anda iki durumda olamaz" },
-    e: { ad: "Ekipmanlarda ara", ipucu: "Kod, tür, konum", birim: "ekipman", cipler: CIP_E, seciciler: SEC_E,
-      metin: function (e) { return [e.kod, e.tur.ad, e.konum].join(" "); },
-      imkansiz: "Bir ekipmanın raporu hem var hem yok olamaz" },
-    r: { ad: "Raporlarda ara", ipucu: "Rapor no, ekipman kodu", birim: "rapor", cipler: CIP_R, seciciler: [],
-      metin: function (r) { return [r.no, r.kod, SICIL[r.kod].tur.ad].join(" "); },
-      imkansiz: "Bir rapor aynı anda iki durumda olamaz" }
-  };
-  function yeniSz(on) {
-    var s = { ara: "", secili: [], kip: "veya", sec: {}, sayfa: 1 };
-    SZ_TANIM[on].seciciler.forEach(function (x) { s.sec[x.k] = x.siralama ? "varsayilan" : "tumu"; });
-    return s;
-  }
-  var SZ = { l: yeniSz("l"), e: yeniSz("e"), r: yeniSz("r") };
-  var kap = function (on) { return document.querySelector('.a-suzgec[data-sz="' + on + '"]'); };
-  function suzgecHtml(on) {
-    var t = SZ_TANIM[on], secicili = t.seciciler.length > 0;
-    return '<div class="a-suzgec" data-sz="' + on + '"' + (secicili ? "" : " data-secicisiz") + ">" +
-      '<label class="a-ara"><span class="a-gizli">' + t.ad + "</span>" + ikon("search") +
-        '<input type="search" data-ara="' + on + '" placeholder="' + t.ipucu + '" autocomplete="off">' +
-        '<button class="a-ara-sil" type="button" data-eylem="ara-sil" aria-label="Aramayı temizle">' + ikon("x", "a-ikon-kucuk") + "</button></label>" +
-      (secicili ? '<button class="a-suzgec-tus" type="button" data-eylem="levha-ac" aria-haspopup="dialog">' + ikon("sliders-horizontal") +
-        'Süzgeç <span class="a-suzgec-rozet" hidden></span></button>' : "") +
-      '<div class="a-cipler" role="group" aria-label="' + t.birim + ' durumu süzgeci"></div>' +
-      '<div class="a-suzgec-sag"><div class="a-seciciler"></div>' +
-        '<button class="a-temizle" type="button" data-eylem="temizle">' + ikon("filter-x", "a-ikon-kucuk") + "Temizle</button></div></div>";
-  }
-  var aktifSecici = function (on) { return SZ_TANIM[on].seciciler.filter(function (x) { return !x.siralama && SZ[on].sec[x.k] !== "tumu"; }).length; };
-  var suzgecVar = function (on) { var s = SZ[on]; return !!s.ara.trim() || s.secili.length > 0 || aktifSecici(on) > 0; };
-  function taban(on, kayitlar) {   /* çipler HARİÇ her şey; çip sayıları buradan (dürüst sayaç, anayasa 2.8) */
-    var t = SZ_TANIM[on], s = SZ[on], a = tr(s.ara.trim());
-    return kayitlar.filter(function (k) {
-      if (a && tr(t.metin(k)).indexOf(a) < 0) return false;
-      return t.seciciler.every(function (x) { return x.gecer(k, s.sec[x.k]); });
-    });
-  }
-  function cipGecer(on, k) {
-    var s = SZ[on]; if (!s.secili.length) return true;
-    var sonuc = s.secili.map(function (c) { return SZ_TANIM[on].cipler.filter(function (x) { return x.k === c; })[0].test(k); });
-    return s.kip === "ve" ? sonuc.every(Boolean) : sonuc.some(Boolean);
-  }
-  function imkansiz(on) {
-    if (SZ[on].kip !== "ve") return false;
-    var gruplar = {};
-    SZ[on].secili.forEach(function (c) { var g = SZ_TANIM[on].cipler.filter(function (x) { return x.k === c; })[0].grup; if (g) gruplar[g] = (gruplar[g] || 0) + 1; });
-    return Object.keys(gruplar).some(function (g) { return gruplar[g] >= 2; });
-  }
-  function cipCiz(on, tb) {
-    var s = SZ[on], k = kap(on); if (!k) return;
-    var az = s.secili.length < 2;
-    k.querySelector(".a-cipler").innerHTML = SZ_TANIM[on].cipler.map(function (c) {
-      return '<button class="a-cip" type="button" data-cip="' + c.k + '" aria-pressed="' + (s.secili.indexOf(c.k) >= 0) + '">' + kacis(c.ad) +
-        ' <span class="a-cip-sayi">' + tb.filter(c.test).length + "</span></button>";
-    }).join("") + '<div class="a-kip" role="group" aria-label="Seçili çipleri birleştirme" aria-disabled="' + az + '"' +
-      ' title="veya: seçili çiplerden herhangi birine uyanlar · ve: hepsine uyanlar">' +
-      '<button type="button" data-kip="veya" aria-pressed="' + (s.kip === "veya") + '"' + (az ? " disabled" : "") + ">veya</button>" +
-      '<button type="button" data-kip="ve" aria-pressed="' + (s.kip === "ve") + '"' + (az ? " disabled" : "") + ">ve</button></div>";
-    k.querySelector(".a-temizle").disabled = !suzgecVar(on);
-  }
-  function seciciCiz(on) {
-    var k = kap(on); if (!k) return;
-    k.querySelector(".a-seciciler").innerHTML = SZ_TANIM[on].seciciler.map(function (x) {
-      var sec = x.secenek(), gor = sec.filter(function (o) { return o[0] === SZ[on].sec[x.k]; })[0] || sec[0];
-      return '<div class="a-secici' + (x.siralama ? " a-secici-sira" : "") + '" data-secici="' + x.k + '">' +
-        '<button class="a-secici-tus" type="button" aria-haspopup="listbox" aria-expanded="false" data-secici-ac="' + x.k + '">' +
-        '<span class="a-secici-etiket">' + x.ad + '</span><span class="a-secici-deger">' + kacis(gor[1]) + "</span>" + ikon("chevron-down", "a-ikon-kucuk") + "</button>" +
-        '<div class="a-secici-liste" role="listbox" aria-label="' + x.ad + '" hidden>' +
-        sec.map(function (o) {
-          return '<button class="a-secenek" type="button" role="option" aria-selected="' + (o[0] === SZ[on].sec[x.k]) + '" data-sec="' + x.k + '" data-deger="' + kacis(o[0]) + '">' +
-            ikon("check", "a-ikon-kucuk") + '<span class="a-kirp">' + kacis(o[1]) + "</span></button>";
-        }).join("") + "</div></div>";
-    }).join("");
-    var r = k.querySelector(".a-suzgec-rozet"), n = aktifSecici(on);
-    if (r) { r.hidden = !n; r.textContent = n || ""; }
-    if ($("a-levha").open && $("a-levha").dataset.sz === on) levhaCiz(on);
-  }
-  function levhaCiz(on) {
-    $("a-levha").dataset.sz = on;
-    $("a-levha-govde").innerHTML = SZ_TANIM[on].seciciler.map(function (x) {
-      return '<div class="a-levha-grup"><p class="a-levha-grup-ad">' + x.ad + '</p><div class="a-levha-secenekler">' +
-        x.secenek().map(function (o) {
-          return '<button class="a-cip" type="button" aria-pressed="' + (o[0] === SZ[on].sec[x.k]) + '" data-sec="' + x.k + '" data-deger="' + kacis(o[0]) + '">' + kacis(o[1]) + "</button>";
-        }).join("") + "</div></div>";
-    }).join("");
-  }
-  function temizle(on) {
-    var eski = SZ[on].sec.sira; SZ[on] = yeniSz(on); if (eski) SZ[on].sec.sira = eski;   /* sıralama süzgeç değildir, kalır */
-    var k = kap(on); if (k) { k.querySelector("[data-ara]").value = ""; k.querySelector(".a-ara").classList.remove("a-dolu"); }
-  }
-  function yenile(on) { if (on === "l") ciz(); else listeCiz(on); }
+  MK.suzgecTanimla("l", { ad: "Planlarda ara", ipucu: "Proje, müşteri, il", birim: "plan", cipler: CIP_L, seciciler: SEC_L,
+    metin: function (p) { return [p.no, p.ad, p.musteri, p.adres, p.ilce, p.il].join(" "); },
+    imkansiz: "Bir plan aynı anda iki durumda olamaz" }, function () { ciz(); });
+  MK.suzgecTanimla("e", { ad: "Ekipmanlarda ara", ipucu: "Kod, tür, konum", birim: "ekipman", cipler: CIP_E, seciciler: SEC_E, sayfa: SAYFA.e,
+    metin: function (e) { return [e.kod, e.tur.ad, e.konum].join(" "); },
+    imkansiz: "Bir ekipmanın raporu hem var hem yok olamaz" }, function () { listeCiz("e"); });
+  MK.suzgecTanimla("r", { ad: "Raporlarda ara", ipucu: "Rapor no, ekipman kodu", birim: "rapor", cipler: CIP_R, seciciler: [], sayfa: SAYFA.r,
+    metin: function (r) { return [r.no, r.kod, SICIL[r.kod].tur.ad].join(" "); },
+    imkansiz: "Bir rapor aynı anda iki durumda olamaz" }, function () { listeCiz("r"); });
 
-  /* ── TEK LİSTE ÜRETİCİSİ + SAYFALAYICI ───────────────────────────────────────────────────────────────
-     Liste kabı eşiğin üstünde tablo, altında kart (maket.css @container liste). Sütun: k · baslik · kart (ust | rozet |
-     govde | eylem) · sira (kartta diziliş) · hucre(kayıt). Sayfalama yalnız istenen yerde: ekipmanlar ve raporlar (10). */
-  function tabloHtml(o) {
-    var bas = o.sutunlar.map(function (s) {
-      if (s.gizliBaslik) return '<th scope="col"><span class="a-gizli">' + s.baslik + "</span></th>";
-      if (!o.siralanir) return '<th scope="col">' + s.baslik + "</th>";
-      var v = SZ.l.sec.sira, yon = v === s.k + "-artan" ? "ascending" : v === s.k + "-azalan" ? "descending" : "";
-      return '<th scope="col"' + (yon ? ' aria-sort="' + yon + '"' : "") + '><button class="a-sirala" type="button" data-sirala="' + s.k + '">' +
-        s.baslik + ikon(yon === "ascending" ? "arrow-up" : yon === "descending" ? "arrow-down" : "arrow-up-down", "a-ikon-kucuk") + "</button></th>";
-    }).join("");
-    var govde = o.kayitlar.map(function (r) {
-      var href = o.href ? o.href(r) : "";
-      return "<tr" + (href ? ' data-href="' + href + '"' : "") + ">" + o.sutunlar.map(function (s) {
-        return '<td data-alan="' + s.k + '" data-kart="' + s.kart + '" style="--sira:' + s.sira + '">' + s.hucre(r) + "</td>";
-      }).join("") + "</tr>";
-    }).join("");
-    return '<table class="a-tablo ' + o.sinif + '"><caption class="a-gizli">' + o.baslik + "</caption><colgroup>" +
-      o.sutunlar.map(function (s) { return '<col class="a-k-' + s.k + '">'; }).join("") + "</colgroup>" +
-      "<thead><tr>" + bas + "</tr></thead><tbody>" + govde + "</tbody></table>";
-  }
-  function sayfalayici(on, toplam, sayfa) {
-    if (!toplam) return "";
-    var boy = SAYFA[on], n = Math.ceil(toplam / boy), bas = (sayfa - 1) * boy + 1, son = Math.min(toplam, sayfa * boy);
-    var h = '<nav class="a-sayfalar" aria-label="' + SZ_TANIM[on].birim + ' sayfaları"><span class="a-sayfa-bilgi">' + bas + "–" + son + " / " + toplam + "</span>";
-    if (n > 1) {
-      h += '<div class="a-sayfa-tuslar"><button class="a-sayfa" type="button" data-sayfa="' + (sayfa - 1) + '" aria-label="Önceki sayfa"' + (sayfa === 1 ? " disabled" : "") + ">" + ikon("chevron-left", "a-ikon-kucuk") + "</button>";
-      for (var i = 1; i <= n; i++) h += '<button class="a-sayfa" type="button" data-sayfa="' + i + '"' + (i === sayfa ? ' aria-current="page"' : "") + ' aria-label="Sayfa ' + i + '">' + i + "</button>";
-      h += '<button class="a-sayfa" type="button" data-sayfa="' + (sayfa + 1) + '" aria-label="Sonraki sayfa"' + (sayfa === n ? " disabled" : "") + ">" + ikon("chevron-right", "a-ikon-kucuk") + "</button></div>";
-    }
-    return h + "</nav>";
-  }
   function tus(eylem, p, ad, ik, kapali, sinif, sebepId) {
-    return '<button class="a-tus ' + (sinif || "a-tus-birincil") + '" type="button" data-eylem="' + eylem + '" data-id="' + p.id + '"' +
-      (kapali ? " disabled" + (sebepId ? ' aria-describedby="' + sebepId + '"' : "") : "") + ">" + (ik ? ikon(ik, "a-ikon-kucuk") : "") + ad + "</button>";
+    return MK.tus({ eylem: eylem, ad: ad, ikon: ik, kapali: kapali, sinif: sinif, sebepId: sebepId, veri: { id: p.id } });
   }
-  function bos(tur, on) {
+  /* Planlar'a özgü boş durumlar; süzgeç boş / imkânsız ortak üreticiden (MK.bosSuzgec) */
+  function bos(tur) {
     var d = {
-      yok: ["inbox", "Atanmış plan yok", "Planlama ekibi plan açınca burada görünür.", ""],
-      suzgec: ["search", "Süzgece uyan " + (on ? SZ_TANIM[on].birim : "plan") + " yok", "Arama ya da süzgeç değiştirilince liste yeniden dolar.", '<button class="a-tus a-tus-ikincil" type="button" data-eylem="temizle">Süzgeci temizle</button>'],
-      imkansiz: ["circle-alert", on ? SZ_TANIM[on].imkansiz : "", "“ve” seçiliyken aynı gruptan iki çip birlikte hiçbir kayda uymaz. “veya” ile ikisine uyanlar birlikte listelenir.", '<button class="a-tus a-tus-ikincil" type="button" data-kip="veya">“veya”ya geç</button>'],
-      hata: ["refresh-cw", "Planlar yüklenemedi", "Sunucuya bağlanılamadı; liste eski hâliyle gösterilmiyor.", '<button class="a-tus a-tus-ikincil" type="button" data-eylem="tekrar">' + ikon("refresh-cw", "a-ikon-kucuk") + "Tekrar dene</button>"],
-      plan: ["circle-alert", "Plan bulunamadı", "Bu adresteki plan listede yok ya da artık size atanmış değil.", '<a class="a-tus a-tus-ikincil" href="#/">' + ikon("arrow-left", "a-ikon-kucuk") + "Planlara dön</a>"],
+      yok: { ikon: "inbox", baslik: "Atanmış plan yok", metin: "Planlama ekibi plan açınca burada görünür." },
+      hata: { ikon: "refresh-cw", hata: true, baslik: "Planlar yüklenemedi", metin: "Sunucuya bağlanılamadı; liste eski hâliyle gösterilmiyor.", eylem: '<button class="a-tus a-tus-ikincil" type="button" data-eylem="tekrar">' + ikon("refresh-cw", "a-ikon-kucuk") + "Tekrar dene</button>" },
+      plan: { ikon: "circle-alert", baslik: "Plan bulunamadı", metin: "Bu adresteki plan listede yok ya da artık size atanmış değil.", eylem: '<a class="a-tus a-tus-ikincil" href="#/">' + ikon("arrow-left", "a-ikon-kucuk") + "Planlara dön</a>" },
       /* yükleme hatasında "bulunamadı" denmez — plan var olabilir, yüklenemedi (anayasa 2.8 dürüstlük) */
-      planHata: ["refresh-cw", "Plan yüklenemedi", "Sunucuya bağlanılamadı; plan eski hâliyle gösterilmiyor.", '<button class="a-tus a-tus-ikincil" type="button" data-eylem="tekrar">' + ikon("refresh-cw", "a-ikon-kucuk") + "Tekrar dene</button>"]
+      planHata: { ikon: "refresh-cw", hata: true, baslik: "Plan yüklenemedi", metin: "Sunucuya bağlanılamadı; plan eski hâliyle gösterilmiyor.", eylem: '<button class="a-tus a-tus-ikincil" type="button" data-eylem="tekrar">' + ikon("refresh-cw", "a-ikon-kucuk") + "Tekrar dene</button>" }
     }[tur];
-    return '<div class="a-bos' + (tur === "hata" || tur === "planHata" ? " a-bos-hata" : "") + '" role="status"' + (on ? ' data-sz="' + on + '"' : "") + '><div class="a-bos-ikon">' + ikon(d[0]) + "</div>" +
-      '<p class="a-bos-baslik">' + d[1] + '</p><p class="a-bos-metin">' + d[2] + "</p>" + d[3] + "</div>";
+    return MK.bos(d);
   }
 
-  /* ── PLANLARIM LİSTESİ ────────────────────────────────────────────────────────────────────────────── */
+  /* ── PLANLAR LİSTESİ ────────────────────────────────────────────────────────────────────────────── */
   function sirala(l) {
     var v = SZ.l.sec.sira, zaman = function (p) { return p.tarih + " " + p.bas; };
     if (v === "varsayilan") {   /* açık işler (bekliyor, kabul, denetimde) başlangıca göre ileri; kapanmışlar en yeni önce, sonda */
@@ -407,45 +264,23 @@
     { k: "durum", baslik: "Durum", kart: "rozet", sira: 1, hucre: function (p) { return rozet(DURUM[p.durum]); } },
     { k: "eylem", baslik: "İşlem", gizliBaslik: true, kart: "eylem", sira: 9, hucre: listeEylem }
   ];
-  /* yan menü tek kaynaktan (MENU); ekranı henüz tasarlanmamış modül tıklanınca bildirim — maket dışına gidilmez */
-  function menuHtml() {
-    return MENU.map(function (g, i) {
-      return '<p class="a-menu-grup" id="a-menu-grup-' + i + '">' + g.grup + '</p><ul class="a-menu-liste" aria-labelledby="a-menu-grup-' + i + '">' +
-        g.ogeler.map(function (o) {
-          var plan = o[2] === 13;
-          return "<li><a " + (plan ? 'href="#/" aria-current="page"' : 'href="#" data-eylem="modul" data-ne="' + o[0] + '"') + ">" + ikon(o[1]) + '<span class="a-menu-ad">' + o[0] + "</span>" +
-            (plan ? '<span class="a-menu-sayi" id="a-menu-sayi" title="Kabul bekleyen plan"></span>' : "") + "</a></li>";
-        }).join("") + "</ul>";
-    }).join("");
-  }
-  function menuSayi() {
-    var ms = PLANLAR.filter(function (p) { return p.durum === "bekliyor"; }).length;
-    $("a-menu-sayi").textContent = ms || ""; $("a-menu-sayi").hidden = !ms || VERI !== "dolu";
-  }
-  /* Sıralama seçicisi yalnız KART kipinde satırda görünür: kip CSS'in kendi kararından okunur (kartta başlık yok). */
-  function listeKipi() {
-    var th = document.querySelector("#a-liste thead");
-    if (th) kap("l").setAttribute("data-liste-kip", getComputedStyle(th).display === "none" ? "kart" : "tablo");
-  }
+  function menuSayi() { MK.menuSayi(13, VERI === "dolu" ? PLANLAR.filter(function (p) { return p.durum === "bekliyor"; }).length : 0); }
   function ciz() {
-    var hepsi = VERI === "dolu" ? PLANLAR : [], tb = taban("l", hepsi), liste = sirala(tb.filter(function (p) { return cipGecer("l", p); }));
-    cipCiz("l", tb); menuSayi();
+    var hepsi = VERI === "dolu" ? PLANLAR : [], tb = MK.taban("l", hepsi), liste = sirala(tb.filter(function (p) { return MK.cipGecer("l", p); }));
+    MK.cipCiz("l", tb); menuSayi();
     if (VERI === "hata") { $("a-sayac").innerHTML = "—"; $("a-liste").innerHTML = bos("hata"); return; }
-    $("a-sayac").innerHTML = suzgecVar("l") ? "<b>" + liste.length + "</b> / " + hepsi.length + " plan" : "<b>" + hepsi.length + "</b> plan";
+    $("a-sayac").innerHTML = MK.sayac("l", liste.length, hepsi.length);
     if (!hepsi.length) { $("a-liste").innerHTML = bos("yok"); return; }
-    if (!liste.length) { $("a-liste").innerHTML = bos(imkansiz("l") ? "imkansiz" : "suzgec", "l"); return; }
-    $("a-liste").innerHTML = tabloHtml({ baslik: "Planlar", sinif: "a-tablo-plan", sutunlar: PLAN_SUTUN, kayitlar: liste, siralanir: true,
+    if (!liste.length) { $("a-liste").innerHTML = MK.bosSuzgec("l"); return; }
+    $("a-liste").innerHTML = MK.tablo({ baslik: "Planlar", sinif: "a-tablo-plan", sutunlar: PLAN_SUTUN, kayitlar: liste, sz: "l",
       href: function (p) { return "#/plan/" + p.id; } });
-    listeKipi();
+    MK.listeKipi("l", "a-liste");
   }
 
   /* ══ PLAN İÇİ — AKIŞ (4. tur) ════════════════════════════════════════════════════════════════════════
      Dört adım: Planlandı → Kabul → Denetim → Tamamlama. Adım durumu: tamam (✓) · aktif (şu an) · bekliyor (sırada) ·
      red. Her adım kim + ne zaman gösterir; iş adımın içinde yapılır. Masaüstü ve tablette tuşlar adımın içinde,
      telefonda aynı tuşlar altta yapışkan çubukta (kalıp 2). Tek birincil tuş (anayasa 2.7). */
-  function serit(tur, ik, metin, id) {
-    return '<div class="a-serit a-serit-' + tur + '"' + (id ? ' id="' + id + '"' : "") + ">" + ikon(ik, "a-ikon-kucuk") + "<span>" + metin + "</span></div>";
-  }
   function planEylem(p) {   /* şu anki adımın tuşları — adımda ve telefonun alt çubuğunda aynı üretici */
     var sid = "a-plan-sebep-" + p.id;
     if (p.durum === "bekliyor") return tus("reddet", p, "Reddet", "", false, "a-tus-ikincil") + tus("kabul", p, "Kabul et", "check", !!p.eksik, "", sid);
@@ -462,7 +297,6 @@
       (ozet ? '<span class="a-adim-ozet">' + ozet + "</span>" : "") + "</div>" + (icerik ? '<div class="a-adim-icerik">' + icerik + "</div>" : "") + "</div></li>";
   }
   var kimZaman = function (z, k) { return zamanYaz(z) + " · " + KISI[k].ad + ' <span class="a-gecmis-rol">' + KISI[k].rol + "</span>"; };
-  var bilgi = function (etiket, deger, genis) { return '<div class="a-bilgi-oge' + (genis ? " a-bilgi-genis" : "") + '"><dt>' + etiket + "</dt><dd>" + deger + "</dd></div>"; };
   var KAPSAM_SUTUN = [
     { k: "tur", baslik: "Ekipman türü", kart: "ust", sira: 1, hucre: function (x) { return '<span class="a-ekipman-ad">' + x.ad + "</span>"; } },
     { k: "brans", baslik: "Branş", kart: "rozet", sira: 1, hucre: function (x) { return '<span class="a-hucre-satir">' + ikon(x.b === "m" ? "cog" : "zap", "a-ikon-kucuk") + bransAd(x.b) + "</span>"; } },
@@ -509,24 +343,15 @@
     } }
   ];
   function listeCiz(on) {   /* yalnız liste, çipler, sayaç ve sayfalayıcı çizilir; arama kutusu yerinde kalır (odak çalınmaz) */
-    var p = AKTIF; if (!p || !kap(on)) return;
-    var s = SZ[on], hepsi = on === "e" ? p.ekp.map(function (k) { return SICIL[k]; }) : p.rapor.slice().sort(function (a, b) { return a.olustu < b.olustu ? 1 : a.olustu > b.olustu ? -1 : 0; });
-    var tb = taban(on, hepsi), liste = tb.filter(function (k) { return cipGecer(on, k); });
-    cipCiz(on, tb);
-    var birim = SZ_TANIM[on].birim;
-    $("a-sayac-" + on).innerHTML = suzgecVar(on) ? "<b>" + liste.length + "</b> / " + hepsi.length + " " + birim : "<b>" + hepsi.length + "</b> " + birim;
-    var n = Math.max(1, Math.ceil(liste.length / SAYFA[on])); if (s.sayfa > n) s.sayfa = n;
-    var ic = "";
-    if (!hepsi.length) ic = '<p class="a-bos-satir">' + (on === "r" ? (calisir(p) ? "Bu planda henüz rapor yok. Rapor, ekipmanın satırındaki “Rapor oluştur” ile açılır." : "Rapor, denetime başlanınca ekipmanın satırından oluşturulur.") : "Bu planda ekipman yok.") + "</p>";
-    else if (!liste.length) ic = bos(imkansiz(on) ? "imkansiz" : "suzgec", on);
-    else ic = tabloHtml({ baslik: on === "e" ? "Plandaki ekipmanlar" : "Bu plandaki raporlar", sinif: on === "e" ? "a-tablo-ekipman" : "a-tablo-rapor",
-      sutunlar: on === "e" ? ekpSutun(p) : RAP_SUTUN, kayitlar: liste.slice((s.sayfa - 1) * SAYFA[on], s.sayfa * SAYFA[on]) });
-    $("a-liste-" + on).innerHTML = ic;
-    $("a-sayfa-" + on).innerHTML = liste.length ? sayfalayici(on, liste.length, s.sayfa) : "";
+    var p = AKTIF; if (!p || !MK.kap(on)) return;
+    var hepsi = on === "e" ? p.ekp.map(function (k) { return SICIL[k]; }) : p.rapor.slice().sort(function (a, b) { return a.olustu < b.olustu ? 1 : a.olustu > b.olustu ? -1 : 0; });
+    MK.listeCiz({ on: on, kayitlar: hepsi, sayacId: "a-sayac-" + on, listeId: "a-liste-" + on, sayfaId: "a-sayfa-" + on,
+      bosVeri: '<p class="a-bos-satir">' + (on === "r" ? (calisir(p) ? "Bu planda henüz rapor yok. Rapor, ekipmanın satırındaki “Rapor oluştur” ile açılır." : "Rapor, denetime başlanınca ekipmanın satırından oluşturulur.") : "Bu planda ekipman yok.") + "</p>",
+      tablo: { baslik: on === "e" ? "Plandaki ekipmanlar" : "Bu plandaki raporlar", sinif: on === "e" ? "a-tablo-ekipman" : "a-tablo-rapor", sutunlar: on === "e" ? ekpSutun(p) : RAP_SUTUN } });
   }
   /* eklenen ekipman sayfalı listede görünsün: bulunduğu sayfaya geçilir; süzgeç gizliyorsa bildirim söyler (anayasa 2.8) */
   function kaydaGit(kod) {
-    var liste = taban("e", AKTIF.ekp.map(function (k) { return SICIL[k]; })).filter(function (e) { return cipGecer("e", e); });
+    var liste = MK.taban("e", AKTIF.ekp.map(function (k) { return SICIL[k]; })).filter(function (e) { return MK.cipGecer("e", e); });
     var i = liste.map(function (e) { return e.kod; }).indexOf(kod);
     if (i >= 0) SZ.e.sayfa = Math.floor(i / SAYFA.e) + 1;
     return i >= 0;
@@ -535,7 +360,7 @@
     menuSayi();
     if (!p) { AKTIF = null; $("a-plan").innerHTML = '<nav class="a-kirinti" aria-label="Konum"><a href="#/">' + ikon("arrow-left", "a-ikon-kucuk") + "Planlar</a></nav>" +
       '<h1 class="a-gizli" tabindex="-1">' + (VERI === "hata" ? "Plan yüklenemedi" : "Plan bulunamadı") + "</h1>" + bos(VERI === "hata" ? "planHata" : "plan"); return; }
-    if (!AKTIF || AKTIF.id !== p.id) { SZ.e = yeniSz("e"); SZ.r = yeniSz("r"); NOTLAR_ACIK = false; }   /* başka plana geçince süzgeçler sıfırlanır */
+    if (!AKTIF || AKTIF.id !== p.id) { MK.suzgecSifirla("e"); MK.suzgecSifirla("r"); NOTLAR_ACIK = false; }   /* başka plana geçince süzgeçler sıfırlanır */
     AKTIF = p;
     var d = p.durum, eylem = planEylem(p), sid = "a-plan-sebep-" + p.id;
     var isg = !p.isg ? '<span class="a-yuz-uyari">Kayıt yok</span>' : kacis(p.isg.no) + ' <span class="a-alt-inline' + (p.eksik ? " a-yuz-uyari" : "") + '">· onay ' + gunKisa(p.isg.onay) + "</span>";
@@ -552,7 +377,7 @@
       "</dl>" +
       /* kapsam: kabul bekleyen planda AÇIK (inspector kabulden önce görür), sonra katlı — asıl iş Denetim adımında */
       '<details class="a-ayrinti a-kapsam"' + (d === "bekliyor" ? " open" : "") + "><summary>Kapsam · " + kapsam(p).length + " tür, " + p.ekp.length + " ekipman</summary>" +
-        '<div class="a-liste-kap">' + tabloHtml({ baslik: "Plan kapsamı", sinif: "a-tablo-kapsam", sutunlar: KAPSAM_SUTUN, kayitlar: kapsam(p) }) + "</div></details>");
+        '<div class="a-liste-kap">' + MK.tablo({ baslik: "Plan kapsamı", sinif: "a-tablo-kapsam", sutunlar: KAPSAM_SUTUN, kayitlar: kapsam(p) }) + "</div></details>");
     /* 2 · Kabul (tarafsızlık beyanı) */
     var a2;
     if (d === "bekliyor") a2 = adim(2, "aktif", "Kabul", "",
@@ -569,9 +394,9 @@
     if (d === "kabul" || calisir(p)) kontrol =
       '<div class="a-alt-bolum"><div class="a-alt-bas"><h3 class="a-alt-baslik" id="a-ekipman-baslik">Ekipmanlar</h3><span class="a-sayac" id="a-sayac-e"></span>' +
         (d === "denetimde" ? '<button class="a-tus a-tus-ikincil a-bolum-tus" type="button" data-eylem="ekle-ac" data-id="' + p.id + '">' + ikon("plus", "a-ikon-kucuk") + "Ekipman ekle</button>" : "") +
-        "</div>" + suzgecHtml("e") + '<div class="a-liste-kap" id="a-liste-e"></div><div id="a-sayfa-e"></div></div>' +
+        "</div>" + MK.suzgecHtml("e") + '<div class="a-liste-kap" id="a-liste-e"></div><div id="a-sayfa-e"></div></div>' +
       (calisir(p) ? '<div class="a-alt-bolum"><div class="a-alt-bas"><h3 class="a-alt-baslik" id="a-rapor-baslik">Raporlar</h3><span class="a-sayac" id="a-sayac-r"></span></div>' +
-        suzgecHtml("r") + '<div class="a-liste-kap" id="a-liste-r"></div><div id="a-sayfa-r"></div></div>' : "");
+        MK.suzgecHtml("r") + '<div class="a-liste-kap" id="a-liste-r"></div><div id="a-sayfa-r"></div></div>' : "");
     var a3 = adim(3, a3durum, "Denetim", a3ozet,
       (d === "bekliyor" ? '<p class="a-adim-not">Plan kabul edilince başlar.</p>' : d === "red" ? '<p class="a-adim-not">Plan reddedildi; denetim yok.</p>' : "") +
       (d === "kabul" ? '<div class="a-adim-eylem"><p class="a-adim-not">Ekipman ekleme ve rapor oluşturma denetime başlayınca açılır.</p><div class="a-adim-tuslar">' + eylem + "</div></div>" : "") +
@@ -593,10 +418,10 @@
         '<p class="a-nesne-alt">' + ikon("building-2", "a-ikon-kucuk") + "<span>" + kacis(p.musteri) + "</span></p></div></div>" +
       '<ol class="a-akis" aria-label="Plan akışı">' + a1 + a2 + a3 + a4 + "</ol>" +
       '<section class="a-bolum a-notlar" aria-labelledby="a-not-baslik"><div class="a-alt-bas"><h2 class="a-alt-baslik" id="a-not-baslik">Proje notları</h2>' +
-        '<span class="a-sayac"><b>' + notlar.length + "</b>\u00a0not</span></div>" +
+        '<span class="a-sayac"><b>' + notlar.length + "</b> not</span></div>" +
         '<div class="a-not-form"><label class="a-gizli" for="a-not-girdi">Proje notu</label><textarea class="a-alan a-alan-ince" id="a-not-girdi" maxlength="500" placeholder="Proje notu ekleyin" aria-describedby="a-not-ipucu"></textarea>' +
         '<button class="a-tus a-tus-ikincil" type="button" data-eylem="not-ekle" data-id="' + p.id + '" id="a-not-ekle" disabled>' + ikon("plus", "a-ikon-kucuk") + "Notu ekle</button></div>" +
-        '<p class="a-ipucu a-not-ipucu" id="a-not-ipucu">Planlama ekibi ve plandaki inspector\u2019lar görür; müşteri görmez. Not silinmez.</p>' +
+        '<p class="a-ipucu a-not-ipucu" id="a-not-ipucu">Planlama ekibi ve plandaki inspector’lar görür; müşteri görmez. Not silinmez.</p>' +
         (notlar.length ? '<ol class="a-gecmis">' + gorunen.map(function (g) {
           return '<li><span class="a-gecmis-zaman">' + zamanYaz(g.z) + '</span><span class="a-gecmis-ne"><b>' + KISI[g.kim].ad + "</b>" +
             ' <span class="a-gecmis-rol">' + KISI[g.kim].rol + '</span><span class="a-not-metin">' + kacis(g.ayrinti) + "</span></span></li>";
@@ -604,11 +429,7 @@
         (notlar.length > 6 ? '<button class="a-tus a-tus-ikincil a-hepsi-tus" type="button" data-eylem="notlar-hepsi">' + (NOTLAR_ACIK ? "Son 6 notu göster" : "Tümünü göster (" + notlar.length + ")") + "</button>" : "") +
       "</section>" +
       (eylem ? '<div class="a-eylem-cubugu a-eylem-cubugu-alt">' + eylem + "</div>" : "");
-    ["e", "r"].forEach(function (on) {
-      var k = kap(on); if (!k) return;
-      var g = k.querySelector("[data-ara]"); g.value = SZ[on].ara; k.querySelector(".a-ara").classList.toggle("a-dolu", !!SZ[on].ara);
-      seciciCiz(on); listeCiz(on);
-    });
+    ["e", "r"].forEach(function (on) { MK.suzgecKur(on); });
   }
 
   /* ── EKİPMAN EKLE PENCERESİ (3. tur; reisim 17–19 kabul: kod firma genelinde eşsiz, biçim serbest, yalnız yönetici değiştirir) ──
@@ -691,153 +512,64 @@
     }
     if (p && r.ekle && p.durum === "denetimde") ekleAc(p, kodNormal(r.kod)); else ekleKapat();
   }
+  MK.goster = goster;
   function git(id) { var r = rota(); if (r && r.id === id && !r.ekle) goster(false); else location.hash = "#/plan/" + id; }
 
-  /* ── ETKİLEŞİM ────────────────────────────────────────────────────────────────────────────────── */
-  var bildirimZaman;
-  function bildir(m) {
-    $("a-bildirim-metin").textContent = m; $("a-bildirim").classList.add("a-gorunur");
-    clearTimeout(bildirimZaman); bildirimZaman = setTimeout(function () { $("a-bildirim").classList.remove("a-gorunur"); }, 2800);
-  }
-  function listeleriKapat(haric) {
-    document.querySelectorAll(".a-secici").forEach(function (s) {
-      if (s === haric) return;
-      s.querySelector(".a-secici-liste").hidden = true; s.querySelector(".a-secici-tus").setAttribute("aria-expanded", "false");
-    });
-  }
-  /* Yan menü daraltma (reisim 2026-09-23: "sol taraf açılıp kapanabilir olsun kapatılınca sadece logolar kalsın").
-     Yalnız geniş bantta (≥ 1280) etkili — CSS daralmış hâli o banda bağlar; orta/dar bantta çekmece aynen (anayasa 2.11).
-     Daralmışken ad görünmez (ekran okuyucu okur), üstüne gelince ipucu (title). Tercih bu cihazda saklanır.
-     İpucu YALNIZ daralmış şerit görünürken: orta/dar bantta çekmece adı zaten yazar, ipucu aynı adı tekrarlardı
-     (canlı ölçümde 1080'de 17 çift ad yakalandı, 2026-09-23) → bant değişince yeniden hesaplanır. */
-  var MENU_DAR = false, GENIS_BANT = window.matchMedia("(min-width: 1280px)");
-  try { MENU_DAR = localStorage.getItem("probata-menu") === "dar"; } catch (x) {}
-  function menuIpucu() {
-    var serit = MENU_DAR && GENIS_BANT.matches;
-    document.querySelectorAll("#a-menu a").forEach(function (a) {
-      if (serit) a.setAttribute("title", a.querySelector(".a-menu-ad").textContent); else a.removeAttribute("title");
-    });
-  }
-  function menuDar(dar) {
-    MENU_DAR = dar;
-    $("a-kabuk").classList.toggle("a-kabuk-dar", dar);
-    var tus = document.querySelector(".a-daralt-tus");
-    tus.setAttribute("aria-expanded", String(!dar));
-    tus.setAttribute("aria-label", dar ? "Menüyü genişlet" : "Menüyü daralt");
-    menuIpucu();
-    try { localStorage.setItem("probata-menu", dar ? "dar" : "genis"); } catch (x) {}
-  }
-  GENIS_BANT.addEventListener("change", menuIpucu);
-  function cekmece(ac) {
-    $("a-kabuk").classList.toggle("a-cekmece-acik", ac);
-    document.querySelector(".a-menu-tus").setAttribute("aria-expanded", String(ac));
-  }
-  var szOf = function (el) { var z = el.closest("[data-sz]"); return z ? z.dataset.sz : "l"; };
+  /* ── ETKİLEŞİM (Planlar'a özgü; genel tıklamalar ortak dağıtıcıda) ──────────────────────────────────── */
   var redId = null;
-
-  document.addEventListener("click", function (e) {
-    var el = e.target.closest("[data-cip],[data-kip],[data-sec],[data-secici-ac],[data-sirala],[data-sayfa],[data-sekme],[data-tur],[data-eylem]");
-    if (!e.target.closest(".a-secici")) listeleriKapat(null);
+  MK.onTikla = function (e) {
     if (E.turAcik && !e.target.closest(".a-combo")) { E.turAcik = false; ekleCiz(); }
-    if (!el) {
-      var satir = e.target.closest("tr[data-href]");   /* tıklanır satır / kart: tuşa ya da bağlantıya basılmadıysa plana girer */
-      if (satir && !e.target.closest("a, button")) location.hash = satir.getAttribute("data-href");
-      return;
+    var el = e.target.closest("[data-sekme],[data-tur]");
+    if (!el) return false;
+    if (el.dataset.sekme) { E.sekme = el.dataset.sekme; ekleCiz(); return true; }
+    E.tur = KATALOG.filter(function (t) { return t.k === el.dataset.tur; })[0]; E.turAcik = false; E.turAra = ""; ekleCiz("a-ekle-seri"); return true;
+  };
+  var X = MK.eylem, pl = function (el) { return bul(+el.dataset.id); };
+  X.tekrar = function () { VERI = "dolu"; goster(false); };
+  X.kabul = function (el) { var p = pl(el); if (p && p.durum === "bekliyor" && !p.eksik) { p.durum = "kabul"; p.kabul = simdi(); kaydet(p, simdi(), BEN, "Plan kabul edildi", "Tarafsızlık beyanı onaylandı"); goster(false); MK.bildir("Plan kabul edildi."); } };
+  X.basla = function (el) { var p = pl(el); if (p && p.durum === "kabul") { p.durum = "denetimde"; p.basladi = simdi(); kaydet(p, simdi(), BEN, "Denetime başlandı"); MK.bildir("Denetim başladı."); git(p.id); } };
+  X.devam = function (el) { var p = pl(el); if (p) git(p.id); };
+  X.tamamla = function (el) { var p = pl(el); if (p && p.durum === "denetimde") { p.durum = "tamam"; p.bitti = simdi(); kaydet(p, simdi(), BEN, "Plan tamamlandı"); goster(false); MK.bildir("Plan tamamlandı."); } };
+  X["geri-al"] = function (el) { var p = pl(el); if (p && p.durum === "tamam") { p.durum = "denetimde"; p.bitti = null; kaydet(p, simdi(), BEN, "Tamamlama geri alındı"); goster(false); MK.bildir("Tamamlama geri alındı; plan yeniden denetime açıldı."); } };
+  X["rapor-olustur"] = function (el) {
+    var p = pl(el);
+    if (p && calisir(p) && !raporuVar(p, el.dataset.kod)) {
+      var r = { no: raporNo("0926", raporSira++), kod: el.dataset.kod, durum: "taslak", olustu: simdi(), sonuc: null };
+      p.rapor.push(r); kaydet(p, simdi(), BEN, "Rapor oluşturuldu", r.no + " · " + r.kod); SZ.r.sayfa = 1;
+      goster(false); MK.bildir("Rapor oluşturuldu: " + r.no + ". Saha rapor ekranı bu maketin kapsamında değil.");
     }
-    var on = szOf(el);
-    if (el.dataset.cip) {
-      var i = SZ[on].secili.indexOf(el.dataset.cip);
-      if (i >= 0) SZ[on].secili.splice(i, 1); else SZ[on].secili.push(el.dataset.cip);
-      SZ[on].sayfa = 1; yenile(on); return;
+  };
+  X["ekle-ac"] = function (el) { var p = pl(el); if (p && p.durum === "denetimde") ekleAc(p); };
+  X["ekle-kapat"] = ekleKapat;
+  X["tesistekini-sec"] = function (el) { E.sekme = "kayitli"; E.secili = [el.dataset.kod]; ekleCiz(); };
+  X["kayitli-ekle"] = function () {
+    if (E.plan && E.secili.length) {
+      var p = E.plan, n = E.secili.length;
+      E.secili.forEach(function (kod) { p.ekp.push(kod); p.sonradan.push(kod); kaydet(p, simdi(), BEN, "Kayıtlı ekipman plana alındı", kod + " · " + SICIL[kod].tur.ad); });
+      var gorunur = kaydaGit(E.secili[0]);
+      ekleKapat(); goster(false); MK.bildir(n + " kayıtlı ekipman plana eklendi" + (gorunur ? "." : "; süzgeç yüzünden listede görünmüyor."));
     }
-    if (el.dataset.kip) { if (!el.disabled) { SZ[on].kip = el.dataset.kip; SZ[on].sayfa = 1; yenile(on); } return; }
-    if (el.dataset.sirala) {
-      var k = el.dataset.sirala, v = SZ.l.sec.sira;
-      SZ.l.sec.sira = v === k + "-artan" ? k + "-azalan" : v === k + "-azalan" ? "varsayilan" : k + "-artan";
-      seciciCiz("l"); ciz();
-      var yeni = document.querySelector('[data-sirala="' + k + '"]'); if (yeni) yeni.focus();
-      return;
+  };
+  X["yeni-kaydet"] = function () {
+    if (E.plan && E.tur && kodDurum(E.plan, E.kod).tur === "tamam") {   /* kaydetmeden önce yeniden denetlenir */
+      var p = E.plan, kod = E.kod;
+      SICIL[kod] = { kod: kod, tur: E.tur, konum: E.konum.trim() || "Konum yazılmadı", tesis: p.id, onceki: null, eklendi: simdi(), seri: E.seri.trim() };
+      p.ekp.push(kod); p.sonradan.push(kod); kaydet(p, simdi(), BEN, "Ekipman eklendi", kod + " · " + E.tur.ad);
+      var gor = kaydaGit(kod);
+      ekleKapat(); goster(false); MK.bildir(kod + " plana eklendi" + (gor ? ". Raporu satırındaki “Rapor oluştur” açar." : "; süzgeç yüzünden listede görünmüyor."));
     }
-    if (el.dataset.sayfa) {
-      if (el.disabled) return;
-      var nav = el.closest(".a-sayfalar"), sonr = nav && nav.parentElement.id.replace("a-sayfa-", "");
-      if (sonr) { SZ[sonr].sayfa = +el.dataset.sayfa; listeCiz(sonr); var s = $("a-sayfa-" + sonr).querySelector('.a-sayfa[aria-current="page"]'); if (s) s.focus(); }
-      return;
-    }
-    if (el.dataset.seciciAc) {
-      var kp = el.closest(".a-secici"), l = kp.querySelector(".a-secici-liste"), acik = l.hidden;
-      listeleriKapat(kp); l.hidden = !acik; el.setAttribute("aria-expanded", String(acik));
-      if (acik) (l.querySelector('[aria-selected="true"]') || l.firstElementChild).focus();
-      return;
-    }
-    if (el.dataset.sec) { SZ[on].sec[el.dataset.sec] = el.dataset.deger; SZ[on].sayfa = 1; seciciCiz(on); if ($("a-levha").open) levhaCiz(on); yenile(on); return; }
-    if (el.dataset.sekme) { E.sekme = el.dataset.sekme; ekleCiz(); return; }
-    if (el.dataset.tur) { E.tur = KATALOG.filter(function (t) { return t.k === el.dataset.tur; })[0]; E.turAcik = false; E.turAra = ""; ekleCiz("a-ekle-seri"); return; }
-    if (el.tagName === "A" && el.dataset.eylem) e.preventDefault();   /* maket içi bağlantı adresi (#) değiştirmez */
-    var id = +el.dataset.id, p = bul(id);
-    switch (el.dataset.eylem) {
-      case "cekmece-ac": cekmece(true); break;
-      case "menu-daralt": menuDar(!MENU_DAR); break;
-      case "cekmece-kapat": cekmece(false); break;
-      case "tema":
-        var tema = document.documentElement.getAttribute("data-tema") === "koyu" ? "acik" : "koyu";
-        document.documentElement.setAttribute("data-tema", tema);
-        try { localStorage.setItem("probata-tema", tema); } catch (x) {}
-        temaEtiketi(); break;
-      case "ara-sil":
-        SZ[on].ara = ""; SZ[on].sayfa = 1; var ak = kap(on); ak.querySelector("[data-ara]").value = ""; ak.querySelector(".a-ara").classList.remove("a-dolu");
-        yenile(on); ak.querySelector("[data-ara]").focus(); break;
-      case "temizle": temizle(on); seciciCiz(on); if ($("a-levha").open) levhaCiz(on); yenile(on); break;
-      case "levha-ac": levhaCiz(on); $("a-levha").showModal(); break;
-      case "levha-kapat": $("a-levha").close(); break;
-      case "tekrar": VERI = "dolu"; goster(false); break;
-      case "kabul": if (p && p.durum === "bekliyor" && !p.eksik) { p.durum = "kabul"; p.kabul = simdi(); kaydet(p, simdi(), BEN, "Plan kabul edildi", "Tarafsızlık beyanı onaylandı"); goster(false); bildir("Plan kabul edildi."); } break;
-      case "basla": if (p && p.durum === "kabul") { p.durum = "denetimde"; p.basladi = simdi(); kaydet(p, simdi(), BEN, "Denetime başlandı"); bildir("Denetim başladı."); git(id); } break;
-      case "devam": if (p) git(id); break;
-      case "tamamla": if (p && p.durum === "denetimde") { p.durum = "tamam"; p.bitti = simdi(); kaydet(p, simdi(), BEN, "Plan tamamlandı"); goster(false); bildir("Plan tamamlandı."); } break;
-      case "geri-al": if (p && p.durum === "tamam") { p.durum = "denetimde"; p.bitti = null; kaydet(p, simdi(), BEN, "Tamamlama geri alındı"); goster(false); bildir("Tamamlama geri alındı; plan yeniden denetime açıldı."); } break;
-      case "rapor-olustur":
-        if (p && calisir(p) && !raporuVar(p, el.dataset.kod)) {
-          var r = { no: raporNo("0926", raporSira++), kod: el.dataset.kod, durum: "taslak", olustu: simdi(), sonuc: null };
-          p.rapor.push(r); kaydet(p, simdi(), BEN, "Rapor oluşturuldu", r.no + " · " + r.kod); SZ.r.sayfa = 1;
-          goster(false); bildir("Rapor oluşturuldu: " + r.no + ". Saha rapor ekranı bu maketin kapsamında değil.");
-        }
-        break;
-      case "ekle-ac": if (p && p.durum === "denetimde") ekleAc(p); break;
-      case "ekle-kapat": ekleKapat(); break;
-      case "tesistekini-sec": E.sekme = "kayitli"; E.secili = [el.dataset.kod]; ekleCiz(); break;
-      case "kayitli-ekle":
-        if (E.plan && E.secili.length) {
-          var pl = E.plan, n = E.secili.length;
-          E.secili.forEach(function (kod) { pl.ekp.push(kod); pl.sonradan.push(kod); kaydet(pl, simdi(), BEN, "Kayıtlı ekipman plana alındı", kod + " · " + SICIL[kod].tur.ad); });
-          var gorunur = kaydaGit(E.secili[0]);
-          ekleKapat(); goster(false); bildir(n + " kayıtlı ekipman plana eklendi" + (gorunur ? "." : "; süzgeç yüzünden listede görünmüyor."));
-        }
-        break;
-      case "yeni-kaydet":
-        if (E.plan && E.tur && kodDurum(E.plan, E.kod).tur === "tamam") {   /* kaydetmeden önce yeniden denetlenir */
-          var pk = E.plan, kod = E.kod;
-          SICIL[kod] = { kod: kod, tur: E.tur, konum: E.konum.trim() || "Konum yazılmadı", tesis: pk.id, onceki: null, eklendi: simdi(), seri: E.seri.trim() };
-          pk.ekp.push(kod); pk.sonradan.push(kod); kaydet(pk, simdi(), BEN, "Ekipman eklendi", kod + " · " + E.tur.ad);
-          var gor = kaydaGit(kod);
-          ekleKapat(); goster(false); bildir(kod + " plana eklendi" + (gor ? ". Raporu satırındaki “Rapor oluştur” açar." : "; süzgeç yüzünden listede görünmüyor."));
-        }
-        break;
-      case "not-ekle":
-        var ng = $("a-not-girdi"), metin = ng ? ng.value.trim() : "";
-        if (p && metin.length >= 3) { kaydet(p, simdi(), BEN, "Not", metin); goster(false); bildir("Not plana eklendi; planlama ekibi görür."); }
-        break;
-      case "notlar-hepsi": NOTLAR_ACIK = !NOTLAR_ACIK; goster(false); break;
-      case "reddet":
-        if (!p) break;
-        redId = id; $("a-red-gerekce").value = ""; $("a-red-onay").disabled = true;
-        $("a-red-ozet").innerHTML = "<b>" + kacis(p.ad) + "</b> · " + p.no + "<br>" + kacis(p.musteri) + "<br>" + gunYaz(p.tarih) + " · " + p.bas + " – " + p.bit;
-        $("a-red-ipucu").className = "a-ipucu"; $("a-red-ipucu").hidden = false; $("a-red-pencere").showModal(); $("a-red-gerekce").focus(); break;
-      case "pencere-kapat": $("a-red-pencere").close(); break;
-      case "kapsam-disi": bildir("Maket: " + el.dataset.ne + " bu maketin kapsamında değil."); break;
-      case "modul": cekmece(false); bildir("Maket: " + el.dataset.ne + " ekranı henüz tasarlanmadı."); break;
-    }
-  });
+  };
+  X["not-ekle"] = function (el) {
+    var p = pl(el), ng = $("a-not-girdi"), metin = ng ? ng.value.trim() : "";
+    if (p && metin.length >= 3) { kaydet(p, simdi(), BEN, "Not", metin); goster(false); MK.bildir("Not plana eklendi; planlama ekibi görür."); }
+  };
+  X["notlar-hepsi"] = function () { NOTLAR_ACIK = !NOTLAR_ACIK; goster(false); };
+  X.reddet = function (el) {
+    var p = pl(el); if (!p) return;
+    redId = p.id; $("a-red-gerekce").value = ""; $("a-red-onay").disabled = true;
+    $("a-red-ozet").innerHTML = "<b>" + kacis(p.ad) + "</b> · " + p.no + "<br>" + kacis(p.musteri) + "<br>" + gunYaz(p.tarih) + " · " + p.bas + " – " + p.bit;
+    $("a-red-ipucu").className = "a-ipucu"; $("a-red-ipucu").hidden = false; $("a-red-pencere").showModal(); $("a-red-gerekce").focus();
+  };
   document.addEventListener("change", function (e) {
     var k = e.target.dataset && e.target.dataset.kayitli;
     if (!k) return;
@@ -846,11 +578,8 @@
     ekleCiz();
     var geri = document.querySelector('[data-kayitli="' + k + '"]'); if (geri) geri.focus();
   });
-  document.addEventListener("input", function (e) {
+  MK.onGirdi = function (e) {
     var t = e.target;
-    if (t.dataset && t.dataset.ara) {   /* arama: yalnız liste yeniden çizilir, kutu yerinde kalır (odak çalınmaz) */
-      var on = t.dataset.ara; SZ[on].ara = t.value; SZ[on].sayfa = 1; t.closest(".a-ara").classList.toggle("a-dolu", !!t.value); yenile(on); return;
-    }
     if (t.id === "a-not-girdi") { $("a-not-ekle").disabled = t.value.trim().length < 3; return; }
     if (t.id === "a-ekle-kod") {
       var ham = t.value, nor = kodNormal(ham), yer = Math.max(0, t.selectionStart - (ham.length - nor.length));
@@ -859,22 +588,18 @@
     if (t.id === "a-ekle-tur") { E.turAra = t.value; E.tur = null; E.turAcik = true; E.turEtkin = 0; ekleCiz("a-ekle-tur", t.selectionStart); return; }
     if (t.id === "a-ekle-konum") { E.konum = t.value; return; }
     if (t.id === "a-ekle-seri") { E.seri = t.value; return; }
-  });
+  };
   document.addEventListener("focusin", function (e) {
     if (e.target.id === "a-ekle-tur" && !E.turAcik) { E.turAcik = true; E.turAra = ""; E.turEtkin = 0; ekleCiz("a-ekle-tur"); }
   });
-  document.addEventListener("keydown", function (e) {
-    if (e.target.id === "a-ekle-tur" && E.turAcik) {
-      var l = turListesi();
-      if (e.key === "ArrowDown" || e.key === "ArrowUp") { e.preventDefault(); E.turEtkin = (E.turEtkin + (e.key === "ArrowDown" ? 1 : l.length - 1)) % Math.max(l.length, 1); ekleCiz("a-ekle-tur"); return; }
-      if (e.key === "Enter") { e.preventDefault(); if (l[E.turEtkin]) { E.tur = l[E.turEtkin]; E.turAcik = false; E.turAra = ""; ekleCiz("a-ekle-seri"); } return; }
-      if (e.key === "Escape") { e.preventDefault(); e.stopPropagation(); E.turAcik = false; ekleCiz("a-ekle-tur"); return; }
-    }
-    if (e.key !== "Escape") return;
-    var acik = document.querySelector('.a-secici-tus[aria-expanded="true"]');
-    if (acik) { listeleriKapat(null); acik.focus(); return; }
-    if ($("a-kabuk").classList.contains("a-cekmece-acik")) cekmece(false);
-  }, true);
+  MK.onTus = function (e) {
+    if (e.target.id !== "a-ekle-tur" || !E.turAcik) return false;
+    var l = turListesi();
+    if (e.key === "ArrowDown" || e.key === "ArrowUp") { e.preventDefault(); E.turEtkin = (E.turEtkin + (e.key === "ArrowDown" ? 1 : l.length - 1)) % Math.max(l.length, 1); ekleCiz("a-ekle-tur"); return true; }
+    if (e.key === "Enter") { e.preventDefault(); if (l[E.turEtkin]) { E.tur = l[E.turEtkin]; E.turAcik = false; E.turAra = ""; ekleCiz("a-ekle-seri"); } return true; }
+    if (e.key === "Escape") { e.preventDefault(); e.stopPropagation(); E.turAcik = false; ekleCiz("a-ekle-tur"); return true; }
+    return false;
+  };
   $("a-red-gerekce").addEventListener("input", function (e) {
     var yeter = e.target.value.trim().length >= 3;
     $("a-red-onay").disabled = !yeter; $("a-red-ipucu").hidden = yeter;
@@ -885,19 +610,12 @@
     if (g.length < 3) { $("a-red-ipucu").hidden = false; $("a-red-ipucu").className = "a-ipucu a-ipucu-uyari"; return; }
     var p = bul(redId);
     if (p && p.durum === "bekliyor") { p.durum = "red"; p.gerekce = g; p.reddedildi = simdi(); kaydet(p, simdi(), BEN, "Plan reddedildi", "Gerekçe: " + g); }
-    $("a-red-pencere").close(); goster(false); bildir("Plan reddedildi; gerekçe planlama ekibine gider.");
+    $("a-red-pencere").close(); goster(false); MK.bildir("Plan reddedildi; gerekçe planlama ekibine gider.");
   });
   /* pencere kapanınca adres plan içine döner (sunum çerçevesi #/plan/1/ekle ile açar) */
   $("a-ekle-pencere").addEventListener("close", function () { var r = rota(); if (r && r.ekle) history.replaceState(null, "", "#/plan/" + r.id); });
-  window.addEventListener("hashchange", function () { goster(true); });
-  window.addEventListener("resize", function () { if (!$("a-liste-gorunum").hidden) listeKipi(); });
-  function temaEtiketi() {
-    var k = document.documentElement.getAttribute("data-tema") === "koyu";
-    $("a-tema-tus").setAttribute("aria-label", k ? "Açık temaya geç" : "Koyu temaya geç");
-  }
 
-  $("a-menu").innerHTML = menuHtml();
-  menuDar(MENU_DAR);
-  $("a-suzgec-kap").innerHTML = suzgecHtml("l");   /* Planlar süzgeci de aynı üreticiden (kalıp 15) */
-  temaEtiketi(); seciciCiz("l"); goster(false);
+  MK.kabuk({ modul: 13, kullanici: { bas: "MK", ad: "Mert Kaya", rol: "Inspector · Makine Mühendisi" }, sayac: { 13: "Kabul bekleyen plan" } });
+  $("a-suzgec-kap").innerHTML = MK.suzgecHtml("l");   /* Planlar süzgeci de aynı üreticiden (kalıp 15) */
+  MK.seciciCiz("l"); goster(false);
 })();

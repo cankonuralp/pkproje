@@ -30,14 +30,25 @@ mkdir -p /opt/olcum
 if [ ! -d /opt/olcum/node_modules/puppeteer-core ]; then
   npm install --prefix /opt/olcum --no-audit --no-fund puppeteer-core
 fi
-if ! find /opt/olcum -type f -name chrome-headless-shell | grep -q .; then
-  (cd /opt/olcum && npx -y @puppeteer/browsers install chrome-headless-shell@stable --path /opt/olcum --install-deps)
+# 2026-09-24 ilk bulut koşusu: Chrome for Testing indirmesi vekil sunucuda 403 verdi; VM Playwright'ın Chromium'unu hazır
+# getiriyor (/opt/pw-browsers). Önce o kullanılır, yoksa indirme denenir. Ölçüm sürücüsü aynı sırayla arar (tools/olc-bulut.mjs).
+CHROME="$(find /opt/pw-browsers -type f -name headless_shell 2>/dev/null | head -1 || true)"
+if [ -z "${CHROME}" ]; then
+  if ! find /opt/olcum -type f -name chrome-headless-shell | grep -q .; then
+    (cd /opt/olcum && npx -y @puppeteer/browsers install chrome-headless-shell@stable --path /opt/olcum --install-deps)
+  fi
+  CHROME="$(find /opt/olcum -type f -name chrome-headless-shell | head -1)"
 fi
-CHROME="$(find /opt/olcum -type f -name chrome-headless-shell | head -1)"
 echo "chrome: ${CHROME} · $("${CHROME}" --version 2>/dev/null || echo 'SÜRÜM OKUNAMADI')"
 echo "puppeteer-core $(node -p "require('/opt/olcum/node_modules/puppeteer-core/package.json').version")"
 
 # 3) Depo bağımlılıkları (CI ile aynı komut)
 (cd "${KOK}" && npm ci --no-audit --no-fund)
 
+# 4) Root olmayan test kullanıcısı (2026-09-24 ilk bulut koşusu): bulut oturumu root; gömülü PostgreSQL root'ta initdb'yi
+# "postgres" kullanıcısına geçirip testin 0700 geçici klasörüne erişemiyor ("Permission denied", 5 test düştü). CI root değil;
+# testler burada da root olmayan kullanıcıyla koşar. Kaynak ve test DEĞİŞMEDİ.
+id bulut >/dev/null 2>&1 || useradd -m bulut
+
 echo "HAZIR. Komutları PATH=/opt/node24/bin:\$PATH önekiyle koş (kabuk durumu çağrılar arasında korunmaz)."
+echo "Testler: su bulut -s /bin/bash -c 'cd ${KOK} && PATH=/opt/node24/bin:\$PATH npm test' (root'ta gömülü PostgreSQL düşer)."
