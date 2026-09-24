@@ -219,6 +219,11 @@ müşteri, tesis, inspector, ekipman ve İSG-KATİP kayıtlarından oluşur, bun
 liste (tablo ↔ kart), süzgeç satırı ve sayfalama ilk liste ekranında (Personel) tek üretici olarak kodlanır, Planlar onlarla
 kurulur. *Öneri — o kalemde onaya sunulur:* Pages önizlemesinde veritabanı olmadığından kodlanmış ekranlar orada boş
 görünür → ilk modül ekranıyla birlikte önizlemeye **örnek veri kipi** (uydurma veri, yalnız önizleme derlemesinde).
+**Toplu maket kararı (reisim 2026-09-24, birebir):** *"tüm maketleri sırayla bulutta yapılsın en son hepsine toplu bakar ona göre
+ilerleriz"* · seçimler: **hepsi, sonda toplu bakış** (ara onay yok) · kapsam **faz 1 + faz 2**. Sıra, teslim biçimi ve bulut
+ortamı `MAKET-PLANI.md`'de (M1 Kullanıcı ve Rol · Personel … M16 Eğitimler, sonda toplu bakış sayfası). Eksik bulunan akış
+sıraya eklendi: planlama ekibinin **plan açma** ekranı (M6; Planlar maketinde yalnız inspector tarafı var). Maketler
+onaylanana kadar kod yok; soru numaraları 32'den devam eder.
 **Referans ekran (reisim 2026-09-23: *"uygun"*):** **Planlar** (13 Planlama; 5. turda eski "Planlarım" adı genel ada çevrildi). Liste, süzgeç satırı, durum rozeti,
 birincil/ikincil tuş, boş durum ve dürüst sayaç gibi ortak parçaları doğurur; ölçüleri tasarım kalıbının bu
 projedeki sayıları olur. Ardından saha rapor ekranı (14). **Dondurma (karar 25, 4. tur — önerim kabul):** plan içi
@@ -657,7 +662,10 @@ olsun"*), ☰ ile 2. deneme **onaylandı** (*"uygun"*) → uygulamaya geçti (§
 
 **Onuncu tur (2026-09-24):** Planlar'ın koda dönme zamanı → **faz 1 sırası korundu** (7. adım, gerçek veriyle; §3.3).
 
-**Açık kalanlar:** **önizlemede örnek veri kipi** (öneri, §3.3) · **rol × modül görünürlüğü** (reisim: *"sonradan belirleriz"*) · **gerçek sunucunun sağlayıcısı**
+**On birinci tur (2026-09-24):** maket çalışma biçimi → **bütün maketler (faz 1 + faz 2) sırayla bulutta, sonda toplu
+bakış** (§3.3, `MAKET-PLANI.md`).
+
+**Açık kalanlar:** **toplu maket çalışması** (M1–M16 + toplu bakış, `MAKET-PLANI.md`) · **önizlemede örnek veri kipi** (öneri, §3.3) · **rol × modül görünürlüğü** (reisim: *"sonradan belirleriz"*) · **gerçek sunucunun sağlayıcısı**
 (Türkiye, §8.8) ·
 alan adının alınması · e-imza yöntemi (8.4) · v1 ekipman grupları · 5 yıl sonrası silme
 mekanizması · **zimmette birden çok cihaz varsa süzgeç** (§3) · **kontrol metodu standardının seçim yeri**
@@ -701,6 +709,10 @@ revizyon, alan kopyalama, hafif kusur devri, meslek eşleşme denetimi).
   aktarıldığı hâline döndü. Ürün kararları bu dosyada tutulur. (b) Fotoğraf konumu/EXIF gibi şeylere
   **dokunulmayacak**. (c) Emsal uygulama incelemesi **GitHub'da paylaşılmaz** → bölüm 6 `yerel/` klasörüne
   taşındı, depo geçmişi bu içerikten temizlendi. Ana hedef: **müşterimizin işini kolaylaştırmak.**
+- 2026-09-24 (12): bulut oturumu soruldu (belgeler okundu: bulut VM Ubuntu 24.04, Node ≤ 22 hazır, yerel hafıza ve `yerel/`
+  gitmez, tarayıcı bölmesi yok) → reisim: *"tüm maketleri sırayla bulutta yapılsın en son hepsine toplu bakar"* → kapsam faz 1 +
+  faz 2, ara onay yok. `MAKET-PLANI.md` (talimat + durum) ve `tools/bulut-hazirla.sh` (Node 24, başsız Chrome, npm ci; bulutta
+  ilk koşuda doğrulanacak) yazıldı; plan açma ekranı eksikti, sıraya eklendi (M6).
 - 2026-09-24 (11): reisim Planlar maketinin neden koda dönmediğini sordu → faz 1 sırası ve bağımlılıklar anlatıldı; seçenekler
   (sırayı koru · Planlar'ı ince tablolarla öne al · örnek veriyle şimdi kodla) → **sırayı koru**. Önizleme için örnek veri
   kipi önerisi not edildi (§3.3, §9).

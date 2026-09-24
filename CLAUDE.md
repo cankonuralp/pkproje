@@ -27,6 +27,9 @@ inspector son imza → müşteriye açıldı → fatura → tahsilat → iş kap
 (17 modüllü yan menü, tema), kiracı izolasyonlu veri katmanı (gömülü PostgreSQL + RLS), kilit testleri, CI ve Pages
 önizlemesi var; modül ekranları YOK — faz 1 sırasıyla (pkproje.md §3.3), her biri önce maket + onay. Referans ekran
 (Planlar + plan içi) dondu: `src/styles/kalip.ts`.
+**Toplu maket çalışması (2026-09-24, reisim: *"tüm maketleri sırayla bulutta yapılsın en son hepsine toplu bakar ona göre
+ilerleriz"*):** faz 1 + faz 2'nin bütün maketleri sırayla, tek bulut oturumunda; reisim en sonda toplu bakar. ⛔ Talimat ve
+durum **`MAKET-PLANI.md`** — bu çalışma sürerken oturum başında o da TAM okunur. Maketler onaylanana kadar kod yok.
 
 ## 2 · Yığın (pkproje.md §8 — **reisim 2026-09-22'de onayladı**)
 - **TypeScript + Next.js (App Router), standalone çıktı — onaylı 2026-09-22** (SvelteKit düştü). Tarayıcı
@@ -56,6 +59,7 @@ inspector son imza → müşteriye açıldı → fatura → tahsilat → iş kap
 pkproje/
   CLAUDE.md                 bu dosya
   pkproje.md                alan bilgisi · kurgu · kararlar · açık sorular
+  MAKET-PLANI.md            toplu maket çalışmasının talimatı ve durumu (2026-09-24; bulut oturumu için)
   ANAYASA.md · TASARIM-KALIBI.md · 00–08-*.md · EKSIKLER-VE-ONERILER.md
                             kural dosyaları (ANAYASA/KALIP'a madde yalnız reisim onayıyla eklenir)
   src/app/                  sayfalar (iş mantığı YOK): Planlar ana sayfa + modül başına bir rota klasörü (kayıtla birebir)
@@ -71,7 +75,8 @@ pkproje/
   scripts/                  next.ts (telemetri kapalı + webpack) · gelistir.ts (npm run dev) · onizleme.ts + onizleme-sun.ts
   tests/                    `*.test.ts` kilit testleri (başında "NEREDEN GELDİ"); yardimci/denetimler.ts saf denetim işlevleri
   tests/bozan/              olumsuz kanıt (`*.bozan.ts`; kaynağı diskte DEĞİŞTİRMEDEN bellekte bozar)
-  tools/                    salt okunur araçlar: palet-olc.mjs · sunum-uret.mjs · olc-maket.js · olc-uygulama.js
+  tools/                    salt okunur araçlar: palet-olc.mjs · sunum-uret.mjs · olc-maket.js · olc-uygulama.js ·
+                            bulut-hazirla.sh (yalnız bulut VM'i: Node 24 + başsız Chrome + npm ci)
   .github/workflows/ci.yml  her push: tip · lint · test · olumsuz kanıt · derleme; main'de Pages önizlemesi
   docs/                     maket + sunum (Pages sitesinin kökü)
   data/                     yerel veritabanı + dosya deposu (git dışı)
