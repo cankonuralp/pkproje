@@ -29,7 +29,7 @@
       { k: "yakin", ad: "Kontrolü 30 gün içinde", test: function (m) { return yakin(enYakin(m)); } },
       { k: "isgsiz", ad: "İSG-KATİP kaydı olmayan tesis", test: function (m) { return isgsiz(m).length > 0; } },
       { k: "portalsiz", ad: "Portal kullanıcısı yok", test: function (m) { return !portal(m).length; } },
-      { k: "uygunsuz", ad: "Açık uygunsuzluk", test: function (m) { return m.uygunsuz > 0; } }
+      { k: "uygunsuz", ad: "Açık uygunsuzluk", test: function (m) { return MV.acikUygunsuz(m.id) > 0; } }
     ],
     seciciler: [{ k: "il", ad: "İl", secenek: function () {
       return [["tumu", "Tümü"]].concat(MV.TESISLER.map(function (t) { return t.il; }).filter(function (v, i, a) { return a.indexOf(v) === i; })
@@ -51,8 +51,9 @@
     { k: "sonraki", baslik: "En yakın kontrol", kart: "govde", sira: 5, hucre: function (m) { return '<span class="a-kart-etiket">En yakın kontrol</span>' + tarihHtml(enYakin(m)); } },
     { k: "durum", baslik: "Uygunsuzluk", kart: "rozet", sira: 1, hucre: function (m) {
       var e = isgsiz(m).length;
-      return (m.uygunsuz ? rozet({ ad: m.uygunsuz + " açık uygunsuzluk", rozet: "a-rozet-red" }) : "") +
-        (e ? '<span class="a-uyari-metin">' + e + " tesiste İSG-KATİP yok</span>" : "") + (!m.uygunsuz && !e ? '<span class="a-deger-yok">—</span>' : "");
+      var u = MV.acikUygunsuz(m.id);   /* 2026-09-24 (M11): uygunsuzluk kayıtlarından (önceden sabit sayı) */
+      return (u ? rozet({ ad: u + " açık uygunsuzluk", rozet: "a-rozet-red" }) : "") +
+        (e ? '<span class="a-uyari-metin">' + e + " tesiste İSG-KATİP yok</span>" : "") + (!u && !e ? '<span class="a-deger-yok">—</span>' : "");
     } }
   ];
   function listeCiz() {
@@ -106,7 +107,7 @@
         yuz({ ikon: "map-pin", ad: "Tesis", sayi: t.length, not: t.map(function (x) { return x.il; }).filter(function (v, i, a) { return a.indexOf(v) === i; }).join(" · ") }) +
         yuz({ ikon: "wrench", ad: "Ekipman", sayi: ekipmanSayisi(m), hedef: 7, hash: "#/?musteri=" + m.id, ne: "Ekipmanlar" }) +
         yuz({ ikon: "calendar-check", ad: "Açık plan", sayi: acikPlan, hedef: 13, hash: "", ne: "Planlar", not: "kabul bekleyen ve süren" }) +
-        yuz({ ikon: "triangle-alert", ad: "Açık uygunsuzluk", sayi: m.uygunsuz, hedef: 14, hash: "#/?musteri=" + m.id + "&uygunsuz", ne: "Raporlar", uyari: m.uygunsuz > 0, not: m.uygunsuz ? "giderilmesi bekleniyor" : "yok" }) +
+        yuz({ ikon: "triangle-alert", ad: "Açık uygunsuzluk", sayi: MV.acikUygunsuz(m.id), hedef: "musteri", hash: "#/uygunsuz?musteri=" + m.id, ne: "Müşteri paneli", uyari: MV.acikUygunsuz(m.id) > 0, not: MV.acikUygunsuz(m.id) ? "müşteri panelinde gördüğü" : "yok" }) +
       "</div>" +
       '<section class="a-bolum" aria-labelledby="a-b-bilgi"><div class="a-alt-bas"><h2 class="a-alt-baslik" id="a-b-bilgi">Müşteri bilgileri</h2></div><dl class="a-bilgi">' +
         bilgi("Ünvan", kacis(m.unvan), true) + bilgi("Kısa ad", kacis(m.kisa)) + bilgi("Vergi dairesi", kacis(m.vd)) + bilgi("Vergi no", '<span class="a-kod">' + m.vno + "</span>") +

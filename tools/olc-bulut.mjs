@@ -164,6 +164,17 @@ export const DURUMLAR = {
     { ad: "uyarılar · kişiye göre", hash: "#/", adim: [["js", 'MK.SZ.u.sec.kisi = "dk"; MK.suzgecKur("u")']] },
     { ad: "personel kartı · eğitim tekrarı geçmiş", sayfa: "maket/personel.html", hash: "#/p/ke" },
   ] },
+  /* müşteri paneli: firmanın yan menüsü ve çekmecesi yok → kabuksuz (çekmece ölçülmez) */
+  m11: { sayfa: "maket/musteri.html", durumlar: [
+    { ad: "müşteri paneli · raporlar", hash: "#/", kabuksuz: true },
+    { ad: "müşteri paneli · uygunsuzluklar", hash: "#/uygunsuz", kabuksuz: true },
+    { ad: "uygunsuzları indir (Excel önizlemesi)", hash: "#/excel", kabuksuz: true },
+    { ad: "rapor · açık uygunsuzluk, PDF", hash: "#/r/KM-0925-403-66888", kabuksuz: true },
+    { ad: "başka müşterinin raporu · bulunamadı", hash: "#/r/KM-0925-466-70a71", kabuksuz: true },
+    { ad: "portal kullanıcısı olmayan müşteri", hash: "#/?musteri=m5", kabuksuz: true },
+    { ad: "giderilmiş uygunsuzluklar (firma ekranından önizleme)", hash: "#/uygunsuz?musteri=m9", kabuksuz: true },
+    { ad: "müşteri kartı · açık uygunsuzluk kayıtlardan", sayfa: "maket/musteriler.html", hash: "#/m/m9" },
+  ] },
 };
 
 /* ── ETKİLEŞİM DENEMELERİ (--etkilesim): adımlar koşar, sonra `bekle` ifadesi sayfada doğru dönmeli. Gen verilmezse 1920. ── */
@@ -317,6 +328,14 @@ export const DENEMELER = {
     { ad: "adresten kalibrasyon süzgeci (6)", hash: "#/?tur=kalibrasyon", bekle: 'document.querySelector("#a-sayac").textContent === "6 / 11 uyarı"' },
     { ad: "uyarıdan cihaz sayfasına", hash: "#/", adim: [["tikla", '#a-liste a.a-ad-bag[href*="olcum-cihazlari.html"]']], bekle: '/olcum-cihazlari\\.html$/.test(location.pathname) && /^#\\/c\\/v/.test(location.hash)' },
     { ad: "personel kartı eğitim yüzü kayıttan (Kaan Er: tekrarı geçti)", sayfa: "maket/personel.html", hash: "#/p/ke", bekle: '/1 tekrarı geçti/.test(document.querySelector(".a-yuzler").textContent)' },
+  ],
+  m11: [
+    { ad: "yalnız imzalı ve kendi raporları (21)", hash: "#/", bekle: 'document.querySelector("#a-sayac").textContent === "21 rapor" && !document.querySelector("#a-menu")' },
+    { ad: "Uygunsuz çipi (6 / 21)", hash: "#/", adim: [["tikla", '[data-sz="m"] [data-cip="kusurlu"]']], bekle: 'document.querySelector("#a-sayac").textContent === "6 / 21 rapor"' },
+    { ad: "uygunsuzluklar sekmesi: 6 açık, Excel tuşu görünür", hash: "#/", adim: [["tikla", 'a.a-sekme[href="#/uygunsuz"]']], bekle: 'document.querySelector("#a-sayac").textContent === "6 uygunsuzluk" && !document.querySelector(\'[data-eylem="excel-ac"]\').hidden' },
+    { ad: "Excel önizlemesi: açık başına satır; rapor bağlantısı paneli açar", hash: "#/uygunsuz", adim: [["tikla", '[data-eylem="excel-ac"]'], ["tikla", "#a-pencere .a-belge-tablo a.a-no"]], bekle: '/^#\\/r\\//.test(location.hash) && !document.querySelector("#a-pencere").open && !!document.querySelector("#a-nesne .a-belge")' },
+    { ad: "başka müşterinin raporu açılmaz", hash: "#/r/KM-0925-466-70a71", bekle: '/bulunamadı/.test(document.querySelector("#a-nesne").textContent) && !document.querySelector(".a-belge")' },
+    { ad: "müşteri sayfasından uygunsuzluk yüzü → o müşterinin paneli", sayfa: "maket/musteriler.html", hash: "#/m/m9", adim: [["tikla", 'a.a-yuz[href^="musteri.html"]']], bekle: '/musteri\\.html$/.test(location.pathname) && /Başak Un/.test(document.querySelector("#a-alt").textContent) && document.querySelector("#a-sayac").textContent === "10 uygunsuzluk"' },
   ],
   m6: [
     { ad: "tesisten gelince: tarih sonraki kontrol, 6 / 6 seçili", hash: "#/?tesis=t2", bekle: 'document.querySelector("#p-tarih").value === "14.10.2026" && /^6 \\/ 6 kayıtlı seçili/.test(document.querySelector("#p-secili").textContent)' },

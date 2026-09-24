@@ -529,6 +529,20 @@
      (maket tutarsızlığı) → burada "Kusurlu"ya çevrilir */
   MV.sonucAd = function (r) { if (!r.sonuc) return null; return r.sonuc === "Uygun" || MV.kusurSinifli(MV.tur(MV.ekipman(r.kod).tur)) ? r.sonuc : "Kusurlu"; };
   MV.raporDurum = function (r) { return MV.RAPOR_DURUM[r.durum === "taslak" && r.geri ? "geri" : r.durum]; };
+  /* UYGUNSUZLUK KAYDI (§3.2 madde 6: ayrı kayıt — rapor, ekipman, kriter, açıklama, sınıf, tarih): imzalı ve sonucu "Uygun" olmayan
+     rapordan; aynı ekipmanın SONRAKİ imzalı raporu gelince "giderildi" (sonraki kontrol ya da ikinci kontrol, Ek-III 1.9). Kriter ve açıklama
+     rapor belgesindekiyle aynı (MB.belge). Müşteri kartındaki "açık uygunsuzluk" sayısı buradan (M2'deki sabit sayı yerine). */
+  MV.uygunsuzluklar = function (mid) {
+    var ts = MV.tesisleri(mid).map(function (t) { return t.id; }), l = [];
+    MV.RAPORLAR.filter(function (r) { return r.durum === "imzali" && ts.indexOf(r.tesis) >= 0 && r.sonuc && r.sonuc !== "Uygun"; }).forEach(function (r) {
+      var e = MV.ekipman(r.kod), t = MV.tur(e.tur), sinifli = MV.kusurSinifli(t), hafif = /Hafif/.test(r.sonuc);
+      var sonra = MV.RAPORLAR.filter(function (x) { return x.kod === r.kod && x.durum === "imzali" && x.olustu > r.olustu; })[0];
+      l.push({ id: "u-" + r.no, rapor: r, e: e, t: t, tesis: r.tesis, kriter: MV.kriterler(t)[hafif ? 2 : 1], sinif: sinifli ? (hafif ? "Hafif" : "Ağır") : "Kusurlu",
+        aciklama: hafif ? "Madde 3'te okunabilirliği azaltan hasar." : "Madde 2'de izin verilen sınırın üstünde aşınma.", tarih: r.olustu.slice(0, 10), durum: sonra ? "giderildi" : "acik", kapatan: sonra || null });
+    });
+    return l;
+  };
+  MV.acikUygunsuz = function (mid) { return MV.uygunsuzluklar(mid).filter(function (u) { return u.durum === "acik"; }).length; };
   /* belge (MB.belge) için raporun dolu verisi; İSG-KATİP kaydı rapor tarihinde geçerli olan (önceki kayıtlar dahil) */
   MV.raporBelge = function (r) {
     var e = MV.ekipman(r.kod), t = MV.tur(e.tur), ts = MV.tesis(r.tesis), p = MV.kisi(r.kisi), gun = r.olustu.slice(0, 10);

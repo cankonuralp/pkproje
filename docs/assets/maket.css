@@ -719,7 +719,9 @@ a.a-yuz:hover { border-color: var(--kenar-alan); background: var(--zemin); }
 }
 .a-belge-madde { color: var(--yazi2); font-size: var(--boy-etiket); font-weight: 500; }
 .a-belge-tablo { width: 100%; border-collapse: collapse; font-size: var(--boy-kucuk); }
-.a-belge-tablo th, .a-belge-tablo td { padding: 6px 8px; border: 1px solid var(--kenar); text-align: left; vertical-align: top; overflow-wrap: anywhere; }
+/* ⛔ 2026-09-24 (M11, 375'te gözle): "anywhere" en kısa sütunu harf harf bölüyordu ("Yap ıldı") — ölçüm yakalamaz (taşma yok).
+   Kelime içinde bölünmez; en uzun kelime sütunun en dar hâlidir. */
+.a-belge-tablo th, .a-belge-tablo td { padding: 6px 8px; border: 1px solid var(--kenar); text-align: left; vertical-align: top; overflow-wrap: break-word; }
 .a-belge-tablo th { background: var(--zemin2); color: var(--yazi2); font-weight: 600; }
 /* şablon görünümünde alanın nereden dolduğu (rapor zinciri, §3.2 madde 1) */
 .a-belge-kaynak { display: flex; align-items: center; gap: 4px; margin-top: 4px; color: var(--yazi2); font-size: var(--boy-etiket); font-weight: 500; }
@@ -757,6 +759,18 @@ a.a-yuz:hover { border-color: var(--kenar-alan); background: var(--zemin); }
 /* M10 — uyarılar */
 .a-tablo-uyari .a-k-konu { width: 32%; } .a-tablo-uyari .a-k-kisi { width: 16%; } .a-tablo-uyari .a-k-tarih { width: 16%; }
 .a-tablo-uyari .a-k-kalan { width: 20%; } .a-tablo-uyari .a-k-durum { width: 16%; }
+
+/* M11 — MÜŞTERİ PANELİ kabuğu: yan menü yok, tek sütun; üst çubukta probata logosu (temaya göre) ve "Müşteri paneli" */
+.a-kabuk.a-kabuk-musteri { grid-template-columns: minmax(0, 1fr); }
+.a-ust-logo { height: 28px; width: auto; flex: none; }
+.a-ust-logo-koyu { display: none; }
+:root[data-tema="koyu"] .a-ust-logo-acik { display: none; }
+:root[data-tema="koyu"] .a-ust-logo-koyu { display: block; }
+.a-ust-panel { color: var(--yazi2); font-size: var(--boy-kucuk); font-weight: 600; white-space: nowrap; }
+.a-tablo-mrapor .a-k-no { width: 22%; } .a-tablo-mrapor .a-k-ekipman { width: 22%; } .a-tablo-mrapor .a-k-tesis { width: 16%; }
+.a-tablo-mrapor .a-k-tarih { width: 12%; } .a-tablo-mrapor .a-k-sonraki { width: 13%; } .a-tablo-mrapor .a-k-sonuc { width: 15%; }
+.a-tablo-uygunsuz .a-k-ekipman { width: 20%; } .a-tablo-uygunsuz .a-k-kusur { width: 32%; } .a-tablo-uygunsuz .a-k-rapor { width: 20%; }
+.a-tablo-uygunsuz .a-k-tarih { width: 12%; } .a-tablo-uygunsuz .a-k-durum { width: 16%; }
 
 /* ══ BANTLAR — taban kuralların ARDINDA (anayasa 3.2) ══════════════════════════════════════════════════ */
 

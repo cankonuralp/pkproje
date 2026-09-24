@@ -69,7 +69,7 @@
   var SAYFALAR = { 13: "planlarim.html", 1: "kullanicilar.html", 2: "personel.html", 3: "musteriler.html", 5: "ekipman-turleri.html", 7: "ekipmanlar.html", 8: "olcum-cihazlari.html", 9: "zimmetler.html", 12: "sozlesmeler.html", 4: "standartlar.html", 14: "raporlar.html", 15: "onaylar.html", 20: "uyarilar.html" };
   MK.sayfaAdresi = function (no) { return SAYFALAR[no] || null; };
   /* menü dışı maket ekranları (ör. plan açma); hazır olunca buraya yazılır, bağlantılar kendiliğinden açılır */
-  var EK_SAYFALAR = { giris: "giris.html", "plan-ac": "plan-ac.html", sablon: "sablon.html", rapor: "rapor.html" };
+  var EK_SAYFALAR = { giris: "giris.html", "plan-ac": "plan-ac.html", sablon: "sablon.html", rapor: "rapor.html", musteri: "musteri.html" };
   MK.adres = function (anahtar, hash) { var a = SAYFALAR[anahtar] || EK_SAYFALAR[anahtar]; return a ? a + (hash || "") : null; };
   /* hazırsa bağlantı-tuş, değilse "henüz tasarlanmadı" bildirimi veren tuş (maket dışına gidilmez) */
   MK.git = function (o) {
@@ -99,6 +99,30 @@
   MK.kabuk = function (o) {
     var ana = $("a-icerik"), kok = document.createElement("div");
     kok.className = "a-kabuk"; kok.id = "a-kabuk";
+    /* 2026-09-24 (M11): MÜŞTERİ PANELİ kabuğu — firmanın modül menüsü yok; üst çubukta marka, tema ve müşteri kullanıcısı.
+       o.musteri = { ad: müşteri kısa adı }. Aynı üst çubuk sınıfları (ikinci aile yok). */
+    if (o.musteri) {
+      kok.className = "a-kabuk a-kabuk-musteri";
+      kok.innerHTML = '<div class="a-govde"><header class="a-ust">' +
+          '<img class="a-ust-logo a-ust-logo-acik" src="../marka/probata-yatay-renkli.svg" alt="probata" width="120" height="30">' +
+          '<img class="a-ust-logo a-ust-logo-koyu" src="../marka/probata-yatay-koyu-zemin.svg" alt="probata" width="120" height="30">' +
+          '<span class="a-ust-panel">Müşteri paneli</span><div class="a-ust-bosluk"></div>' +
+          '<button class="a-ikon-tus" type="button" data-eylem="tema" id="a-tema-tus" aria-label="Temayı değiştir">' +
+            '<svg class="a-ikon a-tema-ay" aria-hidden="true"><use href="' + IKON + 'moon"/></svg><svg class="a-ikon a-tema-gunes" aria-hidden="true"><use href="' + IKON + 'sun"/></svg></button>' +
+          '<div class="a-kullanici"><span class="a-avatar" aria-hidden="true">' + kacis(o.kullanici.bas) + "</span>" +
+            '<span class="a-kullanici-yazi"><span class="a-kullanici-ad">' + kacis(o.kullanici.ad) + '</span><span class="a-kullanici-rol">' + kacis(o.kullanici.rol) + "</span></span></div>" +
+        "</header></div>";
+      document.body.insertBefore(kok, ana);
+      kok.querySelector(".a-govde").appendChild(ana);
+      document.body.insertAdjacentHTML("beforeend",
+        '<dialog class="a-pencere" id="a-levha" aria-labelledby="a-levha-baslik"><div class="a-pencere-bas"><h2 id="a-levha-baslik">Süzgeç</h2>' +
+          '<button class="a-ikon-tus" type="button" data-eylem="levha-kapat" aria-label="Kapat">' + I("x") + "</button></div>" +
+          '<div class="a-pencere-govde" id="a-levha-govde"></div><div class="a-pencere-alt">' +
+          '<button class="a-tus a-tus-ikincil" type="button" data-eylem="temizle">Temizle</button>' +
+          '<button class="a-tus a-tus-birincil" type="button" data-eylem="levha-kapat" id="a-levha-uygula">Sonuçları göster</button></div></dialog>' +
+        '<div class="a-bildirim" id="a-bildirim" role="status" aria-live="polite">' + I("circle-check") + '<span id="a-bildirim-metin"></span></div>');
+      temaEtiketi(); return;
+    }
     kok.innerHTML =
       '<aside class="a-cubuk" id="a-cubuk" aria-label="Ana menü"><div class="a-cubuk-bas">' +
         '<img class="a-cubuk-logo" src="../marka/probata-yatay-koyu-zemin.svg" alt="probata" width="148" height="37">' +

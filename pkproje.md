@@ -723,6 +723,34 @@ süresi geçmiş; seçici: kişi; adresten türe göre (`?tur=kalibrasyon|egitim
 **Ölçüm (2026-09-24, bulut):** 5 durum × 1920 · 1080 · 375 × açık/koyu = **30/30 temiz**, çekmece 2/2; etkileşim **6/6**. Telefonda kart
 "etiket: değer" satırlarına indirildi (M5 deseni).
 
+#### Maket M11 — Müşteri Paneli (modül 17) — ONAY BEKLİYOR
+Ekran: **müşteri paneli** (`maket/musteri.html`, Ada Makina'dan Serkan Ateş): **müşteri kabuğu** (firmanın modül menüsü yok; üst çubukta
+probata, "Müşteri paneli", tema, kullanıcı) · **Raporlar** (yalnız imzalı ve kendi tesislerinin raporları, 20'şer; çipler: uygunsuz ·
+sonraki kontrol 60 gün içinde; seçiciler: tesis, yıl) · **Uygunsuzluklar** (açık / giderildi; sınıf, kriter, açıklama, rapor bağlantısı) ·
+**"Uygunsuzları indir"** (Excel önizlemesi: açık uygunsuzluk başına satır, "Rapor" bağlantısı paneldeki raporu açar) · **rapor sayfası**
+(PDF önizlemesi — tek üretici, indir). Firma tarafında müşteri kartındaki "Açık uygunsuzluk" yüzü o müşterinin panelini önizleme olarak açar.
+**Varsayımlar:**
+- Müşteri **firmanın aynı giriş sayfasından** e-postayla girer (M1 giriş maketi); hesabın türüne göre müşteri paneli açılır.
+- Yalnız **imzalı** raporlar ve yalnız kullanıcının **yetkili olduğu tesisler**; başka müşterinin ya da imzasız raporun **var olduğu bile
+  söylenmez** ("bulunamadı").
+- **Uygunsuzluk ayrı kayıt** (§3.2 madde 6): imzalı ve "Uygun" olmayan rapordan doğar; aynı ekipmanın sonraki imzalı raporu gelince
+  **"giderildi"** (sonraki kontrol ya da ikinci kontrol, Ek-III 1.9). Sınıf hafif / ağır yalnız format yürürlükteki türde, öteki "kusurlu".
+- Excel **kayıtlardan** üretilir (PDF'ten okunmaz); rapor bağlantısı **giriş ister** (kalıcı herkese açık dosya bağlantısı yok, anayasa 5.1).
+- Müşteri kartındaki ve listedeki **açık uygunsuzluk sayısı** artık bu kayıtlardan (M2'deki sabit sayı kalktı; M2 48/48, 11/11 yeniden).
+- Firma ekranından panele geçiş makette önizleme; uygulamada firma kullanıcısı müşteri paneline girmez, aynı veriyi kendi ekranında görür.
+- Portal kullanıcısı olmayan müşteride uyarı: raporlar imzalansa da kimse göremez.
+**Sorular (M11):**
+111. Müşteri **aynı giriş sayfasından** (öneri) mı girer, ayrı adresten mi?
+112. Panelde hangi marka: **probata** (makette) mı, **muayene firmasının logosu** mu, ikisi de mi?
+113. Excel'deki bağlantı **paneldeki rapora** (giriş ister; öneri) mı gitsin?
+114. Uygunsuzluk **nasıl giderildi** sayılır: yalnız sonraki / ikinci kontrol raporuyla (öneri) mı; müşteri "giderdim" deyip fotoğraf yükleyebilsin mi?
+115. Müşteri **kendi kullanıcılarını** ekleyebilsin mi, yoksa yalnız firma mı açar? *(soru 35 ile bağlı)*
+116. Panelde **planlanan kontrol** tarihi (açık plan) ve sonraki kontrol takvimi gösterilsin mi? *(soru 81 ile bağlı)*
+117. Onaydaki / taslak raporların **varlığı da gizli** kalsın (öneri) mı?
+**Ölçüm (2026-09-24, bulut):** 8 durum × 1920 · 1080 · 375 × açık/koyu = **48/48 temiz**, çekmece 2/2 (firma ekranında); etkileşim **6/6**.
+Gözle bulunup düzeltilen (ölçüm yakalamıyor): telefonda **belge tablolarında kelimeler harf ortasından bölünüyordu** ("Yap ıldı") — ortak
+belge stili düzeltildi, M7 (66/66) ve M9 (60/60) yeniden ölçüldü; Excel önizlemesi telefonda iki sütuna indi.
+
 ---
 
 ## 4 · Mevzuat bulguları (2026-09-18 araştırması; kaynaklar bölüm 10)
@@ -1064,6 +1092,8 @@ revizyon, alan kopyalama, hafif kusur devri, meslek eşleşme denetimi).
 - Emsal ürünler: https://opwire.app/iso-17020-periyodik-kontrol-yazilimi/ · https://17020muayene.vidco.com.tr/ · https://akuple.com/asansor-kontrol-yazilimi/ · https://ensyazilim.com/
 
 ## 11 · Değişiklik günlüğü
+- 2026-09-24 (23): **toplu maket M11 Müşteri Paneli** (§3.6): müşteri kabuğu, imzalı raporlar, uygunsuzluk kayıtları (açık / giderildi),
+  "Uygunsuzları indir" önizlemesi, rapor PDF'i; müşteri kartındaki açık uygunsuzluk sayısı kayıtlardan. Sorular 111–117. Faz 1 maketleri bitti.
 - 2026-09-24 (22): **toplu maket M10 Uyarılar** (§3.6): kalibrasyon bitişi ve eğitim tekrarı uyarıları (yalnız ekranda, koşuldan türeyen);
   eğitim kayıtları ortak veride, personel kartı onlardan sayar. Sorular 107–110.
 - 2026-09-24 (21): **toplu maket M9 Raporlar · Onaylar · İmza · PDF** (§3.6): inspector'ın rapor listesi ve rapor sayfası (durum
