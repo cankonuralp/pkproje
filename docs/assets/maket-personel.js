@@ -321,8 +321,7 @@
     var kiside = g.filter(function (x) { return !x.alindi; }).length;
     $("a-nesne").innerHTML = MK.kirinti([["Personel", "#/"], [p.ad, "#/p/" + p.id], ["Zimmet geçmişi"]]) +
       '<div class="a-nesne-bas"><div class="a-nesne-kimlik"><div class="a-nesne-baslik"><h1 tabindex="-1">Zimmet geçmişi</h1></div>' +
-        '<p class="a-nesne-alt">' + ikon("user", "a-ikon-kucuk") + "<span>" + kacis(p.ad) + " · " + g.length + " teslim · " + kiside + " varlık hâlâ kişide</span></p></div>" +
-        '<div class="a-eylem-cubugu"><a class="a-tus a-tus-ikincil" href="zimmetler.html#/?kisi=' + p.id + '">' + ikon("package", "a-ikon-kucuk") + "Zimmetler modülünde</a></div></div>" +
+        '<p class="a-nesne-alt">' + ikon("user", "a-ikon-kucuk") + "<span>" + kacis(p.ad) + " · " + g.length + " teslim · " + kiside + " varlık hâlâ kişide</span></p></div></div>" +
       '<section class="a-bolum" aria-labelledby="a-b-zg"><div class="a-alt-bas"><h2 class="a-alt-baslik" id="a-b-zg">Verilenler ve geri alınanlar</h2><span class="a-sayac">yeniden eskiye</span></div>' +
         (g.length ? '<div class="a-liste-kap">' + MK.tablo({ baslik: "Zimmet geçmişi", sinif: "a-tablo-zgecmis", sutunlar: GECMIS_SUTUN, kayitlar: g }) + "</div>"
           : '<p class="a-bos-satir">Bu kişiye hiç varlık teslim edilmemiş.</p>') + "</section>" +

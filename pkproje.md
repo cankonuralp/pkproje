@@ -395,7 +395,7 @@ hesabı aç / yeni geçici parola (parola bir kez gösterilir) · özlük belges
   yanında "İmzalı formu aç" (yüklenen tarama; makette formun imzalı hâli) · "Zimmet geçmişi" kartın içinde ayrı görünüm: kişiye yapılan
   her teslim — varlık, verildi (tarih, depodan / devir), geri alındı (tarih, depoya iade / kalibrasyona / devredildi · kişi) ya da
   "Hâlâ kişide", not; altında kişinin bütün imzalı formları (yeniden eskiye, her biri açılır). Formun kapsamı imza tarihinde kişide olan
-  varlıklardan hesaplanır. Kartın rol kaydetme çubuğu telefonda artık yapışkan değil (bölüm içi çubuk).
+  varlıklardan hesaplanır. Geçmişte "Zimmetler modülünde" tuşu yok (reisim: *"gerek yok kaldır"*). Kartın rol kaydetme çubuğu telefonda artık yapışkan değil (bölüm içi çubuk).
 - Karar (40): kişinin kartında **zimmetindekiler** (o an kişide olan varlıklar; teslim geçmişi Zimmetler'de) ve **özlük dosyası**
   (iş sözleşmesi, diploma, oda kaydı, EKİPNET belgesi, kimlik, sağlık raporu, diğer; yalnız firma yöneticisi görür — KVKK: özlük bilgisi,
   varsayım). Eğitim sertifikaları Eğitimler modülünde.
