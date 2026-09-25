@@ -8,8 +8,8 @@
   390,
   430
  ],
- "toplam": 108,
- "temiz": 108,
+ "toplam": 116,
+ "temiz": 116,
  "durumlar": [
   {
    "ad": "giriş",
@@ -904,6 +904,78 @@
   },
   {
    "ad": "personel · kart (zimmet formu eskidi)",
+   "gen": 430,
+   "temiz": true,
+   "tasma": 0,
+   "disari": [],
+   "kucukAlan": [],
+   "alan": 0
+  },
+  {
+   "ad": "zimmet geçmişi (devir, iade, hâlâ kişide)",
+   "gen": 320,
+   "temiz": true,
+   "tasma": 0,
+   "disari": [],
+   "kucukAlan": [],
+   "alan": 0
+  },
+  {
+   "ad": "zimmet geçmişi (devir, iade, hâlâ kişide)",
+   "gen": 360,
+   "temiz": true,
+   "tasma": 0,
+   "disari": [],
+   "kucukAlan": [],
+   "alan": 0
+  },
+  {
+   "ad": "zimmet geçmişi (devir, iade, hâlâ kişide)",
+   "gen": 390,
+   "temiz": true,
+   "tasma": 0,
+   "disari": [],
+   "kucukAlan": [],
+   "alan": 0
+  },
+  {
+   "ad": "zimmet geçmişi (devir, iade, hâlâ kişide)",
+   "gen": 430,
+   "temiz": true,
+   "tasma": 0,
+   "disari": [],
+   "kucukAlan": [],
+   "alan": 0
+  },
+  {
+   "ad": "imzalı zimmet formu açıldı",
+   "gen": 320,
+   "temiz": true,
+   "tasma": 0,
+   "disari": [],
+   "kucukAlan": [],
+   "alan": 0
+  },
+  {
+   "ad": "imzalı zimmet formu açıldı",
+   "gen": 360,
+   "temiz": true,
+   "tasma": 0,
+   "disari": [],
+   "kucukAlan": [],
+   "alan": 0
+  },
+  {
+   "ad": "imzalı zimmet formu açıldı",
+   "gen": 390,
+   "temiz": true,
+   "tasma": 0,
+   "disari": [],
+   "kucukAlan": [],
+   "alan": 0
+  },
+  {
+   "ad": "imzalı zimmet formu açıldı",
    "gen": 430,
    "temiz": true,
    "tasma": 0,

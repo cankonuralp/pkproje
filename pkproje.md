@@ -390,6 +390,12 @@ hesabı aç / yeni geçici parola (parola bir kez gösterilir) · özlük belges
   **temel format** önizlemesi (PDF'in iskeleti; `MB.zimmetFormu`, rapor belgesiyle tek üretici) → yazdır, teslim eden ve teslim alan
   imzalar → "İmzalı taramayı yükle". Kartta durum: yüklü ve güncel · **eskidi** (formdan sonra zimmet değişti → yeni form) · yok.
   Teslim eden makette planlama ekibinden depo sorumlusu (varsayım, M4 soru 63). Format firmaya göre değişebilir → §3.7 listesi.
+  **Ek (reisim 2026-09-25: "İmzalı zimmet formuna tıklayınca açılmalı sadece yüklü olduğu bilgisi yeterli değil, personelin profilindeki
+  zimmet geçmişine tıklayınca o personele hangi tarihte hangi ekipman verilmiş hangi tarihte alınmış görülsün"):** durum şeridinin
+  yanında "İmzalı formu aç" (yüklenen tarama; makette formun imzalı hâli) · "Zimmet geçmişi" kartın içinde ayrı görünüm: kişiye yapılan
+  her teslim — varlık, verildi (tarih, depodan / devir), geri alındı (tarih, depoya iade / kalibrasyona / devredildi · kişi) ya da
+  "Hâlâ kişide", not; altında kişinin bütün imzalı formları (yeniden eskiye, her biri açılır). Formun kapsamı imza tarihinde kişide olan
+  varlıklardan hesaplanır. Kartın rol kaydetme çubuğu telefonda artık yapışkan değil (bölüm içi çubuk).
 - Karar (40): kişinin kartında **zimmetindekiler** (o an kişide olan varlıklar; teslim geçmişi Zimmetler'de) ve **özlük dosyası**
   (iş sözleşmesi, diploma, oda kaydı, EKİPNET belgesi, kimlik, sağlık raporu, diğer; yalnız firma yöneticisi görür — KVKK: özlük bilgisi,
   varsayım). Eğitim sertifikaları Eğitimler modülünde.
@@ -402,8 +408,8 @@ hesabı aç / yeni geçici parola (parola bir kez gösterilir) · özlük belges
   meslekler" ayrıntısı sadeleşecek · M2'de portal kullanıcısı davetle değil kendiliğinden açılacak.
 **Sorular (M1):**
 Açık soru yok — 32–43 ve 159 cevaplandı (§9, on ikinci tur). 2. turun kendisi reisim'in incelemesini bekliyor.
-**Ölçüm (2026-09-25, bulut, 2. tur + zimmet formu):** 27 durum × 1920 · 1080 · 375 × açık/koyu = **162/162 temiz**, 1080'de çekmece açık 2/2; etkileşim
-**35/35**, telefon 108/108 (rol seçicisi, eksik bilgi çipi, rol kaydetme, yetkisiz meslekte uyarılı inspector, hesap aç → geçici parola → kart, yeni geçici
+**Ölçüm (2026-09-25, bulut, 2. tur + zimmet formu + zimmet geçmişi):** 29 durum × 1920 · 1080 · 375 × açık/koyu = **174/174 temiz**, 1080'de çekmece açık 2/2; etkileşim
+**38/38**, telefon 116/116 (rol seçicisi, eksik bilgi çipi, rol kaydetme, yetkisiz meslekte uyarılı inspector, hesap aç → geçici parola → kart, yeni geçici
 parola, hesabı kapat, rol yetkilerini düzenle / kaydet / önerilene dön, yöneticinin sabit hücresi, özlük belgesi, eski Kullanıcılar
 bağlantısı, geçici parolayla giriş, Ana sayfa rol anahtarı ve onay kuyruğu sırası). Ölçerken düzeltilen: telefonda zimmetteki uzun varlık
 adı 93 px taşıyordu (kısa kimlik bağlantı, ad alt satırda) · özlük notundaki satır içi bağlantı 16 px küçük hedefti (kaldırıldı) · telefonda
@@ -1281,6 +1287,8 @@ revizyon, alan kopyalama, hafif kusur devri, meslek eşleşme denetimi).
 - Emsal ürünler: https://opwire.app/iso-17020-periyodik-kontrol-yazilimi/ · https://17020muayene.vidco.com.tr/ · https://akuple.com/asansor-kontrol-yazilimi/ · https://ensyazilim.com/
 
 ## 11 · Değişiklik günlüğü
+- 2026-09-25 (35): **imzalı zimmet formu açılır, zimmet geçmişi kartta** (reisim): kişiye verilen / geri alınan her varlık tarihleriyle,
+  kişinin bütün imzalı formları; "Teslim geçmişi" tuşu Zimmetler modülüne atmak yerine bu görünümü açar. M1 174/174, 38/38.
 - 2026-09-25 (34): **zimmet teslim formu** (reisim: "zimmete varlık eklendikten sonra eklenen varlıkların PDF şeklinde çıkartılıp
   imzalanıp taramasının buraya koyulması için bir düzenek kurgula ... temel bir format oluştur"): personel kartında form önizlemesi,
   imzalı taramayı yükleme, güncel / eskidi / yok durumu; **§3.7 firmaya göre değişen formatlar** canlı listesi (8 satır). M1 162/162, 35/35.

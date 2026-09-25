@@ -72,6 +72,7 @@
      çıkartılıp imzalanıp taramasının buraya koyulması için bir düzenek kurgula, bunun için temel bir format oluştur; müşteri formatı
      istemese biz müşteri isteği doğrultusunda bunu değiştiririz"). Firmaya göre değişen formatlardan biri (pkproje.md §3.7): firma kendi
      formunu isterse o firmaya özel üretilir, bu varsayılan kalır. o = { p (teslim alan), varliklar[], no, tarih, eden (teslim eden) }. */
+  /* o.imzali: yüklenmiş taramanın yerine imzalı hâl (makette; imza alanında ad + tarih) */
   MB.zimmetFormu = function (o) {
     var f = MV.FIRMA, formKod = f.kisa + "-FR-ZMT-01";
     var tur = { cihaz: "Ölçüm cihazı", arac: "Araç", diger: "Diğer" };
@@ -94,8 +95,10 @@
       bolum("2", "Taahhüt", "",
         '<p>Yukarıda listelenen varlıkları eksiksiz ve çalışır durumda teslim aldım. Özenle ve yalnız işim için kullanacağımı; kayıp, hasar ya da ' +
         'arızayı gecikmeden bildireceğimi; işten ayrılışımda ya da istendiğinde eksiksiz iade edeceğimi kabul ederim.</p>') +
-      '<div class="a-belge-imzalar"><div><b>Teslim eden</b><span>' + kacis(o.eden.ad) + '</span><div class="a-belge-imza">Tarih · imza</div></div>' +
-        '<div><b>Teslim alan</b><span>' + kacis(o.p.ad) + '</span><div class="a-belge-imza">Tarih · imza</div></div></div>' +
+      '<div class="a-belge-imzalar">' + [["Teslim eden", o.eden], ["Teslim alan", o.p]].map(function (x) {
+        return "<div><b>" + x[0] + "</b><span>" + kacis(x[1].ad) + '</span><div class="a-belge-imza' + (o.imzali ? " a-belge-imzali" : "") + '">' +
+          (o.imzali ? kacis(x[1].ad) + " · " + MK.tarihYaz(o.tarih) + " · imzalı" : "Tarih · imza") + "</div></div>";
+      }).join("") + "</div>" +
       '<footer class="a-belge-alt"><span>' + kacis(f.ad) + " · " + formKod + " · temel format</span><span>Sayfa 1 / 1</span></footer></article>";
   };
 })();

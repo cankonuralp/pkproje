@@ -627,7 +627,12 @@ a.a-yuz:hover { border-color: var(--kenar-alan); background: var(--zemin); }
 /* zimmet teslim formu (2026-09-25): iki imza alanı yan yana, telefonda alt alta (kap sorgusu yok; ızgara kendiliğinden sarar) */
 .a-belge-imzalar { display: grid; grid-template-columns: repeat(auto-fit, minmax(min(100%, 220px), 1fr)); gap: 12px; margin-top: 16px; }
 .a-belge-imzalar > div { display: grid; gap: 2px; font-size: var(--boy-kucuk); }
-.a-zimmet-form-durum { margin: 0 0 10px; }
+.a-zimmet-form-durum { display: flex; align-items: center; flex-wrap: wrap; gap: 8px; margin: 0 0 10px; }
+.a-zimmet-form-durum > .a-serit { flex: 1 1 320px; min-width: 0; }
+.a-belge-imzali { border-style: solid; color: var(--yazi); font-style: italic; }
+.a-bolum-eylem { display: flex; justify-content: flex-end; align-items: center; flex-wrap: wrap; gap: 8px; margin: 12px 0 0; }
+.a-bolum-eylem .a-adim-not { margin-right: auto; }
+.a-tablo-zgecmis .a-k-varlik { width: 32%; } .a-tablo-zgecmis .a-k-verildi { width: 20%; } .a-tablo-zgecmis .a-k-alindi { width: 22%; } .a-tablo-zgecmis .a-k-not { width: 26%; }
 /* M2 (müşteri ve tesis) — SGK sicil no 26 hane bölünmez (anayasa 3.11): sütunu ~230 px'e göre */
 .a-tablo-musteri .a-k-unvan { width: 27%; } .a-tablo-musteri .a-k-tesis { width: 17%; } .a-tablo-musteri .a-k-ekipman { width: 9%; }
 .a-tablo-musteri .a-k-portal { width: 12%; } .a-tablo-musteri .a-k-sonraki { width: 15%; } .a-tablo-musteri .a-k-durum { width: 20%; }
@@ -1022,7 +1027,8 @@ a.a-yuz:hover { border-color: var(--kenar-alan); background: var(--zemin); }
   .a-tablo-perf .a-kart-etiket, .a-tablo-gunluk .a-kart-etiket, .a-tablo-egitim .a-kart-etiket, .a-tablo-egitimtur .a-kart-etiket { display: inline; }
   /* M1 2. tur: zimmet, özlük ve Ana sayfa listeleri kartta etiket: değer; rol yetkileri kartında seçim alanı değerin yerinde */
   .a-tablo-kzimmet td[data-kart="govde"], .a-tablo-ozluk td[data-kart="govde"], .a-tablo-ana td[data-kart="govde"] { display: flex; align-items: baseline; justify-content: space-between; flex-wrap: wrap; gap: 4px 8px; }
-  .a-tablo-kzimmet .a-kart-etiket, .a-tablo-ozluk .a-kart-etiket, .a-tablo-ana .a-kart-etiket { display: inline; }
+  .a-tablo-kzimmet .a-kart-etiket, .a-tablo-ozluk .a-kart-etiket, .a-tablo-ana .a-kart-etiket, .a-tablo-zgecmis .a-kart-etiket { display: inline; }
+  .a-tablo-zgecmis td[data-kart="govde"] { display: flex; align-items: baseline; justify-content: space-between; flex-wrap: wrap; gap: 4px 8px; text-align: right; }
   .a-tablo-matris .a-secim { flex: 0 1 170px; }
   .a-tablo-isgkayit td[data-kart="govde"], .a-tablo-planekp td[data-kart="govde"], .a-tablo-aday td[data-kart="govde"],
   .a-tablo-kapsamozet td[data-kart="govde"], .a-tablo-uyari td[data-kart="govde"], .a-tablo-issoz td[data-kart="govde"]:has(.a-kart-etiket),
