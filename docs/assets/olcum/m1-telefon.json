@@ -8,8 +8,8 @@
   390,
   430
  ],
- "toplam": 72,
- "temiz": 72,
+ "toplam": 100,
+ "temiz": 100,
  "durumlar": [
   {
    "ad": "giriş",
@@ -156,7 +156,7 @@
    "alan": 1
   },
   {
-   "ad": "giriş · parola belirle, kural dışı",
+   "ad": "giriş · geçici parolayla ilk giriş, kural dışı",
    "gen": 320,
    "temiz": true,
    "tasma": 0,
@@ -165,7 +165,7 @@
    "alan": 2
   },
   {
-   "ad": "giriş · parola belirle, kural dışı",
+   "ad": "giriş · geçici parolayla ilk giriş, kural dışı",
    "gen": 360,
    "temiz": true,
    "tasma": 0,
@@ -174,7 +174,7 @@
    "alan": 2
   },
   {
-   "ad": "giriş · parola belirle, kural dışı",
+   "ad": "giriş · geçici parolayla ilk giriş, kural dışı",
    "gen": 390,
    "temiz": true,
    "tasma": 0,
@@ -183,7 +183,7 @@
    "alan": 2
   },
   {
-   "ad": "giriş · parola belirle, kural dışı",
+   "ad": "giriş · geçici parolayla ilk giriş, kural dışı",
    "gen": 430,
    "temiz": true,
    "tasma": 0,
@@ -192,43 +192,7 @@
    "alan": 2
   },
   {
-   "ad": "kullanıcılar · liste",
-   "gen": 320,
-   "temiz": true,
-   "tasma": 0,
-   "disari": [],
-   "kucukAlan": [],
-   "alan": 1
-  },
-  {
-   "ad": "kullanıcılar · liste",
-   "gen": 360,
-   "temiz": true,
-   "tasma": 0,
-   "disari": [],
-   "kucukAlan": [],
-   "alan": 1
-  },
-  {
-   "ad": "kullanıcılar · liste",
-   "gen": 390,
-   "temiz": true,
-   "tasma": 0,
-   "disari": [],
-   "kucukAlan": [],
-   "alan": 1
-  },
-  {
-   "ad": "kullanıcılar · liste",
-   "gen": 430,
-   "temiz": true,
-   "tasma": 0,
-   "disari": [],
-   "kucukAlan": [],
-   "alan": 1
-  },
-  {
-   "ad": "kullanıcılar · rol yetkileri",
+   "ad": "ana sayfa · firma yöneticisi",
    "gen": 320,
    "temiz": true,
    "tasma": 0,
@@ -237,7 +201,7 @@
    "alan": 0
   },
   {
-   "ad": "kullanıcılar · rol yetkileri",
+   "ad": "ana sayfa · firma yöneticisi",
    "gen": 360,
    "temiz": true,
    "tasma": 0,
@@ -246,7 +210,7 @@
    "alan": 0
   },
   {
-   "ad": "kullanıcılar · rol yetkileri",
+   "ad": "ana sayfa · firma yöneticisi",
    "gen": 390,
    "temiz": true,
    "tasma": 0,
@@ -255,7 +219,7 @@
    "alan": 0
   },
   {
-   "ad": "kullanıcılar · rol yetkileri",
+   "ad": "ana sayfa · firma yöneticisi",
    "gen": 430,
    "temiz": true,
    "tasma": 0,
@@ -264,7 +228,7 @@
    "alan": 0
   },
   {
-   "ad": "kullanıcı · iki rol, plan kabulü eksik",
+   "ad": "ana sayfa · planlama",
    "gen": 320,
    "temiz": true,
    "tasma": 0,
@@ -273,7 +237,7 @@
    "alan": 0
   },
   {
-   "ad": "kullanıcı · iki rol, plan kabulü eksik",
+   "ad": "ana sayfa · planlama",
    "gen": 360,
    "temiz": true,
    "tasma": 0,
@@ -282,7 +246,7 @@
    "alan": 0
   },
   {
-   "ad": "kullanıcı · iki rol, plan kabulü eksik",
+   "ad": "ana sayfa · planlama",
    "gen": 390,
    "temiz": true,
    "tasma": 0,
@@ -291,7 +255,7 @@
    "alan": 0
   },
   {
-   "ad": "kullanıcı · iki rol, plan kabulü eksik",
+   "ad": "ana sayfa · planlama",
    "gen": 430,
    "temiz": true,
    "tasma": 0,
@@ -300,7 +264,7 @@
    "alan": 0
   },
   {
-   "ad": "kullanıcı · rol değişti, kaydedilmedi",
+   "ad": "ana sayfa · inspector",
    "gen": 320,
    "temiz": true,
    "tasma": 0,
@@ -309,7 +273,7 @@
    "alan": 0
   },
   {
-   "ad": "kullanıcı · rol değişti, kaydedilmedi",
+   "ad": "ana sayfa · inspector",
    "gen": 360,
    "temiz": true,
    "tasma": 0,
@@ -318,7 +282,7 @@
    "alan": 0
   },
   {
-   "ad": "kullanıcı · rol değişti, kaydedilmedi",
+   "ad": "ana sayfa · inspector",
    "gen": 390,
    "temiz": true,
    "tasma": 0,
@@ -327,7 +291,7 @@
    "alan": 0
   },
   {
-   "ad": "kullanıcı · rol değişti, kaydedilmedi",
+   "ad": "ana sayfa · inspector",
    "gen": 430,
    "temiz": true,
    "tasma": 0,
@@ -336,7 +300,7 @@
    "alan": 0
   },
   {
-   "ad": "kullanıcı · davet bekliyor",
+   "ad": "ana sayfa · mekanik yönetici",
    "gen": 320,
    "temiz": true,
    "tasma": 0,
@@ -345,7 +309,7 @@
    "alan": 0
   },
   {
-   "ad": "kullanıcı · davet bekliyor",
+   "ad": "ana sayfa · mekanik yönetici",
    "gen": 360,
    "temiz": true,
    "tasma": 0,
@@ -354,7 +318,7 @@
    "alan": 0
   },
   {
-   "ad": "kullanıcı · davet bekliyor",
+   "ad": "ana sayfa · mekanik yönetici",
    "gen": 390,
    "temiz": true,
    "tasma": 0,
@@ -363,7 +327,7 @@
    "alan": 0
   },
   {
-   "ad": "kullanıcı · davet bekliyor",
+   "ad": "ana sayfa · mekanik yönetici",
    "gen": 430,
    "temiz": true,
    "tasma": 0,
@@ -372,7 +336,7 @@
    "alan": 0
   },
   {
-   "ad": "kullanıcı · pasif",
+   "ad": "ana sayfa · elektrik yönetici",
    "gen": 320,
    "temiz": true,
    "tasma": 0,
@@ -381,7 +345,7 @@
    "alan": 0
   },
   {
-   "ad": "kullanıcı · pasif",
+   "ad": "ana sayfa · elektrik yönetici",
    "gen": 360,
    "temiz": true,
    "tasma": 0,
@@ -390,7 +354,7 @@
    "alan": 0
   },
   {
-   "ad": "kullanıcı · pasif",
+   "ad": "ana sayfa · elektrik yönetici",
    "gen": 390,
    "temiz": true,
    "tasma": 0,
@@ -399,49 +363,13 @@
    "alan": 0
   },
   {
-   "ad": "kullanıcı · pasif",
+   "ad": "ana sayfa · elektrik yönetici",
    "gen": 430,
    "temiz": true,
    "tasma": 0,
    "disari": [],
    "kucukAlan": [],
    "alan": 0
-  },
-  {
-   "ad": "davet penceresi",
-   "gen": 320,
-   "temiz": true,
-   "tasma": 0,
-   "disari": [],
-   "kucukAlan": [],
-   "alan": 2
-  },
-  {
-   "ad": "davet penceresi",
-   "gen": 360,
-   "temiz": true,
-   "tasma": 0,
-   "disari": [],
-   "kucukAlan": [],
-   "alan": 2
-  },
-  {
-   "ad": "davet penceresi",
-   "gen": 390,
-   "temiz": true,
-   "tasma": 0,
-   "disari": [],
-   "kucukAlan": [],
-   "alan": 2
-  },
-  {
-   "ad": "davet penceresi",
-   "gen": 430,
-   "temiz": true,
-   "tasma": 0,
-   "disari": [],
-   "kucukAlan": [],
-   "alan": 2
   },
   {
    "ad": "personel · liste",
@@ -480,6 +408,78 @@
    "alan": 1
   },
   {
+   "ad": "personel · rol yetkileri",
+   "gen": 320,
+   "temiz": true,
+   "tasma": 0,
+   "disari": [],
+   "kucukAlan": [],
+   "alan": 0
+  },
+  {
+   "ad": "personel · rol yetkileri",
+   "gen": 360,
+   "temiz": true,
+   "tasma": 0,
+   "disari": [],
+   "kucukAlan": [],
+   "alan": 0
+  },
+  {
+   "ad": "personel · rol yetkileri",
+   "gen": 390,
+   "temiz": true,
+   "tasma": 0,
+   "disari": [],
+   "kucukAlan": [],
+   "alan": 0
+  },
+  {
+   "ad": "personel · rol yetkileri",
+   "gen": 430,
+   "temiz": true,
+   "tasma": 0,
+   "disari": [],
+   "kucukAlan": [],
+   "alan": 0
+  },
+  {
+   "ad": "personel · rol yetkileri düzenleniyor (1 değişiklik)",
+   "gen": 320,
+   "temiz": true,
+   "tasma": 0,
+   "disari": [],
+   "kucukAlan": [],
+   "alan": 0
+  },
+  {
+   "ad": "personel · rol yetkileri düzenleniyor (1 değişiklik)",
+   "gen": 360,
+   "temiz": true,
+   "tasma": 0,
+   "disari": [],
+   "kucukAlan": [],
+   "alan": 0
+  },
+  {
+   "ad": "personel · rol yetkileri düzenleniyor (1 değişiklik)",
+   "gen": 390,
+   "temiz": true,
+   "tasma": 0,
+   "disari": [],
+   "kucukAlan": [],
+   "alan": 0
+  },
+  {
+   "ad": "personel · rol yetkileri düzenleniyor (1 değişiklik)",
+   "gen": 430,
+   "temiz": true,
+   "tasma": 0,
+   "disari": [],
+   "kucukAlan": [],
+   "alan": 0
+  },
+  {
    "ad": "personel · kart (inspector, eksiksiz)",
    "gen": 320,
    "temiz": true,
@@ -516,7 +516,7 @@
    "alan": 0
   },
   {
-   "ad": "personel · kart (EKİPNET eksik)",
+   "ad": "personel · kart (iki rol, EKİPNET boş)",
    "gen": 320,
    "temiz": true,
    "tasma": 0,
@@ -525,7 +525,7 @@
    "alan": 0
   },
   {
-   "ad": "personel · kart (EKİPNET eksik)",
+   "ad": "personel · kart (iki rol, EKİPNET boş)",
    "gen": 360,
    "temiz": true,
    "tasma": 0,
@@ -534,7 +534,7 @@
    "alan": 0
   },
   {
-   "ad": "personel · kart (EKİPNET eksik)",
+   "ad": "personel · kart (iki rol, EKİPNET boş)",
    "gen": 390,
    "temiz": true,
    "tasma": 0,
@@ -543,7 +543,7 @@
    "alan": 0
   },
   {
-   "ad": "personel · kart (EKİPNET eksik)",
+   "ad": "personel · kart (iki rol, EKİPNET boş)",
    "gen": 430,
    "temiz": true,
    "tasma": 0,
@@ -552,7 +552,7 @@
    "alan": 0
   },
   {
-   "ad": "personel · kart (planlama, yetkili meslek değil)",
+   "ad": "personel · kart (ilk giriş bekleniyor)",
    "gen": 320,
    "temiz": true,
    "tasma": 0,
@@ -561,7 +561,7 @@
    "alan": 0
   },
   {
-   "ad": "personel · kart (planlama, yetkili meslek değil)",
+   "ad": "personel · kart (ilk giriş bekleniyor)",
    "gen": 360,
    "temiz": true,
    "tasma": 0,
@@ -570,7 +570,7 @@
    "alan": 0
   },
   {
-   "ad": "personel · kart (planlama, yetkili meslek değil)",
+   "ad": "personel · kart (ilk giriş bekleniyor)",
    "gen": 390,
    "temiz": true,
    "tasma": 0,
@@ -579,13 +579,265 @@
    "alan": 0
   },
   {
-   "ad": "personel · kart (planlama, yetkili meslek değil)",
+   "ad": "personel · kart (ilk giriş bekleniyor)",
    "gen": 430,
    "temiz": true,
    "tasma": 0,
    "disari": [],
    "kucukAlan": [],
    "alan": 0
+  },
+  {
+   "ad": "personel · kart (giriş hesabı yok)",
+   "gen": 320,
+   "temiz": true,
+   "tasma": 0,
+   "disari": [],
+   "kucukAlan": [],
+   "alan": 0
+  },
+  {
+   "ad": "personel · kart (giriş hesabı yok)",
+   "gen": 360,
+   "temiz": true,
+   "tasma": 0,
+   "disari": [],
+   "kucukAlan": [],
+   "alan": 0
+  },
+  {
+   "ad": "personel · kart (giriş hesabı yok)",
+   "gen": 390,
+   "temiz": true,
+   "tasma": 0,
+   "disari": [],
+   "kucukAlan": [],
+   "alan": 0
+  },
+  {
+   "ad": "personel · kart (giriş hesabı yok)",
+   "gen": 430,
+   "temiz": true,
+   "tasma": 0,
+   "disari": [],
+   "kucukAlan": [],
+   "alan": 0
+  },
+  {
+   "ad": "personel · kart (ayrıldı, hesap kapalı)",
+   "gen": 320,
+   "temiz": true,
+   "tasma": 0,
+   "disari": [],
+   "kucukAlan": [],
+   "alan": 0
+  },
+  {
+   "ad": "personel · kart (ayrıldı, hesap kapalı)",
+   "gen": 360,
+   "temiz": true,
+   "tasma": 0,
+   "disari": [],
+   "kucukAlan": [],
+   "alan": 0
+  },
+  {
+   "ad": "personel · kart (ayrıldı, hesap kapalı)",
+   "gen": 390,
+   "temiz": true,
+   "tasma": 0,
+   "disari": [],
+   "kucukAlan": [],
+   "alan": 0
+  },
+  {
+   "ad": "personel · kart (ayrıldı, hesap kapalı)",
+   "gen": 430,
+   "temiz": true,
+   "tasma": 0,
+   "disari": [],
+   "kucukAlan": [],
+   "alan": 0
+  },
+  {
+   "ad": "personel · rol değişti, kaydedilmedi",
+   "gen": 320,
+   "temiz": true,
+   "tasma": 0,
+   "disari": [],
+   "kucukAlan": [],
+   "alan": 0
+  },
+  {
+   "ad": "personel · rol değişti, kaydedilmedi",
+   "gen": 360,
+   "temiz": true,
+   "tasma": 0,
+   "disari": [],
+   "kucukAlan": [],
+   "alan": 0
+  },
+  {
+   "ad": "personel · rol değişti, kaydedilmedi",
+   "gen": 390,
+   "temiz": true,
+   "tasma": 0,
+   "disari": [],
+   "kucukAlan": [],
+   "alan": 0
+  },
+  {
+   "ad": "personel · rol değişti, kaydedilmedi",
+   "gen": 430,
+   "temiz": true,
+   "tasma": 0,
+   "disari": [],
+   "kucukAlan": [],
+   "alan": 0
+  },
+  {
+   "ad": "giriş hesabı aç penceresi",
+   "gen": 320,
+   "temiz": true,
+   "tasma": 0,
+   "disari": [],
+   "kucukAlan": [],
+   "alan": 1
+  },
+  {
+   "ad": "giriş hesabı aç penceresi",
+   "gen": 360,
+   "temiz": true,
+   "tasma": 0,
+   "disari": [],
+   "kucukAlan": [],
+   "alan": 1
+  },
+  {
+   "ad": "giriş hesabı aç penceresi",
+   "gen": 390,
+   "temiz": true,
+   "tasma": 0,
+   "disari": [],
+   "kucukAlan": [],
+   "alan": 1
+  },
+  {
+   "ad": "giriş hesabı aç penceresi",
+   "gen": 430,
+   "temiz": true,
+   "tasma": 0,
+   "disari": [],
+   "kucukAlan": [],
+   "alan": 1
+  },
+  {
+   "ad": "geçici parola gösterildi",
+   "gen": 320,
+   "temiz": true,
+   "tasma": 0,
+   "disari": [],
+   "kucukAlan": [],
+   "alan": 0
+  },
+  {
+   "ad": "geçici parola gösterildi",
+   "gen": 360,
+   "temiz": true,
+   "tasma": 0,
+   "disari": [],
+   "kucukAlan": [],
+   "alan": 0
+  },
+  {
+   "ad": "geçici parola gösterildi",
+   "gen": 390,
+   "temiz": true,
+   "tasma": 0,
+   "disari": [],
+   "kucukAlan": [],
+   "alan": 0
+  },
+  {
+   "ad": "geçici parola gösterildi",
+   "gen": 430,
+   "temiz": true,
+   "tasma": 0,
+   "disari": [],
+   "kucukAlan": [],
+   "alan": 0
+  },
+  {
+   "ad": "yeni geçici parola penceresi",
+   "gen": 320,
+   "temiz": true,
+   "tasma": 0,
+   "disari": [],
+   "kucukAlan": [],
+   "alan": 0
+  },
+  {
+   "ad": "yeni geçici parola penceresi",
+   "gen": 360,
+   "temiz": true,
+   "tasma": 0,
+   "disari": [],
+   "kucukAlan": [],
+   "alan": 0
+  },
+  {
+   "ad": "yeni geçici parola penceresi",
+   "gen": 390,
+   "temiz": true,
+   "tasma": 0,
+   "disari": [],
+   "kucukAlan": [],
+   "alan": 0
+  },
+  {
+   "ad": "yeni geçici parola penceresi",
+   "gen": 430,
+   "temiz": true,
+   "tasma": 0,
+   "disari": [],
+   "kucukAlan": [],
+   "alan": 0
+  },
+  {
+   "ad": "özlük belgesi penceresi",
+   "gen": 320,
+   "temiz": true,
+   "tasma": 0,
+   "disari": [],
+   "kucukAlan": [],
+   "alan": 1
+  },
+  {
+   "ad": "özlük belgesi penceresi",
+   "gen": 360,
+   "temiz": true,
+   "tasma": 0,
+   "disari": [],
+   "kucukAlan": [],
+   "alan": 1
+  },
+  {
+   "ad": "özlük belgesi penceresi",
+   "gen": 390,
+   "temiz": true,
+   "tasma": 0,
+   "disari": [],
+   "kucukAlan": [],
+   "alan": 1
+  },
+  {
+   "ad": "özlük belgesi penceresi",
+   "gen": 430,
+   "temiz": true,
+   "tasma": 0,
+   "disari": [],
+   "kucukAlan": [],
+   "alan": 1
   },
   {
    "ad": "personel · yeni form, boş gönderildi (hatalar)",
@@ -624,7 +876,7 @@
    "alan": 7
   },
   {
-   "ad": "personel · düzenle (teknisyen seçildi)",
+   "ad": "personel · düzenle (teknisyen)",
    "gen": 320,
    "temiz": true,
    "tasma": 0,
@@ -633,7 +885,7 @@
    "alan": 7
   },
   {
-   "ad": "personel · düzenle (teknisyen seçildi)",
+   "ad": "personel · düzenle (teknisyen)",
    "gen": 360,
    "temiz": true,
    "tasma": 0,
@@ -642,7 +894,7 @@
    "alan": 7
   },
   {
-   "ad": "personel · düzenle (teknisyen seçildi)",
+   "ad": "personel · düzenle (teknisyen)",
    "gen": 390,
    "temiz": true,
    "tasma": 0,
@@ -651,7 +903,7 @@
    "alan": 7
   },
   {
-   "ad": "personel · düzenle (teknisyen seçildi)",
+   "ad": "personel · düzenle (teknisyen)",
    "gen": 430,
    "temiz": true,
    "tasma": 0,

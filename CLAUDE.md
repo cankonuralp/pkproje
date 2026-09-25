@@ -24,7 +24,7 @@ inspector son imza → müşteriye açıldı → fatura → tahsilat → iş kap
 **Modül haritası ve modüller arası bağlantı kuralları: `pkproje.md` §3.1–3.2.** Ayrıntı, mevzuat, kararlar:
 `pkproje.md`.
 **Durum (2026-09-23): İSKELET KURULDU** (reisim: *"tüm önerilerin uygun kodlamaya başla ilk yayını yap"*). Kabuk
-(17 modüllü yan menü, tema), kiracı izolasyonlu veri katmanı (gömülü PostgreSQL + RLS), kilit testleri, CI ve Pages
+(yan menü, tema), kiracı izolasyonlu veri katmanı (gömülü PostgreSQL + RLS), kilit testleri, CI ve Pages
 önizlemesi var; modül ekranları YOK — faz 1 sırasıyla (pkproje.md §3.3), her biri önce maket + onay. Referans ekran
 (Planlar + plan içi) dondu: `src/styles/kalip.ts`.
 **Toplu maket çalışması (2026-09-24, reisim: *"tüm maketleri sırayla bulutta yapılsın en son hepsine toplu bakar ona göre
@@ -32,7 +32,8 @@ ilerleriz"*):** faz 1 + faz 2'nin bütün maketleri sırayla, tek bulut oturumun
 durum **`MAKET-PLANI.md`** — bu çalışma sürerken oturum başında o da TAM okunur. Maketler onaylanana kadar kod yok.
 **2026-09-24 bitti:** 16 maket + toplu bakış (`docs/toplu-bakis.html`; 127 soru, 32–158). **2026-09-25 reisim:** sorular toplu
 cevaplanmaz → modüller benim önerdiğim sırayla tek tek; her modülde o modülün soruları YENİDEN sorulur; çakışan / gereksiz
-modüller sırası gelince silinir, şimdi değil (MAKET-PLANI.md Durum).
+modüller sırası gelince silinir, şimdi değil (MAKET-PLANI.md Durum). **M1 2. tur yapıldı (2026-09-25)**, reisim'in
+incelemesinde; genel ilke: teknik ayrıntı yok, kural uyarıdır engel değil (pkproje.md §9 on ikinci tur).
 
 ## 2 · Yığın (pkproje.md §8 — **reisim 2026-09-22'de onayladı**)
 - **TypeScript + Next.js (App Router), standalone çıktı — onaylı 2026-09-22** (SvelteKit düştü). Tarayıcı
@@ -66,7 +67,7 @@ pkproje/
   ANAYASA.md · TASARIM-KALIBI.md · 00–08-*.md · EKSIKLER-VE-ONERILER.md
                             kural dosyaları (ANAYASA/KALIP'a madde yalnız reisim onayıyla eklenir)
   src/app/                  sayfalar (iş mantığı YOK): Planlar ana sayfa + modül başına bir rota klasörü (kayıtla birebir)
-  src/modules/moduller.ts   MODÜL KAYDI — yan menünün ve rotaların tek kaynağı (17 modül, 6 grup, onaylı maketle aynı)
+  src/modules/moduller.ts   MODÜL KAYDI — yan menünün ve rotaların tek kaynağı (16 modül, 6 grup, onaylı maketle aynı; 2026-09-25 Kullanıcılar Personel'e katıldı)
   src/modules/<modül>/      ★ her iş modülü: server/ (veri erişimi + iş kuralları, dışa açılan fonksiyonlar) · ui/ · şema · testler
   src/server/db/            gömülü PostgreSQL (gomulu.ts) · göç koşucusu (goc.ts, gocler/NNNN_ad.sql, her göç idempotent) ·
                             kiracı süzgeçli TEK erişim katmanı (kiraci.ts: kiraciIcinde) — pg YALNIZ burada içe aktarılır

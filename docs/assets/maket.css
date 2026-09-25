@@ -607,12 +607,23 @@ a.a-yuz:hover { border-color: var(--kenar-alan); background: var(--zemin); }
 /* sütun oranları (anayasa 3.4: oran) — yeni listeler; her liste 960 px kapta ölçüldü (olcum/<maket>.json) */
 .a-tablo-personel .a-k-ad { width: 19%; } .a-tablo-personel .a-k-meslek { width: 20%; } .a-tablo-personel .a-k-brans { width: 10%; }
 .a-tablo-personel .a-k-ekipnet { width: 12%; } .a-tablo-personel .a-k-roller { width: 22%; } .a-tablo-personel .a-k-durum { width: 17%; }
-.a-tablo-kullanici .a-k-ad { width: 27%; } .a-tablo-kullanici .a-k-roller { width: 30%; } .a-tablo-kullanici .a-k-son { width: 18%; }
-.a-tablo-kullanici .a-k-durum { width: 25%; }
 .a-tablo-matris .a-k-modul { width: 25%; } .a-tablo-matris .a-k-r0, .a-tablo-matris .a-k-r1, .a-tablo-matris .a-k-r2,
 .a-tablo-matris .a-k-r3, .a-tablo-matris .a-k-r4 { width: 15%; }
-.a-tablo-yetkinlik .a-k-grup { width: 40%; } .a-tablo-yetkinlik .a-k-meslek { width: 28%; } .a-tablo-yetkinlik .a-k-yetki { width: 32%; }
-.a-tablo-belge .a-k-belge { width: 45%; } .a-tablo-belge .a-k-durum { width: 25%; } .a-tablo-belge .a-k-eylem { width: 30%; }
+/* M1 2. tur (2026-09-25): Kullanıcılar Personel'e katıldı → kişinin kartında zimmet ve özlük dosyası; rol yetkileri düzenlenir;
+   geçici parola bir kez gösterilir; Ana sayfa listeleri (plan · onay kuyruğu · kontrolü yaklaşan tesis) aynı sütun adlarıyla */
+.a-tablo-kzimmet .a-k-varlik { width: 50%; } .a-tablo-kzimmet .a-k-teslim { width: 22%; } .a-tablo-kzimmet .a-k-durum { width: 28%; }
+.a-tablo-ozluk .a-k-belge { width: 52%; } .a-tablo-ozluk .a-k-tarih { width: 24%; } .a-tablo-ozluk .a-k-eylem { width: 24%; }
+.a-tablo-ana .a-k-plan { width: 38%; } .a-tablo-ana .a-k-tarih { width: 24%; } .a-tablo-ana .a-k-ekip { width: 22%; } .a-tablo-ana .a-k-durum { width: 16%; }
+.a-matris-sabit { display: inline-flex; flex-direction: column; align-items: flex-start; gap: 2px; }
+.a-tablo-matris .a-secim-tus { min-height: var(--tus-y); }
+.a-eylem-sol { justify-content: flex-start; }
+.a-etiket-ust { margin-top: 14px; }
+.a-etiket-satir { margin: 0; }
+.a-gecici-parola { margin: 0 0 12px; padding: 12px 14px; border: 1px dashed var(--kenar-alan); border-radius: var(--r-orta); background: var(--zemin2);
+  font-size: var(--boy-baslik); letter-spacing: .06em; overflow-wrap: anywhere; }
+.a-dosya-sec { display: flex; align-items: center; flex-wrap: wrap; gap: 8px 12px; }
+.a-hucre-metin { min-width: 0; overflow-wrap: anywhere; }
+.a-matris-arac { margin: 0 0 12px; }
 /* M2 (müşteri ve tesis) — SGK sicil no 26 hane bölünmez (anayasa 3.11): sütunu ~230 px'e göre */
 .a-tablo-musteri .a-k-unvan { width: 27%; } .a-tablo-musteri .a-k-tesis { width: 17%; } .a-tablo-musteri .a-k-ekipman { width: 9%; }
 .a-tablo-musteri .a-k-portal { width: 12%; } .a-tablo-musteri .a-k-sonraki { width: 15%; } .a-tablo-musteri .a-k-durum { width: 20%; }
@@ -1005,6 +1016,10 @@ a.a-yuz:hover { border-color: var(--kenar-alan); background: var(--zemin); }
   .a-tablo-issoz .a-kart-etiket, .a-tablo-iskapsam .a-kart-etiket, .a-tablo-is .a-kart-etiket, .a-tablo-fatura .a-kart-etiket,
   .a-tablo-isfatura .a-kart-etiket, .a-tablo-israpor .a-kart-etiket, .a-tablo-tahsilat .a-kart-etiket, .a-tablo-fkalem .a-kart-etiket,
   .a-tablo-perf .a-kart-etiket, .a-tablo-gunluk .a-kart-etiket, .a-tablo-egitim .a-kart-etiket, .a-tablo-egitimtur .a-kart-etiket { display: inline; }
+  /* M1 2. tur: zimmet, özlük ve Ana sayfa listeleri kartta etiket: değer; rol yetkileri kartında seçim alanı değerin yerinde */
+  .a-tablo-kzimmet td[data-kart="govde"], .a-tablo-ozluk td[data-kart="govde"], .a-tablo-ana td[data-kart="govde"] { display: flex; align-items: baseline; justify-content: space-between; flex-wrap: wrap; gap: 4px 8px; }
+  .a-tablo-kzimmet .a-kart-etiket, .a-tablo-ozluk .a-kart-etiket, .a-tablo-ana .a-kart-etiket { display: inline; }
+  .a-tablo-matris .a-secim { flex: 0 1 170px; }
   .a-tablo-isgkayit td[data-kart="govde"], .a-tablo-planekp td[data-kart="govde"], .a-tablo-aday td[data-kart="govde"],
   .a-tablo-kapsamozet td[data-kart="govde"], .a-tablo-uyari td[data-kart="govde"], .a-tablo-issoz td[data-kart="govde"]:has(.a-kart-etiket),
   .a-tablo-iskapsam td[data-kart="govde"], .a-tablo-is td[data-kart="govde"]:has(.a-kart-etiket), .a-tablo-fatura td[data-kart="govde"]:has(.a-kart-etiket),

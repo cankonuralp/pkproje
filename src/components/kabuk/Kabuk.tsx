@@ -1,6 +1,6 @@
 "use client";
 /* ══ KABUK — yan menü + üst çubuk (maket 5. tur, reisim onaylı) ═══════════════════════════════════════════════
-   · Menü MODUL_GRUPLARI'ndan (tek kaynak, src/modules/moduller.ts); 17 modül, 6 grup, genel adlar.
+   · Menü MODUL_GRUPLARI'ndan (tek kaynak, src/modules/moduller.ts); 16 modül (2026-09-25: Kullanıcılar Personel'e katıldı), 6 grup, genel adlar.
    · Geniş (≥ 1280) menü sabit; orta ve dar (< 1280) ☰ çekmecesi (anayasa 2.11: ikon rayına dönüşmez).
    · Sığmayan yükseklikte YALNIZ menü kayar; logo yerinde kalır.
    · Tema: açık / koyu, tercih bu cihazda saklanır (anahtar maketle aynı: "probata-tema").

@@ -1,8 +1,11 @@
 /* ══ probata MAKET M1 — Giriş (modül 1) · ONAY BEKLİYOR (toplu maket, 2026-09-24) ═════════════════════════════════
    Kaynak: pkproje.md §2 (kiracı = alt alan adı; kullanıcı e-postayla), CLAUDE.md §2 (kimlik bizim kodumuzda), anayasa 5.3
    (parola alanında tam sessizlik: sayfaya genel tuş dinleyicisi parola alanına dokunmaz). Hâller: #/ · #/hata · #/unuttum ·
-   #/gonderildi · #/parola (davet ya da sıfırlama bağlantısından parola belirleme). Hangi hesabın var olduğu ASLA söylenmez
-   (yanlış e-posta ile yanlış parola aynı ileti; sıfırlamada "kayıtlıysa gönderildi"). Kural ve süreler VARSAYIM. */
+   #/gonderildi · #/gecici (geçici parolayla ilk giriş). Hangi hesabın var olduğu ASLA söylenmez (yanlış e-posta ile yanlış parola
+   aynı ileti; sıfırlamada "kayıtlıysa gönderildi"). Kurallar ve süreler reisim onaylı (37: "uygun").
+   2. tur (2026-09-25): 34 "yönetici geçici parola verir, daha sonra kullanıcı parolasını değiştirebilir" → davet bağlantısıyla parola
+   belirleme kalktı; geçici parolayla girince değiştirme önerilir, "Şimdi değil" ile geçilebilir. 35 aynı alan adı (müşteri de buradan),
+   36 firma logosu yok, 41 girişten sonra Ana sayfa. 33: müşterinin parolası sistemdeki e-postasına kendiliğinden gönderilir (M2). */
 (function () {
   "use strict";
   var $ = MK.$, kacis = MK.kacis, ikon = MK.ikon;
@@ -33,13 +36,14 @@
         (h === "#/gonderildi" ? "" : epostaAlani()) +
         '<div class="a-giris-tuslar">' + (h === "#/gonderildi" ? "" : MK.tus({ eylem: "sifirla", ad: "Bağlantı gönder", ikon: "send" })) +
           '<a class="a-baglanti" href="#/">' + ikon("arrow-left", "a-ikon-kucuk") + "Girişe dön</a></div>";
-    } else if (h === "#/parola") {
+    } else if (h === "#/gecici") {
       var k = S.hata;
-      f.innerHTML = bas("Parola belirle") +
-        '<p class="a-bolum-aciklama">Davet bağlantısıyla gelindi: <b>elif.aydin@firma.example</b>. Parola en az 10 karakter; harf ve rakam içerir.</p>' +
-        parolaAlani("g-p1", "Yeni parola", S.p1, "Ad ya da e-posta içermesin.", k.p1, "new-password") +
+      f.innerHTML = bas("Parolayı değiştir") +
+        MK.serit("bilgi", "key-round", "Geçici parolayla giriş yapıldı: <b>ozan.kurt@firma.example</b>. Parola şimdi ya da daha sonra değiştirilebilir.") +
+        parolaAlani("g-p1", "Yeni parola", S.p1, "En az 10 karakter; harf ve rakam içerir.", k.p1, "new-password") +
         parolaAlani("g-p2", "Yeni parola (tekrar)", S.p2, "Aynısını yazın.", k.p2, "new-password") +
-        '<div class="a-giris-tuslar">' + MK.tus({ eylem: "belirle", ad: "Parolayı kaydet ve gir", ikon: "log-in" }) + "</div>";
+        '<div class="a-giris-tuslar">' + MK.tus({ eylem: "belirle", ad: "Kaydet ve devam et", ikon: "check" }) +
+          '<a class="a-baglanti" href="anasayfa.html">Şimdi değil</a></div>';
     } else {
       f.innerHTML = bas("Giriş") +
         (h === "#/hata" ? MK.serit("hata", "circle-alert", "E-posta ya da parola yanlış. 5 hatalı denemeden sonra giriş 15 dakika kilitlenir.") : "") +
@@ -47,7 +51,7 @@
         parolaAlani("g-parola", "Parola", S.parola, "", S.hata.parola, "current-password") +
         '<div class="a-giris-tuslar">' + MK.tus({ eylem: "gir", ad: "Giriş yap", ikon: "log-in" }) +
           '<a class="a-baglanti" href="#/unuttum">Parolamı unuttum</a></div>' +
-        '<p class="a-giris-ayrac">Raporlarına bakmak isteyen müşteriler aynı adresten, kendilerine verilen e-postayla girer.</p>';
+        '<p class="a-giris-ayrac">Müşteriler de aynı adresten girer; parolaları sistemde kayıtlı e-postalarına gönderilir.</p>';
     }
   }
   function goster(odakla) {
@@ -72,9 +76,10 @@
     if (!epostaGecerli(S.eposta)) S.hata.eposta = S.eposta ? "E-posta biçimi geçersiz." : "E-posta yazılmalı.";
     if (!S.parola) S.hata.parola = "Parola yazılmalı.";
     if (Object.keys(S.hata).length) { ciz(); $(S.hata.eposta ? "g-eposta" : "g-parola").focus(); return; }
-    /* maket: "hata" içeren parola yanlış sayılır; öteki her şey Planlar'a girer */
+    /* maket: "hata" içeren parola yanlış sayılır, "gecici" içeren geçici parola sayılır; öteki her şey Ana sayfa'ya girer */
     if (/hata/.test(S.parola)) { location.hash = "#/hata"; return; }
-    location.href = "planlarim.html";
+    if (/gecici/.test(S.parola)) { location.hash = "#/gecici"; return; }
+    location.href = "anasayfa.html";
   };
   X.sifirla = function () {
     S.hata = {};
@@ -86,7 +91,7 @@
     if (S.p1.length < 10 || !/[A-Za-zÇĞİÖŞÜçğıöşü]/.test(S.p1) || !/\d/.test(S.p1)) S.hata.p1 = "En az 10 karakter; harf ve rakam içermeli.";
     else if (S.p1 !== S.p2) S.hata.p2 = "İki parola aynı değil.";
     if (Object.keys(S.hata).length) { ciz(); $(S.hata.p1 ? "g-p1" : "g-p2").focus(); return; }
-    location.href = "planlarim.html";
+    location.href = "anasayfa.html";
   };
   document.addEventListener("keydown", function (e) {   /* Enter formu gönderir (yalnız Enter; parola içeriğine dokunulmaz) */
     if (e.key !== "Enter" || e.target.tagName !== "INPUT") return;

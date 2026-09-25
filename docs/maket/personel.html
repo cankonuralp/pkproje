@@ -11,8 +11,9 @@
 <link rel="stylesheet" href="../assets/maket.css">
 </head>
 <body>
-<!-- MAKET M1 · Personel (modül 2) — ONAY BEKLİYOR. Kabuk maket-ortak.js MK.kabuk() ile kurulur.
-     Adres: #/ liste · #/p/<id> personel kartı · #/yeni ve #/p/<id>/duzenle form. -->
+<!-- MAKET M1 · Personel (modül 1 + 2, 2. tur 2026-09-25: Kullanıcılar buraya katıldı) — ONAY BEKLİYOR. Kabuk maket-ortak.js MK.kabuk().
+     Adres: #/ liste · #/roller rol yetkileri · #/p/<id> personel kartı · #/p/<id>/hesap giriş hesabı aç ya da yeni geçici parola ·
+     #/p/<id>/belge özlük belgesi ekle · #/yeni ve #/p/<id>/duzenle form. -->
 <main class="a-icerik" id="a-icerik">
   <div id="a-liste-gorunum">
     <div class="a-sayfa-bas">
@@ -20,12 +21,45 @@
       <span class="a-sayac" id="a-sayac" aria-live="polite"></span>
       <a class="a-tus a-tus-birincil a-bolum-tus" href="#/yeni"><svg class="a-ikon a-ikon-kucuk" aria-hidden="true"><use href="../vendor/lucide-1.47.0/ikonlar.svg#i-plus"/></svg>Personel ekle</a>
     </div>
+    <nav class="a-sekmeler a-sekmeler-sayfa" aria-label="Personel bölümleri">
+      <a class="a-sekme" href="#/" aria-current="page">Personel</a><a class="a-sekme" href="#/roller">Rol yetkileri</a>
+    </nav>
     <div id="a-suzgec-kap"></div>
     <div class="a-liste-kap" id="a-liste"></div>
+  </div>
+  <div id="a-roller-gorunum" hidden>
+    <div class="a-sayfa-bas" id="a-roller-bas"></div>
+    <nav class="a-sekmeler a-sekmeler-sayfa" aria-label="Personel bölümleri">
+      <a class="a-sekme" href="#/">Personel</a><a class="a-sekme" href="#/roller" aria-current="page">Rol yetkileri</a>
+    </nav>
+    <div id="a-roller"></div>
   </div>
   <section id="a-nesne" aria-label="Personel kartı" hidden></section>
   <section id="a-form-gorunum" aria-label="Personel formu" hidden></section>
 </main>
+
+<!-- GİRİŞ HESABI / GEÇİCİ PAROLA (reisim 34: "yönetici geçici parola verir, daha sonra kullanıcı parolasını değiştirebilir") -->
+<dialog class="a-pencere a-pencere-form" id="a-hesap-pencere" aria-labelledby="a-hesap-baslik">
+  <div class="a-pencere-bas">
+    <h2 id="a-hesap-baslik">Giriş hesabı</h2>
+    <button class="a-ikon-tus" type="button" data-eylem="pencere-kapat" aria-label="Kapat">
+      <svg class="a-ikon" aria-hidden="true"><use href="../vendor/lucide-1.47.0/ikonlar.svg#i-x"/></svg>
+    </button>
+  </div>
+  <div class="a-pencere-govde" id="a-hesap-govde"></div>
+  <div class="a-pencere-alt" id="a-hesap-alt"></div>
+</dialog>
+<!-- ÖZLÜK BELGESİ EKLE (reisim 40: "personel özlük dosyaları ve zimmetleri personelde olacak") -->
+<dialog class="a-pencere a-pencere-form" id="a-belge-pencere" aria-labelledby="a-belge-baslik">
+  <div class="a-pencere-bas">
+    <h2 id="a-belge-baslik">Özlük belgesi ekle</h2>
+    <button class="a-ikon-tus" type="button" data-eylem="pencere-kapat" aria-label="Kapat">
+      <svg class="a-ikon" aria-hidden="true"><use href="../vendor/lucide-1.47.0/ikonlar.svg#i-x"/></svg>
+    </button>
+  </div>
+  <div class="a-pencere-govde" id="a-belge-govde"></div>
+  <div class="a-pencere-alt" id="a-belge-alt"></div>
+</dialog>
 <script src="../assets/maket-ortak.js"></script>
 <script src="../assets/maket-veri.js"></script>
 <script src="../assets/maket-personel.js"></script>

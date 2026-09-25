@@ -49,11 +49,12 @@
     { k: "inspector", ad: "Inspector", kisa: "Inspector", acik: "Kendisine atanan planı kabul eder, sahada rapor hazırlar, son imzayı atar." },
     { k: "mekyon", ad: "Mekanik yönetici", kisa: "Mek. yönetici", acik: "Mekanik branş raporlarını onaylar ya da gerekçeyle geri gönderir." },
     { k: "elkyon", ad: "Elektrik yönetici", kisa: "Elk. yönetici", acik: "Elektrik branş raporlarını onaylar ya da gerekçeyle geri gönderir." },
-    { k: "yonetici", ad: "Firma yöneticisi", kisa: "Firma yön.", acik: "Kullanıcılar, roller ve firma ayarları; hareket kaydını görür." }
+    { k: "yonetici", ad: "Firma yöneticisi", kisa: "Firma yön.", acik: "Personel hesapları, rol yetkileri ve firma ayarları; hareket kaydını görür." }
   ];
   MV.rol = function (k) { return MV.ROLLER.filter(function (r) { return r.k === k; })[0]; };
 
-  /* Rol × modül görünürlüğü — ÖNERİ (reisim 2026-09-23: "kim hangi modülü görebilecek sonradan belirleriz").
+  /* Rol × modül görünürlüğü — başlangıç düzeni (reisim 2026-09-25, 32: "başlangıç olarak uygun ama admin istediği gibi rollerin
+     yetkilerini değiştirebilmeli" → firma yöneticisi Personel › Rol yetkileri'nde değiştirir; MATRIS_ONERI "önerilen düzene dön" içindir).
      Düzey: yaz (görür ve değiştirir) · gor (görür) · brans (yalnız kendi branşı) · kendi (yalnız kendi kayıtları) · yok.
      Sıra: planlama · inspector · mekyon · elkyon · yonetici. "hareket" = Hareket kaydı (denetim izi; karar 30: yöneticiye). */
   MV.MATRIS = {
@@ -62,14 +63,16 @@
     12: ["yaz", "kendi", "gor", "gor", "yaz"], 7: ["yaz", "yaz", "gor", "gor", "yaz"], 8: ["gor", "kendi", "yaz", "yaz", "yaz"],
     9: ["gor", "kendi", "yaz", "yaz", "yaz"], 2: ["gor", "kendi", "gor", "gor", "yaz"], 10: ["gor", "kendi", "yaz", "yaz", "yaz"],
     18: ["yok", "yok", "yok", "yok", "yaz"], 19: ["gor", "kendi", "brans", "brans", "gor"], 5: ["gor", "gor", "yaz", "yaz", "yaz"],
-    4: ["gor", "gor", "yaz", "yaz", "yaz"], 1: ["yok", "yok", "yok", "yok", "yaz"], hareket: ["yok", "yok", "yok", "yok", "gor"]
+    4: ["gor", "gor", "yaz", "yaz", "yaz"], hareket: ["yok", "yok", "yok", "yok", "gor"]
   };
+  MV.MATRIS_ONERI = JSON.parse(JSON.stringify(MV.MATRIS));
   MV.DUZEY = {
     yaz: { ad: "Değiştirir", rozet: "a-rozet-tamam", sira: 4 }, gor: { ad: "Görür", rozet: "a-rozet-kabul", sira: 3 },
     brans: { ad: "Branşı", rozet: "a-rozet-notr", sira: 2 }, kendi: { ad: "Kendi", rozet: "a-rozet-notr", sira: 1 }, yok: { ad: "—", rozet: "", sira: 0 }
   };
 
-  /* PERSONEL (modül 2) ve hesapları (modül 1). hesap: null = giriş hesabı yok · durum etkin | davet | pasif.
+  /* PERSONEL (modül 2) ve hesapları (modül 1; 2026-09-25'ten Personel'in içinde). hesap: null = giriş hesabı yok · durum etkin |
+     ilk (yönetici geçici parola verdi, kişi henüz girmedi — reisim 34) | pasif (kapalı).
      yetki: firmanın gruba yetkilendirme tarihi (TS EN ISO/IEC 17020 yetkinlik matrisi) · sayilar: kartın bilgi yüzleri
      (öteki modüllerin maketleri gelince oradan beslenir; şimdilik sabit). */
   var E = "@firma.example";
@@ -100,7 +103,7 @@
     { id: "ad", ad: "Ayşe Demir", meslek: "diger", meslekMetin: "İşletme yöneticisi", diploma: "", oda: "", ekipnet: "", eposta: "ayse.demir" + E, basla: "2015-06-01", durum: "etkin",
       hesap: { durum: "etkin", roller: ["yonetici"], son: "2026-09-23T16:02" }, yetki: {}, belge: {}, sayilar: { isg: 0, zimmet: 0, egitim: 0, egitimYakin: 0, plan: 0 } },
     { id: "ok", ad: "Ozan Kurt", meslek: "tog-elk", diploma: "2011/01963", oda: "47735", ekipnet: "247781", eposta: "ozan.kurt" + E, basla: "2021-10-04", durum: "etkin",
-      hesap: { durum: "davet", roller: ["inspector"], davet: "2026-09-22T10:15" }, yetki: { elektrik: "2021-12-13" },
+      hesap: { durum: "ilk", roller: ["inspector"], verildi: "2026-09-22T10:15" }, yetki: { elektrik: "2021-12-13" },
       belge: { diploma: 1, oda: 1, ekipnet: 1, egitim: "2021-11-02" }, sayilar: { isg: 1, zimmet: 2, egitim: 2, egitimYakin: 0, plan: 0 } },
     { id: "hp", ad: "Hakan Polat", meslek: "mak-ytek", diploma: "2015/06628", oda: "", ekipnet: "250019", eposta: "hakan.polat" + E, basla: "2021-04-12", durum: "etkin",
       hesap: { durum: "etkin", roller: ["inspector"], son: "2026-09-18T12:26" }, yetki: { basincli: "2021-07-19", kaldirma: "2021-07-19" },
@@ -457,6 +460,15 @@
   MV.bas = function (ad) { return ad.split(" ").map(function (x) { return x.charAt(0); }).join("").slice(0, 2).toLocaleUpperCase("tr"); };
   /* yetkili kişi (inspector) olabilir mi: meslek en az bir gruba izin veriyor (teknisyen/diğer değil) */
   MV.yetkiliOlabilir = function (p) { return MV.meslek(p.meslek).g.length > 0; };
+  /* eksik bilgi — UYARI, engel değil (reisim 2026-09-25, 39: "sadece uyarsın, ama yapılabilir olsun"; 38: grup yetkilendirmesi
+     gibi teknik ayrıntı yok). Personel (M1) bunu kullanır; aşağıdaki kabulEksik M6 Plan aç'ın eski kuralı, sırası gelince buna döner. */
+  MV.eksikBilgi = function (p) {
+    if (!p.hesap || p.hesap.roller.indexOf("inspector") < 0) return [];
+    var e = [];
+    if (!p.ekipnet) e.push("EKİPNET kayıt no boş");
+    if (!MV.yetkiliOlabilir(p)) e.push("Meslek yetkili kişi meslekleri arasında değil");
+    return e;
+  };
   /* plan kabulü için kişi eksikleri (§3.2 madde 2b–2c; 2a İSG-KATİP plan × tesis başına, burada değil) */
   MV.kabulEksik = function (p) {
     if (!p.hesap || p.hesap.roller.indexOf("inspector") < 0) return null;

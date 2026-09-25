@@ -54,22 +54,25 @@
 
   /* ── YAN MENÜ — TEK KAYNAK ─────────────────────────────────────────────────────────────────────────────
      Reisim 2026-09-23: "diğer modüller nerde onlarda gözüksün"; ad: "planlar raporlar zimmetler gibi genel isimler".
-     pkproje.md §3.1'in firma panelinde ekranı olan 17 modülü; ekranı olmayanlar yok: 6 Rapor Şablonları (kodda), 16 PDF
-     Üretimi (sunucu işi), 17 Müşteri Paneli (müşterinin kendi girişi). Rol × modül görünürlüğü sonra belirlenecek.
-     Uygulamanın modül kaydı bununla birebir (tests/moduller.test.ts). 2026-09-24: maket.js'ten buraya taşındı. */
+     pkproje.md §3.1'in firma panelinde ekranı olan modülleri; ekranı olmayanlar yok: 6 Rapor Şablonları (kodda), 16 PDF
+     Üretimi (sunucu işi), 17 Müşteri Paneli (müşterinin kendi girişi). Uygulamanın modül kaydı bununla birebir
+     (tests/moduller.test.ts). 2026-09-24: maket.js'ten buraya taşındı.
+     2026-09-25 (M1 2. tur, reisim: "159 birleşsin", "kullanıcı hesabı her zaman personele bağlı olsun"): Kullanıcılar (1) menüden
+     kalktı, hesap ve roller Personel'in içinde → 16 modül. Menünün üstünde gruptan bağımsız "Ana sayfa" (reisim 41: "herkes için bir
+     anasayfa olmalı"); modül değil, giriş sonrası açılan sayfa — MENU sabitine girmez. */
   var MENU = [
     { grup: "İş takibi", ogeler: [["Planlar", "calendar-check", 13], ["Raporlar", "file-text", 14], ["Onaylar", "badge-check", 15], ["Uyarılar", "alarm-clock", 20]] },
     { grup: "Müşteri", ogeler: [["Müşteriler", "building-2", 3], ["Teklifler", "file-pen-line", 11], ["Sözleşmeler", "scroll-text", 12]] },
     { grup: "Varlık", ogeler: [["Ekipmanlar", "wrench", 7], ["Ölçüm cihazları", "gauge", 8], ["Zimmetler", "package", 9]] },
     { grup: "Personel", ogeler: [["Personel", "users", 2], ["Eğitimler", "graduation-cap", 10]] },
     { grup: "Finans", ogeler: [["Muhasebe", "wallet", 18], ["Performans", "chart-column", 19]] },
-    { grup: "Tanımlar", ogeler: [["Ekipman türleri", "layers", 5], ["Standartlar", "book-open", 4], ["Kullanıcılar", "user-cog", 1]] }
+    { grup: "Tanımlar", ogeler: [["Ekipman türleri", "layers", 5], ["Standartlar", "book-open", 4]] }
   ];
   /* hazır maketler: menüden tıklanınca gidilir (toplu bakışta tıklanır prototip, MAKET-PLANI §3.3); olmayan → bildirim */
-  var SAYFALAR = { 13: "planlarim.html", 1: "kullanicilar.html", 2: "personel.html", 3: "musteriler.html", 5: "ekipman-turleri.html", 7: "ekipmanlar.html", 8: "olcum-cihazlari.html", 9: "zimmetler.html", 12: "sozlesmeler.html", 4: "standartlar.html", 14: "raporlar.html", 15: "onaylar.html", 20: "uyarilar.html", 11: "teklifler.html", 18: "muhasebe.html", 19: "performans.html", 10: "egitimler.html" };
+  var SAYFALAR = { 13: "planlarim.html", 2: "personel.html", 3: "musteriler.html", 5: "ekipman-turleri.html", 7: "ekipmanlar.html", 8: "olcum-cihazlari.html", 9: "zimmetler.html", 12: "sozlesmeler.html", 4: "standartlar.html", 14: "raporlar.html", 15: "onaylar.html", 20: "uyarilar.html", 11: "teklifler.html", 18: "muhasebe.html", 19: "performans.html", 10: "egitimler.html" };
   MK.sayfaAdresi = function (no) { return SAYFALAR[no] || null; };
   /* menü dışı maket ekranları (ör. plan açma); hazır olunca buraya yazılır, bağlantılar kendiliğinden açılır */
-  var EK_SAYFALAR = { giris: "giris.html", "plan-ac": "plan-ac.html", sablon: "sablon.html", rapor: "rapor.html", musteri: "musteri.html", "is-sozlesmesi": "is-sozlesmeleri.html" };
+  var EK_SAYFALAR = { ana: "anasayfa.html", giris: "giris.html", "plan-ac": "plan-ac.html", sablon: "sablon.html", rapor: "rapor.html", musteri: "musteri.html", "is-sozlesmesi": "is-sozlesmeleri.html" };
   MK.adres = function (anahtar, hash) { var a = SAYFALAR[anahtar] || EK_SAYFALAR[anahtar]; return a ? a + (hash || "") : null; };
   /* hazırsa bağlantı-tuş, değilse "henüz tasarlanmadı" bildirimi veren tuş (maket dışına gidilmez) */
   MK.git = function (o) {
@@ -80,7 +83,9 @@
   MK.MENU = MENU;   /* salt okunur: rol yetkileri tablosu modülleri menünün kendisinden sayar (ikinci liste yok) */
 
   function menuHtml(o) {
-    return MENU.map(function (g, i) {
+    var ana = o.modul === "ana";
+    return '<ul class="a-menu-liste" aria-label="Ana sayfa"><li><a ' + (ana ? 'href="#/" aria-current="page"' : 'href="anasayfa.html"') + ">" + ikon("house") +
+      '<span class="a-menu-ad">Ana sayfa</span></a></li></ul>' + MENU.map(function (g, i) {
       return '<p class="a-menu-grup" id="a-menu-grup-' + i + '">' + g.grup + '</p><ul class="a-menu-liste" aria-labelledby="a-menu-grup-' + i + '">' +
         g.ogeler.map(function (x) {
           var bu = x[2] === o.modul, adres = SAYFALAR[x[2]];

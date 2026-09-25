@@ -63,7 +63,7 @@
     if (isg.tur === "yok") e.push("İSG-KATİP kaydı yok");
     else if (isg.tur === "gec") e.push("İSG-KATİP onayı geç (en geç " + enGec(gun) + ")");
     (MV.kabulEksik(p) || []).forEach(function (m) { e.push(m); });
-    if (p.hesap.durum !== "etkin") e.push("Giriş daveti kabul edilmedi");
+    if (p.hesap.durum !== "etkin") e.push("İlk girişini yapmadı");
     var k = kapsam(), top = kapsamToplam(k), yet = k.reduce(function (n, x) { return n + (yetkili(p, x.tur) ? x.kayitli + x.yeni : 0); }, 0);
     return { isg: isg, eksik: e, cak: gun ? cakismalar(p.id, gun) : [], yet: yet, top: top };
   }

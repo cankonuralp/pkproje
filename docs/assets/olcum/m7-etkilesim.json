@@ -1,6 +1,6 @@
 {
  "maket": "m7",
- "tarih": "2026-09-24",
+ "tarih": "2026-09-25",
  "arac": "tools/olc-bulut.mjs --etkilesim (başsız tarayıcı, 1920 açık tema; gen verilen denemede o genişlik)",
  "toplam": 12,
  "gecen": 12,

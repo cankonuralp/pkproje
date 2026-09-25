@@ -1,9 +1,11 @@
 /* ══ MODÜL KAYDI — yan menünün ve modül yollarının TEK KAYNAĞI ══════════════════════════════════════════════
-   pkproje.md §3.1'in firma panelinde ekranı olan 17 modülü; sıra, grup ve adlar reisim'in onayladığı maketle aynı
+   pkproje.md §3.1'in firma panelinde ekranı olan modülleri; sıra, grup ve adlar reisim'in onayladığı maketle aynı
    (docs/assets/maket.js MENU, 5. tur; tests/moduller.test.ts birebir karşılaştırır). Adlar genel, kişiye bağlı değil
    (reisim 2026-09-23: "planlar raporlar zimmetler gibi genel isimler"). Menüde olmayanlar: 6 Rapor Şablonları (kodda),
    16 PDF Üretimi (sunucu işi), 17 Müşteri Paneli (müşterinin kendi girişi). Kimin hangi modülü göreceği sonra
-   belirlenecek (reisim) — bu kayıt o karar geldiğinde yetki alanı alır. */
+   belirlenecek (reisim) — bu kayıt o karar geldiğinde yetki alanı alır.
+   2026-09-25 (reisim, M1 soruları: "159 birleşsin", "kullanıcı hesabı her zaman personele bağlı olsun"): 1 Kullanıcı & Rol ayrı
+   menü değil; hesap, roller ve rol yetkileri Personel'in (2) içinde → 16 modül. */
 
 export interface Modul {
   /** pkproje.md §3.1 numarası */
@@ -48,7 +50,6 @@ export const MODUL_GRUPLARI: readonly ModulGrubu[] = [
   { grup: "Tanımlar", moduller: [
     { no: 5, ad: "Ekipman türleri", yol: "ekipman-turleri", ikon: "layers" },
     { no: 4, ad: "Standartlar", yol: "standartlar", ikon: "book-open" },
-    { no: 1, ad: "Kullanıcılar", yol: "kullanicilar", ikon: "user-cog" },
   ] },
 ];
 

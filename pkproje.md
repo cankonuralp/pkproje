@@ -5,7 +5,7 @@
 > ekleme tarih taşır. Buradaki hiçbir madde reisim onaylamadan **yapılacak iş** değildir; onay durumu her
 > bölümde ayrıca yazar. Gerçek müşteri/firma adı bu dosyaya girmez (anayasa 5.8, 10.3).
 
-Oluşturma: 2026-09-18 · Son güncelleme: 2026-09-24
+Oluşturma: 2026-09-18 · Son güncelleme: 2026-09-25
 
 ---
 
@@ -151,7 +151,7 @@ Kurallar (reisim'in sözünden türeyen, ürün kuralı olarak):
 
 | # | Modül | İşlev |
 |---|---|---|
-| 1 | Kullanıcı & Rol | Giriş, çoklu rol, rol bazlı ekran yetkisi |
+| 1 | Kullanıcı & Rol | Giriş, çoklu rol, rol bazlı ekran yetkisi — 2026-09-25: ayrı ekran değil, **Personel'in içinde** (hesap, roller, rol yetkileri) |
 | 2 | Personel | Ad soyad, meslek, branş, diploma no, oda sicil no (teknikerde boş olabilir), EKİPNET no; yetkinlik (§4.6) |
 | 3 | Müşteri & Tesis | Müşteri; tesis (adres, SGK işyeri sicil no); müşteri kullanıcıları (e-posta) |
 | 4 | Standart Kütüphanesi | Firma başına; firma kendi yükler; kontrol metodu standardı buradan seçilir |
@@ -363,58 +363,48 @@ bildirim `docs/assets/maket-ortak.js`'e AYNEN taşındı (Planlar ayrımdan önc
 karşılaştırıldı); ortak uydurma veri `docs/assets/maket-veri.js`; menüdeki hazır maketler tıklanınca açılır.
 
 #### Maket M1 — Kullanıcı ve Rol · Personel (modül 1, 2) — ONAY BEKLİYOR
-Ekranlar: **giriş** (`maket/giris.html`: giriş · yanlış bilgi · parola sıfırlama · davet bağlantısından parola belirleme) ·
-**kullanıcılar** (`maket/kullanicilar.html`: liste, rollere göre çip + ve/veya · **rol yetkileri** tablosu · kullanıcı sayfası:
-roller, görebildiği modüller, parola sıfırlama, pasifleştirme · **davet penceresi**) · **personel** (`maket/personel.html`: liste ·
-personel kartı: bilgi yüzleri, kimlik ve sicil, plan kabul ön koşulları, 17020 yetkinlik tablosu, belgeler · form).
+**2. tur (2026-09-25, reisim'in M1 cevaplarıyla; soru kararları §9 on ikinci tur).** Ekranlar: **giriş** (`maket/giris.html`: giriş · yanlış
+bilgi · parola sıfırlama · **geçici parolayla ilk giriş** — parolayı değiştir ya da "Şimdi değil") · **Ana sayfa** (`maket/anasayfa.html`:
+girişten sonra herkes buraya gelir; role göre bilgi yüzleri + iş listesi — firma yöneticisi, planlama, inspector, mekanik / elektrik
+yönetici; makette rol anahtarı) · **personel** (`maket/personel.html`: liste — rol seçicisi, "Bilgisi eksik" çipi · **Rol yetkileri**
+sekmesi: düzenlenir, "Önerilen düzene dön" · personel kartı: bilgi yüzleri, kimlik ve sicil, eksik bilgi uyarısı, **giriş hesabı ve
+roller** (geçici parola, hesabı kapat / yeniden aç, görebildiği modül), **zimmetindekiler**, **özlük dosyası** · pencereler: giriş
+hesabı aç / yeni geçici parola (parola bir kez gösterilir) · özlük belgesi ekle · form). Eski `maket/kullanicilar.html` Personel'e yönlendirir.
 **Varsayımlar:**
-- Bakış **firma yöneticisi** (§2'de taslak rol); menü herkese tam (rol × modül henüz karar değil).
-- **Kullanıcı hesabı personel kaydına bağlı:** önce Personel'de kişi açılır, sonra Kullanıcılar'dan davet edilir; hesabı olmayan
-  personel olabilir (ör. teknisyen). Hesap **davet e-postasıyla** açılır, kişi parolasını kendisi belirler.
-- Meslek listesi ve Ek-III grupları §4.6'dan **birebir**; yalnız iskele yetkisi veren meslekler (inşaat) **mekanik** branş sayıldı.
-  **Teknisyen** personel olarak kaydedilir ama Inspector rolü ve yetkinlik verilemez (arayüzde seçilemez, sebebi yazar).
-- **Yetkinlik = firmanın kişiyi Ek-III GRUBUNA yetkilendirmesi** (tarihli; 17020 yetkinlik matrisi, §4.9); meslek izin vermeyen
-  grup seçilemez.
-- Oda sicil no **teknikerde zorunlu değil** (§3.1), mühendis ve teknik öğretmende zorunlu; diploma no yetkili meslekte zorunlu.
-  EKİPNET, diploma ve oda sicil **biçimleri bilinmiyor** — maketteki numaralar rasgele; EKİPNET formda "4–12 rakam" yer tutucu.
-- Plan kabulünün **kişi** ön koşulları kartta: EKİPNET dolu + meslek yetkili + en az bir gruba yetkilendirilmiş (§3.2 2b–2c;
-  üçüncüsü öneri). İSG-KATİP (2a) plan × tesis başına denetlenir, kartta yalnız bilgi.
-- Rol tablosu (**öneri**): Değiştirir · Görür · Branşı · Kendi · —; kişinin birden çok rolü varsa en geniş düzey. **Hareket kaydı**
-  yalnız firma yöneticisine (karar 30). Rol değişikliği **bir sonraki girişte** geçerli (anayasa 7.5).
-- **Ayrılan personel silinmez:** "Ayrılanlar" görünümünde kalır, hesabı pasifleşir; imzaladığı raporlar yerinde.
-- Giriş: hangi hesabın var olduğu **söylenmez** (yanlış e-posta ve yanlış parola aynı ileti; sıfırlamada "kayıtlıysa gönderildi");
-  parola en az 10 karakter, harf + rakam; 5 hatalı denemede 15 dk kilit; sıfırlama bağlantısı 30 dk — **hepsi varsayım**.
+- Karar (159 + 33): **Kullanıcılar ekranı kalktı**, giriş hesabı her zaman bir personel kaydına bağlı; hesap, roller ve rol yetkileri
+  Personel'in içinde. Menü 17 → **16 modül** (uygulamanın modül kaydı da, `src/modules/moduller.ts`).
+- Karar (32): rol yetkileri tablosu **başlangıç düzeni**; firma yöneticisi rol × modül düzeyini (değiştirir · görür · branşı · kendi ·
+  görmez) değiştirir, "önerilen düzene dön" ile geri alır. Firma yöneticisinin **Personel** yetkisi sabit (kendini hesap yönetiminden
+  kilitleyemesin — varsayım). Değişiklik kaydedilince hemen geçerli (kendi kimlik sistemimiz; varsayım).
+- Karar (34): **davet yok** — yönetici "Giriş hesabı aç" ya da "Yeni geçici parola" ile parola oluşturur, parola **yalnız bir kez**
+  gösterilir, kişiye yönetici iletir; kişi ilk girişte değiştirebilir ("Şimdi değil" ile geçebilir). Hesap durumu: etkin · ilk giriş
+  bekleniyor · kapalı.
+- Karar (33, müşteri tarafı): her müşteriye portal girişi **kendiliğinden** açılır, parola müşterinin sistemdeki e-postasına gider;
+  personel de erişip müşteriye bilgi verebilir → **M2 Müşteri ve Tesis sırasında maketlenir** (bu turda yalnız giriş ekranındaki not).
+- Karar (35, 36): firma çalışanı ve müşteri **aynı alan adındaki aynı giriş ekranından** girer; giriş ekranında firma logosu **yok**.
+- Karar (37): parola en az 10 karakter, harf + rakam · 5 hatalı denemede 15 dk kilit · sıfırlama bağlantısı 30 dk.
+- Karar (38, 39): **teknik ayrıntıya girilmez** — Ek-III grup yetkilendirmesi (17020 yetkinlik tablosu) kalktı; eksik bilgi (EKİPNET no
+  boş, meslek yetkili kişi meslekleri arasında değil) **uyarıdır, engel değil**: plan kabulünde uyarı olarak görünür, iş yapılabilir.
+  Formda zorunlu yalnız ad, işe başlama ve meslek. Yetkili meslek olmayan kişiye de inspector rolü verilebilir, kartta uyarı yazar.
+- Karar (40): kişinin kartında **zimmetindekiler** (o an kişide olan varlıklar; teslim geçmişi Zimmetler'de) ve **özlük dosyası**
+  (iş sözleşmesi, diploma, oda kaydı, EKİPNET belgesi, kimlik, sağlık raporu, diğer; yalnız firma yöneticisi görür — KVKK: özlük bilgisi,
+  varsayım). Eğitim sertifikaları Eğitimler modülünde.
+- Karar (41): girişten sonra herkes **Ana sayfa**'ya gelir, içerik role göre; birden çok rolü olan kişi her rolün bölümünü alt alta görür
+  (varsayım). Yüzlerdeki sayılar öteki maketlerin ortak verisinden. Yan menünün en üstünde "Ana sayfa" (modül değil, gruba girmez).
+- Karar (42): yeni desenler kalıba girdi (TASARIM-KALIBI kural 20). Karar (43): ayrılan personel silinmez, hesabı kapanır.
 - Telefon numarası alanı yok (KVKK: en az veri); tarih alanı metin (GG.AA.YYYY) — tarih seçici ayrı iş (kalıp 19).
-- Kişi kartındaki İSG-KATİP, zimmet, eğitim sayıları o modüllerin kayıtlarından (M5, M4, M10/M16 gelince bağlandı; 2026-09-24).
-**Yeni desenler (kalıp 16 gereği önce soru — soru 42):** tıklanır **bilgi yüzleri** (anayasa 2.7'nin nesne sayfası kalıbı) ·
-**form sayfası** (bölüm kartları en az 440 px, telefonda alttaki tuş çubuğu yapışkan — plan içi çubuğuyla aynı karar) ·
-**seçim alanı** formda (kalıp 19: yerli açılır liste yok) · **koşul listesi** (✓ / ⚠) · **giriş ekranı** (iki pano) · sekmeler bağlantı
-olarak (Kullanıcılar | Rol yetkileri; ekle penceresindeki sekmeyle aynı sınıf).
+- **Sırası gelince düzelecekler (bu kararların öteki maketlere etkisi):** M6 Plan aç'taki aday tablosu hâlâ "firma yetkilendirmesi"
+  (grup) ve eksikleri **engel** gibi gösteriyor · Planlar'daki kabul kilidi (EKİPNET) uyarıya dönecek · M3'te tür başına "yetkili
+  meslekler" ayrıntısı sadeleşecek · M2'de portal kullanıcısı davetle değil kendiliğinden açılacak.
 **Sorular (M1):**
-32. **Rol × modül görünürlüğü:** Kullanıcılar › Rol yetkileri'ndeki öneri tablosu başlangıç olarak uygun mu? *(Bağımlılık: her
-    maketin menüsü ve tuşları bu cevaba göre daralır.)*
-33. Kullanıcı hesabı her zaman bir **personel kaydına** mı bağlı olsun? Dış muhasebeci gibi personel olmayan kişi için ayrı bir rol
-    (ör. "Muhasebe") gerekir mi? *(Bağımlılık: M14 Muhasebe.)*
-34. Hesap açma **davet e-postası + kişi kendi parolasını belirler** (öneri) mi, yoksa yönetici geçici parola mı verir?
-35. Firma kullanıcıları ile **müşteri kullanıcıları aynı giriş ekranından** mı girsin (öneri: aynı alt alan adı, e-postadan ayrılır)?
-    *(Bağımlılık: M11 Müşteri Paneli.)*
-36. Giriş ekranında **firmanın logosu ve adı** görünsün mü (firma ayarı)? Şu an yalnız probata ve alt alan adı; masaüstünde form
-    panosunda boşluk kalıyor.
-37. Parola ve kilit kuralları (10 karakter harf + rakam · 5 hatada 15 dk kilit · sıfırlama 30 dk · davet 72 saat) uygun mu?
-38. **Yetkilendirme düzeyi:** Ek-III **grubu** mu (öneri), ekipman **türü** mü? *(Bağımlılık: M3 Ekipman Türü Kataloğu ve plan
-    kabulündeki meslek denetimi.)*
-39. Plan kabulünde **kişi** ön koşulları (EKİPNET + yetkili meslek + en az bir grup yetkisi) sağlanmazsa kabul düğmesi pasif ve
-    eksik yazılı olsun mu (§3.2 2c'nin genişletilmişi)?
-40. Personel **belgeleri** (diploma, oda kaydı, EKİPNET belgesi, Bakanlık eğitim sertifikası) sisteme yüklensin mi? Eğitim
-    sertifikası M16 Eğitimler'le mi yürüsün?
-41. Girişten sonraki **ilk ekran** herkes için Planlar mı, rolüne göre mi (inspector → Planlar · yönetici → Onaylar)?
-42. Yukarıdaki **yeni desenler** kalıba madde olarak girsin mi (kalıp 16)?
-43. Ayrılan personel **silinmez**, "Ayrılanlar" görünümünde kalır ve hesabı pasifleşir (öneri) — uygun mu?
-**Ölçüm (2026-09-24, bulut):** 18 durum × 1920 · 1080 · 375 × açık/koyu = **108/108 temiz**, 1080'de çekmece açık 2/2; etkileşim
-**17/17**. Ölçerken bulunup düzeltilen: kırıntıda ayraçsız bitişik bağlantılar üst üste biniyordu · bağlantı olan tuşun altı çiziliydi ·
-parola göster düğmesi alanın üstüne biniyordu (yanına alındı) · **sayaç dürüst değildi** ("Çalışanlar" görünümünde 15 kişi listelenirken
-"16 kişi"; üreticide düzeltildi, bütün listeler için) · görünüm anahtarı Temizle ile sıfırlanıyordu · bilgi yüzleri masaüstünde
-kabı doldurmuyordu · yeni kişinin adresi (rakamlı kimlik) listeye düşüyordu.
+Açık soru yok — 32–43 ve 159 cevaplandı (§9, on ikinci tur). 2. turun kendisi reisim'in incelemesini bekliyor.
+**Ölçüm (2026-09-25, bulut, 2. tur):** 25 durum × 1920 · 1080 · 375 × açık/koyu = **150/150 temiz**, 1080'de çekmece açık 2/2; etkileşim
+**32/32** (rol seçicisi, eksik bilgi çipi, rol kaydetme, yetkisiz meslekte uyarılı inspector, hesap aç → geçici parola → kart, yeni geçici
+parola, hesabı kapat, rol yetkilerini düzenle / kaydet / önerilene dön, yöneticinin sabit hücresi, özlük belgesi, eski Kullanıcılar
+bağlantısı, geçici parolayla giriş, Ana sayfa rol anahtarı ve onay kuyruğu sırası). Ölçerken düzeltilen: telefonda zimmetteki uzun varlık
+adı 93 px taşıyordu (kısa kimlik bağlantı, ad alt satırda) · özlük notundaki satır içi bağlantı 16 px küçük hedefti (kaldırıldı) · telefonda
+rol yetkileri çubuğuna üç tuş sığmıyordu ("Önerilen düzene dön" tablonun üstüne alındı).
+1. tur (2026-09-24): 18 durum 108/108, etkileşim 17/17 (Kullanıcılar ayrı ekrandı).
 
 #### Maket M2 — Müşteri ve Tesis (modül 3) — ONAY BEKLİYOR
 Ekranlar (`maket/musteriler.html`): **liste** (tesis sayısı ve illeri, ekipman, portal kullanıcısı, en yakın kontrol, açık
@@ -1229,7 +1219,19 @@ olsun"*), ☰ ile 2. deneme **onaylandı** (*"uygun"*) → uygulamaya geçti (§
 **On birinci tur (2026-09-24):** maket çalışma biçimi → **bütün maketler (faz 1 + faz 2) sırayla bulutta, sonda toplu
 bakış** (§3.3, `MAKET-PLANI.md`).
 
-**Açık kalanlar:** **toplu maket çalışması** (M1–M16 + toplu bakış, `MAKET-PLANI.md`; sorular §3.6'da, 32'den) · **önizlemede örnek veri kipi** (öneri, §3.3) · **rol × modül görünürlüğü** (reisim: *"sonradan belirleriz"*) · **gerçek sunucunun sağlayıcısı**
+**On ikinci tur (2026-09-25, M1 soruları; reisim birebir):** *"159 birleşsin- 32:başlangıç olarak uygun ama admin istediği gibi rollerin
+yetkilerini değiştirebilmeli / 33:kullanıcı hesabı her zaman personele bağlı olsun aslında bu 159 un da cevabı, ancak müşteri girişi olcak ve
+her müşteri için müşteri girişi otomatik oluşacak müşterinin sistemdeki mail adresi ile otomatik oluşturulmuş şifre o mail adresine
+gönderilecek isterse personel de erişip müşteriye bilgi verebilecek. 34:Yönetici geçici parola verir daha sonra kullanıcı parolasını
+değiştirebilir / 35:evet , önerin gibi aynı alan adı, 36:Hayır gerek yok, 37uygun,38: bu kadar teknik detaya girme bunu bir çok yerde
+yapmışsın gerek yok biz sadece yazılım hizmeti vericez , 39:hayır dediğim gibi teknik detaya çok girme sadece uyarsın, ama yapılabilir
+olsun , eğer firma ister ise firma özelinde yazılımı değiştirerek sunarız. 40:Eğitimler ile yürüyecek ama personel özlük dosyaları ve
+zimmetleri personel de olacak/ 41: Role göre ama herkes için bir anasayfa olmalı/ 42: Girsin her şeyimiz kayıtlı ve disipline edici
+olsun/ 43uygun"* → M1 2. tur (§3.6). **Genel ilke (38–39, bütün modüller için):** mevzuatın teknik ayrıntısına girilmez, biz yazılım
+hizmeti veririz; kural ihlali **uyarı** olur, **engel olmaz**; firma daha sıkı kural isterse o firmaya özel geliştirme yapılır.
+Öteki modüllerdeki kilitler (İSG-KATİP kabul kilidi dahil) sıraları gelince bu ilkeyle yeniden sorulur.
+
+**Açık kalanlar:** **modül modül gözden geçirme** (M1 2. tur incelemede; sırada M2) · **toplu maket çalışması** (M1–M16 + toplu bakış, `MAKET-PLANI.md`; sorular §3.6'da, 32'den) · **önizlemede örnek veri kipi** (öneri, §3.3) · ~~rol × modül görünürlüğü~~ (karar 2026-09-25: başlangıç düzeni + firma yöneticisi değiştirir) · **gerçek sunucunun sağlayıcısı**
 (Türkiye, §8.8) ·
 alan adının alınması · e-imza yöntemi (8.4) · v1 ekipman grupları · 5 yıl sonrası silme
 mekanizması · **zimmette birden çok cihaz varsa süzgeç** (§3) · **kontrol metodu standardının seçim yeri**
@@ -1259,6 +1261,10 @@ revizyon, alan kopyalama, hafif kusur devri, meslek eşleşme denetimi).
 - Emsal ürünler: https://opwire.app/iso-17020-periyodik-kontrol-yazilimi/ · https://17020muayene.vidco.com.tr/ · https://akuple.com/asansor-kontrol-yazilimi/ · https://ensyazilim.com/
 
 ## 11 · Değişiklik günlüğü
+- 2026-09-25 (33): **M1 2. tur** (reisim'in 32–43 ve 159 cevapları, §9 on ikinci tur): Kullanıcılar Personel'e katıldı (menü ve uygulamanın
+  modül kaydı 16 modül), rol yetkileri düzenlenir, davet yerine geçici parola, grup yetkilendirmesi kalktı ve eksik bilgi yalnız uyarı,
+  kartta zimmet ve özlük dosyası, **Ana sayfa** (role göre), giriş ekranında geçici parolayla ilk giriş; yeni desenler kalıba girdi (kural 20).
+  Genel ilke: teknik ayrıntı yok, kural uyarıdır engel değil. M1 150/150, 32/32.
 - 2026-09-25 (32): **sonraki yol** (reisim): modüller önerdiğim sırayla tek tek ele alınır, her modülde o modülün soruları yeniden
   sorulur; çakışan / gereksiz modüller sırası gelince silinir, şimdi değil (MAKET-PLANI.md Durum).
 - 2026-09-25 (31): **telefonda sayfanın sağa sola kayması düzeltildi** (reisim: *"maket telefonda ekranı büyültüp küçültünce veya

@@ -94,7 +94,7 @@ yönerge 1036×55 · parça/özet 1036×80 · **foto ekle 253×253** · Yapan/Ta
     bloğunda gizleme yok; Esc/X → `dismissModal`; 2026-09-15) · 7 → `tasarim-kalibi` + `olu-tiklama` + `baslik-dili` (1000px) ·
     8 → `kalip-ve-veya` + `rapor-mail-foto` · 9 → `pdf-baslik-olcegi` · 10 → `ekran-genisligi-2026-09-12` · 11 → `rapor-mail-foto` ·
     12–13 → `uzun-tus-kilidi` · 14 → `kalan-kalemler-2026-09-14` + `mahal-nesne-sayfasi` · 15 → `suzgec-satiri-2026-09-15` ·
-    16 → süreç kuralı, kilit yok · 18 → `tests/tablet-duzeni-2026-09-15` KURAL 1–6 · 19 → `tests/secim-alani-2026-09-17` (kapsam kilidi 40+3 · tek üretici · davranış · katman/klavye · tema; olumsuz kanıt 4/4). Yeni kural = yeni satır burada; kilitsiz kural açık iştir. Medya bloğu testte parantez sayan
+    16 → süreç kuralı, kilit yok · 20 → AÇIK İŞ (M1 kodlanınca) · 18 → `tests/tablet-duzeni-2026-09-15` KURAL 1–6 · 19 → `tests/secim-alani-2026-09-17` (kapsam kilidi 40+3 · tek üretici · davranış · katman/klavye · tema; olumsuz kanıt 4/4). Yeni kural = yeni satır burada; kilitsiz kural açık iştir. Medya bloğu testte parantez sayan
     `medyaBlogu()` ile bulunur (anayasa 3.9: `lastIndexOf('@media')` yasak); yeni CSS kilidi bu yardımcıyı kullanır.
 
 18. ⛔⛔ **TABLET DÜZENİ + GENİŞ IZGARA KAYDIRMA** (reisim 2026-09-15 iPad fotoğrafı; anayasa 2.11 + 3.11'in kalıp karşılığı).
@@ -117,6 +117,18 @@ yönerge 1036×55 · parça/özet 1036×80 · **foto ekle 253×253** · Yapan/Ta
     kapatmaz). **Yeni seçim alanı = `data-secim` ile yazılır**, ekran başına bağlama yok. Kapsam dışı (gerekçeli): 23-landing · 29 Makine ·
     31 Personel · 32 Güvenlik · 33 Depo · 36 Okut modu · 02 chip-select (Makine süzgeci) — yeniden yapımda bu bileşene geçerler.
     Tarih/saat seçicileri AYRI İŞ (reisim kararı 2). Kilit `tests/secim-alani-2026-09-17`.
+
+20. ⛔ **PROBATA DESENLERİ — M1'DE DOĞDU, HER MODÜLDE AYNI** (reisim 2026-09-25, soru 42: *"Girsin her şeyimiz kayıtlı ve disipline edici
+    olsun"*). Bu projenin kendi desenleri; referans ekran maket M1 (`docs/maket/personel.html`, `giris.html`, `anasayfa.html`), üreticiler
+    `docs/assets/maket-ortak.js`, sınıflar `docs/assets/maket.css` (`a-` önekli). (a) **Tıklanır bilgi yüzleri** (`.a-yuzler` / `.a-yuz`):
+    nesne sayfasının ve Ana sayfa'nın özet kutuları; sayı + kısa not, uyarı notu uyarı renginde, tıklanınca ilgili listeye ya da bölüme gider
+    (anayasa 2.7–2.8: sayı gittiği listeyle aynı ölçütten). (b) **Form sayfası** (`.a-form-sayfa` / `.a-form-bolum`): başlıklı bölüm kartları
+    kabı doldurur (kalıp 10), telefonda alttaki tuş çubuğu yapışkan (kalıp 2); zorunlu alan işaretli, hata alanın altında. (c) **Seçim alanı**
+    (`MK.secim`, kalıp 19): yerli açılır liste yok. (d) **Koşul / uyarı listesi** (`.a-kosullar`, ✓ / ⚠) ve **şerit** (`MK.serit`): engel
+    değil bilgi — kural ihlali uyarıdır (reisim 39). (e) **Giriş ekranı** (`.a-giris`): iki pano, telefonda marka şeridi üstte. (f) **Bağlantı
+    olarak sekmeler** (`.a-sekmeler-sayfa`): aynı modülün bölümleri (Personel | Rol yetkileri); sığmayınca sekme alt satıra geçer.
+    (g) **Bir kez gösterilen gizli değer** (`.a-gecici-parola`): geçici parola yalnız oluşturulduğu pencerede, kopyala + uyarı şeridi.
+    Kilit: **açık iş** — desenler uygulamada ilk kodlandığı kalemde (M1 kodu) tek üreticiyle kurulur ve testle kilitlenir (kural 17'ye satır).
 
 ## 🔧 Mekanizmalar
 - `_eqRoz()` / `_eqSade()` — tek rozet üreticisi, `.kirp` + `title` otomatik. Elle `<span class="eqg-roz">` yazmak testte patlar.

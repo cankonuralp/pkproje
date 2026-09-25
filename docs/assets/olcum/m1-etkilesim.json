@@ -1,9 +1,9 @@
 {
  "maket": "m1",
- "tarih": "2026-09-24",
+ "tarih": "2026-09-25",
  "arac": "tools/olc-bulut.mjs --etkilesim (başsız tarayıcı, 1920 açık tema; gen verilen denemede o genişlik)",
- "toplam": 17,
- "gecen": 17,
+ "toplam": 32,
+ "gecen": 32,
  "denemeler": [
   {
    "ad": "personel: sayaç görünüme dürüst (15 çalışan)",
@@ -14,6 +14,20 @@
   },
   {
    "ad": "personel: Inspector çipi 9 / 15",
+   "gen": 1920,
+   "sayfa": "maket/personel.html",
+   "hash": "#/",
+   "gecti": true
+  },
+  {
+   "ad": "personel: Rol seçicisi Planlama ekibi 3 / 15",
+   "gen": 1920,
+   "sayfa": "maket/personel.html",
+   "hash": "#/",
+   "gecti": true
+  },
+  {
+   "ad": "personel: Bilgisi eksik çipi 1 / 15 (engel değil, uyarı)",
    "gen": 1920,
    "sayfa": "maket/personel.html",
    "hash": "#/",
@@ -41,59 +55,108 @@
    "gecti": true
   },
   {
-   "ad": "personel formu: teknikerde oda sicil zorunlu değil, iskele seçilemez",
+   "ad": "personel formu: teknisyen → uyarı, grup yetkilendirmesi yok",
    "gen": 1920,
    "sayfa": "maket/personel.html",
    "hash": "#/yeni",
    "gecti": true
   },
   {
-   "ad": "personel formu: teknisyen → uyarı, hiçbir yetki seçilemez",
+   "ad": "personel formu: diploma ve oda no boş kaydedilir, karta düşer",
    "gen": 1920,
    "sayfa": "maket/personel.html",
    "hash": "#/yeni",
    "gecti": true
   },
   {
-   "ad": "personel formu: geçerli kayıt karta düşer",
+   "ad": "kart: rol eklenir, kaydedilir",
    "gen": 1920,
    "sayfa": "maket/personel.html",
-   "hash": "#/yeni",
+   "hash": "#/p/mk",
    "gecti": true
   },
   {
-   "ad": "kullanıcılar: Inspector ve Planlama → yalnız çift rollü (1 / 13)",
+   "ad": "kart: yetkili meslek değilse inspector verilebilir, uyarı yazar",
    "gen": 1920,
-   "sayfa": "maket/kullanicilar.html",
-   "hash": "#/",
+   "sayfa": "maket/personel.html",
+   "hash": "#/p/za",
    "gecti": true
   },
   {
-   "ad": "kullanıcı: rol eklenir, kaydedilir",
+   "ad": "hesap aç: rolsüz açılamaz",
+   "gen": 1920,
+   "sayfa": "maket/personel.html",
+   "hash": "#/p/by/hesap",
+   "gecti": true
+  },
+  {
+   "ad": "hesap aç: geçici parola bir kez gösterilir",
+   "gen": 1920,
+   "sayfa": "maket/personel.html",
+   "hash": "#/p/by/hesap",
+   "gecti": true
+  },
+  {
+   "ad": "hesap aç → Tamam → kartta İlk giriş bekleniyor",
+   "gen": 1920,
+   "sayfa": "maket/personel.html",
+   "hash": "#/p/by/hesap",
+   "gecti": true
+  },
+  {
+   "ad": "yeni geçici parola: eski geçersiz, ilk giriş beklenir",
+   "gen": 1920,
+   "sayfa": "maket/personel.html",
+   "hash": "#/p/mk/hesap",
+   "gecti": true
+  },
+  {
+   "ad": "hesabı kapat: roller kilitlenir, Hesabı yeniden aç çıkar",
+   "gen": 1920,
+   "sayfa": "maket/personel.html",
+   "hash": "#/p/mk",
+   "gecti": true
+  },
+  {
+   "ad": "rol yetkileri: düzenle → değiştir → kaydet",
+   "gen": 1920,
+   "sayfa": "maket/personel.html",
+   "hash": "#/roller",
+   "gecti": true
+  },
+  {
+   "ad": "rol yetkileri: firma yöneticisinin Personel yetkisi sabit",
+   "gen": 1920,
+   "sayfa": "maket/personel.html",
+   "hash": "#/roller",
+   "gecti": true
+  },
+  {
+   "ad": "rol yetkileri: önerilen düzene dön → değişiklik kalmaz",
+   "gen": 1920,
+   "sayfa": "maket/personel.html",
+   "hash": "#/roller",
+   "gecti": true
+  },
+  {
+   "ad": "özlük: belge eklenir, kartta görünür",
+   "gen": 1920,
+   "sayfa": "maket/personel.html",
+   "hash": "#/p/mk/belge",
+   "gecti": true
+  },
+  {
+   "ad": "kart: Zimmetinde yüzü bölüme götürür",
+   "gen": 1920,
+   "sayfa": "maket/personel.html",
+   "hash": "#/p/mk",
+   "gecti": true
+  },
+  {
+   "ad": "eski Kullanıcılar bağlantısı kişinin kartına gider",
    "gen": 1920,
    "sayfa": "maket/kullanicilar.html",
    "hash": "#/k/mk",
-   "gecti": true
-  },
-  {
-   "ad": "kullanıcı: teknisyen olmayan planlamacıya Inspector verilemez",
-   "gen": 1920,
-   "sayfa": "maket/kullanicilar.html",
-   "hash": "#/k/za",
-   "gecti": true
-  },
-  {
-   "ad": "davet: kişi + rol → davet bekliyor",
-   "gen": 1920,
-   "sayfa": "maket/kullanicilar.html",
-   "hash": "#/davet/by",
-   "gecti": true
-  },
-  {
-   "ad": "davet: rolsüz gönderilemez",
-   "gen": 1920,
-   "sayfa": "maket/kullanicilar.html",
-   "hash": "#/davet/by",
    "gecti": true
   },
   {
@@ -122,6 +185,48 @@
    "gen": 1920,
    "sayfa": "maket/giris.html",
    "hash": "#/unuttum",
+   "gecti": true
+  },
+  {
+   "ad": "giriş: geçici parolayla → parolayı değiştir ekranı",
+   "gen": 1920,
+   "sayfa": "maket/giris.html",
+   "hash": "#/",
+   "gecti": true
+  },
+  {
+   "ad": "giriş: geçici parola ekranında Şimdi değil → Ana sayfa",
+   "gen": 1920,
+   "sayfa": "maket/giris.html",
+   "hash": "#/gecici",
+   "gecti": true
+  },
+  {
+   "ad": "giriş: doğru bilgi → Ana sayfa",
+   "gen": 1920,
+   "sayfa": "maket/giris.html",
+   "hash": "#/",
+   "gecti": true
+  },
+  {
+   "ad": "ana sayfa: menüde Ana sayfa seçili",
+   "gen": 1920,
+   "sayfa": "maket/anasayfa.html",
+   "hash": "#/yonetici",
+   "gecti": true
+  },
+  {
+   "ad": "ana sayfa: rol anahtarı → inspector bölümü ve kişi",
+   "gen": 1920,
+   "sayfa": "maket/anasayfa.html",
+   "hash": "#/yonetici",
+   "gecti": true
+  },
+  {
+   "ad": "ana sayfa: mekanik yöneticide onay kuyruğu en eski üstte",
+   "gen": 1920,
+   "sayfa": "maket/anasayfa.html",
+   "hash": "#/mekyon",
    "gecti": true
   }
  ]

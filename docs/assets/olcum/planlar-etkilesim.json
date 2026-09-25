@@ -1,6 +1,6 @@
 {
  "maket": "planlar",
- "tarih": "2026-09-24",
+ "tarih": "2026-09-25",
  "arac": "tools/olc-bulut.mjs --etkilesim (başsız tarayıcı, 1920 açık tema; gen verilen denemede o genişlik)",
  "toplam": 15,
  "gecen": 15,
@@ -97,7 +97,7 @@
    "gecti": true
   },
   {
-   "ad": "menüdeki 17 modülün hepsi maketi açar (bildirim tuşu yok)",
+   "ad": "menüdeki 16 modül ve Ana sayfa maketi açar (bildirim tuşu yok)",
    "gen": 1920,
    "sayfa": "maket/planlarim.html",
    "hash": "#/",
