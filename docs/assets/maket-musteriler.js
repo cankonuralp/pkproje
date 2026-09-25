@@ -126,8 +126,9 @@
       return '<span class="a-kart-etiket">Gördüğü tesisler</span>' + (k.tesis === "hepsi" ? "Bütün tesisler" : kacis(k.tesis.map(function (id) { return MV.tesis(id).ad; }).join(", ")));
     } },
     { k: "son", baslik: "Son giriş", kart: "govde", sira: 3, hucre: function (k) {
-      var g = k.durum === "gonderildi";
-      return '<span class="a-kart-etiket">' + (g ? "Parola gönderildi" : "Son giriş") + '</span><span class="a-tarih-saat">' + MK.zamanYaz(g ? k.gonderildi : k.son) + "</span>";
+      /* henüz girmediyse sütunda giriş tarihi yok: "Girmedi" + parolanın gittiği gün (tabloda başlık "Son giriş" kalır) */
+      if (k.durum === "gonderildi") return '<span class="a-kart-etiket">Son giriş</span><span><span class="a-uyari-metin">Girmedi</span><span class="a-tarih-saat">parola ' + MK.zamanYaz(k.gonderildi) + "</span></span>";
+      return '<span class="a-kart-etiket">Son giriş</span><span class="a-tarih-saat">' + MK.zamanYaz(k.son) + "</span>";
     } },
     { k: "durum", baslik: "Durum", kart: "rozet", sira: 1, hucre: function (k) { return rozet(HESAP[k.durum]); } }
   ];
