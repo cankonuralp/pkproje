@@ -210,6 +210,36 @@
     { m: "m11", ad: "Kerem Sezer", eposta: "kerem.sezer@poyraz-metal.example", tesis: "hepsi", durum: "etkin", son: "2026-06-18T09:40" }
   ];
   MV.musteriKullanicilari = function (mid) { return MV.MUSTERI_KULLANICI.filter(function (x) { return x.m === mid; }); };
+  /* 2026-09-25 (M2 2. tur, reisim 33: "her müşteri için müşteri girişi otomatik oluşacak müşterinin sistemdeki mail adresi ile otomatik
+     oluşturulmuş şifre o mail adresine gönderilecek"): müşterinin ANA GİRİŞİ müşteri kaydında (m.giris), e-postası müşterinin e-postası.
+     durum: etkin (girdi) · gonderildi (parola gitti, henüz girmedi) · yok (e-posta yazılmamış). Kişiye özel ek girişler
+     MV.MUSTERI_KULLANICI'da (M11 paneli onları okur; ana giriş M11'in sırası gelince bağlanır). */
+  var GIRIS = { m1: "2026-09-22T08:40", m2: "2026-09-15T10:05", m3: "2026-09-19T14:12", m4: "2026-08-28T09:30", m6: "2026-09-11T16:20",
+    m8: "2026-09-23T07:51", m9: "2026-09-21T18:44", m10: "2026-09-05T11:18", m11: "2026-07-02T15:00" };
+  MV.MUSTERILER.forEach(function (m) { m.giris = GIRIS[m.id] ? { durum: "etkin", son: GIRIS[m.id] } : { durum: "gonderildi", gonderildi: m.acilis + "T10:15" }; });
+  MV.MUSTERI_KULLANICI.forEach(function (k) { if (k.durum === "davet") { k.durum = "gonderildi"; k.gonderildi = k.davet; delete k.davet; } });
+  /* 81 il (plaka sırası) ve verideki illerin ilçeleri (reisim 50: aramalı seçim listesi). Maket: ilçe listesi yalnız verideki 6 ilde;
+     uygulamada 81 ilin tamamı. */
+  MV.ILLER = ["Adana", "Adıyaman", "Afyonkarahisar", "Ağrı", "Amasya", "Ankara", "Antalya", "Artvin", "Aydın", "Balıkesir", "Bilecik", "Bingöl",
+    "Bitlis", "Bolu", "Burdur", "Bursa", "Çanakkale", "Çankırı", "Çorum", "Denizli", "Diyarbakır", "Edirne", "Elazığ", "Erzincan", "Erzurum",
+    "Eskişehir", "Gaziantep", "Giresun", "Gümüşhane", "Hakkari", "Hatay", "Isparta", "Mersin", "İstanbul", "İzmir", "Kars", "Kastamonu",
+    "Kayseri", "Kırklareli", "Kırşehir", "Kocaeli", "Konya", "Kütahya", "Malatya", "Manisa", "Kahramanmaraş", "Mardin", "Muğla", "Muş",
+    "Nevşehir", "Niğde", "Ordu", "Rize", "Sakarya", "Samsun", "Siirt", "Sinop", "Sivas", "Tekirdağ", "Tokat", "Trabzon", "Tunceli",
+    "Şanlıurfa", "Uşak", "Van", "Yozgat", "Zonguldak", "Aksaray", "Bayburt", "Karaman", "Kırıkkale", "Batman", "Şırnak", "Bartın",
+    "Ardahan", "Iğdır", "Yalova", "Karabük", "Kilis", "Osmaniye", "Düzce"];
+  MV.ILCELER = {
+    "Bursa": ["Büyükorhan", "Gemlik", "Gürsu", "Harmancık", "İnegöl", "İznik", "Karacabey", "Keles", "Kestel", "Mudanya", "Mustafakemalpaşa",
+      "Nilüfer", "Orhaneli", "Orhangazi", "Osmangazi", "Yenişehir", "Yıldırım"],
+    "İstanbul": ["Adalar", "Arnavutköy", "Ataşehir", "Avcılar", "Bağcılar", "Bahçelievler", "Bakırköy", "Başakşehir", "Bayrampaşa", "Beşiktaş",
+      "Beykoz", "Beylikdüzü", "Beyoğlu", "Büyükçekmece", "Çatalca", "Çekmeköy", "Esenler", "Esenyurt", "Eyüpsultan", "Fatih", "Gaziosmanpaşa",
+      "Güngören", "Kadıköy", "Kağıthane", "Kartal", "Küçükçekmece", "Maltepe", "Pendik", "Sancaktepe", "Sarıyer", "Silivri", "Sultanbeyli",
+      "Sultangazi", "Şile", "Şişli", "Tuzla", "Ümraniye", "Üsküdar", "Zeytinburnu"],
+    "Kırklareli": ["Babaeski", "Demirköy", "Kofçaz", "Lüleburgaz", "Merkez", "Pehlivanköy", "Pınarhisar", "Vize"],
+    "Kocaeli": ["Başiskele", "Çayırova", "Darıca", "Derince", "Dilovası", "Gebze", "Gölcük", "İzmit", "Kandıra", "Karamürsel", "Kartepe", "Körfez"],
+    "Manisa": ["Ahmetli", "Akhisar", "Alaşehir", "Demirci", "Gölmarmara", "Gördes", "Kırkağaç", "Köprübaşı", "Kula", "Salihli", "Sarıgöl",
+      "Saruhanlı", "Selendi", "Soma", "Şehzadeler", "Turgutlu", "Yunusemre"],
+    "Tekirdağ": ["Çerkezköy", "Çorlu", "Ergene", "Hayrabolu", "Kapaklı", "Malkara", "Marmaraereğlisi", "Muratlı", "Saray", "Süleymanpaşa", "Şarköy"]
+  };
 
   /* ── STANDART KÜTÜPHANESİ (modül 4; M3'te tür kataloğu için, M7'de ekranı) ────────────────────────────────────
      Her firma kendi standardını yükler (reisim 2026-09-22). Numara ve konular ÖRNEKTİR; türlere atanışları doğrulanmadı —

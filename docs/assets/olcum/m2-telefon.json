@@ -8,8 +8,8 @@
   390,
   430
  ],
- "toplam": 32,
- "temiz": 32,
+ "toplam": 52,
+ "temiz": 52,
  "durumlar": [
   {
    "ad": "müşteriler · liste",
@@ -48,7 +48,7 @@
    "alan": 1
   },
   {
-   "ad": "müşteri · üç tesis, portal kullanıcıları",
+   "ad": "müşteri · üç tesis, müşteri girişi etkin, ek girişler",
    "gen": 320,
    "temiz": true,
    "tasma": 0,
@@ -57,7 +57,7 @@
    "alan": 0
   },
   {
-   "ad": "müşteri · üç tesis, portal kullanıcıları",
+   "ad": "müşteri · üç tesis, müşteri girişi etkin, ek girişler",
    "gen": 360,
    "temiz": true,
    "tasma": 0,
@@ -66,7 +66,7 @@
    "alan": 0
   },
   {
-   "ad": "müşteri · üç tesis, portal kullanıcıları",
+   "ad": "müşteri · üç tesis, müşteri girişi etkin, ek girişler",
    "gen": 390,
    "temiz": true,
    "tasma": 0,
@@ -75,7 +75,7 @@
    "alan": 0
   },
   {
-   "ad": "müşteri · üç tesis, portal kullanıcıları",
+   "ad": "müşteri · üç tesis, müşteri girişi etkin, ek girişler",
    "gen": 430,
    "temiz": true,
    "tasma": 0,
@@ -84,7 +84,7 @@
    "alan": 0
   },
   {
-   "ad": "müşteri · portal kullanıcısı yok, İSG-KATİP'siz tesis",
+   "ad": "müşteri · girişi henüz kullanılmadı, İSG-KATİP'siz tesis",
    "gen": 320,
    "temiz": true,
    "tasma": 0,
@@ -93,7 +93,7 @@
    "alan": 0
   },
   {
-   "ad": "müşteri · portal kullanıcısı yok, İSG-KATİP'siz tesis",
+   "ad": "müşteri · girişi henüz kullanılmadı, İSG-KATİP'siz tesis",
    "gen": 360,
    "temiz": true,
    "tasma": 0,
@@ -102,7 +102,7 @@
    "alan": 0
   },
   {
-   "ad": "müşteri · portal kullanıcısı yok, İSG-KATİP'siz tesis",
+   "ad": "müşteri · girişi henüz kullanılmadı, İSG-KATİP'siz tesis",
    "gen": 390,
    "temiz": true,
    "tasma": 0,
@@ -111,7 +111,7 @@
    "alan": 0
   },
   {
-   "ad": "müşteri · portal kullanıcısı yok, İSG-KATİP'siz tesis",
+   "ad": "müşteri · girişi henüz kullanılmadı, İSG-KATİP'siz tesis",
    "gen": 430,
    "temiz": true,
    "tasma": 0,
@@ -120,7 +120,7 @@
    "alan": 0
   },
   {
-   "ad": "tesis · İSG-KATİP geç onay (açık plan)",
+   "ad": "tesis · İSG-KATİP geç onay (uyarı)",
    "gen": 320,
    "temiz": true,
    "tasma": 0,
@@ -129,7 +129,7 @@
    "alan": 0
   },
   {
-   "ad": "tesis · İSG-KATİP geç onay (açık plan)",
+   "ad": "tesis · İSG-KATİP geç onay (uyarı)",
    "gen": 360,
    "temiz": true,
    "tasma": 0,
@@ -138,7 +138,7 @@
    "alan": 0
   },
   {
-   "ad": "tesis · İSG-KATİP geç onay (açık plan)",
+   "ad": "tesis · İSG-KATİP geç onay (uyarı)",
    "gen": 390,
    "temiz": true,
    "tasma": 0,
@@ -147,7 +147,7 @@
    "alan": 0
   },
   {
-   "ad": "tesis · İSG-KATİP geç onay (açık plan)",
+   "ad": "tesis · İSG-KATİP geç onay (uyarı)",
    "gen": 430,
    "temiz": true,
    "tasma": 0,
@@ -228,43 +228,151 @@
    "alan": 7
   },
   {
-   "ad": "tesis ekle · çakışan SGK sicil",
+   "ad": "müşteri ekle · aynı vergi no uyarısı (Yine de kaydet)",
    "gen": 320,
    "temiz": true,
    "tasma": 0,
    "disari": [],
    "kucukAlan": [],
-   "alan": 5
+   "alan": 7
   },
   {
-   "ad": "tesis ekle · çakışan SGK sicil",
+   "ad": "müşteri ekle · aynı vergi no uyarısı (Yine de kaydet)",
    "gen": 360,
    "temiz": true,
    "tasma": 0,
    "disari": [],
    "kucukAlan": [],
-   "alan": 5
+   "alan": 7
   },
   {
-   "ad": "tesis ekle · çakışan SGK sicil",
+   "ad": "müşteri ekle · aynı vergi no uyarısı (Yine de kaydet)",
    "gen": 390,
    "temiz": true,
    "tasma": 0,
    "disari": [],
    "kucukAlan": [],
-   "alan": 5
+   "alan": 7
   },
   {
-   "ad": "tesis ekle · çakışan SGK sicil",
+   "ad": "müşteri ekle · aynı vergi no uyarısı (Yine de kaydet)",
    "gen": 430,
    "temiz": true,
    "tasma": 0,
    "disari": [],
    "kucukAlan": [],
-   "alan": 5
+   "alan": 7
   },
   {
-   "ad": "portal kullanıcısı ekle · seçili tesisler",
+   "ad": "müşteri · vergi no ve e-posta eksik kaydedildi",
+   "gen": 320,
+   "temiz": true,
+   "tasma": 0,
+   "disari": [],
+   "kucukAlan": [],
+   "alan": 0
+  },
+  {
+   "ad": "müşteri · vergi no ve e-posta eksik kaydedildi",
+   "gen": 360,
+   "temiz": true,
+   "tasma": 0,
+   "disari": [],
+   "kucukAlan": [],
+   "alan": 0
+  },
+  {
+   "ad": "müşteri · vergi no ve e-posta eksik kaydedildi",
+   "gen": 390,
+   "temiz": true,
+   "tasma": 0,
+   "disari": [],
+   "kucukAlan": [],
+   "alan": 0
+  },
+  {
+   "ad": "müşteri · vergi no ve e-posta eksik kaydedildi",
+   "gen": 430,
+   "temiz": true,
+   "tasma": 0,
+   "disari": [],
+   "kucukAlan": [],
+   "alan": 0
+  },
+  {
+   "ad": "tesis ekle · çakışan SGK sicil uyarısı",
+   "gen": 320,
+   "temiz": true,
+   "tasma": 0,
+   "disari": [],
+   "kucukAlan": [],
+   "alan": 4
+  },
+  {
+   "ad": "tesis ekle · çakışan SGK sicil uyarısı",
+   "gen": 360,
+   "temiz": true,
+   "tasma": 0,
+   "disari": [],
+   "kucukAlan": [],
+   "alan": 4
+  },
+  {
+   "ad": "tesis ekle · çakışan SGK sicil uyarısı",
+   "gen": 390,
+   "temiz": true,
+   "tasma": 0,
+   "disari": [],
+   "kucukAlan": [],
+   "alan": 4
+  },
+  {
+   "ad": "tesis ekle · çakışan SGK sicil uyarısı",
+   "gen": 430,
+   "temiz": true,
+   "tasma": 0,
+   "disari": [],
+   "kucukAlan": [],
+   "alan": 4
+  },
+  {
+   "ad": "tesis · SGK sicil no eksik kaydedildi",
+   "gen": 320,
+   "temiz": true,
+   "tasma": 0,
+   "disari": [],
+   "kucukAlan": [],
+   "alan": 0
+  },
+  {
+   "ad": "tesis · SGK sicil no eksik kaydedildi",
+   "gen": 360,
+   "temiz": true,
+   "tasma": 0,
+   "disari": [],
+   "kucukAlan": [],
+   "alan": 0
+  },
+  {
+   "ad": "tesis · SGK sicil no eksik kaydedildi",
+   "gen": 390,
+   "temiz": true,
+   "tasma": 0,
+   "disari": [],
+   "kucukAlan": [],
+   "alan": 0
+  },
+  {
+   "ad": "tesis · SGK sicil no eksik kaydedildi",
+   "gen": 430,
+   "temiz": true,
+   "tasma": 0,
+   "disari": [],
+   "kucukAlan": [],
+   "alan": 0
+  },
+  {
+   "ad": "ek giriş ekle · seçili tesisler",
    "gen": 320,
    "temiz": true,
    "tasma": 0,
@@ -273,7 +381,7 @@
    "alan": 2
   },
   {
-   "ad": "portal kullanıcısı ekle · seçili tesisler",
+   "ad": "ek giriş ekle · seçili tesisler",
    "gen": 360,
    "temiz": true,
    "tasma": 0,
@@ -282,7 +390,7 @@
    "alan": 2
   },
   {
-   "ad": "portal kullanıcısı ekle · seçili tesisler",
+   "ad": "ek giriş ekle · seçili tesisler",
    "gen": 390,
    "temiz": true,
    "tasma": 0,
@@ -291,13 +399,85 @@
    "alan": 2
   },
   {
-   "ad": "portal kullanıcısı ekle · seçili tesisler",
+   "ad": "ek giriş ekle · seçili tesisler",
    "gen": 430,
    "temiz": true,
    "tasma": 0,
    "disari": [],
    "kucukAlan": [],
    "alan": 2
+  },
+  {
+   "ad": "pasif yap penceresi (müşteri)",
+   "gen": 320,
+   "temiz": true,
+   "tasma": 0,
+   "disari": [],
+   "kucukAlan": [],
+   "alan": 0
+  },
+  {
+   "ad": "pasif yap penceresi (müşteri)",
+   "gen": 360,
+   "temiz": true,
+   "tasma": 0,
+   "disari": [],
+   "kucukAlan": [],
+   "alan": 0
+  },
+  {
+   "ad": "pasif yap penceresi (müşteri)",
+   "gen": 390,
+   "temiz": true,
+   "tasma": 0,
+   "disari": [],
+   "kucukAlan": [],
+   "alan": 0
+  },
+  {
+   "ad": "pasif yap penceresi (müşteri)",
+   "gen": 430,
+   "temiz": true,
+   "tasma": 0,
+   "disari": [],
+   "kucukAlan": [],
+   "alan": 0
+  },
+  {
+   "ad": "müşteri · pasif, tesisleri de pasif",
+   "gen": 320,
+   "temiz": true,
+   "tasma": 0,
+   "disari": [],
+   "kucukAlan": [],
+   "alan": 0
+  },
+  {
+   "ad": "müşteri · pasif, tesisleri de pasif",
+   "gen": 360,
+   "temiz": true,
+   "tasma": 0,
+   "disari": [],
+   "kucukAlan": [],
+   "alan": 0
+  },
+  {
+   "ad": "müşteri · pasif, tesisleri de pasif",
+   "gen": 390,
+   "temiz": true,
+   "tasma": 0,
+   "disari": [],
+   "kucukAlan": [],
+   "alan": 0
+  },
+  {
+   "ad": "müşteri · pasif, tesisleri de pasif",
+   "gen": 430,
+   "temiz": true,
+   "tasma": 0,
+   "disari": [],
+   "kucukAlan": [],
+   "alan": 0
   }
  ]
 }

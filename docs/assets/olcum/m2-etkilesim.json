@@ -2,11 +2,11 @@
  "maket": "m2",
  "tarih": "2026-09-25",
  "arac": "tools/olc-bulut.mjs --etkilesim (başsız tarayıcı, 1920 açık tema; gen verilen denemede o genişlik)",
- "toplam": 14,
- "gecen": 14,
+ "toplam": 24,
+ "gecen": 24,
  "denemeler": [
   {
-   "ad": "müşteriler: Portal kullanıcısı yok → 3 / 11",
+   "ad": "müşteriler: Müşteri girişi kullanılmadı → 2 / 11",
    "gen": 1920,
    "sayfa": "maket/musteriler.html",
    "hash": "#/",
@@ -27,45 +27,115 @@
    "gecti": true
   },
   {
-   "ad": "müşteri ekle: aynı vergi no kaydedilmez",
+   "ad": "müşteri ekle: aynı vergi no → uyarı, pencere açık, Yine de kaydet",
    "gen": 1920,
    "sayfa": "maket/musteriler.html",
    "hash": "#/",
    "gecti": true
   },
   {
-   "ad": "müşteri ekle: geçerli → müşteri sayfası",
+   "ad": "müşteri ekle: aynı vergi no → Yine de kaydet kaydeder (engel değil)",
    "gen": 1920,
    "sayfa": "maket/musteriler.html",
    "hash": "#/",
    "gecti": true
   },
   {
-   "ad": "tesis ekle: çakışan SGK sicil kaydedilmez",
+   "ad": "müşteri ekle: vergi no ve e-posta boş → kaydedilir, eksik uyarısı, giriş yok",
+   "gen": 1920,
+   "sayfa": "maket/musteriler.html",
+   "hash": "#/yeni",
+   "gecti": true
+  },
+  {
+   "ad": "müşteri ekle: e-postayla → müşteri girişi kendiliğinden açılır",
+   "gen": 1920,
+   "sayfa": "maket/musteriler.html",
+   "hash": "#/yeni",
+   "gecti": true
+  },
+  {
+   "ad": "tesis ekle: çakışan SGK → uyarı, pencere açık",
    "gen": 1920,
    "sayfa": "maket/musteriler.html",
    "hash": "#/m/m1/tesis-ekle",
    "gecti": true
   },
   {
-   "ad": "tesis ekle: geçerli → tesis sayfası",
+   "ad": "tesis ekle: il seçilmeden ilçe seçilemez",
    "gen": 1920,
    "sayfa": "maket/musteriler.html",
    "hash": "#/m/m10/tesis-ekle",
    "gecti": true
   },
   {
-   "ad": "portal kullanıcısı: seçili tesis seçilmeden gönderilmez",
+   "ad": "tesis ekle: il ve ilçe listeden, SGK boş → kaydedilir, eksik uyarısı",
+   "gen": 1920,
+   "sayfa": "maket/musteriler.html",
+   "hash": "#/m/m10/tesis-ekle",
+   "gecti": true
+  },
+  {
+   "ad": "tesis ekle: il listesinde arama (81 il)",
+   "gen": 1920,
+   "sayfa": "maket/musteriler.html",
+   "hash": "#/m/m10/tesis-ekle",
+   "gecti": true
+  },
+  {
+   "ad": "ek giriş: seçili tesis seçilmeden açılmaz",
    "gen": 1920,
    "sayfa": "maket/musteriler.html",
    "hash": "#/m/m3/kullanici-ekle",
    "gecti": true
   },
   {
-   "ad": "portal kullanıcısı: davet edilir, listede Davet bekliyor",
+   "ad": "ek giriş: açılır, parola gönderildi",
    "gen": 1920,
    "sayfa": "maket/musteriler.html",
    "hash": "#/m/m5/kullanici-ekle",
+   "gecti": true
+  },
+  {
+   "ad": "müşteri girişi: parolayı yeniden gönder",
+   "gen": 1920,
+   "sayfa": "maket/musteriler.html",
+   "hash": "#/m/m5",
+   "gecti": true
+  },
+  {
+   "ad": "müşteri girişi: Müşteri gözüyle bak → o müşterinin paneli",
+   "gen": 1920,
+   "sayfa": "maket/musteriler.html",
+   "hash": "#/m/m1",
+   "gecti": true
+  },
+  {
+   "ad": "pasif yap: müşteri ve tesisleri pasif, Plan aç yok",
+   "gen": 1920,
+   "sayfa": "maket/musteriler.html",
+   "hash": "#/m/m11",
+   "gecti": true
+  },
+  {
+   "ad": "pasif müşteri listeden kalkar, Görünüm: Pasif'te görünür",
+   "gen": 1920,
+   "sayfa": "maket/musteriler.html",
+   "hash": "#/m/m11",
+   "gecti": true
+  },
+  {
+   "ad": "yeniden etkinleştir: müşteri ve tesisleri geri gelir",
+   "gen": 1920,
+   "sayfa": "maket/musteriler.html",
+   "hash": "#/m/m11",
+   "gecti": true
+  },
+  {
+   "ad": "tesis sayfası: İSG-KATİP'te aç → İSG-KATİP ekranı",
+   "gen": 1920,
+   "sayfa": "maket/musteriler.html",
+   "hash": "#/t/t7",
    "gecti": true
   },
   {

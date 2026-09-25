@@ -374,7 +374,7 @@ const OLCULEMEYEN = [
   ["PDF'in kendisi", "Sunucuda üretilen belge (M7 şablon, M9 rapor, M11 müşteri paneli, M12 teklif, M13 sözleşme): makette HTML önizleme."],
   ["Gerçek Excel dosyası", "“Uygunsuzları indir” (M11): makette önizleme tablosu."],
   ["Gerçek e-Fatura / e-Arşiv", "Fatura (M14): makette yalnız numara ve tarih kaydı."],
-  ["E-posta gönderimi", "Davet ve parola sıfırlama (M1): makette gönderildi bildirimi."]
+  ["E-posta gönderimi", "Parola sıfırlama (M1) ve müşteri girişinin parolası (M2): makette gönderildi bildirimi."]
 ];
 const bagimli = TS.filter(q => /Bağımlılık|ile bağlı/.test(q.metin));
 const on36 = b36.split(/\n(?=#### Maket M\d+ )/)[0].split("\n").slice(1).join(" ").trim();

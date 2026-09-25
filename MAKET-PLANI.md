@@ -118,3 +118,6 @@ tek mesaj: sayfanın bağlantısı + kaç maket + kaç soru + ölçülemeyen var
 - 2026-09-25: M1'de imzalı zimmet formu açılır ve kartta **zimmet geçmişi** (verildi / geri alındı tarihleri, imzalı formlar). M1 174/174 · 38/38.
 - 2026-09-25: **M1 ONAYLANDI** (reisim: *"Onaylıyorum"*). Sırada **M2 Müşteri ve Tesis** — sorular 44–50 yeniden sorulur, müşteri girişi
   kendiliğinden açılır (cevap 33).
+- 2026-09-25: **M2 2. tur** — reisim 44–50: *"Tüm önerilerin uygundur"* (pkproje.md §9 on üçüncü tur): müşteri girişi kendiliğinden, ek
+  girişler, vergi / SGK no uyarı, pasif, il / ilçe listeden. M2 78/78 · 24/24 · telefon 52/52. **Reisim'in incelemesi bekleniyor**; onaylanınca
+  sırada M3 Ekipman türleri · Ekipmanlar.

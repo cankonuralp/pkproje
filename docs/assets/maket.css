@@ -356,6 +356,8 @@ button { cursor: pointer; }
 }
 .a-ipucu { margin: 6px 0 0; font-size: var(--boy-etiket); color: var(--yazi3); }
 .a-ipucu.a-ipucu-uyari { color: var(--hata-yazi); font-weight: 600; }
+/* kaydı durdurmayan uyarı (M2 2. tur, 2026-09-25: aynı vergi / sicil no başka kayıtta — "Yine de kaydet") */
+.a-ipucu .a-ipucu-dikkat { color: var(--uyari-yazi); font-weight: 600; }
 .a-pencere-alt { display: flex; justify-content: flex-end; gap: 8px; padding: 10px 16px 12px; border-top: 1px solid var(--kenar); }
 .a-levha-grup { margin: 0 0 18px; }
 .a-levha-grup-ad { margin: 0 0 8px; font-size: var(--boy-kucuk); font-weight: 600; color: var(--yazi2); }
@@ -445,6 +447,7 @@ button { cursor: pointer; }
 .a-alt-bolum { min-width: 0; }
 .a-alt-bas { display: flex; align-items: center; flex-wrap: wrap; gap: 6px 12px; margin: 0 0 8px; }
 .a-alt-baslik { margin: 0; font-size: var(--boy-govde); font-weight: 700; }
+.a-alt-bas.a-alt-bas-ic { margin-top: 24px; }   /* bölüm içindeki ikinci alt başlık (M2 müşteri girişi → ek girişler) */
 .a-alt-bolum .a-suzgec { margin-bottom: 8px; }
 .a-bolum-tus { margin-left: auto; }
 .a-bolum { margin: 0 0 20px; }
