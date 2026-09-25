@@ -30,7 +30,9 @@ inspector son imza → müşteriye açıldı → fatura → tahsilat → iş kap
 **Toplu maket çalışması (2026-09-24, reisim: *"tüm maketleri sırayla bulutta yapılsın en son hepsine toplu bakar ona göre
 ilerleriz"*):** faz 1 + faz 2'nin bütün maketleri sırayla, tek bulut oturumunda; reisim en sonda toplu bakar. ⛔ Talimat ve
 durum **`MAKET-PLANI.md`** — bu çalışma sürerken oturum başında o da TAM okunur. Maketler onaylanana kadar kod yok.
-**2026-09-24 bitti:** 16 maket + toplu bakış (`docs/toplu-bakis.html`; 127 soru, 32–158) — reisim'in toplu cevabı bekleniyor.
+**2026-09-24 bitti:** 16 maket + toplu bakış (`docs/toplu-bakis.html`; 127 soru, 32–158). **2026-09-25 reisim:** sorular toplu
+cevaplanmaz → modüller benim önerdiğim sırayla tek tek; her modülde o modülün soruları YENİDEN sorulur; çakışan / gereksiz
+modüller sırası gelince silinir, şimdi değil (MAKET-PLANI.md Durum).
 
 ## 2 · Yığın (pkproje.md §8 — **reisim 2026-09-22'de onayladı**)
 - **TypeScript + Next.js (App Router), standalone çıktı — onaylı 2026-09-22** (SvelteKit düştü). Tarayıcı

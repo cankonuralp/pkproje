@@ -1259,6 +1259,8 @@ revizyon, alan kopyalama, hafif kusur devri, meslek eşleşme denetimi).
 - Emsal ürünler: https://opwire.app/iso-17020-periyodik-kontrol-yazilimi/ · https://17020muayene.vidco.com.tr/ · https://akuple.com/asansor-kontrol-yazilimi/ · https://ensyazilim.com/
 
 ## 11 · Değişiklik günlüğü
+- 2026-09-25 (32): **sonraki yol** (reisim): modüller önerdiğim sırayla tek tek ele alınır, her modülde o modülün soruları yeniden
+  sorulur; çakışan / gereksiz modüller sırası gelince silinir, şimdi değil (MAKET-PLANI.md Durum).
 - 2026-09-25 (31): **telefonda sayfanın sağa sola kayması düzeltildi** (reisim: *"maket telefonda ekranı büyültüp küçültünce veya
   sağa sola kaydırınca ekrandan taşıyor"* → *"bunu düzelt"*): yazı alanı dokunmatikte 16 px (§8.12, iPhone odakta büyütmesi),
   320 px'teki 4 taşma, ölçüme telefon taklidi. Maket olduğu için değildi; uygulamanın kodunda da aynı kural vardı.

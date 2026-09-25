@@ -106,3 +106,8 @@ tek mesaj: sayfanın bağlantısı + kaç maket + kaç soru + ölçülemeyen var
 - 2026-09-25: **telefonda sağa sola kayma düzeltildi** (reisim iPhone'da gördü → *"bunu düzelt"*): yazı alanı dokunmatikte 16 px
   (`--boy-girdi`; iPhone 16 px altında odakta büyütüyordu), 320 px'teki 4 taşma, ölçüme telefon taklidi
   (`tools/olc-bulut.mjs <maket> --telefon`: 320 · 360 · 390 · 430; sonuç `docs/assets/olcum/<maket>-telefon.json`).
+- 2026-09-25: **sonraki yol** (reisim: *"daha sonra her modülü senin belirlediğin sırayla ele alacağız her modülü ele alırken o modül
+  için sorduğun soruları tekrar sor çakışan ve gereksiz modüller var onlarıda teker teker ele alırken sileriz şimdi değil"*):
+  127 soru toplu cevaplanmaz; modüller **benim önerdiğim sırayla tek tek** ele alınır, her modülde o modülün soruları reisim'e
+  **yeniden** sorulur, cevaplar pkproje.md'ye işlenir. Çakışan / gereksiz modüller o modülün sırası gelince silinir — **şimdi değil**.
+
