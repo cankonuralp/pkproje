@@ -140,6 +140,22 @@ export function degiskenDegeri(css: string, degisken: string, medya: string | nu
   return m ? m[1]!.trim() : null;
 }
 
+/** yazı alanı yazı boyu (2026-09-25): alan boyunu YALNIZ `input, textarea, select { font-size: var(--boy-girdi); }` verir.
+ *  Döner: bağlayan kural yoksa "bağlama kuralı yok", ondan SONRA yazı alanının boyunu başka değere çeken her kuralın seçicisi
+ *  (`font:` kısaltması ya da başka `font-size`) — iPhone 16 px altında odakta sayfayı büyütür. */
+export function girdiYaziHatalari(css: string): string[] {
+  const temiz = cssTemizle(css);
+  const bag = temiz.search(/(^|\n)input, textarea, select \{ font-size: var\(--boy-girdi\); \}/);
+  if (bag < 0) return ["bağlama kuralı yok"];
+  const hatalar: string[] = [];
+  for (const m of temiz.slice(temiz.indexOf("}", bag) + 1).matchAll(/([^{}]+)\{([^{}]*)\}/g)) {
+    const secici = m[1]!.trim(), govde = m[2]!;
+    if (!/(^|[\s,>+~(])(input|textarea|select)(?![\w-])/.test(secici)) continue;
+    if (/(^|[;\s])font\s*:/.test(govde) || /font-size\s*:(?!\s*var\(--boy-girdi\)\s*(;|$))/.test(govde)) hatalar.push(secici);
+  }
+  return hatalar;
+}
+
 /** kalıbın üç bandı dışında kalan genişlik eşikleri: izinli olanlar max-width (genis|orta) − 0,02 ve min-width genis|orta */
 export function kalipDisiEsikler(css: string, bant: { orta: number; genis: number }): string[] {
   const izinli = new Set([`max-width: ${bant.genis - 0.02}px`, `max-width: ${bant.orta - 0.02}px`, `min-width: ${bant.genis}px`, `min-width: ${bant.orta}px`]);

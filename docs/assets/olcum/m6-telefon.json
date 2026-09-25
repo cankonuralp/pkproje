@@ -1,0 +1,375 @@
+{
+ "maket": "m6",
+ "tarih": "2026-09-25",
+ "arac": "tools/olc-bulut.mjs --telefon (başsız tarayıcı, telefon taklidi: dokunmatik, meta viewport, 3x; açık tema)",
+ "genislikler": [
+  320,
+  360,
+  390,
+  430
+ ],
+ "toplam": 40,
+ "temiz": 40,
+ "durumlar": [
+  {
+   "ad": "plan aç · boş form",
+   "gen": 320,
+   "temiz": true,
+   "tasma": 0,
+   "disari": [],
+   "kucukAlan": [],
+   "alan": 5
+  },
+  {
+   "ad": "plan aç · boş form",
+   "gen": 360,
+   "temiz": true,
+   "tasma": 0,
+   "disari": [],
+   "kucukAlan": [],
+   "alan": 5
+  },
+  {
+   "ad": "plan aç · boş form",
+   "gen": 390,
+   "temiz": true,
+   "tasma": 0,
+   "disari": [],
+   "kucukAlan": [],
+   "alan": 5
+  },
+  {
+   "ad": "plan aç · boş form",
+   "gen": 430,
+   "temiz": true,
+   "tasma": 0,
+   "disari": [],
+   "kucukAlan": [],
+   "alan": 5
+  },
+  {
+   "ad": "müşteriden gelince (tesis bekliyor)",
+   "gen": 320,
+   "temiz": true,
+   "tasma": 0,
+   "disari": [],
+   "kucukAlan": [],
+   "alan": 4
+  },
+  {
+   "ad": "müşteriden gelince (tesis bekliyor)",
+   "gen": 360,
+   "temiz": true,
+   "tasma": 0,
+   "disari": [],
+   "kucukAlan": [],
+   "alan": 4
+  },
+  {
+   "ad": "müşteriden gelince (tesis bekliyor)",
+   "gen": 390,
+   "temiz": true,
+   "tasma": 0,
+   "disari": [],
+   "kucukAlan": [],
+   "alan": 4
+  },
+  {
+   "ad": "müşteriden gelince (tesis bekliyor)",
+   "gen": 430,
+   "temiz": true,
+   "tasma": 0,
+   "disari": [],
+   "kucukAlan": [],
+   "alan": 4
+  },
+  {
+   "ad": "tesisten gelince: tarih + kontrolü gelen seçili",
+   "gen": 320,
+   "temiz": true,
+   "tasma": 0,
+   "disari": [],
+   "kucukAlan": [],
+   "alan": 6
+  },
+  {
+   "ad": "tesisten gelince: tarih + kontrolü gelen seçili",
+   "gen": 360,
+   "temiz": true,
+   "tasma": 0,
+   "disari": [],
+   "kucukAlan": [],
+   "alan": 6
+  },
+  {
+   "ad": "tesisten gelince: tarih + kontrolü gelen seçili",
+   "gen": 390,
+   "temiz": true,
+   "tasma": 0,
+   "disari": [],
+   "kucukAlan": [],
+   "alan": 6
+  },
+  {
+   "ad": "tesisten gelince: tarih + kontrolü gelen seçili",
+   "gen": 430,
+   "temiz": true,
+   "tasma": 0,
+   "disari": [],
+   "kucukAlan": [],
+   "alan": 6
+  },
+  {
+   "ad": "ekip seçili: kabul eksiği + yetki boşluğu",
+   "gen": 320,
+   "temiz": true,
+   "tasma": 0,
+   "disari": [],
+   "kucukAlan": [],
+   "alan": 6
+  },
+  {
+   "ad": "ekip seçili: kabul eksiği + yetki boşluğu",
+   "gen": 360,
+   "temiz": true,
+   "tasma": 0,
+   "disari": [],
+   "kucukAlan": [],
+   "alan": 6
+  },
+  {
+   "ad": "ekip seçili: kabul eksiği + yetki boşluğu",
+   "gen": 390,
+   "temiz": true,
+   "tasma": 0,
+   "disari": [],
+   "kucukAlan": [],
+   "alan": 6
+  },
+  {
+   "ad": "ekip seçili: kabul eksiği + yetki boşluğu",
+   "gen": 430,
+   "temiz": true,
+   "tasma": 0,
+   "disari": [],
+   "kucukAlan": [],
+   "alan": 6
+  },
+  {
+   "ad": "açık planlı tesis: kapsam açık planda, aynı saat",
+   "gen": 320,
+   "temiz": true,
+   "tasma": 0,
+   "disari": [],
+   "kucukAlan": [],
+   "alan": 6
+  },
+  {
+   "ad": "açık planlı tesis: kapsam açık planda, aynı saat",
+   "gen": 360,
+   "temiz": true,
+   "tasma": 0,
+   "disari": [],
+   "kucukAlan": [],
+   "alan": 6
+  },
+  {
+   "ad": "açık planlı tesis: kapsam açık planda, aynı saat",
+   "gen": 390,
+   "temiz": true,
+   "tasma": 0,
+   "disari": [],
+   "kucukAlan": [],
+   "alan": 6
+  },
+  {
+   "ad": "açık planlı tesis: kapsam açık planda, aynı saat",
+   "gen": 430,
+   "temiz": true,
+   "tasma": 0,
+   "disari": [],
+   "kucukAlan": [],
+   "alan": 6
+  },
+  {
+   "ad": "sahada kaydedilecek yeni ekipman eklendi",
+   "gen": 320,
+   "temiz": true,
+   "tasma": 0,
+   "disari": [],
+   "kucukAlan": [],
+   "alan": 6
+  },
+  {
+   "ad": "sahada kaydedilecek yeni ekipman eklendi",
+   "gen": 360,
+   "temiz": true,
+   "tasma": 0,
+   "disari": [],
+   "kucukAlan": [],
+   "alan": 6
+  },
+  {
+   "ad": "sahada kaydedilecek yeni ekipman eklendi",
+   "gen": 390,
+   "temiz": true,
+   "tasma": 0,
+   "disari": [],
+   "kucukAlan": [],
+   "alan": 6
+  },
+  {
+   "ad": "sahada kaydedilecek yeni ekipman eklendi",
+   "gen": 430,
+   "temiz": true,
+   "tasma": 0,
+   "disari": [],
+   "kucukAlan": [],
+   "alan": 6
+  },
+  {
+   "ad": "kapsam listesi 2. sayfa (24 ekipman)",
+   "gen": 320,
+   "temiz": true,
+   "tasma": 0,
+   "disari": [],
+   "kucukAlan": [],
+   "alan": 6
+  },
+  {
+   "ad": "kapsam listesi 2. sayfa (24 ekipman)",
+   "gen": 360,
+   "temiz": true,
+   "tasma": 0,
+   "disari": [],
+   "kucukAlan": [],
+   "alan": 6
+  },
+  {
+   "ad": "kapsam listesi 2. sayfa (24 ekipman)",
+   "gen": 390,
+   "temiz": true,
+   "tasma": 0,
+   "disari": [],
+   "kucukAlan": [],
+   "alan": 6
+  },
+  {
+   "ad": "kapsam listesi 2. sayfa (24 ekipman)",
+   "gen": 430,
+   "temiz": true,
+   "tasma": 0,
+   "disari": [],
+   "kucukAlan": [],
+   "alan": 6
+  },
+  {
+   "ad": "boş gönderildi",
+   "gen": 320,
+   "temiz": true,
+   "tasma": 0,
+   "disari": [],
+   "kucukAlan": [],
+   "alan": 5
+  },
+  {
+   "ad": "boş gönderildi",
+   "gen": 360,
+   "temiz": true,
+   "tasma": 0,
+   "disari": [],
+   "kucukAlan": [],
+   "alan": 5
+  },
+  {
+   "ad": "boş gönderildi",
+   "gen": 390,
+   "temiz": true,
+   "tasma": 0,
+   "disari": [],
+   "kucukAlan": [],
+   "alan": 5
+  },
+  {
+   "ad": "boş gönderildi",
+   "gen": 430,
+   "temiz": true,
+   "tasma": 0,
+   "disari": [],
+   "kucukAlan": [],
+   "alan": 5
+  },
+  {
+   "ad": "tesisli, ekipsiz gönderildi",
+   "gen": 320,
+   "temiz": true,
+   "tasma": 0,
+   "disari": [],
+   "kucukAlan": [],
+   "alan": 6
+  },
+  {
+   "ad": "tesisli, ekipsiz gönderildi",
+   "gen": 360,
+   "temiz": true,
+   "tasma": 0,
+   "disari": [],
+   "kucukAlan": [],
+   "alan": 6
+  },
+  {
+   "ad": "tesisli, ekipsiz gönderildi",
+   "gen": 390,
+   "temiz": true,
+   "tasma": 0,
+   "disari": [],
+   "kucukAlan": [],
+   "alan": 6
+  },
+  {
+   "ad": "tesisli, ekipsiz gönderildi",
+   "gen": 430,
+   "temiz": true,
+   "tasma": 0,
+   "disari": [],
+   "kucukAlan": [],
+   "alan": 6
+  },
+  {
+   "ad": "plan açıldı · eksikli ekip",
+   "gen": 320,
+   "temiz": true,
+   "tasma": 0,
+   "disari": [],
+   "kucukAlan": [],
+   "alan": 0
+  },
+  {
+   "ad": "plan açıldı · eksikli ekip",
+   "gen": 360,
+   "temiz": true,
+   "tasma": 0,
+   "disari": [],
+   "kucukAlan": [],
+   "alan": 0
+  },
+  {
+   "ad": "plan açıldı · eksikli ekip",
+   "gen": 390,
+   "temiz": true,
+   "tasma": 0,
+   "disari": [],
+   "kucukAlan": [],
+   "alan": 0
+  },
+  {
+   "ad": "plan açıldı · eksikli ekip",
+   "gen": 430,
+   "temiz": true,
+   "tasma": 0,
+   "disari": [],
+   "kucukAlan": [],
+   "alan": 0
+  }
+ ]
+}

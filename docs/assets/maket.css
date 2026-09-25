@@ -15,7 +15,14 @@ html {
   text-rendering: optimizeLegibility;
 }
 body { margin: 0; min-height: 100vh; background: var(--zemin); }
-button, input, textarea { font: inherit; color: inherit; }
+button, input, textarea, select { font: inherit; color: inherit; }
+/* ⛔ HATA SINIFI (2026-09-25, reisim telefonda gördü): yazı alanı gövdeyle 15 px'ti → iPhone 16 px altındaki alana
+   dokununca sayfayı büyütüyor, geri küçültmüyor, sayfa sağa sola kayıyordu. Yazı alanı kendi değişkeninden (--boy-girdi,
+   dokunmatikte 16). Büyütmeyi kapatmak (maximum-scale) YOK: iki parmakla büyütme erişilebilirlik için açık kalır. */
+input, textarea, select { font-size: var(--boy-girdi); }
+/* ipucu metni (placeholder) gövde boyunda kalır: iPhone büyütmesi yazılan metnin boyuna bakar, ipucu 16'ya çıkınca dar
+   kutuda kesiliyordu (2026-09-25 ölçümü, 375: ekipman araması, rapor notu) */
+::placeholder { font-size: var(--boy-govde); }
 button { cursor: pointer; }
 :focus-visible { outline: 3px solid var(--odak); outline-offset: 2px; }
 /* ⛔ HATA SINIFI (2026-09-23, boş/hata ekranında gözle yakalandı): `hidden` özniteliği, sınıfın `display` kuralı
@@ -856,6 +863,8 @@ a.a-yuz:hover { border-color: var(--kenar-alan); background: var(--zemin); }
 /* dar (< 768): arama + Süzgeç üstte; çipler yana kayar; seçiciler + Temizle levhada; pencere alttan levha */
 @media (max-width: 767.98px) {
   .a-kullanici-yazi { display: none; }
+  /* ⛔ 2026-09-25 (320 px): müşteri panelinde "Müşteri paneli" tek satırda kalınca kullanıcı simgesi 21 px taşıyordu */
+  .a-ust-panel { min-width: 0; white-space: normal; line-height: 1.2; }
   /* telefon (kalıp 15): arama + Süzgeç üstte; çip şeridi tam satır, yana kayar; seçiciler + Temizle levhada */
   .a-ara { flex: 1 1 0; min-width: 0; }
   .a-suzgec-tus { display: inline-flex; }
@@ -904,7 +913,10 @@ a.a-yuz:hover { border-color: var(--kenar-alan); background: var(--zemin); }
   .a-eylem-cubugu-alt .a-tus { flex: 1 1 0; }
   .a-bildirim { bottom: calc(var(--tus-y) + 40px); }
   .a-form { grid-template-columns: minmax(0, 1fr); }
-  .a-sekmeler { display: flex; }
+  /* ⛔ 2026-09-25 (320 px telefon taklidi): "İş sözleşmeleri" sekmesi 12 px, saha raporunun "Yapıldı · Yapılmadı ·
+     Uygulanamaz" seçimi 2 px ekrandan taşıyordu → sığmayan sekme alt satıra geçer (ad tek satır kalır; sığdığı her genişlikte
+     görünüm aynı). Köşe = tek satırlık kapsülün yarı yüksekliği (tuş + 3+3 iç boşluk + 1+1 kenar): iki satırda oval olmaz. */
+  .a-sekmeler { display: flex; flex-wrap: wrap; border-radius: calc(var(--tus-y) / 2 + 4px); }
   .a-sekme { flex: 1 1 0; justify-content: center; }
   .a-gecmis { grid-template-columns: minmax(0, 1fr); }
   .a-sayfa-komsu { display: none; }

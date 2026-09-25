@@ -13,8 +13,9 @@ export const KALIP = {
   kartEsigi: 960,
   /** sayfa boyu listeye göre — ekipman 10 ("10 taneden sonra diğer sayfaya geçsin"), rapor 20 ("5 değil 20") */
   sayfa: { ekipman: 10, rapor: 20 },
-  /** yazı ölçeği px — başlık 20 (telefonda 18) · bölüm 15 · gövde 14 (dokunmatikte 15) · küçük 12,5 · etiket 11,5 */
-  yazi: { baslik: 20, baslikTelefon: 18, bolum: 15, govde: 14, govdeDokunmatik: 15, kucuk: 12.5, etiket: 11.5 },
+  /** yazı ölçeği px — başlık 20 (telefonda 18) · bölüm 15 · gövde 14 (dokunmatikte 15) · küçük 12,5 · etiket 11,5 ·
+   *  yazı alanı 14 (dokunmatikte 16; reisim 2026-09-25 "bunu düzelt" — reddedilen: 15, iPhone odakta sayfayı büyütüyordu) */
+  yazi: { baslik: 20, baslikTelefon: 18, bolum: 15, govde: 14, govdeDokunmatik: 15, girdi: 14, girdiDokunmatik: 16, kucuk: 12.5, etiket: 11.5 },
   /** kabuk: yan menü genişliği, daraltılmış simge şeridi (yalnız geniş bant) ve üst çubuk yüksekliği.
    *  cubukDar 64 = 12 + 40 (simge tuşu) + 12 — maket 6. tur, reisim 2026-09-24 "uygun" (1920'de içerik 1.648 → 1.816 px);
    *  reddedilen: sayı değil düğme simgesi (panel simgesi → standart ☰, "standart üç alt alta çizgi görünümü olsun") */

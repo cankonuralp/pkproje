@@ -57,8 +57,8 @@
           s.parcalar.filter(function (p) { return p[1] > 0; }).map(function (p) { return '<span class="a-seri-' + p[0] + '" style="width:' + (p[1] * 100 / enc).toFixed(2) + '%"></span>'; }).join("") +
           '</span><span class="a-grafik-deger">' + s.deger + (s.alt ? '<span class="a-alt-satir">' + s.alt + "</span>" : "") + "</span></div>";
       }).join("") + "</div>" : '<p class="a-bos-satir">Bu dönemde rapor yok.</p>') +
-      '<table class="a-gizli"><caption>' + o.baslik + "</caption><thead><tr><th scope=\"col\">" + o.ilkSutun + '</th><th scope="col">Değer</th></tr></thead><tbody>' +
-        o.satirlar.map(function (s) { return "<tr><th scope=\"row\">" + kacis(s.etiket) + "</th><td>" + s.deger + (s.alt ? " · " + s.alt : "") + "</td></tr>"; }).join("") + "</tbody></table></figure>";
+      '<div class="a-gizli"><table><caption>' + o.baslik + "</caption><thead><tr><th scope=\"col\">" + o.ilkSutun + '</th><th scope="col">Değer</th></tr></thead><tbody>' +
+        o.satirlar.map(function (s) { return "<tr><th scope=\"row\">" + kacis(s.etiket) + "</th><td>" + s.deger + (s.alt ? " · " + s.alt : "") + "</td></tr>"; }).join("") + "</tbody></table></div></figure>";
   }
   /* zaman grafiği: bu ay → rapor yazılan günler (gün başı); yıl → aylar (boş ay da görünür) */
   function zamanGrafigi(rl) {

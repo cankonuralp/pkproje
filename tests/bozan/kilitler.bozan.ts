@@ -6,7 +6,7 @@ import { test } from "node:test";
 import { KALIP } from "../../src/styles/kalip.ts";
 import { MODUL_GRUPLARI } from "../../src/modules/moduller.ts";
 import {
-  bantDisiDaraltma, ciftIdler, ciftSeciciler, ciftTanimliDegiskenler, daralmisSerit, degiskenDegeri, dosyalar, eksikIkonlar, kalipDisiEsikler,
+  bantDisiDaraltma, ciftIdler, ciftSeciciler, ciftTanimliDegiskenler, daralmisSerit, degiskenDegeri, dosyalar, eksikIkonlar, girdiYaziHatalari, kalipDisiEsikler,
   kiraciDisiErisim, kullanilanIkonlar, maketIkonlari, maketMenusu, oku, parantezHatasi, rlsEksikTablolar, tanimsizDegiskenler, testKapisiEksikleri, tokenGovdesi,
 } from "../yardimci/denetimler.ts";
 
@@ -54,6 +54,16 @@ test("tek kaynak: maketteki kopyada tek değer değişince yakalanır", () => {
 test("kalıp sayısı: denetim yüksekliği 40'a dönünce yakalanır", () => {
   assert.equal(degiskenDegeri(tokens, "--tus-y", null), `${KALIP.tusY.fare}px`);
   assert.notEqual(degiskenDegeri(tokens.replace("--tus-y: 34px", "--tus-y: 40px"), "--tus-y", null), `${KALIP.tusY.fare}px`);
+});
+
+test("yazı alanı (2026-09-25): dokunmatikte 15'e dönünce, bağlama kuralı silinince, sonra bir alan küçültülünce yakalanır", () => {
+  assert.equal(degiskenDegeri(tokens, "--boy-girdi", "(pointer: coarse)"), `${KALIP.yazi.girdiDokunmatik}px`);
+  assert.notEqual(degiskenDegeri(tokens.replaceAll("--boy-girdi: 16px", "--boy-girdi: 15px"), "--boy-girdi", "(pointer: coarse)"), `${KALIP.yazi.girdiDokunmatik}px`);
+  const temel = oku("src/styles/temel.css"), maket = oku("docs/assets/maket.css");
+  assert.deepEqual(girdiYaziHatalari(temel), []);
+  assert.deepEqual(girdiYaziHatalari(temel.replace("input, textarea, select { font-size: var(--boy-girdi); }", "")), ["bağlama kuralı yok"]);
+  assert.deepEqual(girdiYaziHatalari(maket + "\n.a-ara input { font-size: var(--boy-kucuk); }\n"), [".a-ara input"]);
+  assert.deepEqual(girdiYaziHatalari(maket + "\n.a-form textarea { font: inherit; }\n"), [".a-form textarea"]);
 });
 
 test("kalıp bandı: kabuğa kalıp dışı bir eşik (min-width 1200) eklenince yakalanır", () => {

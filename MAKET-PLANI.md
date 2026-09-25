@@ -103,3 +103,6 @@ tek mesaj: sayfanın bağlantısı + kaç maket + kaç soru + ölçülemeyen var
 - **Toplu bakış bitti** (`docs/toplu-bakis.html`, `tools/sunum-uret.mjs` üretir; `docs/index.html`'den bağlantı): 16 maket · 127 soru
   (32–158) · durum 900/900 temiz · çekmece 32/32 · etkileşim 188/188 (sonuçlar `docs/assets/olcum/<maket>-etkilesim.json`); sayfanın
   kendi ölçümü 18/18. **Reisim'in toplu cevabı bekleniyor**; cevaplar pkproje.md'ye işlenir, sonra faz 1 sırasıyla kod.
+- 2026-09-25: **telefonda sağa sola kayma düzeltildi** (reisim iPhone'da gördü → *"bunu düzelt"*): yazı alanı dokunmatikte 16 px
+  (`--boy-girdi`; iPhone 16 px altında odakta büyütüyordu), 320 px'teki 4 taşma, ölçüme telefon taklidi
+  (`tools/olc-bulut.mjs <maket> --telefon`: 320 · 360 · 390 · 430; sonuç `docs/assets/olcum/<maket>-telefon.json`).

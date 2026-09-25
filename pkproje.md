@@ -1131,6 +1131,13 @@ tarih-saat, fotoğraflar, form) · **Eğitim kaydı** (personel, eğitim, belge,
      15) · küçük 12,5 · etiket 11,5; yan menü 232 px, üst çubuk 52 px. Kart eşiği tablet bandında ölçülüp **960 px**
      (liste 933, ekipman 891, rapor 891 px'de bozuluyor). 54 ölçüm temiz, kontrast 62 / 62 (adım çizgisi, şu anki adım,
      seçili sayfa için 3 çift eklendi); ölçüm aracına iki denetim eklendi (hiza kayması, kart tutarlılığı).
+   · **Yazı alanı 14 / 16 px (2026-09-25, reisim *"bunu düzelt"*):** reisim iPhone'da maketin sağa sola kaydığını gördü.
+     Sebep: yazı alanı (arama, form) dokunmatikte gövdeyle 15 px'ti; iPhone 16 px altındaki alana dokununca sayfayı büyütüp
+     bırakıyor. Alan artık kendi değişkeninden (`--boy-girdi`: fareyle 14, orta bantta ve dokunmatikte 16; reddedilen 15);
+     uygulama (`src/styles/temel.css`) ve maket aynı kuralla, kilidi `tests/kalip-sayilari.test.ts`. Büyütmeyi kapatmak
+     (`maximum-scale`) seçilmedi: iki parmakla büyütme erişilebilirlik için açık kalır. Aynı turda 320 px telefonda 4 taşma
+     düzeltildi (sözleşme sekmeleri, müşteri paneli üst çubuğu, saha raporu seçimi, performans grafiğinin gizli tablosu) ve
+     ölçüm aracına telefon taklidi eklendi (`tools/olc-bulut.mjs --telefon`: 320 · 360 · 390 · 430).
    · **Görsel sistem önerisi + referans ekran maketi (2026-09-23; 1–6 onaylandı):** GitHub Pages'te
      `docs/index.html` (sunum) ve `docs/maket/planlarim.html` (Planlarım maketi). İçerik: marka renklerinden türetilen
      27 değişken × 2 tema (`docs/assets/tokens.css`), 54 yazı/zemin çiftinin hepsi WCAG AA geçer (ölçüm aracı
@@ -1252,6 +1259,9 @@ revizyon, alan kopyalama, hafif kusur devri, meslek eşleşme denetimi).
 - Emsal ürünler: https://opwire.app/iso-17020-periyodik-kontrol-yazilimi/ · https://17020muayene.vidco.com.tr/ · https://akuple.com/asansor-kontrol-yazilimi/ · https://ensyazilim.com/
 
 ## 11 · Değişiklik günlüğü
+- 2026-09-25 (31): **telefonda sayfanın sağa sola kayması düzeltildi** (reisim: *"maket telefonda ekranı büyültüp küçültünce veya
+  sağa sola kaydırınca ekrandan taşıyor"* → *"bunu düzelt"*): yazı alanı dokunmatikte 16 px (§8.12, iPhone odakta büyütmesi),
+  320 px'teki 4 taşma, ölçüme telefon taklidi. Maket olduğu için değildi; uygulamanın kodunda da aynı kural vardı.
 - 2026-09-24 (30): **toplu bakış sayfası** (`docs/toplu-bakis.html`, MAKET-PLANI.md SON): §3.6'daki her maketin ekranı, varsayımları ve
   soruları (metin buradan okunur) + ölçüm dosyalarındaki sayılar; bağımlılıklar ve ölçülemeyenler. Etkileşim sonuçları artık dosyaya
   yazılıyor. 16 maket, 127 soru; reisim'in toplu cevabı bekleniyor.

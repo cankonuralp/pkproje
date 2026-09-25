@@ -13,7 +13,11 @@
    ölçüm yalancı demektir ve sürücü hata koduyla biter.
    Kullanım:  node tools/olc-bulut.mjs <maket> [--goruntu <klasör>] [--yazma]      (maket adları: DURUMLAR)
               node tools/olc-bulut.mjs <maket> --etkilesim [--yazma]   (sonuç docs/assets/olcum/<maket>-etkilesim.json)
+              node tools/olc-bulut.mjs <maket> --telefon [--yazma]    (sonuç docs/assets/olcum/<maket>-telefon.json)
               node tools/olc-bulut.mjs --olumsuz
+   --telefon (2026-09-25, reisim telefonda sayfanın sağa sola kaydığını gördü): her durum GERÇEK TELEFON TAKLİDİYLE (dokunmatik,
+   meta viewport uygulanır, pointer: coarse) 320 · 360 · 390 · 430 genişlikte açılır; sayfa yana taşıyor mu, taşan en dış öğe
+   hangisi, 16 px altında yazı alanı var mı (iPhone odakta sayfayı büyütür). 375'lik masaüstü penceresi 320'yi görmüyordu.
    --yazma: "yazma" — sonuç dosyası yazılmaz, yalnız ekrana (deneme koşuları için).
    Komutlar Node 24 ile: PATH=/opt/node24/bin:$PATH. */
 import { spawn } from "node:child_process";
@@ -622,6 +626,66 @@ async function etkilesim(ad, { yazma } = {}) {
   return gecen === l.length;
 }
 
+/* ── TELEFON (--telefon): gerçek telefon taklidi, sayfa yana kayıyor mu + 16 px altı yazı alanı ── */
+const TELEFON_GEN = [320, 360, 390, 430];
+const TELEFON_UA = "Mozilla/5.0 (iPhone; CPU iPhone OS 18_0 like Mac OS X) AppleWebKit/605.1.15 (KHTML, like Gecko) Version/18.0 Mobile/15E148 Safari/604.1";
+const TELEFON_OLC = `(() => {
+  const d = document.documentElement, W = d.clientWidth;
+  const gor = e => { const b = e.getBoundingClientRect(), s = getComputedStyle(e); return b.width > 0 && b.height > 0 && s.visibility !== "hidden" && s.display !== "none"; };
+  /* kırpan ata içinde kalan (yana kayan şerit, pencere) sayfayı taşırmaz; yalnız en dış taşan öğe yazılır */
+  const kirpanAta = e => { for (let a = e.parentElement; a && a !== document.body && a !== d; a = a.parentElement) if (getComputedStyle(a).overflowX !== "visible") return a; return null; };
+  const disari = [];
+  for (const e of document.querySelectorAll("body *")) {
+    if (!gor(e) || e.closest("dialog:not([open])")) continue;
+    const b = e.getBoundingClientRect();
+    if (b.right <= W + 1) continue;   /* sayfa yalnız SAĞA kayar; solda kalan (kapalı çekmece) kaydırma yaratmaz */
+    const k = kirpanAta(e); if (k) { const kb = k.getBoundingClientRect(); if (kb.right <= W + 1) continue; }
+    if (disari.some(x => x.el.contains(e))) continue;
+    disari.push({ el: e, ad: e.tagName.toLowerCase() + (typeof e.className === "string" && e.className.trim() ? "." + e.className.trim().split(/\\s+/).join(".") : ""), sag: Math.round(b.right - W) });
+  }
+  const alanlar = [...document.querySelectorAll("input:not([type=checkbox]):not([type=radio]):not([type=hidden]), textarea, select")].filter(gor);
+  return { W, tasma: d.scrollWidth - W, disari: disari.map(({ el, ...x }) => x),
+    kucukAlan: alanlar.filter(e => parseFloat(getComputedStyle(e).fontSize) < 16).map(e => (e.id || e.name || e.className || e.tagName) + ":" + getComputedStyle(e).fontSize),
+    alan: alanlar.length, dokunmatik: matchMedia("(pointer: coarse)").matches };
+})()`;
+
+async function telefonAc(tar, taban, dosya, hash, gen, adim) {
+  const ctx = await tar.createBrowserContext(), s = await ctx.newPage();
+  await s.emulate({ viewport: { width: gen, height: 800, deviceScaleFactor: 3, isMobile: true, hasTouch: true }, userAgent: TELEFON_UA });
+  await s.goto(`${taban}/${dosya}?tema=acik${hash || ""}`, { waitUntil: "load" });
+  await s.addStyleTag({ content: "*,*::before,*::after{transition:none!important;animation:none!important}" });
+  await s.evaluate(() => document.fonts.ready);
+  await adimlar(s, adim);
+  await new Promise(r => setTimeout(r, 60));
+  return { s, ctx };
+}
+
+async function telefon(ad, { yazma } = {}) {
+  const t = DURUMLAR[ad]; if (!t) throw new Error("bilinmeyen maket: " + ad);
+  const sv = await sunucu(), taban = `http://127.0.0.1:${sv.kapi}`;
+  const tar = await puppeteer.launch({ executablePath: tarayici(), headless: true, args: ["--no-sandbox"] });
+  const sonuclar = [];
+  try {
+    for (const d of t.durumlar) for (const gen of TELEFON_GEN) {
+      let r, hata;
+      try { const { s, ctx } = await telefonAc(tar, taban, d.sayfa || t.sayfa, d.hash, gen, d.adim); r = await s.evaluate(TELEFON_OLC); await ctx.close(); }
+      catch (e) { hata = String(e.message || e); }
+      const temiz = !hata && r.dokunmatik && r.tasma <= 0 && !r.disari.length && !r.kucukAlan.length;
+      sonuclar.push({ ad: d.ad, gen, temiz, ...(r || {}), hata });
+      if (!temiz) console.log(`✗ ${gen} ${d.ad} → ${hata || `taşma ${r.tasma} · dışarı ${JSON.stringify(r.disari.slice(0, 3))} · 16 px altı alan ${JSON.stringify(r.kucukAlan)}${r.dokunmatik ? "" : " · dokunmatik taklidi tutmadı"}`}`);
+    }
+  } finally { await tar.close(); sv.kapat(); }
+  const gecen = sonuclar.filter(x => x.temiz).length;
+  if (!yazma) {
+    mkdirSync(join(KOK, "docs/assets/olcum"), { recursive: true });
+    writeFileSync(join(KOK, `docs/assets/olcum/${ad}-telefon.json`), JSON.stringify({ maket: ad, tarih: new Date().toISOString().slice(0, 10),
+      arac: "tools/olc-bulut.mjs --telefon (başsız tarayıcı, telefon taklidi: dokunmatik, meta viewport, 3x; açık tema)", genislikler: TELEFON_GEN,
+      toplam: sonuclar.length, temiz: gecen, durumlar: sonuclar.map(({ ad, gen, temiz, tasma, disari, kucukAlan, alan, hata }) => ({ ad, gen, temiz, tasma, disari, kucukAlan, alan, hata })) }, null, 1) + "\n");
+  }
+  console.log(`${ad}: telefon ${gecen}/${sonuclar.length} temiz`);
+  return gecen === sonuclar.length;
+}
+
 /* OLUMSUZ KANIT: ölçüm gerçekten yakalıyor mu — bilerek bozulmuş sayfa bulgu vermeli */
 async function olumsuz() {
   const sv = await sunucu(), taban = `http://127.0.0.1:${sv.kapi}`;
@@ -647,6 +711,18 @@ async function olumsuz() {
       console.log(`${hepsi ? "✓" : "✗"} ${gen}: bozulmuş sayfada bulgu → ${JSON.stringify(bulgu)} (hepsi > 0 olmalı)`);
       await ctx.close();
     }
+    /* telefon ölçümü: 320'de ekrandan geniş öğe ve 15 px yazı alanı eklenir → ikisi de yakalanmalı */
+    const { s, ctx } = await telefonAc(tar, taban, "maket/planlarim.html", "#/", 320, []);
+    await s.evaluate(() => {
+      const ic = document.querySelector(".a-icerik");
+      const genis = document.createElement("div"); genis.style.cssText = "width:340px;height:10px"; ic.appendChild(genis);
+      const alan = document.createElement("input"); alan.style.cssText = "font-size:15px"; ic.appendChild(alan);
+    });
+    const r = await s.evaluate(TELEFON_OLC);
+    const hepsi = r.dokunmatik && r.tasma > 0 && r.disari.length > 0 && r.kucukAlan.length > 0;
+    gecti = gecti && hepsi;
+    console.log(`${hepsi ? "✓" : "✗"} telefon 320: bozulmuş sayfada bulgu → ${JSON.stringify({ dokunmatik: r.dokunmatik, tasma: r.tasma, disari: r.disari.length, kucukAlan: r.kucukAlan.length })} (hepsi > 0 olmalı)`);
+    await ctx.close();
   } finally { await tar.close(); sv.kapat(); }
   return gecti;
 }
@@ -657,5 +733,5 @@ const gi = arg.indexOf("--goruntu"); if (gi >= 0) { secenek.goruntu = arg[gi + 1
 const adlar = arg.filter((a, i) => !a.startsWith("--") && arg[i - 1] !== "--goruntu");
 let tamam = true;
 if (arg.includes("--olumsuz")) tamam = await olumsuz();
-for (const ad of adlar) tamam = (arg.includes("--etkilesim") ? await etkilesim(ad, secenek) : await olc(ad, secenek)) && tamam;
+for (const ad of adlar) tamam = (arg.includes("--etkilesim") ? await etkilesim(ad, secenek) : arg.includes("--telefon") ? await telefon(ad, secenek) : await olc(ad, secenek)) && tamam;
 process.exit(tamam ? 0 : 1);

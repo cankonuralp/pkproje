@@ -1,7 +1,7 @@
 {
  "maket": "m16",
  "sayfa": "maket/egitimler.html",
- "tarih": "2026-09-24",
+ "tarih": "2026-09-25",
  "arac": "başsız HeadlessChrome/141.0.7390.37 · puppeteer-core · tools/olc-bulut.mjs + tools/olc-maket.js",
  "yontem": "python3 http.server (docs/), her durum × genişlik × tema taze yükleme ve ayrı oturum, geçişler kapalı; 1920×1080 · 1080×810 · 375×812 × açık/koyu; 1080'de çekmece açık ayrıca.",
  "toplam": 36,

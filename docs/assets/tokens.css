@@ -32,6 +32,7 @@
   --boy-baslik: 20px;   --kal-baslik: 700;
   --boy-bolum: 15px;    --kal-bolum: 600;
   --boy-govde: 14px;
+  --boy-girdi: 14px;    /* yazı alanı (arama, form); dokunmatikte 16 — iPhone 16 px altında odakta sayfayı büyütür */
   --boy-kucuk: 12.5px;
   --boy-etiket: 11.5px; --kal-etiket: 600;
   --r-kucuk: 5px; --r-orta: 8px; --r-buyuk: 12px; --r-tam: 999px;
@@ -163,11 +164,11 @@
    Dokunmatik geniş ekran (pointer: coarse) da 44 px alır. Liste tablo↔kart kararı EKRANA değil KABA göre
    (@container, anayasa 3.3); eşik maket.css'te, ölçümle. */
 @media (max-width: 1279.98px) {
-  :root { --tus-y: 44px; --boy-govde: 15px; --bosluk-sayfa: 16px; }
+  :root { --tus-y: 44px; --boy-govde: 15px; --boy-girdi: 16px; --bosluk-sayfa: 16px; }
 }
 @media (max-width: 767.98px) {
   :root { --bosluk-sayfa: 12px; --boy-baslik: 18px; }
 }
 @media (pointer: coarse) {
-  :root { --tus-y: 44px; --boy-govde: 15px; }
+  :root { --tus-y: 44px; --boy-govde: 15px; --boy-girdi: 16px; }
 }

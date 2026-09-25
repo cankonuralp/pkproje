@@ -14,6 +14,13 @@ html {
 }
 body { margin: 0; min-height: 100vh; background: var(--zemin); }
 button, input, textarea, select { font: inherit; color: inherit; }
+/* ⛔ HATA SINIFI (2026-09-25, reisim telefonda gördü): yazı alanı gövdeyle 15 px'ti → iPhone 16 px altındaki alana
+   dokununca sayfayı büyütüyor, geri küçültmüyor, sayfa sağa sola kayıyordu. Yazı alanı kendi değişkeninden (--boy-girdi,
+   dokunmatikte 16). Büyütmeyi kapatmak (maximum-scale) YOK: iki parmakla büyütme erişilebilirlik için açık kalır. */
+input, textarea, select { font-size: var(--boy-girdi); }
+/* ipucu metni (placeholder) gövde boyunda kalır: iPhone büyütmesi yazılan metnin boyuna bakar, ipucu 16'ya çıkınca dar
+   kutuda kesiliyordu (2026-09-25 ölçümü, 375: ekipman araması, rapor notu) */
+::placeholder { font-size: var(--boy-govde); }
 button { cursor: pointer; }
 :focus-visible { outline: 3px solid var(--odak); outline-offset: 2px; }
 /* ⛔ HATA SINIFI (maket, 2026-09-23): `hidden` özniteliği sınıfın `display` kuralıyla eziliyordu → tek genel kural */

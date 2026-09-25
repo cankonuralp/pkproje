@@ -88,7 +88,7 @@
      kutuları yukarıdaki denetimlerin dışında olduğu için ölçüm görmedi → ipucu metni kutunun iç genişliğiyle kıyaslanır. */
   const tuval = document.createElement("canvas").getContext("2d");
   r.ipucuKesik = [...document.querySelectorAll("input[placeholder], textarea[placeholder]")].filter(gorunur).filter(e => {
-    const s = getComputedStyle(e); tuval.font = s.fontWeight + " " + s.fontSize + " " + s.fontFamily;
+    const s = getComputedStyle(e), p = getComputedStyle(e, "::placeholder"); tuval.font = p.fontWeight + " " + p.fontSize + " " + p.fontFamily;   /* ipucunun kendi yazısı (2026-09-25) */
     return tuval.measureText(e.placeholder).width > e.clientWidth - parseFloat(s.paddingLeft) - parseFloat(s.paddingRight) + 1;
   }).map(e => e.id + ":" + e.placeholder);
   r.ekranDisi = et.filter(e => { if (e.closest(".a-cipler") || e.closest(".a-cubuk")) return false; const b = e.getBoundingClientRect(); return b.right > innerWidth + 1 || b.left < -1; }).length;
