@@ -624,6 +624,10 @@ a.a-yuz:hover { border-color: var(--kenar-alan); background: var(--zemin); }
 .a-dosya-sec { display: flex; align-items: center; flex-wrap: wrap; gap: 8px 12px; }
 .a-hucre-metin { min-width: 0; overflow-wrap: anywhere; }
 .a-matris-arac { margin: 0 0 12px; }
+/* zimmet teslim formu (2026-09-25): iki imza alanı yan yana, telefonda alt alta (kap sorgusu yok; ızgara kendiliğinden sarar) */
+.a-belge-imzalar { display: grid; grid-template-columns: repeat(auto-fit, minmax(min(100%, 220px), 1fr)); gap: 12px; margin-top: 16px; }
+.a-belge-imzalar > div { display: grid; gap: 2px; font-size: var(--boy-kucuk); }
+.a-zimmet-form-durum { margin: 0 0 10px; }
 /* M2 (müşteri ve tesis) — SGK sicil no 26 hane bölünmez (anayasa 3.11): sütunu ~230 px'e göre */
 .a-tablo-musteri .a-k-unvan { width: 27%; } .a-tablo-musteri .a-k-tesis { width: 17%; } .a-tablo-musteri .a-k-ekipman { width: 9%; }
 .a-tablo-musteri .a-k-portal { width: 12%; } .a-tablo-musteri .a-k-sonraki { width: 15%; } .a-tablo-musteri .a-k-durum { width: 20%; }

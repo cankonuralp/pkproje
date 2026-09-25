@@ -68,4 +68,34 @@
       satirlar.map(function (s) { return "<tr>" + s.map(function (h) { return "<td>" + h + "</td>"; }).join("") + "</tr>"; }).join("") + "</tbody></table>" + (kay ? kaynak(kay) : "");
   }
 
+  /* ── ZİMMET TESLİM FORMU — TEMEL FORMAT (reisim 2026-09-25: "zimmete varlık eklendikten sonra eklenen varlıkların PDF şeklinde
+     çıkartılıp imzalanıp taramasının buraya koyulması için bir düzenek kurgula, bunun için temel bir format oluştur; müşteri formatı
+     istemese biz müşteri isteği doğrultusunda bunu değiştiririz"). Firmaya göre değişen formatlardan biri (pkproje.md §3.7): firma kendi
+     formunu isterse o firmaya özel üretilir, bu varsayılan kalır. o = { p (teslim alan), varliklar[], no, tarih, eden (teslim eden) }. */
+  MB.zimmetFormu = function (o) {
+    var f = MV.FIRMA, formKod = f.kisa + "-FR-ZMT-01";
+    var tur = { cihaz: "Ölçüm cihazı", arac: "Araç", diger: "Diğer" };
+    var satirlar = o.varliklar.map(function (v, i) {
+      var z = MV.hareketler(v.id)[0];
+      /* 4 sütun: 375'te 6 sütun 74 px taşıyordu (2026-09-25) → marka/model adın altında, not tarihin altında */
+      return [String(i + 1), '<b>' + kacis(v.plaka || v.env) + "</b><br>" + kacis(v.ad) + '<br><span class="a-belge-madde">' + tur[v.tur] + " · " + kacis([v.marka, v.model].filter(Boolean).join(" ")) + "</span>",
+        v.seri ? '<span class="a-kod">' + v.seri + "</span>" : v.plaka ? kacis(v.plaka) : "—",
+        MK.tarihYaz(z.tarih) + (v.tur === "cihaz" ? '<br><span class="a-belge-madde">kalibrasyon ' + MK.tarihYaz(v.bitis) + "</span>" : v.tur === "arac" ? '<br><span class="a-belge-madde">km teslimde yazılır</span>' : "")];
+    });
+    return '<article class="a-belge" aria-label="Zimmet teslim formu önizlemesi">' +
+      '<header class="a-belge-bas"><div class="a-belge-logo" role="img" aria-label="Firma logosu yeri">Logo</div>' +
+        '<div class="a-belge-kunye"><b>' + kacis(f.ad) + "</b><span>" + kacis(f.adres) + "</span></div></header>" +
+      '<div class="a-belge-baslik"><h2>Zimmet teslim formu</h2><p>Personele teslim edilen ölçüm cihazı, araç ve diğer iş varlıkları</p></div>' +
+      '<dl class="a-bilgi">' + bilgi("Form no", '<span class="a-kod">' + o.no + "</span>") + bilgi("Tarih", MK.tarihYaz(o.tarih)) +
+        bilgi("Teslim alan", kacis(o.p.ad) + '<span class="a-alt-satir">' + kacis(MV.meslekAd(o.p)) + "</span>") +
+        bilgi("Teslim eden", kacis(o.eden.ad) + '<span class="a-alt-satir">firma adına</span>') + "</dl>" +
+      bolum("1", "Zimmetlenen varlıklar", o.varliklar.length + " kalem",
+        tablo(["#", "Varlık", "Seri no / plaka", "Teslim"], satirlar)) +
+      bolum("2", "Taahhüt", "",
+        '<p>Yukarıda listelenen varlıkları eksiksiz ve çalışır durumda teslim aldım. Özenle ve yalnız işim için kullanacağımı; kayıp, hasar ya da ' +
+        'arızayı gecikmeden bildireceğimi; işten ayrılışımda ya da istendiğinde eksiksiz iade edeceğimi kabul ederim.</p>') +
+      '<div class="a-belge-imzalar"><div><b>Teslim eden</b><span>' + kacis(o.eden.ad) + '</span><div class="a-belge-imza">Tarih · imza</div></div>' +
+        '<div><b>Teslim alan</b><span>' + kacis(o.p.ad) + '</span><div class="a-belge-imza">Tarih · imza</div></div></div>' +
+      '<footer class="a-belge-alt"><span>' + kacis(f.ad) + " · " + formKod + " · temel format</span><span>Sayfa 1 / 1</span></footer></article>";
+  };
 })();

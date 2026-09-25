@@ -8,8 +8,8 @@
   390,
   430
  ],
- "toplam": 100,
- "temiz": 100,
+ "toplam": 108,
+ "temiz": 108,
  "durumlar": [
   {
    "ad": "giriş",
@@ -838,6 +838,78 @@
    "disari": [],
    "kucukAlan": [],
    "alan": 1
+  },
+  {
+   "ad": "zimmet teslim formu (temel format)",
+   "gen": 320,
+   "temiz": true,
+   "tasma": 0,
+   "disari": [],
+   "kucukAlan": [],
+   "alan": 0
+  },
+  {
+   "ad": "zimmet teslim formu (temel format)",
+   "gen": 360,
+   "temiz": true,
+   "tasma": 0,
+   "disari": [],
+   "kucukAlan": [],
+   "alan": 0
+  },
+  {
+   "ad": "zimmet teslim formu (temel format)",
+   "gen": 390,
+   "temiz": true,
+   "tasma": 0,
+   "disari": [],
+   "kucukAlan": [],
+   "alan": 0
+  },
+  {
+   "ad": "zimmet teslim formu (temel format)",
+   "gen": 430,
+   "temiz": true,
+   "tasma": 0,
+   "disari": [],
+   "kucukAlan": [],
+   "alan": 0
+  },
+  {
+   "ad": "personel · kart (zimmet formu eskidi)",
+   "gen": 320,
+   "temiz": true,
+   "tasma": 0,
+   "disari": [],
+   "kucukAlan": [],
+   "alan": 0
+  },
+  {
+   "ad": "personel · kart (zimmet formu eskidi)",
+   "gen": 360,
+   "temiz": true,
+   "tasma": 0,
+   "disari": [],
+   "kucukAlan": [],
+   "alan": 0
+  },
+  {
+   "ad": "personel · kart (zimmet formu eskidi)",
+   "gen": 390,
+   "temiz": true,
+   "tasma": 0,
+   "disari": [],
+   "kucukAlan": [],
+   "alan": 0
+  },
+  {
+   "ad": "personel · kart (zimmet formu eskidi)",
+   "gen": 430,
+   "temiz": true,
+   "tasma": 0,
+   "disari": [],
+   "kucukAlan": [],
+   "alan": 0
   },
   {
    "ad": "personel · yeni form, boş gönderildi (hatalar)",

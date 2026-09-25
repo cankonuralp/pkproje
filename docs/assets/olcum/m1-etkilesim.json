@@ -2,8 +2,8 @@
  "maket": "m1",
  "tarih": "2026-09-25",
  "arac": "tools/olc-bulut.mjs --etkilesim (başsız tarayıcı, 1920 açık tema; gen verilen denemede o genişlik)",
- "toplam": 32,
- "gecen": 32,
+ "toplam": 35,
+ "gecen": 35,
  "denemeler": [
   {
    "ad": "personel: sayaç görünüme dürüst (15 çalışan)",
@@ -143,6 +143,27 @@
    "gen": 1920,
    "sayfa": "maket/personel.html",
    "hash": "#/p/mk/belge",
+   "gecti": true
+  },
+  {
+   "ad": "zimmet formu: güncel form kartta onaylı, eskiyen uyarılı",
+   "gen": 1920,
+   "sayfa": "maket/personel.html",
+   "hash": "#/p/mk",
+   "gecti": true
+  },
+  {
+   "ad": "zimmet formu: varlıklar forma dolar, taramayı yükle → kartta güncel",
+   "gen": 1920,
+   "sayfa": "maket/personel.html",
+   "hash": "#/p/ea/zimmet-formu",
+   "gecti": true
+  },
+  {
+   "ad": "zimmet formu: tablo kişideki varlık sayısı kadar",
+   "gen": 1920,
+   "sayfa": "maket/personel.html",
+   "hash": "#/p/mk/zimmet-formu",
    "gecti": true
   },
   {

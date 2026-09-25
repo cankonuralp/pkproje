@@ -114,4 +114,4 @@ tek mesaj: sayfanın bağlantısı + kaç maket + kaç soru + ölçülemeyen var
   rol yetkileri düzenlenir, geçici parola, kartta zimmet + özlük, Ana sayfa (`maket/anasayfa.html`), grup yetkilendirmesi kalktı, eksik
   bilgi uyarı. M1 150/150 · 32/32. **Reisim'in incelemesi bekleniyor**; onaylanınca sırada M2 Müşteri ve Tesis (sorular 44–50 + müşteri
   girişinin kendiliğinden açılması).
-
+- 2026-09-25: M1'e **zimmet teslim formu** eklendi (temel format, imzalı tarama yükleme) ve pkproje.md **§3.7 firmaya göre değişen formatlar** listesi açıldı. M1 162/162 · 35/35.

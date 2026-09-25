@@ -442,6 +442,19 @@
   MV.hareketler = function (vid) { return MV.ZIMMET.filter(function (z) { return z.v === vid; }).sort(function (a, b) { return a.tarih < b.tarih ? 1 : -1; }); };
   MV.kimde = function (vid) { var h = MV.hareketler(vid)[0]; return h ? h.alan : "depo"; };
   MV.yerAdi = function (k) { return k === "depo" ? "Depo" : k === "lab" ? "Kalibrasyonda" : MV.kisi(k).ad; };
+  /* İMZALI ZİMMET TESLİM FORMU (2026-09-25, reisim: zimmetlenen varlıklar PDF olarak çıkar, imzalanıp taranır, personel kartına konur).
+     kişi başına son yüklenen form: no, tarih, kapsam (formdaki varlıklar). Kapsam bugünkü zimmetle aynı değilse form ESKİDİR (yeni imza
+     gerekir). Örnek: Mert Kaya güncel · Elif Aydın'a formdan sonra bir cihaz daha verildi. */
+  MV.ZIMMET_FORMU = {};
+  (function () {
+    var kimde = function (k) { return MV.VARLIKLAR.filter(function (v) { return MV.kimde(v.id) === k; }).map(function (v) { return v.id; }); };
+    MV.ZIMMET_FORMU.mk = { no: "ZF-0426-003", tarih: "2026-04-02", kapsam: kimde("mk"), dosya: "zimmet-formu-imzali.pdf" };
+    MV.ZIMMET_FORMU.ea = { no: "ZF-1025-011", tarih: "2025-10-15", kapsam: kimde("ea").slice(1), dosya: "zimmet-formu-imzali.pdf" };
+  })();
+  MV.zimmetFormuGuncel = function (k, kapsam) {
+    var f = MV.ZIMMET_FORMU[k]; if (!f) return false;
+    return f.kapsam.slice().sort().join() === kapsam.slice().sort().join();
+  };
   /* kalibrasyon durumu: gecti (bitiş geçti) · yakin (30 gün içinde) · lab (laboratuvarda) · gecerli */
   MV.kalDurum = function (v) {
     if (v.tur !== "cihaz") return null;

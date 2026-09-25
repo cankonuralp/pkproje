@@ -386,6 +386,10 @@ hesabı aç / yeni geçici parola (parola bir kez gösterilir) · özlük belges
 - Karar (38, 39): **teknik ayrıntıya girilmez** — Ek-III grup yetkilendirmesi (17020 yetkinlik tablosu) kalktı; eksik bilgi (EKİPNET no
   boş, meslek yetkili kişi meslekleri arasında değil) **uyarıdır, engel değil**: plan kabulünde uyarı olarak görünür, iş yapılabilir.
   Formda zorunlu yalnız ad, işe başlama ve meslek. Yetkili meslek olmayan kişiye de inspector rolü verilebilir, kartta uyarı yazar.
+- **Zimmet teslim formu (reisim 2026-09-25, cevaplardan sonra ek istek):** Zimmetindekiler'de "Zimmet formu" → kişideki varlıkların
+  **temel format** önizlemesi (PDF'in iskeleti; `MB.zimmetFormu`, rapor belgesiyle tek üretici) → yazdır, teslim eden ve teslim alan
+  imzalar → "İmzalı taramayı yükle". Kartta durum: yüklü ve güncel · **eskidi** (formdan sonra zimmet değişti → yeni form) · yok.
+  Teslim eden makette planlama ekibinden depo sorumlusu (varsayım, M4 soru 63). Format firmaya göre değişebilir → §3.7 listesi.
 - Karar (40): kişinin kartında **zimmetindekiler** (o an kişide olan varlıklar; teslim geçmişi Zimmetler'de) ve **özlük dosyası**
   (iş sözleşmesi, diploma, oda kaydı, EKİPNET belgesi, kimlik, sağlık raporu, diğer; yalnız firma yöneticisi görür — KVKK: özlük bilgisi,
   varsayım). Eğitim sertifikaları Eğitimler modülünde.
@@ -398,8 +402,8 @@ hesabı aç / yeni geçici parola (parola bir kez gösterilir) · özlük belges
   meslekler" ayrıntısı sadeleşecek · M2'de portal kullanıcısı davetle değil kendiliğinden açılacak.
 **Sorular (M1):**
 Açık soru yok — 32–43 ve 159 cevaplandı (§9, on ikinci tur). 2. turun kendisi reisim'in incelemesini bekliyor.
-**Ölçüm (2026-09-25, bulut, 2. tur):** 25 durum × 1920 · 1080 · 375 × açık/koyu = **150/150 temiz**, 1080'de çekmece açık 2/2; etkileşim
-**32/32** (rol seçicisi, eksik bilgi çipi, rol kaydetme, yetkisiz meslekte uyarılı inspector, hesap aç → geçici parola → kart, yeni geçici
+**Ölçüm (2026-09-25, bulut, 2. tur + zimmet formu):** 27 durum × 1920 · 1080 · 375 × açık/koyu = **162/162 temiz**, 1080'de çekmece açık 2/2; etkileşim
+**35/35**, telefon 108/108 (rol seçicisi, eksik bilgi çipi, rol kaydetme, yetkisiz meslekte uyarılı inspector, hesap aç → geçici parola → kart, yeni geçici
 parola, hesabı kapat, rol yetkilerini düzenle / kaydet / önerilene dön, yöneticinin sabit hücresi, özlük belgesi, eski Kullanıcılar
 bağlantısı, geçici parolayla giriş, Ana sayfa rol anahtarı ve onay kuyruğu sırası). Ölçerken düzeltilen: telefonda zimmetteki uzun varlık
 adı 93 px taşıyordu (kısa kimlik bağlantı, ad alt satırda) · özlük notundaki satır içi bağlantı 16 px küçük hedefti (kaldırıldı) · telefonda
@@ -901,9 +905,25 @@ penceresi (personel, eğitim, tarih → tekrar tarihi türden, veren, sertifika)
 kartından ve Uyarılar'dan geçiş, tekrarı kaydet → önceki kayıt, ileri tarih reddi, türden tekrar tarihi, türe süzme). M1 108/108 + 17/17,
 M10 30/30 + 6/6, Planlar 15/15 yeniden. **Faz 2 maketleri bitti.**
 
----
+### 3.7 · Firmaya göre değişen formatlar — CANLI LİSTE (reisim 2026-09-25)
+Reisim (birebir): *"bu ve bunun gibi müşteriye göre değişecek formatları listele ben söyledikçe yeni şeyler olursa onlarda bu listeye
+eklersin"* · *"temel bir format oluştur eğer müşteri formatı istemese biz müşteri isteği doğrultusunda bunu değiştiririz"*.
+(Buradaki "müşteri" = bizim müşterimiz, yani muayene **firması**.) **Kural:** her belgenin bir **temel formatı** vardır ve herkes onunla
+başlar; firma kendi formatını isterse o firmaya özel sürüm **kodda** hazırlanıp yayınla gelir — site içinde biçim düzenleyici yok (rapor
+şablonu kararıyla aynı yol, §3, §8.3). Belgenin altında form kodu durur (`<firma kısa kodu>-FR-…`), firmaya özel sürüm kendi kodunu alır.
+Reisim yeni bir tane söyledikçe bu tabloya satır eklenir.
+| # | Format | Nerede | Temel format | Firmaya göre ne değişir |
+|---|---|---|---|---|
+| 1 | Periyodik kontrol raporu | Saha ve Rapor, PDF (M7–M9) | var (maket, Ek-III 1.7 sırası) | firma × ekipman türü şablonu; Bakanlık formatı zorunlu türlerde biçim Bakanlığınki, firma yalnız künye / logo |
+| 2 | **Zimmet teslim formu** | Personel kartı › Zimmetindekiler (M1) | **var — `KM-FR-ZMT-01` (2026-09-25)** | başlık, sütunlar, taahhüt metni, imza alanları, logo |
+| 3 | Tarafsızlık ve çıkar çatışması beyanı | Planlar › plan kabulü (§3.4) | var (varsayılan metin) | beyan metni (firmanın kalite el kitabından) |
+| 4 | Teklif belgesi | Teklifler (M12) | maket (liste + sayfa), PDF biçimi yok | başlık, kalem tablosu, koşullar, imza |
+| 5 | İş sözleşmesi metni | Sözleşmeler (M13) | yok — soru 127 (kodda şablon mu, firma kendi metnini mi yükler) | metnin tamamı |
+| 6 | Uygunsuzluklar Excel'i | Müşteri paneli (M11) | var (maket önizlemesi) | sütunlar ve sırası |
+| 7 | Özlük dosyası belge türleri | Personel kartı (M1) | var (iş sözleşmesi, diploma, oda kaydı, EKİPNET belgesi, kimlik, sağlık raporu, diğer) | tür listesi |
+| 8 | Numara ve form kodu önekleri | rapor no, form kodları (§3.5) | var (firma kısa kodu) | kısa kod (firma ayarı) |
 
-## 4 · Mevzuat bulguları (2026-09-18 araştırması; kaynaklar bölüm 10)
+ (2026-09-18 araştırması; kaynaklar bölüm 10)
 
 ### 4.1 Çerçeve
 - **İş Ekipmanlarının Kullanımında Sağlık ve Güvenlik Şartları Yönetmeliği** (RG 25/4/2013, 28628). Son büyük
@@ -1261,6 +1281,9 @@ revizyon, alan kopyalama, hafif kusur devri, meslek eşleşme denetimi).
 - Emsal ürünler: https://opwire.app/iso-17020-periyodik-kontrol-yazilimi/ · https://17020muayene.vidco.com.tr/ · https://akuple.com/asansor-kontrol-yazilimi/ · https://ensyazilim.com/
 
 ## 11 · Değişiklik günlüğü
+- 2026-09-25 (34): **zimmet teslim formu** (reisim: "zimmete varlık eklendikten sonra eklenen varlıkların PDF şeklinde çıkartılıp
+  imzalanıp taramasının buraya koyulması için bir düzenek kurgula ... temel bir format oluştur"): personel kartında form önizlemesi,
+  imzalı taramayı yükleme, güncel / eskidi / yok durumu; **§3.7 firmaya göre değişen formatlar** canlı listesi (8 satır). M1 162/162, 35/35.
 - 2026-09-25 (33): **M1 2. tur** (reisim'in 32–43 ve 159 cevapları, §9 on ikinci tur): Kullanıcılar Personel'e katıldı (menü ve uygulamanın
   modül kaydı 16 modül), rol yetkileri düzenlenir, davet yerine geçici parola, grup yetkilendirmesi kalktı ve eksik bilgi yalnız uyarı,
   kartta zimmet ve özlük dosyası, **Ana sayfa** (role göre), giriş ekranında geçici parolayla ilk giriş; yeni desenler kalıba girdi (kural 20).
