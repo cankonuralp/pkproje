@@ -32,8 +32,8 @@ ilerleriz"*):** faz 1 + faz 2'nin bütün maketleri sırayla, tek bulut oturumun
 durum **`MAKET-PLANI.md`** — bu çalışma sürerken oturum başında o da TAM okunur. Maketler onaylanana kadar kod yok.
 **2026-09-24 bitti:** 16 maket + toplu bakış (`docs/toplu-bakis.html`; 127 soru, 32–158). **2026-09-25 reisim:** sorular toplu
 cevaplanmaz → modüller benim önerdiğim sırayla tek tek; her modülde o modülün soruları YENİDEN sorulur; çakışan / gereksiz
-modüller sırası gelince silinir, şimdi değil (MAKET-PLANI.md Durum). **M1 2. tur yapıldı (2026-09-25)**, reisim'in
-incelemesinde; genel ilke: teknik ayrıntı yok, kural uyarıdır engel değil (pkproje.md §9 on ikinci tur).
+modüller sırası gelince silinir, şimdi değil (MAKET-PLANI.md Durum). **M1 onaylandı (2026-09-25, reisim: *"Onaylıyorum"*)**; sırada M2
+Müşteri ve Tesis; genel ilke: teknik ayrıntı yok, kural uyarıdır engel değil (pkproje.md §9 on ikinci tur).
 
 ## 2 · Yığın (pkproje.md §8 — **reisim 2026-09-22'de onayladı**)
 - **TypeScript + Next.js (App Router), standalone çıktı — onaylı 2026-09-22** (SvelteKit düştü). Tarayıcı

@@ -362,7 +362,7 @@ Reisim en sonda toplu bakış sayfasından hepsine birlikte bakar; aradaki maket
 bildirim `docs/assets/maket-ortak.js`'e AYNEN taşındı (Planlar ayrımdan önce ve sonra 54/54 temiz, ekran görüntüleri piksel
 karşılaştırıldı); ortak uydurma veri `docs/assets/maket-veri.js`; menüdeki hazır maketler tıklanınca açılır.
 
-#### Maket M1 — Kullanıcı ve Rol · Personel (modül 1, 2) — ONAY BEKLİYOR
+#### Maket M1 — Kullanıcı ve Rol · Personel (modül 1, 2) — ONAYLANDI 2026-09-25
 **2. tur (2026-09-25, reisim'in M1 cevaplarıyla; soru kararları §9 on ikinci tur).** Ekranlar: **giriş** (`maket/giris.html`: giriş · yanlış
 bilgi · parola sıfırlama · **geçici parolayla ilk giriş** — parolayı değiştir ya da "Şimdi değil") · **Ana sayfa** (`maket/anasayfa.html`:
 girişten sonra herkes buraya gelir; role göre bilgi yüzleri + iş listesi — firma yöneticisi, planlama, inspector, mekanik / elektrik
@@ -407,7 +407,8 @@ hesabı aç / yeni geçici parola (parola bir kez gösterilir) · özlük belges
   (grup) ve eksikleri **engel** gibi gösteriyor · Planlar'daki kabul kilidi (EKİPNET) uyarıya dönecek · M3'te tür başına "yetkili
   meslekler" ayrıntısı sadeleşecek · M2'de portal kullanıcısı davetle değil kendiliğinden açılacak.
 **Sorular (M1):**
-Açık soru yok — 32–43 ve 159 cevaplandı (§9, on ikinci tur). 2. turun kendisi reisim'in incelemesini bekliyor.
+Açık soru yok — 32–43 ve 159 cevaplandı (§9, on ikinci tur). **2. tur ONAYLANDI (2026-09-25, reisim: *"Onaylıyorum"*)**; koda geçiş
+reisim'in "başla" demesiyle (kalıp kuralı 20'nin kilidi o zaman kurulur).
 **Ölçüm (2026-09-25, bulut, 2. tur + zimmet formu + zimmet geçmişi):** 29 durum × 1920 · 1080 · 375 × açık/koyu = **174/174 temiz**, 1080'de çekmece açık 2/2; etkileşim
 **38/38**, telefon 116/116 (rol seçicisi, eksik bilgi çipi, rol kaydetme, yetkisiz meslekte uyarılı inspector, hesap aç → geçici parola → kart, yeni geçici
 parola, hesabı kapat, rol yetkilerini düzenle / kaydet / önerilene dön, yöneticinin sabit hücresi, özlük belgesi, eski Kullanıcılar
@@ -1287,6 +1288,8 @@ revizyon, alan kopyalama, hafif kusur devri, meslek eşleşme denetimi).
 - Emsal ürünler: https://opwire.app/iso-17020-periyodik-kontrol-yazilimi/ · https://17020muayene.vidco.com.tr/ · https://akuple.com/asansor-kontrol-yazilimi/ · https://ensyazilim.com/
 
 ## 11 · Değişiklik günlüğü
+- 2026-09-25 (36): **M1 ONAYLANDI** (reisim: *"Onaylıyorum"*) — giriş, Ana sayfa, personel (rol yetkileri, giriş hesabı, zimmet formu ve
+  geçmişi, özlük dosyası). Sırada M2 Müşteri ve Tesis; M1'in kodu reisim "başla" deyince.
 - 2026-09-25 (35): **imzalı zimmet formu açılır, zimmet geçmişi kartta** (reisim): kişiye verilen / geri alınan her varlık tarihleriyle,
   kişinin bütün imzalı formları; "Teslim geçmişi" tuşu Zimmetler modülüne atmak yerine bu görünümü açar. M1 174/174, 38/38.
 - 2026-09-25 (34): **zimmet teslim formu** (reisim: "zimmete varlık eklendikten sonra eklenen varlıkların PDF şeklinde çıkartılıp

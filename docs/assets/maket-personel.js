@@ -1,4 +1,4 @@
-/* ══ probata MAKET M1 — Personel (modül 1 + 2) · 2. TUR, ONAY BEKLİYOR (2026-09-25) ═════════════════════════════════
+/* ══ probata MAKET M1 — Personel (modül 1 + 2) · 2. TUR, ONAYLANDI (2026-09-25) ═════════════════════════════════
    1. tur (toplu maket, 2026-09-24): Kullanıcılar ve Personel iki ayrı ekrandı. Reisim'in M1 cevapları (2026-09-25):
    · 159 "birleşsin" + 33 "kullanıcı hesabı her zaman personele bağlı olsun" → Kullanıcılar ekranı kalktı; giriş hesabı, roller ve
      rol yetkileri buradadır (kişinin kartında "Giriş hesabı ve roller", sayfada "Rol yetkileri" sekmesi).

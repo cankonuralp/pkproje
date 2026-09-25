@@ -329,7 +329,7 @@ const sayfaAdi = f => (/<title>([^<]+)<\/title>/.exec(readFileSync(yol("docs/mak
 /* madde listesi: "- " yeni madde, girintili satır öncekine eklenir · soru listesi: "NN. " yeni soru */
 const maddeler = (satirlar, bas) => satirlar.reduce((l, x) => { const m = bas.exec(x); if (m) l.push({ no: m[1], metin: m[2] }); else if (l.length && x.trim()) l[l.length - 1].metin += " " + x.trim(); return l; }, []);
 const MAKETLER = b36.split(/\n(?=#### Maket M\d+ )/).slice(1).map(parca => {
-  const satir = parca.trim().split("\n"), bas = /^#### Maket (M(\d+)) — (.+) — ONAY BEKLİYOR/.exec(satir[0]);
+  const satir = parca.trim().split("\n"), bas = /^#### Maket (M(\d+)) — (.+) — (ONAY BEKLİYOR|ONAYLANDI[^—]*)$/.exec(satir[0]);
   const bloklar = [{ ad: "Ekran", satirlar: [] }];
   for (const x of satir.slice(1)) {
     const m = /^\*\*((?:Varsayımlar|Sorular \(M\d+\)|Ölçüm|Yeni desen)[^*]*?):?\*\*\s*(.*)$/.exec(x);
@@ -338,7 +338,7 @@ const MAKETLER = b36.split(/\n(?=#### Maket M\d+ )/).slice(1).map(parca => {
   const blok = on => bloklar.find(b => b.ad.startsWith(on));
   const ad = /^(.*) \((modül [^)]*)\)$/.exec(bas[3]) || [, bas[3], ""];
   const key = "m" + bas[2], dur = oku(key + ".json"), etk = oku(key + "-etkilesim.json");
-  return { id: bas[1], no: +bas[2], key, ad: ad[1], modul: ad[2], faz: /faz 2/.test(ad[2]) ? 2 : 1,
+  return { id: bas[1], no: +bas[2], key, durum: bas[4].trim(), ad: ad[1], modul: ad[2], faz: /faz 2/.test(ad[2]) ? 2 : 1,
     ekran: blok("Ekran").satirlar.join(" ").trim(), desen: blok("Yeni desen") && { ad: blok("Yeni desen").ad, metin: blok("Yeni desen").satirlar.join(" ") },
     varsayim: maddeler(blok("Varsayımlar").satirlar, /^()- (.*)$/),
     sorular: maddeler(blok("Sorular").satirlar, /^(\d+)\. (.*)$/),
@@ -356,7 +356,7 @@ const baglantilar = m => `<div class="s-baglantilar">${m.sayfalar.map(f => `<a c
 const soruListesi = l => `<ol class="s-tsorular">${l.map(q => `<li id="soru-${q.no}"><span class="s-tsoru-no">${q.no}</span><div>${md(q.metin)}</div></li>`).join("")}</ol>`;
 const maketBolumu = m => `<section class="s-bolum" id="${m.key}">
   <h2><span class="s-no s-no-genis">${m.id}</span>${K(m.ad)}</h2>
-  <p class="s-alt">${K(m.modul)}${m.faz === 1 ? " · faz 1" : ""} · <b>ONAY BEKLİYOR</b> · ${olcumYaz(m)}</p>
+  <p class="s-alt">${K(m.modul)}${m.faz === 1 ? " · faz 1" : ""} · <b>${K(m.durum)}</b> · ${olcumYaz(m)}</p>
   ${baglantilar(m)}
   <p>${md(m.ekran)}</p>
   ${m.desen ? `<div class="s-bulgu">${ikon("layers")}<div><b>${md(m.desen.ad)}:</b> ${md(m.desen.metin)}</div></div>` : ""}
@@ -382,7 +382,7 @@ const faz = f => MAKETLER.filter(m => m.faz === f);
 const n3 = sayfa({
   dosya: "toplu-bakis.html",
   baslik: "probata · Toplu bakış",
-  ust: `<b>Toplu bakış</b><span>${MAKETLER.length} maket · ${TS.length} soru · faz 1 + faz 2 · hepsi ONAY BEKLİYOR</span>`,
+  ust: `<b>Toplu bakış</b><span>${MAKETLER.length} maket · ${TS.length} soru · faz 1 + faz 2 · ${(n => n ? n + " onaylandı · " : "")(MAKETLER.filter(m => m.durum.startsWith("ONAYLANDI")).length)}${MAKETLER.filter(m => m.durum === "ONAY BEKLİYOR").length} onay bekliyor</span>`,
   alt: `<a class="s-tus" href="index.html">${ikon("book-open")}Görsel sistem</a><a class="s-tus" href="maket/planlarim.html" target="_blank" rel="noopener">${ikon("calendar-check")}Planlar'dan başla</a>`,
   icindekiler: [["nasil", "Nasıl bakılır"], ["ozet", "Özet"], ["faz1", "Faz 1 · M1–M" + faz(1).length], ["faz2", "Faz 2 · M" + (faz(1).length + 1) + "–M" + MAKETLER.length], ["bagimli", "Bağımlılıklar"], ["olculemeyen", "Ölçülemeyenler"]],
   govde: [

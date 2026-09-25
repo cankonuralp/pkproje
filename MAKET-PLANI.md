@@ -116,3 +116,5 @@ tek mesaj: sayfanın bağlantısı + kaç maket + kaç soru + ölçülemeyen var
   girişinin kendiliğinden açılması).
 - 2026-09-25: M1'e **zimmet teslim formu** eklendi (temel format, imzalı tarama yükleme) ve pkproje.md **§3.7 firmaya göre değişen formatlar** listesi açıldı. M1 162/162 · 35/35.
 - 2026-09-25: M1'de imzalı zimmet formu açılır ve kartta **zimmet geçmişi** (verildi / geri alındı tarihleri, imzalı formlar). M1 174/174 · 38/38.
+- 2026-09-25: **M1 ONAYLANDI** (reisim: *"Onaylıyorum"*). Sırada **M2 Müşteri ve Tesis** — sorular 44–50 yeniden sorulur, müşteri girişi
+  kendiliğinden açılır (cevap 33).
