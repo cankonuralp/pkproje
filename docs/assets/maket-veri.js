@@ -272,8 +272,10 @@
   /* ── EKİPMAN TÜRÜ KATALOĞU (modül 5; M3) ─────────────────────────────────────────────────────────────────────
      Planlar maketinin 14 türü aynı kod, ad ve branşla (Planlar bunlardan okur); diğerleri Ek-III ve §4.8'den.
      g: Ek-III grubu (yetkili meslekler buradan, §4.6) · periyot: ay (§4.7: çoğu 12, iskele 6) · std: standart kimlikleri (örnek) ·
-     format: Bakanlık rapor formatı (§4.8; zorunlu | taslak) · akr: akreditasyon (Ek-2: zorunlu | 2027) · sablon: rapor şablonu
-     sürümü (kodda, §8.3; yoksa rapor açılamaz) · sure: tahmini kontrol süresi, dk (öneri §3.1). */
+     format: Bakanlık rapor formatı (§4.8; zorunlu | taslak) · sablon: rapor şablonu
+     sürümü (kodda, §8.3; yoksa rapor açılamaz) · sure: tahmini kontrol süresi, dk (öneri §3.1).
+     2026-09-26 (reisim: "Akreditasyon zorunluluğu ile ilgili bir şey yazma, bunu bilmek periyodik kontrol firması yetkililerinin
+     sorumluluğu"): akr alanı kalktı. M3 2. tur: sablon olan türde firmanın yüklediği rapor formatı PDF'i var sayılır (maket-turler.js). */
   MV.KATALOG = [
     { k: "HT", ad: "Hava tankı", b: "m", g: "basincli", periyot: 12, std: ["s1", "s2"], format: "KR11", formatDurum: "taslak", sablon: "v3 · 1 Mar 2026", sure: 20 },
     { k: "FL", ad: "Forklift", b: "m", g: "kaldirma", periyot: 12, std: ["s3", "s4"], format: "KR05", formatDurum: "taslak", sablon: "v2 · 15 Oca 2026", sure: 40 },
@@ -283,21 +285,21 @@
     { k: "KS", ad: "Kompresör", b: "m", g: "basincli", periyot: 12, std: ["s1"], sablon: "v1 · 1 Eyl 2025", sure: 25 },
     { k: "ZV", ad: "Zincirli vinç", b: "m", g: "kaldirma", periyot: 12, std: ["s7"], sablon: "v1 · 1 Eyl 2025", sure: 30 },
     { k: "YA", ad: "Yük asansörü", b: "m", g: "kaldirma", periyot: 12, std: ["s8"], sablon: "v1 · 1 Eyl 2025", sure: 60 },
-    { k: "BK", ad: "Buhar kazanı", b: "m", g: "basincli", periyot: 12, std: ["s9"], format: "KR07", formatDurum: "taslak", akr: "2027", sure: 90 },
+    { k: "BK", ad: "Buhar kazanı", b: "m", g: "basincli", periyot: 12, std: ["s9"], format: "KR07", formatDurum: "taslak", sure: 90 },
     { k: "ET", ad: "Elektrik iç tesisatı", b: "e", g: "elektrik", periyot: 12, std: ["s10"], format: "ZPKR02", formatDurum: "zorunlu", sablon: "v4 · 1 Eyl 2025", sure: 90 },
     { k: "AT", ad: "AG topraklama", b: "e", g: "elektrik", periyot: 12, std: ["s11"], format: "ZPKR01", formatDurum: "zorunlu", sablon: "v3 · 1 Eyl 2025", sure: 45 },
     { k: "YK", ad: "Yıldırımdan korunma", b: "e", g: "elektrik", periyot: 12, std: ["s12"], format: "ZPKR03", formatDurum: "zorunlu", sablon: "v2 · 1 Eyl 2025", sure: 45 },
     { k: "DP", ad: "Dağıtım panosu", b: "e", g: "elektrik", periyot: 12, std: ["s13"], sablon: "v2 · 1 Eyl 2025", sure: 30 },
     { k: "JN", ad: "Jeneratör", b: "e", g: "elektrik", periyot: 12, std: [], sure: 40 },
-    { k: "KU", ad: "Kule kren", b: "m", g: "kaldirma", periyot: 12, std: ["s14"], format: "ZPKR06", formatDurum: "zorunlu", akr: "zorunlu", sablon: "v1 · 1 Oca 2026", sure: 120 },
-    { k: "LP", ad: "LPG tankı", b: "m", g: "basincli", periyot: 12, std: [], format: "ZPMR01", formatDurum: "zorunlu", akr: "zorunlu", sure: 60 },
+    { k: "KU", ad: "Kule kren", b: "m", g: "kaldirma", periyot: 12, std: ["s14"], format: "ZPKR06", formatDurum: "zorunlu", sablon: "v1 · 1 Oca 2026", sure: 120 },
+    { k: "LP", ad: "LPG tankı", b: "m", g: "basincli", periyot: 12, std: [], format: "ZPMR01", formatDurum: "zorunlu", sure: 60 },
     { k: "YG", ad: "Yangın algılama sistemi", b: "e", g: "elektrik", periyot: 12, std: ["s20"], format: "ZPKR04", formatDurum: "zorunlu", sure: 60 },
     { k: "TR", ad: "Transformatör (1–36 kV)", b: "e", g: "elektrik", periyot: 12, std: ["s21"], format: "ZPKR05", formatDurum: "zorunlu", sure: 60 },
     { k: "IS", ad: "Yapı iskelesi", b: "m", g: "iskele", periyot: 6, std: ["s16"], sure: 60 },
     { k: "MB", ad: "Mobil kren", b: "m", g: "kaldirma", periyot: 12, std: ["s15"], format: "KR02", formatDurum: "taslak", sure: 90 },
-    { k: "YM", ad: "Yürüyen merdiven", b: "m", g: "kaldirma", periyot: 12, std: ["s17"], akr: "zorunlu", sure: 60 },
-    { k: "AE", ad: "Asılı erişim donanımı", b: "m", g: "kaldirma", periyot: 12, std: ["s18"], format: "ZPKR07", formatDurum: "zorunlu", akr: "zorunlu", sure: 60 },
-    { k: "SP", ad: "Sütunlu çalışma platformu", b: "m", g: "kaldirma", periyot: 12, std: ["s19"], format: "KR03", formatDurum: "taslak", akr: "2027", sure: 60 },
+    { k: "YM", ad: "Yürüyen merdiven", b: "m", g: "kaldirma", periyot: 12, std: ["s17"], sure: 60 },
+    { k: "AE", ad: "Asılı erişim donanımı", b: "m", g: "kaldirma", periyot: 12, std: ["s18"], format: "ZPKR07", formatDurum: "zorunlu", sure: 60 },
+    { k: "SP", ad: "Sütunlu çalışma platformu", b: "m", g: "kaldirma", periyot: 12, std: ["s19"], format: "KR03", formatDurum: "taslak", sure: 60 },
     { k: "PR", ad: "Mekanik pres", b: "m", g: "diger", periyot: 12, std: [], sure: 45 }
   ];
   MV.tur = function (k) { return MV.KATALOG.filter(function (t) { return t.k === k; })[0]; };

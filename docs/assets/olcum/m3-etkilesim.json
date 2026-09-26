@@ -2,11 +2,11 @@
  "maket": "m3",
  "tarih": "2026-09-26",
  "arac": "tools/olc-bulut.mjs --etkilesim (başsız tarayıcı, 1920 açık tema; gen verilen denemede o genişlik)",
- "toplam": 10,
- "gecen": 10,
+ "toplam": 15,
+ "gecen": 15,
  "denemeler": [
   {
-   "ad": "türler: Rapor şablonu hazırlanıyor çipi",
+   "ad": "türler: Rapor formatı yüklenmedi çipi",
    "gen": 1920,
    "sayfa": "maket/ekipman-turleri.html",
    "hash": "#/",
@@ -20,42 +20,77 @@
    "gecti": true
   },
   {
-   "ad": "türler: Tür ekle tuşu yok (türler probata'dan)",
+   "ad": "akreditasyon hiçbir yerde yazmaz (liste ve tür sayfası)",
    "gen": 1920,
    "sayfa": "maket/ekipman-turleri.html",
-   "hash": "#/",
+   "hash": "#/tur/KU",
    "gecti": true
   },
   {
-   "ad": "tür sayfası: yetkili meslekler bölümü yok, ekipman yüzü tıklanmaz",
+   "ad": "tür sayfası: yetkili meslekler yok, ekipman yüzü tıklanmaz",
    "gen": 1920,
    "sayfa": "maket/ekipman-turleri.html",
    "hash": "#/tur/ET",
    "gecti": true
   },
   {
-   "ad": "ayarlar: süre boş bırakılır → kaydedilir, Girilmedi",
+   "ad": "tür ekle: kullanılan kod reddedilir",
+   "gen": 1920,
+   "sayfa": "maket/ekipman-turleri.html",
+   "hash": "#/yeni",
+   "gecti": true
+  },
+  {
+   "ad": "tür ekle: PDF'siz → tür sayfası, format yüklenmedi uyarısı",
+   "gen": 1920,
+   "sayfa": "maket/ekipman-turleri.html",
+   "hash": "#/yeni",
+   "gecti": true
+  },
+  {
+   "ad": "tür ekle: PDF'le → format v1 kullanımda",
+   "gen": 1920,
+   "sayfa": "maket/ekipman-turleri.html",
+   "hash": "#/yeni",
+   "gecti": true
+  },
+  {
+   "ad": "format yükle: PDF seçilmeden yüklenmez",
+   "gen": 1920,
+   "sayfa": "maket/ekipman-turleri.html",
+   "hash": "#/tur/HT/format",
+   "gecti": true
+  },
+  {
+   "ad": "format yükle: yeni sürüm v4 kullanımda, v3 önceki",
+   "gen": 1920,
+   "sayfa": "maket/ekipman-turleri.html",
+   "hash": "#/tur/HT/format",
+   "gecti": true
+  },
+  {
+   "ad": "PDF'i aç → format önizlemesi",
+   "gen": 1920,
+   "sayfa": "maket/ekipman-turleri.html",
+   "hash": "#/tur/HT",
+   "gecti": true
+  },
+  {
+   "ad": "düzenle: süre boş bırakılır → Girilmedi",
    "gen": 1920,
    "sayfa": "maket/ekipman-turleri.html",
    "hash": "#/tur/ET/duzenle",
    "gecti": true
   },
   {
-   "ad": "ayarlar: periyot 0 → hata, pencere açık",
+   "ad": "düzenle: periyot 0 → hata, pencere açık",
    "gen": 1920,
    "sayfa": "maket/ekipman-turleri.html",
    "hash": "#/tur/ET/duzenle",
    "gecti": true
   },
   {
-   "ad": "ayarlar: periyot 6 → tür sayfasında 6 ay",
-   "gen": 1920,
-   "sayfa": "maket/ekipman-turleri.html",
-   "hash": "#/tur/ET/duzenle",
-   "gecti": true
-  },
-  {
-   "ad": "ayarlar: Vazgeç → tür sayfasına döner",
+   "ad": "düzenle: Vazgeç → tür sayfasına döner",
    "gen": 1920,
    "sayfa": "maket/ekipman-turleri.html",
    "hash": "#/tur/ET/duzenle",

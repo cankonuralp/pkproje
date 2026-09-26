@@ -126,3 +126,5 @@ tek mesaj: sayfanın bağlantısı + kaç maket + kaç soru + ölçülemeyen var
 - 2026-09-26: **M3 2. tur** — reisim 51–57 (pkproje.md §9 on dördüncü tur): Ekipmanlar modülü kalktı (15 modül, ekipmanlar planın içinde),
   firma tür eklemez, yetkili meslek bölümü kalktı. M3 36/36 · 10/10 · 24/24. **Reisim'in incelemesi bekleniyor**; onaylanınca sırada M4
   Ölçüm cihazları · Zimmetler.
+- 2026-09-26: **M3 2. tur, ek** — reisim: Tür ekle olsun, her türe firmanın rapor formatı PDF'i yüklensin, akreditasyon yazılmasın.
+  M3 48/48 · 15/15 · 32/32. Reisim'in incelemesi bekleniyor.

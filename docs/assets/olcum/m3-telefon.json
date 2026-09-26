@@ -8,8 +8,8 @@
   390,
   430
  ],
- "toplam": 24,
- "temiz": 24,
+ "toplam": 32,
+ "temiz": 32,
  "durumlar": [
   {
    "ad": "ekipman türleri · katalog",
@@ -48,7 +48,7 @@
    "alan": 1
   },
   {
-   "ad": "tür · zorunlu format, şablon var",
+   "ad": "tür · rapor formatı yüklü, zorunlu Bakanlık formatı",
    "gen": 320,
    "temiz": true,
    "tasma": 0,
@@ -57,7 +57,7 @@
    "alan": 0
   },
   {
-   "ad": "tür · zorunlu format, şablon var",
+   "ad": "tür · rapor formatı yüklü, zorunlu Bakanlık formatı",
    "gen": 360,
    "temiz": true,
    "tasma": 0,
@@ -66,7 +66,7 @@
    "alan": 0
   },
   {
-   "ad": "tür · zorunlu format, şablon var",
+   "ad": "tür · rapor formatı yüklü, zorunlu Bakanlık formatı",
    "gen": 390,
    "temiz": true,
    "tasma": 0,
@@ -75,7 +75,7 @@
    "alan": 0
   },
   {
-   "ad": "tür · zorunlu format, şablon var",
+   "ad": "tür · rapor formatı yüklü, zorunlu Bakanlık formatı",
    "gen": 430,
    "temiz": true,
    "tasma": 0,
@@ -84,7 +84,7 @@
    "alan": 0
   },
   {
-   "ad": "tür · şablon hazırlanıyor, standart yok",
+   "ad": "tür · rapor formatı yüklenmedi, standart yok",
    "gen": 320,
    "temiz": true,
    "tasma": 0,
@@ -93,7 +93,7 @@
    "alan": 0
   },
   {
-   "ad": "tür · şablon hazırlanıyor, standart yok",
+   "ad": "tür · rapor formatı yüklenmedi, standart yok",
    "gen": 360,
    "temiz": true,
    "tasma": 0,
@@ -102,7 +102,7 @@
    "alan": 0
   },
   {
-   "ad": "tür · şablon hazırlanıyor, standart yok",
+   "ad": "tür · rapor formatı yüklenmedi, standart yok",
    "gen": 390,
    "temiz": true,
    "tasma": 0,
@@ -111,7 +111,7 @@
    "alan": 0
   },
   {
-   "ad": "tür · şablon hazırlanıyor, standart yok",
+   "ad": "tür · rapor formatı yüklenmedi, standart yok",
    "gen": 430,
    "temiz": true,
    "tasma": 0,
@@ -120,76 +120,148 @@
    "alan": 0
   },
   {
-   "ad": "ayarları düzenle · periyot, süre, standartlar",
+   "ad": "tür ekle · boş gönderildi",
    "gen": 320,
    "temiz": true,
    "tasma": 0,
    "disari": [],
    "kucukAlan": [],
-   "alan": 2
+   "alan": 5
   },
   {
-   "ad": "ayarları düzenle · periyot, süre, standartlar",
+   "ad": "tür ekle · boş gönderildi",
    "gen": 360,
    "temiz": true,
    "tasma": 0,
    "disari": [],
    "kucukAlan": [],
-   "alan": 2
+   "alan": 5
   },
   {
-   "ad": "ayarları düzenle · periyot, süre, standartlar",
+   "ad": "tür ekle · boş gönderildi",
    "gen": 390,
    "temiz": true,
    "tasma": 0,
    "disari": [],
    "kucukAlan": [],
-   "alan": 2
+   "alan": 5
   },
   {
-   "ad": "ayarları düzenle · periyot, süre, standartlar",
+   "ad": "tür ekle · boş gönderildi",
    "gen": 430,
    "temiz": true,
    "tasma": 0,
    "disari": [],
    "kucukAlan": [],
-   "alan": 2
+   "alan": 5
   },
   {
-   "ad": "ayarları düzenle · geçersiz periyot",
+   "ad": "tür ekle · PDF seçildi",
    "gen": 320,
    "temiz": true,
    "tasma": 0,
    "disari": [],
    "kucukAlan": [],
-   "alan": 2
+   "alan": 5
   },
   {
-   "ad": "ayarları düzenle · geçersiz periyot",
+   "ad": "tür ekle · PDF seçildi",
    "gen": 360,
    "temiz": true,
    "tasma": 0,
    "disari": [],
    "kucukAlan": [],
-   "alan": 2
+   "alan": 5
   },
   {
-   "ad": "ayarları düzenle · geçersiz periyot",
+   "ad": "tür ekle · PDF seçildi",
    "gen": 390,
    "temiz": true,
    "tasma": 0,
    "disari": [],
    "kucukAlan": [],
-   "alan": 2
+   "alan": 5
   },
   {
-   "ad": "ayarları düzenle · geçersiz periyot",
+   "ad": "tür ekle · PDF seçildi",
    "gen": 430,
    "temiz": true,
    "tasma": 0,
    "disari": [],
    "kucukAlan": [],
-   "alan": 2
+   "alan": 5
+  },
+  {
+   "ad": "rapor formatı yükle · PDF seçilmeden",
+   "gen": 320,
+   "temiz": true,
+   "tasma": 0,
+   "disari": [],
+   "kucukAlan": [],
+   "alan": 1
+  },
+  {
+   "ad": "rapor formatı yükle · PDF seçilmeden",
+   "gen": 360,
+   "temiz": true,
+   "tasma": 0,
+   "disari": [],
+   "kucukAlan": [],
+   "alan": 1
+  },
+  {
+   "ad": "rapor formatı yükle · PDF seçilmeden",
+   "gen": 390,
+   "temiz": true,
+   "tasma": 0,
+   "disari": [],
+   "kucukAlan": [],
+   "alan": 1
+  },
+  {
+   "ad": "rapor formatı yükle · PDF seçilmeden",
+   "gen": 430,
+   "temiz": true,
+   "tasma": 0,
+   "disari": [],
+   "kucukAlan": [],
+   "alan": 1
+  },
+  {
+   "ad": "tür düzenle",
+   "gen": 320,
+   "temiz": true,
+   "tasma": 0,
+   "disari": [],
+   "kucukAlan": [],
+   "alan": 4
+  },
+  {
+   "ad": "tür düzenle",
+   "gen": 360,
+   "temiz": true,
+   "tasma": 0,
+   "disari": [],
+   "kucukAlan": [],
+   "alan": 4
+  },
+  {
+   "ad": "tür düzenle",
+   "gen": 390,
+   "temiz": true,
+   "tasma": 0,
+   "disari": [],
+   "kucukAlan": [],
+   "alan": 4
+  },
+  {
+   "ad": "tür düzenle",
+   "gen": 430,
+   "temiz": true,
+   "tasma": 0,
+   "disari": [],
+   "kucukAlan": [],
+   "alan": 4
   },
   {
    "ad": "tesis sayfası · ekipman yüzü planı açar",

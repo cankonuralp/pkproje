@@ -94,12 +94,14 @@ export const DURUMLAR = {
   ] },
   /* M3 Ekipman Türü Kataloğu · Ekipman (2026-09-24) */
   m3: { sayfa: "maket/ekipman-turleri.html", durumlar: [
-    /* 2026-09-26 (2. tur): Ekipmanlar ekranı kalktı (ekipmanlar planın içinde); tür eklenmez, firma yalnız ayarını düzenler */
+    /* 2026-09-26 (2. tur): Ekipmanlar ekranı kalktı; firma tür ekler ve her türe rapor formatını PDF olarak yükler; akreditasyon yok */
     { ad: "ekipman türleri · katalog", hash: "#/" },
-    { ad: "tür · zorunlu format, şablon var", hash: "#/tur/ET" },
-    { ad: "tür · şablon hazırlanıyor, standart yok", hash: "#/tur/LP" },
-    { ad: "ayarları düzenle · periyot, süre, standartlar", hash: "#/tur/ET/duzenle" },
-    { ad: "ayarları düzenle · geçersiz periyot", hash: "#/tur/ET/duzenle", adim: [["yaz", "#w-periyot", "0"], ["tikla", '[data-eylem="pencere-kaydet"]']] },
+    { ad: "tür · rapor formatı yüklü, zorunlu Bakanlık formatı", hash: "#/tur/ET" },
+    { ad: "tür · rapor formatı yüklenmedi, standart yok", hash: "#/tur/LP" },
+    { ad: "tür ekle · boş gönderildi", hash: "#/yeni", adim: [["tikla", '[data-eylem="pencere-kaydet"]']] },
+    { ad: "tür ekle · PDF seçildi", hash: "#/yeni", adim: [["yaz", "#w-ad", "Kaldırma aparatı"], ["yaz", "#w-k", "ka"], ["tikla", '[data-eylem="pdf-sec"]']] },
+    { ad: "rapor formatı yükle · PDF seçilmeden", hash: "#/tur/HT/format", adim: [["tikla", '[data-eylem="pencere-kaydet"]']] },
+    { ad: "tür düzenle", hash: "#/tur/ET/duzenle" },
     { ad: "tesis sayfası · ekipman yüzü planı açar", sayfa: "maket/musteriler.html", hash: "#/t/t1" },
   ] },
   /* M4 Ölçüm Cihazı · Zimmet · kalibrasyon uyarısı (2026-09-24) */
@@ -345,15 +347,21 @@ export const DENEMELER = {
     { ad: "müşteri sayfası: Açık alacak yüzü → müşterinin faturaları (3 / 13)", hash: "#/m/m1", adim: [["tikla", 'a.a-yuz[href^="muhasebe.html"]']], bekle: '/muhasebe\\.html$/.test(location.pathname) && document.querySelector("#a-sayac").textContent === "3 / 13 fatura" && /3.600,00 TL/.test(document.querySelector("#a-liste").textContent)' },
   ],
   m3: [
-    /* 2026-09-26 (2. tur, reisim: "ekipman türleri yeterli" · 51 "hayır bu işi denetçiler yapacak" · 52–54 öneriler) */
-    { ad: "türler: Rapor şablonu hazırlanıyor çipi", hash: "#/", adim: [["tikla", '[data-cip="sablonsuz"]']], bekle: 'document.querySelector("#a-sayac").textContent === MV.KATALOG.filter(t => !t.sablon).length + " / " + MV.KATALOG.length + " tür"' },
+    /* 2026-09-26 (2. tur, reisim: "ekipman türleri yeterli" · "ekipman türü ekleme tuşu olsun ve her ekipmanın içinde türün formatını
+       belirleyecek pdf i ekleme tuşu da olsun" · "Akreditasyon zorunluluğu ile ilgili bir şey yazma" · 52–54 öneriler) */
+    { ad: "türler: Rapor formatı yüklenmedi çipi", hash: "#/", adim: [["tikla", '[data-cip="pdfsiz"]']], bekle: 'document.querySelector("#a-sayac").textContent === MV.KATALOG.filter(t => !t.sablon).length + " / " + MV.KATALOG.length + " tür"' },
     { ad: "türler: branş Elektrik", hash: "#/", adim: [["tikla", '[data-secici-ac="brans"]'], ["tikla", '[data-sec="brans"][data-deger="e"]']], bekle: 'document.querySelectorAll("#a-liste tbody tr").length === MV.KATALOG.filter(t => t.b === "e").length' },
-    { ad: "türler: Tür ekle tuşu yok (türler probata'dan)", hash: "#/", bekle: '!document.querySelector(\'[data-eylem="tur-ac"]\') && /probata\'dan gelir/.test(document.querySelector("#a-tur-bilgi").textContent)' },
-    { ad: "tür sayfası: yetkili meslekler bölümü yok, ekipman yüzü tıklanmaz", hash: "#/tur/ET", bekle: '!document.querySelector("#a-b-meslek") && ![...document.querySelectorAll("#a-nesne a.a-yuz")].some(a => /Ekipman/.test(a.textContent))' },
-    { ad: "ayarlar: süre boş bırakılır → kaydedilir, Girilmedi", hash: "#/tur/ET/duzenle", adim: [["yaz", "#w-sure", ""], ["tikla", '[data-eylem="pencere-kaydet"]']], bekle: 'location.hash === "#/tur/ET" && MV.tur("ET").sure === null && /Girilmedi/.test(document.querySelector("#a-b-kural").closest("section").textContent)' },
-    { ad: "ayarlar: periyot 0 → hata, pencere açık", hash: "#/tur/ET/duzenle", adim: [["yaz", "#w-periyot", "0"], ["tikla", '[data-eylem="pencere-kaydet"]']], bekle: 'document.querySelector("#a-pencere").open && /1–120 ay/.test(document.querySelector("#w-periyot-ipucu").textContent)' },
-    { ad: "ayarlar: periyot 6 → tür sayfasında 6 ay", hash: "#/tur/ET/duzenle", adim: [["yaz", "#w-periyot", "6"], ["tikla", '[data-eylem="pencere-kaydet"]']], bekle: 'MV.tur("ET").periyot === 6 && /6 ay/.test(document.querySelector("#a-nesne .a-yuzler").textContent)' },
-    { ad: "ayarlar: Vazgeç → tür sayfasına döner", hash: "#/tur/ET/duzenle", adim: [["tikla", '#a-pencere [data-eylem="pencere-kapat"]']], bekle: 'location.hash === "#/tur/ET" && !document.querySelector("#a-pencere").open' },
+    { ad: "akreditasyon hiçbir yerde yazmaz (liste ve tür sayfası)", hash: "#/tur/KU", bekle: '!/kreditasyon/.test(document.querySelector("#a-icerik").textContent) && (MK.goster(false), true) && (location.hash = "#/", MK.goster(false), !/kreditasyon/.test(document.querySelector("#a-icerik").textContent))' },
+    { ad: "tür sayfası: yetkili meslekler yok, ekipman yüzü tıklanmaz", hash: "#/tur/ET", bekle: '!document.querySelector("#a-b-meslek") && ![...document.querySelectorAll("#a-nesne a.a-yuz")].length' },
+    { ad: "tür ekle: kullanılan kod reddedilir", hash: "#/yeni", adim: [["yaz", "#w-ad", "Deneme"], ["yaz", "#w-k", "HT"], ["tikla", '[data-eylem="pencere-kaydet"]']], bekle: '/Hava tankı türünde kullanılıyor/.test(document.querySelector("#w-k-ipucu").textContent)' },
+    { ad: "tür ekle: PDF'siz → tür sayfası, format yüklenmedi uyarısı", hash: "#/yeni", adim: [["yaz", "#w-ad", "Kaldırma aparatı"], ["yaz", "#w-k", "ka"], ["tikla", "#w-g"], ["tikla", '[data-secim="w-g"][data-deger="kaldirma"]'], ["tikla", '[data-eylem="pencere-kaydet"]']], bekle: 'location.hash === "#/tur/KA" && /rapor formatı yüklenmedi/.test(document.querySelector("#a-b-pdf").closest("section").textContent)' },
+    { ad: "tür ekle: PDF'le → format v1 kullanımda", hash: "#/yeni", adim: [["yaz", "#w-ad", "Kaldırma aparatı"], ["yaz", "#w-k", "ka"], ["tikla", "#w-g"], ["tikla", '[data-secim="w-g"][data-deger="kaldirma"]'], ["tikla", '[data-eylem="pdf-sec"]'], ["tikla", '[data-eylem="pencere-kaydet"]']], bekle: 'location.hash === "#/tur/KA" && MV.tur("KA").pdf.length === 1 && /Kullanımda/.test(document.querySelector(".a-tablo-pdf").textContent)' },
+    { ad: "format yükle: PDF seçilmeden yüklenmez", hash: "#/tur/HT/format", adim: [["tikla", '[data-eylem="pencere-kaydet"]']], bekle: 'document.querySelector("#a-pencere").open && /PDF seçilmeli/.test(document.querySelector("#w-dosya-ipucu").textContent)' },
+    { ad: "format yükle: yeni sürüm v4 kullanımda, v3 önceki", hash: "#/tur/HT/format", adim: [["tikla", '[data-eylem="pdf-sec"]'], ["yaz", "#w-not", "Basınç testi bölümü eklendi"], ["tikla", '[data-eylem="pencere-kaydet"]']], bekle: 'location.hash === "#/tur/HT" && MV.tur("HT").pdf[0].surum === "v4" && document.querySelectorAll(".a-tablo-pdf tbody tr").length === 2 && /Önceki/.test(document.querySelector(".a-tablo-pdf").textContent)' },
+    { ad: "PDF'i aç → format önizlemesi", hash: "#/tur/HT", adim: [["tikla", '[data-eylem="pdf-ac"]']], bekle: '/sablon\\.html$/.test(location.pathname)' },
+    { ad: "düzenle: süre boş bırakılır → Girilmedi", hash: "#/tur/ET/duzenle", adim: [["yaz", "#w-sure", ""], ["tikla", '[data-eylem="pencere-kaydet"]']], bekle: 'location.hash === "#/tur/ET" && MV.tur("ET").sure === null && /Girilmedi/.test(document.querySelector("#a-b-kural").closest("section").textContent)' },
+    { ad: "düzenle: periyot 0 → hata, pencere açık", hash: "#/tur/ET/duzenle", adim: [["yaz", "#w-periyot", "0"], ["tikla", '[data-eylem="pencere-kaydet"]']], bekle: 'document.querySelector("#a-pencere").open && /1–120 ay/.test(document.querySelector("#w-periyot-ipucu").textContent)' },
+    { ad: "düzenle: Vazgeç → tür sayfasına döner", hash: "#/tur/ET/duzenle", adim: [["tikla", '#a-pencere [data-eylem="pencere-kapat"]']], bekle: 'location.hash === "#/tur/ET" && !document.querySelector("#a-pencere").open' },
     { ad: "eski Ekipmanlar bağlantısı Ekipman türlerine gider", sayfa: "maket/ekipmanlar.html", hash: "#/e/HT-1001", bekle: '/ekipman-turleri\\.html$/.test(location.pathname)' },
     { ad: "tesis sayfası: Ekipman yüzü tesisin planını açar", sayfa: "maket/musteriler.html", hash: "#/t/t1", adim: [["tikla", 'a.a-yuz[href^="planlarim.html"]']], bekle: '/planlarim\\.html$/.test(location.pathname) && location.hash === "#/plan/1"' },
   ],
