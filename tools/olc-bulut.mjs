@@ -596,7 +596,8 @@ export const DENEMELER = {
   ],
 };
 
-const GENISLIK = [[1920, 1080], [1080, 810], [375, 812]];
+/* 2026-09-26: tablet dikey (810×1080) eklendi — reisim: "dikey de de aynı yataydaki gibi gözüksün … kart görünümü istemiyorum" */
+const GENISLIK = [[1920, 1080], [1080, 810], [810, 1080], [375, 812]];
 const TEMA = ["acik", "koyu"];
 const SIFIR = ["tasma", "sertKirpma", "tasanMetin", "cakisma", "sonCakisma", "gizliEtkilesimli", "ekranDisi", "kucukHedef", "basliksizKirpma", "ipucuKesik", "kenarFarki", "gorunenGizli", "pencereKenar", "hizaKaymasi", "kartTutarsiz", "eksikIkon"];
 
@@ -717,7 +718,7 @@ async function etkilesim(ad, { yazma } = {}) {
   let gecen = 0;
   try {
     for (const d of l) {
-      const gen = d.gen || 1920, yuk = { 1920: 1080, 1080: 810, 375: 812 }[gen];
+      const gen = d.gen || 1920, yuk = { 1920: 1080, 1080: 810, 810: 1080, 375: 812 }[gen];
       let ok = false, hata = "";
       const { s, ctx, hatalar } = await ac(tar, taban, d.sayfa || t.sayfa, d.hash, gen, yuk, "acik", []).catch(e => ({ hatalar: [String(e)] }));
       /* adres değişimi (hashchange) eşzamansız: sonuç en çok 2 sn beklenir */

@@ -130,7 +130,7 @@ CI aynı zinciri her push'ta koşar (`.github/workflows/ci.yml`); main'de deneti
 
 ## 6 · Kalıp ve kilitler (bu projede)
 - **Referans ekran DONDU (2026-09-23): Planlar + plan içi** (maket 5. tur). Sayılar `src/styles/kalip.ts`'te
-  (denetim 34/44 · bantlar 768/1280 · kart eşiği 960 · sayfa ekipman 10 / rapor 20 · yazı ölçeği · kabuk 232/52 ·
+  (denetim 34/44 · bantlar 768/1280 · kart eşiği 600 (2026-09-26, kart yalnız telefonda; 600–960 sıkışık tablo) · sayfa ekipman 10 / rapor 20 · yazı ölçeği · kabuk 232/52 ·
   daraltılmış yan menü 64, yalnız geniş bant — 2026-09-24),
   kilidi `tests/kalip-sayilari.test.ts` (değişkenler + kabuk + onaylı maket). Kabul/ret örneği dosyada. Kaynak
   projenin sayıları kopyalanmadı.

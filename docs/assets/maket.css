@@ -241,7 +241,8 @@ button { cursor: pointer; }
    sarmayan içeriğin istediği en küçük sütun → liste: proje no 106 · inspector 97 · başlangıç ~98 · durum 104 · eylem 186
    ("Denetime başla" + ikon); ekipman: kod 81 · branş 95 · önceki kontrol 183 · rapor 79 · eylem 171; rapor: no 180 ·
    sonuç 107 · durum 79 · oluşturuldu 88 · eylem 186. Serbest metin (kırpılan) tabanı 116 (içerik 96). Oranlar bu
-   ihtiyaçlarla 960 px'e göre dağıtıldı → kart eşiği 960 px (dosya sonu). Eski eşik 1.180 (3. tur, 40 px tuş). */
+   ihtiyaçlarla 960 px'e göre dağıtıldı → kart eşiği 960 px (dosya sonu). Eski eşik 1.180 (3. tur, 40 px tuş).
+   2026-09-26 (reisim): kart yalnız telefonda → eşik 600 px; 600–960 px kapta tablo sıkışır (dosya sonu, "sıkışık tablo"). */
 .a-tablo-plan .a-k-no { width: 11.25%; } .a-tablo-plan .a-k-ad { width: 12.5%; } .a-tablo-plan .a-k-musteri { width: 12.5%; }
 .a-tablo-plan .a-k-adres { width: 12.75%; } .a-tablo-plan .a-k-ekip { width: 10.25%; } .a-tablo-plan .a-k-baslangic { width: 10.25%; }
 .a-tablo-plan .a-k-durum { width: 11%; } .a-tablo-plan .a-k-eylem { width: 19.5%; }
@@ -995,9 +996,27 @@ a.a-yuz:hover { border-color: var(--kenar-alan); background: var(--zemin); }
   .a-kalem > :first-child { grid-column: 1 / -1; }
 }
 
+/* SIKIŞIK TABLO — kap 600–960 px (tablet dikey; reisim 2026-09-26: "dikey de de aynı yataydaki gibi gözüksün, gerekiyorsa biraz sıkışsın,
+   kart görünümü istemiyorum"): tablo kalır; hücre boşluğu daralır, yazı bir basamak küçülür, tek satıra zorlanan kısa metinler (rozet,
+   kod, saat, tuş) gerekince ikinci satıra iner. Kart yalnız telefonda (aşağıda, < 600 px). */
+@container liste (min-width: 600px) and (max-width: 959.98px) {
+  .a-tablo th { padding: 4px 6px; white-space: normal; line-height: 1.25; }
+  .a-tablo td { padding: 6px; font-size: var(--boy-kucuk); overflow-wrap: break-word; }
+  .a-tablo .a-rozet { height: auto; min-height: 22px; padding: 2px 6px; white-space: normal; line-height: 1.2; text-align: center; }
+  .a-tablo .a-kod, .a-tablo .a-tarih-saat, .a-tablo .a-no { white-space: normal; }
+  .a-tablo .a-hucre-satir { flex-wrap: wrap; gap: 2px 4px; }
+  .a-tablo .a-eylem-tuslar { flex-wrap: wrap; gap: 4px; }
+  .a-tablo .a-tus { height: auto; min-height: var(--tus-y); padding: 4px 8px; white-space: normal; line-height: 1.2; }
+  .a-tablo .a-sirala { white-space: normal; text-align: left; flex-wrap: wrap; row-gap: 0; letter-spacing: 0; }
+  /* Planlar listesi: durum rozeti tek kelime ("Tamamlandı") → durum sütunu eylemden pay alır */
+  .a-tablo-plan .a-k-durum { width: 13.5%; } .a-tablo-plan .a-k-eylem { width: 17%; }
+  /* Muhasebe iş raporları: 16 karakterlik fatura no bölünmez → fatura sütunu fiyattan pay alır */
+  .a-tablo-israpor .a-k-fatura { width: 21%; } .a-tablo-israpor .a-k-fiyat { width: 15%; }
+}
+
 /* kap < ESİK: aynı tablo KARTA döner (tek üretici; anayasa 3.3 kap sorgusu). Kartta yerleşim sütunun `data-kart`
    rolünden: ust (sol üst) · rozet (sağ üst) · govde (tam genişlik, --sira ile dizilir) · eylem (altta, çizgiyle). */
-@container liste (max-width: 959.98px) {
+@container liste (max-width: 599.98px) {
   .a-tablo, .a-tablo tbody, .a-tablo tr, .a-tablo td { display: block; }
   .a-tablo { background: transparent; border: 0; }
   /* ⛔ 2026-09-23 (2. tur, ölçüm "çakışma 2"): başlık kırpılarak gizlenince içindeki SIRALAMA TUŞLARI görünmez ama

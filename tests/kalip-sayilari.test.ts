@@ -1,7 +1,8 @@
 /* NEREDEN GELDİ: TASARIM-KALIBI yöntemi ("onaylı gerçek ekranı referans al, ölçümü yaz, kuralı ölçen bir testle
    mekanik olarak zorla") + reisim 2026-09-23 "tüm önerilerin uygun" → referans ekran (Planlar + plan içi) DONDU
    (pkproje.md §3.3). Sayılar src/styles/kalip.ts'te; bu test onları değişkenlere, kabuğa ve onaylı makete bağlar.
-   Kabul edilen / reddedilen: denetim 34/44 (reddedilen 40/48) · kart eşiği 960 (reddedilen 1.180).
+   Kabul edilen / reddedilen: denetim 34/44 (reddedilen 40/48) · kart eşiği 600 (reddedilen 960 — 2026-09-26 reisim: tablet
+   dikeyde kart istemiyor; reddedilen 1.180).
    2026-09-24 (maket 6. tur, reisim "uygun"): daraltılmış yan menü 64 px, YALNIZ geniş bantta (anayasa 2.11: tablette ikon
    şeridi yok) → eşik denetimi min-width eşiklerini de kapsayacak şekilde genişletildi (geniş bant bloğu eklendi).
    2026-09-25: yazı alanı 14/16 (--boy-girdi) eklendi, reisim "bunu düzelt" (iPhone odakta büyütme).
@@ -66,7 +67,7 @@ test("daraltılmış yan menü 64 px ve YALNIZ geniş bantta — uygulama ve ona
   assert.equal(bantDisiDaraltma(maketCss, ".a-kabuk-dar", GENIS), 0, "maket: daraltma kuralı geniş bant dışında");
 });
 
-test("onaylı maket aynı sayıları taşıyor: kart eşiği 960, sayfa ekipman 10 · rapor 20", () => {
+test("onaylı maket aynı sayıları taşıyor: kart eşiği 600, sayfa ekipman 10 · rapor 20", () => {
   assert.ok(maketCss.includes(`@container liste (max-width: ${KALIP.kartEsigi - 0.02}px)`));
   assert.ok(oku("docs/assets/maket.js").includes(`var SAYFA = { e: ${KALIP.sayfa.ekipman}, r: ${KALIP.sayfa.rapor} };`));
 });

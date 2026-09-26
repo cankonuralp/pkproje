@@ -227,7 +227,7 @@ onaylanana kadar kod yok; soru numaraları 32'den devam eder.
 **Referans ekran (reisim 2026-09-23: *"uygun"*):** **Planlar** (13 Planlama; 5. turda eski "Planlarım" adı genel ada çevrildi). Liste, süzgeç satırı, durum rozeti,
 birincil/ikincil tuş, boş durum ve dürüst sayaç gibi ortak parçaları doğurur; ölçüleri tasarım kalıbının bu
 projedeki sayıları olur. Ardından saha rapor ekranı (14). **Dondurma (karar 25, 4. tur — önerim kabul):** plan içi
-sunumunun son turu onaylanınca Planlar + plan içi dondurulur: sayıları (34 / 44 px, kart eşiği 960 px, sayfa ekipman 10 · rapor 20)
+sunumunun son turu onaylanınca Planlar + plan içi dondurulur: sayıları (34 / 44 px, kart eşiği 960 px (2026-09-26: 600 px — kart yalnız telefonda), sayfa ekipman 10 · rapor 20)
 tasarım kalıbının bu projedeki sayıları olarak yazılır, iskelet kaleminde testle kilitlenir; sonra iskelet.
 **DONDU (reisim 2026-09-23: *"tüm önerilerin uygun kodlamaya başla ilk yayını yap"*):** sayılar `src/styles/kalip.ts`,
 kilidi `tests/kalip-sayilari.test.ts` (değişkenler, kabuk ve onaylı maket aynı sayıyı taşımazsa test düşer). İskelet kuruldu
@@ -1330,6 +1330,21 @@ yüne revize gerekirse söylicem maketi komple onaylamadan koda geçmek yok"* �
 - Öteki öneriler kabul (A'lar, 82–84, 159, 90–94, 96–98, 100–117, 119–124, 161, 135–142, 144–150, 152–158; liste `MAKET-PLANI.md`).
 - **Koda geçiş:** bütün maketler toplu olarak onaylanmadan kod yok.
 
+**Yirmi ikinci tur (2026-09-26, toplu gözden geçirmeden ilk geri bildirim; reisim birebir):** *"Plan sözleşme teklif vb modüllerde sırlama
+tarihi olsun her zaman en yeni en yukarıda olsun , planlar ve raporlarda da bu geçerli plana girince gözüken raporlarda da , tablette yatay
+görünüm güzel ala dikey görünümde karta geçiyor o kötü dikey de de aynı yataydaki gibi gözüksün , gerekiyorsa biraz sıkışsın, kart görünümü
+istemiyorum  raporlar için durumlar şunlar : "Yeni" , " teknik yönetici onayında" , " muayene uzmanı onayı"  " imzaya gönderildi" "tamamlandı"
+raporun başlangıcından bitişine kadar ki sürecini kronolojik girdim , denetçi rapor açar yazar kaydeder gönder diyerek teknik yönetici onayına
+gönderir onaydan gelen raporu imzala der ve imzalar  (şirkete göre nasıl kurarsak) şimdilik bunlar ışığında ilgili düzenlemeleri yap sonra
+tekrar konuşacak"* → **Kararlar:**
+- **Sıralama:** bütün listelerde (plan, sözleşme, teklif, Planlar, raporlar, plan içindeki raporlar ve ötekiler) varsayılan sıra **tarih, en yeni
+  en üstte**.
+- **Tablet dikeyde kart yok:** tablo tabletin dikey hâlinde de yataydaki gibi kalır, gerekirse sıkışır; kart yalnız telefonda. Kart eşiği
+  960 → 600 px (kalıp sayısı; reddedilen: 960, tablet dikeyde karta geçiyordu). Ölçüme tablet dikey (810) eklendi.
+- **Rapor durumları (kronolojik):** **Yeni** (denetçi açar, yazar, kaydeder) → **Teknik yönetici onayında** ("Gönder") → **Muayene uzmanı onayı**
+  (onaydan dönen rapor, denetçi "İmzala" der) → **İmzaya gönderildi** → **Tamamlandı**. İmza yolu firmaya göre kurulur. Geri gönderilen rapor
+  "Yeni"ye döner, gerekçesi raporun üstünde durur.
+
 **Açık kalanlar:** **modül modül gözden geçirme** (M1–M5 ve M13 onaylandı — Ekipmanlar kalktı, Sözleşmeler birleşti; M6 Plan aç 2. tur incelemede) · **toplu maket çalışması** (M1–M16 + toplu bakış, `MAKET-PLANI.md`; sorular §3.6'da, 32'den) · **önizlemede örnek veri kipi** (öneri, §3.3) · ~~rol × modül görünürlüğü~~ (karar 2026-09-25: başlangıç düzeni + firma yöneticisi değiştirir) · **gerçek sunucunun sağlayıcısı**
 (Türkiye, §8.8) ·
 alan adının alınması · e-imza yöntemi (8.4) · v1 ekipman grupları · 5 yıl sonrası silme
@@ -1360,6 +1375,7 @@ revizyon, alan kopyalama, hafif kusur devri, meslek eşleşme denetimi).
 - Emsal ürünler: https://opwire.app/iso-17020-periyodik-kontrol-yazilimi/ · https://17020muayene.vidco.com.tr/ · https://akuple.com/asansor-kontrol-yazilimi/ · https://ensyazilim.com/
 
 ## 11 · Değişiklik günlüğü
+- 2026-09-26 (61): **Yirmi ikinci tur kaydı**: sıralama en yeni üstte, tablet dikeyde kart yok (eşik 600), rapor durumları beş adım.
 - 2026-09-26 (60): **Toplu gözden geçirmeye hazır**: M6–M16 2. tur bitti; eski soru listeleri kapandı (§3.6), toplu bakış yeniden üretildi (16 maket,
   açık soru yok). Bütün maketler: durum 1050/1050, etkileşim 253/253 (toplu bakıştaki sayım), Planlar 54/54 · 15/15 · 36/36. Reisim hepsini birlikte
   gözden geçirecek; onaylanmadan kod yok.

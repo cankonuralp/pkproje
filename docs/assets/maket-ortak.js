@@ -1,6 +1,6 @@
 /* ══ probata MAKET — ORTAK ÜRETİCİLER (toplu maket çalışması, 2026-09-24) ═══════════════════════════════════════
    MAKET-PLANI.md §3.2: kabuk ve ortak parçalar TEK üreticiden (anayasa 2.9, kalıp 15–16). Planlar maketinin (5. tur, onaylı)
-   kabuğu, süzgeç satırı, liste (tablo ↔ kart, eşik 960), sayfalayıcı, boş durum, bildirim ve olay dağıtıcısı buraya AYNEN
+   kabuğu, süzgeç satırı, liste (tablo ↔ kart, eşik 600: kart yalnız telefonda), sayfalayıcı, boş durum, bildirim ve olay dağıtıcısı buraya AYNEN
    taşındı; Planlar'a özgü olan docs/assets/maket.js'te kaldı. Yeni maketler yalnız bu üreticileri kullanır, ikinci aile açmaz.
    ⛔ Tüm veri UYDURMADIR (anayasa 10.3). ⛔ "Bugün" sabit: 2026-09-23 16:40 — ölçüm her açılışta aynı sonucu versin.
    Sayfa sözleşmesi: <head>'de maket-tema.js; gövdede <main class="a-icerik" id="a-icerik"> (+ sayfanın pencereleri);

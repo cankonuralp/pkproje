@@ -8,9 +8,10 @@ export const KALIP = {
   tusY: { fare: 34, dokunmatik: 44 },
   /** üç adlandırılmış bant: dar < 768 · orta 768–1279 · geniş ≥ 1280 (reisim 2026-09-23, karar 4) */
   bant: { orta: 768, genis: 1280 },
-  /** liste kabı ≥ 960 px tablo, altı kart — tablet bandında ölçüldü (liste 933 · ekipman 891 · rapor 891 px'de bozuluyor);
-   *  reddedilen: 1.180 (3. tur, 40 px tuşla) */
-  kartEsigi: 960,
+  /** liste kabı ≥ 600 px tablo, altı kart — kart YALNIZ telefonda (reisim 2026-09-26: "tablette … dikey de de aynı yataydaki gibi
+   *  gözüksün, gerekiyorsa biraz sıkışsın, kart görünümü istemiyorum"); tablet dikeyde (810) tablo sıkışır.
+   *  reddedilen: 960 (tablet dikeyde karta geçiyordu) · 1.180 (3. tur, 40 px tuşla) */
+  kartEsigi: 600,
   /** sayfa boyu listeye göre — ekipman 10 ("10 taneden sonra diğer sayfaya geçsin"), rapor 20 ("5 değil 20") */
   sayfa: { ekipman: 10, rapor: 20 },
   /** yazı ölçeği px — başlık 20 (telefonda 18) · bölüm 15 · gövde 14 (dokunmatikte 15) · küçük 12,5 · etiket 11,5 ·
