@@ -1375,6 +1375,9 @@ revizyon, alan kopyalama, hafif kusur devri, meslek eşleşme denetimi).
 - Emsal ürünler: https://opwire.app/iso-17020-periyodik-kontrol-yazilimi/ · https://17020muayene.vidco.com.tr/ · https://akuple.com/asansor-kontrol-yazilimi/ · https://ensyazilim.com/
 
 ## 11 · Değişiklik günlüğü
+- 2026-09-26 (63): **Rapor durumları beş adım**: Yeni · Teknik yönetici onayında · Muayene uzmanı onayı · İmzaya gönderildi · Tamamlandı (tek kaynak
+  MV.RAPOR_DURUM; Planlar, saha raporu, Raporlar, Onaylar, Ana sayfa). İmza servisi yolu "İmzaya gönderildi", indir-imzala-yükle yolu doğrudan
+  "Tamamlandı". Geri gönderilen rapor "Yeni", gerekçe şeritte. Uzun durum rozeti dar sütunda ikinci satıra iner. Bütün maketler dört genişlikte temiz.
 - 2026-09-26 (62): **Sıralama en yeni üstte**: Planlar (varsayılan "En yeni önce"), plan içindeki raporlar, Raporlar, Onaylar kuyruğu, Sözleşmeler,
   Teklifler, Muhasebe işler ve faturalar, müşteri panelinde raporlar ve uygunsuzluklar, eğitim kayıtları. Tarihsiz ana kayıtlar (müşteri,
   personel, cihaz, tür, standart) adla; Uyarılar ve Ana sayfa ajandası yaklaşan tarihe göre kaldı.

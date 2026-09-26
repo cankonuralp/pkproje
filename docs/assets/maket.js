@@ -108,10 +108,12 @@
     red: { ad: "Reddedildi", rozet: "a-rozet-red", sira: 4 }
   };
   var RAPOR = {
-    taslak: { ad: "Taslak", rozet: "a-rozet-bekliyor" },
-    onayda: { ad: "Onayda", rozet: "a-rozet-kabul" },
-    onaylandi: { ad: "İmza bekliyor", rozet: "a-rozet-denetimde" },
-    imzali: { ad: "Müşteriye açık", rozet: "a-rozet-tamam" },
+    /* reisim 2026-09-26: rapor durumları kronolojik — Yeni · Teknik yönetici onayında · Muayene uzmanı onayı · İmzaya gönderildi · Tamamlandı */
+    taslak: { ad: "Yeni", rozet: "a-rozet-bekliyor" },
+    onayda: { ad: "Teknik yönetici onayında", rozet: "a-rozet-kabul" },
+    onaylandi: { ad: "Muayene uzmanı onayı", rozet: "a-rozet-denetimde" },
+    imzada: { ad: "İmzaya gönderildi", rozet: "a-rozet-notr" },
+    imzali: { ad: "Tamamlandı", rozet: "a-rozet-tamam" },
     yok: { ad: "Rapor yok", rozet: "a-rozet-notr" }
   };
 
@@ -145,10 +147,10 @@
     { k: "kusur", ad: "Önceki kontrolde kusur", test: function (e) { return !!e.onceki && e.onceki.sonuc !== "Uygun"; } }
   ];
   var CIP_R = [
-    { k: "taslak", ad: "Taslak", grup: "durum", test: function (r) { return r.durum === "taslak"; } },
-    { k: "onayda", ad: "Onayda", grup: "durum", test: function (r) { return r.durum === "onayda"; } },
-    { k: "onaylandi", ad: "İmza bekliyor", grup: "durum", test: function (r) { return r.durum === "onaylandi"; } },
-    { k: "imzali", ad: "Müşteriye açık", grup: "durum", test: function (r) { return r.durum === "imzali"; } }
+    { k: "taslak", ad: "Yeni", grup: "durum", test: function (r) { return r.durum === "taslak"; } },
+    { k: "onayda", ad: "Teknik yönetici onayında", grup: "durum", test: function (r) { return r.durum === "onayda"; } },
+    { k: "onaylandi", ad: "Muayene uzmanı onayı", grup: "durum", test: function (r) { return r.durum === "onaylandi"; } },
+    { k: "imzali", ad: "Tamamlandı", grup: "durum", test: function (r) { return r.durum === "imzali"; } }
   ];
   /* Sıralama (yalnız Planlar): tabloda sütun başlığı, kart kipinde "Sıralama" seçicisi; ikisi de aynı değeri yazar. */
   var SIRA_ANAHTAR = {

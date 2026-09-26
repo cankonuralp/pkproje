@@ -291,9 +291,10 @@ button { cursor: pointer; }
 .a-onceki.a-sonuc-hata { color: var(--hata-yazi); }
 .a-bos-satir { margin: 0; padding: 12px 14px; color: var(--yazi2); background: var(--kart); border: 1px dashed var(--kenar-alan); border-radius: var(--r-buyuk); }
 
+/* 2026-09-26: rapor durumları uzadı ("Teknik yönetici onayında", "Muayene uzmanı onayı") → rozet dar sütunda ikinci satıra iner */
 .a-rozet {
-  display: inline-flex; align-items: center; gap: 6px; height: 22px; padding: 0 8px; max-width: 100%;
-  border-radius: var(--r-tam); font-size: var(--boy-etiket); font-weight: 700; white-space: nowrap;
+  display: inline-flex; align-items: center; gap: 6px; min-height: 22px; padding: 2px 8px; max-width: 100%;
+  border-radius: var(--r-tam); font-size: var(--boy-etiket); font-weight: 700; line-height: 1.2;
 }
 .a-rozet-bekliyor { background: var(--uyari-zemin); color: var(--uyari-yazi); }
 .a-rozet-kabul { background: var(--bilgi-zemin); color: var(--bilgi-yazi); }
@@ -1002,7 +1003,7 @@ a.a-yuz:hover { border-color: var(--kenar-alan); background: var(--zemin); }
 @container liste (min-width: 600px) and (max-width: 959.98px) {
   .a-tablo th { padding: 4px 6px; white-space: normal; line-height: 1.25; }
   .a-tablo td { padding: 6px; font-size: var(--boy-kucuk); overflow-wrap: break-word; }
-  .a-tablo .a-rozet { height: auto; min-height: 22px; padding: 2px 6px; white-space: normal; line-height: 1.2; text-align: center; }
+  .a-tablo .a-rozet { padding: 2px 6px; text-align: center; }
   .a-tablo .a-kod, .a-tablo .a-tarih-saat, .a-tablo .a-no { white-space: normal; }
   .a-tablo .a-hucre-satir { flex-wrap: wrap; gap: 2px 4px; }
   .a-tablo .a-eylem-tuslar { flex-wrap: wrap; gap: 4px; }
@@ -1032,7 +1033,7 @@ a.a-yuz:hover { border-color: var(--kenar-alan); background: var(--zemin); }
   .a-tablo tbody tr:hover td { background: transparent; }
   .a-tablo td { grid-column: 1 / -1; order: var(--sira, 5); height: auto; padding: 0; border: 0; }
   .a-tablo td[data-kart="ust"] { grid-column: 1; grid-row: 1; align-self: center; }
-  .a-tablo td[data-kart="rozet"] { grid-column: 2; grid-row: 1; justify-self: end; align-self: center; }
+  .a-tablo td[data-kart="rozet"] { grid-column: 2; grid-row: 1; justify-self: end; align-self: center; max-width: 7rem; text-align: right; }   /* uzun durum iki satıra iner (2026-09-26) */
   /* ⛔ 2026-09-23 (4. tur, 375'te gözle + kartTutarsiz ölçüsü): taban kuraldaki "ilk satırın üst kenarı yok" (tr:first-child td,
      özgüllük 0,2,3) bu kuralı eziyordu → ilk kartta tuş ayırıcısı yoktu. Seçici aynı özgüllükte ve dosyada sonra: kazanır. */
   .a-tablo tbody tr td[data-kart="eylem"] { margin-top: 4px; padding-top: 10px; border-top: 1px solid var(--kenar); }

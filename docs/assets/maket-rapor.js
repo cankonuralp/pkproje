@@ -9,7 +9,7 @@
   "use strict";
   var $ = MK.$, kacis = MK.kacis, ikon = MK.ikon, kirp = MK.kirp, rozet = MK.rozet, bilgi = MK.bilgi;
   var sorgu = function () { var m = /\?(.*)$/.exec(location.hash), o = {}; (m ? m[1] : "").split("&").forEach(function (x) { var y = x.split("="); if (y[0]) o[y[0]] = decodeURIComponent(y[1] || ""); }); return o; };
-  var DURUM = { taslak: { ad: "Taslak", rozet: "a-rozet-bekliyor" }, onayda: { ad: "Onayda", rozet: "a-rozet-kabul" }, onaylandi: { ad: "Onaylandı", rozet: "a-rozet-tamam" } };
+  var DURUM = { taslak: MV.RAPOR_DURUM.taslak, onayda: MV.RAPOR_DURUM.onayda, onaylandi: MV.RAPOR_DURUM.onaylandi };   /* reisim 2026-09-26: beş durum, tek kaynak MV */
   var YON = { m: "sy", e: "co" };   /* branş yöneticisi: onay türün branşına gider (§3.2 madde 3) */
   var sayi = function (v) { var x = parseFloat(String(v).replace(",", ".")); return /^\s*\d+([.,]\d+)?\s*$/.test(String(v)) ? x : NaN; };
   var tarihIso = function (s) {
@@ -112,7 +112,7 @@
         '<p class="a-nesne-alt">' + ikon("file-text", "a-ikon-kucuk") + '<span><span class="a-kod">' + r.no + "</span> · " + kacis(PL.ad) + " · " + kacis(MV.musteri(PL.m).kisa) + " · " + kacis(p.ad) + "</span></p></div></div>" +
       '<div class="a-uyari-serit">' +
         (r.geri && !oku ? MK.serit("uyari", "undo-2", "<b>Geri gönderildi</b> · " + kacis(MV.kisi(r.geri.kim).ad) + " · " + MK.zamanYaz(r.geri.zaman) + ": “" + kacis(r.geri.gerekce) + "”") : "") +
-        (oku ? MK.serit("bilgi", "lock", r.durum === "onayda" ? "Onayda · " + kacis(yon.ad) + (r.gonderildi ? " · " + MK.zamanYaz(r.gonderildi) : "") : "Onaylandı · son imza bekleniyor") : "") +
+        (oku ? MK.serit("bilgi", "lock", r.durum === "onayda" ? "Teknik yönetici onayında · " + kacis(yon.ad) + (r.gonderildi ? " · " + MK.zamanYaz(r.gonderildi) : "") : "Muayene uzmanı onayı · imza bekleniyor") : "") +
       "</div>" +
       (r.geriler.length ? '<section class="a-form-bolum a-bolum-rapor" aria-labelledby="r-geri-b"><div class="a-alt-bas"><h2 class="a-alt-baslik" id="r-geri-b">Geri gönderme geçmişi</h2>' +
         '<span class="a-sayac"><b>' + r.geriler.length + "</b> kez</span></div>" + '<ol class="a-gecmis">' + r.geriler.map(function (g) {

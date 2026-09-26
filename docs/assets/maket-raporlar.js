@@ -17,11 +17,12 @@
   /* ── LİSTE ─────────────────────────────────────────────────────────────────────────────────────────── */
   MK.suzgecTanimla("r", { ad: "Raporlarda ara", ipucu: "Rapor no, kod, tesis", birim: "rapor", sayfa: 20,
     cipler: [
-      { k: "taslak", ad: "Taslak", grup: "durum", test: function (r) { return r.durum === "taslak"; } },
-      { k: "onayda", ad: "Onayda", grup: "durum", test: function (r) { return r.durum === "onayda"; } },
-      { k: "imza", ad: "İmza bekliyor", grup: "durum", test: function (r) { return r.durum === "onaylandi"; } },
-      { k: "acik", ad: "Müşteriye açık", grup: "durum", test: function (r) { return r.durum === "imzali"; } },
-      { k: "geri", ad: "Geri gönderildi", test: function (r) { return !!r.geri && r.durum === "taslak"; } },
+      { k: "taslak", ad: "Yeni", grup: "durum", test: function (r) { return r.durum === "taslak"; } },
+      { k: "onayda", ad: "Teknik yönetici onayında", grup: "durum", test: function (r) { return r.durum === "onayda"; } },
+      { k: "imza", ad: "Muayene uzmanı onayı", grup: "durum", test: function (r) { return r.durum === "onaylandi"; } },
+      { k: "imzada", ad: "İmzaya gönderildi", grup: "durum", test: function (r) { return r.durum === "imzada"; } },
+      { k: "acik", ad: "Tamamlandı", grup: "durum", test: function (r) { return r.durum === "imzali"; } },
+      { k: "geri", ad: "Geri gönderilen", test: function (r) { return !!r.geri && r.durum === "taslak"; } },
       { k: "kusurlu", ad: "Kusurlu", test: function (r) { return !!r.sonuc && r.sonuc !== "Uygun"; } }
     ],
     seciciler: [
@@ -45,7 +46,7 @@
   function uyariCiz() {
     var l = imzaBekleyen(); MK.menuSayi(14, l.length);
     $("a-uyari").innerHTML = l.length ? '<div class="a-uyari-serit"><div class="a-serit a-serit-uyari">' + ikon("file-signature", "a-ikon-kucuk") +
-      "<span><b>" + l.length + " rapor son imzanızı bekliyor</b> · onaylandı; imzalanınca müşteriye açılır.</span>" +
+      "<span><b>" + l.length + " rapor imzanızı bekliyor</b></span>" +
       MK.tus({ eylem: "imza-ac", ad: "İmzala (" + l.length + ")", sinif: "a-tus-ikincil a-serit-tus" }) + "</div></div>" : "";
   }
   function listeCiz() {
@@ -67,7 +68,8 @@
     if (r.geri) l.push([dkGeri(r), MV.kisi(r.kisi).ad, "Onaya gönderildi"], [r.geri.zaman, MV.kisi(r.geri.kim).ad, "Geri gönderildi", "“" + r.geri.gerekce + "”"]);
     if (r.gonderildi) l.push([r.gonderildi, MV.kisi(r.kisi).ad, "Onaya gönderildi"]);
     if (r.onay) l.push([r.onay.zaman, MV.kisi(r.onay.kim).ad, "Onaylandı"]);
-    if (r.imza) l.push([r.imza.zaman, MV.kisi(r.kisi).ad, "İmzalandı"], [r.imza.zaman, "Sistem", "Müşteriye açıldı"]);
+    if (r.imzaGonderildi) l.push([r.imzaGonderildi, MV.kisi(r.kisi).ad, "İmzaya gönderildi"]);
+    if (r.imza) l.push([r.imza.zaman, MV.kisi(r.kisi).ad, "İmzalandı"], [r.imza.zaman, "Sistem", "Tamamlandı · müşteriye açıldı"]);
     (r.revizyonlar || []).forEach(function (v) { l.push([v.zaman, MV.kisi(r.kisi).ad, "Düzeltme açıldı · " + v.ad, "önceki sürüm saklandı"]); });
     return l.sort(function (a, b) { return a[0] < b[0] ? 1 : a[0] > b[0] ? -1 : 0; });
   }
@@ -90,8 +92,9 @@
       '<div class="a-uyari-serit">' +
         (r.geri && r.durum === "taslak" ? MK.serit("uyari", "undo-2", "<b>Geri gönderildi</b> · " + kacis(MV.kisi(r.geri.kim).ad) + ": “" + kacis(r.geri.gerekce) + "”") : "") +
         (r.durum === "onayda" ? MK.serit("bilgi", "clock", "Onayda · " + kacis(yon.ad)) : "") +
-        (r.durum === "onaylandi" ? MK.serit("uyari", "file-signature", "Onaylandı · son imzanız bekleniyor") : "") +
-        (r.durum === "imzali" ? MK.serit(portal.length ? "onay" : "uyari", "circle-check", "İmzalı ve müşteriye açık" + (portal.length ? "" : " · müşterinin giriş yapan kullanıcısı yok")) : "") +
+        (r.durum === "onaylandi" ? MK.serit("uyari", "file-signature", "Muayene uzmanı onayı · imzanız bekleniyor") : "") +
+        (r.durum === "imzada" ? MK.serit("bilgi", "file-signature", "İmzaya gönderildi") : "") +
+        (r.durum === "imzali" ? MK.serit(portal.length ? "onay" : "uyari", "circle-check", "Tamamlandı · müşteriye açık" + (portal.length ? "" : " · müşterinin giriş yapan kullanıcısı yok")) : "") +
       "</div>" +
       '<div class="a-yuzler">' +
         yuz({ ikon: "wrench", ad: "Ekipman", sayi: e.kod, not: MV.tur(e.tur).ad }) +   /* 2026-09-26: Ekipmanlar ekranı yok (M3 2. tur) */
@@ -133,13 +136,14 @@
   }
   function imzala() {
     if (W.y === "dosya" && !W.yuklendi) { W.hata = "Önce imzalı PDF'leri yükleyin."; pencereCiz('[data-eylem="imzali-yukle"]'); return; }
-    var n = W.l.length, zaman = MK.simdi();
-    W.l.forEach(function (r) { r.durum = "imzali"; r.imza = { zaman: zaman }; });
+    var n = W.l.length, zaman = MK.simdi(), servis = W.y === "servis";
+    /* servis yolu: rapor "İmzaya gönderildi", imzalı PDF dönünce "Tamamlandı" · dosya yolu: imzalı PDF yüklendi → "Tamamlandı" */
+    W.l.forEach(function (r) { if (servis) { r.durum = "imzada"; r.imzaGonderildi = zaman; } else { r.durum = "imzali"; r.imza = { zaman: zaman }; } });
     var tek = n === 1 ? W.l[0] : null;
     $("a-pencere").close();
     if (tek && rota().v === "rapor") raporCiz(tek); else listeCiz();
     MK.menuSayi(14, imzaBekleyen().length);
-    MK.bildir(n + " rapor imzalandı ve müşteriye açıldı.");
+    MK.bildir(servis ? n + " rapor imzaya gönderildi; her biri ayrı imzalanır." : n + " rapor imzalandı, tamamlandı ve müşteriye açıldı.");
   }
 
   /* ── GÖRÜNÜM ────────────────────────────────────────────────────────────────────────────────────────── */
