@@ -1413,6 +1413,8 @@ revizyon, alan kopyalama, hafif kusur devri, meslek eşleşme denetimi).
 - Emsal ürünler: https://opwire.app/iso-17020-periyodik-kontrol-yazilimi/ · https://17020muayene.vidco.com.tr/ · https://akuple.com/asansor-kontrol-yazilimi/ · https://ensyazilim.com/
 
 ## 11 · Değişiklik günlüğü
+- 2026-09-26 (66): **Plan aç saatsiz**: "Tarihler" bölümü başlangıç ve bitiş tarihi; saat alanları kalktı; çakışma uyarısı gün aralığıyla ("aynı
+  günde"); müşteri paneli ve Ana sayfada plan saati gösterilmez. M6 80/80 · 18/18 · 40/40.
 - 2026-09-26 (65): **Planlar (yirmi üçüncü tur)**: listede yalnız "Görüntüle"; kabul planın içinde, beyan okundu işaretiyle; plan içi üst bölüm
   (başlangıç / bitiş tarihi, İSG-KATİP sözleşme ID, teklif içeriği, adres, açıklama); ekipman pasife alınır; rapor saatlerini hizala; saha formu
   (§3.7 satır 9). Planlar 88/88 · 22/22 · 44/44.

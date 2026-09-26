@@ -100,7 +100,7 @@
     var SUT = [
       { k: "tesis", baslik: "Tesis", kart: "ust", sira: 1, hucre: function (x) { return kirp(x.t.ad) + kirp(x.t.ilce + " / " + x.t.il, "a-alt-satir"); } },
       { k: "plan", baslik: "Planlanan kontrol", kart: "govde", sira: 2, hucre: function (x) {
-        return '<span class="a-kart-etiket">Planlanan kontrol</span>' + (x.acik ? '<span><span class="a-tarih-gun">' + MK.gunYaz(x.t.ptarih) + '</span><span class="a-tarih-saat">' + (x.t.psaat ? x.t.psaat[0] + "–" + x.t.psaat[1] : "") + "</span></span>" : '<span class="a-deger-yok">Yok</span>'); } },
+        return '<span class="a-kart-etiket">Planlanan kontrol</span>' + (x.acik ? '<span><span class="a-tarih-gun">' + MK.gunYaz(x.t.ptarih) + '</span><span class="a-tarih-saat">' + (x.t.pbitTarih && x.t.pbitTarih !== x.t.ptarih ? "– " + MK.gunYaz(x.t.pbitTarih) : "") + "</span></span>" : '<span class="a-deger-yok">Yok</span>'); } },
       { k: "sonraki", baslik: "Sonraki kontrol", kart: "govde", sira: 3, hucre: function (x) { return '<span class="a-kart-etiket">Sonraki kontrol</span>' + MK.tarihYaz(x.t.sonraki); } },
       { k: "durum", baslik: "Durum", kart: "rozet", sira: 1, hucre: function (x) { return x.acik ? rozet(MV.PLAN_DURUM[x.t.pdurum]) : '<span class="a-deger-yok">—</span>'; } }
     ];

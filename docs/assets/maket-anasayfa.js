@@ -27,7 +27,7 @@
       return '<a class="a-no" href="' + p.href + '">' + p.no + '</a><span class="a-alt-satir">' + kacis(p.musteri + " · " + p.tesis) + "</span>";
     } },
     { k: "tarih", baslik: "Başlangıç", kart: "govde", sira: 2, hucre: function (p) {
-      return '<span class="a-kart-etiket">Başlangıç</span><span class="a-tarih-saat">' + MK.gunYaz(p.tarih) + (p.saat ? " · " + p.saat[0] : "") + "</span>" +
+      return '<span class="a-kart-etiket">Başlangıç</span><span class="a-tarih-saat">' + MK.gunYaz(p.tarih) + "</span>" +
         (p.tarih === BUGUN ? '<span class="a-bugun">Bugün</span>' : "");
     } },
     { k: "ekip", baslik: "Inspector", kart: "govde", sira: 3, hucre: function (p) {

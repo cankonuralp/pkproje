@@ -62,14 +62,14 @@
    "gecti": true
   },
   {
-   "ad": "aynı saatte başka plan yazılır",
+   "ad": "aynı günde başka plan yazılır (saat sorulmaz)",
    "gen": 1920,
    "sayfa": "maket/plan-ac.html",
    "hash": "#/?tesis=t8",
    "gecti": true
   },
   {
-   "ad": "saat değişince çakışma kalkar",
+   "ad": "tarih değişince çakışma kalkar; bitiş başlangıçtan önce olamaz",
    "gen": 1920,
    "sayfa": "maket/plan-ac.html",
    "hash": "#/?tesis=t8",
