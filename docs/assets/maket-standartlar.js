@@ -71,7 +71,6 @@
       return;
     }
     var t = turleri(s), yeni = s.yerine ? bul(s.yerine) : null, surumler = (yeni ? [yeni].concat(onceki(yeni)) : [s].concat(onceki(s)));
-    var ornekTur = (yeni ? turleri(yeni) : t).filter(function (x) { return x.sablon; })[0];
     $("a-nesne").innerHTML = MK.kirinti([["Standartlar", "#/"], [ad(s)]]) +
       '<div class="a-nesne-bas"><div class="a-nesne-kimlik"><div class="a-nesne-baslik"><h1 tabindex="-1">' + kacis(ad(s)) + "</h1>" + rozet(durum(s)) + "</div>" +
         '<p class="a-nesne-alt">' + ikon("book-open", "a-ikon-kucuk") + "<span>" + kacis(s.konu) + "</span></p></div>" +
@@ -96,9 +95,8 @@
             '<span class="a-not-metin">' + kacis(x.dosya.ad) + " · " + boyut(x.dosya.kb) + " · " + raporSayisi(x) + " rapor · yükleyen " + kacis(MV.kisi(x.yukleyen).ad) + (x.bitti ? " · " + MK.tarihYaz(x.bitti) + "'e kadar" : "") + "</span></span></li>";
         }).join("") + "</ol></section>" +
       '<section class="a-bolum" aria-labelledby="a-b-rapor"><div class="a-alt-bas"><h2 class="a-alt-baslik" id="a-b-rapor">Raporda</h2>' +
-        (ornekTur ? MK.git({ hedef: "sablon", hash: "#/" + ornekTur.k, ad: "Şablonda gör", ikon: "file-text", sinif: "a-tus-ikincil a-bolum-tus", ne: "Rapor şablonu önizlemesi" }) : "") + "</div>" +
-        '<dl class="a-bilgi">' + bilgi("Kontrol metodu (Ek-III 1.7.1.1)", kacis(ad(yeni || s)) + " — " + kacis(s.konu), true) +
-          bilgi("Seçim", "Tür düzeyinde atanır, inspector rapor anında türün standartlarından seçer (öneri)", true) + "</dl></section>";
+        "</div>" +
+        '<dl class="a-bilgi">' + bilgi("Kontrol metodu", kacis(ad(yeni || s)) + " — " + kacis(s.konu), true) + "</dl></section>";
   }
 
   /* ── YÜKLE / YENİ SÜRÜM PENCERESİ ───────────────────────────────────────────────────────────────────── */

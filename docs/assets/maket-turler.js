@@ -198,10 +198,16 @@
     W.d.dosya = k + "-rapor-formati-" + MK.BUGUN + ".pdf"; delete W.hata.dosya;
     pencereCiz(); $("a-pencere-alt").querySelector(".a-tus-birincil").focus();
   };
-  /* PDF'i aç: makette şablon önizlemesi (M7) PDF'in yerini tutar */
+  /* PDF'i aç: makette yüklenen PDF'in yerine rapor belgesi (MB.belge) pencerede açılır. Ayrı "rapor şablonu önizlemesi" ekranı
+     kalktı (reisim 2026-09-26, M7 A: türün rapor formatı PDF'i yeter). */
   X["pdf-ac"] = function (el) {
-    var t = MV.tur(el.dataset.k), h = MK.adres("sablon", "#/" + t.k);
-    if (t.sablon && h && t.pdf[0].dosya.indexOf(MK.BUGUN) < 0) location.href = h; else MK.bildir("Makette yeni yüklenen PDF açılmaz; uygulamada yüklenen dosya açılır.");
+    var t = MV.tur(el.dataset.k);
+    W = { tur: "pdf", id: t.k, hata: {}, d: {} };
+    $("a-pencere-baslik").textContent = t.ad + " · rapor formatı " + t.pdf[0].surum;
+    $("a-pencere-govde").innerHTML = MB.belge(t);
+    $("a-pencere-alt").innerHTML = MK.tus({ eylem: "pencere-kapat", ad: "Kapat", sinif: "a-tus-ikincil" });
+    if (!$("a-pencere").open) $("a-pencere").showModal();
+    $("a-pencere-alt").querySelector(".a-tus").focus({ preventScroll: true }); $("a-pencere-govde").scrollTop = 0;
   };
   X["pencere-kaydet"] = function () {
     W.hata = denetle(); var hk = Object.keys(W.hata);

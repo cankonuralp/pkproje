@@ -600,7 +600,12 @@ kalktı (müşteri ünvanı / tesis adresi / sonraki kontrol / süre ipuçları,
 bilgi şeridi); etiket **"İSG-KATİP sözleşme ID"**. Yeniden ölçüm: 60/60 · 18/18 · 40/40.
 1. tur (2026-09-24): 10 durum 60/60, etkileşim 12/12 ("Kabul edemez", sahada yeni ekipman alanı vardı).
 
-#### Maket M7 — Standart Kütüphanesi · Rapor şablonu önizlemesi (modül 4, 6) — ONAY BEKLİYOR
+#### Maket M7 — Standart Kütüphanesi (modül 4) — 2. TUR, ONAY BEKLİYOR (toplu gözden geçirmede)
+**2. tur (2026-09-26, §9 yirmi birinci tur):** ayrı **rapor şablonu önizlemesi ekranı kalktı** (A: türün rapor formatı PDF'i yeter); tür sayfasındaki
+"PDF'i aç" formatı pencerede gösterir (makette rapor belgesi), `maket/sablon.html` Ekipman türlerine yönlendirir. Standart sayfasında "Şablonda gör"
+ve açıklama satırları kalktı. 82 kontrol metodu türün standartlarından, yoksa üretici talimatı · 83 yükleyen branş yöneticisi + firma yöneticisi,
+okuyan herkes · 84 yeni sürüme türler kendiliğinden geçer. Ölçüm: 9 durum 54/54, etkileşim 11/11, telefon 36/36; M3 48/48 · 15/15 · 32/32.
+1. tur metni (tarihsel):
 Ekranlar: **standartlar** (`maket/standartlar.html`: liste — standart, sürüm, kullanan türler, bu sürümle rapor sayısı, yükleyen; çipler:
 türe atanmamış · mekanik · elektrik; seçiciler: tür (tür sayfasındaki "Standart kütüphanesi" süzgeçli gelir) · görünüm (güncel · önceki
 sürümler · hepsi) · **standart sayfası**: kullanan türler, sürümler, raporda nasıl yazıldığı, "Oku", "Yeni sürüm yükle" · **yükle / yeni
@@ -1373,6 +1378,7 @@ revizyon, alan kopyalama, hafif kusur devri, meslek eşleşme denetimi).
 - Emsal ürünler: https://opwire.app/iso-17020-periyodik-kontrol-yazilimi/ · https://17020muayene.vidco.com.tr/ · https://akuple.com/asansor-kontrol-yazilimi/ · https://ensyazilim.com/
 
 ## 11 · Değişiklik günlüğü
+- 2026-09-26 (51): **M7 2. tur**: ayrı rapor şablonu önizlemesi ekranı kalktı; format tür sayfasında "PDF'i aç" ile pencerede. M7 54/54 · 11/11 · 36/36.
 - 2026-09-26 (50): **Genel temizlik** (§9 on dokuzuncu tur genel ilkesi, bütün maketler): ortak form alanı artık altına yalnız hata, kaydı
   durdurmayan uyarı ya da canlı sonuç yazar (açıklayıcı ipucu çizilmez); açıklama paragrafları, "makette …" notları ve açıklayıcı bilgi
   şeritleri kalktı. Bütün maketler yeniden ölçüldü, hepsi temiz (iki deneme yeni metne göre güncellendi: M4 fotoğraf uyarısı, M5 tesis sayfası).

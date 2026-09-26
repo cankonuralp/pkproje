@@ -2,8 +2,8 @@
  "maket": "m7",
  "tarih": "2026-09-26",
  "arac": "tools/olc-bulut.mjs --etkilesim (başsız tarayıcı, 1920 açık tema; gen verilen denemede o genişlik)",
- "toplam": 12,
- "gecen": 12,
+ "toplam": 11,
+ "gecen": 11,
  "denemeler": [
   {
    "ad": "görünüm: önceki sürümler (1)",
@@ -69,24 +69,17 @@
    "gecti": true
   },
   {
-   "ad": "şablon: tür değişir (seçim alanı)",
+   "ad": "PDF'i aç: rapor formatı pencerede, firma bilgileri bölümüyle",
    "gen": 1920,
-   "sayfa": "maket/sablon.html",
-   "hash": "#/HT",
+   "sayfa": "maket/ekipman-turleri.html",
+   "hash": "#/tur/HT",
    "gecti": true
   },
   {
-   "ad": "şablon: alanların kaynağı yazılı, örnekte değer",
+   "ad": "eski şablon adresi tür sayfasına gider",
    "gen": 1920,
    "sayfa": "maket/sablon.html",
-   "hash": "#/HT",
-   "gecti": true
-  },
-  {
-   "ad": "şablonu olmayan tür: boş durum",
-   "gen": 1920,
-   "sayfa": "maket/sablon.html",
-   "hash": "#/BK",
+   "hash": "#/ET/ornek",
    "gecti": true
   }
  ]

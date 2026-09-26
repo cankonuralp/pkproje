@@ -6,7 +6,8 @@
 (function () {
   "use strict";
   var kacis = MK.kacis, ikon = MK.ikon, bilgi = MK.bilgi;
-  var kaynak = function (k) { return '<span class="a-belge-kaynak">' + ikon("arrow-left", "a-ikon-kucuk") + k + "</span>"; };
+  /* boş belgede alanın nereden dolduğu artık yazılmaz (reisim 2026-09-26: "alt tarafa yazılmış küçük mesajlar istemiyorum") */
+  var kaynak = function () { return ""; };
   var bos = '<span class="a-deger-yok">—</span>';
   window.MB = {};
   MB.belge = function (t, o) {
@@ -17,7 +18,7 @@
     /* hafif / ağır yalnız Bakanlık formatı yürürlükte olan türde (§4.5, Ek-III 1.9.1); öteki türde "Kusurlu" */
     var hafifAd = zorunlu ? "Hafif kusur" : "Kusurlu", agirAd = zorunlu ? "Ağır kusur" : "Kusurlu";
     var kriter = MV.kriterler(t), test = MV.testler(t);
-    var formKod = zorunlu ? t.format : f.kisa + "-FR-" + t.k + "-" + t.sablon.split(" · ")[0].slice(1);
+    var surum = t.pdf && t.pdf[0] ? t.pdf[0].surum : t.sablon ? t.sablon.split(" · ")[0] : "v1", formKod = zorunlu ? t.format : f.kisa + "-FR-" + t.k + "-" + surum.slice(1);
     return '<article class="a-belge" aria-label="Rapor önizlemesi">' +
       '<header class="a-belge-bas"><div class="a-belge-logo" role="img" aria-label="Firma logosu yeri">Logo</div>' +
         '<div class="a-belge-kunye"><b>' + kacis(f.ad) + "</b><span>" + kacis(f.adres) + "</span><span>" + kacis(f.eposta) + " · Akreditasyon no <span class=\"a-kod\">" + f.akr + "</span></span></div>" +
@@ -25,7 +26,7 @@
       '<div class="a-belge-baslik"><h2>Periyodik kontrol raporu</h2><p>' + kacis(t.ad) + " · " + kacis(grup.ad) + "</p></div>" +
       '<dl class="a-bilgi">' + bilgi("Rapor no", o ? '<span class="a-kod">' + o.no + "</span>" : bos + kaynak("sunucu, rapor oluşturulurken")) +
         bilgi("Form", '<span class="a-kod">' + formKod + "</span>") +
-        bilgi("Şablon sürümü", kacis(t.sablon)) + bilgi("Sayfa", "1 / 2") + "</dl>" +
+        bilgi("Format sürümü", kacis(surum)) + bilgi("Sayfa", "1 / 2") + "</dl>" +
       /* 1 · FİRMA BİLGİLERİ — türün rapor formatından bağımsız, her raporda aynı blok (reisim 2026-09-26: "1 genel bilgiler değil firma
          bilgileri olacak formattan bağımsız her rapor için ortak olacak"); değerler müşteri, tesis ve iş sözleşmesinden */
       bolum("1", "Firma bilgileri", '<dl class="a-bilgi">' +

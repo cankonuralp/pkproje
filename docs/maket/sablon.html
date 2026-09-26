@@ -3,22 +3,14 @@
 <head>
 <meta charset="utf-8">
 <meta name="viewport" content="width=device-width, initial-scale=1">
-<title>Rapor şablonu · probata maket</title>
+<title>Ekipman türleri · probata maket</title>
 <meta name="robots" content="noindex">
 <link rel="icon" href="../marka/favicon.svg" type="image/svg+xml">
-<script src="../assets/maket-tema.js"></script>
-<link rel="stylesheet" href="../assets/tokens.css">
-<link rel="stylesheet" href="../assets/maket.css">
+<!-- 2026-09-26 (reisim, M7 A kabul): ayrı "rapor şablonu önizlemesi" ekranı kalktı; türün rapor formatı PDF'i yeter ve tür sayfasındaki
+     "PDF'i aç" ile görünür. Eski bağlantılar (toplu bakış, yer imleri) Ekipman türleri ekranına gider. -->
+<script>var m = /^#\/([A-Z]{2,3})/.exec(location.hash); location.replace("ekipman-turleri.html#/" + (m ? "tur/" + m[1] : ""));</script>
 </head>
 <body>
-<!-- MAKET M7 · Rapor şablonu önizlemesi (modül 6, kodda) — ONAY BEKLİYOR. Şablon firma × tür başına kodda; site içi düzenleyici YOK.
-     Adres: #/<TÜR KODU> şablon (alanlar ve nereden dolduğu) · #/<TÜR KODU>/ornek örnek raporla -->
-<main class="a-icerik" id="a-icerik">
-  <div id="a-sablon"></div>
-</main>
-<script src="../assets/maket-ortak.js"></script>
-<script src="../assets/maket-veri.js"></script>
-<script src="../assets/maket-belge.js"></script>
-<script src="../assets/maket-sablon.js"></script>
+<p><a href="ekipman-turleri.html">Rapor formatı ekipman türünün sayfasında görünür. Ekipman türleri →</a></p>
 </body>
 </html>

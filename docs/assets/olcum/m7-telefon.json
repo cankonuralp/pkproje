@@ -8,8 +8,8 @@
   390,
   430
  ],
- "toplam": 44,
- "temiz": 44,
+ "toplam": 36,
+ "temiz": 36,
  "durumlar": [
   {
    "ad": "standartlar · liste",
@@ -264,7 +264,7 @@
    "alan": 4
   },
   {
-   "ad": "şablon · elektrik, Bakanlık formatı zorunlu",
+   "ad": "tür · rapor formatı PDF'i açık (elektrik)",
    "gen": 320,
    "temiz": true,
    "tasma": 0,
@@ -273,7 +273,7 @@
    "alan": 0
   },
   {
-   "ad": "şablon · elektrik, Bakanlık formatı zorunlu",
+   "ad": "tür · rapor formatı PDF'i açık (elektrik)",
    "gen": 360,
    "temiz": true,
    "tasma": 0,
@@ -282,7 +282,7 @@
    "alan": 0
   },
   {
-   "ad": "şablon · elektrik, Bakanlık formatı zorunlu",
+   "ad": "tür · rapor formatı PDF'i açık (elektrik)",
    "gen": 390,
    "temiz": true,
    "tasma": 0,
@@ -291,7 +291,7 @@
    "alan": 0
   },
   {
-   "ad": "şablon · elektrik, Bakanlık formatı zorunlu",
+   "ad": "tür · rapor formatı PDF'i açık (elektrik)",
    "gen": 430,
    "temiz": true,
    "tasma": 0,
@@ -300,7 +300,7 @@
    "alan": 0
   },
   {
-   "ad": "şablon · örnek rapor (hava tankı, taslak format)",
+   "ad": "tür · rapor formatı PDF'i açık (hava tankı)",
    "gen": 320,
    "temiz": true,
    "tasma": 0,
@@ -309,7 +309,7 @@
    "alan": 0
   },
   {
-   "ad": "şablon · örnek rapor (hava tankı, taslak format)",
+   "ad": "tür · rapor formatı PDF'i açık (hava tankı)",
    "gen": 360,
    "temiz": true,
    "tasma": 0,
@@ -318,7 +318,7 @@
    "alan": 0
   },
   {
-   "ad": "şablon · örnek rapor (hava tankı, taslak format)",
+   "ad": "tür · rapor formatı PDF'i açık (hava tankı)",
    "gen": 390,
    "temiz": true,
    "tasma": 0,
@@ -327,79 +327,7 @@
    "alan": 0
   },
   {
-   "ad": "şablon · örnek rapor (hava tankı, taslak format)",
-   "gen": 430,
-   "temiz": true,
-   "tasma": 0,
-   "disari": [],
-   "kucukAlan": [],
-   "alan": 0
-  },
-  {
-   "ad": "şablon · örnek rapor (elektrik iç tesisatı, zorunlu format)",
-   "gen": 320,
-   "temiz": true,
-   "tasma": 0,
-   "disari": [],
-   "kucukAlan": [],
-   "alan": 0
-  },
-  {
-   "ad": "şablon · örnek rapor (elektrik iç tesisatı, zorunlu format)",
-   "gen": 360,
-   "temiz": true,
-   "tasma": 0,
-   "disari": [],
-   "kucukAlan": [],
-   "alan": 0
-  },
-  {
-   "ad": "şablon · örnek rapor (elektrik iç tesisatı, zorunlu format)",
-   "gen": 390,
-   "temiz": true,
-   "tasma": 0,
-   "disari": [],
-   "kucukAlan": [],
-   "alan": 0
-  },
-  {
-   "ad": "şablon · örnek rapor (elektrik iç tesisatı, zorunlu format)",
-   "gen": 430,
-   "temiz": true,
-   "tasma": 0,
-   "disari": [],
-   "kucukAlan": [],
-   "alan": 0
-  },
-  {
-   "ad": "şablon · şablonu olmayan tür",
-   "gen": 320,
-   "temiz": true,
-   "tasma": 0,
-   "disari": [],
-   "kucukAlan": [],
-   "alan": 0
-  },
-  {
-   "ad": "şablon · şablonu olmayan tür",
-   "gen": 360,
-   "temiz": true,
-   "tasma": 0,
-   "disari": [],
-   "kucukAlan": [],
-   "alan": 0
-  },
-  {
-   "ad": "şablon · şablonu olmayan tür",
-   "gen": 390,
-   "temiz": true,
-   "tasma": 0,
-   "disari": [],
-   "kucukAlan": [],
-   "alan": 0
-  },
-  {
-   "ad": "şablon · şablonu olmayan tür",
+   "ad": "tür · rapor formatı PDF'i açık (hava tankı)",
    "gen": 430,
    "temiz": true,
    "tasma": 0,
