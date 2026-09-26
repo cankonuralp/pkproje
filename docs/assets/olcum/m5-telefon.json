@@ -8,8 +8,8 @@
   390,
   430
  ],
- "toplam": 40,
- "temiz": 40,
+ "toplam": 44,
+ "temiz": 44,
  "durumlar": [
   {
    "ad": "sözleşmeler · liste, ID eksik ve biten şeritleri",
@@ -156,115 +156,43 @@
    "alan": 0
   },
   {
-   "ad": "ID ekle · eksikten (tesis + denetçi dolu)",
+   "ad": "sözleşme · İSG-KATİP bitmiş (plan gününden önce)",
    "gen": 320,
    "temiz": true,
    "tasma": 0,
    "disari": [],
    "kucukAlan": [],
-   "alan": 3
+   "alan": 0
   },
   {
-   "ad": "ID ekle · eksikten (tesis + denetçi dolu)",
+   "ad": "sözleşme · İSG-KATİP bitmiş (plan gününden önce)",
    "gen": 360,
    "temiz": true,
    "tasma": 0,
    "disari": [],
    "kucukAlan": [],
-   "alan": 3
+   "alan": 0
+  },
+  {
+   "ad": "sözleşme · İSG-KATİP bitmiş (plan gününden önce)",
+   "gen": 390,
+   "temiz": true,
+   "tasma": 0,
+   "disari": [],
+   "kucukAlan": [],
+   "alan": 0
+  },
+  {
+   "ad": "sözleşme · İSG-KATİP bitmiş (plan gününden önce)",
+   "gen": 430,
+   "temiz": true,
+   "tasma": 0,
+   "disari": [],
+   "kucukAlan": [],
+   "alan": 0
   },
   {
    "ad": "ID ekle · eksikten (tesis + denetçi dolu)",
-   "gen": 390,
-   "temiz": true,
-   "tasma": 0,
-   "disari": [],
-   "kucukAlan": [],
-   "alan": 3
-  },
-  {
-   "ad": "ID ekle · eksikten (tesis + denetçi dolu)",
-   "gen": 430,
-   "temiz": true,
-   "tasma": 0,
-   "disari": [],
-   "kucukAlan": [],
-   "alan": 3
-  },
-  {
-   "ad": "ID ekle · boş gönderildi",
-   "gen": 320,
-   "temiz": true,
-   "tasma": 0,
-   "disari": [],
-   "kucukAlan": [],
-   "alan": 3
-  },
-  {
-   "ad": "ID ekle · boş gönderildi",
-   "gen": 360,
-   "temiz": true,
-   "tasma": 0,
-   "disari": [],
-   "kucukAlan": [],
-   "alan": 3
-  },
-  {
-   "ad": "ID ekle · boş gönderildi",
-   "gen": 390,
-   "temiz": true,
-   "tasma": 0,
-   "disari": [],
-   "kucukAlan": [],
-   "alan": 3
-  },
-  {
-   "ad": "ID ekle · boş gönderildi",
-   "gen": 430,
-   "temiz": true,
-   "tasma": 0,
-   "disari": [],
-   "kucukAlan": [],
-   "alan": 3
-  },
-  {
-   "ad": "ID ekle · kişinin mevcut ID'si önceki olur uyarısı",
-   "gen": 320,
-   "temiz": true,
-   "tasma": 0,
-   "disari": [],
-   "kucukAlan": [],
-   "alan": 3
-  },
-  {
-   "ad": "ID ekle · kişinin mevcut ID'si önceki olur uyarısı",
-   "gen": 360,
-   "temiz": true,
-   "tasma": 0,
-   "disari": [],
-   "kucukAlan": [],
-   "alan": 3
-  },
-  {
-   "ad": "ID ekle · kişinin mevcut ID'si önceki olur uyarısı",
-   "gen": 390,
-   "temiz": true,
-   "tasma": 0,
-   "disari": [],
-   "kucukAlan": [],
-   "alan": 3
-  },
-  {
-   "ad": "ID ekle · kişinin mevcut ID'si önceki olur uyarısı",
-   "gen": 430,
-   "temiz": true,
-   "tasma": 0,
-   "disari": [],
-   "kucukAlan": [],
-   "alan": 3
-  },
-  {
-   "ad": "ID düzenle · PDF seçildi",
    "gen": 320,
    "temiz": true,
    "tasma": 0,
@@ -273,7 +201,7 @@
    "alan": 4
   },
   {
-   "ad": "ID düzenle · PDF seçildi",
+   "ad": "ID ekle · eksikten (tesis + denetçi dolu)",
    "gen": 360,
    "temiz": true,
    "tasma": 0,
@@ -282,7 +210,7 @@
    "alan": 4
   },
   {
-   "ad": "ID düzenle · PDF seçildi",
+   "ad": "ID ekle · eksikten (tesis + denetçi dolu)",
    "gen": 390,
    "temiz": true,
    "tasma": 0,
@@ -291,13 +219,121 @@
    "alan": 4
   },
   {
-   "ad": "ID düzenle · PDF seçildi",
+   "ad": "ID ekle · eksikten (tesis + denetçi dolu)",
    "gen": 430,
    "temiz": true,
    "tasma": 0,
    "disari": [],
    "kucukAlan": [],
    "alan": 4
+  },
+  {
+   "ad": "ID ekle · boş gönderildi",
+   "gen": 320,
+   "temiz": true,
+   "tasma": 0,
+   "disari": [],
+   "kucukAlan": [],
+   "alan": 4
+  },
+  {
+   "ad": "ID ekle · boş gönderildi",
+   "gen": 360,
+   "temiz": true,
+   "tasma": 0,
+   "disari": [],
+   "kucukAlan": [],
+   "alan": 4
+  },
+  {
+   "ad": "ID ekle · boş gönderildi",
+   "gen": 390,
+   "temiz": true,
+   "tasma": 0,
+   "disari": [],
+   "kucukAlan": [],
+   "alan": 4
+  },
+  {
+   "ad": "ID ekle · boş gönderildi",
+   "gen": 430,
+   "temiz": true,
+   "tasma": 0,
+   "disari": [],
+   "kucukAlan": [],
+   "alan": 4
+  },
+  {
+   "ad": "ID ekle · kişinin mevcut ID'si önceki olur uyarısı",
+   "gen": 320,
+   "temiz": true,
+   "tasma": 0,
+   "disari": [],
+   "kucukAlan": [],
+   "alan": 4
+  },
+  {
+   "ad": "ID ekle · kişinin mevcut ID'si önceki olur uyarısı",
+   "gen": 360,
+   "temiz": true,
+   "tasma": 0,
+   "disari": [],
+   "kucukAlan": [],
+   "alan": 4
+  },
+  {
+   "ad": "ID ekle · kişinin mevcut ID'si önceki olur uyarısı",
+   "gen": 390,
+   "temiz": true,
+   "tasma": 0,
+   "disari": [],
+   "kucukAlan": [],
+   "alan": 4
+  },
+  {
+   "ad": "ID ekle · kişinin mevcut ID'si önceki olur uyarısı",
+   "gen": 430,
+   "temiz": true,
+   "tasma": 0,
+   "disari": [],
+   "kucukAlan": [],
+   "alan": 4
+  },
+  {
+   "ad": "ID düzenle · PDF seçildi",
+   "gen": 320,
+   "temiz": true,
+   "tasma": 0,
+   "disari": [],
+   "kucukAlan": [],
+   "alan": 5
+  },
+  {
+   "ad": "ID düzenle · PDF seçildi",
+   "gen": 360,
+   "temiz": true,
+   "tasma": 0,
+   "disari": [],
+   "kucukAlan": [],
+   "alan": 5
+  },
+  {
+   "ad": "ID düzenle · PDF seçildi",
+   "gen": 390,
+   "temiz": true,
+   "tasma": 0,
+   "disari": [],
+   "kucukAlan": [],
+   "alan": 5
+  },
+  {
+   "ad": "ID düzenle · PDF seçildi",
+   "gen": 430,
+   "temiz": true,
+   "tasma": 0,
+   "disari": [],
+   "kucukAlan": [],
+   "alan": 5
   },
   {
    "ad": "sözleşme şablonu",

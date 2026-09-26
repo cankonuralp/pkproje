@@ -2,21 +2,28 @@
  "maket": "m13",
  "tarih": "2026-09-26",
  "arac": "tools/olc-bulut.mjs --etkilesim (başsız tarayıcı, 1920 açık tema; gen verilen denemede o genişlik)",
- "toplam": 9,
- "gecen": 9,
+ "toplam": 10,
+ "gecen": 10,
  "denemeler": [
   {
-   "ad": "liste: 12 sözleşme, imza bekleyen üstte; biten şeridi yenileme teklifini gösterir",
+   "ad": "liste: 12 sözleşme, imza bekleyen üstte; hizmet sözleşmesi bitişi için şerit yok",
    "gen": 1920,
    "sayfa": "maket/sozlesmeler.html",
    "hash": "#/",
    "gecti": true
   },
   {
-   "ad": "Bitişi 60 gün içinde çipi (2 / 12)",
+   "ad": "imzalı sözleşme: Aç tuşu belgeyi gösterir",
    "gen": 1920,
    "sayfa": "maket/sozlesmeler.html",
-   "hash": "#/",
+   "hash": "#/s/IS-1025-001",
+   "gecti": true
+  },
+  {
+   "ad": "imzalı sözleşme yüklenince Aç tuşu çıkar",
+   "gen": 1920,
+   "sayfa": "maket/sozlesmeler.html",
+   "hash": "#/s/IS-0926-007",
    "gecti": true
   },
   {

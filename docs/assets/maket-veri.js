@@ -190,7 +190,10 @@
   ];
   /* 2026-09-26 (M5 2. tur, reisim: "isg katip sözleşmesi pdf olarak isteğe bağlı buraya yüklenebilir olsun"): PDF isteğe bağlı; onay tarihi de
      isteğe bağlı (girilmişse geç onay yalnız uyarı). Kayıt = iş sözleşmesinin içinde tesis başına denetçi → sözleşme ID (no). */
-  MV.ISG.forEach(function (x, i) { x.id = "i" + (i + 1); x.girdi = "za"; x.pdf = i % 3 === 0 ? "isg-katip-" + x.no.toLowerCase() + ".pdf" : null; });
+  MV.ISG.forEach(function (x, i) { x.id = "i" + (i + 1); x.girdi = "za"; x.pdf = i % 3 === 0 ? "isg-katip-" + x.no.toLowerCase() + ".pdf" : null;
+    /* bitiş tarihi isteğe bağlı (reisim 2026-09-26: "isg katip sözleşmesi bitmişse plan açarken uyarsın"); makette onaydan 1 yıl, t9 · Elif Aydın
+       planın gününden önce bitiyor (uyarı örneği) */
+    var b = new Date(x.onay + "T12:00:00"); b.setFullYear(b.getFullYear() + 1); b.setDate(b.getDate() - 1); x.bitis = x.t === "t9" && x.k === "ea" ? "2026-09-28" : b.toISOString().slice(0, 10); });
   /* önceki yılın sözleşmeleri (geçmişte kalır; yeni kayıt kişi × tesis için güncel olanı olur) */
   MV.ISG.push({ id: "i90", t: "t12", k: "mk", no: "S-2025-0211", onay: "2025-09-12", girdi: "za", onceki: true }, { id: "i91", t: "t11", k: "mk", no: "S-2025-0230", onay: "2025-09-15", girdi: "za", onceki: true });
   MV.isgTesis = function (tid) { return MV.ISG.filter(function (x) { return x.t === tid && !x.onceki; }); };

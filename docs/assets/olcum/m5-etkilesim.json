@@ -2,8 +2,8 @@
  "maket": "m5",
  "tarih": "2026-09-26",
  "arac": "tools/olc-bulut.mjs --etkilesim (başsız tarayıcı, 1920 açık tema; gen verilen denemede o genişlik)",
- "toplam": 14,
- "gecen": 14,
+ "toplam": 16,
+ "gecen": 16,
  "denemeler": [
   {
    "ad": "eski İSG-KATİP adresi (tesis) sözleşmenin İSG-KATİP bölümüne gider",
@@ -31,6 +31,20 @@
    "gen": 1920,
    "sayfa": "maket/sozlesmeler.html",
    "hash": "#/",
+   "gecti": true
+  },
+  {
+   "ad": "İSG-KATİP bitmiş: plan gününden önce biten ID uyarılır",
+   "gen": 1920,
+   "sayfa": "maket/sozlesmeler.html",
+   "hash": "#/isg?tesis=t9",
+   "gecti": true
+  },
+  {
+   "ad": "ID düzenle: bitiş tarihi uzatılınca uyarı düşer",
+   "gen": 1920,
+   "sayfa": "maket/sozlesmeler.html",
+   "hash": "#/isg/i11",
    "gecti": true
   },
   {

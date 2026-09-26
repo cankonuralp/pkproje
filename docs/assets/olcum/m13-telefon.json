@@ -8,11 +8,11 @@
   390,
   430
  ],
- "toplam": 28,
- "temiz": 28,
+ "toplam": 32,
+ "temiz": 32,
  "durumlar": [
   {
-   "ad": "iş sözleşmeleri · liste, biten sözleşme şeridi",
+   "ad": "iş sözleşmeleri · liste (hizmet sözleşmesi için şerit yok)",
    "gen": 320,
    "temiz": true,
    "tasma": 0,
@@ -21,7 +21,7 @@
    "alan": 1
   },
   {
-   "ad": "iş sözleşmeleri · liste, biten sözleşme şeridi",
+   "ad": "iş sözleşmeleri · liste (hizmet sözleşmesi için şerit yok)",
    "gen": 360,
    "temiz": true,
    "tasma": 0,
@@ -30,7 +30,7 @@
    "alan": 1
   },
   {
-   "ad": "iş sözleşmeleri · liste, biten sözleşme şeridi",
+   "ad": "iş sözleşmeleri · liste (hizmet sözleşmesi için şerit yok)",
    "gen": 390,
    "temiz": true,
    "tasma": 0,
@@ -39,7 +39,7 @@
    "alan": 1
   },
   {
-   "ad": "iş sözleşmeleri · liste, biten sözleşme şeridi",
+   "ad": "iş sözleşmeleri · liste (hizmet sözleşmesi için şerit yok)",
    "gen": 430,
    "temiz": true,
    "tasma": 0,
@@ -84,7 +84,7 @@
    "alan": 0
   },
   {
-   "ad": "sözleşme · yürürlükte, 7 gün sonra bitiyor",
+   "ad": "sözleşme · yürürlükte, bitişe az kaldı (uyarı yok)",
    "gen": 320,
    "temiz": true,
    "tasma": 0,
@@ -93,7 +93,7 @@
    "alan": 0
   },
   {
-   "ad": "sözleşme · yürürlükte, 7 gün sonra bitiyor",
+   "ad": "sözleşme · yürürlükte, bitişe az kaldı (uyarı yok)",
    "gen": 360,
    "temiz": true,
    "tasma": 0,
@@ -102,7 +102,7 @@
    "alan": 0
   },
   {
-   "ad": "sözleşme · yürürlükte, 7 gün sonra bitiyor",
+   "ad": "sözleşme · yürürlükte, bitişe az kaldı (uyarı yok)",
    "gen": 390,
    "temiz": true,
    "tasma": 0,
@@ -111,7 +111,43 @@
    "alan": 0
   },
   {
-   "ad": "sözleşme · yürürlükte, 7 gün sonra bitiyor",
+   "ad": "sözleşme · yürürlükte, bitişe az kaldı (uyarı yok)",
+   "gen": 430,
+   "temiz": true,
+   "tasma": 0,
+   "disari": [],
+   "kucukAlan": [],
+   "alan": 0
+  },
+  {
+   "ad": "sözleşme · imzalı sözleşme görüntüleme",
+   "gen": 320,
+   "temiz": true,
+   "tasma": 0,
+   "disari": [],
+   "kucukAlan": [],
+   "alan": 0
+  },
+  {
+   "ad": "sözleşme · imzalı sözleşme görüntüleme",
+   "gen": 360,
+   "temiz": true,
+   "tasma": 0,
+   "disari": [],
+   "kucukAlan": [],
+   "alan": 0
+  },
+  {
+   "ad": "sözleşme · imzalı sözleşme görüntüleme",
+   "gen": 390,
+   "temiz": true,
+   "tasma": 0,
+   "disari": [],
+   "kucukAlan": [],
+   "alan": 0
+  },
+  {
+   "ad": "sözleşme · imzalı sözleşme görüntüleme",
    "gen": 430,
    "temiz": true,
    "tasma": 0,

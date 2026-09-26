@@ -4,8 +4,8 @@
  "tarih": "2026-09-26",
  "arac": "başsız HeadlessChrome/141.0.7390.37 · puppeteer-core · tools/olc-bulut.mjs + tools/olc-maket.js",
  "yontem": "python3 http.server (docs/), her durum × genişlik × tema taze yükleme ve ayrı oturum, geçişler kapalı; 1920×1080 · 1080×810 · 375×812 × açık/koyu; 1080'de çekmece açık ayrıca.",
- "toplam": 42,
- "temiz": 42,
+ "toplam": 48,
+ "temiz": 48,
  "cekmece": {
   "toplam": 2,
   "temiz": 2,
@@ -42,7 +42,7 @@
  },
  "durumlar": [
   {
-   "ad": "iş sözleşmeleri · liste, biten sözleşme şeridi",
+   "ad": "iş sözleşmeleri · liste (hizmet sözleşmesi için şerit yok)",
    "gen": 1920,
    "tema": "acik",
    "gorunum": "liste",
@@ -66,7 +66,7 @@
    "eksikIkon": 0,
    "tusY": 34,
    "tusGen": [
-    61,
+    70,
     177
    ],
    "satirY": 52,
@@ -80,7 +80,7 @@
    "hatalar": []
   },
   {
-   "ad": "iş sözleşmeleri · liste, biten sözleşme şeridi",
+   "ad": "iş sözleşmeleri · liste (hizmet sözleşmesi için şerit yok)",
    "gen": 1920,
    "tema": "koyu",
    "gorunum": "liste",
@@ -104,7 +104,7 @@
    "eksikIkon": 0,
    "tusY": 34,
    "tusGen": [
-    61,
+    70,
     177
    ],
    "satirY": 52,
@@ -118,7 +118,7 @@
    "hatalar": []
   },
   {
-   "ad": "iş sözleşmeleri · liste, biten sözleşme şeridi",
+   "ad": "iş sözleşmeleri · liste (hizmet sözleşmesi için şerit yok)",
    "gen": 1080,
    "tema": "acik",
    "gorunum": "liste",
@@ -142,10 +142,10 @@
    "eksikIkon": 0,
    "tusY": 44,
    "tusGen": [
-    61,
+    70,
     187
    ],
-   "satirY": 56,
+   "satirY": 69,
    "birincil": null,
    "pencereGen": null,
    "icerik": 1080,
@@ -156,7 +156,7 @@
    "hatalar": []
   },
   {
-   "ad": "iş sözleşmeleri · liste, biten sözleşme şeridi",
+   "ad": "iş sözleşmeleri · liste (hizmet sözleşmesi için şerit yok)",
    "gen": 1080,
    "tema": "koyu",
    "gorunum": "liste",
@@ -180,10 +180,10 @@
    "eksikIkon": 0,
    "tusY": 44,
    "tusGen": [
-    61,
+    70,
     187
    ],
-   "satirY": 56,
+   "satirY": 69,
    "birincil": null,
    "pencereGen": null,
    "icerik": 1080,
@@ -194,7 +194,7 @@
    "hatalar": []
   },
   {
-   "ad": "iş sözleşmeleri · liste, biten sözleşme şeridi",
+   "ad": "iş sözleşmeleri · liste (hizmet sözleşmesi için şerit yok)",
    "gen": 375,
    "tema": "acik",
    "gorunum": "liste",
@@ -218,7 +218,7 @@
    "eksikIkon": 0,
    "tusY": 44,
    "tusGen": [
-    61,
+    70,
     351
    ],
    "satirY": 186,
@@ -232,7 +232,7 @@
    "hatalar": []
   },
   {
-   "ad": "iş sözleşmeleri · liste, biten sözleşme şeridi",
+   "ad": "iş sözleşmeleri · liste (hizmet sözleşmesi için şerit yok)",
    "gen": 375,
    "tema": "koyu",
    "gorunum": "liste",
@@ -256,7 +256,7 @@
    "eksikIkon": 0,
    "tusY": 44,
    "tusGen": [
-    61,
+    70,
     351
    ],
    "satirY": 186,
@@ -498,7 +498,7 @@
    "hatalar": []
   },
   {
-   "ad": "sözleşme · yürürlükte, 7 gün sonra bitiyor",
+   "ad": "sözleşme · yürürlükte, bitişe az kaldı (uyarı yok)",
    "gen": 1920,
    "tema": "acik",
    "gorunum": "liste",
@@ -536,7 +536,7 @@
    "hatalar": []
   },
   {
-   "ad": "sözleşme · yürürlükte, 7 gün sonra bitiyor",
+   "ad": "sözleşme · yürürlükte, bitişe az kaldı (uyarı yok)",
    "gen": 1920,
    "tema": "koyu",
    "gorunum": "liste",
@@ -574,7 +574,7 @@
    "hatalar": []
   },
   {
-   "ad": "sözleşme · yürürlükte, 7 gün sonra bitiyor",
+   "ad": "sözleşme · yürürlükte, bitişe az kaldı (uyarı yok)",
    "gen": 1080,
    "tema": "acik",
    "gorunum": "liste",
@@ -612,7 +612,7 @@
    "hatalar": []
   },
   {
-   "ad": "sözleşme · yürürlükte, 7 gün sonra bitiyor",
+   "ad": "sözleşme · yürürlükte, bitişe az kaldı (uyarı yok)",
    "gen": 1080,
    "tema": "koyu",
    "gorunum": "liste",
@@ -650,7 +650,7 @@
    "hatalar": []
   },
   {
-   "ad": "sözleşme · yürürlükte, 7 gün sonra bitiyor",
+   "ad": "sözleşme · yürürlükte, bitişe az kaldı (uyarı yok)",
    "gen": 375,
    "tema": "acik",
    "gorunum": "liste",
@@ -688,7 +688,7 @@
    "hatalar": []
   },
   {
-   "ad": "sözleşme · yürürlükte, 7 gün sonra bitiyor",
+   "ad": "sözleşme · yürürlükte, bitişe az kaldı (uyarı yok)",
    "gen": 375,
    "tema": "koyu",
    "gorunum": "liste",
@@ -720,6 +720,234 @@
    "pencereGen": null,
    "icerik": 375,
    "listeGen": 351,
+   "yaziTipi": "Sora yüklü",
+   "hata": 0,
+   "ayrinti": {},
+   "hatalar": []
+  },
+  {
+   "ad": "sözleşme · imzalı sözleşme görüntüleme",
+   "gen": 1920,
+   "tema": "acik",
+   "gorunum": "liste",
+   "liste": "(liste yok)",
+   "pencere": null,
+   "tasma": 0,
+   "sertKirpma": 0,
+   "tasanMetin": 0,
+   "cakisma": 0,
+   "sonCakisma": null,
+   "gizliEtkilesimli": 0,
+   "ekranDisi": 0,
+   "kucukHedef": 0,
+   "basliksizKirpma": 0,
+   "ipucuKesik": 0,
+   "kenarFarki": null,
+   "gorunenGizli": 0,
+   "pencereKenar": null,
+   "hizaKaymasi": 0,
+   "kartTutarsiz": 0,
+   "eksikIkon": 0,
+   "tusY": 34,
+   "tusGen": [
+    141,
+    165
+   ],
+   "satirY": null,
+   "birincil": null,
+   "pencereGen": null,
+   "icerik": 1688,
+   "listeGen": null,
+   "yaziTipi": "Sora yüklü",
+   "hata": 0,
+   "ayrinti": {},
+   "hatalar": []
+  },
+  {
+   "ad": "sözleşme · imzalı sözleşme görüntüleme",
+   "gen": 1920,
+   "tema": "koyu",
+   "gorunum": "liste",
+   "liste": "(liste yok)",
+   "pencere": null,
+   "tasma": 0,
+   "sertKirpma": 0,
+   "tasanMetin": 0,
+   "cakisma": 0,
+   "sonCakisma": null,
+   "gizliEtkilesimli": 0,
+   "ekranDisi": 0,
+   "kucukHedef": 0,
+   "basliksizKirpma": 0,
+   "ipucuKesik": 0,
+   "kenarFarki": null,
+   "gorunenGizli": 0,
+   "pencereKenar": null,
+   "hizaKaymasi": 0,
+   "kartTutarsiz": 0,
+   "eksikIkon": 0,
+   "tusY": 34,
+   "tusGen": [
+    141,
+    165
+   ],
+   "satirY": null,
+   "birincil": null,
+   "pencereGen": null,
+   "icerik": 1688,
+   "listeGen": null,
+   "yaziTipi": "Sora yüklü",
+   "hata": 0,
+   "ayrinti": {},
+   "hatalar": []
+  },
+  {
+   "ad": "sözleşme · imzalı sözleşme görüntüleme",
+   "gen": 1080,
+   "tema": "acik",
+   "gorunum": "liste",
+   "liste": "(liste yok)",
+   "pencere": null,
+   "tasma": 0,
+   "sertKirpma": 0,
+   "tasanMetin": 0,
+   "cakisma": 0,
+   "sonCakisma": null,
+   "gizliEtkilesimli": 0,
+   "ekranDisi": 0,
+   "kucukHedef": 0,
+   "basliksizKirpma": 0,
+   "ipucuKesik": 0,
+   "kenarFarki": null,
+   "gorunenGizli": 0,
+   "pencereKenar": null,
+   "hizaKaymasi": 0,
+   "kartTutarsiz": 0,
+   "eksikIkon": 0,
+   "tusY": 44,
+   "tusGen": [
+    148,
+    173
+   ],
+   "satirY": null,
+   "birincil": null,
+   "pencereGen": null,
+   "icerik": 1080,
+   "listeGen": null,
+   "yaziTipi": "Sora yüklü",
+   "hata": 0,
+   "ayrinti": {},
+   "hatalar": []
+  },
+  {
+   "ad": "sözleşme · imzalı sözleşme görüntüleme",
+   "gen": 1080,
+   "tema": "koyu",
+   "gorunum": "liste",
+   "liste": "(liste yok)",
+   "pencere": null,
+   "tasma": 0,
+   "sertKirpma": 0,
+   "tasanMetin": 0,
+   "cakisma": 0,
+   "sonCakisma": null,
+   "gizliEtkilesimli": 0,
+   "ekranDisi": 0,
+   "kucukHedef": 0,
+   "basliksizKirpma": 0,
+   "ipucuKesik": 0,
+   "kenarFarki": null,
+   "gorunenGizli": 0,
+   "pencereKenar": null,
+   "hizaKaymasi": 0,
+   "kartTutarsiz": 0,
+   "eksikIkon": 0,
+   "tusY": 44,
+   "tusGen": [
+    148,
+    173
+   ],
+   "satirY": null,
+   "birincil": null,
+   "pencereGen": null,
+   "icerik": 1080,
+   "listeGen": null,
+   "yaziTipi": "Sora yüklü",
+   "hata": 0,
+   "ayrinti": {},
+   "hatalar": []
+  },
+  {
+   "ad": "sözleşme · imzalı sözleşme görüntüleme",
+   "gen": 375,
+   "tema": "acik",
+   "gorunum": "liste",
+   "liste": "(liste yok)",
+   "pencere": null,
+   "tasma": 0,
+   "sertKirpma": 0,
+   "tasanMetin": 0,
+   "cakisma": 0,
+   "sonCakisma": null,
+   "gizliEtkilesimli": 0,
+   "ekranDisi": 0,
+   "kucukHedef": 0,
+   "basliksizKirpma": 0,
+   "ipucuKesik": 0,
+   "kenarFarki": null,
+   "gorunenGizli": 0,
+   "pencereKenar": null,
+   "hizaKaymasi": 0,
+   "kartTutarsiz": 0,
+   "eksikIkon": 0,
+   "tusY": 44,
+   "tusGen": [
+    170,
+    173
+   ],
+   "satirY": null,
+   "birincil": null,
+   "pencereGen": null,
+   "icerik": 375,
+   "listeGen": null,
+   "yaziTipi": "Sora yüklü",
+   "hata": 0,
+   "ayrinti": {},
+   "hatalar": []
+  },
+  {
+   "ad": "sözleşme · imzalı sözleşme görüntüleme",
+   "gen": 375,
+   "tema": "koyu",
+   "gorunum": "liste",
+   "liste": "(liste yok)",
+   "pencere": null,
+   "tasma": 0,
+   "sertKirpma": 0,
+   "tasanMetin": 0,
+   "cakisma": 0,
+   "sonCakisma": null,
+   "gizliEtkilesimli": 0,
+   "ekranDisi": 0,
+   "kucukHedef": 0,
+   "basliksizKirpma": 0,
+   "ipucuKesik": 0,
+   "kenarFarki": null,
+   "gorunenGizli": 0,
+   "pencereKenar": null,
+   "hizaKaymasi": 0,
+   "kartTutarsiz": 0,
+   "eksikIkon": 0,
+   "tusY": 44,
+   "tusGen": [
+    170,
+    173
+   ],
+   "satirY": null,
+   "birincil": null,
+   "pencereGen": null,
+   "icerik": 375,
+   "listeGen": null,
    "yaziTipi": "Sora yüklü",
    "hata": 0,
    "ayrinti": {},
@@ -979,7 +1207,7 @@
    "tusY": 34,
    "tusGen": [
     97,
-    162
+    193
    ],
    "satirY": 65,
    "birincil": null,
@@ -1017,7 +1245,7 @@
    "tusY": 34,
    "tusGen": [
     97,
-    162
+    193
    ],
    "satirY": 65,
    "birincil": null,
@@ -1055,7 +1283,7 @@
    "tusY": 44,
    "tusGen": [
     100,
-    170
+    203
    ],
    "satirY": 75,
    "birincil": null,
@@ -1093,7 +1321,7 @@
    "tusY": 44,
    "tusGen": [
     100,
-    170
+    203
    ],
    "satirY": 75,
    "birincil": null,
@@ -1131,7 +1359,7 @@
    "tusY": 44,
    "tusGen": [
     100,
-    172
+    351
    ],
    "satirY": 137,
    "birincil": null,
@@ -1169,7 +1397,7 @@
    "tusY": 44,
    "tusGen": [
     100,
-    172
+    351
    ],
    "satirY": 137,
    "birincil": null,

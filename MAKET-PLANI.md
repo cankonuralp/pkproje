@@ -135,3 +135,5 @@ tek mesaj: sayfanın bağlantısı + kaç maket + kaç soru + ölçülemeyen var
 - 2026-09-26: **M4 ONAYLANDI**. **M5 2. tur** — reisim A–H ("Önerilerin hepsi uygun başla"): Sözleşmeler = iş sözleşmesi, M5 + M13
   birleşti, İSG-KATİP ID'leri sözleşmenin içinde denetçiye göre, PDF ve onay tarihi isteğe bağlı, sözleşme şablonu yüklenir. M5 60/60 · 14/14 ·
   40/40. Reisim'in incelemesi bekleniyor; iş sözleşmesinin kalan soruları (M13) ve sonra M6 Plan aç.
+- 2026-09-26: **M5 2. tur, ek** — imzalı sözleşme görüntülenir; uyarı yalnız İSG-KATİP (yok · geç onay · bitmiş); hizmet sözleşmesi uyarıları
+  kalktı; numaralandırma firmaya göre (§3.7); M13 soruları cevaplandı. M5 66/66 · 16/16 · 44/44. Reisim'in incelemesi bekleniyor; sırada M6.

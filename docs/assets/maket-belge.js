@@ -73,6 +73,28 @@
      istemese biz müşteri isteği doğrultusunda bunu değiştiririz"). Firmaya göre değişen formatlardan biri (pkproje.md §3.7): firma kendi
      formunu isterse o firmaya özel üretilir, bu varsayılan kalır. o = { p (teslim alan), varliklar[], no, tarih, eden (teslim eden) }. */
   /* o.imzali: yüklenmiş taramanın yerine imzalı hâl (makette; imza alanında ad + tarih) */
+  /* İŞ (HİZMET) SÖZLEŞMESİ — temel format KM-FR-SZL-01 (2026-09-26, reisim: "imzalı sözleşmeyi görüntüleme tuşu göremedim"): imzalı
+     tarama makette bu önizlemeyle gösterilir. Firma kendi şablonunu yükleyebilir (§3.7 satır 5). */
+  MB.isSozlesmesi = function (o) {
+    var f = MV.FIRMA, x = o.x, m = MV.musteri(x.m), formKod = f.kisa + "-FR-SZL-01";
+    var satirlar = x.tesisler.map(function (tid, i) { var t = MV.tesis(tid); return [String(i + 1), "<b>" + kacis(t.ad) + "</b><br>" + kacis(t.adres || "") + '<br><span class="a-belge-madde">' + kacis([t.ilce, t.il].filter(Boolean).join(" / ")) + "</span>"]; });
+    var imza = [["Hizmet veren", f.ad, x.imza.firma], ["Hizmet alan", m.unvan, x.imza.musteri]];
+    return '<article class="a-belge" aria-label="İş sözleşmesi önizlemesi">' +
+      '<header class="a-belge-bas"><div class="a-belge-logo" role="img" aria-label="Firma logosu yeri">Logo</div>' +
+        '<div class="a-belge-kunye"><b>' + kacis(f.ad) + "</b><span>" + kacis(f.adres) + "</span></div></header>" +
+      '<div class="a-belge-baslik"><h2>Periyodik kontrol hizmet sözleşmesi</h2><p>İş ekipmanlarının periyodik kontrolü</p></div>' +
+      '<dl class="a-bilgi">' + bilgi("Sözleşme no", '<span class="a-kod">' + x.no + "</span>") + bilgi("Süre", MK.tarihYaz(x.baslangic) + " – " + MK.tarihYaz(x.bitis)) +
+        bilgi("Hizmet alan", kacis(m.unvan)) + bilgi("Ödeme vadesi", x.vade + " gün") + "</dl>" +
+      bolum("1", "Kapsamdaki tesisler", x.tesisler.length + " tesis", tablo(["#", "Tesis"], satirlar)) +
+      bolum("2", "Konu ve koşullar", "",
+        "<p>Hizmet veren, kapsamdaki tesislerde bulunan iş ekipmanlarının periyodik kontrollerini kabul edilen teklifteki kalem ve fiyatlarla yapar; " +
+        "raporlar imzalandıktan sonra hizmet alanın erişimine açılır. Ödeme fatura tarihinden itibaren " + x.vade + " gün içinde yapılır.</p>") +
+      '<div class="a-belge-imzalar">' + imza.map(function (y) {
+        return "<div><b>" + y[0] + "</b><span>" + kacis(y[1]) + '</span><div class="a-belge-imza' + (y[2] ? " a-belge-imzali" : "") + '">' +
+          (y[2] ? MK.tarihYaz(y[2]) + " · imzalı" : "Tarih · imza") + "</div></div>";
+      }).join("") + "</div>" +
+      '<footer class="a-belge-alt"><span>' + kacis(f.ad) + " · " + formKod + " · temel format</span><span>Sayfa 1 / 1</span></footer></article>";
+  };
   MB.zimmetFormu = function (o) {
     var f = MV.FIRMA, formKod = f.kisa + "-FR-ZMT-01";
     var tur = { cihaz: "Ölçüm cihazı", arac: "Araç", diger: "Diğer" };
