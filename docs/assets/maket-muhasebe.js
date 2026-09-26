@@ -192,7 +192,6 @@
         bilgi("İş", '<a class="a-no" href="#/is/' + x.no + '">' + x.no + '</a><span class="a-alt-satir">' + kacis(MV.tesis(x.tesis).ad) + " · " + f.raporlar.length + " rapor</span>") +
         bilgi("Kaydeden", kacis(MV.kisi(f.kaydeden).ad)) + "</dl></section>" +
       '<section class="a-bolum" aria-labelledby="a-b-kalem"><div class="a-alt-bas"><h2 class="a-alt-baslik" id="a-b-kalem">Kalemler</h2><span class="a-sayac"><b>' + MV.faturaKalemleri(f.raporlar).length + "</b> kalem</span></div>" +
-        '<p class="a-bolum-aciklama">İmzalı raporlardan: ekipman türü × rapor sayısı × birim fiyat (teklif kalemi).</p>' +
         '<div class="a-liste-kap">' + MK.tablo({ baslik: "Fatura kalemleri", sinif: "a-tablo-kalem a-tablo-fkalem", sutunlar: KALEM, kayitlar: MV.faturaKalemleri(f.raporlar) }) + "</div>" +
         '<dl class="a-bilgi a-bolum-serit">' + toplamlar(t) + "</dl></section>" +
       '<section class="a-bolum" aria-labelledby="a-b-tahsil"><div class="a-alt-bas"><h2 class="a-alt-baslik" id="a-b-tahsil">Tahsilatlar</h2><span class="a-sayac"><b>' + f.tahsilatlar.length + "</b> tahsilat</span></div>" +
@@ -215,7 +214,7 @@
     var gecici = { raporlar: o.hazir.map(function (r) { return r.no; }) };
     var vade = fi ? (function () { var d = new Date(fi + "T12:00:00"); d.setDate(d.getDate() + vg); return d.toISOString().slice(0, 10); })() : null;
     $("a-pencere-baslik").textContent = "Fatura kaydet · " + x.no;
-    $("a-pencere-govde").innerHTML = '<p class="a-bolum-aciklama">Fatura firmanın muhasebe programında e-Fatura ya da e-Arşiv olarak kesilir; numarası ve tarihi buraya yazılır. Kalemler imzalı ve faturalanmamış ' + o.hazir.length + " rapordan.</p>" +
+    $("a-pencere-govde").innerHTML = '<p class="a-bolum-aciklama"><b>' + o.hazir.length + "</b> imzalı rapor</p>" +
       '<div class="a-liste-kap">' + MK.tablo({ baslik: "Faturaya girecek kalemler", sinif: "a-tablo-kalem a-tablo-fkalem", sutunlar: KALEM, kayitlar: MV.faturaKalemleri(gecici.raporlar) }) + "</div>" +
       '<dl class="a-bilgi a-bolum-serit">' + toplamlar(ft(gecici)) + "</dl>" +
       (o.surec.length ? '<div class="a-bolum-serit">' + MK.serit("uyari", "history", o.surec.length + " rapor imza sürecinde; bu faturaya girmez, imzalanınca sonraki faturaya kalır.") + "</div>" : "") +

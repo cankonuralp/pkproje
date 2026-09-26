@@ -105,7 +105,6 @@
   /* ── SÖZLEŞME SAYFASI ─────────────────────────────────────────────────────────────────────────────── */
   function isgBolum(x) {
     return '<section class="a-bolum" aria-labelledby="a-b-isg"><div class="a-alt-bas"><h2 class="a-alt-baslik" id="a-b-isg">İSG-KATİP</h2><span class="a-sayac"><b>' + isgSayisi(x) + "</b> ID</span></div>" +
-      '<p class="a-bolum-aciklama">Her tesiste denetçi başına sözleşme ID. Plan açarken seçilen denetçinin ID\'si buradan gelir, raporlara oradan geçer; yoksa plan açan el ile yazar. SGK tescil no tesis kaydından gelir.</p>' +
       x.tesisler.map(function (tid) {
         var t = MV.tesis(tid), l = MV.isgTesis(tid), eks = idEksik({ tesisler: [tid] });
         var SUT = [
@@ -156,7 +155,7 @@
           (d !== "imza" && yeni ? '<a class="a-tus a-tus-ikincil" href="' + MK.adres(11, "#/t/" + yeni.no) + '">' + ikon("file-text", "a-ikon-kucuk") + "Yenileme teklifi " + yeni.no + "</a>" :
             d === "suresi" ? '<a class="a-tus a-tus-birincil" href="' + MK.adres(11, "#/yeni?tesis=" + x.tesisler[0]) + '">' + ikon("plus", "a-ikon-kucuk") + "Yeni teklif</a>" : "") + "</div></div>" +
       /* hizmet sözleşmesi için uyarı yok (reisim 2026-09-26); yalnız durum bilgisi */
-      (d === "imza" ? '<div class="a-serit-kap">' + MK.serit("bilgi", "file-signature", "Firma imzaladı; müşteri imzası bekleniyor. İmzalı sözleşme yüklenince yürürlüğe girer.") + "</div>" : "") +
+      (d === "imza" ? '<div class="a-serit-kap">' + MK.serit("bilgi", "file-signature", "Müşteri imzası bekleniyor.") + "</div>" : "") +
       '<section class="a-bolum" aria-labelledby="a-b-taraf"><div class="a-alt-bas"><h2 class="a-alt-baslik" id="a-b-taraf">Taraflar ve koşullar</h2></div>' +
         '<dl class="a-bilgi">' + bilgi("Hizmet veren", kacis(f.ad), true) +
           bilgi("Hizmet alan", kacis(m.unvan) + '<span class="a-alt-satir">' + kacis(m.vd) + " VD · " + m.vno + "</span>", true) +
@@ -181,7 +180,6 @@
         '<p class="a-nesne-alt">' + ikon("file-check", "a-ikon-kucuk") + "<span>" + kacis(MV.musteri(x.m).kisa) + " · " + x.no + ".pdf · yüklendi " + MK.tarihYaz(x.imza.musteri) + "</span></p></div>" +
         '<div class="a-eylem-cubugu">' + MK.tus({ eylem: "pdf", ad: "Dosyayı indir", ikon: "file-text", sinif: "a-tus-ikincil" }) +
           '<a class="a-tus a-tus-ikincil" href="#/s/' + x.no + '">' + ikon("arrow-left", "a-ikon-kucuk") + "Sözleşmeye dön</a></div></div>" +
-      '<div class="a-serit-kap">' + MK.serit("bilgi", "circle-alert", "Makette taramanın yerine sözleşmenin imzalı hâli gösterilir; uygulamada yüklenen PDF burada açılır (yalnız firma içinde, kısa ömürlü bağlantı).") + "</div>" +
       MB.isSozlesmesi({ x: x });
   }
 
@@ -213,9 +211,9 @@
           '<div class="a-alan-grup a-alan-genis"><p class="a-etiket">Yenileme</p><div class="a-sekmeler" role="group" aria-label="Yenileme">' +
             '<button type="button" class="a-sekme" data-yenileme="yok" aria-pressed="' + (F.yenileme === "yok") + '">Yeni teklifle</button>' +
             '<button type="button" class="a-sekme" data-yenileme="otomatik" aria-pressed="' + (F.yenileme === "otomatik") + '">Kendiliğinden</button></div></div>' +
-        "</div>" + '<div class="a-bolum-serit">' + MK.serit("bilgi", "file-text", "Sözleşme metni " + (sb ? "firmanızın şablonundan (" + kacis(sb.surum) + ")" : "temel formattan") + " üretilir; imzalanınca taranmış ya da e-imzalı PDF yüklenir. İSG-KATİP ID'leri kaydettikten sonra sözleşme sayfasında eklenir.") + "</div></section>" +
+        "</div></section>" +
       "</div>" +
-      '<div class="a-form-eylem"><p class="a-adim-not">Kaydedince firma imzalı sayılır; müşteri imzası beklenir.</p><a class="a-tus a-tus-ikincil" href="#/">Vazgeç</a>' + MK.tus({ eylem: "kaydet", ad: "Sözleşmeyi hazırla", ikon: "check" }) + "</div>";
+      '<div class="a-form-eylem"><a class="a-tus a-tus-ikincil" href="#/">Vazgeç</a>' + MK.tus({ eylem: "kaydet", ad: "Sözleşmeyi hazırla", ikon: "check" }) + "</div>";
     if (odak) { var el = $(odak) || document.querySelector(odak); if (el) el.focus(); }
   }
   var tarihIso = function (s) { var m = /^(\d{2})\.(\d{2})\.(\d{4})$/.exec(s.trim()); if (!m) return null; var iso = m[3] + "-" + m[2] + "-" + m[1], d = new Date(iso + "T12:00:00"); return isNaN(d) || d.getDate() !== +m[1] ? null : iso; };
@@ -243,7 +241,7 @@
         '<div class="a-form"><div class="a-alan-grup a-alan-genis"><p class="a-etiket">Firmanın şablonu (PDF ya da Word)</p>' +
           '<div class="a-dosya-sec">' + MK.tus({ eylem: "dosya-sec", ad: d.dosya ? "Başka dosya seç" : "Dosya seç", ikon: "file-plus", sinif: "a-tus-ikincil" }) +
           '<span class="a-dosya-ad" id="w-dosya">' + (d.dosya ? kacis(d.dosya) : '<span class="a-deger-yok">Dosya seçilmedi</span>') + "</span></div>" +
-          (h.dosya ? '<p class="a-ipucu a-ipucu-uyari" id="w-dosya-ipucu">' + h.dosya + "</p>" : '<p class="a-ipucu">Müşteri, tesis, süre ve ödeme bilgileri şablondaki yerlerine doldurulur.</p>') + "</div></div>";
+          (h.dosya ? '<p class="a-ipucu a-ipucu-uyari" id="w-dosya-ipucu">' + h.dosya + "</p>" : "") + "</div></div>";
       kaydet = { ad: "Yükle", ikon: "file-plus" };
     } else {
       var x = MV.isSozlesmesi(W.no), r = W.id ? MV.ISG.filter(function (i) { return i.id === W.id; })[0] : null;

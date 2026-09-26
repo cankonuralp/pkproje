@@ -136,14 +136,12 @@
     var g = m.pasif ? { durum: "pasif" } : m.giris, ek = ekGiris(m);
     var durum = g.durum === "pasif" ? "Müşteri pasif; giriş kapalı" : g.durum === "etkin" ? "Son giriş " + MK.zamanYaz(g.son) : g.durum === "gonderildi" ? "Parola " + MK.zamanYaz(g.gonderildi) + " tarihinde gönderildi; henüz girmedi" : "Müşterinin e-postası yok";
     return '<section class="a-bolum" aria-labelledby="a-b-giris"><div class="a-alt-bas"><h2 class="a-alt-baslik" id="a-b-giris">Müşteri girişi</h2>' + rozet(HESAP[g.durum]) + "</div>" +
-      '<p class="a-bolum-aciklama">Müşteri eklenince giriş kendiliğinden açılır: kullanıcı adı müşterinin e-postası, parolayı sistem üretip o adrese gönderir. Müşteri yalnız kendi raporlarını görür ve indirir.</p>' +
       '<dl class="a-bilgi">' + bilgi("Kullanıcı adı", g.durum === "yok" ? '<span class="a-uyari-metin">E-posta yazılınca giriş açılır</span>' : kacis(m.eposta), true) + bilgi("Durum", durum, true) + bilgi("Gördüğü tesisler", "Bütün tesisler") + "</dl>" +
       (g.durum === "pasif" ? "" : '<div class="a-bolum-eylem">' + (g.durum === "yok" ? MK.tus({ eylem: "musteri-duzenle", ad: "E-posta yaz", ikon: "pencil", sinif: "a-tus-ikincil" })
         : '<a class="a-tus a-tus-ikincil" href="musteri.html#/?musteri=' + m.id + '">' + ikon("eye", "a-ikon-kucuk") + "Müşteri gözüyle bak</a>" +
           MK.tus({ eylem: "parola-gonder", ad: "Parolayı yeniden gönder", ikon: "send", sinif: "a-tus-ikincil" })) + "</div>") +
       '<div class="a-alt-bas a-alt-bas-ic"><h3 class="a-alt-baslik">Ek girişler</h3><span class="a-sayac"><b>' + ek.length + "</b> kişi</span>" +
         (m.pasif ? "" : MK.tus({ eylem: "kullanici-ac", ad: "Ek giriş ekle", ikon: "user-plus", sinif: "a-tus-ikincil a-bolum-tus" })) + "</div>" +
-      '<p class="a-bolum-aciklama">Müşterinin çalışanlarına kişiye özel giriş; bütün tesisleri ya da yalnız seçilenleri görür.</p>' +
       '<div class="a-liste-kap">' + (ek.length ? MK.tablo({ baslik: "Ek girişler", sinif: "a-tablo-mkullanici", sutunlar: KULLANICI_SUTUN, kayitlar: ek })
         : '<p class="a-bos-satir">Ek giriş yok; müşteri ana girişle bütün tesislerini görür.</p>') + "</div></section>";
   }
@@ -182,7 +180,6 @@
       "</dl></section>" +
       '<section class="a-bolum" aria-labelledby="a-b-tesis"><div class="a-alt-bas"><h2 class="a-alt-baslik" id="a-b-tesis">Tesisler</h2><span class="a-sayac"><b>' + et.length + "</b> tesis" + (t.length > et.length ? " · " + (t.length - et.length) + " pasif" : "") + "</span>" +
         (m.pasif ? "" : MK.tus({ eylem: "tesis-ac", ad: "Tesis ekle", ikon: "plus", sinif: "a-tus-ikincil a-bolum-tus" })) + "</div>" +
-        '<p class="a-bolum-aciklama">Bir tesis tek müşteriye aittir; aynı adreste iki ayrı işletme varsa iki tesis açılır.</p>' +
         '<div class="a-liste-kap">' + (t.length ? MK.tablo({ baslik: "Tesisler", sinif: "a-tablo-tesis", sutunlar: TESIS_SUTUN, kayitlar: t, href: function (x) { return "#/t/" + x.id; } })
           : '<p class="a-bos-satir">Bu müşterinin tesisi yok. Plan, rapor ve İSG-KATİP kaydı tesise bağlıdır; önce tesis eklenir.</p>') + "</div></section>" +
       girisHtml(m);
@@ -220,13 +217,10 @@
         yuz({ ikon: "alarm-clock", ad: "Sonraki kontrol", sayi: MK.gunKisa(t.sonraki), not: k < 0 ? -k + " gün geçti" : k === 0 ? "bugün" : k + " gün sonra", uyari: k <= YAKIN }) +
       "</div>" +
       '<section class="a-bolum" aria-labelledby="a-b-tbilgi"><div class="a-alt-bas"><h2 class="a-alt-baslik" id="a-b-tbilgi">Tesis bilgileri</h2></div>' +
-        '<div class="a-serit-kap">' + MK.serit("bilgi", "file-text", "Raporun firma bilgileri bu kayıttan dolar.") + "</div>" +
         '<dl class="a-bilgi">' + bilgi("İşyeri ünvanı", kacis(m.unvan), true) + bilgi("Adres", t.adres ? kacis(t.adres) : '<span class="a-yuz-uyari">Boş</span>', true) +
           bilgi("SGK tescil no", t.sgk ? '<span class="a-kod a-kod-uzun">' + t.sgk + "</span>" : '<span class="a-yuz-uyari">Boş</span>', "cift") + bilgi("İl", t.il || yok) + bilgi("İlçe", t.ilce || yok) + "</dl></section>" +
       '<section class="a-bolum" aria-labelledby="a-b-isg"><div class="a-alt-bas"><h2 class="a-alt-baslik" id="a-b-isg">İSG-KATİP sözleşme ID\'leri</h2><span class="a-sayac"><b>' + isg.length + "</b> ID</span>" +
         (soz ? MK.git({ hedef: 12, hash: "#/s/" + soz.no, ad: "Sözleşmede aç", ikon: "arrow-right", sinif: "a-tus-ikincil a-bolum-tus", ne: "Sözleşmeler" }) : "") + "</div>" +
-        '<p class="a-bolum-aciklama">' + (soz ? "ID'ler iş sözleşmesinin (" + soz.no + ") içinde girilir, burada görünür; plan açarken denetçinin ID'si oradan gelir."
-          : "Bu tesisin geçerli iş sözleşmesi yok; ID plan açarken el ile girilir.") + "</p>" +
         '<div class="a-liste-kap">' + (isg.length ? MK.tablo({ baslik: "İSG-KATİP sözleşme ID'leri", sinif: "a-tablo-isg", sutunlar: ISG_SUTUN(t), kayitlar: isg })
           : '<p class="a-bos-satir">Bu tesis için ID yok; plan açarken el ile girilebilir.</p>') + "</div></section>" +
       '<section class="a-bolum" aria-labelledby="a-b-plan"><div class="a-alt-bas"><h2 class="a-alt-baslik" id="a-b-plan">Planlar</h2></div>' +
@@ -266,8 +260,7 @@
   function pencereCiz(odak) {
     var d = W.d, h = W.hata, u = W.uyari || {}, A = function (id, etiket, deger, o) {
       o = o || {};
-      var ip = u[id] ? '<span class="a-ipucu-dikkat">' + u[id] + "</span>" : o.ipucu;
-      return MK.alan({ id: "w-" + id, etiket: etiket, zorunlu: o.zorunlu, genis: o.genis, ipucu: ip, hata: h[id],
+      return MK.alan({ id: "w-" + id, etiket: etiket, zorunlu: o.zorunlu, genis: o.genis, uyari: u[id], hata: h[id],
         girdi: o.girdi || MK.girdi({ id: "w-" + id, alan: id, deger: deger, sinif: o.sinif, ek: o.ek, hata: h[id] }) });
     };
     var govde, kaydet = { ad: "Kaydet", ikon: "check" }, uyariVar = Object.keys(u).length > 0;

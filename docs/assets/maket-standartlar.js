@@ -87,7 +87,6 @@
       "</div>" +
       '<section class="a-bolum" aria-labelledby="a-b-tur"><div class="a-alt-bas"><h2 class="a-alt-baslik" id="a-b-tur">Kullanan ekipman türleri</h2><span class="a-sayac"><b>' + t.length + "</b> tür</span>" +
         MK.git({ hedef: 5, hash: "#/", ad: "Ekipman türleri", ikon: "layers", sinif: "a-tus-ikincil a-bolum-tus", ne: "Ekipman türleri" }) + "</div>" +
-        '<p class="a-bolum-aciklama">Tür sayfasında kontrol metodu olarak atanır; raporda inspector türün standartlarından seçer.</p>' +
         (t.length ? '<ul class="a-kosullar">' + t.map(function (x) {
           return '<li class="a-kosul-bilgi">' + ikon("layers", "a-ikon-kucuk") + '<span><a class="a-baglanti" href="' + MK.adres(5, "#/tur/" + x.k) + '">' + kacis(x.ad) + "</a> · " + MV.bransAd(x.b) + (x.format ? " · Bakanlık formatı " + x.format : "") + "</span></li>";
         }).join("") + "</ul>" : '<p class="a-bos-satir">' + (s.yerine ? "Önceki sürüm türlere bağlı değildir; türler güncel sürümü kullanır." : "Bu standart henüz hiçbir türde kontrol metodu değil.") + "</p>") + "</section>" +
@@ -130,7 +129,7 @@
         (h.dosya ? '<p class="a-ipucu a-ipucu-uyari" id="w-dosya-ipucu">' + h.dosya + "</p>" : '<p class="a-ipucu" id="w-dosya-ipucu">PDF, en çok 50 MB.</p>') + "</div>" +
       "</div>" +
       '<div class="a-serit-kap a-uyari-serit" id="w-seritler" aria-live="polite">' + seritler(ayni) + "</div>" +
-      '<div class="a-serit-kap">' + MK.serit("bilgi", "lock", "Standart telifli belgedir: firmanın satın aldığı kopya yüklenir. Yalnız firma kullanıcıları okur; dışarıya kalıcı bağlantı üretilmez.") + "</div>";
+      "";
     $("a-pencere-alt").innerHTML = MK.tus({ eylem: "pencere-kapat", ad: "Vazgeç", sinif: "a-tus-ikincil" }) + MK.tus({ eylem: "pencere-kaydet", ad: s ? "Yeni sürümü yükle" : "Yükle", ikon: "check" });
     if (odak) { var el = $(odak); if (el) el.focus(); }
   }

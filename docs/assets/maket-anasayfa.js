@@ -148,7 +148,6 @@
         (r === "planlama" || r === "yonetici" ? '<a class="a-tus a-tus-birincil a-bolum-tus" href="plan-ac.html#/">' + ikon("calendar-check", "a-ikon-kucuk") + "Plan aç</a>" : "") + "</div>" +
       '<div class="a-pano-anahtar"><span class="a-etiket a-etiket-satir">Makette bakış</span><div class="a-sekmeler" role="group" aria-label="Rol">' +
         MV.ROLLER.map(function (x) { return '<a class="a-sekme" href="#/' + x.k + '"' + (x.k === r ? ' aria-current="page"' : "") + ">" + x.ad + "</a>"; }).join("") + "</div></div>" +
-      '<div class="a-serit-kap">' + MK.serit("bilgi", "circle-alert", "Girişten sonra herkes buraya gelir; içerik kişinin rolüne göre değişir. Birden çok rolü olan her rolün bölümünü alt alta görür. (Rol seçimi yalnız makette.)") + "</div>" +
       BOLUM[r](KISI[r]);
     var u = document.querySelector(".a-kullanici");
     if (u) { u.querySelector(".a-avatar").textContent = MV.bas(p.ad); u.querySelector(".a-kullanici-ad").textContent = p.ad; u.querySelector(".a-kullanici-rol").textContent = MV.rol(r).ad; }

@@ -346,13 +346,17 @@
     return liste;
   };
 
-  /* ── FORM ALANI — TEK ÜRETİCİ (kalıp 3: alan veri tipine göre, sınıfla; hata ipucunun yerine yazılır) ─────────────
-     alan({ id, etiket, girdi (html), ipucu, hata, zorunlu (true | metin), genis }) · girdi({ id, alan (veri anahtarı), deger,
+  /* ── FORM ALANI — TEK ÜRETİCİ (kalıp 3: alan veri tipine göre, sınıfla) ─────────────
+     alan({ id, etiket, girdi (html), hata, uyari, sonuc, zorunlu (true | metin), genis }) — alanın altında YALNIZ hata, kaydı durdurmayan
+     uyarı ya da canlı sonuç yazılır; açıklayıcı ipucu (eski `ipucu`) çizilmez (reisim 2026-09-26: "alt tarafa yazılmış küçük mesajlar
+     istemiyorum"). · girdi({ id, alan (veri anahtarı), deger,
      sinif, ek (öznitelikler), hata }) — girdi `data-alan` taşır; sayfa MK.onGirdi'de e.target.dataset.alan'ı okur. */
   MK.alan = function (o) {
     return '<div class="a-alan-grup' + (o.genis ? " a-alan-genis" : "") + '"><label class="a-etiket" for="' + o.id + '">' + o.etiket +
       (o.zorunlu ? ' <span class="a-zorunlu">' + (o.zorunlu === true ? "zorunlu" : o.zorunlu) + "</span>" : "") + "</label>" + o.girdi +
-      (o.hata ? '<p class="a-ipucu a-ipucu-uyari" id="' + o.id + '-ipucu">' + o.hata + "</p>" : o.ipucu ? '<p class="a-ipucu" id="' + o.id + '-ipucu">' + o.ipucu + "</p>" : "") + "</div>";
+      (o.hata ? '<p class="a-ipucu a-ipucu-uyari" id="' + o.id + '-ipucu">' + o.hata + "</p>"
+        : o.uyari ? '<p class="a-ipucu" id="' + o.id + '-ipucu"><span class="a-ipucu-dikkat">' + o.uyari + "</span></p>"
+        : o.sonuc ? '<p class="a-ipucu" id="' + o.id + '-ipucu">' + o.sonuc + "</p>" : "") + "</div>";
   };
   MK.girdi = function (o) {
     return '<input class="a-girdi' + (o.sinif ? " " + o.sinif : "") + '" id="' + o.id + '"' + (o.alan ? ' data-alan="' + o.alan + '"' : "") + ' autocomplete="off" value="' + kacis(o.deger || "") + '"' +

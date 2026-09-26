@@ -66,7 +66,7 @@
   ];
   function turCiz() {
     $("a-sayac").innerHTML = "<b>" + TUR.length + "</b> eğitim türü"; $("a-uyari").innerHTML = ""; $("a-suzgec-kap").innerHTML = ""; $("a-sayfa").innerHTML = "";
-    $("a-liste").innerHTML = '<p class="a-bolum-aciklama">Tekrar süresi türde tanımlıdır; kayıt eklenince tekrar tarihi buradan hesaplanır. Adlar ve süreler örnek (soru 153).</p>' +
+    $("a-liste").innerHTML = 
       MK.tablo({ baslik: "Eğitim türleri", sinif: "a-tablo-egitimtur", sutunlar: T_SUTUN, kayitlar: TUR, href: function (t) { return "#/?tur=" + t.k; } });
   }
 

@@ -99,12 +99,10 @@
     var l = uygunsuzlar().filter(function (u) { return u.durum === "acik"; });
     $("a-pencere-baslik").textContent = "Uygunsuzları indir (Excel)";
     $("a-pencere-govde").innerHTML = '<p class="a-bolum-aciklama"><b>' + l.length + " açık uygunsuzluk</b> · " + kacis(M.unvan) + " · " + MK.tarihYaz(MK.BUGUN) + "</p>" +
-      '<div class="a-serit-kap">' + MK.serit("bilgi", "file-check", "Dosyada her uygunsuzluk bir satır. “Rapor” sütunundaki bağlantı raporu panelde açar (giriş ister; herkese açık dosya bağlantısı üretilmez).") + "</div>" +
       /* önizleme iki sütun (telefonda da okunur); dosyanın kendisinde her alan ayrı sütun */
       '<table class="a-belge-tablo"><thead><tr><th scope="col">Uygunsuzluk</th><th scope="col">Rapor</th></tr></thead><tbody>' +
       l.map(function (u) { return '<tr><td><span class="a-kod">' + u.e.kod + "</span> " + kacis(u.t.ad) + '<span class="a-alt-satir">' + kacis(MV.tesis(u.tesis).ad) + " · " + kacis(u.sinif) + " · " + kacis(u.kriter) + "</span>" +
-        '</td><td><a class="a-no" href="#/r/' + u.rapor.no + '">' + u.rapor.no + "</a></td></tr>"; }).join("") + "</tbody></table>" +
-      '<p class="a-ipucu">Dosyanın sütunları: tesis, ekipman kodu, tür, konum, kriter, sınıf, açıklama, tespit tarihi, rapor (bağlantı), sonraki kontrol. Giderilenler ayrı sayfada.</p>';
+        '</td><td><a class="a-no" href="#/r/' + u.rapor.no + '">' + u.rapor.no + "</a></td></tr>"; }).join("") + "</tbody></table>";
     $("a-pencere-alt").innerHTML = MK.tus({ eylem: "pencere-kapat", ad: "Vazgeç", sinif: "a-tus-ikincil" }) + MK.tus({ eylem: "excel-indir", ad: "İndir (.xlsx)", ikon: "file-check" });
     if (!$("a-pencere").open) $("a-pencere").showModal();
     document.querySelector('[data-eylem="excel-indir"]').focus();

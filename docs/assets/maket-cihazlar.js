@@ -183,7 +183,7 @@
         A("aralik", "Ölçüm aralığı", d.aralik, { ek: ' maxlength="60"' }) +
         (W.v ? "" : A("bitis", "Kalibrasyon geçerlilik bitişi", d.bitis, { zorunlu: true, sinif: "a-girdi-sicil", ek: tarih, ipucu: "Sertifikadaki tarih; sertifika kalibrasyon kaydıyla eklenir." })) +
         '<div class="a-alan-grup a-alan-genis"><label class="a-onay-kutusu"><input type="checkbox" data-aratakip="1"' + (d.ara ? " checked" : "") + '><span>Ara kontrol takip edilsin<span class="a-alt-satir">İsteğe bağlı; her ' + ARA_PERIYOT + " ayda bir (firma ayarı).</span></span></label></div></div>" +
-        (W.v ? "" : '<div class="a-serit-kap">' + MK.serit("bilgi", "warehouse", "Yeni cihaz depoya girer; “Teslim et” ile denetçiye verilir.") + "</div>");
+        "";
     } else if (W.tur === "kal") {
       $("a-pencere-baslik").textContent = W.v.env + " · kalibrasyon kaydı";
       govde = '<p class="a-pencere-ozet"><b>' + W.v.env + " · " + kacis(W.v.ad) + "</b><br>Mevcut bitiş " + MK.tarihYaz(W.v.bitis) + ". Yeni kayıt en son geçerlilik tarihini günceller; eski sertifikalar kalır.</p>" +

@@ -54,7 +54,7 @@
   function listeCiz() {
     var l = uyarilar();
     MK.menuSayi(20, l.length);
-    $("a-uyari").innerHTML = '<div class="a-serit-kap">' + MK.serit("bilgi", "alarm-clock", "Uyarılar yalnız ekranda: bu liste, menüdeki sayaç ve ilgili sayfalardaki şeritler. E-posta, SMS ya da anlık bildirim gönderilmez. Koşul kalkınca uyarı kendiliğinden düşer.") + "</div>";
+    $("a-uyari").innerHTML = "";
     MK.listeCiz({ on: "u", kayitlar: l, sayacId: "a-sayac", listeId: "a-liste",
       sirala: function (x) { return x.slice().sort(function (a, b) { return a.tarih < b.tarih ? -1 : a.tarih > b.tarih ? 1 : 0; }); },
       bosVeri: { ikon: "circle-check", baslik: "Uyarı yok", metin: "Kalibrasyonu 30 gün içinde biten cihaz ve tekrarı 60 gün içinde gelen eğitim yok." },

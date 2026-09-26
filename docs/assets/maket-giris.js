@@ -32,7 +32,7 @@
     if (h === "#/unuttum" || h === "#/gonderildi") {
       f.innerHTML = bas("Parola sıfırlama") +
         (h === "#/gonderildi" ? MK.serit("onay", "circle-check", "Bu adres kayıtlıysa sıfırlama bağlantısı gönderildi. Bağlantı 30 dakika geçerli.") :
-          '<p class="a-bolum-aciklama">Hesabın e-posta adresini yazın; parola belirleme bağlantısı o adrese gider.</p>') +
+          "") +
         (h === "#/gonderildi" ? "" : epostaAlani()) +
         '<div class="a-giris-tuslar">' + (h === "#/gonderildi" ? "" : MK.tus({ eylem: "sifirla", ad: "Bağlantı gönder", ikon: "send" })) +
           '<a class="a-baglanti" href="#/">' + ikon("arrow-left", "a-ikon-kucuk") + "Girişe dön</a></div>";

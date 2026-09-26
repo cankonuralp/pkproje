@@ -117,7 +117,6 @@
           '<div class="a-alan-grup a-alan-genis"><label class="a-etiket" for="f-not">Not</label><textarea class="a-alan a-alan-ince" id="f-not" data-alan="not" maxlength="300" placeholder="Ödeme, ulaşım, ek koşullar">' + kacis(F.not) + "</textarea></div>" +
         "</div></section></div>" +
         '<section class="a-form-bolum a-alan-genis" aria-labelledby="f-b3"><div class="a-alt-bas"><h2 class="a-alt-baslik" id="f-b3">Kalemler</h2><span class="a-sayac">ekipman türü × adet × birim fiyat</span></div>' +
-          '<p class="a-bolum-aciklama">Birim fiyat firmanın fiyat listesinden gelir, teklife özel değiştirilebilir. Raporlar kalemlere türüyle bağlanır.</p>' +
           F.kalemler.map(function (k, i) {
             var a = +k.adet, f = sayi(k.fiyat);
             return '<div class="a-kalem">' +
@@ -131,7 +130,7 @@
             MK.tus({ eylem: "kalem-ekle", ad: "Kalem ekle", ikon: "plus", sinif: "a-tus-ikincil" }) + "</div>" +
           '<dl class="a-bilgi a-bolum-serit" id="f-toplam">' + toplamHtml(top) + "</dl></section>" +
       "</div>" +
-      '<div class="a-form-eylem"><p class="a-adim-not">Taslak olarak kaydedilir; gönderilince durum değişir.</p>' +
+      '<div class="a-form-eylem">' +
         '<a class="a-tus a-tus-ikincil" href="' + (F.no ? "#/t/" + F.no : "#/") + '">Vazgeç</a>' + MK.tus({ eylem: "kaydet", ad: "Kaydet", ikon: "check" }) + "</div>";
     if (odak) { var el = $(odak); if (el) el.focus(); }
   }

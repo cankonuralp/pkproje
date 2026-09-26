@@ -159,7 +159,7 @@
         }).join(""), '<span class="a-sayac" id="r-kriter-say"><b>' + cevaplanan + "</b> / " + r.kriter.length + " madde</span>") +
       bolum(6, "r-b5", "Test değerleri", '<div class="a-form">' + MV.testler(t).map(function (x, i) {
           var s = testSonuc(x, r.test[i]);
-          return MK.alan({ id: "r-t" + i, etiket: kacis(x.ad) + " (" + x.birim + ")", zorunlu: !oku, ipucu: '<span id="r-t' + i + '-sonuc">' + testIpucu(x, r.test[i]) + "</span>", hata: "",
+          return MK.alan({ id: "r-t" + i, etiket: kacis(x.ad) + " (" + x.birim + ")", zorunlu: !oku, sonuc: '<span id="r-t' + i + '-sonuc">' + testIpucu(x, r.test[i]) + "</span>", hata: "",
             girdi: MK.girdi({ id: "r-t" + i, alan: "t" + i, deger: r.test[i], sinif: "a-girdi-sicil" + (oku ? " a-girdi-oku" : ""), ek: ' inputmode="decimal" maxlength="10"' + (oku ? " readonly" : "") + (s === false ? ' aria-invalid="true"' : "") }) });
         }).join("") + "</div>") +
       (elektrik(t) ? bolum(7, "r-b6", "Pano sigortaları", sigortaHtml(r, oku)) : "") +
@@ -200,7 +200,7 @@
         return oku ? "" : '<div class="a-eylem"><div class="a-eylem-tuslar">' + MK.tus({ eylem: "sigorta-ac", ad: x.durum === "onayli" ? "Düzelt" : "Kontrol et", ikon: "pencil", sinif: "a-tus-ikincil", veri: { no: x.no } }) + "</div></div>";
       } }
     ];
-    return '<p class="a-bolum-aciklama">Pano fotoğrafı çekilir; sigortalar görsel yapay zekâ ile okunur ve <b>öneri</b> olarak düşer. Siz kontrol edip onaylamadan rapora yazılmaz.</p>' +
+    return "" +
       (oku ? "" : '<div class="a-eylem-cubugu a-bolum-serit">' + MK.tus({ eylem: "sigorta-oku", ad: d ? "Yeniden oku" : "Fotoğraftan oku", ikon: "camera", sinif: d ? "a-tus-ikincil" : "a-tus-birincil" }) +
         MK.tus({ eylem: "sigorta-ekle", ad: "Elle ekle", ikon: "plus", sinif: "a-tus-ikincil" }) + (bek.length > dusuk.length ? MK.tus({ eylem: "sigorta-onayla", ad: "Önerileri onayla (" + (bek.length - dusuk.length) + ")", ikon: "check", sinif: "a-tus-ikincil" }) : "") + "</div>") +
       (d ? '<div class="a-bolum-serit">' + (bek.length ? MK.serit(dusuk.length ? "uyari" : "bilgi", dusuk.length ? "triangle-alert" : "eye", d.length + " sigorta · <b>" + bek.length + "</b> onay bekliyor" + (dusuk.length ? " · " + dusuk.length + " satırda okuma emin değil: tek tek kontrol edin (toplu onaya girmez)." : ".")) : MK.serit("onay", "circle-check", d.length + " sigorta onaylandı.")) + "</div>" +
@@ -226,7 +226,7 @@
       $("a-pencere-alt").innerHTML = MK.tus({ eylem: "pencere-kapat", ad: "Vazgeç", sinif: "a-tus-ikincil" }) + MK.tus({ eylem: "pencere-kaydet", ad: "Kaydet ve onayla", ikon: "check" });
     } else {
       $("a-pencere-baslik").textContent = "Sonraki kontrol tarihi";
-      $("a-pencere-govde").innerHTML = '<div class="a-serit-kap">' + MK.serit("bilgi", "calendar-check", "Varsayılan: bugün + tür periyodu (" + W.r.t.periyot + " ay). Değiştirmek gerekçe ister; gerekçe raporda ve hareket kaydında görünür (§4.7).") + "</div>" +
+      $("a-pencere-govde").innerHTML = "" +
         '<div class="a-form">' + MK.alan({ id: "w-tarih", etiket: "Sonraki kontrol", zorunlu: true, hata: h.tarih, girdi: MK.girdi({ id: "w-tarih", alan: "tarih", deger: d.tarih, sinif: "a-girdi-sicil", ek: ' inputmode="numeric" maxlength="10"', hata: h.tarih }) }) +
         '<div class="a-alan-grup a-alan-genis"><label class="a-etiket" for="w-gerekce">Gerekçe <span class="a-zorunlu">zorunlu</span></label><textarea class="a-alan a-alan-ince" id="w-gerekce" data-alan="gerekce" maxlength="200"' + (h.gerekce ? ' aria-invalid="true"' : "") + ' aria-describedby="w-gerekce-ipucu">' + kacis(d.gerekce) + "</textarea>" +
           (h.gerekce ? '<p class="a-ipucu a-ipucu-uyari" id="w-gerekce-ipucu">' + h.gerekce + "</p>" : '<p class="a-ipucu" id="w-gerekce-ipucu">ör. üretici talimatı daha kısa periyot istiyor</p>') + "</div></div>";

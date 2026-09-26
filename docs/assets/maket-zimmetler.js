@@ -165,11 +165,10 @@
       '<div class="a-alan-grup a-alan-genis"><label class="a-etiket" for="w-not">Durum notu</label><textarea class="a-alan a-alan-ince" id="w-not" data-alan="not" maxlength="300" placeholder="Eksik parça, hasar, aksesuarlar">' + kacis(d.not) + "</textarea></div>" +
       '<div class="a-alan-grup a-alan-genis"><p class="a-etiket">Fotoğraflar</p><div class="a-fotolar">' + fotolar(d.foto, "Teslim") +
         MK.tus({ eylem: "foto-ekle", ad: "Fotoğraf ekle", ikon: "camera", sinif: "a-tus-ikincil" }) + "</div>" +
-        (d.foto ? '<p class="a-ipucu">Telefonda kamera açılır; masaüstünde dosya seçilir.</p>'
-          : '<p class="a-ipucu"><span class="a-ipucu-dikkat">Fotoğraf yok: teslim fotoğrafsız da kaydedilir.</span> Teslim anındaki durum sonradan tartışılmasın diye önerilir.</p>') + "</div>" +
+        (d.foto ? "" : '<p class="a-ipucu"><span class="a-ipucu-dikkat">Fotoğraf yok.</span></p>') + "</div>" +
       "</div>" +
       (v && MV.kalDurum(v) === "gecti" && d.alan && d.alan !== "depo" ? '<div class="a-serit-kap">' + MK.serit("uyari", "triangle-alert", "Bu cihazın kalibrasyonu geçti: teslim alanın raporları, cihaz zimmetinde kaldıkça onaya gönderilemez.") + "</div>" : "") +
-      '<div class="a-serit-kap">' + MK.serit("bilgi", "file-signature", "Kişiye teslimde zimmet formu güncellenir; imzalatılıp taraması personel kartına yüklenir (Personel › Zimmetindekiler).") + "</div>";
+      "";
     $("a-pencere-alt").innerHTML = MK.tus({ eylem: "pencere-kapat", ad: "Vazgeç", sinif: "a-tus-ikincil" }) + MK.tus({ eylem: "pencere-kaydet", ad: "Teslimi kaydet", ikon: "check" });
     if (odak) { var el = $(odak); if (el) el.focus(); }
   }

@@ -1373,6 +1373,9 @@ revizyon, alan kopyalama, hafif kusur devri, meslek eşleşme denetimi).
 - Emsal ürünler: https://opwire.app/iso-17020-periyodik-kontrol-yazilimi/ · https://17020muayene.vidco.com.tr/ · https://akuple.com/asansor-kontrol-yazilimi/ · https://ensyazilim.com/
 
 ## 11 · Değişiklik günlüğü
+- 2026-09-26 (50): **Genel temizlik** (§9 on dokuzuncu tur genel ilkesi, bütün maketler): ortak form alanı artık altına yalnız hata, kaydı
+  durdurmayan uyarı ya da canlı sonuç yazar (açıklayıcı ipucu çizilmez); açıklama paragrafları, "makette …" notları ve açıklayıcı bilgi
+  şeritleri kalktı. Bütün maketler yeniden ölçüldü, hepsi temiz (iki deneme yeni metne göre güncellendi: M4 fotoğraf uyarısı, M5 tesis sayfası).
 - 2026-09-26 (49): **M7–M16 toplu cevap** (§9 yirmi birinci tur): 160 hayır (plan açılırken girilir), 95 gerekçe yok, 99 raporlar birleşmez
   (her rapor ayrı imza), ötekiler kabul. Maketler sırayla yenileniyor; bütün maketler onaylanmadan kod yok.
 - 2026-09-26 (48): **Süreç değişti** (§9 yirminci tur): M7–M16'nın soruları sadeleştirilip tek listede soruldu (MAKET-PLANI.md).

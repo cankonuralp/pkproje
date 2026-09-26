@@ -170,7 +170,7 @@
   function hesapHtml(p) {
     var h = p.hesap, bas = '<div class="a-alt-bas"><h2 class="a-alt-baslik" id="a-b-hesap" tabindex="-1">Giriş hesabı ve roller</h2>';
     if (!h) return '<section class="a-bolum" aria-labelledby="a-b-hesap">' + bas + "</div>" +
-      '<p class="a-bolum-aciklama">Giriş hesabı yok. Hesap açılınca geçici bir parola oluşur; kişiye siz iletirsiniz, kişi ilk girişten sonra parolasını değiştirebilir.</p>' +
+      '<p class="a-bolum-aciklama">Giriş hesabı yok.</p>' +
       (p.durum === "etkin" ? '<div class="a-eylem-cubugu a-eylem-sol">' + MK.tus({ eylem: "hesap-ac", ad: "Giriş hesabı aç", ikon: "key-round" }) + "</div>"
         : MK.serit("bilgi", "ban", "Ayrılan personele hesap açılmaz.")) + "</section>";
     var sec = SECILI || h.roller, pasif = h.durum === "pasif", degisti = sec.slice().sort().join() !== h.roller.slice().sort().join();
@@ -184,7 +184,7 @@
       (pasif ? '<div class="a-bolum-serit">' + MK.serit("bilgi", "ban", "Hesap kapalı: giriş yapamaz; roller korunur, kayıtları ve imzaladığı raporlar yerinde kalır.") + "</div>" : "") +
       '<p class="a-etiket a-etiket-ust">Roller</p>' + rolListesi(sec, "data-rol", pasif, p) +
       /* bölüm içi çubuk: telefonda yapışkan DEĞİL (form sayfası çubuğu değil; ölçüm 2026-09-25: rol satırlarının üstüne biniyordu) */
-      (pasif ? "" : '<div class="a-bolum-eylem"><p class="a-adim-not">' + (degisti ? "Kaydedilmemiş değişiklik var." : "Bir kişinin birden çok rolü olabilir.") + "</p>" +
+      (pasif ? "" : '<div class="a-bolum-eylem"><p class="a-adim-not">' + (degisti ? "Kaydedilmemiş değişiklik var." : "") + "</p>" +
         (degisti ? MK.tus({ eylem: "rol-geri", ad: "Vazgeç", sinif: "a-tus-ikincil" }) : "") +
         MK.tus({ eylem: "rol-kaydet", ad: "Rolleri kaydet", ikon: "check", kapali: !degisti || !sec.length }) + "</div>") +
       "</section>";
@@ -254,7 +254,6 @@
     return '<section class="a-bolum" aria-labelledby="a-b-ozluk"><div class="a-alt-bas"><h2 class="a-alt-baslik" id="a-b-ozluk">Özlük dosyası</h2>' +
         '<span class="a-sayac"><b>' + l.length + "</b> belge</span>" +
         '<div class="a-eylem-cubugu a-bolum-tus">' + MK.tus({ eylem: "belge-ekle", ad: "Belge ekle", ikon: "plus", sinif: "a-tus-ikincil" }) + "</div></div>" +
-      '<p class="a-bolum-aciklama">Yalnız firma yöneticisi görür. Eğitim sertifikaları Eğitimler modülünde tutulur (yukarıdaki Eğitim kutusu).</p>' +
       '<div class="a-liste-kap">' + MK.tablo({ baslik: "Özlük dosyası", sinif: "a-tablo-ozluk", sutunlar: OZLUK_SUTUN, kayitlar: l }) + "</div></section>";
   }
 
@@ -269,7 +268,6 @@
         '<p class="a-nesne-alt">' + ikon("user", "a-ikon-kucuk") + "<span>" + kacis(p.ad) + " · " + z.length + " varlık</span></p></div>" +
         '<div class="a-eylem-cubugu">' + MK.tus({ eylem: "kapsam-disi", ad: "PDF indir", ikon: "file-text", sinif: "a-tus-ikincil", veri: { ne: "PDF indirme (sunucuda üretilir)" } }) +
           MK.tus({ eylem: "zform-yukle", ad: "İmzalı taramayı yükle", ikon: "file-plus" }) + "</div></div>" +
-      '<div class="a-serit-kap">' + MK.serit("bilgi", "circle-alert", "Temel format. Firma kendi formunu isterse o firmaya özel düzenlenir. Sıra: PDF indir → yazdır, iki taraf imzalar → taramayı (PDF ya da fotoğraf) yükle.") + "</div>" +
       MB.zimmetFormu({ p: p, varliklar: z, no: formNo(p), tarih: MK.BUGUN, eden: teslimEden() });
   }
 
@@ -284,7 +282,6 @@
         '<p class="a-nesne-alt">' + ikon("file-check", "a-ikon-kucuk") + "<span>" + kacis(p.ad) + " · " + MK.tarihYaz(f.tarih) + " · " + f.kapsam.length + " varlık · " + kacis(f.dosya) + "</span></p></div>" +
         '<div class="a-eylem-cubugu">' + MK.tus({ eylem: "kapsam-disi", ad: "Dosyayı indir", ikon: "file-text", sinif: "a-tus-ikincil", veri: { ne: "Tarama dosyasını indirme" } }) +
           '<a class="a-tus a-tus-ikincil" href="#/p/' + p.id + '/zimmet-gecmisi">' + ikon("history", "a-ikon-kucuk") + "Zimmet geçmişi</a></div></div>" +
-      '<div class="a-serit-kap">' + MK.serit("bilgi", "circle-alert", "Makette taramanın yerine formun imzalı hâli gösterilir; uygulamada yüklenen PDF ya da fotoğraf burada açılır (yalnız firma içinde, kısa ömürlü bağlantı).") + "</div>" +
       MB.zimmetFormu({ p: p, varliklar: f.kapsam.map(MV.varlik), no: f.no, tarih: f.tarih, eden: teslimEden(), imzali: true });
   }
   /* zimmet geçmişi (reisim 2026-09-25): hangi varlık hangi tarihte verildi, hangi tarihte kime / nereye geri alındı */
@@ -374,7 +371,7 @@
     } else if (W.mod === "yeni") {
       $("a-hesap-baslik").textContent = "Yeni geçici parola";
       govde = '<p class="a-pencere-ozet"><b>' + kacis(p.ad) + "</b> · " + kacis(p.eposta) + "</p>" +
-        '<p class="a-bolum-aciklama">Yeni geçici parola oluşunca eski parola geçersiz olur ve açık oturumlar kapanır. Parola bir kez gösterilir.</p>';
+        "";
       alt = MK.tus({ eylem: "pencere-kapat", ad: "Vazgeç", sinif: "a-tus-ikincil" }) + MK.tus({ eylem: "parola-olustur", ad: "Parola oluştur", ikon: "key-round" });
     } else {
       var eg = epostaGecerli(W.eposta), hazir = eg && W.roller.length;
@@ -407,7 +404,7 @@
       '<div class="a-alan-grup a-alan-genis"><p class="a-etiket">Dosya <span class="a-zorunlu">zorunlu</span></p>' +
         '<div class="a-dosya-sec">' + MK.tus({ eylem: "dosya-sec", ad: B.dosya ? "Başka dosya seç" : "Dosya seç", ikon: "file-plus", sinif: "a-tus-ikincil" }) +
         '<span class="a-dosya-ad" id="b-dosya">' + (B.dosya ? kacis(B.dosya) : '<span class="a-deger-yok">Dosya seçilmedi</span>') + "</span></div>" +
-        '<p class="a-ipucu">PDF ya da fotoğraf; yalnız firma içinde açılır.</p></div></div>';
+        "</div></div>";
     $("a-belge-alt").innerHTML = MK.tus({ eylem: "pencere-kapat", ad: "Vazgeç", sinif: "a-tus-ikincil" }) + MK.tus({ eylem: "belge-kaydet", ad: "Ekle", ikon: "check", kapali: !(B.tur && B.dosya) });
     if (odak) { var el = $(odak); if (el) el.focus(); }
   }
@@ -450,11 +447,10 @@
           alan("ekipnet", "EKİPNET kayıt no", girdi("ekipnet", "a-girdi-sicil", F.ekipnet, ' maxlength="20" inputmode="numeric"'), "Inspector'da boşsa uyarı görünür.", false) +
         "</div></section>" +
         '<section class="a-form-bolum" aria-labelledby="f-b4"><h2 id="f-b4">Giriş hesabı</h2>' +
-          '<p class="a-bolum-aciklama">' + (p && p.hesap ? "Hesap var: " + p.hesap.roller.map(function (r) { return MV.rol(r).ad; }).join(", ") + ". Roller ve parola kişinin kartında değişir."
-            : p ? "Bu kişinin giriş hesabı yok; kartındaki “Giriş hesabı aç” geçici parola verir." : "Kaydettikten sonra kişinin kartındaki “Giriş hesabı aç” geçici parola verir.") + "</p>" +
+          '<p class="a-bolum-aciklama">' + (p && p.hesap ? "Roller: " + p.hesap.roller.map(function (r) { return MV.rol(r).ad; }).join(", ") : "Hesap yok") + "</p>" +
         "</section>" +
       "</div>" +
-      '<div class="a-form-eylem"><p class="a-adim-not">Zorunlu alanlar işaretli.</p>' +
+      '<div class="a-form-eylem">' +
         '<a class="a-tus a-tus-ikincil" href="' + (p ? "#/p/" + p.id : "#/") + '">Vazgeç</a>' +
         MK.tus({ eylem: "kaydet", ad: "Kaydet", ikon: "check" }) + "</div>";
     if (odak) { var el = $(odak); if (el) el.focus(); }

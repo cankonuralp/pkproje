@@ -96,7 +96,6 @@
       /* rapor formatı: firmanın kendi PDF'i (reisim 2026-09-26). Sorular bu formattan gelir — kurgusu M8'de. */
       '<section class="a-bolum" aria-labelledby="a-b-pdf"><div class="a-alt-bas"><h2 class="a-alt-baslik" id="a-b-pdf">Rapor formatı</h2>' +
         (p ? '<span class="a-sayac"><b>' + t.pdf.length + "</b> sürüm</span>" + MK.tus({ eylem: "pdf-ac", ad: "PDF'i aç", ikon: "eye", sinif: "a-tus-ikincil a-bolum-tus", veri: { k: t.k } }) : "") + "</div>" +
-        '<p class="a-bolum-aciklama">Firmanın bu tür için kullandığı rapor çıktısı. “Rapor oluştur” dendiğinde sorular bu formattan gelir, sonuç uygun ya da uygun değil çıkar. Eski raporlar kendi sürümüyle açılır.</p>' +
         (p ? '<div class="a-liste-kap">' + MK.tablo({ baslik: "Rapor formatı sürümleri", sinif: "a-tablo-pdf", sutunlar: pdfSutun(p), kayitlar: t.pdf }) + "</div>"
           : '<div class="a-serit-kap">' + MK.serit("uyari", "file-plus", "Bu türün rapor formatı yüklenmedi. PDF yüklenince bu türde rapor oluşturulur.") + "</div>") +
       "</section>" +
@@ -133,7 +132,7 @@
       '<div class="a-dosya-sec">' + MK.tus({ eylem: "pdf-sec", ad: d.dosya ? "Başka dosya seç" : "PDF seç", ikon: "file-plus", sinif: "a-tus-ikincil" }) +
       '<span class="a-dosya-ad" id="w-dosya">' + (d.dosya ? kacis(d.dosya) : '<span class="a-deger-yok">Dosya seçilmedi</span>') + "</span></div>" +
       (W.hata.dosya ? '<p class="a-ipucu a-ipucu-uyari" id="w-dosya-ipucu">' + W.hata.dosya + "</p>"
-        : '<p class="a-ipucu">Rapor çıktısı nasıl görünsün istiyorsanız o PDF. ' + (W.tur === "format" ? "Eski raporlar önceki sürümle kalır." : "Sonra da yüklenebilir.") + "</p>") + "</div>";
+        : "") + "</div>";
   }
   function pencereCiz(odak) {
     var d = W.d, h = W.hata, t = W.id ? MV.tur(W.id) : null, A = function (id, etiket, deger, o) {
@@ -156,7 +155,7 @@
         A("periyot", "Periyot (ay)", d.periyot, { zorunlu: true, sinif: "a-girdi-sicil", ek: ' inputmode="numeric" maxlength="3"', ipucu: "Sonraki kontrol önerisi bununla hesaplanır." }) +
         A("sure", "Tahmini kontrol süresi (dk)", d.sure, { sinif: "a-girdi-sicil", ek: ' inputmode="numeric" maxlength="3"', ipucu: "İsteğe bağlı; plan saat önerisinde kullanılır." }) +
         (W.id ? "" : dosyaSec(d)) +
-        '<div class="a-alan-grup a-alan-genis"><p class="a-etiket">Kontrol metodu standartları</p><p class="a-bolum-aciklama">Firmanın kütüphanesinden; hiçbiri seçilmezse metot rapor anında yazılır.</p>' +
+        '<div class="a-alan-grup a-alan-genis"><p class="a-etiket">Kontrol metodu standartları</p>' +
           '<ul class="a-secim-listesi">' + MV.STANDARTLAR.map(function (s) {
             return '<li><label class="a-secim-satir"><input type="checkbox" data-std="' + s.k + '"' + (d.std.indexOf(s.k) >= 0 ? " checked" : "") + '><span class="a-secim-metin"><span class="a-kod">' + s.no + '</span><span class="a-alt-satir">' + kacis(s.konu) + "</span></span></label></li>";
           }).join("") + "</ul></div></div>";
@@ -235,7 +234,7 @@
   $("a-pencere").addEventListener("close", function () { var r = rota(); if (r.pencere) history.replaceState(null, "", r.id ? "#/tur/" + r.id : "#/"); });
 
   MK.kabuk({ modul: 5, kullanici: { bas: "SY", ad: "Selin Yıldız", rol: "Mekanik yönetici" } });
-  $("a-tur-bilgi").innerHTML = MK.serit("bilgi", "file-text", "Her türe firmanızın rapor formatını PDF olarak yükleyin; denetçi “Rapor oluştur” dediğinde rapor bu formata göre hazırlanır. Ekipmanlar planın içinde görünür.");
+  $("a-tur-bilgi").innerHTML = "";
   $("a-suzgec-kap").innerHTML = MK.suzgecHtml("t");
   MK.seciciCiz("t"); goster(false);
 })();

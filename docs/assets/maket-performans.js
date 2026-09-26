@@ -126,7 +126,6 @@
           return { etiket: x.p.ad, parcalar: [["k", x.o.kazanc]], deger: tl(x.o.kazanc), alt: x.o.rapor + " rapor · " + x.o.gun + " gün" };
         }) }) + "</div>" +
       '<section class="a-bolum" aria-labelledby="a-b-kisi"><div class="a-alt-bas"><h2 class="a-alt-baslik" id="a-b-kisi">Personel</h2><span class="a-sayac" id="a-p-sayac"></span></div>' +
-        '<p class="a-bolum-aciklama">Kazanç, raporun bağlı olduğu teklif kaleminin birim fiyatı (KDV hariç; teklif yoksa fiyat listesi) — raporu yazan inspector\'a yazılır.</p>' +
         MK.suzgecHtml("p") + '<div class="a-liste-kap" id="a-p-liste"></div></section>';
     MK.suzgecKur("p");
   }
