@@ -2,32 +2,32 @@
  "maket": "m8",
  "tarih": "2026-09-26",
  "arac": "tools/olc-bulut.mjs --etkilesim (başsız tarayıcı, 1920 açık tema; gen verilen denemede o genişlik)",
- "toplam": 17,
- "gecen": 17,
+ "toplam": 21,
+ "gecen": 21,
  "denemeler": [
   {
-   "ad": "kriter cevaplanınca sayaç güncellenir, odak basılan seçimde",
+   "ad": "kriter seçilince sayaç güncellenir, odak seçimde",
    "gen": 1920,
    "sayfa": "maket/rapor.html",
    "hash": "#/r/ET-1009",
    "gecti": true
   },
   {
-   "ad": "yapılmadı seçilince sonuç sorulmaz",
+   "ad": "Uygulanamaz da cevaptır, açıklama sorulmaz",
    "gen": 1920,
    "sayfa": "maket/rapor.html",
    "hash": "#/r/ET-1009",
    "gecti": true
   },
   {
-   "ad": "hafif kusurda açıklama istenir",
+   "ad": "Uygun değilde kusur açıklaması ve fotoğraf",
    "gen": 1920,
    "sayfa": "maket/rapor.html",
    "hash": "#/r/ET-1009",
    "gecti": true
   },
   {
-   "ad": "sınır dışı test değeri: işaretlenir, öneri kullanılamaz (odak yerinde)",
+   "ad": "sınır dışı test değeri: işaretlenir, öneri Uygun değil (odak yerinde)",
    "gen": 1920,
    "sayfa": "maket/rapor.html",
    "hash": "#/r/ET-1009",
@@ -48,14 +48,14 @@
    "gecti": true
   },
   {
-   "ad": "kalibrasyonu geçmiş cihaz: gönder kapalı, sebebi yazılı",
+   "ad": "ölçüm cihazları tablo (cihaz · cihaz no · kalibrasyon tarihi); geçmiş cihazda gönder kapalı, sebebi yazılı",
    "gen": 1920,
    "sayfa": "maket/rapor.html",
    "hash": "#/r/ET-1009",
    "gecti": true
   },
   {
-   "ad": "ağır kusurda Kullanılabilir seçilemez",
+   "ad": "uygun değil madde varken sonuç Uygun: uyarı, seçim kalır",
    "gen": 1920,
    "sayfa": "maket/rapor.html",
    "hash": "#/r/ET-1009",
@@ -69,7 +69,7 @@
    "gecti": true
   },
   {
-   "ad": "geri gönderilen rapor: test girilince hazır",
+   "ad": "geri gönderilen rapor: test girilince pencere açmadan gönderilir",
    "gen": 1920,
    "sayfa": "maket/rapor.html",
    "hash": "#/r/ZV-1007",
@@ -97,14 +97,42 @@
    "gecti": true
   },
   {
-   "ad": "sonraki kontrol gerekçesiz değişir",
+   "ad": "Onaya göndermeden önce / N eksik bölümü yok",
+   "gen": 1920,
+   "sayfa": "maket/rapor.html",
+   "hash": "#/r/ET-1009",
+   "gecti": true
+  },
+  {
+   "ad": "etiketler: Ekipman bilgileri, Ölçüm cihazları, Muayene uzmanı yorumu, sonuç Uygun / Uygun değil",
+   "gen": 1920,
+   "sayfa": "maket/rapor.html",
+   "hash": "#/r/ET-1009",
+   "gecti": true
+  },
+  {
+   "ad": "başlangıç değişince sonraki kontrol kendiliğinden (odak yerinde)",
    "gen": 1920,
    "sayfa": "maket/rapor.html",
    "hash": "#/r/KP-1004",
    "gecti": true
   },
   {
-   "ad": "Git: bölüme kayar, başlığa odaklanır",
+   "ad": "sonraki kontrol el ile yazılınca başlangıç değişse de kalır",
+   "gen": 1920,
+   "sayfa": "maket/rapor.html",
+   "hash": "#/r/KP-1004",
+   "gecti": true
+  },
+  {
+   "ad": "bitiş başlangıçtan önce: hata yerinde, odak kaçmaz",
+   "gen": 1920,
+   "sayfa": "maket/rapor.html",
+   "hash": "#/r/ET-1009",
+   "gecti": true
+  },
+  {
+   "ad": "başlık kapanır, yeniden çizimde kapalı kalır",
    "gen": 1920,
    "sayfa": "maket/rapor.html",
    "hash": "#/r/ET-1009",

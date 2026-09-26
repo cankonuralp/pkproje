@@ -16,7 +16,7 @@
     var sonraki = o ? o.sonraki : null, hafif = o && /Hafif/.test(o.sonuc), kusurlu = o && /^Kusurlu/.test(o.sonuc);
     var metot = o && (o.metot === "uretici" ? "Üretici talimatı" : o.metot === "risk" ? "Risk değerlendirmesi" : MV.standart(o.metot || t.std[0]) ? (function (s) { return s.no + ":" + s.surum + " — " + s.konu; })(MV.standart(o.metot || t.std[0])) : "Üretici talimatı");
     /* hafif / ağır yalnız Bakanlık formatı yürürlükte olan türde (§4.5, Ek-III 1.9.1); öteki türde "Kusurlu" */
-    var hafifAd = zorunlu ? "Hafif kusur" : "Kusurlu", agirAd = zorunlu ? "Ağır kusur" : "Kusurlu";
+    var hafifAd = "Uygun değil", agirAd = "Uygun değil";   /* reisim 2026-09-26: madde sonucu Uygun · Uygun değil · Uygulanamaz */
     var kriter = MV.kriterler(t), test = MV.testler(t);
     var surum = t.pdf && t.pdf[0] ? t.pdf[0].surum : t.sablon ? t.sablon.split(" · ")[0] : "v1", formKod = zorunlu ? t.format : f.kisa + "-FR-" + t.k + "-" + surum.slice(1);
     return '<article class="a-belge" aria-label="Rapor önizlemesi">' +
@@ -46,16 +46,16 @@
         bilgi("Seri no", d(o && '<span class="a-kod">' + o.e.seri + "</span>", "ekipman etiketi")) + bilgi("Kullanım yeri", d(o && kacis(o.e.konum), "ekipman konumu")) +
         bilgi("Kullanım amacı", d(o && "Üretim ve sevkiyat", "saha")) + "</dl>") +
       bolum("4", "Test değerleri", tablo(["Ölçüm", "Değer", "Sınır"], test.map(function (x) { return [x.ad, o ? x.ornek + " " + x.birim : bos, MV.sinirYaz(x)]; }), o ? "" : "saha: inspector ölçer")) +
-      bolum("5", "Ölçüm aletleri", o ? tablo(["Cihaz", "Seri no", "Kalibrasyon geçerlilik"], o.cihaz.length ? o.cihaz.map(function (v) { return [kacis(v.ad + " " + v.env), '<span class="a-kod">' + v.seri + "</span>", MK.tarihYaz(v.bitis)]; }) : [[bos, bos, bos]])
+      bolum("5", "Ölçüm cihazları", o ? tablo(["Cihaz", "Cihaz no", "Kalibrasyon tarihi"], o.cihaz.length ? o.cihaz.map(function (v) { return [kacis(v.ad), '<span class="a-kod">' + v.seri + "</span>", MK.tarihYaz(v.kal[0].tarih)]; }) : [[bos, bos, bos]])
         : '<p class="a-bolum-aciklama">' + kaynak("inspector'ın zimmetindeki, bu grup için uygun cihazlar otomatik gelir (seçilmez)") + "</p>") +
-      bolum("6", "Muayene kriterleri ve testler", tablo(["No", "Kriter", "Yapıldı", "Sonuç"], kriter.map(function (k, i) {
-        return [String(i + 1), kacis(k), o ? "Yapıldı" : '<span class="a-belge-kutu"></span>Yapıldı · yapılmadı · uygulanamaz', o ? (hafif && i === 2 ? hafifAd : kusurlu && i === 1 ? agirAd : "Uygun") : bos];
+      bolum("6", "Muayene kriterleri", tablo(["No", "Muayene kriteri", "Sonuç"], kriter.map(function (k, i) {
+        return [String(i + 1), kacis(k), o ? (hafif && i === 2 ? hafifAd : kusurlu && i === 1 ? agirAd : "Uygun") : '<span class="a-belge-kutu"></span>Uygun · uygun değil · uygulanamaz'];
       }), o ? "" : "saha: her madde ayrı")) +
       bolum("7", "Kusur açıklamaları", o ? (hafif || kusurlu ? "<p>" + (hafif ? hafifAd + ": madde 3'te okunabilirliği azaltan hasar." + (zorunlu ? " Sonraki kontrole kadar giderilmeli." : "") : agirAd + ": madde 2'de izin verilen sınırın üstünde aşınma. Giderilene kadar kullanılamaz.") + "</p>" : '<p class="a-deger-yok">Kusur yok.</p>')
         : '<p class="a-bolum-aciklama">' + (zorunlu ? "Her kusur ayrı yazılır; sınıf hafif ya da ağır." : "Her kusur ayrı yazılır.") + "</p>") +
-      bolum("8", "Notlar", '<p class="a-deger-yok">—</p>') +
-      bolum("9", "Sonuç ve kanaat", '<p class="a-belge-secenek"><span class="a-belge-kutu' + (o && !kusurlu ? " a-belge-kutu-dolu" : "") + '"></span>Kullanılabilir</p>' +
-        '<p class="a-belge-secenek"><span class="a-belge-kutu' + (kusurlu ? " a-belge-kutu-dolu" : "") + '"></span>Kusur giderilene kadar kullanılamaz</p>') +
+      bolum("8", "Muayene uzmanı yorumu", '<p class="a-deger-yok">—</p>') +
+      bolum("9", "Sonuç ve kanaat", '<p class="a-belge-secenek"><span class="a-belge-kutu' + (o && !kusurlu ? " a-belge-kutu-dolu" : "") + '"></span>Uygun</p>' +
+        '<p class="a-belge-secenek"><span class="a-belge-kutu' + (kusurlu ? " a-belge-kutu-dolu" : "") + '"></span>Uygun değil</p>') +
       bolum("10", "Yetkili kişi", '<dl class="a-bilgi">' +
         bilgi("Ad soyad", d(o && kacis(o.p.ad), "personel")) + bilgi("Meslek", d(o && kacis(MV.meslekAd(o.p)), "personel")) +
         bilgi("Diploma no", d(o && '<span class="a-kod">' + o.p.diploma + "</span>", "personel")) + bilgi("Oda sicil no", d(o && (o.p.oda ? '<span class="a-kod">' + o.p.oda + "</span>" : bos), "personel")) +

@@ -769,14 +769,21 @@ a.a-yuz:hover { border-color: var(--kenar-alan); background: var(--zemin); }
 }
 .a-belge-alt { display: flex; justify-content: space-between; flex-wrap: wrap; gap: 8px; margin-top: 16px; padding-top: 8px; border-top: 1px solid var(--kenar); color: var(--yazi2); font-size: var(--boy-etiket); }
 
-/* M8 — saha raporu: bölümler alt alta; kriter satırı = madde + iki bölümlü seçim (yapıldı mı · sonuç). Seçim, ekle penceresindeki
-   a-sekmeler ailesi (ikinci aile yok); sonuç seçiminin basılı hâli durum rengini taşır (şeritlerle aynı renk çiftleri). */
+/* M8 — saha raporu: bölümler alt alta, her başlık açılır kapanır (reisim 2026-09-26); kriter satırı = solda madde, sağda seçim
+   (Uygun · Uygun değil · Uygulanamaz, formun tek seçim alanı). Sonuç seçiminin basılı hâli durum rengini taşır (şeritlerle aynı renk çiftleri). */
 .a-bolum-rapor { margin: 0 0 16px; }
-.a-kriter { display: grid; gap: 8px; padding: 12px 0; border-top: 1px solid var(--kenar); }
+.a-bolum-acilir > summary { list-style: none; min-height: var(--tus-y); margin: 0; cursor: pointer; }
+.a-bolum-acilir > summary::-webkit-details-marker { display: none; }
+.a-bolum-acilir[open] > summary { margin-bottom: 8px; }
+.a-acilir-ok { margin-left: auto; color: var(--yazi2); }
+.a-bolum-acilir:not([open]) .a-acilir-ok { transform: rotate(-90deg); }
+.a-kriter { display: grid; grid-template-columns: minmax(0, 1fr) 13rem; align-items: center; gap: 8px 16px; padding: 12px 0; border-top: 1px solid var(--kenar); }
 .a-kriter-ad { display: flex; gap: 8px; margin: 0; font-weight: 600; }
 .a-kriter-no { flex: none; min-width: 20px; color: var(--yazi2); font-variant-numeric: tabular-nums; }
-.a-kriter-cevap { display: flex; flex-wrap: wrap; align-items: center; gap: 8px 12px; }
-.a-kriter-cevap .a-sekmeler { margin: 0; }
+.a-kriter-cevap { min-width: 0; }
+.a-kriter-kusur { grid-column: 1 / -1; display: grid; gap: 8px; }
+.a-kriter .a-secim .a-secici-liste { left: auto; right: 0; width: auto; min-width: 100%; white-space: nowrap; }   /* telefonda seçenek adı kırpılmaz */
+.a-tablo-olcum .a-uyari-metin { display: inline; font-size: inherit; }
 .a-sekme-onay[aria-pressed="true"] { background: var(--onay-zemin); color: var(--onay-yazi); }
 .a-sekme-uyari[aria-pressed="true"] { background: var(--uyari-zemin); color: var(--uyari-yazi); }
 .a-sekme-hata[aria-pressed="true"] { background: var(--hata-zemin); color: var(--hata-yazi); }
@@ -784,6 +791,7 @@ a.a-yuz:hover { border-color: var(--kenar-alan); background: var(--zemin); }
 .a-kosullar .a-serit-tus { margin-left: auto; }
 .a-tablo-sigorta .a-k-no { width: 30%; } .a-tablo-sigorta .a-k-deger { width: 14%; } .a-tablo-sigorta .a-k-kutup { width: 10%; }
 .a-tablo-sigorta .a-k-rcd { width: 14%; } .a-tablo-sigorta .a-k-durum { width: 14%; } .a-tablo-sigorta .a-k-eylem { width: 18%; }
+.a-tablo-olcum .a-k-ad { width: 46%; } .a-tablo-olcum .a-k-no { width: 27%; } .a-tablo-olcum .a-k-kal { width: 27%; }
 
 /* M9 — raporlar ve onay kuyruğu */
 .a-tablo-raporlar .a-k-no { width: 24%; } .a-tablo-raporlar .a-k-ekipman { width: 24%; } .a-tablo-raporlar .a-k-tesis { width: 22%; }
@@ -991,9 +999,8 @@ a.a-yuz:hover { border-color: var(--kenar-alan); background: var(--zemin); }
   .a-belge-bas { flex-wrap: wrap; justify-content: space-between; gap: 10px; }
   .a-belge-logo { width: 84px; }
   .a-belge-kunye { order: 3; flex-basis: 100%; }
-  /* saha raporu telefonda: iki seçim alt alta, her biri tam satır (başparmak hedefi 44) */
-  .a-kriter-cevap .a-sekmeler { flex: 1 1 100%; }
-  .a-kriter-cevap .a-sekme { padding: 0 8px; }
+  /* saha raporu telefonda: madde solda, seçim sağda daha dar */
+  .a-kriter { grid-template-columns: minmax(0, 1fr) 9.75rem; gap: 8px 10px; }
   /* teklif kalemi telefonda: tür tam satır, altında adet · fiyat, tutar · kaldır */
   .a-kalem { grid-template-columns: minmax(0, 1fr) minmax(0, 1fr); }
   .a-kalem > :first-child { grid-column: 1 / -1; }

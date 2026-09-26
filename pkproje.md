@@ -635,6 +635,14 @@ yılın şablon sürümüyle gösteriyordu (örnek bugün tarihli yapıldı). Ek
 süzülmüş listeye gider (M3 60/60, 14/14 yeniden).
 
 #### Maket M8 — Saha ve Rapor (modül 14) — ONAY BEKLİYOR
+**3. tur (2026-09-26, §9 yirmi üçüncü tur):** "Onaya göndermeden önce N eksik" bölümü **kalktı** (eksikler yalnız "Onaya gönder"e basınca
+pencerede) · **Kontrol bilgileri**: başlangıç ve bitiş **tarih ve saati el ile** (GG.AA.YYYY SS:DD), **sonraki kontrol** başlangıç + tür periyodundan
+kendiliğinden, el ile yazılırsa o kalır ("değiştir" penceresi kalktı) · **Ekipman bilgileri** · **Ölçüm cihazları** tablo: cihaz · cihaz no ·
+kalibrasyon tarihi (geçmiş cihaz kırmızı, tek engel aynen) · **Muayene kriterleri**: solda madde, sağda seçim **Uygun · Uygun değil ·
+Uygulanamaz** ("yapıldı mı" ve hafif/ağır kalktı; "Uygun değil"de kusur açıklaması ve fotoğraf) · **Sonuç ve kanaat: Uygun · Uygun değil**
+(uygun değil madde ya da sınır dışı test varken "Uygun" uyarıdır, engel değil) · **Muayene uzmanı yorumu** ("Notlar" yerine) · **bütün
+başlıklar açılır kapanır**. Rapor belgesi (M7, M9, M11) aynı adlarla. Ölçüm: M8 88/88 · 21/21 · 44/44; M7 72/72 · 11/11; M9 96/96 · 17/17;
+M11 88/88 · 9/9.
 **2. tur (2026-09-26, §9 yirmi birinci tur):** rapor ekranı türün yüklenen formatına göre kurulur; ayrıntısı emsal uygulamaya göre (95).
 **1 · Firma bilgileri** her raporda aynı, raporda düzeltilmez (160: plan açılırken girilir) · **2 · Kontrol bilgileri** · sonraki kontrol tarihi
 **gerekçesiz** değişir (95) · **"Onaya gönder" hep açık** (90): eksik varsa uyarı penceresi, "Yine de gönder"; **tek engel kalibrasyonu geçmiş cihaz**
@@ -1413,6 +1421,9 @@ revizyon, alan kopyalama, hafif kusur devri, meslek eşleşme denetimi).
 - Emsal ürünler: https://opwire.app/iso-17020-periyodik-kontrol-yazilimi/ · https://17020muayene.vidco.com.tr/ · https://akuple.com/asansor-kontrol-yazilimi/ · https://ensyazilim.com/
 
 ## 11 · Değişiklik günlüğü
+- 2026-09-26 (67): **Saha raporu (yirmi üçüncü tur)**: "N eksik" bölümü kalktı; başlangıç / bitiş tarih ve saati el ile, sonraki kontrol
+  kendiliğinden ve el ile; Ekipman bilgileri; Ölçüm cihazları tablosu; kriter seçimi Uygun · Uygun değil · Uygulanamaz; sonuç Uygun · Uygun
+  değil; Muayene uzmanı yorumu; başlıklar açılır kapanır; rapor belgesi aynı adlarla. M8 88/88 · 21/21 · 44/44.
 - 2026-09-26 (66): **Plan aç saatsiz**: "Tarihler" bölümü başlangıç ve bitiş tarihi; saat alanları kalktı; çakışma uyarısı gün aralığıyla ("aynı
   günde"); müşteri paneli ve Ana sayfada plan saati gösterilmez. M6 80/80 · 18/18 · 40/40.
 - 2026-09-26 (65): **Planlar (yirmi üçüncü tur)**: listede yalnız "Görüntüle"; kabul planın içinde, beyan okundu işaretiyle; plan içi üst bölüm
