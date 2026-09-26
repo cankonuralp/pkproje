@@ -8,9 +8,45 @@
   390,
   430
  ],
- "toplam": 20,
- "temiz": 20,
+ "toplam": 24,
+ "temiz": 24,
  "durumlar": [
+  {
+   "ad": "uyarılar · ara kontrol",
+   "gen": 320,
+   "temiz": true,
+   "tasma": 0,
+   "disari": [],
+   "kucukAlan": [],
+   "alan": 1
+  },
+  {
+   "ad": "uyarılar · ara kontrol",
+   "gen": 360,
+   "temiz": true,
+   "tasma": 0,
+   "disari": [],
+   "kucukAlan": [],
+   "alan": 1
+  },
+  {
+   "ad": "uyarılar · ara kontrol",
+   "gen": 390,
+   "temiz": true,
+   "tasma": 0,
+   "disari": [],
+   "kucukAlan": [],
+   "alan": 1
+  },
+  {
+   "ad": "uyarılar · ara kontrol",
+   "gen": 430,
+   "temiz": true,
+   "tasma": 0,
+   "disari": [],
+   "kucukAlan": [],
+   "alan": 1
+  },
   {
    "ad": "uyarılar · liste",
    "gen": 320,

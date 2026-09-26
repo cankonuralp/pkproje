@@ -2,25 +2,32 @@
  "maket": "m10",
  "tarih": "2026-09-26",
  "arac": "tools/olc-bulut.mjs --etkilesim (başsız tarayıcı, 1920 açık tema; gen verilen denemede o genişlik)",
- "toplam": 6,
- "gecen": 6,
+ "toplam": 7,
+ "gecen": 7,
  "denemeler": [
   {
-   "ad": "11 uyarı, menü sayacı 11, en yakın tarih üstte",
+   "ad": "ara kontrol uyarıları listede (gecikmiş OC-009)",
+   "gen": 1920,
+   "sayfa": "maket/uyarilar.html",
+   "hash": "#/?tur=ara",
+   "gecti": true
+  },
+  {
+   "ad": "16 uyarı (ara kontrol dahil), menü sayacı 16, en yakın tarih üstte",
    "gen": 1920,
    "sayfa": "maket/uyarilar.html",
    "hash": "#/",
    "gecti": true
   },
   {
-   "ad": "Eğitim tekrarı çipi (5 / 11)",
+   "ad": "Eğitim tekrarı çipi (5 / 16)",
    "gen": 1920,
    "sayfa": "maket/uyarilar.html",
    "hash": "#/",
    "gecti": true
   },
   {
-   "ad": "Süresi geçmiş (3): iki cihaz + Kaan Er",
+   "ad": "Süresi geçmiş (4): iki cihaz, bir ara kontrol + Kaan Er",
    "gen": 1920,
    "sayfa": "maket/uyarilar.html",
    "hash": "#/",

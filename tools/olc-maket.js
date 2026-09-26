@@ -61,7 +61,10 @@
      geçer — tasarım gereği. Muafiyet adla değil kaynakla: farklı yapışkan atası olan iki öğe karşılaştırılmaz. Muafiyetin
      gerçek örtmeyi gizlemediği ayrıca ölçülür: sona kaydırınca (sonCakisma) çakışma 0 olmalı, yoksa son öğe hiç açılmaz. */
   const yapiskanAta = e => { for (let a = e; a && a !== document.body; a = a.parentElement) if (getComputedStyle(a).position === "sticky") return a; return null; };
-  const cakismaSay = muaf => { let n = 0; const bs = et.map(e => [e, e.getBoundingClientRect(), yapiskanAta(e)]);
+  /* 2026-09-26: ekranın tamamen dışındaki iki öğe (kapalı çekmecenin bağlantısı ile yana kaymış çip şeridinin başı, ikisi de x < 0)
+     görünür biçimde örtüşemez; karşılaştırılmaz. Ekranda en az bir pikseli olan her öğe eskisi gibi sayılır. */
+  const ekranda = R => R.right > 0 && R.left < innerWidth;
+  const cakismaSay = muaf => { let n = 0; const bs = et.map(e => [e, e.getBoundingClientRect(), yapiskanAta(e)]).filter(x => ekranda(x[1]));
     for (let i = 0; i < bs.length; i++) for (let j = i + 1; j < bs.length; j++) {
       const [a, A, ya] = bs[i], [b, B, yb] = bs[j]; if (a.contains(b) || b.contains(a)) continue;
       if (muaf && ya !== yb) continue;

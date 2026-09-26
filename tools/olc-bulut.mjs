@@ -185,6 +185,7 @@ export const DURUMLAR = {
     { ad: "onaylar · onaylanan rapor, Onayı geri al", sayfa: "maket/onaylar.html", hash: "#/r/KM-0926-770-a99c1" },
   ] },
   m10: { sayfa: "maket/uyarilar.html", durumlar: [
+    { ad: "uyarılar · ara kontrol", hash: "#/?tur=ara" },
     { ad: "uyarılar · liste", hash: "#/" },
     { ad: "uyarılar · yalnız kalibrasyon (adresten)", hash: "#/?tur=kalibrasyon" },
     { ad: "uyarılar · süresi geçmiş", hash: "#/", adim: [["tikla", '[data-sz="u"] [data-cip="gecti"]']] },
@@ -467,10 +468,12 @@ export const DENEMELER = {
     { ad: "telefonda onay tuşları altta yapışkan", gen: 375, sayfa: "maket/onaylar.html", hash: "#/r/KM-0926-786-fd731", bekle: 'getComputedStyle(document.querySelector(".a-eylem-cubugu-alt")).position === "sticky"' },
   ],
   m10: [
-    { ad: "11 uyarı, menü sayacı 11, en yakın tarih üstte", hash: "#/", bekle: 'document.querySelector("#a-sayac").textContent === "11 uyarı" && document.querySelector("#a-menu-sayi-20").textContent === "11" && /OC-013/.test(document.querySelector("#a-liste tbody tr").textContent)' },
-    { ad: "Eğitim tekrarı çipi (5 / 11)", hash: "#/", adim: [["tikla", '[data-sz="u"] [data-cip="egt"]']], bekle: 'document.querySelector("#a-sayac").textContent === "5 / 11 uyarı"' },
-    { ad: "Süresi geçmiş (3): iki cihaz + Kaan Er", hash: "#/", adim: [["tikla", '[data-sz="u"] [data-cip="gecti"]']], bekle: 'document.querySelector("#a-sayac").textContent === "3 / 11 uyarı" && /Kaan Er/.test(document.querySelector("#a-liste").textContent)' },
-    { ad: "adresten kalibrasyon süzgeci (6)", hash: "#/?tur=kalibrasyon", bekle: 'document.querySelector("#a-sayac").textContent === "6 / 11 uyarı"' },
+    /* 2026-09-26 (reisim 108): ara kontrol de listede */
+    { ad: "ara kontrol uyarıları listede (gecikmiş OC-009)", hash: "#/?tur=ara", bekle: '/OC-009/.test(document.querySelector("#a-liste").textContent) && /Ara kontrol/.test(document.querySelector("#a-liste").textContent) && !/Eğitim tekrarı/.test(document.querySelector("#a-liste").textContent)' },
+    { ad: "16 uyarı (ara kontrol dahil), menü sayacı 16, en yakın tarih üstte", hash: "#/", bekle: 'document.querySelector("#a-sayac").textContent === "16 uyarı" && document.querySelector("#a-menu-sayi-20").textContent === "16" && /OC-009/.test(document.querySelector("#a-liste tbody tr").textContent)' },
+    { ad: "Eğitim tekrarı çipi (5 / 16)", hash: "#/", adim: [["tikla", '[data-sz="u"] [data-cip="egt"]']], bekle: 'document.querySelector("#a-sayac").textContent === "5 / 16 uyarı"' },
+    { ad: "Süresi geçmiş (4): iki cihaz, bir ara kontrol + Kaan Er", hash: "#/", adim: [["tikla", '[data-sz="u"] [data-cip="gecti"]']], bekle: 'document.querySelector("#a-sayac").textContent === "4 / 16 uyarı" && /Kaan Er/.test(document.querySelector("#a-liste").textContent)' },
+    { ad: "adresten kalibrasyon süzgeci (6)", hash: "#/?tur=kalibrasyon", bekle: 'document.querySelector("#a-sayac").textContent === "6 / 16 uyarı"' },
     { ad: "uyarıdan cihaz sayfasına", hash: "#/", adim: [["tikla", '#a-liste a.a-ad-bag[href*="olcum-cihazlari.html"]']], bekle: '/olcum-cihazlari\\.html$/.test(location.pathname) && /^#\\/c\\/v/.test(location.hash)' },
     { ad: "personel kartı eğitim yüzü kayıttan (Kaan Er: tekrarı geçti)", sayfa: "maket/personel.html", hash: "#/p/ke", bekle: '/1 tekrarı geçti/.test(document.querySelector(".a-yuzler").textContent)' },
   ],

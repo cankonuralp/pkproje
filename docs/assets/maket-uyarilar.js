@@ -18,6 +18,14 @@
       l.push({ id: "k-" + v.id, tur: "kal", ikon: "gauge", konu: v.env + " · " + v.ad, alt: "Kalibrasyon", kisi: k, tarih: v.bitis, durum: d,
         href: MK.adres(8, "#/c/" + v.id), sonuc: d === "gecti" ? (k !== "depo" ? MV.kisi(k).ad + " raporlarını onaya gönderemez" : "depoda") : "30 gün içinde bitiyor" });
     });
+    /* 108 (reisim 2026-09-26): ara kontrol de listede — yalnız takibi açık (girilmiş) cihazda, 30 gün kala */
+    MV.VARLIKLAR.forEach(function (v) {
+      if (v.tur !== "cihaz" || !v.araPeriyot || !v.araSon || MV.kalDurum(v) === "gecti" || MV.kimde(v.id) === "lab") return;   /* kalibrasyonu geçen ya da kalibrasyondaki cihazda ara kontrol sorulmaz */
+      var t = new Date(v.araSon + "T12:00:00"); t.setMonth(t.getMonth() + v.araPeriyot); var iso = t.toISOString().slice(0, 10), k = kalan(iso);
+      if (k > 30) return;
+      l.push({ id: "a-" + v.id, tur: "ara", ikon: "flask-conical", konu: v.env + " · " + v.ad, alt: "Ara kontrol", kisi: MV.kimde(v.id), tarih: iso, durum: k < 0 ? "gecti" : "yakin",
+        href: MK.adres(8, "#/c/" + v.id), sonuc: k < 0 ? "ara kontrol gecikti" : "30 gün içinde" });
+    });
     MV.EGITIMLER.forEach(function (x) {
       var d = MV.egitimDurum(x); if (d !== "gecti" && d !== "yakin") return;
       l.push({ id: "e-" + x.id, tur: "egt", ikon: "graduation-cap", konu: MV.egitimTuru(x.k).ad, alt: "Eğitim tekrarı", kisi: x.kisi, tarih: x.tekrar, durum: d,
@@ -30,6 +38,7 @@
   MK.suzgecTanimla("u", { ad: "Uyarılarda ara", ipucu: "Cihaz, eğitim, kişi", birim: "uyarı",
     cipler: [
       { k: "kal", ad: "Kalibrasyon", grup: "tur", test: function (u) { return u.tur === "kal"; } },
+      { k: "ara", ad: "Ara kontrol", grup: "tur", test: function (u) { return u.tur === "ara"; } },
       { k: "egt", ad: "Eğitim tekrarı", grup: "tur", test: function (u) { return u.tur === "egt"; } },
       { k: "gecti", ad: "Süresi geçmiş", test: function (u) { return u.durum === "gecti"; } }
     ],
@@ -38,13 +47,13 @@
       return [["tumu", "Tümü"]].concat(l.map(function (k) { return [k, kisiAd(k)]; }).sort(function (a, b) { return a[1].localeCompare(b[1], "tr"); }));
     }, gecer: function (u, v) { return v === "tumu" || u.kisi === v; } }],
     metin: function (u) { return [u.konu, u.alt, kisiAd(u.kisi)].join(" "); },
-    imkansiz: "Bir uyarı hem kalibrasyon hem eğitim olamaz" }, function () { listeCiz(); });
+    imkansiz: "Bir uyarı tek türdendir" }, function () { listeCiz(); });
   var SUTUN = [
     { k: "konu", baslik: "Uyarı", kart: "ust", sira: 1, hucre: function (u) {
       return '<span class="a-hucre-satir">' + ikon(u.ikon, "a-ikon-kucuk") + '<span class="a-adres"><a class="a-ad-bag" href="' + u.href + '">' + kirp(u.konu) + "</a>" + kirp(u.alt, "a-alt-satir") + "</span></span>";
     } },
-    { k: "kisi", baslik: "Kimde / kim", kart: "govde", sira: 2, hucre: function (u) { return '<span class="a-kart-etiket">' + (u.tur === "kal" ? "Kimde" : "Kişi") + "</span>" + kirp(kisiAd(u.kisi)); } },
-    { k: "tarih", baslik: "Bitiş / tekrar", kart: "govde", sira: 3, hucre: function (u) { return '<span class="a-kart-etiket">' + (u.tur === "kal" ? "Kalibrasyon bitişi" : "Tekrar tarihi") + "</span>" + MK.tarihYaz(u.tarih); } },
+    { k: "kisi", baslik: "Kimde / kim", kart: "govde", sira: 2, hucre: function (u) { return '<span class="a-kart-etiket">' + (u.tur === "egt" ? "Kişi" : "Kimde") + "</span>" + kirp(kisiAd(u.kisi)); } },
+    { k: "tarih", baslik: "Bitiş / tekrar", kart: "govde", sira: 3, hucre: function (u) { return '<span class="a-kart-etiket">' + (u.tur === "kal" ? "Kalibrasyon bitişi" : u.tur === "ara" ? "Ara kontrol" : "Tekrar tarihi") + "</span>" + MK.tarihYaz(u.tarih); } },
     { k: "kalan", baslik: "Kalan", kart: "govde", sira: 4, hucre: function (u) {
       var k = kalan(u.tarih);
       return '<span class="a-kart-etiket">Kalan</span><span><span class="' + (k < 0 ? "a-uyari-metin a-hata-metin" : "a-uyari-metin") + '">' + (k < 0 ? -k + " gün geçti" : k === 0 ? "bugün" : k + " gün") + '</span><span class="a-alt-satir">' + kacis(u.sonuc) + "</span></span>";
@@ -57,7 +66,7 @@
     $("a-uyari").innerHTML = "";
     MK.listeCiz({ on: "u", kayitlar: l, sayacId: "a-sayac", listeId: "a-liste",
       sirala: function (x) { return x.slice().sort(function (a, b) { return a.tarih < b.tarih ? -1 : a.tarih > b.tarih ? 1 : 0; }); },
-      bosVeri: { ikon: "circle-check", baslik: "Uyarı yok", metin: "Kalibrasyonu 30 gün içinde biten cihaz ve tekrarı 60 gün içinde gelen eğitim yok." },
+      bosVeri: { ikon: "circle-check", baslik: "Uyarı yok", metin: "Yaklaşan kalibrasyon, ara kontrol ya da eğitim tekrarı yok." },
       tablo: { baslik: "Uyarılar", sinif: "a-tablo-uyari", sutunlar: SUTUN, href: function (u) { return u.href; } } });
     $("a-sayfa").innerHTML = "";
   }
@@ -67,7 +76,7 @@
   }
   MK.goster = goster;
   MK.kabuk({ modul: 20, kullanici: { bas: "AD", ad: "Ayşe Demir", rol: "Firma yöneticisi" }, sayac: { 20: "Süresi geçen ya da yaklaşan" } });
-  var q = /[?&]tur=(kalibrasyon|egitim)/.exec(location.hash);
-  if (q) SZ.u.secili = [q[1] === "kalibrasyon" ? "kal" : "egt"];
+  var q = /[?&]tur=(kalibrasyon|ara|egitim)/.exec(location.hash);
+  if (q) SZ.u.secili = [{ kalibrasyon: "kal", ara: "ara", egitim: "egt" }[q[1]]];
   goster(false);
 })();

@@ -728,7 +728,12 @@ mekanik branş yöneticisi Selin Yıldız: kuyruk en eski üstte, bekleme süres
 düzeltilen: rapor numarasındaki küçük harfli ek, sayfa adresinde tanınmıyordu (rapor ve onay ekranı açılmıyordu). M7 şablon önizlemesi
 belge üreticisine bağlandı (66/66, 12/12), Planlar denemesi hâlâ maketi olmayan modüle çevrildi (15/15), M8 yeniden (15/15).
 
-#### Maket M10 — Uyarılar (modül 20) — ONAY BEKLİYOR
+#### Maket M10 — Uyarılar (modül 20) — 2. TUR, ONAY BEKLİYOR (toplu gözden geçirmede)
+**2. tur (2026-09-26, §9 yirmi birinci tur):** listede yalnız **kalibrasyon, ara kontrol (takibi açık cihazda) ve eğitim tekrarı** (108); ara kontrol
+kalibrasyonu geçmiş ya da kalibrasyondaki cihazda sorulmaz · yalnız ekranda (107) · eşik kalibrasyon ve ara kontrolde 30, eğitimde 60 gün, firma
+değiştirir (109) · koşul kalkınca düşer (110). Açıklama şeridi kalktı. Ölçüm: 6 durum 36/36, etkileşim 7/7, telefon 24/24. Ölçüm aracında
+düzeltme: ekranın tamamen dışındaki iki öğe (kapalı çekmece bağlantısı ile yana kaymış çip) artık "çakışma" sayılmaz.
+1. tur metni (tarihsel):
 Ekran: **Uyarılar** (`maket/uyarilar.html`, firma yöneticisi Ayşe Demir): yalnız reisim'in istedikleri — **kalibrasyon bitişi** (30 gün)
 ve **eğitim tekrarı** (60 gün); en yakın tarih üstte; uyarı → cihaz sayfası ya da kişinin eğitimleri; çipler: kalibrasyon · eğitim tekrarı ·
 süresi geçmiş; seçici: kişi; adresten türe göre (`?tur=kalibrasyon|egitim`); menüde sayaç.
@@ -1392,6 +1397,7 @@ revizyon, alan kopyalama, hafif kusur devri, meslek eşleşme denetimi).
 - Emsal ürünler: https://opwire.app/iso-17020-periyodik-kontrol-yazilimi/ · https://17020muayene.vidco.com.tr/ · https://akuple.com/asansor-kontrol-yazilimi/ · https://ensyazilim.com/
 
 ## 11 · Değişiklik günlüğü
+- 2026-09-26 (54): **M10 2. tur**: ara kontrol uyarıları eklendi (kalibrasyonu geçen / kalibrasyondaki cihaz hariç). M10 36/36 · 7/7 · 24/24.
 - 2026-09-26 (53): **M9 2. tur**: her rapor ayrı imza (birleştirme yok), vekil onay, onayı geri al, imzalı raporun düzeltmesi (R1), Planlar'da
   İmza bekliyor / Müşteriye açık. M9 72/72 · 16/16 · 48/48, Planlar 54/54 · 15/15 · 36/36.
 - 2026-09-26 (52): **M8 2. tur**: gönder hep açık (eksik uyarı, tek engel kalibrasyon), sonraki kontrol gerekçesiz, kusura fotoğraf, pano fotoğrafı,
