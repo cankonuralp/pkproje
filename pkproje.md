@@ -153,7 +153,7 @@ Kurallar (reisim'in sözünden türeyen, ürün kuralı olarak):
 |---|---|---|
 | 1 | Kullanıcı & Rol | Giriş, çoklu rol, rol bazlı ekran yetkisi — 2026-09-25: ayrı ekran değil, **Personel'in içinde** (hesap, roller, rol yetkileri) |
 | 2 | Personel | Ad soyad, meslek, branş, diploma no, oda sicil no (teknikerde boş olabilir), EKİPNET no; yetkinlik (§4.6) |
-| 3 | Müşteri & Tesis | Müşteri; tesis (adres, SGK işyeri sicil no); müşteri kullanıcıları (e-posta) |
+| 3 | Müşteri & Tesis | Müşteri; tesis (adres, SGK tescil no); müşteri kullanıcıları (e-posta) |
 | 4 | Standart Kütüphanesi | Firma başına; firma kendi yükler; kontrol metodu standardı buradan seçilir |
 | 5 | Ekipman Türü Kataloğu | Ek-III grubu, branş, periyot, standart(lar), Bakanlık format kodu — 2026-09-26: **firma tür ekler** ve her türe **kendi rapor formatını PDF olarak yükler** (sürümlü); akreditasyon ve yetkili meslek ayrıntısı yok |
 | 6 | Rapor Şablonları (kodda) | Firma × ekipman türü: kontrol kriterleri + PDF formatı, sürümlü; site içi düzenleyici yok |
@@ -162,7 +162,7 @@ Kurallar (reisim'in sözünden türeyen, ürün kuralı olarak):
 | 9 | Zimmet | Varlık: cihaz, araç, diğer. Her teslim ayrı kayıt: teslim eden → alan, tarih-saat, fotoğraflar, zimmet formu. Anlık "kimde" + tam geçmiş |
 | 10 | Eğitim Takibi | Personel eğitimleri, belge, tekrar süresi, bitmeden uyarı |
 | 11 | Teklif | Müşteri, tesis, kalemler (ekipman türü × adet × birim fiyat), durum |
-| 12 | Sözleşme | Firmalar arası **iş sözleşmesi** (periyodik kontrol firması ↔ müşteri) — 2026-09-26: menüdeki Sözleşmeler budur; **İSG-KATİP** bilgisi onun içinde, tesis başına denetçi → sözleşme ID (isteğe bağlı onay tarihi ve PDF); SGK işyeri sicil no tesiste |
+| 12 | Sözleşme | Firmalar arası **iş sözleşmesi** (periyodik kontrol firması ↔ müşteri) — 2026-09-26: menüdeki Sözleşmeler budur; **İSG-KATİP** bilgisi onun içinde, tesis başına denetçi → sözleşme ID (isteğe bağlı onay tarihi ve PDF); SGK tescil no tesiste |
 | 13 | Planlama | Plan açma, inspector atama, ekipman listesi, "Planlar" ekranı (5. turda genel ad; eski "Planlarım"), kabul/red, durumlar |
 | 14 | Saha & Rapor | Rapor girişi, ölçüm, kriter, kusur (hafif/ağır), fotoğraf (en az 1), cihazlar zimmetten; pano fotoğrafından sigorta okuma |
 | 15 | Onay & İmza | Branş yöneticisi onayı, geri gönderme gerekçesi, inspector son imzası; yöntem firma seçer (§8.4) |
@@ -431,7 +431,7 @@ pasif yap / yeniden etkinleştir**.
 - **Müşteri girişi kendiliğinden** (cevap 33): müşteri kaydedilince müşterinin e-postası kullanıcı adı olur, sistemin ürettiği parola o
   adrese gider; davet yok. E-posta yazılmamışsa kayıt yine olur, giriş e-posta yazılınca açılır. Personel "Müşteri gözüyle bak" ile
   müşterinin gördüğünü açar. Ana giriş bütün tesisleri görür; **ek giriş** kişiye özeldir, bütün ya da seçili tesisleri görür (44).
-- **Vergi no ve SGK işyeri sicil no zorunlu değil** (45, 46): boşsa kayıt olur, müşteri / tesis sayfasında "eksik bilgi" uyarısı çıkar;
+- **Vergi no ve SGK tescil no zorunlu değil** (45, 46): boşsa kayıt olur, müşteri / tesis sayfasında "eksik bilgi" uyarısı çıkar;
   aynı numara başka kayıtta varsa pencere uyarır, **"Yine de kaydet"** ile kaydedilir. SGK no raporda gerektiği için rapor imzalanırken
   yeniden hatırlatılır (M9'un sırası gelince). Biçim (10–11 hane, 26 hane) yalnız yazım yanlışına karşı denetlenir.
 - **Bir tesis tek müşteriye ait** (47); aynı adreste iki işletme = iki tesis.
@@ -536,13 +536,13 @@ Ortak veri değiştiği için M1, M8, M9, M10, M16 etkileşim denemeleri yeniden
 `is-sozlesmeleri.html` ve `#/isg…` adresleri karşılığına gider): **iş sözleşmeleri listesi** (no, müşteri / tesis, süre, İSG-KATİP ID sayısı
 ve eksik, durum; çipler: imza bekliyor · yürürlükte · süresi doldu · bitişi 60 gün içinde · İSG-KATİP ID'si eksik; seçiciler: müşteri ·
 denetçi; şeritler: açık planda ID eksik · biten sözleşme) · **sözleşme sayfası**: taraflar ve koşullar, kapsam, **İSG-KATİP** (tesis başına
-SGK işyeri sicil no + denetçi → sözleşme ID, onay tarihi, PDF, kullanım; ID ekle / düzenle / sil), geçmiş · pencereler: **İSG-KATİP ID
+SGK tescil no + denetçi → sözleşme ID, onay tarihi, PDF, kullanım; ID ekle / düzenle / sil), geçmiş · pencereler: **İSG-KATİP ID
 ekle / düzenle** · **sözleşme şablonu** · form: sözleşme hazırla.
 **Varsayımlar:**
 - **Sözleşmeler = firma ile fabrika arasındaki iş sözleşmesi** (reisim). Ayrı "İSG-KATİP kayıtları" sekmesi kalktı; M5 ve M13 birleşti.
 - **İSG-KATİP bilgisi iş sözleşmesinin içinde, tesis başına:** denetçi → **sözleşme ID** (reisim: *"sözleşme id denetçiye göre değişir"*).
   Kişi × tesis için tek güncel ID; yenisi girilince eskisi "önceki" olur.
-- **SGK işyeri sicil no tek yerde, tesiste** (M2); sözleşmede ve raporda oradan görünür (B).
+- **SGK tescil no tek yerde, tesiste** (M2); sözleşmede ve raporda oradan görünür (B).
 - **ID'nin yolu (C, "ikisi de"):** sözleşmede girilir → plan açarken seçilen denetçinin ID'si kendiliğinden gelir → rapor plandan alır; ID yoksa
   plan açan el ile yazar ("sözleşmeye de kaydet") ve raporda da düzeltilebilir. **Plan açma ve rapor tarafı M6 / M8'in sırası gelince.**
 - **İSG-KATİP PDF'i her ID'nin yanında, isteğe bağlı** (D) · **onay tarihi isteğe bağlı** (E); girilmişse kontrolden sonraki onay yalnız
@@ -595,6 +595,9 @@ Açık soru yok — 74–81 önerileri uygun (§9, on sekizinci tur). 2. tur rei
 bitmiş uyarısı, aynı saat, ikinci plan bilgisi, Hepsini seç / yeni ekipman alanı yok, kapsam boş açılır, geçmiş tarih, boş gönderim, plan açılır
 + ID sözleşmeye kaydedilir, Ana sayfa'dan Plan aç). Ölçerken düzeltilen: telefonda denetçi kartında uyarı metni rozetin yanında 63–70 px taşıyordu
 → ayrı "Uyarı" satırı.
+**2. tur, ek (2026-09-26, §9 on dokuzuncu tur):** alanların altındaki küçük mesajlar, parantez içi açıklamalar ve bölüm açıklama paragrafları
+kalktı (müşteri ünvanı / tesis adresi / sonraki kontrol / süre ipuçları, "Proje no kaydedince verilir", "sözleşmeden · el ile" alt satırları,
+bilgi şeridi); etiket **"İSG-KATİP sözleşme ID"**. Yeniden ölçüm: 60/60 · 18/18 · 40/40.
 1. tur (2026-09-24): 10 durum 60/60, etkileşim 12/12 ("Kabul edemez", sahada yeni ekipman alanı vardı).
 
 #### Maket M7 — Standart Kütüphanesi · Rapor şablonu önizlemesi (modül 4, 6) — ONAY BEKLİYOR
@@ -1053,7 +1056,7 @@ bu dosyanın ilgili bölümlerine (akış, veri modeli, rapor şablonu) kendi c�
 
 ## 7 · Veri modeli çekirdeği (taslak — onay bekliyor; 2026-09-22'de genişletildi)
 Firma (kiracı) · Kullanıcı + rol · **Personel** (meslek, branş, diploma no, oda sicil no, EKİPNET no) ·
-Müşteri (işveren; adres, iletişim) · **Tesis** (adres, **SGK işyeri sicil numarası** — reisim onayı 2026-09-22:
+Müşteri (işveren; adres, iletişim) · **Tesis** (adres, **SGK tescil numarası** — reisim onayı 2026-09-22:
 SGK numarası müşteride değil **tesiste** durur) · Ekipman (tür kataloğuna bağlı; etiket bilgileri; tesise bağlı;
 kalıcı) · Ekipman türü kataloğu (Ek-III grubu, **branş**, periyot, standartlar, **yetkili meslekler**, akreditasyon
 gereği, Bakanlık format kodu) · **Teklif + teklif kalemi** (ekipman türü × adet × birim fiyat) · **İş sözleşmesi**
@@ -1313,6 +1316,16 @@ tekrar konuşuruz"* → önerilen: A asıl hedef (tesis + tarih + denetçi + kap
 78 kontrolü gelen seçili, sahada yeni ekipman alanı kalkar · 79 sorumlu denetçi yok · 80 "Plan aç" yetkiliye · 81 müşteri panelinde planlanan
 kontrol; çakışma: kapsam listesi sade, "Hepsini seç". → M6 2. tur (§3.6); reisim inceleyip yeniden konuşacak.
 
+**On dokuzuncu tur (2026-09-26, M6 2. tur incelemesi; reisim birebir):** *"1 genel bilgiler değil firma bilgilerş olacak formattan bağımsız her
+rapor için ortak olacak, SGK SİCİL NO DEĞİL SGK destis no yazcak isg katip no depil isg katip sözleşme id yazacak parantez içinde açıklamalar
+antin kuntin gereksiz detaylar alt tarafa yazılmış küçük mesajlar istemiyorum"* → **Karar:** (1) raporun 1. bölümü **"Firma bilgileri"**: firma
+ünvanı · adres · SGK tescil no · İSG-KATİP sözleşme ID; türün rapor formatından (§3.7 satır 1) **bağımsız, her raporda aynı** blok; kontrole ait
+satırlar (başlangıç, bitiş, sonraki kontrol, kontrol metodu) ayrı **"2 · Kontrol bilgileri"** bölümünde. (2) Etiket her yerde **"SGK tescil no"**
+("SGK işyeri sicil no" kalktı) ve **"İSG-KATİP sözleşme ID"** ("Sözleşme no (İSG-KATİP)" kalktı). (3) **Genel ilke (bütün modüller):** parantez
+içi açıklama, mevzuat madde numarası, alanın altına yazılan küçük mesaj ve gereksiz ayrıntı yok; hata mesajı ve uyarı kalır. Uygulandı: M6,
+rapor ekranı (M8) ve rapor belgesi (M7 / M9 / M11 önizlemesi; bölüm başlıklarındaki "Ek-III 1.7.x" kalktı). Onaylı M1–M5'te ve sırası gelmemiş
+modüllerde kalan ipuçları o modül ele alınınca (ya da kodda) temizlenir; şablon önizlemesindeki "alan nereden dolar" notları M7'de sorulur.
+
 **Açık kalanlar:** **modül modül gözden geçirme** (M1–M5 ve M13 onaylandı — Ekipmanlar kalktı, Sözleşmeler birleşti; M6 Plan aç 2. tur incelemede) · **toplu maket çalışması** (M1–M16 + toplu bakış, `MAKET-PLANI.md`; sorular §3.6'da, 32'den) · **önizlemede örnek veri kipi** (öneri, §3.3) · ~~rol × modül görünürlüğü~~ (karar 2026-09-25: başlangıç düzeni + firma yöneticisi değiştirir) · **gerçek sunucunun sağlayıcısı**
 (Türkiye, §8.8) ·
 alan adının alınması · e-imza yöntemi (8.4) · v1 ekipman grupları · 5 yıl sonrası silme
@@ -1343,6 +1356,9 @@ revizyon, alan kopyalama, hafif kusur devri, meslek eşleşme denetimi).
 - Emsal ürünler: https://opwire.app/iso-17020-periyodik-kontrol-yazilimi/ · https://17020muayene.vidco.com.tr/ · https://akuple.com/asansor-kontrol-yazilimi/ · https://ensyazilim.com/
 
 ## 11 · Değişiklik günlüğü
+- 2026-09-26 (47): **M6 2. tur, ek** (§9 on dokuzuncu tur): raporun 1. bölümü "Firma bilgileri" (her raporda ortak), "2 · Kontrol bilgileri"
+  ayrıldı; "SGK tescil no", "İSG-KATİP sözleşme ID"; M6 ve rapor ekranında alt satır mesajları, parantez içi açıklamalar, madde numaraları
+  kalktı. Ölçüm: M6 60/60 · 18/18 · 40/40; M2, M5, M7, M8, M9, M11, M13 yeniden ölçüldü, hepsi temiz.
 - 2026-09-26 (46): **M6 2. tur** (reisim 74–81 öneriler uygun, "maketi yap inceleyeyim"; §9 on sekizinci tur): denetçi eksikleri yalnız uyarı
   ("Kabul edemez" kalktı), İSG-KATİP ID sözleşmeden / el ile + sözleşmeye kaydet, bitmiş İSG-KATİP uyarısı, sahada yeni ekipman alanı kalktı,
   kapsam boş açılır, "Hepsini seç", Ana sayfa'da "Plan aç". M6 60/60 · 18/18 · 40/40.

@@ -1,6 +1,6 @@
 /* ══ probata MAKET M2 — Müşteri ve Tesis (modül 3) · 2. TUR, ONAYLANDI (2026-09-26) ═════════════════════════════════
    Kaynak: pkproje.md §2 (müşteri e-postayla girer; bir müşterinin birden çok tesisi; tesis = raporun adresi), §4.2 1.7.1
-   (raporda işyerinin ünvanı, SGK sicil no, adres, sözleşme no), §7 (SGK işyeri sicil no TESİSTE), §3.2 (plan: müşteri →
+   (raporda işyerinin ünvanı, SGK sicil no, adres, sözleşme no), §7 (SGK tescil no TESİSTE), §3.2 (plan: müşteri →
    tesis; İSG-KATİP kişi × tesis; öneri 8: imzada bilgi rapora kopyalanır). Ekranlar: liste (#/) · müşteri (#/m/<id>) · tesis
    (#/t/<id>) · pencereler: müşteri ekle/düzenle · tesis ekle/düzenle · ek giriş ekle · pasif yap / yeniden etkinleştir.
    Bakış: planlama ekibi. Veri ortak (maket-veri.js), UYDURMA.
@@ -32,7 +32,7 @@
   var ekGiris = function (m) { return MV.musteriKullanicilari(m.id); };
   /* eksik bilgi: kayıt ENGELLENMEZ, sayfada uyarı (45, 46; M1'deki eksik bilgi uyarısıyla aynı dil) */
   var eksikMusteri = function (m) { return [!m.vno && "vergi no", !m.eposta && "e-posta"].filter(Boolean); };
-  var eksikTesis = function (t) { return [!t.sgk && "SGK işyeri sicil no", !t.adres && "adres", !t.il && "il", !t.ilce && "ilçe"].filter(Boolean); };
+  var eksikTesis = function (t) { return [!t.sgk && "SGK tescil no", !t.adres && "adres", !t.il && "il", !t.ilce && "ilçe"].filter(Boolean); };
   var eksikVar = function (m) { return eksikMusteri(m).length > 0 || etkinTesisler(m).some(function (t) { return eksikTesis(t).length > 0; }); };
   var yok = '<span class="a-deger-yok">—</span>';
   /* "kontrol tarihi" metni: geçmiş · bugün · N gün (eşik içi uyarı rengi) */
@@ -111,8 +111,8 @@
       var il = [t.ilce, t.il].filter(Boolean).join(" / ");
       return '<span class="a-hucre-satir">' + ikon("map-pin", "a-ikon-kucuk a-kart-ikon") + '<span class="a-adres">' + kirp(t.adres, "a-adres-sokak", t.adres + (il ? ", " + il : "")) + '<span class="a-adres-il">' + (il || "—") + "</span></span></span>";
     } },
-    { k: "sgk", baslik: "SGK işyeri sicil no", kart: "govde", sira: 3, hucre: function (t) {
-      return '<span class="a-kart-etiket">SGK işyeri sicil no</span>' + (t.sgk ? '<span class="a-kod a-kod-uzun">' + t.sgk + "</span>" : '<span class="a-uyari-metin">Eksik</span>');
+    { k: "sgk", baslik: "SGK tescil no", kart: "govde", sira: 3, hucre: function (t) {
+      return '<span class="a-kart-etiket">SGK tescil no</span>' + (t.sgk ? '<span class="a-kod a-kod-uzun">' + t.sgk + "</span>" : '<span class="a-uyari-metin">Eksik</span>');
     } },
     { k: "isg", baslik: "İSG-KATİP", kart: "govde", sira: 4, hucre: function (t) {
       var n = MV.isgTesis(t.id).length; return '<span class="a-kart-etiket">İSG-KATİP</span>' + (n ? '<span class="a-sayi">' + n + " kayıt</span>" : '<span class="a-uyari-metin">Kayıt yok</span>');
@@ -215,19 +215,19 @@
       '<div class="a-yuzler">' +
         /* 2026-09-26 (M3 2. tur): ekipmanlar planın içinde → yüz tesisin planını açar (plan yoksa yalnız sayı) */
         yuz({ ikon: "wrench", ad: "Ekipman", sayi: t.ekipman, hedef: t.pid ? 13 : null, hash: "#/plan/" + t.pid, ne: "Planlar", not: t.pid ? "planın içinde" : "plan açılınca görünür" }) +
-        yuz({ ikon: "scroll-text", ad: "İSG-KATİP ID", sayi: isg.length, hedef: soz ? 12 : null, hash: soz ? "#/s/" + soz.no : "", ne: "Sözleşmeler", uyari: !isg.length, not: soz ? "sözleşme " + soz.no : "iş sözleşmesi yok" }) +
+        yuz({ ikon: "scroll-text", ad: "İSG-KATİP sözleşme ID", sayi: isg.length, hedef: soz ? 12 : null, hash: soz ? "#/s/" + soz.no : "", ne: "Sözleşmeler", uyari: !isg.length, not: soz ? "sözleşme " + soz.no : "iş sözleşmesi yok" }) +
         yuz({ ikon: "clock", ad: "Son kontrol", sayi: t.son ? MK.gunKisa(t.son) : "—", not: t.son ? MK.ayYil(t.son) : "ilk kontrol" }) +
         yuz({ ikon: "alarm-clock", ad: "Sonraki kontrol", sayi: MK.gunKisa(t.sonraki), not: k < 0 ? -k + " gün geçti" : k === 0 ? "bugün" : k + " gün sonra", uyari: k <= YAKIN }) +
       "</div>" +
       '<section class="a-bolum" aria-labelledby="a-b-tbilgi"><div class="a-alt-bas"><h2 class="a-alt-baslik" id="a-b-tbilgi">Tesis bilgileri</h2></div>' +
-        '<div class="a-serit-kap">' + MK.serit("bilgi", "file-text", "Raporun işyeri bölümü (ünvan, SGK sicil no, adres) bu kayıttan dolar; imzalanan rapor o günkü bilgiyi saklar, sonradan değişmez.") + "</div>" +
+        '<div class="a-serit-kap">' + MK.serit("bilgi", "file-text", "Raporun firma bilgileri bu kayıttan dolar.") + "</div>" +
         '<dl class="a-bilgi">' + bilgi("İşyeri ünvanı", kacis(m.unvan), true) + bilgi("Adres", t.adres ? kacis(t.adres) : '<span class="a-yuz-uyari">Boş</span>', true) +
-          bilgi("SGK işyeri sicil no", t.sgk ? '<span class="a-kod a-kod-uzun">' + t.sgk + "</span>" : '<span class="a-yuz-uyari">Boş</span>', "cift") + bilgi("İl", t.il || yok) + bilgi("İlçe", t.ilce || yok) + "</dl></section>" +
-      '<section class="a-bolum" aria-labelledby="a-b-isg"><div class="a-alt-bas"><h2 class="a-alt-baslik" id="a-b-isg">İSG-KATİP ID\'leri</h2><span class="a-sayac"><b>' + isg.length + "</b> ID</span>" +
+          bilgi("SGK tescil no", t.sgk ? '<span class="a-kod a-kod-uzun">' + t.sgk + "</span>" : '<span class="a-yuz-uyari">Boş</span>', "cift") + bilgi("İl", t.il || yok) + bilgi("İlçe", t.ilce || yok) + "</dl></section>" +
+      '<section class="a-bolum" aria-labelledby="a-b-isg"><div class="a-alt-bas"><h2 class="a-alt-baslik" id="a-b-isg">İSG-KATİP sözleşme ID\'leri</h2><span class="a-sayac"><b>' + isg.length + "</b> ID</span>" +
         (soz ? MK.git({ hedef: 12, hash: "#/s/" + soz.no, ad: "Sözleşmede aç", ikon: "arrow-right", sinif: "a-tus-ikincil a-bolum-tus", ne: "Sözleşmeler" }) : "") + "</div>" +
         '<p class="a-bolum-aciklama">' + (soz ? "ID'ler iş sözleşmesinin (" + soz.no + ") içinde girilir, burada görünür; plan açarken denetçinin ID'si oradan gelir."
           : "Bu tesisin geçerli iş sözleşmesi yok; ID plan açarken el ile girilir.") + "</p>" +
-        '<div class="a-liste-kap">' + (isg.length ? MK.tablo({ baslik: "İSG-KATİP ID'leri", sinif: "a-tablo-isg", sutunlar: ISG_SUTUN(t), kayitlar: isg })
+        '<div class="a-liste-kap">' + (isg.length ? MK.tablo({ baslik: "İSG-KATİP sözleşme ID'leri", sinif: "a-tablo-isg", sutunlar: ISG_SUTUN(t), kayitlar: isg })
           : '<p class="a-bos-satir">Bu tesis için ID yok; plan açarken el ile girilebilir.</p>') + "</div></section>" +
       '<section class="a-bolum" aria-labelledby="a-b-plan"><div class="a-alt-bas"><h2 class="a-alt-baslik" id="a-b-plan">Planlar</h2></div>' +
         (t.pid ? '<dl class="a-bilgi">' + bilgi("Proje no", '<a class="a-no" href="planlarim.html#/plan/' + t.pid + '">' + t.plan + "</a>") + bilgi("Başlangıç", MK.gunYaz(t.ptarih)) +
@@ -252,8 +252,8 @@
       if (d.eposta && !eposta(d.eposta)) h.eposta = "E-posta biçimi geçersiz.";
     } else if (W.tur === "tesis") {
       if (d.ad.trim().length < 2) h.ad = "Tesis adı yazılmalı.";
-      if (d.sgk && !/^\d{26}$/.test(d.sgk)) h.sgk = "SGK işyeri sicil no 26 hane rakam; boş bırakılabilir.";
-      else if (d.sgk) { var s = MV.TESISLER.filter(function (x) { return x.sgk === d.sgk && x.id !== W.id; })[0]; if (s) u.sgk = "Bu sicil no " + MV.musteri(s.m).kisa + " / " + s.ad + " tesisinde de kayıtlı. Aynı tesis olabilir."; }
+      if (d.sgk && !/^\d{26}$/.test(d.sgk)) h.sgk = "SGK tescil no 26 hane rakam.";
+      else if (d.sgk) { var s = MV.TESISLER.filter(function (x) { return x.sgk === d.sgk && x.id !== W.id; })[0]; if (s) u.sgk = "Bu SGK tescil no " + MV.musteri(s.m).kisa + " / " + s.ad + " tesisinde de kayıtlı. Aynı tesis olabilir."; }
     } else if (W.tur === "kullanici") {
       if (d.ad.trim().split(/\s+/).length < 2) h.ad = "Ad ve soyad yazılmalı.";
       if (!eposta(d.eposta)) h.eposta = "E-posta biçimi geçersiz.";
@@ -292,7 +292,7 @@
         A("ilce", "İlçe", d.ilce, { girdi: !d.il ? '<input class="a-girdi a-girdi-oku" id="w-ilce" readonly value="Önce il seçin" aria-describedby="w-ilce-ipucu">'
           : ilceler ? MK.secim({ id: "w-ilce", ad: "İlçe", deger: d.ilce, secenekler: ilceler.map(function (x) { return [x, x]; }), ipucu: "İlçe seçin" }) : null,
           ek: ' maxlength="40"' }) +
-        A("sgk", "SGK işyeri sicil no", d.sgk, { genis: true, sinif: "a-girdi-sgk", ek: ' inputmode="numeric" maxlength="26"', ipucu: "26 hane. Boşsa kayıt olur; rapor imzalanırken hatırlatılır." }) + "</div>";
+        A("sgk", "SGK tescil no", d.sgk, { genis: true, sinif: "a-girdi-sgk", ek: ' inputmode="numeric" maxlength="26"', ipucu: "26 hane. Boşsa kayıt olur; rapor imzalanırken hatırlatılır." }) + "</div>";
     } else if (W.tur === "kullanici") {
       $("a-pencere-baslik").textContent = "Ek giriş ekle";
       var t = etkinTesisler(MV.musteri(W.m));

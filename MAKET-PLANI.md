@@ -140,3 +140,5 @@ tek mesaj: sayfanın bağlantısı + kaç maket + kaç soru + ölçülemeyen var
 - 2026-09-26: **M5 ve M13 ONAYLANDI** (reisim: *"Sıradakine geçelim"*). Sırada **M6 Plan aç** — sorular 74–81 yeniden soruldu.
 - 2026-09-26: **M6 2. tur** — reisim 74–81 ("Önerilerin uygun ama geliştirilebilir maketi yap inceleyeyim"): uyarılar engel değil, İSG-KATİP ID
   sözleşmeden / el ile, bitmiş uyarısı, sahada yeni ekipman alanı kalktı. M6 60/60 · 18/18 · 40/40. Reisim'in incelemesi bekleniyor.
+- 2026-09-26: **M6 2. tur, ek** — reisim: rapor 1. bölümü "Firma bilgileri" (her raporda ortak), "SGK tescil no", "İSG-KATİP sözleşme ID",
+  parantez içi açıklama ve alt satır mesajı yok (genel ilke). M6 60/60 · 18/18 · 40/40. Reisim'in incelemesi bekleniyor.

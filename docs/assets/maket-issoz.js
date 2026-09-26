@@ -7,7 +7,7 @@
    yüklenebilir olsun, isg katip sözleşme id ve sgk no buraya girilsin buradan raporlara otomatik çekilecek ... sözleşme id denetçiye göre
    değişir ... otomatik gelmeyen veriler el ile girilebilir olsun" + "Önerilerin hepsi uygun başla"):
    · A → ayrı "İSG-KATİP kayıtları" sekmesi KALKTI (M5 ile M13 birleşti); Sözleşmeler = iş sözleşmeleri.
-   · B → SGK işyeri sicil no tek yerde, tesiste (M2); burada ve raporda oradan görünür.
+   · B → SGK tescil no tek yerde, tesiste (M2); burada ve raporda oradan görünür.
    · C → sözleşmenin içinde tesis başına denetçi → sözleşme ID; plan açarken seçilen denetçinin ID'si buradan gelir, yoksa plan açan el ile
      yazar ("sözleşmeye de kaydet"; M6'nın sırası gelince). Rapor ID'yi plandan alır, raporda da düzeltilebilir.
    · D → her ID'nin yanında isteğe bağlı İSG-KATİP PDF'i · E → onay tarihi isteğe bağlı; geç onay yalnız UYARI (kabul engellenmez).
@@ -105,7 +105,7 @@
   /* ── SÖZLEŞME SAYFASI ─────────────────────────────────────────────────────────────────────────────── */
   function isgBolum(x) {
     return '<section class="a-bolum" aria-labelledby="a-b-isg"><div class="a-alt-bas"><h2 class="a-alt-baslik" id="a-b-isg">İSG-KATİP</h2><span class="a-sayac"><b>' + isgSayisi(x) + "</b> ID</span></div>" +
-      '<p class="a-bolum-aciklama">Her tesiste denetçi başına sözleşme ID. Plan açarken seçilen denetçinin ID\'si buradan gelir, raporlara oradan geçer; yoksa plan açan el ile yazar. SGK işyeri sicil no tesis kaydından gelir.</p>' +
+      '<p class="a-bolum-aciklama">Her tesiste denetçi başına sözleşme ID. Plan açarken seçilen denetçinin ID\'si buradan gelir, raporlara oradan geçer; yoksa plan açan el ile yazar. SGK tescil no tesis kaydından gelir.</p>' +
       x.tesisler.map(function (tid) {
         var t = MV.tesis(tid), l = MV.isgTesis(tid), eks = idEksik({ tesisler: [tid] });
         var SUT = [
@@ -124,7 +124,7 @@
               (idKullanimi(r) ? "" : MK.tus({ eylem: "isg-sil", ad: "Sil", ikon: "x", sinif: "a-tus-ikincil", veri: { id: r.id } })) + "</div></div>";
           } }
         ];
-        return '<div class="a-alt-bas a-alt-bas-ic"><h3 class="a-alt-baslik">' + kacis(t.ad) + '</h3><span class="a-sayac">SGK işyeri sicil no <span class="a-kod">' + (t.sgk || "—") + "</span></span>" +
+        return '<div class="a-alt-bas a-alt-bas-ic"><h3 class="a-alt-baslik">' + kacis(t.ad) + '</h3><span class="a-sayac">SGK tescil no <span class="a-kod">' + (t.sgk || "—") + "</span></span>" +
           '<a class="a-tus a-tus-ikincil a-bolum-tus" href="#/s/' + x.no + "/isg-ekle?tesis=" + tid + '">' + ikon("plus", "a-ikon-kucuk") + "ID ekle</a></div>" +
           (eks.length ? '<div class="a-serit-kap">' + MK.serit("uyari", "triangle-alert", "Açık planda İSG-KATİP sorunu: " + eks.map(function (e) { return kacis(e[1].ad) + " (" + e[2] + ")"; }).join(", ") + ". Buradan eklenebilir ya da plan açarken el ile girilir.") + "</div>" : "") +
           '<div class="a-liste-kap">' + (l.length ? MK.tablo({ baslik: "İSG-KATİP · " + t.ad, sinif: "a-tablo-isgid", sutunlar: SUT, kayitlar: l }) : '<p class="a-bos-satir">Bu tesiste ID yok.</p>') + "</div>";
@@ -250,14 +250,14 @@
       var tesisler = x.tesisler.map(function (tid) { return [tid, MV.tesis(tid).ad]; });
       var kisiler = MV.PERSONEL.filter(function (p) { return p.durum === "etkin"; }).map(function (p) { return [p.id, p.ad, MV.meslekAd(p)]; });
       var mevcut = !r && d.tesis && d.kisi ? MV.isgTesis(d.tesis).filter(function (i) { return i.k === d.kisi; })[0] : null;
-      $("a-pencere-baslik").textContent = r ? "İSG-KATİP ID · düzenle" : "İSG-KATİP ID ekle";
+      $("a-pencere-baslik").textContent = r ? "İSG-KATİP sözleşme ID · düzenle" : "İSG-KATİP sözleşme ID ekle";
       govde = '<p class="a-pencere-ozet"><b>' + x.no + "</b> · " + kacis(MV.musteri(x.m).kisa) + "</p>" + '<div class="a-form">' +
-        MK.alan({ id: "w-tesis", etiket: "Tesis", zorunlu: true, hata: h.tesis, ipucu: d.tesis ? "SGK işyeri sicil no " + (MV.tesis(d.tesis).sgk || "girilmemiş") : "",
+        MK.alan({ id: "w-tesis", etiket: "Tesis", zorunlu: true, hata: h.tesis, ipucu: d.tesis ? "SGK tescil no " + (MV.tesis(d.tesis).sgk || "girilmemiş") : "",
           girdi: r || tesisler.length === 1 ? '<input class="a-girdi a-girdi-oku" id="w-tesis" readonly value="' + kacis(MV.tesis(d.tesis).ad) + '" aria-describedby="w-tesis-ipucu">'
             : MK.secim({ id: "w-tesis", ad: "Tesis", deger: d.tesis, secenekler: tesisler, ipucu: "Tesis seçin", gecersiz: !!h.tesis, tanim: "w-tesis-ipucu" }) }) +
         MK.alan({ id: "w-kisi", etiket: "Denetçi", zorunlu: true, hata: h.kisi,
           girdi: r ? '<input class="a-girdi a-girdi-oku" id="w-kisi" readonly value="' + kacis(MV.kisi(r.k).ad) + '">' : MK.secim({ id: "w-kisi", ad: "Denetçi", deger: d.kisi, secenekler: kisiler, ipucu: "Kişi seçin", gecersiz: !!h.kisi, tanim: h.kisi ? "w-kisi-ipucu" : "" }) }) +
-        MK.alan({ id: "w-no", etiket: "Sözleşme ID", zorunlu: true, hata: h.no, ipucu: "İSG-KATİP'teki sözleşme numarası; raporlara buradan geçer.", girdi: MK.girdi({ id: "w-no", alan: "no", deger: d.no, sinif: "a-girdi-seri", ek: ' maxlength="30"', hata: h.no }) }) +
+        MK.alan({ id: "w-no", etiket: "İSG-KATİP sözleşme ID", zorunlu: true, hata: h.no, ipucu: "İSG-KATİP'teki sözleşme numarası; raporlara buradan geçer.", girdi: MK.girdi({ id: "w-no", alan: "no", deger: d.no, sinif: "a-girdi-seri", ek: ' maxlength="30"', hata: h.no }) }) +
         MK.alan({ id: "w-onay", etiket: "Onay tarihi", hata: h.onay, ipucu: "İsteğe bağlı; kontrolden sonraki onayda uyarı çıkar.", girdi: MK.girdi({ id: "w-onay", alan: "onay", deger: d.onay, sinif: "a-girdi-sicil", ek: ' inputmode="numeric" maxlength="10" placeholder="GG.AA.YYYY"', hata: h.onay }) }) +
         MK.alan({ id: "w-bitis", etiket: "Bitiş tarihi", hata: h.bitis, ipucu: "İsteğe bağlı; plan günü bitişten sonraysa plan açarken uyarı çıkar.", girdi: MK.girdi({ id: "w-bitis", alan: "bitis", deger: d.bitis, sinif: "a-girdi-sicil", ek: ' inputmode="numeric" maxlength="10" placeholder="GG.AA.YYYY"', hata: h.bitis }) }) +
         '<div class="a-alan-grup a-alan-genis"><p class="a-etiket">İSG-KATİP sözleşmesi (PDF)</p>' +

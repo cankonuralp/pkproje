@@ -71,7 +71,7 @@
     var girilen = r.test.filter(function (v) { return !isNaN(sayi(v)); }).length, gecti = cihazlar(r).filter(function (v) { return MV.kalDurum(v) === "gecti"; });
     var oneri = r.sigorta ? r.sigorta.filter(function (x) { return x.durum !== "onayli"; }).length : 0;
     return [
-      { ok: !!r.metot, metin: r.metot ? "Kontrol metodu seçildi" : "Kontrol metodu seçilmedi", bolum: "r-b1" },
+      { ok: !!r.metot, metin: r.metot ? "Kontrol metodu seçildi" : "Kontrol metodu seçilmedi", bolum: "r-bk" },
       { ok: !!r.amac.trim(), metin: r.amac.trim() ? "Kullanım amacı yazıldı" : "Kullanım amacı yazılmadı", bolum: "r-b2" },
       { ok: !gecti.length, metin: gecti.length ? "Kalibrasyonu geçmiş cihaz zimmette: " + gecti.map(function (v) { return v.env; }).join(", ") : "Ölçüm aletlerinin kalibrasyonu geçerli", bolum: "r-b3" },
       { ok: cev === r.kriter.length, metin: cev + " / " + r.kriter.length + " kriter cevaplandı", bolum: "r-b4" },
@@ -120,25 +120,27 @@
             (x.ok ? "" : '<button class="a-tus a-tus-ikincil a-serit-tus" type="button" data-eylem="bolume-git" data-hedef="' + x.bolum + '">Git</button>') + "</li>";
         }).join("") + "</ul></section>") +
       '<div class="a-rapor-bolumler">' +
-      bolum(1, "r-b1", "Genel bilgiler", '<dl class="a-bilgi">' +
-          bilgi("İşyeri", kacis(MV.musteri(PL.m).unvan), true) + bilgi("SGK işyeri sicil no", '<span class="a-kod a-kod-uzun">' + PL.sgk + "</span>", "cift") +
-          bilgi("Sözleşme no (İSG-KATİP)", isg ? '<span class="a-kod">' + isg.no + "</span>" : '<span class="a-uyari-metin">Kayıt yok</span>') +
-          bilgi("Başlangıç", (r.olustu || r.basladi) ? MK.zamanYaz(r.olustu || r.basladi) + '<span class="a-alt-satir">rapor açıldı</span>' : '<span class="a-deger-yok">—</span>') +
-          bilgi("Bitiş", r.gonderildi ? MK.zamanYaz(r.gonderildi) : '<span class="a-deger-yok">Onaya gönderilince</span>') +
-          bilgi("Sonraki kontrol", MK.tarihYaz(r.sonraki) + (r.gerekce ? '<span class="a-alt-satir">değiştirildi: ' + kacis(r.gerekce) + "</span>" : '<span class="a-alt-satir">bugün + ' + t.periyot + " ay</span>")) +
+      /* 1 · FİRMA BİLGİLERİ: türün rapor formatından bağımsız, her raporda aynı (reisim 2026-09-26) */
+      bolum(1, "r-b1", "Firma bilgileri", '<dl class="a-bilgi">' +
+          bilgi("Firma ünvanı", kacis(MV.musteri(PL.m).unvan), true) + bilgi("Adres", kacis(PL.adres + ", " + PL.ilce + " / " + PL.il), true) +
+          bilgi("SGK tescil no", '<span class="a-kod a-kod-uzun">' + PL.sgk + "</span>", "cift") +
+          bilgi("İSG-KATİP sözleşme ID", isg ? '<span class="a-kod">' + isg.no + "</span>" : '<span class="a-uyari-metin">Yok</span>') + "</dl>") +
+      bolum(2, "r-bk", "Kontrol bilgileri", '<dl class="a-bilgi">' +
+          bilgi("Başlangıç", (r.olustu || r.basladi) ? MK.zamanYaz(r.olustu || r.basladi) : '<span class="a-deger-yok">—</span>') +
+          bilgi("Bitiş", r.gonderildi ? MK.zamanYaz(r.gonderildi) : '<span class="a-deger-yok">—</span>') +
+          bilgi("Sonraki kontrol", MK.tarihYaz(r.sonraki)) + (r.gerekce ? bilgi("Değiştirme gerekçesi", kacis(r.gerekce), true) : "") +
         "</dl>" +
         '<div class="a-form a-bolum-serit">' +
-          MK.alan({ id: "r-metot", etiket: "Kontrol metodu", zorunlu: !oku, ipucu: "Türün standartları; yoksa üretici talimatı ya da risk değerlendirmesi (Ek-III 1.7.1.1)", genis: true,
+          MK.alan({ id: "r-metot", etiket: "Kontrol metodu", zorunlu: !oku, genis: true,
             girdi: oku ? '<input class="a-girdi a-girdi-oku" id="r-metot" readonly value="' + kacis(metotAd || "—") + '" aria-describedby="r-metot-ipucu">' : MK.secim({ id: "r-metot", ad: "Kontrol metodu", deger: r.metot, secenekler: metotlar, ipucu: "Metot seçin", tanim: "r-metot-ipucu" }) }) +
         "</div>" +
         (oku ? "" : '<div class="a-eylem-cubugu a-bolum-serit">' + MK.tus({ eylem: "sonraki-ac", ad: "Sonraki kontrolü değiştir", ikon: "calendar-check", sinif: "a-tus-ikincil" }) + "</div>")) +
-      bolum(2, "r-b2", "Ekipman", '<dl class="a-bilgi">' + bilgi("Kod", '<span class="a-kod">' + e.kod + "</span>") + bilgi("Marka / model", kacis(e.marka + " " + e.model)) +
+      bolum(3, "r-b2", "Ekipman", '<dl class="a-bilgi">' + bilgi("Kod", '<span class="a-kod">' + e.kod + "</span>") + bilgi("Marka / model", kacis(e.marka + " " + e.model)) +
           bilgi("Seri no", '<span class="a-kod">' + e.seri + "</span>") + bilgi("İmal yılı", e.imal) + bilgi("Kullanım yeri", kacis(e.konum)) +
           bilgi("Önceki kontrol", e.onceki ? MK.tarihYaz(e.onceki.tarih) + '<span class="a-alt-satir">' + kacis(e.onceki.sonuc) + " · <span class=\"a-rapor-no\">" + e.onceki.rapor + "</span></span>" : '<span class="a-deger-yok">İlk kontrol</span>') + "</dl>" +
-        '<p class="a-bolum-aciklama a-bolum-serit">Etiket bilgisi ekipman kaydından gelir; farklıysa ekipman sayfasında düzeltilir (kayıt tüm raporlar için ortak).</p>' +
-        '<div class="a-form">' + MK.alan({ id: "r-amac", etiket: "Kullanım amacı", zorunlu: !oku, genis: true, ipucu: "Ek-III 1.7.2.2 — tespit edilen bilgi",
+        '<div class="a-form">' + MK.alan({ id: "r-amac", etiket: "Kullanım amacı", zorunlu: !oku, genis: true,
           girdi: MK.girdi({ id: "r-amac", alan: "amac", deger: r.amac, ek: ' maxlength="120"' + (oku ? " readonly" : ""), sinif: oku ? "a-girdi-oku" : "" }) }) + "</div>") +
-      bolum(3, "r-b3", "Ölçüm aletleri", '<p class="a-bolum-aciklama">Seçilmez: ' + kacis(p.ad) + " zimmetindeki, bu gruba (" + kacis(MV.grup(t.g).ad.toLocaleLowerCase("tr")) + ") uygun cihazlar kendiliğinden gelir.</p>" +
+      bolum(4, "r-b3", "Ölçüm aletleri", "" +
         (ci.length ? '<ul class="a-kosullar">' + ci.map(function (v) {
           var d = MV.kalDurum(v);
           return '<li class="' + (d === "gecti" ? "a-kosul-eksik" : "a-kosul-tamam") + '">' + ikon(d === "gecti" ? "circle-x" : d === "yakin" ? "triangle-alert" : "circle-check", "a-ikon-kucuk") +
@@ -146,29 +148,27 @@
         }).join("") + "</ul>" : '<p class="a-bos-satir">Zimmette bu gruba uygun cihaz yok.</p>') +
         (ci.some(function (v) { return MV.kalDurum(v) === "gecti"; }) && !oku ? '<div class="a-bolum-serit">' + MK.serit("hata", "circle-x", "Kalibrasyonu geçmiş cihaz zimmetinizde: rapor doldurulabilir ama onaya gönderilemez. Cihazı depoya teslim edin ya da kalibrasyona gönderin.") +
           '</div><div class="a-eylem-cubugu a-bolum-serit">' + MK.git({ hedef: 9, hash: "#/?kisi=" + r.kisi, ad: "Zimmetlerim", ikon: "package", ne: "Zimmetler" }) + "</div>" : "")) +
-      bolum(4, "r-b4", "Muayene kriterleri", '<p class="a-bolum-aciklama">Her madde ayrı: fiilen yapıldı mı ve sonucu (14/A-1-ç, 14/A-1-d). ' +
-          (sinifli ? "Bakanlık formatı " + t.format + " yürürlükte: kusur hafif ya da ağır." : "Bu türde Bakanlık formatı yürürlükte değil: hafif / ağır sınıflandırması yapılmaz.") + "</p>" +
+      bolum(5, "r-b4", "Muayene kriterleri", "" +
         r.kriter.map(function (x, i) {
           var ad = MV.kriterler(t)[i], kus = x.d === "yapildi" && x.s && x.s !== "uygun";
           return '<div class="a-kriter" id="r-k' + i + '"><p class="a-kriter-ad"><span class="a-kriter-no">' + (i + 1) + "</span><span>" + kacis(ad) + "</span></p>" +
             '<div class="a-kriter-cevap">' + segmen("Madde " + (i + 1) + " yapıldı mı", "d" + i, x.d, [["yapildi", "Yapıldı"], ["yapilmadi", "Yapılmadı"], ["uygulanamaz", "Uygulanamaz"]], oku) +
               (x.d === "yapildi" ? segmen("Madde " + (i + 1) + " sonucu", "s" + i, x.s, sonuclar, oku) : "") + "</div>" +
-            (kus ? MK.alan({ id: "r-kn" + i, etiket: "Kusur açıklaması", zorunlu: !oku, ipucu: "Her kusur ayrı yazılır; uygunsuzluk notlara yazılamaz",
+            (kus ? MK.alan({ id: "r-kn" + i, etiket: "Kusur açıklaması", zorunlu: !oku,
               girdi: '<textarea class="a-alan a-alan-ince" id="r-kn' + i + '" data-alan="kn' + i + '" maxlength="300" aria-describedby="r-kn' + i + '-ipucu"' + (oku ? " readonly" : "") + ">" + kacis(x.not) + "</textarea>" }) : "") + "</div>";
         }).join(""), '<span class="a-sayac" id="r-kriter-say"><b>' + cevaplanan + "</b> / " + r.kriter.length + " madde</span>") +
-      bolum(5, "r-b5", "Test değerleri", '<div class="a-form">' + MV.testler(t).map(function (x, i) {
+      bolum(6, "r-b5", "Test değerleri", '<div class="a-form">' + MV.testler(t).map(function (x, i) {
           var s = testSonuc(x, r.test[i]);
           return MK.alan({ id: "r-t" + i, etiket: kacis(x.ad) + " (" + x.birim + ")", zorunlu: !oku, ipucu: '<span id="r-t' + i + '-sonuc">' + testIpucu(x, r.test[i]) + "</span>", hata: "",
             girdi: MK.girdi({ id: "r-t" + i, alan: "t" + i, deger: r.test[i], sinif: "a-girdi-sicil" + (oku ? " a-girdi-oku" : ""), ek: ' inputmode="decimal" maxlength="10"' + (oku ? " readonly" : "") + (s === false ? ' aria-invalid="true"' : "") }) });
         }).join("") + "</div>") +
-      (elektrik(t) ? bolum(6, "r-b6", "Pano sigortaları", sigortaHtml(r, oku)) : "") +
-      bolum(elektrik(t) ? 7 : 6, "r-b7", "Fotoğraflar", '<div class="a-fotolar">' + fotolar(r.foto) + (oku ? "" : MK.tus({ eylem: "foto-ekle", ad: "Fotoğraf çek", ikon: "camera", sinif: "a-tus-ikincil" })) + "</div>" +
-        '<p class="a-ipucu">' + (r.foto ? r.foto + " fotoğraf · rapor başına en az 1 (onaya gönderirken denetlenir)" : "Rapor başına en az 1 fotoğraf zorunlu. Telefonda kamera açılır; masaüstünde dosya seçilir.") + "</p>") +
-      bolum(elektrik(t) ? 8 : 7, "r-b8", "Sonuç ve kanaat", '<p class="a-bolum-aciklama" id="r-oneri">' + oneri(r, sinifli) + "</p>" +
+      (elektrik(t) ? bolum(7, "r-b6", "Pano sigortaları", sigortaHtml(r, oku)) : "") +
+      bolum(elektrik(t) ? 8 : 7, "r-b7", "Fotoğraflar", '<div class="a-fotolar">' + fotolar(r.foto) + (oku ? "" : MK.tus({ eylem: "foto-ekle", ad: "Fotoğraf çek", ikon: "camera", sinif: "a-tus-ikincil" })) + "</div>" +
+        "") +
+      bolum(elektrik(t) ? 9 : 8, "r-b8", "Sonuç ve kanaat", '<p class="a-bolum-aciklama" id="r-oneri">' + oneri(r, sinifli) + "</p>" +
         segmen("Sonuç ve kanaat", "sonuc", r.sonuc, [["kullanilir", "Kullanılabilir", "a-sekme-onay"], ["kullanilamaz", "Kullanılamaz", "a-sekme-hata"]], oku) +
-        '<p class="a-ipucu">Kullanılamaz: kusur giderilene kadar (Ek-III 1.7.8, raporda açıkça yazılır).</p>' +
         (agir(r) && r.sonuc === "kullanilir" ? '<p class="a-ipucu a-ipucu-uyari">Ağır kusur ya da sınır dışı test değeri varken “Kullanılabilir” seçilemez.</p>' : "")) +
-      bolum(elektrik(t) ? 9 : 8, "r-b9", "Notlar", '<textarea class="a-alan a-alan-ince" id="r-notlar" data-alan="notlar" maxlength="500" aria-label="Notlar" placeholder="Ek bilgi (uygunsuzluk buraya yazılamaz)"' + (oku ? " readonly" : "") + ">" + kacis(r.notlar) + "</textarea>") +
+      bolum(elektrik(t) ? 10 : 9, "r-b9", "Notlar", '<textarea class="a-alan a-alan-ince" id="r-notlar" data-alan="notlar" maxlength="500" aria-label="Notlar" placeholder="Ek bilgi"' + (oku ? " readonly" : "") + ">" + kacis(r.notlar) + "</textarea>") +
       "</div>" +
       (oku ? "" : '<div class="a-form-eylem"><p class="a-adim-not">Taslak her değişiklikte kaydedilir · son kayıt ' + MK.SAAT + "</p>" +
         MK.tus({ eylem: "onaya-gonder", ad: "Onaya gönder", ikon: "send", kapali: eksik.length > 0, sebepId: "r-eksik-say" }) + "</div>");
@@ -251,7 +251,7 @@
       if (!iso) h.tarih = "GG.AA.YYYY biçiminde geçerli bir tarih."; else if (iso <= MK.BUGUN) h.tarih = "Bugünden sonra olmalı.";
       if (!d.gerekce.trim()) h.gerekce = "Varsayılandan farklı tarih gerekçe ister.";
       W.hata = h; if (Object.keys(h).length) { pencereCiz("w-" + Object.keys(h)[0]); return; }
-      r.sonraki = iso; r.gerekce = d.gerekce.trim(); $("a-pencere").close(); ciz("r-b1-b"); MK.bildir("Sonraki kontrol " + MK.tarihYaz(iso) + " oldu; gerekçe rapora yazıldı.");
+      r.sonraki = iso; r.gerekce = d.gerekce.trim(); $("a-pencere").close(); ciz("r-bk-b"); MK.bildir("Sonraki kontrol " + MK.tarihYaz(iso) + " oldu; gerekçe rapora yazıldı.");
     }
   }
 
