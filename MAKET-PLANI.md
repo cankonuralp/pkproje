@@ -241,3 +241,5 @@ karara bağlanmış ya da gereksiz kalan sorular düştü (82 dışı M7 sorular
 düzeltilemez) · 95 gerekçe yok (rapor ekranı emsal uygulamaya göre) · 99 raporlar birleşmez, her rapor ayrı imzalanır (indir + e-imza ya da
 imza servisi) · ötekiler kabul. Sıra: genel temizlik (alt satır mesajları) → M7 → M8 → M9 → M10 → M11 → M12 → M14 → M15 → M16 → toplu bakış.
 Bütün maketler onaylanmadan kod yok.
+- 2026-09-26: **M6–M16 2. tur bitti** (genel temizlik → M7 → M8 → M9 → M10 → M11 → M12 → M14 → M15 → M16); toplu bakış yeniden üretildi, açık soru
+  yok. Bütün maketler üç kipte temiz. Reisim'in toplu gözden geçirmesi bekleniyor; onaylanmadan kod yok.

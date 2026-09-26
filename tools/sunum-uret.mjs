@@ -391,12 +391,12 @@ const n3 = sayfa({
     <li><b>Maketler birbirine bağlı</b><span>Her bağlantı yeni sekmede açılır. Yan menüdeki bütün modüllerin maketi var; ekranlar arası geçişler (teklif → sözleşme → plan aç, plan → rapor → onay → muhasebe, uyarı → eğitim) tıklanır.</span></li>
     <li><b>Masaüstü, tablet, telefon</b><span>Aynı sayfa telefonda açılınca telefon tasarımı görünür (tablo yerine kart, süzgeç levhası, altta yapışkan tuş). Tema üst çubuktaki düğmeyle.</span></li>
     <li><b>Veri uydurma, gün sabit</b><span>Bütün firma, kişi, tesis ve numaralar uydurmadır; maketin “bugün”ü 23 Eylül 2026. Yapılan değişiklik sayfa yenilenince geri gelir.</span></li>
-    <li><b>Cevap numarayla</b><span>Sorular pkproje.md'deki numarayla (${TS[0].no}–${TS[TS.length - 1].no}). “45: evet · 46: hayır, şöyle olsun” biçiminde yazılabilir; cevaplar pkproje.md'ye işlenir, sonra faz 1 sırasıyla koda geçilir.</span></li>
+    <li><b>Cevap numarayla</b><span>Sorular pkproje.md'deki numarayla (${TS.length ? TS[0].no + "–" + TS[TS.length - 1].no : "açık soru yok"}). “45: evet · 46: hayır, şöyle olsun” biçiminde yazılabilir; cevaplar pkproje.md'ye işlenir, sonra faz 1 sırasıyla koda geçilir.</span></li>
   </ul><p class="s-oran" style="margin-top:12px">${md(on36)}</p>`),
     bolum(2, "ozet", "Özet", `Sayılar ölçüm dosyalarından (${K(MAKETLER[0].dur.arac)}); elle yazılmadı.`,
       `<div class="s-karolar">
     <div class="s-karo"><b>${MAKETLER.length}</b><span>maket · faz 1: ${faz(1).length}, faz 2: ${faz(2).length}</span></div>
-    <div class="s-karo"><b>${TS.length}</b><span>karar sorusu (${TS[0].no}–${TS[TS.length - 1].no})</span></div>
+    <div class="s-karo"><b>${TS.length}</b><span>${TS.length ? "karar sorusu (" + TS[0].no + "–" + TS[TS.length - 1].no + ")" : "açık karar sorusu"}</span></div>
     <div class="s-karo s-iyi"><b>${DURUM.temiz}/${DURUM.toplam}</b><span>durum temiz (1920 · 1080 · 375 × açık/koyu) · çekmece ${DURUM.cekTemiz}/${DURUM.cekToplam}</span></div>
     <div class="s-karo s-iyi"><b>${DURUM.etkGecen}/${DURUM.etkToplam}</b><span>etkileşim denemesi geçti</span></div>
   </div>

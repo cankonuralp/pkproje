@@ -600,7 +600,7 @@ kalktı (müşteri ünvanı / tesis adresi / sonraki kontrol / süre ipuçları,
 bilgi şeridi); etiket **"İSG-KATİP sözleşme ID"**. Yeniden ölçüm: 60/60 · 18/18 · 40/40.
 1. tur (2026-09-24): 10 durum 60/60, etkileşim 12/12 ("Kabul edemez", sahada yeni ekipman alanı vardı).
 
-#### Maket M7 — Standart Kütüphanesi (modül 4) — 2. TUR, ONAY BEKLİYOR (toplu gözden geçirmede)
+#### Maket M7 — Standart Kütüphanesi (modül 4) — ONAY BEKLİYOR
 **2. tur (2026-09-26, §9 yirmi birinci tur):** ayrı **rapor şablonu önizlemesi ekranı kalktı** (A: türün rapor formatı PDF'i yeter); tür sayfasındaki
 "PDF'i aç" formatı pencerede gösterir (makette rapor belgesi), `maket/sablon.html` Ekipman türlerine yönlendirir. Standart sayfasında "Şablonda gör"
 ve açıklama satırları kalktı. 82 kontrol metodu türün standartlarından, yoksa üretici talimatı · 83 yükleyen branş yöneticisi + firma yöneticisi,
@@ -627,22 +627,14 @@ sürüm penceresi**) · **rapor şablonu önizlemesi** (`maket/sablon.html#/<tü
   ölçüm aletleri ← inspector'ın zimmeti (M4, seçilmez) · yetkili kişi ← personel (M1) · nüsha ← firma ayarı · imza ← e-imza / ıslak imza.
 - Hafif / ağır kusur yalnız Bakanlık formatı yürürlükte olan türde; öteki türde "Kusurlu" (§4.5). Kriter maddeleri **örnek** (grup başına).
 **Sorular (M7):**
-82. Kontrol metodu standardı: **tür düzeyinde atanıp rapor anında türün standartlarından seçilsin** (öneri) mi, yalnız biri mi? *(§3 açık soru.)*
-83. Standart yükleme ve yeni sürüm yetkisi: **branş yöneticisi + firma yöneticisi** (öneri) mi? Okuma herkese açık mı?
-84. Yeni sürüm yüklenince türler **kendiliğinden yeni sürüme** geçsin mi (öneri), yoksa tür tür onaylansın mı?
-85. Standart dosyasının açılması **kayda geçsin mi** (kim, ne zaman; telifli belge)?
-86. **Belge önizlemesi** yeni desen (kalıp 16): kâğıt ortada, en çok 880 px, metin bir basamak küçük, telefonda akar — uygun mu? (M9 PDF de
-    bu desenle.)
-87. Akreditasyon markası rapor başlığında **her raporda** mı, yalnız **akreditasyon kapsamındaki türlerde** mi?
-88. Bakanlık formatı olmayan türlerde firma formatı Ek-III 1.7 sırasıyla (makette) yeterli mi; firma **kendi form kodunu** mu kullanır?
-89. Şablon önizlemesini **inspector** da görsün mü (sahada neyi dolduracağını görmek için), yoksa yalnız yöneticiler mi?
+Açık soru yok — sorular toplu listede cevaplandı (§9 yirmi birinci tur; liste `MAKET-PLANI.md`).
 **Ölçüm (2026-09-24, bulut):** 11 durum × 1920 · 1080 · 375 × açık/koyu = **66/66 temiz**, çekmece 2/2; etkileşim **12/12**. Ölçerken
 düzeltilen: telefonda akreditasyon markası yeri ve 26 haneli SGK sicil no taşıyordu (belge metni bir basamak küçüldü) · telefonda künye
 logoların arasına sıkışıp e-posta ve akreditasyon no bölünüyordu (künye alta alındı, no bölünmez) · örnek rapor geçen yılın tarihini bu
 yılın şablon sürümüyle gösteriyordu (örnek bugün tarihli yapıldı). Ekipman türü sayfasındaki "Standart kütüphanesi" artık türe göre
 süzülmüş listeye gider (M3 60/60, 14/14 yeniden).
 
-#### Maket M8 — Saha ve Rapor (modül 14) — 2. TUR, ONAY BEKLİYOR (toplu gözden geçirmede)
+#### Maket M8 — Saha ve Rapor (modül 14) — ONAY BEKLİYOR
 **2. tur (2026-09-26, §9 yirmi birinci tur):** rapor ekranı türün yüklenen formatına göre kurulur; ayrıntısı emsal uygulamaya göre (95).
 **1 · Firma bilgileri** her raporda aynı, raporda düzeltilmez (160: plan açılırken girilir) · **2 · Kontrol bilgileri** · sonraki kontrol tarihi
 **gerekçesiz** değişir (95) · **"Onaya gönder" hep açık** (90): eksik varsa uyarı penceresi, "Yine de gönder"; **tek engel kalibrasyonu geçmiş cihaz**
@@ -675,20 +667,13 @@ Durumlar: taslak · geri gönderilmiş (yöneticinin gerekçesi üstte) · onayd
 - Taslak her değişiklikte kaydedilir (makette "son kayıt" satırı); çevrimdışı kuyruk sonraki fazda (§8.1).
 - Planlar maketinde tek değişiklik: rapor satırındaki "Raporu düzenle / aç" tuşu bu ekrana giden bağlantı oldu (görünüş aynı).
 **Sorular (M8):**
-90. Onaya gönderme: eksik varken **tuş pasif + eksik listesi** (öneri) mi, tuş açık ve basınca eksikleri göstermek mi?
-91. Kalibrasyonu geçmiş cihaz kilidi: yalnız **bu gruba uygun** cihaz mı kilitler (öneri), zimmetteki herhangi bir geçmiş cihaz mı? *(soru 58–59 ile bağlı)*
-92. Sigorta okuma: **emin olunmayan satırlar toplu onaya girmesin** (öneri) mi? Okunan pano fotoğrafı rapora ek olarak saklansın mı?
-93. Pano sigortaları bölümü hangi türlerde: **elektrik grubunun tamamı** (makette) mı, yalnız pano ve iç tesisat mı?
-94. Her kusurlu maddeye **ayrı fotoğraf** bağlansın mı?
-95. Sonraki kontrol tarihini değiştirmek: **gerekçe yeter** (öneri) mi, yönetici onayı da mı?
-96. Geri gönderilen raporda yöneticinin gerekçesi üstte kalır; yeniden gönderilince **gerekçe geçmişi** raporda saklansın mı (öneri: evet)?
-97. Sahada bağlantı durumu (çevrimdışı / eşitlendi) ekranda **ayrıca** gösterilsin mi, yoksa "son kayıt" satırı yeter mi?
+Açık soru yok — sorular toplu listede cevaplandı (§9 yirmi birinci tur; liste `MAKET-PLANI.md`).
 **Ölçüm (2026-09-24, bulut):** 10 durum × 1920 · 1080 · 375 × açık/koyu = **60/60 temiz**, çekmece 2/2; etkileşim **15/15** (Planlar'dan
 geçiş dahil). Ölçerken düzeltilen: 375'te üç seçenekli seçim satırı 8 px, "Giderilene kadar kullanılamaz" seçeneği 66 px taşıyordu
 (telefonda seçenek iç boşluğu daraldı; seçenek "Kullanılamaz" oldu, açıklaması altında) · önceki raporun numarası satır sonunda bölünüyordu.
 Planlar (54/54, 15/15) ve M7 (66/66, 12/12; kriter ve test listesi ortak veriye taşındı) yeniden ölçüldü.
 
-#### Maket M9 — Raporlar · Onaylar · İmza · PDF (modül 14, 15, 16) — 2. TUR, ONAY BEKLİYOR (toplu gözden geçirmede)
+#### Maket M9 — Raporlar · Onaylar · İmza · PDF (modül 14, 15, 16) — ONAY BEKLİYOR
 **2. tur (2026-09-26, §9 yirmi birinci tur):** **raporlar asla birleştirilmez** (99): son imza penceresinde her rapor ayrı PDF, ayrı imzalanır;
 yöntem firma ayarı (98: imza servisi ya da indir, e-imza, yükle) · **vekil onay** (100): Onaylar'da kuyruk seçimi "Mekanik · Elektrik · vekil" ·
 **"Onayı geri al"** (102): onaylanıp imza bekleyen rapor yeniden kuyruğa döner · **"Düzelt (R1)"** (103): imzalı raporun düzeltmesi yeni
@@ -715,20 +700,12 @@ mekanik branş yöneticisi Selin Yıldız: kuyruk en eski üstte, bekleme süres
 - PDF indirme kısa ömürlü yetkili bağlantıyla (anayasa 5.1). Sonuç adı §4.5'e göre: taslak formatlı türde "Hafif kusurlu" yerine "Kusurlu"
   (Planlar maketinin verisinde tutarsızlık).
 **Sorular (M9):**
-98. Son imza yöntemi: **aracı imza servisi**, **indir-imzala-yükle**, ikisi de (firma ayarı, makette ikisi) mi?
-99. **Toplu imza** (birden çok raporu tek seferde) olsun mu (öneri: evet)?
-100. Branş yöneticisi yokken **vekil** (başka yönetici) onaylayabilsin mi?
-101. Geri gönderirken **hangi bölümün** hatalı olduğu işaretlensin mi, yoksa serbest gerekçe (makette) yeter mi?
-102. Onaylanan rapor imzalanana kadar **düzenlenemez** (öneri); değişiklik gerekirse yönetici "onayı geri al" mı?
-103. İmzalı raporun düzeltmesi: **revizyon** (aynı numara + R1, eski sürüm saklanır; §3.2 madde 7 önerisi) uygun mu?
-104. Müşteriye açılma **imza anında** (öneri) mı, planın bütün raporları bitince toplu mu?
-105. Onaylayan yöneticinin adı **PDF'te** yer alsın mı (Ek-III istemiyor; 17020 gözden geçirme kaydı sistemde tutuluyor)?
-106. Planlar'daki rapor rozeti de **İmza bekliyor / Müşteriye açık** diye ayrılsın mı?
+Açık soru yok — sorular toplu listede cevaplandı (§9 yirmi birinci tur; liste `MAKET-PLANI.md`).
 **Ölçüm (2026-09-24, bulut):** 10 durum × 1920 · 1080 · 375 × açık/koyu = **60/60 temiz**, çekmece 2/2; etkileşim **12/12**. Ölçerken
 düzeltilen: rapor numarasındaki küçük harfli ek, sayfa adresinde tanınmıyordu (rapor ve onay ekranı açılmıyordu). M7 şablon önizlemesi
 belge üreticisine bağlandı (66/66, 12/12), Planlar denemesi hâlâ maketi olmayan modüle çevrildi (15/15), M8 yeniden (15/15).
 
-#### Maket M10 — Uyarılar (modül 20) — 2. TUR, ONAY BEKLİYOR (toplu gözden geçirmede)
+#### Maket M10 — Uyarılar (modül 20) — ONAY BEKLİYOR
 **2. tur (2026-09-26, §9 yirmi birinci tur):** listede yalnız **kalibrasyon, ara kontrol (takibi açık cihazda) ve eğitim tekrarı** (108); ara kontrol
 kalibrasyonu geçmiş ya da kalibrasyondaki cihazda sorulmaz · yalnız ekranda (107) · eşik kalibrasyon ve ara kontrolde 30, eğitimde 60 gün, firma
 değiştirir (109) · koşul kalkınca düşer (110). Açıklama şeridi kalktı. Ölçüm: 6 durum 36/36, etkileşim 7/7, telefon 24/24. Ölçüm aracında
@@ -745,15 +722,11 @@ süresi geçmiş; seçici: kişi; adresten türe göre (`?tur=kalibrasyon|egitim
   artık kayıtlardan sayılır ve "tekrarı geçti"yi de söyler (M1 yeniden ölçüldü: 108/108, 17/17).
 - Firma yöneticisi hepsini görür; inspector yalnız kendisininkini (rol × modül önerisi).
 **Sorular (M10):**
-107. Uyarı **yalnız ekranda** (öneri) mı kalsın; e-posta ya da anlık bildirim istenirse kime, hangi uyarı için?
-108. Başka uyarılar eklensin mi: ara kontrol gecikmesi (M4) · İSG-KATİP eksikleri (M5) · müşterinin **kontrolü yaklaşan ekipmanı** (planlama
-     için) · 24 saati geçen onay (M9) · imza bekleyen rapor (M9)?
-109. Eğitim tekrarı eşiği **60 gün** (öneri) mi; eğitim türü başına ayrı mı?
-110. "Okundu / gizle" olmasın, **koşul kalkınca düşsün** (öneri) — uygun mu?
+Açık soru yok — sorular toplu listede cevaplandı (§9 yirmi birinci tur; liste `MAKET-PLANI.md`).
 **Ölçüm (2026-09-24, bulut):** 5 durum × 1920 · 1080 · 375 × açık/koyu = **30/30 temiz**, çekmece 2/2; etkileşim **6/6**. Telefonda kart
 "etiket: değer" satırlarına indirildi (M5 deseni).
 
-#### Maket M11 — Müşteri Paneli (modül 17) — 2. TUR, ONAY BEKLİYOR (toplu gözden geçirmede)
+#### Maket M11 — Müşteri Paneli (modül 17) — ONAY BEKLİYOR
 **2. tur (2026-09-26, §9 yirmi birinci tur):** üst çubukta **muayene firmasının logosu** (112; probata logosu yok) · yeni sekmeler **Planlanan
 kontroller** (81: tesis başına açık planın tarihi, saati, durumu ve sonraki kontrol) ve **Sözleşmeler** (134: iş sözleşmesi ve imzalı hâli
 görünür, panelden imza atılmaz) · aynı giriş sayfası (111) · uygunsuzluk yalnız sonraki kontrol raporuyla giderilir (114) · müşteri kullanıcı
@@ -775,18 +748,12 @@ sonraki kontrol 60 gün içinde; seçiciler: tesis, yıl) · **Uygunsuzluklar** 
 - Firma ekranından panele geçiş makette önizleme; uygulamada firma kullanıcısı müşteri paneline girmez, aynı veriyi kendi ekranında görür.
 - Portal kullanıcısı olmayan müşteride uyarı: raporlar imzalansa da kimse göremez.
 **Sorular (M11):**
-111. Müşteri **aynı giriş sayfasından** (öneri) mı girer, ayrı adresten mi?
-112. Panelde hangi marka: **probata** (makette) mı, **muayene firmasının logosu** mu, ikisi de mi?
-113. Excel'deki bağlantı **paneldeki rapora** (giriş ister; öneri) mı gitsin?
-114. Uygunsuzluk **nasıl giderildi** sayılır: yalnız sonraki / ikinci kontrol raporuyla (öneri) mı; müşteri "giderdim" deyip fotoğraf yükleyebilsin mi?
-115. Müşteri **kendi kullanıcılarını** ekleyebilsin mi, yoksa yalnız firma mı açar? *(soru 35 ile bağlı)*
-116. Panelde **planlanan kontrol** tarihi (açık plan) ve sonraki kontrol takvimi gösterilsin mi? *(soru 81 ile bağlı)*
-117. Onaydaki / taslak raporların **varlığı da gizli** kalsın (öneri) mı?
+Açık soru yok — sorular toplu listede cevaplandı (§9 yirmi birinci tur; liste `MAKET-PLANI.md`).
 **Ölçüm (2026-09-24, bulut):** 8 durum × 1920 · 1080 · 375 × açık/koyu = **48/48 temiz**, çekmece 2/2 (firma ekranında); etkileşim **6/6**.
 Gözle bulunup düzeltilen (ölçüm yakalamıyor): telefonda **belge tablolarında kelimeler harf ortasından bölünüyordu** ("Yap ıldı") — ortak
 belge stili düzeltildi, M7 (66/66) ve M9 (60/60) yeniden ölçüldü; Excel önizlemesi telefonda iki sütuna indi.
 
-#### Maket M12 — Teklifler (modül 11, faz 2) — 2. TUR, ONAY BEKLİYOR (toplu gözden geçirmede)
+#### Maket M12 — Teklifler (modül 11, faz 2) — ONAY BEKLİYOR
 **2. tur (2026-09-26, §9 yirmi birinci tur):** **KDV teklifte değiştirilebilir** (120, varsayılan %20) · teklif tesis başına, istenirse **çok tesisli**
 (123: "Başka tesisler"; kalemler seçili tesislerden toplanır, raporlar ve birim fiyat bütün tesislerden bağlanır, iş sözleşmesi bütün tesisleri
 alır) · fiyat listesi firma ayarı, satır başına değişir (119) · PDF indirilip elle gönderilir, panelden kabul yok (121) · adedi aşan rapor aynı
@@ -808,14 +775,7 @@ fiyat listesinden birim fiyat, "tesisteki ekipmandan doldur", tutar ve toplam ca
 - Plan açılan her tesisin kabul edilmiş teklifi var (örnek veri); kabulden sonra sıra: iş sözleşmesi (M13) + İSG-KATİP (M5) → plan (M6).
 - Teklif müşteriye makette **elle iletilir** (PDF indir, "gönderildi olarak işaretle"); sistemden e-posta yok.
 **Sorular (M12):**
-118. Teklif no biçimi **T-AAYY-SIRA** (öneri) uygun mu?
-119. Fiyat listesi **firma ayarı** (öneri) mı; müşteriye özel fiyat / iskonto olsun mu?
-120. KDV %20 sabit mi; tevkifat, iskonto gibi muhasebe kalemleri gerekir mi? *(M14 ile bağlı)*
-121. Teklif müşteriye **nasıl iletilir**: PDF indirip elle (makette) mi, sistemden e-posta mı? Müşteri **panelden kabul** edebilsin mi?
-122. Kabul edilen teklifin adedini **aşan rapor** (sahada eklenen ekipman): ek teklif mi, aynı birim fiyatla otomatik mi (öneri: aynı fiyat,
-     muhasebede "teklif dışı" işaretli)?
-123. Teklif **tesis başına** (makette) mı, çok tesisli tek teklif mi?
-124. Geçerliliği biten gönderilmiş teklif **kendiliğinden "süresi doldu"** olsun mu (öneri: evet)?
+Açık soru yok — sorular toplu listede cevaplandı (§9 yirmi birinci tur; liste `MAKET-PLANI.md`).
 **Ölçüm (2026-09-24, bulut):** 9 durum × 1920 · 1080 · 375 × açık/koyu = **54/54 temiz**, çekmece 2/2; etkileşim **10/10** (teklif → plan aç
 geçişi dahil).
 
@@ -848,7 +808,7 @@ Açık soru yok — 125–134 cevaplandı (§9, on yedinci tur): 125 kayıt + im
 etkileşim **10/10**, telefon **32/32** (imzalı sözleşme görüntüleme, yüklenince Aç tuşu, hizmet sözleşmesi için şerit ve çip yok).
 1. tur (2026-09-24): 48/48, 11/11.
 
-#### Maket M14 — Muhasebe (modül 18, faz 2) — 2. TUR, ONAY BEKLİYOR (toplu gözden geçirmede)
+#### Maket M14 — Muhasebe (modül 18, faz 2) — ONAY BEKLİYOR
 **2. tur (2026-09-26, §9 yirmi birinci tur):** fatura iş başına; istenirse **müşteri başına toplu** (136: iş sayfasında "Toplu fatura (N iş)", aynı
 müşterinin faturaya hazır bütün işleri tek faturada; fatura sayfasında "İşler") · muhasebeyi firma yöneticisi görür, istenirse **"Muhasebe" rolü**
 (137: rol listesinde ve rol yetkileri tablosunda altıncı sütun; muhasebe, müşteri, teklif, sözleşme) · fatura programda kesilir, numarası
@@ -879,22 +839,12 @@ birim fiyat × fatura, sayfa 20; faturalar; geçmiş) · **fatura sayfası** (al
 - Ortak süzgeç düzeltmesi: seçicisi olmayan süzgeçte arama telefonda kendi satırında (adım dışında 0'a eziliyordu; Planlar'da görünüm
   aynı, yeniden ölçüldü). M13 örnek verisinde IS-1024-001'in tarihleri bir gün kaydırıldı (geçen yılın denetimi sözleşme kapsamında).
 **Sorular (M14):**
-135. Fatura **probata'da mı kesilsin** (e-Fatura / e-Arşiv entegratörüne bağlanarak), yoksa firmanın muhasebe programında kesilip
-     **numarası mı yazılsın** (makette)? Muhasebe programına aktarım dosyası gerekir mi?
-136. Faturalama **iş (plan) başına** mı (makette), müşteri başına **aylık toplu fatura** mı?
-137. Muhasebeyi kim görür ve yazar: firma yöneticisi (öneri) mi, ayrı bir **"Muhasebe" rolü** mü? *(soru 33 ile bağlı)*
-138. Fatura **imzalı raporlarla kısmen** kesilebilsin mi (makette: imzası sürenler sonraki faturaya kalır), yoksa **bütün raporlar
-     imzalanınca tek fatura** mı?
-139. İş **tahsilat tamamlanınca kendiliğinden** mi kapansın (makette), elle "İşi kapat" ile mi?
-140. Vadesi geçen alacak **Uyarılar**'a (M10) ve **müşteri kartına** (M2) da düşsün mü? *(yalnız ekranda, bildirim yok)*
-141. Tahsilat yöntemleri yeterli mi; **çekin vadesi** ayrıca izlensin mi?
-142. Müşteri paneli (M11) **faturaları ve açık alacağı** göstersin mi?
-143. Teklifi olmayan işte **fiyat listesi**, teklif dışı rapor faturada **ayrı işaretli kalem** (makette) — uygun mu? *(soru 122 ile bağlı)*
+Açık soru yok — sorular toplu listede cevaplandı (§9 yirmi birinci tur; liste `MAKET-PLANI.md`).
 **Ölçüm (2026-09-24, bulut):** 10 durum × 1920 · 1080 · 375 × açık/koyu = **60/60 temiz**, çekmece 2/2; etkileşim **14/14** (fatura kaydet,
 kayıtlı no reddi, tahsilat fazlası reddi, tahsilat → iş kapandı, Raporlar'a geçiş dahil). Planlar yeniden 54/54, 15/15 (süzgeç düzeltmesi;
 "hazır olmayan modül" denemesi artık Performans); M13 yeniden 48/48, 11/11.
 
-#### Maket M15 — Performans ve Raporlama (modül 19, faz 2) — 2. TUR, ONAY BEKLİYOR (toplu gözden geçirmede)
+#### Maket M15 — Performans ve Raporlama (modül 19, faz 2) — ONAY BEKLİYOR
 **2. tur (2026-09-26, §9 yirmi birinci tur):** dönemlere **"Tarih aralığı"** (150: iki tarih + Uygula; 62 günden uzunsa aylık, yıllar arası ay adı yıl
 ile) ve **"Excel'e aktar"** · **denetçi görünümü** (148, makette `#/ben`: kendi sayıları, kazanç yok) · gün başı = rapor ÷ çalışılan gün, hedef
 yok (144) · kazanç = birim fiyat (145) · sayılan = onaya gönderilen + imzalı (146) · çok kişili planda raporu yazana (147) · ek ölçü yalnız geri
@@ -916,20 +866,12 @@ gün başı, kazanç, geri gönderilen, son rapor; sütundan sıralanır; görü
   ekran okuyucu aynı veriyi gizli tabloda okur. *Yeni desen (kalıp 16) → soru 151.*
 - Örnek veride yalnız 15 tesisin raporları var (geçen yıl eylül–kasım, bu yıl şubat ve eylül); grafikler bu yüzden seyrek.
 **Sorular (M15):**
-144. **Gün başı** ölçüsü rapor ÷ çalışılan gün (makette) uygun mu; kişi ya da branş için **günlük hedef** (ör. 8 rapor) tanımlansın mı?
-145. **Kazanç** hangisi: raporlanan (makette, birim fiyat), faturalanan mı, tahsil edilen mi?
-146. **Sayılan rapor:** onaya gönderilen + imzalı (makette) mı, yalnız imzalı mı?
-147. Çok kişili planda kazanç **raporu yazana** (makette) mı, **ekibe paylaştırılsın** mı?
-148. Kim neyi görür: yönetici hepsini, branş yöneticisi kendi branşını, inspector yalnız kendini (rol × modül önerisi) — **inspector kazancı
-     görsün** mü?
-149. Ek ölçüler gerekir mi: kabul / red edilen plan, ortalama onay süresi, geri gönderme oranı, uygunsuzluk oranı?
-150. Dönemler (bu ay · bu yıl · geçen yıl) yeterli mi; **tarih aralığı** ve **Excel'e aktarma** gerekir mi?
-151. Grafik biçimi: **yatay çubuk** (makette, yeni desen) uygun mu; zaman çizgisi (dikey sütun / çizgi) ister misiniz?
+Açık soru yok — sorular toplu listede cevaplandı (§9 yirmi birinci tur; liste `MAKET-PLANI.md`).
 **Ölçüm (2026-09-24, bulut):** 6 durum × 1920 · 1080 · 375 × açık/koyu = **36/36 temiz**, çekmece 2/2; etkileşim **9/9** (dönem, branş,
 sütun sıralama, görünüm, arama, kişiye geçiş, dönemin korunması, menüden açılış). Planlar ("hazır olmayan modül" artık Eğitimler) 15/15,
 M14 14/14 yeniden.
 
-#### Maket M16 — Eğitim Takibi (modül 10, faz 2) — 2. TUR, ONAY BEKLİYOR (toplu gözden geçirmede)
+#### Maket M16 — Eğitim Takibi (modül 10, faz 2) — ONAY BEKLİYOR
 **2. tur (2026-09-26, §9 yirmi birinci tur):** **eğitim türlerini ve tekrar sürelerini firma ekler / düzenler** (153: Eğitim türleri sekmesinde "Eğitim
 türü ekle" ve satırda "Düzenle"; tekrar 1–120 ay) · kaydı yönetici girer (152) · zorunlu eğitim tanımı yok (154) · belge isteğe bağlı (155) ·
 tekrar uyarısı 60 gün (156) · tekrarı geçen eğitim plan açarken uyarı vermez, yalnız Uyarılar'da (157) · yetkili kişi eğitim belgesi personel
@@ -949,14 +891,7 @@ penceresi (personel, eğitim, tarih → tekrar tarihi türden, veren, sertifika)
 - Personel kartındaki eğitim yüzü ve Uyarılar'daki eğitim satırı bu ekranı **kişiye süzülü** açar (M1 ve M10 yeniden ölçüldü).
 - Bütün modüllerin maketi hazır: Planlar'daki "hazır olmayan modül" denemesi "menüdeki 17 modülün hepsi maketi açar" oldu.
 **Sorular (M16):**
-152. Eğitim kaydını **kim girer**: yönetici (makette) mi; personel kendi eğitimini belgesiyle girip yönetici **onaylasın** mı?
-153. Eğitim türleri ve **tekrar süreleri** (makette örnek: temel İSG 12 ay, yüksekte çalışma 12, ilk yardım 36, 17020 bilgilendirme 24,
-     elektrikte güvenli çalışma 12, yangın 12): firmanın gerçek listesi nedir; süreler kodda mı, firma ayarı mı?
-154. **Kim hangi eğitimi almalı** (rol / meslek / branş başına zorunlu eğitim) tanımlansın mı; eksik zorunlu eğitim listede ayrıca görünsün mü?
-155. Sertifika **zorunlu** mu (makette isteğe bağlı)?
-156. Tekrar eşiği **60 gün** (makette, M10 ile aynı) uygun mu; tür başına farklı olsun mu?
-157. Tekrarı geçen eğitim **plan kabulünü engellesin** mi (makette yalnız uyarı; §3.2 madde 2'deki koşullara eklenir)?
-158. Bakanlık **yetkili kişi eğitimi** belgesi personel kartında (M1) kalsın mı, burada eğitim türü olarak da izlensin mi?
+Açık soru yok — sorular toplu listede cevaplandı (§9 yirmi birinci tur; liste `MAKET-PLANI.md`).
 **Ölçüm (2026-09-24, bulut):** 6 durum × 1920 · 1080 · 375 × açık/koyu = **36/36 temiz**, çekmece 2/2; etkileşim **10/10** (personel
 kartından ve Uyarılar'dan geçiş, tekrarı kaydet → önceki kayıt, ileri tarih reddi, türden tekrar tarihi, türe süzme). M1 108/108 + 17/17,
 M10 30/30 + 6/6, Planlar 15/15 yeniden. **Faz 2 maketleri bitti.**
@@ -1425,6 +1360,9 @@ revizyon, alan kopyalama, hafif kusur devri, meslek eşleşme denetimi).
 - Emsal ürünler: https://opwire.app/iso-17020-periyodik-kontrol-yazilimi/ · https://17020muayene.vidco.com.tr/ · https://akuple.com/asansor-kontrol-yazilimi/ · https://ensyazilim.com/
 
 ## 11 · Değişiklik günlüğü
+- 2026-09-26 (60): **Toplu gözden geçirmeye hazır**: M6–M16 2. tur bitti; eski soru listeleri kapandı (§3.6), toplu bakış yeniden üretildi (16 maket,
+  açık soru yok). Bütün maketler: durum 1050/1050, etkileşim 253/253 (toplu bakıştaki sayım), Planlar 54/54 · 15/15 · 36/36. Reisim hepsini birlikte
+  gözden geçirecek; onaylanmadan kod yok.
 - 2026-09-26 (59): **M16 2. tur**: eğitim türü ekle / düzenle (tekrar süresi firmada). M16 42/42 · 12/12 · 28/28.
 - 2026-09-26 (58): **M15 2. tur**: tarih aralığı, Excel'e aktar, denetçi görünümü (kazanç yok). M15 48/48 · 13/13 · 32/32.
 - 2026-09-26 (57): **M14 2. tur**: müşteri başına toplu fatura, "Muhasebe" rolü (rol yetkileri altı sütun). M14 66/66 · 15/15 · 44/44.
