@@ -6,7 +6,9 @@
    docs/assets/maket.js'ten docs/assets/maket-ortak.js'e taşındı → okunan dosya değişti, denetim aynı; ayrıca menü sabiti
    maket betiklerinde TEK yerde (ikinci kopya sessizce ayrışırdı).
    2026-09-25 (reisim, M1 cevapları: "159 birleşsin"): Kullanıcılar (1) Personel'e katıldı → 16 modül, menüde olmayanlar 1, 6, 16, 17
-   (1'in ekranı Personel'in içinde). Beklenen sayılar bu karar için güncellendi; denetimin kendisi aynı. */
+   (1'in ekranı Personel'in içinde). Beklenen sayılar bu karar için güncellendi; denetimin kendisi aynı.
+   2026-09-26 (reisim, M3: "ekipmanlar ve ekipman türleri diye iki modüle gerek yok ekipman türleri yeterli"): Ekipmanlar (7) ayrı
+   modül değil, ekipmanlar planın içinde → 15 modül, menüde olmayanlar 1, 6, 7, 16, 17. Denetim aynı, beklenen sayılar güncellendi. */
 import assert from "node:assert/strict";
 import { existsSync, readdirSync, readFileSync, statSync } from "node:fs";
 import { join } from "node:path";
@@ -27,12 +29,12 @@ test("maket menüsü tek kaynakta: menü sabiti yalnız maket-ortak.js'te", () =
   assert.deepEqual(tasiyan, ["maket-ortak.js"]);
 });
 
-test("16 modül, numaralar tekil; menüde olmayanlar 1 (Personel'in içinde), 6, 16, 17", () => {
+test("15 modül, numaralar tekil; menüde olmayanlar 1 (Personel'in içinde), 6, 7 (planın içinde), 16, 17", () => {
   const nolar = MODULLER.map((m) => m.no);
-  assert.equal(nolar.length, 16);
-  assert.equal(new Set(nolar).size, 16);
+  assert.equal(nolar.length, 15);
+  assert.equal(new Set(nolar).size, 15);
   const yok = Array.from({ length: 20 }, (_, i) => i + 1).filter((n) => !nolar.includes(n));
-  assert.deepEqual(yok, [1, 6, 16, 17]);
+  assert.deepEqual(yok, [1, 6, 7, 16, 17]);
 });
 
 test("her modülün rota klasörü var ve src/app'te modül dışı rota yok", () => {

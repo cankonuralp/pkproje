@@ -159,7 +159,8 @@
       (e.length ? '<div class="a-serit-kap">' + MK.serit("uyari", "triangle-alert", "Eksik bilgi: " + e.join(" · ") + ". Kayıt engellenmez; teklif, fatura ve müşteri girişi için gerekir.") + "</div>" : "") +
       '<div class="a-yuzler">' +
         yuz({ ikon: "map-pin", ad: "Tesis", sayi: et.length, not: et.map(function (x) { return x.il; }).filter(function (v, i, a) { return v && a.indexOf(v) === i; }).join(" · ") || "tesis yok" }) +
-        yuz({ ikon: "wrench", ad: "Ekipman", sayi: ekipmanSayisi(m), hedef: 7, hash: "#/?musteri=" + m.id, ne: "Ekipmanlar" }) +
+        /* 2026-09-26 (M3 2. tur): Ekipmanlar ekranı yok, ekipmanlar planın içinde → sayı yalnız bilgi */
+        yuz({ ikon: "wrench", ad: "Ekipman", sayi: ekipmanSayisi(m), not: "planlarda görünür" }) +
         yuz({ ikon: "calendar-check", ad: "Açık plan", sayi: acikPlan, hedef: 13, hash: "", ne: "Planlar", not: "kabul bekleyen ve süren" }) +
         yuz({ ikon: "triangle-alert", ad: "Açık uygunsuzluk", sayi: MV.acikUygunsuz(m.id), hedef: "musteri", hash: "#/uygunsuz?musteri=" + m.id, ne: "Müşteri paneli", uyari: MV.acikUygunsuz(m.id) > 0, not: MV.acikUygunsuz(m.id) ? "müşteri panelinde gördüğü" : "yok" }) +
         /* 2026-09-24 (toplu bakış öncesi): faz 2 maketleri geldi → teklif, iş sözleşmesi ve açık alacak yüzleri */
@@ -210,7 +211,8 @@
       pasifSerit(t, "Tesis") +
       (e.length ? '<div class="a-serit-kap">' + MK.serit("uyari", "triangle-alert", "Eksik bilgi: " + e.join(" · ") + ". Kayıt engellenmez; raporun işyeri bölümünde gerekir, rapor imzalanırken yeniden hatırlatılır.") + "</div>" : "") +
       '<div class="a-yuzler">' +
-        yuz({ ikon: "wrench", ad: "Ekipman", sayi: t.ekipman, hedef: 7, hash: "#/?tesis=" + t.id, ne: "Ekipmanlar", not: "kalıcı kayıt, kodla" }) +
+        /* 2026-09-26 (M3 2. tur): ekipmanlar planın içinde → yüz tesisin planını açar (plan yoksa yalnız sayı) */
+        yuz({ ikon: "wrench", ad: "Ekipman", sayi: t.ekipman, hedef: t.pid ? 13 : null, hash: "#/plan/" + t.pid, ne: "Planlar", not: t.pid ? "planın içinde" : "plan açılınca görünür" }) +
         yuz({ ikon: "scroll-text", ad: "İSG-KATİP kaydı", sayi: isg.length, hedef: 12, hash: "#/isg?tesis=" + t.id, ne: "Sözleşmeler · İSG-KATİP", uyari: !isg.length, not: isg.length ? "inspector başına" : "plan kabulünde uyarı" }) +
         yuz({ ikon: "clock", ad: "Son kontrol", sayi: t.son ? MK.gunKisa(t.son) : "—", not: t.son ? MK.ayYil(t.son) : "ilk kontrol" }) +
         yuz({ ikon: "alarm-clock", ad: "Sonraki kontrol", sayi: MK.gunKisa(t.sonraki), not: k < 0 ? -k + " gün geçti" : k === 0 ? "bugün" : k + " gün sonra", uyari: k <= YAKIN }) +

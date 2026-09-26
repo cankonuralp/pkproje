@@ -91,7 +91,7 @@
         (r.durum === "imzali" ? MK.serit("onay", "circle-check", "İmzalı ve müşteriye açık" + (portal.length ? ": " + portal.length + " portal kullanıcısı indirebilir." : "; müşterinin portal kullanıcısı yok.")) : "") +
       "</div>" +
       '<div class="a-yuzler">' +
-        yuz({ ikon: "wrench", ad: "Ekipman", sayi: e.kod, href: MK.adres(7, "#/e/" + e.kod), not: MV.tur(e.tur).ad }) +
+        yuz({ ikon: "wrench", ad: "Ekipman", sayi: e.kod, not: MV.tur(e.tur).ad }) +   /* 2026-09-26: Ekipmanlar ekranı yok (M3 2. tur) */
         yuz({ ikon: "calendar-check", ad: "Plan", sayi: r.plan ? ts.plan : "—", href: r.plan ? MK.adres(13, "#/plan/" + r.plan) : null, not: r.plan ? MK.tarihYaz(r.olustu) : "geçen yılın planı" }) +
         yuz({ ikon: r.sonuc && r.sonuc !== "Uygun" ? "triangle-alert" : "circle-check", ad: "Sonuç", sayi: MV.sonucAd(r) || "—", uyari: !!r.sonuc && r.sonuc !== "Uygun", not: r.sonuc ? "kriterlere göre" : "taslak" }) +
         yuz({ ikon: "users", ad: "Müşteri erişimi", sayi: r.durum === "imzali" ? "Açık" : "Kapalı", not: r.durum === "imzali" ? portal.length + " kullanıcı" : "imzadan sonra açılır" }) +

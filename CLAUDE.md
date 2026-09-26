@@ -33,7 +33,7 @@ durum **`MAKET-PLANI.md`** — bu çalışma sürerken oturum başında o da TAM
 **2026-09-24 bitti:** 16 maket + toplu bakış (`docs/toplu-bakis.html`; 127 soru, 32–158). **2026-09-25 reisim:** sorular toplu
 cevaplanmaz → modüller benim önerdiğim sırayla tek tek; her modülde o modülün soruları YENİDEN sorulur; çakışan / gereksiz
 modüller sırası gelince silinir, şimdi değil (MAKET-PLANI.md Durum). **M1 onaylandı (2026-09-25, reisim: *"Onaylıyorum"*)**; **M2 onaylandı
-(2026-09-26)**; sırada M3 (Ekipmanlar ayrı modül olmayacak); genel ilke: teknik ayrıntı yok, kural uyarıdır engel değil (pkproje.md §9 on ikinci tur).
+(2026-09-26)**; M3 Ekipman türleri 2. tur incelemede (Ekipmanlar modülü kalktı, ekipmanlar planın içinde); genel ilke: teknik ayrıntı yok, kural uyarıdır engel değil (pkproje.md §9 on ikinci tur).
 
 ## 2 · Yığın (pkproje.md §8 — **reisim 2026-09-22'de onayladı**)
 - **TypeScript + Next.js (App Router), standalone çıktı — onaylı 2026-09-22** (SvelteKit düştü). Tarayıcı
@@ -67,7 +67,7 @@ pkproje/
   ANAYASA.md · TASARIM-KALIBI.md · 00–08-*.md · EKSIKLER-VE-ONERILER.md
                             kural dosyaları (ANAYASA/KALIP'a madde yalnız reisim onayıyla eklenir)
   src/app/                  sayfalar (iş mantığı YOK): Planlar ana sayfa + modül başına bir rota klasörü (kayıtla birebir)
-  src/modules/moduller.ts   MODÜL KAYDI — yan menünün ve rotaların tek kaynağı (16 modül, 6 grup, onaylı maketle aynı; 2026-09-25 Kullanıcılar Personel'e katıldı)
+  src/modules/moduller.ts   MODÜL KAYDI — yan menünün ve rotaların tek kaynağı (15 modül, 6 grup, onaylı maketle aynı; 2026-09-25 Kullanıcılar Personel'e katıldı; 2026-09-26 Ekipmanlar planın içine)
   src/modules/<modül>/      ★ her iş modülü: server/ (veri erişimi + iş kuralları, dışa açılan fonksiyonlar) · ui/ · şema · testler
   src/server/db/            gömülü PostgreSQL (gomulu.ts) · göç koşucusu (goc.ts, gocler/NNNN_ad.sql, her göç idempotent) ·
                             kiracı süzgeçli TEK erişim katmanı (kiraci.ts: kiraciIcinde) — pg YALNIZ burada içe aktarılır

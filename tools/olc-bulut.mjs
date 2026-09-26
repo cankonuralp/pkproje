@@ -93,17 +93,14 @@ export const DURUMLAR = {
     { ad: "müşteri · pasif, tesisleri de pasif", hash: "#/m/m11", adim: [["tikla", '[data-eylem="pasif-ac"]'], ["tikla", '[data-eylem="pencere-kaydet"]']] },
   ] },
   /* M3 Ekipman Türü Kataloğu · Ekipman (2026-09-24) */
-  m3: { sayfa: "maket/ekipmanlar.html", durumlar: [
-    { ad: "ekipman türleri · katalog", sayfa: "maket/ekipman-turleri.html", hash: "#/" },
-    { ad: "tür · zorunlu format, şablon var", sayfa: "maket/ekipman-turleri.html", hash: "#/tur/ET" },
-    { ad: "tür · şablon ve standart yok", sayfa: "maket/ekipman-turleri.html", hash: "#/tur/LP" },
-    { ad: "tür ekle · boş gönderildi", sayfa: "maket/ekipman-turleri.html", hash: "#/yeni", adim: [["tikla", '[data-eylem="pencere-kaydet"]']] },
-    { ad: "ekipmanlar · liste (10'ar)", hash: "#/" },
-    { ad: "ekipmanlar · tesis süzgeci (adresten)", hash: "#/?tesis=t1" },
-    { ad: "ekipman · kullanılamaz, kod geçmişi", hash: "#/e/TP-1005" },
-    { ad: "ekipman · ilk kontrol bekliyor", hash: "#/e/YK-1011" },
-    { ad: "ekipman ekle · çakışan kod", hash: "#/yeni", adim: [["yaz", "#w-kod", "ht-1001"]] },
-    { ad: "kodu değiştir · eski kod yeniden verilemez", hash: "#/e/TP-1005/kod", adim: [["yaz", "#w-kod", "TP-05"]] },
+  m3: { sayfa: "maket/ekipman-turleri.html", durumlar: [
+    /* 2026-09-26 (2. tur): Ekipmanlar ekranı kalktı (ekipmanlar planın içinde); tür eklenmez, firma yalnız ayarını düzenler */
+    { ad: "ekipman türleri · katalog", hash: "#/" },
+    { ad: "tür · zorunlu format, şablon var", hash: "#/tur/ET" },
+    { ad: "tür · şablon hazırlanıyor, standart yok", hash: "#/tur/LP" },
+    { ad: "ayarları düzenle · periyot, süre, standartlar", hash: "#/tur/ET/duzenle" },
+    { ad: "ayarları düzenle · geçersiz periyot", hash: "#/tur/ET/duzenle", adim: [["yaz", "#w-periyot", "0"], ["tikla", '[data-eylem="pencere-kaydet"]']] },
+    { ad: "tesis sayfası · ekipman yüzü planı açar", sayfa: "maket/musteriler.html", hash: "#/t/t1" },
   ] },
   /* M4 Ölçüm Cihazı · Zimmet · kalibrasyon uyarısı (2026-09-24) */
   m4: { sayfa: "maket/zimmetler.html", durumlar: [
@@ -272,8 +269,9 @@ export const DENEMELER = {
     { ad: "ekipman ekle: çakışan kod kaydedilmez", hash: "#/plan/1/ekle", adim: [["yaz", "#a-ekle-kod", "ht-1001"]], bekle: 'document.querySelector("#a-ekle-kod").value === "HT-1001" && document.querySelector(\'[data-eylem="yeni-kaydet"]\').disabled' },
     { ad: "ekipman ekle: yeni kod + tür → plana eklenir", hash: "#/plan/1", adim: [["tikla", '[data-eylem="ekle-ac"]'], ["yaz", "#a-ekle-kod", "ZZ-9001"], ["tikla", "#a-ekle-tur"], ["tikla", '[data-tur="FL"]'], ["tikla", '[data-eylem="yeni-kaydet"]']], bekle: '!document.querySelector("#a-ekle-pencere").open && [...document.querySelectorAll("#a-liste-e .a-kod")].some(e => e.textContent === "ZZ-9001")' },
     /* 2026-09-24 (M16): bütün modüllerin maketi geldi → "hazır olmayan modül" denemesi yerine: menüdeki 17 modülün hepsi maket sayfasına
-       bağlantı, "henüz tasarlanmadı" bildirimi veren tuş kalmadı. 2026-09-25 (M1 2. tur): 16 modül + Ana sayfa = yine 17 bağlantı. */
-    { ad: "menüdeki 16 modül ve Ana sayfa maketi açar (bildirim tuşu yok)", hash: "#/", bekle: 'document.querySelectorAll("#a-menu [data-eylem=modul]").length === 0 && document.querySelectorAll("#a-menu a[href]").length === 17' },
+       bağlantı, "henüz tasarlanmadı" bildirimi veren tuş kalmadı. 2026-09-25 (M1 2. tur): 16 modül + Ana sayfa = yine 17 bağlantı.
+       2026-09-26 (M3 2. tur): Ekipmanlar planın içinde → 15 modül + Ana sayfa = 16 bağlantı. */
+    { ad: "menüdeki 15 modül ve Ana sayfa maketi açar (bildirim tuşu yok)", hash: "#/", bekle: 'document.querySelectorAll("#a-menu [data-eylem=modul]").length === 0 && document.querySelectorAll("#a-menu a[href]").length === 16' },
     { ad: "menüden hazır maket → bağlantı (Personel)", hash: "#/", bekle: 'document.querySelector(\'#a-menu a[href="personel.html"]\') !== null' },
   ],
   m1: [
@@ -347,20 +345,17 @@ export const DENEMELER = {
     { ad: "müşteri sayfası: Açık alacak yüzü → müşterinin faturaları (3 / 13)", hash: "#/m/m1", adim: [["tikla", 'a.a-yuz[href^="muhasebe.html"]']], bekle: '/muhasebe\\.html$/.test(location.pathname) && document.querySelector("#a-sayac").textContent === "3 / 13 fatura" && /3.600,00 TL/.test(document.querySelector("#a-liste").textContent)' },
   ],
   m3: [
-    { ad: "türler: Rapor şablonu yok çipi", sayfa: "maket/ekipman-turleri.html", hash: "#/", adim: [["tikla", '[data-cip="sablonsuz"]']], bekle: 'document.querySelector("#a-sayac").textContent === MV.KATALOG.filter(t => !t.sablon).length + " / " + MV.KATALOG.length + " tür"' },
-    { ad: "türler: branş Elektrik", sayfa: "maket/ekipman-turleri.html", hash: "#/", adim: [["tikla", '[data-secici-ac="brans"]'], ["tikla", '[data-sec="brans"][data-deger="e"]']], bekle: 'document.querySelectorAll("#a-liste tbody tr").length === MV.KATALOG.filter(t => t.b === "e").length' },
-    { ad: "tür ekle: kullanılan kod reddedilir", sayfa: "maket/ekipman-turleri.html", hash: "#/yeni", adim: [["yaz", "#w-ad", "Deneme"], ["yaz", "#w-k", "HT"], ["tikla", '[data-eylem="pencere-kaydet"]']], bekle: '/Hava tankı türünde kullanılıyor/.test(document.querySelector("#w-k-ipucu").textContent)' },
-    { ad: "tür ekle: geçerli → tür sayfası, şablon yok uyarısı", sayfa: "maket/ekipman-turleri.html", hash: "#/yeni", adim: [["yaz", "#w-ad", "Kaldırma aparatı"], ["yaz", "#w-k", "ka"], ["tikla", "#w-g"], ["tikla", '[data-secim="w-g"][data-deger="kaldirma"]'], ["tikla", '[data-eylem="pencere-kaydet"]']], bekle: 'location.hash === "#/tur/KA" && /şablonu yok/.test(document.querySelector("#a-nesne").textContent)' },
-    { ad: "ekipmanlar: adresten tesis süzgeci (14 / 143)", hash: "#/?tesis=t1", bekle: 'document.querySelector("#a-sayac").textContent === "14 / 143 ekipman"' },
-    { ad: "ekipmanlar: müşteri değişince başka müşterinin tesisi seçili kalmaz", hash: "#/?tesis=t1", adim: [["tikla", '[data-secici-ac="musteri"]'], ["tikla", '[data-sec="musteri"][data-deger="m2"]']], bekle: 'MK.SZ.e.sec.tesis === "tumu" && document.querySelectorAll("#a-liste tbody tr").length === 5' },
-    { ad: "ekipmanlar: son sayfa (141–143 / 143)", hash: "#/", adim: [["tikla", '.a-sayfalar [data-sayfa="15"]']], bekle: 'document.querySelector(".a-sayfa-bilgi").textContent === "141–143 / 143"' },
-    { ad: "ekipmanlar: geçmiş ve 30 gün içinde birlikte → imkânsız", hash: "#/", adim: [["tikla", '[data-cip="gecikti"]'], ["tikla", '[data-cip="yakin"]'], ["tikla", '[data-kip="ve"]']], bekle: '/hem geçmiş hem yaklaşıyor/.test(document.querySelector("#a-liste .a-bos-baslik").textContent)' },
-    { ad: "ekipman ekle: çakışan kod söylenir, kaydedilmez", hash: "#/yeni", adim: [["yaz", "#w-kod", "ht-1001"], ["tikla", '[data-eylem="pencere-kaydet"]']], bekle: '/HT-1001 kayıtlı/.test(document.querySelector("#w-kod-ipucu").textContent) && document.querySelector("#a-pencere").open' },
-    { ad: "ekipman ekle: geçerli → ilk kontrol bekliyor", hash: "#/yeni", adim: [["tikla", "#w-tesis"], ["tikla", '[data-secim="w-tesis"][data-deger="t13"]'], ["yaz", "#w-kod", "zz-9001"], ["tikla", "#w-tur"], ["yaz", '[data-secim-ara="w-tur"]', "pres"], ["tikla", '[data-secim="w-tur"][data-deger="PR"]'], ["tikla", '[data-eylem="pencere-kaydet"]']], bekle: 'location.hash === "#/e/ZZ-9001" && /İlk kontrol bekliyor/.test(document.querySelector("#a-nesne .a-nesne-baslik").textContent)' },
-    { ad: "seçim alanı araması: eşleşmeyen yazı → seçenek yok", hash: "#/yeni", adim: [["tikla", "#w-tur"], ["yaz", '[data-secim-ara="w-tur"]', "qqq"]], bekle: '!document.querySelector(\'[data-secim-ara="w-tur"]\').parentNode.querySelector(".a-secim-yok").hidden' },
-    { ad: "kodu değiştir: eski kod yeniden verilmez", hash: "#/e/TP-1005/kod", adim: [["yaz", "#w-kod", "TP-05"]], bekle: '/eski kodlar yeniden verilmez/.test(document.querySelector("#w-kod-ipucu").textContent)' },
-    { ad: "kodu değiştir: yeni kod + gerekçe → geçmişte eski kod", hash: "#/e/TP-1005/kod", adim: [["yaz", "#w-kod", "TP-9005"], ["yaz", "#w-gerekce", "Etiket yenilendi"], ["tikla", '[data-eylem="pencere-kaydet"]']], bekle: 'location.hash === "#/e/TP-9005" && /TP-1005 → TP-9005/.test(document.querySelector("#a-nesne").textContent)' },
-    { ad: "ekipman sayfası: tesis müşteriler maketine bağlanır", hash: "#/e/HT-1001", bekle: 'document.querySelector(\'#a-nesne .a-nesne-alt a[href="musteriler.html#/t/t1"]\') !== null' },
+    /* 2026-09-26 (2. tur, reisim: "ekipman türleri yeterli" · 51 "hayır bu işi denetçiler yapacak" · 52–54 öneriler) */
+    { ad: "türler: Rapor şablonu hazırlanıyor çipi", hash: "#/", adim: [["tikla", '[data-cip="sablonsuz"]']], bekle: 'document.querySelector("#a-sayac").textContent === MV.KATALOG.filter(t => !t.sablon).length + " / " + MV.KATALOG.length + " tür"' },
+    { ad: "türler: branş Elektrik", hash: "#/", adim: [["tikla", '[data-secici-ac="brans"]'], ["tikla", '[data-sec="brans"][data-deger="e"]']], bekle: 'document.querySelectorAll("#a-liste tbody tr").length === MV.KATALOG.filter(t => t.b === "e").length' },
+    { ad: "türler: Tür ekle tuşu yok (türler probata'dan)", hash: "#/", bekle: '!document.querySelector(\'[data-eylem="tur-ac"]\') && /probata\'dan gelir/.test(document.querySelector("#a-tur-bilgi").textContent)' },
+    { ad: "tür sayfası: yetkili meslekler bölümü yok, ekipman yüzü tıklanmaz", hash: "#/tur/ET", bekle: '!document.querySelector("#a-b-meslek") && ![...document.querySelectorAll("#a-nesne a.a-yuz")].some(a => /Ekipman/.test(a.textContent))' },
+    { ad: "ayarlar: süre boş bırakılır → kaydedilir, Girilmedi", hash: "#/tur/ET/duzenle", adim: [["yaz", "#w-sure", ""], ["tikla", '[data-eylem="pencere-kaydet"]']], bekle: 'location.hash === "#/tur/ET" && MV.tur("ET").sure === null && /Girilmedi/.test(document.querySelector("#a-b-kural").closest("section").textContent)' },
+    { ad: "ayarlar: periyot 0 → hata, pencere açık", hash: "#/tur/ET/duzenle", adim: [["yaz", "#w-periyot", "0"], ["tikla", '[data-eylem="pencere-kaydet"]']], bekle: 'document.querySelector("#a-pencere").open && /1–120 ay/.test(document.querySelector("#w-periyot-ipucu").textContent)' },
+    { ad: "ayarlar: periyot 6 → tür sayfasında 6 ay", hash: "#/tur/ET/duzenle", adim: [["yaz", "#w-periyot", "6"], ["tikla", '[data-eylem="pencere-kaydet"]']], bekle: 'MV.tur("ET").periyot === 6 && /6 ay/.test(document.querySelector("#a-nesne .a-yuzler").textContent)' },
+    { ad: "ayarlar: Vazgeç → tür sayfasına döner", hash: "#/tur/ET/duzenle", adim: [["tikla", '#a-pencere [data-eylem="pencere-kapat"]']], bekle: 'location.hash === "#/tur/ET" && !document.querySelector("#a-pencere").open' },
+    { ad: "eski Ekipmanlar bağlantısı Ekipman türlerine gider", sayfa: "maket/ekipmanlar.html", hash: "#/e/HT-1001", bekle: '/ekipman-turleri\\.html$/.test(location.pathname)' },
+    { ad: "tesis sayfası: Ekipman yüzü tesisin planını açar", sayfa: "maket/musteriler.html", hash: "#/t/t1", adim: [["tikla", 'a.a-yuz[href^="planlarim.html"]']], bekle: '/planlarim\\.html$/.test(location.pathname) && location.hash === "#/plan/1"' },
   ],
   m4: [
     { ad: "cihazlar: uyarı şeridindeki Göster çipi uygular (2 / 20)", sayfa: "maket/olcum-cihazlari.html", hash: "#/", adim: [["tikla", '[data-eylem="cip-uygula"][data-deger="gecti"]']], bekle: 'document.querySelector("#a-sayac").textContent === "2 / 20 cihaz" && document.querySelector(\'[data-cip="gecti"]\').getAttribute("aria-pressed") === "true"' },

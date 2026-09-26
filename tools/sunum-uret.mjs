@@ -388,7 +388,7 @@ const n3 = sayfa({
   govde: [
     bolum(1, "nasil", "Nasıl bakılır", "Reisim: “tüm maketleri sırayla bulutta yapılsın en son hepsine toplu bakar ona göre ilerleriz” (2026-09-24). Maketler onaylanana kadar kod yok.",
       `<ul class="s-kurallar">
-    <li><b>Maketler birbirine bağlı</b><span>Her bağlantı yeni sekmede açılır. Yan menüdeki 17 modülün hepsinin maketi var; ekranlar arası geçişler (teklif → sözleşme → plan aç, plan → rapor → onay → muhasebe, uyarı → eğitim) tıklanır.</span></li>
+    <li><b>Maketler birbirine bağlı</b><span>Her bağlantı yeni sekmede açılır. Yan menüdeki bütün modüllerin maketi var; ekranlar arası geçişler (teklif → sözleşme → plan aç, plan → rapor → onay → muhasebe, uyarı → eğitim) tıklanır.</span></li>
     <li><b>Masaüstü, tablet, telefon</b><span>Aynı sayfa telefonda açılınca telefon tasarımı görünür (tablo yerine kart, süzgeç levhası, altta yapışkan tuş). Tema üst çubuktaki düğmeyle.</span></li>
     <li><b>Veri uydurma, gün sabit</b><span>Bütün firma, kişi, tesis ve numaralar uydurmadır; maketin “bugün”ü 23 Eylül 2026. Yapılan değişiklik sayfa yenilenince geri gelir.</span></li>
     <li><b>Cevap numarayla</b><span>Sorular pkproje.md'deki numarayla (${TS[0].no}–${TS[TS.length - 1].no}). “45: evet · 46: hayır, şöyle olsun” biçiminde yazılabilir; cevaplar pkproje.md'ye işlenir, sonra faz 1 sırasıyla koda geçilir.</span></li>

@@ -155,9 +155,9 @@ Kurallar (reisim'in sözünden türeyen, ürün kuralı olarak):
 | 2 | Personel | Ad soyad, meslek, branş, diploma no, oda sicil no (teknikerde boş olabilir), EKİPNET no; yetkinlik (§4.6) |
 | 3 | Müşteri & Tesis | Müşteri; tesis (adres, SGK işyeri sicil no); müşteri kullanıcıları (e-posta) |
 | 4 | Standart Kütüphanesi | Firma başına; firma kendi yükler; kontrol metodu standardı buradan seçilir |
-| 5 | Ekipman Türü Kataloğu | Ek-III grubu, branş, periyot, standart(lar), yetkili meslekler, akreditasyon gereği, Bakanlık format kodu |
+| 5 | Ekipman Türü Kataloğu | Ek-III grubu, branş, periyot, standart(lar), akreditasyon gereği, Bakanlık format kodu — 2026-09-26: türler ve şablonlar **bizden** gelir, firma yalnız periyot / tahmini süre / standart ayarını değiştirir; yetkili meslek ayrıntısı yok (uyarı) |
 | 6 | Rapor Şablonları (kodda) | Firma × ekipman türü: kontrol kriterleri + PDF formatı, sürümlü; site içi düzenleyici yok |
-| 7 | Ekipman | Tesise bağlı, kalıcı; özellik değerleri; rapor geçmişi; sonraki kontrol tarihi; durum (kullanılabilir / kullanılamaz) |
+| 7 | Ekipman | Tesise bağlı, kalıcı; özellik değerleri; rapor geçmişi; sonraki kontrol tarihi; durum (kullanılabilir / kullanılamaz) — 2026-09-26: **ayrı ekran değil, planın içinde**; denetçi sahada ekler, sonraki yıllarda önceki raporundan "Rapor oluştur" |
 | 8 | Ölçüm Cihazı | Ad, seri no, envanter no, kalibrasyon tarihi, sertifika, ara kontrol; 30 gün uyarı |
 | 9 | Zimmet | Varlık: cihaz, araç, diğer. Her teslim ayrı kayıt: teslim eden → alan, tarih-saat, fotoğraflar, zimmet formu. Anlık "kimde" + tam geçmiş |
 | 10 | Eğitim Takibi | Personel eğitimleri, belge, tekrar süresi, bitmeden uyarı |
@@ -458,44 +458,34 @@ alttaki alanların üstüne açıldığı için "çakışma" sayıldı; açılı
 liste etkileşim denemesiyle ölçüldü (81 il, arama).
 1. tur (2026-09-24): 8 durum 48/48, etkileşim 14/14 (portal kullanıcısı davetle, vergi / SGK no zorunluydu).
 
-#### Maket M3 — Ekipman Türü Kataloğu · Ekipman (modül 5, 7) — ONAY BEKLİYOR
-Ekranlar: **ekipman türleri** (`maket/ekipman-turleri.html`: katalog — Ek-III grubu, branş, periyot, Bakanlık formatı, rapor
-şablonu, akreditasyon; çipler: format zorunlu · akreditasyon · şablonu yok · standart seçilmemiş · **tür sayfası**: kontrol
-kuralları, kontrol metodu standartları, yetkili meslekler, rapor şablonu · tür ekle / düzenle) · **ekipmanlar**
-(`maket/ekipmanlar.html`: firma geneli sicil, 10'ar sayfa; çipler: kullanılamaz · hafif kusurlu · kontrolü geçmiş · 30 gün içinde ·
-ilk kontrol bekliyor; müşteri / tesis / tür seçicileri; tesis, müşteri ve tür sayfalarındaki yüzlerden süzgeçli gelinir ·
-**ekipman sayfası**: etiket bilgileri (Ek-III 1.7.2.1), tür kuralları, rapor geçmişi, kod geçmişi · ekipman ekle · etiket
-düzenle · kodu değiştir).
+#### Maket M3 — Ekipman türleri (modül 5) — ONAY BEKLİYOR
+**2. tur (2026-09-26, reisim'in M3 cevaplarıyla; kararlar §9 on dördüncü tur).** Ekranlar: **ekipman türleri** (`maket/ekipman-turleri.html`:
+katalog — Ek-III grubu, branş, periyot, Bakanlık formatı, rapor şablonu, akreditasyon; çipler: format zorunlu · akreditasyon · şablon
+hazırlanıyor · standart seçilmemiş; üstte "türler probata'dan, ayarlar firmanın" bilgisi · **tür sayfası**: kontrol kuralları, kontrol
+metodu standartları, rapor şablonunun adı ve önizleme bağlantısı · **ayarları düzenle**: periyot, tahmini kontrol süresi, standartlar).
+**Ekipmanlar ekranı kalktı** (`maket/ekipmanlar.html` artık Ekipman türlerine yönlendirir): ekipmanlar planın içinde görünür.
 **Varsayımlar:**
-- Katalog 24 tür: Planlar maketinin 14 türü (aynı kod ve ad; Planlar artık ortak katalogdan okur) + §4.8 ve Ek-2'den kule kren, LPG
-  tankı, yangın algılama, transformatör, yapı iskelesi, mobil kren, yürüyen merdiven, asılı erişim donanımı, sütunlu çalışma
-  platformu, mekanik pres. **Standart atamaları örnektir** (doğrulanmadı; firma kendi kütüphanesinden seçer).
-- **Yetkili meslekler türün Ek-III grubundan türetilir** (§4.6 birebir); tür başına ayrıca daraltma yok.
-- Periyot tür düzeyinde (çoğu 12 ay, iskele 6); **sonraki kontrol = son imzalı kontrol + periyot** (inspector gerekçeyle değiştirir —
-  ekranı M8).
-- Kusur sınıflandırması (hafif / ağır) yalnız Bakanlık formatı **yürürlükte** olan türde (§4.5, Ek-III 1.9.1); taslak formatta yok.
-- Rapor şablonu kodda (sürüm + yürürlük); **şablonu olmayan türde ekipman eklenir ama rapor açılamaz**.
-- Ekipman ekranındaki kodlar Planlar maketindeki kodların **aynısı** (aynı algoritma; HT-1001 …); ortak veride 143 ekipman.
-- Ekipman durumu son **imzalı** rapora göre: Kullanılabilir · **Kullanılamaz** (ağır kusur, giderilene kadar) · Kontrolü geçti ·
-  İlk kontrol bekliyor · **Raporu onayda** (bu yılın kontrolü yapıldı, imza bekleniyor — "geçti" denmez).
-- **Kodu değiştir** yalnız yönetici, gerekçe zorunlu, eski kod geçmişte kalır ve **yeniden verilmez** (karar 19'un genişletilmesi).
-- Ekipman firma genelindeki listeden de eklenebilir (planlama); silme yok.
+- **Ekipmanlar ayrı modül değil** (reisim: *"planlar açıldığında ekipmanlar orada gözüküyor ya, oradan rapor oluştur diyoruz"*): denetçi
+  ekipmanı sahada planın içinde ekler; ekipman kaydı kalıcıdır çünkü sonraki yıllarda önceki raporundan "Rapor oluştur" ile yeni rapor
+  açılır (tekrar tekrar rapor yazılmaz). Menüden ve uygulamanın modül kaydından çıktı → 15 modül. Müşteri ve tesis sayfasındaki ekipman
+  sayısı yalnız bilgi; tesiste açık plan varsa yüz o planı açar. Rapor sayfasındaki ekipman yüzü tıklanmaz.
+- **Firma tür eklemez** (51): türler ve rapor şablonları probata'dan gelir; firma yalnız kendi ayarını değiştirir (periyot, tahmini süre,
+  standartlar). Şablonu henüz hazır olmayan türde "hazırlanıyor" yazar.
+- **Yetkili meslekler bölümü yok** (52): yetkisiz denetçi plana alınırsa yalnız uyarı (M1, M6).
+- **Periyot türde** (53); tek ekipmanın sonraki kontrol tarihi planda / raporda elle değiştirilir (M8'in sırası gelince).
+- **Tahmini kontrol süresi isteğe bağlı** (54); boşsa "Girilmedi".
+- Eski ekipman kodu **başka ekipmana verilmez** (56); kod değişikliğinin yeri plan içi / rapor (M6–M8'in sırası gelince).
+- Sökülen / hizmet dışı ekipman düşünülmez (57, reisim: *"biz fabrikaya hizmet eden bir uygulama yapmıyoruz, biz denetçiye ve periyodik
+  kontrol firmasına hizmet verecek bir içerik üretiyoruz"*).
+- Rapor şablonunun önizlemesi M7'de; tür sayfasında yalnız adı ve bağlantısı (çakışma önerisi).
+- Katalog 24 tür (Planlar maketinin 14 türü + 10 tür); standart atamaları örnektir.
 **Sorular (M3):**
-51. Tür kataloğu **her firmanın kendisinin** mi (firma tür ekler), yoksa **bizim tuttuğumuz ortak katalog** mu? Rapor şablonu kodda
-    olduğundan yeni tür de fiilen bizim işimiz — "Tür ekle" firmaya açık kalsın mı?
-52. Yetkili meslekler **grup düzeyinde** mi (öneri), tür başına daraltılabilsin mi? *(soru 38 ile bağlı)*
-53. Periyot yalnız tür düzeyinde mi; ekipman düzeyinde **istisna** (3 yılda bir test basıncı, 10 yılda yeniden değerlendirme, §4.7)
-    gerekir mi?
-54. **Tahmini kontrol süresi** türde tutulsun mu (plan saat önerisi için, §3.1 öneri)?
-55. Ekipman **firma genelindeki Ekipmanlar ekranından** da eklenebilsin mi, yoksa yalnız plan açarken (planlama) ve sahada (inspector)?
-56. Eski ekipman kodu **yeniden verilmesin** (öneri) — uygun mu?
-57. Ekipman sökülünce / satılınca: **"Hizmet dışı"** durumu (raporları kalır, plana alınamaz) önerisi uygun mu?
-**Ölçüm (2026-09-24, bulut):** 10 durum × 1920 · 1080 · 375 × açık/koyu = **60/60 temiz**, çekmece 2/2; etkileşim **14/14**.
-Ölçerken bulunup düzeltilen: 1080'de akreditasyon rozeti sığmıyordu (listede kısa ad) · pencerede iç içe kaydırma alttaki tuş
-çubuğunun altında kalıyordu (kaldırıldı) · 143 ekipmanda sayfalayıcı 15 tuşla iki satıra taşıyordu (7'den fazla sayfada "1 … 7 8 9 …
-15", telefonda "1 … 8 … 15") · **onaylı Planlar maketinden beri "önceki sayfa" tuşu boştu** (`chevron-left` ikon dosyasında yoktu →
-eklendi; iki yeni kilit: maket betiklerindeki her ikon adı dosyada olmalı + ölçümde çizilen her ikonun karşılığı) · raporu onayda
-olan ekipman "Kontrolü geçti" görünüyordu · müşteri değişince başka müşterinin tesisi seçili kalıyordu (liste sessizce boşalıyordu).
+Açık soru yok — 51–57 cevaplandı (§9, on dördüncü tur). 2. tur reisim'in incelemesini bekliyor.
+**Ölçüm (2026-09-26, bulut, 2. tur):** 6 durum × 1920 · 1080 · 375 × açık/koyu = **36/36 temiz**, çekmece 2/2; etkileşim **10/10**, telefon **24/24**
+(şablon hazırlanıyor çipi, branş, Tür ekle yok, yetkili meslek bölümü yok, ekipman yüzü tıklanmaz, süre boş kaydedilir, periyot 0 hata,
+periyot 6 kaydedilir, Vazgeç, eski Ekipmanlar bağlantısı, tesis sayfasındaki ekipman yüzü → plan). Menü değiştiği için bütün maketler
+yeniden ölçüldü (§11, 39).
+1. tur (2026-09-24): 10 durum 60/60, etkileşim 14/14 (Ekipmanlar ayrı ekrandı; firma tür ekliyordu).
 
 #### Maket M4 — Ölçüm Cihazı · Zimmet · kalibrasyon uyarısı (modül 8, 9, 20 kısmı) — ONAY BEKLİYOR
 Ekranlar: **ölçüm cihazları** (`maket/olcum-cihazlari.html`: liste üstünde kalibrasyon uyarı şeridi — geçenler kişi adıyla, 30 gün
@@ -1272,7 +1262,18 @@ işyeri sicil no aynı biçimde, rapor aşamasında yeniden hatırlatılır · 4
 başlangıç 30 gün · 50 il ve ilçe aramalı seçim listesi. Çakışma önerileri de uygun: İSG-KATİP kayıtları tesiste yalnız görünür, girişi
 M5'te; "açık plan için" sütunu uyarı. → M2 2. tur (§3.6).
 
-**Açık kalanlar:** **modül modül gözden geçirme** (M1 ve M2 onaylandı; sırada M3 — reisim: Ekipmanlar ayrı modül olmayacak, Ekipman türleri yeterli) · **toplu maket çalışması** (M1–M16 + toplu bakış, `MAKET-PLANI.md`; sorular §3.6'da, 32'den) · **önizlemede örnek veri kipi** (öneri, §3.3) · ~~rol × modül görünürlüğü~~ (karar 2026-09-25: başlangıç düzeni + firma yöneticisi değiştirir) · **gerçek sunucunun sağlayıcısı**
+**On dördüncü tur (2026-09-26, M3 soruları 51–57; reisim birebir):** *"Sıradakine geçelim ve ekipmanlar ve ekipman türleri diye iki modüle
+gerek yok ekipman türleri yeterli"* · *"Zaten planlar açıldığında ekipmanlar orada gözüküyor ya, oradan rapor oluştur diyoruz zaten neden
+ekstradan ekipmanlar sekmesi lazım olsun. Gerek yok./ 51. Bunu sorman sistemi anlamadığını işaret ediyor, bizim kullanıcımız periyodik
+kontrol firmaları, müşterisinden herhangi bir beklentisi bu konuda yok. Saha personeli(denetçi) sahada ekipmanı ekleyip raporunu
+oluşturucak. Ekipmanı ayrı raporu ayrı oluşturmamızın sebebi, ilerleyen senelerde aynı raporları tekrar rapor oluştur diyerek oluşturup
+kullanabilmek. Yani tekrar tekrar rapor yazma ile vakit kaybetmemek için. Özetle hayır bu işi denetçiler yapacak 52 ve diğerleri için
+önerilerini kabul ediyorum ama sökülen ga da hizmet dışı makineleri düşünmene gerek yok dediğim gibi biz fabrikaya hizmet eden bir
+uygulama yapmıyoruz, biz denetçiye ve periyodik kontrol firmasına hizmet verecek bir içerik üretiyoruz."* → M3 2. tur (§3.6).
+**Ürün ilkesi (bu cevaptan, bütün modüller için):** kullanıcımız **periyodik kontrol firması ve denetçisi**; fabrikanın (müşterinin)
+varlık yönetimi ürünün konusu değil. Ekipman ve raporun ayrı tutulmasının amacı: sonraki yıl önceki rapordan yeni rapor, yeniden yazma yok.
+
+**Açık kalanlar:** **modül modül gözden geçirme** (M1 ve M2 onaylandı; M3 2. tur incelemede — Ekipmanlar kalktı; sırada M4) · **toplu maket çalışması** (M1–M16 + toplu bakış, `MAKET-PLANI.md`; sorular §3.6'da, 32'den) · **önizlemede örnek veri kipi** (öneri, §3.3) · ~~rol × modül görünürlüğü~~ (karar 2026-09-25: başlangıç düzeni + firma yöneticisi değiştirir) · **gerçek sunucunun sağlayıcısı**
 (Türkiye, §8.8) ·
 alan adının alınması · e-imza yöntemi (8.4) · v1 ekipman grupları · 5 yıl sonrası silme
 mekanizması · **zimmette birden çok cihaz varsa süzgeç** (§3) · **kontrol metodu standardının seçim yeri**
@@ -1302,6 +1303,9 @@ revizyon, alan kopyalama, hafif kusur devri, meslek eşleşme denetimi).
 - Emsal ürünler: https://opwire.app/iso-17020-periyodik-kontrol-yazilimi/ · https://17020muayene.vidco.com.tr/ · https://akuple.com/asansor-kontrol-yazilimi/ · https://ensyazilim.com/
 
 ## 11 · Değişiklik günlüğü
+- 2026-09-26 (39): **M3 2. tur** (reisim 51–57, §9 on dördüncü tur): **Ekipmanlar modülü kalktı** (menü, uygulamanın modül kaydı ve rotası →
+  15 modül; ekipmanlar planın içinde), firma tür eklemez (ayarları düzenler: periyot, süre, standartlar), yetkili meslek bölümü kalktı,
+  tahmini süre isteğe bağlı, rapor şablonu yalnız ad + bağlantı. Menü değiştiği için bütün maketler yeniden ölçüldü. M3 36/36 · 10/10 · 24/24.
 - 2026-09-26 (38): **M2 ONAYLANDI** (reisim: *"Sıradakine geçelim"*). M3'e geçerken reisim: *"ekipmanlar ve ekipman türleri diye iki
   modüle gerek yok ekipman türleri yeterli"* → Ekipmanlar modülü M3'ün 2. turunda kalkacak; ekipman kaydının yeri reisim'e soruldu.
 - 2026-09-25 (37): **M2 2. tur** (reisim 44–50: *"Tüm önerilerin uygundur"*, §9 on üçüncü tur): müşteri girişi kendiliğinden (davet kalktı),

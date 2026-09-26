@@ -11,22 +11,23 @@
 <link rel="stylesheet" href="../assets/maket.css">
 </head>
 <body>
-<!-- MAKET M3 · Ekipman Türü Kataloğu (modül 5) — ONAY BEKLİYOR. Kabuk maket-ortak.js MK.kabuk() ile kurulur.
-     Adres: #/ katalog · #/tur/<kod> tür sayfası · #/yeni tür ekle -->
+<!-- MAKET M3 · Ekipman türleri (modül 5) — 2. tur 2026-09-26, ONAY BEKLİYOR. Kabuk maket-ortak.js MK.kabuk() ile kurulur.
+     Adres: #/ katalog · #/tur/<kod> tür sayfası · #/tur/<kod>/duzenle firma ayarları (periyot, süre, standartlar).
+     Tür ekle yok (reisim 51: türleri ve rapor şablonlarını biz tanımlarız); Ekipmanlar ayrı ekran değil, planın içinde. -->
 <main class="a-icerik" id="a-icerik">
   <div id="a-liste-gorunum">
     <div class="a-sayfa-bas">
       <h1 tabindex="-1">Ekipman türleri</h1>
       <span class="a-sayac" id="a-sayac" aria-live="polite"></span>
-      <button class="a-tus a-tus-birincil a-bolum-tus" type="button" data-eylem="tur-ac"><svg class="a-ikon a-ikon-kucuk" aria-hidden="true"><use href="../vendor/lucide-1.47.0/ikonlar.svg#i-plus"/></svg>Tür ekle</button>
     </div>
+    <div class="a-serit-kap" id="a-tur-bilgi"></div>
     <div id="a-suzgec-kap"></div>
     <div class="a-liste-kap" id="a-liste"></div>
   </div>
   <section id="a-nesne" aria-label="Ekipman türü" hidden></section>
 </main>
 
-<!-- form penceresi (içerik maket-turler.js) -->
+<!-- firma ayarları penceresi: periyot · tahmini süre · standartlar (içerik maket-turler.js) -->
 <dialog class="a-pencere a-pencere-form" id="a-pencere" aria-labelledby="a-pencere-baslik">
   <div class="a-pencere-bas">
     <h2 id="a-pencere-baslik"></h2>

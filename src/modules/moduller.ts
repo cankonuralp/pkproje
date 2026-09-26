@@ -5,7 +5,10 @@
    16 PDF Üretimi (sunucu işi), 17 Müşteri Paneli (müşterinin kendi girişi). Kimin hangi modülü göreceği sonra
    belirlenecek (reisim) — bu kayıt o karar geldiğinde yetki alanı alır.
    2026-09-25 (reisim, M1 soruları: "159 birleşsin", "kullanıcı hesabı her zaman personele bağlı olsun"): 1 Kullanıcı & Rol ayrı
-   menü değil; hesap, roller ve rol yetkileri Personel'in (2) içinde → 16 modül. */
+   menü değil; hesap, roller ve rol yetkileri Personel'in (2) içinde → 16 modül.
+   2026-09-26 (reisim, M3: "ekipmanlar ve ekipman türleri diye iki modüle gerek yok ekipman türleri yeterli" · "planlar açıldığında
+   ekipmanlar orada gözüküyor ... neden ekstradan ekipmanlar sekmesi lazım olsun"): 7 Ekipmanlar ayrı menü değil; ekipmanlar planın
+   içinde (denetçi sahada ekler) → 15 modül. */
 
 export interface Modul {
   /** pkproje.md §3.1 numarası */
@@ -35,7 +38,6 @@ export const MODUL_GRUPLARI: readonly ModulGrubu[] = [
     { no: 12, ad: "Sözleşmeler", yol: "sozlesmeler", ikon: "scroll-text" },
   ] },
   { grup: "Varlık", moduller: [
-    { no: 7, ad: "Ekipmanlar", yol: "ekipmanlar", ikon: "wrench" },
     { no: 8, ad: "Ölçüm cihazları", yol: "olcum-cihazlari", ikon: "gauge" },
     { no: 9, ad: "Zimmetler", yol: "zimmetler", ikon: "package" },
   ] },

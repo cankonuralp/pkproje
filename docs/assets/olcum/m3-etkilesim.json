@@ -1,12 +1,12 @@
 {
  "maket": "m3",
- "tarih": "2026-09-25",
+ "tarih": "2026-09-26",
  "arac": "tools/olc-bulut.mjs --etkilesim (başsız tarayıcı, 1920 açık tema; gen verilen denemede o genişlik)",
- "toplam": 14,
- "gecen": 14,
+ "toplam": 10,
+ "gecen": 10,
  "denemeler": [
   {
-   "ad": "türler: Rapor şablonu yok çipi",
+   "ad": "türler: Rapor şablonu hazırlanıyor çipi",
    "gen": 1920,
    "sayfa": "maket/ekipman-turleri.html",
    "hash": "#/",
@@ -20,87 +20,59 @@
    "gecti": true
   },
   {
-   "ad": "tür ekle: kullanılan kod reddedilir",
+   "ad": "türler: Tür ekle tuşu yok (türler probata'dan)",
    "gen": 1920,
    "sayfa": "maket/ekipman-turleri.html",
-   "hash": "#/yeni",
-   "gecti": true
-  },
-  {
-   "ad": "tür ekle: geçerli → tür sayfası, şablon yok uyarısı",
-   "gen": 1920,
-   "sayfa": "maket/ekipman-turleri.html",
-   "hash": "#/yeni",
-   "gecti": true
-  },
-  {
-   "ad": "ekipmanlar: adresten tesis süzgeci (14 / 143)",
-   "gen": 1920,
-   "sayfa": "maket/ekipmanlar.html",
-   "hash": "#/?tesis=t1",
-   "gecti": true
-  },
-  {
-   "ad": "ekipmanlar: müşteri değişince başka müşterinin tesisi seçili kalmaz",
-   "gen": 1920,
-   "sayfa": "maket/ekipmanlar.html",
-   "hash": "#/?tesis=t1",
-   "gecti": true
-  },
-  {
-   "ad": "ekipmanlar: son sayfa (141–143 / 143)",
-   "gen": 1920,
-   "sayfa": "maket/ekipmanlar.html",
    "hash": "#/",
    "gecti": true
   },
   {
-   "ad": "ekipmanlar: geçmiş ve 30 gün içinde birlikte → imkânsız",
+   "ad": "tür sayfası: yetkili meslekler bölümü yok, ekipman yüzü tıklanmaz",
    "gen": 1920,
-   "sayfa": "maket/ekipmanlar.html",
-   "hash": "#/",
+   "sayfa": "maket/ekipman-turleri.html",
+   "hash": "#/tur/ET",
    "gecti": true
   },
   {
-   "ad": "ekipman ekle: çakışan kod söylenir, kaydedilmez",
+   "ad": "ayarlar: süre boş bırakılır → kaydedilir, Girilmedi",
    "gen": 1920,
-   "sayfa": "maket/ekipmanlar.html",
-   "hash": "#/yeni",
+   "sayfa": "maket/ekipman-turleri.html",
+   "hash": "#/tur/ET/duzenle",
    "gecti": true
   },
   {
-   "ad": "ekipman ekle: geçerli → ilk kontrol bekliyor",
+   "ad": "ayarlar: periyot 0 → hata, pencere açık",
    "gen": 1920,
-   "sayfa": "maket/ekipmanlar.html",
-   "hash": "#/yeni",
+   "sayfa": "maket/ekipman-turleri.html",
+   "hash": "#/tur/ET/duzenle",
    "gecti": true
   },
   {
-   "ad": "seçim alanı araması: eşleşmeyen yazı → seçenek yok",
+   "ad": "ayarlar: periyot 6 → tür sayfasında 6 ay",
    "gen": 1920,
-   "sayfa": "maket/ekipmanlar.html",
-   "hash": "#/yeni",
+   "sayfa": "maket/ekipman-turleri.html",
+   "hash": "#/tur/ET/duzenle",
    "gecti": true
   },
   {
-   "ad": "kodu değiştir: eski kod yeniden verilmez",
+   "ad": "ayarlar: Vazgeç → tür sayfasına döner",
    "gen": 1920,
-   "sayfa": "maket/ekipmanlar.html",
-   "hash": "#/e/TP-1005/kod",
+   "sayfa": "maket/ekipman-turleri.html",
+   "hash": "#/tur/ET/duzenle",
    "gecti": true
   },
   {
-   "ad": "kodu değiştir: yeni kod + gerekçe → geçmişte eski kod",
-   "gen": 1920,
-   "sayfa": "maket/ekipmanlar.html",
-   "hash": "#/e/TP-1005/kod",
-   "gecti": true
-  },
-  {
-   "ad": "ekipman sayfası: tesis müşteriler maketine bağlanır",
+   "ad": "eski Ekipmanlar bağlantısı Ekipman türlerine gider",
    "gen": 1920,
    "sayfa": "maket/ekipmanlar.html",
    "hash": "#/e/HT-1001",
+   "gecti": true
+  },
+  {
+   "ad": "tesis sayfası: Ekipman yüzü tesisin planını açar",
+   "gen": 1920,
+   "sayfa": "maket/musteriler.html",
+   "hash": "#/t/t1",
    "gecti": true
   }
  ]

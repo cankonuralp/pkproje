@@ -123,3 +123,6 @@ tek mesaj: sayfanın bağlantısı + kaç maket + kaç soru + ölçülemeyen var
   sırada M3 Ekipman türleri · Ekipmanlar.
 - 2026-09-26: **M2 ONAYLANDI** (reisim: *"Sıradakine geçelim"*). Sırada **M3** — reisim: *"ekipmanlar ve ekipman türleri diye iki modüle gerek
   yok ekipman türleri yeterli"*; sorular 51–57 ve ekipman kaydının yeri yeniden soruldu.
+- 2026-09-26: **M3 2. tur** — reisim 51–57 (pkproje.md §9 on dördüncü tur): Ekipmanlar modülü kalktı (15 modül, ekipmanlar planın içinde),
+  firma tür eklemez, yetkili meslek bölümü kalktı. M3 36/36 · 10/10 · 24/24. **Reisim'in incelemesi bekleniyor**; onaylanınca sırada M4
+  Ölçüm cihazları · Zimmetler.
