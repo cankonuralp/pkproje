@@ -417,7 +417,7 @@ adı 93 px taşıyordu (kısa kimlik bağlantı, ad alt satırda) · özlük not
 rol yetkileri çubuğuna üç tuş sığmıyordu ("Önerilen düzene dön" tablonun üstüne alındı).
 1. tur (2026-09-24): 18 durum 108/108, etkileşim 17/17 (Kullanıcılar ayrı ekrandı).
 
-#### Maket M2 — Müşteri ve Tesis (modül 3) — ONAY BEKLİYOR
+#### Maket M2 — Müşteri ve Tesis (modül 3) — ONAYLANDI 2026-09-26
 **2. tur (2026-09-25, reisim'in M2 cevaplarıyla: *"Tüm önerilerin uygundur"*; kararlar §9 on üçüncü tur).** Ekranlar (`maket/musteriler.html`):
 **liste** (tesis sayısı ve illeri, ekipman, **müşteri girişi** — son giriş ya da "henüz girmedi", en yakın kontrol, durum; çipler:
 kontrolü 30 gün içinde · İSG-KATİP kaydı olmayan tesis · müşteri girişi kullanılmadı · bilgisi eksik · açık uygunsuzluk; il seçicisi;
@@ -448,7 +448,7 @@ pasif yap / yeniden etkinleştir**.
   süzülü listeyi açar; faturası olmayan müşteride alacak yüzü tıklanmaz (boş liste gösterilmez, anayasa 2.6).
 - M11 Müşteri Paneli ek girişleri okuyor; ana girişin panelde karşılığı M11'in sırası gelince bağlanır.
 **Sorular (M2):**
-Açık soru yok — 44–50 cevaplandı (§9, on üçüncü tur). 2. tur reisim'in incelemesini bekliyor.
+Açık soru yok — 44–50 cevaplandı (§9, on üçüncü tur). **2. tur ONAYLANDI (2026-09-26, reisim: *"Sıradakine geçelim"*)**.
 **Ölçüm (2026-09-25, bulut, 2. tur):** 13 durum × 1920 · 1080 · 375 × açık/koyu = **78/78 temiz**, çekmece 2/2; etkileşim **24/24**, telefon
 **52/52** (müşteri girişi kullanılmadı çipi, aynı vergi no → uyarı → "Yine de kaydet" kaydeder, vergi no ve e-posta boş kaydedilir, e-postayla
 müşteri girişi kendiliğinden açılır, çakışan SGK uyarısı, il seçilmeden ilçe kapalı, il ve ilçe listeden, 81 ilde arama, ek giriş, parolayı
@@ -1272,7 +1272,7 @@ işyeri sicil no aynı biçimde, rapor aşamasında yeniden hatırlatılır · 4
 başlangıç 30 gün · 50 il ve ilçe aramalı seçim listesi. Çakışma önerileri de uygun: İSG-KATİP kayıtları tesiste yalnız görünür, girişi
 M5'te; "açık plan için" sütunu uyarı. → M2 2. tur (§3.6).
 
-**Açık kalanlar:** **modül modül gözden geçirme** (M1 onaylandı; M2 2. tur incelemede; sırada M3) · **toplu maket çalışması** (M1–M16 + toplu bakış, `MAKET-PLANI.md`; sorular §3.6'da, 32'den) · **önizlemede örnek veri kipi** (öneri, §3.3) · ~~rol × modül görünürlüğü~~ (karar 2026-09-25: başlangıç düzeni + firma yöneticisi değiştirir) · **gerçek sunucunun sağlayıcısı**
+**Açık kalanlar:** **modül modül gözden geçirme** (M1 ve M2 onaylandı; sırada M3 — reisim: Ekipmanlar ayrı modül olmayacak, Ekipman türleri yeterli) · **toplu maket çalışması** (M1–M16 + toplu bakış, `MAKET-PLANI.md`; sorular §3.6'da, 32'den) · **önizlemede örnek veri kipi** (öneri, §3.3) · ~~rol × modül görünürlüğü~~ (karar 2026-09-25: başlangıç düzeni + firma yöneticisi değiştirir) · **gerçek sunucunun sağlayıcısı**
 (Türkiye, §8.8) ·
 alan adının alınması · e-imza yöntemi (8.4) · v1 ekipman grupları · 5 yıl sonrası silme
 mekanizması · **zimmette birden çok cihaz varsa süzgeç** (§3) · **kontrol metodu standardının seçim yeri**
@@ -1302,6 +1302,8 @@ revizyon, alan kopyalama, hafif kusur devri, meslek eşleşme denetimi).
 - Emsal ürünler: https://opwire.app/iso-17020-periyodik-kontrol-yazilimi/ · https://17020muayene.vidco.com.tr/ · https://akuple.com/asansor-kontrol-yazilimi/ · https://ensyazilim.com/
 
 ## 11 · Değişiklik günlüğü
+- 2026-09-26 (38): **M2 ONAYLANDI** (reisim: *"Sıradakine geçelim"*). M3'e geçerken reisim: *"ekipmanlar ve ekipman türleri diye iki
+  modüle gerek yok ekipman türleri yeterli"* → Ekipmanlar modülü M3'ün 2. turunda kalkacak; ekipman kaydının yeri reisim'e soruldu.
 - 2026-09-25 (37): **M2 2. tur** (reisim 44–50: *"Tüm önerilerin uygundur"*, §9 on üçüncü tur): müşteri girişi kendiliğinden (davet kalktı),
   ek girişler, vergi / SGK no uyarı (engel değil, "Yine de kaydet"), pasif yap / yeniden etkinleştir, il ve ilçe listeden, İSG-KATİP tesiste
   yalnız görünür. M2 78/78 · 24/24 · telefon 52/52.

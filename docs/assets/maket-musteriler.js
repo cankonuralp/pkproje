@@ -1,4 +1,4 @@
-/* ══ probata MAKET M2 — Müşteri ve Tesis (modül 3) · 2. TUR, ONAY BEKLİYOR (2026-09-25) ═════════════════════════════════
+/* ══ probata MAKET M2 — Müşteri ve Tesis (modül 3) · 2. TUR, ONAYLANDI (2026-09-26) ═════════════════════════════════
    Kaynak: pkproje.md §2 (müşteri e-postayla girer; bir müşterinin birden çok tesisi; tesis = raporun adresi), §4.2 1.7.1
    (raporda işyerinin ünvanı, SGK sicil no, adres, sözleşme no), §7 (SGK işyeri sicil no TESİSTE), §3.2 (plan: müşteri →
    tesis; İSG-KATİP kişi × tesis; öneri 8: imzada bilgi rapora kopyalanır). Ekranlar: liste (#/) · müşteri (#/m/<id>) · tesis

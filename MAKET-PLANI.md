@@ -121,3 +121,5 @@ tek mesaj: sayfanın bağlantısı + kaç maket + kaç soru + ölçülemeyen var
 - 2026-09-25: **M2 2. tur** — reisim 44–50: *"Tüm önerilerin uygundur"* (pkproje.md §9 on üçüncü tur): müşteri girişi kendiliğinden, ek
   girişler, vergi / SGK no uyarı, pasif, il / ilçe listeden. M2 78/78 · 24/24 · telefon 52/52. **Reisim'in incelemesi bekleniyor**; onaylanınca
   sırada M3 Ekipman türleri · Ekipmanlar.
+- 2026-09-26: **M2 ONAYLANDI** (reisim: *"Sıradakine geçelim"*). Sırada **M3** — reisim: *"ekipmanlar ve ekipman türleri diye iki modüle gerek
+  yok ekipman türleri yeterli"*; sorular 51–57 ve ekipman kaydının yeri yeniden soruldu.
