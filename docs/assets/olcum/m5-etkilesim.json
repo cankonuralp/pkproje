@@ -6,98 +6,98 @@
  "gecen": 14,
  "denemeler": [
   {
-   "ad": "eksikler: iki plan kabulü durur (kayıt yok · geç onay)",
+   "ad": "eski İSG-KATİP adresi (tesis) sözleşmenin İSG-KATİP bölümüne gider",
    "gen": 1920,
    "sayfa": "maket/sozlesmeler.html",
-   "hash": "#/",
+   "hash": "#/isg?tesis=t7",
    "gecti": true
   },
   {
-   "ad": "personel kartından kişiye göre (9 / 17)",
+   "ad": "sözleşmesi olmayan tesis → tesis sayfası",
+   "gen": 1920,
+   "sayfa": "maket/sozlesmeler.html",
+   "hash": "#/isg?tesis=t2",
+   "gecti": true
+  },
+  {
+   "ad": "personel kartından denetçiye göre",
    "gen": 1920,
    "sayfa": "maket/sozlesmeler.html",
    "hash": "#/isg?kisi=mk",
    "gecti": true
   },
   {
-   "ad": "Geç onay çipi (1 / 17)",
+   "ad": "şeritteki Göster: ID'si eksik sözleşme",
    "gen": 1920,
    "sayfa": "maket/sozlesmeler.html",
    "hash": "#/",
    "gecti": true
   },
   {
-   "ad": "görünüm: önceki kayıtlar (2), süzgeç sayılmaz",
+   "ad": "geç onay yalnız uyarı (kabul engellenmez)",
    "gen": 1920,
    "sayfa": "maket/sozlesmeler.html",
-   "hash": "#/",
+   "hash": "#/isg?tesis=t7",
    "gecti": true
   },
   {
-   "ad": "tesisten gelince Kayıt ekle tesisi doldurur",
+   "ad": "ID ekle: boş → denetçi ve ID hatası",
    "gen": 1920,
    "sayfa": "maket/sozlesmeler.html",
-   "hash": "#/isg?tesis=t8",
+   "hash": "#/isg/yeni?tesis=t8",
    "gecti": true
   },
   {
-   "ad": "boş gönderildi: dört alan hatası",
-   "gen": 1920,
-   "sayfa": "maket/sozlesmeler.html",
-   "hash": "#/isg/yeni",
-   "gecti": true
-  },
-  {
-   "ad": "aynı sözleşme no reddedilir",
+   "ad": "ID ekle: onay tarihsiz kaydedilir, eksik düşer, planda kullanılıyor",
    "gen": 1920,
    "sayfa": "maket/sozlesmeler.html",
    "hash": "#/isg/yeni?tesis=t8&kisi=mk",
    "gecti": true
   },
   {
-   "ad": "olmayan tarih (31.02.2026) reddedilir",
+   "ad": "ID ekle: PDF'le kaydedilir",
    "gen": 1920,
    "sayfa": "maket/sozlesmeler.html",
    "hash": "#/isg/yeni?tesis=t8&kisi=mk",
    "gecti": true
   },
   {
-   "ad": "geç onay canlı denetlenir (26.09 → kabul edemez)",
-   "gen": 1920,
-   "sayfa": "maket/sozlesmeler.html",
-   "hash": "#/isg/yeni?tesis=t8&kisi=mk",
-   "gecti": true
-  },
-  {
-   "ad": "eksikten kayıt eklenir → P-0926-039 eksikten düşer",
-   "gen": 1920,
-   "sayfa": "maket/sozlesmeler.html",
-   "hash": "#/",
-   "gecti": true
-  },
-  {
-   "ad": "geç onay düzeltilir → P-0926-038 eksikten düşer",
-   "gen": 1920,
-   "sayfa": "maket/sozlesmeler.html",
-   "hash": "#/isg/i8",
-   "gecti": true
-  },
-  {
-   "ad": "yenileme: eski kayıt önceki kayda geçer",
+   "ad": "yenileme: kişinin eski ID'si önceki olur",
    "gen": 1920,
    "sayfa": "maket/sozlesmeler.html",
    "hash": "#/isg/yeni?tesis=t12&kisi=mk",
    "gecti": true
   },
   {
-   "ad": "önceki kayıt salt okunur (Kaydet yok)",
+   "ad": "düzenle: onay tarihi silinebilir",
    "gen": 1920,
    "sayfa": "maket/sozlesmeler.html",
-   "hash": "#/isg/i90",
+   "hash": "#/isg/i8",
    "gecti": true
   },
   {
-   "ad": "Esc pencereyi kapatır, adres listeye döner",
+   "ad": "kullanılmamış ID silinir",
+   "gen": 1920,
+   "sayfa": "maket/sozlesmeler.html",
+   "hash": "#/s/IS-1125-001",
+   "gecti": true
+  },
+  {
+   "ad": "planda kullanılan ID'de Sil yok",
+   "gen": 1920,
+   "sayfa": "maket/sozlesmeler.html",
+   "hash": "#/isg?tesis=t12",
+   "gecti": true
+  },
+  {
+   "ad": "sözleşme şablonu yüklenir",
+   "gen": 1920,
+   "sayfa": "maket/sozlesmeler.html",
+   "hash": "#/sablon",
+   "gecti": true
+  },
+  {
+   "ad": "Esc pencereyi kapatır, adres sözleşmeye döner",
    "gen": 1920,
    "sayfa": "maket/sozlesmeler.html",
    "hash": "#/isg/i1",

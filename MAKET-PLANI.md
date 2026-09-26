@@ -132,3 +132,6 @@ tek mesaj: sayfanın bağlantısı + kaç maket + kaç soru + ölçülemeyen var
 - 2026-09-26: **M4 2. tur** — reisim 58–65 ("59 hariç dediklerini kabul ediyorum"; 59: kalibrasyonu geçmiş cihazda gönderim engellenir):
   cihazda kimde / kod / kalibrasyon başta, zimmet onayı imzalı formla, fotoğraf ve ara kontrol isteğe bağlı. M4 72/72 · 20/20 · 48/48.
   Reisim'in incelemesi bekleniyor; onaylanınca sırada M5 İSG-KATİP.
+- 2026-09-26: **M4 ONAYLANDI**. **M5 2. tur** — reisim A–H ("Önerilerin hepsi uygun başla"): Sözleşmeler = iş sözleşmesi, M5 + M13
+  birleşti, İSG-KATİP ID'leri sözleşmenin içinde denetçiye göre, PDF ve onay tarihi isteğe bağlı, sözleşme şablonu yüklenir. M5 60/60 · 14/14 ·
+  40/40. Reisim'in incelemesi bekleniyor; iş sözleşmesinin kalan soruları (M13) ve sonra M6 Plan aç.

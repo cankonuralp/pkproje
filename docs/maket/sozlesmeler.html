@@ -3,7 +3,7 @@
 <head>
 <meta charset="utf-8">
 <meta name="viewport" content="width=device-width, initial-scale=1">
-<title>İSG-KATİP kayıtları · probata maket</title>
+<title>Sözleşmeler · probata maket</title>
 <meta name="robots" content="noindex">
 <link rel="icon" href="../marka/favicon.svg" type="image/svg+xml">
 <script src="../assets/maket-tema.js"></script>
@@ -11,24 +11,28 @@
 <link rel="stylesheet" href="../assets/maket.css">
 </head>
 <body>
-<!-- MAKET M5 · Sözleşmeler (modül 12), İSG-KATİP kısmı — ONAY BEKLİYOR. Kayıt kişi × tesis: sözleşme no + onay tarihi.
-     Adres: #/ ya da #/isg liste (?kisi=<id> · ?tesis=<id>) · #/isg/yeni[?tesis=&kisi=] kayıt ekle · #/isg/<id> kayıt penceresi -->
+<!-- MAKET M5 + M13 · Sözleşmeler (modül 12) — 2. tur 2026-09-26, ONAY BEKLİYOR. Reisim: "sözleşmeler ... firma ile fabrika arasındaki
+     sözleşme" → bu ekran İŞ SÖZLEŞMELERİ; İSG-KATİP bilgisi (tesis başına denetçi → sözleşme ID, isteğe bağlı onay tarihi ve PDF) sözleşmenin
+     içinde. Ayrı "İSG-KATİP kayıtları" sekmesi kalktı. Adres: #/ liste (?kisi=<id> denetçiye göre · ?musteri=<id>) · #/s/<no> sözleşme ·
+     #/s/<no>/isg-ekle?tesis=<id>&kisi=<id> · #/s/<no>/isg/<id> ID düzenle · #/sablon sözleşme şablonu · #/yeni (?teklif=<no>) sözleşme hazırla.
+     Eski adresler (#/isg…) karşılığına gider. -->
 <main class="a-icerik" id="a-icerik">
   <div id="a-liste-gorunum">
     <div class="a-sayfa-bas">
       <h1 tabindex="-1">Sözleşmeler</h1>
       <span class="a-sayac" id="a-sayac" aria-live="polite"></span>
-      <button class="a-tus a-tus-birincil a-bolum-tus" type="button" data-eylem="isg-ekle"><svg class="a-ikon a-ikon-kucuk" aria-hidden="true"><use href="../vendor/lucide-1.47.0/ikonlar.svg#i-plus"/></svg>İSG-KATİP kaydı ekle</button>
+      <a class="a-tus a-tus-ikincil a-bolum-tus" href="#/sablon"><svg class="a-ikon a-ikon-kucuk" aria-hidden="true"><use href="../vendor/lucide-1.47.0/ikonlar.svg#i-file-text"/></svg>Sözleşme şablonu</a>
+      <button class="a-tus a-tus-birincil" type="button" data-eylem="yeni"><svg class="a-ikon a-ikon-kucuk" aria-hidden="true"><use href="../vendor/lucide-1.47.0/ikonlar.svg#i-plus"/></svg>Sözleşme hazırla</button>
     </div>
-    <!-- 2026-09-24 (M13): iki sekme — İSG-KATİP kayıtları (bu sayfa) · iş sözleşmeleri (is-sozlesmeleri.html) -->
-    <nav class="a-sekmeler a-sekmeler-sayfa" aria-label="Sözleşme türleri"><a class="a-sekme" href="#/" aria-current="page">İSG-KATİP kayıtları</a><a class="a-sekme" href="is-sozlesmeleri.html#/">İş sözleşmeleri</a></nav>
     <div id="a-uyari"></div>
     <div id="a-suzgec-kap"></div>
     <div class="a-liste-kap" id="a-liste"></div>
   </div>
+  <section id="a-nesne" aria-label="İş sözleşmesi" hidden></section>
+  <div id="a-form-gorunum" hidden></div>
 </main>
 
-<!-- kayıt penceresi: ekle · düzenle · önceki kaydı görüntüle (içerik maket-isg.js) -->
+<!-- tek pencere: İSG-KATİP ID ekle / düzenle · sözleşme şablonu (içerik maket-issoz.js) -->
 <dialog class="a-pencere a-pencere-form" id="a-pencere" aria-labelledby="a-pencere-baslik">
   <div class="a-pencere-bas">
     <h2 id="a-pencere-baslik"></h2>
@@ -41,6 +45,6 @@
 </dialog>
 <script src="../assets/maket-ortak.js"></script>
 <script src="../assets/maket-veri.js"></script>
-<script src="../assets/maket-isg.js"></script>
+<script src="../assets/maket-issoz.js"></script>
 </body>
 </html>

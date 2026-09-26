@@ -188,12 +188,14 @@
     { t: "t12", k: "mk", no: "S-2026-0398", onay: "2026-09-10" }, { t: "t12", k: "ea", no: "S-2026-0399", onay: "2026-09-10" },
     { t: "t14", k: "hp", no: "S-2025-0361", onay: "2025-10-28" }, { t: "t15", k: "hp", no: "S-2025-0362", onay: "2025-10-28" }
   ];
-  MV.ISG.forEach(function (x, i) { x.id = "i" + (i + 1); x.girdi = "za"; });
+  /* 2026-09-26 (M5 2. tur, reisim: "isg katip sözleşmesi pdf olarak isteğe bağlı buraya yüklenebilir olsun"): PDF isteğe bağlı; onay tarihi de
+     isteğe bağlı (girilmişse geç onay yalnız uyarı). Kayıt = iş sözleşmesinin içinde tesis başına denetçi → sözleşme ID (no). */
+  MV.ISG.forEach(function (x, i) { x.id = "i" + (i + 1); x.girdi = "za"; x.pdf = i % 3 === 0 ? "isg-katip-" + x.no.toLowerCase() + ".pdf" : null; });
   /* önceki yılın sözleşmeleri (geçmişte kalır; yeni kayıt kişi × tesis için güncel olanı olur) */
   MV.ISG.push({ id: "i90", t: "t12", k: "mk", no: "S-2025-0211", onay: "2025-09-12", girdi: "za", onceki: true }, { id: "i91", t: "t11", k: "mk", no: "S-2025-0230", onay: "2025-09-15", girdi: "za", onceki: true });
   MV.isgTesis = function (tid) { return MV.ISG.filter(function (x) { return x.t === tid && !x.onceki; }); };
   /* plan kabul kuralı (§3.2 2a, §4.4): onay tarihi ≤ kontrol tarihi − 1 gün */
-  MV.isgUygun = function (onay, kontrol) { return MK.gunFarki(onay, kontrol) >= 1; };
+  MV.isgUygun = function (onay, kontrol) { return !onay || MK.gunFarki(onay, kontrol) >= 1; };   /* onay tarihi isteğe bağlı (M5 2. tur): yoksa uyarı yok */
   MV.acikPlan = function (t) { return t.pid && ["bekliyor", "kabul", "denetimde"].indexOf(t.pdurum) >= 0; };
   /* müşteri (portal) kullanıcıları: e-postayla hesap (reisim 2026-09-22); tesis: "hepsi" ya da tesis kimlikleri (soru) */
   MV.MUSTERI_KULLANICI = [

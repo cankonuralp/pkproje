@@ -663,9 +663,6 @@ a.a-yuz:hover { border-color: var(--kenar-alan); background: var(--zemin); }
 .a-tablo-hareket .a-k-tarih { width: 14%; } .a-tablo-hareket .a-k-varlik { width: 26%; } .a-tablo-hareket .a-k-kim { width: 28%; }
 .a-tablo-hareket .a-k-foto { width: 10%; } .a-tablo-hareket .a-k-form { width: 22%; }
 .a-tablo-isg .a-k-kisi { width: 28%; } .a-tablo-isg .a-k-no { width: 22%; } .a-tablo-isg .a-k-onay { width: 20%; } .a-tablo-isg .a-k-durum { width: 30%; }
-/* M5 (İSG-KATİP kaydı) */
-.a-tablo-isgkayit .a-k-tesis { width: 22%; } .a-tablo-isgkayit .a-k-kisi { width: 17%; } .a-tablo-isgkayit .a-k-no { width: 15%; }
-.a-tablo-isgkayit .a-k-onay { width: 13%; } .a-tablo-isgkayit .a-k-plan { width: 15%; } .a-tablo-isgkayit .a-k-durum { width: 18%; }
 /* M6 (plan aç): kapsam ekipmanı · inspector adayı · kapsam tür başına */
 .a-tablo-planekp .a-k-sec { width: 20%; } .a-tablo-planekp .a-k-tur { width: 24%; } .a-tablo-planekp .a-k-konum { width: 20%; }
 .a-tablo-planekp .a-k-sonraki { width: 18%; } .a-tablo-planekp .a-k-durum { width: 18%; }
@@ -818,8 +815,11 @@ a.a-yuz:hover { border-color: var(--kenar-alan); background: var(--zemin); }
 
 /* M13 — iş sözleşmeleri listesi ve sözleşme kapsamı (tesis × İSG-KATİP × plan) */
 .a-tablo-issoz .a-k-no { width: 16%; } .a-tablo-issoz .a-k-musteri { width: 30%; } .a-tablo-issoz .a-k-sure { width: 24%; }
-.a-tablo-issoz .a-k-teklif { width: 14%; } .a-tablo-issoz .a-k-durum { width: 16%; }
-.a-tablo-iskapsam .a-k-tesis { width: 40%; } .a-tablo-iskapsam .a-k-isg { width: 18%; } .a-tablo-iskapsam .a-k-plan { width: 22%; } .a-tablo-iskapsam .a-k-durum { width: 20%; }
+.a-tablo-issoz .a-k-isg { width: 14%; } .a-tablo-issoz .a-k-durum { width: 16%; }
+.a-tablo-iskapsam .a-k-tesis { width: 50%; } .a-tablo-iskapsam .a-k-plan { width: 28%; } .a-tablo-iskapsam .a-k-durum { width: 22%; }
+/* 2026-09-26 (M5 2. tur): sözleşmenin içinde tesis başına İSG-KATİP ID'leri (denetçi → ID, isteğe bağlı onay ve PDF) */
+.a-tablo-isgid .a-k-kisi { width: 19%; } .a-tablo-isgid .a-k-no { width: 15%; } .a-tablo-isgid .a-k-onay { width: 12%; } .a-tablo-isgid .a-k-pdf { width: 19%; }
+.a-tablo-isgid .a-k-durum { width: 17%; } .a-tablo-isgid .a-k-eylem { width: 18%; }
 
 /* M14 — muhasebe: işler, faturalar, işin raporları ve faturaları, tahsilatlar */
 .a-tablo-is .a-k-no { width: 14%; } .a-tablo-is .a-k-musteri { width: 24%; } .a-tablo-is .a-k-rapor { width: 14%; }
@@ -1018,14 +1018,14 @@ a.a-yuz:hover { border-color: var(--kenar-alan); background: var(--zemin); }
   .a-eylem-tuslar { flex-wrap: nowrap; justify-content: flex-end; }
   .a-sebep, .a-not { text-align: left; order: -1; }
   /* toplu maket (2026-09-24): matris, yetkinlik ve İSG-KATİP kartında etiket değerin solunda, satır satır (etiket: değer) */
-  .a-tablo-matris td[data-kart="govde"], .a-tablo-yetkinlik td[data-kart="govde"], .a-tablo-isgkayit td[data-kart="govde"],
+  .a-tablo-matris td[data-kart="govde"], .a-tablo-yetkinlik td[data-kart="govde"], .a-tablo-isgid td[data-kart="govde"],
   .a-tablo-planekp td[data-kart="govde"], .a-tablo-aday td[data-kart="govde"], .a-tablo-kapsamozet td[data-kart="govde"],
   .a-tablo-uyari td[data-kart="govde"], .a-tablo-issoz td[data-kart="govde"]:has(.a-kart-etiket),
   .a-tablo-iskapsam td[data-kart="govde"], .a-tablo-is td[data-kart="govde"]:has(.a-kart-etiket), .a-tablo-fatura td[data-kart="govde"]:has(.a-kart-etiket),
   .a-tablo-isfatura td[data-kart="govde"], .a-tablo-israpor td[data-kart="govde"]:has(.a-kart-etiket), .a-tablo-tahsilat td[data-kart="govde"],
   .a-tablo-fkalem td[data-kart="govde"], .a-tablo-perf td[data-kart="govde"], .a-tablo-gunluk td[data-kart="govde"]:has(.a-kart-etiket),
   .a-tablo-egitim td[data-kart="govde"]:has(.a-kart-etiket), .a-tablo-egitimtur td[data-kart="govde"] { display: flex; align-items: center; justify-content: space-between; gap: 8px; }
-  .a-tablo-matris .a-kart-etiket, .a-tablo-yetkinlik .a-kart-etiket, .a-tablo-isgkayit .a-kart-etiket,
+  .a-tablo-matris .a-kart-etiket, .a-tablo-yetkinlik .a-kart-etiket, .a-tablo-isgid .a-kart-etiket,
   .a-tablo-planekp .a-kart-etiket, .a-tablo-aday .a-kart-etiket, .a-tablo-kapsamozet .a-kart-etiket, .a-tablo-uyari .a-kart-etiket,
   .a-tablo-issoz .a-kart-etiket, .a-tablo-iskapsam .a-kart-etiket, .a-tablo-is .a-kart-etiket, .a-tablo-fatura .a-kart-etiket,
   .a-tablo-isfatura .a-kart-etiket, .a-tablo-israpor .a-kart-etiket, .a-tablo-tahsilat .a-kart-etiket, .a-tablo-fkalem .a-kart-etiket,
@@ -1035,7 +1035,7 @@ a.a-yuz:hover { border-color: var(--kenar-alan); background: var(--zemin); }
   .a-tablo-kzimmet .a-kart-etiket, .a-tablo-ozluk .a-kart-etiket, .a-tablo-ana .a-kart-etiket, .a-tablo-zgecmis .a-kart-etiket { display: inline; }
   .a-tablo-zgecmis td[data-kart="govde"] { display: flex; align-items: baseline; justify-content: space-between; flex-wrap: wrap; gap: 4px 8px; text-align: right; }
   .a-tablo-matris .a-secim { flex: 0 1 170px; }
-  .a-tablo-isgkayit td[data-kart="govde"], .a-tablo-planekp td[data-kart="govde"], .a-tablo-aday td[data-kart="govde"],
+  .a-tablo-isgid td[data-kart="govde"], .a-tablo-planekp td[data-kart="govde"], .a-tablo-aday td[data-kart="govde"],
   .a-tablo-kapsamozet td[data-kart="govde"], .a-tablo-uyari td[data-kart="govde"], .a-tablo-issoz td[data-kart="govde"]:has(.a-kart-etiket),
   .a-tablo-iskapsam td[data-kart="govde"], .a-tablo-is td[data-kart="govde"]:has(.a-kart-etiket), .a-tablo-fatura td[data-kart="govde"]:has(.a-kart-etiket),
   .a-tablo-isfatura td[data-kart="govde"], .a-tablo-israpor td[data-kart="govde"]:has(.a-kart-etiket), .a-tablo-tahsilat td[data-kart="govde"],

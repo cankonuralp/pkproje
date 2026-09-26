@@ -162,7 +162,7 @@ Kurallar (reisim'in sözünden türeyen, ürün kuralı olarak):
 | 9 | Zimmet | Varlık: cihaz, araç, diğer. Her teslim ayrı kayıt: teslim eden → alan, tarih-saat, fotoğraflar, zimmet formu. Anlık "kimde" + tam geçmiş |
 | 10 | Eğitim Takibi | Personel eğitimleri, belge, tekrar süresi, bitmeden uyarı |
 | 11 | Teklif | Müşteri, tesis, kalemler (ekipman türü × adet × birim fiyat), durum |
-| 12 | Sözleşme | Firmalar arası iş sözleşmesi + İSG-KATİP kayıtları (no, onay tarihi, yetkili kişi, tesis) |
+| 12 | Sözleşme | Firmalar arası **iş sözleşmesi** (periyodik kontrol firması ↔ müşteri) — 2026-09-26: menüdeki Sözleşmeler budur; **İSG-KATİP** bilgisi onun içinde, tesis başına denetçi → sözleşme ID (isteğe bağlı onay tarihi ve PDF); SGK işyeri sicil no tesiste |
 | 13 | Planlama | Plan açma, inspector atama, ekipman listesi, "Planlar" ekranı (5. turda genel ad; eski "Planlarım"), kabul/red, durumlar |
 | 14 | Saha & Rapor | Rapor girişi, ölçüm, kriter, kusur (hafif/ağır), fotoğraf (en az 1), cihazlar zimmetten; pano fotoğrafından sigorta okuma |
 | 15 | Onay & İmza | Branş yöneticisi onayı, geri gönderme gerekçesi, inspector son imzası; yöntem firma seçer (§8.4) |
@@ -494,7 +494,7 @@ ekle, PDF seçilmeden yüklenmez, yeni sürüm v4 kullanımda / v3 önceki, PDF'
 bağlantısı, tesis sayfasındaki ekipman yüzü → plan). Menü değiştiği için bütün maketler yeniden ölçüldü (§11, 39).
 1. tur (2026-09-24): 10 durum 60/60, etkileşim 14/14 (Ekipmanlar ayrı ekrandı, akreditasyon ve yetkili meslekler gösteriliyordu).
 
-#### Maket M4 — Ölçüm Cihazı · Zimmet · kalibrasyon uyarısı (modül 8, 9, 20 kısmı) — ONAY BEKLİYOR
+#### Maket M4 — Ölçüm Cihazı · Zimmet · kalibrasyon uyarısı (modül 8, 9, 20 kısmı) — ONAYLANDI 2026-09-26
 **2. tur (2026-09-26, reisim'in M4 cevaplarıyla; kararlar §9 on beşinci tur).** Ekranlar: **ölçüm cihazları** (`maket/olcum-cihazlari.html`:
 liste üstünde kalibrasyon uyarı şeridi — geçenler kişi adıyla, 30 gün içinde bitenler; "Göster" çipi uygular · çipler: kalibrasyonu geçmiş ·
 30 gün içinde · kalibrasyonda · ara kontrol gecikti · depoda · **cihaz sayfası**: başta **Kimde** (tıklanınca zimmet geçmişi) ve **kalibrasyon
@@ -521,7 +521,8 @@ kişiye göre adresten) · **Hareketler** (tam geçmiş, 20'şer; "İmzalı form
 - Sertifika dosyası (PDF) zorunlu; sonuç "Uygun değil" ise cihaz kullanımdan çekilir. Laboratuvardan dönen cihaz depoya girer.
 - Ayrılan personelin zimmeti iadeyle depoya döner. Plaka il kodu **00** (gerçek olamaz), laboratuvar adları uydurma.
 **Sorular (M4):**
-Açık soru yok — 58–65 cevaplandı (§9, on beşinci tur). 2. tur reisim'in incelemesini bekliyor.
+Açık soru yok — 58–65 cevaplandı (§9, on beşinci tur). **2. tur ONAYLANDI (2026-09-26)**: reisim düzeltme söylemeden M5'e geçti; "onaylı
+sayıyorum, yanlışsa söyle" dendi, itiraz gelmedi ("Önerilerin hepsi uygun başla").
 **Ölçüm (2026-09-26, bulut, 2. tur):** 12 durum × 1920 · 1080 · 375 × açık/koyu = **72/72 temiz**, çekmece 2/2; etkileşim **20/20**, telefon **48/48**
 (Göster çipi, aynı cihaz kodu reddedilir, cihaz ekle, kalibrasyon kaydı dosyasız kaydedilmez, laboratuvardan dönüş, ara kontrol, kişiye göre,
 20'şer sayfa, aynı kişiye teslim reddedilir, kilometresiz araç reddedilir / fotoğrafsızlık yalnız uyarı, fotoğrafsız teslim kaydedilir,
@@ -530,42 +531,33 @@ Teslim et → pencere dolu, cihaz kodu düzenlenir, ara kontrolsüz cihazda böl
 Ortak veri değiştiği için M1, M8, M9, M10, M16 etkileşim denemeleri yeniden koşuldu, hepsi geçti.
 1. tur (2026-09-24): 10 durum 60/60, etkileşim 12/12 (uygulama içi onay, zorunlu fotoğraf, her cihazda ara kontrol).
 
-#### Maket M5 — İSG-KATİP kaydı (modül 12, kısım) — ONAY BEKLİYOR
-Ekran: **İSG-KATİP kayıtları** (`maket/sozlesmeler.html`; menüde Sözleşmeler — iş sözleşmesi sekmesi M13'te gelir). Liste üstünde
-**plan kabulünü durduran eksikler** (kabul bekleyen planda atanmış inspector için kayıt yok ya da onay geç; "Kayıt ekle" tesis ve
-kişi dolu açar, "Kaydı aç") · liste: tesis · inspector · sözleşme no · onay tarihi · açık plan · plan kabulü için (Uygun · Geç onay +
-en geç tarih · —) · çipler: açık plana bağlı · geç onay · seçiciler: inspector · müşteri → tesis · görünüm (güncel · önceki · hepsi) ·
-adresten kişiye (personel kartındaki yüz) ve tesise göre (tesis sayfasındaki yüz) · **kayıt penceresi**: ekle (tesis, inspector,
-sözleşme no, onay tarihi; seçilen tesiste kabul bekleyen plan varsa canlı denetim) · düzenle (kişi × tesis sabit) · önceki kayıt salt okunur.
+#### Maket M5 — Sözleşmeler: iş sözleşmesi + İSG-KATİP (modül 12; M13 ile birleşti) — ONAY BEKLİYOR
+**2. tur (2026-09-26, reisim'in cevaplarıyla; kararlar §9 on altıncı tur).** Ekran: **Sözleşmeler** (`maket/sozlesmeler.html`; eski
+`is-sozlesmeleri.html` ve `#/isg…` adresleri karşılığına gider): **iş sözleşmeleri listesi** (no, müşteri / tesis, süre, İSG-KATİP ID sayısı
+ve eksik, durum; çipler: imza bekliyor · yürürlükte · süresi doldu · bitişi 60 gün içinde · İSG-KATİP ID'si eksik; seçiciler: müşteri ·
+denetçi; şeritler: açık planda ID eksik · biten sözleşme) · **sözleşme sayfası**: taraflar ve koşullar, kapsam, **İSG-KATİP** (tesis başına
+SGK işyeri sicil no + denetçi → sözleşme ID, onay tarihi, PDF, kullanım; ID ekle / düzenle / sil), geçmiş · pencereler: **İSG-KATİP ID
+ekle / düzenle** · **sözleşme şablonu** · form: sözleşme hazırla.
 **Varsayımlar:**
-- Kayıt **kişi × tesis** (§4.6). Kişi × tesis için **tek güncel kayıt**: yeni sözleşme girilince eskisi "önceki kayıt" olur, silinmez.
-- Kuralın **tek kaynağı** plan kabul kilidi (§3.2 2a): onay tarihi ≤ kontrol − 1 gün. Tesis sayfasının "açık plan için" sütunu ve bu
-  sayfa aynı işlevi okur. Denetim yalnız kişinin **atandığı** planda; kabul edilmiş planda kilit şeridi gösterilir.
-- Sözleşme no **zorunlu, biçimi serbest** (makette S-YYYY-NNNN uydurma), iki kayıtta aynı numara olamaz; onay tarihi GG.AA.YYYY, geçerli
-  tarih. **Belge yüklenmez, geçerlilik aralığı yok** (reisim 2026-09-22) — pencerede bilgi şeridiyle söylenir.
-- Inspector listesi: etkin personelden **mesleği yetkili kişi olabilenler** (inspector rolü şart değil; sözleşme yetkili kişiyle).
-- Kaydı **planlama ekibi girer** (Zeynep Arslan); inspector kendi kayıtlarını görür (rol × modül önerisi "kendi", M1).
-- Kabul edilmiş planın dayanağı olan kayıt düzenlenebilir: değişiklik hareket kaydına yazılır, **yapılmış kabul geri alınmaz**.
-- Kişi × tesis kaydın kimliğidir, eklendikten sonra değişmez (yanlışsa yeni kayıt). Makette silme yok.
-- Eksik uyarısı **yalnız ekranda** (anayasa 1.3); M10 Uyarılar'da toplanır.
+- **Sözleşmeler = firma ile fabrika arasındaki iş sözleşmesi** (reisim). Ayrı "İSG-KATİP kayıtları" sekmesi kalktı; M5 ve M13 birleşti.
+- **İSG-KATİP bilgisi iş sözleşmesinin içinde, tesis başına:** denetçi → **sözleşme ID** (reisim: *"sözleşme id denetçiye göre değişir"*).
+  Kişi × tesis için tek güncel ID; yenisi girilince eskisi "önceki" olur.
+- **SGK işyeri sicil no tek yerde, tesiste** (M2); sözleşmede ve raporda oradan görünür (B).
+- **ID'nin yolu (C, "ikisi de"):** sözleşmede girilir → plan açarken seçilen denetçinin ID'si kendiliğinden gelir → rapor plandan alır; ID yoksa
+  plan açan el ile yazar ("sözleşmeye de kaydet") ve raporda da düzeltilebilir. **Plan açma ve rapor tarafı M6 / M8'in sırası gelince.**
+- **İSG-KATİP PDF'i her ID'nin yanında, isteğe bağlı** (D) · **onay tarihi isteğe bağlı** (E); girilmişse kontrolden sonraki onay yalnız
+  "Geç onay" uyarısı, plan kabulü engellenmez.
+- **Kim girer** (F): Sözleşmeler yetkisi olan herkes (M1 rol yetkileri); plan açan da plan anında ekler.
+- **Silme** (G): hiçbir planda kullanılmamış ID silinir; kullanılmış ID yalnız düzeltilir.
+- **Sözleşme şablonu** (H): firma kendi şablonunu (PDF / Word) yükler, sürümlü; yüklemezse temel format (KM-FR-SZL-01). §3.7 satır 5.
+- Geçerli iş sözleşmesi olmayan tesiste ID'ler tesis sayfasında görünür, girişi plan açarken el ile (makette t2).
 **Sorular (M5):**
-66. **Kaydı kim girer**: planlama ekibi mi (öneri), inspector kendi sözleşmesini mi, ikisi de mi?
-67. **Yenileme**: kişi × tesis için yeni sözleşme girilince eskisi "önceki kayıt" olsun mu (öneri), yoksa aynı anda birden çok güncel
-    kayıt tutulabilsin mi?
-68. **Sözleşme no biçimi**: İSG-KATİP'in verdiği numaranın biçimini doğrulayamadım — serbest metin mi kalsın (öneri), biçim denetimi mi?
-69. **Onay tarihi ileri olabilir mi?** Öneri: bugünden ileri tarih girilemez. Not: Planlar maketindeki P-0926-038 örneğinde onay 25 Eyl,
-    maketin "bugün"ü 23 Eyl — örnek kendi içinde tutarsız; öneri onaylanırsa örnek, onayı bugünü geçmeyen bir geç onayla değiştirilir.
-70. Kabul edilmiş planın dayanağı olan kayıt **değiştirilebilsin mi** (öneri: evet, hareket kaydına yazılır, kabul geri alınmaz), kilitlensin mi?
-71. **Silme**: yanlış girilen kayıt silinebilsin mi (öneri: hiçbir planın dayanağı olmayan kayıt silinebilir, dayanak olan silinemez)?
-72. Sözleşmenin **azami 6 ay geçerliliği** (§4.4; birincil metinde doğrulanmadı): aralık denetimi yok kararı durur; yalnız bilgi olarak
-    "onaydan 6 ay geçti" işareti istenir mi?
-73. Planlar'daki kabul kilidi sebebi ("Bu tesis için İSG-KATİP kaydı yok") bu sayfaya **bağlansın mı** (inspector'a görüntüleme, planlamaya
-    "Kayıt ekle")? Planlar dondurulduğu için makette dokunulmadı.
-**Ölçüm (2026-09-24, bulut):** 11 durum × 1920 · 1080 · 375 × açık/koyu = **66/66 temiz**, çekmece 2/2; etkileşim **14/14**; olumsuz
-kanıt 2/2. Ölçerken düzeltilen: telefonda arama ipucu kesikti (kısaltıldı) · `#/isg/yeni?tesis=…` adresindeki ön dolgu liste süzgecine
-de uygulanıyordu · sözleşme no şerit içinde satır sonunda bölünüyordu · telefonda kart beş satırdan "etiket: değer" satırlarına indi
-(matris kartıyla aynı desen). Personel kartındaki İSG-KATİP sayısı artık önceki kayıtları saymıyor (M1 yeniden ölçüldü: 108/108, 17/17);
-tesis sayfasının sütunu bu kuralı okuyor (M2 yeniden ölçüldü: 48/48, 11/11).
+Açık soru yok — A–H cevaplandı (§9, on altıncı tur). İş sözleşmesinin kendi soruları M13 bölümünde (125–134'ün kalanları) sırada.
+**Ölçüm (2026-09-26, bulut, 2. tur):** 10 durum × 1920 · 1080 · 375 × açık/koyu = **60/60 temiz**, çekmece 2/2; etkileşim **14/14**, telefon **40/40**
+(eski İSG-KATİP adresi sözleşmeye gider, sözleşmesi olmayan tesis → tesis sayfası, denetçiye göre, ID eksik çipi, geç onay yalnız uyarı,
+boş ID hatası, onay tarihsiz ID kaydı ve eksiğin düşmesi, PDF'li ID, yenileme, onay tarihinin silinmesi, kullanılmamış ID silinir, kullanılanda
+Sil yok, şablon yükleme, Esc). M2, M13 yeniden ölçüldü; öteki 14 maketin etkileşim denemeleri geçti.
+1. tur (2026-09-24): 11 durum 66/66, etkileşim 14/14 (İSG-KATİP ayrı sekme ve plan kabul kilidiydi).
 
 #### Maket M6 — Plan aç (modül 13, planlama ekibi) — ONAY BEKLİYOR
 Ekran: **Plan aç** (`maket/plan-ac.html`; müşteri ve tesis sayfalarındaki "Plan aç" buraya gelir, müşteri/tesis dolu). Tek sayfa, beş
@@ -790,8 +782,9 @@ fiyat listesinden birim fiyat, "tesisteki ekipmandan doldur", tutar ve toplam ca
 geçişi dahil).
 
 #### Maket M13 — Sözleşmeler: firmalar arası iş sözleşmesi (modül 12, faz 2) — ONAY BEKLİYOR
-Ekran: **İş sözleşmeleri** (`maket/is-sozlesmeleri.html`, planlama Zeynep Arslan): modül 12 tek menü öğesi, **iki sekme** — İSG-KATİP
-kayıtları (M5, `sozlesmeler.html`) · iş sözleşmeleri. Liste (no, müşteri / tesis, süre + kalan gün, dayanak teklif, durum; çipler: imza
+**2026-09-26: M5 ile birleşti** (reisim: menüdeki Sözleşmeler = iş sözleşmesi); ekran artık `maket/sozlesmeler.html`, sekme yok, İSG-KATİP
+bilgisi sözleşmenin içinde (M5 2. tur). Aşağıdaki 1. tur metni tarihseldir; kalan sorular sırası gelince yeniden sorulur.
+Ekran (1. tur): **İş sözleşmeleri** (planlama Zeynep Arslan): modül 12 tek menü öğesi, **iki sekme** — İSG-KATİP kayıtları · iş sözleşmeleri. Liste (no, müşteri / tesis, süre + kalan gün, dayanak teklif, durum; çipler: imza
 bekliyor · yürürlükte · süresi doldu · bitişi 60 gün içinde; seçici müşteri; bitişi yaklaşan sözleşme için şerit + yenileme teklifi
 bağlantısı) · **sözleşme sayfası** (taraflar ve koşullar, kapsam: tesis × İSG-KATİP kaydı × plan, geçmiş; eylem: sözleşme metni ·
 imzalı sözleşmeyi yükle · yenileme teklifi / yeni teklif) · **form** (müşteri, dayanak teklif, kapsamdaki tesisler, başlangıç, süre, ödeme
@@ -811,18 +804,16 @@ vadesi, yenileme).
 **Sorular (M13):**
 125. Firmalar arası iş sözleşmesi **sistemde kayıt + imzalı PDF** (makette) olarak mı tutulsun, yalnız "imzalandı" işareti mi yeter?
 126. Sözleşme no biçimi **IS-AAYY-SIRA** (öneri) uygun mu?
-127. Sözleşme metni **firmanın şablonundan kodda** üretilsin mi (rapor şablonu gibi, §8.3), yoksa firma kendi metnini yükleyip yalnız
-     imzalısını mı saklasın?
 128. Sözleşme **teklif başına** mı (makette; kapsam teklifin tesisi), müşteri başına **çerçeve sözleşme** (bütün tesisler, yıllık) mı?
 129. Varsayılan **12 ay** ve **kendiliğinden yenileme** seçeneği uygun mu?
-130. Plan, iş sözleşmesi **müşteri imzası beklerken açılabilir** mi (makette IS-0926-007 bekliyor, P-0926-039 açılmış), yoksa plan açma
-     bunu da **engellesin** mi (İSG-KATİP kaydı gibi)?
-131. İmzalı iş sözleşmesi **yüklensin** (makette), İSG-KATİP kaydında dosya **yüklenmesin** (M5) — ikisi farklı kalsın mı?
+130. Plan, iş sözleşmesi **müşteri imzası beklerken açılabilir** mi (makette IS-0926-007 bekliyor, P-0926-039 açılmış)? Öneri (genel
+     ilke): açılır, yalnız uyarı çıkar.
 132. Bitişe **60 gün** kala şerit + çip (öneri) uygun mu; **Uyarılar**'a (M10) da düşsün mü?
 133. Ödeme vadesi **sözleşmede** mi (makette), müşteri kartında mı? *(M14 ile bağlı)*
 134. Müşteri paneli (M11) **sözleşmeyi göstersin** mi; müşteri panelden imzalayabilsin mi?
-**Ölçüm (2026-09-24, bulut):** 8 durum × 1920 · 1080 · 375 × açık/koyu = **48/48 temiz**, çekmece 2/2; etkileşim **11/11** (sekme geçişi,
-teklif → sözleşme formu, yenileme teklifi bağlantısı dahil). M5 (başlık + sekme) yeniden: 66/66, 14/14; M12 (bağlantı) yeniden: 54/54, 10/10.
+(127 → firma şablonu yükler, 131 → iki belge de yüklenir; ikisi M5 2. turunda cevaplandı, H ve D.)
+**Ölçüm (2026-09-26, bulut, M5 ile birleşince):** 7 durum × 1920 · 1080 · 375 × açık/koyu = **42/42 temiz**, çekmece 2/2; etkileşim **9/9**, telefon
+**28/28** (sekme denemeleri kalktı). 1. tur (2026-09-24): 48/48, 11/11.
 
 #### Maket M14 — Muhasebe (modül 18, faz 2) — ONAY BEKLİYOR
 Ekran: **Muhasebe** (`maket/muhasebe.html`, Ayşe Demir, firma yöneticisi): iki sekme — **İşler** (proje no, müşteri / tesis, imzalı ve
@@ -933,7 +924,7 @@ Reisim yeni bir tane söyledikçe bu tabloya satır eklenir.
 | 2 | **Zimmet teslim formu** | Personel kartı › Zimmetindekiler (M1) | **var — `KM-FR-ZMT-01` (2026-09-25)** | başlık, sütunlar, taahhüt metni, imza alanları, logo |
 | 3 | Tarafsızlık ve çıkar çatışması beyanı | Planlar › plan kabulü (§3.4) | var (varsayılan metin) | beyan metni (firmanın kalite el kitabından) |
 | 4 | Teklif belgesi | Teklifler (M12) | maket (liste + sayfa), PDF biçimi yok | başlık, kalem tablosu, koşullar, imza |
-| 5 | İş sözleşmesi metni | Sözleşmeler (M13) | yok — soru 127 (kodda şablon mu, firma kendi metnini mi yükler) | metnin tamamı |
+| 5 | İş sözleşmesi metni | Sözleşmeler (M5 + M13) | temel format KM-FR-SZL-01 (probata) | **2026-09-26: firma kendi sözleşme şablonunu (PDF / Word) yükler, sürümlü** (reisim H); bilgiler şablondaki yerlerine doldurulur |
 | 6 | Uygunsuzluklar Excel'i | Müşteri paneli (M11) | var (maket önizlemesi) | sütunlar ve sırası |
 | 7 | Özlük dosyası belge türleri | Personel kartı (M1) | var (iş sözleşmesi, diploma, oda kaydı, EKİPNET belgesi, kimlik, sağlık raporu, diğer) | tür listesi |
 | 8 | Numara ve form kodu önekleri | rapor no, form kodları (§3.5) | var (firma kısa kodu) | kısa kod (firma ayarı) |
@@ -1303,7 +1294,18 @@ uyarı · 63 depo için ayrı rol yok · 64 araçta yalnız kimde + km · 65 kal
 cihaz zimmetteyken raporu onaya göndermek ENGELLENİR** (genel ilkenin istisnası). **Ürün ilkesi (bu cevaptan):** her modülde önce o
 modülün **asıl hedefi** sorulur ve ekran onu öne koyar; başka modülleri etkileyen sorular o modüllerin sırasında sorulur. → M4 2. tur (§3.6).
 
-**Açık kalanlar:** **modül modül gözden geçirme** (M1, M2 ve M3 onaylandı — Ekipmanlar kalktı; M4 2. tur incelemede; sırada M5) · **toplu maket çalışması** (M1–M16 + toplu bakış, `MAKET-PLANI.md`; sorular §3.6'da, 32'den) · **önizlemede örnek veri kipi** (öneri, §3.3) · ~~rol × modül görünürlüğü~~ (karar 2026-09-25: başlangıç düzeni + firma yöneticisi değiştirir) · **gerçek sunucunun sağlayıcısı**
+**On altıncı tur (2026-09-26, M5; reisim birebir):** *"Sol panelde sözleşmeşet olarak gözüken modülden bahsediyorsan orada kastım ist katip
+sözleşmesi değildi, pl firma ile favrika arasındaki sözleşmeden bahsediyorum, her firmanın kendi sözleşm fotmatı olabilir tabiki onuda ekleriz,
+isg katip sözleşmesi pdf olarak isteğe bağlı buraya yüklenebilir olsun, isg katip sözleşme id ve sgk destis no buraya girilsin buradan
+raporlara otomatik çekilecek ama , sgk destis no sabitken sözleşme id denetçiye göre değişir o yüzden sözleşme id ler eklenirken bunu göz önüne
+alarak eklenmeli, ya da buradan eklenmesin plan açılırken plan açılan kişiye göre elle girilsin ya da ikiside olsun otomatik gelmeyen veriler
+el ile girilebilir olsun , sorularınıda sor sonra komple elden geçirirsin"* → sorulan A–H (A: ayrı İSG-KATİP sekmesi kalksın, M5 + M13
+birleşsin · B: SGK no tesiste tek yerde · C: ID sözleşmede + plan açarken otomatik / el ile, ikisi de · D: PDF her ID'nin yanında isteğe bağlı ·
+E: onay tarihi isteğe bağlı, geç onay yalnız uyarı · F: Sözleşmeler yetkisi olan girer · G: kullanılmamış ID silinir · H: firma sözleşme
+şablonunu yükler) → reisim: *"Önerilerin hepsi uygun başla"* → M5 2. tur (§3.6). **Genel ilke (bu cevaptan):** otomatik gelmeyen her veri
+el ile girilebilir. **M6 için not:** plan açarken denetçinin ID'si sözleşmeden gelsin, yoksa el ile + "sözleşmeye de kaydet".
+
+**Açık kalanlar:** **modül modül gözden geçirme** (M1–M4 onaylandı — Ekipmanlar kalktı; M5 Sözleşmeler 2. tur incelemede (M13 ile birleşti); sırada M6) · **toplu maket çalışması** (M1–M16 + toplu bakış, `MAKET-PLANI.md`; sorular §3.6'da, 32'den) · **önizlemede örnek veri kipi** (öneri, §3.3) · ~~rol × modül görünürlüğü~~ (karar 2026-09-25: başlangıç düzeni + firma yöneticisi değiştirir) · **gerçek sunucunun sağlayıcısı**
 (Türkiye, §8.8) ·
 alan adının alınması · e-imza yöntemi (8.4) · v1 ekipman grupları · 5 yıl sonrası silme
 mekanizması · **zimmette birden çok cihaz varsa süzgeç** (§3) · **kontrol metodu standardının seçim yeri**
@@ -1333,6 +1335,9 @@ revizyon, alan kopyalama, hafif kusur devri, meslek eşleşme denetimi).
 - Emsal ürünler: https://opwire.app/iso-17020-periyodik-kontrol-yazilimi/ · https://17020muayene.vidco.com.tr/ · https://akuple.com/asansor-kontrol-yazilimi/ · https://ensyazilim.com/
 
 ## 11 · Değişiklik günlüğü
+- 2026-09-26 (43): **M4 ONAYLANDI** (reisim düzeltme söylemeden M5'e geçti; itiraz gelmedi). **M5 2. tur** (reisim A–H, §9 on altıncı tur):
+  Sözleşmeler = iş sözleşmesi; ayrı İSG-KATİP sekmesi kalktı, **M5 ve M13 birleşti** (`sozlesmeler.html`); İSG-KATİP ID'leri sözleşmenin içinde
+  tesis başına denetçiye göre, onay tarihi ve PDF isteğe bağlı, geç onay uyarı; sözleşme şablonu yüklenir. M5 60/60 · 14/14 · 40/40.
 - 2026-09-26 (42): **M4 2. tur** (reisim 58–65, §9 on beşinci tur): cihaz sayfasında Kimde + kalibrasyon başta, cihaz kodu düzenlenir, Teslim et;
   zimmette uygulama içi onay yerine imzalı form (M1), fotoğraf isteğe bağlı, ara kontrol isteğe bağlı; kalibrasyonu geçmiş cihazda rapor
   onaya gönderilemez (istisna). M4 72/72 · 20/20 · 48/48.

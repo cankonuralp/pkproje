@@ -192,10 +192,10 @@
   var ISG_SUTUN = function (t) {
     return [
       { k: "kisi", baslik: "Inspector", kart: "ust", sira: 1, hucre: function (x) { var p = MV.kisi(x.k); return '<a class="a-ad-bag" href="personel.html#/p/' + p.id + '">' + kirp(p.ad) + "</a>"; } },
-      { k: "no", baslik: "Sözleşme no", kart: "govde", sira: 2, hucre: function (x) { return '<span class="a-kart-etiket">Sözleşme no</span><span class="a-kod">' + x.no + "</span>"; } },
-      { k: "onay", baslik: "Onay tarihi", kart: "govde", sira: 3, hucre: function (x) { return '<span class="a-kart-etiket">Onay tarihi</span>' + MK.tarihYaz(x.onay); } },
+      { k: "no", baslik: "Sözleşme ID", kart: "govde", sira: 2, hucre: function (x) { return '<span class="a-kart-etiket">Sözleşme ID</span><span class="a-kod">' + x.no + "</span>"; } },
+      { k: "onay", baslik: "Onay tarihi", kart: "govde", sira: 3, hucre: function (x) { return '<span class="a-kart-etiket">Onay tarihi</span>' + (x.onay ? MK.tarihYaz(x.onay) : '<span class="a-deger-yok">—</span>'); } },
       { k: "durum", baslik: "Açık plan için", kart: "rozet", sira: 1, hucre: function (x) {
-        if (!MV.acikPlan(t)) return yok;
+        if (!MV.acikPlan(t) || !x.onay) return yok;
         var uygun = MV.isgUygun(x.onay, t.ptarih);   /* onay ≤ kontrol − 1 gün (§4.4); İSG-KATİP sayfasıyla tek kural — UYARI, kilit değil */
         return rozet(uygun ? { ad: "Uygun", rozet: "a-rozet-tamam" } : { ad: "Geç onay", rozet: "a-rozet-bekliyor" }) + (uygun ? "" : '<span class="a-uyari-metin">en geç ' + MK.gunKisa(new Date(new Date(t.ptarih + "T12:00:00") - 864e5).toISOString()) + "</span>");
       } }
@@ -204,6 +204,8 @@
   function tesisCiz(t) {
     if (!t) return bulunamadi("Tesis bulunamadı");
     var m = MV.musteri(t.m), isg = MV.isgTesis(t.id), k = kalan(t.sonraki), e = eksikTesis(t);
+    /* 2026-09-26 (M5 2. tur): İSG-KATİP ID'leri tesisin iş sözleşmesinin içinde; sözleşme yoksa plan açarken el ile girilir */
+    var soz = MV.tesisSozlesmesi(t.id, MK.BUGUN);
     $("a-nesne").innerHTML = MK.kirinti([["Müşteriler", "#/"], [m.kisa, "#/m/" + m.id], [t.ad]]) +
       '<div class="a-nesne-bas"><div class="a-nesne-kimlik"><div class="a-nesne-baslik"><h1 tabindex="-1">' + kacis(t.ad) + "</h1>" + (t.pasif ? rozet(PASIF) : "") + "</div>" +
         '<p class="a-nesne-alt">' + ikon("building-2", "a-ikon-kucuk") + '<a class="a-baglanti" href="#/m/' + m.id + '">' + kacis(m.unvan) + "</a></p></div>" +
@@ -213,7 +215,7 @@
       '<div class="a-yuzler">' +
         /* 2026-09-26 (M3 2. tur): ekipmanlar planın içinde → yüz tesisin planını açar (plan yoksa yalnız sayı) */
         yuz({ ikon: "wrench", ad: "Ekipman", sayi: t.ekipman, hedef: t.pid ? 13 : null, hash: "#/plan/" + t.pid, ne: "Planlar", not: t.pid ? "planın içinde" : "plan açılınca görünür" }) +
-        yuz({ ikon: "scroll-text", ad: "İSG-KATİP kaydı", sayi: isg.length, hedef: 12, hash: "#/isg?tesis=" + t.id, ne: "Sözleşmeler · İSG-KATİP", uyari: !isg.length, not: isg.length ? "inspector başına" : "plan kabulünde uyarı" }) +
+        yuz({ ikon: "scroll-text", ad: "İSG-KATİP ID", sayi: isg.length, hedef: soz ? 12 : null, hash: soz ? "#/s/" + soz.no : "", ne: "Sözleşmeler", uyari: !isg.length, not: soz ? "sözleşme " + soz.no : "iş sözleşmesi yok" }) +
         yuz({ ikon: "clock", ad: "Son kontrol", sayi: t.son ? MK.gunKisa(t.son) : "—", not: t.son ? MK.ayYil(t.son) : "ilk kontrol" }) +
         yuz({ ikon: "alarm-clock", ad: "Sonraki kontrol", sayi: MK.gunKisa(t.sonraki), not: k < 0 ? -k + " gün geçti" : k === 0 ? "bugün" : k + " gün sonra", uyari: k <= YAKIN }) +
       "</div>" +
@@ -221,11 +223,12 @@
         '<div class="a-serit-kap">' + MK.serit("bilgi", "file-text", "Raporun işyeri bölümü (ünvan, SGK sicil no, adres) bu kayıttan dolar; imzalanan rapor o günkü bilgiyi saklar, sonradan değişmez.") + "</div>" +
         '<dl class="a-bilgi">' + bilgi("İşyeri ünvanı", kacis(m.unvan), true) + bilgi("Adres", t.adres ? kacis(t.adres) : '<span class="a-yuz-uyari">Boş</span>', true) +
           bilgi("SGK işyeri sicil no", t.sgk ? '<span class="a-kod a-kod-uzun">' + t.sgk + "</span>" : '<span class="a-yuz-uyari">Boş</span>', "cift") + bilgi("İl", t.il || yok) + bilgi("İlçe", t.ilce || yok) + "</dl></section>" +
-      '<section class="a-bolum" aria-labelledby="a-b-isg"><div class="a-alt-bas"><h2 class="a-alt-baslik" id="a-b-isg">İSG-KATİP kayıtları</h2><span class="a-sayac"><b>' + isg.length + "</b> kayıt</span>" +
-        MK.git({ hedef: 12, hash: "#/isg?tesis=" + t.id, ad: "İSG-KATİP'te aç", ikon: "arrow-right", sinif: "a-tus-ikincil a-bolum-tus", ne: "İSG-KATİP kaydı" }) + "</div>" +
-        '<p class="a-bolum-aciklama">Kayıtlar İSG-KATİP ekranında girilir, burada görünür. Onay tarihi kontrolden en geç bir gün önce olmalı; geç kalırsa plan kabulünde uyarı çıkar.</p>' +
-        '<div class="a-liste-kap">' + (isg.length ? MK.tablo({ baslik: "İSG-KATİP kayıtları", sinif: "a-tablo-isg", sutunlar: ISG_SUTUN(t), kayitlar: isg })
-          : '<p class="a-bos-satir">Bu tesis için İSG-KATİP kaydı yok; bu tesiste açılan plan kabul edilirken uyarı çıkar.</p>') + "</div></section>" +
+      '<section class="a-bolum" aria-labelledby="a-b-isg"><div class="a-alt-bas"><h2 class="a-alt-baslik" id="a-b-isg">İSG-KATİP ID\'leri</h2><span class="a-sayac"><b>' + isg.length + "</b> ID</span>" +
+        (soz ? MK.git({ hedef: 12, hash: "#/s/" + soz.no, ad: "Sözleşmede aç", ikon: "arrow-right", sinif: "a-tus-ikincil a-bolum-tus", ne: "Sözleşmeler" }) : "") + "</div>" +
+        '<p class="a-bolum-aciklama">' + (soz ? "ID'ler iş sözleşmesinin (" + soz.no + ") içinde girilir, burada görünür; plan açarken denetçinin ID'si oradan gelir."
+          : "Bu tesisin geçerli iş sözleşmesi yok; ID plan açarken el ile girilir.") + "</p>" +
+        '<div class="a-liste-kap">' + (isg.length ? MK.tablo({ baslik: "İSG-KATİP ID'leri", sinif: "a-tablo-isg", sutunlar: ISG_SUTUN(t), kayitlar: isg })
+          : '<p class="a-bos-satir">Bu tesis için ID yok; plan açarken el ile girilebilir.</p>') + "</div></section>" +
       '<section class="a-bolum" aria-labelledby="a-b-plan"><div class="a-alt-bas"><h2 class="a-alt-baslik" id="a-b-plan">Planlar</h2></div>' +
         (t.pid ? '<dl class="a-bilgi">' + bilgi("Proje no", '<a class="a-no" href="planlarim.html#/plan/' + t.pid + '">' + t.plan + "</a>") + bilgi("Başlangıç", MK.gunYaz(t.ptarih)) +
           bilgi("Durum", rozet(MV.PLAN_DURUM[t.pdurum])) + "</dl>" : '<p class="a-bos-satir">Bu tesiste açık ya da geçmiş plan yok.</p>') + "</section>";

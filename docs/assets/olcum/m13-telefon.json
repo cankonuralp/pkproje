@@ -8,8 +8,8 @@
   390,
   430
  ],
- "toplam": 32,
- "temiz": 32,
+ "toplam": 28,
+ "temiz": 28,
  "durumlar": [
   {
    "ad": "iş sözleşmeleri · liste, biten sözleşme şeridi",
@@ -262,42 +262,6 @@
    "disari": [],
    "kucukAlan": [],
    "alan": 4
-  },
-  {
-   "ad": "İSG-KATİP sekmesi · aynı menü",
-   "gen": 320,
-   "temiz": true,
-   "tasma": 0,
-   "disari": [],
-   "kucukAlan": [],
-   "alan": 1
-  },
-  {
-   "ad": "İSG-KATİP sekmesi · aynı menü",
-   "gen": 360,
-   "temiz": true,
-   "tasma": 0,
-   "disari": [],
-   "kucukAlan": [],
-   "alan": 1
-  },
-  {
-   "ad": "İSG-KATİP sekmesi · aynı menü",
-   "gen": 390,
-   "temiz": true,
-   "tasma": 0,
-   "disari": [],
-   "kucukAlan": [],
-   "alan": 1
-  },
-  {
-   "ad": "İSG-KATİP sekmesi · aynı menü",
-   "gen": 430,
-   "temiz": true,
-   "tasma": 0,
-   "disari": [],
-   "kucukAlan": [],
-   "alan": 1
   }
  ]
 }

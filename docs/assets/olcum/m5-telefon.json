@@ -8,11 +8,11 @@
   390,
   430
  ],
- "toplam": 44,
- "temiz": 44,
+ "toplam": 40,
+ "temiz": 40,
  "durumlar": [
   {
-   "ad": "İSG-KATİP · liste + plan kabulünü durduran eksikler",
+   "ad": "sözleşmeler · liste, ID eksik ve biten şeritleri",
    "gen": 320,
    "temiz": true,
    "tasma": 0,
@@ -21,7 +21,7 @@
    "alan": 1
   },
   {
-   "ad": "İSG-KATİP · liste + plan kabulünü durduran eksikler",
+   "ad": "sözleşmeler · liste, ID eksik ve biten şeritleri",
    "gen": 360,
    "temiz": true,
    "tasma": 0,
@@ -30,7 +30,7 @@
    "alan": 1
   },
   {
-   "ad": "İSG-KATİP · liste + plan kabulünü durduran eksikler",
+   "ad": "sözleşmeler · liste, ID eksik ve biten şeritleri",
    "gen": 390,
    "temiz": true,
    "tasma": 0,
@@ -39,7 +39,7 @@
    "alan": 1
   },
   {
-   "ad": "İSG-KATİP · liste + plan kabulünü durduran eksikler",
+   "ad": "sözleşmeler · liste, ID eksik ve biten şeritleri",
    "gen": 430,
    "temiz": true,
    "tasma": 0,
@@ -48,151 +48,115 @@
    "alan": 1
   },
   {
-   "ad": "kişiye göre (personel kartından)",
+   "ad": "sözleşme · İSG-KATİP, geç onay yalnız uyarı (eski adresten)",
    "gen": 320,
    "temiz": true,
    "tasma": 0,
    "disari": [],
    "kucukAlan": [],
-   "alan": 1
+   "alan": 0
   },
   {
-   "ad": "kişiye göre (personel kartından)",
+   "ad": "sözleşme · İSG-KATİP, geç onay yalnız uyarı (eski adresten)",
    "gen": 360,
    "temiz": true,
    "tasma": 0,
    "disari": [],
    "kucukAlan": [],
-   "alan": 1
+   "alan": 0
   },
   {
-   "ad": "kişiye göre (personel kartından)",
+   "ad": "sözleşme · İSG-KATİP, geç onay yalnız uyarı (eski adresten)",
    "gen": 390,
    "temiz": true,
    "tasma": 0,
    "disari": [],
    "kucukAlan": [],
-   "alan": 1
+   "alan": 0
   },
   {
-   "ad": "kişiye göre (personel kartından)",
+   "ad": "sözleşme · İSG-KATİP, geç onay yalnız uyarı (eski adresten)",
    "gen": 430,
    "temiz": true,
    "tasma": 0,
    "disari": [],
    "kucukAlan": [],
-   "alan": 1
+   "alan": 0
   },
   {
-   "ad": "tesise göre, kayıt yok (tesis sayfasından)",
+   "ad": "sözleşme · iki tesis, ID'ler",
    "gen": 320,
    "temiz": true,
    "tasma": 0,
    "disari": [],
    "kucukAlan": [],
-   "alan": 1
+   "alan": 0
   },
   {
-   "ad": "tesise göre, kayıt yok (tesis sayfasından)",
+   "ad": "sözleşme · iki tesis, ID'ler",
    "gen": 360,
    "temiz": true,
    "tasma": 0,
    "disari": [],
    "kucukAlan": [],
-   "alan": 1
+   "alan": 0
   },
   {
-   "ad": "tesise göre, kayıt yok (tesis sayfasından)",
+   "ad": "sözleşme · iki tesis, ID'ler",
    "gen": 390,
    "temiz": true,
    "tasma": 0,
    "disari": [],
    "kucukAlan": [],
-   "alan": 1
+   "alan": 0
   },
   {
-   "ad": "tesise göre, kayıt yok (tesis sayfasından)",
+   "ad": "sözleşme · iki tesis, ID'ler",
    "gen": 430,
    "temiz": true,
    "tasma": 0,
    "disari": [],
    "kucukAlan": [],
-   "alan": 1
+   "alan": 0
   },
   {
-   "ad": "görünüm · hepsi (önceki kayıtlar dahil)",
+   "ad": "sözleşme · açık planda ID eksik",
    "gen": 320,
    "temiz": true,
    "tasma": 0,
    "disari": [],
    "kucukAlan": [],
-   "alan": 1
+   "alan": 0
   },
   {
-   "ad": "görünüm · hepsi (önceki kayıtlar dahil)",
+   "ad": "sözleşme · açık planda ID eksik",
    "gen": 360,
    "temiz": true,
    "tasma": 0,
    "disari": [],
    "kucukAlan": [],
-   "alan": 1
+   "alan": 0
   },
   {
-   "ad": "görünüm · hepsi (önceki kayıtlar dahil)",
+   "ad": "sözleşme · açık planda ID eksik",
    "gen": 390,
    "temiz": true,
    "tasma": 0,
    "disari": [],
    "kucukAlan": [],
-   "alan": 1
+   "alan": 0
   },
   {
-   "ad": "görünüm · hepsi (önceki kayıtlar dahil)",
+   "ad": "sözleşme · açık planda ID eksik",
    "gen": 430,
    "temiz": true,
    "tasma": 0,
    "disari": [],
    "kucukAlan": [],
-   "alan": 1
+   "alan": 0
   },
   {
-   "ad": "kayıt ekle · eksikten (tesis + kişi dolu)",
-   "gen": 320,
-   "temiz": true,
-   "tasma": 0,
-   "disari": [],
-   "kucukAlan": [],
-   "alan": 3
-  },
-  {
-   "ad": "kayıt ekle · eksikten (tesis + kişi dolu)",
-   "gen": 360,
-   "temiz": true,
-   "tasma": 0,
-   "disari": [],
-   "kucukAlan": [],
-   "alan": 3
-  },
-  {
-   "ad": "kayıt ekle · eksikten (tesis + kişi dolu)",
-   "gen": 390,
-   "temiz": true,
-   "tasma": 0,
-   "disari": [],
-   "kucukAlan": [],
-   "alan": 3
-  },
-  {
-   "ad": "kayıt ekle · eksikten (tesis + kişi dolu)",
-   "gen": 430,
-   "temiz": true,
-   "tasma": 0,
-   "disari": [],
-   "kucukAlan": [],
-   "alan": 3
-  },
-  {
-   "ad": "kayıt ekle · geç onay canlı denetimi",
+   "ad": "ID ekle · eksikten (tesis + denetçi dolu)",
    "gen": 320,
    "temiz": true,
    "tasma": 0,
@@ -201,7 +165,7 @@
    "alan": 3
   },
   {
-   "ad": "kayıt ekle · geç onay canlı denetimi",
+   "ad": "ID ekle · eksikten (tesis + denetçi dolu)",
    "gen": 360,
    "temiz": true,
    "tasma": 0,
@@ -210,7 +174,7 @@
    "alan": 3
   },
   {
-   "ad": "kayıt ekle · geç onay canlı denetimi",
+   "ad": "ID ekle · eksikten (tesis + denetçi dolu)",
    "gen": 390,
    "temiz": true,
    "tasma": 0,
@@ -219,7 +183,7 @@
    "alan": 3
   },
   {
-   "ad": "kayıt ekle · geç onay canlı denetimi",
+   "ad": "ID ekle · eksikten (tesis + denetçi dolu)",
    "gen": 430,
    "temiz": true,
    "tasma": 0,
@@ -228,7 +192,7 @@
    "alan": 3
   },
   {
-   "ad": "kayıt ekle · güncel kaydı olan kişi × tesis",
+   "ad": "ID ekle · boş gönderildi",
    "gen": 320,
    "temiz": true,
    "tasma": 0,
@@ -237,7 +201,7 @@
    "alan": 3
   },
   {
-   "ad": "kayıt ekle · güncel kaydı olan kişi × tesis",
+   "ad": "ID ekle · boş gönderildi",
    "gen": 360,
    "temiz": true,
    "tasma": 0,
@@ -246,7 +210,7 @@
    "alan": 3
   },
   {
-   "ad": "kayıt ekle · güncel kaydı olan kişi × tesis",
+   "ad": "ID ekle · boş gönderildi",
    "gen": 390,
    "temiz": true,
    "tasma": 0,
@@ -255,7 +219,7 @@
    "alan": 3
   },
   {
-   "ad": "kayıt ekle · güncel kaydı olan kişi × tesis",
+   "ad": "ID ekle · boş gönderildi",
    "gen": 430,
    "temiz": true,
    "tasma": 0,
@@ -264,7 +228,7 @@
    "alan": 3
   },
   {
-   "ad": "kayıt ekle · boş gönderildi",
+   "ad": "ID ekle · kişinin mevcut ID'si önceki olur uyarısı",
    "gen": 320,
    "temiz": true,
    "tasma": 0,
@@ -273,7 +237,7 @@
    "alan": 3
   },
   {
-   "ad": "kayıt ekle · boş gönderildi",
+   "ad": "ID ekle · kişinin mevcut ID'si önceki olur uyarısı",
    "gen": 360,
    "temiz": true,
    "tasma": 0,
@@ -282,7 +246,7 @@
    "alan": 3
   },
   {
-   "ad": "kayıt ekle · boş gönderildi",
+   "ad": "ID ekle · kişinin mevcut ID'si önceki olur uyarısı",
    "gen": 390,
    "temiz": true,
    "tasma": 0,
@@ -291,7 +255,7 @@
    "alan": 3
   },
   {
-   "ad": "kayıt ekle · boş gönderildi",
+   "ad": "ID ekle · kişinin mevcut ID'si önceki olur uyarısı",
    "gen": 430,
    "temiz": true,
    "tasma": 0,
@@ -300,112 +264,112 @@
    "alan": 3
   },
   {
-   "ad": "kayıt · geç onay (P-0926-038)",
+   "ad": "ID düzenle · PDF seçildi",
    "gen": 320,
    "temiz": true,
    "tasma": 0,
    "disari": [],
    "kucukAlan": [],
-   "alan": 5
+   "alan": 4
   },
   {
-   "ad": "kayıt · geç onay (P-0926-038)",
+   "ad": "ID düzenle · PDF seçildi",
    "gen": 360,
    "temiz": true,
    "tasma": 0,
    "disari": [],
    "kucukAlan": [],
-   "alan": 5
+   "alan": 4
   },
   {
-   "ad": "kayıt · geç onay (P-0926-038)",
+   "ad": "ID düzenle · PDF seçildi",
    "gen": 390,
    "temiz": true,
    "tasma": 0,
    "disari": [],
    "kucukAlan": [],
-   "alan": 5
+   "alan": 4
   },
   {
-   "ad": "kayıt · geç onay (P-0926-038)",
+   "ad": "ID düzenle · PDF seçildi",
    "gen": 430,
    "temiz": true,
    "tasma": 0,
    "disari": [],
    "kucukAlan": [],
-   "alan": 5
+   "alan": 4
   },
   {
-   "ad": "kayıt · kabul edilmiş planın dayanağı",
+   "ad": "sözleşme şablonu",
    "gen": 320,
    "temiz": true,
    "tasma": 0,
    "disari": [],
    "kucukAlan": [],
-   "alan": 5
+   "alan": 1
   },
   {
-   "ad": "kayıt · kabul edilmiş planın dayanağı",
+   "ad": "sözleşme şablonu",
    "gen": 360,
    "temiz": true,
    "tasma": 0,
    "disari": [],
    "kucukAlan": [],
-   "alan": 5
+   "alan": 1
   },
   {
-   "ad": "kayıt · kabul edilmiş planın dayanağı",
+   "ad": "sözleşme şablonu",
    "gen": 390,
    "temiz": true,
    "tasma": 0,
    "disari": [],
    "kucukAlan": [],
-   "alan": 5
+   "alan": 1
   },
   {
-   "ad": "kayıt · kabul edilmiş planın dayanağı",
+   "ad": "sözleşme şablonu",
    "gen": 430,
    "temiz": true,
    "tasma": 0,
    "disari": [],
    "kucukAlan": [],
-   "alan": 5
+   "alan": 1
   },
   {
-   "ad": "önceki kayıt · salt okunur",
+   "ad": "denetçiye göre (personel kartından)",
    "gen": 320,
    "temiz": true,
    "tasma": 0,
    "disari": [],
    "kucukAlan": [],
-   "alan": 5
+   "alan": 1
   },
   {
-   "ad": "önceki kayıt · salt okunur",
+   "ad": "denetçiye göre (personel kartından)",
    "gen": 360,
    "temiz": true,
    "tasma": 0,
    "disari": [],
    "kucukAlan": [],
-   "alan": 5
+   "alan": 1
   },
   {
-   "ad": "önceki kayıt · salt okunur",
+   "ad": "denetçiye göre (personel kartından)",
    "gen": 390,
    "temiz": true,
    "tasma": 0,
    "disari": [],
    "kucukAlan": [],
-   "alan": 5
+   "alan": 1
   },
   {
-   "ad": "önceki kayıt · salt okunur",
+   "ad": "denetçiye göre (personel kartından)",
    "gen": 430,
    "temiz": true,
    "tasma": 0,
    "disari": [],
    "kucukAlan": [],
-   "alan": 5
+   "alan": 1
   }
  ]
 }
