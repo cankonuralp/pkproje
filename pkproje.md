@@ -567,42 +567,35 @@ Sil yok, şablon yükleme, Esc). M2, M13 yeniden ölçüldü; öteki 14 maketin 
 1. tur (2026-09-24): 11 durum 66/66, etkileşim 14/14 (İSG-KATİP ayrı sekme ve plan kabul kilidiydi).
 
 #### Maket M6 — Plan aç (modül 13, planlama ekibi) — ONAY BEKLİYOR
-Ekran: **Plan aç** (`maket/plan-ac.html`; müşteri ve tesis sayfalarındaki "Plan aç" buraya gelir, müşteri/tesis dolu). Tek sayfa, beş
-bölüm sırayla dolar: **1 Müşteri ve tesis** (açık plan ve İSG-KATİP kaydı olmayan tesis uyarısı) · **2 Tarih ve saat** (başlangıç,
-saat aralığı, kapsamın tahmini süresi, açıklama) · **3 Inspector** (adaylar tablosu: bu tesis ve tarih için İSG-KATİP, EKİPNET,
-kapsamda yetkili ekipman sayısı, aynı gün başka plan / saat çakışması, "Kabul edebilir / Kabul edemez" + sebep) · **4 Kapsam**
-(tesisin kayıtlı ekipmanı: süzgeç, 10'ar sayfa, "Kontrolü gelenleri seç", başka açık plandaki ekipman seçilemez; **sahada kaydedilecek
-yeni ekipman** tür × adet) · **5 Özet ve kabul ön koşulları** (proje no önizlemesi, tür başına kapsam ve ekipte yetkili kişi, kişi
-kişi kabul koşulları + İSG-KATİP kaydına bağlantı) · **plan açıldı** ekranı (eksikli kişi şeridi, "Yeni plan aç").
+**2. tur (2026-09-26, reisim: *"Önerilerin uygun ama geliştirilebilir maketi yap inceleyeyim ona göre tekrar konuşuruz"*; kararlar §9 on
+sekizinci tur).** Ekran: **Plan aç** (`maket/plan-ac.html`; müşteri, tesis ve Ana sayfa (planlama / yönetici) "Plan aç"tan gelir). Tek sayfa,
+**asıl hedef** sırayla: **1 Müşteri ve tesis** (açık plan varsa ikinci plan bilgisi, İSG-KATİP ID'si olmayan tesis uyarısı) · **2 Tarih ve
+saat** (başlangıç, saat aralığı, tahmini süre, açıklama) · **3 Denetçi** (tablo: İSG-KATİP ID — sözleşmeden / geç onay / bitmiş / yok ·
+EKİPNET · aynı gün · uyarı · durum "Uygun / N uyarı"; ID'si olmayan seçilince **el ile ID** + "sözleşmeye de kaydet") · **4 Kapsam** (tesisin
+kayıtlı ekipmanı; kontrolü gelenler seçili; "Kontrolü gelenleri seç" · "Hepsini seç" · "Seçimi temizle") · **5 Özet ve uyarılar** · **plan
+açıldı** ekranı (uyarılı kişi şeridi, el ile ID'nin sözleşmeye kaydı, planın İSG-KATİP ID'leri).
 **Varsayımlar:**
-- **Sihirbaz değil tek sayfa**: ön koşullar birbirine bağlı (tarih İSG uygunluğunu, kapsam yetki eşleşmesini değiştirir), hepsi aynı
-  anda görünsün. Bölüm tesis seçilmeden boş durum söyler ("Önce tesis seçin").
-- Tesis seçilince tarih = tesisin **sonraki kontrolü** (geçmişse bugün); kontrolü **30 gün** içinde gelen ve ilk kontrolü yapılacak
-  ekipman **seçili gelir**. Başka **açık planın** kapsamındaki ekipman seçilemez (aynı ekipman iki açık planda olmaz).
-- Adaylar: inspector rolü olan etkin kişiler. Kabul koşulları Planlar'daki kilidin aynısı (§3.2 madde 2): İSG-KATİP (M5, tek kural),
-  EKİPNET, firma yetkilendirmesi (M1); ek olarak giriş daveti kabul edilmemişse. **Eksikler planı açmayı engellemez**, kabulü durdurur;
-  özet ve plan açıldı ekranı eksik kişiyi adıyla ve düzeltme bağlantısıyla söyler.
-- Türe yetkili = meslek Ek-III grubuna izin veriyor **ve** firma o gruba yetkilendirmiş (2c öneri); kapsamdaki bir türe ekipte yetkili
-  kimse yoksa özet uyarır (ekip düzeyinde; kişi tüm türlere yetkili olmak zorunda değil).
-- Aynı gün başka plan bilgi, **saat çakışması uyarı**; engel değil. Tahmini süre tür sürelerinden (M3), yalnız ipucu.
-- Kapsam tür başına **planlanan = seçili kayıtlı + sahada kaydedilecek yeni** (Planlar'daki "planlanan / planda" sayıları buradan doğar).
-- Proje no kaydedince sunucu verir (§3.5); ekranda önizleme (P-0926-040). Plan açılınca ekipteki inspector'ların Planlar'ına "Kabul
-  bekliyor" düşer, hareket kaydına yazılır; bildirim yok (anayasa 1.3). Açıklama plan içinde görünür, müşteri görmez.
-- Makette sayfalar arası kayıt taşınmaz: açılan plan Planlar maketinin listesinde görünmez (ekranda yazılı).
+- **Asıl hedef:** tesis + tarih/saat + denetçi(ler) + kapsam → plan denetçinin Planlar'ına "Kabul bekliyor" düşer; müşteri panelinde "planlanan
+  kontrol" görünür (81; M11'in sırası gelince), e-posta / bildirim yok.
+- **Uyarılar engel değil:** İSG-KATİP ID'si yok · onay geç · **İSG-KATİP sözleşmesi bitmiş** (reisim, M5) · EKİPNET yok · meslek yetkili değil ·
+  ilk giriş yapılmadı · saat çakışması (76) · kapsamdaki türe ekipte yetkili meslekten kimse yok. "Kabul edemez" kalktı.
+- **İSG-KATİP ID** sözleşmeden kendiliğinden gelir (M5); yoksa plan açan el ile yazar, "sözleşmeye de kaydet" işaretliyse tesisin iş sözleşmesine
+  eklenir (bir dahaki planda kendiliğinden gelir). Boş bırakılırsa plan açılır, uyarı kalır.
+- **Tek sayfa** (74). **Tesiste açık plan varken ikinci plan açılır** (77); o plandaki ekipman bu plana alınamaz.
+- **Kapsam** (78): kontrolü eşik içinde gelen ve ilk kontrolü yapılacak kayıtlı ekipman seçili gelir (eşik firma ayarı, başlangıç 30 gün).
+  **"Sahada kaydedilecek yeni ekipman" alanı kalktı**: yeni ekipmanı denetçi sahada plana ekler; **kapsam boş da** plan açılır.
+- **Sorumlu denetçi yok** (79), ekip eşit. **"Plan aç" tuşu** plan açma yetkisi olana (80): makette Ana sayfa'nın planlama ve yönetici
+  görünümünde; Planlar maketi denetçi gözünden olduğu (ve dondurulduğu) için orada gösterilmedi — uygulamada rol yetkisiyle görünür.
+- Tahmini süre tür sürelerinden (M3), yalnız ipucu. Proje no kaydedince sunucu verir (numara biçimi firmaya göre, §3.7). Makette sayfalar
+  arası kayıt taşınmaz: açılan plan Planlar maketinin listesinde görünmez.
 **Sorular (M6):**
-74. Plan açma **tek sayfa** mı (öneri, makette) yoksa adım adım sihirbaz mı?
-75. Eksiği olan inspector (İSG-KATİP, EKİPNET, yetki) plana **atanabilsin mi** (öneri: evet, kabul durur) yoksa seçim engellensin mi?
-76. Aynı inspector'ın **aynı saatte** başka planı varsa: uyarı (öneri) mı, engel mi?
-77. Tesiste **açık plan varken** ikinci plan açılabilsin mi (ör. ayrı branş)? Öneri: açılabilir, aynı ekipman iki açık planda olamaz.
-78. Kontrolü gelen ekipman **otomatik seçili** gelsin mi, eşik **30 gün** mü (öneri)?
-79. Ekipte **sorumlu inspector** ayrımı olsun mu (öneri: hayır, Planlar'daki gibi ekip eşit)?
-80. Planlar ekranına planlama ekibi için **"Plan aç" tuşu** eklensin mi? (Planlar dondu; makette giriş müşteri ve tesis sayfalarından.)
-81. Plan açılırken **müşteri** bilgilendirilsin mi (ör. müşteri panelinde "planlanan kontrol" satırı)? Bildirim kurulmadı. *(Bağımlılık: M11.)*
-**Ölçüm (2026-09-24, bulut):** 10 durum × 1920 · 1080 · 375 × açık/koyu = **60/60 temiz**, çekmece 2/2; etkileşim **12/12**; olumsuz kanıt
-2/2. Ölçerken düzeltilen: telefonda açıklama ipucu kesikti · üstteki iki kısa bölüm geniş ekranda kabı doldurmuyordu (üç sütunlu
-ızgarada üçüncü sütun boş kalıyordu; iç ızgaraya alındı) · ölçüm aracı form bölümündeki listeyi sayfa kenarıyla kıyaslıyordu
-(`tools/olc-maket.js`: çerçeve artık bölümün iç genişliği; Planlar 54/54, M1 108/108 yeniden ölçüldü). M2'nin "Plan aç" denemesi artık
-bu sayfaya gider (48/48, 11/11).
+Açık soru yok — 74–81 önerileri uygun (§9, on sekizinci tur). 2. tur reisim'in incelemesini bekliyor ("ona göre tekrar konuşuruz").
+**Ölçüm (2026-09-26, bulut, 2. tur):** 10 durum × 1920 · 1080 · 375 × açık/koyu = **60/60 temiz**, çekmece 2/2; etkileşim **18/18**, telefon **40/40**
+(ID sözleşmeden gelir, tarihle İSG uyarısı, "Kabul edemez" yok, el ile ID alanı ve sözleşmeye kaydet, el ile ID yazılınca uyarı düşer, İSG-KATİP
+bitmiş uyarısı, aynı saat, ikinci plan bilgisi, Hepsini seç / yeni ekipman alanı yok, kapsam boş açılır, geçmiş tarih, boş gönderim, plan açılır
++ ID sözleşmeye kaydedilir, Ana sayfa'dan Plan aç). Ölçerken düzeltilen: telefonda denetçi kartında uyarı metni rozetin yanında 63–70 px taşıyordu
+→ ayrı "Uyarı" satırı.
+1. tur (2026-09-24): 10 durum 60/60, etkileşim 12/12 ("Kabul edemez", sahada yeni ekipman alanı vardı).
 
 #### Maket M7 — Standart Kütüphanesi · Rapor şablonu önizlemesi (modül 4, 6) — ONAY BEKLİYOR
 Ekranlar: **standartlar** (`maket/standartlar.html`: liste — standart, sürüm, kullanan türler, bu sürümle rapor sayısı, yükleyen; çipler:
@@ -1315,7 +1308,12 @@ katip girilmemiş geçmiş vb uyarı tamamdır.  Bunlar dışında dediklerini k
 türlü numaralandırma; İSG-KATİP ID'sine isteğe bağlı bitiş tarihi, "bitmiş" uyarısı; hizmet sözleşmesi uyarıları kalktı; 125, 128, 129, 133,
 134 öneriler kabul. **M6 için not:** plan açarken İSG-KATİP bitmişse / yoksa / geç onaylıysa uyarı (engel değil).
 
-**Açık kalanlar:** **modül modül gözden geçirme** (M1–M5 ve M13 onaylandı — Ekipmanlar kalktı, Sözleşmeler birleşti; sırada M6 Plan aç) · **toplu maket çalışması** (M1–M16 + toplu bakış, `MAKET-PLANI.md`; sorular §3.6'da, 32'den) · **önizlemede örnek veri kipi** (öneri, §3.3) · ~~rol × modül görünürlüğü~~ (karar 2026-09-25: başlangıç düzeni + firma yöneticisi değiştirir) · **gerçek sunucunun sağlayıcısı**
+**On sekizinci tur (2026-09-26, M6 soruları 74–81; reisim birebir):** *"Önerilerin uygun ama geliştirilebilir maketi yap inceleyeyim ona göre
+tekrar konuşuruz"* → önerilen: A asıl hedef (tesis + tarih + denetçi + kapsam) · 74 tek sayfa · 76 saat çakışması uyarı · 77 ikinci plan açılır ·
+78 kontrolü gelen seçili, sahada yeni ekipman alanı kalkar · 79 sorumlu denetçi yok · 80 "Plan aç" yetkiliye · 81 müşteri panelinde planlanan
+kontrol; çakışma: kapsam listesi sade, "Hepsini seç". → M6 2. tur (§3.6); reisim inceleyip yeniden konuşacak.
+
+**Açık kalanlar:** **modül modül gözden geçirme** (M1–M5 ve M13 onaylandı — Ekipmanlar kalktı, Sözleşmeler birleşti; M6 Plan aç 2. tur incelemede) · **toplu maket çalışması** (M1–M16 + toplu bakış, `MAKET-PLANI.md`; sorular §3.6'da, 32'den) · **önizlemede örnek veri kipi** (öneri, §3.3) · ~~rol × modül görünürlüğü~~ (karar 2026-09-25: başlangıç düzeni + firma yöneticisi değiştirir) · **gerçek sunucunun sağlayıcısı**
 (Türkiye, §8.8) ·
 alan adının alınması · e-imza yöntemi (8.4) · v1 ekipman grupları · 5 yıl sonrası silme
 mekanizması · **zimmette birden çok cihaz varsa süzgeç** (§3) · **kontrol metodu standardının seçim yeri**
@@ -1345,6 +1343,9 @@ revizyon, alan kopyalama, hafif kusur devri, meslek eşleşme denetimi).
 - Emsal ürünler: https://opwire.app/iso-17020-periyodik-kontrol-yazilimi/ · https://17020muayene.vidco.com.tr/ · https://akuple.com/asansor-kontrol-yazilimi/ · https://ensyazilim.com/
 
 ## 11 · Değişiklik günlüğü
+- 2026-09-26 (46): **M6 2. tur** (reisim 74–81 öneriler uygun, "maketi yap inceleyeyim"; §9 on sekizinci tur): denetçi eksikleri yalnız uyarı
+  ("Kabul edemez" kalktı), İSG-KATİP ID sözleşmeden / el ile + sözleşmeye kaydet, bitmiş İSG-KATİP uyarısı, sahada yeni ekipman alanı kalktı,
+  kapsam boş açılır, "Hepsini seç", Ana sayfa'da "Plan aç". M6 60/60 · 18/18 · 40/40.
 - 2026-09-26 (45): **M5 ve M13 ONAYLANDI** (reisim: *"Sıradakine geçelim"*). Sırada M6 Plan aç; sorular 74–81 yeniden soruldu.
 - 2026-09-26 (44): **M5 2. tur, ek** (reisim, §9 on yedinci tur): "İmzalı sözleşmeyi aç" + imzalı belge görünümü; hizmet sözleşmesi için uyarı
   yok (bitiş şeridi, 60 gün çipi kalktı); uyarı yalnız İSG-KATİP (yok · geç onay · bitmiş — bitiş tarihi isteğe bağlı); §3.7 satır 8 her türlü

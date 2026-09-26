@@ -2,8 +2,8 @@
  "maket": "m6",
  "tarih": "2026-09-26",
  "arac": "tools/olc-bulut.mjs --etkilesim (başsız tarayıcı, 1920 açık tema; gen verilen denemede o genişlik)",
- "toplam": 12,
- "gecen": 12,
+ "toplam": 18,
+ "gecen": 18,
  "denemeler": [
   {
    "ad": "tesisten gelince: tarih sonraki kontrol, 6 / 6 seçili",
@@ -20,10 +20,45 @@
    "gecti": true
   },
   {
-   "ad": "tarih değişince İSG uygunluğu yeniden hesaplanır (odak yerinde)",
+   "ad": "İSG-KATİP ID sözleşmeden gelir",
+   "gen": 1920,
+   "sayfa": "maket/plan-ac.html",
+   "hash": "#/?tesis=t12",
+   "gecti": true
+  },
+  {
+   "ad": "tarih değişince İSG uyarısı yeniden hesaplanır (odak yerinde)",
    "gen": 1920,
    "sayfa": "maket/plan-ac.html",
    "hash": "#/?tesis=t7",
+   "gecti": true
+  },
+  {
+   "ad": "eksikli denetçi: \"Kabul edemez\" yok, uyarı",
+   "gen": 1920,
+   "sayfa": "maket/plan-ac.html",
+   "hash": "#/?tesis=t2",
+   "gecti": true
+  },
+  {
+   "ad": "ID'si olmayan seçilince el ile ID alanı ve sözleşmeye kaydet",
+   "gen": 1920,
+   "sayfa": "maket/plan-ac.html",
+   "hash": "#/?tesis=t4",
+   "gecti": true
+  },
+  {
+   "ad": "el ile ID yazılınca uyarı düşer",
+   "gen": 1920,
+   "sayfa": "maket/plan-ac.html",
+   "hash": "#/?tesis=t2",
+   "gecti": true
+  },
+  {
+   "ad": "İSG-KATİP bitmişse uyarı (plan açılır)",
+   "gen": 1920,
+   "sayfa": "maket/plan-ac.html",
+   "hash": "#/?tesis=t9",
    "gecti": true
   },
   {
@@ -41,21 +76,21 @@
    "gecti": true
   },
   {
-   "ad": "açık plandaki ekipman seçilemez",
+   "ad": "açık plandaki ekipman seçilemez; ikinci plan bilgisi",
    "gen": 1920,
    "sayfa": "maket/plan-ac.html",
    "hash": "#/?tesis=t8",
    "gecti": true
   },
   {
-   "ad": "yeni ekipman kapsama eklenir, özet tür başına",
+   "ad": "sahada yeni ekipman alanı yok; Hepsini seç",
    "gen": 1920,
    "sayfa": "maket/plan-ac.html",
-   "hash": "#/?tesis=t8",
+   "hash": "#/?tesis=t12",
    "gecti": true
   },
   {
-   "ad": "seçim temizlenince kapsam hatası, odak ilk ekipmanda",
+   "ad": "kapsam boş da açılır (denetçi sahada ekler)",
    "gen": 1920,
    "sayfa": "maket/plan-ac.html",
    "hash": "#/?tesis=t2",
@@ -76,10 +111,17 @@
    "gecti": true
   },
   {
-   "ad": "plan açılır: P-0926-040, eksikli kişi yazılır",
+   "ad": "plan açılır: el ile ID sözleşmeye kaydedilir",
    "gen": 1920,
    "sayfa": "maket/plan-ac.html",
-   "hash": "#/?tesis=t2",
+   "hash": "#/?tesis=t4",
+   "gecti": true
+  },
+  {
+   "ad": "Ana sayfa (planlama): Plan aç tuşu",
+   "gen": 1920,
+   "sayfa": "maket/anasayfa.html",
+   "hash": "#/planlama",
    "gecti": true
   },
   {

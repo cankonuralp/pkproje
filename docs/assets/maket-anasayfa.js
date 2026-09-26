@@ -91,7 +91,7 @@
       var bugun = planlar(function (t) { return t.ptarih === BUGUN && ACIK.indexOf(t.pdurum) >= 0; });
       var isgEksik = 0;
       planlar(function (t) { return ACIK.indexOf(t.pdurum) >= 0; }).forEach(function (t) {
-        t.pekip.forEach(function (k) { var x = MV.isgTesis(t.id).filter(function (y) { return y.k === k; })[0]; if (!x || !MV.isgUygun(x.onay, t.ptarih)) isgEksik++; });
+        t.pekip.forEach(function (k) { var x = MV.isgTesis(t.id).filter(function (y) { return y.k === k; })[0]; if (!x || !MV.isgUygun(x.onay, t.ptarih) || (x.bitis && x.bitis < t.ptarih)) isgEksik++; });
       });
       var yaklasan = MV.TESISLER.filter(function (t) { return !MV.acikPlan(t) && MK.gunFarki(BUGUN, t.sonraki) <= 30; })
         .sort(function (a, b) { return a.sonraki < b.sonraki ? -1 : 1; });
@@ -143,7 +143,9 @@
   function ciz(odakla) {
     var r = rolu(), p = MV.kisi(KISI[r]);
     $("a-icerik").innerHTML =
-      '<div class="a-sayfa-bas"><h1 tabindex="-1">Ana sayfa</h1><span class="a-sayac">' + MK.gunYaz(BUGUN) + " · " + kacis(p.ad) + "</span></div>" +
+      '<div class="a-sayfa-bas"><h1 tabindex="-1">Ana sayfa</h1><span class="a-sayac">' + MK.gunYaz(BUGUN) + " · " + kacis(p.ad) + "</span>" +
+        /* M6 2. tur (80): "Plan aç" yalnız plan açma yetkisi olana (planlama ekibi, firma yöneticisi) */
+        (r === "planlama" || r === "yonetici" ? '<a class="a-tus a-tus-birincil a-bolum-tus" href="plan-ac.html#/">' + ikon("calendar-check", "a-ikon-kucuk") + "Plan aç</a>" : "") + "</div>" +
       '<div class="a-pano-anahtar"><span class="a-etiket a-etiket-satir">Makette bakış</span><div class="a-sekmeler" role="group" aria-label="Rol">' +
         MV.ROLLER.map(function (x) { return '<a class="a-sekme" href="#/' + x.k + '"' + (x.k === r ? ' aria-current="page"' : "") + ">" + x.ad + "</a>"; }).join("") + "</div></div>" +
       '<div class="a-serit-kap">' + MK.serit("bilgi", "circle-alert", "Girişten sonra herkes buraya gelir; içerik kişinin rolüne göre değişir. Birden çok rolü olan her rolün bölümünü alt alta görür. (Rol seçimi yalnız makette.)") + "</div>" +

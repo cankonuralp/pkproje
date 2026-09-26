@@ -666,8 +666,9 @@ a.a-yuz:hover { border-color: var(--kenar-alan); background: var(--zemin); }
 /* M6 (plan aç): kapsam ekipmanı · inspector adayı · kapsam tür başına */
 .a-tablo-planekp .a-k-sec { width: 20%; } .a-tablo-planekp .a-k-tur { width: 24%; } .a-tablo-planekp .a-k-konum { width: 20%; }
 .a-tablo-planekp .a-k-sonraki { width: 18%; } .a-tablo-planekp .a-k-durum { width: 18%; }
-.a-tablo-aday .a-k-ad { width: 22%; } .a-tablo-aday .a-k-isg { width: 17%; } .a-tablo-aday .a-k-ekipnet { width: 11%; }
-.a-tablo-aday .a-k-yet { width: 14%; } .a-tablo-aday .a-k-gun { width: 17%; } .a-tablo-aday .a-k-durum { width: 19%; }
+/* M6 2. tur (2026-09-26): "kapsamda yetkili" sütunu kalktı, uyarı metni ayrı sütun */
+.a-tablo-aday .a-k-ad { width: 19%; } .a-tablo-aday .a-k-isg { width: 17%; } .a-tablo-aday .a-k-ekipnet { width: 11%; }
+.a-tablo-aday .a-k-gun { width: 15%; } .a-tablo-aday .a-k-uyari { width: 26%; } .a-tablo-aday .a-k-durum { width: 12%; }
 .a-tablo-kapsamozet .a-k-tur { width: 30%; } .a-tablo-kapsamozet .a-k-kayitli { width: 12%; } .a-tablo-kapsamozet .a-k-yeni { width: 12%; }
 .a-tablo-kapsamozet .a-k-yetkili { width: 32%; } .a-tablo-kapsamozet .a-k-toplam { width: 14%; }
 

@@ -90,7 +90,7 @@
    "tasma": 0,
    "disari": [],
    "kucukAlan": [],
-   "alan": 6
+   "alan": 5
   },
   {
    "ad": "tesisten gelince: tarih + kontrolü gelen seçili",
@@ -99,7 +99,7 @@
    "tasma": 0,
    "disari": [],
    "kucukAlan": [],
-   "alan": 6
+   "alan": 5
   },
   {
    "ad": "tesisten gelince: tarih + kontrolü gelen seçili",
@@ -108,7 +108,7 @@
    "tasma": 0,
    "disari": [],
    "kucukAlan": [],
-   "alan": 6
+   "alan": 5
   },
   {
    "ad": "tesisten gelince: tarih + kontrolü gelen seçili",
@@ -117,10 +117,10 @@
    "tasma": 0,
    "disari": [],
    "kucukAlan": [],
-   "alan": 6
+   "alan": 5
   },
   {
-   "ad": "ekip seçili: kabul eksiği + yetki boşluğu",
+   "ad": "ekip seçili: ID'si olmayana el ile ID alanı",
    "gen": 320,
    "temiz": true,
    "tasma": 0,
@@ -129,7 +129,7 @@
    "alan": 6
   },
   {
-   "ad": "ekip seçili: kabul eksiği + yetki boşluğu",
+   "ad": "ekip seçili: ID'si olmayana el ile ID alanı",
    "gen": 360,
    "temiz": true,
    "tasma": 0,
@@ -138,7 +138,7 @@
    "alan": 6
   },
   {
-   "ad": "ekip seçili: kabul eksiği + yetki boşluğu",
+   "ad": "ekip seçili: ID'si olmayana el ile ID alanı",
    "gen": 390,
    "temiz": true,
    "tasma": 0,
@@ -147,7 +147,7 @@
    "alan": 6
   },
   {
-   "ad": "ekip seçili: kabul eksiği + yetki boşluğu",
+   "ad": "ekip seçili: ID'si olmayana el ile ID alanı",
    "gen": 430,
    "temiz": true,
    "tasma": 0,
@@ -156,43 +156,43 @@
    "alan": 6
   },
   {
-   "ad": "açık planlı tesis: kapsam açık planda, aynı saat",
+   "ad": "İSG-KATİP bitmiş denetçi (uyarı)",
    "gen": 320,
    "temiz": true,
    "tasma": 0,
    "disari": [],
    "kucukAlan": [],
-   "alan": 6
+   "alan": 5
   },
   {
-   "ad": "açık planlı tesis: kapsam açık planda, aynı saat",
+   "ad": "İSG-KATİP bitmiş denetçi (uyarı)",
    "gen": 360,
    "temiz": true,
    "tasma": 0,
    "disari": [],
    "kucukAlan": [],
-   "alan": 6
+   "alan": 5
   },
   {
-   "ad": "açık planlı tesis: kapsam açık planda, aynı saat",
+   "ad": "İSG-KATİP bitmiş denetçi (uyarı)",
    "gen": 390,
    "temiz": true,
    "tasma": 0,
    "disari": [],
    "kucukAlan": [],
-   "alan": 6
+   "alan": 5
   },
   {
-   "ad": "açık planlı tesis: kapsam açık planda, aynı saat",
+   "ad": "İSG-KATİP bitmiş denetçi (uyarı)",
    "gen": 430,
    "temiz": true,
    "tasma": 0,
    "disari": [],
    "kucukAlan": [],
-   "alan": 6
+   "alan": 5
   },
   {
-   "ad": "sahada kaydedilecek yeni ekipman eklendi",
+   "ad": "açık planlı tesis: ikinci plan, aynı saat uyarısı",
    "gen": 320,
    "temiz": true,
    "tasma": 0,
@@ -201,7 +201,7 @@
    "alan": 6
   },
   {
-   "ad": "sahada kaydedilecek yeni ekipman eklendi",
+   "ad": "açık planlı tesis: ikinci plan, aynı saat uyarısı",
    "gen": 360,
    "temiz": true,
    "tasma": 0,
@@ -210,7 +210,7 @@
    "alan": 6
   },
   {
-   "ad": "sahada kaydedilecek yeni ekipman eklendi",
+   "ad": "açık planlı tesis: ikinci plan, aynı saat uyarısı",
    "gen": 390,
    "temiz": true,
    "tasma": 0,
@@ -219,7 +219,7 @@
    "alan": 6
   },
   {
-   "ad": "sahada kaydedilecek yeni ekipman eklendi",
+   "ad": "açık planlı tesis: ikinci plan, aynı saat uyarısı",
    "gen": 430,
    "temiz": true,
    "tasma": 0,
@@ -234,7 +234,7 @@
    "tasma": 0,
    "disari": [],
    "kucukAlan": [],
-   "alan": 6
+   "alan": 5
   },
   {
    "ad": "kapsam listesi 2. sayfa (24 ekipman)",
@@ -243,7 +243,7 @@
    "tasma": 0,
    "disari": [],
    "kucukAlan": [],
-   "alan": 6
+   "alan": 5
   },
   {
    "ad": "kapsam listesi 2. sayfa (24 ekipman)",
@@ -252,7 +252,7 @@
    "tasma": 0,
    "disari": [],
    "kucukAlan": [],
-   "alan": 6
+   "alan": 5
   },
   {
    "ad": "kapsam listesi 2. sayfa (24 ekipman)",
@@ -261,7 +261,7 @@
    "tasma": 0,
    "disari": [],
    "kucukAlan": [],
-   "alan": 6
+   "alan": 5
   },
   {
    "ad": "boş gönderildi",
@@ -306,7 +306,7 @@
    "tasma": 0,
    "disari": [],
    "kucukAlan": [],
-   "alan": 6
+   "alan": 5
   },
   {
    "ad": "tesisli, ekipsiz gönderildi",
@@ -315,7 +315,7 @@
    "tasma": 0,
    "disari": [],
    "kucukAlan": [],
-   "alan": 6
+   "alan": 5
   },
   {
    "ad": "tesisli, ekipsiz gönderildi",
@@ -324,7 +324,7 @@
    "tasma": 0,
    "disari": [],
    "kucukAlan": [],
-   "alan": 6
+   "alan": 5
   },
   {
    "ad": "tesisli, ekipsiz gönderildi",
@@ -333,10 +333,10 @@
    "tasma": 0,
    "disari": [],
    "kucukAlan": [],
-   "alan": 6
+   "alan": 5
   },
   {
-   "ad": "plan açıldı · eksikli ekip",
+   "ad": "plan açıldı · uyarılı ekip, el ile ID sözleşmeye kaydedildi",
    "gen": 320,
    "temiz": true,
    "tasma": 0,
@@ -345,7 +345,7 @@
    "alan": 0
   },
   {
-   "ad": "plan açıldı · eksikli ekip",
+   "ad": "plan açıldı · uyarılı ekip, el ile ID sözleşmeye kaydedildi",
    "gen": 360,
    "temiz": true,
    "tasma": 0,
@@ -354,7 +354,7 @@
    "alan": 0
   },
   {
-   "ad": "plan açıldı · eksikli ekip",
+   "ad": "plan açıldı · uyarılı ekip, el ile ID sözleşmeye kaydedildi",
    "gen": 390,
    "temiz": true,
    "tasma": 0,
@@ -363,7 +363,7 @@
    "alan": 0
   },
   {
-   "ad": "plan açıldı · eksikli ekip",
+   "ad": "plan açıldı · uyarılı ekip, el ile ID sözleşmeye kaydedildi",
    "gen": 430,
    "temiz": true,
    "tasma": 0,
