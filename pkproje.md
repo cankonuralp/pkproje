@@ -1326,6 +1326,10 @@ içi açıklama, mevzuat madde numarası, alanın altına yazılan küçük mesa
 rapor ekranı (M8) ve rapor belgesi (M7 / M9 / M11 önizlemesi; bölüm başlıklarındaki "Ek-III 1.7.x" kalktı). Onaylı M1–M5'te ve sırası gelmemiş
 modüllerde kalan ipuçları o modül ele alınınca (ya da kodda) temizlenir; şablon önizlemesindeki "alan nereden dolar" notları M7'de sorulur.
 
+**Yirminci tur (2026-09-26, süreç; reisim birebir):** *"Kalan Tüm modüllerin sorularını sor hepsini tek seferde cevaplayayım maketi ona göre
+yenile sonra tüm maketi gözden geçiririm"* → 2026-09-25'teki "modül modül" düzeni M7–M16 için bırakıldı: sorular sadeleştirilip **tek listede**
+soruldu (`MAKET-PLANI.md`, "Toplu soru listesi"); cevaplar gelince bütün maketler yenilenir, reisim hepsini (M6 dahil) birlikte gözden geçirir.
+
 **Açık kalanlar:** **modül modül gözden geçirme** (M1–M5 ve M13 onaylandı — Ekipmanlar kalktı, Sözleşmeler birleşti; M6 Plan aç 2. tur incelemede) · **toplu maket çalışması** (M1–M16 + toplu bakış, `MAKET-PLANI.md`; sorular §3.6'da, 32'den) · **önizlemede örnek veri kipi** (öneri, §3.3) · ~~rol × modül görünürlüğü~~ (karar 2026-09-25: başlangıç düzeni + firma yöneticisi değiştirir) · **gerçek sunucunun sağlayıcısı**
 (Türkiye, §8.8) ·
 alan adının alınması · e-imza yöntemi (8.4) · v1 ekipman grupları · 5 yıl sonrası silme
@@ -1356,6 +1360,7 @@ revizyon, alan kopyalama, hafif kusur devri, meslek eşleşme denetimi).
 - Emsal ürünler: https://opwire.app/iso-17020-periyodik-kontrol-yazilimi/ · https://17020muayene.vidco.com.tr/ · https://akuple.com/asansor-kontrol-yazilimi/ · https://ensyazilim.com/
 
 ## 11 · Değişiklik günlüğü
+- 2026-09-26 (48): **Süreç değişti** (§9 yirminci tur): M7–M16'nın soruları sadeleştirilip tek listede soruldu (MAKET-PLANI.md).
 - 2026-09-26 (47): **M6 2. tur, ek** (§9 on dokuzuncu tur): raporun 1. bölümü "Firma bilgileri" (her raporda ortak), "2 · Kontrol bilgileri"
   ayrıldı; "SGK tescil no", "İSG-KATİP sözleşme ID"; M6 ve rapor ekranında alt satır mesajları, parantez içi açıklamalar, madde numaraları
   kalktı. Ölçüm: M6 60/60 · 18/18 · 40/40; M2, M5, M7, M8, M9, M11, M13 yeniden ölçüldü, hepsi temiz.

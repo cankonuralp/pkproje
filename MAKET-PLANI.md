@@ -142,3 +142,97 @@ tek mesaj: sayfanın bağlantısı + kaç maket + kaç soru + ölçülemeyen var
   sözleşmeden / el ile, bitmiş uyarısı, sahada yeni ekipman alanı kalktı. M6 60/60 · 18/18 · 40/40. Reisim'in incelemesi bekleniyor.
 - 2026-09-26: **M6 2. tur, ek** — reisim: rapor 1. bölümü "Firma bilgileri" (her raporda ortak), "SGK tescil no", "İSG-KATİP sözleşme ID",
   parantez içi açıklama ve alt satır mesajı yok (genel ilke). M6 60/60 · 18/18 · 40/40. Reisim'in incelemesi bekleniyor.
+
+### Toplu soru listesi — M7–M16 (2026-09-26, reisim: *"Kalan Tüm modüllerin sorularını sor hepsini tek seferde cevaplayayım maketi ona göre yenile sonra tüm maketi gözden geçiririm"*)
+Sadeleştirildi: teknik / mevzuat ayrıntısı yok, kural ihlali uyarı (istisna: kalibrasyonu geçmiş cihaz), önce asıl hedef. Eski numaralar korundu;
+karara bağlanmış ya da gereksiz kalan sorular düştü (82 dışı M7 soruları, 118, 143, 151, 116). Cevap bekleniyor.
+
+**M7 Standartlar**
+- A. Asıl hedef: firma standartlarını PDF olarak yükler, sürümleri tutulur, ekipman türüne bağlanır. **Ayrı "rapor şablonu önizlemesi" ekranı
+  kalkar** — türün rapor formatı PDF'i (M3) yeter.
+- 82. Kontrol metodu: denetçi raporda türün standartlarından seçer; standart yoksa "üretici talimatı" yazar.
+- 83. Standardı branş yöneticisi ve firma yöneticisi yükler; firmadaki herkes okur.
+- 84. Yeni sürüm yüklenince türler yeni sürüme geçer; eski raporlar kendi sürümünü gösterir.
+
+**M8 Saha ve Rapor**
+- A. Asıl hedef: denetçi ekipmanın raporunu açar, türün formatındaki soruları doldurur, fotoğraf ekler, onaya gönderir. Rapor ekranı türün
+  yüklenen formatına göre kurulur; 1 · Firma bilgileri her raporda aynı.
+- 159. Firma PDF formatını yükleyince rapor ekranı **bizim tarafımızda hazırlanır** (o sırada tür "hazırlanıyor" görünür).
+- 90. Eksik varken "Onaya gönder" basılabilir; eksik listesi uyarı olarak çıkar, "Yine de gönder". Tek engel kalibrasyonu geçmiş cihaz.
+- 91. Kalibrasyon engeli yalnız o raporda kullanılan cihaz için.
+- 160. Raporda SGK tescil no ve İSG-KATİP sözleşme ID düzeltilebilir; "tesise / sözleşmeye de kaydet" seçeneği (M6'daki gibi).
+- 92. Sigorta okuma: emin olunmayan satırlar tek tek onaylanır; pano fotoğrafı rapora eklenir.
+- 93. Pano sigortaları bölümü türün formatında varsa çıkar.
+- 94. Kusurlu maddeye fotoğraf isteğe bağlı.
+- 95. Sonraki kontrol tarihini değiştirmek için gerekçe yeter.
+- 96. Geri gönderme gerekçeleri raporda saklanır.
+- 97. Bağlantı durumu için "son kayıt" satırı yeter.
+
+**M9 Raporlar · Onaylar · İmza**
+- A. Asıl hedef: denetçi raporlarını görür; branş yöneticisi onaylar ya da gerekçeyle geri gönderir; denetçi son imzayı atar; rapor müşteriye açılır.
+- 98. İmza iki yolla, firma seçer: ekranda e-imza · indir, imzala, yükle.
+- 99. Toplu imza olsun.
+- 100. Branş yöneticisi yokken başka branş yöneticisi ya da firma yöneticisi onaylayabilir.
+- 101. Geri gönderirken serbest gerekçe yeter.
+- 102. Onaylanan rapor imzaya kadar değişmez; gerekirse yönetici "onayı geri al".
+- 103. İmzalı raporun düzeltmesi yeni sürümle (R1); eskisi saklanır.
+- 104. Rapor imza anında müşteriye açılır.
+- 105. Onaylayanın adı PDF'te firmanın formatında yeri varsa yer alır.
+- 106. Planlar'daki rapor rozeti "İmza bekliyor" ve "Müşteriye açık" diye ayrılır.
+
+**M10 Uyarılar**
+- A. Asıl hedef: yaklaşan kalibrasyon ve eğitim tekrarı tek listede.
+- 107. Uyarılar yalnız ekranda; e-posta ve bildirim yok.
+- 108. Listede yalnız kalibrasyon, ara kontrol (girilmişse) ve eğitim tekrarı olur; başka uyarı eklenmez.
+- 109. Eşik kalibrasyonda 30, eğitimde 60 gün; firma değiştirebilir.
+- 110. Uyarı, koşul kalkınca kendiliğinden düşer; "okundu" yok.
+
+**M11 Müşteri Paneli**
+- A. Asıl hedef: müşteri imzalı raporlarını görür ve indirir, uygunsuzlukları Excel olarak alır.
+- 111. Müşteri firmanın aynı giriş sayfasından girer.
+- 112. Panelde muayene firmasının logosu olur.
+- 114. Uygunsuzluk yalnız sonraki kontrol raporuyla "giderildi" olur.
+- 115. Müşteri kendi şirketine ek kullanıcı ekleyemez; firma açar.
+- 117. Onaydaki ve taslak raporlar müşteriye hiç görünmez.
+- (Karar verilmiş, maket buna göre yenilenecek: planlanan kontrol ve sözleşme panelde görünür — 81, 134.)
+
+**M12 Teklifler**
+- A. Asıl hedef: tesis için tür × adet × fiyat teklifi; kabul ya da red; kabulde sözleşme ve plan.
+- 119. Fiyat listesi firma ayarı; teklifte satır başına fiyat değiştirilebilir.
+- 120. KDV %20 varsayılan, teklifte değiştirilebilir.
+- 121. Teklif PDF indirilip elle gönderilir; müşteri panelden kabul etmez.
+- 122. Teklifteki adedi aşan rapor aynı birim fiyatla faturalanır, "teklif dışı" olarak işaretlenir.
+- 123. Teklif tesis başına; istenirse çok tesis.
+- 124. Süresi geçen teklif kendiliğinden "süresi doldu" olur.
+- 161. Teklifin PDF formatı firmaya göre (§3.7 listesine eklenir).
+
+**M14 Muhasebe**
+- A. Asıl hedef: iş başına raporlanan tutar, fatura, tahsilat, iş kapanışı.
+- 135. Fatura firmanın muhasebe programında kesilir; buraya numarası ve tarihi yazılır.
+- 136. Fatura iş başına; istenirse müşteri başına toplu.
+- 137. Muhasebeyi firma yöneticisi görür; istenirse "Muhasebe" rolü verilir.
+- 138. İmzalanan raporlarla kısmi fatura kesilebilir.
+- 139. İş tahsilat tamamlanınca kendiliğinden kapanır.
+- 140. Vadesi geçen alacak yalnız Muhasebe'de ve müşteri kartında görünür; Uyarılar'a düşmez.
+- 141. Tahsilat yöntemleri yeterli; çek vadesi ayrıca izlenmez.
+- 142. Müşteri panelinde fatura görünmez.
+
+**M15 Performans**
+- A. Asıl hedef: personel başına günlük iş, rapor sayısı, kazanç, grafik.
+- 144. Gün başına rapor = rapor sayısı ÷ çalışılan gün; hedef tanımlanmaz.
+- 145. Kazanç = raporun birim fiyatı.
+- 146. Sayılan rapor = onaya gönderilen ve imzalı rapor.
+- 147. Çok kişili planda kazanç raporu yazana yazılır.
+- 148. Denetçi yalnız kendi sayılarını görür, kazancını görmez.
+- 149. Ek ölçü: yalnız geri gönderilen rapor sayısı.
+- 150. Tarih aralığı seçimi ve Excel'e aktarma olsun.
+
+**M16 Eğitimler**
+- A. Asıl hedef: personel eğitimleri, belge, tekrar tarihi, yaklaşınca uyarı.
+- 152. Eğitim kaydını yönetici girer.
+- 153. Eğitim türlerini ve tekrar sürelerini firma ekler.
+- 154. Zorunlu eğitim tanımı yok.
+- 155. Belge isteğe bağlı.
+- 156. Tekrar eşiği 60 gün.
+- 157. Tekrarı geçen eğitim plan açarken uyarı vermez; yalnız Uyarılar'da görünür.
+- 158. Yetkili kişi eğitim belgesi personel kartında kalır.
