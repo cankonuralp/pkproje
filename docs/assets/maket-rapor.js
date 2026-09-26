@@ -34,7 +34,7 @@
     var ts0 = MV.tesis(e.tesis);
     var r = { e: e, t: t, k: k, ts: ts0, basladi: e.tesis === "t1" ? BASLADI : ts0.ptarih ? ts0.ptarih + "T" + (ts0.psaat ? ts0.psaat[0] : "09:00") : null, no: k >= 0 ? MV.raporNo("0926", 786 + k) : q.no || "—", durum: k >= 0 ? (k < 3 ? "onayda" : "taslak") : (DURUM[q.durum] ? q.durum : "onaylandi"),
       olustu: k >= 0 ? saatEkle(10 + k * 6) : null, kisi: t.b === "e" ? "ea" : "mk", kriter: kr.map(function () { return { d: "", s: "", not: "" }; }), test: ts.map(function () { return ""; }),
-      foto: 0, metot: "", amac: "", sonuc: "", notlar: "", sigorta: null, sonraki: s.toISOString().slice(0, 10), gerekce: "", geri: null, gonderildi: null };
+      foto: 0, metot: "", amac: "", sonuc: "", notlar: "", sigorta: null, sonraki: s.toISOString().slice(0, 10), geri: null, geriler: [], pano: false, gonderildi: null };
     var dolu = function () {
       r.kriter.forEach(function (x) { x.d = "yapildi"; x.s = "uygun"; });
       r.test = ts.map(function (x) { return x.ornek; }); r.foto = 2; r.metot = t.std[0] || "uretici"; r.amac = "Üretim ve bakım"; r.sonuc = "kullanilir";
@@ -42,7 +42,7 @@
     if (r.durum !== "taslak") { dolu(); r.gonderildi = r.olustu ? saatEkle(60 + k * 9) : null; }
     if (e.kod === "ET-1009") {   /* elektrik iç tesisatı: yarıda; pano sigortaları okunmadı; inspector'ın zimmetinde kalibrasyonu geçmiş cihaz */
       [0, 1, 2].forEach(function (i) { r.kriter[i].d = "yapildi"; r.kriter[i].s = i === 2 ? (sinifli ? "hafif" : "kusurlu") : "uygun"; });
-      r.kriter[2].not = "Priz devresindeki kaçak akım rölesinin test düğmesi çalışmıyor; açma süresi ölçümle doğrulandı.";
+      r.kriter[2].foto = 1; r.kriter[2].not = "Priz devresindeki kaçak akım rölesinin test düğmesi çalışmıyor; açma süresi ölçümle doğrulandı.";
       r.test[0] = "0,8"; r.foto = 1; r.metot = t.std[0]; r.amac = "Aydınlatma, priz ve makine besleme devreleri";
     }
     if (e.kod === "KP-1004") dolu();   /* onaya hazır */
@@ -66,6 +66,7 @@
   var kusurlar = function (r) { return r.kriter.filter(function (x) { return x.d === "yapildi" && x.s && x.s !== "uygun"; }); };
   var agir = function (r) { return r.kriter.some(function (x) { return x.d === "yapildi" && (x.s === "agir"); }) || MV.testler(r.t).some(function (x, i) { return testSonuc(x, r.test[i]) === false; }); };
   var elektrik = function (t) { return t.g === "elektrik"; };   /* pano sigortaları bölümü yalnız elektrik grubunda */
+  var engelli = function (r) { return eksikler(r).some(function (x) { return x.engel && !x.ok; }); };
   function eksikler(r) {
     var ts = MV.testler(r.t), cev = r.kriter.filter(function (x) { return x.d && (x.d !== "yapildi" || x.s); }).length, kusurNotsuz = kusurlar(r).filter(function (x) { return !x.not.trim(); }).length;
     var girilen = r.test.filter(function (v) { return !isNaN(sayi(v)); }).length, gecti = cihazlar(r).filter(function (v) { return MV.kalDurum(v) === "gecti"; });
@@ -73,7 +74,7 @@
     return [
       { ok: !!r.metot, metin: r.metot ? "Kontrol metodu seçildi" : "Kontrol metodu seçilmedi", bolum: "r-bk" },
       { ok: !!r.amac.trim(), metin: r.amac.trim() ? "Kullanım amacı yazıldı" : "Kullanım amacı yazılmadı", bolum: "r-b2" },
-      { ok: !gecti.length, metin: gecti.length ? "Kalibrasyonu geçmiş cihaz zimmette: " + gecti.map(function (v) { return v.env; }).join(", ") : "Ölçüm aletlerinin kalibrasyonu geçerli", bolum: "r-b3" },
+      { ok: !gecti.length, metin: gecti.length ? "Kalibrasyonu geçmiş cihaz: " + gecti.map(function (v) { return v.env; }).join(", ") : "Ölçüm aletlerinin kalibrasyonu geçerli", bolum: "r-b3", engel: true },
       { ok: cev === r.kriter.length, metin: cev + " / " + r.kriter.length + " kriter cevaplandı", bolum: "r-b4" },
       { ok: !kusurNotsuz, metin: kusurNotsuz ? kusurNotsuz + " kusurun açıklaması yazılmadı" : "Kusur açıklamaları tamam", bolum: "r-b4", gizle: !kusurlar(r).length },
       { ok: girilen === ts.length, metin: girilen + " / " + ts.length + " test değeri girildi", bolum: "r-b5" },
@@ -111,8 +112,11 @@
         '<p class="a-nesne-alt">' + ikon("file-text", "a-ikon-kucuk") + '<span><span class="a-kod">' + r.no + "</span> · " + kacis(PL.ad) + " · " + kacis(MV.musteri(PL.m).kisa) + " · " + kacis(p.ad) + "</span></p></div></div>" +
       '<div class="a-uyari-serit">' +
         (r.geri && !oku ? MK.serit("uyari", "undo-2", "<b>Geri gönderildi</b> · " + kacis(MV.kisi(r.geri.kim).ad) + " · " + MK.zamanYaz(r.geri.zaman) + ": “" + kacis(r.geri.gerekce) + "”") : "") +
-        (oku ? MK.serit("bilgi", "lock", r.durum === "onayda" ? "Onayda: " + kacis(yon.ad) + " (" + MV.bransAd(t.b).toLocaleLowerCase("tr") + " branş yöneticisi) onaylar ya da gerekçeyle geri gönderir. Bu sırada düzenlenemez." + (r.gonderildi ? " Gönderildi " + MK.zamanYaz(r.gonderildi) + "." : "") : "Onaylandı: inspector son imzayı atınca müşteriye açılır. Düzeltme revizyonla yapılır.") : "") +
+        (oku ? MK.serit("bilgi", "lock", r.durum === "onayda" ? "Onayda · " + kacis(yon.ad) + (r.gonderildi ? " · " + MK.zamanYaz(r.gonderildi) : "") : "Onaylandı · son imza bekleniyor") : "") +
       "</div>" +
+      (r.geriler.length ? '<section class="a-form-bolum a-bolum-rapor" aria-labelledby="r-geri-b"><div class="a-alt-bas"><h2 class="a-alt-baslik" id="r-geri-b">Geri gönderme geçmişi</h2>' +
+        '<span class="a-sayac"><b>' + r.geriler.length + "</b> kez</span></div>" + '<ol class="a-gecmis">' + r.geriler.map(function (g) {
+          return '<li><span class="a-gecmis-zaman">' + MK.zamanYaz(g.zaman) + '</span><span class="a-gecmis-ne"><b>' + kacis(MV.kisi(g.kim).ad) + "</b> · " + kacis(g.gerekce) + "</span></li>"; }).join("") + "</ol></section>" : "") +
       (oku ? "" : '<section class="a-form-bolum a-bolum-rapor" aria-labelledby="r-kontrol-b"><div class="a-alt-bas"><h2 class="a-alt-baslik" id="r-kontrol-b">Onaya göndermeden önce</h2><span class="a-sayac" id="r-eksik-say">' +
         (eksik.length ? "<b>" + eksik.length + "</b> eksik" : "Hazır") + "</span></div>" +
         '<ul class="a-kosullar" id="r-kontrol">' + eks.map(function (x) {
@@ -128,7 +132,7 @@
       bolum(2, "r-bk", "Kontrol bilgileri", '<dl class="a-bilgi">' +
           bilgi("Başlangıç", (r.olustu || r.basladi) ? MK.zamanYaz(r.olustu || r.basladi) : '<span class="a-deger-yok">—</span>') +
           bilgi("Bitiş", r.gonderildi ? MK.zamanYaz(r.gonderildi) : '<span class="a-deger-yok">—</span>') +
-          bilgi("Sonraki kontrol", MK.tarihYaz(r.sonraki)) + (r.gerekce ? bilgi("Değiştirme gerekçesi", kacis(r.gerekce), true) : "") +
+          bilgi("Sonraki kontrol", MK.tarihYaz(r.sonraki)) +
         "</dl>" +
         '<div class="a-form a-bolum-serit">' +
           MK.alan({ id: "r-metot", etiket: "Kontrol metodu", zorunlu: !oku, genis: true,
@@ -155,7 +159,8 @@
             '<div class="a-kriter-cevap">' + segmen("Madde " + (i + 1) + " yapıldı mı", "d" + i, x.d, [["yapildi", "Yapıldı"], ["yapilmadi", "Yapılmadı"], ["uygulanamaz", "Uygulanamaz"]], oku) +
               (x.d === "yapildi" ? segmen("Madde " + (i + 1) + " sonucu", "s" + i, x.s, sonuclar, oku) : "") + "</div>" +
             (kus ? MK.alan({ id: "r-kn" + i, etiket: "Kusur açıklaması", zorunlu: !oku,
-              girdi: '<textarea class="a-alan a-alan-ince" id="r-kn' + i + '" data-alan="kn' + i + '" maxlength="300" aria-describedby="r-kn' + i + '-ipucu"' + (oku ? " readonly" : "") + ">" + kacis(x.not) + "</textarea>" }) : "") + "</div>";
+              girdi: '<textarea class="a-alan a-alan-ince" id="r-kn' + i + '" data-alan="kn' + i + '" maxlength="300" aria-describedby="r-kn' + i + '-ipucu"' + (oku ? " readonly" : "") + ">" + kacis(x.not) + "</textarea>" }) : "") +
+            (kus ? '<div class="a-fotolar">' + fotolar(x.foto || 0) + (oku ? "" : MK.tus({ eylem: "kusur-foto", ad: "Fotoğraf ekle", ikon: "camera", sinif: "a-tus-ikincil", veri: { i: i } })) + "</div>" : "") + "</div>";
         }).join(""), '<span class="a-sayac" id="r-kriter-say"><b>' + cevaplanan + "</b> / " + r.kriter.length + " madde</span>") +
       bolum(6, "r-b5", "Test değerleri", '<div class="a-form">' + MV.testler(t).map(function (x, i) {
           var s = testSonuc(x, r.test[i]);
@@ -171,7 +176,7 @@
       bolum(elektrik(t) ? 10 : 9, "r-b9", "Notlar", '<textarea class="a-alan a-alan-ince" id="r-notlar" data-alan="notlar" maxlength="500" aria-label="Notlar" placeholder="Ek bilgi"' + (oku ? " readonly" : "") + ">" + kacis(r.notlar) + "</textarea>") +
       "</div>" +
       (oku ? "" : '<div class="a-form-eylem"><p class="a-adim-not">Taslak her değişiklikte kaydedilir · son kayıt ' + MK.SAAT + "</p>" +
-        MK.tus({ eylem: "onaya-gonder", ad: "Onaya gönder", ikon: "send", kapali: eksik.length > 0, sebepId: "r-eksik-say" }) + "</div>");
+        MK.tus({ eylem: "onaya-gonder", ad: "Onaya gönder", ikon: "send", kapali: engelli(r), sebepId: "r-eksik-say" }) + "</div>");
     document.title = e.kod + " · " + r.no + " · probata maket";
     if (odak) { var el = $(odak); if (el) el.focus(); }
   }
@@ -203,6 +208,7 @@
     return "" +
       (oku ? "" : '<div class="a-eylem-cubugu a-bolum-serit">' + MK.tus({ eylem: "sigorta-oku", ad: d ? "Yeniden oku" : "Fotoğraftan oku", ikon: "camera", sinif: d ? "a-tus-ikincil" : "a-tus-birincil" }) +
         MK.tus({ eylem: "sigorta-ekle", ad: "Elle ekle", ikon: "plus", sinif: "a-tus-ikincil" }) + (bek.length > dusuk.length ? MK.tus({ eylem: "sigorta-onayla", ad: "Önerileri onayla (" + (bek.length - dusuk.length) + ")", ikon: "check", sinif: "a-tus-ikincil" }) : "") + "</div>") +
+      (r.pano ? '<div class="a-fotolar a-bolum-serit"><span class="a-foto" role="img" aria-label="Pano fotoğrafı">' + ikon("camera") + '<span class="a-foto-no">Pano</span></span></div>' : "") +
       (d ? '<div class="a-bolum-serit">' + (bek.length ? MK.serit(dusuk.length ? "uyari" : "bilgi", dusuk.length ? "triangle-alert" : "eye", d.length + " sigorta · <b>" + bek.length + "</b> onay bekliyor" + (dusuk.length ? " · " + dusuk.length + " satırda okuma emin değil: tek tek kontrol edin (toplu onaya girmez)." : ".")) : MK.serit("onay", "circle-check", d.length + " sigorta onaylandı.")) + "</div>" +
         '<div class="a-liste-kap a-bolum-serit">' + MK.tablo({ baslik: "Pano sigortaları", sinif: "a-tablo-sigorta", sutunlar: SUTUN, kayitlar: d }) + "</div>"
         : '<p class="a-bos-satir a-bolum-serit">Henüz sigorta girilmedi.</p>');
@@ -224,17 +230,23 @@
         MK.alan({ id: "w-rcd", etiket: "Kaçak akım (mA)", ipucu: "Yoksa boş", girdi: MK.girdi({ id: "w-rcd", alan: "rcd", deger: d.rcd, sinif: "a-girdi-sicil", ek: ' inputmode="numeric" maxlength="4"' }) }) +
         "</div>";
       $("a-pencere-alt").innerHTML = MK.tus({ eylem: "pencere-kapat", ad: "Vazgeç", sinif: "a-tus-ikincil" }) + MK.tus({ eylem: "pencere-kaydet", ad: "Kaydet ve onayla", ikon: "check" });
+    } else if (W.tur === "gonder") {
+      $("a-pencere-baslik").textContent = W.eks.length + " eksik var";
+      $("a-pencere-govde").innerHTML = '<ul class="a-kosullar">' + W.eks.map(function (x) {
+        return '<li class="a-kosul-eksik">' + ikon("triangle-alert", "a-ikon-kucuk") + "<span>" + kacis(x.metin) + "</span></li>"; }).join("") + "</ul>";
+      $("a-pencere-alt").innerHTML = MK.tus({ eylem: "pencere-kapat", ad: "Tamamla", sinif: "a-tus-ikincil" }) + MK.tus({ eylem: "yine-de-gonder", ad: "Yine de gönder", ikon: "send" });
     } else {
       $("a-pencere-baslik").textContent = "Sonraki kontrol tarihi";
       $("a-pencere-govde").innerHTML = "" +
-        '<div class="a-form">' + MK.alan({ id: "w-tarih", etiket: "Sonraki kontrol", zorunlu: true, hata: h.tarih, girdi: MK.girdi({ id: "w-tarih", alan: "tarih", deger: d.tarih, sinif: "a-girdi-sicil", ek: ' inputmode="numeric" maxlength="10"', hata: h.tarih }) }) +
-        '<div class="a-alan-grup a-alan-genis"><label class="a-etiket" for="w-gerekce">Gerekçe <span class="a-zorunlu">zorunlu</span></label><textarea class="a-alan a-alan-ince" id="w-gerekce" data-alan="gerekce" maxlength="200"' + (h.gerekce ? ' aria-invalid="true"' : "") + ' aria-describedby="w-gerekce-ipucu">' + kacis(d.gerekce) + "</textarea>" +
-          (h.gerekce ? '<p class="a-ipucu a-ipucu-uyari" id="w-gerekce-ipucu">' + h.gerekce + "</p>" : '<p class="a-ipucu" id="w-gerekce-ipucu">ör. üretici talimatı daha kısa periyot istiyor</p>') + "</div></div>";
+        '<div class="a-form">' + MK.alan({ id: "w-tarih", etiket: "Sonraki kontrol", zorunlu: true, hata: h.tarih, girdi: MK.girdi({ id: "w-tarih", alan: "tarih", deger: d.tarih, sinif: "a-girdi-sicil", ek: ' inputmode="numeric" maxlength="10"', hata: h.tarih }) }) + "</div>";
       $("a-pencere-alt").innerHTML = MK.tus({ eylem: "pencere-kapat", ad: "Vazgeç", sinif: "a-tus-ikincil" }) + MK.tus({ eylem: "pencere-kaydet", ad: "Kaydet", ikon: "check" });
     }
     if (odak) { var el = $(odak); if (el) el.focus(); }
   }
-  function pencereAc(o) { W = o; W.hata = {}; pencereCiz(); $("a-pencere").showModal(); $(o.tur === "sigorta" ? (o.x ? "w-tip" : "w-no") : "w-tarih").focus(); }
+  function pencereAc(o) {
+    W = o; W.hata = {}; pencereCiz(); $("a-pencere").showModal();
+    if (o.tur === "gonder") document.querySelector('[data-eylem="yine-de-gonder"]').focus(); else $(o.tur === "sigorta" ? (o.x ? "w-tip" : "w-no") : "w-tarih").focus();
+  }
   function pencereKaydet() {
     var d = W.d, h = {}, r = W.r;
     if (W.tur === "sigorta") {
@@ -249,9 +261,8 @@
     } else {
       var iso = tarihIso(d.tarih);
       if (!iso) h.tarih = "GG.AA.YYYY biçiminde geçerli bir tarih."; else if (iso <= MK.BUGUN) h.tarih = "Bugünden sonra olmalı.";
-      if (!d.gerekce.trim()) h.gerekce = "Varsayılandan farklı tarih gerekçe ister.";
       W.hata = h; if (Object.keys(h).length) { pencereCiz("w-" + Object.keys(h)[0]); return; }
-      r.sonraki = iso; r.gerekce = d.gerekce.trim(); $("a-pencere").close(); ciz("r-bk-b"); MK.bildir("Sonraki kontrol " + MK.tarihYaz(iso) + " oldu; gerekçe rapora yazıldı.");
+      r.sonraki = iso; $("a-pencere").close(); ciz("r-bk-b"); MK.bildir("Sonraki kontrol " + MK.tarihYaz(iso) + " oldu.");
     }
   }
 
@@ -283,7 +294,7 @@
   function ozetYenile(r) {
     var eks = eksikler(r), n = eks.filter(function (x) { return !x.ok; }).length, t = document.querySelector('[data-eylem="onaya-gonder"]');
     if ($("r-eksik-say")) $("r-eksik-say").innerHTML = n ? "<b>" + n + "</b> eksik" : "Hazır";
-    if (t) t.disabled = n > 0;
+    if (t) t.disabled = engelli(r);
     var ul = $("r-kontrol"); if (ul && document.activeElement && !ul.contains(document.activeElement)) {
       ul.innerHTML = eks.map(function (x) {
         return '<li class="' + (x.ok ? "a-kosul-tamam" : "a-kosul-eksik") + '">' + ikon(x.ok ? "circle-check" : "triangle-alert", "a-ikon-kucuk") + "<span>" + kacis(x.metin) + "</span>" +
@@ -300,6 +311,7 @@
   X["foto-ekle"] = function () { var r = aktif(); r.foto++; ciz(); var t = document.querySelector('[data-eylem="foto-ekle"]'); if (t) t.focus(); MK.bildir("Fotoğraf " + r.foto + " eklendi."); };
   X["sigorta-oku"] = function () {
     var r = aktif();
+    r.pano = true;
     r.sigorta = SIGORTA.map(function (s) { return { no: s[0], devre: s[1], tip: s[2], akim: s[3], kutup: s[4], rcd: s[5], guven: s[6] || "yuksek", durum: "oneri" }; });
     ciz(); var t = document.querySelector('[data-eylem="sigorta-oku"]'); if (t) t.focus();
     MK.bildir("Pano fotoğrafından " + r.sigorta.length + " sigorta okundu; öneriler onayınızı bekliyor.");
@@ -313,14 +325,27 @@
     pencereAc({ tur: "sigorta", r: r, x: x, d: { no: x.no, devre: x.devre, tip: x.tip, akim: String(x.akim), kutup: String(x.kutup), rcd: x.rcd } });
   };
   X["sigorta-ekle"] = function () { var r = aktif(); pencereAc({ tur: "sigorta", r: r, x: null, d: { no: "F" + ((r.sigorta || []).length + 1), devre: "", tip: "", akim: "", kutup: "1", rcd: "" } }); };
-  X["sonraki-ac"] = function () { var r = aktif(); pencereAc({ tur: "sonraki", r: r, d: { tarih: r.sonraki.slice(8, 10) + "." + r.sonraki.slice(5, 7) + "." + r.sonraki.slice(0, 4), gerekce: r.gerekce } }); };
+  X["sonraki-ac"] = function () { var r = aktif(); pencereAc({ tur: "sonraki", r: r, d: { tarih: r.sonraki.slice(8, 10) + "." + r.sonraki.slice(5, 7) + "." + r.sonraki.slice(0, 4) } }); };
   X["pencere-kaydet"] = pencereKaydet;
+  /* 90 (reisim 2026-09-26): eksik varken de gönderilir — eksikler uyarı penceresinde, "Yine de gönder"; tek engel kalibrasyonu geçmiş cihaz */
   X["onaya-gonder"] = function () {
-    var r = aktif(); if (eksikler(r).some(function (x) { return !x.ok; })) return;
+    var r = aktif(); if (engelli(r)) return;
+    var eks = eksikler(r).filter(function (x) { return !x.ok; });
+    if (eks.length) { pencereAc({ tur: "gonder", r: r, d: {}, eks: eks }); return; }
+    gonder(r);
+  };
+  X["yine-de-gonder"] = function () { var r = W.r; $("a-pencere").close(); gonder(r); };
+  X["kusur-foto"] = function (el) {
+    var r = aktif(), i = +el.dataset.i; r.kriter[i].foto = (r.kriter[i].foto || 0) + 1; ciz();
+    var t = document.querySelector('[data-eylem="kusur-foto"][data-i="' + i + '"]'); if (t) t.focus();
+    MK.bildir("Madde " + (i + 1) + " için fotoğraf eklendi.");
+  };
+  function gonder(r) {
+    if (r.geri) r.geriler.unshift(r.geri);
     r.durum = "onayda"; r.gonderildi = MK.simdi(); r.geri = null;
     ciz(); window.scrollTo(0, 0); var h = document.querySelector("#a-rapor h1"); if (h) h.focus({ preventScroll: true });
-    MK.bildir("Onaya gönderildi: " + MV.kisi(YON[r.t.b]).ad + " (" + MV.bransAd(r.t.b).toLocaleLowerCase("tr") + " branş yöneticisi).");
-  };
+    MK.bildir("Onaya gönderildi: " + MV.kisi(YON[r.t.b]).ad + ", " + MV.bransAd(r.t.b).toLocaleLowerCase("tr") + " branş yöneticisi.");
+  }
 
   MK.goster = function (odakla) { ciz(); if (odakla) { window.scrollTo(0, 0); var h = document.querySelector("#a-rapor h1"); if (h) h.focus({ preventScroll: true }); } };
   /* kabuk: raporu yazan inspector (elektrik raporunu Elif Aydın, mekaniği Mert Kaya) */

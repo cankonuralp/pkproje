@@ -71,7 +71,8 @@
     return [
       { k: "surum", baslik: "Sürüm", kart: "ust", sira: 1, hucre: function (x) { return '<span class="a-ekipman-ad">' + kacis(x.surum) + "</span>" + kirp(x.dosya, "a-alt-satir"); } },
       { k: "tarih", baslik: "Yüklendi", kart: "govde", sira: 2, hucre: function (x) { return '<span class="a-kart-etiket">Yüklendi</span>' + kacis(x.tarih) + (x.not ? '<span class="a-alt-satir">' + kacis(x.not) + "</span>" : ""); } },
-      { k: "durum", baslik: "Durum", kart: "rozet", sira: 1, hucre: function (x) { return rozet(x === p ? { ad: "Kullanımda", rozet: "a-rozet-tamam" } : { ad: "Önceki", rozet: "a-rozet-notr" }); } }
+      { k: "durum", baslik: "Durum", kart: "rozet", sira: 1, hucre: function (x) { /* 159: yeni yüklenen formatın rapor ekranı bizde hazırlanır; o sırada "Hazırlanıyor" */
+        return rozet(x !== p ? { ad: "Önceki", rozet: "a-rozet-notr" } : x.dosya.indexOf(MK.BUGUN) >= 0 ? { ad: "Hazırlanıyor", rozet: "a-rozet-bekliyor" } : { ad: "Kullanımda", rozet: "a-rozet-tamam" }); } }
     ];
   }
   function turCiz(t) {

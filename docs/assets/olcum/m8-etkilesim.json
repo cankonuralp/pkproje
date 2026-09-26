@@ -2,8 +2,8 @@
  "maket": "m8",
  "tarih": "2026-09-26",
  "arac": "tools/olc-bulut.mjs --etkilesim (başsız tarayıcı, 1920 açık tema; gen verilen denemede o genişlik)",
- "toplam": 15,
- "gecen": 15,
+ "toplam": 17,
+ "gecen": 17,
  "denemeler": [
   {
    "ad": "kriter cevaplanınca sayaç güncellenir, odak basılan seçimde",
@@ -76,14 +76,28 @@
    "gecti": true
   },
   {
-   "ad": "sonraki kontrol: gerekçesiz kaydedilmez",
+   "ad": "eksik varken gönder: uyarı penceresi, Yine de gönder",
    "gen": 1920,
    "sayfa": "maket/rapor.html",
-   "hash": "#/r/KP-1004",
+   "hash": "#/r/ZV-1007",
    "gecti": true
   },
   {
-   "ad": "sonraki kontrol gerekçeyle değişir",
+   "ad": "kusurlu maddeye fotoğraf eklenir",
+   "gen": 1920,
+   "sayfa": "maket/rapor.html",
+   "hash": "#/r/ET-1009",
+   "gecti": true
+  },
+  {
+   "ad": "sigorta okununca pano fotoğrafı rapora eklenir",
+   "gen": 1920,
+   "sayfa": "maket/rapor.html",
+   "hash": "#/r/ET-1009",
+   "gecti": true
+  },
+  {
+   "ad": "sonraki kontrol gerekçesiz değişir",
    "gen": 1920,
    "sayfa": "maket/rapor.html",
    "hash": "#/r/KP-1004",

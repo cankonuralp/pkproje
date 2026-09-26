@@ -642,7 +642,14 @@ logoların arasına sıkışıp e-posta ve akreditasyon no bölünüyordu (küny
 yılın şablon sürümüyle gösteriyordu (örnek bugün tarihli yapıldı). Ekipman türü sayfasındaki "Standart kütüphanesi" artık türe göre
 süzülmüş listeye gider (M3 60/60, 14/14 yeniden).
 
-#### Maket M8 — Saha ve Rapor (modül 14) — ONAY BEKLİYOR
+#### Maket M8 — Saha ve Rapor (modül 14) — 2. TUR, ONAY BEKLİYOR (toplu gözden geçirmede)
+**2. tur (2026-09-26, §9 yirmi birinci tur):** rapor ekranı türün yüklenen formatına göre kurulur; ayrıntısı emsal uygulamaya göre (95).
+**1 · Firma bilgileri** her raporda aynı, raporda düzeltilmez (160: plan açılırken girilir) · **2 · Kontrol bilgileri** · sonraki kontrol tarihi
+**gerekçesiz** değişir (95) · **"Onaya gönder" hep açık** (90): eksik varsa uyarı penceresi, "Yine de gönder"; **tek engel kalibrasyonu geçmiş cihaz**
+(91, yalnız rapordaki cihaz) · kusurlu maddeye **isteğe bağlı fotoğraf** (94) · sigorta okununca **pano fotoğrafı rapora eklenir** (92) ·
+**geri gönderme geçmişi** raporda (96) · tür sayfasında yeni yüklenen formatın durumu **"Hazırlanıyor"** (159: rapor ekranı bizde hazırlanır).
+Ölçüm: 10 durum 60/60, etkileşim 17/17, telefon 40/40; M3 15/15.
+1. tur metni (tarihsel):
 Ekran: **saha rapor ekranı** (`maket/rapor.html#/r/<ekipman kodu>`; Planlar'daki "Raporu düzenle / Raporu aç" buraya gelir). Önce tablet ve
 telefon: bölümler alt alta, Ek-III 1.7 sırasıyla — **1 Genel bilgiler** (işyeri, SGK, İSG-KATİP no, başlangıç, bitiş, sonraki kontrol +
 "değiştir", kontrol metodu seçimi) · **2 Ekipman** (etiket kayıttan, önceki kontrol, kullanım amacı) · **3 Ölçüm aletleri** (zimmetten,
@@ -1378,6 +1385,8 @@ revizyon, alan kopyalama, hafif kusur devri, meslek eşleşme denetimi).
 - Emsal ürünler: https://opwire.app/iso-17020-periyodik-kontrol-yazilimi/ · https://17020muayene.vidco.com.tr/ · https://akuple.com/asansor-kontrol-yazilimi/ · https://ensyazilim.com/
 
 ## 11 · Değişiklik günlüğü
+- 2026-09-26 (52): **M8 2. tur**: gönder hep açık (eksik uyarı, tek engel kalibrasyon), sonraki kontrol gerekçesiz, kusura fotoğraf, pano fotoğrafı,
+  geri gönderme geçmişi, tür formatı "Hazırlanıyor". M8 60/60 · 17/17 · 40/40.
 - 2026-09-26 (51): **M7 2. tur**: ayrı rapor şablonu önizlemesi ekranı kalktı; format tür sayfasında "PDF'i aç" ile pencerede. M7 54/54 · 11/11 · 36/36.
 - 2026-09-26 (50): **Genel temizlik** (§9 on dokuzuncu tur genel ilkesi, bütün maketler): ortak form alanı artık altına yalnız hata, kaydı
   durdurmayan uyarı ya da canlı sonuç yazar (açıklayıcı ipucu çizilmez); açıklama paragrafları, "makette …" notları ve açıklayıcı bilgi
