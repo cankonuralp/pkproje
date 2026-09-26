@@ -236,3 +236,8 @@ karara bağlanmış ya da gereksiz kalan sorular düştü (82 dışı M7 sorular
 - 156. Tekrar eşiği 60 gün.
 - 157. Tekrarı geçen eğitim plan açarken uyarı vermez; yalnız Uyarılar'da görünür.
 - 158. Yetkili kişi eğitim belgesi personel kartında kalır.
+
+**Cevap (2026-09-26, pkproje.md §9 yirmi birinci tur):** 160 hayır (SGK tescil no ve İSG-KATİP sözleşme ID plan açılırken girilir, raporda
+düzeltilemez) · 95 gerekçe yok (rapor ekranı emsal uygulamaya göre) · 99 raporlar birleşmez, her rapor ayrı imzalanır (indir + e-imza ya da
+imza servisi) · ötekiler kabul. Sıra: genel temizlik (alt satır mesajları) → M7 → M8 → M9 → M10 → M11 → M12 → M14 → M15 → M16 → toplu bakış.
+Bütün maketler onaylanmadan kod yok.

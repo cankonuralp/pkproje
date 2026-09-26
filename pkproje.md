@@ -1330,6 +1330,19 @@ modüllerde kalan ipuçları o modül ele alınınca (ya da kodda) temizlenir; �
 yenile sonra tüm maketi gözden geçiririm"* → 2026-09-25'teki "modül modül" düzeni M7–M16 için bırakıldı: sorular sadeleştirilip **tek listede**
 soruldu (`MAKET-PLANI.md`, "Toplu soru listesi"); cevaplar gelince bütün maketler yenilenir, reisim hepsini (M6 dahil) birlikte gözden geçirir.
 
+**Yirmi birinci tur (2026-09-26, M7–M16 toplu cevap; reisim birebir):** *"160 hayır plan açılırken girilir. Raporda düzeltilemez 95 gerekçe
+merekçe gerekmez, en-pulseyi inceledik oraya göre yapıcaz dedik ne alaka bu sorular ? 99 toplu imzadan kastın kesin raporları birleştirmek,
+hayır raporlar asla birleştirilmiyecek her bir rapor bir pdf toplu imza ancak olursa her bir raporu ayrı ayrı imzalama olur o da kullanıcı kendi
+imza yöntemiyle yapar ya indirir e imza atar ya da api ile imzayerine bağlarız toplu imza atar . Diğer dediklerin kabul yap değişiklikleri sonra
+yüne revize gerekirse söylicem maketi komple onaylamadan koda geçmek yok"* → **Kararlar:**
+- **160:** SGK tescil no ve İSG-KATİP sözleşme ID **plan açılırken** girilir; **raporda düzeltilemez**.
+- **95:** sonraki kontrol tarihi değiştirilir, **gerekçe istenmez**. Rapor ekranının ayrıntısı incelenen emsal uygulamaya göre yapılır
+  (inceleme yerel dosyada, §6); rapor ekranı için bu tür ayrıntı soruları sorulmaz.
+- **99:** raporlar **asla birleştirilmez**; her rapor ayrı PDF. "Toplu imza" = seçilen raporların **her biri ayrı ayrı** imzalanır; yöntem
+  kullanıcının: indirip e-imza atar ya da imza servisine bağlanıp (API) toplu imzalar.
+- Öteki öneriler kabul (A'lar, 82–84, 159, 90–94, 96–98, 100–117, 119–124, 161, 135–142, 144–150, 152–158; liste `MAKET-PLANI.md`).
+- **Koda geçiş:** bütün maketler toplu olarak onaylanmadan kod yok.
+
 **Açık kalanlar:** **modül modül gözden geçirme** (M1–M5 ve M13 onaylandı — Ekipmanlar kalktı, Sözleşmeler birleşti; M6 Plan aç 2. tur incelemede) · **toplu maket çalışması** (M1–M16 + toplu bakış, `MAKET-PLANI.md`; sorular §3.6'da, 32'den) · **önizlemede örnek veri kipi** (öneri, §3.3) · ~~rol × modül görünürlüğü~~ (karar 2026-09-25: başlangıç düzeni + firma yöneticisi değiştirir) · **gerçek sunucunun sağlayıcısı**
 (Türkiye, §8.8) ·
 alan adının alınması · e-imza yöntemi (8.4) · v1 ekipman grupları · 5 yıl sonrası silme
@@ -1360,6 +1373,8 @@ revizyon, alan kopyalama, hafif kusur devri, meslek eşleşme denetimi).
 - Emsal ürünler: https://opwire.app/iso-17020-periyodik-kontrol-yazilimi/ · https://17020muayene.vidco.com.tr/ · https://akuple.com/asansor-kontrol-yazilimi/ · https://ensyazilim.com/
 
 ## 11 · Değişiklik günlüğü
+- 2026-09-26 (49): **M7–M16 toplu cevap** (§9 yirmi birinci tur): 160 hayır (plan açılırken girilir), 95 gerekçe yok, 99 raporlar birleşmez
+  (her rapor ayrı imza), ötekiler kabul. Maketler sırayla yenileniyor; bütün maketler onaylanmadan kod yok.
 - 2026-09-26 (48): **Süreç değişti** (§9 yirminci tur): M7–M16'nın soruları sadeleştirilip tek listede soruldu (MAKET-PLANI.md).
 - 2026-09-26 (47): **M6 2. tur, ek** (§9 on dokuzuncu tur): raporun 1. bölümü "Firma bilgileri" (her raporda ortak), "2 · Kontrol bilgileri"
   ayrıldı; "SGK tescil no", "İSG-KATİP sözleşme ID"; M6 ve rapor ekranında alt satır mesajları, parantez içi açıklamalar, madde numaraları
