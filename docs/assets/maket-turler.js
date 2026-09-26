@@ -1,4 +1,4 @@
-/* ══ probata MAKET M3 — Ekipman türleri (modül 5) · 2. TUR, ONAY BEKLİYOR (2026-09-26) ═══════════════════════════════════
+/* ══ probata MAKET M3 — Ekipman türleri (modül 5) · 2. TUR, ONAYLANDI (2026-09-26) ═══════════════════════════════════
    Kaynak: pkproje.md §3.1 modül 5 (Ek-III grubu, branş, periyot, standart(lar), Bakanlık format kodu), §4.7 (periyot), §4.8
    (formatlar), §3.2 madde 3 (onay branşa göre). Ekranlar: katalog (#/) · tür sayfası (#/tur/<kod>) · pencereler: tür ekle (#/yeni) ·
    tür düzenle (#/tur/<kod>/duzenle) · rapor formatı yükle (#/tur/<kod>/format). Bakış: mekanik yönetici. Veri UYDURMA; standart

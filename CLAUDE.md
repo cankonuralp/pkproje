@@ -33,7 +33,7 @@ durum **`MAKET-PLANI.md`** — bu çalışma sürerken oturum başında o da TAM
 **2026-09-24 bitti:** 16 maket + toplu bakış (`docs/toplu-bakis.html`; 127 soru, 32–158). **2026-09-25 reisim:** sorular toplu
 cevaplanmaz → modüller benim önerdiğim sırayla tek tek; her modülde o modülün soruları YENİDEN sorulur; çakışan / gereksiz
 modüller sırası gelince silinir, şimdi değil (MAKET-PLANI.md Durum). **M1 onaylandı (2026-09-25, reisim: *"Onaylıyorum"*)**; **M2 onaylandı
-(2026-09-26)**; M3 Ekipman türleri 2. tur incelemede (Ekipmanlar modülü kalktı, ekipmanlar planın içinde); genel ilke: teknik ayrıntı yok, kural uyarıdır engel değil (pkproje.md §9 on ikinci tur).
+(2026-09-26)**; **M3 onaylandı (2026-09-26)** (Ekipmanlar modülü kalktı, ekipmanlar planın içinde; tür başına firmanın rapor formatı PDF'i); sırada M4; genel ilke: teknik ayrıntı yok, kural uyarıdır engel değil (pkproje.md §9 on ikinci tur).
 
 ## 2 · Yığın (pkproje.md §8 — **reisim 2026-09-22'de onayladı**)
 - **TypeScript + Next.js (App Router), standalone çıktı — onaylı 2026-09-22** (SvelteKit düştü). Tarayıcı

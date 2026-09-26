@@ -128,3 +128,4 @@ tek mesaj: sayfanın bağlantısı + kaç maket + kaç soru + ölçülemeyen var
   Ölçüm cihazları · Zimmetler.
 - 2026-09-26: **M3 2. tur, ek** — reisim: Tür ekle olsun, her türe firmanın rapor formatı PDF'i yüklensin, akreditasyon yazılmasın.
   M3 48/48 · 15/15 · 32/32. Reisim'in incelemesi bekleniyor.
+- 2026-09-26: **M3 ONAYLANDI** (reisim: *"Sıradakine geçelim"*). Sırada **M4 Ölçüm cihazları · Zimmetler** — sorular 58–65 yeniden soruldu.

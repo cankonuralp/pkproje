@@ -458,7 +458,7 @@ alttaki alanların üstüne açıldığı için "çakışma" sayıldı; açılı
 liste etkileşim denemesiyle ölçüldü (81 il, arama).
 1. tur (2026-09-24): 8 durum 48/48, etkileşim 14/14 (portal kullanıcısı davetle, vergi / SGK no zorunluydu).
 
-#### Maket M3 — Ekipman türleri (modül 5) — ONAY BEKLİYOR
+#### Maket M3 — Ekipman türleri (modül 5) — ONAYLANDI 2026-09-26
 **2. tur (2026-09-26, reisim'in M3 cevaplarıyla; kararlar §9 on dördüncü tur).** Ekranlar: **ekipman türleri** (`maket/ekipman-turleri.html`:
 katalog — Ek-III grubu, branş, periyot, Bakanlık formatı, **rapor formatı** (yüklendi / yüklenmedi, sürüm); çipler: rapor formatı yüklenmedi ·
 Bakanlık formatı zorunlu · standart seçilmemiş; **Tür ekle** · **tür sayfası**: rapor formatı (firmanın PDF'i, sürümleri, "PDF'i aç", "Yeni
@@ -487,7 +487,7 @@ yükle**). **Ekipmanlar ekranı kalktı** (`maket/ekipmanlar.html` artık Ekipma
 - Katalog 24 tür (Planlar maketinin 14 türü + 10 tür); rapor şablonu olan 15 türde bir format sürümü yüklenmiş sayılır; standart
   atamaları örnektir.
 **Sorular (M3):**
-Açık soru yok — 51–57 cevaplandı (§9, on dördüncü tur). 2. tur reisim'in incelemesini bekliyor.
+Açık soru yok — 51–57 cevaplandı (§9, on dördüncü tur). **2. tur ONAYLANDI (2026-09-26, reisim: *"Sıradakine geçelim"*)**.
 **Ölçüm (2026-09-26, bulut, 2. tur):** 8 durum × 1920 · 1080 · 375 × açık/koyu = **48/48 temiz**, çekmece 2/2; etkileşim **15/15**, telefon **32/32**
 (format yüklenmedi çipi, branş, akreditasyon hiçbir yerde yazmaz, yetkili meslek bölümü yok, kullanılan kod reddedilir, PDF'siz ve PDF'li tür
 ekle, PDF seçilmeden yüklenmez, yeni sürüm v4 kullanımda / v3 önceki, PDF'i aç, süre boş kaydedilir, periyot 0 hata, Vazgeç, eski Ekipmanlar
@@ -1289,7 +1289,7 @@ ilerledikçe daha oturaklı olacak. Dediklerimi projeye hakim ol diye anlatıyor
 M3'e Tür ekle ve rapor formatı (PDF) yükleme; akreditasyon kalktı. **M8 için not:** mevcut rapor ekranı reisim'e göre "çok kullanışsız";
 M8'in sırası gelince rapor, türün PDF formatındaki sorularla ve uygun / uygun değil sonucuyla yeniden kurulacak (§8.3 de o zaman).
 
-**Açık kalanlar:** **modül modül gözden geçirme** (M1 ve M2 onaylandı; M3 2. tur incelemede — Ekipmanlar kalktı; sırada M4) · **toplu maket çalışması** (M1–M16 + toplu bakış, `MAKET-PLANI.md`; sorular §3.6'da, 32'den) · **önizlemede örnek veri kipi** (öneri, §3.3) · ~~rol × modül görünürlüğü~~ (karar 2026-09-25: başlangıç düzeni + firma yöneticisi değiştirir) · **gerçek sunucunun sağlayıcısı**
+**Açık kalanlar:** **modül modül gözden geçirme** (M1, M2 ve M3 onaylandı — Ekipmanlar kalktı; sırada M4) · **toplu maket çalışması** (M1–M16 + toplu bakış, `MAKET-PLANI.md`; sorular §3.6'da, 32'den) · **önizlemede örnek veri kipi** (öneri, §3.3) · ~~rol × modül görünürlüğü~~ (karar 2026-09-25: başlangıç düzeni + firma yöneticisi değiştirir) · **gerçek sunucunun sağlayıcısı**
 (Türkiye, §8.8) ·
 alan adının alınması · e-imza yöntemi (8.4) · v1 ekipman grupları · 5 yıl sonrası silme
 mekanizması · **zimmette birden çok cihaz varsa süzgeç** (§3) · **kontrol metodu standardının seçim yeri**
@@ -1319,6 +1319,7 @@ revizyon, alan kopyalama, hafif kusur devri, meslek eşleşme denetimi).
 - Emsal ürünler: https://opwire.app/iso-17020-periyodik-kontrol-yazilimi/ · https://17020muayene.vidco.com.tr/ · https://akuple.com/asansor-kontrol-yazilimi/ · https://ensyazilim.com/
 
 ## 11 · Değişiklik günlüğü
+- 2026-09-26 (41): **M3 ONAYLANDI** (reisim: *"Sıradakine geçelim"*). Sırada M4 Ölçüm cihazları · Zimmetler; sorular 58–65 yeniden soruldu.
 - 2026-09-26 (40): **M3 2. tur, ek** (reisim, §9 on dördüncü tur ek): **Tür ekle** geri geldi, her türe **firmanın rapor formatı PDF'i** yüklenir
   (sürümlü; "Rapor oluştur" soruları bu formattan — kurgusu M8'de), **akreditasyon her yerden kalktı**. §3.1 modül 5 ve §3.7 satır 1 güncellendi;
   §8.3 ile ilişki M8'de kararlaştırılacak. M3 48/48 · 15/15 · 32/32.
