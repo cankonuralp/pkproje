@@ -91,7 +91,8 @@
   ];
   function listeCiz() {
     MK.listeCiz({ on: "s", kayitlar: S, sayacId: "a-sayac", listeId: "a-liste",
-      sirala: function (l) { var o = { imza: 0, yururlukte: 1, suresi: 2 }; return l.slice().sort(function (a, b) { return o[MV.isDurum(a)] - o[MV.isDurum(b)] || (a.bitis < b.bitis ? -1 : 1); }); },
+      /* 2026-09-26 (reisim: "sıralama tarihi olsun her zaman en yeni en yukarıda olsun"): varsayılan sıra tarih, en yeni üstte */
+      sirala: function (l) { return l.slice().sort(function (a, b) { return a.baslangic < b.baslangic ? 1 : a.baslangic > b.baslangic ? -1 : 0; }); },
       bosVeri: { ikon: "file-signature", baslik: "İş sözleşmesi yok", metin: "Kabul edilen tekliften “İş sözleşmesi” ile hazırlanır." },
       tablo: { baslik: "İş sözleşmeleri", sinif: "a-tablo-issoz", sutunlar: SUTUN, href: function (x) { return "#/s/" + x.no; } } });
     /* uyarı YALNIZ İSG-KATİP için (reisim 2026-09-26); hizmet sözleşmesinin bitişi için şerit yok */

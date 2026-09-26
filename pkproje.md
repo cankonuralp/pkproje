@@ -1375,6 +1375,9 @@ revizyon, alan kopyalama, hafif kusur devri, meslek eşleşme denetimi).
 - Emsal ürünler: https://opwire.app/iso-17020-periyodik-kontrol-yazilimi/ · https://17020muayene.vidco.com.tr/ · https://akuple.com/asansor-kontrol-yazilimi/ · https://ensyazilim.com/
 
 ## 11 · Değişiklik günlüğü
+- 2026-09-26 (62): **Sıralama en yeni üstte**: Planlar (varsayılan "En yeni önce"), plan içindeki raporlar, Raporlar, Onaylar kuyruğu, Sözleşmeler,
+  Teklifler, Muhasebe işler ve faturalar, müşteri panelinde raporlar ve uygunsuzluklar, eğitim kayıtları. Tarihsiz ana kayıtlar (müşteri,
+  personel, cihaz, tür, standart) adla; Uyarılar ve Ana sayfa ajandası yaklaşan tarihe göre kaldı.
 - 2026-09-26 (61): **Yirmi ikinci tur kaydı**: sıralama en yeni üstte, tablet dikeyde kart yok (eşik 600), rapor durumları beş adım.
 - 2026-09-26 (60): **Toplu gözden geçirmeye hazır**: M6–M16 2. tur bitti; eski soru listeleri kapandı (§3.6), toplu bakış yeniden üretildi (16 maket,
   açık soru yok). Bütün maketler: durum 1050/1050, etkileşim 253/253 (toplu bakıştaki sayım), Planlar 54/54 · 15/15 · 36/36. Reisim hepsini birlikte

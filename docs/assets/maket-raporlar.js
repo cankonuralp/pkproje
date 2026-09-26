@@ -51,7 +51,8 @@
   function listeCiz() {
     uyariCiz();
     MK.listeCiz({ on: "r", kayitlar: benim(), sayacId: "a-sayac", listeId: "a-liste", sayfaId: "a-sayfa",
-      sirala: function (l) { var o = { onaylandi: 0, taslak: 1, onayda: 2, imzali: 3 }; return l.slice().sort(function (a, b) { return o[a.durum] - o[b.durum] || (a.olustu < b.olustu ? 1 : -1); }); },
+      /* 2026-09-26 (reisim: "sıralama tarihi olsun her zaman en yeni en yukarıda olsun"): varsayılan sıra tarih, en yeni üstte */
+      sirala: function (l) { return l.slice().sort(function (a, b) { return a.olustu < b.olustu ? 1 : a.olustu > b.olustu ? -1 : 0; }); },
       bosVeri: { ikon: "file-text", baslik: "Rapor yok", metin: "Raporlar plan içinde ekipmanın satırından oluşturulur." },
       tablo: { baslik: "Raporlar", sinif: "a-tablo-raporlar", sutunlar: SUTUN, href: function (r) { return "#/r/" + r.no; } } });
   }

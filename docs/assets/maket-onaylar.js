@@ -9,7 +9,7 @@
   var $ = MK.$, kacis = MK.kacis, ikon = MK.ikon, kirp = MK.kirp, rozet = MK.rozet, SZ = MK.SZ;
   var BEN = "sy", BENIM = "m", BRANS = "m";   /* 100: branş yöneticisi yokken başka branşın kuyruğu vekil olarak açılır (?brans=e) */
   var brans = function (r) { return MV.tur(MV.ekipman(r.kod).tur).b; };
-  var kuyruk = function () { return MV.RAPORLAR.filter(function (r) { return r.durum === "onayda" && brans(r) === BRANS; }).sort(function (a, b) { return a.gonderildi < b.gonderildi ? -1 : 1; }); };
+  var kuyruk = function () { return MV.RAPORLAR.filter(function (r) { return r.durum === "onayda" && brans(r) === BRANS; }).sort(function (a, b) { return a.gonderildi < b.gonderildi ? 1 : -1; }); };   /* en yeni üstte (reisim 2026-09-26) */
   var saatFarki = function (iso) { return Math.round((new Date(MK.simdi() + ":00Z") - new Date(iso + ":00Z")) / 36e5); };
   var bekleme = function (iso) { var h = saatFarki(iso); return h < 1 ? "az önce" : h < 24 ? h + " saattir" : Math.floor(h / 24) + " gündür"; };
 
@@ -47,7 +47,7 @@
       return '<a class="a-sekme" href="' + (b === BENIM ? "#/" : "#/?brans=" + b) + '" aria-pressed="' + (BRANS === b) + '">' + MV.bransAd(b) + (b === BENIM ? "" : " · vekil") + " <b>" + n + "</b></a>";
     }).join("") + "</div>";
     MK.listeCiz({ on: "o", kayitlar: kuyruk(), sayacId: "a-sayac", listeId: "a-liste",
-      sirala: function (l) { return l.slice().sort(function (a, b) { return a.gonderildi < b.gonderildi ? -1 : 1; }); },
+      sirala: function (l) { return l.slice().sort(function (a, b) { return a.gonderildi < b.gonderildi ? 1 : -1; }); },
       bosVeri: { ikon: "circle-check", baslik: "Kuyruk boş", metin: "Onayınızı bekleyen rapor yok. Inspector'lar onaya gönderdikçe burada en eskisi üstte sıralanır." },
       tablo: { baslik: "Onay kuyruğu", sinif: "a-tablo-onay", sutunlar: SUTUN, href: function (r) { return "#/r/" + r.no; } } });
     $("a-sayfa").innerHTML = "";

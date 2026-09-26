@@ -45,7 +45,8 @@
   ];
   function listeCiz() {
     MK.listeCiz({ on: "g", kayitlar: E, sayacId: "a-sayac", listeId: "a-liste", sayfaId: "a-sayfa",
-      sirala: function (l) { return l.slice().sort(function (a, b) { return a.tekrar < b.tekrar ? -1 : a.tekrar > b.tekrar ? 1 : MV.kisi(a.kisi).ad.localeCompare(MV.kisi(b.kisi).ad, "tr"); }); },
+      /* 2026-09-26 (reisim: "sıralama tarihi olsun her zaman en yeni en yukarıda olsun"): varsayılan sıra tarih, en yeni üstte */
+      sirala: function (l) { return l.slice().sort(function (a, b) { return a.tarih < b.tarih ? 1 : a.tarih > b.tarih ? -1 : MV.kisi(a.kisi).ad.localeCompare(MV.kisi(b.kisi).ad, "tr"); }); },
       bosVeri: { ikon: "graduation-cap", baslik: "Eğitim kaydı yok", metin: "“Eğitim kaydı ekle” ile kişi, eğitim ve tarih girilir; tekrar tarihi türden hesaplanır." },
       tablo: { baslik: "Eğitim kayıtları", sinif: "a-tablo-egitim", sutunlar: SUTUN, href: function (x) { return "#/k/" + x.id; } } });
     var gec = E.filter(function (x) { return !x.onceki && MV.egitimDurum(x) === "gecti"; }), yak = E.filter(function (x) { return !x.onceki && MV.egitimDurum(x) === "yakin"; });

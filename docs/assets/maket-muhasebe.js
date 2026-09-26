@@ -13,7 +13,6 @@
     tahsilat: { ad: "Tahsilat bekliyor", rozet: "a-rozet-bekliyor" }, rapor: { ad: "Rapor sürüyor", rozet: "a-rozet-notr" }, kapandi: { ad: "Kapandı", rozet: "a-rozet-tamam" } };
   var F_DURUM = { gecikti: { ad: "Vadesi geçti", rozet: "a-rozet-red" }, bekliyor: { ad: "Bekliyor", rozet: "a-rozet-bekliyor" },
     kismi: { ad: "Kısmi ödendi", rozet: "a-rozet-kabul" }, odendi: { ad: "Ödendi", rozet: "a-rozet-tamam" } };
-  var IS_SIRA = { gecikti: 0, hazir: 1, tahsilat: 2, rapor: 3, kapandi: 4 }, F_SIRA = { gecikti: 0, bekliyor: 1, kismi: 2, odendi: 3 };
   var YONTEM = ["Havale / EFT", "Çek", "Kredi kartı", "Nakit"];
   var oz = MV.isOzet, ft = MV.faturaTutar;
   var musteriSecici = function (l) { return { k: "musteri", ad: "Müşteri", secenek: function () {
@@ -46,7 +45,8 @@
   ];
   function isListeCiz() {
     MK.listeCiz({ on: "i", kayitlar: I, sayacId: "a-sayac", listeId: "a-liste",
-      sirala: function (l) { return l.slice().sort(function (a, b) { return IS_SIRA[oz(a).durum] - IS_SIRA[oz(b).durum] || (a.tarih < b.tarih ? 1 : a.tarih > b.tarih ? -1 : 0); }); },
+      /* 2026-09-26 (reisim: "sıralama tarihi olsun her zaman en yeni en yukarıda olsun"): varsayılan sıra tarih, en yeni üstte */
+      sirala: function (l) { return l.slice().sort(function (a, b) { return a.tarih < b.tarih ? 1 : a.tarih > b.tarih ? -1 : 0; }); },
       bosVeri: { ikon: "wallet", baslik: "İş yok", metin: "Planın ilk raporu yazılınca iş burada görünür." },
       tablo: { baslik: "İşler", sinif: "a-tablo-is", sutunlar: IS_SUTUN, href: function (x) { return "#/is/" + x.no; } } });
   }
@@ -67,7 +67,7 @@
   ];
   function faturaListeCiz() {
     MK.listeCiz({ on: "f", kayitlar: FT, sayacId: "a-sayac", listeId: "a-liste",
-      sirala: function (l) { return l.slice().sort(function (a, b) { return F_SIRA[MV.faturaDurum(a)] - F_SIRA[MV.faturaDurum(b)] || (a.tarih < b.tarih ? 1 : a.tarih > b.tarih ? -1 : 0); }); },
+      sirala: function (l) { return l.slice().sort(function (a, b) { return a.tarih < b.tarih ? 1 : a.tarih > b.tarih ? -1 : 0; }); },
       bosVeri: { ikon: "file-text", baslik: "Fatura yok", metin: "Faturaya hazır bir işin sayfasından “Fatura kaydet” ile eklenir." },
       tablo: { baslik: "Faturalar", sinif: "a-tablo-fatura", sutunlar: F_SUTUN, href: function (f) { return "#/f/" + f.no; } } });
   }

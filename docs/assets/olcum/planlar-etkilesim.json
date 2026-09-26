@@ -2,9 +2,23 @@
  "maket": "planlar",
  "tarih": "2026-09-26",
  "arac": "tools/olc-bulut.mjs --etkilesim (başsız tarayıcı, 1920 açık tema; gen verilen denemede o genişlik)",
- "toplam": 15,
- "gecen": 15,
+ "toplam": 17,
+ "gecen": 17,
  "denemeler": [
+  {
+   "ad": "Planlar varsayılan sıra: en yeni başlangıç üstte",
+   "gen": 1920,
+   "sayfa": "maket/planlarim.html",
+   "hash": "#/",
+   "gecti": true
+  },
+  {
+   "ad": "plan içindeki raporlar en yeni üstte",
+   "gen": 1920,
+   "sayfa": "maket/planlarim.html",
+   "hash": "#/plan/9",
+   "gecti": true
+  },
   {
    "ad": "çip süzer, sayaç dürüst (4 / 9)",
    "gen": 1920,

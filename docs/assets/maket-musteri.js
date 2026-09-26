@@ -70,7 +70,7 @@
   ];
   function uygunsuzCiz() {
     MK.listeCiz({ on: "u", kayitlar: uygunsuzlar(), sayacId: "a-sayac", listeId: "a-liste",
-      sirala: function (l) { return l.slice().sort(function (a, b) { return (a.durum === "acik" ? 0 : 1) - (b.durum === "acik" ? 0 : 1) || (a.tarih < b.tarih ? 1 : -1); }); },
+      sirala: function (l) { return l.slice().sort(function (a, b) { return a.tarih < b.tarih ? 1 : a.tarih > b.tarih ? -1 : 0; }); },
       bosVeri: { ikon: "circle-check", baslik: "Uygunsuzluk yok", metin: "İmzalı raporlarınızda uygunsuz bulunan ekipman yok." },
       tablo: { baslik: "Uygunsuzluklar", sinif: "a-tablo-uygunsuz", sutunlar: U_SUTUN, href: function (u) { return "#/r/" + u.rapor.no; } } });
     $("a-sayfa").innerHTML = "";
