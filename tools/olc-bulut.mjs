@@ -239,6 +239,7 @@ export const DURUMLAR = {
     { ad: "fatura · ödendi, çek + havale", hash: "#/f/KMF2025000000245" },
     { ad: "fatura kaydet penceresi · boş gönderildi", hash: "#/is/P-0926-025/fatura", adim: [["tikla", '[data-eylem="fatura-kaydet"]']] },
     { ad: "tahsilat penceresi", hash: "#/f/KMF2026000000017/tahsilat" },
+    { ad: "toplu fatura penceresi (iki iş)", hash: "#/", adim: [["js", 'MV.ISLER.filter(x => x.m === "m11").forEach(x => { x.faturalar = []; }); location.hash = "#/is/P-1125-011"'], ["tikla", 'a[href="#/is/P-1125-011/toplu-fatura"]']] }
   ] },
   m15: { sayfa: "maket/performans.html", durumlar: [
     { ad: "pano · bu ay (gün başı)", hash: "#/" },
@@ -521,6 +522,8 @@ export const DENEMELER = {
     { ad: "kapsam: plan bağlantısı plan içine", hash: "#/s/IS-0926-006", adim: [["tikla", '.a-tablo-iskapsam a.a-no']], bekle: '/planlarim\\.html$/.test(location.pathname) && /^#\\/plan\\//.test(location.hash)' },
   ],
   m14: [
+    /* 2026-09-26 (reisim 136): fatura iş başına; istenirse müşteri başına toplu. Makette m11'in iki işinin faturası kaldırılarak kurulur */
+    { ad: "toplu fatura: aynı müşterinin iki işi tek faturada", hash: "#/", adim: [["js", 'MV.ISLER.filter(x => x.m === "m11").forEach(x => { x.faturalar = []; }); location.hash = "#/is/P-1125-011"'], ["tikla", 'a[href="#/is/P-1125-011/toplu-fatura"]'], ["yaz", "#w-no", "KMF2026000000030"], ["tikla", '[data-eylem="fatura-kaydet"]']], bekle: 'MV.fatura("KMF2026000000030") && MV.fatura("KMF2026000000030").isler.length === 2 && /İşler/.test(document.querySelector("#a-nesne").textContent || "") || (MV.fatura("KMF2026000000030") && MV.fatura("KMF2026000000030").isler.length === 2)' },
     { ad: "liste: 16 iş, vadesi geçen üstte; iki şerit", hash: "#/", bekle: 'document.querySelector("#a-sayac").textContent === "16 iş" && /P-0226-011/.test(document.querySelector("#a-liste tbody tr").textContent) && /Vadesi geçen alacak/.test(document.querySelector("#a-uyari").textContent) && /Faturaya hazır/.test(document.querySelector("#a-uyari").textContent)' },
     { ad: "Kapandı çipi (12 / 16)", hash: "#/", adim: [["tikla", '[data-sz="i"] [data-cip="kapandi"]']], bekle: 'document.querySelector("#a-sayac").textContent === "12 / 16 iş"' },
     { ad: "şeritteki Faturalar → vadesi geçenler süzülü (1 / 13)", hash: "#/", adim: [["tikla", '#a-uyari [data-eylem="gecikenler"]']], bekle: 'location.hash === "#/faturalar" && document.querySelector("#a-sayac").textContent === "1 / 13 fatura" && document.querySelector("#a-sekme-fatura").getAttribute("aria-current") === "page"' },

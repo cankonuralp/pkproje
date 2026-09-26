@@ -8,8 +8,8 @@
   390,
   430
  ],
- "toplam": 40,
- "temiz": 40,
+ "toplam": 44,
+ "temiz": 44,
  "durumlar": [
   {
    "ad": "işler · liste, vadesi geçen ve faturaya hazır şeridi",
@@ -364,6 +364,42 @@
   },
   {
    "ad": "tahsilat penceresi",
+   "gen": 430,
+   "temiz": true,
+   "tasma": 0,
+   "disari": [],
+   "kucukAlan": [],
+   "alan": 3
+  },
+  {
+   "ad": "toplu fatura penceresi (iki iş)",
+   "gen": 320,
+   "temiz": true,
+   "tasma": 0,
+   "disari": [],
+   "kucukAlan": [],
+   "alan": 3
+  },
+  {
+   "ad": "toplu fatura penceresi (iki iş)",
+   "gen": 360,
+   "temiz": true,
+   "tasma": 0,
+   "disari": [],
+   "kucukAlan": [],
+   "alan": 3
+  },
+  {
+   "ad": "toplu fatura penceresi (iki iş)",
+   "gen": 390,
+   "temiz": true,
+   "tasma": 0,
+   "disari": [],
+   "kucukAlan": [],
+   "alan": 3
+  },
+  {
+   "ad": "toplu fatura penceresi (iki iş)",
    "gen": 430,
    "temiz": true,
    "tasma": 0,

@@ -49,21 +49,23 @@
     { k: "inspector", ad: "Inspector", kisa: "Inspector", acik: "Kendisine atanan planı kabul eder, sahada rapor hazırlar, son imzayı atar." },
     { k: "mekyon", ad: "Mekanik yönetici", kisa: "Mek. yönetici", acik: "Mekanik branş raporlarını onaylar ya da gerekçeyle geri gönderir." },
     { k: "elkyon", ad: "Elektrik yönetici", kisa: "Elk. yönetici", acik: "Elektrik branş raporlarını onaylar ya da gerekçeyle geri gönderir." },
-    { k: "yonetici", ad: "Firma yöneticisi", kisa: "Firma yön.", acik: "Personel hesapları, rol yetkileri ve firma ayarları; hareket kaydını görür." }
+    { k: "yonetici", ad: "Firma yöneticisi", kisa: "Firma yön.", acik: "Personel hesapları, rol yetkileri ve firma ayarları; hareket kaydını görür." },
+    /* 137 (2026-09-26): muhasebeyi firma yöneticisi görür; istenirse birine "Muhasebe" rolü verilir */
+    { k: "muhasebe", ad: "Muhasebe", kisa: "Muhasebe", acik: "Fatura ve tahsilat kaydeder." }
   ];
   MV.rol = function (k) { return MV.ROLLER.filter(function (r) { return r.k === k; })[0]; };
 
   /* Rol × modül görünürlüğü — başlangıç düzeni (reisim 2026-09-25, 32: "başlangıç olarak uygun ama admin istediği gibi rollerin
      yetkilerini değiştirebilmeli" → firma yöneticisi Personel › Rol yetkileri'nde değiştirir; MATRIS_ONERI "önerilen düzene dön" içindir).
      Düzey: yaz (görür ve değiştirir) · gor (görür) · brans (yalnız kendi branşı) · kendi (yalnız kendi kayıtları) · yok.
-     Sıra: planlama · inspector · mekyon · elkyon · yonetici. "hareket" = Hareket kaydı (denetim izi; karar 30: yöneticiye). */
+     Sıra: planlama · inspector · mekyon · elkyon · yonetici · muhasebe. "hareket" = Hareket kaydı (denetim izi; karar 30: yöneticiye). */
   MV.MATRIS = {
-    13: ["yaz", "kendi", "gor", "gor", "yaz"], 14: ["gor", "kendi", "brans", "brans", "gor"], 15: ["yok", "yok", "brans", "brans", "gor"],
-    20: ["gor", "kendi", "gor", "gor", "gor"], 3: ["yaz", "gor", "gor", "gor", "yaz"], 11: ["yaz", "yok", "gor", "gor", "yaz"],
-    12: ["yaz", "kendi", "gor", "gor", "yaz"], 7: ["yaz", "yaz", "gor", "gor", "yaz"], 8: ["gor", "kendi", "yaz", "yaz", "yaz"],
-    9: ["gor", "kendi", "yaz", "yaz", "yaz"], 2: ["gor", "kendi", "gor", "gor", "yaz"], 10: ["gor", "kendi", "yaz", "yaz", "yaz"],
-    18: ["yok", "yok", "yok", "yok", "yaz"], 19: ["gor", "kendi", "brans", "brans", "gor"], 5: ["gor", "gor", "yaz", "yaz", "yaz"],
-    4: ["gor", "gor", "yaz", "yaz", "yaz"], hareket: ["yok", "yok", "yok", "yok", "gor"]
+    13: ["yaz", "kendi", "gor", "gor", "yaz", "yok"], 14: ["gor", "kendi", "brans", "brans", "gor", "yok"], 15: ["yok", "yok", "brans", "brans", "gor", "yok"],
+    20: ["gor", "kendi", "gor", "gor", "gor", "yok"], 3: ["yaz", "gor", "gor", "gor", "yaz", "gor"], 11: ["yaz", "yok", "gor", "gor", "yaz", "gor"],
+    12: ["yaz", "kendi", "gor", "gor", "yaz", "gor"], 7: ["yaz", "yaz", "gor", "gor", "yaz", "yok"], 8: ["gor", "kendi", "yaz", "yaz", "yaz", "yok"],
+    9: ["gor", "kendi", "yaz", "yaz", "yaz", "yok"], 2: ["gor", "kendi", "gor", "gor", "yaz", "yok"], 10: ["gor", "kendi", "yaz", "yaz", "yaz", "yok"],
+    18: ["yok", "yok", "yok", "yok", "yaz", "yaz"], 19: ["gor", "kendi", "brans", "brans", "gor", "yok"], 5: ["gor", "gor", "yaz", "yaz", "yaz", "yok"],
+    4: ["gor", "gor", "yaz", "yaz", "yaz", "yok"], hareket: ["yok", "yok", "yok", "yok", "gor", "yok"]
   };
   MV.MATRIS_ONERI = JSON.parse(JSON.stringify(MV.MATRIS));
   MV.DUZEY = {

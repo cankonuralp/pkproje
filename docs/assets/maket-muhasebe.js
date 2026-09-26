@@ -137,12 +137,13 @@
         '<p class="a-nesne-alt">' + ikon("building-2", "a-ikon-kucuk") + '<span><a class="a-baglanti" href="' + MK.adres(3, "#/m/" + m.id) + '">' + kacis(m.kisa) + "</a> · " + kacis(ts.ad) + "</span></p></div>" +
         '<div class="a-eylem-cubugu">' + (x.pid ? '<a class="a-tus a-tus-ikincil" href="' + MK.adres(13, "#/plan/" + x.pid) + '">' + ikon("calendar-check", "a-ikon-kucuk") + "Plan</a>" : "") +
           (acik.length ? '<a class="a-tus a-tus-ikincil" href="#/f/' + acik[0].no + '/tahsilat">' + ikon("wallet", "a-ikon-kucuk") + "Tahsilat ekle</a>" : "") +
+          (o.hazir.length && hazirIsler(x).length > 1 ? '<a class="a-tus a-tus-ikincil" href="#/is/' + x.no + '/toplu-fatura">' + ikon("file-text", "a-ikon-kucuk") + "Toplu fatura (" + hazirIsler(x).length + " iş)</a>" : "") +
           (o.hazir.length ? '<a class="a-tus a-tus-birincil" href="#/is/' + x.no + '/fatura">' + ikon("file-plus", "a-ikon-kucuk") + "Fatura kaydet</a>" : "") + "</div></div>" +
       '<div class="a-uyari-serit">' +
         (o.durum === "gecikti" ? MK.serit("uyari", "clock", acik.filter(function (f) { return MV.faturaDurum(f) === "gecikti"; }).map(function (f) {
           return f.no + " vadesi " + -MK.gunFarki(MK.BUGUN, f.vade) + " gün önce geçti; kalan " + para(MV.faturaKalan(f)) + "."; }).join(" ")) : "") +
-        (o.hazir.length ? MK.serit("bilgi", "file-check", o.hazir.length + " rapor imzalı ve faturalanmadı" + (o.surec.length ? "; " + o.surec.length + " rapor imza sürecinde, imzalanınca sonraki faturaya girer (soru 138)." : ".")) : "") +
-        (o.durum === "rapor" && !o.hazir.length ? MK.serit("bilgi", "history", x.pdurum === "tamam" ? o.surec.length + " rapor onay ya da imza sürecinde; imzalanan rapor faturaya hazır olur." : "Plan " + MV.PLAN_DURUM[x.pdurum].ad.toLocaleLowerCase("tr") + "; rapor imzalandıkça faturaya hazır olur.") : "") +
+        (o.hazir.length ? MK.serit("bilgi", "file-check", o.hazir.length + " rapor faturaya hazır" + (o.surec.length ? " · " + o.surec.length + " rapor imza sürecinde" : "")) : "") +
+        (o.durum === "rapor" && !o.hazir.length ? MK.serit("bilgi", "history", x.pdurum === "tamam" ? o.surec.length + " rapor imza sürecinde" : "Plan " + MV.PLAN_DURUM[x.pdurum].ad.toLocaleLowerCase("tr")) : "") +
         (o.durum === "kapandi" ? MK.serit("onay", "circle-check", "İş kapandı " + MK.tarihYaz(o.kapandi) + ": bütün raporlar faturalandı ve tahsil edildi. Kayıt 5 yıl arşivde kalır.") : "") + "</div>" +
       '<div class="a-yuzler">' + yuz("Raporlanan", "file-text", para(o.raporlanan), "KDV hariç · " + o.toplam + " rapor") +
         yuz("Faturalanan", "file-check", para(o.faturalanan), "KDV dahil · " + x.faturalar.length + " fatura") +
@@ -189,7 +190,8 @@
       '<section class="a-bolum" aria-labelledby="a-b-fbilgi"><div class="a-alt-bas"><h2 class="a-alt-baslik" id="a-b-fbilgi">Fatura</h2></div><dl class="a-bilgi">' +
         bilgi("Alıcı", kacis(m.unvan) + '<span class="a-alt-satir">' + kacis(m.vd) + " VD · " + m.vno + "</span>", true) +
         bilgi("Fatura tarihi", MK.tarihYaz(f.tarih)) + bilgi("Vade", MK.tarihYaz(f.vade) + '<span class="a-alt-satir">' + f.vadeGun + " gün · " + (soz ? "sözleşme " + soz.no : "varsayılan") + "</span>") +
-        bilgi("İş", '<a class="a-no" href="#/is/' + x.no + '">' + x.no + '</a><span class="a-alt-satir">' + kacis(MV.tesis(x.tesis).ad) + " · " + f.raporlar.length + " rapor</span>") +
+        (f.isler ? bilgi("İşler", f.isler.map(function (n) { return '<a class="a-no" href="#/is/' + n + '">' + n + "</a>"; }).join(", ") + '<span class="a-alt-satir">' + f.raporlar.length + " rapor</span>")
+          : bilgi("İş", '<a class="a-no" href="#/is/' + x.no + '">' + x.no + '</a><span class="a-alt-satir">' + kacis(MV.tesis(x.tesis).ad) + " · " + f.raporlar.length + " rapor</span>")) +
         bilgi("Kaydeden", kacis(MV.kisi(f.kaydeden).ad)) + "</dl></section>" +
       '<section class="a-bolum" aria-labelledby="a-b-kalem"><div class="a-alt-bas"><h2 class="a-alt-baslik" id="a-b-kalem">Kalemler</h2><span class="a-sayac"><b>' + MV.faturaKalemleri(f.raporlar).length + "</b> kalem</span></div>" +
         '<div class="a-liste-kap">' + MK.tablo({ baslik: "Fatura kalemleri", sinif: "a-tablo-kalem a-tablo-fkalem", sutunlar: KALEM, kayitlar: MV.faturaKalemleri(f.raporlar) }) + "</div>" +
@@ -209,17 +211,20 @@
   var sayi = function (v) { var s = String(v).trim(); return /^\d{1,3}(\.\d{3})*(,\d{1,2})?$|^\d+(,\d{1,2})?$/.test(s) ? parseFloat(s.replace(/\./g, "").replace(",", ".")) : NaN; };
   var yaz = function (n) { return n.toLocaleString("tr-TR", { minimumFractionDigits: 2, maximumFractionDigits: 2 }); };
   var bugun = MK.BUGUN.slice(8, 10) + "." + MK.BUGUN.slice(5, 7) + "." + MK.BUGUN.slice(0, 4);
+  /* 136 (2026-09-26): fatura iş başına; istenirse müşteri başına toplu (aynı müşterinin faturaya hazır bütün işleri) */
+  var hazirIsler = function (x) { return I.filter(function (y) { return y.m === x.m && oz(y).hazir.length; }); };
+  var pencereRaporlari = function () { return W.isler.reduce(function (l, y) { return l.concat(oz(y).hazir.map(function (r) { return r.no; })); }, []); };
   function faturaPencere(odak) {
-    var x = W.is, o = oz(x), h = W.hata, soz = MV.tesisSozlesmesi(x.tesis, x.tarih), vg = soz ? soz.vade : 30, fi = tarihIso(W.tarih);
-    var gecici = { raporlar: o.hazir.map(function (r) { return r.no; }) };
+    var x = W.is, h = W.hata, soz = MV.tesisSozlesmesi(x.tesis, x.tarih), vg = soz ? soz.vade : 30, fi = tarihIso(W.tarih);
+    var gecici = { raporlar: pencereRaporlari() }, o = { hazir: gecici.raporlar, surec: W.isler.reduce(function (l, y) { return l.concat(oz(y).surec); }, []) };
     var vade = fi ? (function () { var d = new Date(fi + "T12:00:00"); d.setDate(d.getDate() + vg); return d.toISOString().slice(0, 10); })() : null;
-    $("a-pencere-baslik").textContent = "Fatura kaydet · " + x.no;
+    $("a-pencere-baslik").textContent = W.isler.length > 1 ? "Toplu fatura · " + MV.musteri(x.m).kisa + " · " + W.isler.length + " iş" : "Fatura kaydet · " + x.no;
     $("a-pencere-govde").innerHTML = '<p class="a-bolum-aciklama"><b>' + o.hazir.length + "</b> imzalı rapor</p>" +
       '<div class="a-liste-kap">' + MK.tablo({ baslik: "Faturaya girecek kalemler", sinif: "a-tablo-kalem a-tablo-fkalem", sutunlar: KALEM, kayitlar: MV.faturaKalemleri(gecici.raporlar) }) + "</div>" +
       '<dl class="a-bilgi a-bolum-serit">' + toplamlar(ft(gecici)) + "</dl>" +
       (o.surec.length ? '<div class="a-bolum-serit">' + MK.serit("uyari", "history", o.surec.length + " rapor imza sürecinde; bu faturaya girmez, imzalanınca sonraki faturaya kalır.") + "</div>" : "") +
       '<div class="a-form a-bolum-serit">' +
-        MK.alan({ id: "w-no", etiket: "Fatura no", zorunlu: true, hata: h.no, ipucu: "16 karakter, ör. KMF2026000000018", girdi: MK.girdi({ id: "w-no", alan: "no", deger: W.no, ek: ' maxlength="16" spellcheck="false"', hata: h.no }) }) +
+        MK.alan({ id: "w-no", etiket: "Fatura no", zorunlu: true, hata: h.no, girdi: MK.girdi({ id: "w-no", alan: "no", deger: W.no, ek: ' maxlength="16" spellcheck="false"', hata: h.no }) }) +
         MK.alan({ id: "w-tarih", etiket: "Fatura tarihi", zorunlu: true, hata: h.tarih, ipucu: vade ? "Vade " + MK.tarihYaz(vade) + " (" + vg + " gün, " + (soz ? "sözleşme " + soz.no : "varsayılan") + ")" : "GG.AA.YYYY",
           girdi: MK.girdi({ id: "w-tarih", alan: "tarih", deger: W.tarih, sinif: "a-girdi-sicil", ek: ' inputmode="numeric" maxlength="10"', hata: h.tarih }) }) + "</div>";
     $("a-pencere-alt").innerHTML = MK.tus({ eylem: "pencere-kapat", ad: "Vazgeç", sinif: "a-tus-ikincil" }) + MK.tus({ eylem: "fatura-kaydet", ad: "Faturayı kaydet", ikon: "check" });
@@ -230,7 +235,7 @@
     $("a-pencere-baslik").textContent = "Tahsilat ekle · " + f.no;
     $("a-pencere-govde").innerHTML = '<dl class="a-bilgi">' + bilgi("Müşteri", kacis(MV.musteri(f.m).kisa)) + bilgi("Fatura tutarı", para(ft(f).toplam)) + bilgi("Kalan", "<b>" + para(kalan) + "</b>") + "</dl>" +
       '<div class="a-form a-bolum-serit">' +
-        MK.alan({ id: "w-tarih", etiket: "Tahsilat tarihi", zorunlu: true, hata: h.tarih, ipucu: "GG.AA.YYYY", girdi: MK.girdi({ id: "w-tarih", alan: "tarih", deger: W.tarih, sinif: "a-girdi-sicil", ek: ' inputmode="numeric" maxlength="10"', hata: h.tarih }) }) +
+        MK.alan({ id: "w-tarih", etiket: "Tahsilat tarihi", zorunlu: true, hata: h.tarih, girdi: MK.girdi({ id: "w-tarih", alan: "tarih", deger: W.tarih, sinif: "a-girdi-sicil", ek: ' inputmode="numeric" maxlength="10"', hata: h.tarih }) }) +
         MK.alan({ id: "w-tutar", etiket: "Tutar (TL)", zorunlu: true, hata: h.tutar, ipucu: "Kısmi tahsilat olabilir; en çok kalan kadar", girdi: MK.girdi({ id: "w-tutar", alan: "tutar", deger: W.tutar, sinif: "a-girdi-sicil", ek: ' inputmode="decimal"', hata: h.tutar }) }) +
         MK.alan({ id: "w-yontem", etiket: "Yöntem", zorunlu: true, girdi: MK.secim({ id: "w-yontem", ad: "Yöntem", deger: W.yontem, secenekler: YONTEM.map(function (y) { return [y, y]; }), ipucu: "Yöntem seçin" }) }) +
         MK.alan({ id: "w-not", etiket: "Açıklama", genis: true, ipucu: "İsteğe bağlı; ör. çek no, dekont açıklaması", girdi: MK.girdi({ id: "w-not", alan: "not", deger: W.not, ek: ' maxlength="120"' }) }) + "</div>";
@@ -238,9 +243,9 @@
     if (odak) $(odak).focus();
   }
   function pencereAc(tip, nesne) {
-    W = tip === "fatura" ? { tip: tip, is: nesne, no: "", tarih: bugun, hata: {} } : { tip: tip, f: nesne, tarih: bugun, tutar: yaz(MV.faturaKalan(nesne)), yontem: YONTEM[0], not: "", hata: {} };
-    (tip === "fatura" ? faturaPencere : tahsilatPencere)(); if (!$("a-pencere").open) $("a-pencere").showModal();
-    $(tip === "fatura" ? "w-no" : "w-tutar").focus();
+    W = tip === "fatura" || tip === "toplu" ? { tip: "fatura", is: nesne, isler: tip === "toplu" ? hazirIsler(nesne) : [nesne], no: "", tarih: bugun, hata: {} } : { tip: tip, f: nesne, tarih: bugun, tutar: yaz(MV.faturaKalan(nesne)), yontem: YONTEM[0], not: "", hata: {} };
+    (W.tip === "fatura" ? faturaPencere : tahsilatPencere)(); if (!$("a-pencere").open) $("a-pencere").showModal();
+    $(W.tip === "fatura" ? "w-no" : "w-tutar").focus();
   }
   var X = MK.eylem;
   X["fatura-kaydet"] = function () {
@@ -254,8 +259,8 @@
     W.hata = h; var hk = Object.keys(h);
     if (hk.length) { faturaPencere("w-" + hk[0]); return; }
     var soz = MV.tesisSozlesmesi(x.tesis, x.tarih), vg = soz ? soz.vade : 30, v = new Date(fi + "T12:00:00"); v.setDate(v.getDate() + vg);
-    var f = { no: no, is: x.no, m: x.m, tarih: fi, vadeGun: vg, vade: v.toISOString().slice(0, 10), raporlar: oz(x).hazir.map(function (r) { return r.no; }), kaydeden: "ad", tahsilatlar: [] };
-    FT.push(f); x.faturalar.push(f.no); $("a-pencere").close(); MK.suzgecSifirla("r"); isCiz(x);
+    var f = { no: no, is: x.no, isler: W.isler.length > 1 ? W.isler.map(function (y) { return y.no; }) : null, m: x.m, tarih: fi, vadeGun: vg, vade: v.toISOString().slice(0, 10), raporlar: pencereRaporlari(), kaydeden: "ad", tahsilatlar: [] };
+    FT.push(f); W.isler.forEach(function (y) { y.faturalar.push(f.no); }); $("a-pencere").close(); MK.suzgecSifirla("r"); isCiz(x);
     MK.bildir(f.no + " kaydedildi: " + f.raporlar.length + " rapor, " + para(ft(f).toplam) + " (KDV dahil).");
   };
   X["tahsilat-kaydet"] = function () {
@@ -273,7 +278,7 @@
   };
   X["gecikenler"] = function () { MK.suzgecSifirla("f"); SZ.f.secili = ["gecikti"]; location.hash = "#/faturalar"; };
   X["hazirlar"] = function () { MK.suzgecSifirla("i"); SZ.i.secili = ["hazir"]; if (location.hash === "#/" || location.hash === "") goster(false); else location.hash = "#/"; };
-  X["pdf"] = function () { MK.bildir("Makette belge yok. Fatura firmanın muhasebe programında kesilir; e-Fatura / e-Arşiv belgesi oradan açılır (soru 135)."); };
+  X["pdf"] = function () { MK.bildir("Makette belge yok. Fatura firmanın muhasebe programında kesilir."); };
   MK.onGirdi = function (e) { var k = e.target.dataset && e.target.dataset.alan; if (k && W) W[k] = e.target.value; };
   MK.onSecim = function (id, deger) { if (W && id === "w-yontem") { W.yontem = deger; tahsilatPencere(id); } };
   $("a-pencere").addEventListener("close", function () { W = null; var r = rota(); if (r.pencere) history.replaceState(null, "", r.v === "is" ? "#/is/" + r.no : "#/f/" + r.no); });
@@ -282,7 +287,7 @@
   function rota() {
     var h = location.hash.replace(/\?.*$/, ""), m;
     if (h === "#/faturalar") return { v: "faturalar" };
-    if ((m = /^#\/is\/(P-\d{4}-\d{3})(\/fatura)?$/.exec(h))) return { v: "is", no: m[1], pencere: !!m[2] };
+    if ((m = /^#\/is\/(P-\d{4}-\d{3})(\/fatura|\/toplu-fatura)?$/.exec(h))) return { v: "is", no: m[1], pencere: !!m[2], toplu: m[2] === "/toplu-fatura" };
     if ((m = /^#\/f\/([A-Z0-9]+)(\/tahsilat)?$/.exec(h))) return { v: "fatura", no: m[1], pencere: !!m[2] };
     return { v: "liste" };
   }
@@ -298,7 +303,7 @@
     } else if (r.v === "is") {
       var x = MV.isKaydi(r.no); if (x !== AKTIF) { AKTIF = x; MK.suzgecSifirla("r"); }
       isCiz(x);
-      if (r.pencere && x && oz(x).hazir.length) { if (!W) pencereAc("fatura", x); }
+      if (r.pencere && x && oz(x).hazir.length) { if (!W) pencereAc(r.toplu ? "toplu" : "fatura", x); }
       else { if (r.pencere) history.replaceState(null, "", "#/is/" + r.no); if ($("a-pencere").open) $("a-pencere").close(); }
     } else {
       var f = MV.fatura(r.no); faturaCiz(f);

@@ -848,7 +848,14 @@ Açık soru yok — 125–134 cevaplandı (§9, on yedinci tur): 125 kayıt + im
 etkileşim **10/10**, telefon **32/32** (imzalı sözleşme görüntüleme, yüklenince Aç tuşu, hizmet sözleşmesi için şerit ve çip yok).
 1. tur (2026-09-24): 48/48, 11/11.
 
-#### Maket M14 — Muhasebe (modül 18, faz 2) — ONAY BEKLİYOR
+#### Maket M14 — Muhasebe (modül 18, faz 2) — 2. TUR, ONAY BEKLİYOR (toplu gözden geçirmede)
+**2. tur (2026-09-26, §9 yirmi birinci tur):** fatura iş başına; istenirse **müşteri başına toplu** (136: iş sayfasında "Toplu fatura (N iş)", aynı
+müşterinin faturaya hazır bütün işleri tek faturada; fatura sayfasında "İşler") · muhasebeyi firma yöneticisi görür, istenirse **"Muhasebe" rolü**
+(137: rol listesinde ve rol yetkileri tablosunda altıncı sütun; muhasebe, müşteri, teklif, sözleşme) · fatura programda kesilir, numarası
+yazılır (135) · kısmi fatura (138) · tahsilatla kendiliğinden kapanır (139) · vadesi geçen alacak Muhasebe'de ve müşteri kartında, Uyarılar'da
+değil (140) · çek vadesi izlenmez (141) · panelde fatura yok (142). Şeritler kısaldı; müşteri kartındaki iş sözleşmesi yüzünde "imza bekleyen"
+vurgusu kalktı (sözleşmede uyarı yalnız İSG-KATİP). Ölçüm: 11 durum 66/66, etkileşim 15/15, telefon 44/44; M1 174/174 · 38/38 · 116/116.
+1. tur metni (tarihsel):
 Ekran: **Muhasebe** (`maket/muhasebe.html`, Ayşe Demir, firma yöneticisi): iki sekme — **İşler** (proje no, müşteri / tesis, imzalı ve
 faturalı rapor sayısı, raporlanan tutar, açık alacak, durum; çipler: vadesi geçti · faturaya hazır · tahsilat bekliyor · rapor sürüyor ·
 kapandı; seçici müşteri; şerit: vadesi geçen alacak + faturaya hazır işler) · **Faturalar** (no, müşteri / iş, vade, tutar, kalan,
@@ -1408,6 +1415,7 @@ revizyon, alan kopyalama, hafif kusur devri, meslek eşleşme denetimi).
 - Emsal ürünler: https://opwire.app/iso-17020-periyodik-kontrol-yazilimi/ · https://17020muayene.vidco.com.tr/ · https://akuple.com/asansor-kontrol-yazilimi/ · https://ensyazilim.com/
 
 ## 11 · Değişiklik günlüğü
+- 2026-09-26 (57): **M14 2. tur**: müşteri başına toplu fatura, "Muhasebe" rolü (rol yetkileri altı sütun). M14 66/66 · 15/15 · 44/44.
 - 2026-09-26 (56): **M12 2. tur**: teklifte KDV oranı, çok tesisli teklif; §3.7 satır 4 teklif PDF'i firmaya göre. M12 60/60 · 12/12 · 40/40.
 - 2026-09-26 (55): **M11 2. tur**: firmanın logosu, Planlanan kontroller ve Sözleşmeler sekmeleri (salt görüntü). M11 66/66 · 9/9 · 44/44.
 - 2026-09-26 (54): **M10 2. tur**: ara kontrol uyarıları eklendi (kalibrasyonu geçen / kalibrasyondaki cihaz hariç). M10 36/36 · 7/7 · 24/24.

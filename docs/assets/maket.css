@@ -612,8 +612,9 @@ a.a-yuz:hover { border-color: var(--kenar-alan); background: var(--zemin); }
 /* sütun oranları (anayasa 3.4: oran) — yeni listeler; her liste 960 px kapta ölçüldü (olcum/<maket>.json) */
 .a-tablo-personel .a-k-ad { width: 19%; } .a-tablo-personel .a-k-meslek { width: 20%; } .a-tablo-personel .a-k-brans { width: 10%; }
 .a-tablo-personel .a-k-ekipnet { width: 12%; } .a-tablo-personel .a-k-roller { width: 22%; } .a-tablo-personel .a-k-durum { width: 17%; }
-.a-tablo-matris .a-k-modul { width: 25%; } .a-tablo-matris .a-k-r0, .a-tablo-matris .a-k-r1, .a-tablo-matris .a-k-r2,
-.a-tablo-matris .a-k-r3, .a-tablo-matris .a-k-r4 { width: 15%; }
+/* 2026-09-26 (reisim 137): altıncı rol "Muhasebe" → rol sütunları 14% */
+.a-tablo-matris .a-k-modul { width: 16%; } .a-tablo-matris .a-k-r0, .a-tablo-matris .a-k-r1, .a-tablo-matris .a-k-r2,
+.a-tablo-matris .a-k-r3, .a-tablo-matris .a-k-r4, .a-tablo-matris .a-k-r5 { width: 14%; }
 /* M1 2. tur (2026-09-25): Kullanıcılar Personel'e katıldı → kişinin kartında zimmet ve özlük dosyası; rol yetkileri düzenlenir;
    geçici parola bir kez gösterilir; Ana sayfa listeleri (plan · onay kuyruğu · kontrolü yaklaşan tesis) aynı sütun adlarıyla */
 .a-tablo-kzimmet .a-k-varlik { width: 50%; } .a-tablo-kzimmet .a-k-teslim { width: 22%; } .a-tablo-kzimmet .a-k-durum { width: 28%; }

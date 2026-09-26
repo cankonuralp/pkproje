@@ -110,8 +110,7 @@
     $("a-roller-bas").innerHTML = '<h1 tabindex="-1">Personel</h1>' +
       (R.duzen ? "" : MK.tus({ eylem: "rol-duzenle", ad: "Rol yetkilerini düzenle", ikon: "pencil", sinif: "a-tus-birincil a-bolum-tus" }));
     $("a-roller").innerHTML =
-      MK.serit("bilgi", "circle-alert", (oneri ? "Önerilen başlangıç düzeni. " : "Firmanın kendi düzeni. ") +
-        "Firma yöneticisi her rolün her modülde neyi göreceğini değiştirebilir; bir kişinin birden çok rolü varsa en geniş düzey geçerlidir.") +
+      MK.serit("bilgi", "circle-alert", oneri ? "Önerilen başlangıç düzeni" : "Firmanın kendi düzeni") +
       '<p class="a-bolum-aciklama a-lejant">' + ["yaz", "gor", "brans", "kendi"].map(function (d) {
         return rozet(MV.DUZEY[d]) + " " + { yaz: "görür ve değiştirir", gor: "görür", brans: "yalnız kendi branşının kayıtları", kendi: "yalnız kendi kayıtları" }[d];
       }).join(" · ") + " · — görmez</p>" +

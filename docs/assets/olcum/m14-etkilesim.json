@@ -2,9 +2,16 @@
  "maket": "m14",
  "tarih": "2026-09-26",
  "arac": "tools/olc-bulut.mjs --etkilesim (başsız tarayıcı, 1920 açık tema; gen verilen denemede o genişlik)",
- "toplam": 14,
- "gecen": 14,
+ "toplam": 15,
+ "gecen": 15,
  "denemeler": [
+  {
+   "ad": "toplu fatura: aynı müşterinin iki işi tek faturada",
+   "gen": 1920,
+   "sayfa": "maket/muhasebe.html",
+   "hash": "#/",
+   "gecti": true
+  },
   {
    "ad": "liste: 16 iş, vadesi geçen üstte; iki şerit",
    "gen": 1920,

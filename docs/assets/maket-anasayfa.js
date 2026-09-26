@@ -147,7 +147,7 @@
         /* M6 2. tur (80): "Plan aç" yalnız plan açma yetkisi olana (planlama ekibi, firma yöneticisi) */
         (r === "planlama" || r === "yonetici" ? '<a class="a-tus a-tus-birincil a-bolum-tus" href="plan-ac.html#/">' + ikon("calendar-check", "a-ikon-kucuk") + "Plan aç</a>" : "") + "</div>" +
       '<div class="a-pano-anahtar"><span class="a-etiket a-etiket-satir">Makette bakış</span><div class="a-sekmeler" role="group" aria-label="Rol">' +
-        MV.ROLLER.map(function (x) { return '<a class="a-sekme" href="#/' + x.k + '"' + (x.k === r ? ' aria-current="page"' : "") + ">" + x.ad + "</a>"; }).join("") + "</div></div>" +
+        MV.ROLLER.filter(function (x) { return BOLUM[x.k]; }).map(function (x) { return '<a class="a-sekme" href="#/' + x.k + '"' + (x.k === r ? ' aria-current="page"' : "") + ">" + x.ad + "</a>"; }).join("") + "</div></div>" +
       BOLUM[r](KISI[r]);
     var u = document.querySelector(".a-kullanici");
     if (u) { u.querySelector(".a-avatar").textContent = MV.bas(p.ad); u.querySelector(".a-kullanici-ad").textContent = p.ad; u.querySelector(".a-kullanici-rol").textContent = MV.rol(r).ad; }

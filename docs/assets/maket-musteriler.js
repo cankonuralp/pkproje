@@ -168,7 +168,7 @@
           var gec = fl.filter(function (f) { return MV.faturaDurum(f) === "gecikti"; }).length, yur = sz.filter(function (x) { return MV.isDurum(x) === "yururlukte"; }).length;
           return yuz({ ikon: "file-text", ad: "Teklif", sayi: tk.length, hedef: 11, hash: "#/?musteri=" + m.id, ne: "Teklifler", not: tk.filter(function (x) { return x.durum === "kabul"; }).length + " kabul edildi" }) +
             yuz({ ikon: "file-signature", ad: "İş sözleşmesi", sayi: sz.length, hedef: "is-sozlesmesi", hash: "#/?musteri=" + m.id, ne: "İş sözleşmeleri",
-              not: sz.some(function (x) { return MV.isDurum(x) === "imza"; }) ? "imza bekleyen var" : yur ? yur + " yürürlükte" : "yürürlükte yok", uyari: sz.some(function (x) { return MV.isDurum(x) === "imza"; }) }) +
+              not: sz.some(function (x) { return MV.isDurum(x) === "imza"; }) ? "imza bekleyen var" : yur ? yur + " yürürlükte" : "yürürlükte yok" }) +
             yuz({ ikon: "wallet", ad: "Açık alacak", sayi: kalanPara > 0 ? MV.para(kalanPara) : "—", hedef: fl.length ? 18 : null, hash: "#/faturalar?musteri=" + m.id, ne: "Muhasebe",
               not: gec ? gec + " faturanın vadesi geçti" : fl.length ? fl.length + " fatura" : "fatura yok", uyari: gec > 0 });
         })() +
