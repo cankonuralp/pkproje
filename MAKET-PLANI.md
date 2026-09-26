@@ -137,3 +137,4 @@ tek mesaj: sayfanın bağlantısı + kaç maket + kaç soru + ölçülemeyen var
   40/40. Reisim'in incelemesi bekleniyor; iş sözleşmesinin kalan soruları (M13) ve sonra M6 Plan aç.
 - 2026-09-26: **M5 2. tur, ek** — imzalı sözleşme görüntülenir; uyarı yalnız İSG-KATİP (yok · geç onay · bitmiş); hizmet sözleşmesi uyarıları
   kalktı; numaralandırma firmaya göre (§3.7); M13 soruları cevaplandı. M5 66/66 · 16/16 · 44/44. Reisim'in incelemesi bekleniyor; sırada M6.
+- 2026-09-26: **M5 ve M13 ONAYLANDI** (reisim: *"Sıradakine geçelim"*). Sırada **M6 Plan aç** — sorular 74–81 yeniden soruldu.

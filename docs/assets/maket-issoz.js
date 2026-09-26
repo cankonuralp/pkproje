@@ -1,4 +1,4 @@
-/* ══ probata MAKET M5 + M13 — Sözleşmeler: iş sözleşmesi + İSG-KATİP bilgisi (modül 12) · 2. TUR, ONAY BEKLİYOR (2026-09-26) ════════
+/* ══ probata MAKET M5 + M13 — Sözleşmeler: iş sözleşmesi + İSG-KATİP bilgisi (modül 12) · 2. TUR, ONAYLANDI (2026-09-26) ════════
    Kaynak: pkproje.md §1.1 (akış: "teklif kabul edildi → sözleşmeler yapıldı (isg katip ve şirketler arası iş sözleşmesi) → planlama"),
    §3.1 modül 12. Ekranlar: liste (#/) · sözleşme sayfası (#/s/<no>: taraflar, kapsam, İSG-KATİP (tesis başına denetçi → sözleşme ID),
    geçmiş) · form (#/yeni?teklif=<no>) · pencereler: İSG-KATİP ID ekle / düzenle · sözleşme şablonu. Kullanıcı: Zeynep Arslan. UYDURMA veri.

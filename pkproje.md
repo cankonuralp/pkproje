@@ -531,7 +531,7 @@ Teslim et → pencere dolu, cihaz kodu düzenlenir, ara kontrolsüz cihazda böl
 Ortak veri değiştiği için M1, M8, M9, M10, M16 etkileşim denemeleri yeniden koşuldu, hepsi geçti.
 1. tur (2026-09-24): 10 durum 60/60, etkileşim 12/12 (uygulama içi onay, zorunlu fotoğraf, her cihazda ara kontrol).
 
-#### Maket M5 — Sözleşmeler: iş sözleşmesi + İSG-KATİP (modül 12; M13 ile birleşti) — ONAY BEKLİYOR
+#### Maket M5 — Sözleşmeler: iş sözleşmesi + İSG-KATİP (modül 12; M13 ile birleşti) — ONAYLANDI 2026-09-26
 **2. tur (2026-09-26, reisim'in cevaplarıyla; kararlar §9 on altıncı tur).** Ekran: **Sözleşmeler** (`maket/sozlesmeler.html`; eski
 `is-sozlesmeleri.html` ve `#/isg…` adresleri karşılığına gider): **iş sözleşmeleri listesi** (no, müşteri / tesis, süre, İSG-KATİP ID sayısı
 ve eksik, durum; çipler: imza bekliyor · yürürlükte · süresi doldu · bitişi 60 gün içinde · İSG-KATİP ID'si eksik; seçiciler: müşteri ·
@@ -557,7 +557,8 @@ ekle / düzenle** · **sözleşme şablonu** · form: sözleşme hazırla.
 - **İmzalı sözleşme görüntülenir** ("İmzalı sözleşmeyi aç"; makette temel formatın imzalı hâli, KM-FR-SZL-01).
 - **Numaralar firmaya göre** (IS-AAYY-SIRA temel biçim; §3.7 satır 8).
 **Sorular (M5):**
-Açık soru yok — A–H cevaplandı (§9, on altıncı tur). İş sözleşmesinin kendi soruları M13 bölümünde (125–134'ün kalanları) sırada.
+Açık soru yok — A–H cevaplandı (§9, on altıncı tur); iş sözleşmesinin 125–134'ü de cevaplandı (on yedinci tur). **2. tur ONAYLANDI
+(2026-09-26, reisim: *"Sıradakine geçelim"*)** — M13 (iş sözleşmesi) bu onayın içinde.
 **Ölçüm (2026-09-26, bulut, 2. tur + ek):** 11 durum × 1920 · 1080 · 375 × açık/koyu = **66/66 temiz**, çekmece 2/2; etkileşim **16/16**, telefon **44/44**
 (ek: İSG-KATİP bitmiş uyarısı, bitiş uzatılınca uyarı düşer; ilk hâli 60/60 · 14/14 · 40/40)
 (eski İSG-KATİP adresi sözleşmeye gider, sözleşmesi olmayan tesis → tesis sayfası, denetçiye göre, ID eksik çipi, geç onay yalnız uyarı,
@@ -787,7 +788,7 @@ fiyat listesinden birim fiyat, "tesisteki ekipmandan doldur", tutar ve toplam ca
 **Ölçüm (2026-09-24, bulut):** 9 durum × 1920 · 1080 · 375 × açık/koyu = **54/54 temiz**, çekmece 2/2; etkileşim **10/10** (teklif → plan aç
 geçişi dahil).
 
-#### Maket M13 — Sözleşmeler: firmalar arası iş sözleşmesi (modül 12, faz 2) — ONAY BEKLİYOR
+#### Maket M13 — Sözleşmeler: firmalar arası iş sözleşmesi (modül 12, faz 2) — ONAYLANDI 2026-09-26 (M5 ile)
 **2026-09-26: M5 ile birleşti** (reisim: menüdeki Sözleşmeler = iş sözleşmesi); ekran artık `maket/sozlesmeler.html`, sekme yok, İSG-KATİP
 bilgisi sözleşmenin içinde (M5 2. tur). Aşağıdaki 1. tur metni tarihseldir; kalan sorular sırası gelince yeniden sorulur.
 Ekran (1. tur): **İş sözleşmeleri** (planlama Zeynep Arslan): modül 12 tek menü öğesi, **iki sekme** — İSG-KATİP kayıtları · iş sözleşmeleri. Liste (no, müşteri / tesis, süre + kalan gün, dayanak teklif, durum; çipler: imza
@@ -1314,7 +1315,7 @@ katip girilmemiş geçmiş vb uyarı tamamdır.  Bunlar dışında dediklerini k
 türlü numaralandırma; İSG-KATİP ID'sine isteğe bağlı bitiş tarihi, "bitmiş" uyarısı; hizmet sözleşmesi uyarıları kalktı; 125, 128, 129, 133,
 134 öneriler kabul. **M6 için not:** plan açarken İSG-KATİP bitmişse / yoksa / geç onaylıysa uyarı (engel değil).
 
-**Açık kalanlar:** **modül modül gözden geçirme** (M1–M4 onaylandı — Ekipmanlar kalktı; M5 Sözleşmeler 2. tur incelemede (M13 ile birleşti, soruları cevaplandı); sırada M6) · **toplu maket çalışması** (M1–M16 + toplu bakış, `MAKET-PLANI.md`; sorular §3.6'da, 32'den) · **önizlemede örnek veri kipi** (öneri, §3.3) · ~~rol × modül görünürlüğü~~ (karar 2026-09-25: başlangıç düzeni + firma yöneticisi değiştirir) · **gerçek sunucunun sağlayıcısı**
+**Açık kalanlar:** **modül modül gözden geçirme** (M1–M5 ve M13 onaylandı — Ekipmanlar kalktı, Sözleşmeler birleşti; sırada M6 Plan aç) · **toplu maket çalışması** (M1–M16 + toplu bakış, `MAKET-PLANI.md`; sorular §3.6'da, 32'den) · **önizlemede örnek veri kipi** (öneri, §3.3) · ~~rol × modül görünürlüğü~~ (karar 2026-09-25: başlangıç düzeni + firma yöneticisi değiştirir) · **gerçek sunucunun sağlayıcısı**
 (Türkiye, §8.8) ·
 alan adının alınması · e-imza yöntemi (8.4) · v1 ekipman grupları · 5 yıl sonrası silme
 mekanizması · **zimmette birden çok cihaz varsa süzgeç** (§3) · **kontrol metodu standardının seçim yeri**
@@ -1344,6 +1345,7 @@ revizyon, alan kopyalama, hafif kusur devri, meslek eşleşme denetimi).
 - Emsal ürünler: https://opwire.app/iso-17020-periyodik-kontrol-yazilimi/ · https://17020muayene.vidco.com.tr/ · https://akuple.com/asansor-kontrol-yazilimi/ · https://ensyazilim.com/
 
 ## 11 · Değişiklik günlüğü
+- 2026-09-26 (45): **M5 ve M13 ONAYLANDI** (reisim: *"Sıradakine geçelim"*). Sırada M6 Plan aç; sorular 74–81 yeniden soruldu.
 - 2026-09-26 (44): **M5 2. tur, ek** (reisim, §9 on yedinci tur): "İmzalı sözleşmeyi aç" + imzalı belge görünümü; hizmet sözleşmesi için uyarı
   yok (bitiş şeridi, 60 gün çipi kalktı); uyarı yalnız İSG-KATİP (yok · geç onay · bitmiş — bitiş tarihi isteğe bağlı); §3.7 satır 8 her türlü
   numaralandırma firmaya göre; M13 soruları cevaplandı. M5 66/66 · 16/16 · 44/44; M13 48/48 · 10/10 · 32/32.
