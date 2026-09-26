@@ -82,6 +82,7 @@
     var p = PLANLAR.filter(function (x) { return x.id === id; })[0], dagilim = [];
     ["onaylandi", "onayda", "taslak"].forEach(function (d) { for (var k = 0; k < (p.rap[d] || 0); k++) dagilim.push(d); });
     dagilim.forEach(function (d, k) {
+      if (d === "onaylandi" && id === 9 && k < 10) d = "imzali";   /* 106 (2026-09-26): Raporlar maketiyle aynı — plan 9'da 10 imzalı */
       var dak = 10 + k * 6, saat = p.basladi.slice(0, 11) + ("0" + (+p.basladi.slice(11, 13) + Math.floor(dak / 60))).slice(-2) + ":" + ("0" + (dak % 60)).slice(-2);
       p.rapor.push({ no: raporNo("0926", raporSira++), kod: p.ekp[k], durum: d, olustu: saat, sonuc: d === "taslak" ? null : SONUC[(k + id) % SONUC.length] });
     });
@@ -109,7 +110,8 @@
   var RAPOR = {
     taslak: { ad: "Taslak", rozet: "a-rozet-bekliyor" },
     onayda: { ad: "Onayda", rozet: "a-rozet-kabul" },
-    onaylandi: { ad: "Onaylandı", rozet: "a-rozet-tamam" },
+    onaylandi: { ad: "İmza bekliyor", rozet: "a-rozet-denetimde" },
+    imzali: { ad: "Müşteriye açık", rozet: "a-rozet-tamam" },
     yok: { ad: "Rapor yok", rozet: "a-rozet-notr" }
   };
 
@@ -145,7 +147,8 @@
   var CIP_R = [
     { k: "taslak", ad: "Taslak", grup: "durum", test: function (r) { return r.durum === "taslak"; } },
     { k: "onayda", ad: "Onayda", grup: "durum", test: function (r) { return r.durum === "onayda"; } },
-    { k: "onaylandi", ad: "Onaylandı", grup: "durum", test: function (r) { return r.durum === "onaylandi"; } }
+    { k: "onaylandi", ad: "İmza bekliyor", grup: "durum", test: function (r) { return r.durum === "onaylandi"; } },
+    { k: "imzali", ad: "Müşteriye açık", grup: "durum", test: function (r) { return r.durum === "imzali"; } }
   ];
   /* Sıralama (yalnız Planlar): tabloda sütun başlığı, kart kipinde "Sıralama" seçicisi; ikisi de aynı değeri yazar. */
   var SIRA_ANAHTAR = {

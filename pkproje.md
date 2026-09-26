@@ -688,7 +688,14 @@ geçiş dahil). Ölçerken düzeltilen: 375'te üç seçenekli seçim satırı 8
 (telefonda seçenek iç boşluğu daraldı; seçenek "Kullanılamaz" oldu, açıklaması altında) · önceki raporun numarası satır sonunda bölünüyordu.
 Planlar (54/54, 15/15) ve M7 (66/66, 12/12; kriter ve test listesi ortak veriye taşındı) yeniden ölçüldü.
 
-#### Maket M9 — Raporlar · Onaylar · İmza · PDF (modül 14, 15, 16) — ONAY BEKLİYOR
+#### Maket M9 — Raporlar · Onaylar · İmza · PDF (modül 14, 15, 16) — 2. TUR, ONAY BEKLİYOR (toplu gözden geçirmede)
+**2. tur (2026-09-26, §9 yirmi birinci tur):** **raporlar asla birleştirilmez** (99): son imza penceresinde her rapor ayrı PDF, ayrı imzalanır;
+yöntem firma ayarı (98: imza servisi ya da indir, e-imza, yükle) · **vekil onay** (100): Onaylar'da kuyruk seçimi "Mekanik · Elektrik · vekil" ·
+**"Onayı geri al"** (102): onaylanıp imza bekleyen rapor yeniden kuyruğa döner · **"Düzelt (R1)"** (103): imzalı raporun düzeltmesi yeni
+sürümle, önceki sürüm saklanır · Planlar'daki rapor rozeti **"İmza bekliyor" / "Müşteriye açık"** (106; iki tablonun durum sütunu genişledi) ·
+serbest gerekçe (101), imza anında müşteriye açılır (104), onaylayanın adı formatta yeri varsa (105). Şeritler kısaldı.
+Ölçüm: 12 durum 72/72, etkileşim 16/16, telefon 48/48; Planlar 54/54 · 15/15 · 36/36.
+1. tur metni (tarihsel):
 Ekranlar: **Raporlar** (`maket/raporlar.html`, inspector Mert Kaya: kendi raporları, 20'şer; çipler: taslak · onayda · imza bekliyor ·
 müşteriye açık · geri gönderildi · kusurlu; seçiciler: müşteri, yıl; üstte **"N rapor son imzanızı bekliyor"** şeridi · **rapor sayfası**:
 durum geçmişi, müşteri erişimi, **PDF önizlemesi** · **son imza penceresi**: tekli ya da toplu, iki yol) · **Onaylar** (`maket/onaylar.html`,
@@ -1385,6 +1392,8 @@ revizyon, alan kopyalama, hafif kusur devri, meslek eşleşme denetimi).
 - Emsal ürünler: https://opwire.app/iso-17020-periyodik-kontrol-yazilimi/ · https://17020muayene.vidco.com.tr/ · https://akuple.com/asansor-kontrol-yazilimi/ · https://ensyazilim.com/
 
 ## 11 · Değişiklik günlüğü
+- 2026-09-26 (53): **M9 2. tur**: her rapor ayrı imza (birleştirme yok), vekil onay, onayı geri al, imzalı raporun düzeltmesi (R1), Planlar'da
+  İmza bekliyor / Müşteriye açık. M9 72/72 · 16/16 · 48/48, Planlar 54/54 · 15/15 · 36/36.
 - 2026-09-26 (52): **M8 2. tur**: gönder hep açık (eksik uyarı, tek engel kalibrasyon), sonraki kontrol gerekçesiz, kusura fotoğraf, pano fotoğrafı,
   geri gönderme geçmişi, tür formatı "Hazırlanıyor". M8 60/60 · 17/17 · 40/40.
 - 2026-09-26 (51): **M7 2. tur**: ayrı rapor şablonu önizlemesi ekranı kalktı; format tür sayfasında "PDF'i aç" ile pencerede. M7 54/54 · 11/11 · 36/36.

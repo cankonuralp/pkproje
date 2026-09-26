@@ -65,8 +65,9 @@
     var l = [[r.olustu, MV.kisi(r.kisi).ad, "Rapor oluşturuldu"]];
     if (r.geri) l.push([dkGeri(r), MV.kisi(r.kisi).ad, "Onaya gönderildi"], [r.geri.zaman, MV.kisi(r.geri.kim).ad, "Geri gönderildi", "“" + r.geri.gerekce + "”"]);
     if (r.gonderildi) l.push([r.gonderildi, MV.kisi(r.kisi).ad, "Onaya gönderildi"]);
-    if (r.onay) l.push([r.onay.zaman, MV.kisi(r.onay.kim).ad, "Onaylandı", "branş yöneticisi"]);
-    if (r.imza) l.push([r.imza.zaman, MV.kisi(r.kisi).ad, "İmzalandı", "güvenli elektronik imza"], [r.imza.zaman, "Sistem", "Müşteriye açıldı", "portal kullanıcıları indirebilir"]);
+    if (r.onay) l.push([r.onay.zaman, MV.kisi(r.onay.kim).ad, "Onaylandı"]);
+    if (r.imza) l.push([r.imza.zaman, MV.kisi(r.kisi).ad, "İmzalandı"], [r.imza.zaman, "Sistem", "Müşteriye açıldı"]);
+    (r.revizyonlar || []).forEach(function (v) { l.push([v.zaman, MV.kisi(r.kisi).ad, "Düzeltme açıldı · " + v.ad, "önceki sürüm saklandı"]); });
     return l.sort(function (a, b) { return a[0] < b[0] ? 1 : a[0] > b[0] ? -1 : 0; });
   }
   var dkGeri = function (r) { return r.olustu.slice(0, 11) + "14:20"; };
@@ -79,16 +80,17 @@
     var e = ekp(r), t = MV.tur(e.tur), ts = MV.tesis(r.tesis), m = MV.musteri(ts.m), portal = MV.musteriKullanicilari(m.id).filter(function (x) { return x.durum === "etkin"; });
     var yon = MV.kisi(MV.YONETICI[t.b]);
     $("a-nesne").innerHTML = MK.kirinti([["Raporlar", "#/"], [r.no]]) +
-      '<div class="a-nesne-bas"><div class="a-nesne-kimlik"><div class="a-nesne-baslik"><h1 tabindex="-1">' + r.no + "</h1>" + rozet(MV.raporDurum(r)) + "</div>" +
+      '<div class="a-nesne-bas"><div class="a-nesne-kimlik"><div class="a-nesne-baslik"><h1 tabindex="-1">' + r.no + (r.revizyonlar && r.revizyonlar.length ? "-" + r.revizyonlar[0].ad : "") + "</h1>" + rozet(MV.raporDurum(r)) + "</div>" +
         '<p class="a-nesne-alt">' + ikon("wrench", "a-ikon-kucuk") + '<span><span class="a-kod">' + e.kod + "</span> · " + kacis(t.ad) + " · " + kacis(ts.ad) + " · " + kacis(m.kisa) + "</span></p></div>" +
         '<div class="a-eylem-cubugu">' + MK.tus({ eylem: "pdf", ad: "PDF indir", ikon: "file-text", sinif: "a-tus-ikincil" }) +
           (r.durum === "onaylandi" ? MK.tus({ eylem: "imza-ac", ad: "İmzala", ikon: "file-signature", veri: { no: r.no } }) : "") +
+          (r.durum === "imzali" ? MK.tus({ eylem: "revizyon", ad: "Düzelt (R" + ((r.revizyonlar || []).length + 1) + ")", ikon: "pencil", sinif: "a-tus-ikincil", veri: { no: r.no } }) : "") +
           (yeniden(r) ? '<a class="a-tus a-tus-birincil" href="' + raporEkrani(r) + '">' + ikon("pencil", "a-ikon-kucuk") + "Raporu düzenle</a>" : "") + "</div></div>" +
       '<div class="a-uyari-serit">' +
         (r.geri && r.durum === "taslak" ? MK.serit("uyari", "undo-2", "<b>Geri gönderildi</b> · " + kacis(MV.kisi(r.geri.kim).ad) + ": “" + kacis(r.geri.gerekce) + "”") : "") +
-        (r.durum === "onayda" ? MK.serit("bilgi", "clock", kacis(yon.ad) + " (" + MV.bransAd(t.b).toLocaleLowerCase("tr") + " branş yöneticisi) onayında; bu sırada düzenlenemez.") : "") +
-        (r.durum === "onaylandi" ? MK.serit("uyari", "file-signature", "Onaylandı: son imzanız bekleniyor. İmzasız rapor müşteriye açılmaz.") : "") +
-        (r.durum === "imzali" ? MK.serit("onay", "circle-check", "İmzalı ve müşteriye açık" + (portal.length ? ": " + portal.length + " portal kullanıcısı indirebilir." : "; müşterinin portal kullanıcısı yok.")) : "") +
+        (r.durum === "onayda" ? MK.serit("bilgi", "clock", "Onayda · " + kacis(yon.ad)) : "") +
+        (r.durum === "onaylandi" ? MK.serit("uyari", "file-signature", "Onaylandı · son imzanız bekleniyor") : "") +
+        (r.durum === "imzali" ? MK.serit(portal.length ? "onay" : "uyari", "circle-check", "İmzalı ve müşteriye açık" + (portal.length ? "" : " · müşterinin giriş yapan kullanıcısı yok")) : "") +
       "</div>" +
       '<div class="a-yuzler">' +
         yuz({ ikon: "wrench", ad: "Ekipman", sayi: e.kod, not: MV.tur(e.tur).ad }) +   /* 2026-09-26: Ekipmanlar ekranı yok (M3 2. tur) */
@@ -101,7 +103,7 @@
           return '<li><span class="a-gecmis-zaman">' + MK.zamanYaz(x[0]) + '</span><span class="a-gecmis-ne"><b>' + x[2] + '</b> <span class="a-gecmis-rol">' + kacis(x[1]) + "</span>" + (x[3] ? '<span class="a-not-metin">' + kacis(x[3]) + "</span>" : "") + "</span></li>";
         }).join("") + "</ol></section>" +
       '<section class="a-bolum" aria-labelledby="a-b-pdf"><div class="a-alt-bas"><h2 class="a-alt-baslik" id="a-b-pdf">PDF önizlemesi</h2><span class="a-sayac">' + (r.imza ? "imzalı" : "imzasız") + "</span></div>" +
-        (r.durum === "taslak" ? '<p class="a-bos-satir">Taslak rapor: PDF onaylanıp imzalanınca üretilir. İçerik saha rapor ekranında.</p>' : MB.belge(t, MV.raporBelge(r))) + "</section>";
+        (r.durum === "taslak" ? '<p class="a-bos-satir">Taslak: PDF yok.</p>' : MB.belge(t, MV.raporBelge(r))) + "</section>";
   }
 
   /* ── SON İMZA PENCERESİ: aracı imza servisi · indir, imzala, yükle (yöntem firma ayarı; soru) ───────────────── */
@@ -114,12 +116,12 @@
         '<button type="button" class="a-sekme" data-yontem="dosya" aria-pressed="' + (W.y === "dosya") + '">İndir, imzala, yükle</button></div>' +
       '<ul class="a-kosullar">' + l.map(function (r) { var e = ekp(r); return '<li class="a-kosul-bilgi">' + ikon("file-text", "a-ikon-kucuk") + '<span><span class="a-kod">' + r.no + "</span> · " + e.kod + " · " + kacis(MV.tesis(r.tesis).ad) + "</span></li>"; }).join("") + "</ul>" +
       '<div class="a-serit-kap a-bolum-serit">' + (W.y === "servis"
-        ? MK.serit("bilgi", "file-signature", "PDF'ler firmanın anlaştığı aracı imza servisine gider; güvenli elektronik imza (5070) sizin kartınız ya da mobil imzanızla atılır, imzalı PDF geri gelir.")
-        : MK.serit("bilgi", "file-signature", "1 · PDF'leri indirin · 2 · kendi imza yazılımınızla güvenli elektronik imza atın · 3 · imzalı PDF'leri yükleyin. Sistem imzayı ve dosyanın değişmediğini doğrular.")) + "</div>" +
+        ? MK.serit("bilgi", "file-signature", "Her rapor ayrı PDF olarak imza servisine gider ve ayrı imzalanır.")
+        : MK.serit("bilgi", "file-signature", "Her rapor ayrı PDF: indirin, e-imzayla imzalayın, imzalı PDF'leri yükleyin.")) + "</div>" +
       (W.y === "dosya" ? '<div class="a-eylem-cubugu">' + MK.tus({ eylem: "pdf", ad: "PDF'leri indir", ikon: "file-text", sinif: "a-tus-ikincil" }) +
         MK.tus({ eylem: "imzali-yukle", ad: W.yuklendi ? "İmzalı PDF yüklendi (" + l.length + ")" : "İmzalı PDF'leri yükle", ikon: "file-check", sinif: "a-tus-ikincil" }) + "</div>" +
         (W.hata ? '<p class="a-ipucu a-ipucu-uyari">' + W.hata + "</p>" : "") : "");
-    $("a-pencere-alt").innerHTML = MK.tus({ eylem: "pencere-kapat", ad: "Vazgeç", sinif: "a-tus-ikincil" }) + MK.tus({ eylem: "imzala", ad: W.y === "servis" ? "İmzaya gönder" : "İmzayı tamamla", ikon: "file-signature" });
+    $("a-pencere-alt").innerHTML = MK.tus({ eylem: "pencere-kapat", ad: "Vazgeç", sinif: "a-tus-ikincil" }) + MK.tus({ eylem: "imzala", ad: W.y === "servis" ? "İmza servisine gönder" : "İmzayı tamamla", ikon: "file-signature" });
     if (odak) { var el = document.querySelector(odak); if (el) el.focus(); }
   }
   function pencereAc(no) {
@@ -163,6 +165,13 @@
   X["imza-ac"] = function (el) { pencereAc(el.dataset.no || null); };
   X["imzala"] = imzala;
   X["imzali-yukle"] = function () { W.yuklendi = true; W.hata = ""; pencereCiz('[data-eylem="imzali-yukle"]'); };
+  /* 103: imzalı raporun düzeltmesi yeni sürümle (R1, R2 …); önceki sürüm saklanır, rapor taslağa döner */
+  X["revizyon"] = function (el) {
+    var r = MV.rapor(el.dataset.no); r.revizyonlar = r.revizyonlar || [];
+    r.revizyonlar.unshift({ ad: "R" + (r.revizyonlar.length + 1), zaman: MK.simdi() }); r.durum = "taslak"; r.onay = null; r.imza = null; r.gonderildi = null;
+    raporCiz(r); var h = document.querySelector("#a-nesne h1"); if (h) h.focus();
+    MK.bildir(r.no + "-" + r.revizyonlar[0].ad + " açıldı; önceki imzalı sürüm saklandı.");
+  };
   X["pdf"] = function () { MK.bildir("Makette dosya yok. Uygulamada PDF sunucuda üretilir, kısa ömürlü yetkili bağlantıyla iner."); };
   $("a-pencere").addEventListener("close", function () { W = null; if (rota().pencere) history.replaceState(null, "", "#/"); });
 
