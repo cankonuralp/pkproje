@@ -495,36 +495,40 @@ bağlantısı, tesis sayfasındaki ekipman yüzü → plan). Menü değiştiği 
 1. tur (2026-09-24): 10 durum 60/60, etkileşim 14/14 (Ekipmanlar ayrı ekrandı, akreditasyon ve yetkili meslekler gösteriliyordu).
 
 #### Maket M4 — Ölçüm Cihazı · Zimmet · kalibrasyon uyarısı (modül 8, 9, 20 kısmı) — ONAY BEKLİYOR
-Ekranlar: **ölçüm cihazları** (`maket/olcum-cihazlari.html`: liste üstünde kalibrasyon uyarı şeridi — geçenler kişi adıyla, 30 gün
-içinde bitenler; "Göster" çipi uygular · çipler: kalibrasyonu geçmiş · 30 gün içinde · kalibrasyonda · ara kontrol gecikti · depoda ·
-**cihaz sayfası**: cihaz bilgileri (rapora dolar, Ek-III 1.7.4), kalibrasyon kayıtları + sertifika, ara kontroller · pencereler:
-cihaz ekle · kalibrasyon kaydı · ara kontrol) · **zimmetler** (`maket/zimmetler.html`: **Kimde** (anlık; kişiye göre adresten) ·
-**Hareketler** (tam geçmiş, 20'şer) · **varlık sayfası**: fotoğraflı teslim geçmişi · **teslim penceresi**).
+**2. tur (2026-09-26, reisim'in M4 cevaplarıyla; kararlar §9 on beşinci tur).** Ekranlar: **ölçüm cihazları** (`maket/olcum-cihazlari.html`:
+liste üstünde kalibrasyon uyarı şeridi — geçenler kişi adıyla, 30 gün içinde bitenler; "Göster" çipi uygular · çipler: kalibrasyonu geçmiş ·
+30 gün içinde · kalibrasyonda · ara kontrol gecikti · depoda · **cihaz sayfası**: başta **Kimde** (tıklanınca zimmet geçmişi) ve **kalibrasyon
+bitişi**, "Teslim et", "Düzenle" (cihaz kodu), cihaz bilgileri, kalibrasyon kayıtları + sertifika, ara kontroller (yalnız takip edilen
+cihazda) · pencereler: cihaz ekle / düzenle · kalibrasyon kaydı · ara kontrol) · **zimmetler** (`maket/zimmetler.html`: **Kimde** (anlık;
+kişiye göre adresten) · **Hareketler** (tam geçmiş, 20'şer; "İmzalı formda değil" çipi) · **varlık sayfası**: fotoğraflı teslim geçmişi,
+"Zimmet formu" · **teslim penceresi**).
 **Varsayımlar:**
+- **Asıl hedefler** (reisim: *"cihazlar eklensin tıklanınca kimde olduğu gözüksün kod verilebilsin kalibrasyon tarihi takip edilebilsin"*):
+  cihaz sayfasının başında Kimde ve kalibrasyon bitişi; **cihaz kodu** firmanın verdiği etiket (eşsiz, sonradan düzenlenir); "Teslim et"
+  cihaz sayfasından da açılır. Öteki işler (ara kontrol, uyarı şeridi, hareket geçmişi) kolaylaştırıcı.
 - Varlık = **cihaz · araç · diğer** (saha tableti, KKD seti). Kimde = son teslimin alanı: kişi · **Depo** · **Kalibrasyonda**.
-  Depo tarafında yetkili planlama ekibinden (Zeynep Arslan); kalibrasyona gönderim de bir hareket.
-- Kalibrasyon geçerliliği sertifikadaki bitiş; **ara kontrol 6 ayda bir** (yapan branş yöneticisi) — ikisi de varsayım.
-- Kalibrasyon durumları: Geçerli · 30 gün içinde · Kalibrasyonu geçti · Kalibrasyonda. **Uyarı yalnız ekranda** (liste şeridi, çip,
-  cihaz ve varlık sayfasında şerit); e-posta ya da anlık bildirim YOK (anayasa 1.3). M10 Uyarılar'da toplanır.
-- Kalibrasyonu geçen cihaz zimmette kalabilir; o kişinin raporları onaya **gönderilemez** (§3) — şerit bunu kişi adıyla söyler.
-- **Cihaz türü → ekipman grupları**: rapora yalnız ilgili gruptaki zimmetli cihazlar gelir (§3'teki açık soruya öneri).
-- Teslimde **en az 1 fotoğraf**, araçta **kilometre** zorunlu; kaydedince zimmet formu oluşur, **teslim alan kendi ekranından onaylar**
-  (o zamana kadar "Onay bekliyor"); depoya iade ve laboratuvara gönderim onay istemez. Kişiye aynı varlık yeniden teslim edilemez.
+- **Depo için ayrı rol yok** (63): Zimmetler yetkisi olan herkes teslim eder; geçmişte kaydı yapan yazar.
+- **Zimmetin onayı tek yoldan: ıslak imzalı zimmet formu + tarama** (M1, personel kartı). Uygulama içi "Onay bekliyor" kalktı (çakışma);
+  hareketlerde her kişiye teslim o kişinin imzalı formunda mı ("İmzalı formda" / "Form imzalatılacak") görünür.
+- **Kalibrasyonu geçen cihaz zimmette kalabilir, o kişinin raporları onaya GÖNDERİLEMEZ** (59, reisim: *"kalibrasyon önemli o durumda
+  göndermeyi engellesin"*) — genel "uyarı, engel değil" ilkesinin bilinçli istisnası.
+- **Rapordaki cihazlar** (58): denetçi rapor anında zimmetindeki cihazlardan seçer; cihaz türünün ekipman gruplarına uyanlar önceden işaretli
+  gelir (M8'in sırası gelince).
+- **Ara kontrol isteğe bağlı** (60): cihazda "takip edilsin" açıksa görünür; periyot firma ayarı (başlangıç 6 ay). Makette kumpas, mesafe
+  ölçer ve lüksmetrede takip edilmiyor.
+- **Kalibrasyon uyarı eşiği firma ayarı** (65), başlangıç 30 gün; cihaz başına değil. Uyarı yalnız ekranda (anayasa 1.3), M10'da toplanır.
+- **Teslimde fotoğraf isteğe bağlı** (62): fotoğrafsız teslim kaydedilir, pencerede uyarı yazar. **Araçta yalnız kimde + kilometre** (64).
 - Sertifika dosyası (PDF) zorunlu; sonuç "Uygun değil" ise cihaz kullanımdan çekilir. Laboratuvardan dönen cihaz depoya girer.
 - Ayrılan personelin zimmeti iadeyle depoya döner. Plaka il kodu **00** (gerçek olamaz), laboratuvar adları uydurma.
 **Sorular (M4):**
-58. Zimmette birden çok cihaz varsa rapora hangileri gelir: **hepsi** mi, **cihaz türünün ekipman gruplarına göre süzülmüş** mü (öneri),
-    inspector rapor anında çıkarabilir mi? *(§3 açık soru; bağımlılık: M8 Saha ve Rapor.)*
-59. Kalibrasyonu geçen cihaz **zimmette kalabilir** mi (öneri), yoksa bitiş günü teslim / kullanım mı engellensin?
-60. **Ara kontrol** periyodu (öneri 6 ay) ve yapan kişi: firma ayarı mı, cihaz başına mı?
-61. Zimmet formunun onayı: **uygulama içi onay** (öneri) mı, ıslak imzalı form mu, ikisi de mi?
-62. Teslimde **fotoğraf zorunlu** mu (öneri: en az 1; araçta dört yönden önerilir)?
-63. **Depo sorumlusu** kim: planlama ekibi mi, ayrı bir rol mü? *(Bağımlılık: soru 32 rol tablosu.)*
-64. Araçlar için ek takip (muayene, sigorta, bakım tarihi) istenir mi, yoksa yalnız "kimde"?
-65. Kalibrasyon uyarı eşiği 30 gün: **cihaz başına** değişebilsin mi?
-**Ölçüm (2026-09-24, bulut):** 10 durum × 1920 · 1080 · 375 × açık/koyu = **60/60 temiz**, çekmece 2/2; etkileşim **12/12**.
-Ölçerken düzeltilen: `list-checks` ikonu dosyada yoktu (M3'te kurulan çalışma anı ikon denetimi yakaladı) · telefonda iki arama ipucu
-kesikti · seçim alanında kırpılan değerin tam metni (title) yoktu (ortak üreticide, bütün maketler için).
+Açık soru yok — 58–65 cevaplandı (§9, on beşinci tur). 2. tur reisim'in incelemesini bekliyor.
+**Ölçüm (2026-09-26, bulut, 2. tur):** 12 durum × 1920 · 1080 · 375 × açık/koyu = **72/72 temiz**, çekmece 2/2; etkileşim **20/20**, telefon **48/48**
+(Göster çipi, aynı cihaz kodu reddedilir, cihaz ekle, kalibrasyon kaydı dosyasız kaydedilmez, laboratuvardan dönüş, ara kontrol, kişiye göre,
+20'şer sayfa, aynı kişiye teslim reddedilir, kilometresiz araç reddedilir / fotoğrafsızlık yalnız uyarı, fotoğrafsız teslim kaydedilir,
+kalibrasyonu geçmiş cihaz depoya, kişiye teslim → Form imzalatılacak, Zimmet formu → Personel, İmzalı formda değil çipi, Kimde yüzü → varlık,
+Teslim et → pencere dolu, cihaz kodu düzenlenir, ara kontrolsüz cihazda bölüm yok, kalibrasyonu geçmiş cihazda gönderilemez uyarısı).
+Ortak veri değiştiği için M1, M8, M9, M10, M16 etkileşim denemeleri yeniden koşuldu, hepsi geçti.
+1. tur (2026-09-24): 10 durum 60/60, etkileşim 12/12 (uygulama içi onay, zorunlu fotoğraf, her cihazda ara kontrol).
 
 #### Maket M5 — İSG-KATİP kaydı (modül 12, kısım) — ONAY BEKLİYOR
 Ekran: **İSG-KATİP kayıtları** (`maket/sozlesmeler.html`; menüde Sözleşmeler — iş sözleşmesi sekmesi M13'te gelir). Liste üstünde
@@ -1289,7 +1293,17 @@ ilerledikçe daha oturaklı olacak. Dediklerimi projeye hakim ol diye anlatıyor
 M3'e Tür ekle ve rapor formatı (PDF) yükleme; akreditasyon kalktı. **M8 için not:** mevcut rapor ekranı reisim'e göre "çok kullanışsız";
 M8'in sırası gelince rapor, türün PDF formatındaki sorularla ve uygun / uygun değil sonucuyla yeniden kurulacak (§8.3 de o zaman).
 
-**Açık kalanlar:** **modül modül gözden geçirme** (M1, M2 ve M3 onaylandı — Ekipmanlar kalktı; sırada M4) · **toplu maket çalışması** (M1–M16 + toplu bakış, `MAKET-PLANI.md`; sorular §3.6'da, 32'den) · **önizlemede örnek veri kipi** (öneri, §3.3) · ~~rol × modül görünürlüğü~~ (karar 2026-09-25: başlangıç düzeni + firma yöneticisi değiştirir) · **gerçek sunucunun sağlayıcısı**
+**On beşinci tur (2026-09-26, M4 soruları 58–65; reisim birebir):** *"59 kalibrasuon önemli o durumda göndermeyi engellesin diğer önerilerini
+kabul ediyorum ama genel olarak cihazlar modüllerden çok diğer modülleri etkileyecek sorular sordun genel olarak cihazlar modülünde cihazlar
+eklensin tıklanınca kimde olduğu gözüksün kod verilebilsin kalibrasyon tarihi takip edilebilsin asıl hedefler bunlar diğer söylediğin iş
+kolaylaştırıcı işlemleride ekle tabiki ama bu fikri unutma diye söyledim . Özetle 59 hariç dediklerini kabul ediyorum 59 u da yukarıda
+açıkladım"* → kabul edilen öneriler: çakışma (zimmet onayı yalnız imzalı form + tarama, M1) · 58 denetçi rapor anında zimmetindeki
+cihazlardan seçer, türe uyanlar işaretli · 60 ara kontrol isteğe bağlı, periyot firma ayarı · 61 = çakışma · 62 fotoğraf isteğe bağlı,
+uyarı · 63 depo için ayrı rol yok · 64 araçta yalnız kimde + km · 65 kalibrasyon eşiği firma ayarı, 30 gün. **59: kalibrasyonu geçmiş
+cihaz zimmetteyken raporu onaya göndermek ENGELLENİR** (genel ilkenin istisnası). **Ürün ilkesi (bu cevaptan):** her modülde önce o
+modülün **asıl hedefi** sorulur ve ekran onu öne koyar; başka modülleri etkileyen sorular o modüllerin sırasında sorulur. → M4 2. tur (§3.6).
+
+**Açık kalanlar:** **modül modül gözden geçirme** (M1, M2 ve M3 onaylandı — Ekipmanlar kalktı; M4 2. tur incelemede; sırada M5) · **toplu maket çalışması** (M1–M16 + toplu bakış, `MAKET-PLANI.md`; sorular §3.6'da, 32'den) · **önizlemede örnek veri kipi** (öneri, §3.3) · ~~rol × modül görünürlüğü~~ (karar 2026-09-25: başlangıç düzeni + firma yöneticisi değiştirir) · **gerçek sunucunun sağlayıcısı**
 (Türkiye, §8.8) ·
 alan adının alınması · e-imza yöntemi (8.4) · v1 ekipman grupları · 5 yıl sonrası silme
 mekanizması · **zimmette birden çok cihaz varsa süzgeç** (§3) · **kontrol metodu standardının seçim yeri**
@@ -1319,6 +1333,9 @@ revizyon, alan kopyalama, hafif kusur devri, meslek eşleşme denetimi).
 - Emsal ürünler: https://opwire.app/iso-17020-periyodik-kontrol-yazilimi/ · https://17020muayene.vidco.com.tr/ · https://akuple.com/asansor-kontrol-yazilimi/ · https://ensyazilim.com/
 
 ## 11 · Değişiklik günlüğü
+- 2026-09-26 (42): **M4 2. tur** (reisim 58–65, §9 on beşinci tur): cihaz sayfasında Kimde + kalibrasyon başta, cihaz kodu düzenlenir, Teslim et;
+  zimmette uygulama içi onay yerine imzalı form (M1), fotoğraf isteğe bağlı, ara kontrol isteğe bağlı; kalibrasyonu geçmiş cihazda rapor
+  onaya gönderilemez (istisna). M4 72/72 · 20/20 · 48/48.
 - 2026-09-26 (41): **M3 ONAYLANDI** (reisim: *"Sıradakine geçelim"*). Sırada M4 Ölçüm cihazları · Zimmetler; sorular 58–65 yeniden soruldu.
 - 2026-09-26 (40): **M3 2. tur, ek** (reisim, §9 on dördüncü tur ek): **Tür ekle** geri geldi, her türe **firmanın rapor formatı PDF'i** yüklenir
   (sürümlü; "Rapor oluştur" soruları bu formattan — kurgusu M8'de), **akreditasyon her yerden kalktı**. §3.1 modül 5 ve §3.7 satır 1 güncellendi;

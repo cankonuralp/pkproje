@@ -2,8 +2,8 @@
  "maket": "m4",
  "tarih": "2026-09-26",
  "arac": "tools/olc-bulut.mjs --etkilesim (başsız tarayıcı, 1920 açık tema; gen verilen denemede o genişlik)",
- "toplam": 12,
- "gecen": 12,
+ "toplam": 20,
+ "gecen": 20,
  "denemeler": [
   {
    "ad": "cihazlar: uyarı şeridindeki Göster çipi uygular (2 / 20)",
@@ -13,7 +13,7 @@
    "gecti": true
   },
   {
-   "ad": "cihaz ekle: aynı envanter no reddedilir",
+   "ad": "cihaz ekle: aynı cihaz kodu reddedilir",
    "gen": 1920,
    "sayfa": "maket/olcum-cihazlari.html",
    "hash": "#/yeni",
@@ -69,24 +69,80 @@
    "gecti": true
   },
   {
-   "ad": "teslim: fotoğrafsız ve kilometresiz araç teslimi reddedilir",
+   "ad": "teslim: kilometresiz araç teslimi reddedilir, fotoğrafsızlık yalnız uyarı",
    "gen": 1920,
    "sayfa": "maket/zimmetler.html",
    "hash": "#/teslim/a3",
    "gecti": true
   },
   {
-   "ad": "teslim: kalibrasyonu geçmiş cihaz depoya alınır, onay gerekmez",
+   "ad": "teslim: fotoğrafsız teslim kaydedilir",
+   "gen": 1920,
+   "sayfa": "maket/zimmetler.html",
+   "hash": "#/teslim/d5",
+   "gecti": true
+  },
+  {
+   "ad": "teslim: kalibrasyonu geçmiş cihaz depoya alınır",
    "gen": 1920,
    "sayfa": "maket/zimmetler.html",
    "hash": "#/teslim/v3",
    "gecti": true
   },
   {
-   "ad": "teslim: kişiye teslim onay bekler",
+   "ad": "teslim: kişiye teslim → Form imzalatılacak, uygulama içi onay yok",
    "gen": 1920,
    "sayfa": "maket/zimmetler.html",
    "hash": "#/teslim/d5",
+   "gecti": true
+  },
+  {
+   "ad": "varlık sayfası: Zimmet formu → kişinin formu (Personel)",
+   "gen": 1920,
+   "sayfa": "maket/zimmetler.html",
+   "hash": "#/v/v7",
+   "gecti": true
+  },
+  {
+   "ad": "hareketler: İmzalı formda değil çipi",
+   "gen": 1920,
+   "sayfa": "maket/zimmetler.html",
+   "hash": "#/hareketler",
+   "gecti": true
+  },
+  {
+   "ad": "cihaz: Kimde yüzü → zimmetteki varlık sayfası",
+   "gen": 1920,
+   "sayfa": "maket/olcum-cihazlari.html",
+   "hash": "#/c/v7",
+   "gecti": true
+  },
+  {
+   "ad": "cihaz: Teslim et → teslim penceresi cihazla dolu",
+   "gen": 1920,
+   "sayfa": "maket/olcum-cihazlari.html",
+   "hash": "#/c/v1",
+   "gecti": true
+  },
+  {
+   "ad": "cihaz: kodu düzenlenir",
+   "gen": 1920,
+   "sayfa": "maket/olcum-cihazlari.html",
+   "hash": "#/c/v1",
+   "gecti": true
+  },
+  {
+   "ad": "cihaz: ara kontrol takip edilmeyende bölüm yok",
+   "gen": 1920,
+   "sayfa": "maket/olcum-cihazlari.html",
+   "hash": "#/c/v16",
+   "gecti": true
+  },
+  {
+   "ad": "cihaz: kalibrasyonu geçmiş cihazda rapor onaya gönderilemez uyarısı",
+   "gen": 1920,
+   "sayfa": "maket/olcum-cihazlari.html",
+   "hash": "#/c/v3",
    "gecti": true
   }
  ]

@@ -1,9 +1,18 @@
-/* ══ probata MAKET M4 — Zimmet (modül 9) · ONAY BEKLİYOR (toplu maket, 2026-09-24) ══════════════════════════════════
+/* ══ probata MAKET M4 — Zimmet (modül 9) · 2. TUR, ONAY BEKLİYOR (2026-09-26) ═══════════════════════════════════════════
    Kaynak: pkproje.md §1.1 (reisim: "kim hangi aracı kimden teslim aldı kime verdi ne zaman görselleri ile"), §3.1 modül 9 (varlık:
    cihaz · araç · diğer; her teslim ayrı kayıt: teslim eden → alan, tarih-saat, fotoğraflar, zimmet formu; anlık "kimde" + tam
    geçmiş), §3 + §3.2 madde 4 (rapordaki cihazlar zimmetten gelir). Ekranlar: kimde (#/, ?kisi=) · hareketler (#/hareketler) ·
    varlık (#/v/<id>) · teslim penceresi (#/teslim[/<varlık>]). Depo tarafındaki yetkili: planlama ekibinden Zeynep Arslan
-   (varsayım). Fotoğraflar makette yer tutucu. UYDURMA veri. */
+   (varsayım). Fotoğraflar makette yer tutucu. UYDURMA veri.
+   2. tur (2026-09-26, reisim: "59 hariç dediklerini kabul ediyorum"):
+   · çakışma → uygulama içi onay ("Onay bekliyor") KALKTI; onay tek yoldan: M1'deki ıslak imzalı zimmet formu + tarama (personel
+     kartı). Hareketlerde her kişiye teslim o kişinin imzalı formunda mı, değil mi görünür; varlık sayfasında "Zimmet formu" kişinin
+     formunu açar.
+   · 62 → fotoğraf isteğe bağlı: fotoğrafsız teslim kaydedilir, pencerede uyarı yazar.
+   · 63 → depo için ayrı rol yok: Zimmetler yetkisi olan herkes teslim eder (kaydı yapan geçmişte yazar).
+   · 64 → araçta yalnız kimde + teslimdeki kilometre.
+   · 59 → kalibrasyonu geçmiş cihaz zimmette kalabilir ama o kişinin raporu onaya GÖNDERİLEMEZ (reisim: "kalibrasyon önemli o durumda
+     göndermeyi engellesin"). */
 (function () {
   "use strict";
   var $ = MK.$, kacis = MK.kacis, ikon = MK.ikon, kirp = MK.kirp, rozet = MK.rozet, SZ = MK.SZ;
@@ -61,7 +70,7 @@
   /* ── HAREKETLER (tam geçmiş) ─────────────────────────────────────────────────────────────────────── */
   MK.suzgecTanimla("h", { ad: "Hareketlerde ara", ipucu: "Varlık, kişi, not", birim: "hareket", sayfa: 20,
     cipler: [
-      { k: "onaysiz", ad: "Onay bekliyor", test: function (h) { return h.alan !== "depo" && h.alan !== "lab" && !h.onay; } },
+      { k: "formsuz", ad: "İmzalı formda değil", test: function (h) { return kisiye(h) && !formda(h); } },
       { k: "cihaz", ad: "Ölçüm cihazı", grup: "tur", test: function (h) { return MV.varlik(h.v).tur === "cihaz"; } },
       { k: "arac", ad: "Araç", grup: "tur", test: function (h) { return MV.varlik(h.v).tur === "arac"; } },
       { k: "diger", ad: "Diğer", grup: "tur", test: function (h) { return MV.varlik(h.v).tur === "diger"; } }
@@ -72,9 +81,16 @@
     }, gecer: function (h, d) { return d === "tumu" || h.eden === d || h.alan === d; } }],
     metin: function (h) { var v = MV.varlik(h.v); return [MV.varlikAdi(v), MV.yerAdi(h.eden), MV.yerAdi(h.alan), h.not].join(" "); },
     imkansiz: "Bir hareket aynı anda iki türde olamaz" }, function () { hareketCiz(); });
+  /* 2. tur: onay = alanın imzalı zimmet formu (M1). Kişiye teslim, o tarihten sonra yüklenen ve varlığı kapsayan imzalı formdaysa "formda". */
+  var kisiye = function (h) { return h.alan !== "depo" && h.alan !== "lab"; };
+  var formda = function (h) {
+    return (MV.ZIMMET_FORMLARI[h.alan] || []).filter(function (f) { return f.tarih >= h.tarih.slice(0, 10) && f.kapsam.indexOf(h.v) >= 0; })[0] || null;
+  };
   var formRozet = function (h) {
-    if (h.alan === "depo" || h.alan === "lab") return rozet({ ad: h.alan === "lab" ? "Gönderim formu" : "İade alındı", rozet: "a-rozet-notr" });
-    return h.onay ? rozet({ ad: "Onaylandı " + MK.gunKisa(h.onay), rozet: "a-rozet-tamam" }) : rozet({ ad: "Onay bekliyor", rozet: "a-rozet-bekliyor" });
+    if (!kisiye(h)) return rozet({ ad: h.alan === "lab" ? "Kalibrasyona gönderildi" : "Depoya alındı", rozet: "a-rozet-notr" });
+    var f = formda(h);
+    /* rozet bağlantı değil (satır zaten tıklanır; formun kendisi personel kartında) */
+    return rozet(f ? { ad: "İmzalı formda", rozet: "a-rozet-tamam" } : { ad: "Form imzalatılacak", rozet: "a-rozet-bekliyor" });
   };
   var HAREKET_SUTUN = [
     { k: "tarih", baslik: "Tarih", kart: "ust", sira: 1, hucre: function (h) { return '<span class="a-tarih-gun">' + MK.tarihYaz(h.tarih) + '</span><span class="a-tarih-saat">' + h.tarih.slice(11, 16) + "</span>"; } },
@@ -107,6 +123,7 @@
       '<div class="a-nesne-bas"><div class="a-nesne-kimlik"><div class="a-nesne-baslik"><h1 tabindex="-1">' + kimlik + " · " + kacis(v.ad) + "</h1>" + rozet(durum(v)) + "</div>" +
         '<p class="a-nesne-alt">' + ikon(TUR[v.tur].ikon, "a-ikon-kucuk") + "<span>" + TUR[v.tur].ad + " · " + kacis(v.marka + " " + v.model) + (v.yil ? " · " + v.yil : "") + "</span></p></div>" +
         '<div class="a-eylem-cubugu">' + (v.tur === "cihaz" ? MK.git({ hedef: 8, hash: "#/c/" + v.id, ad: "Cihaz ve kalibrasyon", ikon: "gauge", ne: "Ölçüm cihazları" }) : "") +
+          (k !== "depo" && k !== "lab" ? '<a class="a-tus a-tus-ikincil" href="' + MK.adres(2, "#/p/" + k + "/zimmet-formu") + '">' + ikon("file-signature", "a-ikon-kucuk") + "Zimmet formu</a>" : "") +
         (k === "lab" ? "" : MK.tus({ eylem: "teslim-ac", ad: "Teslim et", ikon: "arrow-right-left", veri: { varlik: v.id } })) + "</div></div>" +
       (MV.kalDurum(v) === "gecti" && k !== "depo" ? '<div class="a-serit-kap">' + MK.serit("hata", "circle-x", "Kalibrasyonu geçmiş cihaz " + kacis(MV.yerAdi(k)) + " zimmetinde: raporları onaya gönderilemez. Depoya alın ya da kalibrasyona gönderin.") + "</div>" : "") +
       '<div class="a-yuzler">' +
@@ -117,7 +134,7 @@
       '<section class="a-bolum" aria-labelledby="a-b-gecmis"><div class="a-alt-bas"><h2 class="a-alt-baslik" id="a-b-gecmis">Teslim geçmişi</h2><span class="a-sayac"><b>' + h.length + "</b> hareket</span></div>" +
         (h.length ? '<ol class="a-gecmis a-gecmis-zimmet">' + h.map(function (x) {
           return '<li><span class="a-gecmis-zaman">' + MK.zamanYaz(x.tarih) + '</span><span class="a-gecmis-ne"><b>' + kacis(MV.yerAdi(x.eden)) + " → " + kacis(MV.yerAdi(x.alan)) + "</b> " + formRozet(x) +
-            '<span class="a-not-metin">' + (x.not ? kacis(x.not) : '<span class="a-deger-yok">Not yok</span>') + (x.eden === "depo" || x.alan === "depo" ? ' <span class="a-gecmis-rol">depo yetkilisi ' + kacis(MV.kisi(x.yetkili).ad) + "</span>" : "") + "</span>" +
+            '<span class="a-not-metin">' + (x.not ? kacis(x.not) : '<span class="a-deger-yok">Not yok</span>') + ' <span class="a-gecmis-rol">kaydeden ' + kacis(MV.kisi(x.yetkili).ad) + "</span></span>" +
             '<span class="a-fotolar">' + fotolar(x.foto, MV.varlikAdi(v) + " " + MK.gunKisa(x.tarih)) + "</span></span></li>";
         }).join("") + "</ol>" : '<p class="a-bos-satir">Bu varlığın hareketi yok; depoda.</p>') + "</section>";
   }
@@ -132,7 +149,6 @@
     else if (d.alan === k) h.alan = "Varlık zaten " + MV.yerAdi(k) + (k === "depo" ? "da." : "'de.");
     if (!/^\d{2}\.\d{2}\.\d{4} \d{2}:\d{2}$/.test(d.zaman)) h.zaman = "GG.AA.YYYY SS:DD biçiminde.";
     if (d.varlik && MV.varlik(d.varlik).tur === "arac" && !/^\d[\d.]*$/.test(d.km)) h.km = "Araç teslimde kilometre yazılır.";
-    if (d.foto < 1) h.foto = "En az bir fotoğraf eklenmeli (teslim anındaki durum).";
     return h;
   }
   function pencereCiz(odak) {
@@ -142,17 +158,18 @@
     $("a-pencere-govde").innerHTML = '<div class="a-form">' +
       MK.alan({ id: "w-varlik", etiket: "Varlık", zorunlu: true, genis: true, hata: h.varlik, ipucu: v ? "Şu an: " + MV.yerAdi(k) : "",
         girdi: MK.secim({ id: "w-varlik", ad: "Varlık", deger: d.varlik, secenekler: MV.VARLIKLAR.map(function (x) { return [x.id, MV.varlikAdi(x), MV.yerAdi(MV.kimde(x.id))]; }), ipucu: "Varlık seçin", gecersiz: !!h.varlik, tanim: "w-varlik-ipucu" }) }) +
-      MK.alan({ id: "w-alan", etiket: "Teslim alan", zorunlu: true, hata: h.alan, ipucu: "Teslim eden: " + (k ? MV.yerAdi(k) + (k === "depo" ? " (depo yetkilisi Zeynep Arslan)" : "") : "—"),
+      MK.alan({ id: "w-alan", etiket: "Teslim alan", zorunlu: true, hata: h.alan, ipucu: "Teslim eden: " + (k ? MV.yerAdi(k) : "—"),
         girdi: MK.secim({ id: "w-alan", ad: "Teslim alan", deger: d.alan, secenekler: kisiler, ipucu: "Kişi ya da depo", gecersiz: !!h.alan, tanim: "w-alan-ipucu" }) }) +
       MK.alan({ id: "w-zaman", etiket: "Tarih ve saat", zorunlu: true, hata: h.zaman, girdi: MK.girdi({ id: "w-zaman", alan: "zaman", deger: d.zaman, sinif: "a-girdi-seri", ek: ' inputmode="numeric" maxlength="16"', hata: h.zaman }) }) +
       (v && v.tur === "arac" ? MK.alan({ id: "w-km", etiket: "Kilometre", zorunlu: true, hata: h.km, girdi: MK.girdi({ id: "w-km", alan: "km", deger: d.km, sinif: "a-girdi-sicil", ek: ' inputmode="numeric" maxlength="9"', hata: h.km }) }) : "") +
       '<div class="a-alan-grup a-alan-genis"><label class="a-etiket" for="w-not">Durum notu</label><textarea class="a-alan a-alan-ince" id="w-not" data-alan="not" maxlength="300" placeholder="Eksik parça, hasar, aksesuarlar">' + kacis(d.not) + "</textarea></div>" +
-      '<div class="a-alan-grup a-alan-genis"><p class="a-etiket">Fotoğraflar <span class="a-zorunlu">en az bir</span></p><div class="a-fotolar">' + fotolar(d.foto, "Teslim") +
+      '<div class="a-alan-grup a-alan-genis"><p class="a-etiket">Fotoğraflar</p><div class="a-fotolar">' + fotolar(d.foto, "Teslim") +
         MK.tus({ eylem: "foto-ekle", ad: "Fotoğraf ekle", ikon: "camera", sinif: "a-tus-ikincil" }) + "</div>" +
-        (h.foto ? '<p class="a-ipucu a-ipucu-uyari">' + h.foto + "</p>" : '<p class="a-ipucu">Telefonda kamera açılır; masaüstünde dosya seçilir.</p>') + "</div>" +
+        (d.foto ? '<p class="a-ipucu">Telefonda kamera açılır; masaüstünde dosya seçilir.</p>'
+          : '<p class="a-ipucu"><span class="a-ipucu-dikkat">Fotoğraf yok: teslim fotoğrafsız da kaydedilir.</span> Teslim anındaki durum sonradan tartışılmasın diye önerilir.</p>') + "</div>" +
       "</div>" +
       (v && MV.kalDurum(v) === "gecti" && d.alan && d.alan !== "depo" ? '<div class="a-serit-kap">' + MK.serit("uyari", "triangle-alert", "Bu cihazın kalibrasyonu geçti: teslim alanın raporları, cihaz zimmetinde kaldıkça onaya gönderilemez.") + "</div>" : "") +
-      '<div class="a-serit-kap">' + MK.serit("bilgi", "file-signature", "Kaydedince zimmet formu oluşur; teslim alan kendi ekranından onaylar (onaylanana kadar hareket “Onay bekliyor”).") + "</div>";
+      '<div class="a-serit-kap">' + MK.serit("bilgi", "file-signature", "Kişiye teslimde zimmet formu güncellenir; imzalatılıp taraması personel kartına yüklenir (Personel › Zimmetindekiler).") + "</div>";
     $("a-pencere-alt").innerHTML = MK.tus({ eylem: "pencere-kapat", ad: "Vazgeç", sinif: "a-tus-ikincil" }) + MK.tus({ eylem: "pencere-kaydet", ad: "Teslimi kaydet", ikon: "check" });
     if (odak) { var el = $(odak); if (el) el.focus(); }
   }
@@ -192,13 +209,13 @@
   X["foto-ekle"] = function () { W.d.foto++; delete W.hata.foto; pencereCiz(); var t = document.querySelector('[data-eylem="foto-ekle"]'); if (t) t.focus(); };
   X["pencere-kaydet"] = function () {
     W.hata = denetle(); var hk = Object.keys(W.hata);
-    if (hk.length) { pencereCiz(hk[0] === "foto" ? null : "w-" + hk[0]); return; }
+    if (hk.length) { pencereCiz("w-" + hk[0]); return; }
     var d = W.d, v = MV.varlik(d.varlik), eden = MV.kimde(v.id), z = d.zaman.split(" ");
     MV.ZIMMET.push({ id: "z" + (MV.ZIMMET.length + 1), v: v.id, tarih: z[0].split(".").reverse().join("-") + "T" + z[1], eden: eden, alan: d.alan, foto: d.foto,
-      not: (v.tur === "arac" ? "Km " + d.km + (d.not.trim() ? " · " : "") : "") + d.not.trim(), onay: null, yetkili: "za" });
+      not: (v.tur === "arac" ? "Km " + d.km + (d.not.trim() ? " · " : "") : "") + d.not.trim(), onay: null, yetkili: "co" });
     $("a-pencere").close();
     location.hash = "#/v/" + v.id;
-    MK.bildir(MV.varlikAdi(v) + ": " + MV.yerAdi(eden) + " → " + MV.yerAdi(d.alan) + (d.alan === "depo" ? "." : "; onay bekliyor."));
+    MK.bildir(MV.varlikAdi(v) + ": " + MV.yerAdi(eden) + " → " + MV.yerAdi(d.alan) + (d.alan === "depo" ? "." : "; zimmet formunu imzalatıp personel kartına yükleyin."));
   };
   MK.onGirdi = function (e) { var k = e.target.dataset && e.target.dataset.alan; if (k && W) W.d[k] = e.target.value; };
   MK.onSecim = function (id, deger) { if (!W) return; if (id === "w-varlik") W.d.varlik = deger; if (id === "w-alan") W.d.alan = deger; delete W.hata[id.slice(2)]; pencereCiz(); };

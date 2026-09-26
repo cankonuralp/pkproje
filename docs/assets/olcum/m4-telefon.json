@@ -8,8 +8,8 @@
   390,
   430
  ],
- "toplam": 40,
- "temiz": 40,
+ "toplam": 48,
+ "temiz": 48,
  "durumlar": [
   {
    "ad": "ölçüm cihazları · liste + uyarı şeridi",
@@ -364,6 +364,78 @@
   },
   {
    "ad": "teslim · araç, boş gönderildi",
+   "gen": 430,
+   "temiz": true,
+   "tasma": 0,
+   "disari": [],
+   "kucukAlan": [],
+   "alan": 4
+  },
+  {
+   "ad": "cihaz · ara kontrol takip edilmiyor",
+   "gen": 320,
+   "temiz": true,
+   "tasma": 0,
+   "disari": [],
+   "kucukAlan": [],
+   "alan": 0
+  },
+  {
+   "ad": "cihaz · ara kontrol takip edilmiyor",
+   "gen": 360,
+   "temiz": true,
+   "tasma": 0,
+   "disari": [],
+   "kucukAlan": [],
+   "alan": 0
+  },
+  {
+   "ad": "cihaz · ara kontrol takip edilmiyor",
+   "gen": 390,
+   "temiz": true,
+   "tasma": 0,
+   "disari": [],
+   "kucukAlan": [],
+   "alan": 0
+  },
+  {
+   "ad": "cihaz · ara kontrol takip edilmiyor",
+   "gen": 430,
+   "temiz": true,
+   "tasma": 0,
+   "disari": [],
+   "kucukAlan": [],
+   "alan": 0
+  },
+  {
+   "ad": "cihaz düzenle",
+   "gen": 320,
+   "temiz": true,
+   "tasma": 0,
+   "disari": [],
+   "kucukAlan": [],
+   "alan": 4
+  },
+  {
+   "ad": "cihaz düzenle",
+   "gen": 360,
+   "temiz": true,
+   "tasma": 0,
+   "disari": [],
+   "kucukAlan": [],
+   "alan": 4
+  },
+  {
+   "ad": "cihaz düzenle",
+   "gen": 390,
+   "temiz": true,
+   "tasma": 0,
+   "disari": [],
+   "kucukAlan": [],
+   "alan": 4
+  },
+  {
+   "ad": "cihaz düzenle",
    "gen": 430,
    "temiz": true,
    "tasma": 0,

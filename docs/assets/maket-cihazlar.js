@@ -1,19 +1,27 @@
-/* ══ probata MAKET M4 — Ölçüm Cihazı (modül 8) + kalibrasyon uyarısı (modül 20, kısım) · ONAY BEKLİYOR (2026-09-24) ══════
+/* ══ probata MAKET M4 — Ölçüm Cihazı (modül 8) + kalibrasyon uyarısı (modül 20, kısım) · 2. TUR, ONAY BEKLİYOR (2026-09-26) ═
    Kaynak: pkproje.md §3 (cihazlar personele zimmetlenir; raporda cihaz SEÇİLMEZ, zimmetten gelir; kalibrasyonu geçmiş cihaz varsa
    rapor açılır ama yönetici onayına gönderilemez — sunucuda da; bitişe 30 gün kala uyarı), §3.1 modül 8 (ad, seri no, envanter no,
    kalibrasyon tarihi, sertifika, ara kontrol), §4.2 1.7.4 (raporda ölçüm aletleri: ad, seri no, kalibrasyon bilgileri), §4.9 (17020:
    kalibrasyon + ara kontrol kayıtları; kalibrasyon ≠ doğrulama). Uyarı YALNIZ ekranda (şerit, çip); e-posta / anlık bildirim YOK
-   (anayasa 1.3). Ekranlar: liste (#/) · cihaz (#/c/<id>) · pencereler: cihaz ekle · kalibrasyon kaydı · ara kontrol. UYDURMA veri. */
+   (anayasa 1.3). Ekranlar: liste (#/) · cihaz (#/c/<id>) · pencereler: cihaz ekle / düzenle · kalibrasyon kaydı · ara kontrol. UYDURMA veri.
+   2. tur (2026-09-26, reisim: "cihazlar modülünde cihazlar eklensin tıklanınca kimde olduğu gözüksün kod verilebilsin kalibrasyon tarihi
+   takip edilebilsin asıl hedefler bunlar diğer söylediğin iş kolaylaştırıcı işlemleride ekle" · "59 hariç dediklerini kabul ediyorum"):
+   · asıl hedefler öne: cihaz sayfasının başında KİMDE (+ "Teslim et") ve kalibrasyon bitişi; cihaz KODU firmanın verdiği etiket, düzenlenir.
+   · 59 → kalibrasyonu geçmiş cihaz zimmette kalabilir, o kişinin raporu onaya GÖNDERİLEMEZ (reisim: "kalibrasyon önemli o durumda
+     göndermeyi engellesin").
+   · 58 → rapor anında denetçi zimmetindeki cihazlardan seçer; cihaz türüne uygun olanlar önceden işaretli (M8'de).
+   · 60 → ara kontrol İSTEĞE BAĞLI: cihazda açıksa görünür; periyot firma ayarı (başlangıç 6 ay).
+   · 65 → kalibrasyon uyarı eşiği firma ayarı (başlangıç 30 gün; ESIK), cihaz başına değil. */
 (function () {
   "use strict";
   var $ = MK.$, kacis = MK.kacis, ikon = MK.ikon, kirp = MK.kirp, rozet = MK.rozet, bilgi = MK.bilgi, SZ = MK.SZ;
-  var BUGUN = MK.BUGUN;
+  var BUGUN = MK.BUGUN, ESIK = 30, ARA_PERIYOT = 6;   /* firma ayarları (65, 60) */
   var KAL = { gecerli: { ad: "Geçerli", rozet: "a-rozet-tamam" }, yakin: { ad: "30 gün içinde bitiyor", rozet: "a-rozet-bekliyor" },
     gecti: { ad: "Kalibrasyonu geçti", rozet: "a-rozet-red" }, lab: { ad: "Kalibrasyonda", rozet: "a-rozet-kabul" } };
   var cihazlar = function () { return MV.VARLIKLAR.filter(function (v) { return v.tur === "cihaz"; }); };
   var kalan = function (t) { return MK.gunFarki(BUGUN, t); };
   var araSonraki = function (v) { var d = new Date(v.araSon + "T12:00:00"); d.setMonth(d.getMonth() + v.araPeriyot); return d.toISOString().slice(0, 10); };
-  var araGecti = function (v) { return kalan(araSonraki(v)) < 0; };
+  var araGecti = function (v) { return !!v.araPeriyot && kalan(araSonraki(v)) < 0; };
   var kimdeHtml = function (k) {
     return k === "depo" ? '<span class="a-hucre-satir">' + ikon("warehouse", "a-ikon-kucuk") + "Depo</span>" : k === "lab" ? '<span class="a-hucre-satir">' + ikon("flask-conical", "a-ikon-kucuk") + "Kalibrasyonda</span>"
       : '<a class="a-ad-bag" href="' + MK.adres(2, "#/p/" + k) + '">' + kirp(MV.kisi(k).ad) + "</a>";
@@ -24,7 +32,7 @@
   }
 
   /* ── LİSTE + UYARI ŞERİDİ ─────────────────────────────────────────────────────────────────────── */
-  MK.suzgecTanimla("c", { ad: "Cihazlarda ara", ipucu: "Envanter no, cihaz, kişi", birim: "cihaz",
+  MK.suzgecTanimla("c", { ad: "Cihazlarda ara", ipucu: "Cihaz kodu, cihaz, kişi", birim: "cihaz",
     cipler: [
       { k: "gecti", ad: "Kalibrasyonu geçmiş", grup: "kal", test: function (v) { return MV.kalDurum(v) === "gecti"; } },
       { k: "yakin", ad: "30 gün içinde bitiyor", grup: "kal", test: function (v) { return MV.kalDurum(v) === "yakin"; } },
@@ -42,11 +50,12 @@
     metin: function (v) { return [v.env, v.ad, v.marka, v.seri, MV.yerAdi(MV.kimde(v.id))].join(" "); },
     imkansiz: "Bir cihazın kalibrasyonu aynı anda iki durumda olamaz" }, function () { listeCiz(); });
   var SUTUN = [
-    { k: "env", baslik: "Envanter no", kart: "ust", sira: 1, hucre: function (v) { return '<a class="a-no" href="#/c/' + v.id + '">' + v.env + "</a>"; } },
+    { k: "env", baslik: "Cihaz kodu", kart: "ust", sira: 1, hucre: function (v) { return '<a class="a-no" href="#/c/' + v.id + '">' + v.env + "</a>"; } },
     { k: "ad", baslik: "Cihaz", kart: "govde", sira: 2, hucre: function (v) { return kirp(v.ad, "a-ekipman-ad") + kirp(v.marka + " " + v.model + " · seri " + v.seri, "a-alt-satir"); } },
     { k: "kimde", baslik: "Kimde", kart: "govde", sira: 3, hucre: function (v) { return '<span class="a-kart-etiket">Kimde</span>' + kimdeHtml(MV.kimde(v.id)); } },
-    { k: "bitis", baslik: "Kalibrasyon bitişi", kart: "govde", sira: 4, hucre: function (v) { return '<span class="a-kart-etiket">Kalibrasyon bitişi</span>' + kalanHtml(v.bitis, 30); } },
+    { k: "bitis", baslik: "Kalibrasyon bitişi", kart: "govde", sira: 4, hucre: function (v) { return '<span class="a-kart-etiket">Kalibrasyon bitişi</span>' + kalanHtml(v.bitis, ESIK); } },
     { k: "ara", baslik: "Ara kontrol", kart: "govde", sira: 5, hucre: function (v) {
+      if (!v.araPeriyot) return '<span class="a-kart-etiket">Ara kontrol</span><span class="a-deger-yok">Takip edilmiyor</span>';
       var s = araSonraki(v), k = kalan(s);
       return '<span class="a-kart-etiket">Ara kontrol</span><span class="a-tarih-gun">' + MK.tarihYaz(v.araSon) + "</span>" +
         '<span class="' + (k < 0 ? "a-uyari-metin" : "a-tarih-saat") + '">' + (k < 0 ? "Sonraki " + -k + " gün gecikti" : "Sonraki " + MK.gunKisa(s)) + "</span>";
@@ -99,32 +108,35 @@
         MK.bos({ ikon: "circle-alert", baslik: "Cihaz bulunamadı", metin: "Bu adreste kayıtlı ölçüm cihazı yok.", eylem: '<a class="a-tus a-tus-ikincil" href="#/">' + ikon("arrow-left", "a-ikon-kucuk") + "Cihazlara dön</a>" });
       return;
     }
-    var d = MV.kalDurum(v), kim = MV.kimde(v.id), k = kalan(v.bitis), as = araSonraki(v), t = MV.cihazTuru(v.cihazTur), h = MV.hareketler(v.id);
-    var serit = d === "gecti" ? MK.serit("hata", "circle-x", "Kalibrasyonu " + MK.tarihYaz(v.bitis) + "'de bitti." + (kim !== "depo" && kim !== "lab" ? " " + kacis(MV.kisi(kim).ad) + " zimmetinde: bu cihazın geldiği raporlar yönetici onayına gönderilemez (sunucuda da denetlenir). Kalibrasyona gönderin ya da zimmetten alın." : ""))
+    var d = MV.kalDurum(v), kim = MV.kimde(v.id), k = kalan(v.bitis), as = v.araPeriyot ? araSonraki(v) : null, t = MV.cihazTuru(v.cihazTur), h = MV.hareketler(v.id);
+    var serit = d === "gecti" ? MK.serit("hata", "circle-x", "Kalibrasyonu " + MK.tarihYaz(v.bitis) + "'de bitti." + (kim !== "depo" && kim !== "lab" ? " " + kacis(MV.kisi(kim).ad) + " zimmetinde: bu cihazın geldiği raporlar yönetici onayına gönderilemez. Kalibrasyona gönderin ya da zimmetten alın." : ""))
       : d === "yakin" ? MK.serit("uyari", "triangle-alert", "Kalibrasyon " + MK.tarihYaz(v.bitis) + "'de bitiyor (" + k + " gün). Bitince bu cihazın geldiği raporlar onaya gönderilemez.")
       : d === "lab" ? MK.serit("bilgi", "flask-conical", "Kalibrasyonda (" + MK.tarihYaz(h[0].tarih) + "'den beri). Yeni sertifika gelince kalibrasyon kaydı eklenir, cihaz depoya döner.") : "";
     $("a-nesne").innerHTML = MK.kirinti([["Ölçüm cihazları", "#/"], [v.env]]) +
       '<div class="a-nesne-bas"><div class="a-nesne-kimlik"><div class="a-nesne-baslik"><h1 tabindex="-1">' + v.env + " · " + kacis(v.ad) + "</h1>" + rozet(KAL[d]) + "</div>" +
         '<p class="a-nesne-alt">' + ikon("gauge", "a-ikon-kucuk") + "<span>" + kacis(v.marka + " " + v.model) + " · seri " + v.seri + "</span></p></div>" +
-        '<div class="a-eylem-cubugu">' + MK.git({ hedef: 9, hash: "#/v/" + v.id, ad: "Zimmet geçmişi", ikon: "arrow-right-left", ne: "Zimmetler" }) +
+        '<div class="a-eylem-cubugu">' + MK.tus({ eylem: "cihaz-duzenle", ad: "Düzenle", ikon: "pencil", sinif: "a-tus-ikincil" }) +
+        (kim === "lab" ? "" : MK.git({ hedef: 9, hash: "#/teslim/" + v.id, ad: "Teslim et", ikon: "arrow-right-left", sinif: "a-tus-ikincil", ne: "Zimmetler" })) +
         MK.tus({ eylem: "kal-ac", ad: "Kalibrasyon kaydı ekle", ikon: "plus" }) + "</div></div>" +
       (serit ? '<div class="a-serit-kap">' + serit + "</div>" : "") +
       '<div class="a-yuzler">' +
-        yuz({ ikon: "badge-check", ad: "Kalibrasyon bitişi", sayi: MK.gunKisa(v.bitis), not: k < 0 ? -k + " gün geçti" : k + " gün kaldı", uyari: k <= 30 }) +
-        yuz({ ikon: "list-checks", ad: "Sonraki ara kontrol", sayi: MK.gunKisa(as), not: kalan(as) < 0 ? -kalan(as) + " gün gecikti" : "her " + v.araPeriyot + " ayda", uyari: kalan(as) < 0 }) +
-        yuz({ ikon: kim === "depo" ? "warehouse" : kim === "lab" ? "flask-conical" : "user", ad: "Kimde", sayi: MV.yerAdi(kim), href: kim !== "depo" && kim !== "lab" ? MK.adres(2, "#/p/" + kim) : null, not: h[0] ? "teslim " + MK.gunKisa(h[0].tarih) : "" }) +
+        /* 2. tur: asıl hedefler başta — kimde, kalibrasyon */
+        yuz({ ikon: kim === "depo" ? "warehouse" : kim === "lab" ? "flask-conical" : "user", ad: "Kimde", sayi: MV.yerAdi(kim), href: MK.adres(9, "#/v/" + v.id), not: h[0] ? "teslim " + MK.gunKisa(h[0].tarih) + " · geçmiş" : "hareket yok" }) +
+        yuz({ ikon: "badge-check", ad: "Kalibrasyon bitişi", sayi: MK.gunKisa(v.bitis), not: k < 0 ? -k + " gün geçti" : k + " gün kaldı", uyari: k <= ESIK }) +
+        (as ? yuz({ ikon: "list-checks", ad: "Sonraki ara kontrol", sayi: MK.gunKisa(as), not: kalan(as) < 0 ? -kalan(as) + " gün gecikti" : "her " + v.araPeriyot + " ayda", uyari: kalan(as) < 0 }) : "") +
         yuz({ ikon: "file-text", ad: "Raporlarda", sayi: v.rapor, not: "son 12 ayda imzalı rapor" }) +
       "</div>" +
-      '<section class="a-bolum" aria-labelledby="a-b-cihaz"><div class="a-alt-bas"><h2 class="a-alt-baslik" id="a-b-cihaz">Cihaz bilgileri</h2><span class="a-sayac">rapora buradan dolar (Ek-III 1.7.4)</span></div><dl class="a-bilgi">' +
+      '<section class="a-bolum" aria-labelledby="a-b-cihaz"><div class="a-alt-bas"><h2 class="a-alt-baslik" id="a-b-cihaz">Cihaz bilgileri</h2><span class="a-sayac">rapora buradan dolar</span></div><dl class="a-bilgi">' +
         bilgi("Cihaz", kacis(v.ad)) + bilgi("Marka / model", kacis(v.marka + " " + v.model)) + bilgi("Seri no", '<span class="a-kod">' + v.seri + "</span>") +
-        bilgi("Envanter no", '<span class="a-kod">' + v.env + "</span>") + bilgi("Ölçüm aralığı", kacis(v.aralik)) +
-        bilgi("Kullanıldığı ekipman grupları", t.g.map(function (g) { return MV.grup(g).ad; }).join(" · ") + ' <span class="a-alt-inline">· rapora yalnız bu gruplarda gelir (öneri)</span>', true) +
+        bilgi("Cihaz kodu", '<span class="a-kod">' + v.env + "</span>") + bilgi("Ölçüm aralığı", kacis(v.aralik)) +
+        bilgi("Kullanıldığı ekipman grupları", t.g.map(function (g) { return MV.grup(g).ad; }).join(" · ") + ' <span class="a-alt-inline">· raporda bu gruplarda önceden işaretli gelir; denetçi zimmetindekilerden seçer</span>', true) +
       "</dl></section>" +
       '<section class="a-bolum" aria-labelledby="a-b-kal"><div class="a-alt-bas"><h2 class="a-alt-baslik" id="a-b-kal">Kalibrasyon kayıtları</h2><span class="a-sayac"><b>' + v.kal.length + "</b> kayıt</span></div>" +
         '<div class="a-liste-kap">' + MK.tablo({ baslik: "Kalibrasyon kayıtları", sinif: "a-tablo-kal", sutunlar: KAL_SUTUN, kayitlar: v.kal }) + "</div></section>" +
-      '<section class="a-bolum" aria-labelledby="a-b-ara"><div class="a-alt-bas"><h2 class="a-alt-baslik" id="a-b-ara">Ara kontroller</h2><span class="a-sayac">kalibrasyonlar arasında cihazın doğruluğu</span>' +
+      /* 60: ara kontrol isteğe bağlı — takip edilmeyen cihazda bölüm yok */
+      (v.araPeriyot ? '<section class="a-bolum" aria-labelledby="a-b-ara"><div class="a-alt-bas"><h2 class="a-alt-baslik" id="a-b-ara">Ara kontroller</h2><span class="a-sayac">kalibrasyonlar arasında cihazın doğruluğu</span>' +
         MK.tus({ eylem: "ara-ac", ad: "Ara kontrol ekle", ikon: "plus", sinif: "a-tus-ikincil a-bolum-tus" }) + "</div>" +
-        '<div class="a-liste-kap">' + MK.tablo({ baslik: "Ara kontroller", sinif: "a-tablo-ara", sutunlar: ARA_SUTUN, kayitlar: v.ara }) + "</div></section>";
+        '<div class="a-liste-kap">' + (v.ara.length ? MK.tablo({ baslik: "Ara kontroller", sinif: "a-tablo-ara", sutunlar: ARA_SUTUN, kayitlar: v.ara }) : '<p class="a-bos-satir">Henüz ara kontrol yok.</p>') + "</div></section>" : "");
   }
 
   /* ── PENCERELER: cihaz ekle · kalibrasyon kaydı · ara kontrol ─────────────────────────────────────── */
@@ -134,11 +146,11 @@
   function denetle() {
     var h = {}, d = W.d;
     if (W.tur === "cihaz") {
-      if (!/^[A-Z0-9-]{3,12}$/.test(d.env)) h.env = "Envanter no 3–12 hane (A–Z, 0–9, tire).";
-      else if (MV.VARLIKLAR.some(function (v) { return v.env === d.env; })) h.env = d.env + " başka bir cihazda kayıtlı.";
+      if (!/^[A-Z0-9-]{3,12}$/.test(d.env)) h.env = "Cihaz kodu 3–12 hane (A–Z, 0–9, tire).";
+      else if (MV.VARLIKLAR.some(function (v) { return v.env === d.env && v !== W.v; })) h.env = d.env + " başka bir cihazda kayıtlı.";
       if (!d.cihazTur) h.cihazTur = "Cihaz türü seçilmeli.";
       if (!d.seri.trim()) h.seri = "Seri no yazılmalı (raporda zorunlu).";
-      if (!tarihGecerli(d.bitis)) h.bitis = "Tarih GG.AA.YYYY.";
+      if (!W.v && !tarihGecerli(d.bitis)) h.bitis = "Tarih GG.AA.YYYY.";
     } else if (W.tur === "kal") {
       if (!tarihGecerli(d.tarih)) h.tarih = "Tarih GG.AA.YYYY.";
       if (!tarihGecerli(d.bitis)) h.bitis = "Tarih GG.AA.YYYY.";
@@ -163,13 +175,15 @@
     };
     var tarih = ' inputmode="numeric" maxlength="10" placeholder="GG.AA.YYYY"', govde;
     if (W.tur === "cihaz") {
-      $("a-pencere-baslik").textContent = "Cihaz ekle";
-      govde = '<div class="a-form">' + A("env", "Envanter no", d.env, { zorunlu: true, sinif: "a-girdi-sicil", ek: ' maxlength="12"', ipucu: "Firmanın cihaz etiketi; eşsiz." }) +
+      $("a-pencere-baslik").textContent = W.v ? W.v.env + " · düzenle" : "Cihaz ekle";
+      govde = '<div class="a-form">' + A("env", "Cihaz kodu", d.env, { zorunlu: true, sinif: "a-girdi-sicil", ek: ' maxlength="12"', ipucu: "Firmanın cihaza verdiği kod (etiket); eşsiz." }) +
         A("cihazTur", "Cihaz türü", "", { zorunlu: true, girdi: MK.secim({ id: "w-cihazTur", ad: "Cihaz türü", deger: d.cihazTur, secenekler: MV.CIHAZ_TURLERI.map(function (t) { return [t.k, t.ad]; }), ipucu: "Tür seçin", gecersiz: !!h.cihazTur, tanim: "w-cihazTur-ipucu" }),
           ipucu: d.cihazTur ? "Rapora gelir: " + MV.cihazTuru(d.cihazTur).g.map(function (g) { return MV.grup(g).ad; }).join(", ") : "Hangi ekipman gruplarında kullanıldığı türden gelir." }) +
         A("marka", "Marka / model", d.marka, { ek: ' maxlength="60"' }) + A("seri", "Seri no", d.seri, { zorunlu: true, sinif: "a-girdi-seri", ek: ' maxlength="30"' }) +
-        A("aralik", "Ölçüm aralığı", d.aralik, { ek: ' maxlength="60"' }) + A("bitis", "Kalibrasyon geçerlilik bitişi", d.bitis, { zorunlu: true, sinif: "a-girdi-sicil", ek: tarih, ipucu: "Sertifikadaki tarih; ilk sertifika kaydı ayrıca eklenir." }) + "</div>" +
-        '<div class="a-serit-kap">' + MK.serit("bilgi", "warehouse", "Yeni cihaz depoya girer; Zimmetler'den inspector'a teslim edilince raporlarına kendiliğinden gelir.") + "</div>";
+        A("aralik", "Ölçüm aralığı", d.aralik, { ek: ' maxlength="60"' }) +
+        (W.v ? "" : A("bitis", "Kalibrasyon geçerlilik bitişi", d.bitis, { zorunlu: true, sinif: "a-girdi-sicil", ek: tarih, ipucu: "Sertifikadaki tarih; sertifika kalibrasyon kaydıyla eklenir." })) +
+        '<div class="a-alan-grup a-alan-genis"><label class="a-onay-kutusu"><input type="checkbox" data-aratakip="1"' + (d.ara ? " checked" : "") + '><span>Ara kontrol takip edilsin<span class="a-alt-satir">İsteğe bağlı; her ' + ARA_PERIYOT + " ayda bir (firma ayarı).</span></span></label></div></div>" +
+        (W.v ? "" : '<div class="a-serit-kap">' + MK.serit("bilgi", "warehouse", "Yeni cihaz depoya girer; “Teslim et” ile denetçiye verilir.") + "</div>");
     } else if (W.tur === "kal") {
       $("a-pencere-baslik").textContent = W.v.env + " · kalibrasyon kaydı";
       govde = '<p class="a-pencere-ozet"><b>' + W.v.env + " · " + kacis(W.v.ad) + "</b><br>Mevcut bitiş " + MK.tarihYaz(W.v.bitis) + ". Yeni kayıt en son geçerlilik tarihini günceller; eski sertifikalar kalır.</p>" +
@@ -192,7 +206,8 @@
     if (odak) { var el = $(odak); if (el) el.focus(); }
   }
   function pencereAc(tur, v) {
-    W = { tur: tur, v: v || null, hata: {}, d: tur === "cihaz" ? { env: "", cihazTur: "", marka: "", seri: "", aralik: "", bitis: "" }
+    W = { tur: tur, v: tur === "cihaz" ? (v || null) : v || null, hata: {}, d: tur === "cihaz" ? (v ? { env: v.env, cihazTur: v.cihazTur, marka: (v.marka + " " + v.model).trim(), seri: v.seri, aralik: v.aralik, bitis: "", ara: !!v.araPeriyot }
+      : { env: "", cihazTur: "", marka: "", seri: "", aralik: "", bitis: "", ara: false })
       : tur === "kal" ? { tarih: "23.09.2026", bitis: "", lab: v.kal[0].lab, sertifika: "", dosya: "", sonuc: "Uygun" } : { tarih: "23.09.2026", yontem: "Referans değerle karşılaştırma", sonuc: "Uygun" } };
     pencereCiz(); if (!$("a-pencere").open) $("a-pencere").showModal();
     var ilk = $("a-pencere-govde").querySelector("input, button"); if (ilk) ilk.focus();
@@ -216,6 +231,7 @@
   MK.goster = goster;
   var X = MK.eylem, aktif = function () { return MV.varlik(rota().id); };
   X["cihaz-ac"] = function () { pencereAc("cihaz"); };
+  X["cihaz-duzenle"] = function () { pencereAc("cihaz", aktif()); };
   X["kal-ac"] = function () { pencereAc("kal", aktif()); };
   X["ara-ac"] = function () { pencereAc("ara", aktif()); };
   X["cip-uygula"] = function (el) { var s = SZ.c; s.secili = [el.dataset.deger]; s.kip = "veya"; s.sayfa = 1; listeCiz(); var c = document.querySelector('[data-cip="' + el.dataset.deger + '"]'); if (c) c.focus(); };
@@ -224,9 +240,14 @@
     W.hata = denetle(); var hk = Object.keys(W.hata);
     if (hk.length) { pencereCiz(hk[0] === "dosya" ? null : "w-" + hk[0]); return; }
     var d = W.d, v = W.v, hedef, ileti;
-    if (W.tur === "cihaz") {
+    if (W.tur === "cihaz" && v) {
+      Object.assign(v, { env: d.env, cihazTur: d.cihazTur, ad: MV.cihazTuru(d.cihazTur).ad, marka: d.marka.trim() || "—", model: "", seri: d.seri.trim(), aralik: d.aralik.trim() || "—",
+        araPeriyot: d.ara ? (v.araPeriyot || ARA_PERIYOT) : null });
+      if (d.ara && !v.araSon) v.araSon = BUGUN;
+      hedef = "#/c/" + v.id; ileti = "Cihaz güncellendi.";
+    } else if (W.tur === "cihaz") {
       v = { id: "v" + (MV.VARLIKLAR.length + 1), tur: "cihaz", ad: MV.cihazTuru(d.cihazTur).ad, cihazTur: d.cihazTur, env: d.env, marka: d.marka.trim() || "—", model: "", seri: d.seri.trim(), aralik: d.aralik.trim() || "—",
-        bitis: iso(d.bitis), araSon: BUGUN, araPeriyot: 6, kal: [], ara: [], rapor: 0 };
+        bitis: iso(d.bitis), araSon: d.ara ? BUGUN : null, araPeriyot: d.ara ? ARA_PERIYOT : null, kal: [], ara: [], rapor: 0 };
       MV.VARLIKLAR.push(v); hedef = "#/c/" + v.id; ileti = v.env + " depoya kaydedildi; sertifikası kalibrasyon kaydıyla eklenir.";
     } else if (W.tur === "kal") {
       v.kal.unshift({ tarih: iso(d.tarih), bitis: iso(d.bitis), lab: d.lab.trim(), sertifika: d.sertifika.trim(), sonuc: d.sonuc }); v.bitis = iso(d.bitis);
@@ -242,7 +263,10 @@
   };
   MK.onGirdi = function (e) { var k = e.target.dataset && e.target.dataset.alan; if (k && W) W.d[k] = k === "env" ? e.target.value.toUpperCase() : e.target.value; };
   MK.onSecim = function (id, deger) { if (W && id === "w-cihazTur") { W.d.cihazTur = deger; delete W.hata.cihazTur; pencereCiz(); } };
-  document.addEventListener("change", function (e) { var r = e.target.dataset && e.target.dataset.radyo; if (r && W) W.d[r] = e.target.value; });
+  document.addEventListener("change", function (e) {
+    var r = e.target.dataset && e.target.dataset.radyo; if (r && W) W.d[r] = e.target.value;
+    if (e.target.dataset && e.target.dataset.aratakip && W) W.d.ara = e.target.checked;
+  });
   $("a-pencere").addEventListener("close", function () { var r = rota(); if (r.pencere) history.replaceState(null, "", r.v === "liste" ? "#/" : "#/c/" + r.id); });
 
   MK.kabuk({ modul: 8, kullanici: { bas: "CÖ", ad: "Can Öztürk", rol: "Elektrik yönetici" } });

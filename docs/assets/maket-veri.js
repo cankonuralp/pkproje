@@ -436,13 +436,15 @@
     ["OC-017", "kalinlik", "Vega", "2026-10-20", "2026-04-21", "1–300 mm"], ["OC-018", "multimetre", "Orion", "2027-03-15", "2026-09-14", "0–1000 V"],
     ["OC-019", "tesisat", "Delta", "2027-07-01", "2026-07-01", "0,01–2 kΩ · 10–500 mA"], ["OC-020", "pens", "Pars", "2027-02-02", "2026-08-03", "0–1000 A"]
   ];
+  var ARASIZ = ["kumpas", "mesafe", "luksmetre"];
   MV.VARLIKLAR = C.map(function (c, i) {
     var t = MV.cihazTuru(c[1]), bit = c[3], y = +bit.slice(0, 4);
     return { id: "v" + (i + 1), tur: "cihaz", ad: t.ad, cihazTur: c[1], env: c[0], marka: c[2], model: c[0].replace("OC-", "M") + "0", seri: "CS" + (48213 + i * 977),
-      aralik: c[5], bitis: bit, araSon: c[4], araPeriyot: 6,
+      /* 2026-09-26 (M4 2. tur, 60: ara kontrol isteğe bağlı): kumpas, mesafe ölçer, lüksmetrede takip edilmiyor */
+      aralik: c[5], bitis: bit, araSon: ARASIZ.indexOf(c[1]) >= 0 ? null : c[4], araPeriyot: ARASIZ.indexOf(c[1]) >= 0 ? null : 6,
       kal: [{ tarih: (y - 1) + bit.slice(4), bitis: bit, lab: LAB[i % 2], sertifika: "KL-" + (y - 1) + "-" + (410 + i * 13), sonuc: "Uygun" },
             { tarih: (y - 2) + bit.slice(4), bitis: (y - 1) + bit.slice(4), lab: LAB[(i + 1) % 2], sertifika: "KL-" + (y - 2) + "-" + (300 + i * 11), sonuc: "Uygun" }],
-      ara: [{ tarih: c[4], kim: i % 2 ? "co" : "sy", yontem: "Referans değerle karşılaştırma", sonuc: "Uygun" }], rapor: 12 + (i * 7) % 40 };
+      ara: ARASIZ.indexOf(c[1]) >= 0 ? [] : [{ tarih: c[4], kim: i % 2 ? "co" : "sy", yontem: "Referans değerle karşılaştırma", sonuc: "Uygun" }], rapor: 12 + (i * 7) % 40 };
   }).concat([
     { id: "a1", tur: "arac", ad: "Hafif ticari araç", plaka: "00 MAK 001", marka: "Delta", model: "Van", yil: 2022 },
     { id: "a2", tur: "arac", ad: "Hafif ticari araç", plaka: "00 MAK 002", marka: "Delta", model: "Van", yil: 2023 },

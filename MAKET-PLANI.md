@@ -129,3 +129,6 @@ tek mesaj: sayfanın bağlantısı + kaç maket + kaç soru + ölçülemeyen var
 - 2026-09-26: **M3 2. tur, ek** — reisim: Tür ekle olsun, her türe firmanın rapor formatı PDF'i yüklensin, akreditasyon yazılmasın.
   M3 48/48 · 15/15 · 32/32. Reisim'in incelemesi bekleniyor.
 - 2026-09-26: **M3 ONAYLANDI** (reisim: *"Sıradakine geçelim"*). Sırada **M4 Ölçüm cihazları · Zimmetler** — sorular 58–65 yeniden soruldu.
+- 2026-09-26: **M4 2. tur** — reisim 58–65 ("59 hariç dediklerini kabul ediyorum"; 59: kalibrasyonu geçmiş cihazda gönderim engellenir):
+  cihazda kimde / kod / kalibrasyon başta, zimmet onayı imzalı formla, fotoğraf ve ara kontrol isteğe bağlı. M4 72/72 · 20/20 · 48/48.
+  Reisim'in incelemesi bekleniyor; onaylanınca sırada M5 İSG-KATİP.
