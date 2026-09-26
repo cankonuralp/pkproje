@@ -1,6 +1,6 @@
 {
  "maket": "m7",
- "tarih": "2026-09-25",
+ "tarih": "2026-09-26",
  "arac": "tools/olc-bulut.mjs --telefon (başsız tarayıcı, telefon taklidi: dokunmatik, meta viewport, 3x; açık tema)",
  "genislikler": [
   320,
