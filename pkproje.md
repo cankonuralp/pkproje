@@ -753,7 +753,12 @@ süresi geçmiş; seçici: kişi; adresten türe göre (`?tur=kalibrasyon|egitim
 **Ölçüm (2026-09-24, bulut):** 5 durum × 1920 · 1080 · 375 × açık/koyu = **30/30 temiz**, çekmece 2/2; etkileşim **6/6**. Telefonda kart
 "etiket: değer" satırlarına indirildi (M5 deseni).
 
-#### Maket M11 — Müşteri Paneli (modül 17) — ONAY BEKLİYOR
+#### Maket M11 — Müşteri Paneli (modül 17) — 2. TUR, ONAY BEKLİYOR (toplu gözden geçirmede)
+**2. tur (2026-09-26, §9 yirmi birinci tur):** üst çubukta **muayene firmasının logosu** (112; probata logosu yok) · yeni sekmeler **Planlanan
+kontroller** (81: tesis başına açık planın tarihi, saati, durumu ve sonraki kontrol) ve **Sözleşmeler** (134: iş sözleşmesi ve imzalı hâli
+görünür, panelden imza atılmaz) · aynı giriş sayfası (111) · uygunsuzluk yalnız sonraki kontrol raporuyla giderilir (114) · müşteri kullanıcı
+ekleyemez (115) · onaydaki / taslak raporlar görünmez (117). Açıklama satırları kısaldı. Ölçüm: 11 durum 66/66, etkileşim 9/9, telefon 44/44.
+1. tur metni (tarihsel):
 Ekran: **müşteri paneli** (`maket/musteri.html`, Ada Makina'dan Serkan Ateş): **müşteri kabuğu** (firmanın modül menüsü yok; üst çubukta
 probata, "Müşteri paneli", tema, kullanıcı) · **Raporlar** (yalnız imzalı ve kendi tesislerinin raporları, 20'şer; çipler: uygunsuz ·
 sonraki kontrol 60 gün içinde; seçiciler: tesis, yıl) · **Uygunsuzluklar** (açık / giderildi; sınıf, kriter, açıklama, rapor bağlantısı) ·
@@ -1397,6 +1402,7 @@ revizyon, alan kopyalama, hafif kusur devri, meslek eşleşme denetimi).
 - Emsal ürünler: https://opwire.app/iso-17020-periyodik-kontrol-yazilimi/ · https://17020muayene.vidco.com.tr/ · https://akuple.com/asansor-kontrol-yazilimi/ · https://ensyazilim.com/
 
 ## 11 · Değişiklik günlüğü
+- 2026-09-26 (55): **M11 2. tur**: firmanın logosu, Planlanan kontroller ve Sözleşmeler sekmeleri (salt görüntü). M11 66/66 · 9/9 · 44/44.
 - 2026-09-26 (54): **M10 2. tur**: ara kontrol uyarıları eklendi (kalibrasyonu geçen / kalibrasyondaki cihaz hariç). M10 36/36 · 7/7 · 24/24.
 - 2026-09-26 (53): **M9 2. tur**: her rapor ayrı imza (birleştirme yok), vekil onay, onayı geri al, imzalı raporun düzeltmesi (R1), Planlar'da
   İmza bekliyor / Müşteriye açık. M9 72/72 · 16/16 · 48/48, Planlar 54/54 · 15/15 · 36/36.

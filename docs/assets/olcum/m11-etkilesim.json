@@ -2,9 +2,30 @@
  "maket": "m11",
  "tarih": "2026-09-26",
  "arac": "tools/olc-bulut.mjs --etkilesim (başsız tarayıcı, 1920 açık tema; gen verilen denemede o genişlik)",
- "toplam": 6,
- "gecen": 6,
+ "toplam": 9,
+ "gecen": 9,
  "denemeler": [
+  {
+   "ad": "planlanan kontrol: açık planlı tesis tarihiyle",
+   "gen": 1920,
+   "sayfa": "maket/musteri.html",
+   "hash": "#/plan",
+   "gecti": true
+  },
+  {
+   "ad": "sözleşme açılır, imza tuşu yok",
+   "gen": 1920,
+   "sayfa": "maket/musteri.html",
+   "hash": "#/sozlesme",
+   "gecti": true
+  },
+  {
+   "ad": "üst çubukta muayene firmasının logosu",
+   "gen": 1920,
+   "sayfa": "maket/musteri.html",
+   "hash": "#/",
+   "gecti": true
+  },
   {
    "ad": "yalnız imzalı ve kendi raporları (21)",
    "gen": 1920,

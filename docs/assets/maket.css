@@ -799,8 +799,14 @@ a.a-yuz:hover { border-color: var(--kenar-alan); background: var(--zemin); }
 :root[data-tema="koyu"] .a-ust-logo-acik { display: none; }
 :root[data-tema="koyu"] .a-ust-logo-koyu { display: block; }
 .a-ust-panel { color: var(--yazi2); font-size: var(--boy-kucuk); font-weight: 600; white-space: nowrap; }
+/* müşteri paneli: muayene firmasının logosu yeri (reisim 112, 2026-09-26) */
+.a-ust-firma-logo { display: inline-flex; align-items: center; justify-content: center; flex: none; width: 64px; height: 32px; border: 1px dashed var(--kenar);
+  border-radius: 6px; color: var(--yazi2); font-size: var(--boy-etiket); font-weight: 600; }
 .a-tablo-mrapor .a-k-no { width: 22%; } .a-tablo-mrapor .a-k-ekipman { width: 22%; } .a-tablo-mrapor .a-k-tesis { width: 16%; }
 .a-tablo-mrapor .a-k-tarih { width: 12%; } .a-tablo-mrapor .a-k-sonraki { width: 13%; } .a-tablo-mrapor .a-k-sonuc { width: 15%; }
+/* müşteri paneli: planlanan kontroller ve sözleşmeler (reisim 81, 134; 2026-09-26) */
+.a-tablo-mplan .a-k-tesis { width: 34%; } .a-tablo-mplan .a-k-plan { width: 26%; } .a-tablo-mplan .a-k-sonraki { width: 20%; } .a-tablo-mplan .a-k-durum { width: 20%; }
+.a-tablo-msoz .a-k-no { width: 20%; } .a-tablo-msoz .a-k-tesis { width: 36%; } .a-tablo-msoz .a-k-donem { width: 26%; } .a-tablo-msoz .a-k-durum { width: 18%; }
 .a-tablo-uygunsuz .a-k-ekipman { width: 20%; } .a-tablo-uygunsuz .a-k-kusur { width: 32%; } .a-tablo-uygunsuz .a-k-rapor { width: 20%; }
 .a-tablo-uygunsuz .a-k-tarih { width: 12%; } .a-tablo-uygunsuz .a-k-durum { width: 16%; }
 

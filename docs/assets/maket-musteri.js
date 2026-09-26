@@ -94,6 +94,46 @@
       MB.belge(t, MV.raporBelge(r));
   }
 
+  /* ── PLANLANAN KONTROLLER (reisim 81) · SÖZLEŞMELER (reisim 134: görünür, panelden imza atılmaz) ───────────────────────── */
+  function planCiz() {
+    var l = tesisleri().map(function (t) { return { t: t, acik: MV.acikPlan(t) }; });
+    var SUT = [
+      { k: "tesis", baslik: "Tesis", kart: "ust", sira: 1, hucre: function (x) { return kirp(x.t.ad) + kirp(x.t.ilce + " / " + x.t.il, "a-alt-satir"); } },
+      { k: "plan", baslik: "Planlanan kontrol", kart: "govde", sira: 2, hucre: function (x) {
+        return '<span class="a-kart-etiket">Planlanan kontrol</span>' + (x.acik ? '<span><span class="a-tarih-gun">' + MK.gunYaz(x.t.ptarih) + '</span><span class="a-tarih-saat">' + (x.t.psaat ? x.t.psaat[0] + "–" + x.t.psaat[1] : "") + "</span></span>" : '<span class="a-deger-yok">Yok</span>'); } },
+      { k: "sonraki", baslik: "Sonraki kontrol", kart: "govde", sira: 3, hucre: function (x) { return '<span class="a-kart-etiket">Sonraki kontrol</span>' + MK.tarihYaz(x.t.sonraki); } },
+      { k: "durum", baslik: "Durum", kart: "rozet", sira: 1, hucre: function (x) { return x.acik ? rozet(MV.PLAN_DURUM[x.t.pdurum]) : '<span class="a-deger-yok">—</span>'; } }
+    ];
+    $("a-sayac").innerHTML = "<b>" + l.filter(function (x) { return x.acik; }).length + "</b> planlı";
+    $("a-liste").innerHTML = MK.tablo({ baslik: "Planlanan kontroller", sinif: "a-tablo-mplan", sutunlar: SUT, kayitlar: l });
+  }
+  var SOZ_DURUM = { imza: { ad: "İmza bekliyor", rozet: "a-rozet-bekliyor" }, yururlukte: { ad: "Yürürlükte", rozet: "a-rozet-tamam" }, suresi: { ad: "Süresi doldu", rozet: "a-rozet-notr" } };
+  var sozlesmeler = function () { var ts = tid(); return MV.IS_SOZLESMELERI.filter(function (x) { return x.m === M.id && x.tesisler.some(function (t) { return ts.indexOf(t) >= 0; }); }); };
+  function sozCiz() {
+    var l = sozlesmeler(), ek = q !== "m1" ? "?musteri=" + q : "";
+    var SUT = [
+      { k: "no", baslik: "Sözleşme", kart: "ust", sira: 1, hucre: function (x) { return '<a class="a-no" href="#/s/' + x.no + ek + '">' + x.no + "</a>"; } },
+      { k: "tesis", baslik: "Tesisler", kart: "govde", sira: 2, hucre: function (x) { return '<span class="a-kart-etiket">Tesisler</span>' + kirp(x.tesisler.map(function (t) { return MV.tesis(t).ad; }).join(", ")); } },
+      { k: "donem", baslik: "Dönem", kart: "govde", sira: 3, hucre: function (x) { return '<span class="a-kart-etiket">Dönem</span>' + MK.tarihYaz(x.baslangic) + " – " + MK.tarihYaz(x.bitis); } },
+      { k: "durum", baslik: "Durum", kart: "rozet", sira: 1, hucre: function (x) { return rozet(SOZ_DURUM[MV.isDurum(x)]); } }
+    ];
+    $("a-sayac").innerHTML = "<b>" + l.length + "</b> sözleşme";
+    $("a-liste").innerHTML = l.length ? MK.tablo({ baslik: "Sözleşmeler", sinif: "a-tablo-msoz", sutunlar: SUT, kayitlar: l, href: function (x) { return "#/s/" + x.no + ek; } })
+      : MK.bos({ ikon: "scroll-text", baslik: "Sözleşme yok", metin: "Size açılmış bir sözleşme yok." });
+  }
+  function sozSayfa(x) {
+    var ek = q !== "m1" ? "?musteri=" + q : "";
+    if (!x || sozlesmeler().indexOf(x) < 0) {
+      $("a-nesne").innerHTML = MK.kirinti([["Sözleşmeler", "#/sozlesme" + ek]]) + '<h1 class="a-gizli" tabindex="-1">Sözleşme bulunamadı</h1>' +
+        MK.bos({ ikon: "circle-alert", baslik: "Sözleşme bulunamadı", metin: "Bu adreste size açık bir sözleşme yok.", eylem: '<a class="a-tus a-tus-ikincil" href="#/sozlesme' + ek + '">' + ikon("arrow-left", "a-ikon-kucuk") + "Sözleşmelere dön</a>" });
+      return;
+    }
+    $("a-nesne").innerHTML = MK.kirinti([["Sözleşmeler", "#/sozlesme" + ek], [x.no]]) +
+      '<div class="a-nesne-bas"><div class="a-nesne-kimlik"><div class="a-nesne-baslik"><h1 tabindex="-1">' + x.no + "</h1>" + rozet(SOZ_DURUM[MV.isDurum(x)]) + "</div></div>" +
+        (x.dosya ? '<div class="a-eylem-cubugu">' + MK.tus({ eylem: "pdf", ad: "PDF indir", ikon: "file-text" }) + "</div>" : "") + "</div>" +
+      MB.isSozlesmesi({ x: x });
+  }
+
   /* ── "UYGUNSUZLARI İNDİR" (Excel) ÖNİZLEMESİ ───────────────────────────────────────────────────────────── */
   function excelAc() {
     var l = uygunsuzlar().filter(function (u) { return u.durum === "acik"; });
@@ -113,24 +153,29 @@
     var h = location.hash.replace(/\?.*$/, ""), m;
     if (h === "#/excel") return { v: "uygunsuz", pencere: true };
     if (h === "#/uygunsuz") return { v: "uygunsuz" };
+    if (h === "#/plan") return { v: "plan" };
+    if (h === "#/sozlesme") return { v: "sozlesme" };
+    if ((m = /^#\/s\/([A-Za-z0-9-]+)$/.exec(h))) return { v: "soz", no: m[1] };
     if ((m = /^#\/r\/([A-Za-z0-9-]+)$/.exec(h))) return { v: "rapor", no: m[1] };
     return { v: "rapor-liste" };
   }
   function goster(odakla) {
-    var r = rota(), liste = r.v !== "rapor", musteriEk = q !== "m1" ? "?musteri=" + q : "";
+    var r = rota(), liste = r.v !== "rapor" && r.v !== "soz", musteriEk = q !== "m1" ? "?musteri=" + q : "";
     $("a-liste-gorunum").hidden = !liste; $("a-nesne").hidden = liste;
     if (liste) {
-      var u = r.v === "uygunsuz", acik = uygunsuzlar().filter(function (x) { return x.durum === "acik"; }).length;
-      $("a-liste-gorunum").querySelector("h1").textContent = u ? "Uygunsuzluklar" : "Raporlarınız";
-      $("a-alt").innerHTML = kacis(M.unvan) + " · " + (KUL ? (KUL.tesis === "hepsi" ? "bütün tesisler" : tesisleri().map(function (t) { return t.ad; }).join(", ")) : "portal kullanıcısı yok") + " · raporlar " + kacis(MV.FIRMA.ad) + " tarafından imzalanır";
-      $("a-sekmeler").innerHTML = '<a class="a-sekme" href="#/' + musteriEk + '"' + (u ? "" : ' aria-current="page"') + ">Raporlar</a>" +
-        '<a class="a-sekme" href="#/uygunsuz' + musteriEk + '"' + (u ? ' aria-current="page"' : "") + '>Uygunsuzluklar <span class="a-cip-sayi">' + acik + "</span></a>";
-      $("a-uyari").innerHTML = !KUL ? '<div class="a-serit-kap">' + MK.serit("uyari", "triangle-alert", "Bu müşterinin etkin portal kullanıcısı yok: raporlar imzalansa da kimse göremez. Kullanıcı müşteri sayfasından eklenir.") + "</div>"
-        : u && acik ? '<div class="a-serit-kap">' + MK.serit("uyari", "triangle-alert", acik + " açık uygunsuzluk: hafif kusur sonraki kontrole kadar giderilmeli; ağır kusurlu ekipman giderilene kadar kullanılmaz (Ek-III 1.9).") + "</div>" : "";
+      var u = r.v === "uygunsuz", pl = r.v === "plan", sz = r.v === "sozlesme", acik = uygunsuzlar().filter(function (x) { return x.durum === "acik"; }).length;
+      $("a-liste-gorunum").querySelector("h1").textContent = u ? "Uygunsuzluklar" : pl ? "Planlanan kontroller" : sz ? "Sözleşmeler" : "Raporlarınız";
+      $("a-alt").innerHTML = kacis(M.unvan) + " · " + (KUL ? (KUL.tesis === "hepsi" ? "bütün tesisler" : tesisleri().map(function (t) { return t.ad; }).join(", ")) : "kullanıcı yok");
+      var sekme = function (h, ad, akt, ek) { return '<a class="a-sekme" href="#/' + h + musteriEk + '"' + (akt ? ' aria-current="page"' : "") + ">" + ad + (ek || "") + "</a>"; };
+      $("a-sekmeler").innerHTML = sekme("", "Raporlar", !u && !pl && !sz) + sekme("uygunsuz", "Uygunsuzluklar", u, ' <span class="a-cip-sayi">' + acik + "</span>") +
+        sekme("plan", "Planlanan kontroller", pl) + sekme("sozlesme", "Sözleşmeler", sz);
+      $("a-uyari").innerHTML = !KUL ? '<div class="a-serit-kap">' + MK.serit("uyari", "triangle-alert", "Bu müşterinin giriş yapan kullanıcısı yok.") + "</div>" : "";
       document.querySelector('[data-eylem="excel-ac"]').hidden = !u;
-      $("a-suzgec-kap").innerHTML = MK.suzgecHtml(u ? "u" : "m"); MK.suzgecKur(u ? "u" : "m");
-    } else raporSayfa(MV.rapor(r.no));
-    document.title = (r.v === "rapor" ? r.no : r.v === "uygunsuz" ? "Uygunsuzluklar" : "Raporlarınız") + " · müşteri paneli · probata maket";
+      if (pl || sz) { $("a-suzgec-kap").innerHTML = ""; $("a-sayfa").innerHTML = ""; if (pl) planCiz(); else sozCiz(); }
+      else { $("a-suzgec-kap").innerHTML = MK.suzgecHtml(u ? "u" : "m"); MK.suzgecKur(u ? "u" : "m"); }
+    } else if (r.v === "soz") sozSayfa(MV.isSozlesmesi(r.no));
+    else raporSayfa(MV.rapor(r.no));
+    document.title = (r.v === "rapor" || r.v === "soz" ? r.no : r.v === "uygunsuz" ? "Uygunsuzluklar" : r.v === "plan" ? "Planlanan kontroller" : r.v === "sozlesme" ? "Sözleşmeler" : "Raporlarınız") + " · müşteri paneli · probata maket";
     if (odakla) { window.scrollTo(0, 0); var hh = document.querySelector("#a-icerik > :not([hidden]) h1"); if (hh) hh.focus({ preventScroll: true }); }
     if (r.pencere) excelAc(); else if ($("a-pencere").open) $("a-pencere").close();
   }
@@ -141,6 +186,6 @@
   X["pdf"] = function () { MK.bildir("Makette dosya yok. Uygulamada imzalı PDF kısa ömürlü, yetkili bağlantıyla iner."); };
   $("a-pencere").addEventListener("close", function () { if (rota().pencere) history.replaceState(null, "", "#/uygunsuz" + (q !== "m1" ? "?musteri=" + q : "")); });
 
-  MK.kabuk({ musteri: { ad: M.kisa }, kullanici: KUL ? { bas: MV.bas(KUL.ad), ad: KUL.ad, rol: M.kisa } : { bas: "—", ad: "Portal kullanıcısı yok", rol: M.kisa } });
+  MK.kabuk({ musteri: { ad: M.kisa, firma: MV.FIRMA.ad }, kullanici: KUL ? { bas: MV.bas(KUL.ad), ad: KUL.ad, rol: M.kisa } : { bas: "—", ad: "Portal kullanıcısı yok", rol: M.kisa } });
   goster(false);
 })();

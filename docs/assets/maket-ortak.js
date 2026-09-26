@@ -105,13 +105,13 @@
     var ana = $("a-icerik"), kok = document.createElement("div");
     kok.className = "a-kabuk"; kok.id = "a-kabuk";
     /* 2026-09-24 (M11): MÜŞTERİ PANELİ kabuğu — firmanın modül menüsü yok; üst çubukta marka, tema ve müşteri kullanıcısı.
-       o.musteri = { ad: müşteri kısa adı }. Aynı üst çubuk sınıfları (ikinci aile yok). */
+       o.musteri = { ad: müşteri kısa adı, firma: muayene firmasının adı }. Aynı üst çubuk sınıfları (ikinci aile yok).
+       2026-09-26 (reisim 112): üst çubukta muayene firmasının logosu (makette logo yeri + firma adı), probata logosu yok. */
     if (o.musteri) {
       kok.className = "a-kabuk a-kabuk-musteri";
       kok.innerHTML = '<div class="a-govde"><header class="a-ust">' +
-          '<img class="a-ust-logo a-ust-logo-acik" src="../marka/probata-yatay-renkli.svg" alt="probata" width="120" height="30">' +
-          '<img class="a-ust-logo a-ust-logo-koyu" src="../marka/probata-yatay-koyu-zemin.svg" alt="probata" width="120" height="30">' +
-          '<span class="a-ust-panel">Müşteri paneli</span><div class="a-ust-bosluk"></div>' +
+          '<span class="a-ust-firma-logo" role="img" aria-label="' + kacis(o.musteri.firma || "Firma") + ' logosu">Logo</span>' +
+          '<span class="a-ust-panel">' + kacis(o.musteri.firma || "Müşteri paneli") + '</span><div class="a-ust-bosluk"></div>' +
           '<button class="a-ikon-tus" type="button" data-eylem="tema" id="a-tema-tus" aria-label="Temayı değiştir">' +
             '<svg class="a-ikon a-tema-ay" aria-hidden="true"><use href="' + IKON + 'moon"/></svg><svg class="a-ikon a-tema-gunes" aria-hidden="true"><use href="' + IKON + 'sun"/></svg></button>' +
           '<div class="a-kullanici"><span class="a-avatar" aria-hidden="true">' + kacis(o.kullanici.bas) + "</span>" +

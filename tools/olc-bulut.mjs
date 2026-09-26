@@ -202,6 +202,9 @@ export const DURUMLAR = {
     { ad: "portal kullanıcısı olmayan müşteri", hash: "#/?musteri=m5", kabuksuz: true },
     { ad: "giderilmiş uygunsuzluklar (firma ekranından önizleme)", hash: "#/uygunsuz?musteri=m9", kabuksuz: true },
     { ad: "müşteri kartı · açık uygunsuzluk kayıtlardan", sayfa: "maket/musteriler.html", hash: "#/m/m9" },
+    { ad: "panel · planlanan kontroller", hash: "#/plan", kabuksuz: true },
+    { ad: "panel · sözleşmeler", hash: "#/sozlesme", kabuksuz: true },
+    { ad: "panel · sözleşme (imzalı hâli)", hash: "#/sozlesme", adim: [["tikla", "#a-liste a.a-no"]], kabuksuz: true }
   ] },
   m12: { sayfa: "maket/teklifler.html", durumlar: [
     { ad: "teklifler · liste", hash: "#/" },
@@ -478,6 +481,10 @@ export const DENEMELER = {
     { ad: "personel kartı eğitim yüzü kayıttan (Kaan Er: tekrarı geçti)", sayfa: "maket/personel.html", hash: "#/p/ke", bekle: '/1 tekrarı geçti/.test(document.querySelector(".a-yuzler").textContent)' },
   ],
   m11: [
+    /* 2026-09-26 (reisim 81, 112, 134): planlanan kontrol, sözleşme görünür (imza yok), firmanın logosu */
+    { ad: "planlanan kontrol: açık planlı tesis tarihiyle", hash: "#/plan", bekle: '/Planlanan kontroller/.test(document.querySelector("h1").textContent) && document.querySelectorAll("#a-liste tbody tr").length > 0' },
+    { ad: "sözleşme açılır, imza tuşu yok", hash: "#/sozlesme", adim: [["tikla", "#a-liste a.a-no"]], bekle: '/^#\\/s\\//.test(location.hash) && !!document.querySelector("#a-nesne .a-belge") && !/İmzala/.test(document.querySelector("#a-nesne").textContent)' },
+    { ad: "üst çubukta muayene firmasının logosu", hash: "#/", bekle: '!!document.querySelector(".a-ust-firma-logo") && !document.querySelector(".a-kabuk-musteri .a-ust-logo")' },
     { ad: "yalnız imzalı ve kendi raporları (21)", hash: "#/", bekle: 'document.querySelector("#a-sayac").textContent === "21 rapor" && !document.querySelector("#a-menu")' },
     { ad: "Uygunsuz çipi (6 / 21)", hash: "#/", adim: [["tikla", '[data-sz="m"] [data-cip="kusurlu"]']], bekle: 'document.querySelector("#a-sayac").textContent === "6 / 21 rapor"' },
     { ad: "uygunsuzluklar sekmesi: 6 açık, Excel tuşu görünür", hash: "#/", adim: [["tikla", 'a.a-sekme[href="#/uygunsuz"]']], bekle: 'document.querySelector("#a-sayac").textContent === "6 uygunsuzluk" && !document.querySelector(\'[data-eylem="excel-ac"]\').hidden' },
