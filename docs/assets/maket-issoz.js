@@ -28,7 +28,7 @@
   var kalan = function (x) { return MK.gunFarki(MK.BUGUN, x.bitis); };
   var tesisAd = function (x) { return x.tesisler.map(function (t) { return MV.tesis(t).ad; }).join(", "); };
   /* yenileme teklifi: kapsamdaki bir tesis için sözleşme başladıktan sonra hazırlanmış, reddedilmemiş teklif */
-  var yenilemeTeklifi = function (x) { return MV.TEKLIFLER.filter(function (t) { return x.tesisler.indexOf(t.tesis) >= 0 && t.tarih > x.baslangic && t.durum !== "red"; })[0]; };
+  var yenilemeTeklifi = function (x) { return MV.TEKLIFLER.filter(function (t) { return MV.teklifTesisleri(t).some(function (y) { return x.tesisler.indexOf(y) >= 0; }) && t.tarih > x.baslangic && t.durum !== "red"; })[0]; };
   var TK_DURUM = { gonderildi: "gönderildi", taslak: "taslak", kabul: "kabul edildi", suresi: "süresi doldu" };
 
   /* ── İSG-KATİP: tesis başına denetçi → sözleşme ID ─────────────────────────────────────────────────── */
@@ -187,7 +187,7 @@
   var F = null;
   function formAc() {
     var q = /[?&]teklif=([A-Z0-9-]+)/.exec(location.hash), t = q ? MV.teklif(q[1]) : null;
-    F = { teklif: t ? t.no : "", m: t ? t.m : "", tesisler: t ? [t.tesis] : [], baslangic: "24.09.2026", sure: "12", vade: "30", yenileme: "yok", hata: {} };
+    F = { teklif: t ? t.no : "", m: t ? t.m : "", tesisler: t ? MV.teklifTesisleri(t).slice() : [], baslangic: "24.09.2026", sure: "12", vade: "30", yenileme: "yok", hata: {} };
   }
   function formCiz(odak) {
     var h = F.hata, m = F.m ? MV.musteri(F.m) : null;

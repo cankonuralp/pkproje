@@ -216,6 +216,7 @@ export const DURUMLAR = {
     { ad: "yeni teklif · tesisteki ekipmandan dolduruldu", hash: "#/yeni?tesis=t13", adim: [["tikla", '[data-eylem="doldur"]']] },
     { ad: "yeni teklif · boş gönderildi", hash: "#/yeni", adim: [["tikla", '[data-eylem="kaydet"]']] },
     { ad: "taslak teklif · düzenle", hash: "#/t/T-0926-012/duzenle" },
+    { ad: "yeni teklif · çok tesis, KDV", hash: "#/yeni?tesis=t1", adim: [["tikla", '[data-ektesis="t2"]'], ["tikla", '[data-eylem="doldur"]']] }
   ] },
   m13: { sayfa: "maket/sozlesmeler.html", durumlar: [
     { ad: "iş sözleşmeleri · liste (hizmet sözleşmesi için şerit yok)", hash: "#/" },
@@ -493,6 +494,9 @@ export const DENEMELER = {
     { ad: "müşteri sayfasından uygunsuzluk yüzü → o müşterinin paneli", sayfa: "maket/musteriler.html", hash: "#/m/m9", adim: [["tikla", 'a.a-yuz[href^="musteri.html"]']], bekle: '/musteri\\.html$/.test(location.pathname) && /Başak Un/.test(document.querySelector("#a-alt").textContent) && document.querySelector("#a-sayac").textContent === "10 uygunsuzluk"' },
   ],
   m12: [
+    /* 2026-09-26 (reisim 120, 123): KDV teklifte değişir; teklif istenirse çok tesisli */
+    { ad: "çok tesisli teklif, KDV %10: kalemler iki tesisten, kaydedilir", hash: "#/yeni?tesis=t1", adim: [["tikla", '[data-ektesis="t2"]'], ["yaz", "#f-kdv", "10"], ["tikla", '[data-eylem="doldur"]'], ["tikla", '[data-eylem="kaydet"]']], bekle: '/^#\\/t\\//.test(location.hash) && /Merkez Fabrika, Depo/.test(document.querySelector("#a-nesne .a-nesne-alt").textContent) && /KDV %10/.test(document.querySelector("#a-nesne").textContent)' },
+    { ad: "KDV yazınca toplam canlı güncellenir (odak yerinde)", hash: "#/yeni?tesis=t1", adim: [["tikla", '[data-eylem="doldur"]'], ["yaz", "#f-kdv", "18"]], bekle: '/KDV %18/.test(document.querySelector("#f-toplam").textContent) && document.activeElement.id === "f-kdv"' },
     { ad: "liste: 15 teklif, en yenisi üstte", hash: "#/", bekle: 'document.querySelector("#a-sayac").textContent === "15 teklif" && /T-0926-011|T-0926-012/.test(document.querySelector("#a-liste tbody tr").textContent)' },
     { ad: "kabul edilmiş teklif: raporlanan adet ve tutar", hash: "#/t/T-0926-001", bekle: '/Raporlanan tutar/.test(document.querySelector("#a-nesne").textContent) && document.querySelectorAll(".a-tablo-kalem-rapor tbody tr").length === 12' },
     { ad: "kabul → Plan aç tesisle açılır", hash: "#/t/T-0926-001", adim: [["tikla", '#a-nesne a[href^="plan-ac.html"]']], bekle: '/plan-ac\\.html$/.test(location.pathname) && document.querySelector("#p-tesis .a-kirp").textContent === "Merkez Fabrika"' },

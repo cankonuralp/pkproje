@@ -8,8 +8,8 @@
   390,
   430
  ],
- "toplam": 36,
- "temiz": 36,
+ "toplam": 40,
+ "temiz": 40,
  "durumlar": [
   {
    "ad": "teklifler · liste",
@@ -198,7 +198,7 @@
    "tasma": 0,
    "disari": [],
    "kucukAlan": [],
-   "alan": 5
+   "alan": 6
   },
   {
    "ad": "yeni teklif · boş",
@@ -207,7 +207,7 @@
    "tasma": 0,
    "disari": [],
    "kucukAlan": [],
-   "alan": 5
+   "alan": 6
   },
   {
    "ad": "yeni teklif · boş",
@@ -216,7 +216,7 @@
    "tasma": 0,
    "disari": [],
    "kucukAlan": [],
-   "alan": 5
+   "alan": 6
   },
   {
    "ad": "yeni teklif · boş",
@@ -225,7 +225,7 @@
    "tasma": 0,
    "disari": [],
    "kucukAlan": [],
-   "alan": 5
+   "alan": 6
   },
   {
    "ad": "yeni teklif · tesisteki ekipmandan dolduruldu",
@@ -234,7 +234,7 @@
    "tasma": 0,
    "disari": [],
    "kucukAlan": [],
-   "alan": 24
+   "alan": 25
   },
   {
    "ad": "yeni teklif · tesisteki ekipmandan dolduruldu",
@@ -243,7 +243,7 @@
    "tasma": 0,
    "disari": [],
    "kucukAlan": [],
-   "alan": 24
+   "alan": 25
   },
   {
    "ad": "yeni teklif · tesisteki ekipmandan dolduruldu",
@@ -252,7 +252,7 @@
    "tasma": 0,
    "disari": [],
    "kucukAlan": [],
-   "alan": 24
+   "alan": 25
   },
   {
    "ad": "yeni teklif · tesisteki ekipmandan dolduruldu",
@@ -261,7 +261,7 @@
    "tasma": 0,
    "disari": [],
    "kucukAlan": [],
-   "alan": 24
+   "alan": 25
   },
   {
    "ad": "yeni teklif · boş gönderildi",
@@ -270,7 +270,7 @@
    "tasma": 0,
    "disari": [],
    "kucukAlan": [],
-   "alan": 5
+   "alan": 6
   },
   {
    "ad": "yeni teklif · boş gönderildi",
@@ -279,7 +279,7 @@
    "tasma": 0,
    "disari": [],
    "kucukAlan": [],
-   "alan": 5
+   "alan": 6
   },
   {
    "ad": "yeni teklif · boş gönderildi",
@@ -288,7 +288,7 @@
    "tasma": 0,
    "disari": [],
    "kucukAlan": [],
-   "alan": 5
+   "alan": 6
   },
   {
    "ad": "yeni teklif · boş gönderildi",
@@ -297,7 +297,7 @@
    "tasma": 0,
    "disari": [],
    "kucukAlan": [],
-   "alan": 5
+   "alan": 6
   },
   {
    "ad": "taslak teklif · düzenle",
@@ -306,7 +306,7 @@
    "tasma": 0,
    "disari": [],
    "kucukAlan": [],
-   "alan": 8
+   "alan": 9
   },
   {
    "ad": "taslak teklif · düzenle",
@@ -315,7 +315,7 @@
    "tasma": 0,
    "disari": [],
    "kucukAlan": [],
-   "alan": 8
+   "alan": 9
   },
   {
    "ad": "taslak teklif · düzenle",
@@ -324,7 +324,7 @@
    "tasma": 0,
    "disari": [],
    "kucukAlan": [],
-   "alan": 8
+   "alan": 9
   },
   {
    "ad": "taslak teklif · düzenle",
@@ -333,7 +333,43 @@
    "tasma": 0,
    "disari": [],
    "kucukAlan": [],
-   "alan": 8
+   "alan": 9
+  },
+  {
+   "ad": "yeni teklif · çok tesis, KDV",
+   "gen": 320,
+   "temiz": true,
+   "tasma": 0,
+   "disari": [],
+   "kucukAlan": [],
+   "alan": 31
+  },
+  {
+   "ad": "yeni teklif · çok tesis, KDV",
+   "gen": 360,
+   "temiz": true,
+   "tasma": 0,
+   "disari": [],
+   "kucukAlan": [],
+   "alan": 31
+  },
+  {
+   "ad": "yeni teklif · çok tesis, KDV",
+   "gen": 390,
+   "temiz": true,
+   "tasma": 0,
+   "disari": [],
+   "kucukAlan": [],
+   "alan": 31
+  },
+  {
+   "ad": "yeni teklif · çok tesis, KDV",
+   "gen": 430,
+   "temiz": true,
+   "tasma": 0,
+   "disari": [],
+   "kucukAlan": [],
+   "alan": 31
   }
  ]
 }

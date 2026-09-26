@@ -2,9 +2,23 @@
  "maket": "m12",
  "tarih": "2026-09-26",
  "arac": "tools/olc-bulut.mjs --etkilesim (başsız tarayıcı, 1920 açık tema; gen verilen denemede o genişlik)",
- "toplam": 10,
- "gecen": 10,
+ "toplam": 12,
+ "gecen": 12,
  "denemeler": [
+  {
+   "ad": "çok tesisli teklif, KDV %10: kalemler iki tesisten, kaydedilir",
+   "gen": 1920,
+   "sayfa": "maket/teklifler.html",
+   "hash": "#/yeni?tesis=t1",
+   "gecti": true
+  },
+  {
+   "ad": "KDV yazınca toplam canlı güncellenir (odak yerinde)",
+   "gen": 1920,
+   "sayfa": "maket/teklifler.html",
+   "hash": "#/yeni?tesis=t1",
+   "gecti": true
+  },
   {
    "ad": "liste: 15 teklif, en yenisi üstte",
    "gen": 1920,

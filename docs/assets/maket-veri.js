@@ -647,7 +647,9 @@
   MV.teklif = function (no) { return MV.TEKLIFLER.filter(function (t) { return t.no === no; })[0]; };
   MV.teklifTutar = function (t) { return t.kalemler.reduce(function (n, k) { return n + k.adet * k.fiyat; }, 0); };
   /* teklif kalemine bağlı raporlar: tesisin bu yılki (teklif sonrası) raporları, türüyle (§3.2 madde 5) */
-  MV.kalemRaporlari = function (t, tur) { return MV.RAPORLAR.filter(function (r) { return r.tesis === t.tesis && r.olustu.slice(0, 10) >= t.tarih && MV.ekipman(r.kod).tur === tur; }); };
+  /* 123 (2026-09-26): teklif istenirse çok tesisli (t.tesisler); yoksa tek tesis */
+  MV.teklifTesisleri = function (t) { return t.tesisler && t.tesisler.length ? t.tesisler : [t.tesis]; };
+  MV.kalemRaporlari = function (t, tur) { return MV.RAPORLAR.filter(function (r) { return MV.teklifTesisleri(t).indexOf(r.tesis) >= 0 && r.olustu.slice(0, 10) >= t.tarih && MV.ekipman(r.kod).tur === tur; }); };
   MV.para = function (n) { return n.toLocaleString("tr-TR", { minimumFractionDigits: 2, maximumFractionDigits: 2 }) + " TL"; };
 
   /* ── İŞ SÖZLEŞMELERİ (modül 12, firmalar arası; M13, faz 2, 2026-09-24) — muayene firması ile müşteri arasında. İSG-KATİP sözleşmesinden
@@ -682,7 +684,7 @@
   var kurus = function (n) { return Math.round(n * 100) / 100; };
   MV.raporFiyat = function (r) {
     var gun = r.olustu.slice(0, 10), tur = MV.ekipman(r.kod).tur;
-    var t = MV.TEKLIFLER.filter(function (x) { return x.durum === "kabul" && x.tesis === r.tesis && x.tarih <= gun; }).sort(function (a, b) { return a.tarih < b.tarih ? 1 : -1; })[0];
+    var t = MV.TEKLIFLER.filter(function (x) { return x.durum === "kabul" && MV.teklifTesisleri(x).indexOf(r.tesis) >= 0 && x.tarih <= gun; }).sort(function (a, b) { return a.tarih < b.tarih ? 1 : -1; })[0];
     var k = t && t.kalemler.filter(function (x) { return x.tur === tur; })[0];
     if (!k) return { fiyat: MV.FIYAT[tur], kaynak: t ? "disi" : "liste", teklif: t || null };
     var sira = MV.kalemRaporlari(t, tur).sort(function (a, b) { return a.olustu < b.olustu ? -1 : 1; }).indexOf(r);

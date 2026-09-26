@@ -786,7 +786,13 @@ sonraki kontrol 60 gün içinde; seçiciler: tesis, yıl) · **Uygunsuzluklar** 
 Gözle bulunup düzeltilen (ölçüm yakalamıyor): telefonda **belge tablolarında kelimeler harf ortasından bölünüyordu** ("Yap ıldı") — ortak
 belge stili düzeltildi, M7 (66/66) ve M9 (60/60) yeniden ölçüldü; Excel önizlemesi telefonda iki sütuna indi.
 
-#### Maket M12 — Teklifler (modül 11, faz 2) — ONAY BEKLİYOR
+#### Maket M12 — Teklifler (modül 11, faz 2) — 2. TUR, ONAY BEKLİYOR (toplu gözden geçirmede)
+**2. tur (2026-09-26, §9 yirmi birinci tur):** **KDV teklifte değiştirilebilir** (120, varsayılan %20) · teklif tesis başına, istenirse **çok tesisli**
+(123: "Başka tesisler"; kalemler seçili tesislerden toplanır, raporlar ve birim fiyat bütün tesislerden bağlanır, iş sözleşmesi bütün tesisleri
+alır) · fiyat listesi firma ayarı, satır başına değişir (119) · PDF indirilip elle gönderilir, panelden kabul yok (121) · adedi aşan rapor aynı
+fiyatla "teklif dışı" (122) · süresi dolan kendiliğinden (124) · teklif PDF'i firmaya göre (161, §3.7 satır 4). Şeritler kısaldı.
+Ölçüm: 10 durum 60/60, etkileşim 12/12, telefon 40/40; M13 ve M14 yeniden temiz.
+1. tur metni (tarihsel):
 Ekran: **Teklifler** (`maket/teklifler.html`, planlama Zeynep Arslan): liste (no, müşteri / tesis, kalem, tutar, geçerlilik, durum; çipler:
 taslak · gönderildi · kabul · red ya da süresi doldu · geçerliliği 7 gün içinde bitiyor; seçici müşteri) · **teklif sayfası** (kalemler:
 tür × adet × birim fiyat, ara toplam, KDV, genel toplam; kabul edilmişte **raporlanan adet** ve **raporlanan tutar**; duruma göre eylem:
@@ -950,7 +956,7 @@ Reisim yeni bir tane söyledikçe bu tabloya satır eklenir.
 | 1 | Periyodik kontrol raporu | Ekipman türleri (M3) → Saha ve Rapor (M8–M9) | var (maket, Ek-III 1.7 sırası) | **2026-09-26: firma her ekipman türüne kendi rapor formatını PDF olarak yükler** (reisim); "Rapor oluştur" sorularını bu formattan alır — PDF'ten soruya nasıl geçileceği M8'de kurgulanır |
 | 2 | **Zimmet teslim formu** | Personel kartı › Zimmetindekiler (M1) | **var — `KM-FR-ZMT-01` (2026-09-25)** | başlık, sütunlar, taahhüt metni, imza alanları, logo |
 | 3 | Tarafsızlık ve çıkar çatışması beyanı | Planlar › plan kabulü (§3.4) | var (varsayılan metin) | beyan metni (firmanın kalite el kitabından) |
-| 4 | Teklif belgesi | Teklifler (M12) | maket (liste + sayfa), PDF biçimi yok | başlık, kalem tablosu, koşullar, imza |
+| 4 | Teklif belgesi | Teklifler (M12) | maket (liste + sayfa), PDF biçimi yok | başlık, kalem tablosu, koşullar, imza — **2026-09-26 (161): teklif PDF'i firmanın formatıyla; indirilip elle gönderilir** |
 | 5 | İş sözleşmesi metni | Sözleşmeler (M5 + M13) | temel format KM-FR-SZL-01 (probata) | **2026-09-26: firma kendi sözleşme şablonunu (PDF / Word) yükler, sürümlü** (reisim H); bilgiler şablondaki yerlerine doldurulur |
 | 6 | Uygunsuzluklar Excel'i | Müşteri paneli (M11) | var (maket önizlemesi) | sütunlar ve sırası |
 | 7 | Özlük dosyası belge türleri | Personel kartı (M1) | var (iş sözleşmesi, diploma, oda kaydı, EKİPNET belgesi, kimlik, sağlık raporu, diğer) | tür listesi |
@@ -1402,6 +1408,7 @@ revizyon, alan kopyalama, hafif kusur devri, meslek eşleşme denetimi).
 - Emsal ürünler: https://opwire.app/iso-17020-periyodik-kontrol-yazilimi/ · https://17020muayene.vidco.com.tr/ · https://akuple.com/asansor-kontrol-yazilimi/ · https://ensyazilim.com/
 
 ## 11 · Değişiklik günlüğü
+- 2026-09-26 (56): **M12 2. tur**: teklifte KDV oranı, çok tesisli teklif; §3.7 satır 4 teklif PDF'i firmaya göre. M12 60/60 · 12/12 · 40/40.
 - 2026-09-26 (55): **M11 2. tur**: firmanın logosu, Planlanan kontroller ve Sözleşmeler sekmeleri (salt görüntü). M11 66/66 · 9/9 · 44/44.
 - 2026-09-26 (54): **M10 2. tur**: ara kontrol uyarıları eklendi (kalibrasyonu geçen / kalibrasyondaki cihaz hariç). M10 36/36 · 7/7 · 24/24.
 - 2026-09-26 (53): **M9 2. tur**: her rapor ayrı imza (birleştirme yok), vekil onay, onayı geri al, imzalı raporun düzeltmesi (R1), Planlar'da

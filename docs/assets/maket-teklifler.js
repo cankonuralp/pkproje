@@ -11,7 +11,9 @@
   var DURUM = { taslak: { ad: "Taslak", rozet: "a-rozet-notr" }, gonderildi: { ad: "Gönderildi", rozet: "a-rozet-kabul" }, kabul: { ad: "Kabul edildi", rozet: "a-rozet-tamam" },
     red: { ad: "Reddedildi", rozet: "a-rozet-red" }, suresi: { ad: "Süresi doldu", rozet: "a-rozet-bekliyor" } };
   var bitis = function (t) { var d = new Date((t.gonderildi || t.tarih) + "T12:00:00"); d.setDate(d.getDate() + t.gecerlilik); return d.toISOString().slice(0, 10); };
-  var kdvli = function (n) { return Math.round(n * (100 + MV.KDV)) / 100; };
+  /* 120 (2026-09-26): KDV varsayılan %20, teklifte değiştirilebilir (t.kdv) */
+  var oran = function (t) { return t && t.kdv != null ? t.kdv : MV.KDV; };
+  var kdvli = function (n, o) { return Math.round(n * (100 + (o == null ? MV.KDV : o))) / 100; };
 
   /* ── LİSTE ─────────────────────────────────────────────────────────────────────────────────────────── */
   MK.suzgecTanimla("t", { ad: "Tekliflerde ara", ipucu: "Teklif no, müşteri, tesis", birim: "teklif",
@@ -73,26 +75,26 @@
     var raporlu = kabul ? t.kalemler.reduce(function (n, k) { return n + Math.min(k.adet, MV.kalemRaporlari(t, k.tur).length) * k.fiyat; }, 0) : 0;
     $("a-nesne").innerHTML = MK.kirinti([["Teklifler", "#/"], [t.no]]) +
       '<div class="a-nesne-bas"><div class="a-nesne-kimlik"><div class="a-nesne-baslik"><h1 tabindex="-1">' + t.no + "</h1>" + rozet(DURUM[t.durum]) + "</div>" +
-        '<p class="a-nesne-alt">' + ikon("building-2", "a-ikon-kucuk") + '<span><a class="a-baglanti" href="' + MK.adres(3, "#/m/" + m.id) + '">' + kacis(m.unvan) + "</a> · " + kacis(ts.ad) + "</span></p></div>" +
+        '<p class="a-nesne-alt">' + ikon("building-2", "a-ikon-kucuk") + '<span><a class="a-baglanti" href="' + MK.adres(3, "#/m/" + m.id) + '">' + kacis(m.unvan) + "</a> · " + kacis(MV.teklifTesisleri(t).map(function (x) { return MV.tesis(x).ad; }).join(", ")) + "</span></p></div>" +
         '<div class="a-eylem-cubugu">' + eylem + "</div></div>" +
       (t.durum === "red" ? '<div class="a-serit-kap">' + MK.serit("hata", "ban", "Reddedildi " + MK.tarihYaz(t.sonuc) + ": “" + kacis(t.gerekce) + "”") + "</div>" : "") +
-      (t.durum === "suresi" ? '<div class="a-serit-kap">' + MK.serit("uyari", "clock", "Geçerlilik " + MK.tarihYaz(bitis(t)) + " tarihinde doldu, müşteri yanıt vermedi. Yeniden göndermek için kopyalanır (numara yeni).") + "</div>" : "") +
-      (kabul ? '<div class="a-serit-kap">' + MK.serit("onay", "circle-check", "Kabul edildi " + MK.tarihYaz(t.sonuc) + ". Sıradaki: iş sözleşmesi ve İSG-KATİP kaydı, sonra plan. Tesisin raporları bu kalemlere türüyle bağlanır.") + "</div>" : "") +
+      (t.durum === "suresi" ? '<div class="a-serit-kap">' + MK.serit("uyari", "clock", "Geçerlilik " + MK.tarihYaz(bitis(t)) + " tarihinde doldu.") + "</div>" : "") +
+      (kabul ? '<div class="a-serit-kap">' + MK.serit("onay", "circle-check", "Kabul edildi " + MK.tarihYaz(t.sonuc) + ".") + "</div>" : "") +
       '<div class="a-serit-kap"><dl class="a-bilgi">' + bilgi("Hazırlanan", MK.tarihYaz(t.tarih) + '<span class="a-alt-satir">' + kacis(MV.kisi(t.hazirlayan).ad) + "</span>") +
         bilgi("Gönderildi", t.gonderildi ? MK.tarihYaz(t.gonderildi) : '<span class="a-deger-yok">Henüz değil</span>') +
         bilgi("Geçerlilik", t.gecerlilik + " gün" + (t.gonderildi ? '<span class="a-alt-satir">' + MK.tarihYaz(bitis(t)) + "'e kadar</span>" : "")) +
         bilgi("İlgili kişi", kacis(m.ilgili)) + "</dl></div>" +
       '<section class="a-bolum" aria-labelledby="a-b-kalem"><div class="a-alt-bas"><h2 class="a-alt-baslik" id="a-b-kalem">Kalemler</h2><span class="a-sayac"><b>' + t.kalemler.length + "</b> tür</span></div>" +
         '<div class="a-liste-kap">' + MK.tablo({ baslik: "Teklif kalemleri", sinif: kabul ? "a-tablo-kalem a-tablo-kalem-rapor" : "a-tablo-kalem", sutunlar: KS, kayitlar: t.kalemler }) + "</div>" +
-        '<dl class="a-bilgi a-bolum-serit">' + bilgi("Ara toplam", para(top)) + bilgi("KDV %" + MV.KDV, para(kdvli(top) - top)) + bilgi("Genel toplam", "<b>" + para(kdvli(top)) + "</b>") +
-          (kabul ? bilgi("Raporlanan tutar", para(raporlu) + '<span class="a-alt-satir">muhasebe ve performans buradan (§3.2 madde 5)</span>') : "") + "</dl></section>";
+        '<dl class="a-bilgi a-bolum-serit">' + bilgi("Ara toplam", para(top)) + bilgi("KDV %" + oran(t), para(kdvli(top, oran(t)) - top)) + bilgi("Genel toplam", "<b>" + para(kdvli(top, oran(t))) + "</b>") +
+          (kabul ? bilgi("Raporlanan tutar", para(raporlu)) : "") + "</dl></section>";
   }
 
   /* ── FORM ─────────────────────────────────────────────────────────────────────────────────────────── */
   var F = null;
   function formAc(t, kopya) {
     var k = t || kopya;
-    F = { no: t ? t.no : null, m: k ? k.m : "", tesis: k ? k.tesis : "", gecerlilik: String(k ? k.gecerlilik : 30), not: "", hata: {},
+    F = { no: t ? t.no : null, m: k ? k.m : "", tesis: k ? k.tesis : "", ek: k ? MV.teklifTesisleri(k).slice(1) : [], kdv: String(oran(k)), gecerlilik: String(k ? k.gecerlilik : 30), not: "", hata: {},
       kalemler: k ? k.kalemler.map(function (x) { return { tur: x.tur, adet: String(x.adet), fiyat: String(x.fiyat) }; }) : [{ tur: "", adet: "1", fiyat: "" }] };
     var q = /[?&]tesis=(t\d+)/.exec(location.hash); if (!k && q && MV.tesis(q[1])) { F.tesis = q[1]; F.m = MV.tesis(q[1]).m; }
   }
@@ -111,9 +113,13 @@
           MK.alan({ id: "f-m", etiket: "Müşteri", zorunlu: true, hata: h.m, genis: true, ipucu: m ? kacis(m.unvan) : "", girdi: MK.secim({ id: "f-m", ad: "Müşteri", deger: F.m, secenekler: musteriler, ipucu: "Müşteri seçin", gecersiz: !!h.m, tanim: "f-m-ipucu" }) }) +
           MK.alan({ id: "f-tesis", etiket: "Tesis", zorunlu: true, hata: h.tesis, genis: true, ipucu: F.tesis ? MV.tesisKalemleri(F.tesis).reduce(function (n, k) { return n + k.adet; }, 0) + " kayıtlı ekipman" : "",
             girdi: m ? MK.secim({ id: "f-tesis", ad: "Tesis", deger: F.tesis, secenekler: MV.tesisleri(m.id).map(function (x) { return [x.id, x.ad, x.ilce + " / " + x.il]; }), ipucu: "Tesis seçin", gecersiz: !!h.tesis, tanim: "f-tesis-ipucu" })
-              : '<input class="a-girdi a-girdi-oku" id="f-tesis" readonly value="Önce müşteri seçin" aria-describedby="f-tesis-ipucu">' }) + "</div></section>" +
+              : '<input class="a-girdi a-girdi-oku" id="f-tesis" readonly value="Önce müşteri seçin" aria-describedby="f-tesis-ipucu">' }) +
+          (m && F.tesis && MV.tesisleri(m.id).length > 1 ? '<div class="a-alan-grup a-alan-genis"><p class="a-etiket">Başka tesisler</p>' + MV.tesisleri(m.id).filter(function (x) { return x.id !== F.tesis; }).map(function (x) {
+            return '<label class="a-onay-kutusu"><input type="checkbox" data-ektesis="' + x.id + '"' + (F.ek.indexOf(x.id) >= 0 ? " checked" : "") + "><span>" + kacis(x.ad) + "</span></label>"; }).join("") + "</div>" : "") +
+          "</div></section>" +
         '<section class="a-form-bolum" aria-labelledby="f-b2"><h2 id="f-b2">Koşullar</h2><div class="a-form">' +
           MK.alan({ id: "f-gecerlilik", etiket: "Geçerlilik (gün)", zorunlu: true, hata: h.gecerlilik, ipucu: "Gönderildiği günden", girdi: MK.girdi({ id: "f-gecerlilik", alan: "gecerlilik", deger: F.gecerlilik, sinif: "a-girdi-sicil", ek: ' inputmode="numeric" maxlength="3"', hata: h.gecerlilik }) }) +
+          MK.alan({ id: "f-kdv", etiket: "KDV (%)", zorunlu: true, hata: h.kdv, girdi: MK.girdi({ id: "f-kdv", alan: "kdv", deger: F.kdv, sinif: "a-girdi-sicil", ek: ' inputmode="numeric" maxlength="2"', hata: h.kdv }) }) +
           '<div class="a-alan-grup a-alan-genis"><label class="a-etiket" for="f-not">Not</label><textarea class="a-alan a-alan-ince" id="f-not" data-alan="not" maxlength="300" placeholder="Ödeme, ulaşım, ek koşullar">' + kacis(F.not) + "</textarea></div>" +
         "</div></section></div>" +
         '<section class="a-form-bolum a-alan-genis" aria-labelledby="f-b3"><div class="a-alt-bas"><h2 class="a-alt-baslik" id="f-b3">Kalemler</h2><span class="a-sayac">ekipman türü × adet × birim fiyat</span></div>' +
@@ -134,12 +140,13 @@
         '<a class="a-tus a-tus-ikincil" href="' + (F.no ? "#/t/" + F.no : "#/") + '">Vazgeç</a>' + MK.tus({ eylem: "kaydet", ad: "Kaydet", ikon: "check" }) + "</div>";
     if (odak) { var el = $(odak); if (el) el.focus(); }
   }
-  var toplamHtml = function (top) { return bilgi("Ara toplam", para(top)) + bilgi("KDV %" + MV.KDV, para(kdvli(top) - top)) + bilgi("Genel toplam", "<b>" + para(kdvli(top)) + "</b>"); };
+  var toplamHtml = function (top) { var o = /^\d{1,2}$/.test(F.kdv) ? +F.kdv : MV.KDV; return bilgi("Ara toplam", para(top)) + bilgi("KDV %" + o, para(kdvli(top, o) - top)) + bilgi("Genel toplam", "<b>" + para(kdvli(top, o)) + "</b>"); };
   function denetle() {
     var h = {}, gor = {};
     if (!F.m) h.m = "Müşteri seçilmeli.";
     if (!F.tesis) h.tesis = "Tesis seçilmeli.";
     if (!/^\d{1,3}$/.test(F.gecerlilik) || +F.gecerlilik < 1) h.gecerlilik = "Gün, 1–999.";
+    if (!/^\d{1,2}$/.test(F.kdv)) h.kdv = "0–99.";
     F.kalemler.forEach(function (k, i) {
       if (!k.tur) h["tur-" + i] = "Tür seçilmeli.";
       else if (gor[k.tur]) h["tur-" + i] = "Bu tür yukarıda var; adedini artırın.";
@@ -190,9 +197,14 @@
     else if ($("a-pencere").open) $("a-pencere").close();
   }
   MK.goster = goster;
+  MK.onTikla = function (e) {
+    var c = e.target.closest("[data-ektesis]"); if (!c || !F) return false;
+    var id = c.dataset.ektesis, i = F.ek.indexOf(id); if (c.checked && i < 0) F.ek.push(id); else if (!c.checked && i >= 0) F.ek.splice(i, 1);
+    return true;
+  };
   MK.onSecim = function (id, deger) {
-    if (id === "f-m") { if (F.m !== deger) { F.m = deger; F.tesis = ""; } delete F.hata.m; }
-    else if (id === "f-tesis") { F.tesis = deger; delete F.hata.tesis; }
+    if (id === "f-m") { if (F.m !== deger) { F.m = deger; F.tesis = ""; F.ek = []; } delete F.hata.m; }
+    else if (id === "f-tesis") { F.tesis = deger; F.ek = F.ek.filter(function (x) { return x !== deger; }); delete F.hata.tesis; }
     else if (/^f-tur-\d+$/.test(id)) { var i = +id.slice(6); F.kalemler[i].tur = deger; if (!F.kalemler[i].fiyat) F.kalemler[i].fiyat = MV.para(MV.FIYAT[deger]).replace(" TL", ""); delete F.hata["tur-" + i]; }
     formCiz(id);
   };
@@ -205,24 +217,27 @@
       var x = F.kalemler[+m[2]]; x[m[1]] = e.target.value;
       var a = +x.adet, f = sayi(x.fiyat); $("f-tutar-" + m[2]).textContent = a > 0 && f > 0 ? para(a * f) : "—";
       $("f-toplam").innerHTML = toplamHtml(formTop());
-    } else F[k] = e.target.value;
+    } else { F[k] = e.target.value; if (k === "kdv") $("f-toplam").innerHTML = toplamHtml(formTop()); }
   };
   var X = MK.eylem;
   X["yeni"] = function () { location.hash = "#/yeni"; };
   X["kalem-ekle"] = function () { F.kalemler.push({ tur: "", adet: "1", fiyat: "" }); delete F.hata.kalem; formCiz("f-tur-" + (F.kalemler.length - 1)); };
   X["kalem-sil"] = function (el) { F.kalemler.splice(+el.dataset.i, 1); F.hata = {}; formCiz("f-tur-0"); };
   X["doldur"] = function () {
-    F.kalemler = MV.tesisKalemleri(F.tesis).map(function (k) { return { tur: k.tur, adet: String(k.adet), fiyat: MV.para(k.fiyat).replace(" TL", "") }; }); F.hata = {};
+    var top = {};   /* çok tesisli teklifte kalemler bütün seçili tesislerden toplanır */
+    [F.tesis].concat(F.ek).forEach(function (tid) { MV.tesisKalemleri(tid).forEach(function (k) { if (!top[k.tur]) top[k.tur] = { tur: k.tur, adet: 0, fiyat: k.fiyat }; top[k.tur].adet += k.adet; }); });
+    F.kalemler = Object.keys(top).map(function (k) { var x = top[k]; return { tur: x.tur, adet: String(x.adet), fiyat: MV.para(x.fiyat).replace(" TL", "") }; }); F.hata = {};
     formCiz("f-tur-0"); MK.bildir(F.kalemler.length + " tür, tesisteki kayıtlı ekipmandan eklendi.");
   };
   X["kaydet"] = function () {
     F.hata = denetle(); var hk = Object.keys(F.hata);
     if (hk.length) { formCiz("f-" + hk[0]); return; }
     var kal = F.kalemler.map(function (k) { return { tur: k.tur, adet: +k.adet, fiyat: sayi(k.fiyat) }; }), t = F.no ? MV.teklif(F.no) : null;
-    if (t) Object.assign(t, { m: F.m, tesis: F.tesis, gecerlilik: +F.gecerlilik, kalemler: kal });
+    var tl = F.ek.length ? [F.tesis].concat(F.ek) : null;
+    if (t) Object.assign(t, { m: F.m, tesis: F.tesis, tesisler: tl, kdv: +F.kdv, gecerlilik: +F.gecerlilik, kalemler: kal });
     else {
       var n = T.filter(function (x) { return x.no.indexOf("T-0926-") === 0; }).length + 1;
-      t = { no: "T-0926-" + ("00" + n).slice(-3), m: F.m, tesis: F.tesis, durum: "taslak", tarih: MK.BUGUN, gonderildi: null, sonuc: null, gerekce: "", gecerlilik: +F.gecerlilik, hazirlayan: "za", kalemler: kal };
+      t = { no: "T-0926-" + ("00" + n).slice(-3), m: F.m, tesis: F.tesis, durum: "taslak", tarih: MK.BUGUN, gonderildi: null, sonuc: null, gerekce: "", tesisler: tl, kdv: +F.kdv, gecerlilik: +F.gecerlilik, hazirlayan: "za", kalemler: kal };
       T.push(t);
     }
     F = null; location.hash = "#/t/" + t.no; MK.bildir(t.no + " kaydedildi (taslak).");
@@ -233,7 +248,7 @@
     if (W.gerekce.trim().length < 5) { W.hata = "Gerekçe yazılmalı."; redCiz("w-gerekce"); return; }
     var t = W.t; t.durum = "red"; t.sonuc = MK.BUGUN; t.gerekce = W.gerekce.trim(); $("a-pencere").close(); teklifCiz(t); MK.bildir(t.no + " reddedildi olarak kaydedildi.");
   };
-  X["pdf"] = function () { MK.bildir("Makette dosya yok. Uygulamada teklif PDF'i sunucuda üretilir; müşteriye iletim yöntemi soru."); };
+  X["pdf"] = function () { MK.bildir("Makette dosya yok. Teklif PDF'i firmanın formatıyla üretilir, indirilip elle gönderilir."); };
   $("a-pencere").addEventListener("close", function () { W = null; var r = rota(); if (r.pencere) history.replaceState(null, "", "#/t/" + r.no); });
 
   MK.kabuk({ modul: 11, kullanici: { bas: "ZA", ad: "Zeynep Arslan", rol: "Planlama ekibi" } });
