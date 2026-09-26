@@ -12,8 +12,17 @@
   var DONEM = {
     ay: { ad: "Bu ay", bas: "2026-09-01", bit: MK.BUGUN, grup: "gun", alt: "1–23 Eylül 2026" },
     yil: { ad: "Bu yıl", bas: "2026-01-01", bit: MK.BUGUN, grup: "ay", alt: "Ocak–Eylül 2026" },
-    gecen: { ad: "Geçen yıl", bas: "2025-01-01", bit: "2025-12-31", grup: "ay", alt: "Ocak–Aralık 2025" }
+    gecen: { ad: "Geçen yıl", bas: "2025-01-01", bit: "2025-12-31", grup: "ay", alt: "Ocak–Aralık 2025" },
+    /* 150 (2026-09-26): tarih aralığı — iki tarih yazılıp "Uygula"; 62 günden uzunsa aylık */
+    aralik: { ad: "Tarih aralığı", bas: "2025-09-01", bit: MK.BUGUN, grup: "ay", alt: "" }
   };
+  var tarihIso = function (s) { var m = /^(\d{2})\.(\d{2})\.(\d{4})$/.exec(String(s || "").trim()); if (!m) return null; var iso = m[3] + "-" + m[2] + "-" + m[1], d = new Date(iso + "T12:00:00"); return isNaN(d) || d.getDate() !== +m[1] ? null : iso; };
+  var gg = function (iso) { return iso.slice(8, 10) + "." + iso.slice(5, 7) + "." + iso.slice(0, 4); };
+  var A = { bas: gg(DONEM.aralik.bas), bit: gg(DONEM.aralik.bit), hata: "" };
+  var aralikKur = function () { var d = DONEM.aralik; d.grup = MK.gunFarki(d.bas, d.bit) > 62 ? "ay" : "gun"; d.alt = MK.tarihYaz(d.bas) + " – " + MK.tarihYaz(d.bit); };
+  aralikKur();
+  /* 148: denetçi yalnız kendi sayılarını görür, kazancını görmez (makette #/ben: Mert Kaya gözünden) */
+  var BEN = /^#\/ben/.test(location.hash) ? "mk" : null;
   var BRANS = { tumu: "Tümü", m: "Mekanik", e: "Elektrik" };
   var D = { donem: "ay", brans: "tumu" };
   var AYLAR = ["Ocak", "Şubat", "Mart", "Nisan", "Mayıs", "Haziran", "Temmuz", "Ağustos", "Eylül", "Ekim", "Kasım", "Aralık"];
@@ -41,9 +50,9 @@
   var ortYaz = function (n) { return n ? n.toLocaleString("tr-TR", { maximumFractionDigits: 1 }) : "—"; };
   var yuz = function (ad, ik, sayi, not) { return '<div class="a-yuz"><span class="a-yuz-ust">' + ikon(ik, "a-ikon-kucuk") + ad + '</span><span class="a-yuz-sayi">' + sayi + "</span>" + (not ? '<span class="a-yuz-not">' + not + "</span>" : "") + "</div>"; };
   function yuzler(o) {
-    return '<div class="a-yuzler">' + yuz("Rapor", "file-text", o.rapor, "onaya gönderilen ya da imzalı") + yuz("Çalışılan gün", "calendar-check", o.gun, "kişi × gün") +
-      yuz("Gün başı rapor", "gauge", ortYaz(o.ort), "ortalama") + yuz("Kazanç", "wallet", tl(o.kazanc), "KDV hariç · gün başı " + (o.gun ? tl(o.gunKazanc) : "—")) +
-      yuz("Geri gönderilen", "undo-2", o.geri, "yönetici onayından dönen") + "</div>";
+    return '<div class="a-yuzler">' + yuz("Rapor", "file-text", o.rapor) + yuz("Çalışılan gün", "calendar-check", o.gun) +
+      yuz("Gün başı rapor", "gauge", ortYaz(o.ort)) + (BEN ? "" : yuz("Kazanç", "wallet", tl(o.kazanc), "gün başı " + (o.gun ? tl(o.gunKazanc) : "—"))) +
+      yuz("Geri gönderilen", "undo-2", o.geri) + "</div>";
   }
 
   /* ── GRAFİK — tek üretici: yatay çubuk satırları (telefonda da okunur; dış kütüphane yok). satirlar: [{ etiket, parcalar: [[seri, değer]],
@@ -67,14 +76,16 @@
       var g = {}; rl.forEach(function (r) { (g[gun(r)] = g[gun(r)] || []).push(r); });
       gruplar = Object.keys(g).sort().map(function (k) { return [MK.gunYaz(k), g[k]]; });
     } else {
-      var a0 = +d.bas.slice(5, 7), a1 = +d.bit.slice(5, 7), y = d.bas.slice(0, 4);
-      for (var a = a0; a <= a1; a++) { var ay = y + "-" + ("0" + a).slice(-2); gruplar.push([AYLAR[a - 1], rl.filter(function (r) { return gun(r).slice(0, 7) === ay; })]); }
+      var y = +d.bas.slice(0, 4), a = +d.bas.slice(5, 7), son = d.bit.slice(0, 7), cokYil = d.bas.slice(0, 4) !== d.bit.slice(0, 4);
+      for (var ay = y + "-" + ("0" + a).slice(-2); ay <= son; a = a === 12 ? (y++, 1) : a + 1, ay = y + "-" + ("0" + a).slice(-2)) {
+        (function (ay, ad) { gruplar.push([ad, rl.filter(function (r) { return gun(r).slice(0, 7) === ay; })]); })(ay, AYLAR[a - 1] + (cokYil ? " " + y : ""));
+      }
     }
     return grafik({ baslik: d.grup === "gun" ? "Gün başı rapor ve kazanç" : "Aylık rapor ve kazanç", ilkSutun: d.grup === "gun" ? "Gün" : "Ay",
       seriler: [["m", "Mekanik"], ["e", "Elektrik"]],
       satirlar: gruplar.map(function (x) {
         var m = x[1].filter(function (r) { return rBrans(r) === "m"; }).length, e = x[1].length - m, k = x[1].reduce(function (t, r) { return t + MV.raporFiyat(r).fiyat; }, 0);
-        return { etiket: x[0], parcalar: [["m", m], ["e", e]], deger: x[1].length ? x[1].length + " rapor" : "—", alt: x[1].length ? tl(k) : "" };
+        return { etiket: x[0], parcalar: [["m", m], ["e", e]], deger: x[1].length ? x[1].length + " rapor" : "—", alt: x[1].length && !BEN ? tl(k) : "" };
       }) });
   }
 
@@ -94,7 +105,7 @@
     { k: "rapor", baslik: "Rapor", kart: "govde", sira: 2, hucre: function (p) { return '<span class="a-kart-etiket">Rapor</span><span class="a-sayi">' + p.o.rapor + "</span>"; } },
     { k: "gun", baslik: "Gün", kart: "govde", sira: 3, hucre: function (p) { return '<span class="a-kart-etiket">Çalışılan gün</span><span class="a-sayi">' + p.o.gun + "</span>"; } },
     { k: "ort", baslik: "Gün başı", kart: "govde", sira: 4, hucre: function (p) { return '<span class="a-kart-etiket">Gün başı rapor</span><span class="a-sayi">' + ortYaz(p.o.ort) + "</span>"; } },
-    { k: "kazanc", baslik: "Kazanç (KDV hariç)", kart: "govde", sira: 5, hucre: function (p) { return '<span class="a-kart-etiket">Kazanç (KDV hariç)</span><span class="a-sayi">' + (p.o.kazanc ? tl(p.o.kazanc) : "—") + "</span>"; } },
+    { k: "kazanc", baslik: "Kazanç", kart: "govde", sira: 5, hucre: function (p) { return '<span class="a-kart-etiket">Kazanç</span><span class="a-sayi">' + (p.o.kazanc ? tl(p.o.kazanc) : "—") + "</span>"; } },
     { k: "geri", baslik: "Geri gönderilen", kart: "govde", sira: 6, hucre: function (p) { return '<span class="a-kart-etiket">Geri gönderilen</span><span class="a-sayi' + (p.o.geri ? " a-uyari-metin" : "") + '">' + p.o.geri + "</span>"; } },
     { k: "son", baslik: "Son rapor", kart: "govde", sira: 7, hucre: function (p) { return '<span class="a-kart-etiket">Son rapor</span>' + (p.o.son ? MK.gunKisa(p.o.son) : '<span class="a-deger-yok">—</span>'); } }
   ];
@@ -113,6 +124,9 @@
   function anahtarlar(kisi) {
     return '<div class="a-pano-anahtar"><div class="a-sekmeler" role="group" aria-label="Dönem">' + Object.keys(DONEM).map(function (k) {
         return '<button type="button" class="a-sekme" data-donem="' + k + '" aria-pressed="' + (D.donem === k) + '">' + DONEM[k].ad + "</button>"; }).join("") + "</div>" +
+      (D.donem === "aralik" ? '<div class="a-pano-aralik">' + MK.alan({ id: "p-bas", etiket: "Başlangıç", girdi: MK.girdi({ id: "p-bas", alan: "bas", deger: A.bas, sinif: "a-girdi-sicil", ek: ' inputmode="numeric" maxlength="10" placeholder="GG.AA.YYYY"', hata: A.hata }) }) +
+        MK.alan({ id: "p-bit", etiket: "Bitiş", hata: A.hata, girdi: MK.girdi({ id: "p-bit", alan: "bit", deger: A.bit, sinif: "a-girdi-sicil", ek: ' inputmode="numeric" maxlength="10" placeholder="GG.AA.YYYY"', hata: A.hata }) }) +
+        MK.tus({ eylem: "aralik-uygula", ad: "Uygula", sinif: "a-tus-ikincil" }) + "</div>" : "") +
       (kisi ? "" : '<div class="a-sekmeler" role="group" aria-label="Branş">' + Object.keys(BRANS).map(function (k) {
         return '<button type="button" class="a-sekme" data-brans="' + k + '" aria-pressed="' + (D.brans === k) + '">' + BRANS[k] + "</button>"; }).join("") + "</div>") +
       '<p class="a-pano-donem">' + DONEM[D.donem].alt + (!kisi && D.brans !== "tumu" ? " · " + BRANS[D.brans].toLocaleLowerCase("tr") : "") + "</p></div>";
@@ -120,7 +134,7 @@
   function panoCiz() {
     var rl = raporlar(), o = ozet(rl, geriler());
     var kazanclar = KISILER.map(function (p) { return { p: p, o: kisiOz(p) }; }).filter(function (x) { return x.o.kazanc > 0; }).sort(function (a, b) { return b.o.kazanc - a.o.kazanc; });
-    $("a-pano").innerHTML = '<div class="a-sayfa-bas"><h1 tabindex="-1">Performans</h1></div>' + anahtarlar() + yuzler(o) +
+    $("a-pano").innerHTML = '<div class="a-sayfa-bas"><h1 tabindex="-1">Performans</h1>' + MK.tus({ eylem: "excel", ad: "Excel'e aktar", ikon: "file-check", sinif: "a-tus-ikincil a-bolum-tus" }) + "</div>" + anahtarlar() + yuzler(o) +
       '<div class="a-grafikler">' + zamanGrafigi(rl) +
         grafik({ baslik: "Personel başına kazanç", ilkSutun: "Personel", seriler: [["k", "Kazanç"]], satirlar: kazanclar.map(function (x) {
           return { etiket: x.p.ad, parcalar: [["k", x.o.kazanc]], deger: tl(x.o.kazanc), alt: x.o.rapor + " rapor · " + x.o.gun + " gün" };
@@ -138,7 +152,7 @@
       var t = MV.tesis(g.tesis); return "<span>" + (g.is ? '<a class="a-no" href="' + MK.adres(18, "#/is/" + g.is) + '">' + g.is + "</a>" : '<span class="a-deger-yok">İş kaydı yok</span>') + kirp(MV.musteri(t.m).kisa + " · " + t.ad, "a-alt-satir") + "</span>";
     } },
     { k: "rapor", baslik: "Rapor", kart: "govde", sira: 3, hucre: function (g) { return '<span class="a-kart-etiket">Rapor</span><span class="a-sayi">' + g.rl.length + "</span>"; } },
-    { k: "kazanc", baslik: "Kazanç (KDV hariç)", kart: "govde", sira: 4, hucre: function (g) { return '<span class="a-kart-etiket">Kazanç (KDV hariç)</span><span class="a-sayi">' + tl(g.kazanc) + "</span>"; } },
+    { k: "kazanc", baslik: "Kazanç", kart: "govde", sira: 4, hucre: function (g) { return '<span class="a-kart-etiket">Kazanç</span><span class="a-sayi">' + tl(g.kazanc) + "</span>"; } },
     { k: "durum", baslik: "İmzalı", kart: "rozet", sira: 1, hucre: function (g) {
       var n = g.rl.filter(function (r) { return r.durum === "imzali"; }).length;
       return MK.rozet({ ad: n + " / " + g.rl.length + " imzalı", rozet: n === g.rl.length ? "a-rozet-tamam" : n ? "a-rozet-kabul" : "a-rozet-notr" });
@@ -152,18 +166,19 @@
     }
     var rl = raporlar(p.id), o = ozet(rl, geriler(p.id)), g = {};
     rl.forEach(function (r) { var k = gun(r) + "|" + r.tesis; (g[k] = g[k] || { gun: gun(r), tesis: r.tesis, is: isNo(r), rl: [], kazanc: 0 }); g[k].rl.push(r); g[k].kazanc += MV.raporFiyat(r).fiyat; });
+    var GS = BEN ? G_SUTUN.filter(function (c) { return c.k !== "kazanc"; }) : G_SUTUN;
     var gunluk = Object.keys(g).map(function (k) { return g[k]; }).sort(function (a, b) { return a.gun < b.gun ? 1 : -1; });
-    $("a-nesne").innerHTML = MK.kirinti([["Performans", "#/"], [p.ad]]) +
+    $("a-nesne").innerHTML = (BEN ? "" : MK.kirinti([["Performans", "#/"], [p.ad]])) +
       '<div class="a-nesne-bas"><div class="a-nesne-kimlik"><div class="a-nesne-baslik"><h1 tabindex="-1">' + kacis(p.ad) + "</h1></div>" +
         '<p class="a-nesne-alt">' + ikon("id-card", "a-ikon-kucuk") + "<span>" + kacis(MV.meslekAd(p)) + " · " + MV.bransAd(kBrans(p)) + "</span></p></div>" +
-        '<div class="a-eylem-cubugu"><a class="a-tus a-tus-ikincil" href="' + MK.adres(2, "#/p/" + p.id) + '">' + ikon("user", "a-ikon-kucuk") + "Personel kartı</a></div></div>" +
+        (BEN ? "" : '<div class="a-eylem-cubugu"><a class="a-tus a-tus-ikincil" href="' + MK.adres(2, "#/p/" + p.id) + '">' + ikon("user", "a-ikon-kucuk") + "Personel kartı</a></div>") + "</div>" +
       anahtarlar(true) + yuzler(o) + '<div class="a-grafikler a-grafikler-tek">' + zamanGrafigi(rl) + "</div>" +
       '<section class="a-bolum" aria-labelledby="a-b-gunluk"><div class="a-alt-bas"><h2 class="a-alt-baslik" id="a-b-gunluk">Günlük iş</h2><span class="a-sayac"><b>' + gunluk.length + "</b> gün × tesis</span></div>" +
-        (gunluk.length ? '<div class="a-liste-kap">' + MK.tablo({ baslik: "Günlük iş", sinif: "a-tablo-gunluk", sutunlar: G_SUTUN, kayitlar: gunluk }) + "</div>" : '<p class="a-bos-satir">Bu dönemde rapor yok.</p>') + "</section>";
+        (gunluk.length ? '<div class="a-liste-kap">' + MK.tablo({ baslik: "Günlük iş", sinif: BEN ? "a-tablo-gunluk a-tablo-gunluk-ben" : "a-tablo-gunluk", sutunlar: GS, kayitlar: gunluk }) + "</div>" : '<p class="a-bos-satir">Bu dönemde rapor yok.</p>') + "</section>";
   }
 
   /* ── GÖRÜNÜM ────────────────────────────────────────────────────────────────────────────────────────── */
-  function rota() { var m = /^#\/p\/([a-z0-9]+)$/.exec(location.hash); return m ? { v: "kisi", id: m[1] } : { v: "pano" }; }
+  function rota() { if (BEN) return { v: "kisi", id: BEN }; var m = /^#\/p\/([a-z0-9]+)$/.exec(location.hash); return m ? { v: "kisi", id: m[1] } : { v: "pano" }; }
   function goster(odakla) {
     var r = rota();
     $("a-pano").hidden = r.v !== "pano"; $("a-nesne").hidden = r.v !== "kisi";
@@ -182,6 +197,15 @@
     return true;
   };
 
-  MK.kabuk({ modul: 19, kullanici: { bas: "AD", ad: "Ayşe Demir", rol: "Firma yöneticisi" } });
+  var X = MK.eylem;
+  X["aralik-uygula"] = function () {
+    var b = tarihIso(A.bas), e = tarihIso(A.bit);
+    A.hata = !b || !e ? "GG.AA.YYYY biçiminde iki tarih." : b > e ? "Başlangıç bitişten sonra olamaz." : e > MK.BUGUN ? "Bitiş bugünden sonra olamaz." : "";
+    if (!A.hata) { DONEM.aralik.bas = b; DONEM.aralik.bit = e; aralikKur(); }
+    goster(false); var t = document.querySelector(A.hata ? "#p-bas" : '[data-eylem="aralik-uygula"]'); if (t) t.focus();
+  };
+  X["excel"] = function () { MK.bildir("Makette dosya yok. Seçili dönemin personel tablosu .xlsx olarak iner."); };
+  MK.onGirdi = function (e) { var k = e.target.dataset && e.target.dataset.alan; if (k === "bas" || k === "bit") A[k] = e.target.value; };
+  MK.kabuk({ modul: 19, kullanici: BEN ? { bas: "MK", ad: "Mert Kaya", rol: "Inspector" } : { bas: "AD", ad: "Ayşe Demir", rol: "Firma yöneticisi" } });
   goster(false);
 })();

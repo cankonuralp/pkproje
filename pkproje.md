@@ -894,7 +894,12 @@ birim fiyat × fatura, sayfa 20; faturalar; geçmiş) · **fatura sayfası** (al
 kayıtlı no reddi, tahsilat fazlası reddi, tahsilat → iş kapandı, Raporlar'a geçiş dahil). Planlar yeniden 54/54, 15/15 (süzgeç düzeltmesi;
 "hazır olmayan modül" denemesi artık Performans); M13 yeniden 48/48, 11/11.
 
-#### Maket M15 — Performans ve Raporlama (modül 19, faz 2) — ONAY BEKLİYOR
+#### Maket M15 — Performans ve Raporlama (modül 19, faz 2) — 2. TUR, ONAY BEKLİYOR (toplu gözden geçirmede)
+**2. tur (2026-09-26, §9 yirmi birinci tur):** dönemlere **"Tarih aralığı"** (150: iki tarih + Uygula; 62 günden uzunsa aylık, yıllar arası ay adı yıl
+ile) ve **"Excel'e aktar"** · **denetçi görünümü** (148, makette `#/ben`: kendi sayıları, kazanç yok) · gün başı = rapor ÷ çalışılan gün, hedef
+yok (144) · kazanç = birim fiyat (145) · sayılan = onaya gönderilen + imzalı (146) · çok kişili planda raporu yazana (147) · ek ölçü yalnız geri
+gönderilen (149). Yüzlerdeki açıklama satırları kalktı. Ölçüm: 8 durum 48/48, etkileşim 13/13, telefon 32/32.
+1. tur metni (tarihsel):
 Ekran: **Performans** (`maket/performans.html`, Ayşe Demir, firma yöneticisi): **pano** — dönem (bu ay · bu yıl · geçen yıl) ve branş
 (tümü · mekanik · elektrik) anahtarı; yüzler (rapor · çalışılan gün · gün başı rapor · kazanç · geri gönderilen); **gün başı rapor ve
 kazanç** grafiği (bu ayda gün gün, yılda ay ay; mekanik / elektrik yığılı); **personel başına kazanç** grafiği; personel tablosu (rapor, gün,
@@ -1415,6 +1420,7 @@ revizyon, alan kopyalama, hafif kusur devri, meslek eşleşme denetimi).
 - Emsal ürünler: https://opwire.app/iso-17020-periyodik-kontrol-yazilimi/ · https://17020muayene.vidco.com.tr/ · https://akuple.com/asansor-kontrol-yazilimi/ · https://ensyazilim.com/
 
 ## 11 · Değişiklik günlüğü
+- 2026-09-26 (58): **M15 2. tur**: tarih aralığı, Excel'e aktar, denetçi görünümü (kazanç yok). M15 48/48 · 13/13 · 32/32.
 - 2026-09-26 (57): **M14 2. tur**: müşteri başına toplu fatura, "Muhasebe" rolü (rol yetkileri altı sütun). M14 66/66 · 15/15 · 44/44.
 - 2026-09-26 (56): **M12 2. tur**: teklifte KDV oranı, çok tesisli teklif; §3.7 satır 4 teklif PDF'i firmaya göre. M12 60/60 · 12/12 · 40/40.
 - 2026-09-26 (55): **M11 2. tur**: firmanın logosu, Planlanan kontroller ve Sözleşmeler sekmeleri (salt görüntü). M11 66/66 · 9/9 · 44/44.

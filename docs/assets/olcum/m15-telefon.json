@@ -8,8 +8,8 @@
   390,
   430
  ],
- "toplam": 24,
- "temiz": 24,
+ "toplam": 32,
+ "temiz": 32,
  "durumlar": [
   {
    "ad": "pano · bu ay (gün başı)",
@@ -220,6 +220,78 @@
   },
   {
    "ad": "kişi · bu ay raporu yok",
+   "gen": 430,
+   "temiz": true,
+   "tasma": 0,
+   "disari": [],
+   "kucukAlan": [],
+   "alan": 0
+  },
+  {
+   "ad": "performans · tarih aralığı (iki yıl)",
+   "gen": 320,
+   "temiz": true,
+   "tasma": 0,
+   "disari": [],
+   "kucukAlan": [],
+   "alan": 3
+  },
+  {
+   "ad": "performans · tarih aralığı (iki yıl)",
+   "gen": 360,
+   "temiz": true,
+   "tasma": 0,
+   "disari": [],
+   "kucukAlan": [],
+   "alan": 3
+  },
+  {
+   "ad": "performans · tarih aralığı (iki yıl)",
+   "gen": 390,
+   "temiz": true,
+   "tasma": 0,
+   "disari": [],
+   "kucukAlan": [],
+   "alan": 3
+  },
+  {
+   "ad": "performans · tarih aralığı (iki yıl)",
+   "gen": 430,
+   "temiz": true,
+   "tasma": 0,
+   "disari": [],
+   "kucukAlan": [],
+   "alan": 3
+  },
+  {
+   "ad": "performans · denetçi görünümü (kazanç yok)",
+   "gen": 320,
+   "temiz": true,
+   "tasma": 0,
+   "disari": [],
+   "kucukAlan": [],
+   "alan": 0
+  },
+  {
+   "ad": "performans · denetçi görünümü (kazanç yok)",
+   "gen": 360,
+   "temiz": true,
+   "tasma": 0,
+   "disari": [],
+   "kucukAlan": [],
+   "alan": 0
+  },
+  {
+   "ad": "performans · denetçi görünümü (kazanç yok)",
+   "gen": 390,
+   "temiz": true,
+   "tasma": 0,
+   "disari": [],
+   "kucukAlan": [],
+   "alan": 0
+  },
+  {
+   "ad": "performans · denetçi görünümü (kazanç yok)",
    "gen": 430,
    "temiz": true,
    "tasma": 0,

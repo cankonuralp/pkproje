@@ -248,6 +248,8 @@ export const DURUMLAR = {
     { ad: "kişi · Mert Kaya, bu ay", hash: "#/p/mk" },
     { ad: "kişi · Hakan Polat, geçen yıl", hash: "#/p/hp", adim: [["tikla", '[data-donem="gecen"]']] },
     { ad: "kişi · bu ay raporu yok", hash: "#/p/bs" },
+    { ad: "performans · tarih aralığı (iki yıl)", hash: "#/", adim: [["tikla", '[data-donem="aralik"]'], ["yaz", "#p-bas", "01.09.2025"], ["tikla", '[data-eylem="aralik-uygula"]']] },
+    { ad: "performans · denetçi görünümü (kazanç yok)", hash: "#/ben" }
   ] },
   /* toplu bakış sayfası (tools/sunum-uret.mjs üretir; maket değil, sunum): kabuksuz, taşma / kırpma / çakışma / hedef ölçülür */
   toplu: { sayfa: "toplu-bakis.html", durumlar: [
@@ -540,6 +542,11 @@ export const DENEMELER = {
     { ad: "menüde Muhasebe hazır maketi açar (Planlar'dan)", sayfa: "maket/planlarim.html", hash: "#/", adim: [["tikla", '#a-menu a[href="muhasebe.html"]']], bekle: '/muhasebe\\.html$/.test(location.pathname) && document.querySelector("#a-sayac").textContent === "16 iş"' },
   ],
   m15: [
+    /* 2026-09-26 (reisim 148, 150): tarih aralığı + Excel'e aktar; denetçi kendi sayılarını görür, kazancını görmez */
+    { ad: "tarih aralığı: iki yıllık aralık aylık gruplanır", hash: "#/", adim: [["tikla", '[data-donem="aralik"]'], ["yaz", "#p-bas", "01.09.2025"], ["yaz", "#p-bit", "23.09.2026"], ["tikla", '[data-eylem="aralik-uygula"]']], bekle: '/Eylül 2025/.test(document.querySelector("#a-pano").textContent) && /Eylül 2026/.test(document.querySelector("#a-pano").textContent) && document.activeElement.dataset.eylem === "aralik-uygula"' },
+    { ad: "tarih aralığı: ters tarih reddedilir", hash: "#/", adim: [["tikla", '[data-donem="aralik"]'], ["yaz", "#p-bas", "01.09.2026"], ["yaz", "#p-bit", "01.08.2026"], ["tikla", '[data-eylem="aralik-uygula"]']], bekle: '/bitişten sonra/.test(document.querySelector("#p-bit-ipucu").textContent) && document.activeElement.id === "p-bas"' },
+    { ad: "Excel'e aktar tuşu", hash: "#/", adim: [["tikla", '[data-eylem="excel"]']], bekle: '/xlsx/.test(document.querySelector("#a-bildirim").textContent)' },
+    { ad: "denetçi görünümü: kendi sayıları, kazanç yok", hash: "#/ben", bekle: '/Mert Kaya/.test(document.querySelector("h1").textContent) && !/Kazanç/.test(document.querySelector("#a-nesne").textContent)' },
     { ad: "bu ay: 28 rapor, gün başı 3 gün, kazanç en çok olan üstte", hash: "#/", bekle: '/^Rapor28/.test(document.querySelector(".a-yuz").textContent.replace(/\\s/g, "")) && document.querySelectorAll(".a-grafik")[0].querySelectorAll(".a-grafik-satir").length === 3 && document.querySelector("#a-p-liste tbody tr .a-ad-bag").textContent === "Mert Kaya"' },
     { ad: "dönem: geçen yıl → 12 ay satırı, odak tuşta", hash: "#/", adim: [["tikla", '[data-donem="gecen"]']], bekle: 'document.querySelectorAll(".a-grafik")[0].querySelectorAll(".a-grafik-satir").length === 12 && document.activeElement.dataset.donem === "gecen" && /Aylık/.test(document.querySelector(".a-grafik-baslik").textContent)' },
     { ad: "branş: elektrik → yalnız elektrik personeli", hash: "#/", adim: [["tikla", '[data-brans="e"]']], bekle: '[...document.querySelectorAll("#a-p-liste tbody .a-alt-satir")].every(e => /Elektrik|elektrik/.test(e.textContent)) && document.activeElement.dataset.brans === "e"' },

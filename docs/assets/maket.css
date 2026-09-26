@@ -846,6 +846,9 @@ a.a-yuz:hover { border-color: var(--kenar-alan); background: var(--zemin); }
 .a-pano-anahtar { display: flex; flex-wrap: wrap; align-items: center; gap: 8px 12px; margin: 0 0 16px; }
 .a-pano-anahtar .a-sekmeler { margin: 0; }
 .a-pano-donem { margin: 0; color: var(--yazi2); font-size: var(--boy-kucuk); }
+/* 150 (2026-09-26): tarih aralığı alanları */
+.a-pano-aralik { display: flex; flex-wrap: wrap; align-items: flex-end; gap: 8px 12px; }
+.a-pano-aralik .a-alan-grup { margin: 0; }
 .a-grafikler { display: grid; grid-template-columns: repeat(auto-fit, minmax(min(100%, 420px), 1fr)); gap: 12px; margin: 0 0 20px; }
 .a-grafikler-tek { grid-template-columns: minmax(0, 1fr); }
 .a-grafik { margin: 0; padding: 14px 16px; min-width: 0; border: 1px solid var(--kenar); border-radius: var(--r-buyuk); background: var(--kart); }
@@ -865,6 +868,7 @@ a.a-yuz:hover { border-color: var(--kenar-alan); background: var(--zemin); }
 .a-tablo-perf .a-k-kazanc { width: 18%; } .a-tablo-perf .a-k-geri { width: 15%; } .a-tablo-perf .a-k-son { width: 14%; }
 .a-tablo-gunluk .a-k-gun { width: 18%; } .a-tablo-gunluk .a-k-is { width: 34%; } .a-tablo-gunluk .a-k-rapor { width: 12%; }
 .a-tablo-gunluk .a-k-kazanc { width: 18%; } .a-tablo-gunluk .a-k-durum { width: 18%; }
+.a-tablo-gunluk-ben .a-k-gun { width: 22%; } .a-tablo-gunluk-ben .a-k-is { width: 40%; } .a-tablo-gunluk-ben .a-k-rapor { width: 16%; } .a-tablo-gunluk-ben .a-k-durum { width: 22%; }
 
 /* M16 — eğitim kayıtları ve eğitim türleri */
 .a-tablo-egitim .a-k-kisi { width: 20%; } .a-tablo-egitim .a-k-egitim { width: 26%; } .a-tablo-egitim .a-k-tarih { width: 12%; }

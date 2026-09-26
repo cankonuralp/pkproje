@@ -2,9 +2,37 @@
  "maket": "m15",
  "tarih": "2026-09-26",
  "arac": "tools/olc-bulut.mjs --etkilesim (başsız tarayıcı, 1920 açık tema; gen verilen denemede o genişlik)",
- "toplam": 9,
- "gecen": 9,
+ "toplam": 13,
+ "gecen": 13,
  "denemeler": [
+  {
+   "ad": "tarih aralığı: iki yıllık aralık aylık gruplanır",
+   "gen": 1920,
+   "sayfa": "maket/performans.html",
+   "hash": "#/",
+   "gecti": true
+  },
+  {
+   "ad": "tarih aralığı: ters tarih reddedilir",
+   "gen": 1920,
+   "sayfa": "maket/performans.html",
+   "hash": "#/",
+   "gecti": true
+  },
+  {
+   "ad": "Excel'e aktar tuşu",
+   "gen": 1920,
+   "sayfa": "maket/performans.html",
+   "hash": "#/",
+   "gecti": true
+  },
+  {
+   "ad": "denetçi görünümü: kendi sayıları, kazanç yok",
+   "gen": 1920,
+   "sayfa": "maket/performans.html",
+   "hash": "#/ben",
+   "gecti": true
+  },
   {
    "ad": "bu ay: 28 rapor, gün başı 3 gün, kazanç en çok olan üstte",
    "gen": 1920,
