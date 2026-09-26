@@ -873,7 +873,9 @@ a.a-yuz:hover { border-color: var(--kenar-alan); background: var(--zemin); }
 /* M16 — eğitim kayıtları ve eğitim türleri */
 .a-tablo-egitim .a-k-kisi { width: 20%; } .a-tablo-egitim .a-k-egitim { width: 26%; } .a-tablo-egitim .a-k-tarih { width: 12%; }
 .a-tablo-egitim .a-k-tekrar { width: 16%; } .a-tablo-egitim .a-k-belge { width: 10%; } .a-tablo-egitim .a-k-durum { width: 16%; }
-.a-tablo-egitimtur .a-k-ad { width: 40%; } .a-tablo-egitimtur .a-k-tekrar { width: 20%; } .a-tablo-egitimtur .a-k-kisi { width: 16%; } .a-tablo-egitimtur .a-k-durum { width: 24%; }
+/* 2026-09-26 (reisim 153): tür düzenlenir → işlem sütunu */
+.a-tablo-egitimtur .a-k-ad { width: 34%; } .a-tablo-egitimtur .a-k-tekrar { width: 16%; } .a-tablo-egitimtur .a-k-kisi { width: 12%; } .a-tablo-egitimtur .a-k-durum { width: 20%; }
+.a-tablo-egitimtur .a-k-eylem { width: 18%; }
 
 /* ══ BANTLAR — taban kuralların ARDINDA (anayasa 3.2) ══════════════════════════════════════════════════ */
 

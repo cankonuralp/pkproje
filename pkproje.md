@@ -929,7 +929,12 @@ gün başı, kazanç, geri gönderilen, son rapor; sütundan sıralanır; görü
 sütun sıralama, görünüm, arama, kişiye geçiş, dönemin korunması, menüden açılış). Planlar ("hazır olmayan modül" artık Eğitimler) 15/15,
 M14 14/14 yeniden.
 
-#### Maket M16 — Eğitim Takibi (modül 10, faz 2) — ONAY BEKLİYOR
+#### Maket M16 — Eğitim Takibi (modül 10, faz 2) — 2. TUR, ONAY BEKLİYOR (toplu gözden geçirmede)
+**2. tur (2026-09-26, §9 yirmi birinci tur):** **eğitim türlerini ve tekrar sürelerini firma ekler / düzenler** (153: Eğitim türleri sekmesinde "Eğitim
+türü ekle" ve satırda "Düzenle"; tekrar 1–120 ay) · kaydı yönetici girer (152) · zorunlu eğitim tanımı yok (154) · belge isteğe bağlı (155) ·
+tekrar uyarısı 60 gün (156) · tekrarı geçen eğitim plan açarken uyarı vermez, yalnız Uyarılar'da (157) · yetkili kişi eğitim belgesi personel
+kartında (158). Açıklama satırları kalktı. Ölçüm: 7 durum 42/42, etkileşim 12/12, telefon 28/28.
+1. tur metni (tarihsel):
 Ekran: **Eğitimler** (`maket/egitimler.html`, Ayşe Demir, firma yöneticisi): iki sekme — **Kayıtlar** (personel, eğitim + veren, alındı,
 tekrar + kalan gün, belge, durum; çipler: tekrarı geçti · 60 gün içinde · geçerli · belgesi yok; seçiciler: kişi, eğitim, görünüm güncel /
 önceki / hepsi; tekrarı geçen ve yaklaşan şeridi; 20'şer sayfa) · **Eğitim türleri** (tür, tekrar süresi, kişi sayısı, tekrarı yaklaşan;
@@ -1420,6 +1425,7 @@ revizyon, alan kopyalama, hafif kusur devri, meslek eşleşme denetimi).
 - Emsal ürünler: https://opwire.app/iso-17020-periyodik-kontrol-yazilimi/ · https://17020muayene.vidco.com.tr/ · https://akuple.com/asansor-kontrol-yazilimi/ · https://ensyazilim.com/
 
 ## 11 · Değişiklik günlüğü
+- 2026-09-26 (59): **M16 2. tur**: eğitim türü ekle / düzenle (tekrar süresi firmada). M16 42/42 · 12/12 · 28/28.
 - 2026-09-26 (58): **M15 2. tur**: tarih aralığı, Excel'e aktar, denetçi görünümü (kazanç yok). M15 48/48 · 13/13 · 32/32.
 - 2026-09-26 (57): **M14 2. tur**: müşteri başına toplu fatura, "Muhasebe" rolü (rol yetkileri altı sütun). M14 66/66 · 15/15 · 44/44.
 - 2026-09-26 (56): **M12 2. tur**: teklifte KDV oranı, çok tesisli teklif; §3.7 satır 4 teklif PDF'i firmaya göre. M12 60/60 · 12/12 · 40/40.

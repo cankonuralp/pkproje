@@ -62,10 +62,14 @@
     { k: "durum", baslik: "Tekrarı yaklaşan", kart: "rozet", sira: 1, hucre: function (t) {
       var l = E.filter(function (x) { return x.k === t.k && !x.onceki && MV.egitimDurum(x) !== "gecerli"; }), gec = l.filter(function (x) { return MV.egitimDurum(x) === "gecti"; }).length;
       return l.length ? rozet({ ad: gec ? gec + " geçti" + (l.length > gec ? " · " + (l.length - gec) + " yakın" : "") : l.length + " yakın", rozet: gec ? "a-rozet-red" : "a-rozet-bekliyor" }) : '<span class="a-deger-yok">—</span>';
-    } }
+    } },
+    /* 153 (2026-09-26): eğitim türlerini ve tekrar sürelerini firma ekler / düzenler */
+    { k: "eylem", baslik: "İşlem", gizliBaslik: true, kart: "eylem", sira: 9, hucre: function (t) {
+      return '<div class="a-eylem"><div class="a-eylem-tuslar"><a class="a-tus a-tus-ikincil" href="#/turler/' + t.k + '">' + ikon("pencil", "a-ikon-kucuk") + "Düzenle</a></div></div>"; } }
   ];
   function turCiz() {
-    $("a-sayac").innerHTML = "<b>" + TUR.length + "</b> eğitim türü"; $("a-uyari").innerHTML = ""; $("a-suzgec-kap").innerHTML = ""; $("a-sayfa").innerHTML = "";
+    $("a-sayac").innerHTML = "<b>" + TUR.length + "</b> eğitim türü"; $("a-uyari").innerHTML = ""; $("a-sayfa").innerHTML = "";
+    $("a-suzgec-kap").innerHTML = '<div class="a-eylem-cubugu a-bolum-serit"><a class="a-tus a-tus-birincil" href="#/turler/yeni">' + ikon("plus", "a-ikon-kucuk") + "Eğitim türü ekle</a></div>";
     $("a-liste").innerHTML = 
       MK.tablo({ baslik: "Eğitim türleri", sinif: "a-tablo-egitimtur", sutunlar: T_SUTUN, kayitlar: TUR, href: function (t) { return "#/?tur=" + t.k; } });
   }
@@ -78,7 +82,7 @@
   function formCiz(odak) {
     var d = W.d, h = W.hata, t = d.k ? MV.egitimTuru(d.k) : null, ti = tarihIso(d.tarih), eski = d.kisi && d.k ? guncel(d.kisi, d.k) : null;
     $("a-pencere-baslik").textContent = W.tekrar ? "Tekrarı kaydet" : "Eğitim kaydı ekle";
-    $("a-pencere-govde").innerHTML = (eski ? '<div class="a-serit-kap">' + MK.serit("bilgi", "history", "Bu kişinin bu eğitimde güncel kaydı var (" + MK.tarihYaz(eski.tarih) + "); kaydedince o kayıt “önceki” olur.") + "</div>" : "") +
+    $("a-pencere-govde").innerHTML = (eski ? '<div class="a-serit-kap">' + MK.serit("bilgi", "history", "Güncel kayıt " + MK.tarihYaz(eski.tarih) + "; kaydedince önceki olur.") + "</div>" : "") +
       '<div class="a-form">' +
         MK.alan({ id: "w-kisi", etiket: "Personel", zorunlu: true, hata: h.kisi, girdi: MK.secim({ id: "w-kisi", ad: "Personel", deger: d.kisi, secenekler: KISILER.map(function (p) { return [p.id, p.ad, MV.meslekAd(p)]; }), ipucu: "Kişi seçin", gecersiz: !!h.kisi, tanim: h.kisi ? "w-kisi-ipucu" : "" }) }) +
         MK.alan({ id: "w-k", etiket: "Eğitim", zorunlu: true, hata: h.k, ipucu: t ? "Tekrar süresi " + t.tekrar + " ay" : "", girdi: MK.secim({ id: "w-k", ad: "Eğitim", deger: d.k, secenekler: TUR.map(function (x) { return [x.k, x.ad, x.tekrar + " ay"]; }), ipucu: "Eğitim seçin", gecersiz: !!h.k, tanim: t || h.k ? "w-k-ipucu" : "" }) }) +
@@ -89,11 +93,21 @@
           '<button type="button" class="a-sekme" data-kurum="Dış eğitim kurumu" aria-pressed="' + (d.kurum === "Dış eğitim kurumu") + '">Dış kurum</button></div></div>' +
         '<div class="a-alan-grup a-alan-genis"><p class="a-etiket">Sertifika</p><div class="a-dosya">' +
           MK.tus({ eylem: "dosya-sec", ad: d.belge ? "Değiştir" : "PDF seç", ikon: "file-plus", sinif: "a-tus-ikincil" }) +
-          (d.belge ? '<span class="a-dosya-ad">sertifika.pdf</span>' : '<span class="a-dosya-ad a-deger-yok">İsteğe bağlı; yoksa listede “Belgesi yok”</span>') + "</div></div>" +
+          (d.belge ? '<span class="a-dosya-ad">sertifika.pdf</span>' : '<span class="a-dosya-ad a-deger-yok">İsteğe bağlı</span>') + "</div></div>" +
       "</div>";
     $("a-pencere-alt").innerHTML = MK.tus({ eylem: "pencere-kapat", ad: "Vazgeç", sinif: "a-tus-ikincil" }) + MK.tus({ eylem: "kaydet", ad: "Kaydet", ikon: "check" });
     if (odak) { var el = $(odak) || document.querySelector(odak); if (el) el.focus(); }
   }
+  function turFormCiz(odak) {
+    var d = W.d, h = W.hata;
+    $("a-pencere-baslik").textContent = W.t ? W.t.ad + " · düzenle" : "Eğitim türü ekle";
+    $("a-pencere-govde").innerHTML = '<div class="a-form">' +
+      MK.alan({ id: "w-ad", etiket: "Eğitim", zorunlu: true, genis: true, hata: h.ad, girdi: MK.girdi({ id: "w-ad", alan: "ad", deger: d.ad, ek: ' maxlength="60"', hata: h.ad }) }) +
+      MK.alan({ id: "w-tekrar", etiket: "Tekrar süresi (ay)", zorunlu: true, hata: h.tekrar, girdi: MK.girdi({ id: "w-tekrar", alan: "tekrar", deger: d.tekrar, sinif: "a-girdi-sicil", ek: ' inputmode="numeric" maxlength="3"', hata: h.tekrar }) }) + "</div>";
+    $("a-pencere-alt").innerHTML = MK.tus({ eylem: "pencere-kapat", ad: "Vazgeç", sinif: "a-tus-ikincil" }) + MK.tus({ eylem: "tur-kaydet", ad: "Kaydet", ikon: "check" });
+    if (odak) { var el = $(odak); if (el) el.focus(); }
+  }
+  function turAc(t) { W = { tip: "tur", t: t || null, d: { ad: t ? t.ad : "", tekrar: t ? String(t.tekrar) : "12" }, hata: {} }; turFormCiz(); if (!$("a-pencere").open) $("a-pencere").showModal(); $("w-ad").focus(); }
   function kayitCiz(x) {
     var p = MV.kisi(x.kisi), t = MV.egitimTuru(x.k), d = MV.egitimDurum(x), k = kalan(x);
     var gecmis = E.filter(function (y) { return y.kisi === x.kisi && y.k === x.k && y !== x; }).sort(function (a, b) { return a.tarih < b.tarih ? 1 : -1; });
@@ -101,8 +115,8 @@
     $("a-pencere-govde").innerHTML = '<div class="a-serit-kap">' + (x.onceki ? MK.serit("bilgi", "history", "Önceki kayıt: aynı eğitim " + MK.tarihYaz(guncel(x.kisi, x.k).tarih) + " tarihinde yenilendi.")
         : d === "gecerli" ? MK.serit("onay", "circle-check", "Geçerli; tekrar " + k + " gün sonra.") : MK.serit(d === "gecti" ? "hata" : "uyari", "clock", k < 0 ? "Tekrarı " + -k + " gün önce geçti." : "Tekrarı " + k + " gün sonra.")) + "</div>" +
       '<dl class="a-bilgi">' + bilgi("Personel", '<a class="a-baglanti" href="' + MK.adres(2, "#/p/" + p.id) + '">' + kacis(p.ad) + '</a><span class="a-alt-satir">' + kacis(MV.meslekAd(p)) + "</span>") +
-        bilgi("Eğitim", kacis(t.ad) + '<span class="a-alt-satir">tekrar ' + t.tekrar + " ayda bir</span>") + bilgi("Tarih", MK.tarihYaz(x.tarih) + '<span class="a-alt-satir">' + kacis(x.kurum) + "</span>") +
-        bilgi("Tekrar", MK.tarihYaz(x.tekrar)) + bilgi("Sertifika", x.belge ? '<span class="a-kod">' + belgeAdi(x) + '</span><span class="a-alt-satir">yalnız firma içinde, kısa ömürlü bağlantı</span>' : '<span class="a-uyari-metin">Yüklenmedi</span>', true) + "</dl>" +
+        bilgi("Eğitim", kacis(t.ad)) + bilgi("Tarih", MK.tarihYaz(x.tarih) + '<span class="a-alt-satir">' + kacis(x.kurum) + "</span>") +
+        bilgi("Tekrar", MK.tarihYaz(x.tekrar)) + bilgi("Sertifika", x.belge ? '<span class="a-kod">' + belgeAdi(x) + "</span>" : '<span class="a-uyari-metin">Yüklenmedi</span>', true) + "</dl>" +
       (gecmis.length ? '<p class="a-etiket a-bolum-serit">Bu eğitimin öteki kayıtları</p><ol class="a-gecmis">' + gecmis.map(function (y) {
         return '<li><span class="a-gecmis-zaman">' + MK.tarihYaz(y.tarih) + '</span><span class="a-gecmis-ne"><b>' + (y.onceki ? "Önceki kayıt" : "Güncel kayıt") + '</b> <span class="a-gecmis-rol">tekrar ' + MK.tarihYaz(y.tekrar) + "</span></span></li>"; }).join("") + "</ol>" : "");
     $("a-pencere-alt").innerHTML = MK.tus({ eylem: "pencere-kapat", ad: "Kapat", sinif: "a-tus-ikincil" }) + (x.onceki ? "" : MK.tus({ eylem: "tekrar", ad: "Tekrarı kaydet", ikon: "refresh-cw", veri: { id: x.id } }));
@@ -133,14 +147,25 @@
     E.push(x); $("a-pencere").close(); listeCiz();
     MK.bildir(MV.kisi(x.kisi).ad + " · " + t.ad + " kaydedildi; tekrar " + MK.tarihYaz(x.tekrar) + (eski ? ". Önceki kayıt geçmişte." : "."));
   };
-  MK.onGirdi = function (e) { var k = e.target.dataset && e.target.dataset.alan; if (k && W && W.tip === "form") W.d[k] = e.target.value; };
+  MK.onGirdi = function (e) { var k = e.target.dataset && e.target.dataset.alan; if (k && W && (W.tip === "form" || W.tip === "tur")) W.d[k] = e.target.value; };
+  X["tur-kaydet"] = function () {
+    var d = W.d, h = {}, ad = d.ad.trim();
+    if (!ad) h.ad = "Eğitim adı yazılmalı.";
+    else if (TUR.some(function (x) { return x !== W.t && x.ad.toLocaleLowerCase("tr") === ad.toLocaleLowerCase("tr"); })) h.ad = "Bu adla eğitim türü var.";
+    if (!/^\d{1,3}$/.test(d.tekrar) || +d.tekrar < 1 || +d.tekrar > 120) h.tekrar = "1–120 ay.";
+    W.hata = h; var hk = Object.keys(h);
+    if (hk.length) { turFormCiz("w-" + hk[0]); return; }
+    var t = W.t; if (t) { t.ad = ad; t.tekrar = +d.tekrar; } else { t = { k: "y" + (TUR.length + 1), ad: ad, tekrar: +d.tekrar }; TUR.push(t); }
+    $("a-pencere").close(); history.replaceState(null, "", "#/turler"); turCiz(); MK.bildir(t.ad + " kaydedildi; tekrar " + t.tekrar + " ayda bir.");
+  };
   MK.onSecim = function (id, deger) { if (!W || W.tip !== "form") return; W.d[id.slice(2)] = deger; delete W.hata[id.slice(2)]; formCiz(id); };
   MK.onTikla = function (e) { var b = e.target.closest("[data-kurum]"); if (!b || !W) return false; W.d.kurum = b.dataset.kurum; formCiz('[data-kurum="' + W.d.kurum + '"]'); return true; };
-  $("a-pencere").addEventListener("close", function () { W = null; if (/^#\/(yeni|k\/)/.test(location.hash)) history.replaceState(null, "", "#/"); });
+  $("a-pencere").addEventListener("close", function () { W = null; if (/^#\/(yeni|k\/)/.test(location.hash)) history.replaceState(null, "", "#/"); else if (/^#\/turler\//.test(location.hash)) history.replaceState(null, "", "#/turler"); });
 
   /* ── GÖRÜNÜM ────────────────────────────────────────────────────────────────────────────────────────── */
   function rota() {
     var h = location.hash, m, q = function (k) { var x = new RegExp("[?&]" + k + "=([a-z0-9]+)").exec(h); return x ? x[1] : ""; };
+    if ((m = /^#\/turler\/([a-z0-9]+)$/.exec(h))) return { v: "tur", pencere: "tur", k: m[1] };
     if (/^#\/turler/.test(h)) return { v: "tur" };
     if (/^#\/yeni/.test(h)) return { v: "kayit", pencere: "yeni", kisi: q("kisi"), tur: q("tur") };
     if ((m = /^#\/k\/(g[0-9]+)$/.exec(h))) return { v: "kayit", pencere: "kayit", id: m[1] };
@@ -155,7 +180,8 @@
       if (!r.pencere && (r.kisi || r.tur)) { MK.suzgecSifirla("g"); if (r.kisi && MV.kisi(r.kisi)) SZ.g.sec.kisi = r.kisi; if (r.tur && MV.egitimTuru(r.tur)) SZ.g.sec.tur = r.tur; }
       $("a-suzgec-kap").innerHTML = MK.suzgecHtml("g"); MK.suzgecKur("g");
     }
-    if (r.pencere === "yeni") { if (!W) formAc({ kisi: MV.kisi(r.kisi) ? r.kisi : "", k: MV.egitimTuru(r.tur) ? r.tur : "" }, !!(r.kisi && r.tur)); }
+    if (r.pencere === "tur") { if (!W) turAc(r.k === "yeni" ? null : MV.egitimTuru(r.k)); }
+    else if (r.pencere === "yeni") { if (!W) formAc({ kisi: MV.kisi(r.kisi) ? r.kisi : "", k: MV.egitimTuru(r.tur) ? r.tur : "" }, !!(r.kisi && r.tur)); }
     else if (r.pencere === "kayit") { var x = E.filter(function (y) { return y.id === r.id; })[0]; if (x) kayitAc(x); else { history.replaceState(null, "", "#/"); MK.bildir("Bu adreste kayıt yok."); } }
     else if ($("a-pencere").open) $("a-pencere").close();
     document.title = (r.v === "tur" ? "Eğitim türleri" : "Eğitimler") + " · probata maket";

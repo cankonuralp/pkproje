@@ -2,9 +2,23 @@
  "maket": "m16",
  "tarih": "2026-09-26",
  "arac": "tools/olc-bulut.mjs --etkilesim (başsız tarayıcı, 1920 açık tema; gen verilen denemede o genişlik)",
- "toplam": 10,
- "gecen": 10,
+ "toplam": 12,
+ "gecen": 12,
  "denemeler": [
+  {
+   "ad": "eğitim türü eklenir",
+   "gen": 1920,
+   "sayfa": "maket/egitimler.html",
+   "hash": "#/turler",
+   "gecti": true
+  },
+  {
+   "ad": "eğitim türü: tekrar süresi aralık dışı reddedilir",
+   "gen": 1920,
+   "sayfa": "maket/egitimler.html",
+   "hash": "#/turler/yeni",
+   "gecti": true
+  },
   {
    "ad": "liste: 34 kayıt, tekrarı geçen üstte, şerit",
    "gen": 1920,

@@ -264,6 +264,7 @@ export const DURUMLAR = {
     { ad: "kayıt penceresi · tekrarı geçti", hash: "#/k/g31" },
     { ad: "kayıt ekle · boş gönderildi", hash: "#/yeni", adim: [["tikla", '[data-eylem="kaydet"]']] },
     { ad: "tekrarı kaydet · güncel kayıt uyarısı, sertifika seçildi", hash: "#/yeni?kisi=mk&tur=isg", adim: [["tikla", '[data-eylem="dosya-sec"]']] },
+    { ad: "eğitim türü düzenle penceresi", hash: "#/turler/ilkyardim" }
   ] },
 };
 
@@ -558,6 +559,9 @@ export const DENEMELER = {
     { ad: "menüde Performans hazır maketi açar (Muhasebe'den)", sayfa: "maket/muhasebe.html", hash: "#/", adim: [["tikla", '#a-menu a[href="performans.html"]']], bekle: '/performans\\.html$/.test(location.pathname) && !!document.querySelector(".a-grafik")' },
   ],
   m16: [
+    /* 2026-09-26 (reisim 153): eğitim türünü ve tekrar süresini firma ekler / düzenler */
+    { ad: "eğitim türü eklenir", hash: "#/turler", adim: [["tikla", 'a[href="#/turler/yeni"]'], ["yaz", "#w-ad", "Kişisel koruyucu donanım"], ["yaz", "#w-tekrar", "24"], ["tikla", '[data-eylem="tur-kaydet"]']], bekle: '!document.querySelector("#a-pencere").open && /Kişisel koruyucu donanım/.test(document.querySelector("#a-liste").textContent) && /24 ay/.test(document.querySelector("#a-liste").textContent)' },
+    { ad: "eğitim türü: tekrar süresi aralık dışı reddedilir", hash: "#/turler/yeni", adim: [["yaz", "#w-ad", "Deneme"], ["yaz", "#w-tekrar", "0"], ["tikla", '[data-eylem="tur-kaydet"]']], bekle: '/1–120/.test(document.querySelector("#w-tekrar-ipucu").textContent) && document.activeElement.id === "w-tekrar"' },
     { ad: "liste: 34 kayıt, tekrarı geçen üstte, şerit", hash: "#/", bekle: 'document.querySelector("#a-sayac").textContent === "34 kayıt" && /Kaan Er/.test(document.querySelector("#a-liste tbody tr").textContent) && /tekrarı geçti/.test(document.querySelector("#a-uyari").textContent)' },
     { ad: "Tekrarı geçti çipi (1 / 34)", hash: "#/", adim: [["tikla", '[data-sz="g"] [data-cip="gecti"]']], bekle: 'document.querySelector("#a-sayac").textContent === "1 / 34 kayıt"' },
     { ad: "sayfalayıcı 2. sayfa (21–34 / 34)", hash: "#/", adim: [["tikla", '[data-sz="g"] [data-sayfa="2"]']], bekle: 'document.querySelector(\'.a-sayfalar[data-sz="g"] .a-sayfa-bilgi\').textContent === "21–34 / 34"' },
