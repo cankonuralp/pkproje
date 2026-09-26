@@ -42,6 +42,8 @@ export const DURUMLAR = {
     { ad: "ekipman ekle · çakışan kod", hash: "#/plan/1/ekle/HT-1001" },
     { ad: "ekipman ekle · tesiste kayıtlı", hash: "#/plan/1/ekle/FL-1013" },
     { ad: "reddet penceresi", hash: "#/plan/3", adim: [["tikla", '#a-plan .a-adim-tuslar [data-eylem="reddet"], #a-plan .a-eylem-cubugu-alt [data-eylem="reddet"]']] },
+    { ad: "plan içi · saha formu", hash: "#/plan/9", adim: [["tikla", '[data-eylem="saha-formu"]']] },
+    { ad: "plan içi · rapor saatlerini hizala", hash: "#/plan/9", adim: [["tikla", '[data-eylem="saat-ac"]']] }
   ] },
   /* M1 Kullanıcı ve Rol · Personel (2026-09-24; 2. tur 2026-09-25: Kullanıcılar Personel'e katıldı, Ana sayfa, geçici parola,
      rol yetkileri düzenlenir, kartta zimmet ve özlük) */
@@ -283,7 +285,13 @@ export const DENEMELER = {
     { ad: "levhada Temizle doğru süzgeci temizler (plan içi)", gen: 375, hash: "#/plan/1", adim: [["tikla", '[data-sz="e"] [data-eylem="levha-ac"]'], ["tikla", '#a-levha [data-sec="brans"][data-deger="e"]'], ["tikla", '#a-levha [data-eylem="temizle"]']], bekle: 'document.querySelector(\'[data-sz="e"] .a-suzgec-rozet\').hidden' },
     { ad: "tablette çekmece açılır, Esc kapatır", gen: 1080, hash: "#/", adim: [["tikla", ".a-menu-tus"], ["tus", "Escape"]], bekle: '!document.querySelector("#a-kabuk").classList.contains("a-cekmece-acik")' },
     { ad: "masaüstünde menü 64 px şeride daralır", hash: "#/", adim: [["tikla", ".a-daralt-tus"]], bekle: 'Math.round(document.querySelector(".a-cubuk").getBoundingClientRect().width) === 64' },
-    { ad: "kabul et → Kabul edildi", hash: "#/plan/3", adim: [["tikla", '#a-plan .a-adim-tuslar [data-eylem="kabul"]']], bekle: '/Kabul edildi/.test(document.querySelector("#a-plan .a-nesne-baslik").textContent)' },
+    /* 2026-09-26 (reisim): kabul planın içinde, beyan okundu işaretlenmeden kapalı; listede yalnız Görüntüle; pasife al; saat hizalama; saha formu */
+    { ad: "beyan okunmadan Kabul et kapalı", hash: "#/plan/3", bekle: 'document.querySelector(\'#a-plan .a-adim-tuslar [data-eylem="kabul"]\').disabled' },
+    { ad: "beyan okundu → Kabul et → Kabul edildi", hash: "#/plan/3", adim: [["tikla", "[data-beyan]"], ["tikla", '#a-plan .a-adim-tuslar [data-eylem="kabul"]']], bekle: '/Kabul edildi/.test(document.querySelector("#a-plan .a-nesne-baslik").textContent)' },
+    { ad: "listede her planda yalnız Görüntüle", hash: "#/", bekle: '[...document.querySelectorAll("#a-liste tbody tr")].every(t => /Görüntüle/.test(t.textContent)) && !document.querySelector(\'#a-liste [data-eylem="kabul"]\')' },
+    { ad: "ekipman pasife alınır, Etkinleştir ile döner", hash: "#/plan/1", adim: [["tikla", '[data-sz="e"] [data-cip="raporsuz"]'], ["tikla", '[data-eylem="ekipman-pasif"]']], bekle: '/Pasif/.test(document.querySelector("#a-liste-e").textContent) && !!document.querySelector(\'[data-eylem="ekipman-etkin"]\')' },
+    { ad: "rapor saatleri: ilk 10:00, 15 dk, 2 raporda bir", hash: "#/plan/9", adim: [["tikla", '[data-eylem="saat-ac"]'], ["yaz", "#w-ilk", "10:00"], ["yaz", "#w-sure", "15"], ["tikla", '[data-adim="2"]'], ["tikla", '[data-eylem="saat-uygula"]']], bekle: '!document.querySelector("#a-pencere").open && /12:30/.test(document.querySelector("#a-liste-r").textContent) && /12:15/.test(document.querySelector("#a-liste-r").textContent)' },
+    { ad: "tamamlanan planda saha formu (istendiği kadar)", hash: "#/plan/9", adim: [["tikla", '#a-plan .a-adim-tuslar [data-eylem="saha-formu"]'], ["tikla", '[data-eylem="pencere-kapat"]'], ["tikla", '#a-plan .a-adim-tuslar [data-eylem="saha-formu"]']], bekle: 'document.querySelector("#a-pencere").open && /SF2/.test(document.querySelector("#a-pencere-govde").textContent) && /Firma yetkilisi/.test(document.querySelector("#a-pencere-govde").textContent)' },
     { ad: "reddet: gerekçesiz gönderilmez, gerekçeyle reddedilir", hash: "#/plan/3", adim: [["tikla", '#a-plan .a-adim-tuslar [data-eylem="reddet"]'], ["yaz", "#a-red-gerekce", "Aynı gün başka denetim"], ["tikla", "#a-red-onay"]], bekle: '/Reddedildi/.test(document.querySelector("#a-plan .a-nesne-baslik").textContent)' },
     { ad: "ekipman ekle: çakışan kod kaydedilmez", hash: "#/plan/1/ekle", adim: [["yaz", "#a-ekle-kod", "ht-1001"]], bekle: 'document.querySelector("#a-ekle-kod").value === "HT-1001" && document.querySelector(\'[data-eylem="yeni-kaydet"]\').disabled' },
     { ad: "ekipman ekle: yeni kod + tür → plana eklenir", hash: "#/plan/1", adim: [["tikla", '[data-eylem="ekle-ac"]'], ["yaz", "#a-ekle-kod", "ZZ-9001"], ["tikla", "#a-ekle-tur"], ["tikla", '[data-tur="FL"]'], ["tikla", '[data-eylem="yeni-kaydet"]']], bekle: '!document.querySelector("#a-ekle-pencere").open && [...document.querySelectorAll("#a-liste-e .a-kod")].some(e => e.textContent === "ZZ-9001")' },

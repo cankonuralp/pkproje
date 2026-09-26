@@ -81,6 +81,25 @@
   /* o.imzali: yüklenmiş taramanın yerine imzalı hâl (makette; imza alanında ad + tarih) */
   /* İŞ (HİZMET) SÖZLEŞMESİ — temel format KM-FR-SZL-01 (2026-09-26, reisim: "imzalı sözleşmeyi görüntüleme tuşu göremedim"): imzalı
      tarama makette bu önizlemeyle gösterilir. Firma kendi şablonunu yükleyebilir (§3.7 satır 5). */
+  /* SAHA FORMU — temel format KM-FR-SAH-01 (reisim 2026-09-26: "plan tamamlandıktan sonra saha formu oluştur … yapılan ekipmanlar ve
+     yapıldığına dair firma onayı için imza yerleri"). Firmaya göre değişen formatlardan (§3.7). o = { p (plan), ekipmanlar[], no, tarih, uzmanlar[] } */
+  MB.sahaFormu = function (o) {
+    var f = MV.FIRMA, p = o.p, formKod = f.kisa + "-FR-SAH-01";
+    var satirlar = o.ekipmanlar.map(function (e, i) { return [String(i + 1), '<span class="a-kod">' + kacis(e.kod) + "</span>", kacis(e.tur.ad), kacis(e.konum)]; });
+    return '<article class="a-belge" aria-label="Saha formu önizlemesi">' +
+      '<header class="a-belge-bas"><div class="a-belge-logo" role="img" aria-label="Firma logosu yeri">Logo</div>' +
+        '<div class="a-belge-kunye"><b>' + kacis(f.ad) + "</b><span>" + kacis(f.adres) + "</span></div></header>" +
+      '<div class="a-belge-baslik"><h2>Saha formu</h2><p>' + kacis(p.musteri) + " · " + kacis(p.ad) + "</p></div>" +
+      '<dl class="a-bilgi">' + bilgi("Form no", '<span class="a-kod">' + o.no + "</span>") + bilgi("Proje no", '<span class="a-kod">' + p.no + "</span>") +
+        bilgi("Tarih", MK.tarihYaz(p.tarih) + (p.bitTarih && p.bitTarih !== p.tarih ? " – " + MK.tarihYaz(p.bitTarih) : "")) +
+        bilgi("Adres", kacis(p.adres) + ", " + kacis(p.ilce) + " / " + kacis(p.il), true) + "</dl>" +
+      bolum("1", "Kontrolü yapılan ekipmanlar", o.ekipmanlar.length + " ekipman", tablo(["#", "Kod", "Ekipman", "Konum"], satirlar)) +
+      bolum("2", "Firma onayı", "", "<p>Yukarıda listelenen ekipmanların periyodik kontrolü tesisimizde yapılmıştır.</p>") +
+      '<div class="a-belge-imzalar">' + [["Firma yetkilisi", "Ad soyad · unvan"], ["Muayene uzmanı", o.uzmanlar.join(", ")]].map(function (x) {
+        return "<div><b>" + x[0] + "</b><span>" + kacis(x[1]) + '</span><div class="a-belge-imza">Tarih · imza' + (x[0] === "Firma yetkilisi" ? " · kaşe" : "") + "</div></div>";
+      }).join("") + "</div>" +
+      '<footer class="a-belge-alt"><span>' + kacis(f.ad) + " · " + formKod + " · temel format</span><span>Sayfa 1 / 1</span></footer></article>";
+  };
   MB.isSozlesmesi = function (o) {
     var f = MV.FIRMA, x = o.x, m = MV.musteri(x.m), formKod = f.kisa + "-FR-SZL-01";
     var satirlar = x.tesisler.map(function (tid, i) { var t = MV.tesis(tid); return [String(i + 1), "<b>" + kacis(t.ad) + "</b><br>" + kacis(t.adres || "") + '<br><span class="a-belge-madde">' + kacis([t.ilce, t.il].filter(Boolean).join(" / ")) + "</span>"]; });

@@ -913,6 +913,7 @@ Reisim yeni bir tane söyledikçe bu tabloya satır eklenir.
 | 6 | Uygunsuzluklar Excel'i | Müşteri paneli (M11) | var (maket önizlemesi) | sütunlar ve sırası |
 | 7 | Özlük dosyası belge türleri | Personel kartı (M1) | var (iş sözleşmesi, diploma, oda kaydı, EKİPNET belgesi, kimlik, sağlık raporu, diğer) | tür listesi |
 | 8 | **Her türlü numaralandırma** ve form kodu önekleri | rapor no, form kodları (§3.5), **sözleşme, teklif, plan (proje), zimmet formu, fatura no** | var (temel: firma kısa kodu + XX-AAYY-SIRA) | **2026-09-26, reisim: "her türlü numaralandırma şirkete göre değişir"** — biçim ve önek firmaya göre |
+| 9 | **Saha formu** | Planlar › plan içi, plan tamamlanınca (2026-09-26) | **var — `KM-FR-SAH-01`** | başlık, ekipman sütunları, onay metni, imza ve kaşe yerleri (reisim: "firmanın talebine göre oluşturulmuş saha formu") |
 
  (2026-09-18 araştırması; kaynaklar bölüm 10)
 
@@ -1345,6 +1346,40 @@ tekrar konuşacak"* → **Kararlar:**
   (onaydan dönen rapor, denetçi "İmzala" der) → **İmzaya gönderildi** → **Tamamlandı**. İmza yolu firmaya göre kurulur. Geri gönderilen rapor
   "Yeni"ye döner, gerekçesi raporun üstünde durur.
 
+**Yirmi üçüncü tur (2026-09-26, toplu gözden geçirme; reisim birebir):** *"Gerek yok, öncelikle planı kabul etme işi planın içinde olsun ki denetçi
+tarafsızlık beyanını okuyarak kabul etsin şu an okumadan kabul ediyor şu an kabul et yazan yerde sadece görüntüle yazsın daha sonra değişmesin,
+bu arada oluşturulan raporlar o plana özel ama eklenen ekipmanlar o müşteri için açılan plana giren ve ilgili birimde olan (mekanşk elektirik) her
+denetçide gözüküyor değil mi? Ve pasife alınabiliyor olmalı eğer yanlış ekipman girilirse( art niyetli kullanıcı olabilmesi ihtimaline karşı silme
+işlemi sadece yöneticiler tarafından yapılabilmeli) raporlar kısmının içinde onaya göndermeden önce 8 eksik vb eksik yazan kısım olmasın. SGK
+tescil no diye yazan yerler var yanlış sgk destis no olacak planlar açılırken başlangıç ve bitiş saatleri sormasın başlangıç ve bitişe tarihleri ve
+saatleri el ile seçilebilir olsun sonraki kontrol tarihi kontrol tarihine göre otomatik oluşsun ama yine el ile seçilebilir olsun 3 ekipman değil
+ekipman bilgileri olacak / ölçüm aletleri değil ölçüm cihazları yazmalı ve tablo olmalı cihaz cihaz numarası kalibrasyon tarihi yazması yeterli
+ekstra şeylere gerek yok / muayene kriterleri kısmında solda muayene kriteri sağda seçmeli tuşa basınca seçenekler çıkıcak şekilde uygun/uygun
+değil uygulanamaz yazmalı sonuç ve kanaatte uygun uygun değil olarak olmalı muayene kriterleri, firma bilgileri cihazlar vb tüm başlıklar açılır
+kapanır olmalı, notlar değil muayene uzmanı yorumu yazmalı / raporlar ekranında tabloda sağ üstte oluşturuldu sütununun hizasında sağda köşede
+saat işareti olsun o işarete basınca tüm raporlardaki süre kısımları hizalansın ilk raporun saat kaçta açıldığını sorsun ondan sonrasını
+belirlenen süreye göre ekleyerek gitsin, 2 raporda bir süre arttır 3 rapor da bir süre arttır gibi seçenekler olsun, plan detayında daha rapor
+açılmada yukarıdaki ekranı beğenmedim düzenlenmeli isg katıp sözleşme id yazsın ama başlangıç tarihinin yazmasına gerek yok başlangıç bitiş
+tarihi yazsın ( plan için belirlenen süre) teklif içeriği yazsın ( muayene edilecek ekipman ve adeti) adres ve açıklama da yine bulunsun plan
+tamamlandıktan sonra saha formu oluştur tuşu gelsin bu tuşa istenildiği kadar basılsın basılınca firmanın talebine göre oluşturulmuş saha formu (
+yapılan ekipmanlar ve yapıldığına dair firma onayı için imza yerleri ) kullanılacak. Şimdilik bu kadar daha sonra tekrar üzerine bakarız."*
+→ **Kararlar:**
+- **Planlar:** listede plan tuşu her durumda **"Görüntüle"** (değişmez); kabul **planın içinde**, "Tarafsızlık beyanını okudum" işaretlenmeden
+  "Kabul et" açılmaz. Plan içi üst bölüm: proje no · **başlangıç ve bitiş tarihi** (plan süresi) · denetçi · **İSG-KATİP sözleşme ID** (onay tarihi
+  yok) · **teklif içeriği** (ekipman türü × adet) · adres · açıklama.
+- **Ekipman:** tesise aittir; o tesis için açılan her planda, ilgili branştaki denetçilerde görünür (rapor plana özeldir). Yanlış girilen ekipman
+  **pasife alınır** (geri alınabilir); **silme yalnız yönetici**.
+- **Saat hizalama:** plan içindeki raporlar tablosunun sağ üstünde saat işareti → ilk raporun saati, süre (dk) ve "her 1 / 2 / 3 raporda bir artır";
+  bütün raporların saati buna göre dizilir.
+- **Saha formu:** plan tamamlanınca "Saha formu oluştur" (istendiği kadar); yapılan ekipmanlar + firma onayı imza yerleri; format firmaya göre
+  (§3.7 yeni satır).
+- **Plan aç:** saat sorulmaz; **başlangıç ve bitiş tarihi** seçilir.
+- **Rapor ekranı:** "Onaya göndermeden önce N eksik" bölümü kalkar · başlangıç ve bitiş **tarih ve saati el ile** seçilir · sonraki kontrol kontrol
+  tarihinden kendiliğinden, el ile değişir · "Ekipman bilgileri" · "Ölçüm cihazları" tablo (cihaz, cihaz no, kalibrasyon tarihi) · muayene kriteri
+  solda, sağda seçim tuşu: **Uygun / Uygun değil / Uygulanamaz** · sonuç ve kanaat **Uygun / Uygun değil** · bütün başlıklar **açılır kapanır** ·
+  "Notlar" yerine **"Muayene uzmanı yorumu"**.
+- **SGK etiketi:** reisim "SGK destis no" diyor; terim doğrulanmadı → sorulacak, etiket şimdilik aynı.
+
 **Açık kalanlar:** **Ana sayfada İSGGM duyuruları** (reisim 2026-09-26: *"Ana sayfada isgüm duyurularını gösterebilir miyiz ? Bunu
 yapılacaklar listesine ekle"*; öneri: ÇSGB İSGGM duyurular sayfası — https://www.csgb.gov.tr/isggm/duyurular/ — sunucuda günde birkaç kez
 okunur (pg-boss işi, §8.9), Ana sayfada son 5 duyuru başlık + tarih + kaynağa bağlantı; yalnız ekranda, bildirim yok; sayfa RSS vermiyorsa
@@ -1378,6 +1413,9 @@ revizyon, alan kopyalama, hafif kusur devri, meslek eşleşme denetimi).
 - Emsal ürünler: https://opwire.app/iso-17020-periyodik-kontrol-yazilimi/ · https://17020muayene.vidco.com.tr/ · https://akuple.com/asansor-kontrol-yazilimi/ · https://ensyazilim.com/
 
 ## 11 · Değişiklik günlüğü
+- 2026-09-26 (65): **Planlar (yirmi üçüncü tur)**: listede yalnız "Görüntüle"; kabul planın içinde, beyan okundu işaretiyle; plan içi üst bölüm
+  (başlangıç / bitiş tarihi, İSG-KATİP sözleşme ID, teklif içeriği, adres, açıklama); ekipman pasife alınır; rapor saatlerini hizala; saha formu
+  (§3.7 satır 9). Planlar 88/88 · 22/22 · 44/44.
 - 2026-09-26 (64): **Yapılacaklara eklendi**: Ana sayfada İSGGM duyuruları (Açık kalanlar).
 - 2026-09-26 (63): **Rapor durumları beş adım**: Yeni · Teknik yönetici onayında · Muayene uzmanı onayı · İmzaya gönderildi · Tamamlandı (tek kaynak
   MV.RAPOR_DURUM; Planlar, saha raporu, Raporlar, Onaylar, Ana sayfa). İmza servisi yolu "İmzaya gönderildi", indir-imzala-yükle yolu doğrudan

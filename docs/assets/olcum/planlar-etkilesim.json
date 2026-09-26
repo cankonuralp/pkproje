@@ -2,8 +2,8 @@
  "maket": "planlar",
  "tarih": "2026-09-26",
  "arac": "tools/olc-bulut.mjs --etkilesim (başsız tarayıcı, 1920 açık tema; gen verilen denemede o genişlik)",
- "toplam": 17,
- "gecen": 17,
+ "toplam": 22,
+ "gecen": 22,
  "denemeler": [
   {
    "ad": "Planlar varsayılan sıra: en yeni başlangıç üstte",
@@ -83,10 +83,45 @@
    "gecti": true
   },
   {
-   "ad": "kabul et → Kabul edildi",
+   "ad": "beyan okunmadan Kabul et kapalı",
    "gen": 1920,
    "sayfa": "maket/planlarim.html",
    "hash": "#/plan/3",
+   "gecti": true
+  },
+  {
+   "ad": "beyan okundu → Kabul et → Kabul edildi",
+   "gen": 1920,
+   "sayfa": "maket/planlarim.html",
+   "hash": "#/plan/3",
+   "gecti": true
+  },
+  {
+   "ad": "listede her planda yalnız Görüntüle",
+   "gen": 1920,
+   "sayfa": "maket/planlarim.html",
+   "hash": "#/",
+   "gecti": true
+  },
+  {
+   "ad": "ekipman pasife alınır, Etkinleştir ile döner",
+   "gen": 1920,
+   "sayfa": "maket/planlarim.html",
+   "hash": "#/plan/1",
+   "gecti": true
+  },
+  {
+   "ad": "rapor saatleri: ilk 10:00, 15 dk, 2 raporda bir",
+   "gen": 1920,
+   "sayfa": "maket/planlarim.html",
+   "hash": "#/plan/9",
+   "gecti": true
+  },
+  {
+   "ad": "tamamlanan planda saha formu (istendiği kadar)",
+   "gen": 1920,
+   "sayfa": "maket/planlarim.html",
+   "hash": "#/plan/9",
    "gecti": true
   },
   {
