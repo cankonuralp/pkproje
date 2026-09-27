@@ -2,8 +2,8 @@
  "maket": "m8",
  "tarih": "2026-09-27",
  "arac": "tools/olc-bulut.mjs --etkilesim (başsız tarayıcı, 1920 açık tema; gen verilen denemede o genişlik)",
- "toplam": 27,
- "gecen": 27,
+ "toplam": 31,
+ "gecen": 31,
  "denemeler": [
   {
    "ad": "kriter seçilince sayaç güncellenir, odak seçimde",
@@ -139,7 +139,35 @@
    "gecti": true
   },
   {
-   "ad": "saat iki hane yazılınca yerleşir, liste kapanır",
+   "ad": "saat iki hane yazılınca yerleşir, öneri açık kalır (09)",
+   "gen": 1920,
+   "sayfa": "maket/rapor.html",
+   "hash": "#/r/KP-1004",
+   "gecti": true
+  },
+  {
+   "ad": "önerilen saat listeden seçilir, liste kapanır",
+   "gen": 1920,
+   "sayfa": "maket/rapor.html",
+   "hash": "#/r/KP-1004",
+   "gecti": true
+  },
+  {
+   "ad": "odak başka alana geçince öneri kapanır",
+   "gen": 1920,
+   "sayfa": "maket/rapor.html",
+   "hash": "#/r/KP-1004",
+   "gecti": true
+  },
+  {
+   "ad": "takvim altındaki Bugün tuşu bugünü seçer, takvim kapanır",
+   "gen": 1920,
+   "sayfa": "maket/rapor.html",
+   "hash": "#/r/KP-1004",
+   "gecti": true
+  },
+  {
+   "ad": "fareyle kullanımda kalın odak çerçevesi yok, klavyede var",
    "gen": 1920,
    "sayfa": "maket/rapor.html",
    "hash": "#/r/KP-1004",

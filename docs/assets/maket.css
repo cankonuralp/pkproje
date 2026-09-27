@@ -25,6 +25,9 @@ input, textarea, select { font-size: var(--boy-girdi); }
 ::placeholder { font-size: var(--boy-govde); }
 button { cursor: pointer; }
 :focus-visible { outline: 3px solid var(--odak); outline-offset: 2px; }
+/* fareyle / dokunarak kullanımda kalın odak çerçevesi yok; yazı alanında kenar koyulaşır (reisim 2026-09-27; klavyede çerçeve aynen) */
+html[data-giris="fare"] :focus-visible { outline: none; }
+html[data-giris="fare"] .a-girdi:focus, html[data-giris="fare"] .a-alan:focus { border-color: var(--yazi2); }
 /* ⛔ HATA SINIFI (2026-09-23, boş/hata ekranında gözle yakalandı): `hidden` özniteliği, sınıfın `display` kuralı
    tarafından eziliyor → yan menüde içi boş rozet kalıyordu. İki yerde tek tek yamalanmıştı, üçüncüsü atlanmıştı.
    Anayasa 0.8: yama değil sınıf → tek genel kural, bütün `hidden` öğeler için. */
@@ -611,9 +614,9 @@ a.a-yuz:hover { border-color: var(--kenar-alan); background: var(--zemin); }
 /* kutu = kenarlı sarmal (kenar gölgeyle, yükseklik alanla aynı); içinde yan yana girdi (kenarsız) + simge tuşu — üst üste binmez */
 .a-zaman-tarih, .a-zaman-parca { display: flex; box-shadow: inset 0 0 0 1px var(--kenar-alan); border-radius: var(--r-orta); background: var(--kart); }
 .a-zaman-tarih:focus-within, .a-zaman-parca:focus-within { box-shadow: inset 0 0 0 1px var(--yazi2); }
-.a-zaman-tarih { flex: 1 1 11rem; min-width: 0; }
-.a-zaman-parca { flex: 0 0 5.75rem; }
-.a-zaman .a-zaman-girdi { flex: 1 1 auto; min-width: 0; width: auto; height: var(--tus-y); padding-right: 4px; border: 0; background: transparent; font-variant-numeric: tabular-nums; }
+.a-zaman-tarih { flex: 2 1 11rem; min-width: 0; }   /* örnek ekrandaki oran: tarih yarı, saat ve dakika çeyrek */
+.a-zaman-parca { flex: 1 1 5.75rem; min-width: 0; }   /* içerik (girdinin varsayılan genişliği) kutuyu büyütmesin */
+.a-zaman .a-zaman-girdi { flex: 1 1 0; min-width: 0; width: 100%; height: var(--tus-y); padding-right: 4px; border: 0; background: transparent; font-variant-numeric: tabular-nums; }
 .a-zaman-girdi[aria-invalid="true"] { box-shadow: inset 0 -2px 0 var(--hata-yazi); }
 .a-zaman-ikon { flex: none; width: 36px; display: grid; place-items: center; border: 0; border-radius: 0 var(--r-orta) var(--r-orta) 0; background: transparent; color: var(--yazi2); }
 .a-zaman-ikon:hover, .a-zaman-ikon[aria-expanded="true"] { background: var(--zemin2); color: var(--yazi); }
@@ -629,6 +632,7 @@ a.a-yuz:hover { border-color: var(--kenar-alan); background: var(--zemin); }
 .a-zaman-gun:hover, .a-zaman-gun:focus-visible { background: var(--zemin2); }
 .a-zaman-gun.a-zaman-bugun { box-shadow: inset 0 0 0 1px var(--kenar-alan); font-weight: 700; }
 .a-zaman-gun[aria-pressed="true"] { background: var(--vurgu); color: var(--vurgu-uzeri); font-weight: 700; }
+.a-zaman-alt { display: flex; justify-content: flex-end; margin-top: 8px; padding-top: 8px; border-top: 1px solid var(--kenar); }   /* takvim altı: Bugün */
 .a-zaman-iki { font-size: var(--boy-bolum); font-weight: 700; }
 .a-secim-ara { margin: 0 0 6px; }
 .a-secim-yok { margin: 0 0 6px; }

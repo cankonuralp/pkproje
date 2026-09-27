@@ -399,7 +399,9 @@
     }
     return '<div class="a-zaman-bas">' + '<button type="button" class="a-ikon-tus" data-zaman-ay="-1" aria-label="Önceki ay">' + ikon("chevron-left") + "</button>" +
       '<span class="a-zaman-ay">' + AY_UZUN[m] + " " + y + '</span><button type="button" class="a-ikon-tus" data-zaman-ay="1" aria-label="Sonraki ay">' + ikon("chevron-right") + "</button></div>" +
-      '<div class="a-zaman-gunler">' + ["Pt", "Sa", "Ça", "Pe", "Cu", "Ct", "Pz"].map(function (x) { return '<span class="a-zaman-gun-ad" aria-hidden="true">' + x + "</span>"; }).join("") + h + "</div>";
+      '<div class="a-zaman-gunler">' + ["Pt", "Sa", "Ça", "Pe", "Cu", "Ct", "Pz"].map(function (x) { return '<span class="a-zaman-gun-ad" aria-hidden="true">' + x + "</span>"; }).join("") + h + "</div>" +
+      /* reisim 2026-09-27: "takvimin altında bu gün tuşu olsun ve direk bu günü seçtirtsin" */
+      '<div class="a-zaman-alt"><button type="button" class="a-tus a-tus-ikincil" data-zaman-gun="' + MK.BUGUN + '">Bugün</button></div>';
   }
   /* saat (00–23) ya da dakika (00–59) alanı: yazılır; liste yazılana uyanları gösterir */
   var parca = function (id, p, deger, ad) {
@@ -442,15 +444,21 @@
       var p = t.dataset.zamanParca, kap = t.closest(".a-secici"), l = kap.querySelector(".a-parca-liste"), v = t.value.replace(/\D/g, ""), n = 0;
       l.querySelectorAll(".a-secenek").forEach(function (b) { var uy = !v || b.dataset.zamanSec.indexOf(v) === 0; b.hidden = !uy; if (uy) n++; });
       listeleriKapat(kap); l.hidden = !v || !n; kap.querySelector("[data-zaman-liste]").setAttribute("aria-expanded", String(!l.hidden));
+      /* reisim 2026-09-27: "yazarken 09 bile yazsam aşağıda 09 u önermeye devam edecek oradan seçebileceğim" — liste açık kalır */
       if (v.length === 2 && +v < (p === "s" ? 24 : 60)) {
         var d = k.dataset.deger || MK.simdi(), gun = d.slice(0, 10);
         zamanYay(k, p === "s" ? saatliDeger(k, gun, v) : saatliDeger(k, gun, null, v));
-        l.hidden = true; kap.querySelector("[data-zaman-liste]").setAttribute("aria-expanded", "false");
       }
       return true;
     }
     return false;
   }
+  /* saat / dakika alanından odak çıkınca öneri listesi kapanır (Tab ile ayrılınca açık kalmasın) */
+  document.addEventListener("focusout", function (e) {
+    var kap = e.target.closest && e.target.closest(".a-zaman-parca"); if (!kap) return;
+    if (!e.relatedTarget || kap.contains(e.relatedTarget)) return;   /* dışarı tıklama ayrıca kapatır; Safari tıklanan tuşa odak vermez */
+    kap.querySelector(".a-parca-liste").hidden = true; kap.querySelector("[data-zaman-liste]").setAttribute("aria-expanded", "false");
+  });
   /* tıklamalar: true dönerse iş bitti */
   function zamanTikla(e) {
     var el = e.target.closest("[data-zaman-ac],[data-zaman-gun],[data-zaman-ay],[data-zaman-liste],[data-zaman-sec]"); if (!el) return false;
@@ -620,6 +628,10 @@
     }
     if (MK.onGirdi) MK.onGirdi(e);
   });
+  /* odak çerçevesi (reisim 2026-09-27: "seçili alanların etrafında çerçeve kalıyor"): fareyle / dokunarak kullanılırken kalın çerçeve
+     çizilmez (yazı alanında yalnız kenar koyulaşır); klavyeyle (Tab, oklar) gezinilince çerçeve geri gelir — erişilebilirlik korunur */
+  document.addEventListener("pointerdown", function () { document.documentElement.setAttribute("data-giris", "fare"); }, true);
+  document.addEventListener("keydown", function (e) { if (e.key === "Tab" || e.key.indexOf("Arrow") === 0) document.documentElement.setAttribute("data-giris", "klavye"); }, true);
   document.addEventListener("keydown", function (e) {
     if (MK.onTus && MK.onTus(e)) return;
     if (e.key !== "Escape") return;

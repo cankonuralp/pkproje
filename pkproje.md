@@ -1434,6 +1434,10 @@ revizyon, alan kopyalama, hafif kusur devri, meslek eşleşme denetimi).
 - Emsal ürünler: https://opwire.app/iso-17020-periyodik-kontrol-yazilimi/ · https://17020muayene.vidco.com.tr/ · https://akuple.com/asansor-kontrol-yazilimi/ · https://ensyazilim.com/
 
 ## 11 · Değişiklik günlüğü
+- 2026-09-27 (75): **Tarih / saat alanı ve seçim çerçevesi** (reisim: *"takvimin altında bu gün tuşu olsun"*, *"yazarken 09 bile yazsam
+  aşağıda 09 u önermeye devam edecek"*, *"seçili alanların etrafında çerçeve kalıyor"*): takvim altında Bugün; saat / dakika iki hane yazılınca
+  öneri açık kalır, listeden seçilince kapanır; fareyle / dokunarak kullanımda kalın odak çerçevesi yok (klavyede var). Tarih yarı, saat ve
+  dakika çeyrek genişlik (örnek ekran oranı; önceki sürümde masaüstünde saat kutusu gereğinden genişti). M8 104/104 · 31/31 · 52/52.
 - 2026-09-27 (74): **Saha raporu firma bilgileri örnek ekrana göre; tarih · saat · dakika ayrı, yazılır ya da simgeyle seçilir**; etiket
   "SGK DETSİS no" (örnek ekrandaki adı; kısaltma büyük harf). Ölçüm aracı: açık katmanın içeriği "taşan metin" sayılmaz.
 - 2026-09-27 (73): **Plan içi "Planlandı" örnek ekrana göre sadeleşti** (reisim: *"bu kadar basit aslında istediğim şey bu"*): etiket : değer
