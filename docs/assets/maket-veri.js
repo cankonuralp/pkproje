@@ -124,6 +124,26 @@
       belge: { diploma: 1, oda: 1, ekipnet: 1, egitim: "2018-03-06" }, sayilar: { isg: 0, zimmet: 0, egitim: 3, egitimYakin: 0, plan: 0 } }
   ];
   MV.kisi = function (id) { return MV.PERSONEL.filter(function (p) { return p.id === id; })[0]; };
+  /* ── MAAŞ VE BORDRO (2026-09-27, reisim: "personel ekranında maaşlar ve bordrolarda olacak oraya yüklenebilecek bordrolar") — her ay kişi
+     başına bordro yüklenir (PDF) ve tutarları yazılır (brüt, net, işverene maliyet); kişinin maliyeti son bordrodan. İş kârlılığında inspector
+     payı = günlük maliyet × işte çalıştığı gün; günlük = aylık işverene maliyet ÷ 22 iş günü (VARSAYIM). Tutarlar UYDURMA (meslek + kıdem);
+     işverene maliyet ≈ brüt × 1,2275 (SGK işveren + işsizlik payı, teşvik hariç; VARSAYIM). */
+  var BRUT = { "mak-muh": 90000, "elk-muh": 90000, "ee-muh": 104000, "ins-muh": 88000, "tog-elk": 86000, "mak-tek": 66000, "mak-ytek": 70000, "elk-tek": 64000, teknisyen: 52000, diger: 72000 };
+  MV.BORDRO_AYLAR = ["2026-06", "2026-07", "2026-08"];
+  MV.BORDROLAR = [];
+  MV.PERSONEL.forEach(function (p) {
+    var brut = (p.id === "ad" ? 135000 : BRUT[p.meslek] || 72000) + Math.max(0, 2026 - +p.basla.slice(0, 4)) * 1500;
+    MV.BORDRO_AYLAR.forEach(function (ay) {
+      if (p.basla.slice(0, 7) > ay || (p.ayrildi && p.ayrildi.slice(0, 7) < ay)) return;
+      var s = new Date(ay + "-01T12:00:00"); s.setMonth(s.getMonth() + 1);
+      MV.BORDROLAR.push({ kisi: p.id, ay: ay, brut: brut, net: Math.round(brut * 0.705), maliyet: Math.round(brut * 1.2275), dosya: "bordro-" + ay + "-" + p.id + ".pdf",
+        yuklendi: s.toISOString().slice(0, 8) + "03", yukleyen: "ad" });
+    });
+  });
+  MV.kisiBordrolari = function (id) { return MV.BORDROLAR.filter(function (b) { return b.kisi === id; }).sort(function (a, b) { return a.ay < b.ay ? 1 : -1; }); };
+  MV.IS_GUNU = 22;
+  MV.gunlukMaliyet = function (id) { var b = MV.kisiBordrolari(id)[0]; return b ? Math.round(b.maliyet / MV.IS_GUNU * 100) / 100 : 0; };
+  MV.ayAd = function (ay) { return ["Ocak", "Şubat", "Mart", "Nisan", "Mayıs", "Haziran", "Temmuz", "Ağustos", "Eylül", "Ekim", "Kasım", "Aralık"][+ay.slice(5, 7) - 1] + " " + ay.slice(0, 4); };
 
   /* ── MÜŞTERİ VE TESİS (modül 3; M2, 2026-09-24) ─────────────────────────────────────────────────────────────
      Planlar maketinin (onaylı) 9 müşterisi ve tesisi aynı adlarla (plan: Planlar'daki plan no'su). SGK işyeri sicil no

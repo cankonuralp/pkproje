@@ -8,8 +8,8 @@
   390,
   430
  ],
- "toplam": 116,
- "temiz": 116,
+ "toplam": 124,
+ "temiz": 124,
  "durumlar": [
   {
    "ad": "giriş",
@@ -730,6 +730,78 @@
    "disari": [],
    "kucukAlan": [],
    "alan": 1
+  },
+  {
+   "ad": "bordro yükle penceresi (dönemin bordrosu var uyarısı)",
+   "gen": 320,
+   "temiz": true,
+   "tasma": 0,
+   "disari": [],
+   "kucukAlan": [],
+   "alan": 3
+  },
+  {
+   "ad": "bordro yükle penceresi (dönemin bordrosu var uyarısı)",
+   "gen": 360,
+   "temiz": true,
+   "tasma": 0,
+   "disari": [],
+   "kucukAlan": [],
+   "alan": 3
+  },
+  {
+   "ad": "bordro yükle penceresi (dönemin bordrosu var uyarısı)",
+   "gen": 390,
+   "temiz": true,
+   "tasma": 0,
+   "disari": [],
+   "kucukAlan": [],
+   "alan": 3
+  },
+  {
+   "ad": "bordro yükle penceresi (dönemin bordrosu var uyarısı)",
+   "gen": 430,
+   "temiz": true,
+   "tasma": 0,
+   "disari": [],
+   "kucukAlan": [],
+   "alan": 3
+  },
+  {
+   "ad": "bordro yükle · dosyasız gönderildi",
+   "gen": 320,
+   "temiz": true,
+   "tasma": 0,
+   "disari": [],
+   "kucukAlan": [],
+   "alan": 3
+  },
+  {
+   "ad": "bordro yükle · dosyasız gönderildi",
+   "gen": 360,
+   "temiz": true,
+   "tasma": 0,
+   "disari": [],
+   "kucukAlan": [],
+   "alan": 3
+  },
+  {
+   "ad": "bordro yükle · dosyasız gönderildi",
+   "gen": 390,
+   "temiz": true,
+   "tasma": 0,
+   "disari": [],
+   "kucukAlan": [],
+   "alan": 3
+  },
+  {
+   "ad": "bordro yükle · dosyasız gönderildi",
+   "gen": 430,
+   "temiz": true,
+   "tasma": 0,
+   "disari": [],
+   "kucukAlan": [],
+   "alan": 3
   },
   {
    "ad": "geçici parola gösterildi",

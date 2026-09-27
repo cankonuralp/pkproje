@@ -364,6 +364,8 @@ bildirim `docs/assets/maket-ortak.js`'e AYNEN taşındı (Planlar ayrımdan önc
 karşılaştırıldı); ortak uydurma veri `docs/assets/maket-veri.js`; menüdeki hazır maketler tıklanınca açılır.
 
 #### Maket M1 — Kullanıcı ve Rol · Personel (modül 1, 2) — ONAYLANDI 2026-09-25
+**Ek (2026-09-27, §9 yirmi altıncı tur):** kişi sayfasında **"Maaş ve bordrolar"** (brüt, net, işverene maliyet, günlük maliyet; bordrolar,
+"Bordro yükle"). Ölçüm: M1 248/248 · 45/45 · 124/124.
 **2. tur (2026-09-25, reisim'in M1 cevaplarıyla; soru kararları §9 on ikinci tur).** Ekranlar: **giriş** (`maket/giris.html`: giriş · yanlış
 bilgi · parola sıfırlama · **geçici parolayla ilk giriş** — parolayı değiştir ya da "Şimdi değil") · **Ana sayfa** (`maket/anasayfa.html`:
 girişten sonra herkes buraya gelir; role göre bilgi yüzleri + iş listesi — firma yöneticisi, planlama, inspector, mekanik / elektrik
@@ -1525,6 +1527,11 @@ detaylı olacak,"* (1 = Standartlar örneği sorusu: bırakıldı, kütüphane o
   tarih, ileri tarih, tutar, proje no), geçerli satırlar "Muhasebe" kaynağıyla girer. **Sütunlar VARSAYIM** (Tarih · Tür · Tutar · KDV
   oranı · Açıklama · Proje no) — reisim'in örnek Excel'i gelince ona göre kurulur.
 - İş seçici (İşe bağlı · Genel) çipten seçiciye taşındı; çipler durum için.
+- **Maaş ve bordro (Personel):** kişi sayfasında **"Maaş ve bordrolar"**: brüt, net, işverene maliyet (son bordrodan) ve **günlük maliyet**
+  (aylık işverene maliyet ÷ 22 iş günü; VARSAYIM) — iş kârlılığına girer. Bordrolar listesi (dönem, brüt, net, işverene maliyet, "Aç").
+  **"Bordro yükle"**: dönem (son 12 ay), brüt, net, işverene maliyet (son bordrodan dolu gelir), dosya zorunlu; aynı dönemin bordrosu varsa
+  uyarı, yenisi yerine geçer; net brütten büyük olamaz. Görenler: firma yöneticisi ve Muhasebe rolü (VARSAYIM). Toplu bordro yükleme (bütün
+  personel tek dosyada) ayrıntı gelince.
 
 **Açık kalanlar:** **Ana sayfada İSGGM duyuruları** (reisim 2026-09-26: *"Ana sayfada isgüm duyurularını gösterebilir miyiz ? Bunu
 yapılacaklar listesine ekle"*; öneri: ÇSGB İSGGM duyurular sayfası — https://www.csgb.gov.tr/isggm/duyurular/ — sunucuda günde birkaç kez
@@ -1558,6 +1565,8 @@ revizyon, alan kopyalama, hafif kusur devri, meslek eşleşme denetimi).
 - Emsal ürünler: https://opwire.app/iso-17020-periyodik-kontrol-yazilimi/ · https://17020muayene.vidco.com.tr/ · https://akuple.com/asansor-kontrol-yazilimi/ · https://ensyazilim.com/
 
 ## 11 · Değişiklik günlüğü
+- 2026-09-27 (86): **Personel: maaş ve bordrolar** (§9 yirmi altıncı tur): kişi sayfasında maaş satırları (son bordrodan), günlük maliyet,
+  bordrolar listesi ve "Bordro yükle" penceresi. Örnek bordrolar haziran–ağustos 2026 (uydurma tutarlar). M1 248/248 · 45/45 · 124/124.
 - 2026-09-27 (85): **Masraf formu** (§9 yirmi altıncı tur): inspector plan içinden gönderir ("Masraflarım"); Muhasebe'de onay bekliyor →
   onaylandı → ödendi ya da reddedildi (gerekçe); elle eklemede Ödendi / Ödenecek; Giderler'de Excel'e aktar / Excel'den yükle (sütunlar
   reisim'in örneğine göre kurulacak). M14 160/160 · 35/35 · 80/80; Planlar 120/120 · 33/33 · 60/60.

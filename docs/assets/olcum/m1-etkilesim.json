@@ -2,9 +2,44 @@
  "maket": "m1",
  "tarih": "2026-09-27",
  "arac": "tools/olc-bulut.mjs --etkilesim (başsız tarayıcı, 1920 açık tema; gen verilen denemede o genişlik)",
- "toplam": 40,
- "gecen": 40,
+ "toplam": 45,
+ "gecen": 45,
  "denemeler": [
+  {
+   "ad": "kişide maaş ve bordrolar: 3 bordro, günlük maliyet",
+   "gen": 1920,
+   "sayfa": "maket/personel.html",
+   "hash": "#/p/mk",
+   "gecti": true
+  },
+  {
+   "ad": "yeni başlayan: bordro yok",
+   "gen": 1920,
+   "sayfa": "maket/personel.html",
+   "hash": "#/p/by",
+   "gecti": true
+  },
+  {
+   "ad": "bordro: dosya seçilmeden yüklenmez, odak dosya tuşunda",
+   "gen": 1920,
+   "sayfa": "maket/personel.html",
+   "hash": "#/p/mk/bordro",
+   "gecti": true
+  },
+  {
+   "ad": "bordro: net brütten büyük olamaz",
+   "gen": 1920,
+   "sayfa": "maket/personel.html",
+   "hash": "#/p/mk/bordro",
+   "gecti": true
+  },
+  {
+   "ad": "bordro yüklenir: Eylül 2026, 4 bordro",
+   "gen": 1920,
+   "sayfa": "maket/personel.html",
+   "hash": "#/p/mk/bordro",
+   "gecti": true
+  },
   {
    "ad": "özlük belgesi Aç: PDF görüntüleyici",
    "gen": 1920,

@@ -257,6 +257,53 @@
       '<div class="a-liste-kap">' + MK.tablo({ baslik: "Özlük dosyası", sinif: "a-tablo-ozluk", sutunlar: OZLUK_SUTUN, kayitlar: l }) + "</div></section>";
   }
 
+  /* ── MAAŞ VE BORDROLAR (2026-09-27, reisim: "personel ekranında maaşlar ve bordrolarda olacak oraya yüklenebilecek bordrolar") ──
+     aylık bordro PDF'i + tutarları; maaş satırları son bordrodan; günlük maliyet iş kârlılığına girer (Muhasebe). Firma yöneticisi ve Muhasebe
+     rolü görür (VARSAYIM). */
+  var para = MV.para;
+  var BORDRO_SUTUN = [
+    { k: "ay", baslik: "Dönem", kart: "ust", sira: 1, hucre: function (b) { return "<span>" + MV.ayAd(b.ay) + '<span class="a-alt-satir">yüklendi ' + MK.tarihYaz(b.yuklendi) + "</span></span>"; } },
+    { k: "brut", baslik: "Brüt", kart: "govde", sira: 2, hucre: function (b) { return '<span class="a-kart-etiket">Brüt</span><span class="a-sayi">' + para(b.brut) + "</span>"; } },
+    { k: "net", baslik: "Net", kart: "govde", sira: 3, hucre: function (b) { return '<span class="a-kart-etiket">Net</span><span class="a-sayi">' + para(b.net) + "</span>"; } },
+    { k: "maliyet", baslik: "İşverene maliyet", kart: "govde", sira: 4, hucre: function (b) { return '<span class="a-kart-etiket">İşverene maliyet</span><span class="a-sayi">' + para(b.maliyet) + "</span>"; } },
+    { k: "eylem", baslik: "İşlem", gizliBaslik: true, kart: "eylem", sira: 9, hucre: function (b) { return '<div class="a-eylem"><div class="a-eylem-tuslar">' + MK.pdfTus(b.dosya) + "</div></div>"; } }
+  ];
+  function maasHtml(p) {
+    var l = MV.kisiBordrolari(p.id), s = l[0];
+    return '<section class="a-bolum" aria-labelledby="a-b-maas"><div class="a-alt-bas"><h2 class="a-alt-baslik" id="a-b-maas">Maaş ve bordrolar</h2>' +
+        '<span class="a-sayac"><b>' + l.length + "</b> bordro</span>" +
+        '<div class="a-eylem-cubugu a-bolum-tus">' + MK.tus({ eylem: "bordro-ekle", ad: "Bordro yükle", ikon: "upload", sinif: "a-tus-ikincil" }) + "</div></div>" +
+      (s ? '<dl class="a-bilgi">' + bilgi("Brüt maaş", para(s.brut)) + bilgi("Net maaş", para(s.net)) +
+          bilgi("İşverene maliyet", para(s.maliyet) + '<span class="a-alt-satir">aylık · ' + MV.ayAd(s.ay) + " bordrosu</span>") +
+          bilgi("Günlük maliyet", para(MV.gunlukMaliyet(p.id)) + '<span class="a-alt-satir">' + MV.IS_GUNU + " iş günü · iş kârlılığına girer</span>") + "</dl>" +
+        '<div class="a-liste-kap">' + MK.tablo({ baslik: "Bordrolar", sinif: "a-tablo-bordro", sutunlar: BORDRO_SUTUN, kayitlar: l }) + "</div>"
+        : '<p class="a-bos-satir">Bordro yüklenmedi.</p>') + "</section>";
+  }
+  var BR = null;
+  var tlOku = function (v) { var t = String(v).trim(); return /^\d{1,3}(\.\d{3})*(,\d{1,2})?$|^\d+(,\d{1,2})?$/.test(t) ? parseFloat(t.replace(/\./g, "").replace(",", ".")) : NaN; };
+  var tlYaz = function (n) { return n.toLocaleString("tr-TR", { minimumFractionDigits: 2, maximumFractionDigits: 2 }); };
+  var bordroAylari = function () { var l = [], d = new Date(MK.BUGUN.slice(0, 7) + "-01T12:00:00"); for (var i = 0; i < 12; i++) { l.push(d.toISOString().slice(0, 7)); d.setMonth(d.getMonth() - 1); } return l; };
+  function bordroCiz(odak) {
+    var p = MV.kisi(BR.kisi), h = BR.hata, var_ = MV.kisiBordrolari(p.id).some(function (b) { return b.ay === BR.ay; });
+    $("a-bordro-govde").innerHTML = '<p class="a-pencere-ozet"><b>' + kacis(p.ad) + "</b> · " + kacis(MV.meslekAd(p)) + "</p>" + '<div class="a-form">' +
+      MK.alan({ id: "r-ay", etiket: "Dönem", zorunlu: true, genis: true, uyari: var_ ? "Bu dönemin bordrosu var; yenisi onun yerine geçer." : "",
+        girdi: MK.secim({ id: "r-ay", ad: "Dönem", deger: BR.ay, secenekler: bordroAylari().map(function (a) { return [a, MV.ayAd(a)]; }) }) }) +
+      MK.alan({ id: "r-brut", etiket: "Brüt (TL)", zorunlu: true, hata: h.brut, girdi: MK.girdi({ id: "r-brut", deger: BR.brut, sinif: "a-girdi-sicil", ek: ' inputmode="decimal"', hata: h.brut }) }) +
+      MK.alan({ id: "r-net", etiket: "Net (TL)", zorunlu: true, hata: h.net, girdi: MK.girdi({ id: "r-net", deger: BR.net, sinif: "a-girdi-sicil", ek: ' inputmode="decimal"', hata: h.net }) }) +
+      MK.alan({ id: "r-maliyet", etiket: "İşverene maliyet (TL)", zorunlu: true, hata: h.maliyet, girdi: MK.girdi({ id: "r-maliyet", deger: BR.maliyet, sinif: "a-girdi-sicil", ek: ' inputmode="decimal"', hata: h.maliyet }) }) +
+      '<div class="a-alan-grup a-alan-genis"><p class="a-etiket">Bordro dosyası <span class="a-zorunlu">zorunlu</span></p>' +
+        '<div class="a-dosya-sec">' + MK.tus({ eylem: "bordro-dosya", ad: BR.dosya ? "Başka dosya seç" : "Dosya seç", ikon: "file-plus", sinif: "a-tus-ikincil" }) +
+        '<span class="a-dosya-ad">' + (BR.dosya ? kacis(BR.dosya) : '<span class="a-deger-yok">Dosya seçilmedi</span>') + "</span>" + (BR.dosya ? MK.pdfTus(BR.dosya) : "") + "</div>" +
+        (h.dosya ? '<p class="a-ipucu a-ipucu-uyari">' + h.dosya + "</p>" : "") + "</div></div>";
+    $("a-bordro-alt").innerHTML = MK.tus({ eylem: "pencere-kapat", ad: "Vazgeç", sinif: "a-tus-ikincil" }) + MK.tus({ eylem: "bordro-kaydet", ad: "Yükle", ikon: "upload" });
+    if (odak) { var el = $(odak); if (el) el.focus(); }
+  }
+  function bordroAc(p) {
+    var s = MV.kisiBordrolari(p.id)[0], ay = bordroAylari()[1];   /* varsayılan: geçen ay */
+    BR = { kisi: p.id, ay: ay, brut: s ? tlYaz(s.brut) : "", net: s ? tlYaz(s.net) : "", maliyet: s ? tlYaz(s.maliyet) : "", dosya: "", hata: {} };
+    bordroCiz(); if (!$("a-bordro-pencere").open) $("a-bordro-pencere").showModal(); $("r-ay").focus();
+  }
+
   /* zimmet teslim formu görünümü: temel format önizlemesi (PDF'in iskeleti) + imzalı taramayı yükle */
   var formNo = function (p) { return "ZF-0926-" + ("00" + (15 + MV.PERSONEL.indexOf(p))).slice(-3); };
   var teslimEden = function () { return MV.kisi("za"); };
@@ -348,7 +395,7 @@
         bilgi("E-posta", p.eposta ? kacis(p.eposta) : yok, true) +
         bilgi("İşe başlama", MK.tarihYaz(p.basla)) + (p.durum === "ayrildi" ? bilgi("Ayrılış", MK.tarihYaz(p.ayrildi)) : "") +
       "</dl></section>" +
-      hesapHtml(p) + zimmetHtml(p) + ozlukHtml(p);
+      maasHtml(p) + hesapHtml(p) + zimmetHtml(p) + ozlukHtml(p);
   }
 
   /* ── GİRİŞ HESABI PENCERESİ: hesap aç (e-posta + roller) · yeni geçici parola · parola bir kez gösterilir (34) ─────────── */
@@ -474,7 +521,7 @@
     if ((m = /^#\/p\/([a-z0-9]+)\/zimmet-formu$/.exec(h))) return { v: "zform", id: m[1] };
     if ((m = /^#\/p\/([a-z0-9]+)\/zimmet-gecmisi$/.exec(h))) return { v: "zgecmis", id: m[1] };
     if ((m = /^#\/p\/([a-z0-9]+)\/zimmet-imzali\/([A-Z0-9-]+)$/.exec(h))) return { v: "zimzali", id: m[1], no: m[2] };
-    if ((m = /^#\/p\/([a-z0-9]+)\/(hesap|belge)$/.exec(h))) return { v: "kart", id: m[1], pencere: m[2] };
+    if ((m = /^#\/p\/([a-z0-9]+)\/(hesap|belge|bordro)$/.exec(h))) return { v: "kart", id: m[1], pencere: m[2] };
     if ((m = /^#\/p\/([a-z0-9]+)$/.exec(h))) return { v: "kart", id: m[1] };
     return { v: "liste" };
   }
@@ -498,6 +545,7 @@
     if (odakla && !r.pencere) { window.scrollTo(0, 0); var h = document.querySelector("#a-icerik > :not([hidden]) h1"); if (h) h.focus({ preventScroll: true }); }
     if (r.pencere === "hesap" && p) { if (!$("a-hesap-pencere").open) hesapPencereAc(p); } else if ($("a-hesap-pencere").open) $("a-hesap-pencere").close();
     if (r.pencere === "belge" && p) { if (!$("a-belge-pencere").open) belgeAc(p); } else if ($("a-belge-pencere").open) $("a-belge-pencere").close();
+    if (r.pencere === "bordro" && p) { if (!$("a-bordro-pencere").open) bordroAc(p); } else if ($("a-bordro-pencere").open) $("a-bordro-pencere").close();
   }
   MK.goster = goster;
 
@@ -512,6 +560,20 @@
   X["zimmete-git"] = function () { bolumeGit("a-b-zimmet"); };
   X["hesap-ac"] = function () { location.hash = "#/p/" + aktif().id + "/hesap"; };
   X["belge-ekle"] = function () { location.hash = "#/p/" + aktif().id + "/belge"; };
+  X["bordro-ekle"] = function () { location.hash = "#/p/" + aktif().id + "/bordro"; };
+  X["bordro-dosya"] = function () { BR.dosya = "bordro-" + BR.ay + "-" + BR.kisi + ".pdf"; delete BR.hata.dosya; bordroCiz(); $("a-bordro-alt").querySelector(".a-tus-birincil").focus(); };
+  X["bordro-kaydet"] = function () {
+    var h = {}, n = { brut: tlOku(BR.brut), net: tlOku(BR.net), maliyet: tlOku(BR.maliyet) };
+    ["brut", "net", "maliyet"].forEach(function (k) { if (!(n[k] > 0)) h[k] = "Tutar sıfırdan büyük olmalı (ör. 90.000,00)."; });
+    if (!h.net && !h.brut && n.net > n.brut) h.net = "Net brütten büyük olamaz.";
+    if (!BR.dosya) h.dosya = "Bordro dosyası seçilmeli.";
+    BR.hata = h; var hk = Object.keys(h);
+    if (hk.length) { bordroCiz(hk[0] === "dosya" ? null : "r-" + hk[0]); if (hk[0] === "dosya") document.querySelector('#a-bordro-pencere [data-eylem="bordro-dosya"]').focus(); return; }
+    var p = MV.kisi(BR.kisi);
+    MV.BORDROLAR = MV.BORDROLAR.filter(function (b) { return !(b.kisi === p.id && b.ay === BR.ay); });
+    MV.BORDROLAR.push({ kisi: p.id, ay: BR.ay, brut: n.brut, net: n.net, maliyet: n.maliyet, dosya: BR.dosya, yuklendi: MK.BUGUN, yukleyen: "ad" });
+    var ay = BR.ay; $("a-bordro-pencere").close(); MK.bildir(p.ad + ": " + MV.ayAd(ay) + " bordrosu yüklendi.");
+  };
   X["rol-kaydet"] = function () { var p = aktif(); p.hesap.roller = SECILI.slice(); SECILI = null; kartCiz(p); bolumeGit("a-b-hesap"); MK.bildir("Roller kaydedildi; yeni yetkiler hemen geçerli."); };
   X["rol-geri"] = function () { SECILI = null; kartCiz(aktif()); bolumeGit("a-b-hesap"); };
   X["hesap-kapat"] = function () { var p = aktif(); p.hesap.durum = "pasif"; SECILI = null; kartCiz(p); bolumeGit("a-b-hesap"); MK.bildir(p.ad + ": hesap kapatıldı, açık oturumları sonlandı."); };
@@ -546,6 +608,7 @@
     var m;
     if (id === "f-meslek") { F.meslek = deger; delete F.hata.meslek; formCiz(); }
     else if (id === "b-tur") { B.tur = deger; belgeCiz(); }
+    else if (id === "r-ay") { BR.ay = deger; bordroCiz(id); }
     else if ((m = /^m-(\w+)-(\d)$/.exec(id))) { R.taslak[m[1]][+m[2]] = deger; rollerCiz(); }
   };
   MK.onGirdi = function (e) {
@@ -553,6 +616,7 @@
     if (k) { F[k] = t.value; return; }
     if (t.id === "h-eposta") { W.eposta = t.value.trim(); var yer = t.selectionStart; hesapPencereCiz("h-eposta"); $("h-eposta").setSelectionRange(yer, yer); }
     else if (t.id === "b-aciklama") B.aciklama = t.value;
+    else if (BR && /^r-(brut|net|maliyet)$/.test(t.id)) BR[t.id.slice(2)] = t.value;
   };
   document.addEventListener("change", function (e) {
     var t = e.target, r;
@@ -580,11 +644,11 @@
     MK.bildir(kayit.ad + " kaydedildi.");
   };
   /* pencere kapanınca adres karta döner, kart yeni hâli gösterir (açılan hesap, eklenen belge) */
-  ["a-hesap-pencere", "a-belge-pencere"].forEach(function (id) {
+  ["a-hesap-pencere", "a-belge-pencere", "a-bordro-pencere"].forEach(function (id) {
     $(id).addEventListener("close", function () {
       var r = rota(); if (!r.pencere) return;
       history.replaceState(null, "", "#/p/" + r.id); kartCiz(MV.kisi(r.id));
-      bolumeGit(id === "a-hesap-pencere" ? "a-b-hesap" : "a-b-ozluk");
+      bolumeGit(id === "a-hesap-pencere" ? "a-b-hesap" : id === "a-bordro-pencere" ? "a-b-maas" : "a-b-ozluk");
     });
   });
 

@@ -73,6 +73,9 @@ export const DURUMLAR = {
     { ad: "personel · kart (ayrıldı, hesap kapalı)", hash: "#/p/ns" },
     { ad: "personel · rol değişti, kaydedilmedi", hash: "#/p/mk", adim: [["tikla", '[data-rol="planlama"]']] },
     { ad: "giriş hesabı aç penceresi", hash: "#/p/by/hesap", adim: [["tikla", '[data-hrol="inspector"]']] },
+    /* 2026-09-27 (reisim): maaş ve bordrolar */
+    { ad: "bordro yükle penceresi (dönemin bordrosu var uyarısı)", hash: "#/p/mk/bordro" },
+    { ad: "bordro yükle · dosyasız gönderildi", hash: "#/p/mk/bordro", adim: [["tikla", '[data-eylem="bordro-kaydet"]']] },
     { ad: "geçici parola gösterildi", hash: "#/p/by/hesap", adim: [["tikla", '[data-hrol="inspector"]'], ["tikla", '[data-eylem="hesap-onayla"]']] },
     { ad: "yeni geçici parola penceresi", hash: "#/p/mk/hesap" },
     { ad: "özlük belgesi penceresi", hash: "#/p/mk/belge", adim: [["tikla", "#b-tur"], ["tikla", '[data-secim="b-tur"][data-deger="saglik"]'], ["tikla", '[data-eylem="dosya-sec"]']] },
@@ -354,6 +357,12 @@ export const DENEMELER = {
     { ad: "menüden hazır maket → bağlantı (Personel)", hash: "#/", bekle: 'document.querySelector(\'#a-menu a[href="personel.html"]\') !== null' },
   ],
   m1: [
+    /* 2026-09-27 (reisim: "personel ekranında maaşlar ve bordrolarda olacak oraya yüklenebilecek bordrolar") */
+    { ad: "kişide maaş ve bordrolar: 3 bordro, günlük maliyet", hash: "#/p/mk", bekle: 'document.querySelector("section[aria-labelledby=a-b-maas] .a-sayac").textContent === "3 bordro" && /Günlük maliyet/.test(document.querySelector("section[aria-labelledby=a-b-maas]").textContent)' },
+    { ad: "yeni başlayan: bordro yok", hash: "#/p/by", bekle: '/Bordro yüklenmedi/.test(document.querySelector("section[aria-labelledby=a-b-maas]").textContent)' },
+    { ad: "bordro: dosya seçilmeden yüklenmez, odak dosya tuşunda", hash: "#/p/mk/bordro", adim: [["tikla", '[data-eylem="bordro-kaydet"]']], bekle: '/dosyası seçilmeli/.test(document.querySelector("#a-bordro-govde").textContent) && document.activeElement.dataset.eylem === "bordro-dosya"' },
+    { ad: "bordro: net brütten büyük olamaz", hash: "#/p/mk/bordro", adim: [["yaz", "#r-net", "200.000,00"], ["tikla", '[data-eylem="bordro-dosya"]'], ["tikla", '[data-eylem="bordro-kaydet"]']], bekle: '/brütten büyük/.test(document.querySelector("#r-net-ipucu").textContent) && document.activeElement.id === "r-net"' },
+    { ad: "bordro yüklenir: Eylül 2026, 4 bordro", hash: "#/p/mk/bordro", adim: [["tikla", "#r-ay"], ["tikla", '[data-secim="r-ay"][data-deger="2026-09"]'], ["tikla", '[data-eylem="bordro-dosya"]'], ["tikla", '[data-eylem="bordro-kaydet"]']], bekle: '!document.querySelector("#a-bordro-pencere").open && location.hash === "#/p/mk" && document.querySelector("section[aria-labelledby=a-b-maas] .a-sayac").textContent === "4 bordro" && /Eylül 2026 bordrosu yüklendi/.test(document.querySelector("#a-bildirim-metin").textContent)' },
     { ad: "özlük belgesi Aç: PDF görüntüleyici", hash: "#/p/mk", adim: [["tikla", '#a-nesne [data-eylem="pdf-goster"]']], bekle: 'document.querySelector("#a-pdf").open && !!document.querySelector("#a-pdf .a-pdf-sayfa")' },
     { ad: "imzalı zimmet formu: Taramayı aç", hash: "#/p/mk/zimmet-imzali/ZF-0426-003", adim: [["tikla", '#a-nesne [data-eylem="pdf-goster"]']], bekle: 'document.querySelector("#a-pdf").open && /zimmet-formu-imzali\\.pdf/.test(document.querySelector("#a-pdf-govde").textContent)' },
     { ad: "personel: sayaç görünüme dürüst (15 çalışan)", sayfa: "maket/personel.html", hash: "#/", bekle: 'document.querySelector("#a-sayac").textContent === "15 kişi" && document.querySelectorAll("#a-liste tbody tr").length === 15' },
