@@ -100,6 +100,8 @@
   /* ölçüm cihazları (reisim 2026-09-27): eklenen cihazlar · eksik tür = türün listesinde olup geçerli cihazı eklenmemiş · geçmiş = eklenmiş
      ama kalibrasyonu geçmiş. Eksik ya da geçmiş varsa rapor onaya gönderilemez (tek engel). */
   var cihazlar = function (r) { return r.cihaz.map(MV.varlik); };
+  /* gerekli cihaz satırları: türün her cihaz türü için eklenen cihaz (yoksa v = null) */
+  var cihazSatirlari = function (r) { var ci = cihazlar(r); return MV.turCihazlari(r.t).map(function (c) { return { c: c, v: ci.filter(function (v) { return v.cihazTur === c; })[0] || null }; }); };
   var gecmis = function (r) { return cihazlar(r).filter(function (v) { return MV.kalDurum(v) === "gecti"; }); };
   var eksikTur = function (r) { var gecerli = cihazlar(r).filter(function (v) { return MV.kalDurum(v) !== "gecti"; }).map(function (v) { return v.cihazTur; });
     return MV.turCihazlari(r.t).filter(function (c) { return gecerli.indexOf(c) < 0; }); };
@@ -302,6 +304,17 @@
     var PL = r.ts, p = MV.kisi(r.kisi), yon = MV.kisi(YON[t.b]), isg = MV.isgTesis(PL.id).filter(function (x) { return x.k === r.kisi; })[0], ci = cihazlar(r);
     var gecti = gecmis(r), eksik = eksikTur(r), mus = MV.musteri(PL.m);
     var cevaplanan = r.kriter.filter(function (x) { return x.c; }).length;
+    var CIHAZ_SATIR = [
+      { k: "tur", baslik: "Gerekli cihaz", kart: "ust", sira: 1, hucre: function (x) { return "<b>" + kacis(MV.cihazTuru(x.c).ad) + "</b>"; } },
+      { k: "ad", baslik: "Cihaz", kart: "govde", sira: 2, hucre: function (x) {
+        return '<span class="a-kart-etiket">Cihaz</span>' + (x.v ? '<span class="a-kod">' + x.v.env + "</span> · " + kacis(x.v.marka + " " + x.v.model) : oku ? '<span class="a-deger-yok">—</span>'
+          : MK.tus({ eylem: "cihaz-ekle-ac", ad: "Cihaz ekle", ikon: "plus", sinif: "a-tus-ikincil", veri: { tur: x.c } })); } },
+      { k: "no", baslik: "Cihaz no", kart: "govde", sira: 3, hucre: function (x) { return '<span class="a-kart-etiket">Cihaz no</span>' + (x.v ? '<span class="a-kod">' + x.v.seri + "</span>" : '<span class="a-deger-yok">—</span>'); } },
+      { k: "kal", baslik: "Kalibrasyon tarihi", kart: "govde", sira: 4, hucre: function (x) {
+        if (!x.v) return '<span class="a-kart-etiket">Kalibrasyon tarihi</span><span class="a-deger-yok">—</span>';
+        return '<span class="a-kart-etiket">Kalibrasyon tarihi</span>' + (MV.kalDurum(x.v) === "gecti" ? '<span class="a-uyari-metin a-hata-metin">' + MK.tarihYaz(x.v.kal[0].tarih) + " · geçmiş</span>" : MK.tarihYaz(x.v.kal[0].tarih)); } }
+    ].concat(oku ? [] : [{ k: "eylem", baslik: "İşlem", gizliBaslik: true, kart: "eylem", sira: 9, hucre: function (x) {
+      return x.v ? '<div class="a-eylem"><div class="a-eylem-tuslar"><button class="a-ikon-tus" type="button" data-eylem="cihaz-kaldir" data-id="' + x.v.id + '" aria-label="' + kacis(x.v.ad) + ' kaldır" title="Kaldır">' + ikon("x") + "</button></div></div>" : ""; } }]);
     var CIHAZ = [
       { k: "ad", baslik: "Cihaz", kart: "ust", sira: 1, hucre: function (v) { return kacis(v.ad); } },
       { k: "no", baslik: "Cihaz no", kart: "govde", sira: 2, hucre: function (v) { return '<span class="a-kart-etiket">Cihaz no</span><span class="a-kod">' + v.seri + "</span>"; } },
@@ -344,12 +357,12 @@
         metinAlan(r, oku, "imal", "İmal yılı", 4, ' inputmode="numeric"') + metinAlan(r, oku, "konum", "Kullanım yeri", 60) + metinAlan(r, oku, "amac", "Kullanım amacı", 120) +
         satir("Önceki kontrol", e.onceki ? MK.tarihYaz(e.onceki.tarih) + " · " + kacis(e.onceki.sonuc) + ' · <span class="a-rapor-no">' + e.onceki.rapor + "</span>" : "İlk kontrol") + "</dl>");
     S.termal = F && F.bolumler.termal ? bolum(F.bolumler.termal, "r-bt", "Termal kamera bilgileri", termalHtml(r, oku, CIHAZ)) : "";
-    /* ÖLÇÜM CİHAZLARI (reisim 2026-09-27): hangi cihazların kullanılacağı ekipman türünden; eksik ya da kalibrasyonu geçmiş cihaz
-       varsa rapor gönderilemez; "Cihaz ekle" yalnız eksik varken, pencerede inspector'ın zimmetindeki geçerli cihazlar. Zimmetlerim tuşu yok. */
-    S.cihaz = bolum(no("cihaz", 3), "r-b3", "Ölçüm cihazları", "" +
-      (ci.length ? '<div class="a-liste-kap">' + MK.tablo({ baslik: "Ölçüm cihazları", sinif: "a-tablo-olcum", sutunlar: CIHAZ, kayitlar: ci }) + "</div>" : '<p class="a-bos-satir">Cihaz eklenmedi.</p>') +
-      ((gecti.length || eksik.length) && !oku ? '<div class="a-bolum-serit">' + MK.serit("hata", "circle-x", kacis(cihazEngelMetin(r)), "r-cihaz-engel") + "</div>" +
-        (eksik.length ? '<div class="a-eylem-cubugu a-bolum-serit">' + MK.tus({ eylem: "cihaz-ekle-ac", ad: "Cihaz ekle", ikon: "plus", sinif: "a-tus-ikincil" }) + "</div>" : "") : ""));
+    /* ÖLÇÜM CİHAZLARI (reisim 2026-09-28: "hangi cihaz kullanılacaksa o sabit yazsın, onun hizasında bilgileri … cihaz yoksa cihaz ekle
+       tuşu olsun, kaldırınca komple satır silinmesin … sadece ilgili satırdaki cihaz"): türün her gerekli cihazı sabit bir satır; eklenen
+       cihaz hizasında, eklenmemişse o satırda "Cihaz ekle" (pencerede yalnız o türden, zimmetteki geçerli cihazlar); kaldırınca satır kalır.
+       Eksik ya da kalibrasyonu geçmiş cihazla rapor gönderilemez (tek engel). */
+    S.cihaz = bolum(no("cihaz", 3), "r-b3", "Ölçüm cihazları", '<div class="a-liste-kap">' +
+      MK.tablo({ baslik: "Ölçüm cihazları", sinif: "a-tablo-olcum a-tablo-gerekli", sutunlar: CIHAZ_SATIR, kayitlar: cihazSatirlari(r) }) + "</div>");
     S.tanim = F && F.tanimlar ? bolum(F.bolumler.tanim, "r-bd", "Test değerleri tanımları", '<dl class="a-satirlar">' +
       F.tanimlar.map(function (x) { return satir('<span class="a-kod">' + kacis(x[0]) + "</span>", kacis(x[1])); }).join("") + "</dl>") : "";
     /* muayene kriterleri: solda kriter, sağda seçim — Uygun · Uygun değil · Uygulanamaz (reisim 2026-09-26); formatlı türde formattaki
@@ -402,7 +415,7 @@
          kaydet gönder diye iki tuş olsun") */
       (oku ? "" : '<div class="a-form-eylem a-rapor-eylem"><p class="a-adim-not" id="r-kayit">' + kayitMetin(r) + "</p>" +
         MK.tus({ eylem: "kaydet", ad: "Kaydet", ikon: "check", sinif: "a-tus-ikincil" }) +
-        MK.tus({ eylem: "onaya-gonder", ad: "Onaya gönder", ikon: "send", kapali: engelli(r), sebepId: "r-cihaz-engel" }) + "</div>");
+        MK.tus({ eylem: "onaya-gonder", ad: "Onaya gönder", ikon: "send", kapali: engelli(r), sebepId: "r-b3-b" }) + "</div>");
     document.title = e.kod + " · " + r.no + " · probata maket";
     if (odak) { var fo = $(odak); if (fo) fo.focus(); }
   }
@@ -465,16 +478,16 @@
         "</div>";
       $("a-pencere-alt").innerHTML = MK.tus({ eylem: "pencere-kapat", ad: "Vazgeç", sinif: "a-tus-ikincil" }) + MK.tus({ eylem: "pencere-kaydet", ad: "Ekle", ikon: "plus" });
     } else if (W.tur === "cihaz") {
-      /* inspector'ın zimmetindeki, eksik türden, kalibrasyonu geçmemiş cihazlar (reisim 2026-09-27) */
-      var tr = eksikTur(W.r);
-      $("a-pencere-baslik").textContent = "Cihaz ekle";
-      $("a-pencere-govde").innerHTML = (h.sec ? '<div class="a-serit-kap">' + MK.serit("hata", "circle-x", h.sec) + "</div>" : "") + tr.map(function (c) {
-        var l = MV.eklenebilirCihazlar(W.r.kisi, [c]);
-        return '<fieldset class="a-cihaz-grup"><legend>' + kacis(MV.cihazTuru(c).ad) + "</legend>" + (l.length ? l.map(function (v) {
-          return '<label class="a-onay-kutusu"><input type="checkbox" data-cihaz-sec="' + v.id + '"' + (d.sec.indexOf(v.id) >= 0 ? " checked" : "") + '><span><b>' + kacis(v.ad) + '</b> · <span class="a-kod">' + v.seri +
-            "</span> · kalibrasyon " + MK.tarihYaz(v.kal[0].tarih) + "</span></label>"; }).join("") : '<p class="a-bos-satir">Zimmetinizde kalibrasyonu geçerli ' + kacis(MV.cihazTuru(c).ad.toLocaleLowerCase("tr")) + " yok.</p>") + "</fieldset>";
-      }).join("");
-      $("a-pencere-alt").innerHTML = MK.tus({ eylem: "pencere-kapat", ad: "Vazgeç", sinif: "a-tus-ikincil" }) + MK.tus({ eylem: "cihaz-ekle", ad: "Ekle", ikon: "plus" });
+      /* yalnız o satırın cihaz türünden, inspector'ın zimmetindeki kalibrasyonu geçerli cihazlar; yoksa söylenir (reisim 2026-09-28) */
+      var ct = MV.cihazTuru(W.c), l = MV.eklenebilirCihazlar(W.r.kisi, [W.c]);
+      $("a-pencere-baslik").textContent = "Cihaz ekle · " + ct.ad;
+      $("a-pencere-govde").innerHTML = (h.sec ? '<div class="a-serit-kap">' + MK.serit("hata", "circle-x", h.sec) + "</div>" : "") +
+        (l.length ? '<fieldset class="a-cihaz-grup"><legend class="a-gizli">' + kacis(ct.ad) + "</legend>" + l.map(function (v) {
+          return '<label class="a-onay-kutusu"><input type="radio" name="w-cihaz" data-cihaz-sec="' + v.id + '"' + (d.sec.indexOf(v.id) >= 0 ? " checked" : "") + '><span><b>' + kacis(v.ad) + '</b> · <span class="a-kod">' + v.seri +
+            "</span> · kalibrasyon " + MK.tarihYaz(v.kal[0].tarih) + "</span></label>"; }).join("") + "</fieldset>"
+          : '<p class="a-bos-satir">Zimmetinizde kalibrasyonu geçerli ' + kacis(ct.ad.toLocaleLowerCase("tr")) + " yok.</p>");
+      $("a-pencere-alt").innerHTML = l.length ? MK.tus({ eylem: "pencere-kapat", ad: "Vazgeç", sinif: "a-tus-ikincil" }) + MK.tus({ eylem: "cihaz-ekle", ad: "Ekle", ikon: "plus" })
+        : MK.tus({ eylem: "pencere-kapat", ad: "Kapat" });
     } else if (W.tur === "gonder") {
       $("a-pencere-baslik").textContent = W.eks.length + " eksik var";
       $("a-pencere-govde").innerHTML = '<ul class="a-kosullar">' + W.eks.map(function (x) {
@@ -528,7 +541,7 @@
       degisti(r); return;
     }
     var c = e.target.closest && e.target.closest("[data-cihaz-sec]"); if (!c || !W) return;
-    var id = c.dataset.cihazSec, i = W.d.sec.indexOf(id); if (c.checked && i < 0) W.d.sec.push(id); if (!c.checked && i >= 0) W.d.sec.splice(i, 1);
+    if (c.checked) W.d.sec = [c.dataset.cihazSec];   /* satır başına tek cihaz */
   });
   MK.onGirdi = function (e) {
     var k = e.target.dataset && e.target.dataset.alan; if (!k) return;
@@ -591,15 +604,17 @@
     ciz(); var t = document.querySelector('[data-eylem="firma-guncelle"]'); if (t) t.focus();
     MK.bildir("Firma bilgileri müşteri kaydından güncellendi.");
   };
-  X["cihaz-ekle-ac"] = function () { var r = aktif(); pencereAc({ tur: "cihaz", r: r, d: { sec: [] } }); };
+  X["cihaz-ekle-ac"] = function (el) { var r = aktif(); pencereAc({ tur: "cihaz", r: r, c: el.dataset.tur, d: { sec: [] } }); };
   X["cihaz-ekle"] = function () {
     var r = W.r; if (!W.d.sec.length) { W.hata = { sec: "Eklenecek cihazı seçin." }; pencereCiz(); var f = document.querySelector("#a-pencere [data-cihaz-sec]") || document.querySelector('#a-pencere [data-eylem="pencere-kapat"]'); if (f) f.focus(); return; }
-    W.d.sec.forEach(function (id) { if (r.cihaz.indexOf(id) < 0) r.cihaz.push(id); });
-    var n = W.d.sec.length; $("a-pencere").close(); degisti(r); ciz("r-b3-b"); MK.bildir(n + " cihaz eklendi.");
+    var c = W.c, v = MV.varlik(W.d.sec[0]);
+    r.cihaz = r.cihaz.filter(function (id) { return MV.varlik(id).cihazTur !== c; }).concat([v.id]);
+    $("a-pencere").close(); degisti(r); ciz("r-b3-b"); MK.bildir(v.ad + " " + v.seri + " eklendi.");
   };
   X["cihaz-kaldir"] = function (el) {
-    var r = aktif(), v = MV.varlik(el.dataset.id); r.cihaz = r.cihaz.filter(function (x) { return x !== el.dataset.id; }); degisti(r); ciz("r-b3-b");
-    MK.bildir(v.ad + " rapordan kaldırıldı.");
+    var r = aktif(), v = MV.varlik(el.dataset.id); r.cihaz = r.cihaz.filter(function (x) { return x !== el.dataset.id; }); degisti(r);
+    ciz(); var t = document.querySelector('#r-b3 [data-eylem="cihaz-ekle-ac"][data-tur="' + v.cihazTur + '"]'); if (t) t.focus();
+    MK.bildir(v.ad + " rapordan kaldırıldı; satırı boş kaldı.");
   };
   X["sigorta-oku"] = function () {
     var r = aktif();

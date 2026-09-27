@@ -1621,6 +1621,32 @@ sekmesi de açılıp kapanır bir sekme bu arada, daha bir çok eksiğimiz var i
   açık / kapalı tercihi tarayıcıda sayfa başına hatırlanır.
 - **Yerelde devam:** evet — iş GitHub'da (`main`); yerelde `git pull` ile sürer. Eksiklerin incelenmesi yerelde.
 
+**Otuzuncu tur (2026-09-28, reisim birebir):** *"Masraf formu ve personelin bireysel olarak isteyeceği şeyler sol panel de gözüksün masraf plana
+özel değil genel de olabilir sonuçta muhasebe modülü de denetçi de gözükmeyeceği için talepler kısmı olsun denetçi izin talebi masraf formu ekleme
+ve ileride ekleyeceğimiz bir şey olursa buradan ekler, bir de, bu standart olayını şöyle yapalım, dökümanlar modülü olsun standartlar bunun altında
+olsun, eğitimler, muayene kriterleri, standartlar, ve diğer dökümanlar bu kısımda tutulsun, Ölçüm cihazlarında ilgili ekipmanda hangi cihaz
+kullanılacaksa o sabit yazsın, onun hizasında bilgileri. Yazması gereken yerde eğer cihaz yoksa cihaz ekle tuşu olsun, kaldırınca komple satır
+silinmesin, gerekli ölçüm cihazları ilk bakışta anlaşılabilsin. cihaz ekle dediğimizde sadece ilgili satırdaki cihaz örn: "metre" tarafıma atalı
+metreler çıksın yoksa çıkması. Şu an yapılan gibi değil. Onay gönder tuşu soluk olmasın eğer basılamıyorsa basıldığında neden gönderilemediğini
+yazsın ve eksik alanları uyararak göstersin, zorunlu bölümleri doldurun. Desin. Örnekler hala eski, en son attığım rapor formatına göre sonuç o
+şekilde gözükecek biçimde örnekler görmeliyim planlar da en üstte sadece en son attığım PDF formatlara göre açılmış plan olsun, raporlamaların ön
+izleme en sağ üstte ön izleme tuşu olmalı PDF çıktısını ön izleyebilmeliyim ön izle halinde PDF halini indiredebilmeliyim. Raporlarda durum
+geçmişi olmamalı, filtreleyip arama detaylı olmalı; ekipman türüne rapor numarasına göre ayrı ayrı arayabilmeliyim bundan sonra sana filtreleme
+ekranları örnekleri atacağım"*
+→ **Kararlar (her biri ayrı kalem):**
+- **Raporda ölçüm cihazları:** türün her gerekli cihazı sabit bir satır (gerekli cihaz · cihaz (envanter, marka model) · cihaz no · kalibrasyon);
+  eklenmemişse o satırda "Cihaz ekle"; pencerede **yalnız o satırın türünden**, inspector'ın zimmetindeki kalibrasyonu geçerli cihazlar (yoksa
+  "zimmetinizde … yok"); satır başına tek cihaz; kaldırınca satır kalır, "Cihaz ekle"ye döner. Kalibrasyonu geçmiş cihaz "geçmiş" diye işaretli.
+- **Onaya gönder soluk değil:** her zaman basılır; gönderilemiyorsa nedenini yazar, "Zorunlu bölümleri doldurun" der, eksik bölüm ve alanları
+  işaretler.
+- **Ön izle:** rapor ekranında sağ üstte; PDF önizlemesi rapordaki değerlerle; önizlemeden PDF indirilir.
+- **Örnekler son formatlarla:** Planlar'da en üstteki plan yalnız ZPKR01 / ZPKR02 türleriyle (AG topraklama + elektrik iç tesisatı) açılmış;
+  raporların sonuçları formata göre.
+- **Raporlar:** durum geçmişi yok; süzgeç ayrıntılı — ekipman türü, rapor no ayrı ayrı aranır (reisim süzgeç ekranı örnekleri gönderecek).
+- **Talepler modülü (sol menü):** personelin kendi talepleri — izin talebi, masraf formu (plana bağlı ya da genel); ileride eklenecek talepler de
+  buradan. Muhasebe modülü denetçide görünmediği için masraf formu burada.
+- **Dökümanlar modülü:** Standartlar, Muayene kriterleri, Eğitimler, Diğer dökümanlar altında.
+
 **Açık kalanlar:** ~~Ana sayfada İSGGM duyuruları~~ (2026-09-27: makette eklendi; okuma işi uygulamada) (reisim 2026-09-26: *"Ana sayfada isgüm duyurularını gösterebilir miyiz ? Bunu
 yapılacaklar listesine ekle"*; öneri: ÇSGB İSGGM duyurular sayfası — https://www.csgb.gov.tr/isggm/duyurular/ — sunucuda günde birkaç kez
 okunur (pg-boss işi, §8.9), Ana sayfada son 5 duyuru başlık + tarih + kaynağa bağlantı; yalnız ekranda, bildirim yok; sayfa RSS vermiyorsa
@@ -1653,6 +1679,8 @@ revizyon, alan kopyalama, hafif kusur devri, meslek eşleşme denetimi).
 - Emsal ürünler: https://opwire.app/iso-17020-periyodik-kontrol-yazilimi/ · https://17020muayene.vidco.com.tr/ · https://akuple.com/asansor-kontrol-yazilimi/ · https://ensyazilim.com/
 
 ## 11 · Değişiklik günlüğü
+- 2026-09-28 (95): **Raporda ölçüm cihazları satır satır** (§9 otuzuncu tur): gerekli cihaz sabit, satır başına Cihaz ekle (yalnız o türden),
+  kaldırınca satır kalır. M8 136/136 · 56/56 · 68/68.
 - 2026-09-27 (94): **Süzgeç kutusu açılır kapanır** (§9 yirmi dokuzuncu tur): bütün listelerde başlık + uygulanan süzgeç sayısı; tercih
   hatırlanır. 17 maket temiz: durum 1792/1792 · etkileşim 396/396 · telefon 896/896 (Planlar etkileşim 38/38, 2 yeni deneme).
 - 2026-09-27 (93): **Saha raporu ve rapor belgesi Bakanlık formatına göre** (§9 yirmi sekizinci tur): iç tesisat ZPKR02 (1–11) ve AG topraklama

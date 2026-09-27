@@ -2,8 +2,8 @@
  "maket": "m8",
  "tarih": "2026-09-27",
  "arac": "tools/olc-bulut.mjs --etkilesim (başsız tarayıcı, 1920 açık tema; gen verilen denemede o genişlik)",
- "toplam": 54,
- "gecen": 54,
+ "toplam": 56,
+ "gecen": 56,
  "denemeler": [
   {
    "ad": "kontrol metodu türden, yalnız standart numarası, seçim alanı yok (formatlı türde firma bölümünde)",
@@ -62,7 +62,21 @@
    "gecti": true
   },
   {
-   "ad": "ölçüm cihazları tablo (cihaz · cihaz no · kalibrasyon tarihi); geçmiş cihazda gönder kapalı, sebebi yazılı; Zimmetlerim yok",
+   "ad": "ölçüm cihazları: gerekli her cihaz sabit satır (tür · cihaz · no · kalibrasyon), geçmiş kalibrasyon işaretli; Zimmetlerim yok",
+   "gen": 1920,
+   "sayfa": "maket/rapor.html",
+   "hash": "#/r/ET-1009",
+   "gecti": true
+  },
+  {
+   "ad": "cihaz kaldırılınca satır kalır, o satırda Cihaz ekle (odak orada)",
+   "gen": 1920,
+   "sayfa": "maket/rapor.html",
+   "hash": "#/r/ET-1009",
+   "gecti": true
+  },
+  {
+   "ad": "Cihaz ekle yalnız o satırın türünden zimmetteki cihazları listeler, seçilen o satıra girer",
    "gen": 1920,
    "sayfa": "maket/rapor.html",
    "hash": "#/r/ET-1009",
@@ -335,14 +349,14 @@
    "gecti": true
   },
   {
-   "ad": "zimmette geçerli cihaz yoksa pencere söyler; geçmiş cihaz listelenmez",
+   "ad": "zimmette geçerli cihaz yoksa pencere söyler; öteki türün cihazı listelenmez",
    "gen": 1920,
    "sayfa": "maket/rapor.html",
    "hash": "#/r/YA-1008",
    "gecti": true
   },
   {
-   "ad": "kalibrasyonu geçmiş cihaz kaldırılır: eksik tür kalır, Cihaz ekle görünür, gönder kapalı",
+   "ad": "kalibrasyonu geçmiş cihaz kaldırılır: satırı kalır, o satırda Cihaz ekle",
    "gen": 1920,
    "sayfa": "maket/rapor.html",
    "hash": "#/r/ET-1009",
