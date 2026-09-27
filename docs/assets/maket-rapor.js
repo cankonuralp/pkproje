@@ -167,7 +167,7 @@
       /* 1 · FİRMA BİLGİLERİ: türün rapor formatından bağımsız, her raporda aynı (reisim 2026-09-26) */
       bolum(1, "r-b1", "Firma bilgileri", '<dl class="a-bilgi">' +
           bilgi("Firma ünvanı", kacis(MV.musteri(PL.m).unvan), true) + bilgi("Adres", kacis(PL.adres + ", " + PL.ilce + " / " + PL.il), true) +
-          bilgi("SGK tescil no", '<span class="a-kod a-kod-uzun">' + PL.sgk + "</span>", "cift") +
+          bilgi("SGK destis no", '<span class="a-kod a-kod-uzun">' + PL.sgk + "</span>", "cift") +
           bilgi("İSG-KATİP sözleşme ID", isg ? '<span class="a-kod">' + isg.no + "</span>" : '<span class="a-uyari-metin">Yok</span>') + "</dl>") +
       bolum(2, "r-bk", "Kontrol bilgileri", '<div class="a-form">' +
           tarihAlan(r, oku, "bas", "Başlangıç", "GG.AA.YYYY SS:DD") + tarihAlan(r, oku, "bit", "Bitiş", "GG.AA.YYYY SS:DD") +

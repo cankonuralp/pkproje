@@ -35,7 +35,7 @@
   MK.serit = function (tur, ik, metin, id) {
     return '<div class="a-serit a-serit-' + tur + '"' + (id ? ' id="' + id + '"' : "") + ">" + ikon(ik, "a-ikon-kucuk") + "<span>" + metin + "</span></div>";
   };
-  /* genis: true → telefonda tam satır · "cift" → her bantta iki sütun (bölünmez uzun kimlik, ör. 26 haneli SGK sicil no) */
+  /* genis: true → telefonda tam satır · "cift" → her bantta iki sütun (bölünmez uzun kimlik, ör. 26 haneli SGK destis no) */
   MK.bilgi = function (etiket, deger, genis) { return '<div class="a-bilgi-oge' + (genis === "cift" ? " a-bilgi-genis a-bilgi-cift" : genis ? " a-bilgi-genis" : "") + '"><dt>' + etiket + "</dt><dd>" + deger + "</dd></div>"; };
   /* genel tuş: o = { eylem, ad, ikon, sinif (varsayılan birincil), kapali, sebepId, veri: { id: … } → data-id } */
   MK.tus = function (o) {

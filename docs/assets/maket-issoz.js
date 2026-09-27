@@ -7,7 +7,7 @@
    yüklenebilir olsun, isg katip sözleşme id ve sgk no buraya girilsin buradan raporlara otomatik çekilecek ... sözleşme id denetçiye göre
    değişir ... otomatik gelmeyen veriler el ile girilebilir olsun" + "Önerilerin hepsi uygun başla"):
    · A → ayrı "İSG-KATİP kayıtları" sekmesi KALKTI (M5 ile M13 birleşti); Sözleşmeler = iş sözleşmeleri.
-   · B → SGK tescil no tek yerde, tesiste (M2); burada ve raporda oradan görünür.
+   · B → SGK destis no tek yerde, tesiste (M2); burada ve raporda oradan görünür.
    · C → sözleşmenin içinde tesis başına denetçi → sözleşme ID; plan açarken seçilen denetçinin ID'si buradan gelir, yoksa plan açan el ile
      yazar ("sözleşmeye de kaydet"; M6'nın sırası gelince). Rapor ID'yi plandan alır, raporda da düzeltilebilir.
    · D → her ID'nin yanında isteğe bağlı İSG-KATİP PDF'i · E → onay tarihi isteğe bağlı; geç onay yalnız UYARI (kabul engellenmez).
@@ -124,7 +124,7 @@
               (idKullanimi(r) ? "" : MK.tus({ eylem: "isg-sil", ad: "Sil", ikon: "x", sinif: "a-tus-ikincil", veri: { id: r.id } })) + "</div></div>";
           } }
         ];
-        return '<div class="a-alt-bas a-alt-bas-ic"><h3 class="a-alt-baslik">' + kacis(t.ad) + '</h3><span class="a-sayac">SGK tescil no <span class="a-kod">' + (t.sgk || "—") + "</span></span>" +
+        return '<div class="a-alt-bas a-alt-bas-ic"><h3 class="a-alt-baslik">' + kacis(t.ad) + '</h3><span class="a-sayac">SGK destis no <span class="a-kod">' + (t.sgk || "—") + "</span></span>" +
           '<a class="a-tus a-tus-ikincil a-bolum-tus" href="#/s/' + x.no + "/isg-ekle?tesis=" + tid + '">' + ikon("plus", "a-ikon-kucuk") + "ID ekle</a></div>" +
           (eks.length ? '<div class="a-serit-kap">' + MK.serit("uyari", "triangle-alert", "Açık planda İSG-KATİP sorunu: " + eks.map(function (e) { return kacis(e[1].ad) + " (" + e[2] + ")"; }).join(", ") + ". Buradan eklenebilir ya da plan açarken el ile girilir.") + "</div>" : "") +
           '<div class="a-liste-kap">' + (l.length ? MK.tablo({ baslik: "İSG-KATİP · " + t.ad, sinif: "a-tablo-isgid", sutunlar: SUT, kayitlar: l }) : '<p class="a-bos-satir">Bu tesiste ID yok.</p>') + "</div>";
@@ -251,7 +251,7 @@
       var mevcut = !r && d.tesis && d.kisi ? MV.isgTesis(d.tesis).filter(function (i) { return i.k === d.kisi; })[0] : null;
       $("a-pencere-baslik").textContent = r ? "İSG-KATİP sözleşme ID · düzenle" : "İSG-KATİP sözleşme ID ekle";
       govde = '<p class="a-pencere-ozet"><b>' + x.no + "</b> · " + kacis(MV.musteri(x.m).kisa) + "</p>" + '<div class="a-form">' +
-        MK.alan({ id: "w-tesis", etiket: "Tesis", zorunlu: true, hata: h.tesis, ipucu: d.tesis ? "SGK tescil no " + (MV.tesis(d.tesis).sgk || "girilmemiş") : "",
+        MK.alan({ id: "w-tesis", etiket: "Tesis", zorunlu: true, hata: h.tesis, ipucu: d.tesis ? "SGK destis no " + (MV.tesis(d.tesis).sgk || "girilmemiş") : "",
           girdi: r || tesisler.length === 1 ? '<input class="a-girdi a-girdi-oku" id="w-tesis" readonly value="' + kacis(MV.tesis(d.tesis).ad) + '" aria-describedby="w-tesis-ipucu">'
             : MK.secim({ id: "w-tesis", ad: "Tesis", deger: d.tesis, secenekler: tesisler, ipucu: "Tesis seçin", gecersiz: !!h.tesis, tanim: "w-tesis-ipucu" }) }) +
         MK.alan({ id: "w-kisi", etiket: "Denetçi", zorunlu: true, hata: h.kisi,

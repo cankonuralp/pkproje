@@ -641,7 +641,7 @@ a.a-yuz:hover { border-color: var(--kenar-alan); background: var(--zemin); }
 .a-bolum-eylem { display: flex; justify-content: flex-end; align-items: center; flex-wrap: wrap; gap: 8px; margin: 12px 0 0; }
 .a-bolum-eylem .a-adim-not { margin-right: auto; }
 .a-tablo-zgecmis .a-k-varlik { width: 32%; } .a-tablo-zgecmis .a-k-verildi { width: 20%; } .a-tablo-zgecmis .a-k-alindi { width: 22%; } .a-tablo-zgecmis .a-k-not { width: 26%; }
-/* M2 (müşteri ve tesis) — SGK sicil no 26 hane bölünmez (anayasa 3.11): sütunu ~230 px'e göre */
+/* M2 (müşteri ve tesis) — SGK destis no 26 hane bölünmez (anayasa 3.11): sütunu ~230 px'e göre */
 .a-tablo-musteri .a-k-unvan { width: 27%; } .a-tablo-musteri .a-k-tesis { width: 17%; } .a-tablo-musteri .a-k-ekipman { width: 9%; }
 .a-tablo-musteri .a-k-portal { width: 12%; } .a-tablo-musteri .a-k-sonraki { width: 15%; } .a-tablo-musteri .a-k-durum { width: 20%; }
 .a-tablo-tesis .a-k-tesis { width: 17%; } .a-tablo-tesis .a-k-adres { width: 20%; } .a-tablo-tesis .a-k-sgk { width: 29%; }

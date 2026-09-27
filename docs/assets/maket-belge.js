@@ -32,7 +32,7 @@
       bolum("1", "Firma bilgileri", '<dl class="a-bilgi">' +
         bilgi("Firma ünvanı", o ? kacis(o.m.unvan) : bos, true) +
         bilgi("Adres", o ? kacis(o.ts.adres + ", " + o.ts.ilce + " / " + o.ts.il) : bos, true) +
-        bilgi("SGK tescil no", o ? '<span class="a-kod a-kod-uzun">' + o.ts.sgk + "</span>" : bos, "cift") +
+        bilgi("SGK destis no", o ? '<span class="a-kod a-kod-uzun">' + o.ts.sgk + "</span>" : bos, "cift") +
         bilgi("İSG-KATİP sözleşme ID", o ? (o.isg ? '<span class="a-kod">' + o.isg.no + "</span>" : '<span class="a-uyari-metin">Yok</span>') : bos) + "</dl>") +
       bolum("2", "Kontrol bilgileri", '<dl class="a-bilgi">' +
         bilgi("Başlangıç", d(o && MK.tarihYaz(o.tarih) + " " + (o.bas || "09:12"), "saha: rapor açıldı")) +

@@ -140,7 +140,7 @@ tek mesaj: sayfanın bağlantısı + kaç maket + kaç soru + ölçülemeyen var
 - 2026-09-26: **M5 ve M13 ONAYLANDI** (reisim: *"Sıradakine geçelim"*). Sırada **M6 Plan aç** — sorular 74–81 yeniden soruldu.
 - 2026-09-26: **M6 2. tur** — reisim 74–81 ("Önerilerin uygun ama geliştirilebilir maketi yap inceleyeyim"): uyarılar engel değil, İSG-KATİP ID
   sözleşmeden / el ile, bitmiş uyarısı, sahada yeni ekipman alanı kalktı. M6 60/60 · 18/18 · 40/40. Reisim'in incelemesi bekleniyor.
-- 2026-09-26: **M6 2. tur, ek** — reisim: rapor 1. bölümü "Firma bilgileri" (her raporda ortak), "SGK tescil no", "İSG-KATİP sözleşme ID",
+- 2026-09-26: **M6 2. tur, ek** — reisim: rapor 1. bölümü "Firma bilgileri" (her raporda ortak), "SGK destis no", "İSG-KATİP sözleşme ID",
   parantez içi açıklama ve alt satır mesajı yok (genel ilke). M6 60/60 · 18/18 · 40/40. Reisim'in incelemesi bekleniyor.
 
 ### Toplu soru listesi — M7–M16 (2026-09-26, reisim: *"Kalan Tüm modüllerin sorularını sor hepsini tek seferde cevaplayayım maketi ona göre yenile sonra tüm maketi gözden geçiririm"*)
@@ -160,7 +160,7 @@ karara bağlanmış ya da gereksiz kalan sorular düştü (82 dışı M7 sorular
 - 159. Firma PDF formatını yükleyince rapor ekranı **bizim tarafımızda hazırlanır** (o sırada tür "hazırlanıyor" görünür).
 - 90. Eksik varken "Onaya gönder" basılabilir; eksik listesi uyarı olarak çıkar, "Yine de gönder". Tek engel kalibrasyonu geçmiş cihaz.
 - 91. Kalibrasyon engeli yalnız o raporda kullanılan cihaz için.
-- 160. Raporda SGK tescil no ve İSG-KATİP sözleşme ID düzeltilebilir; "tesise / sözleşmeye de kaydet" seçeneği (M6'daki gibi).
+- 160. Raporda SGK destis no ve İSG-KATİP sözleşme ID düzeltilebilir; "tesise / sözleşmeye de kaydet" seçeneği (M6'daki gibi).
 - 92. Sigorta okuma: emin olunmayan satırlar tek tek onaylanır; pano fotoğrafı rapora eklenir.
 - 93. Pano sigortaları bölümü türün formatında varsa çıkar.
 - 94. Kusurlu maddeye fotoğraf isteğe bağlı.
@@ -237,7 +237,7 @@ karara bağlanmış ya da gereksiz kalan sorular düştü (82 dışı M7 sorular
 - 157. Tekrarı geçen eğitim plan açarken uyarı vermez; yalnız Uyarılar'da görünür.
 - 158. Yetkili kişi eğitim belgesi personel kartında kalır.
 
-**Cevap (2026-09-26, pkproje.md §9 yirmi birinci tur):** 160 hayır (SGK tescil no ve İSG-KATİP sözleşme ID plan açılırken girilir, raporda
+**Cevap (2026-09-26, pkproje.md §9 yirmi birinci tur):** 160 hayır (SGK destis no ve İSG-KATİP sözleşme ID plan açılırken girilir, raporda
 düzeltilemez) · 95 gerekçe yok (rapor ekranı emsal uygulamaya göre) · 99 raporlar birleşmez, her rapor ayrı imzalanır (indir + e-imza ya da
 imza servisi) · ötekiler kabul. Sıra: genel temizlik (alt satır mesajları) → M7 → M8 → M9 → M10 → M11 → M12 → M14 → M15 → M16 → toplu bakış.
 Bütün maketler onaylanmadan kod yok.

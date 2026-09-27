@@ -1,7 +1,7 @@
 {
  "maket": "m2",
  "sayfa": "maket/musteriler.html",
- "tarih": "2026-09-26",
+ "tarih": "2026-09-27",
  "arac": "başsız HeadlessChrome/141.0.7390.37 · puppeteer-core · tools/olc-bulut.mjs + tools/olc-maket.js",
  "yontem": "python3 http.server (docs/), her durum × genişlik × tema taze yükleme ve ayrı oturum, geçişler kapalı; 1920×1080 · 1080×810 · 375×812 × açık/koyu; 1080'de çekmece açık ayrıca.",
  "toplam": 104,
@@ -2474,7 +2474,7 @@
    "hatalar": []
   },
   {
-   "ad": "tesis ekle · çakışan SGK tescil no uyarısı",
+   "ad": "tesis ekle · çakışan SGK destis no uyarısı",
    "gen": 1920,
    "tema": "acik",
    "gorunum": "liste",
@@ -2512,7 +2512,7 @@
    "hatalar": []
   },
   {
-   "ad": "tesis ekle · çakışan SGK tescil no uyarısı",
+   "ad": "tesis ekle · çakışan SGK destis no uyarısı",
    "gen": 1920,
    "tema": "koyu",
    "gorunum": "liste",
@@ -2550,7 +2550,7 @@
    "hatalar": []
   },
   {
-   "ad": "tesis ekle · çakışan SGK tescil no uyarısı",
+   "ad": "tesis ekle · çakışan SGK destis no uyarısı",
    "gen": 1080,
    "tema": "acik",
    "gorunum": "liste",
@@ -2588,7 +2588,7 @@
    "hatalar": []
   },
   {
-   "ad": "tesis ekle · çakışan SGK tescil no uyarısı",
+   "ad": "tesis ekle · çakışan SGK destis no uyarısı",
    "gen": 1080,
    "tema": "koyu",
    "gorunum": "liste",
@@ -2626,7 +2626,7 @@
    "hatalar": []
   },
   {
-   "ad": "tesis ekle · çakışan SGK tescil no uyarısı",
+   "ad": "tesis ekle · çakışan SGK destis no uyarısı",
    "gen": 810,
    "tema": "acik",
    "gorunum": "liste",
@@ -2664,7 +2664,7 @@
    "hatalar": []
   },
   {
-   "ad": "tesis ekle · çakışan SGK tescil no uyarısı",
+   "ad": "tesis ekle · çakışan SGK destis no uyarısı",
    "gen": 810,
    "tema": "koyu",
    "gorunum": "liste",
@@ -2702,7 +2702,7 @@
    "hatalar": []
   },
   {
-   "ad": "tesis ekle · çakışan SGK tescil no uyarısı",
+   "ad": "tesis ekle · çakışan SGK destis no uyarısı",
    "gen": 375,
    "tema": "acik",
    "gorunum": "liste",
@@ -2740,7 +2740,7 @@
    "hatalar": []
   },
   {
-   "ad": "tesis ekle · çakışan SGK tescil no uyarısı",
+   "ad": "tesis ekle · çakışan SGK destis no uyarısı",
    "gen": 375,
    "tema": "koyu",
    "gorunum": "liste",
@@ -2778,7 +2778,7 @@
    "hatalar": []
   },
   {
-   "ad": "tesis · SGK tescil no eksik kaydedildi",
+   "ad": "tesis · SGK destis no eksik kaydedildi",
    "gen": 1920,
    "tema": "acik",
    "gorunum": "liste",
@@ -2816,7 +2816,7 @@
    "hatalar": []
   },
   {
-   "ad": "tesis · SGK tescil no eksik kaydedildi",
+   "ad": "tesis · SGK destis no eksik kaydedildi",
    "gen": 1920,
    "tema": "koyu",
    "gorunum": "liste",
@@ -2854,7 +2854,7 @@
    "hatalar": []
   },
   {
-   "ad": "tesis · SGK tescil no eksik kaydedildi",
+   "ad": "tesis · SGK destis no eksik kaydedildi",
    "gen": 1080,
    "tema": "acik",
    "gorunum": "liste",
@@ -2892,7 +2892,7 @@
    "hatalar": []
   },
   {
-   "ad": "tesis · SGK tescil no eksik kaydedildi",
+   "ad": "tesis · SGK destis no eksik kaydedildi",
    "gen": 1080,
    "tema": "koyu",
    "gorunum": "liste",
@@ -2930,7 +2930,7 @@
    "hatalar": []
   },
   {
-   "ad": "tesis · SGK tescil no eksik kaydedildi",
+   "ad": "tesis · SGK destis no eksik kaydedildi",
    "gen": 810,
    "tema": "acik",
    "gorunum": "liste",
@@ -2968,7 +2968,7 @@
    "hatalar": []
   },
   {
-   "ad": "tesis · SGK tescil no eksik kaydedildi",
+   "ad": "tesis · SGK destis no eksik kaydedildi",
    "gen": 810,
    "tema": "koyu",
    "gorunum": "liste",
@@ -3006,7 +3006,7 @@
    "hatalar": []
   },
   {
-   "ad": "tesis · SGK tescil no eksik kaydedildi",
+   "ad": "tesis · SGK destis no eksik kaydedildi",
    "gen": 375,
    "tema": "acik",
    "gorunum": "liste",
@@ -3044,7 +3044,7 @@
    "hatalar": []
   },
   {
-   "ad": "tesis · SGK tescil no eksik kaydedildi",
+   "ad": "tesis · SGK destis no eksik kaydedildi",
    "gen": 375,
    "tema": "koyu",
    "gorunum": "liste",
