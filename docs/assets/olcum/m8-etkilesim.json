@@ -2,8 +2,8 @@
  "maket": "m8",
  "tarih": "2026-09-27",
  "arac": "tools/olc-bulut.mjs --etkilesim (başsız tarayıcı, 1920 açık tema; gen verilen denemede o genişlik)",
- "toplam": 62,
- "gecen": 62,
+ "toplam": 64,
+ "gecen": 64,
  "denemeler": [
   {
    "ad": "kontrol metodu türden, yalnız standart numarası, seçim alanı yok (formatlı türde firma bölümünde)",
@@ -332,6 +332,20 @@
    "gen": 1920,
    "sayfa": "maket/rapor.html",
    "hash": "#/r/ET-1009",
+   "gecti": true
+  },
+  {
+   "ad": "plan 10 · AT-2003: ağır kusur (Not-2) kusur listesinde, sonuç Uygun değil",
+   "gen": 1920,
+   "sayfa": "maket/rapor.html",
+   "hash": "#/r/AT-2003?no=KM-0926-798-3c545&durum=onayda",
+   "gecti": true
+  },
+  {
+   "ad": "plan 10 · ET-2002: formatın maddesinde hafif kusur",
+   "gen": 1920,
+   "sayfa": "maket/rapor.html",
+   "hash": "#/r/ET-2002?no=KM-0926-797-f716e&durum=onaylandi",
    "gecti": true
   },
   {

@@ -179,7 +179,10 @@
     { id: "t12", m: "m9", ad: "Değirmen", adres: "İstasyon Caddesi No: 30", ilce: "Lüleburgaz", il: "Kırklareli", ekipman: 24, son: "2026-09-21", sonraki: "2027-03-21", plan: "P-0926-025", pid: 9, pdurum: "tamam", ptarih: "2026-09-21", pekip: ["mk", "ea"] },
     { id: "t13", m: "m10", ad: "Fabrika", adres: "Mobilyacılar Sitesi 3. Blok No: 14", ilce: "İnegöl", il: "Bursa", ekipman: 11, son: "2025-10-20", sonraki: "2026-10-20" },
     { id: "t14", m: "m11", ad: "Pres Atölyesi", adres: "Organize Sanayi Bölgesi Mavi Cadde No: 6", ilce: "Nilüfer", il: "Bursa", ekipman: 16, son: "2025-11-05", sonraki: "2026-11-05" },
-    { id: "t15", m: "m11", ad: "Kaynakhane", adres: "Organize Sanayi Bölgesi Mavi Cadde No: 8", ilce: "Nilüfer", il: "Bursa", ekipman: 7, son: "2025-11-05", sonraki: "2026-11-05" }
+    { id: "t15", m: "m11", ad: "Kaynakhane", adres: "Organize Sanayi Bölgesi Mavi Cadde No: 8", ilce: "Nilüfer", il: "Bursa", ekipman: 7, son: "2025-11-05", sonraki: "2026-11-05" },
+    /* 2026-09-28 (reisim: "planlar da en üstte sadece en son attığım PDF formatlara göre açılmış plan olsun"): yalnız elektrik iç tesisatı
+       (ZPKR02) ve AG topraklama (ZPKR01) ekipmanıyla açılmış, bugün denetimde olan örnek plan (plan 10) */
+    { id: "t16", m: "m1", ad: "Enerji Merkezi", adres: "Organize Sanayi Bölgesi 4. Cadde No: 14", ilce: "Gebze", il: "Kocaeli", ekipman: 5, son: "", sonraki: "2026-09-23", plan: "P-0926-040", pid: 10, pdurum: "denetimde", ptarih: "2026-09-23", pekip: ["mk", "ea"] }
   ];
   MV.TESISLER.forEach(function (t, i) { t.sgk = SGK(i + 3); });
   /* plan saatleri — Planlar maketindeki başlangıç–bitiş (M6 plan açmada aynı gün çakışma denetimi) */
@@ -210,7 +213,8 @@
     { t: "t10", k: "mk", no: "S-2026-0444", onay: "2026-09-21" },
     { t: "t11", k: "mk", no: "S-2026-0405", onay: "2026-09-12" },
     { t: "t12", k: "mk", no: "S-2026-0398", onay: "2026-09-10" }, { t: "t12", k: "ea", no: "S-2026-0399", onay: "2026-09-10" },
-    { t: "t14", k: "hp", no: "S-2025-0361", onay: "2025-10-28" }, { t: "t15", k: "hp", no: "S-2025-0362", onay: "2025-10-28" }
+    { t: "t14", k: "hp", no: "S-2025-0361", onay: "2025-10-28" }, { t: "t15", k: "hp", no: "S-2025-0362", onay: "2025-10-28" },
+    { t: "t16", k: "mk", no: "S-2026-0451", onay: "2026-09-18" }, { t: "t16", k: "ea", no: "S-2026-0452", onay: "2026-09-18" }
   ];
   /* 2026-09-26 (M5 2. tur, reisim: "isg katip sözleşmesi pdf olarak isteğe bağlı buraya yüklenebilir olsun"): PDF isteğe bağlı; onay tarihi de
      isteğe bağlı (girilmişse geç onay yalnız uyarı). Kayıt = iş sözleşmesinin içinde tesis başına denetçi → sözleşme ID (no). */
@@ -626,6 +630,14 @@
       ekipmanEkle(t.id, tur, KONUM[(i + n) % KONUM.length], { tarih: t.son, sonuc: SONUC[(i + n + 2) % SONUC.length], rapor: MV.raporNo(t.son.slice(5, 7) + t.son.slice(2, 4), eskiSira++), kisi: tur.b === "e" ? "ea" : "hp" }, false, i);
     }
   });
+  /* plan 10 (t16, 2026-09-28): yalnız Bakanlık formatlı türler; kodlar açık yazılır (öteki ekipmanın kod sırası kaymasın). Yeni tesis:
+     ilk periyodik kontrol (önceki rapor yok); AT-2005 denetimde eklendi. */
+  MV.PLAN10_KODLAR = [["ET-2001", "ET", "Ana dağıtım odası"], ["ET-2002", "ET", "Üretim holü"], ["AT-2003", "AT", "Ana dağıtım odası"], ["ET-2004", "ET", "Kompresör odası"], ["AT-2005", "AT", "Jeneratör odası"]];
+  MV.PLAN10_KODLAR.forEach(function (x, i) {
+    var ilk = i === 4;
+    MV.EKIPMAN.push({ kod: x[0], tur: x[1], tesis: "t16", konum: x[2], ilk: ilk, plan: 10, marka: MARKA[i % MARKA.length], model: x[1] + "-" + (300 + i * 7), imal: 2015 + i, seri: "SN" + (731200 + i * 37),
+      onceki: null });
+  });
   /* kod değiştirme yalnız yöneticide, eski kod geçmişte kalır (§3.5 karar 19) — bir örnek */
   MV.EKIPMAN[4].eskiKod = [{ kod: "TP-05", tarih: "2024-02-12", kim: "sy", gerekce: "Etiket yenilendi, firma kod düzenine geçildi" }];   /* TP-1005 */
   MV.ekipman = function (kod) { return MV.EKIPMAN.filter(function (e) { return e.kod === kod; })[0]; };
@@ -852,6 +864,15 @@
       MV.RAPORLAR.push(r);
     });
   });
+  /* plan 10 (2026-09-28): son formatlarla örnek — sonuçlar formata göre: Tamamlandı · Uygun, Muayene uzmanı onayı · hafif kusurlu,
+     yönetici onayında · ağır kusurlu (topraklamada Not-2), iki taslak. Planlar maketindeki plan 10 ile aynı numara ve durum. */
+  [["imzali", "Uygun"], ["onaylandi", "Hafif kusurlu"], ["onayda", "Ağır kusurlu"], ["taslak", null], ["taslak", null]].forEach(function (x, k) {
+    var e = MV.ekipman(MV.PLAN10_KODLAR[k][0]), o = dk("2026-09-23T13:10", 10 + k * 6), r = { no: MV.raporNo("0926", raporSira++), kod: e.kod, tesis: "t16", plan: 10, kisi: "ea",
+      olustu: o, durum: x[0], sonuc: x[1], gonderildi: x[0] === "taslak" ? null : dk(o, 35), onay: null, imza: null };
+    if (x[0] === "imzali" || x[0] === "onaylandi") r.onay = { kim: "co", zaman: dk(o, 70) };
+    if (x[0] === "imzali") r.imza = { zaman: dk(o, 150) };
+    MV.RAPORLAR.push(r);
+  });
   /* geri gönderilmiş taslak (M8'deki ZV-1007 ile aynı) */
   MV.RAPORLAR.filter(function (r) { return r.kod === "ZV-1007" && r.plan === 1; })[0].geri = { kim: "sy", zaman: "2026-09-23T15:10", gerekce: "Yük deneyi değerleri yazılmamış: dinamik ve statik deney yüklerini girin." };
   MV.rapor = function (no) { return MV.RAPORLAR.filter(function (r) { return r.no === no; })[0]; };
@@ -937,6 +958,8 @@
     var bekliyor = t.tesis === "t8";   /* en son kabul: müşteri imzası bekleniyor */
     isEkle({ tesisler: [t.tesis], teklif: t.no, baslangic: b, bitis: bit.toISOString().slice(0, 10), imza: { firma: b, musteri: bekliyor ? null : b }, dosya: !bekliyor });
   });
+  /* plan 10: yeni tesis (t16) müşterinin yürürlükteki iş sözleşmesine eklendi */
+  MV.IS_SOZLESMELERI.filter(function (x) { return x.tesisler.indexOf("t1") >= 0; }).forEach(function (x) { x.tesisler.push("t16"); });
   MV.isDurum = function (x) { return !x.imza.musteri ? "imza" : x.bitis < MK.BUGUN ? "suresi" : "yururlukte"; };
   MV.isSozlesmesi = function (no) { return MV.IS_SOZLESMELERI.filter(function (x) { return x.no === no; })[0]; };
   /* tesisin o tarihte geçerli iş sözleşmesi (ödeme vadesi buradan; yoksa 30 gün) */

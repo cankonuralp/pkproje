@@ -1679,6 +1679,14 @@ revizyon, alan kopyalama, hafif kusur devri, meslek eşleşme denetimi).
 - Emsal ürünler: https://opwire.app/iso-17020-periyodik-kontrol-yazilimi/ · https://17020muayene.vidco.com.tr/ · https://akuple.com/asansor-kontrol-yazilimi/ · https://ensyazilim.com/
 
 ## 11 · Değişiklik günlüğü
+- 2026-09-28 (101): **Son formatlarla örnek plan** (§9 otuzuncu tur; reisim seçti: *"Yeni plan"*): Ada Makina'nın yeni tesisi Enerji Merkezi
+  (t16), plan **P-0926-040** (plan 10), bugün denetimde; yalnız elektrik iç tesisatı (ZPKR02) ve AG topraklama (ZPKR01): ET-2001 Tamamlandı ·
+  Uygun · ET-2002 Muayene uzmanı onayı · hafif kusurlu (5.4.2 tehlike işareti) · AT-2003 yönetici onayında · ağır kusurlu (Not-2) · ET-2004
+  yarıda · AT-2005 denetimde eklendi, boş. Yeni tesis: ilk periyodik kontrol; müşterinin iş sözleşmesine eklendi; İSG-KATİP ID'leri var.
+  Sıralama kuralı değişmedi ("en yeni tarih üstte"); plan "Denetimde" süzgecinde en üstte. Formatlı türde ağır sonuç "Ağır kusurlu" (kırmızı).
+  Etkisi: Planlar 10 plan, Muhasebe 17 iş (faturaya hazır 2), Performans bu ay 31 rapor, müşteri portalı 22 rapor — denemeler güncellendi.
+  18 maket temiz: durum 1904/1904 · etkileşim 423/423 · telefon 952/952 (sonuç dosyaları bu koşudan; ölçüm aracında `--yazma` "yazma"
+  demektir, önceki üç tam koşu dosyaya yazılmamıştı — bu koşu hepsini güncelledi).
 - 2026-09-28 (100): **Dökümanlar modülü** (§9 otuzuncu tur): Standartlar (4) → Dökümanlar; sekmeler Standartlar · Muayene kriterleri ·
   Eğitimler · Diğer dökümanlar. Eğitimler (10) ayrı menü değil (sayfası `egitimler.html` aynı sekme satırıyla, menüde Dökümanlar etkin).
   Diğer dökümanlar: firmanın kalite el kitabı, prosedür, talimat, politika, form, sertifika (uydurma 7 kayıt); "Döküman yükle" (ad, tür, kod,

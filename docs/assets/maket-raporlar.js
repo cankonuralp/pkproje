@@ -43,7 +43,7 @@
         var l = benim().map(function (r) { return MV.tesis(r.tesis).il; }).filter(function (x, i, a) { return a.indexOf(x) === i; }).sort(function (a, b) { return a.localeCompare(b, "tr"); });
         return [["tumu", "Tümü"]].concat(l.map(function (x) { return [x, x]; }));
       }, gecer: function (r, v) { return v === "tumu" || MV.tesis(r.tesis).il === v; } },
-      { k: "sonuc", ad: "Sonuç", secenek: function () { return [["tumu", "Tümü"], ["Uygun", "Uygun"], ["Hafif kusurlu", "Hafif kusurlu"], ["Kusurlu", "Kusurlu"], ["yok", "Sonuç yok"]]; },
+      { k: "sonuc", ad: "Sonuç", secenek: function () { return [["tumu", "Tümü"], ["Uygun", "Uygun"], ["Hafif kusurlu", "Hafif kusurlu"], ["Kusurlu", "Kusurlu"], ["Ağır kusurlu", "Ağır kusurlu"], ["yok", "Sonuç yok"]]; },
         gecer: function (r, v) { var s = MV.sonucAd(r); return v === "tumu" || (v === "yok" ? !s : s === v); } },
       { k: "yil", ad: "Yıl", secenek: function () { return [["tumu", "Tümü"], ["2026", "2026"], ["2025", "2025"]]; }, gecer: function (r, v) { return v === "tumu" || r.olustu.slice(0, 4) === v; } }
     ],
@@ -54,7 +54,7 @@
     { k: "ekipman", baslik: "Ekipman", kart: "govde", sira: 2, hucre: function (r) { var e = ekp(r); return '<span class="a-hucre-satir"><span class="a-kod">' + e.kod + "</span>" + kirp(MV.tur(e.tur).ad) + "</span>"; } },
     { k: "tesis", baslik: "Müşteri / tesis", kart: "govde", sira: 3, hucre: function (r) { var ts = MV.tesis(r.tesis); return "<span>" + kirp(ts.ad) + kirp(MV.musteri(ts.m).kisa, "a-alt-satir") + "</span>"; } },
     { k: "sonuc", baslik: "Sonuç", kart: "govde", sira: 4, hucre: function (r) {
-      var s = MV.sonucAd(r); return '<span class="a-kart-etiket">Sonuç</span>' + (s ? '<span class="a-onceki' + (s === "Uygun" ? "" : s === "Kusurlu" ? " a-sonuc-hata" : " a-sonuc-uyari") + '">' + s + "</span>" : '<span class="a-deger-yok">—</span>');
+      var s = MV.sonucAd(r); return '<span class="a-kart-etiket">Sonuç</span>' + (s ? '<span class="a-onceki' + (s === "Uygun" ? "" : /^(Kusurlu|Ağır)/.test(s) ? " a-sonuc-hata" : " a-sonuc-uyari") + '">' + s + "</span>" : '<span class="a-deger-yok">—</span>');
     } },
     { k: "durum", baslik: "Durum", kart: "rozet", sira: 1, hucre: function (r) { return rozet(MV.raporDurum(r)); } }
   ];

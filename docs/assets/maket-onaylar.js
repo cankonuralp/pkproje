@@ -39,7 +39,7 @@
       var h = saatFarki(r.gonderildi);
       return '<span class="a-kart-etiket">Gönderildi</span><span><span class="a-tarih-gun">' + MK.zamanYaz(r.gonderildi) + '</span><span class="' + (h >= 24 ? "a-uyari-metin" : "a-tarih-saat") + '">' + bekleme(r.gonderildi) + " bekliyor</span></span>";
     } },
-    { k: "sonuc", baslik: "Sonuç", kart: "rozet", sira: 1, hucre: function (r) { var s = MV.sonucAd(r); return rozet(s === "Uygun" ? { ad: "Uygun", rozet: "a-rozet-tamam" } : { ad: s, rozet: s === "Kusurlu" ? "a-rozet-red" : "a-rozet-bekliyor" }); } }
+    { k: "sonuc", baslik: "Sonuç", kart: "rozet", sira: 1, hucre: function (r) { var s = MV.sonucAd(r); return rozet(s === "Uygun" ? { ad: "Uygun", rozet: "a-rozet-tamam" } : { ad: s, rozet: /^(Kusurlu|Ağır)/.test(s) ? "a-rozet-red" : "a-rozet-bekliyor" }); } }
   ];
   function listeCiz() {
     $("a-uyari").innerHTML = '<div class="a-sekmeler a-bolum-serit" role="group" aria-label="Kuyruk">' + ["m", "e"].map(function (b) {

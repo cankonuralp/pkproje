@@ -50,6 +50,10 @@
     { id: 6, no: "P-0926-035", ad: "Üretim Tesisi", musteri: "Ege Plastik A.Ş.", adres: "Organize Sanayi Bölgesi 1. Kısım No: 9", ilce: "Yunusemre", il: "Manisa", tarih: "2026-09-29", bas: "09:00", bit: "15:00", ekip: ["mk", "ea"], m: 7, e: 3, durum: "kabul", acildi: "2026-09-17T15:30", kabul: "2026-09-18T09:12", isg: { no: "S-2026-0436", onay: "2026-09-20" } },
     { id: 7, no: "P-0926-037", ad: "Şantiye Deposu", musteri: "Kaya Yapı Malzemeleri Ltd.", adres: "Çevre Yolu Caddesi No: 3", ilce: "Başakşehir", il: "İstanbul", tarih: "2026-09-30", bas: "09:00", bit: "12:00", ekip: ["mk"], m: 2, e: 0, durum: "red", acildi: "2026-09-18T16:02", reddedildi: "2026-09-19T08:47", isg: { no: "S-2026-0444", onay: "2026-09-21" }, gerekce: "Aynı saatte başka tesiste denetimim var." },
     { id: 8, no: "P-0926-028", ad: "Soğuk Hava Deposu", musteri: "Deniz Gıda Ltd.", adres: "Liman Yolu No: 15", ilce: "Pendik", il: "İstanbul", tarih: "2026-09-22", bas: "09:00", bit: "11:30", ekip: ["mk"], m: 4, e: 0, durum: "tamam", acildi: "2026-09-10T13:15", kabul: "2026-09-11T08:05", basladi: "2026-09-22T09:02", bitti: "2026-09-22T11:52", isg: { no: "S-2026-0405", onay: "2026-09-12" }, rap: { onayda: 3, taslak: 1 } },
+    /* 2026-09-28 (reisim: "planlar da en üstte sadece en son attığım PDF formatlara göre açılmış plan olsun"): yalnız elektrik iç tesisatı
+       (ZPKR02) ve AG topraklama (ZPKR01); raporları formata göre sonuçlu (Tamamlandı · Uygun, hafif kusurlu, ağır kusurlu, iki taslak).
+       Ekipman ve raporlar ortak veriden (MV.PLAN10_KODLAR, MV.RAPORLAR plan 10) — aynı kod, numara, durum. */
+    { id: 10, no: "P-0926-040", ad: "Enerji Merkezi", musteri: "Ada Makina San. ve Tic. A.Ş.", adres: "Organize Sanayi Bölgesi 4. Cadde No: 14", ilce: "Gebze", il: "Kocaeli", tarih: "2026-09-23", bas: "13:00", bit: "17:00", ekip: ["mk", "ea"], m: 0, e: 5, yeni: 1, durum: "denetimde", acildi: "2026-09-17T09:20", kabul: "2026-09-18T08:40", basladi: "2026-09-23T13:10", isg: { no: "S-2026-0451", onay: "2026-09-18" }, ortak: true, aciklama: "Yalnız Bakanlık formatlı türler: elektrik iç tesisatı (ZPKR02) ve AG topraklama (ZPKR01)." },
     { id: 9, no: "P-0926-025", ad: "Değirmen", musteri: "Başak Un Değirmenleri A.Ş.", adres: "İstasyon Caddesi No: 30", ilce: "Lüleburgaz", il: "Kırklareli", tarih: "2026-09-21", bas: "13:00", bit: "16:00", ekip: ["mk", "ea"], m: 16, e: 8, durum: "tamam", acildi: "2026-09-08T10:30", kabul: "2026-09-09T07:58", basladi: "2026-09-21T13:05", bitti: "2026-09-21T16:20", isg: { no: "S-2026-0398", onay: "2026-09-10" }, rap: { onaylandi: 14, onayda: 8 } }
   ];
 
@@ -66,6 +70,14 @@
   var kodSira = 1001;
   PLANLAR.forEach(function (p) {
     p.ekp = []; p.sonradan = []; p.rapor = []; p.gecmis = [];
+    if (p.ortak) {   /* plan 10: ekipman ortak veriden (kod sırası kaymaz) */
+      MV.EKIPMAN.filter(function (e) { return e.plan === p.id; }).forEach(function (e, i) {
+        var o = e.onceki ? { tarih: e.onceki.tarih, sonuc: e.onceki.sonuc, rapor: e.onceki.rapor } : null;
+        SICIL[e.kod] = { kod: e.kod, tur: KATALOG.filter(function (t) { return t.k === e.tur; })[0], konum: e.konum, tesis: p.id, onceki: o, eklendi: e.ilk ? "2026-09-23T13:" + (40 + i) : null };
+        p.ekp.push(e.kod); if (e.ilk) p.sonradan.push(e.kod);
+      });
+      return;
+    }
     var toplam = p.m + p.e, yeni = p.yeni || 0, gun = p.tarih.slice(8, 10);
     for (var i = 0; i < toplam + (p.disarida || 0); i++) {
       var b = i < p.m ? "m" : i < toplam ? "e" : "m", havuz = b === "m" ? MEK : ELK, j = b === "m" ? i : i - p.m;
@@ -87,6 +99,10 @@
       p.rapor.push({ no: raporNo("0926", raporSira++), kod: p.ekp[k], durum: d, olustu: saat, sonuc: d === "taslak" ? null : SONUC[(k + id) % SONUC.length] });
     });
   });
+  /* plan 10 raporları ortak veriden (aynı numara, durum, sonuç) */
+  PLANLAR.filter(function (p) { return p.ortak; }).forEach(function (p) {
+    MV.RAPORLAR.filter(function (r) { return r.plan === p.id; }).forEach(function (r) { p.rapor.push({ no: r.no, kod: r.kod, durum: r.durum, olustu: r.olustu, sonuc: r.sonuc }); raporSira++; });
+  });   /* sıra kesintisiz: yeni açılan rapor plan 10'un raporlarından sonra numara alır */
   /* Hareket kaydı (reisim: "istediği zaman istediği tepkiyi verebilsin, bu hareketler kayıt altında kalsın") */
   function kaydet(p, zaman, kim, ne, ayrinti) { p.gecmis.push({ z: zaman, kim: kim, ne: ne, ayrinti: ayrinti || "", s: p.gecmis.length }); }
   /* 2026-09-26 (reisim): plan saat taşımaz, başlangıç ve bitiş TARİHİ taşır (plan için belirlenen süre) */
@@ -332,7 +348,7 @@
     { k: "no", baslik: "Rapor no", kart: "ust", sira: 1, hucre: function (r) { return '<span class="a-rapor-no">' + r.no + "</span>"; } },
     { k: "ekipman", baslik: "Ekipman", kart: "govde", sira: 2, hucre: function (r) { return '<span class="a-hucre-satir"><span class="a-kod">' + r.kod + "</span>" + kirp(SICIL[r.kod].tur.ad) + "</span>"; } },
     { k: "sonuc", baslik: "Sonuç", kart: "govde", sira: 3, hucre: function (r) {
-      var s = r.sonuc; return '<span class="a-kart-etiket">Sonuç</span>' + (s ? '<span class="a-onceki' + (s === "Uygun" ? "" : s === "Kusurlu" ? " a-sonuc-hata" : " a-sonuc-uyari") + '">' + s + "</span>" : '<span class="a-alt-satir">—</span>');
+      var s = r.sonuc; return '<span class="a-kart-etiket">Sonuç</span>' + (s ? '<span class="a-onceki' + (s === "Uygun" ? "" : /^(Kusurlu|Ağır)/.test(s) ? " a-sonuc-hata" : " a-sonuc-uyari") + '">' + s + "</span>" : '<span class="a-alt-satir">—</span>');
     } },
     { k: "durum", baslik: "Durum", kart: "rozet", sira: 1, hucre: function (r) { return rozet(RAPOR[r.durum]); } },
     { k: "olustu", baslik: "Oluşturuldu", kart: "govde", sira: 4, hucre: function (r) { return '<span class="a-tarih-saat">' + zamanYaz(r.olustu) + "</span>"; } },

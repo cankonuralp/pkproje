@@ -2,9 +2,23 @@
  "maket": "planlar",
  "tarih": "2026-09-27",
  "arac": "tools/olc-bulut.mjs --etkilesim (başsız tarayıcı, 1920 açık tema; gen verilen denemede o genişlik)",
- "toplam": 38,
- "gecen": 38,
+ "toplam": 40,
+ "gecen": 40,
  "denemeler": [
+  {
+   "ad": "Denetimde süzgecinde en üstte son formatlarla açılmış plan (P-0926-040)",
+   "gen": 1920,
+   "sayfa": "maket/planlarim.html",
+   "hash": "#/",
+   "gecti": true
+  },
+  {
+   "ad": "plan 10: yalnız iç tesisat ve topraklama; raporların sonucu formata göre",
+   "gen": 1920,
+   "sayfa": "maket/planlarim.html",
+   "hash": "#/plan/10",
+   "gecti": true
+  },
   {
    "ad": "süzgeç kutusu: çip seçilince sayı, başlığa basınca kapanır (sayı görünür kalır)",
    "gen": 1920,
@@ -132,7 +146,7 @@
    "gecti": true
   },
   {
-   "ad": "çip süzer, sayaç dürüst (4 / 9)",
+   "ad": "çip süzer, sayaç dürüst (4 / 10)",
    "gen": 1920,
    "sayfa": "maket/planlarim.html",
    "hash": "#/",
@@ -258,7 +272,7 @@
    "gecti": true
   },
   {
-   "ad": "menüdeki 15 modül ve Ana sayfa maketi açar (bildirim tuşu yok)",
+   "ad": "menüdeki bütün modüller ve Ana sayfa maketi açar (bildirim tuşu yok)",
    "gen": 1920,
    "sayfa": "maket/planlarim.html",
    "hash": "#/",

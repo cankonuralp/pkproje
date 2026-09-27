@@ -41,14 +41,14 @@
    "gecti": true
   },
   {
-   "ad": "liste: 16 iş, en yeni üstte; iki şerit",
+   "ad": "liste: 17 iş, en yeni üstte; iki şerit",
    "gen": 1920,
    "sayfa": "maket/muhasebe.html",
    "hash": "#/",
    "gecti": true
   },
   {
-   "ad": "Kapandı çipi (12 / 16)",
+   "ad": "Kapandı çipi (12 / 17)",
    "gen": 1920,
    "sayfa": "maket/muhasebe.html",
    "hash": "#/",
@@ -62,7 +62,7 @@
    "gecti": true
   },
   {
-   "ad": "şeritteki İş → faturaya hazır iş",
+   "ad": "şeritteki İşler → faturaya hazır işler (2)",
    "gen": 1920,
    "sayfa": "maket/muhasebe.html",
    "hash": "#/",
@@ -300,7 +300,7 @@
    "gecti": true
   },
   {
-   "ad": "gelir-gider: Eylül 2026, 3 iş, sabit giderler satırda",
+   "ad": "gelir-gider: Eylül 2026, 4 iş, sabit giderler satırda",
    "gen": 1920,
    "sayfa": "maket/muhasebe.html",
    "hash": "#/gelir-gider",

@@ -150,6 +150,8 @@ tek mesaj: sayfanın bağlantısı + kaç maket + kaç soru + ölçülemeyen var
   hafızadaki `pkproje-durum` notu buna göre güncellenir (bulut oturumu yerel hafızaya yazamaz). Ölçüm aracı `tools/olc-bulut.mjs` yalnız
   bulutta (başsız Chrome); yerelde ölçüm `tools/olc-maket.js` ile tarayıcı bölmesinde. **Sıradaki:** reisim'in bildirdiği eksiklerin
   incelenip çıkarım yapılması (yerelde).
+- 2026-09-28 (bulut): §9 otuzuncu tur yedi kalem — raporda cihaz satırları · Onaya gönder hep basılır · Ön izle · Raporlar ayrıntılı süzgeç ·
+  Talepler modülü · Dökümanlar modülü · son formatlarla örnek plan (P-0926-040). Menü: Personel grubunda Talepler; Tanımlar'da Dökümanlar.
 
 ### Toplu soru listesi — M7–M16 (2026-09-26, reisim: *"Kalan Tüm modüllerin sorularını sor hepsini tek seferde cevaplayayım maketi ona göre yenile sonra tüm maketi gözden geçiririm"*)
 Sadeleştirildi: teknik / mevzuat ayrıntısı yok, kural ihlali uyarı (istisna: kalibrasyonu geçmiş cihaz), önce asıl hedef. Eski numaralar korundu;

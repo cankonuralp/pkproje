@@ -81,6 +81,16 @@
       r.nokta.push({ ad: "Kapı motoru — sevkiyat", egri: "C", In: 10, zx: "2,6", rcd: "", priz: false });
       r.rcdler[0].id = F.rcd[0][4]; r.rcdler[0].td = F.rcd[0][5]; r.foto = 1;
     }
+    /* plan 10 (2026-09-28; reisim: "en son attığım rapor formatına göre sonuç o şekilde gözükecek biçimde örnekler"): son formatlarla —
+       ET-2001 Tamamlandı · Uygun · ET-2002 hafif kusur (formatın maddesi) · AT-2003 ağır kusur (Zx sınırı aşıyor, RCD yok → Not-2) ·
+       ET-2004 yarıda · AT-2005 ilk kontrol, boş */
+    if (e.kod === "ET-2002") { var ok = MV.ornekKusur(t, true), x = r.kriter[ok.i]; x.c = "uygundegil"; x.derece = "hafif"; x.not = ok.aciklama; x.foto = 1; r.sonuc = "kullanilamaz"; }
+    if (e.kod === "AT-2003") { r.nokta.push({ ad: "Kapı motoru — sevkiyat", egri: "C", In: 10, zx: "2,6", rcd: "", priz: false }); r.sonuc = "kullanilamaz"; r.notlar = "Kapı motoru hattına 30 mA RCD takılması ya da koruma değerinin düşürülmesi önerilir."; }
+    if (e.kod === "ET-2004") {
+      ornekBilgi(); r.tespit = { degisiklik: "Yok", etiket: "Var" }; cihazDoldur(); r.metod = F.metot[0]; r.termal = "hayir";
+      [0, 1, 2, 3, 4].forEach(function (i) { r.kriter[i].c = "uygun"; }); r.test[0] = "0,19"; r.test[1] = "5,8"; r.foto = 1;
+    }
+    if (e.kod === "AT-2005") cihazDoldur();
     if (e.kod === "KP-1004") dolu();   /* onaya hazır */
     if (e.kod === "ZV-1007") {   /* branş yöneticisi geri gönderdi: test değerleri eksik */
       dolu(); r.test = ts.map(function () { return ""; }); r.foto = 1;
@@ -93,7 +103,12 @@
     var e = MV.ekipman(kod), k = PLAN_EKP.indexOf(e), q = sorgu();
     if (!e) return null;
     if (k < 0 || k >= 10) { if (!q.no) return null; k = -1; }   /* Planlar'dan gelen öteki raporlar: numara ve durum adresten */
-    return (R[kod] = raporKur(e, k, q));
+    var r = raporKur(e, k, q), kay = k < 0 ? MV.rapor(q.no) : null;
+    if (kay) {   /* ortak kayıtta varsa açılış ve gönderiliş zamanı oradan (2026-09-28) */
+      r.olustu = kay.olustu; r.bas = kay.olustu; r.rtarih = kay.olustu.slice(0, 10); r.sonraki = sonrakiHesap(r); r.kayit = kay.olustu;
+      if (kay.gonderildi) { r.gonderildi = kay.gonderildi; r.bit = kay.gonderildi; }
+    }
+    return (R[kod] = r);
   }
 
   /* ── HESAPLAR ───────────────────────────────────────────────────────────────────────────────────────── */
