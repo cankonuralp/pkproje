@@ -137,26 +137,35 @@
   BOLUM.mekyon = yoneticiBolumu("m", "sy");
   BOLUM.elkyon = yoneticiBolumu("e", "co");
 
-  /* ── DUYURULAR (reisim 2026-09-26: "Ana sayfada isgüm duyurularını gösterebilir miyiz"; 2026-09-27: "ana sayfaya duyurular kısmımızda ekle")
-     Uygulamada sunucu ÇSGB İSGGM duyurular sayfasını ve iş ekipmanları portalını günde birkaç kez okur (pg-boss işi, §8.9); son duyurular
-     başlık + kaynak + tarih + bağlantı; yalnız ekranda, bildirim yok. Okunamazsa sessiz kalmaz: "alınamadı" yazar, son başarılı liste durur.
-     Makette: bu depoda kaydı olan GERÇEK duyurular (pkproje.md §10); tarihi bilinmeyene tarih yazılmaz (uydurma tarih yok). */
+  /* ── DUYURULAR (reisim 2026-09-26: "Ana sayfada isgüm duyurularını gösterebilir miyiz"; 2026-09-27: "ana sayfaya duyurular kısmımızda ekle";
+     2026-09-27: "Duyurular sanırım doğru çalışmıyor eksik duyuru var ve bazı duyurularda tarih varken bazılarında yok")
+     Uygulamada sunucu İSGGM ve İSGÜM duyuru sayfalarını ve iş ekipmanları portalını günde birkaç kez okur (pg-boss, §8.9); en yeni üstte, her
+     duyuru başlık + kaynak + yayım tarihi + bağlantı; yalnız ekranda, bildirim yok. Okunamazsa "alınamadı" yazar, son liste durur.
+     Makette: GERÇEK duyurular (2026-09-27 web aramasıyla bulundu; doğrudan erişim bu ortamda kapalı); tarih duyurunun adresindeki gün-ay-yıl.
+     Tarihi doğrulanamayan kayıt listeye alınmaz. */
   var DUYURULAR = [
-    { baslik: "İş Ekipmanlarının Kullanımında Sağlık ve Güvenlik Şartları Yönetmeliğinde değişiklik (RG 23.12.2025, 33116)", kaynak: "ÇSGB İSGGM", tarih: "2025-12-24",
+    { baslik: "27-29 Temmuz 2026 Ölçüm ve Numune Alma Personeli Sertifikalandırma Eğitimi Başvuruları Hakkında Duyuru", kaynak: "İSGÜM", tarih: "2026-07-14",
+      url: "https://www.csgb.gov.tr/isgum/duyurular/140720262/" },
+    { baslik: "13 Aralık 2026 tarihinde yapılacak 2026-2 İSG sınav duyurusu", kaynak: "İSGGM", tarih: "2026-06-23", url: "https://www.csgb.gov.tr/isggm/duyurular/23062026/" },
+    { baslik: "2026 yılı İSG sınavları hakkında duyuru", kaynak: "İSGGM", tarih: "2026-04-09", url: "https://www.csgb.gov.tr/isggm/duyurular/09042026/" },
+    { baslik: "16 Mayıs 2026 tarihinde yapılacak 2026-1 İSG sınav duyurusu", kaynak: "İSGGM", tarih: "2026-01-09", url: "https://www.csgb.gov.tr/isggm/duyurular/09012026/" },
+    { baslik: "İş Ekipmanlarının Kullanımında Sağlık ve Güvenlik Şartları Yönetmeliğinde Değişiklik Yapılmasına Dair Yönetmelik (23 Aralık 2025)", kaynak: "İSGGM", tarih: "2025-12-24",
       url: "https://www.csgb.gov.tr/isggm/duyurular/24122025/" },
-    { baslik: "Zorunlu periyodik kontrol rapor formatları", kaynak: "İş Ekipmanları Portalı", tarih: "", url: "https://isekipmanlari.csgb.gov.tr/detay.aspx?d=1040" },
-    { baslik: "LPG tankı muayene ve yeterlilik rapor formatları", kaynak: "İş Ekipmanları Portalı", tarih: "", url: "https://isekipmanlari.csgb.gov.tr/detay.aspx?d=1039" }
-  ];
+    { baslik: "2026 Yılında Yapılacak İş Güvenliği Uzmanlığı, İşyeri Hekimliği ve DSP Sınavlarına İlişkin Duyuru", kaynak: "İSGGM", tarih: "2025-11-18",
+      url: "https://www.csgb.gov.tr/isggm/duyurular/18112025/" }
+  ].sort(function (a, b) { return a.tarih < b.tarih ? 1 : -1; });
+  var KAYNAKLAR = [["İSGGM", "https://www.csgb.gov.tr/isggm/tr/duyurular/"], ["İSGÜM", "https://www.csgb.gov.tr/isgum/duyurular/"], ["İş ekipmanları", "https://isekipmanlari.csgb.gov.tr/sayfa.aspx?d=3"]];
   var DUYURU_SON = "2026-09-23T08:00";
   function duyurularHtml() {
     var hata = !!window.DUYURU_HATA;
     return '<section class="a-bolum" aria-labelledby="a-b-duyuru"><div class="a-alt-bas"><h2 class="a-alt-baslik" id="a-b-duyuru">Duyurular</h2>' +
-        '<span class="a-sayac">İSGGM · güncellendi ' + MK.zamanYaz(DUYURU_SON) + "</span>" +
-        '<a class="a-tus a-tus-ikincil a-bolum-tus" href="https://www.csgb.gov.tr/isggm/duyurular/" target="_blank" rel="noopener">' + ikon("arrow-right", "a-ikon-kucuk") + "Tümü</a></div>" +
+        '<span class="a-sayac"><b>' + DUYURULAR.length + "</b> duyuru · güncellendi " + MK.zamanYaz(DUYURU_SON) + "</span>" +
+        '<div class="a-eylem-cubugu a-bolum-tus">' + KAYNAKLAR.map(function (k) {
+          return '<a class="a-tus a-tus-ikincil" href="' + k[1] + '" target="_blank" rel="noopener">' + ikon("arrow-right", "a-ikon-kucuk") + k[0] + "</a>"; }).join("") + "</div></div>" +
       (hata ? '<div class="a-uyari-serit">' + MK.serit("uyari", "triangle-alert", "Duyurular alınamadı; son alınan liste gösteriliyor.") + "</div>" : "") +
       '<ul class="a-kosullar a-duyurular">' + DUYURULAR.map(function (d) {
         return '<li class="a-kosul-bilgi">' + ikon("scroll-text", "a-ikon-kucuk") + '<span><a class="a-baglanti" href="' + d.url + '" target="_blank" rel="noopener">' + kacis(d.baslik) + "</a>" +
-          '<span class="a-alt-satir">' + kacis(d.kaynak) + (d.tarih ? " · " + MK.tarihYaz(d.tarih) : "") + "</span></span></li>";
+          '<span class="a-alt-satir">' + MK.tarihYaz(d.tarih) + " · " + kacis(d.kaynak) + "</span></span></li>";
       }).join("") + "</ul></section>";
   }
 

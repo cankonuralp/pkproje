@@ -1575,6 +1575,15 @@ kodlayalımki tekrar tekrar yama atarak siteyi kötü yapmayalım ayrıca ana sa
   yeni sekmede açılan bağlantı; "Tümü" İSGGM duyurular sayfasına. Uygulamada sunucu günde birkaç kez okur (pg-boss, §8.9), yalnız ekranda
   (bildirim yok); okunamazsa "Duyurular alınamadı; son alınan liste gösteriliyor." Makette bu depoda kayıtlı 3 gerçek duyuru (§10).
 
+**Yirmi sekizinci tur (2026-09-27, reisim birebir; ZPKR01, ZPKK01, ZPKR02, ZPKK02 PDF'leri iletildi):** *"Duyurular sanırım doğru çalışmıyor eksik
+duyuru var ve bazı duyurularda tarih varken bazılarında yok, kontrol rapor formatı ve kontrol kriterleri olarak şimdili 4 dosya attım bu aşamada
+bunlar iş görecektir, kriterler de sistem de muhafaza edilecek ve standartlar modülü altında bir sekme de onlar da var olsunlar bunlar ilgili
+ekipmanın muayenesi ile alakalı tariflerdir."*
+→ **Kararlar:**
+- **Duyurular:** her duyuruda yayım tarihi (tarihi doğrulanamayan kayıt listeye girmez), en yeni üstte; kaynaklar İSGGM + **İSGÜM** + iş
+  ekipmanları portalı (her birine "Tümü" bağlantısı). Makette 6 gerçek duyuru (2026-09-27 web aramasıyla; tarih duyuru adresindeki gün-ay-yıl;
+  bu ortamdan csgb.gov.tr'ye doğrudan erişim kapalı). Uygulamada sunucu üç kaynağı okur.
+
 **Açık kalanlar:** ~~Ana sayfada İSGGM duyuruları~~ (2026-09-27: makette eklendi; okuma işi uygulamada) (reisim 2026-09-26: *"Ana sayfada isgüm duyurularını gösterebilir miyiz ? Bunu
 yapılacaklar listesine ekle"*; öneri: ÇSGB İSGGM duyurular sayfası — https://www.csgb.gov.tr/isggm/duyurular/ — sunucuda günde birkaç kez
 okunur (pg-boss işi, §8.9), Ana sayfada son 5 duyuru başlık + tarih + kaynağa bağlantı; yalnız ekranda, bildirim yok; sayfa RSS vermiyorsa
@@ -1607,6 +1616,7 @@ revizyon, alan kopyalama, hafif kusur devri, meslek eşleşme denetimi).
 - Emsal ürünler: https://opwire.app/iso-17020-periyodik-kontrol-yazilimi/ · https://17020muayene.vidco.com.tr/ · https://akuple.com/asansor-kontrol-yazilimi/ · https://ensyazilim.com/
 
 ## 11 · Değişiklik günlüğü
+- 2026-09-27 (91): **Duyurular düzeltildi** (§9 yirmi sekizinci tur): 6 gerçek duyuru, hepsi tarihli, en yeni üstte; İSGÜM eklendi. M1 256/256 · 49/49 · 128/128.
 - 2026-09-27 (90): **Maket çalışır hâlde** (§9 yirmi yedinci tur): gerçek dosya seçme / açma (PDF, fotoğraf), gerçek .xlsx indirme ve okuma,
   belgelerin yazdırma penceresinden PDF'i; ortak MK.dosyaSec · MK.indir · MK.yazdir · MK.xlsx · MK.tabloOku · MK.fotolar. 17 maket yeniden temiz
   (1768/1768 durum); gerçek dosya penceresiyle PDF, sıkıştırılmış .xlsx ve fotoğraf ayrıca denendi.
