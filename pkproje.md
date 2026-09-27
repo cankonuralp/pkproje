@@ -1612,6 +1612,15 @@ ekipmanın muayenesi ile alakalı tariflerdir."*
     durumlar" listesi açılır.
   - Öteki türler şimdilik firmanın örnek formatıyla (§8.3) kalır; format geldikçe aynı yapıya geçer.
 
+**Yirmi dokuzuncu tur (2026-09-27, reisim birebir; başka bir uygulamadan ekran görüntüsüyle — içindeki gerçek adlar alınmadı):** *"filtreler
+sekmesi de açılıp kapanır bir sekme bu arada, daha bir çok eksiğimiz var inceleyip çıkarım yapabilmen için bu işler bittikten sonra, buluttan
+çıkıp yerelde devam edebilir miyiz ?"*
+→ **Kararlar:**
+- **Süzgeç kutusu açılır kapanır** (bütün listelerde, tek üretici `MK.suzgecHtml`): başlık "Süzgeçler" + uygulanan süzgeç sayısı ("2 süzgeç
+  uygulandı"; arama, seçili çipler ve seçiciler sayılır, sıralama ve görünüm anahtarı sayılmaz); kapalıyken de sayı görünür; varsayılan açık,
+  açık / kapalı tercihi tarayıcıda sayfa başına hatırlanır.
+- **Yerelde devam:** evet — iş GitHub'da (`main`); yerelde `git pull` ile sürer. Eksiklerin incelenmesi yerelde.
+
 **Açık kalanlar:** ~~Ana sayfada İSGGM duyuruları~~ (2026-09-27: makette eklendi; okuma işi uygulamada) (reisim 2026-09-26: *"Ana sayfada isgüm duyurularını gösterebilir miyiz ? Bunu
 yapılacaklar listesine ekle"*; öneri: ÇSGB İSGGM duyurular sayfası — https://www.csgb.gov.tr/isggm/duyurular/ — sunucuda günde birkaç kez
 okunur (pg-boss işi, §8.9), Ana sayfada son 5 duyuru başlık + tarih + kaynağa bağlantı; yalnız ekranda, bildirim yok; sayfa RSS vermiyorsa
@@ -1644,6 +1653,8 @@ revizyon, alan kopyalama, hafif kusur devri, meslek eşleşme denetimi).
 - Emsal ürünler: https://opwire.app/iso-17020-periyodik-kontrol-yazilimi/ · https://17020muayene.vidco.com.tr/ · https://akuple.com/asansor-kontrol-yazilimi/ · https://ensyazilim.com/
 
 ## 11 · Değişiklik günlüğü
+- 2026-09-27 (94): **Süzgeç kutusu açılır kapanır** (§9 yirmi dokuzuncu tur): bütün listelerde başlık + uygulanan süzgeç sayısı; tercih
+  hatırlanır. 17 maket temiz: durum 1792/1792 · etkileşim 396/396 · telefon 896/896 (Planlar etkileşim 38/38, 2 yeni deneme).
 - 2026-09-27 (93): **Saha raporu ve rapor belgesi Bakanlık formatına göre** (§9 yirmi sekizinci tur): iç tesisat ZPKR02 (1–11) ve AG topraklama
   ZPKR01 (1–9 + fotoğraf eki); formattaki ekipman detayları / tespitler, gözle kontrol grupları, ölçüm noktası hesabı (Ia, Zs, Ik1, Not),
   RCD testleri, kusur derecesi, kusur listesi, formatın sonuç cümlesi ve yetkili kişi; onay özeti ve uygunsuzluk kaydı formatın maddeleriyle.

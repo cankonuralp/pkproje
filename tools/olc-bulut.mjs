@@ -321,6 +321,9 @@ const RAPOR_AC = ["js", 'document.querySelectorAll("details.a-bolum-acilir").for
 const raporHazirla = (l, sayfa) => l.forEach(d => { if ((d.sayfa || sayfa) === "maket/rapor.html" && /^#\/r\//.test(d.hash) && !d.kapali) d.adim = [RAPOR_AC].concat(d.adim || []); });
 export const DENEMELER = {
   planlar: [
+    /* 2026-09-27 (reisim: "filtreler sekmesi de açılıp kapanır bir sekme"): süzgeç kutusu, başlıkta uygulanan süzgeç sayısı */
+    { ad: "süzgeç kutusu: çip seçilince sayı, başlığa basınca kapanır (sayı görünür kalır)", hash: "#/", adim: [["tikla", "[data-cip]"], ["tikla", ".a-suzgec-bas"]], bekle: '!document.querySelector(".a-suzgec-kutu").open && document.querySelector(".a-suzgec-say").textContent === "1 süzgeç uygulandı" && !document.querySelector(".a-suzgec-say").hidden' },
+    { ad: "süzgeç kutusu: süzgeç yokken sayı gizli", hash: "#/", bekle: 'document.querySelector(".a-suzgec-kutu").open && document.querySelector(".a-suzgec-say").hidden' },
     /* 2026-09-27 (reisim: "maket site nasıl çalışması gerekiyorsa çalışsın"): gerçek dosya indirme / yazdırma */
     { ad: "Excel'e aktar → gerçek .xlsx iner", hash: "#/plan/9", adim: [["tikla", "[data-eylem=\"excel-disa\"]"], ["tikla", "[data-eylem=\"excel-indir\"]"]], bekle: "MK.SON_INDIRME && /P-0926-025-ekipmanlar\\.xlsx$/.test(MK.SON_INDIRME.ad) && MK.SON_INDIRME.boyut > 1000" },
     { ad: "Excel şablonu iner", hash: "#/plan/1", adim: [["tikla", "[data-eylem=\"excel-ice\"]"], ["tikla", "[data-eylem=\"excel-sablon\"]"]], bekle: "MK.SON_INDIRME && /sablonu\\.xlsx$/.test(MK.SON_INDIRME.ad) && MK.SON_INDIRME.boyut > 1000" },

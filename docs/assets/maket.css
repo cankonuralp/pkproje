@@ -123,6 +123,14 @@ html[data-giris="fare"] .a-girdi:focus, html[data-giris="fare"] .a-alan:focus { 
    TEK akış, kuralın sırasıyla: arama → durum çipleri → ve/veya → boşluk → seçiciler + Temizle SAĞDA.
    Hepsi sığmazsa seçiciler + Temizle BİRLİKTE alt satırın sağına kayar (Temizle yalnız kalmaz; 1. tur dersi).
    2. turdaki sabit iki satır kuralın sırasını bozuyordu (seçiciler çiplerden önce geliyordu) → kaldırıldı. */
+/* süzgeç kutusu açılır kapanır (2026-09-27): başlık satırı + uygulanan süzgeç sayısı */
+.a-suzgec-kutu { margin: 0 0 12px; }
+.a-suzgec-bas { display: flex; align-items: center; gap: 8px; min-height: var(--tus-y); padding: 0 2px; cursor: pointer; list-style: none; color: var(--yazi); font-weight: 700; }
+.a-suzgec-bas::-webkit-details-marker { display: none; }
+.a-suzgec-bas .a-acilir-ok { margin-left: 0; }
+.a-suzgec-kutu:not([open]) .a-acilir-ok { transform: rotate(-90deg); }
+.a-suzgec-say { padding: 2px 8px; border-radius: var(--r-tam); background: var(--uyari-zemin); color: var(--uyari-yazi); font-size: var(--boy-kucuk); font-weight: 600; }
+.a-suzgec-kutu > .a-suzgec { margin: 4px 0 0; }
 .a-suzgec { display: flex; align-items: center; flex-wrap: wrap; gap: 8px 6px; margin: 0 0 12px; min-width: 0; }
 .a-suzgec-sag { margin-left: auto; display: flex; align-items: center; gap: 8px; flex-wrap: wrap; justify-content: flex-end; min-width: 0; }
 .a-ara { position: relative; flex: 0 1 320px; min-width: 200px; height: var(--tus-y); }

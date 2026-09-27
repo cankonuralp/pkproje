@@ -142,6 +142,14 @@ tek mesaj: sayfanın bağlantısı + kaç maket + kaç soru + ölçülemeyen var
   sözleşmeden / el ile, bitmiş uyarısı, sahada yeni ekipman alanı kalktı. M6 60/60 · 18/18 · 40/40. Reisim'in incelemesi bekleniyor.
 - 2026-09-26: **M6 2. tur, ek** — reisim: rapor 1. bölümü "Firma bilgileri" (her raporda ortak), "SGK DETSİS no", "İSG-KATİP sözleşme ID",
   parantez içi açıklama ve alt satır mesajı yok (genel ilke). M6 60/60 · 18/18 · 40/40. Reisim'in incelemesi bekleniyor.
+- 2026-09-26 → 27 (bulut): M7–M16 soruları cevaplandı ve maketler 2. turla yenilendi; reisim'in toplu gözden geçirmesinden gelen istekler
+  kalem kalem işlendi (pkproje.md §9 yirmi dördüncü – yirmi dokuzuncu tur, §11 günlük 83–94): saha raporu, tarih seçici, masraf formu,
+  giderler, bordro, iş kârlılığı, duyurular, kontrol kriterleri, Bakanlık formatlı rapor (ZPKR01 / ZPKR02), açılır kapanır süzgeç.
+- 2026-09-27: **buluttan yerele geçiş** (reisim: *"buluttan çıkıp yerelde devam edebilir miyiz ?"*): her şey `main`'de ve
+  `kalem/toplu-maket-plani-yfxvp3`'te. Yerelde: `git pull` (main) → bu dosya + pkproje.md §9 son turlar + §11 günlük okunur; kalıcı
+  hafızadaki `pkproje-durum` notu buna göre güncellenir (bulut oturumu yerel hafızaya yazamaz). Ölçüm aracı `tools/olc-bulut.mjs` yalnız
+  bulutta (başsız Chrome); yerelde ölçüm `tools/olc-maket.js` ile tarayıcı bölmesinde. **Sıradaki:** reisim'in bildirdiği eksiklerin
+  incelenip çıkarım yapılması (yerelde).
 
 ### Toplu soru listesi — M7–M16 (2026-09-26, reisim: *"Kalan Tüm modüllerin sorularını sor hepsini tek seferde cevaplayayım maketi ona göre yenile sonra tüm maketi gözden geçiririm"*)
 Sadeleştirildi: teknik / mevzuat ayrıntısı yok, kural ihlali uyarı (istisna: kalibrasyonu geçmiş cihaz), önce asıl hedef. Eski numaralar korundu;

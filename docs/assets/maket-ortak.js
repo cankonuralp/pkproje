@@ -173,9 +173,18 @@
   MK.suzgecSifirla = function (on) { SZ[on] = yeniSz(on); };
   MK.suzgecTanimi = function (on) { return SZ_TANIM[on]; };
   var kap = MK.kap = function (on) { return document.querySelector('.a-suzgec[data-sz="' + on + '"]'); };
+  /* süzgeç kutusu açılır kapanır (reisim 2026-09-27: "filtreler sekmesi de açılıp kapanır bir sekme"): başlıkta uygulanan süzgeç sayısı;
+     kapalıyken de sayı görünür. Açık / kapalı tercih bu tarayıcıda sayfa başına hatırlanır (kolaylık; okunamazsa açık gelir). */
+  var kutuAcik = function (on) { try { return localStorage.getItem("probata-suzgec-" + location.pathname + "-" + on) !== "kapali"; } catch (e) { return true; } };
+  document.addEventListener("toggle", function (e) {
+    var d = e.target; if (!d.classList || !d.classList.contains("a-suzgec-kutu")) return;
+    try { localStorage.setItem("probata-suzgec-" + location.pathname + "-" + d.dataset.kutu, d.open ? "acik" : "kapali"); } catch (x) { /* depolama kapalı: tercih hatırlanmaz */ }
+  }, true);
   MK.suzgecHtml = function (on) {
     var t = SZ_TANIM[on], secicili = t.seciciler.length > 0;
-    return '<div class="a-suzgec" data-sz="' + on + '"' + (secicili ? "" : " data-secicisiz") + ">" +
+    return '<details class="a-suzgec-kutu" data-kutu="' + on + '"' + (kutuAcik(on) ? " open" : "") + '><summary class="a-suzgec-bas">' + ikon("sliders-horizontal", "a-ikon-kucuk") +
+      '<span class="a-suzgec-baslik">Süzgeçler</span><span class="a-suzgec-say" hidden></span>' + ikon("chevron-down", "a-ikon-kucuk a-acilir-ok") + "</summary>" +
+      '<div class="a-suzgec" data-sz="' + on + '"' + (secicili ? "" : " data-secicisiz") + ">" +
       '<label class="a-ara"><span class="a-gizli">' + t.ad + "</span>" + ikon("search") +
         '<input type="search" data-ara="' + on + '" placeholder="' + t.ipucu + '" autocomplete="off">' +
         '<button class="a-ara-sil" type="button" data-eylem="ara-sil" aria-label="Aramayı temizle">' + ikon("x", "a-ikon-kucuk") + "</button></label>" +
@@ -183,8 +192,14 @@
         'Süzgeç <span class="a-suzgec-rozet" hidden></span></button>' : "") +
       '<div class="a-cipler" role="group" aria-label="' + t.birim + ' durumu süzgeci"></div>' +
       '<div class="a-suzgec-sag"><div class="a-seciciler"></div>' +
-        '<button class="a-temizle" type="button" data-eylem="temizle">' + ikon("filter-x", "a-ikon-kucuk") + "Temizle</button></div></div>";
+        '<button class="a-temizle" type="button" data-eylem="temizle">' + ikon("filter-x", "a-ikon-kucuk") + "Temizle</button></div></div></details>";
   };
+  /* uygulanan süzgeç sayısı: arama + seçili çipler + seçiciler (sıralama ve görünüm anahtarı sayılmaz) */
+  function kutuSay(on) {
+    var k = kap(on), y = k && k.closest(".a-suzgec-kutu") && k.closest(".a-suzgec-kutu").querySelector(".a-suzgec-say"); if (!y) return;
+    var n = (SZ[on].ara.trim() ? 1 : 0) + SZ[on].secili.length + aktifSecici(on);
+    y.hidden = !n; y.textContent = n ? n + " süzgeç uygulandı" : "";
+  }
   /* seçicinin başlangıç değeri `bas` (verilmezse "tumu"). `bas` taşıyan seçici GÖRÜNÜM ANAHTARIDIR (ör. Çalışanlar /
      Ayrılanlar / Hepsi, kalıp 8: "süzgeç değil görünüm anahtarı"): süzgeç sayılmaz, Temizle onu sıfırlamaz (sıralama gibi) */
   var aktifSecici = function (on) { return SZ_TANIM[on].seciciler.filter(function (x) { return !x.siralama && !x.bas && SZ[on].sec[x.k] !== "tumu"; }).length; };
@@ -218,6 +233,7 @@
       '<button type="button" data-kip="veya" aria-pressed="' + (s.kip === "veya") + '"' + (az ? " disabled" : "") + ">veya</button>" +
       '<button type="button" data-kip="ve" aria-pressed="' + (s.kip === "ve") + '"' + (az ? " disabled" : "") + ">ve</button></div>" : "");
     k.querySelector(".a-temizle").disabled = !suzgecVar(on);
+    kutuSay(on);
   };
   var seciciCiz = MK.seciciCiz = function (on) {
     var k = kap(on); if (!k) return;
