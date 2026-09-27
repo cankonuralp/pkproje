@@ -404,7 +404,11 @@
     var kontrol = "";
     if (d === "kabul" || calisir(p)) kontrol =
       '<div class="a-alt-bolum"><div class="a-alt-bas"><h3 class="a-alt-baslik" id="a-ekipman-baslik">Ekipmanlar</h3><span class="a-sayac" id="a-sayac-e"></span>' +
-        (d === "denetimde" ? '<button class="a-tus a-tus-ikincil a-bolum-tus" type="button" data-eylem="ekle-ac" data-id="' + p.id + '">' + ikon("plus", "a-ikon-kucuk") + "Ekipman ekle</button>" : "") +
+        /* 2026-09-27 (reisim: "ekipan listesinbi excelden export etme ve inport etme olsun"): Excel'e aktar her zaman; Excel'den yükle
+           ekipman eklenebilen durumda (denetimde) */
+        '<div class="a-bolum-tuslar">' + MK.tus({ eylem: "excel-disa", ad: "Excel'e aktar", ikon: "download", sinif: "a-tus-ikincil", veri: { id: p.id } }) +
+        (d === "denetimde" ? MK.tus({ eylem: "excel-ice", ad: "Excel'den yükle", ikon: "upload", sinif: "a-tus-ikincil", veri: { id: p.id } }) +
+          '<button class="a-tus a-tus-ikincil" type="button" data-eylem="ekle-ac" data-id="' + p.id + '">' + ikon("plus", "a-ikon-kucuk") + "Ekipman ekle</button>" : "") + "</div>" +
         "</div>" + MK.suzgecHtml("e") + '<div class="a-liste-kap" id="a-liste-e"></div><div id="a-sayfa-e"></div></div>' +
       (calisir(p) ? '<div class="a-alt-bolum"><div class="a-alt-bas"><h3 class="a-alt-baslik" id="a-rapor-baslik">Raporlar</h3><span class="a-sayac" id="a-sayac-r"></span>' +
         (p.rapor.length ? '<button class="a-ikon-tus a-bolum-tus" type="button" data-eylem="saat-ac" data-id="' + p.id + '" aria-label="Rapor saatlerini hizala" title="Rapor saatlerini hizala">' + ikon("clock") + "</button>" : "") + "</div>" +
@@ -592,6 +596,70 @@
     $("a-pencere-govde").innerHTML = MB.sahaFormu({ p: p, ekipmanlar: yapilan, no: p.no + "-SF" + p.sahaSayisi, tarih: BUGUN, uzmanlar: p.ekip.map(function (k) { return KISI[k].ad; }) });
     $("a-pencere-alt").innerHTML = MK.tus({ eylem: "pencere-kapat", ad: "Kapat", sinif: "a-tus-ikincil" }) + MK.tus({ eylem: "saha-indir", ad: "PDF indir", ikon: "file-text" });
     $("a-pencere").showModal(); $("a-pencere-govde").scrollTop = 0; $("a-pencere-alt").querySelector(".a-tus-birincil").focus({ preventScroll: true });
+  };
+  /* ── EXCEL (reisim 2026-09-27): ekipman listesi dışa aktarılır (önizleme + indir) ve Excel'den yüklenir (şablon, satır satır denetim,
+     yalnız geçerli yeni satırlar plana girer). Makette dosya yok: örnek dosya ve satırlar. */
+  var EXCEL = null;
+  function excelPencere(baslik, govde, alt) {
+    $("a-pencere").dataset.kip = "excel"; $("a-pencere-baslik").textContent = baslik; $("a-pencere-govde").innerHTML = govde; $("a-pencere-alt").innerHTML = alt;
+    if (!$("a-pencere").open) $("a-pencere").showModal(); $("a-pencere-govde").scrollTop = 0;
+  }
+  var tablo = function (bas, satirlar) {
+    return '<table class="a-belge-tablo"><thead><tr>' + bas.map(function (b) { return '<th scope="col">' + b + "</th>"; }).join("") + "</tr></thead><tbody>" +
+      satirlar.map(function (r) { return "<tr>" + r.map(function (h) { return "<td>" + h + "</td>"; }).join("") + "</tr>"; }).join("") + "</tbody></table>";
+  };
+  X["excel-disa"] = function (el) {
+    var p = pl(el); if (!p) return;
+    excelPencere("Excel'e aktar · " + p.no,
+      '<p class="a-pencere-ozet"><b>' + p.ekp.length + " ekipman</b> · " + p.no + "-ekipmanlar.xlsx</p>" +
+      /* önizleme iki sütun (telefonda da okunur, M11 Excel önizlemesiyle aynı); dosyanın kendisinde her alan ayrı sütun */
+      '<div class="a-excel-kap">' + tablo(["Ekipman", "Önceki kontrol · rapor"], p.ekp.map(function (k) {
+        var e = SICIL[k]; return ['<span class="a-kod">' + k + "</span> " + kacis(e.tur.ad) + '<span class="a-alt-satir">' + kacis(e.konum) + " · " + bransAd(e.tur.b) + "</span>",
+          (e.onceki ? tno(e.onceki.tarih) + " · " + e.onceki.sonuc : "İlk kontrol") + '<span class="a-alt-satir">' + (e.pasif ? "Pasif" : raporuVar(p, k) ? "Raporlandı" : "Rapor yok") + "</span>"];
+      })) + "</div>",
+      MK.tus({ eylem: "pencere-kapat", ad: "Kapat", sinif: "a-tus-ikincil" }) + MK.tus({ eylem: "excel-indir", ad: "İndir", ikon: "download" }));
+    $("a-pencere-alt").querySelector(".a-tus-birincil").focus({ preventScroll: true });
+  };
+  X["excel-indir"] = function () { MK.bildir("Makette dosya yok. Liste Excel dosyası (.xlsx) olarak iner."); };
+  function excelIceCiz() {
+    var p = EXCEL.p, satirlar = EXCEL.satirlar, gecerli = satirlar.filter(function (x) { return x.ok; });
+    excelPencere("Excel'den yükle · " + p.no,
+      '<p class="a-pencere-ozet">Sütunlar: Kod · Ekipman türü · Konum · Seri no. Şablonu indirip doldurun; her satır denetlenir, yalnız geçerli yeni satırlar plana girer.</p>' +
+      '<div class="a-dosya-sec">' + MK.tus({ eylem: "excel-sablon", ad: "Şablonu indir", ikon: "file-spreadsheet", sinif: "a-tus-ikincil" }) +
+        MK.tus({ eylem: "excel-sec", ad: EXCEL.dosya ? "Başka dosya seç" : "Dosya seç", ikon: "upload", sinif: "a-tus-ikincil" }) +
+        '<span class="a-dosya-ad">' + (EXCEL.dosya ? kacis(EXCEL.dosya) : '<span class="a-deger-yok">Dosya seçilmedi</span>') + "</span></div>" +
+      (EXCEL.dosya ? '<div class="a-excel-kap">' + tablo(["Satır", "Ekipman", "Durum"], satirlar.map(function (x, i) {
+        return [String(i + 2), '<span class="a-kod">' + kacis(x.kod) + "</span> " + kacis(x.tur) + '<span class="a-alt-satir">' + kacis(x.konum) + "</span>",
+          x.ok ? rozet({ ad: "Eklenecek", rozet: "a-rozet-tamam" }) : '<span class="a-uyari-metin a-hata-metin">' + kacis(x.neden) + "</span>"];
+      })) + "</div>" : ""),
+      MK.tus({ eylem: "pencere-kapat", ad: "Vazgeç", sinif: "a-tus-ikincil" }) + MK.tus({ eylem: "excel-yukle", ad: "Yükle" + (EXCEL.dosya ? " (" + gecerli.length + ")" : ""), ikon: "upload", kapali: !EXCEL.dosya || !gecerli.length }));
+  }
+  X["excel-ice"] = function (el) {
+    var p = pl(el); if (!p || p.durum !== "denetimde") return;
+    EXCEL = { p: p, dosya: "", satirlar: [] }; excelIceCiz();
+    $("a-pencere-alt").querySelector('[data-eylem="pencere-kapat"]').focus({ preventScroll: true }); document.querySelector('#a-pencere [data-eylem="excel-sec"]').focus();
+  };
+  X["excel-sablon"] = function () { MK.bildir("Makette dosya yok. Şablon: Kod · Ekipman türü · Konum · Seri no sütunlu .xlsx."); };
+  /* maket: dosya penceresi yerine örnek dosya; satırlar yeni kayıt denetimiyle aynı kurala göre (kod eşsiz, tür katalogda) */
+  X["excel-sec"] = function () {
+    var p = EXCEL.p, ham = [["HT-9001", "Hava tankı", "Kazan dairesi", "HT-24-118"], ["FL-9002", "Forklift", "Sevkiyat alanı", "FL-22-431"],
+      [p.ekp[0], SICIL[p.ekp[0]].tur.ad, SICIL[p.ekp[0]].konum, ""], ["VK-9003", "Vinç kancası", "Depo girişi", ""]];
+    EXCEL.dosya = p.no + "-ekipman-yukle.xlsx";
+    EXCEL.satirlar = ham.map(function (h) {
+      var t = KATALOG.filter(function (x) { return tr(x.ad) === tr(h[1]); })[0], kd = kodDurum(p, h[0]);
+      return { kod: h[0], tur: h[1], konum: h[2], seri: h[3], t: t, ok: !!t && kd.tur === "tamam", neden: !t ? "Tür bulunamadı, atlanır" : kd.tur === "tamam" ? "" : "Planda var, atlanır" };
+    });
+    excelIceCiz(); var y = document.querySelector('#a-pencere [data-eylem="excel-yukle"]'); if (y) y.focus({ preventScroll: true });
+  };
+  X["excel-yukle"] = function () {
+    var p = EXCEL.p, ok = EXCEL.satirlar.filter(function (x) { return x.ok; }), atla = EXCEL.satirlar.length - ok.length;
+    ok.forEach(function (x) {
+      SICIL[x.kod] = { kod: x.kod, tur: x.t, konum: x.konum, tesis: p.id, onceki: null, eklendi: simdi(), seri: x.seri };
+      p.ekp.push(x.kod); p.sonradan.push(x.kod);
+    });
+    kaydet(p, simdi(), BEN, "Excel'den ekipman yüklendi", ok.length + " ekipman · " + EXCEL.dosya);
+    $("a-pencere").close(); goster(false);
+    MK.bildir(ok.length + " ekipman plana eklendi" + (atla ? "; " + atla + " satır atlandı." : "."));
   };
   X["saha-indir"] = function () { MK.bildir("Makette dosya yok. Saha formu firmanın formatıyla PDF olarak iner."); };
   X["ekle-ac"] = function (el) { var p = pl(el); if (p && p.durum === "denetimde") ekleAc(p); };

@@ -1498,6 +1498,9 @@ revizyon, alan kopyalama, hafif kusur devri, meslek eşleşme denetimi).
 - Emsal ürünler: https://opwire.app/iso-17020-periyodik-kontrol-yazilimi/ · https://17020muayene.vidco.com.tr/ · https://akuple.com/asansor-kontrol-yazilimi/ · https://ensyazilim.com/
 
 ## 11 · Değişiklik günlüğü
+- 2026-09-27 (78): **Planlar: Plan aç tuşu ve ekipman listesi Excel** (§9 yirmi dördüncü tur): liste başında "Plan aç" (gerçekte yalnız planlama
+  yetkisi olan görür); plan içi ekipmanlarda "Excel'e aktar" (önizleme + indir) ve denetimdeyken "Excel'den yükle" (şablon; satırlar yeni kayıt
+  kuralıyla denetlenir — kod eşsiz, tür katalogda; geçersiz satır atlanır, sebebi yazar). Planlar 104/104 · 28/28 · 52/52.
 - 2026-09-27 (77): **Ekipman türünde kullanılacak ölçüm cihazları** ve **rapor bölümleri** (§9 yirmi dördüncü tur). M3 72/72 · 17/17 · 36/36.
 - 2026-09-27 (76): **Saha raporu yirmi dördüncü tur** (§9): ekipman bilgileri elle, ölçüm cihazı türün listesinden zimmetten eklenir, eksik /
   geçmiş cihazda gönderilemez, sonuç seçmeli (seçilmezse kriterlere göre), Kaydet + Onaya gönder yapışkan, bölümler her girişte kapalı, fotoğraf

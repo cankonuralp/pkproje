@@ -8,8 +8,8 @@
   390,
   430
  ],
- "toplam": 44,
- "temiz": 44,
+ "toplam": 52,
+ "temiz": 52,
  "durumlar": [
   {
    "ad": "liste",
@@ -406,6 +406,78 @@
    "disari": [],
    "kucukAlan": [],
    "alan": 5
+  },
+  {
+   "ad": "plan içi · Excel'e aktar önizlemesi",
+   "gen": 320,
+   "temiz": true,
+   "tasma": 0,
+   "disari": [],
+   "kucukAlan": [],
+   "alan": 3
+  },
+  {
+   "ad": "plan içi · Excel'e aktar önizlemesi",
+   "gen": 360,
+   "temiz": true,
+   "tasma": 0,
+   "disari": [],
+   "kucukAlan": [],
+   "alan": 3
+  },
+  {
+   "ad": "plan içi · Excel'e aktar önizlemesi",
+   "gen": 390,
+   "temiz": true,
+   "tasma": 0,
+   "disari": [],
+   "kucukAlan": [],
+   "alan": 3
+  },
+  {
+   "ad": "plan içi · Excel'e aktar önizlemesi",
+   "gen": 430,
+   "temiz": true,
+   "tasma": 0,
+   "disari": [],
+   "kucukAlan": [],
+   "alan": 3
+  },
+  {
+   "ad": "plan içi · Excel'den yükle, satırlar denetlendi",
+   "gen": 320,
+   "temiz": true,
+   "tasma": 0,
+   "disari": [],
+   "kucukAlan": [],
+   "alan": 3
+  },
+  {
+   "ad": "plan içi · Excel'den yükle, satırlar denetlendi",
+   "gen": 360,
+   "temiz": true,
+   "tasma": 0,
+   "disari": [],
+   "kucukAlan": [],
+   "alan": 3
+  },
+  {
+   "ad": "plan içi · Excel'den yükle, satırlar denetlendi",
+   "gen": 390,
+   "temiz": true,
+   "tasma": 0,
+   "disari": [],
+   "kucukAlan": [],
+   "alan": 3
+  },
+  {
+   "ad": "plan içi · Excel'den yükle, satırlar denetlendi",
+   "gen": 430,
+   "temiz": true,
+   "tasma": 0,
+   "disari": [],
+   "kucukAlan": [],
+   "alan": 3
   }
  ]
 }

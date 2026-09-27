@@ -460,6 +460,8 @@ html[data-giris="fare"] .a-girdi:focus, html[data-giris="fare"] .a-alan:focus { 
 .a-alt-bas.a-alt-bas-ic { margin-top: 24px; }   /* bölüm içindeki ikinci alt başlık (M2 müşteri girişi → ek girişler) */
 .a-alt-bolum .a-suzgec { margin-bottom: 8px; }
 .a-bolum-tus { margin-left: auto; }
+.a-bolum-tuslar { margin-left: auto; display: flex; flex-wrap: wrap; justify-content: flex-end; gap: 8px; }   /* başlık sağında birden çok tuş */
+.a-excel-kap { margin-top: 8px; }   /* Excel önizlemesi (iki-üç sütun; telefonda da okunur) */
 .a-bolum { margin: 0 0 20px; }
 /* sayfalayıcı (reisim 2026-09-23: "10 taneden sonra diğer sayfaya geçsin") — yalnız ekipman ve rapor listelerinde */
 .a-sayfalar { display: flex; align-items: center; justify-content: space-between; flex-wrap: wrap; gap: 8px; margin-top: 8px; }

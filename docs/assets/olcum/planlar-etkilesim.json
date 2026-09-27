@@ -2,9 +2,37 @@
  "maket": "planlar",
  "tarih": "2026-09-27",
  "arac": "tools/olc-bulut.mjs --etkilesim (başsız tarayıcı, 1920 açık tema; gen verilen denemede o genişlik)",
- "toplam": 24,
- "gecen": 24,
+ "toplam": 28,
+ "gecen": 28,
  "denemeler": [
+  {
+   "ad": "liste: Plan aç tuşu plan açma ekranına gider",
+   "gen": 1920,
+   "sayfa": "maket/planlarim.html",
+   "hash": "#/",
+   "gecti": true
+  },
+  {
+   "ad": "Excel'e aktar: önizleme bütün ekipmanlar",
+   "gen": 1920,
+   "sayfa": "maket/planlarim.html",
+   "hash": "#/plan/1",
+   "gecti": true
+  },
+  {
+   "ad": "Excel'den yükle: dosyasız Yükle kapalı; dosya seçilince satırlar denetlenir, 2 geçerli eklenir, 2 atlanır",
+   "gen": 1920,
+   "sayfa": "maket/planlarim.html",
+   "hash": "#/plan/1",
+   "gecti": true
+  },
+  {
+   "ad": "tamamlanan planda Excel'den yükle yok, Excel'e aktar var",
+   "gen": 1920,
+   "sayfa": "maket/planlarim.html",
+   "hash": "#/plan/9",
+   "gecti": true
+  },
   {
    "ad": "plan içi: tarih 23.09.2026, Bugün yok, adımlarda yalnız tarih, teklif içeriği tablo (alan · tür · adet), satırlar",
    "gen": 1920,

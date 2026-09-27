@@ -43,7 +43,9 @@ export const DURUMLAR = {
     { ad: "ekipman ekle · tesiste kayıtlı", hash: "#/plan/1/ekle/FL-1013" },
     { ad: "reddet penceresi", hash: "#/plan/3", adim: [["tikla", '#a-plan .a-adim-tuslar [data-eylem="reddet"], #a-plan .a-eylem-cubugu-alt [data-eylem="reddet"]']] },
     { ad: "plan içi · saha formu", hash: "#/plan/9", adim: [["tikla", '[data-eylem="saha-formu"]']] },
-    { ad: "plan içi · rapor saatlerini hizala", hash: "#/plan/9", adim: [["tikla", '[data-eylem="saat-ac"]']] }
+    { ad: "plan içi · rapor saatlerini hizala", hash: "#/plan/9", adim: [["tikla", '[data-eylem="saat-ac"]']] },
+    { ad: "plan içi · Excel'e aktar önizlemesi", hash: "#/plan/1", adim: [["tikla", '[data-eylem="excel-disa"]']] },
+    { ad: "plan içi · Excel'den yükle, satırlar denetlendi", hash: "#/plan/1", adim: [["tikla", '[data-eylem="excel-ice"]'], ["tikla", '[data-eylem="excel-sec"]']] }
   ] },
   /* M1 Kullanıcı ve Rol · Personel (2026-09-24; 2. tur 2026-09-25: Kullanıcılar Personel'e katıldı, Ana sayfa, geçici parola,
      rol yetkileri düzenlenir, kartta zimmet ve özlük) */
@@ -285,6 +287,11 @@ const RAPOR_AC = ["js", 'document.querySelectorAll("details.a-bolum-acilir").for
 const raporHazirla = (l, sayfa) => l.forEach(d => { if ((d.sayfa || sayfa) === "maket/rapor.html" && /^#\/r\//.test(d.hash) && !d.kapali) d.adim = [RAPOR_AC].concat(d.adim || []); });
 export const DENEMELER = {
   planlar: [
+    /* 2026-09-27 (reisim yirmi dördüncü tur): Plan aç tuşu (planlamacı) · ekipman listesi Excel'e aktar / Excel'den yükle */
+    { ad: "liste: Plan aç tuşu plan açma ekranına gider", hash: "#/", adim: [["tikla", '.a-sayfa-bas a[href="plan-ac.html"]']], bekle: '/plan-ac\\.html$/.test(location.pathname)' },
+    { ad: "Excel'e aktar: önizleme bütün ekipmanlar", hash: "#/plan/1", adim: [["tikla", '[data-eylem="excel-disa"]']], bekle: 'document.querySelector("#a-pencere").open && document.querySelectorAll("#a-pencere .a-belge-tablo tbody tr").length === 12 && /P-0926-031-ekipmanlar\.xlsx/.test(document.querySelector("#a-pencere-govde").textContent)' },
+    { ad: "Excel'den yükle: dosyasız Yükle kapalı; dosya seçilince satırlar denetlenir, 2 geçerli eklenir, 2 atlanır", hash: "#/plan/1", adim: [["tikla", '[data-eylem="excel-ice"]'], ["js", 'window.__kapali = document.querySelector(\'[data-eylem="excel-yukle"]\').disabled'], ["tikla", '[data-eylem="excel-sec"]'], ["tikla", '[data-eylem="excel-yukle"]']], bekle: 'window.__kapali && !document.querySelector("#a-pencere").open && /14/.test(document.querySelector("#a-sayac-e").textContent) && /2 ekipman plana eklendi; 2 satır atlandı/.test(document.querySelector("#a-bildirim-metin").textContent)' },
+    { ad: "tamamlanan planda Excel'den yükle yok, Excel'e aktar var", hash: "#/plan/9", bekle: '!document.querySelector(\'[data-eylem="excel-ice"]\') && !!document.querySelector(\'[data-eylem="excel-disa"]\')' },
     /* 2026-09-27 (reisim): tarih GG.AA.YYYY, "Bugün" yok; adımlarda yalnız tarih; teklif içeriği tablo */
     { ad: "plan içi: tarih 23.09.2026, Bugün yok, adımlarda yalnız tarih, teklif içeriği tablo (alan · tür · adet), satırlar", hash: "#/plan/1", bekle: '/23\\.09\\.2026/.test(document.querySelector("#a-icerik").textContent) && !document.querySelector(".a-bugun") && /^Başladı: \\d\\d\\.\\d\\d\\.\\d{4}$/.test([...document.querySelectorAll("#a-icerik *")].map(e => e.textContent.trim()).find(t => /^Başladı:/.test(t)) || "") && /^\\d\\d\\.\\d\\d\\.\\d{4}$/.test([...document.querySelectorAll("#a-icerik *")].filter(e => !e.children.length).map(e => e.textContent.trim()).find(t => /^16\\.09\\./.test(t)) || "") && [...document.querySelectorAll(".a-duz-tablo thead th")].map(t => t.textContent).join("|") === "Muayene alanı|Muayene türü|Adet" && [...document.querySelectorAll(".a-duz-tablo tbody tr")].some(tr => tr.textContent === "ForkliftPeriyodik kontrol1") && /İSG-KATİP sözleşme ID/.test(document.querySelector(".a-satirlar").textContent)' },
     /* 2026-09-27 (reisim): ekipman satırında raporun aşaması yazmaz, yalnız "Raporlandı"; aşama Raporlar tablosunda */
