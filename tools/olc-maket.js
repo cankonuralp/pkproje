@@ -64,10 +64,13 @@
   /* 2026-09-26: ekranın tamamen dışındaki iki öğe (kapalı çekmecenin bağlantısı ile yana kaymış çip şeridinin başı, ikisi de x < 0)
      görünür biçimde örtüşemez; karşılaştırılmaz. Ekranda en az bir pikseli olan her öğe eskisi gibi sayılır. */
   const ekranda = R => R.right > 0 && R.left < innerWidth;
-  const cakismaSay = muaf => { let n = 0; const bs = et.map(e => [e, e.getBoundingClientRect(), yapiskanAta(e)]).filter(x => ekranda(x[1]));
+  /* 2026-09-27: açık açılır katman (seçim listesi, tarih seçici) altındaki içeriğin üstünden geçer — tasarım gereği, yapışkan çubukla
+     aynı muafiyet: katmanın içindeki bir öğe dışındakiyle karşılaştırılmaz; katmanın kendi içindeki öğeler eskisi gibi sayılır. */
+  const katman = e => e.closest(".a-secici-liste:not([hidden])");
+  const cakismaSay = muaf => { let n = 0; const bs = et.map(e => [e, e.getBoundingClientRect(), yapiskanAta(e), katman(e)]).filter(x => ekranda(x[1]));
     for (let i = 0; i < bs.length; i++) for (let j = i + 1; j < bs.length; j++) {
-      const [a, A, ya] = bs[i], [b, B, yb] = bs[j]; if (a.contains(b) || b.contains(a)) continue;
-      if (muaf && ya !== yb) continue;
+      const [a, A, ya, ka] = bs[i], [b, B, yb, kb] = bs[j]; if (a.contains(b) || b.contains(a)) continue;
+      if (muaf && (ya !== yb || ka !== kb)) continue;
       const x = Math.min(A.right, B.right) - Math.max(A.left, B.left), y = Math.min(A.bottom, B.bottom) - Math.max(A.top, B.top);
       if (x > 1 && y > 1) n++;
     } return n; };

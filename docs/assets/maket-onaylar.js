@@ -59,10 +59,9 @@
     var s = MV.sonucAd(r), kusur = s !== "Uygun";
     return [
       [!!b.isg, b.isg ? "İSG-KATİP " + b.isg.no + " · onay " + MK.tarihYaz(b.isg.onay) : "İSG-KATİP kaydı yok"],
-      [true, "Kontrol metodu: " + (MV.standart(b.metot) ? MV.standart(b.metot).no + ":" + MV.standart(b.metot).surum : "üretici talimatı")],
-      [!kusur, kr.length + " kriter yapıldı" + (kusur ? " · " + (s === "Hafif kusurlu" ? "1 hafif kusur (açıklamalı)" : "1 kusur (açıklamalı)") : " · hepsi uygun")],
+      [!kusur, kr.length + " kriter yapıldı" + (kusur ? " · " + "1 uygun değil madde" : " · hepsi uygun")],
       [true, ts.length + " test değeri · hepsi sınır içinde"],
-      [!gecti.length, b.cihaz.length + " ölçüm aleti" + (gecti.length ? " · kalibrasyonu geçmiş: " + gecti.map(function (v) { return v.env; }).join(", ") : " · kalibrasyonu geçerli")],
+      [!gecti.length, b.cihaz.length + " ölçüm cihazı" + (gecti.length ? " · kalibrasyonu geçmiş: " + gecti.map(function (v) { return v.seri; }).join(", ") : " · kalibrasyonu geçerli")],
       [true, "2 fotoğraf"],
       [true, "Sonuç ve kanaat: " + (/^Kusurlu|Ağır/.test(s) && MV.kusurSinifli(t) ? "giderilene kadar kullanılamaz" : "kullanılabilir")]
     ];

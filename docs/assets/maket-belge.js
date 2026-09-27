@@ -2,7 +2,7 @@
    Sunucuda üretilen PDF'in iskeleti (§8.3); Ek-III 1.7'nin dokuz bölümü + fotoğraf eki (§4.2), başlıkta firma künyesi ve akreditasyon
    markası yeri (§4.8). MB.belge(tür, o): o yoksa BOŞ ŞABLON (her alanın nereden dolduğu yazılır), varsa dolu rapor —
    o = { e (ekipman), ts (tesis), m (müşteri), p (inspector), isg, cihaz[], tarih, bas, bit, sonraki, no, sonuc ("Uygun" | "Hafif kusurlu" |
-   "Kusurlu"), metot (standart kimliği | "uretici" | "risk"), imza: { zaman } | null }. UYDURMA veri. (2026-09-24, M9'da maket-sablon.js'ten taşındı.) */
+   "Kusurlu"), imza: { zaman } | null }. UYDURMA veri. (2026-09-24, M9'da maket-sablon.js'ten taşındı.) */
 (function () {
   "use strict";
   var kacis = MK.kacis, ikon = MK.ikon, bilgi = MK.bilgi;
@@ -14,7 +14,6 @@
     var f = MV.FIRMA, std = t.std.map(MV.standart), zorunlu = MV.kusurSinifli(t), grup = MV.grup(t.g);
     var d = function (deger, kay) { return o ? deger : bos + kaynak(kay); };
     var sonraki = o ? o.sonraki : null, hafif = o && /Hafif/.test(o.sonuc), kusurlu = o && /^Kusurlu/.test(o.sonuc);
-    var metot = o && (o.metot === "uretici" ? "Üretici talimatı" : o.metot === "risk" ? "Risk değerlendirmesi" : MV.standart(o.metot || t.std[0]) ? (function (s) { return s.no + ":" + s.surum + " — " + s.konu; })(MV.standart(o.metot || t.std[0])) : "Üretici talimatı");
     /* hafif / ağır yalnız Bakanlık formatı yürürlükte olan türde (§4.5, Ek-III 1.9.1); öteki türde "Kusurlu" */
     var hafifAd = "Uygun değil", agirAd = "Uygun değil";   /* reisim 2026-09-26: madde sonucu Uygun · Uygun değil · Uygulanamaz */
     var kriter = MV.kriterler(t), test = MV.testler(t);
@@ -39,7 +38,7 @@
         bilgi("Bitiş", d(o && MK.tarihYaz(o.tarih) + " " + (o.bit || "09:48"), "saha: onaya gönderildi")) +
         bilgi("Sonraki kontrol", d(o && sonraki && MK.tarihYaz(sonraki), "kontrol + tür periyodu")) +
         bilgi("Rapor tarihi", d(o && MK.tarihYaz(o.tarih), "son imza")) +
-        bilgi("Kontrol metodu", o ? kacis(metot) : bos + kaynak(std.length ? "türün standartlarından seçilir" : "üretici talimatı ya da risk değerlendirmesi"), true) + "</dl>") +
+        "</dl>") +
       bolum("3", "Ekipman bilgileri", '<dl class="a-bilgi">' +
         bilgi("Ekipman", d(o && kacis(t.ad), "ekipman türü")) + bilgi("Kod", d(o && '<span class="a-kod">' + o.e.kod + "</span>", "ekipman kaydı")) +
         bilgi("Marka / model", d(o && kacis(o.e.marka + " " + o.e.model), "ekipman etiketi")) + bilgi("İmal yılı", d(o && o.e.imal, "ekipman etiketi")) +

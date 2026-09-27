@@ -635,6 +635,12 @@ yılın şablon sürümüyle gösteriyordu (örnek bugün tarihli yapıldı). Ek
 süzülmüş listeye gider (M3 60/60, 14/14 yeniden).
 
 #### Maket M8 — Saha ve Rapor (modül 14) — ONAY BEKLİYOR
+**4. tur (2026-09-27, reisim: *"tıklayınca tarih seçtiren bi takvim açılsın ve saat dakika seçebileceğim bir kısım olsun otomatik dolu
+gelsin ama tıklayınca seçerek değiştirebileyim, ayrıca metot kısmını kaldır"*):** başlangıç, bitiş ve sonraki kontrol **elle yazılmaz**:
+alana basınca takvim açılır (ay ileri / geri, gün), başlangıç ve bitişte altında **saat : dakika** (yukarı / aşağı tuşları) ve "Tamam".
+Otomatik dolu gelir: başlangıç rapor açıldığında, bitiş gönderilince (taslakta şimdi), sonraki kontrol başlangıç + periyot (elle seçilirse
+o kalır). **Kontrol metodu kalktı**: rapor ekranı, rapor belgesi ve onay ekranı özetinden. Seçici ortak (`MK.zaman`, tek üretici); öteki
+ekranlardaki tarih alanları sırası gelince buna geçer. M8 96/96 · 25/25 · 48/48.
 **3. tur (2026-09-26, §9 yirmi üçüncü tur):** "Onaya göndermeden önce N eksik" bölümü **kalktı** (eksikler yalnız "Onaya gönder"e basınca
 pencerede) · **Kontrol bilgileri**: başlangıç ve bitiş **tarih ve saati el ile** (GG.AA.YYYY SS:DD), **sonraki kontrol** başlangıç + tür periyodundan
 kendiliğinden, el ile yazılırsa o kalır ("değiştir" penceresi kalktı) · **Ekipman bilgileri** · **Ölçüm cihazları** tablo: cihaz · cihaz no ·
@@ -1421,6 +1427,9 @@ revizyon, alan kopyalama, hafif kusur devri, meslek eşleşme denetimi).
 - Emsal ürünler: https://opwire.app/iso-17020-periyodik-kontrol-yazilimi/ · https://17020muayene.vidco.com.tr/ · https://akuple.com/asansor-kontrol-yazilimi/ · https://ensyazilim.com/
 
 ## 11 · Değişiklik günlüğü
+- 2026-09-27 (70): **Saha raporunda tarih seçici ve metot yok**: başlangıç / bitiş / sonraki kontrol takvimden (saat · dakika tuşla),
+  otomatik dolu; "Kontrol metodu" rapor, belge ve onay özetinden kalktı. Ölçüm aracı: açık açılır katman altındakini örter (muaf, yapışkan
+  çubukla aynı). İki ikon eklendi (calendar, chevron-up; Lucide 1.47.0). M8 96/96 · 25/25 · 48/48; M7, M9, M11 temiz.
 - 2026-09-27 (69): **Plan içi ekipman tablosunda rapor aşaması yazmaz** (reisim: *"ekipmanın raporunda yazması yeterli"*): Rapor
   sütunu yalnız "Raporlandı" / "Rapor yok" / "Pasif"; Yeni, Teknik yönetici onayında vb. Raporlar tablosunda ve raporun kendisinde. Planlar 88/88 · 23/23.
 - 2026-09-27 (68): **Etiket "SGK destis no"** (reisim: *"SGK tescil no değil destis no olacak"*): bütün maketlerde, rapor belgesinde ve

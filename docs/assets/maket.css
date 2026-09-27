@@ -603,6 +603,23 @@ a.a-yuz:hover { border-color: var(--kenar-alan); background: var(--zemin); }
 .a-secim .a-secici-liste { left: 0; right: auto; width: 100%; min-width: 0; }
 /* pencerede liste akış içinde açılır (telefonda pencere kayar; kayan liste kesilmesin — tür kutusuyla aynı karar) */
 .a-pencere .a-secim .a-secici-liste { position: static; margin-top: 6px; box-shadow: none; max-height: 240px; }
+/* tarih / saat seçici (reisim 2026-09-27): takvim + saat · dakika; yazma yok. Gün tuşu yüksekliği bandın dokunma hedefi (--tus-y) */
+.a-zaman .a-secici-liste.a-zaman-liste { width: 340px; max-width: calc(100vw - 32px); min-width: 0; max-height: none; overflow: visible; padding: 10px; }
+.a-zaman .a-secim-tus[aria-expanded="true"] .a-ikon { transform: none; }
+.a-zaman-bas { display: flex; align-items: center; justify-content: space-between; gap: 8px; margin-bottom: 6px; }
+.a-zaman-ay { font-weight: 700; }
+.a-zaman-gunler { display: grid; grid-template-columns: repeat(7, 1fr); gap: 2px; }
+.a-zaman-gun-ad { display: grid; place-items: center; height: 28px; color: var(--yazi3); font-size: var(--boy-etiket); font-weight: 600; }
+.a-zaman-gun { height: var(--tus-y); border: 0; border-radius: var(--r-kucuk); background: transparent; color: var(--yazi); font-variant-numeric: tabular-nums; }
+.a-zaman-gun:hover, .a-zaman-gun:focus-visible { background: var(--zemin2); }
+.a-zaman-gun.a-zaman-bugun { box-shadow: inset 0 0 0 1px var(--kenar-alan); font-weight: 700; }
+.a-zaman-gun[aria-pressed="true"] { background: var(--vurgu); color: var(--vurgu-uzeri); font-weight: 700; }
+.a-zaman-saat { display: flex; align-items: center; gap: 8px; margin-top: 10px; padding-top: 10px; border-top: 1px solid var(--kenar); }
+.a-zaman-saat .a-etiket { margin: 0; }
+.a-zaman-sayac { display: flex; flex-direction: column; align-items: center; }
+.a-zaman-deger { min-width: 2.2em; text-align: center; font-size: var(--boy-bolum); font-weight: 700; font-variant-numeric: tabular-nums; }
+.a-zaman-iki { font-size: var(--boy-bolum); font-weight: 700; }
+.a-zaman-tamam { margin-left: auto; }
 .a-secim-ara { margin: 0 0 6px; }
 .a-secim-yok { margin: 0 0 6px; }
 
@@ -1001,6 +1018,9 @@ a.a-yuz:hover { border-color: var(--kenar-alan); background: var(--zemin); }
   .a-belge-kunye { order: 3; flex-basis: 100%; }
   /* saha raporu telefonda: madde solda, seçim sağda daha dar */
   .a-kriter { grid-template-columns: minmax(0, 1fr) 9.75rem; gap: 8px 10px; }
+  /* tarih seçici telefonda alanın genişliğinde (kartın dışına taşmaz); gün tuşları arası boşluksuz, yükseklik 44 kalır */
+  .a-zaman .a-secici-liste.a-zaman-liste { width: 100%; max-width: none; padding: 6px; }
+  .a-zaman-gunler { gap: 0; }
   /* teklif kalemi telefonda: tür tam satır, altında adet · fiyat, tutar · kaldır */
   .a-kalem { grid-template-columns: minmax(0, 1fr) minmax(0, 1fr); }
   .a-kalem > :first-child { grid-column: 1 / -1; }

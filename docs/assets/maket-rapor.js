@@ -12,23 +12,13 @@
   var DURUM = { taslak: MV.RAPOR_DURUM.taslak, onayda: MV.RAPOR_DURUM.onayda, onaylandi: MV.RAPOR_DURUM.onaylandi };   /* reisim 2026-09-26: beş durum, tek kaynak MV */
   var YON = { m: "sy", e: "co" };   /* branş yöneticisi: onay türün branşına gider (§3.2 madde 3) */
   var sayi = function (v) { var x = parseFloat(String(v).replace(",", ".")); return /^\s*\d+([.,]\d+)?\s*$/.test(String(v)) ? x : NaN; };
-  /* başlangıç ve bitiş el ile yazılır: GG.AA.YYYY SS:DD (reisim 2026-09-26: "başlangıç ve bitişe tarihleri ve saatleri el ile seçilebilir olsun") */
-  var ztYaz = function (iso) { return iso ? iso.slice(8, 10) + "." + iso.slice(5, 7) + "." + iso.slice(0, 4) + " " + iso.slice(11, 16) : ""; };
-  var ztIso = function (s) {
-    var m = /^(\d{2}\.\d{2}\.\d{4})\s+(\d{2}):(\d{2})$/.exec((s || "").trim()); if (!m || +m[2] > 23 || +m[3] > 59) return null;
-    var g = tarihIso(m[1]); return g ? g + "T" + m[2] + ":" + m[3] : null;
-  };
-  var gg = function (iso) { return iso.slice(8, 10) + "." + iso.slice(5, 7) + "." + iso.slice(0, 4); };
-  /* sonraki kontrol = kontrol tarihi (başlangıç) + türün periyodu; el ile değiştirilirse o kalır */
+  /* başlangıç, bitiş ve sonraki kontrol takvimden seçilir, elle yazılmaz (reisim 2026-09-27: "tıklayınca tarih seçtiren bi takvim açılsın
+     ve saat dakika seçebileceğim bir kısım olsun otomatik dolu gelsin"); değerler ISO: "YYYY-MM-DDTHH:MM" · sonraki "YYYY-MM-DD" */
+  /* sonraki kontrol = kontrol tarihi (başlangıç) + türün periyodu; elle seçilirse o kalır */
   var sonrakiHesap = function (r) {
-    var b = ztIso(r.bas); if (!b) return "";
-    var d = new Date(b.slice(0, 10) + "T12:00:00"); d.setMonth(d.getMonth() + r.t.periyot); return gg(d.toISOString().slice(0, 10));
+    if (!r.bas) return "";
+    var d = new Date(r.bas.slice(0, 10) + "T12:00:00"); d.setMonth(d.getMonth() + r.t.periyot); return d.toISOString().slice(0, 10);
   };
-  function tarihIso(s) {
-    var m = /^(\d{2})\.(\d{2})\.(\d{4})$/.exec((s || "").trim()); if (!m) return null;
-    var iso = m[3] + "-" + m[2] + "-" + m[1], d = new Date(iso + "T12:00:00");
-    return isNaN(d) || d.getDate() !== +m[1] || d.getMonth() + 1 !== +m[2] ? null : iso;
-  }
 
   /* ── RAPORLAR: plan 1'in ilk 10 ekipmanı (Planlar'la aynı sıra ve numara: 3 onayda, 7 taslak) ─────────────────────────── */
   var BASLADI = "2026-09-23T09:04";   /* plan 1 denetime başladı (Planlar) */
@@ -45,17 +35,18 @@
     var ts0 = MV.tesis(e.tesis);
     var r = { e: e, t: t, k: k, ts: ts0, basladi: e.tesis === "t1" ? BASLADI : ts0.ptarih ? ts0.ptarih + "T" + (ts0.psaat ? ts0.psaat[0] : "09:00") : null, no: k >= 0 ? MV.raporNo("0926", 786 + k) : q.no || "—", durum: k >= 0 ? (k < 3 ? "onayda" : "taslak") : (DURUM[q.durum] ? q.durum : "onaylandi"),
       olustu: k >= 0 ? saatEkle(10 + k * 6) : null, kisi: t.b === "e" ? "ea" : "mk", kriter: kr.map(function () { return { c: "", not: "" }; }), test: ts.map(function () { return ""; }),
-      foto: 0, metot: "", amac: "", sonuc: "", notlar: "", sigorta: null, bas: "", bit: "", sonraki: "", sonrakiEl: false, geri: null, geriler: [], pano: false, gonderildi: null };
+      foto: 0, amac: "", sonuc: "", notlar: "", sigorta: null, bas: "", bit: "", sonraki: "", sonrakiEl: false, bitEl: false, geri: null, geriler: [], pano: false, gonderildi: null };
     var dolu = function () {
       r.kriter.forEach(function (x) { x.c = "uygun"; });
-      r.test = ts.map(function (x) { return x.ornek; }); r.foto = 2; r.metot = t.std[0] || "uretici"; r.amac = "Üretim ve bakım"; r.sonuc = "kullanilir";
+      r.test = ts.map(function (x) { return x.ornek; }); r.foto = 2; r.amac = "Üretim ve bakım"; r.sonuc = "kullanilir";
     };
     if (r.durum !== "taslak") { dolu(); r.gonderildi = r.olustu ? saatEkle(60 + k * 9) : null; }
-    r.bas = ztYaz(r.olustu || r.basladi); r.bit = ztYaz(r.gonderildi); r.sonraki = sonrakiHesap(r);
+    /* otomatik dolu: başlangıç rapor açıldığında, bitiş gönderildiğinde (taslakta şimdi), sonraki kontrol başlangıç + periyot */
+    r.bas = r.olustu || r.basladi || MK.simdi(); r.bit = r.gonderildi || MK.simdi(); r.sonraki = sonrakiHesap(r);
     if (e.kod === "ET-1009") {   /* elektrik iç tesisatı: yarıda; pano sigortaları okunmadı; inspector'ın zimmetinde kalibrasyonu geçmiş cihaz */
       [0, 1, 2].forEach(function (i) { r.kriter[i].c = i === 2 ? "uygundegil" : "uygun"; });
       r.kriter[2].foto = 1; r.kriter[2].not = "Priz devresindeki kaçak akım rölesinin test düğmesi çalışmıyor; açma süresi ölçümle doğrulandı.";
-      r.test[0] = "0,8"; r.foto = 1; r.metot = t.std[0]; r.amac = "Aydınlatma, priz ve makine besleme devreleri";
+      r.test[0] = "0,8"; r.foto = 1; r.amac = "Aydınlatma, priz ve makine besleme devreleri";
     }
     if (e.kod === "KP-1004") dolu();   /* onaya hazır */
     if (e.kod === "ZV-1007") {   /* branş yöneticisi geri gönderdi: test değerleri eksik */
@@ -87,10 +78,8 @@
     var girilen = r.test.filter(function (v) { return !isNaN(sayi(v)); }).length, gecti = cihazlar(r).filter(function (v) { return MV.kalDurum(v) === "gecti"; });
     var oneri = r.sigorta ? r.sigorta.filter(function (x) { return x.durum !== "onayli"; }).length : 0;
     return [
-      { ok: !!r.metot, metin: r.metot ? "Kontrol metodu seçildi" : "Kontrol metodu seçilmedi", bolum: "r-bk" },
       { ok: !!r.amac.trim(), metin: r.amac.trim() ? "Kullanım amacı yazıldı" : "Kullanım amacı yazılmadı", bolum: "r-b2" },
-      { ok: !!ztIso(r.bas), metin: "Başlangıç tarihi ve saati yazılmadı", bolum: "r-bk" },
-      { ok: !r.bit || !!ztIso(r.bit), metin: "Bitiş tarihi ve saati geçersiz", bolum: "r-bk" },
+      { ok: r.bit >= r.bas, metin: "Bitiş başlangıçtan önce", bolum: "r-bk" },
       { ok: !gecti.length, metin: gecti.length ? "Kalibrasyonu geçmiş cihaz: " + gecti.map(function (v) { return v.seri; }).join(", ") : "Ölçüm cihazlarının kalibrasyonu geçerli", bolum: "r-b3", engel: true },
       { ok: cev === r.kriter.length, metin: cev + " / " + r.kriter.length + " kriter cevaplandı", bolum: "r-b4" },
       { ok: !kusurNotsuz, metin: kusurNotsuz ? kusurNotsuz + " kusurun açıklaması yazılmadı" : "Kusur açıklamaları tamam", bolum: "r-b4", gizle: !kusurlar(r).length },
@@ -116,22 +105,19 @@
     }).join("") + "</div>";
   };
   var okuGirdi = function (id, deger) { return '<input class="a-girdi a-girdi-oku" id="' + id + '" readonly value="' + kacis(deger || "—") + '">'; };
-  /* tarih alanlarının hatası yazarken yerinde güncellenir (liste yeniden çizilmez, odak kaçmaz) */
-  function tarihHata(r, k) {
-    var v = (r[k] || "").trim(), b = ztIso(r.bas);
-    if (k === "sonraki") { var i = tarihIso(v); return !v ? "" : !i ? "GG.AA.YYYY biciminde geçerli bir tarih." : b && i <= b.slice(0, 10) ? "Kontrol tarihinden sonra olmalı." : ""; }
-    if (!v) return k === "bas" ? "Tarih ve saat yazın." : "";
-    var z = ztIso(v); return !z ? "GG.AA.YYYY SS:DD biciminde." : k === "bit" && b && z < b ? "Bitiş başlangıçtan önce olamaz." : "";
+  /* tarih uyarıları seçince yerinde güncellenir (yeniden çizim yok, seçici açık kalır); uyarıdır, engel değil */
+  function tarihUyari(r, k) {
+    return k === "bit" && r.bit < r.bas ? "Bitiş başlangıçtan önce." : k === "sonraki" && r.sonraki <= r.bas.slice(0, 10) ? "Kontrol tarihinden sonra olmalı." : "";
   }
-  function hataYaz(id, metin) {
+  function uyariYaz(id, metin) {
     var g = $(id); if (!g) return; var kap = g.closest(".a-alan-grup"), p = kap.querySelector(".a-ipucu");
     if (metin) { g.setAttribute("aria-invalid", "true"); if (!p) { p = document.createElement("p"); p.className = "a-ipucu a-ipucu-uyari"; p.id = id + "-ipucu"; kap.appendChild(p); } p.textContent = metin; }
     else { g.removeAttribute("aria-invalid"); if (p) p.remove(); }
   }
-  var tarihAlan = function (r, oku, k, etiket, bicim) {
-    var id = "r-" + k, h = oku ? "" : tarihHata(r, k);
-    return MK.alan({ id: id, etiket: etiket, zorunlu: !oku && k === "bas", hata: h,
-      girdi: oku ? okuGirdi(id, r[k]) : MK.girdi({ id: id, alan: k, deger: r[k], sinif: "a-girdi-sicil", hata: h, ek: ' inputmode="numeric" maxlength="' + bicim.length + '" placeholder="' + bicim + '"' }) });
+  var tarihAlan = function (r, oku, k, etiket, saat) {
+    var id = "r-" + k, h = oku ? "" : tarihUyari(r, k);
+    return MK.alan({ id: id, etiket: etiket, hata: h,
+      girdi: oku ? okuGirdi(id, saat ? MK.tarihYaz(r[k]) + " · " + r[k].slice(11, 16) : MK.tarihYaz(r[k])) : MK.zaman({ id: id, ad: etiket, deger: r[k], saat: saat, tanim: id + "-ipucu" }) });
   };
   function ciz(odak) {
     var kod = (/^#\/r\/([A-Z0-9-]+)/.exec(location.hash) || [])[1], r = kod ? rapor(kod) : null;
@@ -144,8 +130,6 @@
     var t = r.t, e = r.e, oku = r.durum !== "taslak";
     var PL = r.ts, p = MV.kisi(r.kisi), yon = MV.kisi(YON[t.b]), isg = MV.isgTesis(PL.id).filter(function (x) { return x.k === r.kisi; })[0], ci = cihazlar(r);
     var gecti = ci.filter(function (v) { return MV.kalDurum(v) === "gecti"; });
-    var metotlar = t.std.map(function (k) { var s = MV.standart(k); return [k, s.no + ":" + s.surum, s.konu]; }).concat([["uretici", "Üretici talimatı"], ["risk", "Risk değerlendirmesi"]]);
-    var metotAd = (metotlar.filter(function (x) { return x[0] === r.metot; })[0] || [])[1];
     var cevaplanan = r.kriter.filter(function (x) { return x.c; }).length;
     var CIHAZ = [
       { k: "ad", baslik: "Cihaz", kart: "ust", sira: 1, hucre: function (v) { return kacis(v.ad); } },
@@ -170,10 +154,7 @@
           bilgi("SGK destis no", '<span class="a-kod a-kod-uzun">' + PL.sgk + "</span>", "cift") +
           bilgi("İSG-KATİP sözleşme ID", isg ? '<span class="a-kod">' + isg.no + "</span>" : '<span class="a-uyari-metin">Yok</span>') + "</dl>") +
       bolum(2, "r-bk", "Kontrol bilgileri", '<div class="a-form">' +
-          tarihAlan(r, oku, "bas", "Başlangıç", "GG.AA.YYYY SS:DD") + tarihAlan(r, oku, "bit", "Bitiş", "GG.AA.YYYY SS:DD") +
-          tarihAlan(r, oku, "sonraki", "Sonraki kontrol", "GG.AA.YYYY") +
-          MK.alan({ id: "r-metot", etiket: "Kontrol metodu", zorunlu: !oku, genis: true,
-            girdi: oku ? okuGirdi("r-metot", metotAd) : MK.secim({ id: "r-metot", ad: "Kontrol metodu", deger: r.metot, secenekler: metotlar, ipucu: "Metot seçin", tanim: "r-metot-ipucu" }) }) +
+          tarihAlan(r, oku, "bas", "Başlangıç", true) + tarihAlan(r, oku, "bit", "Bitiş", true) + tarihAlan(r, oku, "sonraki", "Sonraki kontrol", false) +
         "</div>") +
       bolum(3, "r-b2", "Ekipman bilgileri", '<dl class="a-bilgi">' + bilgi("Kod", '<span class="a-kod">' + e.kod + "</span>") + bilgi("Marka / model", kacis(e.marka + " " + e.model)) +
           bilgi("Seri no", '<span class="a-kod">' + e.seri + "</span>") + bilgi("İmal yılı", e.imal) + bilgi("Kullanım yeri", kacis(e.konum)) +
@@ -304,12 +285,6 @@
     if (W && $("a-pencere").open) { W.d[k] = e.target.value; return; }
     var r = aktif(); if (!r) return;
     if (k === "amac" || k === "notlar") r[k] = e.target.value;
-    else if (k === "bas" || k === "bit" || k === "sonraki") {
-      r[k] = e.target.value;
-      if (k === "sonraki") r.sonrakiEl = !!r.sonraki.trim();
-      if (k === "bas" && !r.sonrakiEl && $("r-sonraki")) { r.sonraki = sonrakiHesap(r); $("r-sonraki").value = r.sonraki; }   /* sonraki kontrol kendiliğinden */
-      ["bas", "bit", "sonraki"].forEach(function (x) { hataYaz("r-" + x, tarihHata(r, x)); });
-    }
     else if (k[0] === "t" && k[1] !== undefined && /^t\d+$/.test(k)) {   /* test değeri: ipucu ve sonuç önerisi canlı, odak yerinde */
       var i = +k.slice(1), x = MV.testler(r.t)[i]; r.test[i] = e.target.value;
       $("r-t" + i + "-sonuc").textContent = testIpucu(x, r.test[i]);
@@ -323,8 +298,15 @@
   function ozetYenile(r) { var t = document.querySelector('[data-eylem="onaya-gonder"]'); if (t) t.disabled = engelli(r); }
   MK.onSecim = function (id, deger) {
     if (W && $("a-pencere").open) { W.d[id.slice(2)] = deger; delete W.hata[id.slice(2)]; pencereCiz(id); return; }
-    var r = aktif(); if (id === "r-metot") { r.metot = deger; ciz(id); }
-    else if (/^r-kc\d+$/.test(id)) { r.kriter[+id.slice(4)].c = deger; ciz(id); }
+    var r = aktif(); if (/^r-kc\d+$/.test(id)) { r.kriter[+id.slice(4)].c = deger; ciz(id); }
+  };
+  MK.onZaman = function (id, deger) {
+    var r = aktif(), k = id.slice(2); if (!r || !(k in r)) return;
+    r[k] = deger;
+    if (k === "sonraki") r.sonrakiEl = true;
+    if (k === "bit") r.bitEl = true;
+    if (k === "bas" && !r.sonrakiEl) { r.sonraki = sonrakiHesap(r); MK.zamanAyarla("r-sonraki", r.sonraki); }   /* sonraki kontrol kendiliğinden */
+    ["bit", "sonraki"].forEach(function (x) { uyariYaz("r-" + x, tarihUyari(r, x)); });
   };
   var X = MK.eylem;
   X["foto-ekle"] = function () { var r = aktif(); r.foto++; ciz(); var t = document.querySelector('[data-eylem="foto-ekle"]'); if (t) t.focus(); MK.bildir("Fotoğraf " + r.foto + " eklendi."); };
@@ -360,7 +342,7 @@
   };
   function gonder(r) {
     if (r.geri) r.geriler.unshift(r.geri);
-    r.durum = "onayda"; r.gonderildi = MK.simdi(); r.geri = null; if (!ztIso(r.bit)) r.bit = ztYaz(r.gonderildi);
+    r.durum = "onayda"; r.gonderildi = MK.simdi(); r.geri = null; if (!r.bitEl) r.bit = r.gonderildi;
     ciz(); window.scrollTo(0, 0); var h = document.querySelector("#a-rapor h1"); if (h) h.focus({ preventScroll: true });
     MK.bildir("Onaya gönderildi: " + MV.kisi(YON[r.t.b]).ad + ", " + MV.bransAd(r.t.b).toLocaleLowerCase("tr") + " branş yöneticisi.");
   }

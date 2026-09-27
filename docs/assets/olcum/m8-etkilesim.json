@@ -2,8 +2,8 @@
  "maket": "m8",
  "tarih": "2026-09-27",
  "arac": "tools/olc-bulut.mjs --etkilesim (başsız tarayıcı, 1920 açık tema; gen verilen denemede o genişlik)",
- "toplam": 21,
- "gecen": 21,
+ "toplam": 25,
+ "gecen": 25,
  "denemeler": [
   {
    "ad": "kriter seçilince sayaç güncellenir, odak seçimde",
@@ -111,21 +111,49 @@
    "gecti": true
   },
   {
-   "ad": "başlangıç değişince sonraki kontrol kendiliğinden (odak yerinde)",
+   "ad": "tarihler elle yazılmaz, otomatik dolu; metot yok",
+   "gen": 1920,
+   "sayfa": "maket/rapor.html",
+   "hash": "#/r/ET-1009",
+   "gecti": true
+  },
+  {
+   "ad": "başlangıçta gün seçilince sonraki kontrol kendiliğinden, seçici açık kalır",
    "gen": 1920,
    "sayfa": "maket/rapor.html",
    "hash": "#/r/KP-1004",
    "gecti": true
   },
   {
-   "ad": "sonraki kontrol el ile yazılınca başlangıç değişse de kalır",
+   "ad": "saat ve dakika tuşla değişir, odak tuşta",
    "gen": 1920,
    "sayfa": "maket/rapor.html",
    "hash": "#/r/KP-1004",
    "gecti": true
   },
   {
-   "ad": "bitiş başlangıçtan önce: hata yerinde, odak kaçmaz",
+   "ad": "sonraki kontrol elle seçilince başlangıç değişse de kalır",
+   "gen": 1920,
+   "sayfa": "maket/rapor.html",
+   "hash": "#/r/KP-1004",
+   "gecti": true
+  },
+  {
+   "ad": "Tamam seçiciyi kapatır, odak alanda",
+   "gen": 1920,
+   "sayfa": "maket/rapor.html",
+   "hash": "#/r/ET-1009",
+   "gecti": true
+  },
+  {
+   "ad": "Escape seçiciyi kapatır",
+   "gen": 1920,
+   "sayfa": "maket/rapor.html",
+   "hash": "#/r/ET-1009",
+   "gecti": true
+  },
+  {
+   "ad": "bitiş başlangıçtan önce: uyarı yerinde (engel değil)",
    "gen": 1920,
    "sayfa": "maket/rapor.html",
    "hash": "#/r/ET-1009",
