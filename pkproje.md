@@ -1679,6 +1679,11 @@ revizyon, alan kopyalama, hafif kusur devri, meslek eşleşme denetimi).
 - Emsal ürünler: https://opwire.app/iso-17020-periyodik-kontrol-yazilimi/ · https://17020muayene.vidco.com.tr/ · https://akuple.com/asansor-kontrol-yazilimi/ · https://ensyazilim.com/
 
 ## 11 · Değişiklik günlüğü
+- 2026-09-28 (100): **Dökümanlar modülü** (§9 otuzuncu tur): Standartlar (4) → Dökümanlar; sekmeler Standartlar · Muayene kriterleri ·
+  Eğitimler · Diğer dökümanlar. Eğitimler (10) ayrı menü değil (sayfası `egitimler.html` aynı sekme satırıyla, menüde Dökümanlar etkin).
+  Diğer dökümanlar: firmanın kalite el kitabı, prosedür, talimat, politika, form, sertifika (uydurma 7 kayıt); "Döküman yükle" (ad, tür, kod,
+  revizyon, PDF). Modül kaydı 15 modül (`src/app/dokumanlar`; `egitimler` ve `standartlar` rotaları kalktı). Ölçüm aracı: sayfa yönlenirken
+  kesilen yazı tipi isteği hata sayılmaz. 18 maket temiz: durum 1896/1896 · etkileşim 419/419 · telefon 948/948.
 - 2026-09-28 (99): **Talepler modülü (21)** (§9 otuzuncu tur): menüde Personel grubunda; `maket/talepler.html`. Taleplerim listesi (izin +
   masraf, süzgeç), yıllık izin özeti (hak · kullanılan · kalan · bekleyen), "Yeni talep" → izin talebi (tür, başlangıç–bitiş, iş günü
   kendiliğinden, sağlık raporunda belge; yıllık izin kalanı aşılırsa uyarı, engel değil) · masraf formu (iş seçilir ya da "Genel"; Muhasebe'ye

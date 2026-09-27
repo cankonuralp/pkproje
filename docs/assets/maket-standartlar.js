@@ -111,6 +111,19 @@
     { k: "yururluk", baslik: "Yürürlük", kart: "govde", sira: 5, hucre: function (x) { return '<span class="a-kart-etiket">Yürürlük</span><span>' + MK.tarihYaz(x.yururluk) + '<span class="a-alt-satir">yayım ' + MK.tarihYaz(x.yayim) + "</span></span>"; } },
     { k: "eylem", baslik: "İşlem", gizliBaslik: true, kart: "eylem", sira: 9, hucre: function (x) { return '<div class="a-eylem"><div class="a-eylem-tuslar">' + MK.pdfTus(x.dosya) + "</div></div>"; } }
   ];
+  /* ── DİĞER DÖKÜMANLAR (2026-09-28): firmanın kendi belgeleri; yüklenir, açılır ─────────────────────────────────────── */
+  var D_SUTUN = [
+    { k: "ad", baslik: "Döküman", kart: "ust", sira: 1, hucre: function (d) { return "<b>" + kacis(d.ad) + "</b>" + (d.kod ? '<span class="a-alt-satir a-kod">' + d.kod + "</span>" : ""); } },
+    { k: "tur", baslik: "Tür", kart: "govde", sira: 2, hucre: function (d) { return '<span class="a-kart-etiket">Tür</span>' + kacis(d.tur); } },
+    { k: "rev", baslik: "Revizyon", kart: "govde", sira: 3, hucre: function (d) { return '<span class="a-kart-etiket">Revizyon</span>' + kacis(d.rev); } },
+    { k: "tarih", baslik: "Yayım", kart: "govde", sira: 4, hucre: function (d) { return '<span class="a-kart-etiket">Yayım</span>' + MK.tarihYaz(d.tarih); } },
+    { k: "eylem", baslik: "İşlem", gizliBaslik: true, kart: "eylem", sira: 9, hucre: function (d) { return '<div class="a-eylem"><div class="a-eylem-tuslar">' + MK.pdfTus(d.dosya) + "</div></div>"; } }
+  ];
+  function digerCiz() {
+    var l = MV.DOKUMANLAR.slice().sort(function (a, b) { return a.tarih < b.tarih ? 1 : -1; });
+    $("a-sayac").innerHTML = "<b>" + l.length + "</b> döküman"; $("a-suzgec-kap").innerHTML = "";
+    $("a-liste").innerHTML = MK.tablo({ baslik: "Diğer dökümanlar", sinif: "a-tablo-dokuman", sutunlar: D_SUTUN, kayitlar: l });
+  }
   function kriterListeCiz() {
     $("a-sayac").innerHTML = "<b>" + KB.length + "</b> belge"; $("a-suzgec-kap").innerHTML = "";
     $("a-liste").innerHTML = MK.tablo({ baslik: "Kontrol kriterleri", sinif: "a-tablo-kriterbelge", sutunlar: K_SUTUN, kayitlar: KB, href: function (x) { return "#/k/" + x.k; } });
@@ -122,12 +135,12 @@
   ];
   function kriterCiz(x) {
     if (!x) {
-      $("a-nesne").innerHTML = MK.kirinti([["Kontrol kriterleri", "#/kriterler"]]) + '<h1 class="a-gizli" tabindex="-1">Belge bulunamadı</h1>' +
-        MK.bos({ ikon: "circle-alert", baslik: "Belge bulunamadı", metin: "Bu adreste kontrol kriterleri belgesi yok.", eylem: '<a class="a-tus a-tus-ikincil" href="#/kriterler">' + ikon("arrow-left", "a-ikon-kucuk") + "Kontrol kriterlerine dön</a>" });
+      $("a-nesne").innerHTML = MK.kirinti([["Muayene kriterleri", "#/kriterler"]]) + '<h1 class="a-gizli" tabindex="-1">Belge bulunamadı</h1>' +
+        MK.bos({ ikon: "circle-alert", baslik: "Belge bulunamadı", metin: "Bu adreste kontrol kriterleri belgesi yok.", eylem: '<a class="a-tus a-tus-ikincil" href="#/kriterler">' + ikon("arrow-left", "a-ikon-kucuk") + "Muayene kriterlerine dön</a>" });
       return;
     }
     var f = MV.raporFormati(x.rapor), t = MV.tur(x.tur);
-    $("a-nesne").innerHTML = MK.kirinti([["Kontrol kriterleri", "#/kriterler"], [x.k]]) +
+    $("a-nesne").innerHTML = MK.kirinti([["Muayene kriterleri", "#/kriterler"], [x.k]]) +
       '<div class="a-nesne-bas"><div class="a-nesne-kimlik"><div class="a-nesne-baslik"><h1 tabindex="-1">' + x.k + "</h1>" + rozet({ ad: "Yürürlükte", rozet: "a-rozet-tamam" }) + "</div>" +
         '<p class="a-nesne-alt">' + ikon("list-checks", "a-ikon-kucuk") + "<span>" + kacis(x.ad) + "</span></p></div>" +
         '<div class="a-eylem-cubugu">' + MK.pdfTus(x.dosya, "Kriterleri aç") + MK.pdfTus(f.dosya, "Rapor formatını aç") + "</div></div>" +
@@ -180,6 +193,23 @@
     return MK.serit("uyari", "history", (W.s ? "" : "Bu numara kütüphanede var (" + kacis(ad(s)) + "). ") + "Yüklenince " + kacis(ad(s)) + " önceki sürüm olur" +
       (t.length ? "; " + t.length + " tür (" + kacis(t.map(function (x) { return x.ad; }).join(", ")) + ") yeni sürümü kullanır" : "") + ". Yazılmış raporlar eski sürümü göstermeye devam eder.");
   }
+  /* döküman yükle penceresi: ad, tür, kod, revizyon, PDF */
+  function dokCiz(odak) {
+    var d = W.d, h = W.hata;
+    $("a-pencere-baslik").textContent = "Döküman yükle";
+    $("a-pencere-govde").innerHTML = '<div class="a-form">' +
+      MK.alan({ id: "w-ad", etiket: "Döküman adı", zorunlu: true, hata: h.ad, genis: true, girdi: MK.girdi({ id: "w-ad", alan: "ad", deger: d.ad, ek: ' maxlength="100"', hata: h.ad }) }) +
+      MK.alan({ id: "w-tur", etiket: "Tür", zorunlu: true, hata: h.tur, girdi: MK.secim({ id: "w-tur", ad: "Tür", deger: d.tur, ipucu: "Tür seçin", gecersiz: !!h.tur, secenekler: MV.DOKUMAN_TUR.map(function (t) { return [t, t]; }) }) }) +
+      MK.alan({ id: "w-kod", etiket: "Kod", girdi: MK.girdi({ id: "w-kod", alan: "kod", deger: d.kod, sinif: "a-girdi-sicil", ek: ' maxlength="20"' }) }) +
+      MK.alan({ id: "w-rev", etiket: "Revizyon", girdi: MK.girdi({ id: "w-rev", alan: "rev", deger: d.rev, ek: ' maxlength="20"' }) }) +
+      '<div class="a-alan-grup a-alan-genis"><p class="a-etiket">Dosya <span class="a-zorunlu">zorunlu</span></p><div class="a-dosya">' +
+        MK.tus({ eylem: "dok-dosya", ad: d.dosya ? "Değiştir" : "PDF seç", ikon: "file-plus", sinif: "a-tus-ikincil" }) +
+        (d.dosya ? '<span class="a-dosya-ad">' + kacis(d.dosya) + "</span>" + MK.pdfTus(d.dosya) : '<span class="a-dosya-ad a-deger-yok">Dosya seçilmedi</span>') + "</div>" +
+        (h.dosya ? '<p class="a-ipucu a-ipucu-uyari" id="w-dosya-ipucu">' + h.dosya + "</p>" : "") + "</div></div>";
+    $("a-pencere-alt").innerHTML = MK.tus({ eylem: "pencere-kapat", ad: "Vazgeç", sinif: "a-tus-ikincil" }) + MK.tus({ eylem: "dok-kaydet", ad: "Yükle", ikon: "check" });
+    if (odak) { var el = $(odak); if (el) el.focus(); }
+  }
+  function dokAc() { W = { tip: "dok", hata: {}, d: { ad: "", tur: "", kod: "", rev: "", dosya: "" } }; dokCiz(); if (!$("a-pencere").open) $("a-pencere").showModal(); $("w-ad").focus(); }
   function pencereAc(s) {
     W = { s: s || null, hata: {}, d: { no: s ? s.no : "", surum: "", konu: s ? s.konu : "", dosya: "" } };
     pencereCiz(); if (!$("a-pencere").open) $("a-pencere").showModal(); $(s ? "w-surum" : "w-no").focus();
@@ -206,28 +236,46 @@
     var h = location.hash.replace(/\?.*$/, ""), m;
     if (h === "#/yukle") return { v: "liste", pencere: true };
     if (h === "#/kriterler") return { v: "kriterler" };
+    if (h === "#/diger") return { v: "diger" };
+    if (h === "#/diger/yukle") return { v: "diger", pencere: "dok" };
     if ((m = /^#\/k\/([A-Z0-9]+)$/.exec(h))) return { v: "kriter", id: m[1] };
     if ((m = /^#\/s\/([a-z0-9]+)\/surum$/.exec(h))) return { v: "std", id: m[1], pencere: true };
     if ((m = /^#\/s\/([a-z0-9]+)$/.exec(h))) return { v: "std", id: m[1] };
     return { v: "liste" };
   }
   function goster(odakla) {
-    var r = rota(), s = r.v === "std" ? bul(r.id) : null, liste = r.v === "liste" || r.v === "kriterler";
+    var r = rota(), s = r.v === "std" ? bul(r.id) : null, liste = r.v === "liste" || r.v === "kriterler" || r.v === "diger";
     $("a-liste-gorunum").hidden = !liste; $("a-nesne").hidden = liste;
-    $("a-sekme-std").toggleAttribute("aria-current", r.v === "liste"); $("a-sekme-krt").toggleAttribute("aria-current", r.v === "kriterler");
-    if (r.v === "liste") $("a-sekme-std").setAttribute("aria-current", "page"); if (r.v === "kriterler") $("a-sekme-krt").setAttribute("aria-current", "page");
-    document.querySelector("#a-liste-gorunum .a-sayfa-bas .a-bolum-tus").hidden = r.v === "kriterler";   /* kriter belgeleri kodda; yükleme yok */
+    [["a-sekme-std", "liste"], ["a-sekme-krt", "kriterler"], ["a-sekme-dgr", "diger"]].forEach(function (x) { if (r.v === x[1]) $(x[0]).setAttribute("aria-current", "page"); else $(x[0]).removeAttribute("aria-current"); });
+    document.querySelector("#a-liste-gorunum .a-sayfa-bas .a-bolum-tus").hidden = r.v !== "liste";   /* kriter belgeleri kodda; yükleme yok */
+    $("a-dok-yukle").hidden = r.v !== "diger";
     if (r.v === "liste") { $("a-suzgec-kap").innerHTML = MK.suzgecHtml("s"); MK.suzgecKur("s"); }
     else if (r.v === "kriterler") kriterListeCiz();
+    else if (r.v === "diger") digerCiz();
     else if (r.v === "kriter") kriterCiz(MV.kontrolBelgesi(r.id));
     else standartCiz(s);
-    document.title = (r.v === "liste" ? "Standartlar" : r.v === "kriterler" ? "Kontrol kriterleri" : r.v === "kriter" ? r.id : s ? ad(s) : "Standart bulunamadı") + " · probata maket";
+    document.title = (r.v === "liste" ? "Standartlar · Dökümanlar" : r.v === "kriterler" ? "Muayene kriterleri · Dökümanlar" : r.v === "diger" ? "Diğer dökümanlar · Dökümanlar" : r.v === "kriter" ? r.id : s ? ad(s) : "Standart bulunamadı") + " · probata maket";
     if (odakla) { window.scrollTo(0, 0); var hh = document.querySelector("#a-icerik > :not([hidden]) h1"); if (hh) hh.focus({ preventScroll: true }); }
-    if (r.pencere && (r.v === "liste" || (s && !s.yerine))) pencereAc(s); else if ($("a-pencere").open) $("a-pencere").close();
+    if (r.pencere === "dok") { if (!W) dokAc(); }
+    else if (r.pencere && (r.v === "liste" || (s && !s.yerine))) pencereAc(s); else if ($("a-pencere").open) $("a-pencere").close();
   }
   MK.goster = goster;
   var X = MK.eylem;
   X["yukle-ac"] = function () { pencereAc(null); };
+  X["dok-yukle-ac"] = function () { history.replaceState(null, "", "#/diger/yukle"); dokAc(); };
+  X["dok-dosya"] = function () {
+    MK.dosyaSec({ kabul: ".pdf", enCokMB: 50, ornek: (W.d.kod || W.d.ad || "dokuman").replace(/\s+/g, "-") + ".pdf" }, function (ad) {
+      if (!W) return; W.d.dosya = ad; delete W.hata.dosya; dokCiz(); document.querySelector('[data-eylem="dok-dosya"]').focus();
+    });
+  };
+  X["dok-kaydet"] = function () {
+    var d = W.d, h = {};
+    if (!d.ad.trim()) h.ad = "Döküman adı yazılmalı."; if (!d.tur) h.tur = "Tür seçilmeli."; if (!d.dosya) h.dosya = "PDF dosyası eklenmeli.";
+    W.hata = h; var hk = Object.keys(h); if (hk.length) { dokCiz(hk[0] === "dosya" ? null : "w-" + hk[0]); if (hk[0] === "dosya") document.querySelector('[data-eylem="dok-dosya"]').focus(); return; }
+    var x = { k: "d" + (MV.DOKUMANLAR.length + 1), kod: d.kod.trim(), ad: d.ad.trim(), tur: d.tur, rev: d.rev.trim() || "—", tarih: MK.BUGUN, yukleyen: "sy", dosya: d.dosya };
+    MV.DOKUMANLAR.push(x); $("a-pencere").close(); digerCiz(); MK.bildir(x.ad + " yüklendi.");
+  };
+  MK.onSecim = function (id, deger) { if (W && W.tip === "dok" && id === "w-tur") { W.d.tur = deger; delete W.hata.tur; dokCiz(id); } };
   X["surum-ac"] = function () { pencereAc(bul(rota().id)); };
   /* yüklenen standart PDF'i görüntüleyicide açılır (reisim 2026-09-27); sahada tablet ve telefonda da okunur */
   X["oku"] = function () { var s = bul(rota().id); MK.pdfGoster({ dosya: s.dosya.ad, baslik: ad(s), sayfa: 3 }); };
@@ -244,7 +292,7 @@
     if (k === "no") { var no = W.d.no.trim().replace(/\s+/g, " "); $("w-seritler").innerHTML = seritler(S.filter(function (x) { return !x.yerine && x.no === no; })[0]); }
   };
   $("a-pencere").addEventListener("close", function () {
-    var r = rota(); if (r.pencere) history.replaceState(null, "", r.v === "std" ? "#/s/" + r.id : "#/");
+    W = null; var r = rota(); if (r.pencere) history.replaceState(null, "", r.v === "std" ? "#/s/" + r.id : r.v === "diger" ? "#/diger" : "#/");
   });
 
   MK.kabuk({ modul: 4, kullanici: { bas: "SY", ad: "Selin Yıldız", rol: "Mekanik yönetici" } });

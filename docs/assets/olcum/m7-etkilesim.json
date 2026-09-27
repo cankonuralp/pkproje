@@ -2,11 +2,39 @@
  "maket": "m7",
  "tarih": "2026-09-27",
  "arac": "tools/olc-bulut.mjs --etkilesim (başsız tarayıcı, 1920 açık tema; gen verilen denemede o genişlik)",
- "toplam": 18,
- "gecen": 18,
+ "toplam": 22,
+ "gecen": 22,
  "denemeler": [
   {
-   "ad": "Kontrol kriterleri sekmesi: 2 belge, yükleme tuşu yok",
+   "ad": "menüde Dökümanlar (Standartlar ve Eğitimler ayrı menü değil); dört sekme",
+   "gen": 1920,
+   "sayfa": "maket/standartlar.html",
+   "hash": "#/",
+   "gecti": true
+  },
+  {
+   "ad": "Eğitimler sekmesi eğitim kayıtlarını açar; menüde Dökümanlar etkin",
+   "gen": 1920,
+   "sayfa": "maket/egitimler.html",
+   "hash": "#/",
+   "gecti": true
+  },
+  {
+   "ad": "Diğer dökümanlar: liste ve açılır belge",
+   "gen": 1920,
+   "sayfa": "maket/standartlar.html",
+   "hash": "#/diger",
+   "gecti": true
+  },
+  {
+   "ad": "döküman yüklenir, listede görünür",
+   "gen": 1920,
+   "sayfa": "maket/standartlar.html",
+   "hash": "#/diger",
+   "gecti": true
+  },
+  {
+   "ad": "Muayene kriterleri sekmesi: 2 belge, yükleme tuşu yok",
    "gen": 1920,
    "sayfa": "maket/standartlar.html",
    "hash": "#/kriterler",

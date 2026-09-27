@@ -162,6 +162,9 @@ export const DURUMLAR = {
     { ad: "plan açıldı · uyarılı ekip, el ile ID sözleşmeye kaydedildi", hash: "#/?tesis=t4", adim: [["tikla", "#p-a-mk"], ["tikla", "#p-a-ea"], ["yaz", "#p-isg-ea", "S-2026-0470"], ["tikla", '[data-kaydet="ea"]'], ["tikla", '[data-eylem="plani-ac"]']] },
   ] },
   m7: { sayfa: "maket/standartlar.html", durumlar: [
+    /* 2026-09-28 (reisim: dökümanlar modülü — standartlar, muayene kriterleri, eğitimler, diğer dökümanlar) */
+    { ad: "diğer dökümanlar · liste", hash: "#/diger" },
+    { ad: "döküman yükle · boş gönderildi", hash: "#/diger/yukle", adim: [["tikla", '[data-eylem="dok-kaydet"]']] },
     /* 2026-09-27 (reisim: kontrol kriterleri Standartlar altında sekme) */
     { ad: "kontrol kriterleri · liste", hash: "#/kriterler" },
     { ad: "kriter belgesi · ZPKK02 (17 madde)", hash: "#/k/ZPKK02" },
@@ -543,8 +546,13 @@ export const DENEMELER = {
     { ad: "Esc pencereyi kapatır, adres sözleşmeye döner", hash: "#/isg/i1", adim: [["tus", "Escape"]], bekle: '!document.querySelector("#a-pencere").open && /^#\\/s\\/IS-[0-9-]+$/.test(location.hash)' },
   ],
   m7: [
+    /* 2026-09-28 (reisim: "dökümanlar modülü olsun standartlar bunun altında olsun, eğitimler, muayene kriterleri, standartlar, ve diğer dökümanlar") */
+    { ad: "menüde Dökümanlar (Standartlar ve Eğitimler ayrı menü değil); dört sekme", hash: "#/", bekle: '/Dökümanlar/.test(document.querySelector("#a-menu").textContent) && !/Standartlar|Eğitimler/.test(document.querySelector("#a-menu").textContent) && [...document.querySelectorAll(".a-sekmeler-sayfa .a-sekme")].map(a => a.textContent).join("|") === "Standartlar|Muayene kriterleri|Eğitimler|Diğer dökümanlar" && document.querySelector("#a-icerik h1").textContent === "Dökümanlar"' },
+    { ad: "Eğitimler sekmesi eğitim kayıtlarını açar; menüde Dökümanlar etkin", sayfa: "maket/egitimler.html", hash: "#/", bekle: '[...document.querySelectorAll("#a-menu [aria-current=page]")].some(a => a.textContent.trim() === "Dökümanlar") && document.querySelector(\'.a-sekmeler-sayfa [aria-current="page"]\').textContent === "Eğitimler" && document.querySelectorAll("#a-liste tbody tr").length > 0' },
+    { ad: "Diğer dökümanlar: liste ve açılır belge", hash: "#/diger", adim: [["tikla", '#a-liste [data-eylem="pdf-goster"]']], bekle: 'document.querySelector("#a-pdf").open && /7 döküman/.test(document.querySelector("#a-sayac").textContent) && !document.querySelector("#a-dok-yukle").hidden && document.querySelector("#a-liste-gorunum .a-sayfa-bas .a-bolum-tus").hidden' },
+    { ad: "döküman yüklenir, listede görünür", hash: "#/diger", adim: [["tikla", '[data-eylem="dok-yukle-ac"]'], ["yaz", "#w-ad", "Acil durum talimatı"], ["tikla", "#w-tur"], ["tikla", '[data-secim="w-tur"][data-deger="Talimat"]'], ["tikla", '[data-eylem="dok-dosya"]'], ["tikla", '[data-eylem="dok-kaydet"]']], bekle: '!document.querySelector("#a-pencere").open && /Acil durum talimatı/.test(document.querySelector("#a-liste").textContent) && location.hash === "#/diger"' },
     /* 2026-09-27 (reisim: "kriterler de sistem de muhafaza edilecek ve standartlar modülü altında bir sekme de onlar da var olsunlar") */
-    { ad: "Kontrol kriterleri sekmesi: 2 belge, yükleme tuşu yok", hash: "#/kriterler", bekle: 'document.querySelector("#a-sayac").textContent === "2 belge" && document.querySelector("#a-sekme-krt").getAttribute("aria-current") === "page" && document.querySelector("#a-liste-gorunum .a-sayfa-bas .a-bolum-tus").hidden' },
+    { ad: "Muayene kriterleri sekmesi: 2 belge, yükleme tuşu yok", hash: "#/kriterler", bekle: 'document.querySelector("#a-sayac").textContent === "2 belge" && document.querySelector("#a-sekme-krt").getAttribute("aria-current") === "page" && document.querySelector("#a-liste-gorunum .a-sayfa-bas .a-bolum-tus").hidden' },
     { ad: "kriter belgesi: 17 madde, notlar, rapor formatı ZPKR02", hash: "#/k/ZPKK02", bekle: 'document.querySelector("section[aria-labelledby=a-b-madde] .a-sayac").textContent === "17 madde" && /ZPKR02/.test(document.querySelector("#a-nesne").textContent) && document.querySelectorAll("section[aria-labelledby=a-b-knot] li").length === 6' },
     { ad: "resmî PDF gerçek dosyayla açılır ve iner (dosya application/pdf olarak geliyor)", hash: "#/k/ZPKK01", adim: [["tikla", '#a-nesne .a-eylem-cubugu [data-eylem="pdf-goster"]'], ["tikla", '[data-eylem="pdf-indir"]'], ["js", 'fetch(document.querySelector("#a-pdf iframe").src).then(function (r) { window.PDF_TUR = r.ok && r.headers.get("content-type"); })']], bekle: 'window.PDF_TUR === "application/pdf" && /belgeler\\/ZPKK01\\.pdf$/.test(document.querySelector("#a-pdf iframe").getAttribute("src")) && MK.SON_INDIRME && MK.SON_INDIRME.url === "belgeler/ZPKK01.pdf"' },
     { ad: "Standartlar sekmesine dönüş: liste ve yükle tuşu", hash: "#/kriterler", adim: [["tikla", "#a-sekme-std"]], bekle: 'location.hash === "#/" && !document.querySelector("#a-liste-gorunum .a-sayfa-bas .a-bolum-tus").hidden && /standart/.test(document.querySelector("#a-sayac").textContent)' },
@@ -907,7 +915,9 @@ async function ac(tar, taban, dosya, hash, gen, yuk, tema, adim) {
   s.on("console", m => { if (m.type() === "error") hatalar.push(m.text()); });
   /* 2026-09-27: iframe'deki PDF'i başsız Chrome kendi görüntüleyicisine devrederken ilk isteği ERR_ABORTED bildirir (sayfanın hatası değil);
      dosyanın gerçekten ve doğru türle geldiği etkileşim denemesinde fetch ile ayrıca doğrulanır (m7 "resmî PDF …") */
-  s.on("requestfailed", r => { const e = r.failure() && r.failure().errorText; if (/\.pdf$/.test(r.url()) && e === "net::ERR_ABORTED") return; hatalar.push("istek düştü: " + r.url() + " · " + e); });
+  /* 2026-09-28: sayfa başka sayfaya yönlenirken (ör. Sözleşmeler → müşteri sayfası) yüklenmekte olan yazı tipi isteği kesilir (ERR_ABORTED);
+     sayfanın hatası değil. Eksik yazı tipi 404 döner, o yine yakalanır. */
+  s.on("requestfailed", r => { const e = r.failure() && r.failure().errorText; if (/\.(pdf|woff2)$/.test(r.url()) && e === "net::ERR_ABORTED") return; hatalar.push("istek düştü: " + r.url() + " · " + e); });
   s.on("response", r => { if (r.status() >= 400) hatalar.push(r.status() + " " + r.url()); });
   await s.setViewport({ width: gen, height: yuk, deviceScaleFactor: 1 });
   /* 2026-09-27: başsız tarayıcı dosya penceresi açamaz → maket örnek dosya adını kullanır (MK.dosyaSec); yazdırma penceresi açılmaz */

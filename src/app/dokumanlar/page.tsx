@@ -2,7 +2,7 @@ import type { Metadata } from "next";
 import { ModulSayfasi } from "../../components/modul/ModulSayfasi";
 import { modulBul } from "../../modules/moduller";
 
-const MODUL = modulBul("standartlar")!;
+const MODUL = modulBul("dokumanlar")!;
 
 export const metadata: Metadata = { title: MODUL.ad };
 

@@ -3,7 +3,7 @@
 <head>
 <meta charset="utf-8">
 <meta name="viewport" content="width=device-width, initial-scale=1">
-<title>Standartlar · probata maket</title>
+<title>Dökümanlar · probata maket</title>
 <meta name="robots" content="noindex">
 <link rel="icon" href="../marka/favicon.svg" type="image/svg+xml">
 <script src="../assets/maket-tema.js"></script>
@@ -13,15 +13,18 @@
 <body>
 <!-- MAKET M7 · Standart Kütüphanesi (modül 4) — ONAY BEKLİYOR. Firma kendi standardını yükler; kontrol metodu buradan seçilir.
      Adres: #/ liste (?tur=<kod>) · #/s/<id> standart sayfası · #/yukle standart yükle · #/s/<id>/surum yeni sürüm yükle ·
-     #/kriterler kontrol kriterleri (2026-09-27) · #/k/<kod> kriter belgesi -->
+     #/kriterler muayene kriterleri (2026-09-27) · #/k/<kod> kriter belgesi · #/diger diğer dökümanlar (/yukle: döküman yükle).
+     2026-09-28 (reisim: "dökümanlar modülü olsun standartlar bunun altında olsun, eğitimler, muayene kriterleri, standartlar ve diğer dökümanlar
+     bu kısımda tutulsun"): modül adı Dökümanlar; Eğitimler sekmesi egitimler.html (aynı sekme satırı). -->
 <main class="a-icerik" id="a-icerik">
   <div id="a-liste-gorunum">
     <div class="a-sayfa-bas">
-      <h1 tabindex="-1">Standartlar</h1>
+      <h1 tabindex="-1">Dökümanlar</h1>
       <span class="a-sayac" id="a-sayac" aria-live="polite"></span>
       <button class="a-tus a-tus-birincil a-bolum-tus" type="button" data-eylem="yukle-ac"><svg class="a-ikon a-ikon-kucuk" aria-hidden="true"><use href="../vendor/lucide-1.47.0/ikonlar.svg#i-plus"/></svg>Standart yükle</button>
+      <button class="a-tus a-tus-birincil a-bolum-tus" type="button" data-eylem="dok-yukle-ac" id="a-dok-yukle" hidden><svg class="a-ikon a-ikon-kucuk" aria-hidden="true"><use href="../vendor/lucide-1.47.0/ikonlar.svg#i-plus"/></svg>Döküman yükle</button>
     </div>
-    <nav class="a-sekmeler a-sekmeler-sayfa" aria-label="Standartlar görünümü"><a class="a-sekme" href="#/" id="a-sekme-std">Standartlar</a><a class="a-sekme" href="#/kriterler" id="a-sekme-krt">Kontrol kriterleri</a></nav>
+    <nav class="a-sekmeler a-sekmeler-sayfa" aria-label="Dökümanlar görünümü"><a class="a-sekme" href="#/" id="a-sekme-std">Standartlar</a><a class="a-sekme" href="#/kriterler" id="a-sekme-krt">Muayene kriterleri</a><a class="a-sekme" href="egitimler.html" id="a-sekme-egt">Eğitimler</a><a class="a-sekme" href="#/diger" id="a-sekme-dgr">Diğer dökümanlar</a></nav>
     <div id="a-suzgec-kap"></div>
     <div class="a-liste-kap" id="a-liste"></div>
   </div>

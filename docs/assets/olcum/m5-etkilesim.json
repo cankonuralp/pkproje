@@ -3,7 +3,7 @@
  "tarih": "2026-09-27",
  "arac": "tools/olc-bulut.mjs --etkilesim (başsız tarayıcı, 1920 açık tema; gen verilen denemede o genişlik)",
  "toplam": 17,
- "gecen": 17,
+ "gecen": 16,
  "denemeler": [
   {
    "ad": "İSG-KATİP sözleşmesi PDF'i açılır",
@@ -24,7 +24,8 @@
    "gen": 1920,
    "sayfa": "maket/sozlesmeler.html",
    "hash": "#/isg?tesis=t2",
-   "gecti": true
+   "gecti": false,
+   "hata": "istek düştü: http://127.0.0.1:8836/vendor/sora-5.3.0/sora-latin-wght-normal.woff2 · net::ERR_ABORTED"
   },
   {
    "ad": "personel kartından denetçiye göre",

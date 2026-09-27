@@ -530,6 +530,16 @@
     o.agir = o.not === 2 || o.not === 5;
     return o;
   };
+  /* DİĞER DÖKÜMANLAR (Dökümanlar modülü, 2026-09-28; reisim: "eğitimler, muayene kriterleri, standartlar, ve diğer dökümanlar bu kısımda
+     tutulsun"): firmanın kendi belgeleri — kalite el kitabı, prosedür, talimat, politika, form, sertifika. Firma yükler, herkes okur; kalıcı
+     herkese açık bağlantı yok. Kodlar firma düzeni (öneri). UYDURMA. */
+  MV.DOKUMAN_TUR = ["Kalite el kitabı", "Prosedür", "Talimat", "Politika", "Form", "Sertifika", "Diğer"];
+  MV.DOKUMANLAR = [["KM-KEK-01", "Kalite el kitabı", "Kalite el kitabı", "Rev. 4", "2026-03-02"], ["KM-PR-01", "Muayene prosedürü", "Prosedür", "Rev. 6", "2026-01-15"],
+    ["KM-PR-04", "Şikâyet ve itiraz prosedürü", "Prosedür", "Rev. 2", "2025-11-20"], ["KM-PL-01", "Tarafsızlık ve gizlilik politikası", "Politika", "Rev. 3", "2025-09-01"],
+    ["KM-TL-03", "Ölçüm cihazı kullanım ve ara kontrol talimatı", "Talimat", "Rev. 1", "2026-05-12"], ["KM-FR-12", "Personel yetkinlik değerlendirme formu", "Form", "Rev. 2", "2026-02-03"],
+    ["", "Akreditasyon sertifikası", "Sertifika", "—", "2025-06-30"]].map(function (x, i) {
+    return { k: "d" + (i + 1), kod: x[0], ad: x[1], tur: x[2], rev: x[3], tarih: x[4], yukleyen: "ad", dosya: (x[0] || "akreditasyon-sertifikasi") + ".pdf" };
+  });
   MV.kontrolBelgesi = function (k) { return MV.KONTROL_BELGELERI.filter(function (x) { return x.k === k; })[0]; };
   MV.raporFormati = function (k) { return MV.RAPOR_FORMATLARI.filter(function (x) { return x.k === k; })[0]; };
   /* resmî belgeler gerçek PDF olarak açılır ve iner (sayfalar docs/maket/ altında: "belgeler/…") */

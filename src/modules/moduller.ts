@@ -10,7 +10,10 @@
    ekipmanlar orada gözüküyor ... neden ekstradan ekipmanlar sekmesi lazım olsun"): 7 Ekipmanlar ayrı menü değil; ekipmanlar planın
    içinde (denetçi sahada ekler) → 15 modül.
    2026-09-28 (reisim: "personelin bireysel olarak isteyeceği şeyler sol panelde gözüksün … talepler kısmı olsun"): 21 Talepler (izin
-   talebi, masraf formu; ileride eklenecek talepler) Personel grubunda → 16 modül. */
+   talebi, masraf formu; ileride eklenecek talepler) Personel grubunda → 16 modül.
+   2026-09-28 (reisim: "dökümanlar modülü olsun standartlar bunun altında olsun, eğitimler, muayene kriterleri, standartlar ve diğer
+   dökümanlar bu kısımda tutulsun"): 4 Standartlar → Dökümanlar (yol dokumanlar); 10 Eğitimler ayrı menü değil, Dökümanlar'ın sekmesi
+   → 15 modül. */
 
 export interface Modul {
   /** pkproje.md §3.1 numarası */
@@ -45,7 +48,6 @@ export const MODUL_GRUPLARI: readonly ModulGrubu[] = [
   ] },
   { grup: "Personel", moduller: [
     { no: 2, ad: "Personel", yol: "personel", ikon: "users" },
-    { no: 10, ad: "Eğitimler", yol: "egitimler", ikon: "graduation-cap" },
     { no: 21, ad: "Talepler", yol: "talepler", ikon: "inbox" },
   ] },
   { grup: "Finans", moduller: [
@@ -54,7 +56,7 @@ export const MODUL_GRUPLARI: readonly ModulGrubu[] = [
   ] },
   { grup: "Tanımlar", moduller: [
     { no: 5, ad: "Ekipman türleri", yol: "ekipman-turleri", ikon: "layers" },
-    { no: 4, ad: "Standartlar", yol: "standartlar", ikon: "book-open" },
+    { no: 4, ad: "Dökümanlar", yol: "dokumanlar", ikon: "book-open" },
   ] },
 ];
 

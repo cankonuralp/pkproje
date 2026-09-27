@@ -185,11 +185,11 @@
     else if (r.pencere === "yeni") { if (!W) formAc({ kisi: MV.kisi(r.kisi) ? r.kisi : "", k: MV.egitimTuru(r.tur) ? r.tur : "" }, !!(r.kisi && r.tur)); }
     else if (r.pencere === "kayit") { var x = E.filter(function (y) { return y.id === r.id; })[0]; if (x) kayitAc(x); else { history.replaceState(null, "", "#/"); MK.bildir("Bu adreste kayıt yok."); } }
     else if ($("a-pencere").open) $("a-pencere").close();
-    document.title = (r.v === "tur" ? "Eğitim türleri" : "Eğitimler") + " · probata maket";
+    document.title = (r.v === "tur" ? "Eğitim türleri" : "Eğitimler") + " · Dökümanlar · probata maket";
     if (odakla && !r.pencere) { window.scrollTo(0, 0); var hh = document.querySelector("#a-icerik h1"); if (hh) hh.focus({ preventScroll: true }); }
   }
   MK.goster = goster;
 
-  MK.kabuk({ modul: 10, kullanici: { bas: "AD", ad: "Ayşe Demir", rol: "Firma yöneticisi" } });
+  MK.kabuk({ modul: 4, kullanici: { bas: "AD", ad: "Ayşe Demir", rol: "Firma yöneticisi" } });
   goster(false);
 })();
