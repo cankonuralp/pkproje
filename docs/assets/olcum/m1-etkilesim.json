@@ -2,9 +2,30 @@
  "maket": "m1",
  "tarih": "2026-09-27",
  "arac": "tools/olc-bulut.mjs --etkilesim (başsız tarayıcı, 1920 açık tema; gen verilen denemede o genişlik)",
- "toplam": 49,
- "gecen": 49,
+ "toplam": 52,
+ "gecen": 52,
  "denemeler": [
+  {
+   "ad": "İzin talepleri sekmesi: bekleyen talep üstte, onay uyarısı",
+   "gen": 1920,
+   "sayfa": "maket/personel.html",
+   "hash": "#/izinler",
+   "gecti": true
+  },
+  {
+   "ad": "izin onaylanır → Onaylandı, uyarı kalkar",
+   "gen": 1920,
+   "sayfa": "maket/personel.html",
+   "hash": "#/izinler",
+   "gecti": true
+  },
+  {
+   "ad": "izin reddi: gerekçe zorunlu, yazılınca reddedilir",
+   "gen": 1920,
+   "sayfa": "maket/personel.html",
+   "hash": "#/izinler",
+   "gecti": true
+  },
   {
    "ad": "zimmet formu PDF indir: yazdırma penceresi",
    "gen": 1920,

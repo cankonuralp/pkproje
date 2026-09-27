@@ -512,10 +512,44 @@
     return h;
   }
 
+  /* ── İZİN TALEPLERİ (2026-09-28; reisim: izin onayı firma yöneticisinde, Personel'de) — Talepler'den gelen izin talepleri; bekleyen üstte,
+     yıllık izinde kişinin kalan hakkı yanında (aşıyorsa uyarı, engel değil). Onayla ya da gerekçeyle reddet; karar talep edenin Talepler'inde. ── */
+  var IZIN_SUTUN = [
+    { k: "no", baslik: "Talep no", kart: "ust", sira: 1, hucre: function (x) { return '<span class="a-kod">' + x.no + '</span><span class="a-alt-satir">' + MK.zamanYaz(x.gonderildi) + "</span>"; } },
+    { k: "kisi", baslik: "Personel / izin", kart: "govde", sira: 2, hucre: function (x) {
+      return '<span><a class="a-baglanti" href="#/p/' + x.kisi + '">' + kacis(MV.kisi(x.kisi).ad) + '</a><span class="a-alt-satir">' + kacis(MV.izinTur(x.tur).ad) + (x.aciklama ? " · " + kacis(x.aciklama) : "") + "</span></span>"; } },
+    { k: "tarih", baslik: "Tarih", kart: "govde", sira: 3, hucre: function (x) {
+      var o = MV.izinOzet(x.kisi), asim = x.tur === "yillik" && x.durum === "bekliyor" && x.gun > o.kalan;
+      return '<span class="a-kart-etiket">Tarih</span><span>' + MK.tarihYaz(x.bas) + (x.bit !== x.bas ? " – " + MK.tarihYaz(x.bit) : "") + '<span class="a-alt-satir' + (asim ? " a-uyari-metin" : "") + '">' + x.gun + " iş günü" +
+        (x.tur === "yillik" ? " · kalan yıllık izin " + o.kalan + " gün" : "") + "</span></span>"; } },
+    { k: "durum", baslik: "Durum", kart: "rozet", sira: 1, hucre: function (x) { return rozet(MV.IZIN_DURUM[x.durum]) + (x.red ? '<span class="a-alt-satir">' + kacis(x.red) + "</span>" : ""); } },
+    { k: "eylem", baslik: "İşlem", gizliBaslik: true, kart: "eylem", sira: 9, hucre: function (x) {
+      return x.durum !== "bekliyor" ? "" : '<div class="a-eylem"><div class="a-eylem-tuslar">' + MK.tus({ eylem: "izin-reddet", ad: "Reddet", ikon: "x", sinif: "a-tus-ikincil", veri: { no: x.no } }) +
+        MK.tus({ eylem: "izin-onayla", ad: "Onayla", ikon: "check", veri: { no: x.no } }) + "</div></div>"; } }
+  ];
+  function izinCiz() {
+    var l = MV.IZINLER.slice().sort(function (a, b) { return (a.durum === "bekliyor" ? 0 : 1) - (b.durum === "bekliyor" ? 0 : 1) || (a.gonderildi < b.gonderildi ? 1 : -1); });
+    var bek = l.filter(function (x) { return x.durum === "bekliyor"; }).length;
+    $("a-izin-sayac").innerHTML = "<b>" + l.length + "</b> talep";
+    $("a-izin-uyari").innerHTML = bek ? '<div class="a-uyari-serit">' + MK.serit("uyari", "inbox", "<b>" + bek + " izin talebi onayınızı bekliyor.</b>") + "</div>" : "";
+    $("a-izin-liste").innerHTML = l.length ? MK.tablo({ baslik: "İzin talepleri", sinif: "a-tablo-izin", sutunlar: IZIN_SUTUN, kayitlar: l }) : MK.bos({ ikon: "inbox", baslik: "İzin talebi yok", metin: "Personel izin talebini Talepler'den gönderir." });
+  }
+  var IZ = null;
+  function izinRedCiz(odak) {
+    var x = IZ.x;
+    $("a-izin-govde").innerHTML = '<p class="a-pencere-ozet"><b>' + kacis(MV.kisi(x.kisi).ad) + "</b> · " + kacis(MV.izinTur(x.tur).ad) + " · " + MK.tarihYaz(x.bas) + (x.bit !== x.bas ? " – " + MK.tarihYaz(x.bit) : "") + "</p>" +
+      MK.alan({ id: "iz-gerekce", etiket: "Red gerekçesi", zorunlu: true, genis: true, hata: IZ.hata,
+        girdi: '<textarea class="a-alan a-alan-ince" id="iz-gerekce" maxlength="200" aria-describedby="iz-gerekce-ipucu"' + (IZ.hata ? ' aria-invalid="true"' : "") + ">" + kacis(IZ.gerekce) + "</textarea>" });
+    $("a-izin-alt").innerHTML = MK.tus({ eylem: "pencere-kapat", ad: "Vazgeç", sinif: "a-tus-ikincil" }) + MK.tus({ eylem: "izin-red-kaydet", ad: "Reddet", ikon: "x" });
+    if (odak) $(odak).focus();
+  }
+  var izinBul = function (no) { return MV.IZINLER.filter(function (x) { return x.no === no; })[0]; };
+
   /* ── GÖRÜNÜM ────────────────────────────────────────────────────────────────────────────────────────── */
   function rota() {
     var h = location.hash, m;
     if (h === "#/roller") return { v: "roller" };
+    if (h === "#/izinler") return { v: "izinler" };
     if (h === "#/yeni") return { v: "form" };
     if ((m = /^#\/p\/([a-z0-9]+)\/duzenle$/.exec(h))) return { v: "form", id: m[1] };
     if ((m = /^#\/p\/([a-z0-9]+)\/zimmet-formu$/.exec(h))) return { v: "zform", id: m[1] };
@@ -531,16 +565,17 @@
     if (r.v !== "kart" || sonKisi !== r.id) SECILI = null;
     if (r.v !== "roller") { R.duzen = false; R.taslak = null; }
     sonKisi = r.id || null;
-    $("a-liste-gorunum").hidden = r.v !== "liste"; $("a-roller-gorunum").hidden = r.v !== "roller";
+    $("a-liste-gorunum").hidden = r.v !== "liste"; $("a-roller-gorunum").hidden = r.v !== "roller"; $("a-izin-gorunum").hidden = r.v !== "izinler";
     $("a-nesne").hidden = ["kart", "zform", "zgecmis", "zimzali"].indexOf(r.v) < 0; $("a-form-gorunum").hidden = r.v !== "form";
     if (r.v === "liste") listeCiz();
     else if (r.v === "roller") rollerCiz();
+    else if (r.v === "izinler") izinCiz();
     else if (r.v === "kart") kartCiz(p);
     else if (r.v === "zform") { if (p) zimmetFormuCiz(p); else kartCiz(null); }
     else if (r.v === "zgecmis") { if (p) zimmetGecmisiCiz(p); else kartCiz(null); }
     else if (r.v === "zimzali") { if (p) imzaliFormCiz(p, r.no); else kartCiz(null); }
     else { if (!F || F.id !== (r.id || null) || odakla) formAc(p); formCiz(); }
-    document.title = (r.v === "liste" ? "Personel" : r.v === "roller" ? "Rol yetkileri" : r.v === "kart" ? (p ? p.ad : "Kişi bulunamadı") : r.v === "zform" ? (p ? p.ad + " · zimmet formu" : "Kişi bulunamadı") : r.v === "zgecmis" ? (p ? p.ad + " · zimmet geçmişi" : "Kişi bulunamadı") :
+    document.title = (r.v === "liste" ? "Personel" : r.v === "roller" ? "Rol yetkileri" : r.v === "izinler" ? "İzin talepleri" : r.v === "kart" ? (p ? p.ad : "Kişi bulunamadı") : r.v === "zform" ? (p ? p.ad + " · zimmet formu" : "Kişi bulunamadı") : r.v === "zgecmis" ? (p ? p.ad + " · zimmet geçmişi" : "Kişi bulunamadı") :
       r.v === "zimzali" ? (p ? p.ad + " · imzalı zimmet formu" : "Kişi bulunamadı") : (p ? p.ad + " · düzenle" : "Yeni personel")) + " · probata maket";
     if (odakla && !r.pencere) { window.scrollTo(0, 0); var h = document.querySelector("#a-icerik > :not([hidden]) h1"); if (h) h.focus({ preventScroll: true }); }
     if (r.pencere === "hesap" && p) { if (!$("a-hesap-pencere").open) hesapPencereAc(p); } else if ($("a-hesap-pencere").open) $("a-hesap-pencere").close();
@@ -552,6 +587,17 @@
   var X = MK.eylem, aktif = function () { return MV.kisi(rota().id); };
   var bolumeGit = function (id) { var h = $(id); if (h) { h.scrollIntoView({ block: "start" }); h.focus({ preventScroll: true }); } };
   X["hesaba-git"] = function () { bolumeGit("a-b-hesap"); };
+  X["izin-onayla"] = function (el) {
+    var x = izinBul(el.dataset.no); if (!x || x.durum !== "bekliyor") return;
+    x.durum = "onaylandi"; x.onaylayan = "ad"; x.karar = MK.simdi(); izinCiz(); var h = document.querySelector("#a-izin-gorunum h1"); if (h) h.focus();
+    MK.bildir(x.no + " onaylandı: " + MV.kisi(x.kisi).ad + ", " + x.gun + " iş günü " + MV.izinTur(x.tur).ad.toLocaleLowerCase("tr") + ".");
+  };
+  X["izin-reddet"] = function (el) { IZ = { x: izinBul(el.dataset.no), gerekce: "", hata: "" }; izinRedCiz(); $("a-izin-pencere").showModal(); $("iz-gerekce").focus(); };
+  X["izin-red-kaydet"] = function () {
+    IZ.gerekce = $("iz-gerekce").value.trim(); if (!IZ.gerekce) { IZ.hata = "Gerekçe yazılmalı; talep eden görür."; izinRedCiz("iz-gerekce"); return; }
+    var x = IZ.x; x.durum = "red"; x.red = IZ.gerekce; x.onaylayan = "ad"; x.karar = MK.simdi(); IZ = null; $("a-izin-pencere").close(); izinCiz();
+    var h = document.querySelector("#a-izin-gorunum h1"); if (h) h.focus(); MK.bildir(x.no + " reddedildi; gerekçe talep edene iletildi.");
+  };
   X["zform-yukle"] = function () {   /* 2026-09-27: gerçek dosya penceresi; formdaki varlıklar kapsam olarak saklanır */
     var p = aktif();
     MK.dosyaSec({ kabul: ".pdf,image/*", enCokMB: 10, ornek: "zimmet-formu-imzali.pdf" }, function (ad) {

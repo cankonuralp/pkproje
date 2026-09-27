@@ -13,7 +13,7 @@
 <body>
 <!-- MAKET M1 · Personel (modül 1 + 2, 2. tur 2026-09-25: Kullanıcılar buraya katıldı) — ONAYLANDI 2026-09-25. Kabuk maket-ortak.js MK.kabuk().
      Adres: #/ liste · #/roller rol yetkileri · #/p/<id> personel kartı · #/p/<id>/hesap giriş hesabı aç ya da yeni geçici parola ·
-     #/p/<id>/belge özlük belgesi ekle · #/p/<id>/zimmet-formu zimmet teslim formu (PDF önizleme, imzalı tarama yükleme) · #/yeni ve #/p/<id>/duzenle form. -->
+     #/p/<id>/belge özlük belgesi ekle · #/p/<id>/zimmet-formu zimmet teslim formu (PDF önizleme, imzalı tarama yükleme) · #/yeni ve #/p/<id>/duzenle form · #/izinler izin talepleri (2026-09-28; /red/<no>: gerekçeyle reddet). -->
 <main class="a-icerik" id="a-icerik">
   <div id="a-liste-gorunum">
     <div class="a-sayfa-bas">
@@ -22,7 +22,7 @@
       <a class="a-tus a-tus-birincil a-bolum-tus" href="#/yeni"><svg class="a-ikon a-ikon-kucuk" aria-hidden="true"><use href="../vendor/lucide-1.47.0/ikonlar.svg#i-plus"/></svg>Personel ekle</a>
     </div>
     <nav class="a-sekmeler a-sekmeler-sayfa" aria-label="Personel bölümleri">
-      <a class="a-sekme" href="#/" aria-current="page">Personel</a><a class="a-sekme" href="#/roller">Rol yetkileri</a>
+      <a class="a-sekme" href="#/" aria-current="page">Personel</a><a class="a-sekme" href="#/roller">Rol yetkileri</a><a class="a-sekme" href="#/izinler">İzin talepleri</a>
     </nav>
     <div id="a-suzgec-kap"></div>
     <div class="a-liste-kap" id="a-liste"></div>
@@ -30,9 +30,18 @@
   <div id="a-roller-gorunum" hidden>
     <div class="a-sayfa-bas" id="a-roller-bas"></div>
     <nav class="a-sekmeler a-sekmeler-sayfa" aria-label="Personel bölümleri">
-      <a class="a-sekme" href="#/">Personel</a><a class="a-sekme" href="#/roller" aria-current="page">Rol yetkileri</a>
+      <a class="a-sekme" href="#/">Personel</a><a class="a-sekme" href="#/roller" aria-current="page">Rol yetkileri</a><a class="a-sekme" href="#/izinler">İzin talepleri</a>
     </nav>
     <div id="a-roller"></div>
+  </div>
+  <!-- İZİN TALEPLERİ (2026-09-28, reisim: izin onayı firma yöneticisinde, Personel'de) -->
+  <div id="a-izin-gorunum" hidden>
+    <div class="a-sayfa-bas"><h1 tabindex="-1">Personel</h1><span class="a-sayac" id="a-izin-sayac" aria-live="polite"></span></div>
+    <nav class="a-sekmeler a-sekmeler-sayfa" aria-label="Personel bölümleri">
+      <a class="a-sekme" href="#/">Personel</a><a class="a-sekme" href="#/roller">Rol yetkileri</a><a class="a-sekme" href="#/izinler" aria-current="page">İzin talepleri</a>
+    </nav>
+    <div id="a-izin-uyari"></div>
+    <div class="a-liste-kap" id="a-izin-liste"></div>
   </div>
   <section id="a-nesne" aria-label="Personel kartı" hidden></section>
   <section id="a-form-gorunum" aria-label="Personel formu" hidden></section>
@@ -70,6 +79,17 @@
   </div>
   <div class="a-pencere-govde" id="a-bordro-govde"></div>
   <div class="a-pencere-alt" id="a-bordro-alt"></div>
+</dialog>
+<!-- İZİN TALEBİNİ REDDET: gerekçe zorunlu (talep eden Talepler'de görür) -->
+<dialog class="a-pencere a-pencere-form" id="a-izin-pencere" aria-labelledby="a-izin-baslik">
+  <div class="a-pencere-bas">
+    <h2 id="a-izin-baslik">İzin talebini reddet</h2>
+    <button class="a-ikon-tus" type="button" data-eylem="pencere-kapat" aria-label="Kapat">
+      <svg class="a-ikon" aria-hidden="true"><use href="../vendor/lucide-1.47.0/ikonlar.svg#i-x"/></svg>
+    </button>
+  </div>
+  <div class="a-pencere-govde" id="a-izin-govde"></div>
+  <div class="a-pencere-alt" id="a-izin-alt"></div>
 </dialog>
 <script src="../assets/maket-ortak.js"></script>
 <script src="../assets/maket-veri.js"></script>

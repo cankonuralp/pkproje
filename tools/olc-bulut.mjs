@@ -54,6 +54,9 @@ export const DURUMLAR = {
   /* M1 Kullanıcı ve Rol · Personel (2026-09-24; 2. tur 2026-09-25: Kullanıcılar Personel'e katıldı, Ana sayfa, geçici parola,
      rol yetkileri düzenlenir, kartta zimmet ve özlük) */
   m1: { sayfa: "maket/personel.html", durumlar: [
+    /* 2026-09-28 (reisim: izin onayı firma yöneticisinde, Personel'de) */
+    { ad: "izin talepleri · bekleyen üstte", hash: "#/izinler" },
+    { ad: "izin talebini reddet · gerekçe boş", hash: "#/izinler", adim: [["tikla", '[data-eylem="izin-reddet"]'], ["tikla", '[data-eylem="izin-red-kaydet"]']] },
     { ad: "giriş", sayfa: "maket/giris.html", hash: "#/", kabuksuz: true },
     { ad: "giriş · boş gönderildi", sayfa: "maket/giris.html", hash: "#/", kabuksuz: true, adim: [["tikla", '[data-eylem="gir"]']] },
     { ad: "giriş · yanlış bilgi", sayfa: "maket/giris.html", hash: "#/hata", kabuksuz: true },
@@ -393,6 +396,10 @@ export const DENEMELER = {
     { ad: "menüden hazır maket → bağlantı (Personel)", hash: "#/", bekle: 'document.querySelector(\'#a-menu a[href="personel.html"]\') !== null' },
   ],
   m1: [
+    /* 2026-09-28 (reisim: "1 önerini kabul ediyorum" — izin onayı firma yöneticisinde, Personel'de) */
+    { ad: "İzin talepleri sekmesi: bekleyen talep üstte, onay uyarısı", hash: "#/izinler", bekle: '/1 izin talebi onayınızı bekliyor/.test(document.querySelector("#a-izin-uyari").textContent) && /Onay bekliyor/.test(document.querySelector("#a-izin-liste tbody tr").textContent) && /Mert Kaya/.test(document.querySelector("#a-izin-liste tbody tr").textContent)' },
+    { ad: "izin onaylanır → Onaylandı, uyarı kalkar", hash: "#/izinler", adim: [["tikla", '[data-eylem="izin-onayla"]']], bekle: 'MV.IZINLER.every(x => x.durum !== "bekliyor") && !document.querySelector("#a-izin-uyari .a-serit") && /onaylandı/.test(document.querySelector("#a-bildirim-metin").textContent)' },
+    { ad: "izin reddi: gerekçe zorunlu, yazılınca reddedilir", hash: "#/izinler", adim: [["tikla", '[data-eylem="izin-reddet"]'], ["tikla", '[data-eylem="izin-red-kaydet"]'], ["yaz", "#iz-gerekce", "Ekim ortasında yoğun plan var; kasıma kaydırın."], ["tikla", '[data-eylem="izin-red-kaydet"]']], bekle: '!document.querySelector("#a-izin-pencere").open && MV.IZINLER.some(x => x.durum === "red" && /kasıma/.test(x.red)) && /Reddedildi/.test(document.querySelector("#a-izin-liste").textContent)' },
     /* 2026-09-27 (reisim: "maket site nasıl çalışması gerekiyorsa çalışsın"): gerçek dosya indirme / yazdırma */
     { ad: "zimmet formu PDF indir: yazdırma penceresi", sayfa: "maket/personel.html", hash: "#/p/mk/zimmet-formu", adim: [["tikla", "[data-eylem=\"zform-pdf\"]"]], bekle: "MK.SON_INDIRME && MK.SON_INDIRME.tur === \"yazdir\"" },
     /* 2026-09-27 (reisim: "ana sayfaya duyurular kısmımızda ekle") */

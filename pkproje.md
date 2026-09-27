@@ -1647,6 +1647,12 @@ ekranları örnekleri atacağım"*
   buradan. Muhasebe modülü denetçide görünmediği için masraf formu burada.
 - **Dökümanlar modülü:** Standartlar, Muayene kriterleri, Eğitimler, Diğer dökümanlar altında.
 
+**Otuz birinci tur (2026-09-28, reisim birebir):** *"1 önerini kabul ediyorum/ 2 tür de belirlensin"* (1: izin onayı firma yöneticisinde,
+Personel'de · 2: ölçüm metodu raporda değil ekipman türünde belirlenir).
+→ **Kararlar:** izin talebini firma yöneticisi onaylar ya da gerekçeyle reddeder (Personel › İzin talepleri; bekleyen üstte, yıllık izinde
+kalan hak yanında, aşıyorsa uyarı); ölçüm metodu (formattaki: üç uçlu, çevrim empedansı, klamp) ekipman türünde seçilir, raporda türden
+okunur, seçilmez. Planlar'da "en üstte" sorusu (denetimdeki plan hep üstte mi, "Denetimde" süzgeci seçili mi gelsin) cevaplanmadı; sıralama aynı.
+
 **Açık kalanlar:** ~~Ana sayfada İSGGM duyuruları~~ (2026-09-27: makette eklendi; okuma işi uygulamada) (reisim 2026-09-26: *"Ana sayfada isgüm duyurularını gösterebilir miyiz ? Bunu
 yapılacaklar listesine ekle"*; öneri: ÇSGB İSGGM duyurular sayfası — https://www.csgb.gov.tr/isggm/duyurular/ — sunucuda günde birkaç kez
 okunur (pg-boss işi, §8.9), Ana sayfada son 5 duyuru başlık + tarih + kaynağa bağlantı; yalnız ekranda, bildirim yok; sayfa RSS vermiyorsa
@@ -1679,6 +1685,8 @@ revizyon, alan kopyalama, hafif kusur devri, meslek eşleşme denetimi).
 - Emsal ürünler: https://opwire.app/iso-17020-periyodik-kontrol-yazilimi/ · https://17020muayene.vidco.com.tr/ · https://akuple.com/asansor-kontrol-yazilimi/ · https://ensyazilim.com/
 
 ## 11 · Değişiklik günlüğü
+- 2026-09-28 (102): **İzin talepleri onayı** (§9 otuz birinci tur): Personel'de "İzin talepleri" sekmesi (firma yöneticisi): bekleyen üstte,
+  onay uyarısı, yıllık izinde kalan hak; Onayla · Reddet (gerekçe zorunlu, talep eden Talepler'de görür). M1 272/272 · 52/52 · 136/136.
 - 2026-09-28 (101): **Son formatlarla örnek plan** (§9 otuzuncu tur; reisim seçti: *"Yeni plan"*): Ada Makina'nın yeni tesisi Enerji Merkezi
   (t16), plan **P-0926-040** (plan 10), bugün denetimde; yalnız elektrik iç tesisatı (ZPKR02) ve AG topraklama (ZPKR01): ET-2001 Tamamlandı ·
   Uygun · ET-2002 Muayene uzmanı onayı · hafif kusurlu (5.4.2 tehlike işareti) · AT-2003 yönetici onayında · ağır kusurlu (Not-2) · ET-2004
@@ -1696,8 +1704,7 @@ revizyon, alan kopyalama, hafif kusur devri, meslek eşleşme denetimi).
   masraf, süzgeç), yıllık izin özeti (hak · kullanılan · kalan · bekleyen), "Yeni talep" → izin talebi (tür, başlangıç–bitiş, iş günü
   kendiliğinden, sağlık raporunda belge; yıllık izin kalanı aşılırsa uyarı, engel değil) · masraf formu (iş seçilir ya da "Genel"; Muhasebe'ye
   "Onay bekliyor" düşer, plan içindeki formla aynı kayıt); bekleyen talep geri çekilir. Modül kaydı 16 modül (`src/modules/moduller.ts`,
-  `src/app/talepler`), rol yetkisi önerisi herkes "kendi", yönetici "değiştirir". **Açık:** izin onayı kimde ve nerede (öneri: firma yöneticisi,
-  Personel'de "İzin talepleri"). 18 maket temiz: durum 1880/1880 · etkileşim 415/415 · telefon 940/940.
+  `src/app/talepler`), rol yetkisi önerisi herkes "kendi", yönetici "değiştirir". ~~**Açık:** izin onayı kimde ve nerede~~ (2026-09-28: firma yöneticisi, Personel'de, 102). 18 maket temiz: durum 1880/1880 · etkileşim 415/415 · telefon 940/940.
 - 2026-09-28 (98): **Raporlar: durum geçmişi kalktı, ayrıntılı süzgeç** (§9 otuzuncu tur): genel aramanın yanında alan alan arama (rapor no ·
   ekipman kodu · ekipman türü · tesis; ortak süzgeç üreticisinde `alanlar`, başlıktaki sayıya girer, Temizle boşaltır); seçiciler müşteri, il,
   sonuç, yıl. Süzgeç ekranı örnekleri reisim'den gelecek. 17 maket temiz: durum 1816/1816 · etkileşim 408/408 · telefon 908/908.
