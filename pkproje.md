@@ -1463,7 +1463,15 @@ olan raporlara dair veri tutularak garfik oluşturularak performans takibide yap
   teklif PDF'inin biçimi **PK firmasının verdiği PDF'e göre** kurulur (§3.7).
 - **PDF:** sisteme yüklenen **her PDF sonradan açılıp incelenebilir** (yalnız yüklemek yetmez).
 - **Performans:** raporların **24 saat içinde / 48 saat içinde / 48 saatten uzun** sürede tamamlanması izlenir, grafikle.
-- **Muhasebe:** reisim'in soruları (alacaklar otomatik mi, gider nasıl girilir, fatura no nasıl belirlenir) cevaplandı; sekme sadeleştirilecek.
+- **Muhasebe — reisim'in soruları ve cevap (M14 maketinin bugünkü hâli):** (1) **Alacaklar otomatik:** plan denetime başlayıp ilk rapor
+  yazılınca "İş" kendiliğinden açılır; her rapor bağlı olduğu kabul edilmiş teklif kaleminin birim fiyatıyla "Raporlanan" tutara girer (teklif
+  dışı türde fiyat listesi, işaretli); imzalanan rapor "Faturaya hazır" olur. Fatura kaydedilince açık alacak = fatura − tahsilatlar, vade iş
+  sözleşmesinden; vadesi geçen alacak listenin üstünde şeritte. (2) **Gider girişi YOK** — maket yalnız gelir tarafını (iş → fatura →
+  tahsilat → iş kapandı) gösteriyor. **Öneri:** "Giderler" sekmesi — tarih, tür (yakıt, konaklama, yol, kalibrasyon, sarf, diğer), tutar + KDV,
+  belge (fiş / fatura PDF ya da fotoğrafı, açılıp incelenir), isteğe bağlı iş / plan ve personel bağlantısı; iş sayfasında o işin gideri ve
+  kârı. Reisim onaylamadan eklenmedi. (3) **Fatura no:** fatura bu sistemde kesilmez; firmanın kendi e-Fatura / e-Arşiv programında kesilir,
+  buraya numarası (GİB biçimi, 16 karakter: 3 harf/rakam + yıl + 9 hane) ve tarihi elle yazılır, vade sözleşmeden hesaplanır (VARSAYIM;
+  e-Fatura entegratörü bağlantısı sonraki faz önerisi). **Sadeleştirme önerisi:** üç sekme — Alacaklar (işler) · Faturalar · Giderler.
 - **SGK etiketi:** "SGK DETSİS no" (reisim'in örnek ekranında böyle; DETSİS kısaltması büyük harf).
 
 **Açık kalanlar:** **Ana sayfada İSGGM duyuruları** (reisim 2026-09-26: *"Ana sayfada isgüm duyurularını gösterebilir miyiz ? Bunu
@@ -1498,6 +1506,8 @@ revizyon, alan kopyalama, hafif kusur devri, meslek eşleşme denetimi).
 - Emsal ürünler: https://opwire.app/iso-17020-periyodik-kontrol-yazilimi/ · https://17020muayene.vidco.com.tr/ · https://akuple.com/asansor-kontrol-yazilimi/ · https://ensyazilim.com/
 
 ## 11 · Değişiklik günlüğü
+- 2026-09-27 (82): **Muhasebe soruları cevaplandı** (§9 yirmi dördüncü tur): alacaklar süreçten kendiliğinden; gider girişi yok, "Giderler"
+  sekmesi önerildi (onay bekliyor); fatura no firmanın e-Fatura programından elle. §8.1 çevrimdışı / mağaza uygulaması notu.
 - 2026-09-27 (81): **Performans: tamamlanma süresi** (§9 yirmi dördüncü tur): rapor açılışından Tamamlandı'ya (son imza) süre; üç dilim
   (24 saat içinde · 24–48 saat · 48 saatten uzun) yüz olarak, kişi başına "24 saat içinde tamamlanan" payı ve "48 saatten uzun süren" sayısı
   grafikle (her grafik tek seri; dilimler yazıda da), personel tablosunda iki sütun, kişi sayfasında da dilimler. Örnek verideki imza saatleri
