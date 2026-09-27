@@ -1653,6 +1653,15 @@ Personel'de · 2: ölçüm metodu raporda değil ekipman türünde belirlenir).
 kalan hak yanında, aşıyorsa uyarı); ölçüm metodu (formattaki: üç uçlu, çevrim empedansı, klamp) ekipman türünde seçilir, raporda türden
 okunur, seçilmez. Planlar'da "en üstte" sorusu (denetimdeki plan hep üstte mi, "Denetimde" süzgeci seçili mi gelsin) cevaplanmadı; sıralama aynı.
 
+**Otuz ikinci tur (2026-09-28, reisim birebir):** *"raporların çıktıları ön izleme olarak baktığımda sana verdiğim pdfler gibi gözükmüyor hala ?
+Sanki uygulamanın temasına göre bir pdf oluşuyor birebir aynı pdf çıktısı olmalı final raporu ayrıca planlarda en son planlar konuştuğumuz gibi
+değil verdiğim formatları kullanacağımız ekipmanların kontrolleri olan planlar olsun ya da ben yapabileyim. Fonksiyonlar çalışsın"* · *"Ama neden
+en üstte değil en yeni onlar açıldı neye göre üstte değil en son açılan plan en üste olursa en son onlar açıldıysa neden en üstte değiller"*
+→ **Kararlar:** (a) Planlar'ın varsayılan sırası planın **açıldığı zaman**, en son açılan üstte (önceki "en yeni" başlangıç tarihi olarak
+anlaşılmıştı); son formatlarla açılmış örnek plan en son açılan → en üstte. (b) Formatlı türde final rapor ve ön izleme resmî PDF'in birebir
+sayfa düzeninde (siyah-beyaz A4, başlık tablosu, bölüm tabloları, onay kutuları), uygulama temasından bağımsız. (c) Plan aç → Planlar → kabul →
+denetim → ekipman → rapor → onay zinciri sayfalar arasında çalışır (maket tarayıcıda saklar); reisim kendi planını açıp yürütebilir.
+
 **Açık kalanlar:** ~~Ana sayfada İSGGM duyuruları~~ (2026-09-27: makette eklendi; okuma işi uygulamada) (reisim 2026-09-26: *"Ana sayfada isgüm duyurularını gösterebilir miyiz ? Bunu
 yapılacaklar listesine ekle"*; öneri: ÇSGB İSGGM duyurular sayfası — https://www.csgb.gov.tr/isggm/duyurular/ — sunucuda günde birkaç kez
 okunur (pg-boss işi, §8.9), Ana sayfada son 5 duyuru başlık + tarih + kaynağa bağlantı; yalnız ekranda, bildirim yok; sayfa RSS vermiyorsa
@@ -1685,6 +1694,8 @@ revizyon, alan kopyalama, hafif kusur devri, meslek eşleşme denetimi).
 - Emsal ürünler: https://opwire.app/iso-17020-periyodik-kontrol-yazilimi/ · https://17020muayene.vidco.com.tr/ · https://akuple.com/asansor-kontrol-yazilimi/ · https://ensyazilim.com/
 
 ## 11 · Değişiklik günlüğü
+- 2026-09-28 (104): **Planlar sırası: en son açılan üstte** (§9 otuz ikinci tur): varsayılan sıra açılış zamanı; P-0926-040 en son açılan
+  (22.09.2026 16:30) → en üstte; sıralama seçicisinde "En son açılan önce". Planlar 128/128 · 40/40 · 64/64.
 - 2026-09-28 (103): **Ölçüm metodu ekipman türünde** (§9 otuz birinci tur): formatlı türde (ET, AT) tür sayfasında "Ölçüm metodu" (ET: üç uçlu
   karşılaştırma, AT: çevrim empedansı; örnek), Düzenle'de formatın metotlarından seçilir; raporda seçim alanı kalktı, türden salt okunur
   yazar; rapor belgesi türden. M3 88/88 · 23/23 · 44/44; M8 160/160 · 65/65 · 80/80; M9 96/96 · 23/23 · 48/48; M11 88/88 · 10/10 · 44/44.

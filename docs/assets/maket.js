@@ -53,7 +53,7 @@
     /* 2026-09-28 (reisim: "planlar da en üstte sadece en son attığım PDF formatlara göre açılmış plan olsun"): yalnız elektrik iç tesisatı
        (ZPKR02) ve AG topraklama (ZPKR01); raporları formata göre sonuçlu (Tamamlandı · Uygun, hafif kusurlu, ağır kusurlu, iki taslak).
        Ekipman ve raporlar ortak veriden (MV.PLAN10_KODLAR, MV.RAPORLAR plan 10) — aynı kod, numara, durum. */
-    { id: 10, no: "P-0926-040", ad: "Enerji Merkezi", musteri: "Ada Makina San. ve Tic. A.Ş.", adres: "Organize Sanayi Bölgesi 4. Cadde No: 14", ilce: "Gebze", il: "Kocaeli", tarih: "2026-09-23", bas: "13:00", bit: "17:00", ekip: ["mk", "ea"], m: 0, e: 5, yeni: 1, durum: "denetimde", acildi: "2026-09-17T09:20", kabul: "2026-09-18T08:40", basladi: "2026-09-23T13:10", isg: { no: "S-2026-0451", onay: "2026-09-18" }, ortak: true, aciklama: "Yalnız Bakanlık formatlı türler: elektrik iç tesisatı (ZPKR02) ve AG topraklama (ZPKR01)." },
+    { id: 10, no: "P-0926-040", ad: "Enerji Merkezi", musteri: "Ada Makina San. ve Tic. A.Ş.", adres: "Organize Sanayi Bölgesi 4. Cadde No: 14", ilce: "Gebze", il: "Kocaeli", tarih: "2026-09-23", bas: "13:00", bit: "17:00", ekip: ["mk", "ea"], m: 0, e: 5, yeni: 1, durum: "denetimde", acildi: "2026-09-22T16:30", kabul: "2026-09-23T08:40", basladi: "2026-09-23T13:10", isg: { no: "S-2026-0451", onay: "2026-09-18" }, ortak: true, aciklama: "Yalnız Bakanlık formatlı türler: elektrik iç tesisatı (ZPKR02) ve AG topraklama (ZPKR01)." },
     { id: 9, no: "P-0926-025", ad: "Değirmen", musteri: "Başak Un Değirmenleri A.Ş.", adres: "İstasyon Caddesi No: 30", ilce: "Lüleburgaz", il: "Kırklareli", tarih: "2026-09-21", bas: "13:00", bit: "16:00", ekip: ["mk", "ea"], m: 16, e: 8, durum: "tamam", acildi: "2026-09-08T10:30", kabul: "2026-09-09T07:58", basladi: "2026-09-21T13:05", bitti: "2026-09-21T16:20", isg: { no: "S-2026-0398", onay: "2026-09-10" }, rap: { onaylandi: 14, onayda: 8 } }
   ];
 
@@ -178,7 +178,7 @@
   };
   var SIRA_AD = { no: "Proje no", ad: "Proje adı", musteri: "Müşteri", adres: "Adres", ekip: "Inspector", baslangic: "Başlangıç", durum: "Durum" };
   function siraEtiket(v) {
-    if (v === "varsayilan") return "En yeni önce";
+    if (v === "varsayilan") return "En son açılan önce";
     var x = v.split("-"), artan = x[1] === "artan";
     var yon = x[0] === "baslangic" ? (artan ? "yakın → uzak" : "uzak → yakın") : x[0] === "no" ? (artan ? "küçükten büyüğe" : "büyükten küçüğe")
       : x[0] === "durum" ? (artan ? "akış sırası" : "ters akış") : (artan ? "A → Z" : "Z → A");
@@ -234,8 +234,9 @@
   /* ── PLANLAR LİSTESİ ────────────────────────────────────────────────────────────────────────────── */
   function sirala(l) {
     var v = SZ.l.sec.sira, zaman = function (p) { return p.tarih + " " + p.bas; };
-    if (v === "varsayilan") {   /* 2026-09-26 (reisim: "sıralama tarihi olsun her zaman en yeni en yukarıda olsun"): varsayılan sıra tarih, en yeni üstte */
-      return l.slice().sort(function (a, b) { return zaman(b).localeCompare(zaman(a)); });
+    if (v === "varsayilan") {   /* 2026-09-26 (reisim: "sıralama tarihi olsun her zaman en yeni en yukarıda olsun"); 2026-09-28 (reisim: "en son açılan
+      plan en üste olursa en son onlar açıldıysa neden en üstte değiller"): varsayılan sıra planın AÇILDIĞI zaman, en son açılan üstte */
+      return l.slice().sort(function (a, b) { return (b.acildi || "").localeCompare(a.acildi || "") || zaman(b).localeCompare(zaman(a)); });
     }
     var x = v.split("-"), f = SIRA_ANAHTAR[x[0]], yon = x[1] === "azalan" ? -1 : 1;
     return l.slice().sort(function (a, b) {
