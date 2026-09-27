@@ -94,7 +94,7 @@
           '<button type="button" class="a-sekme" data-kurum="Dış eğitim kurumu" aria-pressed="' + (d.kurum === "Dış eğitim kurumu") + '">Dış kurum</button></div></div>' +
         '<div class="a-alan-grup a-alan-genis"><p class="a-etiket">Sertifika</p><div class="a-dosya">' +
           MK.tus({ eylem: "dosya-sec", ad: d.belge ? "Değiştir" : "PDF seç", ikon: "file-plus", sinif: "a-tus-ikincil" }) +
-          (d.belge ? '<span class="a-dosya-ad">sertifika.pdf</span>' : '<span class="a-dosya-ad a-deger-yok">İsteğe bağlı</span>') + "</div></div>" +
+          (d.belge ? '<span class="a-dosya-ad">sertifika.pdf</span>' + MK.pdfTus("sertifika.pdf") : '<span class="a-dosya-ad a-deger-yok">İsteğe bağlı</span>') + "</div></div>" +
       "</div>";
     $("a-pencere-alt").innerHTML = MK.tus({ eylem: "pencere-kapat", ad: "Vazgeç", sinif: "a-tus-ikincil" }) + MK.tus({ eylem: "kaydet", ad: "Kaydet", ikon: "check" });
     if (odak) { var el = $(odak) || document.querySelector(odak); if (el) el.focus(); }
@@ -117,7 +117,7 @@
         : d === "gecerli" ? MK.serit("onay", "circle-check", "Geçerli; tekrar " + k + " gün sonra.") : MK.serit(d === "gecti" ? "hata" : "uyari", "clock", k < 0 ? "Tekrarı " + -k + " gün önce geçti." : "Tekrarı " + k + " gün sonra.")) + "</div>" +
       '<dl class="a-bilgi">' + bilgi("Personel", '<a class="a-baglanti" href="' + MK.adres(2, "#/p/" + p.id) + '">' + kacis(p.ad) + '</a><span class="a-alt-satir">' + kacis(MV.meslekAd(p)) + "</span>") +
         bilgi("Eğitim", kacis(t.ad)) + bilgi("Tarih", MK.tarihYaz(x.tarih) + '<span class="a-alt-satir">' + kacis(x.kurum) + "</span>") +
-        bilgi("Tekrar", MK.tarihYaz(x.tekrar)) + bilgi("Sertifika", x.belge ? '<span class="a-kod">' + belgeAdi(x) + "</span>" : '<span class="a-uyari-metin">Yüklenmedi</span>', true) + "</dl>" +
+        bilgi("Tekrar", MK.tarihYaz(x.tekrar)) + bilgi("Sertifika", x.belge ? '<span class="a-kod">' + belgeAdi(x) + "</span> " + MK.pdfTus(belgeAdi(x)) : '<span class="a-uyari-metin">Yüklenmedi</span>', true) + "</dl>" +
       (gecmis.length ? '<p class="a-etiket a-bolum-serit">Bu eğitimin öteki kayıtları</p><ol class="a-gecmis">' + gecmis.map(function (y) {
         return '<li><span class="a-gecmis-zaman">' + MK.tarihYaz(y.tarih) + '</span><span class="a-gecmis-ne"><b>' + (y.onceki ? "Önceki kayıt" : "Güncel kayıt") + '</b> <span class="a-gecmis-rol">tekrar ' + MK.tarihYaz(y.tekrar) + "</span></span></li>"; }).join("") + "</ol>" : "");
     $("a-pencere-alt").innerHTML = MK.tus({ eylem: "pencere-kapat", ad: "Kapat", sinif: "a-tus-ikincil" }) + (x.onceki ? "" : MK.tus({ eylem: "tekrar", ad: "Tekrarı kaydet", ikon: "refresh-cw", veri: { id: x.id } }));

@@ -8,8 +8,8 @@
   390,
   430
  ],
- "toplam": 28,
- "temiz": 28,
+ "toplam": 32,
+ "temiz": 32,
  "durumlar": [
   {
    "ad": "kayıtlar · liste, tekrarı geçen şeridi",
@@ -262,6 +262,42 @@
    "disari": [],
    "kucukAlan": [],
    "alan": 2
+  },
+  {
+   "ad": "PDF görüntüleyici · eğitim sertifikası",
+   "gen": 320,
+   "temiz": true,
+   "tasma": 0,
+   "disari": [],
+   "kucukAlan": [],
+   "alan": 1
+  },
+  {
+   "ad": "PDF görüntüleyici · eğitim sertifikası",
+   "gen": 360,
+   "temiz": true,
+   "tasma": 0,
+   "disari": [],
+   "kucukAlan": [],
+   "alan": 1
+  },
+  {
+   "ad": "PDF görüntüleyici · eğitim sertifikası",
+   "gen": 390,
+   "temiz": true,
+   "tasma": 0,
+   "disari": [],
+   "kucukAlan": [],
+   "alan": 1
+  },
+  {
+   "ad": "PDF görüntüleyici · eğitim sertifikası",
+   "gen": 430,
+   "temiz": true,
+   "tasma": 0,
+   "disari": [],
+   "kucukAlan": [],
+   "alan": 1
   }
  ]
 }

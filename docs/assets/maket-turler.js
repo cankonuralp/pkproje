@@ -74,7 +74,9 @@
       { k: "surum", baslik: "Sürüm", kart: "ust", sira: 1, hucre: function (x) { return '<span class="a-ekipman-ad">' + kacis(x.surum) + "</span>" + kirp(x.dosya, "a-alt-satir"); } },
       { k: "tarih", baslik: "Yüklendi", kart: "govde", sira: 2, hucre: function (x) { return '<span class="a-kart-etiket">Yüklendi</span>' + kacis(x.tarih) + (x.not ? '<span class="a-alt-satir">' + kacis(x.not) + "</span>" : ""); } },
       { k: "durum", baslik: "Durum", kart: "rozet", sira: 1, hucre: function (x) { /* 159: yeni yüklenen formatın rapor ekranı bizde hazırlanır; o sırada "Hazırlanıyor" */
-        return rozet(x !== p ? { ad: "Önceki", rozet: "a-rozet-notr" } : x.dosya.indexOf(MK.BUGUN) >= 0 ? { ad: "Hazırlanıyor", rozet: "a-rozet-bekliyor" } : { ad: "Kullanımda", rozet: "a-rozet-tamam" }); } }
+        return rozet(x !== p ? { ad: "Önceki", rozet: "a-rozet-notr" } : x.dosya.indexOf(MK.BUGUN) >= 0 ? { ad: "Hazırlanıyor", rozet: "a-rozet-bekliyor" } : { ad: "Kullanımda", rozet: "a-rozet-tamam" }); } },
+      /* her sürümün yüklenen PDF'i açılır, önceki sürümler dahil (reisim 2026-09-27) */
+      { k: "eylem", baslik: "İşlem", gizliBaslik: true, kart: "eylem", sira: 9, hucre: function (x) { return '<div class="a-eylem"><div class="a-eylem-tuslar">' + MK.pdfTus(x.dosya) + "</div></div>"; } }
     ];
   }
   function turCiz(t) {
@@ -145,7 +147,7 @@
   function dosyaSec(d) {
     return '<div class="a-alan-grup a-alan-genis"><p class="a-etiket">Rapor formatı (PDF)</p>' +
       '<div class="a-dosya-sec">' + MK.tus({ eylem: "pdf-sec", ad: d.dosya ? "Başka dosya seç" : "PDF seç", ikon: "file-plus", sinif: "a-tus-ikincil" }) +
-      '<span class="a-dosya-ad" id="w-dosya">' + (d.dosya ? kacis(d.dosya) : '<span class="a-deger-yok">Dosya seçilmedi</span>') + "</span></div>" +
+      '<span class="a-dosya-ad" id="w-dosya">' + (d.dosya ? kacis(d.dosya) : '<span class="a-deger-yok">Dosya seçilmedi</span>') + "</span>" + (d.dosya ? MK.pdfTus(d.dosya) : "") + "</div>" +
       (W.hata.dosya ? '<p class="a-ipucu a-ipucu-uyari" id="w-dosya-ipucu">' + W.hata.dosya + "</p>"
         : "") + "</div>";
   }

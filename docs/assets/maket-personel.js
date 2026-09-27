@@ -244,8 +244,9 @@
       return '<span class="a-hucre-satir">' + ikon("file-check", "a-ikon-kucuk") + '<span class="a-hucre-metin">' + kirp(belgeAd(b.tur)) + (b.aciklama ? kirp(b.aciklama, "a-alt-satir") : "") + "</span></span>";
     } },
     { k: "tarih", baslik: "Eklendi", kart: "govde", sira: 2, hucre: function (b) { return '<span class="a-kart-etiket">Eklendi</span><span class="a-tarih-saat">' + MK.tarihYaz(b.tarih) + "</span>"; } },
-    { k: "eylem", baslik: "İşlem", gizliBaslik: true, kart: "eylem", sira: 9, hucre: function () {
-      return '<div class="a-eylem"><div class="a-eylem-tuslar">' + MK.tus({ eylem: "kapsam-disi", ad: "Aç", ikon: "file-text", sinif: "a-tus-ikincil", veri: { ne: "Belgeyi açma" } }) + "</div></div>";
+    /* yüklenen belge açılır (reisim 2026-09-27: "eklenen herhangi bir pdf daha sonradan açılıp incelenebilir olsun") */
+    { k: "eylem", baslik: "İşlem", gizliBaslik: true, kart: "eylem", sira: 9, hucre: function (b) {
+      return '<div class="a-eylem"><div class="a-eylem-tuslar">' + MK.pdfTus(b.dosya || b.tur + ".pdf") + "</div></div>";
     } }
   ];
   function ozlukHtml(p) {
@@ -279,7 +280,7 @@
       '<div class="a-nesne-bas"><div class="a-nesne-kimlik"><div class="a-nesne-baslik"><h1 tabindex="-1">İmzalı zimmet formu · ' + f.no + "</h1>" +
         (guncel ? rozet({ ad: "Güncel", rozet: "a-rozet-tamam" }) : rozet({ ad: son ? "Eskidi" : "Önceki form", rozet: son ? "a-rozet-bekliyor" : "a-rozet-notr" })) + "</div>" +
         '<p class="a-nesne-alt">' + ikon("file-check", "a-ikon-kucuk") + "<span>" + kacis(p.ad) + " · " + MK.tarihYaz(f.tarih) + " · " + f.kapsam.length + " varlık · " + kacis(f.dosya) + "</span></p></div>" +
-        '<div class="a-eylem-cubugu">' + MK.tus({ eylem: "kapsam-disi", ad: "Dosyayı indir", ikon: "file-text", sinif: "a-tus-ikincil", veri: { ne: "Tarama dosyasını indirme" } }) +
+        '<div class="a-eylem-cubugu">' + MK.pdfTus(f.dosya, "Taramayı aç") + MK.tus({ eylem: "pdf-indir", ad: "Dosyayı indir", ikon: "download", sinif: "a-tus-ikincil" }) +
           '<a class="a-tus a-tus-ikincil" href="#/p/' + p.id + '/zimmet-gecmisi">' + ikon("history", "a-ikon-kucuk") + "Zimmet geçmişi</a></div></div>" +
       MB.zimmetFormu({ p: p, varliklar: f.kapsam.map(MV.varlik), no: f.no, tarih: f.tarih, eden: teslimEden(), imzali: true });
   }
@@ -402,7 +403,7 @@
       MK.alan({ id: "b-aciklama", etiket: "Açıklama", genis: true, ipucu: "İsteğe bağlı (ör. yenileme tarihi).", girdi: MK.girdi({ id: "b-aciklama", deger: B.aciklama, ek: ' maxlength="80"' }) }) +
       '<div class="a-alan-grup a-alan-genis"><p class="a-etiket">Dosya <span class="a-zorunlu">zorunlu</span></p>' +
         '<div class="a-dosya-sec">' + MK.tus({ eylem: "dosya-sec", ad: B.dosya ? "Başka dosya seç" : "Dosya seç", ikon: "file-plus", sinif: "a-tus-ikincil" }) +
-        '<span class="a-dosya-ad" id="b-dosya">' + (B.dosya ? kacis(B.dosya) : '<span class="a-deger-yok">Dosya seçilmedi</span>') + "</span></div>" +
+        '<span class="a-dosya-ad" id="b-dosya">' + (B.dosya ? kacis(B.dosya) : '<span class="a-deger-yok">Dosya seçilmedi</span>') + "</span>" + (B.dosya ? MK.pdfTus(B.dosya) : "") + "</div>" +
         "</div></div>";
     $("a-belge-alt").innerHTML = MK.tus({ eylem: "pencere-kapat", ad: "Vazgeç", sinif: "a-tus-ikincil" }) + MK.tus({ eylem: "belge-kaydet", ad: "Ekle", ikon: "check", kapali: !(B.tur && B.dosya) });
     if (odak) { var el = $(odak); if (el) el.focus(); }

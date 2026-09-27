@@ -8,8 +8,8 @@
   390,
   430
  ],
- "toplam": 36,
- "temiz": 36,
+ "toplam": 40,
+ "temiz": 40,
  "durumlar": [
   {
    "ad": "standartlar · liste",
@@ -112,6 +112,42 @@
   },
   {
    "ad": "standart · güncel, çok türde",
+   "gen": 430,
+   "temiz": true,
+   "tasma": 0,
+   "disari": [],
+   "kucukAlan": [],
+   "alan": 0
+  },
+  {
+   "ad": "PDF görüntüleyici · standart (Oku)",
+   "gen": 320,
+   "temiz": true,
+   "tasma": 0,
+   "disari": [],
+   "kucukAlan": [],
+   "alan": 0
+  },
+  {
+   "ad": "PDF görüntüleyici · standart (Oku)",
+   "gen": 360,
+   "temiz": true,
+   "tasma": 0,
+   "disari": [],
+   "kucukAlan": [],
+   "alan": 0
+  },
+  {
+   "ad": "PDF görüntüleyici · standart (Oku)",
+   "gen": 390,
+   "temiz": true,
+   "tasma": 0,
+   "disari": [],
+   "kucukAlan": [],
+   "alan": 0
+  },
+  {
+   "ad": "PDF görüntüleyici · standart (Oku)",
    "gen": 430,
    "temiz": true,
    "tasma": 0,

@@ -8,8 +8,8 @@
   390,
   430
  ],
- "toplam": 44,
- "temiz": 44,
+ "toplam": 48,
+ "temiz": 48,
  "durumlar": [
   {
    "ad": "sözleşmeler · liste, ID eksik ve biten şeritleri",
@@ -76,6 +76,42 @@
   },
   {
    "ad": "sözleşme · İSG-KATİP, geç onay yalnız uyarı (eski adresten)",
+   "gen": 430,
+   "temiz": true,
+   "tasma": 0,
+   "disari": [],
+   "kucukAlan": [],
+   "alan": 0
+  },
+  {
+   "ad": "PDF görüntüleyici · İSG-KATİP sözleşmesi",
+   "gen": 320,
+   "temiz": true,
+   "tasma": 0,
+   "disari": [],
+   "kucukAlan": [],
+   "alan": 0
+  },
+  {
+   "ad": "PDF görüntüleyici · İSG-KATİP sözleşmesi",
+   "gen": 360,
+   "temiz": true,
+   "tasma": 0,
+   "disari": [],
+   "kucukAlan": [],
+   "alan": 0
+  },
+  {
+   "ad": "PDF görüntüleyici · İSG-KATİP sözleşmesi",
+   "gen": 390,
+   "temiz": true,
+   "tasma": 0,
+   "disari": [],
+   "kucukAlan": [],
+   "alan": 0
+  },
+  {
+   "ad": "PDF görüntüleyici · İSG-KATİP sözleşmesi",
    "gen": 430,
    "temiz": true,
    "tasma": 0,

@@ -118,7 +118,8 @@
     $("a-pencere-govde").innerHTML = '<div class="a-sekmeler" role="group" aria-label="İmza yöntemi">' +
         '<button type="button" class="a-sekme" data-yontem="servis" aria-pressed="' + (W.y === "servis") + '">İmza servisi</button>' +
         '<button type="button" class="a-sekme" data-yontem="dosya" aria-pressed="' + (W.y === "dosya") + '">İndir, imzala, yükle</button></div>' +
-      '<ul class="a-kosullar">' + l.map(function (r) { var e = ekp(r); return '<li class="a-kosul-bilgi">' + ikon("file-text", "a-ikon-kucuk") + '<span><span class="a-kod">' + r.no + "</span> · " + e.kod + " · " + kacis(MV.tesis(r.tesis).ad) + "</span></li>"; }).join("") + "</ul>" +
+      '<ul class="a-kosullar">' + l.map(function (r) { var e = ekp(r); return '<li class="a-kosul-bilgi">' + ikon("file-text", "a-ikon-kucuk") + '<span><span class="a-kod">' + r.no + "</span> · " + e.kod + " · " + kacis(MV.tesis(r.tesis).ad) + "</span>" +
+        (W.y === "dosya" && W.yuklendi ? MK.pdfTus(r.no + "-imzali.pdf", "Aç", "a-tus-ikincil a-serit-tus") : "") + "</li>"; }).join("") + "</ul>" +
       '<div class="a-serit-kap a-bolum-serit">' + (W.y === "servis"
         ? MK.serit("bilgi", "file-signature", "Her rapor ayrı PDF olarak imza servisine gider ve ayrı imzalanır.")
         : MK.serit("bilgi", "file-signature", "Her rapor ayrı PDF: indirin, e-imzayla imzalayın, imzalı PDF'leri yükleyin.")) + "</div>" +

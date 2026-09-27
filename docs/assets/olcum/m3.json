@@ -4,8 +4,8 @@
  "tarih": "2026-09-27",
  "arac": "başsız HeadlessChrome/141.0.7390.37 · puppeteer-core · tools/olc-bulut.mjs + tools/olc-maket.js",
  "yontem": "python3 http.server (docs/), her durum × genişlik × tema taze yükleme ve ayrı oturum, geçişler kapalı; 1920×1080 · 1080×810 · 375×812 × açık/koyu; 1080'de çekmece açık ayrıca.",
- "toplam": 72,
- "temiz": 72,
+ "toplam": 80,
+ "temiz": 80,
  "cekmece": {
   "toplam": 2,
   "temiz": 2,
@@ -370,7 +370,7 @@
    "eksikIkon": 0,
    "tusY": 34,
    "tusGen": [
-    104,
+    67,
     203
    ],
    "satirY": 52,
@@ -408,7 +408,7 @@
    "eksikIkon": 0,
    "tusY": 34,
    "tusGen": [
-    104,
+    67,
     203
    ],
    "satirY": 52,
@@ -446,7 +446,7 @@
    "eksikIkon": 0,
    "tusY": 44,
    "tusGen": [
-    108,
+    69,
     214
    ],
    "satirY": 56,
@@ -484,7 +484,7 @@
    "eksikIkon": 0,
    "tusY": 44,
    "tusGen": [
-    108,
+    69,
     214
    ],
    "satirY": 56,
@@ -522,7 +522,7 @@
    "eksikIkon": 0,
    "tusY": 44,
    "tusGen": [
-    108,
+    57,
     214
    ],
    "satirY": 56,
@@ -560,7 +560,7 @@
    "eksikIkon": 0,
    "tusY": 44,
    "tusGen": [
-    108,
+    57,
     214
    ],
    "satirY": 56,
@@ -599,9 +599,9 @@
    "tusY": 44,
    "tusGen": [
     108,
-    214
+    325
    ],
-   "satirY": 111,
+   "satirY": 174,
    "birincil": null,
    "pencereGen": null,
    "icerik": 375,
@@ -637,9 +637,9 @@
    "tusY": 44,
    "tusGen": [
     108,
-    214
+    325
    ],
-   "satirY": 111,
+   "satirY": 174,
    "birincil": null,
    "pencereGen": null,
    "icerik": 375,
@@ -1282,7 +1282,7 @@
    "eksikIkon": 0,
    "tusY": 34,
    "tusGen": [
-    78,
+    67,
     164
    ],
    "satirY": 65,
@@ -1320,7 +1320,7 @@
    "eksikIkon": 0,
    "tusY": 34,
    "tusGen": [
-    78,
+    67,
     164
    ],
    "satirY": 65,
@@ -1358,7 +1358,7 @@
    "eksikIkon": 0,
    "tusY": 44,
    "tusGen": [
-    81,
+    69,
     172
    ],
    "satirY": 75,
@@ -1396,7 +1396,7 @@
    "eksikIkon": 0,
    "tusY": 44,
    "tusGen": [
-    81,
+    69,
     172
    ],
    "satirY": 75,
@@ -1434,7 +1434,7 @@
    "eksikIkon": 0,
    "tusY": 44,
    "tusGen": [
-    81,
+    69,
     172
    ],
    "satirY": 75,
@@ -1472,7 +1472,7 @@
    "eksikIkon": 0,
    "tusY": 44,
    "tusGen": [
-    81,
+    69,
     172
    ],
    "satirY": 75,
@@ -1510,7 +1510,7 @@
    "eksikIkon": 0,
    "tusY": 44,
    "tusGen": [
-    167,
+    69,
     351
    ],
    "satirY": 247,
@@ -1548,7 +1548,7 @@
    "eksikIkon": 0,
    "tusY": 44,
    "tusGen": [
-    167,
+    69,
     351
    ],
    "satirY": 247,
@@ -1586,7 +1586,7 @@
    "eksikIkon": 0,
    "tusY": 34,
    "tusGen": [
-    78,
+    67,
     203
    ],
    "satirY": 52,
@@ -1624,7 +1624,7 @@
    "eksikIkon": 0,
    "tusY": 34,
    "tusGen": [
-    78,
+    67,
     203
    ],
    "satirY": 52,
@@ -1662,7 +1662,7 @@
    "eksikIkon": 0,
    "tusY": 44,
    "tusGen": [
-    81,
+    69,
     214
    ],
    "satirY": 56,
@@ -1700,7 +1700,7 @@
    "eksikIkon": 0,
    "tusY": 44,
    "tusGen": [
-    81,
+    69,
     214
    ],
    "satirY": 56,
@@ -1738,7 +1738,7 @@
    "eksikIkon": 0,
    "tusY": 44,
    "tusGen": [
-    81,
+    57,
     214
    ],
    "satirY": 56,
@@ -1776,7 +1776,7 @@
    "eksikIkon": 0,
    "tusY": 44,
    "tusGen": [
-    81,
+    57,
     214
    ],
    "satirY": 56,
@@ -1815,9 +1815,9 @@
    "tusY": 44,
    "tusGen": [
     108,
-    214
+    325
    ],
-   "satirY": 111,
+   "satirY": 174,
    "birincil": null,
    "pencereGen": 375,
    "icerik": 375,
@@ -1853,9 +1853,9 @@
    "tusY": 44,
    "tusGen": [
     108,
-    214
+    325
    ],
-   "satirY": 111,
+   "satirY": 174,
    "birincil": null,
    "pencereGen": 375,
    "icerik": 375,
@@ -1890,7 +1890,7 @@
    "eksikIkon": 0,
    "tusY": 34,
    "tusGen": [
-    78,
+    67,
     203
    ],
    "satirY": 52,
@@ -1928,7 +1928,7 @@
    "eksikIkon": 0,
    "tusY": 34,
    "tusGen": [
-    78,
+    67,
     203
    ],
    "satirY": 52,
@@ -1966,7 +1966,7 @@
    "eksikIkon": 0,
    "tusY": 44,
    "tusGen": [
-    81,
+    69,
     214
    ],
    "satirY": 56,
@@ -2004,7 +2004,7 @@
    "eksikIkon": 0,
    "tusY": 44,
    "tusGen": [
-    81,
+    69,
     214
    ],
    "satirY": 56,
@@ -2042,7 +2042,7 @@
    "eksikIkon": 0,
    "tusY": 44,
    "tusGen": [
-    81,
+    57,
     214
    ],
    "satirY": 56,
@@ -2080,7 +2080,7 @@
    "eksikIkon": 0,
    "tusY": 44,
    "tusGen": [
-    81,
+    57,
     214
    ],
    "satirY": 56,
@@ -2119,9 +2119,9 @@
    "tusY": 44,
    "tusGen": [
     108,
-    214
+    325
    ],
-   "satirY": 111,
+   "satirY": 174,
    "birincil": null,
    "pencereGen": 375,
    "icerik": 375,
@@ -2157,9 +2157,9 @@
    "tusY": 44,
    "tusGen": [
     108,
-    214
+    325
    ],
-   "satirY": 111,
+   "satirY": 174,
    "birincil": null,
    "pencereGen": 375,
    "icerik": 375,
@@ -2468,6 +2468,310 @@
    "pencereGen": null,
    "icerik": 375,
    "listeGen": null,
+   "yaziTipi": "Sora yüklü",
+   "hata": 0,
+   "ayrinti": {},
+   "hatalar": []
+  },
+  {
+   "ad": "PDF görüntüleyici · rapor formatı sürümü",
+   "gen": 1920,
+   "tema": "acik",
+   "gorunum": "liste",
+   "liste": "tablo",
+   "pencere": "a-pdf",
+   "tasma": 0,
+   "sertKirpma": 0,
+   "tasanMetin": 0,
+   "cakisma": 0,
+   "sonCakisma": 0,
+   "gizliEtkilesimli": 0,
+   "ekranDisi": 0,
+   "kucukHedef": 0,
+   "basliksizKirpma": 0,
+   "ipucuKesik": 0,
+   "kenarFarki": 0,
+   "gorunenGizli": 0,
+   "pencereKenar": 0,
+   "hizaKaymasi": 0,
+   "kartTutarsiz": 0,
+   "eksikIkon": 0,
+   "tusY": 34,
+   "tusGen": [
+    67,
+    203
+   ],
+   "satirY": 52,
+   "birincil": null,
+   "pencereGen": 820,
+   "icerik": 1688,
+   "listeGen": 1648,
+   "yaziTipi": "Sora yüklü",
+   "hata": 0,
+   "ayrinti": {},
+   "hatalar": []
+  },
+  {
+   "ad": "PDF görüntüleyici · rapor formatı sürümü",
+   "gen": 1920,
+   "tema": "koyu",
+   "gorunum": "liste",
+   "liste": "tablo",
+   "pencere": "a-pdf",
+   "tasma": 0,
+   "sertKirpma": 0,
+   "tasanMetin": 0,
+   "cakisma": 0,
+   "sonCakisma": 0,
+   "gizliEtkilesimli": 0,
+   "ekranDisi": 0,
+   "kucukHedef": 0,
+   "basliksizKirpma": 0,
+   "ipucuKesik": 0,
+   "kenarFarki": 0,
+   "gorunenGizli": 0,
+   "pencereKenar": 0,
+   "hizaKaymasi": 0,
+   "kartTutarsiz": 0,
+   "eksikIkon": 0,
+   "tusY": 34,
+   "tusGen": [
+    67,
+    203
+   ],
+   "satirY": 52,
+   "birincil": null,
+   "pencereGen": 820,
+   "icerik": 1688,
+   "listeGen": 1648,
+   "yaziTipi": "Sora yüklü",
+   "hata": 0,
+   "ayrinti": {},
+   "hatalar": []
+  },
+  {
+   "ad": "PDF görüntüleyici · rapor formatı sürümü",
+   "gen": 1080,
+   "tema": "acik",
+   "gorunum": "liste",
+   "liste": "tablo",
+   "pencere": "a-pdf",
+   "tasma": 0,
+   "sertKirpma": 0,
+   "tasanMetin": 0,
+   "cakisma": 0,
+   "sonCakisma": 0,
+   "gizliEtkilesimli": 0,
+   "ekranDisi": 0,
+   "kucukHedef": 0,
+   "basliksizKirpma": 0,
+   "ipucuKesik": 0,
+   "kenarFarki": 0,
+   "gorunenGizli": 0,
+   "pencereKenar": 0,
+   "hizaKaymasi": 0,
+   "kartTutarsiz": 0,
+   "eksikIkon": 0,
+   "tusY": 44,
+   "tusGen": [
+    69,
+    214
+   ],
+   "satirY": 56,
+   "birincil": null,
+   "pencereGen": 820,
+   "icerik": 1080,
+   "listeGen": 1048,
+   "yaziTipi": "Sora yüklü",
+   "hata": 0,
+   "ayrinti": {},
+   "hatalar": []
+  },
+  {
+   "ad": "PDF görüntüleyici · rapor formatı sürümü",
+   "gen": 1080,
+   "tema": "koyu",
+   "gorunum": "liste",
+   "liste": "tablo",
+   "pencere": "a-pdf",
+   "tasma": 0,
+   "sertKirpma": 0,
+   "tasanMetin": 0,
+   "cakisma": 0,
+   "sonCakisma": 0,
+   "gizliEtkilesimli": 0,
+   "ekranDisi": 0,
+   "kucukHedef": 0,
+   "basliksizKirpma": 0,
+   "ipucuKesik": 0,
+   "kenarFarki": 0,
+   "gorunenGizli": 0,
+   "pencereKenar": 0,
+   "hizaKaymasi": 0,
+   "kartTutarsiz": 0,
+   "eksikIkon": 0,
+   "tusY": 44,
+   "tusGen": [
+    69,
+    214
+   ],
+   "satirY": 56,
+   "birincil": null,
+   "pencereGen": 820,
+   "icerik": 1080,
+   "listeGen": 1048,
+   "yaziTipi": "Sora yüklü",
+   "hata": 0,
+   "ayrinti": {},
+   "hatalar": []
+  },
+  {
+   "ad": "PDF görüntüleyici · rapor formatı sürümü",
+   "gen": 810,
+   "tema": "acik",
+   "gorunum": "liste",
+   "liste": "tablo",
+   "pencere": "a-pdf",
+   "tasma": 0,
+   "sertKirpma": 0,
+   "tasanMetin": 0,
+   "cakisma": 0,
+   "sonCakisma": 0,
+   "gizliEtkilesimli": 0,
+   "ekranDisi": 0,
+   "kucukHedef": 0,
+   "basliksizKirpma": 0,
+   "ipucuKesik": 0,
+   "kenarFarki": 0,
+   "gorunenGizli": 0,
+   "pencereKenar": 0,
+   "hizaKaymasi": 0,
+   "kartTutarsiz": 0,
+   "eksikIkon": 0,
+   "tusY": 44,
+   "tusGen": [
+    57,
+    214
+   ],
+   "satirY": 56,
+   "birincil": null,
+   "pencereGen": 778,
+   "icerik": 810,
+   "listeGen": 778,
+   "yaziTipi": "Sora yüklü",
+   "hata": 0,
+   "ayrinti": {},
+   "hatalar": []
+  },
+  {
+   "ad": "PDF görüntüleyici · rapor formatı sürümü",
+   "gen": 810,
+   "tema": "koyu",
+   "gorunum": "liste",
+   "liste": "tablo",
+   "pencere": "a-pdf",
+   "tasma": 0,
+   "sertKirpma": 0,
+   "tasanMetin": 0,
+   "cakisma": 0,
+   "sonCakisma": 0,
+   "gizliEtkilesimli": 0,
+   "ekranDisi": 0,
+   "kucukHedef": 0,
+   "basliksizKirpma": 0,
+   "ipucuKesik": 0,
+   "kenarFarki": 0,
+   "gorunenGizli": 0,
+   "pencereKenar": 0,
+   "hizaKaymasi": 0,
+   "kartTutarsiz": 0,
+   "eksikIkon": 0,
+   "tusY": 44,
+   "tusGen": [
+    57,
+    214
+   ],
+   "satirY": 56,
+   "birincil": null,
+   "pencereGen": 778,
+   "icerik": 810,
+   "listeGen": 778,
+   "yaziTipi": "Sora yüklü",
+   "hata": 0,
+   "ayrinti": {},
+   "hatalar": []
+  },
+  {
+   "ad": "PDF görüntüleyici · rapor formatı sürümü",
+   "gen": 375,
+   "tema": "acik",
+   "gorunum": "liste",
+   "liste": "kart",
+   "pencere": "a-pdf",
+   "tasma": 0,
+   "sertKirpma": 0,
+   "tasanMetin": 0,
+   "cakisma": 0,
+   "sonCakisma": 0,
+   "gizliEtkilesimli": 0,
+   "ekranDisi": 0,
+   "kucukHedef": 0,
+   "basliksizKirpma": 0,
+   "ipucuKesik": 0,
+   "kenarFarki": 0,
+   "gorunenGizli": 0,
+   "pencereKenar": 0,
+   "hizaKaymasi": 0,
+   "kartTutarsiz": 0,
+   "eksikIkon": 0,
+   "tusY": 44,
+   "tusGen": [
+    108,
+    325
+   ],
+   "satirY": 174,
+   "birincil": null,
+   "pencereGen": 375,
+   "icerik": 375,
+   "listeGen": 351,
+   "yaziTipi": "Sora yüklü",
+   "hata": 0,
+   "ayrinti": {},
+   "hatalar": []
+  },
+  {
+   "ad": "PDF görüntüleyici · rapor formatı sürümü",
+   "gen": 375,
+   "tema": "koyu",
+   "gorunum": "liste",
+   "liste": "kart",
+   "pencere": "a-pdf",
+   "tasma": 0,
+   "sertKirpma": 0,
+   "tasanMetin": 0,
+   "cakisma": 0,
+   "sonCakisma": 0,
+   "gizliEtkilesimli": 0,
+   "ekranDisi": 0,
+   "kucukHedef": 0,
+   "basliksizKirpma": 0,
+   "ipucuKesik": 0,
+   "kenarFarki": 0,
+   "gorunenGizli": 0,
+   "pencereKenar": 0,
+   "hizaKaymasi": 0,
+   "kartTutarsiz": 0,
+   "eksikIkon": 0,
+   "tusY": 44,
+   "tusGen": [
+    108,
+    325
+   ],
+   "satirY": 174,
+   "birincil": null,
+   "pencereGen": 375,
+   "icerik": 375,
+   "listeGen": 351,
    "yaziTipi": "Sora yüklü",
    "hata": 0,
    "ayrinti": {},

@@ -496,11 +496,23 @@ html[data-giris="fare"] .a-girdi:focus, html[data-giris="fare"] .a-alan:focus { 
 .a-gecmis-zaman { color: var(--yazi2); font-size: var(--boy-kucuk); font-variant-numeric: tabular-nums; white-space: nowrap; padding-top: 1px; }
 .a-gecmis-ne { min-width: 0; overflow-wrap: anywhere; }
 .a-gecmis-rol { color: var(--yazi3); font-size: var(--boy-etiket); font-weight: 600; }
+.a-gecmis-tus { margin-top: 6px; }   /* geçmiş satırında dosya aç tuşu (standart sürümü) */
 
 /* ── FORM PENCERESİ (3. tur: ekipman ekle) ─────────────────────────────────────────────────────────────
    Kalıp 10: pencerenin içindeki her kutu pencereyi doldurur. Kalıp 3: alanlar veri tipine göre (kod 20 hane, seri no
    30 hane dar; tür ve konum sütunu doldurur). Kalıp 1: tuşlar içerik kadar. Kalıp 6: × ve Esc; telefonda alttan levha. */
 .a-pencere-form { width: 760px; }
+/* PDF görüntüleyici (reisim 2026-09-27: yüklenen her PDF açılıp incelenir) — araç çubuğu + sayfa; makette sayfa iskeleti */
+.a-pencere-pdf { width: 820px; }
+.a-pdf-arac { display: flex; align-items: center; flex-wrap: wrap; gap: 4px 8px; margin: 0 0 10px; }
+.a-pdf-dosya { display: inline-flex; align-items: center; gap: 6px; min-width: 0; margin-right: auto; font-weight: 600; overflow-wrap: anywhere; }
+.a-pdf-sayfa-no { color: var(--yazi2); font-size: var(--boy-kucuk); font-variant-numeric: tabular-nums; }
+.a-pdf-sayfa { display: flex; flex-direction: column; gap: 10px; min-height: 420px; padding: 24px; background: var(--kart); border: 1px solid var(--kenar); border-radius: var(--r-orta); box-shadow: var(--golge-1); }
+.a-pdf-bas { display: flex; align-items: center; gap: 12px; margin-bottom: 8px; }
+.a-pdf-logo { display: grid; place-items: center; width: 64px; height: 40px; border: 1px dashed var(--kenar-alan); border-radius: var(--r-kucuk); color: var(--yazi3); font-size: var(--boy-etiket); }
+.a-pdf-bas-yazi { display: flex; flex: 1 1 auto; flex-direction: column; gap: 6px; }
+.a-pdf-satir { display: block; height: 8px; border-radius: 4px; background: var(--zemin2); }
+.a-pdf-satir-kisa { width: 60%; }
 .a-sekmeler { display: inline-flex; gap: 2px; padding: 3px; margin: 0 0 12px; border: 1px solid var(--kenar-alan); border-radius: var(--r-tam); background: var(--kart); }
 .a-sekme {
   min-height: var(--tus-y); padding: 0 14px; display: inline-flex; align-items: center; gap: 6px;
@@ -685,7 +697,7 @@ a.a-yuz:hover { border-color: var(--kenar-alan); background: var(--zemin); }
 /* 2026-09-26 (M3 2. tur): akreditasyon sütunu kalktı; "Rapor formatı" = firmanın yüklediği PDF (durum rozeti) */
 .a-tablo-tur .a-k-tur { width: 22%; } .a-tablo-tur .a-k-grup { width: 20%; } .a-tablo-tur .a-k-brans { width: 11%; } .a-tablo-tur .a-k-periyot { width: 9%; }
 .a-tablo-tur .a-k-format { width: 16%; } .a-tablo-tur .a-k-rapor { width: 22%; }
-.a-tablo-pdf .a-k-surum { width: 50%; } .a-tablo-pdf .a-k-tarih { width: 30%; } .a-tablo-pdf .a-k-durum { width: 20%; }
+.a-tablo-pdf .a-k-surum { width: 42%; } .a-tablo-pdf .a-k-tarih { width: 24%; } .a-tablo-pdf .a-k-durum { width: 18%; } .a-tablo-pdf .a-k-eylem { width: 16%; }
 .a-tablo-ekipmanlar .a-k-kod { width: 11%; } .a-tablo-ekipmanlar .a-k-tur { width: 14%; } .a-tablo-ekipmanlar .a-k-tesis { width: 18%; }
 .a-tablo-ekipmanlar .a-k-konum { width: 13%; } .a-tablo-ekipmanlar .a-k-son { width: 14%; } .a-tablo-ekipmanlar .a-k-sonraki { width: 14%; }
 .a-tablo-ekipmanlar .a-k-durum { width: 16%; }

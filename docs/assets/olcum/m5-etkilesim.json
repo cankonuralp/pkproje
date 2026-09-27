@@ -2,9 +2,16 @@
  "maket": "m5",
  "tarih": "2026-09-27",
  "arac": "tools/olc-bulut.mjs --etkilesim (başsız tarayıcı, 1920 açık tema; gen verilen denemede o genişlik)",
- "toplam": 16,
- "gecen": 16,
+ "toplam": 17,
+ "gecen": 17,
  "denemeler": [
+  {
+   "ad": "İSG-KATİP sözleşmesi PDF'i açılır",
+   "gen": 1920,
+   "sayfa": "maket/sozlesmeler.html",
+   "hash": "#/s/IS-0926-001",
+   "gecti": true
+  },
   {
    "ad": "eski İSG-KATİP adresi (tesis) sözleşmenin İSG-KATİP bölümüne gider",
    "gen": 1920,

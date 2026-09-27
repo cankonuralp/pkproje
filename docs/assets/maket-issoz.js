@@ -120,7 +120,8 @@
             return (bitti(r) ? rozet({ ad: "Bitmiş", rozet: "a-rozet-bekliyor" }) : "") + (gecOnay(r) ? rozet({ ad: "Geç onay", rozet: "a-rozet-bekliyor" }) : "") + (p ? rozet({ ad: "Planda · " + p.plan, rozet: "a-rozet-kabul" }) : rozet({ ad: "Kullanılmadı", rozet: "a-rozet-notr" }));
           } },
           { k: "eylem", baslik: "İşlem", gizliBaslik: true, kart: "eylem", sira: 9, hucre: function (r) {
-            return '<div class="a-eylem"><div class="a-eylem-tuslar"><a class="a-tus a-tus-ikincil" href="#/s/' + x.no + "/isg/" + r.id + '">' + ikon("pencil", "a-ikon-kucuk") + "Düzenle</a>" +
+            /* yüklenen İSG-KATİP PDF'i açılır (reisim 2026-09-27) */
+            return '<div class="a-eylem"><div class="a-eylem-tuslar">' + (r.pdf ? MK.pdfTus(r.pdf) : "") + '<a class="a-tus a-tus-ikincil" href="#/s/' + x.no + "/isg/" + r.id + '">' + ikon("pencil", "a-ikon-kucuk") + "Düzenle</a>" +
               (idKullanimi(r) ? "" : MK.tus({ eylem: "isg-sil", ad: "Sil", ikon: "x", sinif: "a-tus-ikincil", veri: { id: r.id } })) + "</div></div>";
           } }
         ];
@@ -236,12 +237,12 @@
     if (W.tur === "sablon") {
       $("a-pencere-baslik").textContent = "Sözleşme şablonu";
       var sb = MV.SOZ_SABLON;
-      govde = '<p class="a-pencere-ozet">' + (sb.length ? "Kullanımda: <b>firmanızın şablonu " + kacis(sb[0].surum) + "</b> · " + kacis(sb[0].dosya) : "Kullanımda: <b>temel format</b> (KM-FR-SZL-01, probata)") +
+      govde = '<p class="a-pencere-ozet">' + (sb.length ? "Kullanımda: <b>firmanızın şablonu " + kacis(sb[0].surum) + "</b> · " + kacis(sb[0].dosya) + " " + MK.pdfTus(sb[0].dosya, "Aç", "a-tus-ikincil a-serit-tus") : "Kullanımda: <b>temel format</b> (KM-FR-SZL-01, probata)") +
         "<br>Yeni sözleşmeler bu şablondan üretilir; imzalanmış sözleşmeler kendi sürümüyle kalır.</p>" +
-        (sb.length > 1 ? '<ul class="a-kosullar">' + sb.slice(1).map(function (x) { return "<li>" + ikon("history", "a-ikon-kucuk") + "<span>" + kacis(x.surum) + " · " + kacis(x.tarih) + " · önceki</span></li>"; }).join("") + "</ul>" : "") +
+        (sb.length > 1 ? '<ul class="a-kosullar">' + sb.slice(1).map(function (x) { return "<li>" + ikon("history", "a-ikon-kucuk") + "<span>" + kacis(x.surum) + " · " + kacis(x.tarih) + " · önceki</span>" + MK.pdfTus(x.dosya, "Aç", "a-tus-ikincil a-serit-tus") + "</li>"; }).join("") + "</ul>" : "") +
         '<div class="a-form"><div class="a-alan-grup a-alan-genis"><p class="a-etiket">Firmanın şablonu (PDF ya da Word)</p>' +
           '<div class="a-dosya-sec">' + MK.tus({ eylem: "dosya-sec", ad: d.dosya ? "Başka dosya seç" : "Dosya seç", ikon: "file-plus", sinif: "a-tus-ikincil" }) +
-          '<span class="a-dosya-ad" id="w-dosya">' + (d.dosya ? kacis(d.dosya) : '<span class="a-deger-yok">Dosya seçilmedi</span>') + "</span></div>" +
+          '<span class="a-dosya-ad" id="w-dosya">' + (d.dosya ? kacis(d.dosya) : '<span class="a-deger-yok">Dosya seçilmedi</span>') + "</span>" + (d.dosya ? MK.pdfTus(d.dosya) : "") + "</div>" +
           (h.dosya ? '<p class="a-ipucu a-ipucu-uyari" id="w-dosya-ipucu">' + h.dosya + "</p>" : "") + "</div></div>";
       kaydet = { ad: "Yükle", ikon: "file-plus" };
     } else {
@@ -261,7 +262,7 @@
         MK.alan({ id: "w-bitis", etiket: "Bitiş tarihi", hata: h.bitis, ipucu: "İsteğe bağlı; plan günü bitişten sonraysa plan açarken uyarı çıkar.", girdi: MK.girdi({ id: "w-bitis", alan: "bitis", deger: d.bitis, sinif: "a-girdi-sicil", ek: ' inputmode="numeric" maxlength="10" placeholder="GG.AA.YYYY"', hata: h.bitis }) }) +
         '<div class="a-alan-grup a-alan-genis"><p class="a-etiket">İSG-KATİP sözleşmesi (PDF)</p>' +
           '<div class="a-dosya-sec">' + MK.tus({ eylem: "dosya-sec", ad: d.pdf ? "Başka dosya seç" : "PDF seç", ikon: "file-plus", sinif: "a-tus-ikincil" }) +
-          '<span class="a-dosya-ad" id="w-dosya">' + (d.pdf ? kacis(d.pdf) : '<span class="a-deger-yok">İsteğe bağlı</span>') + "</span></div></div></div>" +
+          '<span class="a-dosya-ad" id="w-dosya">' + (d.pdf ? kacis(d.pdf) : '<span class="a-deger-yok">İsteğe bağlı</span>') + "</span>" + (d.pdf ? MK.pdfTus(d.pdf) : "") + "</div></div></div>" +
         (mevcut ? '<div class="a-serit-kap">' + MK.serit("uyari", "history", kacis(MV.kisi(d.kisi).ad) + " için bu tesiste " + kacis(mevcut.no) + " var; yenisi kaydedilince o önceki kayıt olur.") + "</div>" : "");
       kaydet = { ad: "Kaydet", ikon: "check" };
     }

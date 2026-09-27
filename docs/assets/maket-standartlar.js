@@ -92,7 +92,7 @@
       '<section class="a-bolum" aria-labelledby="a-b-surum"><div class="a-alt-bas"><h2 class="a-alt-baslik" id="a-b-surum">Sürümler</h2><span class="a-sayac"><b>' + surumler.length + "</b> sürüm</span></div>" +
         '<ol class="a-gecmis">' + surumler.map(function (x) {
           return '<li><span class="a-gecmis-zaman">' + MK.tarihYaz(x.tarih) + '</span><span class="a-gecmis-ne"><b>' + (x.k === s.k ? kacis(ad(x)) : '<a class="a-baglanti" href="#/s/' + x.k + '">' + kacis(ad(x)) + "</a>") + "</b> " + rozet(durum(x)) +
-            '<span class="a-not-metin">' + kacis(x.dosya.ad) + " · " + boyut(x.dosya.kb) + " · " + raporSayisi(x) + " rapor · yükleyen " + kacis(MV.kisi(x.yukleyen).ad) + (x.bitti ? " · " + MK.tarihYaz(x.bitti) + "'e kadar" : "") + "</span></span></li>";
+            '<span class="a-not-metin">' + kacis(x.dosya.ad) + " · " + boyut(x.dosya.kb) + " · " + raporSayisi(x) + " rapor · yükleyen " + kacis(MV.kisi(x.yukleyen).ad) + (x.bitti ? " · " + MK.tarihYaz(x.bitti) + "'e kadar" : "") + "</span>" + MK.pdfTus(x.dosya.ad, "Aç", "a-tus-ikincil a-gecmis-tus") + "</span></li>";
         }).join("") + "</ol></section>" +
       '<section class="a-bolum" aria-labelledby="a-b-rapor"><div class="a-alt-bas"><h2 class="a-alt-baslik" id="a-b-rapor">Raporda</h2>' +
         "</div>" +
@@ -123,7 +123,7 @@
         girdi: s ? sabit("w-konu", s.konu) : MK.girdi({ id: "w-konu", alan: "konu", deger: d.konu, ek: ' maxlength="120"', hata: h.konu }) }) +
       '<div class="a-alan-grup a-alan-genis"><p class="a-etiket">Dosya <span class="a-zorunlu">zorunlu</span></p><div class="a-dosya">' +
         MK.tus({ eylem: "dosya-sec", ad: d.dosya ? "Değiştir" : "PDF seç", ikon: "file-plus", sinif: "a-tus-ikincil" }) +
-        (d.dosya ? '<span class="a-dosya-ad">' + kacis(d.dosya) + "</span>" : '<span class="a-dosya-ad a-deger-yok">Dosya seçilmedi</span>') + "</div>" +
+        (d.dosya ? '<span class="a-dosya-ad">' + kacis(d.dosya) + "</span>" + MK.pdfTus(d.dosya) : '<span class="a-dosya-ad a-deger-yok">Dosya seçilmedi</span>') + "</div>" +
         (h.dosya ? '<p class="a-ipucu a-ipucu-uyari" id="w-dosya-ipucu">' + h.dosya + "</p>" : '<p class="a-ipucu" id="w-dosya-ipucu">PDF, en çok 50 MB.</p>') + "</div>" +
       "</div>" +
       '<div class="a-serit-kap a-uyari-serit" id="w-seritler" aria-live="polite">' + seritler(ayni) + "</div>" +
@@ -180,7 +180,8 @@
   var X = MK.eylem;
   X["yukle-ac"] = function () { pencereAc(null); };
   X["surum-ac"] = function () { pencereAc(bul(rota().id)); };
-  X["oku"] = function () { MK.bildir("Makette dosya yok. Uygulamada kısa ömürlü, yetkili bağlantıyla açılır; sahada tablet ve telefonda da okunur."); };
+  /* yüklenen standart PDF'i görüntüleyicide açılır (reisim 2026-09-27); sahada tablet ve telefonda da okunur */
+  X["oku"] = function () { var s = bul(rota().id); MK.pdfGoster({ dosya: s.dosya.ad, baslik: ad(s), sayfa: 3 }); };
   X["dosya-sec"] = function () {
     var no = (W.s ? W.s.no : W.d.no.trim() || "Standart").replace(/\s+/g, "-");
     W.d.dosya = no + "_" + (W.d.surum.trim() || "sürüm") + ".pdf"; delete W.hata.dosya; pencereCiz();

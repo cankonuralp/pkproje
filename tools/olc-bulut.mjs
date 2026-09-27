@@ -107,6 +107,7 @@ export const DURUMLAR = {
     { ad: "rapor formatı yükle · PDF seçilmeden", hash: "#/tur/HT/format", adim: [["tikla", '[data-eylem="pencere-kaydet"]']] },
     { ad: "tür düzenle", hash: "#/tur/ET/duzenle" },
     { ad: "tür · jeneratör: kullanılacak cihazlar ve rapor bölümleri", hash: "#/tur/JN" },
+    { ad: "PDF görüntüleyici · rapor formatı sürümü", hash: "#/tur/ET", adim: [["tikla", '[data-eylem="pdf-goster"]']] },
     { ad: "tesis sayfası · ekipman yüzü planı açar", sayfa: "maket/musteriler.html", hash: "#/t/t1" },
   ] },
   /* M4 Ölçüm Cihazı · Zimmet · kalibrasyon uyarısı (2026-09-24) */
@@ -114,6 +115,7 @@ export const DURUMLAR = {
     { ad: "ölçüm cihazları · liste + uyarı şeridi", sayfa: "maket/olcum-cihazlari.html", hash: "#/" },
     { ad: "cihaz · kalibrasyonu geçmiş, zimmette", sayfa: "maket/olcum-cihazlari.html", hash: "#/c/v3" },
     { ad: "cihaz · kalibrasyonda", sayfa: "maket/olcum-cihazlari.html", hash: "#/c/v14" },
+    { ad: "PDF görüntüleyici · kalibrasyon sertifikası", sayfa: "maket/olcum-cihazlari.html", hash: "#/c/v1", adim: [["tikla", '[data-eylem="pdf-goster"]']] },
     { ad: "kalibrasyon kaydı · boş gönderildi", sayfa: "maket/olcum-cihazlari.html", hash: "#/c/v1/kalibrasyon", adim: [["tikla", '[data-eylem="pencere-kaydet"]']] },
     { ad: "zimmetler · kimde", hash: "#/" },
     { ad: "zimmetler · kişiye göre (adresten)", hash: "#/?kisi=mk" },
@@ -128,6 +130,7 @@ export const DURUMLAR = {
     /* 2026-09-26 (2. tur, reisim: Sözleşmeler = firma ile fabrika arasındaki sözleşme; İSG-KATİP ID'leri onun içinde, tesis başına denetçiye göre) */
     { ad: "sözleşmeler · liste, ID eksik ve biten şeritleri", hash: "#/" },
     { ad: "sözleşme · İSG-KATİP, geç onay yalnız uyarı (eski adresten)", hash: "#/isg?tesis=t7" },
+    { ad: "PDF görüntüleyici · İSG-KATİP sözleşmesi", hash: "#/s/IS-0926-001", adim: [["tikla", '[data-eylem="pdf-goster"]']] },
     { ad: "sözleşme · iki tesis, ID'ler", hash: "#/s/IS-1125-001" },
     { ad: "sözleşme · açık planda ID eksik", hash: "#/isg?tesis=t8" },
     { ad: "sözleşme · İSG-KATİP bitmiş (plan gününden önce)", hash: "#/isg?tesis=t9" },
@@ -155,6 +158,7 @@ export const DURUMLAR = {
     { ad: "standartlar · liste", hash: "#/" },
     { ad: "standartlar · önceki sürümler", hash: "#/", adim: [["js", 'MK.SZ.s.sec.gorunum = "hepsi"; MK.suzgecKur("s")']] },
     { ad: "standart · güncel, çok türde", hash: "#/s/s1" },
+    { ad: "PDF görüntüleyici · standart (Oku)", hash: "#/s/s1", adim: [["tikla", '[data-eylem="oku"]']] },
     { ad: "standart · önceki sürüm", hash: "#/s/s1e" },
     { ad: "standart · türe atanmamış", hash: "#/s/s22" },
     { ad: "standart yükle · var olan numara (yeni sürüm uyarısı)", hash: "#/yukle", adim: [["yaz", "#w-no", "TS EN 280"]] },
@@ -279,7 +283,9 @@ export const DURUMLAR = {
     { ad: "kayıt penceresi · tekrarı geçti", hash: "#/k/g31" },
     { ad: "kayıt ekle · boş gönderildi", hash: "#/yeni", adim: [["tikla", '[data-eylem="kaydet"]']] },
     { ad: "tekrarı kaydet · güncel kayıt uyarısı, sertifika seçildi", hash: "#/yeni?kisi=mk&tur=isg", adim: [["tikla", '[data-eylem="dosya-sec"]']] },
-    { ad: "eğitim türü düzenle penceresi", hash: "#/turler/ilkyardim" }
+    { ad: "eğitim türü düzenle penceresi", hash: "#/turler/ilkyardim" },
+    /* 2026-09-27 (reisim): yüklenen her PDF açılıp incelenir — ortak görüntüleyici */
+    { ad: "PDF görüntüleyici · eğitim sertifikası", hash: "#/k/g31", adim: [["tikla", '#a-pencere [data-eylem="pdf-goster"]']] }
   ] },
 };
 
@@ -328,6 +334,8 @@ export const DENEMELER = {
     { ad: "menüden hazır maket → bağlantı (Personel)", hash: "#/", bekle: 'document.querySelector(\'#a-menu a[href="personel.html"]\') !== null' },
   ],
   m1: [
+    { ad: "özlük belgesi Aç: PDF görüntüleyici", hash: "#/p/mk", adim: [["tikla", '#a-nesne [data-eylem="pdf-goster"]']], bekle: 'document.querySelector("#a-pdf").open && !!document.querySelector("#a-pdf .a-pdf-sayfa")' },
+    { ad: "imzalı zimmet formu: Taramayı aç", hash: "#/p/mk/zimmet-imzali/ZF-0426-003", adim: [["tikla", '#a-nesne [data-eylem="pdf-goster"]']], bekle: 'document.querySelector("#a-pdf").open && /zimmet-formu-imzali\\.pdf/.test(document.querySelector("#a-pdf-govde").textContent)' },
     { ad: "personel: sayaç görünüme dürüst (15 çalışan)", sayfa: "maket/personel.html", hash: "#/", bekle: 'document.querySelector("#a-sayac").textContent === "15 kişi" && document.querySelectorAll("#a-liste tbody tr").length === 15' },
     { ad: "personel: Inspector çipi 9 / 15", sayfa: "maket/personel.html", hash: "#/", adim: [["tikla", '[data-cip="inspector"]']], bekle: 'document.querySelector("#a-sayac").textContent === "9 / 15 kişi"' },
     { ad: "personel: Rol seçicisi Planlama ekibi 3 / 15", sayfa: "maket/personel.html", hash: "#/", adim: [["tikla", '[data-secici-ac="rol"]'], ["tikla", '[data-sec="rol"][data-deger="planlama"]']], bekle: 'document.querySelector("#a-sayac").textContent === "3 / 15 kişi"' },
@@ -398,6 +406,7 @@ export const DENEMELER = {
     { ad: "müşteri sayfası: Açık alacak yüzü → müşterinin faturaları (3 / 13)", hash: "#/m/m1", adim: [["tikla", 'a.a-yuz[href^="muhasebe.html"]']], bekle: '/muhasebe\\.html$/.test(location.pathname) && document.querySelector("#a-sayac").textContent === "3 / 13 fatura" && /3.600,00 TL/.test(document.querySelector("#a-liste").textContent)' },
   ],
   m3: [
+    { ad: "rapor formatı sürümünün PDF'i açılır", hash: "#/tur/ET", adim: [["tikla", '.a-tablo-pdf [data-eylem="pdf-goster"]']], bekle: 'document.querySelector("#a-pdf").open && /et-rapor-formati-v4\\.pdf/.test(document.querySelector("#a-pdf-govde").textContent)' },
     /* 2026-09-27 (reisim yirmi dördüncü tur): türün kullanacağı ölçüm cihazları düzenlenir, rapor bunları ister; rapor bölümleri */
     { ad: "tür sayfası: kullanılacak ölçüm cihazları ve rapor bölümleri", hash: "#/tur/ET", bekle: '/Kullanılacak ölçüm cihazları/.test(document.querySelector("#a-nesne").textContent) && document.querySelectorAll("#a-b-cihaz ~ .a-kosullar li, section[aria-labelledby=a-b-cihaz] li").length === 3 && /Her raporda sabitFotoğraflar · Sonuç ve kanaat · Muayene uzmanı yorumu/.test(document.querySelector("section[aria-labelledby=a-b-bolum]").textContent)' },
     { ad: "düzenle: cihaz türü eklenir, tür sayfasında görünür", hash: "#/tur/KS/duzenle", adim: [["tikla", '[data-cihaz-tur="termal"]'], ["tikla", '[data-eylem="pencere-kaydet"]']], bekle: 'location.hash === "#/tur/KS" && /Termal kamera/.test(document.querySelector("section[aria-labelledby=a-b-cihaz]").textContent) && MV.tur("KS").cihaz.indexOf("termal") >= 0' },
@@ -420,6 +429,7 @@ export const DENEMELER = {
     { ad: "tesis sayfası: Ekipman yüzü tesisin planını açar", sayfa: "maket/musteriler.html", hash: "#/t/t1", adim: [["tikla", 'a.a-yuz[href^="planlarim.html"]']], bekle: '/planlarim\\.html$/.test(location.pathname) && location.hash === "#/plan/1"' },
   ],
   m4: [
+    { ad: "kalibrasyon sertifikası açılır", sayfa: "maket/olcum-cihazlari.html", hash: "#/c/v1", adim: [["tikla", '[data-eylem="pdf-goster"]']], bekle: 'document.querySelector("#a-pdf").open && /\\.pdf/.test(document.querySelector("#a-pdf-govde").textContent)' },
     { ad: "cihazlar: uyarı şeridindeki Göster çipi uygular (2 / 20)", sayfa: "maket/olcum-cihazlari.html", hash: "#/", adim: [["tikla", '[data-eylem="cip-uygula"][data-deger="gecti"]']], bekle: 'document.querySelector("#a-sayac").textContent === "2 / 20 cihaz" && document.querySelector(\'[data-cip="gecti"]\').getAttribute("aria-pressed") === "true"' },
     { ad: "cihaz ekle: aynı cihaz kodu reddedilir", sayfa: "maket/olcum-cihazlari.html", hash: "#/yeni", adim: [["yaz", "#w-env", "oc-001"], ["tikla", '[data-eylem="pencere-kaydet"]']], bekle: '/başka bir cihazda kayıtlı/.test(document.querySelector("#w-env-ipucu").textContent)' },
     { ad: "cihaz ekle: geçerli → depoda cihaz sayfası", sayfa: "maket/olcum-cihazlari.html", hash: "#/yeni", adim: [["yaz", "#w-env", "OC-099"], ["tikla", "#w-cihazTur"], ["tikla", '[data-secim="w-cihazTur"][data-deger="pens"]'], ["yaz", "#w-seri", "CS1"], ["yaz", "#w-bitis", "01.09.2027"], ["tikla", '[data-eylem="pencere-kaydet"]']], bekle: '/^#\\/c\\/v/.test(location.hash) && /OC-099/.test(document.querySelector("#a-nesne h1").textContent) && /Depo/.test(document.querySelector(".a-yuzler").textContent)' },
@@ -444,6 +454,7 @@ export const DENEMELER = {
     { ad: "cihaz: kalibrasyonu geçmiş cihazda rapor onaya gönderilemez uyarısı", sayfa: "maket/olcum-cihazlari.html", hash: "#/c/v3", bekle: '/onayına gönderilemez/.test(document.querySelector("#a-nesne .a-serit-hata").textContent)' },
   ],
   m5: [
+    { ad: "İSG-KATİP sözleşmesi PDF'i açılır", hash: "#/s/IS-0926-001", adim: [["tikla", '[data-eylem="pdf-goster"]']], bekle: 'document.querySelector("#a-pdf").open && /isg-katip-s-2026-0412\\.pdf/.test(document.querySelector("#a-pdf-govde").textContent)' },
     /* 2026-09-26 (2. tur, reisim A–H "Önerilerin hepsi uygun başla"): ayrı İSG-KATİP sekmesi yok; ID sözleşmede, onay ve PDF isteğe bağlı */
     { ad: "eski İSG-KATİP adresi (tesis) sözleşmenin İSG-KATİP bölümüne gider", hash: "#/isg?tesis=t7", bekle: '/^#\\/s\\/IS-/.test(location.hash) && !!document.querySelector("#a-b-isg") && !document.querySelector(".a-sekmeler-sayfa")' },
     { ad: "sözleşmesi olmayan tesis → tesis sayfası", hash: "#/isg?tesis=t2", bekle: '/musteriler\\.html$/.test(location.pathname) && location.hash === "#/t/t2" && !!document.querySelector("#a-b-isg")' },
@@ -463,6 +474,10 @@ export const DENEMELER = {
     { ad: "Esc pencereyi kapatır, adres sözleşmeye döner", hash: "#/isg/i1", adim: [["tus", "Escape"]], bekle: '!document.querySelector("#a-pencere").open && /^#\\/s\\/IS-[0-9-]+$/.test(location.hash)' },
   ],
   m7: [
+    /* 2026-09-27 (reisim: "Sistemde herhangi bir yere eklenen herhangi bir pdf daha sonradan açılıp incelenebilir olsun") */
+    { ad: "Oku: standart PDF'i görüntüleyicide, sayfa ileri, Kapat", hash: "#/s/s1", adim: [["tikla", '[data-eylem="oku"]'], ["tikla", '#a-pdf [data-eylem="pdf-sayfa"][data-yon="1"]']], bekle: 'document.querySelector("#a-pdf").open && /Sayfa 2 \\/ 3/.test(document.querySelector("#a-pdf").textContent) && document.activeElement.dataset.yon === "1"' },
+    { ad: "önceki sürümün PDF'i de açılır", hash: "#/s/s1", adim: [["tikla", '.a-gecmis [data-eylem="pdf-goster"][data-dosya*="2002"]']], bekle: 'document.querySelector("#a-pdf").open && /2002/.test(document.querySelector("#a-pdf-govde").textContent)' },
+    { ad: "yükleme penceresinde seçilen PDF açılır", hash: "#/yukle", adim: [["yaz", "#w-no", "TS EN 9999"], ["tikla", '[data-eylem="dosya-sec"]'], ["tikla", '#a-pencere [data-eylem="pdf-goster"]']], bekle: 'document.querySelector("#a-pdf").open && document.querySelector("#a-pencere").open' },
     { ad: "görünüm: önceki sürümler (1)", hash: "#/", adim: [["tikla", '[data-secici-ac="gorunum"]'], ["tikla", '[data-sec="gorunum"][data-deger="onceki"]']], bekle: 'document.querySelector("#a-sayac").textContent === "1 standart" && /2002/.test(document.querySelector("#a-liste").textContent)' },
     { ad: "Türe atanmamış çipi (1 / 22)", hash: "#/", adim: [["tikla", '[data-sz="s"] [data-cip="bos"]']], bekle: 'document.querySelector("#a-sayac").textContent === "1 / 22 standart" && /60204-1/.test(document.querySelector("#a-liste").textContent)' },
     { ad: "tür sayfasından gelince türe göre süzülür", hash: "#/?tur=HT", bekle: 'document.querySelector("#a-sayac").textContent === "2 / 22 standart"' },
@@ -636,6 +651,7 @@ export const DENEMELER = {
     { ad: "menüde Performans hazır maketi açar (Muhasebe'den)", sayfa: "maket/muhasebe.html", hash: "#/", adim: [["tikla", '#a-menu a[href="performans.html"]']], bekle: '/performans\\.html$/.test(location.pathname) && !!document.querySelector(".a-grafik")' },
   ],
   m16: [
+    { ad: "eğitim sertifikası açılır (kayıt penceresinin üstünde)", hash: "#/k/g31", adim: [["tikla", '#a-pencere [data-eylem="pdf-goster"]']], bekle: 'document.querySelector("#a-pdf").open && document.querySelector("#a-pencere").open' },
     /* 2026-09-26 (reisim 153): eğitim türünü ve tekrar süresini firma ekler / düzenler */
     { ad: "eğitim türü eklenir", hash: "#/turler", adim: [["tikla", 'a[href="#/turler/yeni"]'], ["yaz", "#w-ad", "Kişisel koruyucu donanım"], ["yaz", "#w-tekrar", "24"], ["tikla", '[data-eylem="tur-kaydet"]']], bekle: '!document.querySelector("#a-pencere").open && /Kişisel koruyucu donanım/.test(document.querySelector("#a-liste").textContent) && /24 ay/.test(document.querySelector("#a-liste").textContent)' },
     { ad: "eğitim türü: tekrar süresi aralık dışı reddedilir", hash: "#/turler/yeni", adim: [["yaz", "#w-ad", "Deneme"], ["yaz", "#w-tekrar", "0"], ["tikla", '[data-eylem="tur-kaydet"]']], bekle: '/1–120/.test(document.querySelector("#w-tekrar-ipucu").textContent) && document.activeElement.id === "w-tekrar"' },

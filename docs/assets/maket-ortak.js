@@ -496,6 +496,40 @@
     return false;
   }
 
+  /* ── PDF GÖRÜNTÜLEYİCİ (reisim 2026-09-27: "Sistemde herhangi bir yere eklenen herhangi bir pdf daha sonradan açılıp incelenebilir
+     olsun sdaece yüklemek olmaz") — TEK ÜRETİCİ: yüklenen her dosyanın yanında "Aç"; indirmeden sayfa sayfa incelenir. Pencere
+     gerektiğinde bir kez kurulur; başka pencerenin üstünde de açılır. Makette dosyanın kendisi yok: sayfa iskeleti gösterilir.
+     pdfTus(dosya, ad?) → "Aç" tuşu · MK.pdfGoster({ dosya, baslik, icerik (varsa gerçek önizleme, ör. MB.belge), sayfa }) */
+  MK.pdfTus = function (dosya, ad, sinif) { return MK.tus({ eylem: "pdf-goster", ad: ad || "Aç", ikon: "eye", sinif: sinif || "a-tus-ikincil", veri: { dosya: dosya } }); };
+  var PDF = { sayfa: 1, toplam: 1, o: null };
+  function pdfPencere() {
+    var d = $("a-pdf"); if (d) return d;
+    d = document.createElement("dialog"); d.className = "a-pencere a-pencere-pdf"; d.id = "a-pdf"; d.setAttribute("aria-labelledby", "a-pdf-baslik");
+    d.innerHTML = '<div class="a-pencere-bas"><h2 id="a-pdf-baslik"></h2><button class="a-ikon-tus" type="button" data-eylem="pencere-kapat" aria-label="Kapat">' + ikon("x") + "</button></div>" +
+      '<div class="a-pencere-govde" id="a-pdf-govde"></div><div class="a-pencere-alt" id="a-pdf-alt"></div>';
+    document.body.appendChild(d); return d;
+  }
+  function pdfCiz() {
+    var o = PDF.o, satir = function (n, uzun) { var h = ""; for (var i = 0; i < n; i++) h += '<span class="a-pdf-satir' + (uzun && i % 3 === 2 ? " a-pdf-satir-kisa" : "") + '"></span>'; return h; };
+    $("a-pdf-baslik").textContent = o.baslik || o.dosya;
+    $("a-pdf-govde").innerHTML = '<div class="a-pdf-arac"><span class="a-pdf-dosya">' + ikon("file-text", "a-ikon-kucuk") + "<span>" + kacis(o.dosya) + "</span></span>" +
+        '<span class="a-pdf-sayfa-no">Sayfa ' + PDF.sayfa + " / " + PDF.toplam + "</span>" +
+        '<button class="a-ikon-tus" type="button" data-eylem="pdf-sayfa" data-yon="-1" aria-label="Önceki sayfa"' + (PDF.sayfa === 1 ? " disabled" : "") + ">" + ikon("chevron-left") + "</button>" +
+        '<button class="a-ikon-tus" type="button" data-eylem="pdf-sayfa" data-yon="1" aria-label="Sonraki sayfa"' + (PDF.sayfa === PDF.toplam ? " disabled" : "") + ">" + ikon("chevron-right") + "</button></div>" +
+      (o.icerik && PDF.sayfa === 1 ? o.icerik : '<div class="a-pdf-sayfa" role="img" aria-label="' + kacis(o.dosya) + ", sayfa " + PDF.sayfa + '">' +
+        '<div class="a-pdf-bas"><span class="a-pdf-logo">Logo</span><span class="a-pdf-bas-yazi">' + satir(2) + "</span></div>" + satir(14, true) + "</div>");
+    $("a-pdf-alt").innerHTML = MK.tus({ eylem: "pdf-indir", ad: "İndir", ikon: "download", sinif: "a-tus-ikincil" }) + MK.tus({ eylem: "pencere-kapat", ad: "Kapat" });
+  }
+  MK.pdfGoster = function (o) {
+    PDF.o = o; PDF.sayfa = 1; PDF.toplam = o.sayfa || 2;
+    var d = pdfPencere(); pdfCiz(); if (!d.open) d.showModal(); $("a-pdf-govde").scrollTop = 0;
+    $("a-pdf-alt").querySelector(".a-tus-birincil").focus({ preventScroll: true });
+  };
+  MK.eylem = MK.eylem || {};
+  MK.eylem["pdf-goster"] = function (el) { MK.pdfGoster({ dosya: el.dataset.dosya }); };
+  MK.eylem["pdf-sayfa"] = function (el) { PDF.sayfa = Math.min(PDF.toplam, Math.max(1, PDF.sayfa + +el.dataset.yon)); pdfCiz(); var t = document.querySelector('#a-pdf [data-eylem="pdf-sayfa"][data-yon="' + el.dataset.yon + '"]'); (t && !t.disabled ? t : $("a-pdf-alt").querySelector(".a-tus-birincil")).focus(); };
+  MK.eylem["pdf-indir"] = function () { MK.bildir("Makette dosya yok. Uygulamada kısa ömürlü, yetkili bağlantıyla iner."); };
+
   /* ── BİLDİRİM · ÇEKMECE · DARALTMA · TEMA ───────────────────────────────────────────────────────── */
   var bildirimZaman;
   MK.bildir = function (m) {
@@ -547,7 +581,7 @@
   /* ── OLAY DAĞITICI — tek dinleyici; sayfa kendi işlerini MK.eylem[ad] ve kancalarla ekler ─────────────────
      MK.onTikla(e) → true dönerse iş bitti (sayfaya özgü öznitelikler) · MK.eylem[ad](el, e) · MK.onGirdi(e) ·
      MK.onTus(e) → true dönerse iş bitti · MK.onSecim(id, deger) · MK.goster(odakla) adres değişince. */
-  MK.eylem = {};
+  MK.eylem = MK.eylem || {};   /* ortak eylemler (PDF görüntüleyici) önce kaydolur */
   document.addEventListener("click", function (e) {
     if (!e.target.closest(".a-secici")) listeleriKapat(null);
     if (zamanTikla(e)) return;

@@ -1498,6 +1498,11 @@ revizyon, alan kopyalama, hafif kusur devri, meslek eşleşme denetimi).
 - Emsal ürünler: https://opwire.app/iso-17020-periyodik-kontrol-yazilimi/ · https://17020muayene.vidco.com.tr/ · https://akuple.com/asansor-kontrol-yazilimi/ · https://ensyazilim.com/
 
 ## 11 · Değişiklik günlüğü
+- 2026-09-27 (80): **Yüklenen her PDF açılır** (§9 yirmi dördüncü tur): ortak PDF görüntüleyici (MK.pdfGoster / MK.pdfTus; sayfa ileri-geri,
+  İndir, Kapat; başka pencerenin üstünde de açılır). "Aç" eklenen yerler: kalibrasyon sertifikası (M4), eğitim sertifikası (M16), İSG-KATİP
+  sözleşmesi ve sözleşme şablonu (M5), özlük belgeleri ve imzalı zimmet formu taraması (M1), standart PDF'i ve önceki sürümleri (M7, "Oku"),
+  rapor formatı sürümleri (M3), imzalı rapor PDF'leri (M9); yükleme pencerelerinde seçilen dosya da açılır. İmzalı sözleşme ve rapor
+  zaten belge olarak açılıyordu.
 - 2026-09-27 (79): **Teklif kayıtlı olmayan müşteriye** (§9 yirmi dördüncü tur): formda "Kayıtlı müşteri / Kayıtlı olmayan müşteri"; kayıtlı
   olmayanda ünvan, vergi, adres, il/ilçe, e-posta, telefon, yetkili elle (ünvan, adres, il zorunlu); teklif sayfasında "Kayıtlı değil" ve müşteri
   bilgileri; kabul edilince "Müşteri olarak kaydet" (müşteri + Merkez tesisi) → iş sözleşmesi, plan. Müşteriler formunda telefon (rapordaki firma

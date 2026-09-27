@@ -2,9 +2,30 @@
  "maket": "m7",
  "tarih": "2026-09-27",
  "arac": "tools/olc-bulut.mjs --etkilesim (başsız tarayıcı, 1920 açık tema; gen verilen denemede o genişlik)",
- "toplam": 11,
- "gecen": 11,
+ "toplam": 14,
+ "gecen": 14,
  "denemeler": [
+  {
+   "ad": "Oku: standart PDF'i görüntüleyicide, sayfa ileri, Kapat",
+   "gen": 1920,
+   "sayfa": "maket/standartlar.html",
+   "hash": "#/s/s1",
+   "gecti": true
+  },
+  {
+   "ad": "önceki sürümün PDF'i de açılır",
+   "gen": 1920,
+   "sayfa": "maket/standartlar.html",
+   "hash": "#/s/s1",
+   "gecti": true
+  },
+  {
+   "ad": "yükleme penceresinde seçilen PDF açılır",
+   "gen": 1920,
+   "sayfa": "maket/standartlar.html",
+   "hash": "#/yukle",
+   "gecti": true
+  },
   {
    "ad": "görünüm: önceki sürümler (1)",
    "gen": 1920,

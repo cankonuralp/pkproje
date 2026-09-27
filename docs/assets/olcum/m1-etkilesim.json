@@ -2,9 +2,23 @@
  "maket": "m1",
  "tarih": "2026-09-27",
  "arac": "tools/olc-bulut.mjs --etkilesim (başsız tarayıcı, 1920 açık tema; gen verilen denemede o genişlik)",
- "toplam": 38,
- "gecen": 38,
+ "toplam": 40,
+ "gecen": 40,
  "denemeler": [
+  {
+   "ad": "özlük belgesi Aç: PDF görüntüleyici",
+   "gen": 1920,
+   "sayfa": "maket/personel.html",
+   "hash": "#/p/mk",
+   "gecti": true
+  },
+  {
+   "ad": "imzalı zimmet formu: Taramayı aç",
+   "gen": 1920,
+   "sayfa": "maket/personel.html",
+   "hash": "#/p/mk/zimmet-imzali/ZF-0426-003",
+   "gecti": true
+  },
   {
    "ad": "personel: sayaç görünüme dürüst (15 çalışan)",
    "gen": 1920,

@@ -2,9 +2,16 @@
  "maket": "m4",
  "tarih": "2026-09-27",
  "arac": "tools/olc-bulut.mjs --etkilesim (başsız tarayıcı, 1920 açık tema; gen verilen denemede o genişlik)",
- "toplam": 20,
- "gecen": 20,
+ "toplam": 21,
+ "gecen": 21,
  "denemeler": [
+  {
+   "ad": "kalibrasyon sertifikası açılır",
+   "gen": 1920,
+   "sayfa": "maket/olcum-cihazlari.html",
+   "hash": "#/c/v1",
+   "gecti": true
+  },
   {
    "ad": "cihazlar: uyarı şeridindeki Göster çipi uygular (2 / 20)",
    "gen": 1920,

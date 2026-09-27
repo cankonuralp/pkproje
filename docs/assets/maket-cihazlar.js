@@ -88,8 +88,9 @@
     { k: "lab", baslik: "Laboratuvar", kart: "govde", sira: 3, hucre: function (x) { return '<span class="a-kart-etiket">Laboratuvar</span>' + kirp(x.lab); } },
     { k: "sertifika", baslik: "Sertifika no", kart: "govde", sira: 4, hucre: function (x) { return '<span class="a-kart-etiket">Sertifika no</span><span class="a-kod">' + x.sertifika + "</span>"; } },
     { k: "sonuc", baslik: "Sonuç", kart: "rozet", sira: 1, hucre: function (x) { return rozet(x.sonuc === "Uygun" ? { ad: "Uygun", rozet: "a-rozet-tamam" } : { ad: "Uygun değil", rozet: "a-rozet-red" }); } },
-    { k: "eylem", baslik: "İşlem", gizliBaslik: true, kart: "eylem", sira: 9, hucre: function () {
-      return '<div class="a-eylem"><div class="a-eylem-tuslar">' + MK.tus({ eylem: "kapsam-disi", ad: "Sertifikayı gör", ikon: "file-text", sinif: "a-tus-ikincil", veri: { ne: "Kalibrasyon sertifikası" } }) + "</div></div>";
+    /* yüklenen sertifika PDF'i açılır (reisim 2026-09-27: "eklenen herhangi bir pdf daha sonradan açılıp incelenebilir olsun") */
+    { k: "eylem", baslik: "İşlem", gizliBaslik: true, kart: "eylem", sira: 9, hucre: function (x) {
+      return '<div class="a-eylem"><div class="a-eylem-tuslar">' + MK.pdfTus(x.sertifika.toLowerCase() + ".pdf", "Sertifikayı aç") + "</div></div>";
     } }
   ];
   var ARA_SUTUN = [
@@ -192,7 +193,7 @@
         A("lab", "Laboratuvar", d.lab, { zorunlu: true, genis: true, ek: ' maxlength="80"' }) + A("sertifika", "Sertifika no", d.sertifika, { zorunlu: true, sinif: "a-girdi-seri", ek: ' maxlength="30"' }) +
         '<div class="a-alan-grup"><p class="a-etiket">Sertifika dosyası <span class="a-zorunlu">zorunlu</span></p>' +
           '<div class="a-dosya">' + MK.tus({ eylem: "dosya-sec", ad: d.dosya ? "Değiştir" : "Dosya seç", ikon: "file-plus", sinif: "a-tus-ikincil" }) +
-          '<span class="a-dosya-ad' + (d.dosya ? "" : " a-deger-yok") + '">' + (d.dosya || "PDF, en çok 10 MB") + "</span></div>" +
+          '<span class="a-dosya-ad' + (d.dosya ? "" : " a-deger-yok") + '">' + (d.dosya || "PDF, en çok 10 MB") + "</span>" + (d.dosya ? MK.pdfTus(d.dosya) : "") + "</div>" +
           (h.dosya ? '<p class="a-ipucu a-ipucu-uyari">' + h.dosya + "</p>" : "") + "</div>" +
         '<div class="a-alan-grup a-alan-genis"><p class="a-etiket">Sonuç</p>' + radyo("sonuc", d.sonuc, [["Uygun", "Uygun — cihaz kullanılabilir"], ["Uygun değil", "Uygun değil — cihaz kullanımdan çekilir"]]) + "</div></div>";
     } else {
