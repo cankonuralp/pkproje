@@ -1583,6 +1583,16 @@ ekipmanın muayenesi ile alakalı tariflerdir."*
 - **Duyurular:** her duyuruda yayım tarihi (tarihi doğrulanamayan kayıt listeye girmez), en yeni üstte; kaynaklar İSGGM + **İSGÜM** + iş
   ekipmanları portalı (her birine "Tümü" bağlantısı). Makette 6 gerçek duyuru (2026-09-27 web aramasıyla; tarih duyuru adresindeki gün-ay-yıl;
   bu ortamdan csgb.gov.tr'ye doğrudan erişim kapalı). Uygulamada sunucu üç kaynağı okur.
+- **Kontrol kriterleri (Standartlar modülünde ikinci sekme):** Bakanlığın kontrol kriterleri belgeleri sistemde tutulur — şimdilik **ZPKK01**
+  (AG topraklama, 9 madde) ve **ZPKK02** (elektrik iç tesisatı gözle kontrol ve fonksiyon testleri, 17 madde); ikisi de yayım 18.07.2025,
+  yürürlük 01.09.2025. Liste (belge · ekipman türü · rapor formatı · madde sayısı · yürürlük · "Aç") ve belge sayfası (kapsam, maddeler tablosu:
+  no · başlık · içerik · standart / yönetmelik; notlar; "Kriterleri aç" · "Rapor formatını aç"). Belgeler **kodda** (şablonlar gibi, §8.3); site
+  içinde yüklenmez / düzenlenmez. Resmî PDF'ler depoda `docs/maket/belgeler/` (ZPKR01, ZPKK01, ZPKR02, ZPKK02; **üst verideki kişi adı silindi**,
+  içerik aynen) ve makette gerçekten açılır / iner. Ekipman türü sayfası (AT, ET) "rapor formatı" olarak resmî PDF'i gösterir ve kriter belgesine
+  bağlanır. Maddelerin "standart / yönetmelik" sütunu PDF tablosundan sırayla eşlendi (metin çıkarımında sütun hizası kayar; uygulamada belgeyle
+  karşılaştırılarak doğrulanır).
+- **Standartlar formatlara göre:** AG topraklama → TS HD 60364-4-41 + TS HD 60364-6; elektrik iç tesisatı → **TS HD 60364-4-43** (yeni) + TS HD
+  60364-6 (ZPKR01 / ZPKR02 başlığındaki standartlar). Kütüphane 23 standart.
 
 **Açık kalanlar:** ~~Ana sayfada İSGGM duyuruları~~ (2026-09-27: makette eklendi; okuma işi uygulamada) (reisim 2026-09-26: *"Ana sayfada isgüm duyurularını gösterebilir miyiz ? Bunu
 yapılacaklar listesine ekle"*; öneri: ÇSGB İSGGM duyurular sayfası — https://www.csgb.gov.tr/isggm/duyurular/ — sunucuda günde birkaç kez
@@ -1616,6 +1626,8 @@ revizyon, alan kopyalama, hafif kusur devri, meslek eşleşme denetimi).
 - Emsal ürünler: https://opwire.app/iso-17020-periyodik-kontrol-yazilimi/ · https://17020muayene.vidco.com.tr/ · https://akuple.com/asansor-kontrol-yazilimi/ · https://ensyazilim.com/
 
 ## 11 · Değişiklik günlüğü
+- 2026-09-27 (92): **Kontrol kriterleri sekmesi** (§9 yirmi sekizinci tur): Standartlar'da ZPKK01 / ZPKK02 (maddeler, notlar, PDF), resmî rapor
+  formatları ZPKR01 / ZPKR02 türlerde; AT ve ET standartları formatlardaki gibi. M7 104/104 · 18/18 · 52/52; M3 80/80 · 20/20 · 40/40; M8 · M9 temiz.
 - 2026-09-27 (91): **Duyurular düzeltildi** (§9 yirmi sekizinci tur): 6 gerçek duyuru, hepsi tarihli, en yeni üstte; İSGÜM eklendi. M1 256/256 · 49/49 · 128/128.
 - 2026-09-27 (90): **Maket çalışır hâlde** (§9 yirmi yedinci tur): gerçek dosya seçme / açma (PDF, fotoğraf), gerçek .xlsx indirme ve okuma,
   belgelerin yazdırma penceresinden PDF'i; ortak MK.dosyaSec · MK.indir · MK.yazdir · MK.xlsx · MK.tabloOku · MK.fotolar. 17 maket yeniden temiz

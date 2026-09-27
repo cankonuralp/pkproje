@@ -542,7 +542,7 @@
   /* İndir: seçilen gerçek dosya aynen iner; belge (rapor, form) yazdırma penceresinden PDF olur; örnek kayıt dosyası maket PDF'i olarak iner */
   MK.eylem["pdf-indir"] = function () {
     var o = PDF.o, d = MK.DOSYA[o.dosya];
-    if (d) MK.indir(o.dosya, d.dosya); else if (o.icerik) MK.yazdir(o.baslik || o.dosya, o.icerik); else MK.indir(o.dosya, MK.ornekPdf(o.dosya));
+    if (d && d.dosya) MK.indir(o.dosya, d.dosya); else if (d && d.url) MK.indirUrl(o.dosya, d.url); else if (o.icerik) MK.yazdir(o.baslik || o.dosya, o.icerik); else MK.indir(o.dosya, MK.ornekPdf(o.dosya));
   };
 
   /* ── DOSYA: seç · indir · yazdır · Excel (reisim 2026-09-27: "maket site nasıl çalışması gerekiyorsa çalışsın maket olduğu için çalışmayan
@@ -586,6 +586,11 @@
     var a = document.createElement("a"), u = URL.createObjectURL(blob); a.href = u; a.download = ad; a.hidden = true;
     document.body.appendChild(a); a.click(); a.remove(); setTimeout(function () { URL.revokeObjectURL(u); }, 60000);
     MK.SON_INDIRME = { ad: ad, tur: blob.type, boyut: blob.size }; MK.bildir(ad + " indirildi.");
+  };
+  /* sitedeki bir dosya (ör. Bakanlığın resmî PDF'leri, docs/maket/belgeler/) adresinden iner */
+  MK.indirUrl = function (ad, url) {
+    var a = document.createElement("a"); a.href = url; a.download = ad; a.hidden = true; document.body.appendChild(a); a.click(); a.remove();
+    MK.SON_INDIRME = { ad: ad, tur: "application/pdf", url: url }; MK.bildir(ad + " indirildi.");
   };
   /* belge → tarayıcının yazdırma penceresi ("PDF olarak kaydet"); sayfanın kendi stilleriyle, açık temada */
   MK.yazdir = function (baslik, html) {

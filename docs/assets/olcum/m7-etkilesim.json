@@ -2,9 +2,37 @@
  "maket": "m7",
  "tarih": "2026-09-27",
  "arac": "tools/olc-bulut.mjs --etkilesim (başsız tarayıcı, 1920 açık tema; gen verilen denemede o genişlik)",
- "toplam": 14,
- "gecen": 14,
+ "toplam": 18,
+ "gecen": 18,
  "denemeler": [
+  {
+   "ad": "Kontrol kriterleri sekmesi: 2 belge, yükleme tuşu yok",
+   "gen": 1920,
+   "sayfa": "maket/standartlar.html",
+   "hash": "#/kriterler",
+   "gecti": true
+  },
+  {
+   "ad": "kriter belgesi: 17 madde, notlar, rapor formatı ZPKR02",
+   "gen": 1920,
+   "sayfa": "maket/standartlar.html",
+   "hash": "#/k/ZPKK02",
+   "gecti": true
+  },
+  {
+   "ad": "resmî PDF gerçek dosyayla açılır ve iner (dosya application/pdf olarak geliyor)",
+   "gen": 1920,
+   "sayfa": "maket/standartlar.html",
+   "hash": "#/k/ZPKK01",
+   "gecti": true
+  },
+  {
+   "ad": "Standartlar sekmesine dönüş: liste ve yükle tuşu",
+   "gen": 1920,
+   "sayfa": "maket/standartlar.html",
+   "hash": "#/kriterler",
+   "gecti": true
+  },
   {
    "ad": "Oku: standart PDF'i görüntüleyicide, sayfa ileri, Kapat",
    "gen": 1920,
@@ -34,7 +62,7 @@
    "gecti": true
   },
   {
-   "ad": "Türe atanmamış çipi (1 / 22)",
+   "ad": "Türe atanmamış çipi (1 / 23)",
    "gen": 1920,
    "sayfa": "maket/standartlar.html",
    "hash": "#/",

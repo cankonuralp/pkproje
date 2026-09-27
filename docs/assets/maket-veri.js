@@ -283,8 +283,8 @@
     { k: "s7", no: "TS EN 14492-2", konu: "Motorlu vinçler ve kaldırma donanımları" },
     { k: "s8", no: "TS EN 81-31", konu: "Yalnız yük taşıyan asansörler" },
     { k: "s9", no: "TS EN 12953", konu: "Silindirik kazanlar" },
-    { k: "s10", no: "TS HD 60364-6", konu: "Alçak gerilim tesisleri — doğrulama" },
-    { k: "s11", no: "TS HD 60364-5-54", konu: "Alçak gerilim tesisleri — topraklama düzenleri" },
+    { k: "s10", no: "TS HD 60364-6", konu: "Alçak gerilim elektrik tesisatları — doğrulama" },
+    { k: "s11", no: "TS HD 60364-4-41", konu: "Alçak gerilim elektrik tesisleri — güvenlik için koruma — elektrik çarpmasına karşı koruma" },
     { k: "s12", no: "TS EN 62305-3", konu: "Yıldırımdan korunma — yapılarda fiziksel hasar" },
     { k: "s13", no: "TS EN 61439-1", konu: "Alçak gerilim anahtarlama ve kontrol düzenleri (panolar)" },
     { k: "s14", no: "TS EN 14439", konu: "Kule krenler" },
@@ -315,8 +315,8 @@
     { k: "ZV", ad: "Zincirli vinç", b: "m", g: "kaldirma", periyot: 12, std: ["s7"], sablon: "v1 · 01.09.2025", sure: 30 },
     { k: "YA", ad: "Yük asansörü", b: "m", g: "kaldirma", periyot: 12, std: ["s8"], sablon: "v1 · 01.09.2025", sure: 60 },
     { k: "BK", ad: "Buhar kazanı", b: "m", g: "basincli", periyot: 12, std: ["s9"], format: "KR07", formatDurum: "taslak", sure: 90 },
-    { k: "ET", ad: "Elektrik iç tesisatı", b: "e", g: "elektrik", periyot: 12, std: ["s10"], format: "ZPKR02", formatDurum: "zorunlu", sablon: "v4 · 01.09.2025", sure: 90 },
-    { k: "AT", ad: "AG topraklama", b: "e", g: "elektrik", periyot: 12, std: ["s11"], format: "ZPKR01", formatDurum: "zorunlu", sablon: "v3 · 01.09.2025", sure: 45 },
+    { k: "ET", ad: "Elektrik iç tesisatı", b: "e", g: "elektrik", periyot: 12, std: ["s23", "s10"], format: "ZPKR02", formatDurum: "zorunlu", sablon: "v4 · 01.09.2025", sure: 90 },
+    { k: "AT", ad: "AG topraklama", b: "e", g: "elektrik", periyot: 12, std: ["s11", "s10"], format: "ZPKR01", formatDurum: "zorunlu", sablon: "v3 · 01.09.2025", sure: 45 },
     { k: "YK", ad: "Yıldırımdan korunma", b: "e", g: "elektrik", periyot: 12, std: ["s12"], format: "ZPKR03", formatDurum: "zorunlu", sablon: "v2 · 01.09.2025", sure: 45 },
     { k: "DP", ad: "Dağıtım panosu", b: "e", g: "elektrik", periyot: 12, std: ["s13"], sablon: "v2 · 01.09.2025", sure: 30 },
     { k: "JN", ad: "Jeneratör", b: "e", g: "elektrik", periyot: 12, std: [], sure: 40 },
@@ -351,8 +351,72 @@
     { k: "s1e", no: "TS EN 286-1", konu: "Basit basınçlı kaplar — hava ve azot için", surum: "2002", yukleyen: "sy", tarih: "2021-05-10",
       dosya: { ad: "TS-EN-286-1_2002.pdf", kb: 2710 }, yerine: "s1", bitti: "2026-03-02" },
     { k: "s22", no: "TS EN 60204-1", konu: "Makinelerde güvenlik — makinelerin elektrik donanımı", surum: "2018", yukleyen: "co", tarih: "2026-09-18",
-      dosya: { ad: "TS-EN-60204-1_2018.pdf", kb: 5120 } });
+      dosya: { ad: "TS-EN-60204-1_2018.pdf", kb: 5120 } },
+    /* 2026-09-27: ZPKR02'nin dayandığı standart (Bakanlık formatının başlığından) */
+    { k: "s23", no: "TS HD 60364-4-43", konu: "Alçak gerilim elektrik tesisatları — güvenlik için koruma — aşırı akıma karşı koruma", surum: "2010", yukleyen: "co", tarih: "2025-08-20",
+      dosya: { ad: "TS-HD-60364-4-43_2010.pdf", kb: 2380 } });
   MV.standartTurleri = function (k) { return MV.KATALOG.filter(function (t) { return t.std.indexOf(k) >= 0; }); };
+
+  /* ── KONTROL KRİTERLERİ VE RAPOR FORMATLARI (2026-09-27, reisim: "kriterler de sistem de muhafaza edilecek ve standartlar modülü altında bir
+     sekme de onlar da var olsunlar bunlar ilgili ekipmanın muayenesi ile alakalı tariflerdir") — Bakanlığın yayımladığı resmî belgeler
+     (isekipmanlari.csgb.gov.tr), reisim'in ilettiği PDF'ler docs/maket/belgeler/ altında (üst verisindeki kişi adı silindi, içerik aynen).
+     Maddeler PDF'lerin metninden (başlık · içerik özeti · standart / yönetmelik); kaynak sütunu PDF tablosundaki sıraya göre eşlendi
+     (metin çıkarımında sütun hizası kayar; uygulamada belgeyle karşılaştırılarak doğrulanır). Kodda tutulur (şablonlar gibi, §8.3). */
+  var ETTY = "Elektrik Tesislerinde Topraklamalar Yönetmeliği", EITY = "Elektrik İç Tesisleri Yönetmeliği";
+  MV.KONTROL_BELGELERI = [
+    { k: "ZPKK01", ad: "Alçak Gerilim Topraklama Tesisatı Periyodik Kontrol Kriterleri", tur: "AT", rapor: "ZPKR01", yayim: "2025-07-18", yururluk: "2025-09-01", dosya: "ZPKK01.pdf",
+      kapsam: "Elektrik İç Tesisleri Yönetmeliği kapsamındaki tesislerde bulunan ekipmanların periyodik kontrolleri. Elektrik İç Tesisatı Gözle Kontrol ve Fonksiyon Testleri Periyodik Kontrol Raporu bu raporun tamamlayıcısıdır; tek başına uygunluk değerlendirmesi yapılamaz. Rapor her ekipman (pano) için ayrı düzenlenir; grup panolarda tek rapor, bulgular pano numarasıyla notlarda.",
+      maddeler: [
+        ["0", "Hazırlık", "Ölçüm tarihi, hava durumu, toprak durumu gibi genel bilgiler kontrol edildikten sonra tesisat bilgileri; tesise ait topraklama projesi olup olmadığı sorgulanır.", ETTY + " · TS HD 60364-5-53"],
+        ["1", "Ölçüm noktası", "Dokunma gerilimi <1000 V ve >50 V olan tüm noktalardan ölçüm alınır. Enerji altındaki ekipmanlarla 2,5 m ulaşma mesafesindeki enerjisiz metal ekipmanlar arasında potansiyel dengeleme kontrol edilip süreklilik testi yapılır. TN sistemlerde son tüketim noktalarından ayrı ayrı çevrim empedansı (Zx); IT sistemlerde ilk hata için eşpotansiyel toprak barası topraklama direnci (Ra), ikinci hata için bağlantı tipine göre Zx ya da Ra ölçülür.", ETTY + " Madde 10 · TS HD 60364-5-53"],
+        ["2", "Koruma kesiti (mm²)", "Koruma iletkeninin kesiti yazılır. Uygunluğu 63 A'dan küçük devrelerde faz kesitine göre tablodan, 63 A'dan büyük devrelerde ısınma kontrolüne göre denetlenir.", ETTY + " Çizelge 4-a ve 4-b · TS HD 60364-5-53"],
+        ["3", "Koruma elemanı değerleri", "In (A) · açma eğrisi tipi veya modeli · açma akımı Ia (A) · hesaplanan toprak kısa devre akımı. Hesaplar koruma ekipmanının anma akımı ve açma eğrisi tipine göre yapılır; toprak kısa devre akımı 230 V'un ölçülen çevrim empedansına bölünmesiyle bulunur (ör. 2 Ω için Ik = 115 A).", ETTY + " Çizelge-10 · TS HD 60364-5-53"],
+        ["4", "Topraklama ölçülen değerler ve sınır değerler", "Çevrim empedansı, üç uçlu karşılaştırma ya da pens yöntemiyle ölçülen değer Zx (Rx) alanına; topraklama tipine göre koruma elemanının açma akımı üzerinden hesaplanan sınır Zs (Rs) alanına yazılır. Sınırın üstündeki değerde notlara göre uygunluk yazılır. Süreler ETTY Madde 8'de.", ETTY + " Çizelge-10 · TS HD 60364-5-53"],
+        ["5", "RCD testleri", "Devresinde RCD bulunan ekipmanlarda RCD açma akımı ve açma zamanı testleri yapılıp yazılır.", ETTY + " Madde 8 · TS HD 60364-5-53"],
+        ["6", "30 mA RCD kullanma zorunluluğu", "TT veya TN (TN-S veya TN-CS'nin S bölümü) şebekelerde 32 A'e kadar genel kullanım priz tesisatlarında ve 32 A'e kadar seyyar cihaz prizlerinde 30 mA RCD zorunludur. 32 A üzerindeki devrelerde doğal kaçak akımlar kaçınılmazsa uygun seçilmiş RCD diğer önlemlerle birlikte kullanılır; doğal kaçakların teknik detayı raporda belirtilir.", ETTY + " Madde 8 · TS HD 60364-4-41"],
+        ["7", "RCD performans testleri", "Açma akımı cihaz etiketindeki beyan açma akımını, açma zamanı 200 ms'yi geçmemelidir. 1000 mA üzerindeki toroidal akım trafolu RCD'ler test butonuyla denetlenir.", "TS HD 60364-6 · TS EN 61008-1 · TS EN 61009-1 · " + ETTY + " · TS EN 62423 · TS EN IEC 60947-2"],
+        ["8", "Notlar", "Korozyon, kopma, kesit sorunları notlara yazılır ve öneride bulunulur. Sınıf II cihazda toprak bağlantısı olmadığı; izolasyon trafosunun sekonderinde toprak bağlantısı olmadığı ölçülerek doğrulanır. Düşük gerilimli tüketim noktalarında gerilimin a.a. 50 V'u, d.a. 42 V'u geçmediği doğrulanır. Projeyi hazırlayan ve onaylayanların bilgileri eklenir.", ETTY + " · TS HD 60364-5-53"]
+      ],
+      notlar: ["Kusur derecesi “*” hafif kusurlu ve “**” kusurlu anlamında kullanılır.",
+        "Kriterler ekipmanın kullanım yeri, amacı, tipi ve modeline göre değişebilir; ilgili imalat mevzuatı / standardına göre riskin bulunmadığı durumda kriter aranmaz. Kriterin listede bulunması her ekipmanda zorunlu olarak aranacağı anlamına gelmez.",
+        "Pano dışındaki topraklama kontrollerinde (kablo tavası, buat, yapı bağlantı kutusu, armatür bağlantısı vb.) ölçüm noktası numaralandırılır; mümkünse vaziyet planında işaretlenir.",
+        "Isınma ve bağlantı noktası kontrollerinde termal kamera kullanıldığında Bakanlıkça aksi belirtilmedikçe ek eğitim şartı aranmaz."] },
+    { k: "ZPKK02", ad: "Elektrik İç Tesisatı Gözle Kontrol ve Fonksiyon Testleri Periyodik Kontrol Kriterleri", tur: "ET", rapor: "ZPKR02", yayim: "2025-07-18", yururluk: "2025-09-01", dosya: "ZPKK02.pdf",
+      kapsam: "Elektrik İç Tesisleri Yönetmeliği kapsamındaki tesislerde bulunan ekipmanların periyodik kontrolleri. Alçak Gerilim Topraklama Tesisatı Periyodik Kontrol Raporu bu raporun tamamlayıcısıdır; tek başına uygunluk değerlendirmesi yapılamaz. Rapor her ekipman (pano) için ayrı; pano dışındaki priz, kablo tavası, buat, eşpotansiyel bara, motor, regülatör gibi ekipmanlar notlarda.",
+      maddeler: [
+        ["0", "Hazırlık", "İş güvenliği tedbirlerinden sonra mevcut durumun fotoğrafı çekilir; elektrik pano listesi (numara, tanım, göz sayısı, bölüm/yer) oluşturulur, numarası olmayan panoya numara verilir. Havuz, karavan, güneş enerjisi gibi özel tesisatlar TS HD 60364-7 serisine göre kontrol edilir.", "TS HD 60364-4-41 · TS HD 60364-6 · TS HD 60364-7 serisi"],
+        ["1", "Panonun 3 faz simetrik kısa devre akımı (Ik) < şalter kısa devre kesme kapasitesi (Icu)", "Projeden kontrol edilir: panodaki tüm devre kesicilerin Icu'su panonun 3 faz simetrik kısa devre akımından büyük olmalıdır.", "TS HD 60364-6 · TS HD 60364-5-53:2001 Madde 536 · " + EITY + " Madde 57 b-2"],
+        ["2", "Tasarım (yük) akımı (Ib)", "Normal işletmede devreden geçmesi öngörülen akım; projeden kontrol edilir, en yüksek yükte ölçülebilir.", "TS HD 60364-6 · TS HD 60364-5-52:2009 Madde 523"],
+        ["3", "Devre kesici açma eğrisi tipi / kategori (B=5x C=10x D=15x)", "Koruma süresindeki açma eğrisine göre tip yazılır; bilinmiyorsa üretici kataloğu ya da TS IEC 61439.", "TS HD 60364-6 · TS HD 60364-5-53:2001 Madde 536"],
+        ["4", "Faz kesiti (mm²)", "Ölçülerek yazılır; tasarım akımıyla kesitin akım taşıma kapasitesi tahkik edilir.", "TS HD 60364-6 · TS HD 60364-5-52:2009 Madde 523"],
+        ["5", "Devre kesici nominal akımı (In)", "Kesicilerin nominal akımları yazılarak tasarım yük akımına göre tahkik yapılır.", "TS HD 60364-6 · TS HD 60364-5-53:2001 Madde 536"],
+        ["6", "Akım taşıma kapasitesi — ortam sıcaklığına göre r1", "Ortam sıcaklığına göre TS HD 60364-5-52 tablosundan seçilen katsayı.", "TS HD 60364-6 · TS HD 60364-4-43"],
+        ["7", "Akım taşıma kapasitesi — döşeme şekline göre r2", "İletkenin döşenme şekline göre TS HD 60364-5-52 tablosundan seçilen katsayı.", "TS HD 60364-6 · TS HD 60364-4-43"],
+        ["8", "Akım taşıma kapasitesi Iz (A)", "Döşenme şekli ve sıcaklığa göre tablodan hesaplanan akım.", "TS HD 60364-6 · TS HD 60364-4-43"],
+        ["9", "Akım taşıma kapasitesi r1·r2·Iz (A)", "Katsayılarla düzeltilmiş akım taşıma kapasitesi.", "TS HD 60364-6 · TS HD 60364-4-43"],
+        ["10", "Nötr kesiti kontrolü", "Nötr, faz kesitine göre tahkik edilir; harmonikli devrelerde ve TN-C / TN-CS'de PEN kesiti faz kesitiyle aynı. PEN kesiti 10 mm²'den küçük olamaz, faz kesitine eşit olmalı (EİTY Md. 57), yangın tehlikeli yerlerden geçirilmez (EİTY Md. 64), patlama tehlikeli Zone-0/1'den geçirilmez; tehlikeli alanda TN-S.", "TS HD 60364-6 · TS EN 60079-14 Madde 6.2.1 · " + EITY + " Madde 36"],
+        ["11", "Koruma iletkeni kesiti (PE)", "Faz kesitine göre belirlenir; 63 A'e kadar tablodan, daha büyük devrelerde hesapla (ETTY Md. 9-e).", "TS HD 60364-6 · TS HD 60364-5-51:2005 Madde 514.3 · " + ETTY + " Madde 9-e"],
+        ["12", "Ek potansiyel dengeleme iletkeni kesiti (PD)", "Yük ve kısa devre akımına göre ETTY'deki en küçük kesitlerde mi bakılır (en az 6 mm², en fazla 25 mm²).", "TS HD 60364-6 · TS HD 60364-5-51:2005 Madde 514.3"],
+        ["13", "İletken boyu (m)", "Projeden belirlenebiliyorsa yazılır; belirlenemiyorsa linye 20 m alınabilir.", "TS HD 60364-6 · TS HD 60364-5-51:2005 Madde 514.3"],
+        ["14", "Kablo şalter koordinasyonu Ib < In < Iz", "Her devre kesici için ayrı karşılaştırılır; kablo akım taşıma kapasitesinden büyük şaltere uygunsuzluk verilir.", "TS HD 60364-6 · TS HD 60364-4-43 · TS HD 60364-5-53:2001 Madde 536"],
+        ["15", "Yapılacak testler", "Süreklilik (R1+R2) ve R2 · izolasyon direnci faz-faz / faz-toprak (MΩ; periyodik kontrolde yapılmaz) · topraklama çevrim empedansı Zx ve sınır Zs · RCD açma zamanı ve akımı · aşırı gerilim koruma kategorisi ve dayanma akımı. Tava, hava kanalı gibi metal ekipmanlarda eşpotansiyel baraya süreklilik Rc < 0,1 Ω.", "TS HD 60364-6 Madde 6.4.3 · TS HD 60364-4-41"],
+        ["16", "Muayenenin sonuçlandırılması", "Muayene edilen öğe teslim alındığı gibi bırakılır ve alandan ayrılmadan önce fotoğraf çekilir. Projeyi onaylayanların bilgileri eklenir.", "TS HD 60364-6"]
+      ],
+      notlar: ["Kusur derecesi “*” hafif kusurlu ve “**” kusurlu anlamında kullanılır.",
+        "Kriterler ekipmanın kullanım yeri, amacı, tipi ve modeline göre değişebilir; riskin bulunmadığı durumda kriter aranmaz. Kriterin listede bulunması her ekipmanda zorunlu olarak aranacağı anlamına gelmez.",
+        "Fonksiyon testlerindeki yalıtım direnci ölçümleri yalnız doğrulama kontrollerinde yapılır; periyodik kontrollerde yapılmaz.",
+        "Toroid artık akım anahtarlarının testleri test butonuyla yapılabilir.",
+        "Toprak çevrim empedansı ölçümlerindeki yalıtım hatasından kaynaklanan belirsizlikler Topraklama Tesisatı Raporunda belirtilir.",
+        "Isınma ve bağlantı noktası kontrollerinde termal kamera isteğe bağlıdır; gözle kontrol formunda belirtilmesi yeterlidir; ek eğitim şartı aranmaz."] }
+  ];
+  MV.RAPOR_FORMATLARI = [
+    { k: "ZPKR01", ad: "Alçak Gerilim Topraklama Tesisatı Periyodik Kontrol Raporu", tur: "AT", kriter: "ZPKK01", yayim: "2025-07-18", yururluk: "2025-09-01", dosya: "ZPKR01.pdf" },
+    { k: "ZPKR02", ad: "Elektrik İç Tesisatı Gözle Kontrol ve Fonksiyon Testleri Periyodik Kontrol Raporu", tur: "ET", kriter: "ZPKK02", yayim: "2025-07-18", yururluk: "2025-09-01", dosya: "ZPKR02.pdf" }
+  ];
+  MV.kontrolBelgesi = function (k) { return MV.KONTROL_BELGELERI.filter(function (x) { return x.k === k; })[0]; };
+  MV.raporFormati = function (k) { return MV.RAPOR_FORMATLARI.filter(function (x) { return x.k === k; })[0]; };
+  /* resmî belgeler gerçek PDF olarak açılır ve iner (sayfalar docs/maket/ altında: "belgeler/…") */
+  MV.KONTROL_BELGELERI.concat(MV.RAPOR_FORMATLARI).forEach(function (x) { if (MK.DOSYA) MK.DOSYA[x.dosya] = { url: "belgeler/" + x.dosya, tur: "application/pdf" }; });
   /* ── RAPOR İÇERİĞİ (M7 şablon önizlemesi + M8 saha raporu; TEK KAYNAK) — grup başına ÖRNEK kriter ve test listesi.
      Gerçek şablonda tür ve format başına kodda yazılır (§3, §8.3). Test: op + sınır sayısal (ekranda otomatik değerlendirme). */
   MV.KRITER = {

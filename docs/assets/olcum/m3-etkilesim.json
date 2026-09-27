@@ -2,9 +2,16 @@
  "maket": "m3",
  "tarih": "2026-09-27",
  "arac": "tools/olc-bulut.mjs --etkilesim (başsız tarayıcı, 1920 açık tema; gen verilen denemede o genişlik)",
- "toplam": 19,
- "gecen": 19,
+ "toplam": 20,
+ "gecen": 20,
  "denemeler": [
+  {
+   "ad": "AG topraklama: resmî format ZPKR01 ve kriter bağlantısı",
+   "gen": 1920,
+   "sayfa": "maket/ekipman-turleri.html",
+   "hash": "#/tur/AT",
+   "gecti": true
+  },
   {
    "ad": "standartsız tür: uyarı, raporda üretici talimatı yazar",
    "gen": 1920,

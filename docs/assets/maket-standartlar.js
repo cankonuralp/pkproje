@@ -99,6 +99,48 @@
         '<dl class="a-bilgi">' + bilgi("Kontrol metodu", kacis(ad(yeni || s)), true) + "</dl></section>";
   }
 
+  /* ── KONTROL KRİTERLERİ (2026-09-27, reisim: "kriterler de sistem de muhafaza edilecek ve standartlar modülü altında bir sekme de onlar da
+     var olsunlar bunlar ilgili ekipmanın muayenesi ile alakalı tariflerdir") — Bakanlığın kontrol kriterleri belgeleri: maddeler, notlar, bağlı
+     rapor formatı ve ekipman türü; PDF'i açılır. Belgeler kodda tutulur (şablonlar gibi); site içinde düzenlenmez. ───────────────── */
+  var KB = MV.KONTROL_BELGELERI;
+  var K_SUTUN = [
+    { k: "kod", baslik: "Belge", kart: "ust", sira: 1, hucre: function (x) { return '<a class="a-no" href="#/k/' + x.k + '">' + x.k + "</a>" + kirp(x.ad, "a-alt-satir"); } },
+    { k: "tur", baslik: "Ekipman türü", kart: "govde", sira: 2, hucre: function (x) { return '<span class="a-kart-etiket">Ekipman türü</span><a class="a-baglanti" href="' + MK.adres(5, "#/tur/" + x.tur) + '">' + kacis(MV.tur(x.tur).ad) + "</a>"; } },
+    { k: "rapor", baslik: "Rapor formatı", kart: "govde", sira: 3, hucre: function (x) { return '<span class="a-kart-etiket">Rapor formatı</span><span class="a-kod">' + x.rapor + "</span>"; } },
+    { k: "madde", baslik: "Madde", kart: "govde", sira: 4, hucre: function (x) { return '<span class="a-kart-etiket">Madde</span><span class="a-sayi">' + x.maddeler.length + "</span>"; } },
+    { k: "yururluk", baslik: "Yürürlük", kart: "govde", sira: 5, hucre: function (x) { return '<span class="a-kart-etiket">Yürürlük</span><span>' + MK.tarihYaz(x.yururluk) + '<span class="a-alt-satir">yayım ' + MK.tarihYaz(x.yayim) + "</span></span>"; } },
+    { k: "eylem", baslik: "İşlem", gizliBaslik: true, kart: "eylem", sira: 9, hucre: function (x) { return '<div class="a-eylem"><div class="a-eylem-tuslar">' + MK.pdfTus(x.dosya) + "</div></div>"; } }
+  ];
+  function kriterListeCiz() {
+    $("a-sayac").innerHTML = "<b>" + KB.length + "</b> belge"; $("a-suzgec-kap").innerHTML = "";
+    $("a-liste").innerHTML = MK.tablo({ baslik: "Kontrol kriterleri", sinif: "a-tablo-kriterbelge", sutunlar: K_SUTUN, kayitlar: KB, href: function (x) { return "#/k/" + x.k; } });
+  }
+  var M_SUTUN = [
+    { k: "no", baslik: "No", kart: "ust", sira: 1, hucre: function (m) { return '<span class="a-kod">' + m[0] + "</span> <b>" + kacis(m[1]) + "</b>"; } },
+    { k: "icerik", baslik: "İçerik", kart: "govde", sira: 2, hucre: function (m) { return "<span>" + kacis(m[2]) + "</span>"; } },
+    { k: "kaynak", baslik: "Standart / yönetmelik", kart: "govde", sira: 3, hucre: function (m) { return '<span class="a-alt-inline">' + kacis(m[3]) + "</span>"; } }
+  ];
+  function kriterCiz(x) {
+    if (!x) {
+      $("a-nesne").innerHTML = MK.kirinti([["Kontrol kriterleri", "#/kriterler"]]) + '<h1 class="a-gizli" tabindex="-1">Belge bulunamadı</h1>' +
+        MK.bos({ ikon: "circle-alert", baslik: "Belge bulunamadı", metin: "Bu adreste kontrol kriterleri belgesi yok.", eylem: '<a class="a-tus a-tus-ikincil" href="#/kriterler">' + ikon("arrow-left", "a-ikon-kucuk") + "Kontrol kriterlerine dön</a>" });
+      return;
+    }
+    var f = MV.raporFormati(x.rapor), t = MV.tur(x.tur);
+    $("a-nesne").innerHTML = MK.kirinti([["Kontrol kriterleri", "#/kriterler"], [x.k]]) +
+      '<div class="a-nesne-bas"><div class="a-nesne-kimlik"><div class="a-nesne-baslik"><h1 tabindex="-1">' + x.k + "</h1>" + rozet({ ad: "Yürürlükte", rozet: "a-rozet-tamam" }) + "</div>" +
+        '<p class="a-nesne-alt">' + ikon("list-checks", "a-ikon-kucuk") + "<span>" + kacis(x.ad) + "</span></p></div>" +
+        '<div class="a-eylem-cubugu">' + MK.pdfTus(x.dosya, "Kriterleri aç") + MK.pdfTus(f.dosya, "Rapor formatını aç") + "</div></div>" +
+      '<section class="a-bolum" aria-labelledby="a-b-kbilgi"><div class="a-alt-bas"><h2 class="a-alt-baslik" id="a-b-kbilgi">Belge</h2></div><dl class="a-bilgi">' +
+        bilgi("Doküman kodu", '<span class="a-kod">' + x.k + "</span>") + bilgi("Yayım tarihi", MK.tarihYaz(x.yayim)) + bilgi("Yürürlük tarihi", MK.tarihYaz(x.yururluk)) + bilgi("Revizyon", "—") +
+        bilgi("Ekipman türü", '<a class="a-baglanti" href="' + MK.adres(5, "#/tur/" + t.k) + '">' + kacis(t.ad) + "</a>") +
+        bilgi("Rapor formatı", '<span class="a-kod">' + f.k + "</span> " + kacis(f.ad), true) + bilgi("Kapsam", kacis(x.kapsam), "tam") + "</dl></section>" +
+      '<section class="a-bolum" aria-labelledby="a-b-madde"><div class="a-alt-bas"><h2 class="a-alt-baslik" id="a-b-madde">Kontrol kriterleri</h2><span class="a-sayac"><b>' + x.maddeler.length + "</b> madde</span></div>" +
+        '<div class="a-liste-kap">' + MK.tablo({ baslik: x.k + " maddeleri", sinif: "a-tablo-kmadde", sutunlar: M_SUTUN, kayitlar: x.maddeler }) + "</div></section>" +
+      '<section class="a-bolum" aria-labelledby="a-b-knot"><div class="a-alt-bas"><h2 class="a-alt-baslik" id="a-b-knot">Notlar</h2></div>' +
+        '<ol class="a-kosullar">' + x.notlar.map(function (n, i) { return '<li class="a-kosul-bilgi">' + '<span class="a-kod">Not ' + (i + 1) + "</span><span>" + kacis(n) + "</span></li>"; }).join("") + "</ol></section>";
+  }
+
   /* ── YÜKLE / YENİ SÜRÜM PENCERESİ ───────────────────────────────────────────────────────────────────── */
   var W = null;
   function denetle() {
@@ -163,16 +205,23 @@
   function rota() {
     var h = location.hash.replace(/\?.*$/, ""), m;
     if (h === "#/yukle") return { v: "liste", pencere: true };
+    if (h === "#/kriterler") return { v: "kriterler" };
+    if ((m = /^#\/k\/([A-Z0-9]+)$/.exec(h))) return { v: "kriter", id: m[1] };
     if ((m = /^#\/s\/([a-z0-9]+)\/surum$/.exec(h))) return { v: "std", id: m[1], pencere: true };
     if ((m = /^#\/s\/([a-z0-9]+)$/.exec(h))) return { v: "std", id: m[1] };
     return { v: "liste" };
   }
   function goster(odakla) {
-    var r = rota(), s = r.id ? bul(r.id) : null;
-    $("a-liste-gorunum").hidden = r.v !== "liste"; $("a-nesne").hidden = r.v === "liste";
+    var r = rota(), s = r.v === "std" ? bul(r.id) : null, liste = r.v === "liste" || r.v === "kriterler";
+    $("a-liste-gorunum").hidden = !liste; $("a-nesne").hidden = liste;
+    $("a-sekme-std").toggleAttribute("aria-current", r.v === "liste"); $("a-sekme-krt").toggleAttribute("aria-current", r.v === "kriterler");
+    if (r.v === "liste") $("a-sekme-std").setAttribute("aria-current", "page"); if (r.v === "kriterler") $("a-sekme-krt").setAttribute("aria-current", "page");
+    document.querySelector("#a-liste-gorunum .a-sayfa-bas .a-bolum-tus").hidden = r.v === "kriterler";   /* kriter belgeleri kodda; yükleme yok */
     if (r.v === "liste") { $("a-suzgec-kap").innerHTML = MK.suzgecHtml("s"); MK.suzgecKur("s"); }
+    else if (r.v === "kriterler") kriterListeCiz();
+    else if (r.v === "kriter") kriterCiz(MV.kontrolBelgesi(r.id));
     else standartCiz(s);
-    document.title = (r.v === "liste" ? "Standartlar" : s ? ad(s) : "Standart bulunamadı") + " · probata maket";
+    document.title = (r.v === "liste" ? "Standartlar" : r.v === "kriterler" ? "Kontrol kriterleri" : r.v === "kriter" ? r.id : s ? ad(s) : "Standart bulunamadı") + " · probata maket";
     if (odakla) { window.scrollTo(0, 0); var hh = document.querySelector("#a-icerik > :not([hidden]) h1"); if (hh) hh.focus({ preventScroll: true }); }
     if (r.pencere && (r.v === "liste" || (s && !s.yerine))) pencereAc(s); else if ($("a-pencere").open) $("a-pencere").close();
   }

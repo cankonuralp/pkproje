@@ -26,7 +26,9 @@
   /* rapor formatı: firmanın yüklediği PDF'ler, en yenisi başta. Maket: rapor şablonu olan türde bir sürüm yüklenmiş sayılır. */
   MV.KATALOG.forEach(function (t) {
     if (t.pdf) return;
-    var s = t.sablon ? t.sablon.split(" · ") : null;
+    var s = t.sablon ? t.sablon.split(" · ") : null, f = t.format && MV.raporFormati(t.format);
+    /* 2026-09-27: Bakanlığın resmî formatı elimizde olan türde (ZPKR01, ZPKR02) o PDF'in kendisi */
+    if (f) { t.pdf = [{ surum: f.k, tarih: MK.tarihNo(f.yururluk), dosya: f.dosya }]; return; }
     t.pdf = s ? [{ surum: s[0], tarih: s[1], dosya: t.k.toLowerCase() + "-rapor-formati-" + s[0] + ".pdf" }] : [];
   });
   var guncel = function (t) { return t.pdf[0]; };
@@ -120,7 +122,8 @@
         bilgi("Ek-III grubu", kacis(g.ad), true) + bilgi("Branş", MV.bransAd(t.b) + ' <span class="a-alt-inline">· onay ' + onay.toLocaleLowerCase("tr") + "</span>") +
         bilgi("Periyot", t.periyot + ' ay <span class="a-alt-inline">· tek ekipmanın tarihi planda değiştirilebilir</span>') +
         bilgi("Tahmini kontrol süresi", t.sure ? t.sure + " dk" : '<span class="a-deger-yok">Girilmedi</span>') +
-        bilgi("Bakanlık rapor formatı", t.format ? '<span class="a-kod">' + t.format + "</span> " + rozet(FORMAT[t.formatDurum]) : '<span class="a-deger-yok">Yayımlanmadı</span>') +
+        bilgi("Bakanlık rapor formatı", t.format ? '<span class="a-kod">' + t.format + "</span> " + rozet(FORMAT[t.formatDurum]) +
+          (MV.KONTROL_BELGELERI.filter(function (k) { return k.tur === t.k; }).map(function (k) { return '<span class="a-alt-satir">kontrol kriterleri <a class="a-baglanti" href="' + MK.adres(4, "#/k/" + k.k) + '">' + k.k + "</a></span>"; }).join("")) : '<span class="a-deger-yok">Yayımlanmadı</span>') +
       "</dl></section>" +
       '<section class="a-bolum" aria-labelledby="a-b-std"><div class="a-alt-bas"><h2 class="a-alt-baslik" id="a-b-std">Kontrol metodu standartları</h2><span class="a-sayac"><b>' + t.std.length + "</b> standart</span>" +
         MK.git({ hedef: 4, hash: "#/?tur=" + t.k, ad: "Standart kütüphanesi", ikon: "book-open", sinif: "a-tus-ikincil a-bolum-tus", ne: "Standartlar" }) + "</div>" +

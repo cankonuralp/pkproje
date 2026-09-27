@@ -162,6 +162,10 @@ export const DURUMLAR = {
     { ad: "plan açıldı · uyarılı ekip, el ile ID sözleşmeye kaydedildi", hash: "#/?tesis=t4", adim: [["tikla", "#p-a-mk"], ["tikla", "#p-a-ea"], ["yaz", "#p-isg-ea", "S-2026-0470"], ["tikla", '[data-kaydet="ea"]'], ["tikla", '[data-eylem="plani-ac"]']] },
   ] },
   m7: { sayfa: "maket/standartlar.html", durumlar: [
+    /* 2026-09-27 (reisim: kontrol kriterleri Standartlar altında sekme) */
+    { ad: "kontrol kriterleri · liste", hash: "#/kriterler" },
+    { ad: "kriter belgesi · ZPKK02 (17 madde)", hash: "#/k/ZPKK02" },
+    { ad: "kriter belgesi · resmî PDF açık", hash: "#/k/ZPKK01", adim: [["tikla", '#a-nesne .a-eylem-cubugu [data-eylem="pdf-goster"]']] },
     { ad: "standartlar · liste", hash: "#/" },
     { ad: "standartlar · önceki sürümler", hash: "#/", adim: [["js", 'MK.SZ.s.sec.gorunum = "hepsi"; MK.suzgecKur("s")']] },
     { ad: "standart · güncel, çok türde", hash: "#/s/s1" },
@@ -449,9 +453,10 @@ export const DENEMELER = {
     { ad: "müşteri sayfası: Açık alacak yüzü → müşterinin faturaları (3 / 13)", hash: "#/m/m1", adim: [["tikla", 'a.a-yuz[href^="muhasebe.html"]']], bekle: '/muhasebe\\.html$/.test(location.pathname) && document.querySelector("#a-sayac").textContent === "3 / 13 fatura" && /3.600,00 TL/.test(document.querySelector("#a-liste").textContent)' },
   ],
   m3: [
+    { ad: "AG topraklama: resmî format ZPKR01 ve kriter bağlantısı", hash: "#/tur/AT", bekle: '/ZPKR01/.test(document.querySelector("#a-nesne").textContent) && !!document.querySelector(\'#a-nesne a[href$="#/k/ZPKK01"]\')' },
     /* 2026-09-27 (reisim: "metod kısmı olsun ama sadece ekipman türü eklerken belirlene"): standartsız türde raporda üretici talimatı */
     { ad: "standartsız tür: uyarı, raporda üretici talimatı yazar", hash: "#/tur/JN", bekle: '/Üretici talimatı/.test(document.querySelector("#a-nesne").textContent)' },
-    { ad: "rapor formatı sürümünün PDF'i açılır", hash: "#/tur/ET", adim: [["tikla", '.a-tablo-pdf [data-eylem="pdf-goster"]']], bekle: 'document.querySelector("#a-pdf").open && /et-rapor-formati-v4\\.pdf/.test(document.querySelector("#a-pdf-govde").textContent)' },
+    { ad: "rapor formatı sürümünün PDF'i açılır", hash: "#/tur/ET", adim: [["tikla", '.a-tablo-pdf [data-eylem="pdf-goster"]']], bekle: 'document.querySelector("#a-pdf").open && /ZPKR02\\.pdf/.test(document.querySelector("#a-pdf-govde").textContent) && !!document.querySelector("#a-pdf iframe")' },
     /* 2026-09-27 (reisim yirmi dördüncü tur): türün kullanacağı ölçüm cihazları düzenlenir, rapor bunları ister; rapor bölümleri */
     { ad: "tür sayfası: kullanılacak ölçüm cihazları ve rapor bölümleri", hash: "#/tur/ET", bekle: '/Kullanılacak ölçüm cihazları/.test(document.querySelector("#a-nesne").textContent) && document.querySelectorAll("#a-b-cihaz ~ .a-kosullar li, section[aria-labelledby=a-b-cihaz] li").length === 3 && /Her raporda sabitFotoğraflar · Sonuç ve kanaat · Muayene uzmanı yorumu/.test(document.querySelector("section[aria-labelledby=a-b-bolum]").textContent)' },
     { ad: "düzenle: cihaz türü eklenir, tür sayfasında görünür", hash: "#/tur/KS/duzenle", adim: [["tikla", '[data-cihaz-tur="termal"]'], ["tikla", '[data-eylem="pencere-kaydet"]']], bekle: 'location.hash === "#/tur/KS" && /Termal kamera/.test(document.querySelector("section[aria-labelledby=a-b-cihaz]").textContent) && MV.tur("KS").cihaz.indexOf("termal") >= 0' },
@@ -521,13 +526,19 @@ export const DENEMELER = {
     { ad: "Esc pencereyi kapatır, adres sözleşmeye döner", hash: "#/isg/i1", adim: [["tus", "Escape"]], bekle: '!document.querySelector("#a-pencere").open && /^#\\/s\\/IS-[0-9-]+$/.test(location.hash)' },
   ],
   m7: [
+    /* 2026-09-27 (reisim: "kriterler de sistem de muhafaza edilecek ve standartlar modülü altında bir sekme de onlar da var olsunlar") */
+    { ad: "Kontrol kriterleri sekmesi: 2 belge, yükleme tuşu yok", hash: "#/kriterler", bekle: 'document.querySelector("#a-sayac").textContent === "2 belge" && document.querySelector("#a-sekme-krt").getAttribute("aria-current") === "page" && document.querySelector("#a-liste-gorunum .a-sayfa-bas .a-bolum-tus").hidden' },
+    { ad: "kriter belgesi: 17 madde, notlar, rapor formatı ZPKR02", hash: "#/k/ZPKK02", bekle: 'document.querySelector("section[aria-labelledby=a-b-madde] .a-sayac").textContent === "17 madde" && /ZPKR02/.test(document.querySelector("#a-nesne").textContent) && document.querySelectorAll("section[aria-labelledby=a-b-knot] li").length === 6' },
+    { ad: "resmî PDF gerçek dosyayla açılır ve iner (dosya application/pdf olarak geliyor)", hash: "#/k/ZPKK01", adim: [["tikla", '#a-nesne .a-eylem-cubugu [data-eylem="pdf-goster"]'], ["tikla", '[data-eylem="pdf-indir"]'], ["js", 'fetch(document.querySelector("#a-pdf iframe").src).then(function (r) { window.PDF_TUR = r.ok && r.headers.get("content-type"); })']], bekle: 'window.PDF_TUR === "application/pdf" && /belgeler\\/ZPKK01\\.pdf$/.test(document.querySelector("#a-pdf iframe").getAttribute("src")) && MK.SON_INDIRME && MK.SON_INDIRME.url === "belgeler/ZPKK01.pdf"' },
+    { ad: "Standartlar sekmesine dönüş: liste ve yükle tuşu", hash: "#/kriterler", adim: [["tikla", "#a-sekme-std"]], bekle: 'location.hash === "#/" && !document.querySelector("#a-liste-gorunum .a-sayfa-bas .a-bolum-tus").hidden && /standart/.test(document.querySelector("#a-sayac").textContent)' },
     /* 2026-09-27 (reisim: "Sistemde herhangi bir yere eklenen herhangi bir pdf daha sonradan açılıp incelenebilir olsun") */
     { ad: "Oku: standart PDF'i görüntüleyicide, sayfa ileri, Kapat", hash: "#/s/s1", adim: [["tikla", '[data-eylem="oku"]'], ["tikla", '#a-pdf [data-eylem="pdf-sayfa"][data-yon="1"]']], bekle: 'document.querySelector("#a-pdf").open && /Sayfa 2 \\/ 3/.test(document.querySelector("#a-pdf").textContent) && document.activeElement.dataset.yon === "1"' },
     { ad: "önceki sürümün PDF'i de açılır", hash: "#/s/s1", adim: [["tikla", '.a-gecmis [data-eylem="pdf-goster"][data-dosya*="2002"]']], bekle: 'document.querySelector("#a-pdf").open && /2002/.test(document.querySelector("#a-pdf-govde").textContent)' },
     { ad: "yükleme penceresinde seçilen PDF açılır", hash: "#/yukle", adim: [["yaz", "#w-no", "TS EN 9999"], ["tikla", '[data-eylem="dosya-sec"]'], ["tikla", '#a-pencere [data-eylem="pdf-goster"]']], bekle: 'document.querySelector("#a-pdf").open && document.querySelector("#a-pencere").open' },
     { ad: "görünüm: önceki sürümler (1)", hash: "#/", adim: [["tikla", '[data-secici-ac="gorunum"]'], ["tikla", '[data-sec="gorunum"][data-deger="onceki"]']], bekle: 'document.querySelector("#a-sayac").textContent === "1 standart" && /2002/.test(document.querySelector("#a-liste").textContent)' },
-    { ad: "Türe atanmamış çipi (1 / 22)", hash: "#/", adim: [["tikla", '[data-sz="s"] [data-cip="bos"]']], bekle: 'document.querySelector("#a-sayac").textContent === "1 / 22 standart" && /60204-1/.test(document.querySelector("#a-liste").textContent)' },
-    { ad: "tür sayfasından gelince türe göre süzülür", hash: "#/?tur=HT", bekle: 'document.querySelector("#a-sayac").textContent === "2 / 22 standart"' },
+    /* 2026-09-27: TS HD 60364-4-43 eklendi (ZPKR02'nin standardı) → 23 standart */
+    { ad: "Türe atanmamış çipi (1 / 23)", hash: "#/", adim: [["tikla", '[data-sz="s"] [data-cip="bos"]']], bekle: 'document.querySelector("#a-sayac").textContent === "1 / 23 standart" && /60204-1/.test(document.querySelector("#a-liste").textContent)' },
+    { ad: "tür sayfasından gelince türe göre süzülür", hash: "#/?tur=HT", bekle: 'document.querySelector("#a-sayac").textContent === "2 / 23 standart"' },
     { ad: "önceki sürümün rapor sayısı yeni sürümde değil", hash: "#/s/s1e", bekle: '+document.querySelectorAll(".a-yuz-sayi")[1].textContent > 0 && /Önceki sürüm/.test(document.querySelector(".a-nesne-baslik").textContent) && !document.querySelector(\'[data-eylem="surum-ac"]\')' },
     { ad: "yükle: boş gönderildi, dört eksik, odak numarada", hash: "#/yukle", adim: [["tikla", '[data-eylem="pencere-kaydet"]']], bekle: 'document.querySelectorAll(\'#a-pencere [aria-invalid="true"]\').length === 3 && /PDF dosyası/.test(document.querySelector("#w-dosya-ipucu").textContent) && document.activeElement.id === "w-no"' },
     { ad: "yükle: kütüphanedeki numara yazılınca yeni sürüm uyarısı", hash: "#/yukle", adim: [["yaz", "#w-no", "TS EN 280"]], bekle: '/önceki sürüm olur/.test(document.querySelector("#w-seritler").textContent) && document.activeElement.id === "w-no"' },
@@ -841,7 +852,9 @@ async function ac(tar, taban, dosya, hash, gen, yuk, tema, adim) {
   const hatalar = [];
   s.on("pageerror", e => hatalar.push(String(e.message || e)));
   s.on("console", m => { if (m.type() === "error") hatalar.push(m.text()); });
-  s.on("requestfailed", r => hatalar.push("istek düştü: " + r.url()));
+  /* 2026-09-27: iframe'deki PDF'i başsız Chrome kendi görüntüleyicisine devrederken ilk isteği ERR_ABORTED bildirir (sayfanın hatası değil);
+     dosyanın gerçekten ve doğru türle geldiği etkileşim denemesinde fetch ile ayrıca doğrulanır (m7 "resmî PDF …") */
+  s.on("requestfailed", r => { const e = r.failure() && r.failure().errorText; if (/\.pdf$/.test(r.url()) && e === "net::ERR_ABORTED") return; hatalar.push("istek düştü: " + r.url() + " · " + e); });
   s.on("response", r => { if (r.status() >= 400) hatalar.push(r.status() + " " + r.url()); });
   await s.setViewport({ width: gen, height: yuk, deviceScaleFactor: 1 });
   /* 2026-09-27: başsız tarayıcı dosya penceresi açamaz → maket örnek dosya adını kullanır (MK.dosyaSec); yazdırma penceresi açılmaz */

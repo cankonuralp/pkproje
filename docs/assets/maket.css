@@ -947,6 +947,11 @@ a.a-yuz:hover { border-color: var(--kenar-alan); background: var(--zemin); }
 .a-tablo-iskar .a-k-no { width: 17%; } .a-tablo-iskar .a-k-musteri { width: 29%; } .a-tablo-iskar .a-k-gelir { width: 18%; }
 .a-tablo-iskar .a-k-gider { width: 18%; } .a-tablo-iskar .a-k-kar { width: 18%; }
 .a-gg-donem { max-width: 320px; margin: 0 0 16px; }
+/* 2026-09-27 kontrol kriterleri (Standartlar sekmesi) */
+.a-tablo-kriterbelge .a-k-kod { width: 36%; } .a-tablo-kriterbelge .a-k-tur { width: 16%; } .a-tablo-kriterbelge .a-k-rapor { width: 12%; }
+.a-tablo-kriterbelge .a-k-madde { width: 8%; } .a-tablo-kriterbelge .a-k-yururluk { width: 14%; } .a-tablo-kriterbelge .a-k-eylem { width: 14%; }
+.a-tablo-kmadde .a-k-no { width: 24%; } .a-tablo-kmadde .a-k-icerik { width: 50%; } .a-tablo-kmadde .a-k-kaynak { width: 26%; }
+.a-tablo-kmadde td { vertical-align: top; }
 
 /* M15 — performans panosu: dönem + branş anahtarı, yatay çubuk grafik (dış kütüphane yok; renkler var olan değişkenler), iki tablo */
 .a-pano-anahtar { display: flex; flex-wrap: wrap; align-items: center; gap: 8px 12px; margin: 0 0 16px; }
@@ -1177,14 +1182,15 @@ a.a-yuz:hover { border-color: var(--kenar-alan); background: var(--zemin); }
   .a-tablo-egitim td[data-kart="govde"]:has(.a-kart-etiket), .a-tablo-egitimtur td[data-kart="govde"],
   .a-tablo-gider td[data-kart="govde"]:has(.a-kart-etiket), .a-tablo-isgider td[data-kart="govde"]:has(.a-kart-etiket),
   .a-tablo-masraf td[data-kart="govde"]:has(.a-kart-etiket), .a-tablo-bordro td[data-kart="govde"],
-  .a-tablo-karlilik td[data-kart="govde"]:has(.a-kart-etiket), .a-tablo-iskar td[data-kart="govde"]:has(.a-kart-etiket) { display: flex; align-items: center; justify-content: space-between; gap: 8px; }
+  .a-tablo-karlilik td[data-kart="govde"]:has(.a-kart-etiket), .a-tablo-iskar td[data-kart="govde"]:has(.a-kart-etiket),
+  .a-tablo-kriterbelge td[data-kart="govde"]:has(.a-kart-etiket) { display: flex; align-items: center; justify-content: space-between; gap: 8px; }
   .a-tablo-matris .a-kart-etiket, .a-tablo-yetkinlik .a-kart-etiket, .a-tablo-isgid .a-kart-etiket,
   .a-tablo-planekp .a-kart-etiket, .a-tablo-aday .a-kart-etiket, .a-tablo-kapsamozet .a-kart-etiket, .a-tablo-uyari .a-kart-etiket,
   .a-tablo-issoz .a-kart-etiket, .a-tablo-iskapsam .a-kart-etiket, .a-tablo-is .a-kart-etiket, .a-tablo-fatura .a-kart-etiket,
   .a-tablo-isfatura .a-kart-etiket, .a-tablo-israpor .a-kart-etiket, .a-tablo-tahsilat .a-kart-etiket, .a-tablo-fkalem .a-kart-etiket,
   .a-tablo-perf .a-kart-etiket, .a-tablo-gunluk .a-kart-etiket, .a-tablo-egitim .a-kart-etiket, .a-tablo-egitimtur .a-kart-etiket,
   .a-tablo-gider .a-kart-etiket, .a-tablo-isgider .a-kart-etiket, .a-tablo-masraf .a-kart-etiket, .a-tablo-bordro .a-kart-etiket,
-  .a-tablo-karlilik .a-kart-etiket, .a-tablo-iskar .a-kart-etiket { display: inline; }
+  .a-tablo-karlilik .a-kart-etiket, .a-tablo-iskar .a-kart-etiket, .a-tablo-kriterbelge .a-kart-etiket { display: inline; }
   /* M1 2. tur: zimmet, özlük ve Ana sayfa listeleri kartta etiket: değer; rol yetkileri kartında seçim alanı değerin yerinde */
   .a-tablo-kzimmet td[data-kart="govde"], .a-tablo-ozluk td[data-kart="govde"], .a-tablo-ana td[data-kart="govde"] { display: flex; align-items: baseline; justify-content: space-between; flex-wrap: wrap; gap: 4px 8px; }
   .a-tablo-kzimmet .a-kart-etiket, .a-tablo-ozluk .a-kart-etiket, .a-tablo-ana .a-kart-etiket, .a-tablo-zgecmis .a-kart-etiket { display: inline; }
@@ -1198,7 +1204,8 @@ a.a-yuz:hover { border-color: var(--kenar-alan); background: var(--zemin); }
   .a-tablo-egitim td[data-kart="govde"]:has(.a-kart-etiket), .a-tablo-egitimtur td[data-kart="govde"],
   .a-tablo-gider td[data-kart="govde"]:has(.a-kart-etiket), .a-tablo-isgider td[data-kart="govde"]:has(.a-kart-etiket),
   .a-tablo-masraf td[data-kart="govde"]:has(.a-kart-etiket), .a-tablo-bordro td[data-kart="govde"],
-  .a-tablo-karlilik td[data-kart="govde"]:has(.a-kart-etiket), .a-tablo-iskar td[data-kart="govde"]:has(.a-kart-etiket) { text-align: right; }   /* değerin ikinci satırı (ör. "kontrol 25 Eyl") değere hizalı */
+  .a-tablo-karlilik td[data-kart="govde"]:has(.a-kart-etiket), .a-tablo-iskar td[data-kart="govde"]:has(.a-kart-etiket),
+  .a-tablo-kriterbelge td[data-kart="govde"]:has(.a-kart-etiket) { text-align: right; }   /* değerin ikinci satırı (ör. "kontrol 25 Eyl") değere hizalı */
 }
 
 /* ══ DARALTILMIŞ YAN MENÜ — yalnız geniş bant (reisim 2026-09-23: "sol taraf açılıp kapanabilir olsun kapatılınca sadece
