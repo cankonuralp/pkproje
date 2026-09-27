@@ -1421,6 +1421,8 @@ revizyon, alan kopyalama, hafif kusur devri, meslek eşleşme denetimi).
 - Emsal ürünler: https://opwire.app/iso-17020-periyodik-kontrol-yazilimi/ · https://17020muayene.vidco.com.tr/ · https://akuple.com/asansor-kontrol-yazilimi/ · https://ensyazilim.com/
 
 ## 11 · Değişiklik günlüğü
+- 2026-09-27 (69): **Plan içi ekipman tablosunda rapor aşaması yazmaz** (reisim: *"ekipmanın raporunda yazması yeterli"*): Rapor
+  sütunu yalnız "Raporlandı" / "Rapor yok" / "Pasif"; Yeni, Teknik yönetici onayında vb. Raporlar tablosunda ve raporun kendisinde. Planlar 88/88 · 23/23.
 - 2026-09-27 (68): **Etiket "SGK destis no"** (reisim: *"SGK tescil no değil destis no olacak"*): bütün maketlerde, rapor belgesinde ve
   kayıtlarda "SGK tescil no" yerine "SGK destis no".
 - 2026-09-26 (67): **Saha raporu (yirmi üçüncü tur)**: "N eksik" bölümü kalktı; başlangıç / bitiş tarih ve saati el ile, sonraki kontrol

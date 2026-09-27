@@ -312,7 +312,9 @@
       { k: "konum", baslik: "Konum", kart: "govde", sira: 3, hucre: function (e) { return '<span class="a-hucre-satir">' + ikon("map-pin", "a-ikon-kucuk a-kart-ikon") + kirp(e.konum) + "</span>"; } },
       { k: "brans", baslik: "Branş", kart: "govde", sira: 4, hucre: function (e) { return '<span class="a-hucre-satir">' + ikon(e.tur.b === "m" ? "cog" : "zap", "a-ikon-kucuk") + bransAd(e.tur.b) + "</span>"; } },
       { k: "onceki", baslik: "Önceki kontrol", kart: "govde", sira: 5, hucre: oncekiHtml },
-      { k: "rapor", baslik: "Rapor", kart: "rozet", sira: 1, hucre: function (e) { var r = raporuVar(p, e.kod); return rozet(e.pasif ? { ad: "Pasif", rozet: "a-rozet-notr" } : r ? RAPOR[r.durum] : RAPOR.yok); } },
+      /* 2026-09-27 (reisim: "ekipmanın raporunda yazması yeterli"): ekipman satırında raporun aşaması (Yeni, Teknik yönetici onayında …)
+         yazmaz; yalnız rapor var mı. Aşama Raporlar tablosunda ve raporun kendisinde. */
+      { k: "rapor", baslik: "Rapor", kart: "rozet", sira: 1, hucre: function (e) { var r = raporuVar(p, e.kod); return rozet(e.pasif ? { ad: "Pasif", rozet: "a-rozet-notr" } : r ? { ad: "Raporlandı", rozet: "a-rozet-tamam" } : RAPOR.yok); } },
       /* 2026-09-26 (reisim): yanlış girilen ekipman PASİFE alınır (geri alınabilir); silme yalnız yönetici — maket denetçi gözünden, sil yok */
       { k: "eylem", baslik: "İşlem", gizliBaslik: true, kart: "eylem", sira: 9, hucre: function (e) {
         if (!calisir(p) || raporuVar(p, e.kod)) return "";

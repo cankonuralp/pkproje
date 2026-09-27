@@ -274,6 +274,8 @@ export const DURUMLAR = {
 /* ── ETKİLEŞİM DENEMELERİ (--etkilesim): adımlar koşar, sonra `bekle` ifadesi sayfada doğru dönmeli. Gen verilmezse 1920. ── */
 export const DENEMELER = {
   planlar: [
+    /* 2026-09-27 (reisim): ekipman satırında raporun aşaması yazmaz, yalnız "Raporlandı"; aşama Raporlar tablosunda */
+    { ad: "ekipman tablosunda rapor aşaması yok, Raporlandı var", hash: "#/plan/1", bekle: '!/onayında|Yeni\\b|İmzaya|Tamamlandı/.test([...document.querySelectorAll("#a-liste-e tbody td.a-k-rapor, #a-liste-e tbody td[data-kart=rozet]")].map(t => t.textContent).join("|")) && /Raporlandı/.test(document.querySelector("#a-liste-e").textContent) && /Teknik yönetici onayında/.test(document.querySelector("#a-liste-r").textContent)' },
     /* 2026-09-26 (reisim: "sıralama tarihi olsun her zaman en yeni en yukarıda"): plan listesi ve plan içindeki raporlar en yeni üstte */
     { ad: "Planlar varsayılan sıra: en yeni başlangıç üstte", hash: "#/", bekle: '/P-0926-037/.test(document.querySelector("#a-liste tbody tr").textContent) && /P-0926-025/.test([...document.querySelectorAll("#a-liste tbody tr")].pop().textContent)' },
     { ad: "plan içindeki raporlar en yeni üstte", hash: "#/plan/9", bekle: '/KM-0926-781/.test(document.querySelector("#a-liste-r tbody tr").textContent)' },

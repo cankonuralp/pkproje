@@ -1,7 +1,7 @@
 {
  "maket": "planlar",
  "sayfa": "maket/planlarim.html",
- "tarih": "2026-09-26",
+ "tarih": "2026-09-27",
  "arac": "başsız HeadlessChrome/141.0.7390.37 · puppeteer-core · tools/olc-bulut.mjs + tools/olc-maket.js",
  "yontem": "python3 http.server (docs/), her durum × genişlik × tema taze yükleme ve ayrı oturum, geçişler kapalı; 1920×1080 · 1080×810 · 375×812 × açık/koyu; 1080'de çekmece açık ayrıca.",
  "toplam": 88,
@@ -1133,7 +1133,7 @@
     104,
     150
    ],
-   "satirY": 58,
+   "satirY": 56,
    "birincil": 1,
    "pencereGen": null,
    "icerik": 810,
@@ -1171,7 +1171,7 @@
     104,
     150
    ],
-   "satirY": 58,
+   "satirY": 56,
    "birincil": 1,
    "pencereGen": null,
    "icerik": 810,
@@ -1209,7 +1209,7 @@
     150,
     351
    ],
-   "satirY": 199,
+   "satirY": 173,
    "birincil": 1,
    "pencereGen": null,
    "icerik": 375,
@@ -1247,7 +1247,7 @@
     150,
     351
    ],
-   "satirY": 199,
+   "satirY": 173,
    "birincil": 1,
    "pencereGen": null,
    "icerik": 375,
@@ -2045,7 +2045,7 @@
     81,
     204
    ],
-   "satirY": 58,
+   "satirY": 56,
    "birincil": 1,
    "pencereGen": 760,
    "icerik": 810,
@@ -2083,7 +2083,7 @@
     81,
     204
    ],
-   "satirY": 58,
+   "satirY": 56,
    "birincil": 1,
    "pencereGen": 760,
    "icerik": 810,
@@ -2121,7 +2121,7 @@
     129,
     351
    ],
-   "satirY": 199,
+   "satirY": 173,
    "birincil": 1,
    "pencereGen": 375,
    "icerik": 375,
@@ -2159,7 +2159,7 @@
     129,
     351
    ],
-   "satirY": 199,
+   "satirY": 173,
    "birincil": 1,
    "pencereGen": 375,
    "icerik": 375,
@@ -2349,7 +2349,7 @@
     81,
     204
    ],
-   "satirY": 58,
+   "satirY": 56,
    "birincil": 1,
    "pencereGen": 760,
    "icerik": 810,
@@ -2387,7 +2387,7 @@
     81,
     204
    ],
-   "satirY": 58,
+   "satirY": 56,
    "birincil": 1,
    "pencereGen": 760,
    "icerik": 810,
@@ -2425,7 +2425,7 @@
     129,
     351
    ],
-   "satirY": 199,
+   "satirY": 173,
    "birincil": 1,
    "pencereGen": 375,
    "icerik": 375,
@@ -2463,7 +2463,7 @@
     129,
     351
    ],
-   "satirY": 199,
+   "satirY": 173,
    "birincil": 1,
    "pencereGen": 375,
    "icerik": 375,
