@@ -124,6 +124,8 @@
         bilgi("Tahmini kontrol süresi", t.sure ? t.sure + " dk" : '<span class="a-deger-yok">Girilmedi</span>') +
         bilgi("Bakanlık rapor formatı", t.format ? '<span class="a-kod">' + t.format + "</span> " + rozet(FORMAT[t.formatDurum]) +
           (MV.KONTROL_BELGELERI.filter(function (k) { return k.tur === t.k; }).map(function (k) { return '<span class="a-alt-satir">kontrol kriterleri <a class="a-baglanti" href="' + MK.adres(4, "#/k/" + k.k) + '">' + k.k + "</a></span>"; }).join("")) : '<span class="a-deger-yok">Yayımlanmadı</span>') +
+        /* 2026-09-28 (reisim: ölçüm metodu "tür de belirlensin"): formatlı türde formattaki ölçüm metotlarından biri; raporda türden okunur */
+        (MV.formatYapi(t) ? bilgi("Ölçüm metodu", t.olcumMetot ? kacis(t.olcumMetot) : '<span class="a-uyari-metin">Belirlenmemiş</span>') : "") +
       "</dl></section>" +
       '<section class="a-bolum" aria-labelledby="a-b-std"><div class="a-alt-bas"><h2 class="a-alt-baslik" id="a-b-std">Kontrol metodu standartları</h2><span class="a-sayac"><b>' + t.std.length + "</b> standart</span>" +
         MK.git({ hedef: 4, hash: "#/?tur=" + t.k, ad: "Standart kütüphanesi", ikon: "book-open", sinif: "a-tus-ikincil a-bolum-tus", ne: "Standartlar" }) + "</div>" +
@@ -175,6 +177,8 @@
         A("periyot", "Periyot (ay)", d.periyot, { zorunlu: true, sinif: "a-girdi-sicil", ek: ' inputmode="numeric" maxlength="3"', ipucu: "Sonraki kontrol önerisi bununla hesaplanır." }) +
         A("sure", "Tahmini kontrol süresi (dk)", d.sure, { sinif: "a-girdi-sicil", ek: ' inputmode="numeric" maxlength="3"', ipucu: "İsteğe bağlı; plan saat önerisinde kullanılır." }) +
         (W.id ? "" : dosyaSec(d)) +
+        (W.id && MV.formatYapi(MV.tur(W.id)) ? MK.alan({ id: "w-olcum", etiket: "Ölçüm metodu", genis: true, girdi: MK.secim({ id: "w-olcum", ad: "Ölçüm metodu", deger: d.olcum, ipucu: "Seçin",
+          secenekler: MV.formatYapi(MV.tur(W.id)).metot.map(function (m) { return [m, m]; }) }) }) : "") +
         '<div class="a-alan-grup a-alan-genis"><p class="a-etiket">Kullanılacak ölçüm cihazları</p>' +
           '<ul class="a-secim-listesi">' + MV.CIHAZ_TURLERI.map(function (c) {
             return '<li><label class="a-secim-satir"><input type="checkbox" data-cihaz-tur="' + c.k + '"' + (d.cihaz.indexOf(c.k) >= 0 ? " checked" : "") + '><span class="a-secim-metin">' + kacis(c.ad) + "</span></label></li>";
@@ -191,7 +195,7 @@
   function pencereAc(tur, id) {
     var t = id ? MV.tur(id) : null;
     W = { tur: tur, id: id || null, hata: {}, d: tur === "format" ? { dosya: "", not: "" }
-      : t ? { ad: t.ad, k: t.k, g: t.g, periyot: String(t.periyot), sure: t.sure ? String(t.sure) : "", std: t.std.slice(), cihaz: t.cihaz.slice(), dosya: "" }
+      : t ? { ad: t.ad, k: t.k, g: t.g, periyot: String(t.periyot), sure: t.sure ? String(t.sure) : "", std: t.std.slice(), cihaz: t.cihaz.slice(), dosya: "", olcum: t.olcumMetot || "" }
       : { ad: "", k: "", g: "", periyot: "12", sure: "", std: [], cihaz: [], dosya: "" } };
     pencereCiz(); if (!$("a-pencere").open) $("a-pencere").showModal();
     var ilk = $("a-pencere-govde").querySelector("input:not([readonly]), .a-tus"); if (ilk) ilk.focus();
@@ -246,6 +250,7 @@
       var g = MV.grup(d.g);
       t = W.id ? MV.tur(W.id) : { k: d.k, pdf: [] };
       Object.assign(t, { ad: d.ad.trim(), g: d.g, b: g.b, periyot: +d.periyot, sure: d.sure ? +d.sure : null, std: d.std.slice(), cihaz: d.cihaz.slice() });
+      if (d.olcum) t.olcumMetot = d.olcum;
       if (!W.id) {
         if (d.dosya) t.pdf.unshift({ surum: "v1", tarih: MK.tarihYaz(MK.BUGUN), dosya: d.dosya });
         MV.KATALOG.push(t);
@@ -257,7 +262,7 @@
     MK.bildir(ileti);
   };
   MK.onGirdi = function (e) { var k = e.target.dataset && e.target.dataset.alan; if (k && W) W.d[k] = k === "k" ? e.target.value.toUpperCase().replace(/[^A-Z]/g, "") : e.target.value; };
-  MK.onSecim = function (id, deger) { if (W && id === "w-g") { W.d.g = deger; delete W.hata.g; pencereCiz("w-g"); } };
+  MK.onSecim = function (id, deger) { if (W && id === "w-g") { W.d.g = deger; delete W.hata.g; pencereCiz("w-g"); } else if (W && id === "w-olcum") { W.d.olcum = deger; pencereCiz("w-olcum"); } };
   document.addEventListener("change", function (e) {
     var c = e.target.dataset && e.target.dataset.cihazTur;
     if (c && W) { var j = W.d.cihaz.indexOf(c); if (e.target.checked && j < 0) W.d.cihaz.push(c); else if (!e.target.checked && j >= 0) W.d.cihaz.splice(j, 1); return; }

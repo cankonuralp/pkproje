@@ -523,6 +523,9 @@
       sonuc: "Periyodik kontrol tarihi itibarıyla yukarıda teknik özellikleri belirtilen Elektrik Tesisatının fonksiyon testleri muayenesi sonrasında mevcut şartlar altında kullanımı"
     }
   };
+  /* ölçüm metodu (formattaki: üç uçlu · çevrim empedansı · klamp) ekipman türünde belirlenir, raporda türden okunur (reisim 2026-09-28:
+     "tür de belirlensin"); firma türü düzenlerken seçer */
+  MV.tur("ET").olcumMetot = "Üç uçlu karşılaştırma"; MV.tur("AT").olcumMetot = "Çevrim empedansı";
   MV.formatYapi = function (t) { return t && t.format ? MV.FORMAT_YAPI[t.format] || null : null; };
   /* açma akımı çarpanı (ZPKK02 madde 3: B=5x C=10x D=15x) · Zs = 230 V / Ia · Ik1 = 230 V / Zx */
   MV.EGRI_KAT = { B: 5, C: 10, D: 15 };

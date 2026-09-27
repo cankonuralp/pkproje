@@ -97,13 +97,13 @@
         var tb = tablo(["No", "Kriter", "Sonuç"], g[1].map(function (k, j) { var i = i0 + j;
           return [B.kontrol + "." + (gi + 1) + "." + (j + 1), kacis(k), R ? sonucAd(R.kriter[i]) : o ? (kusurlu && i === ok.i ? "Uygun değil · " + (hafif ? "hafif" : "ağır") : g[0] === "Termal kamera" ? "Uygulanamaz" : "Uygun") : '<span class="a-belge-kutu"></span>Uygun · uygun değil · uygulanamaz']; }), "", "a-belge-tablo-kriter");
         i0 += g[1].length; return "<h4>" + B.kontrol + "." + (gi + 1) + " · " + kacis(g[0]) + "</h4>" + tb; }).join("")));
-      h.push(bolum(B.fonksiyon, "Fonksiyon kontrol kriterleri ve testler", '<dl class="a-bilgi">' + bilgi("Ölçüm metodu", d(R ? rv(R.metod) : F.metot[0])) + "</dl>" +
+      h.push(bolum(B.fonksiyon, "Fonksiyon kontrol kriterleri ve testler", '<dl class="a-bilgi">' + bilgi("Ölçüm metodu", d(R ? rv(R.metod) : t.olcumMetot || "-")) + "</dl>" +
         tablo(["Ölçüm", "Değer", "Sınır"], MV.testler(t).map(function (x, i) { return [kacis(x.ad), R ? (R.test[i] ? kacis(R.test[i]) + " " + x.birim : "-") : o ? x.ornek + " " + x.birim : bos, MV.sinirYaz(x)]; }))));
     } else {
       h.push(bolum(B.tanim, "Test değerleri tanımları", tablo(["Kısaltma", "Tanım"], F.tanimlar.map(function (x) { return ['<span class="a-kod">' + kacis(x[0]) + "</span>", kacis(x[1])]; }))));
       var nk = R ? R.nokta : F.noktalar.map(function (n) { return { ad: n[0], egri: n[1], In: n[2], zx: n[3] || "0,34", rcd: n[4], priz: /priz/i.test(n[0]) }; });
       if (!R && kusurlu && !hafif) nk.push({ ad: "Kapı motoru — sevkiyat", egri: "C", In: 10, zx: "2,6", rcd: "" });
-      h.push(bolum(B.kontrol, "Kontrol ve ölçümler", '<dl class="a-bilgi">' + bilgi("Ölçüm metodu", d(R ? rv(R.metod) : F.metot[0])) + "</dl>" +
+      h.push(bolum(B.kontrol, "Kontrol ve ölçümler", '<dl class="a-bilgi">' + bilgi("Ölçüm metodu", d(R ? rv(R.metod) : t.olcumMetot || "-")) + "</dl>" +
         "<h4>" + B.kontrol + ".1 · Çevrim empedansı ölçümleri</h4>" +
         tablo(["Nokta", "Zx (Ω)", "Zs (Ω)", "Ik1 (A)", "Not"], (o ? nk : nk.slice(0, 1)).map(function (n) { var c = MV.noktaHesap(n);
           return o ? [kacis(n.ad) + '<br><span class="a-belge-madde">' + n.egri + n.In + "</span>", kacis(n.zx) || "-", String(c.zs).replace(".", ","), c.ik ? String(c.ik) : "-", c.not ? "Not-" + c.not : "-"] : [bos, bos, bos, bos, bos]; })) +

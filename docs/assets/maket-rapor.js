@@ -43,7 +43,7 @@
     var cihazDoldur = function () { r.cihaz = MV.turCihazlari(t).map(function (c) { return MV.eklenebilirCihazlar(r.kisi, [c])[0]; }).filter(Boolean).map(function (v) { return v.id; }); };
     /* Bakanlık formatlı tür (ZPKR01 · ZPKR02, 2026-09-27): ekipman detayları ve tespitler formattan; topraklamada ölçüm noktaları ve RCD
        satırları (noktalar önceki rapordan gelir, Zx her kontrolde yeniden ölçülür) */
-    var F = MV.formatYapi(t); r.F = F; r.detay = {}; r.tespit = {}; r.metod = ""; r.termal = ""; r.nokta = []; r.rcdler = [];
+    var F = MV.formatYapi(t); r.F = F; r.detay = {}; r.tespit = {}; r.metod = t.olcumMetot || ""; r.termal = ""; r.nokta = []; r.rcdler = [];   /* ölçüm metodu türden (2026-09-28) */
     var ornekBilgi = function () {
       F.detay.forEach(function (x) { r.detay[x.k] = x.ornek; });
       F.tespit.forEach(function (x) { r.tespit[x.k] = Array.isArray(x.ornek) ? x.ornek.slice() : x.ornek; });
@@ -58,7 +58,7 @@
       r.kriter.forEach(function (x) { x.c = "uygun"; });
       r.test = ts.map(function (x) { return x.ornek; }); r.foto = 2; r.amac = "Üretim ve bakım"; r.sonuc = "kullanilir";
       if (F) {
-        ornekBilgi(); r.metod = F.metot[0]; r.termal = F.gozle ? "hayir" : "";   /* termal kamera kullanılmadı → termal kamera maddeleri uygulanamaz */
+        ornekBilgi(); r.termal = F.gozle ? "hayir" : "";   /* termal kamera kullanılmadı → termal kamera maddeleri uygulanamaz */
         if (F.gozle) MV.kriterGruplari(t).reduce(function (i, g) { g[1].forEach(function (x, j) { if (g[0] === "Termal kamera") r.kriter[i + j].c = "uygulanamaz"; }); return i + g[1].length; }, 0);
         r.nokta.forEach(function (n, i) { n.zx = F.noktalar[i][3] || "0,34"; });
         r.rcdler.forEach(function (x, i) { x.id = F.rcd[i][4] || "220"; x.td = F.rcd[i][5] || "180"; });
@@ -76,7 +76,7 @@
       r.cihaz = ["v1", "v2", "v3"];   /* v3 = tesisat test cihazı OC-003, kalibrasyonu 18.09.2026'da geçti; zimmette geçerli başkası yok */
     }
     if (e.kod === "AT-1010") {   /* AG topraklama (ZPKR01): ölçümler yarıda; kapı motoru hattında Zx sınırı aşıyor, RCD yok → Not-2, ağır kusur */
-      ornekBilgi(); r.metod = F.metot[0]; cihazDoldur();
+      ornekBilgi(); cihazDoldur();
       [0, 1, 2, 3, 4].forEach(function (i) { r.nokta[i].zx = F.noktalar[i][3]; });
       r.nokta.push({ ad: "Kapı motoru — sevkiyat", egri: "C", In: 10, zx: "2,6", rcd: "", priz: false });
       r.rcdler[0].id = F.rcd[0][4]; r.rcdler[0].td = F.rcd[0][5]; r.foto = 1;
@@ -87,7 +87,7 @@
     if (e.kod === "ET-2002") { var ok = MV.ornekKusur(t, true), x = r.kriter[ok.i]; x.c = "uygundegil"; x.derece = "hafif"; x.not = ok.aciklama; x.foto = 1; r.sonuc = "kullanilamaz"; }
     if (e.kod === "AT-2003") { r.nokta.push({ ad: "Kapı motoru — sevkiyat", egri: "C", In: 10, zx: "2,6", rcd: "", priz: false }); r.sonuc = "kullanilamaz"; r.notlar = "Kapı motoru hattına 30 mA RCD takılması ya da koruma değerinin düşürülmesi önerilir."; }
     if (e.kod === "ET-2004") {
-      ornekBilgi(); r.tespit = { degisiklik: "Yok", etiket: "Var" }; cihazDoldur(); r.metod = F.metot[0]; r.termal = "hayir";
+      ornekBilgi(); r.tespit = { degisiklik: "Yok", etiket: "Var" }; cihazDoldur(); r.termal = "hayir";
       [0, 1, 2, 3, 4].forEach(function (i) { r.kriter[i].c = "uygun"; }); r.test[0] = "0,19"; r.test[1] = "5,8"; r.foto = 1;
     }
     if (e.kod === "AT-2005") cihazDoldur();
@@ -150,7 +150,7 @@
     var zx = r.nokta.filter(function (n) { return !isNaN(sayi(n.zx)); }).length, rcdGir = r.rcdler.filter(function (x) { return rcdSonuc(x) !== null; }).length;
     return (F ? [
       { ok: girilenAlan >= gerekli, metin: Math.min(girilenAlan, gerekli) + " / " + gerekli + " ekipman bilgisi dolduruldu", bolum: "r-b2" },
-      { ok: !!r.metod, metin: "Ölçüm metodu seçilmedi", bolum: "r-b5" },
+      { ok: !!r.metod, metin: "Ölçüm metodu ekipman türünde belirlenmemiş", bolum: "r-b5" },
       { ok: zx === r.nokta.length, metin: zx + " / " + r.nokta.length + " ölçüm noktasında Zx girildi", bolum: "r-b5", gizle: !F.noktalar },
       { ok: rcdGir === r.rcdler.length, metin: rcdGir + " / " + r.rcdler.length + " RCD testi girildi", bolum: "r-b5", gizle: !F.noktalar },
       { ok: !derecesiz, metin: derecesiz + " kusurun derecesi seçilmedi", bolum: "r-b4", gizle: !derecesiz }
@@ -266,7 +266,10 @@
       (r.termal !== "evet" ? "" : tk ? '<div class="a-liste-kap a-bolum-serit">' + MK.tablo({ baslik: "Termal kamera", sinif: "a-tablo-olcum", sutunlar: CIHAZ.slice(0, 3), kayitlar: [tk] }) + "</div>"
         : '<p class="a-bos-satir a-bolum-serit">Zimmetinizde kalibrasyonu geçerli termal kamera yok.</p>');
   }
-  var metodHtml = function (r, oku) { return tekSecim("r-metod", "Ölçüm metodu", r.metod, r.F.metot.map(function (m) { return [m, m]; }), oku, true, uyar(r, !r.metod)); };
+  /* ölçüm metodu raporda seçilmez, ekipman türünden okunur (reisim 2026-09-28: "tür de belirlensin") */
+  var metodHtml = function (r) {
+    return '<dl class="a-satirlar"><div class="a-satir"><dt>Ölçüm metodu</dt><dd id="r-metod">' + (r.metod ? kacis(r.metod) : '<span class="a-uyari-metin">Ekipman türünde belirlenmemiş</span>') + "</dd></div></dl>";
+  };
   /* topraklama ölçüm noktası: Ia = eğri çarpanı × In, Zs = 230 V / Ia, Ik1 = 230 V / Zx, uygunluk notu formata göre (MV.noktaHesap) */
   var notRozet = function (h) { return h.not === null ? '<span class="a-deger-yok">—</span>' : rozet({ ad: "Not-" + h.not + (h.agir ? " · ağır" : ""), rozet: h.agir ? "a-rozet-red" : "a-rozet-tamam" }); };
   var rcdRozet = function (s) { return s === null ? '<span class="a-deger-yok">—</span>' : rozet(s ? { ad: "Uygun", rozet: "a-rozet-tamam" } : { ad: "Yetersiz · ağır", rozet: "a-rozet-red" }); };
@@ -600,7 +603,7 @@
     else if (id === "r-sonuc") { r.sonuc = deger; degisti(r); ciz(id); }
     else if (/^r-kd\d+$/.test(id)) { r.kriter[+id.slice(4)].derece = deger; degisti(r); ciz(id); }
     else if (/^r-[ds]-/.test(id)) { r[id[2] === "d" ? "detay" : "tespit"][id.slice(4)] = deger; degisti(r); ciz(id); }
-    else if (id === "r-metod" || id === "r-termal") { r[id.slice(2)] = deger; degisti(r); ciz(id); }
+    else if (id === "r-termal") { r[id.slice(2)] = deger; degisti(r); ciz(id); }
   };
   MK.onZaman = function (id, deger) {
     var r = aktif(), k = id.slice(2); if (!r || !(k in r)) return;

@@ -2,9 +2,30 @@
  "maket": "m3",
  "tarih": "2026-09-27",
  "arac": "tools/olc-bulut.mjs --etkilesim (başsız tarayıcı, 1920 açık tema; gen verilen denemede o genişlik)",
- "toplam": 20,
- "gecen": 20,
+ "toplam": 23,
+ "gecen": 23,
  "denemeler": [
+  {
+   "ad": "formatlı türde ölçüm metodu türde yazar (ET: Üç uçlu karşılaştırma)",
+   "gen": 1920,
+   "sayfa": "maket/ekipman-turleri.html",
+   "hash": "#/tur/ET",
+   "gecti": true
+  },
+  {
+   "ad": "düzenle: ölçüm metodu formatın metotlarından seçilir, kaydedilir",
+   "gen": 1920,
+   "sayfa": "maket/ekipman-turleri.html",
+   "hash": "#/tur/ET/duzenle",
+   "gecti": true
+  },
+  {
+   "ad": "formatsız türde ölçüm metodu alanı yok",
+   "gen": 1920,
+   "sayfa": "maket/ekipman-turleri.html",
+   "hash": "#/tur/KP/duzenle",
+   "gecti": true
+  },
   {
    "ad": "AG topraklama: resmî format ZPKR01 ve kriter bağlantısı",
    "gen": 1920,

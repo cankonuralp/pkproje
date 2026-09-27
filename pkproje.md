@@ -1685,6 +1685,9 @@ revizyon, alan kopyalama, hafif kusur devri, meslek eşleşme denetimi).
 - Emsal ürünler: https://opwire.app/iso-17020-periyodik-kontrol-yazilimi/ · https://17020muayene.vidco.com.tr/ · https://akuple.com/asansor-kontrol-yazilimi/ · https://ensyazilim.com/
 
 ## 11 · Değişiklik günlüğü
+- 2026-09-28 (103): **Ölçüm metodu ekipman türünde** (§9 otuz birinci tur): formatlı türde (ET, AT) tür sayfasında "Ölçüm metodu" (ET: üç uçlu
+  karşılaştırma, AT: çevrim empedansı; örnek), Düzenle'de formatın metotlarından seçilir; raporda seçim alanı kalktı, türden salt okunur
+  yazar; rapor belgesi türden. M3 88/88 · 23/23 · 44/44; M8 160/160 · 65/65 · 80/80; M9 96/96 · 23/23 · 48/48; M11 88/88 · 10/10 · 44/44.
 - 2026-09-28 (102): **İzin talepleri onayı** (§9 otuz birinci tur): Personel'de "İzin talepleri" sekmesi (firma yöneticisi): bekleyen üstte,
   onay uyarısı, yıllık izinde kalan hak; Onayla · Reddet (gerekçe zorunlu, talep eden Talepler'de görür). M1 272/272 · 52/52 · 136/136.
 - 2026-09-28 (101): **Son formatlarla örnek plan** (§9 otuzuncu tur; reisim seçti: *"Yeni plan"*): Ada Makina'nın yeni tesisi Enerji Merkezi

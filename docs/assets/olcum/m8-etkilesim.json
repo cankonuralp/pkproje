@@ -2,8 +2,8 @@
  "maket": "m8",
  "tarih": "2026-09-27",
  "arac": "tools/olc-bulut.mjs --etkilesim (başsız tarayıcı, 1920 açık tema; gen verilen denemede o genişlik)",
- "toplam": 64,
- "gecen": 64,
+ "toplam": 65,
+ "gecen": 65,
  "denemeler": [
   {
    "ad": "kontrol metodu türden, yalnız standart numarası, seçim alanı yok (formatlı türde firma bölümünde)",
@@ -332,6 +332,13 @@
    "gen": 1920,
    "sayfa": "maket/rapor.html",
    "hash": "#/r/ET-1009",
+   "gecti": true
+  },
+  {
+   "ad": "ölçüm metodu raporda türden, seçim alanı yok (iç tesisat ve topraklama)",
+   "gen": 1920,
+   "sayfa": "maket/rapor.html",
+   "hash": "#/r/AT-1010",
    "gecti": true
   },
   {

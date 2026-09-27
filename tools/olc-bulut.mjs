@@ -120,6 +120,7 @@ export const DURUMLAR = {
     { ad: "tür · jeneratör: kullanılacak cihazlar ve rapor bölümleri", hash: "#/tur/JN" },
     { ad: "PDF görüntüleyici · rapor formatı sürümü", hash: "#/tur/ET", adim: [["tikla", '[data-eylem="pdf-goster"]']] },
     { ad: "tesis sayfası · ekipman yüzü planı açar", sayfa: "maket/musteriler.html", hash: "#/t/t1" },
+    { ad: "tür düzenle · formatlı tür, ölçüm metodu seçimi (2026-09-28)", hash: "#/tur/ET/duzenle" }
   ] },
   /* M4 Ölçüm Cihazı · Zimmet · kalibrasyon uyarısı (2026-09-24) */
   m4: { sayfa: "maket/zimmetler.html", durumlar: [
@@ -484,6 +485,10 @@ export const DENEMELER = {
     { ad: "müşteri sayfası: Açık alacak yüzü → müşterinin faturaları (3 / 13)", hash: "#/m/m1", adim: [["tikla", 'a.a-yuz[href^="muhasebe.html"]']], bekle: '/muhasebe\\.html$/.test(location.pathname) && document.querySelector("#a-sayac").textContent === "3 / 13 fatura" && /3.600,00 TL/.test(document.querySelector("#a-liste").textContent)' },
   ],
   m3: [
+    /* 2026-09-28 (reisim: ölçüm metodu "tür de belirlensin") */
+    { ad: "formatlı türde ölçüm metodu türde yazar (ET: Üç uçlu karşılaştırma)", hash: "#/tur/ET", bekle: '/Ölçüm metoduÜç uçlu karşılaştırma/.test(document.querySelector("#a-nesne").textContent)' },
+    { ad: "düzenle: ölçüm metodu formatın metotlarından seçilir, kaydedilir", hash: "#/tur/ET/duzenle", adim: [["tikla", "#w-olcum"], ["tikla", '[data-secim="w-olcum"][data-deger="Klamp yöntemi"]'], ["tikla", '[data-eylem="pencere-kaydet"]']], bekle: 'location.hash === "#/tur/ET" && MV.tur("ET").olcumMetot === "Klamp yöntemi" && /Ölçüm metoduKlamp yöntemi/.test(document.querySelector("#a-nesne").textContent)' },
+    { ad: "formatsız türde ölçüm metodu alanı yok", hash: "#/tur/KP/duzenle", bekle: '!document.querySelector("#w-olcum")' },
     { ad: "AG topraklama: resmî format ZPKR01 ve kriter bağlantısı", hash: "#/tur/AT", bekle: '/ZPKR01/.test(document.querySelector("#a-nesne").textContent) && !!document.querySelector(\'#a-nesne a[href$="#/k/ZPKK01"]\')' },
     /* 2026-09-27 (reisim: "metod kısmı olsun ama sadece ekipman türü eklerken belirlene"): standartsız türde raporda üretici talimatı */
     { ad: "standartsız tür: uyarı, raporda üretici talimatı yazar", hash: "#/tur/JN", bekle: '/Üretici talimatı/.test(document.querySelector("#a-nesne").textContent)' },
@@ -643,6 +648,8 @@ export const DENEMELER = {
     { ad: "topraklama: ölçüm noktası ekle", hash: "#/r/AT-1010", adim: [["tikla", '[data-eylem="nokta-ekle"]'], ["yaz", "#w-ad", "Priz hattı P3"], ["tikla", "#w-egri"], ["tikla", '[data-secim="w-egri"][data-deger="C"]'], ["yaz", "#w-In", "16"], ["tikla", '[data-eylem="pencere-kaydet"]']], bekle: '!document.querySelector("#a-pencere").open && document.querySelectorAll(".a-tablo-nokta tbody tr").length === 8 && document.activeElement.id === "r-zx7"' },
     { ad: "topraklama: RCD yetersiz → ağır", hash: "#/r/AT-1010", adim: [["yaz", "#r-ri1", "280"], ["yaz", "#r-rt1", "260"]], bekle: '/Yetersiz/.test(document.querySelector("#r-rs1").textContent)' },
     { ad: "Kaydet ve Onaya gönder masaüstünde de altta yapışkan", gen: 1920, hash: "#/r/ET-1009", bekle: 'getComputedStyle(document.querySelector(".a-rapor-eylem")).position === "sticky" && !!document.querySelector(\'.a-rapor-eylem [data-eylem="kaydet"]\') && !!document.querySelector(\'.a-rapor-eylem [data-eylem="onaya-gonder"]\')' },
+    /* 2026-09-28 (reisim: ölçüm metodu "tür de belirlensin"): raporda seçilmez, türden okunur */
+    { ad: "ölçüm metodu raporda türden, seçim alanı yok (iç tesisat ve topraklama)", hash: "#/r/AT-1010", bekle: 'document.querySelector("#r-metod").textContent === "Çevrim empedansı" && !document.querySelector(\'[data-secim-ac="r-metod"]\') && document.querySelector("#r-metod").tagName === "DD"' },
     /* 2026-09-28 (plan 10): son formatlarla sonuçlu örnekler */
     { ad: "plan 10 · AT-2003: ağır kusur (Not-2) kusur listesinde, sonuç Uygun değil", hash: "#/r/AT-2003?no=KM-0926-798-3c545&durum=onayda", bekle: '/Not-2/.test(document.querySelector("#r-bk").textContent) && /Ağır kusur/.test(document.querySelector("#r-bk").textContent) && document.querySelector("#r-sonuc").value === "Uygun değil"' },
     { ad: "plan 10 · ET-2002: formatın maddesinde hafif kusur", hash: "#/r/ET-2002?no=KM-0926-797-f716e&durum=onaylandi", bekle: '/5\\.4\\.2 · Tehlike işaretleri/.test(document.querySelector("#r-bk").textContent) && /Hafif kusur/.test(document.querySelector("#r-bk").textContent)' },
