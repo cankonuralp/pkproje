@@ -16,16 +16,11 @@
   var $ = MK.$ = function (id) { return document.getElementById(id); };
   var kacis = MK.kacis = function (s) { return String(s).replace(/[&<>"']/g, function (c) { return { "&": "&amp;", "<": "&lt;", ">": "&gt;", '"': "&quot;", "'": "&#39;" }[c]; }); };
   var ikon = MK.ikon = function (ad, sinif) { return '<svg class="a-ikon' + (sinif ? " " + sinif : "") + '" aria-hidden="true"><use href="' + IKON + ad + '"/></svg>'; };
-  var GUN = ["Paz", "Pzt", "Sal", "Çar", "Per", "Cum", "Cmt"];
-  var AY = ["Oca", "Şub", "Mar", "Nis", "May", "Haz", "Tem", "Ağu", "Eyl", "Eki", "Kas", "Ara"];
-  /* tarih bölünmez (gün adı · gün · ay birlikte kalır) */
-  MK.gunYaz = function (iso) { var d = new Date(iso.slice(0, 10) + "T12:00:00"); return GUN[d.getDay()] + " " + d.getDate() + " " + AY[d.getMonth()]; };
-  MK.gunKisa = function (iso) { var d = new Date(iso.slice(0, 10) + "T12:00:00"); return d.getDate() + " " + AY[d.getMonth()]; };
-  MK.ayYil = function (iso) { var d = new Date(iso.slice(0, 10) + "T12:00:00"); return AY[d.getMonth()] + " " + d.getFullYear(); };
-  /* tam tarih: gün ay yıl (belge ve bitiş tarihlerinde yıl şart) */
-  MK.tarihYaz = function (iso) { var d = new Date(iso.slice(0, 10) + "T12:00:00"); return d.getDate() + " " + AY[d.getMonth()] + " " + d.getFullYear(); };
-  MK.tarihNo = function (iso) { return iso.slice(8, 10) + "." + iso.slice(5, 7) + "." + iso.slice(0, 4); };   /* 23.09.2026 (reisim 2026-09-27) */
-  MK.zamanYaz = function (z) { return MK.gunKisa(z) + " " + z.slice(11, 16); };
+  /* 2026-09-27 (reisim: "Her yerde aynı 23.09.2026 formatı gibi olsun"): bütün tarihler GG.AA.YYYY, saatli olanlar GG.AA.YYYY SS:DD;
+     gün adı ve ay adı yazılmaz. Eski adlar (gunYaz, gunKisa, ayYil, tarihYaz) aynı biçime bağlandı — tek kaynak MK.tarihNo. */
+  MK.tarihNo = function (iso) { return iso.slice(8, 10) + "." + iso.slice(5, 7) + "." + iso.slice(0, 4); };
+  MK.gunYaz = MK.gunKisa = MK.ayYil = MK.tarihYaz = MK.tarihNo;
+  MK.zamanYaz = function (z) { return MK.tarihNo(z) + " " + z.slice(11, 16); };
   MK.simdi = function () { return MK.BUGUN + "T" + MK.SAAT; };
   /* iki tarih arası gün (b − a); "bugün"e göre kalan gün için gunFarki(MK.BUGUN, x) */
   MK.gunFarki = function (a, b) { return Math.round((new Date(b.slice(0, 10) + "T12:00:00") - new Date(a.slice(0, 10) + "T12:00:00")) / 864e5); };

@@ -10,9 +10,9 @@
   "use strict";
   var $ = MK.$, kacis = MK.kacis, ikon = MK.ikon, kirp = MK.kirp, SZ = MK.SZ;
   var DONEM = {
-    ay: { ad: "Bu ay", bas: "2026-09-01", bit: MK.BUGUN, grup: "gun", alt: "1–23 Eylül 2026" },
-    yil: { ad: "Bu yıl", bas: "2026-01-01", bit: MK.BUGUN, grup: "ay", alt: "Ocak–Eylül 2026" },
-    gecen: { ad: "Geçen yıl", bas: "2025-01-01", bit: "2025-12-31", grup: "ay", alt: "Ocak–Aralık 2025" },
+    ay: { ad: "Bu ay", bas: "2026-09-01", bit: MK.BUGUN, grup: "gun", alt: "01.09.2026–23.09.2026" },
+    yil: { ad: "Bu yıl", bas: "2026-01-01", bit: MK.BUGUN, grup: "ay", alt: "01.01.2026–23.09.2026" },
+    gecen: { ad: "Geçen yıl", bas: "2025-01-01", bit: "2025-12-31", grup: "ay", alt: "01.01.2025–31.12.2025" },
     /* 150 (2026-09-26): tarih aralığı — iki tarih yazılıp "Uygula"; 62 günden uzunsa aylık */
     aralik: { ad: "Tarih aralığı", bas: "2025-09-01", bit: MK.BUGUN, grup: "ay", alt: "" }
   };

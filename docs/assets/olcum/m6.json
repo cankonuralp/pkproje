@@ -1,7 +1,7 @@
 {
  "maket": "m6",
  "sayfa": "maket/plan-ac.html",
- "tarih": "2026-09-26",
+ "tarih": "2026-09-27",
  "arac": "başsız HeadlessChrome/141.0.7390.37 · puppeteer-core · tools/olc-bulut.mjs + tools/olc-maket.js",
  "yontem": "python3 http.server (docs/), her durum × genişlik × tema taze yükleme ve ayrı oturum, geçişler kapalı; 1920×1080 · 1080×810 · 375×812 × açık/koyu; 1080'de çekmece açık ayrıca.",
  "toplam": 80,
@@ -905,7 +905,7 @@
     137,
     217
    ],
-   "satirY": 197,
+   "satirY": 215,
    "birincil": null,
    "pencereGen": null,
    "icerik": 375,
@@ -943,7 +943,7 @@
     137,
     217
    ],
-   "satirY": 197,
+   "satirY": 215,
    "birincil": null,
    "pencereGen": null,
    "icerik": 375,
@@ -1209,7 +1209,7 @@
     137,
     217
    ],
-   "satirY": 197,
+   "satirY": 215,
    "birincil": null,
    "pencereGen": null,
    "icerik": 375,
@@ -1247,7 +1247,7 @@
     137,
     217
    ],
-   "satirY": 197,
+   "satirY": 215,
    "birincil": null,
    "pencereGen": null,
    "icerik": 375,
