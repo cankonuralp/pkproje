@@ -606,9 +606,21 @@ a.a-yuz:hover { border-color: var(--kenar-alan); background: var(--zemin); }
 .a-secim .a-secici-liste { left: 0; right: auto; width: 100%; min-width: 0; }
 /* pencerede liste akış içinde açılır (telefonda pencere kayar; kayan liste kesilmesin — tür kutusuyla aynı karar) */
 .a-pencere .a-secim .a-secici-liste { position: static; margin-top: 6px; box-shadow: none; max-height: 240px; }
-/* tarih / saat seçici (reisim 2026-09-27): takvim + saat · dakika; yazma yok. Gün tuşu yüksekliği bandın dokunma hedefi (--tus-y) */
-.a-zaman .a-secici-liste.a-zaman-liste { width: 340px; max-width: calc(100vw - 32px); min-width: 0; max-height: none; overflow: visible; padding: 10px; }
-.a-zaman .a-secim-tus[aria-expanded="true"] .a-ikon { transform: none; }
+/* tarih / saat alanı (reisim 2026-09-27, örnek ekranla): tarih · saat · dakika ayrı, yazılır ya da simgeyle seçilir; gün tuşu --tus-y */
+.a-zaman { display: flex; flex-wrap: wrap; align-items: center; gap: 8px; }
+/* kutu = kenarlı sarmal (kenar gölgeyle, yükseklik alanla aynı); içinde yan yana girdi (kenarsız) + simge tuşu — üst üste binmez */
+.a-zaman-tarih, .a-zaman-parca { display: flex; box-shadow: inset 0 0 0 1px var(--kenar-alan); border-radius: var(--r-orta); background: var(--kart); }
+.a-zaman-tarih:focus-within, .a-zaman-parca:focus-within { box-shadow: inset 0 0 0 1px var(--yazi2); }
+.a-zaman-tarih { flex: 1 1 11rem; min-width: 0; }
+.a-zaman-parca { flex: 0 0 5.75rem; }
+.a-zaman .a-zaman-girdi { flex: 1 1 auto; min-width: 0; width: auto; height: var(--tus-y); padding-right: 4px; border: 0; background: transparent; font-variant-numeric: tabular-nums; }
+.a-zaman-girdi[aria-invalid="true"] { box-shadow: inset 0 -2px 0 var(--hata-yazi); }
+.a-zaman-ikon { flex: none; width: 36px; display: grid; place-items: center; border: 0; border-radius: 0 var(--r-orta) var(--r-orta) 0; background: transparent; color: var(--yazi2); }
+.a-zaman-ikon:hover, .a-zaman-ikon[aria-expanded="true"] { background: var(--zemin2); color: var(--yazi); }
+.a-zaman .a-secici-liste.a-zaman-liste { left: 0; right: auto; width: 340px; max-width: calc(100vw - 32px); min-width: 0; max-height: none; overflow: visible; padding: 10px; }
+.a-zaman .a-secici-liste.a-parca-liste { left: 0; right: auto; width: 100%; min-width: 0; max-height: 240px; }
+.a-parca-liste .a-secenek { justify-content: center; font-variant-numeric: tabular-nums; }
+.a-parca-liste .a-secenek[aria-selected="true"] { background: var(--zemin2); }
 .a-zaman-bas { display: flex; align-items: center; justify-content: space-between; gap: 8px; margin-bottom: 6px; }
 .a-zaman-ay { font-weight: 700; }
 .a-zaman-gunler { display: grid; grid-template-columns: repeat(7, 1fr); gap: 2px; }
@@ -617,12 +629,7 @@ a.a-yuz:hover { border-color: var(--kenar-alan); background: var(--zemin); }
 .a-zaman-gun:hover, .a-zaman-gun:focus-visible { background: var(--zemin2); }
 .a-zaman-gun.a-zaman-bugun { box-shadow: inset 0 0 0 1px var(--kenar-alan); font-weight: 700; }
 .a-zaman-gun[aria-pressed="true"] { background: var(--vurgu); color: var(--vurgu-uzeri); font-weight: 700; }
-.a-zaman-saat { display: flex; align-items: center; gap: 8px; margin-top: 10px; padding-top: 10px; border-top: 1px solid var(--kenar); }
-.a-zaman-saat .a-etiket { margin: 0; }
-.a-zaman-sayac { display: flex; flex-direction: column; align-items: center; }
-.a-zaman-deger { min-width: 2.2em; text-align: center; font-size: var(--boy-bolum); font-weight: 700; font-variant-numeric: tabular-nums; }
 .a-zaman-iki { font-size: var(--boy-bolum); font-weight: 700; }
-.a-zaman-tamam { margin-left: auto; }
 .a-secim-ara { margin: 0 0 6px; }
 .a-secim-yok { margin: 0 0 6px; }
 
@@ -661,7 +668,7 @@ a.a-yuz:hover { border-color: var(--kenar-alan); background: var(--zemin); }
 .a-bolum-eylem { display: flex; justify-content: flex-end; align-items: center; flex-wrap: wrap; gap: 8px; margin: 12px 0 0; }
 .a-bolum-eylem .a-adim-not { margin-right: auto; }
 .a-tablo-zgecmis .a-k-varlik { width: 32%; } .a-tablo-zgecmis .a-k-verildi { width: 20%; } .a-tablo-zgecmis .a-k-alindi { width: 22%; } .a-tablo-zgecmis .a-k-not { width: 26%; }
-/* M2 (müşteri ve tesis) — SGK destis no 26 hane bölünmez (anayasa 3.11): sütunu ~230 px'e göre */
+/* M2 (müşteri ve tesis) — SGK DETSİS no 26 hane bölünmez (anayasa 3.11): sütunu ~230 px'e göre */
 .a-tablo-musteri .a-k-unvan { width: 27%; } .a-tablo-musteri .a-k-tesis { width: 17%; } .a-tablo-musteri .a-k-ekipman { width: 9%; }
 .a-tablo-musteri .a-k-portal { width: 12%; } .a-tablo-musteri .a-k-sonraki { width: 15%; } .a-tablo-musteri .a-k-durum { width: 20%; }
 .a-tablo-tesis .a-k-tesis { width: 17%; } .a-tablo-tesis .a-k-adres { width: 20%; } .a-tablo-tesis .a-k-sgk { width: 29%; }
@@ -785,6 +792,8 @@ a.a-yuz:hover { border-color: var(--kenar-alan); background: var(--zemin); }
 .a-satir + .a-satir { border-top: 1px solid var(--kenar); }
 .a-satir dt { font-weight: 700; }
 .a-satir dd { margin: 0; overflow-wrap: anywhere; }
+.a-satirlar-form .a-satir { align-items: center; }   /* rapor firma bilgileri: sağda alan (tarih · saat · dakika ayrı) */
+.a-satir dt label { font: inherit; color: inherit; }
 .a-teklif { margin-top: 12px; background: var(--kart); border: 1px solid var(--kenar); border-radius: var(--r-orta); }
 .a-teklif-baslik { margin: 0; padding: 12px; font-size: var(--boy-govde); font-weight: 700; border-bottom: 1px solid var(--kenar); }
 .a-teklif-kap { padding: 12px; overflow-x: auto; }
@@ -1040,6 +1049,7 @@ a.a-yuz:hover { border-color: var(--kenar-alan); background: var(--zemin); }
   /* plan içi etiket : değer satırları telefonda alt alta (kimlik bölünmez, taşmasın) */
   .a-satir { grid-template-columns: minmax(0, 1fr); gap: 2px; }
   /* tarih seçici telefonda alanın genişliğinde (kartın dışına taşmaz); gün tuşları arası boşluksuz, yükseklik 44 kalır */
+  .a-zaman-tarih { flex-basis: 100%; }   /* telefonda tarih tam satır, saat : dakika altında; takvim alanın genişliğinde */
   .a-zaman .a-secici-liste.a-zaman-liste { width: 100%; max-width: none; padding: 6px; }
   .a-zaman-gunler { gap: 0; }
   /* teklif kalemi telefonda: tür tam satır, altında adet · fiyat, tutar · kaldır */

@@ -31,7 +31,7 @@
   MK.serit = function (tur, ik, metin, id) {
     return '<div class="a-serit a-serit-' + tur + '"' + (id ? ' id="' + id + '"' : "") + ">" + ikon(ik, "a-ikon-kucuk") + "<span>" + metin + "</span></div>";
   };
-  /* genis: true → telefonda tam satır · "tam" → her bantta tam satır (tablo taşıyan alan) · "cift" → her bantta iki sütun (bölünmez uzun kimlik, ör. 26 haneli SGK destis no) */
+  /* genis: true → telefonda tam satır · "tam" → her bantta tam satır (tablo taşıyan alan) · "cift" → her bantta iki sütun (bölünmez uzun kimlik, ör. 26 haneli SGK DETSİS no) */
   MK.bilgi = function (etiket, deger, genis) { return '<div class="a-bilgi-oge' + (genis === "tam" ? " a-bilgi-genis a-bilgi-tam" : genis === "cift" ? " a-bilgi-genis a-bilgi-cift" : genis ? " a-bilgi-genis" : "") + '"><dt>' + etiket + "</dt><dd>" + deger + "</dd></div>"; };
   /* genel tuş: o = { eylem, ad, ikon, sinif (varsayılan birincil), kapali, sebepId, veri: { id: … } → data-id } */
   MK.tus = function (o) {
@@ -376,72 +376,114 @@
       }).join("") + "</div></div>";
   };
 
-  /* ── TARİH / SAAT SEÇİCİ (reisim 2026-09-27: "tıklayınca tarih seçtiren bi takvim açılsın ve saat dakika seçebileceğim bir kısım olsun
-     otomatik dolu gelsin ama tıklayınca seçerek değiştirebileyim") — elle yazma yok; yerli tarih girdisi yok (kalıp 19'la aynı gerekçe).
-     zaman({ id, ad, deger ("YYYY-MM-DD" ya da "YYYY-MM-DDTHH:MM"), saat: true }) — her seçimde MK.onZaman(id, deger) çağrılır;
-     sayfa yeniden çizmez, gerekirse MK.zamanAyarla(id, deger) ile başka alanı günceller. */
+  /* ── TARİH / SAAT ALANI (reisim 2026-09-27: "tıklayınca tarih seçtiren bi takvim açılsın ve saat dakika seçebileceğim bir kısım olsun
+     otomatik dolu gelsin ama tıklayınca seçerek değiştirebileyim"; ardından örnek ekranla: "tarih ve saat ayrı el ile de girilebiliyo
+     yandaki küçük ikonlara basınca seçiledebiliyor el ile yazınca saat için aşağıda ilgili saatler çıkıyor").
+     zaman({ id, ad, deger ("YYYY-MM-DD" ya da "YYYY-MM-DDTHH:MM"), saat: true }) → tarih (GG.AA.YYYY, yazılır ya da takvimden) ·
+     saatliyse saat ve dakika ayrı alan (yazılır; yazarken uyan değerler altta listelenir; simgeyle tam liste). Geçerli her değişiklikte
+     MK.onZaman(id, deger); sayfa yeniden çizmez, başka alanı MK.zamanAyarla(id, deger) ile günceller. Yerli tarih girdisi yok (kalıp 19). */
   var AY_UZUN = ["Ocak", "Şubat", "Mart", "Nisan", "Mayıs", "Haziran", "Temmuz", "Ağustos", "Eylül", "Ekim", "Kasım", "Aralık"];
   var iki = function (n) { return ("0" + n).slice(-2); };
-  var zamanGor = function (d, saat) { return d ? MK.tarihYaz(d) + (saat ? " · " + d.slice(11, 16) : "") : "Seçin"; };
+  var tarihOku = function (s) {
+    var m = /^(\d{2})\.(\d{2})\.(\d{4})$/.exec(String(s).trim()); if (!m) return null;
+    var iso = m[3] + "-" + m[2] + "-" + m[1], d = new Date(iso + "T12:00:00");
+    return isNaN(d) || d.getDate() !== +m[1] || d.getMonth() + 1 !== +m[2] ? null : iso;
+  };
   function zamanIc(k) {
-    var d = k.dataset.deger, saat = k.dataset.saat === "1", ay = k.dataset.ay, y = +ay.slice(0, 4), m = +ay.slice(5, 7) - 1;
+    var d = k.dataset.deger, ay = k.dataset.ay, y = +ay.slice(0, 4), m = +ay.slice(5, 7) - 1;
     var ilk = (new Date(y, m, 1).getDay() + 6) % 7, gunSay = new Date(y, m + 1, 0).getDate(), h = "";
     for (var i = 0; i < ilk; i++) h += "<span></span>";
     for (var g = 1; g <= gunSay; g++) {
       var iso = y + "-" + iki(m + 1) + "-" + iki(g);
-      h += '<button type="button" class="a-zaman-gun' + (iso === MK.BUGUN ? " a-zaman-bugun" : "") + '" data-zaman-gun="' + iso + '" aria-pressed="' + (!!d && d.slice(0, 10) === iso) + '" aria-label="' + MK.tarihYaz(iso) + '">' + g + "</button>";
+      h += '<button type="button" class="a-zaman-gun' + (iso === MK.BUGUN ? " a-zaman-bugun" : "") + '" data-zaman-gun="' + iso + '" aria-pressed="' + (!!d && d.slice(0, 10) === iso) + '" aria-label="' + MK.tarihNo(iso) + '">' + g + "</button>";
     }
-    var adim = function (k2, yon, ad) { return '<button type="button" class="a-ikon-tus a-zaman-adim" data-zaman-adim="' + k2 + yon + '" aria-label="' + ad + '">' + ikon(yon === "+" ? "chevron-up" : "chevron-down") + "</button>"; };
     return '<div class="a-zaman-bas">' + '<button type="button" class="a-ikon-tus" data-zaman-ay="-1" aria-label="Önceki ay">' + ikon("chevron-left") + "</button>" +
       '<span class="a-zaman-ay">' + AY_UZUN[m] + " " + y + '</span><button type="button" class="a-ikon-tus" data-zaman-ay="1" aria-label="Sonraki ay">' + ikon("chevron-right") + "</button></div>" +
-      '<div class="a-zaman-gunler">' + ["Pt", "Sa", "Ça", "Pe", "Cu", "Ct", "Pz"].map(function (x) { return '<span class="a-zaman-gun-ad" aria-hidden="true">' + x + "</span>"; }).join("") + h + "</div>" +
-      (saat ? '<div class="a-zaman-saat"><span class="a-etiket">Saat</span>' +
-        '<div class="a-zaman-sayac">' + adim("s", "+", "Saati artır") + '<span class="a-zaman-deger" data-zaman-s>' + (d ? d.slice(11, 13) : "--") + "</span>" + adim("s", "-", "Saati azalt") + "</div>" +
-        '<span class="a-zaman-iki" aria-hidden="true">:</span>' +
-        '<div class="a-zaman-sayac">' + adim("d", "+", "Dakikayı artır") + '<span class="a-zaman-deger" data-zaman-d>' + (d ? d.slice(14, 16) : "--") + "</span>" + adim("d", "-", "Dakikayı azalt") + "</div>" +
-        '<button type="button" class="a-tus a-tus-birincil a-zaman-tamam" data-zaman-tamam>Tamam</button></div>' : "");
+      '<div class="a-zaman-gunler">' + ["Pt", "Sa", "Ça", "Pe", "Cu", "Ct", "Pz"].map(function (x) { return '<span class="a-zaman-gun-ad" aria-hidden="true">' + x + "</span>"; }).join("") + h + "</div>";
   }
+  /* saat (00–23) ya da dakika (00–59) alanı: yazılır; liste yazılana uyanları gösterir */
+  var parca = function (id, p, deger, ad) {
+    var n = p === "s" ? 24 : 60, sec = "";
+    for (var i = 0; i < n; i++) sec += '<button class="a-secenek" type="button" role="option" aria-selected="' + (iki(i) === deger) + '" data-zaman-sec="' + iki(i) + '">' + iki(i) + "</button>";
+    return '<div class="a-secici a-zaman-parca" data-parca="' + p + '"><input class="a-girdi a-zaman-girdi" id="' + id + "-" + p + '" data-zaman-parca="' + p + '" value="' + deger +
+      '" inputmode="numeric" maxlength="2" autocomplete="off" aria-label="' + ad + (p === "s" ? " saati" : " dakikası") + '">' +
+      '<button class="a-zaman-ikon" type="button" data-zaman-liste="' + p + '" aria-haspopup="listbox" aria-expanded="false" aria-label="' + (p === "s" ? "Saat" : "Dakika") + ' seç">' + ikon("clock", "a-ikon-kucuk") + "</button>" +
+      '<div class="a-secici-liste a-parca-liste" role="listbox" aria-label="' + (p === "s" ? "Saat" : "Dakika") + '" hidden>' + sec + "</div></div>";
+  };
   MK.zaman = function (o) {
-    var d = o.deger || "", ay = (d || MK.BUGUN).slice(0, 7);
-    return '<div class="a-secici a-secim a-zaman" data-secim-kap="' + o.id + '" data-zaman="' + o.id + '" data-deger="' + d + '" data-saat="' + (o.saat ? 1 : 0) + '" data-ay="' + ay + '">' +
-      '<button class="a-girdi a-secim-tus" type="button" id="' + o.id + '" aria-haspopup="dialog" aria-expanded="false" data-zaman-ac="' + o.id + '"' + (o.tanim ? ' aria-describedby="' + o.tanim + '"' : "") + ">" +
-      '<span class="a-kirp' + (d ? "" : " a-secim-bos") + '">' + zamanGor(d, o.saat) + "</span>" + ikon("calendar", "a-ikon-kucuk") + "</button>" +
-      '<div class="a-secici-liste a-zaman-liste" role="dialog" aria-label="' + kacis(o.ad) + '" hidden></div></div>';
+    var d = o.deger || "";
+    return '<div class="a-zaman' + (o.saat ? " a-zaman-saatli" : "") + '" data-zaman="' + o.id + '" data-deger="' + d + '" data-saat="' + (o.saat ? 1 : 0) + '" data-ay="' + (d || MK.BUGUN).slice(0, 7) + '">' +
+      '<div class="a-secici a-zaman-tarih"><input class="a-girdi a-zaman-girdi" id="' + o.id + '" data-zaman-tarih value="' + (d ? MK.tarihNo(d) : "") + '" inputmode="numeric" maxlength="10" placeholder="GG.AA.YYYY" autocomplete="off"' +
+        (o.tanim ? ' aria-describedby="' + o.tanim + '"' : "") + ">" +
+        '<button class="a-zaman-ikon" type="button" data-zaman-ac aria-haspopup="dialog" aria-expanded="false" aria-label="Takvimden seç">' + ikon("calendar", "a-ikon-kucuk") + "</button>" +
+        '<div class="a-secici-liste a-zaman-liste" role="dialog" aria-label="' + kacis(o.ad) + '" hidden></div></div>' +
+      (o.saat ? parca(o.id, "s", d ? d.slice(11, 13) : "", o.ad) + '<span class="a-zaman-iki" aria-hidden="true">:</span>' + parca(o.id, "d", d ? d.slice(14, 16) : "", o.ad) : "") + "</div>";
   };
   MK.zamanAyarla = function (id, d) {
     var k = document.querySelector('[data-zaman="' + id + '"]'); if (!k) return;
     k.dataset.deger = d; k.dataset.ay = (d || MK.BUGUN).slice(0, 7);
-    var s = k.querySelector(".a-secim-tus .a-kirp"); s.textContent = zamanGor(d, k.dataset.saat === "1"); s.classList.toggle("a-secim-bos", !d);
+    var t = k.querySelector("[data-zaman-tarih]"); if (document.activeElement !== t) t.value = d ? MK.tarihNo(d) : "";
+    if (k.dataset.saat === "1") ["s", "d"].forEach(function (p) {
+      var g = k.querySelector('[data-zaman-parca="' + p + '"]'); if (document.activeElement !== g) g.value = d ? (p === "s" ? d.slice(11, 13) : d.slice(14, 16)) : "";
+    });
     var l = k.querySelector(".a-zaman-liste"); if (!l.hidden) l.innerHTML = zamanIc(k);
   };
-  /* seçici içindeki tıklamalar: true dönerse iş bitti */
+  var zamanYay = function (k, yeni) { k.dataset.deger = yeni; k.dataset.ay = yeni.slice(0, 7); if (MK.onZaman) MK.onZaman(k.dataset.zaman, yeni); };
+  var saatliDeger = function (k, gun, s, dk) { var d = k.dataset.deger || MK.simdi(); return k.dataset.saat === "1" ? gun + "T" + (s || d.slice(11, 13)) + ":" + (dk || d.slice(14, 16)) : gun; };
+  /* yazma: tarih geçerli olunca, saat / dakika iki hane ve aralıkta olunca değer yayılır; saat yazarken uyan değerler listelenir */
+  function zamanYaz(t) {
+    var k = t.closest("[data-zaman]"); if (!k) return false;
+    if (t.dataset.zamanTarih !== undefined) {
+      var g = tarihOku(t.value);
+      if (g) { t.removeAttribute("aria-invalid"); zamanYay(k, saatliDeger(k, g)); } else if (t.value.length >= 10) t.setAttribute("aria-invalid", "true");
+      return true;
+    }
+    if (t.dataset.zamanParca) {
+      var p = t.dataset.zamanParca, kap = t.closest(".a-secici"), l = kap.querySelector(".a-parca-liste"), v = t.value.replace(/\D/g, ""), n = 0;
+      l.querySelectorAll(".a-secenek").forEach(function (b) { var uy = !v || b.dataset.zamanSec.indexOf(v) === 0; b.hidden = !uy; if (uy) n++; });
+      listeleriKapat(kap); l.hidden = !v || !n; kap.querySelector("[data-zaman-liste]").setAttribute("aria-expanded", String(!l.hidden));
+      if (v.length === 2 && +v < (p === "s" ? 24 : 60)) {
+        var d = k.dataset.deger || MK.simdi(), gun = d.slice(0, 10);
+        zamanYay(k, p === "s" ? saatliDeger(k, gun, v) : saatliDeger(k, gun, null, v));
+        l.hidden = true; kap.querySelector("[data-zaman-liste]").setAttribute("aria-expanded", "false");
+      }
+      return true;
+    }
+    return false;
+  }
+  /* tıklamalar: true dönerse iş bitti */
   function zamanTikla(e) {
-    var el = e.target.closest("[data-zaman-ac],[data-zaman-gun],[data-zaman-ay],[data-zaman-adim],[data-zaman-tamam]"); if (!el) return false;
-    var k = el.closest("[data-zaman]"), id = k.dataset.zaman, l = k.querySelector(".a-zaman-liste"), tus = $(id), d = k.dataset.deger, saat = k.dataset.saat === "1";
-    var kapat = function () { l.hidden = true; tus.setAttribute("aria-expanded", "false"); tus.focus(); };
-    var yaz = function (yeni, odak) { MK.zamanAyarla(id, yeni); if (MK.onZaman) MK.onZaman(id, yeni); if (odak) { var f = l.querySelector(odak); if (f) f.focus(); } };
-    if (el.dataset.zamanAc) {
-      var ac = l.hidden; listeleriKapat(k);
-      if (ac) { k.dataset.ay = (d || MK.BUGUN).slice(0, 7); l.innerHTML = zamanIc(k); }
-      l.hidden = !ac; tus.setAttribute("aria-expanded", String(ac));
+    var el = e.target.closest("[data-zaman-ac],[data-zaman-gun],[data-zaman-ay],[data-zaman-liste],[data-zaman-sec]"); if (!el) return false;
+    var k = el.closest("[data-zaman]"), kap = el.closest(".a-secici");
+    if (el.dataset.zamanAc !== undefined) {
+      var l = kap.querySelector(".a-zaman-liste"), ac = l.hidden; listeleriKapat(kap);
+      if (ac) { k.dataset.ay = (k.dataset.deger || MK.BUGUN).slice(0, 7); l.innerHTML = zamanIc(k); }
+      l.hidden = !ac; el.setAttribute("aria-expanded", String(ac));
       if (ac) (l.querySelector('[data-zaman-gun][aria-pressed="true"]') || l.querySelector(".a-zaman-bugun") || l.querySelector("[data-zaman-gun]")).focus();
       return true;
     }
-    if (el.dataset.zamanTamam !== undefined) { kapat(); return true; }
     if (el.dataset.zamanAy) {
       var t = new Date(+k.dataset.ay.slice(0, 4), +k.dataset.ay.slice(5, 7) - 1 + +el.dataset.zamanAy, 1);
-      k.dataset.ay = t.getFullYear() + "-" + iki(t.getMonth() + 1); l.innerHTML = zamanIc(k);
-      l.querySelector('[data-zaman-ay="' + el.dataset.zamanAy + '"]').focus(); return true;
+      k.dataset.ay = t.getFullYear() + "-" + iki(t.getMonth() + 1); kap.querySelector(".a-zaman-liste").innerHTML = zamanIc(k);
+      kap.querySelector('[data-zaman-ay="' + el.dataset.zamanAy + '"]').focus(); return true;
     }
     if (el.dataset.zamanGun) {
-      var g = el.dataset.zamanGun;
-      if (!saat) { yaz(g); kapat(); return true; }
-      yaz(g + "T" + (d ? d.slice(11, 16) : MK.SAAT), '[data-zaman-gun="' + g + '"]'); return true;
+      zamanYay(k, saatliDeger(k, el.dataset.zamanGun)); MK.zamanAyarla(k.dataset.zaman, k.dataset.deger);
+      listeleriKapat(null); kap.querySelector("[data-zaman-ac]").focus(); return true;
     }
-    if (el.dataset.zamanAdim) {
-      var z = d || MK.simdi(), sa = +z.slice(11, 13), dk = +z.slice(14, 16), a = el.dataset.zamanAdim, b = a[1] === "+" ? 1 : -1;
-      if (a[0] === "s") sa = (sa + b + 24) % 24; else dk = (dk + b + 60) % 60;
-      yaz(z.slice(0, 11) + iki(sa) + ":" + iki(dk), '[data-zaman-adim="' + a + '"]'); return true;
+    if (el.dataset.zamanListe) {
+      var pl = kap.querySelector(".a-parca-liste"), pac = pl.hidden; listeleriKapat(kap);
+      pl.querySelectorAll(".a-secenek").forEach(function (b) { b.hidden = false; });
+      pl.hidden = !pac; el.setAttribute("aria-expanded", String(pac));
+      if (pac) { var s = pl.querySelector('[aria-selected="true"]') || pl.querySelector(".a-secenek"); s.focus(); }
+      return true;
+    }
+    if (el.dataset.zamanSec) {
+      var pp = kap.dataset.parca, gun2 = (k.dataset.deger || MK.simdi()).slice(0, 10);
+      zamanYay(k, pp === "s" ? saatliDeger(k, gun2, el.dataset.zamanSec) : saatliDeger(k, gun2, null, el.dataset.zamanSec));
+      MK.zamanAyarla(k.dataset.zaman, k.dataset.deger);
+      kap.querySelectorAll(".a-secenek").forEach(function (b) { b.setAttribute("aria-selected", String(b === el)); });
+      listeleriKapat(null); kap.querySelector("[data-zaman-parca]").focus(); return true;
     }
     return false;
   }
@@ -570,6 +612,7 @@
     if (t.dataset && t.dataset.ara) {   /* arama: yalnız liste yeniden çizilir, kutu yerinde kalır (odak çalınmaz) */
       var on = t.dataset.ara; SZ[on].ara = t.value; SZ[on].sayfa = 1; t.closest(".a-ara").classList.toggle("a-dolu", !!t.value); yenile(on); return;
     }
+    if (zamanYaz(t)) return;   /* tarih / saat alanı */
     if (t.dataset && t.dataset.secimAra) {   /* seçim alanının arama kutusu: seçenekleri süzer */
       var q = MK.tr(t.value.trim()), l = t.closest(".a-secici-liste"), n = 0;
       l.querySelectorAll(".a-secenek").forEach(function (b) { var g = !q || MK.tr(b.textContent).indexOf(q) >= 0; b.hidden = !g; if (g) n++; });

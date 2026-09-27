@@ -2,8 +2,8 @@
  "maket": "m8",
  "tarih": "2026-09-27",
  "arac": "tools/olc-bulut.mjs --etkilesim (başsız tarayıcı, 1920 açık tema; gen verilen denemede o genişlik)",
- "toplam": 25,
- "gecen": 25,
+ "toplam": 27,
+ "gecen": 27,
  "denemeler": [
   {
    "ad": "kriter seçilince sayaç güncellenir, odak seçimde",
@@ -111,42 +111,56 @@
    "gecti": true
   },
   {
-   "ad": "tarihler elle yazılmaz, otomatik dolu; metot yok",
+   "ad": "firma bilgileri satırları: tarih · saat · dakika ayrı, otomatik dolu, SGK DETSİS no, takip kontrol; metot yok",
    "gen": 1920,
    "sayfa": "maket/rapor.html",
    "hash": "#/r/ET-1009",
    "gecti": true
   },
   {
-   "ad": "başlangıçta gün seçilince sonraki kontrol kendiliğinden, seçici açık kalır",
+   "ad": "takvimden gün seçilince sonraki kontrol kendiliğinden, takvim kapanır",
    "gen": 1920,
    "sayfa": "maket/rapor.html",
    "hash": "#/r/KP-1004",
    "gecti": true
   },
   {
-   "ad": "saat ve dakika tuşla değişir, odak tuşta",
+   "ad": "tarih elle yazılınca sonraki kontrol kendiliğinden (odak yerinde)",
    "gen": 1920,
    "sayfa": "maket/rapor.html",
    "hash": "#/r/KP-1004",
    "gecti": true
   },
   {
-   "ad": "sonraki kontrol elle seçilince başlangıç değişse de kalır",
+   "ad": "saat yazılınca yalnız uyan saatler listelenir",
    "gen": 1920,
    "sayfa": "maket/rapor.html",
    "hash": "#/r/KP-1004",
    "gecti": true
   },
   {
-   "ad": "Tamam seçiciyi kapatır, odak alanda",
+   "ad": "saat iki hane yazılınca yerleşir, liste kapanır",
    "gen": 1920,
    "sayfa": "maket/rapor.html",
-   "hash": "#/r/ET-1009",
+   "hash": "#/r/KP-1004",
    "gecti": true
   },
   {
-   "ad": "Escape seçiciyi kapatır",
+   "ad": "dakika simgeyle listeden seçilir, odak alanda",
+   "gen": 1920,
+   "sayfa": "maket/rapor.html",
+   "hash": "#/r/KP-1004",
+   "gecti": true
+  },
+  {
+   "ad": "sonraki kontrol elle yazılınca başlangıç değişse de kalır",
+   "gen": 1920,
+   "sayfa": "maket/rapor.html",
+   "hash": "#/r/KP-1004",
+   "gecti": true
+  },
+  {
+   "ad": "Escape takvimi kapatır, odak simgede",
    "gen": 1920,
    "sayfa": "maket/rapor.html",
    "hash": "#/r/ET-1009",

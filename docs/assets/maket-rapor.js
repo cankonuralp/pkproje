@@ -35,14 +35,14 @@
     var ts0 = MV.tesis(e.tesis);
     var r = { e: e, t: t, k: k, ts: ts0, basladi: e.tesis === "t1" ? BASLADI : ts0.ptarih ? ts0.ptarih + "T" + (ts0.psaat ? ts0.psaat[0] : "09:00") : null, no: k >= 0 ? MV.raporNo("0926", 786 + k) : q.no || "—", durum: k >= 0 ? (k < 3 ? "onayda" : "taslak") : (DURUM[q.durum] ? q.durum : "onaylandi"),
       olustu: k >= 0 ? saatEkle(10 + k * 6) : null, kisi: t.b === "e" ? "ea" : "mk", kriter: kr.map(function () { return { c: "", not: "" }; }), test: ts.map(function () { return ""; }),
-      foto: 0, amac: "", sonuc: "", notlar: "", sigorta: null, bas: "", bit: "", sonraki: "", sonrakiEl: false, bitEl: false, geri: null, geriler: [], pano: false, gonderildi: null };
+      foto: 0, amac: "", sonuc: "", notlar: "", sigorta: null, bas: "", bit: "", sonraki: "", sonrakiEl: false, bitEl: false, takip: "", rtarih: "", rtarihEl: false, tel: "", bolumAd: "", geri: null, geriler: [], pano: false, gonderildi: null };
     var dolu = function () {
       r.kriter.forEach(function (x) { x.c = "uygun"; });
       r.test = ts.map(function (x) { return x.ornek; }); r.foto = 2; r.amac = "Üretim ve bakım"; r.sonuc = "kullanilir";
     };
     if (r.durum !== "taslak") { dolu(); r.gonderildi = r.olustu ? saatEkle(60 + k * 9) : null; }
     /* otomatik dolu: başlangıç rapor açıldığında, bitiş gönderildiğinde (taslakta şimdi), sonraki kontrol başlangıç + periyot */
-    r.bas = r.olustu || r.basladi || MK.simdi(); r.bit = r.gonderildi || MK.simdi(); r.sonraki = sonrakiHesap(r);
+    r.bas = r.olustu || r.basladi || MK.simdi(); r.bit = r.gonderildi || MK.simdi(); r.sonraki = sonrakiHesap(r); r.rtarih = r.bas.slice(0, 10);
     if (e.kod === "ET-1009") {   /* elektrik iç tesisatı: yarıda; pano sigortaları okunmadı; inspector'ın zimmetinde kalibrasyonu geçmiş cihaz */
       [0, 1, 2].forEach(function (i) { r.kriter[i].c = i === 2 ? "uygundegil" : "uygun"; });
       r.kriter[2].foto = 1; r.kriter[2].not = "Priz devresindeki kaçak akım rölesinin test düğmesi çalışmıyor; açma süresi ölçümle doğrulandı.";
@@ -79,7 +79,7 @@
     var oneri = r.sigorta ? r.sigorta.filter(function (x) { return x.durum !== "onayli"; }).length : 0;
     return [
       { ok: !!r.amac.trim(), metin: r.amac.trim() ? "Kullanım amacı yazıldı" : "Kullanım amacı yazılmadı", bolum: "r-b2" },
-      { ok: r.bit >= r.bas, metin: "Bitiş başlangıçtan önce", bolum: "r-bk" },
+      { ok: r.bit >= r.bas, metin: "Bitiş başlangıçtan önce", bolum: "r-b1" },
       { ok: !gecti.length, metin: gecti.length ? "Kalibrasyonu geçmiş cihaz: " + gecti.map(function (v) { return v.seri; }).join(", ") : "Ölçüm cihazlarının kalibrasyonu geçerli", bolum: "r-b3", engel: true },
       { ok: cev === r.kriter.length, metin: cev + " / " + r.kriter.length + " kriter cevaplandı", bolum: "r-b4" },
       { ok: !kusurNotsuz, metin: kusurNotsuz ? kusurNotsuz + " kusurun açıklaması yazılmadı" : "Kusur açıklamaları tamam", bolum: "r-b4", gizle: !kusurlar(r).length },
@@ -110,14 +110,19 @@
     return k === "bit" && r.bit < r.bas ? "Bitiş başlangıçtan önce." : k === "sonraki" && r.sonraki <= r.bas.slice(0, 10) ? "Kontrol tarihinden sonra olmalı." : "";
   }
   function uyariYaz(id, metin) {
-    var g = $(id); if (!g) return; var kap = g.closest(".a-alan-grup"), p = kap.querySelector(".a-ipucu");
+    var g = $(id); if (!g) return; var kap = g.closest(".a-alan-grup, .a-satir dd"), p = kap.querySelector(".a-ipucu");
     if (metin) { g.setAttribute("aria-invalid", "true"); if (!p) { p = document.createElement("p"); p.className = "a-ipucu a-ipucu-uyari"; p.id = id + "-ipucu"; kap.appendChild(p); } p.textContent = metin; }
     else { g.removeAttribute("aria-invalid"); if (p) p.remove(); }
   }
+  /* firma bilgileri satırı: solda etiket, sağda değer ya da alan (reisim 2026-09-27, örnek ekran) */
+  var satir = function (etiket, deger, id) { return '<div class="a-satir"><dt>' + (id ? '<label for="' + id + '">' + etiket + "</label>" : etiket) + "</dt><dd>" + deger + "</dd></div>"; };
   var tarihAlan = function (r, oku, k, etiket, saat) {
     var id = "r-" + k, h = oku ? "" : tarihUyari(r, k);
-    return MK.alan({ id: id, etiket: etiket, hata: h,
-      girdi: oku ? okuGirdi(id, saat ? MK.tarihYaz(r[k]) + " · " + r[k].slice(11, 16) : MK.tarihYaz(r[k])) : MK.zaman({ id: id, ad: etiket, deger: r[k], saat: saat, tanim: id + "-ipucu" }) });
+    if (oku) return satir(etiket, r[k] ? (saat ? MK.zamanYaz(r[k]) : MK.tarihNo(r[k])) : "-");
+    return satir(etiket, MK.zaman({ id: id, ad: etiket, deger: r[k], saat: saat, tanim: id + "-ipucu" }) + (h ? '<p class="a-ipucu a-ipucu-uyari" id="' + id + '-ipucu">' + h + "</p>" : ""), id);
+  };
+  var metinAlan = function (r, oku, k, etiket, en) {
+    return satir(etiket, oku ? (kacis(r[k]) || "-") : MK.girdi({ id: "r-" + k, alan: k, deger: r[k], ek: ' maxlength="' + en + '"' }), oku ? null : "r-" + k);
   };
   function ciz(odak) {
     var kod = (/^#\/r\/([A-Z0-9-]+)/.exec(location.hash) || [])[1], r = kod ? rapor(kod) : null;
@@ -148,26 +153,35 @@
           return '<li><span class="a-gecmis-zaman">' + MK.zamanYaz(g.zaman) + '</span><span class="a-gecmis-ne"><b>' + kacis(MV.kisi(g.kim).ad) + "</b> · " + kacis(g.gerekce) + "</span></li>"; }).join("") + "</ol>",
         '<span class="a-sayac"><b>' + r.geriler.length + "</b> kez</span>") : "") +
       '<div class="a-rapor-bolumler">' +
-      /* 1 · FİRMA BİLGİLERİ: türün rapor formatından bağımsız, her raporda aynı (reisim 2026-09-26) */
-      bolum(1, "r-b1", "Firma bilgileri", '<dl class="a-bilgi">' +
-          bilgi("Firma ünvanı", kacis(MV.musteri(PL.m).unvan), true) + bilgi("Adres", kacis(PL.adres + ", " + PL.ilce + " / " + PL.il), true) +
-          bilgi("SGK destis no", '<span class="a-kod a-kod-uzun">' + PL.sgk + "</span>", "cift") +
-          bilgi("İSG-KATİP sözleşme ID", isg ? '<span class="a-kod">' + isg.no + "</span>" : '<span class="a-uyari-metin">Yok</span>') + "</dl>") +
-      bolum(2, "r-bk", "Kontrol bilgileri", '<div class="a-form">' +
-          tarihAlan(r, oku, "bas", "Başlangıç", true) + tarihAlan(r, oku, "bit", "Bitiş", true) + tarihAlan(r, oku, "sonraki", "Sonraki kontrol", false) +
-        "</div>") +
-      bolum(3, "r-b2", "Ekipman bilgileri", '<dl class="a-bilgi">' + bilgi("Kod", '<span class="a-kod">' + e.kod + "</span>") + bilgi("Marka / model", kacis(e.marka + " " + e.model)) +
+      /* 1 · FİRMA BİLGİLERİ: türün rapor formatından bağımsız, her raporda aynı (reisim 2026-09-26); 2026-09-27 örnek ekranla: etiket solda,
+         değer ya da alan sağda, satır satır; kontrol tarihleri de burada (ayrı "Kontrol bilgileri" bölümü kalktı). Kayıttan gelen değerler
+         (firma, e-posta, adres, SGK DETSİS no, İSG-KATİP ID, rapor no) raporda değişmez (160); telefon ve ekipman bölümü elle. */
+      bolum(1, "r-b1", "Firma bilgileri", '<dl class="a-satirlar a-satirlar-form">' +
+          satir("Firma adı", kacis(MV.musteri(PL.m).unvan)) +
+          satir("E-posta", kacis(MV.musteri(PL.m).eposta)) +
+          metinAlan(r, oku, "tel", "Telefon", 20) +
+          tarihAlan(r, oku, "bas", "Periyodik kontrol başlangıç tarihi ve saati", true) +
+          tarihAlan(r, oku, "bit", "Periyodik kontrol bitiş tarihi ve saati", true) +
+          tarihAlan(r, oku, "sonraki", "Bir sonraki periyodik kontrol tarihi", false) +
+          tarihAlan(r, oku, "takip", "Takip kontrol tarihi", false) +
+          satir("Adres", kacis(PL.adres + ", " + PL.ilce + " / " + PL.il)) +
+          satir("Rapor no", '<span class="a-kod">' + r.no + "</span>") +
+          tarihAlan(r, oku, "rtarih", "Rapor tarihi", false) +
+          satir("SGK DETSİS no", '<span class="a-kod a-kod-uzun">' + PL.sgk + "</span>") +
+          satir("İSG-KATİP sözleşme ID", isg ? '<span class="a-kod">' + isg.no + "</span>" : '<span class="a-uyari-metin">Yok</span>') +
+          metinAlan(r, oku, "bolumAd", "Ekipman bölümü", 60) + "</dl>") +
+      bolum(2, "r-b2", "Ekipman bilgileri", '<dl class="a-bilgi">' + bilgi("Kod", '<span class="a-kod">' + e.kod + "</span>") + bilgi("Marka / model", kacis(e.marka + " " + e.model)) +
           bilgi("Seri no", '<span class="a-kod">' + e.seri + "</span>") + bilgi("İmal yılı", e.imal) + bilgi("Kullanım yeri", kacis(e.konum)) +
           bilgi("Önceki kontrol", e.onceki ? MK.tarihYaz(e.onceki.tarih) + '<span class="a-alt-satir">' + kacis(e.onceki.sonuc) + " · <span class=\"a-rapor-no\">" + e.onceki.rapor + "</span></span>" : '<span class="a-deger-yok">İlk kontrol</span>') + "</dl>" +
         '<div class="a-form">' + MK.alan({ id: "r-amac", etiket: "Kullanım amacı", zorunlu: !oku, genis: true,
           girdi: MK.girdi({ id: "r-amac", alan: "amac", deger: r.amac, ek: ' maxlength="120"' + (oku ? " readonly" : ""), sinif: oku ? "a-girdi-oku" : "" }) }) + "</div>") +
       /* ölçüm cihazları: zimmetten gelir, seçilmez; tabloda yalnız cihaz · cihaz no · kalibrasyon tarihi (reisim 2026-09-26) */
-      bolum(4, "r-b3", "Ölçüm cihazları", "" +
+      bolum(3, "r-b3", "Ölçüm cihazları", "" +
         (ci.length ? '<div class="a-liste-kap">' + MK.tablo({ baslik: "Ölçüm cihazları", sinif: "a-tablo-olcum", sutunlar: CIHAZ, kayitlar: ci }) + "</div>" : '<p class="a-bos-satir">Zimmette bu gruba uygun cihaz yok.</p>') +
         (gecti.length && !oku ? '<div class="a-bolum-serit">' + MK.serit("hata", "circle-x", "Kalibrasyonu geçmiş cihaz: " + gecti.map(function (v) { return kacis(v.ad) + " " + v.seri; }).join(", ") + ". Rapor doldurulabilir ama onaya gönderilemez.", "r-kal-engel") +
           '</div><div class="a-eylem-cubugu a-bolum-serit">' + MK.git({ hedef: 9, hash: "#/?kisi=" + r.kisi, ad: "Zimmetlerim", ikon: "package", ne: "Zimmetler" }) + "</div>" : "")) +
       /* muayene kriterleri: solda kriter, sağda seçim — Uygun · Uygun değil · Uygulanamaz (reisim 2026-09-26) */
-      bolum(5, "r-b4", "Muayene kriterleri", "" +
+      bolum(4, "r-b4", "Muayene kriterleri", "" +
         r.kriter.map(function (x, i) {
           var ad = MV.kriterler(t)[i], kus = x.c === "uygundegil", secAd = (KRITER.filter(function (y) { return y[0] === x.c; })[0] || [])[1];
           return '<div class="a-kriter" id="r-k' + i + '"><p class="a-kriter-ad" id="r-ka' + i + '"><span class="a-kriter-no">' + (i + 1) + "</span><span>" + kacis(ad) + "</span></p>" +
@@ -176,18 +190,18 @@
               girdi: '<textarea class="a-alan a-alan-ince" id="r-kn' + i + '" data-alan="kn' + i + '" maxlength="300" aria-describedby="r-kn' + i + '-ipucu"' + (oku ? " readonly" : "") + ">" + kacis(x.not) + "</textarea>" }) +
               '<div class="a-fotolar">' + fotolar(x.foto || 0) + (oku ? "" : MK.tus({ eylem: "kusur-foto", ad: "Fotoğraf ekle", ikon: "camera", sinif: "a-tus-ikincil", veri: { i: i } })) + "</div></div>" : "") + "</div>";
         }).join(""), '<span class="a-sayac" id="r-kriter-say"><b>' + cevaplanan + "</b> / " + r.kriter.length + " madde</span>") +
-      bolum(6, "r-b5", "Test değerleri", '<div class="a-form">' + MV.testler(t).map(function (x, i) {
+      bolum(5, "r-b5", "Test değerleri", '<div class="a-form">' + MV.testler(t).map(function (x, i) {
           var s = testSonuc(x, r.test[i]);
           return MK.alan({ id: "r-t" + i, etiket: kacis(x.ad) + " (" + x.birim + ")", zorunlu: !oku, sonuc: '<span id="r-t' + i + '-sonuc">' + testIpucu(x, r.test[i]) + "</span>", hata: "",
             girdi: MK.girdi({ id: "r-t" + i, alan: "t" + i, deger: r.test[i], sinif: "a-girdi-sicil" + (oku ? " a-girdi-oku" : ""), ek: ' inputmode="decimal" maxlength="10"' + (oku ? " readonly" : "") + (s === false ? ' aria-invalid="true"' : "") }) });
         }).join("") + "</div>") +
-      (elektrik(t) ? bolum(7, "r-b6", "Pano sigortaları", sigortaHtml(r, oku)) : "") +
-      bolum(elektrik(t) ? 8 : 7, "r-b7", "Fotoğraflar", '<div class="a-fotolar">' + fotolar(r.foto) + (oku ? "" : MK.tus({ eylem: "foto-ekle", ad: "Fotoğraf çek", ikon: "camera", sinif: "a-tus-ikincil" })) + "</div>") +
+      (elektrik(t) ? bolum(6, "r-b6", "Pano sigortaları", sigortaHtml(r, oku)) : "") +
+      bolum(elektrik(t) ? 7 : 6, "r-b7", "Fotoğraflar", '<div class="a-fotolar">' + fotolar(r.foto) + (oku ? "" : MK.tus({ eylem: "foto-ekle", ad: "Fotoğraf çek", ikon: "camera", sinif: "a-tus-ikincil" })) + "</div>") +
       /* sonuç ve kanaat: Uygun · Uygun değil (reisim 2026-09-26); uygun değil madde varken "Uygun" uyarıdır, engel değil */
-      bolum(elektrik(t) ? 9 : 8, "r-b8", "Sonuç ve kanaat", '<p class="a-bolum-aciklama" id="r-oneri">' + oneri(r) + "</p>" +
+      bolum(elektrik(t) ? 8 : 7, "r-b8", "Sonuç ve kanaat", '<p class="a-bolum-aciklama" id="r-oneri">' + oneri(r) + "</p>" +
         segmen("Sonuç ve kanaat", "sonuc", r.sonuc, [["kullanilir", "Uygun", "a-sekme-onay"], ["kullanilamaz", "Uygun değil", "a-sekme-hata"]], oku) +
         (!oku && uygunDegil(r) && r.sonuc === "kullanilir" ? '<p class="a-ipucu a-ipucu-uyari">Uygun değil madde ya da sınır dışı test değeri varken sonuç “Uygun”.</p>' : "")) +
-      bolum(elektrik(t) ? 10 : 9, "r-b9", "Muayene uzmanı yorumu", '<textarea class="a-alan a-alan-ince" id="r-notlar" data-alan="notlar" maxlength="500" aria-label="Muayene uzmanı yorumu"' + (oku ? " readonly" : "") + ">" + kacis(r.notlar) + "</textarea>") +
+      bolum(elektrik(t) ? 9 : 8, "r-b9", "Muayene uzmanı yorumu", '<textarea class="a-alan a-alan-ince" id="r-notlar" data-alan="notlar" maxlength="500" aria-label="Muayene uzmanı yorumu"' + (oku ? " readonly" : "") + ">" + kacis(r.notlar) + "</textarea>") +
       "</div>" +
       (oku ? "" : '<div class="a-form-eylem"><p class="a-adim-not">Taslak her değişiklikte kaydedilir · son kayıt ' + MK.SAAT + "</p>" +
         MK.tus({ eylem: "onaya-gonder", ad: "Onaya gönder", ikon: "send", kapali: engelli(r), sebepId: "r-kal-engel" }) + "</div>");
@@ -284,7 +298,7 @@
     var k = e.target.dataset && e.target.dataset.alan; if (!k) return;
     if (W && $("a-pencere").open) { W.d[k] = e.target.value; return; }
     var r = aktif(); if (!r) return;
-    if (k === "amac" || k === "notlar") r[k] = e.target.value;
+    if (k === "amac" || k === "notlar" || k === "tel" || k === "bolumAd") r[k] = e.target.value;
     else if (k[0] === "t" && k[1] !== undefined && /^t\d+$/.test(k)) {   /* test değeri: ipucu ve sonuç önerisi canlı, odak yerinde */
       var i = +k.slice(1), x = MV.testler(r.t)[i]; r.test[i] = e.target.value;
       $("r-t" + i + "-sonuc").textContent = testIpucu(x, r.test[i]);
@@ -307,6 +321,8 @@
     if (k === "bit") r.bitEl = true;
     if (k === "bas" && !r.sonrakiEl) { r.sonraki = sonrakiHesap(r); MK.zamanAyarla("r-sonraki", r.sonraki); }   /* sonraki kontrol kendiliğinden */
     ["bit", "sonraki"].forEach(function (x) { uyariYaz("r-" + x, tarihUyari(r, x)); });
+    if (k === "bas" && !r.rtarihEl) { r.rtarih = r.bas.slice(0, 10); MK.zamanAyarla("r-rtarih", r.rtarih); }   /* rapor tarihi başlangıç günü */
+    if (k === "rtarih") r.rtarihEl = true;
   };
   var X = MK.eylem;
   X["foto-ekle"] = function () { var r = aktif(); r.foto++; ciz(); var t = document.querySelector('[data-eylem="foto-ekle"]'); if (t) t.focus(); MK.bildir("Fotoğraf " + r.foto + " eklendi."); };

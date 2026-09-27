@@ -43,7 +43,9 @@
   const metinSag = n => { const x = document.createRange(); x.selectNodeContents(n); return x.getBoundingClientRect().right; };
   const gercekTasma = e => { const sag = e.getBoundingClientRect().left + e.clientLeft + e.clientWidth + 1;
     return [...e.childNodes].some(n => n.nodeType === 3 && n.textContent.trim() && metinSag(n) > sag)
-      || [...e.querySelectorAll("*")].some(d => !d.closest(BILEREK) && gorunur(d) && d.getBoundingClientRect().right > sag); };
+      || [...e.querySelectorAll("*")].some(d => !d.closest(BILEREK) && !d.closest(".a-secici-liste") && gorunur(d) && d.getBoundingClientRect().right > sag); };
+  /* 2026-09-27: açık açılır katman (takvim, seçim listesi) kendi alanından geniş olabilir — katman içeriği "taşan metin" sayılmaz;
+     katmanın sayfadan taşması ayrıca yakalanır (tasma / ekranDisi). */
   r.tasanMetin = [...document.querySelectorAll("body *")].filter(e => gorunur(e) && e.textContent.trim() && !e.closest(".a-cipler") && !e.closest(".a-gizli") && !gizliAtada(e)
     && !["INPUT", "TEXTAREA", "BUTTON", "SELECT"].includes(e.tagName) && getComputedStyle(e).overflowX === "visible" && e.scrollWidth > e.clientWidth + 1 && e.clientWidth > 0 && gercekTasma(e))
     .map(e => (e.className || e.id || e.tagName) + ":" + (e.scrollWidth - e.clientWidth) + "px");
