@@ -315,6 +315,17 @@ export const DURUMLAR = {
     /* 2026-09-27 (reisim): yüklenen her PDF açılıp incelenir — ortak görüntüleyici */
     { ad: "PDF görüntüleyici · eğitim sertifikası", hash: "#/k/g31", adim: [["tikla", '#a-pencere [data-eylem="pdf-goster"]']] }
   ] },
+  /* 2026-09-28 (reisim: "talepler kısmı olsun denetçi izin talebi masraf formu ekleme"): Talepler (modül 21) */
+  talepler: { sayfa: "maket/talepler.html", durumlar: [
+    { ad: "taleplerim · izin özeti, liste", hash: "#/" },
+    { ad: "yeni talep menüsü açık", hash: "#/", adim: [["tikla", '[data-secici-ac="yeni-talep"]']] },
+    { ad: "izin talebi · boş gönderildi", hash: "#/yeni/izin", adim: [["tikla", '[data-eylem="izin-gonder"]']] },
+    { ad: "izin talebi · sağlık raporu, belge eklendi", hash: "#/yeni/izin", adim: [["tikla", "#w-tur"], ["tikla", '[data-secim="w-tur"][data-deger="rapor"]'], ["tikla", '[data-eylem="belge-sec"]']] },
+    { ad: "masraf formu · boş gönderildi", hash: "#/yeni/masraf", adim: [["tikla", '[data-eylem="masraf-gonder"]']] },
+    { ad: "masraf formu · iş seçimi açık", hash: "#/yeni/masraf", adim: [["tikla", "#w-is"]] },
+    { ad: "talep penceresi · bekleyen izin (geri çekilebilir)", hash: "#/t/I-1026-001" },
+    { ad: "talep penceresi · ödenmiş masraf, fiş", hash: "#/t/G-0926-008" }
+  ] },
 };
 
 /* ── ETKİLEŞİM DENEMELERİ (--etkilesim): adımlar koşar, sonra `bekle` ifadesi sayfada doğru dönmeli. Gen verilmezse 1920. ── */
@@ -371,7 +382,7 @@ export const DENEMELER = {
     /* 2026-09-24 (M16): bütün modüllerin maketi geldi → "hazır olmayan modül" denemesi yerine: menüdeki 17 modülün hepsi maket sayfasına
        bağlantı, "henüz tasarlanmadı" bildirimi veren tuş kalmadı. 2026-09-25 (M1 2. tur): 16 modül + Ana sayfa = yine 17 bağlantı.
        2026-09-26 (M3 2. tur): Ekipmanlar planın içinde → 15 modül + Ana sayfa = 16 bağlantı. */
-    { ad: "menüdeki 15 modül ve Ana sayfa maketi açar (bildirim tuşu yok)", hash: "#/", bekle: 'document.querySelectorAll("#a-menu [data-eylem=modul]").length === 0 && document.querySelectorAll("#a-menu a[href]").length === 16' },
+    { ad: "menüdeki bütün modüller ve Ana sayfa maketi açar (bildirim tuşu yok)", hash: "#/", bekle: 'document.querySelectorAll("#a-menu [data-eylem=modul]").length === 0 && document.querySelectorAll("#a-menu a[href]").length === MK.MENU.reduce((n, g) => n + g.ogeler.length, 0) + 1' },
     { ad: "menüden hazır maket → bağlantı (Personel)", hash: "#/", bekle: 'document.querySelector(\'#a-menu a[href="personel.html"]\') !== null' },
   ],
   m1: [
@@ -790,6 +801,15 @@ export const DENEMELER = {
     { ad: "kişiye geçiş: günlük iş, muhasebe iş bağlantısı", hash: "#/", adim: [["tikla", '#a-p-liste a[href="#/p/mk"]']], bekle: 'location.hash === "#/p/mk" && document.querySelectorAll(".a-tablo-gunluk tbody tr").length === 3 && !!document.querySelector(\'.a-tablo-gunluk a[href^="muhasebe.html#/is/"]\')' },
     { ad: "kişide dönem korunur (panodan geçen yıl → kişi)", hash: "#/", adim: [["tikla", '[data-donem="gecen"]'], ["tikla", '#a-p-liste a[href="#/p/hp"]']], bekle: 'document.querySelector(\'[data-donem="gecen"]\').getAttribute("aria-pressed") === "true" && document.querySelectorAll(".a-tablo-gunluk tbody tr").length > 0' },
     { ad: "menüde Performans hazır maketi açar (Muhasebe'den)", sayfa: "maket/muhasebe.html", hash: "#/", adim: [["tikla", '#a-menu a[href="performans.html"]']], bekle: '/performans\\.html$/.test(location.pathname) && !!document.querySelector(".a-grafik")' },
+  ],
+  talepler: [
+    { ad: "menüde Personel grubunda Talepler, etkin", hash: "#/", bekle: '[...document.querySelectorAll(".a-menu-grup")].some(g => g.textContent === "Personel" && /Talepler/.test(g.nextElementSibling.textContent)) && [...document.querySelectorAll("[aria-current=page]")].some(a => a.textContent.trim() === "Talepler")' },
+    { ad: "yıllık izin özeti: hak 14 · kullanılan 5 · kalan 9", hash: "#/", bekle: '/Yıllık izin hakkı14 gün/.test(document.querySelector("#a-ozet").textContent) && /Kalan9 gün/.test(document.querySelector("#a-ozet").textContent)' },
+    { ad: "izin talebi gönderilir → listede Onay bekliyor", hash: "#/yeni/izin", adim: [["tikla", "#w-tur"], ["tikla", '[data-secim="w-tur"][data-deger="mazeret"]'], ["tikla", '[data-zaman="w-bas"] [data-zaman-ac]'], ["tikla", '[data-zaman="w-bas"] [data-zaman-gun="2026-09-25"]'], ["tikla", '[data-eylem="izin-gonder"]']], bekle: '!document.querySelector("#a-pencere").open && [...document.querySelectorAll("#a-liste tbody tr")].some(tr => /Mazeret izni/.test(tr.textContent) && /Onay bekliyor/.test(tr.textContent) && /1 gün/.test(tr.textContent))' },
+    { ad: "genel masraf (işe bağlı değil) gönderilir → Muhasebe kaydına düşer", hash: "#/yeni/masraf", adim: [["tikla", "#w-gtur"], ["tikla", '[data-secim="w-gtur"][data-deger="yol"]'], ["yaz", "#w-tutar", "240"], ["tikla", '[data-eylem="masraf-gonder"]']], bekle: '!document.querySelector("#a-pencere").open && MV.GIDERLER.some(g => g.kisi === "mk" && g.is === null && g.tutar === 240 && g.durum === "bekliyor") && /Genel/.test(document.querySelector("#a-liste").textContent)' },
+    { ad: "işe bağlı masraf: iş seçilir", hash: "#/yeni/masraf", adim: [["tikla", "#w-is"], ["tikla", '[data-secim="w-is"][data-deger="P-0926-031"]'], ["tikla", "#w-gtur"], ["tikla", '[data-secim="w-gtur"][data-deger="yakit"]'], ["yaz", "#w-tutar", "1.050,00"], ["tikla", '[data-eylem="masraf-gonder"]']], bekle: 'MV.GIDERLER.some(g => g.kisi === "mk" && g.is === "P-0926-031" && g.tutar === 1050)' },
+    { ad: "bekleyen talep geri çekilir", hash: "#/t/I-1026-001", adim: [["tikla", '[data-eylem="geri-cek"]']], bekle: '!document.querySelector("#a-pencere").open && !MV.IZINLER.some(x => x.no === "I-1026-001")' },
+    { ad: "yıllık izin kalanı aşınca uyarı (engel değil)", hash: "#/yeni/izin", adim: [["tikla", "#w-tur"], ["tikla", '[data-secim="w-tur"][data-deger="yillik"]'], ["tikla", '[data-zaman="w-bas"] [data-zaman-ac]'], ["tikla", '[data-zaman="w-bas"] [data-zaman-gun="2026-09-01"]'], ["tikla", '[data-zaman="w-bit"] [data-zaman-ac]'], ["tikla", '[data-zaman="w-bit"] [data-zaman-gun="2026-09-30"]']], bekle: '/kalan yıllık izin 9 gün/.test(document.querySelector("#a-pencere-govde").textContent) && !!document.querySelector(\'[data-eylem="izin-gonder"]\')' }
   ],
   m16: [
     { ad: "eğitim sertifikası açılır (kayıt penceresinin üstünde)", hash: "#/k/g31", adim: [["tikla", '#a-pencere [data-eylem="pdf-goster"]']], bekle: 'document.querySelector("#a-pdf").open && document.querySelector("#a-pencere").open' },

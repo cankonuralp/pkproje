@@ -65,7 +65,7 @@
     12: ["yaz", "kendi", "gor", "gor", "yaz", "gor"], 7: ["yaz", "yaz", "gor", "gor", "yaz", "yok"], 8: ["gor", "kendi", "yaz", "yaz", "yaz", "yok"],
     9: ["gor", "kendi", "yaz", "yaz", "yaz", "yok"], 2: ["gor", "kendi", "gor", "gor", "yaz", "yok"], 10: ["gor", "kendi", "yaz", "yaz", "yaz", "yok"],
     18: ["yok", "yok", "yok", "yok", "yaz", "yaz"], 19: ["gor", "kendi", "brans", "brans", "gor", "yok"], 5: ["gor", "gor", "yaz", "yaz", "yaz", "yok"],
-    4: ["gor", "gor", "yaz", "yaz", "yaz", "yok"], hareket: ["yok", "yok", "yok", "yok", "gor", "yok"]
+    4: ["gor", "gor", "yaz", "yaz", "yaz", "yok"], 21: ["kendi", "kendi", "kendi", "kendi", "yaz", "kendi"], hareket: ["yok", "yok", "yok", "yok", "gor", "yok"]
   };
   MV.MATRIS_ONERI = JSON.parse(JSON.stringify(MV.MATRIS));
   MV.DUZEY = {
@@ -1032,6 +1032,29 @@
   var gSira = {};
   MV.giderNo = function (tarih) { var ay = tarih.slice(5, 7) + tarih.slice(2, 4); gSira[ay] = (gSira[ay] || 0) + 1; return "G-" + ay + "-" + ("00" + gSira[ay]).slice(-3); };
   MV.GIDERLER.forEach(function (g) { g.no = MV.giderNo(g.tarih); });
+  /* ── TALEPLER (modül 21, 2026-09-28; reisim: "personelin bireysel olarak isteyeceği şeyler … denetçi izin talebi masraf formu ekleme ve
+     ileride ekleyeceğimiz bir şey olursa buradan ekler") — talep türleri (yenisi buraya) · izin talepleri. Masraf formu MV.GIDERLER'e yazar.
+     İzin: tür, başlangıç–bitiş, iş günü (hafta sonu sayılmaz; resmî tatil takvimi uygulamada), durum bekliyor → onaylandi / red (onaylayan
+     firma yöneticisi, öneri). Yıllık izin hakkı personel kaydında (örnek 14 gün); kalan = hak − onaylanan yıllık izin. UYDURMA. */
+  MV.TALEP_TURLERI = [{ k: "izin", ad: "İzin talebi" }, { k: "masraf", ad: "Masraf formu" }];
+  MV.IZIN_TUR = [{ k: "yillik", ad: "Yıllık izin" }, { k: "mazeret", ad: "Mazeret izni" }, { k: "rapor", ad: "Hastalık (sağlık raporu)" }, { k: "ucretsiz", ad: "Ücretsiz izin" }];
+  MV.izinTur = function (k) { return MV.IZIN_TUR.filter(function (t) { return t.k === k; })[0]; };
+  MV.IZIN_DURUM = { bekliyor: { ad: "Onay bekliyor", rozet: "a-rozet-bekliyor" }, onaylandi: { ad: "Onaylandı", rozet: "a-rozet-tamam" }, red: { ad: "Reddedildi", rozet: "a-rozet-red" } };
+  MV.isGunu = function (bas, bit) { var n = 0, d = new Date(bas + "T12:00:00"), s = new Date(bit + "T12:00:00"); while (d <= s) { if (d.getDay() % 6) n++; d.setDate(d.getDate() + 1); } return n; };
+  var iSira = {};
+  MV.izinNo = function (tarih) { var ay = tarih.slice(5, 7) + tarih.slice(2, 4); iSira[ay] = (iSira[ay] || 0) + 1; return "I-" + ay + "-" + ("00" + iSira[ay]).slice(-3); };
+  MV.IZIN_HAK = { mk: 14, ea: 14, bs: 14, hp: 20 };
+  MV.IZINLER = [["mk", "yillik", "2026-08-10", "2026-08-14", "Yaz izni", "onaylandi", "2026-07-20T10:05", "2026-07-21T09:30"],
+    ["mk", "mazeret", "2026-06-05", "2026-06-05", "Taşınma", "onaylandi", "2026-05-28T16:40", "2026-05-29T08:50"],
+    ["mk", "yillik", "2026-10-12", "2026-10-16", "", "bekliyor", "2026-09-22T17:10", null],
+    ["ea", "yillik", "2026-07-06", "2026-07-10", "", "onaylandi", "2026-06-15T11:00", "2026-06-16T09:00"]].map(function (x) {
+    return { no: MV.izinNo(x[2]), kisi: x[0], tur: x[1], bas: x[2], bit: x[3], gun: MV.isGunu(x[2], x[3]), aciklama: x[4], belge: "", durum: x[5], gonderildi: x[6], karar: x[7], onaylayan: x[7] ? "ad" : null };
+  });
+  MV.izinOzet = function (kisi) {
+    var yil = MK.BUGUN.slice(0, 4), l = MV.IZINLER.filter(function (x) { return x.kisi === kisi && x.tur === "yillik" && x.bas.slice(0, 4) === yil; });
+    var kul = l.filter(function (x) { return x.durum === "onaylandi"; }).reduce(function (n, x) { return n + x.gun; }, 0), bek = l.filter(function (x) { return x.durum === "bekliyor"; }).reduce(function (n, x) { return n + x.gun; }, 0);
+    var hak = MV.IZIN_HAK[kisi] || 14; return { hak: hak, kullanilan: kul, bekleyen: bek, kalan: hak - kul };
+  };
   MV.gider = function (no) { return MV.GIDERLER.filter(function (g) { return g.no === no; })[0]; };
   MV.isGiderleri = function (no) { return MV.GIDERLER.filter(function (g) { return g.is === no; }); };
 

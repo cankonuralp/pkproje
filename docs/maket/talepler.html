@@ -1,0 +1,51 @@
+<!doctype html>
+<html lang="tr">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1">
+<title>Talepler · probata maket</title>
+<meta name="robots" content="noindex">
+<link rel="icon" href="../marka/favicon.svg" type="image/svg+xml">
+<script src="../assets/maket-tema.js"></script>
+<link rel="stylesheet" href="../assets/tokens.css">
+<link rel="stylesheet" href="../assets/maket.css">
+</head>
+<body>
+<!-- MAKET · Talepler (modül 21, 2026-09-28) — ONAY BEKLİYOR. Personelin kendi talepleri: izin talebi, masraf formu (plana bağlı ya da genel);
+     ileride eklenecek talepler de buradan. Adres: #/ taleplerim · #/yeni/izin · #/yeni/masraf · #/t/<no> talep penceresi -->
+<main class="a-icerik" id="a-icerik">
+  <div id="a-liste-gorunum">
+    <div class="a-sayfa-bas">
+      <h1 tabindex="-1">Talepler</h1>
+      <span class="a-sayac" id="a-sayac" aria-live="polite"></span>
+      <div class="a-secici a-yeni-talep a-bolum-tus">
+        <button class="a-tus a-tus-birincil" type="button" data-secici-ac="yeni-talep" aria-haspopup="menu" aria-expanded="false"><svg class="a-ikon a-ikon-kucuk" aria-hidden="true"><use href="../vendor/lucide-1.47.0/ikonlar.svg#i-plus"/></svg>Yeni talep</button>
+        <div class="a-secici-liste" role="menu" aria-label="Talep türü" hidden>
+          <a class="a-secenek" role="menuitem" href="#/yeni/izin">İzin talebi</a>
+          <a class="a-secenek" role="menuitem" href="#/yeni/masraf">Masraf formu</a>
+        </div>
+      </div>
+    </div>
+    <div class="a-yuzler" id="a-ozet"></div>
+    <div id="a-suzgec-kap"></div>
+    <div class="a-liste-kap" id="a-liste"></div>
+    <div id="a-sayfa"></div>
+  </div>
+</main>
+
+<!-- izin talebi · masraf formu · talep penceresi (içerik maket-talepler.js) -->
+<dialog class="a-pencere a-pencere-form" id="a-pencere" aria-labelledby="a-pencere-baslik">
+  <div class="a-pencere-bas">
+    <h2 id="a-pencere-baslik"></h2>
+    <button class="a-ikon-tus" type="button" data-eylem="pencere-kapat" aria-label="Kapat">
+      <svg class="a-ikon" aria-hidden="true"><use href="../vendor/lucide-1.47.0/ikonlar.svg#i-x"/></svg>
+    </button>
+  </div>
+  <div class="a-pencere-govde" id="a-pencere-govde"></div>
+  <div class="a-pencere-alt" id="a-pencere-alt"></div>
+</dialog>
+<script src="../assets/maket-ortak.js"></script>
+<script src="../assets/maket-veri.js"></script>
+<script src="../assets/maket-talepler.js"></script>
+</body>
+</html>

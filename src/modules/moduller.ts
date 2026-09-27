@@ -8,7 +8,9 @@
    menü değil; hesap, roller ve rol yetkileri Personel'in (2) içinde → 16 modül.
    2026-09-26 (reisim, M3: "ekipmanlar ve ekipman türleri diye iki modüle gerek yok ekipman türleri yeterli" · "planlar açıldığında
    ekipmanlar orada gözüküyor ... neden ekstradan ekipmanlar sekmesi lazım olsun"): 7 Ekipmanlar ayrı menü değil; ekipmanlar planın
-   içinde (denetçi sahada ekler) → 15 modül. */
+   içinde (denetçi sahada ekler) → 15 modül.
+   2026-09-28 (reisim: "personelin bireysel olarak isteyeceği şeyler sol panelde gözüksün … talepler kısmı olsun"): 21 Talepler (izin
+   talebi, masraf formu; ileride eklenecek talepler) Personel grubunda → 16 modül. */
 
 export interface Modul {
   /** pkproje.md §3.1 numarası */
@@ -44,6 +46,7 @@ export const MODUL_GRUPLARI: readonly ModulGrubu[] = [
   { grup: "Personel", moduller: [
     { no: 2, ad: "Personel", yol: "personel", ikon: "users" },
     { no: 10, ad: "Eğitimler", yol: "egitimler", ikon: "graduation-cap" },
+    { no: 21, ad: "Talepler", yol: "talepler", ikon: "inbox" },
   ] },
   { grup: "Finans", moduller: [
     { no: 18, ad: "Muhasebe", yol: "muhasebe", ikon: "wallet" },

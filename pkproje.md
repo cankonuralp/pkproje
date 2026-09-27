@@ -1679,6 +1679,12 @@ revizyon, alan kopyalama, hafif kusur devri, meslek eşleşme denetimi).
 - Emsal ürünler: https://opwire.app/iso-17020-periyodik-kontrol-yazilimi/ · https://17020muayene.vidco.com.tr/ · https://akuple.com/asansor-kontrol-yazilimi/ · https://ensyazilim.com/
 
 ## 11 · Değişiklik günlüğü
+- 2026-09-28 (99): **Talepler modülü (21)** (§9 otuzuncu tur): menüde Personel grubunda; `maket/talepler.html`. Taleplerim listesi (izin +
+  masraf, süzgeç), yıllık izin özeti (hak · kullanılan · kalan · bekleyen), "Yeni talep" → izin talebi (tür, başlangıç–bitiş, iş günü
+  kendiliğinden, sağlık raporunda belge; yıllık izin kalanı aşılırsa uyarı, engel değil) · masraf formu (iş seçilir ya da "Genel"; Muhasebe'ye
+  "Onay bekliyor" düşer, plan içindeki formla aynı kayıt); bekleyen talep geri çekilir. Modül kaydı 16 modül (`src/modules/moduller.ts`,
+  `src/app/talepler`), rol yetkisi önerisi herkes "kendi", yönetici "değiştirir". **Açık:** izin onayı kimde ve nerede (öneri: firma yöneticisi,
+  Personel'de "İzin talepleri"). 18 maket temiz: durum 1880/1880 · etkileşim 415/415 · telefon 940/940.
 - 2026-09-28 (98): **Raporlar: durum geçmişi kalktı, ayrıntılı süzgeç** (§9 otuzuncu tur): genel aramanın yanında alan alan arama (rapor no ·
   ekipman kodu · ekipman türü · tesis; ortak süzgeç üreticisinde `alanlar`, başlıktaki sayıya girer, Temizle boşaltır); seçiciler müşteri, il,
   sonuç, yıl. Süzgeç ekranı örnekleri reisim'den gelecek. 17 maket temiz: durum 1816/1816 · etkileşim 408/408 · telefon 908/908.

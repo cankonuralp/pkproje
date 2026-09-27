@@ -1,0 +1,58 @@
+{
+ "maket": "talepler",
+ "tarih": "2026-09-27",
+ "arac": "tools/olc-bulut.mjs --etkilesim (başsız tarayıcı, 1920 açık tema; gen verilen denemede o genişlik)",
+ "toplam": 7,
+ "gecen": 7,
+ "denemeler": [
+  {
+   "ad": "menüde Personel grubunda Talepler, etkin",
+   "gen": 1920,
+   "sayfa": "maket/talepler.html",
+   "hash": "#/",
+   "gecti": true
+  },
+  {
+   "ad": "yıllık izin özeti: hak 14 · kullanılan 5 · kalan 9",
+   "gen": 1920,
+   "sayfa": "maket/talepler.html",
+   "hash": "#/",
+   "gecti": true
+  },
+  {
+   "ad": "izin talebi gönderilir → listede Onay bekliyor",
+   "gen": 1920,
+   "sayfa": "maket/talepler.html",
+   "hash": "#/yeni/izin",
+   "gecti": true
+  },
+  {
+   "ad": "genel masraf (işe bağlı değil) gönderilir → Muhasebe kaydına düşer",
+   "gen": 1920,
+   "sayfa": "maket/talepler.html",
+   "hash": "#/yeni/masraf",
+   "gecti": true
+  },
+  {
+   "ad": "işe bağlı masraf: iş seçilir",
+   "gen": 1920,
+   "sayfa": "maket/talepler.html",
+   "hash": "#/yeni/masraf",
+   "gecti": true
+  },
+  {
+   "ad": "bekleyen talep geri çekilir",
+   "gen": 1920,
+   "sayfa": "maket/talepler.html",
+   "hash": "#/t/I-1026-001",
+   "gecti": true
+  },
+  {
+   "ad": "yıllık izin kalanı aşınca uyarı (engel değil)",
+   "gen": 1920,
+   "sayfa": "maket/talepler.html",
+   "hash": "#/yeni/izin",
+   "gecti": true
+  }
+ ]
+}

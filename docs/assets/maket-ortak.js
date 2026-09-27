@@ -55,17 +55,18 @@
      (tests/moduller.test.ts). 2026-09-24: maket.js'ten buraya taşındı.
      2026-09-25 (M1 2. tur, reisim: "159 birleşsin", "kullanıcı hesabı her zaman personele bağlı olsun"): Kullanıcılar (1) menüden
      kalktı, hesap ve roller Personel'in içinde → 16 modül. Menünün üstünde gruptan bağımsız "Ana sayfa" (reisim 41: "herkes için bir
-     anasayfa olmalı"); modül değil, giriş sonrası açılan sayfa — MENU sabitine girmez. */
+     anasayfa olmalı"); modül değil, giriş sonrası açılan sayfa — MENU sabitine girmez.
+     2026-09-28 (reisim: "talepler kısmı olsun denetçi izin talebi masraf formu ekleme"): Talepler (21) Personel grubunda. */
   var MENU = [
     { grup: "İş takibi", ogeler: [["Planlar", "calendar-check", 13], ["Raporlar", "file-text", 14], ["Onaylar", "badge-check", 15], ["Uyarılar", "alarm-clock", 20]] },
     { grup: "Müşteri", ogeler: [["Müşteriler", "building-2", 3], ["Teklifler", "file-pen-line", 11], ["Sözleşmeler", "scroll-text", 12]] },
     { grup: "Varlık", ogeler: [["Ölçüm cihazları", "gauge", 8], ["Zimmetler", "package", 9]] },
-    { grup: "Personel", ogeler: [["Personel", "users", 2], ["Eğitimler", "graduation-cap", 10]] },
+    { grup: "Personel", ogeler: [["Personel", "users", 2], ["Eğitimler", "graduation-cap", 10], ["Talepler", "inbox", 21]] },
     { grup: "Finans", ogeler: [["Muhasebe", "wallet", 18], ["Performans", "chart-column", 19]] },
     { grup: "Tanımlar", ogeler: [["Ekipman türleri", "layers", 5], ["Standartlar", "book-open", 4]] }
   ];
   /* hazır maketler: menüden tıklanınca gidilir (toplu bakışta tıklanır prototip, MAKET-PLANI §3.3); olmayan → bildirim */
-  var SAYFALAR = { 13: "planlarim.html", 2: "personel.html", 3: "musteriler.html", 5: "ekipman-turleri.html", 8: "olcum-cihazlari.html", 9: "zimmetler.html", 12: "sozlesmeler.html", 4: "standartlar.html", 14: "raporlar.html", 15: "onaylar.html", 20: "uyarilar.html", 11: "teklifler.html", 18: "muhasebe.html", 19: "performans.html", 10: "egitimler.html" };
+  var SAYFALAR = { 13: "planlarim.html", 2: "personel.html", 3: "musteriler.html", 5: "ekipman-turleri.html", 8: "olcum-cihazlari.html", 9: "zimmetler.html", 12: "sozlesmeler.html", 4: "standartlar.html", 14: "raporlar.html", 15: "onaylar.html", 20: "uyarilar.html", 11: "teklifler.html", 18: "muhasebe.html", 19: "performans.html", 10: "egitimler.html", 21: "talepler.html" };
   MK.sayfaAdresi = function (no) { return SAYFALAR[no] || null; };
   /* menü dışı maket ekranları (ör. plan açma); hazır olunca buraya yazılır, bağlantılar kendiliğinden açılır */
   var EK_SAYFALAR = { ana: "anasayfa.html", giris: "giris.html", "plan-ac": "plan-ac.html", rapor: "rapor.html", musteri: "musteri.html", "is-sozlesmesi": "sozlesmeler.html" };
