@@ -2,8 +2,8 @@
  "maket": "m14",
  "tarih": "2026-09-27",
  "arac": "tools/olc-bulut.mjs --etkilesim (başsız tarayıcı, 1920 açık tema; gen verilen denemede o genişlik)",
- "toplam": 35,
- "gecen": 35,
+ "toplam": 40,
+ "gecen": 40,
  "denemeler": [
   {
    "ad": "toplu fatura: aynı müşterinin iki işi tek faturada",
@@ -248,6 +248,41 @@
    "gen": 1920,
    "sayfa": "maket/muhasebe.html",
    "hash": "#/is/P-0926-025",
+   "gecti": true
+  },
+  {
+   "ad": "iş listesinde Kâr sütunu (tutar ve yüzde)",
+   "gen": 1920,
+   "sayfa": "maket/muhasebe.html",
+   "hash": "#/",
+   "gecti": true
+  },
+  {
+   "ad": "iş sayfasında kârlılık: gelir, masraf, inspector, genel pay, kâr %33,1",
+   "gen": 1920,
+   "sayfa": "maket/muhasebe.html",
+   "hash": "#/is/P-0926-025",
+   "gecti": true
+  },
+  {
+   "ad": "aynı gün iki işe giden inspector'ın günü işlere bölünür",
+   "gen": 1920,
+   "sayfa": "maket/muhasebe.html",
+   "hash": "#/",
+   "gecti": true
+  },
+  {
+   "ad": "gelir-gider: Eylül 2026, 3 iş, sabit giderler satırda",
+   "gen": 1920,
+   "sayfa": "maket/muhasebe.html",
+   "hash": "#/gelir-gider",
+   "gecti": true
+  },
+  {
+   "ad": "gelir-gider: dönem Kasım 2025 → 2 iş, odak seçimde",
+   "gen": 1920,
+   "sayfa": "maket/muhasebe.html",
+   "hash": "#/gelir-gider",
    "gecti": true
   }
  ]

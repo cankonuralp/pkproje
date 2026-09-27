@@ -42,8 +42,12 @@
     } },
     { k: "tutar", baslik: "Raporlanan (KDV hariç)", kart: "govde", sira: 4, hucre: function (x) { return '<span class="a-kart-etiket">Raporlanan (KDV hariç)</span><span class="a-sayi">' + para(oz(x).raporlanan) + "</span>"; } },
     { k: "kalan", baslik: "Açık alacak", kart: "govde", sira: 5, hucre: function (x) { var o = oz(x); return '<span class="a-kart-etiket">Açık alacak</span>' + kalanYaz(o.kalan, o.durum === "gecikti"); } },
+    /* 2026-09-27 (reisim: "kar hesaplanacak kar yüzdesi yazacak iş başına") */
+    { k: "kar", baslik: "Kâr", kart: "govde", sira: 6, hucre: function (x) { return '<span class="a-kart-etiket">Kâr</span>' + karYaz(MV.isKarlilik(x)); } },
     { k: "durum", baslik: "Durum", kart: "rozet", sira: 1, hucre: function (x) { return rozet(IS_DURUM[oz(x).durum]); } }
   ];
+  var yuzde = function (n) { return (n < 0 ? "−%" : "%") + Math.abs(n).toLocaleString("tr-TR", { maximumFractionDigits: 1 }); };
+  var karYaz = function (k) { return '<span><span class="a-sayi' + (k.kar < 0 ? " a-uyari-metin" : "") + '">' + para(k.kar) + '</span><span class="a-alt-satir">' + yuzde(k.oran) + "</span></span>"; };
   function isListeCiz() {
     MK.listeCiz({ on: "i", kayitlar: I, sayacId: "a-sayac", listeId: "a-liste",
       /* 2026-09-26 (reisim: "sıralama tarihi olsun her zaman en yeni en yukarıda olsun"): varsayılan sıra tarih, en yeni üstte */
@@ -153,6 +157,58 @@
         MK.tus({ eylem: "g-cip", ad: "Göster", sinif: "a-tus-ikincil a-serit-tus", veri: { secilecek: "belgesiz" } }) + "</div>" : "") + "</div>" : "";
   }
 
+  /* ── KÂRLILIK (2026-09-27; hesap MV.isKarlilik, dağıtım yöntemi VARSAYIM — reisim ayrıntıyı verecek) ─────────────────────── */
+  var sayiTr = function (n) { return n.toLocaleString("tr-TR", { maximumFractionDigits: 2 }); };
+  var KAR_SUTUN = [
+    { k: "ad", baslik: "Kalem", kart: "ust", sira: 1, hucre: function (s) { return s.toplam ? "<b>" + s.ad + "</b>" : kacis(s.ad); } },
+    { k: "ayrinti", baslik: "Ayrıntı", kart: "govde", sira: 2, hucre: function (s) { return '<span class="a-alt-inline">' + s.ayrinti + "</span>"; } },
+    { k: "tutar", baslik: "Tutar", kart: "govde", sira: 3, hucre: function (s) {
+      return '<span class="a-kart-etiket">Tutar</span><span class="a-sayi' + (s.tutar < 0 && s.toplam ? " a-uyari-metin" : "") + '">' + (s.eksi ? "− " : "") + para(s.tutar) + "</span>"; } }
+  ];
+  function karlilikHtml(k) {
+    var satir = [
+      { ad: "Gelir", ayrinti: k.rapor + " rapor · raporlanan, KDV hariç", tutar: k.gelir },
+      { ad: "İşe bağlı masraflar", ayrinti: "KDV hariç, reddedilen hariç", tutar: k.dogrudan, eksi: true },
+      { ad: "Inspector maliyeti", ayrinti: k.kisiler.length ? k.kisiler.map(function (x) { return kacis(MV.kisi(x.kisi).ad) + " " + sayiTr(x.gun) + " gün × " + para(x.gunluk); }).join(" · ") : "rapor yok", tutar: k.personel, eksi: true },
+      { ad: "Genel gider payı", ayrinti: sayiTr(k.gun) + " kişi-gün × " + para(k.gunPay) + " (araç, ofis, vergi, genel masraf, diğer personel)", tutar: k.genel, eksi: true },
+      { ad: "Kâr", ayrinti: yuzde(k.oran) + " · KDV hariç", tutar: k.kar, toplam: true }
+    ];
+    return '<section class="a-bolum" aria-labelledby="a-b-kar"><div class="a-alt-bas"><h2 class="a-alt-baslik" id="a-b-kar">Kârlılık</h2><span class="a-sayac"><b>' + yuzde(k.oran) + "</b> kâr</span></div>" +
+      (k.tahmini ? '<div class="a-uyari-serit">' + MK.serit("bilgi", "history", MV.ayAd(k.ay) + " bordroları yüklenmedi; inspector maliyeti son bordrodan tahmini.") + "</div>" : "") +
+      '<div class="a-liste-kap">' + MK.tablo({ baslik: "Kârlılık", sinif: "a-tablo-karlilik", sutunlar: KAR_SUTUN, kayitlar: satir }) + "</div></section>";
+  }
+  /* GELİR-GİDER (2026-09-27, reisim: "gelir gidere göre bilançoda olacak"): ay seçilir; o ayın gelir (denetlenen işlerin raporlananı), maaşlar
+     (bordro işverene maliyeti), masraflar ve sabit giderler; işlerin kârı. Bilanço (varlık / borç) firmanın muhasebe programında (VARSAYIM). */
+  var GG = { ay: MK.BUGUN.slice(0, 7) };
+  var ggAylar = function () { var l = [], d = new Date(MK.BUGUN.slice(0, 7) + "-01T12:00:00"); for (var i = 0; i < 13; i++) { l.push(d.toISOString().slice(0, 7)); d.setMonth(d.getMonth() - 1); } return l; };
+  var GG_SUTUN = [
+    { k: "no", baslik: "Proje no", kart: "ust", sira: 1, hucre: function (x) { return '<a class="a-no" href="#/is/' + x.no + '">' + x.no + '</a><span class="a-alt-satir">' + MK.tarihYaz(x.tarih) + "</span>"; } },
+    { k: "musteri", baslik: "Müşteri / tesis", kart: "govde", sira: 2, hucre: function (x) { return "<span>" + kirp(MV.musteri(x.m).kisa) + kirp(MV.tesis(x.tesis).ad, "a-alt-satir") + "</span>"; } },
+    { k: "gelir", baslik: "Gelir", kart: "govde", sira: 3, hucre: function (x) { return '<span class="a-kart-etiket">Gelir</span><span class="a-sayi">' + para(MV.isKarlilik(x).gelir) + "</span>"; } },
+    { k: "gider", baslik: "Gider", kart: "govde", sira: 4, hucre: function (x) { return '<span class="a-kart-etiket">Gider</span><span class="a-sayi">' + para(MV.isKarlilik(x).gider) + "</span>"; } },
+    { k: "kar", baslik: "Kâr", kart: "govde", sira: 5, hucre: function (x) { return '<span class="a-kart-etiket">Kâr</span>' + karYaz(MV.isKarlilik(x)); } }
+  ];
+  function ggCiz() {
+    var d = MV.ayGelirGider(GG.ay), am = d.am;
+    $("a-sayac").innerHTML = "<b>" + MV.ayAd(GG.ay) + "</b>";
+    $("a-uyari").innerHTML = am.bordroVar ? "" : '<div class="a-uyari-serit">' + MK.serit("bilgi", "history", MV.ayAd(GG.ay) + " bordroları yüklenmedi; maaşlar son bordrodan tahmini.") + "</div>";
+    $("a-suzgec-kap").innerHTML = '<div class="a-form a-gg-donem">' + MK.alan({ id: "gg-ay", etiket: "Dönem", girdi: MK.secim({ id: "gg-ay", ad: "Dönem", deger: GG.ay, secenekler: ggAylar().map(function (a) { return [a, MV.ayAd(a)]; }) }) }) + "</div>";
+    var satir = [
+      { ad: "Gelir", ayrinti: d.isler.length + " iş · raporlanan, KDV hariç", tutar: d.gelir },
+      { ad: "Maaşlar", ayrinti: am.kisi + " kişi · bordro, işverene maliyet" + (am.bordroVar ? "" : " · tahmini"), tutar: kr(am.maasIns + am.maasDiger), eksi: true },
+      { ad: "İşe bağlı masraflar", ayrinti: "KDV hariç", tutar: am.masraf, eksi: true },
+      { ad: "Genel masraflar", ayrinti: "işe bağlı olmayan, KDV hariç", tutar: am.genel, eksi: true }
+    ].concat(MV.SABIT_GIDER.map(function (x) { return { ad: x.ad, ayrinti: "sabit gider" + (x.not ? " · " + kacis(x.not) : ""), tutar: x.aylik, eksi: true }; }))
+      .concat([{ ad: "Kâr", ayrinti: d.oran === null ? "gelir yok" : yuzde(d.oran), tutar: d.kar, toplam: true }]);
+    $("a-gg").innerHTML = '<div class="a-yuzler">' + yuz("Gelir", "file-text", para(d.gelir), "KDV hariç · " + d.isler.length + " iş") + yuz("Gider", "receipt", para(d.gider), "maaş, masraf, sabit") +
+        yuz("Kâr", "chart-column", para(d.kar), d.oran === null ? "gelir yok" : yuzde(d.oran), d.kar < 0) + "</div>" +
+      '<section class="a-bolum" aria-labelledby="a-b-gg"><div class="a-alt-bas"><h2 class="a-alt-baslik" id="a-b-gg">Gelir ve giderler</h2></div>' +
+        '<div class="a-liste-kap">' + MK.tablo({ baslik: "Gelir ve giderler", sinif: "a-tablo-karlilik", sutunlar: KAR_SUTUN, kayitlar: satir }) + "</div></section>" +
+      '<section class="a-bolum" aria-labelledby="a-b-ggis"><div class="a-alt-bas"><h2 class="a-alt-baslik" id="a-b-ggis">İşlerin kârı</h2><span class="a-sayac"><b>' + d.isler.length + "</b> iş</span></div>" +
+        (d.isler.length ? '<div class="a-liste-kap">' + MK.tablo({ baslik: "İşlerin kârı", sinif: "a-tablo-iskar", sutunlar: GG_SUTUN, kayitlar: d.isler, href: function (x) { return "#/is/" + x.no; } }) + "</div>"
+          : '<p class="a-bos-satir">Bu ay denetlenen iş yok.</p>') + "</section>";
+  }
+
   /* ── İŞ SAYFASI ─────────────────────────────────────────────────────────────────────────────────────── */
   var AKTIF = null;
   MK.suzgecTanimla("r", { ad: "Raporlarda ara", ipucu: "Rapor no, ekipman", birim: "rapor", sayfa: 20,
@@ -194,7 +250,7 @@
     if (!x) { yok("İş bulunamadı", "Bu adreste iş yok.", "#/", "İşlere dön"); return; }
     var m = MV.musteri(x.m), ts = MV.tesis(x.tesis), o = oz(x), soz = MV.tesisSozlesmesi(x.tesis, x.tarih), acik = x.faturalar.map(MV.fatura).filter(function (f) { return MV.faturaKalan(f) > 0; });
     var teklif = x.raporlar.length ? MV.raporFiyat(MV.rapor(x.raporlar[0])).teklif : null;
-    var gl = giderSirala(MV.isGiderleri(x.no)), gh = kr(gl.reduce(function (n, g) { return n + gKdv(g).haric; }, 0));
+    var gl = giderSirala(MV.isGiderleri(x.no)), k = MV.isKarlilik(x);
     var imzaSon = x.raporlar.map(MV.rapor).filter(function (r) { return r.imza; }).reduce(function (s, r) { return r.imza.zaman > s ? r.imza.zaman : s; }, "");
     var gecmis = [[x.tarih, "Denetim", x.ekip.map(function (k) { return MV.kisi(k).ad; }).join(", ")]];
     if (imzaSon) gecmis.push([imzaSon.slice(0, 10), o.imzali === o.toplam ? "Raporların hepsi imzalandı, müşteriye açıldı" : o.imzali + " rapor imzalandı, müşteriye açıldı", o.imzali + " / " + o.toplam]);
@@ -218,7 +274,8 @@
         (o.durum === "kapandi" ? MK.serit("onay", "circle-check", "İş kapandı " + MK.tarihYaz(o.kapandi) + ": bütün raporlar faturalandı ve tahsil edildi. Kayıt 5 yıl arşivde kalır.") : "") + "</div>" +
       '<div class="a-yuzler">' + yuz("Raporlanan", "file-text", para(o.raporlanan), "KDV hariç · " + o.toplam + " rapor") +
         yuz("Faturalanan", "file-check", para(o.faturalanan), "KDV dahil · " + x.faturalar.length + " fatura") +
-        yuz("Tahsil edilen", "wallet", para(o.tahsil), "") + yuz("Açık alacak", "clock", para(o.kalan), o.durum === "gecikti" ? "vadesi geçti" : "", o.durum === "gecikti") + "</div>" +
+        yuz("Tahsil edilen", "wallet", para(o.tahsil), "") + yuz("Açık alacak", "clock", para(o.kalan), o.durum === "gecikti" ? "vadesi geçti" : "", o.durum === "gecikti") +
+        yuz("Kâr", "chart-column", yuzde(k.oran), para(k.kar) + " · KDV hariç", k.kar < 0) + "</div>" +
       '<section class="a-bolum" aria-labelledby="a-b-is"><div class="a-alt-bas"><h2 class="a-alt-baslik" id="a-b-is">İş</h2></div><dl class="a-bilgi">' +
         bilgi("Denetim", MK.tarihYaz(x.tarih) + '<span class="a-alt-satir">' + x.ekip.map(function (k) { return MV.kisi(k).ad; }).join(", ") + "</span>") +
         bilgi("Birim fiyat", teklif ? '<a class="a-no" href="' + MK.adres(11, "#/t/" + teklif.no) + '">' + teklif.no + '</a><span class="a-alt-satir">kabul edilen teklif</span>' : "Fiyat listesi" + '<span class="a-alt-satir">teklif kaydı yok</span>') +
@@ -232,8 +289,8 @@
       /* 2026-09-27: işin gideri ve kârı (raporlanan − gider, KDV hariç) */
       '<section class="a-bolum" aria-labelledby="a-b-gider"><div class="a-alt-bas"><h2 class="a-alt-baslik" id="a-b-gider">Giderler</h2><span class="a-sayac"><b>' + gl.length + "</b> gider</span>" +
         '<a class="a-tus a-tus-ikincil a-bolum-tus" href="#/is/' + x.no + '/gider">' + ikon("plus", "a-ikon-kucuk") + "Gider ekle</a></div>" +
-        (gl.length ? '<div class="a-liste-kap">' + MK.tablo({ baslik: "İşin giderleri", sinif: "a-tablo-isgider", sutunlar: GI_SUTUN, kayitlar: gl, href: gHref }) + "</div>" : '<p class="a-bos-satir">Henüz gider yok.</p>') +
-        '<dl class="a-bilgi a-bolum-serit">' + bilgi("Raporlanan (KDV hariç)", para(o.raporlanan)) + bilgi("Gider (KDV hariç)", para(gh)) + bilgi("Kâr (KDV hariç)", "<b>" + para(kr(o.raporlanan - gh)) + "</b>") + "</dl></section>" +
+        (gl.length ? '<div class="a-liste-kap">' + MK.tablo({ baslik: "İşin giderleri", sinif: "a-tablo-isgider", sutunlar: GI_SUTUN, kayitlar: gl, href: gHref }) + "</div>" : '<p class="a-bos-satir">Henüz gider yok.</p>') + "</section>" +
+      karlilikHtml(k) +
       '<section class="a-bolum" aria-labelledby="a-b-gecmis"><div class="a-alt-bas"><h2 class="a-alt-baslik" id="a-b-gecmis">Geçmiş</h2></div>' + gecmisHtml(gecmis) + "</section>";
     MK.suzgecKur("r");
   }
@@ -497,6 +554,7 @@
   MK.onGirdi = function (e) { var k = e.target.dataset && e.target.dataset.alan; if (k && W) { W[k] = e.target.value; if (W.tip === "gider" && k === "tutar") kdvGuncelle(); } };
   MK.onZaman = function (id, d) { if (W && W.tip === "gider" && id === "w-tarih") { W.tarih = d; W.tarihYazi = ""; } };
   MK.onSecim = function (id, deger) {
+    if (id === "gg-ay") { GG.ay = deger; ggCiz(); return; }
     if (!W) return;
     if (W.tip === "gider") {
       if (id === "w-tur") { W.tur = deger; W.oran = gTur(deger).kdv; delete W.hata.tur; }   /* tür seçilince oran türün varsayılanı; sonra değiştirilebilir */
@@ -514,6 +572,7 @@
   function rota() {
     var h = location.hash.replace(/\?.*$/, ""), m;
     if (h === "#/faturalar") return { v: "faturalar" };
+    if (h === "#/gelir-gider") return { v: "gelirgider" };
     if (h === "#/giderler" || h === "#/giderler/yeni") return { v: "giderler", pencere: h === "#/giderler/yeni" };
     if ((m = /^#\/g\/(G-\d{4}-\d{3})$/.exec(h))) return { v: "giderler", pencere: true, gno: m[1] };
     if ((m = /^#\/is\/(P-\d{4}-\d{3})(\/fatura|\/toplu-fatura|\/gider(?:\/(G-\d{4}-\d{3}))?)?$/.exec(h)))
@@ -522,13 +581,17 @@
     return { v: "liste" };
   }
   function goster(odakla) {
-    var r = rota(), liste = r.v === "liste" || r.v === "faturalar" || r.v === "giderler";
+    var r = rota(), liste = r.v === "liste" || r.v === "faturalar" || r.v === "giderler" || r.v === "gelirgider";
     $("a-liste-gorunum").hidden = !liste; $("a-nesne").hidden = liste;
-    if (liste) {
+    $("a-gg").hidden = r.v !== "gelirgider"; $("a-liste").hidden = r.v === "gelirgider";
+    if (r.v === "gelirgider") {
+      ["a-sekme-is", "a-sekme-fatura", "a-sekme-gider"].forEach(function (id) { $(id).removeAttribute("aria-current"); }); $("a-sekme-gg").setAttribute("aria-current", "page");
+      $("a-gider-tuslar").hidden = true; $("a-liste-alt").innerHTML = ""; if ($("a-pencere").open) $("a-pencere").close(); ggCiz();
+    } else if (liste) {
       var on = r.v === "liste" ? "i" : r.v === "faturalar" ? "f" : "g";
       /* müşteri sayfasındaki "Açık alacak" yüzü → o müşterinin faturaları */
       var mq = /[?&]musteri=(m\d+)/.exec(location.hash); if (on !== "g" && mq && MV.musteri(mq[1])) { MK.suzgecSifirla(on); SZ[on].sec.musteri = mq[1]; }
-      ["a-sekme-is", "a-sekme-fatura", "a-sekme-gider"].forEach(function (id) { $(id).removeAttribute("aria-current"); });
+      ["a-sekme-is", "a-sekme-fatura", "a-sekme-gider", "a-sekme-gg"].forEach(function (id) { $(id).removeAttribute("aria-current"); });
       $({ i: "a-sekme-is", f: "a-sekme-fatura", g: "a-sekme-gider" }[on]).setAttribute("aria-current", "page");
       $("a-gider-tuslar").hidden = on !== "g"; if (on !== "g") $("a-liste-alt").innerHTML = "";
       uyariCiz(on); $("a-suzgec-kap").innerHTML = MK.suzgecHtml(on); MK.suzgecKur(on);
@@ -546,7 +609,7 @@
       if (r.pencere && f && MV.faturaKalan(f) > 0) { if (!W) pencereAc("tahsilat", f); }
       else { if (r.pencere) history.replaceState(null, "", "#/f/" + r.no); if ($("a-pencere").open) $("a-pencere").close(); }
     }
-    document.title = (r.v === "is" || r.v === "fatura" ? r.no : r.v === "faturalar" ? "Faturalar" : r.v === "giderler" ? "Giderler" : "Muhasebe") + " · probata maket";
+    document.title = (r.v === "is" || r.v === "fatura" ? r.no : r.v === "faturalar" ? "Faturalar" : r.v === "giderler" ? "Giderler" : r.v === "gelirgider" ? "Gelir-gider" : "Muhasebe") + " · probata maket";
     if (odakla && !(r.pencere && W)) { window.scrollTo(0, 0); var hh = document.querySelector("#a-icerik > :not([hidden]) h1"); if (hh) hh.focus({ preventScroll: true }); }
   }
   MK.goster = goster;

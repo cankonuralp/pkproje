@@ -142,7 +142,9 @@
   });
   MV.kisiBordrolari = function (id) { return MV.BORDROLAR.filter(function (b) { return b.kisi === id; }).sort(function (a, b) { return a.ay < b.ay ? 1 : -1; }); };
   MV.IS_GUNU = 22;
-  MV.gunlukMaliyet = function (id) { var b = MV.kisiBordrolari(id)[0]; return b ? Math.round(b.maliyet / MV.IS_GUNU * 100) / 100 : 0; };
+  /* ayın bordrosu; yoksa o aydan önceki son bordro, o da yoksa ilk bordro (tahmini) */
+  MV.bordroAy = function (id, ay) { var l = MV.kisiBordrolari(id); return (ay ? l.filter(function (b) { return b.ay <= ay; })[0] : l[0]) || l[l.length - 1] || null; };
+  MV.gunlukMaliyet = function (id, ay) { var b = MV.bordroAy(id, ay); return b ? Math.round(b.maliyet / MV.IS_GUNU * 100) / 100 : 0; };
   MV.ayAd = function (ay) { return ["Ocak", "Şubat", "Mart", "Nisan", "Mayıs", "Haziran", "Temmuz", "Ağustos", "Eylül", "Ekim", "Kasım", "Aralık"][+ay.slice(5, 7) - 1] + " " + ay.slice(0, 4); };
 
   /* ── MÜŞTERİ VE TESİS (modül 3; M2, 2026-09-24) ─────────────────────────────────────────────────────────────
@@ -827,6 +829,53 @@
   MV.GIDERLER.forEach(function (g) { g.no = MV.giderNo(g.tarih); });
   MV.gider = function (no) { return MV.GIDERLER.filter(function (g) { return g.no === no; })[0]; };
   MV.isGiderleri = function (no) { return MV.GIDERLER.filter(function (g) { return g.is === no; }); };
+
+  /* ── KÂRLILIK (2026-09-27, reisim: "plan yapıldığında inspector maaşı yakıt araç kira bedeli ofis giderleri vergiler vb tüm giderler etki
+     edecek şekilde kazanç ve gider hesaplanarak kar hesaplanacak kar yüzdesi yazacak iş başına"; iskelet, dağıtım yöntemi VARSAYIM) —
+     iş kârı = gelir (raporlanan, KDV hariç) − işe bağlı masraflar (KDV hariç, reddedilen hariç) − inspector maliyeti (günlük maliyet × işte
+     rapor yazdığı gün) − genel gider payı. Genel gider = ayın sabit giderleri + işe bağlı olmayan masrafları + inspector olmayan personelin
+     maliyeti; inspector-gününe eşit dağıtılır (÷ inspector sayısı ÷ 22 iş günü). Sabit giderler firma ayarı; tutarlar UYDURMA. */
+  MV.SABIT_GIDER = [{ k: "arac", ad: "Araç kira", aylik: 42000, not: "2 araç" }, { k: "ofis", ad: "Ofis kirası", aylik: 28000, not: "" },
+    { k: "ofisgider", ad: "Ofis giderleri", aylik: 7500, not: "elektrik, su, internet" }, { k: "vergi", ad: "Vergi ve harçlar", aylik: 12000, not: "" }];
+  MV.sabitToplam = function () { return MV.SABIT_GIDER.reduce(function (n, x) { return n + x.aylik; }, 0); };
+  var inspMi = function (p) { return !!(p.hesap && p.hesap.roller.indexOf("inspector") >= 0); };
+  var haricTop = function (l) { return kurus(l.reduce(function (n, g) { return n + MV.giderKdv(g).haric; }, 0)); };
+  MV.ayMaliyet = function (ay) {
+    var aktif = MV.PERSONEL.filter(function (p) { return p.basla.slice(0, 7) <= ay && !(p.ayrildi && p.ayrildi.slice(0, 7) < ay); });
+    var ins = aktif.filter(inspMi), diger = aktif.filter(function (p) { return !inspMi(p); });
+    var mal = function (l) { return kurus(l.reduce(function (n, p) { var b = MV.bordroAy(p.id, ay); return n + (b ? b.maliyet : 0); }, 0)); };
+    var gl = MV.GIDERLER.filter(function (g) { return g.tarih.slice(0, 7) === ay && g.durum !== "red"; });
+    var o = { ay: ay, kisi: aktif.length, insSayi: ins.length, maasIns: mal(ins), maasDiger: mal(diger), sabit: MV.sabitToplam(),
+      genel: haricTop(gl.filter(function (g) { return !g.is; })), masraf: haricTop(gl.filter(function (g) { return g.is; })),
+      bordroVar: MV.BORDROLAR.some(function (b) { return b.ay === ay; }) };
+    o.gunPay = o.insSayi ? kurus((o.maasDiger + o.sabit + o.genel) / o.insSayi / MV.IS_GUNU) : 0;
+    return o;
+  };
+  var gunRapor = function (k, g) { var n = 0; MV.ISLER.forEach(function (y) { y.raporlar.forEach(function (no) { var r = MV.rapor(no); if (r.kisi === k && r.olustu.slice(0, 10) === g) n++; }); }); return n; };
+  MV.isKarlilik = function (x) {
+    var ay = x.tarih.slice(0, 7), am = MV.ayMaliyet(ay), o = MV.isOzet(x), kg = {};
+    /* kişi-gün: kişinin o gün bu işte yazdığı rapor ÷ o gün bütün işlerde yazdığı rapor (aynı gün iki işe giden inspector'ın günü bölünür) */
+    x.raporlar.map(MV.rapor).forEach(function (r) { var g = r.olustu.slice(0, 10); (kg[r.kisi] = kg[r.kisi] || {})[g] = (kg[r.kisi][g] || 0) + 1; });
+    var kisiler = Object.keys(kg).map(function (k) {
+      var gun = Object.keys(kg[k]).reduce(function (n, g) { return n + kg[k][g] / gunRapor(k, g); }, 0);
+      return { kisi: k, gun: Math.round(gun * 100) / 100, gunluk: MV.gunlukMaliyet(k, ay) };
+    });
+    var gun = kisiler.reduce(function (n, k) { return n + k.gun; }, 0);
+    var sonuc = { ay: ay, gelir: o.raporlanan, rapor: o.toplam, kisiler: kisiler, gun: gun, gunPay: am.gunPay, tahmini: !am.bordroVar,
+      dogrudan: haricTop(MV.isGiderleri(x.no).filter(function (g) { return g.durum !== "red"; })),
+      personel: kurus(kisiler.reduce(function (n, k) { return n + k.gun * k.gunluk; }, 0)), genel: kurus(am.gunPay * gun) };
+    sonuc.gider = kurus(sonuc.dogrudan + sonuc.personel + sonuc.genel);
+    sonuc.kar = kurus(sonuc.gelir - sonuc.gider);
+    sonuc.oran = sonuc.gelir ? Math.round(sonuc.kar / sonuc.gelir * 1000) / 10 : 0;
+    return sonuc;
+  };
+  /* firma geneli, ay: gelir (o ay denetlenen işlerin raporlananı) − maaşlar (bordro) − masraflar − sabit giderler */
+  MV.ayGelirGider = function (ay) {
+    var am = MV.ayMaliyet(ay), isler = MV.ISLER.filter(function (x) { return x.tarih.slice(0, 7) === ay; });
+    var gelir = kurus(isler.reduce(function (n, x) { return n + MV.isOzet(x).raporlanan; }, 0));
+    var gider = kurus(am.maasIns + am.maasDiger + am.masraf + am.genel + am.sabit);
+    return { am: am, isler: isler, gelir: gelir, gider: gider, kar: kurus(gelir - gider), oran: gelir ? Math.round((gelir - gider) / gelir * 1000) / 10 : null };
+  };
 
   /* belge (MB.belge) için raporun dolu verisi; İSG-KATİP kaydı rapor tarihinde geçerli olan (önceki kayıtlar dahil) */
   MV.raporBelge = function (r) {

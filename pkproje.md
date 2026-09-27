@@ -847,6 +847,8 @@ etkileşim **10/10**, telefon **32/32** (imzalı sözleşme görüntüleme, yük
 1. tur (2026-09-24): 48/48, 11/11.
 
 #### Maket M14 — Muhasebe (modül 18, faz 2) — ONAY BEKLİYOR
+**5. tur (2026-09-27, §9 yirmi altıncı tur):** iş başına **kâr ve kâr oranı** (liste sütunu, iş sayfasında yüz + "Kârlılık" tablosu) ve
+dördüncü sekme **Gelir-gider** (aylık). Ölçüm: M14 184/184 · 40/40 · 92/92.
 **4. tur (2026-09-27, §9 yirmi altıncı tur):** masraf formu akışı — Giderler'de durum (onay bekliyor · onaylandı · ödendi · reddedildi),
 Onayla / Reddet (gerekçe) / Ödendi, onay bekleyen şeridi, elle eklemede "Ödendi / Ödenecek", **Excel'e aktar / Excel'den yükle**; masraf formu
 Planlar'da plan içinde ("Masraflarım"). Ölçüm: M14 160/160 · 35/35 · 80/80; Planlar 120/120 · 33/33 · 60/60.
@@ -1532,6 +1534,18 @@ detaylı olacak,"* (1 = Standartlar örneği sorusu: bırakıldı, kütüphane o
   **"Bordro yükle"**: dönem (son 12 ay), brüt, net, işverene maliyet (son bordrodan dolu gelir), dosya zorunlu; aynı dönemin bordrosu varsa
   uyarı, yenisi yerine geçer; net brütten büyük olamaz. Görenler: firma yöneticisi ve Muhasebe rolü (VARSAYIM). Toplu bordro yükleme (bütün
   personel tek dosyada) ayrıntı gelince.
+- **İş başına kâr (VARSAYIM, iskelet — dağıtım yöntemi reisim'le kesinleşecek):** kâr = **gelir** (raporlanan, KDV hariç) − **işe bağlı
+  masraflar** (KDV hariç, reddedilen hariç) − **inspector maliyeti** (kişinin günlük maliyeti × o işte geçirdiği gün; aynı gün iki işe giden
+  inspector'ın günü o gün yazdığı rapor sayısına göre bölünür) − **genel gider payı** (ayın sabit giderleri + işe bağlı olmayan masraflar +
+  inspector olmayan personelin maliyeti, inspector-gününe eşit dağıtılır: ÷ inspector sayısı ÷ 22). **Kâr oranı** = kâr ÷ gelir. İşler
+  listesinde "Kâr" sütunu (tutar + yüzde), iş sayfasında "Kâr" yüzü ve **"Kârlılık"** tablosu (kalem · ayrıntı · tutar). Ayın bordrosu yoksa
+  son bordrodan tahmini (şeritte söylenir).
+- **Sabit giderler** (firma ayarı; örnek: araç kira 2 araç, ofis kirası, ofis giderleri, vergi ve harçlar — UYDURMA tutarlar); düzenleme ekranı
+  ayrıntı gelince.
+- **Gelir-gider (Muhasebe'de dördüncü sekme):** reisim "bilanço" dedi; burada **aylık gelir-gider** (dönem seçilir: gelir, maaşlar, işe bağlı ve
+  genel masraflar, sabit giderler, kâr ve oranı; o ayın işlerinin kârı). Gerçek **bilanço** (varlık, borç, öz kaynak) firmanın muhasebe
+  programında kalır (VARSAYIM; reisim isterse sorulacak). Örnek veride bir ayda yalnız birkaç iş olduğu için aylar zararda görünür; gerçek
+  kullanımda o ayın bütün raporları gelire girer.
 
 **Açık kalanlar:** **Ana sayfada İSGGM duyuruları** (reisim 2026-09-26: *"Ana sayfada isgüm duyurularını gösterebilir miyiz ? Bunu
 yapılacaklar listesine ekle"*; öneri: ÇSGB İSGGM duyurular sayfası — https://www.csgb.gov.tr/isggm/duyurular/ — sunucuda günde birkaç kez
@@ -1565,6 +1579,9 @@ revizyon, alan kopyalama, hafif kusur devri, meslek eşleşme denetimi).
 - Emsal ürünler: https://opwire.app/iso-17020-periyodik-kontrol-yazilimi/ · https://17020muayene.vidco.com.tr/ · https://akuple.com/asansor-kontrol-yazilimi/ · https://ensyazilim.com/
 
 ## 11 · Değişiklik günlüğü
+- 2026-09-27 (87): **İş kârlılığı ve gelir-gider** (§9 yirmi altıncı tur): iş başına kâr = gelir − işe bağlı masraf − inspector maliyeti
+  (bordrodan günlük × gün) − genel gider payı (sabit giderler, genel masraf, diğer personel; inspector-gününe); kâr oranı listede ve iş
+  sayfasında; Muhasebe'de "Gelir-gider" sekmesi (aylık). Dağıtım yöntemi VARSAYIM. M14 184/184 · 40/40 · 92/92.
 - 2026-09-27 (86): **Personel: maaş ve bordrolar** (§9 yirmi altıncı tur): kişi sayfasında maaş satırları (son bordrodan), günlük maliyet,
   bordrolar listesi ve "Bordro yükle" penceresi. Örnek bordrolar haziran–ağustos 2026 (uydurma tutarlar). M1 248/248 · 45/45 · 124/124.
 - 2026-09-27 (85): **Masraf formu** (§9 yirmi altıncı tur): inspector plan içinden gönderir ("Masraflarım"); Muhasebe'de onay bekliyor →
