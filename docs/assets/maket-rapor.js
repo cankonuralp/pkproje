@@ -286,7 +286,7 @@
   /* kusur açıklamaları (formatlı tür): uygun değil maddeler, sınır dışı ölçümler, uygunsuz ölçüm noktaları ve RCD'ler tek listede */
   function kusurListe(r) {
     var l = [], F = r.F, t = r.t, kr = MV.kriterler(t);
-    r.kriter.forEach(function (x, i) { if (x.c === "uygundegil") l.push([kriterNo(t, i) + " · " + kr[i], ad2(DERECE, x.derece) || "Derece seçilmedi", x.not || "Açıklama yazılmadı"]); });
+    r.kriter.forEach(function (x, i) { if (x.c === "uygundegil") l.push([kriterNo(t, i) + " · " + kr[i], ad2(DERECE, x.derece) || (MV.kusurSinifli(t) ? "Derece seçilmedi" : "Uygun değil"), x.not || "Açıklama yazılmadı"]); });
     MV.testler(t).forEach(function (x, i) { if (testSonuc(x, r.test[i]) === false) l.push([x.ad, "Ağır kusur", r.test[i] + " " + x.birim + " · sınır " + MV.sinirYaz(x)]); });
     r.nokta.forEach(function (x) { var h = MV.noktaHesap(x); if (h.agir) l.push([x.ad, "Ağır kusur", "Not-" + h.not + ": " + F.notlar[h.not - 1]]); });
     r.rcdler.forEach(function (x) { if (rcdSonuc(x) === false) l.push([x.ad + " · RCD", "Ağır kusur", "RCD performans testi yetersiz (IΔ " + x.id + " mA · TΔ " + x.td + " ms)."]); });
@@ -409,7 +409,9 @@
       : ["firma", "ekipman", "cihaz", "tanim", "test", "kusur", "not", "sonuc", "yetkili", "foto"];
     $("a-rapor").innerHTML = MK.kirinti([["Planlar", MK.adres(13, "#/")], [PL.plan || PL.ad, PL.pid ? MK.adres(13, "#/plan/" + PL.pid) : MK.adres(13, "#/")], [r.no]]) +
       '<div class="a-nesne-bas"><div class="a-nesne-kimlik"><div class="a-nesne-baslik"><h1 tabindex="-1">' + e.kod + " · " + kacis(t.ad) + "</h1>" + rozet(DURUM[r.durum]) + "</div>" +
-        '<p class="a-nesne-alt">' + ikon("file-text", "a-ikon-kucuk") + '<span><span class="a-kod">' + r.no + "</span> · " + (F ? '<span class="a-kod">' + t.format + "</span> · " : "") + kacis(PL.ad) + " · " + kacis(MV.musteri(PL.m).kisa) + " · " + kacis(p.ad) + "</span></p></div></div>" +
+        '<p class="a-nesne-alt">' + ikon("file-text", "a-ikon-kucuk") + '<span><span class="a-kod">' + r.no + "</span> · " + (F ? '<span class="a-kod">' + t.format + "</span> · " : "") + kacis(PL.ad) + " · " + kacis(MV.musteri(PL.m).kisa) + " · " + kacis(p.ad) + "</span></p></div>" +
+        /* Ön izle (reisim 2026-09-28: "en sağ üstte ön izleme tuşu olmalı PDF çıktısını ön izleyebilmeliyim ön izle halinde PDF halini indirebilmeliyim") */
+        '<div class="a-eylem-cubugu">' + MK.tus({ eylem: "on-izle", ad: "Ön izle", ikon: "eye", sinif: "a-tus-ikincil" }) + "</div></div>" +
       '<div class="a-uyari-serit">' +
         (r.geri && !oku ? MK.serit("uyari", "undo-2", "<b>Geri gönderildi</b> · " + kacis(MV.kisi(r.geri.kim).ad) + " · " + MK.zamanYaz(r.geri.zaman) + ": “" + kacis(r.geri.gerekce) + "”") : "") +
         (oku ? MK.serit("bilgi", "lock", r.durum === "onayda" ? "Teknik yönetici onayında · " + kacis(yon.ad) + (r.gonderildi ? " · " + MK.zamanYaz(r.gonderildi) : "") : "Muayene uzmanı onayı · imza bekleniyor") : "") +
@@ -607,6 +609,13 @@
       MK.bildir("Fotoğraf " + r.foto + " eklendi (" + nereden + ").");
     });
   };
+  /* ön izleme: rapordaki güncel değerlerle PDF belgesi (MB.belge, o.r = rapor); pencerede "İndir" PDF olarak kaydeder */
+  function belgeVeri(r) {
+    var isg = MV.isgTesis(r.ts.id).filter(function (x) { return x.k === r.kisi; })[0];
+    return { e: r.e, ts: r.ts, m: MV.musteri(r.ts.m), p: MV.kisi(r.kisi), isg: isg, cihaz: cihazlar(r), tarih: r.rtarih || r.bas.slice(0, 10), bas: r.bas.slice(11, 16),
+      bit: r.bit.slice(11, 16), sonraki: r.sonraki, no: r.no, sonuc: r.sonuc === "kullanilamaz" ? "Kusurlu" : "Uygun", imza: null, r: r, kusurlar: kusurListe(r) };
+  }
+  X["on-izle"] = function () { var r = aktif(); MK.pdfGoster({ dosya: r.no + ".pdf", baslik: r.no, icerik: MB.belge(r.t, belgeVeri(r)), sayfa: 1 }); };
   X["kaydet"] = function () {
     var r = aktif(); r.kayit = MK.simdi(); r.degisti = false; $("r-kayit").textContent = kayitMetin(r);
     MK.bildir("Rapor kaydedildi.");

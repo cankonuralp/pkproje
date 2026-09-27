@@ -2,8 +2,8 @@
  "maket": "m8",
  "tarih": "2026-09-27",
  "arac": "tools/olc-bulut.mjs --etkilesim (başsız tarayıcı, 1920 açık tema; gen verilen denemede o genişlik)",
- "toplam": 59,
- "gecen": 59,
+ "toplam": 62,
+ "gecen": 62,
  "denemeler": [
   {
    "ad": "kontrol metodu türden, yalnız standart numarası, seçim alanı yok (formatlı türde firma bölümünde)",
@@ -329,6 +329,27 @@
   },
   {
    "ad": "Kaydet ve Onaya gönder masaüstünde de altta yapışkan",
+   "gen": 1920,
+   "sayfa": "maket/rapor.html",
+   "hash": "#/r/ET-1009",
+   "gecti": true
+  },
+  {
+   "ad": "Ön izle: sağ üstte; rapordaki değerlerle belge (topraklama: formattaki başlık, ölçüm noktası ve notu)",
+   "gen": 1920,
+   "sayfa": "maket/rapor.html",
+   "hash": "#/r/AT-1010",
+   "gecti": true
+  },
+  {
+   "ad": "Ön izle: seçilen madde sonucu ve kusur derecesi belgede",
+   "gen": 1920,
+   "sayfa": "maket/rapor.html",
+   "hash": "#/r/ET-1009",
+   "gecti": true
+  },
+  {
+   "ad": "Ön izle → İndir: PDF olarak kaydedilir (yazdırma penceresi)",
    "gen": 1920,
    "sayfa": "maket/rapor.html",
    "hash": "#/r/ET-1009",
