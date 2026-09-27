@@ -4,8 +4,8 @@
  "tarih": "2026-09-27",
  "arac": "başsız HeadlessChrome/141.0.7390.37 · puppeteer-core · tools/olc-bulut.mjs + tools/olc-maket.js",
  "yontem": "python3 http.server (docs/), her durum × genişlik × tema taze yükleme ve ayrı oturum, geçişler kapalı; 1920×1080 · 1080×810 · 375×812 × açık/koyu; 1080'de çekmece açık ayrıca.",
- "toplam": 248,
- "temiz": 248,
+ "toplam": 256,
+ "temiz": 256,
  "cekmece": {
   "toplam": 2,
   "temiz": 2,
@@ -1586,7 +1586,7 @@
    "eksikIkon": 0,
    "tusY": 34,
    "tusGen": [
-    97,
+    88,
     99
    ],
    "satirY": 65,
@@ -1624,7 +1624,7 @@
    "eksikIkon": 0,
    "tusY": 34,
    "tusGen": [
-    97,
+    88,
     99
    ],
    "satirY": 65,
@@ -1662,7 +1662,7 @@
    "eksikIkon": 0,
    "tusY": 44,
    "tusGen": [
-    101,
+    90,
     102
    ],
    "satirY": 75,
@@ -1700,7 +1700,7 @@
    "eksikIkon": 0,
    "tusY": 44,
    "tusGen": [
-    101,
+    90,
     102
    ],
    "satirY": 75,
@@ -1738,7 +1738,7 @@
    "eksikIkon": 0,
    "tusY": 44,
    "tusGen": [
-    101,
+    90,
     102
    ],
    "satirY": 75,
@@ -1776,7 +1776,7 @@
    "eksikIkon": 0,
    "tusY": 44,
    "tusGen": [
-    101,
+    90,
     102
    ],
    "satirY": 75,
@@ -1814,7 +1814,7 @@
    "eksikIkon": 0,
    "tusY": 44,
    "tusGen": [
-    101,
+    90,
     351
    ],
    "satirY": 138,
@@ -1852,7 +1852,7 @@
    "eksikIkon": 0,
    "tusY": 44,
    "tusGen": [
-    101,
+    90,
     351
    ],
    "satirY": 138,
@@ -1890,7 +1890,7 @@
    "eksikIkon": 0,
    "tusY": 34,
    "tusGen": [
-    99,
+    88,
     122
    ],
    "satirY": 65,
@@ -1928,7 +1928,7 @@
    "eksikIkon": 0,
    "tusY": 34,
    "tusGen": [
-    99,
+    88,
     122
    ],
    "satirY": 65,
@@ -1966,7 +1966,7 @@
    "eksikIkon": 0,
    "tusY": 44,
    "tusGen": [
-    102,
+    90,
     127
    ],
    "satirY": 75,
@@ -2004,7 +2004,7 @@
    "eksikIkon": 0,
    "tusY": 44,
    "tusGen": [
-    102,
+    90,
     127
    ],
    "satirY": 75,
@@ -2118,7 +2118,7 @@
    "eksikIkon": 0,
    "tusY": 44,
    "tusGen": [
-    127,
+    90,
     351
    ],
    "satirY": 201,
@@ -2156,7 +2156,7 @@
    "eksikIkon": 0,
    "tusY": 44,
    "tusGen": [
-    127,
+    90,
     351
    ],
    "satirY": 201,
@@ -2194,7 +2194,7 @@
    "eksikIkon": 0,
    "tusY": 34,
    "tusGen": [
-    97,
+    88,
     97
    ],
    "satirY": 65,
@@ -2232,7 +2232,7 @@
    "eksikIkon": 0,
    "tusY": 34,
    "tusGen": [
-    97,
+    88,
     97
    ],
    "satirY": 65,
@@ -2270,7 +2270,7 @@
    "eksikIkon": 0,
    "tusY": 44,
    "tusGen": [
-    101,
+    90,
     101
    ],
    "satirY": 75,
@@ -2308,7 +2308,7 @@
    "eksikIkon": 0,
    "tusY": 44,
    "tusGen": [
-    101,
+    90,
     101
    ],
    "satirY": 75,
@@ -2346,7 +2346,7 @@
    "eksikIkon": 0,
    "tusY": 44,
    "tusGen": [
-    101,
+    90,
     101
    ],
    "satirY": 75,
@@ -2384,7 +2384,7 @@
    "eksikIkon": 0,
    "tusY": 44,
    "tusGen": [
-    101,
+    90,
     101
    ],
    "satirY": 75,
@@ -2422,7 +2422,7 @@
    "eksikIkon": 0,
    "tusY": 44,
    "tusGen": [
-    101,
+    90,
     101
    ],
    "satirY": 138,
@@ -2460,8 +2460,312 @@
    "eksikIkon": 0,
    "tusY": 44,
    "tusGen": [
-    101,
+    90,
     101
+   ],
+   "satirY": 138,
+   "birincil": null,
+   "pencereGen": null,
+   "icerik": 375,
+   "listeGen": 351,
+   "yaziTipi": "Sora yüklü",
+   "hata": 0,
+   "ayrinti": {},
+   "hatalar": []
+  },
+  {
+   "ad": "ana sayfa · duyurular alınamadı",
+   "gen": 1920,
+   "tema": "acik",
+   "gorunum": "liste",
+   "liste": "tablo",
+   "pencere": null,
+   "tasma": 0,
+   "sertKirpma": 0,
+   "tasanMetin": 0,
+   "cakisma": 0,
+   "sonCakisma": null,
+   "gizliEtkilesimli": 0,
+   "ekranDisi": 0,
+   "kucukHedef": 0,
+   "basliksizKirpma": 0,
+   "ipucuKesik": 0,
+   "kenarFarki": 0,
+   "gorunenGizli": 0,
+   "pencereKenar": null,
+   "hizaKaymasi": 0,
+   "kartTutarsiz": 0,
+   "eksikIkon": 0,
+   "tusY": 34,
+   "tusGen": [
+    88,
+    99
+   ],
+   "satirY": 65,
+   "birincil": null,
+   "pencereGen": null,
+   "icerik": 1688,
+   "listeGen": 1648,
+   "yaziTipi": "Sora yüklü",
+   "hata": 0,
+   "ayrinti": {},
+   "hatalar": []
+  },
+  {
+   "ad": "ana sayfa · duyurular alınamadı",
+   "gen": 1920,
+   "tema": "koyu",
+   "gorunum": "liste",
+   "liste": "tablo",
+   "pencere": null,
+   "tasma": 0,
+   "sertKirpma": 0,
+   "tasanMetin": 0,
+   "cakisma": 0,
+   "sonCakisma": null,
+   "gizliEtkilesimli": 0,
+   "ekranDisi": 0,
+   "kucukHedef": 0,
+   "basliksizKirpma": 0,
+   "ipucuKesik": 0,
+   "kenarFarki": 0,
+   "gorunenGizli": 0,
+   "pencereKenar": null,
+   "hizaKaymasi": 0,
+   "kartTutarsiz": 0,
+   "eksikIkon": 0,
+   "tusY": 34,
+   "tusGen": [
+    88,
+    99
+   ],
+   "satirY": 65,
+   "birincil": null,
+   "pencereGen": null,
+   "icerik": 1688,
+   "listeGen": 1648,
+   "yaziTipi": "Sora yüklü",
+   "hata": 0,
+   "ayrinti": {},
+   "hatalar": []
+  },
+  {
+   "ad": "ana sayfa · duyurular alınamadı",
+   "gen": 1080,
+   "tema": "acik",
+   "gorunum": "liste",
+   "liste": "tablo",
+   "pencere": null,
+   "tasma": 0,
+   "sertKirpma": 0,
+   "tasanMetin": 0,
+   "cakisma": 0,
+   "sonCakisma": null,
+   "gizliEtkilesimli": 0,
+   "ekranDisi": 0,
+   "kucukHedef": 0,
+   "basliksizKirpma": 0,
+   "ipucuKesik": 0,
+   "kenarFarki": 0,
+   "gorunenGizli": 0,
+   "pencereKenar": null,
+   "hizaKaymasi": 0,
+   "kartTutarsiz": 0,
+   "eksikIkon": 0,
+   "tusY": 44,
+   "tusGen": [
+    90,
+    102
+   ],
+   "satirY": 75,
+   "birincil": null,
+   "pencereGen": null,
+   "icerik": 1080,
+   "listeGen": 1048,
+   "yaziTipi": "Sora yüklü",
+   "hata": 0,
+   "ayrinti": {},
+   "hatalar": []
+  },
+  {
+   "ad": "ana sayfa · duyurular alınamadı",
+   "gen": 1080,
+   "tema": "koyu",
+   "gorunum": "liste",
+   "liste": "tablo",
+   "pencere": null,
+   "tasma": 0,
+   "sertKirpma": 0,
+   "tasanMetin": 0,
+   "cakisma": 0,
+   "sonCakisma": null,
+   "gizliEtkilesimli": 0,
+   "ekranDisi": 0,
+   "kucukHedef": 0,
+   "basliksizKirpma": 0,
+   "ipucuKesik": 0,
+   "kenarFarki": 0,
+   "gorunenGizli": 0,
+   "pencereKenar": null,
+   "hizaKaymasi": 0,
+   "kartTutarsiz": 0,
+   "eksikIkon": 0,
+   "tusY": 44,
+   "tusGen": [
+    90,
+    102
+   ],
+   "satirY": 75,
+   "birincil": null,
+   "pencereGen": null,
+   "icerik": 1080,
+   "listeGen": 1048,
+   "yaziTipi": "Sora yüklü",
+   "hata": 0,
+   "ayrinti": {},
+   "hatalar": []
+  },
+  {
+   "ad": "ana sayfa · duyurular alınamadı",
+   "gen": 810,
+   "tema": "acik",
+   "gorunum": "liste",
+   "liste": "tablo",
+   "pencere": null,
+   "tasma": 0,
+   "sertKirpma": 0,
+   "tasanMetin": 0,
+   "cakisma": 0,
+   "sonCakisma": null,
+   "gizliEtkilesimli": 0,
+   "ekranDisi": 0,
+   "kucukHedef": 0,
+   "basliksizKirpma": 0,
+   "ipucuKesik": 0,
+   "kenarFarki": 0,
+   "gorunenGizli": 0,
+   "pencereKenar": null,
+   "hizaKaymasi": 0,
+   "kartTutarsiz": 0,
+   "eksikIkon": 0,
+   "tusY": 44,
+   "tusGen": [
+    90,
+    102
+   ],
+   "satirY": 75,
+   "birincil": null,
+   "pencereGen": null,
+   "icerik": 810,
+   "listeGen": 778,
+   "yaziTipi": "Sora yüklü",
+   "hata": 0,
+   "ayrinti": {},
+   "hatalar": []
+  },
+  {
+   "ad": "ana sayfa · duyurular alınamadı",
+   "gen": 810,
+   "tema": "koyu",
+   "gorunum": "liste",
+   "liste": "tablo",
+   "pencere": null,
+   "tasma": 0,
+   "sertKirpma": 0,
+   "tasanMetin": 0,
+   "cakisma": 0,
+   "sonCakisma": null,
+   "gizliEtkilesimli": 0,
+   "ekranDisi": 0,
+   "kucukHedef": 0,
+   "basliksizKirpma": 0,
+   "ipucuKesik": 0,
+   "kenarFarki": 0,
+   "gorunenGizli": 0,
+   "pencereKenar": null,
+   "hizaKaymasi": 0,
+   "kartTutarsiz": 0,
+   "eksikIkon": 0,
+   "tusY": 44,
+   "tusGen": [
+    90,
+    102
+   ],
+   "satirY": 75,
+   "birincil": null,
+   "pencereGen": null,
+   "icerik": 810,
+   "listeGen": 778,
+   "yaziTipi": "Sora yüklü",
+   "hata": 0,
+   "ayrinti": {},
+   "hatalar": []
+  },
+  {
+   "ad": "ana sayfa · duyurular alınamadı",
+   "gen": 375,
+   "tema": "acik",
+   "gorunum": "liste",
+   "liste": "kart",
+   "pencere": null,
+   "tasma": 0,
+   "sertKirpma": 0,
+   "tasanMetin": 0,
+   "cakisma": 0,
+   "sonCakisma": null,
+   "gizliEtkilesimli": 0,
+   "ekranDisi": 0,
+   "kucukHedef": 0,
+   "basliksizKirpma": 0,
+   "ipucuKesik": 0,
+   "kenarFarki": 0,
+   "gorunenGizli": 0,
+   "pencereKenar": null,
+   "hizaKaymasi": 0,
+   "kartTutarsiz": 0,
+   "eksikIkon": 0,
+   "tusY": 44,
+   "tusGen": [
+    90,
+    351
+   ],
+   "satirY": 138,
+   "birincil": null,
+   "pencereGen": null,
+   "icerik": 375,
+   "listeGen": 351,
+   "yaziTipi": "Sora yüklü",
+   "hata": 0,
+   "ayrinti": {},
+   "hatalar": []
+  },
+  {
+   "ad": "ana sayfa · duyurular alınamadı",
+   "gen": 375,
+   "tema": "koyu",
+   "gorunum": "liste",
+   "liste": "kart",
+   "pencere": null,
+   "tasma": 0,
+   "sertKirpma": 0,
+   "tasanMetin": 0,
+   "cakisma": 0,
+   "sonCakisma": null,
+   "gizliEtkilesimli": 0,
+   "ekranDisi": 0,
+   "kucukHedef": 0,
+   "basliksizKirpma": 0,
+   "ipucuKesik": 0,
+   "kenarFarki": 0,
+   "gorunenGizli": 0,
+   "pencereKenar": null,
+   "hizaKaymasi": 0,
+   "kartTutarsiz": 0,
+   "eksikIkon": 0,
+   "tusY": 44,
+   "tusGen": [
+    90,
+    351
    ],
    "satirY": 138,
    "birincil": null,
@@ -2498,7 +2802,7 @@
    "eksikIkon": 0,
    "tusY": 34,
    "tusGen": [
-    104,
+    88,
     104
    ],
    "satirY": 65,
@@ -2536,7 +2840,7 @@
    "eksikIkon": 0,
    "tusY": 34,
    "tusGen": [
-    104,
+    88,
     104
    ],
    "satirY": 65,
@@ -2574,7 +2878,7 @@
    "eksikIkon": 0,
    "tusY": 44,
    "tusGen": [
-    108,
+    90,
     108
    ],
    "satirY": 75,
@@ -2612,7 +2916,7 @@
    "eksikIkon": 0,
    "tusY": 44,
    "tusGen": [
-    108,
+    90,
     108
    ],
    "satirY": 75,
@@ -2650,7 +2954,7 @@
    "eksikIkon": 0,
    "tusY": 44,
    "tusGen": [
-    108,
+    90,
     108
    ],
    "satirY": 75,
@@ -2688,7 +2992,7 @@
    "eksikIkon": 0,
    "tusY": 44,
    "tusGen": [
-    108,
+    90,
     108
    ],
    "satirY": 75,
@@ -2726,7 +3030,7 @@
    "eksikIkon": 0,
    "tusY": 44,
    "tusGen": [
-    108,
+    90,
     108
    ],
    "satirY": 138,
@@ -2764,7 +3068,7 @@
    "eksikIkon": 0,
    "tusY": 44,
    "tusGen": [
-    108,
+    90,
     108
    ],
    "satirY": 138,
@@ -2802,7 +3106,7 @@
    "eksikIkon": 0,
    "tusY": 34,
    "tusGen": [
-    104,
+    88,
     104
    ],
    "satirY": 65,
@@ -2840,7 +3144,7 @@
    "eksikIkon": 0,
    "tusY": 34,
    "tusGen": [
-    104,
+    88,
     104
    ],
    "satirY": 65,
@@ -2878,7 +3182,7 @@
    "eksikIkon": 0,
    "tusY": 44,
    "tusGen": [
-    108,
+    90,
     108
    ],
    "satirY": 75,
@@ -2916,7 +3220,7 @@
    "eksikIkon": 0,
    "tusY": 44,
    "tusGen": [
-    108,
+    90,
     108
    ],
    "satirY": 75,
@@ -2954,7 +3258,7 @@
    "eksikIkon": 0,
    "tusY": 44,
    "tusGen": [
-    108,
+    90,
     108
    ],
    "satirY": 75,
@@ -2992,7 +3296,7 @@
    "eksikIkon": 0,
    "tusY": 44,
    "tusGen": [
-    108,
+    90,
     108
    ],
    "satirY": 75,
@@ -3030,7 +3334,7 @@
    "eksikIkon": 0,
    "tusY": 44,
    "tusGen": [
-    108,
+    90,
     108
    ],
    "satirY": 138,
@@ -3068,7 +3372,7 @@
    "eksikIkon": 0,
    "tusY": 44,
    "tusGen": [
-    108,
+    90,
     108
    ],
    "satirY": 138,

@@ -1560,8 +1560,11 @@ kodlayalımki tekrar tekrar yama atarak siteyi kötü yapmayalım ayrıca ana sa
   engelliyor. Formatların içeriği görülmeden örnekler kurulmaz (sonra yeniden yama olur). Yol: ağ izni ya da reisim PDF'leri iletir →
   örnek ekipman, rapor bölümleri, kriterler ve test değerleri bu beş formata göre yeniden kurulur.
 - **Maket tam çalışsın; site istenen hâle gelince kod** (§3.3 kuralı teyit: bütün maketler onaylanmadan kod yok).
+- **Ana sayfada "Duyurular"** (her rolde, en altta): İSGGM ve iş ekipmanları portalının duyuruları — başlık, kaynak, tarih (bilinmiyorsa yazılmaz),
+  yeni sekmede açılan bağlantı; "Tümü" İSGGM duyurular sayfasına. Uygulamada sunucu günde birkaç kez okur (pg-boss, §8.9), yalnız ekranda
+  (bildirim yok); okunamazsa "Duyurular alınamadı; son alınan liste gösteriliyor." Makette bu depoda kayıtlı 3 gerçek duyuru (§10).
 
-**Açık kalanlar:** **Ana sayfada İSGGM duyuruları** (reisim 2026-09-26: *"Ana sayfada isgüm duyurularını gösterebilir miyiz ? Bunu
+**Açık kalanlar:** ~~Ana sayfada İSGGM duyuruları~~ (2026-09-27: makette eklendi; okuma işi uygulamada) (reisim 2026-09-26: *"Ana sayfada isgüm duyurularını gösterebilir miyiz ? Bunu
 yapılacaklar listesine ekle"*; öneri: ÇSGB İSGGM duyurular sayfası — https://www.csgb.gov.tr/isggm/duyurular/ — sunucuda günde birkaç kez
 okunur (pg-boss işi, §8.9), Ana sayfada son 5 duyuru başlık + tarih + kaynağa bağlantı; yalnız ekranda, bildirim yok; sayfa RSS vermiyorsa
 sayfa yapısı değişince okuma bozulabilir → okunamazsa sessiz kalmaz, "duyurular alınamadı" yazar; maket sırası Ana sayfa revizesinde) · **modül modül gözden geçirme** (M1–M5 ve M13 onaylandı — Ekipmanlar kalktı, Sözleşmeler birleşti; M6 Plan aç 2. tur incelemede) · **toplu maket çalışması** (M1–M16 + toplu bakış, `MAKET-PLANI.md`; sorular §3.6'da, 32'den) · **önizlemede örnek veri kipi** (öneri, §3.3) · ~~rol × modül görünürlüğü~~ (karar 2026-09-25: başlangıç düzeni + firma yöneticisi değiştirir) · **gerçek sunucunun sağlayıcısı**
@@ -1593,6 +1596,8 @@ revizyon, alan kopyalama, hafif kusur devri, meslek eşleşme denetimi).
 - Emsal ürünler: https://opwire.app/iso-17020-periyodik-kontrol-yazilimi/ · https://17020muayene.vidco.com.tr/ · https://akuple.com/asansor-kontrol-yazilimi/ · https://ensyazilim.com/
 
 ## 11 · Değişiklik günlüğü
+- 2026-09-27 (89): **Ana sayfada Duyurular** (§9 yirmi yedinci tur): İSGGM / portal duyuruları, yeni sekmede bağlantı, "alınamadı" hâli.
+  M1 256/256 · 47/47 · 128/128.
 - 2026-09-27 (88): **Kontrol metodu yalnız standart numarası** (§9 yirmi yedinci tur): raporda, belgede, onayda, Standartlar "Raporda" satırında
   açıklama yok; iki standart virgülle. Elektrik formatları ağ izni olmadığı için çekilemedi (kayıtlı). M8 136/136 · 45/45 · 68/68; M9 · M7 · M11 temiz.
 - 2026-09-27 (87): **İş kârlılığı ve gelir-gider** (§9 yirmi altıncı tur): iş başına kâr = gelir − işe bağlı masraf − inspector maliyeti

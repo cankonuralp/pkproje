@@ -8,8 +8,8 @@
   390,
   430
  ],
- "toplam": 124,
- "temiz": 124,
+ "toplam": 128,
+ "temiz": 128,
  "durumlar": [
   {
    "ad": "giriş",
@@ -292,6 +292,42 @@
   },
   {
    "ad": "ana sayfa · inspector",
+   "gen": 430,
+   "temiz": true,
+   "tasma": 0,
+   "disari": [],
+   "kucukAlan": [],
+   "alan": 0
+  },
+  {
+   "ad": "ana sayfa · duyurular alınamadı",
+   "gen": 320,
+   "temiz": true,
+   "tasma": 0,
+   "disari": [],
+   "kucukAlan": [],
+   "alan": 0
+  },
+  {
+   "ad": "ana sayfa · duyurular alınamadı",
+   "gen": 360,
+   "temiz": true,
+   "tasma": 0,
+   "disari": [],
+   "kucukAlan": [],
+   "alan": 0
+  },
+  {
+   "ad": "ana sayfa · duyurular alınamadı",
+   "gen": 390,
+   "temiz": true,
+   "tasma": 0,
+   "disari": [],
+   "kucukAlan": [],
+   "alan": 0
+  },
+  {
+   "ad": "ana sayfa · duyurular alınamadı",
    "gen": 430,
    "temiz": true,
    "tasma": 0,

@@ -2,9 +2,23 @@
  "maket": "m1",
  "tarih": "2026-09-27",
  "arac": "tools/olc-bulut.mjs --etkilesim (başsız tarayıcı, 1920 açık tema; gen verilen denemede o genişlik)",
- "toplam": 45,
- "gecen": 45,
+ "toplam": 47,
+ "gecen": 47,
  "denemeler": [
+  {
+   "ad": "ana sayfada duyurular: her rolde, bağlantılar yeni sekmede",
+   "gen": 1920,
+   "sayfa": "maket/anasayfa.html",
+   "hash": "#/inspector",
+   "gecti": true
+  },
+  {
+   "ad": "duyurular alınamazsa söylenir, liste durur",
+   "gen": 1920,
+   "sayfa": "maket/anasayfa.html",
+   "hash": "#/yonetici",
+   "gecti": true
+  },
   {
    "ad": "kişide maaş ve bordrolar: 3 bordro, günlük maliyet",
    "gen": 1920,

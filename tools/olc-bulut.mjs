@@ -61,6 +61,7 @@ export const DURUMLAR = {
     { ad: "ana sayfa · firma yöneticisi", sayfa: "maket/anasayfa.html", hash: "#/yonetici" },
     { ad: "ana sayfa · planlama", sayfa: "maket/anasayfa.html", hash: "#/planlama" },
     { ad: "ana sayfa · inspector", sayfa: "maket/anasayfa.html", hash: "#/inspector" },
+    { ad: "ana sayfa · duyurular alınamadı", sayfa: "maket/anasayfa.html", hash: "#/yonetici", adim: [["js", "window.DUYURU_HATA = true; MK.goster(false)"]] },
     { ad: "ana sayfa · mekanik yönetici", sayfa: "maket/anasayfa.html", hash: "#/mekyon" },
     { ad: "ana sayfa · elektrik yönetici", sayfa: "maket/anasayfa.html", hash: "#/elkyon" },
     { ad: "personel · liste", hash: "#/" },
@@ -360,6 +361,9 @@ export const DENEMELER = {
     { ad: "menüden hazır maket → bağlantı (Personel)", hash: "#/", bekle: 'document.querySelector(\'#a-menu a[href="personel.html"]\') !== null' },
   ],
   m1: [
+    /* 2026-09-27 (reisim: "ana sayfaya duyurular kısmımızda ekle") */
+    { ad: "ana sayfada duyurular: her rolde, bağlantılar yeni sekmede", sayfa: "maket/anasayfa.html", hash: "#/inspector", bekle: 'document.querySelectorAll("section[aria-labelledby=a-b-duyuru] li").length === 3 && [...document.querySelectorAll("section[aria-labelledby=a-b-duyuru] a")].every(function (a) { return a.target === "_blank" && /noopener/.test(a.rel); })' },
+    { ad: "duyurular alınamazsa söylenir, liste durur", sayfa: "maket/anasayfa.html", hash: "#/yonetici", adim: [["js", "window.DUYURU_HATA = true; MK.goster(false)"]], bekle: '/alınamadı/.test(document.querySelector("section[aria-labelledby=a-b-duyuru]").textContent) && document.querySelectorAll("section[aria-labelledby=a-b-duyuru] li").length === 3' },
     /* 2026-09-27 (reisim: "personel ekranında maaşlar ve bordrolarda olacak oraya yüklenebilecek bordrolar") */
     { ad: "kişide maaş ve bordrolar: 3 bordro, günlük maliyet", hash: "#/p/mk", bekle: 'document.querySelector("section[aria-labelledby=a-b-maas] .a-sayac").textContent === "3 bordro" && /Günlük maliyet/.test(document.querySelector("section[aria-labelledby=a-b-maas]").textContent)' },
     { ad: "yeni başlayan: bordro yok", hash: "#/p/by", bekle: '/Bordro yüklenmedi/.test(document.querySelector("section[aria-labelledby=a-b-maas]").textContent)' },

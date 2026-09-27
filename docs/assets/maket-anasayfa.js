@@ -137,6 +137,29 @@
   BOLUM.mekyon = yoneticiBolumu("m", "sy");
   BOLUM.elkyon = yoneticiBolumu("e", "co");
 
+  /* ── DUYURULAR (reisim 2026-09-26: "Ana sayfada isgüm duyurularını gösterebilir miyiz"; 2026-09-27: "ana sayfaya duyurular kısmımızda ekle")
+     Uygulamada sunucu ÇSGB İSGGM duyurular sayfasını ve iş ekipmanları portalını günde birkaç kez okur (pg-boss işi, §8.9); son duyurular
+     başlık + kaynak + tarih + bağlantı; yalnız ekranda, bildirim yok. Okunamazsa sessiz kalmaz: "alınamadı" yazar, son başarılı liste durur.
+     Makette: bu depoda kaydı olan GERÇEK duyurular (pkproje.md §10); tarihi bilinmeyene tarih yazılmaz (uydurma tarih yok). */
+  var DUYURULAR = [
+    { baslik: "İş Ekipmanlarının Kullanımında Sağlık ve Güvenlik Şartları Yönetmeliğinde değişiklik (RG 23.12.2025, 33116)", kaynak: "ÇSGB İSGGM", tarih: "2025-12-24",
+      url: "https://www.csgb.gov.tr/isggm/duyurular/24122025/" },
+    { baslik: "Zorunlu periyodik kontrol rapor formatları", kaynak: "İş Ekipmanları Portalı", tarih: "", url: "https://isekipmanlari.csgb.gov.tr/detay.aspx?d=1040" },
+    { baslik: "LPG tankı muayene ve yeterlilik rapor formatları", kaynak: "İş Ekipmanları Portalı", tarih: "", url: "https://isekipmanlari.csgb.gov.tr/detay.aspx?d=1039" }
+  ];
+  var DUYURU_SON = "2026-09-23T08:00";
+  function duyurularHtml() {
+    var hata = !!window.DUYURU_HATA;
+    return '<section class="a-bolum" aria-labelledby="a-b-duyuru"><div class="a-alt-bas"><h2 class="a-alt-baslik" id="a-b-duyuru">Duyurular</h2>' +
+        '<span class="a-sayac">İSGGM · güncellendi ' + MK.zamanYaz(DUYURU_SON) + "</span>" +
+        '<a class="a-tus a-tus-ikincil a-bolum-tus" href="https://www.csgb.gov.tr/isggm/duyurular/" target="_blank" rel="noopener">' + ikon("arrow-right", "a-ikon-kucuk") + "Tümü</a></div>" +
+      (hata ? '<div class="a-uyari-serit">' + MK.serit("uyari", "triangle-alert", "Duyurular alınamadı; son alınan liste gösteriliyor.") + "</div>" : "") +
+      '<ul class="a-kosullar a-duyurular">' + DUYURULAR.map(function (d) {
+        return '<li class="a-kosul-bilgi">' + ikon("scroll-text", "a-ikon-kucuk") + '<span><a class="a-baglanti" href="' + d.url + '" target="_blank" rel="noopener">' + kacis(d.baslik) + "</a>" +
+          '<span class="a-alt-satir">' + kacis(d.kaynak) + (d.tarih ? " · " + MK.tarihYaz(d.tarih) : "") + "</span></span></li>";
+      }).join("") + "</ul></section>";
+  }
+
   /* ── GÖRÜNÜM ────────────────────────────────────────────────────────────────────────────────────────── */
   var rolu = function () { var m = /^#\/(\w+)$/.exec(location.hash); return m && BOLUM[m[1]] ? m[1] : "yonetici"; };
   function ciz(odakla) {
@@ -147,7 +170,7 @@
         (r === "planlama" || r === "yonetici" ? '<a class="a-tus a-tus-birincil a-bolum-tus" href="plan-ac.html#/">' + ikon("calendar-check", "a-ikon-kucuk") + "Plan aç</a>" : "") + "</div>" +
       '<div class="a-pano-anahtar"><span class="a-etiket a-etiket-satir">Makette bakış</span><div class="a-sekmeler" role="group" aria-label="Rol">' +
         MV.ROLLER.filter(function (x) { return BOLUM[x.k]; }).map(function (x) { return '<a class="a-sekme" href="#/' + x.k + '"' + (x.k === r ? ' aria-current="page"' : "") + ">" + x.ad + "</a>"; }).join("") + "</div></div>" +
-      BOLUM[r](KISI[r]);
+      BOLUM[r](KISI[r]) + duyurularHtml();
     var u = document.querySelector(".a-kullanici");
     if (u) { u.querySelector(".a-avatar").textContent = MV.bas(p.ad); u.querySelector(".a-kullanici-ad").textContent = p.ad; u.querySelector(".a-kullanici-rol").textContent = MV.rol(r).ad; }
     document.title = "Ana sayfa · " + MV.rol(r).ad + " · probata maket";
