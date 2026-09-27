@@ -59,7 +59,7 @@
     var s = MV.sonucAd(r), kusur = s !== "Uygun";
     return [
       [!!b.isg, b.isg ? "İSG-KATİP " + b.isg.no + " · onay " + MK.tarihYaz(b.isg.onay) : "İSG-KATİP kaydı yok"],
-      [true, "Kontrol metodu: " + MV.turMetot(t).map(function (m) { return m.no || m.konu; }).join(", ")],   /* türden (2026-09-27) */
+      [true, "Kontrol metodu: " + MV.metotYazi(t)],   /* türden (2026-09-27) */
       [!kusur, kr.length + " kriter yapıldı" + (kusur ? " · " + "1 uygun değil madde" : " · hepsi uygun")],
       [true, ts.length + " test değeri · hepsi sınır içinde"],
       [!gecti.length, b.cihaz.length + " ölçüm cihazı" + (gecti.length ? " · kalibrasyonu geçmiş: " + gecti.map(function (v) { return v.seri; }).join(", ") : " · kalibrasyonu geçerli")],

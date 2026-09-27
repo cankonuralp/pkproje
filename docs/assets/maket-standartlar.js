@@ -96,7 +96,7 @@
         }).join("") + "</ol></section>" +
       '<section class="a-bolum" aria-labelledby="a-b-rapor"><div class="a-alt-bas"><h2 class="a-alt-baslik" id="a-b-rapor">Raporda</h2>' +
         "</div>" +
-        '<dl class="a-bilgi">' + bilgi("Kontrol metodu", kacis(ad(yeni || s)) + " — " + kacis(s.konu), true) + "</dl></section>";
+        '<dl class="a-bilgi">' + bilgi("Kontrol metodu", kacis(ad(yeni || s)), true) + "</dl></section>";
   }
 
   /* ── YÜKLE / YENİ SÜRÜM PENCERESİ ───────────────────────────────────────────────────────────────────── */

@@ -204,7 +204,7 @@
       bolum(2, "r-b2", "Ekipman bilgileri", '<dl class="a-satirlar a-satirlar-form">' +
           satir("Kod", '<span class="a-kod">' + e.kod + "</span>") + satir("Ekipman türü", kacis(t.ad)) +
           /* 2026-09-27 (reisim: "metod kısmı olsun ama sadece ekipman türü eklerken belirlene"): raporda seçilmez, türden okunur */
-          satir("Kontrol metodu", MV.turMetot(t).map(function (m) { return '<span class="a-metot">' + (m.no ? '<span class="a-kod">' + m.no + "</span> " : "") + kacis(m.konu) + "</span>"; }).join("")) +
+          satir("Kontrol metodu", kacis(MV.metotYazi(t))) +
           metinAlan(r, oku, "marka", "Marka", 40) + metinAlan(r, oku, "model", "Model", 40) + metinAlan(r, oku, "seri", "Seri no", 30) +
           metinAlan(r, oku, "imal", "İmal yılı", 4, ' inputmode="numeric"') + metinAlan(r, oku, "konum", "Kullanım yeri", 60) + metinAlan(r, oku, "amac", "Kullanım amacı", 120) +
           satir("Önceki kontrol", e.onceki ? MK.tarihYaz(e.onceki.tarih) + " · " + kacis(e.onceki.sonuc) + ' · <span class="a-rapor-no">' + e.onceki.rapor + "</span>" : "İlk kontrol") + "</dl>") +

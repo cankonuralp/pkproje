@@ -468,7 +468,8 @@
   MV.turMetot = function (t) {
     return t.std.length ? t.std.map(function (k) { var s = MV.standart(k); return { no: s.no + ":" + s.surum, konu: s.konu }; }) : [{ no: "", konu: "Üretici talimatı" }];
   };
-  MV.metotYazi = function (t) { return MV.turMetot(t).map(function (m) { return m.no ? m.no + " — " + m.konu : m.konu; }).join("; "); };
+  /* 2026-09-27 (reisim: "kontrol metodunda sadece standartlar yazsın açıklaması değil örneğin 'TS EN 1579, TS EN 2134'"): yalnız numara:sürüm */
+  MV.metotYazi = function (t) { return MV.turMetot(t).map(function (m) { return m.no || m.konu; }).join(", "); };
   /* raporda eklenebilecek cihazlar: kişinin zimmetinde, türün cihaz türlerinden, kalibrasyonu geçmemiş */
   MV.eklenebilirCihazlar = function (kisi, turler) {
     return MV.VARLIKLAR.filter(function (v) { return v.tur === "cihaz" && MV.kimde(v.id) === kisi && turler.indexOf(v.cihazTur) >= 0 && MV.kalDurum(v) !== "gecti"; });

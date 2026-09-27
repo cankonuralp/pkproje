@@ -1547,6 +1547,20 @@ detaylı olacak,"* (1 = Standartlar örneği sorusu: bırakıldı, kütüphane o
   programında kalır (VARSAYIM; reisim isterse sorulacak). Örnek veride bir ayda yalnız birkaç iş olduğu için aylar zararda görünür; gerçek
   kullanımda o ayın bütün raporları gelire girer.
 
+**Yirmi yedinci tur (2026-09-27, reisim birebir):** *"Referans olarak isgümde yayınlanan zorunlu formatlardan elektrik ile ilgili olanları çek
+ve örnekleri hep onlarla ilgili yap, kontrol metodunda sadece standartlar yazsın açıklaması değil örneğin. "TS EN 1579, TS EN 2134" (salladım )
+maket site nasıl çalışması gerekiyorsa çalışsın maket olduğu için çalışmayan yerler de dahil site tam olarak istediğim gibi olduğunda
+kodlayalımki tekrar tekrar yama atarak siteyi kötü yapmayalım ayrıca ana sayfaya duyurular kısmımızda ekle"*
+→ **Kararlar:**
+- **Kontrol metodu yalnız standart numarası** (numara:sürüm, virgülle; ör. "TS ISO 5057:2012, TS EN ISO 3691-1:2018"); açıklama (konu) raporda,
+  belgede, onay özetinde ve Standartlar sayfasının "Raporda" satırında yazmaz. Türde standart yoksa "Üretici talimatı". Tür sayfası ve Standartlar
+  listesi konuyu göstermeye devam eder (kütüphane bilgisi).
+- **Elektrikle ilgili zorunlu formatlar (ZPKR01 AG topraklama · ZPKR02 elektrik iç tesisat · ZPKR03 yıldırımdan korunma · ZPKR04 yangın
+  algılama · ZPKR05 transformatör; §4.8):** bu oturumda **çekilemedi** — ortamın ağ ayarı isekipmanlari.csgb.gov.tr ve www.csgb.gov.tr'yi
+  engelliyor. Formatların içeriği görülmeden örnekler kurulmaz (sonra yeniden yama olur). Yol: ağ izni ya da reisim PDF'leri iletir →
+  örnek ekipman, rapor bölümleri, kriterler ve test değerleri bu beş formata göre yeniden kurulur.
+- **Maket tam çalışsın; site istenen hâle gelince kod** (§3.3 kuralı teyit: bütün maketler onaylanmadan kod yok).
+
 **Açık kalanlar:** **Ana sayfada İSGGM duyuruları** (reisim 2026-09-26: *"Ana sayfada isgüm duyurularını gösterebilir miyiz ? Bunu
 yapılacaklar listesine ekle"*; öneri: ÇSGB İSGGM duyurular sayfası — https://www.csgb.gov.tr/isggm/duyurular/ — sunucuda günde birkaç kez
 okunur (pg-boss işi, §8.9), Ana sayfada son 5 duyuru başlık + tarih + kaynağa bağlantı; yalnız ekranda, bildirim yok; sayfa RSS vermiyorsa
@@ -1579,6 +1593,8 @@ revizyon, alan kopyalama, hafif kusur devri, meslek eşleşme denetimi).
 - Emsal ürünler: https://opwire.app/iso-17020-periyodik-kontrol-yazilimi/ · https://17020muayene.vidco.com.tr/ · https://akuple.com/asansor-kontrol-yazilimi/ · https://ensyazilim.com/
 
 ## 11 · Değişiklik günlüğü
+- 2026-09-27 (88): **Kontrol metodu yalnız standart numarası** (§9 yirmi yedinci tur): raporda, belgede, onayda, Standartlar "Raporda" satırında
+  açıklama yok; iki standart virgülle. Elektrik formatları ağ izni olmadığı için çekilemedi (kayıtlı). M8 136/136 · 45/45 · 68/68; M9 · M7 · M11 temiz.
 - 2026-09-27 (87): **İş kârlılığı ve gelir-gider** (§9 yirmi altıncı tur): iş başına kâr = gelir − işe bağlı masraf − inspector maliyeti
   (bordrodan günlük × gün) − genel gider payı (sabit giderler, genel masraf, diğer personel; inspector-gününe); kâr oranı listede ve iş
   sayfasında; Muhasebe'de "Gelir-gider" sekmesi (aylık). Dağıtım yöntemi VARSAYIM. M14 184/184 · 40/40 · 92/92.

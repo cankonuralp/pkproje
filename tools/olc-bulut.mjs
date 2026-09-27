@@ -526,7 +526,8 @@ export const DENEMELER = {
   ],
   m8: [
     /* 2026-09-27 (reisim: "metod kısmı olsun ama sadece ekipman türü eklerken belirlene"): raporda seçilmez, türden okunur */
-    { ad: "kontrol metodu türden, seçim alanı yok", hash: "#/r/ET-1009", bekle: '/Kontrol metodu/.test(document.querySelector("#r-b2").textContent) && /TS HD 60364-6/.test(document.querySelector("#r-b2").textContent) && !document.querySelector("#r-metot")' },
+    { ad: "kontrol metodu türden, yalnız standart numarası, seçim alanı yok", hash: "#/r/ET-1009", bekle: '/Kontrol metodu/.test(document.querySelector("#r-b2").textContent) && /TS HD 60364-6:2012/.test(document.querySelector("#r-b2").textContent) && !/Alçak gerilim/.test(document.querySelector("#r-b2").textContent) && !document.querySelector("#r-metot")' },
+    { ad: "iki standartlı türde metot virgülle (belge)", sayfa: "maket/raporlar.html", hash: "#/", bekle: '/TS ISO 5057:2012, TS EN ISO 3691-1:2018/.test(MB.belge(MV.tur("FL"), MV.raporBelge(MV.RAPORLAR.filter(function (r) { return MV.ekipman(r.kod).tur === "FL"; })[0])))' },
     /* 2026-09-26 (reisim yirmi üçüncü tur): kriter seçimi Uygun · Uygun değil · Uygulanamaz; "N eksik" bölümü yok; tarihler el ile */
     { ad: "kriter seçilince sayaç güncellenir, odak seçimde", hash: "#/r/ET-1009", adim: [["tikla", "#r-kc3"], ["tikla", '[data-secim="r-kc3"][data-deger="uygun"]']], bekle: '/^4 \\/ 6/.test(document.querySelector("#r-kriter-say").textContent) && document.activeElement.id === "r-kc3"' },
     { ad: "Uygulanamaz da cevaptır, açıklama sorulmaz", hash: "#/r/ET-1009", adim: [["tikla", "#r-kc4"], ["tikla", '[data-secim="r-kc4"][data-deger="uygulanamaz"]']], bekle: '!document.querySelector("#r-kn4") && /^4 \\/ 6/.test(document.querySelector("#r-kriter-say").textContent)' },

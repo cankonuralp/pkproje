@@ -811,7 +811,6 @@ a.a-yuz:hover { border-color: var(--kenar-alan); background: var(--zemin); }
 .a-satir + .a-satir { border-top: 1px solid var(--kenar); }
 .a-satir dt { font-weight: 700; }
 .a-satir dd { margin: 0; overflow-wrap: anywhere; }
-.a-metot { display: block; }   /* raporda türün kontrol metodu standartları alt alta (2026-09-27) */
 .a-satirlar-form .a-satir { align-items: center; }   /* rapor firma bilgileri: sağda alan (tarih · saat · dakika ayrı) */
 .a-satir dt label { font: inherit; color: inherit; }
 .a-teklif { margin-top: 12px; background: var(--kart); border: 1px solid var(--kenar); border-radius: var(--r-orta); }

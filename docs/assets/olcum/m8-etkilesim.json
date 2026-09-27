@@ -2,14 +2,21 @@
  "maket": "m8",
  "tarih": "2026-09-27",
  "arac": "tools/olc-bulut.mjs --etkilesim (başsız tarayıcı, 1920 açık tema; gen verilen denemede o genişlik)",
- "toplam": 44,
- "gecen": 44,
+ "toplam": 45,
+ "gecen": 45,
  "denemeler": [
   {
-   "ad": "kontrol metodu türden, seçim alanı yok",
+   "ad": "kontrol metodu türden, yalnız standart numarası, seçim alanı yok",
    "gen": 1920,
    "sayfa": "maket/rapor.html",
    "hash": "#/r/ET-1009",
+   "gecti": true
+  },
+  {
+   "ad": "iki standartlı türde metot virgülle (belge)",
+   "gen": 1920,
+   "sayfa": "maket/raporlar.html",
+   "hash": "#/",
    "gecti": true
   },
   {
