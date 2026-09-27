@@ -2,9 +2,23 @@
  "maket": "planlar",
  "tarih": "2026-09-27",
  "arac": "tools/olc-bulut.mjs --etkilesim (başsız tarayıcı, 1920 açık tema; gen verilen denemede o genişlik)",
- "toplam": 36,
- "gecen": 36,
+ "toplam": 38,
+ "gecen": 38,
  "denemeler": [
+  {
+   "ad": "süzgeç kutusu: çip seçilince sayı, başlığa basınca kapanır (sayı görünür kalır)",
+   "gen": 1920,
+   "sayfa": "maket/planlarim.html",
+   "hash": "#/",
+   "gecti": true
+  },
+  {
+   "ad": "süzgeç kutusu: süzgeç yokken sayı gizli",
+   "gen": 1920,
+   "sayfa": "maket/planlarim.html",
+   "hash": "#/",
+   "gecti": true
+  },
   {
    "ad": "Excel'e aktar → gerçek .xlsx iner",
    "gen": 1920,

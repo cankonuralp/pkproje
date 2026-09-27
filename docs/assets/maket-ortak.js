@@ -165,7 +165,8 @@
      yenile: süzgeç değişince çağrılır (liste, çipler, sayaç ve sayfalayıcı yeniden çizilir; arama kutusu yerinde kalır). */
   var SZ_TANIM = {}, SZ = MK.SZ = {}, YENILE = {};
   function yeniSz(on) {
-    var s = { ara: "", secili: [], kip: "veya", sec: {}, sayfa: 1 };
+    var s = { ara: "", secili: [], kip: "veya", sec: {}, sayfa: 1, alan: {} };
+    (SZ_TANIM[on].alanlar || []).forEach(function (x) { s.alan[x.k] = ""; });
     SZ_TANIM[on].seciciler.forEach(function (x) { s.sec[x.k] = x.siralama ? "varsayilan" : x.bas || "tumu"; });
     return s;
   }
@@ -192,22 +193,28 @@
         'Süzgeç <span class="a-suzgec-rozet" hidden></span></button>' : "") +
       '<div class="a-cipler" role="group" aria-label="' + t.birim + ' durumu süzgeci"></div>' +
       '<div class="a-suzgec-sag"><div class="a-seciciler"></div>' +
-        '<button class="a-temizle" type="button" data-eylem="temizle">' + ikon("filter-x", "a-ikon-kucuk") + "Temizle</button></div></div></details>";
+        '<button class="a-temizle" type="button" data-eylem="temizle">' + ikon("filter-x", "a-ikon-kucuk") + "Temizle</button></div>" +
+      /* alan alan arama (reisim 2026-09-28: "ekipman türüne rapor numarasına göre ayrı ayrı arayabilmeliyim"): tanim.alanlar = [{ k, ad, ipucu, metin(kayıt) }] */
+      (t.alanlar ? '<div class="a-suzgec-alanlar">' + t.alanlar.map(function (x) {
+        return '<label class="a-alan-ara"><span class="a-alan-ara-ad">' + x.ad + '</span><input class="a-girdi" type="search" data-alan-ara="' + on + "|" + x.k + '" placeholder="' + (x.ipucu || "") + '" autocomplete="off"></label>';
+      }).join("") + "</div>" : "") + "</div></details>";
   };
   /* uygulanan süzgeç sayısı: arama + seçili çipler + seçiciler (sıralama ve görünüm anahtarı sayılmaz) */
   function kutuSay(on) {
     var k = kap(on), y = k && k.closest(".a-suzgec-kutu") && k.closest(".a-suzgec-kutu").querySelector(".a-suzgec-say"); if (!y) return;
-    var n = (SZ[on].ara.trim() ? 1 : 0) + SZ[on].secili.length + aktifSecici(on);
+    var n = (SZ[on].ara.trim() ? 1 : 0) + SZ[on].secili.length + aktifSecici(on) + alanSay(on);
     y.hidden = !n; y.textContent = n ? n + " süzgeç uygulandı" : "";
   }
   /* seçicinin başlangıç değeri `bas` (verilmezse "tumu"). `bas` taşıyan seçici GÖRÜNÜM ANAHTARIDIR (ör. Çalışanlar /
      Ayrılanlar / Hepsi, kalıp 8: "süzgeç değil görünüm anahtarı"): süzgeç sayılmaz, Temizle onu sıfırlamaz (sıralama gibi) */
   var aktifSecici = function (on) { return SZ_TANIM[on].seciciler.filter(function (x) { return !x.siralama && !x.bas && SZ[on].sec[x.k] !== "tumu"; }).length; };
-  var suzgecVar = MK.suzgecVar = function (on) { var s = SZ[on]; return !!s.ara.trim() || s.secili.length > 0 || aktifSecici(on) > 0; };
+  var alanSay = function (on) { var a = SZ[on].alan || {}; return Object.keys(a).filter(function (k) { return a[k].trim(); }).length; };
+  var suzgecVar = MK.suzgecVar = function (on) { var s = SZ[on]; return !!s.ara.trim() || s.secili.length > 0 || aktifSecici(on) > 0 || alanSay(on) > 0; };
   MK.taban = function (on, kayitlar) {   /* çipler HARİÇ her şey; çip sayıları buradan (dürüst sayaç, anayasa 2.8) */
     var t = SZ_TANIM[on], s = SZ[on], a = MK.tr(s.ara.trim());
     return kayitlar.filter(function (k) {
       if (a && MK.tr(t.metin(k)).indexOf(a) < 0) return false;
+      if ((t.alanlar || []).some(function (x) { var v = MK.tr((s.alan[x.k] || "").trim()); return v && MK.tr(x.metin(k)).indexOf(v) < 0; })) return false;
       return t.seciciler.every(function (x) { return x.gecer(k, s.sec[x.k]); });
     });
   };
@@ -264,12 +271,13 @@
   function temizle(on) {
     var eski = SZ[on].sec, t = SZ_TANIM[on]; SZ[on] = yeniSz(on);
     t.seciciler.forEach(function (x) { if (x.siralama || x.bas) SZ[on].sec[x.k] = eski[x.k]; });   /* sıralama ve görünüm süzgeç değildir, kalır */
-    var k = kap(on); if (k) { k.querySelector("[data-ara]").value = ""; k.querySelector(".a-ara").classList.remove("a-dolu"); }
+    var k = kap(on); if (k) { k.querySelector("[data-ara]").value = ""; k.querySelector(".a-ara").classList.remove("a-dolu"); k.querySelectorAll("[data-alan-ara]").forEach(function (g) { g.value = ""; }); }
   }
   /* süzgeç satırını durumdan yeniden kurar (sayfa yeniden çizilince arama kutusu değeri, seçiciler ve liste) */
   MK.suzgecKur = function (on) {
     var k = kap(on); if (!k) return;
     var g = k.querySelector("[data-ara]"); g.value = SZ[on].ara; k.querySelector(".a-ara").classList.toggle("a-dolu", !!SZ[on].ara);
+    k.querySelectorAll("[data-alan-ara]").forEach(function (x) { x.value = SZ[on].alan[x.dataset.alanAra.split("|")[1]] || ""; });
     seciciCiz(on); YENILE[on]();
   };
   /* sayaç: süzgeç açıkken "3 / 12 birim" (anayasa 2.8) */
@@ -843,6 +851,9 @@
     var t = e.target;
     if (t.dataset && t.dataset.ara) {   /* arama: yalnız liste yeniden çizilir, kutu yerinde kalır (odak çalınmaz) */
       var on = t.dataset.ara; SZ[on].ara = t.value; SZ[on].sayfa = 1; t.closest(".a-ara").classList.toggle("a-dolu", !!t.value); yenile(on); return;
+    }
+    if (t.dataset && t.dataset.alanAra) {   /* alan alan arama: aynı biçimde yerinde */
+      var a = t.dataset.alanAra.split("|"); SZ[a[0]].alan[a[1]] = t.value; SZ[a[0]].sayfa = 1; yenile(a[0]); return;
     }
     if (zamanYaz(t)) return;   /* tarih / saat alanı */
     if (t.dataset && t.dataset.secimAra) {   /* seçim alanının arama kutusu: seçenekleri süzer */

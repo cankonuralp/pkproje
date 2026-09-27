@@ -8,8 +8,8 @@
   390,
   430
  ],
- "toplam": 68,
- "temiz": 68,
+ "toplam": 80,
+ "temiz": 80,
  "durumlar": [
   {
    "ad": "elektrik raporu yarıda · kalibrasyonu geçmiş cihaz",
@@ -184,6 +184,114 @@
   },
   {
    "ad": "uygun değil madde + sonuç Uygun (uyarı)",
+   "gen": 430,
+   "temiz": true,
+   "tasma": 0,
+   "disari": [],
+   "kucukAlan": [],
+   "alan": 29
+  },
+  {
+   "ad": "ön izleme penceresi (topraklama, rapordaki değerlerle)",
+   "gen": 320,
+   "temiz": true,
+   "tasma": 0,
+   "disari": [],
+   "kucukAlan": [],
+   "alan": 29
+  },
+  {
+   "ad": "ön izleme penceresi (topraklama, rapordaki değerlerle)",
+   "gen": 360,
+   "temiz": true,
+   "tasma": 0,
+   "disari": [],
+   "kucukAlan": [],
+   "alan": 29
+  },
+  {
+   "ad": "ön izleme penceresi (topraklama, rapordaki değerlerle)",
+   "gen": 390,
+   "temiz": true,
+   "tasma": 0,
+   "disari": [],
+   "kucukAlan": [],
+   "alan": 29
+  },
+  {
+   "ad": "ön izleme penceresi (topraklama, rapordaki değerlerle)",
+   "gen": 430,
+   "temiz": true,
+   "tasma": 0,
+   "disari": [],
+   "kucukAlan": [],
+   "alan": 29
+  },
+  {
+   "ad": "gönderilemez penceresi + eksik bölümler işaretli (2026-09-28)",
+   "gen": 320,
+   "temiz": true,
+   "tasma": 0,
+   "disari": [],
+   "kucukAlan": [],
+   "alan": 29
+  },
+  {
+   "ad": "gönderilemez penceresi + eksik bölümler işaretli (2026-09-28)",
+   "gen": 360,
+   "temiz": true,
+   "tasma": 0,
+   "disari": [],
+   "kucukAlan": [],
+   "alan": 29
+  },
+  {
+   "ad": "gönderilemez penceresi + eksik bölümler işaretli (2026-09-28)",
+   "gen": 390,
+   "temiz": true,
+   "tasma": 0,
+   "disari": [],
+   "kucukAlan": [],
+   "alan": 29
+  },
+  {
+   "ad": "gönderilemez penceresi + eksik bölümler işaretli (2026-09-28)",
+   "gen": 430,
+   "temiz": true,
+   "tasma": 0,
+   "disari": [],
+   "kucukAlan": [],
+   "alan": 29
+  },
+  {
+   "ad": "eksik bölümler işaretli, pencere kapalı",
+   "gen": 320,
+   "temiz": true,
+   "tasma": 0,
+   "disari": [],
+   "kucukAlan": [],
+   "alan": 29
+  },
+  {
+   "ad": "eksik bölümler işaretli, pencere kapalı",
+   "gen": 360,
+   "temiz": true,
+   "tasma": 0,
+   "disari": [],
+   "kucukAlan": [],
+   "alan": 29
+  },
+  {
+   "ad": "eksik bölümler işaretli, pencere kapalı",
+   "gen": 390,
+   "temiz": true,
+   "tasma": 0,
+   "disari": [],
+   "kucukAlan": [],
+   "alan": 29
+  },
+  {
+   "ad": "eksik bölümler işaretli, pencere kapalı",
    "gen": 430,
    "temiz": true,
    "tasma": 0,

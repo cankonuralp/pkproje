@@ -2,9 +2,37 @@
  "maket": "m9",
  "tarih": "2026-09-27",
  "arac": "tools/olc-bulut.mjs --etkilesim (başsız tarayıcı, 1920 açık tema; gen verilen denemede o genişlik)",
- "toplam": 19,
- "gecen": 19,
+ "toplam": 23,
+ "gecen": 23,
  "denemeler": [
+  {
+   "ad": "rapor sayfasında durum geçmişi yok",
+   "gen": 1920,
+   "sayfa": "maket/raporlar.html",
+   "hash": "#/r/KM-0926-760-f535b",
+   "gecti": true
+  },
+  {
+   "ad": "alan alan arama: ekipman türü ve rapor no ayrı; sayı başlıkta",
+   "gen": 1920,
+   "sayfa": "maket/raporlar.html",
+   "hash": "#/",
+   "gecti": true
+  },
+  {
+   "ad": "rapor no alanı yalnız rapor numarasında arar",
+   "gen": 1920,
+   "sayfa": "maket/raporlar.html",
+   "hash": "#/",
+   "gecti": true
+  },
+  {
+   "ad": "Temizle alan aramalarını da boşaltır",
+   "gen": 1920,
+   "sayfa": "maket/raporlar.html",
+   "hash": "#/",
+   "gecti": true
+  },
   {
    "ad": "rapor PDF indir: yazdırma penceresi",
    "gen": 1920,

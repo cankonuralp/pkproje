@@ -131,6 +131,9 @@ html[data-giris="fare"] .a-girdi:focus, html[data-giris="fare"] .a-alan:focus { 
 .a-suzgec-kutu:not([open]) .a-acilir-ok { transform: rotate(-90deg); }
 .a-suzgec-say { padding: 2px 8px; border-radius: var(--r-tam); background: var(--uyari-zemin); color: var(--uyari-yazi); font-size: var(--boy-kucuk); font-weight: 600; }
 .a-suzgec-kutu > .a-suzgec { margin: 4px 0 0; }
+.a-suzgec-alanlar { flex: 1 1 100%; display: grid; grid-template-columns: repeat(auto-fill, minmax(200px, 1fr)); gap: 8px 12px; min-width: 0; }
+.a-alan-ara { display: grid; gap: 4px; min-width: 0; }
+.a-alan-ara-ad { font-size: var(--boy-etiket); font-weight: 600; color: var(--yazi2); }
 .a-suzgec { display: flex; align-items: center; flex-wrap: wrap; gap: 8px 6px; margin: 0 0 12px; min-width: 0; }
 .a-suzgec-sag { margin-left: auto; display: flex; align-items: center; gap: 8px; flex-wrap: wrap; justify-content: flex-end; min-width: 0; }
 .a-ara { position: relative; flex: 0 1 320px; min-width: 200px; height: var(--tus-y); }
@@ -1135,6 +1138,7 @@ a.a-yuz:hover { border-color: var(--kenar-alan); background: var(--zemin); }
   /* saha raporu telefonda: madde solda, seçim sağda daha dar */
   .a-kriter { grid-template-columns: minmax(0, 1fr) 9.75rem; gap: 8px 10px; }
   .a-kriter-genis { grid-template-columns: minmax(0, 1fr); }
+  .a-suzgec-alanlar { grid-template-columns: repeat(2, minmax(0, 1fr)); }   /* alan alan arama telefonda iki sütun */
   /* plan içi etiket : değer satırları telefonda alt alta (kimlik bölünmez, taşmasın) */
   .a-satir { grid-template-columns: minmax(0, 1fr); gap: 2px; }
   /* tarih seçici telefonda alanın genişliğinde (kartın dışına taşmaz); gün tuşları arası boşluksuz, yükseklik 44 kalır */

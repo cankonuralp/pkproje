@@ -3,7 +3,7 @@
    imzasız yayın yok), §1.1 (reisim: "pdf imzalamaya gönderilebilecek … aracı firmalar ile de yapılabilir, indirilip … ara yazılımlar ile
    imzalamada seçilebilir, bu kısım ilgili modül tasarımı esnasında tekrar tartışılır"), §4.3 (5070 güvenli e-imza), §8.3 (PDF sunucuda).
    Kullanıcı: Mert Kaya (inspector) — kendi raporları (rol × modül önerisi "kendi", M1). Ekranlar: liste (#/) · rapor sayfası (#/r/<no>:
-   durum geçmişi + PDF önizlemesi, MB.belge tek üretici) · son imza penceresi (#/imza; tekli ya da toplu). UYDURMA veri. */
+   PDF önizlemesi, MB.belge tek üretici; durum geçmişi 2026-09-28'de kalktı) · son imza penceresi (#/imza; tekli ya da toplu). UYDURMA veri. */
 (function () {
   "use strict";
   var $ = MK.$, kacis = MK.kacis, ikon = MK.ikon, kirp = MK.kirp, rozet = MK.rozet, SZ = MK.SZ;
@@ -15,7 +15,16 @@
   var raporEkrani = function (r) { return MK.adres("rapor", "#/r/" + r.kod + "?no=" + r.no + "&durum=" + r.durum); };
 
   /* ── LİSTE ─────────────────────────────────────────────────────────────────────────────────────────── */
-  MK.suzgecTanimla("r", { ad: "Raporlarda ara", ipucu: "Rapor no, kod, tesis", birim: "rapor", sayfa: 20,
+  /* 2026-09-28 (reisim: "filtreleyip arama detaylı olmalı; ekipman türüne rapor numarasına göre ayrı ayrı arayabilmeliyim"): genel aramanın
+     yanında alan alan arama (rapor no · ekipman kodu · ekipman türü · tesis); seçiciler müşteri, il, sonuç, yıl. Süzgeç ekranı örnekleri
+     reisim'den gelecek; bu ilk düzen. */
+  MK.suzgecTanimla("r", { ad: "Raporlarda ara", ipucu: "Hepsinde ara", birim: "rapor", sayfa: 20,
+    alanlar: [
+      { k: "no", ad: "Rapor no", ipucu: "ör. KM-0926-7", metin: function (r) { return r.no; } },
+      { k: "kod", ad: "Ekipman kodu", ipucu: "ör. ET-10", metin: function (r) { return ekp(r).kod; } },
+      { k: "tur", ad: "Ekipman türü", ipucu: "ör. topraklama", metin: function (r) { var t = MV.tur(ekp(r).tur); return t.ad + " " + t.k; } },
+      { k: "tesis", ad: "Tesis", ipucu: "ör. fabrika", metin: function (r) { return MV.tesis(r.tesis).ad; } }
+    ],
     cipler: [
       { k: "taslak", ad: "Yeni", grup: "durum", test: function (r) { return r.durum === "taslak"; } },
       { k: "onayda", ad: "Teknik yönetici onayında", grup: "durum", test: function (r) { return r.durum === "onayda"; } },
@@ -30,6 +39,12 @@
         var l = benim().map(function (r) { return MV.tesis(r.tesis).m; }).filter(function (x, i, a) { return a.indexOf(x) === i; });
         return [["tumu", "Tümü"]].concat(l.map(function (m) { return [m, MV.musteri(m).kisa]; }).sort(function (a, b) { return a[1].localeCompare(b[1], "tr"); }));
       }, gecer: function (r, v) { return v === "tumu" || MV.tesis(r.tesis).m === v; } },
+      { k: "il", ad: "İl", secenek: function () {
+        var l = benim().map(function (r) { return MV.tesis(r.tesis).il; }).filter(function (x, i, a) { return a.indexOf(x) === i; }).sort(function (a, b) { return a.localeCompare(b, "tr"); });
+        return [["tumu", "Tümü"]].concat(l.map(function (x) { return [x, x]; }));
+      }, gecer: function (r, v) { return v === "tumu" || MV.tesis(r.tesis).il === v; } },
+      { k: "sonuc", ad: "Sonuç", secenek: function () { return [["tumu", "Tümü"], ["Uygun", "Uygun"], ["Hafif kusurlu", "Hafif kusurlu"], ["Kusurlu", "Kusurlu"], ["yok", "Sonuç yok"]]; },
+        gecer: function (r, v) { var s = MV.sonucAd(r); return v === "tumu" || (v === "yok" ? !s : s === v); } },
       { k: "yil", ad: "Yıl", secenek: function () { return [["tumu", "Tümü"], ["2026", "2026"], ["2025", "2025"]]; }, gecer: function (r, v) { return v === "tumu" || r.olustu.slice(0, 4) === v; } }
     ],
     metin: function (r) { var e = ekp(r), ts = MV.tesis(r.tesis); return [r.no, e.kod, MV.tur(e.tur).ad, ts.ad, MV.musteri(ts.m).kisa].join(" "); },
@@ -58,22 +73,11 @@
       tablo: { baslik: "Raporlar", sinif: "a-tablo-raporlar", sutunlar: SUTUN, href: function (r) { return "#/r/" + r.no; } } });
   }
 
-  /* ── RAPOR SAYFASI: durum geçmişi + PDF önizlemesi ─────────────────────────────────────────────────── */
+  /* ── RAPOR SAYFASI: PDF önizlemesi (durum geçmişi 2026-09-28'de kalktı, reisim: "Raporlarda durum geçmişi olmamalı") ─────────────────────────────────────────────────── */
   function yuz(o) {
     var ic = '<span class="a-yuz-ust">' + ikon(o.ikon, "a-ikon-kucuk") + o.ad + '</span><span class="a-yuz-sayi">' + o.sayi + "</span>" + (o.not ? '<span class="a-yuz-not' + (o.uyari ? " a-yuz-uyari" : "") + '">' + o.not + "</span>" : "");
     return o.href ? '<a class="a-yuz" href="' + o.href + '">' + ic + "</a>" : '<div class="a-yuz">' + ic + "</div>";
   }
-  function gecmis(r) {
-    var l = [[r.olustu, MV.kisi(r.kisi).ad, "Rapor oluşturuldu"]];
-    if (r.geri) l.push([dkGeri(r), MV.kisi(r.kisi).ad, "Onaya gönderildi"], [r.geri.zaman, MV.kisi(r.geri.kim).ad, "Geri gönderildi", "“" + r.geri.gerekce + "”"]);
-    if (r.gonderildi) l.push([r.gonderildi, MV.kisi(r.kisi).ad, "Onaya gönderildi"]);
-    if (r.onay) l.push([r.onay.zaman, MV.kisi(r.onay.kim).ad, "Onaylandı"]);
-    if (r.imzaGonderildi) l.push([r.imzaGonderildi, MV.kisi(r.kisi).ad, "İmzaya gönderildi"]);
-    if (r.imza) l.push([r.imza.zaman, MV.kisi(r.kisi).ad, "İmzalandı"], [r.imza.zaman, "Sistem", "Tamamlandı · müşteriye açıldı"]);
-    (r.revizyonlar || []).forEach(function (v) { l.push([v.zaman, MV.kisi(r.kisi).ad, "Düzeltme açıldı · " + v.ad, "önceki sürüm saklandı"]); });
-    return l.sort(function (a, b) { return a[0] < b[0] ? 1 : a[0] > b[0] ? -1 : 0; });
-  }
-  var dkGeri = function (r) { return r.olustu.slice(0, 11) + "14:20"; };
   function raporCiz(r) {
     if (!r || r.kisi !== BEN) {
       $("a-nesne").innerHTML = MK.kirinti([["Raporlar", "#/"]]) + '<h1 class="a-gizli" tabindex="-1">Rapor bulunamadı</h1>' +
@@ -102,10 +106,6 @@
         yuz({ ikon: r.sonuc && r.sonuc !== "Uygun" ? "triangle-alert" : "circle-check", ad: "Sonuç", sayi: MV.sonucAd(r) || "—", uyari: !!r.sonuc && r.sonuc !== "Uygun", not: r.sonuc ? "kriterlere göre" : "taslak" }) +
         yuz({ ikon: "users", ad: "Müşteri erişimi", sayi: r.durum === "imzali" ? "Açık" : "Kapalı", not: r.durum === "imzali" ? portal.length + " kullanıcı" : "imzadan sonra açılır" }) +
       "</div>" +
-      '<section class="a-bolum" aria-labelledby="a-b-gecmis"><div class="a-alt-bas"><h2 class="a-alt-baslik" id="a-b-gecmis">Durum geçmişi</h2></div>' +
-        '<ol class="a-gecmis">' + gecmis(r).map(function (x) {
-          return '<li><span class="a-gecmis-zaman">' + MK.zamanYaz(x[0]) + '</span><span class="a-gecmis-ne"><b>' + x[2] + '</b> <span class="a-gecmis-rol">' + kacis(x[1]) + "</span>" + (x[3] ? '<span class="a-not-metin">' + kacis(x[3]) + "</span>" : "") + "</span></li>";
-        }).join("") + "</ol></section>" +
       '<section class="a-bolum" aria-labelledby="a-b-pdf"><div class="a-alt-bas"><h2 class="a-alt-baslik" id="a-b-pdf">PDF önizlemesi</h2><span class="a-sayac">' + (r.imza ? "imzalı" : "imzasız") + "</span></div>" +
         (r.durum === "taslak" ? '<p class="a-bos-satir">Taslak: PDF yok.</p>' : MB.belge(t, MV.raporBelge(r))) + "</section>";
   }

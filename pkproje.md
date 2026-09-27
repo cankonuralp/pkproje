@@ -1679,6 +1679,9 @@ revizyon, alan kopyalama, hafif kusur devri, meslek eşleşme denetimi).
 - Emsal ürünler: https://opwire.app/iso-17020-periyodik-kontrol-yazilimi/ · https://17020muayene.vidco.com.tr/ · https://akuple.com/asansor-kontrol-yazilimi/ · https://ensyazilim.com/
 
 ## 11 · Değişiklik günlüğü
+- 2026-09-28 (98): **Raporlar: durum geçmişi kalktı, ayrıntılı süzgeç** (§9 otuzuncu tur): genel aramanın yanında alan alan arama (rapor no ·
+  ekipman kodu · ekipman türü · tesis; ortak süzgeç üreticisinde `alanlar`, başlıktaki sayıya girer, Temizle boşaltır); seçiciler müşteri, il,
+  sonuç, yıl. Süzgeç ekranı örnekleri reisim'den gelecek. 17 maket temiz: durum 1816/1816 · etkileşim 408/408 · telefon 908/908.
 - 2026-09-28 (97): **Rapor ön izleme** (§9 otuzuncu tur): rapor ekranında sağ üstte "Ön izle"; PDF belgesi rapordaki güncel değerlerle (formatlı
   türde ekipman detayları, madde sonucu + kusur derecesi, ölçüm noktaları, RCD, kusur listesi, notlar, sonuç, fotoğraf sayısı); pencerede
   "İndir" PDF olarak kaydeder. M8 160/160 · 62/62 · 80/80; M9 96/96 · 48/48; M11 88/88 · 44/44; M7 104/104.
