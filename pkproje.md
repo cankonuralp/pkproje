@@ -1679,6 +1679,9 @@ revizyon, alan kopyalama, hafif kusur devri, meslek eşleşme denetimi).
 - Emsal ürünler: https://opwire.app/iso-17020-periyodik-kontrol-yazilimi/ · https://17020muayene.vidco.com.tr/ · https://akuple.com/asansor-kontrol-yazilimi/ · https://ensyazilim.com/
 
 ## 11 · Değişiklik günlüğü
+- 2026-09-28 (96): **Onaya gönder soluk değil** (§9 otuzuncu tur): tuş hep basılır; eksik varsa pencere nedenini ve "Zorunlu bölümleri
+  doldurun"u yazar (engelde yalnız "Tamam", öteki eksiklerde "Yine de gönder"), her eksiğin yanında "Git"; eksik bölümler kırmızı çerçeve +
+  "Eksik", boş zorunlu alanlar işaretli; doldurdukça kalkar. M8 152/152 · 59/59 · 76/76.
 - 2026-09-28 (95): **Raporda ölçüm cihazları satır satır** (§9 otuzuncu tur): gerekli cihaz sabit, satır başına Cihaz ekle (yalnız o türden),
   kaldırınca satır kalır. M8 136/136 · 56/56 · 68/68.
 - 2026-09-27 (94): **Süzgeç kutusu açılır kapanır** (§9 yirmi dokuzuncu tur): bütün listelerde başlık + uygulanan süzgeç sayısı; tercih

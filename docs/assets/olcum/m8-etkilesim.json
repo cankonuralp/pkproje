@@ -2,8 +2,8 @@
  "maket": "m8",
  "tarih": "2026-09-27",
  "arac": "tools/olc-bulut.mjs --etkilesim (başsız tarayıcı, 1920 açık tema; gen verilen denemede o genişlik)",
- "toplam": 56,
- "gecen": 56,
+ "toplam": 59,
+ "gecen": 59,
  "denemeler": [
   {
    "ad": "kontrol metodu türden, yalnız standart numarası, seçim alanı yok (formatlı türde firma bölümünde)",
@@ -329,6 +329,27 @@
   },
   {
    "ad": "Kaydet ve Onaya gönder masaüstünde de altta yapışkan",
+   "gen": 1920,
+   "sayfa": "maket/rapor.html",
+   "hash": "#/r/ET-1009",
+   "gecti": true
+  },
+  {
+   "ad": "gönderilemeyen rapor: tuş açık; pencere nedenini ve 'Zorunlu bölümleri doldurun'u yazar, Yine de gönder yok",
+   "gen": 1920,
+   "sayfa": "maket/rapor.html",
+   "hash": "#/r/ET-1009",
+   "gecti": true
+  },
+  {
+   "ad": "gönderilemeyen rapor: eksik bölümler işaretli ve açık, boş maddeler aria-invalid",
+   "gen": 1920,
+   "sayfa": "maket/rapor.html",
+   "hash": "#/r/ET-1009",
+   "gecti": true
+  },
+  {
+   "ad": "pencereden bölüme git: bölüm açılır, başlığa odak",
    "gen": 1920,
    "sayfa": "maket/rapor.html",
    "hash": "#/r/ET-1009",
