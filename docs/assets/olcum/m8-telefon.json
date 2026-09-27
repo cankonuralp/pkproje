@@ -8,8 +8,8 @@
   390,
   430
  ],
- "toplam": 52,
- "temiz": 52,
+ "toplam": 68,
+ "temiz": 68,
  "durumlar": [
   {
    "ad": "elektrik raporu yarıda · kalibrasyonu geçmiş cihaz",
@@ -18,7 +18,7 @@
    "tasma": 0,
    "disari": [],
    "kucukAlan": [],
-   "alan": 17
+   "alan": 21
   },
   {
    "ad": "elektrik raporu yarıda · kalibrasyonu geçmiş cihaz",
@@ -27,7 +27,7 @@
    "tasma": 0,
    "disari": [],
    "kucukAlan": [],
-   "alan": 17
+   "alan": 21
   },
   {
    "ad": "elektrik raporu yarıda · kalibrasyonu geçmiş cihaz",
@@ -36,7 +36,7 @@
    "tasma": 0,
    "disari": [],
    "kucukAlan": [],
-   "alan": 17
+   "alan": 21
   },
   {
    "ad": "elektrik raporu yarıda · kalibrasyonu geçmiş cihaz",
@@ -45,7 +45,7 @@
    "tasma": 0,
    "disari": [],
    "kucukAlan": [],
-   "alan": 17
+   "alan": 21
   },
   {
    "ad": "pano sigortaları okundu (öneri + emin değil)",
@@ -54,7 +54,7 @@
    "tasma": 0,
    "disari": [],
    "kucukAlan": [],
-   "alan": 17
+   "alan": 21
   },
   {
    "ad": "pano sigortaları okundu (öneri + emin değil)",
@@ -63,7 +63,7 @@
    "tasma": 0,
    "disari": [],
    "kucukAlan": [],
-   "alan": 17
+   "alan": 21
   },
   {
    "ad": "pano sigortaları okundu (öneri + emin değil)",
@@ -72,7 +72,7 @@
    "tasma": 0,
    "disari": [],
    "kucukAlan": [],
-   "alan": 17
+   "alan": 21
   },
   {
    "ad": "pano sigortaları okundu (öneri + emin değil)",
@@ -81,7 +81,7 @@
    "tasma": 0,
    "disari": [],
    "kucukAlan": [],
-   "alan": 17
+   "alan": 21
   },
   {
    "ad": "sigorta kontrol penceresi (emin değil)",
@@ -90,7 +90,7 @@
    "tasma": 0,
    "disari": [],
    "kucukAlan": [],
-   "alan": 21
+   "alan": 25
   },
   {
    "ad": "sigorta kontrol penceresi (emin değil)",
@@ -99,7 +99,7 @@
    "tasma": 0,
    "disari": [],
    "kucukAlan": [],
-   "alan": 21
+   "alan": 25
   },
   {
    "ad": "sigorta kontrol penceresi (emin değil)",
@@ -108,10 +108,46 @@
    "tasma": 0,
    "disari": [],
    "kucukAlan": [],
-   "alan": 21
+   "alan": 25
   },
   {
    "ad": "sigorta kontrol penceresi (emin değil)",
+   "gen": 430,
+   "temiz": true,
+   "tasma": 0,
+   "disari": [],
+   "kucukAlan": [],
+   "alan": 25
+  },
+  {
+   "ad": "rapor açılışı · bütün bölümler kapalı",
+   "gen": 320,
+   "temiz": true,
+   "tasma": 0,
+   "disari": [],
+   "kucukAlan": [],
+   "alan": 21
+  },
+  {
+   "ad": "rapor açılışı · bütün bölümler kapalı",
+   "gen": 360,
+   "temiz": true,
+   "tasma": 0,
+   "disari": [],
+   "kucukAlan": [],
+   "alan": 21
+  },
+  {
+   "ad": "rapor açılışı · bütün bölümler kapalı",
+   "gen": 390,
+   "temiz": true,
+   "tasma": 0,
+   "disari": [],
+   "kucukAlan": [],
+   "alan": 21
+  },
+  {
+   "ad": "rapor açılışı · bütün bölümler kapalı",
    "gen": 430,
    "temiz": true,
    "tasma": 0,
@@ -126,7 +162,7 @@
    "tasma": 0,
    "disari": [],
    "kucukAlan": [],
-   "alan": 17
+   "alan": 21
   },
   {
    "ad": "uygun değil madde + sonuç Uygun (uyarı)",
@@ -135,7 +171,7 @@
    "tasma": 0,
    "disari": [],
    "kucukAlan": [],
-   "alan": 17
+   "alan": 21
   },
   {
    "ad": "uygun değil madde + sonuç Uygun (uyarı)",
@@ -144,7 +180,7 @@
    "tasma": 0,
    "disari": [],
    "kucukAlan": [],
-   "alan": 17
+   "alan": 21
   },
   {
    "ad": "uygun değil madde + sonuç Uygun (uyarı)",
@@ -153,7 +189,115 @@
    "tasma": 0,
    "disari": [],
    "kucukAlan": [],
-   "alan": 17
+   "alan": 21
+  },
+  {
+   "ad": "cihaz ekle penceresi (zimmetteki geçerli cihaz)",
+   "gen": 320,
+   "temiz": true,
+   "tasma": 0,
+   "disari": [],
+   "kucukAlan": [],
+   "alan": 19
+  },
+  {
+   "ad": "cihaz ekle penceresi (zimmetteki geçerli cihaz)",
+   "gen": 360,
+   "temiz": true,
+   "tasma": 0,
+   "disari": [],
+   "kucukAlan": [],
+   "alan": 19
+  },
+  {
+   "ad": "cihaz ekle penceresi (zimmetteki geçerli cihaz)",
+   "gen": 390,
+   "temiz": true,
+   "tasma": 0,
+   "disari": [],
+   "kucukAlan": [],
+   "alan": 19
+  },
+  {
+   "ad": "cihaz ekle penceresi (zimmetteki geçerli cihaz)",
+   "gen": 430,
+   "temiz": true,
+   "tasma": 0,
+   "disari": [],
+   "kucukAlan": [],
+   "alan": 19
+  },
+  {
+   "ad": "cihaz ekle penceresi (zimmette uygun cihaz yok)",
+   "gen": 320,
+   "temiz": true,
+   "tasma": 0,
+   "disari": [],
+   "kucukAlan": [],
+   "alan": 19
+  },
+  {
+   "ad": "cihaz ekle penceresi (zimmette uygun cihaz yok)",
+   "gen": 360,
+   "temiz": true,
+   "tasma": 0,
+   "disari": [],
+   "kucukAlan": [],
+   "alan": 19
+  },
+  {
+   "ad": "cihaz ekle penceresi (zimmette uygun cihaz yok)",
+   "gen": 390,
+   "temiz": true,
+   "tasma": 0,
+   "disari": [],
+   "kucukAlan": [],
+   "alan": 19
+  },
+  {
+   "ad": "cihaz ekle penceresi (zimmette uygun cihaz yok)",
+   "gen": 430,
+   "temiz": true,
+   "tasma": 0,
+   "disari": [],
+   "kucukAlan": [],
+   "alan": 19
+  },
+  {
+   "ad": "fotoğraf ekle menüsü (kamera / galeri)",
+   "gen": 320,
+   "temiz": true,
+   "tasma": 0,
+   "disari": [],
+   "kucukAlan": [],
+   "alan": 21
+  },
+  {
+   "ad": "fotoğraf ekle menüsü (kamera / galeri)",
+   "gen": 360,
+   "temiz": true,
+   "tasma": 0,
+   "disari": [],
+   "kucukAlan": [],
+   "alan": 21
+  },
+  {
+   "ad": "fotoğraf ekle menüsü (kamera / galeri)",
+   "gen": 390,
+   "temiz": true,
+   "tasma": 0,
+   "disari": [],
+   "kucukAlan": [],
+   "alan": 21
+  },
+  {
+   "ad": "fotoğraf ekle menüsü (kamera / galeri)",
+   "gen": 430,
+   "temiz": true,
+   "tasma": 0,
+   "disari": [],
+   "kucukAlan": [],
+   "alan": 21
   },
   {
    "ad": "mekanik raporu onaya hazır",
@@ -162,7 +306,7 @@
    "tasma": 0,
    "disari": [],
    "kucukAlan": [],
-   "alan": 15
+   "alan": 19
   },
   {
    "ad": "mekanik raporu onaya hazır",
@@ -171,7 +315,7 @@
    "tasma": 0,
    "disari": [],
    "kucukAlan": [],
-   "alan": 15
+   "alan": 19
   },
   {
    "ad": "mekanik raporu onaya hazır",
@@ -180,7 +324,7 @@
    "tasma": 0,
    "disari": [],
    "kucukAlan": [],
-   "alan": 15
+   "alan": 19
   },
   {
    "ad": "mekanik raporu onaya hazır",
@@ -189,7 +333,7 @@
    "tasma": 0,
    "disari": [],
    "kucukAlan": [],
-   "alan": 15
+   "alan": 19
   },
   {
    "ad": "onaya gönderildi (salt okunur)",
@@ -234,7 +378,7 @@
    "tasma": 0,
    "disari": [],
    "kucukAlan": [],
-   "alan": 15
+   "alan": 19
   },
   {
    "ad": "geri gönderilmiş rapor",
@@ -243,7 +387,7 @@
    "tasma": 0,
    "disari": [],
    "kucukAlan": [],
-   "alan": 15
+   "alan": 19
   },
   {
    "ad": "geri gönderilmiş rapor",
@@ -252,7 +396,7 @@
    "tasma": 0,
    "disari": [],
    "kucukAlan": [],
-   "alan": 15
+   "alan": 19
   },
   {
    "ad": "geri gönderilmiş rapor",
@@ -261,7 +405,7 @@
    "tasma": 0,
    "disari": [],
    "kucukAlan": [],
-   "alan": 15
+   "alan": 19
   },
   {
    "ad": "onaydaki rapor",
@@ -306,7 +450,7 @@
    "tasma": 0,
    "disari": [],
    "kucukAlan": [],
-   "alan": 17
+   "alan": 21
   },
   {
    "ad": "tarih seçici açık (takvim)",
@@ -315,7 +459,7 @@
    "tasma": 0,
    "disari": [],
    "kucukAlan": [],
-   "alan": 17
+   "alan": 21
   },
   {
    "ad": "tarih seçici açık (takvim)",
@@ -324,7 +468,7 @@
    "tasma": 0,
    "disari": [],
    "kucukAlan": [],
-   "alan": 17
+   "alan": 21
   },
   {
    "ad": "tarih seçici açık (takvim)",
@@ -333,7 +477,7 @@
    "tasma": 0,
    "disari": [],
    "kucukAlan": [],
-   "alan": 17
+   "alan": 21
   },
   {
    "ad": "saat yazılınca uyan saatler listelenir",
@@ -342,7 +486,7 @@
    "tasma": 0,
    "disari": [],
    "kucukAlan": [],
-   "alan": 17
+   "alan": 21
   },
   {
    "ad": "saat yazılınca uyan saatler listelenir",
@@ -351,7 +495,7 @@
    "tasma": 0,
    "disari": [],
    "kucukAlan": [],
-   "alan": 17
+   "alan": 21
   },
   {
    "ad": "saat yazılınca uyan saatler listelenir",
@@ -360,7 +504,7 @@
    "tasma": 0,
    "disari": [],
    "kucukAlan": [],
-   "alan": 17
+   "alan": 21
   },
   {
    "ad": "saat yazılınca uyan saatler listelenir",
@@ -369,7 +513,7 @@
    "tasma": 0,
    "disari": [],
    "kucukAlan": [],
-   "alan": 17
+   "alan": 21
   },
   {
    "ad": "bitiş başlangıçtan önce (uyarı yerinde)",
@@ -378,7 +522,7 @@
    "tasma": 0,
    "disari": [],
    "kucukAlan": [],
-   "alan": 17
+   "alan": 21
   },
   {
    "ad": "bitiş başlangıçtan önce (uyarı yerinde)",
@@ -387,7 +531,7 @@
    "tasma": 0,
    "disari": [],
    "kucukAlan": [],
-   "alan": 17
+   "alan": 21
   },
   {
    "ad": "bitiş başlangıçtan önce (uyarı yerinde)",
@@ -396,7 +540,7 @@
    "tasma": 0,
    "disari": [],
    "kucukAlan": [],
-   "alan": 17
+   "alan": 21
   },
   {
    "ad": "bitiş başlangıçtan önce (uyarı yerinde)",
@@ -405,7 +549,7 @@
    "tasma": 0,
    "disari": [],
    "kucukAlan": [],
-   "alan": 17
+   "alan": 21
   },
   {
    "ad": "başlıklar kapalı",
@@ -414,7 +558,7 @@
    "tasma": 0,
    "disari": [],
    "kucukAlan": [],
-   "alan": 17
+   "alan": 21
   },
   {
    "ad": "başlıklar kapalı",
@@ -423,7 +567,7 @@
    "tasma": 0,
    "disari": [],
    "kucukAlan": [],
-   "alan": 17
+   "alan": 21
   },
   {
    "ad": "başlıklar kapalı",
@@ -432,7 +576,7 @@
    "tasma": 0,
    "disari": [],
    "kucukAlan": [],
-   "alan": 17
+   "alan": 21
   },
   {
    "ad": "başlıklar kapalı",
@@ -441,7 +585,7 @@
    "tasma": 0,
    "disari": [],
    "kucukAlan": [],
-   "alan": 17
+   "alan": 21
   },
   {
    "ad": "raporu olmayan ekipman",

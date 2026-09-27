@@ -429,6 +429,22 @@
     { k: "luksmetre", ad: "Lüksmetre", g: ["elektrik"] }, { k: "kumpas", ad: "Dijital kumpas", g: ["kaldirma", "diger"] }
   ];
   MV.cihazTuru = function (k) { return MV.CIHAZ_TURLERI.filter(function (t) { return t.k === k; })[0]; };
+  /* EKİPMAN TÜRÜNÜN KULLANACAĞI ÖLÇÜM CİHAZLARI (reisim 2026-09-27: "ekipmana göre hangi cihazların kullanılacağı ekipman türlerinden
+     belirlenecek ve ilgili cihaz ekli değil ise veya kalibrasyon tarihi geçmişse rapor gönderilemeyecek"). Tür sayfasında düzenlenir (M7);
+     aşağıdaki başlangıç listesi ÖRNEK (firma kendi yöntemine göre belirler). */
+  var TUR_CIHAZ = {
+    ET: ["topraklama", "izolasyon", "tesisat"], AT: ["topraklama"], YK: ["topraklama"], DP: ["izolasyon", "termal"], JN: ["multimetre", "izolasyon"],
+    YG: ["multimetre"], TR: ["izolasyon", "termal"], HT: ["manometre", "kalinlik"], KS: ["manometre"], BK: ["manometre", "kalinlik", "termal"],
+    LP: ["manometre", "kalinlik"], FL: ["dinamometre"], KK: ["dinamometre"], KP: ["dinamometre"], TP: ["dinamometre"], ZV: ["dinamometre"],
+    YA: ["dinamometre", "mesafe"], KU: ["dinamometre", "mesafe"], MB: ["dinamometre", "mesafe"], YM: ["mesafe"], AE: ["dinamometre"],
+    SP: ["dinamometre"], IS: ["mesafe"], PR: ["kumpas"]
+  };
+  MV.KATALOG.forEach(function (t) { t.cihaz = (TUR_CIHAZ[t.k] || []).slice(); });
+  MV.turCihazlari = function (t) { return t.cihaz || []; };
+  /* raporda eklenebilecek cihazlar: kişinin zimmetinde, türün cihaz türlerinden, kalibrasyonu geçmemiş */
+  MV.eklenebilirCihazlar = function (kisi, turler) {
+    return MV.VARLIKLAR.filter(function (v) { return v.tur === "cihaz" && MV.kimde(v.id) === kisi && turler.indexOf(v.cihazTur) >= 0 && MV.kalDurum(v) !== "gecti"; });
+  };
   var LAB = ["Kalibrasyon Laboratuvarı A (akredite)", "Kalibrasyon Laboratuvarı B (akredite)"];
   /* [envanter, tür, marka, bitiş, ara kontrol son, ölçüm aralığı] — kalibrasyon geçerliliği 12 ay, ara kontrol 6 ay (varsayım) */
   var C = [
@@ -754,7 +770,7 @@
     var isg = MV.ISG.filter(function (x) { return x.t === ts.id && x.k === p.id && x.onay <= gun; }).sort(function (a, b) { return a.onay < b.onay ? 1 : -1; })[0];
     var s = new Date(gun + "T12:00:00"); s.setMonth(s.getMonth() + t.periyot);
     return { e: e, ts: ts, m: MV.musteri(ts.m), p: p, isg: isg, tarih: gun, bas: r.olustu.slice(11, 16), bit: r.gonderildi ? r.gonderildi.slice(11, 16) : null,
-      cihaz: MV.VARLIKLAR.filter(function (v) { return v.tur === "cihaz" && MV.kimde(v.id) === p.id && MV.cihazTuru(v.cihazTur).g.indexOf(t.g) >= 0; }),
+      cihaz: MV.turCihazlari(t).map(function (k) { return MV.eklenebilirCihazlar(p.id, [k])[0]; }).filter(Boolean),   /* raporda eklenen: türün cihazları, zimmetten */
       sonraki: s.toISOString().slice(0, 10), no: r.no, sonuc: MV.sonucAd(r) || "Uygun", metot: t.std[0] || "uretici", imza: r.imza };
   };
 })();

@@ -826,11 +826,20 @@ a.a-yuz:hover { border-color: var(--kenar-alan); background: var(--zemin); }
 .a-bolum-acilir[open] > summary { margin-bottom: 8px; }
 .a-acilir-ok { margin-left: auto; color: var(--yazi2); }
 .a-bolum-acilir:not([open]) .a-acilir-ok { transform: rotate(-90deg); }
+.a-bolum-acilir > summary .a-bolum-tus + .a-acilir-ok { margin-left: 4px; }   /* başlık tuşu (Güncelle) sağda, okun yanında */
 .a-kriter { display: grid; grid-template-columns: minmax(0, 1fr) 13rem; align-items: center; gap: 8px 16px; padding: 12px 0; border-top: 1px solid var(--kenar); }
 .a-kriter-ad { display: flex; gap: 8px; margin: 0; font-weight: 600; }
 .a-kriter-no { flex: none; min-width: 20px; color: var(--yazi2); font-variant-numeric: tabular-nums; }
 .a-kriter-cevap { min-width: 0; }
 .a-kriter-kusur { grid-column: 1 / -1; display: grid; gap: 8px; }
+.a-kriter-uyari { grid-column: 1 / -1; margin: 0; }
+.a-kriter-sonuc { border-top: 0; padding-top: 0; }   /* sonuç ve kanaat: kriter satırıyla aynı düzen (solda ad, sağda seçim) */
+.a-foto-menu .a-secici-liste { left: 0; right: auto; min-width: 200px; }
+/* cihaz ekle penceresi: tür başına grup, zimmetteki geçerli cihazlar */
+.a-cihaz-grup { margin: 0 0 12px; padding: 0; border: 0; min-width: 0; }
+.a-cihaz-grup legend { padding: 0; margin-bottom: 4px; font-weight: 700; }
+/* rapor: Kaydet + Onaya gönder her bantta altta yapışkan, sayfa kaysa da görünür (reisim 2026-09-27) */
+.a-rapor-eylem { position: sticky; bottom: 0; z-index: 10; margin: 16px 0 0; padding: 10px 12px; background: var(--kart); border: 1px solid var(--kenar); border-radius: var(--r-buyuk); box-shadow: var(--golge-2); }
 .a-kriter .a-secim .a-secici-liste { left: auto; right: 0; width: auto; min-width: 100%; white-space: nowrap; }   /* telefonda seçenek adı kırpılmaz */
 .a-tablo-olcum .a-uyari-metin { display: inline; font-size: inherit; }
 .a-sekme-onay[aria-pressed="true"] { background: var(--onay-zemin); color: var(--onay-yazi); }
@@ -840,7 +849,7 @@ a.a-yuz:hover { border-color: var(--kenar-alan); background: var(--zemin); }
 .a-kosullar .a-serit-tus { margin-left: auto; }
 .a-tablo-sigorta .a-k-no { width: 30%; } .a-tablo-sigorta .a-k-deger { width: 14%; } .a-tablo-sigorta .a-k-kutup { width: 10%; }
 .a-tablo-sigorta .a-k-rcd { width: 14%; } .a-tablo-sigorta .a-k-durum { width: 14%; } .a-tablo-sigorta .a-k-eylem { width: 18%; }
-.a-tablo-olcum .a-k-ad { width: 46%; } .a-tablo-olcum .a-k-no { width: 27%; } .a-tablo-olcum .a-k-kal { width: 27%; }
+.a-tablo-olcum .a-k-ad { width: 42%; } .a-tablo-olcum .a-k-no { width: 24%; } .a-tablo-olcum .a-k-kal { width: 24%; } .a-tablo-olcum .a-k-eylem { width: 10%; }
 
 /* M9 — raporlar ve onay kuyruğu */
 .a-tablo-raporlar .a-k-no { width: 24%; } .a-tablo-raporlar .a-k-ekipman { width: 24%; } .a-tablo-raporlar .a-k-tesis { width: 22%; }
@@ -1031,6 +1040,7 @@ a.a-yuz:hover { border-color: var(--kenar-alan); background: var(--zemin); }
   }
   .a-form-eylem .a-tus { flex: 1 1 0; }
   .a-form-eylem .a-adim-not { display: none; }
+  .a-rapor-eylem { border-width: 1px 0 0; border-radius: 0; box-shadow: none; }
   /* nesne sayfası: tuşlar başlığın altında tam satır; sayfa başı tuşu başlığın altına iner */
   .a-nesne-bas .a-eylem-cubugu { flex: 1 1 100%; justify-content: stretch; }
   .a-nesne-bas .a-eylem-cubugu .a-tus { flex: 1 1 0; }

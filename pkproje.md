@@ -635,6 +635,12 @@ yılın şablon sürümüyle gösteriyordu (örnek bugün tarihli yapıldı). Ek
 süzülmüş listeye gider (M3 60/60, 14/14 yeniden).
 
 #### Maket M8 — Saha ve Rapor (modül 14) — ONAY BEKLİYOR
+**6. tur (2026-09-27, §9 yirmi dördüncü tur):** ekipman bilgileri elle (girdi; önceki raporun değerleri başlangıç) · ölçüm cihazları türün
+listesinden, "Cihaz ekle" penceresinde zimmetteki geçerli cihazlar; eksik ya da geçmiş cihazda gönder kapalı; "Zimmetlerim" kalktı; cihaz rapordan
+kaldırılır · sonuç ve kanaat seçmeli, seçilmezse gönderilince kriterlere göre · Kaydet + Onaya gönder altta yapışkan (her bantta), kayıt satırı
+("Son kayıt …" / "Kaydedilmemiş değişiklik var") · bölümler her girişte kapalı · "Fotoğraf ekle" (kamera / galeri) · firma bilgileri salt
+okunur, başlıkta "Güncelle" · öneri satırı kalktı. Örnek raporlar: ET-1009 geçmiş tesisat cihazı (zimmette geçerlisi yok), KS-1006 cihazı
+eklenmemiş (zimmette var), YA-1008 mesafe ölçer zimmette yok. M8 136/136 · 43/43 · 68/68.
 **5. tur (2026-09-27, reisim örnek ekranlarla: *"tarih ve saat ayrı el ile de girilebiliyo yandaki küçük ikonlara basınca seçiledebiliyor
 el ile yazınca saat için aşağıda ilgili saatler çıkıyor"*):** **1 · Firma bilgileri** satır satır (etiket solda, değer ya da alan sağda):
 firma adı · e-posta · telefon (elle) · periyodik kontrol başlangıç tarihi ve saati · bitiş tarihi ve saati · bir sonraki periyodik kontrol
@@ -685,7 +691,8 @@ Durumlar: taslak · geri gönderilmiş (yöneticinin gerekçesi üstte) · onayd
 - **Onaya gönder** eksik varken pasif (Planlar'daki kabul kilidiyle aynı desen); gönderilince bitiş saati yazılır, rapor salt okunur olur ve türün
   branş yöneticisine gider (mekanik Selin Yıldız, elektrik Can Öztürk). Bildirim yok; yöneticinin Onaylar ekranında görünür (M9).
 - Sonraki kontrol varsayılanı bugün + tür periyodu; değiştirmek **gerekçe** ister, gerekçe raporda görünür (§4.7).
-- Taslak her değişiklikte kaydedilir (makette "son kayıt" satırı); çevrimdışı kuyruk sonraki fazda (§8.1).
+- Taslak her değişiklikte kaydedilir (makette "son kayıt" satırı); çevrimdışı kuyruk sonraki fazda (§8.1). (2026-09-27: "Kaydet" tuşu;
+  raporlamanın tamamı çevrimdışı, §8.1.)
 - Planlar maketinde tek değişiklik: rapor satırındaki "Raporu düzenle / aç" tuşu bu ekrana giden bağlantı oldu (görünüş aynı).
 **Sorular (M8):**
 Açık soru yok — sorular toplu listede cevaplandı (§9 yirmi birinci tur; liste `MAKET-PLANI.md`).
@@ -1084,6 +1091,10 @@ tarih-saat, fotoğraflar, form) · **Eğitim kaydı** (personel, eğitim, belge,
    Türkiye'deki sunucuda Node ile çalışır (**standalone** çıktı). Tarayıcı uygulaması; sahada tablet/telefon için
    **PWA + çevrimdışı kuyruk** kararı **aynen kalır** (fabrika/bodrum). Çevrimdışı riskli iş sınıfı → faz
    listesinin sonunda (anayasa 10.6), ama şema ilk günden buna göre.
+   **2026-09-27 (reisim, yirmi dördüncü tur):** *"tüm raporlama süreçleri offline da çalışabilecek şekilde kurgulanacak ileride appstore ya da
+   android markete uygulama olarak çıkabilir bunu göz önünde bulundurarak kodlama yapacağız"* → raporlamanın **tamamı** (rapor açma, doldurma,
+   fotoğraf, cihaz ekleme, kaydet, onaya gönder) çevrimdışı çalışır: kayıt cihazda saklanır, bağlantı gelince sırayla sunucuya gider; ekranlar
+   ve iş kuralları mağaza uygulamasına (iOS / Android sarmalayıcı) taşınabilecek şekilde yazılır — öneri, kodlamada karara bağlanacak.
 2. **Veri:** PostgreSQL + satır seviyesi güvenlik (firma ve müşteri izolasyonu veritabanında) + dosya deposu
    (fotoğraf/PDF). Gerekçe: rapor arşivi ve süzme ilişkisel iş; dışa aktarım standart; güvenlik sunucuda.
    **2026-09-18 revizyon (reisim: "illa bir şey kurmaya gerek var mı? localhost ve yerel depolama"):** Supabase ve
@@ -1399,7 +1410,57 @@ yapılan ekipmanlar ve yapıldığına dair firma onayı için imza yerleri ) ku
   tarihinden kendiliğinden, el ile değişir · "Ekipman bilgileri" · "Ölçüm cihazları" tablo (cihaz, cihaz no, kalibrasyon tarihi) · muayene kriteri
   solda, sağda seçim tuşu: **Uygun / Uygun değil / Uygulanamaz** · sonuç ve kanaat **Uygun / Uygun değil** · bütün başlıklar **açılır kapanır** ·
   "Notlar" yerine **"Muayene uzmanı yorumu"**.
-- **SGK etiketi:** reisim "SGK DETSİS no" diyor; terim doğrulanmadı → sorulacak, etiket şimdilik aynı.
+- **SGK etiketi:** "SGK DETSİS no" (2026-09-27 reisim'in örnek ekranıyla kesinleşti, yirmi dördüncü tur).
+
+**Yirmi dördüncü tur (2026-09-27, toplu gözden geçirme; reisim birebir):** *"2 ekipman bilgilerindeki kısım otomatik girili gibi gözüküyor o
+kısım elle girilecek, ölçüm cihazlarıda eklenebilir olacak ama ekipmana göre hangi cihazların kullanılacağı ekipman türlerinden belirlenecek ve
+ilgili cihaz ekli değil ise veya kalibrasyon tarihi geçmişsse rapor gönderilemeyecek, zimmetler tuşu olmayacak eğer ekli olması gereken ama
+olmayan cihaz var ise cihaz ekle tuşu olacak zimmetli cihazlardan seçim ilgili cihazın denetçiye atanmış olanları pop-up ekranda karşısına
+çıkacak ve cihazı seçip ekleyebilecek( eğer kalibrasyonu geçmemiş ve var ise) 7-8-9. kısımlar da sabit ama muayene kriterleri test değerleri
+kısımlar firmanın verdiği pdf e göre düzenlenebilir olacak diğer kısımlarda düzenlenebilir olacak gerçi ama standart ve büyük ölçüde bu şekilde
+kullanılacak. sonuç ve kanaat kısmı muayene kriterlerindeki gibi seçmeli olacak, uygun veya uygun değil iki seçenek olacak eğer bir şey seçilmez
+ise muayene kriterlerine göre rapor tamamlanıp gönderilince otomatik gönderilecek, sağ altta onaya gönder tuşu olmasın ekranda sabit ekran kaysa
+da gözükecek şekilde , kaydet gönder diye iki tuş olsun birisi kaydetmek diğeri onaya göndermek için, rapor açıldığında her giriş çıkışta tüm
+seçenekler kapalı gelsin, fotoğraflar kısmında fotoğraf çek değil fotopraf ekle yazsın galeriden de eklenebilsin, firma bilgileri değişirse diye
+firma bilgileri yazan barın sağ üstünde güncelleme tuşu olsun basınca güncel bilgiler çeklisin çünkü buradaki bilgileri inspector
+değiştiremeyecek(firma adı, e posta telefon mnumarası adres rapor no kısımları ya otomatik oluşturulacak ya da plan açılırken planlamacı
+tarafından girilecek) bir hata sonucu değiştirilmesi gerekirse planlamacı müşteriler kısmından değiştirecek denetçi güncelle tuşu ile güncel
+bilgiyi çekebilecek, tüm raporlama süreçleri offline da çalışabilecek şekilde kurgulanacak ileride appstore ya da android markete uygulama olarak
+çıkabilir bunu göz önünde bulundurarak kodlama yapacağız. tarih seçerken takvimin altında bu gün tuşu olsun ve direk bu günü seçtirtsin, saat
+kısmında saat otomatik gelecek ama daha sonra el ile yazarsam yazarken 09 bile yazsam aşağıda 09 u önermeye devam edecek oradan seçebileceğim,
+seçili alanların etrafında çerçeve kalıyor bazen maket olduğu için olabilir bilmiyorum./// planlar sayfasında plan ekle tuşu olmalı(planlamacı
+için),// teklif hazırlarken kayıtlı olmayan müşterilere de hazırlayabilmeliyim, ekipan listesinbi excelden export etme ve inport etme olsun / el ile
+müşteri girişinde ilgili bilgiler istensin, adres vb teklif pdf i müşteriden(pk firması) alınacak ve bu kısım alınan pdf e göre değişebilir.
+Sistemde herhangi bir yere eklenen herhangi bir pdf daha sonradan açılıp incelenebilir olsun sdaece yüklemek olmaz. Muhasebe kısmı nasıl çalışıyor
+alınacakları otomatik mi sürece ekliyor eğğer öyleyse iyi, gider gösterilecek şeyler nasıl girilecek ? fatura no vb nasıl belirleniyor ? muhasebe
+sekmesi kafamı karıştırdı. Performans kısmında 24 saat içinde tamamlandı olan 48 saat içinde tamamlandı olan ve 48 saatten uzun sürede tamamlandı
+olan raporlara dair veri tutularak garfik oluşturularak performans takibide yapılsın. şimdilik bunları düzelt daha sonrası için tekrar konuşacağız."*
+→ **Kararlar:**
+- **Saha raporu — ekipman bilgileri** elle girilir (marka, model, seri no, imal yılı, kullanım yeri, kullanım amacı); daha önce kontrol edilmiş
+  ekipmanda son raporun değerleri başlangıç olarak gelir, değiştirilebilir; kod ve tür plandan.
+- **Ölçüm cihazları:** hangi cihaz türlerinin kullanılacağı **ekipman türünde** belirlenir (M7'de düzenlenir). Raporda türün her cihaz türünden
+  kalibrasyonu geçerli bir cihaz eklenmemişse ya da eklenen cihazın kalibrasyonu geçmişse **rapor onaya gönderilemez** (tek engel).
+  "Zimmetlerim" tuşu yok; eksik varken **"Cihaz ekle"** → pencerede inspector'ın zimmetindeki, o türden, **kalibrasyonu geçmemiş** cihazlar;
+  seçip ekler. Geçmiş cihaz rapordan kaldırılır.
+- **Rapor bölümleri:** 7 Fotoğraflar · 8 Sonuç ve kanaat · 9 Muayene uzmanı yorumu **her raporda sabit**; **muayene kriterleri ve test
+  değerleri firmanın türe verdiği rapor formatı PDF'ine göre** düzenlenir; öteki bölümler de düzenlenebilir ama büyük ölçüde standart.
+- **Sonuç ve kanaat** seçmeli (Uygun / Uygun değil), seçilmezse rapor gönderilince **muayene kriterlerine göre** konur.
+- **Kaydet + Onaya gönder** iki tuş, ekranın altında **yapışkan** (sayfa kaysa da görünür).
+- Rapor **her açılışta bütün bölümler kapalı** gelir.
+- **Fotoğraf ekle** (kameradan ya da galeriden).
+- **Firma bilgileri inspector'da değişmez** (firma adı, e-posta, telefon, adres, rapor no: kendiliğinden ya da plan açılırken planlamacı girer;
+  yanlışsa planlamacı Müşteriler'den düzeltir); başlık çubuğunun sağında **"Güncelle"** ile güncel bilgi çekilir.
+- **Çevrimdışı:** bütün raporlama süreçleri çevrimdışı çalışacak şekilde kurgulanır (kayıt cihazda, bağlantı gelince eşitlenir); ileride App Store /
+  Google Play uygulaması olabilir → kod buna göre (§8 yığın notu).
+- **Tarih / saat alanı:** takvim altında **Bugün**; saat kendiliğinden dolu, yazılınca uyan değerler önerilmeye devam eder; fareyle kullanımda odak
+  çerçevesi kalmaz.
+- **Planlar:** **Plan aç** tuşu (planlama yetkisi olan görür); plan içi ekipman listesi **Excel'e aktarılır / Excel'den yüklenir**.
+- **Teklif:** **kayıtlı olmayan müşteriye** de hazırlanır, el ile müşteri bilgileri istenir (ünvan, adres, il/ilçe, vergi, e-posta, telefon, yetkili);
+  teklif PDF'inin biçimi **PK firmasının verdiği PDF'e göre** kurulur (§3.7).
+- **PDF:** sisteme yüklenen **her PDF sonradan açılıp incelenebilir** (yalnız yüklemek yetmez).
+- **Performans:** raporların **24 saat içinde / 48 saat içinde / 48 saatten uzun** sürede tamamlanması izlenir, grafikle.
+- **Muhasebe:** reisim'in soruları (alacaklar otomatik mi, gider nasıl girilir, fatura no nasıl belirlenir) cevaplandı; sekme sadeleştirilecek.
+- **SGK etiketi:** "SGK DETSİS no" (reisim'in örnek ekranında böyle; DETSİS kısaltması büyük harf).
 
 **Açık kalanlar:** **Ana sayfada İSGGM duyuruları** (reisim 2026-09-26: *"Ana sayfada isgüm duyurularını gösterebilir miyiz ? Bunu
 yapılacaklar listesine ekle"*; öneri: ÇSGB İSGGM duyurular sayfası — https://www.csgb.gov.tr/isggm/duyurular/ — sunucuda günde birkaç kez
@@ -1407,8 +1468,7 @@ okunur (pg-boss işi, §8.9), Ana sayfada son 5 duyuru başlık + tarih + kayna�
 sayfa yapısı değişince okuma bozulabilir → okunamazsa sessiz kalmaz, "duyurular alınamadı" yazar; maket sırası Ana sayfa revizesinde) · **modül modül gözden geçirme** (M1–M5 ve M13 onaylandı — Ekipmanlar kalktı, Sözleşmeler birleşti; M6 Plan aç 2. tur incelemede) · **toplu maket çalışması** (M1–M16 + toplu bakış, `MAKET-PLANI.md`; sorular §3.6'da, 32'den) · **önizlemede örnek veri kipi** (öneri, §3.3) · ~~rol × modül görünürlüğü~~ (karar 2026-09-25: başlangıç düzeni + firma yöneticisi değiştirir) · **gerçek sunucunun sağlayıcısı**
 (Türkiye, §8.8) ·
 alan adının alınması · e-imza yöntemi (8.4) · v1 ekipman grupları · 5 yıl sonrası silme
-mekanizması · **zimmette birden çok cihaz varsa süzgeç** (§3) · **kontrol metodu standardının seçim yeri**
-(rapor anı mı, ekipman türü mü — §3) · **§3.1 ve §3.2'deki "öneri" maddeleri** (planlama saat dağıtımı,
+mekanizması · **zimmette birden çok cihaz varsa süzgeç** (§3) · ~~kontrol metodu standardının seçim yeri~~ (2026-09-27: rapordan kaldırıldı) · **§3.1 ve §3.2'deki "öneri" maddeleri** (planlama saat dağıtımı,
 revizyon, alan kopyalama, hafif kusur devri, meslek eşleşme denetimi).
 
 ## 10 · Kaynaklar (2026-09-18)
@@ -1434,6 +1494,9 @@ revizyon, alan kopyalama, hafif kusur devri, meslek eşleşme denetimi).
 - Emsal ürünler: https://opwire.app/iso-17020-periyodik-kontrol-yazilimi/ · https://17020muayene.vidco.com.tr/ · https://akuple.com/asansor-kontrol-yazilimi/ · https://ensyazilim.com/
 
 ## 11 · Değişiklik günlüğü
+- 2026-09-27 (76): **Saha raporu yirmi dördüncü tur** (§9): ekipman bilgileri elle, ölçüm cihazı türün listesinden zimmetten eklenir, eksik /
+  geçmiş cihazda gönderilemez, sonuç seçmeli (seçilmezse kriterlere göre), Kaydet + Onaya gönder yapışkan, bölümler her girişte kapalı, fotoğraf
+  kamera / galeri, firma bilgileri salt okunur + Güncelle. Türlerin cihaz listesi verisi (MV.turCihazlari). M8 136/136 · 43/43 · 68/68.
 - 2026-09-27 (75): **Tarih / saat alanı ve seçim çerçevesi** (reisim: *"takvimin altında bu gün tuşu olsun"*, *"yazarken 09 bile yazsam
   aşağıda 09 u önermeye devam edecek"*, *"seçili alanların etrafında çerçeve kalıyor"*): takvim altında Bugün; saat / dakika iki hane yazılınca
   öneri açık kalır, listeden seçilince kapanır; fareyle / dokunarak kullanımda kalın odak çerçevesi yok (klavyede var). Tarih yarı, saat ve

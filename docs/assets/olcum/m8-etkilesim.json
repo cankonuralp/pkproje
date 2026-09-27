@@ -2,8 +2,8 @@
  "maket": "m8",
  "tarih": "2026-09-27",
  "arac": "tools/olc-bulut.mjs --etkilesim (başsız tarayıcı, 1920 açık tema; gen verilen denemede o genişlik)",
- "toplam": 31,
- "gecen": 31,
+ "toplam": 43,
+ "gecen": 43,
  "denemeler": [
   {
    "ad": "kriter seçilince sayaç güncellenir, odak seçimde",
@@ -27,7 +27,7 @@
    "gecti": true
   },
   {
-   "ad": "sınır dışı test değeri: işaretlenir, öneri Uygun değil (odak yerinde)",
+   "ad": "sınır dışı test değeri: işaretlenir (odak yerinde)",
    "gen": 1920,
    "sayfa": "maket/rapor.html",
    "hash": "#/r/ET-1009",
@@ -48,14 +48,14 @@
    "gecti": true
   },
   {
-   "ad": "ölçüm cihazları tablo (cihaz · cihaz no · kalibrasyon tarihi); geçmiş cihazda gönder kapalı, sebebi yazılı",
+   "ad": "ölçüm cihazları tablo (cihaz · cihaz no · kalibrasyon tarihi); geçmiş cihazda gönder kapalı, sebebi yazılı; Zimmetlerim yok",
    "gen": 1920,
    "sayfa": "maket/rapor.html",
    "hash": "#/r/ET-1009",
    "gecti": true
   },
   {
-   "ad": "uygun değil madde varken sonuç Uygun: uyarı, seçim kalır",
+   "ad": "sonuç seçmeli; uygun değil madde varken Uygun: uyarı, seçim kalır",
    "gen": 1920,
    "sayfa": "maket/rapor.html",
    "hash": "#/r/ET-1009",
@@ -83,7 +83,7 @@
    "gecti": true
   },
   {
-   "ad": "kusurlu maddeye fotoğraf eklenir",
+   "ad": "kusurlu maddeye fotoğraf eklenir (menüden kamera)",
    "gen": 1920,
    "sayfa": "maket/rapor.html",
    "hash": "#/r/ET-1009",
@@ -203,6 +203,90 @@
   },
   {
    "ad": "başlık kapanır, yeniden çizimde kapalı kalır",
+   "gen": 1920,
+   "sayfa": "maket/rapor.html",
+   "hash": "#/r/ET-1009",
+   "gecti": true
+  },
+  {
+   "ad": "rapor açılınca bütün bölümler kapalı",
+   "gen": 1920,
+   "sayfa": "maket/rapor.html",
+   "hash": "#/r/ET-1009",
+   "gecti": true
+  },
+  {
+   "ad": "başka rapora geçip dönünce yine kapalı",
+   "gen": 1920,
+   "sayfa": "maket/rapor.html",
+   "hash": "#/r/ET-1009",
+   "gecti": true
+  },
+  {
+   "ad": "ekipman bilgileri elle: yazınca kaydedilmemiş değişiklik",
+   "gen": 1920,
+   "sayfa": "maket/rapor.html",
+   "hash": "#/r/ET-1009",
+   "gecti": true
+  },
+  {
+   "ad": "Kaydet: son kayıt güncellenir",
+   "gen": 1920,
+   "sayfa": "maket/rapor.html",
+   "hash": "#/r/ET-1009",
+   "gecti": true
+  },
+  {
+   "ad": "Kaydet ve Onaya gönder masaüstünde de altta yapışkan",
+   "gen": 1920,
+   "sayfa": "maket/rapor.html",
+   "hash": "#/r/ET-1009",
+   "gecti": true
+  },
+  {
+   "ad": "eksik cihaz: pencerede zimmetteki geçerli cihaz seçilip eklenir, gönder açılır",
+   "gen": 1920,
+   "sayfa": "maket/rapor.html",
+   "hash": "#/r/KS-1006",
+   "gecti": true
+  },
+  {
+   "ad": "cihaz seçmeden Ekle: pencere söyler",
+   "gen": 1920,
+   "sayfa": "maket/rapor.html",
+   "hash": "#/r/KS-1006",
+   "gecti": true
+  },
+  {
+   "ad": "zimmette geçerli cihaz yoksa pencere söyler; geçmiş cihaz listelenmez",
+   "gen": 1920,
+   "sayfa": "maket/rapor.html",
+   "hash": "#/r/YA-1008",
+   "gecti": true
+  },
+  {
+   "ad": "kalibrasyonu geçmiş cihaz kaldırılır: eksik tür kalır, Cihaz ekle görünür, gönder kapalı",
+   "gen": 1920,
+   "sayfa": "maket/rapor.html",
+   "hash": "#/r/ET-1009",
+   "gecti": true
+  },
+  {
+   "ad": "sonuç seçilmezse gönderilince kriterlere göre konur",
+   "gen": 1920,
+   "sayfa": "maket/rapor.html",
+   "hash": "#/r/KS-1006",
+   "gecti": true
+  },
+  {
+   "ad": "fotoğraf galeriden eklenir",
+   "gen": 1920,
+   "sayfa": "maket/rapor.html",
+   "hash": "#/r/ET-1009",
+   "gecti": true
+  },
+  {
+   "ad": "Güncelle: firma bilgileri kayıttan, bölüm açık kalır",
    "gen": 1920,
    "sayfa": "maket/rapor.html",
    "hash": "#/r/ET-1009",
