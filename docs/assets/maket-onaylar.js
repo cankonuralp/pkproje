@@ -55,17 +55,19 @@
 
   /* ── ONAY EKRANI: gözden geçirme özeti + PDF önizlemesi ───────────────────────────────────────────────── */
   function ozet(r) {
-    var b = MV.raporBelge(r), t = MV.tur(b.e.tur), kr = MV.kriterler(t), ts = MV.testler(t), gecti = b.cihaz.filter(function (v) { return MV.kalDurum(v) === "gecti"; });
+    var b = MV.raporBelge(r), t = MV.tur(b.e.tur), kr = MV.kriterler(t), ts = MV.testler(t), F = MV.formatYapi(t), gecti = b.cihaz.filter(function (v) { return MV.kalDurum(v) === "gecti"; });
     var s = MV.sonucAd(r), kusur = s !== "Uygun";
     return [
       [!!b.isg, b.isg ? "İSG-KATİP " + b.isg.no + " · onay " + MK.tarihYaz(b.isg.onay) : "İSG-KATİP kaydı yok"],
       [true, "Kontrol metodu: " + MV.metotYazi(t)],   /* türden (2026-09-27) */
-      [!kusur, kr.length + " kriter yapıldı" + (kusur ? " · " + "1 uygun değil madde" : " · hepsi uygun")],
-      [true, ts.length + " test değeri · hepsi sınır içinde"],
+      /* topraklama formatında (ZPKR01) madde yok: ölçüm noktaları ve RCD testleri (2026-09-27) */
+      kr.length ? [!kusur, kr.length + " kriter yapıldı" + (kusur ? " · " + "1 uygun değil madde" : " · hepsi uygun")]
+        : [!kusur, F.noktalar.length + " ölçüm noktası · " + F.rcd.length + " RCD testi" + (kusur ? " · 1 uygun değil nokta" : " · hepsi uygun")],
+      ts.length ? [true, ts.length + " test değeri · hepsi sınır içinde"] : null,
       [!gecti.length, b.cihaz.length + " ölçüm cihazı" + (gecti.length ? " · kalibrasyonu geçmiş: " + gecti.map(function (v) { return v.seri; }).join(", ") : " · kalibrasyonu geçerli")],
       [true, "2 fotoğraf"],
       [true, "Sonuç ve kanaat: " + (/^Kusurlu|Ağır/.test(s) && MV.kusurSinifli(t) ? "giderilene kadar kullanılamaz" : "kullanılabilir")]
-    ];
+    ].filter(Boolean);
   }
   function onayCiz(r) {
     if (r && r.durum === "onaylandi") { onayliCiz(r); return; }

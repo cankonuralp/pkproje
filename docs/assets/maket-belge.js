@@ -11,12 +11,13 @@
   var bos = '<span class="a-deger-yok">—</span>';
   window.MB = {};
   MB.belge = function (t, o) {
+    if (MV.formatYapi(t)) return formatBelge(t, o, MV.formatYapi(t));
     var f = MV.FIRMA, std = t.std.map(MV.standart), zorunlu = MV.kusurSinifli(t), grup = MV.grup(t.g);
     var d = function (deger, kay) { return o ? deger : bos + kaynak(kay); };
     var sonraki = o ? o.sonraki : null, hafif = o && /Hafif/.test(o.sonuc), kusurlu = o && /^Kusurlu/.test(o.sonuc);
     /* hafif / ağır yalnız Bakanlık formatı yürürlükte olan türde (§4.5, Ek-III 1.9.1); öteki türde "Kusurlu" */
     var hafifAd = "Uygun değil", agirAd = "Uygun değil";   /* reisim 2026-09-26: madde sonucu Uygun · Uygun değil · Uygulanamaz */
-    var kriter = MV.kriterler(t), test = MV.testler(t);
+    var kriter = MV.kriterler(t), test = MV.testler(t), ok = MV.ornekKusur(t, hafif);
     var surum = t.pdf && t.pdf[0] ? t.pdf[0].surum : t.sablon ? t.sablon.split(" · ")[0] : "v1", formKod = zorunlu ? t.format : f.kisa + "-FR-" + t.k + "-" + surum.slice(1);
     return '<article class="a-belge" aria-label="Rapor önizlemesi">' +
       '<header class="a-belge-bas"><div class="a-belge-logo" role="img" aria-label="Firma logosu yeri">Logo</div>' +
@@ -50,9 +51,9 @@
       bolum("5", "Ölçüm cihazları", o ? tablo(["Cihaz", "Cihaz no", "Kalibrasyon tarihi"], o.cihaz.length ? o.cihaz.map(function (v) { return [kacis(v.ad), '<span class="a-kod">' + v.seri + "</span>", MK.tarihYaz(v.kal[0].tarih)]; }) : [[bos, bos, bos]])
         : '<p class="a-bolum-aciklama">' + kaynak("inspector'ın zimmetindeki, bu grup için uygun cihazlar otomatik gelir (seçilmez)") + "</p>") +
       bolum("6", "Muayene kriterleri", tablo(["No", "Muayene kriteri", "Sonuç"], kriter.map(function (k, i) {
-        return [String(i + 1), kacis(k), o ? (hafif && i === 2 ? hafifAd : kusurlu && i === 1 ? agirAd : "Uygun") : '<span class="a-belge-kutu"></span>Uygun · uygun değil · uygulanamaz'];
+        return [String(i + 1), kacis(k), o ? (hafif && i === ok.i ? hafifAd : kusurlu && i === ok.i ? agirAd : "Uygun") : '<span class="a-belge-kutu"></span>Uygun · uygun değil · uygulanamaz'];
       }), o ? "" : "saha: her madde ayrı")) +
-      bolum("7", "Kusur açıklamaları", o ? (hafif || kusurlu ? "<p>" + (hafif ? hafifAd + ": madde 3'te okunabilirliği azaltan hasar." + (zorunlu ? " Sonraki kontrole kadar giderilmeli." : "") : agirAd + ": madde 2'de izin verilen sınırın üstünde aşınma. Giderilene kadar kullanılamaz.") + "</p>" : '<p class="a-deger-yok">Kusur yok.</p>')
+      bolum("7", "Kusur açıklamaları", o ? (hafif || kusurlu ? "<p>" + (hafif ? hafifAd + ": " + kacis(ok.aciklama.charAt(0).toLocaleLowerCase("tr") + ok.aciklama.slice(1)) + (zorunlu ? " Sonraki kontrole kadar giderilmeli." : "") : agirAd + ": " + kacis(ok.aciklama.charAt(0).toLocaleLowerCase("tr") + ok.aciklama.slice(1)) + " Giderilene kadar kullanılamaz.") + "</p>" : '<p class="a-deger-yok">Kusur yok.</p>')
         : '<p class="a-bolum-aciklama">' + (zorunlu ? "Her kusur ayrı yazılır; sınıf hafif ya da ağır." : "Her kusur ayrı yazılır.") + "</p>") +
       bolum("8", "Muayene uzmanı yorumu", '<p class="a-deger-yok">—</p>') +
       bolum("9", "Sonuç ve kanaat", '<p class="a-belge-secenek"><span class="a-belge-kutu' + (o && !kusurlu ? " a-belge-kutu-dolu" : "") + '"></span>Uygun</p>' +
@@ -65,13 +66,77 @@
       bolum("Ek", "Fotoğraflar", '<div class="a-fotolar">' + [1, 2].map(function (i) { return '<span class="a-foto" role="img" aria-label="Fotoğraf ' + i + '">' + ikon("camera") + '<span class="a-foto-no">' + i + "</span></span>"; }).join("") + "</div>") +
       '<footer class="a-belge-alt"><span>' + kacis(f.ad) + " · " + formKod + "</span><span>Sayfa 1 / 2</span></footer></article>";
   };
+  /* BAKANLIK FORMATLI BELGE (2026-09-27; ZPKR01 AG topraklama · ZPKR02 elektrik iç tesisatı): bölüm sırası, adları, alanları ve sonuç
+     cümlesi formattaki gibi; başlıkta doküman kodu, yayım ve yürürlük tarihi; dayanak mevzuat birinci bölümde. o yoksa boş şablon. */
+  function formatBelge(t, o, F) {
+    var f = MV.FIRMA, rf = MV.raporFormati(t.format), B = F.bolumler, grup = MV.grup(t.g);
+    var d = function (deger) { return o ? deger : bos; };
+    var hafif = o && /Hafif/.test(o.sonuc), kusurlu = o && o.sonuc !== "Uygun", ok = MV.ornekKusur(t, hafif);
+    var alanTablo = function (l) { return tablo(["Alan", "Değer"], l.map(function (x) { var v = x.ornek; return [kacis(x.ad), o ? (Array.isArray(v) ? v.map(kacis).join("<br>") : kacis(v) || "-") : bos]; })); };
+    var yetkili = '<dl class="a-bilgi">' + bilgi("Ad soyad", d(o && kacis(o.p.ad))) + bilgi("Meslek", d(o && kacis(MV.meslekAd(o.p)))) +
+      bilgi("Yetkili kişi kayıt no", d(o && '<span class="a-kod">' + o.p.ekipnet + "</span>")) + bilgi("Nüsha sayısı", String(f.nusha)) + "</dl>" +
+      '<div class="a-belge-imza">' + (!o ? "İmza" : o.imza ? "Güvenli elektronik imza · " + kacis(o.p.ad) + " · " + MK.zamanYaz(o.imza.zaman) : "İmzasız — inspector son imzayı atınca geçerli olur ve müşteriye açılır.") + "</div>";
+    var h = [];
+    h.push(bolum(B.firma, "Firma bilgileri", '<dl class="a-bilgi">' +
+      bilgi("Firma ünvanı", o ? kacis(o.m.unvan) : bos, true) + bilgi("Adres", o ? kacis(o.ts.adres + ", " + o.ts.ilce + " / " + o.ts.il) : bos, true) +
+      bilgi("SGK DETSİS no", o ? '<span class="a-kod a-kod-uzun">' + o.ts.sgk + "</span>" : bos, "cift") +
+      bilgi("İSG-KATİP sözleşme ID", o ? (o.isg ? '<span class="a-kod">' + o.isg.no + "</span>" : '<span class="a-uyari-metin">Yok</span>') : bos) +
+      bilgi("Başlangıç", d(o && MK.tarihYaz(o.tarih) + " " + (o.bas || "09:12"))) + bilgi("Bitiş", d(o && MK.tarihYaz(o.tarih) + " " + (o.bit || "09:48"))) +
+      bilgi("Sonraki kontrol", d(o && o.sonraki && MK.tarihYaz(o.sonraki))) + bilgi("Rapor tarihi", d(o && MK.tarihYaz(o.tarih))) +
+      bilgi("Periyodik kontrol metodu ve kapsamı", kacis(MV.metotYazi(t)), true) + "</dl>" +
+      '<p class="a-belge-madde">Dayanak: ' + F.dayanak.map(kacis).join(" · ") + "</p>"));
+    h.push(bolum(B.ekipman, "Ekipman bilgileri", '<dl class="a-bilgi">' + bilgi("Ekipman", kacis(t.ad)) + bilgi("Kod", d(o && '<span class="a-kod">' + o.e.kod + "</span>")) +
+      bilgi("Kullanım yeri", d(o && kacis(o.e.konum)), true) + "</dl>" +
+      "<h4>" + B.ekipman + ".1 · Ekipman detayları</h4>" + alanTablo(F.detay) + "<h4>" + B.ekipman + ".2 · Tespitler</h4>" + alanTablo(F.tespit)));
+    if (B.termal) h.push(bolum(B.termal, "Termal kamera bilgileri", '<dl class="a-bilgi">' + bilgi("Termal kamera ile kontrol", d("Hayır")) + "</dl>"));
+    h.push(bolum(B.cihaz, "Ölçüm cihazları", tablo(["Cihaz", "Cihaz no", "Kalibrasyon tarihi"], o && o.cihaz.length ? o.cihaz.map(function (v) { return [kacis(v.ad), '<span class="a-kod">' + v.seri + "</span>", MK.tarihYaz(v.kal[0].tarih)]; }) : [[bos, bos, bos]])));
+    if (F.gozle) {
+      var i0 = 0;
+      h.push(bolum(B.kontrol, "Gözle kontrol kriterleri", F.gozle.map(function (g, gi) {
+        var tb = tablo(["No", "Kriter", "Sonuç"], g[1].map(function (k, j) { var i = i0 + j;
+          return [B.kontrol + "." + (gi + 1) + "." + (j + 1), kacis(k), o ? (kusurlu && i === ok.i ? "Uygun değil · " + (hafif ? "hafif" : "ağır") : g[0] === "Termal kamera" ? "Uygulanamaz" : "Uygun") : '<span class="a-belge-kutu"></span>Uygun · uygun değil · uygulanamaz']; }), "", "a-belge-tablo-kriter");
+        i0 += g[1].length; return "<h4>" + B.kontrol + "." + (gi + 1) + " · " + kacis(g[0]) + "</h4>" + tb; }).join("")));
+      h.push(bolum(B.fonksiyon, "Fonksiyon kontrol kriterleri ve testler", '<dl class="a-bilgi">' + bilgi("Ölçüm metodu", d(F.metot[0])) + "</dl>" +
+        tablo(["Ölçüm", "Değer", "Sınır"], MV.testler(t).map(function (x) { return [kacis(x.ad), o ? x.ornek + " " + x.birim : bos, MV.sinirYaz(x)]; }))));
+    } else {
+      h.push(bolum(B.tanim, "Test değerleri tanımları", tablo(["Kısaltma", "Tanım"], F.tanimlar.map(function (x) { return ['<span class="a-kod">' + kacis(x[0]) + "</span>", kacis(x[1])]; }))));
+      var nk = F.noktalar.map(function (n) { return { ad: n[0], egri: n[1], In: n[2], zx: n[3] || "0,34", rcd: n[4], priz: /priz/i.test(n[0]) }; });
+      if (kusurlu && !hafif) nk.push({ ad: "Kapı motoru — sevkiyat", egri: "C", In: 10, zx: "2,6", rcd: "" });
+      h.push(bolum(B.kontrol, "Kontrol ve ölçümler", '<dl class="a-bilgi">' + bilgi("Ölçüm metodu", d(F.metot[0])) + "</dl>" +
+        "<h4>" + B.kontrol + ".1 · Çevrim empedansı ölçümleri</h4>" +
+        tablo(["Nokta", "Zx (Ω)", "Zs (Ω)", "Ik1 (A)", "Not"], (o ? nk : nk.slice(0, 1)).map(function (n) { var c = MV.noktaHesap(n);
+          return o ? [kacis(n.ad) + '<br><span class="a-belge-madde">' + n.egri + n.In + "</span>", n.zx, String(c.zs).replace(".", ","), String(c.ik), "Not-" + c.not] : [bos, bos, bos, bos, bos]; })) +
+        "<h4>" + B.kontrol + ".2 · RCD testleri</h4>" +
+        tablo(["Pano", "Tip · In · IΔn", "IΔ (mA)", "TΔ (ms)"], (o ? F.rcd : F.rcd.slice(0, 1)).map(function (x) {
+          return o ? [kacis(x[0]), x[1] + " · " + x[2] + " A · " + x[3] + " mA", x[4] || "220", x[5] || "180"] : [bos, bos, bos, bos]; }))));
+    }
+    h.push(bolum(B.kusur, "Kusur açıklamaları", o ? (kusurlu ? "<p><b>" + kacis(ok.kriter) + "</b> · " + (hafif ? "Hafif kusur" : "Ağır kusur") + ": " + kacis(ok.aciklama) + "</p>" : '<p class="a-deger-yok">Kusur yok.</p>')
+      : '<p class="a-bolum-aciklama">Her kusur ayrı yazılır; sınıf hafif ya da ağır.</p>'));
+    var foto = '<div class="a-fotolar">' + [1, 2].map(function (i) { return '<span class="a-foto" role="img" aria-label="Fotoğraf ' + i + '">' + ikon("camera") + '<span class="a-foto-no">' + i + "</span></span>"; }).join("") + "</div>";
+    if (B.foto) h.push(bolum(B.foto, "Fotoğraflar", foto));
+    h.push(bolum(B.not, "Notlar", F.notlar ? '<ol class="a-belge-notlar">' + F.notlar.map(function (x) { return "<li>" + kacis(x) + "</li>"; }).join("") + "</ol>" : '<p class="a-deger-yok">—</p>'));
+    h.push(bolum(B.sonuc, "Sonuç ve kanaat", "<p>" + kacis(F.sonuc) + " …</p>" +
+      '<p class="a-belge-secenek"><span class="a-belge-kutu' + (o && !kusurlu ? " a-belge-kutu-dolu" : "") + '"></span>Uygun</p>' +
+      '<p class="a-belge-secenek"><span class="a-belge-kutu' + (kusurlu ? " a-belge-kutu-dolu" : "") + '"></span>Uygun değil</p>'));
+    h.push(bolum(B.yetkili, "Yetkili kişi", yetkili));
+    if (!B.foto) h.push(bolum("Ek", "Fotoğraflar", foto));
+    return '<article class="a-belge" aria-label="Rapor önizlemesi">' +
+      '<header class="a-belge-bas"><div class="a-belge-logo" role="img" aria-label="Firma logosu yeri">Logo</div>' +
+        '<div class="a-belge-kunye"><b>' + kacis(f.ad) + "</b><span>" + kacis(f.adres) + "</span><span>" + kacis(f.eposta) + " · Akreditasyon no <span class=\"a-kod\">" + f.akr + "</span></span></div>" +
+        '<div class="a-belge-logo" role="img" aria-label="Akreditasyon markası yeri">Akreditasyon markası</div></header>' +
+      '<div class="a-belge-baslik"><h2>' + kacis(rf.ad) + "</h2><p>" + kacis(t.ad) + " · " + kacis(grup.ad) + "</p></div>" +
+      '<dl class="a-bilgi">' + bilgi("Rapor no", o ? '<span class="a-kod">' + o.no + "</span>" : bos) + bilgi("Doküman kodu", '<span class="a-kod">' + rf.k + "</span>") +
+        bilgi("Yayım · yürürlük", MK.tarihYaz(rf.yayim) + " · " + MK.tarihYaz(rf.yururluk)) + bilgi("Sayfa", "1 / 3") + "</dl>" +
+      h.join("") +
+      '<footer class="a-belge-alt"><span>' + kacis(f.ad) + " · " + rf.k + "</span><span>Sayfa 1 / 3</span></footer></article>";
+  }
   /* bolum(no, başlık, iç) ya da bolum(no, başlık, sağdaki kısa bilgi, iç) — rapor belgesinde madde etiketi yok (2026-09-26) */
   function bolum(no, baslik, ek, ic) {
     if (ic === undefined) { ic = ek; ek = ""; }
     return '<section class="a-belge-bolum"><h3><span>' + no + " · " + baslik + "</span>" + (ek ? '<span class="a-belge-madde">' + ek + "</span>" : "") + "</h3>" + ic + "</section>";
   }
-  function tablo(bas, satirlar, kay) {
-    return '<table class="a-belge-tablo"><thead><tr>' + bas.map(function (b) { return '<th scope="col">' + b + "</th>"; }).join("") + "</tr></thead><tbody>" +
+  function tablo(bas, satirlar, kay, sinif) {
+    return '<table class="a-belge-tablo' + (sinif ? " " + sinif : "") + '"><thead><tr>' + bas.map(function (b) { return '<th scope="col">' + b + "</th>"; }).join("") + "</tr></thead><tbody>" +
       satirlar.map(function (s) { return "<tr>" + s.map(function (h) { return "<td>" + h + "</td>"; }).join("") + "</tr>"; }).join("") + "</tbody></table>" + (kay ? kaynak(kay) : "");
   }
 

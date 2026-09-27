@@ -2,11 +2,11 @@
  "maket": "m8",
  "tarih": "2026-09-27",
  "arac": "tools/olc-bulut.mjs --etkilesim (başsız tarayıcı, 1920 açık tema; gen verilen denemede o genişlik)",
- "toplam": 45,
- "gecen": 45,
+ "toplam": 54,
+ "gecen": 54,
  "denemeler": [
   {
-   "ad": "kontrol metodu türden, yalnız standart numarası, seçim alanı yok",
+   "ad": "kontrol metodu türden, yalnız standart numarası, seçim alanı yok (formatlı türde firma bölümünde)",
    "gen": 1920,
    "sayfa": "maket/rapor.html",
    "hash": "#/r/ET-1009",
@@ -121,7 +121,7 @@
    "ad": "etiketler: Ekipman bilgileri, Ölçüm cihazları, Muayene uzmanı yorumu, sonuç Uygun / Uygun değil",
    "gen": 1920,
    "sayfa": "maket/rapor.html",
-   "hash": "#/r/ET-1009",
+   "hash": "#/r/KP-1004",
    "gecti": true
   },
   {
@@ -240,14 +240,77 @@
    "ad": "ekipman bilgileri elle: yazınca kaydedilmemiş değişiklik",
    "gen": 1920,
    "sayfa": "maket/rapor.html",
-   "hash": "#/r/ET-1009",
+   "hash": "#/r/KP-1004",
    "gecti": true
   },
   {
    "ad": "Kaydet: son kayıt güncellenir",
    "gen": 1920,
    "sayfa": "maket/rapor.html",
+   "hash": "#/r/KP-1004",
+   "gecti": true
+  },
+  {
+   "ad": "iç tesisat (ZPKR02): bölümler formattaki sırayla 1–11",
+   "gen": 1920,
+   "sayfa": "maket/rapor.html",
    "hash": "#/r/ET-1009",
+   "gecti": true
+  },
+  {
+   "ad": "iç tesisat: gözle kontrol 7 grup, 27 madde; kusur derecesi listede",
+   "gen": 1920,
+   "sayfa": "maket/rapor.html",
+   "hash": "#/r/ET-1009",
+   "gecti": true
+  },
+  {
+   "ad": "iç tesisat: ekipman detayları ve tespitler formattan (çoklu seçim işaretlenir)",
+   "gen": 1920,
+   "sayfa": "maket/rapor.html",
+   "hash": "#/r/ET-1009",
+   "gecti": true
+  },
+  {
+   "ad": "iç tesisat: termal kamera Evet → zimmette yoksa söylenir (termal kamera depoda)",
+   "gen": 1920,
+   "sayfa": "maket/rapor.html",
+   "hash": "#/r/ET-1009",
+   "gecti": true
+  },
+  {
+   "ad": "topraklama (ZPKR01): bölümler 1–9 + fotoğraf eki; pano sigortası yok",
+   "gen": 1920,
+   "sayfa": "maket/rapor.html",
+   "hash": "#/r/AT-1010",
+   "gecti": true
+  },
+  {
+   "ad": "topraklama: Zx sınırı aşan, RCD'siz nokta Not-2 ağır; kusur listesinde",
+   "gen": 1920,
+   "sayfa": "maket/rapor.html",
+   "hash": "#/r/AT-1010",
+   "gecti": true
+  },
+  {
+   "ad": "topraklama: Zx yazınca Ik1 ve not yerinde hesaplanır (odak yerinde)",
+   "gen": 1920,
+   "sayfa": "maket/rapor.html",
+   "hash": "#/r/AT-1010",
+   "gecti": true
+  },
+  {
+   "ad": "topraklama: ölçüm noktası ekle",
+   "gen": 1920,
+   "sayfa": "maket/rapor.html",
+   "hash": "#/r/AT-1010",
+   "gecti": true
+  },
+  {
+   "ad": "topraklama: RCD yetersiz → ağır",
+   "gen": 1920,
+   "sayfa": "maket/rapor.html",
+   "hash": "#/r/AT-1010",
    "gecti": true
   },
   {

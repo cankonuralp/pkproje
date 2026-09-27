@@ -1593,6 +1593,24 @@ ekipmanın muayenesi ile alakalı tariflerdir."*
   karşılaştırılarak doğrulanır).
 - **Standartlar formatlara göre:** AG topraklama → TS HD 60364-4-41 + TS HD 60364-6; elektrik iç tesisatı → **TS HD 60364-4-43** (yeni) + TS HD
   60364-6 (ZPKR01 / ZPKR02 başlığındaki standartlar). Kütüphane 23 standart.
+- **Saha raporu ve rapor belgesi formata göre** (önceki tur: *"örnekleri hep onlarla ilgili yap"*; formatı Bakanlıkça yayımlanmış türde):
+  bölüm sırası ve adları formattaki gibi — **iç tesisat (ZPKR02) 1–11:** firma · ekipman (2.1 ekipman detayları, 2.2 tespitler) · termal kamera
+  (isteğe bağlı; kullanıldıysa inspector'ın zimmetindeki geçerli kamera, yoksa "zimmetinizde yok") · ölçüm cihazları · gözle kontrol (7 grup,
+  27 madde; madde no 5.g.m) · fonksiyon testleri (ölçüm metodu + 6.1–6.3 ölçümleri + 6.4 pano linye ve sigortaları) · kusur açıklamaları ·
+  fotoğraflar · notlar · sonuç (formatın cümlesi + Uygun / Uygun değil) · yetkili kişi. **Topraklama (ZPKR01) 1–9:** firma · ekipman · ölçüm
+  cihazları · test değerleri tanımları · kontrol ve ölçümler (ölçüm metodu; 5.1 çevrim empedansı noktaları; 5.2 RCD testleri) · kusur ·
+  notlar (Not-1 … Not-11 açılır listede) · sonuç · yetkili kişi; formatta fotoğraf bölümü olmadığından fotoğraflar **ek**.
+  - Ekipman bilgileri formattaki alanlar (şebeke tipi, topraklayıcı tipi, yapı cinsi … seçmeli; kuruluş, gerilim … yazılır; doğrudan
+    dokunmaya karşı önlemler çoklu); marka / model / seri no bu türlerde yok. "Periyodik kontrol metodu ve kapsamı" (türden, yalnız standartlar)
+    formattaki gibi firma bölümünde. **Ölçüm metodu** (üç uçlu, çevrim empedansı, klamp) formatta sahada işaretlenen alan olduğundan raporda
+    seçilir — kontrol metodundan ayrı.
+  - Topraklamada her ölçüm noktası için **Ia = eğri çarpanı (B 5 · C 10 · D 15) × In, Zs = 230 V / Ia, Ik1 = 230 V / Zx kendiliğinden**;
+    uygunluk notu formata göre: Zx ≤ Zs → Not-1 (32 A'e kadar prizde RCD yoksa Not-5, ağır); aşıyor ve RCD var → Not-4 (uygun); RCD yok →
+    Not-2 (ağır). RCD: IΔ ≤ IΔn ve TΔ ≤ 200 ms, değilse yetersiz (ağır). Nokta ve RCD eklenir / kaldırılır.
+  - Kusur derecesi (hafif / ağır) Bakanlık formatı yürürlükteki türde her uygun değil maddede seçilir (§4.5); kusur açıklamaları bölümü
+    maddeleri, sınır dışı ölçümleri, ağır notlu noktaları ve yetersiz RCD'leri tek listede toplar; iç tesisatta formatın "ağır kusur sayılan
+    durumlar" listesi açılır.
+  - Öteki türler şimdilik firmanın örnek formatıyla (§8.3) kalır; format geldikçe aynı yapıya geçer.
 
 **Açık kalanlar:** ~~Ana sayfada İSGGM duyuruları~~ (2026-09-27: makette eklendi; okuma işi uygulamada) (reisim 2026-09-26: *"Ana sayfada isgüm duyurularını gösterebilir miyiz ? Bunu
 yapılacaklar listesine ekle"*; öneri: ÇSGB İSGGM duyurular sayfası — https://www.csgb.gov.tr/isggm/duyurular/ — sunucuda günde birkaç kez
@@ -1626,6 +1644,11 @@ revizyon, alan kopyalama, hafif kusur devri, meslek eşleşme denetimi).
 - Emsal ürünler: https://opwire.app/iso-17020-periyodik-kontrol-yazilimi/ · https://17020muayene.vidco.com.tr/ · https://akuple.com/asansor-kontrol-yazilimi/ · https://ensyazilim.com/
 
 ## 11 · Değişiklik günlüğü
+- 2026-09-27 (93): **Saha raporu ve rapor belgesi Bakanlık formatına göre** (§9 yirmi sekizinci tur): iç tesisat ZPKR02 (1–11) ve AG topraklama
+  ZPKR01 (1–9 + fotoğraf eki); formattaki ekipman detayları / tespitler, gözle kontrol grupları, ölçüm noktası hesabı (Ia, Zs, Ik1, Not),
+  RCD testleri, kusur derecesi, kusur listesi, formatın sonuç cümlesi ve yetkili kişi; onay özeti ve uygunsuzluk kaydı formatın maddeleriyle.
+  M8 136/136 · 54/54 · 68/68; M9 96/96 · 19/19 · 48/48; M11 88/88 · 10/10 · 44/44; M7 104/104 · 18/18 · 52/52; M3 80/80 · 20/20 · 40/40;
+  M12 96/96 · 16/16 · 48/48; M2 104/104 · 24/24 · 52/52.
 - 2026-09-27 (92): **Kontrol kriterleri sekmesi** (§9 yirmi sekizinci tur): Standartlar'da ZPKK01 / ZPKK02 (maddeler, notlar, PDF), resmî rapor
   formatları ZPKR01 / ZPKR02 türlerde; AT ve ET standartları formatlardaki gibi. M7 104/104 · 18/18 · 52/52; M3 80/80 · 20/20 · 40/40; M8 · M9 temiz.
 - 2026-09-27 (91): **Duyurular düzeltildi** (§9 yirmi sekizinci tur): 6 gerçek duyuru, hepsi tarihli, en yeni üstte; İSGÜM eklendi. M1 256/256 · 49/49 · 128/128.

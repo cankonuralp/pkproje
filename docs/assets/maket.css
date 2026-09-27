@@ -808,6 +808,9 @@ a.a-yuz:hover { border-color: var(--kenar-alan); background: var(--zemin); }
   background: var(--zemin2); border-radius: var(--r-kucuk); font-size: var(--boy-govde); font-weight: var(--kal-bolum);
 }
 .a-belge-madde { color: var(--yazi2); font-size: var(--boy-etiket); font-weight: 500; }
+.a-belge-bolum h4 { margin: 12px 0 6px; font-size: var(--boy-kucuk); font-weight: 700; }   /* formatlı belgede alt başlık (2.1, 5.3 …) */
+.a-belge-tablo-kriter { table-layout: fixed; } .a-belge-tablo-kriter th:first-child { width: 16%; } .a-belge-tablo-kriter th:last-child { width: 30%; }
+.a-belge-notlar { margin: 0; padding-left: 20px; display: grid; gap: 4px; font-size: var(--boy-kucuk); }
 .a-belge-tablo { width: 100%; border-collapse: collapse; font-size: var(--boy-kucuk); }
 /* ⛔ 2026-09-24 (M11, 375'te gözle): "anywhere" en kısa sütunu harf harf bölüyordu ("Yap ıldı") — ölçüm yakalamaz (taşma yok).
    Kelime içinde bölünmez; en uzun kelime sütunun en dar hâlidir. */
@@ -852,11 +855,12 @@ a.a-yuz:hover { border-color: var(--kenar-alan); background: var(--zemin); }
 .a-bolum-acilir > summary .a-bolum-tus + .a-acilir-ok { margin-left: 4px; }   /* başlık tuşu (Güncelle) sağda, okun yanında */
 .a-kriter { display: grid; grid-template-columns: minmax(0, 1fr) 13rem; align-items: center; gap: 8px 16px; padding: 12px 0; border-top: 1px solid var(--kenar); }
 .a-kriter-ad { display: flex; gap: 8px; margin: 0; font-weight: 600; }
-.a-kriter-no { flex: none; min-width: 20px; color: var(--yazi2); font-variant-numeric: tabular-nums; }
+.a-kriter-no { flex: none; min-width: 20px; white-space: nowrap; color: var(--yazi2); font-variant-numeric: tabular-nums; }
 .a-kriter-cevap { min-width: 0; }
 .a-kriter-kusur { grid-column: 1 / -1; display: grid; gap: 8px; }
 .a-kriter-uyari { grid-column: 1 / -1; margin: 0; }
-.a-kriter-sonuc { border-top: 0; padding-top: 0; }   /* sonuç ve kanaat: kriter satırıyla aynı düzen (solda ad, sağda seçim) */
+.a-kriter-sonuc { border-top: 0; padding-top: 0; }
+.a-kriter-genis { grid-template-columns: minmax(0, 1fr) 22rem; }   /* uzun seçenekli tek seçim (ölçüm metodu) */   /* sonuç ve kanaat: kriter satırıyla aynı düzen (solda ad, sağda seçim) */
 .a-foto-menu .a-secici-liste { left: 0; right: auto; min-width: 200px; }
 /* cihaz ekle penceresi: tür başına grup, zimmetteki geçerli cihazlar */
 .a-cihaz-grup { margin: 0 0 12px; padding: 0; border: 0; min-width: 0; }
@@ -872,6 +876,18 @@ a.a-yuz:hover { border-color: var(--kenar-alan); background: var(--zemin); }
 .a-kosullar .a-serit-tus { margin-left: auto; }
 .a-tablo-sigorta .a-k-no { width: 30%; } .a-tablo-sigorta .a-k-deger { width: 14%; } .a-tablo-sigorta .a-k-kutup { width: 10%; }
 .a-tablo-sigorta .a-k-rcd { width: 14%; } .a-tablo-sigorta .a-k-durum { width: 14%; } .a-tablo-sigorta .a-k-eylem { width: 18%; }
+/* Bakanlık formatlı rapor (ZPKR01 · ZPKR02, 2026-09-27): alt başlık (2.1, 5.3 …), çoklu seçim, kusur listesi, formattan açılır listeler, ölçüm tabloları */
+.a-kriter-grup { margin: 16px 0 4px; font-size: var(--boy-govde); font-weight: 700; color: var(--yazi2); }
+.a-kriter-grup:first-child { margin-top: 4px; }
+.a-coklu { display: grid; gap: 0; }
+.a-kusur-liste { margin: 0; padding-left: 20px; display: grid; gap: 8px; }
+.a-format-metin { margin: 0 0 8px; color: var(--yazi2); }
+.a-format-liste { margin: 10px 0 0; }
+.a-format-liste summary { cursor: pointer; min-height: var(--tus-y); display: flex; align-items: center; font-weight: 600; }
+.a-format-liste ol, .a-format-liste ul { margin: 4px 0 0; padding-left: 20px; display: grid; gap: 4px; font-size: var(--boy-kucuk); }
+.a-tablo-nokta .a-k-ad { width: 30%; } .a-tablo-nokta .a-k-zx { width: 14%; } .a-tablo-nokta .a-k-zs { width: 20%; } .a-tablo-nokta .a-k-ik { width: 10%; }
+.a-tablo-nokta .a-k-not { width: 16%; } .a-tablo-nokta .a-k-eylem { width: 10%; }
+.a-tablo-rcd .a-k-ad { width: 38%; } .a-tablo-rcd .a-k-id { width: 16%; } .a-tablo-rcd .a-k-td { width: 16%; } .a-tablo-rcd .a-k-not { width: 20%; } .a-tablo-rcd .a-k-eylem { width: 10%; }
 .a-tablo-olcum .a-k-ad { width: 42%; } .a-tablo-olcum .a-k-no { width: 24%; } .a-tablo-olcum .a-k-kal { width: 24%; } .a-tablo-olcum .a-k-eylem { width: 10%; }
 
 /* M9 — raporlar ve onay kuyruğu */
@@ -1105,6 +1121,7 @@ a.a-yuz:hover { border-color: var(--kenar-alan); background: var(--zemin); }
   .a-belge-kunye { order: 3; flex-basis: 100%; }
   /* saha raporu telefonda: madde solda, seçim sağda daha dar */
   .a-kriter { grid-template-columns: minmax(0, 1fr) 9.75rem; gap: 8px 10px; }
+  .a-kriter-genis { grid-template-columns: minmax(0, 1fr); }
   /* plan içi etiket : değer satırları telefonda alt alta (kimlik bölünmez, taşmasın) */
   .a-satir { grid-template-columns: minmax(0, 1fr); gap: 2px; }
   /* tarih seçici telefonda alanın genişliğinde (kartın dışına taşmaz); gün tuşları arası boşluksuz, yükseklik 44 kalır */
