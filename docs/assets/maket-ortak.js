@@ -528,7 +528,7 @@
      gerektiğinde bir kez kurulur; başka pencerenin üstünde de açılır. Seçilen gerçek dosya kendisi, örnek kaydın dosyası sayfa iskeleti olarak gösterilir.
      pdfTus(dosya, ad?) → "Aç" tuşu · MK.pdfGoster({ dosya, baslik, icerik (varsa gerçek önizleme, ör. MB.belge), sayfa }) */
   MK.pdfTus = function (dosya, ad, sinif) { return MK.tus({ eylem: "pdf-goster", ad: ad || "Aç", ikon: "eye", sinif: sinif || "a-tus-ikincil", veri: { dosya: dosya } }); };
-  var PDF = { sayfa: 1, toplam: 1, o: null };
+  var PDF = { o: null };
   function pdfPencere() {
     var d = $("a-pdf"); if (d) return d;
     d = document.createElement("dialog"); d.className = "a-pencere a-pencere-pdf"; d.id = "a-pdf"; d.setAttribute("aria-labelledby", "a-pdf-baslik");
@@ -536,47 +536,166 @@
       '<div class="a-pencere-govde" id="a-pdf-govde"></div><div class="a-pencere-alt" id="a-pdf-alt"></div>';
     document.body.appendChild(d); return d;
   }
+  /* örnek kaydın dosyası (makette dosyası yok): sayfa iskeleti, KÂĞIT üreticisiyle aynı A4 sayfalar */
+  function ornekSayfalar(n, ad) {
+    var satir = function (k, uzun) { var h = ""; for (var i = 0; i < k; i++) h += '<span class="a-pdf-satir' + (uzun && i % 3 === 2 ? " a-pdf-satir-kisa" : "") + '"></span>'; return h; };
+    var h = ""; for (var i = 1; i <= n; i++) h += '<div class="rb-sayfa a-ornek-sayfa" role="img" aria-label="' + kacis(ad) + ", sayfa " + i + '"><div class="a-pdf-bas"><span class="a-pdf-logo">Logo</span><span class="a-pdf-bas-yazi">' + satir(2) + "</span></div>" + satir(30, true) + "</div>";
+    return h;
+  }
+  /* 2026-09-28 (reisim: "ön izlemede yukarıda istemediğim şeyler var … pdf indir dediğimde inen şey ön izlemeden çok farklı"): pencerede
+     yalnız başlık + kâğıt; dosya adı satırı, sayfa sayacı ve sayfa okları kalktı (kâğıt kayarak okunur). İndirilen PDF pencerede görünen
+     sayfaların kendisi (MK.kagitPdf). Seçilen gerçek dosya kendisi gösterilir ve aynen iner. */
   function pdfCiz() {
     var o = PDF.o, yuklu = MK.DOSYA[o.dosya];
-    /* seçilen gerçek dosya: PDF tarayıcının kendi görüntüleyicisinde (sayfalar orada), fotoğraf resim olarak */
-    if (yuklu) {
-      $("a-pdf-baslik").textContent = o.baslik || o.dosya;
-      $("a-pdf-govde").innerHTML = '<div class="a-pdf-arac"><span class="a-pdf-dosya">' + ikon("file-text", "a-ikon-kucuk") + "<span>" + kacis(o.dosya) + "</span></span></div>" +
-        (/pdf/.test(yuklu.tur) ? '<iframe class="a-pdf-cerceve" src="' + yuklu.url + '" title="' + kacis(o.dosya) + '"></iframe>'
-          : /^image\//.test(yuklu.tur) ? '<img class="a-pdf-resim" src="' + yuklu.url + '" alt="' + kacis(o.dosya) + '">'
-          : '<p class="a-bos-satir">Bu dosya türü burada önizlenemez; “İndir” ile açın.</p>');
-      $("a-pdf-alt").innerHTML = MK.tus({ eylem: "pdf-indir", ad: "İndir", ikon: "download", sinif: "a-tus-ikincil" }) + MK.tus({ eylem: "pencere-kapat", ad: "Kapat" });
-      return;
-    }
-    /* resmî belge (rb-sayfa) bütün sayfalarıyla çizilir; sayfa tuşları o sayfaya kaydırır */
-    var sayfalar = o.icerik ? (o.icerik.match(/class="rb-sayfa"/g) || []).length : 0;
-    if (sayfalar) PDF.toplam = sayfalar;
-    var o = PDF.o, satir = function (n, uzun) { var h = ""; for (var i = 0; i < n; i++) h += '<span class="a-pdf-satir' + (uzun && i % 3 === 2 ? " a-pdf-satir-kisa" : "") + '"></span>'; return h; };
     $("a-pdf-baslik").textContent = o.baslik || o.dosya;
-    $("a-pdf-govde").innerHTML = '<div class="a-pdf-arac"><span class="a-pdf-dosya">' + ikon("file-text", "a-ikon-kucuk") + "<span>" + kacis(o.dosya) + "</span></span>" +
-        '<span class="a-pdf-sayfa-no">Sayfa ' + PDF.sayfa + " / " + PDF.toplam + "</span>" +
-        '<button class="a-ikon-tus" type="button" data-eylem="pdf-sayfa" data-yon="-1" aria-label="Önceki sayfa"' + (PDF.sayfa === 1 ? " disabled" : "") + ">" + ikon("chevron-left") + "</button>" +
-        '<button class="a-ikon-tus" type="button" data-eylem="pdf-sayfa" data-yon="1" aria-label="Sonraki sayfa"' + (PDF.sayfa === PDF.toplam ? " disabled" : "") + ">" + ikon("chevron-right") + "</button></div>" +
-      (o.icerik && (sayfalar || PDF.sayfa === 1) ? o.icerik : '<div class="a-pdf-sayfa" role="img" aria-label="' + kacis(o.dosya) + ", sayfa " + PDF.sayfa + '">' +
-        '<div class="a-pdf-bas"><span class="a-pdf-logo">Logo</span><span class="a-pdf-bas-yazi">' + satir(2) + "</span></div>" + satir(14, true) + "</div>");
+    $("a-pdf-govde").innerHTML = yuklu ? (/pdf/.test(yuklu.tur) ? '<iframe class="a-pdf-cerceve" src="' + yuklu.url + '" title="' + kacis(o.dosya) + '"></iframe>'
+        : /^image\//.test(yuklu.tur) ? '<img class="a-pdf-resim" src="' + yuklu.url + '" alt="' + kacis(o.dosya) + '">'
+        : '<p class="a-bos-satir">Bu dosya türü burada önizlenemez; “İndir” ile açın.</p>')
+      : '<div class="a-kagit" data-ad="' + kacis(o.baslik || o.dosya) + '">' + (o.icerik ? kagitKaynak(o.icerik) : ornekSayfalar(o.sayfa || 2, o.dosya)) + "</div>";
     $("a-pdf-alt").innerHTML = MK.tus({ eylem: "pdf-indir", ad: "İndir", ikon: "download", sinif: "a-tus-ikincil" }) + MK.tus({ eylem: "pencere-kapat", ad: "Kapat" });
-    if (!sayfalar) return;
-    var g = $("a-pdf-govde"), hedef = g.querySelectorAll(".rb-sayfa")[PDF.sayfa - 1];
-    if (window.MB && MB.sigdir) MB.sigdir(g);
-    g.scrollTop = PDF.sayfa === 1 ? 0 : g.scrollTop + hedef.getBoundingClientRect().top - g.getBoundingClientRect().top;
+    kagitKur();
   }
   MK.pdfGoster = function (o) {
-    PDF.o = o; PDF.sayfa = 1; PDF.toplam = o.sayfa || 2;
+    PDF.o = o;
     var d = pdfPencere(); pdfCiz(); if (!d.open) d.showModal(); $("a-pdf-govde").scrollTop = 0;
     $("a-pdf-alt").querySelector(".a-tus-birincil").focus({ preventScroll: true });
   };
   MK.eylem = MK.eylem || {};
   MK.eylem["pdf-goster"] = function (el) { MK.pdfGoster({ dosya: el.dataset.dosya }); };
-  MK.eylem["pdf-sayfa"] = function (el) { PDF.sayfa = Math.min(PDF.toplam, Math.max(1, PDF.sayfa + +el.dataset.yon)); pdfCiz(); var t = document.querySelector('#a-pdf [data-eylem="pdf-sayfa"][data-yon="' + el.dataset.yon + '"]'); (t && !t.disabled ? t : $("a-pdf-alt").querySelector(".a-tus-birincil")).focus(); };
-  /* İndir: seçilen gerçek dosya aynen iner; belge (rapor, form) yazdırma penceresinden PDF olur; örnek kayıt dosyası maket PDF'i olarak iner */
+  /* İndir: seçilen gerçek dosya aynen iner; öteki her şey pencerede görünen kâğıdın PDF'i */
   MK.eylem["pdf-indir"] = function () {
-    var o = PDF.o, d = MK.DOSYA[o.dosya];
-    if (d && d.dosya) MK.indir(o.dosya, d.dosya); else if (d && d.url) MK.indirUrl(o.dosya, d.url); else if (o.icerik) MK.yazdir(o.baslik || o.dosya, o.icerik); else MK.indir(o.dosya, MK.ornekPdf(o.dosya));
+    var o = PDF.o, d = MK.DOSYA[o.dosya], ad = /\.pdf$/i.test(o.dosya) ? o.dosya : (o.baslik || o.dosya) + ".pdf";
+    if (d && d.dosya) MK.indir(o.dosya, d.dosya); else if (d && d.url) MK.indirUrl(o.dosya, d.url);
+    else { var k = document.querySelector("#a-pdf-govde > .a-kagit-cerceve"); MK.bildir("PDF hazırlanıyor…"); MK.kagitPdf(k).then(function (b) { MK.indir(ad, b); MK.SON_INDIRME.sayfa = b.sayfa; MK.SON_INDIRME.onizleme = k.sayfaSayisi; }, function (e) { MK.bildir("PDF hazırlanamadı: " + (e && e.message || e)); }); }
+  };
+
+  /* ── KÂĞIT: belge → A4 sayfalar → PDF (2026-09-28, TEK MEKANİZMA; reisim: "özel değil genel düşün … geçici çözümler üretme").
+     Rapor, sözleşme, teklif, fatura özeti, zimmet formu, saha formu, örnek dosya — hepsi aynı yoldan: kaynak HTML sayfanın kendi
+     stilleriyle, AÇIK temada, ayrı bir çerçevede (iframe) A4 sayfalara (794 × 1123 px) dizilir; sayfaya sığmayan içerik bir sonraki sayfaya
+     geçer (tablo satır satır bölünür, başlığı yeni sayfada tekrarlanır; resmî belgenin başlık tablosu her sayfada). İndir aynı çerçevedeki
+     sayfaları görüntüye çevirip PDF'e yazar → önizleme ile inen dosya birebir aynıdır. Çerçeve kabının genişliğine sığar (küçülür, kaydırma
+     yok). Kaynak ekranda gizli durur (metin aranabilir); görünen yalnız kâğıt. Yazdırma penceresi yolu (MK.yazdir'in eski hâli) kalktı:
+     telefonda gizli çerçeve yerine bütün sayfayı basıyordu. Dış kütüphane yok; html2canvas sitenin kendi kökeninden (vendor, sürümlü). */
+  var KAGIT_G = 794, KAGIT_Y = 1123, KAGIT_KENAR = 16;
+  var kokYol = (function () { var sc = document.currentScript; return sc ? sc.src.replace(/assets\/maket-ortak\.js.*$/, "") : "../"; })();
+  function kagitBelge(f, html, ad) {
+    var stil = [].map.call(document.querySelectorAll('link[rel="stylesheet"]'), function (l) { return '<link rel="stylesheet" href="' + l.href + '">'; }).join("");
+    var d = f.contentDocument; d.open();
+    d.write('<!doctype html><html lang="tr" data-tema="acik"><head><meta charset="utf-8"><title>' + kacis(ad) + "</title>" + stil +
+      "<style>html,body{margin:0;padding:0;overflow:hidden;background:var(--zemin)}#a-sayfalar{width:" + (KAGIT_G + 2 * KAGIT_KENAR) + "px;padding:" + KAGIT_KENAR + "px " + KAGIT_KENAR + "px 0;box-sizing:border-box;transform-origin:0 0}" +
+      "#a-sayfalar .rb-sayfa{height:" + KAGIT_Y + "px;min-height:0;overflow:hidden;margin:0 0 " + KAGIT_KENAR + "px}.a-serbest{font:inherit}</style></head>" +
+      '<body class="a-yazdir-govde"><div id="a-kaynak" hidden>' + html + '</div><div id="a-sayfalar"></div></body></html>');
+    d.close();
+  }
+  /* sayfalama: kaynaktaki her .rb-sayfa bir sayfa dizisi başlatır (ilk çocuğu .rb-bas ise her sayfada tekrar); rb-sayfa yoksa bütün içerik
+     tek dizi (.a-serbest). Taşan düğüm bölünebiliyorsa (blok kap, tablo) çocukları tek tek yerleşir; bölünemiyorsa yeni sayfaya geçer. */
+  function sayfala(d) {
+    var kaynak = d.getElementById("a-kaynak"), hedef = d.getElementById("a-sayfalar"), w = d.defaultView;
+    var diziler = [].slice.call(kaynak.querySelectorAll(".rb-sayfa"));
+    if (!diziler.length) { var s0 = d.createElement("div"); s0.className = "rb-sayfa a-serbest"; while (kaynak.firstChild) s0.appendChild(kaynak.firstChild); kaynak.appendChild(s0); diziler = [s0]; }
+    var BOLUNMEZ = /^(TR|P|H[1-6]|LI|IMG|SVG|THEAD|BUTTON|LABEL|SPAN|B|I|S|A|DT|DD|CAPTION|COLGROUP|INPUT|TEXTAREA|SELECT)$/;
+    var bolunur = function (n) { if (n.nodeType !== 1 || BOLUNMEZ.test(n.tagName) || n.children.length < 2) return false; var g = w.getComputedStyle(n).display; return !/flex|grid|inline|table-row$/.test(g); };
+    var basKopya = function (a, c) { if (a.tagName === "TABLE") [].forEach.call(a.children, function (x) { if (/^(COLGROUP|THEAD|CAPTION)$/.test(x.tagName)) c.appendChild(x.cloneNode(true)); }); };
+    diziler.forEach(function (src) {
+      var bas = src.firstElementChild && src.firstElementChild.classList.contains("rb-bas") ? src.firstElementChild : null, sayfa;
+      var yeni = function () { sayfa = d.createElement("div"); sayfa.className = src.className; sayfa.dolu = 0; hedef.appendChild(sayfa); if (bas) sayfa.appendChild(bas.cloneNode(true)); return sayfa; };
+      var tasti = function () { return sayfa.scrollHeight > sayfa.clientHeight + 1; };
+      var devam = function (parent) {   /* yeni sayfada aynı kap zinciri (boş kopyalar) */
+        var l = []; for (var e = parent; e !== sayfa; e = e.parentNode) l.unshift(e);
+        var p = yeni(); l.forEach(function (e) { var c = e.cloneNode(false); basKopya(e, c); p.appendChild(c); p = c; }); return p;
+      };
+      var ekle = function (n, parent) {
+        var bos = n.nodeType === 3 && !n.textContent.trim();
+        parent.appendChild(n); if (bos || !tasti()) { if (!bos) sayfa.dolu++; return parent; }
+        var boy = n.nodeType === 1 ? n.offsetHeight : 0; parent.removeChild(n);
+        /* sayfanın üçte birinden kısa blok bölünmez, bütün olarak sonraki sayfaya geçer (bölüm başlığı gövdesinden ayrılmaz) */
+        if (bolunur(n) && !(sayfa.dolu && boy <= KAGIT_Y / 3)) {
+          var kab = n.cloneNode(false); basKopya(n, kab); parent.appendChild(kab);
+          if (tasti() && sayfa.dolu) { parent.removeChild(kab); parent = devam(parent); kab = n.cloneNode(false); basKopya(n, kab); parent.appendChild(kab); }
+          var p = kab; [].slice.call(n.childNodes).forEach(function (c) { if (!(n.tagName === "TABLE" && /^(COLGROUP|THEAD|CAPTION)$/.test(c.tagName))) p = ekle(c, p); });
+          return p.parentNode;
+        }
+        if (!sayfa.dolu) { parent.appendChild(n); sayfa.dolu++; return parent; }   /* boş sayfaya da sığmıyor: kesilir, sonsuz döngü yok */
+        var np = devam(parent); np.appendChild(n); sayfa.dolu++; return np;
+      };
+      var p = yeni(); [].slice.call(src.childNodes).forEach(function (c) { if (c !== bas) p = ekle(c, p); });
+    });
+    kaynak.remove();
+    return hedef.children.length;
+  }
+  /* kâğıdı kabına sığdır: sayfalar ölçeklenir, çerçeve yüksekliği ölçekli içerik kadar */
+  function kagitSigdir(f) {
+    var d = f.contentDocument, h = d && d.getElementById("a-sayfalar"); if (!h || !f.clientWidth) return;
+    var tam = KAGIT_G + 2 * KAGIT_KENAR, k = Math.min(1, f.clientWidth / tam);
+    h.style.transform = k < 1 ? "scale(" + k + ")" : ""; h.style.marginLeft = k < 1 ? "0" : Math.max(0, (f.clientWidth - tam) / 2) + "px";
+    f.style.height = Math.ceil(h.offsetHeight * k) + "px";
+  }
+  var kagitIzle = window.ResizeObserver ? new ResizeObserver(function (l) { l.forEach(function (x) { kagitSigdir(x.target); }); }) : null;
+  /* içerik ekrandan kopyalandıysa (ör. açık belgeyi PDF'e gönderen tuşlar) içindeki kâğıt çerçeveleri atılır, gizli kaynaklar açılır */
+  function kagitKaynak(html) {
+    var t = document.createElement("div"); t.innerHTML = html;
+    [].forEach.call(t.querySelectorAll(".a-kagit-cerceve"), function (f) { f.remove(); });
+    [].forEach.call(t.querySelectorAll("[data-kagit]"), function (k) { k.removeAttribute("data-kagit"); k.hidden = false; });
+    return t.innerHTML;
+  }
+  function kagitAc(kap) {
+    var html = kagitKaynak(kap.innerHTML), ad = kap.getAttribute("data-ad") || document.title;
+    kap.setAttribute("data-kagit", ""); kap.hidden = true;
+    var f = document.createElement("iframe"); f.className = "a-kagit-cerceve"; f.title = ad; f.setAttribute("scrolling", "no");
+    kap.parentNode.insertBefore(f, kap.nextSibling); kagitBelge(f, html, ad);
+    var d = f.contentDocument, links = [].slice.call(d.querySelectorAll('link[rel="stylesheet"]'));
+    f.hazir = Promise.all(links.map(function (l) { return l.sheet ? 1 : new Promise(function (ok) { l.onload = l.onerror = ok; }); }))
+      /* kaynak gizliyken yazı tipleri kendiliğinden inmez: sayfalamadan önce açıkça yüklenir (yoksa yedek yazı tipiyle ölçülür, sonra kayar) */
+      .then(function () { return d.fonts ? Promise.all(["12px Carlito", "bold 12px Carlito", "italic 12px Carlito", "14px Sora", "bold 14px Sora"].map(function (y) { return d.fonts.load(y, "Aağİış"); })).then(function () { return d.fonts.ready; }) : 1; })
+      .then(function () { f.sayfaSayisi = sayfala(d); kagitSigdir(f); if (kagitIzle) kagitIzle.observe(f); return f; });
+    return f;
+  }
+  /* kâğıt nerede olursa olsun kendiliğinden kurulur: .a-kagit (pencere içeriği) ya da çıplak belge (.rb-belge resmî format, .a-belge temel
+     format; Raporlar, Onaylar, müşteri portalı, sözleşme, zimmet formu, şablon önizlemesi) — kaynağın içindeki belge ikinci kez kurulmaz */
+  function kagitKur() {
+    [].forEach.call(document.querySelectorAll(".a-kagit:not([data-kagit]), .rb-belge:not([data-kagit]), .a-belge:not([data-kagit])"), function (k) {
+      if (k.parentNode && k.parentNode.closest && k.parentNode.closest(".a-kagit, [data-kagit]")) return;
+      kagitAc(k);
+    });
+  }
+  if (window.MutationObserver) new MutationObserver(kagitKur).observe(document.documentElement, { childList: true, subtree: true });
+  var kutuphane = {};
+  function yukle(yol, ad) {
+    if (window[ad]) return Promise.resolve(window[ad]);
+    return kutuphane[yol] || (kutuphane[yol] = new Promise(function (ok, red) { var sc = document.createElement("script"); sc.src = kokYol + yol; sc.onload = function () { ok(window[ad]); }; sc.onerror = function () { red(new Error(yol + " yüklenemedi")); }; document.head.appendChild(sc); }));
+  }
+  /* görüntülerden PDF (her sayfa bir JPEG, A4 595,28 × 841,89 pt) */
+  function pdfYaz(sayfalar) {
+    var te = new TextEncoder(), parca = [], uz = 0, ofs = [];
+    var yaz = function (x) { var b = typeof x === "string" ? te.encode(x) : x; parca.push(b); uz += b.length; };
+    var nesne = function (no, govde, akis) { ofs[no] = uz; yaz(no + " 0 obj\n" + govde); if (akis) { yaz("\nstream\n"); yaz(akis); yaz("\nendstream"); } yaz("\nendobj\n"); };
+    var n = sayfalar.length, kids = []; for (var i = 0; i < n; i++) kids.push((3 + i * 3) + " 0 R");
+    yaz("%PDF-1.4\n");
+    nesne(1, "<< /Type /Catalog /Pages 2 0 R >>"); nesne(2, "<< /Type /Pages /Kids [" + kids.join(" ") + "] /Count " + n + " >>");
+    sayfalar.forEach(function (s, i) {
+      var sy = 3 + i * 3, im = sy + 1, ic = sy + 2, cz = "q 595.28 0 0 841.89 0 0 cm /Im0 Do Q";
+      nesne(sy, "<< /Type /Page /Parent 2 0 R /MediaBox [0 0 595.28 841.89] /Resources << /XObject << /Im0 " + im + " 0 R >> >> /Contents " + ic + " 0 R >>");
+      nesne(im, "<< /Type /XObject /Subtype /Image /Width " + s.w + " /Height " + s.h + " /ColorSpace /DeviceRGB /BitsPerComponent 8 /Filter /DCTDecode /Length " + s.jpeg.length + " >>", s.jpeg);
+      nesne(ic, "<< /Length " + cz.length + " >>", cz);
+    });
+    var x = uz, top = 3 + n * 3; yaz("xref\n0 " + top + "\n0000000000 65535 f \n");
+    for (var j = 1; j < top; j++) yaz(("000000000" + ofs[j]).slice(-10) + " 00000 n \n");
+    yaz("trailer\n<< /Size " + top + " /Root 1 0 R >>\nstartxref\n" + x + "\n%%EOF");
+    var blob = new Blob(parca, { type: "application/pdf" }); blob.sayfa = n; return blob;
+  }
+  /* kâğıt çerçevesi → PDF Blob; sayfalar ölçeksiz (1:1) çizilir, çözünürlük 2× (ölçümde 1×) */
+  MK.kagitPdf = function (f) {
+    if (!f) return Promise.reject(new Error("belge yok"));
+    return Promise.all([f.hazir, yukle("vendor/html2canvas-1.4.1/html2canvas.min.js", "html2canvas")]).then(function (v) {
+      var h2c = v[1], sayfalar = [].slice.call(f.contentDocument.querySelectorAll("#a-sayfalar > .rb-sayfa")), olcek = window.MAKET_ORNEK ? 1 : 2, sonuc = [];
+      return sayfalar.reduce(function (zincir, s) {
+        return zincir.then(function () {
+          return h2c(s, { scale: olcek, backgroundColor: "#ffffff", logging: false, windowWidth: KAGIT_G + 2 * KAGIT_KENAR,
+            onclone: function (kd) { var hh = kd.getElementById("a-sayfalar"); hh.style.transform = ""; hh.style.marginLeft = "0"; } })
+            .then(function (c) { return new Promise(function (ok) { c.toBlob(function (b) { b.arrayBuffer().then(function (a) { sonuc.push({ w: c.width, h: c.height, jpeg: new Uint8Array(a) }); ok(); }); }, "image/jpeg", 0.92); }); });
+        });
+      }, Promise.resolve()).then(function () { return pdfYaz(sonuc); });
+    });
   };
 
   /* ── DOSYA: seç · indir · yazdır · Excel (reisim 2026-09-27: "maket site nasıl çalışması gerekiyorsa çalışsın maket olduğu için çalışmayan
@@ -626,20 +745,8 @@
     var a = document.createElement("a"); a.href = url; a.download = ad; a.hidden = true; document.body.appendChild(a); a.click(); a.remove();
     MK.SON_INDIRME = { ad: ad, tur: "application/pdf", url: url }; MK.bildir(ad + " indirildi.");
   };
-  /* belge → tarayıcının yazdırma penceresi ("PDF olarak kaydet"); sayfanın kendi stilleriyle, açık temada */
-  MK.yazdir = function (baslik, html) {
-    var f = document.createElement("iframe"); f.className = "a-yazdir"; f.tabIndex = -1; f.setAttribute("aria-hidden", "true"); f.title = baslik;
-    document.body.appendChild(f);
-    var stil = [].map.call(document.querySelectorAll('link[rel="stylesheet"]'), function (l) { return '<link rel="stylesheet" href="' + l.href + '">'; }).join("");
-    var d = f.contentDocument; d.open();
-    d.write('<!doctype html><html lang="tr" data-tema="acik"><head><meta charset="utf-8"><title>' + kacis(baslik) + "</title>" + stil +
-      "<style>@page{margin:12mm}body{margin:0;background:#fff}</style></head><body class=\"a-yazdir-govde\">" + html + "</body></html>");
-    d.close();
-    MK.SON_INDIRME = { ad: baslik + ".pdf", tur: "yazdir" };
-    if (window.MAKET_ORNEK) { f.remove(); MK.bildir(baslik + ": yazdırma penceresi açıldı."); return; }
-    setTimeout(function () { f.contentWindow.focus(); f.contentWindow.print(); setTimeout(function () { f.remove(); }, 1000); }, 500);
-    MK.bildir("Yazdırma penceresinde “PDF olarak kaydet”i seçin.");
-  };
+  /* belge PDF'i: önizleme penceresinde açılır, "İndir" gördüğün sayfaların PDF'ini indirir (KÂĞIT). Ad eski çağıranlar için korunur. */
+  MK.yazdir = function (baslik, html) { MK.pdfGoster({ dosya: baslik + ".pdf", baslik: baslik, icerik: html }); };
   /* ── ZIP (sıkıştırmasız yazma; okurken deflate tarayıcının DecompressionStream'i ile) ── */
   var CRC = (function () { var t = []; for (var n = 0; n < 256; n++) { var c = n; for (var k = 0; k < 8; k++) c = c & 1 ? 0xEDB88320 ^ (c >>> 1) : c >>> 1; t[n] = c >>> 0; } return t; })();
   var crc32 = function (b) { var c = 0xFFFFFFFF; for (var i = 0; i < b.length; i++) c = CRC[(c ^ b[i]) & 255] ^ (c >>> 8); return (c ^ 0xFFFFFFFF) >>> 0; };
@@ -723,19 +830,6 @@
         });
       });
     });
-  };
-  /* örnek kayıt dosyası (makette dosyası olmayan) → tek sayfalık maket PDF'i (PDF'in standart yazı tipinde Türkçe harf yok: sadeleşir) */
-  MK.ornekPdf = function (ad) {
-    var sade = function (t) { return String(t).replace(/[çÇğĞıİöÖşŞüÜ]/g, function (c) { return { "ç": "c", "Ç": "C", "ğ": "g", "Ğ": "G", "ı": "i", "İ": "I", "ö": "o", "Ö": "O", "ş": "s", "Ş": "S", "ü": "u", "Ü": "U" }[c]; }).replace(/[()\\]/g, "").replace(/[^\x20-\x7e]/g, "?"); };
-    var akis = "BT /F1 16 Tf 56 780 Td (" + sade(ad) + ") Tj 0 -28 Td /F1 11 Tf (probata maket - ornek dosya; gercek dosya uygulamada yuklenen dosyadir.) Tj ET";
-    var ob = ["<< /Type /Catalog /Pages 2 0 R >>", "<< /Type /Pages /Kids [3 0 R] /Count 1 >>",
-      "<< /Type /Page /Parent 2 0 R /MediaBox [0 0 595 842] /Resources << /Font << /F1 4 0 R >> >> /Contents 5 0 R >>",
-      "<< /Type /Font /Subtype /Type1 /BaseFont /Helvetica >>", "<< /Length " + akis.length + " >>\nstream\n" + akis + "\nendstream"];
-    var m = "%PDF-1.4\n", ofs = [];
-    ob.forEach(function (o, i) { ofs.push(m.length); m += (i + 1) + " 0 obj\n" + o + "\nendobj\n"; });
-    var x = m.length; m += "xref\n0 " + (ob.length + 1) + "\n0000000000 65535 f \n" + ofs.map(function (o) { return ("000000000" + o).slice(-10) + " 00000 n \n"; }).join("") +
-      "trailer\n<< /Size " + (ob.length + 1) + " /Root 1 0 R >>\nstartxref\n" + x + "\n%%EOF";
-    return new Blob([m], { type: "application/pdf" });
   };
 
   /* ── BİLDİRİM · ÇEKMECE · DARALTMA · TEMA ───────────────────────────────────────────────────────── */

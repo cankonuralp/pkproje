@@ -1694,6 +1694,22 @@ revizyon, alan kopyalama, hafif kusur devri, meslek eşleşme denetimi).
 - Emsal ürünler: https://opwire.app/iso-17020-periyodik-kontrol-yazilimi/ · https://17020muayene.vidco.com.tr/ · https://akuple.com/asansor-kontrol-yazilimi/ · https://ensyazilim.com/
 
 ## 11 · Değişiklik günlüğü
+- 2026-09-28 (108): **Belge önizlemesi ile inen PDF birebir aynı — tek KÂĞIT mekanizması** (reisim: *"ön izlemede yukarıda istemediğim şeyler
+  var … pdf indir dediğimde inen şey ön izlemeden çok farklı garip saçma bir şey"* · *"özel değil genel düşün … anlık bir iş çözüp yama yapma
+  anayasamıza sadık kal"*). Kök neden: İndir yazdırma penceresine gidiyordu (telefonda gizli çerçeve yerine bütün sayfa basılıyordu) ve
+  ekran belgesi uygulama temasıyla, yazdırma başka kurallarla diziliyordu. Yeni düzen (maket-ortak.js KÂĞIT): her belge — rapor, iş
+  sözleşmesi, teklif, fatura özeti, zimmet formu, saha formu, örnek dosya — açık temalı ayrı bir çerçevede A4 sayfalara (794 × 1123)
+  dizilir; taşan içerik sonraki sayfaya geçer (tablo satır satır, resmî başlık tablosu her sayfada, sayfanın üçte birinden kısa blok
+  bölünmez); İndir aynı sayfaları görüntüye çevirip PDF'e yazar (sayfa sayısı önizlemeyle aynı, denemeyle kilitli). Önizleme penceresinde
+  yalnız başlık + kâğıt + İndir / Kapat; dosya adı satırı, "Sayfa 1 / N" ve oklar kalktı. Raporlar, Onaylar, müşteri portalı ve şablon
+  önizlemesindeki belgeler de aynı kâğıttan. Resmî formun ölçüleri PDF'ten: yazı tipi Calibri ölçülü Carlito (OFL, sitenin kendi
+  kökeninden; cihazda Calibri yokken daha geniş yedek yazı tipi sayfaları taşırıyordu, iç tesisat 7 sayfaya çıkmıştı → 4), kenar 22 px,
+  satır ~17 px; dikey başlıklar PDF'e de aynı çıkan döndürmeyle. html2canvas 1.4.1 (MIT) `docs/vendor/`'da, yalnız İndir'de yüklenir.
+  Belgelerdeki elle yazılı "Sayfa 1 / N" kalktı (sayfa sayısı artık dizilimden). Ölçerken bulunan: ekrandaki belgeyi kopyalayıp PDF'e
+  gönderen tuşlar (saha formu, zimmet formu) boş çerçeveyi kopyalıyordu → kâğıda giren her içerik tek temizleyiciden geçer. Ölçüm aracına
+  deneme başına bekleme süresi (PDF üretimi 2 sn'den uzun). 18 maket temiz: durum 1928/1928 · etkileşim 430/430 · telefon 964/964; PDF'ler
+  sayfa görüntüsüne çevrilip resmî formla yan yana karşılaştırıldı (iç tesisat 4 sayfa, düzen formla aynı). iPhone'da inen dosya: ölçemedim
+  (gerçek cihaz, 11.2).
 - 2026-09-28 (107): **Termal kamera yalnız ekipman türünden** (reisim: *"ekipman bellidir zorunlu olan cihazlar bellidir türde belirtilmiştir
   belirtilmediyse neye göre zorunlu diyosun zorunlu diyosan cihazlar kısmında neden göstermiyosun ki ben oraya tıklayım zimmetli termal
   kameramı ekliyim bu tarz mantık hataları kabul edilebilir değil"*): raporda "Termal kamera ile kontrol yapıldı mı?" sorusu ve bölüm 3'ün

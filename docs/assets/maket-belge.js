@@ -28,7 +28,7 @@
       '<div class="a-belge-baslik"><h2>Periyodik kontrol raporu</h2><p>' + kacis(t.ad) + " · " + kacis(grup.ad) + "</p></div>" +
       '<dl class="a-bilgi">' + bilgi("Rapor no", o ? '<span class="a-kod">' + o.no + "</span>" : bos + kaynak("sunucu, rapor oluşturulurken"), true) +
         bilgi("Form", '<span class="a-kod">' + formKod + "</span>") +
-        bilgi("Format sürümü", kacis(surum)) + bilgi("Sayfa", "1 / 2") + "</dl>" +
+        bilgi("Format sürümü", kacis(surum)) + "</dl>" +
       /* 1 · FİRMA BİLGİLERİ — türün rapor formatından bağımsız, her raporda aynı blok (reisim 2026-09-26: "1 genel bilgiler değil firma
          bilgileri olacak formattan bağımsız her rapor için ortak olacak"); değerler müşteri, tesis ve iş sözleşmesinden */
       bolum("1", "Firma bilgileri", '<dl class="a-bilgi">' +
@@ -65,7 +65,7 @@
         bilgi("EKİPNET kayıt no", d(o && '<span class="a-kod">' + o.p.ekipnet + "</span>", "personel")) + bilgi("Nüsha sayısı", f.nusha + (o ? "" : kaynak("firma ayarı"))) + "</dl>" +
         '<div class="a-belge-imza">' + (!o ? "İmza" : o.imza ? "Güvenli elektronik imza · " + kacis(o.p.ad) + " · " + MK.zamanYaz(o.imza.zaman) : "İmzasız — inspector son imzayı atınca geçerli olur ve müşteriye açılır.") + "</div>") +
       bolum("Ek", "Fotoğraflar", fotoHtml(R ? R.foto : 2)) +
-      '<footer class="a-belge-alt"><span>' + kacis(f.ad) + " · " + formKod + "</span><span>Sayfa 1 / 2</span></footer></article>";
+      '<footer class="a-belge-alt"><span>' + kacis(f.ad) + " · " + formKod + "</span></footer></article>";
   };
   /* ══ RESMÎ FORMAT ÇIKTISI (2026-09-28; reisim: "sana verdiğim pdfler gibi gözükmüyor … sanki uygulamanın temasına göre bir pdf oluşuyor
      birebir aynı pdf çıktısı olmalı final raporu") — ZPKR01 / ZPKR02 PDF'lerinin sayfa düzeni birebir: A4, siyah-beyaz, başlık tablosu (logo ·
@@ -364,7 +364,7 @@
       '<div class="a-belge-imzalar">' + [["Firma yetkilisi", "Ad soyad · unvan"], ["Muayene uzmanı", o.uzmanlar.join(", ")]].map(function (x) {
         return "<div><b>" + x[0] + "</b><span>" + kacis(x[1]) + '</span><div class="a-belge-imza">Tarih · imza' + (x[0] === "Firma yetkilisi" ? " · kaşe" : "") + "</div></div>";
       }).join("") + "</div>" +
-      '<footer class="a-belge-alt"><span>' + kacis(f.ad) + " · " + formKod + " · temel format</span><span>Sayfa 1 / 1</span></footer></article>";
+      '<footer class="a-belge-alt"><span>' + kacis(f.ad) + " · " + formKod + " · temel format</span></footer></article>";
   };
   MB.isSozlesmesi = function (o) {
     var f = MV.FIRMA, x = o.x, m = MV.musteri(x.m), formKod = f.kisa + "-FR-SZL-01";
@@ -384,7 +384,7 @@
         return "<div><b>" + y[0] + "</b><span>" + kacis(y[1]) + '</span><div class="a-belge-imza' + (y[2] ? " a-belge-imzali" : "") + '">' +
           (y[2] ? MK.tarihYaz(y[2]) + " · imzalı" : "Tarih · imza") + "</div></div>";
       }).join("") + "</div>" +
-      '<footer class="a-belge-alt"><span>' + kacis(f.ad) + " · " + formKod + " · temel format</span><span>Sayfa 1 / 1</span></footer></article>";
+      '<footer class="a-belge-alt"><span>' + kacis(f.ad) + " · " + formKod + " · temel format</span></footer></article>";
   };
   MB.zimmetFormu = function (o) {
     var f = MV.FIRMA, formKod = f.kisa + "-FR-ZMT-01";
@@ -412,16 +412,7 @@
         return "<div><b>" + x[0] + "</b><span>" + kacis(x[1].ad) + '</span><div class="a-belge-imza' + (o.imzali ? " a-belge-imzali" : "") + '">' +
           (o.imzali ? kacis(x[1].ad) + " · " + MK.tarihYaz(o.tarih) + " · imzalı" : "Tarih · imza") + "</div></div>";
       }).join("") + "</div>" +
-      '<footer class="a-belge-alt"><span>' + kacis(f.ad) + " · " + formKod + " · temel format</span><span>Sayfa 1 / 1</span></footer></article>";
+      '<footer class="a-belge-alt"><span>' + kacis(f.ad) + " · " + formKod + " · temel format</span></footer></article>";
   };
 
-  /* 2026-09-28: resmî belge PDF okuyucudaki gibi "genişliğe sığdır" — A4 sayfa (794 px) kabından genişse orantılı küçülür, yazı ve
-     tablo düzeni aynı kalır (kaydırma ya da kırpma yok); pencere açılınca, kap boyu değişince yeniden hesaplanır. Yazdırmada ölçek 1. */
-  function sigdir(b) { var z = Math.min(1, b.clientWidth / 794); [].forEach.call(b.querySelectorAll(".rb-sayfa"), function (s) { s.style.zoom = z > 0 ? z : 1; }); }
-  MB.sigdir = function (kap) { [].forEach.call(kap.querySelectorAll(".rb-belge"), sigdir); };
-  if (window.ResizeObserver && window.MutationObserver) {
-    var izle = new ResizeObserver(function (l) { l.forEach(function (x) { sigdir(x.target); }); });
-    var bak = function () { [].forEach.call(document.querySelectorAll(".rb-belge:not([data-sigdi])"), function (b) { b.setAttribute("data-sigdi", ""); izle.observe(b); sigdir(b); }); };
-    new MutationObserver(bak).observe(document.documentElement, { childList: true, subtree: true }); bak();
-  }
 })();

@@ -62,7 +62,7 @@
    "gecti": true
   },
   {
-   "ad": "Oku: standart PDF'i görüntüleyicide, sayfa ileri, Kapat",
+   "ad": "Oku: standart PDF'i görüntüleyicide sayfalar alt alta; üstte yalnız başlık (sayfa sayacı, ok yok)",
    "gen": 1920,
    "sayfa": "maket/standartlar.html",
    "hash": "#/s/s1",

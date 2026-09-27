@@ -6,7 +6,7 @@
  "gecen": 16,
  "denemeler": [
   {
-   "ad": "teklif PDF: yazdırma penceresi",
+   "ad": "teklif PDF: önizleme, İndir önizlemedeki sayfaların PDF'i",
    "gen": 1920,
    "sayfa": "maket/teklifler.html",
    "hash": "#/t/T-0926-001",

@@ -195,7 +195,7 @@
   /* 2026-09-27: rapor belgesi yazdırma penceresinden PDF olur (uygulamada PDF sunucuda üretilir); imza penceresinde seçili raporların hepsi, her biri ayrı sayfa */
   X["pdf"] = function () {
     var l = $("a-pencere").open && W ? W.l : [MV.rapor(rota().no)];
-    MK.yazdir(l.length > 1 ? l.length + " rapor" : l[0].no, l.map(function (r) { return '<div class="a-yazdir-sayfa">' + MB.belge(MV.tur(ekp(r).tur), MV.raporBelge(r)) + "</div>"; }).join(""));
+    MK.yazdir(l.length > 1 ? l.length + " rapor" : l[0].no, l.map(function (r) { return MB.belge(MV.tur(ekp(r).tur), MV.raporBelge(r)); }).join(""));
   };
   $("a-pencere").addEventListener("close", function () { W = null; if (rota().pencere) history.replaceState(null, "", "#/"); });
 
