@@ -845,6 +845,9 @@ etkileşim **10/10**, telefon **32/32** (imzalı sözleşme görüntüleme, yük
 1. tur (2026-09-24): 48/48, 11/11.
 
 #### Maket M14 — Muhasebe (modül 18, faz 2) — ONAY BEKLİYOR
+**4. tur (2026-09-27, §9 yirmi altıncı tur):** masraf formu akışı — Giderler'de durum (onay bekliyor · onaylandı · ödendi · reddedildi),
+Onayla / Reddet (gerekçe) / Ödendi, onay bekleyen şeridi, elle eklemede "Ödendi / Ödenecek", **Excel'e aktar / Excel'den yükle**; masraf formu
+Planlar'da plan içinde ("Masraflarım"). Ölçüm: M14 160/160 · 35/35 · 80/80; Planlar 120/120 · 33/33 · 60/60.
 **3. tur (2026-09-27, §9 yirmi beşinci tur):** üçüncü sekme **Giderler** — tarih, tür, tutar (KDV dahil) + KDV oranı (türün varsayılanı), açıklama,
 isteğe bağlı iş ve personel, belge (açılır); belgesi olmayan uyarıyla kaydedilir; liste süzgeci (işe bağlı · genel · belgesi yok; tür, dönem,
 personel) ve süzülenin toplamı; iş sayfasında o işin giderleri ve kâr (raporlanan − gider, KDV hariç). Ölçüm: 16 durum 128/128, etkileşim
@@ -1503,6 +1506,26 @@ yazdın sana daha önce örnek paylaşmış olmam laızm  planlanan saat olması
 - **Planlanan saat yok:** reisim'in örnek ekranındaki "Planlanan saat" satırı plan içine eklenmez; plan açarken de saat sorulmaz (2026-09-26
   kararıyla aynı). Rapordaki başlangıç / bitiş saati yerinde kalır.
 
+**Yirmi altıncı tur (2026-09-27, reisim birebir):** *"1 i boşver, 2 için inspector masraf formu ekleyebilsin masraf formu olur doldurulur
+gönderilir muhasebe tarafında onaylanır ödenince ödendi olur , ekstradan muhasebe el ile de masraf ekleyebili otel vb örnek excel atarım inport
+export yine buradada olacak  gelir gidere göre bilançoda olacak plan bazında kârlılık ta hesaplanabilir bir sistem olacak personel ekranında
+maaşlar ve bordrolarda olacak oraya yüklenebilecek bordrolar plan yapıldığında inspector maaşı yakıt araç kira bedeli ofis giderleri vergiler vb
+tüm giderler etki edecek şekilde kazanç ve gider hesaplanarak kar hesaplanacak kar yüzdesi yazacak iş başına  bu söylediklerim iskelet daha
+detaylı olacak,"* (1 = Standartlar örneği sorusu: bırakıldı, kütüphane olduğu gibi kalır.)
+→ **Kararlar (iskelet; reisim ayrıntıyı sonra verecek):**
+- **Masraf formu (inspector):** plan içinde **"Masraflarım"** bölümü (plan kabul edildikten sonra; kabul bekleyen ve reddedilen planda yok) ve
+  **"Masraf formu"**: tarih (takvimle), tür, tutar (KDV dahil) + KDV oranı (türün varsayılanı; KDV yazarken hesaplanır), açıklama, fiş
+  (fotoğraf ya da PDF). İş ve kişi kendiliğinden (plan + inspector). **Gönder** → Muhasebe'de **"Onay bekliyor"**. Inspector kendi masraflarının
+  durumunu plan içinde görür (onay bekliyor · onaylandı · ödendi + ödeme tarihi · reddedildi + gerekçe).
+- **Muhasebe onayı:** Giderler'de durum sütunu ve çipler (**Onay bekliyor · Ödenecek · Belgesi yok**), listenin üstünde "Onay bekleyen masraf"
+  şeridi. Masraf penceresinde **Onayla** (muhasebe alanları düzeltebilir) ya da **Reddet** (gerekçe zorunlu, en az 5 karakter; inspector plan
+  içinde görür). Onaylanan masrafta **"Ödendi"** → ödeme tarihi bugün. Akış: onay bekliyor → onaylandı (ödenecek) → ödendi; ya da reddedildi.
+- **Muhasebe elle ekler** (otel vb.): kaynak "Muhasebe"; ödeme "Ödendi" (firma ödedi) ya da "Ödenecek".
+- **Excel (Giderler):** **Excel'e aktar** süzülen listeyi alır (önizleme + indir); **Excel'den yükle** şablon + satır satır denetim (tür,
+  tarih, ileri tarih, tutar, proje no), geçerli satırlar "Muhasebe" kaynağıyla girer. **Sütunlar VARSAYIM** (Tarih · Tür · Tutar · KDV
+  oranı · Açıklama · Proje no) — reisim'in örnek Excel'i gelince ona göre kurulur.
+- İş seçici (İşe bağlı · Genel) çipten seçiciye taşındı; çipler durum için.
+
 **Açık kalanlar:** **Ana sayfada İSGGM duyuruları** (reisim 2026-09-26: *"Ana sayfada isgüm duyurularını gösterebilir miyiz ? Bunu
 yapılacaklar listesine ekle"*; öneri: ÇSGB İSGGM duyurular sayfası — https://www.csgb.gov.tr/isggm/duyurular/ — sunucuda günde birkaç kez
 okunur (pg-boss işi, §8.9), Ana sayfada son 5 duyuru başlık + tarih + kaynağa bağlantı; yalnız ekranda, bildirim yok; sayfa RSS vermiyorsa
@@ -1535,6 +1558,9 @@ revizyon, alan kopyalama, hafif kusur devri, meslek eşleşme denetimi).
 - Emsal ürünler: https://opwire.app/iso-17020-periyodik-kontrol-yazilimi/ · https://17020muayene.vidco.com.tr/ · https://akuple.com/asansor-kontrol-yazilimi/ · https://ensyazilim.com/
 
 ## 11 · Değişiklik günlüğü
+- 2026-09-27 (85): **Masraf formu** (§9 yirmi altıncı tur): inspector plan içinden gönderir ("Masraflarım"); Muhasebe'de onay bekliyor →
+  onaylandı → ödendi ya da reddedildi (gerekçe); elle eklemede Ödendi / Ödenecek; Giderler'de Excel'e aktar / Excel'den yükle (sütunlar
+  reisim'in örneğine göre kurulacak). M14 160/160 · 35/35 · 80/80; Planlar 120/120 · 33/33 · 60/60.
 - 2026-09-27 (84): **Kontrol metodu yalnız ekipman türünde** (§9 yirmi beşinci tur): raporda salt okunur satır (türün standartları; yoksa üretici
   talimatı), belgede ve onay özetinde geri; tür sayfasındaki uyarı "raporda üretici talimatı yazar". §2 açık soru kapandı. Standartlar
   kütüphanesi kalır; reisim'in bahsettiği örnek sorulacak. M8 · M9 · M3 · M7 · M11 yeniden temiz.

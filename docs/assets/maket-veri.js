@@ -791,6 +791,17 @@
     ["2026-09-23", "diger", 350, null, null, "Kargo, cihaz kalibrasyona gönderildi", 1]].map(function (x) {
     return { tarih: x[0], tur: x[1], tutar: x[2], oran: MV.giderTur(x[1]).kdv, is: x[3], kisi: x[4], aciklama: x[5], belge: x[6] ? "fis-" + x[0].replace(/-/g, "") + "-" + x[1] + ".pdf" : "", kaydeden: "ad" };
   });
+  /* 2026-09-27 (reisim: "inspector masraf formu ekleyebilsin … muhasebe tarafında onaylanır ödenince ödendi olur, ekstradan muhasebe el ile de
+     masraf ekleyebilir"): kaynak "form" (inspector plan içinden gönderir) ya da "muhasebe" (elle); durum bekliyor → onaylandi → odendi, ya da red */
+  MV.GIDER_DURUM = { bekliyor: { ad: "Onay bekliyor", rozet: "a-rozet-bekliyor" }, onaylandi: { ad: "Onaylandı", rozet: "a-rozet-kabul" },
+    odendi: { ad: "Ödendi", rozet: "a-rozet-tamam" }, red: { ad: "Reddedildi", rozet: "a-rozet-red" } };
+  /* örnek: personelli giderler masraf formundan; eylülün son dördü onay / ödeme sürecinde */
+  var SUREC = { "2026-09-21|konaklama": ["onaylandi"], "2026-09-21|yol": ["bekliyor"], "2026-09-22|yakit": ["bekliyor"], "2026-09-23|yakit": ["bekliyor"] };
+  MV.GIDERLER.forEach(function (g) {
+    var d = SUREC[g.tarih + "|" + g.tur];
+    g.kaynak = g.kisi ? "form" : "muhasebe"; g.gonderildi = g.tarih + "T18:30";
+    g.durum = d ? d[0] : "odendi"; var od = fGun(g.tarih, g.kisi ? 5 : 0); g.odeme = g.durum === "odendi" ? (od > MK.BUGUN ? MK.BUGUN : od) : null; g.onaylayan = g.durum === "bekliyor" ? null : "ad";
+  });
   var gSira = {};
   MV.giderNo = function (tarih) { var ay = tarih.slice(5, 7) + tarih.slice(2, 4); gSira[ay] = (gSira[ay] || 0) + 1; return "G-" + ay + "-" + ("00" + gSira[ay]).slice(-3); };
   MV.GIDERLER.forEach(function (g) { g.no = MV.giderNo(g.tarih); });

@@ -2,9 +2,44 @@
  "maket": "planlar",
  "tarih": "2026-09-27",
  "arac": "tools/olc-bulut.mjs --etkilesim (başsız tarayıcı, 1920 açık tema; gen verilen denemede o genişlik)",
- "toplam": 28,
- "gecen": 28,
+ "toplam": 33,
+ "gecen": 33,
  "denemeler": [
+  {
+   "ad": "plan içinde Masraflarım: 2 masraf, durumlarıyla",
+   "gen": 1920,
+   "sayfa": "maket/planlarim.html",
+   "hash": "#/plan/9",
+   "gecti": true
+  },
+  {
+   "ad": "kabul bekleyen planda Masraflarım yok",
+   "gen": 1920,
+   "sayfa": "maket/planlarim.html",
+   "hash": "#/plan/2",
+   "gecti": true
+  },
+  {
+   "ad": "masraf formu: boş gönderilmez, odak Tür'de",
+   "gen": 1920,
+   "sayfa": "maket/planlarim.html",
+   "hash": "#/plan/9",
+   "gecti": true
+  },
+  {
+   "ad": "masraf formu: tutar yazılınca KDV hesaplanır",
+   "gen": 1920,
+   "sayfa": "maket/planlarim.html",
+   "hash": "#/plan/9",
+   "gecti": true
+  },
+  {
+   "ad": "masraf gönderilir → Onay bekliyor, 3 masraf",
+   "gen": 1920,
+   "sayfa": "maket/planlarim.html",
+   "hash": "#/plan/9",
+   "gecti": true
+  },
   {
    "ad": "liste: Plan aç tuşu plan açma ekranına gider",
    "gen": 1920,

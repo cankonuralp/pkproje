@@ -2,8 +2,8 @@
  "maket": "m14",
  "tarih": "2026-09-27",
  "arac": "tools/olc-bulut.mjs --etkilesim (başsız tarayıcı, 1920 açık tema; gen verilen denemede o genişlik)",
- "toplam": 27,
- "gecen": 27,
+ "toplam": 35,
+ "gecen": 35,
  "denemeler": [
   {
    "ad": "toplu fatura: aynı müşterinin iki işi tek faturada",
@@ -182,6 +182,62 @@
   },
   {
    "ad": "satır → kayıtlı gider pencerede dolu açılır",
+   "gen": 1920,
+   "sayfa": "maket/muhasebe.html",
+   "hash": "#/giderler",
+   "gecti": true
+  },
+  {
+   "ad": "şeritteki Göster → onay bekleyen masraflar (3 / 15)",
+   "gen": 1920,
+   "sayfa": "maket/muhasebe.html",
+   "hash": "#/giderler",
+   "gecti": true
+  },
+  {
+   "ad": "masraf onaylanır → Onaylandı (ödenecek)",
+   "gen": 1920,
+   "sayfa": "maket/muhasebe.html",
+   "hash": "#/g/G-0926-005",
+   "gecti": true
+  },
+  {
+   "ad": "onaylanan masraf Ödendi işaretlenir (bugün)",
+   "gen": 1920,
+   "sayfa": "maket/muhasebe.html",
+   "hash": "#/g/G-0926-004",
+   "gecti": true
+  },
+  {
+   "ad": "red: gerekçesiz reddedilmez, odak gerekçede",
+   "gen": 1920,
+   "sayfa": "maket/muhasebe.html",
+   "hash": "#/g/G-0926-006",
+   "gecti": true
+  },
+  {
+   "ad": "red: gerekçeyle reddedilir",
+   "gen": 1920,
+   "sayfa": "maket/muhasebe.html",
+   "hash": "#/g/G-0926-006",
+   "gecti": true
+  },
+  {
+   "ad": "elle eklenen gider Ödenecek olarak kaydedilir",
+   "gen": 1920,
+   "sayfa": "maket/muhasebe.html",
+   "hash": "#/giderler/yeni",
+   "gecti": true
+  },
+  {
+   "ad": "Excel'e aktar: süzülen liste önizlenir",
+   "gen": 1920,
+   "sayfa": "maket/muhasebe.html",
+   "hash": "#/giderler",
+   "gecti": true
+  },
+  {
+   "ad": "Excel'den yükle: 2 geçerli satır girer, 2 atlanır",
    "gen": 1920,
    "sayfa": "maket/muhasebe.html",
    "hash": "#/giderler",
