@@ -2,8 +2,8 @@
  "maket": "m12",
  "tarih": "2026-09-27",
  "arac": "tools/olc-bulut.mjs --etkilesim (başsız tarayıcı, 1920 açık tema; gen verilen denemede o genişlik)",
- "toplam": 12,
- "gecen": 12,
+ "toplam": 15,
+ "gecen": 15,
  "denemeler": [
   {
    "ad": "çok tesisli teklif, KDV %10: kalemler iki tesisten, kaydedilir",
@@ -20,7 +20,7 @@
    "gecti": true
   },
   {
-   "ad": "liste: 15 teklif, en yenisi üstte",
+   "ad": "liste: 16 teklif (biri kayıtlı olmayan müşteriye), en yenisi üstte",
    "gen": 1920,
    "sayfa": "maket/teklifler.html",
    "hash": "#/",
@@ -80,6 +80,27 @@
    "gen": 1920,
    "sayfa": "maket/teklifler.html",
    "hash": "#/yeni?tesis=t13",
+   "gecti": true
+  },
+  {
+   "ad": "kayıtlı olmayan müşteri: ünvan, adres, il istenir; ekipmandan doldur yok",
+   "gen": 1920,
+   "sayfa": "maket/teklifler.html",
+   "hash": "#/yeni",
+   "gecti": true
+  },
+  {
+   "ad": "kayıtlı olmayan müşteriye teklif kaydedilir",
+   "gen": 1920,
+   "sayfa": "maket/teklifler.html",
+   "hash": "#/yeni",
+   "gecti": true
+  },
+  {
+   "ad": "kayıtlı olmayan müşteri kabul → Müşteri olarak kaydet → iş sözleşmesi ve plan",
+   "gen": 1920,
+   "sayfa": "maket/teklifler.html",
+   "hash": "#/t/T-0926-013",
    "gecti": true
   },
   {

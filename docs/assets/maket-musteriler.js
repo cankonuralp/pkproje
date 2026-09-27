@@ -176,7 +176,7 @@
       '<section class="a-bolum" aria-labelledby="a-b-bilgi"><div class="a-alt-bas"><h2 class="a-alt-baslik" id="a-b-bilgi">Müşteri bilgileri</h2></div><dl class="a-bilgi">' +
         bilgi("Ünvan", kacis(m.unvan), true) + bilgi("Kısa ad", kacis(m.kisa)) + bilgi("Vergi dairesi", m.vd ? kacis(m.vd) : yok) +
         bilgi("Vergi no", m.vno ? '<span class="a-kod">' + m.vno + "</span>" : '<span class="a-yuz-uyari">Boş</span>') +
-        bilgi("E-posta", m.eposta ? kacis(m.eposta) : '<span class="a-yuz-uyari">Boş</span>', true) + bilgi("İlgili kişi", m.ilgili ? kacis(m.ilgili) : yok, true) + bilgi("Müşteri olduğu tarih", MK.tarihYaz(m.acilis)) +
+        bilgi("E-posta", m.eposta ? kacis(m.eposta) : '<span class="a-yuz-uyari">Boş</span>', true) + bilgi("Telefon", m.tel ? kacis(m.tel) : yok) + bilgi("İlgili kişi", m.ilgili ? kacis(m.ilgili) : yok, true) + bilgi("Müşteri olduğu tarih", MK.tarihYaz(m.acilis)) +
       "</dl></section>" +
       '<section class="a-bolum" aria-labelledby="a-b-tesis"><div class="a-alt-bas"><h2 class="a-alt-baslik" id="a-b-tesis">Tesisler</h2><span class="a-sayac"><b>' + et.length + "</b> tesis" + (t.length > et.length ? " · " + (t.length - et.length) + " pasif" : "") + "</span>" +
         (m.pasif ? "" : MK.tus({ eylem: "tesis-ac", ad: "Tesis ekle", ikon: "plus", sinif: "a-tus-ikincil a-bolum-tus" })) + "</div>" +
@@ -272,6 +272,8 @@
         A("vno", "Vergi no", d.vno, { sinif: "a-girdi-sicil", ek: ' inputmode="numeric" maxlength="11"', ipucu: "Boşsa kayıt olur, müşteri sayfasında hatırlatılır." }) +
         A("eposta", "E-posta", d.eposta, { sinif: "a-girdi-eposta", genis: true, ek: ' type="email" inputmode="email" maxlength="120"',
           ipucu: W.id ? "Müşteri girişinin kullanıcı adı; faturalar da bu adrese." : "Kaydedince müşteri girişi bu adresle açılır, parola bu adrese gider." }) +
+        /* 2026-09-27 (reisim): telefon müşteri kaydında; rapordaki firma bilgileri buradan gelir, inspector değiştirmez */
+        A("tel", "Telefon", d.tel, { sinif: "a-girdi-sicil", ek: ' type="tel" inputmode="tel" maxlength="20"' }) +
         A("ilgili", "İlgili kişi", d.ilgili, { genis: true, ek: ' maxlength="80"', ipucu: "Ad ve görev." }) + "</div>";
     } else if (W.tur === "tesis") {
       $("a-pencere-baslik").textContent = W.id ? "Tesisi düzenle" : "Tesis ekle";
@@ -318,7 +320,7 @@
     o = o || {};
     var m = o.m ? MV.musteri(o.m) : null, t = o.t ? MV.tesis(o.t) : null;
     W = { tur: tur, id: o.id || null, m: o.m || (t && t.m), hata: {}, uyari: {}, kim: o.kim, hedef: o.hedef, d:
-      tur === "musteri" ? (m && o.id ? { unvan: m.unvan, kisa: m.kisa, vd: m.vd, vno: m.vno, eposta: m.eposta, ilgili: m.ilgili } : { unvan: "", kisa: "", vd: "", vno: "", eposta: "", ilgili: "" })
+      tur === "musteri" ? (m && o.id ? { unvan: m.unvan, kisa: m.kisa, vd: m.vd, vno: m.vno, eposta: m.eposta, tel: m.tel || "", ilgili: m.ilgili } : { unvan: "", kisa: "", vd: "", vno: "", eposta: "", tel: "", ilgili: "" })
       : tur === "tesis" ? (t ? { ad: t.ad, adres: t.adres, ilce: t.ilce, il: t.il, sgk: t.sgk } : { ad: "", adres: "", ilce: "", il: "", sgk: "" })
       : { ad: "", eposta: "", kapsam: "hepsi", tesis: [] } };
     pencereCiz(); if (!$("a-pencere").open) $("a-pencere").showModal();
@@ -372,7 +374,7 @@
     var d = W.d, hedef, ileti;
     if (W.tur === "musteri") {
       var m = W.id ? MV.musteri(W.id) : { id: "m" + (MV.MUSTERILER.length + 1), acilis: BUGUN, uygunsuz: 0, giris: { durum: "yok" } };
-      Object.assign(m, { unvan: d.unvan.trim(), kisa: d.kisa.trim() || d.unvan.trim().split(" ").slice(0, 2).join(" "), vd: d.vd.trim(), vno: d.vno, eposta: d.eposta.trim(), ilgili: d.ilgili.trim() });
+      Object.assign(m, { unvan: d.unvan.trim(), kisa: d.kisa.trim() || d.unvan.trim().split(" ").slice(0, 2).join(" "), vd: d.vd.trim(), vno: d.vno, eposta: d.eposta.trim(), tel: d.tel.trim(), ilgili: d.ilgili.trim() });
       var yeniGiris = m.eposta && m.giris.durum === "yok";
       if (yeniGiris) m.giris = { durum: "gonderildi", gonderildi: MK.simdi() };
       if (!m.eposta) m.giris = { durum: "yok" };

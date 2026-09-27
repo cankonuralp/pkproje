@@ -588,6 +588,7 @@ a.a-yuz:hover { border-color: var(--kenar-alan); background: var(--zemin); }
 .a-form-bolum { min-width: 0; padding: 12px 14px 14px; background: var(--kart); border: 1px solid var(--kenar); border-radius: var(--r-buyuk); }
 .a-form-bolum > h2 { margin: 0 0 10px; font-size: var(--boy-bolum); font-weight: var(--kal-bolum); }
 .a-form-bolum > .a-serit { margin: 0 0 10px; }
+.a-form-bolum > .a-sekmeler { margin-bottom: 12px; }   /* bölüm başındaki seçim (ör. kayıtlı / kayıtlı olmayan müşteri) */
 .a-alan-genis { grid-column: 1 / -1; }
 .a-bolum-aciklama { margin: 0 0 8px; color: var(--yazi2); font-size: var(--boy-kucuk); }
 .a-lejant { margin: 10px 0 12px; line-height: 2; }
