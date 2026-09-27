@@ -178,7 +178,7 @@
   };
   var SIRA_AD = { no: "Proje no", ad: "Proje adı", musteri: "Müşteri", adres: "Adres", ekip: "Inspector", baslangic: "Başlangıç", durum: "Durum" };
   function siraEtiket(v) {
-    if (v === "varsayilan") return "En son açılan önce";
+    if (v === "varsayilan") return "En yeni tarih önce";
     var x = v.split("-"), artan = x[1] === "artan";
     var yon = x[0] === "baslangic" ? (artan ? "yakın → uzak" : "uzak → yakın") : x[0] === "no" ? (artan ? "küçükten büyüğe" : "büyükten küçüğe")
       : x[0] === "durum" ? (artan ? "akış sırası" : "ters akış") : (artan ? "A → Z" : "Z → A");
@@ -234,9 +234,10 @@
   /* ── PLANLAR LİSTESİ ────────────────────────────────────────────────────────────────────────────── */
   function sirala(l) {
     var v = SZ.l.sec.sira, zaman = function (p) { return p.tarih + " " + p.bas; };
-    if (v === "varsayilan") {   /* 2026-09-26 (reisim: "sıralama tarihi olsun her zaman en yeni en yukarıda olsun"); 2026-09-28 (reisim: "en son açılan
-      plan en üste olursa en son onlar açıldıysa neden en üstte değiller"): varsayılan sıra planın AÇILDIĞI zaman, en son açılan üstte */
-      return l.slice().sort(function (a, b) { return (b.acildi || "").localeCompare(a.acildi || "") || zaman(b).localeCompare(zaman(a)); });
+    if (v === "varsayilan") {   /* 2026-09-26 (reisim: "sıralama tarihi olsun her zaman en yeni en yukarıda olsun"); 2026-09-28 (reisim: "en yeni tarihli
+      en son açılan plan her zaman en üstte olacak tarihe göre sıralama olacak"): varsayılan sıra planın TARİHİ, en yeni tarih üstte; aynı günde
+      en son açılan üstte (açılış zamanına göre sıralama yanlış anlamaydı, kalktı) */
+      return l.slice().sort(function (a, b) { return b.tarih.localeCompare(a.tarih) || (b.acildi || "").localeCompare(a.acildi || "") || b.bas.localeCompare(a.bas); });
     }
     var x = v.split("-"), f = SIRA_ANAHTAR[x[0]], yon = x[1] === "azalan" ? -1 : 1;
     return l.slice().sort(function (a, b) {

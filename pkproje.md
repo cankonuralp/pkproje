@@ -1657,8 +1657,8 @@ okunur, seçilmez. Planlar'da "en üstte" sorusu (denetimdeki plan hep üstte mi
 Sanki uygulamanın temasına göre bir pdf oluşuyor birebir aynı pdf çıktısı olmalı final raporu ayrıca planlarda en son planlar konuştuğumuz gibi
 değil verdiğim formatları kullanacağımız ekipmanların kontrolleri olan planlar olsun ya da ben yapabileyim. Fonksiyonlar çalışsın"* · *"Ama neden
 en üstte değil en yeni onlar açıldı neye göre üstte değil en son açılan plan en üste olursa en son onlar açıldıysa neden en üstte değiller"*
-→ **Kararlar:** (a) Planlar'ın varsayılan sırası planın **açıldığı zaman**, en son açılan üstte (önceki "en yeni" başlangıç tarihi olarak
-anlaşılmıştı); son formatlarla açılmış örnek plan en son açılan → en üstte. (b) Formatlı türde final rapor ve ön izleme resmî PDF'in birebir
+→ **Kararlar:** (a) Planlar'ın varsayılan sırası planın **tarihi**, en yeni tarih üstte; aynı günde en son açılan üstte (2026-09-28 reisim düzeltti:
+*"en yeni tarihli en son açılan plan her zaman en üstte olacak tarihe göre sıralama olacak"*; ilk uygulamadaki açılış zamanı sırası yanlıştı, 106). (b) Formatlı türde final rapor ve ön izleme resmî PDF'in birebir
 sayfa düzeninde (siyah-beyaz A4, başlık tablosu, bölüm tabloları, onay kutuları), uygulama temasından bağımsız. (c) Plan aç → Planlar → kabul →
 denetim → ekipman → rapor → onay zinciri sayfalar arasında çalışır (maket tarayıcıda saklar); reisim kendi planını açıp yürütebilir.
 
@@ -1694,6 +1694,10 @@ revizyon, alan kopyalama, hafif kusur devri, meslek eşleşme denetimi).
 - Emsal ürünler: https://opwire.app/iso-17020-periyodik-kontrol-yazilimi/ · https://17020muayene.vidco.com.tr/ · https://akuple.com/asansor-kontrol-yazilimi/ · https://ensyazilim.com/
 
 ## 11 · Değişiklik günlüğü
+- 2026-09-28 (106): **Planlar sırası plan tarihine göre, en yeni tarih üstte** (reisim: *"Hala planlarda 23.09 un planı 26 dan yukarda
+  gözüküyo, en yeni tarihli en son açılan plan her zaman en üstte olacak tarihe göre sıralama olacak dedik"*): 104'teki açılış zamanı sırası
+  yanlış anlamaydı, kalktı. Varsayılan sıra planın tarihi (en yeni üstte: 30.09 → 21.09); aynı günde en son açılan üstte (23.09'da
+  P-0926-040, sonra P-0926-034, P-0926-031); seçicide "En yeni tarih önce". Planlar 128/128 · 40/40 · 64/64; Plan aç, Ana sayfa, M13 etkileşim temiz.
 - 2026-09-28 (105): **Rapor çıktısı resmî formatın birebir düzeninde** (§9 otuz ikinci tur, karar b): ZPKR02 dört sayfa (1 Firma · 2 Ekipman
   2.1 / 2.2 · 3 Termal · 4 Ölçüm aletleri · 5 Gözle kontrol, formattaki 7 grup / 27 madde · 6 Fonksiyon + linye tablosu · 6.2 · 6.3 · 7 Kusur ·
   8 Fotoğraflar · 9 Notlar · 10 Sonuç · 11 Yetkili), ZPKR01 iki sayfa (+ fotoğraf eki); her sayfada formatın başlık tablosu (logo, firma,
@@ -1705,7 +1709,7 @@ revizyon, alan kopyalama, hafif kusur devri, meslek eşleşme denetimi).
   (linye sütunları, 6.2, 6.3, nokta RCD testi, selektivite) sıradaki kalem. Ölçerken 4 deneme yeni çıktıya göre güncellendi, belge kabı
   kaydırma yerine sığdırmaya geçti (ilk koşuda 16 durumda "sert kırpma" buldu). 18 maket temiz: durum 1928/1928 · etkileşim 430/430 ·
   telefon 964/964.
-- 2026-09-28 (104): **Planlar sırası: en son açılan üstte** (§9 otuz ikinci tur): varsayılan sıra açılış zamanı; P-0926-040 en son açılan
+- 2026-09-28 (104, ~~106'da düzeltildi~~): **Planlar sırası: en son açılan üstte** (§9 otuz ikinci tur): varsayılan sıra açılış zamanı; P-0926-040 en son açılan
   (22.09.2026 16:30) → en üstte; sıralama seçicisinde "En son açılan önce". Planlar 128/128 · 40/40 · 64/64.
 - 2026-09-28 (103): **Ölçüm metodu ekipman türünde** (§9 otuz birinci tur): formatlı türde (ET, AT) tür sayfasında "Ölçüm metodu" (ET: üç uçlu
   karşılaştırma, AT: çevrim empedansı; örnek), Düzenle'de formatın metotlarından seçilir; raporda seçim alanı kalktı, türden salt okunur
