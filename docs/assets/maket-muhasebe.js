@@ -2,7 +2,8 @@
    Kaynak: pkproje.md §3 (akış: "… inspector son imza → müşteriye açıldı → fatura → tahsilat → iş kapandı → arşiv"), §3.1 modül 18 (fatura,
    tahsilat, iş kapanışı), §3.2 madde 5 (her rapor teklif kalemine bağlanır; birim fiyat oradan), §7 (fatura / tahsilat).
    Ekranlar: işler (#/) · faturalar (#/faturalar) · iş sayfası (#/is/<proje no>: raporlar × birim fiyat, faturalar, geçmiş) · fatura sayfası
-   (#/f/<no>: kalemler, KDV, tahsilatlar) · fatura kaydet penceresi (#/is/<no>/fatura) · tahsilat penceresi (#/f/<no>/tahsilat).
+   (#/f/<no>: kalemler, KDV, tahsilatlar) · fatura kaydet penceresi (#/is/<no>/fatura) · tahsilat penceresi (#/f/<no>/tahsilat) ·
+   giderler (#/giderler; 2026-09-27, reisim: "Giderleri ekle") · gider penceresi (#/giderler/yeni · #/g/<no> · iş sayfasından #/is/<no>/gider).
    Kullanıcı: Ayşe Demir (firma yöneticisi; rol × modül önerisinde muhasebe yalnız yöneticide — soru 33). e-Fatura / e-Arşiv firmanın kendi
    muhasebe programında kesilir, buraya numarası ve tarihi yazılır (VARSAYIM). UYDURMA veri. */
 (function () {
@@ -72,7 +73,8 @@
       tablo: { baslik: "Faturalar", sinif: "a-tablo-fatura", sutunlar: F_SUTUN, href: function (f) { return "#/f/" + f.no; } } });
   }
   /* listenin üstünde: vadesi geçen alacak ve faturaya hazır işler (yalnız ekranda; bildirim yok, anayasa 1.3) */
-  function uyariCiz() {
+  function uyariCiz(on) {
+    if (on === "g") { giderUyariCiz(); return; }
     var gec = FT.filter(function (f) { return MV.faturaDurum(f) === "gecikti"; }), hazir = I.filter(function (x) { return oz(x).durum === "hazir"; });
     var top = gec.reduce(function (n, f) { return n + MV.faturaKalan(f); }, 0);
     $("a-uyari").innerHTML = gec.length || hazir.length ? '<div class="a-uyari-serit">' +
@@ -81,6 +83,64 @@
       (hazir.length ? '<div class="a-serit a-serit-bilgi">' + ikon("file-check", "a-ikon-kucuk") + "<span><b>Faturaya hazır:</b> " + hazir.map(function (x) {
         return x.no + " · " + kacis(MV.musteri(x.m).kisa) + " (" + oz(x).hazir.length + " imzalı rapor)"; }).join(", ") + "</span>" +
         (hazir.length === 1 ? '<a class="a-tus a-tus-ikincil a-serit-tus" href="#/is/' + hazir[0].no + '">İş</a>' : MK.tus({ eylem: "hazirlar", ad: "İşler", sinif: "a-tus-ikincil a-serit-tus" })) + "</div>" : "") + "</div>" : "";
+  }
+
+  /* ── GİDERLER (2026-09-27, reisim: "Giderleri ekle") — fiş / fatura: tarih, tür, tutar (KDV dahil) + oran, belge (açılıp incelenir),
+     isteğe bağlı iş ve personel. Belgesi olmayan gider kaydedilir, listede ve şeritte uyarı olarak görünür (engel değil). ─────────── */
+  var GD = MV.GIDERLER, gTur = MV.giderTur, gKdv = MV.giderKdv, kr = function (n) { return Math.round(n * 100) / 100; };
+  var AYLAR = ["Ocak", "Şubat", "Mart", "Nisan", "Mayıs", "Haziran", "Temmuz", "Ağustos", "Eylül", "Ekim", "Kasım", "Aralık"];
+  var giderSirala = function (l) { return l.slice().sort(function (a, b) { return a.tarih < b.tarih ? 1 : a.tarih > b.tarih ? -1 : a.no < b.no ? 1 : -1; }); };
+  var tekil = function (l) { return l.filter(function (v, i, a) { return v && a.indexOf(v) === i; }); };
+  MK.suzgecTanimla("g", { ad: "Giderlerde ara", ipucu: "Gider no, iş, açıklama", birim: "gider",
+    cipler: [
+      { k: "is", ad: "İşe bağlı", grup: "bag", test: function (g) { return !!g.is; } },
+      { k: "genel", ad: "Genel", grup: "bag", test: function (g) { return !g.is; } },
+      { k: "belgesiz", ad: "Belgesi yok", test: function (g) { return !g.belge; } }
+    ],
+    seciciler: [
+      { k: "tur", ad: "Tür", secenek: function () { return [["tumu", "Tümü"]].concat(MV.GIDER_TUR.map(function (t) { return [t[0], t[1]]; })); },
+        gecer: function (g, v) { return v === "tumu" || g.tur === v; } },
+      { k: "ay", ad: "Dönem", secenek: function () {
+        return [["tumu", "Tümü"]].concat(tekil(GD.map(function (g) { return g.tarih.slice(0, 7); })).sort().reverse().map(function (a) { return [a, AYLAR[+a.slice(5, 7) - 1] + " " + a.slice(0, 4)]; }));
+      }, gecer: function (g, v) { return v === "tumu" || g.tarih.slice(0, 7) === v; } },
+      { k: "kisi", ad: "Personel", secenek: function () {
+        return [["tumu", "Tümü"]].concat(tekil(GD.map(function (g) { return g.kisi; })).map(function (id) { return [id, MV.kisi(id).ad]; }).sort(function (a, b) { return a[1].localeCompare(b[1], "tr"); }));
+      }, gecer: function (g, v) { return v === "tumu" || g.kisi === v; } }
+    ],
+    metin: function (g) { var x = g.is && MV.isKaydi(g.is); return [g.no, gTur(g.tur).ad, g.aciklama, g.is || "", x ? MV.musteri(x.m).kisa : "", g.kisi ? MV.kisi(g.kisi).ad : ""].join(" "); },
+    imkansiz: "Bir gider hem işe bağlı hem genel olamaz" }, function () { giderListeCiz(); });
+  /* satırın adresi: iş sayfasındaysa pencere iş sayfasının üstünde açılır */
+  var gHref = function (g) { var r = rota(); return r.v === "is" ? "#/is/" + r.no + "/gider/" + g.no : "#/g/" + g.no; };
+  var G_NO = { k: "no", baslik: "Gider no", kart: "ust", sira: 1, hucre: function (g) { return '<a class="a-no" href="' + gHref(g) + '">' + g.no + '</a><span class="a-alt-satir">' + MK.tarihYaz(g.tarih) + "</span>"; } };
+  var G_TUR = { k: "tur", baslik: "Tür / açıklama", kart: "govde", sira: 2, hucre: function (g) { return "<span>" + kacis(gTur(g.tur).ad) + (g.aciklama ? kirp(g.aciklama, "a-alt-satir") : "") + "</span>"; } };
+  var G_TUTAR = { k: "tutar", baslik: "Tutar (KDV dahil)", kart: "govde", sira: 4, hucre: function (g) {
+    return '<span class="a-kart-etiket">Tutar (KDV dahil)</span><span><span class="a-sayi">' + para(g.tutar) + '</span><span class="a-alt-satir">KDV %' + g.oran + " · " + para(gKdv(g).kdv) + "</span></span>";
+  } };
+  var G_BELGE = { k: "belge", baslik: "Belge", kart: "eylem", sira: 9, hucre: function (g) {
+    return '<div class="a-eylem"><div class="a-eylem-tuslar">' + (g.belge ? MK.pdfTus(g.belge) : '<span class="a-uyari-metin">Belge yok</span>') + "</div></div>";
+  } };
+  var G_SUTUN = [G_NO, G_TUR,
+    { k: "bag", baslik: "İş / personel", kart: "govde", sira: 3, hucre: function (g) {
+      var x = g.is && MV.isKaydi(g.is), ad = g.kisi ? MV.kisi(g.kisi).ad : "";
+      return "<span>" + (x ? '<a class="a-no" href="#/is/' + x.no + '">' + x.no + "</a>" + kirp(MV.musteri(x.m).kisa + (ad ? " · " + ad : ""), "a-alt-satir") : "Genel" + (ad ? kirp(ad, "a-alt-satir") : "")) + "</span>";
+    } }, G_TUTAR, G_BELGE];
+  var GI_SUTUN = [G_NO, G_TUR,
+    { k: "kisi", baslik: "Personel", kart: "govde", sira: 3, hucre: function (g) { return '<span class="a-kart-etiket">Personel</span>' + (g.kisi ? kacis(MV.kisi(g.kisi).ad) : '<span class="a-deger-yok">—</span>'); } },
+    G_TUTAR, G_BELGE];
+  var giderToplam = function (l) {
+    var t = l.reduce(function (n, g) { var k = gKdv(g); n.haric += k.haric; n.kdv += k.kdv; n.top += g.tutar; return n; }, { haric: 0, kdv: 0, top: 0 });
+    return bilgi("KDV hariç", para(kr(t.haric))) + bilgi("KDV", para(kr(t.kdv))) + bilgi("Toplam", "<b>" + para(kr(t.top)) + "</b>");
+  };
+  function giderListeCiz() {
+    var l = MK.listeCiz({ on: "g", kayitlar: GD, sayacId: "a-sayac", listeId: "a-liste", sirala: giderSirala,
+      bosVeri: { ikon: "receipt", baslik: "Gider yok", metin: "“Gider ekle” ile fişi ya da faturası eklenir." },
+      tablo: { baslik: "Giderler", sinif: "a-tablo-gider", sutunlar: G_SUTUN, href: gHref } });
+    $("a-liste-alt").innerHTML = l.length ? '<dl class="a-bilgi a-bolum-serit">' + giderToplam(l) + "</dl>" : "";
+  }
+  function giderUyariCiz() {
+    var b = GD.filter(function (g) { return !g.belge; });
+    $("a-uyari").innerHTML = b.length ? '<div class="a-uyari-serit"><div class="a-serit a-serit-uyari">' + ikon("receipt", "a-ikon-kucuk") + "<span><b>Belgesi yok:</b> " + b.length + " gider · " +
+      para(kr(b.reduce(function (n, g) { return n + g.tutar; }, 0))) + "</span>" + MK.tus({ eylem: "belgesizler", ad: "Göster", sinif: "a-tus-ikincil a-serit-tus" }) + "</div></div>" : "";
   }
 
   /* ── İŞ SAYFASI ─────────────────────────────────────────────────────────────────────────────────────── */
@@ -124,6 +184,7 @@
     if (!x) { yok("İş bulunamadı", "Bu adreste iş yok.", "#/", "İşlere dön"); return; }
     var m = MV.musteri(x.m), ts = MV.tesis(x.tesis), o = oz(x), soz = MV.tesisSozlesmesi(x.tesis, x.tarih), acik = x.faturalar.map(MV.fatura).filter(function (f) { return MV.faturaKalan(f) > 0; });
     var teklif = x.raporlar.length ? MV.raporFiyat(MV.rapor(x.raporlar[0])).teklif : null;
+    var gl = giderSirala(MV.isGiderleri(x.no)), gh = kr(gl.reduce(function (n, g) { return n + gKdv(g).haric; }, 0));
     var imzaSon = x.raporlar.map(MV.rapor).filter(function (r) { return r.imza; }).reduce(function (s, r) { return r.imza.zaman > s ? r.imza.zaman : s; }, "");
     var gecmis = [[x.tarih, "Denetim", x.ekip.map(function (k) { return MV.kisi(k).ad; }).join(", ")]];
     if (imzaSon) gecmis.push([imzaSon.slice(0, 10), o.imzali === o.toplam ? "Raporların hepsi imzalandı, müşteriye açıldı" : o.imzali + " rapor imzalandı, müşteriye açıldı", o.imzali + " / " + o.toplam]);
@@ -158,6 +219,11 @@
       '<section class="a-bolum" aria-labelledby="a-b-fatura"><div class="a-alt-bas"><h2 class="a-alt-baslik" id="a-b-fatura">Faturalar</h2><span class="a-sayac"><b>' + x.faturalar.length + "</b> fatura</span></div>" +
         (x.faturalar.length ? '<div class="a-liste-kap">' + MK.tablo({ baslik: "İşin faturaları", sinif: "a-tablo-isfatura", sutunlar: FI_SUTUN, kayitlar: x.faturalar.map(MV.fatura), href: function (f) { return "#/f/" + f.no; } }) + "</div>"
           : '<p class="a-bos-satir">Henüz fatura yok.</p>') + "</section>" +
+      /* 2026-09-27: işin gideri ve kârı (raporlanan − gider, KDV hariç) */
+      '<section class="a-bolum" aria-labelledby="a-b-gider"><div class="a-alt-bas"><h2 class="a-alt-baslik" id="a-b-gider">Giderler</h2><span class="a-sayac"><b>' + gl.length + "</b> gider</span>" +
+        '<a class="a-tus a-tus-ikincil a-bolum-tus" href="#/is/' + x.no + '/gider">' + ikon("plus", "a-ikon-kucuk") + "Gider ekle</a></div>" +
+        (gl.length ? '<div class="a-liste-kap">' + MK.tablo({ baslik: "İşin giderleri", sinif: "a-tablo-isgider", sutunlar: GI_SUTUN, kayitlar: gl, href: gHref }) + "</div>" : '<p class="a-bos-satir">Henüz gider yok.</p>') +
+        '<dl class="a-bilgi a-bolum-serit">' + bilgi("Raporlanan (KDV hariç)", para(o.raporlanan)) + bilgi("Gider (KDV hariç)", para(gh)) + bilgi("Kâr (KDV hariç)", "<b>" + para(kr(o.raporlanan - gh)) + "</b>") + "</dl></section>" +
       '<section class="a-bolum" aria-labelledby="a-b-gecmis"><div class="a-alt-bas"><h2 class="a-alt-baslik" id="a-b-gecmis">Geçmiş</h2></div>' + gecmisHtml(gecmis) + "</section>";
     MK.suzgecKur("r");
   }
@@ -242,6 +308,41 @@
     $("a-pencere-alt").innerHTML = MK.tus({ eylem: "pencere-kapat", ad: "Vazgeç", sinif: "a-tus-ikincil" }) + MK.tus({ eylem: "tahsilat-kaydet", ad: "Tahsilatı kaydet", ikon: "check" });
     if (odak) $(odak).focus();
   }
+  /* gider penceresi (ekle / düzenle): tarih takvimle, tür seçilince KDV oranı türün varsayılanı; tutar yazılınca KDV canlı */
+  var kdvMetin = function () { var n = sayi(W.tutar); if (!(n > 0)) return ""; var k = gKdv({ tutar: n, oran: +W.oran }); return "KDV " + para(k.kdv) + " · KDV hariç " + para(k.haric); };
+  function kdvGuncelle() {
+    var p = $("w-oran-ipucu"), m = kdvMetin();
+    if (!m) { if (p) p.remove(); return; }
+    if (!p) { p = document.createElement("p"); p.className = "a-ipucu"; p.id = "w-oran-ipucu"; $("w-oran").closest(".a-alan-grup").appendChild(p); }
+    p.textContent = m;
+  }
+  function giderPencere(odak) {
+    var h = W.hata;
+    $("a-pencere-baslik").textContent = W.g ? "Gider · " + W.g.no : "Gider ekle" + (W.sabitIs ? " · " + W.sabitIs : "");
+    $("a-pencere-govde").innerHTML = '<div class="a-form">' +
+      MK.alan({ id: "w-tarih", etiket: "Tarih", zorunlu: true, hata: h.tarih, girdi: MK.zaman({ id: "w-tarih", ad: "Gider tarihi", deger: W.tarih }) }) +
+      MK.alan({ id: "w-tur", etiket: "Tür", zorunlu: true, hata: h.tur, girdi: MK.secim({ id: "w-tur", ad: "Tür", deger: W.tur, gecersiz: !!h.tur, ipucu: "Tür seçin",
+        secenekler: MV.GIDER_TUR.map(function (t) { return [t[0], t[1]]; }) }) }) +
+      MK.alan({ id: "w-tutar", etiket: "Tutar (KDV dahil)", zorunlu: true, hata: h.tutar, girdi: MK.girdi({ id: "w-tutar", alan: "tutar", deger: W.tutar, sinif: "a-girdi-sicil", ek: ' inputmode="decimal"', hata: h.tutar }) }) +
+      MK.alan({ id: "w-oran", etiket: "KDV oranı", sonuc: kdvMetin(), girdi: MK.secim({ id: "w-oran", ad: "KDV oranı", deger: String(W.oran), secenekler: MV.KDV_ORAN.map(function (o) { return [String(o), "%" + o]; }) }) }) +
+      MK.alan({ id: "w-aciklama", etiket: "Açıklama", genis: true, girdi: MK.girdi({ id: "w-aciklama", alan: "aciklama", deger: W.aciklama, ek: ' maxlength="120"' }) }) +
+      MK.alan({ id: "w-is", etiket: "İş", girdi: MK.secim({ id: "w-is", ad: "İş", deger: W.is, secenekler: [["", "Genel gider"]].concat(I.slice().sort(function (a, b) { return a.tarih < b.tarih ? 1 : -1; }).map(function (x) {
+        return [x.no, x.no + " · " + MV.musteri(x.m).kisa, MK.tarihYaz(x.tarih)]; })) }) }) +
+      MK.alan({ id: "w-kisi", etiket: "Personel", girdi: MK.secim({ id: "w-kisi", ad: "Personel", deger: W.kisi, secenekler: [["", "Seçilmedi"]].concat(MV.PERSONEL.filter(function (p) { return p.durum === "etkin"; })
+        .map(function (p) { return [p.id, p.ad]; }).sort(function (a, b) { return a[1].localeCompare(b[1], "tr"); })) }) }) +
+      '<div class="a-alan-grup a-alan-genis"><p class="a-etiket">Belge</p><div class="a-dosya">' + MK.tus({ eylem: "gider-belge", ad: W.belge ? "Değiştir" : "Dosya seç", ikon: "file-plus", sinif: "a-tus-ikincil" }) +
+        '<span class="a-dosya-ad' + (W.belge ? "" : " a-deger-yok") + '">' + kacis(W.belge || "Fiş ya da fatura; PDF ya da fotoğraf") + "</span>" + (W.belge ? MK.pdfTus(W.belge) : "") + "</div></div></div>";
+    /* yazılan ama geçersiz tarih yeniden çizimde kaybolmaz */
+    if (W.tarihYazi) { $("w-tarih").value = W.tarihYazi; $("w-tarih").setAttribute("aria-invalid", "true"); }
+    $("a-pencere-alt").innerHTML = MK.tus({ eylem: "pencere-kapat", ad: "Vazgeç", sinif: "a-tus-ikincil" }) + MK.tus({ eylem: "gider-kaydet", ad: W.g ? "Kaydet" : "Gideri kaydet", ikon: "check" });
+    if (odak) $(odak).focus();
+  }
+  function giderAc(g, isNo) {
+    W = { tip: "gider", g: g || null, sabitIs: g ? null : isNo || null, tarih: g ? g.tarih : MK.BUGUN, tarihYazi: "", tur: g ? g.tur : "", tutar: g ? yaz(g.tutar) : "", oran: g ? g.oran : 20,
+      aciklama: g ? g.aciklama : "", is: g ? g.is || "" : isNo || "", kisi: g ? g.kisi || "" : "", belge: g ? g.belge : "", hata: {} };
+    giderPencere(); if (!$("a-pencere").open) $("a-pencere").showModal();
+    $("w-tur").focus();
+  }
   function pencereAc(tip, nesne) {
     W = tip === "fatura" || tip === "toplu" ? { tip: "fatura", is: nesne, isler: tip === "toplu" ? hazirIsler(nesne) : [nesne], no: "", tarih: bugun, hata: {} } : { tip: tip, f: nesne, tarih: bugun, tutar: yaz(MV.faturaKalan(nesne)), yontem: YONTEM[0], not: "", hata: {} };
     (W.tip === "fatura" ? faturaPencere : tahsilatPencere)(); if (!$("a-pencere").open) $("a-pencere").showModal();
@@ -276,41 +377,81 @@
     var x = MV.isKaydi(f.is), o = oz(x); $("a-pencere").close(); faturaCiz(f);
     MK.bildir(para(n) + " tahsilat kaydedildi" + (MV.faturaKalan(f) <= 0 ? "; fatura ödendi" + (o.durum === "kapandi" ? ", " + x.no + " kapandı." : ".") : "; kalan " + para(MV.faturaKalan(f)) + "."));
   };
+  X["gider-kaydet"] = function () {
+    var h = {}, yazi = $("w-tarih").value, fi = tarihIso(yazi), n = sayi(W.tutar);
+    if (!fi) h.tarih = "GG.AA.YYYY biçiminde geçerli bir tarih.";
+    else if (fi > MK.BUGUN) h.tarih = "İleri tarihli gider kaydedilmez.";
+    if (!W.tur) h.tur = "Tür seçilmeli.";
+    if (!(n > 0)) h.tutar = "Tutar sıfırdan büyük olmalı (ör. 1.250,00).";
+    W.hata = h; W.tarihYazi = fi ? "" : yazi; var hk = Object.keys(h);
+    if (hk.length) { giderPencere("w-" + hk[0]); return; }
+    var yeni = !W.g, g = W.g || { no: MV.giderNo(fi), kaydeden: "ad" };
+    g.tarih = fi; g.tur = W.tur; g.tutar = kr(n); g.oran = +W.oran; g.aciklama = W.aciklama.trim(); g.is = W.is || null; g.kisi = W.kisi || null; g.belge = W.belge;
+    if (yeni) GD.push(g);
+    var r = rota(); $("a-pencere").close();
+    if (r.v === "is") isCiz(MV.isKaydi(r.no)); else { history.replaceState(null, "", "#/giderler"); uyariCiz("g"); MK.suzgecKur("g"); }
+    MK.bildir(g.no + (yeni ? " kaydedildi: " : " güncellendi: ") + para(g.tutar) + " (KDV dahil)" + (g.is ? ", " + g.is : "") + (g.belge ? "." : "; belge eklenmedi."));
+  };
+  X["gider-belge"] = function () {
+    W.belge = "fis-" + (W.tarih || MK.BUGUN).replace(/-/g, "") + "-" + (W.tur || "gider") + ".pdf"; giderPencere();
+    document.querySelector('#a-pencere [data-eylem="gider-belge"]').focus();
+  };
+  X["belgesizler"] = function () { MK.suzgecSifirla("g"); SZ.g.secili = ["belgesiz"]; MK.suzgecKur("g"); };
   X["gecikenler"] = function () { MK.suzgecSifirla("f"); SZ.f.secili = ["gecikti"]; location.hash = "#/faturalar"; };
   X["hazirlar"] = function () { MK.suzgecSifirla("i"); SZ.i.secili = ["hazir"]; if (location.hash === "#/" || location.hash === "") goster(false); else location.hash = "#/"; };
   X["pdf"] = function () { MK.bildir("Makette belge yok. Fatura firmanın muhasebe programında kesilir."); };
-  MK.onGirdi = function (e) { var k = e.target.dataset && e.target.dataset.alan; if (k && W) W[k] = e.target.value; };
-  MK.onSecim = function (id, deger) { if (W && id === "w-yontem") { W.yontem = deger; tahsilatPencere(id); } };
-  $("a-pencere").addEventListener("close", function () { W = null; var r = rota(); if (r.pencere) history.replaceState(null, "", r.v === "is" ? "#/is/" + r.no : "#/f/" + r.no); });
+  MK.onGirdi = function (e) { var k = e.target.dataset && e.target.dataset.alan; if (k && W) { W[k] = e.target.value; if (W.tip === "gider" && k === "tutar") kdvGuncelle(); } };
+  MK.onZaman = function (id, d) { if (W && W.tip === "gider" && id === "w-tarih") { W.tarih = d; W.tarihYazi = ""; } };
+  MK.onSecim = function (id, deger) {
+    if (!W) return;
+    if (W.tip === "gider") {
+      if (id === "w-tur") { W.tur = deger; W.oran = gTur(deger).kdv; delete W.hata.tur; }   /* tür seçilince oran türün varsayılanı; sonra değiştirilebilir */
+      else if (id === "w-oran") W.oran = +deger;
+      else if (id === "w-is") W.is = deger;
+      else if (id === "w-kisi") W.kisi = deger;
+      giderPencere(id); return;
+    }
+    if (id === "w-yontem") { W.yontem = deger; tahsilatPencere(id); }
+  };
+  $("a-pencere").addEventListener("close", function () { W = null; var r = rota(); if (r.pencere) history.replaceState(null, "", r.v === "is" ? "#/is/" + r.no : r.v === "giderler" ? "#/giderler" : "#/f/" + r.no); });
 
   /* ── GÖRÜNÜM ────────────────────────────────────────────────────────────────────────────────────────── */
   function rota() {
     var h = location.hash.replace(/\?.*$/, ""), m;
     if (h === "#/faturalar") return { v: "faturalar" };
-    if ((m = /^#\/is\/(P-\d{4}-\d{3})(\/fatura|\/toplu-fatura)?$/.exec(h))) return { v: "is", no: m[1], pencere: !!m[2], toplu: m[2] === "/toplu-fatura" };
+    if (h === "#/giderler" || h === "#/giderler/yeni") return { v: "giderler", pencere: h === "#/giderler/yeni" };
+    if ((m = /^#\/g\/(G-\d{4}-\d{3})$/.exec(h))) return { v: "giderler", pencere: true, gno: m[1] };
+    if ((m = /^#\/is\/(P-\d{4}-\d{3})(\/fatura|\/toplu-fatura|\/gider(?:\/(G-\d{4}-\d{3}))?)?$/.exec(h)))
+      return { v: "is", no: m[1], pencere: !!m[2], toplu: m[2] === "/toplu-fatura", gider: !!m[2] && m[2].indexOf("/gider") === 0, gno: m[3] };
     if ((m = /^#\/f\/([A-Z0-9]+)(\/tahsilat)?$/.exec(h))) return { v: "fatura", no: m[1], pencere: !!m[2] };
     return { v: "liste" };
   }
   function goster(odakla) {
-    var r = rota(), liste = r.v === "liste" || r.v === "faturalar";
+    var r = rota(), liste = r.v === "liste" || r.v === "faturalar" || r.v === "giderler";
     $("a-liste-gorunum").hidden = !liste; $("a-nesne").hidden = liste;
     if (liste) {
-      var on = r.v === "liste" ? "i" : "f";
+      var on = r.v === "liste" ? "i" : r.v === "faturalar" ? "f" : "g";
       /* müşteri sayfasındaki "Açık alacak" yüzü → o müşterinin faturaları */
-      var mq = /[?&]musteri=(m\d+)/.exec(location.hash); if (mq && MV.musteri(mq[1])) { MK.suzgecSifirla(on); SZ[on].sec.musteri = mq[1]; }
-      $("a-sekme-is").removeAttribute("aria-current"); $("a-sekme-fatura").removeAttribute("aria-current"); $(on === "i" ? "a-sekme-is" : "a-sekme-fatura").setAttribute("aria-current", "page");
-      uyariCiz(); $("a-suzgec-kap").innerHTML = MK.suzgecHtml(on); MK.suzgecKur(on);
+      var mq = /[?&]musteri=(m\d+)/.exec(location.hash); if (on !== "g" && mq && MV.musteri(mq[1])) { MK.suzgecSifirla(on); SZ[on].sec.musteri = mq[1]; }
+      ["a-sekme-is", "a-sekme-fatura", "a-sekme-gider"].forEach(function (id) { $(id).removeAttribute("aria-current"); });
+      $({ i: "a-sekme-is", f: "a-sekme-fatura", g: "a-sekme-gider" }[on]).setAttribute("aria-current", "page");
+      $("a-gider-ekle").hidden = on !== "g"; if (on !== "g") $("a-liste-alt").innerHTML = "";
+      uyariCiz(on); $("a-suzgec-kap").innerHTML = MK.suzgecHtml(on); MK.suzgecKur(on);
+      var g = r.gno && MV.gider(r.gno);
+      if (r.pencere && (!r.gno || g)) { if (!W) giderAc(g); }
+      else { if (r.pencere) history.replaceState(null, "", "#/giderler"); if ($("a-pencere").open) $("a-pencere").close(); }
     } else if (r.v === "is") {
       var x = MV.isKaydi(r.no); if (x !== AKTIF) { AKTIF = x; MK.suzgecSifirla("r"); }
       isCiz(x);
-      if (r.pencere && x && oz(x).hazir.length) { if (!W) pencereAc(r.toplu ? "toplu" : "fatura", x); }
+      if (r.gider && x && (!r.gno || MV.gider(r.gno))) { if (!W) giderAc(r.gno ? MV.gider(r.gno) : null, x.no); }
+      else if (r.pencere && !r.gider && x && oz(x).hazir.length) { if (!W) pencereAc(r.toplu ? "toplu" : "fatura", x); }
       else { if (r.pencere) history.replaceState(null, "", "#/is/" + r.no); if ($("a-pencere").open) $("a-pencere").close(); }
     } else {
       var f = MV.fatura(r.no); faturaCiz(f);
       if (r.pencere && f && MV.faturaKalan(f) > 0) { if (!W) pencereAc("tahsilat", f); }
       else { if (r.pencere) history.replaceState(null, "", "#/f/" + r.no); if ($("a-pencere").open) $("a-pencere").close(); }
     }
-    document.title = (r.v === "is" || r.v === "fatura" ? r.no : r.v === "faturalar" ? "Faturalar" : "Muhasebe") + " · probata maket";
+    document.title = (r.v === "is" || r.v === "fatura" ? r.no : r.v === "faturalar" ? "Faturalar" : r.v === "giderler" ? "Giderler" : "Muhasebe") + " · probata maket";
     if (odakla && !(r.pencere && W)) { window.scrollTo(0, 0); var hh = document.querySelector("#a-icerik > :not([hidden]) h1"); if (hh) hh.focus({ preventScroll: true }); }
   }
   MK.goster = goster;

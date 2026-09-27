@@ -767,6 +767,29 @@
     if (o.durum === "kapandi") o.kapandi = fl.reduce(function (s, f) { return f.tahsilatlar.reduce(function (t, y) { return y.tarih > t ? y.tarih : t; }, s); }, "");
     return o;
   };
+  /* ── GİDERLER (M14, 2026-09-27; reisim: "Giderleri ekle") — tarih, tür, tutar (fişteki KDV dahil tutar) + KDV oranı, belge (fiş / fatura;
+     açılıp incelenir), isteğe bağlı iş (proje no) ve personel. İşin sayfasında o işin gideri ve kârı (raporlanan − gider, KDV hariç).
+     No G-AAYY-SIRA (proje no'nun düzeni; firma ayarı, öneri). Tür başına varsayılan KDV oranı, değiştirilebilir. UYDURMA tutarlar. */
+  MV.GIDER_TUR = [["yakit", "Yakıt", 20], ["konaklama", "Konaklama", 10], ["yol", "Yol", 20], ["kalibrasyon", "Kalibrasyon", 20], ["sarf", "Sarf malzeme", 20], ["diger", "Diğer", 20]];
+  MV.KDV_ORAN = [20, 10, 1, 0];
+  MV.giderTur = function (k) { var t = MV.GIDER_TUR.filter(function (x) { return x[0] === k; })[0]; return { k: t[0], ad: t[1], kdv: t[2] }; };
+  MV.giderKdv = function (g) { var kdv = kurus(g.tutar * g.oran / (100 + g.oran)); return { kdv: kdv, haric: kurus(g.tutar - kdv) }; };
+  /* [tarih, tür, tutar, iş, personel, açıklama, belge var mı] */
+  MV.GIDERLER = [["2025-09-24", "yakit", 1460, "P-0925-019", "mk", "", 1], ["2025-11-05", "yakit", 1540, "P-1125-011", "ea", "", 1],
+    ["2025-11-05", "konaklama", 3080, "P-1125-011", "hp", "İki gece, iki oda", 1], ["2026-02-10", "yakit", 780, "P-0226-011", "hp", "", 1],
+    ["2026-02-10", "yol", 135, "P-0226-011", "hp", "Otoyol", 1], ["2026-08-05", "kalibrasyon", 3600, null, null, "Topraklama ölçer kalibrasyonu", 1],
+    ["2026-08-19", "sarf", 920, null, null, "Eldiven ve baret", 1], ["2026-09-02", "kalibrasyon", 4200, null, null, "Yük hücresi kalibrasyonu", 1],
+    ["2026-09-08", "sarf", 1380, null, null, "Penetrant seti", 1], ["2026-09-21", "yakit", 1850, "P-0926-025", "mk", "", 1],
+    ["2026-09-21", "konaklama", 2640, "P-0926-025", "mk", "Bir gece, iki oda", 1], ["2026-09-21", "yol", 245, "P-0926-025", "ea", "Otoyol ve otopark", 0],
+    ["2026-09-22", "yakit", 1120, "P-0926-028", "mk", "", 1], ["2026-09-23", "yakit", 960, "P-0926-031", "ea", "", 0],
+    ["2026-09-23", "diger", 350, null, null, "Kargo, cihaz kalibrasyona gönderildi", 1]].map(function (x) {
+    return { tarih: x[0], tur: x[1], tutar: x[2], oran: MV.giderTur(x[1]).kdv, is: x[3], kisi: x[4], aciklama: x[5], belge: x[6] ? "fis-" + x[0].replace(/-/g, "") + "-" + x[1] + ".pdf" : "", kaydeden: "ad" };
+  });
+  var gSira = {};
+  MV.giderNo = function (tarih) { var ay = tarih.slice(5, 7) + tarih.slice(2, 4); gSira[ay] = (gSira[ay] || 0) + 1; return "G-" + ay + "-" + ("00" + gSira[ay]).slice(-3); };
+  MV.GIDERLER.forEach(function (g) { g.no = MV.giderNo(g.tarih); });
+  MV.gider = function (no) { return MV.GIDERLER.filter(function (g) { return g.no === no; })[0]; };
+  MV.isGiderleri = function (no) { return MV.GIDERLER.filter(function (g) { return g.is === no; }); };
 
   /* belge (MB.belge) için raporun dolu verisi; İSG-KATİP kaydı rapor tarihinde geçerli olan (önceki kayıtlar dahil) */
   MV.raporBelge = function (r) {

@@ -12,22 +12,25 @@
 </head>
 <body>
 <!-- MAKET M14 · Muhasebe (modül 18, faz 2) — ONAY BEKLİYOR. İş = plan: imzalı raporlar → fatura → tahsilat → iş kapandı.
-     Adres: #/ işler · #/faturalar · #/is/<proje no> iş (/fatura: fatura kaydet) · #/f/<fatura no> fatura (/tahsilat: tahsilat ekle) -->
+     Adres: #/ işler · #/faturalar · #/is/<proje no> iş (/fatura: fatura kaydet · /gider: gider ekle) · #/f/<fatura no> fatura (/tahsilat: tahsilat ekle) ·
+     #/giderler (2026-09-27; /yeni: gider ekle) · #/g/<gider no> gider -->
 <main class="a-icerik" id="a-icerik">
   <div id="a-liste-gorunum">
     <div class="a-sayfa-bas">
       <h1 tabindex="-1">Muhasebe</h1>
       <span class="a-sayac" id="a-sayac" aria-live="polite"></span>
+      <a class="a-tus a-tus-birincil a-bolum-tus" href="#/giderler/yeni" id="a-gider-ekle" hidden><svg class="a-ikon a-ikon-kucuk" aria-hidden="true"><use href="../vendor/lucide-1.47.0/ikonlar.svg#i-plus"/></svg>Gider ekle</a>
     </div>
-    <nav class="a-sekmeler a-sekmeler-sayfa" aria-label="Muhasebe görünümü"><a class="a-sekme" href="#/" id="a-sekme-is">İşler</a><a class="a-sekme" href="#/faturalar" id="a-sekme-fatura">Faturalar</a></nav>
+    <nav class="a-sekmeler a-sekmeler-sayfa" aria-label="Muhasebe görünümü"><a class="a-sekme" href="#/" id="a-sekme-is">İşler</a><a class="a-sekme" href="#/faturalar" id="a-sekme-fatura">Faturalar</a><a class="a-sekme" href="#/giderler" id="a-sekme-gider">Giderler</a></nav>
     <div id="a-uyari"></div>
     <div id="a-suzgec-kap"></div>
     <div class="a-liste-kap" id="a-liste"></div>
+    <div id="a-liste-alt"></div>
   </div>
   <section id="a-nesne" aria-label="İş ya da fatura" hidden></section>
 </main>
 
-<!-- fatura kaydet · tahsilat ekle penceresi (içerik maket-muhasebe.js) -->
+<!-- fatura kaydet · tahsilat ekle · gider penceresi (içerik maket-muhasebe.js) -->
 <dialog class="a-pencere a-pencere-form" id="a-pencere" aria-labelledby="a-pencere-baslik">
   <div class="a-pencere-bas">
     <h2 id="a-pencere-baslik"></h2>

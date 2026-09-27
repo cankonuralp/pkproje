@@ -2,8 +2,8 @@
  "maket": "m14",
  "tarih": "2026-09-27",
  "arac": "tools/olc-bulut.mjs --etkilesim (başsız tarayıcı, 1920 açık tema; gen verilen denemede o genişlik)",
- "toplam": 15,
- "gecen": 15,
+ "toplam": 27,
+ "gecen": 27,
  "denemeler": [
   {
    "ad": "toplu fatura: aynı müşterinin iki işi tek faturada",
@@ -108,6 +108,90 @@
    "gen": 1920,
    "sayfa": "maket/planlarim.html",
    "hash": "#/",
+   "gecti": true
+  },
+  {
+   "ad": "giderler: 15 gider, en yeni üstte, şerit ve toplam",
+   "gen": 1920,
+   "sayfa": "maket/muhasebe.html",
+   "hash": "#/giderler",
+   "gecti": true
+  },
+  {
+   "ad": "Gider ekle tuşu yalnız Giderler sekmesinde",
+   "gen": 1920,
+   "sayfa": "maket/muhasebe.html",
+   "hash": "#/giderler",
+   "gecti": true
+  },
+  {
+   "ad": "şeritteki Göster → belgesi olmayanlar (2 / 15), toplam süzülene göre",
+   "gen": 1920,
+   "sayfa": "maket/muhasebe.html",
+   "hash": "#/giderler",
+   "gecti": true
+  },
+  {
+   "ad": "Tür seçici: Yakıt (6 / 15)",
+   "gen": 1920,
+   "sayfa": "maket/muhasebe.html",
+   "hash": "#/giderler",
+   "gecti": true
+  },
+  {
+   "ad": "belge Aç → PDF görüntüleyici",
+   "gen": 1920,
+   "sayfa": "maket/muhasebe.html",
+   "hash": "#/giderler",
+   "gecti": true
+  },
+  {
+   "ad": "gider ekle: boş gönderilmez, odak Tür'de",
+   "gen": 1920,
+   "sayfa": "maket/muhasebe.html",
+   "hash": "#/giderler/yeni",
+   "gecti": true
+  },
+  {
+   "ad": "tür seçilince KDV oranı türün varsayılanı (Konaklama %10), odak yerinde",
+   "gen": 1920,
+   "sayfa": "maket/muhasebe.html",
+   "hash": "#/giderler/yeni",
+   "gecti": true
+  },
+  {
+   "ad": "tutar yazılınca KDV canlı hesaplanır (1.200,00 → KDV 200,00)",
+   "gen": 1920,
+   "sayfa": "maket/muhasebe.html",
+   "hash": "#/giderler/yeni",
+   "gecti": true
+  },
+  {
+   "ad": "ileri tarihli gider kaydedilmez, odak tarihte",
+   "gen": 1920,
+   "sayfa": "maket/muhasebe.html",
+   "hash": "#/giderler/yeni",
+   "gecti": true
+  },
+  {
+   "ad": "gider kaydedilir → G-0926-009 listenin üstünde, 16 gider",
+   "gen": 1920,
+   "sayfa": "maket/muhasebe.html",
+   "hash": "#/giderler/yeni",
+   "gecti": true
+  },
+  {
+   "ad": "satır → kayıtlı gider pencerede dolu açılır",
+   "gen": 1920,
+   "sayfa": "maket/muhasebe.html",
+   "hash": "#/giderler",
+   "gecti": true
+  },
+  {
+   "ad": "iş sayfasından gider ekle: iş seçili, kaydedince gider ve kâr güncellenir",
+   "gen": 1920,
+   "sayfa": "maket/muhasebe.html",
+   "hash": "#/is/P-0926-025",
    "gecti": true
   }
  ]

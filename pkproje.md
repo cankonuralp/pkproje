@@ -841,6 +841,10 @@ etkileşim **10/10**, telefon **32/32** (imzalı sözleşme görüntüleme, yük
 1. tur (2026-09-24): 48/48, 11/11.
 
 #### Maket M14 — Muhasebe (modül 18, faz 2) — ONAY BEKLİYOR
+**3. tur (2026-09-27, §9 yirmi beşinci tur):** üçüncü sekme **Giderler** — tarih, tür, tutar (KDV dahil) + KDV oranı (türün varsayılanı), açıklama,
+isteğe bağlı iş ve personel, belge (açılır); belgesi olmayan uyarıyla kaydedilir; liste süzgeci (işe bağlı · genel · belgesi yok; tür, dönem,
+personel) ve süzülenin toplamı; iş sayfasında o işin giderleri ve kâr (raporlanan − gider, KDV hariç). Ölçüm: 16 durum 128/128, etkileşim
+27/27, telefon 64/64.
 **2. tur (2026-09-26, §9 yirmi birinci tur):** fatura iş başına; istenirse **müşteri başına toplu** (136: iş sayfasında "Toplu fatura (N iş)", aynı
 müşterinin faturaya hazır bütün işleri tek faturada; fatura sayfasında "İşler") · muhasebeyi firma yöneticisi görür, istenirse **"Muhasebe" rolü**
 (137: rol listesinde ve rol yetkileri tablosunda altıncı sütun; muhasebe, müşteri, teklif, sözleşme) · fatura programda kesilir, numarası
@@ -1474,6 +1478,21 @@ olan raporlara dair veri tutularak garfik oluşturularak performans takibide yap
   e-Fatura entegratörü bağlantısı sonraki faz önerisi). **Sadeleştirme önerisi:** üç sekme — Alacaklar (işler) · Faturalar · Giderler.
 - **SGK etiketi:** "SGK DETSİS no" (reisim'in örnek ekranında böyle; DETSİS kısaltması büyük harf).
 
+**Yirmi beşinci tur (2026-09-27, reisim birebir):** *"Giderleri ekle metod kısmı olsun ama sadece ekipman türü eklerken belirlene. Standartlar
+yazdın sana daha önce örnek paylaşmış olmam laızm  planlanan saat olmasın"*
+→ **Kararlar:**
+- **Giderler (M14):** Muhasebe'de üçüncü sekme **Giderler** (İşler · Faturalar · Giderler). Gider: **tarih** (takvimle), **tür** (yakıt,
+  konaklama, yol, kalibrasyon, sarf malzeme, diğer), **tutar** (fişteki KDV dahil tutar) + **KDV oranı** (%20 · %10 · %1 · %0; tür seçilince türün
+  varsayılanı gelir: konaklama %10, ötekiler %20; değiştirilebilir; KDV ve KDV hariç tutar yazarken hesaplanır), **açıklama**, isteğe bağlı
+  **iş** (proje no; yoksa genel gider) ve **personel**, **belge** (fiş / fatura, PDF ya da fotoğraf; açılıp incelenir). Belgesi olmayan gider
+  kaydedilir; listede "Belge yok", listenin üstünde şerit (uyarı, engel değil). Liste: en yeni üstte; çipler işe bağlı · genel · belgesi yok;
+  seçiciler tür · dönem (ay) · personel; altında süzülen giderlerin KDV hariç, KDV ve toplamı. Kayıtlı gider satırdan açılıp düzeltilir.
+  **İş sayfasında** "Giderler" bölümü (o işin giderleri, "Gider ekle" iş seçili açılır) ve **raporlanan − gider = kâr** (KDV hariç).
+  No **G-AAYY-SIRA** (proje no'nun düzeni; firma ayarı, öneri). İleri tarihli gider kaydedilmez (fatura ve tahsilatla aynı).
+  *Açık (sırası gelince sorulacak):* gideri yalnız muhasebe / yönetici mi girer, yoksa inspector sahada fişin fotoğrafını kendisi mi ekler?
+- **Planlanan saat yok:** reisim'in örnek ekranındaki "Planlanan saat" satırı plan içine eklenmez; plan açarken de saat sorulmaz (2026-09-26
+  kararıyla aynı). Rapordaki başlangıç / bitiş saati yerinde kalır.
+
 **Açık kalanlar:** **Ana sayfada İSGGM duyuruları** (reisim 2026-09-26: *"Ana sayfada isgüm duyurularını gösterebilir miyiz ? Bunu
 yapılacaklar listesine ekle"*; öneri: ÇSGB İSGGM duyurular sayfası — https://www.csgb.gov.tr/isggm/duyurular/ — sunucuda günde birkaç kez
 okunur (pg-boss işi, §8.9), Ana sayfada son 5 duyuru başlık + tarih + kaynağa bağlantı; yalnız ekranda, bildirim yok; sayfa RSS vermiyorsa
@@ -1506,6 +1525,10 @@ revizyon, alan kopyalama, hafif kusur devri, meslek eşleşme denetimi).
 - Emsal ürünler: https://opwire.app/iso-17020-periyodik-kontrol-yazilimi/ · https://17020muayene.vidco.com.tr/ · https://akuple.com/asansor-kontrol-yazilimi/ · https://ensyazilim.com/
 
 ## 11 · Değişiklik günlüğü
+- 2026-09-27 (83): **Muhasebe: Giderler** (§9 yirmi beşinci tur): üçüncü sekme; tarih, tür, tutar (KDV dahil) + KDV oranı (türün varsayılanı),
+  açıklama, isteğe bağlı iş ve personel, belge (açılır); belgesi olmayan uyarıyla kaydedilir; süzgeç (işe bağlı · genel · belgesi yok; tür,
+  dönem, personel) ve süzülenin toplamı; iş sayfasında giderler ve kâr (raporlanan − gider, KDV hariç). No G-AAYY-SIRA. Planlanan saat
+  eklenmedi (reisim: olmasın). M14 128/128 · 27/27 · 64/64.
 - 2026-09-27 (82): **Muhasebe soruları cevaplandı** (§9 yirmi dördüncü tur): alacaklar süreçten kendiliğinden; gider girişi yok, "Giderler"
   sekmesi önerildi (onay bekliyor); fatura no firmanın e-Fatura programından elle. §8.1 çevrimdışı / mağaza uygulaması notu.
 - 2026-09-27 (81): **Performans: tamamlanma süresi** (§9 yirmi dördüncü tur): rapor açılışından Tamamlandı'ya (son imza) süre; üç dilim
