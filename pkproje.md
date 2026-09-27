@@ -1427,6 +1427,10 @@ revizyon, alan kopyalama, hafif kusur devri, meslek eşleşme denetimi).
 - Emsal ürünler: https://opwire.app/iso-17020-periyodik-kontrol-yazilimi/ · https://17020muayene.vidco.com.tr/ · https://akuple.com/asansor-kontrol-yazilimi/ · https://ensyazilim.com/
 
 ## 11 · Değişiklik günlüğü
+- 2026-09-27 (73): **Plan içi "Planlandı" örnek ekrana göre sadeleşti** (reisim: *"bu kadar basit aslında istediğim şey bu"*): etiket : değer
+  satırları alt alta (Proje no, İSG-KATİP sözleşme ID, başlangıç / bitiş tarihi, inspector, adres, açıklama), altında ayrı kutuda teklif
+  içeriği tablosu (Muayene alanı · Muayene türü · Adet). Ekipman tablosunda hiçbir satırda işlem yoksa işlem sütunu çizilmez (reisim:
+  *"raporlandı yazılarından sonra sağ tarafta çok boşluk var"*). Planlar 88/88 · 24/24 · 44/44.
 - 2026-09-27 (72): **Her yerde tarih GG.AA.YYYY** (reisim: *"Her yerde aynı 23.09.2026 formatı gibi olsun"*): bütün maketlerde tarih
   23.09.2026, saatli 23.09.2026 09:14; gün ve ay adı yazılmaz (tek kaynak MK.tarihNo); Ana sayfadaki "Bugün" etiketi kalktı; şablon sürüm
   tarihleri, performans dönem adları ve plan uyarı metni aynı biçimde. Takvim başlığındaki ay adı (Eylül 2026) ve performans grafiğinin ay

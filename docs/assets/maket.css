@@ -250,6 +250,9 @@ button { cursor: pointer; }
 .a-tablo-ekipman .a-k-kod { width: 10%; } .a-tablo-ekipman .a-k-tur { width: 15%; } .a-tablo-ekipman .a-k-konum { width: 14%; }
 .a-tablo-ekipman .a-k-brans { width: 10.5%; } .a-tablo-ekipman .a-k-onceki { width: 17%; } .a-tablo-ekipman .a-k-rapor { width: 14%; }
 .a-tablo-ekipman .a-k-eylem { width: 19.5%; }
+/* işlem sütunu yoksa (plan bitti / hepsi raporlu): genişlik içerikli sütunlara */
+.a-tablo-sade .a-k-kod { width: 12%; } .a-tablo-sade .a-k-tur { width: 20%; } .a-tablo-sade .a-k-konum { width: 20%; }
+.a-tablo-sade .a-k-brans { width: 13%; } .a-tablo-sade .a-k-onceki { width: 20%; } .a-tablo-sade .a-k-rapor { width: 15%; }
 /* 2026-09-26 (reisim 106): durum "İmza bekliyor" / "Müşteriye açık" ikiye ayrıldı → durum sütunu genişledi (ekipman ve eylemden) */
 .a-tablo-rapor .a-k-no { width: 20%; } .a-tablo-rapor .a-k-ekipman { width: 22%; } .a-tablo-rapor .a-k-sonuc { width: 12.5%; }
 .a-tablo-rapor .a-k-durum { width: 15%; } .a-tablo-rapor .a-k-olustu { width: 11%; } .a-tablo-rapor .a-k-eylem { width: 19.5%; }
@@ -776,8 +779,21 @@ a.a-yuz:hover { border-color: var(--kenar-alan); background: var(--zemin); }
    Kelime içinde bölünmez; en uzun kelime sütunun en dar hâlidir. */
 .a-belge-tablo th, .a-belge-tablo td { padding: 6px 8px; border: 1px solid var(--kenar); text-align: left; vertical-align: top; overflow-wrap: break-word; }
 .a-belge-tablo th { background: var(--zemin2); color: var(--yazi2); font-weight: 600; }
-.a-teklif-tablo { max-width: 32rem; margin-top: 2px; font-size: var(--boy-govde); }   /* plan içi teklif içeriği: muayene · adet */
-.a-teklif-tablo th:last-child, .a-teklif-tablo td:last-child { width: 6.5rem; white-space: nowrap; }
+/* plan içi "Planlandı" (reisim 2026-09-27, örnek ekran): etiket : değer satırları + teklif içeriği tablosu (alan · tür · adet) */
+.a-satirlar { margin: 0; background: var(--kart); border: 1px solid var(--kenar); border-radius: var(--r-orta); }
+.a-satir { display: grid; grid-template-columns: minmax(0, 16rem) minmax(0, 1fr); gap: 12px; padding: 9px 12px; }
+.a-satir + .a-satir { border-top: 1px solid var(--kenar); }
+.a-satir dt { font-weight: 700; }
+.a-satir dd { margin: 0; overflow-wrap: anywhere; }
+.a-teklif { margin-top: 12px; background: var(--kart); border: 1px solid var(--kenar); border-radius: var(--r-orta); }
+.a-teklif-baslik { margin: 0; padding: 12px; font-size: var(--boy-govde); font-weight: 700; border-bottom: 1px solid var(--kenar); }
+.a-teklif-kap { padding: 12px; overflow-x: auto; }
+.a-duz-tablo { width: 100%; border-collapse: collapse; }
+.a-duz-tablo th, .a-duz-tablo td { padding: 9px 8px; text-align: left; vertical-align: top; border-bottom: 1px solid var(--kenar); overflow-wrap: anywhere; }
+.a-duz-tablo th { background: var(--zemin2); font-weight: 700; }
+.a-duz-tablo th + th, .a-duz-tablo td + td { border-left: 1px solid var(--kenar); }
+.a-duz-tablo th:nth-child(2), .a-duz-tablo td:nth-child(2) { width: 30%; }
+.a-duz-tablo th:last-child, .a-duz-tablo td:last-child { width: 4.5rem; }
 /* şablon görünümünde alanın nereden dolduğu (rapor zinciri, §3.2 madde 1) */
 .a-belge-kaynak { display: flex; align-items: center; gap: 4px; margin-top: 4px; color: var(--yazi2); font-size: var(--boy-etiket); font-weight: 500; }
 .a-belge-kutu { display: inline-block; width: 14px; height: 14px; margin-right: 8px; vertical-align: -2px; border: 2px solid var(--yazi2); border-radius: 2px; }
@@ -1021,6 +1037,8 @@ a.a-yuz:hover { border-color: var(--kenar-alan); background: var(--zemin); }
   .a-belge-kunye { order: 3; flex-basis: 100%; }
   /* saha raporu telefonda: madde solda, seçim sağda daha dar */
   .a-kriter { grid-template-columns: minmax(0, 1fr) 9.75rem; gap: 8px 10px; }
+  /* plan içi etiket : değer satırları telefonda alt alta (kimlik bölünmez, taşmasın) */
+  .a-satir { grid-template-columns: minmax(0, 1fr); gap: 2px; }
   /* tarih seçici telefonda alanın genişliğinde (kartın dışına taşmaz); gün tuşları arası boşluksuz, yükseklik 44 kalır */
   .a-zaman .a-secici-liste.a-zaman-liste { width: 100%; max-width: none; padding: 6px; }
   .a-zaman-gunler { gap: 0; }

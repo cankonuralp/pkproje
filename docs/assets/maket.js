@@ -290,6 +290,7 @@
   /* 2026-09-27 (reisim: "Tarih 23.09.2026 formatında yazmalı yanında bu gün vs yazmamalı, … kabul ve başladı kısımlarında sadece tarih
      yazmalı"): plan içinde tarih GG.AA.YYYY; adım başlıklarında yalnız tarih (saat ve kişi yok) */
   var tno = MK.tarihNo;
+  var satir = function (etiket, deger) { return '<div class="a-satir"><dt>' + etiket + "</dt><dd>" + deger + "</dd></div>"; };
   var KAPSAM_SUTUN = [
     { k: "tur", baslik: "Ekipman türü", kart: "ust", sira: 1, hucre: function (x) { return '<span class="a-ekipman-ad">' + x.ad + "</span>"; } },
     { k: "brans", baslik: "Branş", kart: "rozet", sira: 1, hucre: function (x) { return '<span class="a-hucre-satir">' + ikon(x.b === "m" ? "cog" : "zap", "a-ikon-kucuk") + bransAd(x.b) + "</span>"; } },
@@ -341,12 +342,16 @@
       return '<div class="a-eylem"><div class="a-eylem-tuslar">' + MK.git({ hedef: "rapor", hash: "#/r/" + r.kod + "?no=" + r.no + "&durum=" + r.durum, ad: d[1], ikon: d[0], ne: "Saha rapor ekranı" }) + "</div></div>";
     } }
   ];
+  /* 2026-09-27 (reisim: "raporlandı yazılarından sonra sağ tarafta çok boşluk var"): hiçbir satırda işlem yoksa (plan bitti ya da
+     hepsi raporlu) işlem sütunu hiç çizilmez; genişlik öteki sütunlara dağılır */
+  var islemVar = function (p) { return calisir(p) && p.ekp.some(function (k) { return !raporuVar(p, k); }); };
   function listeCiz(on) {   /* yalnız liste, çipler, sayaç ve sayfalayıcı çizilir; arama kutusu yerinde kalır (odak çalınmaz) */
     var p = AKTIF; if (!p || !MK.kap(on)) return;
     var hepsi = on === "e" ? p.ekp.map(function (k) { return SICIL[k]; }) : p.rapor.slice().sort(function (a, b) { return a.olustu < b.olustu ? 1 : a.olustu > b.olustu ? -1 : 0; });
     MK.listeCiz({ on: on, kayitlar: hepsi, sayacId: "a-sayac-" + on, listeId: "a-liste-" + on, sayfaId: "a-sayfa-" + on,
       bosVeri: '<p class="a-bos-satir">' + (on === "r" ? (calisir(p) ? "Bu planda henüz rapor yok. Rapor, ekipmanın satırındaki “Rapor oluştur” ile açılır." : "Rapor, denetime başlanınca ekipmanın satırından oluşturulur.") : "Bu planda ekipman yok.") + "</p>",
-      tablo: { baslik: on === "e" ? "Plandaki ekipmanlar" : "Bu plandaki raporlar", sinif: on === "e" ? "a-tablo-ekipman" : "a-tablo-rapor", sutunlar: on === "e" ? ekpSutun(p) : RAP_SUTUN } });
+      tablo: { baslik: on === "e" ? "Plandaki ekipmanlar" : "Bu plandaki raporlar", sinif: on === "e" ? (islemVar(p) ? "a-tablo-ekipman" : "a-tablo-ekipman a-tablo-sade") : "a-tablo-rapor",
+        sutunlar: on === "e" ? ekpSutun(p).filter(function (s) { return s.k !== "eylem" || islemVar(p); }) : RAP_SUTUN } });
   }
   /* eklenen ekipman sayfalı listede görünsün: bulunduğu sayfaya geçilir; süzgeç gizliyorsa bildirim söyler (anayasa 2.8) */
   function kaydaGit(kod) {
@@ -368,18 +373,21 @@
     var a1 = adim(1, "tamam", "Planlandı", tno(p.acildi),
       /* 2026-09-26 (reisim): İSG-KATİP sözleşme ID (onay tarihi yok) · başlangıç ve bitiş tarihi (plan süresi) · teklif içeriği (tür × adet) ·
          adres · açıklama */
-      '<dl class="a-bilgi">' +
-        bilgi("Proje no", '<span class="a-kod">' + p.no + "</span>") +
-        bilgi("Başlangıç", tno(p.tarih)) +
-        bilgi("Bitiş", tno(p.bitTarih)) +
-        bilgi("İSG-KATİP sözleşme ID", isg) +
-        bilgi("Inspector", p.ekip.map(function (k) { return KISI[k].ad + ' <span class="a-alt-inline">' + KISI[k].brans + "</span>"; }).join(" · "), true) +
-        bilgi("Adres", kacis(p.adres) + ", " + p.ilce + " / " + p.il, true) +
-        bilgi("Açıklama", p.aciklama ? kacis(p.aciklama) : '<span class="a-alt-inline">—</span>', true) +
-        /* teklif içeriği tablo (reisim 2026-09-27: "Forklift muayenesi 1 adet gibi") */
-        bilgi("Teklif içeriği", '<table class="a-belge-tablo a-teklif-tablo"><thead><tr><th scope="col">Muayene</th><th scope="col">Adet</th></tr></thead><tbody>' +
-          kapsam(p).filter(function (x) { return x.planlanan; }).map(function (x) { return "<tr><td>" + kacis(x.ad) + " muayenesi</td><td>" + x.planlanan + " adet</td></tr>"; }).join("") + "</tbody></table>", "tam") +
-      "</dl>");
+      /* 2026-09-27 (reisim, örnek ekranla: "bu kadar basit aslında istediğim şey bu"): etiket : değer satırları alt alta, altında
+         ayrı kutuda teklif içeriği tablosu (muayene alanı · muayene türü · adet), tam genişlik */
+      '<dl class="a-satirlar">' +
+        satir("Proje no", '<span class="a-kod">' + p.no + "</span>") +
+        satir("İSG-KATİP sözleşme ID", isg) +
+        satir("Başlangıç tarihi", tno(p.tarih)) +
+        satir("Bitiş tarihi", tno(p.bitTarih)) +
+        satir("Inspector", p.ekip.map(function (k) { return KISI[k].ad + ' <span class="a-alt-inline">' + KISI[k].brans + "</span>"; }).join(" · ")) +
+        satir("Adres", kacis(p.adres) + ", " + p.ilce + " / " + p.il) +
+        satir("Açıklama", p.aciklama ? kacis(p.aciklama) : "-") +
+      "</dl>" +
+      '<section class="a-teklif" aria-labelledby="a-teklif-b"><h3 class="a-teklif-baslik" id="a-teklif-b">Teklif içeriği</h3>' +
+        '<div class="a-teklif-kap"><table class="a-duz-tablo"><thead><tr><th scope="col">Muayene alanı</th><th scope="col">Muayene türü</th><th scope="col">Adet</th></tr></thead><tbody>' +
+        kapsam(p).filter(function (x) { return x.planlanan; }).map(function (x) { return "<tr><td>" + kacis(x.ad) + "</td><td>Periyodik kontrol</td><td>" + x.planlanan + "</td></tr>"; }).join("") +
+        "</tbody></table></div></section>");
     /* 2 · Kabul (tarafsızlık beyanı) */
     var a2;
     if (d === "bekliyor") a2 = adim(2, "aktif", "Kabul", "",

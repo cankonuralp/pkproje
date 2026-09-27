@@ -6,7 +6,7 @@
  "gecen": 24,
  "denemeler": [
   {
-   "ad": "plan içi: tarih 23.09.2026, Bugün yok, adımlarda yalnız tarih, teklif içeriği tablo",
+   "ad": "plan içi: tarih 23.09.2026, Bugün yok, adımlarda yalnız tarih, teklif içeriği tablo (alan · tür · adet), satırlar",
    "gen": 1920,
    "sayfa": "maket/planlarim.html",
    "hash": "#/plan/1",
