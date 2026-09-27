@@ -594,10 +594,13 @@
   MV.YONETICI = { m: "sy", e: "co" };
   var dk = function (iso, n) { var d = new Date(iso + ":00Z"); d.setUTCMinutes(d.getUTCMinutes() + n); return d.toISOString().slice(0, 16); };
   MV.RAPORLAR = [];
-  MV.EKIPMAN.filter(function (e) { return e.onceki; }).forEach(function (e) {   /* geçen yılın imzalı raporları */
-    var b = MV.tur(e.tur).b, o = e.onceki.tarih + "T10:00";
+  /* açılıştan Tamamlandı'ya süre (saat) — performansın 24 / 48 / 48+ saat ölçüsü için örnek dağılım (2026-09-27): yarıdan çoğu 24 saat
+     içinde, dörtte biri 24–48, kalanı 48 saatten uzun. UYDURMA. */
+  var tamamSaat = function (i) { var x = i % 20; return x < 11 ? 4 + (x * 7) % 19 : x < 16 ? 26 + (x * 5) % 20 : 54 + (x * 9) % 40; };
+  MV.EKIPMAN.filter(function (e) { return e.onceki; }).forEach(function (e, i) {   /* geçen yılın imzalı raporları */
+    var b = MV.tur(e.tur).b, o = e.onceki.tarih + "T10:00", sa = tamamSaat(i);
     MV.RAPORLAR.push({ no: e.onceki.rapor, kod: e.kod, tesis: e.tesis, plan: null, kisi: e.onceki.kisi, olustu: o, durum: "imzali", sonuc: e.onceki.sonuc,
-      gonderildi: dk(o, 50), onay: { kim: MV.YONETICI[b], zaman: dk(o, 300) }, imza: { zaman: dk(o, 420) } });
+      gonderildi: dk(o, 50), onay: { kim: MV.YONETICI[b], zaman: dk(o, Math.round(sa * 36)) }, imza: { zaman: dk(o, sa * 60) } });
   });
   var PLAN_RAP = [[9, "2026-09-21T13:05", { onaylandi: 14, onayda: 8 }], [8, "2026-09-22T09:02", { onayda: 3, taslak: 1 }], [1, "2026-09-23T09:04", { onayda: 3, taslak: 7 }]];
   var raporSira = 760;
@@ -609,7 +612,8 @@
         olustu: o, durum: d, sonuc: d === "taslak" ? null : SONUC[(k + id) % SONUC.length], gonderildi: d === "taslak" ? null : dk(o, 30 + (k % 4) * 7), onay: null, imza: null };
       if (d === "onaylandi") {   /* plan 9: ilk 10'u imzalandı ve müşteriye açıldı, son 4'ü son imzayı bekliyor */
         r.onay = { kim: MV.YONETICI[b], zaman: k < 10 ? dk("2026-09-22T09:40", k * 11) : dk("2026-09-23T11:20", k * 4) };
-        if (k < 10) { r.durum = "imzali"; r.imza = { zaman: dk("2026-09-22T15:05", k * 3) }; }
+        /* son imza açılıştan 21–50 saat sonra (performansın 24 / 48 / 48+ ölçüsü için örnek dağılım; onaydan sonra, bugünden önce) */
+        if (k < 10) { r.durum = "imzali"; r.imza = { zaman: dk(o, [22, 23, 21, 30, 22, 40, 23, 50, 22, 28][k] * 60) }; }
       }
       MV.RAPORLAR.push(r);
     });

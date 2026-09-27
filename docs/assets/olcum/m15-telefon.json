@@ -8,9 +8,45 @@
   390,
   430
  ],
- "toplam": 32,
- "temiz": 32,
+ "toplam": 36,
+ "temiz": 36,
  "durumlar": [
+  {
+   "ad": "pano · geçen yıl, tamamlanma süresi dilimleri",
+   "gen": 320,
+   "temiz": true,
+   "tasma": 0,
+   "disari": [],
+   "kucukAlan": [],
+   "alan": 1
+  },
+  {
+   "ad": "pano · geçen yıl, tamamlanma süresi dilimleri",
+   "gen": 360,
+   "temiz": true,
+   "tasma": 0,
+   "disari": [],
+   "kucukAlan": [],
+   "alan": 1
+  },
+  {
+   "ad": "pano · geçen yıl, tamamlanma süresi dilimleri",
+   "gen": 390,
+   "temiz": true,
+   "tasma": 0,
+   "disari": [],
+   "kucukAlan": [],
+   "alan": 1
+  },
+  {
+   "ad": "pano · geçen yıl, tamamlanma süresi dilimleri",
+   "gen": 430,
+   "temiz": true,
+   "tasma": 0,
+   "disari": [],
+   "kucukAlan": [],
+   "alan": 1
+  },
   {
    "ad": "pano · bu ay (gün başı)",
    "gen": 320,

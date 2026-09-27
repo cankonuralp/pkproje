@@ -944,13 +944,15 @@ a.a-yuz:hover { border-color: var(--kenar-alan); background: var(--zemin); }
 .a-grafik-renk { width: 10px; height: 10px; border-radius: 2px; }
 .a-seri-m, .a-seri-k { background: var(--onay); }
 .a-seri-e { background: var(--vurgu-2); }
+.a-seri-h { background: var(--hata-yazi); }   /* "48 saatten uzun" (tek seri; hata rengi yazıyla birlikte) */
 .a-grafik-satirlar { display: grid; gap: 6px; }
 .a-grafik-satir { display: grid; grid-template-columns: minmax(0, 120px) minmax(0, 1fr) 128px; align-items: center; gap: 10px; min-height: 36px; }
 .a-grafik-etiket { min-width: 0; color: var(--yazi2); font-size: var(--boy-kucuk); }
 .a-grafik-cubuk { display: flex; height: 14px; min-width: 0; border-radius: 3px; background: var(--zemin2); overflow: hidden; }
 .a-grafik-deger { text-align: right; font-weight: 600; font-variant-numeric: tabular-nums; white-space: nowrap; }
-.a-tablo-perf .a-k-ad { width: 24%; } .a-tablo-perf .a-k-rapor { width: 9%; } .a-tablo-perf .a-k-gun { width: 9%; } .a-tablo-perf .a-k-ort { width: 11%; }
-.a-tablo-perf .a-k-kazanc { width: 18%; } .a-tablo-perf .a-k-geri { width: 15%; } .a-tablo-perf .a-k-son { width: 14%; }
+.a-tablo-perf .a-k-ad { width: 18%; } .a-tablo-perf .a-k-rapor { width: 7%; } .a-tablo-perf .a-k-gun { width: 7%; } .a-tablo-perf .a-k-ort { width: 9%; }
+.a-tablo-perf .a-k-kazanc { width: 13%; } .a-tablo-perf .a-k-geri { width: 11%; } .a-tablo-perf .a-k-h24 { width: 12%; } .a-tablo-perf .a-k-h48p { width: 12%; }
+.a-tablo-perf .a-k-son { width: 11%; }   /* 2026-09-27: 24 saat içinde · 48 saatten uzun sütunları */
 .a-tablo-gunluk .a-k-gun { width: 18%; } .a-tablo-gunluk .a-k-is { width: 34%; } .a-tablo-gunluk .a-k-rapor { width: 12%; }
 .a-tablo-gunluk .a-k-kazanc { width: 18%; } .a-tablo-gunluk .a-k-durum { width: 18%; }
 .a-tablo-gunluk-ben .a-k-gun { width: 22%; } .a-tablo-gunluk-ben .a-k-is { width: 40%; } .a-tablo-gunluk-ben .a-k-rapor { width: 16%; } .a-tablo-gunluk-ben .a-k-durum { width: 22%; }

@@ -1498,6 +1498,10 @@ revizyon, alan kopyalama, hafif kusur devri, meslek eşleşme denetimi).
 - Emsal ürünler: https://opwire.app/iso-17020-periyodik-kontrol-yazilimi/ · https://17020muayene.vidco.com.tr/ · https://akuple.com/asansor-kontrol-yazilimi/ · https://ensyazilim.com/
 
 ## 11 · Değişiklik günlüğü
+- 2026-09-27 (81): **Performans: tamamlanma süresi** (§9 yirmi dördüncü tur): rapor açılışından Tamamlandı'ya (son imza) süre; üç dilim
+  (24 saat içinde · 24–48 saat · 48 saatten uzun) yüz olarak, kişi başına "24 saat içinde tamamlanan" payı ve "48 saatten uzun süren" sayısı
+  grafikle (her grafik tek seri; dilimler yazıda da), personel tablosunda iki sütun, kişi sayfasında da dilimler. Örnek verideki imza saatleri
+  çeşitlendi (uydurma dağılım). M15 72/72 · 16/16 · 36/36; 17 maket yeniden temiz.
 - 2026-09-27 (80): **Yüklenen her PDF açılır** (§9 yirmi dördüncü tur): ortak PDF görüntüleyici (MK.pdfGoster / MK.pdfTus; sayfa ileri-geri,
   İndir, Kapat; başka pencerenin üstünde de açılır). "Aç" eklenen yerler: kalibrasyon sertifikası (M4), eğitim sertifikası (M16), İSG-KATİP
   sözleşmesi ve sözleşme şablonu (M5), özlük belgeleri ve imzalı zimmet formu taraması (M1), standart PDF'i ve önceki sürümleri (M7, "Oku"),
