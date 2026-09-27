@@ -548,15 +548,22 @@
       $("a-pdf-alt").innerHTML = MK.tus({ eylem: "pdf-indir", ad: "İndir", ikon: "download", sinif: "a-tus-ikincil" }) + MK.tus({ eylem: "pencere-kapat", ad: "Kapat" });
       return;
     }
+    /* resmî belge (rb-sayfa) bütün sayfalarıyla çizilir; sayfa tuşları o sayfaya kaydırır */
+    var sayfalar = o.icerik ? (o.icerik.match(/class="rb-sayfa"/g) || []).length : 0;
+    if (sayfalar) PDF.toplam = sayfalar;
     var o = PDF.o, satir = function (n, uzun) { var h = ""; for (var i = 0; i < n; i++) h += '<span class="a-pdf-satir' + (uzun && i % 3 === 2 ? " a-pdf-satir-kisa" : "") + '"></span>'; return h; };
     $("a-pdf-baslik").textContent = o.baslik || o.dosya;
     $("a-pdf-govde").innerHTML = '<div class="a-pdf-arac"><span class="a-pdf-dosya">' + ikon("file-text", "a-ikon-kucuk") + "<span>" + kacis(o.dosya) + "</span></span>" +
         '<span class="a-pdf-sayfa-no">Sayfa ' + PDF.sayfa + " / " + PDF.toplam + "</span>" +
         '<button class="a-ikon-tus" type="button" data-eylem="pdf-sayfa" data-yon="-1" aria-label="Önceki sayfa"' + (PDF.sayfa === 1 ? " disabled" : "") + ">" + ikon("chevron-left") + "</button>" +
         '<button class="a-ikon-tus" type="button" data-eylem="pdf-sayfa" data-yon="1" aria-label="Sonraki sayfa"' + (PDF.sayfa === PDF.toplam ? " disabled" : "") + ">" + ikon("chevron-right") + "</button></div>" +
-      (o.icerik && PDF.sayfa === 1 ? o.icerik : '<div class="a-pdf-sayfa" role="img" aria-label="' + kacis(o.dosya) + ", sayfa " + PDF.sayfa + '">' +
+      (o.icerik && (sayfalar || PDF.sayfa === 1) ? o.icerik : '<div class="a-pdf-sayfa" role="img" aria-label="' + kacis(o.dosya) + ", sayfa " + PDF.sayfa + '">' +
         '<div class="a-pdf-bas"><span class="a-pdf-logo">Logo</span><span class="a-pdf-bas-yazi">' + satir(2) + "</span></div>" + satir(14, true) + "</div>");
     $("a-pdf-alt").innerHTML = MK.tus({ eylem: "pdf-indir", ad: "İndir", ikon: "download", sinif: "a-tus-ikincil" }) + MK.tus({ eylem: "pencere-kapat", ad: "Kapat" });
+    if (!sayfalar) return;
+    var g = $("a-pdf-govde"), hedef = g.querySelectorAll(".rb-sayfa")[PDF.sayfa - 1];
+    if (window.MB && MB.sigdir) MB.sigdir(g);
+    g.scrollTop = PDF.sayfa === 1 ? 0 : g.scrollTop + hedef.getBoundingClientRect().top - g.getBoundingClientRect().top;
   }
   MK.pdfGoster = function (o) {
     PDF.o = o; PDF.sayfa = 1; PDF.toplam = o.sayfa || 2;

@@ -1694,6 +1694,17 @@ revizyon, alan kopyalama, hafif kusur devri, meslek eşleşme denetimi).
 - Emsal ürünler: https://opwire.app/iso-17020-periyodik-kontrol-yazilimi/ · https://17020muayene.vidco.com.tr/ · https://akuple.com/asansor-kontrol-yazilimi/ · https://ensyazilim.com/
 
 ## 11 · Değişiklik günlüğü
+- 2026-09-28 (105): **Rapor çıktısı resmî formatın birebir düzeninde** (§9 otuz ikinci tur, karar b): ZPKR02 dört sayfa (1 Firma · 2 Ekipman
+  2.1 / 2.2 · 3 Termal · 4 Ölçüm aletleri · 5 Gözle kontrol, formattaki 7 grup / 27 madde · 6 Fonksiyon + linye tablosu · 6.2 · 6.3 · 7 Kusur ·
+  8 Fotoğraflar · 9 Notlar · 10 Sonuç · 11 Yetkili), ZPKR01 iki sayfa (+ fotoğraf eki); her sayfada formatın başlık tablosu (logo, firma,
+  AKR., başlık, doküman kodu · yayım · revizyon · yürürlük), PDF'in renkleri ve çizgileri, onay kutuları ●/○, sonuç cümlesinde seçilmeyen
+  üstü çizili. Uygulama temasından bağımsız (koyu temada da beyaz kâğıt), yazdırmada her sayfa ayrı A4. Pencerede PDF okuyucudaki gibi
+  genişliğe sığar (telefonda küçülür, kaydırma yok), "Sayfa 1 / 4" tuşları o sayfaya gider; PDF penceresi 860 px. Veri formatlara göre
+  düzeltildi: ET ve AT ayrıntı / tespit alanları ve seçenek sırası PDF'teki gibi, ölçüm metotları formatın adlarıyla, ET fonksiyon
+  testleri formattaki sütunlar. Boş şablon da aynı düzende (Ekipman türleri → rapor formatı). Saha raporu tablolarının PDF'e eşitlenmesi
+  (linye sütunları, 6.2, 6.3, nokta RCD testi, selektivite) sıradaki kalem. Ölçerken 4 deneme yeni çıktıya göre güncellendi, belge kabı
+  kaydırma yerine sığdırmaya geçti (ilk koşuda 16 durumda "sert kırpma" buldu). 18 maket temiz: durum 1928/1928 · etkileşim 430/430 ·
+  telefon 964/964.
 - 2026-09-28 (104): **Planlar sırası: en son açılan üstte** (§9 otuz ikinci tur): varsayılan sıra açılış zamanı; P-0926-040 en son açılan
   (22.09.2026 16:30) → en üstte; sıralama seçicisinde "En son açılan önce". Planlar 128/128 · 40/40 · 64/64.
 - 2026-09-28 (103): **Ölçüm metodu ekipman türünde** (§9 otuz birinci tur): formatlı türde (ET, AT) tür sayfasında "Ölçüm metodu" (ET: üç uçlu

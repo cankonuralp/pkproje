@@ -88,7 +88,7 @@
     if (e.kod === "AT-2003") { r.nokta.push({ ad: "Kapı motoru — sevkiyat", egri: "C", In: 10, zx: "2,6", rcd: "", priz: false }); r.sonuc = "kullanilamaz"; r.notlar = "Kapı motoru hattına 30 mA RCD takılması ya da koruma değerinin düşürülmesi önerilir."; }
     if (e.kod === "ET-2004") {
       ornekBilgi(); r.tespit = { degisiklik: "Yok", etiket: "Var" }; cihazDoldur(); r.termal = "hayir";
-      [0, 1, 2, 3, 4].forEach(function (i) { r.kriter[i].c = "uygun"; }); r.test[0] = "0,19"; r.test[1] = "5,8"; r.foto = 1;
+      [0, 1, 2, 3, 4].forEach(function (i) { r.kriter[i].c = "uygun"; }); r.test[0] = "0,19"; r.test[1] = "0,17"; r.foto = 1;
     }
     if (e.kod === "AT-2005") cihazDoldur();
     if (e.kod === "KP-1004") dolu();   /* onaya hazır */
@@ -120,7 +120,8 @@
   var gecmis = function (r) { return cihazlar(r).filter(function (v) { return MV.kalDurum(v) === "gecti"; }); };
   var eksikTur = function (r) { var gecerli = cihazlar(r).filter(function (v) { return MV.kalDurum(v) !== "gecti"; }).map(function (v) { return v.cihazTur; });
     return MV.turCihazlari(r.t).filter(function (c) { return gecerli.indexOf(c) < 0; }); };
-  var testSonuc = function (x, v) { var n = sayi(v); return isNaN(n) ? null : x.op === "<=" ? n <= x.sinir : n >= x.sinir; };
+  var testSonuc = function (x, v) { if (!x.op) return null; var n = sayi(v); return isNaN(n) ? null : x.op === "<=" ? n <= x.sinir : n >= x.sinir; };
+  var testDolu = function (x, v) { return x.metin ? !!String(v || "").trim() : !isNaN(sayi(v)); };
   /* madde sonucu Uygun · Uygun değil · Uygulanamaz (reisim 2026-09-26); "sınır dışı" test değeri de uygun değil sayılır */
   var KRITER = [["uygun", "Uygun"], ["uygundegil", "Uygun değil"], ["uygulanamaz", "Uygulanamaz"]];
   var kusurlar = function (r) { return r.kriter.filter(function (x) { return x.c === "uygundegil"; }); };
@@ -141,7 +142,7 @@
   var SONUC = [["kullanilir", "Uygun"], ["kullanilamaz", "Uygun değil"]];
   function eksikler(r) {
     var ts = MV.testler(r.t), cev = r.kriter.filter(function (x) { return x.c; }).length, kusurNotsuz = kusurlar(r).filter(function (x) { return !x.not.trim(); }).length;
-    var girilen = r.test.filter(function (v) { return !isNaN(sayi(v)); }).length, gecti = gecmis(r), eks = eksikTur(r);
+    var girilen = ts.filter(function (x, i) { return testDolu(x, r.test[i]); }).length, gecti = gecmis(r), eks = eksikTur(r);
     var oneri = r.sigorta ? r.sigorta.filter(function (x) { return x.durum !== "onayli"; }).length : 0;
     var F = r.F, dolu = function (v) { return Array.isArray(v) ? v.length > 0 : !!String(v || "").trim(); };
     var alan = F ? F.detay.map(function (x) { return r.detay[x.k]; }).concat(F.tespit.map(function (x) { return r.tespit[x.k]; })) : [];
@@ -400,8 +401,8 @@
       '<span class="a-sayac" id="r-kriter-say"><b>' + cevaplanan + "</b> / " + r.kriter.length + " madde</span>");
     var testlerHtml = '<div class="a-form">' + MV.testler(t).map(function (x, i) {
       var s = testSonuc(x, r.test[i]);
-      return MK.alan({ id: "r-t" + i, etiket: kacis(x.ad) + " (" + x.birim + ")", zorunlu: !oku, sonuc: '<span id="r-t' + i + '-sonuc">' + testIpucu(x, r.test[i]) + "</span>", hata: "",
-        girdi: MK.girdi({ id: "r-t" + i, alan: "t" + i, deger: r.test[i], sinif: "a-girdi-sicil" + (oku ? " a-girdi-oku" : ""), ek: ' inputmode="decimal" maxlength="10"' + (oku ? " readonly" : "") + (s === false || uyar(r, !String(r.test[i] || "").trim()) ? ' aria-invalid="true"' : "") }) });
+      return MK.alan({ id: "r-t" + i, etiket: kacis(x.ad) + (x.birim ? " (" + x.birim + ")" : ""), zorunlu: !oku, sonuc: '<span id="r-t' + i + '-sonuc">' + testIpucu(x, r.test[i]) + "</span>", hata: "",
+        girdi: MK.girdi({ id: "r-t" + i, alan: "t" + i, deger: r.test[i], sinif: "a-girdi-sicil" + (oku ? " a-girdi-oku" : ""), ek: (x.metin ? ' maxlength="20"' : ' inputmode="decimal" maxlength="10"') + (oku ? " readonly" : "") + (s === false || uyar(r, !String(r.test[i] || "").trim()) ? ' aria-invalid="true"' : "") }) });
     }).join("") + "</div>";
     S.test = !F ? bolum(5, "r-b5", "Test değerleri", testlerHtml)
       : F.gozle ? bolum(F.bolumler.fonksiyon, "r-b5", "Fonksiyon kontrol kriterleri ve testler", metodHtml(r, oku) + testlerHtml)
@@ -447,7 +448,7 @@
     if (odak) { var fo = $(odak); if (fo) fo.focus(); }
   }
   function testIpucu(x, v) {
-    var s = testSonuc(x, v);
+    var s = testSonuc(x, v); if (!x.op) return "";   /* sınırı olmayan değer yalnız kaydedilir */
     return s === null ? "Sınır " + MV.sinirYaz(x) : s ? "Uygun · sınır " + MV.sinirYaz(x) : "Sınır dışı · " + MV.sinirYaz(x);
   }
   var kayitMetin = function (r) { return r.degisti ? "Kaydedilmemiş değişiklik var" : r.kayit ? "Son kayıt " + MK.zamanYaz(r.kayit) : "Henüz kaydedilmedi"; };

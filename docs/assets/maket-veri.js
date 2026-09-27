@@ -419,8 +419,9 @@
   ];
   /* ── FORMAT YAPISI (2026-09-27; ZPKR01 / ZPKR02 PDF'lerinden birebir bölüm ve alanlar) — saha raporu (M8) ve rapor belgesi (MB) bu yapıyla
      çizilir. Alan tipi: secim (tek) · coklu (birden çok) · metin. ornek = belgedeki örnek raporun değeri (UYDURMA). */
-  var VAR_YOK = ["Var", "Yok"], NEDEN = ["Periyodik kontrol", "İlk kontrol"], YAPI = ["Ev", "Ticari", "Endüstri", "Diğer"];
-  var SEBEKE = ["TT", "IT", "TN-C", "TN-S", "TN-CS"], TOPRAKLAYICI = ["Ring", "Derin", "Yüzeysel", "Temel", "Belirlenemedi"];
+  /* 2026-09-28 (reisim: "birebir aynı pdf çıktısı olmalı"): alan adları, seçenekler ve kriter grupları PDF'teki yazımla birebir */
+  var VAR_YOK = ["Var", "Yok"], NEDEN = ["Periyodik Kontrol", "İlk Kontrol"], YAPI = ["Ev", "Ticari", "Endüstri", "Diğer"];
+  var SEBEKE = ["TT", "IT", "TN-CS", "TN-C", "TN-S"], TOPRAKLAYICI = ["Ring", "Yüzeysel", "Temel", "Derin", "Belirlenemedi"];
   MV.FORMAT_YAPI = {
     ZPKR01: {
       dayanak: ["TS HD 60364-4-41 Alçak Gerilim Elektrik Tesisleri – Bölüm 4: Güvenlik İçin Koruma – Bölüm 41: Elektrik Çarpmasına Karşı Koruma",
@@ -431,23 +432,25 @@
         { k: "kurulus", ad: "Enerji sağlayan kuruluş", tip: "metin", ornek: "Bölge elektrik dağıtım şirketi" },
         { k: "sebeke", ad: "Şebeke tipi", tip: "secim", sec: SEBEKE, ornek: "TN-S" },
         { k: "gerilim", ad: "Şebeke gerilimi", tip: "metin", ornek: "400 / 230 V" },
-        { k: "neden", ad: "Kontrol nedeni", tip: "secim", sec: NEDEN, ornek: "Periyodik kontrol" },
         { k: "proje", ad: "Tesise ait proje var mı?", tip: "secim", sec: VAR_YOK, ornek: "Var" },
+        { k: "tekhat", ad: "Tek hat şeması var mı?", tip: "secim", sec: VAR_YOK, ornek: "Var" },
+        { k: "neden", ad: "Kontrol nedeni", tip: "secim", sec: NEDEN, ornek: "Periyodik Kontrol" },
         { k: "projeBilgi", ad: "Proje bilgileri", tip: "metin", ornek: "Topraklama projesi, 2019 onaylı" },
         { k: "topraklayici", ad: "Topraklayıcı tipi", tip: "secim", sec: TOPRAKLAYICI, ornek: "Temel" },
-        { k: "tekhat", ad: "Tek hat şeması var mı?", tip: "secim", sec: VAR_YOK, ornek: "Var" },
         { k: "yapi", ad: "Yapı cinsi", tip: "secim", sec: YAPI, ornek: "Endüstri" },
+        { k: "amac", ad: "Ekipmanın kullanım amacı", tip: "metin", ornek: "Üretim tesisi elektrik dağıtımı" },
+        { k: "sonKontrol", ad: "Son kontrol tarihi", tip: "metin", ornek: "23.09.2025" },
         { k: "dolayli", ad: "Dolaylı dokunmaya karşı koruma önlemi", tip: "secim", sec: ["Eşpotansiyel topraklama ve beslemenin otomatik kesilmesi (TT, TN, IT)",
-          "Koruyucu ayırma (izolasyon trafosu)", "Küçük gerilim < 50 V", "Koruyucu yalıtma (Sınıf II veya zemin yalıtımı)"], ornek: "Eşpotansiyel topraklama ve beslemenin otomatik kesilmesi (TT, TN, IT)" },
+          "Koruyucu yalıtma (Sınıf II veya zemin yalıtımı)", "Koruyucu ayırma (İzolasyon trafosu)", "Küçük gerilim <50 V"], ornek: "Eşpotansiyel topraklama ve beslemenin otomatik kesilmesi (TT, TN, IT)" },
         { k: "hava", ad: "Hava durumu ve sıcaklığı", tip: "metin", ornek: "Açık, 21 °C" },
         { k: "zemin", ad: "Zemin nem durumu", tip: "metin", ornek: "Kuru" }
       ],
       tespit: [
         { k: "degisiklik", ad: "Tesisatta kapsamlı değişiklik var mı?", tip: "secim", sec: VAR_YOK, ornek: "Yok" },
         { k: "etiket", ad: "Bir önceki periyodik kontrol etiketi var mı?", tip: "secim", sec: VAR_YOK, ornek: "Var" },
-        { k: "pano", ad: "Pano / ekipman tanımlaması", tip: "metin", ornek: "Ana dağıtım panosu (ADP) ve tali panolar" }
+        { k: "pano", ad: "Pano/Ekipman tanımlaması", tip: "metin", ornek: "Ana dağıtım panosu (ADP) ve tali panolar" }
       ],
-      metot: ["Çevrim empedansı", "3 uçlu topraklama", "Klamp metodu (çoklu topraklayıcılı)"],
+      metot: ["Çevrim empedansı", "3 Uçlu topraklama", "Klamp metodu (Çoklu topraklayıcılı)"],
       /* 4 · TEST DEĞERLERİ bölümü: formattaki tanımlar */
       tanimlar: [["Zx", "Ölçülen çevrim empedansı"], ["Zs", "Aşırı akım koruma cihazının açma akımına göre hesaplanan sınır çevrim empedansı"], ["Rx", "Ölçülen topraklama direnci"],
         ["RA", "Aşırı akım koruma cihazının açma akımına göre hesaplanan sınır topraklama direnci"], ["Ik", "Toprak çevrim empedansına göre hesaplanan ya da ölçülen faz-toprak hata akımı"],
@@ -476,43 +479,56 @@
       bolumler: { firma: 1, ekipman: 2, termal: 3, cihaz: 4, kontrol: 5, fonksiyon: 6, kusur: 7, foto: 8, not: 9, sonuc: 10, yetkili: 11 },
       detay: [
         { k: "kurulus", ad: "Enerji sağlayan kuruluş", tip: "metin", ornek: "Bölge elektrik dağıtım şirketi" },
-        { k: "gerilim", ad: "Şebeke gerilimi", tip: "metin", ornek: "400 / 230 V" },
-        { k: "neden", ad: "Kontrol nedeni", tip: "secim", sec: NEDEN, ornek: "Periyodik kontrol" },
-        { k: "yapi", ad: "Yapı cinsi", tip: "secim", sec: YAPI, ornek: "Endüstri" },
-        { k: "faz", ad: "Faz iletkenlerinin sayısı ve tipi", tip: "secim", sec: ["AA · 1 faz, 2 tel", "AA · 1 faz, 3 tel", "AA · 2 faz, 3 tel", "AA · 3 faz, 3 tel", "AA · 3 faz, 4 tel",
-          "DA · 2 kutup", "DA · 3 kutup", "Diğer"], ornek: "AA · 3 faz, 4 tel" },
-        { k: "kaynak", ad: "Besleme kaynağı karakteristikleri", tip: "metin", ornek: "U/Uo 0,4 kV · 50 Hz · IF 10 kA · ZE 0,08 Ω" },
         { k: "sebeke", ad: "Şebeke tipi", tip: "secim", sec: SEBEKE, ornek: "TN-S" },
+        { k: "gerilim", ad: "Şebeke gerilimi", tip: "metin", ornek: "400 / 230 V" },
         { k: "proje", ad: "Tesise ait proje var mı?", tip: "secim", sec: VAR_YOK, ornek: "Var" },
         { k: "tekhat", ad: "Tek hat şeması var mı?", tip: "secim", sec: VAR_YOK, ornek: "Var" },
+        { k: "neden", ad: "Kontrol nedeni", tip: "secim", sec: NEDEN, ornek: "Periyodik Kontrol" },
         { k: "topraklayici", ad: "Topraklayıcı tipi", tip: "secim", sec: TOPRAKLAYICI, ornek: "Temel" },
+        { k: "yapi", ad: "Yapı cinsi", tip: "secim", sec: YAPI, ornek: "Endüstri" },
+        { k: "amac", ad: "Ekipmanın kullanım amacı", tip: "metin", ornek: "Aydınlatma, priz ve makine besleme" },
+        { k: "sonKontrol", ad: "Son kontrol tarihi", tip: "metin", ornek: "23.09.2025" },
+        { k: "faz", ad: "Faz iletkenlerinin sayısı ve tipi", tip: "secim", sec: ["AA · 1 faz, 2 tel", "AA · 1 faz, 3 tel", "AA · 2 faz, 3 tel", "AA · 3 faz, 3 tel", "AA · 3 faz, 4 tel",
+          "DA · 2 kutup", "DA · 3 kutup", "Diğer"], ornek: "AA · 3 faz, 4 tel" },
+        { k: "temelDirenc", ad: "Temel topraklama direnci (Ω)", tip: "metin", ornek: "0,9" },
         { k: "elektrot", ad: "İlave topraklama elektrotu detayları (varsa)", tip: "metin", ornek: "" },
         { k: "sistemIletken", ad: "Sistem topraklama iletkeni ve kesiti", tip: "metin", ornek: "Cu, 50 mm²" },
         { k: "anaEsp", ad: "Ana eşpotansiyel iletkeni ve kesiti", tip: "metin", ornek: "Cu, 25 mm²" },
-        { k: "temelDirenc", ad: "Temel topraklama direnci (Ω)", tip: "metin", ornek: "0,9" },
+        { k: "kaynakU", ad: "Nominal gerilim, U/Uo (kV)", tip: "metin", ornek: "0,4 / 0,23" },
+        { k: "kaynakF", ad: "Nominal frekans, f (Hz)", tip: "metin", ornek: "50" },
+        { k: "kaynakIF", ad: "Hata akımı olasılığı, IF (kA)", tip: "metin", ornek: "10" },
+        { k: "kaynakZE", ad: "Dış çevrim empedansı ZE (Ω)", tip: "metin", ornek: "0,08" },
         { k: "anaRcd", ad: "TT-TN-S şebeke için ana RCD anma akımı", tip: "metin", ornek: "300 mA" },
-        { k: "anaRcdTest", ad: "Ana RCD test akımı (mA) ve süresi (ms)", tip: "metin", ornek: "280 mA · 42 ms" },
-        { k: "anaKesici", ad: "Ana kesici karakteristikleri", tip: "metin", ornek: "Tip C · 63 A" }
+        { k: "anaKesiciTip", ad: "Ana kesici tipi", tip: "metin", ornek: "C" },
+        { k: "anaKesiciAkim", ad: "Ana kesici nominal akım (A)", tip: "metin", ornek: "63" },
+        { k: "anaRcdTest", ad: "TT-TNS şebeke için ana RCD test akımı (mA) ve süresi (ms)", tip: "metin", ornek: "280 mA · 42 ms" }
       ],
       tespit: [
-        { k: "degisiklik", ad: "Tesisatta kapsamlı değişiklik var mı? (> %20)", tip: "secim", sec: VAR_YOK, ornek: "Yok" },
-        { k: "dkd", ad: "Aşırı gerilim koruma cihazı (DKD / SPD) kullanılmış mı?", tip: "secim", sec: ["Evet", "Hayır"], ornek: "Evet" },
-        { k: "dogrudan", ad: "Doğrudan dokunmaya karşı koruma önlemleri", tip: "coklu", sec: ["Gerilim altındaki bölümlerin yalıtılması (iç kapak veya pleksi koruma)",
-          "Mahfaza (IPXY, pano kilidi, tehlike işareti vb.)", "Engel", "El ulaşma uzaklığı dışına yerleştirme", "İlave koruma: 30 mA RCD (5×IΔn için 40 ms), < 32 A devreler"],
-          ornek: ["Gerilim altındaki bölümlerin yalıtılması (iç kapak veya pleksi koruma)", "Mahfaza (IPXY, pano kilidi, tehlike işareti vb.)", "İlave koruma: 30 mA RCD (5×IΔn için 40 ms), < 32 A devreler"] },
+        { k: "degisiklik", ad: "Tesisatta kapsamlı değişiklik var mı? (>%20)", tip: "secim", sec: VAR_YOK, ornek: "Yok" },
+        { k: "dkd", ad: "Tesisatta aşırı gerilim koruma cihazları (DKD/SPD) kullanılmış mı?", tip: "secim", sec: ["Evet", "Hayır"], ornek: "Evet" },
+        { k: "dogrudan", ad: "Tespit edilen bilgiler (Doğrudan dokunmaya karşı koruma önlemleri)", tip: "coklu", sec: ["Gerilim altındaki bölümlerin yalıtılması (iç kapak veya pleksi koruma)",
+          "Mahfaza (IPXY, Pano kilidi, tehlike işareti vb.)", "Engel", "El ulaşma uzaklığı dışına yerleştirme", "İlave koruma",
+          "30 mA RCD (5xI için 40 ms açma zamanı); devre kesicisi <32 A devreler için (TS HD 60364-4-41)"],
+          ornek: ["Gerilim altındaki bölümlerin yalıtılması (iç kapak veya pleksi koruma)", "Mahfaza (IPXY, Pano kilidi, tehlike işareti vb.)", "İlave koruma",
+            "30 mA RCD (5xI için 40 ms açma zamanı); devre kesicisi <32 A devreler için (TS HD 60364-4-41)"] },
         { k: "etiket", ad: "Bir önceki periyodik kontrol etiketi var mı?", tip: "secim", sec: VAR_YOK, ornek: "Var" },
-        { k: "pano", ad: "Pano adı / ekipman tanımlaması", tip: "metin", ornek: "ADP · ana dağıtım panosu" }
+        { k: "pano", ad: "Pano Adı/Ekipman Tanımlaması", tip: "metin", ornek: "ADP · ana dağıtım panosu" }
       ],
-      metot: ["Üç uçlu karşılaştırma", "Çevrim empedansı", "Klamp yöntemi"],
-      /* 5 · gözle kontrol: formattaki gruplar ve kriterler (değerlendirme Uygun · Uygun değil · Uygulanamaz) */
+      metot: ["Üç Uçlu Karşılaştırma", "Çevrim Empedansı", "Klamp Yöntemi"],
+      /* 5 · gözle kontrol: PDF'teki gruplar ve sıra (iki sütunlu tabloda soldan sağa, satır satır); değerlendirme Uygun · Uygun değil · Uygulanamaz */
       gozle: [
-        ["Pano ve diğer donanımlara girişin uygunluğu", ["Kablo şebeke tarafı", "Kablo donanım tarafı", "Pano sabitlenmesi (depreme dayanıklılık)", "Dış darbelere karşı koruma önlemi", "Elektrik panosu etrafında yabancı malzemeler"]],
-        ["Topraklanmış potansiyel dengeleme ve beslemenin otomatik kesilmesi; elektrik çarpmasına (dolaylı dokunmaya) karşı koruma", ["Topraklama iletkeni", "Ana potansiyel dengeleme iletkeni", "Ek potansiyel dengeleme iletkeni (tamamlayıcı pot. den.)", "Pano kapak bağlantısı kontrolü 6 mm²", "Zemin izolasyonu"]],
-        ["Karşılıklı zararlı etkilerin önlenmesi", ["Elektriksel olmayan tesislere yaklaşma ve diğer etkilerin kontrolü", "Güvenlik devre ayrılması", "Bant I ve Bant II ayrılması, Bant II yalıtımı"]],
-        ["Tanımlama", ["Şemalar, talimatlar, devre çizimleri ve kısa bilgiler", "Tehlike işaretleri ve diğer uyarı işaretleri", "Koruma cihaz ve terminal etiket"]],
-        ["Kablo ve iletkenler", ["Kablo yollarının uygunluğu ve mekanik koruma", "Tesisat yöntemi", "Kablo renk kodları (nötr mavi, toprak sarı-yeşil)", "Yangın engeli, uygun kilitleme ve sıcaklık etkisine karşı koruma"]],
-        ["Termal kamera", ["Kontak gevşekliği ısınması", "Aşırı yük ısınması (PVC kablolar için > 70 °C)"]],
-        ["Genel değerlendirmeler", ["Ekipman temizlik / bakım durumu", "Pano içi ve bağlantılarının korozyon kontrolü", "Ekipman yakınında elektriksel ekipman yangın söndürme tertibatı", "Ekipman içi veya yakınında acil durum aydınlatma tertibatı", "Pano iç kapak, faza erişim engeli veya pleksi koruma"]]
+        ["PANO VE DİĞER DONANIMLARA GİRİŞİN UYGUNLUĞU", ["Kablo şebeke tarafı", "Kablo donanım tarafı", "Pano sabitlenmesi (Depreme dayanıklılık)", "Dış darbelere karşı koruma önlemi",
+          "Elektrik panosu etrafında yabancı malzemeler", "Zemin izolasyonu"]],
+        ["TOPRAKLANMIŞ POTANSİYEL DENGELEME VE BESLEMENİN OTOMATİK KESİLMESİ, ELEKTRİK ÇARPMASINA (DOLAYLI DOKUNMAYA) KARŞI KORUMA", ["Topraklama iletkeni", "Ana potansiyel dengeleme iletkeni",
+          "Ek Potansiyel dengeleme İletkeni (Tamamlayıcı pot.den)", "Pano kapak bağlantısı kontrolü 6 mm²"]],
+        ["KARŞILIKLI ZARARLI ETKİLERİN ÖNLENMESİ", ["Elektriksel olmayan tesislere yaklaşma ve diğer etkilerin kontrolü", "Bant I ve Bant II ayrılması, Bant II yalıtımı",
+          "Güvenlik devre ayrılması", "Pano iç kapak, faza erişim engeli veya pleksi koruma"]],
+        ["TANIMLAMA", ["Şemalar, talimatlar, devre çizimleri ve kısa bilgiler", "Koruma cihaz ve terminal etiket", "Tehlike işaretleri ve diğer uyarı işaretleri"]],
+        ["KABLO ve İLETKENLER", ["Kablo yollarının uygunluğu ve mekanik koruma", "Kablo renk kodları Nötr: Mavi Toprak: Sarı/ Yeşil", "Tesisat yöntemi",
+          "Yangın engeli, uygun kilitleme ve sıcaklık etkisine karşı koruma"]],
+        ["TERMAL KAMERA", ["Kontak gevşekliği ısınması", "Aşırı yük ısınması PVC kablolar için >70 derece"]],
+        ["GENEL DEĞERLENDİRMELER", ["Ekipman yakınında elektriksel ekipman yangın söndürme tertibatı", "Ekipman temizlik/bakım durumu", "Pano içi ve bağlantılarının korozyon kontrolü",
+          "Ekipman içi veya yakınında acil durum aydınlatma tertibatı"]]
       ],
       agirKusur: ["Faza erişim engeli IP2X koruma sınıfını sağlamıyorsa", "Kablo ek noktaları yalıtımlı değilse, pano içinde ucu açıkta iletken varsa",
         "Pano elemanlarının bağlantı noktalarında kontak gevşekliği (seri ark) tespit edilmişse", "PVC izoleli kablolarda ve dokunulabilen metal olmayan yüzeylerde aşırı ısınma tespit edilmişse",
@@ -525,7 +541,7 @@
   };
   /* ölçüm metodu (formattaki: üç uçlu · çevrim empedansı · klamp) ekipman türünde belirlenir, raporda türden okunur (reisim 2026-09-28:
      "tür de belirlensin"); firma türü düzenlerken seçer */
-  MV.tur("ET").olcumMetot = "Üç uçlu karşılaştırma"; MV.tur("AT").olcumMetot = "Çevrim empedansı";
+  MV.tur("ET").olcumMetot = "Üç Uçlu Karşılaştırma"; MV.tur("AT").olcumMetot = "Çevrim empedansı";
   MV.formatYapi = function (t) { return t && t.format ? MV.FORMAT_YAPI[t.format] || null : null; };
   /* açma akımı çarpanı (ZPKK02 madde 3: B=5x C=10x D=15x) · Zs = 230 V / Ia · Ik1 = 230 V / Zx */
   MV.EGRI_KAT = { B: 5, C: 10, D: 15 };
@@ -572,11 +588,14 @@
   };
   /* 2026-09-27: Bakanlık formatı elimizde olan türde kriterler ve ölçümler formattan (ZPKR02 bölüm 5 ve 6; ZPKR01'de gözle liste yok, ölçüm tabloları) */
   MV.TUR_TESTLER = {
-    ET: [{ ad: "6.1 Panodan ölçülen faz-toprak çevrim empedansı Zx", birim: "Ω", op: "<=", sinir: 0.37, not: "ana kesici C63 · Zs = 230 V / 630 A", ornek: "0,21" },
-      { ad: "6.1 Hesaplanan 3 fazlı kısa devre akımı", birim: "kA", op: "<=", sinir: 10, not: "panodaki en küçük Icu", ornek: "6,2" },
-      { ad: "6.1 RCD açma zamanı (5×IΔn)", birim: "ms", op: "<=", sinir: 40, not: "30 mA ilave koruma", ornek: "18" },
-      { ad: "6.2 Potansiyel dengeleme iletkeni süreklilik", birim: "Ω", op: "<=", sinir: 0.1, not: "eşpotansiyel baraya kadar", ornek: "0,04" },
-      { ad: "6.3 Zemin izolasyon direnci", birim: "kΩ", op: ">=", sinir: 50, ornek: "180" }],
+    /* 2026-09-28: ZPKR02 6.1'in ölçümleri PDF'teki sırayla; sınırı olmayan değer yalnız kaydedilir (op yok) */
+    ET: [{ k: "zx", ad: "Panodan ölçülen faz-toprak çevrim empedansı (Zx)", birim: "Ω", op: "<=", sinir: 0.37, not: "ana kesici C63 · Zs = 230 V / 630 A", ornek: "0,21" },
+      { k: "zln", ad: "Panodan ölçülen faz-nötr çevrim empedansı (ZLN)", birim: "Ω", ornek: "0,18" },
+      { k: "ff", ad: "Gerilim F-F", birim: "V", ornek: "398" }, { k: "ln", ad: "Gerilim L-N", birim: "V", ornek: "229" },
+      { k: "npe", ad: "Gerilim N-PE", birim: "V", op: "<=", sinir: 10, ornek: "1,2" },
+      { k: "ik3", ad: "Hesaplanan 3 fazlı kısa devre akımı", birim: "kA", op: "<=", sinir: 10, not: "panodaki en küçük Icu", ornek: "6,2" },
+      { k: "dkdTip", ad: "Aşırı gerilim koruma (DKD) tipi", birim: "", metin: true, ornek: "Tip 2" },
+      { k: "dkdAkim", ad: "Aşırı gerilim koruma (DKD) dayanma akımı", birim: "kA", ornek: "20" }],
     AT: []
   };
   MV.kriterGruplari = function (t) { var f = MV.formatYapi(t); return f && f.gozle ? f.gozle : null; };
@@ -586,7 +605,7 @@
     return MV.KRITER[t.g] || MV.KRITER.diger;
   };
   MV.testler = function (t) { return t && MV.TUR_TESTLER[t.k] || MV.TESTLER[t.g] || MV.TESTLER.diger; };
-  MV.sinirYaz = function (x) { return (x.op === "<=" ? "≤ " : "≥ ") + String(x.sinir).replace(".", ",") + " " + x.birim + (x.not ? " (" + x.not + ")" : ""); };
+  MV.sinirYaz = function (x) { if (!x.op) return "—"; return (x.op === "<=" ? "≤ " : "≥ ") + String(x.sinir).replace(".", ",") + " " + x.birim + (x.not ? " (" + x.not + ")" : ""); };
   /* hafif / ağır kusur yalnız Bakanlık formatı YÜRÜRLÜKTE olan türde (§4.5, Ek-III 1.9.1) */
   MV.kusurSinifli = function (t) { return !!t.format && t.formatDurum === "zorunlu"; };
   /* kiracı firmanın künyesi (rapor başlığı, §4.2 ve §4.8: akredite kuruluş logosu + ticari ad + TÜRKAK markası) — UYDURMA */
@@ -904,8 +923,8 @@
   /* örnek kusur (uygunsuzluk kaydı ve rapor belgesi aynı metni kullanır): formatlı türde formatın kendi maddesi ve notu */
   MV.ornekKusur = function (t, hafif) {
     var F = MV.formatYapi(t), kr = MV.kriterler(t);
-    if (F && F.gozle) return hafif ? { i: 14, kriter: kr[14], aciklama: "Tali pano TP-2 kapağında tehlike işareti yok." }
-      : { i: 26, kriter: kr[26], aciklama: "Faza erişim engeli IP2X koruma sınıfını sağlamıyor; pano iç kapağı yok." };
+    if (F && F.gozle) return hafif ? { i: 16, kriter: kr[16], aciklama: "Tali pano TP-2 kapağında tehlike işareti yok." }
+      : { i: 13, kriter: kr[13], aciklama: "Faza erişim engeli IP2X koruma sınıfını sağlamıyor; pano iç kapağı yok." };
     if (F) return hafif ? { kriter: "Tali pano TP-2 · RCD", aciklama: "Not-7: " + F.notlar[6] } : { kriter: "Kapı motoru — sevkiyat", aciklama: "Not-2: " + F.notlar[1] };
     return hafif ? { i: 2, kriter: kr[2], aciklama: "Madde 3'te okunabilirliği azaltan hasar." } : { i: 1, kriter: kr[1], aciklama: "Madde 2'de izin verilen sınırın üstünde aşınma." };
   };
