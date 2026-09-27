@@ -694,7 +694,7 @@
      belirlenecek ve ilgili cihaz ekli değil ise veya kalibrasyon tarihi geçmişse rapor gönderilemeyecek"). Tür sayfasında düzenlenir (M7);
      aşağıdaki başlangıç listesi ÖRNEK (firma kendi yöntemine göre belirler). */
   var TUR_CIHAZ = {
-    ET: ["topraklama", "izolasyon", "tesisat"], AT: ["topraklama"], YK: ["topraklama"], DP: ["izolasyon", "termal"], JN: ["multimetre", "izolasyon"],
+    ET: ["topraklama", "izolasyon", "tesisat", "termal"], AT: ["topraklama"], YK: ["topraklama"], DP: ["izolasyon", "termal"], JN: ["multimetre", "izolasyon"],
     YG: ["multimetre"], TR: ["izolasyon", "termal"], HT: ["manometre", "kalinlik"], KS: ["manometre"], BK: ["manometre", "kalinlik", "termal"],
     LP: ["manometre", "kalinlik"], FL: ["dinamometre"], KK: ["dinamometre"], KP: ["dinamometre"], TP: ["dinamometre"], ZV: ["dinamometre"],
     YA: ["dinamometre", "mesafe"], KU: ["dinamometre", "mesafe"], MB: ["dinamometre", "mesafe"], YM: ["mesafe"], AE: ["dinamometre"],
@@ -751,7 +751,7 @@
   var H = [   /* [varlık, tarih, eden, alan, foto, not] ; "depo" / "lab" yer; depo tarafında yetkili Zeynep Arslan (za) */
     ["v1", "2025-10-14T09:10", "depo", "ea", 2, "Çanta, problar ve kazıklar tam."], ["v2", "2026-03-05T08:40", "depo", "ea", 2, "Problar tam."],
     ["v3", "2025-09-22T10:05", "depo", "ea", 2, "Adaptör seti tam."], ["v4", "2026-01-20T09:00", "depo", "dk", 1, ""], ["v5", "2026-01-20T09:02", "depo", "dk", 1, ""],
-    ["v6", "2025-10-06T11:30", "depo", "dk", 2, "Kılıf ve şarj aleti tam."], ["v7", "2026-02-16T08:15", "depo", "mk", 1, "Jel ve prob tam."],
+    ["v6", "2025-10-06T11:30", "depo", "dk", 2, "Kılıf ve şarj aleti tam."], ["v6", "2026-09-01T09:15", "dk", "ea", 2, "Elektrik iç tesisatı kontrolleri için devredildi; kılıf ve şarj aleti tam."], ["v7", "2026-02-16T08:15", "depo", "mk", 1, "Jel ve prob tam."],
     ["v8", "2025-12-05T13:20", "depo", "mk", 1, ""], ["v9", "2026-04-27T08:30", "depo", "mk", 2, "Kalibrasyon etiketi sağlam."],
     ["v10", "2026-05-11T09:45", "depo", "bs", 1, ""], ["v11", "2025-10-15T10:00", "depo", "bs", 1, ""],
     ["v13", "2025-09-08T09:30", "depo", "ok", 1, ""], ["v15", "2026-06-03T14:10", "depo", "ea", 1, ""], ["v16", "2026-03-03T09:00", "depo", "hp", 1, ""],

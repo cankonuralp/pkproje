@@ -1694,6 +1694,16 @@ revizyon, alan kopyalama, hafif kusur devri, meslek eşleşme denetimi).
 - Emsal ürünler: https://opwire.app/iso-17020-periyodik-kontrol-yazilimi/ · https://17020muayene.vidco.com.tr/ · https://akuple.com/asansor-kontrol-yazilimi/ · https://ensyazilim.com/
 
 ## 11 · Değişiklik günlüğü
+- 2026-09-28 (107): **Termal kamera yalnız ekipman türünden** (reisim: *"ekipman bellidir zorunlu olan cihazlar bellidir türde belirtilmiştir
+  belirtilmediyse neye göre zorunlu diyosun zorunlu diyosan cihazlar kısmında neden göstermiyosun ki ben oraya tıklayım zimmetli termal
+  kameramı ekliyim bu tarz mantık hataları kabul edilebilir değil"*): raporda "Termal kamera ile kontrol yapıldı mı?" sorusu ve bölüm 3'ün
+  kendi "zimmetinizde yok" uyarısı kalktı. Raporun istediği cihazlar tek kaynaktan, ekipman türünün "Kullanılacak ölçüm cihazları"
+  listesinden: ET (iç tesisat) türüne termal kamera eklendi (örnek; firma türde çıkarabilir) → Ölçüm cihazları'nda termal kamera satırı ve
+  "Cihaz ekle"; bölüm 3 eklenen termal kamerayı gösterir, eklenmediyse "Termal kamera ekle" tuşu aynı pencereyi açar; türde termal kamera
+  yoksa bölüm 3 bir şey istemez, termal maddeleri örnek raporlarda uygulanamaz. Örnek veri: termal kamera OC-006 01.09.2026'da Elif Aydın'a
+  devredildi (zimmet hareketi). Rapor belgesinde 3. bölüm eklenen termal kameradan. Aynı kuralın bütün yolları tarandı (rapor satırları,
+  eksik / engel metni, örnek raporların cihazları, belge 3 ve 4. bölüm, tür sayfası): hepsi türün listesinden. 18 maket temiz: durum
+  1928/1928 · etkileşim 430/430 · telefon 964/964 (5 deneme yeni kurala göre güncellendi).
 - 2026-09-28 (106): **Planlar sırası plan tarihine göre, en yeni tarih üstte** (reisim: *"Hala planlarda 23.09 un planı 26 dan yukarda
   gözüküyo, en yeni tarihli en son açılan plan her zaman en üstte olacak tarihe göre sıralama olacak dedik"*): 104'teki açılış zamanı sırası
   yanlış anlamaydı, kalktı. Varsayılan sıra planın tarihi (en yeni üstte: 30.09 → 21.09); aynı günde en son açılan üstte (23.09'da

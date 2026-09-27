@@ -199,7 +199,7 @@
         '<tr><td class="rb-e" colspan="4">Tesisatta aşırı gerilim koruma cihazları (DKD/SPD) kullanılmış mı?</td><td colspan="3">' + sec(T("dkd"), ["Evet", "Hayır"]) + "</td></tr>" +
         '<tr><td class="rb-e" colspan="4">Tespit edilen bilgiler<br>(Doğrudan dokunmaya karşı koruma önlemleri)</td><td colspan="3">' + sec(T("dogrudan") || [], F.tespit.filter(function (x) { return x.k === "dogrudan"; })[0].sec, "<br>") + "</td></tr>" +
         '<tr><td class="rb-e" colspan="4">Bir önceki periyodik kontrol etiketi var mı?</td><td colspan="3">' + sec(T("etiket"), ["Var", "Yok"]) + "</td></tr></table>";
-      var termal = R ? (R.termal === "evet" ? cihazlar.filter(function (v) { return v.cihazTur === "termal"; }) : []) : [];
+      var termal = cihazlar.filter(function (v) { return v.cihazTur === "termal"; });   /* türün cihazlarından eklenen termal kamera */
       var gruplar = MV.kriterGruplari(t), i0 = 0;
       var kriterTablo = '<table class="rb-t rb-kucuk"><colgroup><col style="width:32%"><col style="width:18%"><col style="width:32%"><col style="width:18%"></colgroup>' +
         '<tr><th class="rb-ust" colspan="4">TEST VE KONTROLLER</th></tr>' + bolumBas("5. KONTROL KRİTERLERİ VE TESTLER", 4) +

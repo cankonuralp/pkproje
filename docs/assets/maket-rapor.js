@@ -43,7 +43,7 @@
     var cihazDoldur = function () { r.cihaz = MV.turCihazlari(t).map(function (c) { return MV.eklenebilirCihazlar(r.kisi, [c])[0]; }).filter(Boolean).map(function (v) { return v.id; }); };
     /* Bakanlık formatlı tür (ZPKR01 · ZPKR02, 2026-09-27): ekipman detayları ve tespitler formattan; topraklamada ölçüm noktaları ve RCD
        satırları (noktalar önceki rapordan gelir, Zx her kontrolde yeniden ölçülür) */
-    var F = MV.formatYapi(t); r.F = F; r.detay = {}; r.tespit = {}; r.metod = t.olcumMetot || ""; r.termal = ""; r.nokta = []; r.rcdler = [];   /* ölçüm metodu türden (2026-09-28) */
+    var F = MV.formatYapi(t); r.F = F; r.detay = {}; r.tespit = {}; r.metod = t.olcumMetot || ""; r.nokta = []; r.rcdler = [];   /* ölçüm metodu türden (2026-09-28) */
     var ornekBilgi = function () {
       F.detay.forEach(function (x) { r.detay[x.k] = x.ornek; });
       F.tespit.forEach(function (x) { r.tespit[x.k] = Array.isArray(x.ornek) ? x.ornek.slice() : x.ornek; });
@@ -58,8 +58,8 @@
       r.kriter.forEach(function (x) { x.c = "uygun"; });
       r.test = ts.map(function (x) { return x.ornek; }); r.foto = 2; r.amac = "Üretim ve bakım"; r.sonuc = "kullanilir";
       if (F) {
-        ornekBilgi(); r.termal = F.gozle ? "hayir" : "";   /* termal kamera kullanılmadı → termal kamera maddeleri uygulanamaz */
-        if (F.gozle) MV.kriterGruplari(t).reduce(function (i, g) { g[1].forEach(function (x, j) { if (g[0] === "Termal kamera") r.kriter[i + j].c = "uygulanamaz"; }); return i + g[1].length; }, 0);
+        ornekBilgi();   /* termal kamera türün cihazlarında yoksa termal kamera maddeleri uygulanamaz */
+        if (F.gozle && MV.turCihazlari(t).indexOf("termal") < 0) MV.kriterGruplari(t).reduce(function (i, g) { g[1].forEach(function (x, j) { if (g[0] === "TERMAL KAMERA") r.kriter[i + j].c = "uygulanamaz"; }); return i + g[1].length; }, 0);
         r.nokta.forEach(function (n, i) { n.zx = F.noktalar[i][3] || "0,34"; });
         r.rcdler.forEach(function (x, i) { x.id = F.rcd[i][4] || "220"; x.td = F.rcd[i][5] || "180"; });
       }
@@ -87,7 +87,7 @@
     if (e.kod === "ET-2002") { var ok = MV.ornekKusur(t, true), x = r.kriter[ok.i]; x.c = "uygundegil"; x.derece = "hafif"; x.not = ok.aciklama; x.foto = 1; r.sonuc = "kullanilamaz"; }
     if (e.kod === "AT-2003") { r.nokta.push({ ad: "Kapı motoru — sevkiyat", egri: "C", In: 10, zx: "2,6", rcd: "", priz: false }); r.sonuc = "kullanilamaz"; r.notlar = "Kapı motoru hattına 30 mA RCD takılması ya da koruma değerinin düşürülmesi önerilir."; }
     if (e.kod === "ET-2004") {
-      ornekBilgi(); r.tespit = { degisiklik: "Yok", etiket: "Var" }; cihazDoldur(); r.termal = "hayir";
+      ornekBilgi(); r.tespit = { degisiklik: "Yok", etiket: "Var" }; cihazDoldur();
       [0, 1, 2, 3, 4].forEach(function (i) { r.kriter[i].c = "uygun"; }); r.test[0] = "0,19"; r.test[1] = "0,17"; r.foto = 1;
     }
     if (e.kod === "AT-2005") cihazDoldur();
@@ -260,12 +260,15 @@
       '<h3 class="a-kriter-grup">' + n + ".2 · Tespitler</h3>" +
       '<dl class="a-satirlar a-satirlar-form">' + F.tespit.map(function (x) { return bilgiAlan(r, oku, "tespit", x); }).join("") + "</dl>";
   }
-  /* 3 · TERMAL KAMERA (ZPKR02): isteğe bağlı; kullanıldıysa inspector'ın zimmetindeki geçerli termal kamera yazılır */
-  function termalHtml(r, oku, CIHAZ) {
-    var tk = MV.eklenebilirCihazlar(r.kisi, ["termal"])[0];
-    return tekSecim("r-termal", "Termal kamera ile kontrol yapıldı mı?", r.termal, [["evet", "Evet"], ["hayir", "Hayır"]], oku) +
-      (r.termal !== "evet" ? "" : tk ? '<div class="a-liste-kap a-bolum-serit">' + MK.tablo({ baslik: "Termal kamera", sinif: "a-tablo-olcum", sutunlar: CIHAZ.slice(0, 3), kayitlar: [tk] }) + "</div>"
-        : '<p class="a-bos-satir a-bolum-serit">Zimmetinizde kalibrasyonu geçerli termal kamera yok.</p>');
+  /* 3 · TERMAL KAMERA (ZPKR02): hangi cihazın kullanılacağı yalnız ekipman türünden (reisim 2026-09-28: "zorunlu olan cihazlar bellidir türde
+     belirtilmiştir belirtilmediyse neye göre zorunlu diyosun"). Türün cihazlarında termal kamera varsa Ölçüm cihazları'nda onun satırı olur ve
+     buradan da eklenir; yoksa bu bölümde bir şey istenmez. Ayrı "kullanıldı mı" sorusu ve kendi uyarısı kalktı. */
+  function termalHtml(r, oku) {
+    var tv = cihazlar(r).filter(function (v) { return v.cihazTur === "termal"; })[0];
+    if (MV.turCihazlari(r.t).indexOf("termal") < 0) return '<p class="a-bos-satir">Bu ekipman türünün ölçüm cihazlarında termal kamera yok; termal kamera istenmez.</p>';
+    if (tv) return '<dl class="a-satirlar">' + satir("Cihaz", '<span class="a-kod">' + tv.env + "</span> · " + kacis(tv.marka + " " + tv.model)) + satir("Cihaz no", '<span class="a-kod">' + tv.seri + "</span>") +
+      satir("Kalibrasyon tarihi", MV.kalDurum(tv) === "gecti" ? '<span class="a-uyari-metin a-hata-metin">' + MK.tarihYaz(tv.kal[0].tarih) + " · geçmiş</span>" : MK.tarihYaz(tv.kal[0].tarih)) + "</dl>";
+    return '<p class="a-bos-satir">Termal kamera eklenmedi.</p>' + (oku ? "" : '<div class="a-eylem-cubugu a-bolum-serit">' + MK.tus({ eylem: "cihaz-ekle-ac", ad: "Termal kamera ekle", ikon: "plus", sinif: "a-tus-ikincil", veri: { tur: "termal" } }) + "</div>");
   }
   /* ölçüm metodu raporda seçilmez, ekipman türünden okunur (reisim 2026-09-28: "tür de belirlensin") */
   var metodHtml = function (r) {
@@ -341,13 +344,6 @@
         return '<span class="a-kart-etiket">Kalibrasyon tarihi</span>' + (MV.kalDurum(x.v) === "gecti" ? '<span class="a-uyari-metin a-hata-metin">' + MK.tarihYaz(x.v.kal[0].tarih) + " · geçmiş</span>" : MK.tarihYaz(x.v.kal[0].tarih)); } }
     ].concat(oku ? [] : [{ k: "eylem", baslik: "İşlem", gizliBaslik: true, kart: "eylem", sira: 9, hucre: function (x) {
       return x.v ? '<div class="a-eylem"><div class="a-eylem-tuslar"><button class="a-ikon-tus" type="button" data-eylem="cihaz-kaldir" data-id="' + x.v.id + '" aria-label="' + kacis(x.v.ad) + ' kaldır" title="Kaldır">' + ikon("x") + "</button></div></div>" : ""; } }]);
-    var CIHAZ = [
-      { k: "ad", baslik: "Cihaz", kart: "ust", sira: 1, hucre: function (v) { return kacis(v.ad); } },
-      { k: "no", baslik: "Cihaz no", kart: "govde", sira: 2, hucre: function (v) { return '<span class="a-kart-etiket">Cihaz no</span><span class="a-kod">' + v.seri + "</span>"; } },
-      { k: "kal", baslik: "Kalibrasyon tarihi", kart: "govde", sira: 3, hucre: function (v) {
-        return '<span class="a-kart-etiket">Kalibrasyon tarihi</span>' + (MV.kalDurum(v) === "gecti" ? '<span class="a-uyari-metin a-hata-metin">' + MK.tarihYaz(v.kal[0].tarih) + "</span>" : MK.tarihYaz(v.kal[0].tarih)); } }
-    ].concat(oku ? [] : [{ k: "eylem", baslik: "İşlem", gizliBaslik: true, kart: "eylem", sira: 9, hucre: function (v) {
-      return '<div class="a-eylem"><div class="a-eylem-tuslar"><button class="a-ikon-tus" type="button" data-eylem="cihaz-kaldir" data-id="' + v.id + '" aria-label="' + kacis(v.ad) + ' kaldır" title="Kaldır">' + ikon("x") + "</button></div></div>"; } }]);
     /* bölüm numarası: formatlı türde formattaki sıra (iç tesisat 1–11, topraklama 1–9), ötekinde firmanın sabit sırası */
     var el = elektrik(t), no = function (k, v) { return F ? F.bolumler[k] : v; }, S = {};
     /* 1 · FİRMA BİLGİLERİ: türün rapor formatından bağımsız, her raporda aynı (reisim 2026-09-26); 2026-09-27 örnek ekranla: etiket solda,
@@ -382,7 +378,7 @@
         metinAlan(r, oku, "marka", "Marka", 40) + metinAlan(r, oku, "model", "Model", 40) + metinAlan(r, oku, "seri", "Seri no", 30) +
         metinAlan(r, oku, "imal", "İmal yılı", 4, ' inputmode="numeric"') + metinAlan(r, oku, "konum", "Kullanım yeri", 60) + metinAlan(r, oku, "amac", "Kullanım amacı", 120) +
         satir("Önceki kontrol", e.onceki ? MK.tarihYaz(e.onceki.tarih) + " · " + kacis(e.onceki.sonuc) + ' · <span class="a-rapor-no">' + e.onceki.rapor + "</span>" : "İlk kontrol") + "</dl>");
-    S.termal = F && F.bolumler.termal ? bolum(F.bolumler.termal, "r-bt", "Termal kamera bilgileri", termalHtml(r, oku, CIHAZ)) : "";
+    S.termal = F && F.bolumler.termal ? bolum(F.bolumler.termal, "r-bt", "Termal kamera bilgileri", termalHtml(r, oku)) : "";
     /* ÖLÇÜM CİHAZLARI (reisim 2026-09-28: "hangi cihaz kullanılacaksa o sabit yazsın, onun hizasında bilgileri … cihaz yoksa cihaz ekle
        tuşu olsun, kaldırınca komple satır silinmesin … sadece ilgili satırdaki cihaz"): türün her gerekli cihazı sabit bir satır; eklenen
        cihaz hizasında, eklenmemişse o satırda "Cihaz ekle" (pencerede yalnız o türden, zimmetteki geçerli cihazlar); kaldırınca satır kalır.
@@ -604,7 +600,6 @@
     else if (id === "r-sonuc") { r.sonuc = deger; degisti(r); ciz(id); }
     else if (/^r-kd\d+$/.test(id)) { r.kriter[+id.slice(4)].derece = deger; degisti(r); ciz(id); }
     else if (/^r-[ds]-/.test(id)) { r[id[2] === "d" ? "detay" : "tespit"][id.slice(4)] = deger; degisti(r); ciz(id); }
-    else if (id === "r-termal") { r[id.slice(2)] = deger; degisti(r); ciz(id); }
   };
   MK.onZaman = function (id, deger) {
     var r = aktif(), k = id.slice(2); if (!r || !(k in r)) return;

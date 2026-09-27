@@ -286,7 +286,7 @@
    "gecti": true
   },
   {
-   "ad": "iç tesisat: termal kamera Evet → zimmette yoksa söylenir (termal kamera depoda)",
+   "ad": "iç tesisat: termal kamera türün cihazı → Ölçüm cihazları'nda satırı; bölüm 3'ten zimmetteki termal kamera eklenir",
    "gen": 1920,
    "sayfa": "maket/rapor.html",
    "hash": "#/r/ET-1009",
