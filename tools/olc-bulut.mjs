@@ -104,6 +104,7 @@ export const DURUMLAR = {
     { ad: "tür ekle · PDF seçildi", hash: "#/yeni", adim: [["yaz", "#w-ad", "Kaldırma aparatı"], ["yaz", "#w-k", "ka"], ["tikla", '[data-eylem="pdf-sec"]']] },
     { ad: "rapor formatı yükle · PDF seçilmeden", hash: "#/tur/HT/format", adim: [["tikla", '[data-eylem="pencere-kaydet"]']] },
     { ad: "tür düzenle", hash: "#/tur/ET/duzenle" },
+    { ad: "tür · jeneratör: kullanılacak cihazlar ve rapor bölümleri", hash: "#/tur/JN" },
     { ad: "tesis sayfası · ekipman yüzü planı açar", sayfa: "maket/musteriler.html", hash: "#/t/t1" },
   ] },
   /* M4 Ölçüm Cihazı · Zimmet · kalibrasyon uyarısı (2026-09-24) */
@@ -387,6 +388,9 @@ export const DENEMELER = {
     { ad: "müşteri sayfası: Açık alacak yüzü → müşterinin faturaları (3 / 13)", hash: "#/m/m1", adim: [["tikla", 'a.a-yuz[href^="muhasebe.html"]']], bekle: '/muhasebe\\.html$/.test(location.pathname) && document.querySelector("#a-sayac").textContent === "3 / 13 fatura" && /3.600,00 TL/.test(document.querySelector("#a-liste").textContent)' },
   ],
   m3: [
+    /* 2026-09-27 (reisim yirmi dördüncü tur): türün kullanacağı ölçüm cihazları düzenlenir, rapor bunları ister; rapor bölümleri */
+    { ad: "tür sayfası: kullanılacak ölçüm cihazları ve rapor bölümleri", hash: "#/tur/ET", bekle: '/Kullanılacak ölçüm cihazları/.test(document.querySelector("#a-nesne").textContent) && document.querySelectorAll("#a-b-cihaz ~ .a-kosullar li, section[aria-labelledby=a-b-cihaz] li").length === 3 && /Her raporda sabitFotoğraflar · Sonuç ve kanaat · Muayene uzmanı yorumu/.test(document.querySelector("section[aria-labelledby=a-b-bolum]").textContent)' },
+    { ad: "düzenle: cihaz türü eklenir, tür sayfasında görünür", hash: "#/tur/KS/duzenle", adim: [["tikla", '[data-cihaz-tur="termal"]'], ["tikla", '[data-eylem="pencere-kaydet"]']], bekle: 'location.hash === "#/tur/KS" && /Termal kamera/.test(document.querySelector("section[aria-labelledby=a-b-cihaz]").textContent) && MV.tur("KS").cihaz.indexOf("termal") >= 0' },
     /* 2026-09-26 (2. tur, reisim: "ekipman türleri yeterli" · "ekipman türü ekleme tuşu olsun ve her ekipmanın içinde türün formatını
        belirleyecek pdf i ekleme tuşu da olsun" · "Akreditasyon zorunluluğu ile ilgili bir şey yazma" · 52–54 öneriler) */
     { ad: "türler: Rapor formatı yüklenmedi çipi", hash: "#/", adim: [["tikla", '[data-cip="pdfsiz"]']], bekle: 'document.querySelector("#a-sayac").textContent === MV.KATALOG.filter(t => !t.sablon).length + " / " + MV.KATALOG.length + " tür"' },

@@ -459,6 +459,10 @@ liste etkileşim denemesiyle ölçüldü (81 il, arama).
 1. tur (2026-09-24): 8 durum 48/48, etkileşim 14/14 (portal kullanıcısı davetle, vergi / SGK no zorunluydu).
 
 #### Maket M3 — Ekipman türleri (modül 5) — ONAYLANDI 2026-09-26
+**Ek (2026-09-27, §9 yirmi dördüncü tur):** tür sayfasında **"Kullanılacak ölçüm cihazları"** (tür düzenle penceresinde seçilir; raporda
+bu türlerin her birinden kalibrasyonu geçerli cihaz eklenmeden rapor onaya gönderilemez) ve **"Rapor bölümleri"** (formattan: muayene kriterleri,
+test değerleri, elektrikte pano sigortaları · standart: firma, ekipman, cihazlar · her raporda sabit: fotoğraflar, sonuç ve kanaat, muayene
+uzmanı yorumu). Başlangıç cihaz listesi örnek. M3 72/72 · 17/17 · 36/36.
 **2. tur (2026-09-26, reisim'in M3 cevaplarıyla; kararlar §9 on dördüncü tur).** Ekranlar: **ekipman türleri** (`maket/ekipman-turleri.html`:
 katalog — Ek-III grubu, branş, periyot, Bakanlık formatı, **rapor formatı** (yüklendi / yüklenmedi, sürüm); çipler: rapor formatı yüklenmedi ·
 Bakanlık formatı zorunlu · standart seçilmemiş; **Tür ekle** · **tür sayfası**: rapor formatı (firmanın PDF'i, sürümleri, "PDF'i aç", "Yeni
@@ -1494,6 +1498,7 @@ revizyon, alan kopyalama, hafif kusur devri, meslek eşleşme denetimi).
 - Emsal ürünler: https://opwire.app/iso-17020-periyodik-kontrol-yazilimi/ · https://17020muayene.vidco.com.tr/ · https://akuple.com/asansor-kontrol-yazilimi/ · https://ensyazilim.com/
 
 ## 11 · Değişiklik günlüğü
+- 2026-09-27 (77): **Ekipman türünde kullanılacak ölçüm cihazları** ve **rapor bölümleri** (§9 yirmi dördüncü tur). M3 72/72 · 17/17 · 36/36.
 - 2026-09-27 (76): **Saha raporu yirmi dördüncü tur** (§9): ekipman bilgileri elle, ölçüm cihazı türün listesinden zimmetten eklenir, eksik /
   geçmiş cihazda gönderilemez, sonuç seçmeli (seçilmezse kriterlere göre), Kaydet + Onaya gönder yapışkan, bölümler her girişte kapalı, fotoğraf
   kamera / galeri, firma bilgileri salt okunur + Güncelle. Türlerin cihaz listesi verisi (MV.turCihazlari). M8 136/136 · 43/43 · 68/68.

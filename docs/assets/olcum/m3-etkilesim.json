@@ -2,9 +2,23 @@
  "maket": "m3",
  "tarih": "2026-09-27",
  "arac": "tools/olc-bulut.mjs --etkilesim (başsız tarayıcı, 1920 açık tema; gen verilen denemede o genişlik)",
- "toplam": 15,
- "gecen": 15,
+ "toplam": 17,
+ "gecen": 17,
  "denemeler": [
+  {
+   "ad": "tür sayfası: kullanılacak ölçüm cihazları ve rapor bölümleri",
+   "gen": 1920,
+   "sayfa": "maket/ekipman-turleri.html",
+   "hash": "#/tur/ET",
+   "gecti": true
+  },
+  {
+   "ad": "düzenle: cihaz türü eklenir, tür sayfasında görünür",
+   "gen": 1920,
+   "sayfa": "maket/ekipman-turleri.html",
+   "hash": "#/tur/KS/duzenle",
+   "gecti": true
+  },
   {
    "ad": "türler: Rapor formatı yüklenmedi çipi",
    "gen": 1920,

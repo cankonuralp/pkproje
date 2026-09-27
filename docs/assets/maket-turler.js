@@ -12,6 +12,8 @@
      değil çıkacak" → firma tür EKLER ve her türe kendi RAPOR FORMATINI PDF olarak yükler (sürümlü; eski raporlar kendi sürümüyle).
      Soruların PDF'ten nasıl çıkacağı rapor modülünün (M8) sırası gelince kurgulanır (reisim: "şimdilik tam anlamıyla yapmana gerek yok").
    · "Akreditasyon zorunluluğu ile ilgili bir şey yazma" → akreditasyon sütunu, çipi, rozeti ve satırı kalktı.
+   · 2026-09-27 (yirmi dördüncü tur): türün kullanacağı ölçüm cihazları (düzenlenir; rapor bunları ister) · rapor bölümleri
+     (formattan · standart · sabit)
    · 52 → yetkili meslekler bölümü yok (yetkisiz denetçide yalnız uyarı) · 53 → periyot türde, tek ekipmanın tarihi planda değişir ·
      54 → tahmini kontrol süresi isteğe bağlı. */
 (function () {
@@ -100,6 +102,18 @@
         (p ? '<div class="a-liste-kap">' + MK.tablo({ baslik: "Rapor formatı sürümleri", sinif: "a-tablo-pdf", sutunlar: pdfSutun(p), kayitlar: t.pdf }) + "</div>"
           : '<div class="a-serit-kap">' + MK.serit("uyari", "file-plus", "Bu türün rapor formatı yüklenmedi. PDF yüklenince bu türde rapor oluşturulur.") + "</div>") +
       "</section>" +
+      /* kullanılacak ölçüm cihazları (reisim 2026-09-27: "ekipmana göre hangi cihazların kullanılacağı ekipman türlerinden belirlenecek");
+         raporda bu türlerin her birinden kalibrasyonu geçerli bir cihaz eklenmeden rapor onaya gönderilemez */
+      '<section class="a-bolum" aria-labelledby="a-b-cihaz"><div class="a-alt-bas"><h2 class="a-alt-baslik" id="a-b-cihaz">Kullanılacak ölçüm cihazları</h2><span class="a-sayac"><b>' + t.cihaz.length + "</b> cihaz türü</span>" +
+        '<a class="a-tus a-tus-ikincil a-bolum-tus" href="#/tur/' + t.k + '/duzenle">' + ikon("pencil", "a-ikon-kucuk") + "Düzenle</a></div>" +
+        (t.cihaz.length ? '<ul class="a-kosullar">' + t.cihaz.map(function (c) { return '<li class="a-kosul-bilgi">' + ikon("gauge", "a-ikon-kucuk") + "<span>" + kacis(MV.cihazTuru(c).ad) + "</span></li>"; }).join("") + "</ul>"
+          : '<p class="a-bos-satir">Cihaz türü seçilmedi: raporda ölçüm cihazı istenmez.</p>') + "</section>" +
+      /* rapor bölümleri (reisim 2026-09-27: "7-8-9. kısımlar da sabit ama muayene kriterleri test değerleri kısımlar firmanın verdiği pdf e göre
+         düzenlenebilir olacak diğer kısımlarda düzenlenebilir olacak gerçi ama standart") */
+      '<section class="a-bolum" aria-labelledby="a-b-bolum"><div class="a-alt-bas"><h2 class="a-alt-baslik" id="a-b-bolum">Rapor bölümleri</h2></div><dl class="a-satirlar">' +
+        '<div class="a-satir"><dt>Bu türün formatından</dt><dd>Muayene kriterleri (' + MV.kriterler(t).length + " madde) · Test değerleri (" + MV.testler(t).length + ")" + (t.g === "elektrik" ? " · Pano sigortaları" : "") + "</dd></div>" +
+        '<div class="a-satir"><dt>Standart</dt><dd>Firma bilgileri · Ekipman bilgileri · Ölçüm cihazları</dd></div>' +
+        '<div class="a-satir"><dt>Her raporda sabit</dt><dd>Fotoğraflar · Sonuç ve kanaat · Muayene uzmanı yorumu</dd></div></dl></section>' +
       '<section class="a-bolum" aria-labelledby="a-b-kural"><div class="a-alt-bas"><h2 class="a-alt-baslik" id="a-b-kural">Kontrol kuralları</h2></div><dl class="a-bilgi">' +
         bilgi("Ek-III grubu", kacis(g.ad), true) + bilgi("Branş", MV.bransAd(t.b) + ' <span class="a-alt-inline">· onay ' + onay.toLocaleLowerCase("tr") + "</span>") +
         bilgi("Periyot", t.periyot + ' ay <span class="a-alt-inline">· tek ekipmanın tarihi planda değiştirilebilir</span>') +
@@ -109,7 +123,7 @@
       '<section class="a-bolum" aria-labelledby="a-b-std"><div class="a-alt-bas"><h2 class="a-alt-baslik" id="a-b-std">Kontrol metodu standartları</h2><span class="a-sayac"><b>' + t.std.length + "</b> standart</span>" +
         MK.git({ hedef: 4, hash: "#/?tur=" + t.k, ad: "Standart kütüphanesi", ikon: "book-open", sinif: "a-tus-ikincil a-bolum-tus", ne: "Standartlar" }) + "</div>" +
         (t.std.length ? '<ul class="a-kosullar">' + t.std.map(function (k) { var s = MV.standart(k); return '<li class="a-kosul-bilgi">' + ikon("book-open", "a-ikon-kucuk") + '<span><span class="a-kod">' + s.no + "</span> · " + kacis(s.konu) + "</span></li>"; }).join("") + "</ul>"
-          : '<div class="a-serit-kap">' + MK.serit("uyari", "triangle-alert", "Standart seçilmemiş: raporun kontrol metodu rapor anında yazılır.") + "</div>") +
+          : '<div class="a-serit-kap">' + MK.serit("uyari", "triangle-alert", "Standart seçilmemiş.") + "</div>") +
       "</section>";
   }
 
@@ -156,6 +170,10 @@
         A("periyot", "Periyot (ay)", d.periyot, { zorunlu: true, sinif: "a-girdi-sicil", ek: ' inputmode="numeric" maxlength="3"', ipucu: "Sonraki kontrol önerisi bununla hesaplanır." }) +
         A("sure", "Tahmini kontrol süresi (dk)", d.sure, { sinif: "a-girdi-sicil", ek: ' inputmode="numeric" maxlength="3"', ipucu: "İsteğe bağlı; plan saat önerisinde kullanılır." }) +
         (W.id ? "" : dosyaSec(d)) +
+        '<div class="a-alan-grup a-alan-genis"><p class="a-etiket">Kullanılacak ölçüm cihazları</p>' +
+          '<ul class="a-secim-listesi">' + MV.CIHAZ_TURLERI.map(function (c) {
+            return '<li><label class="a-secim-satir"><input type="checkbox" data-cihaz-tur="' + c.k + '"' + (d.cihaz.indexOf(c.k) >= 0 ? " checked" : "") + '><span class="a-secim-metin">' + kacis(c.ad) + "</span></label></li>";
+          }).join("") + "</ul></div>" +
         '<div class="a-alan-grup a-alan-genis"><p class="a-etiket">Kontrol metodu standartları</p>' +
           '<ul class="a-secim-listesi">' + MV.STANDARTLAR.map(function (s) {
             return '<li><label class="a-secim-satir"><input type="checkbox" data-std="' + s.k + '"' + (d.std.indexOf(s.k) >= 0 ? " checked" : "") + '><span class="a-secim-metin"><span class="a-kod">' + s.no + '</span><span class="a-alt-satir">' + kacis(s.konu) + "</span></span></label></li>";
@@ -168,8 +186,8 @@
   function pencereAc(tur, id) {
     var t = id ? MV.tur(id) : null;
     W = { tur: tur, id: id || null, hata: {}, d: tur === "format" ? { dosya: "", not: "" }
-      : t ? { ad: t.ad, k: t.k, g: t.g, periyot: String(t.periyot), sure: t.sure ? String(t.sure) : "", std: t.std.slice(), dosya: "" }
-      : { ad: "", k: "", g: "", periyot: "12", sure: "", std: [], dosya: "" } };
+      : t ? { ad: t.ad, k: t.k, g: t.g, periyot: String(t.periyot), sure: t.sure ? String(t.sure) : "", std: t.std.slice(), cihaz: t.cihaz.slice(), dosya: "" }
+      : { ad: "", k: "", g: "", periyot: "12", sure: "", std: [], cihaz: [], dosya: "" } };
     pencereCiz(); if (!$("a-pencere").open) $("a-pencere").showModal();
     var ilk = $("a-pencere-govde").querySelector("input:not([readonly]), .a-tus"); if (ilk) ilk.focus();
   }
@@ -221,7 +239,7 @@
     } else {
       var g = MV.grup(d.g);
       t = W.id ? MV.tur(W.id) : { k: d.k, pdf: [] };
-      Object.assign(t, { ad: d.ad.trim(), g: d.g, b: g.b, periyot: +d.periyot, sure: d.sure ? +d.sure : null, std: d.std.slice() });
+      Object.assign(t, { ad: d.ad.trim(), g: d.g, b: g.b, periyot: +d.periyot, sure: d.sure ? +d.sure : null, std: d.std.slice(), cihaz: d.cihaz.slice() });
       if (!W.id) {
         if (d.dosya) t.pdf.unshift({ surum: "v1", tarih: MK.tarihYaz(MK.BUGUN), dosya: d.dosya });
         MV.KATALOG.push(t);
@@ -235,6 +253,8 @@
   MK.onGirdi = function (e) { var k = e.target.dataset && e.target.dataset.alan; if (k && W) W.d[k] = k === "k" ? e.target.value.toUpperCase().replace(/[^A-Z]/g, "") : e.target.value; };
   MK.onSecim = function (id, deger) { if (W && id === "w-g") { W.d.g = deger; delete W.hata.g; pencereCiz("w-g"); } };
   document.addEventListener("change", function (e) {
+    var c = e.target.dataset && e.target.dataset.cihazTur;
+    if (c && W) { var j = W.d.cihaz.indexOf(c); if (e.target.checked && j < 0) W.d.cihaz.push(c); else if (!e.target.checked && j >= 0) W.d.cihaz.splice(j, 1); return; }
     var s = e.target.dataset && e.target.dataset.std; if (!s || !W) return;
     var i = W.d.std.indexOf(s); if (e.target.checked && i < 0) W.d.std.push(s); else if (!e.target.checked && i >= 0) W.d.std.splice(i, 1);
   });

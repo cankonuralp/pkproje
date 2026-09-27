@@ -8,8 +8,8 @@
   390,
   430
  ],
- "toplam": 32,
- "temiz": 32,
+ "toplam": 36,
+ "temiz": 36,
  "durumlar": [
   {
    "ad": "ekipman türleri · katalog",
@@ -262,6 +262,42 @@
    "disari": [],
    "kucukAlan": [],
    "alan": 4
+  },
+  {
+   "ad": "tür · jeneratör: kullanılacak cihazlar ve rapor bölümleri",
+   "gen": 320,
+   "temiz": true,
+   "tasma": 0,
+   "disari": [],
+   "kucukAlan": [],
+   "alan": 0
+  },
+  {
+   "ad": "tür · jeneratör: kullanılacak cihazlar ve rapor bölümleri",
+   "gen": 360,
+   "temiz": true,
+   "tasma": 0,
+   "disari": [],
+   "kucukAlan": [],
+   "alan": 0
+  },
+  {
+   "ad": "tür · jeneratör: kullanılacak cihazlar ve rapor bölümleri",
+   "gen": 390,
+   "temiz": true,
+   "tasma": 0,
+   "disari": [],
+   "kucukAlan": [],
+   "alan": 0
+  },
+  {
+   "ad": "tür · jeneratör: kullanılacak cihazlar ve rapor bölümleri",
+   "gen": 430,
+   "temiz": true,
+   "tasma": 0,
+   "disari": [],
+   "kucukAlan": [],
+   "alan": 0
   },
   {
    "ad": "tesis sayfası · ekipman yüzü planı açar",
