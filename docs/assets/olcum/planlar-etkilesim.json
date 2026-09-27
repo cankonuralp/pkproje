@@ -2,9 +2,16 @@
  "maket": "planlar",
  "tarih": "2026-09-27",
  "arac": "tools/olc-bulut.mjs --etkilesim (başsız tarayıcı, 1920 açık tema; gen verilen denemede o genişlik)",
- "toplam": 23,
- "gecen": 23,
+ "toplam": 24,
+ "gecen": 24,
  "denemeler": [
+  {
+   "ad": "plan içi: tarih 23.09.2026, Bugün yok, adımlarda yalnız tarih, teklif içeriği tablo",
+   "gen": 1920,
+   "sayfa": "maket/planlarim.html",
+   "hash": "#/plan/1",
+   "gecti": true
+  },
   {
    "ad": "ekipman tablosunda rapor aşaması yok, Raporlandı var",
    "gen": 1920,

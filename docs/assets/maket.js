@@ -250,8 +250,7 @@
     } },
     { k: "ekip", baslik: "Inspector", kart: "govde", sira: 6, hucre: ekipHtml },
     { k: "baslangic", baslik: "Başlangıç", kart: "govde", sira: 3, hucre: function (p) {
-      return '<span class="a-tarih-gun">' + gunYaz(p.tarih) + (p.tarih === BUGUN ? ' <span class="a-bugun">Bugün</span>' : "") + "</span>" +
-        (p.bitTarih !== p.tarih ? '<span class="a-tarih-saat">– ' + gunYaz(p.bitTarih) + "</span>" : "");
+      return '<span class="a-tarih-gun">' + tno(p.tarih) + "</span>" + (p.bitTarih !== p.tarih ? '<span class="a-tarih-saat">– ' + tno(p.bitTarih) + "</span>" : "");
     } },
     { k: "durum", baslik: "Durum", kart: "rozet", sira: 1, hucre: function (p) { return rozet(DURUM[p.durum]); } },
     { k: "eylem", baslik: "İşlem", gizliBaslik: true, kart: "eylem", sira: 9, hucre: listeEylem }
@@ -288,7 +287,9 @@
       '<div class="a-adim-govde"><div class="a-adim-bas"><h2 class="a-adim-baslik">' + baslik + '</h2><span class="a-adim-durum">' + etiket + "</span>" +
       (ozet ? '<span class="a-adim-ozet">' + ozet + "</span>" : "") + "</div>" + (icerik ? '<div class="a-adim-icerik">' + icerik + "</div>" : "") + "</div></li>";
   }
-  var kimZaman = function (z, k) { return zamanYaz(z) + " · " + KISI[k].ad + ' <span class="a-gecmis-rol">' + KISI[k].rol + "</span>"; };
+  /* 2026-09-27 (reisim: "Tarih 23.09.2026 formatında yazmalı yanında bu gün vs yazmamalı, … kabul ve başladı kısımlarında sadece tarih
+     yazmalı"): plan içinde tarih GG.AA.YYYY; adım başlıklarında yalnız tarih (saat ve kişi yok) */
+  var tno = MK.tarihNo;
   var KAPSAM_SUTUN = [
     { k: "tur", baslik: "Ekipman türü", kart: "ust", sira: 1, hucre: function (x) { return '<span class="a-ekipman-ad">' + x.ad + "</span>"; } },
     { k: "brans", baslik: "Branş", kart: "rozet", sira: 1, hucre: function (x) { return '<span class="a-hucre-satir">' + ikon(x.b === "m" ? "cog" : "zap", "a-ikon-kucuk") + bransAd(x.b) + "</span>"; } },
@@ -364,18 +365,20 @@
     var isg = !p.isg ? '<span class="a-yuz-uyari">Yok</span>' : '<span class="a-kod">' + kacis(p.isg.no) + "</span>";
     var raporsuz = p.ekp.filter(function (k) { return !raporuVar(p, k); }).length;
     /* 1 · Planlandı — plan bilgisi ve kapsam */
-    var a1 = adim(1, "tamam", "Planlandı", kimZaman(p.acildi, "za"),
+    var a1 = adim(1, "tamam", "Planlandı", tno(p.acildi),
       /* 2026-09-26 (reisim): İSG-KATİP sözleşme ID (onay tarihi yok) · başlangıç ve bitiş tarihi (plan süresi) · teklif içeriği (tür × adet) ·
          adres · açıklama */
       '<dl class="a-bilgi">' +
         bilgi("Proje no", '<span class="a-kod">' + p.no + "</span>") +
-        bilgi("Başlangıç", gunYaz(p.tarih) + (p.tarih === BUGUN ? ' <span class="a-bugun">Bugün</span>' : "")) +
-        bilgi("Bitiş", gunYaz(p.bitTarih)) +
+        bilgi("Başlangıç", tno(p.tarih)) +
+        bilgi("Bitiş", tno(p.bitTarih)) +
         bilgi("İSG-KATİP sözleşme ID", isg) +
         bilgi("Inspector", p.ekip.map(function (k) { return KISI[k].ad + ' <span class="a-alt-inline">' + KISI[k].brans + "</span>"; }).join(" · "), true) +
-        bilgi("Teklif içeriği", kapsam(p).filter(function (x) { return x.planlanan; }).map(function (x) { return kacis(x.ad) + " × " + x.planlanan; }).join("<br>"), true) +
         bilgi("Adres", kacis(p.adres) + ", " + p.ilce + " / " + p.il, true) +
         bilgi("Açıklama", p.aciklama ? kacis(p.aciklama) : '<span class="a-alt-inline">—</span>', true) +
+        /* teklif içeriği tablo (reisim 2026-09-27: "Forklift muayenesi 1 adet gibi") */
+        bilgi("Teklif içeriği", '<table class="a-belge-tablo a-teklif-tablo"><thead><tr><th scope="col">Muayene</th><th scope="col">Adet</th></tr></thead><tbody>' +
+          kapsam(p).filter(function (x) { return x.planlanan; }).map(function (x) { return "<tr><td>" + kacis(x.ad) + " muayenesi</td><td>" + x.planlanan + " adet</td></tr>"; }).join("") + "</tbody></table>", "tam") +
       "</dl>");
     /* 2 · Kabul (tarafsızlık beyanı) */
     var a2;
@@ -384,12 +387,12 @@
       (p.eksik ? serit("uyari", "triangle-alert", kacis(p.eksik), sid) : "") +
       '<label class="a-onay-kutusu a-beyan-onay"><input type="checkbox" data-beyan="' + p.id + '"' + (p.beyanOkundu ? " checked" : "") + "><span>Tarafsızlık beyanını okudum, kabul ediyorum</span></label>" +
       '<div class="a-adim-eylem"><div class="a-adim-tuslar">' + eylem + "</div></div>");
-    else if (d === "red") a2 = adim(2, "red", "Kabul", kimZaman(p.reddedildi, BEN), serit("hata", "circle-x", "Gerekçe: " + kacis(p.gerekce || "")));
-    else a2 = adim(2, "tamam", "Kabul", kimZaman(p.kabul, BEN),
+    else if (d === "red") a2 = adim(2, "red", "Kabul", tno(p.reddedildi), serit("hata", "circle-x", "Gerekçe: " + kacis(p.gerekce || "")));
+    else a2 = adim(2, "tamam", "Kabul", tno(p.kabul),
       '<details class="a-ayrinti"><summary>Tarafsızlık beyanı onaylandı · beyanı gör</summary><blockquote class="a-beyan"><p>' + BEYAN + "</p></blockquote></details>");
     /* 3 · Denetim — kontrol listesi: ekipmanlar + raporlar (süzgeçli, 10'ar sayfalı) */
     var a3durum = d === "tamam" ? "tamam" : (d === "kabul" || d === "denetimde") ? "aktif" : "bekliyor";
-    var a3ozet = p.basladi ? (d === "tamam" ? zamanYaz(p.basladi) + " – " + zamanYaz(p.bitti).slice(-5) : "Başladı: " + zamanYaz(p.basladi)) : "";
+    var a3ozet = p.basladi ? (d === "tamam" ? tno(p.basladi) + (p.bitti.slice(0, 10) !== p.basladi.slice(0, 10) ? " – " + tno(p.bitti) : "") : "Başladı: " + tno(p.basladi)) : "";
     var kontrol = "";
     if (d === "kabul" || calisir(p)) kontrol =
       '<div class="a-alt-bolum"><div class="a-alt-bas"><h3 class="a-alt-baslik" id="a-ekipman-baslik">Ekipmanlar</h3><span class="a-sayac" id="a-sayac-e"></span>' +
@@ -403,7 +406,7 @@
       (d === "kabul" ? '<div class="a-adim-eylem"><p class="a-adim-not">Ekipman ekleme ve rapor oluşturma denetime başlayınca açılır.</p><div class="a-adim-tuslar">' + eylem + "</div></div>" : "") +
       kontrol);
     /* 4 · Tamamlama */
-    var a4 = adim(4, d === "tamam" ? "tamam" : "bekliyor", "Tamamlama", d === "tamam" ? kimZaman(p.bitti, BEN) : "",
+    var a4 = adim(4, d === "tamam" ? "tamam" : "bekliyor", "Tamamlama", d === "tamam" ? tno(p.bitti) : "",
       d === "denetimde" ? '<div class="a-adim-eylem"><p class="a-adim-not">' + (raporsuz ? raporsuz + " ekipmanın bu planda raporu yok; tamamlamak engellenmez." : "Bütün ekipmanların raporu açıldı.") + '</p><div class="a-adim-tuslar">' + eylem + "</div></div>"
       : d === "tamam" ? '<div class="a-adim-eylem"><div class="a-adim-tuslar">' + eylem + "</div></div>"
       : '<p class="a-adim-not">Denetim bitince buradan tamamlanır.</p>');

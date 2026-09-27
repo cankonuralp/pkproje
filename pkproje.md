@@ -1427,6 +1427,10 @@ revizyon, alan kopyalama, hafif kusur devri, meslek eşleşme denetimi).
 - Emsal ürünler: https://opwire.app/iso-17020-periyodik-kontrol-yazilimi/ · https://17020muayene.vidco.com.tr/ · https://akuple.com/asansor-kontrol-yazilimi/ · https://ensyazilim.com/
 
 ## 11 · Değişiklik günlüğü
+- 2026-09-27 (71): **Planlar tarih biçimi ve teklif tablosu** (reisim: *"Tarih 23.09.2026 formatında yazmalı yanında bu gün vs yazmamalı,
+  … kabul ve başladı kısımlarında sadece tarih yazmalı teklif içeriği tablo gibi olmalı … Forklift muayenesi 1 adet gibi"*): liste ve plan içinde
+  tarih GG.AA.YYYY, "Bugün" etiketi kalktı; adım başlıklarında (Planlandı, Kabul, Başladı, Tamamlama) yalnız tarih; teklif içeriği Muayene · Adet
+  tablosu, tam satır. Planlar 88/88 · 24/24 · 44/44.
 - 2026-09-27 (70): **Saha raporunda tarih seçici ve metot yok**: başlangıç / bitiş / sonraki kontrol takvimden (saat · dakika tuşla),
   otomatik dolu; "Kontrol metodu" rapor, belge ve onay özetinden kalktı. Ölçüm aracı: açık açılır katman altındakini örter (muaf, yapışkan
   çubukla aynı). İki ikon eklendi (calendar, chevron-up; Lucide 1.47.0). M8 96/96 · 25/25 · 48/48; M7, M9, M11 temiz.

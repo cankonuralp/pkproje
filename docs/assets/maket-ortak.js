@@ -24,6 +24,7 @@
   MK.ayYil = function (iso) { var d = new Date(iso.slice(0, 10) + "T12:00:00"); return AY[d.getMonth()] + " " + d.getFullYear(); };
   /* tam tarih: gün ay yıl (belge ve bitiş tarihlerinde yıl şart) */
   MK.tarihYaz = function (iso) { var d = new Date(iso.slice(0, 10) + "T12:00:00"); return d.getDate() + " " + AY[d.getMonth()] + " " + d.getFullYear(); };
+  MK.tarihNo = function (iso) { return iso.slice(8, 10) + "." + iso.slice(5, 7) + "." + iso.slice(0, 4); };   /* 23.09.2026 (reisim 2026-09-27) */
   MK.zamanYaz = function (z) { return MK.gunKisa(z) + " " + z.slice(11, 16); };
   MK.simdi = function () { return MK.BUGUN + "T" + MK.SAAT; };
   /* iki tarih arası gün (b − a); "bugün"e göre kalan gün için gunFarki(MK.BUGUN, x) */
@@ -35,8 +36,8 @@
   MK.serit = function (tur, ik, metin, id) {
     return '<div class="a-serit a-serit-' + tur + '"' + (id ? ' id="' + id + '"' : "") + ">" + ikon(ik, "a-ikon-kucuk") + "<span>" + metin + "</span></div>";
   };
-  /* genis: true → telefonda tam satır · "cift" → her bantta iki sütun (bölünmez uzun kimlik, ör. 26 haneli SGK destis no) */
-  MK.bilgi = function (etiket, deger, genis) { return '<div class="a-bilgi-oge' + (genis === "cift" ? " a-bilgi-genis a-bilgi-cift" : genis ? " a-bilgi-genis" : "") + '"><dt>' + etiket + "</dt><dd>" + deger + "</dd></div>"; };
+  /* genis: true → telefonda tam satır · "tam" → her bantta tam satır (tablo taşıyan alan) · "cift" → her bantta iki sütun (bölünmez uzun kimlik, ör. 26 haneli SGK destis no) */
+  MK.bilgi = function (etiket, deger, genis) { return '<div class="a-bilgi-oge' + (genis === "tam" ? " a-bilgi-genis a-bilgi-tam" : genis === "cift" ? " a-bilgi-genis a-bilgi-cift" : genis ? " a-bilgi-genis" : "") + '"><dt>' + etiket + "</dt><dd>" + deger + "</dd></div>"; };
   /* genel tuş: o = { eylem, ad, ikon, sinif (varsayılan birincil), kapali, sebepId, veri: { id: … } → data-id } */
   MK.tus = function (o) {
     var veri = Object.keys(o.veri || {}).map(function (k) { return " data-" + k + '="' + kacis(o.veri[k]) + '"'; }).join("");
