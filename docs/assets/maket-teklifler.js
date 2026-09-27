@@ -301,7 +301,8 @@
     if (W.gerekce.trim().length < 5) { W.hata = "Gerekçe yazılmalı."; redCiz("w-gerekce"); return; }
     var t = W.t; t.durum = "red"; t.sonuc = MK.BUGUN; t.gerekce = W.gerekce.trim(); $("a-pencere").close(); teklifCiz(t); MK.bildir(t.no + " reddedildi olarak kaydedildi.");
   };
-  X["pdf"] = function () { MK.bildir("Makette dosya yok. Teklif PDF'i firmanın formatıyla üretilir, indirilip elle gönderilir."); };
+  /* 2026-09-27: teklif yazdırma penceresinden PDF olur (uygulamada firmanın teklif formatıyla, §3.7) */
+  X["pdf"] = function () { var n = $("a-nesne"); MK.yazdir(n.querySelector("h1").textContent, [].map.call(n.querySelectorAll(".a-nesne-bas, section.a-bolum"), function (e) { return e.outerHTML; }).join("")); };
   $("a-pencere").addEventListener("close", function () { W = null; var r = rota(); if (r.pencere) history.replaceState(null, "", "#/t/" + r.no); });
 
   MK.kabuk({ modul: 11, kullanici: { bas: "ZA", ad: "Zeynep Arslan", rol: "Planlama ekibi" } });

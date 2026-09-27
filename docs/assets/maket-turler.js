@@ -213,11 +213,12 @@
   MK.goster = goster;
   var X = MK.eylem;
   X["tur-ac"] = function () { location.hash = "#/yeni"; };
-  /* maket: dosya penceresi yerine örnek dosya adı */
+  /* 2026-09-27: gerçek dosya penceresi; seçilen PDF "Aç" ile görüntülenir */
   X["pdf-sec"] = function () {
     var k = (W.id || W.d.k || "tur").toLowerCase();
-    W.d.dosya = k + "-rapor-formati-" + MK.BUGUN + ".pdf"; delete W.hata.dosya;
-    pencereCiz(); $("a-pencere-alt").querySelector(".a-tus-birincil").focus();
+    MK.dosyaSec({ kabul: ".pdf", enCokMB: 20, ornek: k + "-rapor-formati-" + MK.BUGUN + ".pdf" }, function (ad) {
+      if (!W) return; W.d.dosya = ad; delete W.hata.dosya; pencereCiz(); $("a-pencere-alt").querySelector(".a-tus-birincil").focus();
+    });
   };
   /* PDF'i aç: makette yüklenen PDF'in yerine rapor belgesi (MB.belge) pencerede açılır. Ayrı "rapor şablonu önizlemesi" ekranı
      kalktı (reisim 2026-09-26, M7 A: türün rapor formatı PDF'i yeter). */

@@ -182,8 +182,19 @@
   MK.goster = goster;
   var X = MK.eylem;
   X["excel-ac"] = excelAc;
-  X["excel-indir"] = function () { $("a-pencere").close(); MK.bildir("Makette dosya yok. Uygulamada .xlsx kayıtlardan üretilir (PDF'ten okunmaz) ve kısa ömürlü bağlantıyla iner."); };
-  X["pdf"] = function () { MK.bildir("Makette dosya yok. Uygulamada imzalı PDF kısa ömürlü, yetkili bağlantıyla iner."); };
+  /* 2026-09-27: açık uygunsuzluklar gerçek .xlsx (kayıtlardan; PDF'ten okunmaz) */
+  X["excel-indir"] = function () {
+    var l = uygunsuzlar().filter(function (u) { return u.durum === "acik"; });
+    $("a-pencere").close();
+    MK.indir("uygunsuzluklar-" + MK.BUGUN + ".xlsx", MK.xlsx("Uygunsuzluklar", [["Ekipman kodu", "Ekipman türü", "Tesis", "Sınıf", "Kriter", "Açıklama", "Rapor no", "Kontrol tarihi"]].concat(l.map(function (u) {
+      return [u.e.kod, u.t.ad, MV.tesis(u.tesis).ad, u.sinif, u.kriter, u.aciklama, u.rapor.no, MK.tarihYaz(u.tarih)]; }))));
+  };
+  /* imzalı rapor ya da sözleşme belgesi yazdırma penceresinden PDF olur */
+  X["pdf"] = function () {
+    var r = rota();
+    if (r.v === "soz") MK.yazdir(r.no, MB.isSozlesmesi({ x: MV.isSozlesmesi(r.no) }));
+    else { var rp = MV.rapor(r.no); MK.yazdir(rp.no, MB.belge(MV.tur(MV.ekipman(rp.kod).tur), MV.raporBelge(rp))); }
+  };
   $("a-pencere").addEventListener("close", function () { if (rota().pencere) history.replaceState(null, "", "#/uygunsuz" + (q !== "m1" ? "?musteri=" + q : "")); });
 
   MK.kabuk({ musteri: { ad: M.kisa, firma: MV.FIRMA.ad }, kullanici: KUL ? { bas: MV.bas(KUL.ad), ad: KUL.ad, rol: M.kisa } : { bas: "—", ad: "Portal kullanıcısı yok", rol: M.kisa } });

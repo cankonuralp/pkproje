@@ -507,6 +507,12 @@ html[data-giris="fare"] .a-girdi:focus, html[data-giris="fare"] .a-alan:focus { 
 .a-pdf-arac { display: flex; align-items: center; flex-wrap: wrap; gap: 4px 8px; margin: 0 0 10px; }
 .a-pdf-dosya { display: inline-flex; align-items: center; gap: 6px; min-width: 0; margin-right: auto; font-weight: 600; overflow-wrap: anywhere; }
 .a-pdf-sayfa-no { color: var(--yazi2); font-size: var(--boy-kucuk); font-variant-numeric: tabular-nums; }
+/* 2026-09-27: seçilen gerçek dosya görüntüleyicide; belge yazdırma çerçevesi görünmez */
+.a-pdf-cerceve { display: block; width: 100%; height: min(70vh, 720px); border: 1px solid var(--kenar); border-radius: var(--r-orta); background: var(--kart); }
+.a-pdf-resim { display: block; max-width: 100%; max-height: 70vh; margin: 0 auto; border-radius: var(--r-orta); }
+.a-yazdir-sayfa { break-after: page; }   /* yazdırılan belgelerde her rapor ayrı sayfa */
+.a-yazdir-govde .a-eylem-cubugu, .a-yazdir-govde .a-kirinti { display: none; }
+.a-yazdir { position: fixed; right: 0; bottom: 0; width: 0; height: 0; border: 0; }
 .a-pdf-sayfa { display: flex; flex-direction: column; gap: 10px; min-height: 420px; padding: 24px; background: var(--kart); border: 1px solid var(--kenar); border-radius: var(--r-orta); box-shadow: var(--golge-1); }
 .a-pdf-bas { display: flex; align-items: center; gap: 12px; margin-bottom: 8px; }
 .a-pdf-logo { display: grid; place-items: center; width: 64px; height: 40px; border: 1px dashed var(--kenar-alan); border-radius: var(--r-kucuk); color: var(--yazi3); font-size: var(--boy-etiket); }
@@ -745,6 +751,8 @@ a.a-yuz:hover { border-color: var(--kenar-alan); background: var(--zemin); }
   position: relative; width: 64px; height: 64px; flex: none; display: inline-flex; align-items: center; justify-content: center;
   border: 1px solid var(--kenar); border-radius: var(--r-orta); background: var(--zemin2); color: var(--yazi3);
 }
+.a-foto-resim { padding: 0; overflow: hidden; cursor: pointer; }   /* seçilen gerçek fotoğraf (2026-09-27) */
+.a-foto-resim img { width: 100%; height: 100%; object-fit: cover; }
 .a-foto-no { position: absolute; right: 4px; bottom: 2px; font-size: var(--boy-etiket); font-weight: 700; color: var(--yazi2); }
 .a-gecmis-zimmet .a-not-metin { margin-top: 4px; }
 

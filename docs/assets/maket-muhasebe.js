@@ -315,7 +315,7 @@
     $("a-nesne").innerHTML = MK.kirinti([["Muhasebe", "#/"], ["Faturalar", "#/faturalar"], [f.no]]) +
       '<div class="a-nesne-bas"><div class="a-nesne-kimlik"><div class="a-nesne-baslik"><h1 tabindex="-1">' + f.no + "</h1>" + rozet(F_DURUM[d]) + "</div>" +
         '<p class="a-nesne-alt">' + ikon("building-2", "a-ikon-kucuk") + "<span>" + kacis(m.unvan) + ' · <a class="a-baglanti" href="#/is/' + x.no + '">' + x.no + "</a></span></p></div>" +
-        '<div class="a-eylem-cubugu">' + MK.tus({ eylem: "pdf", ad: "Fatura belgesi", ikon: "file-text", sinif: "a-tus-ikincil" }) +
+        '<div class="a-eylem-cubugu">' + MK.tus({ eylem: "pdf", ad: "Fatura özeti (PDF)", ikon: "file-text", sinif: "a-tus-ikincil" }) +
           (kalan > 0 ? '<a class="a-tus a-tus-birincil" href="#/f/' + f.no + '/tahsilat">' + ikon("wallet", "a-ikon-kucuk") + "Tahsilat ekle</a>" : "") + "</div></div>" +
       '<div class="a-uyari-serit">' +
         (d === "gecikti" ? MK.serit("uyari", "clock", "Vade " + MK.tarihYaz(f.vade) + " tarihinde geçti (" + -MK.gunFarki(MK.BUGUN, f.vade) + " gün); kalan " + para(kalan) + ".") : "") +
@@ -499,7 +499,12 @@
       MK.tus({ eylem: "pencere-kapat", ad: "Kapat", sinif: "a-tus-ikincil" }) + MK.tus({ eylem: "gider-excel-indir", ad: "İndir", ikon: "download" }));
     $("a-pencere-alt").querySelector(".a-tus-birincil").focus({ preventScroll: true });
   };
-  X["gider-excel-indir"] = function () { MK.bildir("Makette dosya yok. Liste Excel dosyası (.xlsx) olarak iner."); };
+  X["gider-excel-indir"] = function () {
+    var l = giderSirala(MK.taban("g", GD).filter(function (g) { return MK.cipGecer("g", g); }));
+    MK.indir("giderler-" + MK.BUGUN.slice(0, 7) + ".xlsx", MK.xlsx("Giderler", [["Gider no", "Tarih", "Tür", "Tutar (KDV dahil)", "KDV oranı", "KDV", "KDV hariç", "Açıklama", "Proje no", "Personel", "Durum", "Ödeme tarihi", "Belge"]]
+      .concat(l.map(function (g) { var k = gKdv(g); return [g.no, MK.tarihYaz(g.tarih), gTur(g.tur).ad, g.tutar, g.oran, k.kdv, k.haric, g.aciklama, g.is || "", g.kisi ? MV.kisi(g.kisi).ad : "",
+        MV.GIDER_DURUM[g.durum].ad, g.odeme ? MK.tarihYaz(g.odeme) : "", g.belge || ""]; }))));
+  };
   function excelIceCiz() {
     var ok = W.satirlar.filter(function (x) { return x.ok; });
     excelAc("Excel'den yükle · Giderler", '<p class="a-pencere-ozet">Sütunlar: Tarih · Tür · Tutar (KDV dahil) · KDV oranı · Açıklama · Proje no. Her satır denetlenir, yalnız geçerli satırlar girer.</p>' +
@@ -512,18 +517,27 @@
       MK.tus({ eylem: "pencere-kapat", ad: "Vazgeç", sinif: "a-tus-ikincil" }) + MK.tus({ eylem: "gider-excel-yukle", ad: "Yükle" + (W.dosya ? " (" + ok.length + ")" : ""), ikon: "upload", kapali: !W.dosya || !ok.length }));
   }
   X["gider-excel-ice"] = function () { W = { tip: "excel", dosya: "", satirlar: [] }; excelIceCiz(); document.querySelector('#a-pencere [data-eylem="gider-excel-sec"]').focus(); };
-  X["gider-excel-sablon"] = function () { MK.bildir("Makette dosya yok. Şablon: Tarih · Tür · Tutar · KDV oranı · Açıklama · Proje no sütunlu .xlsx."); };
+  X["gider-excel-sablon"] = function () { MK.indir("gider-yukleme-sablonu.xlsx", MK.xlsx("Giderler", [["Tarih", "Tür", "Tutar (KDV dahil)", "KDV oranı", "Açıklama", "Proje no"], ["20.09.2026", "Konaklama", 3200, 10, "Otel, iki gece", "P-0926-025"]])); };
   /* maket: dosya penceresi yerine örnek dosya (uydurma satırlar); denetim formdakiyle aynı kural */
-  X["gider-excel-sec"] = function () {
-    var ham = [["20.09.2026", "Konaklama", "3.200,00", "10", "Otel, iki gece", "P-0926-025"], ["22.09.2026", "Yakıt", "1.450,00", "20", "Araç 2", ""],
-      ["22.09.2026", "Kırtasiye", "180,00", "20", "Dosya ve kalem", ""], ["30.09.2026", "Yol", "95,00", "20", "Köprü geçişi", ""]];
-    W.dosya = "giderler-eylul.xlsx";
-    W.satirlar = ham.map(function (h) {
-      var t = MV.GIDER_TUR.filter(function (x) { return MK.tr(x[1]) === MK.tr(h[1]); })[0], fi = tarihIso(h[0]), n = sayi(h[2]);
-      var neden = !t ? "Tür bulunamadı, atlanır" : !fi ? "Tarih geçersiz, atlanır" : fi > MK.BUGUN ? "İleri tarih, atlanır" : !(n > 0) ? "Tutar geçersiz, atlanır" : h[5] && !MV.isKaydi(h[5]) ? "Proje no bulunamadı, atlanır" : "";
-      return { tarihYazi: h[0], tur: h[1], tutarYazi: h[2], aciklama: h[4], t: t, fi: fi, n: n, oran: +h[3], is: h[5] || null, ok: !neden, neden: neden };
+  /* Excel hücresi sayı olarak gelebilir ("1450.5"); yazıyla gelen Türkçe biçim ("1.450,50") de okunur. Oran "20", "%20" ya da "0,2" */
+  var tutarOku = function (v) { var t = String(v || "").trim(); return /^\d+(\.\d+)?$/.test(t) && !/^\d{1,3}\.\d{3}$/.test(t) ? parseFloat(t) : sayi(t); };
+  var oranOku = function (v) { var t = String(v == null ? "" : v).replace("%", "").replace(",", ".").trim(); if (t === "") return 20; var n = parseFloat(t); return n > 0 && n < 1 ? Math.round(n * 100) : n; };
+  var giderSatirlari = function (ham) {
+    if (ham.length && /tarih/i.test(ham[0][0] || "")) ham = ham.slice(1);
+    return ham.map(function (h) {
+      var tarihYazi = MK.excelTarih(h[0] || ""), t = MV.GIDER_TUR.filter(function (x) { return MK.tr(x[1]) === MK.tr(h[1] || ""); })[0], fi = tarihIso(tarihYazi), n = tutarOku(h[2]), oran = oranOku(h[3]);
+      var neden = !t ? "Tür bulunamadı, atlanır" : !fi ? "Tarih geçersiz, atlanır" : fi > MK.BUGUN ? "İleri tarih, atlanır" : !(n > 0) ? "Tutar geçersiz, atlanır" :
+        MV.KDV_ORAN.indexOf(oran) < 0 ? "KDV oranı geçersiz, atlanır" : h[5] && !MV.isKaydi(h[5]) ? "Proje no bulunamadı, atlanır" : "";
+      return { tarihYazi: tarihYazi, tur: h[1] || "", tutarYazi: n > 0 ? yaz(n) : String(h[2] || ""), aciklama: h[4] || "", t: t, fi: fi, n: n, oran: oran, is: h[5] || null, ok: !neden, neden: neden };
     });
-    excelIceCiz(); var y = document.querySelector('#a-pencere [data-eylem="gider-excel-yukle"]'); if (y) y.focus({ preventScroll: true });
+  };
+  X["gider-excel-sec"] = function () {
+    MK.dosyaSec({ kabul: ".xlsx,.csv", ornek: "giderler-eylul.xlsx" }, function (ad, f) {
+      var bitir = function (ham) { W.dosya = ad; W.satirlar = giderSatirlari(ham); excelIceCiz(); var y = document.querySelector('#a-pencere [data-eylem="gider-excel-yukle"]'); if (y && !y.disabled) y.focus({ preventScroll: true }); };
+      if (!f) { bitir([["20.09.2026", "Konaklama", "3.200,00", "10", "Otel, iki gece", "P-0926-025"], ["22.09.2026", "Yakıt", "1.450,00", "20", "Araç 2", ""],
+        ["22.09.2026", "Kırtasiye", "180,00", "20", "Dosya ve kalem", ""], ["30.09.2026", "Yol", "95,00", "20", "Köprü geçişi", ""]]); return; }
+      MK.tabloOku(f).then(bitir).catch(function () { MK.bildir(ad + " okunamadı; .xlsx ya da .csv seçin."); });
+    });
   };
   X["gider-excel-yukle"] = function () {
     var ok = W.satirlar.filter(function (x) { return x.ok; }), atla = W.satirlar.length - ok.length;
@@ -544,13 +558,15 @@
     MK.bildir(g.no + " reddedildi; gerekçe inspector'ın plan içinde görünür.");
   };
   X["gider-belge"] = function () {
-    W.belge = "fis-" + (W.tarih || MK.BUGUN).replace(/-/g, "") + "-" + (W.tur || "gider") + ".pdf"; giderPencere();
-    document.querySelector('#a-pencere [data-eylem="gider-belge"]').focus();
+    MK.dosyaSec({ kabul: "image/*,.pdf", enCokMB: 10, ornek: "fis-" + (W.tarih || MK.BUGUN).replace(/-/g, "") + "-" + (W.tur || "gider") + ".pdf" }, function (ad) {
+      if (!W || W.tip !== "gider") return; W.belge = ad; giderPencere(); document.querySelector('#a-pencere [data-eylem="gider-belge"]').focus();
+    });
   };
   X["g-cip"] = function (el) { MK.suzgecSifirla("g"); SZ.g.secili = [el.dataset.secilecek]; MK.suzgecKur("g"); };
   X["gecikenler"] = function () { MK.suzgecSifirla("f"); SZ.f.secili = ["gecikti"]; location.hash = "#/faturalar"; };
   X["hazirlar"] = function () { MK.suzgecSifirla("i"); SZ.i.secili = ["hazir"]; if (location.hash === "#/" || location.hash === "") goster(false); else location.hash = "#/"; };
-  X["pdf"] = function () { MK.bildir("Makette belge yok. Fatura firmanın muhasebe programında kesilir."); };
+  /* fatura e-Fatura programında kesilir; burada fatura özeti (kalemler, KDV, tahsilat) yazdırılır / PDF olur */
+  X["pdf"] = function () { var n = $("a-nesne"); MK.yazdir(n.querySelector("h1").textContent + " · fatura özeti", [].map.call(n.querySelectorAll(".a-nesne-bas, section.a-bolum"), function (e) { return e.outerHTML; }).join("")); };
   MK.onGirdi = function (e) { var k = e.target.dataset && e.target.dataset.alan; if (k && W) { W[k] = e.target.value; if (W.tip === "gider" && k === "tutar") kdvGuncelle(); } };
   MK.onZaman = function (id, d) { if (W && W.tip === "gider" && id === "w-tarih") { W.tarih = d; W.tarihYazi = ""; } };
   MK.onSecim = function (id, deger) {

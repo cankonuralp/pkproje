@@ -119,7 +119,7 @@
         '<button type="button" class="a-sekme" data-yontem="servis" aria-pressed="' + (W.y === "servis") + '">İmza servisi</button>' +
         '<button type="button" class="a-sekme" data-yontem="dosya" aria-pressed="' + (W.y === "dosya") + '">İndir, imzala, yükle</button></div>' +
       '<ul class="a-kosullar">' + l.map(function (r) { var e = ekp(r); return '<li class="a-kosul-bilgi">' + ikon("file-text", "a-ikon-kucuk") + '<span><span class="a-kod">' + r.no + "</span> · " + e.kod + " · " + kacis(MV.tesis(r.tesis).ad) + "</span>" +
-        (W.y === "dosya" && W.yuklendi ? MK.pdfTus(r.no + "-imzali.pdf", "Aç", "a-tus-ikincil a-serit-tus") : "") + "</li>"; }).join("") + "</ul>" +
+        (W.y === "dosya" && W.dosya && W.dosya[r.no] ? MK.pdfTus(W.dosya[r.no], "Aç", "a-tus-ikincil a-serit-tus") : "") + "</li>"; }).join("") + "</ul>" +
       '<div class="a-serit-kap a-bolum-serit">' + (W.y === "servis"
         ? MK.serit("bilgi", "file-signature", "Her rapor ayrı PDF olarak imza servisine gider ve ayrı imzalanır.")
         : MK.serit("bilgi", "file-signature", "Her rapor ayrı PDF: indirin, e-imzayla imzalayın, imzalı PDF'leri yükleyin.")) + "</div>" +
@@ -170,7 +170,21 @@
   var X = MK.eylem;
   X["imza-ac"] = function (el) { pencereAc(el.dataset.no || null); };
   X["imzala"] = imzala;
-  X["imzali-yukle"] = function () { W.yuklendi = true; W.hata = ""; pencereCiz('[data-eylem="imzali-yukle"]'); };
+  /* 2026-09-27: imzalı PDF'ler gerçek dosya penceresinden (birden çok); dosya adında rapor no geçen o rapora, öteki sırayla eşlenir */
+  X["imzali-yukle"] = function () {
+    var secilen = [];
+    MK.dosyaSec({ kabul: ".pdf", coklu: true, enCokMB: 20, ornek: "" }, function (ad) {
+      if (!W) return;
+      if (ad) secilen.push(ad);
+      var eslesen = function (r) { return secilen.filter(function (x) { return x.indexOf(r.no) >= 0; })[0]; };
+      var serbest = secilen.filter(function (x) { return !W.l.some(function (r) { return x.indexOf(r.no) >= 0; }); });
+      W.dosya = {};
+      W.l.forEach(function (r) { W.dosya[r.no] = ad ? eslesen(r) || serbest.shift() || null : r.no + "-imzali.pdf"; });
+      var eksik = W.l.filter(function (r) { return !W.dosya[r.no]; }).length;
+      W.yuklendi = !eksik; W.hata = eksik ? eksik + " raporun imzalı PDF'i eksik." : "";
+      pencereCiz('[data-eylem="imzali-yukle"]');
+    });
+  };
   /* 103: imzalı raporun düzeltmesi yeni sürümle (R1, R2 …); önceki sürüm saklanır, rapor taslağa döner */
   X["revizyon"] = function (el) {
     var r = MV.rapor(el.dataset.no); r.revizyonlar = r.revizyonlar || [];
@@ -178,7 +192,11 @@
     raporCiz(r); var h = document.querySelector("#a-nesne h1"); if (h) h.focus();
     MK.bildir(r.no + "-" + r.revizyonlar[0].ad + " açıldı; önceki imzalı sürüm saklandı.");
   };
-  X["pdf"] = function () { MK.bildir("Makette dosya yok. Uygulamada PDF sunucuda üretilir, kısa ömürlü yetkili bağlantıyla iner."); };
+  /* 2026-09-27: rapor belgesi yazdırma penceresinden PDF olur (uygulamada PDF sunucuda üretilir); imza penceresinde seçili raporların hepsi, her biri ayrı sayfa */
+  X["pdf"] = function () {
+    var l = $("a-pencere").open && W ? W.l : [MV.rapor(rota().no)];
+    MK.yazdir(l.length > 1 ? l.length + " rapor" : l[0].no, l.map(function (r) { return '<div class="a-yazdir-sayfa">' + MB.belge(MV.tur(ekp(r).tur), MV.raporBelge(r)) + "</div>"; }).join(""));
+  };
   $("a-pencere").addEventListener("close", function () { W = null; if (rota().pencere) history.replaceState(null, "", "#/"); });
 
   MK.kabuk({ modul: 14, kullanici: { bas: "MK", ad: "Mert Kaya", rol: "Inspector" }, sayac: { 14: "İmzanızı bekleyen rapor" } });

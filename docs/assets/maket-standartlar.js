@@ -184,8 +184,9 @@
   X["oku"] = function () { var s = bul(rota().id); MK.pdfGoster({ dosya: s.dosya.ad, baslik: ad(s), sayfa: 3 }); };
   X["dosya-sec"] = function () {
     var no = (W.s ? W.s.no : W.d.no.trim() || "Standart").replace(/\s+/g, "-");
-    W.d.dosya = no + "_" + (W.d.surum.trim() || "sürüm") + ".pdf"; delete W.hata.dosya; pencereCiz();
-    document.querySelector('[data-eylem="dosya-sec"]').focus();
+    MK.dosyaSec({ kabul: ".pdf", enCokMB: 50, ornek: no + "_" + (W.d.surum.trim() || "sürüm") + ".pdf" }, function (ad) {
+      if (!W) return; W.d.dosya = ad; delete W.hata.dosya; pencereCiz(); document.querySelector('[data-eylem="dosya-sec"]').focus();
+    });
   };
   X["pencere-kaydet"] = kaydet;
   MK.onGirdi = function (e) {

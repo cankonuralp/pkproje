@@ -182,7 +182,8 @@
         '<p class="a-nesne-alt">' + ikon("file-check", "a-ikon-kucuk") + "<span>" + kacis(MV.musteri(x.m).kisa) + " · " + x.no + ".pdf · yüklendi " + MK.tarihYaz(x.imza.musteri) + "</span></p></div>" +
         '<div class="a-eylem-cubugu">' + MK.tus({ eylem: "pdf", ad: "Dosyayı indir", ikon: "file-text", sinif: "a-tus-ikincil" }) +
           '<a class="a-tus a-tus-ikincil" href="#/s/' + x.no + '">' + ikon("arrow-left", "a-ikon-kucuk") + "Sözleşmeye dön</a></div></div>" +
-      MB.isSozlesmesi({ x: x });
+      /* yüklenen gerçek dosya kendisi gösterilir; örnek kayıtta sözleşme metni */
+      (x.dosyaAd && MK.DOSYA[x.dosyaAd] ? '<iframe class="a-pdf-cerceve" src="' + MK.DOSYA[x.dosyaAd].url + '" title="' + kacis(x.dosyaAd) + '"></iframe>' : MB.isSozlesmesi({ x: x }));
   }
 
   /* ── FORM (sözleşme hazırla) ─────────────────────────────────────────────────────────────────────── */
@@ -347,10 +348,12 @@
   var X = MK.eylem;
   X["yeni"] = function () { location.hash = "#/yeni"; };
   X["cip-uygula"] = function (el) { var s = SZ.s; s.secili = [el.dataset.deger]; s.kip = "veya"; s.sayfa = 1; MK.suzgecKur("s"); var c = document.querySelector('[data-cip="' + el.dataset.deger + '"]'); if (c) c.focus(); };
-  X["dosya-sec"] = function () {   /* maket: dosya penceresi yerine örnek dosya adı */
-    if (W.tur === "sablon") { W.d.dosya = "sozlesme-sablonu-" + MK.BUGUN + ".docx"; delete W.hata.dosya; }
-    else W.d.pdf = "isg-katip-" + (W.d.no || "sozlesme").toLowerCase() + ".pdf";
-    pencereCiz(); $("a-pencere-alt").querySelector(".a-tus-birincil").focus();
+  X["dosya-sec"] = function () {   /* 2026-09-27: gerçek dosya penceresi */
+    var sablon = W.tur === "sablon";
+    MK.dosyaSec({ kabul: sablon ? ".docx,.pdf" : ".pdf", enCokMB: 10, ornek: sablon ? "sozlesme-sablonu-" + MK.BUGUN + ".docx" : "isg-katip-" + (W.d.no || "sozlesme").toLowerCase() + ".pdf" }, function (ad) {
+      if (!W) return; if (sablon) { W.d.dosya = ad; delete W.hata.dosya; } else W.d.pdf = ad;
+      pencereCiz(); $("a-pencere-alt").querySelector(".a-tus-birincil").focus();
+    });
   };
   X["pencere-kaydet"] = function () {
     var d = W.d, h = {}, ileti;
@@ -390,11 +393,18 @@
       imza: { firma: MK.BUGUN, musteri: null }, dosya: false, vade: +F.vade, yenileme: F.yenileme };
     S.push(x); F = null; location.hash = "#/s/" + x.no; MK.bildir(x.no + " hazırlandı; müşteri imzası bekleniyor.");
   };
-  X["imzali-yukle"] = function () {
-    var x = MV.isSozlesmesi(rota().no); x.imza.musteri = MK.BUGUN; x.dosya = true; sozlesmeCiz(x);
-    MK.bildir(x.no + " imzalı sözleşme yüklendi; yürürlükte. “İmzalı sözleşmeyi aç” ile görüntülenir.");
+  X["imzali-yukle"] = function () {   /* 2026-09-27: gerçek dosya penceresi (PDF) */
+    var x = MV.isSozlesmesi(rota().no);
+    MK.dosyaSec({ kabul: ".pdf", enCokMB: 20, ornek: x.no + "-imzali.pdf" }, function (ad) {
+      x.imza.musteri = MK.BUGUN; x.dosya = true; x.dosyaAd = ad; sozlesmeCiz(x);
+      MK.bildir(x.no + " imzalı sözleşme yüklendi; yürürlükte. “İmzalı sözleşmeyi aç” ile görüntülenir.");
+    });
   };
-  X["pdf"] = function () { MK.bildir("Makette dosya yok. Uygulamada sözleşme metni " + (MV.SOZ_SABLON.length ? "firmanızın şablonundan" : "temel formattan") + " üretilir; imzalı kopya yalnız firma içinde, kısa ömürlü bağlantıyla açılır."); };
+  /* sözleşme metni yazdırma penceresinden PDF olur; imzalı kopya yüklendiyse o dosya aynen iner */
+  X["pdf"] = function () {
+    var r = rota(), x = MV.isSozlesmesi(r.no);
+    if (r.imzali && x.dosyaAd && MK.DOSYA[x.dosyaAd]) MK.indir(x.dosyaAd, MK.DOSYA[x.dosyaAd].dosya); else MK.yazdir(x.no, MB.isSozlesmesi({ x: x }));
+  };
 
   /* sözleşmesi olmayan tesisin eski adresi: kabuk kurulmadan tesis sayfasına (yarım kalan yükleme olmasın) */
   var ilk = rota();

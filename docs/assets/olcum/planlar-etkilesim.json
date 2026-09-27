@@ -2,9 +2,30 @@
  "maket": "planlar",
  "tarih": "2026-09-27",
  "arac": "tools/olc-bulut.mjs --etkilesim (başsız tarayıcı, 1920 açık tema; gen verilen denemede o genişlik)",
- "toplam": 33,
- "gecen": 33,
+ "toplam": 36,
+ "gecen": 36,
  "denemeler": [
+  {
+   "ad": "Excel'e aktar → gerçek .xlsx iner",
+   "gen": 1920,
+   "sayfa": "maket/planlarim.html",
+   "hash": "#/plan/9",
+   "gecti": true
+  },
+  {
+   "ad": "Excel şablonu iner",
+   "gen": 1920,
+   "sayfa": "maket/planlarim.html",
+   "hash": "#/plan/1",
+   "gecti": true
+  },
+  {
+   "ad": "saha formu PDF: yazdırma penceresi",
+   "gen": 1920,
+   "sayfa": "maket/planlarim.html",
+   "hash": "#/plan/9",
+   "gecti": true
+  },
   {
    "ad": "plan içinde Masraflarım: 2 masraf, durumlarıyla",
    "gen": 1920,

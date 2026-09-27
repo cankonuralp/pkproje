@@ -235,7 +235,10 @@
     if (!A.hata) { DONEM.aralik.bas = b; DONEM.aralik.bit = e; aralikKur(); }
     goster(false); var t = document.querySelector(A.hata ? "#p-bas" : '[data-eylem="aralik-uygula"]'); if (t) t.focus();
   };
-  X["excel"] = function () { MK.bildir("Makette dosya yok. Seçili dönemin personel tablosu .xlsx olarak iner."); };
+  X["excel"] = function () {   /* 2026-09-27: seçili dönemin personel tablosu, ekrandaki sütunlarla gerçek .xlsx */
+    var t = document.querySelector(".a-tablo-perf"); if (!t) { MK.bildir("Aktarılacak satır yok."); return; }
+    MK.indir("performans-" + MK.BUGUN + ".xlsx", MK.xlsx("Performans", MK.tablodanSatirlar(t)));
+  };
   MK.onGirdi = function (e) { var k = e.target.dataset && e.target.dataset.alan; if (k === "bas" || k === "bit") A[k] = e.target.value; };
   MK.kabuk({ modul: 19, kullanici: BEN ? { bas: "MK", ad: "Mert Kaya", rol: "Inspector" } : { bas: "AD", ad: "Ayşe Demir", rol: "Firma yöneticisi" } });
   goster(false);

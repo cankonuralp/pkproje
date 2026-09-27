@@ -2,9 +2,16 @@
  "maket": "m11",
  "tarih": "2026-09-27",
  "arac": "tools/olc-bulut.mjs --etkilesim (başsız tarayıcı, 1920 açık tema; gen verilen denemede o genişlik)",
- "toplam": 9,
- "gecen": 9,
+ "toplam": 10,
+ "gecen": 10,
  "denemeler": [
+  {
+   "ad": "uygunsuzlar gerçek .xlsx iner",
+   "gen": 1920,
+   "sayfa": "maket/musteri.html",
+   "hash": "#/excel",
+   "gecti": true
+  },
   {
    "ad": "planlanan kontrol: açık planlı tesis tarihiyle",
    "gen": 1920,

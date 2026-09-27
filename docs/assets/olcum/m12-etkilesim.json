@@ -2,9 +2,16 @@
  "maket": "m12",
  "tarih": "2026-09-27",
  "arac": "tools/olc-bulut.mjs --etkilesim (başsız tarayıcı, 1920 açık tema; gen verilen denemede o genişlik)",
- "toplam": 15,
- "gecen": 15,
+ "toplam": 16,
+ "gecen": 16,
  "denemeler": [
+  {
+   "ad": "teklif PDF: yazdırma penceresi",
+   "gen": 1920,
+   "sayfa": "maket/teklifler.html",
+   "hash": "#/t/T-0926-001",
+   "gecti": true
+  },
   {
    "ad": "çok tesisli teklif, KDV %10: kalemler iki tesisten, kaydedilir",
    "gen": 1920,

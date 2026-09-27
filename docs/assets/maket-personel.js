@@ -313,7 +313,7 @@
       '<div class="a-nesne-bas"><div class="a-nesne-kimlik"><div class="a-nesne-baslik"><h1 tabindex="-1">Zimmet teslim formu</h1>' +
         (guncel ? rozet({ ad: "İmzalısı yüklü", rozet: "a-rozet-tamam" }) : rozet({ ad: "İmza bekliyor", rozet: "a-rozet-bekliyor" })) + "</div>" +
         '<p class="a-nesne-alt">' + ikon("user", "a-ikon-kucuk") + "<span>" + kacis(p.ad) + " · " + z.length + " varlık</span></p></div>" +
-        '<div class="a-eylem-cubugu">' + MK.tus({ eylem: "kapsam-disi", ad: "PDF indir", ikon: "file-text", sinif: "a-tus-ikincil", veri: { ne: "PDF indirme (sunucuda üretilir)" } }) +
+        '<div class="a-eylem-cubugu">' + MK.tus({ eylem: "zform-pdf", ad: "PDF indir", ikon: "file-text", sinif: "a-tus-ikincil" }) +
           MK.tus({ eylem: "zform-yukle", ad: "İmzalı taramayı yükle", ikon: "file-plus" }) + "</div></div>" +
       MB.zimmetFormu({ p: p, varliklar: z, no: formNo(p), tarih: MK.BUGUN, eden: teslimEden() });
   }
@@ -552,16 +552,22 @@
   var X = MK.eylem, aktif = function () { return MV.kisi(rota().id); };
   var bolumeGit = function (id) { var h = $(id); if (h) { h.scrollIntoView({ block: "start" }); h.focus({ preventScroll: true }); } };
   X["hesaba-git"] = function () { bolumeGit("a-b-hesap"); };
-  X["zform-yukle"] = function () {   /* maket: dosya seçimi yerine örnek dosya; formdaki varlıklar kapsam olarak saklanır */
+  X["zform-yukle"] = function () {   /* 2026-09-27: gerçek dosya penceresi; formdaki varlıklar kapsam olarak saklanır */
     var p = aktif();
-    (MV.ZIMMET_FORMLARI[p.id] = MV.ZIMMET_FORMLARI[p.id] || []).unshift({ no: formNo(p), tarih: MK.BUGUN, kapsam: zimmetleri(p).map(function (v) { return v.id; }), dosya: "zimmet-formu-imzali.pdf" });
-    location.hash = "#/p/" + p.id; MK.bildir("İmzalı zimmet formu yüklendi (" + formNo(p) + ")."); setTimeout(function () { bolumeGit("a-b-zimmet"); }, 0);
+    MK.dosyaSec({ kabul: ".pdf,image/*", enCokMB: 10, ornek: "zimmet-formu-imzali.pdf" }, function (ad) {
+      (MV.ZIMMET_FORMLARI[p.id] = MV.ZIMMET_FORMLARI[p.id] || []).unshift({ no: formNo(p), tarih: MK.BUGUN, kapsam: zimmetleri(p).map(function (v) { return v.id; }), dosya: ad });
+      location.hash = "#/p/" + p.id; MK.bildir("İmzalı zimmet formu yüklendi (" + formNo(p) + ")."); setTimeout(function () { bolumeGit("a-b-zimmet"); }, 0);
+    });
   };
   X["zimmete-git"] = function () { bolumeGit("a-b-zimmet"); };
+  /* 2026-09-27: zimmet teslim formu yazdırma penceresinden PDF olur (imzaya götürülür) */
+  X["zform-pdf"] = function () { var n = $("a-nesne"); MK.yazdir(formNo(aktif()) + " · zimmet teslim formu", [].map.call(n.children, function (e) { return e.matches(".a-kirinti") ? "" : e.outerHTML; }).join("")); };
   X["hesap-ac"] = function () { location.hash = "#/p/" + aktif().id + "/hesap"; };
   X["belge-ekle"] = function () { location.hash = "#/p/" + aktif().id + "/belge"; };
   X["bordro-ekle"] = function () { location.hash = "#/p/" + aktif().id + "/bordro"; };
-  X["bordro-dosya"] = function () { BR.dosya = "bordro-" + BR.ay + "-" + BR.kisi + ".pdf"; delete BR.hata.dosya; bordroCiz(); $("a-bordro-alt").querySelector(".a-tus-birincil").focus(); };
+  X["bordro-dosya"] = function () {
+    MK.dosyaSec({ kabul: ".pdf", enCokMB: 10, ornek: "bordro-" + BR.ay + "-" + BR.kisi + ".pdf" }, function (ad) { if (!BR) return; BR.dosya = ad; delete BR.hata.dosya; bordroCiz(); $("a-bordro-alt").querySelector(".a-tus-birincil").focus(); });
+  };
   X["bordro-kaydet"] = function () {
     var h = {}, n = { brut: tlOku(BR.brut), net: tlOku(BR.net), maliyet: tlOku(BR.maliyet) };
     ["brut", "net", "maliyet"].forEach(function (k) { if (!(n[k] > 0)) h[k] = "Tutar sıfırdan büyük olmalı (ör. 90.000,00)."; });
@@ -591,7 +597,9 @@
     try { navigator.clipboard.writeText(W.parola); } catch (x) {}
     MK.bildir("Geçici parola panoya kopyalandı.");
   };
-  X["dosya-sec"] = function () { B.dosya = B.tur ? B.tur + "-" + MK.BUGUN + ".pdf" : "belge-" + MK.BUGUN + ".pdf"; belgeCiz(); $("a-belge-alt").querySelector(".a-tus-birincil").focus(); };
+  X["dosya-sec"] = function () {
+    MK.dosyaSec({ kabul: ".pdf,image/*", enCokMB: 10, ornek: B.tur ? B.tur + "-" + MK.BUGUN + ".pdf" : "belge-" + MK.BUGUN + ".pdf" }, function (ad) { if (!B) return; B.dosya = ad; belgeCiz(); $("a-belge-alt").querySelector(".a-tus-birincil").focus(); });
+  };
   X["belge-kaydet"] = function () {
     var p = MV.kisi(B.kisi); if (!B.tur || !B.dosya) return;
     ozluk(p).push({ tur: B.tur, aciklama: B.aciklama.trim(), tarih: MK.BUGUN, dosya: B.dosya });

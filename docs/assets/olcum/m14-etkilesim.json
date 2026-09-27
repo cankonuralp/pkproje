@@ -2,9 +2,37 @@
  "maket": "m14",
  "tarih": "2026-09-27",
  "arac": "tools/olc-bulut.mjs --etkilesim (başsız tarayıcı, 1920 açık tema; gen verilen denemede o genişlik)",
- "toplam": 40,
- "gecen": 40,
+ "toplam": 44,
+ "gecen": 44,
  "denemeler": [
+  {
+   "ad": "gider Excel'e aktar → gerçek .xlsx iner",
+   "gen": 1920,
+   "sayfa": "maket/muhasebe.html",
+   "hash": "#/giderler",
+   "gecti": true
+  },
+  {
+   "ad": "gider şablonu iner",
+   "gen": 1920,
+   "sayfa": "maket/muhasebe.html",
+   "hash": "#/giderler",
+   "gecti": true
+  },
+  {
+   "ad": "Excel okuma: yazılan .xlsx geri okunur, satır denetimden geçer",
+   "gen": 1920,
+   "sayfa": "maket/muhasebe.html",
+   "hash": "#/giderler",
+   "gecti": true
+  },
+  {
+   "ad": "fatura özeti PDF: yazdırma penceresi",
+   "gen": 1920,
+   "sayfa": "maket/muhasebe.html",
+   "hash": "#/f/KMF2026000000017",
+   "gecti": true
+  },
   {
    "ad": "toplu fatura: aynı müşterinin iki işi tek faturada",
    "gen": 1920,

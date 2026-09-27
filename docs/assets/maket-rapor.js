@@ -222,7 +222,7 @@
             '<div class="a-kriter-cevap">' + (oku ? okuGirdi("r-kc" + i, secAd) : MK.secim({ id: "r-kc" + i, ad: "Madde " + (i + 1), deger: x.c, secenekler: KRITER, ipucu: "Seçin", tanim: "r-ka" + i })) + "</div>" +
             (kus ? '<div class="a-kriter-kusur">' + MK.alan({ id: "r-kn" + i, etiket: "Kusur açıklaması", zorunlu: !oku,
               girdi: '<textarea class="a-alan a-alan-ince" id="r-kn' + i + '" data-alan="kn' + i + '" maxlength="300" aria-describedby="r-kn' + i + '-ipucu"' + (oku ? " readonly" : "") + ">" + kacis(x.not) + "</textarea>" }) +
-              '<div class="a-fotolar">' + fotolar(x.foto || 0) + (oku ? "" : fotoMenu("kusur-foto", ' data-i="' + i + '"')) + "</div></div>" : "") + "</div>";
+              '<div class="a-fotolar">' + fotolar(x.foto || 0, x.fotoAd) + (oku ? "" : fotoMenu("kusur-foto", ' data-i="' + i + '"')) + "</div></div>" : "") + "</div>";
         }).join(""), '<span class="a-sayac" id="r-kriter-say"><b>' + cevaplanan + "</b> / " + r.kriter.length + " madde</span>") +
       bolum(5, "r-b5", "Test değerleri", '<div class="a-form">' + MV.testler(t).map(function (x, i) {
           var s = testSonuc(x, r.test[i]);
@@ -231,7 +231,7 @@
         }).join("") + "</div>") +
       (elektrik(t) ? bolum(6, "r-b6", "Pano sigortaları", sigortaHtml(r, oku)) : "") +
       /* 7 · 8 · 9 her raporda sabit (reisim 2026-09-27); kriterler ve test değerleri firmanın türe verdiği rapor formatına göre */
-      bolum(elektrik(t) ? 7 : 6, "r-b7", "Fotoğraflar", '<div class="a-fotolar">' + fotolar(r.foto) + (oku ? "" : fotoMenu("foto-ekle")) + "</div>") +
+      bolum(elektrik(t) ? 7 : 6, "r-b7", "Fotoğraflar", '<div class="a-fotolar">' + fotolar(r.foto, r.fotoAd) + (oku ? "" : fotoMenu("foto-ekle")) + "</div>") +
       /* sonuç ve kanaat muayene kriterleri gibi seçmeli: Uygun · Uygun değil; seçilmezse gönderilince kriterlere göre konur (reisim 2026-09-27);
          uygun değil madde varken "Uygun" uyarıdır, engel değil */
       bolum(elektrik(t) ? 8 : 7, "r-b8", "Sonuç ve kanaat", '<div class="a-kriter a-kriter-sonuc"><p class="a-kriter-ad" id="r-sonuc-ad"><span>Sonuç ve kanaat</span></p>' +
@@ -252,7 +252,7 @@
     return s === null ? "Sınır " + MV.sinirYaz(x) : s ? "Uygun · sınır " + MV.sinirYaz(x) : "Sınır dışı · " + MV.sinirYaz(x);
   }
   var kayitMetin = function (r) { return r.degisti ? "Kaydedilmemiş değişiklik var" : r.kayit ? "Son kayıt " + MK.zamanYaz(r.kayit) : "Henüz kaydedilmedi"; };
-  var fotolar = function (n) { var s = ""; for (var i = 1; i <= n; i++) s += '<span class="a-foto" role="img" aria-label="Fotoğraf ' + i + '">' + ikon("camera") + '<span class="a-foto-no">' + i + "</span></span>"; return s; };
+  var fotolar = MK.fotolar;
   function sigortaHtml(r, oku) {
     var d = r.sigorta, bek = d ? d.filter(function (x) { return x.durum !== "onayli"; }) : [], dusuk = bek.filter(function (x) { return x.guven === "dusuk"; });
     var SUTUN = [
@@ -370,9 +370,16 @@
     if (k === "rtarih") r.rtarihEl = true;
   };
   var X = MK.eylem;
+  /* kamera: telefonda doğrudan kamera açılır; galeri: birden çok fotoğraf seçilir (2026-09-27, gerçek dosya penceresi) */
+  var fotoSec = function (el, ekle) {
+    var galeri = el.dataset.kaynak === "galeri";
+    MK.dosyaSec({ kabul: "image/*", kamera: !galeri, coklu: galeri, enCokMB: 15, ornek: "foto-" + Date.now() + ".jpg" }, function (ad) { ekle(ad, galeri ? "galeriden" : "kameradan"); });
+  };
   X["foto-ekle"] = function (el) {
-    var r = aktif(); r.foto++; degisti(r); ciz(); var t = document.querySelector('#r-b7 [data-secici-ac]'); if (t) t.focus();
-    MK.bildir("Fotoğraf " + r.foto + " eklendi (" + (el.dataset.kaynak === "galeri" ? "galeriden" : "kameradan") + ").");
+    fotoSec(el, function (ad, nereden) {
+      var r = aktif(); r.foto++; (r.fotoAd = r.fotoAd || [])[r.foto - 1] = ad; degisti(r); ciz(); var t = document.querySelector('#r-b7 [data-secici-ac]'); if (t) t.focus();
+      MK.bildir("Fotoğraf " + r.foto + " eklendi (" + nereden + ").");
+    });
   };
   X["kaydet"] = function () {
     var r = aktif(); r.kayit = MK.simdi(); r.degisti = false; $("r-kayit").textContent = kayitMetin(r);
@@ -419,9 +426,12 @@
   };
   X["yine-de-gonder"] = function () { var r = W.r; $("a-pencere").close(); gonder(r); };
   X["kusur-foto"] = function (el) {
-    var r = aktif(), i = +el.dataset.i; r.kriter[i].foto = (r.kriter[i].foto || 0) + 1; degisti(r); ciz();
-    var t = document.querySelector("#r-k" + i + " [data-secici-ac]"); if (t) t.focus();
-    MK.bildir("Madde " + (i + 1) + " için fotoğraf eklendi (" + (el.dataset.kaynak === "galeri" ? "galeriden" : "kameradan") + ").");
+    var i = +el.dataset.i;
+    fotoSec(el, function (ad, nereden) {
+      var r = aktif(), x = r.kriter[i]; x.foto = (x.foto || 0) + 1; (x.fotoAd = x.fotoAd || [])[x.foto - 1] = ad; degisti(r); ciz();
+      var t = document.querySelector("#r-k" + i + " [data-secici-ac]"); if (t) t.focus();
+      MK.bildir("Madde " + (i + 1) + " için fotoğraf eklendi (" + nereden + ").");
+    });
   };
   function gonder(r) {
     if (r.geri) r.geriler.unshift(r.geri);

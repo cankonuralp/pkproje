@@ -107,7 +107,7 @@
   }
 
   /* ── VARLIK SAYFASI: kimde + tam geçmiş (fotoğraflarla) ─────────────────────────────────────────── */
-  var fotolar = function (n, etiket) { var s = ""; for (var i = 1; i <= n; i++) s += '<span class="a-foto" role="img" aria-label="' + etiket + " fotoğraf " + i + '">' + ikon("camera") + '<span class="a-foto-no">' + i + "</span></span>"; return s; };
+  var fotolar = function (n, etiket, adlar) { return MK.fotolar(n, adlar, etiket); };
   function yuz(o) {
     var ic = '<span class="a-yuz-ust">' + ikon(o.ikon, "a-ikon-kucuk") + o.ad + '</span><span class="a-yuz-sayi">' + o.sayi + "</span>" + (o.not ? '<span class="a-yuz-not' + (o.uyari ? " a-yuz-uyari" : "") + '">' + o.not + "</span>" : "");
     return o.href ? '<a class="a-yuz" href="' + o.href + '">' + ic + "</a>" : '<div class="a-yuz">' + ic + "</div>";
@@ -135,7 +135,7 @@
         (h.length ? '<ol class="a-gecmis a-gecmis-zimmet">' + h.map(function (x) {
           return '<li><span class="a-gecmis-zaman">' + MK.zamanYaz(x.tarih) + '</span><span class="a-gecmis-ne"><b>' + kacis(MV.yerAdi(x.eden)) + " → " + kacis(MV.yerAdi(x.alan)) + "</b> " + formRozet(x) +
             '<span class="a-not-metin">' + (x.not ? kacis(x.not) : '<span class="a-deger-yok">Not yok</span>') + ' <span class="a-gecmis-rol">kaydeden ' + kacis(MV.kisi(x.yetkili).ad) + "</span></span>" +
-            '<span class="a-fotolar">' + fotolar(x.foto, MV.varlikAdi(v) + " " + MK.gunKisa(x.tarih)) + "</span></span></li>";
+            '<span class="a-fotolar">' + fotolar(x.foto, MV.varlikAdi(v) + " " + MK.gunKisa(x.tarih), x.fotoAd) + "</span></span></li>";
         }).join("") + "</ol>" : '<p class="a-bos-satir">Bu varlığın hareketi yok; depoda.</p>') + "</section>";
   }
 
@@ -163,7 +163,7 @@
       MK.alan({ id: "w-zaman", etiket: "Tarih ve saat", zorunlu: true, hata: h.zaman, girdi: MK.girdi({ id: "w-zaman", alan: "zaman", deger: d.zaman, sinif: "a-girdi-seri", ek: ' inputmode="numeric" maxlength="16"', hata: h.zaman }) }) +
       (v && v.tur === "arac" ? MK.alan({ id: "w-km", etiket: "Kilometre", zorunlu: true, hata: h.km, girdi: MK.girdi({ id: "w-km", alan: "km", deger: d.km, sinif: "a-girdi-sicil", ek: ' inputmode="numeric" maxlength="9"', hata: h.km }) }) : "") +
       '<div class="a-alan-grup a-alan-genis"><label class="a-etiket" for="w-not">Durum notu</label><textarea class="a-alan a-alan-ince" id="w-not" data-alan="not" maxlength="300" placeholder="Eksik parça, hasar, aksesuarlar">' + kacis(d.not) + "</textarea></div>" +
-      '<div class="a-alan-grup a-alan-genis"><p class="a-etiket">Fotoğraflar</p><div class="a-fotolar">' + fotolar(d.foto, "Teslim") +
+      '<div class="a-alan-grup a-alan-genis"><p class="a-etiket">Fotoğraflar</p><div class="a-fotolar">' + fotolar(d.foto, "Teslim", d.fotoAd) +
         MK.tus({ eylem: "foto-ekle", ad: "Fotoğraf ekle", ikon: "camera", sinif: "a-tus-ikincil" }) + "</div>" +
         (d.foto ? "" : '<p class="a-ipucu"><span class="a-ipucu-dikkat">Fotoğraf yok.</span></p>') + "</div>" +
       "</div>" +
@@ -205,12 +205,16 @@
   MK.goster = goster;
   var X = MK.eylem;
   X["teslim-ac"] = function (el) { pencereAc(el.dataset.varlik || (rota().v === "varlik" ? rota().id : "")); };
-  X["foto-ekle"] = function () { W.d.foto++; delete W.hata.foto; pencereCiz(); var t = document.querySelector('[data-eylem="foto-ekle"]'); if (t) t.focus(); };
+  X["foto-ekle"] = function () {   /* 2026-09-27: gerçek dosya penceresi (telefonda kamera ya da galeri, birden çok) */
+    MK.dosyaSec({ kabul: "image/*", coklu: true, enCokMB: 15, ornek: "teslim-" + Date.now() + ".jpg" }, function (ad) {
+      if (!W) return; W.d.foto++; (W.d.fotoAd = W.d.fotoAd || [])[W.d.foto - 1] = ad; delete W.hata.foto; pencereCiz(); var t = document.querySelector('[data-eylem="foto-ekle"]'); if (t) t.focus();
+    });
+  };
   X["pencere-kaydet"] = function () {
     W.hata = denetle(); var hk = Object.keys(W.hata);
     if (hk.length) { pencereCiz("w-" + hk[0]); return; }
     var d = W.d, v = MV.varlik(d.varlik), eden = MV.kimde(v.id), z = d.zaman.split(" ");
-    MV.ZIMMET.push({ id: "z" + (MV.ZIMMET.length + 1), v: v.id, tarih: z[0].split(".").reverse().join("-") + "T" + z[1], eden: eden, alan: d.alan, foto: d.foto,
+    MV.ZIMMET.push({ id: "z" + (MV.ZIMMET.length + 1), v: v.id, tarih: z[0].split(".").reverse().join("-") + "T" + z[1], eden: eden, alan: d.alan, foto: d.foto, fotoAd: d.fotoAd || [],
       not: (v.tur === "arac" ? "Km " + d.km + (d.not.trim() ? " · " : "") : "") + d.not.trim(), onay: null, yetkili: "co" });
     $("a-pencere").close();
     location.hash = "#/v/" + v.id;

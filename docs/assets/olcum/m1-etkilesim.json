@@ -2,9 +2,16 @@
  "maket": "m1",
  "tarih": "2026-09-27",
  "arac": "tools/olc-bulut.mjs --etkilesim (başsız tarayıcı, 1920 açık tema; gen verilen denemede o genişlik)",
- "toplam": 47,
- "gecen": 47,
+ "toplam": 48,
+ "gecen": 48,
  "denemeler": [
+  {
+   "ad": "zimmet formu PDF indir: yazdırma penceresi",
+   "gen": 1920,
+   "sayfa": "maket/personel.html",
+   "hash": "#/p/mk/zimmet-formu",
+   "gecti": true
+  },
   {
    "ad": "ana sayfada duyurular: her rolde, bağlantılar yeni sekmede",
    "gen": 1920,

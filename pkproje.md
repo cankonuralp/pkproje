@@ -1560,6 +1560,17 @@ kodlayalımki tekrar tekrar yama atarak siteyi kötü yapmayalım ayrıca ana sa
   engelliyor. Formatların içeriği görülmeden örnekler kurulmaz (sonra yeniden yama olur). Yol: ağ izni ya da reisim PDF'leri iletir →
   örnek ekipman, rapor bölümleri, kriterler ve test değerleri bu beş formata göre yeniden kurulur.
 - **Maket tam çalışsın; site istenen hâle gelince kod** (§3.3 kuralı teyit: bütün maketler onaylanmadan kod yok).
+- **Maket çalışır hâlde** ("maket olduğu için çalışmayan yerler de dahil"):
+  **dosya seçme** her yerde gerçek dosya penceresi (telefonda kamera ya da galeri; tür ve boyut sınırıyla): kalibrasyon ve eğitim sertifikası,
+  İSG-KATİP sözleşmesi, sözleşme şablonu, imzalı iş sözleşmesi, özlük belgesi, imzalı zimmet formu, bordro, standart PDF'i, rapor formatı PDF'i,
+  imzalı rapor PDF'leri (birden çok; adında rapor no geçen o rapora), masraf fişi, gider belgesi, rapor ve teslim fotoğrafları. Seçilen dosya
+  **tarayıcıda kalır** (sunucuya gitmez, sayfa yenilenince gider); "Aç" onu gösterir (PDF tarayıcının görüntüleyicisinde, fotoğraf resim olarak;
+  fotoğraflar küçük resim). **Excel** gerçek .xlsx olarak iner (ekipman listesi, giderler, performans tablosu, açık uygunsuzluklar, şablonlar) ve
+  **Excel'den yükle** gerçek .xlsx / .csv okur (dış kütüphane yok; Excel'in tarih sayısı çevrilir; ilk satır başlıksa atlanır). **PDF indir**
+  (rapor, imzalı rapor, sözleşme metni, teklif, zimmet teslim formu, saha formu, fatura özeti) tarayıcının yazdırma penceresini açar
+  ("PDF olarak kaydet"); uygulamada PDF sunucuda üretilir. Makette dosyası olmayan örnek kaydın "İndir"i tek sayfalık maket PDF'i indirir.
+  Fatura bu sistemde kesilmediği için tuşun adı "Fatura özeti (PDF)". Çalışmayan kalanlar yalnız sunucu işleri: e-posta, e-imza servisi, canlı
+  duyuru okuma, kalıcı kayıt (sayfa yenilenince örnek veri geri gelir).
 - **Ana sayfada "Duyurular"** (her rolde, en altta): İSGGM ve iş ekipmanları portalının duyuruları — başlık, kaynak, tarih (bilinmiyorsa yazılmaz),
   yeni sekmede açılan bağlantı; "Tümü" İSGGM duyurular sayfasına. Uygulamada sunucu günde birkaç kez okur (pg-boss, §8.9), yalnız ekranda
   (bildirim yok); okunamazsa "Duyurular alınamadı; son alınan liste gösteriliyor." Makette bu depoda kayıtlı 3 gerçek duyuru (§10).
@@ -1596,6 +1607,9 @@ revizyon, alan kopyalama, hafif kusur devri, meslek eşleşme denetimi).
 - Emsal ürünler: https://opwire.app/iso-17020-periyodik-kontrol-yazilimi/ · https://17020muayene.vidco.com.tr/ · https://akuple.com/asansor-kontrol-yazilimi/ · https://ensyazilim.com/
 
 ## 11 · Değişiklik günlüğü
+- 2026-09-27 (90): **Maket çalışır hâlde** (§9 yirmi yedinci tur): gerçek dosya seçme / açma (PDF, fotoğraf), gerçek .xlsx indirme ve okuma,
+  belgelerin yazdırma penceresinden PDF'i; ortak MK.dosyaSec · MK.indir · MK.yazdir · MK.xlsx · MK.tabloOku · MK.fotolar. 17 maket yeniden temiz
+  (1768/1768 durum); gerçek dosya penceresiyle PDF, sıkıştırılmış .xlsx ve fotoğraf ayrıca denendi.
 - 2026-09-27 (89): **Ana sayfada Duyurular** (§9 yirmi yedinci tur): İSGGM / portal duyuruları, yeni sekmede bağlantı, "alınamadı" hâli.
   M1 256/256 · 47/47 · 128/128.
 - 2026-09-27 (88): **Kontrol metodu yalnız standart numarası** (§9 yirmi yedinci tur): raporda, belgede, onayda, Standartlar "Raporda" satırında

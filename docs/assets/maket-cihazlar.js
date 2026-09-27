@@ -236,7 +236,9 @@
   X["kal-ac"] = function () { pencereAc("kal", aktif()); };
   X["ara-ac"] = function () { pencereAc("ara", aktif()); };
   X["cip-uygula"] = function (el) { var s = SZ.c; s.secili = [el.dataset.deger]; s.kip = "veya"; s.sayfa = 1; listeCiz(); var c = document.querySelector('[data-cip="' + el.dataset.deger + '"]'); if (c) c.focus(); };
-  X["dosya-sec"] = function () { W.d.dosya = "sertifika-" + W.v.env.toLowerCase() + "-2026.pdf"; delete W.hata.dosya; pencereCiz(); };
+  X["dosya-sec"] = function () {   /* 2026-09-27: gerçek dosya penceresi (PDF, en çok 10 MB); seçilen dosya "Aç" ile açılır */
+    MK.dosyaSec({ kabul: ".pdf", enCokMB: 10, ornek: "sertifika-" + W.v.env.toLowerCase() + "-2026.pdf" }, function (ad) { if (!W) return; W.d.dosya = ad; delete W.hata.dosya; pencereCiz(); });
+  };
   X["pencere-kaydet"] = function () {
     W.hata = denetle(); var hk = Object.keys(W.hata);
     if (hk.length) { pencereCiz(hk[0] === "dosya" ? null : "w-" + hk[0]); return; }

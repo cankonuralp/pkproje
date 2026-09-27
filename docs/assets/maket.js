@@ -647,7 +647,12 @@
     M = { p: p, tarih: BUGUN, tarihYazi: "", tur: "", tutar: "", oran: 20, aciklama: "", belge: "", hata: {} };
     masrafCiz(); $("a-pencere").showModal(); $("m-tur").focus();
   };
-  X["masraf-fis"] = function () { M.belge = "fis-" + M.tarih.replace(/-/g, "") + "-" + (M.tur || "masraf") + ".jpg"; masrafCiz(); document.querySelector('#a-pencere [data-eylem="masraf-fis"]').focus(); };
+  /* fiş: telefonda kamera ya da galeri, bilgisayarda dosya (fotoğraf ya da PDF, en çok 10 MB) */
+  X["masraf-fis"] = function () {
+    MK.dosyaSec({ kabul: "image/*,.pdf", enCokMB: 10, ornek: "fis-" + M.tarih.replace(/-/g, "") + "-" + (M.tur || "masraf") + ".jpg" }, function (ad) {
+      if (!masrafAcik()) return; M.belge = ad; masrafCiz(); document.querySelector('#a-pencere [data-eylem="masraf-fis"]').focus();
+    });
+  };
   X["masraf-gonder"] = function () {
     var h = {}, yazi = $("m-tarih").value, m = /^(\d{2})\.(\d{2})\.(\d{4})$/.exec(yazi.trim()), fi = m ? m[3] + "-" + m[2] + "-" + m[1] : null, n = sayiOku(M.tutar);
     if (fi && isNaN(new Date(fi + "T12:00:00"))) fi = null;
@@ -670,7 +675,7 @@
   };
   MK.onZaman = function (id, deger) { if (masrafAcik() && id === "m-tarih") { M.tarih = deger; M.tarihYazi = ""; } };
   /* ── EXCEL (reisim 2026-09-27): ekipman listesi dışa aktarılır (önizleme + indir) ve Excel'den yüklenir (şablon, satır satır denetim,
-     yalnız geçerli yeni satırlar plana girer). Makette dosya yok: örnek dosya ve satırlar. */
+     yalnız geçerli yeni satırlar plana girer). 2026-09-27: gerçek .xlsx / .csv yazılır ve okunur (MK.xlsx, MK.tabloOku). */
   var EXCEL = null;
   function excelPencere(baslik, govde, alt) {
     $("a-pencere").dataset.kip = "excel"; $("a-pencere-baslik").textContent = baslik; $("a-pencere-govde").innerHTML = govde; $("a-pencere-alt").innerHTML = alt;
@@ -692,7 +697,13 @@
       MK.tus({ eylem: "pencere-kapat", ad: "Kapat", sinif: "a-tus-ikincil" }) + MK.tus({ eylem: "excel-indir", ad: "İndir", ikon: "download" }));
     $("a-pencere-alt").querySelector(".a-tus-birincil").focus({ preventScroll: true });
   };
-  X["excel-indir"] = function () { MK.bildir("Makette dosya yok. Liste Excel dosyası (.xlsx) olarak iner."); };
+  /* 2026-09-27 (reisim: "maket site nasıl çalışması gerekiyorsa çalışsın"): gerçek .xlsx iner */
+  X["excel-indir"] = function () {
+    var p = AKTIF; if (!p) return;
+    MK.indir(p.no + "-ekipmanlar.xlsx", MK.xlsx("Ekipmanlar", [["Kod", "Ekipman türü", "Konum", "Seri no", "Branş", "Önceki kontrol", "Önceki sonuç", "Bu planda"]].concat(p.ekp.map(function (k) {
+      var e = SICIL[k]; return [k, e.tur.ad, e.konum || "", e.seri || "", bransAd(e.tur.b), e.onceki ? tno(e.onceki.tarih) : "İlk kontrol", e.onceki ? e.onceki.sonuc : "", e.pasif ? "Pasif" : raporuVar(p, k) ? "Raporlandı" : "Rapor yok"];
+    }))));
+  };
   function excelIceCiz() {
     var p = EXCEL.p, satirlar = EXCEL.satirlar, gecerli = satirlar.filter(function (x) { return x.ok; });
     excelPencere("Excel'den yükle · " + p.no,
@@ -711,17 +722,29 @@
     EXCEL = { p: p, dosya: "", satirlar: [] }; excelIceCiz();
     $("a-pencere-alt").querySelector('[data-eylem="pencere-kapat"]').focus({ preventScroll: true }); document.querySelector('#a-pencere [data-eylem="excel-sec"]').focus();
   };
-  X["excel-sablon"] = function () { MK.bildir("Makette dosya yok. Şablon: Kod · Ekipman türü · Konum · Seri no sütunlu .xlsx."); };
+  X["excel-sablon"] = function () { MK.indir("ekipman-yukleme-sablonu.xlsx", MK.xlsx("Ekipmanlar", [["Kod", "Ekipman türü", "Konum", "Seri no"], ["HT-9001", "Hava tankı", "Kazan dairesi", "HT-24-118"]])); };
   /* maket: dosya penceresi yerine örnek dosya; satırlar yeni kayıt denetimiyle aynı kurala göre (kod eşsiz, tür katalogda) */
-  X["excel-sec"] = function () {
-    var p = EXCEL.p, ham = [["HT-9001", "Hava tankı", "Kazan dairesi", "HT-24-118"], ["FL-9002", "Forklift", "Sevkiyat alanı", "FL-22-431"],
-      [p.ekp[0], SICIL[p.ekp[0]].tur.ad, SICIL[p.ekp[0]].konum, ""], ["VK-9003", "Vinç kancası", "Depo girişi", ""]];
-    EXCEL.dosya = p.no + "-ekipman-yukle.xlsx";
-    EXCEL.satirlar = ham.map(function (h) {
-      var t = KATALOG.filter(function (x) { return tr(x.ad) === tr(h[1]); })[0], kd = kodDurum(p, h[0]);
-      return { kod: h[0], tur: h[1], konum: h[2], seri: h[3], t: t, ok: !!t && kd.tur === "tamam", neden: !t ? "Tür bulunamadı, atlanır" : kd.tur === "tamam" ? "" : "Planda var, atlanır" };
+  /* satırlar denetlenir (kod eşsiz, tür katalogda); gerçek dosyada ilk satır başlıksa atlanır; sütun sırası şablondaki gibi */
+  var excelSatirlari = function (p, ham) {
+    if (ham.length && /kod/i.test(ham[0][0] || "")) ham = ham.slice(1);
+    return ham.map(function (h) {
+      var kod = kodNormal(h[0] || ""), t = KATALOG.filter(function (x) { return tr(x.ad) === tr(h[1] || ""); })[0], kd = kodDurum(p, kod), ayni = ham.filter(function (y) { return kodNormal(y[0] || "") === kod; }).length > 1;
+      return { kod: kod || "—", tur: h[1] || "", konum: h[2] || "", seri: h[3] || "", t: t, ok: !!kod && !!t && kd.tur === "tamam" && !ayni,
+        neden: !kod ? "Kod yok, atlanır" : !t ? "Tür bulunamadı, atlanır" : ayni ? "Dosyada iki kez, atlanır" : kd.tur === "tamam" ? "" : "Planda var, atlanır" };
     });
-    excelIceCiz(); var y = document.querySelector('#a-pencere [data-eylem="excel-yukle"]'); if (y) y.focus({ preventScroll: true });
+  };
+  X["excel-sec"] = function () {
+    var p = EXCEL.p;
+    MK.dosyaSec({ kabul: ".xlsx,.csv", ornek: p.no + "-ekipman-yukle.xlsx" }, function (ad, f) {
+      if (!f) { EXCEL.dosya = ad; EXCEL.satirlar = excelSatirlari(p, ornekSatirlar(p)); excelSonra(); return; }
+      MK.tabloOku(f).then(function (ham) { EXCEL.dosya = ad; EXCEL.satirlar = excelSatirlari(p, ham); excelSonra(); })
+        .catch(function () { EXCEL.dosya = ""; EXCEL.satirlar = []; excelIceCiz(); MK.bildir(ad + " okunamadı; .xlsx ya da .csv seçin."); });
+    });
+  };
+  var excelSonra = function () { excelIceCiz(); var y = document.querySelector('#a-pencere [data-eylem="excel-yukle"]'); if (y && !y.disabled) y.focus({ preventScroll: true }); };
+  var ornekSatirlar = function (p) {
+    return [["HT-9001", "Hava tankı", "Kazan dairesi", "HT-24-118"], ["FL-9002", "Forklift", "Sevkiyat alanı", "FL-22-431"],
+      [p.ekp[0], SICIL[p.ekp[0]].tur.ad, SICIL[p.ekp[0]].konum, ""], ["VK-9003", "Vinç kancası", "Depo girişi", ""]];
   };
   X["excel-yukle"] = function () {
     var p = EXCEL.p, ok = EXCEL.satirlar.filter(function (x) { return x.ok; }), atla = EXCEL.satirlar.length - ok.length;
@@ -733,7 +756,7 @@
     $("a-pencere").close(); goster(false);
     MK.bildir(ok.length + " ekipman plana eklendi" + (atla ? "; " + atla + " satır atlandı." : "."));
   };
-  X["saha-indir"] = function () { MK.bildir("Makette dosya yok. Saha formu firmanın formatıyla PDF olarak iner."); };
+  X["saha-indir"] = function () { MK.yazdir($("a-pencere-baslik").textContent, $("a-pencere-govde").innerHTML); };
   X["ekle-ac"] = function (el) { var p = pl(el); if (p && p.durum === "denetimde") ekleAc(p); };
   X["ekle-kapat"] = ekleKapat;
   X["tesistekini-sec"] = function (el) { E.sekme = "kayitli"; E.secili = [el.dataset.kod]; ekleCiz(); };

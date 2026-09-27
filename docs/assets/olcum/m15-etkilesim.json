@@ -2,9 +2,16 @@
  "maket": "m15",
  "tarih": "2026-09-27",
  "arac": "tools/olc-bulut.mjs --etkilesim (başsız tarayıcı, 1920 açık tema; gen verilen denemede o genişlik)",
- "toplam": 16,
- "gecen": 16,
+ "toplam": 17,
+ "gecen": 17,
  "denemeler": [
+  {
+   "ad": "Excel'e aktar: ekrandaki tablo gerçek .xlsx",
+   "gen": 1920,
+   "sayfa": "maket/performans.html",
+   "hash": "#/",
+   "gecti": true
+  },
   {
    "ad": "tamamlanma süresi: üç dilim toplamı tamamlanan rapora eşit; iki grafik ve tablo sütunları",
    "gen": 1920,

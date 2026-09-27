@@ -317,6 +317,10 @@ const RAPOR_AC = ["js", 'document.querySelectorAll("details.a-bolum-acilir").for
 const raporHazirla = (l, sayfa) => l.forEach(d => { if ((d.sayfa || sayfa) === "maket/rapor.html" && /^#\/r\//.test(d.hash) && !d.kapali) d.adim = [RAPOR_AC].concat(d.adim || []); });
 export const DENEMELER = {
   planlar: [
+    /* 2026-09-27 (reisim: "maket site nasıl çalışması gerekiyorsa çalışsın"): gerçek dosya indirme / yazdırma */
+    { ad: "Excel'e aktar → gerçek .xlsx iner", hash: "#/plan/9", adim: [["tikla", "[data-eylem=\"excel-disa\"]"], ["tikla", "[data-eylem=\"excel-indir\"]"]], bekle: "MK.SON_INDIRME && /P-0926-025-ekipmanlar\\.xlsx$/.test(MK.SON_INDIRME.ad) && MK.SON_INDIRME.boyut > 1000" },
+    { ad: "Excel şablonu iner", hash: "#/plan/1", adim: [["tikla", "[data-eylem=\"excel-ice\"]"], ["tikla", "[data-eylem=\"excel-sablon\"]"]], bekle: "MK.SON_INDIRME && /sablonu\\.xlsx$/.test(MK.SON_INDIRME.ad) && MK.SON_INDIRME.boyut > 1000" },
+    { ad: "saha formu PDF: yazdırma penceresi", hash: "#/plan/9", adim: [["tikla", "#a-plan .a-adim-tuslar [data-eylem=\"saha-formu\"]"], ["tikla", "[data-eylem=\"saha-indir\"]"]], bekle: "MK.SON_INDIRME && MK.SON_INDIRME.tur === \"yazdir\"" },
     /* 2026-09-27 (reisim: "inspector masraf formu ekleyebilsin … muhasebe tarafında onaylanır ödenince ödendi olur") */
     { ad: "plan içinde Masraflarım: 2 masraf, durumlarıyla", hash: "#/plan/9", bekle: 'document.querySelector("section[aria-labelledby=a-masraf-baslik] .a-sayac").textContent === "2 masraf" && /Onaylandı/.test(document.querySelector(".a-tablo-masraf").textContent) && /Ödendi/.test(document.querySelector(".a-tablo-masraf").textContent)' },
     { ad: "kabul bekleyen planda Masraflarım yok", hash: "#/plan/2", bekle: '!document.querySelector("#a-masraf-baslik")' },
@@ -361,6 +365,8 @@ export const DENEMELER = {
     { ad: "menüden hazır maket → bağlantı (Personel)", hash: "#/", bekle: 'document.querySelector(\'#a-menu a[href="personel.html"]\') !== null' },
   ],
   m1: [
+    /* 2026-09-27 (reisim: "maket site nasıl çalışması gerekiyorsa çalışsın"): gerçek dosya indirme / yazdırma */
+    { ad: "zimmet formu PDF indir: yazdırma penceresi", sayfa: "maket/personel.html", hash: "#/p/mk/zimmet-formu", adim: [["tikla", "[data-eylem=\"zform-pdf\"]"]], bekle: "MK.SON_INDIRME && MK.SON_INDIRME.tur === \"yazdir\"" },
     /* 2026-09-27 (reisim: "ana sayfaya duyurular kısmımızda ekle") */
     { ad: "ana sayfada duyurular: her rolde, bağlantılar yeni sekmede", sayfa: "maket/anasayfa.html", hash: "#/inspector", bekle: 'document.querySelectorAll("section[aria-labelledby=a-b-duyuru] li").length === 3 && [...document.querySelectorAll("section[aria-labelledby=a-b-duyuru] a")].every(function (a) { return a.target === "_blank" && /noopener/.test(a.rel); })' },
     { ad: "duyurular alınamazsa söylenir, liste durur", sayfa: "maket/anasayfa.html", hash: "#/yonetici", adim: [["js", "window.DUYURU_HATA = true; MK.goster(false)"]], bekle: '/alınamadı/.test(document.querySelector("section[aria-labelledby=a-b-duyuru]").textContent) && document.querySelectorAll("section[aria-labelledby=a-b-duyuru] li").length === 3' },
@@ -467,6 +473,8 @@ export const DENEMELER = {
     { ad: "tesis sayfası: Ekipman yüzü tesisin planını açar", sayfa: "maket/musteriler.html", hash: "#/t/t1", adim: [["tikla", 'a.a-yuz[href^="planlarim.html"]']], bekle: '/planlarim\\.html$/.test(location.pathname) && location.hash === "#/plan/1"' },
   ],
   m4: [
+    /* 2026-09-27 (reisim: "maket site nasıl çalışması gerekiyorsa çalışsın"): gerçek dosya indirme / yazdırma */
+    { ad: "örnek sertifika indir: maket PDF'i iner", sayfa: "maket/olcum-cihazlari.html", hash: "#/c/v3", adim: [["tikla", "[data-eylem=\"pdf-goster\"]"], ["tikla", "[data-eylem=\"pdf-indir\"]"]], bekle: "MK.SON_INDIRME && MK.SON_INDIRME.tur === \"application/pdf\" && MK.SON_INDIRME.boyut > 300" },
     { ad: "kalibrasyon sertifikası açılır", sayfa: "maket/olcum-cihazlari.html", hash: "#/c/v1", adim: [["tikla", '[data-eylem="pdf-goster"]']], bekle: 'document.querySelector("#a-pdf").open && /\\.pdf/.test(document.querySelector("#a-pdf-govde").textContent)' },
     { ad: "cihazlar: uyarı şeridindeki Göster çipi uygular (2 / 20)", sayfa: "maket/olcum-cihazlari.html", hash: "#/", adim: [["tikla", '[data-eylem="cip-uygula"][data-deger="gecti"]']], bekle: 'document.querySelector("#a-sayac").textContent === "2 / 20 cihaz" && document.querySelector(\'[data-cip="gecti"]\').getAttribute("aria-pressed") === "true"' },
     { ad: "cihaz ekle: aynı cihaz kodu reddedilir", sayfa: "maket/olcum-cihazlari.html", hash: "#/yeni", adim: [["yaz", "#w-env", "oc-001"], ["tikla", '[data-eylem="pencere-kaydet"]']], bekle: '/başka bir cihazda kayıtlı/.test(document.querySelector("#w-env-ipucu").textContent)' },
@@ -585,6 +593,8 @@ export const DENEMELER = {
     { ad: "Planlar'dan Raporu düzenle → saha rapor ekranı", sayfa: "maket/planlarim.html", hash: "#/plan/1", adim: [["tikla", '#a-liste-r a[href*="#/r/ET-1009"]']], bekle: '/rapor\\.html$/.test(location.pathname) && /ET-1009/.test(document.querySelector("h1") ? document.querySelector("h1").textContent : "")' },
   ],
   m9: [
+    /* 2026-09-27 (reisim: "maket site nasıl çalışması gerekiyorsa çalışsın"): gerçek dosya indirme / yazdırma */
+    { ad: "rapor PDF indir: yazdırma penceresi", hash: "#/r/KM-0926-770-a99c1", adim: [["tikla", "#a-nesne [data-eylem=\"pdf\"]"]], bekle: "MK.SON_INDIRME && MK.SON_INDIRME.tur === \"yazdir\"" },
     /* 2026-09-27: kontrol metodu belgede ve onay özetinde türden */
     { ad: "belgede ve onay özetinde kontrol metodu türden", sayfa: "maket/onaylar.html", hash: "#/r/KM-0926-775-03cf4", bekle: '/Kontrol metodu/.test(document.querySelector("#a-nesne").textContent)' },
     /* 2026-09-26 (reisim): beş durum — servis yoluyla imza "İmzaya gönderildi" */
@@ -618,6 +628,8 @@ export const DENEMELER = {
     { ad: "personel kartı eğitim yüzü kayıttan (Kaan Er: tekrarı geçti)", sayfa: "maket/personel.html", hash: "#/p/ke", bekle: '/1 tekrarı geçti/.test(document.querySelector(".a-yuzler").textContent)' },
   ],
   m11: [
+    /* 2026-09-27 (reisim: "maket site nasıl çalışması gerekiyorsa çalışsın"): gerçek dosya indirme / yazdırma */
+    { ad: "uygunsuzlar gerçek .xlsx iner", hash: "#/excel", adim: [["tikla", "[data-eylem=\"excel-indir\"]"]], bekle: "MK.SON_INDIRME && /^uygunsuzluklar-.*\\.xlsx$/.test(MK.SON_INDIRME.ad) && MK.SON_INDIRME.boyut > 1000" },
     /* 2026-09-26 (reisim 81, 112, 134): planlanan kontrol, sözleşme görünür (imza yok), firmanın logosu */
     { ad: "planlanan kontrol: açık planlı tesis tarihiyle", hash: "#/plan", bekle: '/Planlanan kontroller/.test(document.querySelector("h1").textContent) && document.querySelectorAll("#a-liste tbody tr").length > 0' },
     { ad: "sözleşme açılır, imza tuşu yok", hash: "#/sozlesme", adim: [["tikla", "#a-liste a.a-no"]], bekle: '/^#\\/s\\//.test(location.hash) && !!document.querySelector("#a-nesne .a-belge") && !/İmzala/.test(document.querySelector("#a-nesne").textContent)' },
@@ -630,6 +642,8 @@ export const DENEMELER = {
     { ad: "müşteri sayfasından uygunsuzluk yüzü → o müşterinin paneli", sayfa: "maket/musteriler.html", hash: "#/m/m9", adim: [["tikla", 'a.a-yuz[href^="musteri.html"]']], bekle: '/musteri\\.html$/.test(location.pathname) && /Başak Un/.test(document.querySelector("#a-alt").textContent) && document.querySelector("#a-sayac").textContent === "10 uygunsuzluk"' },
   ],
   m12: [
+    /* 2026-09-27 (reisim: "maket site nasıl çalışması gerekiyorsa çalışsın"): gerçek dosya indirme / yazdırma */
+    { ad: "teklif PDF: yazdırma penceresi", hash: "#/t/T-0926-001", adim: [["tikla", "[data-eylem=\"pdf\"]"]], bekle: "MK.SON_INDIRME && MK.SON_INDIRME.tur === \"yazdir\"" },
     /* 2026-09-26 (reisim 120, 123): KDV teklifte değişir; teklif istenirse çok tesisli */
     { ad: "çok tesisli teklif, KDV %10: kalemler iki tesisten, kaydedilir", hash: "#/yeni?tesis=t1", adim: [["tikla", '[data-ektesis="t2"]'], ["yaz", "#f-kdv", "10"], ["tikla", '[data-eylem="doldur"]'], ["tikla", '[data-eylem="kaydet"]']], bekle: '/^#\\/t\\//.test(location.hash) && /Merkez Fabrika, Depo/.test(document.querySelector("#a-nesne .a-nesne-alt").textContent) && /KDV %10/.test(document.querySelector("#a-nesne").textContent)' },
     { ad: "KDV yazınca toplam canlı güncellenir (odak yerinde)", hash: "#/yeni?tesis=t1", adim: [["tikla", '[data-eylem="doldur"]'], ["yaz", "#f-kdv", "18"]], bekle: '/KDV %18/.test(document.querySelector("#f-toplam").textContent) && document.activeElement.id === "f-kdv"' },
@@ -660,6 +674,11 @@ export const DENEMELER = {
     { ad: "kapsam: plan bağlantısı plan içine", hash: "#/s/IS-0926-006", adim: [["tikla", '.a-tablo-iskapsam a.a-no']], bekle: '/planlarim\\.html$/.test(location.pathname) && /^#\\/plan\\//.test(location.hash)' },
   ],
   m14: [
+    /* 2026-09-27 (reisim: "maket site nasıl çalışması gerekiyorsa çalışsın"): gerçek dosya indirme / yazdırma */
+    { ad: "gider Excel'e aktar → gerçek .xlsx iner", hash: "#/giderler", adim: [["tikla", "[data-eylem=\"gider-excel-disa\"]"], ["tikla", "[data-eylem=\"gider-excel-indir\"]"]], bekle: "MK.SON_INDIRME && /^giderler-.*\\.xlsx$/.test(MK.SON_INDIRME.ad) && MK.SON_INDIRME.boyut > 1000" },
+    { ad: "gider şablonu iner", hash: "#/giderler", adim: [["tikla", "[data-eylem=\"gider-excel-ice\"]"], ["tikla", "[data-eylem=\"gider-excel-sablon\"]"]], bekle: "MK.SON_INDIRME && /sablonu\\.xlsx$/.test(MK.SON_INDIRME.ad) && MK.SON_INDIRME.boyut > 1000" },
+    { ad: "Excel okuma: yazılan .xlsx geri okunur, satır denetimden geçer", hash: "#/giderler", adim: [["js", "MK.tabloOku(new File([MK.xlsx(\"G\", [[\"Tarih\",\"Tür\",\"Tutar (KDV dahil)\",\"KDV oranı\",\"Açıklama\",\"Proje no\"],[\"20.09.2026\",\"Konaklama\",3200,10,\"Otel\",\"P-0926-025\"]])], \"g.xlsx\")).then(function (r) { window.OKUNAN = r; })"]], bekle: "window.OKUNAN && window.OKUNAN.length === 2 && window.OKUNAN[1][2] === \"3200\" && window.OKUNAN[1][1] === \"Konaklama\"" },
+    { ad: "fatura özeti PDF: yazdırma penceresi", hash: "#/f/KMF2026000000017", adim: [["tikla", "[data-eylem=\"pdf\"]"]], bekle: "MK.SON_INDIRME && MK.SON_INDIRME.tur === \"yazdir\"" },
     /* 2026-09-26 (reisim 136): fatura iş başına; istenirse müşteri başına toplu. Makette m11'in iki işinin faturası kaldırılarak kurulur */
     { ad: "toplu fatura: aynı müşterinin iki işi tek faturada", hash: "#/", adim: [["js", 'MV.ISLER.filter(x => x.m === "m11").forEach(x => { x.faturalar = []; }); location.hash = "#/is/P-1125-011"'], ["tikla", 'a[href="#/is/P-1125-011/toplu-fatura"]'], ["yaz", "#w-no", "KMF2026000000030"], ["tikla", '[data-eylem="fatura-kaydet"]']], bekle: 'MV.fatura("KMF2026000000030") && MV.fatura("KMF2026000000030").isler.length === 2 && /İşler/.test(document.querySelector("#a-nesne").textContent || "") || (MV.fatura("KMF2026000000030") && MV.fatura("KMF2026000000030").isler.length === 2)' },
     { ad: "liste: 16 iş, en yeni üstte; iki şerit", hash: "#/", bekle: 'document.querySelector("#a-sayac").textContent === "16 iş" && /P-0926-031/.test(document.querySelector("#a-liste tbody tr").textContent) && /Vadesi geçen alacak/.test(document.querySelector("#a-uyari").textContent) && /Faturaya hazır/.test(document.querySelector("#a-uyari").textContent)' },
@@ -706,6 +725,8 @@ export const DENEMELER = {
     { ad: "gelir-gider: dönem Kasım 2025 → 2 iş, odak seçimde", hash: "#/gelir-gider", adim: [["tikla", "#gg-ay"], ["tikla", '[data-secim="gg-ay"][data-deger="2025-11"]']], bekle: 'document.querySelector("#a-sayac").textContent === "Kasım 2025" && document.querySelector("section[aria-labelledby=a-b-ggis] .a-sayac").textContent === "2 iş" && document.activeElement.id === "gg-ay"' },
   ],
   m15: [
+    /* 2026-09-27 (reisim: "maket site nasıl çalışması gerekiyorsa çalışsın"): gerçek dosya indirme / yazdırma */
+    { ad: "Excel'e aktar: ekrandaki tablo gerçek .xlsx", hash: "#/", adim: [["tikla", "[data-eylem=\"excel\"]"]], bekle: "MK.SON_INDIRME && /^performans-.*\\.xlsx$/.test(MK.SON_INDIRME.ad) && MK.SON_INDIRME.boyut > 1000" },
     /* 2026-09-27 (reisim): 24 saat içinde / 48 saat içinde / 48 saatten uzun tamamlanan raporlar, grafikle */
     { ad: "tamamlanma süresi: üç dilim toplamı tamamlanan rapora eşit; iki grafik ve tablo sütunları", hash: "#/", bekle: '(() => { const y = [...document.querySelectorAll("section[aria-labelledby=a-b-sure] .a-yuz-sayi")].map(e => +e.textContent); const n = +document.querySelector("section[aria-labelledby=a-b-sure] .a-sayac b").textContent; return y.length === 3 && n > 0 && y[0] + y[1] + y[2] === n && /24 saat içinde tamamlanan/.test(document.querySelector("#a-pano").textContent) && /48 saatten uzun süren/.test(document.querySelector("#a-pano").textContent) && !!document.querySelector(".a-tablo-perf .a-k-h24"); })()' },
     { ad: "geçen yıl: üç dilimin hepsi dolu", hash: "#/", adim: [["tikla", '[data-donem="gecen"]']], bekle: '[...document.querySelectorAll("section[aria-labelledby=a-b-sure] .a-yuz-sayi")].every(e => +e.textContent > 0) && document.activeElement.dataset.donem === "gecen"' },
@@ -822,6 +843,8 @@ async function ac(tar, taban, dosya, hash, gen, yuk, tema, adim) {
   s.on("requestfailed", r => hatalar.push("istek düştü: " + r.url()));
   s.on("response", r => { if (r.status() >= 400) hatalar.push(r.status() + " " + r.url()); });
   await s.setViewport({ width: gen, height: yuk, deviceScaleFactor: 1 });
+  /* 2026-09-27: başsız tarayıcı dosya penceresi açamaz → maket örnek dosya adını kullanır (MK.dosyaSec); yazdırma penceresi açılmaz */
+  await s.evaluateOnNewDocument(() => { window.MAKET_ORNEK = true; });
   await s.goto(`${taban}/${dosya}?tema=${tema}${hash || ""}`, { waitUntil: "load" });
   await s.addStyleTag({ content: "*,*::before,*::after{transition:none!important;animation:none!important}" });
   await s.evaluate(() => document.fonts.ready);
@@ -936,6 +959,7 @@ const TELEFON_OLC = `(() => {
 async function telefonAc(tar, taban, dosya, hash, gen, adim) {
   const ctx = await tar.createBrowserContext(), s = await ctx.newPage();
   await s.emulate({ viewport: { width: gen, height: 800, deviceScaleFactor: 3, isMobile: true, hasTouch: true }, userAgent: TELEFON_UA });
+  await s.evaluateOnNewDocument(() => { window.MAKET_ORNEK = true; });
   await s.goto(`${taban}/${dosya}?tema=acik${hash || ""}`, { waitUntil: "load" });
   await s.addStyleTag({ content: "*,*::before,*::after{transition:none!important;animation:none!important}" });
   await s.evaluate(() => document.fonts.ready);
