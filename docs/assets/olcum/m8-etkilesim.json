@@ -2,9 +2,16 @@
  "maket": "m8",
  "tarih": "2026-09-27",
  "arac": "tools/olc-bulut.mjs --etkilesim (başsız tarayıcı, 1920 açık tema; gen verilen denemede o genişlik)",
- "toplam": 43,
- "gecen": 43,
+ "toplam": 44,
+ "gecen": 44,
  "denemeler": [
+  {
+   "ad": "kontrol metodu türden, seçim alanı yok",
+   "gen": 1920,
+   "sayfa": "maket/rapor.html",
+   "hash": "#/r/ET-1009",
+   "gecti": true
+  },
   {
    "ad": "kriter seçilince sayaç güncellenir, odak seçimde",
    "gen": 1920,
@@ -111,7 +118,7 @@
    "gecti": true
   },
   {
-   "ad": "firma bilgileri satırları: tarih · saat · dakika ayrı, otomatik dolu, SGK DETSİS no, takip kontrol; metot yok",
+   "ad": "firma bilgileri satırları: tarih · saat · dakika ayrı, otomatik dolu, SGK DETSİS no, takip kontrol; metot seçilmez",
    "gen": 1920,
    "sayfa": "maket/rapor.html",
    "hash": "#/r/ET-1009",

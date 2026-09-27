@@ -2,9 +2,16 @@
  "maket": "m3",
  "tarih": "2026-09-27",
  "arac": "tools/olc-bulut.mjs --etkilesim (başsız tarayıcı, 1920 açık tema; gen verilen denemede o genişlik)",
- "toplam": 18,
- "gecen": 18,
+ "toplam": 19,
+ "gecen": 19,
  "denemeler": [
+  {
+   "ad": "standartsız tür: uyarı, raporda üretici talimatı yazar",
+   "gen": 1920,
+   "sayfa": "maket/ekipman-turleri.html",
+   "hash": "#/tur/JN",
+   "gecti": true
+  },
   {
    "ad": "rapor formatı sürümünün PDF'i açılır",
    "gen": 1920,

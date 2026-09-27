@@ -441,6 +441,12 @@
   };
   MV.KATALOG.forEach(function (t) { t.cihaz = (TUR_CIHAZ[t.k] || []).slice(); });
   MV.turCihazlari = function (t) { return t.cihaz || []; };
+  /* kontrol metodu (Ek-III 1.7.1.1) YALNIZ ekipman türünde belirlenir (reisim 2026-09-27: "metod kısmı olsun ama sadece ekipman türü eklerken
+     belirlene"); raporda seçilmez, türün standartlarından okunur; türde standart yoksa üretici talimatı (karar 82). [{ no, konu }] */
+  MV.turMetot = function (t) {
+    return t.std.length ? t.std.map(function (k) { var s = MV.standart(k); return { no: s.no + ":" + s.surum, konu: s.konu }; }) : [{ no: "", konu: "Üretici talimatı" }];
+  };
+  MV.metotYazi = function (t) { return MV.turMetot(t).map(function (m) { return m.no ? m.no + " — " + m.konu : m.konu; }).join("; "); };
   /* raporda eklenebilecek cihazlar: kişinin zimmetinde, türün cihaz türlerinden, kalibrasyonu geçmemiş */
   MV.eklenebilirCihazlar = function (kisi, turler) {
     return MV.VARLIKLAR.filter(function (v) { return v.tur === "cihaz" && MV.kimde(v.id) === kisi && turler.indexOf(v.cihazTur) >= 0 && MV.kalDurum(v) !== "gecti"; });
@@ -798,6 +804,6 @@
     var s = new Date(gun + "T12:00:00"); s.setMonth(s.getMonth() + t.periyot);
     return { e: e, ts: ts, m: MV.musteri(ts.m), p: p, isg: isg, tarih: gun, bas: r.olustu.slice(11, 16), bit: r.gonderildi ? r.gonderildi.slice(11, 16) : null,
       cihaz: MV.turCihazlari(t).map(function (k) { return MV.eklenebilirCihazlar(p.id, [k])[0]; }).filter(Boolean),   /* raporda eklenen: türün cihazları, zimmetten */
-      sonraki: s.toISOString().slice(0, 10), no: r.no, sonuc: MV.sonucAd(r) || "Uygun", metot: t.std[0] || "uretici", imza: r.imza };
+      sonraki: s.toISOString().slice(0, 10), no: r.no, sonuc: MV.sonucAd(r) || "Uygun", imza: r.imza };
   };
 })();

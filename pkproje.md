@@ -125,8 +125,9 @@ Kurallar (reisim'in sözünden türeyen, ürün kuralı olarak):
 - Ekipman kaydı **kalıcıdır**; sonraki yıl aynı ekipmandan yeni rapor açılır, önceki rapor geçmiş olarak durur.
 - **Standart kütüphanesi (reisim 2026-09-22):** ayrı **modül**. Her firma kendi standardını **kendisi yükler**;
   kontrol metodu standardı (Ek-III 1.7.1.1) firmanın kütüphanesinden **seçilir**. Reisim: *"ilgili dökümanı
-  yüklerken hangi standarda göre yaptığını kendi seçecek"*. **Açık soru:** seçim rapor anında mı yapılır, ekipman
-  türü düzeyinde mi tanımlanır. (Not: "standartlar sistemde yüklü olacak, herkes erişebilecek" sözü aynı gün
+  yüklerken hangi standarda göre yaptığını kendi seçecek"*. **Karar (2026-09-27, reisim: *"metod kısmı olsun ama sadece
+  ekipman türü eklerken belirlene"*):** metot **ekipman türü düzeyinde** seçilir; raporda seçilmez, türden okunur; türde standart yoksa
+  üretici talimatı. (Not: "standartlar sistemde yüklü olacak, herkes erişebilecek" sözü aynı gün
   "her firma kendi standardını yükler" kararıyla değişti.)
 - **Rapor şablonları (reisim 2026-09-22 — önceki "firma PDF formatı" yorumum DÜZELTİLDİ):** kontrol kriterleri ve
   PDF formatı **firma × ekipman türü** başına ayrı ayrı **kodla elle** yazılır ve yayınla gelir. Site içinde
@@ -639,6 +640,9 @@ yılın şablon sürümüyle gösteriyordu (örnek bugün tarihli yapıldı). Ek
 süzülmüş listeye gider (M3 60/60, 14/14 yeniden).
 
 #### Maket M8 — Saha ve Rapor (modül 14) — ONAY BEKLİYOR
+**7. tur (2026-09-27, §9 yirmi beşinci tur):** "Ekipman bilgileri"nde salt okunur **"Kontrol metodu"** (türün standartlarından; seçim alanı yok);
+belgede ve onay özetinde aynı satır. Ölçüm: M8 136/136 · 44/44 · 68/68; M9 96/96 · 18/18 · 48/48; M3 80/80 · 19/19 · 40/40; M7 80/80 · 14/14 ·
+40/40; M11 88/88 · 9/9 · 44/44.
 **6. tur (2026-09-27, §9 yirmi dördüncü tur):** ekipman bilgileri elle (girdi; önceki raporun değerleri başlangıç) · ölçüm cihazları türün
 listesinden, "Cihaz ekle" penceresinde zimmetteki geçerli cihazlar; eksik ya da geçmiş cihazda gönder kapalı; "Zimmetlerim" kalktı; cihaz rapordan
 kaldırılır · sonuç ve kanaat seçmeli, seçilmezse gönderilince kriterlere göre · Kaydet + Onaya gönder altta yapışkan (her bantta), kayıt satırı
@@ -1490,6 +1494,12 @@ yazdın sana daha önce örnek paylaşmış olmam laızm  planlanan saat olması
   **İş sayfasında** "Giderler" bölümü (o işin giderleri, "Gider ekle" iş seçili açılır) ve **raporlanan − gider = kâr** (KDV hariç).
   No **G-AAYY-SIRA** (proje no'nun düzeni; firma ayarı, öneri). İleri tarihli gider kaydedilmez (fatura ve tahsilatla aynı).
   *Açık (sırası gelince sorulacak):* gideri yalnız muhasebe / yönetici mi girer, yoksa inspector sahada fişin fotoğrafını kendisi mi ekler?
+- **Kontrol metodu yalnız ekipman türünde belirlenir** (M3 tür ekle / düzenle: "Kontrol metodu standartları"). Raporda seçim alanı yok;
+  "Ekipman bilgileri"nde **salt okunur** "Kontrol metodu" satırı türün standartlarını (no:sürüm + konu) gösterir; rapor belgesinde ve onay
+  özetinde de aynı satır geri geldi. Türde standart yoksa **"Üretici talimatı"** (karar 82); tür sayfasındaki "Standart seçilmemiş" uyarısı bunu
+  söyler. Standartlar sayfasındaki "Raporda: Kontrol metodu" satırı böylece yeniden geçerli.
+- **Standartlar:** kütüphane kalır (metodun kaynağı). Reisim'in sözü *"sana daha önce örnek paylaşmış olmam lazım"* — hangi örnek olduğu bu
+  oturumda elimde değil; sorulacak (örnek gelince Standartlar ekranı ona göre gözden geçirilir).
 - **Planlanan saat yok:** reisim'in örnek ekranındaki "Planlanan saat" satırı plan içine eklenmez; plan açarken de saat sorulmaz (2026-09-26
   kararıyla aynı). Rapordaki başlangıç / bitiş saati yerinde kalır.
 
@@ -1499,7 +1509,7 @@ okunur (pg-boss işi, §8.9), Ana sayfada son 5 duyuru başlık + tarih + kayna�
 sayfa yapısı değişince okuma bozulabilir → okunamazsa sessiz kalmaz, "duyurular alınamadı" yazar; maket sırası Ana sayfa revizesinde) · **modül modül gözden geçirme** (M1–M5 ve M13 onaylandı — Ekipmanlar kalktı, Sözleşmeler birleşti; M6 Plan aç 2. tur incelemede) · **toplu maket çalışması** (M1–M16 + toplu bakış, `MAKET-PLANI.md`; sorular §3.6'da, 32'den) · **önizlemede örnek veri kipi** (öneri, §3.3) · ~~rol × modül görünürlüğü~~ (karar 2026-09-25: başlangıç düzeni + firma yöneticisi değiştirir) · **gerçek sunucunun sağlayıcısı**
 (Türkiye, §8.8) ·
 alan adının alınması · e-imza yöntemi (8.4) · v1 ekipman grupları · 5 yıl sonrası silme
-mekanizması · **zimmette birden çok cihaz varsa süzgeç** (§3) · ~~kontrol metodu standardının seçim yeri~~ (2026-09-27: rapordan kaldırıldı) · **§3.1 ve §3.2'deki "öneri" maddeleri** (planlama saat dağıtımı,
+mekanizması · **zimmette birden çok cihaz varsa süzgeç** (§3) · ~~kontrol metodu standardının seçim yeri~~ (2026-09-27: ekipman türünde seçilir, raporda türden okunur) · **§3.1 ve §3.2'deki "öneri" maddeleri** (planlama saat dağıtımı,
 revizyon, alan kopyalama, hafif kusur devri, meslek eşleşme denetimi).
 
 ## 10 · Kaynaklar (2026-09-18)
@@ -1525,6 +1535,9 @@ revizyon, alan kopyalama, hafif kusur devri, meslek eşleşme denetimi).
 - Emsal ürünler: https://opwire.app/iso-17020-periyodik-kontrol-yazilimi/ · https://17020muayene.vidco.com.tr/ · https://akuple.com/asansor-kontrol-yazilimi/ · https://ensyazilim.com/
 
 ## 11 · Değişiklik günlüğü
+- 2026-09-27 (84): **Kontrol metodu yalnız ekipman türünde** (§9 yirmi beşinci tur): raporda salt okunur satır (türün standartları; yoksa üretici
+  talimatı), belgede ve onay özetinde geri; tür sayfasındaki uyarı "raporda üretici talimatı yazar". §2 açık soru kapandı. Standartlar
+  kütüphanesi kalır; reisim'in bahsettiği örnek sorulacak. M8 · M9 · M3 · M7 · M11 yeniden temiz.
 - 2026-09-27 (83): **Muhasebe: Giderler** (§9 yirmi beşinci tur): üçüncü sekme; tarih, tür, tutar (KDV dahil) + KDV oranı (türün varsayılanı),
   açıklama, isteğe bağlı iş ve personel, belge (açılır); belgesi olmayan uyarıyla kaydedilir; süzgeç (işe bağlı · genel · belgesi yok; tür,
   dönem, personel) ve süzülenin toplamı; iş sayfasında giderler ve kâr (raporlanan − gider, KDV hariç). No G-AAYY-SIRA. Planlanan saat

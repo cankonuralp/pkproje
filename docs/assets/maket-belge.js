@@ -38,6 +38,8 @@
         bilgi("Bitiş", d(o && MK.tarihYaz(o.tarih) + " " + (o.bit || "09:48"), "saha: onaya gönderildi")) +
         bilgi("Sonraki kontrol", d(o && sonraki && MK.tarihYaz(sonraki), "kontrol + tür periyodu")) +
         bilgi("Rapor tarihi", d(o && MK.tarihYaz(o.tarih), "son imza")) +
+        /* 2026-09-27 (reisim): metot yalnız ekipman türünde belirlenir; belge türden okur */
+        bilgi("Kontrol metodu", d(o && kacis(MV.metotYazi(t)), "ekipman türünde seçilir"), true) +
         "</dl>") +
       bolum("3", "Ekipman bilgileri", '<dl class="a-bilgi">' +
         bilgi("Ekipman", d(o && kacis(t.ad), "ekipman türü")) + bilgi("Kod", d(o && '<span class="a-kod">' + o.e.kod + "</span>", "ekipman kaydı")) +
