@@ -365,6 +365,27 @@
       }).join("") + "</div>" +
       '<footer class="a-belge-alt"><span>' + kacis(f.ad) + " · " + formKod + " · temel format</span></footer></article>";
   };
+  /* ARA KONTROL KAYITLARI — temel format KM-FR-ARA-01 (2026-09-28, T7; reisim: "ara kontrol kayıtları PDF indir … bizim formatımızla";
+     firma kendi formatını isterse o firmaya özel üretilir, §3.7 satır 12). o = { v (cihaz), kayitlar[] (yapılmış, tarih sırası), tarih } */
+  MB.araKontrolFormu = function (o) {
+    var f = MV.FIRMA, v = o.v, formKod = f.kisa + "-FR-ARA-01";
+    var satirlar = o.kayitlar.map(function (x, i) {
+      return [String(i + 1), MK.tarihYaz(x.tarih), x.siklik ? kacis(MV.araSiklik(x.siklik).ad) : "Tek seferlik", kacis(x.yontem || "—"), x.kim ? kacis(MV.kisi(x.kim).ad) : "—", kacis(x.sonuc || "—")];
+    });
+    var ilk = o.kayitlar[0].tarih, son = o.kayitlar[o.kayitlar.length - 1].tarih;
+    return '<article class="a-belge" aria-label="Ara kontrol kayıtları önizlemesi">' +
+      '<header class="a-belge-bas"><div class="a-belge-logo" role="img" aria-label="Firma logosu yeri">Logo</div>' +
+        '<div class="a-belge-kunye"><b>' + kacis(f.ad) + "</b><span>" + kacis(f.adres) + "</span></div></header>" +
+      '<div class="a-belge-baslik"><h2>Ölçüm cihazı ara kontrol kayıtları</h2><p>' + kacis(v.env + " · " + v.ad) + "</p></div>" +
+      '<dl class="a-bilgi">' + bilgi("Cihaz kodu", '<span class="a-kod">' + kacis(v.env) + "</span>") + bilgi("Marka / model", kacis([v.marka, v.model].filter(Boolean).join(" "))) +
+        bilgi("Seri no", '<span class="a-kod">' + kacis(v.seri) + "</span>") + bilgi("Ölçüm aralığı", kacis(v.aralik)) +
+        bilgi("Kalibrasyon geçerliliği", MK.tarihYaz(v.bitis)) + bilgi("Dönem", MK.tarihYaz(ilk) + (son !== ilk ? " – " + MK.tarihYaz(son) : "")) + "</dl>" +
+      bolum("1", "Ara kontroller", o.kayitlar.length + " kayıt", tablo(["#", "Tarih", "Sıklık", "Yöntem", "Yapan", "Sonuç"], satirlar)) +
+      '<div class="a-belge-imzalar">' + [["Kontrol eden", "Ad soyad"], ["Onaylayan", "Teknik yönetici"]].map(function (x) {
+        return "<div><b>" + x[0] + "</b><span>" + x[1] + '</span><div class="a-belge-imza">Tarih · imza</div></div>';
+      }).join("") + "</div>" +
+      '<footer class="a-belge-alt"><span>' + kacis(f.ad) + " · " + formKod + " · temel format · " + MK.tarihYaz(o.tarih) + "</span></footer></article>";
+  };
   MB.isSozlesmesi = function (o) {
     var f = MV.FIRMA, x = o.x, m = MV.musteri(x.m), formKod = f.kisa + "-FR-SZL-01";
     var satirlar = x.tesisler.map(function (tid, i) { var t = MV.tesis(tid); return [String(i + 1), "<b>" + kacis(t.ad) + "</b><br>" + kacis(t.adres || "") + '<br><span class="a-belge-madde">' + kacis([t.ilce, t.il].filter(Boolean).join(" / ")) + "</span>"]; });

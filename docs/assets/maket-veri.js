@@ -766,10 +766,11 @@
     var t = MV.cihazTuru(c[1]), bit = c[3], y = +bit.slice(0, 4);
     return { id: "v" + (i + 1), tur: "cihaz", ad: t.ad, cihazTur: c[1], env: c[0], marka: c[2], model: c[0].replace("OC-", "M") + "0", seri: "CS" + (48213 + i * 977),
       /* 2026-09-26 (M4 2. tur, 60: ara kontrol isteğe bağlı): kumpas, mesafe ölçer, lüksmetrede takip edilmiyor */
-      aralik: c[5], bitis: bit, araSon: ARASIZ.indexOf(c[1]) >= 0 ? null : c[4], araPeriyot: ARASIZ.indexOf(c[1]) >= 0 ? null : 6,
+      /* 2026-09-28 (T7): ara kontrol programları sıklıkla (günlük · haftalık · aylık · 6 ayda bir); tohumda 6 ayda bir */
+      aralik: c[5], bitis: bit, araSiklik: ARASIZ.indexOf(c[1]) >= 0 ? [] : ["6ay"],
       kal: [{ tarih: (y - 1) + bit.slice(4), bitis: bit, lab: LAB[i % 2], sertifika: "KL-" + (y - 1) + "-" + (410 + i * 13), sonuc: "Uygun" },
             { tarih: (y - 2) + bit.slice(4), bitis: (y - 1) + bit.slice(4), lab: LAB[(i + 1) % 2], sertifika: "KL-" + (y - 2) + "-" + (300 + i * 11), sonuc: "Uygun" }],
-      ara: ARASIZ.indexOf(c[1]) >= 0 ? [] : [{ tarih: c[4], kim: i % 2 ? "co" : "sy", yontem: "Referans değerle karşılaştırma", sonuc: "Uygun" }], rapor: 12 + (i * 7) % 40 };
+      ara: ARASIZ.indexOf(c[1]) >= 0 ? [] : [{ tarih: c[4], siklik: "6ay", kim: i % 2 ? "co" : "sy", yontem: "Referans değerle karşılaştırma", sonuc: "Uygun" }], rapor: 12 + (i * 7) % 40 };
   }).concat([
     { id: "a1", tur: "arac", ad: "Hafif ticari araç", plaka: "00 MAK 001", marka: "Delta", model: "Van", yil: 2022 },
     { id: "a2", tur: "arac", ad: "Hafif ticari araç", plaka: "00 MAK 002", marka: "Delta", model: "Van", yil: 2023 },
@@ -1209,11 +1210,31 @@
      renkli balonları aynı hesabı okur. Kırmızı = süresi geçen, sarı = yaklaşan, yeşil = sorunsuz (reisim: "cihazlarda süresi geçen cihaz
      sayısı kırmızı balon, yaklaşan sarı balon, sorunsuz cihazlar yeşil balon … diğer modüllerde de benzer takip"). */
   var gunKalan = function (iso) { return Math.round((new Date(iso + "T12:00:00") - new Date(MK.BUGUN + "T12:00:00")) / 864e5); };
-  /* ara kontrol: yalnız takibi açık cihazda (son ara kontrol + sıklık), kalibrasyonu geçen ya da kalibrasyondaki cihazda sorulmaz; 30 gün kala */
+  /* ARA KONTROL (2026-09-28, T7; reisim: "ara kontrollerde … günlük, haftalık, aylık, 6 ayda bir … otomatik bakım oluştur"): cihazın bir ya da
+     birkaç programı (sıklık) olur; kayıtlar yapılan (tarih, yapan, yöntem, sonuç) ve planlanan (planli) ara kontrollerdir. Bir programın
+     sonraki tarihi: planlanan en erken kayıt, yoksa son yapılan + sıklık (hiç yapılmadıysa bugün). Uyarı eşiği sıklığa göre (esik gün). */
+  MV.ARA_SIKLIK = [{ k: "gunluk", ad: "Günlük", gun: 1, esik: 0 }, { k: "haftalik", ad: "Haftalık", gun: 7, esik: 2 },
+    { k: "aylik", ad: "Aylık", ay: 1, esik: 7 }, { k: "6ay", ad: "6 ayda bir", ay: 6, esik: 30 }];
+  MV.araSiklik = function (k) { return MV.ARA_SIKLIK.filter(function (x) { return x.k === k; })[0]; };
+  MV.araIleri = function (iso, k) {
+    var s = MV.araSiklik(k), d = new Date(iso + "T12:00:00");
+    if (s.gun) d.setDate(d.getDate() + s.gun); else d.setMonth(d.getMonth() + s.ay);
+    return d.toISOString().slice(0, 10);
+  };
+  MV.araProgram = function (v) {
+    return (v.araSiklik || []).map(function (k) {
+      var plan = v.ara.filter(function (x) { return x.planli && x.siklik === k; }).map(function (x) { return x.tarih; }).sort()[0];
+      var son = v.ara.filter(function (x) { return !x.planli && x.siklik === k; }).map(function (x) { return x.tarih; }).sort().pop();
+      var sonraki = plan || (son ? MV.araIleri(son, k) : MK.BUGUN), kal = gunKalan(sonraki);
+      return { k: k, ad: MV.araSiklik(k).ad, sonraki: sonraki, son: son || null, kalan: kal, durum: kal < 0 ? "gecti" : kal <= MV.araSiklik(k).esik ? "yakin" : "gecerli" };
+    });
+  };
+  /* cihazın ara kontrol durumu: en acil program; kalibrasyonu geçen ya da kalibrasyondaki cihazda sorulmaz */
   MV.araDurum = function (v) {
-    if (v.tur !== "cihaz" || !v.araPeriyot || !v.araSon || MV.kalDurum(v) === "gecti" || MV.kimde(v.id) === "lab") return null;
-    var t = new Date(v.araSon + "T12:00:00"); t.setMonth(t.getMonth() + v.araPeriyot); var iso = t.toISOString().slice(0, 10), k = gunKalan(iso);
-    return { tarih: iso, durum: k < 0 ? "gecti" : k <= 30 ? "yakin" : "gecerli" };
+    if (v.tur !== "cihaz" || !(v.araSiklik || []).length || MV.kalDurum(v) === "gecti" || MV.kimde(v.id) === "lab") return null;
+    var sira = { gecti: 0, yakin: 1, gecerli: 2 };
+    var p = MV.araProgram(v).sort(function (a, b) { return sira[a.durum] - sira[b.durum] || (a.sonraki < b.sonraki ? -1 : 1); })[0];
+    return { tarih: p.sonraki, durum: p.durum, siklik: p.k };
   };
   /* İSG-KATİP (uyarı yalnız İSG-KATİP için, reisim 2026-09-26): bitiş tarihi açık planın gününden (plan yoksa bugünden) önce · açık planda
      görevli olup ID'si olmayan ya da bitmiş denetçiler [tesis, kişi, neden] */
@@ -1241,7 +1262,7 @@
     MV.VARLIKLAR.forEach(function (v) {
       var a = MV.araDurum(v); if (!a || a.durum === "gecerli") return;
       l.push({ id: "a-" + v.id, tur: "ara", ikon: "flask-conical", konu: v.env + " · " + v.ad, alt: "Ara kontrol", kisi: MV.kimde(v.id), tarih: a.tarih, durum: a.durum,
-        href: MK.adres(8, "#/c/" + v.id), sonuc: a.durum === "gecti" ? "ara kontrol gecikti" : "30 gün içinde" });
+        href: MK.adres(8, "#/c/" + v.id), sonuc: (a.durum === "gecti" ? "gecikti · " : "yaklaşıyor · ") + MV.araSiklik(a.siklik).ad.toLocaleLowerCase("tr") });
     });
     MV.EGITIMLER.forEach(function (x) {
       var d = MV.egitimDurum(x); if (d !== "gecti" && d !== "yakin") return;

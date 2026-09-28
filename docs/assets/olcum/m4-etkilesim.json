@@ -2,8 +2,8 @@
  "maket": "m4",
  "tarih": "2026-09-28",
  "arac": "tools/olc-bulut.mjs --etkilesim (başsız tarayıcı, 1920 açık tema; gen verilen denemede o genişlik)",
- "toplam": 23,
- "gecen": 23,
+ "toplam": 35,
+ "gecen": 35,
  "denemeler": [
   {
    "ad": "örnek sertifika indir: maket PDF'i iner",
@@ -146,7 +146,7 @@
    "gecti": true
   },
   {
-   "ad": "cihaz: ara kontrol takip edilmeyende bölüm yok",
+   "ad": "cihaz: ara kontrol takip edilmeyende \"takip edilmiyor\", sonraki ara kontrol yüzü yok",
    "gen": 1920,
    "sayfa": "maket/olcum-cihazlari.html",
    "hash": "#/c/v16",
@@ -164,6 +164,90 @@
    "gen": 1920,
    "sayfa": "maket/olcum-cihazlari.html",
    "hash": "#/c/v1",
+   "gecti": true
+  },
+  {
+   "ad": "cihaz düzenle: sıklık seçilir → program ve sonraki tarih",
+   "gen": 1920,
+   "sayfa": "maket/olcum-cihazlari.html",
+   "hash": "#/c/v16",
+   "gecti": true
+  },
+  {
+   "ad": "otomatik bakım: 3 sıklık, 1 yıl → günlük 365, haftalık 53, aylık 12 planlı",
+   "gen": 1920,
+   "sayfa": "maket/olcum-cihazlari.html",
+   "hash": "#/c/v16",
+   "gecti": true
+  },
+  {
+   "ad": "otomatik bakım: aynı sıklık iki bakımda reddedilir",
+   "gen": 1920,
+   "sayfa": "maket/olcum-cihazlari.html",
+   "hash": "#/c/v16",
+   "gecti": true
+  },
+  {
+   "ad": "otomatik bakım: bitiş başlangıçtan önce reddedilir",
+   "gen": 1920,
+   "sayfa": "maket/olcum-cihazlari.html",
+   "hash": "#/c/v16",
+   "gecti": true
+  },
+  {
+   "ad": "planlı ara kontrol \"Yapıldı\" → yapılan kayıt, planlı bir azalır",
+   "gen": 1920,
+   "sayfa": "maket/olcum-cihazlari.html",
+   "hash": "#/c/v16",
+   "gecti": true
+  },
+  {
+   "ad": "ara kontrol kaydı silinir (onay)",
+   "gen": 1920,
+   "sayfa": "maket/olcum-cihazlari.html",
+   "hash": "#/c/v2",
+   "gecti": true
+  },
+  {
+   "ad": "ara kontrol programı kaldırılır (onay), yapılan kayıt kalır",
+   "gen": 1920,
+   "sayfa": "maket/olcum-cihazlari.html",
+   "hash": "#/c/v2",
+   "gecti": true
+  },
+  {
+   "ad": "ara kontrol PDF'i: temel format, yapılan kayıtlar",
+   "gen": 1920,
+   "sayfa": "maket/olcum-cihazlari.html",
+   "hash": "#/c/v2",
+   "gecti": true
+  },
+  {
+   "ad": "ara kontrol ekle: programsız tek seferlik kayıt",
+   "gen": 1920,
+   "sayfa": "maket/olcum-cihazlari.html",
+   "hash": "#/c/v16",
+   "gecti": true
+  },
+  {
+   "ad": "cihaz türü eklenir; Cihaz türü seçicisinde görünür",
+   "gen": 1920,
+   "sayfa": "maket/olcum-cihazlari.html",
+   "hash": "#/",
+   "gecti": true
+  },
+  {
+   "ad": "cihaz türü: grupsuz ve aynı adla reddedilir",
+   "gen": 1920,
+   "sayfa": "maket/olcum-cihazlari.html",
+   "hash": "#/",
+   "gecti": true
+  },
+  {
+   "ad": "cihaz türü: cihazı olan silinemez, cihazı olmayan silinir (onay) ve ekipman türlerinden çıkar",
+   "gen": 1920,
+   "sayfa": "maket/olcum-cihazlari.html",
+   "hash": "#/",
    "gecti": true
   }
  ]

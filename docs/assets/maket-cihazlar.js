@@ -15,13 +15,15 @@
 (function () {
   "use strict";
   var $ = MK.$, kacis = MK.kacis, ikon = MK.ikon, kirp = MK.kirp, rozet = MK.rozet, bilgi = MK.bilgi, SZ = MK.SZ;
-  var BUGUN = MK.BUGUN, ESIK = 30, ARA_PERIYOT = 6;   /* firma ayarları (65, 60) */
+  var BUGUN = MK.BUGUN, ESIK = 30;   /* firma ayarı (65) */
   var KAL = { gecerli: { ad: "Geçerli", rozet: "a-rozet-tamam" }, yakin: { ad: "30 gün içinde bitiyor", rozet: "a-rozet-bekliyor" },
     gecti: { ad: "Kalibrasyonu geçti", rozet: "a-rozet-red" }, lab: { ad: "Kalibrasyonda", rozet: "a-rozet-kabul" } };
   var cihazlar = function () { return MV.VARLIKLAR.filter(function (v) { return v.tur === "cihaz"; }); };
   var kalan = function (t) { return MK.gunFarki(BUGUN, t); };
-  var araSonraki = function (v) { var d = new Date(v.araSon + "T12:00:00"); d.setMonth(d.getMonth() + v.araPeriyot); return d.toISOString().slice(0, 10); };
-  var araGecti = function (v) { return !!v.araPeriyot && kalan(araSonraki(v)) < 0; };
+  /* ara kontrol programları (2026-09-28, T7): hesap ortak veride (MV.araProgram); burada en yakın program ve gecikme */
+  var araEn = function (v) { return MV.araProgram(v).sort(function (a, b) { return a.sonraki < b.sonraki ? -1 : 1; })[0] || null; };
+  var araGecti = function (v) { return MV.araProgram(v).some(function (p) { return p.durum === "gecti"; }); };
+  var siklikAd = function (v) { return (v.araSiklik || []).map(function (k) { return MV.araSiklik(k).ad; }).join(" · "); };
   var kimdeHtml = function (k) {
     return k === "depo" ? '<span class="a-hucre-satir">' + ikon("warehouse", "a-ikon-kucuk") + "Depo</span>" : k === "lab" ? '<span class="a-hucre-satir">' + ikon("flask-conical", "a-ikon-kucuk") + "Kalibrasyonda</span>"
       : '<a class="a-ad-bag" href="' + MK.adres(2, "#/p/" + k) + '">' + kirp(MV.kisi(k).ad) + "</a>";
@@ -55,10 +57,10 @@
     { k: "kimde", baslik: "Kimde", kart: "govde", sira: 3, hucre: function (v) { return '<span class="a-kart-etiket">Kimde</span>' + kimdeHtml(MV.kimde(v.id)); } },
     { k: "bitis", baslik: "Kalibrasyon bitişi", kart: "govde", sira: 4, hucre: function (v) { return '<span class="a-kart-etiket">Kalibrasyon bitişi</span>' + kalanHtml(v.bitis, ESIK); } },
     { k: "ara", baslik: "Ara kontrol", kart: "govde", sira: 5, hucre: function (v) {
-      if (!v.araPeriyot) return '<span class="a-kart-etiket">Ara kontrol</span><span class="a-deger-yok">Takip edilmiyor</span>';
-      var s = araSonraki(v), k = kalan(s);
-      return '<span class="a-kart-etiket">Ara kontrol</span><span class="a-tarih-gun">' + MK.tarihYaz(v.araSon) + "</span>" +
-        '<span class="' + (k < 0 ? "a-uyari-metin" : "a-tarih-saat") + '">' + (k < 0 ? "Sonraki " + -k + " gün gecikti" : "Sonraki " + MK.gunKisa(s)) + "</span>";
+      var p = araEn(v);
+      if (!p) return '<span class="a-kart-etiket">Ara kontrol</span><span class="a-deger-yok">Takip edilmiyor</span>';
+      return '<span class="a-kart-etiket">Ara kontrol</span><span class="a-tarih-gun">' + kacis(siklikAd(v)) + "</span>" +
+        '<span class="' + (p.kalan < 0 ? "a-uyari-metin" : "a-tarih-saat") + '">' + (p.kalan < 0 ? "Sonraki " + -p.kalan + " gün gecikti" : "Sonraki " + MK.gunKisa(p.sonraki)) + "</span>";
     } },
     { k: "durum", baslik: "Kalibrasyon", kart: "rozet", sira: 1, hucre: function (v) { return rozet(KAL[MV.kalDurum(v)]); } }
   ];
@@ -100,21 +102,31 @@
   var kalDosya = function (x) { return x.dosya || x.sertifika.toLowerCase() + ".pdf"; };
   var ARA_SUTUN = [
     { k: "tarih", baslik: "Tarih", kart: "ust", sira: 1, hucre: function (x) { return '<span class="a-tarih-gun">' + MK.tarihYaz(x.tarih) + "</span>"; } },
-    { k: "kim", baslik: "Yapan", kart: "govde", sira: 2, hucre: function (x) { return '<span class="a-kart-etiket">Yapan</span>' + kacis(MV.kisi(x.kim).ad); } },
-    { k: "yontem", baslik: "Yöntem", kart: "govde", sira: 3, hucre: function (x) { return '<span class="a-kart-etiket">Yöntem</span>' + kirp(x.yontem); } },
-    { k: "sonuc", baslik: "Sonuç", kart: "rozet", sira: 1, hucre: function (x) { return rozet(x.sonuc === "Uygun" ? { ad: "Uygun", rozet: "a-rozet-tamam" } : { ad: "Uygun değil", rozet: "a-rozet-red" }); } }
+    { k: "siklik", baslik: "Sıklık", kart: "govde", sira: 2, hucre: function (x) { return '<span class="a-kart-etiket">Sıklık</span>' + (x.siklik ? kacis(MV.araSiklik(x.siklik).ad) : '<span class="a-deger-yok">—</span>'); } },
+    { k: "kim", baslik: "Yapan", kart: "govde", sira: 3, hucre: function (x) { return '<span class="a-kart-etiket">Yapan</span>' + (x.kim ? kacis(MV.kisi(x.kim).ad) : '<span class="a-deger-yok">—</span>'); } },
+    { k: "yontem", baslik: "Yöntem", kart: "govde", sira: 4, hucre: function (x) { return '<span class="a-kart-etiket">Yöntem</span>' + (x.yontem ? kirp(x.yontem) : '<span class="a-deger-yok">—</span>'); } },
+    { k: "sonuc", baslik: "Sonuç", kart: "rozet", sira: 1, hucre: function (x) {
+      var d = ARA_DURUM[araDurumu(x)]; if (d) return rozet(d);
+      return rozet(x.sonuc === "Uygun" ? { ad: "Uygun", rozet: "a-rozet-tamam" } : { ad: "Uygun değil", rozet: "a-rozet-red" }); } },
+    /* planlı kayıt "Yapıldı" ile tamamlanır; her kayıt silinir (2026-09-28) */
+    { k: "eylem", baslik: "İşlem", gizliBaslik: true, kart: "eylem", sira: 9, hucre: function (x) {
+      var i = aktif().ara.indexOf(x);
+      return '<div class="a-eylem"><div class="a-eylem-tuslar">' + (x.planli ? MK.tus({ eylem: "ara-yapildi", ad: "Yapıldı", ikon: "check", sinif: "a-tus-ikincil", veri: { i: i } }) : "") +
+        '<button class="a-ikon-tus" type="button" data-eylem="arakayit-sil" data-i="' + i + '" aria-label="' + MK.tarihYaz(x.tarih) + ' kaydını sil" title="Sil">' + ikon("x") + "</button></div></div>"; } }
   ];
   function yuz(o) {
     var ic = '<span class="a-yuz-ust">' + ikon(o.ikon, "a-ikon-kucuk") + o.ad + '</span><span class="a-yuz-sayi">' + o.sayi + "</span>" + (o.not ? '<span class="a-yuz-not' + (o.uyari ? " a-yuz-uyari" : "") + '">' + o.not + "</span>" : "");
     return o.href ? '<a class="a-yuz" href="' + o.href + '">' + ic + "</a>" : '<div class="a-yuz">' + ic + "</div>";
   }
+  var SON_CIHAZ = null;
   function cihazCiz(v) {
     if (!v || v.tur !== "cihaz") {
       $("a-nesne").innerHTML = MK.kirinti([["Ölçüm cihazları", "#/"]]) + '<h1 class="a-gizli" tabindex="-1">Cihaz bulunamadı</h1>' +
         MK.bos({ ikon: "circle-alert", baslik: "Cihaz bulunamadı", metin: "Bu adreste kayıtlı ölçüm cihazı yok.", eylem: '<a class="a-tus a-tus-ikincil" href="#/">' + ikon("arrow-left", "a-ikon-kucuk") + "Cihazlara dön</a>" });
       return;
     }
-    var d = MV.kalDurum(v), kim = MV.kimde(v.id), k = kalan(v.bitis), as = v.araPeriyot ? araSonraki(v) : null, t = MV.cihazTuru(v.cihazTur), h = MV.hareketler(v.id);
+    if (SON_CIHAZ !== v.id) { MK.suzgecSifirla("a"); SON_CIHAZ = v.id; }   /* başka cihaza geçince ara kontrol süzgeci baştan */
+    var d = MV.kalDurum(v), kim = MV.kimde(v.id), k = kalan(v.bitis), as = araEn(v), t = MV.cihazTuru(v.cihazTur), h = MV.hareketler(v.id);
     var serit = d === "gecti" ? MK.serit("hata", "circle-x", "Kalibrasyonu " + MK.tarihYaz(v.bitis) + "'de bitti." + (kim !== "depo" && kim !== "lab" ? " " + kacis(MV.kisi(kim).ad) + " zimmetinde: bu cihazın geldiği raporlar yönetici onayına gönderilemez. Kalibrasyona gönderin ya da zimmetten alın." : ""))
       : d === "yakin" ? MK.serit("uyari", "triangle-alert", "Kalibrasyon " + MK.tarihYaz(v.bitis) + "'de bitiyor (" + k + " gün). Bitince bu cihazın geldiği raporlar onaya gönderilemez.")
       : d === "lab" ? MK.serit("bilgi", "flask-conical", "Kalibrasyonda (" + MK.tarihYaz(h[0].tarih) + "'den beri). Yeni sertifika gelince kalibrasyon kaydı eklenir, cihaz depoya döner.") : "";
@@ -129,7 +141,7 @@
         /* 2. tur: asıl hedefler başta — kimde, kalibrasyon */
         yuz({ ikon: kim === "depo" ? "warehouse" : kim === "lab" ? "flask-conical" : "user", ad: "Kimde", sayi: MV.yerAdi(kim), href: MK.adres(9, "#/v/" + v.id), not: h[0] ? "teslim " + MK.gunKisa(h[0].tarih) + " · geçmiş" : "hareket yok" }) +
         yuz({ ikon: "badge-check", ad: "Kalibrasyon bitişi", sayi: MK.gunKisa(v.bitis), not: k < 0 ? -k + " gün geçti" : k + " gün kaldı", uyari: k <= ESIK }) +
-        (as ? yuz({ ikon: "list-checks", ad: "Sonraki ara kontrol", sayi: MK.gunKisa(as), not: kalan(as) < 0 ? -kalan(as) + " gün gecikti" : "her " + v.araPeriyot + " ayda", uyari: kalan(as) < 0 }) : "") +
+        (as ? yuz({ ikon: "list-checks", ad: "Sonraki ara kontrol", sayi: MK.gunKisa(as.sonraki), not: as.kalan < 0 ? -as.kalan + " gün gecikti" : as.ad, uyari: as.kalan < 0 }) : "") +
         yuz({ ikon: "file-text", ad: "Raporlarda", sayi: v.rapor, not: "son 12 ayda imzalı rapor" }) +
       "</div>" +
       '<section class="a-bolum" aria-labelledby="a-b-cihaz"><div class="a-alt-bas"><h2 class="a-alt-baslik" id="a-b-cihaz">Cihaz bilgileri</h2></div><dl class="a-bilgi">' +
@@ -139,10 +151,40 @@
       "</dl></section>" +
       '<section class="a-bolum" aria-labelledby="a-b-kal"><div class="a-alt-bas"><h2 class="a-alt-baslik" id="a-b-kal" tabindex="-1">Kalibrasyon kayıtları</h2><span class="a-sayac"><b>' + v.kal.length + "</b> kayıt</span></div>" +
         '<div class="a-liste-kap">' + MK.tablo({ baslik: "Kalibrasyon kayıtları", sinif: "a-tablo-kal", sutunlar: KAL_SUTUN, kayitlar: v.kal }) + "</div></section>" +
-      /* 60: ara kontrol isteğe bağlı — takip edilmeyen cihazda bölüm yok */
-      (v.araPeriyot ? '<section class="a-bolum" aria-labelledby="a-b-ara"><div class="a-alt-bas"><h2 class="a-alt-baslik" id="a-b-ara">Ara kontroller</h2>' +
-        MK.tus({ eylem: "ara-ac", ad: "Ara kontrol ekle", ikon: "plus", sinif: "a-tus-ikincil a-bolum-tus" }) + "</div>" +
-        '<div class="a-liste-kap">' + (v.ara.length ? MK.tablo({ baslik: "Ara kontroller", sinif: "a-tablo-ara", sutunlar: ARA_SUTUN, kayitlar: v.ara }) : '<p class="a-bos-satir">Henüz ara kontrol yok.</p>') + "</div></section>" : "");
+      /* ARA KONTROLLER (2026-09-28, T7): programlar (sıklık · sonraki), kayıtlar (yapılan ve planlanan; süzgeçli, sayfalı), otomatik bakım
+         oluştur, kayıtların PDF'i. Programı olmayan cihazda da bölüm var (program buradan kurulur). */
+      '<section class="a-bolum" aria-labelledby="a-b-ara"><div class="a-alt-bas"><h2 class="a-alt-baslik" id="a-b-ara" tabindex="-1">Ara kontroller</h2><span class="a-sayac" id="a-sayac-a"></span>' +
+        '<div class="a-bolum-tuslar">' + MK.tus({ eylem: "ara-pdf", ad: "PDF indir", ikon: "download", sinif: "a-tus-ikincil" }) +
+          MK.tus({ eylem: "oto-ac", ad: "Otomatik bakım oluştur", ikon: "calendar-check", sinif: "a-tus-ikincil" }) +
+          MK.tus({ eylem: "ara-ac", ad: "Ara kontrol ekle", ikon: "plus", sinif: "a-tus-ikincil" }) + "</div></div>" +
+        (MV.araProgram(v).length ? '<ul class="a-kosullar">' + MV.araProgram(v).map(function (p) {
+          return '<li class="' + (p.durum === "gecti" ? "a-kosul-eksik" : "a-kosul-bilgi") + '">' + ikon(p.durum === "gecti" ? "triangle-alert" : "list-checks", "a-ikon-kucuk") +
+            "<span><b>" + kacis(p.ad) + "</b> · sonraki " + MK.tarihYaz(p.sonraki) + (p.kalan < 0 ? " · " + -p.kalan + " gün gecikti" : "") + "</span>" +
+            '<button class="a-ikon-tus" type="button" data-eylem="program-sil" data-k="' + p.k + '" aria-label="' + kacis(p.ad) + ' programını kaldır" title="Kaldır">' + ikon("x") + "</button></li>";
+        }).join("") + "</ul>" : '<p class="a-bos-satir">Ara kontrol takip edilmiyor.</p>') +
+        '<div id="a-suzgec-a">' + MK.suzgecHtml("a") + '</div><div class="a-liste-kap" id="a-liste-a"></div><div id="a-sayfa-a"></div></section>';
+    MK.suzgecKur("a");
+  }
+  /* ara kontrol kayıtları: gecikenler, sonra yaklaşan planlılar, sonra yapılanlar (en yeni üstte) */
+  var araDurumu = function (x) { return !x.planli ? "yapildi" : kalan(x.tarih) < 0 ? "gecikti" : "planli"; };
+  var ARA_DURUM = { yapildi: null, planli: { ad: "Planlı", rozet: "a-rozet-notr" }, gecikti: { ad: "Gecikti", rozet: "a-rozet-red" } };
+  MK.suzgecTanimla("a", { ad: "Ara kontrollerde ara", ipucu: "", birim: "kayıt", sayfa: 20,
+    alanlar: [{ k: "tarih", ad: "Tarih", ipucu: "10.2026", metin: function (x) { return MK.tarihYaz(x.tarih); } }],
+    cipler: [
+      { k: "yapildi", ad: "Yapıldı", grup: "d", test: function (x) { return araDurumu(x) === "yapildi"; } },
+      { k: "planli", ad: "Planlı", grup: "d", test: function (x) { return araDurumu(x) === "planli"; } },
+      { k: "gecikti", ad: "Gecikti", grup: "d", test: function (x) { return araDurumu(x) === "gecikti"; } }
+    ],
+    seciciler: [{ k: "siklik", ad: "Sıklık", secenek: function () { return [["tumu", "Tümü"]].concat(MV.ARA_SIKLIK.map(function (x) { return [x.k, x.ad]; })); },
+      gecer: function (x, d) { return d === "tumu" || x.siklik === d; } }],
+    metin: function (x) { return x.yontem || ""; }, imkansiz: "Bir kayıt aynı anda iki durumda olamaz" }, function () { araListe(); });
+  var ARA_SIRA = { gecikti: 0, planli: 1, yapildi: 2 };
+  function araListe() {
+    var v = aktif(); if (!v || !$("a-liste-a")) return;
+    MK.listeCiz({ on: "a", kayitlar: v.ara, sayacId: "a-sayac-a", listeId: "a-liste-a", sayfaId: "a-sayfa-a",
+      sirala: function (l) { return l.slice().sort(function (a, b) { var da = araDurumu(a), db = araDurumu(b); return ARA_SIRA[da] - ARA_SIRA[db] || (da === "yapildi" ? (a.tarih < b.tarih ? 1 : -1) : (a.tarih < b.tarih ? -1 : 1)); }); },
+      bosVeri: '<p class="a-bos-satir">Ara kontrol kaydı yok.</p>',
+      tablo: { baslik: "Ara kontroller", sinif: "a-tablo-ara", sutunlar: ARA_SUTUN } });
   }
 
   /* ── PENCERELER: cihaz ekle · kalibrasyon kaydı · ara kontrol ─────────────────────────────────────── */
@@ -164,6 +206,20 @@
       if (d.lab.trim().length < 3) h.lab = "Laboratuvar yazılmalı.";
       if (!d.sertifika.trim()) h.sertifika = "Sertifika no yazılmalı (raporda yazar).";
       if (!d.dosya) h.dosya = "Sertifika dosyası eklenmeli.";
+    } else if (W.tur === "oto") {
+      if (!tarihGecerli(d.bas)) h.bas = "Tarih GG.AA.YYYY.";
+      if (!tarihGecerli(d.bit)) h.bit = "Tarih GG.AA.YYYY.";
+      else if (tarihGecerli(d.bas) && iso(d.bit) <= iso(d.bas)) h.bit = "Bitiş başlangıçtan sonra olmalı.";
+      else if (tarihGecerli(d.bas) && MK.gunFarki(iso(d.bas), iso(d.bit)) > 731) h.bit = "En çok 2 yıllık bakım oluşturulur.";
+      d.satir.forEach(function (s, i) {
+        if (d.satir.some(function (y, j) { return j < i && y.siklik === s.siklik; })) h["oto-siklik-" + i] = "Bu sıklık " + (d.satir.map(function (y) { return y.siklik; }).indexOf(s.siklik) + 1) + ". bakımda seçili.";
+        if (s.yontem.trim().length < 3) h["oto-yontem-" + i] = "Yöntem yazılmalı.";
+      });
+    } else if (W.tur === "tur") {
+      var ad = d.ad.trim().toLocaleLowerCase("tr");
+      if (ad.length < 3) h.ad = "Tür adı yazılmalı.";
+      else if (MV.CIHAZ_TURLERI.some(function (t) { return t.k !== W.k && t.ad.toLocaleLowerCase("tr") === ad; })) h.ad = "Bu adla tür var.";
+      if (!d.g.length) h.g = "En az bir ekipman grubu seçilmeli.";
     } else {
       if (!tarihGecerli(d.tarih)) h.tarih = "Tarih GG.AA.YYYY.";
       if (d.yontem.trim().length < 3) h.yontem = "Yöntem yazılmalı.";
@@ -188,8 +244,37 @@
         A("marka", "Marka / model", d.marka, { ek: ' maxlength="60"' }) + A("seri", "Seri no", d.seri, { zorunlu: true, sinif: "a-girdi-seri", ek: ' maxlength="30"' }) +
         A("aralik", "Ölçüm aralığı", d.aralik, { ek: ' maxlength="60"' }) +
         (W.v ? "" : A("bitis", "Kalibrasyon geçerlilik bitişi", d.bitis, { zorunlu: true, sinif: "a-girdi-sicil", ek: tarih, ipucu: "Sertifikadaki tarih; sertifika kalibrasyon kaydıyla eklenir." })) +
-        '<div class="a-alan-grup a-alan-genis"><label class="a-onay-kutusu"><input type="checkbox" data-aratakip="1"' + (d.ara ? " checked" : "") + '><span>Ara kontrol takip edilsin<span class="a-alt-satir">İsteğe bağlı; her ' + ARA_PERIYOT + " ayda bir (firma ayarı).</span></span></label></div></div>" +
-        "";
+        /* ara kontrol sıklıkları (T7): isteğe bağlı, birden çok seçilir; hiçbiri seçilmezse takip edilmez */
+        '<div class="a-alan-grup a-alan-genis"><p class="a-etiket">Ara kontrol sıklığı</p>' + MV.ARA_SIKLIK.map(function (x) {
+          return '<label class="a-onay-kutusu"><input type="checkbox" data-siklik="' + x.k + '"' + (d.siklik.indexOf(x.k) >= 0 ? " checked" : "") + "><span>" + x.ad + "</span></label>";
+        }).join("") + "</div></div>";
+    } else if (W.tur === "oto") {
+      /* OTOMATİK BAKIM OLUŞTUR (T7; reisim: "başlangıç ve bitiş tarihi, kaç adet ara bakım, sıklığı … örneğin 3 bakım günlük, haftalık, aylık"):
+         her satır bir sıklık; aralıktaki planlı ara kontroller üretilir, o sıklığın aralıktaki eski planlıları yerini bırakır */
+      $("a-pencere-baslik").textContent = W.v.env + " · otomatik bakım oluştur";
+      govde = '<div class="a-form">' + A("bas", "Başlangıç", d.bas, { zorunlu: true, sinif: "a-girdi-sicil", ek: tarih }) +
+        A("bit", "Bitiş", d.bit, { zorunlu: true, sinif: "a-girdi-sicil", ek: tarih }) +
+        '<div class="a-alan-grup a-alan-genis"><p class="a-etiket">Ara bakım sayısı</p><div class="a-radyo-satir">' + radyo("adet", String(d.satir.length), [["1", "1"], ["2", "2"], ["3", "3"], ["4", "4"]]) + "</div></div>" +
+        d.satir.map(function (s, i) {
+          return A("oto-siklik-" + i, (i + 1) + ". bakım · sıklık", "", { zorunlu: true, girdi: MK.secim({ id: "w-oto-siklik-" + i, ad: (i + 1) + ". bakım sıklığı", deger: s.siklik,
+              secenekler: MV.ARA_SIKLIK.map(function (x) { return [x.k, x.ad]; }), gecersiz: !!h["oto-siklik-" + i] }) }) +
+            A("oto-yontem-" + i, (i + 1) + ". bakım · yöntem", s.yontem, { zorunlu: true, ek: ' maxlength="100"' });
+        }).join("") + "</div>";
+    } else if (W.tur === "turler") {
+      /* CİHAZ TÜRLERİ (T7; reisim: "ölçüm cihazlarına cihaz türü ekleme"): firma kendi türlerini ekler, düzenler; cihazı olmayan tür silinir */
+      $("a-pencere-baslik").textContent = "Cihaz türleri";
+      govde = '<ul class="a-secim-listesi">' + MV.CIHAZ_TURLERI.map(function (t) {
+        var n = cihazlar().filter(function (v) { return v.cihazTur === t.k; }).length;
+        return '<li class="a-tur-satir"><span class="a-tur-ad"><b>' + kacis(t.ad) + '</b><span class="a-alt-satir">' + t.g.map(function (g) { return MV.grup(g).ad; }).join(" · ") + " · " + n + " cihaz</span></span>" +
+          '<span class="a-eylem-tuslar">' + MK.tus({ eylem: "tur-duzenle", ad: "Düzenle", ikon: "pencil", sinif: "a-tus-ikincil", veri: { k: t.k } }) +
+          (n ? "" : '<button class="a-ikon-tus" type="button" data-eylem="tur-sil" data-k="' + t.k + '" aria-label="' + kacis(t.ad) + ' türünü sil" title="Sil">' + ikon("x") + "</button>") + "</span></li>";
+      }).join("") + "</ul>";
+    } else if (W.tur === "tur") {
+      $("a-pencere-baslik").textContent = W.k ? MV.cihazTuru(W.k).ad + " · düzenle" : "Cihaz türü ekle";
+      govde = '<div class="a-form">' + A("ad", "Tür adı", d.ad, { zorunlu: true, genis: true, ek: ' maxlength="60"' }) +
+        '<div class="a-alan-grup a-alan-genis"><p class="a-etiket">Kullanıldığı ekipman grupları <span class="a-zorunlu">zorunlu</span></p>' + MV.GRUPLAR.map(function (g) {
+          return '<label class="a-onay-kutusu"><input type="checkbox" data-grup="' + g.k + '"' + (d.g.indexOf(g.k) >= 0 ? " checked" : "") + "><span>" + kacis(g.ad) + "</span></label>";
+        }).join("") + (h.g ? '<p class="a-ipucu a-ipucu-uyari">' + h.g + "</p>" : "") + "</div></div>";
     } else if (W.tur === "kal") {
       $("a-pencere-baslik").textContent = W.v.env + (W.i === null || W.i === undefined ? " · kalibrasyon kaydı" : " · kalibrasyon kaydını düzenle");
       govde = '<p class="a-pencere-ozet"><b>' + W.v.env + " · " + kacis(W.v.ad) + "</b><br>Mevcut bitiş " + MK.tarihYaz(W.v.bitis) + ".</p>" +
@@ -201,22 +286,36 @@
           (h.dosya ? '<p class="a-ipucu a-ipucu-uyari">' + h.dosya + "</p>" : "") + "</div>" +
         '<div class="a-alan-grup a-alan-genis"><p class="a-etiket">Sonuç</p>' + radyo("sonuc", d.sonuc, [["Uygun", "Uygun — cihaz kullanılabilir"], ["Uygun değil", "Uygun değil — cihaz kullanımdan çekilir"]]) + "</div></div>";
     } else {
-      $("a-pencere-baslik").textContent = W.v.env + " · ara kontrol";
+      /* ara kontrol kaydı: yeni ya da planlı olanın "Yapıldı"sı; sıklık cihazın programlarından, ya da programsız tek seferlik */
+      $("a-pencere-baslik").textContent = W.v.env + (W.i !== null ? " · planlı ara kontrol yapıldı" : " · ara kontrol");
       govde = '<div class="a-form">' + A("tarih", "Tarih", d.tarih, { zorunlu: true, sinif: "a-girdi-sicil", ek: tarih }) +
+        A("siklik", "Sıklık", "", { girdi: MK.secim({ id: "w-siklik", ad: "Sıklık", deger: d.siklik,
+          secenekler: (W.v.araSiklik || []).map(function (k) { return [k, MV.araSiklik(k).ad]; }).concat([["", "Programsız (tek seferlik)"]]) }) }) +
         A("yontem", "Yöntem", d.yontem, { zorunlu: true, genis: true, ek: ' maxlength="100"', ipucu: "Ör. referans direnç / ağırlıkla karşılaştırma." }) +
         '<div class="a-alan-grup a-alan-genis"><p class="a-etiket">Sonuç</p>' + radyo("sonuc", d.sonuc, [["Uygun", "Uygun"], ["Uygun değil", "Uygun değil — kalibrasyona gönderilir"]]) + "</div></div>";
     }
     $("a-pencere-govde").innerHTML = govde;
-    $("a-pencere-alt").innerHTML = MK.tus({ eylem: "pencere-kapat", ad: "Vazgeç", sinif: "a-tus-ikincil" }) + MK.tus({ eylem: "pencere-kaydet", ad: "Kaydet", ikon: "check" });
+    $("a-pencere-alt").innerHTML = W.tur === "turler" ? MK.tus({ eylem: "pencere-kapat", ad: "Kapat", sinif: "a-tus-ikincil" }) + MK.tus({ eylem: "tur-ekle", ad: "Cihaz türü ekle", ikon: "plus" })
+      : MK.tus(W.tur === "tur" ? { eylem: "turler-ac", ad: "Geri", ikon: "arrow-left", sinif: "a-tus-ikincil" } : { eylem: "pencere-kapat", ad: "Vazgeç", sinif: "a-tus-ikincil" }) +
+        MK.tus({ eylem: "pencere-kaydet", ad: W.tur === "oto" ? "Oluştur" : "Kaydet", ikon: "check" });
     if (odak) { var el = $(odak); if (el) el.focus(); }
   }
   var gga = function (isoT) { return isoT.split("-").reverse().join("."); };
   function pencereAc(tur, v, i) {
-    var kk = tur === "kal" && i !== undefined ? v.kal[i] : null;
+    var kk = tur === "kal" && i !== undefined ? v.kal[i] : null, pl = tur === "ara" && i !== undefined ? v.ara[i] : null, bugun = gga(BUGUN);
     if (kk) { W = { tur: tur, v: v, i: i, hata: {}, d: { tarih: gga(kk.tarih), bitis: gga(kk.bitis), lab: kk.lab, sertifika: kk.sertifika, dosya: kalDosya(kk), sonuc: kk.sonuc } }; }
-    else W = { tur: tur, v: tur === "cihaz" ? (v || null) : v || null, i: null, hata: {}, d: tur === "cihaz" ? (v ? { env: v.env, cihazTur: v.cihazTur, marka: (v.marka + " " + v.model).trim(), seri: v.seri, aralik: v.aralik, bitis: "", ara: !!v.araPeriyot }
-      : { env: "", cihazTur: "", marka: "", seri: "", aralik: "", bitis: "", ara: false })
-      : tur === "kal" ? { tarih: "23.09.2026", bitis: "", lab: v.kal[0].lab, sertifika: "", dosya: "", sonuc: "Uygun" } : { tarih: "23.09.2026", yontem: "Referans değerle karşılaştırma", sonuc: "Uygun" } };
+    /* planlı ara kontrol "Yapıldı": tarih bugün (plan günü geçmediyse plan günü), sıklık ve yöntem plandan */
+    else if (pl) W = { tur: tur, v: v, i: i, hata: {}, d: { tarih: pl.tarih < BUGUN ? bugun : gga(pl.tarih), siklik: pl.siklik || "", yontem: pl.yontem || "", sonuc: "Uygun" } };
+    else if (tur === "oto") {
+      var sira = (v.araSiklik || []).concat(MV.ARA_SIKLIK.map(function (x) { return x.k; })).filter(function (k, j, a) { return a.indexOf(k) === j; });
+      var bir = new Date(BUGUN + "T12:00:00"); bir.setFullYear(bir.getFullYear() + 1); bir.setDate(bir.getDate() - 1);   /* bir yıl: bitiş dahil */
+      W = { tur: tur, v: v, i: null, hata: {}, sira: sira, d: { bas: bugun, bit: gga(bir.toISOString().slice(0, 10)), satir: [{ siklik: sira[0], yontem: "Referans değerle karşılaştırma" }] } };
+    } else if (tur === "turler") W = { tur: tur, v: null, i: null, hata: {}, d: {} };
+    else if (tur === "tur") { var t = i ? MV.cihazTuru(i) : null; W = { tur: tur, v: null, i: null, k: t ? t.k : null, hata: {}, d: { ad: t ? t.ad : "", g: t ? t.g.slice() : [] } }; }
+    else W = { tur: tur, v: tur === "cihaz" ? (v || null) : v || null, i: null, hata: {}, d: tur === "cihaz" ? (v ? { env: v.env, cihazTur: v.cihazTur, marka: (v.marka + " " + v.model).trim(), seri: v.seri, aralik: v.aralik, bitis: "", siklik: (v.araSiklik || []).slice() }
+      : { env: "", cihazTur: "", marka: "", seri: "", aralik: "", bitis: "", siklik: [] })
+      : tur === "kal" ? { tarih: bugun, bitis: "", lab: v.kal[0] ? v.kal[0].lab : "", sertifika: "", dosya: "", sonuc: "Uygun" }
+      : { tarih: bugun, siklik: (v.araSiklik || [])[0] || "", yontem: "Referans değerle karşılaştırma", sonuc: "Uygun" } };
     pencereCiz(); if (!$("a-pencere").open) $("a-pencere").showModal();
     var ilk = $("a-pencere-govde").querySelector("input, button"); if (ilk) ilk.focus();
   }
@@ -242,6 +341,44 @@
   X["cihaz-duzenle"] = function () { pencereAc("cihaz", aktif()); };
   X["kal-ac"] = function () { pencereAc("kal", aktif()); };
   X["ara-ac"] = function () { pencereAc("ara", aktif()); };
+  /* ── ARA KONTROL İŞLEMLERİ (T7) ── */
+  var araBolum = function () { var b = $("a-b-ara"); if (b) b.focus(); };
+  X["ara-yapildi"] = function (el) { pencereAc("ara", aktif(), +el.dataset.i); };
+  X["arakayit-sil"] = function (el) {
+    var v = aktif(), x = v.ara[+el.dataset.i];
+    MK.onayla({ baslik: "Ara kontrol kaydını sil", metin: MK.tarihYaz(x.tarih) + (x.siklik ? " · " + MV.araSiklik(x.siklik).ad : "") + (x.planli ? " planlı ara kontrolü" : " ara kontrol kaydı") + " silinir.", tamam: function () {
+      v.ara.splice(v.ara.indexOf(x), 1); goster(false); araBolum(); MK.bildir("Ara kontrol kaydı silindi.");
+    } });
+  };
+  X["program-sil"] = function (el) {
+    var v = aktif(), k = el.dataset.k, s = MV.araSiklik(k), n = v.ara.filter(function (x) { return x.planli && x.siklik === k; }).length;
+    MK.onayla({ baslik: s.ad + " ara kontrolü kaldır", metin: "Cihaz bu sıklıkta takip edilmez" + (n ? "; planlanan " + n + " ara kontrol silinir" : "") + ". Yapılan kayıtlar kalır.", tus: "Kaldır", tamam: function () {
+      v.araSiklik = (v.araSiklik || []).filter(function (x) { return x !== k; });
+      v.ara = v.ara.filter(function (x) { return !(x.planli && x.siklik === k); });
+      goster(false); araBolum(); MK.bildir(s.ad + " ara kontrol kaldırıldı.");
+    } });
+  };
+  X["oto-ac"] = function () { pencereAc("oto", aktif()); };
+  /* ara kontrol kayıtlarının PDF'i: süzgeçten geçen YAPILMIŞ kayıtlar, tarih sırasıyla; temel format (firma formatı §3.7 satır 12) */
+  X["ara-pdf"] = function () {
+    var v = aktif(), l = MK.taban("a", v.ara).filter(function (x) { return !x.planli && MK.cipGecer("a", x); }).sort(function (a, b) { return a.tarih < b.tarih ? -1 : 1; });
+    if (!l.length) { MK.bildir("PDF için yapılmış ara kontrol kaydı yok (süzgeci değiştirin)."); return; }
+    MK.pdfGoster({ dosya: v.env.toLowerCase() + "-ara-kontroller.pdf", baslik: v.env + " · ara kontrol kayıtları", icerik: MB.araKontrolFormu({ v: v, kayitlar: l, tarih: BUGUN }) });
+  };
+  /* ── CİHAZ TÜRLERİ (T7) ── */
+  X["turler-ac"] = function () { pencereAc("turler"); };
+  /* tür listesi değişti: pencere tür listesine döner, liste ve "Cihaz türü" seçicisi yenilenir (pencere açık kalır) */
+  function turlerYenile() { MK.seciciCiz("c"); listeCiz(); pencereAc("turler"); var t = document.querySelector('#a-pencere [data-eylem="tur-ekle"]'); if (t) t.focus(); }
+  X["tur-ekle"] = function () { pencereAc("tur"); };
+  X["tur-duzenle"] = function (el) { pencereAc("tur", null, el.dataset.k); };
+  X["tur-sil"] = function (el) {
+    var t = MV.cihazTuru(el.dataset.k);
+    MK.onayla({ baslik: "Cihaz türünü sil", metin: t.ad + " silinir; ekipman türlerinin kullanacağı cihazlardan da çıkar.", tamam: function () {
+      MV.CIHAZ_TURLERI.splice(MV.CIHAZ_TURLERI.indexOf(t), 1);
+      MV.KATALOG.forEach(function (e) { if (e.cihaz) e.cihaz = e.cihaz.filter(function (k) { return k !== t.k; }); });
+      turlerYenile(); MK.bildir(t.ad + " silindi.");
+    } });
+  };
   /* kalibrasyon kayıtları en yeni üstte; cihazın geçerlilik bitişi en yeni kaydın bitişi (kayıt kalmadıysa kalibrasyonsuz = geçmiş) */
   function kalSirala(v) { v.kal.sort(function (a, b) { return a.tarih < b.tarih ? 1 : -1; }); v.bitis = v.kal.length ? v.kal[0].bitis : "2000-01-01"; }
   X["kal-duzenle"] = function (el) { pencereAc("kal", aktif(), +el.dataset.i); };
@@ -262,13 +399,14 @@
     if (hk.length) { pencereCiz(hk[0] === "dosya" ? null : "w-" + hk[0]); return; }
     var d = W.d, v = W.v, hedef, ileti;
     if (W.tur === "cihaz" && v) {
+      /* programı kaldırılan sıklığın planlı kayıtları gider; yapılanlar kalır */
+      v.ara = v.ara.filter(function (x) { return !x.planli || d.siklik.indexOf(x.siklik) >= 0; });
       Object.assign(v, { env: d.env, cihazTur: d.cihazTur, ad: MV.cihazTuru(d.cihazTur).ad, marka: d.marka.trim() || "—", model: "", seri: d.seri.trim(), aralik: d.aralik.trim() || "—",
-        araPeriyot: d.ara ? (v.araPeriyot || ARA_PERIYOT) : null });
-      if (d.ara && !v.araSon) v.araSon = BUGUN;
+        araSiklik: siraliSiklik(d.siklik) });
       hedef = "#/c/" + v.id; ileti = "Cihaz güncellendi.";
     } else if (W.tur === "cihaz") {
       v = { id: "v" + (MV.VARLIKLAR.length + 1), tur: "cihaz", ad: MV.cihazTuru(d.cihazTur).ad, cihazTur: d.cihazTur, env: d.env, marka: d.marka.trim() || "—", model: "", seri: d.seri.trim(), aralik: d.aralik.trim() || "—",
-        bitis: iso(d.bitis), araSon: d.ara ? BUGUN : null, araPeriyot: d.ara ? ARA_PERIYOT : null, kal: [], ara: [], rapor: 0 };
+        bitis: iso(d.bitis), araSiklik: siraliSiklik(d.siklik), kal: [], ara: [], rapor: 0 };
       MV.VARLIKLAR.push(v); hedef = "#/c/" + v.id; ileti = v.env + " depoya kaydedildi; sertifikası kalibrasyon kaydıyla eklenir.";
     } else if (W.tur === "kal") {
       var kay = { tarih: iso(d.tarih), bitis: iso(d.bitis), lab: d.lab.trim(), sertifika: d.sertifika.trim(), sonuc: d.sonuc, dosya: d.dosya };
@@ -276,19 +414,55 @@
       kalSirala(v);
       if (W.i === null && MV.kimde(v.id) === "lab") MV.ZIMMET.push({ id: "z" + (MV.ZIMMET.length + 1), v: v.id, tarih: MK.simdi(), eden: "lab", alan: "depo", foto: 1, not: "Kalibrasyondan döndü.", onay: null, yetkili: "za" });
       hedef = "#/c/" + v.id; ileti = "Kalibrasyon kaydedildi; geçerlilik " + MK.tarihYaz(v.bitis) + ".";
+    } else if (W.tur === "oto") {
+      var bas = iso(d.bas), bit = iso(d.bit), sayi = [];
+      d.satir.forEach(function (s) {
+        v.ara = v.ara.filter(function (x) { return !(x.planli && x.siklik === s.siklik && x.tarih >= bas && x.tarih <= bit); });
+        var n = 0;
+        for (var t = bas; t <= bit; t = MV.araIleri(t, s.siklik)) { v.ara.push({ tarih: t, siklik: s.siklik, kim: null, yontem: s.yontem.trim(), sonuc: null, planli: true }); n++; }
+        sayi.push(MV.araSiklik(s.siklik).ad.toLocaleLowerCase("tr") + " " + n);
+      });
+      v.araSiklik = siraliSiklik((v.araSiklik || []).concat(d.satir.map(function (s) { return s.siklik; })));
+      hedef = "#/c/" + v.id; ileti = "Planlı ara kontroller oluşturuldu: " + sayi.join(", ") + ".";
+    } else if (W.tur === "tur") {
+      var tt = W.k ? MV.cihazTuru(W.k) : null;
+      if (tt) { tt.ad = d.ad.trim(); tt.g = d.g.slice(); cihazlar().forEach(function (x) { if (x.cihazTur === tt.k) x.ad = tt.ad; }); }
+      else { var no = 1; while (MV.cihazTuru("ct" + no)) no++; MV.CIHAZ_TURLERI.push({ k: "ct" + no, ad: d.ad.trim(), g: d.g.slice() }); }
+      var ad = d.ad.trim(); turlerYenile(); MK.bildir(ad + (tt ? " güncellendi." : " eklendi; cihaz eklerken seçilir."));
+      return;
     } else {
-      v.ara.unshift({ tarih: iso(d.tarih), kim: "co", yontem: d.yontem.trim(), sonuc: d.sonuc }); v.araSon = iso(d.tarih);
-      hedef = "#/c/" + v.id; ileti = "Ara kontrol kaydedildi.";
+      var kayit = { tarih: iso(d.tarih), siklik: d.siklik || null, kim: "co", yontem: d.yontem.trim(), sonuc: d.sonuc };
+      if (W.i !== null) v.ara[W.i] = kayit; else v.ara.push(kayit);
+      hedef = "#/c/" + v.id; ileti = W.i !== null ? "Planlı ara kontrol yapıldı olarak kaydedildi." : "Ara kontrol kaydedildi.";
     }
     $("a-pencere").close();
     if (location.hash === hedef) goster(false); else location.hash = hedef;
     MK.bildir(ileti);
   };
-  MK.onGirdi = function (e) { var k = e.target.dataset && e.target.dataset.alan; if (k && W) W.d[k] = k === "env" ? e.target.value.toUpperCase() : e.target.value; };
-  MK.onSecim = function (id, deger) { if (W && id === "w-cihazTur") { W.d.cihazTur = deger; delete W.hata.cihazTur; pencereCiz(); } };
+  MK.onGirdi = function (e) {
+    var k = e.target.dataset && e.target.dataset.alan, m; if (!k || !W) return;
+    if ((m = /^oto-yontem-(\d)$/.exec(k))) W.d.satir[+m[1]].yontem = e.target.value;
+    else W.d[k] = k === "env" ? e.target.value.toUpperCase() : e.target.value;
+  };
+  MK.onSecim = function (id, deger) {
+    var m; if (!W) return;
+    if (id === "w-cihazTur") { W.d.cihazTur = deger; delete W.hata.cihazTur; pencereCiz(); }
+    else if (id === "w-siklik") { W.d.siklik = deger; pencereCiz(); }
+    else if ((m = /^w-oto-siklik-(\d)$/.exec(id))) { W.d.satir[+m[1]].siklik = deger; W.hata = {}; pencereCiz(id); }
+  };
+  /* sıklık listesi her zaman ARA_SIKLIK sırasında (günlük → 6 ayda bir), tekrar yok */
+  function siraliSiklik(l) { return MV.ARA_SIKLIK.map(function (x) { return x.k; }).filter(function (k) { return l.indexOf(k) >= 0; }); }
+  var degistir = function (l, k, var_) { var i = l.indexOf(k); if (var_ && i < 0) l.push(k); if (!var_ && i >= 0) l.splice(i, 1); };
   document.addEventListener("change", function (e) {
-    var r = e.target.dataset && e.target.dataset.radyo; if (r && W) W.d[r] = e.target.value;
-    if (e.target.dataset && e.target.dataset.aratakip && W) W.d.ara = e.target.checked;
+    var ds = e.target.dataset || {}; if (!W) return;
+    if (ds.radyo === "adet") {   /* bakım sayısı: satır eklenir (sıradaki kullanılmayan sıklık) ya da sondan çıkar */
+      var n = +e.target.value, sat = W.d.satir;
+      while (sat.length > n) sat.pop();
+      while (sat.length < n) { var bos = W.sira.filter(function (k) { return !sat.some(function (s) { return s.siklik === k; }); })[0]; sat.push({ siklik: bos, yontem: "Referans değerle karşılaştırma" }); }
+      W.hata = {}; pencereCiz(); var r = document.querySelector('#a-pencere [data-radyo="adet"][value="' + n + '"]'); if (r) r.focus();
+    } else if (ds.radyo) W.d[ds.radyo] = e.target.value;
+    if (ds.siklik) degistir(W.d.siklik, ds.siklik, e.target.checked);
+    if (ds.grup) { degistir(W.d.g, ds.grup, e.target.checked); delete W.hata.g; }
   });
   $("a-pencere").addEventListener("close", function () { var r = rota(); if (r.pencere) history.replaceState(null, "", r.v === "liste" ? "#/" : "#/c/" + r.id); });
 

@@ -577,6 +577,10 @@ html[data-giris="fare"] .a-girdi:focus, html[data-giris="fare"] .a-alan:focus { 
 .a-secim-satir { display: flex; align-items: flex-start; gap: 10px; min-height: var(--tus-y); padding: 8px 12px; cursor: pointer; }
 .a-secim-satir input { width: 20px; height: 20px; margin: 2px 0 0; flex: none; accent-color: var(--onay-yazi); }
 .a-secim-metin { min-width: 0; }
+/* yan yana radyolar (ör. otomatik bakım sayısı) · pencere içi kayıt satırı (ad + tuşlar; ör. cihaz türleri) — 2026-09-28, T7 */
+.a-radyo-satir { display: flex; flex-wrap: wrap; gap: 0 24px; }
+.a-tur-satir { display: flex; align-items: center; gap: 10px; min-height: var(--tus-y); padding: 8px 12px; }
+.a-tur-ad { flex: 1; min-width: 0; }
 
 /* ── BİLDİRİM ─────────────────────────────────────────────────────────────────────────────────────── */
 .a-bildirim {
@@ -621,6 +625,10 @@ a.a-yuz:hover { border-color: var(--kenar-alan); background: var(--zemin); }
 .a-kosullar { list-style: none; margin: 0; padding: 8px 12px; background: var(--kart); border: 1px solid var(--kenar); border-radius: var(--r-orta); display: grid; gap: 6px; }
 .a-kosullar li { display: flex; align-items: flex-start; gap: 8px; min-width: 0; }
 .a-kosullar .a-ikon { margin-top: 2px; }
+/* satır sonunda kaldır tuşu (ör. ara kontrol programı, T7): sağa yaslı, satırla ortalı */
+.a-kosullar li:has(> .a-ikon-tus) { align-items: center; }
+.a-kosullar li > .a-ikon-tus { margin-left: auto; }
+.a-kosullar .a-ikon-tus .a-ikon { margin-top: 0; }
 .a-kosul-tamam .a-ikon { color: var(--onay-yazi); }
 .a-kosul-eksik { color: var(--uyari-yazi); font-weight: 600; }
 .a-kosul-bilgi .a-ikon { color: var(--yazi3); }
@@ -741,7 +749,8 @@ a.a-yuz:hover { border-color: var(--kenar-alan); background: var(--zemin); }
 .a-tablo-cihaz .a-k-bitis { width: 15%; } .a-tablo-cihaz .a-k-ara { width: 16%; } .a-tablo-cihaz .a-k-durum { width: 18%; }
 .a-tablo-kal .a-k-tarih { width: 15%; } .a-tablo-kal .a-k-bitis { width: 15%; } .a-tablo-kal .a-k-lab { width: 25%; } .a-tablo-kal .a-k-sertifika { width: 14%; }
 .a-tablo-kal .a-k-sonuc { width: 11%; } .a-tablo-kal .a-k-eylem { width: 20%; }
-.a-tablo-ara .a-k-tarih { width: 20%; } .a-tablo-ara .a-k-kim { width: 25%; } .a-tablo-ara .a-k-yontem { width: 40%; } .a-tablo-ara .a-k-sonuc { width: 15%; }
+.a-tablo-ara .a-k-tarih { width: 13%; } .a-tablo-ara .a-k-siklik { width: 13%; } .a-tablo-ara .a-k-kim { width: 17%; } .a-tablo-ara .a-k-yontem { width: 29%; }
+.a-tablo-ara .a-k-sonuc { width: 12%; } .a-tablo-ara .a-k-eylem { width: 16%; }   /* T7: sıklık ve işlem (Yapıldı · sil) sütunları */
 .a-tablo-kimde .a-k-varlik { width: 30%; } .a-tablo-kimde .a-k-tur { width: 14%; } .a-tablo-kimde .a-k-kimde { width: 18%; }
 .a-tablo-kimde .a-k-teslim { width: 20%; } .a-tablo-kimde .a-k-durum { width: 18%; }
 .a-tablo-hareket .a-k-tarih { width: 14%; } .a-tablo-hareket .a-k-varlik { width: 26%; } .a-tablo-hareket .a-k-kim { width: 28%; }

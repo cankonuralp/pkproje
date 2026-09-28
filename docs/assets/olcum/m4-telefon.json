@@ -8,8 +8,8 @@
   390,
   430
  ],
- "toplam": 52,
- "temiz": 52,
+ "toplam": 72,
+ "temiz": 72,
  "durumlar": [
   {
    "ad": "ölçüm cihazları · liste + uyarı şeridi",
@@ -54,7 +54,7 @@
    "tasma": 0,
    "disari": [],
    "kucukAlan": [],
-   "alan": 0
+   "alan": 1
   },
   {
    "ad": "cihaz · kalibrasyonu geçmiş, zimmette",
@@ -63,7 +63,7 @@
    "tasma": 0,
    "disari": [],
    "kucukAlan": [],
-   "alan": 0
+   "alan": 1
   },
   {
    "ad": "cihaz · kalibrasyonu geçmiş, zimmette",
@@ -72,7 +72,7 @@
    "tasma": 0,
    "disari": [],
    "kucukAlan": [],
-   "alan": 0
+   "alan": 1
   },
   {
    "ad": "cihaz · kalibrasyonu geçmiş, zimmette",
@@ -81,7 +81,7 @@
    "tasma": 0,
    "disari": [],
    "kucukAlan": [],
-   "alan": 0
+   "alan": 1
   },
   {
    "ad": "cihaz · kalibrasyonda",
@@ -90,7 +90,7 @@
    "tasma": 0,
    "disari": [],
    "kucukAlan": [],
-   "alan": 0
+   "alan": 1
   },
   {
    "ad": "cihaz · kalibrasyonda",
@@ -99,7 +99,7 @@
    "tasma": 0,
    "disari": [],
    "kucukAlan": [],
-   "alan": 0
+   "alan": 1
   },
   {
    "ad": "cihaz · kalibrasyonda",
@@ -108,7 +108,7 @@
    "tasma": 0,
    "disari": [],
    "kucukAlan": [],
-   "alan": 0
+   "alan": 1
   },
   {
    "ad": "cihaz · kalibrasyonda",
@@ -117,7 +117,7 @@
    "tasma": 0,
    "disari": [],
    "kucukAlan": [],
-   "alan": 0
+   "alan": 1
   },
   {
    "ad": "PDF görüntüleyici · kalibrasyon sertifikası",
@@ -126,7 +126,7 @@
    "tasma": 0,
    "disari": [],
    "kucukAlan": [],
-   "alan": 0
+   "alan": 1
   },
   {
    "ad": "PDF görüntüleyici · kalibrasyon sertifikası",
@@ -135,7 +135,7 @@
    "tasma": 0,
    "disari": [],
    "kucukAlan": [],
-   "alan": 0
+   "alan": 1
   },
   {
    "ad": "PDF görüntüleyici · kalibrasyon sertifikası",
@@ -144,7 +144,7 @@
    "tasma": 0,
    "disari": [],
    "kucukAlan": [],
-   "alan": 0
+   "alan": 1
   },
   {
    "ad": "PDF görüntüleyici · kalibrasyon sertifikası",
@@ -153,7 +153,7 @@
    "tasma": 0,
    "disari": [],
    "kucukAlan": [],
-   "alan": 0
+   "alan": 1
   },
   {
    "ad": "kalibrasyon kaydı · boş gönderildi",
@@ -162,7 +162,7 @@
    "tasma": 0,
    "disari": [],
    "kucukAlan": [],
-   "alan": 4
+   "alan": 5
   },
   {
    "ad": "kalibrasyon kaydı · boş gönderildi",
@@ -171,7 +171,7 @@
    "tasma": 0,
    "disari": [],
    "kucukAlan": [],
-   "alan": 4
+   "alan": 5
   },
   {
    "ad": "kalibrasyon kaydı · boş gönderildi",
@@ -180,7 +180,7 @@
    "tasma": 0,
    "disari": [],
    "kucukAlan": [],
-   "alan": 4
+   "alan": 5
   },
   {
    "ad": "kalibrasyon kaydı · boş gönderildi",
@@ -189,7 +189,7 @@
    "tasma": 0,
    "disari": [],
    "kucukAlan": [],
-   "alan": 4
+   "alan": 5
   },
   {
    "ad": "zimmetler · kimde",
@@ -414,7 +414,7 @@
    "tasma": 0,
    "disari": [],
    "kucukAlan": [],
-   "alan": 0
+   "alan": 1
   },
   {
    "ad": "cihaz · ara kontrol takip edilmiyor",
@@ -423,7 +423,7 @@
    "tasma": 0,
    "disari": [],
    "kucukAlan": [],
-   "alan": 0
+   "alan": 1
   },
   {
    "ad": "cihaz · ara kontrol takip edilmiyor",
@@ -432,7 +432,7 @@
    "tasma": 0,
    "disari": [],
    "kucukAlan": [],
-   "alan": 0
+   "alan": 1
   },
   {
    "ad": "cihaz · ara kontrol takip edilmiyor",
@@ -441,7 +441,7 @@
    "tasma": 0,
    "disari": [],
    "kucukAlan": [],
-   "alan": 0
+   "alan": 1
   },
   {
    "ad": "cihaz düzenle",
@@ -450,7 +450,7 @@
    "tasma": 0,
    "disari": [],
    "kucukAlan": [],
-   "alan": 4
+   "alan": 5
   },
   {
    "ad": "cihaz düzenle",
@@ -459,7 +459,7 @@
    "tasma": 0,
    "disari": [],
    "kucukAlan": [],
-   "alan": 4
+   "alan": 5
   },
   {
    "ad": "cihaz düzenle",
@@ -468,7 +468,7 @@
    "tasma": 0,
    "disari": [],
    "kucukAlan": [],
-   "alan": 4
+   "alan": 5
   },
   {
    "ad": "cihaz düzenle",
@@ -477,7 +477,187 @@
    "tasma": 0,
    "disari": [],
    "kucukAlan": [],
-   "alan": 4
+   "alan": 5
+  },
+  {
+   "ad": "otomatik bakım oluştur · 3 bakım",
+   "gen": 320,
+   "temiz": true,
+   "tasma": 0,
+   "disari": [],
+   "kucukAlan": [],
+   "alan": 6
+  },
+  {
+   "ad": "otomatik bakım oluştur · 3 bakım",
+   "gen": 360,
+   "temiz": true,
+   "tasma": 0,
+   "disari": [],
+   "kucukAlan": [],
+   "alan": 6
+  },
+  {
+   "ad": "otomatik bakım oluştur · 3 bakım",
+   "gen": 390,
+   "temiz": true,
+   "tasma": 0,
+   "disari": [],
+   "kucukAlan": [],
+   "alan": 6
+  },
+  {
+   "ad": "otomatik bakım oluştur · 3 bakım",
+   "gen": 430,
+   "temiz": true,
+   "tasma": 0,
+   "disari": [],
+   "kucukAlan": [],
+   "alan": 6
+  },
+  {
+   "ad": "cihaz · planlı ara kontroller oluşturuldu",
+   "gen": 320,
+   "temiz": true,
+   "tasma": 0,
+   "disari": [],
+   "kucukAlan": [],
+   "alan": 1
+  },
+  {
+   "ad": "cihaz · planlı ara kontroller oluşturuldu",
+   "gen": 360,
+   "temiz": true,
+   "tasma": 0,
+   "disari": [],
+   "kucukAlan": [],
+   "alan": 1
+  },
+  {
+   "ad": "cihaz · planlı ara kontroller oluşturuldu",
+   "gen": 390,
+   "temiz": true,
+   "tasma": 0,
+   "disari": [],
+   "kucukAlan": [],
+   "alan": 1
+  },
+  {
+   "ad": "cihaz · planlı ara kontroller oluşturuldu",
+   "gen": 430,
+   "temiz": true,
+   "tasma": 0,
+   "disari": [],
+   "kucukAlan": [],
+   "alan": 1
+  },
+  {
+   "ad": "ara kontrol kayıtları PDF'i",
+   "gen": 320,
+   "temiz": true,
+   "tasma": 0,
+   "disari": [],
+   "kucukAlan": [],
+   "alan": 1
+  },
+  {
+   "ad": "ara kontrol kayıtları PDF'i",
+   "gen": 360,
+   "temiz": true,
+   "tasma": 0,
+   "disari": [],
+   "kucukAlan": [],
+   "alan": 1
+  },
+  {
+   "ad": "ara kontrol kayıtları PDF'i",
+   "gen": 390,
+   "temiz": true,
+   "tasma": 0,
+   "disari": [],
+   "kucukAlan": [],
+   "alan": 1
+  },
+  {
+   "ad": "ara kontrol kayıtları PDF'i",
+   "gen": 430,
+   "temiz": true,
+   "tasma": 0,
+   "disari": [],
+   "kucukAlan": [],
+   "alan": 1
+  },
+  {
+   "ad": "cihaz türleri",
+   "gen": 320,
+   "temiz": true,
+   "tasma": 0,
+   "disari": [],
+   "kucukAlan": [],
+   "alan": 1
+  },
+  {
+   "ad": "cihaz türleri",
+   "gen": 360,
+   "temiz": true,
+   "tasma": 0,
+   "disari": [],
+   "kucukAlan": [],
+   "alan": 1
+  },
+  {
+   "ad": "cihaz türleri",
+   "gen": 390,
+   "temiz": true,
+   "tasma": 0,
+   "disari": [],
+   "kucukAlan": [],
+   "alan": 1
+  },
+  {
+   "ad": "cihaz türleri",
+   "gen": 430,
+   "temiz": true,
+   "tasma": 0,
+   "disari": [],
+   "kucukAlan": [],
+   "alan": 1
+  },
+  {
+   "ad": "cihaz türü ekle · boş gönderildi",
+   "gen": 320,
+   "temiz": true,
+   "tasma": 0,
+   "disari": [],
+   "kucukAlan": [],
+   "alan": 2
+  },
+  {
+   "ad": "cihaz türü ekle · boş gönderildi",
+   "gen": 360,
+   "temiz": true,
+   "tasma": 0,
+   "disari": [],
+   "kucukAlan": [],
+   "alan": 2
+  },
+  {
+   "ad": "cihaz türü ekle · boş gönderildi",
+   "gen": 390,
+   "temiz": true,
+   "tasma": 0,
+   "disari": [],
+   "kucukAlan": [],
+   "alan": 2
+  },
+  {
+   "ad": "cihaz türü ekle · boş gönderildi",
+   "gen": 430,
+   "temiz": true,
+   "tasma": 0,
+   "disari": [],
+   "kucukAlan": [],
+   "alan": 2
   }
  ]
 }

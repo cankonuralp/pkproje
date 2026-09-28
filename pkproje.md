@@ -1769,6 +1769,20 @@ revizyon, alan kopyalama, hafif kusur devri, meslek eşleşme denetimi).
 - Emsal ürünler: https://opwire.app/iso-17020-periyodik-kontrol-yazilimi/ · https://17020muayene.vidco.com.tr/ · https://akuple.com/asansor-kontrol-yazilimi/ · https://ensyazilim.com/
 
 ## 11 · Değişiklik günlüğü
+- 2026-09-28 (120): **T7 · Ölçüm cihazları: cihaz türü, ara kontrol sıklıkları, otomatik bakım, PDF** (§9 otuz dördüncü tur; §3.7 satır 12;
+  reisim: *"Ölçüm cihazlarında … cihaz türü de eklenebilmeli … ara kontrollerde … günlük, haftalık, aylık, 6 ayda bir … otomatik bakım oluştur
+  tuşu"* · *"Cihazlarda yapılan ara kontrollerin kayıtları pdf olarak indirilebilsin"*). Ara kontrol hesabı ortak veride tek yerde
+  (`MV.ARA_SIKLIK`, `MV.araProgram`, `MV.araDurum`): cihazın bir ya da birkaç **programı** (sıklık) olur; bir programın sonraki tarihi planlı
+  en erken kayıt, yoksa son yapılan + sıklık; uyarı eşiği sıklığa göre (günlük 0, haftalık 2, aylık 7, 6 ayda bir 30 gün). Eski tek
+  "6 ayda bir" periyodu ve "takip edilsin" kutusu kalktı. Cihaz sayfası: **Ara kontroller** bölümü her cihazda (programlar + kaldır, kayıtlar
+  süzgeçli ve sayfalı — Tarih kutusu, Yapıldı / Planlı / Gecikti, Sıklık —, planlı kayıtta **Yapıldı**, her kayıtta sil); **Otomatik bakım
+  oluştur** penceresi (başlangıç, bitiş — en çok 2 yıl —, bakım sayısı 1–4, her bakımın sıklığı ve yöntemi; aynı sıklık iki kez seçilemez;
+  aralıktaki eski planlılar yerini bırakır); **Ara kontrol ekle**'de sıklık (programlardan ya da programsız tek seferlik); **PDF indir**:
+  süzgeçten geçen yapılmış kayıtlar temel formatta (`KM-FR-ARA-01`, firma formatı §3.7 satır 12). Cihaz düzenle / ekle'de sıklıklar
+  işaretlenir. Liste: **Cihaz türleri** penceresi (tür ekle / düzenle — ad eşsiz, en az bir ekipman grubu —; cihazı olmayan tür silinir ve
+  ekipman türlerinin kullanacağı cihazlardan çıkar). Ortak arama temizleme tuşuyla ad çakışması (`ara-sil`) denemede yakalandı, kayıt silme
+  eylemi ayrı adla. Kalıcı maket sürümü artırıldı (tohum veri yapısı değişti). 12 yeni deneme, 2 güncellendi (takip edilmeyen cihaz; balon
+  denemesi yeni ara kontrol yapısıyla); 5 yeni durum. 18 maket temiz: durum 1976/1976 · etkileşim 475/475 · telefon 988/988 · olumsuz kanıt geçti.
 - 2026-09-28 (119): **Yüklenen dosyalar — kalıcı, kendisi açılır, değiştirilir, silinir** (§3.8 kural 10; reisim'in zimmet bildirimi). Kök
   nedenler: (a) seçilen dosya yalnız o sayfanın belleğindeydi — sayfa değişince / yenilenince kayıtta adı kalıyor, görüntüleyici iskelete
   düşüyordu; (b) bazı ekranlar yüklenen dosyayı hiç göstermiyordu (imzalı zimmet sayfası üretilen formu çiziyordu; türün "PDF'i aç"ı rapor
