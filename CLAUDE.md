@@ -34,7 +34,8 @@ durum **`MAKET-PLANI.md`** — bu çalışma sürerken oturum başında o da TAM
 cevaplanmaz → modüller benim önerdiğim sırayla tek tek; her modülde o modülün soruları YENİDEN sorulur; çakışan / gereksiz
 modüller sırası gelince silinir, şimdi değil (MAKET-PLANI.md Durum). **M1 onaylandı (2026-09-25, reisim: *"Onaylıyorum"*)**; **M2 onaylandı
 (2026-09-26)**; **M3 onaylandı (2026-09-26)** (Ekipmanlar modülü kalktı, ekipmanlar planın içinde; tür başına firmanın rapor formatı PDF'i); **M4 onaylandı (2026-09-26)**; **M5 Sözleşmeler onaylandı (2026-09-26)** (M13 ile birleşti;
-İSG-KATİP ID'leri iş sözleşmesinin içinde, uyarı yalnız İSG-KATİP için); M6 Plan aç 2. tur incelemede; **2026-09-26 reisim: kalan modüllerin (M7–M16) soruları tek listede** (MAKET-PLANI.md), cevaplandı (pkproje.md §9 yirmi birinci tur), M6–M16 2. tur bitti, **reisim toplu gözden geçiriyor**; **bütün maketler onaylanmadan kod yok**; genel ilke: teknik ayrıntı yok, kural uyarıdır engel değil (pkproje.md §9 on ikinci tur).
+İSG-KATİP ID'leri iş sözleşmesinin içinde, uyarı yalnız İSG-KATİP için); M6 Plan aç 2. tur incelemede; **2026-09-26 reisim: kalan modüllerin (M7–M16) soruları tek listede** (MAKET-PLANI.md), cevaplandı (pkproje.md §9 yirmi birinci tur), M6–M16 2. tur bitti, **reisim toplu gözden geçiriyor** — 2026-09-27/28 tur tur (pkproje.md §9 yirmi ikinci – otuz üçüncü tur, §11 90–111; maket artık sayfalar arası
+kalıcı, reisim her işlevi kendisi dener; makette geçici çözüm olabilir, nihai kodda olmaz); **bütün maketler onaylanmadan kod yok**; genel ilke: teknik ayrıntı yok, kural uyarıdır engel değil (pkproje.md §9 on ikinci tur).
 
 ## 2 · Yığın (pkproje.md §8 — **reisim 2026-09-22'de onayladı**)
 - **TypeScript + Next.js (App Router), standalone çıktı — onaylı 2026-09-22** (SvelteKit düştü). Tarayıcı

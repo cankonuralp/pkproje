@@ -253,3 +253,8 @@ imza servisi) · ötekiler kabul. Sıra: genel temizlik (alt satır mesajları) 
 Bütün maketler onaylanmadan kod yok.
 - 2026-09-26: **M6–M16 2. tur bitti** (genel temizlik → M7 → M8 → M9 → M10 → M11 → M12 → M14 → M15 → M16); toplu bakış yeniden üretildi, açık soru
   yok. Bütün maketler üç kipte temiz. Reisim'in toplu gözden geçirmesi bekleniyor; onaylanmadan kod yok.
+- 2026-09-27 / 28: **reisim toplu gözden geçirmeyi tur tur yapıyor** (pkproje.md §9 yirmi ikinci – otuz üçüncü tur; §11 90–111): gerçek dosya
+  seçme / indirme, ZPKR01 · ZPKR02 formatları, Talepler ve Dökümanlar modülleri, ölçüm metodu ve cihazlar yalnız türden, resmî rapor çıktısı
+  (önizleme = inen PDF, tek KÂĞIT mekanizması), formatın her verisi saha raporunda, **maket sayfalar arası kalıcı** (reisim her işlevi kendisi
+  dener; "Denemeleri sıfırla" yan menüde). Kural: makette geçici çözüm olabilir, nihai kodda olmaz; rapor ekranı uygulama düzeninde, PDF
+  düzeni yalnız final raporda. Son durum: 18 maket temiz (durum 1912 · etkileşim 440 · telefon 956). Bütün maketler onaylanmadan kod yok.
