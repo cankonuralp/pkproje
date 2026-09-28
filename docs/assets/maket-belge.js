@@ -166,8 +166,9 @@
     };
     var sonucSec = function (uygunMetin, degilMetin) {
       if (!o) return "<b>" + uygunMetin + "/" + degilMetin + "</b>";
+      /* yalnız seçilen sonuç yazılır, öteki çizilmez de yazılmaz (§3.8 kural 2, reisim 2026-09-28); sonuç seçilmemiş taslakta ikisi */
       var uygun = R ? R.sonuc === "kullanilir" : !kusurlu, degil = R ? R.sonuc === "kullanilamaz" : kusurlu;
-      return "<b>" + (degil ? "<s>" + uygunMetin + "</s>" : uygunMetin) + "/" + (uygun ? "<s>" + degilMetin + "</s>" : degilMetin) + "</b>";
+      return "<b>" + (uygun ? uygunMetin.trim() : degil ? degilMetin.trim() : uygunMetin + "/" + degilMetin) + "</b>";
     };
 
     if (et) {
@@ -317,7 +318,7 @@
   var SONUC_AD = { uygun: "Uygun", uygundegil: "Uygun değil", uygulanamaz: "Uygulanamaz" };
   function sonucAd(x) { return x && x.c ? SONUC_AD[x.c] + (x.c === "uygundegil" && x.derece ? " · " + (x.derece === "agir" ? "ağır" : "hafif") : "") : "-"; }
   function kusurHtml(l) {
-    return l && l.length ? "<ol class=\"a-belge-notlar\">" + l.map(function (x) { return "<li><b>" + kacis(x[0]) + "</b> · " + kacis(x[1]) + ": " + kacis(x[2]) + "</li>"; }).join("") + "</ol>" : '<p class="a-deger-yok">Kusur yok.</p>';
+    return l && l.length ? "<ol class=\"a-belge-notlar\">" + l.map(function (x) { return "<li><b>" + kacis(x[0]) + "</b>: " + kacis(x[2]) + "</li>"; }).join("") + "</ol>" : '<p class="a-deger-yok">Kusur yok.</p>';
   }
   function sonucKutu(o, kusurlu) {
     var R = o && o.r, uygun = R ? R.sonuc === "kullanilir" : o && !kusurlu, degil = R ? R.sonuc === "kullanilamaz" : kusurlu;

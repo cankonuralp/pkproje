@@ -111,7 +111,7 @@
       return '<div class="a-yuzler">' +
         yuz({ ikon: "calendar-check", ad: "Açık plan", sayi: acik.length, href: "planlarim.html", not: "kabul bekleyen, kabul edilen, denetimde" }) +
         yuz({ ikon: "badge-check", ad: "Onayda rapor", sayi: onayda.length, href: "onaylar.html", not: "branş yöneticilerinde" }) +
-        yuz({ ikon: "file-signature", ad: "Muayene uzmanı onayı", sayi: imza.length, href: "raporlar.html", not: "imza bekliyor" }) +
+        yuz({ ikon: "file-signature", ad: "Muayene uzmanı imzası", sayi: imza.length, href: "raporlar.html", not: "imza bekliyor" }) +
         yuz({ ikon: "alarm-clock", ad: "Uyarı", sayi: kalUyari().length + eg.length, href: "uyarilar.html", not: kalUyari().length + " kalibrasyon · " + eg.length + " eğitim tekrarı", uyari: true }) +
         yuz({ ikon: "users", ad: "Bilgisi eksik personel", sayi: eksik.length, href: "personel.html", not: eksik.length ? eksik.map(function (p) { return p.ad; }).join(", ") : "yok", uyari: eksik.length > 0 }) +
         "</div>" +
@@ -129,7 +129,7 @@
       return '<div class="a-yuzler">' +
         yuz({ ikon: "badge-check", ad: "Onayını bekleyen", sayi: kuyruk.length, href: "onaylar.html", not: kuyruk.length ? "en eskisi " + saatFarki(kuyruk[0].gonderildi) : "yok", uyari: kuyruk.length > 0 }) +
         yuz({ ikon: "undo-2", ad: "Geri gönderdiğin", sayi: geri.length, href: "raporlar.html", not: "düzeltme bekliyor" }) +
-        yuz({ ikon: "file-signature", ad: "Muayene uzmanı onayı", sayi: imza.length, href: "raporlar.html", not: MV.bransAd(b) + " raporları" }) +
+        yuz({ ikon: "file-signature", ad: "Muayene uzmanı imzası", sayi: imza.length, href: "raporlar.html", not: MV.bransAd(b) + " raporları" }) +
         yuz({ ikon: "gauge", ad: "Kalibrasyon uyarısı", sayi: kal.length, href: "olcum-cihazlari.html", not: MV.bransAd(b) + " cihazları", uyari: kal.length > 0 }) +
         "</div>" +
         liste("Onay kuyruğu", "a-tablo-anakuyruk", KUYRUK_SUTUN, kuyruk.slice(0, 5), "Onay bekleyen rapor yok.", tumu("onaylar.html", "Onaylar"));

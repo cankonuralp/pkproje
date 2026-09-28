@@ -134,7 +134,7 @@
     r.durum = "onaylandi"; r.onay = { kim: BEN, zaman: MK.simdi(), vekil: brans(r) !== BENIM };
     s = s === r ? null : s;
     location.hash = s ? "#/r/" + s.no : BRANS === BENIM ? "#/" : "#/?brans=" + BRANS;
-    MK.bildir(r.no + " onaylandı; muayene uzmanı onayında, " + MV.kisi(r.kisi).ad + " imzalayınca tamamlanır." + (s ? " Sıradaki rapor açıldı." : " Kuyruk boş."));
+    MK.bildir(r.no + " onaylandı; muayene uzmanı imzasında, " + MV.kisi(r.kisi).ad + " imzalayınca tamamlanır." + (s ? " Sıradaki rapor açıldı." : " Kuyruk boş."));
   };
   X["onay-geri-al"] = function () {
     var r = MV.rapor(rota().no); r.durum = "onayda"; r.onay = null; onayCiz(r); MK.menuSayi(15, kuyruk().length);

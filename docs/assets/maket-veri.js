@@ -628,8 +628,8 @@
       { k: "ff", ad: "Gerilim F-F", birim: "V", ornek: "398" }, { k: "ln", ad: "Gerilim L-N", birim: "V", ornek: "229" },
       { k: "npe", ad: "Gerilim N-PE", birim: "V", op: "<=", sinir: 10, ornek: "1,2" },
       { k: "ik3", ad: "Hesaplanan 3 fazlı kısa devre akımı", birim: "kA", ornek: "4,8" },   /* sınırı her sigortanın Icu değeri: MV.linyeHesap (tek kural) */
-      { k: "dkdTip", ad: "Aşırı gerilim koruma (DKD) tipi", birim: "", metin: true, ornek: "Tip 2" },
-      { k: "dkdAkim", ad: "Aşırı gerilim koruma (DKD) dayanma akımı", birim: "kA", ornek: "20" }],
+      { k: "dkdTip", ad: "Aşırı gerilim koruma (DKD) tipi", birim: "", metin: true, ornek: "Tip 2", istege: true },
+      { k: "dkdAkim", ad: "Aşırı gerilim koruma (DKD) dayanma akımı", birim: "kA", ornek: "20", istege: true }],
     AT: []
   };
   MV.kriterGruplari = function (t) { var f = MV.formatYapi(t); return f && f.gozle ? f.gozle : null; };
@@ -920,7 +920,7 @@
       MV.RAPORLAR.push(r);
     });
   });
-  /* plan 10 (2026-09-28): son formatlarla örnek — sonuçlar formata göre: Tamamlandı · Uygun, Muayene uzmanı onayı · hafif kusurlu,
+  /* plan 10 (2026-09-28): son formatlarla örnek — sonuçlar formata göre: Tamamlandı · Uygun, Muayene uzmanı imzası · hafif kusurlu,
      yönetici onayında · ağır kusurlu (topraklamada Not-2), iki taslak. Planlar maketindeki plan 10 ile aynı numara ve durum. */
   [["imzali", "Uygun"], ["onaylandi", "Hafif kusurlu"], ["onayda", "Ağır kusurlu"], ["taslak", null], ["taslak", null]].forEach(function (x, k) {
     var e = MV.ekipman(MV.PLAN10_KODLAR[k][0]), o = dk("2026-09-23T13:10", 10 + k * 6), r = { no: MV.raporNo("0926", raporSira++), kod: e.kod, tesis: "t16", plan: 10, kisi: "ea",
@@ -933,9 +933,9 @@
   MV.RAPORLAR.filter(function (r) { return r.kod === "ZV-1007" && r.plan === 1; })[0].geri = { kim: "sy", zaman: "2026-09-23T15:10", gerekce: "Yük deneyi değerleri yazılmamış: dinamik ve statik deney yüklerini girin." };
   MV.rapor = function (no) { return MV.RAPORLAR.filter(function (r) { return r.no === no; })[0]; };
   /* rapor durumları, kronolojik (reisim 2026-09-26): Yeni (denetçi açar, yazar, kaydeder) → Teknik yönetici onayında ("Gönder") → Muayene
-     uzmanı onayı (onaydan dönen rapor; denetçi "İmzala" der) → İmzaya gönderildi → Tamamlandı. Geri gönderilen rapor "Yeni"ye döner. */
+     uzmanı imzası (onaydan dönen rapor; denetçi "İmzala" der) → İmzaya gönderildi → Tamamlandı. Geri gönderilen rapor "Yeni"ye döner. */
   MV.RAPOR_DURUM = { taslak: { ad: "Yeni", rozet: "a-rozet-bekliyor" }, geri: { ad: "Yeni", rozet: "a-rozet-bekliyor" }, onayda: { ad: "Teknik yönetici onayında", rozet: "a-rozet-kabul" },
-    onaylandi: { ad: "Muayene uzmanı onayı", rozet: "a-rozet-denetimde" }, imzada: { ad: "İmzaya gönderildi", rozet: "a-rozet-notr" }, imzali: { ad: "Tamamlandı", rozet: "a-rozet-tamam" } };
+    onaylandi: { ad: "Muayene uzmanı imzası", rozet: "a-rozet-denetimde" }, imzada: { ad: "İmzaya gönderildi", rozet: "a-rozet-notr" }, imzali: { ad: "Tamamlandı", rozet: "a-rozet-tamam" } };
   /* sonuç adı §4.5'e göre: hafif / ağır yalnız format yürürlükteki türde; Planlar maketi taslak formatlı türde de "Hafif kusurlu" yazıyor
      (maket tutarsızlığı) → burada "Kusurlu"ya çevrilir */
   MV.sonucAd = function (r) { if (!r.sonuc) return null; return r.sonuc === "Uygun" || MV.kusurSinifli(MV.tur(MV.ekipman(r.kod).tur)) ? r.sonuc : "Kusurlu"; };

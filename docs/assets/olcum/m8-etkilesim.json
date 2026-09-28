@@ -2,8 +2,8 @@
  "maket": "m8",
  "tarih": "2026-09-28",
  "arac": "tools/olc-bulut.mjs --etkilesim (başsız tarayıcı, 1920 açık tema; gen verilen denemede o genişlik)",
- "toplam": 73,
- "gecen": 73,
+ "toplam": 76,
+ "gecen": 76,
  "denemeler": [
   {
    "ad": "kontrol metodu türden, yalnız standart numarası, seçim alanı yok (formatlı türde firma bölümünde)",
@@ -20,7 +20,21 @@
    "gecti": true
   },
   {
-   "ad": "kriter seçilince sayaç güncellenir, odak seçimde",
+   "ad": "maddeler Uygun gelir (§3.8 kural 3); seçim değişir, odak seçimde",
+   "gen": 1920,
+   "sayfa": "maket/rapor.html",
+   "hash": "#/r/KS-1006",
+   "gecti": true
+  },
+  {
+   "ad": "ünlem menüsü: grubun maddelerini hepsini uygun değil yapar, odak ünlemde (§3.8 kural 3)",
+   "gen": 1920,
+   "sayfa": "maket/rapor.html",
+   "hash": "#/r/ET-1009",
+   "gecti": true
+  },
+  {
+   "ad": "ünlem menüsü: her grup başlığında bir tane (iç tesisat 7 grup), üç seçenek",
    "gen": 1920,
    "sayfa": "maket/rapor.html",
    "hash": "#/r/ET-1009",
@@ -41,7 +55,7 @@
    "gecti": true
   },
   {
-   "ad": "sınır dışı test değeri: işaretlenir (odak yerinde)",
+   "ad": "sınır dışı test değeri: kırmızı işaretlenir, açıklama yazısı yok (odak yerinde)",
    "gen": 1920,
    "sayfa": "maket/rapor.html",
    "hash": "#/r/ET-1009",
@@ -111,7 +125,7 @@
    "gecti": true
   },
   {
-   "ad": "eksik varken gönder: uyarı penceresi, Yine de gönder",
+   "ad": "zorunlu test boşken gönder: pencere 'Zorunlu alanlar doldurulmadı', gönderilmez",
    "gen": 1920,
    "sayfa": "maket/rapor.html",
    "hash": "#/r/ZV-1007",
@@ -426,6 +440,13 @@
    "gecti": true
   },
   {
+   "ad": "Ön izle: sonuç ve kanaatte yalnız seçilen sonuç, öteki çizili de yazılmaz (§3.8 kural 2)",
+   "gen": 1920,
+   "sayfa": "maket/rapor.html",
+   "hash": "#/r/ET-1009",
+   "gecti": true
+  },
+  {
    "ad": "Ön izle → İndir: PDF olarak kaydedilir (önizlemedeki sayfaların kendisi)",
    "gen": 1920,
    "sayfa": "maket/rapor.html",
@@ -433,24 +454,24 @@
    "gecti": true
   },
   {
-   "ad": "gönderilemeyen rapor: tuş açık; pencere nedenini ve 'Zorunlu bölümleri doldurun'u yazar, Yine de gönder yok",
+   "ad": "zorunlu eksik: uyarı listesi yok, tek Tamam; kalibrasyonu geçmiş cihaz da zorunlu eksik",
    "gen": 1920,
    "sayfa": "maket/rapor.html",
    "hash": "#/r/ET-1009",
    "gecti": true
   },
   {
-   "ad": "gönderilemeyen rapor: eksik bölümler işaretli ve açık, boş maddeler aria-invalid",
+   "ad": "Tamam: ekran ilk eksik alana kayar, eksik bölümler işaretli ve açık, boş testler kırmızı; zorunlu olmayan DKD işaretsiz",
    "gen": 1920,
    "sayfa": "maket/rapor.html",
    "hash": "#/r/ET-1009",
    "gecti": true
   },
   {
-   "ad": "pencereden bölüme git: bölüm açılır, başlığa odak",
+   "ad": "fotoğraf zorunlu: fotoğrafsız raporda fotoğraf alanı kırmızı çerçeve, eklenince kalkar",
    "gen": 1920,
    "sayfa": "maket/rapor.html",
-   "hash": "#/r/ET-1009",
+   "hash": "#/r/KS-1006",
    "gecti": true
   },
   {
@@ -482,7 +503,7 @@
    "gecti": true
   },
   {
-   "ad": "sonuç seçilmezse gönderilince kriterlere göre konur",
+   "ad": "zorunlular dolunca pencere açılmadan gönderilir; sonuç seçilmezse kriterlere göre konur",
    "gen": 1920,
    "sayfa": "maket/rapor.html",
    "hash": "#/r/KS-1006",

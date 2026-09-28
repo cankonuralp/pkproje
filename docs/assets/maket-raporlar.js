@@ -28,7 +28,7 @@
     cipler: [
       { k: "taslak", ad: "Yeni", grup: "durum", test: function (r) { return r.durum === "taslak"; } },
       { k: "onayda", ad: "Teknik yönetici onayında", grup: "durum", test: function (r) { return r.durum === "onayda"; } },
-      { k: "imza", ad: "Muayene uzmanı onayı", grup: "durum", test: function (r) { return r.durum === "onaylandi"; } },
+      { k: "imza", ad: "Muayene uzmanı imzası", grup: "durum", test: function (r) { return r.durum === "onaylandi"; } },
       { k: "imzada", ad: "İmzaya gönderildi", grup: "durum", test: function (r) { return r.durum === "imzada"; } },
       { k: "acik", ad: "Tamamlandı", grup: "durum", test: function (r) { return r.durum === "imzali"; } },
       { k: "geri", ad: "Geri gönderilen", test: function (r) { return !!r.geri && r.durum === "taslak"; } },
@@ -96,7 +96,7 @@
       '<div class="a-uyari-serit">' +
         (r.geri && r.durum === "taslak" ? MK.serit("uyari", "undo-2", "<b>Geri gönderildi</b> · " + kacis(MV.kisi(r.geri.kim).ad) + ": “" + kacis(r.geri.gerekce) + "”") : "") +
         (r.durum === "onayda" ? MK.serit("bilgi", "clock", "Onayda · " + kacis(yon.ad)) : "") +
-        (r.durum === "onaylandi" ? MK.serit("uyari", "file-signature", "Muayene uzmanı onayı · imzanız bekleniyor") : "") +
+        (r.durum === "onaylandi" ? MK.serit("uyari", "file-signature", "Muayene uzmanı imzası · imzanız bekleniyor") : "") +
         (r.durum === "imzada" ? MK.serit("bilgi", "file-signature", "İmzaya gönderildi") : "") +
         (r.durum === "imzali" ? MK.serit(portal.length ? "onay" : "uyari", "circle-check", "Tamamlandı · müşteriye açık" + (portal.length ? "" : " · müşterinin giriş yapan kullanıcısı yok")) : "") +
       "</div>" +

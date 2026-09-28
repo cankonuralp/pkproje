@@ -8,8 +8,8 @@
   390,
   430
  ],
- "toplam": 80,
- "temiz": 80,
+ "toplam": 84,
+ "temiz": 84,
  "durumlar": [
   {
    "ad": "elektrik raporu yarıda · kalibrasyonu geçmiş cihaz",
@@ -228,7 +228,7 @@
    "alan": 37
   },
   {
-   "ad": "gönderilemez penceresi + eksik bölümler işaretli (2026-09-28)",
+   "ad": "zorunlu alanlar penceresi + eksik bölümler işaretli (2026-09-28)",
    "gen": 320,
    "temiz": true,
    "tasma": 0,
@@ -237,7 +237,7 @@
    "alan": 38
   },
   {
-   "ad": "gönderilemez penceresi + eksik bölümler işaretli (2026-09-28)",
+   "ad": "zorunlu alanlar penceresi + eksik bölümler işaretli (2026-09-28)",
    "gen": 360,
    "temiz": true,
    "tasma": 0,
@@ -246,7 +246,7 @@
    "alan": 38
   },
   {
-   "ad": "gönderilemez penceresi + eksik bölümler işaretli (2026-09-28)",
+   "ad": "zorunlu alanlar penceresi + eksik bölümler işaretli (2026-09-28)",
    "gen": 390,
    "temiz": true,
    "tasma": 0,
@@ -255,7 +255,43 @@
    "alan": 38
   },
   {
-   "ad": "gönderilemez penceresi + eksik bölümler işaretli (2026-09-28)",
+   "ad": "zorunlu alanlar penceresi + eksik bölümler işaretli (2026-09-28)",
+   "gen": 430,
+   "temiz": true,
+   "tasma": 0,
+   "disari": [],
+   "kucukAlan": [],
+   "alan": 38
+  },
+  {
+   "ad": "ünlem menüsü açık (hepsini işaretle)",
+   "gen": 320,
+   "temiz": true,
+   "tasma": 0,
+   "disari": [],
+   "kucukAlan": [],
+   "alan": 38
+  },
+  {
+   "ad": "ünlem menüsü açık (hepsini işaretle)",
+   "gen": 360,
+   "temiz": true,
+   "tasma": 0,
+   "disari": [],
+   "kucukAlan": [],
+   "alan": 38
+  },
+  {
+   "ad": "ünlem menüsü açık (hepsini işaretle)",
+   "gen": 390,
+   "temiz": true,
+   "tasma": 0,
+   "disari": [],
+   "kucukAlan": [],
+   "alan": 38
+  },
+  {
+   "ad": "ünlem menüsü açık (hepsini işaretle)",
    "gen": 430,
    "temiz": true,
    "tasma": 0,

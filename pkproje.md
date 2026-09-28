@@ -980,7 +980,8 @@ Yeni format, ekipman türü ya da PDF eklendiğinde de geçerlidir; ekran başı
 4. **Küçük açıklama yazısı yok**: alan altında ipucu, sınır açıklaması, şeffaf bilgi satırı konmaz (firma formatı açıkça isterse o firmada).
 5. **Gönderirken** uyarı listesi yok: zorunlu alan eksikse kısa pencere "Zorunlu alanlar doldurulmadı", eksik alanlar kırmızı, ekran ilk
    eksiğe kayar; zorunlu olmayan eksik gönderimi durdurmaz. Temel zorunlular: fotoğraf (en az 1), türün ölçüm cihazları (kalibrasyonu
-   geçerli), uygun değil maddenin açıklaması — başka format başka zorunluluk getirebilir (§3.7 satır 13).
+   geçerli), uygun değil maddenin açıklaması (Bakanlık formatlı türde derecesi), test ve ölçüm değerleri (isteğe bağlı işaretlenenler hariç)
+   — başka format başka zorunluluk getirebilir (§3.7 satır 13).
 6. **Süzgeçler** alan alan arama kutusudur (ör. rapor no · ekipman kodu · ekipman türü · tesis; proje adı · proje no); alan kutuları olan
    listede genel "ara" kutusu yok; anlamsız çip yok.
 7. **Listelerde toplu PDF**: rapor listeleri (Raporlar, plan içi raporlar) süzgeçten geçen raporları tek PDF olarak indirir.
@@ -1419,8 +1420,8 @@ tekrar konuşacak"* → **Kararlar:**
   en üstte**.
 - **Tablet dikeyde kart yok:** tablo tabletin dikey hâlinde de yataydaki gibi kalır, gerekirse sıkışır; kart yalnız telefonda. Kart eşiği
   960 → 600 px (kalıp sayısı; reddedilen: 960, tablet dikeyde karta geçiyordu). Ölçüme tablet dikey (810) eklendi.
-- **Rapor durumları (kronolojik):** **Yeni** (denetçi açar, yazar, kaydeder) → **Teknik yönetici onayında** ("Gönder") → **Muayene uzmanı onayı**
-  (onaydan dönen rapor, denetçi "İmzala" der) → **İmzaya gönderildi** → **Tamamlandı**. İmza yolu firmaya göre kurulur. Geri gönderilen rapor
+- **Rapor durumları (kronolojik):** **Yeni** (denetçi açar, yazar, kaydeder) → **Teknik yönetici onayında** ("Gönder") → **Muayene uzmanı imzası**
+  (2026-09-28'e kadar adı "Muayene uzmanı onayı"; onaydan dönen rapor, denetçi "İmzala" der) → **İmzaya gönderildi** → **Tamamlandı**. İmza yolu firmaya göre kurulur. Geri gönderilen rapor
   "Yeni"ye döner, gerekçesi raporun üstünde durur.
 
 **Yirmi üçüncü tur (2026-09-26, toplu gözden geçirme; reisim birebir):** *"Gerek yok, öncelikle planı kabul etme işi planın içinde olsun ki denetçi
@@ -1756,6 +1757,23 @@ revizyon, alan kopyalama, hafif kusur devri, meslek eşleşme denetimi).
 - Emsal ürünler: https://opwire.app/iso-17020-periyodik-kontrol-yazilimi/ · https://17020muayene.vidco.com.tr/ · https://akuple.com/asansor-kontrol-yazilimi/ · https://ensyazilim.com/
 
 ## 11 · Değişiklik günlüğü
+- 2026-09-28 (112): **T1 · Saha raporu** (§9 otuz dördüncü tur; §3.8 kural 2, 3, 5; reisim: *"Muayene kriterleri otomatik olarak uygun
+  olarak gelir … ünlem işareti olur ve oradan seçilerek hepsini uygun yap hepsini uygunsuz yap ya da hepsini uygulanamaz yap … Gönder derken
+  gelen uyarı ekranı olmasın sadece eğer zorunlu doldurulması gereken yerler olmasına rağmen doldurulmadıysa pop-up şekilde zorunlu alanlar
+  doldurulmadı yazısı gelsin … fotoğraf eklemek her raporda zorunlu … etrafını kırmızı yakarak oraya doğru dikkat çekecek şekilde ekran
+  kaysın. Muayene uzmanı onayı değil, muayene uzmanı imzası"*). (1) Her madde **Uygun** gelir (termal kamerası olmayan türde termal kamera
+  maddeleri Uygulanamaz); her grup başlığında (gruplu olmayan formatta "Maddeler" başlığında) **ünlem menüsü**: Hepsini uygun · uygun
+  değil · uygulanamaz yap — o grubun maddelerine. (2) Gönder'deki eksik/uyarı listesi ve "Yine de gönder" kalktı: zorunlular doluysa
+  doğrudan gönderilir; boşsa **"Zorunlu alanlar doldurulmadı"** penceresi (tek Tamam), eksik bölümler açılır ve "Eksik" rozeti, boş alanlar
+  kırmızı; Tamam'la ekran ilk eksik alana kayar, odak o alanda. Zorunlular tek yerde (`zorunluEksik`): fotoğraf (en az 1, eksikse kırmızı
+  çerçeve), türün ölçüm cihazları (kalibrasyonu geçerli), uygun değil maddenin açıklaması (Bakanlık formatlı türde derecesi), test ve ölçüm
+  değerleri — isteğe bağlılar hariç (DKD tipi ve dayanma akımı `istege`); ekipman bilgileri zorunlu değil. (3) Küçük açıklama yazıları
+  kalktı: test alanının altındaki "Sınır … / Uygun · sınır …" (sınır dışı değer yalnız kırmızı), termal bölümde uzun cümle ("Termal kamera
+  yok."). (4) Final raporda sonuç ve kanaat **yalnız seçilen sonuç** (öteki çizili de yazılmaz; sonuç seçilmemiş taslakta ikisi); genel belge
+  kusur listesinde derece yazısı yok. (5) "Muayene uzmanı onayı" → **"Muayene uzmanı imzası"** bütün maketlerde. Tohum veri değiştiği için
+  kalıcı maket sürümü artırıldı (eski denemeler bir kez sıfırlanır). Rapor denemeleri güncellendi (+6 yeni: Uygun gelir, ünlem menüsü ×2,
+  zorunlu pencere + kayma, fotoğraf zorunlu, belgede yalnız seçilen sonuç). 18 maket temiz: durum 1938/1938 · etkileşim 443/443 ·
+  telefon 960/960; 1920 ve 375'te gözle bakıldı (ünlem menüsü, kırmızı eksik alanlar, ilk eksiğe kayma).
 - 2026-09-28 (111): **Reisim'in dört düzeltmesi** (reisim: *"Masraf yazmak için ilgili tuş planın içinde olmasın, oradan kaldır her kullanıcı
   profilinden yapacak masraf ve izin formu doldurmak gibi gerekli işlemleri, plan telefon ekranında gözükürken kartlarda ilk başta şirket adı
   yerine şirketin işletmesi çıkıyor şirket adı en üstte olsun, raporlarda … uygun değil işaretlediklerimiz kusur açıklamaları kısmında yazsın

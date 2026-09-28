@@ -894,6 +894,13 @@ a.a-yuz:hover { border-color: var(--kenar-alan); background: var(--zemin); }
 /* Bakanlık formatlı rapor (ZPKR01 · ZPKR02, 2026-09-27): alt başlık (2.1, 5.3 …), çoklu seçim, kusur listesi, formattan açılır listeler, ölçüm tabloları */
 .a-kriter-grup { margin: 16px 0 4px; font-size: var(--boy-govde); font-weight: 700; color: var(--yazi2); }
 .a-kriter-grup:first-child { margin-top: 4px; }
+/* grup başlığı + ünlem menüsü (hepsini işaretle, §3.8 kural 3; 2026-09-28) */
+.a-kriter-grup-bas { display: flex; align-items: center; justify-content: space-between; gap: 8px; margin: 12px 0 0; }
+.a-kriter-grup-bas:first-child { margin-top: 0; }
+.a-kriter-grup-bas .a-kriter-grup { margin: 0; }
+.a-kriter-toplu { flex: none; }
+.a-kriter-toplu .a-ikon-tus { color: var(--uyari-yazi); }
+.a-alan-eksik { outline: 2px solid var(--hata-yazi); outline-offset: 4px; border-radius: var(--r-kucuk); }   /* zorunlu fotoğraf eksik (§3.8 kural 5) */
 .a-coklu { display: grid; gap: 0; }
 .a-kusur-liste { margin: 0; padding-left: 20px; display: grid; gap: 8px; }
 .a-format-metin { margin: 0 0 8px; color: var(--yazi2); }
