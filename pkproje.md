@@ -991,6 +991,10 @@ Yeni format, ekipman türü ya da PDF eklendiğinde de geçerlidir; ekran başı
    (inspector alabilir, pasif rapor inspector'a görünmez); aktife alma ve silme yalnız yönetici. Makette: inspector gönderilmemiş (Yeni)
    raporu plan içinden pasife alır; teknik yönetici Onaylar → "Pasif raporlar"da aktif eder ya da siler (gönderilen rapor onay akışındadır).
 9. **Yan menüde takip sayıları**: modül adının yanında takip isteyen işler renkli balonla (geçmiş / acil kırmızı, yaklaşan sarı, sorunsuz yeşil).
+   Makette (2026-09-28, T6): Ölçüm cihazları (kalibrasyon ya da ara kontrol süresi geçen · 30 gün içinde · sorunsuz; kalibrasyondaki cihaz
+   sayılmaz) · Uyarılar (geçen · yaklaşan) · Personel (eğitim tekrarı geçen · 60 gün içinde) · Sözleşmeler (açık planda İSG-KATİP eksik ya
+   da bitmiş; hizmet sözleşmesi bitişi takip edilmez, M5 kararı) · Muhasebe (vadesi geçen fatura). Sayılar tek hesaptan (ortak veri), her
+   sayfada aynı; 0 olan balon yok. İş kuyruğu sayıları (kabul bekleyen plan, onay bekleyen, imza bekleyen) kendi sayfalarında eskisi gibi.
 
  (2026-09-18 araştırması; kaynaklar bölüm 10)
 
@@ -1760,6 +1764,14 @@ revizyon, alan kopyalama, hafif kusur devri, meslek eşleşme denetimi).
 - Emsal ürünler: https://opwire.app/iso-17020-periyodik-kontrol-yazilimi/ · https://17020muayene.vidco.com.tr/ · https://akuple.com/asansor-kontrol-yazilimi/ · https://ensyazilim.com/
 
 ## 11 · Değişiklik günlüğü
+- 2026-09-28 (117): **T6 · Yan menü takip balonları** (§9 otuz dördüncü tur; §3.8 kural 9; reisim: *"Sol taraftaki nav bar … cihazlarda süresi
+  geçen cihaz sayısı kırmızı balon, yaklaşan sarı balon, sorunsuz cihazlar yeşil balon"*). Takip hesapları ortak veride tek yerde
+  (`MV.takip`, `MV.uyarilar`, `MV.araDurum`, `MV.isgEksik`): Uyarılar listesi ve Sözleşmeler şeridi de aynı hesabı okur (önceden sayfa
+  içinde ayrı hesaplıyordu). Kabuk her sayfada balonları çizer; veri değişince (tıklama, yazma, sayfalar arası kayıt) yenilenir. Renkler
+  rozet renk çiftleri (kontrastı ölçülü), palet değişmedi. Masaüstünde balonlar sığmazsa adın altına, sağa geçer (ad kırpılmaz); daraltılmış
+  menüde simgenin köşesinde yalnız en önemli renk. Uyarılar'ın eski tek sayacı kalktı (balonlar onu içeriyor). 3 yeni deneme (başka sayfada
+  aynı sayılar · veri değişince güncellenir · daraltılmış menü), 1 güncellendi. 18 maket temiz: durum 1936/1936 · etkileşim 457/457 ·
+  telefon 968/968; 1920 (açık ve daraltılmış menü) ve 1080 çekmecede gözle.
 - 2026-09-28 (116): **T5 · Genel arama + küçük açıklama yazıları** (§9 otuz dördüncü tur; §3.8 kural 4, 6; reisim: *"herhangi bir yerde küçük
   yazılarla info olmaz … hepsinde ara barını kaldır … ikinci görselde attığım şeffaf yazılara gerek yok"*). Genel arama: T2'deki ortak kural
   (alan kutusu olan listede genel arama yok) bütün listelerde geçerli — plan içi, Planlar, Raporlar. Açıklama taraması (ölçüt §3.8 kural 4):

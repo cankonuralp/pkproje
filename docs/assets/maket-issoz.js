@@ -34,20 +34,8 @@
   /* ── İSG-KATİP: tesis başına denetçi → sözleşme ID ─────────────────────────────────────────────────── */
   var idKullanimi = function (r) { var t = MV.tesis(r.t); return t.pid && (t.pekip || []).indexOf(r.k) >= 0 ? t : null; };   /* ID hangi planda kullanılıyor */
   var gecOnay = function (r) { var t = MV.tesis(r.t); return !!r.onay && MV.acikPlan(t) && (t.pekip || []).indexOf(r.k) >= 0 && !MV.isgUygun(r.onay, t.ptarih); };
-  /* bitti: bitiş tarihi girilmiş ve açık planın gününden (plan yoksa bugünden) önce */
-  var bitti = function (r) { var t = MV.tesis(r.t), gun = MV.acikPlan(t) && (t.pekip || []).indexOf(r.k) >= 0 ? t.ptarih : MK.BUGUN; return !!r.bitis && r.bitis < gun; };
-  /* açık planda görevli olup ID'si olmayan denetçiler: [tesis, kişi] */
-  var idEksik = function (x) {
-    var l = [];
-    x.tesisler.forEach(function (tid) {
-      var t = MV.tesis(tid); if (!MV.acikPlan(t)) return;
-      (t.pekip || []).forEach(function (k) {
-        var r = MV.isgTesis(tid).filter(function (y) { return y.k === k; })[0];
-        if (!r) l.push([t, MV.kisi(k), "ID yok"]); else if (bitti(r)) l.push([t, MV.kisi(k), "bitmiş"]);
-      });
-    });
-    return l;
-  };
+  /* bitti · idEksik ortak veride (MV.isgBitti · MV.isgEksik): yan menünün takip balonu da aynı hesabı okur (2026-09-28) */
+  var bitti = MV.isgBitti, idEksik = MV.isgEksik;
   var isgSayisi = function (x) { return x.tesisler.reduce(function (n, t) { return n + MV.isgTesis(t).length; }, 0); };
   /* tesisin sözleşmesi: bugün geçerli olan, yoksa en yenisi */
   var tesisinSozlesmesi = function (tid) {

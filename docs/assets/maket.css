@@ -69,6 +69,17 @@ html[data-giris="fare"] .a-girdi:focus, html[data-giris="fare"] .a-alan:focus { 
   border-radius: var(--r-tam); background: var(--onay); color: var(--onay-uzeri);
   font-size: var(--boy-etiket); font-weight: 700;
 }
+/* takip balonları (2026-09-28): kırmızı süresi geçen · sarı yaklaşan · yeşil sorunsuz — rozet renk çiftleri (kontrastı ölçülü) */
+.a-menu-takip { display: inline-flex; gap: 4px; margin-left: auto; }
+.a-menu-takip:empty { display: none; }
+.a-menu-sayi + .a-menu-takip { margin-left: 4px; }
+/* ad kırpılmaz: balonlar sığmazsa ikinci satıra, sağa geçer (menü genişliği kalıpta sabit) */
+.a-kabuk:not(.a-kabuk-dar) .a-menu a:has(.a-balon) { flex-wrap: wrap; row-gap: 2px; padding-top: 6px; padding-bottom: 6px; }
+.a-kabuk:not(.a-kabuk-dar) .a-menu a:has(.a-balon) .a-menu-ad { flex: 0 0 auto; max-width: calc(100% - 32px); }
+.a-balon { min-width: 22px; height: 20px; padding: 0 6px; display: inline-flex; align-items: center; justify-content: center; border-radius: var(--r-tam); font-size: var(--boy-etiket); font-weight: 700; }
+.a-balon-kirmizi { background: var(--hata-zemin); color: var(--hata-yazi); }
+.a-balon-sari { background: var(--uyari-zemin); color: var(--uyari-yazi); }
+.a-balon-yesil { background: var(--onay-zemin); color: var(--onay-yazi); }
 .a-cubuk-alt { flex: none; display: flex; flex-wrap: wrap; align-items: center; justify-content: space-between; gap: 4px 8px; padding: 10px 20px 12px; border-top: 1px solid var(--cubuk-secili); font-size: var(--boy-etiket); color: var(--cubuk-yazi2); }
 /* maketin kalıcı denemelerini siler (2026-09-28, Kalem M) */
 .a-cubuk-sifirla { min-height: var(--tus-y); padding: 0 8px; border: 1px solid var(--cubuk-secili); border-radius: var(--r-kucuk); background: none; color: var(--cubuk-yazi2); font: inherit; cursor: pointer; }
@@ -1267,6 +1278,10 @@ a.a-yuz:hover { border-color: var(--kenar-alan); background: var(--zemin); }
   .a-kabuk-dar .a-menu a { position: relative; justify-content: center; gap: 0; padding: 0; }
   .a-kabuk-dar .a-menu-ad { position: absolute; width: 1px; height: 1px; overflow: hidden; clip: rect(0 0 0 0); white-space: nowrap; }
   .a-kabuk-dar .a-menu-sayi { position: absolute; top: 1px; right: 1px; min-width: 18px; height: 18px; margin: 0; padding: 0 4px; }
+  .a-kabuk-dar .a-menu-takip { position: absolute; top: 1px; right: 1px; margin: 0; }
+  .a-kabuk-dar .a-menu-takip .a-balon { min-width: 18px; height: 18px; padding: 0 4px; }
+  .a-kabuk-dar .a-menu-takip .a-balon + .a-balon { display: none; }
+  .a-kabuk-dar .a-menu-sayi ~ .a-menu-takip { display: none; }
   .a-kabuk-dar .a-cubuk-alt { display: none; }
 }
 

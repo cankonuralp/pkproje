@@ -1205,6 +1205,76 @@
   };
   /* sayfalar arası ortak kayıt (2026-09-28, Kalem M): Plan aç'ta açılan planlar — Planlar bunları kendi listesine alır */
   MV.ACILAN_PLANLAR = [];
+  /* ── TAKİP (2026-09-28, T6): süre takibi isteyen işler tek yerde hesaplanır; Uyarılar listesi, Sözleşmeler şeridi ve yan menünün
+     renkli balonları aynı hesabı okur. Kırmızı = süresi geçen, sarı = yaklaşan, yeşil = sorunsuz (reisim: "cihazlarda süresi geçen cihaz
+     sayısı kırmızı balon, yaklaşan sarı balon, sorunsuz cihazlar yeşil balon … diğer modüllerde de benzer takip"). */
+  var gunKalan = function (iso) { return Math.round((new Date(iso + "T12:00:00") - new Date(MK.BUGUN + "T12:00:00")) / 864e5); };
+  /* ara kontrol: yalnız takibi açık cihazda (son ara kontrol + sıklık), kalibrasyonu geçen ya da kalibrasyondaki cihazda sorulmaz; 30 gün kala */
+  MV.araDurum = function (v) {
+    if (v.tur !== "cihaz" || !v.araPeriyot || !v.araSon || MV.kalDurum(v) === "gecti" || MV.kimde(v.id) === "lab") return null;
+    var t = new Date(v.araSon + "T12:00:00"); t.setMonth(t.getMonth() + v.araPeriyot); var iso = t.toISOString().slice(0, 10), k = gunKalan(iso);
+    return { tarih: iso, durum: k < 0 ? "gecti" : k <= 30 ? "yakin" : "gecerli" };
+  };
+  /* İSG-KATİP (uyarı yalnız İSG-KATİP için, reisim 2026-09-26): bitiş tarihi açık planın gününden (plan yoksa bugünden) önce · açık planda
+     görevli olup ID'si olmayan ya da bitmiş denetçiler [tesis, kişi, neden] */
+  MV.isgBitti = function (r) { var t = MV.tesis(r.t), gun = MV.acikPlan(t) && (t.pekip || []).indexOf(r.k) >= 0 ? t.ptarih : MK.BUGUN; return !!r.bitis && r.bitis < gun; };
+  MV.isgEksik = function (x) {
+    var l = [];
+    x.tesisler.forEach(function (tid) {
+      var t = MV.tesis(tid); if (!MV.acikPlan(t)) return;
+      (t.pekip || []).forEach(function (k) {
+        var r = MV.isgTesis(tid).filter(function (y) { return y.k === k; })[0];
+        if (!r) l.push([t, MV.kisi(k), "ID yok"]); else if (MV.isgBitti(r)) l.push([t, MV.kisi(k), "bitmiş"]);
+      });
+    });
+    return l;
+  };
+  /* uyarılar kayıtlardan türetilir (ayrı "uyarı" kaydı yok): kalibrasyon ≤ 30 gün, ara kontrol ≤ 30 gün, eğitim tekrarı ≤ 60 gün */
+  MV.uyarilar = function () {
+    var l = [];
+    MV.VARLIKLAR.forEach(function (v) {
+      var d = MV.kalDurum(v); if (d !== "gecti" && d !== "yakin") return;
+      var k = MV.kimde(v.id);
+      l.push({ id: "k-" + v.id, tur: "kal", ikon: "gauge", konu: v.env + " · " + v.ad, alt: "Kalibrasyon", kisi: k, tarih: v.bitis, durum: d,
+        href: MK.adres(8, "#/c/" + v.id), sonuc: d === "gecti" ? (k !== "depo" ? MV.kisi(k).ad + " raporlarını onaya gönderemez" : "depoda") : "30 gün içinde bitiyor" });
+    });
+    MV.VARLIKLAR.forEach(function (v) {
+      var a = MV.araDurum(v); if (!a || a.durum === "gecerli") return;
+      l.push({ id: "a-" + v.id, tur: "ara", ikon: "flask-conical", konu: v.env + " · " + v.ad, alt: "Ara kontrol", kisi: MV.kimde(v.id), tarih: a.tarih, durum: a.durum,
+        href: MK.adres(8, "#/c/" + v.id), sonuc: a.durum === "gecti" ? "ara kontrol gecikti" : "30 gün içinde" });
+    });
+    MV.EGITIMLER.forEach(function (x) {
+      var d = MV.egitimDurum(x); if (d !== "gecti" && d !== "yakin") return;
+      l.push({ id: "e-" + x.id, tur: "egt", ikon: "graduation-cap", konu: MV.egitimTuru(x.k).ad, alt: "Eğitim tekrarı", kisi: x.kisi, tarih: x.tekrar, durum: d,
+        href: MK.adres(10, "#/?kisi=" + x.kisi) || MK.adres(2, "#/p/" + x.kisi), sonuc: d === "gecti" ? "tekrar gerekli" : "60 gün içinde" });
+    });
+    return l;
+  };
+  /* modül başına takip sayıları (yan menü balonları): { kirmizi, sari, yesil } ve her rengin adı; 0 olan balon çizilmez */
+  var say = function (l, d) { return l.filter(function (u) { return u.durum === d; }).length; };
+  MV.TAKIP = {
+    8: function () {   /* ölçüm cihazları: kalibrasyon ya da ara kontrol süresi geçen · yaklaşan · sorunsuz (kalibrasyondaki cihaz sayılmaz) */
+      var o = { kirmizi: 0, sari: 0, yesil: 0 };
+      MV.VARLIKLAR.forEach(function (v) {
+        var kd = MV.kalDurum(v); if (!kd || kd === "lab") return;
+        var a = MV.araDurum(v), ad = a ? a.durum : "gecerli";
+        if (kd === "gecti" || ad === "gecti") o.kirmizi++; else if (kd === "yakin" || ad === "yakin") o.sari++; else o.yesil++;
+      });
+      return Object.assign(o, { ad: { kirmizi: "süresi geçen cihaz", sari: "süresi yaklaşan cihaz", yesil: "sorunsuz cihaz" } });
+    },
+    20: function () { var l = MV.uyarilar(); return { kirmizi: say(l, "gecti"), sari: say(l, "yakin"), ad: { kirmizi: "süresi geçen uyarı", sari: "yaklaşan uyarı" } }; },
+    2: function () {   /* personel: eğitim tekrarı geçen · yaklaşan */
+      var l = MV.EGITIMLER.map(function (x) { return { durum: MV.egitimDurum(x) }; });
+      return { kirmizi: say(l, "gecti"), sari: say(l, "yakin"), ad: { kirmizi: "eğitim tekrarı geçen", sari: "eğitim tekrarı yaklaşan" } };
+    },
+    12: function () {   /* sözleşmeler: açık planda İSG-KATİP ID'si eksik ya da bitmiş */
+      return { kirmizi: MV.TESISLER.reduce(function (n, t) { return n + MV.isgEksik({ tesisler: [t.id] }).length; }, 0), ad: { kirmizi: "İSG-KATİP eksik ya da bitmiş" } };
+    },
+    18: function () {   /* muhasebe: vadesi geçen fatura */
+      return { kirmizi: (MV.FATURALAR || []).filter(function (f) { return MV.faturaDurum(f) === "gecikti"; }).length, ad: { kirmizi: "vadesi geçen fatura" } };
+    }
+  };
+  MV.takip = function (no) { var f = MV.TAKIP[no]; return f ? f() : null; };
   /* kalıcı maket: tohum kuruldu, bu tarayıcıdaki denemeler yerinde yüklenir (maket-ortak.js KALICI MAKET) */
   if (MK.kaliciMV) MK.kaliciMV(MV);
 })();

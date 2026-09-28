@@ -90,10 +90,21 @@
           var bu = x[2] === o.modul, adres = SAYFALAR[x[2]];
           var a = bu ? 'href="#/" aria-current="page"' : adres ? 'href="' + adres + '"' : 'href="#" data-eylem="modul" data-ne="' + x[0] + '"';
           return "<li><a " + a + ">" + ikon(x[1]) + '<span class="a-menu-ad">' + x[0] + "</span>" +
-            (o.sayac && o.sayac[x[2]] ? '<span class="a-menu-sayi" id="a-menu-sayi-' + x[2] + '" title="' + o.sayac[x[2]] + '"></span>' : "") + "</a></li>";
+            (o.sayac && o.sayac[x[2]] ? '<span class="a-menu-sayi" id="a-menu-sayi-' + x[2] + '" title="' + o.sayac[x[2]] + '"></span>' : "") +
+            '<span class="a-menu-takip" id="a-menu-takip-' + x[2] + '">' + takipHtml(x[2]) + "</span></a></li>";
         }).join("") + "</ul>";
     }).join("");
   }
+  /* takip balonları (2026-09-28, T6; reisim: "cihazlarda süresi geçen cihaz sayısı kırmızı balon, yaklaşan sarı balon, sorunsuz cihazlar
+     yeşil balon … diğer modüllerde de benzer takip"): sayılar ortak veriden (MV.takip), her sayfada aynı; 0 olan balon çizilmez; değişince
+     (tıklama, yazma) yenilenir. Daraltılmış menüde yalnız en önemli renk görünür. */
+  var TAKIP_RENK = [["kirmizi", "a-balon-kirmizi"], ["sari", "a-balon-sari"], ["yesil", "a-balon-yesil"]];
+  function takipHtml(no) {
+    var t = typeof MV !== "undefined" && MV.takip ? MV.takip(no) : null; if (!t) return "";
+    return TAKIP_RENK.filter(function (r) { return t[r[0]]; }).map(function (r) {
+      return '<span class="a-balon ' + r[1] + '" title="' + t[r[0]] + " " + t.ad[r[0]] + '">' + t[r[0]] + '<span class="a-gizli"> ' + t.ad[r[0]] + "</span></span>"; }).join("");
+  }
+  MK.takipCiz = function () { MENU.forEach(function (g) { g.ogeler.forEach(function (x) { var e = $("a-menu-takip-" + x[2]); if (e) { var h = takipHtml(x[2]); if (e.innerHTML !== h) e.innerHTML = h; } }); }); };
   /* menü sayacı (ör. kabul bekleyen plan): 0 ya da gösterilmeyecekse gizli */
   MK.menuSayi = function (no, n) { var s = $("a-menu-sayi-" + no); if (s) { s.textContent = n || ""; s.hidden = !n; } };
 
@@ -897,6 +908,7 @@
     if (MVK) Object.keys(TABAN).forEach(function (k) { try { var j = JSON.stringify(MVK[k]); if (j !== TABAN[k]) depo.mv[k] = JSON.parse(j); else delete depo.mv[k]; } catch (e) { /* atla */ } });
     Object.keys(MODUL).forEach(function (ad) { try { depo.modul[ad] = MODUL[ad](); } catch (e) { /* atla */ } });
     try { localStorage.setItem(DEPO_AD, JSON.stringify(depo)); } catch (e) { /* depolama kapalı ya da dolu: maket bu oturumda çalışır, kalıcı değil */ }
+    if (MK.takipCiz) MK.takipCiz();   /* veri değişti: yan menü balonları */
   }
   MK.kaliciYaz = function () { if (!sifirlandi) { clearTimeout(yazZaman); yazZaman = setTimeout(kaliciYaz, 150); } };
   MK.kaliciVar = function () { return Object.keys(depo.mv).length + Object.keys(depo.modul).length > 0; };

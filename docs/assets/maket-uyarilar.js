@@ -9,30 +9,8 @@
   var $ = MK.$, kacis = MK.kacis, ikon = MK.ikon, kirp = MK.kirp, rozet = MK.rozet, SZ = MK.SZ;
   var kalan = function (iso) { return MK.gunFarki(MK.BUGUN, iso); };
   var DURUM = { gecti: { ad: "Süresi geçti", rozet: "a-rozet-red" }, yakin: { ad: "Yaklaşıyor", rozet: "a-rozet-bekliyor" } };
-  /* uyarılar kayıtlardan türetilir (ayrı "uyarı" kaydı yok): kalibrasyon ≤ 30 gün, eğitim tekrarı ≤ 60 gün */
-  function uyarilar() {
-    var l = [];
-    MV.VARLIKLAR.forEach(function (v) {
-      var d = MV.kalDurum(v); if (d !== "gecti" && d !== "yakin") return;
-      var k = MV.kimde(v.id);
-      l.push({ id: "k-" + v.id, tur: "kal", ikon: "gauge", konu: v.env + " · " + v.ad, alt: "Kalibrasyon", kisi: k, tarih: v.bitis, durum: d,
-        href: MK.adres(8, "#/c/" + v.id), sonuc: d === "gecti" ? (k !== "depo" ? MV.kisi(k).ad + " raporlarını onaya gönderemez" : "depoda") : "30 gün içinde bitiyor" });
-    });
-    /* 108 (reisim 2026-09-26): ara kontrol de listede — yalnız takibi açık (girilmiş) cihazda, 30 gün kala */
-    MV.VARLIKLAR.forEach(function (v) {
-      if (v.tur !== "cihaz" || !v.araPeriyot || !v.araSon || MV.kalDurum(v) === "gecti" || MV.kimde(v.id) === "lab") return;   /* kalibrasyonu geçen ya da kalibrasyondaki cihazda ara kontrol sorulmaz */
-      var t = new Date(v.araSon + "T12:00:00"); t.setMonth(t.getMonth() + v.araPeriyot); var iso = t.toISOString().slice(0, 10), k = kalan(iso);
-      if (k > 30) return;
-      l.push({ id: "a-" + v.id, tur: "ara", ikon: "flask-conical", konu: v.env + " · " + v.ad, alt: "Ara kontrol", kisi: MV.kimde(v.id), tarih: iso, durum: k < 0 ? "gecti" : "yakin",
-        href: MK.adres(8, "#/c/" + v.id), sonuc: k < 0 ? "ara kontrol gecikti" : "30 gün içinde" });
-    });
-    MV.EGITIMLER.forEach(function (x) {
-      var d = MV.egitimDurum(x); if (d !== "gecti" && d !== "yakin") return;
-      l.push({ id: "e-" + x.id, tur: "egt", ikon: "graduation-cap", konu: MV.egitimTuru(x.k).ad, alt: "Eğitim tekrarı", kisi: x.kisi, tarih: x.tekrar, durum: d,
-        href: MK.adres(10, "#/?kisi=" + x.kisi) || MK.adres(2, "#/p/" + x.kisi), sonuc: d === "gecti" ? "tekrar gerekli" : "60 gün içinde" });
-    });
-    return l;
-  }
+  /* uyarılar ortak veriden (MV.uyarilar, 2026-09-28): yan menünün balonları aynı hesabı okur */
+  var uyarilar = MV.uyarilar;
   var kisiAd = function (k) { return MV.yerAdi(k); };
 
   MK.suzgecTanimla("u", { ad: "Uyarılarda ara", ipucu: "Cihaz, eğitim, kişi", birim: "uyarı",
@@ -62,7 +40,6 @@
   ];
   function listeCiz() {
     var l = uyarilar();
-    MK.menuSayi(20, l.length);
     $("a-uyari").innerHTML = "";
     MK.listeCiz({ on: "u", kayitlar: l, sayacId: "a-sayac", listeId: "a-liste",
       sirala: function (x) { return x.slice().sort(function (a, b) { return a.tarih < b.tarih ? -1 : a.tarih > b.tarih ? 1 : 0; }); },
@@ -75,7 +52,7 @@
     if (odakla) { window.scrollTo(0, 0); var h = document.querySelector("#a-icerik h1"); if (h) h.focus({ preventScroll: true }); }
   }
   MK.goster = goster;
-  MK.kabuk({ modul: 20, kullanici: { bas: "AD", ad: "Ayşe Demir", rol: "Firma yöneticisi" }, sayac: { 20: "Süresi geçen ya da yaklaşan" } });
+  MK.kabuk({ modul: 20, kullanici: { bas: "AD", ad: "Ayşe Demir", rol: "Firma yöneticisi" } });
   var q = /[?&]tur=(kalibrasyon|ara|egitim)/.exec(location.hash);
   if (q) SZ.u.secili = [{ kalibrasyon: "kal", ara: "ara", egitim: "egt" }[q[1]]];
   goster(false);

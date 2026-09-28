@@ -3,7 +3,7 @@
  "tarih": "2026-09-28",
  "arac": "tools/olc-bulut.mjs --etkilesim (başsız tarayıcı, 1920 açık tema; gen verilen denemede o genişlik)",
  "toplam": 7,
- "gecen": 7,
+ "gecen": 6,
  "denemeler": [
   {
    "ad": "ara kontrol uyarıları listede (gecikmiş OC-009)",
@@ -17,7 +17,8 @@
    "gen": 1920,
    "sayfa": "maket/uyarilar.html",
    "hash": "#/",
-   "gecti": true
+   "gecti": false,
+   "hata": "beklenen sonuç yok"
   },
   {
    "ad": "Eğitim tekrarı çipi (5 / 16)",
