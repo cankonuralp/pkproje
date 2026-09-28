@@ -1772,6 +1772,19 @@ revizyon, alan kopyalama, hafif kusur devri, meslek eşleşme denetimi).
 - Emsal ürünler: https://opwire.app/iso-17020-periyodik-kontrol-yazilimi/ · https://17020muayene.vidco.com.tr/ · https://akuple.com/asansor-kontrol-yazilimi/ · https://ensyazilim.com/
 
 ## 11 · Değişiklik günlüğü
+- 2026-09-28 (123): **T9 · Performans: dikey sütun grafikleri, kişinin rapor süreci** (§9 otuz dördüncü tur; reisim: *"Performans
+  değerlendirme ekranındaki grafikler … sütun grafikleri yatay olmasın ve boşluklu olmasın ve kişiye tıklanınca raporlama sürecine dair
+  grafikleri gözükmüyor"*). Grafik üreticisi tek (`maket-performans.js` `grafik`): **dikey sütun**; sütunlar yuvasını doldurur (en çok 96 px),
+  aralarında yalnız 2 px ayraç, tabana oturur, üst uç 4 px yuvarlak; yığında (mekanik / elektrik) parçalar arası 2 px; ızgara silik (0 · yarı ·
+  üst, yuvarlak sayılar; rapor sayısı gibi tam sayılı veride orta çizgi de tam sayı); değer az sütunda her sütunun üstünde, çokta yalnız en
+  yüksekte; üzerine gelince ipucu (tam ad, değer, dağılım); aynı veri gizli tabloda. Etiket sütun ortasına ölçülerek yerleşir, çakışan
+  seyreltilir, uçtaki kartın içine çekilir (kaydırma yok). Kişi grafiklerinde ad (ilk ad), tam ad ipucunda. **Kişi sayfası** (`#/p/<id>`):
+  aylık / günlük rapor + **Tamamlanma süresi** (24 saat içinde · 24–48 saat · 48 saatten uzun) + **Rapor süreci · ortalama süre** (yazım:
+  açılış → onaya gönderim · onay: gönderim → yönetici onayı · son imza: onay → son imza; yalnız o adımı tamamlanmış raporlar). Renkler var olan
+  seri renkleri (palet değişmedi); grafik rehberinin renk doğrulayıcısında çift renk körlüğü ve kontrast denetimini geçti, ikinci renk
+  (lacivert / koyu temada beyaz) "gri okunur" uyarısı aldı — kimlik yalnız renge bırakılmadı (lejant, değer, ipucu, gizli tablo). Ölçüm aracına
+  gerçek fare "üzerine gel" adımı (`uzerine`). 5 yeni deneme, 2 güncellendi (sütun sayısı). 18 maket temiz: durum 1992/1992 ·
+  etkileşim 484/484 · telefon 996/996 · olumsuz kanıt 3/3; pano 1920, kişi 1920, pano 375 koyu gözle.
 - 2026-09-28 (122): **T8 · Talepler: firma formatı iskeleti, PDF, e-postayla ilet** (§9 otuz dördüncü tur; §3.7 satır 10–11; reisim: *"izin
   talebi ve masraf formu için her müşteri (benim müşterilerim pk firmaları) kendi formatını yükleyebilsin o formata göre pdf çıktısı olacak, ve
   son hali hem sisteme kaydolduğu gibi mail olarakta iletilecek tıklayınca mail uygulaması açılacak … sen iskelet olarak hazırla"*).

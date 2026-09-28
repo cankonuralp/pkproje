@@ -2,8 +2,8 @@
  "maket": "m15",
  "tarih": "2026-09-28",
  "arac": "tools/olc-bulut.mjs --etkilesim (başsız tarayıcı, 1920 açık tema; gen verilen denemede o genişlik)",
- "toplam": 17,
- "gecen": 17,
+ "toplam": 22,
+ "gecen": 22,
  "denemeler": [
   {
    "ad": "Excel'e aktar: ekrandaki tablo gerçek .xlsx",
@@ -21,6 +21,41 @@
   },
   {
    "ad": "geçen yıl: üç dilimin hepsi dolu",
+   "gen": 1920,
+   "sayfa": "maket/performans.html",
+   "hash": "#/",
+   "gecti": true
+  },
+  {
+   "ad": "grafikler dikey sütun: sütunlar tabana oturur, aralarında 2 px, yatay çubuk yok",
+   "gen": 1920,
+   "sayfa": "maket/performans.html",
+   "hash": "#/",
+   "gecti": true
+  },
+  {
+   "ad": "sütun yüksekliği değerle orantılı (en yüksek sütun ölçeğin üstüne göre)",
+   "gen": 1920,
+   "sayfa": "maket/performans.html",
+   "hash": "#/",
+   "gecti": true
+  },
+  {
+   "ad": "üzerine gelince sütunun ipucu görünür (kişinin tam adı ve değeri)",
+   "gen": 1920,
+   "sayfa": "maket/performans.html",
+   "hash": "#/",
+   "gecti": true
+  },
+  {
+   "ad": "kişi sayfası: rapor süreci grafikleri (süre dağılımı · adımların ortalama süresi)",
+   "gen": 1920,
+   "sayfa": "maket/performans.html",
+   "hash": "#/p/mk",
+   "gecti": true
+  },
+  {
+   "ad": "etiketler sığmazsa seyreltilir, üst üste binmez (geçen yıl 12 ay, telefon genişliği dahil)",
    "gen": 1920,
    "sayfa": "maket/performans.html",
    "hash": "#/",
@@ -69,7 +104,7 @@
    "gecti": true
   },
   {
-   "ad": "dönem: geçen yıl → 12 ay satırı, odak tuşta",
+   "ad": "dönem: geçen yıl → 12 ay sütunu, odak tuşta",
    "gen": 1920,
    "sayfa": "maket/performans.html",
    "hash": "#/",

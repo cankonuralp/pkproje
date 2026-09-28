@@ -1042,11 +1042,31 @@ a.a-yuz:hover { border-color: var(--kenar-alan); background: var(--zemin); }
 .a-seri-m, .a-seri-k { background: var(--onay); }
 .a-seri-e { background: var(--vurgu-2); }
 .a-seri-h { background: var(--hata-yazi); }   /* "48 saatten uzun" (tek seri; hata rengi yazıyla birlikte) */
-.a-grafik-satirlar { display: grid; gap: 6px; }
-.a-grafik-satir { display: grid; grid-template-columns: minmax(0, 120px) minmax(0, 1fr) 128px; align-items: center; gap: 10px; min-height: 36px; }
-.a-grafik-etiket { min-width: 0; color: var(--yazi2); font-size: var(--boy-kucuk); }
-.a-grafik-cubuk { display: flex; height: 14px; min-width: 0; border-radius: 3px; background: var(--zemin2); overflow: hidden; }
-.a-grafik-deger { text-align: right; font-weight: 600; font-variant-numeric: tabular-nums; white-space: nowrap; }
+/* DİKEY SÜTUN GRAFİĞİ (2026-09-28, T9; reisim: "sütun grafikleri yatay olmasın ve boşluklu olmasın") — sütunlar yuvasını doldurur, aralarında
+   yalnız 2 px ayraç; tabana oturur, üst uç 4 px yuvarlak; yığında parçalar arası 2 px (kartın zemini ayırır, çizgi yok). Izgara silik. */
+.a-sutun-cizim { display: grid; grid-template-columns: 40px minmax(0, 1fr); grid-template-rows: 180px auto; column-gap: 8px; padding-top: 18px; }
+.a-sutun-eksen { position: relative; color: var(--yazi3); font-size: var(--boy-etiket); font-variant-numeric: tabular-nums; }
+.a-sutun-eksen span { position: absolute; right: 0; transform: translateY(50%); white-space: nowrap; }
+.a-sutun-alan { display: flex; align-items: flex-end; justify-content: center; gap: 2px; min-width: 0;
+  background: linear-gradient(var(--kenar), var(--kenar)) 0 0 / 100% 1px no-repeat, linear-gradient(var(--kenar), var(--kenar)) 0 50% / 100% 1px no-repeat;
+  border-bottom: 1px solid var(--kenar-alan); }
+.a-sutun { position: relative; flex: 1 1 0; max-width: 96px; height: 100%; display: flex; align-items: flex-end; }
+.a-sutun-yigin { position: relative; width: 100%; display: flex; flex-direction: column-reverse; gap: 2px; }
+.a-sutun-yigin > span:not(.a-sutun-deger) { flex-basis: 0; min-height: 2px; }
+.a-sutun-yigin > span:last-child { border-radius: 4px 4px 0 0; }
+.a-sutun-deger { position: absolute; bottom: 100%; left: 50%; transform: translateX(-50%); padding-bottom: 2px; white-space: nowrap;
+  color: var(--yazi); font-size: var(--boy-etiket); font-weight: 600; font-variant-numeric: tabular-nums; }
+.a-sutun-ipucu { position: absolute; bottom: calc(100% + 6px); left: 0; z-index: 2; min-width: 120px; padding: 6px 8px;
+  border: 1px solid var(--kenar); border-radius: var(--r-orta); background: var(--kart); box-shadow: var(--golge-2); color: var(--yazi2);
+  font-size: var(--boy-kucuk); line-height: 1.4; white-space: nowrap; pointer-events: none; display: none; }   /* yalnız üzerindeyken var: gizliyken sayfayı genişletmez */
+.a-sutun-ipucu b { display: block; color: var(--yazi); }
+.a-sutun-sag .a-sutun-ipucu { left: auto; right: 0; }
+.a-sutun:hover .a-sutun-ipucu { display: block; }
+.a-sutun:hover .a-sutun-yigin { filter: brightness(1.08); }
+.a-sutun-etiketler { grid-column: 2; position: relative; height: 1.4em; margin-top: 6px; color: var(--yazi2); font-size: var(--boy-etiket); }
+/* etiket sütununun ortasında (grafikKur ölçer); çakışan gizli — metin hiç kırpılmaz */
+.a-sutun-etiketler > span { position: absolute; top: 0; left: 0; white-space: nowrap; }
+.a-sutun-etiketler > .a-sutun-seyrek { visibility: hidden; }
 .a-tablo-perf .a-k-ad { width: 18%; } .a-tablo-perf .a-k-rapor { width: 7%; } .a-tablo-perf .a-k-gun { width: 7%; } .a-tablo-perf .a-k-ort { width: 9%; }
 .a-tablo-perf .a-k-kazanc { width: 13%; } .a-tablo-perf .a-k-geri { width: 11%; } .a-tablo-perf .a-k-h24 { width: 12%; } .a-tablo-perf .a-k-h48p { width: 12%; }
 .a-tablo-perf .a-k-son { width: 11%; }   /* 2026-09-27: 24 saat içinde · 48 saatten uzun sütunları */
@@ -1099,9 +1119,8 @@ a.a-yuz:hover { border-color: var(--kenar-alan); background: var(--zemin); }
   /* 2026-09-24 (M14 ölçümü): Süzgeç tuşu olmayan satırda arama kendi satırında kalır — adım dışındaki süzgeçte çip şeridinin
      eksi kenar payı arama + şeridi aynı satıra sığdırıyor, arama 0'a eziliyordu (Planlar plan içinde zaten tek satırdı) */
   .a-suzgec[data-secicisiz] .a-ara { flex-basis: 100%; }
-  /* M15: grafik satırında etiket dar, değer içerik kadar */
+  /* M15: grafik kartı telefonda dar kenar */
   .a-grafik { padding: 12px; }
-  .a-grafik-satir { grid-template-columns: minmax(0, 84px) minmax(0, 1fr) 108px; gap: 8px; }
   .a-cipler {
     flex: 1 0 100%; flex-wrap: nowrap; overflow-x: auto;
     margin: 0 calc(var(--bosluk-sayfa) * -1); padding: 0 var(--bosluk-sayfa);
