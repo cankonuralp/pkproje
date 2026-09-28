@@ -986,7 +986,8 @@ Yeni format, ekipman türü ya da PDF eklendiğinde de geçerlidir; ekran başı
    listede genel "ara" kutusu yok; anlamsız çip yok.
 7. **Listelerde toplu PDF**: rapor listeleri (Raporlar, plan içi raporlar) süzgeçten geçen raporları tek PDF olarak indirir.
 8. **Rapor oluşturma sınırsız**: ekipman satırında hep "Rapor oluştur"; raporu olan ekipmanın yanında küçük yeşil tik. Rapor pasife alınır
-   (inspector alabilir, pasif rapor inspector'a görünmez); aktife alma ve silme yalnız yönetici.
+   (inspector alabilir, pasif rapor inspector'a görünmez); aktife alma ve silme yalnız yönetici. Makette: inspector gönderilmemiş (Yeni)
+   raporu plan içinden pasife alır; teknik yönetici Onaylar → "Pasif raporlar"da aktif eder ya da siler (gönderilen rapor onay akışındadır).
 9. **Yan menüde takip sayıları**: modül adının yanında takip isteyen işler renkli balonla (geçmiş / acil kırmızı, yaklaşan sarı, sorunsuz yeşil).
 
  (2026-09-18 araştırması; kaynaklar bölüm 10)
@@ -1757,6 +1758,20 @@ revizyon, alan kopyalama, hafif kusur devri, meslek eşleşme denetimi).
 - Emsal ürünler: https://opwire.app/iso-17020-periyodik-kontrol-yazilimi/ · https://17020muayene.vidco.com.tr/ · https://akuple.com/asansor-kontrol-yazilimi/ · https://ensyazilim.com/
 
 ## 11 · Değişiklik günlüğü
+- 2026-09-28 (113): **T2 · Plan içi** (§9 otuz dördüncü tur; §3.8 kural 6, 7, 8; reisim: *"ekipman türü ekipman koduna göre arama motorları
+  ayrı olacak şekilde filtreleme olmalı … raporlandı yazan kısımda sadece rapor oluştur tuşu olsun istediğim kadar o tuşa basabileyim sınır
+  olmasın eğer bu rapor içerisinde rapor oluşturduysam yanında küçük yeşil tik olsun … Pasife alınan raporlar inspectorlere gözükmez inspector
+  pasife alabilir ama silemez, aktife de alamaz, aktife alma ve silme işlemleri sadece yöneticiler tarafından yapılabilir … Raporlar ekranında
+  ve planlarda … toplu pdf indirme tuşu olsun"*). (1) Ekipman satırında her zaman **Rapor oluştur** (her basış yeni rapor, aynı ekipmana
+  sınırsız); raporu olan ekipmanda "Raporlandı" rozeti yerine **yeşil tik**; ekipmanı pasife alma yalnız raporsuz ekipmanda. (2) Saha rapor
+  ekranı raporu numarasıyla ayırır (aynı ekipmanın ikinci raporu boş başlar; örnek içerik yalnız tohum raporda). (3) **Rapor pasife al**:
+  plan içi raporlar tablosunda gönderilmemiş rapora "Pasife al" (onay penceresi); pasif rapor inspector'ın plan içi, Raporlar ve Ana sayfa
+  sayılarından kalkar; ortak kayda yazılır. **Onaylar → "Pasif raporlar"** sekmesi (teknik yönetici, kendi branşı): Aktif et · Sil (onay
+  penceresi, kayıttan kalkar). (4) **Süzgeç alan alan**: ekipmanlarda Ekipman türü · Ekipman kodu, raporlarda Rapor no · Ekipman kodu
+  kutuları; ekipmanlardaki "Tür" seçicisi kalktı (kutuyla aynı iş). Ortak üreticide kural: **alan kutuları olan listede genel arama kutusu
+  çizilmez** (Raporlar listesinde de kalktı). Boş durum açıklamasız da çizilebilir. (5) Raporlar başlığında **PDF indir**: süzgeçten
+  geçen gönderilmiş raporlar tek PDF'te, her rapor kendi sayfalarında (taslak girmez — Raporlar'la aynı). 8 yeni deneme + 2 durum.
+  18 maket temiz: durum 1936/1936 · etkileşim 451/451 · telefon 968/968; plan içi 1920 ve 375'te gözle bakıldı.
 - 2026-09-28 (112): **T1 · Saha raporu** (§9 otuz dördüncü tur; §3.8 kural 2, 3, 5; reisim: *"Muayene kriterleri otomatik olarak uygun
   olarak gelir … ünlem işareti olur ve oradan seçilerek hepsini uygun yap hepsini uygunsuz yap ya da hepsini uygulanamaz yap … Gönder derken
   gelen uyarı ekranı olmasın sadece eğer zorunlu doldurulması gereken yerler olmasına rağmen doldurulmadıysa pop-up şekilde zorunlu alanlar
@@ -1772,8 +1787,9 @@ revizyon, alan kopyalama, hafif kusur devri, meslek eşleşme denetimi).
   yok."). (4) Final raporda sonuç ve kanaat **yalnız seçilen sonuç** (öteki çizili de yazılmaz; sonuç seçilmemiş taslakta ikisi); genel belge
   kusur listesinde derece yazısı yok. (5) "Muayene uzmanı onayı" → **"Muayene uzmanı imzası"** bütün maketlerde. Tohum veri değiştiği için
   kalıcı maket sürümü artırıldı (eski denemeler bir kez sıfırlanır). Rapor denemeleri güncellendi (+6 yeni: Uygun gelir, ünlem menüsü ×2,
-  zorunlu pencere + kayma, fotoğraf zorunlu, belgede yalnız seçilen sonuç). 18 maket temiz: durum 1938/1938 · etkileşim 443/443 ·
-  telefon 960/960; 1920 ve 375'te gözle bakıldı (ünlem menüsü, kırmızı eksik alanlar, ilk eksiğe kayma).
+  zorunlu pencere + kayma, fotoğraf zorunlu, belgede yalnız seçilen sonuç). 18 maket temiz: durum 1920/1920 · etkileşim 443/443 ·
+  telefon 960/960; 1920 ve 375'te gözle bakıldı (ünlem menüsü, kırmızı eksik alanlar, ilk eksiğe kayma). (Düzeltme: commit mesajında
+  "1938/1938" yazdı — toplu bakış sayfasının 18 durumu yanlışlıkla eklenmişti; 18 maketin sayısı 1920/1920.)
 - 2026-09-28 (111): **Reisim'in dört düzeltmesi** (reisim: *"Masraf yazmak için ilgili tuş planın içinde olmasın, oradan kaldır her kullanıcı
   profilinden yapacak masraf ve izin formu doldurmak gibi gerekli işlemleri, plan telefon ekranında gözükürken kartlarda ilk başta şirket adı
   yerine şirketin işletmesi çıkıyor şirket adı en üstte olsun, raporlarda … uygun değil işaretlediklerimiz kusur açıklamaları kısmında yazsın

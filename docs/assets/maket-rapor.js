@@ -73,33 +73,37 @@
     /* otomatik dolu: başlangıç rapor açıldığında, bitiş gönderildiğinde (taslakta şimdi), sonraki kontrol başlangıç + periyot */
     r.bas = r.olustu || r.basladi || MK.simdi(); r.bit = r.gonderildi || MK.simdi(); r.sonraki = sonrakiHesap(r); r.rtarih = r.bas.slice(0, 10);
     r.kayit = r.olustu ? saatEkle(30 + k * 6) : null;
-    if (e.kod === "ET-1009") {   /* elektrik iç tesisatı (ZPKR02): yarıda; pano sigortaları okunmadı; inspector'ın zimmetinde kalibrasyonu geçmiş cihaz */
-      ornekBilgi(); r.tespit = { degisiklik: "Yok", etiket: "Var" };
-      [0, 1, 2].forEach(function (i) { r.kriter[i].c = i === 2 ? "uygundegil" : "uygun"; });
-      r.kriter[2].foto = 1; r.kriter[2].derece = "hafif"; r.kriter[2].not = "Tali pano TP-2 duvara yalnız üstten sabitlenmiş; alt bağlantı yok.";
-      r.test[0] = "0,21"; r.foto = 1; r.amac = "Aydınlatma, priz ve makine besleme devreleri";
-      r.cihaz = ["v1", "v2", "v3"];   /* v3 = tesisat test cihazı OC-003, kalibrasyonu 18.09.2026'da geçti; zimmette geçerli başkası yok */
-    }
-    if (e.kod === "AT-1010") {   /* AG topraklama (ZPKR01): ölçümler yarıda; kapı motoru hattında Zx sınırı aşıyor, RCD yok → Not-2, ağır kusur */
-      ornekBilgi(); cihazDoldur();
-      [0, 1, 2, 3, 4].forEach(function (i) { r.nokta[i].zx = F.noktalar[i][3]; }); r.nokta[1].rcdId = "22"; r.nokta[1].rcdTd = "25";
-      r.nokta.push({ ad: "Kapı motoru — sevkiyat", egri: "C", In: 10, zx: "2,6", rcd: "", priz: false });
-      r.rcdler[0].id = F.rcd[0][4]; r.rcdler[0].td = F.rcd[0][5]; r.foto = 1;
-    }
-    /* plan 10 (2026-09-28; reisim: "en son attığım rapor formatına göre sonuç o şekilde gözükecek biçimde örnekler"): son formatlarla —
-       ET-2001 Tamamlandı · Uygun · ET-2002 hafif kusur (formatın maddesi) · AT-2003 ağır kusur (Zx sınırı aşıyor, RCD yok → Not-2) ·
-       ET-2004 yarıda · AT-2005 ilk kontrol, boş */
-    if (e.kod === "ET-2002") { var ok = MV.ornekKusur(t, true), x = r.kriter[ok.i]; x.c = "uygundegil"; x.derece = "hafif"; x.not = ok.aciklama; x.foto = 1; r.sonuc = "kullanilamaz"; }
-    if (e.kod === "AT-2003") { r.nokta.push({ ad: "Kapı motoru — sevkiyat", egri: "C", In: 10, zx: "2,6", rcd: "", priz: false }); r.sonuc = "kullanilamaz"; r.notlar = "Kapı motoru hattına 30 mA RCD takılması ya da koruma değerinin düşürülmesi önerilir."; }
-    if (e.kod === "ET-2004") {
-      ornekBilgi(); r.tespit = { degisiklik: "Yok", etiket: "Var" }; cihazDoldur();
-      [0, 1, 2, 3, 4].forEach(function (i) { r.kriter[i].c = "uygun"; }); r.test[0] = "0,19"; r.test[1] = "0,17"; r.foto = 1;
-    }
-    if (e.kod === "AT-2005") cihazDoldur();
-    if (e.kod === "KP-1004") dolu();   /* onaya hazır */
-    if (e.kod === "ZV-1007") {   /* branş yöneticisi geri gönderdi: test değerleri eksik */
-      dolu(); r.test = ts.map(function () { return ""; }); r.foto = 1;
-      r.geri = { kim: "sy", zaman: "2026-09-23T15:10", gerekce: "Yük deneyi değerleri yazılmamış: dinamik ve statik deney yüklerini girin." };
+    /* örnek içerik yalnız ekipmanın tohum raporunda; aynı ekipmana sonradan açılan rapor boş başlar (2026-09-28, sınırsız rapor) */
+    var tohum = MV.RAPORLAR.filter(function (x) { return x.kod === e.kod && x.plan; })[0];
+    if (!tohum || tohum.no === r.no) {
+      if (e.kod === "ET-1009") {   /* elektrik iç tesisatı (ZPKR02): yarıda; pano sigortaları okunmadı; inspector'ın zimmetinde kalibrasyonu geçmiş cihaz */
+        ornekBilgi(); r.tespit = { degisiklik: "Yok", etiket: "Var" };
+        [0, 1, 2].forEach(function (i) { r.kriter[i].c = i === 2 ? "uygundegil" : "uygun"; });
+        r.kriter[2].foto = 1; r.kriter[2].derece = "hafif"; r.kriter[2].not = "Tali pano TP-2 duvara yalnız üstten sabitlenmiş; alt bağlantı yok.";
+        r.test[0] = "0,21"; r.foto = 1; r.amac = "Aydınlatma, priz ve makine besleme devreleri";
+        r.cihaz = ["v1", "v2", "v3"];   /* v3 = tesisat test cihazı OC-003, kalibrasyonu 18.09.2026'da geçti; zimmette geçerli başkası yok */
+      }
+      if (e.kod === "AT-1010") {   /* AG topraklama (ZPKR01): ölçümler yarıda; kapı motoru hattında Zx sınırı aşıyor, RCD yok → Not-2, ağır kusur */
+        ornekBilgi(); cihazDoldur();
+        [0, 1, 2, 3, 4].forEach(function (i) { r.nokta[i].zx = F.noktalar[i][3]; }); r.nokta[1].rcdId = "22"; r.nokta[1].rcdTd = "25";
+        r.nokta.push({ ad: "Kapı motoru — sevkiyat", egri: "C", In: 10, zx: "2,6", rcd: "", priz: false });
+        r.rcdler[0].id = F.rcd[0][4]; r.rcdler[0].td = F.rcd[0][5]; r.foto = 1;
+      }
+      /* plan 10 (2026-09-28; reisim: "en son attığım rapor formatına göre sonuç o şekilde gözükecek biçimde örnekler"): son formatlarla —
+         ET-2001 Tamamlandı · Uygun · ET-2002 hafif kusur (formatın maddesi) · AT-2003 ağır kusur (Zx sınırı aşıyor, RCD yok → Not-2) ·
+         ET-2004 yarıda · AT-2005 ilk kontrol, boş */
+      if (e.kod === "ET-2002") { var ok = MV.ornekKusur(t, true), x = r.kriter[ok.i]; x.c = "uygundegil"; x.derece = "hafif"; x.not = ok.aciklama; x.foto = 1; r.sonuc = "kullanilamaz"; }
+      if (e.kod === "AT-2003") { r.nokta.push({ ad: "Kapı motoru — sevkiyat", egri: "C", In: 10, zx: "2,6", rcd: "", priz: false }); r.sonuc = "kullanilamaz"; r.notlar = "Kapı motoru hattına 30 mA RCD takılması ya da koruma değerinin düşürülmesi önerilir."; }
+      if (e.kod === "ET-2004") {
+        ornekBilgi(); r.tespit = { degisiklik: "Yok", etiket: "Var" }; cihazDoldur();
+        [0, 1, 2, 3, 4].forEach(function (i) { r.kriter[i].c = "uygun"; }); r.test[0] = "0,19"; r.test[1] = "0,17"; r.foto = 1;
+      }
+      if (e.kod === "AT-2005") cihazDoldur();
+      if (e.kod === "KP-1004") dolu();   /* onaya hazır */
+      if (e.kod === "ZV-1007") {   /* branş yöneticisi geri gönderdi: test değerleri eksik */
+        dolu(); r.test = ts.map(function () { return ""; }); r.foto = 1;
+        r.geri = { kim: "sy", zaman: "2026-09-23T15:10", gerekce: "Yük deneyi değerleri yazılmamış: dinamik ve statik deney yüklerini girin." };
+      }
     }
     return r;
   }
@@ -108,11 +112,14 @@
   var KAYIT = {}, YERLI = ["e", "t", "ts", "F"];
   var duz = function (r) { var o = {}; Object.keys(r).forEach(function (k) { if (YERLI.indexOf(k) < 0) o[k] = r[k]; }); return JSON.parse(JSON.stringify(o)); };
   MK.kalici("raporlar", function () { Object.keys(R).forEach(function (k) { if (R[k]) KAYIT[R[k].no] = duz(R[k]); }); return KAYIT; }, function (d) { KAYIT = d || {}; });
+  /* bir ekipmanın birden çok raporu olabilir (2026-09-28: "Rapor oluştur" sınırsız): rapor numarası adreste (?no=) — önbellek kod + numara */
   function rapor(kod) {
-    if (R[kod]) return R[kod];
     var e = MV.ekipman(kod), k = PLAN_EKP.indexOf(e), q = sorgu();
     if (!e) return null;
+    if (k >= 0 && k < 10 && q.no && q.no !== MV.raporNo("0926", 786 + k)) k = -1;   /* aynı ekipmanın sonradan açılan raporu */
     if (k < 0 || k >= 10) { if (!q.no) return null; k = -1; }   /* Planlar'dan gelen öteki raporlar: numara ve durum adresten */
+    var an = kod + "|" + (k >= 0 ? MV.raporNo("0926", 786 + k) : q.no);
+    if (R[an]) return R[an];
     var r = raporKur(e, k, q), kay = MV.rapor(r.no);
     if (KAYIT[r.no]) Object.assign(r, KAYIT[r.no]);   /* bu tarayıcıda yazılanlar */
     if (kay) {   /* ortak kayıt: açılış ve gönderiliş zamanı, durum, geri gönderme (2026-09-28) */
@@ -121,7 +128,7 @@
       r.durum = kay.durum === "geri" ? "taslak" : DURUM[kay.durum] ? kay.durum : r.durum;
       if (r.durum === "taslak") { r.gonderildi = kay.gonderildi || null; if (kay.geri) r.geri = kay.geri; }
     }
-    return (R[kod] = r);
+    return (R[an] = r);
   }
 
   /* ── HESAPLAR ───────────────────────────────────────────────────────────────────────────────────────── */

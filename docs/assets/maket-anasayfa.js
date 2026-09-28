@@ -73,7 +73,7 @@
     inspector: function (k) {
       var benim = function (t) { return t.pekip.indexOf(k) >= 0; };
       var bekleyen = planlar(function (t) { return benim(t) && t.pdurum === "bekliyor"; }), denetim = planlar(function (t) { return benim(t) && t.pdurum === "denetimde"; });
-      var rap = MV.RAPORLAR.filter(function (r) { return r.kisi === k; }), taslak = rap.filter(function (r) { return r.durum === "taslak"; }), geri = taslak.filter(function (r) { return r.geri; });
+      var rap = MV.RAPORLAR.filter(function (r) { return r.kisi === k && !r.pasif; }), taslak = rap.filter(function (r) { return r.durum === "taslak"; }), geri = taslak.filter(function (r) { return r.geri; });
       var imza = rap.filter(function (r) { return r.durum === "onaylandi"; });
       var z = MV.VARLIKLAR.filter(function (v) { return MV.kimde(v.id) === k; }), zk = z.filter(function (v) { var d = MV.kalDurum(v); return d === "gecti" || d === "yakin"; });
       return '<div class="a-yuzler">' +

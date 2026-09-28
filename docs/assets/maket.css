@@ -899,6 +899,7 @@ a.a-yuz:hover { border-color: var(--kenar-alan); background: var(--zemin); }
 .a-kriter-grup-bas:first-child { margin-top: 0; }
 .a-kriter-grup-bas .a-kriter-grup { margin: 0; }
 .a-kriter-toplu { flex: none; }
+.a-rapor-tik { display: inline-flex; color: var(--onay-yazi); }   /* plan içi: ekipmanın raporu var (2026-09-28) */
 .a-kriter-toplu .a-ikon-tus { color: var(--uyari-yazi); }
 .a-alan-eksik { outline: 2px solid var(--hata-yazi); outline-offset: 4px; border-radius: var(--r-kucuk); }   /* zorunlu fotoğraf eksik (§3.8 kural 5) */
 .a-coklu { display: grid; gap: 0; }

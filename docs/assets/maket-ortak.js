@@ -168,7 +168,8 @@
   };
 
   /* ══ SÜZGEÇ — TEK ÜRETİCİ (kalıp 15) ════════════════════════════════════════════════════════════════
-     Her süzgeç bir kısa adla (on) tanımlanır: tanim = { ad, ipucu, birim, cipler, seciciler, metin(kayıt), imkansiz, sayfa? }.
+     Her süzgeç bir kısa adla (on) tanımlanır: tanim = { ad, ipucu, birim, cipler, seciciler, metin(kayıt), imkansiz, sayfa?, alanlar? }.
+     alanlar (alan alan arama kutuları) varsa genel arama kutusu çizilmez (§3.8 kural 6).
      Satır: arama → yüklem çipleri + ve/veya (kalıp 8) → seçiciler + Temizle sağda. Telefonda seçiciler levhada.
      Çiplerin `grup`u aynıysa birbirini dışlar: "ve" ile ikisi seçilince sonuç imkânsızdır, sebebi söylenir.
      yenile: süzgeç değişince çağrılır (liste, çipler, sayaç ve sayfalayıcı yeniden çizilir; arama kutusu yerinde kalır). */
@@ -195,9 +196,10 @@
     return '<details class="a-suzgec-kutu" data-kutu="' + on + '"' + (kutuAcik(on) ? " open" : "") + '><summary class="a-suzgec-bas">' + ikon("sliders-horizontal", "a-ikon-kucuk") +
       '<span class="a-suzgec-baslik">Süzgeçler</span><span class="a-suzgec-say" hidden></span>' + ikon("chevron-down", "a-ikon-kucuk a-acilir-ok") + "</summary>" +
       '<div class="a-suzgec" data-sz="' + on + '"' + (secicili ? "" : " data-secicisiz") + ">" +
-      '<label class="a-ara"><span class="a-gizli">' + t.ad + "</span>" + ikon("search") +
+      /* alan kutuları olan listede genel "ara" kutusu yok (§3.8 kural 6, reisim 2026-09-28) */
+      (t.alanlar ? "" : '<label class="a-ara"><span class="a-gizli">' + t.ad + "</span>" + ikon("search") +
         '<input type="search" data-ara="' + on + '" placeholder="' + t.ipucu + '" autocomplete="off">' +
-        '<button class="a-ara-sil" type="button" data-eylem="ara-sil" aria-label="Aramayı temizle">' + ikon("x", "a-ikon-kucuk") + "</button></label>" +
+        '<button class="a-ara-sil" type="button" data-eylem="ara-sil" aria-label="Aramayı temizle">' + ikon("x", "a-ikon-kucuk") + "</button></label>") +
       (secicili ? '<button class="a-suzgec-tus" type="button" data-eylem="levha-ac" aria-haspopup="dialog">' + ikon("sliders-horizontal") +
         'Süzgeç <span class="a-suzgec-rozet" hidden></span></button>' : "") +
       '<div class="a-cipler" role="group" aria-label="' + t.birim + ' durumu süzgeci"></div>' +
@@ -280,12 +282,12 @@
   function temizle(on) {
     var eski = SZ[on].sec, t = SZ_TANIM[on]; SZ[on] = yeniSz(on);
     t.seciciler.forEach(function (x) { if (x.siralama || x.bas) SZ[on].sec[x.k] = eski[x.k]; });   /* sıralama ve görünüm süzgeç değildir, kalır */
-    var k = kap(on); if (k) { k.querySelector("[data-ara]").value = ""; k.querySelector(".a-ara").classList.remove("a-dolu"); k.querySelectorAll("[data-alan-ara]").forEach(function (g) { g.value = ""; }); }
+    var k = kap(on); if (k) { var ga = k.querySelector("[data-ara]"); if (ga) { ga.value = ""; k.querySelector(".a-ara").classList.remove("a-dolu"); } k.querySelectorAll("[data-alan-ara]").forEach(function (g) { g.value = ""; }); }
   }
   /* süzgeç satırını durumdan yeniden kurar (sayfa yeniden çizilince arama kutusu değeri, seçiciler ve liste) */
   MK.suzgecKur = function (on) {
     var k = kap(on); if (!k) return;
-    var g = k.querySelector("[data-ara]"); g.value = SZ[on].ara; k.querySelector(".a-ara").classList.toggle("a-dolu", !!SZ[on].ara);
+    var g = k.querySelector("[data-ara]"); if (g) { g.value = SZ[on].ara; k.querySelector(".a-ara").classList.toggle("a-dolu", !!SZ[on].ara); }
     k.querySelectorAll("[data-alan-ara]").forEach(function (x) { x.value = SZ[on].alan[x.dataset.alanAra.split("|")[1]] || ""; });
     seciciCiz(on); YENILE[on]();
   };
@@ -345,7 +347,7 @@
   /* boş durum: d = { ikon, baslik, metin, eylem (html), hata } — üç hâl: veri yok · süzgeç boş · hata */
   MK.bos = function (d, on) {
     return '<div class="a-bos' + (d.hata ? " a-bos-hata" : "") + '" role="status"' + (on ? ' data-sz="' + on + '"' : "") + '><div class="a-bos-ikon">' + ikon(d.ikon) + "</div>" +
-      '<p class="a-bos-baslik">' + d.baslik + '</p><p class="a-bos-metin">' + d.metin + "</p>" + (d.eylem || "") + "</div>";
+      '<p class="a-bos-baslik">' + d.baslik + "</p>" + (d.metin ? '<p class="a-bos-metin">' + d.metin + "</p>" : "") + (d.eylem || "") + "</div>";
   };
   MK.bosSuzgec = function (on) {
     return MK.imkansiz(on)

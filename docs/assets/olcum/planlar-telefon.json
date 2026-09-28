@@ -8,8 +8,8 @@
   390,
   430
  ],
- "toplam": 56,
- "temiz": 56,
+ "toplam": 60,
+ "temiz": 60,
  "durumlar": [
   {
    "ad": "plan 10 · son formatlarla açılmış plan (iç tesisat + topraklama), raporlar sonuçlu",
@@ -18,7 +18,7 @@
    "tasma": 0,
    "disari": [],
    "kucukAlan": [],
-   "alan": 3
+   "alan": 5
   },
   {
    "ad": "plan 10 · son formatlarla açılmış plan (iç tesisat + topraklama), raporlar sonuçlu",
@@ -27,7 +27,7 @@
    "tasma": 0,
    "disari": [],
    "kucukAlan": [],
-   "alan": 3
+   "alan": 5
   },
   {
    "ad": "plan 10 · son formatlarla açılmış plan (iç tesisat + topraklama), raporlar sonuçlu",
@@ -36,7 +36,7 @@
    "tasma": 0,
    "disari": [],
    "kucukAlan": [],
-   "alan": 3
+   "alan": 5
   },
   {
    "ad": "plan 10 · son formatlarla açılmış plan (iç tesisat + topraklama), raporlar sonuçlu",
@@ -45,7 +45,7 @@
    "tasma": 0,
    "disari": [],
    "kucukAlan": [],
-   "alan": 3
+   "alan": 5
   },
   {
    "ad": "liste",
@@ -126,7 +126,7 @@
    "tasma": 0,
    "disari": [],
    "kucukAlan": [],
-   "alan": 2
+   "alan": 3
   },
   {
    "ad": "plan içi · kabul edildi",
@@ -135,7 +135,7 @@
    "tasma": 0,
    "disari": [],
    "kucukAlan": [],
-   "alan": 2
+   "alan": 3
   },
   {
    "ad": "plan içi · kabul edildi",
@@ -144,7 +144,7 @@
    "tasma": 0,
    "disari": [],
    "kucukAlan": [],
-   "alan": 2
+   "alan": 3
   },
   {
    "ad": "plan içi · kabul edildi",
@@ -153,7 +153,7 @@
    "tasma": 0,
    "disari": [],
    "kucukAlan": [],
-   "alan": 2
+   "alan": 3
   },
   {
    "ad": "plan içi · denetimde",
@@ -162,7 +162,7 @@
    "tasma": 0,
    "disari": [],
    "kucukAlan": [],
-   "alan": 3
+   "alan": 5
   },
   {
    "ad": "plan içi · denetimde",
@@ -171,7 +171,7 @@
    "tasma": 0,
    "disari": [],
    "kucukAlan": [],
-   "alan": 3
+   "alan": 5
   },
   {
    "ad": "plan içi · denetimde",
@@ -180,7 +180,7 @@
    "tasma": 0,
    "disari": [],
    "kucukAlan": [],
-   "alan": 3
+   "alan": 5
   },
   {
    "ad": "plan içi · denetimde",
@@ -189,7 +189,7 @@
    "tasma": 0,
    "disari": [],
    "kucukAlan": [],
-   "alan": 3
+   "alan": 5
   },
   {
    "ad": "plan içi · tamamlandı (22 rapor)",
@@ -198,7 +198,7 @@
    "tasma": 0,
    "disari": [],
    "kucukAlan": [],
-   "alan": 3
+   "alan": 5
   },
   {
    "ad": "plan içi · tamamlandı (22 rapor)",
@@ -207,7 +207,7 @@
    "tasma": 0,
    "disari": [],
    "kucukAlan": [],
-   "alan": 3
+   "alan": 5
   },
   {
    "ad": "plan içi · tamamlandı (22 rapor)",
@@ -216,7 +216,7 @@
    "tasma": 0,
    "disari": [],
    "kucukAlan": [],
-   "alan": 3
+   "alan": 5
   },
   {
    "ad": "plan içi · tamamlandı (22 rapor)",
@@ -225,7 +225,7 @@
    "tasma": 0,
    "disari": [],
    "kucukAlan": [],
-   "alan": 3
+   "alan": 5
   },
   {
    "ad": "plan içi · reddedildi",
@@ -270,7 +270,7 @@
    "tasma": 0,
    "disari": [],
    "kucukAlan": [],
-   "alan": 7
+   "alan": 9
   },
   {
    "ad": "ekipman ekle · çakışan kod",
@@ -279,7 +279,7 @@
    "tasma": 0,
    "disari": [],
    "kucukAlan": [],
-   "alan": 7
+   "alan": 9
   },
   {
    "ad": "ekipman ekle · çakışan kod",
@@ -288,7 +288,7 @@
    "tasma": 0,
    "disari": [],
    "kucukAlan": [],
-   "alan": 7
+   "alan": 9
   },
   {
    "ad": "ekipman ekle · çakışan kod",
@@ -297,7 +297,7 @@
    "tasma": 0,
    "disari": [],
    "kucukAlan": [],
-   "alan": 7
+   "alan": 9
   },
   {
    "ad": "ekipman ekle · tesiste kayıtlı",
@@ -306,7 +306,7 @@
    "tasma": 0,
    "disari": [],
    "kucukAlan": [],
-   "alan": 7
+   "alan": 9
   },
   {
    "ad": "ekipman ekle · tesiste kayıtlı",
@@ -315,7 +315,7 @@
    "tasma": 0,
    "disari": [],
    "kucukAlan": [],
-   "alan": 7
+   "alan": 9
   },
   {
    "ad": "ekipman ekle · tesiste kayıtlı",
@@ -324,7 +324,7 @@
    "tasma": 0,
    "disari": [],
    "kucukAlan": [],
-   "alan": 7
+   "alan": 9
   },
   {
    "ad": "ekipman ekle · tesiste kayıtlı",
@@ -333,7 +333,7 @@
    "tasma": 0,
    "disari": [],
    "kucukAlan": [],
-   "alan": 7
+   "alan": 9
   },
   {
    "ad": "reddet penceresi",
@@ -378,7 +378,7 @@
    "tasma": 0,
    "disari": [],
    "kucukAlan": [],
-   "alan": 3
+   "alan": 5
   },
   {
    "ad": "plan içi · saha formu",
@@ -387,7 +387,7 @@
    "tasma": 0,
    "disari": [],
    "kucukAlan": [],
-   "alan": 3
+   "alan": 5
   },
   {
    "ad": "plan içi · saha formu",
@@ -396,7 +396,7 @@
    "tasma": 0,
    "disari": [],
    "kucukAlan": [],
-   "alan": 3
+   "alan": 5
   },
   {
    "ad": "plan içi · saha formu",
@@ -405,7 +405,7 @@
    "tasma": 0,
    "disari": [],
    "kucukAlan": [],
-   "alan": 3
+   "alan": 5
   },
   {
    "ad": "plan içi · rapor saatlerini hizala",
@@ -414,7 +414,7 @@
    "tasma": 0,
    "disari": [],
    "kucukAlan": [],
-   "alan": 5
+   "alan": 7
   },
   {
    "ad": "plan içi · rapor saatlerini hizala",
@@ -423,7 +423,7 @@
    "tasma": 0,
    "disari": [],
    "kucukAlan": [],
-   "alan": 5
+   "alan": 7
   },
   {
    "ad": "plan içi · rapor saatlerini hizala",
@@ -432,7 +432,7 @@
    "tasma": 0,
    "disari": [],
    "kucukAlan": [],
-   "alan": 5
+   "alan": 7
   },
   {
    "ad": "plan içi · rapor saatlerini hizala",
@@ -441,7 +441,7 @@
    "tasma": 0,
    "disari": [],
    "kucukAlan": [],
-   "alan": 5
+   "alan": 7
   },
   {
    "ad": "plan içi · Excel'e aktar önizlemesi",
@@ -450,7 +450,7 @@
    "tasma": 0,
    "disari": [],
    "kucukAlan": [],
-   "alan": 3
+   "alan": 5
   },
   {
    "ad": "plan içi · Excel'e aktar önizlemesi",
@@ -459,7 +459,7 @@
    "tasma": 0,
    "disari": [],
    "kucukAlan": [],
-   "alan": 3
+   "alan": 5
   },
   {
    "ad": "plan içi · Excel'e aktar önizlemesi",
@@ -468,7 +468,7 @@
    "tasma": 0,
    "disari": [],
    "kucukAlan": [],
-   "alan": 3
+   "alan": 5
   },
   {
    "ad": "plan içi · Excel'e aktar önizlemesi",
@@ -477,7 +477,7 @@
    "tasma": 0,
    "disari": [],
    "kucukAlan": [],
-   "alan": 3
+   "alan": 5
   },
   {
    "ad": "plan içi · Excel'den yükle, satırlar denetlendi",
@@ -486,7 +486,7 @@
    "tasma": 0,
    "disari": [],
    "kucukAlan": [],
-   "alan": 3
+   "alan": 5
   },
   {
    "ad": "plan içi · Excel'den yükle, satırlar denetlendi",
@@ -495,7 +495,7 @@
    "tasma": 0,
    "disari": [],
    "kucukAlan": [],
-   "alan": 3
+   "alan": 5
   },
   {
    "ad": "plan içi · Excel'den yükle, satırlar denetlendi",
@@ -504,7 +504,7 @@
    "tasma": 0,
    "disari": [],
    "kucukAlan": [],
-   "alan": 3
+   "alan": 5
   },
   {
    "ad": "plan içi · Excel'den yükle, satırlar denetlendi",
@@ -513,7 +513,43 @@
    "tasma": 0,
    "disari": [],
    "kucukAlan": [],
-   "alan": 3
+   "alan": 5
+  },
+  {
+   "ad": "plan içi · raporu pasife al penceresi",
+   "gen": 320,
+   "temiz": true,
+   "tasma": 0,
+   "disari": [],
+   "kucukAlan": [],
+   "alan": 5
+  },
+  {
+   "ad": "plan içi · raporu pasife al penceresi",
+   "gen": 360,
+   "temiz": true,
+   "tasma": 0,
+   "disari": [],
+   "kucukAlan": [],
+   "alan": 5
+  },
+  {
+   "ad": "plan içi · raporu pasife al penceresi",
+   "gen": 390,
+   "temiz": true,
+   "tasma": 0,
+   "disari": [],
+   "kucukAlan": [],
+   "alan": 5
+  },
+  {
+   "ad": "plan içi · raporu pasife al penceresi",
+   "gen": 430,
+   "temiz": true,
+   "tasma": 0,
+   "disari": [],
+   "kucukAlan": [],
+   "alan": 5
   }
  ]
 }

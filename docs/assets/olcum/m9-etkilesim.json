@@ -2,8 +2,8 @@
  "maket": "m9",
  "tarih": "2026-09-28",
  "arac": "tools/olc-bulut.mjs --etkilesim (başsız tarayıcı, 1920 açık tema; gen verilen denemede o genişlik)",
- "toplam": 23,
- "gecen": 23,
+ "toplam": 25,
+ "gecen": 25,
  "denemeler": [
   {
    "ad": "rapor sayfasında durum geçmişi yok",
@@ -136,6 +136,20 @@
    "gen": 1920,
    "sayfa": "maket/onaylar.html",
    "hash": "#/r/KM-0926-770-a99c1",
+   "gecti": true
+  },
+  {
+   "ad": "Pasif raporlar sekmesi: inspector'ın pasife aldığı rapor listede; Aktif et → pasif kalkar",
+   "gen": 1920,
+   "sayfa": "maket/onaylar.html",
+   "hash": "#/",
+   "gecti": true
+  },
+  {
+   "ad": "pasif rapor Sil: pencere, Sil → kayıttan kalkar",
+   "gen": 1920,
+   "sayfa": "maket/onaylar.html",
+   "hash": "#/",
    "gecti": true
   },
   {

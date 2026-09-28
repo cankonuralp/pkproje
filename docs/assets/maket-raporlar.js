@@ -8,7 +8,7 @@
   "use strict";
   var $ = MK.$, kacis = MK.kacis, ikon = MK.ikon, kirp = MK.kirp, rozet = MK.rozet, SZ = MK.SZ;
   var BEN = "mk";
-  var benim = function () { return MV.RAPORLAR.filter(function (r) { return r.kisi === BEN; }); };
+  var benim = function () { return MV.RAPORLAR.filter(function (r) { return r.kisi === BEN && !r.pasif; }); };   /* pasif rapor inspector'da görünmez (2026-09-28) */
   var imzaBekleyen = function () { return benim().filter(function (r) { return r.durum === "onaylandi"; }); };
   var ekp = function (r) { return MV.ekipman(r.kod); };
   var yeniden = function (r) { return r.durum === "taslak"; };

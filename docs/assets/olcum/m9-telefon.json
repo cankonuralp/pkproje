@@ -8,8 +8,8 @@
   390,
   430
  ],
- "toplam": 48,
- "temiz": 48,
+ "toplam": 52,
+ "temiz": 52,
  "durumlar": [
   {
    "ad": "raporlar · inspector'ın listesi + imza şeridi",
@@ -18,7 +18,7 @@
    "tasma": 0,
    "disari": [],
    "kucukAlan": [],
-   "alan": 5
+   "alan": 4
   },
   {
    "ad": "raporlar · inspector'ın listesi + imza şeridi",
@@ -27,7 +27,7 @@
    "tasma": 0,
    "disari": [],
    "kucukAlan": [],
-   "alan": 5
+   "alan": 4
   },
   {
    "ad": "raporlar · inspector'ın listesi + imza şeridi",
@@ -36,7 +36,7 @@
    "tasma": 0,
    "disari": [],
    "kucukAlan": [],
-   "alan": 5
+   "alan": 4
   },
   {
    "ad": "raporlar · inspector'ın listesi + imza şeridi",
@@ -45,7 +45,7 @@
    "tasma": 0,
    "disari": [],
    "kucukAlan": [],
-   "alan": 5
+   "alan": 4
   },
   {
    "ad": "raporlar · imza bekleyen çipi",
@@ -54,7 +54,7 @@
    "tasma": 0,
    "disari": [],
    "kucukAlan": [],
-   "alan": 5
+   "alan": 4
   },
   {
    "ad": "raporlar · imza bekleyen çipi",
@@ -63,7 +63,7 @@
    "tasma": 0,
    "disari": [],
    "kucukAlan": [],
-   "alan": 5
+   "alan": 4
   },
   {
    "ad": "raporlar · imza bekleyen çipi",
@@ -72,7 +72,7 @@
    "tasma": 0,
    "disari": [],
    "kucukAlan": [],
-   "alan": 5
+   "alan": 4
   },
   {
    "ad": "raporlar · imza bekleyen çipi",
@@ -81,7 +81,7 @@
    "tasma": 0,
    "disari": [],
    "kucukAlan": [],
-   "alan": 5
+   "alan": 4
   },
   {
    "ad": "rapor · imza bekliyor (PDF önizlemesi)",
@@ -198,7 +198,7 @@
    "tasma": 0,
    "disari": [],
    "kucukAlan": [],
-   "alan": 5
+   "alan": 4
   },
   {
    "ad": "son imza penceresi · toplu, imza servisi",
@@ -207,7 +207,7 @@
    "tasma": 0,
    "disari": [],
    "kucukAlan": [],
-   "alan": 5
+   "alan": 4
   },
   {
    "ad": "son imza penceresi · toplu, imza servisi",
@@ -216,7 +216,7 @@
    "tasma": 0,
    "disari": [],
    "kucukAlan": [],
-   "alan": 5
+   "alan": 4
   },
   {
    "ad": "son imza penceresi · toplu, imza servisi",
@@ -225,7 +225,7 @@
    "tasma": 0,
    "disari": [],
    "kucukAlan": [],
-   "alan": 5
+   "alan": 4
   },
   {
    "ad": "son imza penceresi · indir, imzala, yükle",
@@ -234,7 +234,7 @@
    "tasma": 0,
    "disari": [],
    "kucukAlan": [],
-   "alan": 5
+   "alan": 4
   },
   {
    "ad": "son imza penceresi · indir, imzala, yükle",
@@ -243,7 +243,7 @@
    "tasma": 0,
    "disari": [],
    "kucukAlan": [],
-   "alan": 5
+   "alan": 4
   },
   {
    "ad": "son imza penceresi · indir, imzala, yükle",
@@ -252,7 +252,7 @@
    "tasma": 0,
    "disari": [],
    "kucukAlan": [],
-   "alan": 5
+   "alan": 4
   },
   {
    "ad": "son imza penceresi · indir, imzala, yükle",
@@ -261,7 +261,7 @@
    "tasma": 0,
    "disari": [],
    "kucukAlan": [],
-   "alan": 5
+   "alan": 4
   },
   {
    "ad": "onaylar · mekanik kuyruk",
@@ -436,6 +436,42 @@
   },
   {
    "ad": "onaylar · onaylanan rapor, Onayı geri al",
+   "gen": 430,
+   "temiz": true,
+   "tasma": 0,
+   "disari": [],
+   "kucukAlan": [],
+   "alan": 0
+  },
+  {
+   "ad": "onaylar · pasif raporlar (Aktif et · Sil)",
+   "gen": 320,
+   "temiz": true,
+   "tasma": 0,
+   "disari": [],
+   "kucukAlan": [],
+   "alan": 0
+  },
+  {
+   "ad": "onaylar · pasif raporlar (Aktif et · Sil)",
+   "gen": 360,
+   "temiz": true,
+   "tasma": 0,
+   "disari": [],
+   "kucukAlan": [],
+   "alan": 0
+  },
+  {
+   "ad": "onaylar · pasif raporlar (Aktif et · Sil)",
+   "gen": 390,
+   "temiz": true,
+   "tasma": 0,
+   "disari": [],
+   "kucukAlan": [],
+   "alan": 0
+  },
+  {
+   "ad": "onaylar · pasif raporlar (Aktif et · Sil)",
    "gen": 430,
    "temiz": true,
    "tasma": 0,

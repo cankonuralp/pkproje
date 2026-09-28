@@ -10,6 +10,8 @@
   var BEN = "sy", BENIM = "m", BRANS = "m";   /* 100: branş yöneticisi yokken başka branşın kuyruğu vekil olarak açılır (?brans=e) */
   var brans = function (r) { return MV.tur(MV.ekipman(r.kod).tur).b; };
   var kuyruk = function () { return MV.RAPORLAR.filter(function (r) { return r.durum === "onayda" && brans(r) === BRANS; }).sort(function (a, b) { return a.gonderildi < b.gonderildi ? 1 : -1; }); };   /* en yeni üstte (reisim 2026-09-26) */
+  /* pasif raporlar (2026-09-28, T2; reisim: "inspector pasife alabilir … aktif etme ve silme yalnız yönetici"): branşın pasif raporları */
+  var pasifler = function () { return MV.RAPORLAR.filter(function (r) { return r.pasif && brans(r) === BENIM; }).sort(function (a, b) { return a.pasifZaman < b.pasifZaman ? 1 : -1; }); };
   var saatFarki = function (iso) { return Math.round((new Date(MK.simdi() + ":00Z") - new Date(iso + ":00Z")) / 36e5); };
   var bekleme = function (iso) { var h = saatFarki(iso); return h < 1 ? "az önce" : h < 24 ? h + " saattir" : Math.floor(h / 24) + " gündür"; };
 
@@ -41,11 +43,25 @@
     } },
     { k: "sonuc", baslik: "Sonuç", kart: "rozet", sira: 1, hucre: function (r) { var s = MV.sonucAd(r); return rozet(s === "Uygun" ? { ad: "Uygun", rozet: "a-rozet-tamam" } : { ad: s, rozet: /^(Kusurlu|Ağır)/.test(s) ? "a-rozet-red" : "a-rozet-bekliyor" }); } }
   ];
-  function listeCiz() {
+  function sekmeler(pasif) {
     $("a-uyari").innerHTML = '<div class="a-sekmeler a-bolum-serit" role="group" aria-label="Kuyruk">' + ["m", "e"].map(function (b) {
       var n = MV.RAPORLAR.filter(function (r) { return r.durum === "onayda" && brans(r) === b; }).length;
-      return '<a class="a-sekme" href="' + (b === BENIM ? "#/" : "#/?brans=" + b) + '" aria-pressed="' + (BRANS === b) + '">' + MV.bransAd(b) + (b === BENIM ? "" : " · vekil") + " <b>" + n + "</b></a>";
-    }).join("") + "</div>";
+      return '<a class="a-sekme" href="' + (b === BENIM ? "#/" : "#/?brans=" + b) + '" aria-pressed="' + (!pasif && BRANS === b) + '">' + MV.bransAd(b) + (b === BENIM ? "" : " · vekil") + " <b>" + n + "</b></a>";
+    }).join("") + '<a class="a-sekme" href="#/pasif" aria-pressed="' + !!pasif + '">Pasif raporlar <b>' + pasifler().length + "</b></a></div>";
+  }
+  var PASIF_SUTUN = [SUTUN[0], SUTUN[1], SUTUN[2],
+    { k: "pasif", baslik: "Pasife alındı", kart: "govde", sira: 4, hucre: function (r) { return '<span class="a-kart-etiket">Pasife alındı</span><span class="a-tarih-gun">' + MK.zamanYaz(r.pasifZaman) + "</span>"; } },
+    { k: "eylem", baslik: "İşlem", gizliBaslik: true, kart: "eylem", sira: 9, hucre: function (r) {
+      return '<div class="a-eylem"><div class="a-eylem-tuslar">' + MK.tus({ eylem: "rapor-sil-ac", ad: "Sil", sinif: "a-tus-ikincil", veri: { no: r.no } }) +
+        MK.tus({ eylem: "rapor-aktif", ad: "Aktif et", ikon: "undo-2", sinif: "a-tus-ikincil", veri: { no: r.no } }) + "</div></div>"; } }];
+  function pasifCiz() {
+    var l = pasifler(); sekmeler(true); $("a-suzgec-kap").innerHTML = ""; $("a-sayfa").innerHTML = "";
+    $("a-sayac").innerHTML = "<b>" + l.length + "</b> rapor";
+    $("a-liste").innerHTML = l.length ? MK.tablo({ baslik: "Pasif raporlar", sinif: "a-tablo-onay", sutunlar: PASIF_SUTUN, kayitlar: l })
+      : MK.bos({ ikon: "circle-check", baslik: "Pasif rapor yok", metin: "" });
+  }
+  function listeCiz() {
+    sekmeler(false);
     MK.listeCiz({ on: "o", kayitlar: kuyruk(), sayacId: "a-sayac", listeId: "a-liste",
       sirala: function (l) { return l.slice().sort(function (a, b) { return a.gonderildi < b.gonderildi ? 1 : -1; }); },
       bosVeri: { ikon: "circle-check", baslik: "Kuyruk boş", metin: "Onayınızı bekleyen rapor yok. Inspector'lar onaya gönderdikçe burada en eskisi üstte sıralanır." },
@@ -115,13 +131,14 @@
   function rota() {
     BRANS = /[?&]brans=e/.test(location.hash) ? "e" : /[?&]brans=m/.test(location.hash) ? "m" : BRANS;
     if (location.hash === "#/" || location.hash === "") BRANS = BENIM;
+    if (location.hash === "#/pasif") return { v: "liste", pasif: true };
     var m = /^#\/r\/([A-Za-z0-9-]+)(\/geri)?$/.exec(location.hash);
     return m ? { v: "rapor", no: m[1], pencere: !!m[2] } : { v: "liste" };
   }
   function goster(odakla) {
     var r = rota(), rp = r.no ? MV.rapor(r.no) : null;
     $("a-liste-gorunum").hidden = r.v !== "liste"; $("a-nesne").hidden = r.v === "liste";
-    if (r.v === "liste") { $("a-suzgec-kap").innerHTML = MK.suzgecHtml("o"); MK.suzgecKur("o"); } else onayCiz(rp);
+    if (r.pasif) pasifCiz(); else if (r.v === "liste") { $("a-suzgec-kap").innerHTML = MK.suzgecHtml("o"); MK.suzgecKur("o"); } else onayCiz(rp);
     MK.menuSayi(15, kuyruk().length);
     document.title = (r.v === "rapor" ? (rp ? rp.no + " · onay" : "Rapor bulunamadı") : "Onaylar") + " · probata maket";
     if (odakla) { window.scrollTo(0, 0); var hh = document.querySelector("#a-icerik > :not([hidden]) h1"); if (hh) hh.focus({ preventScroll: true }); }
@@ -139,6 +156,23 @@
   X["onay-geri-al"] = function () {
     var r = MV.rapor(rota().no); r.durum = "onayda"; r.onay = null; onayCiz(r); MK.menuSayi(15, kuyruk().length);
     var h = document.querySelector("#a-nesne h1"); if (h) h.focus(); MK.bildir(r.no + " onayı geri alındı; rapor yeniden kuyrukta.");
+  };
+  X["rapor-aktif"] = function (el) {
+    var r = MV.rapor(el.dataset.no); r.pasif = false; r.pasifKim = null; r.pasifZaman = null; pasifCiz();
+    var s = document.querySelector('#a-uyari [href="#/pasif"]'); if (s) s.focus();
+    MK.bildir(r.no + " yeniden aktif; " + MV.kisi(r.kisi).ad + " planında görür.");
+  };
+  X["rapor-sil-ac"] = function (el) {
+    W = { sil: MV.rapor(el.dataset.no) };
+    $("a-pencere-baslik").textContent = "Raporu sil · " + W.sil.no;
+    $("a-pencere-govde").innerHTML = '<p class="a-pencere-metin">Rapor kalıcı olarak silinir; geri alınamaz.</p>';
+    $("a-pencere-alt").innerHTML = MK.tus({ eylem: "pencere-kapat", ad: "Vazgeç", sinif: "a-tus-ikincil" }) + MK.tus({ eylem: "rapor-sil", ad: "Sil" });
+    $("a-pencere").showModal(); $("a-pencere-alt").querySelector('[data-eylem="pencere-kapat"]').focus();
+  };
+  X["rapor-sil"] = function () {
+    var r = W.sil; MV.RAPORLAR.splice(MV.RAPORLAR.indexOf(r), 1); $("a-pencere").close(); pasifCiz();
+    var s = document.querySelector('#a-uyari [href="#/pasif"]'); if (s) s.focus();
+    MK.bildir(r.no + " silindi.");
   };
   X["geri-ac"] = function () { pencereAc(MV.rapor(rota().no)); };
   X["geri-gonder"] = function () {

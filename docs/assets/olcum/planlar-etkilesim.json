@@ -2,8 +2,8 @@
  "maket": "planlar",
  "tarih": "2026-09-28",
  "arac": "tools/olc-bulut.mjs --etkilesim (başsız tarayıcı, 1920 açık tema; gen verilen denemede o genişlik)",
- "toplam": 41,
- "gecen": 41,
+ "toplam": 47,
+ "gecen": 47,
  "denemeler": [
   {
    "ad": "Denetimde süzgecinde en üstte son formatlarla açılmış plan (P-0926-040)",
@@ -90,7 +90,49 @@
    "gecti": true
   },
   {
-   "ad": "ekipman tablosunda rapor aşaması yok, Raporlandı var",
+   "ad": "ekipman satırında raporu olana yeşil tik (aşama yazısı yok), her satırda Rapor oluştur (2026-09-28)",
+   "gen": 1920,
+   "sayfa": "maket/planlarim.html",
+   "hash": "#/plan/1",
+   "gecti": true
+  },
+  {
+   "ad": "Rapor oluştur sınırsız: raporu olan ekipmana ikinci rapor, Raporlar'da iki satır",
+   "gen": 1920,
+   "sayfa": "maket/planlarim.html",
+   "hash": "#/plan/1",
+   "gecti": true
+  },
+  {
+   "ad": "raporu pasife al: pencere, Pasife al → listeden kalkar, ortak kayıtta pasif, odak Raporlar başlığında",
+   "gen": 1920,
+   "sayfa": "maket/planlarim.html",
+   "hash": "#/plan/1",
+   "gecti": true
+  },
+  {
+   "ad": "plan içi süzgeç: genel arama yok; ekipman türü / kodu ve rapor no / ekipman kodu kutuları; rapor no süzer",
+   "gen": 1920,
+   "sayfa": "maket/planlarim.html",
+   "hash": "#/plan/1",
+   "gecti": true
+  },
+  {
+   "ad": "ekipman türü kutusu süzer (kompresör → 1)",
+   "gen": 1920,
+   "sayfa": "maket/planlarim.html",
+   "hash": "#/plan/1",
+   "gecti": true
+  },
+  {
+   "ad": "raporlar toplu PDF: süzgeçteki gönderilmiş raporlar tek PDF'te (taslak girmez)",
+   "gen": 1920,
+   "sayfa": "maket/planlarim.html",
+   "hash": "#/plan/1",
+   "gecti": true
+  },
+  {
+   "ad": "aynı ekipmanın ikinci raporu saha rapor ekranında boş açılır (numarayla ayrı)",
    "gen": 1920,
    "sayfa": "maket/planlarim.html",
    "hash": "#/plan/1",
