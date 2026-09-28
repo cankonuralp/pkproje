@@ -2,11 +2,11 @@
  "maket": "planlar",
  "tarih": "2026-09-28",
  "arac": "tools/olc-bulut.mjs --etkilesim (başsız tarayıcı, 1920 açık tema; gen verilen denemede o genişlik)",
- "toplam": 47,
- "gecen": 47,
+ "toplam": 48,
+ "gecen": 48,
  "denemeler": [
   {
-   "ad": "Denetimde süzgecinde en üstte son formatlarla açılmış plan (P-0926-040)",
+   "ad": "Durum: Denetimde süzgecinde en üstte son formatlarla açılmış plan (P-0926-040)",
    "gen": 1920,
    "sayfa": "maket/planlarim.html",
    "hash": "#/",
@@ -20,7 +20,7 @@
    "gecti": true
   },
   {
-   "ad": "süzgeç kutusu: çip seçilince sayı, başlığa basınca kapanır (sayı görünür kalır)",
+   "ad": "süzgeç kutusu: süzgeç seçilince sayı, başlığa basınca kapanır (sayı görünür kalır)",
    "gen": 1920,
    "sayfa": "maket/planlarim.html",
    "hash": "#/",
@@ -195,14 +195,14 @@
    "gecti": true
   },
   {
-   "ad": "çip süzer, sayaç dürüst (4 / 10)",
+   "ad": "Durum seçicisi süzer, sayaç dürüst (4 / 10)",
    "gen": 1920,
    "sayfa": "maket/planlarim.html",
    "hash": "#/",
    "gecti": true
   },
   {
-   "ad": "ve + aynı grup → imkânsız, sebep yazılır",
+   "ad": "Planlar süzgecinde çip ve veya / ve yok, genel arama yok; Proje adı · Proje no kutuları (2026-09-28)",
    "gen": 1920,
    "sayfa": "maket/planlarim.html",
    "hash": "#/",
@@ -216,7 +216,14 @@
    "gecti": true
   },
   {
-   "ad": "arama süzer, kutu yerinde kalır",
+   "ad": "Proje no kutusu süzer (040 → 1), kutu yerinde kalır",
+   "gen": 1920,
+   "sayfa": "maket/planlarim.html",
+   "hash": "#/",
+   "gecti": true
+  },
+  {
+   "ad": "Proje adı kutusu süzer (depo → 4)",
    "gen": 1920,
    "sayfa": "maket/planlarim.html",
    "hash": "#/",

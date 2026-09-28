@@ -1758,6 +1758,12 @@ revizyon, alan kopyalama, hafif kusur devri, meslek eşleşme denetimi).
 - Emsal ürünler: https://opwire.app/iso-17020-periyodik-kontrol-yazilimi/ · https://17020muayene.vidco.com.tr/ · https://akuple.com/asansor-kontrol-yazilimi/ · https://ensyazilim.com/
 
 ## 11 · Değişiklik günlüğü
+- 2026-09-28 (114): **T3 · Planlar listesi süzgeci** (§9 otuz dördüncü tur; §3.8 kural 6; reisim: *"Planlar ekranındaki filtreleme kısmıda
+  yine istediğim gibi değil anlamsız filtreleme tuşları var proje için ayrı proje no için ayrı"*). Durum çipleri (Kabul bekliyor … Ön koşul
+  eksik) ve "veya / ve" anahtarı kalktı; durum artık **Durum** seçicisi (Tarih · Müşteri · Branş yanında); genel arama yerine **Proje adı ·
+  Proje no** kutuları. Ortak üreticide: çipi olmayan süzgeçte çip alanı çizilmez; alan kutuları genel aramanın yerinde, ilk sırada,
+  seçicilerle aynı satırda (sığmazsa alt satır). Planlar denemeleri yeni süzgece göre (çip yerine Durum seçicisi; Proje adı / no kutuları).
+  18 maket temiz: durum 1936/1936 · etkileşim 452/452 · telefon 968/968; Planlar 1920 ve 375'te, Raporlar ve plan içi 1920 / 1080'de gözle.
 - 2026-09-28 (113): **T2 · Plan içi** (§9 otuz dördüncü tur; §3.8 kural 6, 7, 8; reisim: *"ekipman türü ekipman koduna göre arama motorları
   ayrı olacak şekilde filtreleme olmalı … raporlandı yazan kısımda sadece rapor oluştur tuşu olsun istediğim kadar o tuşa basabileyim sınır
   olmasın eğer bu rapor içerisinde rapor oluşturduysam yanında küçük yeşil tik olsun … Pasife alınan raporlar inspectorlere gözükmez inspector

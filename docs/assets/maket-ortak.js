@@ -196,19 +196,20 @@
     return '<details class="a-suzgec-kutu" data-kutu="' + on + '"' + (kutuAcik(on) ? " open" : "") + '><summary class="a-suzgec-bas">' + ikon("sliders-horizontal", "a-ikon-kucuk") +
       '<span class="a-suzgec-baslik">Süzgeçler</span><span class="a-suzgec-say" hidden></span>' + ikon("chevron-down", "a-ikon-kucuk a-acilir-ok") + "</summary>" +
       '<div class="a-suzgec" data-sz="' + on + '"' + (secicili ? "" : " data-secicisiz") + ">" +
+      /* alan alan arama; genel aramanın yerinde, ilk sırada (reisim 2026-09-28: "ekipman türüne rapor numarasına göre ayrı ayrı arayabilmeliyim"): tanim.alanlar = [{ k, ad, ipucu, metin(kayıt) }] */
+      (t.alanlar ? '<div class="a-suzgec-alanlar" style="flex-basis:' + t.alanlar.length * 212 + 'px">' + t.alanlar.map(function (x) {
+        return '<label class="a-alan-ara"><span class="a-alan-ara-ad">' + x.ad + '</span><input class="a-girdi" type="search" data-alan-ara="' + on + "|" + x.k + '" placeholder="' + (x.ipucu || "") + '" autocomplete="off"></label>';
+      }).join("") + "</div>" : "") +
       /* alan kutuları olan listede genel "ara" kutusu yok (§3.8 kural 6, reisim 2026-09-28) */
       (t.alanlar ? "" : '<label class="a-ara"><span class="a-gizli">' + t.ad + "</span>" + ikon("search") +
         '<input type="search" data-ara="' + on + '" placeholder="' + t.ipucu + '" autocomplete="off">' +
         '<button class="a-ara-sil" type="button" data-eylem="ara-sil" aria-label="Aramayı temizle">' + ikon("x", "a-ikon-kucuk") + "</button></label>") +
       (secicili ? '<button class="a-suzgec-tus" type="button" data-eylem="levha-ac" aria-haspopup="dialog">' + ikon("sliders-horizontal") +
         'Süzgeç <span class="a-suzgec-rozet" hidden></span></button>' : "") +
-      '<div class="a-cipler" role="group" aria-label="' + t.birim + ' durumu süzgeci"></div>' +
+      (t.cipler.length ? '<div class="a-cipler" role="group" aria-label="' + t.birim + ' durumu süzgeci"></div>' : "") +
       '<div class="a-suzgec-sag"><div class="a-seciciler"></div>' +
         '<button class="a-temizle" type="button" data-eylem="temizle">' + ikon("filter-x", "a-ikon-kucuk") + "Temizle</button></div>" +
-      /* alan alan arama (reisim 2026-09-28: "ekipman türüne rapor numarasına göre ayrı ayrı arayabilmeliyim"): tanim.alanlar = [{ k, ad, ipucu, metin(kayıt) }] */
-      (t.alanlar ? '<div class="a-suzgec-alanlar">' + t.alanlar.map(function (x) {
-        return '<label class="a-alan-ara"><span class="a-alan-ara-ad">' + x.ad + '</span><input class="a-girdi" type="search" data-alan-ara="' + on + "|" + x.k + '" placeholder="' + (x.ipucu || "") + '" autocomplete="off"></label>';
-      }).join("") + "</div>" : "") + "</div></details>";
+      "</div></details>";
   };
   /* uygulanan süzgeç sayısı: arama + seçili çipler + seçiciler (sıralama ve görünüm anahtarı sayılmaz) */
   function kutuSay(on) {
@@ -242,8 +243,8 @@
   };
   MK.cipCiz = function (on, tb) {
     var s = SZ[on], k = kap(on); if (!k) return;
-    var az = s.secili.length < 2;
-    k.querySelector(".a-cipler").innerHTML = SZ_TANIM[on].cipler.map(function (c) {
+    var az = s.secili.length < 2, ck = k.querySelector(".a-cipler");
+    if (ck) ck.innerHTML = SZ_TANIM[on].cipler.map(function (c) {
       return '<button class="a-cip" type="button" data-cip="' + c.k + '" aria-pressed="' + (s.secili.indexOf(c.k) >= 0) + '">' + kacis(c.ad) +
         ' <span class="a-cip-sayi">' + tb.filter(c.test).length + "</span></button>";
     }).join("") + (SZ_TANIM[on].cipler.length >= 2 ? '<div class="a-kip" role="group" aria-label="Seçili çipleri birleştirme" aria-disabled="' + az + '"' +

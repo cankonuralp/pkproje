@@ -197,14 +197,9 @@
 
   /* ══ SÜZGEÇ TANIMLARI (üretici ortak: kalıp 15) ═══════════════════════════════════════════════════════════
      Üç süzgeç: l = Planlar listesi · e = plan içi ekipmanlar · r = plan içi raporlar. */
-  var CIP_L = [
-    { k: "bekliyor", ad: "Kabul bekliyor", grup: "durum", test: function (p) { return p.durum === "bekliyor"; } },
-    { k: "kabul", ad: "Kabul edildi", grup: "durum", test: function (p) { return p.durum === "kabul"; } },
-    { k: "denetimde", ad: "Denetimde", grup: "durum", test: function (p) { return p.durum === "denetimde"; } },
-    { k: "tamam", ad: "Tamamlandı", grup: "durum", test: function (p) { return p.durum === "tamam"; } },
-    { k: "red", ad: "Reddedildi", grup: "durum", test: function (p) { return p.durum === "red"; } },
-    { k: "eksik", ad: "Ön koşul eksik", test: function (p) { return p.durum === "bekliyor" && !!p.eksik; } }
-  ];
+  /* Planlar listesi (2026-09-28; reisim: "Planlar ekranındaki filtreleme kısmıda yine istediğim gibi değil anlamsız filtreleme tuşları var proje
+     için ayrı proje no için ayrı"): durum çipleri ve veya / ve anahtarı kalktı, durum bir seçici; proje adı ve proje no ayrı kutular */
+  var CIP_L = [];
   var CIP_E = [
     { k: "raporsuz", ad: "Raporu yok", grup: "rapor", test: function (e) { return !raporuVar(AKTIF, e.kod); } },
     { k: "raporlu", ad: "Raporu var", grup: "rapor", test: function (e) { return !!raporuVar(AKTIF, e.kod); } },
@@ -233,6 +228,8 @@
   }
   var SIRA_TEMEL = ["varsayilan", "baslangic-artan", "baslangic-azalan", "musteri-artan", "no-artan"];
   var SEC_L = [
+    { k: "durum", ad: "Durum", secenek: function () { return [["tumu", "Tümü"]].concat(Object.keys(DURUM).map(function (k) { return [k, DURUM[k].ad]; })); },
+      gecer: function (p, v) { return v === "tumu" || p.durum === v; } },
     { k: "tarih", ad: "Tarih", secenek: function () { return [["tumu", "Tümü"], ["bugun", "Bugün"], ["hafta", "Bu hafta"], ["yedi", "Önümüzdeki 7 gün"]]; },
       gecer: function (p, v) { return v === "tumu" || (v === "bugun" ? p.tarih === BUGUN : v === "hafta" ? p.tarih >= HAFTA[0] && p.tarih <= HAFTA[1] : p.tarih >= YEDI[0] && p.tarih <= YEDI[1]); } },
     { k: "musteri", ad: "Müşteri", secenek: function () {
@@ -250,6 +247,10 @@
     { k: "brans", ad: "Branş", secenek: function () { return [["tumu", "Tümü"], ["m", "Mekanik"], ["e", "Elektrik"]]; }, gecer: function (e, v) { return v === "tumu" || e.tur.b === v; } }
   ];
   MK.suzgecTanimla("l", { ad: "Planlarda ara", ipucu: "Proje, müşteri, il", birim: "plan", cipler: CIP_L, seciciler: SEC_L,
+    alanlar: [
+      { k: "ad", ad: "Proje adı", ipucu: "ör. fabrika", metin: function (p) { return p.ad; } },
+      { k: "no", ad: "Proje no", ipucu: "ör. P-0926-03", metin: function (p) { return p.no; } }
+    ],
     metin: function (p) { return [p.no, p.ad, p.musteri, p.adres, p.ilce, p.il].join(" "); },
     imkansiz: "Bir plan aynı anda iki durumda olamaz" }, function () { ciz(); });
   /* plan içi süzgeçler alan alan (§3.8 kural 6; reisim 2026-09-28: "ekipman türü, ekipman kodu … rapor numarası … genel ara olmasın") */

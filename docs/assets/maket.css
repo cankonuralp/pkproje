@@ -137,7 +137,9 @@ html[data-giris="fare"] .a-girdi:focus, html[data-giris="fare"] .a-alan:focus { 
 .a-suzgec-kutu:not([open]) .a-acilir-ok { transform: rotate(-90deg); }
 .a-suzgec-say { padding: 2px 8px; border-radius: var(--r-tam); background: var(--uyari-zemin); color: var(--uyari-yazi); font-size: var(--boy-kucuk); font-weight: 600; }
 .a-suzgec-kutu > .a-suzgec { margin: 4px 0 0; }
-.a-suzgec-alanlar { flex: 1 1 100%; display: grid; grid-template-columns: repeat(auto-fill, minmax(200px, 1fr)); gap: 8px 12px; min-width: 0; }
+/* alan kutuları genel aramanın yerinde, ilk sırada; seçiciler aynı satırda sağda, kutuların hizasında (2026-09-28) */
+.a-suzgec-alanlar { flex: 0 1 100%; display: grid; grid-template-columns: repeat(auto-fill, minmax(200px, 1fr)); gap: 8px 12px; min-width: 0; }
+.a-suzgec:has(> .a-suzgec-alanlar) { align-items: flex-end; }
 .a-alan-ara { display: grid; gap: 4px; min-width: 0; }
 .a-alan-ara-ad { font-size: var(--boy-etiket); font-weight: 600; color: var(--yazi2); }
 .a-suzgec { display: flex; align-items: center; flex-wrap: wrap; gap: 8px 6px; margin: 0 0 12px; min-width: 0; }
