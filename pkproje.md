@@ -1764,6 +1764,11 @@ revizyon, alan kopyalama, hafif kusur devri, meslek eşleşme denetimi).
 - Emsal ürünler: https://opwire.app/iso-17020-periyodik-kontrol-yazilimi/ · https://17020muayene.vidco.com.tr/ · https://akuple.com/asansor-kontrol-yazilimi/ · https://ensyazilim.com/
 
 ## 11 · Değişiklik günlüğü
+- 2026-09-28 (118): **Düzeltme — T6 CI'da düştü** (reisim: *"githubdan push failed mesajı geldi"*). T6'daki menü CSS'i daraltma sınıfını
+  (`a-kabuk-dar`) geniş bant dışında kullanıyordu; kalıp kilidi (`tests/kalip-sayilari.test.ts`, anayasa 2.11) yakaladı. Yerelde test 1
+  başarısız verdiği hâlde commit + push zincirim durmadı (komutlar `;` ile bağlıydı) — hata benim. Kural tersine çevrildi: iki satır
+  düzeni genel kural, daraltılmış menüde geniş bant içinde geri alınır; görünüm aynı. Bundan sonra commit ancak `npm test` fail 0 ile
+  (`&&` zinciri). npm test 41/41 · olumsuz kanıt 19/19 · 18 maket durum 1936/1936 · telefon 968/968 · m10 etkileşim 10/10.
 - 2026-09-28 (117): **T6 · Yan menü takip balonları** (§9 otuz dördüncü tur; §3.8 kural 9; reisim: *"Sol taraftaki nav bar … cihazlarda süresi
   geçen cihaz sayısı kırmızı balon, yaklaşan sarı balon, sorunsuz cihazlar yeşil balon"*). Takip hesapları ortak veride tek yerde
   (`MV.takip`, `MV.uyarilar`, `MV.araDurum`, `MV.isgEksik`): Uyarılar listesi ve Sözleşmeler şeridi de aynı hesabı okur (önceden sayfa
