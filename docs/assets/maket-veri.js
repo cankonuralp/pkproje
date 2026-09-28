@@ -889,6 +889,9 @@
   /* tekrar: geçti · 60 gün içinde · geçerli (eşik 60 gün — personel kartındaki "tekrarı 60 gün içinde"le aynı; soru) */
   MV.egitimDurum = function (x) { var k = Math.round((new Date(x.tekrar + "T12:00:00") - new Date("2026-09-23T12:00:00")) / 864e5); return k < 0 ? "gecti" : k <= 60 ? "yakin" : "gecerli"; };
   MV.egitimleri = function (kid) { return MV.EGITIMLER.filter(function (x) { return x.kisi === kid; }); };
+  /* durum adları ve sertifika dosya adı TEK yerde (2026-09-28, T10: Eğitimler ve personel kartı aynısını gösterir) */
+  MV.EGITIM_DURUM = { gecti: { ad: "Tekrarı geçti", rozet: "a-rozet-red" }, yakin: { ad: "60 gün içinde", rozet: "a-rozet-bekliyor" }, gecerli: { ad: "Geçerli", rozet: "a-rozet-tamam" } };
+  MV.egitimBelgeAdi = function (x) { return typeof x.belge === "string" ? x.belge : "egitim-" + x.kisi + "-" + x.k + "-" + x.tarih.slice(0, 4) + ".pdf"; };   /* yüklenen dosyanın adı, örnek kayıtta üretilen ad */
 
   /* ── RAPORLAR (modül 14–16; M9, 2026-09-24) — firma geneli rapor kaydı. Planlar maketindeki plan raporları AYNI numarayla
      (sıra 760'tan: plan 9 → 8 → 1; Planlar'daki dağılım ve sonuç kuralı), geçen yılın imzalı raporları ekipman kaydından.

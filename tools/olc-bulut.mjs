@@ -74,6 +74,7 @@ export const DURUMLAR = {
     { ad: "personel · rol yetkileri", hash: "#/roller" },
     { ad: "personel · rol yetkileri düzenleniyor (1 değişiklik)", hash: "#/roller", adim: [["tikla", '[data-eylem="rol-duzenle"]'], ["tikla", "#m-13-1"], ["tikla", '[data-secim="m-13-1"][data-deger="gor"]']] },
     { ad: "personel · kart (inspector, eksiksiz)", hash: "#/p/mk" },
+    { ad: "personel · kart, Eğitimler bölümü (tekrarı geçen üstte)", hash: "#/p/ke", adim: [["tikla", '[data-eylem="egitime-git"]']] },
     { ad: "personel · kart (iki rol, EKİPNET boş)", hash: "#/p/ec" },
     { ad: "personel · kart (ilk giriş bekleniyor)", hash: "#/p/ok" },
     { ad: "personel · kart (giriş hesabı yok)", hash: "#/p/by" },
@@ -419,6 +420,12 @@ export const DENEMELER = {
     { ad: "menüden hazır maket → bağlantı (Personel)", hash: "#/", bekle: 'document.querySelector(\'#a-menu a[href="personel.html"]\') !== null' },
   ],
   m1: [
+    /* T10 (2026-09-28; reisim: "her personelin kartında eğitimler de gözükmeli") */
+    { ad: "personel kartında Eğitimler: güncel kayıtlar, tekrarı geçen üstte, sayı yüzle aynı", hash: "#/p/ke", bekle: '(() => { const s = document.querySelector("section[aria-labelledby=a-b-egitim]"); if (!s) return false; const tr = s.querySelectorAll("tbody tr"); const g = MV.egitimleri("ke").filter(x => !x.onceki); return tr.length === g.length && /Tekrarı geçti/.test(tr[0].textContent) && +s.querySelector(".a-sayac b").textContent === g.length; })()' },
+    { ad: "karttaki eğitim Eğitimler'de o kaydı açar", hash: "#/p/mk", adim: [["tikla", 'section[aria-labelledby=a-b-egitim] tbody a.a-ad-bag']], bekle: '/egitimler\\.html$/.test(location.pathname) && /^#\\/k\\/g/.test(location.hash) && document.querySelector("#a-pencere").open' },
+    { ad: "karttaki sertifika açılır", hash: "#/p/mk", adim: [["tikla", 'section[aria-labelledby=a-b-egitim] [data-eylem="pdf-goster"]']], bekle: 'document.querySelector("#a-pdf").open && /egitim-mk-/.test(document.querySelector("#a-pdf-baslik").textContent)' },
+    { ad: "Eğitim yüzü karttaki Eğitimler bölümüne götürür", hash: "#/p/mk", adim: [["tikla", '[data-eylem="egitime-git"]']], bekle: 'document.activeElement.id === "a-b-egitim"' },
+    { ad: "karttan Eğitim ekle → Eğitimler'de kişi seçili kayıt penceresi", hash: "#/p/mk", adim: [["tikla", 'section[aria-labelledby=a-b-egitim] a[href*="#/yeni?kisi=mk"]']], bekle: '/egitimler\\.html$/.test(location.pathname) && document.querySelector("#a-pencere").open && /Mert Kaya/.test(document.querySelector("#a-pencere-govde").textContent)' },
     /* 2026-09-28 (reisim: "1 önerini kabul ediyorum" — izin onayı firma yöneticisinde, Personel'de) */
     { ad: "İzin talepleri sekmesi: bekleyen talep üstte, onay uyarısı", hash: "#/izinler", bekle: '/1 izin talebi onayınızı bekliyor/.test(document.querySelector("#a-izin-uyari").textContent) && /Onay bekliyor/.test(document.querySelector("#a-izin-liste tbody tr").textContent) && /Mert Kaya/.test(document.querySelector("#a-izin-liste tbody tr").textContent)' },
     { ad: "izin onaylanır → Onaylandı, uyarı kalkar", hash: "#/izinler", adim: [["tikla", '[data-eylem="izin-onayla"]']], bekle: 'MV.IZINLER.every(x => x.durum !== "bekliyor") && !document.querySelector("#a-izin-uyari .a-serit") && /onaylandı/.test(document.querySelector("#a-bildirim-metin").textContent)' },
@@ -926,7 +933,7 @@ export const DENEMELER = {
     { ad: "liste: 34 kayıt, en yeni kayıt üstte, şerit", hash: "#/", bekle: 'document.querySelector("#a-sayac").textContent === "34 kayıt" && /Ozan Kurt/.test(document.querySelector("#a-liste tbody tr").textContent) && /tekrarı geçti/.test(document.querySelector("#a-uyari").textContent)' },
     { ad: "Tekrarı geçti çipi (1 / 34)", hash: "#/", adim: [["tikla", '[data-sz="g"] [data-cip="gecti"]']], bekle: 'document.querySelector("#a-sayac").textContent === "1 / 34 kayıt"' },
     { ad: "sayfalayıcı 2. sayfa (21–34 / 34)", hash: "#/", adim: [["tikla", '[data-sz="g"] [data-sayfa="2"]']], bekle: 'document.querySelector(\'.a-sayfalar[data-sz="g"] .a-sayfa-bilgi\').textContent === "21–34 / 34"' },
-    { ad: "personel kartındaki eğitim yüzü → kişinin kayıtları (4 / 34)", sayfa: "maket/personel.html", hash: "#/p/mk", adim: [["tikla", 'a.a-yuz[href^="egitimler.html"]']], bekle: '/egitimler\\.html$/.test(location.pathname) && document.querySelector("#a-sayac").textContent === "4 / 34 kayıt"' },
+    { ad: "personel kartında Eğitim geçmişi → kişinin kayıtları (4 / 34)", sayfa: "maket/personel.html", hash: "#/p/mk", adim: [["tikla", 'section[aria-labelledby=a-b-egitim] a[href^="egitimler.html#/?kisi="]']], bekle: '/egitimler\\.html$/.test(location.pathname) && document.querySelector("#a-sayac").textContent === "4 / 34 kayıt"' },
     { ad: "Uyarılar'daki eğitim satırı → kişinin kayıtları", sayfa: "maket/uyarilar.html", hash: "#/", adim: [["tikla", '#a-liste a[href="egitimler.html#/?kisi=ke"]']], bekle: '/egitimler\\.html$/.test(location.pathname) && document.querySelector("#a-sayac").textContent === "1 / 34 kayıt"' },
     { ad: "tekrarı kaydet: geçen kayıt önceki olur, geçti çipi 0", hash: "#/k/g31", adim: [["tikla", '[data-eylem="tekrar"]'], ["tikla", '[data-eylem="kaydet"]']], bekle: '!document.querySelector("#a-pencere").open && document.querySelector(\'[data-cip="gecti"] .a-cip-sayi\').textContent === "0" && document.querySelector("#a-sayac").textContent === "34 kayıt"' },
     { ad: "kayıt ekle: boş kaydedilmez, odak kişide", hash: "#/yeni", adim: [["tikla", '[data-eylem="kaydet"]']], bekle: '/seçilmeli/.test(document.querySelector("#w-kisi-ipucu").textContent) && document.activeElement.id === "w-kisi"' },

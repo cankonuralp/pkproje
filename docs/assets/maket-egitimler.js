@@ -8,10 +8,10 @@
   "use strict";
   var $ = MK.$, kacis = MK.kacis, ikon = MK.ikon, kirp = MK.kirp, rozet = MK.rozet, bilgi = MK.bilgi, SZ = MK.SZ;
   var E = MV.EGITIMLER, TUR = MV.EGITIM_TURLERI;
-  var DURUM = { gecti: { ad: "Tekrarı geçti", rozet: "a-rozet-red" }, yakin: { ad: "60 gün içinde", rozet: "a-rozet-bekliyor" }, gecerli: { ad: "Geçerli", rozet: "a-rozet-tamam" } };
+  var DURUM = MV.EGITIM_DURUM;
   var ONCEKI = { ad: "Önceki kayıt", rozet: "a-rozet-notr" };
   var kalan = function (x) { return MK.gunFarki(MK.BUGUN, x.tekrar); };
-  var belgeAdi = function (x) { return typeof x.belge === "string" ? x.belge : "egitim-" + x.kisi + "-" + x.k + "-" + x.tarih.slice(0, 4) + ".pdf"; };   /* yüklenen dosyanın adı, örnek kayıtta üretilen ad */
+  var belgeAdi = MV.egitimBelgeAdi;
   var KISILER = MV.PERSONEL.filter(function (p) { return p.durum === "etkin"; });
 
   /* ── KAYITLAR ─────────────────────────────────────────────────────────────────────────────────────── */

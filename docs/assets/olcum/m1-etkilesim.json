@@ -2,9 +2,44 @@
  "maket": "m1",
  "tarih": "2026-09-28",
  "arac": "tools/olc-bulut.mjs --etkilesim (başsız tarayıcı, 1920 açık tema; gen verilen denemede o genişlik)",
- "toplam": 54,
- "gecen": 54,
+ "toplam": 59,
+ "gecen": 59,
  "denemeler": [
+  {
+   "ad": "personel kartında Eğitimler: güncel kayıtlar, tekrarı geçen üstte, sayı yüzle aynı",
+   "gen": 1920,
+   "sayfa": "maket/personel.html",
+   "hash": "#/p/ke",
+   "gecti": true
+  },
+  {
+   "ad": "karttaki eğitim Eğitimler'de o kaydı açar",
+   "gen": 1920,
+   "sayfa": "maket/personel.html",
+   "hash": "#/p/mk",
+   "gecti": true
+  },
+  {
+   "ad": "karttaki sertifika açılır",
+   "gen": 1920,
+   "sayfa": "maket/personel.html",
+   "hash": "#/p/mk",
+   "gecti": true
+  },
+  {
+   "ad": "Eğitim yüzü karttaki Eğitimler bölümüne götürür",
+   "gen": 1920,
+   "sayfa": "maket/personel.html",
+   "hash": "#/p/mk",
+   "gecti": true
+  },
+  {
+   "ad": "karttan Eğitim ekle → Eğitimler'de kişi seçili kayıt penceresi",
+   "gen": 1920,
+   "sayfa": "maket/personel.html",
+   "hash": "#/p/mk",
+   "gecti": true
+  },
   {
    "ad": "İzin talepleri sekmesi: bekleyen talep üstte, onay uyarısı",
    "gen": 1920,

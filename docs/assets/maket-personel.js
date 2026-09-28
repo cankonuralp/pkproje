@@ -140,7 +140,7 @@
       yuz({ ikon: "package", ad: "Zimmetinde", sayi: z.length, eylem: "zimmete-git" }) +
       /* eğitim sayıları eğitim kayıtlarından (M10/M16); tekrarı geçen ayrıca söylenir */
       (function () { var eg = MV.egitimleri(p.id), gecti = eg.filter(function (x) { return MV.egitimDurum(x) === "gecti"; }).length, yakin = eg.filter(function (x) { return MV.egitimDurum(x) === "yakin"; }).length;
-        return yuz({ ikon: "graduation-cap", ad: "Eğitim", sayi: eg.length, modul: "Eğitimler", href: sayfa(10) && sayfa(10) + "#/?kisi=" + p.id,
+        return yuz({ ikon: "graduation-cap", ad: "Eğitim", sayi: eg.length, eylem: "egitime-git",
           not: gecti ? gecti + " tekrarı geçti" : yakin ? yakin + " tekrarı 60 gün içinde" : "tekrarı yakın yok", uyari: gecti + yakin > 0 }); })() +
       (inspector(p) ? yuz({ ikon: "calendar-check", ad: "Açık plan", sayi: s.plan, href: "planlarim.html" }) : "") +
       "</div>";
@@ -216,6 +216,29 @@
     if (f && guncel) return MK.serit("onay", "file-check", "İmzalı zimmet formu yüklü: <b>" + f.no + "</b> · " + MK.tarihYaz(f.tarih) + " · " + f.kapsam.length + " varlık.") + ac;
     if (f) return MK.serit("uyari", "triangle-alert", "İmzalı form (" + f.no + ", " + MK.tarihYaz(f.tarih) + ") eskidi: zimmet o tarihten sonra değişti. Yeni formu yazdırıp imzalatın ve taramasını yükleyin.") + ac;
     return MK.serit("uyari", "triangle-alert", "İmzalı zimmet formu yok. Formu yazdırıp imzalatın ve taramasını yükleyin.");
+  }
+  /* EĞİTİMLER (2026-09-28, T10; reisim: "her personelin kartında eğitimler de gözükmeli"): kişinin güncel eğitim kayıtları — tekrarı
+     geçen ve yaklaşan üstte; kayıt Eğitimler'de açılır, sertifika buradan açılır. Kayıt ekleme ve geçmiş Eğitimler'de (Dökümanlar içinde). */
+  var EGITIM_SUTUN = [
+    { k: "egitim", baslik: "Eğitim", kart: "ust", sira: 1, hucre: function (x) { return '<span><a class="a-ad-bag" href="' + MK.adres(10, "#/k/" + x.id) + '">' + kacis(MV.egitimTuru(x.k).ad) + "</a>" + kirp(x.kurum, "a-alt-satir") + "</span>"; } },
+    { k: "tarih", baslik: "Alındı", kart: "govde", sira: 2, hucre: function (x) { return '<span class="a-kart-etiket">Alındı</span>' + MK.tarihYaz(x.tarih); } },
+    { k: "tekrar", baslik: "Tekrar", kart: "govde", sira: 3, hucre: function (x) {
+      var k = MK.gunFarki(MK.BUGUN, x.tekrar), d = MV.egitimDurum(x);
+      return '<span class="a-kart-etiket">Tekrar</span><span><span class="a-tarih-gun">' + MK.tarihYaz(x.tekrar) + '</span><span class="' + (d === "gecerli" ? "a-tarih-saat" : "a-uyari-metin") + '">' + (k < 0 ? -k + " gün geçti" : k + " gün kaldı") + "</span></span>";
+    } },
+    { k: "belge", baslik: "Sertifika", kart: "govde", sira: 4, hucre: function (x) { return '<span class="a-kart-etiket">Sertifika</span>' + (x.belge ? MK.pdfTus(MV.egitimBelgeAdi(x), "Aç") : '<span class="a-uyari-metin">Yok</span>'); } },
+    { k: "durum", baslik: "Durum", kart: "rozet", sira: 1, hucre: function (x) { return rozet(MV.EGITIM_DURUM[MV.egitimDurum(x)]); } }
+  ];
+  var EGITIM_SIRA = { gecti: 0, yakin: 1, gecerli: 2 };
+  function egitimHtml(p) {
+    var l = MV.egitimleri(p.id).filter(function (x) { return !x.onceki; }).sort(function (a, b) { return EGITIM_SIRA[MV.egitimDurum(a)] - EGITIM_SIRA[MV.egitimDurum(b)] || (a.tekrar < b.tekrar ? -1 : 1); });
+    var ek = sayfa(10);
+    return '<section class="a-bolum" aria-labelledby="a-b-egitim"><div class="a-alt-bas"><h2 class="a-alt-baslik" id="a-b-egitim" tabindex="-1">Eğitimler</h2>' +
+        '<span class="a-sayac"><b>' + l.length + "</b> eğitim</span>" +
+        (ek ? '<div class="a-eylem-cubugu a-bolum-tus"><a class="a-tus a-tus-ikincil" href="' + ek + "#/?kisi=" + p.id + '">' + ikon("history", "a-ikon-kucuk") + "Eğitim geçmişi</a>" +
+          '<a class="a-tus a-tus-ikincil" href="' + ek + "#/yeni?kisi=" + p.id + '">' + ikon("plus", "a-ikon-kucuk") + "Eğitim ekle</a></div>" : "") + "</div>" +
+      (l.length ? '<div class="a-liste-kap">' + MK.tablo({ baslik: "Eğitimler", sinif: "a-tablo-kegitim", sutunlar: EGITIM_SUTUN, kayitlar: l }) + "</div>"
+        : '<p class="a-bos-satir">Eğitim kaydı yok.</p>') + "</section>";
   }
   function zimmetHtml(p) {
     var z = zimmetleri(p);
@@ -397,7 +420,7 @@
         bilgi("E-posta", p.eposta ? kacis(p.eposta) : yok, true) +
         bilgi("İşe başlama", MK.tarihYaz(p.basla)) + (p.durum === "ayrildi" ? bilgi("Ayrılış", MK.tarihYaz(p.ayrildi)) : "") +
       "</dl></section>" +
-      maasHtml(p) + hesapHtml(p) + zimmetHtml(p) + ozlukHtml(p);
+      maasHtml(p) + hesapHtml(p) + zimmetHtml(p) + egitimHtml(p) + ozlukHtml(p);
   }
 
   /* ── GİRİŞ HESABI PENCERESİ: hesap aç (e-posta + roller) · yeni geçici parola · parola bir kez gösterilir (34) ─────────── */
@@ -621,6 +644,7 @@
     } });
   };
   X["zimmete-git"] = function () { bolumeGit("a-b-zimmet"); };
+  X["egitime-git"] = function () { bolumeGit("a-b-egitim"); };
   /* 2026-09-27: zimmet teslim formu yazdırma penceresinden PDF olur (imzaya götürülür) */
   X["zform-pdf"] = function () { var n = $("a-nesne"); MK.yazdir(formNo(aktif()) + " · zimmet teslim formu", [].map.call(n.children, function (e) { return e.matches(".a-kirinti") ? "" : e.outerHTML; }).join("")); };
   X["hesap-ac"] = function () { location.hash = "#/p/" + aktif().id + "/hesap"; };

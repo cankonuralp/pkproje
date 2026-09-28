@@ -1772,6 +1772,14 @@ revizyon, alan kopyalama, hafif kusur devri, meslek eşleşme denetimi).
 - Emsal ürünler: https://opwire.app/iso-17020-periyodik-kontrol-yazilimi/ · https://17020muayene.vidco.com.tr/ · https://akuple.com/asansor-kontrol-yazilimi/ · https://ensyazilim.com/
 
 ## 11 · Değişiklik günlüğü
+- 2026-09-28 (124): **T10 · Personel kartında eğitimler** (§9 otuz dördüncü tur; reisim: *"eğitimler kısmı gitmiş … geri gelsin … her
+  personelin kartında eğitimler de gözükmeli"*; Eğitimler modülü Dökümanlar içinde kalır — reisim: *"tamam benim hatam bu şekilde kalsın"*).
+  Kartta **Eğitimler** bölümü (Zimmetindekiler'den sonra): kişinin güncel eğitim kayıtları — eğitim ve kurum, alındığı tarih, tekrar tarihi
+  ve kalan / geçen gün, sertifika (Aç), durum; tekrarı geçen ve 60 gün içinde olan üstte. Eğitim adı Eğitimler'de o kaydı açar;
+  **Eğitim geçmişi** (kişinin bütün kayıtları, önceki kayıtlar dahil) ve **Eğitim ekle** (kişi seçili) Eğitimler'e gider. Kartın Eğitim yüzü
+  bu bölüme götürür (Zimmetinde yüzü gibi). Durum adları ve sertifika dosya adı ortak veride tek yerde (`MV.EGITIM_DURUM`,
+  `MV.egitimBelgeAdi`) — Eğitimler ve kart aynısını gösterir. 5 yeni deneme, 1 güncellendi (yüz yerine Eğitim geçmişi); 1 yeni durum.
+  18 maket temiz: durum 2000/2000 · etkileşim 489/489 · telefon 1000/1000 · olumsuz kanıt 3/3; kart 1920 ve 375'te gözle.
 - 2026-09-28 (123): **T9 · Performans: dikey sütun grafikleri, kişinin rapor süreci** (§9 otuz dördüncü tur; reisim: *"Performans
   değerlendirme ekranındaki grafikler … sütun grafikleri yatay olmasın ve boşluklu olmasın ve kişiye tıklanınca raporlama sürecine dair
   grafikleri gözükmüyor"*). Grafik üreticisi tek (`maket-performans.js` `grafik`): **dikey sütun**; sütunlar yuvasını doldurur (en çok 96 px),
