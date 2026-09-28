@@ -300,16 +300,17 @@
   function listeEylem(p) {
     return '<div class="a-eylem"><div class="a-eylem-tuslar"><a class="a-tus a-tus-ikincil" href="#/plan/' + p.id + '">' + ikon("eye", "a-ikon-kucuk") + "Görüntüle</a></div></div>";
   }
+  /* kartta (telefon) şirket adı en üstte, işletmesi (proje adı) altında (reisim 2026-09-28: "şirket adı en üstte olsun") */
   var PLAN_SUTUN = [
     { k: "no", baslik: "Proje no", kart: "ust", sira: 1, hucre: function (p) { return '<a class="a-no" href="#/plan/' + p.id + '">' + p.no + "</a>"; } },
-    { k: "ad", baslik: "Proje adı", kart: "govde", sira: 2, hucre: function (p) { return kirp(p.ad, "a-proje-ad"); } },
-    { k: "musteri", baslik: "Müşteri", kart: "govde", sira: 4, hucre: function (p) { return '<span class="a-hucre-satir">' + ikon("building-2", "a-ikon-kucuk a-kart-ikon") + kirp(p.musteri) + "</span>"; } },
+    { k: "ad", baslik: "Proje adı", kart: "govde", sira: 3, hucre: function (p) { return kirp(p.ad, "a-proje-ad"); } },
+    { k: "musteri", baslik: "Müşteri", kart: "govde", sira: 2, hucre: function (p) { return '<span class="a-hucre-satir">' + ikon("building-2", "a-ikon-kucuk a-kart-ikon") + kirp(p.musteri) + "</span>"; } },
     { k: "adres", baslik: "Adres", kart: "govde", sira: 5, hucre: function (p) {
       return '<span class="a-hucre-satir">' + ikon("map-pin", "a-ikon-kucuk a-kart-ikon") + '<span class="a-adres">' +
         kirp(p.adres, "a-adres-sokak", p.adres + ", " + p.ilce + " / " + p.il) + '<span class="a-adres-il">' + p.ilce + " / " + p.il + "</span></span></span>";
     } },
     { k: "ekip", baslik: "Inspector", kart: "govde", sira: 6, hucre: ekipHtml },
-    { k: "baslangic", baslik: "Başlangıç", kart: "govde", sira: 3, hucre: function (p) {
+    { k: "baslangic", baslik: "Başlangıç", kart: "govde", sira: 4, hucre: function (p) {
       return '<span class="a-tarih-gun">' + tno(p.tarih) + "</span>" + (p.bitTarih !== p.tarih ? '<span class="a-tarih-saat">– ' + tno(p.bitTarih) + "</span>" : "");
     } },
     { k: "durum", baslik: "Durum", kart: "rozet", sira: 1, hucre: function (p) { return rozet(DURUM[p.durum]); } },
@@ -485,16 +486,8 @@
     /* Proje notları (5. tur, reisim: "hareketler kısmını kaldır"): hareket kaydı tutulmaya devam eder (p.gecmis, denetim
        izi) ama plan içinde gösterilmez; burada yalnız notlar. Kim yazar/görür: plandaki inspector'lar + planlama ekibi;
        müşteri görmez; not silinmez (karar 27). */
-    /* MASRAFLARIM (reisim 2026-09-27: "inspector masraf formu ekleyebilsin masraf formu olur doldurulur gönderilir muhasebe tarafında
-       onaylanır ödenince ödendi olur"): plandaki inspector kendi masrafını plan içinden gönderir; iş ve kişi kendiliğinden; onay ve ödeme
-       Muhasebe'de. Kabul edilmemiş ya da reddedilmiş planda yok. */
-    var masraflar = MV.GIDERLER.filter(function (g) { return g.is === p.no && g.kisi === BEN; }).sort(function (a, b) { return a.no < b.no ? 1 : -1; });
-    var masrafBolum = d === "bekliyor" || d === "red" ? "" :
-      '<section class="a-bolum" aria-labelledby="a-masraf-baslik"><div class="a-alt-bas"><h2 class="a-alt-baslik" id="a-masraf-baslik">Masraflarım</h2>' +
-        '<span class="a-sayac"><b>' + masraflar.length + "</b> masraf</span>" +
-        MK.tus({ eylem: "masraf-ac", ad: "Masraf formu", ikon: "receipt", sinif: "a-tus-ikincil a-bolum-tus", veri: { id: p.id } }) + "</div>" +
-        (masraflar.length ? '<div class="a-liste-kap">' + MK.tablo({ baslik: "Masraflarım", sinif: "a-tablo-masraf", sutunlar: MASRAF_SUTUN, kayitlar: masraflar }) + "</div>"
-          : '<p class="a-bos-satir">Bu planda masraf gönderilmedi.</p>') + "</section>";
+    /* masraf ve izin plan içinde değil, kullanıcının kendi alanından: üst çubukta ad → Taleplerim (reisim 2026-09-28: "masraf yazmak için
+       ilgili tuş planın içinde olmasın … her kullanıcı profilinden yapacak") */
     var notlar = p.gecmis.filter(function (g) { return g.ne === "Not"; }).sort(function (a, b) { return a.z < b.z ? 1 : a.z > b.z ? -1 : b.s - a.s; });
     var gorunen = NOTLAR_ACIK ? notlar : notlar.slice(0, 6);
     $("a-plan").innerHTML =
@@ -502,7 +495,7 @@
         ikon("chevron-right", "a-ikon-kucuk") + '<span aria-current="page">' + p.no + "</span></nav>" +
       '<div class="a-nesne-bas"><div class="a-nesne-kimlik"><div class="a-nesne-baslik"><h1 tabindex="-1">' + kacis(p.ad) + "</h1>" + rozet(DURUM[d]) + "</div>" +
         '<p class="a-nesne-alt">' + ikon("building-2", "a-ikon-kucuk") + "<span>" + kacis(p.musteri) + "</span></p></div></div>" +
-      '<ol class="a-akis" aria-label="Plan akışı">' + a1 + a2 + a3 + a4 + "</ol>" + masrafBolum +
+      '<ol class="a-akis" aria-label="Plan akışı">' + a1 + a2 + a3 + a4 + "</ol>" +
       '<section class="a-bolum a-notlar" aria-labelledby="a-not-baslik"><div class="a-alt-bas"><h2 class="a-alt-baslik" id="a-not-baslik">Proje notları</h2>' +
         '<span class="a-sayac"><b>' + notlar.length + "</b> not</span></div>" +
         '<div class="a-not-form"><label class="a-gizli" for="a-not-girdi">Proje notu</label><textarea class="a-alan a-alan-ince" id="a-not-girdi" maxlength="500" placeholder="Proje notu ekleyin" aria-describedby="a-not-ipucu"></textarea>' +
@@ -667,73 +660,6 @@
     $("a-pencere-alt").innerHTML = MK.tus({ eylem: "pencere-kapat", ad: "Kapat", sinif: "a-tus-ikincil" }) + MK.tus({ eylem: "saha-indir", ad: "PDF indir", ikon: "file-text" });
     $("a-pencere").showModal(); $("a-pencere-govde").scrollTop = 0; $("a-pencere-alt").querySelector(".a-tus-birincil").focus({ preventScroll: true });
   };
-  /* ── MASRAF FORMU (2026-09-27) — tarih, tür, tutar (KDV dahil) + oran, açıklama, fiş; Gönder → Muhasebe'de "Onay bekliyor" ─────── */
-  var para = MV.para, M = null;
-  var MASRAF_SUTUN = [
-    { k: "no", baslik: "Masraf no", kart: "ust", sira: 1, hucre: function (g) { return '<span class="a-kod">' + g.no + '</span><span class="a-alt-satir">' + tno(g.tarih) + "</span>"; } },
-    { k: "tur", baslik: "Tür / açıklama", kart: "govde", sira: 2, hucre: function (g) {
-      return "<span>" + kacis(MV.giderTur(g.tur).ad) + (g.red ? '<span class="a-alt-satir a-uyari-metin">Red: ' + kacis(g.red) + "</span>" : g.aciklama ? '<span class="a-alt-satir">' + kacis(g.aciklama) + "</span>" : "") + "</span>"; } },
-    { k: "tutar", baslik: "Tutar (KDV dahil)", kart: "govde", sira: 3, hucre: function (g) { return '<span class="a-kart-etiket">Tutar (KDV dahil)</span><span class="a-sayi">' + para(g.tutar) + "</span>"; } },
-    { k: "durum", baslik: "Durum", kart: "rozet", sira: 1, hucre: function (g) { return rozet(MV.GIDER_DURUM[g.durum]) + (g.durum === "odendi" && g.odeme ? '<span class="a-alt-satir">' + tno(g.odeme) + "</span>" : ""); } },
-    { k: "belge", baslik: "Fiş", kart: "eylem", sira: 9, hucre: function (g) {
-      return '<div class="a-eylem"><div class="a-eylem-tuslar">' + (g.belge ? MK.pdfTus(g.belge) : '<span class="a-uyari-metin">Fiş yok</span>') + "</div></div>"; } }
-  ];
-  var sayiOku = function (v) { var t = String(v).trim(); return /^\d{1,3}(\.\d{3})*(,\d{1,2})?$|^\d+(,\d{1,2})?$/.test(t) ? parseFloat(t.replace(/\./g, "").replace(",", ".")) : NaN; };
-  var masrafKdv = function () { var n = sayiOku(M.tutar); if (!(n > 0)) return ""; var k = MV.giderKdv({ tutar: n, oran: +M.oran }); return "KDV " + para(k.kdv) + " · KDV hariç " + para(k.haric); };
-  function masrafCiz(odak) {
-    var h = M.hata, p = M.p;
-    $("a-pencere").dataset.kip = "masraf"; $("a-pencere-baslik").textContent = "Masraf formu · " + p.no;
-    $("a-pencere-govde").innerHTML = '<p class="a-pencere-ozet"><b>' + kacis(p.ad) + "</b> · " + KISI[BEN].ad + "</p>" + '<div class="a-form">' +
-      MK.alan({ id: "m-tarih", etiket: "Tarih", zorunlu: true, hata: h.tarih, girdi: MK.zaman({ id: "m-tarih", ad: "Masraf tarihi", deger: M.tarih }) }) +
-      MK.alan({ id: "m-tur", etiket: "Tür", zorunlu: true, hata: h.tur, girdi: MK.secim({ id: "m-tur", ad: "Tür", deger: M.tur, gecersiz: !!h.tur, ipucu: "Tür seçin", secenekler: MV.GIDER_TUR.map(function (t) { return [t[0], t[1]]; }) }) }) +
-      MK.alan({ id: "m-tutar", etiket: "Tutar (KDV dahil)", zorunlu: true, hata: h.tutar, girdi: MK.girdi({ id: "m-tutar", alan: "tutar", deger: M.tutar, sinif: "a-girdi-sicil", ek: ' inputmode="decimal"', hata: h.tutar }) }) +
-      MK.alan({ id: "m-oran", etiket: "KDV oranı", sonuc: masrafKdv(), girdi: MK.secim({ id: "m-oran", ad: "KDV oranı", deger: String(M.oran), secenekler: MV.KDV_ORAN.map(function (o) { return [String(o), "%" + o]; }) }) }) +
-      MK.alan({ id: "m-aciklama", etiket: "Açıklama", genis: true, girdi: MK.girdi({ id: "m-aciklama", alan: "aciklama", deger: M.aciklama, ek: ' maxlength="120"' }) }) +
-      '<div class="a-alan-grup a-alan-genis"><p class="a-etiket">Fiş</p><div class="a-dosya">' + MK.tus({ eylem: "masraf-fis", ad: M.belge ? "Değiştir" : "Fiş ekle", ikon: "camera", sinif: "a-tus-ikincil" }) +
-        '<span class="a-dosya-ad' + (M.belge ? "" : " a-deger-yok") + '">' + kacis(M.belge || "Fotoğraf ya da PDF") + "</span>" + (M.belge ? MK.pdfTus(M.belge) : "") + "</div></div></div>";
-    if (M.tarihYazi) { $("m-tarih").value = M.tarihYazi; $("m-tarih").setAttribute("aria-invalid", "true"); }
-    $("a-pencere-alt").innerHTML = MK.tus({ eylem: "pencere-kapat", ad: "Vazgeç", sinif: "a-tus-ikincil" }) + MK.tus({ eylem: "masraf-gonder", ad: "Gönder", ikon: "send" });
-    if (odak) $(odak).focus();
-  }
-  function masrafKdvGuncelle() {
-    var p = $("m-oran-ipucu"), m = masrafKdv();
-    if (!m) { if (p) p.remove(); return; }
-    if (!p) { p = document.createElement("p"); p.className = "a-ipucu"; p.id = "m-oran-ipucu"; $("m-oran").closest(".a-alan-grup").appendChild(p); }
-    p.textContent = m;
-  }
-  var masrafAcik = function () { return M && $("a-pencere").open && $("a-pencere").dataset.kip === "masraf"; };
-  X["masraf-ac"] = function (el) {
-    var p = pl(el); if (!p) return;
-    M = { p: p, tarih: BUGUN, tarihYazi: "", tur: "", tutar: "", oran: 20, aciklama: "", belge: "", hata: {} };
-    masrafCiz(); $("a-pencere").showModal(); $("m-tur").focus();
-  };
-  /* fiş: telefonda kamera ya da galeri, bilgisayarda dosya (fotoğraf ya da PDF, en çok 10 MB) */
-  X["masraf-fis"] = function () {
-    MK.dosyaSec({ kabul: "image/*,.pdf", enCokMB: 10, ornek: "fis-" + M.tarih.replace(/-/g, "") + "-" + (M.tur || "masraf") + ".jpg" }, function (ad) {
-      if (!masrafAcik()) return; M.belge = ad; masrafCiz(); document.querySelector('#a-pencere [data-eylem="masraf-fis"]').focus();
-    });
-  };
-  X["masraf-gonder"] = function () {
-    var h = {}, yazi = $("m-tarih").value, m = /^(\d{2})\.(\d{2})\.(\d{4})$/.exec(yazi.trim()), fi = m ? m[3] + "-" + m[2] + "-" + m[1] : null, n = sayiOku(M.tutar);
-    if (fi && isNaN(new Date(fi + "T12:00:00"))) fi = null;
-    if (!fi) h.tarih = "GG.AA.YYYY biçiminde geçerli bir tarih.";
-    else if (fi > BUGUN) h.tarih = "İleri tarihli masraf gönderilmez.";
-    if (!M.tur) h.tur = "Tür seçilmeli.";
-    if (!(n > 0)) h.tutar = "Tutar sıfırdan büyük olmalı (ör. 1.250,00).";
-    M.hata = h; M.tarihYazi = fi ? "" : yazi;
-    if (Object.keys(h).length) { masrafCiz("m-" + Object.keys(h)[0]); return; }
-    var p = M.p, g = { no: MV.giderNo(fi), tarih: fi, tur: M.tur, tutar: Math.round(n * 100) / 100, oran: +M.oran, is: p.no, kisi: BEN, aciklama: M.aciklama.trim(), belge: M.belge,
-      kaynak: "form", durum: "bekliyor", gonderildi: simdi(), odeme: null, onaylayan: null, kaydeden: BEN };
-    MV.GIDERLER.push(g); kaydet(p, simdi(), BEN, "Masraf formu gönderildi", g.no + " · " + para(g.tutar));
-    M = null; $("a-pencere").close(); goster(false);
-    MK.bildir(g.no + " muhasebeye gönderildi; onaylanınca ödenir.");
-  };
-  MK.onSecim = function (id, deger) {
-    if (!masrafAcik()) return;
-    if (id === "m-tur") { M.tur = deger; M.oran = MV.giderTur(deger).kdv; delete M.hata.tur; } else if (id === "m-oran") M.oran = +deger;
-    masrafCiz(id);
-  };
-  MK.onZaman = function (id, deger) { if (masrafAcik() && id === "m-tarih") { M.tarih = deger; M.tarihYazi = ""; } };
   /* ── EXCEL (reisim 2026-09-27): ekipman listesi dışa aktarılır (önizleme + indir) ve Excel'den yüklenir (şablon, satır satır denetim,
      yalnız geçerli yeni satırlar plana girer). 2026-09-27: gerçek .xlsx / .csv yazılır ve okunur (MK.xlsx, MK.tabloOku). */
   var EXCEL = null;
@@ -860,7 +786,6 @@
   });
   MK.onGirdi = function (e) {
     var t = e.target;
-    if (masrafAcik() && t.dataset.alan) { M[t.dataset.alan] = t.value; if (t.dataset.alan === "tutar") masrafKdvGuncelle(); return; }
     if (S && $("a-pencere").open && (t.id === "w-ilk" || t.id === "w-sure")) { S[t.dataset.alan] = t.value; return; }
     if (t.id === "a-not-girdi") { $("a-not-ekle").disabled = t.value.trim().length < 3; return; }
     if (t.id === "a-ekle-kod") {

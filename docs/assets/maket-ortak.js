@@ -145,8 +145,14 @@
         '<div class="a-ust-bosluk"></div>' +
         '<button class="a-ikon-tus" type="button" data-eylem="tema" id="a-tema-tus" aria-label="Temayı değiştir">' +
           '<svg class="a-ikon a-tema-ay" aria-hidden="true"><use href="' + IKON + 'moon"/></svg><svg class="a-ikon a-tema-gunes" aria-hidden="true"><use href="' + IKON + 'sun"/></svg></button>' +
-        '<div class="a-kullanici"><span class="a-avatar" aria-hidden="true">' + kacis(o.kullanici.bas) + "</span>" +
-          '<span class="a-kullanici-yazi"><span class="a-kullanici-ad">' + kacis(o.kullanici.ad) + '</span><span class="a-kullanici-rol">' + kacis(o.kullanici.rol) + "</span></span></div>" +
+        /* kullanıcının kendi işlemleri (2026-09-28; reisim: "her kullanıcı profilinden yapacak masraf ve izin formu doldurmak gibi gerekli
+           işlemleri"): ada basınca Taleplerim · İzin talebi · Masraf formu (Talepler modülü, işe bağlı ya da genel masraf) */
+        '<div class="a-secici a-kullanici-secici"><button class="a-kullanici" type="button" data-secici-ac="kullanici" aria-haspopup="menu" aria-expanded="false" aria-label="' + kacis(o.kullanici.ad) + ' · kendi işlemlerim">' +
+          '<span class="a-avatar" aria-hidden="true">' + kacis(o.kullanici.bas) + "</span>" +
+          '<span class="a-kullanici-yazi"><span class="a-kullanici-ad">' + kacis(o.kullanici.ad) + '</span><span class="a-kullanici-rol">' + kacis(o.kullanici.rol) + "</span></span></button>" +
+          '<div class="a-secici-liste" role="menu" aria-label="Kendi işlemlerim" hidden>' +
+            [["#/", "Taleplerim"], ["#/yeni/izin", "İzin talebi"], ["#/yeni/masraf", "Masraf formu"]].map(function (x) { return '<a class="a-secenek" role="menuitem" href="' + MK.adres(21, x[0]) + '">' + x[1] + "</a>"; }).join("") +
+          "</div></div>" +
       "</header></div>";
     document.body.insertBefore(kok, ana);
     kok.querySelector(".a-govde").appendChild(ana);

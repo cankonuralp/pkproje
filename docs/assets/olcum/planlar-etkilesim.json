@@ -2,8 +2,8 @@
  "maket": "planlar",
  "tarih": "2026-09-28",
  "arac": "tools/olc-bulut.mjs --etkilesim (başsız tarayıcı, 1920 açık tema; gen verilen denemede o genişlik)",
- "toplam": 43,
- "gecen": 43,
+ "toplam": 41,
+ "gecen": 41,
  "denemeler": [
   {
    "ad": "Denetimde süzgecinde en üstte son formatlarla açılmış plan (P-0926-040)",
@@ -55,41 +55,6 @@
    "gecti": true
   },
   {
-   "ad": "plan içinde Masraflarım: 2 masraf, durumlarıyla",
-   "gen": 1920,
-   "sayfa": "maket/planlarim.html",
-   "hash": "#/plan/9",
-   "gecti": true
-  },
-  {
-   "ad": "kabul bekleyen planda Masraflarım yok",
-   "gen": 1920,
-   "sayfa": "maket/planlarim.html",
-   "hash": "#/plan/2",
-   "gecti": true
-  },
-  {
-   "ad": "masraf formu: boş gönderilmez, odak Tür'de",
-   "gen": 1920,
-   "sayfa": "maket/planlarim.html",
-   "hash": "#/plan/9",
-   "gecti": true
-  },
-  {
-   "ad": "masraf formu: tutar yazılınca KDV hesaplanır",
-   "gen": 1920,
-   "sayfa": "maket/planlarim.html",
-   "hash": "#/plan/9",
-   "gecti": true
-  },
-  {
-   "ad": "masraf gönderilir → Onay bekliyor, 3 masraf",
-   "gen": 1920,
-   "sayfa": "maket/planlarim.html",
-   "hash": "#/plan/9",
-   "gecti": true
-  },
-  {
    "ad": "liste: Plan aç tuşu plan açma ekranına gider",
    "gen": 1920,
    "sayfa": "maket/planlarim.html",
@@ -129,6 +94,27 @@
    "gen": 1920,
    "sayfa": "maket/planlarim.html",
    "hash": "#/plan/1",
+   "gecti": true
+  },
+  {
+   "ad": "plan içinde masraf yok; üst çubukta ad → Taleplerim · İzin talebi · Masraf formu",
+   "gen": 1920,
+   "sayfa": "maket/planlarim.html",
+   "hash": "#/plan/9",
+   "gecti": true
+  },
+  {
+   "ad": "ad menüsünden Masraf formu → Talepler'de masraf formu açılır",
+   "gen": 1920,
+   "sayfa": "maket/planlarim.html",
+   "hash": "#/",
+   "gecti": true
+  },
+  {
+   "ad": "telefon kartında şirket adı proje adının (işletme) üstünde",
+   "gen": 375,
+   "sayfa": "maket/planlarim.html",
+   "hash": "#/",
    "gecti": true
   },
   {

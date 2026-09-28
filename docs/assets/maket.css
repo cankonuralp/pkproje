@@ -100,7 +100,10 @@ html[data-giris="fare"] .a-girdi:focus, html[data-giris="fare"] .a-alan:focus { 
 /* 4. tur (reisim 2026-09-23): "muayene kuruluşu ismi sol üstte yazmasın" → firma adı üst çubuktan kalktı */
 .a-ust-bosluk { flex: 1 1 auto; }
 /* ⛔ 2026-09-23 (375, taşan-metin denetimi): kutu 29 px'e sıkışıp avatarı 7 px taşırıyordu → küçülmez. */
-.a-kullanici { display: flex; align-items: center; gap: 10px; flex: none; }
+.a-kullanici { display: flex; align-items: center; gap: 10px; flex: none; min-height: var(--tus-y); padding: 2px 4px; border: 0; border-radius: var(--r-orta); background: none; color: inherit; font: inherit; text-align: left; cursor: pointer; }
+.a-kullanici:hover { background: var(--zemin2); }
+.a-kullanici-secici { flex: none; }
+.a-hucre-ust { display: block; font-weight: 600; }   /* hücrede ana satırın üstündeki satır (ör. şirket adı, altında tesis) */
 .a-avatar {
   width: 32px; height: 32px; flex: none; border-radius: var(--r-tam);
   display: inline-flex; align-items: center; justify-content: center;
@@ -967,8 +970,6 @@ a.a-yuz:hover { border-color: var(--kenar-alan); background: var(--zemin); }
 .a-tablo-gider .a-k-tutar { width: 16%; } .a-tablo-gider .a-k-durum { width: 15%; } .a-tablo-gider .a-k-belge { width: 13%; }
 .a-tablo-isgider .a-k-no { width: 15%; } .a-tablo-isgider .a-k-tur { width: 25%; } .a-tablo-isgider .a-k-kisi { width: 16%; }
 .a-tablo-isgider .a-k-tutar { width: 17%; } .a-tablo-isgider .a-k-durum { width: 15%; } .a-tablo-isgider .a-k-belge { width: 12%; }
-.a-tablo-masraf .a-k-no { width: 18%; } .a-tablo-masraf .a-k-tur { width: 30%; } .a-tablo-masraf .a-k-tutar { width: 20%; }
-.a-tablo-masraf .a-k-durum { width: 18%; } .a-tablo-masraf .a-k-belge { width: 14%; }
 .a-tablo-bordro .a-k-ay { width: 24%; } .a-tablo-bordro .a-k-brut { width: 20%; } .a-tablo-bordro .a-k-net { width: 20%; }
 .a-tablo-bordro .a-k-maliyet { width: 22%; } .a-tablo-bordro .a-k-eylem { width: 14%; }
 /* 2026-09-27 kârlılık (iş sayfası, gelir-gider) ve işlerin kârı */
@@ -1213,7 +1214,7 @@ a.a-yuz:hover { border-color: var(--kenar-alan); background: var(--zemin); }
   .a-tablo-fkalem td[data-kart="govde"], .a-tablo-perf td[data-kart="govde"], .a-tablo-gunluk td[data-kart="govde"]:has(.a-kart-etiket),
   .a-tablo-egitim td[data-kart="govde"]:has(.a-kart-etiket), .a-tablo-egitimtur td[data-kart="govde"],
   .a-tablo-gider td[data-kart="govde"]:has(.a-kart-etiket), .a-tablo-isgider td[data-kart="govde"]:has(.a-kart-etiket),
-  .a-tablo-masraf td[data-kart="govde"]:has(.a-kart-etiket), .a-tablo-bordro td[data-kart="govde"],
+  .a-tablo-bordro td[data-kart="govde"],
   .a-tablo-karlilik td[data-kart="govde"]:has(.a-kart-etiket), .a-tablo-iskar td[data-kart="govde"]:has(.a-kart-etiket),
   .a-tablo-kriterbelge td[data-kart="govde"]:has(.a-kart-etiket) { display: flex; align-items: center; justify-content: space-between; gap: 8px; }
   .a-tablo-matris .a-kart-etiket, .a-tablo-yetkinlik .a-kart-etiket, .a-tablo-isgid .a-kart-etiket,
@@ -1221,7 +1222,7 @@ a.a-yuz:hover { border-color: var(--kenar-alan); background: var(--zemin); }
   .a-tablo-issoz .a-kart-etiket, .a-tablo-iskapsam .a-kart-etiket, .a-tablo-is .a-kart-etiket, .a-tablo-fatura .a-kart-etiket,
   .a-tablo-isfatura .a-kart-etiket, .a-tablo-israpor .a-kart-etiket, .a-tablo-tahsilat .a-kart-etiket, .a-tablo-fkalem .a-kart-etiket,
   .a-tablo-perf .a-kart-etiket, .a-tablo-gunluk .a-kart-etiket, .a-tablo-egitim .a-kart-etiket, .a-tablo-egitimtur .a-kart-etiket,
-  .a-tablo-gider .a-kart-etiket, .a-tablo-isgider .a-kart-etiket, .a-tablo-masraf .a-kart-etiket, .a-tablo-bordro .a-kart-etiket,
+  .a-tablo-gider .a-kart-etiket, .a-tablo-isgider .a-kart-etiket, .a-tablo-bordro .a-kart-etiket,
   .a-tablo-karlilik .a-kart-etiket, .a-tablo-iskar .a-kart-etiket, .a-tablo-kriterbelge .a-kart-etiket { display: inline; }
   /* M1 2. tur: zimmet, özlük ve Ana sayfa listeleri kartta etiket: değer; rol yetkileri kartında seçim alanı değerin yerinde */
   .a-tablo-kzimmet td[data-kart="govde"], .a-tablo-ozluk td[data-kart="govde"], .a-tablo-ana td[data-kart="govde"] { display: flex; align-items: baseline; justify-content: space-between; flex-wrap: wrap; gap: 4px 8px; }
@@ -1235,7 +1236,7 @@ a.a-yuz:hover { border-color: var(--kenar-alan); background: var(--zemin); }
   .a-tablo-fkalem td[data-kart="govde"], .a-tablo-perf td[data-kart="govde"], .a-tablo-gunluk td[data-kart="govde"]:has(.a-kart-etiket),
   .a-tablo-egitim td[data-kart="govde"]:has(.a-kart-etiket), .a-tablo-egitimtur td[data-kart="govde"],
   .a-tablo-gider td[data-kart="govde"]:has(.a-kart-etiket), .a-tablo-isgider td[data-kart="govde"]:has(.a-kart-etiket),
-  .a-tablo-masraf td[data-kart="govde"]:has(.a-kart-etiket), .a-tablo-bordro td[data-kart="govde"],
+  .a-tablo-bordro td[data-kart="govde"],
   .a-tablo-karlilik td[data-kart="govde"]:has(.a-kart-etiket), .a-tablo-iskar td[data-kart="govde"]:has(.a-kart-etiket),
   .a-tablo-kriterbelge td[data-kart="govde"]:has(.a-kart-etiket) { text-align: right; }   /* değerin ikinci satırı (ör. "kontrol 25 Eyl") değere hizalı */
 }

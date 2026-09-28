@@ -8,8 +8,8 @@
   390,
   430
  ],
- "toplam": 64,
- "temiz": 64,
+ "toplam": 56,
+ "temiz": 56,
  "durumlar": [
   {
    "ad": "plan 10 · son formatlarla açılmış plan (iç tesisat + topraklama), raporlar sonuçlu",
@@ -334,78 +334,6 @@
    "disari": [],
    "kucukAlan": [],
    "alan": 7
-  },
-  {
-   "ad": "masraf formu penceresi",
-   "gen": 320,
-   "temiz": true,
-   "tasma": 0,
-   "disari": [],
-   "kucukAlan": [],
-   "alan": 6
-  },
-  {
-   "ad": "masraf formu penceresi",
-   "gen": 360,
-   "temiz": true,
-   "tasma": 0,
-   "disari": [],
-   "kucukAlan": [],
-   "alan": 6
-  },
-  {
-   "ad": "masraf formu penceresi",
-   "gen": 390,
-   "temiz": true,
-   "tasma": 0,
-   "disari": [],
-   "kucukAlan": [],
-   "alan": 6
-  },
-  {
-   "ad": "masraf formu penceresi",
-   "gen": 430,
-   "temiz": true,
-   "tasma": 0,
-   "disari": [],
-   "kucukAlan": [],
-   "alan": 6
-  },
-  {
-   "ad": "masraf formu · boş gönderildi",
-   "gen": 320,
-   "temiz": true,
-   "tasma": 0,
-   "disari": [],
-   "kucukAlan": [],
-   "alan": 6
-  },
-  {
-   "ad": "masraf formu · boş gönderildi",
-   "gen": 360,
-   "temiz": true,
-   "tasma": 0,
-   "disari": [],
-   "kucukAlan": [],
-   "alan": 6
-  },
-  {
-   "ad": "masraf formu · boş gönderildi",
-   "gen": 390,
-   "temiz": true,
-   "tasma": 0,
-   "disari": [],
-   "kucukAlan": [],
-   "alan": 6
-  },
-  {
-   "ad": "masraf formu · boş gönderildi",
-   "gen": 430,
-   "temiz": true,
-   "tasma": 0,
-   "disari": [],
-   "kucukAlan": [],
-   "alan": 6
   },
   {
    "ad": "reddet penceresi",

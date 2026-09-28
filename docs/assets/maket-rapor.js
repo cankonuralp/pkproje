@@ -372,7 +372,8 @@
   }
   function kusurHtml(r) {
     var l = kusurListe(r);
-    return (l.length ? '<ol class="a-kusur-liste">' + l.map(function (x) { return "<li><b>" + kacis(x[0]) + "</b> · " + kacis(x[1]) + '<span class="a-alt-satir">' + kacis(x[2]) + "</span></li>"; }).join("") + "</ol>"
+    /* uygun değil işaretlenen her madde ve uygun olmayan ölçüm; kusur derecesi yazısı yok (reisim 2026-09-28: "hafif kusur ağır kusur vs yazmasın") */
+    return (l.length ? '<ol class="a-kusur-liste">' + l.map(function (x) { return "<li><b>" + kacis(x[0]) + '</b><span class="a-alt-satir">' + kacis(x[2]) + "</span></li>"; }).join("") + "</ol>"
         : '<p class="a-bos-satir">Kusur yok.</p>') +
       (r.F.agirKusur ? '<details class="a-format-liste"><summary>Ağır kusur sayılan durumlar</summary><ul>' + r.F.agirKusur.map(function (x) { return "<li>" + kacis(x) + "</li>"; }).join("") + "</ul></details>" : "");
   }
@@ -467,7 +468,7 @@
     S.foto = bolum(F ? F.bolumler.foto || "Ek" : el ? 7 : 6, "r-b7", "Fotoğraflar", '<div class="a-fotolar">' + fotolar(r.foto, r.fotoAd) + (oku ? "" : fotoMenu("foto-ekle")) + "</div>");
     /* sonuç ve kanaat muayene kriterleri gibi seçmeli: Uygun · Uygun değil; seçilmezse gönderilince kriterlere göre konur (reisim 2026-09-27);
        uygun değil madde varken "Uygun" uyarıdır, engel değil. Formatlı türde formatın sonuç cümlesi üstte. */
-    S.sonuc = bolum(F ? F.bolumler.sonuc : el ? 8 : 7, "r-b8", "Sonuç ve kanaat", (F ? '<p class="a-format-metin">' + kacis(F.sonuc) + " …</p>" : "") +
+    S.sonuc = bolum(F ? F.bolumler.sonuc : el ? 8 : 7, "r-b8", "Sonuç ve kanaat", (F ? '<p class="a-format-metin" id="r-sonuc-metin">' + sonucCumle(r) + "</p>" : "") +
       '<div class="a-kriter a-kriter-sonuc"><p class="a-kriter-ad" id="r-sonuc-ad"><span>Sonuç ve kanaat</span></p>' +
       '<div class="a-kriter-cevap">' + (oku ? okuGirdi("r-sonuc", ad2(SONUC, r.sonuc)) : MK.secim({ id: "r-sonuc", ad: "Sonuç ve kanaat", deger: r.sonuc, secenekler: SONUC, ipucu: "Seçin", tanim: "r-sonuc-ad" })) + "</div>" +
       (!oku && uygunDegil(r) && r.sonuc === "kullanilir" ? '<p class="a-ipucu a-ipucu-uyari a-kriter-uyari">Uygun değil madde ya da sınır dışı test değeri varken sonuç “Uygun”.</p>' : "") + "</div>");
@@ -502,6 +503,8 @@
     document.title = e.kod + " · " + r.no + " · probata maket";
     if (odak) { var fo = $(odak); if (fo) fo.focus(); }
   }
+  /* formatın sonuç cümlesi TAM (reisim 2026-09-28: "telefonda … ile bitiyor tam metin okunamıyor"): seçilen sonuçla biter, seçilmediyse iki seçenek */
+  var sonucCumle = function (r) { return kacis(r.F.sonuc) + " " + (r.sonuc === "kullanilir" ? "<b>uygundur</b>" : r.sonuc === "kullanilamaz" ? "<b>uygun değildir</b>" : "uygundur / uygun değildir") + "."; };
   function testIpucu(x, v) {
     var s = testSonuc(x, v); if (!x.op) return "";   /* sınırı olmayan değer yalnız kaydedilir */
     return s === null ? "Sınır " + MV.sinirYaz(x) : s ? "Uygun · sınır " + MV.sinirYaz(x) : "Sınır dışı · " + MV.sinirYaz(x);

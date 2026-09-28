@@ -1702,6 +1702,17 @@ revizyon, alan kopyalama, hafif kusur devri, meslek eşleşme denetimi).
 - Emsal ürünler: https://opwire.app/iso-17020-periyodik-kontrol-yazilimi/ · https://17020muayene.vidco.com.tr/ · https://akuple.com/asansor-kontrol-yazilimi/ · https://ensyazilim.com/
 
 ## 11 · Değişiklik günlüğü
+- 2026-09-28 (111): **Reisim'in dört düzeltmesi** (reisim: *"Masraf yazmak için ilgili tuş planın içinde olmasın, oradan kaldır her kullanıcı
+  profilinden yapacak masraf ve izin formu doldurmak gibi gerekli işlemleri, plan telefon ekranında gözükürken kartlarda ilk başta şirket adı
+  yerine şirketin işletmesi çıkıyor şirket adı en üstte olsun, raporlarda … uygun değil işaretlediklerimiz kusur açıklamaları kısmında yazsın
+  hafif kusur ağır kusur vs yazmasın, sonuç ve kanaat kısmı telefonda … ile bitiyor tam metin okunamıyor"*). (1) Plan içindeki "Masraflarım"
+  bölümü ve masraf penceresi kalktı; masraf ve izin kullanıcının kendi alanından: üst çubukta ada basınca **Taleplerim · İzin talebi · Masraf
+  formu** (Talepler modülü; masraf işe bağlı ya da genel, aynı Muhasebe kaydı) — her sayfada. (2) Planlar kartında (telefon) şirket adı en
+  üstte, işletme (proje adı) altında; aynı sınıf Ana sayfanın tesis listesinde de düzeltildi (şirket üstte). (3) Kusur açıklamaları listesinde
+  "Uygun değil" işaretlenen her madde ve uygun olmayan ölçüm; "Hafif kusur / Ağır kusur" yazısı yok (derece seçimi kalır; final raporda
+  formatın * / ** işareti). (4) Sonuç ve kanaat bölümünde formatın cümlesi tam: seçilen sonuçla biter ("… kullanımı uygun değildir."),
+  seçilmediyse iki seçenek; "…" kalktı. Plan içi masraf denemeleri kaldırıldı (işlev yok), 4 yeni deneme. 18 maket temiz: durum 1912/1912 ·
+  etkileşim 440/440 · telefon 956/956 (durum sayısı plan içi masraf penceresinin 2 durumu kalktığı için azaldı); 375'te gözle bakıldı.
 - 2026-09-28 (110): **Maket sayfalar arası kalıcı — bütün site denenebilir** (§9 otuz üçüncü tur, karar c; reisim: *"tüm site maket üzerinde
   aktif çalışabilsin her fonksiyonu test edicem"*). Tek mekanizma (maket-ortak.js KALICI MAKET): ortak veri (MV) her sayfa açılışında
   tohumdan sonra bu tarayıcıdaki denemelerle yerinde birleşir (kayıt kimliği korunur, silinen silinir, yalnız tohumdan farklı koleksiyon

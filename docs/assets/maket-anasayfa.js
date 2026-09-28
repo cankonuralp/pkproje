@@ -46,8 +46,9 @@
     { k: "durum", baslik: "Durum", kart: "rozet", sira: 1, hucre: function (r) { return rozet(MV.RAPOR_DURUM.onayda); } }
   ];
   var TESIS_SUTUN = [
-    { k: "plan", baslik: "Tesis", kart: "ust", sira: 1, hucre: function (t) {
-      return '<a class="a-no" href="musteriler.html#/t/' + t.id + '">' + kacis(t.ad) + '</a><span class="a-alt-satir">' + kacis(MV.musteri(t.m).kisa + " · " + t.il) + "</span>";
+    /* şirket adı üstte, işletmesi altında (reisim 2026-09-28: "şirket adı en üstte olsun") */
+    { k: "plan", baslik: "Müşteri · tesis", kart: "ust", sira: 1, hucre: function (t) {
+      return '<span class="a-hucre-ust">' + kacis(MV.musteri(t.m).kisa) + '</span><a class="a-no" href="musteriler.html#/t/' + t.id + '">' + kacis(t.ad) + '</a><span class="a-alt-satir">' + kacis(t.il) + "</span>";
     } },
     { k: "tarih", baslik: "Sonraki kontrol", kart: "govde", sira: 2, hucre: function (t) {
       var k = MK.gunFarki(BUGUN, t.sonraki);

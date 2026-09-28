@@ -2,8 +2,8 @@
  "maket": "m8",
  "tarih": "2026-09-28",
  "arac": "tools/olc-bulut.mjs --etkilesim (başsız tarayıcı, 1920 açık tema; gen verilen denemede o genişlik)",
- "toplam": 72,
- "gecen": 72,
+ "toplam": 73,
+ "gecen": 73,
  "denemeler": [
   {
    "ad": "kontrol metodu türden, yalnız standart numarası, seçim alanı yok (formatlı türde firma bölümünde)",
@@ -321,7 +321,14 @@
    "gecti": true
   },
   {
-   "ad": "iç tesisat: gözle kontrol 7 grup, 27 madde; kusur derecesi listede",
+   "ad": "sonuç ve kanaat cümlesi tam (… yok), seçilen sonuçla biter",
+   "gen": 375,
+   "sayfa": "maket/rapor.html",
+   "hash": "#/r/ET-1009",
+   "gecti": true
+  },
+  {
+   "ad": "iç tesisat: gözle kontrol 7 grup, 27 madde; uygun değil madde kusur listesinde, derece yazısı yok (reisim 2026-09-28)",
    "gen": 1920,
    "sayfa": "maket/rapor.html",
    "hash": "#/r/ET-1009",
