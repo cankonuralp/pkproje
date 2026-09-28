@@ -128,8 +128,8 @@
       (MV.kalDurum(v) === "gecti" && k !== "depo" ? '<div class="a-serit-kap">' + MK.serit("hata", "circle-x", "Kalibrasyonu geçmiş cihaz " + kacis(MV.yerAdi(k)) + " zimmetinde: raporları onaya gönderilemez. Depoya alın ya da kalibrasyona gönderin.") + "</div>" : "") +
       '<div class="a-yuzler">' +
         yuz({ ikon: k === "depo" ? "warehouse" : k === "lab" ? "flask-conical" : "user", ad: "Kimde", sayi: MV.yerAdi(k), href: k !== "depo" && k !== "lab" ? MK.adres(2, "#/p/" + k) : null, not: h[0] ? "teslim " + MK.tarihYaz(h[0].tarih) : "" }) +
-        yuz({ ikon: "arrow-right-left", ad: "Hareket", sayi: h.length, not: "her teslim ayrı kayıt" }) +
-        yuz({ ikon: "camera", ad: "Fotoğraf", sayi: h.reduce(function (n, x) { return n + x.foto; }, 0), not: "teslimlerde çekilen" }) +
+        yuz({ ikon: "arrow-right-left", ad: "Hareket", sayi: h.length }) +
+        yuz({ ikon: "camera", ad: "Fotoğraf", sayi: h.reduce(function (n, x) { return n + x.foto; }, 0) }) +
       "</div>" +
       '<section class="a-bolum" aria-labelledby="a-b-gecmis"><div class="a-alt-bas"><h2 class="a-alt-baslik" id="a-b-gecmis">Teslim geçmişi</h2><span class="a-sayac"><b>' + h.length + "</b> hareket</span></div>" +
         (h.length ? '<ol class="a-gecmis a-gecmis-zimmet">' + h.map(function (x) {

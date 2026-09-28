@@ -95,7 +95,7 @@
           '<a class="a-tus a-tus-birincil" href="#/tur/' + t.k + '/format">' + ikon("file-plus", "a-ikon-kucuk") + (p ? "Yeni format yükle" : "Rapor formatı yükle") + "</a></div></div>" +
       '<div class="a-yuzler">' +
         /* Ekipmanlar ekranı yok → sayı yalnız bilgi */
-        yuz({ ikon: "wrench", ad: "Ekipman", sayi: n, not: "planlarda, bütün tesislerde" }) +
+        yuz({ ikon: "wrench", ad: "Ekipman", sayi: n, }) +
         yuz({ ikon: "file-text", ad: "Rapor formatı", sayi: p ? p.surum : "Yok", not: p ? "yüklendi " + p.tarih : "PDF yüklenmedi", uyari: !p }) +
         yuz({ ikon: "badge-check", ad: "Onay", sayi: MV.bransAd(t.b), not: onay + " onaylar" }) +
         yuz({ ikon: "alarm-clock", ad: "Periyot", sayi: t.periyot + " ay", not: t.sure ? "tahmini " + t.sure + " dk" : "sonraki kontrol önerisi" }) +
@@ -111,7 +111,7 @@
       '<section class="a-bolum" aria-labelledby="a-b-cihaz"><div class="a-alt-bas"><h2 class="a-alt-baslik" id="a-b-cihaz">Kullanılacak ölçüm cihazları</h2><span class="a-sayac"><b>' + t.cihaz.length + "</b> cihaz türü</span>" +
         '<a class="a-tus a-tus-ikincil a-bolum-tus" href="#/tur/' + t.k + '/duzenle">' + ikon("pencil", "a-ikon-kucuk") + "Düzenle</a></div>" +
         (t.cihaz.length ? '<ul class="a-kosullar">' + t.cihaz.map(function (c) { return '<li class="a-kosul-bilgi">' + ikon("gauge", "a-ikon-kucuk") + "<span>" + kacis(MV.cihazTuru(c).ad) + "</span></li>"; }).join("") + "</ul>"
-          : '<p class="a-bos-satir">Cihaz türü seçilmedi: raporda ölçüm cihazı istenmez.</p>') + "</section>" +
+          : '<p class="a-bos-satir">Cihaz türü seçilmedi.</p>') + "</section>" +
       /* rapor bölümleri (reisim 2026-09-27: "7-8-9. kısımlar da sabit ama muayene kriterleri test değerleri kısımlar firmanın verdiği pdf e göre
          düzenlenebilir olacak diğer kısımlarda düzenlenebilir olacak gerçi ama standart") */
       '<section class="a-bolum" aria-labelledby="a-b-bolum"><div class="a-alt-bas"><h2 class="a-alt-baslik" id="a-b-bolum">Rapor bölümleri</h2></div><dl class="a-satirlar">' +
@@ -120,7 +120,7 @@
         '<div class="a-satir"><dt>Her raporda sabit</dt><dd>Fotoğraflar · Sonuç ve kanaat · Muayene uzmanı yorumu</dd></div></dl></section>' +
       '<section class="a-bolum" aria-labelledby="a-b-kural"><div class="a-alt-bas"><h2 class="a-alt-baslik" id="a-b-kural">Kontrol kuralları</h2></div><dl class="a-bilgi">' +
         bilgi("Ek-III grubu", kacis(g.ad), true) + bilgi("Branş", MV.bransAd(t.b) + ' <span class="a-alt-inline">· onay ' + onay.toLocaleLowerCase("tr") + "</span>") +
-        bilgi("Periyot", t.periyot + ' ay <span class="a-alt-inline">· tek ekipmanın tarihi planda değiştirilebilir</span>') +
+        bilgi("Periyot", t.periyot + " ay") +
         bilgi("Tahmini kontrol süresi", t.sure ? t.sure + " dk" : '<span class="a-deger-yok">Girilmedi</span>') +
         bilgi("Bakanlık rapor formatı", t.format ? '<span class="a-kod">' + t.format + "</span> " + rozet(FORMAT[t.formatDurum]) +
           (MV.KONTROL_BELGELERI.filter(function (k) { return k.tur === t.k; }).map(function (k) { return '<span class="a-alt-satir">kontrol kriterleri <a class="a-baglanti" href="' + MK.adres(4, "#/k/" + k.k) + '">' + k.k + "</a></span>"; }).join("")) : '<span class="a-deger-yok">Yayımlanmadı</span>') +

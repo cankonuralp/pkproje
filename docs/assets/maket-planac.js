@@ -155,7 +155,7 @@
   }
   function tesisSeritleri(t) {
     var s = "";
-    if (MV.acikPlan(t)) s += MK.serit("bilgi", "calendar-check", "Bu tesiste açık plan var: <b>" + t.plan + "</b> · " + MK.gunKisa(t.ptarih) + " · " + MV.PLAN_DURUM[t.pdurum].ad + ". İkinci plan açılabilir; o plandaki ekipman bu plana alınamaz.");
+    if (MV.acikPlan(t)) s += MK.serit("bilgi", "calendar-check", "Bu tesiste açık plan var: <b>" + t.plan + "</b> · " + MK.gunKisa(t.ptarih) + " · " + MV.PLAN_DURUM[t.pdurum].ad + ".");
     if (!MV.isgTesis(t.id).length) s += MK.serit("uyari", "triangle-alert", "Bu tesiste İSG-KATİP sözleşme ID'si yok.");
     return s ? '<div class="a-uyari-serit a-bolum-serit">' + s + "</div>" : "";
   }
@@ -221,7 +221,7 @@
     ekip.forEach(function (p) {
       var d = D[p.id];
       if (!d.eksik.length) sat.push('<li class="a-kosul-tamam">' + ikon("circle-check", "a-ikon-kucuk") + "<span>" + kacis(p.ad) + ": uyarı yok.</span></li>");
-      else sat.push('<li class="a-kosul-eksik">' + ikon("triangle-alert", "a-ikon-kucuk") + "<span>" + kacis(p.ad) + " — uyarı: " + kacis(d.eksik.join(" · ")) + ". Plan açılır.</span></li>");
+      else sat.push('<li class="a-kosul-eksik">' + ikon("triangle-alert", "a-ikon-kucuk") + "<span>" + kacis(p.ad) + " — uyarı: " + kacis(d.eksik.join(" · ")) + ".</span></li>");
       d.cak.filter(function (c) { return c.ust; }).forEach(function (c) {
         sat.push('<li class="a-kosul-eksik">' + ikon("clock", "a-ikon-kucuk") + "<span>" + kacis(p.ad) + " aynı günde " + c.t.plan + " planında · " + MK.gunKisa(c.t.ptarih) + " · " + kacis(c.t.ad) + ".</span></li>");
       });

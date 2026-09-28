@@ -81,14 +81,14 @@
       '<div class="a-yuzler">' +
         yuz({ ikon: "layers", ad: "Kullanan tür", sayi: t.length, href: t.length === 1 ? MK.adres(5, "#/tur/" + t[0].k) : null, not: s.yerine ? "yeni sürüme geçti" : t.length ? "kontrol metodu" : "atanmadı", uyari: !s.yerine && !t.length }) +
         yuz({ ikon: "file-check", ad: "Bu sürümle rapor", sayi: raporSayisi(s), not: "imzalı raporlar" }) +
-        yuz({ ikon: "file-text", ad: "Dosya", sayi: boyut(s.dosya.kb), not: "PDF · yalnız firma içinde" }) +
+        yuz({ ikon: "file-text", ad: "Dosya", sayi: boyut(s.dosya.kb), not: "PDF" }) +
         yuz({ ikon: "user", ad: "Yükleyen", sayi: kirp(MV.kisi(s.yukleyen).ad), not: MK.tarihYaz(s.tarih) }) +
       "</div>" +
       '<section class="a-bolum" aria-labelledby="a-b-tur"><div class="a-alt-bas"><h2 class="a-alt-baslik" id="a-b-tur">Kullanan ekipman türleri</h2><span class="a-sayac"><b>' + t.length + "</b> tür</span>" +
         MK.git({ hedef: 5, hash: "#/", ad: "Ekipman türleri", ikon: "layers", sinif: "a-tus-ikincil a-bolum-tus", ne: "Ekipman türleri" }) + "</div>" +
         (t.length ? '<ul class="a-kosullar">' + t.map(function (x) {
           return '<li class="a-kosul-bilgi">' + ikon("layers", "a-ikon-kucuk") + '<span><a class="a-baglanti" href="' + MK.adres(5, "#/tur/" + x.k) + '">' + kacis(x.ad) + "</a> · " + MV.bransAd(x.b) + (x.format ? " · Bakanlık formatı " + x.format : "") + "</span></li>";
-        }).join("") + "</ul>" : '<p class="a-bos-satir">' + (s.yerine ? "Önceki sürüm türlere bağlı değildir; türler güncel sürümü kullanır." : "Bu standart henüz hiçbir türde kontrol metodu değil.") + "</p>") + "</section>" +
+        }).join("") + "</ul>" : '<p class="a-bos-satir">' + (s.yerine ? "Önceki sürüm; türler güncel sürümü kullanır." : "Bu standart henüz hiçbir türde kontrol metodu değil.") + "</p>") + "</section>" +
       '<section class="a-bolum" aria-labelledby="a-b-surum"><div class="a-alt-bas"><h2 class="a-alt-baslik" id="a-b-surum">Sürümler</h2><span class="a-sayac"><b>' + surumler.length + "</b> sürüm</span></div>" +
         '<ol class="a-gecmis">' + surumler.map(function (x) {
           return '<li><span class="a-gecmis-zaman">' + MK.tarihYaz(x.tarih) + '</span><span class="a-gecmis-ne"><b>' + (x.k === s.k ? kacis(ad(x)) : '<a class="a-baglanti" href="#/s/' + x.k + '">' + kacis(ad(x)) + "</a>") + "</b> " + rozet(durum(x)) +

@@ -52,7 +52,7 @@
     var gec = E.filter(function (x) { return !x.onceki && MV.egitimDurum(x) === "gecti"; }), yak = E.filter(function (x) { return !x.onceki && MV.egitimDurum(x) === "yakin"; });
     $("a-uyari").innerHTML = gec.length || yak.length ? '<div class="a-uyari-serit">' + MK.serit(gec.length ? "hata" : "uyari", "graduation-cap",
       (gec.length ? "<b>" + gec.length + " eğitimin tekrarı geçti</b> (" + gec.map(function (x) { return kacis(MV.kisi(x.kisi).ad) + " · " + MV.egitimTuru(x.k).ad; }).join(", ") + ")" + (yak.length ? "; " : ".") : "") +
-      (yak.length ? yak.length + " eğitimin tekrarı 60 gün içinde." : "") + " Yalnız ekranda; Uyarılar'da da görünür.") + "</div>" : "";
+      (yak.length ? yak.length + " eğitimin tekrarı 60 gün içinde." : "")) + "</div>" : "";
   }
 
   /* ── EĞİTİM TÜRLERİ ─────────────────────────────────────────────────────────────────────────────────── */

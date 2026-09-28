@@ -145,7 +145,7 @@
           MK.alan({ id: "f-kdv", etiket: "KDV (%)", zorunlu: true, hata: h.kdv, girdi: MK.girdi({ id: "f-kdv", alan: "kdv", deger: F.kdv, sinif: "a-girdi-sicil", ek: ' inputmode="numeric" maxlength="2"', hata: h.kdv }) }) +
           '<div class="a-alan-grup a-alan-genis"><label class="a-etiket" for="f-not">Not</label><textarea class="a-alan a-alan-ince" id="f-not" data-alan="not" maxlength="300" placeholder="Ödeme, ulaşım, ek koşullar">' + kacis(F.not) + "</textarea></div>" +
         "</div></section></div>" +
-        '<section class="a-form-bolum a-alan-genis" aria-labelledby="f-b3"><div class="a-alt-bas"><h2 class="a-alt-baslik" id="f-b3">Kalemler</h2><span class="a-sayac">ekipman türü × adet × birim fiyat</span></div>' +
+        '<section class="a-form-bolum a-alan-genis" aria-labelledby="f-b3"><div class="a-alt-bas"><h2 class="a-alt-baslik" id="f-b3">Kalemler</h2></div>' +
           F.kalemler.map(function (k, i) {
             var a = +k.adet, f = sayi(k.fiyat);
             return '<div class="a-kalem">' +

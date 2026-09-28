@@ -127,15 +127,15 @@
         (as ? yuz({ ikon: "list-checks", ad: "Sonraki ara kontrol", sayi: MK.gunKisa(as), not: kalan(as) < 0 ? -kalan(as) + " gün gecikti" : "her " + v.araPeriyot + " ayda", uyari: kalan(as) < 0 }) : "") +
         yuz({ ikon: "file-text", ad: "Raporlarda", sayi: v.rapor, not: "son 12 ayda imzalı rapor" }) +
       "</div>" +
-      '<section class="a-bolum" aria-labelledby="a-b-cihaz"><div class="a-alt-bas"><h2 class="a-alt-baslik" id="a-b-cihaz">Cihaz bilgileri</h2><span class="a-sayac">rapora buradan dolar</span></div><dl class="a-bilgi">' +
+      '<section class="a-bolum" aria-labelledby="a-b-cihaz"><div class="a-alt-bas"><h2 class="a-alt-baslik" id="a-b-cihaz">Cihaz bilgileri</h2></div><dl class="a-bilgi">' +
         bilgi("Cihaz", kacis(v.ad)) + bilgi("Marka / model", kacis(v.marka + " " + v.model)) + bilgi("Seri no", '<span class="a-kod">' + v.seri + "</span>") +
         bilgi("Cihaz kodu", '<span class="a-kod">' + v.env + "</span>") + bilgi("Ölçüm aralığı", kacis(v.aralik)) +
-        bilgi("Kullanıldığı ekipman grupları", t.g.map(function (g) { return MV.grup(g).ad; }).join(" · ") + ' <span class="a-alt-inline">· raporda bu gruplarda önceden işaretli gelir; denetçi zimmetindekilerden seçer</span>', true) +
+        bilgi("Kullanıldığı ekipman grupları", t.g.map(function (g) { return MV.grup(g).ad; }).join(" · "), true) +
       "</dl></section>" +
       '<section class="a-bolum" aria-labelledby="a-b-kal"><div class="a-alt-bas"><h2 class="a-alt-baslik" id="a-b-kal">Kalibrasyon kayıtları</h2><span class="a-sayac"><b>' + v.kal.length + "</b> kayıt</span></div>" +
         '<div class="a-liste-kap">' + MK.tablo({ baslik: "Kalibrasyon kayıtları", sinif: "a-tablo-kal", sutunlar: KAL_SUTUN, kayitlar: v.kal }) + "</div></section>" +
       /* 60: ara kontrol isteğe bağlı — takip edilmeyen cihazda bölüm yok */
-      (v.araPeriyot ? '<section class="a-bolum" aria-labelledby="a-b-ara"><div class="a-alt-bas"><h2 class="a-alt-baslik" id="a-b-ara">Ara kontroller</h2><span class="a-sayac">kalibrasyonlar arasında cihazın doğruluğu</span>' +
+      (v.araPeriyot ? '<section class="a-bolum" aria-labelledby="a-b-ara"><div class="a-alt-bas"><h2 class="a-alt-baslik" id="a-b-ara">Ara kontroller</h2>' +
         MK.tus({ eylem: "ara-ac", ad: "Ara kontrol ekle", ikon: "plus", sinif: "a-tus-ikincil a-bolum-tus" }) + "</div>" +
         '<div class="a-liste-kap">' + (v.ara.length ? MK.tablo({ baslik: "Ara kontroller", sinif: "a-tablo-ara", sutunlar: ARA_SUTUN, kayitlar: v.ara }) : '<p class="a-bos-satir">Henüz ara kontrol yok.</p>') + "</div></section>" : "");
   }

@@ -100,7 +100,7 @@
     $("a-uyari").innerHTML = eksik.length ? '<div class="a-uyari-serit">' +
       '<div class="a-serit a-serit-uyari">' + ikon("scroll-text", "a-ikon-kucuk") + "<span><b>Açık planda İSG-KATİP eksik ya da bitmiş</b> · " +
         eksik.map(function (x) { return idEksik(x).map(function (e) { return kacis(e[1].ad) + " (" + kacis(e[0].ad) + ", " + e[2] + ")"; }).join(", "); }).join(", ") +
-        ". Plan açarken el ile de girilebilir.</span>" + '<button class="a-tus a-tus-ikincil a-serit-tus" type="button" data-eylem="cip-uygula" data-deger="ideksik">Göster</button></div></div>' : "";
+        ".</span>" + '<button class="a-tus a-tus-ikincil a-serit-tus" type="button" data-eylem="cip-uygula" data-deger="ideksik">Göster</button></div></div>' : "";
   }
 
   /* ── SÖZLEŞME SAYFASI ─────────────────────────────────────────────────────────────────────────────── */

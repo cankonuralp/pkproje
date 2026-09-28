@@ -39,7 +39,7 @@
     } else if (h === "#/gecici") {
       var k = S.hata;
       f.innerHTML = bas("Parolayı değiştir") +
-        MK.serit("bilgi", "key-round", "Geçici parolayla giriş yapıldı: <b>ozan.kurt@firma.example</b>. Parola şimdi ya da daha sonra değiştirilebilir.") +
+        MK.serit("bilgi", "key-round", "Geçici parolayla giriş yapıldı: <b>ozan.kurt@firma.example</b>.") +
         parolaAlani("g-p1", "Yeni parola", S.p1, "En az 10 karakter; harf ve rakam içerir.", k.p1, "new-password") +
         parolaAlani("g-p2", "Yeni parola (tekrar)", S.p2, "Aynısını yazın.", k.p2, "new-password") +
         '<div class="a-giris-tuslar">' + MK.tus({ eylem: "belirle", ad: "Kaydet ve devam et", ikon: "check" }) +

@@ -601,7 +601,7 @@
      penceresine bağlantı — teslim alındıktan sonra rapora dönünce bu pencerede listelenir (zimmet kaydı sayfalar arası kalıcı) */
   function cihazNerede(c, kisi) {
     var l = MV.VARLIKLAR.filter(function (v) { return v.tur === "cihaz" && v.cihazTur === c && MV.kimde(v.id) !== kisi; });
-    if (!l.length) return '<p class="a-pencere-metin">Firmada bu türden cihaz kayıtlı değil; Ölçüm cihazları\'ndan eklenir.</p>';
+    if (!l.length) return '<p class="a-pencere-metin">Firmada bu türden cihaz kayıtlı değil.</p>';
     return '<ul class="a-kosullar">' + l.map(function (v) {
       var k = MV.kimde(v.id), yer = k === "depo" ? "Depoda" : k === "lab" ? "Kalibrasyonda" : MV.kisi(k) ? MV.kisi(k).ad + " zimmetinde" : k, gec = MV.kalDurum(v) === "gecti";
       return '<li class="a-kosul-bilgi">' + ikon(gec ? "circle-x" : "gauge", "a-ikon-kucuk") + '<span><span class="a-kod">' + v.env + "</span> · " + yer + (gec ? " · kalibrasyonu geçmiş" : "") + "</span>" +

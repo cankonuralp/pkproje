@@ -103,8 +103,8 @@
       '<div class="a-yuzler">' +
         yuz({ ikon: "wrench", ad: "Ekipman", sayi: e.kod, not: MV.tur(e.tur).ad }) +   /* 2026-09-26: Ekipmanlar ekranı yok (M3 2. tur) */
         yuz({ ikon: "calendar-check", ad: "Plan", sayi: r.plan ? ts.plan : "—", href: r.plan ? MK.adres(13, "#/plan/" + r.plan) : null, not: r.plan ? MK.tarihYaz(r.olustu) : "geçen yılın planı" }) +
-        yuz({ ikon: r.sonuc && r.sonuc !== "Uygun" ? "triangle-alert" : "circle-check", ad: "Sonuç", sayi: MV.sonucAd(r) || "—", uyari: !!r.sonuc && r.sonuc !== "Uygun", not: r.sonuc ? "kriterlere göre" : "taslak" }) +
-        yuz({ ikon: "users", ad: "Müşteri erişimi", sayi: r.durum === "imzali" ? "Açık" : "Kapalı", not: r.durum === "imzali" ? portal.length + " kullanıcı" : "imzadan sonra açılır" }) +
+        yuz({ ikon: r.sonuc && r.sonuc !== "Uygun" ? "triangle-alert" : "circle-check", ad: "Sonuç", sayi: MV.sonucAd(r) || "—", uyari: !!r.sonuc && r.sonuc !== "Uygun", not: r.sonuc ? "" : "taslak" }) +
+        yuz({ ikon: "users", ad: "Müşteri erişimi", sayi: r.durum === "imzali" ? "Açık" : "Kapalı", not: r.durum === "imzali" ? portal.length + " kullanıcı" : "" }) +
       "</div>" +
       '<section class="a-bolum" aria-labelledby="a-b-pdf"><div class="a-alt-bas"><h2 class="a-alt-baslik" id="a-b-pdf">PDF önizlemesi</h2><span class="a-sayac">' + (r.imza ? "imzalı" : "imzasız") + "</span></div>" +
         (r.durum === "taslak" ? '<p class="a-bos-satir">Taslak: PDF yok.</p>' : MB.belge(t, MV.raporBelge(r))) + "</section>";

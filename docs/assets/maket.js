@@ -428,7 +428,7 @@
     var p = AKTIF; if (!p || !MK.kap(on)) return;
     var hepsi = on === "e" ? p.ekp.map(function (k) { return SICIL[k]; }) : raporlar(p).sort(function (a, b) { return a.olustu < b.olustu ? 1 : a.olustu > b.olustu ? -1 : 0; });
     MK.listeCiz({ on: on, kayitlar: hepsi, sayacId: "a-sayac-" + on, listeId: "a-liste-" + on, sayfaId: "a-sayfa-" + on,
-      bosVeri: '<p class="a-bos-satir">' + (on === "r" ? (calisir(p) ? "Bu planda henüz rapor yok. Rapor, ekipmanın satırındaki “Rapor oluştur” ile açılır." : "Rapor, denetime başlanınca ekipmanın satırından oluşturulur.") : "Bu planda ekipman yok.") + "</p>",
+      bosVeri: '<p class="a-bos-satir">' + (on === "r" ? "Bu planda rapor yok." : "Bu planda ekipman yok.") + "</p>",
       tablo: { baslik: on === "e" ? "Plandaki ekipmanlar" : "Bu plandaki raporlar", sinif: on === "e" ? (islemVar(p) ? "a-tablo-ekipman" : "a-tablo-ekipman a-tablo-sade") : "a-tablo-rapor",
         sutunlar: on === "e" ? ekpSutun(p).filter(function (s) { return s.k !== "eylem" || islemVar(p); }) : RAP_SUTUN } });
   }
@@ -494,14 +494,14 @@
           '<button class="a-ikon-tus" type="button" data-eylem="saat-ac" data-id="' + p.id + '" aria-label="Rapor saatlerini hizala" title="Rapor saatlerini hizala">' + ikon("clock") + "</button></div>" : "") + "</div>" +
         MK.suzgecHtml("r") + '<div class="a-liste-kap" id="a-liste-r"></div><div id="a-sayfa-r"></div></div>' : "");
     var a3 = adim(3, a3durum, "Denetim", a3ozet,
-      (d === "bekliyor" ? '<p class="a-adim-not">Plan kabul edilince başlar.</p>' : d === "red" ? '<p class="a-adim-not">Plan reddedildi; denetim yok.</p>' : "") +
-      (d === "kabul" ? '<div class="a-adim-eylem"><p class="a-adim-not">Ekipman ekleme ve rapor oluşturma denetime başlayınca açılır.</p><div class="a-adim-tuslar">' + eylem + "</div></div>" : "") +
+      (d === "red" ? '<p class="a-adim-not">Plan reddedildi; denetim yok.</p>' : "") +
+      (d === "kabul" ? '<div class="a-adim-eylem"><div class="a-adim-tuslar">' + eylem + "</div></div>" : "") +
       kontrol);
     /* 4 · Tamamlama */
     var a4 = adim(4, d === "tamam" ? "tamam" : "bekliyor", "Tamamlama", d === "tamam" ? tno(p.bitti) : "",
-      d === "denetimde" ? '<div class="a-adim-eylem"><p class="a-adim-not">' + (raporsuz ? raporsuz + " ekipmanın bu planda raporu yok; tamamlamak engellenmez." : "Bütün ekipmanların raporu açıldı.") + '</p><div class="a-adim-tuslar">' + eylem + "</div></div>"
+      d === "denetimde" ? '<div class="a-adim-eylem"><p class="a-adim-not">' + (raporsuz ? raporsuz + " ekipmanın bu planda raporu yok." : "Bütün ekipmanların raporu açıldı.") + '</p><div class="a-adim-tuslar">' + eylem + "</div></div>"
       : d === "tamam" ? '<div class="a-adim-eylem"><div class="a-adim-tuslar">' + eylem + "</div></div>"
-      : '<p class="a-adim-not">Denetim bitince buradan tamamlanır.</p>');
+      : "");
     /* Proje notları (5. tur, reisim: "hareketler kısmını kaldır"): hareket kaydı tutulmaya devam eder (p.gecmis, denetim
        izi) ama plan içinde gösterilmez; burada yalnız notlar. Kim yazar/görür: plandaki inspector'lar + planlama ekibi;
        müşteri görmez; not silinmez (karar 27). */
@@ -517,9 +517,8 @@
       '<ol class="a-akis" aria-label="Plan akışı">' + a1 + a2 + a3 + a4 + "</ol>" +
       '<section class="a-bolum a-notlar" aria-labelledby="a-not-baslik"><div class="a-alt-bas"><h2 class="a-alt-baslik" id="a-not-baslik">Proje notları</h2>' +
         '<span class="a-sayac"><b>' + notlar.length + "</b> not</span></div>" +
-        '<div class="a-not-form"><label class="a-gizli" for="a-not-girdi">Proje notu</label><textarea class="a-alan a-alan-ince" id="a-not-girdi" maxlength="500" placeholder="Proje notu ekleyin" aria-describedby="a-not-ipucu"></textarea>' +
+        '<div class="a-not-form"><label class="a-gizli" for="a-not-girdi">Proje notu</label><textarea class="a-alan a-alan-ince" id="a-not-girdi" maxlength="500" placeholder="Proje notu ekleyin"></textarea>' +
         '<button class="a-tus a-tus-ikincil" type="button" data-eylem="not-ekle" data-id="' + p.id + '" id="a-not-ekle" disabled>' + ikon("plus", "a-ikon-kucuk") + "Notu ekle</button></div>" +
-        '<p class="a-ipucu a-not-ipucu" id="a-not-ipucu">Planlama ekibi ve plandaki inspector’lar görür; müşteri görmez. Not silinmez.</p>' +
         (notlar.length ? '<ol class="a-gecmis">' + gorunen.map(function (g) {
           return '<li><span class="a-gecmis-zaman">' + zamanYaz(g.z) + '</span><span class="a-gecmis-ne"><b>' + KISI[g.kim].ad + "</b>" +
             ' <span class="a-gecmis-rol">' + KISI[g.kim].rol + '</span><span class="a-not-metin">' + kacis(g.ayrinti) + "</span></span></li>";
@@ -559,7 +558,7 @@
         return '<li><label class="a-secim-satir"><input type="checkbox" data-kayitli="' + e.kod + '"' + (E.secili.indexOf(e.kod) >= 0 ? " checked" : "") + ">" +
           '<span class="a-secim-metin"><span><span class="a-kod">' + e.kod + '</span> <span class="a-ekipman-ad">' + e.tur.ad + "</span></span>" +
           '<span class="a-alt-satir">' + kacis(e.konum) + " · " + (e.onceki ? "Önceki kontrol " + ayYil(e.onceki.tarih) + ", " + e.onceki.sonuc : "İlk kontrol") + "</span></span></label></li>";
-      }).join("") + "</ul>" : '<p class="a-bos-satir">Bu tesiste plana alınmamış kayıtlı ekipman yok. Yeni ekipmanı "Yeni ekipman" sekmesinden ekleyin.</p>';
+      }).join("") + "</ul>" : '<p class="a-bos-satir">Bu tesiste plana alınmamış kayıtlı ekipman yok.</p>';
       alt = '<button class="a-tus a-tus-ikincil" type="button" data-eylem="ekle-kapat">Vazgeç</button>' +
         '<button class="a-tus a-tus-birincil" type="button" data-eylem="kayitli-ekle"' + (E.secili.length ? "" : " disabled") + ">" + ikon("plus", "a-ikon-kucuk") +
         "Plana ekle" + (E.secili.length ? " (" + E.secili.length + ")" : "") + "</button>";
@@ -578,7 +577,7 @@
             return '<button class="a-secenek' + (i === E.turEtkin ? " a-etkin" : "") + '" type="button" role="option" tabindex="-1" aria-selected="' + (E.tur === t) + '" data-tur="' + t.k + '">' +
               ikon("check", "a-ikon-kucuk") + '<span class="a-kirp">' + t.ad + '</span><span class="a-secenek-ek">' + bransAd(t.b) + "</span></button>";
           }).join("") : '<p class="a-bos-satir">Bu adla tür yok.</p>') + "</div></div>" +
-          '<p class="a-ipucu">' + (E.tur ? "Branş: " + bransAd(E.tur.b) + " · onay " + bransAd(E.tur.b) + " yöneticisine gider." : "Branş türden gelir.") + "</p></div>" +
+          "</div>" +
         '<div class="a-alan-grup"><label class="a-etiket" for="a-ekle-seri">Seri no</label><input class="a-girdi a-girdi-seri" id="a-ekle-seri" autocomplete="off" maxlength="30" value="' + kacis(E.seri) + '"></div>' +
         '<div class="a-alan-grup"><label class="a-etiket" for="a-ekle-konum">Konum / tanım</label><input class="a-girdi" id="a-ekle-konum" autocomplete="off" maxlength="60" placeholder="Kompresör odası" value="' + kacis(E.konum) + '"></div>' +
         "</div>";
@@ -644,7 +643,7 @@
      teknik yöneticide (Onaylar → Pasif raporlar). Ortak kayda yazılır. */
   X["rapor-pasif-ac"] = function (el) {
     $("a-pencere").dataset.kip = "pasif"; $("a-pencere-baslik").textContent = "Raporu pasife al";
-    $("a-pencere-govde").innerHTML = '<p class="a-pencere-metin"><span class="a-rapor-no">' + el.dataset.no + "</span> pasife alınır ve listenizden kalkar. Geri alma ve silme teknik yöneticide.</p>";
+    $("a-pencere-govde").innerHTML = '<p class="a-pencere-metin"><span class="a-rapor-no">' + el.dataset.no + "</span> pasife alınır ve listenizden kalkar.</p>";
     $("a-pencere-alt").innerHTML = MK.tus({ eylem: "pencere-kapat", ad: "Vazgeç", sinif: "a-tus-ikincil" }) + MK.tus({ eylem: "rapor-pasif", ad: "Pasife al", ikon: "ban", veri: { no: el.dataset.no } });
     $("a-pencere").showModal(); $("a-pencere-alt").querySelector('[data-eylem="pencere-kapat"]').focus();
   };
@@ -814,7 +813,7 @@
     var p = pl(el); if (!p) return;
     redId = p.id; $("a-red-gerekce").value = ""; $("a-red-onay").disabled = true;
     $("a-red-ozet").innerHTML = "<b>" + kacis(p.ad) + "</b> · " + p.no + "<br>" + kacis(p.musteri) + "<br>" + gunYaz(p.tarih) + (p.bitTarih !== p.tarih ? " – " + gunYaz(p.bitTarih) : "");
-    $("a-red-ipucu").className = "a-ipucu"; $("a-red-ipucu").hidden = false; $("a-red-pencere").showModal(); $("a-red-gerekce").focus();
+    $("a-red-ipucu").hidden = true; $("a-red-pencere").showModal();   /* kural yalnız hata anında yazılır (§3.8 kural 4) */ $("a-red-gerekce").focus();
   };
   document.addEventListener("change", function (e) {
     var b = e.target.dataset && e.target.dataset.beyan;
@@ -851,7 +850,7 @@
   };
   $("a-red-gerekce").addEventListener("input", function (e) {
     var yeter = e.target.value.trim().length >= 3;
-    $("a-red-onay").disabled = !yeter; $("a-red-ipucu").hidden = yeter;
+    $("a-red-onay").disabled = !yeter; if (yeter) $("a-red-ipucu").hidden = true;
   });
   $("a-red-form").addEventListener("submit", function (e) {
     e.preventDefault();

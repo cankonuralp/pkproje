@@ -96,8 +96,8 @@
       var yaklasan = MV.TESISLER.filter(function (t) { return !MV.acikPlan(t) && MK.gunFarki(BUGUN, t.sonraki) <= 30; })
         .sort(function (a, b) { return a.sonraki < b.sonraki ? -1 : 1; });
       return '<div class="a-yuzler">' +
-        yuz({ ikon: "calendar-check", ad: "Kabul bekleyen plan", sayi: bekleyen.length, href: "planlarim.html", not: "inspector'ın kabulünde" }) +
-        yuz({ ikon: "circle-x", ad: "Reddedilen plan", sayi: red.length, href: "planlarim.html", not: red.length ? "yeniden planlanmalı" : "yok", uyari: red.length > 0 }) +
+        yuz({ ikon: "calendar-check", ad: "Kabul bekleyen plan", sayi: bekleyen.length, href: "planlarim.html" }) +
+        yuz({ ikon: "circle-x", ad: "Reddedilen plan", sayi: red.length, href: "planlarim.html", uyari: red.length > 0 }) +
         yuz({ ikon: "clock", ad: "Bugün başlayan plan", sayi: bugun.length, href: "planlarim.html", not: MK.gunYaz(BUGUN) }) +
         yuz({ ikon: "scroll-text", ad: "İSG-KATİP eksiği", sayi: isgEksik, href: "sozlesmeler.html", not: isgEksik ? "açık planlarda" : "yok", uyari: isgEksik > 0 }) +
         "</div>" +
@@ -109,8 +109,8 @@
       var eg = MV.EGITIMLER.filter(function (x) { var d = MV.egitimDurum(x); return d === "gecti" || d === "yakin"; });
       var eksik = MV.PERSONEL.filter(function (p) { return p.durum === "etkin" && MV.eksikBilgi(p).length; });
       return '<div class="a-yuzler">' +
-        yuz({ ikon: "calendar-check", ad: "Açık plan", sayi: acik.length, href: "planlarim.html", not: "kabul bekleyen, kabul edilen, denetimde" }) +
-        yuz({ ikon: "badge-check", ad: "Onayda rapor", sayi: onayda.length, href: "onaylar.html", not: "branş yöneticilerinde" }) +
+        yuz({ ikon: "calendar-check", ad: "Açık plan", sayi: acik.length, href: "planlarim.html" }) +
+        yuz({ ikon: "badge-check", ad: "Onayda rapor", sayi: onayda.length, href: "onaylar.html" }) +
         yuz({ ikon: "file-signature", ad: "Muayene uzmanı imzası", sayi: imza.length, href: "raporlar.html", not: "imza bekliyor" }) +
         yuz({ ikon: "alarm-clock", ad: "Uyarı", sayi: kalUyari().length + eg.length, href: "uyarilar.html", not: kalUyari().length + " kalibrasyon · " + eg.length + " eğitim tekrarı", uyari: true }) +
         yuz({ ikon: "users", ad: "Bilgisi eksik personel", sayi: eksik.length, href: "personel.html", not: eksik.length ? eksik.map(function (p) { return p.ad; }).join(", ") : "yok", uyari: eksik.length > 0 }) +

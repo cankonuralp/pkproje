@@ -143,7 +143,7 @@
       '<div class="a-alt-bas a-alt-bas-ic"><h3 class="a-alt-baslik">Ek girişler</h3><span class="a-sayac"><b>' + ek.length + "</b> kişi</span>" +
         (m.pasif ? "" : MK.tus({ eylem: "kullanici-ac", ad: "Ek giriş ekle", ikon: "user-plus", sinif: "a-tus-ikincil a-bolum-tus" })) + "</div>" +
       '<div class="a-liste-kap">' + (ek.length ? MK.tablo({ baslik: "Ek girişler", sinif: "a-tablo-mkullanici", sutunlar: KULLANICI_SUTUN, kayitlar: ek })
-        : '<p class="a-bos-satir">Ek giriş yok; müşteri ana girişle bütün tesislerini görür.</p>') + "</div></section>";
+        : '<p class="a-bos-satir">Ek giriş yok.</p>') + "</div></section>";
   }
   function musteriCiz(m) {
     if (!m) return bulunamadi("Müşteri bulunamadı");
@@ -154,12 +154,12 @@
         '<p class="a-nesne-alt">' + ikon("building-2", "a-ikon-kucuk") + "<span>" + (m.vd ? kacis(m.vd) + " VD · " : "") + (m.vno ? "VKN " + m.vno : "Vergi no yok") + "</span></p></div>" +
         '<div class="a-eylem-cubugu">' + pasifTus(m) + MK.tus({ eylem: "musteri-duzenle", ad: "Düzenle", ikon: "pencil", sinif: "a-tus-ikincil" }) + (m.pasif ? "" : planAc("#/?musteri=" + m.id)) + "</div></div>" +
       pasifSerit(m, "Müşteri") +
-      (e.length ? '<div class="a-serit-kap">' + MK.serit("uyari", "triangle-alert", "Eksik bilgi: " + e.join(" · ") + ". Kayıt engellenmez; teklif, fatura ve müşteri girişi için gerekir.") + "</div>" : "") +
+      (e.length ? '<div class="a-serit-kap">' + MK.serit("uyari", "triangle-alert", "Eksik bilgi: " + e.join(" · ") + ".") + "</div>" : "") +
       '<div class="a-yuzler">' +
         yuz({ ikon: "map-pin", ad: "Tesis", sayi: et.length, not: et.map(function (x) { return x.il; }).filter(function (v, i, a) { return v && a.indexOf(v) === i; }).join(" · ") || "tesis yok" }) +
         /* 2026-09-26 (M3 2. tur): Ekipmanlar ekranı yok, ekipmanlar planın içinde → sayı yalnız bilgi */
-        yuz({ ikon: "wrench", ad: "Ekipman", sayi: ekipmanSayisi(m), not: "planlarda görünür" }) +
-        yuz({ ikon: "calendar-check", ad: "Açık plan", sayi: acikPlan, hedef: 13, hash: "", ne: "Planlar", not: "kabul bekleyen ve süren" }) +
+        yuz({ ikon: "wrench", ad: "Ekipman", sayi: ekipmanSayisi(m) }) +
+        yuz({ ikon: "calendar-check", ad: "Açık plan", sayi: acikPlan, hedef: 13, hash: "", ne: "Planlar" }) +
         yuz({ ikon: "triangle-alert", ad: "Açık uygunsuzluk", sayi: MV.acikUygunsuz(m.id), hedef: "musteri", hash: "#/uygunsuz?musteri=" + m.id, ne: "Müşteri paneli", uyari: MV.acikUygunsuz(m.id) > 0, not: MV.acikUygunsuz(m.id) ? "müşteri panelinde gördüğü" : "yok" }) +
         /* 2026-09-24 (toplu bakış öncesi): faz 2 maketleri geldi → teklif, iş sözleşmesi ve açık alacak yüzleri */
         (function () {
@@ -181,7 +181,7 @@
       '<section class="a-bolum" aria-labelledby="a-b-tesis"><div class="a-alt-bas"><h2 class="a-alt-baslik" id="a-b-tesis">Tesisler</h2><span class="a-sayac"><b>' + et.length + "</b> tesis" + (t.length > et.length ? " · " + (t.length - et.length) + " pasif" : "") + "</span>" +
         (m.pasif ? "" : MK.tus({ eylem: "tesis-ac", ad: "Tesis ekle", ikon: "plus", sinif: "a-tus-ikincil a-bolum-tus" })) + "</div>" +
         '<div class="a-liste-kap">' + (t.length ? MK.tablo({ baslik: "Tesisler", sinif: "a-tablo-tesis", sutunlar: TESIS_SUTUN, kayitlar: t, href: function (x) { return "#/t/" + x.id; } })
-          : '<p class="a-bos-satir">Bu müşterinin tesisi yok. Plan, rapor ve İSG-KATİP kaydı tesise bağlıdır; önce tesis eklenir.</p>') + "</div></section>" +
+          : '<p class="a-bos-satir">Bu müşterinin tesisi yok.</p>') + "</div></section>" +
       girisHtml(m);
   }
 
@@ -211,7 +211,7 @@
       (e.length ? '<div class="a-serit-kap">' + MK.serit("uyari", "triangle-alert", "Eksik bilgi: " + e.join(" · ") + ". Kayıt engellenmez; raporun işyeri bölümünde gerekir, rapor imzalanırken yeniden hatırlatılır.") + "</div>" : "") +
       '<div class="a-yuzler">' +
         /* 2026-09-26 (M3 2. tur): ekipmanlar planın içinde → yüz tesisin planını açar (plan yoksa yalnız sayı) */
-        yuz({ ikon: "wrench", ad: "Ekipman", sayi: t.ekipman, hedef: t.pid ? 13 : null, hash: "#/plan/" + t.pid, ne: "Planlar", not: t.pid ? "planın içinde" : "plan açılınca görünür" }) +
+        yuz({ ikon: "wrench", ad: "Ekipman", sayi: t.ekipman, hedef: t.pid ? 13 : null, hash: "#/plan/" + t.pid, ne: "Planlar" }) +
         yuz({ ikon: "scroll-text", ad: "İSG-KATİP sözleşme ID", sayi: isg.length, hedef: soz ? 12 : null, hash: soz ? "#/s/" + soz.no : "", ne: "Sözleşmeler", uyari: !isg.length, not: soz ? "sözleşme " + soz.no : "iş sözleşmesi yok" }) +
         yuz({ ikon: "clock", ad: "Son kontrol", sayi: t.son ? MK.gunKisa(t.son) : "—", not: t.son ? MK.ayYil(t.son) : "ilk kontrol" }) +
         yuz({ ikon: "alarm-clock", ad: "Sonraki kontrol", sayi: MK.gunKisa(t.sonraki), not: k < 0 ? -k + " gün geçti" : k === 0 ? "bugün" : k + " gün sonra", uyari: k <= YAKIN }) +
@@ -222,7 +222,7 @@
       '<section class="a-bolum" aria-labelledby="a-b-isg"><div class="a-alt-bas"><h2 class="a-alt-baslik" id="a-b-isg">İSG-KATİP sözleşme ID\'leri</h2><span class="a-sayac"><b>' + isg.length + "</b> ID</span>" +
         (soz ? MK.git({ hedef: 12, hash: "#/s/" + soz.no, ad: "Sözleşmede aç", ikon: "arrow-right", sinif: "a-tus-ikincil a-bolum-tus", ne: "Sözleşmeler" }) : "") + "</div>" +
         '<div class="a-liste-kap">' + (isg.length ? MK.tablo({ baslik: "İSG-KATİP sözleşme ID'leri", sinif: "a-tablo-isg", sutunlar: ISG_SUTUN(t), kayitlar: isg })
-          : '<p class="a-bos-satir">Bu tesis için ID yok; plan açarken el ile girilebilir.</p>') + "</div></section>" +
+          : '<p class="a-bos-satir">Bu tesis için ID yok.</p>') + "</div></section>" +
       '<section class="a-bolum" aria-labelledby="a-b-plan"><div class="a-alt-bas"><h2 class="a-alt-baslik" id="a-b-plan">Planlar</h2></div>' +
         (t.pid ? '<dl class="a-bilgi">' + bilgi("Proje no", '<a class="a-no" href="planlarim.html#/plan/' + t.pid + '">' + t.plan + "</a>") + bilgi("Başlangıç", MK.gunYaz(t.ptarih)) +
           bilgi("Durum", rozet(MV.PLAN_DURUM[t.pdurum])) + "</dl>" : '<p class="a-bos-satir">Bu tesiste açık ya da geçmiş plan yok.</p>') + "</section>";

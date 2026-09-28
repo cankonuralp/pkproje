@@ -978,6 +978,8 @@ Yeni format, ekipman türü ya da PDF eklendiğinde de geçerlidir; ekran başı
 3. **Uygun / uygun değil / uygulanamaz** seçilen her tabloda maddeler **Uygun** olarak gelir; başlıktaki ünlem menüsüyle hepsi uygun ·
    uygun değil · uygulanamaz yapılır.
 4. **Küçük açıklama yazısı yok**: alan altında ipucu, sınır açıklaması, şeffaf bilgi satırı konmaz (firma formatı açıkça isterse o firmada).
+   Ölçüt (2026-09-28, T5): sistemin nasıl işlediğini, kimin göreceğini, ne zaman açılacağını anlatan cümle kalkar; değeri niteleyen kısa
+   etiket (durum, birim, zaman aralığı: "imza bekliyor", "son 12 ayda imzalı rapor"), uyarının kendisi ve boş liste başlığı kalır.
 5. **Gönderirken** uyarı listesi yok: zorunlu alan eksikse kısa pencere "Zorunlu alanlar doldurulmadı", eksik alanlar kırmızı, ekran ilk
    eksiğe kayar; zorunlu olmayan eksik gönderimi durdurmaz. Temel zorunlular: fotoğraf (en az 1), türün ölçüm cihazları (kalibrasyonu
    geçerli), uygun değil maddenin açıklaması (Bakanlık formatlı türde derecesi), test ve ölçüm değerleri (isteğe bağlı işaretlenenler hariç)
@@ -1758,6 +1760,22 @@ revizyon, alan kopyalama, hafif kusur devri, meslek eşleşme denetimi).
 - Emsal ürünler: https://opwire.app/iso-17020-periyodik-kontrol-yazilimi/ · https://17020muayene.vidco.com.tr/ · https://akuple.com/asansor-kontrol-yazilimi/ · https://ensyazilim.com/
 
 ## 11 · Değişiklik günlüğü
+- 2026-09-28 (116): **T5 · Genel arama + küçük açıklama yazıları** (§9 otuz dördüncü tur; §3.8 kural 4, 6; reisim: *"herhangi bir yerde küçük
+  yazılarla info olmaz … hepsinde ara barını kaldır … ikinci görselde attığım şeffaf yazılara gerek yok"*). Genel arama: T2'deki ortak kural
+  (alan kutusu olan listede genel arama yok) bütün listelerde geçerli — plan içi, Planlar, Raporlar. Açıklama taraması (ölçüt §3.8 kural 4):
+  Ölçüm cihazları kartı ("rapora buradan dolar", "raporda bu gruplarda önceden işaretli gelir; denetçi zimmetindekilerden seçer",
+  "kalibrasyonlar arasında cihazın doğruluğu") · Ekipman türleri ("tek ekipmanın tarihi planda değiştirilebilir", "planlarda, bütün
+  tesislerde", "raporda ölçüm cihazı istenmez") · plan içi adımlar ("Plan kabul edilince başlar", "Ekipman ekleme ve rapor oluşturma
+  denetime başlayınca açılır", "tamamlamak engellenmez", "Denetim bitince buradan tamamlanır", proje notlarının altındaki kim görür satırı,
+  ekipman ekle penceresindeki branş / onay cümlesi, rapor tablosu boşken "Rapor oluştur ile açılır"; reddet penceresindeki kural yalnız hata
+  anında) · yüz kutularındaki nasıl-işler notları (Ana sayfa, Müşteriler, Personel, Zimmetler, Raporlar, Dökümanlar) · uyarı şeritlerindeki
+  ek cümleler ("Kayıt engellenmez; …", "Plan kabulünde uyarı olarak görünür; …", "Plan açılır.", "Yalnız ekranda; Uyarılar'da da
+  görünür.", "Plan açarken el ile de girilebilir.", "İkinci plan açılabilir; …", "Parola şimdi ya da daha sonra değiştirilebilir.",
+  hesap kapalı şeridi kısaldı) · başlık yanı açıklamalar ("yeniden eskiye", "ekipman türü × adet × birim fiyat"). Telefonda
+  yalnız tuş taşıyan adım kutusu artık boş kutu olarak kalmaz (tuşlar altta). Kalanlar (bilerek): boş liste gövde cümleleri, son imza
+  penceresinin yöntem şeritleri, hata iletileri. 2 deneme güncellendi (Plan aç: İSG-KATİP bitmiş uyarısı ve açık plan şeridi, açıklama cümlesi yok). 18 maket temiz: durum 1936/1936 ·
+  etkileşim 454/454 · telefon 968/968 (son üç şerit kırpması sonrası m1, m5, m6, m13 etkileşimi yeniden koşuldu); cihaz kartı 1920'de, plan içi
+  kabul adımı 375'te gözle.
 - 2026-09-28 (115): **T4 · Raporlar** (§9 otuz dördüncü tur; §3.8 kural 6, 7; reisim: *"Raporlar ekranında ve planlarda … toplu pdf indirme
   tuşu olsun … raporlar modülünde kusurlu tuşunu kaldır … hepsinde ara barını kaldır"*). "Kusurlu" çipi kalktı (sonuç Sonuç seçicisinde);
   "Hepsinde ara" kutusu T2'de ortak kuralla kalkmıştı (alan kutuları var). Başlıkta **PDF indir**: süzgeçten geçen raporlar tek PDF'te,

@@ -136,13 +136,13 @@
     return '<div class="a-yuzler">' +
       yuz({ ikon: "key-round", ad: "Giriş hesabı", sayi: h ? h.roller.length + " rol" : "Yok", eylem: "hesaba-git",
         not: h ? (h.durum === "etkin" ? h.roller.map(function (r) { return MV.rol(r).kisa; }).join(" · ") : HESAP[h.durum].ad) : "Hesap aç", uyari: !!h && h.durum === "ilk" }) +
-      yuz({ ikon: "scroll-text", ad: "İSG-KATİP kaydı", sayi: MV.ISG.filter(function (x) { return x.k === p.id && !x.onceki; }).length, modul: "Sözleşmeler · İSG-KATİP", href: sayfa(12) && sayfa(12) + "#/isg?kisi=" + p.id, not: "tesis başına" }) +
-      yuz({ ikon: "package", ad: "Zimmetinde", sayi: z.length, eylem: "zimmete-git", not: "cihaz, araç ve diğer" }) +
+      yuz({ ikon: "scroll-text", ad: "İSG-KATİP kaydı", sayi: MV.ISG.filter(function (x) { return x.k === p.id && !x.onceki; }).length, modul: "Sözleşmeler · İSG-KATİP", href: sayfa(12) && sayfa(12) + "#/isg?kisi=" + p.id }) +
+      yuz({ ikon: "package", ad: "Zimmetinde", sayi: z.length, eylem: "zimmete-git" }) +
       /* eğitim sayıları eğitim kayıtlarından (M10/M16); tekrarı geçen ayrıca söylenir */
       (function () { var eg = MV.egitimleri(p.id), gecti = eg.filter(function (x) { return MV.egitimDurum(x) === "gecti"; }).length, yakin = eg.filter(function (x) { return MV.egitimDurum(x) === "yakin"; }).length;
         return yuz({ ikon: "graduation-cap", ad: "Eğitim", sayi: eg.length, modul: "Eğitimler", href: sayfa(10) && sayfa(10) + "#/?kisi=" + p.id,
           not: gecti ? gecti + " tekrarı geçti" : yakin ? yakin + " tekrarı 60 gün içinde" : "tekrarı yakın yok", uyari: gecti + yakin > 0 }); })() +
-      (inspector(p) ? yuz({ ikon: "calendar-check", ad: "Açık plan", sayi: s.plan, href: "planlarim.html", not: "kabul bekleyen ve süren" }) : "") +
+      (inspector(p) ? yuz({ ikon: "calendar-check", ad: "Açık plan", sayi: s.plan, href: "planlarim.html" }) : "") +
       "</div>";
   }
 
@@ -180,7 +180,7 @@
       '<dl class="a-bilgi">' + bilgi("Durum", rozet(HESAP[h.durum])) + bilgi("Giriş e-postası", kacis(p.eposta), true) +
         bilgi(h.durum === "ilk" ? "Geçici parola verildi" : "Son giriş", MK.zamanYaz(h.durum === "ilk" ? h.verildi : h.son)) +
         bilgi("Görebildiği modül", gorulen + " / " + modulSayisi) + "</dl>" +
-      (pasif ? '<div class="a-bolum-serit">' + MK.serit("bilgi", "ban", "Hesap kapalı: giriş yapamaz; roller korunur, kayıtları ve imzaladığı raporlar yerinde kalır.") + "</div>" : "") +
+      (pasif ? '<div class="a-bolum-serit">' + MK.serit("bilgi", "ban", "Hesap kapalı: giriş yapamaz.") + "</div>" : "") +
       '<p class="a-etiket a-etiket-ust">Roller</p>' + rolListesi(sec, "data-rol", pasif, p) +
       /* bölüm içi çubuk: telefonda yapışkan DEĞİL (form sayfası çubuğu değil; ölçüm 2026-09-25: rol satırlarının üstüne biniyordu) */
       (pasif ? "" : '<div class="a-bolum-eylem"><p class="a-adim-not">' + (degisti ? "Kaydedilmemiş değişiklik var." : "") + "</p>" +
@@ -366,7 +366,7 @@
     $("a-nesne").innerHTML = MK.kirinti([["Personel", "#/"], [p.ad, "#/p/" + p.id], ["Zimmet geçmişi"]]) +
       '<div class="a-nesne-bas"><div class="a-nesne-kimlik"><div class="a-nesne-baslik"><h1 tabindex="-1">Zimmet geçmişi</h1></div>' +
         '<p class="a-nesne-alt">' + ikon("user", "a-ikon-kucuk") + "<span>" + kacis(p.ad) + " · " + g.length + " teslim · " + kiside + " varlık hâlâ kişide</span></p></div></div>" +
-      '<section class="a-bolum" aria-labelledby="a-b-zg"><div class="a-alt-bas"><h2 class="a-alt-baslik" id="a-b-zg">Verilenler ve geri alınanlar</h2><span class="a-sayac">yeniden eskiye</span></div>' +
+      '<section class="a-bolum" aria-labelledby="a-b-zg"><div class="a-alt-bas"><h2 class="a-alt-baslik" id="a-b-zg">Verilenler ve geri alınanlar</h2></div>' +
         (g.length ? '<div class="a-liste-kap">' + MK.tablo({ baslik: "Zimmet geçmişi", sinif: "a-tablo-zgecmis", sutunlar: GECMIS_SUTUN, kayitlar: g }) + "</div>"
           : '<p class="a-bos-satir">Bu kişiye hiç varlık teslim edilmemiş.</p>') + "</section>" +
       '<section class="a-bolum" aria-labelledby="a-b-zf"><div class="a-alt-bas"><h2 class="a-alt-baslik" id="a-b-zf">İmzalı zimmet formları</h2><span class="a-sayac"><b>' + formlar.length + "</b> form</span></div>" +
@@ -386,7 +386,7 @@
         '<p class="a-nesne-alt">' + ikon("id-card", "a-ikon-kucuk") + "<span>" + kacis(MV.meslekAd(p)) + (m.b ? " · " + MV.bransAd(m.b) : "") + "</span></p></div>" +
         '<div class="a-eylem-cubugu"><a class="a-tus a-tus-birincil" href="#/p/' + p.id + '/duzenle">' + ikon("pencil", "a-ikon-kucuk") + "Düzenle</a></div></div>" +
       yuzler(p) +
-      (e.length ? '<div class="a-serit-kap">' + MK.serit("uyari", "triangle-alert", "Eksik bilgi: " + kacis(e.join(" · ")) + ". Plan kabulünde uyarı olarak görünür; kabul engellenmez.") + "</div>" : "") +
+      (e.length ? '<div class="a-serit-kap">' + MK.serit("uyari", "triangle-alert", "Eksik bilgi: " + kacis(e.join(" · ")) + ".") + "</div>" : "") +
       '<section class="a-bolum" aria-labelledby="a-b-kimlik"><div class="a-alt-bas"><h2 class="a-alt-baslik" id="a-b-kimlik">Kimlik ve sicil</h2></div><dl class="a-bilgi">' +
         bilgi("Meslek", kacis(MV.meslekAd(p))) + bilgi("Branş", MV.bransAd(m.b)) +
         bilgi("Diploma no", p.diploma ? '<span class="a-kod">' + p.diploma + "</span>" : yok) +
@@ -484,7 +484,7 @@
           alan("basla", "İşe başlama", girdi("basla", "a-girdi-sicil", F.basla, ' inputmode="numeric" maxlength="10" placeholder="GG.AA.YYYY"'), "", true) +
         "</div></section>" +
         '<section class="a-form-bolum" aria-labelledby="f-b2"><h2 id="f-b2">Meslek ve sicil</h2>' +
-          (m && !m.g.length ? MK.serit("uyari", "triangle-alert", "Bu meslek yetkili kişi meslekleri arasında değil: inspector rolü verilirse kartta uyarı görünür.") : "") +
+          (m && !m.g.length ? MK.serit("uyari", "triangle-alert", "Bu meslek yetkili kişi meslekleri arasında değil.") : "") +
           '<div class="a-form">' +
           alan("meslek", "Meslek", MK.secim({ id: "f-meslek", ad: "Meslek", deger: F.meslek, secenekler: meslekSec, ipucu: "Meslek seçin", gecersiz: !!F.hata.meslek, tanim: "f-meslek-ipucu" }), "", true, true) +
           (F.meslek === "diger" ? alan("meslekMetin", "Meslek adı", girdi("meslekMetin", "", F.meslekMetin, ' maxlength="60"'), "", true, true) : "") +
