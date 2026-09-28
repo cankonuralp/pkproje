@@ -1702,6 +1702,22 @@ revizyon, alan kopyalama, hafif kusur devri, meslek eşleşme denetimi).
 - Emsal ürünler: https://opwire.app/iso-17020-periyodik-kontrol-yazilimi/ · https://17020muayene.vidco.com.tr/ · https://akuple.com/asansor-kontrol-yazilimi/ · https://ensyazilim.com/
 
 ## 11 · Değişiklik günlüğü
+- 2026-09-28 (110): **Maket sayfalar arası kalıcı — bütün site denenebilir** (§9 otuz üçüncü tur, karar c; reisim: *"tüm site maket üzerinde
+  aktif çalışabilsin her fonksiyonu test edicem"*). Tek mekanizma (maket-ortak.js KALICI MAKET): ortak veri (MV) her sayfa açılışında
+  tohumdan sonra bu tarayıcıdaki denemelerle yerinde birleşir (kayıt kimliği korunur, silinen silinir, yalnız tohumdan farklı koleksiyon
+  saklanır); yerel kayıt tutan iki modül (Planlar, saha raporu) kendi durumunu aynı depoya yazar; her tıklama, yazma, seçim, adres değişimi ve
+  bildirimden sonra kaydedilir. Yan menünün altında "Denemeleri sıfırla" (iki adım) tohum veriye döner. Yalnız makette; gerçek uygulamada
+  kayıt sunucuda. Bağlar: Plan aç'ta açılan plan ortak kayda (MV.ACILAN_PLANLAR, eşsiz kimlik; önce hep 90'dı) → Planlar listesinde
+  "Kabul bekliyor", kapsamdaki ekipmanla; Planlar'da eklenen ekipman ve oluşturulan rapor ortak kayda (MV.EKIPMAN · MV.RAPORLAR) → saha rapor
+  ekranı açılır; raporun durumu, geri gönderme ve gönderiliş ortak kayıttan (Onaylar, Raporlar değiştirir); onaya gönderilen rapor Onaylar
+  kuyruğuna, onaylanan Raporlar'a ve Planlar'daki satıra düşer. Ölçerken bulunan çıkmaz (anayasa 0.8, sınıf): bir inspector'ın zimmetinde
+  türün cihazı yoksa rapor gönderilemiyor ve yol gösterilmiyordu (mekanik: mesafe ölçer, kumpas; elektrik: geçerli tesisat test cihazı,
+  multimetre) → "Cihaz ekle" penceresi o türün cihazlarını kimde / depoda / kalibrasyon durumuyla listeler, geçerli olanda "Zimmet teslimi"
+  Zimmetler'in teslim penceresini teslim alacak kişi seçili açar; teslimden sonra rapora dönünce cihaz eklenir. Uçtan uca denendi (aynı
+  tarayıcıda, sayfa değiştirerek): Plan aç → Planlar → kabul → denetim → rapor oluştur → yazılanlar kalıcı → zimmet teslimi → cihaz ekle →
+  onaya gönder → Onaylar kuyruğu → onayla → Raporlar "Muayene uzmanı onayı" → Planlar satırı aynı durum. 5 yeni deneme (yenilemede kalır,
+  sıfırla, Plan aç → Planlar, Planlar → saha raporu, saha raporu → Onaylar). 18 maket temiz: durum 1928/1928 · etkileşim 441/441 · telefon
+  964/964 ("Denemeleri sıfırla" tuşu dokunmatik bantta ilk ölçümde küçük hedef çıktı → kalıbın tuş yüksekliği).
 - 2026-09-28 (109): **Formatın istediği her veri saha raporunda girilir, final raporda formattaki yerinde çıkar** (§9 otuz üçüncü tur, karar a:
   ekran uygulamanın düzeninde, PDF'e benzetilmedi). İç tesisat: **6.1 Pano linye ve sigortaları** — fotoğraftan okunan satıra "Kontrol et"
   penceresinde Icu, faz / N-PEN / PE kesiti, Ib, Iz, RCD varsa IΔ · TΔ; **6.2 Potansiyel dengeleme iletkenleri** ve **6.3 Zemin izolasyonu**

@@ -271,8 +271,12 @@
     var kaydedilen = F.ekip.filter(function (k) { return !sozId(k) && (F.isg[k] || "").trim() && F.kaydet[k] && MV.tesisSozlesmesi(F.tesis, MK.BUGUN); });
     kaydedilen.forEach(function (k) { MV.ISG.push({ id: "i" + (MV.ISG.length + 200), t: F.tesis, k: k, no: F.isg[k].trim(), onay: null, bitis: null, pdf: null, girdi: "za" }); });
     SONUC = { no: MV.sonrakiProjeNo(), t: t, gun: tarihIso(F.tarih), bitGun: tarihIso(F.bitTarih), aciklama: F.aciklama.trim(), ekip: F.ekip.slice(), k: k, D: D, kaydedilen: kaydedilen };
-    /* maket: tesis yeni planı taşır (sonraki proje no ilerler); Planlar maketinin listesine sayfalar arası kayıt TAŞINMAZ */
-    if (!t.pid || !MV.acikPlan(t)) Object.assign(t, { plan: SONUC.no, pid: 90, pdurum: "bekliyor", ptarih: SONUC.gun, pekip: SONUC.ekip.slice(), pbitTarih: SONUC.bitGun });
+    /* tesis yeni planı taşır (sonraki proje no ilerler); plan ortak kayda yazılır → Planlar listesine düşer (2026-09-28, Kalem M: sayfalar
+       arası kalıcı). Kimlik eşsiz (100'den başlar; tohum planları 1–10). */
+    var pid = 100 + MV.ACILAN_PLANLAR.length;
+    MV.ACILAN_PLANLAR.push({ id: pid, no: SONUC.no, tesis: t.id, tarih: SONUC.gun, bitTarih: SONUC.bitGun, ekip: SONUC.ekip.slice(), aciklama: SONUC.aciklama,
+      ekp: secililer().map(function (e) { return e.kod; }), acildi: MK.simdi(), isg: SONUC.ekip.map(function (k) { var d = D[k]; return d && d.isg.x ? d.isg.x.no : (F.isg[k] || "").trim(); }).filter(Boolean)[0] || "" });
+    if (!t.pid || !MV.acikPlan(t)) Object.assign(t, { plan: SONUC.no, pid: pid, pdurum: "bekliyor", ptarih: SONUC.gun, pekip: SONUC.ekip.slice(), pbitTarih: SONUC.bitGun });
     F = null;
     location.hash = "#/acildi";
   }

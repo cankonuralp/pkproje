@@ -69,7 +69,10 @@ html[data-giris="fare"] .a-girdi:focus, html[data-giris="fare"] .a-alan:focus { 
   border-radius: var(--r-tam); background: var(--onay); color: var(--onay-uzeri);
   font-size: var(--boy-etiket); font-weight: 700;
 }
-.a-cubuk-alt { flex: none; padding: 10px 20px 12px; border-top: 1px solid var(--cubuk-secili); font-size: var(--boy-etiket); color: var(--cubuk-yazi2); }
+.a-cubuk-alt { flex: none; display: flex; flex-wrap: wrap; align-items: center; justify-content: space-between; gap: 4px 8px; padding: 10px 20px 12px; border-top: 1px solid var(--cubuk-secili); font-size: var(--boy-etiket); color: var(--cubuk-yazi2); }
+/* maketin kalıcı denemelerini siler (2026-09-28, Kalem M) */
+.a-cubuk-sifirla { min-height: var(--tus-y); padding: 0 8px; border: 1px solid var(--cubuk-secili); border-radius: var(--r-kucuk); background: none; color: var(--cubuk-yazi2); font: inherit; cursor: pointer; }
+.a-cubuk-sifirla:hover { color: var(--cubuk-yazi); }
 .a-perde { display: none; }
 
 .a-govde { min-width: 0; display: flex; flex-direction: column; }

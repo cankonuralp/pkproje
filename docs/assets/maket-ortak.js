@@ -133,7 +133,7 @@
         '<img class="a-cubuk-isaret" src="../marka/probata-isaret-koyu-zemin.svg" alt="probata" width="25" height="32">' +
         '<button class="a-ikon-tus a-cubuk-kapat" type="button" data-eylem="cekmece-kapat" aria-label="Menüyü kapat">' + I("x") + "</button></div>" +
         '<nav class="a-menu" id="a-menu" aria-label="Modüller">' + menuHtml(o) + "</nav>" +
-        '<div class="a-cubuk-alt">Maket · uydurma veri</div></aside>' +
+        '<div class="a-cubuk-alt"><span>Maket · uydurma veri</span><button class="a-cubuk-sifirla" type="button" data-eylem="maket-sifirla">Denemeleri sıfırla</button></div></aside>' +
       '<div class="a-perde" data-eylem="cekmece-kapat"></div>' +
       '<div class="a-govde"><header class="a-ust">' +
         '<button class="a-menu-tus" type="button" data-eylem="cekmece-ac" aria-label="Menüyü aç" aria-controls="a-cubuk" aria-expanded="false">' + I("menu") + "</button>" +
@@ -832,10 +832,82 @@
     });
   };
 
+  /* ── KALICI MAKET (2026-09-28, Kalem M; reisim: "tüm site maket üzerinde aktif çalışabilsin her fonksiyonu test edicem") ─────────
+     TEK MEKANİZMA: maketteki her değişiklik bu tarayıcıda saklanır, sayfa değişince ve yeniden açılınca sürer. İki kaynak:
+     (1) ortak veri MV — her sayfa açılışında tohum kurulduktan sonra kayıtlı fark YERİNDE geri yüklenir (dizide kayıt kimliği id · no · kod · k
+         ile eşlenir, nesne kimliği korunur; silinen kayıt silinir, sıra korunur); yazarken yalnız tohumdan farklı koleksiyonlar tutulur.
+     (2) modülün kendi durumu — MK.kalici(ad, al, ver): Planlar ve saha raporu gibi yerel kayıt tutan modüller kaydolur.
+     Kayıt anı: her tıklama, yazma, seçim, adres değişimi ve bildirimden hemen sonra; sayfadan çıkarken. Yalnız bu tarayıcıda (sunucu yok);
+     "Sıfırla" (yan menünün altı) tohum veriye döner. Tohum verinin yapısı değişince VERI_SURUM artırılır → eski kayıt kullanılmaz.
+     ⛔ Yalnız makette: gerçek uygulamada kayıt sunucuda (pkproje.md §8), bu mekanizma koda taşınmaz. */
+  var DEPO_AD = "probata-maket", VERI_SURUM = "2026-09-28-1";
+  var depo = (function () { try { var d = JSON.parse(localStorage.getItem(DEPO_AD) || "null"); return d && d.surum === VERI_SURUM ? d : null; } catch (e) { return null; } })() ||
+    { surum: VERI_SURUM, mv: {}, modul: {} };
+  var MVK = null, TABAN = {}, MODUL = {}, sifirlandi = false, yazZaman = null;
+  var nesneMi = function (x) { return x && typeof x === "object" && !Array.isArray(x); };
+  function anahtar(l) {
+    var ad = ["id", "no", "kod", "k"];
+    for (var i = 0; i < ad.length; i++) {
+      var g = {}, ok = l.length > 0 && l.every(function (x) { if (!nesneMi(x) || x[ad[i]] === undefined || x[ad[i]] === null || g[x[ad[i]]]) return false; g[x[ad[i]]] = 1; return true; });
+      if (ok) return ad[i];
+    }
+    return null;
+  }
+  function birlestir(kap, ad, yeni) {   /* kap[ad] := yeni, kimlik korunarak */
+    var eski = kap[ad];
+    if (Array.isArray(eski) && Array.isArray(yeni)) {
+      var an = anahtar(eski.length ? eski : yeni), h = {};
+      if (an) eski.forEach(function (x) { h[x[an]] = x; });
+      var son = yeni.map(function (y, i) {
+        var e = an ? (nesneMi(y) ? h[y[an]] : null) : eski[i];
+        if (nesneMi(e) && nesneMi(y)) { nesneBirlestir(e, y); return e; }
+        return y;
+      });
+      eski.length = 0; son.forEach(function (x) { eski.push(x); }); return;
+    }
+    if (nesneMi(eski) && nesneMi(yeni)) { nesneBirlestir(eski, yeni); return; }
+    kap[ad] = yeni;
+  }
+  function nesneBirlestir(e, y) {
+    Object.keys(e).forEach(function (k) { if (!(k in y) && typeof e[k] !== "function") delete e[k]; });
+    Object.keys(y).forEach(function (k) { birlestir(e, k, y[k]); });
+  }
+  /* maket-veri.js sonunda çağrılır: tohumun izi alınır, kayıtlı fark yüklenir */
+  MK.kaliciMV = function (mv) {
+    MVK = mv;
+    Object.keys(mv).forEach(function (k) { var v = mv[k]; if (v && typeof v === "object") { try { TABAN[k] = JSON.stringify(v); } catch (e) { /* döngülü: saklanmaz */ } } });
+    Object.keys(depo.mv).forEach(function (k) { if (k in TABAN) { try { birlestir(mv, k, depo.mv[k]); } catch (e) { delete depo.mv[k]; } } });
+  };
+  MK.kalici = function (ad, al, ver) {
+    MODUL[ad] = al;
+    if (depo.modul[ad] !== undefined) { try { ver(depo.modul[ad]); } catch (e) { delete depo.modul[ad]; } }
+  };
+  function kaliciYaz() {
+    if (sifirlandi) return;
+    clearTimeout(yazZaman); yazZaman = null;
+    if (MVK) Object.keys(TABAN).forEach(function (k) { try { var j = JSON.stringify(MVK[k]); if (j !== TABAN[k]) depo.mv[k] = JSON.parse(j); else delete depo.mv[k]; } catch (e) { /* atla */ } });
+    Object.keys(MODUL).forEach(function (ad) { try { depo.modul[ad] = MODUL[ad](); } catch (e) { /* atla */ } });
+    try { localStorage.setItem(DEPO_AD, JSON.stringify(depo)); } catch (e) { /* depolama kapalı ya da dolu: maket bu oturumda çalışır, kalıcı değil */ }
+  }
+  MK.kaliciYaz = function () { if (!sifirlandi) { clearTimeout(yazZaman); yazZaman = setTimeout(kaliciYaz, 150); } };
+  MK.kaliciVar = function () { return Object.keys(depo.mv).length + Object.keys(depo.modul).length > 0; };
+  ["click", "input", "change", "keyup"].forEach(function (o) { document.addEventListener(o, MK.kaliciYaz, true); });
+  window.addEventListener("hashchange", MK.kaliciYaz);
+  window.addEventListener("pagehide", function () { if (yazZaman) kaliciYaz(); });
+  document.addEventListener("visibilitychange", function () { if (document.visibilityState === "hidden" && yazZaman) kaliciYaz(); });
+  MK.eylem = MK.eylem || {};
+  /* sıfırla: iki adım (ilk basış onay ister), sonra tohum veriyle yeniden açılır */
+  MK.eylem["maket-sifirla"] = function (el) {
+    if (!el.dataset.onay) { el.dataset.onay = "1"; el.textContent = "Onayla: bütün denemeler silinir"; return; }
+    sifirlandi = true; clearTimeout(yazZaman);
+    try { localStorage.removeItem(DEPO_AD); } catch (e) { /* yok */ }
+    location.reload();
+  };
+
   /* ── BİLDİRİM · ÇEKMECE · DARALTMA · TEMA ───────────────────────────────────────────────────────── */
   var bildirimZaman;
   MK.bildir = function (m) {
-    $("a-bildirim-metin").textContent = m; $("a-bildirim").classList.add("a-gorunur");
+    $("a-bildirim-metin").textContent = m; $("a-bildirim").classList.add("a-gorunur"); MK.kaliciYaz();   /* her sonuç bildirimi bir değişikliktir */
     clearTimeout(bildirimZaman); bildirimZaman = setTimeout(function () { $("a-bildirim").classList.remove("a-gorunur"); }, 2800);
   };
   function listeleriKapat(haric) {

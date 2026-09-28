@@ -11,7 +11,7 @@
   "use strict";
   var $ = MK.$, kacis = MK.kacis, ikon = MK.ikon, kirp = MK.kirp, rozet = MK.rozet;
   var sorgu = function () { var m = /\?(.*)$/.exec(location.hash), o = {}; (m ? m[1] : "").split("&").forEach(function (x) { var y = x.split("="); if (y[0]) o[y[0]] = decodeURIComponent(y[1] || ""); }); return o; };
-  var DURUM = { taslak: MV.RAPOR_DURUM.taslak, onayda: MV.RAPOR_DURUM.onayda, onaylandi: MV.RAPOR_DURUM.onaylandi };   /* reisim 2026-09-26: beş durum, tek kaynak MV */
+  var DURUM = MV.RAPOR_DURUM;   /* reisim 2026-09-26: beş durum, tek kaynak MV (2026-09-28: imzaya gönderilen ve tamamlanan da, salt okunur) */
   var YON = { m: "sy", e: "co" };   /* branş yöneticisi: onay türün branşına gider (§3.2 madde 3) */
   var sayi = function (v) { var x = parseFloat(String(v).replace(",", ".")); return /^\s*\d+([.,]\d+)?\s*$/.test(String(v)) ? x : NaN; };
   /* başlangıç, bitiş ve sonraki kontrol takvimden seçilir, elle yazılmaz (reisim 2026-09-27: "tıklayınca tarih seçtiren bi takvim açılsın
@@ -102,15 +102,23 @@
     }
     return r;
   }
+  /* SAYFALAR ARASI KALICI (2026-09-28, Kalem M): raporda yazılan her şey tarayıcıda saklanır (MK.kalici, numara başına); durum, geri
+     gönderme ve gönderiliş ortak kayıttan (MV.RAPORLAR — Onaylar ve Raporlar aynı kaydı değiştirir) */
+  var KAYIT = {}, YERLI = ["e", "t", "ts", "F"];
+  var duz = function (r) { var o = {}; Object.keys(r).forEach(function (k) { if (YERLI.indexOf(k) < 0) o[k] = r[k]; }); return JSON.parse(JSON.stringify(o)); };
+  MK.kalici("raporlar", function () { Object.keys(R).forEach(function (k) { if (R[k]) KAYIT[R[k].no] = duz(R[k]); }); return KAYIT; }, function (d) { KAYIT = d || {}; });
   function rapor(kod) {
     if (R[kod]) return R[kod];
     var e = MV.ekipman(kod), k = PLAN_EKP.indexOf(e), q = sorgu();
     if (!e) return null;
     if (k < 0 || k >= 10) { if (!q.no) return null; k = -1; }   /* Planlar'dan gelen öteki raporlar: numara ve durum adresten */
-    var r = raporKur(e, k, q), kay = k < 0 ? MV.rapor(q.no) : null;
-    if (kay) {   /* ortak kayıtta varsa açılış ve gönderiliş zamanı oradan (2026-09-28) */
-      r.olustu = kay.olustu; r.bas = kay.olustu; r.rtarih = kay.olustu.slice(0, 10); r.sonraki = sonrakiHesap(r); r.kayit = kay.olustu;
-      if (kay.gonderildi) { r.gonderildi = kay.gonderildi; r.bit = kay.gonderildi; }
+    var r = raporKur(e, k, q), kay = MV.rapor(r.no);
+    if (KAYIT[r.no]) Object.assign(r, KAYIT[r.no]);   /* bu tarayıcıda yazılanlar */
+    if (kay) {   /* ortak kayıt: açılış ve gönderiliş zamanı, durum, geri gönderme (2026-09-28) */
+      if (!KAYIT[r.no]) { r.olustu = kay.olustu; r.bas = kay.olustu; r.rtarih = kay.olustu.slice(0, 10); r.sonraki = sonrakiHesap(r); r.kayit = kay.olustu; }
+      if (kay.gonderildi) { r.gonderildi = kay.gonderildi; if (!r.bitEl) r.bit = kay.gonderildi; }
+      r.durum = kay.durum === "geri" ? "taslak" : DURUM[kay.durum] ? kay.durum : r.durum;
+      if (r.durum === "taslak") { r.gonderildi = kay.gonderildi || null; if (kay.geri) r.geri = kay.geri; }
     }
     return (R[kod] = r);
   }
@@ -479,7 +487,8 @@
         '<div class="a-eylem-cubugu">' + MK.tus({ eylem: "on-izle", ad: "Ön izle", ikon: "eye", sinif: "a-tus-ikincil" }) + "</div></div>" +
       '<div class="a-uyari-serit">' +
         (r.geri && !oku ? MK.serit("uyari", "undo-2", "<b>Geri gönderildi</b> · " + kacis(MV.kisi(r.geri.kim).ad) + " · " + MK.zamanYaz(r.geri.zaman) + ": “" + kacis(r.geri.gerekce) + "”") : "") +
-        (oku ? MK.serit("bilgi", "lock", r.durum === "onayda" ? "Teknik yönetici onayında · " + kacis(yon.ad) + (r.gonderildi ? " · " + MK.zamanYaz(r.gonderildi) : "") : "Muayene uzmanı onayı · imza bekleniyor") : "") +
+        (oku ? MK.serit("bilgi", "lock", r.durum === "onayda" ? "Teknik yönetici onayında · " + kacis(yon.ad) + (r.gonderildi ? " · " + MK.zamanYaz(r.gonderildi) : "")
+          : r.durum === "imzada" ? "İmzaya gönderildi" : r.durum === "imzali" ? "Tamamlandı · son imza atıldı, müşteriye açıldı" : "Muayene uzmanı onayı · imza bekleniyor") : "") +
       "</div>" +
       (r.geriler.length ? bolum("", "r-geri", "Geri gönderme geçmişi", '<ol class="a-gecmis">' + r.geriler.map(function (g) {
           return '<li><span class="a-gecmis-zaman">' + MK.zamanYaz(g.zaman) + '</span><span class="a-gecmis-ne"><b>' + kacis(MV.kisi(g.kim).ad) + "</b> · " + kacis(g.gerekce) + "</span></li>"; }).join("") + "</ol>",
@@ -578,7 +587,7 @@
         (l.length ? '<fieldset class="a-cihaz-grup"><legend class="a-gizli">' + kacis(ct.ad) + "</legend>" + l.map(function (v) {
           return '<label class="a-onay-kutusu"><input type="radio" name="w-cihaz" data-cihaz-sec="' + v.id + '"' + (d.sec.indexOf(v.id) >= 0 ? " checked" : "") + '><span><b>' + kacis(v.ad) + '</b> · <span class="a-kod">' + v.seri +
             "</span> · kalibrasyon " + MK.tarihYaz(v.kal[0].tarih) + "</span></label>"; }).join("") + "</fieldset>"
-          : '<p class="a-bos-satir">Zimmetinizde kalibrasyonu geçerli ' + kacis(ct.ad.toLocaleLowerCase("tr")) + " yok.</p>");
+          : '<p class="a-bos-satir">Zimmetinizde kalibrasyonu geçerli ' + kacis(ct.ad.toLocaleLowerCase("tr")) + " yok.</p>" + cihazNerede(W.c, W.r.kisi));
       $("a-pencere-alt").innerHTML = l.length ? MK.tus({ eylem: "pencere-kapat", ad: "Vazgeç", sinif: "a-tus-ikincil" }) + MK.tus({ eylem: "cihaz-ekle", ad: "Ekle", ikon: "plus" })
         : MK.tus({ eylem: "pencere-kapat", ad: "Kapat" });
     } else if (W.tur === "gonder") {
@@ -591,6 +600,16 @@
         : MK.tus({ eylem: "pencere-kapat", ad: "Tamamla", sinif: "a-tus-ikincil" }) + MK.tus({ eylem: "yine-de-gonder", ad: "Yine de gönder", ikon: "send" });
     }
     if (odak) { var el = $(odak); if (el) { el.focus(); if (el.setSelectionRange && el.type === "text") el.setSelectionRange(el.value.length, el.value.length); } }
+  }
+  /* zimmette yoksa bu türün cihazları nerede (2026-09-28, Kalem M; çıkmaz yok): kimde · kalibrasyon; geçerli olan için Zimmetler'de teslim
+     penceresine bağlantı — teslim alındıktan sonra rapora dönünce bu pencerede listelenir (zimmet kaydı sayfalar arası kalıcı) */
+  function cihazNerede(c, kisi) {
+    var l = MV.VARLIKLAR.filter(function (v) { return v.tur === "cihaz" && v.cihazTur === c && MV.kimde(v.id) !== kisi; });
+    if (!l.length) return '<p class="a-pencere-metin">Firmada bu türden cihaz kayıtlı değil; Ölçüm cihazları\'ndan eklenir.</p>';
+    return '<ul class="a-kosullar">' + l.map(function (v) {
+      var k = MV.kimde(v.id), yer = k === "depo" ? "Depoda" : k === "lab" ? "Kalibrasyonda" : MV.kisi(k) ? MV.kisi(k).ad + " zimmetinde" : k, gec = MV.kalDurum(v) === "gecti";
+      return '<li class="a-kosul-bilgi">' + ikon(gec ? "circle-x" : "gauge", "a-ikon-kucuk") + '<span><span class="a-kod">' + v.env + "</span> · " + yer + (gec ? " · kalibrasyonu geçmiş" : "") + "</span>" +
+        (gec || k === "lab" ? "" : '<a class="a-tus a-tus-ikincil a-serit-tus" href="' + MK.adres(9, "#/teslim/" + v.id + "?alan=" + kisi) + '">Zimmet teslimi</a>') + "</li>"; }).join("") + "</ul>";
   }
   function pencereAc(o) {
     W = o; W.hata = {}; pencereCiz(); $("a-pencere").showModal();
@@ -783,11 +802,21 @@
       MK.bildir("Madde " + (i + 1) + " için fotoğraf eklendi (" + nereden + ").");
     });
   };
+  /* ortak kayıttaki sonuç adı (Onaylar, Raporlar, Planlar bunu yazar): formatlı türde hafif / ağır, ötekinde Kusurlu */
+  function sonucAdi(r) {
+    if (r.sonuc !== "kullanilamaz") return "Uygun";
+    var l = kusurListe(r), agir = l.some(function (x) { return /Ağır/.test(x[1]); }) || sinirDisi(r) || olcumKusur(r) || fonkKusur(r);
+    return !MV.kusurSinifli(r.t) ? "Kusurlu" : agir ? "Ağır kusurlu" : l.length ? "Hafif kusurlu" : "Kusurlu";
+  }
   function gonder(r) {
     UY = null;
     if (r.geri) r.geriler.unshift(r.geri);
     var oto = !r.sonuc; if (oto) r.sonuc = otoSonuc(r);   /* seçilmediyse kriterlere göre (reisim 2026-09-27) */
     r.durum = "onayda"; r.gonderildi = MK.simdi(); r.geri = null; r.kayit = r.gonderildi; r.degisti = false; if (!r.bitEl) r.bit = r.gonderildi;
+    /* ortak kayda: Onaylar'ın kuyruğuna düşer, Planlar ve Raporlar durumu görür (Kalem M) */
+    var kay = MV.rapor(r.no);
+    if (!kay) { kay = { no: r.no, kod: r.e.kod, tesis: r.e.tesis, plan: r.e.plan || null, kisi: r.kisi, olustu: r.olustu || r.bas, onay: null, imza: null }; MV.RAPORLAR.push(kay); }
+    Object.assign(kay, { durum: "onayda", gonderildi: r.gonderildi, sonuc: sonucAdi(r), geri: null });
     ciz(); window.scrollTo(0, 0); var h = document.querySelector("#a-rapor h1"); if (h) h.focus({ preventScroll: true });
     MK.bildir("Onaya gönderildi: " + MV.kisi(YON[r.t.b]).ad + ", " + MV.bransAd(r.t.b).toLocaleLowerCase("tr") + " branş yöneticisi." +
       (oto ? " Sonuç kriterlere göre: " + (r.sonuc === "kullanilir" ? "Uygun" : "Uygun değil") + "." : ""));

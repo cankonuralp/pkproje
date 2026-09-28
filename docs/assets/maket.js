@@ -118,6 +118,48 @@
   });
   kaydet(PLANLAR[0], "2026-09-22T15:20", "za", "Not", "Tesis 12:00–13:00 arası öğle arası veriyor; bu saatte üretim holüne girilmiyor.");
 
+  /* ── SAYFALAR ARASI KALICI (2026-09-28, Kalem M; reisim: "tüm site maket üzerinde aktif çalışabilsin") ─────────────────────────
+     Planlar'ın kendi durumu (planlar, sicil, numara sırası) tarayıcıda saklanır (MK.kalici); Plan aç'ta açılan planlar (MV.ACILAN_PLANLAR)
+     listeye alınır; burada eklenen ekipman ve oluşturulan rapor ortak kayda (MV.EKIPMAN · MV.RAPORLAR) yazılır → saha raporu, Onaylar,
+     Raporlar aynı kaydı görür; rapor durumları ortak kayıttan okunur (onay, geri gönderme, imza başka ekranda olur). */
+  MV.PERSONEL.forEach(function (x) { if (!KISI[x.id]) KISI[x.id] = { ad: x.ad, brans: "", rol: "Inspector" }; });
+  var turBul = function (k) { return KATALOG.filter(function (t) { return t.k === k; })[0] || MV.tur(k); };
+  MK.kalici("planlar", function () {
+    return { planlar: PLANLAR, sicil: Object.keys(SICIL).map(function (k) { return Object.assign({}, SICIL[k], { tur: SICIL[k].tur.k }); }), raporSira: raporSira, kodSira: kodSira };
+  }, function (d) {
+    PLANLAR.length = 0; d.planlar.forEach(function (p) { PLANLAR.push(p); });
+    Object.keys(SICIL).forEach(function (k) { delete SICIL[k]; }); d.sicil.forEach(function (x) { x.tur = turBul(x.tur); SICIL[x.kod] = x; });
+    raporSira = d.raporSira; kodSira = d.kodSira;
+  });
+  var tesisOf = function (p) { if (p.tesis) return p.tesis; var t = MV.TESISLER.filter(function (x) { return x.pid === p.id; })[0]; return t ? t.id : null; };
+  function ortakEkipman(p, kod) {
+    var x = SICIL[kod], e = MV.ekipman(kod);
+    if (e) { e.plan = p.id; return; }
+    MV.EKIPMAN.push({ kod: kod, tur: x.tur.k, tesis: tesisOf(p), konum: x.konum, onceki: null, ilk: true, plan: p.id, marka: "", model: "", imal: "", seri: x.seri || "" });
+  }
+  function ortakRapor(p, r) {
+    if (MV.rapor(r.no)) return;
+    var e = MV.ekipman(r.kod), b = MV.tur(e.tur).b, kisi = p.ekip.filter(function (k) { var x = MV.kisi(k), m = x && MV.meslek(x.meslek); return m && m.g.indexOf(MV.tur(e.tur).g) >= 0; })[0] || (b === "e" ? "ea" : "mk");
+    MV.RAPORLAR.push({ no: r.no, kod: r.kod, tesis: e.tesis, plan: p.id, kisi: kisi, olustu: r.olustu, durum: r.durum, sonuc: null, gonderildi: null, onay: null, imza: null });
+  }
+  /* Plan aç'ta açılan planlar: tesisin kayıtlı ekipmanı kapsamda, yeni ekipmanı denetçi sahada ekler */
+  MV.ACILAN_PLANLAR.forEach(function (a) {
+    if (PLANLAR.some(function (p) { return p.no === a.no; })) return;
+    var t = MV.tesis(a.tesis), ekp = a.ekp.map(MV.ekipman).filter(Boolean);
+    var p = { id: a.id, no: a.no, ad: t.ad, musteri: MV.musteri(t.m).unvan, adres: t.adres, ilce: t.ilce, il: t.il, tarih: a.tarih, bitTarih: a.bitTarih || a.tarih,
+      bas: t.psaat ? t.psaat[0] : "09:00", bit: t.psaat ? t.psaat[1] : "17:00", ekip: a.ekip.slice(), m: ekp.filter(function (e) { return MV.tur(e.tur).b === "m"; }).length,
+      e: ekp.filter(function (e) { return MV.tur(e.tur).b === "e"; }).length, durum: "bekliyor", acildi: a.acildi, isg: a.isg ? { no: a.isg, onay: null } : null, aciklama: a.aciklama,
+      tesis: a.tesis, ekp: [], sonradan: [], rapor: [], gecmis: [] };
+    ekp.forEach(function (e) {
+      if (!SICIL[e.kod]) SICIL[e.kod] = { kod: e.kod, tur: turBul(e.tur), konum: e.konum, tesis: p.id, onceki: e.onceki ? { tarih: e.onceki.tarih, sonuc: e.onceki.sonuc, rapor: e.onceki.rapor } : null, eklendi: null };
+      p.ekp.push(e.kod); e.plan = p.id;
+    });
+    kaydet(p, p.acildi, "za", "Plan açıldı", p.ekp.length + " ekipman · " + p.ekip.map(function (k) { return KISI[k].ad; }).join(", "));
+    PLANLAR.push(p);
+  });
+  /* rapor durumu ortak kayıttan (onay, geri gönderme, imza başka ekranda) */
+  PLANLAR.forEach(function (p) { p.rapor.forEach(function (r) { var m = MV.rapor(r.no); if (m) { r.durum = m.durum === "geri" ? "taslak" : m.durum; r.sonuc = m.sonuc; } }); });
+
   var DURUM = {
     bekliyor: { ad: "Kabul bekliyor", rozet: "a-rozet-bekliyor", sira: 0 },
     kabul: { ad: "Kabul edildi", rozet: "a-rozet-kabul", sira: 1 },
@@ -580,7 +622,7 @@
     var p = pl(el);
     if (p && calisir(p) && !raporuVar(p, el.dataset.kod)) {
       var r = { no: raporNo("0926", raporSira++), kod: el.dataset.kod, durum: "taslak", olustu: simdi(), sonuc: null };
-      p.rapor.push(r); kaydet(p, simdi(), BEN, "Rapor oluşturuldu", r.no + " · " + r.kod); SZ.r.sayfa = 1;
+      p.rapor.push(r); ortakEkipman(p, r.kod); ortakRapor(p, r); kaydet(p, simdi(), BEN, "Rapor oluşturuldu", r.no + " · " + r.kod); SZ.r.sayfa = 1;
       goster(false); MK.bildir("Rapor oluşturuldu: " + r.no + ". Satırındaki “Raporu düzenle” saha rapor ekranını açar.");
     }
   };
@@ -768,7 +810,7 @@
     var p = EXCEL.p, ok = EXCEL.satirlar.filter(function (x) { return x.ok; }), atla = EXCEL.satirlar.length - ok.length;
     ok.forEach(function (x) {
       SICIL[x.kod] = { kod: x.kod, tur: x.t, konum: x.konum, tesis: p.id, onceki: null, eklendi: simdi(), seri: x.seri };
-      p.ekp.push(x.kod); p.sonradan.push(x.kod);
+      p.ekp.push(x.kod); p.sonradan.push(x.kod); ortakEkipman(p, x.kod);
     });
     kaydet(p, simdi(), BEN, "Excel'den ekipman yüklendi", ok.length + " ekipman · " + EXCEL.dosya);
     $("a-pencere").close(); goster(false);
@@ -781,7 +823,7 @@
   X["kayitli-ekle"] = function () {
     if (E.plan && E.secili.length) {
       var p = E.plan, n = E.secili.length;
-      E.secili.forEach(function (kod) { p.ekp.push(kod); p.sonradan.push(kod); kaydet(p, simdi(), BEN, "Kayıtlı ekipman plana alındı", kod + " · " + SICIL[kod].tur.ad); });
+      E.secili.forEach(function (kod) { p.ekp.push(kod); p.sonradan.push(kod); ortakEkipman(p, kod); kaydet(p, simdi(), BEN, "Kayıtlı ekipman plana alındı", kod + " · " + SICIL[kod].tur.ad); });
       var gorunur = kaydaGit(E.secili[0]);
       ekleKapat(); goster(false); MK.bildir(n + " kayıtlı ekipman plana eklendi" + (gorunur ? "." : "; süzgeç yüzünden listede görünmüyor."));
     }
@@ -790,7 +832,7 @@
     if (E.plan && E.tur && kodDurum(E.plan, E.kod).tur === "tamam") {   /* kaydetmeden önce yeniden denetlenir */
       var p = E.plan, kod = E.kod;
       SICIL[kod] = { kod: kod, tur: E.tur, konum: E.konum.trim() || "Konum yazılmadı", tesis: p.id, onceki: null, eklendi: simdi(), seri: E.seri.trim() };
-      p.ekp.push(kod); p.sonradan.push(kod); kaydet(p, simdi(), BEN, "Ekipman eklendi", kod + " · " + E.tur.ad);
+      p.ekp.push(kod); p.sonradan.push(kod); ortakEkipman(p, kod); kaydet(p, simdi(), BEN, "Ekipman eklendi", kod + " · " + E.tur.ad);
       var gor = kaydaGit(kod);
       ekleKapat(); goster(false); MK.bildir(kod + " plana eklendi" + (gor ? ". Raporu satırındaki “Rapor oluştur” açar." : "; süzgeç yüzünden listede görünmüyor."));
     }

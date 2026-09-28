@@ -2,8 +2,8 @@
  "maket": "planlar",
  "tarih": "2026-09-28",
  "arac": "tools/olc-bulut.mjs --etkilesim (başsız tarayıcı, 1920 açık tema; gen verilen denemede o genişlik)",
- "toplam": 40,
- "gecen": 40,
+ "toplam": 43,
+ "gecen": 43,
  "denemeler": [
   {
    "ad": "Denetimde süzgecinde en üstte son formatlarla açılmış plan (P-0926-040)",
@@ -129,6 +129,27 @@
    "gen": 1920,
    "sayfa": "maket/planlarim.html",
    "hash": "#/plan/1",
+   "gecti": true
+  },
+  {
+   "ad": "sayfalar arası: plan içinde oluşturulan rapor saha rapor ekranında açılır (ekipman ve rapor ortak kayıtta)",
+   "gen": 1920,
+   "sayfa": "maket/planlarim.html",
+   "hash": "#/plan/1",
+   "gecti": true
+  },
+  {
+   "ad": "kalıcı maket: plan kabul edilir, sayfa yenilenince kabul edilmiş kalır",
+   "gen": 1920,
+   "sayfa": "maket/planlarim.html",
+   "hash": "#/plan/2",
+   "gecti": true
+  },
+  {
+   "ad": "kalıcı maket: Denemeleri sıfırla (iki adım) tohum veriye döner",
+   "gen": 1920,
+   "sayfa": "maket/planlarim.html",
+   "hash": "#/plan/2",
    "gecti": true
   },
   {

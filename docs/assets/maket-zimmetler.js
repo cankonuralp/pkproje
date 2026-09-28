@@ -173,7 +173,9 @@
     if (odak) { var el = $(odak); if (el) el.focus(); }
   }
   function pencereAc(vid) {
-    W = { hata: {}, d: { varlik: vid || "", alan: "", zaman: "23.09.2026 16:40", km: "", not: "", foto: 0 } };
+    /* ?alan=<kişi>: saha raporunun "Cihaz ekle" penceresinden gelir (teslim alacak inspector hazır seçili; 2026-09-28) */
+    var a = (/[?&]alan=([a-z0-9]+)/.exec(location.hash) || [])[1] || "";
+    W = { hata: {}, d: { varlik: vid || "", alan: a, zaman: "23.09.2026 16:40", km: "", not: "", foto: 0 } };
     pencereCiz(); if (!$("a-pencere").open) $("a-pencere").showModal(); $("w-varlik").focus();
   }
 

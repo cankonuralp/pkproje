@@ -2,8 +2,8 @@
  "maket": "m6",
  "tarih": "2026-09-28",
  "arac": "tools/olc-bulut.mjs --etkilesim (başsız tarayıcı, 1920 açık tema; gen verilen denemede o genişlik)",
- "toplam": 18,
- "gecen": 18,
+ "toplam": 19,
+ "gecen": 19,
  "denemeler": [
   {
    "ad": "tesisten gelince: tarih sonraki kontrol, 6 / 6 seçili",
@@ -108,6 +108,13 @@
    "gen": 1920,
    "sayfa": "maket/plan-ac.html",
    "hash": "#/",
+   "gecti": true
+  },
+  {
+   "ad": "sayfalar arası: açılan plan Planlar listesinde (kabul bekliyor)",
+   "gen": 1920,
+   "sayfa": "maket/plan-ac.html",
+   "hash": "#/?tesis=t2",
    "gecti": true
   },
   {

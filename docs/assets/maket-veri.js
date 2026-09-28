@@ -1203,4 +1203,8 @@
       cihaz: MV.turCihazlari(t).map(function (k) { return MV.eklenebilirCihazlar(p.id, [k])[0]; }).filter(Boolean),   /* raporda eklenen: türün cihazları, zimmetten */
       sonraki: s.toISOString().slice(0, 10), no: r.no, sonuc: MV.sonucAd(r) || "Uygun", imza: r.imza };
   };
+  /* sayfalar arası ortak kayıt (2026-09-28, Kalem M): Plan aç'ta açılan planlar — Planlar bunları kendi listesine alır */
+  MV.ACILAN_PLANLAR = [];
+  /* kalıcı maket: tohum kuruldu, bu tarayıcıdaki denemeler yerinde yüklenir (maket-ortak.js KALICI MAKET) */
+  if (MK.kaliciMV) MK.kaliciMV(MV);
 })();
