@@ -2,8 +2,8 @@
  "maket": "talepler",
  "tarih": "2026-09-28",
  "arac": "tools/olc-bulut.mjs --etkilesim (başsız tarayıcı, 1920 açık tema; gen verilen denemede o genişlik)",
- "toplam": 7,
- "gecen": 7,
+ "toplam": 11,
+ "gecen": 11,
  "denemeler": [
   {
    "ad": "menüde Personel grubunda Talepler, etkin",
@@ -35,6 +35,34 @@
   },
   {
    "ad": "işe bağlı masraf: iş seçilir",
+   "gen": 1920,
+   "sayfa": "maket/talepler.html",
+   "hash": "#/yeni/masraf",
+   "gecti": true
+  },
+  {
+   "ad": "izin talebi PDF'i: firma formatı (temel KM-FR-IZN-01), talebin bilgileri ve durumu",
+   "gen": 1920,
+   "sayfa": "maket/talepler.html",
+   "hash": "#/t/I-1026-001",
+   "gecti": true
+  },
+  {
+   "ad": "masraf formu PDF'i: firma formatı (KM-FR-MSR-01), onaylayan imza yerinde",
+   "gen": 1920,
+   "sayfa": "maket/talepler.html",
+   "hash": "#/t/G-0926-003",
+   "gecti": true
+  },
+  {
+   "ad": "E-postayla ilet: PDF iner, e-posta alıcı (firma yöneticisi), konu ve metinle açılır",
+   "gen": 1920,
+   "sayfa": "maket/talepler.html",
+   "hash": "#/t/I-1026-001",
+   "gecti": true
+  },
+  {
+   "ad": "gönderilen masraf aynı pencerede açılır, PDF · e-posta hazır",
    "gen": 1920,
    "sayfa": "maket/talepler.html",
    "hash": "#/yeni/masraf",

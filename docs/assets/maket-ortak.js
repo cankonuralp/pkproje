@@ -572,7 +572,8 @@
         : /^image\//.test(yuklu.tur) ? '<img class="a-pdf-resim" src="' + yuklu.url + '" alt="' + kacis(o.dosya) + '">'
         : '<p class="a-bos-satir">Bu dosya türü burada önizlenemez; “İndir” ile açın.</p>')
       : '<div class="a-kagit" data-ad="' + kacis(o.baslik || o.dosya) + '">' + (o.icerik ? kagitKaynak(o.icerik) : ornekSayfalar(o.sayfa || 2, o.dosya)) + "</div>";
-    $("a-pdf-alt").innerHTML = MK.tus({ eylem: "pdf-indir", ad: "İndir", ikon: "download", sinif: "a-tus-ikincil" }) + MK.tus({ eylem: "pencere-kapat", ad: "Kapat" });
+    $("a-pdf-alt").innerHTML = MK.tus({ eylem: "pdf-indir", ad: "İndir", ikon: "download", sinif: "a-tus-ikincil" }) +
+      (o.eposta ? MK.tus({ eylem: "pdf-eposta", ad: "E-postayla ilet", ikon: "mail", sinif: "a-tus-ikincil" }) : "") + MK.tus({ eylem: "pencere-kapat", ad: "Kapat" });
     kagitKur();
   }
   MK.pdfGoster = function (o) {
@@ -587,6 +588,29 @@
     var o = PDF.o, d = MK.DOSYA[o.dosya], ad = /\.pdf$/i.test(o.dosya) ? o.dosya : (o.baslik || o.dosya) + ".pdf";
     if (d && d.dosya) MK.indir(o.dosya, d.dosya); else if (d && d.url) MK.indirUrl(o.dosya, d.url);
     else { var k = document.querySelector("#a-pdf-govde > .a-kagit-cerceve"); MK.bildir("PDF hazırlanıyor…"); MK.kagitPdf(k).then(function (b) { MK.indir(ad, b); MK.SON_INDIRME.sayfa = b.sayfa; MK.SON_INDIRME.onizleme = k.sayfaSayisi; }, function (e) { MK.bildir("PDF hazırlanamadı: " + (e && e.message || e)); }); }
+  };
+
+  /* E-POSTAYLA İLET (2026-09-28, T8; reisim: "son hali hem sisteme kaydolduğu gibi mail olarakta iletilecek tıklayınca mail uygulaması
+     açılacak") — TEK MEKANİZMA, her PDF'e açılır: MK.pdfGoster({ …, eposta: { kime: [adres], konu, govde } }). Pencerede görünen PDF'in
+     kendisi gider: dokunmatik cihazda paylaşım menüsü (dosya ekli; e-posta uygulaması seçilir); bilgisayarda PDF iner ve e-posta
+     uygulaması alıcı, konu ve metinle açılır — tarayıcı e-postaya kendisi dosya ekleyemez, inen PDF eklenir (bildirim bunu söyler). */
+  var mailtoAdres = function (e) { return "mailto:" + e.kime.map(encodeURIComponent).join(",") + "?subject=" + encodeURIComponent(e.konu) + "&body=" + encodeURIComponent(e.govde); };
+  MK.eylem["pdf-eposta"] = function () {
+    var o = PDF.o, e = o.eposta, ad = /\.pdf$/i.test(o.dosya) ? o.dosya : (o.baslik || o.dosya) + ".pdf", yuklu = MK.DOSYA[o.dosya];
+    var gonder = function (b) {
+      var f = new File([b], ad, { type: "application/pdf" }), mt = mailtoAdres(e);
+      MK.SON_EPOSTA = { kime: e.kime.slice(), konu: e.konu, mailto: mt, dosya: ad, boyut: b.size };
+      if (window.matchMedia("(pointer: coarse)").matches && navigator.canShare && navigator.canShare({ files: [f] })) {
+        MK.SON_EPOSTA.yol = "paylas"; navigator.share({ files: [f], title: e.konu, text: e.govde }).catch(function () { /* kullanıcı vazgeçti */ }); return;
+      }
+      MK.SON_EPOSTA.yol = "mailto"; MK.indir(ad, b);
+      var a = document.createElement("a"); a.href = mt; a.hidden = true; document.body.appendChild(a); a.click(); a.remove();
+      MK.bildir(ad + " indirildi; e-posta uygulaması açılıyor — indirilen PDF'i ekleyin.");
+    };
+    if (yuklu && yuklu.dosya) { gonder(yuklu.dosya); return; }
+    if (yuklu && yuklu.url) { fetch(yuklu.url).then(function (r) { return r.blob(); }).then(gonder); return; }
+    var k = document.querySelector("#a-pdf-govde > .a-kagit-cerceve"); MK.bildir("PDF hazırlanıyor…");
+    MK.kagitPdf(k).then(gonder, function (h) { MK.bildir("PDF hazırlanamadı: " + (h && h.message || h)); });
   };
 
   /* ── KÂĞIT: belge → A4 sayfalar → PDF (2026-09-28, TEK MEKANİZMA; reisim: "özel değil genel düşün … geçici çözümler üretme").

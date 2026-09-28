@@ -1119,7 +1119,7 @@ a.a-yuz:hover { border-color: var(--kenar-alan); background: var(--zemin); }
     width: 100vw; max-width: 100vw; margin: auto 0 0; border-radius: var(--r-buyuk) var(--r-buyuk) 0 0; border-bottom: 0;
     max-height: 88vh; overflow-y: auto;
   }
-  .a-pencere-alt { position: sticky; bottom: 0; background: var(--kart); }
+  .a-pencere-alt { position: sticky; bottom: 0; background: var(--kart); flex-wrap: wrap; }   /* üç tuş sığmazsa alt satıra (T8) */
   .a-pencere-alt .a-tus { flex: 1 1 0; }
   /* plan içi: şu anki adımın tuşları altta yapışkan çubukta (TAMAMI yapışkan, opak zemin; kalıp 2) — adımın içinde tekrar edilmez */
   .a-adim-tuslar { display: none; }

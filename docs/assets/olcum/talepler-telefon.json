@@ -8,8 +8,8 @@
   390,
   430
  ],
- "toplam": 32,
- "temiz": 32,
+ "toplam": 40,
+ "temiz": 40,
  "durumlar": [
   {
    "ad": "taleplerim · izin özeti, liste",
@@ -292,6 +292,78 @@
   },
   {
    "ad": "talep penceresi · ödenmiş masraf, fiş",
+   "gen": 430,
+   "temiz": true,
+   "tasma": 0,
+   "disari": [],
+   "kucukAlan": [],
+   "alan": 1
+  },
+  {
+   "ad": "izin talep formu PDF'i · E-postayla ilet",
+   "gen": 320,
+   "temiz": true,
+   "tasma": 0,
+   "disari": [],
+   "kucukAlan": [],
+   "alan": 1
+  },
+  {
+   "ad": "izin talep formu PDF'i · E-postayla ilet",
+   "gen": 360,
+   "temiz": true,
+   "tasma": 0,
+   "disari": [],
+   "kucukAlan": [],
+   "alan": 1
+  },
+  {
+   "ad": "izin talep formu PDF'i · E-postayla ilet",
+   "gen": 390,
+   "temiz": true,
+   "tasma": 0,
+   "disari": [],
+   "kucukAlan": [],
+   "alan": 1
+  },
+  {
+   "ad": "izin talep formu PDF'i · E-postayla ilet",
+   "gen": 430,
+   "temiz": true,
+   "tasma": 0,
+   "disari": [],
+   "kucukAlan": [],
+   "alan": 1
+  },
+  {
+   "ad": "masraf formu PDF'i",
+   "gen": 320,
+   "temiz": true,
+   "tasma": 0,
+   "disari": [],
+   "kucukAlan": [],
+   "alan": 1
+  },
+  {
+   "ad": "masraf formu PDF'i",
+   "gen": 360,
+   "temiz": true,
+   "tasma": 0,
+   "disari": [],
+   "kucukAlan": [],
+   "alan": 1
+  },
+  {
+   "ad": "masraf formu PDF'i",
+   "gen": 390,
+   "temiz": true,
+   "tasma": 0,
+   "disari": [],
+   "kucukAlan": [],
+   "alan": 1
+  },
+  {
+   "ad": "masraf formu PDF'i",
    "gen": 430,
    "temiz": true,
    "tasma": 0,

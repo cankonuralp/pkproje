@@ -101,8 +101,17 @@
       sat("Açıklama", x.aciklama ? kacis(x.aciklama) : "-") + /* bekleyen talebin eki değiştirilir / silinir; karar verilmişse yalnız açılır (2026-09-28) */
       (x.belge ? sat(t.tip === "izin" ? "Belge" : "Fiş", MK.dosyaAlan({ ad: x.belge, degistir: "talep-belge-degistir", sil: "talep-belge-sil", veri: { no: t.no }, oku: !bekliyor(t) }))
         : bekliyor(t) ? sat(t.tip === "izin" ? "Belge" : "Fiş", MK.tus({ eylem: "talep-belge-degistir", ad: t.tip === "izin" ? "Belge ekle" : "Fiş ekle", ikon: "upload", sinif: "a-tus-ikincil", veri: { no: t.no } })) : "") + "</dl>";
-    $("a-pencere-alt").innerHTML = (bekliyor(t) ? MK.tus({ eylem: "geri-cek", ad: "Talebi geri çek", ikon: "undo-2", sinif: "a-tus-ikincil", veri: { no: t.no } }) : "") + MK.tus({ eylem: "pencere-kapat", ad: "Kapat" });
+    /* T8: talebin formu (firma formatı; temel KM-FR-IZN-01 / MSR-01) PDF olarak açılır, indirilir, e-postayla iletilir */
+    $("a-pencere-alt").innerHTML = (bekliyor(t) ? MK.tus({ eylem: "geri-cek", ad: "Talebi geri çek", ikon: "undo-2", sinif: "a-tus-ikincil", veri: { no: t.no } }) : "") +
+      MK.tus({ eylem: "talep-pdf", ad: "PDF · e-posta", ikon: "file-text", sinif: "a-tus-ikincil", veri: { no: t.no } }) + MK.tus({ eylem: "pencere-kapat", ad: "Kapat" });
   }
+  X["talep-pdf"] = function (el) {
+    var t = talepler().filter(function (y) { return y.no === el.dataset.no; })[0]; if (!t) return;
+    var F = MB.TALEP_FORMAT[t.tip], kisi = MV.kisi(BEN);
+    MK.pdfGoster({ dosya: t.no.toLowerCase() + ".pdf", baslik: F.baslik + " · " + t.no, icerik: MB.talepFormu({ tip: t.tip, x: t.x, durum: durum(t) }),
+      eposta: { kime: MB.talepAlici(t.tip).map(function (p) { return p.eposta; }), konu: F.baslik + " · " + t.no + " · " + kisi.ad,
+        govde: "Merhaba,\n\n" + turAd(t) + " " + t.no + " ekte (PDF).\n" + ayrinti(t) + "\nDurum: " + durum(t).ad + "\n\n" + kisi.ad } });
+  };
   function pencereAc(o, odak) { W = o; W.hata = W.hata || {}; if (o.tip === "izin") izinCiz(); else if (o.tip === "masraf") masrafCiz(); else talepCiz(o.t); if (!$("a-pencere").open) $("a-pencere").showModal(); var el = $(odak) || $("a-pencere-alt").querySelector(".a-tus-birincil"); if (el) el.focus(); }
   $("a-pencere").addEventListener("close", function () { W = null; if (/^#\/(yeni|t\/)/.test(location.hash)) history.replaceState(null, "", "#/"); });
   MK.onGirdi = function (e) { var k = e.target.dataset && e.target.dataset.alan; if (!k || !W || !W.d) return; W.d[k] = e.target.value;
@@ -130,6 +139,8 @@
     var t = W.t, x = t.x;
     MK.onayla({ baslik: "Eki sil", metin: x.belge + " talepten silinir.", tamam: function () { MK.dosyaSil(x.belge); x.belge = ""; if (W) talepCiz(t); MK.bildir("Ek silindi."); } });
   };
+  /* gönderilen talep aynı pencerede açılır (PDF · e-posta hemen elde); adres talebin adresi olur */
+  function kayitliAc(no) { history.replaceState(null, "", "#/t/" + no); pencereAc({ tip: "talep", t: talepler().filter(function (y) { return y.no === no; })[0] }); }
   X["izin-gonder"] = function () {
     var d = W.d, h = {};
     if (!d.tur) h.tur = "İzin türü seçilmeli.";
@@ -137,7 +148,7 @@
     if (!d.bit) h.bit = "Bitiş seçilmeli."; else if (d.bas && d.bit < d.bas) h.bit = "Bitiş başlangıçtan önce olamaz.";
     W.hata = h; if (Object.keys(h).length) { izinCiz("w-" + Object.keys(h)[0]); return; }
     var x = { no: MV.izinNo(d.bas), kisi: BEN, tur: d.tur, bas: d.bas, bit: d.bit, gun: MV.isGunu(d.bas, d.bit), aciklama: d.aciklama.trim(), belge: d.belge, durum: "bekliyor", gonderildi: MK.simdi() };
-    MV.IZINLER.push(x); $("a-pencere").close(); listeCiz();
+    MV.IZINLER.push(x); listeCiz(); kayitliAc(x.no);
     MK.bildir(x.no + " gönderildi: " + x.gun + " iş günü " + MV.izinTur(x.tur).ad.toLocaleLowerCase("tr") + "; yöneticinin onayında.");
   };
   X["masraf-gonder"] = function () {
@@ -148,7 +159,7 @@
     W.hata = h; if (Object.keys(h).length) { masrafCiz("w-" + Object.keys(h)[0]); return; }
     var g = { no: MV.giderNo(d.tarih), tarih: d.tarih, tur: d.gtur, tutar: Math.round(n * 100) / 100, oran: +d.oran, is: d.is || null, kisi: BEN, aciklama: d.aciklama.trim(), belge: d.belge,
       kaynak: "form", durum: "bekliyor", gonderildi: MK.simdi(), odeme: null, onaylayan: null, kaydeden: BEN };
-    MV.GIDERLER.push(g); $("a-pencere").close(); listeCiz();
+    MV.GIDERLER.push(g); listeCiz(); kayitliAc(g.no);
     MK.bildir(g.no + " muhasebeye gönderildi" + (g.is ? " (" + g.is + ")" : " (genel masraf)") + "; onaylanınca ödenir.");
   };
   X["geri-cek"] = function (el) {

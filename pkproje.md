@@ -961,8 +961,8 @@ Reisim yeni bir tane söyledikçe bu tabloya satır eklenir.
 | 7 | Özlük dosyası belge türleri | Personel kartı (M1) | var (iş sözleşmesi, diploma, oda kaydı, EKİPNET belgesi, kimlik, sağlık raporu, diğer) | tür listesi |
 | 8 | **Her türlü numaralandırma** ve form kodu önekleri | rapor no, form kodları (§3.5), **sözleşme, teklif, plan (proje), zimmet formu, fatura no** | var (temel: firma kısa kodu + XX-AAYY-SIRA) | **2026-09-26, reisim: "her türlü numaralandırma şirkete göre değişir"** — biçim ve önek firmaya göre |
 | 9 | **Saha formu** | Planlar › plan içi, plan tamamlanınca (2026-09-26) | **var — `KM-FR-SAH-01`** | başlık, ekipman sütunları, onay metni, imza ve kaşe yerleri (reisim: "firmanın talebine göre oluşturulmuş saha formu") |
-| 10 | **İzin talebi formu** | Talepler (izin) | temel format `KM-FR-IZN-01` (2026-09-28) | firma kendi formatını yükler; PDF çıktısı o formata göre; kaydedilir ve e-postayla iletilir (reisim 2026-09-28) |
-| 11 | **Masraf formu** | Talepler (masraf) | temel format `KM-FR-MSR-01` (2026-09-28) | aynı: firma formatı, PDF, e-posta |
+| 10 | **İzin talebi formu** | Talepler (izin) | **var — temel format `KM-FR-IZN-01`** (2026-09-28, T8; iskelet `MB.TALEP_FORMAT.izin`) | firma kendi formatını yükler; PDF çıktısı o formata göre; kaydedilir ve e-postayla iletilir (reisim 2026-09-28) |
+| 11 | **Masraf formu** | Talepler (masraf) | **var — temel format `KM-FR-MSR-01`** (2026-09-28, T8; iskelet `MB.TALEP_FORMAT.masraf`) | aynı: firma formatı, PDF, e-posta |
 | 12 | **Cihaz ara kontrol / bakım kaydı** | Ölçüm cihazları › cihaz | temel format `KM-FR-ARA-01` (2026-09-28) | firma kendi formatını kullanabilir; günlük / haftalık / aylık / 6 aylık bakım mantığı aynı (reisim 2026-09-28) |
 | 13 | **Rapor içeriği kuralları** | Saha raporu · final rapor | Bakanlık formatı ya da firma formatı | zorunlu alanlar (temel: fotoğraf en az 1, cihazlar, kusur açıklaması), sonuç cümlesi, kusur listesi biçimi — format eklendikçe o formata göre (§3.8) |
 Firma özelleştirmesi **iskelet olarak hazırlanır**; her firmada o firmanın formatına göre sitenin ilgili kısmı ayrıca düzenlenir (reisim 2026-09-28:
@@ -1772,6 +1772,20 @@ revizyon, alan kopyalama, hafif kusur devri, meslek eşleşme denetimi).
 - Emsal ürünler: https://opwire.app/iso-17020-periyodik-kontrol-yazilimi/ · https://17020muayene.vidco.com.tr/ · https://akuple.com/asansor-kontrol-yazilimi/ · https://ensyazilim.com/
 
 ## 11 · Değişiklik günlüğü
+- 2026-09-28 (122): **T8 · Talepler: firma formatı iskeleti, PDF, e-postayla ilet** (§9 otuz dördüncü tur; §3.7 satır 10–11; reisim: *"izin
+  talebi ve masraf formu için her müşteri (benim müşterilerim pk firmaları) kendi formatını yükleyebilsin o formata göre pdf çıktısı olacak, ve
+  son hali hem sisteme kaydolduğu gibi mail olarakta iletilecek tıklayınca mail uygulaması açılacak … sen iskelet olarak hazırla"*).
+  **İskelet** (`maket-belge.js`): formun düzeni bir format tanımından kurulur — `MB.TALEP_FORMAT[izin | masraf]` = form kodu, başlık,
+  alanlar, beyan metni, imza yerleri, kime gideceği (rol); tek üretici `MB.talepFormu`. Firmanın kendi formatı gelince aynı biçimde yeni tanım
+  yazılır (firma × form başına kodda, §8.3), üretici ve ekranlar değişmez; bugünkü tanım temel format (`KM-FR-IZN-01`, `KM-FR-MSR-01`):
+  firma künyesi, form no, personel, durum, talebin alanları, beyan, imza yerleri (talep eden gönderim zamanıyla; onaylayan karar verince).
+  **E-postayla ilet** — ortak, her PDF'e açılır (`MK.pdfGoster({ eposta })`): pencerede görünen PDF'in kendisi gider; bilgisayarda PDF iner
+  ve e-posta uygulaması alıcı, konu ve metinle açılır (tarayıcı e-postaya kendisi dosya ekleyemez; bildirim "indirilen PDF'i ekleyin" der),
+  telefonda / tablette paylaşım menüsü PDF ekli açılır. Alıcı formatın rolündeki etkin kişiler (temel: firma yöneticisi). Talepler: talep
+  penceresinde **PDF · e-posta**; gönderilen talep aynı pencerede açılır (hemen iletilebilir). Telefonda pencere alt tuşları sığmazsa alt
+  satıra geçer (ortak kural). Ölçüm aracı: `mailto:` bağlantısı ağ hatası sayılmaz; olmayan bir talep numarasına bakan eski durum kaydı
+  düzeltildi (G-0926-008 → G-0926-003). 4 yeni deneme, 2 güncellendi (gönderim sonrası pencere açık kalır); 2 yeni durum. 18 maket
+  temiz: durum 1992/1992 · etkileşim 479/479 · telefon 996/996 · olumsuz kanıt 3/3.
 - 2026-09-28 (121): **T6b · Yan menü balonları küçük, tek sıra; menü çubuğu yok** (§9 otuz dördüncü tur ara istek; reisim: *"şu balonlarda
   sekmeyi aşağı düşürme olayı olmasın küçülsün ve tek sıra olsun renkler daha belirgin olsun"* · *"aşağı yukarı barı da yan menüde düzgün
   durmamış olmasın"*). Balonlar sığmayınca adın altına geçiyordu (T6 kararı "ad kırpılmaz") → satır 34 px'ten 55 px'e çıkıyor, menü taşıp

@@ -386,6 +386,61 @@
       }).join("") + "</div>" +
       '<footer class="a-belge-alt"><span>' + kacis(f.ad) + " · " + formKod + " · temel format · " + MK.tarihYaz(o.tarih) + "</span></footer></article>";
   };
+  /* ── TALEP FORMLARI — izin talebi · masraf formu (2026-09-28, T8; reisim: "izin talebi ve masraf formu için her müşteri … kendi formatını
+     yükleyebilsin o formata göre pdf çıktısı olacak, ve son hali hem sisteme kaydolduğu gibi mail olarakta iletilecek … sen iskelet olarak
+     hazırla"). İSKELET: formun düzeni bir FORMAT TANIMIYLA kurulur (başlık, form kodu, alanlar, metin, imza yerleri, kime gider); firmanın
+     kendi formatı geldiğinde aynı biçimde yeni bir tanım yazılır (firma × form başına kodda, §8.3 ve §3.7 satır 10–11), üretici değişmez.
+     TALEP_FORMAT[tip] = { kod, baslik, alt, alici (rol), alanlar: [[etiket, x → html]], metin, imzalar: [[başlık, x → { ad, zaman, onay }]] } */
+  var tno = MK.tarihYaz, para = function (n) { return MV.para(n); };
+  var bosDeger = function (v) { return v ? v : "—"; };
+  MB.TALEP_FORMAT = {
+    izin: { kod: "IZN-01", baslik: "İzin talep formu", alt: "Personel izin talebi", alici: "yonetici",
+      alanlar: [
+        ["İzin türü", function (x) { return kacis(MV.izinTur(x.tur).ad); }],
+        ["Başlangıç", function (x) { return tno(x.bas); }], ["Bitiş", function (x) { return tno(x.bit); }],
+        ["Süre", function (x) { return x.gun + " iş günü"; }],
+        ["Açıklama", function (x) { return kacis(bosDeger(x.aciklama)); }],
+        ["Ek belge", function (x) { return x.belge ? kacis(x.belge) : "—"; }]
+      ],
+      metin: "Yukarıda belirtilen tarihler arasında izin kullanmak istiyorum. İzin dönüşü görevimin başında olacağım.",
+      imzalar: [["Talep eden", function (x) { return { ad: MV.kisi(x.kisi).ad, zaman: x.gonderildi, onay: "gönderildi" }; }],
+        ["Onaylayan", function (x) { return x.onaylayan ? { ad: MV.kisi(x.onaylayan).ad, zaman: x.karar, onay: x.durum === "red" ? "reddedildi" : "onaylandı" } : { ad: "Firma yöneticisi" }; }]] },
+    masraf: { kod: "MSR-01", baslik: "Masraf formu", alt: "Personel masraf bildirimi", alici: "yonetici",
+      alanlar: [
+        ["İş", function (x) { return x.is ? '<span class="a-kod">' + kacis(x.is) + "</span>" : "Genel (işe bağlı değil)"; }],
+        ["Masraf tarihi", function (x) { return tno(x.tarih); }], ["Tür", function (x) { return kacis(MV.giderTur(x.tur).ad); }],
+        ["Tutar (KDV dahil)", function (x) { return para(x.tutar); }],
+        ["KDV", function (x) { var k = MV.giderKdv(x); return "%" + x.oran + " · " + para(k.kdv) + " (KDV hariç " + para(k.haric) + ")"; }],
+        ["Açıklama", function (x) { return kacis(bosDeger(x.aciklama)); }],
+        ["Fiş", function (x) { return x.belge ? kacis(x.belge) : "—"; }]
+      ],
+      metin: "Yukarıdaki masrafı iş için yaptığımı, fişinin aslını muhasebeye teslim edeceğimi beyan ederim.",
+      imzalar: [["Talep eden", function (x) { return { ad: MV.kisi(x.kisi).ad, zaman: x.gonderildi, onay: "gönderildi" }; }],
+        ["Onaylayan", function (x) { return x.onaylayan ? { ad: MV.kisi(x.onaylayan).ad, zaman: x.karar || null, onay: x.durum === "red" ? "reddedildi" : "onaylandı" } : { ad: "Muhasebe / firma yöneticisi" }; }]] }
+  };
+  /* formun kime gideceği: formatın rolündeki etkin kişilerin e-postaları */
+  MB.talepAlici = function (tip) {
+    var r = MB.TALEP_FORMAT[tip].alici;
+    return MV.PERSONEL.filter(function (p) { return p.durum === "etkin" && p.eposta && p.hesap && (p.hesap.roller || []).indexOf(r) >= 0; });
+  };
+  /* o = { tip: "izin" | "masraf", x (kayıt), durum ({ ad }) } */
+  MB.talepFormu = function (o) {
+    var f = MV.FIRMA, F = MB.TALEP_FORMAT[o.tip], x = o.x, p = MV.kisi(x.kisi), formKod = f.kisa + "-FR-" + F.kod;
+    return '<article class="a-belge" aria-label="' + F.baslik + ' önizlemesi">' +
+      '<header class="a-belge-bas"><div class="a-belge-logo" role="img" aria-label="Firma logosu yeri">Logo</div>' +
+        '<div class="a-belge-kunye"><b>' + kacis(f.ad) + "</b><span>" + kacis(f.adres) + "</span></div></header>" +
+      '<div class="a-belge-baslik"><h2>' + F.baslik + "</h2><p>" + F.alt + "</p></div>" +
+      '<dl class="a-bilgi">' + bilgi("Form no", '<span class="a-kod">' + kacis(x.no) + "</span>") + bilgi("Gönderildi", MK.zamanYaz(x.gonderildi)) +
+        bilgi("Personel", kacis(p.ad) + '<span class="a-alt-satir">' + kacis(MV.meslekAd(p)) + "</span>") + bilgi("Durum", kacis(o.durum.ad)) + "</dl>" +
+      bolum("1", "Talep", "", '<dl class="a-bilgi">' + F.alanlar.map(function (a) { return bilgi(a[0], a[1](x), a[0] === "Açıklama"); }).join("") + "</dl>") +
+      bolum("2", "Beyan", "", "<p>" + F.metin + "</p>" + (x.red ? "<p><b>Red gerekçesi:</b> " + kacis(x.red) + "</p>" : "")) +
+      '<div class="a-belge-imzalar">' + F.imzalar.map(function (y) {
+        var i = y[1](x);
+        return "<div><b>" + y[0] + "</b><span>" + kacis(i.ad) + '</span><div class="a-belge-imza' + (i.onay ? " a-belge-imzali" : "") + '">' +
+          (i.onay ? (i.zaman ? MK.zamanYaz(i.zaman) + " · " : "") + i.onay : "Tarih · imza") + "</div></div>";
+      }).join("") + "</div>" +
+      '<footer class="a-belge-alt"><span>' + kacis(f.ad) + " · " + formKod + " · temel format</span></footer></article>";
+  };
   MB.isSozlesmesi = function (o) {
     var f = MV.FIRMA, x = o.x, m = MV.musteri(x.m), formKod = f.kisa + "-FR-SZL-01";
     var satirlar = x.tesisler.map(function (tid, i) { var t = MV.tesis(tid); return [String(i + 1), "<b>" + kacis(t.ad) + "</b><br>" + kacis(t.adres || "") + '<br><span class="a-belge-madde">' + kacis([t.ilce, t.il].filter(Boolean).join(" / ")) + "</span>"]; });
