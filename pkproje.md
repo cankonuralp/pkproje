@@ -961,6 +961,32 @@ Reisim yeni bir tane söyledikçe bu tabloya satır eklenir.
 | 7 | Özlük dosyası belge türleri | Personel kartı (M1) | var (iş sözleşmesi, diploma, oda kaydı, EKİPNET belgesi, kimlik, sağlık raporu, diğer) | tür listesi |
 | 8 | **Her türlü numaralandırma** ve form kodu önekleri | rapor no, form kodları (§3.5), **sözleşme, teklif, plan (proje), zimmet formu, fatura no** | var (temel: firma kısa kodu + XX-AAYY-SIRA) | **2026-09-26, reisim: "her türlü numaralandırma şirkete göre değişir"** — biçim ve önek firmaya göre |
 | 9 | **Saha formu** | Planlar › plan içi, plan tamamlanınca (2026-09-26) | **var — `KM-FR-SAH-01`** | başlık, ekipman sütunları, onay metni, imza ve kaşe yerleri (reisim: "firmanın talebine göre oluşturulmuş saha formu") |
+| 10 | **İzin talebi formu** | Talepler (izin) | temel format `KM-FR-IZN-01` (2026-09-28) | firma kendi formatını yükler; PDF çıktısı o formata göre; kaydedilir ve e-postayla iletilir (reisim 2026-09-28) |
+| 11 | **Masraf formu** | Talepler (masraf) | temel format `KM-FR-MSR-01` (2026-09-28) | aynı: firma formatı, PDF, e-posta |
+| 12 | **Cihaz ara kontrol / bakım kaydı** | Ölçüm cihazları › cihaz | temel format `KM-FR-ARA-01` (2026-09-28) | firma kendi formatını kullanabilir; günlük / haftalık / aylık / 6 aylık bakım mantığı aynı (reisim 2026-09-28) |
+| 13 | **Rapor içeriği kuralları** | Saha raporu · final rapor | Bakanlık formatı ya da firma formatı | zorunlu alanlar (temel: fotoğraf en az 1, cihazlar, kusur açıklaması), sonuç cümlesi, kusur listesi biçimi — format eklendikçe o formata göre (§3.8) |
+Firma özelleştirmesi **iskelet olarak hazırlanır**; her firmada o firmanın formatına göre sitenin ilgili kısmı ayrıca düzenlenir (reisim 2026-09-28:
+*"bu tarz firmaya göre pdf vb format eklenince ona göre şekil alacak kısımları … sen iskelet olarak hazırla firmaya göre her seferinde sitenin bu
+kısımlarını düzenleriz, bunlar oluşturduğumuz listeye yaz ve firma özelleştirmeleri listesi olarak kenarda tut"*).
+
+### 3.8 · Site geneli kalıcı kurallar (reisim 2026-09-28: *"bu soruna özel değil kalıcı site içi çözümler olarak hafızanda kalsın ve bu şekilde uygula"*)
+Yeni format, ekipman türü ya da PDF eklendiğinde de geçerlidir; ekran başına değil mekanizmaya uygulanır.
+1. **Kusur açıklamaları** yalnız "Uygun değil" işaretlenen maddeleri ve uygun olmayan ölçümleri listeler; "hafif / ağır kusur" yazısı yok
+   (final raporda formatın kendi işareti — ör. \* / \*\* — kalır).
+2. **Sonuç ve kanaat** cümlesi yalnız seçilen sonuçla biter ("… kullanımı uygundur." ya da "… uygun değildir."); öteki seçenek üstü çizili
+   durmaz, yazılmaz (ekran ve final rapor).
+3. **Uygun / uygun değil / uygulanamaz** seçilen her tabloda maddeler **Uygun** olarak gelir; başlıktaki ünlem menüsüyle hepsi uygun ·
+   uygun değil · uygulanamaz yapılır.
+4. **Küçük açıklama yazısı yok**: alan altında ipucu, sınır açıklaması, şeffaf bilgi satırı konmaz (firma formatı açıkça isterse o firmada).
+5. **Gönderirken** uyarı listesi yok: zorunlu alan eksikse kısa pencere "Zorunlu alanlar doldurulmadı", eksik alanlar kırmızı, ekran ilk
+   eksiğe kayar; zorunlu olmayan eksik gönderimi durdurmaz. Temel zorunlular: fotoğraf (en az 1), türün ölçüm cihazları (kalibrasyonu
+   geçerli), uygun değil maddenin açıklaması — başka format başka zorunluluk getirebilir (§3.7 satır 13).
+6. **Süzgeçler** alan alan arama kutusudur (ör. rapor no · ekipman kodu · ekipman türü · tesis; proje adı · proje no); alan kutuları olan
+   listede genel "ara" kutusu yok; anlamsız çip yok.
+7. **Listelerde toplu PDF**: rapor listeleri (Raporlar, plan içi raporlar) süzgeçten geçen raporları tek PDF olarak indirir.
+8. **Rapor oluşturma sınırsız**: ekipman satırında hep "Rapor oluştur"; raporu olan ekipmanın yanında küçük yeşil tik. Rapor pasife alınır
+   (inspector alabilir, pasif rapor inspector'a görünmez); aktife alma ve silme yalnız yönetici.
+9. **Yan menüde takip sayıları**: modül adının yanında takip isteyen işler renkli balonla (geçmiş / acil kırmızı, yaklaşan sarı, sorunsuz yeşil).
 
  (2026-09-18 araştırması; kaynaklar bölüm 10)
 
@@ -1669,6 +1695,34 @@ yama yapma anayasamıza sadık kal geçici çözümler üretme"* · *"tüm site 
 PDF düzeni yalnız final rapor (önizleme + indirilen dosya). Formatın istediği her veri (linye, potansiyel dengeleme, zemin izolasyonu, RCD
 testleri, selektivite) ekranda girilir, final raporda formattaki yerinde çıkar. (b) Makette geçici çözüm kabul; nihai kodda her kural tek
 kaynaktan, genel mekanizmayla (anayasa 0.8). (c) Bütün maket sayfalar arası kalıcı çalışır; reisim her işlevi kendisi dener.
+
+**Otuz dördüncü tur (2026-09-28, reisim birebir, ekran görüntüleriyle):** *"bu ekranda süzgeçler yetersiz daha önce attığım örneğe göre, ekipman türü
+ekipman koduna göre arama motorları ayrı olacak şekilde filtreleme olmalı … raporlandı yazan kısımda sadece rapor oluştur tuşu olsun istediğim kadar
+o tuşa basabileyim sınır olmasın eğer bu rapor içerisinde rapor oluşturduysam yanında küçük yeşil tik olsun … kusur açıklamaları kısmında uygun
+değil olarak işaretlenen maddeler yazsın, sonuç ve kanaat kısmında sadece uygundur/uygun değildir olan yere kadar yazsın, sonuç uygun ise sadece
+uygun yazsın uygun değildirin üstü çizili olarak orda durmasını istemiyorum … kalıcı site içi çözümler olarak hafızanda kalsın … izin talebi ve
+masraf formu için her müşteri (benim müşterilerim pk firmaları) kendi formatını yükleyebilsin o formata göre pdf çıktısı olacak, ve son hali hem
+sisteme kaydolduğu gibi mail olarakta iletilecek tıklayınca mail uygulaması açılacak … sen iskelet olarak hazırla … firma özelleştirmeleri listesi
+olarak kenarda tut … Planlar ekranındaki filtreleme kısmıda yine istediğim gibi değil anlamsız filtreleme tuşları var proje için ayrı proje no için
+ayrı … Pasife alınan raporlar inspectorlere gözükmez inspector pasife alabilir ama silemez, aktife de alamaz, aktife alma ve silme işlemleri sadece
+yöneticiler tarafından yapılabilir. Muayene kriterleri otomatik olarak uygun olarak gelir … ünlem işareti olur ve oradan … hepsini uygun yap
+hepsini uygunsuz yap ya da hepsini uygulanamaz yap … herhangi bir yerde küçük yazılarla info olmaz … Gönder derken gelen uyarı ekranı olmasın
+sadece … zorunlu alanlar doldurulmadı … fotoğraf eklemek her raporda zorunlu … etrafını kırmızı yakarak … ekran kaysın. Muayene uzmanı onayı
+değil, muayene uzmanı imzası olarak değiştir. Raporlar ekranında ve planlarda … toplu pdf indirme tuşu olsun … raporlar modülünde kusurlu tuşunu
+kaldır … hepsinde ara barını kaldır. Sol taraftaki nav bar … cihazlarda süresi geçen cihaz sayısı kırmızı balon, yaklaşan sarı balon, sorunsuz
+cihazlar yeşil balon … Cihazlarda yapılan ara kontrollerin kayıtları pdf olarak indirilebilsin … ikinci görselde attığım şeffaf yazılara gerek yok
+… Performans değerlendirme ekranındaki grafikler … sütun grafikleri yatay olmasın ve boşluklu olmasın ve kişiye tıklanınca raporlama sürecine
+dair grafikleri gözükmüyor … Ölçüm cihazlarında … cihaz türü de eklenebilmeli … ara kontrollerde … günlük, haftalık, aylık, 6 ayda bir …
+otomatik bakım oluştur tuşu … eğitimler kısmı gitmiş … geri gelsin … her personelin kartında eğitimler de gözükmeli"* · *"düzgün bir sıraya koyup
+dikkatlice yap zaman sorunumuz yok hata yapmamaya çalış"*
+→ **Kararlar:** site geneli kurallar §3.8 (1–9), firma özelleştirmeleri §3.7 satır 10–13. **Sıra** (her biri ayrı teslim):
+(1) saha raporu: kriterler Uygun gelir + ünlem menüsü · küçük açıklamalar kalkar · gönderimde zorunlu alan penceresi (fotoğraf zorunlu) · sonuç
+yalnız seçilen (ekran + final rapor) · "Muayene uzmanı imzası"; (2) plan içi: sınırsız "Rapor oluştur" + yeşil tik · rapor pasif / aktif / sil
+(rol) · alan alan süzgeç · toplu PDF; (3) Planlar listesi: proje adı / proje no süzgeci, anlamsız çipler kalkar; (4) Raporlar: Kusurlu çipi ve
+genel arama kalkar, toplu PDF; (5) bütün listelerde genel arama kalkar (alan kutusu olanlar) + şeffaf açıklama yazıları taraması; (6) yan menü
+takip balonları; (7) Ölçüm cihazları: cihaz türü ekle, ara bakım sıklıkları + otomatik bakım oluştur + PDF; (8) Talepler: firma formatı
+iskeleti, PDF, e-postayla ilet; (9) Performans ekranı: dikey, boşluksuz sütunlar, kişinin rapor süreci grafikleri; (10) personel kartında eğitimler.
+Eğitimler: reisim'e soruldu — *"tamam benim hatam bu şekilde kalsın"* → Dökümanlar › Eğitimler sekmesinde kalır (30. tur kararı).
 
 **Açık kalanlar:** ~~Ana sayfada İSGGM duyuruları~~ (2026-09-27: makette eklendi; okuma işi uygulamada) (reisim 2026-09-26: *"Ana sayfada isgüm duyurularını gösterebilir miyiz ? Bunu
 yapılacaklar listesine ekle"*; öneri: ÇSGB İSGGM duyurular sayfası — https://www.csgb.gov.tr/isggm/duyurular/ — sunucuda günde birkaç kez
