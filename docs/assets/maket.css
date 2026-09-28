@@ -514,6 +514,7 @@ html[data-giris="fare"] .a-girdi:focus, html[data-giris="fare"] .a-alan:focus { 
    30 hane dar; tür ve konum sütunu doldurur). Kalıp 1: tuşlar içerik kadar. Kalıp 6: × ve Esc; telefonda alttan levha. */
 .a-pencere-form { width: 760px; }
 /* PDF görüntüleyici (reisim 2026-09-27: yüklenen her PDF açılıp incelenir) — araç çubuğu + sayfa; makette sayfa iskeleti */
+.a-cift-girdi { display: flex; gap: 6px; }   /* aynı hücrede iki ölçüm (RCD testi IΔ · TΔ) */
 .a-pencere-pdf { width: 860px; }   /* 2026-09-28: A4 (794 px) masaüstünde birebir ölçekte sığar */
 /* 2026-09-27: seçilen gerçek dosya görüntüleyicide; belge yazdırma çerçevesi görünmez */
 .a-pdf-cerceve { display: block; width: 100%; height: min(70vh, 720px); border: 1px solid var(--kenar); border-radius: var(--r-orta); background: var(--kart); }

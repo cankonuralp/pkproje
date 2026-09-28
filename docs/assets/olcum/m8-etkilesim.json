@@ -1,9 +1,9 @@
 {
  "maket": "m8",
- "tarih": "2026-09-27",
+ "tarih": "2026-09-28",
  "arac": "tools/olc-bulut.mjs --etkilesim (başsız tarayıcı, 1920 açık tema; gen verilen denemede o genişlik)",
- "toplam": 65,
- "gecen": 65,
+ "toplam": 71,
+ "gecen": 71,
  "denemeler": [
   {
    "ad": "kontrol metodu türden, yalnız standart numarası, seçim alanı yok (formatlı türde firma bölümünde)",
@@ -265,7 +265,49 @@
    "gecti": true
   },
   {
-   "ad": "iç tesisat (ZPKR02): bölümler formattaki sırayla 1–11",
+   "ad": "iç tesisat (ZPKR02): bölümler formattaki sırayla 1–11 (6.1 linye · 6.2 potansiyel dengeleme · 6.3 zemin izolasyonu)",
+   "gen": 1920,
+   "sayfa": "maket/rapor.html",
+   "hash": "#/r/ET-1009",
+   "gecti": true
+  },
+  {
+   "ad": "6.1 linye: kesit / Ib / Iz / RCD testi girilir; N kesiti fazdan küçük → Uygun değil · ağır, kusur listesinde",
+   "gen": 1920,
+   "sayfa": "maket/rapor.html",
+   "hash": "#/r/ET-1009",
+   "gecti": true
+  },
+  {
+   "ad": "6.2 potansiyel dengeleme: bölüm eklenir; kesit 6 mm²'den küçük → Uygun değil, kusur listesinde",
+   "gen": 1920,
+   "sayfa": "maket/rapor.html",
+   "hash": "#/r/ET-1009",
+   "gecti": true
+  },
+  {
+   "ad": "6.3 zemin izolasyonu: yer eklenir, düzeltilir; direnç 50 kΩ'dan büyük → Uygun",
+   "gen": 1920,
+   "sayfa": "maket/rapor.html",
+   "hash": "#/r/ET-1009",
+   "gecti": true
+  },
+  {
+   "ad": "5.1 ölçüm noktası RCD testi: IΔ > IΔn → işaretlenir, kusur listesinde (odak yerinde)",
+   "gen": 1920,
+   "sayfa": "maket/rapor.html",
+   "hash": "#/r/AT-1010",
+   "gecti": true
+  },
+  {
+   "ad": "5.2 selektivite: RCD'ye gecikme ve son tüketim panosu yazılır, tabloda görünür",
+   "gen": 1920,
+   "sayfa": "maket/rapor.html",
+   "hash": "#/r/AT-1010",
+   "gecti": true
+  },
+  {
+   "ad": "girilen 6.1 · 6.2 satırları ve sonuçları final raporda formattaki yerinde",
    "gen": 1920,
    "sayfa": "maket/rapor.html",
    "hash": "#/r/ET-1009",

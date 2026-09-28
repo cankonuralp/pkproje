@@ -460,8 +460,8 @@
       /* 5.1 örnek ölçüm noktaları: [nokta, açma eğrisi, In (A), Zx (Ω), RCD (mA; yoksa "")] */
       noktalar: [["ADP · ana şalter", "C", 63, "0,21", ""], ["Priz hattı P1 — bakım atölyesi", "C", 16, "0,62", "30"], ["Aydınlatma A1 — üretim holü", "B", 16, "0,95", ""],
         ["Kompresör besleme", "C", 32, "0,48", ""], ["Havalandırma motoru", "C", 25, "1,12", "300"], ["Ofis prizleri", "B", 20, "", "30"]],
-      /* 5.2 örnek RCD selektivite: [pano, RCD tipi, In (A), IΔn (mA), IΔ (mA), TΔ (ms)] */
-      rcd: [["Tali pano TP-1", "A", 40, 30, "21", "24"], ["Tali pano TP-2", "AC", 63, 300, "", ""]],
+      /* 5.2 örnek RCD selektivite: [N önceki pano, RCD tipi, In (A), IΔn (mA), IΔ (mA), TΔ (ms), gecikme (ms), son tüketim noktasını besleyen pano] */
+      rcd: [["Tali pano TP-1", "A", 40, 30, "21", "24", "", "TP-1 priz tablosu"], ["Tali pano TP-2", "AC", 63, 300, "", "", "60", "TP-2 makine tablosu"]],
       notlar: ["Uygun.", "Güvenlik şartı sağlanamadığından uygun değildir. (Ağır kusur)", "Topraklama bağlantısı yok kontrol edilmelidir. (Ağır kusur)",
         "Artık akım anahtarı kullanıldığı ve faal olduğu için uygundur.",
         "TT veya TN (TN-S veya TN-CS'nin S bölümü) şebekelerde 32 A'e kadar genel kullanım priz tesisatlarında ve seyyar cihaz prizlerinde 30 mA RCD kullanımı zorunludur. (Ağır kusur)",
@@ -515,6 +515,16 @@
         { k: "pano", ad: "Pano Adı/Ekipman Tanımlaması", tip: "metin", ornek: "ADP · ana dağıtım panosu" }
       ],
       metot: ["Üç Uçlu Karşılaştırma", "Çevrim Empedansı", "Klamp Yöntemi"],
+      /* 6.1 · 6.2 · 6.3 örnek satırları (tamamlanmış örnek raporlar ve boş olmayan önizleme; 2026-09-28 Kalem L) — UYDURMA.
+         linye: pano sigortası + etiketten Icu, ölçülen / hesaplanan kesit, Ib, Iz, RCD testi */
+      linye: [
+        { no: "F1", devre: "Aydınlatma — üretim holü", tip: "B", akim: 16, kutup: 1, rcd: "", icu: "6", faz: "2,5", npen: "2,5", pe: "2,5", ib: "10", iz: "24", id: "", td: "" },
+        { no: "F2", devre: "Priz — bakım atölyesi", tip: "C", akim: 16, kutup: 1, rcd: "30", icu: "6", faz: "2,5", npen: "2,5", pe: "2,5", ib: "12", iz: "24", id: "21", td: "18" },
+        { no: "F3", devre: "Kompresör", tip: "C", akim: 32, kutup: 3, rcd: "", icu: "10", faz: "6", npen: "6", pe: "6", ib: "25", iz: "41", id: "", td: "" },
+        { no: "F4", devre: "Havalandırma", tip: "C", akim: 25, kutup: 3, rcd: "", icu: "10", faz: "4", npen: "4", pe: "4", ib: "18", iz: "32", id: "", td: "" },
+        { no: "F5", devre: "Ofis prizleri", tip: "B", akim: 20, kutup: 1, rcd: "30", icu: "6", faz: "2,5", npen: "2,5", pe: "2,5", ib: "14", iz: "24", id: "19", td: "22" }],
+      pd: [{ yer: "Ana dağıtım odası metal kapı ve kasası", kesit: "16", sure: "0,04", tkesit: "", tsure: "" }, { yer: "Kompresör şasisi", kesit: "6", sure: "0,07", tkesit: "4", tsure: "0,05" }],
+      zi: [{ yer: "ADP önü", en: "1,0", boy: "2,0", direnc: "180" }],
       /* 5 · gözle kontrol: PDF'teki gruplar ve sıra (iki sütunlu tabloda soldan sağa, satır satır); değerlendirme Uygun · Uygun değil · Uygulanamaz */
       gozle: [
         ["PANO VE DİĞER DONANIMLARA GİRİŞİN UYGUNLUĞU", ["Kablo şebeke tarafı", "Kablo donanım tarafı", "Pano sabitlenmesi (Depreme dayanıklılık)", "Dış darbelere karşı koruma önlemi",
@@ -553,6 +563,30 @@
     o.agir = o.not === 2 || o.not === 5;
     return o;
   };
+  /* ZPKR02 6.1 · 6.2 · 6.3 satır değerlendirmesi — formatın "Fonksiyon testleri bölümü" ağır kusur tanımlarından (2026-09-28, Kalem L):
+     1 Icu < hesaplanan 3 fazlı kısa devre akımı · 4 RCD testi yetersiz (IΔ > IΔn ya da TΔ > 200 ms) · 5 Ib ≤ In ≤ Iz sağlanmıyor ·
+     7a N/PEN kesiti faz kesitinden küçük · 8 PE kesiti ETTY Çizelge 8'den küçük (S ≤ 16 → S · 16 < S ≤ 35 → 16 · S > 35 → S/2) ·
+     9 PD kesiti 6–25 mm² dışında · 10 tamamlayıcı PD < 4 mm² · 6c zemin izolasyon direnci ≤ 50 kΩ. Boş değer değerlendirilmez.
+     Sonuç: null (değer yok) · { uygun: true } · { uygun: false, neden: [...] } */
+  var sy = function (v) { var s = String(v === undefined || v === null ? "" : v).trim(); return /^\d+([.,]\d+)?$/.test(s) ? parseFloat(s.replace(",", ".")) : NaN; };
+  MV.sayiOku = sy;
+  MV.rcdTestYeter = function (idn, id, td) { var i = sy(id), d = sy(td); return isNaN(i) || isNaN(d) ? null : i <= idn && d <= 200; };
+  MV.linyeHesap = function (x, ik3) {
+    var n = [], dolu = false, In = sy(x.akim), ib = sy(x.ib), iz = sy(x.iz), faz = sy(x.faz), npen = sy(x.npen), pe = sy(x.pe), icu = sy(x.icu), k3 = sy(ik3);
+    if (!isNaN(icu) && !isNaN(k3) && icu < k3) n.push("Icu " + x.icu + " kA < kısa devre akımı " + ik3 + " kA");   /* etiketten okunan Icu tek başına sonuç doğurmaz */
+    if (!isNaN(ib) || !isNaN(iz)) { dolu = true; if ((!isNaN(ib) && ib > In) || (!isNaN(iz) && In > iz)) n.push("Ib ≤ In ≤ Iz sağlanmıyor"); }
+    if (!isNaN(faz) && !isNaN(npen)) { dolu = true; if (npen < faz) n.push("N/PEN kesiti faz kesitinden küçük"); }
+    if (!isNaN(faz) && !isNaN(pe)) { dolu = true; if (pe < (faz <= 16 ? faz : faz <= 35 ? 16 : faz / 2)) n.push("PE kesiti yetersiz"); }
+    if (x.rcd) { var r = MV.rcdTestYeter(+x.rcd, x.id, x.td); if (r !== null) { dolu = true; if (!r) n.push("RCD testi yetersiz"); } }
+    return dolu || n.length ? { uygun: !n.length, neden: n } : null;
+  };
+  MV.pdHesap = function (x) {
+    var n = [], k = sy(x.kesit), t = sy(x.tkesit); if (isNaN(k) && isNaN(t)) return null;
+    if (!isNaN(k) && (k < 6 || k > 25)) n.push("PD kesiti 6–25 mm² dışında");
+    if (!isNaN(t) && t < 4) n.push("Tamamlayıcı PD kesiti 4 mm²'den küçük");
+    return { uygun: !n.length, neden: n };
+  };
+  MV.ziHesap = function (x) { var d = sy(x.direnc); return isNaN(d) ? null : d > 50 ? { uygun: true, neden: [] } : { uygun: false, neden: ["Zemin izolasyon direnci 50 kΩ'dan büyük değil"] }; };
   /* DİĞER DÖKÜMANLAR (Dökümanlar modülü, 2026-09-28; reisim: "eğitimler, muayene kriterleri, standartlar, ve diğer dökümanlar bu kısımda
      tutulsun"): firmanın kendi belgeleri — kalite el kitabı, prosedür, talimat, politika, form, sertifika. Firma yükler, herkes okur; kalıcı
      herkese açık bağlantı yok. Kodlar firma düzeni (öneri). UYDURMA. */
@@ -593,7 +627,7 @@
       { k: "zln", ad: "Panodan ölçülen faz-nötr çevrim empedansı (ZLN)", birim: "Ω", ornek: "0,18" },
       { k: "ff", ad: "Gerilim F-F", birim: "V", ornek: "398" }, { k: "ln", ad: "Gerilim L-N", birim: "V", ornek: "229" },
       { k: "npe", ad: "Gerilim N-PE", birim: "V", op: "<=", sinir: 10, ornek: "1,2" },
-      { k: "ik3", ad: "Hesaplanan 3 fazlı kısa devre akımı", birim: "kA", op: "<=", sinir: 10, not: "panodaki en küçük Icu", ornek: "6,2" },
+      { k: "ik3", ad: "Hesaplanan 3 fazlı kısa devre akımı", birim: "kA", ornek: "4,8" },   /* sınırı her sigortanın Icu değeri: MV.linyeHesap (tek kural) */
       { k: "dkdTip", ad: "Aşırı gerilim koruma (DKD) tipi", birim: "", metin: true, ornek: "Tip 2" },
       { k: "dkdAkim", ad: "Aşırı gerilim koruma (DKD) dayanma akımı", birim: "kA", ornek: "20" }],
     AT: []

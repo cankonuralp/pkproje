@@ -99,11 +99,6 @@
     "Nötr-toprak geriliminin yüksek olması nedeniyle ölçüm yapılamamıştır. <b>(Ağır kusur)</b>", "TN-S ve TN-CS topraklama sistem tipini belirleyen PEN köprüsü dışında PE ve N iletkenlerinin birleştirilmesi uygun değildir. <b>(Ağır kusur)</b>",
     "Priz üzerinde Nötr-Toprak birleşikliği (sıfırlama yapıldığı) tespit edildiğinden yetersiz. Tesis topraklama tipi TT ise sıfırlama yapılamaz. TN ise PEN iletken kesiti &lt;10 mm<sup>2</sup> olamayacağından 2,5 mm<sup>2</sup> prizde sıfırlama yapılamaz. <b>(Ağır kusur)</b>",
     "Pano gövde–kapak köprüsü olmadığından yetersizdir. <b>(Ağır kusur)</b>"];
-  /* örnek (tamamlanmış örnek raporlar için; saha raporundan gelmeyen tablolar) — UYDURMA */
-  var RB_LINYE = [["ADP · F1 Aydınlatma", "B", "1", "16", "6", "2,5", "2,5", "2,5", "10", "24", "", "", "Uygun"], ["ADP · F2 Priz", "C", "1", "16", "6", "2,5", "2,5", "2,5", "12", "24", "21", "18", "Uygun"],
-    ["ADP · F3 Kompresör", "C", "3", "32", "10", "6", "6", "6", "25", "41", "", "", "Uygun"], ["TP-1 · F4 Havalandırma", "C", "3", "25", "10", "4", "4", "4", "18", "32", "", "", "Uygun"]];
-  var RB_PD = [["Ana dağıtım odası metal kapı ve kasası", "16", "0,04", "", "", "Uygun"], ["Kompresör şasisi", "6", "0,07", "4", "0,05", "Uygun"]];
-  var RB_ZI = [["ADP önü", "1,0", "2,0", "180", "Uygun"]];
   var SAYI_AD = ["sıfır", "bir", "iki", "üç", "dört", "beş"];
 
   function resmiBelge(t, o, F) {
@@ -225,12 +220,15 @@
         '<tr><td class="rb-e">Panodan ölçülen faz-nötr çevrim empedansı (ZLN) (Ω)</td><td>' + k(tv("zln")) + '</td><td class="rb-e">Hesaplanan 3 fazlı kısa devre akımı (kA)</td><td colspan="2">' + k(tv("ik3")) +
           '</td><td class="rb-e">Aşırı gerilim koruma (DKD) dayanma akımı (kA)</td><td>' + k(tv("dkdAkim")) + "</td></tr></table>";
       /* 6.1 linye tablosu: saha raporunda pano sigortaları (tip, akım, kutup, RCD) + L kaleminde kesitler */
-      var linye = R ? (R.sigorta || []).map(function (x, i) { return [x.no + " · " + x.devre, x.tip, x.kutup, x.akim, x.icu || "", x.faz || "", x.npen || "", x.pe || "", x.ib || "", x.iz || "", x.id || "", x.td || "", x.not || ""]; }) : o ? RB_LINYE : [];
+      /* 6.1 · 6.2 · 6.3: saha raporunun satırları (yoksa formatın örnek satırları); sonuç formatın kurallarıyla (MV.linyeHesap · pdHesap · ziHesap) */
+      var sonucYaz = function (h) { return !h ? "" : h.uygun ? "Uygun" : "Uygun Değil **"; };
+      var linye = (R ? R.sigorta || [] : o ? F.linye : []).map(function (x) { return [x.no + " · " + x.devre, x.tip, x.kutup, x.akim, x.icu || "", x.faz || "", x.npen || "", x.pe || "", x.ib || "", x.iz || "", x.id || "", x.td || "", sonucYaz(MV.linyeHesap(x, tv("ik3")))]; });
       var linyeTablo = '<table class="rb-t rb-kucuk rb-linye"><colgroup><col style="width:4%"><col style="width:20%"><col span="4" style="width:5.5%"><col span="5" style="width:6.5%"><col span="2" style="width:5%"><col style="width:6%"></colgroup>' +
         '<tr><th class="rb-e rb-dikey" rowspan="2"><span>No.</span></th><th class="rb-e" rowspan="2">Pano/Tablo numarası-Linye Adı-Etiketi</th><th class="rb-e" colspan="4">Aşırı Akım Koruma Cihazının</th><th class="rb-e" colspan="5">İletkenin</th><th class="rb-e" colspan="2">RCD Testi</th><th class="rb-e rb-dikey" rowspan="2"><span>Sonuç (Not)</span></th></tr>' +
         '<tr>' + ["Açma eğrisi tipi", "Kutup sayısı", "In(A)", "Icu Kısa devre kesme akımı", "Faz kesiti (mm²)", "N/PEN Kesiti (mm²)", "PE Koruma iletkeni kesiti (mm²)", "Ib Yük/Tasarım akımı (A)", "Iz Akım taşıma kapasitesi (A)", "IΔ (mA)", "TΔ (ms)"].map(function (x) { return '<th class="rb-e rb-dikey"><span>' + x + "</span></th>"; }).join("") + "</tr>" +
         doldur(linye, 7, 13).map(function (s, i) { return "<tr><td>" + (s ? i + 1 : "") + "</td>" + (s ? s.map(function (x) { return "<td>" + k(x) + "</td>"; }).join("") : bosSatir(13)) + "</tr>"; }).join("") + "</table>";
-      var pd = R ? (R.pd || []) : o ? RB_PD : [], zi = R ? (R.zi || []) : o ? RB_ZI : [];
+      var pd = (R ? R.pd || [] : o ? F.pd : []).map(function (x) { return [x.yer, x.kesit, x.sure, x.tkesit, x.tsure, sonucYaz(MV.pdHesap(x))]; });
+      var zi = (R ? R.zi || [] : o ? F.zi : []).map(function (x) { return [x.yer, x.en, x.boy, x.direnc, sonucYaz(MV.ziHesap(x))]; });
       var pdTablo = '<table class="rb-t rb-kucuk"><colgroup><col style="width:4%"><col style="width:30%"><col style="width:13%"><col style="width:17%"><col style="width:17%"><col style="width:16%"><col style="width:8%"></colgroup>' +
         '<tr><th class="rb-ab" colspan="7">6.2. POTANSİYEL DENGELEME İLETKENLERİ KONTROLÜ</th></tr><tr><th class="rb-e rb-dikey"><span>No.</span></th>' +
         ["Potansiyel dengeleme yapılan ilgili bölüm", "Potansiyel dengeleme iletkeni kesiti (mm²)", "Potansiyel dengeleme iletkeni süreklilik (Ω)", "Varsa tamamlayıcı potansiyel dengeleme iletkeni kesiti (mm²)", "Tamamlayıcı potansiyel dengeleme süreklilik (Ω)", "Sonuç (Not)"].map(function (x) { return '<th class="rb-e">' + x + "</th>"; }).join("") + "</tr>" +

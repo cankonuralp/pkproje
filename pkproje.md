@@ -1662,6 +1662,14 @@ en üstte değil en yeni onlar açıldı neye göre üstte değil en son açıla
 sayfa düzeninde (siyah-beyaz A4, başlık tablosu, bölüm tabloları, onay kutuları), uygulama temasından bağımsız. (c) Plan aç → Planlar → kabul →
 denetim → ekipman → rapor → onay zinciri sayfalar arasında çalışır (maket tarayıcıda saklar); reisim kendi planını açıp yürütebilir.
 
+**Otuz üçüncü tur (2026-09-28, reisim birebir):** *"Makette yama yapılabilir nihai kodda olmamalı, raporlama süreci attığım pdf gibi
+gözükmeyecek en son final rapor hali bu olacak elindeki tüm işleri bitir"* · önceki mesajlarda: *"özel değil genel düşün … anlık bir iş çözüp
+yama yapma anayasamıza sadık kal geçici çözümler üretme"* · *"tüm site maket üzerinde aktif çalışabilsin her fonksiyonu test edicem hiç bir
+şeyi şu an canlı koda geçirme"* → **Kararlar:** (a) Saha raporu (doldurma) ekranı uygulamanın kendi düzeninde kalır, PDF'e benzetilmez;
+PDF düzeni yalnız final rapor (önizleme + indirilen dosya). Formatın istediği her veri (linye, potansiyel dengeleme, zemin izolasyonu, RCD
+testleri, selektivite) ekranda girilir, final raporda formattaki yerinde çıkar. (b) Makette geçici çözüm kabul; nihai kodda her kural tek
+kaynaktan, genel mekanizmayla (anayasa 0.8). (c) Bütün maket sayfalar arası kalıcı çalışır; reisim her işlevi kendisi dener.
+
 **Açık kalanlar:** ~~Ana sayfada İSGGM duyuruları~~ (2026-09-27: makette eklendi; okuma işi uygulamada) (reisim 2026-09-26: *"Ana sayfada isgüm duyurularını gösterebilir miyiz ? Bunu
 yapılacaklar listesine ekle"*; öneri: ÇSGB İSGGM duyurular sayfası — https://www.csgb.gov.tr/isggm/duyurular/ — sunucuda günde birkaç kez
 okunur (pg-boss işi, §8.9), Ana sayfada son 5 duyuru başlık + tarih + kaynağa bağlantı; yalnız ekranda, bildirim yok; sayfa RSS vermiyorsa
@@ -1694,6 +1702,18 @@ revizyon, alan kopyalama, hafif kusur devri, meslek eşleşme denetimi).
 - Emsal ürünler: https://opwire.app/iso-17020-periyodik-kontrol-yazilimi/ · https://17020muayene.vidco.com.tr/ · https://akuple.com/asansor-kontrol-yazilimi/ · https://ensyazilim.com/
 
 ## 11 · Değişiklik günlüğü
+- 2026-09-28 (109): **Formatın istediği her veri saha raporunda girilir, final raporda formattaki yerinde çıkar** (§9 otuz üçüncü tur, karar a:
+  ekran uygulamanın düzeninde, PDF'e benzetilmedi). İç tesisat: **6.1 Pano linye ve sigortaları** — fotoğraftan okunan satıra "Kontrol et"
+  penceresinde Icu, faz / N-PEN / PE kesiti, Ib, Iz, RCD varsa IΔ · TΔ; **6.2 Potansiyel dengeleme iletkenleri** ve **6.3 Zemin izolasyonu**
+  yeni bölümler (satır ekle · düzelt · kaldır). AG topraklama: ölçüm noktasında RCD tipi ve RCD testi (IΔ · TΔ), 5.2 RCD'de açma zamanı
+  gecikmesi ve son tüketim noktasını besleyen pano. Sonuçlar formatın "Fonksiyon testleri" ağır kusur tanımlarından tek yerde hesaplanır
+  (MV.linyeHesap · pdHesap · ziHesap · rcdTestYeter): Icu < kısa devre akımı · Ib ≤ In ≤ Iz · N/PEN < faz · PE ETTY Çizelge 8 · RCD IΔ > IΔn
+  ya da TΔ > 200 ms · PD 6–25 mm² · tamamlayıcı PD ≥ 4 mm² · zemin > 50 kΩ; uygun olmayan her satır kusur listesine ve final rapora
+  "Uygun Değil **" olarak düşer. Tutarlılık düzeltmeleri: kısa devre akımı testinin kendi sabit sınırı (10 kA) kalktı, sınır her
+  sigortanın Icu değeri (tek kural); örnek raporların kısa devre akımı 4,8 kA (6 kA Icu'lu örnek sigortalar ağır kusurlu çıkıyordu);
+  etiketten okunan Icu tek başına sonuç doğurmaz. Örnek raporlarda 6.1 · 6.2 · 6.3 formatın örnek satırlarıyla (tek kaynak MV.FORMAT_YAPI).
+  6 yeni deneme (linye sonucu ve kusur listesi, 6.2, 6.3 düzelt, nokta RCD testi, selektivite, final rapora yansıma). 18 maket temiz: durum
+  1928/1928 · etkileşim 436/436 · telefon 964/964; dolu örnek raporun PDF'inde 6.1–6.3 sayfa görüntüsüyle kontrol edildi.
 - 2026-09-28 (108): **Belge önizlemesi ile inen PDF birebir aynı — tek KÂĞIT mekanizması** (reisim: *"ön izlemede yukarıda istemediğim şeyler
   var … pdf indir dediğimde inen şey ön izlemeden çok farklı garip saçma bir şey"* · *"özel değil genel düşün … anlık bir iş çözüp yama yapma
   anayasamıza sadık kal"*). Kök neden: İndir yazdırma penceresine gidiyordu (telefonda gizli çerçeve yerine bütün sayfa basılıyordu) ve

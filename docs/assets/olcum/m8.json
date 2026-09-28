@@ -1,7 +1,7 @@
 {
  "maket": "m8",
  "sayfa": "maket/rapor.html",
- "tarih": "2026-09-27",
+ "tarih": "2026-09-28",
  "arac": "başsız HeadlessChrome/141.0.7390.37 · puppeteer-core · tools/olc-bulut.mjs + tools/olc-maket.js",
  "yontem": "python3 http.server (docs/), her durum × genişlik × tema taze yükleme ve ayrı oturum, geçişler kapalı; 1920×1080 · 1080×810 · 375×812 × açık/koyu; 1080'de çekmece açık ayrıca.",
  "toplam": 160,
@@ -294,7 +294,7 @@
    "eksikIkon": 0,
    "tusY": 44,
    "tusGen": [
-    111,
+    108,
     351
    ],
    "satirY": 243,
@@ -332,7 +332,7 @@
    "eksikIkon": 0,
    "tusY": 44,
    "tusGen": [
-    111,
+    108,
     351
    ],
    "satirY": 243,
@@ -598,7 +598,7 @@
    "eksikIkon": 0,
    "tusY": 44,
    "tusGen": [
-    111,
+    108,
     351
    ],
    "satirY": 243,
@@ -636,7 +636,7 @@
    "eksikIkon": 0,
    "tusY": 44,
    "tusGen": [
-    111,
+    108,
     351
    ],
    "satirY": 243,
@@ -902,7 +902,7 @@
    "eksikIkon": 0,
    "tusY": 44,
    "tusGen": [
-    111,
+    108,
     351
    ],
    "satirY": 243,
@@ -940,7 +940,7 @@
    "eksikIkon": 0,
    "tusY": 44,
    "tusGen": [
-    111,
+    108,
     351
    ],
    "satirY": 243,
@@ -1510,7 +1510,7 @@
    "eksikIkon": 0,
    "tusY": 44,
    "tusGen": [
-    111,
+    108,
     351
    ],
    "satirY": 243,
@@ -1548,7 +1548,7 @@
    "eksikIkon": 0,
    "tusY": 44,
    "tusGen": [
-    111,
+    108,
     351
    ],
    "satirY": 243,
@@ -2422,7 +2422,7 @@
    "eksikIkon": 0,
    "tusY": 44,
    "tusGen": [
-    111,
+    108,
     351
    ],
    "satirY": 243,
@@ -2460,7 +2460,7 @@
    "eksikIkon": 0,
    "tusY": 44,
    "tusGen": [
-    111,
+    108,
     351
    ],
    "satirY": 243,
@@ -3334,7 +3334,7 @@
    "eksikIkon": 0,
    "tusY": 44,
    "tusGen": [
-    111,
+    108,
     351
    ],
    "satirY": 243,
@@ -3372,7 +3372,7 @@
    "eksikIkon": 0,
    "tusY": 44,
    "tusGen": [
-    111,
+    108,
     351
    ],
    "satirY": 243,
@@ -5158,7 +5158,7 @@
    "eksikIkon": 0,
    "tusY": 44,
    "tusGen": [
-    111,
+    108,
     351
    ],
    "satirY": 243,
@@ -5196,7 +5196,7 @@
    "eksikIkon": 0,
    "tusY": 44,
    "tusGen": [
-    111,
+    108,
     351
    ],
    "satirY": 243,
@@ -5462,7 +5462,7 @@
    "eksikIkon": 0,
    "tusY": 44,
    "tusGen": [
-    111,
+    108,
     351
    ],
    "satirY": 243,
@@ -5500,7 +5500,7 @@
    "eksikIkon": 0,
    "tusY": 44,
    "tusGen": [
-    111,
+    108,
     351
    ],
    "satirY": 243,
@@ -5766,7 +5766,7 @@
    "eksikIkon": 0,
    "tusY": 44,
    "tusGen": [
-    111,
+    108,
     351
    ],
    "satirY": 243,
@@ -5804,7 +5804,7 @@
    "eksikIkon": 0,
    "tusY": 44,
    "tusGen": [
-    111,
+    108,
     351
    ],
    "satirY": 243,

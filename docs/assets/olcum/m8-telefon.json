@@ -1,6 +1,6 @@
 {
  "maket": "m8",
- "tarih": "2026-09-27",
+ "tarih": "2026-09-28",
  "arac": "tools/olc-bulut.mjs --telefon (başsız tarayıcı, telefon taklidi: dokunmatik, meta viewport, 3x; açık tema)",
  "genislikler": [
   320,
@@ -90,7 +90,7 @@
    "tasma": 0,
    "disari": [],
    "kucukAlan": [],
-   "alan": 42
+   "alan": 48
   },
   {
    "ad": "sigorta kontrol penceresi (emin değil)",
@@ -99,7 +99,7 @@
    "tasma": 0,
    "disari": [],
    "kucukAlan": [],
-   "alan": 42
+   "alan": 48
   },
   {
    "ad": "sigorta kontrol penceresi (emin değil)",
@@ -108,7 +108,7 @@
    "tasma": 0,
    "disari": [],
    "kucukAlan": [],
-   "alan": 42
+   "alan": 48
   },
   {
    "ad": "sigorta kontrol penceresi (emin değil)",
@@ -117,7 +117,7 @@
    "tasma": 0,
    "disari": [],
    "kucukAlan": [],
-   "alan": 42
+   "alan": 48
   },
   {
    "ad": "rapor açılışı · bütün bölümler kapalı",
@@ -198,7 +198,7 @@
    "tasma": 0,
    "disari": [],
    "kucukAlan": [],
-   "alan": 31
+   "alan": 37
   },
   {
    "ad": "ön izleme penceresi (topraklama, rapordaki değerlerle)",
@@ -207,7 +207,7 @@
    "tasma": 0,
    "disari": [],
    "kucukAlan": [],
-   "alan": 31
+   "alan": 37
   },
   {
    "ad": "ön izleme penceresi (topraklama, rapordaki değerlerle)",
@@ -216,7 +216,7 @@
    "tasma": 0,
    "disari": [],
    "kucukAlan": [],
-   "alan": 31
+   "alan": 37
   },
   {
    "ad": "ön izleme penceresi (topraklama, rapordaki değerlerle)",
@@ -225,7 +225,7 @@
    "tasma": 0,
    "disari": [],
    "kucukAlan": [],
-   "alan": 31
+   "alan": 37
   },
   {
    "ad": "gönderilemez penceresi + eksik bölümler işaretli (2026-09-28)",
