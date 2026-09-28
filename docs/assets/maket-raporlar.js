@@ -31,8 +31,8 @@
       { k: "imza", ad: "Muayene uzmanı imzası", grup: "durum", test: function (r) { return r.durum === "onaylandi"; } },
       { k: "imzada", ad: "İmzaya gönderildi", grup: "durum", test: function (r) { return r.durum === "imzada"; } },
       { k: "acik", ad: "Tamamlandı", grup: "durum", test: function (r) { return r.durum === "imzali"; } },
-      { k: "geri", ad: "Geri gönderilen", test: function (r) { return !!r.geri && r.durum === "taslak"; } },
-      { k: "kusurlu", ad: "Kusurlu", test: function (r) { return !!r.sonuc && r.sonuc !== "Uygun"; } }
+      /* "Kusurlu" çipi kalktı (reisim 2026-09-28: "raporlar modülünde kusurlu tuşunu kaldır"); sonuç Sonuç seçicisinde */
+      { k: "geri", ad: "Geri gönderilen", test: function (r) { return !!r.geri && r.durum === "taslak"; } }
     ],
     seciciler: [
       { k: "musteri", ad: "Müşteri", secenek: function () {
@@ -191,6 +191,13 @@
     r.revizyonlar.unshift({ ad: "R" + (r.revizyonlar.length + 1), zaman: MK.simdi() }); r.durum = "taslak"; r.onay = null; r.imza = null; r.gonderildi = null;
     raporCiz(r); var h = document.querySelector("#a-nesne h1"); if (h) h.focus();
     MK.bildir(r.no + "-" + r.revizyonlar[0].ad + " açıldı; önceki imzalı sürüm saklandı.");
+  };
+  /* toplu PDF (§3.8 kural 7; reisim 2026-09-28: "Raporlar ekranında ve planlarda … toplu pdf indirme tuşu olsun"): süzgeçten geçen
+     raporların PDF'i tek dosyada, her rapor kendi sayfalarında; taslağın PDF'i yok */
+  X["toplu-pdf"] = function () {
+    var l = MK.taban("r", benim()).filter(function (r) { return MK.cipGecer("r", r) && r.durum !== "taslak"; }).sort(function (a, b) { return a.no < b.no ? -1 : 1; });
+    if (!l.length) { MK.bildir("Süzgeçte PDF'i olan rapor yok; taslak rapor PDF'e girmez."); return; }
+    MK.pdfGoster({ dosya: "raporlar-" + MK.BUGUN + ".pdf", baslik: l.length + " rapor", icerik: l.map(function (r) { return MB.belge(MV.tur(ekp(r).tur), MV.raporBelge(r)); }).join("") });
   };
   /* 2026-09-27: rapor belgesi yazdırma penceresinden PDF olur (uygulamada PDF sunucuda üretilir); imza penceresinde seçili raporların hepsi, her biri ayrı sayfa */
   X["pdf"] = function () {

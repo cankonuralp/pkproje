@@ -2,8 +2,8 @@
  "maket": "m9",
  "tarih": "2026-09-28",
  "arac": "tools/olc-bulut.mjs --etkilesim (başsız tarayıcı, 1920 açık tema; gen verilen denemede o genişlik)",
- "toplam": 25,
- "gecen": 25,
+ "toplam": 27,
+ "gecen": 27,
  "denemeler": [
   {
    "ad": "rapor sayfasında durum geçmişi yok",
@@ -38,6 +38,20 @@
    "gen": 1920,
    "sayfa": "maket/raporlar.html",
    "hash": "#/r/KM-0926-770-a99c1",
+   "gecti": true
+  },
+  {
+   "ad": "Raporlar: Kusurlu çipi ve genel arama yok (2026-09-28)",
+   "gen": 1920,
+   "sayfa": "maket/raporlar.html",
+   "hash": "#/",
+   "gecti": true
+  },
+  {
+   "ad": "Raporlar PDF indir: süzgeçten geçen raporlar tek PDF'te (HT- → 13 rapor)",
+   "gen": 1920,
+   "sayfa": "maket/raporlar.html",
+   "hash": "#/",
    "gecti": true
   },
   {

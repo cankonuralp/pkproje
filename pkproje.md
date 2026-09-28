@@ -1758,6 +1758,11 @@ revizyon, alan kopyalama, hafif kusur devri, meslek eşleşme denetimi).
 - Emsal ürünler: https://opwire.app/iso-17020-periyodik-kontrol-yazilimi/ · https://17020muayene.vidco.com.tr/ · https://akuple.com/asansor-kontrol-yazilimi/ · https://ensyazilim.com/
 
 ## 11 · Değişiklik günlüğü
+- 2026-09-28 (115): **T4 · Raporlar** (§9 otuz dördüncü tur; §3.8 kural 6, 7; reisim: *"Raporlar ekranında ve planlarda … toplu pdf indirme
+  tuşu olsun … raporlar modülünde kusurlu tuşunu kaldır … hepsinde ara barını kaldır"*). "Kusurlu" çipi kalktı (sonuç Sonuç seçicisinde);
+  "Hepsinde ara" kutusu T2'de ortak kuralla kalkmıştı (alan kutuları var). Başlıkta **PDF indir**: süzgeçten geçen raporlar tek PDF'te,
+  numara sırasıyla, her rapor kendi sayfalarında (taslak girmez). 2 yeni deneme. Yalnız bu maket değişti: m9 durum 104/104 · etkileşim
+  27/27 · telefon 52/52; 375'te gözle.
 - 2026-09-28 (114): **T3 · Planlar listesi süzgeci** (§9 otuz dördüncü tur; §3.8 kural 6; reisim: *"Planlar ekranındaki filtreleme kısmıda
   yine istediğim gibi değil anlamsız filtreleme tuşları var proje için ayrı proje no için ayrı"*). Durum çipleri (Kabul bekliyor … Ön koşul
   eksik) ve "veya / ve" anahtarı kalktı; durum artık **Durum** seçicisi (Tarih · Müşteri · Branş yanında); genel arama yerine **Proje adı ·

@@ -705,6 +705,8 @@ export const DENEMELER = {
     { ad: "Temizle alan aramalarını da boşaltır", hash: "#/", adim: [["yaz", '[data-alan-ara="r|no"]', "760"], ["tikla", ".a-temizle"]], bekle: 'document.querySelector(\'[data-alan-ara="r|no"]\').value === "" && document.querySelector(".a-suzgec-say").hidden' },
     /* 2026-09-27 (reisim: "maket site nasıl çalışması gerekiyorsa çalışsın"): gerçek dosya indirme / yazdırma */
     { ad: "rapor PDF indir: önizleme, İndir önizlemedeki sayfaların PDF'i", hash: "#/r/KM-0926-770-a99c1", adim: [["tikla", "#a-nesne [data-eylem=\"pdf\"]"], ["tikla", "#a-pdf [data-eylem=\"pdf-indir\"]"]], sure: 15000, bekle: "MK.SON_INDIRME && MK.SON_INDIRME.tur === \"application/pdf\" && MK.SON_INDIRME.boyut > 10000 && MK.SON_INDIRME.sayfa === MK.SON_INDIRME.onizleme" },
+    { ad: "Raporlar: Kusurlu çipi ve genel arama yok (2026-09-28)", hash: "#/", bekle: '!document.querySelector(\'[data-cip="kusurlu"]\') && !document.querySelector("[data-ara]") && document.querySelectorAll("[data-alan-ara]").length === 4' },
+    { ad: "Raporlar PDF indir: süzgeçten geçen raporlar tek PDF'te (HT- → 13 rapor)", hash: "#/", sure: 15000, adim: [["yaz", '[data-alan-ara="r|kod"]', "HT-"], ["tikla", '.a-sayfa-bas [data-eylem="toplu-pdf"]']], bekle: 'document.querySelector("#a-pdf") && document.querySelector("#a-pdf").open && document.querySelector("#a-pdf-baslik").textContent === "13 rapor"' },
     /* 2026-09-27: kontrol metodu belgede ve onay özetinde türden */
     { ad: "belgede ve onay özetinde kontrol metodu türden", sayfa: "maket/onaylar.html", hash: "#/r/KM-0926-775-03cf4", bekle: '/Kontrol metodu/.test(document.querySelector("#a-nesne").textContent)' },
     /* 2026-09-26 (reisim): beş durum — servis yoluyla imza "İmzaya gönderildi" */
