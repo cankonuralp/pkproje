@@ -1736,6 +1736,9 @@ genel arama kalkar, toplu PDF; (5) bütün listelerde genel arama kalkar (alan k
 takip balonları; (7) Ölçüm cihazları: cihaz türü ekle, ara bakım sıklıkları + otomatik bakım oluştur + PDF; (8) Talepler: firma formatı
 iskeleti, PDF, e-postayla ilet; (9) Performans ekranı: dikey, boşluksuz sütunlar, kişinin rapor süreci grafikleri; (10) personel kartında eğitimler.
 Eğitimler: reisim'e soruldu — *"tamam benim hatam bu şekilde kalsın"* → Dökümanlar › Eğitimler sekmesinde kalır (30. tur kararı).
+Ara istek (T7 sırasında, 2026-09-28): *"şu balonlarda sekmeyi aşağı düşürme olayı olmasın küçülsün ve tek sıra olsun renkler daha belirgin
+olsun"* · *"aşağı yukarı barı da yan menüde düzgün durmamış olmasın"* → T6b: balonlar adın yanında tek sırada bitişik hap, satır büyümez,
+dolu renk; yan menü kayar ama çubuğu görünmez (§11 121).
 
 **Açık kalanlar:** ~~Ana sayfada İSGGM duyuruları~~ (2026-09-27: makette eklendi; okuma işi uygulamada) (reisim 2026-09-26: *"Ana sayfada isgüm duyurularını gösterebilir miyiz ? Bunu
 yapılacaklar listesine ekle"*; öneri: ÇSGB İSGGM duyurular sayfası — https://www.csgb.gov.tr/isggm/duyurular/ — sunucuda günde birkaç kez
@@ -1769,6 +1772,17 @@ revizyon, alan kopyalama, hafif kusur devri, meslek eşleşme denetimi).
 - Emsal ürünler: https://opwire.app/iso-17020-periyodik-kontrol-yazilimi/ · https://17020muayene.vidco.com.tr/ · https://akuple.com/asansor-kontrol-yazilimi/ · https://ensyazilim.com/
 
 ## 11 · Değişiklik günlüğü
+- 2026-09-28 (121): **T6b · Yan menü balonları küçük, tek sıra; menü çubuğu yok** (§9 otuz dördüncü tur ara istek; reisim: *"şu balonlarda
+  sekmeyi aşağı düşürme olayı olmasın küçülsün ve tek sıra olsun renkler daha belirgin olsun"* · *"aşağı yukarı barı da yan menüde düzgün
+  durmamış olmasın"*). Balonlar sığmayınca adın altına geçiyordu (T6 kararı "ad kırpılmaz") → satır 34 px'ten 55 px'e çıkıyor, menü taşıp
+  kaydırma çubuğu çıkıyordu. Şimdi: satır hiç büyümez; balonlar adın yanında **bitişik tek hap** (18 px yükseklik; ilk ve son uç yuvarlak),
+  ad kalan yeri doldurur, sığmazsa kırpılır (bugünkü veride hiçbiri kırpılmıyor — ölçüldü: "Ölçüm cihazları" 111/111 px). Renk **dolu**:
+  rozet çiftinin tersi (kırmızı `--hata-yazi` zemin / `--hata-zemin` yazı, sarı aynı biçimde, yeşil menü sayacının `--onay` çifti) — aynı
+  ölçülü çiftler, palet ve token değişmedi. Koyu temada parlak (pembe-kırmızı, sarı, yeşil); açık temada doygun koyu (kırmızı, kahve-sarı,
+  yeşil) — açık temada da parlak sarı / kırmızı istenirse yan menü için ayrı renk değişkeni gerekir, bu palet kararı reisim'in (açık soru).
+  Yan menü kayar ama çubuğu görünmez (`scrollbar-width: none`; daraltılmış menüde zaten öyleydi). Yalnız maket (`docs/assets/maket.css`);
+  uygulama kabuğu (`src/`) koda geçişte aynı kurala çekilir. 18 maket temiz: durum 1976/1976 · etkileşim 475/475 · telefon 988/988 ·
+  olumsuz kanıt 3/3; açık / koyu / daraltılmış menü ekran görüntüsüyle gözle bakıldı.
 - 2026-09-28 (120): **T7 · Ölçüm cihazları: cihaz türü, ara kontrol sıklıkları, otomatik bakım, PDF** (§9 otuz dördüncü tur; §3.7 satır 12;
   reisim: *"Ölçüm cihazlarında … cihaz türü de eklenebilmeli … ara kontrollerde … günlük, haftalık, aylık, 6 ayda bir … otomatik bakım oluştur
   tuşu"* · *"Cihazlarda yapılan ara kontrollerin kayıtları pdf olarak indirilebilsin"*). Ara kontrol hesabı ortak veride tek yerde
