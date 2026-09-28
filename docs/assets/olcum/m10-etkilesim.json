@@ -2,8 +2,8 @@
  "maket": "m10",
  "tarih": "2026-09-28",
  "arac": "tools/olc-bulut.mjs --etkilesim (başsız tarayıcı, 1920 açık tema; gen verilen denemede o genişlik)",
- "toplam": 7,
- "gecen": 6,
+ "toplam": 10,
+ "gecen": 10,
  "denemeler": [
   {
    "ad": "ara kontrol uyarıları listede (gecikmiş OC-009)",
@@ -13,12 +13,32 @@
    "gecti": true
   },
   {
-   "ad": "16 uyarı (ara kontrol dahil), menü sayacı 16, en yakın tarih üstte",
+   "ad": "16 uyarı (ara kontrol dahil), menü balonları 4 kırmızı + 12 sarı, en yakın tarih üstte",
    "gen": 1920,
    "sayfa": "maket/uyarilar.html",
    "hash": "#/",
-   "gecti": false,
-   "hata": "beklenen sonuç yok"
+   "gecti": true
+  },
+  {
+   "ad": "yan menü balonları başka sayfada da aynı: cihazlar 3 · 4 · 12, personel 1 · 4, sözleşmeler 2, muhasebe 1",
+   "gen": 1920,
+   "sayfa": "maket/planlarim.html",
+   "hash": "#/",
+   "gecti": true
+  },
+  {
+   "ad": "balon veriyle güncellenir: kalibrasyonu ve ara kontrolü yenilenen cihaz kırmızıdan yeşile geçer (sayfa yenilenmeden)",
+   "gen": 1920,
+   "sayfa": "maket/planlarim.html",
+   "hash": "#/",
+   "gecti": true
+  },
+  {
+   "ad": "daraltılmış menüde simgenin köşesinde yalnız en önemli renk",
+   "gen": 1920,
+   "sayfa": "maket/planlarim.html",
+   "hash": "#/",
+   "gecti": true
   },
   {
    "ad": "Eğitim tekrarı çipi (5 / 16)",

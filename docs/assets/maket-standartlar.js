@@ -75,7 +75,8 @@
       '<div class="a-nesne-bas"><div class="a-nesne-kimlik"><div class="a-nesne-baslik"><h1 tabindex="-1">' + kacis(ad(s)) + "</h1>" + rozet(durum(s)) + "</div>" +
         '<p class="a-nesne-alt">' + ikon("book-open", "a-ikon-kucuk") + "<span>" + kacis(s.konu) + "</span></p></div>" +
         '<div class="a-eylem-cubugu">' + MK.tus({ eylem: "oku", ad: "Oku", ikon: "eye", sinif: "a-tus-ikincil" }) +
-          (s.yerine ? "" : MK.tus({ eylem: "surum-ac", ad: "Yeni sürüm yükle", ikon: "refresh-cw" })) + "</div></div>" +
+          (s.yerine ? "" : MK.tus({ eylem: "surum-ac", ad: "Yeni sürüm yükle", ikon: "refresh-cw" })) +
+          '<button class="a-ikon-tus" type="button" data-eylem="std-sil" aria-label="' + kacis(ad(s)) + ' sil" title="Sil">' + ikon("x") + "</button></div></div>" +
       (yeni ? '<div class="a-serit-kap">' + MK.serit("bilgi", "history", "Önceki sürüm: " + MK.tarihYaz(s.bitti) + " tarihinde yerine <a class=\"a-baglanti\" href=\"#/s/" + yeni.k + "\">" + kacis(ad(yeni)) + "</a> geçti. O tarihe kadar yazılan raporlar bu sürümü gösterir; dosya saklanır, silinmez.") + "</div>"
         : !t.length ? '<div class="a-serit-kap">' + MK.serit("uyari", "triangle-alert", "Hiçbir ekipman türüne atanmadı: raporda kontrol metodu olarak seçilemez. Atama tür sayfasından yapılır (Ekipman türleri).") + "</div>" : "") +
       '<div class="a-yuzler">' +
@@ -117,7 +118,7 @@
     { k: "tur", baslik: "Tür", kart: "govde", sira: 2, hucre: function (d) { return '<span class="a-kart-etiket">Tür</span>' + kacis(d.tur); } },
     { k: "rev", baslik: "Revizyon", kart: "govde", sira: 3, hucre: function (d) { return '<span class="a-kart-etiket">Revizyon</span>' + kacis(d.rev); } },
     { k: "tarih", baslik: "Yayım", kart: "govde", sira: 4, hucre: function (d) { return '<span class="a-kart-etiket">Yayım</span>' + MK.tarihYaz(d.tarih); } },
-    { k: "eylem", baslik: "İşlem", gizliBaslik: true, kart: "eylem", sira: 9, hucre: function (d) { return '<div class="a-eylem"><div class="a-eylem-tuslar">' + MK.pdfTus(d.dosya) + "</div></div>"; } }
+    { k: "eylem", baslik: "İşlem", gizliBaslik: true, kart: "eylem", sira: 9, hucre: function (d) { return '<div class="a-eylem"><div class="a-eylem-tuslar">' + MK.dosyaAlan({ ad: d.dosya, degistir: "dok-degistir", sil: "dok-sil", veri: { k: d.k } }) + "</div></div>"; } }
   ];
   function digerCiz() {
     var l = MV.DOKUMANLAR.slice().sort(function (a, b) { return a.tarih < b.tarih ? 1 : -1; });
@@ -177,9 +178,8 @@
       MK.alan({ id: "w-konu", etiket: "Konu", zorunlu: !s, hata: h.konu, genis: true, ipucu: s ? "" : "Raporun metot alanında numarayla birlikte yazılır",
         girdi: s ? sabit("w-konu", s.konu) : MK.girdi({ id: "w-konu", alan: "konu", deger: d.konu, ek: ' maxlength="120"', hata: h.konu }) }) +
       '<div class="a-alan-grup a-alan-genis"><p class="a-etiket">Dosya <span class="a-zorunlu">zorunlu</span></p><div class="a-dosya">' +
-        MK.tus({ eylem: "dosya-sec", ad: d.dosya ? "Değiştir" : "PDF seç", ikon: "file-plus", sinif: "a-tus-ikincil" }) +
-        (d.dosya ? '<span class="a-dosya-ad">' + kacis(d.dosya) + "</span>" + MK.pdfTus(d.dosya) : '<span class="a-dosya-ad a-deger-yok">Dosya seçilmedi</span>') + "</div>" +
-        (h.dosya ? '<p class="a-ipucu a-ipucu-uyari" id="w-dosya-ipucu">' + h.dosya + "</p>" : '<p class="a-ipucu" id="w-dosya-ipucu">PDF, en çok 50 MB.</p>') + "</div>" +
+        (d.dosya ? MK.dosyaAlan({ ad: d.dosya, degistir: "dosya-sec", sil: "dosya-kaldir" }) : MK.tus({ eylem: "dosya-sec", ad: "PDF seç", ikon: "file-plus", sinif: "a-tus-ikincil" })) + "</div>" +
+        (h.dosya ? '<p class="a-ipucu a-ipucu-uyari" id="w-dosya-ipucu">' + h.dosya + "</p>" : "") + "</div>" +
       "</div>" +
       '<div class="a-serit-kap a-uyari-serit" id="w-seritler" aria-live="polite">' + seritler(ayni) + "</div>" +
       "";
@@ -203,8 +203,7 @@
       MK.alan({ id: "w-kod", etiket: "Kod", girdi: MK.girdi({ id: "w-kod", alan: "kod", deger: d.kod, sinif: "a-girdi-sicil", ek: ' maxlength="20"' }) }) +
       MK.alan({ id: "w-rev", etiket: "Revizyon", girdi: MK.girdi({ id: "w-rev", alan: "rev", deger: d.rev, ek: ' maxlength="20"' }) }) +
       '<div class="a-alan-grup a-alan-genis"><p class="a-etiket">Dosya <span class="a-zorunlu">zorunlu</span></p><div class="a-dosya">' +
-        MK.tus({ eylem: "dok-dosya", ad: d.dosya ? "Değiştir" : "PDF seç", ikon: "file-plus", sinif: "a-tus-ikincil" }) +
-        (d.dosya ? '<span class="a-dosya-ad">' + kacis(d.dosya) + "</span>" + MK.pdfTus(d.dosya) : '<span class="a-dosya-ad a-deger-yok">Dosya seçilmedi</span>') + "</div>" +
+        (d.dosya ? MK.dosyaAlan({ ad: d.dosya, degistir: "dok-dosya", sil: "dok-dosya-kaldir" }) : MK.tus({ eylem: "dok-dosya", ad: "PDF seç", ikon: "file-plus", sinif: "a-tus-ikincil" })) + "</div>" +
         (h.dosya ? '<p class="a-ipucu a-ipucu-uyari" id="w-dosya-ipucu">' + h.dosya + "</p>" : "") + "</div></div>";
     $("a-pencere-alt").innerHTML = MK.tus({ eylem: "pencere-kapat", ad: "Vazgeç", sinif: "a-tus-ikincil" }) + MK.tus({ eylem: "dok-kaydet", ad: "Yükle", ikon: "check" });
     if (odak) { var el = $(odak); if (el) el.focus(); }
@@ -286,6 +285,31 @@
     });
   };
   X["pencere-kaydet"] = kaydet;
+  /* 2026-09-28 (reisim: "yüklenilen şeyler düzenlenebilir silinebilir olmalı"): pencerede seçilen dosya kaldırılır; yüklenen standart sürümü
+     ve döküman silinir. Güncel sürüm silinince bir önceki sürüm geri gelir; tek sürümse standart kütüphaneden ve türlerin kontrol metodundan çıkar. */
+  X["dosya-kaldir"] = function () { if (!W) return; W.d.dosya = ""; pencereCiz(); document.querySelector('#a-pencere [data-eylem="dosya-sec"]').focus(); };
+  X["dok-dosya-kaldir"] = function () { if (!W) return; W.d.dosya = ""; dokCiz(); document.querySelector('#a-pencere [data-eylem="dok-dosya"]').focus(); };
+  var dokBul = function (el) { return MV.DOKUMANLAR.filter(function (x) { return x.k === el.dataset.k; })[0]; };
+  X["dok-degistir"] = function (el) {
+    var x = dokBul(el);
+    MK.dosyaSec({ kabul: ".pdf", enCokMB: 50, ornek: (x.kod || x.ad).replace(/\s+/g, "-") + "-2.pdf" }, function (a) { if (x.dosya && x.dosya !== a) MK.dosyaSil(x.dosya); x.dosya = a; x.tarih = MK.BUGUN; digerCiz(); MK.bildir(x.ad + " dosyası değiştirildi."); });
+  };
+  X["dok-sil"] = function (el) {
+    var x = dokBul(el);
+    MK.onayla({ baslik: "Dökümanı sil", metin: x.ad + " silinir.", tamam: function () { MV.DOKUMANLAR.splice(MV.DOKUMANLAR.indexOf(x), 1); MK.dosyaSil(x.dosya); digerCiz(); MK.bildir(x.ad + " silindi."); } });
+  };
+  X["std-sil"] = function () {
+    var s = bul(rota().id), arsiv = s.yerine ? null : onceki(s).sort(function (a, b) { return a.bitti < b.bitti ? 1 : -1; })[0], t = turleri(s);
+    var metin = s.yerine ? ad(s) + " (önceki sürüm) silinir." : arsiv ? ad(s) + " silinir; bir önceki sürüm (" + kacis(arsiv.surum) + ") yeniden güncel olur."
+      : ad(s) + " kütüphaneden silinir." + (t.length ? " " + t.length + " ekipman türünün kontrol metodundan çıkar." : "");
+    MK.onayla({ baslik: "Standardı sil", metin: metin, tamam: function () {
+      MK.dosyaSil(s.dosya.ad);
+      if (s.yerine) { S.splice(S.indexOf(s), 1); location.hash = "#/s/" + s.yerine; }
+      else if (arsiv) { Object.assign(s, { surum: arsiv.surum, tarih: arsiv.tarih, yukleyen: arsiv.yukleyen, dosya: arsiv.dosya, konu: arsiv.konu }); S.splice(S.indexOf(arsiv), 1); goster(true); }
+      else { t.forEach(function (x) { x.std = x.std.filter(function (k) { return k !== s.k; }); }); S.splice(S.indexOf(s), 1); location.hash = "#/"; }
+      MK.bildir("Standart silindi.");
+    } });
+  };
   MK.onGirdi = function (e) {
     var k = e.target.dataset && e.target.dataset.alan; if (!k || !W) return;
     W.d[k] = e.target.value;

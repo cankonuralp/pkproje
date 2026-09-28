@@ -243,7 +243,8 @@
           girdi: oku ? okuGirdi("r-kd" + i, ad2(DERECE, x.derece)) : MK.secim({ id: "r-kd" + i, ad: "Kusur derecesi", deger: x.derece || "", secenekler: DERECE, ipucu: "Seçin", tanim: "r-kd" + i + "-ipucu", gecersiz: uyar(r, !x.derece) }) }) : "") +
         MK.alan({ id: "r-kn" + i, etiket: "Kusur açıklaması", zorunlu: !oku,
           girdi: '<textarea class="a-alan a-alan-ince" id="r-kn' + i + '" data-alan="kn' + i + '" maxlength="300" aria-describedby="r-kn' + i + '-ipucu"' + (oku ? " readonly" : "") + (uyar(r, !x.not.trim()) ? ' aria-invalid="true"' : "") + ">" + kacis(x.not) + "</textarea>" }) +
-        '<div class="a-fotolar">' + fotolar(x.foto || 0, x.fotoAd) + (oku ? "" : fotoMenu("kusur-foto", ' data-i="' + i + '"')) + "</div></div>" : "") + "</div>";
+        /* "Fotoğraf ekle" fotoğrafların önünde: menüsü hep solda açılır, dar ekranda taşmaz (2026-09-28) */
+        '<div class="a-fotolar">' + (oku ? "" : fotoMenu("kusur-foto", ' data-i="' + i + '"')) + fotolar(x.foto || 0, x.fotoAd, "Madde " + no, oku ? null : { eylem: "kusur-foto-sil", veri: { k: i } }) + "</div></div>" : "") + "</div>";
   }
   /* ünlem menüsü (§3.8 kural 3, reisim 2026-09-28: "ünlem işareti olur ve oradan seçilerek hepsini uygun yap hepsini uygunsuz yap ya da
      hepsini uygulanamaz yap"): grubun başlığında, o grubun bütün maddelerini tek seferde işaretler; madde madde değiştirmek serbest */
@@ -465,7 +466,7 @@
     S.zi = F && F.linye ? bolum(F.bolumler.fonksiyon + ".3", "r-bz", "Zemin izolasyonu", satirHtml(r, oku, "zi")) : "";
     S.kusur = F ? bolum(F.bolumler.kusur, "r-bk", "Kusur açıklamaları", kusurHtml(r)) : "";
     /* fotoğraflar, sonuç ve yorum her raporda (reisim 2026-09-27); topraklama formatında fotoğraf bölümü yok → ek */
-    S.foto = bolum(F ? F.bolumler.foto || "Ek" : el ? 7 : 6, "r-b7", "Fotoğraflar", '<div class="a-fotolar' + (uyar(r, r.foto < 1) ? " a-alan-eksik" : "") + '">' + fotolar(r.foto, r.fotoAd) + (oku ? "" : fotoMenu("foto-ekle")) + "</div>");
+    S.foto = bolum(F ? F.bolumler.foto || "Ek" : el ? 7 : 6, "r-b7", "Fotoğraflar", '<div class="a-fotolar' + (uyar(r, r.foto < 1) ? " a-alan-eksik" : "") + '">' + (oku ? "" : fotoMenu("foto-ekle")) + fotolar(r.foto, r.fotoAd, "", oku ? null : { eylem: "foto-sil" }) + "</div>");
     /* sonuç ve kanaat muayene kriterleri gibi seçmeli: Uygun · Uygun değil; seçilmezse gönderilince kriterlere göre konur (reisim 2026-09-27);
        uygun değil madde varken "Uygun" uyarıdır, engel değil. Formatlı türde formatın sonuç cümlesi üstte. */
     S.sonuc = bolum(F ? F.bolumler.sonuc : el ? 8 : 7, "r-b8", "Sonuç ve kanaat", (F ? '<p class="a-format-metin" id="r-sonuc-metin">' + sonucCumle(r) + "</p>" : "") +
@@ -794,6 +795,14 @@
     degisti(r); ciz("r-kt" + el.dataset.bas);
     MK.bildir((+el.dataset.son - +el.dataset.bas) + " madde " + ad2(KRITER, el.dataset.deger).toLocaleLowerCase("tr") + " işaretlendi.");
   };
+  /* fotoğraf silinir (reisim 2026-09-28: "yüklenilen şeyler düzenlenebilir silinebilir olmalı"); onay penceresiyle */
+  function fotoSil(o, i, ad, odak) {
+    MK.onayla({ baslik: "Fotoğrafı sil", metin: ad + " silinir.", tamam: function () {
+      var r = aktif(), f = (o.fotoAd || [])[i]; o.foto--; if (o.fotoAd) o.fotoAd.splice(i, 1); if (f) MK.dosyaSil(f); degisti(r); ciz(); var t = document.querySelector(odak); if (t) t.focus(); MK.bildir(ad + " silindi.");
+    } });
+  }
+  X["foto-sil"] = function (el) { fotoSil(aktif(), +el.dataset.i, "Fotoğraf " + (+el.dataset.i + 1), "#r-b7 [data-secici-ac]"); };
+  X["kusur-foto-sil"] = function (el) { var k = +el.dataset.k; fotoSil(aktif().kriter[k], +el.dataset.i, "Madde fotoğrafı " + (+el.dataset.i + 1), "#r-k" + k + " [data-secici-ac]"); };
   X["kusur-foto"] = function (el) {
     var i = +el.dataset.i;
     fotoSec(el, function (ad, nereden) {

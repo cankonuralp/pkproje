@@ -2,8 +2,8 @@
  "maket": "m7",
  "tarih": "2026-09-28",
  "arac": "tools/olc-bulut.mjs --etkilesim (başsız tarayıcı, 1920 açık tema; gen verilen denemede o genişlik)",
- "toplam": 22,
- "gecen": 22,
+ "toplam": 24,
+ "gecen": 24,
  "denemeler": [
   {
    "ad": "menüde Dökümanlar (Standartlar ve Eğitimler ayrı menü değil); dört sekme",
@@ -94,6 +94,20 @@
    "gen": 1920,
    "sayfa": "maket/standartlar.html",
    "hash": "#/",
+   "gecti": true
+  },
+  {
+   "ad": "standardın güncel sürümü silinir (onay): bir önceki sürüm yeniden güncel olur, türler bağlı kalır",
+   "gen": 1920,
+   "sayfa": "maket/standartlar.html",
+   "hash": "#/s/s1",
+   "gecti": true
+  },
+  {
+   "ad": "diğer döküman silinir (onay)",
+   "gen": 1920,
+   "sayfa": "maket/standartlar.html",
+   "hash": "#/diger",
    "gecti": true
   },
   {

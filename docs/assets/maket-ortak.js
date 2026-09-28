@@ -722,6 +722,58 @@
      yerler de dahil"). Seçilen dosya TARAYICIDA kalır (sunucuya gitmez, sayfa yenilenince gider); adıyla MK.DOSYA'da tutulur, "Aç" onu gösterir.
      Otomatik ölçüm (MAKET_ORNEK) dosya penceresini açamaz: örnek ad kullanılır. Dış kütüphane yok (anayasa: dış CDN yok). */
   MK.DOSYA = {};
+  /* 2026-09-28 (reisim: "imzalı zimmet diye dosya ekledim … tıklayınca yüklediğim tarama değil … iskelet pdf çıkıyor … yüklediğim taramayı
+     silemiyorum … yüklenilen şeyler düzenlenebilir silinebilir olmalı"): yüklenen dosya sayfalar arası KALICI (tarayıcının IndexedDB'si;
+     "Denemeleri sıfırla" onu da siler) — kayıtta adı, depoda kendisi. Aynı adla ikinci dosya gelirse ad ayrışır ("… (2).pdf"). */
+  var DDB = null, DDB_AD = "probata-maket-dosya";
+  var ddbIs = function (kip, f) { try { if (DDB) f(DDB.transaction("d", kip).objectStore("d")); } catch (e) { /* depolama kapalı: bu oturumda çalışır */ } };
+  try {
+    var ddbIstek = indexedDB.open(DDB_AD, 1);
+    ddbIstek.onupgradeneeded = function () { ddbIstek.result.createObjectStore("d"); };
+    ddbIstek.onsuccess = function () {
+      DDB = ddbIstek.result; var geldi = 0;
+      ddbIs("readonly", function (st) {
+        var c = st.openCursor();
+        c.onsuccess = function () {
+          var k = c.result;
+          if (k) { if (!MK.DOSYA[k.key]) { MK.DOSYA[k.key] = { url: URL.createObjectURL(k.value.blob), tur: k.value.tur, boyut: k.value.boyut, dosya: k.value.blob }; geldi++; } k.continue(); }
+          else if (geldi && MK.goster) MK.goster(false);   /* dosyalar yüklendi: onları gösteren yerler yeniden çizilir */
+        };
+      });
+    };
+  } catch (e) { /* IndexedDB yok: dosya yalnız bu sayfada kalır */ }
+  var benzersiz = function (ad) { if (!MK.DOSYA[ad]) return ad; var m = /^(.*?)(\.[^.]*)?$/.exec(ad), i = 2; while (MK.DOSYA[m[1] + " (" + i + ")" + (m[2] || "")]) i++; return m[1] + " (" + i + ")" + (m[2] || ""); };
+  MK.dosyaSil = function (ad) { var d = MK.DOSYA[ad]; if (!d) return; if (d.url) URL.revokeObjectURL(d.url); delete MK.DOSYA[ad]; ddbIs("readwrite", function (st) { st.delete(ad); }); };
+  /* yüklenen dosya alanı — TEK ÜRETİCİ: ad · Aç (dosyanın kendisi) · Değiştir · Sil. o = { ad, degistir: eylem, sil: eylem, veri, oku (yalnız Aç) } */
+  MK.dosyaAlan = function (o) {
+    if (!o.ad) return "";
+    return '<span class="a-dosya-kayit"><span class="a-dosya-ad">' + ikon("file-text", "a-ikon-kucuk") + kacis(o.ad) + "</span>" + MK.pdfTus(o.ad) +
+      (o.oku ? "" : MK.tus({ eylem: o.degistir, ad: "Değiştir", ikon: "upload", sinif: "a-tus-ikincil", veri: o.veri }) +
+        '<button class="a-ikon-tus" type="button" data-eylem="' + o.sil + '"' + Object.keys(o.veri || {}).map(function (k) { return " data-" + k + '="' + kacis(o.veri[k]) + '"'; }).join("") +
+        ' aria-label="' + kacis(o.ad) + ' sil" title="Sil">' + ikon("x") + "</button>") + "</span>";
+  };
+  /* silme onayı — TEK ÜRETİCİ: MK.onayla({ baslik, metin, tus: "Sil", tamam: fn }). Başka pencerenin üstünde de açılır. */
+  var ONAY = null;
+  MK.onayla = function (o) {
+    var d = $("a-onay-pencere");
+    if (!d) {
+      d = document.createElement("dialog"); d.className = "a-pencere"; d.id = "a-onay-pencere"; d.setAttribute("aria-labelledby", "a-onay-baslik");
+      d.innerHTML = '<div class="a-pencere-bas"><h2 id="a-onay-baslik"></h2><button class="a-ikon-tus" type="button" data-eylem="pencere-kapat" aria-label="Kapat">' + ikon("x") + "</button></div>" +
+        '<div class="a-pencere-govde" id="a-onay-govde"></div><div class="a-pencere-alt" id="a-onay-alt"></div>';
+      document.body.appendChild(d);
+    }
+    ONAY = o; $("a-onay-baslik").textContent = o.baslik; $("a-onay-govde").innerHTML = '<p class="a-pencere-metin">' + o.metin + "</p>";
+    $("a-onay-alt").innerHTML = MK.tus({ eylem: "pencere-kapat", ad: "Vazgeç", sinif: "a-tus-ikincil" }) + MK.tus({ eylem: "onay-tamam", ad: o.tus || "Sil" });
+    d.showModal(); $("a-onay-alt").querySelector('[data-eylem="pencere-kapat"]').focus();
+  };
+  MK.eylem = MK.eylem || {};
+  MK.eylem["onay-tamam"] = function () { var o = ONAY; ONAY = null; $("a-onay-pencere").close(); if (o && o.tamam) o.tamam(); };
+  /* yüklenen dosyanın kendisi sayfanın içinde (PDF çerçeve, resim); dosya yoksa (örnek kayıt) yedek içerik */
+  MK.dosyaOnizle = function (ad, yedek) {
+    var d = MK.DOSYA[ad]; if (!d) return yedek || "";
+    return /pdf/.test(d.tur) ? '<iframe class="a-pdf-cerceve" src="' + d.url + '" title="' + kacis(ad) + '"></iframe>'
+      : /^image\//.test(d.tur) ? '<img class="a-pdf-resim" src="' + d.url + '" alt="' + kacis(ad) + '">' : '<p class="a-bos-satir">' + kacis(ad) + "</p>";
+  };
   MK.dosyaSec = function (o, cb) {   /* o = { kabul, ornek, kamera, coklu, enCokMB } · cb(ad, File|null) her dosya için */
     if (window.MAKET_ORNEK) { cb(o.ornek, null); return; }
     [].forEach.call(document.querySelectorAll("input[data-mk-dosya]"), function (e) { e.remove(); });
@@ -730,18 +782,25 @@
     g.addEventListener("change", function () {
       [].slice.call(g.files || []).forEach(function (f) {
         if (o.enCokMB && f.size > o.enCokMB * 1048576) { MK.bildir(f.name + " " + o.enCokMB + " MB'tan büyük; eklenmedi."); return; }
-        MK.DOSYA[f.name] = { url: URL.createObjectURL(f), tur: f.type, boyut: f.size, dosya: f }; cb(f.name, f);
+        var ad = benzersiz(f.name);
+        MK.DOSYA[ad] = { url: URL.createObjectURL(f), tur: f.type, boyut: f.size, dosya: f };
+        ddbIs("readwrite", function (st) { st.put({ tur: f.type, boyut: f.size, blob: f }, ad); });
+        cb(ad, f);
       });
       g.remove();
     });
     document.body.appendChild(g); g.click();
   };
   /* 2026-09-27: seçilen gerçek fotoğraf küçük resim olarak görünür, basınca görüntüleyicide açılır; örnek kayıtta simge */
-  MK.fotolar = function (n, adlar, etiket) {
+  /* sil = { eylem, veri } verilirse her fotoğrafın köşesinde "Sil" (2026-09-28: "yüklenilen şeyler düzenlenebilir silinebilir olmalı");
+     eyleme data-i = fotoğrafın sırası (0'dan) gider */
+  MK.fotolar = function (n, adlar, etiket, sil) {
     var s = ""; for (var i = 1; i <= n; i++) {
       var ad = adlar && adlar[i - 1], d = ad && MK.DOSYA[ad], ne = (etiket ? etiket + " fotoğraf " : "Fotoğraf ") + i;
-      s += d ? '<button class="a-foto a-foto-resim" type="button" data-eylem="pdf-goster" data-dosya="' + kacis(ad) + '" aria-label="' + kacis(ne) + '"><img src="' + d.url + '" alt=""><span class="a-foto-no">' + i + "</span></button>"
+      var f = d ? '<button class="a-foto a-foto-resim" type="button" data-eylem="pdf-goster" data-dosya="' + kacis(ad) + '" aria-label="' + kacis(ne) + '"><img src="' + d.url + '" alt=""><span class="a-foto-no">' + i + "</span></button>"
         : '<span class="a-foto" role="img" aria-label="' + kacis(ne) + '">' + ikon("camera") + '<span class="a-foto-no">' + i + "</span></span>";
+      s += sil ? '<span class="a-foto-kap">' + f + '<button class="a-ikon-tus a-foto-sil" type="button" data-eylem="' + sil.eylem + '" data-i="' + (i - 1) + '"' +
+        Object.keys(sil.veri || {}).map(function (k) { return " data-" + k + '="' + kacis(sil.veri[k]) + '"'; }).join("") + ' aria-label="' + kacis(ne) + ' sil" title="Sil">' + ikon("x") + "</button></span>" : f;
     }
     return s;
   };
@@ -922,6 +981,7 @@
     if (!el.dataset.onay) { el.dataset.onay = "1"; el.textContent = "Onayla: bütün denemeler silinir"; return; }
     sifirlandi = true; clearTimeout(yazZaman);
     try { localStorage.removeItem(DEPO_AD); } catch (e) { /* yok */ }
+    try { if (DDB) DDB.close(); indexedDB.deleteDatabase(DDB_AD); } catch (e) { /* yok */ }
     location.reload();
   };
 

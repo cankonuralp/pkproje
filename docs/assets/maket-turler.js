@@ -78,7 +78,9 @@
       { k: "durum", baslik: "Durum", kart: "rozet", sira: 1, hucre: function (x) { /* 159: yeni yüklenen formatın rapor ekranı bizde hazırlanır; o sırada "Hazırlanıyor" */
         return rozet(x !== p ? { ad: "Önceki", rozet: "a-rozet-notr" } : x.dosya.indexOf(MK.BUGUN) >= 0 ? { ad: "Hazırlanıyor", rozet: "a-rozet-bekliyor" } : { ad: "Kullanımda", rozet: "a-rozet-tamam" }); } },
       /* her sürümün yüklenen PDF'i açılır, önceki sürümler dahil (reisim 2026-09-27) */
-      { k: "eylem", baslik: "İşlem", gizliBaslik: true, kart: "eylem", sira: 9, hucre: function (x) { return '<div class="a-eylem"><div class="a-eylem-tuslar">' + MK.pdfTus(x.dosya) + "</div></div>"; } }
+      { k: "eylem", baslik: "İşlem", gizliBaslik: true, kart: "eylem", sira: 9, hucre: function (x) {
+        /* 2026-09-28: sürüm silinir (kullanımdaki silinince bir önceki kullanıma girer) */
+        return '<div class="a-eylem"><div class="a-eylem-tuslar">' + MK.pdfTus(x.dosya) + '<button class="a-ikon-tus" type="button" data-eylem="format-sil" data-surum="' + kacis(x.surum) + '" aria-label="' + kacis(x.surum) + ' sil" title="Sil">' + ikon("x") + "</button></div></div>"; } }
     ];
   }
   function turCiz(t) {
@@ -151,8 +153,7 @@
   }
   function dosyaSec(d) {
     return '<div class="a-alan-grup a-alan-genis"><p class="a-etiket">Rapor formatı (PDF)</p>' +
-      '<div class="a-dosya-sec">' + MK.tus({ eylem: "pdf-sec", ad: d.dosya ? "Başka dosya seç" : "PDF seç", ikon: "file-plus", sinif: "a-tus-ikincil" }) +
-      '<span class="a-dosya-ad" id="w-dosya">' + (d.dosya ? kacis(d.dosya) : '<span class="a-deger-yok">Dosya seçilmedi</span>') + "</span>" + (d.dosya ? MK.pdfTus(d.dosya) : "") + "</div>" +
+      '<div class="a-dosya-sec" id="w-dosya">' + (d.dosya ? MK.dosyaAlan({ ad: d.dosya, degistir: "pdf-sec", sil: "pdf-kaldir" }) : MK.tus({ eylem: "pdf-sec", ad: "PDF seç", ikon: "file-plus", sinif: "a-tus-ikincil" })) + "</div>" +
       (W.hata.dosya ? '<p class="a-ipucu a-ipucu-uyari" id="w-dosya-ipucu">' + W.hata.dosya + "</p>"
         : "") + "</div>";
   }
@@ -233,10 +234,17 @@
     var t = MV.tur(el.dataset.k);
     W = { tur: "pdf", id: t.k, hata: {}, d: {} };
     $("a-pencere-baslik").textContent = t.ad + " · rapor formatı " + t.pdf[0].surum;
-    $("a-pencere-govde").innerHTML = MB.belge(t);
+    $("a-pencere-govde").innerHTML = MK.dosyaOnizle(t.pdf[0].dosya, MB.belge(t));   /* yüklenen PDF'in kendisi; örnek kayıtta rapor belgesi (2026-09-28) */
     $("a-pencere-alt").innerHTML = MK.tus({ eylem: "pencere-kapat", ad: "Kapat", sinif: "a-tus-ikincil" });
     if (!$("a-pencere").open) $("a-pencere").showModal();
     $("a-pencere-alt").querySelector(".a-tus").focus({ preventScroll: true }); $("a-pencere-govde").scrollTop = 0;
+  };
+  X["pdf-kaldir"] = function () { if (!W) return; W.d.dosya = ""; pencereCiz(); var e = document.querySelector('#a-pencere [data-eylem="pdf-sec"]'); if (e) e.focus(); };
+  X["format-sil"] = function (el) {
+    var t = MV.tur(rota().id), x = t.pdf.filter(function (y) { return y.surum === el.dataset.surum; })[0], kullanimda = x === t.pdf[0];
+    MK.onayla({ baslik: "Rapor formatını sil", metin: x.surum + " silinir." + (kullanimda ? (t.pdf.length > 1 ? " Bir önceki sürüm (" + kacis(t.pdf[1].surum) + ") kullanıma girer." : " Tür rapor formatısız kalır.") : ""), tamam: function () {
+      t.pdf.splice(t.pdf.indexOf(x), 1); MK.dosyaSil(x.dosya); goster(false); MK.bildir(x.surum + " silindi.");
+    } });
   };
   X["pencere-kaydet"] = function () {
     W.hata = denetle(); var hk = Object.keys(W.hata);

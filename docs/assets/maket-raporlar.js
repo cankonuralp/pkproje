@@ -106,8 +106,9 @@
         yuz({ ikon: r.sonuc && r.sonuc !== "Uygun" ? "triangle-alert" : "circle-check", ad: "Sonuç", sayi: MV.sonucAd(r) || "—", uyari: !!r.sonuc && r.sonuc !== "Uygun", not: r.sonuc ? "" : "taslak" }) +
         yuz({ ikon: "users", ad: "Müşteri erişimi", sayi: r.durum === "imzali" ? "Açık" : "Kapalı", not: r.durum === "imzali" ? portal.length + " kullanıcı" : "" }) +
       "</div>" +
-      '<section class="a-bolum" aria-labelledby="a-b-pdf"><div class="a-alt-bas"><h2 class="a-alt-baslik" id="a-b-pdf">PDF önizlemesi</h2><span class="a-sayac">' + (r.imza ? "imzalı" : "imzasız") + "</span></div>" +
-        (r.durum === "taslak" ? '<p class="a-bos-satir">Taslak: PDF yok.</p>' : MB.belge(t, MV.raporBelge(r))) + "</section>";
+      '<section class="a-bolum" aria-labelledby="a-b-pdf"><div class="a-alt-bas"><h2 class="a-alt-baslik" id="a-b-pdf">' + (r.imzaDosya ? "İmzalı PDF" : "PDF önizlemesi") + '</h2><span class="a-sayac">' + (r.imza ? "imzalı" : "imzasız") + "</span>" +
+          (r.imzaDosya ? '<div class="a-bolum-tus">' + MK.dosyaAlan({ ad: r.imzaDosya, degistir: "rapor-imza-degistir", sil: "rapor-imza-sil", veri: { no: r.no } }) + "</div>" : "") + "</div>" +
+        (r.durum === "taslak" ? '<p class="a-bos-satir">Taslak: PDF yok.</p>' : MK.dosyaOnizle(r.imzaDosya, MB.belge(t, MV.raporBelge(r)))) + "</section>";
   }
 
   /* ── SON İMZA PENCERESİ: aracı imza servisi · indir, imzala, yükle (yöntem firma ayarı; soru) ───────────────── */
@@ -119,7 +120,7 @@
         '<button type="button" class="a-sekme" data-yontem="servis" aria-pressed="' + (W.y === "servis") + '">İmza servisi</button>' +
         '<button type="button" class="a-sekme" data-yontem="dosya" aria-pressed="' + (W.y === "dosya") + '">İndir, imzala, yükle</button></div>' +
       '<ul class="a-kosullar">' + l.map(function (r) { var e = ekp(r); return '<li class="a-kosul-bilgi">' + ikon("file-text", "a-ikon-kucuk") + '<span><span class="a-kod">' + r.no + "</span> · " + e.kod + " · " + kacis(MV.tesis(r.tesis).ad) + "</span>" +
-        (W.y === "dosya" && W.dosya && W.dosya[r.no] ? MK.pdfTus(W.dosya[r.no], "Aç", "a-tus-ikincil a-serit-tus") : "") + "</li>"; }).join("") + "</ul>" +
+        (W.y === "dosya" && W.dosya && W.dosya[r.no] ? MK.dosyaAlan({ ad: W.dosya[r.no], degistir: "imzali-tek", sil: "imzali-kaldir", veri: { no: r.no } }) : "") + "</li>"; }).join("") + "</ul>" +
       '<div class="a-serit-kap a-bolum-serit">' + (W.y === "servis"
         ? MK.serit("bilgi", "file-signature", "Her rapor ayrı PDF olarak imza servisine gider ve ayrı imzalanır.")
         : MK.serit("bilgi", "file-signature", "Her rapor ayrı PDF: indirin, e-imzayla imzalayın, imzalı PDF'leri yükleyin.")) + "</div>" +
@@ -139,7 +140,7 @@
     if (W.y === "dosya" && !W.yuklendi) { W.hata = "Önce imzalı PDF'leri yükleyin."; pencereCiz('[data-eylem="imzali-yukle"]'); return; }
     var n = W.l.length, zaman = MK.simdi(), servis = W.y === "servis";
     /* servis yolu: rapor "İmzaya gönderildi", imzalı PDF dönünce "Tamamlandı" · dosya yolu: imzalı PDF yüklendi → "Tamamlandı" */
-    W.l.forEach(function (r) { if (servis) { r.durum = "imzada"; r.imzaGonderildi = zaman; } else { r.durum = "imzali"; r.imza = { zaman: zaman }; } });
+    W.l.forEach(function (r) { if (servis) { r.durum = "imzada"; r.imzaGonderildi = zaman; } else { r.durum = "imzali"; r.imza = { zaman: zaman }; r.imzaDosya = W.dosya[r.no]; } });   /* yüklenen imzalı PDF raporda saklanır */
     var tek = n === 1 ? W.l[0] : null;
     $("a-pencere").close();
     if (tek && rota().v === "rapor") raporCiz(tek); else listeCiz();
@@ -184,6 +185,25 @@
       W.yuklendi = !eksik; W.hata = eksik ? eksik + " raporun imzalı PDF'i eksik." : "";
       pencereCiz('[data-eylem="imzali-yukle"]');
     });
+  };
+  /* pencerede tek raporun imzalı PDF'i değiştirilir ya da kaldırılır (2026-09-28) */
+  var imzaliSay = function () { var eksik = W.l.filter(function (r) { return !W.dosya[r.no]; }).length; W.yuklendi = !eksik; W.hata = eksik && W.dosya ? eksik + " raporun imzalı PDF'i eksik." : ""; };
+  X["imzali-tek"] = function (el) {
+    var no = el.dataset.no;
+    MK.dosyaSec({ kabul: ".pdf", enCokMB: 20, ornek: no + "-imzali-2.pdf" }, function (ad) { if (!W) return; W.dosya[no] = ad; imzaliSay(); pencereCiz('[data-eylem="imzali-yukle"]'); });
+  };
+  X["imzali-kaldir"] = function (el) { W.dosya[el.dataset.no] = null; imzaliSay(); pencereCiz('[data-eylem="imzali-yukle"]'); };
+  /* tamamlanan raporun imzalı PDF'i değiştirilir; silinirse rapor yeniden imza bekler (2026-09-28) */
+  X["rapor-imza-degistir"] = function (el) {
+    var r = MV.rapor(el.dataset.no);
+    MK.dosyaSec({ kabul: ".pdf", enCokMB: 20, ornek: r.no + "-imzali-2.pdf" }, function (ad) { if (r.imzaDosya && r.imzaDosya !== ad) MK.dosyaSil(r.imzaDosya); r.imzaDosya = ad; raporCiz(r); MK.bildir("İmzalı PDF değiştirildi."); });
+  };
+  X["rapor-imza-sil"] = function (el) {
+    var r = MV.rapor(el.dataset.no);
+    MK.onayla({ baslik: "İmzalı PDF'i sil", metin: r.no + " imzalı PDF'i silinir; rapor yeniden muayene uzmanı imzası bekler ve müşteriye kapanır.", tamam: function () {
+      if (r.imzaDosya) MK.dosyaSil(r.imzaDosya); r.imzaDosya = null; r.imza = null; r.durum = "onaylandi"; raporCiz(r); MK.menuSayi(14, imzaBekleyen().length);
+      var h = document.querySelector("#a-nesne h1"); if (h) h.focus(); MK.bildir(r.no + " imzalı PDF'i silindi; imza bekliyor.");
+    } });
   };
   /* 103: imzalı raporun düzeltmesi yeni sürümle (R1, R2 …); önceki sürüm saklanır, rapor taslağa döner */
   X["revizyon"] = function (el) {

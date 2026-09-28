@@ -93,8 +93,7 @@
           '<button type="button" class="a-sekme" data-kurum="Firma içi" aria-pressed="' + (d.kurum === "Firma içi") + '">Firma içi</button>' +
           '<button type="button" class="a-sekme" data-kurum="Dış eğitim kurumu" aria-pressed="' + (d.kurum === "Dış eğitim kurumu") + '">Dış kurum</button></div></div>' +
         '<div class="a-alan-grup a-alan-genis"><p class="a-etiket">Sertifika</p><div class="a-dosya">' +
-          MK.tus({ eylem: "dosya-sec", ad: d.belge ? "Değiştir" : "PDF seç", ikon: "file-plus", sinif: "a-tus-ikincil" }) +
-          (d.belge ? '<span class="a-dosya-ad">' + kacis(d.belge) + "</span>" + MK.pdfTus(d.belge) : '<span class="a-dosya-ad a-deger-yok">İsteğe bağlı</span>') + "</div></div>" +
+          (d.belge ? MK.dosyaAlan({ ad: d.belge, degistir: "dosya-sec", sil: "dosya-kaldir" }) : MK.tus({ eylem: "dosya-sec", ad: "PDF seç", ikon: "file-plus", sinif: "a-tus-ikincil" })) + "</div></div>" +
       "</div>";
     $("a-pencere-alt").innerHTML = MK.tus({ eylem: "pencere-kapat", ad: "Vazgeç", sinif: "a-tus-ikincil" }) + MK.tus({ eylem: "kaydet", ad: "Kaydet", ikon: "check" });
     if (odak) { var el = $(odak) || document.querySelector(odak); if (el) el.focus(); }
@@ -117,7 +116,8 @@
         : d === "gecerli" ? MK.serit("onay", "circle-check", "Geçerli; tekrar " + k + " gün sonra.") : MK.serit(d === "gecti" ? "hata" : "uyari", "clock", k < 0 ? "Tekrarı " + -k + " gün önce geçti." : "Tekrarı " + k + " gün sonra.")) + "</div>" +
       '<dl class="a-bilgi">' + bilgi("Personel", '<a class="a-baglanti" href="' + MK.adres(2, "#/p/" + p.id) + '">' + kacis(p.ad) + '</a><span class="a-alt-satir">' + kacis(MV.meslekAd(p)) + "</span>") +
         bilgi("Eğitim", kacis(t.ad)) + bilgi("Tarih", MK.tarihYaz(x.tarih) + '<span class="a-alt-satir">' + kacis(x.kurum) + "</span>") +
-        bilgi("Tekrar", MK.tarihYaz(x.tekrar)) + bilgi("Sertifika", x.belge ? '<span class="a-kod">' + belgeAdi(x) + "</span> " + MK.pdfTus(belgeAdi(x)) : '<span class="a-uyari-metin">Yüklenmedi</span>', true) + "</dl>" +
+        bilgi("Tekrar", MK.tarihYaz(x.tekrar)) + bilgi("Sertifika", x.belge ? MK.dosyaAlan({ ad: belgeAdi(x), degistir: "belge-degistir", sil: "belge-sil", veri: { id: x.id } })
+          : '<span class="a-uyari-metin">Yüklenmedi</span> ' + MK.tus({ eylem: "belge-degistir", ad: "Sertifika yükle", ikon: "file-plus", sinif: "a-tus-ikincil", veri: { id: x.id } }), true) + "</dl>" +
       (gecmis.length ? '<p class="a-etiket a-bolum-serit">Bu eğitimin öteki kayıtları</p><ol class="a-gecmis">' + gecmis.map(function (y) {
         return '<li><span class="a-gecmis-zaman">' + MK.tarihYaz(y.tarih) + '</span><span class="a-gecmis-ne"><b>' + (y.onceki ? "Önceki kayıt" : "Güncel kayıt") + '</b> <span class="a-gecmis-rol">tekrar ' + MK.tarihYaz(y.tekrar) + "</span></span></li>"; }).join("") + "</ol>" : "");
     $("a-pencere-alt").innerHTML = MK.tus({ eylem: "pencere-kapat", ad: "Kapat", sinif: "a-tus-ikincil" }) + (x.onceki ? "" : MK.tus({ eylem: "tekrar", ad: "Tekrarı kaydet", ikon: "refresh-cw", veri: { id: x.id } }));
@@ -132,6 +132,23 @@
   X["yeni"] = function () { location.hash = "#/yeni" + (SZ.g.sec.kisi !== "tumu" ? "?kisi=" + SZ.g.sec.kisi : ""); };
   X["tekrar"] = function (el) { var x = E.filter(function (y) { return y.id === el.dataset.id; })[0]; history.replaceState(null, "", "#/yeni?kisi=" + x.kisi + "&tur=" + x.k); formAc({ kisi: x.kisi, k: x.k }, true); };
   X["dosya-sec"] = function () { MK.dosyaSec({ kabul: ".pdf,image/*", enCokMB: 10, ornek: "sertifika.pdf" }, function (ad) { if (!W || W.tip !== "form") return; W.d.belge = ad; formCiz('[data-eylem="dosya-sec"]'); }); };
+  X["dosya-kaldir"] = function () { if (!W || W.tip !== "form") return; W.d.belge = false; formCiz('[data-eylem="dosya-sec"]'); };
+  /* kayıttaki sertifika değiştirilir ya da silinir (reisim 2026-09-28: "yüklenilen şeyler düzenlenebilir silinebilir olmalı") */
+  var kayitBul = function (el) { return E.filter(function (y) { return y.id === el.dataset.id; })[0]; };
+  X["belge-degistir"] = function (el) {
+    var x = kayitBul(el);
+    MK.dosyaSec({ kabul: ".pdf,image/*", enCokMB: 10, ornek: "sertifika-" + x.id + ".pdf" }, function (ad) {
+      if (typeof x.belge === "string" && x.belge !== ad) MK.dosyaSil(x.belge); x.belge = ad; kayitCiz(x); listeCiz();
+      var t = document.querySelector('#a-pencere [data-eylem="belge-degistir"]'); if (t) t.focus(); MK.bildir("Sertifika kaydedildi.");
+    });
+  };
+  X["belge-sil"] = function (el) {
+    var x = kayitBul(el);
+    MK.onayla({ baslik: "Sertifikayı sil", metin: belgeAdi(x) + " silinir; kayıt belgesiz kalır.", tamam: function () {
+      if (typeof x.belge === "string") MK.dosyaSil(x.belge); x.belge = false; kayitCiz(x); listeCiz();
+      var t = document.querySelector('#a-pencere [data-eylem="belge-degistir"]'); if (t) t.focus(); MK.bildir("Sertifika silindi.");
+    } });
+  };
   X["kaydet"] = function () {
     var d = W.d, h = {}, ti = tarihIso(d.tarih);
     if (!d.kisi) h.kisi = "Personel seçilmeli.";

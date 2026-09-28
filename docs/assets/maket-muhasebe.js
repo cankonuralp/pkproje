@@ -408,8 +408,8 @@
         return [x.no, x.no + " · " + MV.musteri(x.m).kisa, MK.tarihYaz(x.tarih)]; })) }) }) +
       MK.alan({ id: "w-kisi", etiket: "Personel", girdi: MK.secim({ id: "w-kisi", ad: "Personel", deger: W.kisi, secenekler: [["", "Seçilmedi"]].concat(MV.PERSONEL.filter(function (p) { return p.durum === "etkin"; })
         .map(function (p) { return [p.id, p.ad]; }).sort(function (a, b) { return a[1].localeCompare(b[1], "tr"); })) }) }) +
-      '<div class="a-alan-grup a-alan-genis"><p class="a-etiket">Belge</p><div class="a-dosya">' + MK.tus({ eylem: "gider-belge", ad: W.belge ? "Değiştir" : "Dosya seç", ikon: "file-plus", sinif: "a-tus-ikincil" }) +
-        '<span class="a-dosya-ad' + (W.belge ? "" : " a-deger-yok") + '">' + kacis(W.belge || "Fiş ya da fatura; PDF ya da fotoğraf") + "</span>" + (W.belge ? MK.pdfTus(W.belge) : "") + "</div></div>" +
+      '<div class="a-alan-grup a-alan-genis"><p class="a-etiket">Belge</p><div class="a-dosya">' + (W.belge ? MK.dosyaAlan({ ad: W.belge, degistir: "gider-belge", sil: "gider-belge-sil" })
+        : MK.tus({ eylem: "gider-belge", ad: "Dosya seç", ikon: "file-plus", sinif: "a-tus-ikincil" })) + "</div></div>" +
       /* elle eklenen gider: firma ödediyse "Ödendi", sonra ödenecekse "Ödenecek" */
       (g ? "" : MK.alan({ id: "w-odeme", etiket: "Ödeme", girdi: MK.secim({ id: "w-odeme", ad: "Ödeme", deger: W.odeme, secenekler: [["odendi", "Ödendi"], ["onaylandi", "Ödenecek"]] }) })) + "</div>";
     /* yazılan ama geçersiz tarih yeniden çizimde kaybolmaz */
@@ -562,6 +562,7 @@
       if (!W || W.tip !== "gider") return; W.belge = ad; giderPencere(); document.querySelector('#a-pencere [data-eylem="gider-belge"]').focus();
     });
   };
+  X["gider-belge-sil"] = function () { if (!W || W.tip !== "gider") return; W.belge = ""; giderPencere(); document.querySelector('#a-pencere [data-eylem="gider-belge"]').focus(); };
   X["g-cip"] = function (el) { MK.suzgecSifirla("g"); SZ.g.secili = [el.dataset.secilecek]; MK.suzgecKur("g"); };
   X["gecikenler"] = function () { MK.suzgecSifirla("f"); SZ.f.secili = ["gecikti"]; location.hash = "#/faturalar"; };
   X["hazirlar"] = function () { MK.suzgecSifirla("i"); SZ.i.secili = ["hazir"]; if (location.hash === "#/" || location.hash === "") goster(false); else location.hash = "#/"; };

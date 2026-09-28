@@ -2,8 +2,8 @@
  "maket": "m1",
  "tarih": "2026-09-28",
  "arac": "tools/olc-bulut.mjs --etkilesim (başsız tarayıcı, 1920 açık tema; gen verilen denemede o genişlik)",
- "toplam": 52,
- "gecen": 52,
+ "toplam": 54,
+ "gecen": 54,
  "denemeler": [
   {
    "ad": "İzin talepleri sekmesi: bekleyen talep üstte, onay uyarısı",
@@ -28,6 +28,20 @@
   },
   {
    "ad": "zimmet formu PDF indir: önizleme, İndir önizlemedeki sayfaların PDF'i",
+   "gen": 1920,
+   "sayfa": "maket/personel.html",
+   "hash": "#/p/mk/zimmet-formu",
+   "gecti": true
+  },
+  {
+   "ad": "imzalı zimmet: yüklenen taramanın kendisi sayfada (iskelet değil), Aç · Değiştir · Sil; sayfa yenilenince kalır",
+   "gen": 1920,
+   "sayfa": "maket/personel.html",
+   "hash": "#/p/mk/zimmet-formu",
+   "gecti": true
+  },
+  {
+   "ad": "imzalı zimmet taraması silinir (onay penceresi), kart bir önceki forma döner",
    "gen": 1920,
    "sayfa": "maket/personel.html",
    "hash": "#/p/mk/zimmet-formu",

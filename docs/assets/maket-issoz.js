@@ -152,7 +152,7 @@
           bilgi("Başlangıç", MK.tarihYaz(x.baslangic)) + bilgi("Bitiş", MK.tarihYaz(x.bitis) + (d === "yururlukte" ? '<span class="a-alt-satir">' + k + " gün kaldı</span>" : "")) +
           bilgi("Ödeme vadesi", x.vade + " gün") + bilgi("Yenileme", x.yenileme === "otomatik" ? "Kendiliğinden (fesih yoksa)" : "Yok · yeni teklif") +
           bilgi("Dayanak teklif", x.teklif ? '<a class="a-no" href="' + MK.adres(11, "#/t/" + x.teklif) + '">' + x.teklif + "</a>" : '<span class="a-deger-yok">Sistem öncesi</span>') +
-          bilgi("İmzalı belge", x.dosya ? '<a class="a-no" href="#/s/' + x.no + '/imzali">' + x.no + '.pdf</a><span class="a-alt-satir">yalnız firma içinde</span>' : '<span class="a-deger-yok">Yüklenmedi</span>') + "</dl></section>" +
+          bilgi("İmzalı belge", x.dosya ? '<a class="a-no" href="#/s/' + x.no + '/imzali">' + x.no + '.pdf</a>' : '<span class="a-deger-yok">Yüklenmedi</span>') + "</dl></section>" +
       '<section class="a-bolum" aria-labelledby="a-b-kapsam"><div class="a-alt-bas"><h2 class="a-alt-baslik" id="a-b-kapsam">Kapsam</h2><span class="a-sayac"><b>' + x.tesisler.length + "</b> tesis</span></div>" +
         '<div class="a-liste-kap">' + MK.tablo({ baslik: "Kapsamdaki tesisler", sinif: "a-tablo-iskapsam", sutunlar: KS, kayitlar: x.tesisler }) + "</div></section>" +
       isgBolum(x) +
@@ -168,10 +168,10 @@
     $("a-nesne").innerHTML = MK.kirinti([["Sözleşmeler", "#/"], [x.no, "#/s/" + x.no], ["İmzalı sözleşme"]]) +
       '<div class="a-nesne-bas"><div class="a-nesne-kimlik"><div class="a-nesne-baslik"><h1 tabindex="-1">İmzalı sözleşme · ' + x.no + "</h1></div>" +
         '<p class="a-nesne-alt">' + ikon("file-check", "a-ikon-kucuk") + "<span>" + kacis(MV.musteri(x.m).kisa) + " · " + x.no + ".pdf · yüklendi " + MK.tarihYaz(x.imza.musteri) + "</span></p></div>" +
-        '<div class="a-eylem-cubugu">' + MK.tus({ eylem: "pdf", ad: "Dosyayı indir", ikon: "file-text", sinif: "a-tus-ikincil" }) +
+        '<div class="a-eylem-cubugu">' + MK.dosyaAlan({ ad: x.dosyaAd || x.no + ".pdf", degistir: "imzali-degistir", sil: "imzali-sil", veri: { no: x.no } }) +
           '<a class="a-tus a-tus-ikincil" href="#/s/' + x.no + '">' + ikon("arrow-left", "a-ikon-kucuk") + "Sözleşmeye dön</a></div></div>" +
-      /* yüklenen gerçek dosya kendisi gösterilir; örnek kayıtta sözleşme metni */
-      (x.dosyaAd && MK.DOSYA[x.dosyaAd] ? '<iframe class="a-pdf-cerceve" src="' + MK.DOSYA[x.dosyaAd].url + '" title="' + kacis(x.dosyaAd) + '"></iframe>' : MB.isSozlesmesi({ x: x }));
+      /* yüklenen gerçek dosya kendisi gösterilir; örnek kayıtta sözleşme metni (2026-09-28: değiştirilir, silinir) */
+      MK.dosyaOnizle(x.dosyaAd, MB.isSozlesmesi({ x: x }));
   }
 
   /* ── FORM (sözleşme hazırla) ─────────────────────────────────────────────────────────────────────── */
@@ -226,12 +226,12 @@
     if (W.tur === "sablon") {
       $("a-pencere-baslik").textContent = "Sözleşme şablonu";
       var sb = MV.SOZ_SABLON;
-      govde = '<p class="a-pencere-ozet">' + (sb.length ? "Kullanımda: <b>firmanızın şablonu " + kacis(sb[0].surum) + "</b> · " + kacis(sb[0].dosya) + " " + MK.pdfTus(sb[0].dosya, "Aç", "a-tus-ikincil a-serit-tus") : "Kullanımda: <b>temel format</b> (KM-FR-SZL-01, probata)") +
-        "<br>Yeni sözleşmeler bu şablondan üretilir; imzalanmış sözleşmeler kendi sürümüyle kalır.</p>" +
-        (sb.length > 1 ? '<ul class="a-kosullar">' + sb.slice(1).map(function (x) { return "<li>" + ikon("history", "a-ikon-kucuk") + "<span>" + kacis(x.surum) + " · " + kacis(x.tarih) + " · önceki</span>" + MK.pdfTus(x.dosya, "Aç", "a-tus-ikincil a-serit-tus") + "</li>"; }).join("") + "</ul>" : "") +
+      /* 2026-09-28: yüklenen şablon sürümleri silinir (kullanımdaki silinince bir önceki, hiç kalmazsa temel format) */
+      govde = '<p class="a-pencere-ozet">' + (sb.length ? "Kullanımda: <b>firmanızın şablonu " + kacis(sb[0].surum) + "</b>" : "Kullanımda: <b>temel format</b> (KM-FR-SZL-01, probata)") + "</p>" +
+        (sb.length ? '<ul class="a-kosullar">' + sb.map(function (x, i) { return "<li>" + ikon(i ? "history" : "file-check", "a-ikon-kucuk") + "<span>" + kacis(x.surum) + " · " + kacis(x.tarih) + (i ? " · önceki" : " · kullanımda") + "</span>" +
+          MK.pdfTus(x.dosya, "Aç", "a-tus-ikincil a-serit-tus") + '<button class="a-ikon-tus" type="button" data-eylem="sablon-sil" data-i="' + i + '" aria-label="' + kacis(x.surum) + ' sil" title="Sil">' + ikon("x") + "</button></li>"; }).join("") + "</ul>" : "") +
         '<div class="a-form"><div class="a-alan-grup a-alan-genis"><p class="a-etiket">Firmanın şablonu (PDF ya da Word)</p>' +
-          '<div class="a-dosya-sec">' + MK.tus({ eylem: "dosya-sec", ad: d.dosya ? "Başka dosya seç" : "Dosya seç", ikon: "file-plus", sinif: "a-tus-ikincil" }) +
-          '<span class="a-dosya-ad" id="w-dosya">' + (d.dosya ? kacis(d.dosya) : '<span class="a-deger-yok">Dosya seçilmedi</span>') + "</span>" + (d.dosya ? MK.pdfTus(d.dosya) : "") + "</div>" +
+          '<div class="a-dosya-sec" id="w-dosya">' + (d.dosya ? MK.dosyaAlan({ ad: d.dosya, degistir: "dosya-sec", sil: "dosya-kaldir" }) : MK.tus({ eylem: "dosya-sec", ad: "Dosya seç", ikon: "file-plus", sinif: "a-tus-ikincil" })) + "</div>" +
           (h.dosya ? '<p class="a-ipucu a-ipucu-uyari" id="w-dosya-ipucu">' + h.dosya + "</p>" : "") + "</div></div>";
       kaydet = { ad: "Yükle", ikon: "file-plus" };
     } else {
@@ -250,8 +250,7 @@
         MK.alan({ id: "w-onay", etiket: "Onay tarihi", hata: h.onay, ipucu: "İsteğe bağlı; kontrolden sonraki onayda uyarı çıkar.", girdi: MK.girdi({ id: "w-onay", alan: "onay", deger: d.onay, sinif: "a-girdi-sicil", ek: ' inputmode="numeric" maxlength="10" placeholder="GG.AA.YYYY"', hata: h.onay }) }) +
         MK.alan({ id: "w-bitis", etiket: "Bitiş tarihi", hata: h.bitis, ipucu: "İsteğe bağlı; plan günü bitişten sonraysa plan açarken uyarı çıkar.", girdi: MK.girdi({ id: "w-bitis", alan: "bitis", deger: d.bitis, sinif: "a-girdi-sicil", ek: ' inputmode="numeric" maxlength="10" placeholder="GG.AA.YYYY"', hata: h.bitis }) }) +
         '<div class="a-alan-grup a-alan-genis"><p class="a-etiket">İSG-KATİP sözleşmesi (PDF)</p>' +
-          '<div class="a-dosya-sec">' + MK.tus({ eylem: "dosya-sec", ad: d.pdf ? "Başka dosya seç" : "PDF seç", ikon: "file-plus", sinif: "a-tus-ikincil" }) +
-          '<span class="a-dosya-ad" id="w-dosya">' + (d.pdf ? kacis(d.pdf) : '<span class="a-deger-yok">İsteğe bağlı</span>') + "</span>" + (d.pdf ? MK.pdfTus(d.pdf) : "") + "</div></div></div>" +
+          '<div class="a-dosya-sec" id="w-dosya">' + (d.pdf ? MK.dosyaAlan({ ad: d.pdf, degistir: "dosya-sec", sil: "dosya-kaldir" }) : MK.tus({ eylem: "dosya-sec", ad: "PDF seç", ikon: "file-plus", sinif: "a-tus-ikincil" })) + "</div></div></div>" +
         (mevcut ? '<div class="a-serit-kap">' + MK.serit("uyari", "history", kacis(MV.kisi(d.kisi).ad) + " için bu tesiste " + kacis(mevcut.no) + " var; yenisi kaydedilince o önceki kayıt olur.") + "</div>" : "");
       kaydet = { ad: "Kaydet", ikon: "check" };
     }
@@ -380,6 +379,24 @@
     var x = { no: "IS-" + ay + "-" + ("00" + n).slice(-3), m: F.m, tesisler: F.tesisler.slice(), teklif: F.teklif || null, baslangic: bas, bitis: bit.toISOString().slice(0, 10),
       imza: { firma: MK.BUGUN, musteri: null }, dosya: false, vade: +F.vade, yenileme: F.yenileme };
     S.push(x); F = null; location.hash = "#/s/" + x.no; MK.bildir(x.no + " hazırlandı; müşteri imzası bekleniyor.");
+  };
+  X["dosya-kaldir"] = function () { if (!W) return; if (W.tur === "sablon") W.d.dosya = ""; else W.d.pdf = ""; pencereCiz(); var t = document.querySelector('#a-pencere [data-eylem="dosya-sec"]'); if (t) t.focus(); };
+  X["sablon-sil"] = function (el) {
+    var i = +el.dataset.i, x = MV.SOZ_SABLON[i];
+    MK.onayla({ baslik: "Şablonu sil", metin: x.surum + " (" + x.dosya + ") silinir." + (i ? "" : " Kullanımdaki şablon silinince bir önceki sürüm, o da yoksa temel format kullanılır."), tamam: function () {
+      MV.SOZ_SABLON.splice(i, 1); MK.dosyaSil(x.dosya); pencereCiz(); var t = document.querySelector('#a-pencere [data-eylem="dosya-sec"]'); if (t) t.focus(); MK.bildir(x.surum + " silindi.");
+    } });
+  };
+  var sozBul = function (el) { return MV.isSozlesmesi(el.dataset.no); };
+  X["imzali-degistir"] = function (el) {
+    var x = sozBul(el);
+    MK.dosyaSec({ kabul: ".pdf", enCokMB: 20, ornek: x.no + "-imzali-2.pdf" }, function (ad) { if (x.dosyaAd && x.dosyaAd !== ad) MK.dosyaSil(x.dosyaAd); x.dosyaAd = ad; imzaliCiz(x); MK.bildir("İmzalı sözleşme değiştirildi."); });
+  };
+  X["imzali-sil"] = function (el) {
+    var x = sozBul(el);
+    MK.onayla({ baslik: "İmzalı sözleşmeyi sil", metin: x.no + " imzalı taraması silinir; sözleşme imza bekliyor durumuna döner.", tamam: function () {
+      if (x.dosyaAd) MK.dosyaSil(x.dosyaAd); x.dosya = false; x.dosyaAd = null; x.imza.musteri = null; location.hash = "#/s/" + x.no; MK.bildir(x.no + " imzalı taraması silindi.");
+    } });
   };
   X["imzali-yukle"] = function () {   /* 2026-09-27: gerçek dosya penceresi (PDF) */
     var x = MV.isSozlesmesi(rota().no);

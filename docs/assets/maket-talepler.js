@@ -72,8 +72,7 @@
       MK.alan({ id: "w-bas", etiket: "Başlangıç", zorunlu: true, hata: h.bas, girdi: MK.zaman({ id: "w-bas", ad: "İzin başlangıcı", deger: d.bas }) }) +
       MK.alan({ id: "w-bit", etiket: "Bitiş", zorunlu: true, hata: h.bit, sonuc: g ? g + " iş günü" : "", uyari: asim ? g + " iş günü · kalan yıllık izin " + o.kalan + " gün" : "", girdi: MK.zaman({ id: "w-bit", ad: "İzin bitişi", deger: d.bit }) }) +
       MK.alan({ id: "w-aciklama", etiket: "Açıklama", genis: true, girdi: MK.girdi({ id: "w-aciklama", alan: "aciklama", deger: d.aciklama, ek: ' maxlength="160"' }) }) +
-      (d.tur === "rapor" ? '<div class="a-alan-grup a-alan-genis"><p class="a-etiket">Sağlık raporu</p><div class="a-dosya">' + MK.tus({ eylem: "belge-sec", ad: d.belge ? "Değiştir" : "Belge ekle", ikon: "upload", sinif: "a-tus-ikincil" }) +
-        '<span class="a-dosya-ad' + (d.belge ? "" : " a-deger-yok") + '">' + kacis(d.belge || "Fotoğraf ya da PDF") + "</span>" + (d.belge ? MK.pdfTus(d.belge) : "") + "</div></div>" : "") + "</div>";
+      (d.tur === "rapor" ? '<div class="a-alan-grup a-alan-genis"><p class="a-etiket">Sağlık raporu</p><div class="a-dosya">' + (d.belge ? MK.dosyaAlan({ ad: d.belge, degistir: "belge-sec", sil: "belge-kaldir" }) : MK.tus({ eylem: "belge-sec", ad: "Belge ekle", ikon: "upload", sinif: "a-tus-ikincil" })) + "</div></div>" : "") + "</div>";
     $("a-pencere-alt").innerHTML = MK.tus({ eylem: "pencere-kapat", ad: "Vazgeç", sinif: "a-tus-ikincil" }) + MK.tus({ eylem: "izin-gonder", ad: "Gönder", ikon: "send" });
     if (odak) { var el = $(odak); if (el) el.focus(); }
   }
@@ -87,8 +86,7 @@
       MK.alan({ id: "w-tutar", etiket: "Tutar (KDV dahil)", zorunlu: true, hata: h.tutar, girdi: MK.girdi({ id: "w-tutar", alan: "tutar", deger: d.tutar, sinif: "a-girdi-sicil", ek: ' inputmode="decimal"', hata: h.tutar }) }) +
       MK.alan({ id: "w-oran", etiket: "KDV oranı", sonuc: k ? "KDV " + para(k.kdv) + " · KDV hariç " + para(k.haric) : "", girdi: MK.secim({ id: "w-oran", ad: "KDV oranı", deger: String(d.oran), secenekler: MV.KDV_ORAN.map(function (o) { return [String(o), "%" + o]; }) }) }) +
       MK.alan({ id: "w-aciklama", etiket: "Açıklama", genis: true, girdi: MK.girdi({ id: "w-aciklama", alan: "aciklama", deger: d.aciklama, ek: ' maxlength="120"' }) }) +
-      '<div class="a-alan-grup a-alan-genis"><p class="a-etiket">Fiş</p><div class="a-dosya">' + MK.tus({ eylem: "belge-sec", ad: d.belge ? "Değiştir" : "Fiş ekle", ikon: "camera", sinif: "a-tus-ikincil" }) +
-        '<span class="a-dosya-ad' + (d.belge ? "" : " a-deger-yok") + '">' + kacis(d.belge || "Fotoğraf ya da PDF") + "</span>" + (d.belge ? MK.pdfTus(d.belge) : "") + "</div></div></div>";
+      '<div class="a-alan-grup a-alan-genis"><p class="a-etiket">Fiş</p><div class="a-dosya">' + (d.belge ? MK.dosyaAlan({ ad: d.belge, degistir: "belge-sec", sil: "belge-kaldir" }) : MK.tus({ eylem: "belge-sec", ad: "Fiş ekle", ikon: "camera", sinif: "a-tus-ikincil" })) + "</div></div></div>";
     $("a-pencere-alt").innerHTML = MK.tus({ eylem: "pencere-kapat", ad: "Vazgeç", sinif: "a-tus-ikincil" }) + MK.tus({ eylem: "masraf-gonder", ad: "Gönder", ikon: "send" });
     if (odak) { var el = $(odak); if (el) el.focus(); }
   }
@@ -100,7 +98,9 @@
           (x.onaylayan ? sat(x.durum === "red" ? "Reddeden" : "Onaylayan", kacis(MV.kisi(x.onaylayan).ad) + (x.karar ? " · " + MK.zamanYaz(x.karar) : "")) : "") + (x.red ? sat("Red gerekçesi", kacis(x.red)) : "")
         : sat("İş", x.is ? '<span class="a-kod">' + x.is + "</span>" : "Genel (işe bağlı değil)") + sat("Tarih", tno(x.tarih)) + sat("Tür", kacis(MV.giderTur(x.tur).ad)) +
           sat("Tutar (KDV dahil)", '<span class="a-sayi">' + para(x.tutar) + "</span> · %" + x.oran + " KDV") + (x.odeme ? sat("Ödendi", tno(x.odeme)) : "") + (x.red ? sat("Red gerekçesi", kacis(x.red)) : "")) +
-      sat("Açıklama", x.aciklama ? kacis(x.aciklama) : "-") + (x.belge ? sat(t.tip === "izin" ? "Belge" : "Fiş", MK.pdfTus(x.belge)) : "") + "</dl>";
+      sat("Açıklama", x.aciklama ? kacis(x.aciklama) : "-") + /* bekleyen talebin eki değiştirilir / silinir; karar verilmişse yalnız açılır (2026-09-28) */
+      (x.belge ? sat(t.tip === "izin" ? "Belge" : "Fiş", MK.dosyaAlan({ ad: x.belge, degistir: "talep-belge-degistir", sil: "talep-belge-sil", veri: { no: t.no }, oku: !bekliyor(t) }))
+        : bekliyor(t) ? sat(t.tip === "izin" ? "Belge" : "Fiş", MK.tus({ eylem: "talep-belge-degistir", ad: t.tip === "izin" ? "Belge ekle" : "Fiş ekle", ikon: "upload", sinif: "a-tus-ikincil", veri: { no: t.no } })) : "") + "</dl>";
     $("a-pencere-alt").innerHTML = (bekliyor(t) ? MK.tus({ eylem: "geri-cek", ad: "Talebi geri çek", ikon: "undo-2", sinif: "a-tus-ikincil", veri: { no: t.no } }) : "") + MK.tus({ eylem: "pencere-kapat", ad: "Kapat" });
   }
   function pencereAc(o, odak) { W = o; W.hata = W.hata || {}; if (o.tip === "izin") izinCiz(); else if (o.tip === "masraf") masrafCiz(); else talepCiz(o.t); if (!$("a-pencere").open) $("a-pencere").showModal(); var el = $(odak) || $("a-pencere-alt").querySelector(".a-tus-birincil"); if (el) el.focus(); }
@@ -118,6 +118,17 @@
     MK.dosyaSec({ kabul: "image/*,.pdf", enCokMB: 10, ornek: izin ? "saglik-raporu-" + (d.bas || BUGUN).replace(/-/g, "") + ".pdf" : "fis-" + (d.tarih || BUGUN).replace(/-/g, "") + "-" + (d.gtur || "masraf") + ".jpg" }, function (ad) {
       if (!W) return; d.belge = ad; if (izin) izinCiz(); else masrafCiz(); document.querySelector('#a-pencere [data-eylem="belge-sec"]').focus();
     });
+  };
+  X["belge-kaldir"] = function () { if (!W || !W.d) return; W.d.belge = ""; if (W.tip === "izin") izinCiz(); else masrafCiz(); document.querySelector('#a-pencere [data-eylem="belge-sec"]').focus(); };
+  X["talep-belge-degistir"] = function () {
+    var t = W.t, x = t.x;
+    MK.dosyaSec({ kabul: "image/*,.pdf", enCokMB: 10, ornek: t.no.toLowerCase() + "-ek.pdf" }, function (ad) {
+      if (!W) return; if (x.belge && x.belge !== ad) MK.dosyaSil(x.belge); x.belge = ad; talepCiz(t); var e = document.querySelector('#a-pencere [data-eylem="talep-belge-degistir"]'); if (e) e.focus(); MK.bildir("Ek kaydedildi.");
+    });
+  };
+  X["talep-belge-sil"] = function () {
+    var t = W.t, x = t.x;
+    MK.onayla({ baslik: "Eki sil", metin: x.belge + " talepten silinir.", tamam: function () { MK.dosyaSil(x.belge); x.belge = ""; if (W) talepCiz(t); MK.bildir("Ek silindi."); } });
   };
   X["izin-gonder"] = function () {
     var d = W.d, h = {};

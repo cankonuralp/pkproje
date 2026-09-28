@@ -246,7 +246,8 @@
     { k: "tarih", baslik: "Eklendi", kart: "govde", sira: 2, hucre: function (b) { return '<span class="a-kart-etiket">Eklendi</span><span class="a-tarih-saat">' + MK.tarihYaz(b.tarih) + "</span>"; } },
     /* yüklenen belge açılır (reisim 2026-09-27: "eklenen herhangi bir pdf daha sonradan açılıp incelenebilir olsun") */
     { k: "eylem", baslik: "İşlem", gizliBaslik: true, kart: "eylem", sira: 9, hucre: function (b) {
-      return '<div class="a-eylem"><div class="a-eylem-tuslar">' + MK.pdfTus(b.dosya || b.tur + ".pdf") + "</div></div>";
+      /* 2026-09-28: belge değiştirilir, silinir (reisim: "yüklenilen şeyler düzenlenebilir silinebilir olmalı") */
+      return '<div class="a-eylem"><div class="a-eylem-tuslar">' + MK.dosyaAlan({ ad: b.dosya || b.tur + ".pdf", degistir: "ozluk-degistir", sil: "ozluk-sil", veri: { i: ozluk(aktif()).indexOf(b) } }) + "</div></div>";
     } }
   ];
   function ozlukHtml(p) {
@@ -266,7 +267,7 @@
     { k: "brut", baslik: "Brüt", kart: "govde", sira: 2, hucre: function (b) { return '<span class="a-kart-etiket">Brüt</span><span class="a-sayi">' + para(b.brut) + "</span>"; } },
     { k: "net", baslik: "Net", kart: "govde", sira: 3, hucre: function (b) { return '<span class="a-kart-etiket">Net</span><span class="a-sayi">' + para(b.net) + "</span>"; } },
     { k: "maliyet", baslik: "İşverene maliyet", kart: "govde", sira: 4, hucre: function (b) { return '<span class="a-kart-etiket">İşverene maliyet</span><span class="a-sayi">' + para(b.maliyet) + "</span>"; } },
-    { k: "eylem", baslik: "İşlem", gizliBaslik: true, kart: "eylem", sira: 9, hucre: function (b) { return '<div class="a-eylem"><div class="a-eylem-tuslar">' + MK.pdfTus(b.dosya) + "</div></div>"; } }
+    { k: "eylem", baslik: "İşlem", gizliBaslik: true, kart: "eylem", sira: 9, hucre: function (b) { return '<div class="a-eylem"><div class="a-eylem-tuslar">' + MK.dosyaAlan({ ad: b.dosya, degistir: "bordro-degistir", sil: "bordro-sil", veri: { ay: b.ay } }) + "</div></div>"; } }
   ];
   function maasHtml(p) {
     var l = MV.kisiBordrolari(p.id), s = l[0];
@@ -292,8 +293,7 @@
       MK.alan({ id: "r-net", etiket: "Net (TL)", zorunlu: true, hata: h.net, girdi: MK.girdi({ id: "r-net", deger: BR.net, sinif: "a-girdi-sicil", ek: ' inputmode="decimal"', hata: h.net }) }) +
       MK.alan({ id: "r-maliyet", etiket: "İşverene maliyet (TL)", zorunlu: true, hata: h.maliyet, girdi: MK.girdi({ id: "r-maliyet", deger: BR.maliyet, sinif: "a-girdi-sicil", ek: ' inputmode="decimal"', hata: h.maliyet }) }) +
       '<div class="a-alan-grup a-alan-genis"><p class="a-etiket">Bordro dosyası <span class="a-zorunlu">zorunlu</span></p>' +
-        '<div class="a-dosya-sec">' + MK.tus({ eylem: "bordro-dosya", ad: BR.dosya ? "Başka dosya seç" : "Dosya seç", ikon: "file-plus", sinif: "a-tus-ikincil" }) +
-        '<span class="a-dosya-ad">' + (BR.dosya ? kacis(BR.dosya) : '<span class="a-deger-yok">Dosya seçilmedi</span>') + "</span>" + (BR.dosya ? MK.pdfTus(BR.dosya) : "") + "</div>" +
+        '<div class="a-dosya-sec">' + (BR.dosya ? MK.dosyaAlan({ ad: BR.dosya, degistir: "bordro-dosya", sil: "bordro-dosya-kaldir" }) : MK.tus({ eylem: "bordro-dosya", ad: "Dosya seç", ikon: "file-plus", sinif: "a-tus-ikincil" })) + "</div>" +
         (h.dosya ? '<p class="a-ipucu a-ipucu-uyari">' + h.dosya + "</p>" : "") + "</div></div>";
     $("a-bordro-alt").innerHTML = MK.tus({ eylem: "pencere-kapat", ad: "Vazgeç", sinif: "a-tus-ikincil" }) + MK.tus({ eylem: "bordro-kaydet", ad: "Yükle", ikon: "upload" });
     if (odak) { var el = $(odak); if (el) el.focus(); }
@@ -318,7 +318,9 @@
       MB.zimmetFormu({ p: p, varliklar: z, no: formNo(p), tarih: MK.BUGUN, eden: teslimEden() });
   }
 
-  /* imzalı formun açılışı: yüklenen tarama (makette: formun o tarihteki kapsamıyla, imzalı hâli) */
+  /* imzalı formun açılışı: YÜKLENEN TARAMANIN KENDİSİ (reisim 2026-09-28: "tıklayınca yüklediğim tarama değil … iskelet pdf çıkıyor"); dosyası
+     olmayan örnek kayıtta formun o tarihteki kapsamıyla imzalı hâli. Tarama değiştirilir ya da silinir ("yüklenilen şeyler düzenlenebilir
+     silinebilir olmalı"). */
   function imzaliFormCiz(p, no) {
     var f = (MV.ZIMMET_FORMLARI[p.id] || []).filter(function (x) { return x.no === no; })[0];
     if (!f) { kartCiz(p); return; }
@@ -327,9 +329,9 @@
       '<div class="a-nesne-bas"><div class="a-nesne-kimlik"><div class="a-nesne-baslik"><h1 tabindex="-1">İmzalı zimmet formu · ' + f.no + "</h1>" +
         (guncel ? rozet({ ad: "Güncel", rozet: "a-rozet-tamam" }) : rozet({ ad: son ? "Eskidi" : "Önceki form", rozet: son ? "a-rozet-bekliyor" : "a-rozet-notr" })) + "</div>" +
         '<p class="a-nesne-alt">' + ikon("file-check", "a-ikon-kucuk") + "<span>" + kacis(p.ad) + " · " + MK.tarihYaz(f.tarih) + " · " + f.kapsam.length + " varlık · " + kacis(f.dosya) + "</span></p></div>" +
-        '<div class="a-eylem-cubugu">' + MK.pdfTus(f.dosya, "Taramayı aç") + MK.tus({ eylem: "pdf-indir", ad: "Dosyayı indir", ikon: "download", sinif: "a-tus-ikincil" }) +
+        '<div class="a-eylem-cubugu">' + MK.dosyaAlan({ ad: f.dosya, degistir: "zform-degistir", sil: "zform-sil", veri: { no: f.no } }) +
           '<a class="a-tus a-tus-ikincil" href="#/p/' + p.id + '/zimmet-gecmisi">' + ikon("history", "a-ikon-kucuk") + "Zimmet geçmişi</a></div></div>" +
-      MB.zimmetFormu({ p: p, varliklar: f.kapsam.map(MV.varlik), no: f.no, tarih: f.tarih, eden: teslimEden(), imzali: true });
+      MK.dosyaOnizle(f.dosya, MB.zimmetFormu({ p: p, varliklar: f.kapsam.map(MV.varlik), no: f.no, tarih: f.tarih, eden: teslimEden(), imzali: true }));
   }
   /* zimmet geçmişi (reisim 2026-09-25): hangi varlık hangi tarihte verildi, hangi tarihte kime / nereye geri alındı */
   var yer = function (k) { return k === "depo" ? "Depoya iade" : k === "lab" ? "Kalibrasyona gönderildi" : "devredildi · " + MV.kisi(k).ad; };
@@ -449,8 +451,7 @@
       MK.alan({ id: "b-tur", etiket: "Belge", zorunlu: true, genis: true, girdi: MK.secim({ id: "b-tur", ad: "Belge", deger: B.tur, secenekler: BELGE_TUR, ipucu: "Belge seçin" }) }) +
       MK.alan({ id: "b-aciklama", etiket: "Açıklama", genis: true, ipucu: "İsteğe bağlı (ör. yenileme tarihi).", girdi: MK.girdi({ id: "b-aciklama", deger: B.aciklama, ek: ' maxlength="80"' }) }) +
       '<div class="a-alan-grup a-alan-genis"><p class="a-etiket">Dosya <span class="a-zorunlu">zorunlu</span></p>' +
-        '<div class="a-dosya-sec">' + MK.tus({ eylem: "dosya-sec", ad: B.dosya ? "Başka dosya seç" : "Dosya seç", ikon: "file-plus", sinif: "a-tus-ikincil" }) +
-        '<span class="a-dosya-ad" id="b-dosya">' + (B.dosya ? kacis(B.dosya) : '<span class="a-deger-yok">Dosya seçilmedi</span>') + "</span>" + (B.dosya ? MK.pdfTus(B.dosya) : "") + "</div>" +
+        '<div class="a-dosya-sec" id="b-dosya">' + (B.dosya ? MK.dosyaAlan({ ad: B.dosya, degistir: "dosya-sec", sil: "belge-dosya-kaldir" }) : MK.tus({ eylem: "dosya-sec", ad: "Dosya seç", ikon: "file-plus", sinif: "a-tus-ikincil" })) + "</div>" +
         "</div></div>";
     $("a-belge-alt").innerHTML = MK.tus({ eylem: "pencere-kapat", ad: "Vazgeç", sinif: "a-tus-ikincil" }) + MK.tus({ eylem: "belge-kaydet", ad: "Ekle", ikon: "check", kapali: !(B.tur && B.dosya) });
     if (odak) { var el = $(odak); if (el) el.focus(); }
@@ -605,12 +606,46 @@
       location.hash = "#/p/" + p.id; MK.bildir("İmzalı zimmet formu yüklendi (" + formNo(p) + ")."); setTimeout(function () { bolumeGit("a-b-zimmet"); }, 0);
     });
   };
+  var zformBul = function (el) { return (MV.ZIMMET_FORMLARI[aktif().id] || []).filter(function (x) { return x.no === el.dataset.no; })[0]; };
+  X["zform-degistir"] = function (el) {
+    var f = zformBul(el);
+    MK.dosyaSec({ kabul: ".pdf,image/*", enCokMB: 10, ornek: "zimmet-formu-imzali-2.pdf" }, function (ad) {
+      if (ad !== f.dosya) MK.dosyaSil(f.dosya); f.dosya = ad; MK.goster(false); MK.bildir(f.no + " taraması değiştirildi.");
+    });
+  };
+  X["zform-sil"] = function (el) {
+    var p = aktif(), f = zformBul(el);
+    MK.onayla({ baslik: "Taramayı sil", metin: f.no + " imzalı zimmet formu ve taraması silinir.", tamam: function () {
+      var l = MV.ZIMMET_FORMLARI[p.id]; l.splice(l.indexOf(f), 1); MK.dosyaSil(f.dosya);
+      location.hash = "#/p/" + p.id; MK.bildir(f.no + " silindi."); setTimeout(function () { bolumeGit("a-b-zimmet"); }, 0);
+    } });
+  };
   X["zimmete-git"] = function () { bolumeGit("a-b-zimmet"); };
   /* 2026-09-27: zimmet teslim formu yazdırma penceresinden PDF olur (imzaya götürülür) */
   X["zform-pdf"] = function () { var n = $("a-nesne"); MK.yazdir(formNo(aktif()) + " · zimmet teslim formu", [].map.call(n.children, function (e) { return e.matches(".a-kirinti") ? "" : e.outerHTML; }).join("")); };
   X["hesap-ac"] = function () { location.hash = "#/p/" + aktif().id + "/hesap"; };
   X["belge-ekle"] = function () { location.hash = "#/p/" + aktif().id + "/belge"; };
   X["bordro-ekle"] = function () { location.hash = "#/p/" + aktif().id + "/bordro"; };
+  X["bordro-dosya-kaldir"] = function () { if (!BR) return; BR.dosya = ""; bordroCiz(); document.querySelector('#a-bordro-pencere [data-eylem="bordro-dosya"]').focus(); };
+  X["belge-dosya-kaldir"] = function () { if (!B) return; B.dosya = ""; belgeCiz(); document.querySelector('#a-belge-pencere [data-eylem="dosya-sec"]').focus(); };
+  var yerinde = function (bolum, ileti) { kartCiz(aktif()); bolumeGit(bolum); MK.bildir(ileti); };
+  X["ozluk-degistir"] = function (el) {
+    var b = ozluk(aktif())[+el.dataset.i];
+    MK.dosyaSec({ kabul: ".pdf,image/*", enCokMB: 10, ornek: b.tur + "-" + MK.BUGUN + "-2.pdf" }, function (ad) { if (b.dosya && b.dosya !== ad) MK.dosyaSil(b.dosya); b.dosya = ad; b.tarih = MK.BUGUN; yerinde("a-b-ozluk", belgeAd(b.tur) + " değiştirildi."); });
+  };
+  X["ozluk-sil"] = function (el) {
+    var l = ozluk(aktif()), b = l[+el.dataset.i];
+    MK.onayla({ baslik: "Belgeyi sil", metin: belgeAd(b.tur) + " özlük dosyasından silinir.", tamam: function () { l.splice(l.indexOf(b), 1); if (b.dosya) MK.dosyaSil(b.dosya); yerinde("a-b-ozluk", belgeAd(b.tur) + " silindi."); } });
+  };
+  var bordroBul = function (el) { var k = aktif().id; return MV.BORDROLAR.filter(function (b) { return b.kisi === k && b.ay === el.dataset.ay; })[0]; };
+  X["bordro-degistir"] = function (el) {
+    var b = bordroBul(el);
+    MK.dosyaSec({ kabul: ".pdf", enCokMB: 10, ornek: "bordro-" + b.ay + "-" + b.kisi + "-2.pdf" }, function (ad) { if (b.dosya && b.dosya !== ad) MK.dosyaSil(b.dosya); b.dosya = ad; yerinde("a-b-maas", MV.ayAd(b.ay) + " bordrosu değiştirildi."); });
+  };
+  X["bordro-sil"] = function (el) {
+    var b = bordroBul(el);
+    MK.onayla({ baslik: "Bordroyu sil", metin: MV.ayAd(b.ay) + " bordrosu ve tutarları silinir.", tamam: function () { MV.BORDROLAR.splice(MV.BORDROLAR.indexOf(b), 1); if (b.dosya) MK.dosyaSil(b.dosya); yerinde("a-b-maas", MV.ayAd(b.ay) + " bordrosu silindi."); } });
+  };
   X["bordro-dosya"] = function () {
     MK.dosyaSec({ kabul: ".pdf", enCokMB: 10, ornek: "bordro-" + BR.ay + "-" + BR.kisi + ".pdf" }, function (ad) { if (!BR) return; BR.dosya = ad; delete BR.hata.dosya; bordroCiz(); $("a-bordro-alt").querySelector(".a-tus-birincil").focus(); });
   };

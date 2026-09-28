@@ -772,6 +772,10 @@ a.a-yuz:hover { border-color: var(--kenar-alan); background: var(--zemin); }
 /* dosya alanı (ör. sertifika): tuş + dosya adı */
 .a-dosya { display: flex; align-items: center; flex-wrap: wrap; gap: 8px 12px; min-width: 0; }
 .a-dosya-ad { min-width: 0; overflow-wrap: anywhere; font-size: var(--boy-kucuk); }
+/* yüklenen dosya: ad · Aç · Değiştir · Sil (2026-09-28) */
+.a-foto-kap { display: inline-flex; align-items: flex-start; gap: 2px; }   /* fotoğraf + yanında Sil (üst üste binmez) */
+.a-dosya-kayit { display: inline-flex; align-items: center; flex-wrap: wrap; gap: 6px 8px; min-width: 0; }
+.a-dosya-kayit .a-dosya-ad { display: inline-flex; align-items: center; gap: 6px; }
 /* FOTOĞRAF (makette yer tutucu; uygulamada küçük önizleme ~240 px, anayasa 4.9) */
 .a-fotolar { display: flex; flex-wrap: wrap; align-items: center; gap: 8px; margin-top: 6px; }
 .a-foto {

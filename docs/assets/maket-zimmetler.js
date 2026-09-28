@@ -107,7 +107,7 @@
   }
 
   /* ── VARLIK SAYFASI: kimde + tam geçmiş (fotoğraflarla) ─────────────────────────────────────────── */
-  var fotolar = function (n, etiket, adlar) { return MK.fotolar(n, adlar, etiket); };
+  var fotolar = function (n, etiket, adlar, sil) { return MK.fotolar(n, adlar, etiket, sil); };
   function yuz(o) {
     var ic = '<span class="a-yuz-ust">' + ikon(o.ikon, "a-ikon-kucuk") + o.ad + '</span><span class="a-yuz-sayi">' + o.sayi + "</span>" + (o.not ? '<span class="a-yuz-not' + (o.uyari ? " a-yuz-uyari" : "") + '">' + o.not + "</span>" : "");
     return o.href ? '<a class="a-yuz" href="' + o.href + '">' + ic + "</a>" : '<div class="a-yuz">' + ic + "</div>";
@@ -163,7 +163,7 @@
       MK.alan({ id: "w-zaman", etiket: "Tarih ve saat", zorunlu: true, hata: h.zaman, girdi: MK.girdi({ id: "w-zaman", alan: "zaman", deger: d.zaman, sinif: "a-girdi-seri", ek: ' inputmode="numeric" maxlength="16"', hata: h.zaman }) }) +
       (v && v.tur === "arac" ? MK.alan({ id: "w-km", etiket: "Kilometre", zorunlu: true, hata: h.km, girdi: MK.girdi({ id: "w-km", alan: "km", deger: d.km, sinif: "a-girdi-sicil", ek: ' inputmode="numeric" maxlength="9"', hata: h.km }) }) : "") +
       '<div class="a-alan-grup a-alan-genis"><label class="a-etiket" for="w-not">Durum notu</label><textarea class="a-alan a-alan-ince" id="w-not" data-alan="not" maxlength="300" placeholder="Eksik parça, hasar, aksesuarlar">' + kacis(d.not) + "</textarea></div>" +
-      '<div class="a-alan-grup a-alan-genis"><p class="a-etiket">Fotoğraflar</p><div class="a-fotolar">' + fotolar(d.foto, "Teslim", d.fotoAd) +
+      '<div class="a-alan-grup a-alan-genis"><p class="a-etiket">Fotoğraflar</p><div class="a-fotolar">' + fotolar(d.foto, "Teslim", d.fotoAd, { eylem: "foto-sil" }) +
         MK.tus({ eylem: "foto-ekle", ad: "Fotoğraf ekle", ikon: "camera", sinif: "a-tus-ikincil" }) + "</div>" +
         (d.foto ? "" : '<p class="a-ipucu"><span class="a-ipucu-dikkat">Fotoğraf yok.</span></p>') + "</div>" +
       "</div>" +
@@ -207,6 +207,8 @@
   MK.goster = goster;
   var X = MK.eylem;
   X["teslim-ac"] = function (el) { pencereAc(el.dataset.varlik || (rota().v === "varlik" ? rota().id : "")); };
+  /* teslim penceresinde eklenen fotoğraf silinir (2026-09-28); kaydedilmiş teslim hareket kaydıdır, değişmez */
+  X["foto-sil"] = function (el) { var i = +el.dataset.i, f = (W.d.fotoAd || [])[i]; W.d.foto--; if (W.d.fotoAd) W.d.fotoAd.splice(i, 1); if (f) MK.dosyaSil(f); pencereCiz(); var t = document.querySelector('[data-eylem="foto-ekle"]'); if (t) t.focus(); };
   X["foto-ekle"] = function () {   /* 2026-09-27: gerçek dosya penceresi (telefonda kamera ya da galeri, birden çok) */
     MK.dosyaSec({ kabul: "image/*", coklu: true, enCokMB: 15, ornek: "teslim-" + Date.now() + ".jpg" }, function (ad) {
       if (!W) return; W.d.foto++; (W.d.fotoAd = W.d.fotoAd || [])[W.d.foto - 1] = ad; delete W.hata.foto; pencereCiz(); var t = document.querySelector('[data-eylem="foto-ekle"]'); if (t) t.focus();

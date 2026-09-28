@@ -2,8 +2,8 @@
  "maket": "m4",
  "tarih": "2026-09-28",
  "arac": "tools/olc-bulut.mjs --etkilesim (başsız tarayıcı, 1920 açık tema; gen verilen denemede o genişlik)",
- "toplam": 22,
- "gecen": 22,
+ "toplam": 23,
+ "gecen": 23,
  "denemeler": [
   {
    "ad": "örnek sertifika indir: maket PDF'i iner",
@@ -157,6 +157,13 @@
    "gen": 1920,
    "sayfa": "maket/olcum-cihazlari.html",
    "hash": "#/c/v3",
+   "gecti": true
+  },
+  {
+   "ad": "kalibrasyon kaydı: yüklenen sertifika kayıtta, Sertifikayı aç onu açar; kayıt silinir (onay)",
+   "gen": 1920,
+   "sayfa": "maket/olcum-cihazlari.html",
+   "hash": "#/c/v1",
    "gecti": true
   }
  ]

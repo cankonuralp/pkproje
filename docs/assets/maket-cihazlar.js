@@ -90,9 +90,14 @@
     { k: "sonuc", baslik: "Sonuç", kart: "rozet", sira: 1, hucre: function (x) { return rozet(x.sonuc === "Uygun" ? { ad: "Uygun", rozet: "a-rozet-tamam" } : { ad: "Uygun değil", rozet: "a-rozet-red" }); } },
     /* yüklenen sertifika PDF'i açılır (reisim 2026-09-27: "eklenen herhangi bir pdf daha sonradan açılıp incelenebilir olsun") */
     { k: "eylem", baslik: "İşlem", gizliBaslik: true, kart: "eylem", sira: 9, hucre: function (x) {
-      return '<div class="a-eylem"><div class="a-eylem-tuslar">' + MK.pdfTus(x.sertifika.toLowerCase() + ".pdf", "Sertifikayı aç") + "</div></div>";
+      /* 2026-09-28: kayıt kendi yüklenen sertifikasını açar (örnek kayıtta sertifika numarasından ad); kayıt düzenlenir, silinir */
+      var i = aktif().kal.indexOf(x);
+      return '<div class="a-eylem"><div class="a-eylem-tuslar">' + MK.pdfTus(kalDosya(x), "Sertifikayı aç") +
+        MK.tus({ eylem: "kal-duzenle", ad: "Düzenle", ikon: "pencil", sinif: "a-tus-ikincil", veri: { i: i } }) +
+        '<button class="a-ikon-tus" type="button" data-eylem="kal-sil" data-i="' + i + '" aria-label="' + kacis(x.sertifika) + ' kaydını sil" title="Sil">' + ikon("x") + "</button></div></div>";
     } }
   ];
+  var kalDosya = function (x) { return x.dosya || x.sertifika.toLowerCase() + ".pdf"; };
   var ARA_SUTUN = [
     { k: "tarih", baslik: "Tarih", kart: "ust", sira: 1, hucre: function (x) { return '<span class="a-tarih-gun">' + MK.tarihYaz(x.tarih) + "</span>"; } },
     { k: "kim", baslik: "Yapan", kart: "govde", sira: 2, hucre: function (x) { return '<span class="a-kart-etiket">Yapan</span>' + kacis(MV.kisi(x.kim).ad); } },
@@ -132,7 +137,7 @@
         bilgi("Cihaz kodu", '<span class="a-kod">' + v.env + "</span>") + bilgi("Ölçüm aralığı", kacis(v.aralik)) +
         bilgi("Kullanıldığı ekipman grupları", t.g.map(function (g) { return MV.grup(g).ad; }).join(" · "), true) +
       "</dl></section>" +
-      '<section class="a-bolum" aria-labelledby="a-b-kal"><div class="a-alt-bas"><h2 class="a-alt-baslik" id="a-b-kal">Kalibrasyon kayıtları</h2><span class="a-sayac"><b>' + v.kal.length + "</b> kayıt</span></div>" +
+      '<section class="a-bolum" aria-labelledby="a-b-kal"><div class="a-alt-bas"><h2 class="a-alt-baslik" id="a-b-kal" tabindex="-1">Kalibrasyon kayıtları</h2><span class="a-sayac"><b>' + v.kal.length + "</b> kayıt</span></div>" +
         '<div class="a-liste-kap">' + MK.tablo({ baslik: "Kalibrasyon kayıtları", sinif: "a-tablo-kal", sutunlar: KAL_SUTUN, kayitlar: v.kal }) + "</div></section>" +
       /* 60: ara kontrol isteğe bağlı — takip edilmeyen cihazda bölüm yok */
       (v.araPeriyot ? '<section class="a-bolum" aria-labelledby="a-b-ara"><div class="a-alt-bas"><h2 class="a-alt-baslik" id="a-b-ara">Ara kontroller</h2>' +
@@ -186,14 +191,13 @@
         '<div class="a-alan-grup a-alan-genis"><label class="a-onay-kutusu"><input type="checkbox" data-aratakip="1"' + (d.ara ? " checked" : "") + '><span>Ara kontrol takip edilsin<span class="a-alt-satir">İsteğe bağlı; her ' + ARA_PERIYOT + " ayda bir (firma ayarı).</span></span></label></div></div>" +
         "";
     } else if (W.tur === "kal") {
-      $("a-pencere-baslik").textContent = W.v.env + " · kalibrasyon kaydı";
-      govde = '<p class="a-pencere-ozet"><b>' + W.v.env + " · " + kacis(W.v.ad) + "</b><br>Mevcut bitiş " + MK.tarihYaz(W.v.bitis) + ". Yeni kayıt en son geçerlilik tarihini günceller; eski sertifikalar kalır.</p>" +
+      $("a-pencere-baslik").textContent = W.v.env + (W.i === null || W.i === undefined ? " · kalibrasyon kaydı" : " · kalibrasyon kaydını düzenle");
+      govde = '<p class="a-pencere-ozet"><b>' + W.v.env + " · " + kacis(W.v.ad) + "</b><br>Mevcut bitiş " + MK.tarihYaz(W.v.bitis) + ".</p>" +
         '<div class="a-form">' + A("tarih", "Kalibrasyon tarihi", d.tarih, { zorunlu: true, sinif: "a-girdi-sicil", ek: tarih }) +
         A("bitis", "Geçerlilik bitişi", d.bitis, { zorunlu: true, sinif: "a-girdi-sicil", ek: tarih, ipucu: "Sertifikadaki tarih." }) +
         A("lab", "Laboratuvar", d.lab, { zorunlu: true, genis: true, ek: ' maxlength="80"' }) + A("sertifika", "Sertifika no", d.sertifika, { zorunlu: true, sinif: "a-girdi-seri", ek: ' maxlength="30"' }) +
         '<div class="a-alan-grup"><p class="a-etiket">Sertifika dosyası <span class="a-zorunlu">zorunlu</span></p>' +
-          '<div class="a-dosya">' + MK.tus({ eylem: "dosya-sec", ad: d.dosya ? "Değiştir" : "Dosya seç", ikon: "file-plus", sinif: "a-tus-ikincil" }) +
-          '<span class="a-dosya-ad' + (d.dosya ? "" : " a-deger-yok") + '">' + (d.dosya || "PDF, en çok 10 MB") + "</span>" + (d.dosya ? MK.pdfTus(d.dosya) : "") + "</div>" +
+          '<div class="a-dosya">' + (d.dosya ? MK.dosyaAlan({ ad: d.dosya, degistir: "dosya-sec", sil: "dosya-kaldir" }) : MK.tus({ eylem: "dosya-sec", ad: "Dosya seç", ikon: "file-plus", sinif: "a-tus-ikincil" })) + "</div>" +
           (h.dosya ? '<p class="a-ipucu a-ipucu-uyari">' + h.dosya + "</p>" : "") + "</div>" +
         '<div class="a-alan-grup a-alan-genis"><p class="a-etiket">Sonuç</p>' + radyo("sonuc", d.sonuc, [["Uygun", "Uygun — cihaz kullanılabilir"], ["Uygun değil", "Uygun değil — cihaz kullanımdan çekilir"]]) + "</div></div>";
     } else {
@@ -206,8 +210,11 @@
     $("a-pencere-alt").innerHTML = MK.tus({ eylem: "pencere-kapat", ad: "Vazgeç", sinif: "a-tus-ikincil" }) + MK.tus({ eylem: "pencere-kaydet", ad: "Kaydet", ikon: "check" });
     if (odak) { var el = $(odak); if (el) el.focus(); }
   }
-  function pencereAc(tur, v) {
-    W = { tur: tur, v: tur === "cihaz" ? (v || null) : v || null, hata: {}, d: tur === "cihaz" ? (v ? { env: v.env, cihazTur: v.cihazTur, marka: (v.marka + " " + v.model).trim(), seri: v.seri, aralik: v.aralik, bitis: "", ara: !!v.araPeriyot }
+  var gga = function (isoT) { return isoT.split("-").reverse().join("."); };
+  function pencereAc(tur, v, i) {
+    var kk = tur === "kal" && i !== undefined ? v.kal[i] : null;
+    if (kk) { W = { tur: tur, v: v, i: i, hata: {}, d: { tarih: gga(kk.tarih), bitis: gga(kk.bitis), lab: kk.lab, sertifika: kk.sertifika, dosya: kalDosya(kk), sonuc: kk.sonuc } }; }
+    else W = { tur: tur, v: tur === "cihaz" ? (v || null) : v || null, i: null, hata: {}, d: tur === "cihaz" ? (v ? { env: v.env, cihazTur: v.cihazTur, marka: (v.marka + " " + v.model).trim(), seri: v.seri, aralik: v.aralik, bitis: "", ara: !!v.araPeriyot }
       : { env: "", cihazTur: "", marka: "", seri: "", aralik: "", bitis: "", ara: false })
       : tur === "kal" ? { tarih: "23.09.2026", bitis: "", lab: v.kal[0].lab, sertifika: "", dosya: "", sonuc: "Uygun" } : { tarih: "23.09.2026", yontem: "Referans değerle karşılaştırma", sonuc: "Uygun" } };
     pencereCiz(); if (!$("a-pencere").open) $("a-pencere").showModal();
@@ -235,6 +242,17 @@
   X["cihaz-duzenle"] = function () { pencereAc("cihaz", aktif()); };
   X["kal-ac"] = function () { pencereAc("kal", aktif()); };
   X["ara-ac"] = function () { pencereAc("ara", aktif()); };
+  /* kalibrasyon kayıtları en yeni üstte; cihazın geçerlilik bitişi en yeni kaydın bitişi (kayıt kalmadıysa kalibrasyonsuz = geçmiş) */
+  function kalSirala(v) { v.kal.sort(function (a, b) { return a.tarih < b.tarih ? 1 : -1; }); v.bitis = v.kal.length ? v.kal[0].bitis : "2000-01-01"; }
+  X["kal-duzenle"] = function (el) { pencereAc("kal", aktif(), +el.dataset.i); };
+  X["kal-sil"] = function (el) {
+    var v = aktif(), x = v.kal[+el.dataset.i];
+    MK.onayla({ baslik: "Kalibrasyon kaydını sil", metin: x.sertifika + " kaydı ve sertifikası silinir.", tamam: function () {
+      v.kal.splice(v.kal.indexOf(x), 1); if (x.dosya) MK.dosyaSil(x.dosya); kalSirala(v); goster(false);
+      var b = $("a-b-kal"); if (b) b.focus(); MK.bildir(x.sertifika + " kaydı silindi.");
+    } });
+  };
+  X["dosya-kaldir"] = function () { if (!W) return; W.d.dosya = ""; pencereCiz(); var t = document.querySelector('#a-pencere [data-eylem="dosya-sec"]'); if (t) t.focus(); };
   X["cip-uygula"] = function (el) { var s = SZ.c; s.secili = [el.dataset.deger]; s.kip = "veya"; s.sayfa = 1; listeCiz(); var c = document.querySelector('[data-cip="' + el.dataset.deger + '"]'); if (c) c.focus(); };
   X["dosya-sec"] = function () {   /* 2026-09-27: gerçek dosya penceresi (PDF, en çok 10 MB); seçilen dosya "Aç" ile açılır */
     MK.dosyaSec({ kabul: ".pdf", enCokMB: 10, ornek: "sertifika-" + W.v.env.toLowerCase() + "-2026.pdf" }, function (ad) { if (!W) return; W.d.dosya = ad; delete W.hata.dosya; pencereCiz(); });
@@ -253,8 +271,10 @@
         bitis: iso(d.bitis), araSon: d.ara ? BUGUN : null, araPeriyot: d.ara ? ARA_PERIYOT : null, kal: [], ara: [], rapor: 0 };
       MV.VARLIKLAR.push(v); hedef = "#/c/" + v.id; ileti = v.env + " depoya kaydedildi; sertifikası kalibrasyon kaydıyla eklenir.";
     } else if (W.tur === "kal") {
-      v.kal.unshift({ tarih: iso(d.tarih), bitis: iso(d.bitis), lab: d.lab.trim(), sertifika: d.sertifika.trim(), sonuc: d.sonuc }); v.bitis = iso(d.bitis);
-      if (MV.kimde(v.id) === "lab") MV.ZIMMET.push({ id: "z" + (MV.ZIMMET.length + 1), v: v.id, tarih: MK.simdi(), eden: "lab", alan: "depo", foto: 1, not: "Kalibrasyondan döndü.", onay: null, yetkili: "za" });
+      var kay = { tarih: iso(d.tarih), bitis: iso(d.bitis), lab: d.lab.trim(), sertifika: d.sertifika.trim(), sonuc: d.sonuc, dosya: d.dosya };
+      if (W.i !== null) v.kal[W.i] = kay; else v.kal.unshift(kay);
+      kalSirala(v);
+      if (W.i === null && MV.kimde(v.id) === "lab") MV.ZIMMET.push({ id: "z" + (MV.ZIMMET.length + 1), v: v.id, tarih: MK.simdi(), eden: "lab", alan: "depo", foto: 1, not: "Kalibrasyondan döndü.", onay: null, yetkili: "za" });
       hedef = "#/c/" + v.id; ileti = "Kalibrasyon kaydedildi; geçerlilik " + MK.tarihYaz(v.bitis) + ".";
     } else {
       v.ara.unshift({ tarih: iso(d.tarih), kim: "co", yontem: d.yontem.trim(), sonuc: d.sonuc }); v.araSon = iso(d.tarih);

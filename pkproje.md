@@ -995,6 +995,11 @@ Yeni format, ekipman türü ya da PDF eklendiğinde de geçerlidir; ekran başı
    sayılmaz) · Uyarılar (geçen · yaklaşan) · Personel (eğitim tekrarı geçen · 60 gün içinde) · Sözleşmeler (açık planda İSG-KATİP eksik ya
    da bitmiş; hizmet sözleşmesi bitişi takip edilmez, M5 kararı) · Muhasebe (vadesi geçen fatura). Sayılar tek hesaptan (ortak veri), her
    sayfada aynı; 0 olan balon yok. İş kuyruğu sayıları (kabul bekleyen plan, onay bekleyen, imza bekleyen) kendi sayfalarında eskisi gibi.
+10. **Yüklenen her dosya düzenlenir ve silinir** (reisim 2026-09-28: *"imzalı zimmet diye dosya ekledim, sonra imzalı zimmet formuna tıklayınca
+   yüklediğim tarama değil de başka bir şey hala iskelet pdf çıkıyor ayrıca yüklediğim taramayı silemiyorum bu tarz basit mantık hatalarını
+   unutma, yükelenilen şeyler düzenlenebilir silinebilir olmalı"*): yüklenen dosya kayıtla birlikte saklanır ve sayfalar arası kalır; "Aç"
+   yüklenen dosyanın KENDİSİNİ gösterir (örnek kayıtta temel format); her yüklemenin yanında Aç · Değiştir · Sil; silme onayla. Dosya
+   kaydın zorunlu parçasıysa (imzalı form, imzalı rapor) silinince kayıt bir önceki duruma döner.
 
  (2026-09-18 araştırması; kaynaklar bölüm 10)
 
@@ -1764,6 +1769,23 @@ revizyon, alan kopyalama, hafif kusur devri, meslek eşleşme denetimi).
 - Emsal ürünler: https://opwire.app/iso-17020-periyodik-kontrol-yazilimi/ · https://17020muayene.vidco.com.tr/ · https://akuple.com/asansor-kontrol-yazilimi/ · https://ensyazilim.com/
 
 ## 11 · Değişiklik günlüğü
+- 2026-09-28 (119): **Yüklenen dosyalar — kalıcı, kendisi açılır, değiştirilir, silinir** (§3.8 kural 10; reisim'in zimmet bildirimi). Kök
+  nedenler: (a) seçilen dosya yalnız o sayfanın belleğindeydi — sayfa değişince / yenilenince kayıtta adı kalıyor, görüntüleyici iskelete
+  düşüyordu; (b) bazı ekranlar yüklenen dosyayı hiç göstermiyordu (imzalı zimmet sayfası üretilen formu çiziyordu; türün "PDF'i aç"ı rapor
+  belgesini açıyordu; kalibrasyon kaydı sertifika dosyasını kayda yazmıyor, "Sertifikayı aç" numaradan uydurulan adı açıyordu; imzalı rapor
+  PDF'i raporda saklanmıyordu); (c) hiçbir yüklemede silme / değiştirme yoktu. Ortak (maket-ortak.js): dosyalar tarayıcının IndexedDB'sinde
+  kalıcı ("Denemeleri sıfırla" onları da siler), aynı adla ikinci dosya ayrışır; tek üretici `MK.dosyaAlan` (ad · Aç · Değiştir · Sil),
+  `MK.dosyaOnizle` (sayfada dosyanın kendisi), `MK.onayla` (silme onayı), `MK.fotolar`'a fotoğraf silme. Bağlanan yerler: Personel (imzalı
+  zimmet formu, özlük belgeleri, bordrolar, belge ve bordro pencereleri) · Ölçüm cihazları (kalibrasyon kaydı: sertifika kayıtta, kayıt
+  düzenlenir / silinir) · Dökümanlar (standart sürümü silinir — güncel silinince önceki geri gelir, tek sürümse türlerin kontrol metodundan
+  çıkar —, diğer dökümanlar, yükleme pencereleri) · Eğitimler (sertifika) · Sözleşmeler (imzalı sözleşme — silinince imza bekler —, şablon
+  sürümleri, İSG-KATİP PDF'i) · Raporlar (imzalı PDF raporda saklanır, rapor sayfasında gösterilir; silinince yeniden imza bekler) ·
+  Ekipman türleri (rapor formatı sürümü silinir, "PDF'i aç" yüklenen PDF) · Muhasebe ve Talepler (fiş / belge; bekleyen talebin eki) ·
+  saha raporu ve zimmet teslimi fotoğrafları. Excel içe aktarmaları dosya saklamaz (satırlar kayda girer), değişmedi; kaydedilmiş zimmet
+  teslimi hareket kaydıdır, fotoğrafı değişmez. Her yerde gerçek dosya yüklenerek tarayıcıda denendi (yükle → aç → sayfayı yenile → aç →
+  değiştir → sil). Telefonda "Fotoğraf ekle" fotoğrafların önünde (Sil tuşu eklenince menü 320 px'te taşıyordu). Ölçüm aracı: sayfa
+  yeniden çizilince / yenilenince yarıda kesilen yüklenen dosya önizlemesi (blob) ağ hatası sayılmaz; 7 yeni deneme (gerçek dosya
+  yüklenerek). 18 maket temiz: durum 1936/1936 · etkileşim 463/463 · telefon 968/968 · olumsuz kanıt 3/3.
 - 2026-09-28 (118): **Düzeltme — T6 CI'da düştü** (reisim: *"githubdan push failed mesajı geldi"*). T6'daki menü CSS'i daraltma sınıfını
   (`a-kabuk-dar`) geniş bant dışında kullanıyordu; kalıp kilidi (`tests/kalip-sayilari.test.ts`, anayasa 2.11) yakaladı. Yerelde test 1
   başarısız verdiği hâlde commit + push zincirim durmadı (komutlar `;` ile bağlıydı) — hata benim. Kural tersine çevrildi: iki satır
