@@ -839,7 +839,8 @@
      Aydın'ın tek formu eski (sonra araç devredildi, cihaz ve tablet eklendi). */
   MV.ZIMMET_FORMLARI = {};
   [["mk", "ZF-1225-006", "2025-12-06"], ["mk", "ZF-0426-003", "2026-04-28"], ["ea", "ZF-1025-011", "2025-10-15"]].forEach(function (x) {
-    (MV.ZIMMET_FORMLARI[x[0]] = MV.ZIMMET_FORMLARI[x[0]] || []).unshift({ no: x[1], tarih: x[2], kapsam: MV.zimmetKapsam(x[0], x[2] + "T23:59"), dosya: "zimmet-formu-imzali.pdf" });
+    (MV.ZIMMET_FORMLARI[x[0]] = MV.ZIMMET_FORMLARI[x[0]] || []).unshift({ no: x[1], tarih: x[2], kapsam: MV.zimmetKapsam(x[0], x[2] + "T23:59"), dosya: "zimmet-formu-imzali.pdf",
+      eden: { ad: MV.kisi("za").ad, alt: "" } });   /* örnek formlar: teslim eden kayıtta (196, 2026-09-29) — başlangıç ayarı değişse de geçmiş form değişmez */
   });
   MV.zimmetFormu = function (k) { return (MV.ZIMMET_FORMLARI[k] || [])[0] || null; };
   MV.zimmetFormuGuncel = function (k, kapsam) {

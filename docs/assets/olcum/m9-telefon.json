@@ -8,8 +8,8 @@
   390,
   430
  ],
- "toplam": 88,
- "temiz": 88,
+ "toplam": 92,
+ "temiz": 92,
  "durumlar": [
   {
    "ad": "raporlar · inspector'ın listesi + imza şeridi",
@@ -370,6 +370,42 @@
    "disari": [],
    "kucukAlan": [],
    "alan": 0
+  },
+  {
+   "ad": "zimmet formu · teslim eden elle yaz açık",
+   "gen": 320,
+   "temiz": true,
+   "tasma": 0,
+   "disari": [],
+   "kucukAlan": [],
+   "alan": 1
+  },
+  {
+   "ad": "zimmet formu · teslim eden elle yaz açık",
+   "gen": 360,
+   "temiz": true,
+   "tasma": 0,
+   "disari": [],
+   "kucukAlan": [],
+   "alan": 1
+  },
+  {
+   "ad": "zimmet formu · teslim eden elle yaz açık",
+   "gen": 390,
+   "temiz": true,
+   "tasma": 0,
+   "disari": [],
+   "kucukAlan": [],
+   "alan": 1
+  },
+  {
+   "ad": "zimmet formu · teslim eden elle yaz açık",
+   "gen": 430,
+   "temiz": true,
+   "tasma": 0,
+   "disari": [],
+   "kucukAlan": [],
+   "alan": 1
   },
   {
    "ad": "firma ayarları · 5 yılı dolan raporlar: bulut arşivi, yer boş uyarısı",

@@ -1941,6 +1941,14 @@ revizyon, alan kopyalama, hafif kusur devri, meslek eşleşme denetimi).
 - Emsal ürünler: https://opwire.app/iso-17020-periyodik-kontrol-yazilimi/ · https://17020muayene.vidco.com.tr/ · https://akuple.com/asansor-kontrol-yazilimi/ · https://ensyazilim.com/
 
 ## 11 · Değişiklik günlüğü
+- 2026-09-29 (137): **W1 · 196 Zimmet formunda teslim eden / teslim alan** (§9 otuz yedinci tur cevap; reisim: *"zimmet formunda teslim eden
+  teslim alan kısmı el ile girilebilsin, listeden personel girilebilsin"*). Zimmet formu sayfasında belgenin üstünde **Teslim** bölümü: iki alan,
+  her biri personel listesinden seçilir ya da **"Listede yok — elle yaz"** ile ad yazılır; belge önizlemesi yazdıkça güncellenir. Elle seçilip
+  ad boş bırakılırsa imza / tarama yükleme durur, alan gösterilir. İmzada imzacılar bu iki kişi; imzalı ve taranmış formda ikisi kayıtlı.
+  **Firma ayarları**'na "Zimmet teslim formu · Teslim eden (başlangıç)" (başlangıç: firma yöneticisi); değişince yeni formlar o kişiyle gelir,
+  eski imzalı formların teslim edeni değişmez (örnek formlarda kayda yazıldı). Ölçüm: m1 etkileşim 68/68 (2 yeni); tam ölçüm durum 2104/2104 · etkileşim
+  519/519 · telefon 1052/1052 · olumsuz 3/3; gözle 1920 ve 375.
+
 - 2026-09-29 (136): **Sunucu kuralları denetimi · otuz yedinci tur kararları** (§9 otuz yedinci tur cevap). Kural dosyaları (ANAYASA, 00–08,
   EKSİKLER) ve §8 bu projenin sunucu yığınına karşı tek tek eşlendi; kaynak projeden Firebase diliyle gelen kuralların (dosya indirme, küçük
   kopya, gizli görüntüleme, güvenli yazıcılar, yedek, yetki) PostgreSQL + S3 + kendi girişimiz karşılığı ve hiç olmayan kurallar (oturum

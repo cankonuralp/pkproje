@@ -476,6 +476,7 @@
       '<footer class="a-belge-alt"><span>' + kacis(f.ad) + " · " + formKod + " · temel format</span></footer></article>";
   };
   MB.zimmetFormu = function (o) {
+    var alan = o.alan || { ad: o.p.ad, alt: MV.meslekAd(o.p) };
     var f = MV.FIRMA, formKod = f.kisa + "-FR-ZMT-01";
     var tur = { cihaz: "Ölçüm cihazı", arac: "Araç", diger: "Diğer" };
     var satirlar = o.varliklar.map(function (v, i) {
@@ -490,14 +491,15 @@
         '<div class="a-belge-kunye"><b>' + kacis(f.ad) + "</b><span>" + kacis(f.adres) + "</span></div></header>" +
       '<div class="a-belge-baslik"><h2>Zimmet teslim formu</h2><p>Personele teslim edilen ölçüm cihazı, araç ve diğer iş varlıkları</p></div>' +
       '<dl class="a-bilgi">' + bilgi("Form no", '<span class="a-kod">' + o.no + "</span>") + bilgi("Tarih", MK.tarihYaz(o.tarih)) +
-        bilgi("Teslim alan", kacis(o.p.ad) + '<span class="a-alt-satir">' + kacis(MV.meslekAd(o.p)) + "</span>") +
+        /* o.alan / o.eden (2026-09-29, 196): listeden personel ya da elle yazılan ad; yoksa kartın kişisi ve teslim eden */
+        bilgi("Teslim alan", kacis(alan.ad) + (alan.alt ? '<span class="a-alt-satir">' + kacis(alan.alt) + "</span>" : "")) +
         bilgi("Teslim eden", kacis(o.eden.ad) + '<span class="a-alt-satir">firma adına</span>') + "</dl>" +
       bolum("1", "Zimmetlenen varlıklar", o.varliklar.length + " kalem",
         tablo(["#", "Varlık", "Seri no / plaka", "Teslim"], satirlar)) +
       bolum("2", "Taahhüt", "",
         '<p>Yukarıda listelenen varlıkları eksiksiz ve çalışır durumda teslim aldım. Özenle ve yalnız işim için kullanacağımı; kayıp, hasar ya da ' +
         'arızayı gecikmeden bildireceğimi; işten ayrılışımda ya da istendiğinde eksiksiz iade edeceğimi kabul ederim.</p>') +
-      '<div class="a-belge-imzalar">' + [["Teslim eden", o.eden], ["Teslim alan", o.p]].map(function (x, i) {
+      '<div class="a-belge-imzalar">' + [["Teslim eden", o.eden], ["Teslim alan", alan]].map(function (x, i) {
         /* o.imza: mobil imza / e-imza (2026-09-29, V3) — imzacı başına zaman; yoksa ıslak imzalı tarama */
         var el = o.imza && o.imza.imzacilar[i];
         return "<div><b>" + x[0] + "</b><span>" + kacis(x[1].ad) + '</span><div class="a-belge-imza' + (o.imzali ? " a-belge-imzali" : "") + '">' +

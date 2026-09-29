@@ -2,8 +2,8 @@
  "maket": "m1",
  "tarih": "2026-09-29",
  "arac": "tools/olc-bulut.mjs --etkilesim (başsız tarayıcı, 1920 açık tema; gen verilen denemede o genişlik)",
- "toplam": 66,
- "gecen": 66,
+ "toplam": 68,
+ "gecen": 68,
  "denemeler": [
   {
    "ad": "İzin talepleri: formun PDF'i açılır, e-posta talep edene",
@@ -336,6 +336,20 @@
   },
   {
    "ad": "5 yılı dolan raporlar: varsayılan Sistemde kalsın; Arşiv seçilince yer alanı ve uyarı, yer girilince uyarı kalkar; Silinsin seçilir (sayfalar arası kalıcı)",
+   "gen": 1920,
+   "sayfa": "maket/personel.html",
+   "hash": "#/ayarlar",
+   "gecti": true
+  },
+  {
+   "ad": "zimmet formu: teslim alan elle yazılır, belgeye yazdıkça geçer; boş ad imzayı durdurur; imzalanan formda iki ad",
+   "gen": 1920,
+   "sayfa": "maket/personel.html",
+   "hash": "#/p/ea/zimmet-formu",
+   "gecti": true
+  },
+  {
+   "ad": "Firma ayarları: zimmet teslim edeninin başlangıcı değişince formda o kişi gelir; eski imzalı formun teslim edeni değişmez",
    "gen": 1920,
    "sayfa": "maket/personel.html",
    "hash": "#/ayarlar",
