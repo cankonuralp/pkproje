@@ -1740,6 +1740,39 @@ Ara istek (T7 sırasında, 2026-09-28): *"şu balonlarda sekmeyi aşağı düş�
 olsun"* · *"aşağı yukarı barı da yan menüde düzgün durmamış olmasın"* → T6b: balonlar adın yanında tek sırada bitişik hap, satır büyümez,
 dolu renk; yan menü kayar ama çubuğu görünmez (§11 121).
 
+**Otuz beşinci tur — sorular (2026-09-29; reisim: *"sonraki turun sorularını getir"*; cevap bekliyor).** Maketlerde VARSAYIM / soru diye
+işaretli kalanlar ve 34. turda çıkan kararlar; her birinde önerim var, "uygun" denirse öneri karar olur.
+- **160 · Talep e-postası:** bilgisayarda PDF iner, e-posta uygulaması alıcı / konu / metinle açılır, PDF'i kişi ekler (tarayıcı dosyayı
+  kendisi ekleyemez); telefonda paylaşım menüsü PDF ekli açılır. *Öneri:* böyle kalsın; sunucudan kendiliğinden e-posta istenirse bu bir
+  bildirim olur (anayasa 1.3), ayrıca karar ister.
+- **161 · Talebin alıcısı:** izin ve masraf formu firma yöneticisine gidiyor (sistemde ayrı muhasebe rolü yok). *Öneri:* "Muhasebe" rolü
+  eklensin, masraf formu ona gitsin; izin yöneticide kalsın.
+- **162 · Onaylayan tarafında PDF:** yönetici izni / muhasebe masrafı onaylayınca formun son hâli onların ekranından da PDF · e-posta ile
+  çıkabilsin mi? *Öneri:* evet (Personel › İzin talepleri ve Muhasebe › Giderler'de aynı tuş).
+- **163 · Menü balonları hangi modüllerde:** renkli balon şu an Uyarılar, Sözleşmeler, Ölçüm cihazları, Personel, Muhasebe'de; Planlar
+  (kabul bekleyen), Raporlar (son imza bekleyen), Onaylar (onay bekleyen) tek yeşil sayı taşıyor. *Öneri:* bu üçü de aynı renkli balona
+  dönsün (bekleyen = sarı, süresi geçen = kırmızı); yeşil (sorunsuz) yalnız sayılabilir varlıkta (cihaz, personel) kalsın.
+- **164 · Ara kontrol uyarı eşikleri:** günlük 0, haftalık 2, aylık 7, 6 ayda bir 30 gün kala sarı. *Öneri:* firma ayarı, bu değerlerle başlar.
+- **165 · Performansta sayılan rapor:** onaya gönderilmiş ya da imzalı raporlar sayılıyor; hiç gönderilmemiş taslak sayılmıyor. *Öneri:* böyle kalsın.
+- **166 · Performans süreç adımları:** kişi sayfasında yazım · onay · son imza ortalama süreleri var. Geri gönderilen raporun düzeltme süresi
+  de ayrı adım olarak görünsün mü? *Öneri:* evet (geri gönderilme → yeniden onaya gönderim).
+- **167 · Eğitim tekrar uyarısı:** tekrarına 60 gün kala sarı; eğitim adları ve tekrar süreleri örnek. *Öneri:* eşik firma ayarı (60 gün);
+  eğitim türlerini firma ekliyor zaten — mevzuattaki zorunlu eğitimlerin listesini sen verirsen başlangıç listesi o olur.
+- **168 · Uyarılarda "okundu":** uyarı koşul kalkınca (kalibrasyon yenilenince vb.) kendiliğinden düşüyor, "okundu" yok. *Öneri:* böyle kalsın.
+- **169 · Son imza yöntemi:** rapor son imzası indir → e-imza ile imzala → yükle (aracı servis sonra). *Öneri:* başlangıçta indir-imzala-yükle;
+  e-imza servisi (8.4 açık soru) firma ayarı olarak sonra eklenir.
+- **170 · Müşteri girişinin tesis kapsamı:** müşteri kullanıcısı "bütün tesisler" ya da seçili tesisleri görür. *Öneri:* böyle kalsın
+  (varsayılan bütün tesisler).
+- **171 · İmzalı iş sözleşmesi:** iş sözleşmesinin imzalı taraması yükleniyor (İSG-KATİP'te "yüklenmez" kararı yalnız ona). *Öneri:* böyle kalsın.
+- **172 · Fatura:** fatura muhasebe programında kesilir, burada numarası ve tarihi yazılır; bilanço da muhasebe programında. *Öneri:* böyle kalsın.
+- **173 · İş kârlılığında personel payı:** günlük maliyet = aylık işverene maliyet ÷ 22 iş günü; işverene maliyet ≈ brüt × 1,2275. *Öneri:*
+  ÷ 22 ve oran firma ayarı; bordrodaki "işverene maliyet" varsa doğrudan o kullanılır.
+- **174 · Maaş ve bordroları kim görür:** firma yöneticisi ve muhasebe. *Öneri:* böyle kalsın (161 kabulse muhasebe rolüyle).
+- **175 · Excel içe aktarma sütunları (Giderler):** senin örnek Excel'in gelince ona göre kurulacak. *Öneri:* elindeki örneği paylaşırsan
+  sütunları birebir kurarım; yoksa şimdiki sütunlar kalsın.
+- **176 · Standartlar örneği:** daha önce paylaştığını söylediğin örnek bu oturumda elimde yok. *Öneri:* yeniden paylaş; Dökümanlar ›
+  Standartlar ona göre gözden geçirilir.
+
 **Açık kalanlar:** ~~Ana sayfada İSGGM duyuruları~~ (2026-09-27: makette eklendi; okuma işi uygulamada) (reisim 2026-09-26: *"Ana sayfada isgüm duyurularını gösterebilir miyiz ? Bunu
 yapılacaklar listesine ekle"*; öneri: ÇSGB İSGGM duyurular sayfası — https://www.csgb.gov.tr/isggm/duyurular/ — sunucuda günde birkaç kez
 okunur (pg-boss işi, §8.9), Ana sayfada son 5 duyuru başlık + tarih + kaynağa bağlantı; yalnız ekranda, bildirim yok; sayfa RSS vermiyorsa
