@@ -2,8 +2,8 @@
  "maket": "m1",
  "tarih": "2026-09-29",
  "arac": "tools/olc-bulut.mjs --etkilesim (başsız tarayıcı, 1920 açık tema; gen verilen denemede o genişlik)",
- "toplam": 60,
- "gecen": 60,
+ "toplam": 65,
+ "gecen": 65,
  "denemeler": [
   {
    "ad": "İzin talepleri: formun PDF'i açılır, e-posta talep edene",
@@ -332,6 +332,41 @@
    "gen": 1920,
    "sayfa": "maket/personel.html",
    "hash": "#/p/ea/zimmet-formu",
+   "gecti": true
+  },
+  {
+   "ad": "zimmet formu mobil imzayla: teslim eden, sonra teslim alan PIN; kısa PIN reddedilir → kartta güncel, formda iki imza",
+   "gen": 1920,
+   "sayfa": "maket/personel.html",
+   "hash": "#/p/ea/zimmet-formu",
+   "gecti": true
+  },
+  {
+   "ad": "e-imzalı zimmet formu açılır: iki imza satırı e-imza, dosya yok, Sil ile kalkar",
+   "gen": 1920,
+   "sayfa": "maket/personel.html",
+   "hash": "#/p/ea/zimmet-formu",
+   "gecti": true
+  },
+  {
+   "ad": "izin talebi imzalanarak gönderilir (mobil imza); formda talep edenin imzası",
+   "gen": 1920,
+   "sayfa": "maket/talepler.html",
+   "hash": "#/yeni/izin",
+   "gecti": true
+  },
+  {
+   "ad": "izin onayı imzayla (Vazgeç → onaylanmaz; PIN → onaylandı · mobil imza)",
+   "gen": 1920,
+   "sayfa": "maket/personel.html",
+   "hash": "#/izinler",
+   "gecti": true
+  },
+  {
+   "ad": "saha formu: muayene uzmanları imzalar (mobil imza), firma yetkilisi kâğıtta; her uzman ayrı PIN; imza planın geçmişinde",
+   "gen": 1920,
+   "sayfa": "maket/planlarim.html",
+   "hash": "#/plan/9",
    "gecti": true
   },
   {

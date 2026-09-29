@@ -213,9 +213,10 @@
     var f = MV.zimmetFormu(p.id), guncel = MV.zimmetFormuGuncel(p.id, z.map(function (v) { return v.id; }));
     var ac = f ? '<a class="a-tus a-tus-ikincil" href="#/p/' + p.id + "/zimmet-imzali/" + f.no + '">' + ikon("file-check", "a-ikon-kucuk") + "İmzalı formu aç</a>" : "";
     if (!z.length && !f) return "";
-    if (f && guncel) return MK.serit("onay", "file-check", "İmzalı zimmet formu yüklü: <b>" + f.no + "</b> · " + MK.tarihYaz(f.tarih) + " · " + f.kapsam.length + " varlık.") + ac;
-    if (f) return MK.serit("uyari", "triangle-alert", "İmzalı form (" + f.no + ", " + MK.tarihYaz(f.tarih) + ") eskidi: zimmet o tarihten sonra değişti. Yeni formu yazdırıp imzalatın ve taramasını yükleyin.") + ac;
-    return MK.serit("uyari", "triangle-alert", "İmzalı zimmet formu yok. Formu yazdırıp imzalatın ve taramasını yükleyin.");
+    var yol = MV.imzaYontem().kisa;   /* 2026-09-29 (V3): firmanın yöntemiyle imzalanır; ıslak imzalı tarama yedek yol */
+    if (f && guncel) return MK.serit("onay", "file-check", "İmzalı zimmet formu: <b>" + f.no + "</b> · " + MK.tarihYaz(f.tarih) + " · " + f.kapsam.length + " varlık" + (f.imza ? " · " + MV.IMZA_YONTEM[f.imza.yontem].kisa : "") + ".") + ac;
+    if (f) return MK.serit("uyari", "triangle-alert", "İmzalı form (" + f.no + ", " + MK.tarihYaz(f.tarih) + ") eskidi: zimmet o tarihten sonra değişti. Yeni formu " + yol + " ile imzalayın ya da ıslak imzalı taramasını yükleyin.") + ac;
+    return MK.serit("uyari", "triangle-alert", "İmzalı zimmet formu yok. Formu " + yol + " ile imzalayın ya da ıslak imzalı taramasını yükleyin.");
   }
   /* EĞİTİMLER (2026-09-28, T10; reisim: "her personelin kartında eğitimler de gözükmeli"): kişinin güncel eğitim kayıtları — tekrarı
      geçen ve yaklaşan üstte; kayıt Eğitimler'de açılır, sertifika buradan açılır. Kayıt ekleme ve geçmiş Eğitimler'de (Dökümanlar içinde). */
@@ -334,10 +335,11 @@
     var z = zimmetleri(p), guncel = MV.zimmetFormuGuncel(p.id, z.map(function (v) { return v.id; }));
     $("a-nesne").innerHTML = MK.kirinti([["Personel", "#/"], [p.ad, "#/p/" + p.id], ["Zimmet formu"]]) +
       '<div class="a-nesne-bas"><div class="a-nesne-kimlik"><div class="a-nesne-baslik"><h1 tabindex="-1">Zimmet teslim formu</h1>' +
-        (guncel ? rozet({ ad: "İmzalısı yüklü", rozet: "a-rozet-tamam" }) : rozet({ ad: "İmza bekliyor", rozet: "a-rozet-bekliyor" })) + "</div>" +
+        (guncel ? rozet({ ad: "İmzalı", rozet: "a-rozet-tamam" }) : rozet({ ad: "İmza bekliyor", rozet: "a-rozet-bekliyor" })) + "</div>" +
         '<p class="a-nesne-alt">' + ikon("user", "a-ikon-kucuk") + "<span>" + kacis(p.ad) + " · " + z.length + " varlık</span></p></div>" +
         '<div class="a-eylem-cubugu">' + MK.tus({ eylem: "zform-pdf", ad: "PDF indir", ikon: "file-text", sinif: "a-tus-ikincil" }) +
-          MK.tus({ eylem: "zform-yukle", ad: "İmzalı taramayı yükle", ikon: "file-plus" }) + "</div></div>" +
+          MK.tus({ eylem: "zform-yukle", ad: "İmzalı taramayı yükle", ikon: "file-plus", sinif: "a-tus-ikincil" }) +
+          (z.length ? MK.tus({ eylem: "zform-imzala", ad: "İmzala (" + MV.imzaYontem().kisa + ")", ikon: "file-signature" }) : "") + "</div></div>" +
       MB.zimmetFormu({ p: p, varliklar: z, no: formNo(p), tarih: MK.BUGUN, eden: teslimEden() });
   }
 
@@ -351,10 +353,11 @@
     $("a-nesne").innerHTML = MK.kirinti([["Personel", "#/"], [p.ad, "#/p/" + p.id], ["İmzalı zimmet formu"]]) +
       '<div class="a-nesne-bas"><div class="a-nesne-kimlik"><div class="a-nesne-baslik"><h1 tabindex="-1">İmzalı zimmet formu · ' + f.no + "</h1>" +
         (guncel ? rozet({ ad: "Güncel", rozet: "a-rozet-tamam" }) : rozet({ ad: son ? "Eskidi" : "Önceki form", rozet: son ? "a-rozet-bekliyor" : "a-rozet-notr" })) + "</div>" +
-        '<p class="a-nesne-alt">' + ikon("file-check", "a-ikon-kucuk") + "<span>" + kacis(p.ad) + " · " + MK.tarihYaz(f.tarih) + " · " + f.kapsam.length + " varlık · " + kacis(f.dosya) + "</span></p></div>" +
-        '<div class="a-eylem-cubugu">' + MK.dosyaAlan({ ad: f.dosya, degistir: "zform-degistir", sil: "zform-sil", veri: { no: f.no } }) +
+        '<p class="a-nesne-alt">' + ikon("file-check", "a-ikon-kucuk") + "<span>" + kacis(p.ad) + " · " + MK.tarihYaz(f.tarih) + " · " + f.kapsam.length + " varlık · " + (f.imza ? MV.IMZA_YONTEM[f.imza.yontem].kisa : kacis(f.dosya)) + "</span></p></div>" +
+        '<div class="a-eylem-cubugu">' + (f.imza ? MK.tus({ eylem: "zform-sil", ad: "Sil", sinif: "a-tus-ikincil", veri: { no: f.no } })   /* elektronik imzalı: dosya yok, form silinebilir */
+          : MK.dosyaAlan({ ad: f.dosya, degistir: "zform-degistir", sil: "zform-sil", veri: { no: f.no } })) +
           '<a class="a-tus a-tus-ikincil" href="#/p/' + p.id + '/zimmet-gecmisi">' + ikon("history", "a-ikon-kucuk") + "Zimmet geçmişi</a></div></div>" +
-      MK.dosyaOnizle(f.dosya, MB.zimmetFormu({ p: p, varliklar: f.kapsam.map(MV.varlik), no: f.no, tarih: f.tarih, eden: teslimEden(), imzali: true }));
+      MK.dosyaOnizle(f.dosya, MB.zimmetFormu({ p: p, varliklar: f.kapsam.map(MV.varlik), no: f.no, tarih: f.tarih, eden: teslimEden(), imzali: true, imza: f.imza }));
   }
   /* zimmet geçmişi (reisim 2026-09-25): hangi varlık hangi tarihte verildi, hangi tarihte kime / nereye geri alındı */
   var yer = function (k) { return k === "depo" ? "Depoya iade" : k === "lab" ? "Kalibrasyona gönderildi" : "devredildi · " + MV.kisi(k).ad; };
@@ -626,8 +629,11 @@
   X["hesaba-git"] = function () { bolumeGit("a-b-hesap"); };
   X["izin-onayla"] = function (el) {
     var x = izinBul(el.dataset.no); if (!x || x.durum !== "bekliyor") return;
-    x.durum = "onaylandi"; x.onaylayan = "ad"; x.karar = MK.simdi(); izinCiz(); var h = document.querySelector("#a-izin-gorunum h1"); if (h) h.focus();
-    MK.bildir(x.no + " onaylandı: " + MV.kisi(x.kisi).ad + ", " + x.gun + " iş günü " + MV.izinTur(x.tur).ad.toLocaleLowerCase("tr") + ".");
+    /* 2026-09-29 (V3): onaylayan izin formunu firmanın yöntemiyle (mobil imza / e-imza) imzalar */
+    MK.imzaAl({ belge: x.no + " izin talep formu", imzacilar: [MV.kisi("ad").ad], tamam: function (im) {
+      x.durum = "onaylandi"; x.onaylayan = "ad"; x.karar = MK.simdi(); x.onayImza = im; izinCiz(); var h = document.querySelector("#a-izin-gorunum h1"); if (h) h.focus();
+      MK.bildir(x.no + " onaylandı ve " + MV.IMZA_YONTEM[im.yontem].kisa + " ile imzalandı: " + MV.kisi(x.kisi).ad + ", " + x.gun + " iş günü " + MV.izinTur(x.tur).ad.toLocaleLowerCase("tr") + ".");
+    } });
   };
   X["izin-pdf"] = function (el) { var x = izinBul(el.dataset.no); MB.talepPdfAc({ tip: "izin", x: x, kime: [MV.kisi(x.kisi)], gonderen: MV.kisi("ad") }); };
   X["izin-reddet"] = function (el) { IZ = { x: izinBul(el.dataset.no), gerekce: "", hata: "" }; izinRedCiz(); $("a-izin-pencere").showModal(); $("iz-gerekce").focus(); };
@@ -643,6 +649,14 @@
       location.hash = "#/p/" + p.id; MK.bildir("İmzalı zimmet formu yüklendi (" + formNo(p) + ")."); setTimeout(function () { bolumeGit("a-b-zimmet"); }, 0);
     });
   };
+  /* 2026-09-29 (V3): zimmet teslim formu firmanın yöntemiyle (mobil imza / e-imza) imzalanır — önce teslim eden, sonra teslim alan */
+  X["zform-imzala"] = function () {
+    var p = aktif(), no = formNo(p);
+    MK.imzaAl({ belge: no + " zimmet teslim formu", imzacilar: [teslimEden().ad, p.ad], tamam: function (im) {
+      (MV.ZIMMET_FORMLARI[p.id] = MV.ZIMMET_FORMLARI[p.id] || []).unshift({ no: no, tarih: MK.BUGUN, kapsam: zimmetleri(p).map(function (v) { return v.id; }), dosya: null, imza: im });
+      location.hash = "#/p/" + p.id; MK.bildir("Zimmet formu " + MV.IMZA_YONTEM[im.yontem].kisa + " ile imzalandı (" + no + ")."); setTimeout(function () { bolumeGit("a-b-zimmet"); }, 0);
+    } });
+  };
   var zformBul = function (el) { return (MV.ZIMMET_FORMLARI[aktif().id] || []).filter(function (x) { return x.no === el.dataset.no; })[0]; };
   X["zform-degistir"] = function (el) {
     var f = zformBul(el);
@@ -652,8 +666,8 @@
   };
   X["zform-sil"] = function (el) {
     var p = aktif(), f = zformBul(el);
-    MK.onayla({ baslik: "Taramayı sil", metin: f.no + " imzalı zimmet formu ve taraması silinir.", tamam: function () {
-      var l = MV.ZIMMET_FORMLARI[p.id]; l.splice(l.indexOf(f), 1); MK.dosyaSil(f.dosya);
+    MK.onayla({ baslik: f.imza ? "Formu sil" : "Taramayı sil", metin: f.no + " imzalı zimmet formu" + (f.imza ? "" : " ve taraması") + " silinir.", tamam: function () {
+      var l = MV.ZIMMET_FORMLARI[p.id]; l.splice(l.indexOf(f), 1); if (f.dosya) MK.dosyaSil(f.dosya);
       location.hash = "#/p/" + p.id; MK.bildir(f.no + " silindi."); setTimeout(function () { bolumeGit("a-b-zimmet"); }, 0);
     } });
   };

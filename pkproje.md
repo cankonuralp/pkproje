@@ -1888,6 +1888,23 @@ revizyon, alan kopyalama, hafif kusur devri, meslek eşleşme denetimi).
 - Emsal ürünler: https://opwire.app/iso-17020-periyodik-kontrol-yazilimi/ · https://17020muayene.vidco.com.tr/ · https://akuple.com/asansor-kontrol-yazilimi/ · https://ensyazilim.com/
 
 ## 11 · Değişiklik günlüğü
+- 2026-09-29 (133): **V3 · İç belgeler de mobil imza ya da e-imzayla** (§9 otuz altıncı tur 180; reisim: *"180 iç belge de de mobil ya da e
+  imza olacak"*). Tek üretici **MK.imzaAl** (maket-ortak.js): firmanın yöntemiyle (Firma ayarları) her imzacı sırayla kendi PIN'ini girer —
+  mobil imzada kendi telefonunda, e-imzada kendi kartıyla (makette telefon ekranı / imza aracı taklit; PIN 4–8 rakam, kısa PIN reddedilir,
+  Vazgeç → hiçbir şey değişmez). Bağlanan belgeler: **zimmet teslim formu** (Personel: "İmzala (mobil imza)" → teslim eden, sonra teslim alan;
+  imzalı form kartta güncel, belgede iki imza satırı yöntem ve zamanla; e-imzalı form dosyasız, "Sil" ile kalkar) · **saha formu** (Planlar:
+  muayene uzmanları imzalar, firma yetkilisinin imzası ve kaşesi kâğıtta; imza planın geçmişine yazılır) · **izin talebi** (Talepler: talep
+  eden gönderirken imzalar; Personel › İzin talepleri: onaylayan onaylarken imzalar) · **masraf formu** (Talepler: gönderirken; Muhasebe:
+  personel formunu onaylarken imzalar). Formların PDF'inde imza satırı "mobil imza · tarih saat" / "e-imza · …". Islak imza + tarama yükleme
+  yolu her belgede yedek olarak duruyor. **Genel düzeltme:** pencere kapanış olayı eşzamansız geldiği için "Vazgeç → hemen yeniden aç"
+  sırasında yeni pencerenin durumu siliniyordu (denemede yakalandı: "Telefonda onayla" boş açıldı) → Raporlar, Onaylar, Talepler, Muhasebe,
+  Teklifler, Eğitimler, Dökümanlar ve ortak imza penceresinde kapanış işleyicisi pencere yeniden açıldıysa durumu silmez. Denemelerde
+  "zimmet formu yüklü" metni "zimmet formu:" oldu (form artık elektronik de imzalanıyor; 2026-09-29). Yeni denemeler: zimmet mobil (2 imzacı,
+  kısa PIN), zimmet e-imza + aç + sil, izin gönder imzalı, izin onay imzalı (Vazgeç dahil), saha formu imzası; mevcut izin/masraf gönder ve
+  onay denemelerine PIN adımı eklendi. Ölçüm: tam ölçüm durum 2072/2072 · etkileşim 512/512 · telefon 1036/1036 · olumsuz kanıt 3/3;
+  m1 etkileşim üç kez üst üste 65/65, m9 iki kez 39/39 (yarış düzeltmesinden sonra); gözle 1920 ve 375 (zimmet imza penceresi, imzalı form),
+  saha formu imza satırı metinden okundu.
+
 - 2026-09-29 (132): **V2 · Son imza: firma yöntemi mobil imza ya da e-imza, aracı site yok** (§9 otuz altıncı tur 177, 178; reisim:
   *"178 zorunlu olmasın hangi firma neyi kullanmak isterse kullansın ister e imza ister mobil"*). **Personel → "Firma ayarları"** sekmesi
   (`#/ayarlar`, firma yöneticisi): imza yöntemi **Mobil imza** (telefonda PIN, her belge ayrı) ya da **E-imza** (kart ve imza aracı, tek PIN);

@@ -349,7 +349,7 @@
   /* İŞ (HİZMET) SÖZLEŞMESİ — temel format KM-FR-SZL-01 (2026-09-26, reisim: "imzalı sözleşmeyi görüntüleme tuşu göremedim"): imzalı
      tarama makette bu önizlemeyle gösterilir. Firma kendi şablonunu yükleyebilir (§3.7 satır 5). */
   /* SAHA FORMU — temel format KM-FR-SAH-01 (reisim 2026-09-26: "plan tamamlandıktan sonra saha formu oluştur … yapılan ekipmanlar ve
-     yapıldığına dair firma onayı için imza yerleri"). Firmaya göre değişen formatlardan (§3.7). o = { p (plan), ekipmanlar[], no, tarih, uzmanlar[] } */
+     yapıldığına dair firma onayı için imza yerleri"). Firmaya göre değişen formatlardan (§3.7). o = { p (plan), ekipmanlar[], no, tarih, uzmanlar[], imza? } */
   MB.sahaFormu = function (o) {
     var f = MV.FIRMA, p = o.p, formKod = f.kisa + "-FR-SAH-01";
     var satirlar = o.ekipmanlar.map(function (e, i) { return [String(i + 1), '<span class="a-kod">' + kacis(e.kod) + "</span>", kacis(e.tur.ad), kacis(e.konum)]; });
@@ -362,8 +362,11 @@
         bilgi("Adres", kacis(p.adres) + ", " + kacis(p.ilce) + " / " + kacis(p.il), true) + "</dl>" +
       bolum("1", "Kontrolü yapılan ekipmanlar", o.ekipmanlar.length + " ekipman", tablo(["#", "Kod", "Ekipman", "Konum"], satirlar)) +
       bolum("2", "Firma onayı", "", "<p>Yukarıda listelenen ekipmanların periyodik kontrolü tesisimizde yapılmıştır.</p>") +
-      '<div class="a-belge-imzalar">' + [["Firma yetkilisi", "Ad soyad · unvan"], ["Muayene uzmanı", o.uzmanlar.join(", ")]].map(function (x) {
-        return "<div><b>" + x[0] + "</b><span>" + kacis(x[1]) + '</span><div class="a-belge-imza">Tarih · imza' + (x[0] === "Firma yetkilisi" ? " · kaşe" : "") + "</div></div>";
+      '<div class="a-belge-imzalar">' + [["Firma yetkilisi", "Ad soyad · unvan"], ["Muayene uzmanı", o.uzmanlar.join(", ")]].map(function (x, i) {
+        /* o.imza (2026-09-29, V3): muayene uzmanları firmanın yöntemiyle (mobil imza / e-imza) imzalar; firma yetkilisi ıslak imza + kaşe */
+        var im = i === 1 && o.imza;
+        return "<div><b>" + x[0] + "</b><span>" + kacis(x[1]) + '</span><div class="a-belge-imza' + (im ? " a-belge-imzali" : "") + '">' +
+          (im ? o.imza.imzacilar.map(function (y) { return kacis(y.ad) + " · " + MK.imzaYaz({ yontem: o.imza.yontem, zaman: y.zaman }); }).join("<br>") : "Tarih · imza" + (i === 0 ? " · kaşe" : "")) + "</div></div>";
       }).join("") + "</div>" +
       '<footer class="a-belge-alt"><span>' + kacis(f.ad) + " · " + formKod + " · temel format</span></footer></article>";
   };
@@ -405,8 +408,8 @@
         ["Ek belge", function (x) { return x.belge ? kacis(x.belge) : "—"; }]
       ],
       metin: "Yukarıda belirtilen tarihler arasında izin kullanmak istiyorum. İzin dönüşü görevimin başında olacağım.",
-      imzalar: [["Talep eden", function (x) { return { ad: MV.kisi(x.kisi).ad, zaman: x.gonderildi, onay: "gönderildi" }; }],
-        ["Onaylayan", function (x) { return x.onaylayan ? { ad: MV.kisi(x.onaylayan).ad, zaman: x.karar, onay: x.durum === "red" ? "reddedildi" : "onaylandı" } : { ad: "Firma yöneticisi" }; }]] },
+      imzalar: [["Talep eden", function (x) { return { ad: MV.kisi(x.kisi).ad, zaman: x.imza ? null : x.gonderildi, onay: x.imza ? MK.imzaYaz(x.imza) : "gönderildi" }; }],
+        ["Onaylayan", function (x) { return x.onaylayan ? { ad: MV.kisi(x.onaylayan).ad, zaman: x.onayImza ? null : x.karar, onay: x.durum === "red" ? "reddedildi" : "onaylandı" + (x.onayImza ? " · " + MK.imzaYaz(x.onayImza) : "") } : { ad: "Firma yöneticisi" }; }]] },
     masraf: { kod: "MSR-01", baslik: "Masraf formu", alt: "Personel masraf bildirimi", alici: "muhasebe",   /* 35. tur 161 */
       alanlar: [
         ["İş", function (x) { return x.is ? '<span class="a-kod">' + kacis(x.is) + "</span>" : "Genel (işe bağlı değil)"; }],
@@ -417,8 +420,8 @@
         ["Fiş", function (x) { return x.belge ? kacis(x.belge) : "—"; }]
       ],
       metin: "Yukarıdaki masrafı iş için yaptığımı, fişinin aslını muhasebeye teslim edeceğimi beyan ederim.",
-      imzalar: [["Talep eden", function (x) { return { ad: MV.kisi(x.kisi).ad, zaman: x.gonderildi, onay: "gönderildi" }; }],
-        ["Onaylayan", function (x) { return x.onaylayan ? { ad: MV.kisi(x.onaylayan).ad, zaman: x.karar || null, onay: x.durum === "red" ? "reddedildi" : "onaylandı" } : { ad: "Muhasebe / firma yöneticisi" }; }]] }
+      imzalar: [["Talep eden", function (x) { return { ad: MV.kisi(x.kisi).ad, zaman: x.imza ? null : x.gonderildi, onay: x.imza ? MK.imzaYaz(x.imza) : "gönderildi" }; }],
+        ["Onaylayan", function (x) { return x.onaylayan ? { ad: MV.kisi(x.onaylayan).ad, zaman: x.onayImza ? null : x.karar || null, onay: x.durum === "red" ? "reddedildi" : "onaylandı" + (x.onayImza ? " · " + MK.imzaYaz(x.onayImza) : "") } : { ad: "Muhasebe / firma yöneticisi" }; }]] }
   };
   /* formun kime gideceği: formatın rolündeki etkin kişiler; o rolde kimse yoksa firma yöneticisi (reisim 2026-09-29, 35. tur 161: masraf
      formu Muhasebe rolüne, izin firma yöneticisine) */
@@ -494,9 +497,11 @@
       bolum("2", "Taahhüt", "",
         '<p>Yukarıda listelenen varlıkları eksiksiz ve çalışır durumda teslim aldım. Özenle ve yalnız işim için kullanacağımı; kayıp, hasar ya da ' +
         'arızayı gecikmeden bildireceğimi; işten ayrılışımda ya da istendiğinde eksiksiz iade edeceğimi kabul ederim.</p>') +
-      '<div class="a-belge-imzalar">' + [["Teslim eden", o.eden], ["Teslim alan", o.p]].map(function (x) {
+      '<div class="a-belge-imzalar">' + [["Teslim eden", o.eden], ["Teslim alan", o.p]].map(function (x, i) {
+        /* o.imza: mobil imza / e-imza (2026-09-29, V3) — imzacı başına zaman; yoksa ıslak imzalı tarama */
+        var el = o.imza && o.imza.imzacilar[i];
         return "<div><b>" + x[0] + "</b><span>" + kacis(x[1].ad) + '</span><div class="a-belge-imza' + (o.imzali ? " a-belge-imzali" : "") + '">' +
-          (o.imzali ? kacis(x[1].ad) + " · " + MK.tarihYaz(o.tarih) + " · imzalı" : "Tarih · imza") + "</div></div>";
+          (el ? kacis(x[1].ad) + " · " + MK.imzaYaz({ yontem: o.imza.yontem, zaman: el.zaman }) : o.imzali ? kacis(x[1].ad) + " · " + MK.tarihYaz(o.tarih) + " · imzalı" : "Tarih · imza") + "</div></div>";
       }).join("") + "</div>" +
       '<footer class="a-belge-alt"><span>' + kacis(f.ad) + " · " + formKod + " · temel format</span></footer></article>";
   };

@@ -288,7 +288,7 @@
     if (e.target.id === "w-gerekce") W.gerekce = e.target.value;
     else if (e.target.hasAttribute("data-hedef")) { W.hedef = e.target.value; W.hedefHata = ""; if (W.hata && !gerekceZorunlu()) W.hata = ""; pencereCiz('[data-hedef][value="' + W.hedef + '"]'); }
   };
-  $("a-pencere").addEventListener("close", function () { W = null; var r = rota(); if (r.pencere) history.replaceState(null, "", "#/r/" + r.no); });
+  $("a-pencere").addEventListener("close", function () { if ($("a-pencere").open) return; W = null; var r = rota(); if (r.pencere) history.replaceState(null, "", "#/r/" + r.no); });
 
   MK.kabuk({ modul: 15, kullanici: { bas: "SY", ad: "Selin Yıldız", rol: "Mekanik yönetici · Inspector" } });
   goster(false);

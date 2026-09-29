@@ -178,7 +178,7 @@
   };
   MK.onSecim = function (id, deger) { if (!W || W.tip !== "form") return; W.d[id.slice(2)] = deger; delete W.hata[id.slice(2)]; formCiz(id); };
   MK.onTikla = function (e) { var b = e.target.closest("[data-kurum]"); if (!b || !W) return false; W.d.kurum = b.dataset.kurum; formCiz('[data-kurum="' + W.d.kurum + '"]'); return true; };
-  $("a-pencere").addEventListener("close", function () { W = null; if (/^#\/(yeni|k\/)/.test(location.hash)) history.replaceState(null, "", "#/"); else if (/^#\/turler\//.test(location.hash)) history.replaceState(null, "", "#/turler"); });
+  $("a-pencere").addEventListener("close", function () { if ($("a-pencere").open) return; W = null; if (/^#\/(yeni|k\/)/.test(location.hash)) history.replaceState(null, "", "#/"); else if (/^#\/turler\//.test(location.hash)) history.replaceState(null, "", "#/turler"); });
 
   /* ── GÖRÜNÜM ────────────────────────────────────────────────────────────────────────────────────────── */
   function rota() {

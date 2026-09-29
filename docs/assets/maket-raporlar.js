@@ -284,7 +284,8 @@
     MK.yazdir(l.length > 1 ? l.length + " rapor" : l[0].no, l.map(function (r) { return MB.belge(MV.tur(ekp(r).tur), MV.raporBelge(r)); }).join(""));
   };
   MK.onGirdi = function (e) { if (W && e.target.id === "w-pin") { W.pin = e.target.value.replace(/\D/g, ""); if (W.pin !== e.target.value) e.target.value = W.pin; } };
-  $("a-pencere").addEventListener("close", function () { W = null; var r = rota(); if (r.pencere || r.telefon) history.replaceState(null, "", "#/"); });
+  /* kapanış olayı eşzamansız gelir: o arada pencere yeniden açıldıysa (ör. Vazgeç → hemen "Telefonda onayla") yeni durum silinmez */
+  $("a-pencere").addEventListener("close", function () { if ($("a-pencere").open) return; W = null; var r = rota(); if (r.pencere || r.telefon) history.replaceState(null, "", "#/"); });
 
   MK.kabuk({ modul: 14, kullanici: { bas: "MK", ad: "Mert Kaya", rol: "Inspector" } });
   goster(false);

@@ -790,7 +790,45 @@
     $("a-onay-alt").innerHTML = MK.tus({ eylem: "pencere-kapat", ad: "Vazgeç", sinif: "a-tus-ikincil" }) + MK.tus({ eylem: "onay-tamam", ad: o.tus || "Sil" });
     d.showModal(); $("a-onay-alt").querySelector('[data-eylem="pencere-kapat"]').focus();
   };
+  /* ── İÇ BELGE İMZASI — TEK ÜRETİCİ (2026-09-29, V3; §9 otuz altıncı tur 180: iç belgeler de mobil imza ya da e-imza) ──────────
+     MK.imzaAl({ belge, imzacilar: [ad, …], tamam(imza) }) — firmanın yöntemiyle (MV.imzaYontem, Personel · Firma ayarları) her imzacı
+     sırayla kendi PIN'ini girer: mobil imzada kendi telefonunda, e-imzada kendi kartıyla. imza = { yontem, zaman, imzacilar: [{ ad, zaman }] }.
+     ⛔ Makette telefon ekranı ve imza aracı TAKLİT; gerçek uygulamada istek operatöre / bilgisayardaki imza aracına gider, imza belgeye
+     sunucuda gömülür. Islak imza + tarama yükleme her belgede yedek yol olarak durur. */
+  var IMZ = null;
+  function imzaCiz(odak) {
+    var y = MV.imzaYontem(), n = IMZ.o.imzacilar.length, ad = IMZ.o.imzacilar[IMZ.i];
+    $("a-imza-baslik").textContent = (y.k === "mobil" ? "Telefon · mobil imza isteği" : "probata imza aracı") + (n > 1 ? " (" + (IMZ.i + 1) + " / " + n + ")" : "");
+    $("a-imza-govde").innerHTML = MK.serit("bilgi", y.k === "mobil" ? "smartphone" : "usb", y.k === "mobil" ? "Maket: " + kacis(ad) + " telefonundaki imza isteği" : "Maket: bilgisayardaki imza aracı · kart takılı · " + kacis(ad)) +
+      '<p class="a-pencere-metin"><b>probata</b> · ' + kacis(IMZ.o.belge) + " belgesini imzalamak için " + (y.k === "mobil" ? "mobil imza" : "kart") + " PIN'inizi girin.</p>" +
+      '<div class="a-alan-grup"><label class="a-etiket" for="a-imza-pin">' + (y.k === "mobil" ? "Mobil imza PIN" : "Kart PIN") + '</label><input class="a-girdi" id="a-imza-pin" type="password" inputmode="numeric" autocomplete="off" maxlength="8" value="' + kacis(IMZ.pin) + '"' +
+        (IMZ.hata ? ' aria-invalid="true" aria-describedby="a-imza-ipucu"' : "") + ">" + (IMZ.hata ? '<p class="a-ipucu a-ipucu-uyari" id="a-imza-ipucu">' + IMZ.hata + "</p>" : "") + "</div>";
+    $("a-imza-alt").innerHTML = MK.tus({ eylem: "pencere-kapat", ad: "Vazgeç", sinif: "a-tus-ikincil" }) + MK.tus({ eylem: "imza-pin-onay", ad: "İmzala", ikon: "file-signature" });
+    if (odak !== false) $("a-imza-pin").focus();
+  }
+  MK.imzaAl = function (o) {
+    var d = $("a-imza-pencere");
+    if (!d) {
+      d = document.createElement("dialog"); d.className = "a-pencere"; d.id = "a-imza-pencere"; d.setAttribute("aria-labelledby", "a-imza-baslik");
+      d.innerHTML = '<div class="a-pencere-bas"><h2 id="a-imza-baslik"></h2><button class="a-ikon-tus" type="button" data-eylem="pencere-kapat" aria-label="Kapat">' + ikon("x") + "</button></div>" +
+        '<div class="a-pencere-govde" id="a-imza-govde"></div><div class="a-pencere-alt" id="a-imza-alt"></div>';
+      d.addEventListener("close", function () { if (!d.open) IMZ = null; });   /* olay eşzamansız: yeniden açıldıysa yeni imza silinmez */
+      document.body.appendChild(d);
+    }
+    IMZ = { o: o, i: 0, pin: "", hata: "", imzalar: [], y: MV.imzaYontem().k }; imzaCiz(false); d.showModal(); $("a-imza-pin").focus();
+  };
+  MK.imzaYaz = function (i) {   /* belgede imza satırı: "mobil imza · 29.09.2026 10:05" */
+    return i ? (MV.IMZA_YONTEM[i.yontem] ? MV.IMZA_YONTEM[i.yontem].kisa : "imzalı") + " · " + MK.zamanYaz(i.zaman) : "";
+  };
   MK.eylem = MK.eylem || {};
+  MK.eylem["imza-pin-onay"] = function () {
+    if (!IMZ) return;
+    if (!/^\d{4,8}$/.test(IMZ.pin)) { IMZ.hata = "PIN 4–8 rakam olmalı."; imzaCiz(); return; }
+    IMZ.imzalar.push({ ad: IMZ.o.imzacilar[IMZ.i], zaman: MK.simdi() }); IMZ.i++; IMZ.pin = ""; IMZ.hata = "";
+    if (IMZ.i < IMZ.o.imzacilar.length) { imzaCiz(); return; }
+    var o = IMZ.o, im = { yontem: IMZ.y, zaman: MK.simdi(), imzacilar: IMZ.imzalar };
+    $("a-imza-pencere").close(); o.tamam(im);
+  };
   MK.eylem["onay-tamam"] = function () { var o = ONAY; ONAY = null; $("a-onay-pencere").close(); if (o && o.tamam) o.tamam(); };
   /* yüklenen dosyanın kendisi sayfanın içinde (PDF çerçeve, resim); dosya yoksa (örnek kayıt) yedek içerik */
   MK.dosyaOnizle = function (ad, yedek) {
@@ -1136,6 +1174,7 @@
     if (t.dataset && t.dataset.alanAra) {   /* alan alan arama: aynı biçimde yerinde */
       var a = t.dataset.alanAra.split("|"); SZ[a[0]].alan[a[1]] = t.value; SZ[a[0]].sayfa = 1; yenile(a[0]); return;
     }
+    if (t.id === "a-imza-pin" && IMZ) { IMZ.pin = t.value.replace(/\D/g, ""); if (IMZ.pin !== t.value) t.value = IMZ.pin; return; }   /* iç belge imzası PIN */
     if (zamanYaz(t)) return;   /* tarih / saat alanı */
     if (t.dataset && t.dataset.secimAra) {   /* seçim alanının arama kutusu: seçenekleri süzer */
       var q = MK.tr(t.value.trim()), l = t.closest(".a-secici-liste"), n = 0;

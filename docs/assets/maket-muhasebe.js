@@ -471,9 +471,14 @@
     if (!(n > 0)) h.tutar = "Tutar sıfırdan büyük olmalı (ör. 1.250,00).";
     W.hata = h; W.tarihYazi = fi ? "" : yazi; var hk = Object.keys(h);
     if (hk.length) { giderPencere("w-" + hk[0]); return; }
+    /* 2026-09-29 (V3): personelin masraf formu onaylanırken onaylayan firmanın yöntemiyle (mobil imza / e-imza) imzalar */
+    if (sonra === "onaylandi" && W.g && W.g.kaynak === "form" && !W.imza) {
+      MK.imzaAl({ belge: W.g.no + " masraf formu", imzacilar: [MV.kisi("ad").ad], tamam: function (im) { if (!W) return; W.imza = im; X["gider-kaydet"](el); } });
+      return;
+    }
     var yeni = !W.g, g = W.g || { no: MV.giderNo(fi), kaydeden: "ad", kaynak: "muhasebe", gonderildi: MK.simdi(), durum: W.odeme, onaylayan: "ad", odeme: W.odeme === "odendi" ? fi : null };
     g.tarih = fi; g.tur = W.tur; g.tutar = kr(n); g.oran = +W.oran; g.aciklama = W.aciklama.trim(); g.is = W.is || null; g.kisi = W.kisi || null; g.belge = W.belge;
-    if (sonra === "onaylandi") { g.durum = "onaylandi"; g.onaylayan = "ad"; }
+    if (sonra === "onaylandi") { g.durum = "onaylandi"; g.onaylayan = "ad"; g.karar = MK.simdi(); if (W.imza) g.onayImza = W.imza; }
     if (sonra === "odendi") { g.durum = "odendi"; g.odeme = MK.BUGUN; }
     if (yeni) GD.push(g);
     var r = rota(); $("a-pencere").close();
@@ -586,7 +591,7 @@
     }
     if (id === "w-yontem") { W.yontem = deger; tahsilatPencere(id); }
   };
-  $("a-pencere").addEventListener("close", function () { W = null; var r = rota(); if (r.pencere) history.replaceState(null, "", r.v === "is" ? "#/is/" + r.no : r.v === "giderler" ? "#/giderler" : "#/f/" + r.no); });
+  $("a-pencere").addEventListener("close", function () { if ($("a-pencere").open) return; W = null; var r = rota(); if (r.pencere) history.replaceState(null, "", r.v === "is" ? "#/is/" + r.no : r.v === "giderler" ? "#/giderler" : "#/f/" + r.no); });
 
   /* ── GÖRÜNÜM ────────────────────────────────────────────────────────────────────────────────────────── */
   function rota() {

@@ -316,6 +316,7 @@
     if (k === "no") { var no = W.d.no.trim().replace(/\s+/g, " "); $("w-seritler").innerHTML = seritler(S.filter(function (x) { return !x.yerine && x.no === no; })[0]); }
   };
   $("a-pencere").addEventListener("close", function () {
+    if ($("a-pencere").open) return;   /* kapanış olayı eşzamansız: yeniden açıldıysa yeni durum silinmez (2026-09-29) */
     W = null; var r = rota(); if (r.pencere) history.replaceState(null, "", r.v === "std" ? "#/s/" + r.id : r.v === "diger" ? "#/diger" : "#/");
   });
 

@@ -681,10 +681,25 @@
     p.sahaSayisi = (p.sahaSayisi || 0) + 1;
     var yapilan = raporlar(p).sort(function (a, b) { return a.no < b.no ? -1 : 1; }).map(function (r) { return SICIL[r.kod]; });
     kaydet(p, simdi(), BEN, "Saha formu oluşturuldu", p.no + "-SF" + p.sahaSayisi);
+    SAHA = { p: p, ekipmanlar: yapilan, no: p.no + "-SF" + p.sahaSayisi };
     $("a-pencere").dataset.kip = "saha"; $("a-pencere-baslik").textContent = "Saha formu · " + p.no;
-    $("a-pencere-govde").innerHTML = MB.sahaFormu({ p: p, ekipmanlar: yapilan, no: p.no + "-SF" + p.sahaSayisi, tarih: BUGUN, uzmanlar: p.ekip.map(function (k) { return KISI[k].ad; }) });
-    $("a-pencere-alt").innerHTML = MK.tus({ eylem: "pencere-kapat", ad: "Kapat", sinif: "a-tus-ikincil" }) + MK.tus({ eylem: "saha-indir", ad: "PDF indir", ikon: "file-text" });
-    $("a-pencere").showModal(); $("a-pencere-govde").scrollTop = 0; $("a-pencere-alt").querySelector(".a-tus-birincil").focus({ preventScroll: true });
+    sahaCiz(); $("a-pencere").showModal(); $("a-pencere-govde").scrollTop = 0; $("a-pencere-alt").querySelector('[data-eylem="saha-indir"]').focus({ preventScroll: true });
+  };
+  /* 2026-09-29 (V3): muayene uzmanları saha formunu firmanın yöntemiyle (mobil imza / e-imza) imzalar; imza planda form numarasıyla saklanır */
+  var SAHA = null;
+  function sahaCiz() {
+    var p = SAHA.p, im = (p.sahaImza || {})[SAHA.no];
+    $("a-pencere-govde").innerHTML = MB.sahaFormu({ p: p, ekipmanlar: SAHA.ekipmanlar, no: SAHA.no, tarih: BUGUN, uzmanlar: p.ekip.map(function (k) { return KISI[k].ad; }), imza: im });
+    $("a-pencere-alt").innerHTML = MK.tus({ eylem: "pencere-kapat", ad: "Kapat", sinif: "a-tus-ikincil" }) + MK.tus({ eylem: "saha-indir", ad: "PDF indir", ikon: "file-text", sinif: im ? "" : "a-tus-ikincil" }) +
+      (im ? "" : MK.tus({ eylem: "saha-imzala", ad: "İmzala (" + MV.imzaYontem().kisa + ")", ikon: "file-signature" }));
+  }
+  X["saha-imzala"] = function () {
+    var p = SAHA.p, no = SAHA.no;
+    MK.imzaAl({ belge: no + " saha formu", imzacilar: p.ekip.map(function (k) { return KISI[k].ad; }), tamam: function (im) {
+      (p.sahaImza = p.sahaImza || {})[no] = im; kaydet(p, simdi(), BEN, "Saha formu imzalandı", no + " · " + MV.IMZA_YONTEM[im.yontem].kisa);
+      if (SAHA && SAHA.no === no && $("a-pencere").open) { sahaCiz(); $("a-pencere-alt").querySelector('[data-eylem="saha-indir"]').focus(); }
+      MK.bildir(no + " " + MV.IMZA_YONTEM[im.yontem].kisa + " ile imzalandı; firma yetkilisinin imzası ve kaşesi kâğıtta.");
+    } });
   };
   /* ── EXCEL (reisim 2026-09-27): ekipman listesi dışa aktarılır (önizleme + indir) ve Excel'den yüklenir (şablon, satır satır denetim,
      yalnız geçerli yeni satırlar plana girer). 2026-09-27: gerçek .xlsx / .csv yazılır ve okunur (MK.xlsx, MK.tabloOku). */

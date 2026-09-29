@@ -110,7 +110,7 @@
     MB.talepPdfAc({ tip: t.tip, x: t.x, kime: MB.talepAlici(t.tip), gonderen: MV.kisi(BEN) });
   };
   function pencereAc(o, odak) { W = o; W.hata = W.hata || {}; if (o.tip === "izin") izinCiz(); else if (o.tip === "masraf") masrafCiz(); else talepCiz(o.t); if (!$("a-pencere").open) $("a-pencere").showModal(); var el = $(odak) || $("a-pencere-alt").querySelector(".a-tus-birincil"); if (el) el.focus(); }
-  $("a-pencere").addEventListener("close", function () { W = null; if (/^#\/(yeni|t\/)/.test(location.hash)) history.replaceState(null, "", "#/"); });
+  $("a-pencere").addEventListener("close", function () { if ($("a-pencere").open) return; W = null; if (/^#\/(yeni|t\/)/.test(location.hash)) history.replaceState(null, "", "#/"); });
   MK.onGirdi = function (e) { var k = e.target.dataset && e.target.dataset.alan; if (!k || !W || !W.d) return; W.d[k] = e.target.value;
     if (k === "tutar" && W.tip === "masraf") { var n = sayiOku(W.d.tutar), p = $("w-oran-ipucu"); if (n > 0) { var kk = MV.giderKdv({ tutar: n, oran: +W.d.oran }); if (!p) { p = document.createElement("p"); p.className = "a-ipucu"; p.id = "w-oran-ipucu"; $("w-oran").closest(".a-alan-grup").appendChild(p); } p.textContent = "KDV " + para(kk.kdv) + " · KDV hariç " + para(kk.haric); } else if (p) p.remove(); } };
   MK.onSecim = function (id, deger) {
@@ -144,9 +144,12 @@
     if (!d.bas) h.bas = "Başlangıç seçilmeli.";
     if (!d.bit) h.bit = "Bitiş seçilmeli."; else if (d.bas && d.bit < d.bas) h.bit = "Bitiş başlangıçtan önce olamaz.";
     W.hata = h; if (Object.keys(h).length) { izinCiz("w-" + Object.keys(h)[0]); return; }
-    var x = { no: MV.izinNo(d.bas), kisi: BEN, tur: d.tur, bas: d.bas, bit: d.bit, gun: MV.isGunu(d.bas, d.bit), aciklama: d.aciklama.trim(), belge: d.belge, durum: "bekliyor", gonderildi: MK.simdi() };
-    MV.IZINLER.push(x); listeCiz(); kayitliAc(x.no);
-    MK.bildir(x.no + " gönderildi: " + x.gun + " iş günü " + MV.izinTur(x.tur).ad.toLocaleLowerCase("tr") + "; yöneticinin onayında.");
+    /* 2026-09-29 (V3): talep eden formu firmanın yöntemiyle (mobil imza / e-imza) imzalayarak gönderir */
+    MK.imzaAl({ belge: "İzin talep formu", imzacilar: [MV.kisi(BEN).ad], tamam: function (im) {
+      var x = { no: MV.izinNo(d.bas), kisi: BEN, tur: d.tur, bas: d.bas, bit: d.bit, gun: MV.isGunu(d.bas, d.bit), aciklama: d.aciklama.trim(), belge: d.belge, durum: "bekliyor", gonderildi: MK.simdi(), imza: im };
+      MV.IZINLER.push(x); listeCiz(); kayitliAc(x.no);
+      MK.bildir(x.no + " imzalandı ve gönderildi: " + x.gun + " iş günü " + MV.izinTur(x.tur).ad.toLocaleLowerCase("tr") + "; yöneticinin onayında.");
+    } });
   };
   X["masraf-gonder"] = function () {
     var d = W.d, h = {}, n = sayiOku(d.tutar);
@@ -154,10 +157,12 @@
     if (!d.gtur) h.gtur = "Tür seçilmeli.";
     if (!(n > 0)) h.tutar = "Tutar sıfırdan büyük olmalı (ör. 1.250,00).";
     W.hata = h; if (Object.keys(h).length) { masrafCiz("w-" + Object.keys(h)[0]); return; }
-    var g = { no: MV.giderNo(d.tarih), tarih: d.tarih, tur: d.gtur, tutar: Math.round(n * 100) / 100, oran: +d.oran, is: d.is || null, kisi: BEN, aciklama: d.aciklama.trim(), belge: d.belge,
-      kaynak: "form", durum: "bekliyor", gonderildi: MK.simdi(), odeme: null, onaylayan: null, kaydeden: BEN };
-    MV.GIDERLER.push(g); listeCiz(); kayitliAc(g.no);
-    MK.bildir(g.no + " muhasebeye (" + MB.talepAlici("masraf").map(function (p) { return p.ad; }).join(", ") + ") gönderildi" + (g.is ? " (" + g.is + ")" : " (genel masraf)") + "; onaylanınca ödenir.");
+    MK.imzaAl({ belge: "Masraf formu", imzacilar: [MV.kisi(BEN).ad], tamam: function (im) {
+      var g = { no: MV.giderNo(d.tarih), tarih: d.tarih, tur: d.gtur, tutar: Math.round(n * 100) / 100, oran: +d.oran, is: d.is || null, kisi: BEN, aciklama: d.aciklama.trim(), belge: d.belge,
+        kaynak: "form", durum: "bekliyor", gonderildi: MK.simdi(), odeme: null, onaylayan: null, kaydeden: BEN, imza: im };
+      MV.GIDERLER.push(g); listeCiz(); kayitliAc(g.no);
+      MK.bildir(g.no + " imzalandı, muhasebeye (" + MB.talepAlici("masraf").map(function (p) { return p.ad; }).join(", ") + ") gönderildi" + (g.is ? " (" + g.is + ")" : " (genel masraf)") + "; onaylanınca ödenir.");
+    } });
   };
   X["geri-cek"] = function (el) {
     var t = talepler().filter(function (y) { return y.no === el.dataset.no; })[0]; if (!t || !bekliyor(t)) return;
