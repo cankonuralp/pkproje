@@ -853,18 +853,32 @@
     });
     document.body.appendChild(g); g.click();
   };
-  /* 2026-09-27: seçilen gerçek fotoğraf küçük resim olarak görünür, basınca görüntüleyicide açılır; örnek kayıtta simge */
-  /* sil = { eylem, veri } verilirse her fotoğrafın köşesinde "Sil" (2026-09-28: "yüklenilen şeyler düzenlenebilir silinebilir olmalı");
-     eyleme data-i = fotoğrafın sırası (0'dan) gider */
+  /* FOTOĞRAF LİSTESİ — TEK ÜRETİCİ (rapor, kusurlu madde, zimmet). 2026-09-29 (reisim: "Fotoğraf eklendiğinde thumnail olmasın sadece
+     görselin adı yazsın, görüntüle, indir , sil tuşları olsun"; 09-SUNUCU-VE-VERI A: küçük kopya üretilmez): her fotoğraf bir satır —
+     dosya adı · Görüntüle · İndir · Sil. Fotoğraf yalnız Görüntüle'ye basınca iner (veri tasarrufu). sil = { eylem, veri } verilirse Sil
+     tuşu; eyleme data-i = fotoğrafın sırası (0'dan) gider. Örnek kayıtta dosya yok: ad "fotograf-N.jpg", Görüntüle bunu söyler. */
+  var fotoAdi = function (adlar, i) { return (adlar && adlar[i - 1]) || "fotograf-" + i + ".jpg"; };
   MK.fotolar = function (n, adlar, etiket, sil) {
     var s = ""; for (var i = 1; i <= n; i++) {
-      var ad = adlar && adlar[i - 1], d = ad && MK.DOSYA[ad], ne = (etiket ? etiket + " fotoğraf " : "Fotoğraf ") + i;
-      var f = d ? '<button class="a-foto a-foto-resim" type="button" data-eylem="pdf-goster" data-dosya="' + kacis(ad) + '" aria-label="' + kacis(ne) + '"><img src="' + d.url + '" alt=""><span class="a-foto-no">' + i + "</span></button>"
-        : '<span class="a-foto" role="img" aria-label="' + kacis(ne) + '">' + ikon("camera") + '<span class="a-foto-no">' + i + "</span></span>";
-      s += sil ? '<span class="a-foto-kap">' + f + '<button class="a-ikon-tus a-foto-sil" type="button" data-eylem="' + sil.eylem + '" data-i="' + (i - 1) + '"' +
-        Object.keys(sil.veri || {}).map(function (k) { return " data-" + k + '="' + kacis(sil.veri[k]) + '"'; }).join("") + ' aria-label="' + kacis(ne) + ' sil" title="Sil">' + ikon("x") + "</button></span>" : f;
+      var ad = fotoAdi(adlar, i), ne = (etiket ? etiket + " fotoğraf " : "Fotoğraf ") + i;
+      s += '<li class="a-foto-satir"><span class="a-foto-ad">' + ikon("camera", "a-ikon-kucuk") + '<span class="a-kirp" title="' + kacis(ad) + '">' + kacis(ad) + "</span></span>" +
+        '<span class="a-foto-tuslar">' +
+          '<button class="a-tus a-tus-ikincil" type="button" data-eylem="foto-goster" data-dosya="' + kacis(ad) + '" aria-label="' + kacis(ne) + ' görüntüle">' + ikon("eye", "a-ikon-kucuk") + "Görüntüle</button>" +
+          '<button class="a-tus a-tus-ikincil" type="button" data-eylem="foto-indir" data-dosya="' + kacis(ad) + '" aria-label="' + kacis(ne) + ' indir">' + ikon("download", "a-ikon-kucuk") + "İndir</button>" +
+          (sil ? '<button class="a-tus a-tus-ikincil a-foto-sil" type="button" data-eylem="' + sil.eylem + '" data-i="' + (i - 1) + '"' +
+            Object.keys(sil.veri || {}).map(function (k) { return " data-" + k + '="' + kacis(sil.veri[k]) + '"'; }).join("") + ' aria-label="' + kacis(ne) + ' sil">' + ikon("x", "a-ikon-kucuk") + "Sil</button>" : "") +
+        "</span></li>";
     }
-    return s;
+    return s ? '<ul class="a-foto-liste">' + s + "</ul>" : "";
+  };
+  MK.eylem = MK.eylem || {};
+  MK.eylem["foto-goster"] = function (el) {
+    var ad = el.dataset.dosya;
+    MK.pdfGoster(MK.DOSYA[ad] ? { dosya: ad } : { dosya: ad, baslik: ad, icerik: '<p class="a-bos-satir">Örnek kayıt: bu fotoğrafın dosyası makette yok. Eklediğiniz fotoğraf burada açılır.</p>' });
+  };
+  MK.eylem["foto-indir"] = function (el) {
+    var ad = el.dataset.dosya, d = MK.DOSYA[ad];
+    if (d && d.dosya) MK.indir(ad, d.dosya); else if (d && d.url) MK.indirUrl(ad, d.url); else MK.bildir("Örnek kayıt: " + ad + " dosyası makette yok.");
   };
   /* ekrandaki tablo → satırlar (kart etiketi ve gizli yazı hariç; "12.500,00 TL" sayı olur) — Excel'e aktarılan liste ekrandakiyle aynı */
   MK.tablodanSatirlar = function (tablo) {

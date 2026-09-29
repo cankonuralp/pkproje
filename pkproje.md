@@ -1964,6 +1964,13 @@ revizyon, alan kopyalama, hafif kusur devri, meslek eşleşme denetimi).
 - Emsal ürünler: https://opwire.app/iso-17020-periyodik-kontrol-yazilimi/ · https://17020muayene.vidco.com.tr/ · https://akuple.com/asansor-kontrol-yazilimi/ · https://ensyazilim.com/
 
 ## 11 · Değişiklik günlüğü
+- 2026-09-29 (155): **X7 · Fotoğrafta küçük resim yok** (§9 otuz sekizinci tur; 09-SUNUCU-VE-VERI A ile aynı: küçük kopya üretilmez).
+  Tek üretici `MK.fotolar` (rapor Fotoğraflar, kusurlu madde fotoğrafı, pano fotoğrafı, zimmet teslim fotoğrafları) artık her fotoğraf için
+  bir satır: **dosya adı · Görüntüle · İndir · Sil** (Sil yalnız düzenlenebilen yerde, onay penceresiyle). Fotoğraf yalnız Görüntüle'ye
+  basınca açılır (veri tasarrufu). Örnek kayıtta dosya yok: ad "fotograf-N.jpg", Görüntüle ve İndir bunu söyler. Rapor PDF'indeki fotoğraf
+  eki (belgenin kendisi) değişmedi. Ölçüm: m8 184/184 · 87/87 (2 yeni: gerçek fotoğraf eklenir, img yok, Görüntüle fotoğrafı açar; Sil ve
+  örnekte İndir; 3 güncellendi) · 92/92; m4 144/144 · 35/35 · 72/72; gözle 1920 + 375 (rapor, zimmet geçmişi).
+
 - 2026-09-29 (154): **X6 · Firma ve ekipman bilgileri iki sütun, etiket üstte** (§9 otuz sekizinci tur; reisim'in örnek görselinden yalnız
   düzen alındı). Saha raporunun Firma bilgileri, Ekipman bilgileri, 2.1 ekipman detayları ve 2.2 tespitler bölümleri: etiket üstte, alanlar
   iki sütun yan yana (telefonda tek sütun), çoklu seçim tam satır. 2026-09-27'deki "etiket solda, değer sağda, satır satır" düzeninin

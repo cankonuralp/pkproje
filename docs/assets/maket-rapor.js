@@ -554,7 +554,7 @@
     return "" +
       (oku ? "" : '<div class="a-eylem-cubugu a-bolum-serit">' + MK.tus({ eylem: "sigorta-oku", ad: d ? "Yeniden oku" : "Fotoğraftan oku", ikon: "camera", sinif: d ? "a-tus-ikincil" : "a-tus-birincil" }) +
         MK.tus({ eylem: "sigorta-ekle", ad: "Elle ekle", ikon: "plus", sinif: "a-tus-ikincil" }) + (bek.length > dusuk.length ? MK.tus({ eylem: "sigorta-onayla", ad: "Önerileri onayla (" + (bek.length - dusuk.length) + ")", ikon: "check", sinif: "a-tus-ikincil" }) : "") + "</div>") +
-      (r.pano ? '<div class="a-fotolar a-bolum-serit"><span class="a-foto" role="img" aria-label="Pano fotoğrafı">' + ikon("camera") + '<span class="a-foto-no">Pano</span></span></div>' : "") +
+      (r.pano ? '<div class="a-fotolar a-bolum-serit">' + fotolar(1, ["pano-fotografi.jpg"], "Pano") + "</div>" : "") +   /* küçük resim yok (2026-09-29) */
       (d ? '<div class="a-bolum-serit">' + (bek.length ? MK.serit(dusuk.length ? "uyari" : "bilgi", dusuk.length ? "triangle-alert" : "eye", d.length + " sigorta · <b>" + bek.length + "</b> onay bekliyor" + (dusuk.length ? " · " + dusuk.length + " satırda okuma emin değil: tek tek kontrol edin (toplu onaya girmez)." : ".")) : MK.serit("onay", "circle-check", d.length + " sigorta onaylandı.")) + "</div>" +
         '<div class="a-liste-kap a-bolum-serit">' + MK.tablo({ baslik: "Pano sigortaları", sinif: "a-tablo-sigorta", sutunlar: SUTUN, kayitlar: d }) + "</div>"
         : '<p class="a-bos-satir a-bolum-serit">Henüz sigorta girilmedi.</p>');

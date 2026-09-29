@@ -793,7 +793,12 @@ a.a-yuz:hover { border-color: var(--kenar-alan); background: var(--zemin); }
 .a-dosya { display: flex; align-items: center; flex-wrap: wrap; gap: 8px 12px; min-width: 0; }
 .a-dosya-ad { min-width: 0; overflow-wrap: anywhere; font-size: var(--boy-kucuk); }
 /* yüklenen dosya: ad · Aç · Değiştir · Sil (2026-09-28) */
-.a-foto-kap { display: inline-flex; align-items: flex-start; gap: 2px; }   /* fotoğraf + yanında Sil (üst üste binmez) */
+/* fotoğraf listesi (2026-09-29): küçük resim yok — ad · Görüntüle · İndir · Sil; telefonda tuşlar adın altında */
+.a-foto-liste { flex: 1 1 100%; list-style: none; margin: 0; padding: 0; border: 1px solid var(--kenar); border-radius: var(--r-orta); background: var(--kart); }
+.a-foto-liste > .a-foto-satir { display: flex; grid-column: auto; flex-wrap: wrap; align-items: center; justify-content: space-between; gap: 8px 12px; padding: 8px 12px; border-top: 0; }
+.a-foto-liste > .a-foto-satir + .a-foto-satir { border-top: 1px solid var(--kenar); }   /* geçmiş listesinin li kuralından (subgrid) bağımsız */
+.a-foto-ad { display: inline-flex; align-items: center; gap: 8px; min-width: 0; flex: 1 1 12rem; font-weight: 600; }
+.a-foto-tuslar { display: flex; flex-wrap: wrap; gap: 8px; }
 .a-dosya-kayit { display: inline-flex; align-items: center; flex-wrap: wrap; gap: 6px 8px; min-width: 0; }
 .a-dosya-kayit .a-dosya-ad { display: inline-flex; align-items: center; gap: 6px; }
 /* FOTOĞRAF (makette yer tutucu; uygulamada küçük önizleme ~240 px, anayasa 4.9) */
@@ -802,8 +807,6 @@ a.a-yuz:hover { border-color: var(--kenar-alan); background: var(--zemin); }
   position: relative; width: 64px; height: 64px; flex: none; display: inline-flex; align-items: center; justify-content: center;
   border: 1px solid var(--kenar); border-radius: var(--r-orta); background: var(--zemin2); color: var(--yazi3);
 }
-.a-foto-resim { padding: 0; overflow: hidden; cursor: pointer; }   /* seçilen gerçek fotoğraf (2026-09-27) */
-.a-foto-resim img { width: 100%; height: 100%; object-fit: cover; }
 .a-foto-no { position: absolute; right: 4px; bottom: 2px; font-size: var(--boy-etiket); font-weight: 700; color: var(--yazi2); }
 .a-gecmis-zimmet .a-not-metin { margin-top: 4px; }
 
