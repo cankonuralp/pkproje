@@ -172,16 +172,17 @@
     $("a-nesne").innerHTML = MK.kirinti([["Onaylar", "#/"], ["Tüm raporlar", brans(r) === BENIM ? "#/tum" : "#/tum?brans=" + brans(r)], [r.no]]) +
       '<div class="a-nesne-bas"><div class="a-nesne-kimlik"><div class="a-nesne-baslik"><h1 tabindex="-1">' + r.no + (rv ? "-" + rv.ad : "") + "</h1>" + rozet(MV.raporDurum(r)) + "</div>" +
         '<p class="a-nesne-alt">' + ikon("wrench", "a-ikon-kucuk") + '<span><span class="a-kod">' + e.kod + "</span> · " + kacis(t.ad) + " · " + kacis(ts.ad) + " · " + kacis(MV.kisi(r.kisi).ad) + "</span></p></div>" +
-        '<div class="a-eylem-cubugu">' + (r.durum === "imzali"
+        '<div class="a-eylem-cubugu">' + (r.arsiv ? MK.tus({ eylem: "arsiv-geri", ad: "Arşivden geri getir", ikon: "undo-2", veri: { no: r.no } }) : r.durum === "imzali"
           ? (r.revizeIstek ? MK.tus({ eylem: "istek-red-ac", ad: "İsteği reddet", sinif: "a-tus-ikincil", veri: { no: r.no } }) : "") + MK.tus({ eylem: "revize-ac", ad: "Revizeye gönder", ikon: "file-pen-line", veri: { no: r.no } })
           : MK.tus({ eylem: "durum-ac", ad: "Durumu değiştir", ikon: "refresh-cw", sinif: r.durum === "onaylandi" ? "a-tus-ikincil" : "", veri: { no: r.no } }) +
             (r.durum === "onaylandi" ? MK.tus({ eylem: "onay-geri-al", ad: "Onayı geri al", ikon: "undo-2" }) : "")) + "</div></div>" +
       (MV.durumSerit(r) ? '<div class="a-uyari-serit">' + MV.durumSerit(r) + "</div>" : "") +
+      (r.arsiv ? '<div class="a-uyari-serit">' + MV.arsivSerit(r) + "</div>" : "") +
       (r.revizeIstek && r.durum === "imzali" ? '<div class="a-uyari-serit">' + MK.serit("uyari", "file-pen-line", "<b>Revize isteği</b> · " + kacis(MV.kisi(r.revizeIstek.kim).ad) + " · " + MK.zamanYaz(r.revizeIstek.zaman) + ": “" + kacis(r.revizeIstek.gerekce) + "”") + "</div>" : "") +
       (r.geri && r.durum === "taslak" ? '<div class="a-uyari-serit">' + MK.serit("uyari", "undo-2", "<b>" + (rv && rv.zaman === r.geri.zaman ? "Revizeye gönderildi (" + rv.ad + ")" : "Geri gönderildi") + "</b> · " +
         kacis(MV.kisi(r.geri.kim).ad) + " · " + MK.zamanYaz(r.geri.zaman) + ": “" + kacis(r.geri.gerekce) + "”") + "</div>" : "") +
       '<section class="a-bolum" aria-labelledby="a-b-pdf"><div class="a-alt-bas"><h2 class="a-alt-baslik" id="a-b-pdf">' + (r.imzaDosya ? "İmzalı PDF" : "Rapor (PDF önizlemesi)") + '</h2><span class="a-sayac">' + (r.imza ? "imzalı" : "imzasız") + "</span></div>" +
-        (r.durum === "taslak" ? '<p class="a-bos-satir">Yeni: rapor inspector\'da, PDF yok.</p>' : MK.dosyaOnizle(r.imzaDosya, MB.belge(t, MV.raporBelge(r)))) + "</section>";
+        (r.arsiv ? '<p class="a-bos-satir">Dosya arşivde.</p>' : r.durum === "taslak" ? '<p class="a-bos-satir">Yeni: rapor inspector\'da, PDF yok.</p>' : MK.dosyaOnizle(r.imzaDosya, MB.belge(t, MV.raporBelge(r)))) + "</section>";
   }
   var sonraki = function (r) { var q = kuyruk(), i = q.indexOf(r); return q[i + 1] || q[0] || null; };
 
@@ -297,6 +298,9 @@
     MK.bildir(r.no + ": " + eski + " → " + MV.raporDurum(r).ad + ".");
   };
   /* imzalı (tamamlanan) rapor revizeye: yeni sürüm (R1, R2 …) Yeni olarak inspector'a döner; tamamlanan sürüm ve imzalı PDF'i sürümde saklanır */
+  X["arsiv-geri"] = function (el) {   /* 201: arşivden geri getir — dosya sisteme döner, müşteride yeniden görünür */
+    var r = MV.rapor(el.dataset.no); r.arsiv = null; yenidenCiz(r.no); MK.bildir(r.no + " arşivden geri getirildi; müşteri portalında yeniden görünür.");
+  };
   X["istek-red-ac"] = function (el) { pencereAc(MV.rapor(el.dataset.no), "istekRed"); };
   X["istek-reddet"] = function () {   /* gerekçe isteğe bağlı; inspector raporunda görür */
     var r = W.r; r.revizeRed = { kim: BEN, zaman: MK.simdi(), gerekce: W.gerekce.trim() }; r.revizeIstek = null;

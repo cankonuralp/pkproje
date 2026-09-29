@@ -112,7 +112,7 @@
           (r.durum === "imzali" ? (r.revizeIstek ? MK.tus({ eylem: "revize-istek-geri", ad: "Revize isteğini geri çek", ikon: "undo-2", sinif: "a-tus-ikincil", veri: { no: r.no } })
             : MK.tus({ eylem: "revize-iste-ac", ad: "Revize iste", ikon: "file-pen-line", sinif: "a-tus-ikincil", veri: { no: r.no } })) : "") +
           (yeniden(r) ? '<a class="a-tus a-tus-birincil" href="' + raporEkrani(r) + '">' + ikon("pencil", "a-ikon-kucuk") + "Raporu düzenle</a>" : "") + "</div></div>" +
-      '<div class="a-uyari-serit">' + MV.durumSerit(r) +
+      '<div class="a-uyari-serit">' + MV.durumSerit(r) + MV.arsivSerit(r) +
         (r.imzaSuresi && r.durum === "onaylandi" ? MK.serit("uyari", "clock", "<b>İmza isteğinin süresi doldu</b> · " + MK.zamanYaz(r.imzaSuresi.gonderildi) + " gönderildi, " + ISTEK_DK + " dakika içinde onaylanmadı. Yeniden imzalayın.") : "") +
         (r.revizeIstek && r.durum === "imzali" ? MK.serit("bilgi", "file-pen-line", "<b>Revize isteğiniz teknik yöneticide</b> · " + kacis(yon.ad) + " · " + MK.zamanYaz(r.revizeIstek.zaman) + ": “" + kacis(r.revizeIstek.gerekce) + "”") : "") +
         (r.revizeRed && r.durum === "imzali" && !r.revizeIstek ? MK.serit("uyari", "file-pen-line", "<b>Revize isteği reddedildi</b> · " + kacis(MV.kisi(r.revizeRed.kim).ad) + " · " + MK.zamanYaz(r.revizeRed.zaman) + (r.revizeRed.gerekce ? ": “" + kacis(r.revizeRed.gerekce) + "”" : "")) : "") +
@@ -130,7 +130,7 @@
       "</div>" +
       '<section class="a-bolum" aria-labelledby="a-b-pdf"><div class="a-alt-bas"><h2 class="a-alt-baslik" id="a-b-pdf">' + (r.imzaDosya ? "İmzalı PDF" : "PDF önizlemesi") + '</h2><span class="a-sayac">' + (r.imza ? "imzalı" : "imzasız") + "</span>" +
           (r.imzaDosya ? '<div class="a-bolum-tus">' + MK.dosyaAlan({ ad: r.imzaDosya, degistir: "rapor-imza-degistir", sil: "rapor-imza-sil", veri: { no: r.no } }) + "</div>" : "") + "</div>" +
-        (r.durum === "taslak" ? '<p class="a-bos-satir">Taslak: PDF yok.</p>' : MK.dosyaOnizle(r.imzaDosya, MB.belge(t, MV.raporBelge(r)))) + "</section>";
+        (r.arsiv ? '<p class="a-bos-satir">Dosya arşivde.</p>' : r.durum === "taslak" ? '<p class="a-bos-satir">Taslak: PDF yok.</p>' : MK.dosyaOnizle(r.imzaDosya, MB.belge(t, MV.raporBelge(r)))) + "</section>";
   }
 
   /* ── SON İMZA PENCERESİ (2026-09-29, V2; §9 otuz altıncı tur 177, 178): yöntem FİRMA AYARI (Personel · Firma ayarları), aracı site yok ──

@@ -607,7 +607,9 @@
       /* 5 yıl dolan raporlar (185, 2026-09-29): firma seçer — sistemde kalsın · bulut arşivine taşınsın · silinsin */
       (function () {
         var sk = MV.saklama();
-        return '<section class="a-bolum" aria-labelledby="a-b-saklama"><div class="a-alt-bas"><h2 class="a-alt-baslik" id="a-b-saklama">5 yılı dolan raporlar</h2></div>' +
+        return '<section class="a-bolum" aria-labelledby="a-b-saklama"><div class="a-alt-bas"><h2 class="a-alt-baslik" id="a-b-saklama">Saklama süresi dolan raporlar</h2></div>' +
+          '<div class="a-form"><div class="a-alan-grup"><label class="a-etiket" for="ay-yil">Saklama süresi</label>' +
+            MK.secim({ id: "ay-yil", ad: "Saklama süresi", deger: String(sk.yil), secenekler: [5, 6, 7, 8, 9, 10, 15, 20].map(function (y) { return [String(y), y + " yıl"]; }), ipucu: "Seçin" }) + "</div></div>" +
           '<div role="radiogroup" aria-labelledby="a-b-saklama">' + Object.keys(MV.SAKLAMA).map(function (k) {
             var x = MV.SAKLAMA[k];
             return '<label class="a-onay-kutusu"><input type="radio" name="ay-saklama" data-saklama value="' + k + '"' + (sk.yontem === k ? " checked" : "") + "><span>" + x.ad + " — " + x.etiket + "</span></label>";
@@ -793,6 +795,7 @@
   MK.onSecim = function (id, deger) {
     var m;
     if (/^zf-(eden|alan)$/.test(id)) { var p0 = aktif(), r0 = id.slice(3); zfDurum(p0)[r0].k = deger; zimmetFormuCiz(p0); var e0 = deger === ELLE ? $(id + "-ad") : $(id); if (e0) e0.focus(); return; }
+    if (id === "ay-yil") { var sk0 = MV.saklama(); MV.FIRMA.saklama = { yontem: sk0.yontem, yer: sk0.yer, yil: +deger }; ayarCiz(); $(id).focus(); MK.bildir("Saklama süresi " + deger + " yıl."); return; }   /* 5 taban: listede 5'ten kısa yok */
     if (id === "ay-zeden") { MV.FIRMA.zimmetEden = deger; ZF = null; ayarCiz(); $(id).focus(); MK.bildir("Zimmet formunda teslim eden başlangıçta: " + MV.kisi(deger).ad + "."); return; }
     if (id === "f-meslek") { F.meslek = deger; delete F.hata.meslek; formCiz(); }
     else if (id === "b-tur") { B.tur = deger; belgeCiz(); }
@@ -810,11 +813,11 @@
   document.addEventListener("change", function (e) {
     var t = e.target, r;
     if (t.hasAttribute && t.hasAttribute("data-saklama")) {
-      MV.FIRMA.saklama = { yontem: t.value, yer: MV.saklama().yer }; ayarCiz(); var q = document.querySelector('[data-saklama][value="' + t.value + '"]'); if (q) q.focus();
+      MV.FIRMA.saklama = { yontem: t.value, yer: MV.saklama().yer, yil: MV.saklama().yil }; ayarCiz(); var q = document.querySelector('[data-saklama][value="' + t.value + '"]'); if (q) q.focus();
       MK.bildir("5 yılı dolan raporlar: " + MV.SAKLAMA[t.value].ad.toLocaleLowerCase("tr") + "."); return;
     }
     if (t.hasAttribute && t.hasAttribute("data-arsiv-yeri")) {   /* arşiv yeri: alandan çıkınca kaydedilir, uyarı güncellenir */
-      MV.FIRMA.saklama = { yontem: "arsiv", yer: t.value.trim() }; ayarCiz(); MK.bildir(t.value.trim() ? "Arşiv yeri kaydedildi." : "Arşiv yeri boş: süresi dolan raporlar sistemde kalır."); return;
+      MV.FIRMA.saklama = { yontem: "arsiv", yer: t.value.trim(), yil: MV.saklama().yil }; ayarCiz(); MK.bildir(t.value.trim() ? "Arşiv yeri kaydedildi." : "Arşiv yeri boş: süresi dolan raporlar sistemde kalır."); return;
     }
     if (t.hasAttribute && t.hasAttribute("data-imza-yontem")) {
       MV.FIRMA.imza = t.value; ayarCiz(); var s = document.querySelector('[data-imza-yontem][value="' + t.value + '"]'); if (s) s.focus();

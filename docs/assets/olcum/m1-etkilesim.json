@@ -2,8 +2,8 @@
  "maket": "m1",
  "tarih": "2026-09-29",
  "arac": "tools/olc-bulut.mjs --etkilesim (başsız tarayıcı, 1920 açık tema; gen verilen denemede o genişlik)",
- "toplam": 70,
- "gecen": 70,
+ "toplam": 71,
+ "gecen": 71,
  "denemeler": [
   {
    "ad": "İzin talepleri: formun PDF'i açılır, e-posta talep edene",
@@ -339,6 +339,13 @@
    "gen": 1920,
    "sayfa": "maket/personel.html",
    "hash": "#/p/bs/duzenle",
+   "gecti": true
+  },
+  {
+   "ad": "200: saklama süresi 5 yıl başlar, en kısa seçenek 5; 10 yıl seçilince kaydedilir (yeniden yüklemede kalıcı)",
+   "gen": 1920,
+   "sayfa": "maket/personel.html",
+   "hash": "#/ayarlar",
    "gecti": true
   },
   {

@@ -663,7 +663,13 @@
     arsiv: { k: "arsiv", ad: "Bulut arşivine taşınsın", etiket: "firmanın belirlediği arşive, sistemden kalkar" },
     sil: { k: "sil", ad: "Silinsin", etiket: "30 gün önce liste, silinen 30 gün geri alınabilir" }
   };
-  MV.saklama = function () { var x = MV.FIRMA.saklama || {}; return { yontem: MV.SAKLAMA[x.yontem] ? x.yontem : "kalsin", yer: x.yer || "", yil: 5 }; };
+  /* 200 (2026-09-29): süre 5 yıl taban, firma uzatabilir (kısaltamaz) */
+  MV.saklama = function () { var x = MV.FIRMA.saklama || {}; return { yontem: MV.SAKLAMA[x.yontem] ? x.yontem : "kalsin", yer: x.yer || "", yil: Math.max(5, +x.yil || 5) }; };
+  /* 201 (2026-09-29): arşive taşınan raporun künyesi sistemde kalır (r.arsiv = { yer, zaman }); dosyası arşivde, müşteri portalından kalkar,
+     firma geri getirebilir. Künye ve PDF yeri tek üreticiden. */
+  MV.arsivSerit = function (r) {
+    return r && r.arsiv ? MK.serit("bilgi", "archive", "<b>Arşivde</b> · " + MK.kacis(r.arsiv.yer) + " · " + MK.tarihYaz(r.arsiv.zaman) + ": künye sistemde, dosya arşivde; müşteri portalında görünmez.") : "";
+  };
   MV.imzaYontem = function () { return MV.IMZA_YONTEM[MV.FIRMA.imza] || MV.IMZA_YONTEM.mobil; };
 
   /* ── EKİPMAN SİCİLİ (modül 7; M3) — kalıcı, tesise bağlı, kod firmada eşsiz (§3.5) ─────────────────────────────
@@ -1258,7 +1264,7 @@
      imzalı sürüm (onay, imza, sonuç ve imzalı PDF sürüm kaydından), yeni sürüm imzalanınca o; eski sürüm firmada saklı kalır. */
   MV.surumNo = function (r) { return r._surumNo || r.no + (r.revizyonlar && r.revizyonlar.length ? "-" + r.revizyonlar[0].ad : ""); };
   MV.musteriSurumu = function (r) {
-    if (!r) return null;
+    if (!r || r.arsiv) return null;   /* arşivdeki rapor müşteride görünmez (201) */
     var rv = r.revizyonlar || [];
     if (r.durum === "imzali") return Object.assign({}, r, { _yerine: rv.length ? (rv[1] ? r.no + "-" + rv[1].ad : r.no) : null });
     var o = rv[0] && rv[0].onceki; if (!o || !o.imza) return null;   /* revize sürüyor: önceki imzalı sürüm */

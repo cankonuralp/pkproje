@@ -1949,6 +1949,13 @@ revizyon, alan kopyalama, hafif kusur devri, meslek eşleşme denetimi).
 - Emsal ürünler: https://opwire.app/iso-17020-periyodik-kontrol-yazilimi/ · https://17020muayene.vidco.com.tr/ · https://akuple.com/asansor-kontrol-yazilimi/ · https://ensyazilim.com/
 
 ## 11 · Değişiklik günlüğü
+- 2026-09-29 (147): **W10 · 200–201 Saklama süresi · arşivdeki rapor künyesi** (§9 otuz yedinci tur). Firma ayarları'ndaki bölüm "Saklama süresi
+  dolan raporlar" oldu; **Saklama süresi** seçicisi 5 yıldan başlar (5 · 6 · 7 · 8 · 9 · 10 · 15 · 20 yıl; kısaltılamaz), kalıcı. Arşive taşınan
+  rapor (`r.arsiv = { yer, zaman }`): künyesi sistemde kalır; Onaylar ve Raporlar rapor sayfasında "Arşivde · yer · tarih: künye sistemde, dosya
+  arşivde; müşteri portalında görünmez" şeridi, PDF yerinde "Dosya arşivde."; müşteri portalında görünmez; Onaylar'da **Arşivden geri getir**
+  (müşteride yeniden görünür). Tek üretici `MV.arsivSerit`. Yeni ikon (Lucide 1.47.0, araçla): archive. Ölçüm: m9 durum 200/200 · etkileşim 48/48
+  (1 yeni, sayfalar arası) · telefon 100/100; m1 280/280 · 71/71 (1 yeni) · 140/140; m11 88/88 · 12/12 · 44/44; gözle 1920.
+
 - 2026-09-29 (146): **W9 · 199 Kusur sınıfı olmayan türlerde önceki kusur** (§9 otuz yedinci tur). `MV.devredenKusurlar` artık her türde: kusur
   sınıflı türde önceki rapor "Hafif kusurlu"ysa hafif kusur, öteki türlerde önceki rapor "Kusurlu"ysa kusur listelenir. Saha raporunda bölüm
   başlığı türe göre ("Önceki kontrolden açık hafif kusurlar" / "… açık kusurlar"), formatı olmayan türün bölüm sırasına da girdi (fotoğraflardan
