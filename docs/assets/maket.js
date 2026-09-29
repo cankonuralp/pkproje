@@ -298,11 +298,12 @@
   function listeEylem(p) {
     return '<div class="a-eylem"><div class="a-eylem-tuslar"><a class="a-tus a-tus-ikincil" href="#/plan/' + p.id + '">' + ikon("eye", "a-ikon-kucuk") + "Görüntüle</a></div></div>";
   }
-  /* kartta (telefon) şirket adı en üstte, işletmesi (proje adı) altında (reisim 2026-09-28: "şirket adı en üstte olsun") */
+  /* kartta (telefon) şirket adı en üstte, işletmesi (proje adı) altında (reisim 2026-09-28: "şirket adı en üstte olsun");
+     kalın olan müşteri adı, proje adı normal (reisim 2026-09-29: "Proje adı daha kalın gözüküyor, böyle olmasın Müşteri isimleri kalın olsun") */
   var PLAN_SUTUN = [
     { k: "no", baslik: "Proje no", kart: "ust", sira: 1, hucre: function (p) { return '<a class="a-no" href="#/plan/' + p.id + '">' + p.no + "</a>"; } },
-    { k: "ad", baslik: "Proje adı", kart: "govde", sira: 3, hucre: function (p) { return kirp(p.ad, "a-proje-ad"); } },
-    { k: "musteri", baslik: "Müşteri", kart: "govde", sira: 2, hucre: function (p) { return '<span class="a-hucre-satir">' + ikon("building-2", "a-ikon-kucuk a-kart-ikon") + kirp(p.musteri) + "</span>"; } },
+    { k: "ad", baslik: "Proje adı", kart: "govde", sira: 3, hucre: function (p) { return kirp(p.ad); } },
+    { k: "musteri", baslik: "Müşteri", kart: "govde", sira: 2, hucre: function (p) { return '<span class="a-hucre-satir">' + ikon("building-2", "a-ikon-kucuk a-kart-ikon") + kirp(p.musteri, "a-musteri-ad") + "</span>"; } },
     { k: "adres", baslik: "Adres", kart: "govde", sira: 5, hucre: function (p) {
       return '<span class="a-hucre-satir">' + ikon("map-pin", "a-ikon-kucuk a-kart-ikon") + '<span class="a-adres">' +
         kirp(p.adres, "a-adres-sokak", p.adres + ", " + p.ilce + " / " + p.il) + '<span class="a-adres-il">' + p.ilce + " / " + p.il + "</span></span></span>";

@@ -1917,6 +1917,21 @@ tasarrufu kuralları **`09-SUNUCU-VE-VERI.md`** (A dosya / gizli görüntüleme 
 E giriş, oturum, kiracı · F imza bütünlüğü · G arka plan, KVKK, e-posta, duman testi); **küçük kopya (thumbnail) üretilmez**; ANAYASA 4.12'ye
 bu projenin istisnası (185). W2–W11 sormadan sırayla.
 
+**Otuz sekizinci tur — onay turu başladı (2026-09-29, reisim birebir):** *"bu şekilde maket üzerinde gitmek mi mantıklı yoksa tüm yaptıklarımızı
+siteye döküp revize yaparak mı ilerleyelim ?"* → öneri: makette devam (revize makette hızlı, kod bir kez yazılır, gerçek site sunucu olmadan
+internette çalışamaz); *"makette devam reisim"* → **Karar:** onay turu makette sürer; ekranlar sırayla onaylanır, sonuncusu onaylanınca kod.
+**Planlar ve rapor içeriği — ilk revizeler (reisim birebir):** *"Planlar ekranında Proje adı daha kalın gözüküyor, böyle olmasın Müşteri
+isimleri kalın olsun. / Plan içeriğinde "SGK destis no:" ksımı yok olmalı; / Planı kabul ettikten sonra denetime başla tuşu olmasına gerek
+yok gereksiz. / Pasife alınan raporlar inspectorlere gözükmesin sadece yöneticilere gözüksün(bunu daha önce söylemiştim). / Muayene
+kriterleri uygun uygun değil seçme tuşu daha büyük olmalı ve ilgili satır aşağı doğru açılmadan da görülebilmeli örneğin muayene kriterleri
+yazısı ile aynı hizada olmalı. / Firma bilgileri girilen yer de veya ekipman bilgileri yazılan yerlerde gereksiz uzun satırlar var ve bazı
+satırlar aşırı uzun boşluklara sahip, yan yana yazılabilecek şekilde örnek görsel atıyorum / Fotoğraf eklendiğinde thumnail olmasın sadece
+görselin adı yazsın, görüntüle, indir , sil tuşları olsun. / Raporu komple silebilmek için sil tuşu olsun kaydet tuşunun yanında olsun. /
+Kaydet gönder silk tuşları sanki bir barın içinde gibi değil bağımsız dursunlar."* (örnek görsel başka uygulamadan, gerçek veri taşıyor:
+yalnız düzeni alındı — etiket üstte, alanlar iki sütun yan yana.) Maket sırası (X): X1 müşteri adı kalın · X2 SGK sicil no kalkar · X3
+Denetime başla kalkar · X4 pasif rapor inspector'da yok · X5 kriter seçici büyük ve başlık hizasında · X6 bilgi alanları iki sütun · X7
+fotoğrafta küçük resim yok · X8 rapor Sil + tuşlar bağımsız.
+
 **Açık kalanlar:** ~~Ana sayfada İSGGM duyuruları~~ (2026-09-27: makette eklendi; okuma işi uygulamada) (reisim 2026-09-26: *"Ana sayfada isgüm duyurularını gösterebilir miyiz ? Bunu
 yapılacaklar listesine ekle"*; öneri: ÇSGB İSGGM duyurular sayfası — https://www.csgb.gov.tr/isggm/duyurular/ — sunucuda günde birkaç kez
 okunur (pg-boss işi, §8.9), Ana sayfada son 5 duyuru başlık + tarih + kaynağa bağlantı; yalnız ekranda, bildirim yok; sayfa RSS vermiyorsa
@@ -1949,6 +1964,9 @@ revizyon, alan kopyalama, hafif kusur devri, meslek eşleşme denetimi).
 - Emsal ürünler: https://opwire.app/iso-17020-periyodik-kontrol-yazilimi/ · https://17020muayene.vidco.com.tr/ · https://akuple.com/asansor-kontrol-yazilimi/ · https://ensyazilim.com/
 
 ## 11 · Değişiklik günlüğü
+- 2026-09-29 (149): **X1 · Planlar listesinde müşteri adı kalın** (§9 otuz sekizinci tur). Kalın olan artık müşteri adı (`.a-musteri-ad`,
+  600; telefon kartında bölüm boyu), proje adı normal yazı. Ölçüm: planlar etkileşim 50/50 (1 yeni: müşteri ≥ 600, proje adı 400).
+
 - 2026-09-29 (148): **W11 · 202 Firma ayarları bir yerde** (§9 otuz yedinci tur). Personel → Firma ayarları sekmesine dört bölüm eklendi:
   **Uyarı eşikleri** (kalibrasyon bitişi 30 · kontrolü yaklaşan tesis 30 · plan açarken "kontrolü geliyor" 30 · eğitim tekrarı 60 gün başlangıç;
   seçenekli), **Rapor numarası** (firma kodu 2–4 harf; yalnız yeni raporlar, açılmış numaralar değişmez; geçersiz kod kaydedilmez, altında

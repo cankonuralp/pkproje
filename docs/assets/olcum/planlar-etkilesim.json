@@ -2,9 +2,16 @@
  "maket": "planlar",
  "tarih": "2026-09-29",
  "arac": "tools/olc-bulut.mjs --etkilesim (başsız tarayıcı, 1920 açık tema; gen verilen denemede o genişlik)",
- "toplam": 49,
- "gecen": 49,
+ "toplam": 50,
+ "gecen": 50,
  "denemeler": [
+  {
+   "ad": "Planlar listesi: müşteri adı kalın (≥ 600), proje adı normal (400)",
+   "gen": 1920,
+   "sayfa": "maket/planlarim.html",
+   "hash": "#/",
+   "gecti": true
+  },
   {
    "ad": "Durum: Denetimde süzgecinde en üstte son formatlarla açılmış plan (P-0926-040)",
    "gen": 1920,
