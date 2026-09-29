@@ -1782,44 +1782,41 @@ kontrol, 167 eğitim 60 gün, 173 ÷ 22 ve işverene maliyet oranı) ayar ekran�
 sırası: (U1) performans — her rapor Yeni'den, süreçte "Düzeltme" adımı; (U2) masraf formu Muhasebe rolüne, bordroyu yönetici + muhasebe
 görür; (U3) onaylayan tarafında talep PDF · e-posta; (U4) Planlar, Raporlar, Onaylar sayaçları renkli balon.
 
-**Otuz altıncı tur — sorular (2026-09-29; reisim: *"Sonraki turun sorularını sor ve mobil imza veya e imza için öneri sun servis mi
-kullanmalıyız yoksa biz kendi içimizde halledebilir miyiz ?"*; cevap bekliyor).**
-- **E-imza önerisi (8.4):** Raporun hukuken geçerli olması için ıslak imza ya da 5070 sayılı Kanun'a uygun **güvenli elektronik imza**
-  gerekir (§4.3). Güvenli e-imza yalnız kişiye verilmiş **nitelikli sertifikayla** atılır; sertifikayı yalnız yetkili elektronik sertifika
-  hizmet sağlayıcıları verir, anahtar kişinin kartında / telefonunun SIM'inde durur. → **Tamamen kendi içimizde yapamayız**; kendi yaptığımız
-  "ekranda parmakla imza" ya da "şifreyle onay" basit elektronik imzadır, rapor için yetmez. **Karma yol öneriyorum:** PDF'i hazırlamak, imzayı
-  PDF'e gömmek (PAdES), imzayı doğrulamak (imzacı raporun inspector'ı mı, sertifika geçerli mi), saklamak ve müşteriye açmak **bizde**;
-  imzanın kendisi **kişinin kendi sertifikasıyla**: (1) **ilk sürüm — e-imza (USB kart):** "indir → kendi e-imza programıyla imzala → yükle";
-  site imzayı kendisi doğrular, imzasız ya da başkasının imzalı dosyası kabul edilmez; ek maliyet yok (inspector'da e-imza varsa).
-  (2) **sonra — mobil imza (sahada telefondan, en pratik):** operatörün mobil imza hizmetine bir **aracı imza servisi (API)** üzerinden
-  bağlanırız; inspector "İmzala"ya basar, telefonuna gelen isteği PIN'le onaylar, toplu imzada her rapor ayrı imzalanır. Aracı servis ve
-  mobil imza **ücretlidir** (sözleşme + imza / kontör başı; fiyatı teklifle öğrenilir, ben tahmin yazmam); servis Türkiye'de olmalı (veri yurt
-  dışına çıkmaz). Firma hangisini kullanacağını seçer (§8.4 "imza yöntemi" firma ayarı).
-- **177 · E-imza yolu:** *Öneri:* yukarıdaki karma yol — ilk sürümde indir-imzala-yükle + otomatik doğrulama, mobil imza aracı servisle
-  ikinci adım. Aracı servis seçimi için ben 2–3 yurt içi sağlayıcıyı özellik olarak karşılaştırırım, teklifi sen alırsın.
-- **178 · Inspector'ların imza aracı:** inspector'larda nitelikli e-imza (USB) ya da mobil imza var mı, firma bunu zorunlu tutuyor mu?
-  *Öneri:* her inspector'da en az biri olsun; personel kartında "imza aracı" alanı (e-imza / mobil imza / yok), yoksa uyarı (engel değil).
-- **179 · İç belgelerde basit imza:** zimmet teslim formu, saha formu (müşteri onayı), izin ve masraf formu için tablette parmakla imza +
-  kimin, ne zaman imzaladığı kaydı (kendi içimizde, ücretsiz) yeterli mi? *Öneri:* evet — bunlar raporda olduğu gibi güvenli e-imza istemez;
-  imzalı tarama yükleme yolu da kalır.
-- **180 · Maket onayı:** M1–M5 ve M13 onaylı; M6–M16 ve sonradan gelenler (Talepler, Dökümanlar) toplu gözden geçirmede. Koda geçmek için
-  hepsinin onayı gerekiyor. *Öneri:* kalan modülleri tek tek "onaylıyorum" ya da düzeltme listesiyle kapat; istersen sıra önereyim
-  (Plan aç → saha raporu → Onaylar → Raporlar → ...).
-- **181 · Sunucu (Türkiye, §8.8):** *Öneri:* yurt içi bulut sağlayıcısı (yönetilen PostgreSQL + S3 uyumlu depo + yedek); 2–3 sağlayıcıyı
-  özellik olarak karşılaştırıp sana sunarım, seçim ve sözleşme senin.
-- **182 · Alan adı:** `probata.com.tr` (+ firmalar için alt alan adları) alınacak mı, sen mi alırsın? *Öneri:* sen al, DNS'i kurulumda ben yaparım.
-- **183 · İlk sürümün ekipman türleri:** *Öneri:* maketteki 14 tür (elektrik, kaldırma, basınçlı kaplar, iskele, diğer); sonra tür tür eklenir.
-- **184 · 5 yıl sonrası silme:** *Öneri:* silinecek raporlar 30 gün önce firma yöneticisine liste olarak gösterilir, silinen 30 gün geri
-  alınabilir, sonra kalıcı silinir (§3 kararı; anayasa 4.12 istisnası).
-- **185 · Önizlemede örnek veri kipi (§3.3):** gerçek uygulamanın Pages önizlemesi uydurma veriyle dolu gösterilsin mi? *Öneri:* evet (yalnız
-  önizleme derlemesinde; gerçek sunucuda hiç yok).
-- **186 · §3.2 öneri maddeleri:** (7) imzalı rapor değiştirilmez, düzeltme **revizyonla** (makette var); (8) imzalanınca tesis, müşteri,
-  personel ve cihaz bilgileri rapora **kopyalanır** (sonra değişse de rapor değişmez); (9) önceki raporun giderilmemiş hafif kusurları sonraki
-  kontrolde kendiliğinden listelenir; (10) listedeki tarih/saat ile rapordaki aynı alandan okunur; §3.2(2c) inspector'ın mesleği ekipman
-  türünün yetkili meslekleri arasında değilse **uyarı** (engel değil). *Öneri:* hepsi karar olsun. §3.1'deki otomatik saat dağıtımı
-  öneriden çıkar ("planlanan saat yok" kararıyla).
-- **187 · Zimmette birden çok aynı tür cihaz:** raporda aynı türden birden çok zimmetli cihaz varsa inspector hangisini kullandığını seçiyor
-  (Kalem A). *Öneri:* böyle kalsın; açık madde kapansın.
+**Otuz altıncı tur — sorular, 2. sürüm (2026-09-29).** İlk sürümü okuyan reisim birebir: *"Aslında e imza için tasarımdan kastım şu idi
+şu an aktif kullandığım yazılımda dosyayı imzaya gönder dediğimizde dosya imzayeri.com a gidiyor oradan mobil imza onayı için işlem yapılıp bana
+gönderiliyor mobilden onaylıyorum dosya onaylandıya dönüşüyor bu tarz ara bağlantılar olmadan, imzaya gönder dediğimde direk telefonuma imza
+onayı gelse onaylayıp pini girsem aradan imzayeri.com u çıkarsak olmaz mı ? Bunu cevapla ve soruları ona göre revize edip tekrar tüm soruları
+sor"* → **Cevap: olur.** Operatörler (Turkcell, Vodafone, Türk Telekom) kendi yazılımını bağlamak isteyen şirketlerle **"mobil imza uygulama
+sağlayıcı"** sözleşmesi yapıyor (Turkcell: başvuru formu + imza sirküleri + taahhütname, IP yetkisi; başvuru ücretsiz, test ortamı var;
+bireye değil şirkete). probata bu sözleşmeyi yaparsa akış: inspector **"İmzaya gönder"** → sunucumuz raporun **özetini** (dosyanın kendisini
+değil) operatöre yollar → inspector'ın telefonuna onay isteği düşer → **PIN** → imza sunucumuza döner → imzayı PDF'e biz gömeriz (PAdES),
+doğrularız, rapor **"Tamamlandı"** olur, müşteriye açılır. Araya başka site, yönlendirme, dosya yükleme girmez; dosya bizim sunucumuzdan
+çıkmaz. Maliyet: inspector'ın mobil imza sertifikası (kişi operatörden alır); işlem başı operatör ücreti varsa sözleşmede netleşir; uzun
+süreli geçerlilik için **zaman damgası** yetkili sertifika sağlayıcısından (kontör, ücretli) önerilir. Toplu imzada her rapor **ayrı** imza
+isteğidir (her biri için PIN; operatörün toplu onay imkânı sözleşmede sorulur).
+- **177 · E-imza yolu:** *Öneri:* **doğrudan operatör bağlantısı** (üç operatörle uygulama sağlayıcı sözleşmesi, bizim kodumuzla imza
+  gömme ve doğrulama). Başlangıçta inspector'ların kullandığı operatör(ler)le başlanır, sonra öbürleri. Yedek yol: USB e-imzası olan için
+  "indir → imzala → yükle" (site imzayı doğrular). Aracı imza sitesi (imzayeri.com benzeri) **yok**.
+- **178 · Inspector'ların mobil imzası:** inspector'lar hangi operatörde, hepsinde mobil imza var mı, firma zorunlu tutuyor mu? *Öneri:* her
+  inspector'da mobil imza zorunlu olsun; personel kartında "mobil imza: operatör · telefon" alanı, yoksa uyarı (engel değil).
+- **179 · Sözleşmeyi kim yapar:** operatör sözleşmesini **probata (yazılım şirketi)** mı yapar, yoksa her muayene firması kendisi mi? *Öneri:*
+  probata yapar (tek bağlantı, bütün firmalar kullanır; firmalar ayrıca uğraşmaz).
+- **180 · İç belgelerde basit imza:** zimmet teslim formu, saha formu (müşteri onayı), izin ve masraf formu için tablette parmakla imza + kimin,
+  ne zaman imzaladığı kaydı (kendi içimizde, ücretsiz) yeterli mi? *Öneri:* evet; imzalı tarama yükleme yolu da kalır.
+- **181 · Maket onayı:** M1–M5 ve M13 onaylı; M6–M16 ve sonradan gelenler (Talepler, Dökümanlar) toplu gözden geçirmede. Koda geçmek için
+  hepsinin onayı gerekiyor. *Öneri:* kalanları tek tek "onaylıyorum" ya da düzeltme listesiyle kapat; istersen sıra önereyim.
+- **182 · Sunucu (Türkiye, §8.8):** *Öneri:* yurt içi bulut sağlayıcısı (yönetilen PostgreSQL + S3 uyumlu depo + yedek); 2–3 sağlayıcıyı
+  özellik olarak karşılaştırıp sunarım, seçim ve sözleşme senin. (Operatör IP yetkisi sabit sunucu adresi ister; bu seçime girer.)
+- **183 · Alan adı:** `probata.com.tr` (+ firmalar için alt alan adları). *Öneri:* sen al, alan adı ayarlarını kurulumda ben yaparım.
+- **184 · İlk sürümün ekipman türleri:** *Öneri:* maketteki 14 tür (elektrik, kaldırma, basınçlı kaplar, iskele, diğer); sonra tür tür eklenir.
+- **185 · 5 yıl sonrası silme:** *Öneri:* silinecek raporlar 30 gün önce firma yöneticisine liste olarak gösterilir, silinen 30 gün geri
+  alınabilir, sonra kalıcı silinir.
+- **186 · Önizlemede örnek veri kipi (§3.3):** *Öneri:* evet (yalnız Pages önizlemesinde uydurma veri; gerçek sunucuda hiç yok).
+- **187 · §3.2 öneri maddeleri:** imzalı rapor değiştirilmez, düzeltme revizyonla · imzalanınca tesis, müşteri, personel, cihaz bilgileri
+  rapora kopyalanır · önceki raporun giderilmemiş hafif kusurları sonraki kontrolde kendiliğinden listelenir · listedeki ve rapordaki tarih /
+  saat aynı alandan · inspector'ın mesleği türün yetkili meslekleri arasında değilse uyarı (engel değil). *Öneri:* hepsi karar; otomatik saat
+  dağıtımı önerisi çıkar ("planlanan saat yok" kararıyla).
+- **188 · Zimmette aynı türden birden çok cihaz:** raporda inspector hangi cihazı kullandığını seçiyor. *Öneri:* böyle kalsın, açık madde kapansın.
 
 **Açık kalanlar:** ~~Ana sayfada İSGGM duyuruları~~ (2026-09-27: makette eklendi; okuma işi uygulamada) (reisim 2026-09-26: *"Ana sayfada isgüm duyurularını gösterebilir miyiz ? Bunu
 yapılacaklar listesine ekle"*; öneri: ÇSGB İSGGM duyurular sayfası — https://www.csgb.gov.tr/isggm/duyurular/ — sunucuda günde birkaç kez
