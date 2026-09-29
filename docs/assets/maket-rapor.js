@@ -236,19 +236,10 @@
     for (var a = 0; a < g.length; a++) { if (i < g[a][1].length) return MV.formatYapi(t).bolumler.kontrol + "." + (a + 1) + "." + (i + 1); i -= g[a][1].length; }
     return "";
   }
-  /* kriter cevabı: üç tuş madde yazısıyla aynı satırda, açılır liste yok (2026-09-29, reisim: "Muayene kriterleri uygun uygun değil seçme
-     tuşu daha büyük olmalı ve ilgili satır aşağı doğru açılmadan da görülebilmeli … muayene kriterleri yazısı ile aynı hizada olmalı") */
-  var KRITER_RENK = { uygun: "a-sekme-onay", uygundegil: "a-sekme-hata", uygulanamaz: "" };
-  var kriterSecim = function (i, deger, gecersiz) {
-    return '<div class="a-sekmeler a-kriter-secim" role="group" id="r-kc' + i + '" aria-labelledby="r-ka' + i + '"' + (gecersiz ? ' aria-invalid="true"' : "") + ">" +
-      KRITER.map(function (k) {
-        return '<button class="a-sekme ' + KRITER_RENK[k[0]] + '" type="button" id="r-kc' + i + "-" + k[0] + '" data-eylem="kriter-sec" data-i="' + i + '" data-deger="' + k[0] + '" aria-pressed="' + (deger === k[0]) + '">' + k[1] + "</button>";
-      }).join("") + "</div>";
-  };
   function kriterHtml(r, oku, i) {
     var t = r.t, x = r.kriter[i], ad = MV.kriterler(t)[i], no = kriterNo(t, i), kus = x.c === "uygundegil";
     return '<div class="a-kriter" id="r-k' + i + '"><p class="a-kriter-ad" id="r-ka' + i + '"><span class="a-kriter-no">' + no + "</span><span>" + kacis(ad) + "</span></p>" +
-      '<div class="a-kriter-cevap">' + (oku ? okuGirdi("r-kc" + i, ad2(KRITER, x.c)) : kriterSecim(i, x.c, uyar(r, !x.c))) + "</div>" +
+      '<div class="a-kriter-cevap">' + (oku ? okuGirdi("r-kc" + i, ad2(KRITER, x.c)) : MK.secim({ id: "r-kc" + i, ad: "Madde " + no, deger: x.c, secenekler: KRITER, ipucu: "Seçin", tanim: "r-ka" + i, gecersiz: uyar(r, !x.c) })) + "</div>" +
       (kus ? '<div class="a-kriter-kusur">' +
         /* hafif / ağır yalnız Bakanlık formatı yürürlükteki türde (§4.5, Ek-III 1.9.1) */
         (MV.kusurSinifli(t) ? MK.alan({ id: "r-kd" + i, etiket: "Kusur derecesi", zorunlu: !oku,
@@ -261,11 +252,16 @@
   /* ünlem menüsü (§3.8 kural 3, reisim 2026-09-28: "ünlem işareti olur ve oradan seçilerek hepsini uygun yap hepsini uygunsuz yap ya da
      hepsini uygulanamaz yap"): grubun başlığında, o grubun bütün maddelerini tek seferde işaretler; madde madde değiştirmek serbest */
   var TOPLU = [["uygun", "Hepsini uygun yap"], ["uygundegil", "Hepsini uygun değil yap"], ["uygulanamaz", "Hepsini uygulanamaz yap"]];
-  var topluMenu = function (bas, son, ad) {
-    return '<div class="a-secici a-kriter-toplu"><button class="a-ikon-tus" type="button" data-secici-ac="toplu" id="r-kt' + bas + '" aria-haspopup="menu" aria-expanded="false" aria-label="' +
-      ad.replace(/<[^>]*>/g, "") + ' · hepsini işaretle" title="Hepsini işaretle">' + ikon("circle-alert") + "</button>" +
+  /* buyuk: bölümün başlığında, başlık hizasında, bölüm açılmadan görünür yazılı tuş — bütün maddeler (2026-09-29, reisim: "muayene
+     kriterleri oraya en son bir tuş ekledik hepsini uygun yap uygun değil yap veya uygulanamaz yap diye onun yerini değiştir muayene kriteri
+     yazısının hizasında olsun … aşağı açılmadan da gözüksün") */
+  var topluMenu = function (bas, son, ad, buyuk) {
+    var id = buyuk ? "r-kth" : "r-kt" + bas;
+    return '<div class="a-secici a-kriter-toplu' + (buyuk ? " a-bolum-tus" : "") + '">' +
+      (buyuk ? '<button class="a-tus a-tus-ikincil" type="button" data-secici-ac="toplu" id="' + id + '" aria-haspopup="menu" aria-expanded="false">' + ikon("circle-alert", "a-ikon-kucuk") + "Hepsini işaretle" + ikon("chevron-down", "a-ikon-kucuk") + "</button>"
+        : '<button class="a-ikon-tus" type="button" data-secici-ac="toplu" id="' + id + '" aria-haspopup="menu" aria-expanded="false" aria-label="' + ad.replace(/<[^>]*>/g, "") + ' · hepsini işaretle" title="Hepsini işaretle">' + ikon("circle-alert") + "</button>") +
       '<div class="a-secici-liste" role="menu" aria-label="Hepsini işaretle" hidden>' + TOPLU.map(function (x) {
-        return '<button class="a-secenek" type="button" role="menuitem" data-eylem="kriter-toplu" data-deger="' + x[0] + '" data-bas="' + bas + '" data-son="' + son + '">' + x[1] + "</button>"; }).join("") + "</div></div>";
+        return '<button class="a-secenek" type="button" role="menuitem" data-eylem="kriter-toplu" data-deger="' + x[0] + '" data-bas="' + bas + '" data-son="' + son + '" data-odak="' + id + '">' + x[1] + "</button>"; }).join("") + "</div></div>";
   };
   /* tek satırlık seçim (solda ad, sağda seçim): ölçüm metodu · termal kamera · sonuç */
   var tekSecim = function (id, ad, deger, secenekler, oku, genis, gecersiz) {
@@ -467,9 +463,8 @@
         var h = '<div class="a-kriter-grup-bas"><h3 class="a-kriter-grup">' + ad + "</h3>" + (oku ? "" : topluMenu(i0, i0 + g[1].length, ad)) + "</div>" +
           g[1].map(function (x, j) { return kriterHtml(r, oku, i0 + j); }).join("");
         i0 += g[1].length; return h; }).join("")
-        : (oku ? "" : '<div class="a-kriter-grup-bas"><h3 class="a-kriter-grup">Maddeler</h3>' + topluMenu(0, r.kriter.length, "Maddeler") + "</div>") +
-          r.kriter.map(function (x, i) { return kriterHtml(r, oku, i); }).join("")),
-      '<span class="a-sayac" id="r-kriter-say"><b>' + cevaplanan + "</b> / " + r.kriter.length + " madde</span>");
+        : r.kriter.map(function (x, i) { return kriterHtml(r, oku, i); }).join("")),
+      '<span class="a-sayac" id="r-kriter-say"><b>' + cevaplanan + "</b> / " + r.kriter.length + " madde</span>" + (oku ? "" : topluMenu(0, r.kriter.length, "", true)));
     var testlerHtml = '<div class="a-form">' + MV.testler(t).map(function (x, i) {
       var s = testSonuc(x, r.test[i]);
       return MK.alan({ id: "r-t" + i, etiket: kacis(x.ad) + (x.birim ? " (" + x.birim + ")" : ""), zorunlu: !oku && testZorunlu(x), hata: "",
@@ -729,8 +724,8 @@
     document.querySelectorAll(".a-bolum-eksik").forEach(function (d) { if (!e[d.id]) { d.classList.remove("a-bolum-eksik"); var z = d.querySelector("summary .a-rozet-red"); if (z) z.remove(); } }); }
   MK.onSecim = function (id, deger) {
     if (W && $("a-pencere").open) { W.d[id.slice(2)] = deger; delete W.hata[id.slice(2)]; pencereCiz(id); return; }
-    var r = aktif();
-    if (id === "r-sonuc") { r.sonuc = deger; degisti(r); ciz(id); }
+    var r = aktif(); if (/^r-kc\d+$/.test(id)) { r.kriter[+id.slice(4)].c = deger; degisti(r); ciz(id); }
+    else if (id === "r-sonuc") { r.sonuc = deger; degisti(r); ciz(id); }
     else if (/^r-kd\d+$/.test(id)) { r.kriter[+id.slice(4)].derece = deger; degisti(r); ciz(id); }
     else if (/^r-dv\d+$/.test(id)) { var x = devreden(r)[+id.slice(4)]; if (x) { (r.devir = r.devir || {})[x.id] = deger; degisti(r); ciz(id); } }
     else if (/^r-[ds]-/.test(id)) { r[id[2] === "d" ? "detay" : "tespit"][id.slice(4)] = deger; degisti(r); ciz(id); }
@@ -835,13 +830,9 @@
     a.scrollIntoView({ block: "center" }); if (g) g.focus({ preventScroll: true });
   }
   $("a-pencere").addEventListener("close", function () { if (W && W.tur === "zorunlu") { var x = W.eks[0]; W = null; eksikeGit(x); } });
-  X["kriter-sec"] = function (el) {
-    var r = aktif(), x = r.kriter[+el.dataset.i]; if (x.c === el.dataset.deger) return;
-    x.c = el.dataset.deger; degisti(r); ciz(el.id);
-  };
   X["kriter-toplu"] = function (el) {
     var r = aktif(), n = 0; for (var i = +el.dataset.bas; i < +el.dataset.son; i++) { if (r.kriter[i].c !== el.dataset.deger) n++; r.kriter[i].c = el.dataset.deger; }
-    degisti(r); ciz("r-kt" + el.dataset.bas);
+    degisti(r); ciz(el.dataset.odak || "r-kt" + el.dataset.bas);
     MK.bildir((+el.dataset.son - +el.dataset.bas) + " madde " + ad2(KRITER, el.dataset.deger).toLocaleLowerCase("tr") + " işaretlendi.");
   };
   /* fotoğraf silinir (reisim 2026-09-28: "yüklenilen şeyler düzenlenebilir silinebilir olmalı"); onay penceresiyle */

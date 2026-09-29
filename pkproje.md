@@ -1932,6 +1932,15 @@ yalnız düzeni alındı — etiket üstte, alanlar iki sütun yan yana.) Maket 
 Denetime başla kalkar · X4 pasif rapor inspector'da yok · X5 kriter seçici büyük ve başlık hizasında · X6 bilgi alanları iki sütun · X7
 fotoğrafta küçük resim yok · X8 rapor Sil + tuşlar bağımsız.
 
+**Otuz sekizinci tur — düzeltme (2026-09-29, reisim birebir):** *"Şimdi reisim ekipman ekleyip sonra rapor oluştur siyoryz ya oluşan rapor
+inspector tarafından da silinebilsin firmaya ekli ekipman için bunu söyledim . Her maddenin kendi seçimi depil örneğin muayene kriterleri
+oraya en son bir tuş ekledik hepsini uygun yap uygun değil yap veya uygulanamaz yap diye onun yerini değiştir muayene kriteri yazısının
+hizasında olsun muayene kriteri yzısı tuşuna basmadan da aşağı açılmadan da gözüksün istedim bu kadar, kabul edildi de kalsın ekipman ekleme
+kısmında tamamla tuşu olsun diyince kontrol listesi tamamlandı desin sonra en aşağıda tamamla yazsın ona tıklayınca komple tamamlandı olsun."*
+→ **Kararlar:** X5'in madde satırı tuşları geri alındı (madde seçimi yine açılır liste); "hepsini işaretle" bölüm başlığının hizasına, bölüm
+açılmadan görünür (Y1). Inspector plan içinde oluşturduğu raporu silebilir (Y2; 2026-09-28'deki "silme yalnız yönetici" bununla değişti).
+"Kabul edildi" durumu kalır. Denetim adımında **Tamamla** → "Kontrol listesi tamamlandı"; en altta **Tamamla** → plan tamamlandı (Y3).
+
 **Açık kalanlar:** ~~Ana sayfada İSGGM duyuruları~~ (2026-09-27: makette eklendi; okuma işi uygulamada) (reisim 2026-09-26: *"Ana sayfada isgüm duyurularını gösterebilir miyiz ? Bunu
 yapılacaklar listesine ekle"*; öneri: ÇSGB İSGGM duyurular sayfası — https://www.csgb.gov.tr/isggm/duyurular/ — sunucuda günde birkaç kez
 okunur (pg-boss işi, §8.9), Ana sayfada son 5 duyuru başlık + tarih + kaynağa bağlantı; yalnız ekranda, bildirim yok; sayfa RSS vermiyorsa
@@ -1964,6 +1973,13 @@ revizyon, alan kopyalama, hafif kusur devri, meslek eşleşme denetimi).
 - Emsal ürünler: https://opwire.app/iso-17020-periyodik-kontrol-yazilimi/ · https://17020muayene.vidco.com.tr/ · https://akuple.com/asansor-kontrol-yazilimi/ · https://ensyazilim.com/
 
 ## 11 · Değişiklik günlüğü
+- 2026-09-29 (157): **Y1 · "Hepsini işaretle" bölüm başlığında; X5 geri alındı** (§9 otuz sekizinci tur, düzeltme). Reisim'in istediği
+  madde madde seçim değil, toplu tuşmuş: Muayene / gözle kontrol kriterleri bölümünün başlığında, başlık hizasında yazılı **Hepsini işaretle**
+  tuşu (Hepsini uygun · uygun değil · uygulanamaz yap); bölüm kapalıyken de görünür, açmadan bütün maddeleri işaretler. Formatlı türde grup
+  başlarındaki ünlem menüleri (o grubun maddeleri) aynen; düz listede "Maddeler" başlığındaki ünlem kalktı (başlığa taşındı). X5'teki madde
+  satırı üç tuşu geri alındı, madde seçimi yine açılır liste. Ölçüm: m8 184/184 · 90/90 (1 yeni: başlık hizası, kapalı bölümde çalışır;
+  X5'in denemeleri eski hâline) · 92/92; gözle 1920 · 1080 · 375.
+
 - 2026-09-29 (156): **X8 · Rapor Sil + tuşlar çubuksuz** (§9 otuz sekizinci tur). Saha raporunda altta yapışkan tuşlar artık çubuk
   içinde değil: kap zeminsiz, kenarsız; **Sil · Kaydet · Onaya gönder** her biri kendi gölgesiyle bağımsız. "Son kayıt" yazısı başlığa
   (rapor numarasının altına) taşındı — telefonda da görünür. **Sil** yalnız hiç gönderilmemiş (ve geri gönderilmemiş) raporda: onay penceresi,

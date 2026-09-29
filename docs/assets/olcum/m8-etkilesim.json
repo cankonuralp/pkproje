@@ -69,13 +69,6 @@
    "gecti": true
   },
   {
-   "ad": "kriter cevabı: üç tuş madde yazısıyla aynı satırda (açılır liste yok), her tuş ≥ 44 px; Uygun değil tek basışta (2026-09-29)",
-   "gen": 1920,
-   "sayfa": "maket/rapor.html",
-   "hash": "#/r/KS-1006",
-   "gecti": true
-  },
-  {
    "ad": "firma ve ekipman bilgileri: etiket üstte, alanlar iki sütun yan yana (2026-09-29)",
    "gen": 1920,
    "sayfa": "maket/rapor.html",
@@ -87,6 +80,13 @@
    "gen": 375,
    "sayfa": "maket/rapor.html",
    "hash": "#/r/ET-1009",
+   "gecti": true
+  },
+  {
+   "ad": "Hepsini işaretle bölüm başlığında, başlık hizasında; bölüm kapalıyken görünür, bölümü açmadan bütün maddeleri işaretler (bölüm kapalı kalır)",
+   "gen": 1920,
+   "sayfa": "maket/rapor.html",
+   "hash": "#/r/KS-1006",
    "gecti": true
   },
   {
