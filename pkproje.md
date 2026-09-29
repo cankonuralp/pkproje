@@ -1896,6 +1896,19 @@ gün geri alınabilir). Kendiliğinden silme yok.
   bugün maketlere dağılmış öteki firma ayarları da buraya toplansın: kalibrasyon uyarı eşiği (30 gün), "kontrolü yaklaşan" eşiği (30 gün),
   plan açarken "kontrolü geliyor" aralığı (30 gün), fiyat listesi, rapor numarasının firma kodu, sabit giderler.
 
+**Otuz yedinci tur — cevap (2026-09-29, reisim birebir):** *"Önerilerin uygun ama 196 da zimmet formunda teslim eden teslim alan kısmı el ile
+girilebilsin, listeden personel girilebilsin. Diğer önerilerini öneriyorum ama bu rapor arşiv işleri backende giriyor ve backendk kurallarımızı
+görmezden gelme, layzload fotoğafların gizli görüntülenmesi vs vs bir sürü kuralımız var dikkat et kurllarımız backend açısından eksik mi bi
+kontrol et"*
+→ **Kararlar:** **189–195, 197–202** öneriler karar oldu. **196** değişti: zimmet teslim formunda **teslim eden ve teslim alan** hem
+**listeden personel** seçilir hem **elle** yazılabilir (Firma ayarları'ndaki "zimmet teslim eden" başlangıç değeri olur). **Sunucu kuralları
+denetimi** yapıldı: `EKSIKLER-VE-ONERILER.md` **D bölümü** (27 madde; dosya ve gizli görüntüleme, giriş ve alt alan adı çerezi, müşteri
+erişim katmanı, iyimser kilit ve çevrimdışı tek seferlik gönderim, sunucu tarafı sayfalama, arşive güvenli taşıma, imzalı PDF bütünlüğü,
+arka plan işlerinde kiracı bağlamı, KVKK, e-posta) — **onay bekliyor**; ANAYASA 4.12 ile 185 arasındaki çelişki (D17) orada.
+Maket sırası (W): W1 196 zimmet formu teslim eden / alan · W2 190 vekil branşın tüm raporları · W3 191 durum değişikliği şeridi · W4 192 inspector
+"Revize iste" · W5 193 müşteride yalnız son sürüm · W6 194 yanıtsız mobil imza isteği süresi · W7 195 mobil imza telefonu · W8 197 imzalı saha
+formu yükle · W9 199 öteki türlerde önceki kusur · W10 200–201 5 yıl uzatma, arşivdeki rapor künyesi · W11 202 firma ayarları bir yerde.
+
 **Açık kalanlar:** ~~Ana sayfada İSGGM duyuruları~~ (2026-09-27: makette eklendi; okuma işi uygulamada) (reisim 2026-09-26: *"Ana sayfada isgüm duyurularını gösterebilir miyiz ? Bunu
 yapılacaklar listesine ekle"*; öneri: ÇSGB İSGGM duyurular sayfası — https://www.csgb.gov.tr/isggm/duyurular/ — sunucuda günde birkaç kez
 okunur (pg-boss işi, §8.9), Ana sayfada son 5 duyuru başlık + tarih + kaynağa bağlantı; yalnız ekranda, bildirim yok; sayfa RSS vermiyorsa
@@ -1928,6 +1941,13 @@ revizyon, alan kopyalama, hafif kusur devri, meslek eşleşme denetimi).
 - Emsal ürünler: https://opwire.app/iso-17020-periyodik-kontrol-yazilimi/ · https://17020muayene.vidco.com.tr/ · https://akuple.com/asansor-kontrol-yazilimi/ · https://ensyazilim.com/
 
 ## 11 · Değişiklik günlüğü
+- 2026-09-29 (136): **Sunucu kuralları denetimi · otuz yedinci tur kararları** (§9 otuz yedinci tur cevap). Kural dosyaları (ANAYASA, 00–08,
+  EKSİKLER) ve §8 bu projenin sunucu yığınına karşı tek tek eşlendi; kaynak projeden Firebase diliyle gelen kuralların (dosya indirme, küçük
+  kopya, gizli görüntüleme, güvenli yazıcılar, yedek, yetki) PostgreSQL + S3 + kendi girişimiz karşılığı ve hiç olmayan kurallar (oturum
+  çerezi alan adı, CSRF / CSP, müşteri erişim katmanı, iyimser kilit, çevrimdışı tek seferlik gönderim, arşive güvenli taşıma, imzalı PDF
+  özeti, arka plan işinde kiracı bağlamı, KVKK erişim kaydı, e-posta) `EKSIKLER-VE-ONERILER.md` D bölümüne öneri olarak yazıldı (27 madde,
+  onay bekliyor). Kod yok; maket sırası W1–W11.
+
 - 2026-09-29 (135): **185 · 5 yılı dolan raporlar: firma seçer** (§9 otuz altıncı tur ek; reisim: *"isteğe bağlı olsun ister silinsin ister
   arşivlensin"*). Personel › Firma ayarları'na ikinci bölüm: **Sistemde kalsın** (başlangıç) · **Bulut arşivine taşınsın** (arşiv yeri alanı;
   boşken uyarı: "yeri girilene kadar süresi dolan raporlar sistemde kalır") · **Silinsin** (30 gün önce liste, silinen 30 gün geri alınabilir).
