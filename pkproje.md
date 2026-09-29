@@ -1964,6 +1964,13 @@ revizyon, alan kopyalama, hafif kusur devri, meslek eşleşme denetimi).
 - Emsal ürünler: https://opwire.app/iso-17020-periyodik-kontrol-yazilimi/ · https://17020muayene.vidco.com.tr/ · https://akuple.com/asansor-kontrol-yazilimi/ · https://ensyazilim.com/
 
 ## 11 · Değişiklik günlüğü
+- 2026-09-29 (154): **X6 · Firma ve ekipman bilgileri iki sütun, etiket üstte** (§9 otuz sekizinci tur; reisim'in örnek görselinden yalnız
+  düzen alındı). Saha raporunun Firma bilgileri, Ekipman bilgileri, 2.1 ekipman detayları ve 2.2 tespitler bölümleri: etiket üstte, alanlar
+  iki sütun yan yana (telefonda tek sütun), çoklu seçim tam satır. 2026-09-27'deki "etiket solda, değer sağda, satır satır" düzeninin
+  yerine geçti. Ölçüm: m8 durum 184/184 · etkileşim 85/85 (2 yeni: iki sütun, telefonda tek sütun) · telefon 92/92; m9 200/200 · 49/49 ·
+  100/100; gözle 1920 · 1080 · 375. Not: bir koşuda "ünlem menüsü: her grup başlığında bir tane" denemesi bir kez düştü, ardından üç
+  koşuda geçti; nedenini bulamadım (izleniyor).
+
 - 2026-09-29 (153): **X5 · Kriter cevabı üç tuş, madde yazısıyla aynı satırda** (§9 otuz sekizinci tur). Muayene / gözle kontrol
   kriterlerinde açılır liste kalktı: **Uygun · Uygun değil · Uygulanamaz** üç tuş (seçili Uygun yeşil, Uygun değil kırmızı zemin, mevcut
   token'lar), madde yazısının hizasında, her bantta ≥ 44 px, tek basışta seçilir; telefonda maddenin altında tam satır (320'de taşma yok).

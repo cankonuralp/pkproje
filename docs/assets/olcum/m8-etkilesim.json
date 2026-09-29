@@ -2,8 +2,8 @@
  "maket": "m8",
  "tarih": "2026-09-29",
  "arac": "tools/olc-bulut.mjs --etkilesim (başsız tarayıcı, 1920 açık tema; gen verilen denemede o genişlik)",
- "toplam": 83,
- "gecen": 83,
+ "toplam": 85,
+ "gecen": 85,
  "denemeler": [
   {
    "ad": "önceki kontrolün hafif kusuru listelenir; Giderilmedi → bu raporun kusurlarına girer, sonuç önerisi Uygun değil",
@@ -73,6 +73,20 @@
    "gen": 1920,
    "sayfa": "maket/rapor.html",
    "hash": "#/r/KS-1006",
+   "gecti": true
+  },
+  {
+   "ad": "firma ve ekipman bilgileri: etiket üstte, alanlar iki sütun yan yana (2026-09-29)",
+   "gen": 1920,
+   "sayfa": "maket/rapor.html",
+   "hash": "#/r/ET-1009",
+   "gecti": true
+  },
+  {
+   "ad": "telefonda firma bilgileri tek sütun, etiket üstte (2026-09-29)",
+   "gen": 375,
+   "sayfa": "maket/rapor.html",
+   "hash": "#/r/ET-1009",
    "gecti": true
   },
   {

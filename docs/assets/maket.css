@@ -873,7 +873,12 @@ a.a-yuz:hover { border-color: var(--kenar-alan); background: var(--zemin); }
 .a-satir + .a-satir { border-top: 1px solid var(--kenar); }
 .a-satir dt { font-weight: 700; }
 .a-satir dd { margin: 0; overflow-wrap: anywhere; }
-.a-satirlar-form .a-satir { align-items: center; }   /* rapor firma bilgileri: sağda alan (tarih · saat · dakika ayrı) */
+/* rapor firma ve ekipman bilgileri (2026-09-29, reisim: "gereksiz uzun satırlar var … yan yana yazılabilecek şekilde"): etiket üstte,
+   alanlar iki sütun yan yana; telefonda tek sütun. Çoklu seçim tam satır. */
+.a-satirlar-form { display: grid; grid-template-columns: repeat(2, minmax(0, 1fr)); gap: 16px 24px; padding: 16px; }
+.a-satirlar-form .a-satir { grid-template-columns: minmax(0, 1fr); align-content: start; gap: 6px; padding: 0; }
+.a-satirlar-form .a-satir + .a-satir { border-top: 0; }
+.a-satirlar-form .a-satir:has(.a-coklu) { grid-column: 1 / -1; }
 .a-satir dt label { font: inherit; color: inherit; }
 .a-teklif { margin-top: 12px; background: var(--kart); border: 1px solid var(--kenar); border-radius: var(--r-orta); }
 .a-teklif-baslik { margin: 0; padding: 12px; font-size: var(--boy-govde); font-weight: 700; border-bottom: 1px solid var(--kenar); }
@@ -1212,6 +1217,7 @@ a.a-yuz:hover { border-color: var(--kenar-alan); background: var(--zemin); }
   .a-suzgec-alanlar { grid-template-columns: repeat(2, minmax(0, 1fr)); }   /* alan alan arama telefonda iki sütun */
   /* plan içi etiket : değer satırları telefonda alt alta (kimlik bölünmez, taşmasın) */
   .a-satir { grid-template-columns: minmax(0, 1fr); gap: 2px; }
+  .a-satirlar-form { grid-template-columns: minmax(0, 1fr); gap: 14px; padding: 12px; }
   /* tarih seçici telefonda alanın genişliğinde (kartın dışına taşmaz); gün tuşları arası boşluksuz, yükseklik 44 kalır */
   .a-zaman-tarih { flex-basis: 100%; }   /* telefonda tarih tam satır, saat : dakika altında; takvim alanın genişliğinde */
   .a-zaman .a-secici-liste.a-zaman-liste { width: 100%; max-width: none; padding: 6px; }
