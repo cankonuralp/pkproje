@@ -1800,8 +1800,13 @@ isteğidir (her biri için PIN; operatörün toplu onay imkânı sözleşmede so
   kurulan küçük bir program (Windows; kartın kendi sürücüsüyle konuşur). Akış: Raporlar'da raporlar seçilir → **"Toplu imzala"** → program
   açılır, imzalanacak raporların listesini gösterir → **PIN bir kez** girilir → her rapor **ayrı ayrı** imzalanır (raporlar birleşmez, karar 99)
   → imzalar sunucumuza döner, PDF'lere biz gömeriz, doğrularız, raporlar "Tamamlandı". Dosya bizim sistemimizden çıkmaz, üçüncü site yok, işlem
-  başı ücret yok. Maliyeti bizde: programın yazılması ve bakımı, farklı kart sürücüleriyle deneme, programın **kod imzalama sertifikası**
-  (Windows imzasız programı engeller — reisim'in bilgisayarındaki Uygulama Denetimi de engelliyor, 2026-09-23 kaydı). Zaman damgası
+  başı ücret yok. **AKİS kurulu varsayılır** (reisim: *"imzayeri de öyle çalışıyor bilgisayara AKİS adında bir program kuruluyor bunun kurulu
+  olduğunu varsay, zaten herhangi bir pdf aracında da aynı şekilde AKİS kurulması gerekiyor"*): AKİS kartın sürücüsüdür (kartı tanır; e-Devlet,
+  Adobe gibi programlar kartla onun üzerinden konuşur). Kart sürücüsünü biz yazmayız; imza aracımız AKİS'i kullanır. Tarayıcı AKİS'e de
+  doğrudan erişemediği için site ile AKİS arasında küçük bir köprü (imza aracımız) yine gerekir — imza siteleri de bunu bir tarayıcı eklentisi
+  ya da arka planda çalışan küçük bir uygulamayla yapar. Kullanıcı için: bir kez kurulur, sonra görünmez; "Toplu imzala" deyince yalnız PIN
+  sorulur. Maliyeti bizde: aracın yazılması ve bakımı, **kod imzalama sertifikası** (Windows imzasız programı engeller — reisim'in
+  bilgisayarındaki Uygulama Denetimi de engelliyor, 2026-09-23 kaydı). Zaman damgası
   mobil imzadaki gibi (kontör). Mobil imzada PIN her imza için ayrı girilir; **çok raporu tek PIN'le imzalamak USB kartla olur** → ofiste
   toplu imza e-imzayla, sahada tek tek mobil imzayla.
 - **177 · İmza yolları:** *Öneri:* ikisi de bizde, aracı site yok: (a) **mobil imza** — operatörlere doğrudan bağlantı, "İmzaya gönder" →
