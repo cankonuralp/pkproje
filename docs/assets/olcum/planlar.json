@@ -979,10 +979,10 @@
    "tusY": 34,
    "tusGen": [
     118,
-    160
+    158
    ],
    "satirY": 46,
-   "birincil": 1,
+   "birincil": 0,
    "pencereGen": null,
    "icerik": 1688,
    "listeGen": 1606,
@@ -1017,10 +1017,10 @@
    "tusY": 34,
    "tusGen": [
     118,
-    160
+    158
    ],
    "satirY": 46,
-   "birincil": 1,
+   "birincil": 0,
    "pencereGen": null,
    "icerik": 1688,
    "listeGen": 1606,
@@ -1055,10 +1055,10 @@
    "tusY": 44,
    "tusGen": [
     123,
-    168
+    165
    ],
    "satirY": 56,
-   "birincil": 1,
+   "birincil": 0,
    "pencereGen": null,
    "icerik": 1080,
    "listeGen": 1006,
@@ -1093,10 +1093,10 @@
    "tusY": 44,
    "tusGen": [
     123,
-    168
+    165
    ],
    "satirY": 56,
-   "birincil": 1,
+   "birincil": 0,
    "pencereGen": null,
    "icerik": 1080,
    "listeGen": 1006,
@@ -1131,10 +1131,10 @@
    "tusY": 44,
    "tusGen": [
     123,
-    168
+    165
    ],
-   "satirY": 56,
-   "birincil": 1,
+   "satirY": 104,
+   "birincil": 0,
    "pencereGen": null,
    "icerik": 810,
    "listeGen": 736,
@@ -1169,10 +1169,10 @@
    "tusY": 44,
    "tusGen": [
     123,
-    168
+    165
    ],
-   "satirY": 56,
-   "birincil": 1,
+   "satirY": 104,
+   "birincil": 0,
    "pencereGen": null,
    "icerik": 810,
    "listeGen": 736,
@@ -1192,7 +1192,7 @@
    "sertKirpma": 0,
    "tasanMetin": 0,
    "cakisma": 0,
-   "sonCakisma": 0,
+   "sonCakisma": null,
    "gizliEtkilesimli": 0,
    "ekranDisi": 0,
    "kucukHedef": 0,
@@ -1209,8 +1209,8 @@
     144,
     351
    ],
-   "satirY": 172,
-   "birincil": 1,
+   "satirY": 235,
+   "birincil": 0,
    "pencereGen": null,
    "icerik": 375,
    "listeGen": 313,
@@ -1230,7 +1230,7 @@
    "sertKirpma": 0,
    "tasanMetin": 0,
    "cakisma": 0,
-   "sonCakisma": 0,
+   "sonCakisma": null,
    "gizliEtkilesimli": 0,
    "ekranDisi": 0,
    "kucukHedef": 0,
@@ -1247,8 +1247,8 @@
     144,
     351
    ],
-   "satirY": 172,
-   "birincil": 1,
+   "satirY": 235,
+   "birincil": 0,
    "pencereGen": null,
    "icerik": 375,
    "listeGen": 313,

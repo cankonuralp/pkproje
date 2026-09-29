@@ -1964,6 +1964,12 @@ revizyon, alan kopyalama, hafif kusur devri, meslek eşleşme denetimi).
 - Emsal ürünler: https://opwire.app/iso-17020-periyodik-kontrol-yazilimi/ · https://17020muayene.vidco.com.tr/ · https://akuple.com/asansor-kontrol-yazilimi/ · https://ensyazilim.com/
 
 ## 11 · Değişiklik günlüğü
+- 2026-09-29 (151): **X3 · Denetime başla tuşu kalktı** (§9 otuz sekizinci tur). Kabul edilen planda ekipmanlar ve **Rapor oluştur**
+  hemen açık (ekipman ekle, Excel'den yükle de); Denetim adımında "İlk rapor oluşturulunca denetim başlar." notu. İlk rapor oluşturulunca
+  plan kendiliğinden **Denetimde** olur, başlama zamanı o an (hareket kaydına "Denetime başlandı · ilk rapor oluşturuldu"). "Kabul edildi"
+  durumu listede anlamını korur: inspector kabul etti, henüz rapor yok. Ölçüm: planlar durum 128/128 · etkileşim 51/51 (1 yeni) · telefon
+  64/64; gözle 1920 + 375.
+
 - 2026-09-29 (150): **X2 · SGK DETSİS no saha ekranında yok** (§9 otuz sekizinci tur). "Plan içeriği"ndeki satır saha raporunun Firma
   bilgileri bölümündeydi (plan içinde yok); oradan kalktı. Ek-III zorunlu alanı olduğu için rapor PDF'ine tesis kaydından gitmeye devam eder.
   Ölçüm: m8 durum 184/184 · etkileşim 82/82 (1 yeni: ekranda yok, PDF'te var; 1 güncellendi) · telefon 92/92.

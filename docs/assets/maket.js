@@ -3,7 +3,7 @@
    ⛔ "Bugün" sabit: 2026-09-23, saat 16:40 — ölçüm her açılışta aynı sonucu versin.
    Adres: ?veri=dolu|bos|hata · ?tema=acik|koyu · #/plan/<id> = plan içi ·
           #/plan/<id>/ekle[/<KOD>] = ekipman ekle penceresi (sunum çerçeveleri için).
-   2. tur: liste sütunları örnek listeden; satırda tek tuş Kabul et → Denetime başla → Devam et.
+   2. tur: liste sütunları örnek listeden; satırda tek tuş Kabul et → Denetime başla → Devam et (2026-09-29: Denetime başla kalktı).
    3. tur: ekipman ile rapor ayrı; ekipman kodu personelce girilir, firmada eşsiz, çakışan kod kaydedilmez; her hareket
    kayda geçer; numara sistemi.
    4. tur (reisim 2026-09-23): plan içi bir AKIŞ — dikey adım çizelgesi: Planlandı → Kabul (tarafsızlık beyanı) →
@@ -175,7 +175,10 @@
   var bransAd = function (b) { return b === "m" ? "Mekanik" : "Elektrik"; };
   var raporlar = function (p) { return p.rapor.filter(function (r) { return !r.pasif; }); };   /* pasif rapor inspector'da görünmez (2026-09-28, T2) */
   var raporuVar = function (p, kod) { return raporlar(p).filter(function (r) { return r.kod === kod; })[0]; };
-  var calisir = function (p) { return p.durum === "denetimde" || p.durum === "tamam"; };   /* rapor oluşturulabilir */
+  /* rapor oluşturulabilir: kabul edilen plan da (2026-09-29, reisim: "Planı kabul ettikten sonra denetime başla tuşu olmasına gerek yok
+     gereksiz") — ilk rapor oluşturulunca plan kendiliğinden "Denetimde" olur, başlama zamanı o an */
+  var calisir = function (p) { return p.durum === "kabul" || p.durum === "denetimde" || p.durum === "tamam"; };
+  var ekipmanAcik = function (p) { return p.durum === "kabul" || p.durum === "denetimde"; };   /* ekipman eklenir, Excel'den yüklenir */
 
   var q = new URLSearchParams(location.search);
   var VERI = q.get("veri") || "dolu";
@@ -334,7 +337,6 @@
   function planEylem(p) {   /* şu anki adımın tuşları — adımda ve telefonun alt çubuğunda aynı üretici */
     var sid = "a-plan-sebep-" + p.id;
     if (p.durum === "bekliyor") return tus("reddet", p, "Reddet", "", false, "a-tus-ikincil") + tus("kabul", p, "Kabul et", "check", !!p.eksik || !p.beyanOkundu, "", sid);
-    if (p.durum === "kabul") return tus("basla", p, "Denetime başla", "play");
     if (p.durum === "denetimde") return tus("tamamla", p, "Tamamla", "circle-check");
     if (p.durum === "tamam") return tus("geri-al", p, "Tamamlamayı geri al", "undo-2", false, "a-tus-ikincil") + tus("saha-formu", p, "Saha formu oluştur", "file-text");
     return "";
@@ -472,7 +474,7 @@
         /* 2026-09-27 (reisim: "ekipan listesinbi excelden export etme ve inport etme olsun"): Excel'e aktar her zaman; Excel'den yükle
            ekipman eklenebilen durumda (denetimde) */
         '<div class="a-bolum-tuslar">' + MK.tus({ eylem: "excel-disa", ad: "Excel'e aktar", ikon: "download", sinif: "a-tus-ikincil", veri: { id: p.id } }) +
-        (d === "denetimde" ? MK.tus({ eylem: "excel-ice", ad: "Excel'den yükle", ikon: "upload", sinif: "a-tus-ikincil", veri: { id: p.id } }) +
+        (ekipmanAcik(p) ? MK.tus({ eylem: "excel-ice", ad: "Excel'den yükle", ikon: "upload", sinif: "a-tus-ikincil", veri: { id: p.id } }) +
           '<button class="a-tus a-tus-ikincil" type="button" data-eylem="ekle-ac" data-id="' + p.id + '">' + ikon("plus", "a-ikon-kucuk") + "Ekipman ekle</button>" : "") + "</div>" +
         "</div>" + MK.suzgecHtml("e") + '<div class="a-liste-kap" id="a-liste-e"></div><div id="a-sayfa-e"></div></div>' +
       (calisir(p) ? '<div class="a-alt-bolum"><div class="a-alt-bas"><h3 class="a-alt-baslik" id="a-rapor-baslik" tabindex="-1">Raporlar</h3><span class="a-sayac" id="a-sayac-r"></span>' +
@@ -481,7 +483,7 @@
         MK.suzgecHtml("r") + '<div class="a-liste-kap" id="a-liste-r"></div><div id="a-sayfa-r"></div></div>' : "");
     var a3 = adim(3, a3durum, "Denetim", a3ozet,
       (d === "red" ? '<p class="a-adim-not">Plan reddedildi; denetim yok.</p>' : "") +
-      (d === "kabul" ? '<div class="a-adim-eylem"><div class="a-adim-tuslar">' + eylem + "</div></div>" : "") +
+      (d === "kabul" ? '<p class="a-adim-not">İlk rapor oluşturulunca denetim başlar.</p>' : "") +
       kontrol);
     /* 4 · Tamamlama */
     var a4 = adim(4, d === "tamam" ? "tamam" : "bekliyor", "Tamamlama", d === "tamam" ? tno(p.bitti) : "",
@@ -593,7 +595,7 @@
       var h = document.querySelector(planda ? "#a-plan h1" : "#a-liste-gorunum h1");
       if (h) h.focus({ preventScroll: true });
     }
-    if (p && r.ekle && p.durum === "denetimde") ekleAc(p, kodNormal(r.kod)); else ekleKapat();
+    if (p && r.ekle && ekipmanAcik(p)) ekleAc(p, kodNormal(r.kod)); else ekleKapat();
   }
   MK.goster = goster;
   function git(id) { var r = rota(); if (r && r.id === id && !r.ekle) goster(false); else location.hash = "#/plan/" + id; }
@@ -611,7 +613,6 @@
   var X = MK.eylem, pl = function (el) { return bul(+el.dataset.id); };
   X.tekrar = function () { VERI = "dolu"; goster(false); };
   X.kabul = function (el) { var p = pl(el); if (p && p.durum === "bekliyor" && !p.eksik && p.beyanOkundu) { p.durum = "kabul"; p.kabul = simdi(); kaydet(p, simdi(), BEN, "Plan kabul edildi", "Tarafsızlık beyanı onaylandı"); goster(false); MK.bildir("Plan kabul edildi."); } };
-  X.basla = function (el) { var p = pl(el); if (p && p.durum === "kabul") { p.durum = "denetimde"; p.basladi = simdi(); kaydet(p, simdi(), BEN, "Denetime başlandı"); MK.bildir("Denetim başladı."); git(p.id); } };
   X.devam = function (el) { var p = pl(el); if (p) git(p.id); };
   X.tamamla = function (el) { var p = pl(el); if (p && p.durum === "denetimde") { p.durum = "tamam"; p.bitti = simdi(); kaydet(p, simdi(), BEN, "Plan tamamlandı"); goster(false); MK.bildir("Plan tamamlandı."); } };
   X["geri-al"] = function (el) { var p = pl(el); if (p && p.durum === "tamam") { p.durum = "denetimde"; p.bitti = null; kaydet(p, simdi(), BEN, "Tamamlama geri alındı"); goster(false); MK.bildir("Tamamlama geri alındı; plan yeniden denetime açıldı."); } };
@@ -619,6 +620,7 @@
     var p = pl(el);
     if (p && calisir(p)) {   /* sınırsız: aynı ekipmana yeni rapor (2026-09-28) */
       var r = { no: raporNo("0926", raporSira++).replace(/^[^-]+/, MV.firmaKodu()), kod: el.dataset.kod, durum: "taslak", olustu: simdi(), sonuc: null };
+      if (p.durum === "kabul") { p.durum = "denetimde"; p.basladi = simdi(); kaydet(p, simdi(), BEN, "Denetime başlandı", "ilk rapor oluşturuldu"); }
       p.rapor.push(r); ortakEkipman(p, r.kod); ortakRapor(p, r); kaydet(p, simdi(), BEN, "Rapor oluşturuldu", r.no + " · " + r.kod); SZ.r.sayfa = 1;
       goster(false); MK.bildir("Rapor oluşturuldu: " + r.no + ". Satırındaki “Raporu düzenle” saha rapor ekranını açar.");
     }
@@ -779,7 +781,7 @@
       MK.tus({ eylem: "pencere-kapat", ad: "Vazgeç", sinif: "a-tus-ikincil" }) + MK.tus({ eylem: "excel-yukle", ad: "Yükle" + (EXCEL.dosya ? " (" + gecerli.length + ")" : ""), ikon: "upload", kapali: !EXCEL.dosya || !gecerli.length }));
   }
   X["excel-ice"] = function (el) {
-    var p = pl(el); if (!p || p.durum !== "denetimde") return;
+    var p = pl(el); if (!p || !ekipmanAcik(p)) return;
     EXCEL = { p: p, dosya: "", satirlar: [] }; excelIceCiz();
     $("a-pencere-alt").querySelector('[data-eylem="pencere-kapat"]').focus({ preventScroll: true }); document.querySelector('#a-pencere [data-eylem="excel-sec"]').focus();
   };
@@ -818,7 +820,7 @@
     MK.bildir(ok.length + " ekipman plana eklendi" + (atla ? "; " + atla + " satır atlandı." : "."));
   };
   X["saha-indir"] = function () { MK.yazdir($("a-pencere-baslik").textContent, $("a-pencere-govde").innerHTML); };
-  X["ekle-ac"] = function (el) { var p = pl(el); if (p && p.durum === "denetimde") ekleAc(p); };
+  X["ekle-ac"] = function (el) { var p = pl(el); if (p && ekipmanAcik(p)) ekleAc(p); };
   X["ekle-kapat"] = ekleKapat;
   X["tesistekini-sec"] = function (el) { E.sekme = "kayitli"; E.secili = [el.dataset.kod]; ekleCiz(); };
   X["kayitli-ekle"] = function () {

@@ -2,8 +2,8 @@
  "maket": "planlar",
  "tarih": "2026-09-29",
  "arac": "tools/olc-bulut.mjs --etkilesim (başsız tarayıcı, 1920 açık tema; gen verilen denemede o genişlik)",
- "toplam": 50,
- "gecen": 50,
+ "toplam": 51,
+ "gecen": 51,
  "denemeler": [
   {
    "ad": "Planlar listesi: müşteri adı kalın (≥ 600), proje adı normal (400)",
@@ -287,6 +287,13 @@
   },
   {
    "ad": "plan kabul edilince Planlar balonu bir azalır; Onaylar sayfasında da aynı (35. tur 163)",
+   "gen": 1920,
+   "sayfa": "maket/planlarim.html",
+   "hash": "#/plan/3",
+   "gecti": true
+  },
+  {
+   "ad": "kabul edilen planda Denetime başla yok; ekipmanlarda Rapor oluştur var, ilk rapor planı Denetimde yapar (başlama zamanı o an)",
    "gen": 1920,
    "sayfa": "maket/planlarim.html",
    "hash": "#/plan/3",
