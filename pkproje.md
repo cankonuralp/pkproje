@@ -1949,6 +1949,14 @@ revizyon, alan kopyalama, hafif kusur devri, meslek eşleşme denetimi).
 - Emsal ürünler: https://opwire.app/iso-17020-periyodik-kontrol-yazilimi/ · https://17020muayene.vidco.com.tr/ · https://akuple.com/asansor-kontrol-yazilimi/ · https://ensyazilim.com/
 
 ## 11 · Değişiklik günlüğü
+- 2026-09-29 (141): **W4 · 192 Inspector "Revize iste"** (§9 otuz yedinci tur). Raporlar'da tamamlanan raporda **"Revize iste"** (gerekçe zorunlu,
+  en az 10 karakter) → raporun üstünde "Revize isteğiniz teknik yöneticide" şeridi, "Revize isteğini geri çek". Onaylar'a **"Revize istekleri"**
+  sekmesi (seçili branşın; vekilde o branşın): satırda **Reddet** (gerekçe isteğe bağlı; inspector raporunda "Revize isteği reddedildi"
+  şeridini görür, yeniden isteyebilir) ve **Revizeye gönder** (inspector'ın gerekçesi başlangıç olarak gelir; gönderince istek kalkar, R1 açılır).
+  Rapor ekranında da istek şeridi ve "İsteği reddet". **Genel düzeltme:** sekme grubu dar kapta taşıyordu (810'da vekil seçiliyken 54 px) → ortak
+  `.a-sekmeler` alt satıra geçer, yarıçap tek satırda hap, çok satırda kutu (bütün sayfaların sekmeleri). Ölçüm: m9 durum 200/200 · etkileşim
+  44/44 (2 yeni, sayfalar arası) · telefon 100/100; gözle 1920 ve 810.
+
 - 2026-09-29 (140): **W3 · 191 Durum değişikliği şeridi** (§9 otuz yedinci tur). Teknik yönetici raporun durumunu değiştirdiyse ve değişiklik hâlâ
   geçerliyse raporun üstünde bilgi şeridi: "Durum teknik yönetici tarafından değiştirildi · ad · zaman · eski → yeni: gerekçe". Tek üretici
   `MV.durumSerit`; Onaylar rapor ekranı, Raporlar rapor sayfası ve saha raporu aynı şeridi gösterir. Yeni'ye alınan raporda çıkmaz (orada "Geri

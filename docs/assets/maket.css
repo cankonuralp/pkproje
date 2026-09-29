@@ -546,7 +546,8 @@ html[data-giris="fare"] .a-girdi:focus, html[data-giris="fare"] .a-alan:focus { 
 .a-pdf-bas-yazi { display: flex; flex: 1 1 auto; flex-direction: column; gap: 6px; }
 .a-pdf-satir { display: block; height: 8px; border-radius: 4px; background: var(--zemin2); }
 .a-pdf-satir-kisa { width: 60%; }
-.a-sekmeler { display: inline-flex; gap: 2px; padding: 3px; margin: 0 0 12px; border: 1px solid var(--kenar-alan); border-radius: var(--r-tam); background: var(--kart); }
+/* 2026-09-29 (W4 ölçümünde 810'da 54 px taşma): sekme grubu dar kapta alt satıra geçer, taşmaz; yarıçap tek satırda hap, çok satırda düzgün kutu */
+.a-sekmeler { display: inline-flex; flex-wrap: wrap; max-width: 100%; gap: 2px; padding: 3px; margin: 0 0 12px; border: 1px solid var(--kenar-alan); border-radius: calc(var(--tus-y) / 2 + 4px); background: var(--kart); }
 .a-sekme {
   min-height: var(--tus-y); padding: 0 14px; display: inline-flex; align-items: center; gap: 6px;
   border: 0; border-radius: var(--r-tam); background: transparent; color: var(--yazi2); font-weight: 600; white-space: nowrap;

@@ -95,8 +95,13 @@
           (r.durum === "onaylandi" ? MK.tus({ eylem: "imza-ac", ad: "İmzala", ikon: "file-signature", veri: { no: r.no } }) : "") +
           (r.durum === "imzada" ? MK.tus({ eylem: "istek-geri", ad: "İsteği geri çek", ikon: "undo-2", sinif: "a-tus-ikincil", veri: { no: r.no } }) +
             MK.tus({ eylem: "telefon-ac", ad: "Telefonda onayla", ikon: "smartphone", veri: { no: r.no } }) : "") +
+          /* 192 (2026-09-29): tamamlanan raporda inspector revize ister (gerekçe zorunlu); revizeye gönderen teknik yönetici */
+          (r.durum === "imzali" ? (r.revizeIstek ? MK.tus({ eylem: "revize-istek-geri", ad: "Revize isteğini geri çek", ikon: "undo-2", sinif: "a-tus-ikincil", veri: { no: r.no } })
+            : MK.tus({ eylem: "revize-iste-ac", ad: "Revize iste", ikon: "file-pen-line", sinif: "a-tus-ikincil", veri: { no: r.no } })) : "") +
           (yeniden(r) ? '<a class="a-tus a-tus-birincil" href="' + raporEkrani(r) + '">' + ikon("pencil", "a-ikon-kucuk") + "Raporu düzenle</a>" : "") + "</div></div>" +
       '<div class="a-uyari-serit">' + MV.durumSerit(r) +
+        (r.revizeIstek && r.durum === "imzali" ? MK.serit("bilgi", "file-pen-line", "<b>Revize isteğiniz teknik yöneticide</b> · " + kacis(yon.ad) + " · " + MK.zamanYaz(r.revizeIstek.zaman) + ": “" + kacis(r.revizeIstek.gerekce) + "”") : "") +
+        (r.revizeRed && r.durum === "imzali" && !r.revizeIstek ? MK.serit("uyari", "file-pen-line", "<b>Revize isteği reddedildi</b> · " + kacis(MV.kisi(r.revizeRed.kim).ad) + " · " + MK.zamanYaz(r.revizeRed.zaman) + (r.revizeRed.gerekce ? ": “" + kacis(r.revizeRed.gerekce) + "”" : "")) : "") +
         (r.geri && r.durum === "taslak" ? MK.serit("uyari", "undo-2", "<b>" + (r.revizyonlar && r.revizyonlar[0] && r.revizyonlar[0].zaman === r.geri.zaman ? "Revizeye gönderildi (" + r.revizyonlar[0].ad + ")" : "Geri gönderildi") + "</b> · " + kacis(MV.kisi(r.geri.kim).ad) + ": “" + kacis(r.geri.gerekce) + "”") : "") +
         (r.durum === "onayda" ? MK.serit("bilgi", "clock", "Onayda · " + kacis(yon.ad)) : "") +
         (r.durum === "onaylandi" ? MK.serit("uyari", "file-signature", "Muayene uzmanı imzası · imzanız bekleniyor") : "") +
@@ -130,6 +135,13 @@
       (W.hata ? ' aria-invalid="true" aria-describedby="w-pin-ipucu"' : "") + ">" + (W.hata ? '<p class="a-ipucu a-ipucu-uyari" id="w-pin-ipucu">' + W.hata + "</p>" : "") + "</div>";
   }
   function pencereCiz(odak) {
+    if (W.tip === "revizeIstek") {   /* 192: revize isteği penceresi */
+      $("a-pencere-baslik").textContent = "Revize iste · " + W.r.no;
+      $("a-pencere-govde").innerHTML = '<div class="a-alan-grup"><label class="a-etiket" for="w-gerekce">Gerekçe <span class="a-zorunlu">zorunlu</span></label><textarea class="a-alan" id="w-gerekce" maxlength="400"' +
+        (W.hata ? ' aria-invalid="true" aria-describedby="w-gerekce-ipucu"' : "") + ' placeholder="Raporda neyin düzeltilmesi gerektiği">' + kacis(W.gerekce) + "</textarea>" + (W.hata ? '<p class="a-ipucu a-ipucu-uyari" id="w-gerekce-ipucu">' + W.hata + "</p>" : "") + "</div>";
+      $("a-pencere-alt").innerHTML = MK.tus({ eylem: "pencere-kapat", ad: "Vazgeç", sinif: "a-tus-ikincil" }) + MK.tus({ eylem: "revize-iste", ad: "İsteği gönder", ikon: "file-pen-line" });
+      if (odak) { var g = document.querySelector(odak); if (g) g.focus(); } return;
+    }
     var l = W.l, y = MV.imzaYontem(), ben = MV.kisi(BEN), tus;
     if (W.adim === "telefon") {   /* telefon ekranı (maket): operatörün imza isteği, her rapor ayrı PIN */
       var r = l[W.i];
@@ -232,6 +244,14 @@
     var r = W.l[W.i]; r.durum = "onaylandi"; r.imzaGonderildi = null;
     telefonSonraki(r, "imza isteği reddedildi; rapor yeniden imzanızı bekliyor");
   };
+  X["revize-iste-ac"] = function (el) { W = { tip: "revizeIstek", r: MV.rapor(el.dataset.no), gerekce: "", hata: "" }; pencereCiz(); $("a-pencere").showModal(); $("w-gerekce").focus(); };
+  X["revize-iste"] = function () {
+    if (W.gerekce.trim().length < 10) { W.hata = "Gerekçe en az 10 karakter olmalı: teknik yönetici neyin düzeltileceğini bilmeli."; pencereCiz("#w-gerekce"); return; }
+    var r = W.r; r.revizeIstek = { kim: BEN, zaman: MK.simdi(), gerekce: W.gerekce.trim() }; r.revizeRed = null;
+    $("a-pencere").close(); raporCiz(r); var h = document.querySelector("#a-nesne h1"); if (h) h.focus();
+    MK.bildir(r.no + " için revize isteği teknik yöneticiye gitti.");
+  };
+  X["revize-istek-geri"] = function (el) { var r = MV.rapor(el.dataset.no); r.revizeIstek = null; raporCiz(r); var h = document.querySelector("#a-nesne h1"); if (h) h.focus(); MK.bildir(r.no + " revize isteği geri çekildi."); };
   X["istek-geri"] = function (el) {   /* telefona gönderilmiş isteği geri çek (ör. telefon yanında değil) */
     var r = MV.rapor(el.dataset.no); r.durum = "onaylandi"; r.imzaGonderildi = null; yenile(r);
     var h = document.querySelector("#a-nesne h1"); if (h) h.focus(); MK.bildir(r.no + " imza isteği geri çekildi; rapor imzanızı bekliyor.");
@@ -283,7 +303,7 @@
     var l = $("a-pencere").open && W ? W.l : [MV.rapor(rota().no)];
     MK.yazdir(l.length > 1 ? l.length + " rapor" : l[0].no, l.map(function (r) { return MB.belge(MV.tur(ekp(r).tur), MV.raporBelge(r)); }).join(""));
   };
-  MK.onGirdi = function (e) { if (W && e.target.id === "w-pin") { W.pin = e.target.value.replace(/\D/g, ""); if (W.pin !== e.target.value) e.target.value = W.pin; } };
+  MK.onGirdi = function (e) { if (W && W.tip === "revizeIstek" && e.target.id === "w-gerekce") { W.gerekce = e.target.value; return; } if (W && e.target.id === "w-pin") { W.pin = e.target.value.replace(/\D/g, ""); if (W.pin !== e.target.value) e.target.value = W.pin; } };
   /* kapanış olayı eşzamansız gelir: o arada pencere yeniden açıldıysa (ör. Vazgeç → hemen "Telefonda onayla") yeni durum silinmez */
   $("a-pencere").addEventListener("close", function () { if ($("a-pencere").open) return; W = null; var r = rota(); if (r.pencere || r.telefon) history.replaceState(null, "", "#/"); });
 

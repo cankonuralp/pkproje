@@ -50,11 +50,15 @@
     } },
     { k: "sonuc", baslik: "Sonuç", kart: "rozet", sira: 1, hucre: function (r) { var s = MV.sonucAd(r); return rozet(s === "Uygun" ? { ad: "Uygun", rozet: "a-rozet-tamam" } : { ad: s, rozet: /^(Kusurlu|Ağır)/.test(s) ? "a-rozet-red" : "a-rozet-bekliyor" }); } }
   ];
-  function sekmeler(gor) {   /* gor: "kuyruk" · "tum" · "pasif" */
+  /* 192 (2026-09-29): inspector'ın revize istekleri — seçili branşın tamamlanan raporları */
+  var istekler = function () { return MV.RAPORLAR.filter(function (r) { return r.revizeIstek && r.durum === "imzali" && brans(r) === BRANS; }).sort(function (a, b) { return a.revizeIstek.zaman < b.revizeIstek.zaman ? 1 : -1; }); };
+  var istekAdres = function () { return BRANS === BENIM ? "#/istekler" : "#/istekler?brans=" + BRANS; };
+  function sekmeler(gor) {   /* gor: "kuyruk" · "tum" · "istek" · "pasif" */
     $("a-uyari").innerHTML = '<div class="a-sekmeler a-bolum-serit" role="group" aria-label="Kuyruk">' + ["m", "e"].map(function (b) {
       var n = MV.RAPORLAR.filter(function (r) { return r.durum === "onayda" && brans(r) === b; }).length;
       return '<a class="a-sekme" href="' + (b === BENIM ? "#/" : "#/?brans=" + b) + '" aria-pressed="' + (gor === "kuyruk" && BRANS === b) + '">' + MV.bransAd(b) + (b === BENIM ? "" : " · vekil") + " <b>" + n + "</b></a>";
     }).join("") + '<a class="a-sekme" href="' + tumAdres() + '" aria-pressed="' + (gor === "tum") + '">Tüm raporlar' + (BRANS === BENIM ? "" : " · " + MV.bransAd(BRANS).toLocaleLowerCase("tr") + " vekil") + " <b>" + tumu().length + "</b></a>" +
+      '<a class="a-sekme" href="' + istekAdres() + '" aria-pressed="' + (gor === "istek") + '">Revize istekleri <b>' + istekler().length + "</b></a>" +
       '<a class="a-sekme" href="#/pasif" aria-pressed="' + (gor === "pasif") + '">Pasif raporlar <b>' + pasifler().length + "</b></a></div>";
   }
   var PASIF_SUTUN = [SUTUN[0], SUTUN[1], SUTUN[2],
@@ -62,6 +66,17 @@
     { k: "eylem", baslik: "İşlem", gizliBaslik: true, kart: "eylem", sira: 9, hucre: function (r) {
       return '<div class="a-eylem"><div class="a-eylem-tuslar">' + MK.tus({ eylem: "rapor-sil-ac", ad: "Sil", sinif: "a-tus-ikincil", veri: { no: r.no } }) +
         MK.tus({ eylem: "rapor-aktif", ad: "Aktif et", ikon: "undo-2", sinif: "a-tus-ikincil", veri: { no: r.no } }) + "</div></div>"; } }];
+  var ISTEK_SUTUN = [SUTUN[0], SUTUN[1], SUTUN[2],
+    { k: "istek", baslik: "İstek", kart: "govde", sira: 4, hucre: function (r) { return '<span class="a-kart-etiket">İstek</span><span><span class="a-tarih-gun">' + MK.zamanYaz(r.revizeIstek.zaman) + "</span>" + kirp(r.revizeIstek.gerekce, "a-alt-satir") + "</span>"; } },
+    { k: "eylem", baslik: "İşlem", gizliBaslik: true, kart: "eylem", sira: 9, hucre: function (r) {
+      return '<div class="a-eylem"><div class="a-eylem-tuslar">' + MK.tus({ eylem: "istek-red-ac", ad: "Reddet", sinif: "a-tus-ikincil", veri: { no: r.no } }) +
+        MK.tus({ eylem: "revize-ac", ad: "Revizeye gönder", ikon: "file-pen-line", sinif: "a-tus-ikincil", veri: { no: r.no } }) + "</div></div>"; } }];
+  function istekCiz() {
+    var l = istekler(); sekmeler("istek"); $("a-suzgec-kap").innerHTML = ""; $("a-sayfa").innerHTML = "";
+    $("a-sayac").innerHTML = "<b>" + l.length + "</b> rapor";
+    $("a-liste").innerHTML = l.length ? MK.tablo({ baslik: "Revize istekleri", sinif: "a-tablo-onay", sutunlar: ISTEK_SUTUN, kayitlar: l, href: function (r) { return "#/r/" + r.no; } })
+      : MK.bos({ ikon: "circle-check", baslik: "Revize isteği yok", metin: "" });
+  }
   function pasifCiz() {
     var l = pasifler(); sekmeler("pasif"); $("a-suzgec-kap").innerHTML = ""; $("a-sayfa").innerHTML = "";
     $("a-sayac").innerHTML = "<b>" + l.length + "</b> rapor";
@@ -158,10 +173,11 @@
       '<div class="a-nesne-bas"><div class="a-nesne-kimlik"><div class="a-nesne-baslik"><h1 tabindex="-1">' + r.no + (rv ? "-" + rv.ad : "") + "</h1>" + rozet(MV.raporDurum(r)) + "</div>" +
         '<p class="a-nesne-alt">' + ikon("wrench", "a-ikon-kucuk") + '<span><span class="a-kod">' + e.kod + "</span> · " + kacis(t.ad) + " · " + kacis(ts.ad) + " · " + kacis(MV.kisi(r.kisi).ad) + "</span></p></div>" +
         '<div class="a-eylem-cubugu">' + (r.durum === "imzali"
-          ? MK.tus({ eylem: "revize-ac", ad: "Revizeye gönder", ikon: "file-pen-line", veri: { no: r.no } })
+          ? (r.revizeIstek ? MK.tus({ eylem: "istek-red-ac", ad: "İsteği reddet", sinif: "a-tus-ikincil", veri: { no: r.no } }) : "") + MK.tus({ eylem: "revize-ac", ad: "Revizeye gönder", ikon: "file-pen-line", veri: { no: r.no } })
           : MK.tus({ eylem: "durum-ac", ad: "Durumu değiştir", ikon: "refresh-cw", sinif: r.durum === "onaylandi" ? "a-tus-ikincil" : "", veri: { no: r.no } }) +
             (r.durum === "onaylandi" ? MK.tus({ eylem: "onay-geri-al", ad: "Onayı geri al", ikon: "undo-2" }) : "")) + "</div></div>" +
       (MV.durumSerit(r) ? '<div class="a-uyari-serit">' + MV.durumSerit(r) + "</div>" : "") +
+      (r.revizeIstek && r.durum === "imzali" ? '<div class="a-uyari-serit">' + MK.serit("uyari", "file-pen-line", "<b>Revize isteği</b> · " + kacis(MV.kisi(r.revizeIstek.kim).ad) + " · " + MK.zamanYaz(r.revizeIstek.zaman) + ": “" + kacis(r.revizeIstek.gerekce) + "”") + "</div>" : "") +
       (r.geri && r.durum === "taslak" ? '<div class="a-uyari-serit">' + MK.serit("uyari", "undo-2", "<b>" + (rv && rv.zaman === r.geri.zaman ? "Revizeye gönderildi (" + rv.ad + ")" : "Geri gönderildi") + "</b> · " +
         kacis(MV.kisi(r.geri.kim).ad) + " · " + MK.zamanYaz(r.geri.zaman) + ": “" + kacis(r.geri.gerekce) + "”") + "</div>" : "") +
       '<section class="a-bolum" aria-labelledby="a-b-pdf"><div class="a-alt-bas"><h2 class="a-alt-baslik" id="a-b-pdf">' + (r.imzaDosya ? "İmzalı PDF" : "Rapor (PDF önizlemesi)") + '</h2><span class="a-sayac">' + (r.imza ? "imzalı" : "imzasız") + "</span></div>" +
@@ -174,10 +190,10 @@
   /* durumu değiştir: tamamlanmamış rapor Yeni / onayda / imza bekliyor durumlarından birine alınır; "Tamamlandı"ya yalnız imzayla geçilir.
      Yeni'ye alınan rapor inspector'a döner: gerekçe geri gönderimdeki gibi zorunlu (inspector neyi düzelteceğini bilmeli); ötekilerde isteğe bağlı */
   var HEDEF = ["taslak", "onayda", "onaylandi"];
-  var gerekceZorunlu = function () { return W.tip !== "durum" || W.hedef === "taslak"; };
+  var gerekceZorunlu = function () { return W.tip !== "istekRed" && (W.tip !== "durum" || W.hedef === "taslak"); };
   function pencereCiz(odak) {
     var r = W.r, rv = (r.revizyonlar || []).length + 1;
-    $("a-pencere-baslik").textContent = (W.tip === "durum" ? "Durumu değiştir · " : W.tip === "revize" ? "Revizeye gönder · " : "Geri gönder · ") + r.no;
+    $("a-pencere-baslik").textContent = (W.tip === "durum" ? "Durumu değiştir · " : W.tip === "revize" ? "Revizeye gönder · " : W.tip === "istekRed" ? "Revize isteğini reddet · " : "Geri gönder · ") + r.no;
     $("a-pencere-govde").innerHTML = "" +
       (W.tip === "durum" ? '<div class="a-alan-grup a-alan-genis"><p class="a-etiket">Şu an: ' + kacis(MV.raporDurum(r).ad) + "</p>" + HEDEF.filter(function (d) { return d !== r.durum; }).map(function (d) {
           return '<label class="a-onay-kutusu"><input type="radio" name="w-hedef" data-hedef value="' + d + '"' + (W.hedef === d ? " checked" : "") + "><span>" + kacis(durumAd(d)) + "</span></label>"; }).join("") +
@@ -188,11 +204,12 @@
         '<p class="a-ipucu' + (W.hata ? " a-ipucu-uyari" : "") + '" id="w-gerekce-ipucu">' + (W.hata || "") + "</p></div>";
     $("a-pencere-alt").innerHTML = MK.tus({ eylem: "pencere-kapat", ad: "Vazgeç", sinif: "a-tus-ikincil" }) +
       (W.tip === "durum" ? MK.tus({ eylem: "durum-kaydet", ad: "Durumu değiştir", ikon: "refresh-cw" }) : W.tip === "revize" ? MK.tus({ eylem: "revize-gonder", ad: "Revizeye gönder", ikon: "file-pen-line" })
+        : W.tip === "istekRed" ? MK.tus({ eylem: "istek-reddet", ad: "Reddet" })
         : MK.tus({ eylem: "geri-gonder", ad: "Geri gönder", ikon: "undo-2" }));
     if (odak) { var el = typeof odak === "string" && odak.charAt(0) !== "#" && odak.charAt(0) !== "[" ? $(odak) : document.querySelector("#a-pencere " + odak); if (el) el.focus(); }
   }
   function pencereAc(r, tip) {
-    W = { r: r, tip: tip || "geri", gerekce: "", hata: "", hedef: null, hedefHata: "" }; pencereCiz(); if (!$("a-pencere").open) $("a-pencere").showModal();
+    W = { r: r, tip: tip || "geri", gerekce: tip === "revize" && r.revizeIstek ? r.revizeIstek.gerekce : "", hata: "", hedef: null, hedefHata: "" }; pencereCiz();   /* revizede inspector'ın istek gerekçesi başlangıç */ if (!$("a-pencere").open) $("a-pencere").showModal();
     var ilk = document.querySelector("#a-pencere [data-hedef]") || $("w-gerekce"); ilk.focus();
   }
   /* durum değişikliği ve revize kayıt altında (r.durumGecmis: kim, ne zaman, eskisi, yenisi, gerekçe); ekranda geçmiş listesi yok (§11 98) */
@@ -203,7 +220,7 @@
   }
   function yenidenCiz(odak) {   /* pencere kapanınca bulunduğu yer yeniden çizilir; odak rapor başlığına ya da listedeki satıra */
     goster(false);
-    var el = rota().v === "rapor" ? document.querySelector("#a-nesne h1") : document.querySelector('#a-liste a[href="#/r/' + odak + '"]') || document.querySelector('#a-uyari [href^="#/tum"]');
+    var el = rota().v === "rapor" ? document.querySelector("#a-nesne h1") : document.querySelector('#a-liste a[href="#/r/' + odak + '"]') || document.querySelector('#a-uyari [aria-pressed="true"]');
     if (el) el.focus();
   }
 
@@ -212,6 +229,8 @@
     BRANS = /[?&]brans=e/.test(location.hash) ? "e" : /[?&]brans=m/.test(location.hash) ? "m" : BRANS;
     if (location.hash === "#/" || location.hash === "") BRANS = BENIM;
     if (location.hash === "#/pasif") return { v: "liste", pasif: true };
+    if (location.hash === "#/istekler") { BRANS = BENIM; return { v: "liste", istek: true }; }
+    if (/^#\/istekler\?brans=[a-z]$/.test(location.hash)) return { v: "liste", istek: true };
     if (location.hash === "#/tum") { BRANS = BENIM; return { v: "liste", tum: true }; }
     if (/^#\/tum\?brans=[a-z]$/.test(location.hash)) return { v: "liste", tum: true };
     var m = /^#\/r\/([A-Za-z0-9-]+)(\/geri)?$/.exec(location.hash);
@@ -221,9 +240,9 @@
     var r = rota(), rp = r.no ? MV.rapor(r.no) : null;
     $("a-liste-gorunum").hidden = r.v !== "liste"; $("a-nesne").hidden = r.v === "liste";
     if (r.tum && TUM_BRANS !== BRANS) { MK.suzgecSifirla("t"); TUM_BRANS = BRANS; }   /* branş değişince süzgeç (inspector, sayfa) baştan */
-    if (r.pasif) pasifCiz(); else if (r.tum) { $("a-suzgec-kap").innerHTML = MK.suzgecHtml("t"); MK.suzgecKur("t"); }
+    if (r.pasif) pasifCiz(); else if (r.istek) istekCiz(); else if (r.tum) { $("a-suzgec-kap").innerHTML = MK.suzgecHtml("t"); MK.suzgecKur("t"); }
     else if (r.v === "liste") { $("a-suzgec-kap").innerHTML = MK.suzgecHtml("o"); MK.suzgecKur("o"); } else onayCiz(rp);
-    document.title = (r.v === "rapor" ? (rp ? rp.no + " · onay" : "Rapor bulunamadı") : r.tum ? "Tüm raporlar · Onaylar" : "Onaylar") + " · probata maket";
+    document.title = (r.v === "rapor" ? (rp ? rp.no + " · onay" : "Rapor bulunamadı") : r.tum ? "Tüm raporlar · Onaylar" : r.istek ? "Revize istekleri · Onaylar" : "Onaylar") + " · probata maket";
     if (odakla) { window.scrollTo(0, 0); var hh = document.querySelector("#a-icerik > :not([hidden]) h1"); if (hh) hh.focus({ preventScroll: true }); }
     if (r.pencere && rp && rp.durum === "onayda") pencereAc(rp, "geri"); else if ($("a-pencere").open) $("a-pencere").close();
   }
@@ -278,12 +297,17 @@
     MK.bildir(r.no + ": " + eski + " → " + MV.raporDurum(r).ad + ".");
   };
   /* imzalı (tamamlanan) rapor revizeye: yeni sürüm (R1, R2 …) Yeni olarak inspector'a döner; tamamlanan sürüm ve imzalı PDF'i sürümde saklanır */
+  X["istek-red-ac"] = function (el) { pencereAc(MV.rapor(el.dataset.no), "istekRed"); };
+  X["istek-reddet"] = function () {   /* gerekçe isteğe bağlı; inspector raporunda görür */
+    var r = W.r; r.revizeRed = { kim: BEN, zaman: MK.simdi(), gerekce: W.gerekce.trim() }; r.revizeIstek = null;
+    $("a-pencere").close(); yenidenCiz(r.no); MK.bildir(r.no + " revize isteği reddedildi.");
+  };
   X["revize-gonder"] = function () {
     var r = W.r, g = W.gerekce.trim(), z = MK.simdi();
     if (g.length < 10) { W.hata = "Gerekçe en az 10 karakter olmalı: inspector neyi düzelteceğini bilmeli."; pencereCiz("w-gerekce"); return; }
     r.revizyonlar = r.revizyonlar || [];
     r.revizyonlar.unshift({ ad: "R" + (r.revizyonlar.length + 1), zaman: z, kim: BEN, gerekce: g, onceki: { onay: r.onay, imza: r.imza, imzaDosya: r.imzaDosya || null, sonuc: r.sonuc } });
-    gecmisYaz(r, "taslak", g, z); inspectoraDon(r, g, z); r.imzaDosya = null;
+    gecmisYaz(r, "taslak", g, z); inspectoraDon(r, g, z); r.imzaDosya = null; r.revizeIstek = null; r.revizeRed = null;
     $("a-pencere").close(); yenidenCiz(r.no);
     MK.bildir(r.no + "-" + r.revizyonlar[0].ad + " açıldı; " + MV.kisi(r.kisi).ad + " raporun üstünde gerekçeyi görür. Tamamlanan sürüm saklandı.");
   };
