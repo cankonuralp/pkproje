@@ -1949,6 +1949,12 @@ revizyon, alan kopyalama, hafif kusur devri, meslek eşleşme denetimi).
 - Emsal ürünler: https://opwire.app/iso-17020-periyodik-kontrol-yazilimi/ · https://17020muayene.vidco.com.tr/ · https://akuple.com/asansor-kontrol-yazilimi/ · https://ensyazilim.com/
 
 ## 11 · Değişiklik günlüğü
+- 2026-09-29 (146): **W9 · 199 Kusur sınıfı olmayan türlerde önceki kusur** (§9 otuz yedinci tur). `MV.devredenKusurlar` artık her türde: kusur
+  sınıflı türde önceki rapor "Hafif kusurlu"ysa hafif kusur, öteki türlerde önceki rapor "Kusurlu"ysa kusur listelenir. Saha raporunda bölüm
+  başlığı türe göre ("Önceki kontrolden açık hafif kusurlar" / "… açık kusurlar"), formatı olmayan türün bölüm sırasına da girdi (fotoğraflardan
+  önce); "Giderilmedi" → sonuç önerisi Uygun değil ("Uygun" seçilirse uyarı); Onaylar özetinde "N kusur". Ölçüm: m8 durum 184/184 · etkileşim
+  81/81 (1 yeni) · telefon 92/92; m9 200/200 · 47/47 · 100/100; planlar 128/128 · 49/49 · 64/64.
+
 - 2026-09-29 (145): **W8 · 197 İmzalı saha formu yükle** (§9 otuz yedinci tur). Plan içinde Tamamlama adımının altında **oluşturulan saha formları**
   (en yeni üstte): numara · uzman imzası (yöntem ya da imzasız) · müşteri taraması (yüklü / yok); **Formu aç** (aynı numarayı açar),
   **İmzalı taramayı yükle** → dosya kaydı (aç · değiştir · sil, silme onaylı); her yükleme / silme planın hareket kaydına. Uzman imzası ve tarama

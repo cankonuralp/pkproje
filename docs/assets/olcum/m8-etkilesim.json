@@ -2,14 +2,21 @@
  "maket": "m8",
  "tarih": "2026-09-29",
  "arac": "tools/olc-bulut.mjs --etkilesim (başsız tarayıcı, 1920 açık tema; gen verilen denemede o genişlik)",
- "toplam": 80,
- "gecen": 80,
+ "toplam": 81,
+ "gecen": 81,
  "denemeler": [
   {
    "ad": "önceki kontrolün hafif kusuru listelenir; Giderilmedi → bu raporun kusurlarına girer, sonuç önerisi Uygun değil",
    "gen": 1920,
    "sayfa": "maket/rapor.html",
    "hash": "#/r/ET-1009?no=KM-0926-801-aaaaa&durum=taslak",
+   "gecti": true
+  },
+  {
+   "ad": "199: kusur sınıfı olmayan türde (FL-1002) önceki Kusurlu raporun kusuru listelenir; Giderilmedi → sonuç önerisi Uygun değil (uyarı)",
+   "gen": 1920,
+   "sayfa": "maket/rapor.html",
+   "hash": "#/r/FL-1002?no=KM-0926-803-ccccc&durum=taslak",
    "gecti": true
   },
   {

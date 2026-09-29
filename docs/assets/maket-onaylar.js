@@ -140,7 +140,7 @@
       (function () {
         var dv = MV.devredenKusurlar(r.kod, r.olustu); if (!dv.length) return null;
         var d = r.devir || {}, gm = dv.filter(function (x) { return d[x.id] === "devam"; }).length, gd = dv.filter(function (x) { return d[x.id] === "giderildi"; }).length;
-        return [!gm && gd === dv.length, "Önceki kontrolden " + dv.length + " hafif kusur · " + [gd ? gd + " giderildi" : "", gm ? gm + " giderilmedi" : "", dv.length - gd - gm ? (dv.length - gd - gm) + " işaretlenmedi" : ""].filter(Boolean).join(" · ")];
+        return [!gm && gd === dv.length, "Önceki kontrolden " + dv.length + (MV.kusurSinifli(t) ? " hafif kusur · " : " kusur · ") + [gd ? gd + " giderildi" : "", gm ? gm + " giderilmedi" : "", dv.length - gd - gm ? (dv.length - gd - gm) + " işaretlenmedi" : ""].filter(Boolean).join(" · ")];
       })(),
       [MV.meslekYetkili(r.kisi, t), "Inspector: " + MV.kisi(r.kisi).ad + " · " + MV.meslekAd(MV.kisi(r.kisi)) + (MV.meslekYetkili(r.kisi, t) ? "" : " · bu türe yetkili meslekler arasında değil")],
       [true, "Sonuç ve kanaat: " + (/^Kusurlu|Ağır/.test(s) && MV.kusurSinifli(t) ? "giderilene kadar kullanılamaz" : "kullanılabilir")]

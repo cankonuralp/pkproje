@@ -368,7 +368,7 @@
     (r.sigorta || []).forEach(function (x) { var h = linyeSonuc(r, x); if (h && !h.uygun) l.push(["6.1 · " + x.no + " " + x.devre, "Ağır kusur", h.neden.join("; ") + "."]); });
     r.pd.forEach(function (x) { var h = MV.pdHesap(x); if (h && !h.uygun) l.push(["6.2 · " + x.yer, "Ağır kusur", h.neden.join("; ") + "."]); });
     r.zi.forEach(function (x) { var h = MV.ziHesap(x); if (h && !h.uygun) l.push(["6.3 · " + x.yer, "Ağır kusur", h.neden.join("; ") + "."]); });
-    devam(r).forEach(function (x) { l.push([x.kriter + " (önceki kontrolden, " + x.rapor + ")", "Hafif kusur", x.aciklama]); });
+    devam(r).forEach(function (x) { l.push([x.kriter + " (önceki kontrolden, " + x.rapor + ")", x.sinif, x.aciklama]); });
     return l;
   }
   function kusurHtml(r) {
@@ -471,7 +471,7 @@
     S.kusur = F ? bolum(F.bolumler.kusur, "r-bk", "Kusur açıklamaları", kusurHtml(r)) : "";
     /* önceki kontrolden açık hafif kusurlar: her biri Giderildi / Giderilmedi; seçilmemesi gönderimi durdurmaz (kural uyarıdır) */
     var dv = devreden(r);
-    S.devir = dv.length ? bolum("", "r-devir", "Önceki kontrolden açık hafif kusurlar", '<ol class="a-kusur-liste">' + dv.map(function (x, i) {
+    S.devir = dv.length ? bolum("", "r-devir", MV.kusurSinifli(t) ? "Önceki kontrolden açık hafif kusurlar" : "Önceki kontrolden açık kusurlar", '<ol class="a-kusur-liste">' + dv.map(function (x, i) {
         var d = (r.devir || {})[x.id] || "", sec = [["giderildi", "Giderildi"], ["devam", "Giderilmedi"]];
         return "<li><b>" + kacis(x.kriter) + '</b><span class="a-alt-satir">' + kacis(x.aciklama) + " · " + x.rapor + " · " + MK.tarihYaz(x.tarih) + "</span>" +
           '<div class="a-kriter-cevap">' + (oku ? okuGirdi("r-dv" + i, ad2(sec, d) || "—") : MK.secim({ id: "r-dv" + i, ad: "Önceki hafif kusur " + (i + 1), deger: d, secenekler: sec, ipucu: "Seçin" })) + "</div></li>";
@@ -490,7 +490,7 @@
     /* yetkili kişi: raporu yazan inspector'ın personel kaydından (değişmez); imza son imzada */
     S.yetkili = F ? bolum(F.bolumler.yetkili, "r-by", "Yetkili kişi", '<dl class="a-satirlar">' + satir("Ad soyad", kacis(p.ad)) + satir("Meslek", kacis(MV.meslekAd(p))) +
       satir("Yetkili kişi kayıt no", '<span class="a-kod">' + p.ekipnet + "</span>") + satir("Nüsha sayısı", String(MV.FIRMA.nusha)) + "</dl>") : "";
-    var SIRA = !F ? ["firma", "ekipman", "cihaz", "kriter", "test", "sigorta", "foto", "sonuc", "not"]
+    var SIRA = !F ? ["firma", "ekipman", "cihaz", "kriter", "test", "sigorta", "devir", "foto", "sonuc", "not"]
       : F.gozle ? ["firma", "ekipman", "termal", "cihaz", "kriter", "test", "sigorta", "pd", "zi", "devir", "kusur", "foto", "not", "sonuc", "yetkili"]
       : ["firma", "ekipman", "cihaz", "tanim", "test", "devir", "kusur", "not", "sonuc", "yetkili", "foto"];
     $("a-rapor").innerHTML = MK.kirinti([["Planlar", MK.adres(13, "#/")], [PL.plan || PL.ad, PL.pid ? MK.adres(13, "#/plan/" + PL.pid) : MK.adres(13, "#/")], [r.no]]) +

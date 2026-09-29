@@ -1001,13 +1001,15 @@
   /* DEVREDEN HAFİF KUSURLAR (2026-09-29, V4; §3.2 öneri maddesi → karar, §9 otuz altıncı tur 187): ekipmanın bu rapordan önceki son imzalı
      raporu "Hafif kusurlu"ysa kusurları sonraki kontrolde kendiliğinden listelenir (Ek-III 1.9.1: hafif kusur bir sonraki periyodik kontrole
      kadar giderilir); inspector her biri için "Giderildi" / "Giderilmedi" der. Yalnız kusur sınıflı (Bakanlık formatı yürürlükte) türde. */
+  /* 199 (2026-09-29): kusur sınıfı olmayan türde önceki rapor "Kusurlu"ysa onun kusuru da listelenir (sinif: "Kusurlu"); sınıflı türde yalnız hafif */
   MV.devredenKusurlar = function (kod, once) {
-    var e = MV.ekipman(kod), t = e && MV.tur(e.tur); if (!t || !MV.kusurSinifli(t)) return [];
+    var e = MV.ekipman(kod), t = e && MV.tur(e.tur); if (!t) return [];
+    var sinifli = MV.kusurSinifli(t);
     var r = MV.RAPORLAR.filter(function (x) { return x.kod === kod && x.durum === "imzali" && x.olustu && (!once || x.olustu < once); })
       .sort(function (a, b) { return a.olustu < b.olustu ? 1 : -1; })[0];
-    if (!r || !/Hafif/.test(r.sonuc || "")) return [];
-    var ok = MV.ornekKusur(t, true);
-    return [{ id: r.no + "-1", kriter: ok.kriter, aciklama: ok.aciklama, rapor: r.no, tarih: r.olustu.slice(0, 10) }];
+    if (!r || (sinifli ? !/Hafif/.test(r.sonuc || "") : MV.sonucAd(r) === "Uygun" || !r.sonuc)) return [];
+    var ok = MV.ornekKusur(t, sinifli);
+    return [{ id: r.no + "-1", kriter: ok.kriter, aciklama: ok.aciklama, rapor: r.no, tarih: r.olustu.slice(0, 10), sinif: sinifli ? "Hafif kusur" : "Uygun değil" }];
   };
   /* inspector'ın mesleği türün yetkili meslekleri arasında mı (§3.2 öneri 2c → karar: uyarı, engel değil) */
   MV.meslekYetkili = function (kisi, t) { var p = MV.kisi(kisi), m = p && MV.meslek(p.meslek); return !!m && m.g.indexOf(t.g) >= 0; };
