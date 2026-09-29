@@ -107,10 +107,7 @@
   }
   X["talep-pdf"] = function (el) {
     var t = talepler().filter(function (y) { return y.no === el.dataset.no; })[0]; if (!t) return;
-    var F = MB.TALEP_FORMAT[t.tip], kisi = MV.kisi(BEN);
-    MK.pdfGoster({ dosya: t.no.toLowerCase() + ".pdf", baslik: F.baslik + " · " + t.no, icerik: MB.talepFormu({ tip: t.tip, x: t.x, durum: durum(t) }),
-      eposta: { kime: MB.talepAlici(t.tip).map(function (p) { return p.eposta; }), konu: F.baslik + " · " + t.no + " · " + kisi.ad,
-        govde: "Merhaba,\n\n" + turAd(t) + " " + t.no + " ekte (PDF).\n" + ayrinti(t) + "\nDurum: " + durum(t).ad + "\n\n" + kisi.ad } });
+    MB.talepPdfAc({ tip: t.tip, x: t.x, kime: MB.talepAlici(t.tip), gonderen: MV.kisi(BEN) });
   };
   function pencereAc(o, odak) { W = o; W.hata = W.hata || {}; if (o.tip === "izin") izinCiz(); else if (o.tip === "masraf") masrafCiz(); else talepCiz(o.t); if (!$("a-pencere").open) $("a-pencere").showModal(); var el = $(odak) || $("a-pencere-alt").querySelector(".a-tus-birincil"); if (el) el.focus(); }
   $("a-pencere").addEventListener("close", function () { W = null; if (/^#\/(yeni|t\/)/.test(location.hash)) history.replaceState(null, "", "#/"); });

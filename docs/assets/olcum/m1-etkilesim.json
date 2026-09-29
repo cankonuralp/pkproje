@@ -2,9 +2,16 @@
  "maket": "m1",
  "tarih": "2026-09-29",
  "arac": "tools/olc-bulut.mjs --etkilesim (başsız tarayıcı, 1920 açık tema; gen verilen denemede o genişlik)",
- "toplam": 59,
- "gecen": 59,
+ "toplam": 60,
+ "gecen": 60,
  "denemeler": [
+  {
+   "ad": "İzin talepleri: formun PDF'i açılır, e-posta talep edene",
+   "gen": 1920,
+   "sayfa": "maket/personel.html",
+   "hash": "#/izinler",
+   "gecti": true
+  },
   {
    "ad": "personel kartında Eğitimler: güncel kayıtlar, tekrarı geçen üstte, sayı yüzle aynı",
    "gen": 1920,

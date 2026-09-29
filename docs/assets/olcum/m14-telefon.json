@@ -8,8 +8,8 @@
   390,
   430
  ],
- "toplam": 92,
- "temiz": 92,
+ "toplam": 96,
+ "temiz": 96,
  "durumlar": [
   {
    "ad": "işler · liste, vadesi geçen ve faturaya hazır şeridi",
@@ -616,6 +616,42 @@
   },
   {
    "ad": "gider · onay bekleyen masraf formu",
+   "gen": 430,
+   "temiz": true,
+   "tasma": 0,
+   "disari": [],
+   "kucukAlan": [],
+   "alan": 4
+  },
+  {
+   "ad": "gider · masraf formu PDF'i (35. tur 162)",
+   "gen": 320,
+   "temiz": true,
+   "tasma": 0,
+   "disari": [],
+   "kucukAlan": [],
+   "alan": 4
+  },
+  {
+   "ad": "gider · masraf formu PDF'i (35. tur 162)",
+   "gen": 360,
+   "temiz": true,
+   "tasma": 0,
+   "disari": [],
+   "kucukAlan": [],
+   "alan": 4
+  },
+  {
+   "ad": "gider · masraf formu PDF'i (35. tur 162)",
+   "gen": 390,
+   "temiz": true,
+   "tasma": 0,
+   "disari": [],
+   "kucukAlan": [],
+   "alan": 4
+  },
+  {
+   "ad": "gider · masraf formu PDF'i (35. tur 162)",
    "gen": 430,
    "temiz": true,
    "tasma": 0,

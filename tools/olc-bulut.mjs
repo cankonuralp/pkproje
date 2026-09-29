@@ -299,6 +299,7 @@ export const DURUMLAR = {
     { ad: "gider penceresi · kayıtlı, belgeli (düzenle)", hash: "#/g/G-0926-004" },
     { ad: "iş sayfasından gider ekle · iş seçili", hash: "#/is/P-0926-025/gider" },
     { ad: "gider · onay bekleyen masraf formu", hash: "#/g/G-0926-005" },
+    { ad: "gider · masraf formu PDF'i (35. tur 162)", hash: "#/g/G-0926-006", adim: [["tikla", '[data-eylem="gider-pdf"]']] },
     { ad: "gider · red gerekçesi boş gönderildi", hash: "#/g/G-0926-006", adim: [["tikla", '[data-eylem="gider-red-ac"]'], ["tikla", '[data-eylem="gider-reddet"]']] },
     { ad: "giderler · Excel'e aktar", hash: "#/giderler", adim: [["tikla", '[data-eylem="gider-excel-disa"]']] },
     { ad: "giderler · Excel'den yükle, önizleme", hash: "#/giderler", adim: [["tikla", '[data-eylem="gider-excel-ice"]'], ["tikla", '[data-eylem="gider-excel-sec"]']] },
@@ -420,6 +421,8 @@ export const DENEMELER = {
     { ad: "menüden hazır maket → bağlantı (Personel)", hash: "#/", bekle: 'document.querySelector(\'#a-menu a[href="personel.html"]\') !== null' },
   ],
   m1: [
+    /* 35. tur 162: onaylayan tarafında formun son hâli PDF · e-posta (talep edene) */
+    { ad: "İzin talepleri: formun PDF'i açılır, e-posta talep edene", sayfa: "maket/personel.html", hash: "#/izinler", sure: 15000, adim: [["tikla", '#a-izin-liste [data-eylem="izin-pdf"]'], ["tikla", '[data-eylem="pdf-eposta"]']], bekle: 'document.querySelector("#a-pdf").open && /KM-FR-IZN-01/.test(document.querySelector("#a-pdf-govde").textContent) && MK.SON_EPOSTA && MK.SON_EPOSTA.kime.length === 1 && /@firma\\.example$/.test(MK.SON_EPOSTA.kime[0]) && !/ayse\\.demir/.test(MK.SON_EPOSTA.kime[0])' },
     /* T10 (2026-09-28; reisim: "her personelin kartında eğitimler de gözükmeli") */
     { ad: "personel kartında Eğitimler: güncel kayıtlar, tekrarı geçen üstte, sayı yüzle aynı", hash: "#/p/ke", bekle: '(() => { const s = document.querySelector("section[aria-labelledby=a-b-egitim]"); if (!s) return false; const tr = s.querySelectorAll("tbody tr"); const g = MV.egitimleri("ke").filter(x => !x.onceki); return tr.length === g.length && /Tekrarı geçti/.test(tr[0].textContent) && +s.querySelector(".a-sayac b").textContent === g.length; })()' },
     { ad: "karttaki eğitim Eğitimler'de o kaydı açar", hash: "#/p/mk", adim: [["tikla", 'section[aria-labelledby=a-b-egitim] tbody a.a-ad-bag']], bekle: '/egitimler\\.html$/.test(location.pathname) && /^#\\/k\\/g/.test(location.hash) && document.querySelector("#a-pencere").open' },
@@ -831,6 +834,8 @@ export const DENEMELER = {
     { ad: "kapsam: plan bağlantısı plan içine", hash: "#/s/IS-0926-006", adim: [["tikla", '.a-tablo-iskapsam a.a-no']], bekle: '/planlarim\\.html$/.test(location.pathname) && /^#\\/plan\\//.test(location.hash)' },
   ],
   m14: [
+    /* 35. tur 162 */
+    { ad: "Giderler: masraf formunun PDF'i açılır, e-posta talep edene (Mert Kaya)", hash: "#/g/G-0926-006", sure: 15000, adim: [["tikla", '[data-eylem="gider-pdf"]'], ["tikla", '[data-eylem="pdf-eposta"]']], bekle: 'document.querySelector("#a-pdf").open && /KM-FR-MSR-01/.test(document.querySelector("#a-pdf-govde").textContent) && MK.SON_EPOSTA && MK.SON_EPOSTA.kime.join() === "mert.kaya@firma.example"' },
     /* 2026-09-27 (reisim: "maket site nasıl çalışması gerekiyorsa çalışsın"): gerçek dosya indirme / yazdırma */
     { ad: "gider Excel'e aktar → gerçek .xlsx iner", hash: "#/giderler", adim: [["tikla", "[data-eylem=\"gider-excel-disa\"]"], ["tikla", "[data-eylem=\"gider-excel-indir\"]"]], bekle: "MK.SON_INDIRME && /^giderler-.*\\.xlsx$/.test(MK.SON_INDIRME.ad) && MK.SON_INDIRME.boyut > 1000" },
     { ad: "gider şablonu iner", hash: "#/giderler", adim: [["tikla", "[data-eylem=\"gider-excel-ice\"]"], ["tikla", "[data-eylem=\"gider-excel-sablon\"]"]], bekle: "MK.SON_INDIRME && /sablonu\\.xlsx$/.test(MK.SON_INDIRME.ad) && MK.SON_INDIRME.boyut > 1000" },

@@ -424,6 +424,14 @@
     var rolde = function (r) { return MV.PERSONEL.filter(function (p) { return p.durum === "etkin" && p.eposta && p.hesap && p.hesap.durum !== "pasif" && (p.hesap.roller || []).indexOf(r) >= 0; }); };
     var l = rolde(MB.TALEP_FORMAT[tip].alici); return l.length ? l : rolde("yonetici");
   };
+  /* talebin PDF'i — TEK AÇILIŞ (35. tur 162): talep eden (Talepler), firma yöneticisi (Personel › İzin talepleri) ve muhasebe (Muhasebe ›
+     Giderler) aynı formu açar; e-posta talep edenden alıcıya, onaylayandan talep edene gider. o = { tip, x, kime ([kişi]), gonderen (kişi) } */
+  MB.talepPdfAc = function (o) {
+    var F = MB.TALEP_FORMAT[o.tip], x = o.x, d = (o.tip === "izin" ? MV.IZIN_DURUM : MV.GIDER_DURUM)[x.durum], p = MV.kisi(x.kisi);
+    MK.pdfGoster({ dosya: x.no.toLowerCase() + ".pdf", baslik: F.baslik + " · " + x.no, icerik: MB.talepFormu({ tip: o.tip, x: x, durum: d }),
+      eposta: { kime: o.kime.filter(function (k) { return k.eposta; }).map(function (k) { return k.eposta; }), konu: F.baslik + " · " + x.no + " · " + p.ad,
+        govde: "Merhaba,\n\n" + F.baslik + " " + x.no + " ekte (PDF).\nPersonel: " + p.ad + "\nDurum: " + d.ad + "\n\n" + o.gonderen.ad } });
+  };
   /* o = { tip: "izin" | "masraf", x (kayıt), durum ({ ad }) } */
   MB.talepFormu = function (o) {
     var f = MV.FIRMA, F = MB.TALEP_FORMAT[o.tip], x = o.x, p = MV.kisi(x.kisi), formKod = f.kisa + "-FR-" + F.kod;

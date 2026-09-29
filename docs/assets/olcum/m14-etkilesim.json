@@ -2,9 +2,16 @@
  "maket": "m14",
  "tarih": "2026-09-29",
  "arac": "tools/olc-bulut.mjs --etkilesim (başsız tarayıcı, 1920 açık tema; gen verilen denemede o genişlik)",
- "toplam": 44,
- "gecen": 44,
+ "toplam": 45,
+ "gecen": 45,
  "denemeler": [
+  {
+   "ad": "Giderler: masraf formunun PDF'i açılır, e-posta talep edene (Mert Kaya)",
+   "gen": 1920,
+   "sayfa": "maket/muhasebe.html",
+   "hash": "#/g/G-0926-006",
+   "gecti": true
+  },
   {
    "ad": "gider Excel'e aktar → gerçek .xlsx iner",
    "gen": 1920,

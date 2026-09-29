@@ -416,6 +416,8 @@
     if (W.tarihYazi) { $("w-tarih").value = W.tarihYazi; $("w-tarih").setAttribute("aria-invalid", "true"); }
     var d = g && g.durum;
     $("a-pencere-alt").innerHTML = MK.tus({ eylem: "pencere-kapat", ad: "Vazgeç", sinif: "a-tus-ikincil" }) +
+      /* 35. tur 162: masraf formunun son hâli PDF · e-posta (talep edene) */
+      (g && g.kaynak === "form" ? MK.tus({ eylem: "gider-pdf", ad: "PDF · e-posta", ikon: "file-text", sinif: "a-tus-ikincil" }) : "") +
       (d === "bekliyor" ? MK.tus({ eylem: "gider-red-ac", ad: "Reddet", ikon: "ban", sinif: "a-tus-ikincil" }) + MK.tus({ eylem: "gider-kaydet", ad: "Onayla", ikon: "check", veri: { sonra: "onaylandi" } })
         : d === "onaylandi" ? MK.tus({ eylem: "gider-kaydet", ad: "Kaydet", ikon: "check", sinif: "a-tus-ikincil" }) + MK.tus({ eylem: "gider-kaydet", ad: "Ödendi", ikon: "wallet", veri: { sonra: "odendi" } })
         : MK.tus({ eylem: "gider-kaydet", ad: g ? "Kaydet" : "Gideri kaydet", ikon: "check" }));
@@ -548,6 +550,7 @@
     $("a-pencere").close(); uyariCiz("g"); MK.suzgecKur("g");
     MK.bildir(ok.length + " gider eklendi" + (atla ? "; " + atla + " satır atlandı." : "."));
   };
+  X["gider-pdf"] = function () { var g = W.g; MB.talepPdfAc({ tip: "masraf", x: g, kime: [MV.kisi(g.kisi)], gonderen: MV.kisi("ad") }); };
   X["gider-red-ac"] = function () { W.redKip = true; W.hata = {}; giderPencere(); };
   X["gider-red-vazgec"] = function () { W.redKip = false; W.hata = {}; giderPencere("w-tur"); };
   X["gider-reddet"] = function () {

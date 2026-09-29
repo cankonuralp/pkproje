@@ -1814,6 +1814,11 @@ revizyon, alan kopyalama, hafif kusur devri, meslek eşleşme denetimi).
 - Emsal ürünler: https://opwire.app/iso-17020-periyodik-kontrol-yazilimi/ · https://17020muayene.vidco.com.tr/ · https://akuple.com/asansor-kontrol-yazilimi/ · https://ensyazilim.com/
 
 ## 11 · Değişiklik günlüğü
+- 2026-09-29 (129): **U3 · Onaylayan tarafında talep PDF · e-posta** (§9 otuz beşinci tur 162). Talep PDF'i tek yerden açılır
+  (`MB.talepPdfAc`): talep eden (Talepler) alıcıya, **firma yöneticisi** (Personel › İzin talepleri, her satırda "PDF") ve **muhasebe**
+  (Muhasebe › Giderler, masraf formu penceresinde "PDF · e-posta") talep edene iletir; form aynı (firma formatı, durum ve onaylayan imza
+  yerinde). 2 yeni deneme, 1 yeni durum. Ölçüm (değişen ekranlar): Personel durum 280/280 · telefon 140/140 · etkileşim 60/60; Muhasebe
+  192/192 · 96/96 · 45/45; Talepler 80/80 · 40/40 · 12/12; izin listesi 1920'de gözle.
 - 2026-09-29 (128): **U2 · Masraf formu Muhasebe rolüne; bordroyu yönetici + muhasebe görür** (§9 otuz beşinci tur 161, 174; reisim önerileri
   kabul etti). Talep formatında alıcı rolü: izin → firma yöneticisi, **masraf → Muhasebe**; o rolde etkin kimse yoksa firma yöneticisi. Örnek
   veride Muhasebe rolü Gizem Aksoy'da (Planlama + Muhasebe; UYDURMA). Muhasebe rolünün açıklaması: fatura / tahsilat, masraf onayı, maaş ve

@@ -548,8 +548,10 @@
         (x.tur === "yillik" ? " · kalan yıllık izin " + o.kalan + " gün" : "") + "</span></span>"; } },
     { k: "durum", baslik: "Durum", kart: "rozet", sira: 1, hucre: function (x) { return rozet(MV.IZIN_DURUM[x.durum]) + (x.red ? '<span class="a-alt-satir">' + kacis(x.red) + "</span>" : ""); } },
     { k: "eylem", baslik: "İşlem", gizliBaslik: true, kart: "eylem", sira: 9, hucre: function (x) {
-      return x.durum !== "bekliyor" ? "" : '<div class="a-eylem"><div class="a-eylem-tuslar">' + MK.tus({ eylem: "izin-reddet", ad: "Reddet", ikon: "x", sinif: "a-tus-ikincil", veri: { no: x.no } }) +
-        MK.tus({ eylem: "izin-onayla", ad: "Onayla", ikon: "check", veri: { no: x.no } }) + "</div></div>"; } }
+      /* 35. tur 162: formun son hâli PDF · e-posta (talep edene) */
+      var pdf = MK.tus({ eylem: "izin-pdf", ad: "PDF", ikon: "file-text", sinif: "a-tus-ikincil", veri: { no: x.no } });
+      return '<div class="a-eylem"><div class="a-eylem-tuslar">' + pdf + (x.durum !== "bekliyor" ? "" : MK.tus({ eylem: "izin-reddet", ad: "Reddet", ikon: "x", sinif: "a-tus-ikincil", veri: { no: x.no } }) +
+        MK.tus({ eylem: "izin-onayla", ad: "Onayla", ikon: "check", veri: { no: x.no } })) + "</div></div>"; } }
   ];
   function izinCiz() {
     var l = MV.IZINLER.slice().sort(function (a, b) { return (a.durum === "bekliyor" ? 0 : 1) - (b.durum === "bekliyor" ? 0 : 1) || (a.gonderildi < b.gonderildi ? 1 : -1); });
@@ -616,6 +618,7 @@
     x.durum = "onaylandi"; x.onaylayan = "ad"; x.karar = MK.simdi(); izinCiz(); var h = document.querySelector("#a-izin-gorunum h1"); if (h) h.focus();
     MK.bildir(x.no + " onaylandı: " + MV.kisi(x.kisi).ad + ", " + x.gun + " iş günü " + MV.izinTur(x.tur).ad.toLocaleLowerCase("tr") + ".");
   };
+  X["izin-pdf"] = function (el) { var x = izinBul(el.dataset.no); MB.talepPdfAc({ tip: "izin", x: x, kime: [MV.kisi(x.kisi)], gonderen: MV.kisi("ad") }); };
   X["izin-reddet"] = function (el) { IZ = { x: izinBul(el.dataset.no), gerekce: "", hata: "" }; izinRedCiz(); $("a-izin-pencere").showModal(); $("iz-gerekce").focus(); };
   X["izin-red-kaydet"] = function () {
     IZ.gerekce = $("iz-gerekce").value.trim(); if (!IZ.gerekce) { IZ.hata = "Gerekçe yazılmalı; talep eden görür."; izinRedCiz("iz-gerekce"); return; }
