@@ -1949,6 +1949,12 @@ revizyon, alan kopyalama, hafif kusur devri, meslek eşleşme denetimi).
 - Emsal ürünler: https://opwire.app/iso-17020-periyodik-kontrol-yazilimi/ · https://17020muayene.vidco.com.tr/ · https://akuple.com/asansor-kontrol-yazilimi/ · https://ensyazilim.com/
 
 ## 11 · Değişiklik günlüğü
+- 2026-09-29 (140): **W3 · 191 Durum değişikliği şeridi** (§9 otuz yedinci tur). Teknik yönetici raporun durumunu değiştirdiyse ve değişiklik hâlâ
+  geçerliyse raporun üstünde bilgi şeridi: "Durum teknik yönetici tarafından değiştirildi · ad · zaman · eski → yeni: gerekçe". Tek üretici
+  `MV.durumSerit`; Onaylar rapor ekranı, Raporlar rapor sayfası ve saha raporu aynı şeridi gösterir. Yeni'ye alınan raporda çıkmaz (orada "Geri
+  gönderildi / Revizeye gönderildi" şeridi var). Ölçüm: m9 durum 184/184 · etkileşim 42/42 (1 yeni, sayfalar arası) · telefon 92/92; m8 184/184 ·
+  80/80 · 92/92; saha raporunda şerit metni okundu.
+
 - 2026-09-29 (139): **W2 · 190 Vekil branşın tüm raporları** (§9 otuz yedinci tur). Onaylar'da "Tüm raporlar" seçili branşı izler: vekil kuyruğu
   ("Elektrik · vekil") seçiliyken sekme "Tüm raporlar · elektrik vekil" olur (`#/tum?brans=e`), o branşın bütün raporları listelenir, durum
   değiştirme ve revizeye gönderme orada da çalışır; kendi kuyruğuna dönünce kendi branşı. Branş değişince süzgeç baştan; rapor ekranındaki

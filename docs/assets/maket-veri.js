@@ -966,6 +966,13 @@
   /* sonuç adı §4.5'e göre: hafif / ağır yalnız format yürürlükteki türde; Planlar maketi taslak formatlı türde de "Hafif kusurlu" yazıyor
      (maket tutarsızlığı) → burada "Kusurlu"ya çevrilir */
   MV.sonucAd = function (r) { if (!r.sonuc) return null; return r.sonuc === "Uygun" || MV.kusurSinifli(MV.tur(MV.ekipman(r.kod).tur)) ? r.sonuc : "Kusurlu"; };
+  /* durumu teknik yönetici değiştirdi (191, 2026-09-29): son değişiklik hâlâ geçerliyse raporun üstünde şerit. Yeni'ye alınan rapor zaten "Geri
+     gönderildi / Revizeye gönderildi" şeridiyle görünür, onda bu şerit çıkmaz. */
+  MV.durumSerit = function (r) {
+    var g = r && r.durumGecmis && r.durumGecmis[0]; if (!g || g.yeni !== r.durum || r.durum === "taslak") return "";
+    return MK.serit("bilgi", "refresh-cw", "<b>Durum teknik yönetici tarafından değiştirildi</b> · " + MK.kacis(MV.kisi(g.kim).ad) + " · " + MK.zamanYaz(g.zaman) + " · " +
+      MK.kacis(MV.RAPOR_DURUM[g.eski === "taslak" ? "taslak" : g.eski].ad) + " → " + MK.kacis(MV.RAPOR_DURUM[g.yeni].ad) + (g.gerekce ? ": “" + MK.kacis(g.gerekce) + "”" : ""));
+  };
   MV.raporDurum = function (r) { return MV.RAPOR_DURUM[r.durum === "taslak" && r.geri ? "geri" : r.durum]; };
   /* UYGUNSUZLUK KAYDI (§3.2 madde 6: ayrı kayıt — rapor, ekipman, kriter, açıklama, sınıf, tarih): imzalı ve sonucu "Uygun" olmayan
      rapordan; aynı ekipmanın SONRAKİ imzalı raporu gelince "giderildi" (sonraki kontrol ya da ikinci kontrol, Ek-III 1.9). Kriter ve açıklama

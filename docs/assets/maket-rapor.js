@@ -498,7 +498,7 @@
         '<p class="a-nesne-alt">' + ikon("file-text", "a-ikon-kucuk") + '<span><span class="a-kod">' + r.no + "</span> · " + (F ? '<span class="a-kod">' + t.format + "</span> · " : "") + kacis(PL.ad) + " · " + kacis(MV.musteri(PL.m).kisa) + " · " + kacis(p.ad) + "</span></p></div>" +
         /* Ön izle (reisim 2026-09-28: "en sağ üstte ön izleme tuşu olmalı PDF çıktısını ön izleyebilmeliyim ön izle halinde PDF halini indirebilmeliyim") */
         '<div class="a-eylem-cubugu">' + MK.tus({ eylem: "on-izle", ad: "Ön izle", ikon: "eye", sinif: "a-tus-ikincil" }) + "</div></div>" +
-      '<div class="a-uyari-serit">' +
+      '<div class="a-uyari-serit">' + MV.durumSerit(MV.rapor(r.no)) +
         /* meslek uyarısı (V4; §3.2 öneri 2c → karar): engel değil */
         (!MV.meslekYetkili(r.kisi, t) ? MK.serit("uyari", "triangle-alert", "Mesleğiniz (" + kacis(MV.meslekAd(p)) + ") " + kacis(t.ad).toLocaleLowerCase("tr") + " için yetkili meslekler arasında değil. Rapor yazılabilir; teknik yönetici onayda görür.") : "") +
         (r.geri && !oku ? MK.serit("uyari", "undo-2", "<b>Geri gönderildi</b> · " + kacis(MV.kisi(r.geri.kim).ad) + " · " + MK.zamanYaz(r.geri.zaman) + ": “" + kacis(r.geri.gerekce) + "”") : "") +

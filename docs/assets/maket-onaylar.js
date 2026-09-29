@@ -161,6 +161,7 @@
           ? MK.tus({ eylem: "revize-ac", ad: "Revizeye gönder", ikon: "file-pen-line", veri: { no: r.no } })
           : MK.tus({ eylem: "durum-ac", ad: "Durumu değiştir", ikon: "refresh-cw", sinif: r.durum === "onaylandi" ? "a-tus-ikincil" : "", veri: { no: r.no } }) +
             (r.durum === "onaylandi" ? MK.tus({ eylem: "onay-geri-al", ad: "Onayı geri al", ikon: "undo-2" }) : "")) + "</div></div>" +
+      (MV.durumSerit(r) ? '<div class="a-uyari-serit">' + MV.durumSerit(r) + "</div>" : "") +
       (r.geri && r.durum === "taslak" ? '<div class="a-uyari-serit">' + MK.serit("uyari", "undo-2", "<b>" + (rv && rv.zaman === r.geri.zaman ? "Revizeye gönderildi (" + rv.ad + ")" : "Geri gönderildi") + "</b> · " +
         kacis(MV.kisi(r.geri.kim).ad) + " · " + MK.zamanYaz(r.geri.zaman) + ": “" + kacis(r.geri.gerekce) + "”") + "</div>" : "") +
       '<section class="a-bolum" aria-labelledby="a-b-pdf"><div class="a-alt-bas"><h2 class="a-alt-baslik" id="a-b-pdf">' + (r.imzaDosya ? "İmzalı PDF" : "Rapor (PDF önizlemesi)") + '</h2><span class="a-sayac">' + (r.imza ? "imzalı" : "imzasız") + "</span></div>" +

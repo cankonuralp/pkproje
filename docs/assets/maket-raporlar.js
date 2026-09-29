@@ -96,7 +96,7 @@
           (r.durum === "imzada" ? MK.tus({ eylem: "istek-geri", ad: "İsteği geri çek", ikon: "undo-2", sinif: "a-tus-ikincil", veri: { no: r.no } }) +
             MK.tus({ eylem: "telefon-ac", ad: "Telefonda onayla", ikon: "smartphone", veri: { no: r.no } }) : "") +
           (yeniden(r) ? '<a class="a-tus a-tus-birincil" href="' + raporEkrani(r) + '">' + ikon("pencil", "a-ikon-kucuk") + "Raporu düzenle</a>" : "") + "</div></div>" +
-      '<div class="a-uyari-serit">' +
+      '<div class="a-uyari-serit">' + MV.durumSerit(r) +
         (r.geri && r.durum === "taslak" ? MK.serit("uyari", "undo-2", "<b>" + (r.revizyonlar && r.revizyonlar[0] && r.revizyonlar[0].zaman === r.geri.zaman ? "Revizeye gönderildi (" + r.revizyonlar[0].ad + ")" : "Geri gönderildi") + "</b> · " + kacis(MV.kisi(r.geri.kim).ad) + ": “" + kacis(r.geri.gerekce) + "”") : "") +
         (r.durum === "onayda" ? MK.serit("bilgi", "clock", "Onayda · " + kacis(yon.ad)) : "") +
         (r.durum === "onaylandi" ? MK.serit("uyari", "file-signature", "Muayene uzmanı imzası · imzanız bekleniyor") : "") +
