@@ -1861,7 +1861,7 @@ yapılacaklar listesine ekle"*; öneri: ÇSGB İSGGM duyurular sayfası — http
 okunur (pg-boss işi, §8.9), Ana sayfada son 5 duyuru başlık + tarih + kaynağa bağlantı; yalnız ekranda, bildirim yok; sayfa RSS vermiyorsa
 sayfa yapısı değişince okuma bozulabilir → okunamazsa sessiz kalmaz, "duyurular alınamadı" yazar; maket sırası Ana sayfa revizesinde) · **modül modül gözden geçirme** (M1–M5 ve M13 onaylandı — Ekipmanlar kalktı, Sözleşmeler birleşti; M6 Plan aç 2. tur incelemede) · **toplu maket çalışması** (M1–M16 + toplu bakış, `MAKET-PLANI.md`; sorular §3.6'da, 32'den) · **önizlemede örnek veri kipi** (öneri, §3.3) · ~~rol × modül görünürlüğü~~ (karar 2026-09-25: başlangıç düzeni + firma yöneticisi değiştirir) · **gerçek sunucunun sağlayıcısı**
 (Türkiye, §8.8) ·
-alan adının alınması · e-imza yöntemi (8.4) · v1 ekipman grupları · 5 yıl sonrası silme
+alan adının alınması · ~~e-imza yöntemi (8.4)~~ (2026-09-29: firma seçer, mobil imza ya da e-imza; makette V2) · v1 ekipman grupları · 5 yıl sonrası silme
 mekanizması · **zimmette birden çok cihaz varsa süzgeç** (§3) · ~~kontrol metodu standardının seçim yeri~~ (2026-09-27: ekipman türünde seçilir, raporda türden okunur) · **§3.1 ve §3.2'deki "öneri" maddeleri** (planlama saat dağıtımı,
 revizyon, alan kopyalama, hafif kusur devri, meslek eşleşme denetimi).
 
@@ -1888,6 +1888,21 @@ revizyon, alan kopyalama, hafif kusur devri, meslek eşleşme denetimi).
 - Emsal ürünler: https://opwire.app/iso-17020-periyodik-kontrol-yazilimi/ · https://17020muayene.vidco.com.tr/ · https://akuple.com/asansor-kontrol-yazilimi/ · https://ensyazilim.com/
 
 ## 11 · Değişiklik günlüğü
+- 2026-09-29 (132): **V2 · Son imza: firma yöntemi mobil imza ya da e-imza, aracı site yok** (§9 otuz altıncı tur 177, 178; reisim:
+  *"178 zorunlu olmasın hangi firma neyi kullanmak isterse kullansın ister e imza ister mobil"*). **Personel → "Firma ayarları"** sekmesi
+  (`#/ayarlar`, firma yöneticisi): imza yöntemi **Mobil imza** (telefonda PIN, her belge ayrı) ya da **E-imza** (kart ve imza aracı, tek PIN);
+  seçim hemen geçerli, sayfalar arası kalıcı. Raporlar'daki son imza penceresinde "İmza servisi" sekmesi kalktı; yerinde firmanın yöntemi,
+  yanında yedek yol **"İndir, imzala, yükle"**. **Mobil imza:** "İmzaya gönder" → her rapor "İmzaya gönderildi", telefona ayrı istek; makette
+  telefon ekranı taklit edilir (istek sırayla, "Mobil imza PIN" 4–8 rakam, **Onayla** → Tamamlandı · **Reddet** → rapor yeniden imza bekler);
+  pencere kapansa da istekler telefonda kalır: listede "N imza isteği telefonunuzda bekliyor · Telefonda onayla" şeridi, rapor sayfasında
+  "Telefonda onayla" ve "İsteği geri çek". **E-imza:** "İmza aracını aç" → imza aracı (maket): kart takılı, raporların listesi, **kart PIN bir
+  kez** → her rapor ayrı imzalanır, hepsi Tamamlandı. Rapor belgesinde imza satırı yolu da yazar ("Güvenli elektronik imza (mobil imza)" ·
+  "(e-imza)" · "(imzalı PDF yüklendi)"). Yeni ikonlar (Lucide 1.47.0, araçla): smartphone, usb. Makette telefon ekranı ve imza aracı
+  taklittir; gerçek uygulamada istek operatöre (mobil) ya da bilgisayardaki imza aracına (AKİS) gider, imza sunucuda PDF'e gömülür.
+  Ölçüm: m9 durum 168/168 · etkileşim 39/39 (yeni: mobil tekli + kısa PIN reddi, Reddet ve İsteği geri çek, pencere kapansa da telefondan
+  sırayla, e-imza tek PIN 4 rapor, Firma ayarları → Raporlar sayfalar arası) · telefon 84/84; tam ölçüm durum 2072/2072 · etkileşim 507/507 ·
+  telefon 1036/1036 · olumsuz kanıt 3/3; gözle 1920 ve 375 (seçim, telefon ekranı, imza aracı, Firma ayarları).
+
 - 2026-09-29 (131): **V1 · Teknik yönetici: durumu değiştir, revizeye gönder** (§9 otuz altıncı tur; reisim: *"herhangi bir süreçteki rapor
   imzalanıp tamamlanmış hariç teknik yönetici tarafından durumu değiştirilebilsin imzalanıp tamamlanan rapor revizeye gönderilebilsin"*).
   Onaylar'a **"Tüm raporlar"** sekmesi (`#/tum`): branşın pasif olmayan bütün raporları, 20'şer; rapor no ve tesis ayrı aranır, Durum ve

@@ -2,8 +2,8 @@
  "maket": "m9",
  "tarih": "2026-09-29",
  "arac": "tools/olc-bulut.mjs --etkilesim (başsız tarayıcı, 1920 açık tema; gen verilen denemede o genişlik)",
- "toplam": 35,
- "gecen": 35,
+ "toplam": 39,
+ "gecen": 39,
  "denemeler": [
   {
    "ad": "rapor sayfasında durum geçmişi yok",
@@ -69,10 +69,38 @@
    "gecti": true
   },
   {
-   "ad": "servis ile tekli imza → İmzaya gönderildi",
+   "ad": "mobil imza tekli: İmzaya gönder → telefon ekranı; kısa PIN reddedilir; PIN → Tamamlandı (mobil imza)",
    "gen": 1920,
    "sayfa": "maket/raporlar.html",
    "hash": "#/r/KM-0926-770-a99c1",
+   "gecti": true
+  },
+  {
+   "ad": "mobil imza: telefonda Reddet → rapor yeniden imza bekler; İsteği geri çek de aynı",
+   "gen": 1920,
+   "sayfa": "maket/raporlar.html",
+   "hash": "#/",
+   "gecti": true
+  },
+  {
+   "ad": "mobil imza: pencere kapansa da istekler telefonda; listeden Telefonda onayla ile sırayla (her biri ayrı PIN)",
+   "gen": 1920,
+   "sayfa": "maket/raporlar.html",
+   "hash": "#/",
+   "gecti": true
+  },
+  {
+   "ad": "e-imza (firma ayarı): İmza aracını aç → tek PIN → 4 rapor ayrı ayrı imzalı (e-imza)",
+   "gen": 1920,
+   "sayfa": "maket/raporlar.html",
+   "hash": "#/",
+   "gecti": true
+  },
+  {
+   "ad": "Firma ayarları: imza yöntemi E-imza seçilir → Raporlar'ın imza penceresi E-imza (sayfalar arası)",
+   "gen": 1920,
+   "sayfa": "maket/personel.html",
+   "hash": "#/ayarlar",
    "gecti": true
   },
   {
@@ -90,7 +118,7 @@
    "gecti": true
   },
   {
-   "ad": "toplu imza (servis) → 4 rapor İmzaya gönderildi",
+   "ad": "toplu mobil imza → 4 istek telefona, imza bekleyen şeridi kalkar, telefon şeridi çıkar",
    "gen": 1920,
    "sayfa": "maket/raporlar.html",
    "hash": "#/",

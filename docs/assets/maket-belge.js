@@ -9,6 +9,8 @@
   /* boş belgede alanın nereden dolduğu artık yazılmaz (reisim 2026-09-26: "alt tarafa yazılmış küçük mesajlar istemiyorum") */
   var kaynak = function () { return ""; };
   var bos = '<span class="a-deger-yok">—</span>';
+  /* imza yolu (2026-09-29, V2): mobil imza · e-imza · yüklenen imzalı PDF; eski kayıtta yol yok */
+  var imzaYolu = function (i) { return i && i.yontem ? " (" + (MV.IMZA_YONTEM[i.yontem] ? MV.IMZA_YONTEM[i.yontem].kisa : "imzalı PDF yüklendi") + ")" : ""; };
   window.MB = {};
   MB.belge = function (t, o) {
     if (MV.formatYapi(t)) return resmiBelge(t, o, MV.formatYapi(t));   /* Bakanlık formatlı tür: resmî PDF'in birebir düzeni (2026-09-28) */
@@ -63,7 +65,7 @@
         bilgi("Ad soyad", d(o && kacis(o.p.ad), "personel")) + bilgi("Meslek", d(o && kacis(MV.meslekAd(o.p)), "personel")) +
         bilgi("Diploma no", d(o && '<span class="a-kod">' + o.p.diploma + "</span>", "personel")) + bilgi("Oda sicil no", d(o && (o.p.oda ? '<span class="a-kod">' + o.p.oda + "</span>" : bos), "personel")) +
         bilgi("EKİPNET kayıt no", d(o && '<span class="a-kod">' + o.p.ekipnet + "</span>", "personel")) + bilgi("Nüsha sayısı", f.nusha + (o ? "" : kaynak("firma ayarı"))) + "</dl>" +
-        '<div class="a-belge-imza">' + (!o ? "İmza" : o.imza ? "Güvenli elektronik imza · " + kacis(o.p.ad) + " · " + MK.zamanYaz(o.imza.zaman) : "İmzasız — inspector son imzayı atınca geçerli olur ve müşteriye açılır.") + "</div>") +
+        '<div class="a-belge-imza">' + (!o ? "İmza" : o.imza ? "Güvenli elektronik imza" + imzaYolu(o.imza) + " · " + kacis(o.p.ad) + " · " + MK.zamanYaz(o.imza.zaman) : "İmzasız — inspector son imzayı atınca geçerli olur ve müşteriye açılır.") + "</div>") +
       bolum("Ek", "Fotoğraflar", fotoHtml(R ? R.foto : 2)) +
       '<footer class="a-belge-alt"><span>' + kacis(f.ad) + " · " + formKod + "</span></footer></article>";
   };
@@ -160,7 +162,7 @@
       var p = o ? o.p : null, n = f.nusha;
       return '<table class="rb-t"><colgroup><col style="width:30%"><col style="width:40%"><col style="width:30%"></colgroup>' + bolumBas(num + ". PERİYODİK KONTROLLERİ YAPMAYA YETKİLİ KİŞİ BİLGİLERİ ve ONAY", 3) +
         '<tr><td class="rb-e">Adı Soyadı</td><td>' + (p ? k(p.ad) : "") + '</td><td class="rb-e rb-orta">İmzası</td></tr>' +
-        '<tr><td class="rb-e">Mesleği</td><td>' + (p ? k(MV.meslekAd(p)) : "") + '</td><td rowspan="2" class="rb-imza">' + (o && o.imza ? "Güvenli elektronik imza<br>" + k(MK.zamanYaz(o.imza.zaman)) : "") + "</td></tr>" +
+        '<tr><td class="rb-e">Mesleği</td><td>' + (p ? k(MV.meslekAd(p)) : "") + '</td><td rowspan="2" class="rb-imza">' + (o && o.imza ? "Güvenli elektronik imza" + imzaYolu(o.imza) + "<br>" + k(MK.zamanYaz(o.imza.zaman)) : "") + "</td></tr>" +
         '<tr><td class="rb-e">Yetkili Kişi Kayıt Numarası</td><td>' + (p ? k(p.ekipnet) : "") + "</td></tr></table>" +
         '<p class="rb-dip">Bu rapor ' + (o ? SAYI_AD[n] + " (" + n + ")" : "............(yazı (rakam))") + " nüsha olarak hazırlanmıştır.</p>";
     };

@@ -59,10 +59,12 @@
     { k: "durum", baslik: "Durum", kart: "rozet", sira: 1, hucre: function (r) { return rozet(MV.raporDurum(r)); } }
   ];
   function uyariCiz() {
-    var l = imzaBekleyen();
-    $("a-uyari").innerHTML = l.length ? '<div class="a-uyari-serit"><div class="a-serit a-serit-uyari">' + ikon("file-signature", "a-ikon-kucuk") +
-      "<span><b>" + l.length + " rapor imzanızı bekliyor</b></span>" +
-      MK.tus({ eylem: "imza-ac", ad: "İmzala (" + l.length + ")", sinif: "a-tus-ikincil a-serit-tus" }) + "</div></div>" : "";
+    var l = imzaBekleyen(), t = telefonda();
+    $("a-uyari").innerHTML = l.length || t.length ? '<div class="a-uyari-serit">' +
+      (l.length ? '<div class="a-serit a-serit-uyari">' + ikon("file-signature", "a-ikon-kucuk") + "<span><b>" + l.length + " rapor imzanızı bekliyor</b></span>" +
+        MK.tus({ eylem: "imza-ac", ad: "İmzala (" + l.length + ")", sinif: "a-tus-ikincil a-serit-tus" }) + "</div>" : "") +
+      (t.length ? '<div class="a-serit a-serit-bilgi">' + ikon("smartphone", "a-ikon-kucuk") + "<span><b>" + t.length + " imza isteği telefonunuzda bekliyor</b></span>" +
+        MK.tus({ eylem: "telefon-ac", ad: "Telefonda onayla", sinif: "a-tus-ikincil a-serit-tus" }) + "</div>" : "") + "</div>" : "";
   }
   function listeCiz() {
     uyariCiz();
@@ -91,12 +93,14 @@
         '<p class="a-nesne-alt">' + ikon("wrench", "a-ikon-kucuk") + '<span><span class="a-kod">' + e.kod + "</span> · " + kacis(t.ad) + " · " + kacis(ts.ad) + " · " + kacis(m.kisa) + "</span></p></div>" +
         '<div class="a-eylem-cubugu">' + MK.tus({ eylem: "pdf", ad: "PDF indir", ikon: "file-text", sinif: "a-tus-ikincil" }) +
           (r.durum === "onaylandi" ? MK.tus({ eylem: "imza-ac", ad: "İmzala", ikon: "file-signature", veri: { no: r.no } }) : "") +
+          (r.durum === "imzada" ? MK.tus({ eylem: "istek-geri", ad: "İsteği geri çek", ikon: "undo-2", sinif: "a-tus-ikincil", veri: { no: r.no } }) +
+            MK.tus({ eylem: "telefon-ac", ad: "Telefonda onayla", ikon: "smartphone", veri: { no: r.no } }) : "") +
           (yeniden(r) ? '<a class="a-tus a-tus-birincil" href="' + raporEkrani(r) + '">' + ikon("pencil", "a-ikon-kucuk") + "Raporu düzenle</a>" : "") + "</div></div>" +
       '<div class="a-uyari-serit">' +
         (r.geri && r.durum === "taslak" ? MK.serit("uyari", "undo-2", "<b>" + (r.revizyonlar && r.revizyonlar[0] && r.revizyonlar[0].zaman === r.geri.zaman ? "Revizeye gönderildi (" + r.revizyonlar[0].ad + ")" : "Geri gönderildi") + "</b> · " + kacis(MV.kisi(r.geri.kim).ad) + ": “" + kacis(r.geri.gerekce) + "”") : "") +
         (r.durum === "onayda" ? MK.serit("bilgi", "clock", "Onayda · " + kacis(yon.ad)) : "") +
         (r.durum === "onaylandi" ? MK.serit("uyari", "file-signature", "Muayene uzmanı imzası · imzanız bekleniyor") : "") +
-        (r.durum === "imzada" ? MK.serit("bilgi", "file-signature", "İmzaya gönderildi") : "") +
+        (r.durum === "imzada" ? MK.serit("bilgi", "smartphone", "İmzaya gönderildi" + (r.imzaGonderildi ? " · " + MK.zamanYaz(r.imzaGonderildi) : "") + " · telefonunuzda onay bekliyor") : "") +
         (r.durum === "imzali" ? MK.serit(portal.length ? "onay" : "uyari", "circle-check", "Tamamlandı · müşteriye açık" + (portal.length ? "" : " · müşterinin giriş yapan kullanıcısı yok")) : "") +
       "</div>" +
       '<div class="a-yuzler">' +
@@ -110,47 +114,88 @@
         (r.durum === "taslak" ? '<p class="a-bos-satir">Taslak: PDF yok.</p>' : MK.dosyaOnizle(r.imzaDosya, MB.belge(t, MV.raporBelge(r)))) + "</section>";
   }
 
-  /* ── SON İMZA PENCERESİ: aracı imza servisi · indir, imzala, yükle (yöntem firma ayarı; soru) ───────────────── */
+  /* ── SON İMZA PENCERESİ (2026-09-29, V2; §9 otuz altıncı tur 177, 178): yöntem FİRMA AYARI (Personel · Firma ayarları), aracı site yok ──
+     mobil imza: "İmzaya gönder" → her rapor için telefona ayrı istek, PIN telefonda (makette telefon ekranı taklit edilir) ·
+     e-imza: "İmza aracını aç" → bilgisayardaki imza aracımız (AKİS kurulu), kart PIN'i bir kez, her rapor ayrı imzalanır ·
+     yedek yol: indir, imzala, yükle. Raporlar asla birleşmez (99). W.adim: "sec" (yöntem) · "arac" (imza aracı) · "telefon" (telefon ekranı) */
   var W = null;
+  var telefonda = function () { return benim().filter(function (r) { return r.durum === "imzada"; }); };
+  var pinGecerli = function (p) { return /^\d{4,8}$/.test(p); };
+  function listeHtml(l) {
+    return '<ul class="a-kosullar">' + l.map(function (r) { var e = ekp(r); return '<li class="a-kosul-bilgi">' + ikon("file-text", "a-ikon-kucuk") + '<span><span class="a-kod">' + r.no + "</span> · " + e.kod + " · " + kacis(MV.tesis(r.tesis).ad) + "</span>" +
+      (W.y === "dosya" && W.adim === "sec" && W.dosya && W.dosya[r.no] ? MK.dosyaAlan({ ad: W.dosya[r.no], degistir: "imzali-tek", sil: "imzali-kaldir", veri: { no: r.no } }) : "") + "</li>"; }).join("") + "</ul>";
+  }
+  function pinHtml(etiket) {
+    return '<div class="a-alan-grup"><label class="a-etiket" for="w-pin">' + etiket + '</label><input class="a-girdi" id="w-pin" type="password" inputmode="numeric" autocomplete="off" maxlength="8" data-alan="pin" value="' + kacis(W.pin) + '"' +
+      (W.hata ? ' aria-invalid="true" aria-describedby="w-pin-ipucu"' : "") + ">" + (W.hata ? '<p class="a-ipucu a-ipucu-uyari" id="w-pin-ipucu">' + W.hata + "</p>" : "") + "</div>";
+  }
   function pencereCiz(odak) {
-    var l = W.l;
-    $("a-pencere-baslik").textContent = l.length > 1 ? l.length + " raporu imzala" : "Raporu imzala";
-    $("a-pencere-govde").innerHTML = '<div class="a-sekmeler" role="group" aria-label="İmza yöntemi">' +
-        '<button type="button" class="a-sekme" data-yontem="servis" aria-pressed="' + (W.y === "servis") + '">İmza servisi</button>' +
-        '<button type="button" class="a-sekme" data-yontem="dosya" aria-pressed="' + (W.y === "dosya") + '">İndir, imzala, yükle</button></div>' +
-      '<ul class="a-kosullar">' + l.map(function (r) { var e = ekp(r); return '<li class="a-kosul-bilgi">' + ikon("file-text", "a-ikon-kucuk") + '<span><span class="a-kod">' + r.no + "</span> · " + e.kod + " · " + kacis(MV.tesis(r.tesis).ad) + "</span>" +
-        (W.y === "dosya" && W.dosya && W.dosya[r.no] ? MK.dosyaAlan({ ad: W.dosya[r.no], degistir: "imzali-tek", sil: "imzali-kaldir", veri: { no: r.no } }) : "") + "</li>"; }).join("") + "</ul>" +
-      '<div class="a-serit-kap a-bolum-serit">' + (W.y === "servis"
-        ? MK.serit("bilgi", "file-signature", "Her rapor ayrı PDF olarak imza servisine gider ve ayrı imzalanır.")
-        : MK.serit("bilgi", "file-signature", "Her rapor ayrı PDF: indirin, e-imzayla imzalayın, imzalı PDF'leri yükleyin.")) + "</div>" +
-      (W.y === "dosya" ? '<div class="a-eylem-cubugu">' + MK.tus({ eylem: "pdf", ad: "PDF'leri indir", ikon: "file-text", sinif: "a-tus-ikincil" }) +
-        MK.tus({ eylem: "imzali-yukle", ad: W.yuklendi ? "İmzalı PDF yüklendi (" + l.length + ")" : "İmzalı PDF'leri yükle", ikon: "file-check", sinif: "a-tus-ikincil" }) + "</div>" +
-        (W.hata ? '<p class="a-ipucu a-ipucu-uyari">' + W.hata + "</p>" : "") : "");
-    $("a-pencere-alt").innerHTML = MK.tus({ eylem: "pencere-kapat", ad: "Vazgeç", sinif: "a-tus-ikincil" }) + MK.tus({ eylem: "imzala", ad: W.y === "servis" ? "İmza servisine gönder" : "İmzayı tamamla", ikon: "file-signature" });
+    var l = W.l, y = MV.imzaYontem(), ben = MV.kisi(BEN), tus;
+    if (W.adim === "telefon") {   /* telefon ekranı (maket): operatörün imza isteği, her rapor ayrı PIN */
+      var r = l[W.i];
+      $("a-pencere-baslik").textContent = "Telefon · mobil imza isteği" + (l.length > 1 ? " (" + (W.i + 1) + " / " + l.length + ")" : "");
+      $("a-pencere-govde").innerHTML = '<div class="a-telefon">' + MK.serit("bilgi", "smartphone", "Maket: telefonunuzdaki imza isteği") +
+        '<p class="a-pencere-metin"><b>probata</b> · ' + r.no + " numaralı raporu imzalamak için mobil imza PIN'inizi girin.</p>" + pinHtml("Mobil imza PIN") + "</div>";
+      tus = MK.tus({ eylem: "tel-reddet", ad: "Reddet", sinif: "a-tus-ikincil" }) + MK.tus({ eylem: "tel-onayla", ad: "Onayla", ikon: "check" });
+    } else if (W.adim === "arac") {   /* imza aracı (maket): kart okundu, PIN bir kez */
+      $("a-pencere-baslik").textContent = "probata imza aracı";
+      $("a-pencere-govde").innerHTML = MK.serit("bilgi", "usb", "Maket: bilgisayardaki imza aracı · kart takılı · " + kacis(ben.ad)) +
+        '<p class="a-pencere-metin">' + l.length + " rapor, her biri ayrı imzalanacak:</p>" + listeHtml(l) + pinHtml("Kart PIN");
+      tus = MK.tus({ eylem: "arac-imzala", ad: l.length > 1 ? l.length + " raporu imzala" : "İmzala", ikon: "file-signature" });
+    } else {
+      $("a-pencere-baslik").textContent = l.length > 1 ? l.length + " raporu imzala" : "Raporu imzala";
+      $("a-pencere-govde").innerHTML = '<div class="a-sekmeler" role="group" aria-label="İmza yöntemi">' +
+          '<button type="button" class="a-sekme" data-yontem="firma" aria-pressed="' + (W.y === "firma") + '">' + y.ad + "</button>" +
+          '<button type="button" class="a-sekme" data-yontem="dosya" aria-pressed="' + (W.y === "dosya") + '">İndir, imzala, yükle</button></div>' +
+        listeHtml(l) +
+        '<div class="a-serit-kap a-bolum-serit">' + MK.serit("bilgi", "file-signature", W.y === "dosya" ? "Her rapor ayrı PDF: indirin, imzalayın, imzalı PDF'leri yükleyin." :
+          y.k === "mobil" ? "Her rapor için telefonunuza ayrı imza isteği gelir; PIN'i telefonda girersiniz." : "İmza aracı açılır; kart PIN'ini bir kez girersiniz, her rapor ayrı imzalanır.") + "</div>" +
+        (W.y === "dosya" ? '<div class="a-eylem-cubugu">' + MK.tus({ eylem: "pdf", ad: "PDF'leri indir", ikon: "file-text", sinif: "a-tus-ikincil" }) +
+          MK.tus({ eylem: "imzali-yukle", ad: W.yuklendi ? "İmzalı PDF yüklendi (" + l.length + ")" : "İmzalı PDF'leri yükle", ikon: "file-check", sinif: "a-tus-ikincil" }) + "</div>" +
+          (W.hata ? '<p class="a-ipucu a-ipucu-uyari">' + W.hata + "</p>" : "") : "");
+      tus = MK.tus({ eylem: "imzala", ad: W.y === "dosya" ? "İmzayı tamamla" : y.k === "mobil" ? "İmzaya gönder" : "İmza aracını aç", ikon: "file-signature" });
+    }
+    $("a-pencere-alt").innerHTML = MK.tus({ eylem: "pencere-kapat", ad: "Vazgeç", sinif: "a-tus-ikincil" }) + tus;
     if (odak) { var el = document.querySelector(odak); if (el) el.focus(); }
   }
   function pencereAc(no) {
     var l = no ? imzaBekleyen().filter(function (r) { return r.no === no; }) : imzaBekleyen();
     if (!l.length) return;
-    W = { l: l, y: "servis", yuklendi: false, hata: "" }; pencereCiz(); if (!$("a-pencere").open) $("a-pencere").showModal();
-    document.querySelector('[data-yontem="servis"]').focus();
+    W = { l: l, y: "firma", adim: "sec", pin: "", yuklendi: false, hata: "" }; pencereCiz(); if (!$("a-pencere").open) $("a-pencere").showModal();
+    document.querySelector('[data-yontem="firma"]').focus();
   }
+  function telefonAc(no) {   /* telefona düşmüş istekler (mobil imza): sırayla, her biri ayrı PIN */
+    var l = telefonda().filter(function (r) { return !no || r.no === no; });
+    if (!l.length) return;
+    W = { l: l, adim: "telefon", i: 0, pin: "", hata: "" }; pencereCiz(); if (!$("a-pencere").open) $("a-pencere").showModal(); $("w-pin").focus();
+  }
+  function yenile(r) { if (r && rota().v === "rapor") raporCiz(r); else listeCiz(); }
   function imzala() {
-    if (W.y === "dosya" && !W.yuklendi) { W.hata = "Önce imzalı PDF'leri yükleyin."; pencereCiz('[data-eylem="imzali-yukle"]'); return; }
-    var n = W.l.length, zaman = MK.simdi(), servis = W.y === "servis";
-    /* servis yolu: rapor "İmzaya gönderildi", imzalı PDF dönünce "Tamamlandı" · dosya yolu: imzalı PDF yüklendi → "Tamamlandı" */
-    W.l.forEach(function (r) { if (servis) { r.durum = "imzada"; r.imzaGonderildi = zaman; } else { r.durum = "imzali"; r.imza = { zaman: zaman }; r.imzaDosya = W.dosya[r.no]; } });   /* yüklenen imzalı PDF raporda saklanır */
-    var tek = n === 1 ? W.l[0] : null;
-    $("a-pencere").close();
-    if (tek && rota().v === "rapor") raporCiz(tek); else listeCiz();
-   
-    MK.bildir(servis ? n + " rapor imzaya gönderildi; her biri ayrı imzalanır." : n + " rapor imzalandı, tamamlandı ve müşteriye açıldı.");
+    var zaman = MK.simdi(), y = MV.imzaYontem();
+    if (W.y === "dosya") {
+      if (!W.yuklendi) { W.hata = "Önce imzalı PDF'leri yükleyin."; pencereCiz('[data-eylem="imzali-yukle"]'); return; }
+      W.l.forEach(function (r) { r.durum = "imzali"; r.imza = { zaman: zaman, yontem: "dosya" }; r.imzaDosya = W.dosya[r.no]; });   /* yüklenen imzalı PDF raporda saklanır */
+      var n = W.l.length, tek = n === 1 ? W.l[0] : null; $("a-pencere").close(); yenile(tek);
+      MK.bildir(n + " rapor imzalandı, tamamlandı ve müşteriye açıldı."); return;
+    }
+    if (y.k === "eimza") { W.adim = "arac"; W.pin = ""; W.hata = ""; pencereCiz("#w-pin"); return; }
+    W.l.forEach(function (r) { r.durum = "imzada"; r.imzaGonderildi = zaman; });   /* mobil: her rapor ayrı istek, telefonda PIN */
+    W = { l: W.l.slice(), adim: "telefon", i: 0, pin: "", hata: "" }; listeCiz(); if (rota().v === "rapor") raporCiz(W.l[0]); pencereCiz("#w-pin");
+    MK.bildir(W.l.length + " imza isteği telefonunuza gönderildi; her birini PIN ile onaylayın.");
   }
+  function pinYok() { if (pinGecerli(W.pin)) return false; W.hata = "PIN 4–8 rakam olmalı."; pencereCiz("#w-pin"); return true; }
+  function telefonSonraki(r, ne) {
+    W.i++; W.pin = ""; W.hata = "";
+    if (W.i < W.l.length) { pencereCiz("#w-pin"); yenileArka(); MK.bildir(r.no + " " + ne + ". Sıradaki istek."); return; }
+    var tek = W.l.length === 1 ? W.l[0] : null; $("a-pencere").close(); yenile(tek); MK.bildir(r.no + " " + ne + ".");
+  }
+  function yenileArka() { if (rota().v === "rapor") raporCiz(MV.rapor(rota().no)); else listeCiz(); }
 
   /* ── GÖRÜNÜM ────────────────────────────────────────────────────────────────────────────────────────── */
   function rota() {
     var h = location.hash, m;
     if (h === "#/imza") return { v: "liste", pencere: true };
+    if (h === "#/telefon") return { v: "liste", telefon: true };
     if ((m = /^#\/r\/([A-Za-z0-9-]+)$/.exec(h))) return { v: "rapor", no: m[1] };
     return { v: "liste" };
   }
@@ -160,16 +205,37 @@
     if (r.v === "liste") { $("a-suzgec-kap").innerHTML = MK.suzgecHtml("r"); MK.suzgecKur("r"); } else raporCiz(rp);
     document.title = (r.v === "rapor" ? (rp ? rp.no : "Rapor bulunamadı") : "Raporlar") + " · probata maket";
     if (odakla) { window.scrollTo(0, 0); var hh = document.querySelector("#a-icerik > :not([hidden]) h1"); if (hh) hh.focus({ preventScroll: true }); }
-    if (r.pencere) pencereAc(); else if ($("a-pencere").open) $("a-pencere").close();
+    if (r.pencere) pencereAc(); else if (r.telefon) telefonAc(); else if ($("a-pencere").open) $("a-pencere").close();
   }
   MK.goster = goster;
   MK.onTikla = function (e) {
-    var b = e.target.closest("[data-yontem]"); if (!b || !W) return false;
+    var b = e.target.closest("[data-yontem]"); if (!b || !W || W.adim !== "sec") return false;
     W.y = b.dataset.yontem; W.hata = ""; pencereCiz('[data-yontem="' + W.y + '"]'); return true;
   };
   var X = MK.eylem;
   X["imza-ac"] = function (el) { pencereAc(el.dataset.no || null); };
   X["imzala"] = imzala;
+  X["telefon-ac"] = function (el) { telefonAc(el.dataset.no || null); };
+  X["arac-imzala"] = function () {
+    if (pinYok()) return;
+    var zaman = MK.simdi(), n = W.l.length, tek = n === 1 ? W.l[0] : null;
+    W.l.forEach(function (r) { r.durum = "imzali"; r.imza = { zaman: zaman, yontem: "eimza" }; });   /* her rapor ayrı imza; PIN bir kez */
+    $("a-pencere").close(); yenile(tek);
+    MK.bildir(n + " rapor e-imzayla imzalandı (her biri ayrı), tamamlandı ve müşteriye açıldı.");
+  };
+  X["tel-onayla"] = function () {
+    if (pinYok()) return;
+    var r = W.l[W.i]; r.durum = "imzali"; r.imza = { zaman: MK.simdi(), yontem: "mobil" }; r.imzaGonderildi = null;
+    telefonSonraki(r, "mobil imzayla imzalandı, müşteriye açıldı");
+  };
+  X["tel-reddet"] = function () {   /* telefonda reddedilen istek: rapor yeniden imza bekler */
+    var r = W.l[W.i]; r.durum = "onaylandi"; r.imzaGonderildi = null;
+    telefonSonraki(r, "imza isteği reddedildi; rapor yeniden imzanızı bekliyor");
+  };
+  X["istek-geri"] = function (el) {   /* telefona gönderilmiş isteği geri çek (ör. telefon yanında değil) */
+    var r = MV.rapor(el.dataset.no); r.durum = "onaylandi"; r.imzaGonderildi = null; yenile(r);
+    var h = document.querySelector("#a-nesne h1"); if (h) h.focus(); MK.bildir(r.no + " imza isteği geri çekildi; rapor imzanızı bekliyor.");
+  };
   /* 2026-09-27: imzalı PDF'ler gerçek dosya penceresinden (birden çok); dosya adında rapor no geçen o rapora, öteki sırayla eşlenir */
   X["imzali-yukle"] = function () {
     var secilen = [];
@@ -217,7 +283,8 @@
     var l = $("a-pencere").open && W ? W.l : [MV.rapor(rota().no)];
     MK.yazdir(l.length > 1 ? l.length + " rapor" : l[0].no, l.map(function (r) { return MB.belge(MV.tur(ekp(r).tur), MV.raporBelge(r)); }).join(""));
   };
-  $("a-pencere").addEventListener("close", function () { W = null; if (rota().pencere) history.replaceState(null, "", "#/"); });
+  MK.onGirdi = function (e) { if (W && e.target.id === "w-pin") { W.pin = e.target.value.replace(/\D/g, ""); if (W.pin !== e.target.value) e.target.value = W.pin; } };
+  $("a-pencere").addEventListener("close", function () { W = null; var r = rota(); if (r.pencere || r.telefon) history.replaceState(null, "", "#/"); });
 
   MK.kabuk({ modul: 14, kullanici: { bas: "MK", ad: "Mert Kaya", rol: "Inspector" } });
   goster(false);

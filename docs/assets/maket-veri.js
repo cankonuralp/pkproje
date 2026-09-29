@@ -645,7 +645,15 @@
   MV.kusurSinifli = function (t) { return !!t.format && t.formatDurum === "zorunlu"; };
   /* kiracı firmanın künyesi (rapor başlığı, §4.2 ve §4.8: akredite kuruluş logosu + ticari ad + TÜRKAK markası) — UYDURMA */
   MV.FIRMA = { ad: "Örnek Muayene ve Kontrol Ltd. Şti.", kisa: "KM", adres: "Örnek Mahallesi Deneme Caddesi No: 1, Gebze / Kocaeli",
-    eposta: "rapor@firma.example", akr: "AB-0000-M", nusha: 2 };
+    eposta: "rapor@firma.example", akr: "AB-0000-M", nusha: 2, imza: "mobil" };
+  /* imza yöntemi firma ayarı (2026-09-29, §9 otuz altıncı tur 177, 178, 180): raporun son imzası ve iç belgeler bu yöntemle; aracı site yok.
+     mobil: her belge için telefona ayrı imza isteği, PIN telefonda (operatöre doğrudan bağlantı) · eimza: bilgisayardaki imza aracımız
+     (AKİS kurulu), kart PIN'i bir kez, her belge ayrı imzalanır. "İndir, imzala, yükle" yedek yol her iki yöntemde durur. */
+  MV.IMZA_YONTEM = {
+    mobil: { k: "mobil", ad: "Mobil imza", kisa: "mobil imza", etiket: "telefonda PIN, her belge ayrı", acik: "Her belge için telefona imza isteği gelir, PIN telefonda girilir." },
+    eimza: { k: "eimza", ad: "E-imza", kisa: "e-imza", etiket: "kart ve imza aracı, tek PIN", acik: "Bilgisayardaki imza aracı açılır, kart PIN'i bir kez girilir; her belge ayrı imzalanır." }
+  };
+  MV.imzaYontem = function () { return MV.IMZA_YONTEM[MV.FIRMA.imza] || MV.IMZA_YONTEM.mobil; };
 
   /* ── EKİPMAN SİCİLİ (modül 7; M3) — kalıcı, tesise bağlı, kod firmada eşsiz (§3.5) ─────────────────────────────
      Planlar maketinin plan tesislerindeki ekipmanlar AYNI algoritmayla üretilir (kod HT-1001…, konum, önceki kontrol, rapor no);

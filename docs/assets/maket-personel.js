@@ -569,6 +569,15 @@
     $("a-izin-alt").innerHTML = MK.tus({ eylem: "pencere-kapat", ad: "Vazgeç", sinif: "a-tus-ikincil" }) + MK.tus({ eylem: "izin-red-kaydet", ad: "Reddet", ikon: "x" });
     if (odak) $(odak).focus();
   }
+  /* ── FİRMA AYARLARI (2026-09-29; firma yöneticisinin rolü: "firma ayarları"): imza yöntemi — firma seçer (§9 otuz altıncı tur 178) ── */
+  function ayarCiz() {
+    var y = MV.imzaYontem();
+    $("a-ayarlar").innerHTML = '<section class="a-bolum" aria-labelledby="a-b-imza"><div class="a-alt-bas"><h2 class="a-alt-baslik" id="a-b-imza">İmza yöntemi</h2></div>' +
+      '<div role="radiogroup" aria-labelledby="a-b-imza">' + Object.keys(MV.IMZA_YONTEM).map(function (k) {
+        var x = MV.IMZA_YONTEM[k];
+        return '<label class="a-onay-kutusu"><input type="radio" name="ay-imza" data-imza-yontem value="' + k + '"' + (y.k === k ? " checked" : "") + "><span>" + x.ad + " — " + x.etiket + "</span></label>";
+      }).join("") + "</div></section>";   /* raporun son imzası ve iç belgeler bu yöntemle; indir-imzala-yükle yedek yol her zaman açık */
+  }
   var izinBul = function (no) { return MV.IZINLER.filter(function (x) { return x.no === no; })[0]; };
 
   /* ── GÖRÜNÜM ────────────────────────────────────────────────────────────────────────────────────────── */
@@ -576,6 +585,7 @@
     var h = location.hash, m;
     if (h === "#/roller") return { v: "roller" };
     if (h === "#/izinler") return { v: "izinler" };
+    if (h === "#/ayarlar") return { v: "ayarlar" };
     if (h === "#/yeni") return { v: "form" };
     if ((m = /^#\/p\/([a-z0-9]+)\/duzenle$/.exec(h))) return { v: "form", id: m[1] };
     if ((m = /^#\/p\/([a-z0-9]+)\/zimmet-formu$/.exec(h))) return { v: "zform", id: m[1] };
@@ -591,17 +601,18 @@
     if (r.v !== "kart" || sonKisi !== r.id) SECILI = null;
     if (r.v !== "roller") { R.duzen = false; R.taslak = null; }
     sonKisi = r.id || null;
-    $("a-liste-gorunum").hidden = r.v !== "liste"; $("a-roller-gorunum").hidden = r.v !== "roller"; $("a-izin-gorunum").hidden = r.v !== "izinler";
+    $("a-liste-gorunum").hidden = r.v !== "liste"; $("a-roller-gorunum").hidden = r.v !== "roller"; $("a-izin-gorunum").hidden = r.v !== "izinler"; $("a-ayar-gorunum").hidden = r.v !== "ayarlar";
     $("a-nesne").hidden = ["kart", "zform", "zgecmis", "zimzali"].indexOf(r.v) < 0; $("a-form-gorunum").hidden = r.v !== "form";
     if (r.v === "liste") listeCiz();
     else if (r.v === "roller") rollerCiz();
     else if (r.v === "izinler") izinCiz();
+    else if (r.v === "ayarlar") ayarCiz();
     else if (r.v === "kart") kartCiz(p);
     else if (r.v === "zform") { if (p) zimmetFormuCiz(p); else kartCiz(null); }
     else if (r.v === "zgecmis") { if (p) zimmetGecmisiCiz(p); else kartCiz(null); }
     else if (r.v === "zimzali") { if (p) imzaliFormCiz(p, r.no); else kartCiz(null); }
     else { if (!F || F.id !== (r.id || null) || odakla) formAc(p); formCiz(); }
-    document.title = (r.v === "liste" ? "Personel" : r.v === "roller" ? "Rol yetkileri" : r.v === "izinler" ? "İzin talepleri" : r.v === "kart" ? (p ? p.ad : "Kişi bulunamadı") : r.v === "zform" ? (p ? p.ad + " · zimmet formu" : "Kişi bulunamadı") : r.v === "zgecmis" ? (p ? p.ad + " · zimmet geçmişi" : "Kişi bulunamadı") :
+    document.title = (r.v === "liste" ? "Personel" : r.v === "roller" ? "Rol yetkileri" : r.v === "izinler" ? "İzin talepleri" : r.v === "ayarlar" ? "Firma ayarları" : r.v === "kart" ? (p ? p.ad : "Kişi bulunamadı") : r.v === "zform" ? (p ? p.ad + " · zimmet formu" : "Kişi bulunamadı") : r.v === "zgecmis" ? (p ? p.ad + " · zimmet geçmişi" : "Kişi bulunamadı") :
       r.v === "zimzali" ? (p ? p.ad + " · imzalı zimmet formu" : "Kişi bulunamadı") : (p ? p.ad + " · düzenle" : "Yeni personel")) + " · probata maket";
     if (odakla && !r.pencere) { window.scrollTo(0, 0); var h = document.querySelector("#a-icerik > :not([hidden]) h1"); if (h) h.focus({ preventScroll: true }); }
     if (r.pencere === "hesap" && p) { if (!$("a-hesap-pencere").open) hesapPencereAc(p); } else if ($("a-hesap-pencere").open) $("a-hesap-pencere").close();
@@ -736,6 +747,10 @@
   };
   document.addEventListener("change", function (e) {
     var t = e.target, r;
+    if (t.hasAttribute && t.hasAttribute("data-imza-yontem")) {
+      MV.FIRMA.imza = t.value; ayarCiz(); var s = document.querySelector('[data-imza-yontem][value="' + t.value + '"]'); if (s) s.focus();
+      MK.bildir("İmza yöntemi: " + MV.imzaYontem().ad + ". Raporlar ve iç belgeler bu yöntemle imzalanır."); return;
+    }
     if ((r = t.dataset && t.dataset.rol)) {
       var p = aktif(); SECILI = (SECILI || p.hesap.roller).slice();
       var i = SECILI.indexOf(r); if (t.checked && i < 0) SECILI.push(r); else if (!t.checked && i >= 0) SECILI.splice(i, 1);

@@ -8,8 +8,8 @@
   390,
   430
  ],
- "toplam": 68,
- "temiz": 68,
+ "toplam": 84,
+ "temiz": 84,
  "durumlar": [
   {
    "ad": "raporlar · inspector'ın listesi + imza şeridi",
@@ -192,7 +192,7 @@
    "alan": 0
   },
   {
-   "ad": "son imza penceresi · toplu, imza servisi",
+   "ad": "son imza penceresi · toplu, firma yöntemi mobil imza",
    "gen": 320,
    "temiz": true,
    "tasma": 0,
@@ -201,7 +201,7 @@
    "alan": 4
   },
   {
-   "ad": "son imza penceresi · toplu, imza servisi",
+   "ad": "son imza penceresi · toplu, firma yöntemi mobil imza",
    "gen": 360,
    "temiz": true,
    "tasma": 0,
@@ -210,7 +210,7 @@
    "alan": 4
   },
   {
-   "ad": "son imza penceresi · toplu, imza servisi",
+   "ad": "son imza penceresi · toplu, firma yöntemi mobil imza",
    "gen": 390,
    "temiz": true,
    "tasma": 0,
@@ -219,13 +219,157 @@
    "alan": 4
   },
   {
-   "ad": "son imza penceresi · toplu, imza servisi",
+   "ad": "son imza penceresi · toplu, firma yöntemi mobil imza",
    "gen": 430,
    "temiz": true,
    "tasma": 0,
    "disari": [],
    "kucukAlan": [],
    "alan": 4
+  },
+  {
+   "ad": "mobil imza · telefon ekranı (maket), PIN",
+   "gen": 320,
+   "temiz": true,
+   "tasma": 0,
+   "disari": [],
+   "kucukAlan": [],
+   "alan": 5
+  },
+  {
+   "ad": "mobil imza · telefon ekranı (maket), PIN",
+   "gen": 360,
+   "temiz": true,
+   "tasma": 0,
+   "disari": [],
+   "kucukAlan": [],
+   "alan": 5
+  },
+  {
+   "ad": "mobil imza · telefon ekranı (maket), PIN",
+   "gen": 390,
+   "temiz": true,
+   "tasma": 0,
+   "disari": [],
+   "kucukAlan": [],
+   "alan": 5
+  },
+  {
+   "ad": "mobil imza · telefon ekranı (maket), PIN",
+   "gen": 430,
+   "temiz": true,
+   "tasma": 0,
+   "disari": [],
+   "kucukAlan": [],
+   "alan": 5
+  },
+  {
+   "ad": "e-imza · imza aracı (maket), tek PIN",
+   "gen": 320,
+   "temiz": true,
+   "tasma": 0,
+   "disari": [],
+   "kucukAlan": [],
+   "alan": 5
+  },
+  {
+   "ad": "e-imza · imza aracı (maket), tek PIN",
+   "gen": 360,
+   "temiz": true,
+   "tasma": 0,
+   "disari": [],
+   "kucukAlan": [],
+   "alan": 5
+  },
+  {
+   "ad": "e-imza · imza aracı (maket), tek PIN",
+   "gen": 390,
+   "temiz": true,
+   "tasma": 0,
+   "disari": [],
+   "kucukAlan": [],
+   "alan": 5
+  },
+  {
+   "ad": "e-imza · imza aracı (maket), tek PIN",
+   "gen": 430,
+   "temiz": true,
+   "tasma": 0,
+   "disari": [],
+   "kucukAlan": [],
+   "alan": 5
+  },
+  {
+   "ad": "rapor · telefonda onay bekliyor (İsteği geri çek · Telefonda onayla)",
+   "gen": 320,
+   "temiz": true,
+   "tasma": 0,
+   "disari": [],
+   "kucukAlan": [],
+   "alan": 0
+  },
+  {
+   "ad": "rapor · telefonda onay bekliyor (İsteği geri çek · Telefonda onayla)",
+   "gen": 360,
+   "temiz": true,
+   "tasma": 0,
+   "disari": [],
+   "kucukAlan": [],
+   "alan": 0
+  },
+  {
+   "ad": "rapor · telefonda onay bekliyor (İsteği geri çek · Telefonda onayla)",
+   "gen": 390,
+   "temiz": true,
+   "tasma": 0,
+   "disari": [],
+   "kucukAlan": [],
+   "alan": 0
+  },
+  {
+   "ad": "rapor · telefonda onay bekliyor (İsteği geri çek · Telefonda onayla)",
+   "gen": 430,
+   "temiz": true,
+   "tasma": 0,
+   "disari": [],
+   "kucukAlan": [],
+   "alan": 0
+  },
+  {
+   "ad": "firma ayarları · imza yöntemi",
+   "gen": 320,
+   "temiz": true,
+   "tasma": 0,
+   "disari": [],
+   "kucukAlan": [],
+   "alan": 0
+  },
+  {
+   "ad": "firma ayarları · imza yöntemi",
+   "gen": 360,
+   "temiz": true,
+   "tasma": 0,
+   "disari": [],
+   "kucukAlan": [],
+   "alan": 0
+  },
+  {
+   "ad": "firma ayarları · imza yöntemi",
+   "gen": 390,
+   "temiz": true,
+   "tasma": 0,
+   "disari": [],
+   "kucukAlan": [],
+   "alan": 0
+  },
+  {
+   "ad": "firma ayarları · imza yöntemi",
+   "gen": 430,
+   "temiz": true,
+   "tasma": 0,
+   "disari": [],
+   "kucukAlan": [],
+   "alan": 0
   },
   {
    "ad": "son imza penceresi · indir, imzala, yükle",
