@@ -2,8 +2,8 @@
  "maket": "m9",
  "tarih": "2026-09-29",
  "arac": "tools/olc-bulut.mjs --etkilesim (başsız tarayıcı, 1920 açık tema; gen verilen denemede o genişlik)",
- "toplam": 40,
- "gecen": 40,
+ "toplam": 41,
+ "gecen": 41,
  "denemeler": [
   {
    "ad": "rapor sayfasında durum geçmişi yok",
@@ -220,6 +220,13 @@
    "gen": 1920,
    "sayfa": "maket/onaylar.html",
    "hash": "#/tum",
+   "gecti": true
+  },
+  {
+   "ad": "190: vekil branş seçiliyken Tüm raporlar o branşın; elektrik raporunda durum değiştirilir; kendi branşına dönünce mekanik",
+   "gen": 1920,
+   "sayfa": "maket/onaylar.html",
+   "hash": "#/",
    "gecti": true
   },
   {

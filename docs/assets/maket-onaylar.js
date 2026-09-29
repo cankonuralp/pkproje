@@ -15,7 +15,10 @@
   var kuyruk = function () { return MV.RAPORLAR.filter(function (r) { return r.durum === "onayda" && brans(r) === BRANS; }).sort(function (a, b) { return a.gonderildi < b.gonderildi ? 1 : -1; }); };   /* en yeni üstte (reisim 2026-09-26) */
   /* pasif raporlar (2026-09-28, T2; reisim: "inspector pasife alabilir … aktif etme ve silme yalnız yönetici"): branşın pasif raporları */
   var pasifler = function () { return MV.RAPORLAR.filter(function (r) { return r.pasif && brans(r) === BENIM; }).sort(function (a, b) { return a.pasifZaman < b.pasifZaman ? 1 : -1; }); };
-  var tumu = function () { return MV.RAPORLAR.filter(function (r) { return !r.pasif && brans(r) === BENIM; }); };
+  /* 190 (2026-09-29): Tüm raporlar seçili branşın — kendi branşı ya da vekil olduğu branş (#/tum?brans=e) */
+  var tumu = function () { return MV.RAPORLAR.filter(function (r) { return !r.pasif && brans(r) === BRANS; }); };
+  var TUM_BRANS = null;
+  var tumAdres = function () { return BRANS === BENIM ? "#/tum" : "#/tum?brans=" + BRANS; };
   var saatFarki = function (iso) { return Math.round((new Date(MK.simdi() + ":00Z") - new Date(iso + ":00Z")) / 36e5); };
   var bekleme = function (iso) { var h = saatFarki(iso); return h < 1 ? "az önce" : h < 24 ? h + " saattir" : Math.floor(h / 24) + " gündür"; };
 
@@ -51,7 +54,7 @@
     $("a-uyari").innerHTML = '<div class="a-sekmeler a-bolum-serit" role="group" aria-label="Kuyruk">' + ["m", "e"].map(function (b) {
       var n = MV.RAPORLAR.filter(function (r) { return r.durum === "onayda" && brans(r) === b; }).length;
       return '<a class="a-sekme" href="' + (b === BENIM ? "#/" : "#/?brans=" + b) + '" aria-pressed="' + (gor === "kuyruk" && BRANS === b) + '">' + MV.bransAd(b) + (b === BENIM ? "" : " · vekil") + " <b>" + n + "</b></a>";
-    }).join("") + '<a class="a-sekme" href="#/tum" aria-pressed="' + (gor === "tum") + '">Tüm raporlar <b>' + tumu().length + "</b></a>" +
+    }).join("") + '<a class="a-sekme" href="' + tumAdres() + '" aria-pressed="' + (gor === "tum") + '">Tüm raporlar' + (BRANS === BENIM ? "" : " · " + MV.bransAd(BRANS).toLocaleLowerCase("tr") + " vekil") + " <b>" + tumu().length + "</b></a>" +
       '<a class="a-sekme" href="#/pasif" aria-pressed="' + (gor === "pasif") + '">Pasif raporlar <b>' + pasifler().length + "</b></a></div>";
   }
   var PASIF_SUTUN = [SUTUN[0], SUTUN[1], SUTUN[2],
@@ -151,7 +154,7 @@
      102'nin "Onayı geri al"ı da durur (tek tıkla kuyruğa döner) */
   function raporCiz(r) {
     var e = MV.ekipman(r.kod), t = MV.tur(e.tur), ts = MV.tesis(r.tesis), rv = r.revizyonlar && r.revizyonlar[0];
-    $("a-nesne").innerHTML = MK.kirinti([["Onaylar", "#/"], ["Tüm raporlar", "#/tum"], [r.no]]) +
+    $("a-nesne").innerHTML = MK.kirinti([["Onaylar", "#/"], ["Tüm raporlar", brans(r) === BENIM ? "#/tum" : "#/tum?brans=" + brans(r)], [r.no]]) +
       '<div class="a-nesne-bas"><div class="a-nesne-kimlik"><div class="a-nesne-baslik"><h1 tabindex="-1">' + r.no + (rv ? "-" + rv.ad : "") + "</h1>" + rozet(MV.raporDurum(r)) + "</div>" +
         '<p class="a-nesne-alt">' + ikon("wrench", "a-ikon-kucuk") + '<span><span class="a-kod">' + e.kod + "</span> · " + kacis(t.ad) + " · " + kacis(ts.ad) + " · " + kacis(MV.kisi(r.kisi).ad) + "</span></p></div>" +
         '<div class="a-eylem-cubugu">' + (r.durum === "imzali"
@@ -199,7 +202,7 @@
   }
   function yenidenCiz(odak) {   /* pencere kapanınca bulunduğu yer yeniden çizilir; odak rapor başlığına ya da listedeki satıra */
     goster(false);
-    var el = rota().v === "rapor" ? document.querySelector("#a-nesne h1") : document.querySelector('#a-liste a[href="#/r/' + odak + '"]') || document.querySelector('#a-uyari [href="#/tum"]');
+    var el = rota().v === "rapor" ? document.querySelector("#a-nesne h1") : document.querySelector('#a-liste a[href="#/r/' + odak + '"]') || document.querySelector('#a-uyari [href^="#/tum"]');
     if (el) el.focus();
   }
 
@@ -208,13 +211,15 @@
     BRANS = /[?&]brans=e/.test(location.hash) ? "e" : /[?&]brans=m/.test(location.hash) ? "m" : BRANS;
     if (location.hash === "#/" || location.hash === "") BRANS = BENIM;
     if (location.hash === "#/pasif") return { v: "liste", pasif: true };
-    if (location.hash === "#/tum") return { v: "liste", tum: true };
+    if (location.hash === "#/tum") { BRANS = BENIM; return { v: "liste", tum: true }; }
+    if (/^#\/tum\?brans=[a-z]$/.test(location.hash)) return { v: "liste", tum: true };
     var m = /^#\/r\/([A-Za-z0-9-]+)(\/geri)?$/.exec(location.hash);
     return m ? { v: "rapor", no: m[1], pencere: !!m[2] } : { v: "liste" };
   }
   function goster(odakla) {
     var r = rota(), rp = r.no ? MV.rapor(r.no) : null;
     $("a-liste-gorunum").hidden = r.v !== "liste"; $("a-nesne").hidden = r.v === "liste";
+    if (r.tum && TUM_BRANS !== BRANS) { MK.suzgecSifirla("t"); TUM_BRANS = BRANS; }   /* branş değişince süzgeç (inspector, sayfa) baştan */
     if (r.pasif) pasifCiz(); else if (r.tum) { $("a-suzgec-kap").innerHTML = MK.suzgecHtml("t"); MK.suzgecKur("t"); }
     else if (r.v === "liste") { $("a-suzgec-kap").innerHTML = MK.suzgecHtml("o"); MK.suzgecKur("o"); } else onayCiz(rp);
     document.title = (r.v === "rapor" ? (rp ? rp.no + " · onay" : "Rapor bulunamadı") : r.tum ? "Tüm raporlar · Onaylar" : "Onaylar") + " · probata maket";

@@ -1949,6 +1949,11 @@ revizyon, alan kopyalama, hafif kusur devri, meslek eşleşme denetimi).
 - Emsal ürünler: https://opwire.app/iso-17020-periyodik-kontrol-yazilimi/ · https://17020muayene.vidco.com.tr/ · https://akuple.com/asansor-kontrol-yazilimi/ · https://ensyazilim.com/
 
 ## 11 · Değişiklik günlüğü
+- 2026-09-29 (139): **W2 · 190 Vekil branşın tüm raporları** (§9 otuz yedinci tur). Onaylar'da "Tüm raporlar" seçili branşı izler: vekil kuyruğu
+  ("Elektrik · vekil") seçiliyken sekme "Tüm raporlar · elektrik vekil" olur (`#/tum?brans=e`), o branşın bütün raporları listelenir, durum
+  değiştirme ve revizeye gönderme orada da çalışır; kendi kuyruğuna dönünce kendi branşı. Branş değişince süzgeç baştan; rapor ekranındaki
+  kırıntı raporun branşına döner. Ölçüm: m9 durum 184/184 · etkileşim 41/41 (1 yeni) · telefon 92/92.
+
 - 2026-09-29 (138): **Sunucu ve veri tasarrufu kuralları: `09-SUNUCU-VE-VERI.md`** (§9 otuz yedinci tur ek; reisim D'yi onayladı, küçük kopya
   çıktı, veri tasarrufu tamamlansın). D bölümü kural dosyasına taşındı ve bu yığına göre yazıldı; veri tasarrufuna eklenenler: yükleme öncesi
   sıkıştırma (1600 px, %75), dosya bir kez iner, sunucuda sayfalı ve yalnız gereken sütunlar, sayılar özetten, canlı yoklama yok (en sık 60 sn,
