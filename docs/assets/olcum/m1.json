@@ -1,7 +1,7 @@
 {
  "maket": "m1",
  "sayfa": "maket/personel.html",
- "tarih": "2026-09-28",
+ "tarih": "2026-09-29",
  "arac": "başsız HeadlessChrome/141.0.7390.37 · puppeteer-core · tools/olc-bulut.mjs + tools/olc-maket.js",
  "yontem": "python3 http.server (docs/), her durum × genişlik × tema taze yükleme ve ayrı oturum, geçişler kapalı; 1920×1080 · 1080×810 · 375×812 × açık/koyu; 1080'de çekmece açık ayrıca.",
  "toplam": 280,
@@ -66,7 +66,7 @@
    "eksikIkon": 0,
    "tusY": 34,
    "tusGen": [
-    98,
+    76,
     101
    ],
    "satirY": 65,
@@ -104,7 +104,7 @@
    "eksikIkon": 0,
    "tusY": 34,
    "tusGen": [
-    98,
+    76,
     101
    ],
    "satirY": 65,
@@ -142,7 +142,7 @@
    "eksikIkon": 0,
    "tusY": 44,
    "tusGen": [
-    101,
+    78,
     105
    ],
    "satirY": 75,
@@ -180,7 +180,7 @@
    "eksikIkon": 0,
    "tusY": 44,
    "tusGen": [
-    101,
+    78,
     105
    ],
    "satirY": 75,
@@ -218,10 +218,10 @@
    "eksikIkon": 0,
    "tusY": 44,
    "tusGen": [
-    84,
+    65,
     87
    ],
-   "satirY": 104,
+   "satirY": 152,
    "birincil": null,
    "pencereGen": null,
    "icerik": 810,
@@ -256,10 +256,10 @@
    "eksikIkon": 0,
    "tusY": 44,
    "tusGen": [
-    84,
+    65,
     87
    ],
-   "satirY": 104,
+   "satirY": 152,
    "birincil": null,
    "pencereGen": null,
    "icerik": 810,
@@ -294,8 +294,8 @@
    "eksikIkon": 0,
    "tusY": 44,
    "tusGen": [
-    159,
-    159
+    102,
+    325
    ],
    "satirY": 260,
    "birincil": null,
@@ -332,8 +332,8 @@
    "eksikIkon": 0,
    "tusY": 44,
    "tusGen": [
-    159,
-    159
+    102,
+    325
    ],
    "satirY": 260,
    "birincil": null,
@@ -370,7 +370,7 @@
    "eksikIkon": 0,
    "tusY": 34,
    "tusGen": [
-    78,
+    76,
     101
    ],
    "satirY": 65,
@@ -408,7 +408,7 @@
    "eksikIkon": 0,
    "tusY": 34,
    "tusGen": [
-    78,
+    76,
     101
    ],
    "satirY": 65,
@@ -446,7 +446,7 @@
    "eksikIkon": 0,
    "tusY": 44,
    "tusGen": [
-    81,
+    78,
     105
    ],
    "satirY": 75,
@@ -484,7 +484,7 @@
    "eksikIkon": 0,
    "tusY": 44,
    "tusGen": [
-    81,
+    78,
     105
    ],
    "satirY": 75,
@@ -522,10 +522,10 @@
    "eksikIkon": 0,
    "tusY": 44,
    "tusGen": [
-    81,
+    65,
     105
    ],
-   "satirY": 104,
+   "satirY": 152,
    "birincil": null,
    "pencereGen": 760,
    "icerik": 810,
@@ -560,10 +560,10 @@
    "eksikIkon": 0,
    "tusY": 44,
    "tusGen": [
-    81,
+    65,
     105
    ],
-   "satirY": 104,
+   "satirY": 152,
    "birincil": null,
    "pencereGen": 760,
    "icerik": 810,
@@ -598,8 +598,8 @@
    "eksikIkon": 0,
    "tusY": 44,
    "tusGen": [
-    159,
-    167
+    102,
+    325
    ],
    "satirY": 260,
    "birincil": null,
@@ -636,8 +636,8 @@
    "eksikIkon": 0,
    "tusY": 44,
    "tusGen": [
-    159,
-    167
+    102,
+    325
    ],
    "satirY": 260,
    "birincil": null,
@@ -9111,7 +9111,7 @@
    "tusY": 44,
    "tusGen": [
     135,
-    208
+    351
    ],
    "satirY": null,
    "birincil": null,
@@ -9149,7 +9149,7 @@
    "tusY": 44,
    "tusGen": [
     135,
-    208
+    351
    ],
    "satirY": null,
    "birincil": null,

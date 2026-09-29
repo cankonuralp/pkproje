@@ -1949,6 +1949,13 @@ revizyon, alan kopyalama, hafif kusur devri, meslek eşleşme denetimi).
 - Emsal ürünler: https://opwire.app/iso-17020-periyodik-kontrol-yazilimi/ · https://17020muayene.vidco.com.tr/ · https://akuple.com/asansor-kontrol-yazilimi/ · https://ensyazilim.com/
 
 ## 11 · Değişiklik günlüğü
+- 2026-09-29 (144): **W7 · 195 Mobil imza telefonu** (§9 otuz yedinci tur). Personel formunda isteğe bağlı **"Mobil imza telefonu"** (05XX XXX XX XX;
+  hatalı biçim kaydedilmez), kartta görünür; firma yöntemi mobil imzaysa inspector'da boşsa kartta "Yok · mobil imzaya gönderilemez". Raporlar'ın
+  imza penceresinde telefonu olmayan kişi için "İmzaya gönder" çizilmez, uyarı: "Personel kartınızda mobil imza telefonu yok; mobil imzaya
+  gönderilemez. İndir, imzala, yükle yolu açık." KVKK: alan yalnız mobil imza amacıyla, başka yerde gösterilmez. Örnek veride UYDURMA numaralar
+  (0500 000 00 …). Tohum veri değiştiği için **maket veri sürümü 2026-09-29-4** (tarayıcıdaki maket denemeleri bir kez tohum veriye döner).
+  Ölçüm: m9 durum 200/200 · etkileşim 47/47 (1 yeni) · telefon 100/100; m1 280/280 · 69/69 (1 yeni) · 140/140.
+
 - 2026-09-29 (143): **W6 · 194 Yanıtsız mobil imza isteği** (§9 otuz yedinci tur). Telefona giden istek **5 dakika** geçerli; yanıtlanmazsa rapor
   "Muayene uzmanı imzası"na döner: listede "N imza isteğinin süresi doldu … yeniden gönderin", rapor sayfasında "İmza isteğinin süresi doldu ·
   gönderilme zamanı"; yeniden gönderilip imzalanınca kalkar. Gerçek uygulamada arka plan işi yapar; makette her çizimde denetlenir, maket saati

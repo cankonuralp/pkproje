@@ -2,8 +2,8 @@
  "maket": "m1",
  "tarih": "2026-09-29",
  "arac": "tools/olc-bulut.mjs --etkilesim (başsız tarayıcı, 1920 açık tema; gen verilen denemede o genişlik)",
- "toplam": 68,
- "gecen": 68,
+ "toplam": 69,
+ "gecen": 69,
  "denemeler": [
   {
    "ad": "İzin talepleri: formun PDF'i açılır, e-posta talep edene",
@@ -332,6 +332,13 @@
    "gen": 1920,
    "sayfa": "maket/personel.html",
    "hash": "#/p/ea/zimmet-formu",
+   "gecti": true
+  },
+  {
+   "ad": "195: personel formunda mobil imza telefonu; hatalı biçim reddedilir, kaydedilince kartta görünür",
+   "gen": 1920,
+   "sayfa": "maket/personel.html",
+   "hash": "#/p/bs/duzenle",
    "gecti": true
   },
   {

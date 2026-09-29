@@ -438,6 +438,7 @@
         bilgi("Oda sicil no", p.oda ? '<span class="a-kod">' + p.oda + "</span>" : yok) +
         bilgi("EKİPNET kayıt no", p.ekipnet ? '<span class="a-kod">' + p.ekipnet + "</span>" : inspector(p) ? '<span class="a-yuz-uyari">Boş</span>' : yok) +
         bilgi("E-posta", p.eposta ? kacis(p.eposta) : yok, true) +
+        bilgi("Mobil imza telefonu", p.imzaTel ? '<span class="a-kod">' + kacis(p.imzaTel) + "</span>" : MV.imzaYontem().k === "mobil" && inspector(p) ? '<span class="a-yuz-uyari">Yok · mobil imzaya gönderilemez</span>' : yok) +
         bilgi("İşe başlama", MK.tarihYaz(p.basla)) + (p.durum === "ayrildi" ? bilgi("Ayrılış", MK.tarihYaz(p.ayrildi)) : "") +
       "</dl></section>" +
       maasHtml(p) + hesapHtml(p) + zimmetHtml(p) + egitimHtml(p) + ozlukHtml(p);
@@ -509,8 +510,8 @@
      39: zorunlu yalnız ad, işe başlama, meslek; mesleki numaralar boş kalabilir (kartta uyarı olur). */
   var F = null;
   function formAc(p) {
-    F = p ? { id: p.id, ad: p.ad, eposta: p.eposta, basla: p.basla.split("-").reverse().join("."), meslek: p.meslek, meslekMetin: p.meslekMetin || "", diploma: p.diploma, oda: p.oda, ekipnet: p.ekipnet, hata: {} }
-      : { id: null, ad: "", eposta: "", basla: "", meslek: "", meslekMetin: "", diploma: "", oda: "", ekipnet: "", hata: {} };
+    F = p ? { id: p.id, ad: p.ad, eposta: p.eposta, imzaTel: p.imzaTel || "", basla: p.basla.split("-").reverse().join("."), meslek: p.meslek, meslekMetin: p.meslekMetin || "", diploma: p.diploma, oda: p.oda, ekipnet: p.ekipnet, hata: {} }
+      : { id: null, ad: "", eposta: "", imzaTel: "", basla: "", meslek: "", meslekMetin: "", diploma: "", oda: "", ekipnet: "", hata: {} };
   }
   function alan(id, etiket, girdi, ipucu, zorunlu, genis) { return MK.alan({ id: "f-" + id, etiket: etiket, girdi: girdi, ipucu: ipucu, hata: F.hata[id], zorunlu: zorunlu, genis: genis }); }
   function girdi(id, sinif, deger, ek) { return MK.girdi({ id: "f-" + id, alan: id, deger: deger, sinif: sinif, ek: ek, hata: F.hata[id] }); }
@@ -525,6 +526,8 @@
         '<section class="a-form-bolum" aria-labelledby="f-b1"><h2 id="f-b1">Kimlik</h2><div class="a-form">' +
           alan("ad", "Ad soyad", girdi("ad", "", F.ad, ' maxlength="80"'), "", true, true) +
           alan("eposta", "İş e-postası", girdi("eposta", "a-girdi-eposta", F.eposta, ' type="email" maxlength="120" inputmode="email"'), "Giriş hesabı bu adresle açılır.", false, true) +
+          /* 195 (2026-09-29): isteğe bağlı; yalnız mobil imza isteği için (KVKK: amaçla sınırlı, başka yerde gösterilmez) */
+          alan("imzaTel", "Mobil imza telefonu", girdi("imzaTel", "a-girdi-sicil", F.imzaTel, ' type="tel" inputmode="tel" maxlength="14" placeholder="05XX XXX XX XX"'), "", false) +
           alan("basla", "İşe başlama", girdi("basla", "a-girdi-sicil", F.basla, ' inputmode="numeric" maxlength="10" placeholder="GG.AA.YYYY"'), "", true) +
         "</div></section>" +
         '<section class="a-form-bolum" aria-labelledby="f-b2"><h2 id="f-b2">Meslek ve sicil</h2>' +
@@ -550,6 +553,7 @@
     var h = {};
     if (F.ad.trim().split(/\s+/).length < 2) h.ad = "Ad ve soyad yazılmalı.";
     if (F.eposta && !epostaGecerli(F.eposta)) h.eposta = "E-posta biçimi geçersiz.";
+    if (F.imzaTel && !/^05\d{2}\s?\d{3}\s?\d{2}\s?\d{2}$/.test(F.imzaTel.trim())) h.imzaTel = "05XX XXX XX XX biçiminde yazılmalı.";
     if (!/^\d{2}\.\d{2}\.\d{4}$/.test(F.basla)) h.basla = "Tarih GG.AA.YYYY biçiminde olmalı.";
     if (!F.meslek) h.meslek = "Meslek seçilmeli.";
     if (F.meslek === "diger" && !F.meslekMetin.trim()) h.meslekMetin = "Meslek adı yazılmalı.";
@@ -831,7 +835,7 @@
     F.hata = denetle();
     var hatalar = Object.keys(F.hata);
     if (hatalar.length) { formCiz(); var ilk = $("f-" + hatalar[0]); if (ilk) ilk.focus(); return; }
-    var kayit = { ad: F.ad.trim(), eposta: F.eposta.trim(), basla: F.basla.split(".").reverse().join("-"), meslek: F.meslek, meslekMetin: F.meslekMetin.trim(),
+    var kayit = { ad: F.ad.trim(), eposta: F.eposta.trim(), imzaTel: F.imzaTel.trim(), basla: F.basla.split(".").reverse().join("-"), meslek: F.meslek, meslekMetin: F.meslekMetin.trim(),
       diploma: F.diploma.trim(), oda: F.oda.trim(), ekipnet: F.ekipnet.trim() };
     var p = F.id ? MV.kisi(F.id) : null;
     if (p) Object.assign(p, kayit);

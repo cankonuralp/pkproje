@@ -125,6 +125,8 @@
       belge: { diploma: 1, oda: 1, ekipnet: 1, egitim: "2018-03-06" }, sayilar: { isg: 0, zimmet: 0, egitim: 3, egitimYakin: 0, plan: 0 } }
   ];
   MV.kisi = function (id) { return MV.PERSONEL.filter(function (p) { return p.id === id; })[0]; };
+  /* mobil imza telefonu (195, 2026-09-29): isteğe bağlı; UYDURMA numara (0500 000 00 …), yalnız mobil imza isteği için */
+  ["mk", "ea", "sy", "co", "ok", "ta", "hp"].forEach(function (k, i) { var p = MV.kisi(k); if (p) p.imzaTel = "0500 000 00 " + ("0" + (i + 1)).slice(-2); });
   /* ── MAAŞ VE BORDRO (2026-09-27, reisim: "personel ekranında maaşlar ve bordrolarda olacak oraya yüklenebilecek bordrolar") — her ay kişi
      başına bordro yüklenir (PDF) ve tutarları yazılır (brüt, net, işverene maliyet); kişinin maliyeti son bordrodan. İş kârlılığında inspector
      payı = günlük maliyet × işte çalıştığı gün; günlük = aylık işverene maliyet ÷ 22 iş günü (VARSAYIM). Tutarlar UYDURMA (meslek + kıdem);

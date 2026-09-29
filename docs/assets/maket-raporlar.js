@@ -138,6 +138,7 @@
      e-imza: "İmza aracını aç" → bilgisayardaki imza aracımız (AKİS kurulu), kart PIN'i bir kez, her rapor ayrı imzalanır ·
      yedek yol: indir, imzala, yükle. Raporlar asla birleşmez (99). W.adim: "sec" (yöntem) · "arac" (imza aracı) · "telefon" (telefon ekranı) */
   var W = null;
+  var telVar = function () { return !!MV.kisi(BEN).imzaTel; };   /* 195 */
   var telefonda = function () { return benim().filter(function (r) { return r.durum === "imzada"; }); };
   var pinGecerli = function (p) { return /^\d{4,8}$/.test(p); };
   function listeHtml(l) {
@@ -174,12 +175,14 @@
           '<button type="button" class="a-sekme" data-yontem="firma" aria-pressed="' + (W.y === "firma") + '">' + y.ad + "</button>" +
           '<button type="button" class="a-sekme" data-yontem="dosya" aria-pressed="' + (W.y === "dosya") + '">İndir, imzala, yükle</button></div>' +
         listeHtml(l) +
+        /* 195: mobil imza telefonu personel kartında yoksa mobil imzaya gönderilemez; öteki yol açık */
+        (W.y === "firma" && y.k === "mobil" && !telVar() ? '<div class="a-serit-kap a-bolum-serit">' + MK.serit("uyari", "triangle-alert", "Personel kartınızda mobil imza telefonu yok; mobil imzaya gönderilemez. İndir, imzala, yükle yolu açık.") + "</div>" : "") +
         '<div class="a-serit-kap a-bolum-serit">' + MK.serit("bilgi", "file-signature", W.y === "dosya" ? "Her rapor ayrı PDF: indirin, imzalayın, imzalı PDF'leri yükleyin." :
           y.k === "mobil" ? "Her rapor için telefonunuza ayrı imza isteği gelir; PIN'i telefonda girersiniz." : "İmza aracı açılır; kart PIN'ini bir kez girersiniz, her rapor ayrı imzalanır.") + "</div>" +
         (W.y === "dosya" ? '<div class="a-eylem-cubugu">' + MK.tus({ eylem: "pdf", ad: "PDF'leri indir", ikon: "file-text", sinif: "a-tus-ikincil" }) +
           MK.tus({ eylem: "imzali-yukle", ad: W.yuklendi ? "İmzalı PDF yüklendi (" + l.length + ")" : "İmzalı PDF'leri yükle", ikon: "file-check", sinif: "a-tus-ikincil" }) + "</div>" +
           (W.hata ? '<p class="a-ipucu a-ipucu-uyari">' + W.hata + "</p>" : "") : "");
-      tus = MK.tus({ eylem: "imzala", ad: W.y === "dosya" ? "İmzayı tamamla" : y.k === "mobil" ? "İmzaya gönder" : "İmza aracını aç", ikon: "file-signature" });
+      tus = W.y === "firma" && y.k === "mobil" && !telVar() ? "" : MK.tus({ eylem: "imzala", ad: W.y === "dosya" ? "İmzayı tamamla" : y.k === "mobil" ? "İmzaya gönder" : "İmza aracını aç", ikon: "file-signature" });
     }
     $("a-pencere-alt").innerHTML = MK.tus({ eylem: "pencere-kapat", ad: "Vazgeç", sinif: "a-tus-ikincil" }) + tus;
     if (odak) { var el = document.querySelector(odak); if (el) el.focus(); }

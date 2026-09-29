@@ -2,8 +2,8 @@
  "maket": "m9",
  "tarih": "2026-09-29",
  "arac": "tools/olc-bulut.mjs --etkilesim (başsız tarayıcı, 1920 açık tema; gen verilen denemede o genişlik)",
- "toplam": 46,
- "gecen": 46,
+ "toplam": 47,
+ "gecen": 47,
  "denemeler": [
   {
    "ad": "rapor sayfasında durum geçmişi yok",
@@ -87,6 +87,13 @@
    "gen": 1920,
    "sayfa": "maket/raporlar.html",
    "hash": "#/",
+   "gecti": true
+  },
+  {
+   "ad": "195: mobil imza telefonu yoksa İmzaya gönder yok, uyarı; İndir-imzala-yükle açık",
+   "gen": 1920,
+   "sayfa": "maket/raporlar.html",
+   "hash": "#/imza",
    "gecti": true
   },
   {
