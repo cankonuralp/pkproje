@@ -2,8 +2,8 @@
  "maket": "m8",
  "tarih": "2026-09-29",
  "arac": "tools/olc-bulut.mjs --etkilesim (başsız tarayıcı, 1920 açık tema; gen verilen denemede o genişlik)",
- "toplam": 76,
- "gecen": 76,
+ "toplam": 77,
+ "gecen": 77,
  "denemeler": [
   {
    "ad": "kontrol metodu türden, yalnız standart numarası, seçim alanı yok (formatlı türde firma bölümünde)",
@@ -115,6 +115,13 @@
    "gen": 1920,
    "sayfa": "maket/rapor.html",
    "hash": "#/r/KP-1004",
+   "gecti": true
+  },
+  {
+   "ad": "geri gönderilen rapor yeniden gönderilince düzeltme süresi kaydedilir (35. tur 166)",
+   "gen": 1920,
+   "sayfa": "maket/rapor.html",
+   "hash": "#/r/ZV-1007",
    "gecti": true
   },
   {

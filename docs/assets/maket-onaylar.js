@@ -178,6 +178,7 @@
   X["geri-gonder"] = function () {
     if (W.gerekce.trim().length < 10) { W.hata = "Gerekçe en az 10 karakter olmalı: inspector neyi düzelteceğini bilmeli."; pencereCiz("w-gerekce"); return; }
     var r = W.r, s = sonraki(r);
+    if (!r.ilkGonderim) r.ilkGonderim = r.gonderildi;   /* ilk gönderim korunur (performans: yazım süresi) */
     r.durum = "taslak"; r.geri = { kim: BEN, zaman: MK.simdi(), gerekce: W.gerekce.trim() }; r.gonderildi = null;
     $("a-pencere").close(); s = s === r ? null : s;
     location.hash = s ? "#/r/" + s.no : BRANS === BENIM ? "#/" : "#/?brans=" + BRANS;

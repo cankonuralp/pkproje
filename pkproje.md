@@ -1773,6 +1773,15 @@ işaretli kalanlar ve 34. turda çıkan kararlar; her birinde önerim var, "uygu
 - **176 · Standartlar örneği:** daha önce paylaştığını söylediğin örnek bu oturumda elimde yok. *Öneri:* yeniden paylaş; Dökümanlar ›
   Standartlar ona göre gözden geçirilir.
 
+**Otuz beşinci tur — cevap (2026-09-29, reisim birebir):** *"Önerilerini kabul ediyorum standartlar sekmesine bir şey yapmana gerek yok,
+yeni durumundan itibaren her rapor performansı etkiler, taslak diye bir aşamamız yok zaten. Bunlar dışında her şey de önerilerin makul ihtiyaca
+göre karar yine değiştirilir"*
+→ **Kararlar:** 160–164 ve 166–175 öneriler karar oldu (ihtiyaca göre yine değişebilir). **165 değişti:** rapor **"Yeni" durumundan itibaren**
+performansa girer (taslak aşaması yok; gönderilmemiş rapor da sayılır). **176:** Standartlar'a dokunulmaz. Firma ayarı olan eşikler (164 ara
+kontrol, 167 eğitim 60 gün, 173 ÷ 22 ve işverene maliyet oranı) ayar ekranı gelince orada; makette başlangıç değerleriyle çalışır. Uygulama
+sırası: (U1) performans — her rapor Yeni'den, süreçte "Düzeltme" adımı; (U2) masraf formu Muhasebe rolüne, bordroyu yönetici + muhasebe
+görür; (U3) onaylayan tarafında talep PDF · e-posta; (U4) Planlar, Raporlar, Onaylar sayaçları renkli balon.
+
 **Açık kalanlar:** ~~Ana sayfada İSGGM duyuruları~~ (2026-09-27: makette eklendi; okuma işi uygulamada) (reisim 2026-09-26: *"Ana sayfada isgüm duyurularını gösterebilir miyiz ? Bunu
 yapılacaklar listesine ekle"*; öneri: ÇSGB İSGGM duyurular sayfası — https://www.csgb.gov.tr/isggm/duyurular/ — sunucuda günde birkaç kez
 okunur (pg-boss işi, §8.9), Ana sayfada son 5 duyuru başlık + tarih + kaynağa bağlantı; yalnız ekranda, bildirim yok; sayfa RSS vermiyorsa
@@ -1805,6 +1814,13 @@ revizyon, alan kopyalama, hafif kusur devri, meslek eşleşme denetimi).
 - Emsal ürünler: https://opwire.app/iso-17020-periyodik-kontrol-yazilimi/ · https://17020muayene.vidco.com.tr/ · https://akuple.com/asansor-kontrol-yazilimi/ · https://ensyazilim.com/
 
 ## 11 · Değişiklik günlüğü
+- 2026-09-29 (127): **U1 · Performans: her rapor "Yeni"den sayılır, süreçte "Düzeltme" adımı** (§9 otuz beşinci tur 165, 166; reisim: *"yeni
+  durumundan itibaren her rapor performansı etkiler, taslak diye bir aşamamız yok zaten"*). Sayılan rapor: pasife alınan dışında her rapor
+  (önceden yalnız onaya gönderilmiş / imzalı). Rapor ortak kaydı süreç geçmişi taşır: **ilk gönderim** (geri gönderilince silinmez) ve
+  **düzeltmeler** (geri gönderme → yeniden gönderim); kişi sayfasındaki "Rapor süreci · ortalama süre" dört adım: yazım (açılış → ilk
+  gönderim) · **düzeltme** · onay · son imza. "Geri gönderilen" sayısı düzeltilip yeniden gönderilenleri de sayar. Tohumda geçen yılın
+  birkaç raporu bir kez geri gönderilip düzeltilmiş (UYDURMA); kalıcı maket sürümü artırıldı. 2 yeni deneme, 2 güncellendi (bu ay 31 → 41
+  rapor; adımlar). 18 maket temiz: durum 2000/2000 · etkileşim 491/491 · telefon 1000/1000 · olumsuz kanıt 3/3.
 - 2026-09-29 (126): **Yan menü balonları yeniden ayrı** (reisim: *"Bildirim balonları sıkışmasın diye birleştirmişsin sanırım ama böyle olmaz,
   kafa karıştırıcı oluyor ayrı olsun"*). Balonlar ayrı küçük daireler (16 px, aralarında 2 px), satır yine büyümez, tek sıra. Yer açmak için
   menü satırının sağ boşluğu 12 → 6 ve simge–ad aralığı 12 → 10 (bütün satırlarda; sol hizalama aynı; daraltılmış menüde 12 + 40 + 12 korunur).

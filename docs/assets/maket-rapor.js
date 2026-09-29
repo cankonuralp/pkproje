@@ -819,13 +819,16 @@
   }
   function gonder(r) {
     UY = null;
-    if (r.geri) r.geriler.unshift(r.geri);
+    var gri = r.geri; if (r.geri) r.geriler.unshift(r.geri);
     var oto = !r.sonuc; if (oto) r.sonuc = otoSonuc(r);   /* seçilmediyse kriterlere göre (reisim 2026-09-27) */
     r.durum = "onayda"; r.gonderildi = MK.simdi(); r.geri = null; r.kayit = r.gonderildi; r.degisti = false; if (!r.bitEl) r.bit = r.gonderildi;
     /* ortak kayda: Onaylar'ın kuyruğuna düşer, Planlar ve Raporlar durumu görür (Kalem M) */
     var kay = MV.rapor(r.no);
     if (!kay) { kay = { no: r.no, kod: r.e.kod, tesis: r.e.tesis, plan: r.e.plan || null, kisi: r.kisi, olustu: r.olustu || r.bas, onay: null, imza: null }; MV.RAPORLAR.push(kay); }
-    Object.assign(kay, { durum: "onayda", gonderildi: r.gonderildi, sonuc: sonucAdi(r), geri: null });
+    /* süreç geçmişi (2026-09-29, 35. tur 166): ilk gönderim ve her geri gönderme → yeniden gönderim (performansta "Düzeltme" adımı) */
+    var gri2 = gri || kay.geri;
+    Object.assign(kay, { durum: "onayda", gonderildi: r.gonderildi, sonuc: sonucAdi(r), geri: null, ilkGonderim: kay.ilkGonderim || r.gonderildi,
+      duzeltmeler: (kay.duzeltmeler || []).concat(gri2 ? [{ geri: gri2.zaman, gonderim: r.gonderildi }] : []) });
     ciz(); window.scrollTo(0, 0); var h = document.querySelector("#a-rapor h1"); if (h) h.focus({ preventScroll: true });
     MK.bildir("Onaya gönderildi: " + MV.kisi(YON[r.t.b]).ad + ", " + MV.bransAd(r.t.b).toLocaleLowerCase("tr") + " branş yöneticisi." +
       (oto ? " Sonuç kriterlere göre: " + (r.sonuc === "kullanilir" ? "Uygun" : "Uygun değil") + "." : ""));

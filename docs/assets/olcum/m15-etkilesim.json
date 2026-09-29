@@ -2,8 +2,8 @@
  "maket": "m15",
  "tarih": "2026-09-29",
  "arac": "tools/olc-bulut.mjs --etkilesim (başsız tarayıcı, 1920 açık tema; gen verilen denemede o genişlik)",
- "toplam": 22,
- "gecen": 22,
+ "toplam": 23,
+ "gecen": 23,
  "denemeler": [
   {
    "ad": "Excel'e aktar: ekrandaki tablo gerçek .xlsx",
@@ -42,6 +42,13 @@
   },
   {
    "ad": "üzerine gelince sütunun ipucu görünür (kişinin tam adı ve değeri)",
+   "gen": 1920,
+   "sayfa": "maket/performans.html",
+   "hash": "#/",
+   "gecti": true
+  },
+  {
+   "ad": "yeni (gönderilmemiş) rapor da sayılır: bu ay gönderilmemiş raporlar dahil",
    "gen": 1920,
    "sayfa": "maket/performans.html",
    "hash": "#/",
@@ -97,7 +104,7 @@
    "gecti": true
   },
   {
-   "ad": "bu ay: 31 rapor, gün başı 3 gün, kazanç en çok olan üstte",
+   "ad": "bu ay: 41 rapor (Yeni durumundan itibaren her rapor; 35. tur 165), 3 gün, kazanç en çok olan üstte",
    "gen": 1920,
    "sayfa": "maket/performans.html",
    "hash": "#/",

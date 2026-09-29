@@ -34,15 +34,19 @@
   var gun = function (r) { return r.olustu.slice(0, 10); };
   var rBrans = function (r) { return MV.tur(MV.ekipman(r.kod).tur).b; };
   var kBrans = function (p) { return MV.meslek(p.meslek).b; };
-  /* sayılan rapor: onaya gönderilmiş ya da imzalı (hiç gönderilmemiş taslak sayılmaz — VARSAYIM, soru) */
-  var sayilan = function (r) { return !!r.gonderildi || r.durum === "imzali"; };
+  /* sayılan rapor: "Yeni" durumundan itibaren her rapor (reisim 2026-09-29: "yeni durumundan itibaren her rapor performansı etkiler, taslak
+     diye bir aşamamız yok zaten"); pasife alınan rapor sayılmaz */
+  var sayilan = function (r) { return !r.pasif; };
   function raporlar(kisi) {
     var d = DONEM[D.donem];
     return MV.RAPORLAR.filter(function (r) { var g = gun(r); return sayilan(r) && g >= d.bas && g <= d.bit && (kisi ? r.kisi === kisi : D.brans === "tumu" || rBrans(r) === D.brans); });
   }
   function geriler(kisi) {
     var d = DONEM[D.donem];
-    return MV.RAPORLAR.filter(function (r) { var g = r.geri && r.geri.zaman.slice(0, 10); return g && g >= d.bas && g <= d.bit && (kisi ? r.kisi === kisi : D.brans === "tumu" || rBrans(r) === D.brans); });
+    /* geri gönderilen: şu an geri duran ya da düzeltilip yeniden gönderilen (geçmişiyle) */
+    return MV.RAPORLAR.filter(function (r) {
+      var z = (r.duzeltmeler || []).map(function (x) { return x.geri; }).concat(r.geri ? [r.geri.zaman] : []);
+      return z.some(function (g) { g = g.slice(0, 10); return g >= d.bas && g <= d.bit; }) && (kisi ? r.kisi === kisi : D.brans === "tumu" || rBrans(r) === D.brans); });
   }
   /* özet: rapor · çalışılan gün (kişi × gün) · gün başı ortalama · kazanç (birim fiyat, KDV hariç) · geri gönderilen */
   function ozet(rl, gl) {
@@ -215,12 +219,14 @@
 
   /* KİŞİNİN RAPOR SÜRECİ (T9; reisim: "kişiye tıklanınca raporlama sürecine dair grafikleri gözükmüyor"): (1) tamamlanan raporların
      süre dağılımı — 24 saat içinde · 24–48 saat · 48 saatten uzun; (2) sürecin adımları, ortalama saat — yazım (açılış → onaya gönderim),
-     onay (gönderim → yönetici onayı), son imza (onay → son imza). Yalnız adımı tamamlanmış raporlar ortalamaya girer. */
+     onay (gönderim → yönetici onayı), son imza (onay → son imza); geri gönderilen raporda düzeltme (geri gönderme → yeniden gönderim;
+     reisim 2026-09-29, 35. tur 166). Yalnız adımı tamamlanmış raporlar ortalamaya girer. */
   var saat = function (a, b) { return (new Date(b + ":00Z") - new Date(a + ":00Z")) / 36e5; };
   var saatYaz = function (h) { return h.toLocaleString("tr-TR", { maximumFractionDigits: 1 }) + " saat"; };
   function surecGrafikleri(rl) {
     var so = sureOzet(rl), ort = function (l) { return l.length ? l.reduce(function (t, x) { return t + x; }, 0) / l.length : 0; };
-    var yazim = rl.filter(function (r) { return r.gonderildi; }).map(function (r) { return saat(r.olustu, r.gonderildi); });
+    var yazim = rl.filter(function (r) { return r.ilkGonderim || r.gonderildi; }).map(function (r) { return saat(r.olustu, r.ilkGonderim || r.gonderildi); });
+    var duzelt = []; rl.forEach(function (r) { (r.duzeltmeler || []).forEach(function (x) { duzelt.push(saat(x.geri, x.gonderim)); }); });
     var onay = rl.filter(function (r) { return r.gonderildi && r.onay; }).map(function (r) { return saat(r.gonderildi, r.onay.zaman); });
     var imza = rl.filter(function (r) { return r.onay && r.imza; }).map(function (r) { return saat(r.onay.zaman, r.imza.zaman); });
     var adim = function (ad, l) { var h = ort(l); return { etiket: ad, parcalar: [["k", Math.round(h * 10) / 10]], deger: l.length ? "ort. " + saatYaz(h) : "—", alt: l.length + " rapor" }; };
@@ -229,7 +235,7 @@
         { etiket: "24–48 saat", parcalar: [["k", so.h48]], deger: so.h48 + " rapor", alt: yuzde(so.h48, so.n) },
         { etiket: "48 saatten uzun", parcalar: [["h", so.h48p]], deger: so.h48p + " rapor", alt: yuzde(so.h48p, so.n) }] : [] }) +
       grafik({ baslik: "Rapor süreci · ortalama süre (saat)", ilkSutun: "Adım", seriler: [["k", "Ortalama saat"]], satirlar: yazim.length ?
-        [adim("Yazım", yazim), adim("Onay", onay), adim("Son imza", imza)] : [] });
+        [adim("Yazım", yazim), adim("Düzeltme", duzelt), adim("Onay", onay), adim("Son imza", imza)] : [] });
   }
 
   /* ── KİŞİ ──────────────────────────────────────────────────────────────────────────────────────────── */

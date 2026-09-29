@@ -905,8 +905,11 @@
   var tamamSaat = function (i) { var x = i % 20; return x < 11 ? 4 + (x * 7) % 19 : x < 16 ? 26 + (x * 5) % 20 : 54 + (x * 9) % 40; };
   MV.EKIPMAN.filter(function (e) { return e.onceki; }).forEach(function (e, i) {   /* geçen yılın imzalı raporları */
     var b = MV.tur(e.tur).b, o = e.onceki.tarih + "T10:00", sa = tamamSaat(i);
+    /* bazı raporlar bir kez geri gönderilip düzeltilmiş (2026-09-29, 35. tur 166 — performansta "Düzeltme" adımı; UYDURMA) */
+    var duz = i % 6 === 2 && sa >= 8 ? [{ geri: dk(o, 110), gonderim: dk(o, 110 + 60 + (i % 5) * 25) }] : [];
     MV.RAPORLAR.push({ no: e.onceki.rapor, kod: e.kod, tesis: e.tesis, plan: null, kisi: e.onceki.kisi, olustu: o, durum: "imzali", sonuc: e.onceki.sonuc,
-      gonderildi: dk(o, 50), onay: { kim: MV.YONETICI[b], zaman: dk(o, Math.round(sa * 36)) }, imza: { zaman: dk(o, sa * 60) } });
+      ilkGonderim: dk(o, 50), gonderildi: duz.length ? duz[0].gonderim : dk(o, 50), duzeltmeler: duz,
+      onay: { kim: MV.YONETICI[b], zaman: dk(o, Math.round(sa * 36)) }, imza: { zaman: dk(o, sa * 60) } });
   });
   var PLAN_RAP = [[9, "2026-09-21T13:05", { onaylandi: 14, onayda: 8 }], [8, "2026-09-22T09:02", { onayda: 3, taslak: 1 }], [1, "2026-09-23T09:04", { onayda: 3, taslak: 7 }]];
   var raporSira = 760;
@@ -934,6 +937,7 @@
     MV.RAPORLAR.push(r);
   });
   /* geri gönderilmiş taslak (M8'deki ZV-1007 ile aynı) */
+  (function (r) { r.ilkGonderim = dk(r.olustu, 45); })(MV.RAPORLAR.filter(function (r) { return r.kod === "ZV-1007" && r.plan === 1; })[0]);
   MV.RAPORLAR.filter(function (r) { return r.kod === "ZV-1007" && r.plan === 1; })[0].geri = { kim: "sy", zaman: "2026-09-23T15:10", gerekce: "Yük deneyi değerleri yazılmamış: dinamik ve statik deney yüklerini girin." };
   MV.rapor = function (no) { return MV.RAPORLAR.filter(function (r) { return r.no === no; })[0]; };
   /* rapor durumları, kronolojik (reisim 2026-09-26): Yeni (denetçi açar, yazar, kaydeder) → Teknik yönetici onayında ("Gönder") → Muayene
