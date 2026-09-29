@@ -2,8 +2,8 @@
  "maket": "m8",
  "tarih": "2026-09-29",
  "arac": "tools/olc-bulut.mjs --etkilesim (başsız tarayıcı, 1920 açık tema; gen verilen denemede o genişlik)",
- "toplam": 87,
- "gecen": 87,
+ "toplam": 90,
+ "gecen": 90,
  "denemeler": [
   {
    "ad": "önceki kontrolün hafif kusuru listelenir; Giderilmedi → bu raporun kusurlarına girer, sonuç önerisi Uygun değil",
@@ -451,6 +451,27 @@
    "gen": 1920,
    "sayfa": "maket/rapor.html",
    "hash": "#/r/AT-1010",
+   "gecti": true
+  },
+  {
+   "ad": "rapor tuşları çubuksuz: Sil · Kaydet · Onaya gönder yan yana, kapta zemin ve kenar yok; son kayıt başlıkta",
+   "gen": 1920,
+   "sayfa": "maket/planlarim.html",
+   "hash": "#/plan/1",
+   "gecti": true
+  },
+  {
+   "ad": "yeni raporda Sil: onayla → rapor silinir, plana dönülür, plandan ve ortak kayıttan kalkar",
+   "gen": 1920,
+   "sayfa": "maket/rapor.html",
+   "hash": "#/",
+   "gecti": true
+  },
+  {
+   "ad": "gönderilmiş ya da geri gönderilmiş raporda Sil yok (onay geçmişi var)",
+   "gen": 1920,
+   "sayfa": "maket/rapor.html",
+   "hash": "#/r/ZV-1007",
    "gecti": true
   },
   {

@@ -508,7 +508,9 @@
       : ["firma", "ekipman", "cihaz", "tanim", "test", "devir", "kusur", "not", "sonuc", "yetkili", "foto"];
     $("a-rapor").innerHTML = MK.kirinti([["Planlar", MK.adres(13, "#/")], [PL.plan || PL.ad, PL.pid ? MK.adres(13, "#/plan/" + PL.pid) : MK.adres(13, "#/")], [r.no]]) +
       '<div class="a-nesne-bas"><div class="a-nesne-kimlik"><div class="a-nesne-baslik"><h1 tabindex="-1">' + e.kod + " · " + kacis(t.ad) + "</h1>" + rozet(DURUM[r.durum]) + "</div>" +
-        '<p class="a-nesne-alt">' + ikon("file-text", "a-ikon-kucuk") + '<span><span class="a-kod">' + r.no + "</span> · " + (F ? '<span class="a-kod">' + t.format + "</span> · " : "") + kacis(PL.ad) + " · " + kacis(MV.musteri(PL.m).kisa) + " · " + kacis(p.ad) + "</span></p></div>" +
+        '<p class="a-nesne-alt">' + ikon("file-text", "a-ikon-kucuk") + '<span><span class="a-kod">' + r.no + "</span> · " + (F ? '<span class="a-kod">' + t.format + "</span> · " : "") + kacis(PL.ad) + " · " + kacis(MV.musteri(PL.m).kisa) + " · " + kacis(p.ad) + "</span></p>" +
+        /* son kayıt başlıkta (2026-09-29: tuşlar çubuksuz, yazı tuşların arkasında kalmasın) */
+        (oku ? "" : '<p class="a-adim-not a-rapor-kayit" id="r-kayit">' + kayitMetin(r) + "</p>") + "</div>" +
         /* Ön izle (reisim 2026-09-28: "en sağ üstte ön izleme tuşu olmalı PDF çıktısını ön izleyebilmeliyim ön izle halinde PDF halini indirebilmeliyim") */
         '<div class="a-eylem-cubugu">' + MK.tus({ eylem: "on-izle", ad: "Ön izle", ikon: "eye", sinif: "a-tus-ikincil" }) + "</div></div>" +
       '<div class="a-uyari-serit">' + MV.durumSerit(MV.rapor(r.no)) +
@@ -523,8 +525,11 @@
         '<span class="a-sayac"><b>' + r.geriler.length + "</b> kez</span>") : "") +
       '<div class="a-rapor-bolumler">' + SIRA.map(function (k) { return S[k]; }).join("") + "</div>" +
       /* Kaydet + Onaya gönder: sayfa kaysa da görünür, altta yapışkan (reisim 2026-09-27: "ekranda sabit ekran kaysa da gözükecek şekilde,
-         kaydet gönder diye iki tuş olsun") */
-      (oku ? "" : '<div class="a-form-eylem a-rapor-eylem"><p class="a-adim-not" id="r-kayit">' + kayitMetin(r) + "</p>" +
+         kaydet gönder diye iki tuş olsun"); 2026-09-29 (reisim: "Raporu komple silebilmek için sil tuşu olsun kaydet tuşunun yanında olsun. /
+         Kaydet gönder sil tuşları sanki bir barın içinde gibi değil bağımsız dursunlar"): çubuk yok, tuşlar kendi gölgeleriyle; Sil yalnız hiç
+         gönderilmemiş raporda (gönderilmiş ya da geri gönderilmiş raporun onay geçmişi var — silme yöneticide, Onaylar · Pasif raporlar) */
+      (oku ? "" : '<div class="a-rapor-eylem">' +
+        (silinebilir(r) ? MK.tus({ eylem: "rapor-sil-ac", ad: "Sil", ikon: "x", sinif: "a-tus-ikincil a-tus-sil" }) : "") +
         MK.tus({ eylem: "kaydet", ad: "Kaydet", ikon: "check", sinif: "a-tus-ikincil" }) +
         MK.tus({ eylem: "onaya-gonder", ad: "Onaya gönder", ikon: "send" }) + "</div>");
     document.title = e.kod + " · " + r.no + " · probata maket";
@@ -532,6 +537,9 @@
   }
   /* formatın sonuç cümlesi TAM (reisim 2026-09-28: "telefonda … ile bitiyor tam metin okunamıyor"): seçilen sonuçla biter, seçilmediyse iki seçenek */
   var sonucCumle = function (r) { return kacis(r.F.sonuc) + " " + (r.sonuc === "kullanilir" ? "<b>uygundur</b>" : r.sonuc === "kullanilamaz" ? "<b>uygun değildir</b>" : "uygundur / uygun değildir") + "."; };
+  var silinebilir = function (r) {   /* hiç gönderilmemiş, geri de gönderilmemiş taslak */
+    var k = MV.rapor(r.no); return r.durum === "taslak" && !(k && (k.gonderildi || k.geri || k.ilkGonderim)) && !r.gonderildi && !r.geri && !r.geriler.length;
+  };
   var kayitMetin = function (r) { return r.degisti ? "Kaydedilmemiş değişiklik var" : r.kayit ? "Son kayıt " + MK.zamanYaz(r.kayit) : "Henüz kaydedilmedi"; };
   var fotolar = MK.fotolar;
   function sigortaHtml(r, oku) {
@@ -756,6 +764,16 @@
       bit: r.bit.slice(11, 16), sonraki: r.sonraki, no: r.no, sonuc: r.sonuc === "kullanilamaz" ? "Kusurlu" : "Uygun", imza: null, r: r, kusurlar: kusurListe(r) };
   }
   X["on-izle"] = function () { var r = aktif(); MK.pdfGoster({ dosya: r.no + ".pdf", baslik: r.no, icerik: MB.belge(r.t, belgeVeri(r)), sayfa: 1 }); };
+  X["rapor-sil-ac"] = function () {
+    var r = aktif(); if (!silinebilir(r)) return;
+    MK.onayla({ baslik: "Raporu sil", metin: '<span class="a-rapor-no">' + r.no + "</span> ve içine yazılan her şey (fotoğraflar dahil) silinir; geri alınamaz.", tus: "Sil", tamam: function () {
+      var no = r.no, pid = r.ts.pid, i = MV.RAPORLAR.indexOf(MV.rapor(no));
+      if (i >= 0) MV.RAPORLAR.splice(i, 1);
+      [r.fotoAd || []].concat(r.kriter.map(function (x) { return x.fotoAd || []; })).forEach(function (l) { l.forEach(function (f) { if (f) MK.dosyaSil(f); }); });
+      delete KAYIT[no]; Object.keys(R).forEach(function (k) { if (R[k] && R[k].no === no) delete R[k]; });
+      MK.kaliciYaz(); location.href = MK.adres(13, pid ? "#/plan/" + pid : "#/");   /* rapor plandan da kalkar (Planlar ortak kayda bakar) */
+    } });
+  };
   X["kaydet"] = function () {
     var r = aktif(); r.kayit = MK.simdi(); r.degisti = false; $("r-kayit").textContent = kayitMetin(r);
     MK.bildir("Rapor kaydedildi.");

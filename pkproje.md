@@ -1964,6 +1964,14 @@ revizyon, alan kopyalama, hafif kusur devri, meslek eşleşme denetimi).
 - Emsal ürünler: https://opwire.app/iso-17020-periyodik-kontrol-yazilimi/ · https://17020muayene.vidco.com.tr/ · https://akuple.com/asansor-kontrol-yazilimi/ · https://ensyazilim.com/
 
 ## 11 · Değişiklik günlüğü
+- 2026-09-29 (156): **X8 · Rapor Sil + tuşlar çubuksuz** (§9 otuz sekizinci tur). Saha raporunda altta yapışkan tuşlar artık çubuk
+  içinde değil: kap zeminsiz, kenarsız; **Sil · Kaydet · Onaya gönder** her biri kendi gölgesiyle bağımsız. "Son kayıt" yazısı başlığa
+  (rapor numarasının altına) taşındı — telefonda da görünür. **Sil** yalnız hiç gönderilmemiş (ve geri gönderilmemiş) raporda: onay penceresi,
+  rapor ve içindeki fotoğraflar silinir, plana dönülür, plandan ve ortak kayıttan kalkar. Gönderilmiş / geri gönderilmiş raporun onay
+  geçmişi olduğu için Sil yok; o raporları silmek yöneticide (Onaylar · Pasif raporlar) — **reisim'e soruldu** (2026-09-28 kuralı: "silme
+  yalnız yönetici"). Ölçüm: m8 184/184 · 90/90 (3 yeni: çubuksuz sıra, Sil akışı, geri gönderilende Sil yok; 1 güncellendi) · 92/92;
+  planlar 128/128 · 52/52 · 64/64; gözle 1920 · 1080 · 375 (açık tema).
+
 - 2026-09-29 (155): **X7 · Fotoğrafta küçük resim yok** (§9 otuz sekizinci tur; 09-SUNUCU-VE-VERI A ile aynı: küçük kopya üretilmez).
   Tek üretici `MK.fotolar` (rapor Fotoğraflar, kusurlu madde fotoğrafı, pano fotoğrafı, zimmet teslim fotoğrafları) artık her fotoğraf için
   bir satır: **dosya adı · Görüntüle · İndir · Sil** (Sil yalnız düzenlenebilen yerde, onay penceresiyle). Fotoğraf yalnız Görüntüle'ye
