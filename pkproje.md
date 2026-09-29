@@ -1834,6 +1834,14 @@ isteğidir (her biri için PIN; operatörün toplu onay imkânı sözleşmede so
   dağıtımı önerisi çıkar ("planlanan saat yok" kararıyla).
 - **188 · Zimmette aynı türden birden çok cihaz:** raporda inspector hangi cihazı kullandığını seçiyor. *Öneri:* böyle kalsın, açık madde kapansın.
 
+**Otuz altıncı tur — kısmi cevap (2026-09-29, reisim birebir):** *"178 zorunlu olmasın hangi firma neyi kullanmak isterse kullansın ister
+e imza ister mobil, 180 iç belge de de mobil ya da e imza olacak 181 hiç bir şey maketten koda dökülmeyecek her şey makette kalsın kodu tek
+seferde olabildiğince düzgün yazmalıyız diğer önerilerine bakıcam sonra"*
+→ **Kararlar:** **178** imza aracı zorunlu değil; **firma seçer** (e-imza ya da mobil imza; firma ayarı, §8.4). **180** iç belgeler (zimmet
+teslim formu, saha formu, izin ve masraf formu) de **mobil imza ya da e-imza** ile imzalanır — parmakla / basit imza yok (imzalı tarama
+yükleme yolu yedek olarak kalır mı, 177 ile birlikte sorulacak). **181** modül modül koda geçiş **yok**: her şey makette kalır, bütün maket
+bitince kod **tek seferde, olabildiğince düzgün** yazılır. 177, 179, 182–188 **cevap bekliyor** (reisim sonra bakacak).
+
 **Açık kalanlar:** ~~Ana sayfada İSGGM duyuruları~~ (2026-09-27: makette eklendi; okuma işi uygulamada) (reisim 2026-09-26: *"Ana sayfada isgüm duyurularını gösterebilir miyiz ? Bunu
 yapılacaklar listesine ekle"*; öneri: ÇSGB İSGGM duyurular sayfası — https://www.csgb.gov.tr/isggm/duyurular/ — sunucuda günde birkaç kez
 okunur (pg-boss işi, §8.9), Ana sayfada son 5 duyuru başlık + tarih + kaynağa bağlantı; yalnız ekranda, bildirim yok; sayfa RSS vermiyorsa
