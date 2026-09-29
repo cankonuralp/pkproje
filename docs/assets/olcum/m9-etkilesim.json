@@ -2,8 +2,8 @@
  "maket": "m9",
  "tarih": "2026-09-29",
  "arac": "tools/olc-bulut.mjs --etkilesim (başsız tarayıcı, 1920 açık tema; gen verilen denemede o genişlik)",
- "toplam": 28,
- "gecen": 28,
+ "toplam": 35,
+ "gecen": 35,
  "denemeler": [
   {
    "ad": "rapor sayfasında durum geçmişi yok",
@@ -174,9 +174,58 @@
    "gecti": true
   },
   {
-   "ad": "imzalı rapor: Düzelt (R1) → önceki sürüm saklanır, taslak",
+   "ad": "Raporlar: inspector'da Düzelt (R) tuşu yok; revize teknik yöneticide (2026-09-29)",
    "gen": 1920,
    "sayfa": "maket/raporlar.html",
+   "hash": "#/r/KM-0926-760-f535b",
+   "gecti": true
+  },
+  {
+   "ad": "Tüm raporlar: branşın bütün raporları 20'şer; tamamlananda Revizeye gönder, ötekilerde Durumu değiştir",
+   "gen": 1920,
+   "sayfa": "maket/onaylar.html",
+   "hash": "#/tum",
+   "gecti": true
+  },
+  {
+   "ad": "Tüm raporlar: Durum seçicisi Yeni → yalnız Yeni raporlar",
+   "gen": 1920,
+   "sayfa": "maket/onaylar.html",
+   "hash": "#/tum",
+   "gecti": true
+  },
+  {
+   "ad": "Durumu değiştir: seçim yoksa kaydetmez; Yeni'ye alırken kısa gerekçe reddedilir",
+   "gen": 1920,
+   "sayfa": "maket/onaylar.html",
+   "hash": "#/r/KM-0926-787-42b08",
+   "gecti": true
+  },
+  {
+   "ad": "Durumu değiştir: onaydaki rapor → Muayene uzmanı imzası (onay ve değişiklik kaydı), kuyruktan çıkar",
+   "gen": 1920,
+   "sayfa": "maket/onaylar.html",
+   "hash": "#/r/KM-0926-787-42b08",
+   "gecti": true
+  },
+  {
+   "ad": "Durumu değiştir: Yeni rapor gerekçesiz de onaya alınabilir; imzadaki rapor Yeni'ye gerekçeyle döner",
+   "gen": 1920,
+   "sayfa": "maket/onaylar.html",
+   "hash": "#/r/KM-0926-785-b835a",
+   "gecti": true
+  },
+  {
+   "ad": "Revizeye gönder: kısa gerekçe reddedilir",
+   "gen": 1920,
+   "sayfa": "maket/onaylar.html",
+   "hash": "#/r/KM-0926-760-f535b",
+   "gecti": true
+  },
+  {
+   "ad": "Revizeye gönder: R1 açılır, Yeni; tamamlanan sürüm saklanır; inspector Raporlar'da gerekçeyi görür (sayfalar arası)",
+   "gen": 1920,
+   "sayfa": "maket/onaylar.html",
    "hash": "#/r/KM-0926-760-f535b",
    "gecti": true
   },

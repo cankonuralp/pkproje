@@ -714,8 +714,8 @@ Planlar (54/54, 15/15) ve M7 (66/66, 12/12; kriter ve test listesi ortak veriye 
 #### Maket M9 — Raporlar · Onaylar · İmza · PDF (modül 14, 15, 16) — ONAY BEKLİYOR
 **2. tur (2026-09-26, §9 yirmi birinci tur):** **raporlar asla birleştirilmez** (99): son imza penceresinde her rapor ayrı PDF, ayrı imzalanır;
 yöntem firma ayarı (98: imza servisi ya da indir, e-imza, yükle) · **vekil onay** (100): Onaylar'da kuyruk seçimi "Mekanik · Elektrik · vekil" ·
-**"Onayı geri al"** (102): onaylanıp imza bekleyen rapor yeniden kuyruğa döner · **"Düzelt (R1)"** (103): imzalı raporun düzeltmesi yeni
-sürümle, önceki sürüm saklanır · Planlar'daki rapor rozeti **"İmza bekliyor" / "Müşteriye açık"** (106; iki tablonun durum sütunu genişledi) ·
+**"Onayı geri al"** (102): onaylanıp imza bekleyen rapor yeniden kuyruğa döner · **revizyon** (103; 2026-09-29'dan beri teknik
+yöneticide: Onaylar · Tüm raporlar → "Revizeye gönder", R1, önceki sürüm saklanır; tamamlanmamış raporda "Durumu değiştir") · Planlar'daki rapor rozeti **"İmza bekliyor" / "Müşteriye açık"** (106; iki tablonun durum sütunu genişledi) ·
 serbest gerekçe (101), imza anında müşteriye açılır (104), onaylayanın adı formatta yeri varsa (105). Şeritler kısaldı.
 Ölçüm: 12 durum 72/72, etkileşim 16/16, telefon 48/48; Planlar 54/54 · 15/15 · 36/36.
 1. tur metni (tarihsel):
@@ -1888,6 +1888,20 @@ revizyon, alan kopyalama, hafif kusur devri, meslek eşleşme denetimi).
 - Emsal ürünler: https://opwire.app/iso-17020-periyodik-kontrol-yazilimi/ · https://17020muayene.vidco.com.tr/ · https://akuple.com/asansor-kontrol-yazilimi/ · https://ensyazilim.com/
 
 ## 11 · Değişiklik günlüğü
+- 2026-09-29 (131): **V1 · Teknik yönetici: durumu değiştir, revizeye gönder** (§9 otuz altıncı tur; reisim: *"herhangi bir süreçteki rapor
+  imzalanıp tamamlanmış hariç teknik yönetici tarafından durumu değiştirilebilsin imzalanıp tamamlanan rapor revizeye gönderilebilsin"*).
+  Onaylar'a **"Tüm raporlar"** sekmesi (`#/tum`): branşın pasif olmayan bütün raporları, 20'şer; rapor no ve tesis ayrı aranır, Durum ve
+  Inspector seçicisi. Satırda ve rapor ekranında tamamlanmamış raporda **"Durumu değiştir"** (Yeni · Teknik yönetici onayında · Muayene uzmanı
+  imzası; "Tamamlandı"ya yalnız imzayla geçilir — İmzaya gönderildi de değiştirilebilir), tamamlanan raporda **"Revizeye gönder"**.
+  Yeni'ye alınan rapor inspector'a döner, gerekçe geri gönderimdeki gibi zorunlu (en az 10 karakter) ve raporun üstünde görünür; öteki
+  hedeflerde gerekçe isteğe bağlı. Muayene uzmanı imzasına alınan rapor onaylanmış sayılır (onaylayan teknik yönetici). Revize: gerekçe
+  zorunlu; rapor **R1, R2 …** sürümüyle Yeni olarak inspector'a döner, tamamlanan sürüm (onay, imza, imzalı PDF, sonuç) sürüm kaydında
+  saklanır; Raporlar'da "Revizeye gönderildi (R1)" şeridi. Her değişiklik kayıtta (kim, ne zaman, eskisi, yenisi, gerekçe); ekranda geçmiş
+  listesi yok (98). Inspector'ın **"Düzelt (R)"** tuşu kalktı (103 artık teknik yöneticide). Kuyruktan geri gönderilmiş rapor düzeltilmeden
+  ileri alınırsa geri gönderim performansta sayılmaya devam eder. Ölçüm: m9 durum 136/136 · etkileşim 35/35 (yeni 8 deneme: sekme 20'şer
+  ve tuş türü, Durum seçicisi, seçimsiz / kısa gerekçe reddi, onayda → imza, Yeni → onayda gerekçesiz, imzada → Yeni gerekçeyle, revize kısa
+  gerekçe reddi, revize R1 + Raporlar'da şerit sayfalar arası) · telefon 68/68; gözle 1920 ve 375 (liste, pencereler); tam ölçüm durum 2040/2040 · etkileşim 503/503 · telefon 1020/1020 · olumsuz kanıt 3/3.
+
 - 2026-09-29 (130): **U4 · Planlar, Raporlar, Onaylar renkli balon** (§9 otuz beşinci tur 163). Tek yeşil sayı kalktı; balonlar öteki
   modüllerle aynı: **Planlar** sarı = kabul bekleyen plan, kırmızı = plan günü gelmiş / geçmiş ve hâlâ kabul bekleyen · **Raporlar** sarı =
   son imza bekleyen, kırmızı = onaydan 24 saati geçmiş · **Onaylar** sarı = onay bekleyen, kırmızı = gönderimden 24 saati geçmiş (süreler

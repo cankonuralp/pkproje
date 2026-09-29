@@ -8,8 +8,8 @@
   390,
   430
  ],
- "toplam": 52,
- "temiz": 52,
+ "toplam": 68,
+ "temiz": 68,
  "durumlar": [
   {
    "ad": "raporlar · inspector'ın listesi + imza şeridi",
@@ -472,6 +472,150 @@
   },
   {
    "ad": "onaylar · pasif raporlar (Aktif et · Sil)",
+   "gen": 430,
+   "temiz": true,
+   "tasma": 0,
+   "disari": [],
+   "kucukAlan": [],
+   "alan": 0
+  },
+  {
+   "ad": "onaylar · tüm raporlar (Durumu değiştir · Revizeye gönder)",
+   "gen": 320,
+   "temiz": true,
+   "tasma": 0,
+   "disari": [],
+   "kucukAlan": [],
+   "alan": 2
+  },
+  {
+   "ad": "onaylar · tüm raporlar (Durumu değiştir · Revizeye gönder)",
+   "gen": 360,
+   "temiz": true,
+   "tasma": 0,
+   "disari": [],
+   "kucukAlan": [],
+   "alan": 2
+  },
+  {
+   "ad": "onaylar · tüm raporlar (Durumu değiştir · Revizeye gönder)",
+   "gen": 390,
+   "temiz": true,
+   "tasma": 0,
+   "disari": [],
+   "kucukAlan": [],
+   "alan": 2
+  },
+  {
+   "ad": "onaylar · tüm raporlar (Durumu değiştir · Revizeye gönder)",
+   "gen": 430,
+   "temiz": true,
+   "tasma": 0,
+   "disari": [],
+   "kucukAlan": [],
+   "alan": 2
+  },
+  {
+   "ad": "durumu değiştir penceresi · Yeni seçili, gerekçe boş",
+   "gen": 320,
+   "temiz": true,
+   "tasma": 0,
+   "disari": [],
+   "kucukAlan": [],
+   "alan": 1
+  },
+  {
+   "ad": "durumu değiştir penceresi · Yeni seçili, gerekçe boş",
+   "gen": 360,
+   "temiz": true,
+   "tasma": 0,
+   "disari": [],
+   "kucukAlan": [],
+   "alan": 1
+  },
+  {
+   "ad": "durumu değiştir penceresi · Yeni seçili, gerekçe boş",
+   "gen": 390,
+   "temiz": true,
+   "tasma": 0,
+   "disari": [],
+   "kucukAlan": [],
+   "alan": 1
+  },
+  {
+   "ad": "durumu değiştir penceresi · Yeni seçili, gerekçe boş",
+   "gen": 430,
+   "temiz": true,
+   "tasma": 0,
+   "disari": [],
+   "kucukAlan": [],
+   "alan": 1
+  },
+  {
+   "ad": "revizeye gönder penceresi",
+   "gen": 320,
+   "temiz": true,
+   "tasma": 0,
+   "disari": [],
+   "kucukAlan": [],
+   "alan": 1
+  },
+  {
+   "ad": "revizeye gönder penceresi",
+   "gen": 360,
+   "temiz": true,
+   "tasma": 0,
+   "disari": [],
+   "kucukAlan": [],
+   "alan": 1
+  },
+  {
+   "ad": "revizeye gönder penceresi",
+   "gen": 390,
+   "temiz": true,
+   "tasma": 0,
+   "disari": [],
+   "kucukAlan": [],
+   "alan": 1
+  },
+  {
+   "ad": "revizeye gönder penceresi",
+   "gen": 430,
+   "temiz": true,
+   "tasma": 0,
+   "disari": [],
+   "kucukAlan": [],
+   "alan": 1
+  },
+  {
+   "ad": "onaylar · tamamlanan rapor ekranı (Revizeye gönder)",
+   "gen": 320,
+   "temiz": true,
+   "tasma": 0,
+   "disari": [],
+   "kucukAlan": [],
+   "alan": 0
+  },
+  {
+   "ad": "onaylar · tamamlanan rapor ekranı (Revizeye gönder)",
+   "gen": 360,
+   "temiz": true,
+   "tasma": 0,
+   "disari": [],
+   "kucukAlan": [],
+   "alan": 0
+  },
+  {
+   "ad": "onaylar · tamamlanan rapor ekranı (Revizeye gönder)",
+   "gen": 390,
+   "temiz": true,
+   "tasma": 0,
+   "disari": [],
+   "kucukAlan": [],
+   "alan": 0
+  },
+  {
+   "ad": "onaylar · tamamlanan rapor ekranı (Revizeye gönder)",
    "gen": 430,
    "temiz": true,
    "tasma": 0,

@@ -91,10 +91,9 @@
         '<p class="a-nesne-alt">' + ikon("wrench", "a-ikon-kucuk") + '<span><span class="a-kod">' + e.kod + "</span> · " + kacis(t.ad) + " · " + kacis(ts.ad) + " · " + kacis(m.kisa) + "</span></p></div>" +
         '<div class="a-eylem-cubugu">' + MK.tus({ eylem: "pdf", ad: "PDF indir", ikon: "file-text", sinif: "a-tus-ikincil" }) +
           (r.durum === "onaylandi" ? MK.tus({ eylem: "imza-ac", ad: "İmzala", ikon: "file-signature", veri: { no: r.no } }) : "") +
-          (r.durum === "imzali" ? MK.tus({ eylem: "revizyon", ad: "Düzelt (R" + ((r.revizyonlar || []).length + 1) + ")", ikon: "pencil", sinif: "a-tus-ikincil", veri: { no: r.no } }) : "") +
           (yeniden(r) ? '<a class="a-tus a-tus-birincil" href="' + raporEkrani(r) + '">' + ikon("pencil", "a-ikon-kucuk") + "Raporu düzenle</a>" : "") + "</div></div>" +
       '<div class="a-uyari-serit">' +
-        (r.geri && r.durum === "taslak" ? MK.serit("uyari", "undo-2", "<b>Geri gönderildi</b> · " + kacis(MV.kisi(r.geri.kim).ad) + ": “" + kacis(r.geri.gerekce) + "”") : "") +
+        (r.geri && r.durum === "taslak" ? MK.serit("uyari", "undo-2", "<b>" + (r.revizyonlar && r.revizyonlar[0] && r.revizyonlar[0].zaman === r.geri.zaman ? "Revizeye gönderildi (" + r.revizyonlar[0].ad + ")" : "Geri gönderildi") + "</b> · " + kacis(MV.kisi(r.geri.kim).ad) + ": “" + kacis(r.geri.gerekce) + "”") : "") +
         (r.durum === "onayda" ? MK.serit("bilgi", "clock", "Onayda · " + kacis(yon.ad)) : "") +
         (r.durum === "onaylandi" ? MK.serit("uyari", "file-signature", "Muayene uzmanı imzası · imzanız bekleniyor") : "") +
         (r.durum === "imzada" ? MK.serit("bilgi", "file-signature", "İmzaya gönderildi") : "") +
@@ -205,13 +204,7 @@
       var h = document.querySelector("#a-nesne h1"); if (h) h.focus(); MK.bildir(r.no + " imzalı PDF'i silindi; imza bekliyor.");
     } });
   };
-  /* 103: imzalı raporun düzeltmesi yeni sürümle (R1, R2 …); önceki sürüm saklanır, rapor taslağa döner */
-  X["revizyon"] = function (el) {
-    var r = MV.rapor(el.dataset.no); r.revizyonlar = r.revizyonlar || [];
-    r.revizyonlar.unshift({ ad: "R" + (r.revizyonlar.length + 1), zaman: MK.simdi() }); r.durum = "taslak"; r.onay = null; r.imza = null; r.gonderildi = null;
-    raporCiz(r); var h = document.querySelector("#a-nesne h1"); if (h) h.focus();
-    MK.bildir(r.no + "-" + r.revizyonlar[0].ad + " açıldı; önceki imzalı sürüm saklandı.");
-  };
+  /* 103 → 2026-09-29: imzalı raporu revizeye teknik yönetici gönderir (Onaylar · Tüm raporlar); inspector revize raporu Yeni olarak görür */
   /* toplu PDF (§3.8 kural 7; reisim 2026-09-28: "Raporlar ekranında ve planlarda … toplu pdf indirme tuşu olsun"): süzgeçten geçen
      raporların PDF'i tek dosyada, her rapor kendi sayfalarında; taslağın PDF'i yok */
   X["toplu-pdf"] = function () {
