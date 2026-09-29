@@ -521,8 +521,8 @@
       '<div class="a-rapor-bolumler">' + SIRA.map(function (k) { return S[k]; }).join("") + "</div>" +
       /* Kaydet + Onaya gönder: sayfa kaysa da görünür, altta yapışkan (reisim 2026-09-27: "ekranda sabit ekran kaysa da gözükecek şekilde,
          kaydet gönder diye iki tuş olsun"); 2026-09-29 (reisim: "Raporu komple silebilmek için sil tuşu olsun kaydet tuşunun yanında olsun. /
-         Kaydet gönder sil tuşları sanki bir barın içinde gibi değil bağımsız dursunlar"): çubuk yok, tuşlar kendi gölgeleriyle; Sil yalnız hiç
-         gönderilmemiş raporda (gönderilmiş ya da geri gönderilmiş raporun onay geçmişi var — silme yöneticide, Onaylar · Pasif raporlar) */
+         Kaydet gönder sil tuşları sanki bir barın içinde gibi değil bağımsız dursunlar"): çubuk yok, tuşlar kendi gölgeleriyle; Sil düzenlenebilen
+         her raporda (silinebilir) */
       (oku ? "" : '<div class="a-rapor-eylem">' +
         (silinebilir(r) ? MK.tus({ eylem: "rapor-sil-ac", ad: "Sil", ikon: "x", sinif: "a-tus-ikincil a-tus-sil" }) : "") +
         MK.tus({ eylem: "kaydet", ad: "Kaydet", ikon: "check", sinif: "a-tus-ikincil" }) +
@@ -532,9 +532,9 @@
   }
   /* formatın sonuç cümlesi TAM (reisim 2026-09-28: "telefonda … ile bitiyor tam metin okunamıyor"): seçilen sonuçla biter, seçilmediyse iki seçenek */
   var sonucCumle = function (r) { return kacis(r.F.sonuc) + " " + (r.sonuc === "kullanilir" ? "<b>uygundur</b>" : r.sonuc === "kullanilamaz" ? "<b>uygun değildir</b>" : "uygundur / uygun değildir") + "."; };
-  var silinebilir = function (r) {   /* hiç gönderilmemiş, geri de gönderilmemiş taslak */
-    var k = MV.rapor(r.no); return r.durum === "taslak" && !(k && (k.gonderildi || k.geri || k.ilkGonderim)) && !r.gonderildi && !r.geri && !r.geriler.length;
-  };
+  /* düzenlenebilen (Yeni ya da geri gönderilmiş) rapor inspector'da silinir (2026-09-29, reisim: "oluşan rapor inspector tarafından da
+     silinebilsin"); gönderilen rapor salt okunur, tuşu yok */
+  var silinebilir = function (r) { return r.durum === "taslak"; };
   var kayitMetin = function (r) { return r.degisti ? "Kaydedilmemiş değişiklik var" : r.kayit ? "Son kayıt " + MK.zamanYaz(r.kayit) : "Henüz kaydedilmedi"; };
   var fotolar = MK.fotolar;
   function sigortaHtml(r, oku) {
@@ -759,9 +759,9 @@
       bit: r.bit.slice(11, 16), sonraki: r.sonraki, no: r.no, sonuc: r.sonuc === "kullanilamaz" ? "Kusurlu" : "Uygun", imza: null, r: r, kusurlar: kusurListe(r) };
   }
   X["on-izle"] = function () { var r = aktif(); MK.pdfGoster({ dosya: r.no + ".pdf", baslik: r.no, icerik: MB.belge(r.t, belgeVeri(r)), sayfa: 1 }); };
-  X["rapor-sil-ac"] = function () {
+  X["rapor-sil-ac"] = function () {   /* plan içinde de aynı (maket.js) */
     var r = aktif(); if (!silinebilir(r)) return;
-    MK.onayla({ baslik: "Raporu sil", metin: '<span class="a-rapor-no">' + r.no + "</span> ve içine yazılan her şey (fotoğraflar dahil) silinir; geri alınamaz.", tus: "Sil", tamam: function () {
+    MK.onayla({ baslik: "Raporu sil", metin: '<span class="a-rapor-no">' + r.no + "</span> ve içine yazılan her şey (fotoğraflar" + (r.geriler.length || r.geri ? ", geri gönderme geçmişi" : "") + " dahil) silinir; geri alınamaz.", tus: "Sil", tamam: function () {
       var no = r.no, pid = r.ts.pid, i = MV.RAPORLAR.indexOf(MV.rapor(no));
       if (i >= 0) MV.RAPORLAR.splice(i, 1);
       [r.fotoAd || []].concat(r.kriter.map(function (x) { return x.fotoAd || []; })).forEach(function (l) { l.forEach(function (f) { if (f) MK.dosyaSil(f); }); });

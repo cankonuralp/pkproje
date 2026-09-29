@@ -2,8 +2,8 @@
  "maket": "m8",
  "tarih": "2026-09-29",
  "arac": "tools/olc-bulut.mjs --etkilesim (başsız tarayıcı, 1920 açık tema; gen verilen denemede o genişlik)",
- "toplam": 90,
- "gecen": 90,
+ "toplam": 91,
+ "gecen": 91,
  "denemeler": [
   {
    "ad": "önceki kontrolün hafif kusuru listelenir; Giderilmedi → bu raporun kusurlarına girer, sonuç önerisi Uygun değil",
@@ -468,10 +468,17 @@
    "gecti": true
   },
   {
-   "ad": "gönderilmiş ya da geri gönderilmiş raporda Sil yok (onay geçmişi var)",
+   "ad": "geri gönderilen raporda da Sil var (inspector siler; onay penceresi geçmişin de silineceğini söyler)",
    "gen": 1920,
    "sayfa": "maket/rapor.html",
    "hash": "#/r/ZV-1007",
+   "gecti": true
+  },
+  {
+   "ad": "onaya gönderilmiş raporda Sil yok (salt okunur)",
+   "gen": 1920,
+   "sayfa": "maket/rapor.html",
+   "hash": "#/r/HT-1001",
    "gecti": true
   },
   {

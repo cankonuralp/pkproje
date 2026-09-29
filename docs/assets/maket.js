@@ -406,7 +406,9 @@
       /* 2026-09-24 (toplu maket M8): saha rapor ekranı maketi geldi — tuş o ekrana gider (numara ve durum adresle taşınır).
          2026-09-28 (reisim: "rapor pasif … inspector pasife alabilir, pasif raporu görmez; aktif etme ve silme yalnız yönetici"): gönderilmemiş
          (Yeni) raporda "Pasife al"; gönderilen rapor onay akışında, pasife alınmaz */
-      return '<div class="a-eylem"><div class="a-eylem-tuslar">' + (r.durum === "taslak" && calisir(AKTIF) ? '<button class="a-ikon-tus" type="button" data-eylem="rapor-pasif-ac" data-no="' + r.no + '" aria-label="' + r.no + ' pasife al" title="Pasife al">' + ikon("ban") + "</button>" : "") +
+      /* 2026-09-29 (reisim: "oluşan rapor inspector tarafından da silinebilsin"): Yeni raporda Sil de (onay penceresiyle) */
+      return '<div class="a-eylem"><div class="a-eylem-tuslar">' + (r.durum === "taslak" && calisir(AKTIF) ? '<button class="a-ikon-tus" type="button" data-eylem="rapor-pasif-ac" data-no="' + r.no + '" aria-label="' + r.no + ' pasife al" title="Pasife al">' + ikon("ban") + "</button>" +
+          '<button class="a-ikon-tus a-tus-sil" type="button" data-eylem="rapor-sil-ac" data-no="' + r.no + '" aria-label="' + r.no + ' sil" title="Sil">' + ikon("trash-2") + "</button>" : "") +
         MK.git({ hedef: "rapor", hash: "#/r/" + r.kod + "?no=" + r.no + "&durum=" + r.durum, ad: d[1], ikon: d[0], ne: "Saha rapor ekranı" }) + "</div></div>";
     } }
   ];
@@ -634,6 +636,14 @@
     $("a-pencere-govde").innerHTML = '<p class="a-pencere-metin"><span class="a-rapor-no">' + el.dataset.no + "</span> pasife alınır ve listenizden kalkar.</p>";
     $("a-pencere-alt").innerHTML = MK.tus({ eylem: "pencere-kapat", ad: "Vazgeç", sinif: "a-tus-ikincil" }) + MK.tus({ eylem: "rapor-pasif", ad: "Pasife al", ikon: "ban", veri: { no: el.dataset.no } });
     $("a-pencere").showModal(); $("a-pencere-alt").querySelector('[data-eylem="pencere-kapat"]').focus();
+  };
+  X["rapor-sil-ac"] = function (el) {
+    var p = AKTIF, no = el.dataset.no, r = p.rapor.filter(function (x) { return x.no === no; })[0]; if (!r || r.durum !== "taslak") return;
+    MK.onayla({ baslik: "Raporu sil", metin: '<span class="a-rapor-no">' + no + "</span> · " + kacis(r.kod) + " raporu ve içine yazılan her şey silinir; geri alınamaz.", tus: "Sil", tamam: function () {
+      p.rapor.splice(p.rapor.indexOf(r), 1); var i = MV.RAPORLAR.indexOf(MV.rapor(no)); if (i >= 0) MV.RAPORLAR.splice(i, 1);
+      kaydet(p, simdi(), BEN, "Rapor silindi", no + " · " + r.kod); goster(false); var b = $("a-rapor-baslik"); if (b) b.focus();
+      MK.bildir(no + " silindi.");
+    } });
   };
   X["rapor-pasif"] = function (el) {
     var p = AKTIF, r = p.rapor.filter(function (x) { return x.no === el.dataset.no; })[0], m = MV.rapor(r.no);

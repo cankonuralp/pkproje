@@ -2,8 +2,8 @@
  "maket": "planlar",
  "tarih": "2026-09-29",
  "arac": "tools/olc-bulut.mjs --etkilesim (başsız tarayıcı, 1920 açık tema; gen verilen denemede o genişlik)",
- "toplam": 52,
- "gecen": 52,
+ "toplam": 53,
+ "gecen": 53,
  "denemeler": [
   {
    "ad": "Planlar listesi: müşteri adı kalın (≥ 600), proje adı normal (400)",
@@ -301,6 +301,13 @@
   },
   {
    "ad": "pasife alınan rapor inspector'da eski bağlantıyla da açılmaz (saha ekranı: pasif, yalnız yöneticiler görür)",
+   "gen": 1920,
+   "sayfa": "maket/planlarim.html",
+   "hash": "#/plan/1",
+   "gecti": true
+  },
+  {
+   "ad": "plan içinde Yeni raporda Sil: onayla → rapor plandan ve ortak kayıttan kalkar; gönderilmiş raporda Sil yok",
    "gen": 1920,
    "sayfa": "maket/planlarim.html",
    "hash": "#/plan/1",

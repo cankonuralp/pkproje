@@ -1973,6 +1973,13 @@ revizyon, alan kopyalama, hafif kusur devri, meslek eşleşme denetimi).
 - Emsal ürünler: https://opwire.app/iso-17020-periyodik-kontrol-yazilimi/ · https://17020muayene.vidco.com.tr/ · https://akuple.com/asansor-kontrol-yazilimi/ · https://ensyazilim.com/
 
 ## 11 · Değişiklik günlüğü
+- 2026-09-29 (158): **Y2 · Inspector oluşturduğu raporu siler** (§9 otuz sekizinci tur, düzeltme; 2026-09-28'deki "silme yalnız yönetici"
+  değişti). Plan içindeki rapor listesinde her **Yeni** raporun satırında Pasife al'ın yanında **Sil** (çöp kutusu), saha rapor ekranında
+  Kaydet'in yanında **Sil**: düzenlenebilen her raporda (Yeni ya da geri gönderilmiş), onay penceresiyle; geri gönderilmiş raporda pencere
+  geçmişin de silineceğini söyler. Rapor plandan ve ortak kayıttan kalkar, plana hareket kaydı düşer. Gönderilmiş (salt okunur) raporda Sil yok.
+  Yeni ikon (Lucide 1.47.0, araçla): trash-2. Ölçüm: planlar 128/128 · 53/53 (1 yeni) · 64/64; m8 184/184 · 91/91 (2 yeni, 1 kalktı) ·
+  92/92; gözle 1920 + 375.
+
 - 2026-09-29 (157): **Y1 · "Hepsini işaretle" bölüm başlığında; X5 geri alındı** (§9 otuz sekizinci tur, düzeltme). Reisim'in istediği
   madde madde seçim değil, toplu tuşmuş: Muayene / gözle kontrol kriterleri bölümünün başlığında, başlık hizasında yazılı **Hepsini işaretle**
   tuşu (Hepsini uygun · uygun değil · uygulanamaz yap); bölüm kapalıyken de görünür, açmadan bütün maddeleri işaretler. Formatlı türde grup
