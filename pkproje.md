@@ -1772,6 +1772,12 @@ revizyon, alan kopyalama, hafif kusur devri, meslek eşleşme denetimi).
 - Emsal ürünler: https://opwire.app/iso-17020-periyodik-kontrol-yazilimi/ · https://17020muayene.vidco.com.tr/ · https://akuple.com/asansor-kontrol-yazilimi/ · https://ensyazilim.com/
 
 ## 11 · Değişiklik günlüğü
+- 2026-09-29 (126): **Yan menü balonları yeniden ayrı** (reisim: *"Bildirim balonları sıkışmasın diye birleştirmişsin sanırım ama böyle olmaz,
+  kafa karıştırıcı oluyor ayrı olsun"*). Balonlar ayrı küçük daireler (16 px, aralarında 2 px), satır yine büyümez, tek sıra. Yer açmak için
+  menü satırının sağ boşluğu 12 → 6 ve simge–ad aralığı 12 → 10 (bütün satırlarda; sol hizalama aynı; daraltılmış menüde 12 + 40 + 12 korunur).
+  Bugünkü sayılarda hiçbir ad kırpılmıyor ("Ölçüm cihazları" 3 balonla sığıyor); çok büyük sayılarda ad kısalır, tam adı üzerine gelince
+  görünür (menü adına `title`). Renkler 125'teki parlak renkler. 18 maket temiz: durum 2000/2000 · etkileşim 489/489 · telefon 1000/1000 ·
+  olumsuz kanıt 3/3 (telefon çekmecesinde kırpılan ad denetimi dahil); açık, koyu, daraltılmış menü 1920'de gözle.
 - 2026-09-29 (125): **Yan menü balonları açık temada da parlak** (reisim: *"Açık temada da parlak renk, 2 şu an iyi"* — 2: Performans
   sütunları böyle kalır). Palet onayıyla (§8.12, anayasa 2.4) yan menüye dört renk değişkeni: `--cubuk-hata` #F4A59C · `--cubuk-uyari`
   #F2C46B · `--cubuk-onay` #45CC9E · `--cubuk-durum-yazi` #0F2A3D — yeni renk değil, paletin koyu tema durum renkleri; yan menü iki temada da

@@ -89,7 +89,7 @@
         g.ogeler.map(function (x) {
           var bu = x[2] === o.modul, adres = SAYFALAR[x[2]];
           var a = bu ? 'href="#/" aria-current="page"' : adres ? 'href="' + adres + '"' : 'href="#" data-eylem="modul" data-ne="' + x[0] + '"';
-          return "<li><a " + a + ">" + ikon(x[1]) + '<span class="a-menu-ad">' + x[0] + "</span>" +
+          return "<li><a " + a + ">" + ikon(x[1]) + '<span class="a-menu-ad" title="' + x[0] + '">' + x[0] + "</span>" +
             (o.sayac && o.sayac[x[2]] ? '<span class="a-menu-sayi" id="a-menu-sayi-' + x[2] + '" title="' + o.sayac[x[2]] + '"></span>' : "") +
             '<span class="a-menu-takip" id="a-menu-takip-' + x[2] + '">' + takipHtml(x[2]) + "</span></a></li>";
         }).join("") + "</ul>";
