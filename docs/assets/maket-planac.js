@@ -14,7 +14,7 @@
 (function () {
   "use strict";
   var $ = MK.$, kacis = MK.kacis, ikon = MK.ikon, kirp = MK.kirp, rozet = MK.rozet, bilgi = MK.bilgi, SZ = MK.SZ;
-  var ARALIK = 30;   /* "kontrolü geliyor": sonraki kontrol plan tarihinden en çok 30 gün sonra — firma ayarı (78), başlangıç 30 */
+  var ARALIK = MV.esik("plan");   /* "kontrolü geliyor": sonraki kontrol plan tarihinden en çok ARALIK gün sonra — firma ayarı (78; Firma ayarları, 202), başlangıç 30 */
   var sorgu = function () { var m = /\?(.*)$/.exec(location.hash), o = {}; (m ? m[1] : "").split("&").forEach(function (x) { var y = x.split("="); if (y[0]) o[y[0]] = decodeURIComponent(y[1] || ""); }); return o; };
   var tarihIso = function (s) {
     var m = /^(\d{2})\.(\d{2})\.(\d{4})$/.exec((s || "").trim()); if (!m) return null;

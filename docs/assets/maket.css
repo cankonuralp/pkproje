@@ -989,6 +989,7 @@ a.a-yuz:hover { border-color: var(--kenar-alan); background: var(--zemin); }
   display: grid; grid-template-columns: minmax(0, 2fr) minmax(0, 1fr) minmax(0, 1fr) minmax(0, 1fr) auto; gap: 8px 12px; align-items: end;
   padding: 10px 0; border-top: 1px solid var(--kenar);
 }
+.a-kalem-sabit { grid-template-columns: minmax(0, 2fr) minmax(0, 1fr) minmax(0, 2fr) auto; }   /* Firma ayarları · sabit giderler (202) */
 .a-kalem-tutar { margin: 0; min-height: var(--tus-y); display: flex; align-items: center; font-weight: 600; font-variant-numeric: tabular-nums; }
 
 /* M13 — iş sözleşmeleri listesi ve sözleşme kapsamı (tesis × İSG-KATİP × plan) */

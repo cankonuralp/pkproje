@@ -19,7 +19,7 @@
 (function () {
   "use strict";
   var $ = MK.$, kacis = MK.kacis, ikon = MK.ikon, kirp = MK.kirp, rozet = MK.rozet, bilgi = MK.bilgi;
-  var BUGUN = MK.BUGUN, YAKIN = 30;   /* firma ayarı (49); başlangıç 30 gün */
+  var BUGUN = MK.BUGUN, YAKIN = MV.esik("tesis");   /* firma ayarı (49; Firma ayarları, 202); başlangıç 30 gün */
   var HESAP = { etkin: { ad: "Etkin", rozet: "a-rozet-tamam" }, gonderildi: { ad: "Parola gönderildi", rozet: "a-rozet-bekliyor" },
     yok: { ad: "E-posta yok", rozet: "a-rozet-bekliyor" }, pasif: { ad: "Kapalı", rozet: "a-rozet-notr" } };
   var PASIF = { ad: "Pasif", rozet: "a-rozet-notr" };

@@ -18,7 +18,7 @@
   MK.suzgecTanimla("g", { ad: "Eğitimlerde ara", ipucu: "Kişi, eğitim", birim: "kayıt", sayfa: 20,
     cipler: [
       { k: "gecti", ad: "Tekrarı geçti", grup: "durum", test: function (x) { return !x.onceki && MV.egitimDurum(x) === "gecti"; } },
-      { k: "yakin", ad: "60 gün içinde", grup: "durum", test: function (x) { return !x.onceki && MV.egitimDurum(x) === "yakin"; } },
+      { k: "yakin", ad: MV.esik("egitim") + " gün içinde", grup: "durum", test: function (x) { return !x.onceki && MV.egitimDurum(x) === "yakin"; } },
       { k: "gecerli", ad: "Geçerli", grup: "durum", test: function (x) { return !x.onceki && MV.egitimDurum(x) === "gecerli"; } },
       { k: "belgesiz", ad: "Belgesi yok", test: function (x) { return !x.belge; } }
     ],
@@ -52,7 +52,7 @@
     var gec = E.filter(function (x) { return !x.onceki && MV.egitimDurum(x) === "gecti"; }), yak = E.filter(function (x) { return !x.onceki && MV.egitimDurum(x) === "yakin"; });
     $("a-uyari").innerHTML = gec.length || yak.length ? '<div class="a-uyari-serit">' + MK.serit(gec.length ? "hata" : "uyari", "graduation-cap",
       (gec.length ? "<b>" + gec.length + " eğitimin tekrarı geçti</b> (" + gec.map(function (x) { return kacis(MV.kisi(x.kisi).ad) + " · " + MV.egitimTuru(x.k).ad; }).join(", ") + ")" + (yak.length ? "; " : ".") : "") +
-      (yak.length ? yak.length + " eğitimin tekrarı 60 gün içinde." : "")) + "</div>" : "";
+      (yak.length ? yak.length + " eğitimin tekrarı " + MV.esik("egitim") + " gün içinde." : "")) + "</div>" : "";
   }
 
   /* ── EĞİTİM TÜRLERİ ─────────────────────────────────────────────────────────────────────────────────── */

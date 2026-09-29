@@ -19,7 +19,7 @@
   var BUGUN = MK.BUGUN;   /* 2026-09-23; saat MK.SAAT (ortak) */
   var HAFTA = ["2026-09-21", "2026-09-27"];
   var YEDI = ["2026-09-23", "2026-09-29"];
-  var FIRMA_KOD = "KM";   /* rapor numarasının başındaki firma kısa kodu (firma ayarı) */
+  var FIRMA_KOD = "KM";   /* örnek verideki numaraların firma kodu; yeni rapor Firma ayarları'ndaki kodla (MV.firmaKodu, 202) */
   /* sayfa boyu listeye göre (reisim 2026-09-23): ekipman 10 ("10 taneden sonra diğer sayfaya geçsin"), rapor 20
      ("raporlarda 5 değil 20 rapor alt alta durabilsin") */
   var SAYFA = { e: 10, r: 20 };
@@ -617,7 +617,7 @@
   X["rapor-olustur"] = function (el) {
     var p = pl(el);
     if (p && calisir(p)) {   /* sınırsız: aynı ekipmana yeni rapor (2026-09-28) */
-      var r = { no: raporNo("0926", raporSira++), kod: el.dataset.kod, durum: "taslak", olustu: simdi(), sonuc: null };
+      var r = { no: raporNo("0926", raporSira++).replace(/^[^-]+/, MV.firmaKodu()), kod: el.dataset.kod, durum: "taslak", olustu: simdi(), sonuc: null };
       p.rapor.push(r); ortakEkipman(p, r.kod); ortakRapor(p, r); kaydet(p, simdi(), BEN, "Rapor oluşturuldu", r.no + " · " + r.kod); SZ.r.sayfa = 1;
       goster(false); MK.bildir("Rapor oluşturuldu: " + r.no + ". Satırındaki “Raporu düzenle” saha rapor ekranını açar.");
     }

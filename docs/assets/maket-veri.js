@@ -663,6 +663,16 @@
     arsiv: { k: "arsiv", ad: "Bulut arşivine taşınsın", etiket: "firmanın belirlediği arşive, sistemden kalkar" },
     sil: { k: "sil", ad: "Silinsin", etiket: "30 gün önce liste, silinen 30 gün geri alınabilir" }
   };
+  /* uyarı eşikleri (202, 2026-09-29): dağınık sabitler Firma ayarları'nda tek yerde; kayıtta yoksa başlangıç değeri. Eşik uyarıdır, engel değil */
+  MV.ESIK = {
+    kal: { ad: "Kalibrasyon bitişi", etiket: "cihazın kalibrasyonu bu kadar gün kala uyarı", v: 30, secenek: [15, 30, 45, 60, 90] },
+    tesis: { ad: "Kontrolü yaklaşan tesis", etiket: "müşteri listesi ve ana sayfada", v: 30, secenek: [15, 30, 45, 60, 90] },
+    plan: { ad: "Plan açarken \u201ckontrolü geliyor\u201d", etiket: "sonraki kontrolü plan gününden en çok bu kadar gün sonra olan ekipman", v: 30, secenek: [15, 30, 45, 60, 90] },
+    egitim: { ad: "Eğitim tekrarı", etiket: "tekrar tarihine bu kadar gün kala uyarı", v: 60, secenek: [30, 45, 60, 90, 120] }
+  };
+  MV.esik = function (k) { var x = +((MV.FIRMA.esik || {})[k]); return x > 0 ? x : MV.ESIK[k].v; };
+  /* yeni rapor numarasının başındaki firma kodu: 2–4 büyük harf; eski numaralar değişmez */
+  MV.firmaKodu = function () { var x = String(MV.FIRMA.raporKod || MV.FIRMA.kisa || "KM"); return /^[A-ZÇĞİÖŞÜ]{2,4}$/.test(x) ? x : "KM"; };
   /* 200 (2026-09-29): süre 5 yıl taban, firma uzatabilir (kısaltamaz) */
   MV.saklama = function () { var x = MV.FIRMA.saklama || {}; return { yontem: MV.SAKLAMA[x.yontem] ? x.yontem : "kalsin", yer: x.yer || "", yil: Math.max(5, +x.yil || 5) }; };
   /* 201 (2026-09-29): arşive taşınan raporun künyesi sistemde kalır (r.arsiv = { yer, zaman }); dosyası arşivde, müşteri portalından kalkar,
@@ -855,12 +865,12 @@
     var f = MV.zimmetFormu(k); if (!f) return false;
     return f.kapsam.slice().sort().join() === kapsam.slice().sort().join();
   };
-  /* kalibrasyon durumu: gecti (bitiş geçti) · yakin (30 gün içinde) · lab (laboratuvarda) · gecerli */
+  /* kalibrasyon durumu: gecti (bitiş geçti) · yakin (eşik içinde; firma ayarı, başlangıç 30 gün) · lab (laboratuvarda) · gecerli */
   MV.kalDurum = function (v) {
     if (v.tur !== "cihaz") return null;
     if (MV.kimde(v.id) === "lab") return "lab";
     var k = Math.round((new Date(v.bitis + "T12:00:00") - new Date("2026-09-23T12:00:00")) / 864e5);
-    return k < 0 ? "gecti" : k <= 30 ? "yakin" : "gecerli";
+    return k < 0 ? "gecti" : k <= MV.esik("kal") ? "yakin" : "gecerli";
   };
 
   /* sonraki kontrol = son imzalı kontrol + türün periyodu (inspector gerekçeyle değiştirebilir, §4.7) */
@@ -913,8 +923,8 @@
         kurum: i % 2 ? "Dış eğitim kurumu" : "Firma içi" });
     }
   });
-  /* tekrar: geçti · 60 gün içinde · geçerli (eşik 60 gün — personel kartındaki "tekrarı 60 gün içinde"le aynı; soru) */
-  MV.egitimDurum = function (x) { var k = Math.round((new Date(x.tekrar + "T12:00:00") - new Date("2026-09-23T12:00:00")) / 864e5); return k < 0 ? "gecti" : k <= 60 ? "yakin" : "gecerli"; };
+  /* tekrar: geçti · eşik içinde · geçerli (eşik firma ayarı, başlangıç 60 gün — 202; personel kartı ve Eğitimler aynı eşikle) */
+  MV.egitimDurum = function (x) { var k = Math.round((new Date(x.tekrar + "T12:00:00") - new Date("2026-09-23T12:00:00")) / 864e5); return k < 0 ? "gecti" : k <= MV.esik("egitim") ? "yakin" : "gecerli"; };
   MV.egitimleri = function (kid) { return MV.EGITIMLER.filter(function (x) { return x.kisi === kid; }); };
   /* durum adları ve sertifika dosya adı TEK yerde (2026-09-28, T10: Eğitimler ve personel kartı aynısını gösterir) */
   MV.EGITIM_DURUM = { gecti: { ad: "Tekrarı geçti", rozet: "a-rozet-red" }, yakin: { ad: "60 gün içinde", rozet: "a-rozet-bekliyor" }, gecerli: { ad: "Geçerli", rozet: "a-rozet-tamam" } };
@@ -1333,14 +1343,14 @@
     });
     return l;
   };
-  /* uyarılar kayıtlardan türetilir (ayrı "uyarı" kaydı yok): kalibrasyon ≤ 30 gün, ara kontrol ≤ 30 gün, eğitim tekrarı ≤ 60 gün */
+  /* uyarılar kayıtlardan türetilir (ayrı "uyarı" kaydı yok): kalibrasyon ve eğitim tekrarı eşikleri firma ayarı (MV.esik), ara kontrol ≤ 30 gün */
   MV.uyarilar = function () {
     var l = [];
     MV.VARLIKLAR.forEach(function (v) {
       var d = MV.kalDurum(v); if (d !== "gecti" && d !== "yakin") return;
       var k = MV.kimde(v.id);
       l.push({ id: "k-" + v.id, tur: "kal", ikon: "gauge", konu: v.env + " · " + v.ad, alt: "Kalibrasyon", kisi: k, tarih: v.bitis, durum: d,
-        href: MK.adres(8, "#/c/" + v.id), sonuc: d === "gecti" ? (k !== "depo" ? MV.kisi(k).ad + " raporlarını onaya gönderemez" : "depoda") : "30 gün içinde bitiyor" });
+        href: MK.adres(8, "#/c/" + v.id), sonuc: d === "gecti" ? (k !== "depo" ? MV.kisi(k).ad + " raporlarını onaya gönderemez" : "depoda") : MV.esik("kal") + " gün içinde bitiyor" });
     });
     MV.VARLIKLAR.forEach(function (v) {
       var a = MV.araDurum(v); if (!a || a.durum === "gecerli") return;
@@ -1350,7 +1360,7 @@
     MV.EGITIMLER.forEach(function (x) {
       var d = MV.egitimDurum(x); if (d !== "gecti" && d !== "yakin") return;
       l.push({ id: "e-" + x.id, tur: "egt", ikon: "graduation-cap", konu: MV.egitimTuru(x.k).ad, alt: "Eğitim tekrarı", kisi: x.kisi, tarih: x.tekrar, durum: d,
-        href: MK.adres(10, "#/?kisi=" + x.kisi) || MK.adres(2, "#/p/" + x.kisi), sonuc: d === "gecti" ? "tekrar gerekli" : "60 gün içinde" });
+        href: MK.adres(10, "#/?kisi=" + x.kisi) || MK.adres(2, "#/p/" + x.kisi), sonuc: d === "gecti" ? "tekrar gerekli" : MV.esik("egitim") + " gün içinde" });
     });
     return l;
   };
@@ -1399,4 +1409,5 @@
   MV.takip = function (no) { var f = MV.TAKIP[no]; return f ? f() : null; };
   /* kalıcı maket: tohum kuruldu, bu tarayıcıdaki denemeler yerinde yüklenir (maket-ortak.js KALICI MAKET) */
   if (MK.kaliciMV) MK.kaliciMV(MV);
+  MV.EGITIM_DURUM.yakin.ad = MV.esik("egitim") + " gün içinde";   /* kayıtlı eşikle (202) */
 })();

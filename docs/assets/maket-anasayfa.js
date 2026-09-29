@@ -93,7 +93,7 @@
       planlar(function (t) { return ACIK.indexOf(t.pdurum) >= 0; }).forEach(function (t) {
         t.pekip.forEach(function (k) { var x = MV.isgTesis(t.id).filter(function (y) { return y.k === k; })[0]; if (!x || !MV.isgUygun(x.onay, t.ptarih) || (x.bitis && x.bitis < t.ptarih)) isgEksik++; });
       });
-      var yaklasan = MV.TESISLER.filter(function (t) { return !MV.acikPlan(t) && MK.gunFarki(BUGUN, t.sonraki) <= 30; })
+      var yaklasan = MV.TESISLER.filter(function (t) { return !MV.acikPlan(t) && MK.gunFarki(BUGUN, t.sonraki) <= MV.esik("tesis"); })
         .sort(function (a, b) { return a.sonraki < b.sonraki ? -1 : 1; });
       return '<div class="a-yuzler">' +
         yuz({ ikon: "calendar-check", ad: "Kabul bekleyen plan", sayi: bekleyen.length, href: "planlarim.html" }) +
@@ -101,7 +101,7 @@
         yuz({ ikon: "clock", ad: "Bugün başlayan plan", sayi: bugun.length, href: "planlarim.html", not: MK.gunYaz(BUGUN) }) +
         yuz({ ikon: "scroll-text", ad: "İSG-KATİP eksiği", sayi: isgEksik, href: "sozlesmeler.html", not: isgEksik ? "açık planlarda" : "yok", uyari: isgEksik > 0 }) +
         "</div>" +
-        liste("Kontrolü 30 gün içinde gelen tesisler", "a-tablo-anatesis", TESIS_SUTUN, yaklasan, "Kontrolü yaklaşan tesis yok.", tumu("musteriler.html", "Müşteriler"));
+        liste("Kontrolü " + MV.esik("tesis") + " gün içinde gelen tesisler", "a-tablo-anatesis", TESIS_SUTUN, yaklasan, "Kontrolü yaklaşan tesis yok.", tumu("musteriler.html", "Müşteriler"));
     },
     yonetici: function () {
       var acik = planlar(function (t) { return ACIK.indexOf(t.pdurum) >= 0; });

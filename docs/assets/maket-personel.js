@@ -141,7 +141,7 @@
       /* eğitim sayıları eğitim kayıtlarından (M10/M16); tekrarı geçen ayrıca söylenir */
       (function () { var eg = MV.egitimleri(p.id), gecti = eg.filter(function (x) { return MV.egitimDurum(x) === "gecti"; }).length, yakin = eg.filter(function (x) { return MV.egitimDurum(x) === "yakin"; }).length;
         return yuz({ ikon: "graduation-cap", ad: "Eğitim", sayi: eg.length, eylem: "egitime-git",
-          not: gecti ? gecti + " tekrarı geçti" : yakin ? yakin + " tekrarı 60 gün içinde" : "tekrarı yakın yok", uyari: gecti + yakin > 0 }); })() +
+          not: gecti ? gecti + " tekrarı geçti" : yakin ? yakin + " tekrarı " + MV.esik("egitim") + " gün içinde" : "tekrarı yakın yok", uyari: gecti + yakin > 0 }); })() +
       (inspector(p) ? yuz({ ikon: "calendar-check", ad: "Açık plan", sayi: s.plan, href: "planlarim.html" }) : "") +
       "</div>";
   }
@@ -203,7 +203,7 @@
     } },
     { k: "durum", baslik: "Durum", kart: "rozet", sira: 1, hucre: function (v) {
       var k = MV.kalDurum(v);
-      return k === "gecti" ? rozet({ ad: "Kalibrasyonu geçti", rozet: "a-rozet-red" }) : k === "yakin" ? rozet({ ad: "Kalibrasyon 30 gün içinde", rozet: "a-rozet-bekliyor" })
+      return k === "gecti" ? rozet({ ad: "Kalibrasyonu geçti", rozet: "a-rozet-red" }) : k === "yakin" ? rozet({ ad: "Kalibrasyon " + MV.esik("kal") + " gün içinde", rozet: "a-rozet-bekliyor" })
         : rozet({ ad: "Kullanımda", rozet: "a-rozet-tamam" });
     } }
   ];
@@ -616,7 +616,44 @@
           }).join("") + "</div>" +
           (sk.yontem === "arsiv" ? MK.alan({ id: "ay-arsiv", etiket: "Arşiv yeri", girdi: '<input class="a-girdi" id="ay-arsiv" data-arsiv-yeri maxlength="200" value="' + kacis(sk.yer) + '" placeholder="Bulut sağlayıcısı ve klasör">',
               uyari: sk.yer.trim() ? "" : "Arşiv yeri girilmedi: yeri girilene kadar süresi dolan raporlar sistemde kalır." }) : "") + "</section>";
-      })();
+      })() + ayarDigerCiz();
+  }
+  /* 202 (2026-09-29): dağınık firma ayarları tek yerde — uyarı eşikleri · rapor numarasının firma kodu · fiyat listesi · sabit giderler.
+     Alandan çıkınca kaydedilir; geçersiz değer kaydedilmez, alanın altında söylenir (uyarı, engel değil: öteki alanlar çalışır) */
+  var AY = { hata: {} };
+  var tlYaz = function (n) { return n.toLocaleString("tr-TR", { minimumFractionDigits: 0, maximumFractionDigits: 2 }); };
+  var tlOku = function (v) { var t = String(v).trim().replace(/\s*TL$/i, ""); return /^\d{1,3}(\.\d{3})*(,\d{1,2})?$|^\d+(,\d{1,2})?$/.test(t) ? parseFloat(t.replace(/\./g, "").replace(",", ".")) : NaN; };
+  function ayarDigerCiz() {
+    var h = AY.hata, kod = MV.firmaKodu();
+    return '<section class="a-bolum" aria-labelledby="a-b-esik"><div class="a-alt-bas"><h2 class="a-alt-baslik" id="a-b-esik">Uyarı eşikleri</h2></div><div class="a-form">' +
+        Object.keys(MV.ESIK).map(function (k) {
+          var x = MV.ESIK[k];
+          return '<div class="a-alan-grup"><label class="a-etiket" for="ay-esik-' + k + '">' + x.ad + "</label>" +
+            MK.secim({ id: "ay-esik-" + k, ad: x.ad, deger: String(MV.esik(k)), secenekler: x.secenek.map(function (g) { return [String(g), g + " gün"]; }), ipucu: "Seçin" }) +
+            '<p class="a-ipucu">' + x.etiket + (MV.esik(k) === x.v ? "" : " · başlangıç " + x.v + " gün") + "</p></div>";
+        }).join("") + "</div></section>" +
+      '<section class="a-bolum" aria-labelledby="a-b-kod"><div class="a-alt-bas"><h2 class="a-alt-baslik" id="a-b-kod">Rapor numarası</h2></div><div class="a-form">' +
+        MK.alan({ id: "ay-kod", etiket: "Firma kodu", hata: h.kod, sonuc: "Yeni rapor: " + kod + "-AAYY-SIRA-…; açılmış raporların numarası değişmez.",
+          girdi: MK.girdi({ id: "ay-kod", deger: AY.kod != null ? AY.kod : kod, sinif: "a-girdi-sicil", hata: h.kod, ek: ' data-rapor-kod maxlength="4" autocapitalize="characters"' }) }) + "</div></section>" +
+      '<section class="a-bolum" aria-labelledby="a-b-fiyat"><div class="a-alt-bas"><h2 class="a-alt-baslik" id="a-b-fiyat">Fiyat listesi</h2></div>' +
+        '<p class="a-ipucu">KDV hariç birim fiyat. Yeni teklif bu listeden dolar; teklif dışı rapor bu fiyatla faturalanır. Kabul edilmiş tekliflerin fiyatı değişmez.</p><div class="a-form">' +
+        MV.KATALOG.map(function (x) {
+          var id = "ay-fiyat-" + x.k;
+          return MK.alan({ id: id, etiket: x.ad + " (TL)", hata: h["fiyat-" + x.k],
+            girdi: MK.girdi({ id: id, deger: h["fiyat-" + x.k] ? AY["fiyat-" + x.k] : tlYaz(MV.FIYAT[x.k] || 0), sinif: "a-girdi-sicil", hata: h["fiyat-" + x.k], ek: ' data-fiyat="' + x.k + '" inputmode="decimal" maxlength="12"' }) });
+        }).join("") + "</div></section>" +
+      '<section class="a-bolum" aria-labelledby="a-b-sabit"><div class="a-alt-bas"><h2 class="a-alt-baslik" id="a-b-sabit">Sabit giderler</h2></div>' +
+        '<p class="a-ipucu">Aylık; Muhasebe\'nin gelir-gider özetinde her ay gider olarak düşer. Toplam ' + MV.para(MV.sabitToplam()) + ".</p>" +
+        MV.SABIT_GIDER.map(function (x, i) {
+          return '<div class="a-kalem a-kalem-sabit">' +
+            MK.alan({ id: "ay-sg-ad-" + i, etiket: "Gider", uyari: x.ad.trim() ? "" : "Adı boş: özette adsız görünür.",
+              girdi: MK.girdi({ id: "ay-sg-ad-" + i, deger: x.ad, ek: ' data-sg-ad="' + i + '" maxlength="60"' }) }) +
+            MK.alan({ id: "ay-sg-tutar-" + i, etiket: "Aylık (TL)", hata: h["sg-" + i],
+              girdi: MK.girdi({ id: "ay-sg-tutar-" + i, deger: h["sg-" + i] ? AY["sg-" + i] : tlYaz(x.aylik), sinif: "a-girdi-sicil", hata: h["sg-" + i], ek: ' data-sg-tutar="' + i + '" inputmode="decimal" maxlength="12"' }) }) +
+            MK.alan({ id: "ay-sg-not-" + i, etiket: "Not", girdi: MK.girdi({ id: "ay-sg-not-" + i, deger: x.not || "", ek: ' data-sg-not="' + i + '" maxlength="80"' }) }) +
+            MK.tus({ eylem: "sg-sil", ad: "Kaldır", ikon: "x", sinif: "a-tus-ikincil a-kalem-sil", veri: { i: i } }) + "</div>";
+        }).join("") +
+        '<div class="a-eylem-cubugu a-bolum-serit">' + MK.tus({ eylem: "sg-ekle", ad: "Sabit gider ekle", ikon: "plus", sinif: "a-tus-ikincil" }) + "</div></section>";
   }
   var izinBul = function (no) { return MV.IZINLER.filter(function (x) { return x.no === no; })[0]; };
 
@@ -662,6 +699,15 @@
   MK.goster = goster;
 
   var X = MK.eylem, aktif = function () { return MV.kisi(rota().id); };
+  X["sg-ekle"] = function () {
+    var n = 1; while (MV.SABIT_GIDER.some(function (x) { return x.k === "sg" + n; })) n++;
+    MV.SABIT_GIDER = MV.SABIT_GIDER.concat([{ k: "sg" + n, ad: "", aylik: 0, not: "" }]); ayarCiz(); $("ay-sg-ad-" + (MV.SABIT_GIDER.length - 1)).focus();
+  };
+  X["sg-sil"] = function (el) {
+    var i = +el.dataset.i, x = MV.SABIT_GIDER[i]; MV.SABIT_GIDER = MV.SABIT_GIDER.filter(function (y, j) { return j !== i; }); AY.hata = {};
+    ayarCiz(); var e = $("ay-sg-ad-" + Math.min(i, MV.SABIT_GIDER.length - 1)) || document.querySelector('[data-eylem="sg-ekle"]'); e.focus();
+    MK.bildir((x.ad || "Adsız gider") + " kaldırıldı.");
+  };
   var bolumeGit = function (id) { var h = $(id); if (h) { h.scrollIntoView({ block: "start" }); h.focus({ preventScroll: true }); } };
   X["hesaba-git"] = function () { bolumeGit("a-b-hesap"); };
   X["izin-onayla"] = function (el) {
@@ -796,6 +842,11 @@
     var m;
     if (/^zf-(eden|alan)$/.test(id)) { var p0 = aktif(), r0 = id.slice(3); zfDurum(p0)[r0].k = deger; zimmetFormuCiz(p0); var e0 = deger === ELLE ? $(id + "-ad") : $(id); if (e0) e0.focus(); return; }
     if (id === "ay-yil") { var sk0 = MV.saklama(); MV.FIRMA.saklama = { yontem: sk0.yontem, yer: sk0.yer, yil: +deger }; ayarCiz(); $(id).focus(); MK.bildir("Saklama süresi " + deger + " yıl."); return; }   /* 5 taban: listede 5'ten kısa yok */
+    if ((m = /^ay-esik-(\w+)$/.exec(id))) {
+      var es = {}; Object.keys(MV.ESIK).forEach(function (k) { es[k] = MV.esik(k); }); es[m[1]] = +deger; MV.FIRMA.esik = es;
+      MV.EGITIM_DURUM.yakin.ad = MV.esik("egitim") + " gün içinde"; ayarCiz(); $(id).focus();
+      MK.bildir(MV.ESIK[m[1]].ad + " eşiği " + deger + " gün; uyarılar bu eşikle."); return;
+    }
     if (id === "ay-zeden") { MV.FIRMA.zimmetEden = deger; ZF = null; ayarCiz(); $(id).focus(); MK.bildir("Zimmet formunda teslim eden başlangıçta: " + MV.kisi(deger).ad + "."); return; }
     if (id === "f-meslek") { F.meslek = deger; delete F.hata.meslek; formCiz(); }
     else if (id === "b-tur") { B.tur = deger; belgeCiz(); }
@@ -818,6 +869,23 @@
     }
     if (t.hasAttribute && t.hasAttribute("data-arsiv-yeri")) {   /* arşiv yeri: alandan çıkınca kaydedilir, uyarı güncellenir */
       MV.FIRMA.saklama = { yontem: "arsiv", yer: t.value.trim(), yil: MV.saklama().yil }; ayarCiz(); MK.bildir(t.value.trim() ? "Arşiv yeri kaydedildi." : "Arşiv yeri boş: süresi dolan raporlar sistemde kalır."); return;
+    }
+    if (t.hasAttribute && t.hasAttribute("data-rapor-kod")) {   /* 2–4 büyük harf; geçersizse eski kod kalır */
+      var kd = t.value.trim().toLocaleUpperCase("tr");
+      if (/^[A-ZÇĞİÖŞÜ]{2,4}$/.test(kd)) { MV.FIRMA.raporKod = kd; delete AY.hata.kod; AY.kod = null; ayarCiz(); MK.bildir("Firma kodu " + kd + "; yeni raporlar bu kodla numaralanır."); }
+      else { AY.hata.kod = "2–4 harf olmalı (ör. KM). Kaydedilmedi; yeni raporlar " + MV.firmaKodu() + " ile numaralanır."; AY.kod = t.value; ayarCiz(); }
+      return;
+    }
+    if (t.dataset && (t.dataset.fiyat || t.dataset.sgTutar)) {   /* tutar alanları: TL biçimi (1.250 ya da 1250,50); geçersizse eski değer kalır */
+      var fk = t.dataset.fiyat, si = t.dataset.sgTutar, hk = fk ? "fiyat-" + fk : "sg-" + si, n = tlOku(t.value), odak = t.id;
+      if (n > 0 || (si != null && n === 0)) { if (fk) MV.FIYAT[fk] = n; else MV.SABIT_GIDER[+si].aylik = n; delete AY.hata[hk]; delete AY[hk]; ayarCiz(); MK.bildir((fk ? MV.tur(fk).ad + " birim fiyatı " : MV.SABIT_GIDER[+si].ad + " aylık ") + MV.para(n) + "."); }
+      else { AY.hata[hk] = "Tutar okunamadı (ör. 1.250 ya da 1250,50). Kaydedilmedi."; AY[hk] = t.value; ayarCiz(); }
+      var o = $(odak); if (o) o.focus(); return;
+    }
+    if (t.dataset && (t.dataset.sgAd != null || t.dataset.sgNot != null)) {
+      var sg = MV.SABIT_GIDER[+(t.dataset.sgAd != null ? t.dataset.sgAd : t.dataset.sgNot)], od = t.id;
+      if (t.dataset.sgAd != null) sg.ad = t.value.trim(); else sg.not = t.value.trim();
+      MV.SABIT_GIDER = MV.SABIT_GIDER.slice(); ayarCiz(); var o2 = $(od); if (o2) o2.focus(); MK.bildir("Sabit gider kaydedildi."); return;
     }
     if (t.hasAttribute && t.hasAttribute("data-imza-yontem")) {
       MV.FIRMA.imza = t.value; ayarCiz(); var s = document.querySelector('[data-imza-yontem][value="' + t.value + '"]'); if (s) s.focus();

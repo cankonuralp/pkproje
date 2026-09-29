@@ -1949,6 +1949,14 @@ revizyon, alan kopyalama, hafif kusur devri, meslek eşleşme denetimi).
 - Emsal ürünler: https://opwire.app/iso-17020-periyodik-kontrol-yazilimi/ · https://17020muayene.vidco.com.tr/ · https://akuple.com/asansor-kontrol-yazilimi/ · https://ensyazilim.com/
 
 ## 11 · Değişiklik günlüğü
+- 2026-09-29 (148): **W11 · 202 Firma ayarları bir yerde** (§9 otuz yedinci tur). Personel → Firma ayarları sekmesine dört bölüm eklendi:
+  **Uyarı eşikleri** (kalibrasyon bitişi 30 · kontrolü yaklaşan tesis 30 · plan açarken "kontrolü geliyor" 30 · eğitim tekrarı 60 gün başlangıç;
+  seçenekli), **Rapor numarası** (firma kodu 2–4 harf; yalnız yeni raporlar, açılmış numaralar değişmez; geçersiz kod kaydedilmez, altında
+  söylenir), **Fiyat listesi** (tür başına KDV hariç birim fiyat; kabul edilmiş tekliflerin fiyatı değişmez), **Sabit giderler** (ekle · düzenle
+  · kaldır; Muhasebe gelir-gider özetine düşer). Dağınık sabitler (Ölçüm cihazları, Müşteriler, Ana sayfa, Plan aç, Eğitimler, Personel,
+  Uyarılar, Planlar'daki firma kodu) tek erişimden okur: `MV.esik(k)`, `MV.firmaKodu()`. Ölçüm: m1 durum 280/280 · etkileşim 78/78 (7 yeni, sayfalar arası) · telefon 140/140; m2, m4, m6, m10, m12, m14,
+  m16, planlar üç kipte temiz; gözle 1920 + 375.
+
 - 2026-09-29 (147): **W10 · 200–201 Saklama süresi · arşivdeki rapor künyesi** (§9 otuz yedinci tur). Firma ayarları'ndaki bölüm "Saklama süresi
   dolan raporlar" oldu; **Saklama süresi** seçicisi 5 yıldan başlar (5 · 6 · 7 · 8 · 9 · 10 · 15 · 20 yıl; kısaltılamaz), kalıcı. Arşive taşınan
   rapor (`r.arsiv = { yer, zaman }`): künyesi sistemde kalır; Onaylar ve Raporlar rapor sayfasında "Arşivde · yer · tarih: künye sistemde, dosya

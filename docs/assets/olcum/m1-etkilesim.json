@@ -2,8 +2,8 @@
  "maket": "m1",
  "tarih": "2026-09-29",
  "arac": "tools/olc-bulut.mjs --etkilesim (başsız tarayıcı, 1920 açık tema; gen verilen denemede o genişlik)",
- "toplam": 71,
- "gecen": 71,
+ "toplam": 78,
+ "gecen": 78,
  "denemeler": [
   {
    "ad": "İzin talepleri: formun PDF'i açılır, e-posta talep edene",
@@ -364,6 +364,55 @@
   },
   {
    "ad": "Firma ayarları: zimmet teslim edeninin başlangıcı değişince formda o kişi gelir; eski imzalı formun teslim edeni değişmez",
+   "gen": 1920,
+   "sayfa": "maket/personel.html",
+   "hash": "#/ayarlar",
+   "gecti": true
+  },
+  {
+   "ad": "Firma ayarları: dört uyarı eşiği başlangıçla (30/30/30/60); kalibrasyon 60 seçilince Ölçüm cihazları süzgeci ve şeridi 60 gün (sayfalar arası)",
+   "gen": 1920,
+   "sayfa": "maket/personel.html",
+   "hash": "#/ayarlar",
+   "gecti": true
+  },
+  {
+   "ad": "Firma ayarları: eğitim tekrarı 90 gün → Eğitimler süzgeci ve şeridi 90 gün (sayfalar arası)",
+   "gen": 1920,
+   "sayfa": "maket/personel.html",
+   "hash": "#/ayarlar",
+   "gecti": true
+  },
+  {
+   "ad": "Firma ayarları: kontrolü yaklaşan tesis 45 gün → Müşteriler süzgeci 45 gün (sayfalar arası)",
+   "gen": 1920,
+   "sayfa": "maket/personel.html",
+   "hash": "#/ayarlar",
+   "gecti": true
+  },
+  {
+   "ad": "Firma ayarları: firma kodu ab → AB kaydedilir, geçersiz A1 kaydedilmez (uyarı, eski kod kalır); yeniden yüklemede AB",
+   "gen": 1920,
+   "sayfa": "maket/personel.html",
+   "hash": "#/ayarlar",
+   "gecti": true
+  },
+  {
+   "ad": "firma kodu AB iken Planlar'da yeni rapor AB- ile numaralanır, eski numaralar KM- kalır",
+   "gen": 1920,
+   "sayfa": "maket/planlarim.html",
+   "hash": "#/plan/1",
+   "gecti": true
+  },
+  {
+   "ad": "Firma ayarları: Hava tankı fiyatı 1.000 kaydedilir, okunamayan tutar kaydedilmez; Teklifler'de Hava tankı 1.000,00 TL (sayfalar arası)",
+   "gen": 1920,
+   "sayfa": "maket/personel.html",
+   "hash": "#/ayarlar",
+   "gecti": true
+  },
+  {
+   "ad": "Firma ayarları: sabit gider eklenir (ad + tutar), biri kaldırılır; Muhasebe gelir-gider özetinde yeni gider var, kaldırılan yok (sayfalar arası)",
    "gen": 1920,
    "sayfa": "maket/personel.html",
    "hash": "#/ayarlar",

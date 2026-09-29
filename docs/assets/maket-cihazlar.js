@@ -15,8 +15,8 @@
 (function () {
   "use strict";
   var $ = MK.$, kacis = MK.kacis, ikon = MK.ikon, kirp = MK.kirp, rozet = MK.rozet, bilgi = MK.bilgi, SZ = MK.SZ;
-  var BUGUN = MK.BUGUN, ESIK = 30;   /* firma ayarı (65) */
-  var KAL = { gecerli: { ad: "Geçerli", rozet: "a-rozet-tamam" }, yakin: { ad: "30 gün içinde bitiyor", rozet: "a-rozet-bekliyor" },
+  var BUGUN = MK.BUGUN, ESIK = MV.esik("kal");   /* firma ayarı (65; Firma ayarları, 202) */
+  var KAL = { gecerli: { ad: "Geçerli", rozet: "a-rozet-tamam" }, yakin: { ad: ESIK + " gün içinde bitiyor", rozet: "a-rozet-bekliyor" },
     gecti: { ad: "Kalibrasyonu geçti", rozet: "a-rozet-red" }, lab: { ad: "Kalibrasyonda", rozet: "a-rozet-kabul" } };
   var cihazlar = function () { return MV.VARLIKLAR.filter(function (v) { return v.tur === "cihaz"; }); };
   var kalan = function (t) { return MK.gunFarki(BUGUN, t); };
@@ -37,7 +37,7 @@
   MK.suzgecTanimla("c", { ad: "Cihazlarda ara", ipucu: "Cihaz kodu, cihaz, kişi", birim: "cihaz",
     cipler: [
       { k: "gecti", ad: "Kalibrasyonu geçmiş", grup: "kal", test: function (v) { return MV.kalDurum(v) === "gecti"; } },
-      { k: "yakin", ad: "30 gün içinde bitiyor", grup: "kal", test: function (v) { return MV.kalDurum(v) === "yakin"; } },
+      { k: "yakin", ad: ESIK + " gün içinde bitiyor", grup: "kal", test: function (v) { return MV.kalDurum(v) === "yakin"; } },
       { k: "lab", ad: "Kalibrasyonda", grup: "kal", test: function (v) { return MV.kalDurum(v) === "lab"; } },
       { k: "ara", ad: "Ara kontrol gecikti", test: araGecti },
       { k: "depo", ad: "Depoda", test: function (v) { return MV.kimde(v.id) === "depo"; } }
@@ -71,7 +71,7 @@
       (gecti.length ? '<div class="a-serit a-serit-hata">' + ikon("circle-x", "a-ikon-kucuk") + "<span><b>" + gecti.length + " cihazın kalibrasyonu geçti</b>" +
         (zimmette.length ? " · " + zimmette.map(function (v) { return v.env + " " + MV.kisi(MV.kimde(v.id)).ad; }).join(", ") + " zimmetinde: bu kişilerin raporları onaya gönderilemez." : "") +
         '</span><button class="a-tus a-tus-ikincil a-serit-tus" type="button" data-eylem="cip-uygula" data-deger="gecti">Göster</button></div>' : "") +
-      (yakin.length ? '<div class="a-serit a-serit-uyari">' + ikon("triangle-alert", "a-ikon-kucuk") + "<span><b>" + yakin.length + " cihazın kalibrasyonu 30 gün içinde bitiyor</b> · " +
+      (yakin.length ? '<div class="a-serit a-serit-uyari">' + ikon("triangle-alert", "a-ikon-kucuk") + "<span><b>" + yakin.length + " cihazın kalibrasyonu " + ESIK + " gün içinde bitiyor</b> · " +
         yakin.map(function (v) { return v.env + " (" + MK.gunKisa(v.bitis) + ")"; }).join(", ") + '</span><button class="a-tus a-tus-ikincil a-serit-tus" type="button" data-eylem="cip-uygula" data-deger="yakin">Göster</button></div>' : "") +
       "</div>" : "";
   }
