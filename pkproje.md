@@ -1949,6 +1949,12 @@ revizyon, alan kopyalama, hafif kusur devri, meslek eşleşme denetimi).
 - Emsal ürünler: https://opwire.app/iso-17020-periyodik-kontrol-yazilimi/ · https://17020muayene.vidco.com.tr/ · https://akuple.com/asansor-kontrol-yazilimi/ · https://ensyazilim.com/
 
 ## 11 · Değişiklik günlüğü
+- 2026-09-29 (142): **W5 · 193 Müşteride yalnız son sürüm** (§9 otuz yedinci tur). Müşteri paneli raporu `MV.musteriSurumu` ile görür: revize sürerken
+  **önceki imzalı sürüm** (onay, imza, sonuç sürüm kaydından; numarası o sürümün), yeni sürüm imzalanınca **yalnız o** (KM-…-R1) ve rapor
+  sayfasında "Bu rapor KM-…-R1, KM-… raporunun yerine geçer" şeridi; eski sürüm firmada saklı. Raporun görünen numarası tek yerden
+  (`MV.surumNo`) — belge başlığı da sürümlü numarayı yazar (firma tarafında da). Ölçüm: m11 durum 88/88 · etkileşim 12/12 (2 yeni) · telefon 44/44;
+  m9 200/200 · 44/44 · 100/100.
+
 - 2026-09-29 (141): **W4 · 192 Inspector "Revize iste"** (§9 otuz yedinci tur). Raporlar'da tamamlanan raporda **"Revize iste"** (gerekçe zorunlu,
   en az 10 karakter) → raporun üstünde "Revize isteğiniz teknik yöneticide" şeridi, "Revize isteğini geri çek". Onaylar'a **"Revize istekleri"**
   sekmesi (seçili branşın; vekilde o branşın): satırda **Reddet** (gerekçe isteğe bağlı; inspector raporunda "Revize isteği reddedildi"

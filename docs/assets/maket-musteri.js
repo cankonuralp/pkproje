@@ -13,7 +13,8 @@
   var tesisleri = function () { return KUL ? (KUL.tesis === "hepsi" ? MV.tesisleri(M.id) : MV.tesisleri(M.id).filter(function (t) { return KUL.tesis.indexOf(t.id) >= 0; })) : []; };
   var tid = function () { return tesisleri().map(function (t) { return t.id; }); };
   /* YALNIZ imzalı raporlar (imzasız yayın yok) ve yalnız kullanıcının tesisleri */
-  var raporlar = function () { var ts = tid(); return MV.RAPORLAR.filter(function (r) { return r.durum === "imzali" && ts.indexOf(r.tesis) >= 0; }); };
+  /* revize edilen raporda yalnız son imzalı sürüm (193, 2026-09-29; MV.musteriSurumu) */
+  var raporlar = function () { var ts = tid(); return MV.RAPORLAR.map(MV.musteriSurumu).filter(function (r) { return r && ts.indexOf(r.tesis) >= 0; }); };
   var uygunsuzlar = function () { var ts = tid(); return MV.uygunsuzluklar(M.id).filter(function (u) { return ts.indexOf(u.tesis) >= 0; }); };
   var sonraki = function (r) { var e = MV.ekipman(r.kod), d = new Date(r.olustu.slice(0, 10) + "T12:00:00"); d.setMonth(d.getMonth() + MV.tur(e.tur).periyot); return d.toISOString().slice(0, 10); };
   var sonucHtml = function (s) { return '<span class="a-onceki' + (s === "Uygun" ? "" : s === "Hafif kusurlu" ? " a-sonuc-uyari" : " a-sonuc-hata") + '">' + s + "</span>"; };
@@ -31,7 +32,7 @@
     metin: function (r) { var e = MV.ekipman(r.kod); return [r.no, e.kod, MV.tur(e.tur).ad, MV.tesis(r.tesis).ad].join(" "); },
     imkansiz: "" }, function () { raporCiz(); });
   var R_SUTUN = [
-    { k: "no", baslik: "Rapor no", kart: "ust", sira: 1, hucre: function (r) { return '<a class="a-no" href="#/r/' + r.no + '">' + r.no + "</a>"; } },
+    { k: "no", baslik: "Rapor no", kart: "ust", sira: 1, hucre: function (r) { return '<a class="a-no" href="#/r/' + r.no + '">' + MV.surumNo(r) + "</a>"; } },
     { k: "ekipman", baslik: "Ekipman", kart: "govde", sira: 2, hucre: function (r) { var e = MV.ekipman(r.kod); return '<span class="a-hucre-satir"><span class="a-kod">' + e.kod + "</span>" + kirp(MV.tur(e.tur).ad) + "</span>"; } },
     { k: "tesis", baslik: "Tesis", kart: "govde", sira: 3, hucre: function (r) { return '<span class="a-kart-etiket">Tesis</span>' + kirp(MV.tesis(r.tesis).ad); } },
     { k: "tarih", baslik: "Kontrol", kart: "govde", sira: 4, hucre: function (r) { return '<span class="a-kart-etiket">Kontrol</span>' + MK.tarihYaz(r.olustu); } },
@@ -78,17 +79,19 @@
 
   /* ── RAPOR (PDF önizlemesi) ─────────────────────────────────────────────────────────────────────────── */
   function raporSayfa(r) {
-    var ok = r && r.durum === "imzali" && tid().indexOf(r.tesis) >= 0;
+    r = MV.musteriSurumu(r);
+    var ok = r && tid().indexOf(r.tesis) >= 0;
     if (!ok) {   /* başka müşterinin ya da imzasız rapor: VAR OLDUĞU BİLE söylenmez */
       $("a-nesne").innerHTML = MK.kirinti([["Raporlarınız", "#/"]]) + '<h1 class="a-gizli" tabindex="-1">Rapor bulunamadı</h1>' +
         MK.bos({ ikon: "circle-alert", baslik: "Rapor bulunamadı", metin: "Bu adreste size açık bir rapor yok.", eylem: '<a class="a-tus a-tus-ikincil" href="#/">' + ikon("arrow-left", "a-ikon-kucuk") + "Raporlara dön</a>" });
       return;
     }
     var e = MV.ekipman(r.kod), t = MV.tur(e.tur), u = uygunsuzlar().filter(function (x) { return x.rapor === r; })[0];
-    $("a-nesne").innerHTML = MK.kirinti([["Raporlarınız", "#/"], [r.no]]) +
-      '<div class="a-nesne-bas"><div class="a-nesne-kimlik"><div class="a-nesne-baslik"><h1 tabindex="-1">' + r.no + "</h1>" + sonucHtml(MV.sonucAd(r)) + "</div>" +
+    $("a-nesne").innerHTML = MK.kirinti([["Raporlarınız", "#/"], [MV.surumNo(r)]]) +
+      '<div class="a-nesne-bas"><div class="a-nesne-kimlik"><div class="a-nesne-baslik"><h1 tabindex="-1">' + MV.surumNo(r) + "</h1>" + sonucHtml(MV.sonucAd(r)) + "</div>" +
         '<p class="a-nesne-alt">' + ikon("wrench", "a-ikon-kucuk") + '<span><span class="a-kod">' + e.kod + "</span> · " + kacis(t.ad) + " · " + kacis(MV.tesis(r.tesis).ad) + " · kontrol " + MK.tarihYaz(r.olustu) + "</span></p></div>" +
         '<div class="a-eylem-cubugu">' + MK.tus({ eylem: "pdf", ad: "PDF indir", ikon: "file-text" }) + "</div></div>" +
+      (r._yerine ? '<div class="a-serit-kap">' + MK.serit("bilgi", "file-pen-line", "Bu rapor " + kacis(MV.surumNo(r)) + ", " + kacis(r._yerine) + " raporunun yerine geçer.") + "</div>" : "") +
       (u ? '<div class="a-serit-kap">' + MK.serit(u.durum === "acik" ? "uyari" : "onay", u.durum === "acik" ? "triangle-alert" : "circle-check",
         (u.durum === "acik" ? "Açık uygunsuzluk · " : "Giderildi · ") + kacis(u.sinif) + ": " + kacis(u.kriter) + (u.durum === "acik" ? (u.sinif === "Hafif" ? " — sonraki kontrole kadar giderilmeli." : " — giderilene kadar kullanılamaz; giderilince ikinci kontrol istenir.") : "")) + "</div>" : "") +
       MB.belge(t, MV.raporBelge(r));
@@ -193,7 +196,7 @@
   X["pdf"] = function () {
     var r = rota();
     if (r.v === "soz") MK.yazdir(r.no, MB.isSozlesmesi({ x: MV.isSozlesmesi(r.no) }));
-    else { var rp = MV.rapor(r.no); MK.yazdir(rp.no, MB.belge(MV.tur(MV.ekipman(rp.kod).tur), MV.raporBelge(rp))); }
+    else { var rp = MV.musteriSurumu(MV.rapor(r.no)); if (!rp) return; MK.yazdir(MV.surumNo(rp), MB.belge(MV.tur(MV.ekipman(rp.kod).tur), MV.raporBelge(rp))); }
   };
   $("a-pencere").addEventListener("close", function () { if (rota().pencere) history.replaceState(null, "", "#/uygunsuz" + (q !== "m1" ? "?musteri=" + q : "")); });
 

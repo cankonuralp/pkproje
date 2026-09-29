@@ -2,9 +2,23 @@
  "maket": "m11",
  "tarih": "2026-09-29",
  "arac": "tools/olc-bulut.mjs --etkilesim (başsız tarayıcı, 1920 açık tema; gen verilen denemede o genişlik)",
- "toplam": 10,
- "gecen": 10,
+ "toplam": 12,
+ "gecen": 12,
  "denemeler": [
+  {
+   "ad": "193: revize sürerken müşteri önceki imzalı sürümü görür (numarası ekisiz, imzalı, yerine geçer notu yok)",
+   "gen": 1920,
+   "sayfa": "maket/musteri.html",
+   "hash": "#/r/KM-0926-760-f535b?musteri=m9",
+   "gecti": true
+  },
+  {
+   "ad": "193: R1 imzalanınca müşteri listesinde yalnız KM-…-R1, rapor sayfasında yerine geçer notu",
+   "gen": 1920,
+   "sayfa": "maket/musteri.html",
+   "hash": "#/?musteri=m9",
+   "gecti": true
+  },
   {
    "ad": "uygunsuzlar gerçek .xlsx iner",
    "gen": 1920,

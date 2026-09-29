@@ -1248,7 +1248,18 @@
     var s = new Date(gun + "T12:00:00"); s.setMonth(s.getMonth() + t.periyot);
     return { e: e, ts: ts, m: MV.musteri(ts.m), p: p, isg: isg, tarih: gun, bas: r.olustu.slice(11, 16), bit: r.gonderildi ? r.gonderildi.slice(11, 16) : null,
       cihaz: MV.turCihazlari(t).map(function (k) { return MV.eklenebilirCihazlar(p.id, [k])[0]; }).filter(Boolean),   /* raporda eklenen: türün cihazları, zimmetten */
-      sonraki: s.toISOString().slice(0, 10), no: r.no, sonuc: MV.sonucAd(r) || "Uygun", imza: r.imza };
+      sonraki: s.toISOString().slice(0, 10), no: MV.surumNo(r), sonuc: MV.sonucAd(r) || "Uygun", imza: r.imza };
+  };
+  /* REVİZE SÜRÜMÜ (193, 2026-09-29): raporun görünen numarası sürümüyle (KM-…-R1). Müşteri yalnız SON İMZALI sürümü görür: revize sürerken önceki
+     imzalı sürüm (onay, imza, sonuç ve imzalı PDF sürüm kaydından), yeni sürüm imzalanınca o; eski sürüm firmada saklı kalır. */
+  MV.surumNo = function (r) { return r._surumNo || r.no + (r.revizyonlar && r.revizyonlar.length ? "-" + r.revizyonlar[0].ad : ""); };
+  MV.musteriSurumu = function (r) {
+    if (!r) return null;
+    var rv = r.revizyonlar || [];
+    if (r.durum === "imzali") return Object.assign({}, r, { _yerine: rv.length ? (rv[1] ? r.no + "-" + rv[1].ad : r.no) : null });
+    var o = rv[0] && rv[0].onceki; if (!o || !o.imza) return null;   /* revize sürüyor: önceki imzalı sürüm */
+    return Object.assign({}, r, { durum: "imzali", onay: o.onay, imza: o.imza, imzaDosya: o.imzaDosya, sonuc: o.sonuc, _surumNo: r.no + (rv[1] ? "-" + rv[1].ad : ""),
+      _yerine: rv[1] ? (rv[2] ? r.no + "-" + rv[2].ad : r.no) : null, revizyonlar: rv.slice(1) });
   };
   /* sayfalar arası ortak kayıt (2026-09-28, Kalem M): Plan aç'ta açılan planlar — Planlar bunları kendi listesine alır */
   /* PLANLAR (Planlar maketinin tohumu; 2026-09-29'da maket.js'ten taşındı — yan menü balonu her sayfada sayar, 35. tur 163). UYDURMA. */
