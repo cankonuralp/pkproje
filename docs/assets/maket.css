@@ -905,6 +905,10 @@ a.a-yuz:hover { border-color: var(--kenar-alan); background: var(--zemin); }
 .a-bolum-acilir:not([open]) .a-acilir-ok { transform: rotate(-90deg); }
 .a-bolum-acilir > summary .a-bolum-tus + .a-acilir-ok { margin-left: 4px; }   /* başlık tuşu (Güncelle) sağda, okun yanında */
 .a-kriter { display: grid; grid-template-columns: minmax(0, 1fr) 13rem; align-items: center; gap: 8px 16px; padding: 12px 0; border-top: 1px solid var(--kenar); }
+/* kriter cevabı üç tuş, madde yazısıyla aynı satırda (2026-09-29): sütun tuşlar kadar geniş, tuşlar her bantta ≥ 44 px */
+.a-kriter:has(.a-kriter-secim) { grid-template-columns: minmax(0, 1fr) auto; }
+.a-kriter-secim { margin: 0; flex-wrap: nowrap; }
+.a-kriter-secim .a-sekme { min-height: 44px; padding: 0 16px; font-size: var(--boy-girdi); }
 .a-kriter-ad { display: flex; gap: 8px; margin: 0; font-weight: 600; }
 .a-kriter-no { flex: none; min-width: 20px; white-space: nowrap; color: var(--yazi2); font-variant-numeric: tabular-nums; }
 .a-kriter-cevap { min-width: 0; }
@@ -1201,6 +1205,9 @@ a.a-yuz:hover { border-color: var(--kenar-alan); background: var(--zemin); }
   .a-belge-kunye { order: 3; flex-basis: 100%; }
   /* saha raporu telefonda: madde solda, seçim sağda daha dar */
   .a-kriter { grid-template-columns: minmax(0, 1fr) 9.75rem; gap: 8px 10px; }
+  .a-kriter:has(.a-kriter-secim) { grid-template-columns: minmax(0, 1fr); }   /* telefonda üç tuş maddenin altında tam satır */
+  .a-kriter-secim { display: flex; width: 100%; }
+  .a-kriter-secim .a-sekme { flex: 1 1 auto; justify-content: center; padding: 0 8px; }
   .a-kriter-genis { grid-template-columns: minmax(0, 1fr); }
   .a-suzgec-alanlar { grid-template-columns: repeat(2, minmax(0, 1fr)); }   /* alan alan arama telefonda iki sütun */
   /* plan içi etiket : değer satırları telefonda alt alta (kimlik bölünmez, taşmasın) */

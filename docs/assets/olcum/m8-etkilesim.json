@@ -2,8 +2,8 @@
  "maket": "m8",
  "tarih": "2026-09-29",
  "arac": "tools/olc-bulut.mjs --etkilesim (başsız tarayıcı, 1920 açık tema; gen verilen denemede o genişlik)",
- "toplam": 82,
- "gecen": 82,
+ "toplam": 83,
+ "gecen": 83,
  "denemeler": [
   {
    "ad": "önceki kontrolün hafif kusuru listelenir; Giderilmedi → bu raporun kusurlarına girer, sonuç önerisi Uygun değil",
@@ -66,6 +66,13 @@
    "gen": 1920,
    "sayfa": "maket/rapor.html",
    "hash": "#/r/ET-1009",
+   "gecti": true
+  },
+  {
+   "ad": "kriter cevabı: üç tuş madde yazısıyla aynı satırda (açılır liste yok), her tuş ≥ 44 px; Uygun değil tek basışta (2026-09-29)",
+   "gen": 1920,
+   "sayfa": "maket/rapor.html",
+   "hash": "#/r/KS-1006",
    "gecti": true
   },
   {

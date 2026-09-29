@@ -236,10 +236,19 @@
     for (var a = 0; a < g.length; a++) { if (i < g[a][1].length) return MV.formatYapi(t).bolumler.kontrol + "." + (a + 1) + "." + (i + 1); i -= g[a][1].length; }
     return "";
   }
+  /* kriter cevabı: üç tuş madde yazısıyla aynı satırda, açılır liste yok (2026-09-29, reisim: "Muayene kriterleri uygun uygun değil seçme
+     tuşu daha büyük olmalı ve ilgili satır aşağı doğru açılmadan da görülebilmeli … muayene kriterleri yazısı ile aynı hizada olmalı") */
+  var KRITER_RENK = { uygun: "a-sekme-onay", uygundegil: "a-sekme-hata", uygulanamaz: "" };
+  var kriterSecim = function (i, deger, gecersiz) {
+    return '<div class="a-sekmeler a-kriter-secim" role="group" id="r-kc' + i + '" aria-labelledby="r-ka' + i + '"' + (gecersiz ? ' aria-invalid="true"' : "") + ">" +
+      KRITER.map(function (k) {
+        return '<button class="a-sekme ' + KRITER_RENK[k[0]] + '" type="button" id="r-kc' + i + "-" + k[0] + '" data-eylem="kriter-sec" data-i="' + i + '" data-deger="' + k[0] + '" aria-pressed="' + (deger === k[0]) + '">' + k[1] + "</button>";
+      }).join("") + "</div>";
+  };
   function kriterHtml(r, oku, i) {
     var t = r.t, x = r.kriter[i], ad = MV.kriterler(t)[i], no = kriterNo(t, i), kus = x.c === "uygundegil";
     return '<div class="a-kriter" id="r-k' + i + '"><p class="a-kriter-ad" id="r-ka' + i + '"><span class="a-kriter-no">' + no + "</span><span>" + kacis(ad) + "</span></p>" +
-      '<div class="a-kriter-cevap">' + (oku ? okuGirdi("r-kc" + i, ad2(KRITER, x.c)) : MK.secim({ id: "r-kc" + i, ad: "Madde " + no, deger: x.c, secenekler: KRITER, ipucu: "Seçin", tanim: "r-ka" + i, gecersiz: uyar(r, !x.c) })) + "</div>" +
+      '<div class="a-kriter-cevap">' + (oku ? okuGirdi("r-kc" + i, ad2(KRITER, x.c)) : kriterSecim(i, x.c, uyar(r, !x.c))) + "</div>" +
       (kus ? '<div class="a-kriter-kusur">' +
         /* hafif / ağır yalnız Bakanlık formatı yürürlükteki türde (§4.5, Ek-III 1.9.1) */
         (MV.kusurSinifli(t) ? MK.alan({ id: "r-kd" + i, etiket: "Kusur derecesi", zorunlu: !oku,
@@ -712,8 +721,8 @@
     document.querySelectorAll(".a-bolum-eksik").forEach(function (d) { if (!e[d.id]) { d.classList.remove("a-bolum-eksik"); var z = d.querySelector("summary .a-rozet-red"); if (z) z.remove(); } }); }
   MK.onSecim = function (id, deger) {
     if (W && $("a-pencere").open) { W.d[id.slice(2)] = deger; delete W.hata[id.slice(2)]; pencereCiz(id); return; }
-    var r = aktif(); if (/^r-kc\d+$/.test(id)) { r.kriter[+id.slice(4)].c = deger; degisti(r); ciz(id); }
-    else if (id === "r-sonuc") { r.sonuc = deger; degisti(r); ciz(id); }
+    var r = aktif();
+    if (id === "r-sonuc") { r.sonuc = deger; degisti(r); ciz(id); }
     else if (/^r-kd\d+$/.test(id)) { r.kriter[+id.slice(4)].derece = deger; degisti(r); ciz(id); }
     else if (/^r-dv\d+$/.test(id)) { var x = devreden(r)[+id.slice(4)]; if (x) { (r.devir = r.devir || {})[x.id] = deger; degisti(r); ciz(id); } }
     else if (/^r-[ds]-/.test(id)) { r[id[2] === "d" ? "detay" : "tespit"][id.slice(4)] = deger; degisti(r); ciz(id); }
@@ -808,6 +817,10 @@
     a.scrollIntoView({ block: "center" }); if (g) g.focus({ preventScroll: true });
   }
   $("a-pencere").addEventListener("close", function () { if (W && W.tur === "zorunlu") { var x = W.eks[0]; W = null; eksikeGit(x); } });
+  X["kriter-sec"] = function (el) {
+    var r = aktif(), x = r.kriter[+el.dataset.i]; if (x.c === el.dataset.deger) return;
+    x.c = el.dataset.deger; degisti(r); ciz(el.id);
+  };
   X["kriter-toplu"] = function (el) {
     var r = aktif(), n = 0; for (var i = +el.dataset.bas; i < +el.dataset.son; i++) { if (r.kriter[i].c !== el.dataset.deger) n++; r.kriter[i].c = el.dataset.deger; }
     degisti(r); ciz("r-kt" + el.dataset.bas);

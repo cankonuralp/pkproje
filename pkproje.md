@@ -1964,6 +1964,12 @@ revizyon, alan kopyalama, hafif kusur devri, meslek eşleşme denetimi).
 - Emsal ürünler: https://opwire.app/iso-17020-periyodik-kontrol-yazilimi/ · https://17020muayene.vidco.com.tr/ · https://akuple.com/asansor-kontrol-yazilimi/ · https://ensyazilim.com/
 
 ## 11 · Değişiklik günlüğü
+- 2026-09-29 (153): **X5 · Kriter cevabı üç tuş, madde yazısıyla aynı satırda** (§9 otuz sekizinci tur). Muayene / gözle kontrol
+  kriterlerinde açılır liste kalktı: **Uygun · Uygun değil · Uygulanamaz** üç tuş (seçili Uygun yeşil, Uygun değil kırmızı zemin, mevcut
+  token'lar), madde yazısının hizasında, her bantta ≥ 44 px, tek basışta seçilir; telefonda maddenin altında tam satır (320'de taşma yok).
+  Grup başındaki "hepsini işaretle" menüsü aynen. Ölçüm: m8 durum 184/184 · etkileşim 83/83 (1 yeni: aynı satır, 44 px, tek basış; 4
+  güncellendi) · telefon 92/92; gözle 1920 · 1080 · 375.
+
 - 2026-09-29 (152): **X4 · Pasif rapor inspector'da hiçbir yoldan açılmaz** (§9 otuz sekizinci tur). Taranan 12 sayfada (Planlar, plan
   içi, Raporlar, Ana sayfa, Uyarılar, Performans, Onaylar, Müşteriler, Talepler, Ekipman türleri) listelerden kalkıyordu; **sızıntı:** eski
   bağlantıyla (tarayıcı geçmişi, açık sekme) saha rapor ekranı ve Raporlar'daki rapor sayfası pasif raporu açıyor, düzenletiyordu. İkisi de
