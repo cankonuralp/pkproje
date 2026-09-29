@@ -94,9 +94,11 @@
   }
   function raporCiz(r) {
     sureDenetle();
-    if (!r || r.kisi !== BEN) {
+    /* pasif rapor inspector'da hiçbir yoldan açılmaz — eski bağlantı, geçmiş, açık sekme (2026-09-29, reisim: "Pasife alınan raporlar
+       inspectorlere gözükmesin sadece yöneticilere gözüksün"; sunucuda: yetkisiz = yok) */
+    if (!r || r.kisi !== BEN || r.pasif) {
       $("a-nesne").innerHTML = MK.kirinti([["Raporlar", "#/"]]) + '<h1 class="a-gizli" tabindex="-1">Rapor bulunamadı</h1>' +
-        MK.bos({ ikon: "circle-alert", baslik: "Rapor bulunamadı", metin: "Bu adreste size ait rapor yok.", eylem: '<a class="a-tus a-tus-ikincil" href="#/">' + ikon("arrow-left", "a-ikon-kucuk") + "Raporlara dön</a>" });
+        MK.bos({ ikon: "circle-alert", baslik: "Rapor bulunamadı", metin: r && r.pasif && r.kisi === BEN ? "Bu rapor pasife alındı; yalnız yöneticiler görür." : "Bu adreste size ait rapor yok.", eylem: '<a class="a-tus a-tus-ikincil" href="#/">' + ikon("arrow-left", "a-ikon-kucuk") + "Raporlara dön</a>" });
       return;
     }
     var e = ekp(r), t = MV.tur(e.tur), ts = MV.tesis(r.tesis), m = MV.musteri(ts.m), portal = MV.musteriKullanicilari(m.id).filter(function (x) { return x.durum === "etkin"; });

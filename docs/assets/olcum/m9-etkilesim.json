@@ -2,9 +2,16 @@
  "maket": "m9",
  "tarih": "2026-09-29",
  "arac": "tools/olc-bulut.mjs --etkilesim (başsız tarayıcı, 1920 açık tema; gen verilen denemede o genişlik)",
- "toplam": 48,
- "gecen": 48,
+ "toplam": 49,
+ "gecen": 49,
  "denemeler": [
+  {
+   "ad": "pasif rapor inspector'ın Raporlar listesinde yok, adresiyle de açılmaz (2026-09-29)",
+   "gen": 1920,
+   "sayfa": "maket/raporlar.html",
+   "hash": "#/",
+   "gecti": true
+  },
   {
    "ad": "rapor sayfasında durum geçmişi yok",
    "gen": 1920,

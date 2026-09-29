@@ -380,9 +380,12 @@
   }
   function ciz(odak) {
     var kod = (/^#\/r\/([A-Z0-9-]+)/.exec(location.hash) || [])[1], r = kod ? rapor(kod) : null;
-    if (!r) {
+    /* pasif rapor saha ekranında açılmaz — eski bağlantı, geçmiş, açık sekme (2026-09-29, reisim: "Pasife alınan raporlar inspectorlere
+       gözükmesin sadece yöneticilere gözüksün") */
+    var pasif = r && MV.rapor(r.no) && MV.rapor(r.no).pasif;
+    if (!r || pasif) {
       $("a-rapor").innerHTML = MK.kirinti([["Planlar", MK.adres(13, "#/")]]) + '<h1 class="a-gizli" tabindex="-1">Rapor bulunamadı</h1>' +
-        MK.bos({ ikon: "circle-alert", baslik: "Rapor bulunamadı", metin: "Bu ekipman için açılmış rapor yok. Rapor, plan içinde ekipmanın satırındaki “Rapor oluştur” ile açılır.",
+        MK.bos({ ikon: "circle-alert", baslik: "Rapor bulunamadı", metin: pasif ? "Bu rapor pasife alındı; yalnız yöneticiler görür." : "Bu ekipman için açılmış rapor yok. Rapor, plan içinde ekipmanın satırındaki “Rapor oluştur” ile açılır.",
           eylem: '<a class="a-tus a-tus-ikincil" href="' + MK.adres(13, "#/plan/1") + '">' + ikon("arrow-left", "a-ikon-kucuk") + "Plana dön</a>" });
       document.title = "Rapor bulunamadı · probata maket"; return;
     }

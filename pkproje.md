@@ -1964,6 +1964,13 @@ revizyon, alan kopyalama, hafif kusur devri, meslek eşleşme denetimi).
 - Emsal ürünler: https://opwire.app/iso-17020-periyodik-kontrol-yazilimi/ · https://17020muayene.vidco.com.tr/ · https://akuple.com/asansor-kontrol-yazilimi/ · https://ensyazilim.com/
 
 ## 11 · Değişiklik günlüğü
+- 2026-09-29 (152): **X4 · Pasif rapor inspector'da hiçbir yoldan açılmaz** (§9 otuz sekizinci tur). Taranan 12 sayfada (Planlar, plan
+  içi, Raporlar, Ana sayfa, Uyarılar, Performans, Onaylar, Müşteriler, Talepler, Ekipman türleri) listelerden kalkıyordu; **sızıntı:** eski
+  bağlantıyla (tarayıcı geçmişi, açık sekme) saha rapor ekranı ve Raporlar'daki rapor sayfası pasif raporu açıyor, düzenletiyordu. İkisi de
+  artık "Rapor bulunamadı · Bu rapor pasife alındı; yalnız yöneticiler görür." (sunucuda karşılığı: yetkisiz = yok). **Kalıcı denetim:** iki
+  deneme (plan içinden pasife al → eski bağlantı; Raporlar listesi + adres); olumsuz kanıt: eski kodda ikisi de düşüyor (51/52 · 48/49).
+  Ölçüm: planlar 128/128 · 52/52 · 64/64; m8 184/184 · 82/82 · 92/92; m9 200/200 · 49/49 · 100/100.
+
 - 2026-09-29 (151): **X3 · Denetime başla tuşu kalktı** (§9 otuz sekizinci tur). Kabul edilen planda ekipmanlar ve **Rapor oluştur**
   hemen açık (ekipman ekle, Excel'den yükle de); Denetim adımında "İlk rapor oluşturulunca denetim başlar." notu. İlk rapor oluşturulunca
   plan kendiliğinden **Denetimde** olur, başlama zamanı o an (hareket kaydına "Denetime başlandı · ilk rapor oluşturuldu"). "Kabul edildi"
