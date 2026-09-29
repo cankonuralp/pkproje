@@ -134,7 +134,9 @@ Kurallar (reisim'in sözünden türeyen, ürün kuralı olarak):
   **şablon düzenleyici yoktur**. Gerekmeyen bölümler boş bırakılabilir. Bakanlık formatı zorunlu türlerde §4.8
   geçerlidir. Reisim: *"site üzerinden değil, kod ile manuel her firma için ayrı ayrı yapılıp yayınlanır ama bu
   şekilde olmak zorunda"*.
-- Rapor arşivi (reisim 2026-09-22): **5 yıl yeterli, sonra silinecek.** Bu, anayasa 4.12'nin istisnasıdır ve
+- Rapor arşivi (reisim 2026-09-22): **5 yıl yeterli, sonra silinecek.** → **2026-09-29 değişti (§9 otuz altıncı tur 185):** süre dolunca
+  kendiliğinden silme yok; **firma seçer** (Personel › Firma ayarları): sistemde kalsın · firmanın bulut arşivine taşınsın · silinsin. Silme bu
+  seçimle, anayasa 4.12'nin istisnası olarak kalır ve
   reisim'in açık kararıyla doğar; silme mekanizması (önce çöp kutusu + gecikmeli temizlik, geri alınabilir pencere)
   ayrı kalemde önerilecek. Mevzuat işverene "ekipman kullanıldığı sürece" der (4.7); işverenin kendi kopyası
   müşteri portalından indirilmiş PDF'tir.
@@ -1182,7 +1184,7 @@ tarih-saat, fotoğraflar, form) · **Eğitim kaydı** (personel, eğitim, belge,
    Sonuç: kaynak kodun tamamı ve buradaki ürün kurgusu kamuya açıktır; sır/anahtar asla koda yazılmaz, gerçek veri
    asla depoya girmez (CLAUDE.md §8 tarama kuralı). Kural dosyaları 2026-09-22'de kök klasöre taşındı ve
    yayımlandı; önceki ürünün alan adı ve gerçek müşteri adı metinden çıkarıldı.
-9. **8.9 Arka plan işleri — KARAR (2026-09-22):** kalibrasyon ve eğitim uyarıları, yedek, 5 yıl silme, toplu PDF
+9. **8.9 Arka plan işleri — KARAR (2026-09-22):** kalibrasyon ve eğitim uyarıları, yedek, 5 yıl sonrası (firmanın seçimiyle arşive taşıma ya da silme, 2026-09-29), toplu PDF
    için **PostgreSQL üstünde iş kuyruğu** (pg-boss). **Ayrı servis yok** — kurulum yükü doğurmaz. İhtiyaç doğan
    modülde kurulur.
 10. **8.10 Sigorta okuma — KARAR (2026-09-22):** elektrik panosu fotoğrafından sigorta bilgilerini okumak için
@@ -1856,13 +1858,51 @@ toplu imzada tek PIN), önce mobil; firma seçer; operatör sözleşmesini proba
 Maket sırası: (V1) teknik yönetici durum değiştir + revizeye gönder · (V2) son imza: mobil / e-imza (firma yöntemi) · (V3) iç belgelerde imza ·
 (V4) önceki raporun giderilmemiş hafif kusurları sonraki raporda · meslek uyarısı.
 
+**Otuz altıncı tur — ek (2026-09-29, reisim birebir):** *"185 i de ekle sonraki turun sorularını sor ve isteğe bağlı olsun ister silinsin
+ister arşivlensin"* → **185 makette** (§11 135): Personel › Firma ayarları › "5 yılı dolan raporlar": **Sistemde kalsın** (başlangıç; firma hiç
+seçmezse) · **Bulut arşivine taşınsın** (arşiv yeri girilir; boşsa raporlar sistemde kalır, uyarı) · **Silinsin** (30 gün önce liste, silinen 30
+gün geri alınabilir). Kendiliğinden silme yok.
+
+**Otuz yedinci tur — sorular (2026-09-29).** V1–V4 ve 185 makette; aşağıdakiler makette yaptığım varsayımlar ve sıradaki kararlar.
+- **189 · Maket onayı:** M1–M5 ve M13 onaylı; M6–M16, Talepler, Dökümanlar ve Firma ayarları toplu gözden geçirmede. Kod, hepsi onaylanınca tek
+  seferde. *Öneri:* akış sırasıyla tek tek kapatalım: Plan aç → Planlar / plan içi → saha raporu → Onaylar → Raporlar → Uyarılar → Ölçüm
+  cihazları → Zimmetler → Müşteriler → Teklifler → Sözleşmeler → Muhasebe → Performans → Talepler → Dökümanlar / Eğitimler → Personel ·
+  Firma ayarları; her birine "onaylıyorum" ya da düzeltme listesi.
+- **190 · Tüm raporlar ve vekil:** teknik yönetici "Tüm raporlar"da yalnız kendi branşını görüyor. Vekil olduğu branşın raporlarının da
+  durumunu değiştirip revizeye gönderebilsin mi? *Öneri:* evet, "Elektrik · vekil" seçiliyken o branşın tüm raporları.
+- **191 · Durum değiştirme = onay:** "Muayene uzmanı imzası"na alınan rapor, onayı teknik yönetici vermiş sayılıyor. *Öneri:* böyle kalsın;
+  raporun üstünde "Durum teknik yönetici tarafından değiştirildi · ad · zaman · gerekçe" şeridi görünsün.
+- **192 · Revize isteği:** revizeye yalnız teknik yönetici gönderiyor. Inspector tamamlanan raporda hata görürse? *Öneri:* inspector'da
+  "Revize iste" (gerekçe zorunlu) → Onaylar'da teknik yöneticinin önüne düşer; revizeye gönderen yine yönetici.
+- **193 · Revize sürümü müşteride:** R1 imzalanınca müşteri neyi görür? *Öneri:* yalnız son sürümü; eski sürüm firmada saklı kalır, yeni
+  sürümün üstünde "KM-…-R1, KM-… raporunun yerine geçer" yazar.
+- **194 · Yanıtsız mobil imza isteği:** telefondaki istek birkaç dakika geçerli. Yanıtlanmazsa? *Öneri:* süre dolunca rapor kendiliğinden
+  "Muayene uzmanı imzası"na döner, listede "imza isteğinin süresi doldu" görünür; inspector yeniden gönderir.
+- **195 · Mobil imza numarası:** istek hangi telefona gidecek? *Öneri:* personel kartında isteğe bağlı "Mobil imza telefonu" alanı; boşsa
+  mobil imzaya gönderilemez, uyarı çıkar (e-imza ya da indir-imzala-yükle açık kalır).
+- **196 · Zimmet formunu firma adına kim imzalar:** makette planlama ekibinden biri. *Öneri:* firma yöneticisinin seçtiği kişi (Firma
+  ayarları'nda "zimmet teslim eden"); başlangıç firma yöneticisi.
+- **197 · Saha formunda müşteri imzası:** müşteri yetkilisi kâğıda imza ve kaşe atıyor; bu kâğıt sistemde yok. *Öneri:* plan içinde
+  "İmzalı saha formunu yükle" (tarama; açılır, değiştirilir, silinir — zimmet formundaki gibi).
+- **198 · Talep reddi imzalı mı:** izin ve masraf onayı imzalı; ret gerekçeyle, imzasız. *Öneri:* böyle kalsın (ret bir belge onayı değil).
+- **199 · Kusur sınıfı olmayan türlerde önceki kusur:** devreden kusur yalnız Bakanlık formatı yürürlükteki türlerde (hafif kusur yalnız
+  orada var). Öteki türlerde önceki rapor "Kusurlu" ise? *Öneri:* aynı bölüm çıksın (Giderildi / Giderilmedi); giderilmeyen bu raporun
+  kusuru olur.
+- **200 · 5 yıl süresi ve başlangıç seçimi:** süre 5 yıl sabit; başlangıç seçimi "Sistemde kalsın". *Öneri:* 5 yıl taban, firma uzatabilir
+  (kısaltamaz); başlangıç seçimi böyle kalsın.
+- **201 · Arşive taşınan rapor:** *Öneri:* sistemde künyesi kalır (rapor no, ekipman, tarih, "arşivde · arşiv yeri"), dosyası arşivde;
+  müşteri portalından kalkar; firma isterse arşivden geri getirilir.
+- **202 · Firma ayarlarının yeri ve kapsamı:** şu an Personel içinde bir sekme (imza yöntemi, 5 yılı dolan raporlar). *Öneri:* böyle kalsın;
+  bugün maketlere dağılmış öteki firma ayarları da buraya toplansın: kalibrasyon uyarı eşiği (30 gün), "kontrolü yaklaşan" eşiği (30 gün),
+  plan açarken "kontrolü geliyor" aralığı (30 gün), fiyat listesi, rapor numarasının firma kodu, sabit giderler.
+
 **Açık kalanlar:** ~~Ana sayfada İSGGM duyuruları~~ (2026-09-27: makette eklendi; okuma işi uygulamada) (reisim 2026-09-26: *"Ana sayfada isgüm duyurularını gösterebilir miyiz ? Bunu
 yapılacaklar listesine ekle"*; öneri: ÇSGB İSGGM duyurular sayfası — https://www.csgb.gov.tr/isggm/duyurular/ — sunucuda günde birkaç kez
 okunur (pg-boss işi, §8.9), Ana sayfada son 5 duyuru başlık + tarih + kaynağa bağlantı; yalnız ekranda, bildirim yok; sayfa RSS vermiyorsa
 sayfa yapısı değişince okuma bozulabilir → okunamazsa sessiz kalmaz, "duyurular alınamadı" yazar; maket sırası Ana sayfa revizesinde) · **modül modül gözden geçirme** (M1–M5 ve M13 onaylandı — Ekipmanlar kalktı, Sözleşmeler birleşti; M6 Plan aç 2. tur incelemede) · **toplu maket çalışması** (M1–M16 + toplu bakış, `MAKET-PLANI.md`; sorular §3.6'da, 32'den) · **önizlemede örnek veri kipi** (öneri, §3.3) · ~~rol × modül görünürlüğü~~ (karar 2026-09-25: başlangıç düzeni + firma yöneticisi değiştirir) · **gerçek sunucunun sağlayıcısı**
 (Türkiye, §8.8) ·
-alan adının alınması · ~~e-imza yöntemi (8.4)~~ (2026-09-29: firma seçer, mobil imza ya da e-imza; makette V2) · v1 ekipman grupları · 5 yıl sonrası silme
-mekanizması · **zimmette birden çok cihaz varsa süzgeç** (§3) · ~~kontrol metodu standardının seçim yeri~~ (2026-09-27: ekipman türünde seçilir, raporda türden okunur) · **§3.1 ve §3.2'deki "öneri" maddeleri** (planlama saat dağıtımı,
+alan adının alınması · ~~e-imza yöntemi (8.4)~~ (2026-09-29: firma seçer, mobil imza ya da e-imza; makette V2) · v1 ekipman grupları · ~~5 yıl sonrası silme
+mekanizması~~ (2026-09-29: firma seçer; makette Firma ayarları) · **zimmette birden çok cihaz varsa süzgeç** (§3) · ~~kontrol metodu standardının seçim yeri~~ (2026-09-27: ekipman türünde seçilir, raporda türden okunur) · **§3.1 ve §3.2'deki "öneri" maddeleri** (planlama saat dağıtımı,
 revizyon, alan kopyalama, hafif kusur devri, meslek eşleşme denetimi).
 
 ## 10 · Kaynaklar (2026-09-18)
@@ -1888,6 +1928,14 @@ revizyon, alan kopyalama, hafif kusur devri, meslek eşleşme denetimi).
 - Emsal ürünler: https://opwire.app/iso-17020-periyodik-kontrol-yazilimi/ · https://17020muayene.vidco.com.tr/ · https://akuple.com/asansor-kontrol-yazilimi/ · https://ensyazilim.com/
 
 ## 11 · Değişiklik günlüğü
+- 2026-09-29 (135): **185 · 5 yılı dolan raporlar: firma seçer** (§9 otuz altıncı tur ek; reisim: *"isteğe bağlı olsun ister silinsin ister
+  arşivlensin"*). Personel › Firma ayarları'na ikinci bölüm: **Sistemde kalsın** (başlangıç) · **Bulut arşivine taşınsın** (arşiv yeri alanı;
+  boşken uyarı: "yeri girilene kadar süresi dolan raporlar sistemde kalır") · **Silinsin** (30 gün önce liste, silinen 30 gün geri alınabilir).
+  Seçim hemen geçerli, sayfalar arası kalıcı. §3 rapor arşivi maddesi, §8.9 ve CLAUDE.md §7 "otomatik silme" satırı bu karara göre
+  düzeltildi. Ayar eski maket kaydında yoksa "Sistemde kalsın" sayılır. Otuz yedinci turun soruları §9'da (189–202).
+  Ölçüm: m1 etkileşim 66/66 (yeni: varsayılan, arşiv yeri uyarısı, Silinsin, yeniden yüklemede kalıcı), m9 durum 176/176 · telefon 88/88;
+  tam ölçüm durum 2096/2096 · etkileşim 517/517 · telefon 1048/1048 · olumsuz 3/3; gözle 1920 ve 375.
+
 - 2026-09-29 (134): **V4 · Önceki kontrolden devreden hafif kusurlar · meslek uyarısı** (§9 otuz altıncı tur 187; reisim: *"diğer önerilerin
   uygundur"* → §3.2 öneri maddeleri karar). **Devreden hafif kusur:** ekipmanın bu rapordan önceki son imzalı raporu "Hafif kusurlu"ysa
   (yalnız kusur sınıflı, Bakanlık formatı yürürlükteki tür) saha raporunda **"Önceki kontrolden açık hafif kusurlar"** bölümü kendiliğinden

@@ -2,8 +2,8 @@
  "maket": "m1",
  "tarih": "2026-09-29",
  "arac": "tools/olc-bulut.mjs --etkilesim (başsız tarayıcı, 1920 açık tema; gen verilen denemede o genişlik)",
- "toplam": 65,
- "gecen": 65,
+ "toplam": 66,
+ "gecen": 66,
  "denemeler": [
   {
    "ad": "İzin talepleri: formun PDF'i açılır, e-posta talep edene",
@@ -332,6 +332,13 @@
    "gen": 1920,
    "sayfa": "maket/personel.html",
    "hash": "#/p/ea/zimmet-formu",
+   "gecti": true
+  },
+  {
+   "ad": "5 yılı dolan raporlar: varsayılan Sistemde kalsın; Arşiv seçilince yer alanı ve uyarı, yer girilince uyarı kalkar; Silinsin seçilir (sayfalar arası kalıcı)",
+   "gen": 1920,
+   "sayfa": "maket/personel.html",
+   "hash": "#/ayarlar",
    "gecti": true
   },
   {

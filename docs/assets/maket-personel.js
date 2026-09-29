@@ -579,7 +579,18 @@
       '<div role="radiogroup" aria-labelledby="a-b-imza">' + Object.keys(MV.IMZA_YONTEM).map(function (k) {
         var x = MV.IMZA_YONTEM[k];
         return '<label class="a-onay-kutusu"><input type="radio" name="ay-imza" data-imza-yontem value="' + k + '"' + (y.k === k ? " checked" : "") + "><span>" + x.ad + " — " + x.etiket + "</span></label>";
-      }).join("") + "</div></section>";   /* raporun son imzası ve iç belgeler bu yöntemle; indir-imzala-yükle yedek yol her zaman açık */
+      }).join("") + "</div></section>" +   /* raporun son imzası ve iç belgeler bu yöntemle; indir-imzala-yükle yedek yol her zaman açık */
+      /* 5 yıl dolan raporlar (185, 2026-09-29): firma seçer — sistemde kalsın · bulut arşivine taşınsın · silinsin */
+      (function () {
+        var sk = MV.saklama();
+        return '<section class="a-bolum" aria-labelledby="a-b-saklama"><div class="a-alt-bas"><h2 class="a-alt-baslik" id="a-b-saklama">5 yılı dolan raporlar</h2></div>' +
+          '<div role="radiogroup" aria-labelledby="a-b-saklama">' + Object.keys(MV.SAKLAMA).map(function (k) {
+            var x = MV.SAKLAMA[k];
+            return '<label class="a-onay-kutusu"><input type="radio" name="ay-saklama" data-saklama value="' + k + '"' + (sk.yontem === k ? " checked" : "") + "><span>" + x.ad + " — " + x.etiket + "</span></label>";
+          }).join("") + "</div>" +
+          (sk.yontem === "arsiv" ? MK.alan({ id: "ay-arsiv", etiket: "Arşiv yeri", girdi: '<input class="a-girdi" id="ay-arsiv" data-arsiv-yeri maxlength="200" value="' + kacis(sk.yer) + '" placeholder="Bulut sağlayıcısı ve klasör">',
+              uyari: sk.yer.trim() ? "" : "Arşiv yeri girilmedi: yeri girilene kadar süresi dolan raporlar sistemde kalır." }) : "") + "</section>";
+      })();
   }
   var izinBul = function (no) { return MV.IZINLER.filter(function (x) { return x.no === no; })[0]; };
 
@@ -761,6 +772,13 @@
   };
   document.addEventListener("change", function (e) {
     var t = e.target, r;
+    if (t.hasAttribute && t.hasAttribute("data-saklama")) {
+      MV.FIRMA.saklama = { yontem: t.value, yer: MV.saklama().yer }; ayarCiz(); var q = document.querySelector('[data-saklama][value="' + t.value + '"]'); if (q) q.focus();
+      MK.bildir("5 yılı dolan raporlar: " + MV.SAKLAMA[t.value].ad.toLocaleLowerCase("tr") + "."); return;
+    }
+    if (t.hasAttribute && t.hasAttribute("data-arsiv-yeri")) {   /* arşiv yeri: alandan çıkınca kaydedilir, uyarı güncellenir */
+      MV.FIRMA.saklama = { yontem: "arsiv", yer: t.value.trim() }; ayarCiz(); MK.bildir(t.value.trim() ? "Arşiv yeri kaydedildi." : "Arşiv yeri boş: süresi dolan raporlar sistemde kalır."); return;
+    }
     if (t.hasAttribute && t.hasAttribute("data-imza-yontem")) {
       MV.FIRMA.imza = t.value; ayarCiz(); var s = document.querySelector('[data-imza-yontem][value="' + t.value + '"]'); if (s) s.focus();
       MK.bildir("İmza yöntemi: " + MV.imzaYontem().ad + ". Raporlar ve iç belgeler bu yöntemle imzalanır."); return;

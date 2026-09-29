@@ -653,6 +653,15 @@
     mobil: { k: "mobil", ad: "Mobil imza", kisa: "mobil imza", etiket: "telefonda PIN, her belge ayrı", acik: "Her belge için telefona imza isteği gelir, PIN telefonda girilir." },
     eimza: { k: "eimza", ad: "E-imza", kisa: "e-imza", etiket: "kart ve imza aracı, tek PIN", acik: "Bilgisayardaki imza aracı açılır, kart PIN'i bir kez girilir; her belge ayrı imzalanır." }
   };
+  /* 5 yıl dolan raporlar (2026-09-29, §9 otuz altıncı tur 185; reisim: "5 yıl sonra silme olmasın firmaya göre belirlediği bulut sisteminde
+     arşive çekilsin isterse istemez ise silinsin" · "isteğe bağlı olsun ister silinsin ister arşivlensin"): firma ayarı. Kendiliğinden silme
+     yok; "Sil" seçilirse silinecekler 30 gün önce listelenir, silinen 30 gün geri alınabilir (185 önerisi). Ayar yoksa (eski kayıt) sistemde kalır. */
+  MV.SAKLAMA = {
+    kalsin: { k: "kalsin", ad: "Sistemde kalsın", etiket: "rapor silinmez, arşive de taşınmaz" },
+    arsiv: { k: "arsiv", ad: "Bulut arşivine taşınsın", etiket: "firmanın belirlediği arşive, sistemden kalkar" },
+    sil: { k: "sil", ad: "Silinsin", etiket: "30 gün önce liste, silinen 30 gün geri alınabilir" }
+  };
+  MV.saklama = function () { var x = MV.FIRMA.saklama || {}; return { yontem: MV.SAKLAMA[x.yontem] ? x.yontem : "kalsin", yer: x.yer || "", yil: 5 }; };
   MV.imzaYontem = function () { return MV.IMZA_YONTEM[MV.FIRMA.imza] || MV.IMZA_YONTEM.mobil; };
 
   /* ── EKİPMAN SİCİLİ (modül 7; M3) — kalıcı, tesise bağlı, kod firmada eşsiz (§3.5) ─────────────────────────────

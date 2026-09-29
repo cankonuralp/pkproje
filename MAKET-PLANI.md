@@ -258,3 +258,7 @@ Bütün maketler onaylanmadan kod yok.
   (önizleme = inen PDF, tek KÂĞIT mekanizması), formatın her verisi saha raporunda, **maket sayfalar arası kalıcı** (reisim her işlevi kendisi
   dener; "Denemeleri sıfırla" yan menüde). Kural: makette geçici çözüm olabilir, nihai kodda olmaz; rapor ekranı uygulama düzeninde, PDF
   düzeni yalnız final raporda. Son durum: 18 maket temiz (durum 1912 · etkileşim 440 · telefon 956). Bütün maketler onaylanmadan kod yok.
+- 2026-09-29: **otuz altıncı tur makette bitti** (pkproje.md §11 131–135): V1 teknik yönetici durum değiştir / revizeye gönder · V2 son imza
+  firmanın yöntemiyle (mobil imza / e-imza, Personel › Firma ayarları) · V3 iç belgeler mobil / e-imzayla · V4 devreden hafif kusur + meslek
+  uyarısı · 185 5 yılı dolan raporlar (sistemde kalsın / arşive / sil). Otuz yedinci tur soruları (189–202) pkproje.md §9'da. Kod, bütün
+  maketler onaylanınca tek seferde.

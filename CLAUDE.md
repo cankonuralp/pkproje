@@ -160,7 +160,8 @@ CI aynı zinciri her push'ta koşar (`.github/workflows/ci.yml`); main'de deneti
 - Deploy, `git push`, canlı veri, dış CDN, kalıcı herkese açık dosya bağlantısı, kök seviyesinde geniş izin.
 - Kiracı süzgeçsiz sorgu; "bellekteki her şeyi yaz" kaydetme; sessizce yutulan yazma hatası.
 - Reisim demeden bildirim kurma (anayasa 1.3); palet değiştirme/önerme (2.4); emoji ikon (2.5).
-- Otomatik silme: yalnız reisim'in verdiği **5 yıl arşiv** kuralı (pkproje.md §3), o da geri alınabilir pencereyle.
+- Otomatik silme: yalnız **5 yıl** dolan raporda ve yalnız **firma "Sil" seçtiyse** (Firma ayarları; arşive taşıma ya da sistemde bırakma da
+  seçilebilir — pkproje.md §3, 2026-09-29), o da önceden liste + geri alınabilir pencereyle.
 - Testi susturma/gevşetme; kırılan test tarih + gerekçeyle güncellenir.
 - "Kapandı" demeden kalem kalem sayım (0.10); ölçmeden "bitti" (11.7–11.8); tahmin yazma, "ölçemedim" yaz.
 
