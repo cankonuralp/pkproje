@@ -1973,6 +1973,13 @@ revizyon, alan kopyalama, hafif kusur devri, meslek eşleşme denetimi).
 - Emsal ürünler: https://opwire.app/iso-17020-periyodik-kontrol-yazilimi/ · https://17020muayene.vidco.com.tr/ · https://akuple.com/asansor-kontrol-yazilimi/ · https://ensyazilim.com/
 
 ## 11 · Değişiklik günlüğü
+- 2026-09-29 (159): **Y3 · Kontrol listesi Tamamla, en altta plan Tamamla** (§9 otuz sekizinci tur, düzeltme). Plan içinde iki adım:
+  Denetim adımının altında (ekipman ve rapor listelerinden sonra) **Tamamla** → "Kontrol listesi tamamlandı" (Denetim adımı ✓, plan
+  Denetimde kalır; "Kontrol listesini yeniden aç" ile geri alınır); ardından Tamamlama adımında **Tamamla** → plan Tamamlandı. Kontrol listesi
+  tamamlanmadan en alttaki Tamamla çıkmaz ("Kontrol listesi tamamlanınca plan buradan tamamlanır."). Telefondaki alt çubukta sıradaki Tamamla.
+  "Kabul edildi" durumu kalır (X3 böyle). Ölçüm: planlar 128/128 · 55/55 (2 yeni: iki adım + yenilemede kalıcı; yeniden aç) · 64/64;
+  gözle 1920 + 375.
+
 - 2026-09-29 (158): **Y2 · Inspector oluşturduğu raporu siler** (§9 otuz sekizinci tur, düzeltme; 2026-09-28'deki "silme yalnız yönetici"
   değişti). Plan içindeki rapor listesinde her **Yeni** raporun satırında Pasife al'ın yanında **Sil** (çöp kutusu), saha rapor ekranında
   Kaydet'in yanında **Sil**: düzenlenebilen her raporda (Yeni ya da geri gönderilmiş), onay penceresiyle; geri gönderilmiş raporda pencere

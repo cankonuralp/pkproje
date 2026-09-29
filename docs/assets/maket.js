@@ -337,7 +337,9 @@
   function planEylem(p) {   /* şu anki adımın tuşları — adımda ve telefonun alt çubuğunda aynı üretici */
     var sid = "a-plan-sebep-" + p.id;
     if (p.durum === "bekliyor") return tus("reddet", p, "Reddet", "", false, "a-tus-ikincil") + tus("kabul", p, "Kabul et", "check", !!p.eksik || !p.beyanOkundu, "", sid);
-    if (p.durum === "denetimde") return tus("tamamla", p, "Tamamla", "circle-check");
+    /* 2026-09-29 (reisim: "ekipman ekleme kısmında tamamla tuşu olsun diyince kontrol listesi tamamlandı desin sonra en aşağıda tamamla
+       yazsın ona tıklayınca komple tamamlandı olsun"): iki adım — Denetim'de kontrol listesi, en altta plan */
+    if (p.durum === "denetimde") return p.kontrolTamam ? tus("tamamla", p, "Tamamla", "circle-check") : tus("kontrol-tamamla", p, "Tamamla", "list-checks");
     if (p.durum === "tamam") return tus("geri-al", p, "Tamamlamayı geri al", "undo-2", false, "a-tus-ikincil") + tus("saha-formu", p, "Saha formu oluştur", "file-text");
     return "";
   }
@@ -468,8 +470,10 @@
     else a2 = adim(2, "tamam", "Kabul", tno(p.kabul),
       '<details class="a-ayrinti"><summary>Tarafsızlık beyanı onaylandı · beyanı gör</summary><blockquote class="a-beyan"><p>' + BEYAN + "</p></blockquote></details>");
     /* 3 · Denetim — kontrol listesi: ekipmanlar + raporlar (süzgeçli, 10'ar sayfalı) */
-    var a3durum = d === "tamam" ? "tamam" : (d === "kabul" || d === "denetimde") ? "aktif" : "bekliyor";
-    var a3ozet = p.basladi ? (d === "tamam" ? tno(p.basladi) + (p.bitti.slice(0, 10) !== p.basladi.slice(0, 10) ? " – " + tno(p.bitti) : "") : "Başladı: " + tno(p.basladi)) : "";
+    var kt = d === "denetimde" && !!p.kontrolTamam;   /* kontrol listesi tamamlandı, plan henüz değil */
+    var a3durum = d === "tamam" || kt ? "tamam" : (d === "kabul" || d === "denetimde") ? "aktif" : "bekliyor";
+    var a3ozet = kt ? "Kontrol listesi tamamlandı · " + tno(p.kontrolTamam)
+      : p.basladi ? (d === "tamam" ? tno(p.basladi) + (p.bitti.slice(0, 10) !== p.basladi.slice(0, 10) ? " – " + tno(p.bitti) : "") : "Başladı: " + tno(p.basladi)) : "";
     var kontrol = "";
     if (d === "kabul" || calisir(p)) kontrol =
       '<div class="a-alt-bolum"><div class="a-alt-bas"><h3 class="a-alt-baslik" id="a-ekipman-baslik">Ekipmanlar</h3><span class="a-sayac" id="a-sayac-e"></span>' +
@@ -486,10 +490,13 @@
     var a3 = adim(3, a3durum, "Denetim", a3ozet,
       (d === "red" ? '<p class="a-adim-not">Plan reddedildi; denetim yok.</p>' : "") +
       (d === "kabul" ? '<p class="a-adim-not">İlk rapor oluşturulunca denetim başlar.</p>' : "") +
-      kontrol);
+      kontrol +
+      (d === "denetimde" && !kt ? '<div class="a-adim-eylem"><p class="a-adim-not">' + (raporsuz ? raporsuz + " ekipmanın bu planda raporu yok." : "Bütün ekipmanların raporu açıldı.") + '</p><div class="a-adim-tuslar">' + eylem + "</div></div>"
+        : kt ? '<div class="a-adim-eylem">' + serit("onay", "circle-check", "Kontrol listesi tamamlandı.") + '<div class="a-adim-tuslar">' + tus("kontrol-geri", p, "Kontrol listesini yeniden aç", "undo-2", false, "a-tus-ikincil") + "</div></div>" : ""));
     /* 4 · Tamamlama */
-    var a4 = adim(4, d === "tamam" ? "tamam" : "bekliyor", "Tamamlama", d === "tamam" ? tno(p.bitti) : "",
-      d === "denetimde" ? '<div class="a-adim-eylem"><p class="a-adim-not">' + (raporsuz ? raporsuz + " ekipmanın bu planda raporu yok." : "Bütün ekipmanların raporu açıldı.") + '</p><div class="a-adim-tuslar">' + eylem + "</div></div>"
+    var a4 = adim(4, d === "tamam" ? "tamam" : kt ? "aktif" : "bekliyor", "Tamamlama", d === "tamam" ? tno(p.bitti) : "",
+      kt ? '<div class="a-adim-eylem"><p class="a-adim-not">Planı tamamlayın; plan Tamamlandı olur.</p><div class="a-adim-tuslar">' + eylem + "</div></div>"
+      : d === "denetimde" ? '<p class="a-adim-not">Kontrol listesi tamamlanınca plan buradan tamamlanır.</p>'
       : d === "tamam" ? '<div class="a-adim-eylem"><div class="a-adim-tuslar">' + eylem + "</div></div>" + sahaListe(p)
       : "");
     /* Proje notları (5. tur, reisim: "hareketler kısmını kaldır"): hareket kaydı tutulmaya devam eder (p.gecmis, denetim
@@ -616,7 +623,19 @@
   X.tekrar = function () { VERI = "dolu"; goster(false); };
   X.kabul = function (el) { var p = pl(el); if (p && p.durum === "bekliyor" && !p.eksik && p.beyanOkundu) { p.durum = "kabul"; p.kabul = simdi(); kaydet(p, simdi(), BEN, "Plan kabul edildi", "Tarafsızlık beyanı onaylandı"); goster(false); MK.bildir("Plan kabul edildi."); } };
   X.devam = function (el) { var p = pl(el); if (p) git(p.id); };
-  X.tamamla = function (el) { var p = pl(el); if (p && p.durum === "denetimde") { p.durum = "tamam"; p.bitti = simdi(); kaydet(p, simdi(), BEN, "Plan tamamlandı"); goster(false); MK.bildir("Plan tamamlandı."); } };
+  X["kontrol-tamamla"] = function (el) {
+    var p = pl(el); if (!p || p.durum !== "denetimde" || p.kontrolTamam) return;
+    p.kontrolTamam = simdi(); kaydet(p, simdi(), BEN, "Kontrol listesi tamamlandı"); goster(false);
+    var t = document.querySelector('#a-plan .a-adim-tuslar [data-eylem="tamamla"]'); if (t) t.focus();
+    MK.bildir("Kontrol listesi tamamlandı. Planı en alttaki Tamamla ile bitirin.");
+  };
+  X["kontrol-geri"] = function (el) {
+    var p = pl(el); if (!p || p.durum !== "denetimde") return;
+    p.kontrolTamam = null; kaydet(p, simdi(), BEN, "Kontrol listesi yeniden açıldı"); goster(false);
+    var t = document.querySelector('#a-plan .a-adim-tuslar [data-eylem="kontrol-tamamla"]'); if (t) t.focus();
+    MK.bildir("Kontrol listesi yeniden açıldı.");
+  };
+  X.tamamla = function (el) { var p = pl(el); if (p && p.durum === "denetimde" && p.kontrolTamam) { p.durum = "tamam"; p.bitti = simdi(); kaydet(p, simdi(), BEN, "Plan tamamlandı"); goster(false); MK.bildir("Plan tamamlandı."); } };
   X["geri-al"] = function (el) { var p = pl(el); if (p && p.durum === "tamam") { p.durum = "denetimde"; p.bitti = null; kaydet(p, simdi(), BEN, "Tamamlama geri alındı"); goster(false); MK.bildir("Tamamlama geri alındı; plan yeniden denetime açıldı."); } };
   X["rapor-olustur"] = function (el) {
     var p = pl(el);

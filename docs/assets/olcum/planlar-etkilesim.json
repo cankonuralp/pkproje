@@ -2,8 +2,8 @@
  "maket": "planlar",
  "tarih": "2026-09-29",
  "arac": "tools/olc-bulut.mjs --etkilesim (başsız tarayıcı, 1920 açık tema; gen verilen denemede o genişlik)",
- "toplam": 53,
- "gecen": 53,
+ "toplam": 55,
+ "gecen": 55,
  "denemeler": [
   {
    "ad": "Planlar listesi: müşteri adı kalın (≥ 600), proje adı normal (400)",
@@ -308,6 +308,20 @@
   },
   {
    "ad": "plan içinde Yeni raporda Sil: onayla → rapor plandan ve ortak kayıttan kalkar; gönderilmiş raporda Sil yok",
+   "gen": 1920,
+   "sayfa": "maket/planlarim.html",
+   "hash": "#/plan/1",
+   "gecti": true
+  },
+  {
+   "ad": "Denetim'de Tamamla → Kontrol listesi tamamlandı (plan Denetimde kalır); en alttaki Tamamla → plan Tamamlandı (sayfa yenilense de)",
+   "gen": 1920,
+   "sayfa": "maket/planlarim.html",
+   "hash": "#/plan/1",
+   "gecti": true
+  },
+  {
+   "ad": "Kontrol listesini yeniden aç → Denetim'in Tamamla tuşu geri gelir, en alttaki Tamamla kalkar",
    "gen": 1920,
    "sayfa": "maket/planlarim.html",
    "hash": "#/plan/1",
