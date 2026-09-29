@@ -157,7 +157,10 @@
     return (r.sigorta || []).some(function (x) { var h = linyeSonuc(r, x); return h && !h.uygun; }) || r.pd.some(function (x) { var h = MV.pdHesap(x); return h && !h.uygun; }) ||
       r.zi.some(function (x) { var h = MV.ziHesap(x); return h && !h.uygun; }) || r.nokta.some(function (n) { return noktaRcd(n) === false; });
   };
-  var uygunDegil = function (r) { return kusurlar(r).length > 0 || sinirDisi(r) || olcumKusur(r) || fonkKusur(r); };
+  /* önceki kontrolden devreden hafif kusurlar (V4, 2026-09-29): "Giderilmedi" denen bu raporun hafif kusuru olur */
+  var devreden = function (r) { return MV.devredenKusurlar(r.e.kod, r.olustu || MK.simdi()); };
+  var devam = function (r) { return devreden(r).filter(function (x) { return (r.devir || {})[x.id] === "devam"; }); };
+  var uygunDegil = function (r) { return kusurlar(r).length > 0 || sinirDisi(r) || olcumKusur(r) || fonkKusur(r) || devam(r).length > 0; };
   var elektrik = function (t) { return t.g === "elektrik"; };   /* pano sigortaları bölümü yalnız elektrik grubunda */
   var sigortali = function (r) { return elektrik(r.t) && (!r.F || !!r.F.gozle); };   /* topraklama formatında pano sigortası yok, ölçüm noktaları var */
   /* ZORUNLU ALANLAR (§3.8 kural 5; reisim 2026-09-28: "Gönder derken gelen uyarı ekranı olmasın sadece eğer zorunlu doldurulması gereken yerler
@@ -365,6 +368,7 @@
     (r.sigorta || []).forEach(function (x) { var h = linyeSonuc(r, x); if (h && !h.uygun) l.push(["6.1 · " + x.no + " " + x.devre, "Ağır kusur", h.neden.join("; ") + "."]); });
     r.pd.forEach(function (x) { var h = MV.pdHesap(x); if (h && !h.uygun) l.push(["6.2 · " + x.yer, "Ağır kusur", h.neden.join("; ") + "."]); });
     r.zi.forEach(function (x) { var h = MV.ziHesap(x); if (h && !h.uygun) l.push(["6.3 · " + x.yer, "Ağır kusur", h.neden.join("; ") + "."]); });
+    devam(r).forEach(function (x) { l.push([x.kriter + " (önceki kontrolden, " + x.rapor + ")", "Hafif kusur", x.aciklama]); });
     return l;
   }
   function kusurHtml(r) {
@@ -465,6 +469,13 @@
     S.pd = F && F.linye ? bolum(F.bolumler.fonksiyon + ".2", "r-bp", "Potansiyel dengeleme iletkenleri", satirHtml(r, oku, "pd")) : "";
     S.zi = F && F.linye ? bolum(F.bolumler.fonksiyon + ".3", "r-bz", "Zemin izolasyonu", satirHtml(r, oku, "zi")) : "";
     S.kusur = F ? bolum(F.bolumler.kusur, "r-bk", "Kusur açıklamaları", kusurHtml(r)) : "";
+    /* önceki kontrolden açık hafif kusurlar: her biri Giderildi / Giderilmedi; seçilmemesi gönderimi durdurmaz (kural uyarıdır) */
+    var dv = devreden(r);
+    S.devir = dv.length ? bolum("", "r-devir", "Önceki kontrolden açık hafif kusurlar", '<ol class="a-kusur-liste">' + dv.map(function (x, i) {
+        var d = (r.devir || {})[x.id] || "", sec = [["giderildi", "Giderildi"], ["devam", "Giderilmedi"]];
+        return "<li><b>" + kacis(x.kriter) + '</b><span class="a-alt-satir">' + kacis(x.aciklama) + " · " + x.rapor + " · " + MK.tarihYaz(x.tarih) + "</span>" +
+          '<div class="a-kriter-cevap">' + (oku ? okuGirdi("r-dv" + i, ad2(sec, d) || "—") : MK.secim({ id: "r-dv" + i, ad: "Önceki hafif kusur " + (i + 1), deger: d, secenekler: sec, ipucu: "Seçin" })) + "</div></li>";
+      }).join("") + "</ol>", '<span class="a-sayac"><b>' + dv.length + "</b> kusur</span>") : "";
     /* fotoğraflar, sonuç ve yorum her raporda (reisim 2026-09-27); topraklama formatında fotoğraf bölümü yok → ek */
     S.foto = bolum(F ? F.bolumler.foto || "Ek" : el ? 7 : 6, "r-b7", "Fotoğraflar", '<div class="a-fotolar' + (uyar(r, r.foto < 1) ? " a-alan-eksik" : "") + '">' + (oku ? "" : fotoMenu("foto-ekle")) + fotolar(r.foto, r.fotoAd, "", oku ? null : { eylem: "foto-sil" }) + "</div>");
     /* sonuç ve kanaat muayene kriterleri gibi seçmeli: Uygun · Uygun değil; seçilmezse gönderilince kriterlere göre konur (reisim 2026-09-27);
@@ -480,14 +491,16 @@
     S.yetkili = F ? bolum(F.bolumler.yetkili, "r-by", "Yetkili kişi", '<dl class="a-satirlar">' + satir("Ad soyad", kacis(p.ad)) + satir("Meslek", kacis(MV.meslekAd(p))) +
       satir("Yetkili kişi kayıt no", '<span class="a-kod">' + p.ekipnet + "</span>") + satir("Nüsha sayısı", String(MV.FIRMA.nusha)) + "</dl>") : "";
     var SIRA = !F ? ["firma", "ekipman", "cihaz", "kriter", "test", "sigorta", "foto", "sonuc", "not"]
-      : F.gozle ? ["firma", "ekipman", "termal", "cihaz", "kriter", "test", "sigorta", "pd", "zi", "kusur", "foto", "not", "sonuc", "yetkili"]
-      : ["firma", "ekipman", "cihaz", "tanim", "test", "kusur", "not", "sonuc", "yetkili", "foto"];
+      : F.gozle ? ["firma", "ekipman", "termal", "cihaz", "kriter", "test", "sigorta", "pd", "zi", "devir", "kusur", "foto", "not", "sonuc", "yetkili"]
+      : ["firma", "ekipman", "cihaz", "tanim", "test", "devir", "kusur", "not", "sonuc", "yetkili", "foto"];
     $("a-rapor").innerHTML = MK.kirinti([["Planlar", MK.adres(13, "#/")], [PL.plan || PL.ad, PL.pid ? MK.adres(13, "#/plan/" + PL.pid) : MK.adres(13, "#/")], [r.no]]) +
       '<div class="a-nesne-bas"><div class="a-nesne-kimlik"><div class="a-nesne-baslik"><h1 tabindex="-1">' + e.kod + " · " + kacis(t.ad) + "</h1>" + rozet(DURUM[r.durum]) + "</div>" +
         '<p class="a-nesne-alt">' + ikon("file-text", "a-ikon-kucuk") + '<span><span class="a-kod">' + r.no + "</span> · " + (F ? '<span class="a-kod">' + t.format + "</span> · " : "") + kacis(PL.ad) + " · " + kacis(MV.musteri(PL.m).kisa) + " · " + kacis(p.ad) + "</span></p></div>" +
         /* Ön izle (reisim 2026-09-28: "en sağ üstte ön izleme tuşu olmalı PDF çıktısını ön izleyebilmeliyim ön izle halinde PDF halini indirebilmeliyim") */
         '<div class="a-eylem-cubugu">' + MK.tus({ eylem: "on-izle", ad: "Ön izle", ikon: "eye", sinif: "a-tus-ikincil" }) + "</div></div>" +
       '<div class="a-uyari-serit">' +
+        /* meslek uyarısı (V4; §3.2 öneri 2c → karar): engel değil */
+        (!MV.meslekYetkili(r.kisi, t) ? MK.serit("uyari", "triangle-alert", "Mesleğiniz (" + kacis(MV.meslekAd(p)) + ") " + kacis(t.ad).toLocaleLowerCase("tr") + " için yetkili meslekler arasında değil. Rapor yazılabilir; teknik yönetici onayda görür.") : "") +
         (r.geri && !oku ? MK.serit("uyari", "undo-2", "<b>Geri gönderildi</b> · " + kacis(MV.kisi(r.geri.kim).ad) + " · " + MK.zamanYaz(r.geri.zaman) + ": “" + kacis(r.geri.gerekce) + "”") : "") +
         (oku ? MK.serit("bilgi", "lock", r.durum === "onayda" ? "Teknik yönetici onayında · " + kacis(yon.ad) + (r.gonderildi ? " · " + MK.zamanYaz(r.gonderildi) : "")
           : r.durum === "imzada" ? "İmzaya gönderildi" : r.durum === "imzali" ? "Tamamlandı · son imza atıldı, müşteriye açıldı" : "Muayene uzmanı imzası bekleniyor") : "") +
@@ -698,6 +711,7 @@
     var r = aktif(); if (/^r-kc\d+$/.test(id)) { r.kriter[+id.slice(4)].c = deger; degisti(r); ciz(id); }
     else if (id === "r-sonuc") { r.sonuc = deger; degisti(r); ciz(id); }
     else if (/^r-kd\d+$/.test(id)) { r.kriter[+id.slice(4)].derece = deger; degisti(r); ciz(id); }
+    else if (/^r-dv\d+$/.test(id)) { var x = devreden(r)[+id.slice(4)]; if (x) { (r.devir = r.devir || {})[x.id] = deger; degisti(r); ciz(id); } }
     else if (/^r-[ds]-/.test(id)) { r[id[2] === "d" ? "detay" : "tespit"][id.slice(4)] = deger; degisti(r); ciz(id); }
   };
   MK.onZaman = function (id, deger) {
@@ -827,7 +841,7 @@
     if (!kay) { kay = { no: r.no, kod: r.e.kod, tesis: r.e.tesis, plan: r.e.plan || null, kisi: r.kisi, olustu: r.olustu || r.bas, onay: null, imza: null }; MV.RAPORLAR.push(kay); }
     /* süreç geçmişi (2026-09-29, 35. tur 166): ilk gönderim ve her geri gönderme → yeniden gönderim (performansta "Düzeltme" adımı) */
     var gri2 = gri || kay.geri;
-    Object.assign(kay, { durum: "onayda", gonderildi: r.gonderildi, sonuc: sonucAdi(r), geri: null, ilkGonderim: kay.ilkGonderim || r.gonderildi,
+    Object.assign(kay, { durum: "onayda", gonderildi: r.gonderildi, sonuc: sonucAdi(r), geri: null, devir: JSON.parse(JSON.stringify(r.devir || {})), ilkGonderim: kay.ilkGonderim || r.gonderildi,
       duzeltmeler: (kay.duzeltmeler || []).concat(gri2 ? [{ geri: gri2.zaman, gonderim: r.gonderildi }] : []) });
     ciz(); window.scrollTo(0, 0); var h = document.querySelector("#a-rapor h1"); if (h) h.focus({ preventScroll: true });
     MK.bildir("Onaya gönderildi: " + MV.kisi(YON[r.t.b]).ad + ", " + MV.bransAd(r.t.b).toLocaleLowerCase("tr") + " branş yöneticisi." +

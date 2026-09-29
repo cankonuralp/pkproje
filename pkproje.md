@@ -1888,6 +1888,18 @@ revizyon, alan kopyalama, hafif kusur devri, meslek eşleşme denetimi).
 - Emsal ürünler: https://opwire.app/iso-17020-periyodik-kontrol-yazilimi/ · https://17020muayene.vidco.com.tr/ · https://akuple.com/asansor-kontrol-yazilimi/ · https://ensyazilim.com/
 
 ## 11 · Değişiklik günlüğü
+- 2026-09-29 (134): **V4 · Önceki kontrolden devreden hafif kusurlar · meslek uyarısı** (§9 otuz altıncı tur 187; reisim: *"diğer önerilerin
+  uygundur"* → §3.2 öneri maddeleri karar). **Devreden hafif kusur:** ekipmanın bu rapordan önceki son imzalı raporu "Hafif kusurlu"ysa
+  (yalnız kusur sınıflı, Bakanlık formatı yürürlükteki tür) saha raporunda **"Önceki kontrolden açık hafif kusurlar"** bölümü kendiliğinden
+  çıkar: her kusur (madde, açıklama, önceki rapor no ve tarihi) için **Giderildi / Giderilmedi**; "Giderilmedi" denen kusur bu raporun kusur
+  açıklamalarına "(önceki kontrolden, rapor no)" diye girer, sonuç önerisini etkiler, PDF'e geçer; seçilmemesi gönderimi durdurmaz. Seçim
+  onaya gönderilince ortak kayda gider; Onaylar'ın gözden geçirme özetinde "Önceki kontrolden N hafif kusur · x giderildi · y giderilmedi".
+  **Meslek uyarısı:** inspector'ın mesleği türün yetkili meslekleri arasında değilse saha raporunun üstünde uyarı şeridi ("Rapor yazılabilir;
+  teknik yönetici onayda görür"), Onaylar özetinde "Inspector: ad · meslek · bu türe yetkili meslekler arasında değil" (engel değil).
+  Denemelerde ZPKR02 bölüm sırası ET-1009'da devir bölümünü de içerir (önceki raporu hafif kusurlu; 2026-09-29).
+  Ölçüm: m8 etkileşim 80/80 (3 yeni), m9 40/40 (1 yeni); tam ölçüm durum 2088/2088 · etkileşim 516/516 · telefon 1044/1044 · olumsuz 3/3;
+  gözle 1920 ve 375 (devir bölümü, kusur listesine geçiş, meslek şeridi).
+
 - 2026-09-29 (133): **V3 · İç belgeler de mobil imza ya da e-imzayla** (§9 otuz altıncı tur 180; reisim: *"180 iç belge de de mobil ya da e
   imza olacak"*). Tek üretici **MK.imzaAl** (maket-ortak.js): firmanın yöntemiyle (Firma ayarları) her imzacı sırayla kendi PIN'ini girer —
   mobil imzada kendi telefonunda, e-imzada kendi kartıyla (makette telefon ekranı / imza aracı taklit; PIN 4–8 rakam, kısa PIN reddedilir,

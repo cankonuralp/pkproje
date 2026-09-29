@@ -118,6 +118,13 @@
       ts.length ? [true, ts.length + " test değeri · hepsi sınır içinde"] : null,
       [!gecti.length, b.cihaz.length + " ölçüm cihazı" + (gecti.length ? " · kalibrasyonu geçmiş: " + gecti.map(function (v) { return v.seri; }).join(", ") : " · kalibrasyonu geçerli")],
       [true, "2 fotoğraf"],
+      /* V4 (2026-09-29): önceki kontrolden devreden hafif kusurlar ve inspector'ın mesleği — ikisi de uyarı, engel değil */
+      (function () {
+        var dv = MV.devredenKusurlar(r.kod, r.olustu); if (!dv.length) return null;
+        var d = r.devir || {}, gm = dv.filter(function (x) { return d[x.id] === "devam"; }).length, gd = dv.filter(function (x) { return d[x.id] === "giderildi"; }).length;
+        return [!gm && gd === dv.length, "Önceki kontrolden " + dv.length + " hafif kusur · " + [gd ? gd + " giderildi" : "", gm ? gm + " giderilmedi" : "", dv.length - gd - gm ? (dv.length - gd - gm) + " işaretlenmedi" : ""].filter(Boolean).join(" · ")];
+      })(),
+      [MV.meslekYetkili(r.kisi, t), "Inspector: " + MV.kisi(r.kisi).ad + " · " + MV.meslekAd(MV.kisi(r.kisi)) + (MV.meslekYetkili(r.kisi, t) ? "" : " · bu türe yetkili meslekler arasında değil")],
       [true, "Sonuç ve kanaat: " + (/^Kusurlu|Ağır/.test(s) && MV.kusurSinifli(t) ? "giderilene kadar kullanılamaz" : "kullanılabilir")]
     ].filter(Boolean);
   }

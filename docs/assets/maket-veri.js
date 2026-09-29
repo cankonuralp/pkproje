@@ -979,6 +979,19 @@
     if (F) return hafif ? { kriter: "Tali pano TP-2 · RCD", aciklama: "Not-7: " + F.notlar[6] } : { kriter: "Kapı motoru — sevkiyat", aciklama: "Not-2: " + F.notlar[1] };
     return hafif ? { i: 2, kriter: kr[2], aciklama: "Madde 3'te okunabilirliği azaltan hasar." } : { i: 1, kriter: kr[1], aciklama: "Madde 2'de izin verilen sınırın üstünde aşınma." };
   };
+  /* DEVREDEN HAFİF KUSURLAR (2026-09-29, V4; §3.2 öneri maddesi → karar, §9 otuz altıncı tur 187): ekipmanın bu rapordan önceki son imzalı
+     raporu "Hafif kusurlu"ysa kusurları sonraki kontrolde kendiliğinden listelenir (Ek-III 1.9.1: hafif kusur bir sonraki periyodik kontrole
+     kadar giderilir); inspector her biri için "Giderildi" / "Giderilmedi" der. Yalnız kusur sınıflı (Bakanlık formatı yürürlükte) türde. */
+  MV.devredenKusurlar = function (kod, once) {
+    var e = MV.ekipman(kod), t = e && MV.tur(e.tur); if (!t || !MV.kusurSinifli(t)) return [];
+    var r = MV.RAPORLAR.filter(function (x) { return x.kod === kod && x.durum === "imzali" && x.olustu && (!once || x.olustu < once); })
+      .sort(function (a, b) { return a.olustu < b.olustu ? 1 : -1; })[0];
+    if (!r || !/Hafif/.test(r.sonuc || "")) return [];
+    var ok = MV.ornekKusur(t, true);
+    return [{ id: r.no + "-1", kriter: ok.kriter, aciklama: ok.aciklama, rapor: r.no, tarih: r.olustu.slice(0, 10) }];
+  };
+  /* inspector'ın mesleği türün yetkili meslekleri arasında mı (§3.2 öneri 2c → karar: uyarı, engel değil) */
+  MV.meslekYetkili = function (kisi, t) { var p = MV.kisi(kisi), m = p && MV.meslek(p.meslek); return !!m && m.g.indexOf(t.g) >= 0; };
   MV.acikUygunsuz = function (mid) { return MV.uygunsuzluklar(mid).filter(function (u) { return u.durum === "acik"; }).length; };
   /* ── TEKLİFLER (modül 11; M12, faz 2, 2026-09-24) — müşteri, tesis, kalem (ekipman türü × adet × birim fiyat), durum (§3.1).
      Fiyat listesi firma ayarı (ÖRNEK tutarlar, TL, KDV hariç); KDV %20. No T-AAYY-SIRA (proje no'nun düzeni; öneri). Plan açılan her tesisin

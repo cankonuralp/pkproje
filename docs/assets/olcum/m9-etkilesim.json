@@ -2,8 +2,8 @@
  "maket": "m9",
  "tarih": "2026-09-29",
  "arac": "tools/olc-bulut.mjs --etkilesim (başsız tarayıcı, 1920 açık tema; gen verilen denemede o genişlik)",
- "toplam": 39,
- "gecen": 39,
+ "toplam": 40,
+ "gecen": 40,
  "denemeler": [
   {
    "ad": "rapor sayfasında durum geçmişi yok",
@@ -206,6 +206,13 @@
    "gen": 1920,
    "sayfa": "maket/raporlar.html",
    "hash": "#/r/KM-0926-760-f535b",
+   "gecti": true
+  },
+  {
+   "ad": "onay özeti (V4): inspector mesleği ve önceki kontrolden devreden hafif kusur",
+   "gen": 1920,
+   "sayfa": "maket/onaylar.html",
+   "hash": "#/r/KM-0926-787-42b08",
    "gecti": true
   },
   {

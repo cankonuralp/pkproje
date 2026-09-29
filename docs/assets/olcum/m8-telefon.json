@@ -8,9 +8,81 @@
   390,
   430
  ],
- "toplam": 84,
- "temiz": 84,
+ "toplam": 92,
+ "temiz": 92,
  "durumlar": [
+  {
+   "ad": "önceki kontrolden açık hafif kusur (V4) · Giderilmedi seçildi",
+   "gen": 320,
+   "temiz": true,
+   "tasma": 0,
+   "disari": [],
+   "kucukAlan": [],
+   "alan": 37
+  },
+  {
+   "ad": "önceki kontrolden açık hafif kusur (V4) · Giderilmedi seçildi",
+   "gen": 360,
+   "temiz": true,
+   "tasma": 0,
+   "disari": [],
+   "kucukAlan": [],
+   "alan": 37
+  },
+  {
+   "ad": "önceki kontrolden açık hafif kusur (V4) · Giderilmedi seçildi",
+   "gen": 390,
+   "temiz": true,
+   "tasma": 0,
+   "disari": [],
+   "kucukAlan": [],
+   "alan": 37
+  },
+  {
+   "ad": "önceki kontrolden açık hafif kusur (V4) · Giderilmedi seçildi",
+   "gen": 430,
+   "temiz": true,
+   "tasma": 0,
+   "disari": [],
+   "kucukAlan": [],
+   "alan": 37
+  },
+  {
+   "ad": "meslek uyarısı (V4): inspector mesleği türe yetkili değil",
+   "gen": 320,
+   "temiz": true,
+   "tasma": 0,
+   "disari": [],
+   "kucukAlan": [],
+   "alan": 37
+  },
+  {
+   "ad": "meslek uyarısı (V4): inspector mesleği türe yetkili değil",
+   "gen": 360,
+   "temiz": true,
+   "tasma": 0,
+   "disari": [],
+   "kucukAlan": [],
+   "alan": 37
+  },
+  {
+   "ad": "meslek uyarısı (V4): inspector mesleği türe yetkili değil",
+   "gen": 390,
+   "temiz": true,
+   "tasma": 0,
+   "disari": [],
+   "kucukAlan": [],
+   "alan": 37
+  },
+  {
+   "ad": "meslek uyarısı (V4): inspector mesleği türe yetkili değil",
+   "gen": 430,
+   "temiz": true,
+   "tasma": 0,
+   "disari": [],
+   "kucukAlan": [],
+   "alan": 37
+  },
   {
    "ad": "elektrik raporu yarıda · kalibrasyonu geçmiş cihaz",
    "gen": 320,
