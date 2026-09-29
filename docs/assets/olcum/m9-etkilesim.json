@@ -2,8 +2,8 @@
  "maket": "m9",
  "tarih": "2026-09-29",
  "arac": "tools/olc-bulut.mjs --etkilesim (başsız tarayıcı, 1920 açık tema; gen verilen denemede o genişlik)",
- "toplam": 44,
- "gecen": 44,
+ "toplam": 46,
+ "gecen": 46,
  "denemeler": [
   {
    "ad": "rapor sayfasında durum geçmişi yok",
@@ -84,6 +84,20 @@
   },
   {
    "ad": "mobil imza: pencere kapansa da istekler telefonda; listeden Telefonda onayla ile sırayla (her biri ayrı PIN)",
+   "gen": 1920,
+   "sayfa": "maket/raporlar.html",
+   "hash": "#/",
+   "gecti": true
+  },
+  {
+   "ad": "194: telefonda yanıtsız kalan istek (Maket: yanıtsız bırak) → süresi doldu şeridi, rapor imza bekliyor; yeniden gönderilip onaylanınca şerit kalkar",
+   "gen": 1920,
+   "sayfa": "maket/raporlar.html",
+   "hash": "#/r/KM-0926-770-a99c1",
+   "gecti": true
+  },
+  {
+   "ad": "194: süresi dolan istek listede sayılır (imza bekleyen şeridinin üstünde)",
    "gen": 1920,
    "sayfa": "maket/raporlar.html",
    "hash": "#/",

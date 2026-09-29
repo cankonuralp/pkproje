@@ -1949,6 +1949,12 @@ revizyon, alan kopyalama, hafif kusur devri, meslek eşleşme denetimi).
 - Emsal ürünler: https://opwire.app/iso-17020-periyodik-kontrol-yazilimi/ · https://17020muayene.vidco.com.tr/ · https://akuple.com/asansor-kontrol-yazilimi/ · https://ensyazilim.com/
 
 ## 11 · Değişiklik günlüğü
+- 2026-09-29 (143): **W6 · 194 Yanıtsız mobil imza isteği** (§9 otuz yedinci tur). Telefona giden istek **5 dakika** geçerli; yanıtlanmazsa rapor
+  "Muayene uzmanı imzası"na döner: listede "N imza isteğinin süresi doldu … yeniden gönderin", rapor sayfasında "İmza isteğinin süresi doldu ·
+  gönderilme zamanı"; yeniden gönderilip imzalanınca kalkar. Gerçek uygulamada arka plan işi yapar; makette her çizimde denetlenir, maket saati
+  sabit olduğundan telefon ekranında **"Maket: yanıtsız bırak"** tuşu süreyi doldurur. Ölçüm: m9 durum 200/200 · etkileşim 46/46 (2 yeni) ·
+  telefon 100/100.
+
 - 2026-09-29 (142): **W5 · 193 Müşteride yalnız son sürüm** (§9 otuz yedinci tur). Müşteri paneli raporu `MV.musteriSurumu` ile görür: revize sürerken
   **önceki imzalı sürüm** (onay, imza, sonuç sürüm kaydından; numarası o sürümün), yeni sürüm imzalanınca **yalnız o** (KM-…-R1) ve rapor
   sayfasında "Bu rapor KM-…-R1, KM-… raporunun yerine geçer" şeridi; eski sürüm firmada saklı. Raporun görünen numarası tek yerden

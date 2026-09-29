@@ -58,9 +58,21 @@
     } },
     { k: "durum", baslik: "Durum", kart: "rozet", sira: 1, hucre: function (r) { return rozet(MV.raporDurum(r)); } }
   ];
+  /* 194 (2026-09-29): telefondaki imza isteği ISTEK_DK dakika geçerli; yanıtsız kalan istek süresi dolunca rapor imza beklemeye döner ve
+     "süresi doldu" görünür (gerçek uygulamada arka plan işi yapar; makette her çizimde denetlenir, maket saati sabit olduğundan telefon
+     ekranındaki "Maket: yanıtsız bırak" tuşu süreyi doldurur) */
+  var ISTEK_DK = 5;
+  var dk = function (a, b) { return (new Date(b + ":00Z") - new Date(a + ":00Z")) / 6e4; };
+  function sureDenetle() {
+    MV.RAPORLAR.forEach(function (r) {
+      if (r.durum === "imzada" && r.imzaGonderildi && dk(r.imzaGonderildi, MK.simdi()) >= ISTEK_DK) { r.durum = "onaylandi"; r.imzaSuresi = { gonderildi: r.imzaGonderildi }; r.imzaGonderildi = null; }
+    });
+  }
   function uyariCiz() {
-    var l = imzaBekleyen(), t = telefonda();
+    sureDenetle();
+    var l = imzaBekleyen(), t = telefonda(), sd = l.filter(function (r) { return r.imzaSuresi; });
     $("a-uyari").innerHTML = l.length || t.length ? '<div class="a-uyari-serit">' +
+      (sd.length ? MK.serit("uyari", "clock", "<b>" + sd.length + " imza isteğinin süresi doldu</b> (telefonda " + ISTEK_DK + " dakika içinde onaylanmadı); yeniden gönderin.") : "") +
       (l.length ? '<div class="a-serit a-serit-uyari">' + ikon("file-signature", "a-ikon-kucuk") + "<span><b>" + l.length + " rapor imzanızı bekliyor</b></span>" +
         MK.tus({ eylem: "imza-ac", ad: "İmzala (" + l.length + ")", sinif: "a-tus-ikincil a-serit-tus" }) + "</div>" : "") +
       (t.length ? '<div class="a-serit a-serit-bilgi">' + ikon("smartphone", "a-ikon-kucuk") + "<span><b>" + t.length + " imza isteği telefonunuzda bekliyor</b></span>" +
@@ -81,6 +93,7 @@
     return o.href ? '<a class="a-yuz" href="' + o.href + '">' + ic + "</a>" : '<div class="a-yuz">' + ic + "</div>";
   }
   function raporCiz(r) {
+    sureDenetle();
     if (!r || r.kisi !== BEN) {
       $("a-nesne").innerHTML = MK.kirinti([["Raporlar", "#/"]]) + '<h1 class="a-gizli" tabindex="-1">Rapor bulunamadı</h1>' +
         MK.bos({ ikon: "circle-alert", baslik: "Rapor bulunamadı", metin: "Bu adreste size ait rapor yok.", eylem: '<a class="a-tus a-tus-ikincil" href="#/">' + ikon("arrow-left", "a-ikon-kucuk") + "Raporlara dön</a>" });
@@ -100,6 +113,7 @@
             : MK.tus({ eylem: "revize-iste-ac", ad: "Revize iste", ikon: "file-pen-line", sinif: "a-tus-ikincil", veri: { no: r.no } })) : "") +
           (yeniden(r) ? '<a class="a-tus a-tus-birincil" href="' + raporEkrani(r) + '">' + ikon("pencil", "a-ikon-kucuk") + "Raporu düzenle</a>" : "") + "</div></div>" +
       '<div class="a-uyari-serit">' + MV.durumSerit(r) +
+        (r.imzaSuresi && r.durum === "onaylandi" ? MK.serit("uyari", "clock", "<b>İmza isteğinin süresi doldu</b> · " + MK.zamanYaz(r.imzaSuresi.gonderildi) + " gönderildi, " + ISTEK_DK + " dakika içinde onaylanmadı. Yeniden imzalayın.") : "") +
         (r.revizeIstek && r.durum === "imzali" ? MK.serit("bilgi", "file-pen-line", "<b>Revize isteğiniz teknik yöneticide</b> · " + kacis(yon.ad) + " · " + MK.zamanYaz(r.revizeIstek.zaman) + ": “" + kacis(r.revizeIstek.gerekce) + "”") : "") +
         (r.revizeRed && r.durum === "imzali" && !r.revizeIstek ? MK.serit("uyari", "file-pen-line", "<b>Revize isteği reddedildi</b> · " + kacis(MV.kisi(r.revizeRed.kim).ad) + " · " + MK.zamanYaz(r.revizeRed.zaman) + (r.revizeRed.gerekce ? ": “" + kacis(r.revizeRed.gerekce) + "”" : "")) : "") +
         (r.geri && r.durum === "taslak" ? MK.serit("uyari", "undo-2", "<b>" + (r.revizyonlar && r.revizyonlar[0] && r.revizyonlar[0].zaman === r.geri.zaman ? "Revizeye gönderildi (" + r.revizyonlar[0].ad + ")" : "Geri gönderildi") + "</b> · " + kacis(MV.kisi(r.geri.kim).ad) + ": “" + kacis(r.geri.gerekce) + "”") : "") +
@@ -148,7 +162,7 @@
       $("a-pencere-baslik").textContent = "Telefon · mobil imza isteği" + (l.length > 1 ? " (" + (W.i + 1) + " / " + l.length + ")" : "");
       $("a-pencere-govde").innerHTML = '<div class="a-telefon">' + MK.serit("bilgi", "smartphone", "Maket: telefonunuzdaki imza isteği") +
         '<p class="a-pencere-metin"><b>probata</b> · ' + r.no + " numaralı raporu imzalamak için mobil imza PIN'inizi girin.</p>" + pinHtml("Mobil imza PIN") + "</div>";
-      tus = MK.tus({ eylem: "tel-reddet", ad: "Reddet", sinif: "a-tus-ikincil" }) + MK.tus({ eylem: "tel-onayla", ad: "Onayla", ikon: "check" });
+      tus = MK.tus({ eylem: "tel-sure", ad: "Maket: yanıtsız bırak", sinif: "a-tus-ikincil" }) + MK.tus({ eylem: "tel-reddet", ad: "Reddet", sinif: "a-tus-ikincil" }) + MK.tus({ eylem: "tel-onayla", ad: "Onayla", ikon: "check" });
     } else if (W.adim === "arac") {   /* imza aracı (maket): kart okundu, PIN bir kez */
       $("a-pencere-baslik").textContent = "probata imza aracı";
       $("a-pencere-govde").innerHTML = MK.serit("bilgi", "usb", "Maket: bilgisayardaki imza aracı · kart takılı · " + kacis(ben.ad)) +
@@ -191,7 +205,7 @@
       MK.bildir(n + " rapor imzalandı, tamamlandı ve müşteriye açıldı."); return;
     }
     if (y.k === "eimza") { W.adim = "arac"; W.pin = ""; W.hata = ""; pencereCiz("#w-pin"); return; }
-    W.l.forEach(function (r) { r.durum = "imzada"; r.imzaGonderildi = zaman; });   /* mobil: her rapor ayrı istek, telefonda PIN */
+    W.l.forEach(function (r) { r.durum = "imzada"; r.imzaGonderildi = zaman; r.imzaSuresi = null; });   /* mobil: her rapor ayrı istek, telefonda PIN */
     W = { l: W.l.slice(), adim: "telefon", i: 0, pin: "", hata: "" }; listeCiz(); if (rota().v === "rapor") raporCiz(W.l[0]); pencereCiz("#w-pin");
     MK.bildir(W.l.length + " imza isteği telefonunuza gönderildi; her birini PIN ile onaylayın.");
   }
@@ -235,9 +249,13 @@
     $("a-pencere").close(); yenile(tek);
     MK.bildir(n + " rapor e-imzayla imzalandı (her biri ayrı), tamamlandı ve müşteriye açıldı.");
   };
+  X["tel-sure"] = function () {   /* maket: telefondaki istek yanıtlanmadan süresi dolar */
+    var r = W.l[W.i], d = new Date(MK.simdi() + ":00Z"); d.setUTCMinutes(d.getUTCMinutes() - ISTEK_DK - 1); r.imzaGonderildi = d.toISOString().slice(0, 16);
+    sureDenetle(); telefonSonraki(r, "imza isteğinin süresi doldu; rapor yeniden imzanızı bekliyor");
+  };
   X["tel-onayla"] = function () {
     if (pinYok()) return;
-    var r = W.l[W.i]; r.durum = "imzali"; r.imza = { zaman: MK.simdi(), yontem: "mobil" }; r.imzaGonderildi = null;
+    var r = W.l[W.i]; r.durum = "imzali"; r.imza = { zaman: MK.simdi(), yontem: "mobil" }; r.imzaGonderildi = null; r.imzaSuresi = null;
     telefonSonraki(r, "mobil imzayla imzalandı, müşteriye açıldı");
   };
   X["tel-reddet"] = function () {   /* telefonda reddedilen istek: rapor yeniden imza bekler */
