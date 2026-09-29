@@ -3,7 +3,8 @@
 > Bu dosya yalnız **bu projeye özgü** olanı taşır. Çalışma anayasası kopyalanmaz, referans verilir:
 > `ANAYASA.md` (14 bölüm, aynen bağlayıcı — **site yapma yöntemimizdir**; ürüne/siteye ait kararlar buraya
 > yazılmaz, onların yeri `pkproje.md`) · `TASARIM-KALIBI.md` (19 kural; yöntem bağlayıcı, sayılar bu projenin
-> kendi ölçümüyle belirlenecek) · `00–08-*.md`
+> kendi ölçümüyle belirlenecek) · `00–08-*.md` · **`09-SUNUCU-VE-VERI.md`** (bu projenin sunucu ve veri tasarrufu kuralları, onaylı
+> 2026-09-29; 00–08 ile çelişirse o geçerli)
 > (kuralların kod kanıtı, "Yeni projeye uyarlama" satırları) · `EKSIKLER-VE-ONERILER.md` (ilk günden kurulacaklar)
 > · `AKTARIM-NOTU.md` ve `YENI-PROJE-PROMPTU.md` (aktarımın kendi kaydı, tarihsel).
 > Alan bilgisi ve ürün kurgusu: `pkproje.md`. **Aktarım 2026-09-22'de tamamlandı, klasör kaldırıldı** (reisim:
@@ -66,7 +67,7 @@ pkproje/
   CLAUDE.md                 bu dosya
   pkproje.md                alan bilgisi · kurgu · kararlar · açık sorular
   MAKET-PLANI.md            toplu maket çalışmasının talimatı ve durumu (2026-09-24; bulut oturumu için)
-  ANAYASA.md · TASARIM-KALIBI.md · 00–08-*.md · EKSIKLER-VE-ONERILER.md
+  ANAYASA.md · TASARIM-KALIBI.md · 00–08-*.md · 09-SUNUCU-VE-VERI.md · EKSIKLER-VE-ONERILER.md
                             kural dosyaları (ANAYASA/KALIP'a madde yalnız reisim onayıyla eklenir)
   src/app/                  sayfalar (iş mantığı YOK): Planlar ana sayfa + modül başına bir rota klasörü (kayıtla birebir)
   src/modules/moduller.ts   MODÜL KAYDI — yan menünün ve rotaların tek kaynağı (15 modül, 6 grup, onaylı maketle aynı; 2026-09-25 Kullanıcılar Personel'e katıldı; 2026-09-26 Ekipmanlar planın içine; 2026-09-28 Talepler eklendi, Standartlar → Dökümanlar, Eğitimler Dökümanlar'ın içinde)

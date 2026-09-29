@@ -1155,6 +1155,7 @@ tarih-saat, fotoğraflar, form) · **Eğitim kaydı** (personel, eğitim, belge,
    android markete uygulama olarak çıkabilir bunu göz önünde bulundurarak kodlama yapacağız"* → raporlamanın **tamamı** (rapor açma, doldurma,
    fotoğraf, cihaz ekleme, kaydet, onaya gönder) çevrimdışı çalışır: kayıt cihazda saklanır, bağlantı gelince sırayla sunucuya gider; ekranlar
    ve iş kuralları mağaza uygulamasına (iOS / Android sarmalayıcı) taşınabilecek şekilde yazılır — öneri, kodlamada karara bağlanacak.
+   **Sunucu ve veri tasarrufu kuralları (2026-09-29, onaylı): `09-SUNUCU-VE-VERI.md`** — kod bu dosyaya göre yazılır, her madde kilit testiyle.
 2. **Veri:** PostgreSQL + satır seviyesi güvenlik (firma ve müşteri izolasyonu veritabanında) + dosya deposu
    (fotoğraf/PDF). Gerekçe: rapor arşivi ve süzme ilişkisel iş; dışa aktarım standart; güvenlik sunucuda.
    **2026-09-18 revizyon (reisim: "illa bir şey kurmaya gerek var mı? localhost ve yerel depolama"):** Supabase ve
@@ -1909,6 +1910,13 @@ Maket sırası (W): W1 196 zimmet formu teslim eden / alan · W2 190 vekil bran�
 "Revize iste" · W5 193 müşteride yalnız son sürüm · W6 194 yanıtsız mobil imza isteği süresi · W7 195 mobil imza telefonu · W8 197 imzalı saha
 formu yükle · W9 199 öteki türlerde önceki kusur · W10 200–201 5 yıl uzatma, arşivdeki rapor künyesi · W11 202 firma ayarları bir yerde.
 
+**Otuz yedinci tur — ek (2026-09-29, reisim birebir):** *"4.12 istisnası nedir"* → açıklandı; *"tamam o eski uygulama içindi bu uygulamanın
+ihtiyaçları farklı bu uygulamada thumbnaile vs de gerek yok bu arada veri tasarrufu ile de alakalı kurallarda eksik varsa onlarıda tamamla D kısmını
+okudum onayladım, elindeki işleri artık bana sormadan tek tek yapabilirsin"* → **Kararlar:** D bölümü **onaylandı** → bu projenin sunucu ve veri
+tasarrufu kuralları **`09-SUNUCU-VE-VERI.md`** (A dosya / gizli görüntüleme · B veri tasarrufu · C veri ömrü, arşiv, yedek · D yazma, eşzamanlılık ·
+E giriş, oturum, kiracı · F imza bütünlüğü · G arka plan, KVKK, e-posta, duman testi); **küçük kopya (thumbnail) üretilmez**; ANAYASA 4.12'ye
+bu projenin istisnası (185). W2–W11 sormadan sırayla.
+
 **Açık kalanlar:** ~~Ana sayfada İSGGM duyuruları~~ (2026-09-27: makette eklendi; okuma işi uygulamada) (reisim 2026-09-26: *"Ana sayfada isgüm duyurularını gösterebilir miyiz ? Bunu
 yapılacaklar listesine ekle"*; öneri: ÇSGB İSGGM duyurular sayfası — https://www.csgb.gov.tr/isggm/duyurular/ — sunucuda günde birkaç kez
 okunur (pg-boss işi, §8.9), Ana sayfada son 5 duyuru başlık + tarih + kaynağa bağlantı; yalnız ekranda, bildirim yok; sayfa RSS vermiyorsa
@@ -1941,6 +1949,13 @@ revizyon, alan kopyalama, hafif kusur devri, meslek eşleşme denetimi).
 - Emsal ürünler: https://opwire.app/iso-17020-periyodik-kontrol-yazilimi/ · https://17020muayene.vidco.com.tr/ · https://akuple.com/asansor-kontrol-yazilimi/ · https://ensyazilim.com/
 
 ## 11 · Değişiklik günlüğü
+- 2026-09-29 (138): **Sunucu ve veri tasarrufu kuralları: `09-SUNUCU-VE-VERI.md`** (§9 otuz yedinci tur ek; reisim D'yi onayladı, küçük kopya
+  çıktı, veri tasarrufu tamamlansın). D bölümü kural dosyasına taşındı ve bu yığına göre yazıldı; veri tasarrufuna eklenenler: yükleme öncesi
+  sıkıştırma (1600 px, %75), dosya bir kez iner, sunucuda sayfalı ve yalnız gereken sütunlar, sayılar özetten, canlı yoklama yok (en sık 60 sn,
+  sekme görünürken), gzip / brotli + karmalı dosyalara uzun önbellek, sahada açılışta yalnız o günün işi, çevrimdışı kuyruk tekrar göndermez,
+  toplu işler arka planda tek dosya, firma başına kullanım ölçümü, depo sürümleri ve kayıtlar sınırlı. ANAYASA 4.9 · 4.12 · 5.1'e bu projenin
+  hâli (gerekçeli), CLAUDE.md'ye dosya, EKSİKLER D "onaylandı". Kilitler kodla birlikte kurulur (her maddede kilit satırı).
+
 - 2026-09-29 (137): **W1 · 196 Zimmet formunda teslim eden / teslim alan** (§9 otuz yedinci tur cevap; reisim: *"zimmet formunda teslim eden
   teslim alan kısmı el ile girilebilsin, listeden personel girilebilsin"*). Zimmet formu sayfasında belgenin üstünde **Teslim** bölümü: iki alan,
   her biri personel listesinden seçilir ya da **"Listede yok — elle yaz"** ile ad yazılır; belge önizlemesi yazdıkça güncellenir. Elle seçilip

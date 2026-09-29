@@ -107,7 +107,12 @@ istemcide süzer (sessiz maliyet).
 
 ---
 
-## D · pkproje sunucu (backend) denetimi — 2026-09-29 · ONAY BEKLİYOR
+## D · pkproje sunucu (backend) denetimi — 2026-09-29 · ✅ ONAYLANDI → `09-SUNUCU-VE-VERI.md`
+
+> **2026-09-29, reisim:** *"o eski uygulama içindi bu uygulamanın ihtiyaçları farklı bu uygulamada thumbnaile vs de gerek yok bu arada veri
+> tasarrufu ile de alakalı kurallarda eksik varsa onlarıda tamamla D kısmını okudum onayladım"* → maddeler kural oldu ve
+> `09-SUNUCU-VE-VERI.md`'ye taşındı; **3. madde değişti** (küçük kopya üretilmez); veri tasarrufu maddeleri eklendi (09 · B); ANAYASA 4.9,
+> 4.12, 5.1'e bu projenin hâli yazıldı. Aşağıdaki metin denetimin tarihsel kaydıdır; geçerli olan 09'dur.
 
 Reisim (2026-09-29): *"bu rapor arşiv işleri backende giriyor ve backend kurallarımızı görmezden gelme, lazyload fotoğrafların gizli
 görüntülenmesi vs vs bir sürü kuralımız var dikkat et kurallarımız backend açısından eksik mi bi kontrol et"*.

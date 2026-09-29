@@ -223,6 +223,8 @@ uygula. Her madde ZOR KAZANILDI — hepsinin arkasında canlıda yaşanmış bir
 9. **Foto/dosya**: `compressImage` + ~240px thumb + `storagePlainUrl` + `secureBlobUrl`;
    ⛔ `getDownloadURL` YASAK ([[veri-tasarrufu-standart]] [[getblob-secure-download]]).
    Veri tasarrufu STANDART: bir daha sorma, her yeni özellikte otomatik uygula.
+   **pkproje (2026-09-29, reisim onayı):** bu yığındaki karşılığı `09-SUNUCU-VE-VERI.md` A ve B — **küçük kopya (thumb) üretilmez**
+   (reisim: *"bu uygulamada thumbnaile vs de gerek yok"*); yükleme öncesi sıkıştırma + geç yükleme + tek yetkili indirme ucu + oturum önbelleği.
 10. **Silme = çöp kutusu** (30 gün); yeni yükleme yolu açtıysan **öksüz süpürücüsünün
     referans setine** de ekle (bkz. 9.4).
 11. ⛔⛔ **AY/GÜN PARÇALI DEFTERDE "AÇIK" KAYIT TUTULAMAZ** (2026-09-08, kapı defteri).
@@ -239,6 +241,9 @@ uygula. Her madde ZOR KAZANILDI — hepsinin arkasında canlıda yaşanmış bir
 12. **VERİ ÖMRÜ**: belge/rapor/foto **ASLA otomatik silinmez** (reisim kararı). Otomatik
     temizlik yalnız çöp kutusu purge'ü (30 gün) ve kendini budayan sayaçlardır. Yeni bir
     "eskiyi temizle" işi ancak reisim söylerse yazılır ([[veri-omru-yedek]]).
+    **pkproje istisnası (reisim 2026-09-29, 185 — *"o eski uygulama içindi bu uygulamanın ihtiyaçları farklı"*):** 5 yılı dolan rapor yalnız
+    **firma "Silinsin" seçtiyse** silinir (30 gün önce liste · çöp kutusu 30 gün geri alınabilir · denetim izine kayıt); "Bulut arşivine
+    taşınsın" seçildiyse kopyala → özet doğrula → sonra kaynağı sil; seçim yoksa sistemde kalır. Ayrıntı `09-SUNUCU-VE-VERI.md` C.
 13. ⛔⛔ **LAZY DAL İNMEDEN PUAN/ÖZET HESAPLAMA — İYİMSER YALAN SÖYLER** (2026-09-08, OEE).
     `stops` inmeden hesaplayınca duruş 0 sayıldı, Kullanılabilirlik %100 ve OEE şişik çıktı,
     saniyeler sonra düştü. Üretim tarafındaki aynı gecikme puanı **0** gösterdiği için hemen
@@ -253,6 +258,8 @@ uygula. Her madde ZOR KAZANILDI — hepsinin arkasında canlıda yaşanmış bir
 1. ⛔ **`getDownloadURL` YASAK** — kalıcı public token üretir, link kaçarsa yetki kapısı yok.
    Dosya **yetki + App Check** ile `getBlob` üzerinden iner, `secureBlobUrl` ile gösterilir;
    listede ~240px thumb ([[getblob-secure-download]]).
+   **pkproje:** kapalı depo + tek indirme ucu (RLS altında sahiplik) + en çok 5 dk imzalı bağlantı, küçük kopya yok — `09-SUNUCU-VE-VERI.md` A.
+   Giriş, oturum çerezi (alt alan adına bağlı), CSRF / CSP, müşteri erişim katmanı: aynı dosya E.
 2. ⛔ **ÜÇÜNCÜ TARAFA VERİ GİTMEZ.** `api.qrserver.com` düşüş yolu ekipman kimliğini dışarı
    yolluyordu. Kütüphaneler **kendi sunucumuzda** (`/vendor/<ad>-<sürüm>.js`, immutable);
    CDN'e düşen yedek yol BIRAKMA ([[okutma-fazlari]]).
