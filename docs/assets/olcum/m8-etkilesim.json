@@ -2,8 +2,8 @@
  "maket": "m8",
  "tarih": "2026-09-29",
  "arac": "tools/olc-bulut.mjs --etkilesim (başsız tarayıcı, 1920 açık tema; gen verilen denemede o genişlik)",
- "toplam": 81,
- "gecen": 81,
+ "toplam": 82,
+ "gecen": 82,
  "denemeler": [
   {
    "ad": "önceki kontrolün hafif kusuru listelenir; Giderilmedi → bu raporun kusurlarına girer, sonuç önerisi Uygun değil",
@@ -195,7 +195,7 @@
    "gecti": true
   },
   {
-   "ad": "firma bilgileri satırları: tarih · saat · dakika ayrı, otomatik dolu, SGK DETSİS no, takip kontrol; metot seçilmez",
+   "ad": "firma bilgileri satırları: tarih · saat · dakika ayrı, otomatik dolu, SGK DETSİS no ekranda yok (2026-09-29), takip kontrol; metot seçilmez",
    "gen": 1920,
    "sayfa": "maket/rapor.html",
    "hash": "#/r/ET-1009",
@@ -469,6 +469,13 @@
   },
   {
    "ad": "Ön izle: seçilen madde sonucu ve kusur derecesi belgede",
+   "gen": 1920,
+   "sayfa": "maket/rapor.html",
+   "hash": "#/r/ET-1009",
+   "gecti": true
+  },
+  {
+   "ad": "SGK DETSİS no ekranda yok ama rapor PDF'inde tesis kaydından var (Ek-III zorunlu alanı; 2026-09-29)",
    "gen": 1920,
    "sayfa": "maket/rapor.html",
    "hash": "#/r/ET-1009",

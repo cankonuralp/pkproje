@@ -406,7 +406,9 @@
     var el = elektrik(t), no = function (k, v) { return F ? F.bolumler[k] : v; }, S = {};
     /* 1 · FİRMA BİLGİLERİ: türün rapor formatından bağımsız, her raporda aynı (reisim 2026-09-26); 2026-09-27 örnek ekranla: etiket solda,
        değer ya da alan sağda, satır satır; kontrol tarihleri de burada (ayrı "Kontrol bilgileri" bölümü kalktı). Kayıttan gelen değerler
-       (firma, e-posta, adres, SGK DETSİS no, İSG-KATİP ID, rapor no) raporda değişmez (160); telefon ve ekipman bölümü elle. */
+       (firma, e-posta, adres, İSG-KATİP ID, rapor no) raporda değişmez (160); telefon ve ekipman bölümü elle.
+       2026-09-29 (reisim: "Plan içeriğinde "SGK destis no:" ksımı yok olmalı"): SGK DETSİS no saha ekranında yok; tesis kaydından
+       rapor PDF'ine gider (Ek-III zorunlu alanı, maket-belge.js). */
     /* 2026-09-27 (reisim): firma adı, e-posta, telefon, adres, rapor no inspector'da DEĞİŞMEZ — plan açılırken planlamacı girer ya da
        kendiliğinden oluşur; yanlışsa planlamacı Müşteriler'den düzeltir, inspector "Güncelle" ile güncel bilgiyi çeker.
        Formatlı türde kontrol metodu (türden, yalnız standartlar) formattaki gibi bu bölümde: "Periyodik kontrol metodu ve kapsamı". */
@@ -421,7 +423,6 @@
         satir("Adres", kacis(PL.adres + ", " + PL.ilce + " / " + PL.il)) +
         satir("Rapor no", '<span class="a-kod">' + r.no + "</span>") +
         tarihAlan(r, oku, "rtarih", "Rapor tarihi", false) +
-        satir("SGK DETSİS no", '<span class="a-kod a-kod-uzun">' + PL.sgk + "</span>") +
         satir("İSG-KATİP sözleşme ID", isg ? '<span class="a-kod">' + isg.no + "</span>" : '<span class="a-uyari-metin">Yok</span>') +
         (F ? satir("Periyodik kontrol metodu ve kapsamı", kacis(MV.metotYazi(t))) : "") +
         metinAlan(r, oku, "bolumAd", "Ekipman bölümü", 60) + "</dl>",
