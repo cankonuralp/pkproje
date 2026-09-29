@@ -1842,6 +1842,20 @@ teslim formu, saha formu, izin ve masraf formu) de **mobil imza ya da e-imza** i
 yükleme yolu yedek olarak kalır mı, 177 ile birlikte sorulacak). **181** modül modül koda geçiş **yok**: her şey makette kalır, bütün maket
 bitince kod **tek seferde, olabildiğince düzgün** yazılır. 177, 179, 182–188 **cevap bekliyor** (reisim sonra bakacak).
 
+**Otuz altıncı tur — cevap (2026-09-29, reisim birebir):** *"Pages e şu an dokunma maketten devam edicez alan adı bulut gibi sistemler sonranın
+işi vakti gelince yaparız 5 yıl sonra silme olmasın firmaya göre belirlediği bulut sisteminde arşive çekilsin isterse istemez ise silinsin
+şeklinde yapacağız / herhangi bir süreçteki rapor imzalanıp tamamlanmış hariç teknik yönetici tarafından durumu değiştirilebilsin imzalanıp
+tamamlanan rapor revizeye gönderilebilsin diğer önerilerin uygundur"*
+→ **Kararlar:** **186** Pages'e dokunulmaz (örnek veri kipi yok); maketten devam. **182–183** sunucu, alan adı: vakti gelince. **185** 5 yıl
+sonra kendiliğinden silme **yok**: süre dolunca firma seçer — **firmanın belirlediği bulut arşivine taşınır** ya da **silinir** (firma
+ayarı; §3 ve §8.9'daki "5 yıl silme" bununla değişti). **Yeni:** **teknik yönetici** (branş yöneticisi) imzalanıp tamamlanmış dışındaki her
+raporun **durumunu değiştirebilir**; **imzalı (Tamamlandı) raporu revizeye gönderebilir** (revizyon: yeni sürüm, eski sürüm saklanır).
+**177, 179, 180a, 184, 187, 188** öneriler karar oldu: iki imza yolu da bizde (mobil imza operatöre doğrudan, e-imza AKİS + kendi imza aracımız,
+toplu imzada tek PIN), önce mobil; firma seçer; operatör sözleşmesini probata yapar; iç belgelerde ıslak imza + tarama yedek yol; ilk sürümde
+14 tür; §3.2 öneri maddeleri (7–10, 2c uyarı) karar, otomatik saat dağıtımı çıktı; zimmette çoklu cihazda inspector seçer.
+Maket sırası: (V1) teknik yönetici durum değiştir + revizeye gönder · (V2) son imza: mobil / e-imza (firma yöntemi) · (V3) iç belgelerde imza ·
+(V4) önceki raporun giderilmemiş hafif kusurları sonraki raporda · meslek uyarısı.
+
 **Açık kalanlar:** ~~Ana sayfada İSGGM duyuruları~~ (2026-09-27: makette eklendi; okuma işi uygulamada) (reisim 2026-09-26: *"Ana sayfada isgüm duyurularını gösterebilir miyiz ? Bunu
 yapılacaklar listesine ekle"*; öneri: ÇSGB İSGGM duyurular sayfası — https://www.csgb.gov.tr/isggm/duyurular/ — sunucuda günde birkaç kez
 okunur (pg-boss işi, §8.9), Ana sayfada son 5 duyuru başlık + tarih + kaynağa bağlantı; yalnız ekranda, bildirim yok; sayfa RSS vermiyorsa
