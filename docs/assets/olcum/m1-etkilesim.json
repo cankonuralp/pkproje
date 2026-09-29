@@ -2,8 +2,8 @@
  "maket": "m1",
  "tarih": "2026-09-29",
  "arac": "tools/olc-bulut.mjs --etkilesim (başsız tarayıcı, 1920 açık tema; gen verilen denemede o genişlik)",
- "toplam": 69,
- "gecen": 69,
+ "toplam": 70,
+ "gecen": 70,
  "denemeler": [
   {
    "ad": "İzin talepleri: formun PDF'i açılır, e-posta talep edene",
@@ -388,6 +388,13 @@
    "gen": 1920,
    "sayfa": "maket/personel.html",
    "hash": "#/izinler",
+   "gecti": true
+  },
+  {
+   "ad": "197: saha formları listede; imzalı tarama yüklenir, değiştirilir, silinir; Formu aç aynı numarayı açar",
+   "gen": 1920,
+   "sayfa": "maket/planlarim.html",
+   "hash": "#/plan/9",
    "gecti": true
   },
   {

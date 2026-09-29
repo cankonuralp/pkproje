@@ -636,6 +636,10 @@ a.a-yuz:hover { border-color: var(--kenar-alan); background: var(--zemin); }
 .a-kosul-tamam .a-ikon { color: var(--onay-yazi); }
 .a-kosul-eksik { color: var(--uyari-yazi); font-weight: 600; }
 .a-kosul-bilgi .a-ikon { color: var(--yazi3); }
+/* plan içi · oluşturulan saha formları (197, 2026-09-29): numara ve durum esner, tuşlar sağda; dar kapta alt satıra iner */
+.a-saha-liste { margin-top: 10px; }
+.a-saha-liste li { align-items: center; flex-wrap: wrap; }
+.a-saha-liste li > span:not(.a-dosya-kayit) { flex: 1 1 260px; min-width: 0; }
 
 /* FORM SAYFASI (kalıp 10: genişlik alanlara değil BÖLÜMLERE gider; bölüm en az 440 px, sığmazsa tek sütun) */
 .a-form-sayfa { display: grid; grid-template-columns: repeat(auto-fit, minmax(min(100%, 440px), 1fr)); gap: 16px; align-items: start; }

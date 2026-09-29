@@ -485,7 +485,7 @@
     /* 4 · Tamamlama */
     var a4 = adim(4, d === "tamam" ? "tamam" : "bekliyor", "Tamamlama", d === "tamam" ? tno(p.bitti) : "",
       d === "denetimde" ? '<div class="a-adim-eylem"><p class="a-adim-not">' + (raporsuz ? raporsuz + " ekipmanın bu planda raporu yok." : "Bütün ekipmanların raporu açıldı.") + '</p><div class="a-adim-tuslar">' + eylem + "</div></div>"
-      : d === "tamam" ? '<div class="a-adim-eylem"><div class="a-adim-tuslar">' + eylem + "</div></div>"
+      : d === "tamam" ? '<div class="a-adim-eylem"><div class="a-adim-tuslar">' + eylem + "</div></div>" + sahaListe(p)
       : "");
     /* Proje notları (5. tur, reisim: "hareketler kısmını kaldır"): hareket kaydı tutulmaya devam eder (p.gecmis, denetim
        izi) ama plan içinde gösterilmez; burada yalnız notlar. Kim yazar/görür: plandaki inspector'lar + planlama ekibi;
@@ -680,10 +680,43 @@
     var p = pl(el); if (!p || p.durum !== "tamam") return;
     p.sahaSayisi = (p.sahaSayisi || 0) + 1;
     var yapilan = raporlar(p).sort(function (a, b) { return a.no < b.no ? -1 : 1; }).map(function (r) { return SICIL[r.kod]; });
-    kaydet(p, simdi(), BEN, "Saha formu oluşturuldu", p.no + "-SF" + p.sahaSayisi);
+    kaydet(p, simdi(), BEN, "Saha formu oluşturuldu", p.no + "-SF" + p.sahaSayisi); goster(false);   /* plan içindeki saha formları listesi (197) */
     SAHA = { p: p, ekipmanlar: yapilan, no: p.no + "-SF" + p.sahaSayisi };
     $("a-pencere").dataset.kip = "saha"; $("a-pencere-baslik").textContent = "Saha formu · " + p.no;
     sahaCiz(); $("a-pencere").showModal(); $("a-pencere-govde").scrollTop = 0; $("a-pencere-alt").querySelector('[data-eylem="saha-indir"]').focus({ preventScroll: true });
+  };
+  /* oluşturulan saha formları (197, 2026-09-29): her biri açılır; uzmanların imzası (V3) ve müşterinin ıslak imzalı + kaşeli kâğıdının taraması
+     (yüklenir, açılır, değiştirilir, silinir — "yüklenilen şeyler düzenlenebilir silinebilir olmalı") */
+  function sahaListe(p) {
+    var n = p.sahaSayisi || 0, l = []; if (!n) return "";
+    for (var i = n; i >= 1; i--) l.push(p.no + "-SF" + i);
+    return '<ul class="a-kosullar a-saha-liste" aria-label="Saha formları">' + l.map(function (no) {
+      var im = (p.sahaImza || {})[no], tr = (p.sahaTarama || {})[no];
+      return '<li class="a-kosul-bilgi">' + ikon("file-text", "a-ikon-kucuk") + '<span><span class="a-kod">' + no + "</span> · uzman " + (im ? MV.IMZA_YONTEM[im.yontem].kisa : "imzasız") +
+        " · müşteri " + (tr ? "imzalı tarama yüklü" : "tarama yok") + "</span>" +
+        MK.tus({ eylem: "saha-ac", ad: "Formu aç", sinif: "a-tus-ikincil", veri: { id: p.id, no: no } }) +
+        (tr ? MK.dosyaAlan({ ad: tr, degistir: "saha-tarama", sil: "saha-tarama-sil", veri: { id: p.id, no: no } })
+          : MK.tus({ eylem: "saha-tarama", ad: "İmzalı taramayı yükle", ikon: "upload", sinif: "a-tus-ikincil", veri: { id: p.id, no: no } })) + "</li>";
+    }).join("") + "</ul>";
+  }
+  X["saha-ac"] = function (el) {
+    var p = pl(el); if (!p) return;
+    SAHA = { p: p, ekipmanlar: raporlar(p).sort(function (a, b) { return a.no < b.no ? -1 : 1; }).map(function (r) { return SICIL[r.kod]; }), no: el.dataset.no };
+    $("a-pencere").dataset.kip = "saha"; $("a-pencere-baslik").textContent = "Saha formu · " + el.dataset.no;
+    sahaCiz(); $("a-pencere").showModal(); $("a-pencere-govde").scrollTop = 0; $("a-pencere-alt").querySelector('[data-eylem="saha-indir"]').focus({ preventScroll: true });
+  };
+  X["saha-tarama"] = function (el) {
+    var p = pl(el), no = el.dataset.no; if (!p) return;
+    MK.dosyaSec({ kabul: ".pdf,image/*", enCokMB: 10, ornek: no.toLowerCase() + "-imzali.pdf" }, function (ad) {
+      var t = (p.sahaTarama = p.sahaTarama || {}); if (t[no] && t[no] !== ad) MK.dosyaSil(t[no]); t[no] = ad;
+      kaydet(p, simdi(), BEN, "İmzalı saha formu yüklendi", no); goster(false); MK.bildir(no + " imzalı taraması yüklendi.");
+    });
+  };
+  X["saha-tarama-sil"] = function (el) {
+    var p = pl(el), no = el.dataset.no; if (!p) return;
+    MK.onayla({ baslik: "Taramayı sil", metin: no + " imzalı saha formunun taraması silinir.", tamam: function () {
+      MK.dosyaSil(p.sahaTarama[no]); delete p.sahaTarama[no]; kaydet(p, simdi(), BEN, "İmzalı saha formu taraması silindi", no); goster(false); MK.bildir(no + " taraması silindi.");
+    } });
   };
   /* 2026-09-29 (V3): muayene uzmanları saha formunu firmanın yöntemiyle (mobil imza / e-imza) imzalar; imza planda form numarasıyla saklanır */
   var SAHA = null;
@@ -696,7 +729,7 @@
   X["saha-imzala"] = function () {
     var p = SAHA.p, no = SAHA.no;
     MK.imzaAl({ belge: no + " saha formu", imzacilar: p.ekip.map(function (k) { return KISI[k].ad; }), tamam: function (im) {
-      (p.sahaImza = p.sahaImza || {})[no] = im; kaydet(p, simdi(), BEN, "Saha formu imzalandı", no + " · " + MV.IMZA_YONTEM[im.yontem].kisa);
+      (p.sahaImza = p.sahaImza || {})[no] = im; kaydet(p, simdi(), BEN, "Saha formu imzalandı", no + " · " + MV.IMZA_YONTEM[im.yontem].kisa); goster(false);
       if (SAHA && SAHA.no === no && $("a-pencere").open) { sahaCiz(); $("a-pencere-alt").querySelector('[data-eylem="saha-indir"]').focus(); }
       MK.bildir(no + " " + MV.IMZA_YONTEM[im.yontem].kisa + " ile imzalandı; firma yetkilisinin imzası ve kaşesi kâğıtta.");
     } });

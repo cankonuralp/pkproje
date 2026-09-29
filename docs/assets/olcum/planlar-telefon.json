@@ -8,8 +8,8 @@
   390,
   430
  ],
- "toplam": 60,
- "temiz": 60,
+ "toplam": 64,
+ "temiz": 64,
  "durumlar": [
   {
    "ad": "plan 10 · son formatlarla açılmış plan (iç tesisat + topraklama), raporlar sonuçlu",
@@ -400,6 +400,42 @@
   },
   {
    "ad": "plan içi · saha formu",
+   "gen": 430,
+   "temiz": true,
+   "tasma": 0,
+   "disari": [],
+   "kucukAlan": [],
+   "alan": 5
+  },
+  {
+   "ad": "plan içi · saha formları listesi (imzalı tarama yüklü)",
+   "gen": 320,
+   "temiz": true,
+   "tasma": 0,
+   "disari": [],
+   "kucukAlan": [],
+   "alan": 5
+  },
+  {
+   "ad": "plan içi · saha formları listesi (imzalı tarama yüklü)",
+   "gen": 360,
+   "temiz": true,
+   "tasma": 0,
+   "disari": [],
+   "kucukAlan": [],
+   "alan": 5
+  },
+  {
+   "ad": "plan içi · saha formları listesi (imzalı tarama yüklü)",
+   "gen": 390,
+   "temiz": true,
+   "tasma": 0,
+   "disari": [],
+   "kucukAlan": [],
+   "alan": 5
+  },
+  {
+   "ad": "plan içi · saha formları listesi (imzalı tarama yüklü)",
    "gen": 430,
    "temiz": true,
    "tasma": 0,
