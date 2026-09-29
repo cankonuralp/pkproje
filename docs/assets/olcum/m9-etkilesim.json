@@ -76,7 +76,7 @@
    "gecti": true
   },
   {
-   "ad": "imza şeridi ve menü sayacı: 4 rapor",
+   "ad": "imza şeridi 4 rapor; menü balonu son imza bekleyenler (firma geneli, 35. tur 163)",
    "gen": 1920,
    "sayfa": "maket/raporlar.html",
    "hash": "#/",
@@ -125,7 +125,7 @@
    "gecti": true
   },
   {
-   "ad": "Onayla → sıradaki (bir önceki gönderilen) rapor açılır, sayaç 7",
+   "ad": "Onayla → sıradaki (bir önceki gönderilen) rapor açılır, menü balonu bir azalır",
    "gen": 1920,
    "sayfa": "maket/onaylar.html",
    "hash": "#/r/KM-0926-775-03cf4",

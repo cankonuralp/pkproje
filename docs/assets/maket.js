@@ -41,21 +41,9 @@
   /* tarafsızlık beyanı (TS EN ISO/IEC 17020 tarafsızlık ilkesi; kendi metnimiz) */
   var BEYAN = "Bu planı TS EN ISO/IEC 17020 kurallarına uygun, bağımsız ve tarafsız yürüteceğimi; muayene edilen kuruluşla tarafsızlığımı etkileyecek ticari, mali ya da kişisel bir ilişkim ve çıkar çatışmam olmadığını; sonuçları yalnız teknik bulgulara dayanarak doğru ve eksiksiz raporlayacağımı beyan ederim.";
 
-  var PLANLAR = [
-    { id: 1, no: "P-0926-031", ad: "Merkez Fabrika", musteri: "Ada Makina San. ve Tic. A.Ş.", adres: "Organize Sanayi Bölgesi 4. Cadde No: 12", ilce: "Gebze", il: "Kocaeli", tarih: "2026-09-23", bas: "09:00", bit: "12:30", ekip: ["mk", "ea"], m: 8, e: 4, yeni: 2, disarida: 2, durum: "denetimde", acildi: "2026-09-15T10:12", kabul: "2026-09-16T08:31", basladi: "2026-09-23T09:04", isg: { no: "S-2026-0412", onay: "2026-09-16" }, rap: { onayda: 3, taslak: 7 }, aciklama: "Kompresör odasına giriş için tesis güvenliğinden refakat istenecek." },
-    { id: 2, no: "P-0926-034", ad: "Depo 2", musteri: "Yıldız Ambalaj A.Ş.", adres: "Liman Caddesi No: 7", ilce: "Tuzla", il: "İstanbul", tarih: "2026-09-23", bas: "14:00", bit: "17:00", ekip: ["mk"], m: 5, e: 0, durum: "bekliyor", acildi: "2026-09-17T11:40", isg: { no: "S-2026-0431", onay: "2026-09-19" } },
-    { id: 3, no: "P-0926-036", ad: "Aktarma Merkezi ve Soğuk Hava Deposu", musteri: "Kuzey Lojistik ve Depolama Hizmetleri A.Ş.", adres: "Sanayi Caddesi No: 48, Aktarma Merkezi Girişi", ilce: "Çorlu", il: "Tekirdağ", tarih: "2026-09-24", bitTarih: "2026-09-25", bas: "08:30", bit: "16:30", ekip: ["mk", "ea", "bs"], m: 14, e: 6, disarida: 1, durum: "bekliyor", acildi: "2026-09-18T09:05", isg: { no: "S-2026-0440", onay: "2026-09-15" } },
-    { id: 4, no: "P-0926-038", ad: "Boyahane", musteri: "Mavi Tekstil Ltd.", adres: "Organize Sanayi Bölgesi 2. Sokak No: 5", ilce: "Çerkezköy", il: "Tekirdağ", tarih: "2026-09-25", bas: "09:00", bit: "13:00", ekip: ["mk", "ea"], m: 2, e: 7, durum: "bekliyor", acildi: "2026-09-19T14:22", isg: { no: "S-2026-0447", onay: "2026-09-25" }, eksik: "İSG-KATİP onayı 25.09.2026'da verilmiş; en geç 24.09.2026 olmalı." },
-    { id: 5, no: "P-0926-039", ad: "Döküm Hattı", musteri: "Akın Döküm San. Ltd.", adres: "Demir Çelik Caddesi No: 21", ilce: "Dilovası", il: "Kocaeli", tarih: "2026-09-26", bas: "10:00", bit: "12:00", ekip: ["mk"], m: 3, e: 0, durum: "bekliyor", acildi: "2026-09-20T10:48", isg: null, eksik: "Bu tesis için İSG-KATİP kaydı yok." },
-    { id: 6, no: "P-0926-035", ad: "Üretim Tesisi", musteri: "Ege Plastik A.Ş.", adres: "Organize Sanayi Bölgesi 1. Kısım No: 9", ilce: "Yunusemre", il: "Manisa", tarih: "2026-09-29", bas: "09:00", bit: "15:00", ekip: ["mk", "ea"], m: 7, e: 3, durum: "kabul", acildi: "2026-09-17T15:30", kabul: "2026-09-18T09:12", isg: { no: "S-2026-0436", onay: "2026-09-20" } },
-    { id: 7, no: "P-0926-037", ad: "Şantiye Deposu", musteri: "Kaya Yapı Malzemeleri Ltd.", adres: "Çevre Yolu Caddesi No: 3", ilce: "Başakşehir", il: "İstanbul", tarih: "2026-09-30", bas: "09:00", bit: "12:00", ekip: ["mk"], m: 2, e: 0, durum: "red", acildi: "2026-09-18T16:02", reddedildi: "2026-09-19T08:47", isg: { no: "S-2026-0444", onay: "2026-09-21" }, gerekce: "Aynı saatte başka tesiste denetimim var." },
-    { id: 8, no: "P-0926-028", ad: "Soğuk Hava Deposu", musteri: "Deniz Gıda Ltd.", adres: "Liman Yolu No: 15", ilce: "Pendik", il: "İstanbul", tarih: "2026-09-22", bas: "09:00", bit: "11:30", ekip: ["mk"], m: 4, e: 0, durum: "tamam", acildi: "2026-09-10T13:15", kabul: "2026-09-11T08:05", basladi: "2026-09-22T09:02", bitti: "2026-09-22T11:52", isg: { no: "S-2026-0405", onay: "2026-09-12" }, rap: { onayda: 3, taslak: 1 } },
-    /* 2026-09-28 (reisim: "planlar da en üstte sadece en son attığım PDF formatlara göre açılmış plan olsun"): yalnız elektrik iç tesisatı
-       (ZPKR02) ve AG topraklama (ZPKR01); raporları formata göre sonuçlu (Tamamlandı · Uygun, hafif kusurlu, ağır kusurlu, iki taslak).
-       Ekipman ve raporlar ortak veriden (MV.PLAN10_KODLAR, MV.RAPORLAR plan 10) — aynı kod, numara, durum. */
-    { id: 10, no: "P-0926-040", ad: "Enerji Merkezi", musteri: "Ada Makina San. ve Tic. A.Ş.", adres: "Organize Sanayi Bölgesi 4. Cadde No: 14", ilce: "Gebze", il: "Kocaeli", tarih: "2026-09-23", bas: "13:00", bit: "17:00", ekip: ["mk", "ea"], m: 0, e: 5, yeni: 1, durum: "denetimde", acildi: "2026-09-22T16:30", kabul: "2026-09-23T08:40", basladi: "2026-09-23T13:10", isg: { no: "S-2026-0451", onay: "2026-09-18" }, ortak: true, aciklama: "Yalnız Bakanlık formatlı türler: elektrik iç tesisatı (ZPKR02) ve AG topraklama (ZPKR01)." },
-    { id: 9, no: "P-0926-025", ad: "Değirmen", musteri: "Başak Un Değirmenleri A.Ş.", adres: "İstasyon Caddesi No: 30", ilce: "Lüleburgaz", il: "Kırklareli", tarih: "2026-09-21", bas: "13:00", bit: "16:00", ekip: ["mk", "ea"], m: 16, e: 8, durum: "tamam", acildi: "2026-09-08T10:30", kabul: "2026-09-09T07:58", basladi: "2026-09-21T13:05", bitti: "2026-09-21T16:20", isg: { no: "S-2026-0398", onay: "2026-09-10" }, rap: { onaylandi: 14, onayda: 8 } }
-  ];
+  /* plan listesi ortak veride (MV.PLANLAR, 2026-09-29): yan menü balonu her sayfada aynı listeden sayar (35. tur 163); kalıcılığı ortak veri
+     katmanı sağlar (MK.kaliciMV) */
+  var PLANLAR = MV.PLANLAR;
 
   /* ── NUMARA SİSTEMİ (pkproje.md §3.5, reisim kararı 2026-09-23) ────────────────────────────────────────
      Proje no  P-AAYY-SIRA        · planın açıldığı ay+yıl · SIRA firmada o ayın kaçıncı planı · sunucu verir.
@@ -125,9 +113,8 @@
   MV.PERSONEL.forEach(function (x) { if (!KISI[x.id]) KISI[x.id] = { ad: x.ad, brans: "", rol: "Inspector" }; });
   var turBul = function (k) { return KATALOG.filter(function (t) { return t.k === k; })[0] || MV.tur(k); };
   MK.kalici("planlar", function () {
-    return { planlar: PLANLAR, sicil: Object.keys(SICIL).map(function (k) { return Object.assign({}, SICIL[k], { tur: SICIL[k].tur.k }); }), raporSira: raporSira, kodSira: kodSira };
+    return { sicil: Object.keys(SICIL).map(function (k) { return Object.assign({}, SICIL[k], { tur: SICIL[k].tur.k }); }), raporSira: raporSira, kodSira: kodSira };
   }, function (d) {
-    PLANLAR.length = 0; d.planlar.forEach(function (p) { PLANLAR.push(p); });
     Object.keys(SICIL).forEach(function (k) { delete SICIL[k]; }); d.sicil.forEach(function (x) { x.tur = turBul(x.tur); SICIL[x.kod] = x; });
     raporSira = d.raporSira; kodSira = d.kodSira;
   });
@@ -327,10 +314,9 @@
     { k: "durum", baslik: "Durum", kart: "rozet", sira: 1, hucre: function (p) { return rozet(DURUM[p.durum]); } },
     { k: "eylem", baslik: "İşlem", gizliBaslik: true, kart: "eylem", sira: 9, hucre: listeEylem }
   ];
-  function menuSayi() { MK.menuSayi(13, VERI === "dolu" ? PLANLAR.filter(function (p) { return p.durum === "bekliyor"; }).length : 0); }
   function ciz() {
     var hepsi = VERI === "dolu" ? PLANLAR : [], tb = MK.taban("l", hepsi), liste = sirala(tb.filter(function (p) { return MK.cipGecer("l", p); }));
-    MK.cipCiz("l", tb); menuSayi();
+    MK.cipCiz("l", tb);
     if (VERI === "hata") { $("a-sayac").innerHTML = "—"; $("a-liste").innerHTML = bos("hata"); return; }
     $("a-sayac").innerHTML = MK.sayac("l", liste.length, hepsi.length);
     if (!hepsi.length) { $("a-liste").innerHTML = bos("yok"); return; }
@@ -440,7 +426,6 @@
     return i >= 0;
   }
   function planCiz(p) {
-    menuSayi();
     if (!p) { AKTIF = null; $("a-plan").innerHTML = '<nav class="a-kirinti" aria-label="Konum"><a href="#/">' + ikon("arrow-left", "a-ikon-kucuk") + "Planlar</a></nav>" +
       '<h1 class="a-gizli" tabindex="-1">' + (VERI === "hata" ? "Plan yüklenemedi" : "Plan bulunamadı") + "</h1>" + bos(VERI === "hata" ? "planHata" : "plan"); return; }
     if (!AKTIF || AKTIF.id !== p.id) { MK.suzgecSifirla("e"); MK.suzgecSifirla("r"); NOTLAR_ACIK = false; }   /* başka plana geçince süzgeçler sıfırlanır */
@@ -863,7 +848,7 @@
   /* pencere kapanınca adres plan içine döner (sunum çerçevesi #/plan/1/ekle ile açar) */
   $("a-ekle-pencere").addEventListener("close", function () { var r = rota(); if (r && r.ekle) history.replaceState(null, "", "#/plan/" + r.id); });
 
-  MK.kabuk({ modul: 13, kullanici: { bas: "MK", ad: "Mert Kaya", rol: "Inspector · Makine Mühendisi" }, sayac: { 13: "Kabul bekleyen plan" } });
+  MK.kabuk({ modul: 13, kullanici: { bas: "MK", ad: "Mert Kaya", rol: "Inspector · Makine Mühendisi" } });
   $("a-suzgec-kap").innerHTML = MK.suzgecHtml("l");   /* Planlar süzgeci de aynı üreticiden (kalıp 15) */
   MK.seciciCiz("l"); goster(false);
 })();

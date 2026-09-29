@@ -59,7 +59,7 @@
     { k: "durum", baslik: "Durum", kart: "rozet", sira: 1, hucre: function (r) { return rozet(MV.raporDurum(r)); } }
   ];
   function uyariCiz() {
-    var l = imzaBekleyen(); MK.menuSayi(14, l.length);
+    var l = imzaBekleyen();
     $("a-uyari").innerHTML = l.length ? '<div class="a-uyari-serit"><div class="a-serit a-serit-uyari">' + ikon("file-signature", "a-ikon-kucuk") +
       "<span><b>" + l.length + " rapor imzanızı bekliyor</b></span>" +
       MK.tus({ eylem: "imza-ac", ad: "İmzala (" + l.length + ")", sinif: "a-tus-ikincil a-serit-tus" }) + "</div></div>" : "";
@@ -144,7 +144,7 @@
     var tek = n === 1 ? W.l[0] : null;
     $("a-pencere").close();
     if (tek && rota().v === "rapor") raporCiz(tek); else listeCiz();
-    MK.menuSayi(14, imzaBekleyen().length);
+   
     MK.bildir(servis ? n + " rapor imzaya gönderildi; her biri ayrı imzalanır." : n + " rapor imzalandı, tamamlandı ve müşteriye açıldı.");
   }
 
@@ -201,7 +201,7 @@
   X["rapor-imza-sil"] = function (el) {
     var r = MV.rapor(el.dataset.no);
     MK.onayla({ baslik: "İmzalı PDF'i sil", metin: r.no + " imzalı PDF'i silinir; rapor yeniden muayene uzmanı imzası bekler ve müşteriye kapanır.", tamam: function () {
-      if (r.imzaDosya) MK.dosyaSil(r.imzaDosya); r.imzaDosya = null; r.imza = null; r.durum = "onaylandi"; raporCiz(r); MK.menuSayi(14, imzaBekleyen().length);
+      if (r.imzaDosya) MK.dosyaSil(r.imzaDosya); r.imzaDosya = null; r.imza = null; r.durum = "onaylandi"; raporCiz(r);
       var h = document.querySelector("#a-nesne h1"); if (h) h.focus(); MK.bildir(r.no + " imzalı PDF'i silindi; imza bekliyor.");
     } });
   };
@@ -226,6 +226,6 @@
   };
   $("a-pencere").addEventListener("close", function () { W = null; if (rota().pencere) history.replaceState(null, "", "#/"); });
 
-  MK.kabuk({ modul: 14, kullanici: { bas: "MK", ad: "Mert Kaya", rol: "Inspector" }, sayac: { 14: "İmzanızı bekleyen rapor" } });
+  MK.kabuk({ modul: 14, kullanici: { bas: "MK", ad: "Mert Kaya", rol: "Inspector" } });
   goster(false);
 })();

@@ -1814,6 +1814,13 @@ revizyon, alan kopyalama, hafif kusur devri, meslek eşleşme denetimi).
 - Emsal ürünler: https://opwire.app/iso-17020-periyodik-kontrol-yazilimi/ · https://17020muayene.vidco.com.tr/ · https://akuple.com/asansor-kontrol-yazilimi/ · https://ensyazilim.com/
 
 ## 11 · Değişiklik günlüğü
+- 2026-09-29 (130): **U4 · Planlar, Raporlar, Onaylar renkli balon** (§9 otuz beşinci tur 163). Tek yeşil sayı kalktı; balonlar öteki
+  modüllerle aynı: **Planlar** sarı = kabul bekleyen plan, kırmızı = plan günü gelmiş / geçmiş ve hâlâ kabul bekleyen · **Raporlar** sarı =
+  son imza bekleyen, kırmızı = onaydan 24 saati geçmiş · **Onaylar** sarı = onay bekleyen, kırmızı = gönderimden 24 saati geçmiş (süreler
+  başlangıç değeri, firma ayarı). Makette firma geneli sayılır; uygulamada kişinin kendi işleri (kabul edecek / imzalayacak inspector,
+  onaylayacak branş yöneticisi). Balonun her sayfada sayabilmesi için Planlar'ın plan listesi ortak veriye taşındı (`MV.PLANLAR`; Planlar
+  sayfası aynı listeyi kullanır, kalıcılığı ortak veri katmanı sağlar); kalıcı maket sürümü artırıldı. 2 yeni deneme, 3 güncellendi (eski
+  sayaç yerine balon). 18 maket temiz: durum 2008/2008 · etkileşim 496/496 · telefon 1004/1004 · olumsuz kanıt 3/3; menü 1920'de gözle.
 - 2026-09-29 (129): **U3 · Onaylayan tarafında talep PDF · e-posta** (§9 otuz beşinci tur 162). Talep PDF'i tek yerden açılır
   (`MB.talepPdfAc`): talep eden (Talepler) alıcıya, **firma yöneticisi** (Personel › İzin talepleri, her satırda "PDF") ve **muhasebe**
   (Muhasebe › Giderler, masraf formu penceresinde "PDF · e-posta") talep edene iletir; form aynı (firma formatı, durum ve onaylayan imza

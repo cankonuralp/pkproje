@@ -2,14 +2,21 @@
  "maket": "m10",
  "tarih": "2026-09-29",
  "arac": "tools/olc-bulut.mjs --etkilesim (başsız tarayıcı, 1920 açık tema; gen verilen denemede o genişlik)",
- "toplam": 10,
- "gecen": 10,
+ "toplam": 11,
+ "gecen": 11,
  "denemeler": [
   {
    "ad": "ara kontrol uyarıları listede (gecikmiş OC-009)",
    "gen": 1920,
    "sayfa": "maket/uyarilar.html",
    "hash": "#/?tur=ara",
+   "gecti": true
+  },
+  {
+   "ad": "Planlar, Raporlar, Onaylar balonları: bekleyen sarı, süresi geçen kırmızı; başka sayfada aynı",
+   "gen": 1920,
+   "sayfa": "maket/uyarilar.html",
+   "hash": "#/",
    "gecti": true
   },
   {

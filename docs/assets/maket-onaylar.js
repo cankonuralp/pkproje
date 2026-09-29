@@ -139,7 +139,7 @@
     var r = rota(), rp = r.no ? MV.rapor(r.no) : null;
     $("a-liste-gorunum").hidden = r.v !== "liste"; $("a-nesne").hidden = r.v === "liste";
     if (r.pasif) pasifCiz(); else if (r.v === "liste") { $("a-suzgec-kap").innerHTML = MK.suzgecHtml("o"); MK.suzgecKur("o"); } else onayCiz(rp);
-    MK.menuSayi(15, kuyruk().length);
+   
     document.title = (r.v === "rapor" ? (rp ? rp.no + " · onay" : "Rapor bulunamadı") : "Onaylar") + " · probata maket";
     if (odakla) { window.scrollTo(0, 0); var hh = document.querySelector("#a-icerik > :not([hidden]) h1"); if (hh) hh.focus({ preventScroll: true }); }
     if (r.pencere && rp && rp.durum === "onayda") pencereAc(rp); else if ($("a-pencere").open) $("a-pencere").close();
@@ -154,7 +154,7 @@
     MK.bildir(r.no + " onaylandı; muayene uzmanı imzasında, " + MV.kisi(r.kisi).ad + " imzalayınca tamamlanır." + (s ? " Sıradaki rapor açıldı." : " Kuyruk boş."));
   };
   X["onay-geri-al"] = function () {
-    var r = MV.rapor(rota().no); r.durum = "onayda"; r.onay = null; onayCiz(r); MK.menuSayi(15, kuyruk().length);
+    var r = MV.rapor(rota().no); r.durum = "onayda"; r.onay = null; onayCiz(r);
     var h = document.querySelector("#a-nesne h1"); if (h) h.focus(); MK.bildir(r.no + " onayı geri alındı; rapor yeniden kuyrukta.");
   };
   X["rapor-aktif"] = function (el) {
@@ -187,6 +187,6 @@
   MK.onGirdi = function (e) { if (W && e.target.id === "w-gerekce") W.gerekce = e.target.value; };
   $("a-pencere").addEventListener("close", function () { W = null; var r = rota(); if (r.pencere) history.replaceState(null, "", "#/r/" + r.no); });
 
-  MK.kabuk({ modul: 15, kullanici: { bas: "SY", ad: "Selin Yıldız", rol: "Mekanik yönetici · Inspector" }, sayac: { 15: "Onayınızı bekleyen rapor" } });
+  MK.kabuk({ modul: 15, kullanici: { bas: "SY", ad: "Selin Yıldız", rol: "Mekanik yönetici · Inspector" } });
   goster(false);
 })();

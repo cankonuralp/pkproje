@@ -2,8 +2,8 @@
  "maket": "planlar",
  "tarih": "2026-09-29",
  "arac": "tools/olc-bulut.mjs --etkilesim (başsız tarayıcı, 1920 açık tema; gen verilen denemede o genişlik)",
- "toplam": 48,
- "gecen": 48,
+ "toplam": 49,
+ "gecen": 49,
  "denemeler": [
   {
    "ad": "Durum: Denetimde süzgecinde en üstte son formatlarla açılmış plan (P-0926-040)",
@@ -273,6 +273,13 @@
   },
   {
    "ad": "beyan okundu → Kabul et → Kabul edildi",
+   "gen": 1920,
+   "sayfa": "maket/planlarim.html",
+   "hash": "#/plan/3",
+   "gecti": true
+  },
+  {
+   "ad": "plan kabul edilince Planlar balonu bir azalır; Onaylar sayfasında da aynı (35. tur 163)",
    "gen": 1920,
    "sayfa": "maket/planlarim.html",
    "hash": "#/plan/3",
