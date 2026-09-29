@@ -1794,9 +1794,20 @@ doğrularız, rapor **"Tamamlandı"** olur, müşteriye açılır. Araya başka 
 çıkmaz. Maliyet: inspector'ın mobil imza sertifikası (kişi operatörden alır); işlem başı operatör ücreti varsa sözleşmede netleşir; uzun
 süreli geçerlilik için **zaman damgası** yetkili sertifika sağlayıcısından (kontör, ücretli) önerilir. Toplu imzada her rapor **ayrı** imza
 isteğidir (her biri için PIN; operatörün toplu onay imkânı sözleşmede sorulur).
-- **177 · E-imza yolu:** *Öneri:* **doğrudan operatör bağlantısı** (üç operatörle uygulama sağlayıcı sözleşmesi, bizim kodumuzla imza
-  gömme ve doğrulama). Başlangıçta inspector'ların kullandığı operatör(ler)le başlanır, sonra öbürleri. Yedek yol: USB e-imzası olan için
-  "indir → imzala → yükle" (site imzayı doğrular). Aracı imza sitesi (imzayeri.com benzeri) **yok**.
+- **E-imza (USB kart) da aracısız** — reisim: *"Önerilerinden önce e imza içinde bir şey yapamaz mıyız mobil imzayı çözdük diye düşünüyorum,
+  ama e imza da imzayeri.com toplu imzalama özelliği sunuyor mesela"* → **Cevap: yapabiliriz.** Tarayıcı USB karta doğrudan erişemez (web'in
+  böyle bir yetkisi yok); aracı siteler de bilgisayara kendi küçük programını kurdurur. Biz **kendi imza aracımızı** yazarız: bilgisayara bir kez
+  kurulan küçük bir program (Windows; kartın kendi sürücüsüyle konuşur). Akış: Raporlar'da raporlar seçilir → **"Toplu imzala"** → program
+  açılır, imzalanacak raporların listesini gösterir → **PIN bir kez** girilir → her rapor **ayrı ayrı** imzalanır (raporlar birleşmez, karar 99)
+  → imzalar sunucumuza döner, PDF'lere biz gömeriz, doğrularız, raporlar "Tamamlandı". Dosya bizim sistemimizden çıkmaz, üçüncü site yok, işlem
+  başı ücret yok. Maliyeti bizde: programın yazılması ve bakımı, farklı kart sürücüleriyle deneme, programın **kod imzalama sertifikası**
+  (Windows imzasız programı engeller — reisim'in bilgisayarındaki Uygulama Denetimi de engelliyor, 2026-09-23 kaydı). Zaman damgası
+  mobil imzadaki gibi (kontör). Mobil imzada PIN her imza için ayrı girilir; **çok raporu tek PIN'le imzalamak USB kartla olur** → ofiste
+  toplu imza e-imzayla, sahada tek tek mobil imzayla.
+- **177 · İmza yolları:** *Öneri:* ikisi de bizde, aracı site yok: (a) **mobil imza** — operatörlere doğrudan bağlantı, "İmzaya gönder" →
+  telefonda PIN (saha, tek tek); (b) **e-imza** — kendi imza aracımız, "Toplu imzala" → tek PIN, her rapor ayrı imza (ofis). İlk sürümde
+  hangisi önce gelsin? *Öneri:* önce mobil imza (sahada en çok kullanılan), hemen ardından e-imza aracı; "indir → imzala → yükle" yedek
+  yol olarak kalır.
 - **178 · Inspector'ların mobil imzası:** inspector'lar hangi operatörde, hepsinde mobil imza var mı, firma zorunlu tutuyor mu? *Öneri:* her
   inspector'da mobil imza zorunlu olsun; personel kartında "mobil imza: operatör · telefon" alanı, yoksa uyarı (engel değil).
 - **179 · Sözleşmeyi kim yapar:** operatör sözleşmesini **probata (yazılım şirketi)** mı yapar, yoksa her muayene firması kendisi mi? *Öneri:*
