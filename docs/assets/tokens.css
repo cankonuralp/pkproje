@@ -74,6 +74,12 @@
   --cubuk-yazi: #F5F3EE;
   --cubuk-yazi2: #A8B7C1;
   --cubuk-secili: #18405A;
+  /* yan menü takip balonları — dolu, parlak; menü iki temada da koyu olduğu için değerler iki temada aynı ve paletin koyu tema
+     durum renkleri (reisim 2026-09-29: "Açık temada da parlak renk"; §11 125) */
+  --cubuk-hata: #F4A59C;
+  --cubuk-uyari: #F2C46B;
+  --cubuk-onay: #45CC9E;
+  --cubuk-durum-yazi: #0F2A3D;
   --golge-1: 0 1px 2px rgba(15, 42, 61, .06), 0 1px 1px rgba(15, 42, 61, .04);
   --golge-2: 0 8px 28px rgba(15, 42, 61, .16);
   --perde: rgba(15, 42, 61, .42);
@@ -109,6 +115,10 @@
   --cubuk-yazi: #F5F3EE;
   --cubuk-yazi2: #93A6B3;
   --cubuk-secili: #0F2A3D;
+  --cubuk-hata: #F4A59C;
+  --cubuk-uyari: #F2C46B;
+  --cubuk-onay: #45CC9E;
+  --cubuk-durum-yazi: #0F2A3D;
   --golge-1: 0 1px 2px rgba(0, 0, 0, .35);
   --golge-2: 0 10px 32px rgba(0, 0, 0, .55);
   --perde: rgba(3, 10, 16, .66);
@@ -144,6 +154,10 @@
     --cubuk-yazi: #F5F3EE;
     --cubuk-yazi2: #93A6B3;
     --cubuk-secili: #0F2A3D;
+    --cubuk-hata: #F4A59C;
+    --cubuk-uyari: #F2C46B;
+    --cubuk-onay: #45CC9E;
+    --cubuk-durum-yazi: #0F2A3D;
     --golge-1: 0 1px 2px rgba(0, 0, 0, .35);
     --golge-2: 0 10px 32px rgba(0, 0, 0, .55);
     --perde: rgba(3, 10, 16, .66);

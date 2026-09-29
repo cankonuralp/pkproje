@@ -8,6 +8,7 @@ import { paletOlc } from "../tools/palet-olc.mjs";
 test("iki temada her yazı/zemin çifti eşiği geçer", () => {
   // araç düz JavaScript (tools/); dönüş biçimi burada adlandırılır
   const { sonuc } = paletOlc() as unknown as { sonuc: { tema: string; anlam: string; oran: number; esik: number; gecti: boolean }[] };
-  assert.ok(sonuc.length >= 62, `yalnız ${sonuc.length} çift ölçüldü`);
+  assert.ok(sonuc.length >= 74,   /* 2026-09-29: 62 → 74 (yan menü balon renkleri, 6 çift × 2 tema) */
+    `yalnız ${sonuc.length} çift ölçüldü`);
   assert.deepEqual(sonuc.filter((s) => !s.gecti).map((s) => `${s.tema} · ${s.anlam}: ${s.oran.toFixed(2)} < ${s.esik}`), []);
 });

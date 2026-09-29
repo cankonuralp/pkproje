@@ -1195,7 +1195,7 @@ tarih-saat, fotoğraflar, form) · **Eğitim kaydı** (personel, eğitim, belge,
    (b) modül **başka modülün tablosuna doğrudan dokunmaz**, o modülün dışa açtığı fonksiyonları kullanır;
    (c) ortak çekirdek (veritabanı, kiracı çözümleme, yetki) `src/server/`'da; (d) sayfalar (`src/app/`) **iş
    mantığı taşımaz**.
-12. **8.12 Görsel kimlik — KARAR (reisim 2026-09-23):**
+12. **8.12 Görsel kimlik — KARAR (reisim 2026-09-23):** *(Ek 2026-09-29: yan menü durum renkleri `--cubuk-hata / -uyari / -onay / -durum-yazi`, paletin koyu tema değerleri, reisim onayı; §11 125.)*
    · **Ürün adı: probata.** Slogan: *Periyodik Kontrol Yönetimi*. Firma alt alan adları `<firma>.probata.com.tr`
      biçiminde düşünülür (alan adının alınması ayrı iş).
    · **Logo paketi:** `probata-logo/` (reisim hazırladı). SVG'ler yalnız yol/şekil taşır, yazılar eğriye çevrili;
@@ -1772,6 +1772,11 @@ revizyon, alan kopyalama, hafif kusur devri, meslek eşleşme denetimi).
 - Emsal ürünler: https://opwire.app/iso-17020-periyodik-kontrol-yazilimi/ · https://17020muayene.vidco.com.tr/ · https://akuple.com/asansor-kontrol-yazilimi/ · https://ensyazilim.com/
 
 ## 11 · Değişiklik günlüğü
+- 2026-09-29 (125): **Yan menü balonları açık temada da parlak** (reisim: *"Açık temada da parlak renk, 2 şu an iyi"* — 2: Performans
+  sütunları böyle kalır). Palet onayıyla (§8.12, anayasa 2.4) yan menüye dört renk değişkeni: `--cubuk-hata` #F4A59C · `--cubuk-uyari`
+  #F2C46B · `--cubuk-onay` #45CC9E · `--cubuk-durum-yazi` #0F2A3D — yeni renk değil, paletin koyu tema durum renkleri; yan menü iki temada da
+  koyu olduğu için değerler iki temada aynı. Tek kaynak `src/styles/tokens.css` + docs kopyası. Kontrast kilidi 62 → 74 çift (balon sayısı /
+  balon ≥ 4,5 · balon / menü zemini ≥ 3; en düşük 7,32). Balonlar bu değişkenleri kullanır (`maket.css`).
 - 2026-09-28 (124): **T10 · Personel kartında eğitimler** (§9 otuz dördüncü tur; reisim: *"eğitimler kısmı gitmiş … geri gelsin … her
   personelin kartında eğitimler de gözükmeli"*; Eğitimler modülü Dökümanlar içinde kalır — reisim: *"tamam benim hatam bu şekilde kalsın"*).
   Kartta **Eğitimler** bölümü (Zimmetindekiler'den sonra): kişinin güncel eğitim kayıtları — eğitim ve kurum, alındığı tarih, tekrar tarihi

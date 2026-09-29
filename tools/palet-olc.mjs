@@ -43,6 +43,11 @@ export const CIFTLER = [
   /* 4. tur: adım çizelgesi ve sayfalayıcı — grafik öğe, eşik 3 (WCAG 1.4.11); işaretin içindeki yazılar rozet çiftleriyle aynı */
   ["onay-yazi", "zemin", 3.0, "biten adımın çizgisi ve işareti / zemin"], ["vurgu", "zemin", 3.0, "şu anki adım işareti / zemin"],
   ["vurgu", "kart", 3.0, "seçili sayfa tuşu / kart"],
+  /* 2026-09-29 (reisim: "Açık temada da parlak renk"): yan menü takip balonları — balon içindeki sayı ve balonun menü zemininden ayrışması */
+  ["cubuk-durum-yazi", "cubuk-hata", 4.5, "kırmızı balon sayısı"], ["cubuk-durum-yazi", "cubuk-uyari", 4.5, "sarı balon sayısı"],
+  ["cubuk-durum-yazi", "cubuk-onay", 4.5, "yeşil balon sayısı"],
+  ["cubuk-hata", "cubuk-zemin", 3.0, "kırmızı balon / yan menü"], ["cubuk-uyari", "cubuk-zemin", 3.0, "sarı balon / yan menü"],
+  ["cubuk-onay", "cubuk-zemin", 3.0, "yeşil balon / yan menü"],
 ];
 
 function blokDegiskenleri(css, secici) {

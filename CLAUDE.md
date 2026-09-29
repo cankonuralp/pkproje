@@ -115,7 +115,7 @@ node tools/palet-olc.mjs
 ```bash
 node tools/sunum-uret.mjs
 ```
-İlki `src/styles/tokens.css`'teki (tek kaynak) gerçek renklerle bütün çiftlerin (şu an 62) WCAG kontrastını ölçer; aynı
+İlki `src/styles/tokens.css`'teki (tek kaynak) gerçek renklerle bütün çiftlerin (şu an 74) WCAG kontrastını ölçer; aynı
 ölçüm `tests/kontrast.test.ts` kilidinde. İkincisi sunumu tokens + `docs/assets/olcum.json`'dan üretir; sunum elle
 düzenlenmez. Maket ölçümü: `tools/olc-maket.js`.
 
@@ -144,7 +144,7 @@ CI aynı zinciri her push'ta koşar (`.github/workflows/ci.yml`); main'de deneti
 - **Kurulu kilitler (iskelet):** tip denetimi · lint · `fail 0` kapısı (betik + CI) · olumsuz kanıt (`tests/bozan/`,
   her kilide bir bozan) · CSS parantez / tanımsız değişken / çift seçici (cırcır) / değişken ezmesi · çift id · değişken
   tek kaynağı (src ↔ docs) · kalıp sayıları (kabuk eşikleri yalnız kalıp bantları; daraltma yalnız geniş bantta, uygulama +
-  maket) · ikonlar · menü = onaylı maket · rota = modül kaydı · kontrast (62 çift) ·
+  maket) · ikonlar · menü = onaylı maket · rota = modül kaydı · kontrast (74 çift) ·
   kiracı süzgeci (pg yalnız src/server/db; her kiracı tablosunda ENABLE + FORCE RLS + politika) · kiracı izolasyonu
   GERÇEK PostgreSQL'de (iki firma, WITH CHECK, uygulama rolü süper kullanıcı değil, göç idempotent).
 - Sonra: Playwright + erişilebilirlik (ilk ekranlar) · görsel regresyon (referans ekran) · hata alarmı (yayında;
