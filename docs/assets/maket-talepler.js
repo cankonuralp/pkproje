@@ -160,7 +160,7 @@
     var g = { no: MV.giderNo(d.tarih), tarih: d.tarih, tur: d.gtur, tutar: Math.round(n * 100) / 100, oran: +d.oran, is: d.is || null, kisi: BEN, aciklama: d.aciklama.trim(), belge: d.belge,
       kaynak: "form", durum: "bekliyor", gonderildi: MK.simdi(), odeme: null, onaylayan: null, kaydeden: BEN };
     MV.GIDERLER.push(g); listeCiz(); kayitliAc(g.no);
-    MK.bildir(g.no + " muhasebeye gönderildi" + (g.is ? " (" + g.is + ")" : " (genel masraf)") + "; onaylanınca ödenir.");
+    MK.bildir(g.no + " muhasebeye (" + MB.talepAlici("masraf").map(function (p) { return p.ad; }).join(", ") + ") gönderildi" + (g.is ? " (" + g.is + ")" : " (genel masraf)") + "; onaylanınca ödenir.");
   };
   X["geri-cek"] = function (el) {
     var t = talepler().filter(function (y) { return y.no === el.dataset.no; })[0]; if (!t || !bekliyor(t)) return;

@@ -1814,6 +1814,11 @@ revizyon, alan kopyalama, hafif kusur devri, meslek eşleşme denetimi).
 - Emsal ürünler: https://opwire.app/iso-17020-periyodik-kontrol-yazilimi/ · https://17020muayene.vidco.com.tr/ · https://akuple.com/asansor-kontrol-yazilimi/ · https://ensyazilim.com/
 
 ## 11 · Değişiklik günlüğü
+- 2026-09-29 (128): **U2 · Masraf formu Muhasebe rolüne; bordroyu yönetici + muhasebe görür** (§9 otuz beşinci tur 161, 174; reisim önerileri
+  kabul etti). Talep formatında alıcı rolü: izin → firma yöneticisi, **masraf → Muhasebe**; o rolde etkin kimse yoksa firma yöneticisi. Örnek
+  veride Muhasebe rolü Gizem Aksoy'da (Planlama + Muhasebe; UYDURMA). Muhasebe rolünün açıklaması: fatura / tahsilat, masraf onayı, maaş ve
+  bordro. Masraf gönderilince bildirim alıcının adını söyler. 1 yeni deneme. Ölçüm (değişen ekranlar): Personel durum 280/280 · telefon
+  140/140 · etkileşim 59/59; Talepler durum 80/80 · telefon 40/40 · etkileşim 12/12.
 - 2026-09-29 (127): **U1 · Performans: her rapor "Yeni"den sayılır, süreçte "Düzeltme" adımı** (§9 otuz beşinci tur 165, 166; reisim: *"yeni
   durumundan itibaren her rapor performansı etkiler, taslak diye bir aşamamız yok zaten"*). Sayılan rapor: pasife alınan dışında her rapor
   (önceden yalnız onaya gönderilmiş / imzalı). Rapor ortak kaydı süreç geçmişi taşır: **ilk gönderim** (geri gönderilince silinmez) ve

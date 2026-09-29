@@ -943,7 +943,7 @@
      Kayıt anı: her tıklama, yazma, seçim, adres değişimi ve bildirimden hemen sonra; sayfadan çıkarken. Yalnız bu tarayıcıda (sunucu yok);
      "Sıfırla" (yan menünün altı) tohum veriye döner. Tohum verinin yapısı değişince VERI_SURUM artırılır → eski kayıt kullanılmaz.
      ⛔ Yalnız makette: gerçek uygulamada kayıt sunucuda (pkproje.md §8), bu mekanizma koda taşınmaz. */
-  var DEPO_AD = "probata-maket", VERI_SURUM = "2026-09-29-1";
+  var DEPO_AD = "probata-maket", VERI_SURUM = "2026-09-29-2";
   var depo = (function () { try { var d = JSON.parse(localStorage.getItem(DEPO_AD) || "null"); return d && d.surum === VERI_SURUM ? d : null; } catch (e) { return null; } })() ||
     { surum: VERI_SURUM, mv: {}, modul: {} };
   var MVK = null, TABAN = {}, MODUL = {}, sifirlandi = false, yazZaman = null;

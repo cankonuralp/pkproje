@@ -2,8 +2,8 @@
  "maket": "talepler",
  "tarih": "2026-09-29",
  "arac": "tools/olc-bulut.mjs --etkilesim (başsız tarayıcı, 1920 açık tema; gen verilen denemede o genişlik)",
- "toplam": 11,
- "gecen": 11,
+ "toplam": 12,
+ "gecen": 12,
  "denemeler": [
   {
    "ad": "menüde Personel grubunda Talepler, etkin",
@@ -59,6 +59,13 @@
    "gen": 1920,
    "sayfa": "maket/talepler.html",
    "hash": "#/t/I-1026-001",
+   "gecti": true
+  },
+  {
+   "ad": "masraf formunun e-postası Muhasebe rolüne gider, izin firma yöneticisine (35. tur 161)",
+   "gen": 1920,
+   "sayfa": "maket/talepler.html",
+   "hash": "#/t/G-0926-006",
    "gecti": true
   },
   {

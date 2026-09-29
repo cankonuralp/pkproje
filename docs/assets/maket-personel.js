@@ -283,7 +283,7 @@
 
   /* ── MAAŞ VE BORDROLAR (2026-09-27, reisim: "personel ekranında maaşlar ve bordrolarda olacak oraya yüklenebilecek bordrolar") ──
      aylık bordro PDF'i + tutarları; maaş satırları son bordrodan; günlük maliyet iş kârlılığına girer (Muhasebe). Firma yöneticisi ve Muhasebe
-     rolü görür (VARSAYIM). */
+     rolü görür (reisim 2026-09-29, 35. tur 174). */
   var para = MV.para;
   var BORDRO_SUTUN = [
     { k: "ay", baslik: "Dönem", kart: "ust", sira: 1, hucre: function (b) { return "<span>" + MV.ayAd(b.ay) + '<span class="a-alt-satir">yüklendi ' + MK.tarihYaz(b.yuklendi) + "</span></span>"; } },

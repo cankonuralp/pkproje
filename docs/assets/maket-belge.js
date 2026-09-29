@@ -405,7 +405,7 @@
       metin: "Yukarıda belirtilen tarihler arasında izin kullanmak istiyorum. İzin dönüşü görevimin başında olacağım.",
       imzalar: [["Talep eden", function (x) { return { ad: MV.kisi(x.kisi).ad, zaman: x.gonderildi, onay: "gönderildi" }; }],
         ["Onaylayan", function (x) { return x.onaylayan ? { ad: MV.kisi(x.onaylayan).ad, zaman: x.karar, onay: x.durum === "red" ? "reddedildi" : "onaylandı" } : { ad: "Firma yöneticisi" }; }]] },
-    masraf: { kod: "MSR-01", baslik: "Masraf formu", alt: "Personel masraf bildirimi", alici: "yonetici",
+    masraf: { kod: "MSR-01", baslik: "Masraf formu", alt: "Personel masraf bildirimi", alici: "muhasebe",   /* 35. tur 161 */
       alanlar: [
         ["İş", function (x) { return x.is ? '<span class="a-kod">' + kacis(x.is) + "</span>" : "Genel (işe bağlı değil)"; }],
         ["Masraf tarihi", function (x) { return tno(x.tarih); }], ["Tür", function (x) { return kacis(MV.giderTur(x.tur).ad); }],
@@ -418,10 +418,11 @@
       imzalar: [["Talep eden", function (x) { return { ad: MV.kisi(x.kisi).ad, zaman: x.gonderildi, onay: "gönderildi" }; }],
         ["Onaylayan", function (x) { return x.onaylayan ? { ad: MV.kisi(x.onaylayan).ad, zaman: x.karar || null, onay: x.durum === "red" ? "reddedildi" : "onaylandı" } : { ad: "Muhasebe / firma yöneticisi" }; }]] }
   };
-  /* formun kime gideceği: formatın rolündeki etkin kişilerin e-postaları */
+  /* formun kime gideceği: formatın rolündeki etkin kişiler; o rolde kimse yoksa firma yöneticisi (reisim 2026-09-29, 35. tur 161: masraf
+     formu Muhasebe rolüne, izin firma yöneticisine) */
   MB.talepAlici = function (tip) {
-    var r = MB.TALEP_FORMAT[tip].alici;
-    return MV.PERSONEL.filter(function (p) { return p.durum === "etkin" && p.eposta && p.hesap && (p.hesap.roller || []).indexOf(r) >= 0; });
+    var rolde = function (r) { return MV.PERSONEL.filter(function (p) { return p.durum === "etkin" && p.eposta && p.hesap && p.hesap.durum !== "pasif" && (p.hesap.roller || []).indexOf(r) >= 0; }); };
+    var l = rolde(MB.TALEP_FORMAT[tip].alici); return l.length ? l : rolde("yonetici");
   };
   /* o = { tip: "izin" | "masraf", x (kayıt), durum ({ ad }) } */
   MB.talepFormu = function (o) {
