@@ -2061,6 +2061,13 @@ revizyon, alan kopyalama, hafif kusur devri, meslek eşleşme denetimi).
 - Emsal ürünler: https://opwire.app/iso-17020-periyodik-kontrol-yazilimi/ · https://17020muayene.vidco.com.tr/ · https://akuple.com/asansor-kontrol-yazilimi/ · https://ensyazilim.com/
 
 ## 11 · Değişiklik günlüğü
+- 2026-09-30 (182): **N6 · Günlük süre üst çubukta, açılır pencere** (§9 kırk birinci tur). Giriş yapan kişi denetçiyse ve mesai takibi açıksa
+  üst çubukta tek satır: saat · "Günlük süre" · harcanan / toplam dk (telefonda kısalır, 320'de yalnız harcanan). Basınca pencere: normal ve
+  mesai çubukları, rapor ekranında "Bu rapor: N dk", ayarların yeri. Plan içi ve rapordaki kalıcı çubuk kalktı; yalnız süre dolunca
+  "yeni rapor oluşturulamaz" şeridi (Rapor oluştur'un nedeni). Denetçinin Ana sayfasında "Günlük süre" yüzü (pencereyi açar). Herkesin süresi
+  kendi raporlarından. Mesai ayarı: Personel › Firma ayarları › Mesai takibi (aç / kapa, normal ve mesai dk; yalnız firma yöneticisi).
+  3 deneme gerekçeyle güncellendi, 1 yeni. Ölçüm: planlar 128/128 · 63/63 · 64/64; m8 184/184 · 107/107 · 92/92; m1, m9, talepler, m16,
+  m10 temiz; gözle 1920 + 375.
 - 2026-09-30 (181): **N5 · Yan menü balonları yalnız iş olunca, kişiye göre** (§9 kırk birinci tur). **Ölçüm cihazları:** yalnız süresi geçen
   (kırmızı) ve yaklaşan (sarı); yeşil "sorunsuz" kalktı. **Dökümanlar:** eğitim tekrarı geçen · yaklaşan (Personel'deki eğitim balonu buraya
   taşındı; eğitimler Dökümanlar'ın içinde). **Onaylar** giriş yapan kişiye göre: denetçiye kendi muayene uzmanı imzasını bekleyen raporlar;

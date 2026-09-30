@@ -104,7 +104,30 @@
     return TAKIP_RENK.filter(function (r) { return t[r[0]]; }).map(function (r) {
       return '<span class="a-balon ' + r[1] + '" title="' + t[r[0]] + " " + t.ad[r[0]] + '">' + t[r[0]] + '<span class="a-gizli"> ' + t.ad[r[0]] + "</span></span>"; }).join("");
   }
-  MK.takipCiz = function () { MENU.forEach(function (g) { g.ogeler.forEach(function (x) { var e = $("a-menu-takip-" + x[2]); if (e) { var h = takipHtml(x[2]); if (e.innerHTML !== h) e.innerHTML = h; } }); }); };
+  /* N6 (2026-09-30, reisim: "Günlük süre takibi … yukarıda satır gibi gözüksün açılıp kapatılabilsin sürekli ekranda olmasın pop-up gibi olsun
+     … her inspectorünki kendisi için hesaplansın"): üst çubukta giriş yapan denetçinin günlük süresi tek satır; basınca pencere (normal ve
+     mesai çubukları); mesai takibi kapalıysa ya da kişi denetçi değilse yok. Veri değişince yenilenir (MK.takipCiz ile). */
+  MK.mesaiUstCiz = function () {
+    var k = $("a-mesai-ust-kap"); if (!k || typeof MV === "undefined" || !MV.gunlukSure) return;
+    var p = MK.BEN && MV.kisi(MK.BEN), ok = p && p.hesap && p.hesap.roller.indexOf("inspector") >= 0 && MV.mesai().acik;
+    if (!ok) { if (k.innerHTML) k.innerHTML = ""; return; }
+    var g = MV.gunlukSure(MK.BEN), h = '<button class="a-mesai-ust' + (g.dolu ? " a-mesai-ust-dolu" : "") + '" type="button" data-eylem="mesai-ac" id="a-mesai-ust" aria-haspopup="dialog" aria-label="Günlük süre ' + (g.normal + g.mesai) + " / " + (g.m.normal + g.m.mesai) + ' dakika; ayrıntı">' +
+      ikon("clock", "a-ikon-kucuk") + '<span class="a-mesai-ust-ad">Günlük süre</span><span class="a-mesai-ust-sayi">' + (g.normal + g.mesai) + '<span class="a-mesai-ust-en"> / ' + (g.m.normal + g.m.mesai) + "</span> dk</span></button>";
+    if (k.innerHTML !== h) k.innerHTML = h;
+  };
+  MK.mesaiAc = function () {
+    var d = $("a-mesai-pencere");
+    if (!d) {
+      d = document.createElement("dialog"); d.className = "a-pencere a-pencere-mesai"; d.id = "a-mesai-pencere"; d.setAttribute("aria-labelledby", "a-mesai-pencere-baslik");
+      d.innerHTML = '<div class="a-pencere-bas"><h2 id="a-mesai-pencere-baslik">Günlük süre</h2><button class="a-ikon-tus" type="button" data-eylem="pencere-kapat" aria-label="Kapat">' + ikon("x") + "</button></div>" +
+        '<div class="a-pencere-govde" id="a-mesai-pencere-govde"></div><div class="a-pencere-alt"><button class="a-tus a-tus-ikincil" type="button" data-eylem="pencere-kapat">Kapat</button></div>';
+      document.body.appendChild(d);
+    }
+    $("a-mesai-pencere-govde").innerHTML = MK.mesaiCubugu(MK.BEN, MK.MESAI_BU != null ? MK.MESAI_BU : null) +
+      '<p class="a-ipucu">Raporların süresi ekipman türünün kontrol süresidir; önce normal süre, sonra mesai dolar. Süreler Personel › Firma ayarları › Mesai takibi\'nde.</p>';
+    d.showModal(); d.querySelector('.a-pencere-alt [data-eylem="pencere-kapat"]').focus();
+  };
+  MK.takipCiz = function () { MENU.forEach(function (g) { g.ogeler.forEach(function (x) { var e = $("a-menu-takip-" + x[2]); if (e) { var h = takipHtml(x[2]); if (e.innerHTML !== h) e.innerHTML = h; } }); }); MK.mesaiUstCiz(); };
   /* menü sayacı (ör. kabul bekleyen plan): 0 ya da gösterilmeyecekse gizli */
   MK.menuSayi = function (no, n) { var s = $("a-menu-sayi-" + no); if (s) { s.textContent = n || ""; s.hidden = !n; } };
 
@@ -156,6 +179,7 @@
         '<img class="a-ust-isaret a-isaret-acik" src="../marka/probata-isaret-renkli.svg" alt="probata" width="25" height="32">' +
         '<img class="a-ust-isaret a-isaret-koyu" src="../marka/probata-isaret-koyu-zemin.svg" alt="probata" width="25" height="32">' +
         '<div class="a-ust-bosluk"></div>' +
+        '<span class="a-mesai-ust-kap" id="a-mesai-ust-kap"></span>' +   /* N6: günlük süre satırı (denetçi) */
         '<button class="a-ikon-tus" type="button" data-eylem="tema" id="a-tema-tus" aria-label="Temayı değiştir">' +
           '<svg class="a-ikon a-tema-ay" aria-hidden="true"><use href="' + IKON + 'moon"/></svg><svg class="a-ikon a-tema-gunes" aria-hidden="true"><use href="' + IKON + 'sun"/></svg></button>' +
         /* kullanıcının kendi işlemleri (2026-09-28; reisim: "her kullanıcı profilinden yapacak masraf ve izin formu doldurmak gibi gerekli
@@ -169,6 +193,7 @@
       "</header></div>";
     document.body.insertBefore(kok, ana);
     kok.querySelector(".a-govde").appendChild(ana);
+    MK.mesaiUstCiz();
     /* süzgeç levhası (telefonda seçiciler) ve bildirim — her sayfada bir tane */
     document.body.insertAdjacentHTML("beforeend",
       '<dialog class="a-pencere" id="a-levha" aria-labelledby="a-levha-baslik"><div class="a-pencere-bas"><h2 id="a-levha-baslik">Süzgeç</h2>' +
@@ -584,6 +609,7 @@
     $("a-pdf-alt").querySelector(".a-tus-birincil").focus({ preventScroll: true });
   };
   MK.eylem = MK.eylem || {};
+  MK.eylem["mesai-ac"] = function () { MK.mesaiAc(); };   /* N6: günlük süre penceresi */
   MK.eylem["pdf-goster"] = function (el) { MK.pdfGoster({ dosya: el.dataset.dosya }); };
   /* İndir: seçilen gerçek dosya aynen iner; öteki her şey pencerede görünen kâğıdın PDF'i */
   MK.eylem["pdf-indir"] = function () {

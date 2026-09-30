@@ -16,7 +16,7 @@
   var saatFarki = function (a) { var d = (new Date(MK.simdi() + ":00") - new Date(a + ":00")) / 36e5; return d < 24 ? Math.max(1, Math.round(d)) + " saattir" : Math.round(d / 24) + " gündür"; };
 
   function yuz(o) {
-    return '<a class="a-yuz" href="' + o.href + '"><span class="a-yuz-ust">' + ikon(o.ikon, "a-ikon-kucuk") + o.ad + '</span><span class="a-yuz-sayi">' + o.sayi + "</span>" +
+    return '<a class="a-yuz" href="' + o.href + '"' + (o.eylem ? ' data-eylem="' + o.eylem + '"' : "") + '><span class="a-yuz-ust">' + ikon(o.ikon, "a-ikon-kucuk") + o.ad + '</span><span class="a-yuz-sayi">' + o.sayi + "</span>" +
       (o.not ? '<span class="a-yuz-not' + (o.uyari ? " a-yuz-uyari" : "") + '">' + o.not + "</span>" : "") + "</a>";
   }
   var planSatir = function (t) {
@@ -81,6 +81,9 @@
         yuz({ ikon: "play", ad: "Denetimdeki plan", sayi: denetim.length, href: "planlarim.html", not: denetim.length ? denetim[0].plan : "yok" }) +
         yuz({ ikon: "file-pen-line", ad: "Taslak rapor", sayi: taslak.length, href: "raporlar.html", not: geri.length ? geri.length + " geri gönderildi" : "onaya gönderilmedi", uyari: geri.length > 0 }) +
         yuz({ ikon: "file-signature", ad: "Son imzanı bekleyen", sayi: imza.length, href: "raporlar.html#/imza", not: "onaylandı, imza bekliyor", uyari: imza.length > 0 }) +
+        /* N6 (2026-09-30, reisim: "inspectorün anasayfasında gözüksün her inspectorünki kendisi için hesaplansın"): kişinin kendi günlük süresi */
+        (MV.mesai().acik ? (function () { var g = MV.gunlukSure(k); return yuz({ ikon: "clock", ad: "Günlük süre", sayi: (g.normal + g.mesai) + " dk", href: "#", eylem: "mesai-ac",
+          not: "normal " + g.normal + " / " + g.m.normal + " · mesai " + g.mesai + " / " + g.m.mesai + (g.dolu ? " · doldu" : ""), uyari: g.dolu }); })() : "") +
         yuz({ ikon: "package", ad: "Zimmetinde", sayi: z.length, href: "zimmetler.html#/?kisi=" + k, not: zk.length ? zk.length + " cihazın kalibrasyonu uyarıda" : "uyarı yok", uyari: zk.length > 0 }) +
         "</div>" +
         liste("Açık planların", "a-tablo-anaplan", PLAN_SUTUN, planlar(function (t) { return benim(t) && ACIK.indexOf(t.pdurum) >= 0; }).map(planSatir),
@@ -174,6 +177,7 @@
   var rolu = function () { var m = /^#\/(\w+)$/.exec(location.hash); return m && BOLUM[m[1]] ? m[1] : "yonetici"; };
   function ciz(odakla) {
     var r = rolu(), p = MV.kisi(KISI[r]);
+    MK.BEN = KISI[r]; MK.mesaiUstCiz(); MK.takipCiz();   /* makette bakış değişince giriş yapan kişi de değişir (N5, N6) */
     $("a-icerik").innerHTML =
       '<div class="a-sayfa-bas"><h1 tabindex="-1">Ana sayfa</h1><span class="a-sayac">' + MK.gunYaz(BUGUN) + " · " + kacis(p.ad) + "</span>" +
         /* M6 2. tur (80): "Plan aç" yalnız plan açma yetkisi olana (planlama ekibi, firma yöneticisi) */

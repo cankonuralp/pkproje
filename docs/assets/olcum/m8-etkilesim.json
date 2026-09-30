@@ -160,7 +160,7 @@
    "gecti": true
   },
   {
-   "ad": "mesai takibi: rapor ekranında günlük süre çubuğu (raporu yazanın), bu raporun süresi; süre doluysa Kaydet ve kopyala kopyalamaz",
+   "ad": "mesai takibi: rapor ekranında üst çubuk satırı raporu yazanın, pencerede bu raporun süresi; süre doluysa Kaydet ve kopyala kopyalamaz",
    "gen": 1920,
    "sayfa": "maket/rapor.html",
    "hash": "#/r/ET-1009",

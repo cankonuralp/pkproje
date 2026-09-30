@@ -415,6 +415,7 @@
       document.title = "Rapor bulunamadı · probata maket"; return;
     }
     var t = r.t, e = r.e, oku = r.durum !== "taslak", F = r.F;
+    MK.MESAI_BU = oku ? null : (MV.tur(e.tur).sure || 0);   /* N6: günlük süre penceresinde "Bu rapor: N dk" */
     EKS = {}; if (UY === r && !oku) zorunluEksik(r).forEach(function (x) { EKS[x.bolum] = true; });
     var PL = r.ts, p = MV.kisi(r.kisi), yon = MV.kisi(YON[t.b]), isg = MV.isgTesis(PL.id).filter(function (x) { return x.k === r.kisi; })[0], ci = cihazlar(r);
     var gecti = gecmis(r), eksik = eksikTur(r), mus = MV.musteri(PL.m);
@@ -531,7 +532,8 @@
         /* Ön izle (reisim 2026-09-28: "en sağ üstte ön izleme tuşu olmalı PDF çıktısını ön izleyebilmeliyim ön izle halinde PDF halini indirebilmeliyim") */
         '<div class="a-eylem-cubugu">' + MK.tus({ eylem: "on-izle", ad: "Ön izle", ikon: "eye", sinif: "a-tus-ikincil" }) + "</div></div>" +
       /* günlük süre (212): raporu yazan inspector'ın bugünkü süresi, bu raporun süresi */
-        (oku ? "" : '<div class="a-rapor-mesai">' + MK.mesaiCubugu(r.kisi, MV.tur(r.e.tur).sure || 0, "r-mesai-sebep") + "</div>") +
+        /* N6 (2026-09-30): günlük süre üst çubukta (açılır; bu raporun süresi pencerede); burada yalnız süre dolunca neden */
+        (!oku && MV.mesai().acik && MV.gunlukSure(r.kisi).dolu ? '<div class="a-rapor-mesai">' + MK.serit("uyari", "clock", "Günlük süre doldu; yeni rapor ve kopya oluşturulamaz.", "r-mesai-sebep") + "</div>" : "") +
       '<div class="a-uyari-serit">' + MV.durumSerit(MV.rapor(r.no)) +
         /* FORMATI GÜNCELLE (2026-09-30, 211): firmanın rapor formatı yenilendiyse açık raporda; eşleşen maddelerin cevabı korunur */
         (!oku && r.sablon && t.sablon && r.sablon !== t.sablon ? '<div class="a-serit a-serit-bilgi" id="r-format-serit">' + ikon("refresh-cw", "a-ikon-kucuk") +

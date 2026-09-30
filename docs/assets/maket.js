@@ -508,7 +508,8 @@
     var kontrol = "";
     if (d === "kabul" || calisir(p)) kontrol =
       /* günlük süre (212): dolunca Rapor oluştur kapalı, sebep çubukta */
-      (d !== "tamam" ? MK.mesaiCubugu(BEN, null, "a-mesai-sebep") : "") +
+      /* N6 (2026-09-30): günlük süre üst çubukta (açılır); burada yalnız süre dolunca neden */
+      (d !== "tamam" && MV.mesai().acik && MV.gunlukSure(BEN).dolu ? '<div class="a-mesai-dolu-serit">' + MK.serit("uyari", "clock", "Günlük süre doldu (normal " + MV.mesai().normal + " + mesai " + MV.mesai().mesai + " dk); bugün yeni rapor oluşturulamaz.", "a-mesai-sebep") + "</div>" : "") +
       '<div class="a-alt-bolum a-plan-bolum"><div class="a-alt-bas"><h3 class="a-alt-baslik" id="a-ekipman-baslik">Ekipmanlar</h3><span class="a-sayac" id="a-sayac-e"></span>' +
         /* 2026-09-27 (reisim: "ekipan listesinbi excelden export etme ve inport etme olsun"): Excel'e aktar her zaman; Excel'den yükle
            ekipman eklenebilen durumda (denetimde) */

@@ -2,8 +2,8 @@
  "maket": "planlar",
  "tarih": "2026-09-30",
  "arac": "tools/olc-bulut.mjs --etkilesim (başsız tarayıcı, 1920 açık tema; gen verilen denemede o genişlik)",
- "toplam": 62,
- "gecen": 62,
+ "toplam": 63,
+ "gecen": 63,
  "denemeler": [
   {
    "ad": "Planlar listesi: müşteri adı kalın (≥ 600), proje adı normal (400)",
@@ -363,14 +363,21 @@
    "gecti": true
   },
   {
-   "ad": "mesai takibi: plan içinde günlük süre çubuğu (normal x / 480, mesai y / 220); süre dolunca Rapor oluştur kapalı ve sebep yazılı",
+   "ad": "mesai takibi: üst çubukta günlük süre satırı, basınca pencerede normal x / 480, mesai y / 220; plan içinde kalıcı çubuk yok; süre dolunca Rapor oluştur kapalı ve sebep yazılı",
    "gen": 1920,
    "sayfa": "maket/planlarim.html",
    "hash": "#/plan/1",
    "gecti": true
   },
   {
-   "ad": "mesai takibi kapalıyken çubuk yok, Rapor oluştur açık",
+   "ad": "günlük süre satırı yalnız denetçide: firma yöneticisinde (Uyarılar) yok; Ana sayfa denetçi bakışında Günlük süre yüzü pencereyi açar",
+   "gen": 1920,
+   "sayfa": "maket/uyarilar.html",
+   "hash": "#/",
+   "gecti": true
+  },
+  {
+   "ad": "mesai takibi kapalıyken üst çubukta satır yok, Rapor oluştur açık",
    "gen": 1920,
    "sayfa": "maket/planlarim.html",
    "hash": "#/plan/1",
