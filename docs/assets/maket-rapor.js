@@ -521,6 +521,8 @@
         (oku ? "" : '<p class="a-adim-not a-rapor-kayit" id="r-kayit">' + kayitMetin(r) + "</p>") + "</div>" +
         /* Ön izle (reisim 2026-09-28: "en sağ üstte ön izleme tuşu olmalı PDF çıktısını ön izleyebilmeliyim ön izle halinde PDF halini indirebilmeliyim") */
         '<div class="a-eylem-cubugu">' + MK.tus({ eylem: "on-izle", ad: "Ön izle", ikon: "eye", sinif: "a-tus-ikincil" }) + "</div></div>" +
+      /* günlük süre (212): raporu yazan inspector'ın bugünkü süresi, bu raporun süresi */
+        (oku ? "" : '<div class="a-rapor-mesai">' + MK.mesaiCubugu(r.kisi, MV.tur(r.e.tur).sure || 0, "r-mesai-sebep") + "</div>") +
       '<div class="a-uyari-serit">' + MV.durumSerit(MV.rapor(r.no)) +
         (r.kopya && r.durum === "taslak" ? MK.serit("bilgi", "copy", "Bilgiler " + '<span class="a-rapor-no">' + r.kopya + "</span> raporundan kopyalandı; test değerleri, fotoğraflar ve sonuç bu ekipman için girilir.") : "") +
         /* meslek uyarısı (V4; §3.2 öneri 2c → karar): engel değil */
@@ -714,6 +716,7 @@
     if (W.tur === "kopya") {
       d.kod = String(d.kod || "").replace(/\s+/g, "").replace(/[a-z]/g, function (c) { return c.toUpperCase(); });
       var kh = kodDurumu(d.kod); if (kh) { W.hata = { kod: kh }; pencereCiz("w-kod"); return; }
+      if (MV.gunlukSure(r.kisi).dolu) { W.hata = { kod: "Günlük süre doldu (mesai takibi); bugün yeni rapor oluşturulamaz." }; pencereCiz("w-kod"); return; }   /* 212 */
       if (!W.oku) { r.kayit = MK.simdi(); r.degisti = false; }
       var y = kopyala(r, { kod: d.kod, seri: String(d.seri || "").trim(), konum: String(d.konum || "").trim() });
       W = null; $("a-pencere").close(); MK.kaliciYaz();

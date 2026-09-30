@@ -853,6 +853,20 @@
     });
     document.body.appendChild(g); g.click();
   };
+  /* GÜNLÜK SÜRE ÇUBUĞU — TEK ÜRETİCİ (2026-09-30, 212): normal ve mesai ayrı çubuk, dolu kısmı; buRapor (dk) verilirse "Bu rapor"; süre
+     dolduysa uyarı (id: sebep — yeni rapor tuşları buna bağlanır). Mesai takibi kapalıysa hiçbir şey çizilmez. */
+  MK.mesaiCubugu = function (kisi, buRapor, sebep) {
+    var g = MV.gunlukSure(kisi); if (!g.m.acik) return "";
+    var bar = function (ad, v, en, sinif) {
+      var oran = en ? Math.round(v / en * 100) : 100;
+      return '<div class="a-mesai-satir"><span class="a-mesai-ad">' + ad + '</span><span class="a-mesai-iz" role="progressbar" aria-label="' + ad + '" aria-valuemin="0" aria-valuemax="' + en + '" aria-valuenow="' + v + '">' +
+        '<span class="a-mesai-dolu ' + sinif + '" style="--oran:' + oran + '%"></span></span><span class="a-mesai-sayi">' + v + " / " + en + " dk</span></div>";
+    };
+    return '<div class="a-mesai"><p class="a-mesai-baslik">' + ikon("clock", "a-ikon-kucuk") + "Günlük süre · " + kacis((MV.kisi(kisi) || {}).ad || "") +
+        (buRapor != null ? '<span class="a-mesai-bu">Bu rapor: ' + buRapor + " dk</span>" : "") + "</p>" +
+      bar("Normal", g.normal, g.m.normal, "a-mesai-normal") + bar("Mesai", g.mesai, g.m.mesai, "a-mesai-fazla") +
+      (g.dolu ? MK.serit("uyari", "triangle-alert", "Günlük süre doldu (normal " + g.m.normal + " + mesai " + g.m.mesai + " dk); yeni rapor oluşturulamaz.", sebep) : "") + "</div>";
+  };
   /* FOTOĞRAF LİSTESİ — TEK ÜRETİCİ (rapor, kusurlu madde, zimmet). 2026-09-29 (reisim: "Fotoğraf eklendiğinde thumnail olmasın sadece
      görselin adı yazsın, görüntüle, indir , sil tuşları olsun"; 09-SUNUCU-VE-VERI A: küçük kopya üretilmez): her fotoğraf bir satır —
      dosya adı · Görüntüle · İndir · Sil. Fotoğraf yalnız Görüntüle'ye basınca iner (veri tasarrufu). sil = { eylem, veri } verilirse Sil

@@ -939,6 +939,18 @@ a.a-yuz:hover { border-color: var(--kenar-alan); background: var(--zemin); }
 .a-rapor-eylem { position: sticky; bottom: 16px; z-index: 10; display: flex; justify-content: flex-end; gap: 12px; margin: 16px 0 0; pointer-events: none; }
 .a-rapor-eylem .a-tus { pointer-events: auto; box-shadow: var(--golge-2); }
 .a-tus-sil { color: var(--hata-yazi); }
+/* günlük süre çubuğu (2026-09-30, 212): normal · mesai */
+.a-rapor-mesai { margin: 12px 0 0; } .a-rapor-mesai:empty { display: none; }
+.a-mesai { display: grid; gap: 6px; padding: 10px 12px; background: var(--kart); border: 1px solid var(--kenar); border-radius: var(--r-orta); }
+.a-mesai-baslik { display: flex; flex-wrap: wrap; align-items: center; gap: 6px 10px; margin: 0; font-weight: 700; }
+.a-mesai-bu { margin-left: auto; font-weight: 600; color: var(--yazi2); }
+.a-mesai-satir { display: grid; grid-template-columns: 4.5rem minmax(0, 1fr) auto; align-items: center; gap: 10px; }
+.a-mesai-ad { color: var(--yazi2); font-weight: 600; }
+.a-mesai-iz { position: relative; height: 10px; background: var(--zemin2); border-radius: var(--r-tam); overflow: hidden; }
+.a-mesai-dolu { --oran: 0%; position: absolute; inset: 0 auto 0 0; width: var(--oran); border-radius: var(--r-tam); }
+.a-mesai-normal { background: var(--vurgu); }
+.a-mesai-fazla { background: var(--uyari-yazi); }
+.a-mesai-sayi { font-variant-numeric: tabular-nums; font-weight: 600; white-space: nowrap; }
 /* telefonda tek "İşlemler" menüsü (2026-09-30, 210); masaüstü ve tablette tuşlar yan yana */
 .a-rapor-islemler { display: none; pointer-events: auto; }
 .a-rapor-islemler .a-secici-liste { top: auto; bottom: calc(100% + 6px); left: auto; right: 0; min-width: 240px; }

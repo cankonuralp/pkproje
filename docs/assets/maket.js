@@ -413,7 +413,8 @@
         if (e.pasif) return '<div class="a-eylem"><div class="a-eylem-tuslar"><button class="a-tus a-tus-ikincil" type="button" data-eylem="ekipman-etkin" data-id="' + p.id + '" data-kod="' + e.kod + '">' +
           ikon("undo-2", "a-ikon-kucuk") + "Etkinleştir</button></div></div>";
         return '<div class="a-eylem"><div class="a-eylem-tuslar">' + (raporuVar(p, e.kod) ? "" : '<button class="a-ikon-tus" type="button" data-eylem="ekipman-pasif" data-id="' + p.id + '" data-kod="' + e.kod + '" aria-label="' + e.kod + ' pasife al" title="Pasife al">' + ikon("ban") + "</button>") +
-          (raporuVar(p, e.kod) ? "" : '<button class="a-tus a-tus-ikincil" type="button" data-eylem="rapor-olustur" data-id="' + p.id + '" data-kod="' + e.kod + '">' +
+          (raporuVar(p, e.kod) ? "" : '<button class="a-tus a-tus-ikincil" type="button" data-eylem="rapor-olustur" data-id="' + p.id + '" data-kod="' + e.kod + '"' +
+            (MV.gunlukSure(BEN).dolu ? ' disabled aria-describedby="a-mesai-sebep"' : "") + ">" +
           ikon("file-plus", "a-ikon-kucuk") + "Rapor oluştur</button>") + "</div></div>";
       } }
     ];
@@ -499,6 +500,8 @@
       : p.basladi ? (d === "tamam" ? tno(p.basladi) + (p.bitti.slice(0, 10) !== p.basladi.slice(0, 10) ? " – " + tno(p.bitti) : "") : "Başladı: " + tno(p.basladi)) : "";
     var kontrol = "";
     if (d === "kabul" || calisir(p)) kontrol =
+      /* günlük süre (212): dolunca Rapor oluştur kapalı, sebep çubukta */
+      (d !== "tamam" ? MK.mesaiCubugu(BEN, null, "a-mesai-sebep") : "") +
       '<div class="a-alt-bolum a-plan-bolum"><div class="a-alt-bas"><h3 class="a-alt-baslik" id="a-ekipman-baslik">Ekipmanlar</h3><span class="a-sayac" id="a-sayac-e"></span>' +
         /* 2026-09-27 (reisim: "ekipan listesinbi excelden export etme ve inport etme olsun"): Excel'e aktar her zaman; Excel'den yükle
            ekipman eklenebilen durumda (denetimde) */
@@ -662,6 +665,7 @@
   X["geri-al"] = function (el) { var p = pl(el); if (p && p.durum === "tamam") { p.durum = "denetimde"; p.bitti = null; kaydet(p, simdi(), BEN, "Tamamlama geri alındı"); goster(false); MK.bildir("Tamamlama geri alındı; plan yeniden denetime açıldı."); } };
   X["rapor-olustur"] = function (el) {
     var p = pl(el);
+    if (p && calisir(p) && MV.gunlukSure(BEN).dolu) { MK.bildir("Günlük süre doldu (mesai takibi); bugün yeni rapor oluşturulamaz."); return; }   /* 212 */
     if (p && calisir(p) && !raporuVar(p, el.dataset.kod)) {   /* ekipman başına bir rapor (2026-09-30, 203) */
       var r = { no: raporNo("0926", raporSira++).replace(/^[^-]+/, MV.firmaKodu()), kod: el.dataset.kod, durum: "taslak", olustu: simdi(), sonuc: null };
       if (p.durum === "kabul") { p.durum = "denetimde"; p.basladi = simdi(); kaydet(p, simdi(), BEN, "Denetime başlandı", "ilk rapor oluşturuldu"); }

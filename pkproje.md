@@ -2014,6 +2014,14 @@ revizyon, alan kopyalama, hafif kusur devri, meslek eşleşme denetimi).
 - Emsal ürünler: https://opwire.app/iso-17020-periyodik-kontrol-yazilimi/ · https://17020muayene.vidco.com.tr/ · https://akuple.com/asansor-kontrol-yazilimi/ · https://ensyazilim.com/
 
 ## 11 · Değişiklik günlüğü
+- 2026-09-30 (167): **K4 · 212 Mesai takibi** (§9 otuz dokuzuncu tur). Günlük **normal 480 dk + mesai 220 dk** (Firma ayarları › Mesai
+  takibi: aç/kapa, iki süre; yalnız yönetici; geçersiz süre kaydedilmez). Raporun süresi ekipman türünün kontrol süresi (Ekipman türleri, dk);
+  kişinin o gün oluşturduğu pasif olmayan raporların süresi önce normali, sonra mesaiyi doldurur. **Günlük süre çubuğu** (tek üretici
+  `MK.mesaiCubugu`): saha raporunda raporu yazanın (ve "Bu rapor: N dk"), plan içinde Denetim adımının başında. İkisi dolunca **yeni rapor
+  oluşturulamaz** (reisim'in açık kararı: engel): plan içinde Rapor oluştur kapalı, sebep çubukta; Kaydet ve kopyala kopyalamaz, pencere
+  söyler. Kapalıyken çubuk yok, sınır yok. Performans ve bordroya bağlanmadı (istenmedi). Ölçüm: planlar 128/128 · 58/58 (2 yeni) · 64/64; m8
+  184/184 · 102/102 (1 yeni) · 92/92; m1 280/280 · 80/80 (1 yeni) · 140/140; gözle 1920 + 375.
+
 - 2026-09-30 (166): **K3 · 213 Kusur fotoğrafı satırda, kusur açıklamalarında, zorunlu (firma ayarı)** (§9 otuz dokuzuncu tur). Uygun
   maddeye fotoğraf yok; genel Fotoğraflar bölümü aynen. "Uygun değil" seçilen maddenin satırında, seçimin yanında **kamera simgesi** (kamera ile
   çek / galeriden seç); eklenen fotoğraf açıklamanın altında listelenir ve **Kusur açıklamaları**nda açıklamayla birlikte ("Fotoğraf: ad"),

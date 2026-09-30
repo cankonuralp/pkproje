@@ -2,8 +2,8 @@
  "maket": "m8",
  "tarih": "2026-09-30",
  "arac": "tools/olc-bulut.mjs --etkilesim (başsız tarayıcı, 1920 açık tema; gen verilen denemede o genişlik)",
- "toplam": 101,
- "gecen": 101,
+ "toplam": 102,
+ "gecen": 102,
  "denemeler": [
   {
    "ad": "önceki kontrolün hafif kusuru listelenir; Giderilmedi → bu raporun kusurlarına girer, sonuç önerisi Uygun değil",
@@ -154,6 +154,13 @@
   },
   {
    "ad": "Firma ayarında fotoğraf isteğe bağlıysa fotoğrafsız Uygun değil maddeyle gönderilebilir",
+   "gen": 1920,
+   "sayfa": "maket/rapor.html",
+   "hash": "#/r/ET-1009",
+   "gecti": true
+  },
+  {
+   "ad": "mesai takibi: rapor ekranında günlük süre çubuğu (raporu yazanın), bu raporun süresi; süre doluysa Kaydet ve kopyala kopyalamaz",
    "gen": 1920,
    "sayfa": "maket/rapor.html",
    "hash": "#/r/ET-1009",

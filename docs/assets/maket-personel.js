@@ -628,6 +628,16 @@
     return '<section class="a-bolum" aria-labelledby="a-b-rapor"><div class="a-alt-bas"><h2 class="a-alt-baslik" id="a-b-rapor">Rapor</h2></div>' +
         /* 213 (2026-09-30): "Uygun değil" maddede fotoğraf zorunluluğu firmaya göre; başlangıçta zorunlu (§3.7 satır 14) */
         '<label class="a-onay-kutusu"><input type="checkbox" data-kusur-foto' + (MV.kusurFotoZorunlu() ? " checked" : "") + '><span>"Uygun değil" işaretlenen maddede fotoğraf zorunlu</span></label></section>' +
+      /* 212 (2026-09-30): mesai takibi — aç/kapa, günlük normal ve mesai süresi (dk); raporun süresi ekipman türünün kontrol süresi */
+      (function () {
+        var m = MV.mesai();
+        return '<section class="a-bolum" aria-labelledby="a-b-mesai"><div class="a-alt-bas"><h2 class="a-alt-baslik" id="a-b-mesai">Mesai takibi</h2></div>' +
+          '<label class="a-onay-kutusu"><input type="checkbox" data-mesai-acik' + (m.acik ? " checked" : "") + "><span>Açık — günlük süre dolunca yeni rapor oluşturulamaz</span></label>" +
+          (m.acik ? '<div class="a-form">' +
+            MK.alan({ id: "ay-mesai-normal", etiket: "Günlük normal çalışma (dk)", hata: h["mesai-normal"], girdi: MK.girdi({ id: "ay-mesai-normal", deger: h["mesai-normal"] ? AY["mesai-normal"] : String(m.normal), sinif: "a-girdi-sicil", hata: h["mesai-normal"], ek: ' data-mesai="normal" inputmode="numeric" maxlength="4"' }) }) +
+            MK.alan({ id: "ay-mesai-mesai", etiket: "Günlük mesai (dk)", hata: h["mesai-mesai"], girdi: MK.girdi({ id: "ay-mesai-mesai", deger: h["mesai-mesai"] ? AY["mesai-mesai"] : String(m.mesai), sinif: "a-girdi-sicil", hata: h["mesai-mesai"], ek: ' data-mesai="mesai" inputmode="numeric" maxlength="4"' }) }) +
+            "</div>" : "") + '<p class="a-ipucu">Raporun süresi ekipman türünün kontrol süresidir (Ekipman türleri). Önce normal süre, sonra mesai dolar.</p></section>';
+      })() +
       '<section class="a-bolum" aria-labelledby="a-b-esik"><div class="a-alt-bas"><h2 class="a-alt-baslik" id="a-b-esik">Uyarı eşikleri</h2></div><div class="a-form">' +
         Object.keys(MV.ESIK).map(function (k) {
           var x = MV.ESIK[k];
@@ -872,6 +882,16 @@
     }
     if (t.hasAttribute && t.hasAttribute("data-arsiv-yeri")) {   /* arşiv yeri: alandan çıkınca kaydedilir, uyarı güncellenir */
       MV.FIRMA.saklama = { yontem: "arsiv", yer: t.value.trim(), yil: MV.saklama().yil }; ayarCiz(); MK.bildir(t.value.trim() ? "Arşiv yeri kaydedildi." : "Arşiv yeri boş: süresi dolan raporlar sistemde kalır."); return;
+    }
+    if (t.hasAttribute && t.hasAttribute("data-mesai-acik")) {
+      var ms = MV.mesai(); MV.FIRMA.mesai = { acik: t.checked, normal: ms.normal, mesai: ms.mesai }; ayarCiz(); var ma = document.querySelector("[data-mesai-acik]"); if (ma) ma.focus();
+      MK.bildir(t.checked ? "Mesai takibi açık." : "Mesai takibi kapalı; günlük süre sınırı yok."); return;
+    }
+    if (t.dataset && t.dataset.mesai) {   /* 0–1440 dk tam sayı; geçersizse eski değer kalır */
+      var mk = t.dataset.mesai, mv = t.value.trim(), mo = t.id, m0 = MV.mesai();
+      if (/^\d{1,4}$/.test(mv) && +mv <= 1440 && (mk === "mesai" || +mv > 0)) { m0[mk] = +mv; MV.FIRMA.mesai = m0; delete AY.hata["mesai-" + mk]; ayarCiz(); MK.bildir((mk === "normal" ? "Günlük normal çalışma " : "Günlük mesai ") + mv + " dk."); }
+      else { AY.hata["mesai-" + mk] = mk === "normal" ? "1–1440 arası dakika yazın. Kaydedilmedi." : "0–1440 arası dakika yazın. Kaydedilmedi."; AY["mesai-" + mk] = t.value; ayarCiz(); }
+      var mf = $(mo); if (mf) mf.focus(); return;
     }
     if (t.hasAttribute && t.hasAttribute("data-kusur-foto")) {
       MV.FIRMA.kusurFoto = t.checked; ayarCiz(); var kf = document.querySelector("[data-kusur-foto]"); if (kf) kf.focus();

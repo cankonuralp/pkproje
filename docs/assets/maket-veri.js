@@ -671,6 +671,20 @@
     egitim: { ad: "Eğitim tekrarı", etiket: "tekrar tarihine bu kadar gün kala uyarı", v: 60, secenek: [30, 45, 60, 90, 120] }
   };
   /* "Uygun değil" maddede fotoğraf zorunlu mu (2026-09-30, 213): firma ayarı, başlangıçta zorunlu (§3.7 satır 14) */
+  /* MESAİ TAKİBİ (2026-09-30, 212): günlük normal çalışma 480 dk + mesai 220 dk (firma ayarı, aç/kapa; yalnız yönetici). Raporun süresi
+     ekipman türünün kontrol süresi (Ekipman türleri, dk). Kişinin o gün oluşturduğu (pasif olmayan) raporların süresi önce normali, sonra
+     mesaiyi doldurur; ikisi dolunca yeni rapor oluşturulamaz (reisim'in açık kararı: engel). */
+  MV.mesai = function () {
+    var x = MV.FIRMA.mesai || {}, n = +x.normal, m = +x.mesai;
+    return { acik: x.acik !== false, normal: n > 0 ? n : 480, mesai: x.mesai !== undefined && x.mesai !== "" && m >= 0 ? m : 220 };
+  };
+  MV.raporSuresi = function (r) { var e = MV.ekipman(r.kod); return e ? MV.tur(e.tur).sure || 0 : 0; };
+  MV.gunlukSure = function (kisi, gun) {
+    gun = gun || MK.BUGUN;
+    var m = MV.mesai(), t = MV.RAPORLAR.filter(function (r) { return r.kisi === kisi && !r.pasif && (r.olustu || "").slice(0, 10) === gun; })
+      .reduce(function (n, r) { return n + MV.raporSuresi(r); }, 0);
+    return { toplam: t, normal: Math.min(t, m.normal), mesai: Math.min(Math.max(t - m.normal, 0), m.mesai), dolu: m.acik && t >= m.normal + m.mesai, m: m };
+  };
   MV.kusurFotoZorunlu = function () { return MV.FIRMA.kusurFoto !== false; };
   MV.esik = function (k) { var x = +((MV.FIRMA.esik || {})[k]); return x > 0 ? x : MV.ESIK[k].v; };
   /* yeni rapor numarasının başındaki firma kodu: 2–4 büyük harf; eski numaralar değişmez */

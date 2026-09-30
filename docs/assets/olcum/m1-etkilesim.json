@@ -2,8 +2,8 @@
  "maket": "m1",
  "tarih": "2026-09-30",
  "arac": "tools/olc-bulut.mjs --etkilesim (başsız tarayıcı, 1920 açık tema; gen verilen denemede o genişlik)",
- "toplam": 79,
- "gecen": 79,
+ "toplam": 80,
+ "gecen": 80,
  "denemeler": [
   {
    "ad": "İzin talepleri: formun PDF'i açılır, e-posta talep edene",
@@ -371,6 +371,13 @@
   },
   {
    "ad": "Firma ayarları · Rapor: Uygun değil maddede fotoğraf başlangıçta zorunlu, kapatılınca isteğe bağlı (kalıcı)",
+   "gen": 1920,
+   "sayfa": "maket/personel.html",
+   "hash": "#/ayarlar",
+   "gecti": true
+  },
+  {
+   "ad": "Firma ayarları · Mesai takibi: başlangıç açık, 480 / 220 dk; normal 450 kaydedilir, geçersiz kaydedilmez; kapatılınca süre alanları gizlenir (kalıcı)",
    "gen": 1920,
    "sayfa": "maket/personel.html",
    "hash": "#/ayarlar",
