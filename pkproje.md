@@ -2061,6 +2061,10 @@ revizyon, alan kopyalama, hafif kusur devri, meslek eşleşme denetimi).
 - Emsal ürünler: https://opwire.app/iso-17020-periyodik-kontrol-yazilimi/ · https://17020muayene.vidco.com.tr/ · https://akuple.com/asansor-kontrol-yazilimi/ · https://ensyazilim.com/
 
 ## 11 · Değişiklik günlüğü
+- 2026-09-30 (179): **N3 · Cihaz türünde ekipman grubu yok** (§9 kırk birinci tur). "Cihaz türü ekle" yalnız adı sorar; cihazın hangi ekipman
+  türünde kullanılacağı Ekipman türleri'nde seçilir. Cihaz sayfası ve tür listesi "kullanıldığı ekipman türleri"ni oradan okur; Ana sayfa'da
+  kalibrasyon uyarısının branşı da (MV.cihazBranslari). Ölçüm aralığı alanına örnek ("ör. 0–1000 V"). 2 deneme gerekçeyle güncellendi.
+  Ölçüm: m4 144/144 · 35/35 · 72/72; m1 304/304 · 87/87 · 152/152.
 - 2026-09-30 (178): **N2 · Plan içinde ekipman listesi denetçinin branşıyla açılır** (§9 kırk birinci tur). Planda o branştan ekipman varsa Branş
   süzgeci denetçinin branşında gelir (mekanikçi mekanik, elektrikçi elektrik); "Tümü" ile bütün ekipman görünür. Bütün ekipmanı gören 7 eski
   deneme önce "Tümü"ye alıyor (gerekçe denemede). Ölçüm: planlar 128/128 · 62/62 (1 yeni) · 64/64; m8 184/184 · 107/107 · 92/92; m1 304/304 ·

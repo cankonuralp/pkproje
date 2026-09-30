@@ -237,7 +237,7 @@
    "gecti": true
   },
   {
-   "ad": "cihaz türü: grupsuz ve aynı adla reddedilir",
+   "ad": "cihaz türü: yalnız ad sorulur (grup alanı yok); aynı adla reddedilir",
    "gen": 1920,
    "sayfa": "maket/olcum-cihazlari.html",
    "hash": "#/",

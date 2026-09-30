@@ -796,6 +796,10 @@
   };
   MV.KATALOG.forEach(function (t) { t.cihaz = (TUR_CIHAZ[t.k] || []).slice(); });
   MV.turCihazlari = function (t) { return t.cihaz || []; };
+  /* N3 (2026-09-30, reisim: "kullanıldığı ekipman türleri diye bir şey olmasın, isteyen istediği ekipmana ekler"): cihaz türünün grubu yok;
+     hangi ekipman türlerinde kullanıldığı ekipman türünün cihaz seçiminden okunur, branşı da oradan */
+  MV.cihazTurKullanan = function (k) { return MV.KATALOG.filter(function (t) { return (t.cihaz || []).indexOf(k) >= 0; }); };
+  MV.cihazBranslari = function (k) { var l = MV.cihazTurKullanan(k).map(function (t) { return t.b; }); return l.length ? l : ["m", "e"]; };
   /* kontrol metodu (Ek-III 1.7.1.1) YALNIZ ekipman türünde belirlenir (reisim 2026-09-27: "metod kısmı olsun ama sadece ekipman türü eklerken
      belirlene"); raporda seçilmez, türün standartlarından okunur; türde standart yoksa üretici talimatı (karar 82). [{ no, konu }] */
   MV.turMetot = function (t) {

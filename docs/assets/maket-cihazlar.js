@@ -147,7 +147,7 @@
       '<section class="a-bolum" aria-labelledby="a-b-cihaz"><div class="a-alt-bas"><h2 class="a-alt-baslik" id="a-b-cihaz">Cihaz bilgileri</h2></div><dl class="a-bilgi">' +
         bilgi("Cihaz", kacis(v.ad)) + bilgi("Marka / model", kacis(v.marka + " " + v.model)) + bilgi("Seri no", '<span class="a-kod">' + v.seri + "</span>") +
         bilgi("Cihaz kodu", '<span class="a-kod">' + v.env + "</span>") + bilgi("Ölçüm aralığı", kacis(v.aralik)) +
-        bilgi("Kullanıldığı ekipman grupları", t.g.map(function (g) { return MV.grup(g).ad; }).join(" · "), true) +
+        bilgi("Kullanıldığı ekipman türleri", MV.cihazTurKullanan(t.k).length ? kacis(MV.cihazTurKullanan(t.k).map(function (x) { return x.ad; }).join(" · ")) : '<span class="a-deger-yok">Henüz hiçbir ekipman türünde seçilmedi</span>', true) +
       "</dl></section>" +
       '<section class="a-bolum" aria-labelledby="a-b-kal"><div class="a-alt-bas"><h2 class="a-alt-baslik" id="a-b-kal" tabindex="-1">Kalibrasyon kayıtları</h2><span class="a-sayac"><b>' + v.kal.length + "</b> kayıt</span></div>" +
         '<div class="a-liste-kap">' + MK.tablo({ baslik: "Kalibrasyon kayıtları", sinif: "a-tablo-kal", sutunlar: KAL_SUTUN, kayitlar: v.kal }) + "</div></section>" +
@@ -219,7 +219,6 @@
       var ad = d.ad.trim().toLocaleLowerCase("tr");
       if (ad.length < 3) h.ad = "Tür adı yazılmalı.";
       else if (MV.CIHAZ_TURLERI.some(function (t) { return t.k !== W.k && t.ad.toLocaleLowerCase("tr") === ad; })) h.ad = "Bu adla tür var.";
-      if (!d.g.length) h.g = "En az bir ekipman grubu seçilmeli.";
     } else {
       if (!tarihGecerli(d.tarih)) h.tarih = "Tarih GG.AA.YYYY.";
       if (d.yontem.trim().length < 3) h.yontem = "Yöntem yazılmalı.";
@@ -240,9 +239,9 @@
       $("a-pencere-baslik").textContent = W.v ? W.v.env + " · düzenle" : "Cihaz ekle";
       govde = '<div class="a-form">' + A("env", "Cihaz kodu", d.env, { zorunlu: true, sinif: "a-girdi-sicil", ek: ' maxlength="12"', ipucu: "Firmanın cihaza verdiği kod (etiket); eşsiz." }) +
         A("cihazTur", "Cihaz türü", "", { zorunlu: true, girdi: MK.secim({ id: "w-cihazTur", ad: "Cihaz türü", deger: d.cihazTur, secenekler: MV.CIHAZ_TURLERI.map(function (t) { return [t.k, t.ad]; }), ipucu: "Tür seçin", gecersiz: !!h.cihazTur, tanim: "w-cihazTur-ipucu" }),
-          ipucu: d.cihazTur ? "Rapora gelir: " + MV.cihazTuru(d.cihazTur).g.map(function (g) { return MV.grup(g).ad; }).join(", ") : "Hangi ekipman gruplarında kullanıldığı türden gelir." }) +
+          ipucu: d.cihazTur ? (MV.cihazTurKullanan(d.cihazTur).length ? "Rapora gelir: " + MV.cihazTurKullanan(d.cihazTur).map(function (x) { return x.ad; }).join(", ") : "Ekipman türünde seçilince rapora gelir (Ekipman türleri).") : "Rapora, bu cihazı seçen ekipman türlerinde gelir." }) +
         A("marka", "Marka / model", d.marka, { ek: ' maxlength="60"' }) + A("seri", "Seri no", d.seri, { zorunlu: true, sinif: "a-girdi-seri", ek: ' maxlength="30"' }) +
-        A("aralik", "Ölçüm aralığı", d.aralik, { ek: ' maxlength="60"' }) +
+        A("aralik", "Ölçüm aralığı", d.aralik, { ek: ' maxlength="60" placeholder="ör. 0–1000 V"' }) +
         (W.v ? "" : A("bitis", "Kalibrasyon geçerlilik bitişi", d.bitis, { zorunlu: true, sinif: "a-girdi-sicil", ek: tarih, ipucu: "Sertifikadaki tarih; sertifika kalibrasyon kaydıyla eklenir." })) +
         /* ara kontrol sıklıkları (T7): isteğe bağlı, birden çok seçilir; hiçbiri seçilmezse takip edilmez */
         '<div class="a-alan-grup a-alan-genis"><p class="a-etiket">Ara kontrol sıklığı</p>' + MV.ARA_SIKLIK.map(function (x) {
@@ -265,16 +264,14 @@
       $("a-pencere-baslik").textContent = "Cihaz türleri";
       govde = '<ul class="a-secim-listesi">' + MV.CIHAZ_TURLERI.map(function (t) {
         var n = cihazlar().filter(function (v) { return v.cihazTur === t.k; }).length;
-        return '<li class="a-tur-satir"><span class="a-tur-ad"><b>' + kacis(t.ad) + '</b><span class="a-alt-satir">' + t.g.map(function (g) { return MV.grup(g).ad; }).join(" · ") + " · " + n + " cihaz</span></span>" +
+        return '<li class="a-tur-satir"><span class="a-tur-ad"><b>' + kacis(t.ad) + '</b><span class="a-alt-satir">' + MV.cihazTurKullanan(t.k).length + " ekipman türünde · " + n + " cihaz</span></span>" +
           '<span class="a-eylem-tuslar">' + MK.tus({ eylem: "tur-duzenle", ad: "Düzenle", ikon: "pencil", sinif: "a-tus-ikincil", veri: { k: t.k } }) +
           (n ? "" : '<button class="a-ikon-tus" type="button" data-eylem="tur-sil" data-k="' + t.k + '" aria-label="' + kacis(t.ad) + ' türünü sil" title="Sil">' + ikon("x") + "</button>") + "</span></li>";
       }).join("") + "</ul>";
     } else if (W.tur === "tur") {
       $("a-pencere-baslik").textContent = W.k ? MV.cihazTuru(W.k).ad + " · düzenle" : "Cihaz türü ekle";
-      govde = '<div class="a-form">' + A("ad", "Tür adı", d.ad, { zorunlu: true, genis: true, ek: ' maxlength="60"' }) +
-        '<div class="a-alan-grup a-alan-genis"><p class="a-etiket">Kullanıldığı ekipman grupları <span class="a-zorunlu">zorunlu</span></p>' + MV.GRUPLAR.map(function (g) {
-          return '<label class="a-onay-kutusu"><input type="checkbox" data-grup="' + g.k + '"' + (d.g.indexOf(g.k) >= 0 ? " checked" : "") + "><span>" + kacis(g.ad) + "</span></label>";
-        }).join("") + (h.g ? '<p class="a-ipucu a-ipucu-uyari">' + h.g + "</p>" : "") + "</div></div>";
+      /* N3 (2026-09-30): yalnız ad; hangi ekipman türünde kullanılacağı Ekipman türleri'nde seçilir */
+      govde = '<div class="a-form">' + A("ad", "Tür adı", d.ad, { zorunlu: true, genis: true, ek: ' maxlength="60"' }) + "</div>";
     } else if (W.tur === "kal") {
       $("a-pencere-baslik").textContent = W.v.env + (W.i === null || W.i === undefined ? " · kalibrasyon kaydı" : " · kalibrasyon kaydını düzenle");
       govde = '<p class="a-pencere-ozet"><b>' + W.v.env + " · " + kacis(W.v.ad) + "</b><br>Mevcut bitiş " + MK.tarihYaz(W.v.bitis) + ".</p>" +

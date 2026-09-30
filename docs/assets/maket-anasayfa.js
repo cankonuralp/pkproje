@@ -124,7 +124,7 @@
     return function () {
       var kuyruk = MV.RAPORLAR.filter(function (r) { return r.durum === "onayda" && raporBrans(r) === b; }).sort(function (x, y) { return x.gonderildi < y.gonderildi ? -1 : 1; });
       var geri = MV.RAPORLAR.filter(function (r) { return r.geri && r.geri.kim === k; });
-      var kal = kalUyari().filter(function (v) { return MV.cihazTuru(v.cihazTur).g.some(function (g) { return MV.grup(g).b === b; }); });
+      var kal = kalUyari().filter(function (v) { return MV.cihazBranslari(v.cihazTur).indexOf(b) >= 0; });
       var imza = MV.RAPORLAR.filter(function (r) { return r.durum === "onaylandi" && raporBrans(r) === b; });
       return '<div class="a-yuzler">' +
         yuz({ ikon: "badge-check", ad: "Onayını bekleyen", sayi: kuyruk.length, href: "onaylar.html", not: kuyruk.length ? "en eskisi " + saatFarki(kuyruk[0].gonderildi) : "yok", uyari: kuyruk.length > 0 }) +
