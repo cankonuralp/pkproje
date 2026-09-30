@@ -2085,6 +2085,11 @@ revizyon, alan kopyalama, hafif kusur devri, meslek eşleşme denetimi).
 - Emsal ürünler: https://opwire.app/iso-17020-periyodik-kontrol-yazilimi/ · https://17020muayene.vidco.com.tr/ · https://akuple.com/asansor-kontrol-yazilimi/ · https://ensyazilim.com/
 
 ## 11 · Değişiklik günlüğü
+- 2026-09-30 (193): **R2 · Hesabım ve Çıkış yap** (§9 kırk üçüncü tur). Üst çubuktaki kullanıcı menüsü: **Hesabım** · Taleplerim · İzin talebi ·
+  Masraf formu · **Çıkış yap**. Çıkış giriş sayfasına gider (M1'den beri makette olan giriş, **Parolamı unuttum** ve geçici parolayla ilk giriş
+  artık bağlı). **Hesabım** sayfası (hesap.html): kişisel bilgiler (Personel kaydından, salt okunur; değişikliği firma yöneticisi yapar), **mobil
+  imza telefonu** (kişi kendisi değiştirir, biçim denetimi, kalıcı), **parola değiştir** (mevcut parola; yeni parola en az 10 karakter, harf ve
+  rakam, mevcuttan farklı; tekrar aynı; yanlışta yazılanlar kalır), oturum ve Çıkış yap. 3 yeni deneme.
 - 2026-09-30 (192): **R1 · Firma ayarları ayrı modül, ekran verimli** (§9 kırk üçüncü tur). Personel'in "Firma ayarları" sekmesi kalktı;
   yan menüde Tanımlar grubunda **Firma ayarları** (modül 22, ikon settings; uygulamanın modül kaydı ve rotası da, 16 modül). Personel'in eski
   adresi (#/ayarlar) yeni sayfaya gider. Ekran: her bölüm bir kart, geniş ekranda iki-üç sütunlu ızgara ve solda bölüm listesi (tıklayınca bölüme

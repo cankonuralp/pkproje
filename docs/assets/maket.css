@@ -1476,3 +1476,9 @@ a.a-yuz:hover { border-color: var(--kenar-alan); background: var(--zemin); }
   .a-ayar-duzen { grid-template-columns: 200px minmax(0, 1fr); align-items: start; }
   .a-ayar-nav { display: block; position: sticky; top: calc(var(--ust-y) + 16px); }
 }
+
+/* HESABIM (R2, 2026-09-30): parola alanları tek sütun, okunur genişlik; kullanıcı menüsünde Çıkış yap ayrı çizgiyle */
+.a-form-tek { grid-template-columns: minmax(0, 1fr); max-width: 420px; }
+.a-secenek-ayrik { margin-top: 4px; border-top: 1px solid var(--kenar); border-radius: 0; }
+.a-ayar-izgara > .a-bolum .a-eylem-cubugu { margin-top: 12px; }
+.a-ayar-izgara .a-satirlar + .a-ipucu { margin-bottom: 12px; }

@@ -72,7 +72,7 @@
   var SAYFALAR = { 13: "planlarim.html", 2: "personel.html", 3: "musteriler.html", 5: "ekipman-turleri.html", 8: "olcum-cihazlari.html", 9: "zimmetler.html", 12: "sozlesmeler.html", 4: "standartlar.html", 14: "raporlar.html", 15: "onaylar.html", 20: "uyarilar.html", 11: "teklifler.html", 18: "muhasebe.html", 19: "performans.html", 10: "egitimler.html", 21: "talepler.html", 22: "firma-ayarlari.html" };
   MK.sayfaAdresi = function (no) { return SAYFALAR[no] || null; };
   /* menü dışı maket ekranları (ör. plan açma); hazır olunca buraya yazılır, bağlantılar kendiliğinden açılır */
-  var EK_SAYFALAR = { ana: "anasayfa.html", giris: "giris.html", "plan-ac": "plan-ac.html", rapor: "rapor.html", musteri: "musteri.html", "is-sozlesmesi": "sozlesmeler.html" };
+  var EK_SAYFALAR = { ana: "anasayfa.html", giris: "giris.html", hesap: "hesap.html", "plan-ac": "plan-ac.html", rapor: "rapor.html", musteri: "musteri.html", "is-sozlesmesi": "sozlesmeler.html" };
   MK.adres = function (anahtar, hash) { var a = SAYFALAR[anahtar] || EK_SAYFALAR[anahtar]; return a ? a + (hash || "") : null; };
   /* hazırsa bağlantı-tuş, değilse "henüz tasarlanmadı" bildirimi veren tuş (maket dışına gidilmez) */
   MK.git = function (o) {
@@ -189,7 +189,11 @@
           '<span class="a-avatar" aria-hidden="true">' + kacis(o.kullanici.bas) + "</span>" +
           '<span class="a-kullanici-yazi"><span class="a-kullanici-ad">' + kacis(o.kullanici.ad) + '</span><span class="a-kullanici-rol">' + kacis(o.kullanici.rol) + "</span></span></button>" +
           '<div class="a-secici-liste" role="menu" aria-label="Kendi işlemlerim" hidden>' +
+            /* R2 (2026-09-30, reisim: "giriş sayfası, profil , şifre değiştirme … parolamı unuttum gibi temel şeyleri atladık"): Hesabım
+               (kişisel bilgiler, mobil imza telefonu, parola) ve Çıkış yap (giriş sayfasına; parolamı unuttum orada) */
+            '<a class="a-secenek" role="menuitem" href="' + MK.adres("hesap", "#/") + '">Hesabım</a>' +
             [["#/", "Taleplerim"], ["#/yeni/izin", "İzin talebi"], ["#/yeni/masraf", "Masraf formu"]].map(function (x) { return '<a class="a-secenek" role="menuitem" href="' + MK.adres(21, x[0]) + '">' + x[1] + "</a>"; }).join("") +
+            '<a class="a-secenek a-secenek-ayrik" role="menuitem" href="' + MK.adres("giris", "#/") + '" data-cikis>Çıkış yap</a>' +
           "</div></div>" +
       "</header></div>";
     document.body.insertBefore(kok, ana);

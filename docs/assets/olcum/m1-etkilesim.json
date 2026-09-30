@@ -2,8 +2,8 @@
  "maket": "m1",
  "tarih": "2026-09-30",
  "arac": "tools/olc-bulut.mjs --etkilesim (başsız tarayıcı, 1920 açık tema; gen verilen denemede o genişlik)",
- "toplam": 90,
- "gecen": 90,
+ "toplam": 93,
+ "gecen": 93,
  "denemeler": [
   {
    "ad": "İzin talepleri: formun PDF'i açılır, e-posta talep edene",
@@ -290,6 +290,27 @@
    "gen": 1920,
    "sayfa": "maket/personel.html",
    "hash": "#/roller",
+   "gecti": true
+  },
+  {
+   "ad": "kullanıcı menüsünde Hesabım ve Çıkış yap; Çıkış yap giriş sayfasına gider (Parolamı unuttum orada)",
+   "gen": 1920,
+   "sayfa": "maket/planlarim.html",
+   "hash": "#/",
+   "gecti": true
+  },
+  {
+   "ad": "Hesabım: giriş yapanın bilgileri; parola değiştir — mevcut yanlış, kısa yeni parola, tekrar farklı söylenir; doğrusu kaydedilir",
+   "gen": 1920,
+   "sayfa": "maket/hesap.html",
+   "hash": "#/",
+   "gecti": true
+  },
+  {
+   "ad": "Hesabım: mobil imza telefonu yanlış biçimde kaydedilmez, doğrusu kaydedilir ve kalıcı (Personel kartında da)",
+   "gen": 1920,
+   "sayfa": "maket/hesap.html",
+   "hash": "#/",
    "gecti": true
   },
   {
