@@ -970,6 +970,7 @@ Reisim yeni bir tane söyledikçe bu tabloya satır eklenir.
 | 12 | **Cihaz ara kontrol / bakım kaydı** | Ölçüm cihazları › cihaz | temel format `KM-FR-ARA-01` (2026-09-28) | firma kendi formatını kullanabilir; günlük / haftalık / aylık / 6 aylık bakım mantığı aynı (reisim 2026-09-28) |
 | 13 | **Rapor içeriği kuralları** | Saha raporu · final rapor | Bakanlık formatı ya da firma formatı | zorunlu alanlar (temel: fotoğraf en az 1, cihazlar, kusur açıklaması), sonuç cümlesi, kusur listesi biçimi — format eklendikçe o formata göre (§3.8) |
 | 14 | **"Uygun değil" maddede fotoğraf zorunluluğu** | Saha raporu (M8) · Firma ayarları | var — başlangıçta **zorunlu** (2026-09-30, 213) | firma isterse isteğe bağlı (Firma ayarları › Rapor) |
+| 15 | **Ön bilgilendirme formu** | Müşteriler › müşteri kartı (gönder) · Firma ayarları (yükle) | temel format `KM-FR-OBF-01` (2026-09-30, iskelet) | **her firmanın kendi formatı** (reisim 2026-09-30): firma PDF'ini Firma ayarları'na yükler; müşteriye o gider |
 Firma özelleştirmesi **iskelet olarak hazırlanır**; her firmada o firmanın formatına göre sitenin ilgili kısmı ayrıca düzenlenir (reisim 2026-09-28:
 *"bu tarz firmaya göre pdf vb format eklenince ona göre şekil alacak kısımları … sen iskelet olarak hazırla firmaya göre her seferinde sitenin bu
 kısımlarını düzenleriz, bunlar oluşturduğumuz listeye yaz ve firma özelleştirmeleri listesi olarak kenarda tut"*).
@@ -2006,6 +2007,28 @@ Ek (aynı gün, reisim birebir; Plan açıldı ekranının görüntüsüyle): *"
 yerd eböyle olmalı neden başlıkta büyük harflerle tesis aşağıda küçük firma yazıyor tam tersi olmalı"* → **L7:** her başlıkta firma (müşteri)
 adı büyük ve önde, tesis adı altında küçük.
 
+**Kırk birinci tur (2026-09-30, reisim birebir; cihaz ekle, cihaz türü ekle ve ekipman türü ekle pencerelerinin görüntüleriyle):** *"ön
+bilgineldirme formu her firmanın kendi formatına göre değişir, 2 evet kendi branşıyla açılsın// görselde ölçüm aralığı ne demek ? 2. görsel
+kullanıldığı ekipman türleri diye bir şey olmasın, isteyen istediği ekipmana ekler. 3. görsel ek 3 grubu içerisinde olmayanlar için diğer
+seöeneği olsun, / yan tarafta dökümanlar kısmında yaklaşan ve günü geçen eğitimlerin uyarıları olsun, ölçüm cihazlarında da sadece yaklaşan
+ve günü geçenlerin uyarısı olsun yeşil bildirimlere gerek yok,  saha formu firmaya göre değişecekler listesine ekle, mesai saatleri nereden
+belirleniyor firma tarafından bu kısıt nereden açılıp kapanıyor ? yap demiştim nereye ekledin ? Günlük süre takibi örnek fotoda attığım gibi
+yularıda satır gibi gözüksün açılıp kapatılabilsin sürekli ekranda olmasın pop-up gibi olsun , inspectorün anasayfasında gözüksün her
+inspectorünki kendisi için hesaplansın, inspector değil denetçi yazsın her yer de , onaylar kısmında elektrik vekil yazıyor ve içerik olarak
+genel olarak hatalı gibi o sayfayı düzenle , gerçi site kodlayınca onlar gözükmeyecek sadece kime nasıl gözüktüğünü göstermek için yazdığın
+bir şey kalsa da olur ama elektrik vekil değil bilgin olsun. Mekanik yönetici ve elektrik yönetici var onaylarda sadece onayda bekleyen rapor
+varsa bildirim olsun, denetçi için muayene imzası durumunda ki raporlar, yöneticiler için her ikiside hem muayene uzmanı hem de kendisi için
+varsa teknik yönetici onayında olan raporlar , diğer muayene uzmanlarının onaya yolladığı raporlar için de olmalı, talepler modülünde de talep
+varsa yanında baloncuk ile çıkmalı talepin iletildiği kişide şimdilik bu kadar"*
+→ **Kararlar:** N1 ön bilgilendirme formu firmanın kendi formatı (§3.7 satır 15; Firma ayarları'na yüklenir) · saha formu §3.7'de zaten
+(satır 9) · N2 plan içinde ekipman süzgeci denetçinin branşıyla açılır · N3 cihaz türünde "kullanıldığı ekipman grupları" kalkar (cihaz
+ekipman türünde seçilir) · N4 ekipman türünde Ek-III grubuna **Diğer (Ek-III dışı)** · N5 yan menü balonları: Dökümanlar'da yaklaşan ve günü
+geçen eğitim; Ölçüm cihazları'nda yalnız yaklaşan ve geçmiş (yeşil yok); Onaylar'da yalnız bekleyen (denetçiye muayene uzmanı imzası
+bekleyenler, yöneticiye bunlar + kendi branşında teknik yönetici onayındakiler); Talepler'de talebin iletildiği kişiye bekleyen talep · N6
+günlük süre takibi üst çubukta tek satır, basınca açılan pencere (sürekli ekranda değil), denetçinin Ana sayfasında; herkes için kendi
+süresi · N7 Onaylar sayfası: "vekil" yok, Mekanik yönetici / Elektrik yönetici; bakış seçimi yalnız "kime nasıl görünür" gösterimi · N8
+arayüzde "inspector" yerine her yerde **denetçi**.
+
 **Açık kalanlar:** ~~Ana sayfada İSGGM duyuruları~~ (2026-09-27: makette eklendi; okuma işi uygulamada) (reisim 2026-09-26: *"Ana sayfada isgüm duyurularını gösterebilir miyiz ? Bunu
 yapılacaklar listesine ekle"*; öneri: ÇSGB İSGGM duyurular sayfası — https://www.csgb.gov.tr/isggm/duyurular/ — sunucuda günde birkaç kez
 okunur (pg-boss işi, §8.9), Ana sayfada son 5 duyuru başlık + tarih + kaynağa bağlantı; yalnız ekranda, bildirim yok; sayfa RSS vermiyorsa
@@ -2038,6 +2061,10 @@ revizyon, alan kopyalama, hafif kusur devri, meslek eşleşme denetimi).
 - Emsal ürünler: https://opwire.app/iso-17020-periyodik-kontrol-yazilimi/ · https://17020muayene.vidco.com.tr/ · https://akuple.com/asansor-kontrol-yazilimi/ · https://ensyazilim.com/
 
 ## 11 · Değişiklik günlüğü
+- 2026-09-30 (177): **N1 · Ön bilgilendirme formu firmanın formatı** (§9 kırk birinci tur). Personel › Firma ayarları'nda "Ön bilgilendirme
+  formu" bölümü: firma PDF'ini yükler (aç · değiştir · kaldır); yüklenmediyse temel format KM-FR-OBF-01. Müşteri kartındaki gönderim
+  penceresi hangisinin gideceğini yazar. §3.7'ye satır 15; saha formu listede zaten (satır 9). Ölçüm: m1 304/304 · 87/87 (1 yeni) · 152/152;
+  m2 104/104 · 27/27 · 52/52.
 - 2026-09-30 (176): **L7 · Başlıkta firma önde, tesis altında** (§9 kırkıncı tur ek). Bütün nesne başlıkları tarandı; tesisi öne koyan dört
   yer düzeltildi: **plan içi** (başlık müşteri, altında tesis), **Plan açıldı** ekranı (proje no · firma ünvanı, altında tesis), **tesis sayfası**
   (başlık firma ünvanı, altında "Tesis: ad"), **saha raporu** alt satırı (firma · tesis · kişi sırası). Planlar listesi zaten müşteri

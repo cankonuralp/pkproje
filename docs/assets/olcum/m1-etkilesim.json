@@ -2,8 +2,8 @@
  "maket": "m1",
  "tarih": "2026-09-30",
  "arac": "tools/olc-bulut.mjs --etkilesim (başsız tarayıcı, 1920 açık tema; gen verilen denemede o genişlik)",
- "toplam": 86,
- "gecen": 86,
+ "toplam": 87,
+ "gecen": 87,
  "denemeler": [
   {
    "ad": "İzin talepleri: formun PDF'i açılır, e-posta talep edene",
@@ -290,6 +290,13 @@
    "gen": 1920,
    "sayfa": "maket/personel.html",
    "hash": "#/roller",
+   "gecti": true
+  },
+  {
+   "ad": "Firma ayarları: ön bilgilendirme formu yüklenir; müşteri kartında gönderimde o dosya (sayfalar arası)",
+   "gen": 1920,
+   "sayfa": "maket/personel.html",
+   "hash": "#/ayarlar",
    "gecti": true
   },
   {

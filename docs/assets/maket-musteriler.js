@@ -384,7 +384,8 @@
      bilgilendirme formu müşterinin e-postasına gider; son gönderim kartta. Formun içeriği firmanın kendi formatı (soru, §9 kırkıncı tur). */
   X["on-bilgi-gonder"] = function () {
     var m = MV.musteri(sayfa().id);
-    MK.onayla({ baslik: "Ön bilgilendirme formu gönder", metin: "Firmanızın ön bilgilendirme formu <b>" + kacis(m.eposta) + "</b> adresine gönderilir." +
+    var f = MV.FIRMA.onBilgiDosya;   /* N1: firmanın kendi formatı (Firma ayarları); yoksa temel format */
+    MK.onayla({ baslik: "Ön bilgilendirme formu gönder", metin: (f ? "Firmanızın ön bilgilendirme formu (" + kacis(f) + ")" : "Ön bilgilendirme formu (temel format KM-FR-OBF-01; firma formatı Personel › Firma ayarları'nda yüklenir)") + " <b>" + kacis(m.eposta) + "</b> adresine gönderilir." +
       (m.onBilgi ? " Son gönderim: " + MK.zamanYaz(m.onBilgi) + "." : ""), tus: "Gönder", tamam: function () {
       m.onBilgi = MK.simdi(); MK.bildir("Ön bilgilendirme formu " + m.eposta + " adresine gönderildi.");
       yenile(); var t = document.querySelector('[data-eylem="on-bilgi-gonder"]'); if (t) t.focus();

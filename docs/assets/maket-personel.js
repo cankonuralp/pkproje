@@ -675,6 +675,12 @@
     return '<section class="a-bolum" aria-labelledby="a-b-rapor"><div class="a-alt-bas"><h2 class="a-alt-baslik" id="a-b-rapor">Rapor</h2></div>' +
         /* 213 (2026-09-30): "Uygun değil" maddede fotoğraf zorunluluğu firmaya göre; başlangıçta zorunlu (§3.7 satır 14) */
         '<label class="a-onay-kutusu"><input type="checkbox" data-kusur-foto' + (MV.kusurFotoZorunlu() ? " checked" : "") + '><span>"Uygun değil" işaretlenen maddede fotoğraf zorunlu</span></label></section>' +
+      /* N1 (2026-09-30, reisim: "ön bilgilendirme formu her firmanın kendi formatına göre değişir"): firma PDF'ini yükler; müşteri kartındaki
+         "Ön bilgilendirme formu gönder" bunu gönderir; yüklenmediyse temel format KM-FR-OBF-01 (§3.7 satır 15) */
+      '<section class="a-bolum" aria-labelledby="a-b-obf"><div class="a-alt-bas"><h2 class="a-alt-baslik" id="a-b-obf">Ön bilgilendirme formu</h2></div>' +
+        (MV.FIRMA.onBilgiDosya ? '<div class="a-dosya-sec">' + MK.dosyaAlan({ ad: MV.FIRMA.onBilgiDosya, degistir: "obf-yukle", sil: "obf-sil" }) + "</div>"
+          : '<p class="a-bolum-aciklama">Firma formatı yüklenmedi; müşteriye temel format (KM-FR-OBF-01) gider.</p><div class="a-eylem-cubugu a-eylem-sol">' +
+            MK.tus({ eylem: "obf-yukle", ad: "Firma formatını yükle", ikon: "upload", sinif: "a-tus-ikincil" }) + "</div>") + "</section>" +
       /* 212 (2026-09-30): mesai takibi — aç/kapa, günlük normal ve mesai süresi (dk); raporun süresi ekipman türünün kontrol süresi */
       (function () {
         var m = MV.mesai();
@@ -827,6 +833,17 @@
   };
   X["zimmete-git"] = function () { bolumeGit("a-b-zimmet"); };
   X["atamaya-git"] = function () { bolumeGit("a-b-atama"); };
+  X["obf-yukle"] = function () {
+    MK.dosyaSec({ kabul: ".pdf", enCokMB: 10, ornek: "on-bilgilendirme-formu.pdf" }, function (ad) {
+      MV.FIRMA.onBilgiDosya = ad; ayarCiz(); MK.bildir("Ön bilgilendirme formu yüklendi; müşterilere bu gider.");
+      var b = document.querySelector('#a-b-obf ~ * [data-eylem="obf-yukle"], [data-eylem="obf-yukle"]'); if (b) b.focus();
+    });
+  };
+  X["obf-sil"] = function () {
+    MK.onayla({ baslik: "Ön bilgilendirme formunu kaldır", metin: "<b>" + kacis(MV.FIRMA.onBilgiDosya) + "</b> kaldırılır; müşterilere temel format gider.", tus: "Kaldır", tamam: function () {
+      delete MV.FIRMA.onBilgiDosya; ayarCiz(); MK.bildir("Ön bilgilendirme formu kaldırıldı; temel format kullanılıyor."); var b = document.querySelector('[data-eylem="obf-yukle"]'); if (b) b.focus();
+    } });
+  };
   X["atama-ekle"] = function () { location.hash = "#/p/" + aktif().id + "/atama"; };
   X["atama-dosya-sec"] = function () {
     MK.dosyaSec({ kabul: ".pdf,image/*", enCokMB: 10, ornek: "atama-" + (A.tur ? A.tur.toLowerCase() : "belgesi") + "-" + MK.BUGUN + ".pdf" }, function (ad) { if (!A) return; A.dosya = ad; delete A.hata.dosya; atamaCiz(); $("a-atama-alt").querySelector(".a-tus-birincil").focus(); });
