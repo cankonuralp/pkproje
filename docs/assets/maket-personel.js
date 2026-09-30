@@ -138,6 +138,7 @@
         not: h ? (h.durum === "etkin" ? h.roller.map(function (r) { return MV.rol(r).kisa; }).join(" · ") : HESAP[h.durum].ad) : "Hesap aç", uyari: !!h && h.durum === "ilk" }) +
       yuz({ ikon: "scroll-text", ad: "İSG-KATİP kaydı", sayi: MV.ISG.filter(function (x) { return x.k === p.id && !x.onceki; }).length, modul: "Sözleşmeler · İSG-KATİP", href: sayfa(12) && sayfa(12) + "#/isg?kisi=" + p.id }) +
       yuz({ ikon: "package", ad: "Zimmetinde", sayi: z.length, eylem: "zimmete-git" }) +
+      (inspector(p) ? yuz({ ikon: "file-check", ad: "Ekipman ataması", sayi: MV.atamalari(p.id).length, eylem: "atamaya-git", not: MV.atamalari(p.id).length ? "tür" : "atama yok", uyari: !MV.atamalari(p.id).length }) : "") +
       /* eğitim sayıları eğitim kayıtlarından (M10/M16); tekrarı geçen ayrıca söylenir */
       (function () { var eg = MV.egitimleri(p.id), gecti = eg.filter(function (x) { return MV.egitimDurum(x) === "gecti"; }).length, yakin = eg.filter(function (x) { return MV.egitimDurum(x) === "yakin"; }).length;
         return yuz({ ikon: "graduation-cap", ad: "Eğitim", sayi: eg.length, eylem: "egitime-git",
@@ -250,6 +251,30 @@
       '<div class="a-zimmet-form-durum">' + zimmetFormuDurum(p, z) + "</div>" +
       (z.length ? '<div class="a-liste-kap">' + MK.tablo({ baslik: "Zimmetindekiler", sinif: "a-tablo-kzimmet", sutunlar: ZIMMET_SUTUN, kayitlar: z }) + "</div>"
         : '<p class="a-bos-satir">Zimmetinde varlık yok.</p>') + "</section>";
+  }
+
+  /* EKİPMAN ATAMALARI (L4, 2026-09-30): denetçinin atandığı ekipman türleri + atama belgesi; belge görüntülenir, iner, değiştirilir; atama
+     kaldırılır. Atanmadığı türde plan ve rapor yalnız uyarı. Yalnız inspector rolündeki kişide. */
+  var ATAMA_SUTUN = [
+    { k: "tur", baslik: "Ekipman türü", kart: "ust", sira: 1, hucre: function (a) { var t = MV.tur(a.tur); return "<span>" + kirp(t.ad) + '<span class="a-alt-satir">' + MV.bransAd(t.b) + "</span></span>"; } },
+    { k: "tarih", baslik: "Atama tarihi", kart: "govde", sira: 2, hucre: function (a) { return '<span class="a-kart-etiket">Atama tarihi</span><span class="a-tarih-saat">' + MK.tarihYaz(a.tarih) + "</span>"; } },
+    { k: "belge", baslik: "Atama belgesi", kart: "govde", sira: 3, hucre: function (a) { return '<span class="a-kart-etiket">Atama belgesi</span><span class="a-dosya-ad">' + ikon("file-text", "a-ikon-kucuk") + kacis(a.dosya) + "</span>"; } },
+    { k: "eylem", baslik: "İşlem", gizliBaslik: true, kart: "eylem", sira: 9, hucre: function (a) {
+      var ad = MV.tur(a.tur).ad;
+      return '<div class="a-eylem"><div class="a-eylem-tuslar">' + MK.pdfTus(a.dosya, "Görüntüle") +
+        '<button class="a-tus a-tus-ikincil" type="button" data-eylem="dosya-indir" data-dosya="' + kacis(a.dosya) + '" aria-label="' + kacis(ad) + ' atama belgesini indir">' + ikon("download", "a-ikon-kucuk") + "İndir</button>" +
+        MK.tus({ eylem: "atama-degistir", ad: "Değiştir", ikon: "upload", sinif: "a-tus-ikincil", veri: { id: a.id } }) +
+        '<button class="a-ikon-tus" type="button" data-eylem="atama-sil" data-id="' + a.id + '" aria-label="' + kacis(ad) + ' atamasını kaldır" title="Atamayı kaldır">' + ikon("x") + "</button></div></div>";
+    } }
+  ];
+  function atamaHtml(p) {
+    if (!inspector(p)) return "";
+    var l = MV.atamalari(p.id).slice().sort(function (a, b) { var x = MV.tur(a.tur), y = MV.tur(b.tur); return x.b === y.b ? x.ad.localeCompare(y.ad, "tr") : x.b === "m" ? -1 : 1; });
+    return '<section class="a-bolum" aria-labelledby="a-b-atama"><div class="a-alt-bas"><h2 class="a-alt-baslik" id="a-b-atama" tabindex="-1">Ekipman atamaları</h2>' +
+        '<span class="a-sayac"><b>' + l.length + "</b> tür</span>" +
+        (p.durum === "etkin" ? '<div class="a-eylem-cubugu a-bolum-tus">' + MK.tus({ eylem: "atama-ekle", ad: "Atama ekle", ikon: "plus", sinif: "a-tus-ikincil" }) + "</div>" : "") + "</div>" +
+      (l.length ? '<div class="a-liste-kap">' + MK.tablo({ baslik: "Ekipman atamaları", sinif: "a-tablo-atama", sutunlar: ATAMA_SUTUN, kayitlar: l }) + "</div>"
+        : '<div class="a-bolum-serit">' + MK.serit("uyari", "triangle-alert", "Hiçbir ekipman türüne atanmamış. Plan ve rapor açılabilir; uyarı görünür.") + "</div>") + "</section>";
   }
 
   /* özlük dosyası (40): kişinin belgeleri; yalnız firma yöneticisi görür (KVKK: özlük bilgisi). Eğitim sertifikaları Eğitimler'de. */
@@ -441,7 +466,7 @@
         bilgi("Mobil imza telefonu", p.imzaTel ? '<span class="a-kod">' + kacis(p.imzaTel) + "</span>" : MV.imzaYontem().k === "mobil" && inspector(p) ? '<span class="a-yuz-uyari">Yok · mobil imzaya gönderilemez</span>' : yok) +
         bilgi("İşe başlama", MK.tarihYaz(p.basla)) + (p.durum === "ayrildi" ? bilgi("Ayrılış", MK.tarihYaz(p.ayrildi)) : "") +
       "</dl></section>" +
-      maasHtml(p) + hesapHtml(p) + zimmetHtml(p) + egitimHtml(p) + ozlukHtml(p);
+      maasHtml(p) + hesapHtml(p) + atamaHtml(p) + zimmetHtml(p) + egitimHtml(p) + ozlukHtml(p);
   }
 
   /* ── GİRİŞ HESABI PENCERESİ: hesap aç (e-posta + roller) · yeni geçici parola · parola bir kez gösterilir (34) ─────────── */
@@ -485,6 +510,28 @@
     hesapPencereCiz();
     if (!$("a-hesap-pencere").open) $("a-hesap-pencere").showModal();
     var ilk = $("h-eposta") || $("a-hesap-alt").querySelector(".a-tus-birincil"); if (ilk) ilk.focus();
+  }
+
+  /* ── EKİPMAN ATAMASI PENCERESİ (L4) ─────────────────────────────────────────────────────────────────── */
+  var A = null;
+  var ggIso = function (s) { var m = /^(\d{2})\.(\d{2})\.(\d{4})$/.exec((s || "").trim()); if (!m) return null; var iso = m[3] + "-" + m[2] + "-" + m[1], d = new Date(iso + "T12:00:00"); return isNaN(d) || d.getDate() !== +m[1] ? null : iso; };
+  function atamaCiz(odak) {
+    var p = MV.kisi(A.kisi), var_ = MV.atamalari(p.id).map(function (a) { return a.tur; });
+    var turler = MV.KATALOG.filter(function (t) { return var_.indexOf(t.k) < 0; }).map(function (t) { return [t.k, t.ad, MV.bransAd(t.b)]; })
+      .sort(function (a, b) { return a[2] === b[2] ? a[1].localeCompare(b[1], "tr") : a[2] < b[2] ? 1 : -1; });
+    $("a-atama-govde").innerHTML = '<p class="a-pencere-ozet"><b>' + kacis(p.ad) + "</b> · " + kacis(MV.meslekAd(p)) + "</p>" + '<div class="a-form">' +
+      MK.alan({ id: "at-tur", etiket: "Ekipman türü", zorunlu: true, genis: true, hata: A.hata.tur, girdi: MK.secim({ id: "at-tur", ad: "Ekipman türü", deger: A.tur, secenekler: turler, ipucu: "Tür seçin", gecersiz: !!A.hata.tur, tanim: "at-tur-ipucu" }) }) +
+      MK.alan({ id: "at-tarih", etiket: "Atama tarihi", zorunlu: true, hata: A.hata.tarih, ipucu: "GG.AA.YYYY", girdi: MK.girdi({ id: "at-tarih", deger: A.tarih, sinif: "a-girdi-sicil", hata: A.hata.tarih, ek: ' inputmode="numeric" maxlength="10"' }) }) +
+      '<div class="a-alan-grup a-alan-genis"><p class="a-etiket">Atama belgesi <span class="a-zorunlu">zorunlu</span></p>' +
+        '<div class="a-dosya-sec" id="at-dosya">' + (A.dosya ? MK.dosyaAlan({ ad: A.dosya, degistir: "atama-dosya-sec", sil: "atama-dosya-kaldir" }) : MK.tus({ eylem: "atama-dosya-sec", ad: "Dosya seç", ikon: "file-plus", sinif: "a-tus-ikincil" })) +
+        (A.hata.dosya ? '<p class="a-ipucu a-ipucu-uyari" id="at-dosya-ipucu">' + A.hata.dosya + "</p>" : "") + "</div></div></div>";
+    $("a-atama-alt").innerHTML = MK.tus({ eylem: "pencere-kapat", ad: "Vazgeç", sinif: "a-tus-ikincil" }) + MK.tus({ eylem: "atama-kaydet", ad: "Ata", ikon: "check" });
+    if (odak) { var el = $(odak); if (el) el.focus(); }
+  }
+  function atamaAc(p) {
+    A = { kisi: p.id, tur: "", tarih: MK.tarihYaz(MK.BUGUN), dosya: "", hata: {} };
+    atamaCiz(); if (!$("a-atama-pencere").open) $("a-atama-pencere").showModal();
+    var s = $("at-tur"); if (s) s.focus();
   }
 
   /* ── ÖZLÜK BELGESİ PENCERESİ ───────────────────────────────────────────────────────────────────────── */
@@ -681,7 +728,7 @@
     if ((m = /^#\/p\/([a-z0-9]+)\/zimmet-formu$/.exec(h))) return { v: "zform", id: m[1] };
     if ((m = /^#\/p\/([a-z0-9]+)\/zimmet-gecmisi$/.exec(h))) return { v: "zgecmis", id: m[1] };
     if ((m = /^#\/p\/([a-z0-9]+)\/zimmet-imzali\/([A-Z0-9-]+)$/.exec(h))) return { v: "zimzali", id: m[1], no: m[2] };
-    if ((m = /^#\/p\/([a-z0-9]+)\/(hesap|belge|bordro)$/.exec(h))) return { v: "kart", id: m[1], pencere: m[2] };
+    if ((m = /^#\/p\/([a-z0-9]+)\/(hesap|belge|bordro|atama)$/.exec(h))) return { v: "kart", id: m[1], pencere: m[2] };
     if ((m = /^#\/p\/([a-z0-9]+)$/.exec(h))) return { v: "kart", id: m[1] };
     return { v: "liste" };
   }
@@ -707,6 +754,7 @@
     if (odakla && !r.pencere) { window.scrollTo(0, 0); var h = document.querySelector("#a-icerik > :not([hidden]) h1"); if (h) h.focus({ preventScroll: true }); }
     if (r.pencere === "hesap" && p) { if (!$("a-hesap-pencere").open) hesapPencereAc(p); } else if ($("a-hesap-pencere").open) $("a-hesap-pencere").close();
     if (r.pencere === "belge" && p) { if (!$("a-belge-pencere").open) belgeAc(p); } else if ($("a-belge-pencere").open) $("a-belge-pencere").close();
+    if (r.pencere === "atama" && p) { if (!$("a-atama-pencere").open) atamaAc(p); } else if ($("a-atama-pencere").open) $("a-atama-pencere").close();
     if (r.pencere === "bordro" && p) { if (!$("a-bordro-pencere").open) bordroAc(p); } else if ($("a-bordro-pencere").open) $("a-bordro-pencere").close();
   }
   MK.goster = goster;
@@ -778,6 +826,38 @@
     } });
   };
   X["zimmete-git"] = function () { bolumeGit("a-b-zimmet"); };
+  X["atamaya-git"] = function () { bolumeGit("a-b-atama"); };
+  X["atama-ekle"] = function () { location.hash = "#/p/" + aktif().id + "/atama"; };
+  X["atama-dosya-sec"] = function () {
+    MK.dosyaSec({ kabul: ".pdf,image/*", enCokMB: 10, ornek: "atama-" + (A.tur ? A.tur.toLowerCase() : "belgesi") + "-" + MK.BUGUN + ".pdf" }, function (ad) { if (!A) return; A.dosya = ad; delete A.hata.dosya; atamaCiz(); $("a-atama-alt").querySelector(".a-tus-birincil").focus(); });
+  };
+  X["atama-dosya-kaldir"] = function () { if (!A) return; A.dosya = ""; atamaCiz(); var b = document.querySelector('#at-dosya [data-eylem="atama-dosya-sec"]'); if (b) b.focus(); };
+  X["atama-kaydet"] = function () {
+    if (!A) return;
+    var iso = ggIso(A.tarih); A.hata = {};
+    if (!A.tur) A.hata.tur = "Ekipman türü seçilmeli.";
+    if (!iso) A.hata.tarih = "GG.AA.YYYY biçiminde geçerli bir tarih.";
+    if (!A.dosya) A.hata.dosya = "Atama belgesi yüklenmeli.";
+    var hk = Object.keys(A.hata); if (hk.length) { atamaCiz(hk[0] === "dosya" ? null : "at-" + hk[0]); if (hk[0] === "dosya") { var b = document.querySelector('#at-dosya [data-eylem="atama-dosya-sec"]'); if (b) b.focus(); } return; }
+    MV.ATAMALAR.push({ id: "at" + (MV.ATAMALAR.length + 100), k: A.kisi, tur: A.tur, tarih: iso, dosya: A.dosya });
+    var ad = MV.tur(A.tur).ad, kisi = A.kisi; A = null;
+    location.hash = "#/p/" + kisi; MK.bildir(ad + " ataması eklendi; belgesi kartta.");
+    setTimeout(function () { bolumeGit("a-b-atama"); }, 0);
+  };
+  X["atama-degistir"] = function (el) {
+    var a = MV.ATAMALAR.filter(function (x) { return x.id === el.dataset.id; })[0]; if (!a) return;
+    MK.dosyaSec({ kabul: ".pdf,image/*", enCokMB: 10, ornek: "atama-" + a.tur.toLowerCase() + "-" + MK.BUGUN + ".pdf" }, function (ad) {
+      a.dosya = ad; kartCiz(aktif()); MK.bildir(MV.tur(a.tur).ad + " atama belgesi değiştirildi.");
+      var b = document.querySelector('[data-eylem="atama-degistir"][data-id="' + a.id + '"]'); if (b) b.focus();
+    });
+  };
+  X["atama-sil"] = function (el) {
+    var i = MV.ATAMALAR.map(function (x) { return x.id; }).indexOf(el.dataset.id); if (i < 0) return;
+    var a = MV.ATAMALAR[i], ad = MV.tur(a.tur).ad;
+    MK.onayla({ baslik: "Atamayı kaldır", metin: "<b>" + kacis(ad) + "</b> ataması ve belgesi kaldırılır. Bu türde plan ve raporda uyarı görünür.", tus: "Kaldır", tamam: function () {
+      MV.ATAMALAR.splice(MV.ATAMALAR.indexOf(a), 1); kartCiz(aktif()); MK.bildir(ad + " ataması kaldırıldı."); bolumeGit("a-b-atama");
+    } });
+  };
   X["egitime-git"] = function () { bolumeGit("a-b-egitim"); };
   /* 2026-09-27: zimmet teslim formu yazdırma penceresinden PDF olur (imzaya götürülür) */
   X["zform-pdf"] = function () { var n = $("a-nesne"); MK.yazdir(formNo(aktif()) + " · zimmet teslim formu", [].map.call(n.children, function (e) { return e.matches(".a-kirinti") ? "" : e.outerHTML; }).join("")); };
@@ -863,6 +943,7 @@
     if (id === "ay-zeden") { MV.FIRMA.zimmetEden = deger; ZF = null; ayarCiz(); $(id).focus(); MK.bildir("Zimmet formunda teslim eden başlangıçta: " + MV.kisi(deger).ad + "."); return; }
     if (id === "f-meslek") { F.meslek = deger; delete F.hata.meslek; formCiz(); }
     else if (id === "b-tur") { B.tur = deger; belgeCiz(); }
+    else if (id === "at-tur" && A) { A.tur = deger; delete A.hata.tur; atamaCiz(id); }
     else if (id === "r-ay") { BR.ay = deger; bordroCiz(id); }
     else if ((m = /^m-(\w+)-(\d)$/.exec(id))) { R.taslak[m[1]][+m[2]] = deger; rollerCiz(); }
   };
@@ -872,6 +953,7 @@
     if (k) { F[k] = t.value; return; }
     if (t.id === "h-eposta") { W.eposta = t.value.trim(); var yer = t.selectionStart; hesapPencereCiz("h-eposta"); $("h-eposta").setSelectionRange(yer, yer); }
     else if (t.id === "b-aciklama") B.aciklama = t.value;
+    else if (t.id === "at-tarih" && A) A.tarih = t.value;
     else if (BR && /^r-(brut|net|maliyet)$/.test(t.id)) BR[t.id.slice(2)] = t.value;
   };
   document.addEventListener("change", function (e) {

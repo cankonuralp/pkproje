@@ -726,6 +726,9 @@ a.a-yuz:hover { border-color: var(--kenar-alan); background: var(--zemin); }
 .a-tablo-kegitim .a-k-egitim { width: 34%; } .a-tablo-kegitim .a-k-tarih { width: 14%; } .a-tablo-kegitim .a-k-tekrar { width: 18%; }   /* T10: kartta eğitimler */
 .a-tablo-kegitim .a-k-belge { width: 16%; } .a-tablo-kegitim .a-k-durum { width: 18%; }
 .a-tablo-ozluk .a-k-belge { width: 52%; } .a-tablo-ozluk .a-k-tarih { width: 24%; } .a-tablo-ozluk .a-k-eylem { width: 24%; }
+.a-tablo-atama .a-dosya-ad { display: inline-flex; align-items: center; gap: 6px; min-width: 0; overflow-wrap: anywhere; }
+.a-tablo-atama .a-eylem-tuslar { flex-wrap: wrap; }   /* dar ekranda dört tuş alt satıra iner, taşmaz */
+.a-tablo-atama .a-k-tur { width: 22%; } .a-tablo-atama .a-k-tarih { width: 13%; } .a-tablo-atama .a-k-belge { width: 25%; } .a-tablo-atama .a-k-eylem { width: 40%; }   /* L4: ekipman atamaları */
 .a-tablo-ana .a-k-plan { width: 38%; } .a-tablo-ana .a-k-tarih { width: 24%; } .a-tablo-ana .a-k-ekip { width: 22%; } .a-tablo-ana .a-k-durum { width: 16%; }
 .a-matris-sabit { display: inline-flex; flex-direction: column; align-items: flex-start; gap: 2px; }
 .a-tablo-matris .a-secim-tus { min-height: var(--tus-y); }
@@ -1346,8 +1349,8 @@ a.a-yuz:hover { border-color: var(--kenar-alan); background: var(--zemin); }
   .a-tablo-gider .a-kart-etiket, .a-tablo-isgider .a-kart-etiket, .a-tablo-bordro .a-kart-etiket,
   .a-tablo-karlilik .a-kart-etiket, .a-tablo-iskar .a-kart-etiket, .a-tablo-kriterbelge .a-kart-etiket { display: inline; }
   /* M1 2. tur: zimmet, özlük ve Ana sayfa listeleri kartta etiket: değer; rol yetkileri kartında seçim alanı değerin yerinde */
-  .a-tablo-kzimmet td[data-kart="govde"], .a-tablo-kegitim td[data-kart="govde"], .a-tablo-ozluk td[data-kart="govde"], .a-tablo-ana td[data-kart="govde"] { display: flex; align-items: baseline; justify-content: space-between; flex-wrap: wrap; gap: 4px 8px; }
-  .a-tablo-kzimmet .a-kart-etiket, .a-tablo-kegitim .a-kart-etiket, .a-tablo-ozluk .a-kart-etiket, .a-tablo-ana .a-kart-etiket, .a-tablo-zgecmis .a-kart-etiket { display: inline; }
+  .a-tablo-kzimmet td[data-kart="govde"], .a-tablo-kegitim td[data-kart="govde"], .a-tablo-ozluk td[data-kart="govde"], .a-tablo-atama td[data-kart="govde"], .a-tablo-ana td[data-kart="govde"] { display: flex; align-items: baseline; justify-content: space-between; flex-wrap: wrap; gap: 4px 8px; }
+  .a-tablo-kzimmet .a-kart-etiket, .a-tablo-kegitim .a-kart-etiket, .a-tablo-ozluk .a-kart-etiket, .a-tablo-atama .a-kart-etiket, .a-tablo-ana .a-kart-etiket, .a-tablo-zgecmis .a-kart-etiket { display: inline; }
   .a-tablo-zgecmis td[data-kart="govde"] { display: flex; align-items: baseline; justify-content: space-between; flex-wrap: wrap; gap: 4px 8px; text-align: right; }
   .a-tablo-matris .a-secim { flex: 0 1 170px; }
   .a-tablo-isgid td[data-kart="govde"], .a-tablo-planekp td[data-kart="govde"], .a-tablo-aday td[data-kart="govde"],

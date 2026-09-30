@@ -180,6 +180,11 @@
       if (ekip.length && !ekip.some(function (p) { return yetkili(p, x.tur); }))
         sat.push('<li class="a-kosul-eksik">' + ikon("triangle-alert", "a-ikon-kucuk") + "<span>" + kacis(x.tur.ad) + ": ekipte bu türe yetkili meslekten kimse yok.</span></li>");
     });
+    /* ekipman ataması (L4, 2026-09-30): türe yetkili biri var ama kimse o türe atanmamış → uyarı, engel değil */
+    k.forEach(function (x) {
+      if (ekip.length && ekip.some(function (p) { return yetkili(p, x.tur); }) && !ekip.some(function (p) { return MV.atandi(p.id, x.tur.k); }))
+        sat.push('<li class="a-kosul-eksik">' + ikon("file-check", "a-ikon-kucuk") + "<span>" + kacis(x.tur.ad) + ": ekipte bu türe atanmış denetçi yok (Personel › Ekipman atamaları).</span></li>");
+    });
     var KSUTUN = [
       { k: "tur", baslik: "Tür", kart: "ust", sira: 1, hucre: function (x) { return kirp(x.tur.ad) + '<span class="a-alt-satir">' + bransAd(x.tur.b) + "</span>"; } },
       { k: "yetkili", baslik: "Ekipte yetkili", kart: "govde", sira: 4, hucre: function (x) {

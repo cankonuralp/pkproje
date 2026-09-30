@@ -2,8 +2,8 @@
  "maket": "m1",
  "tarih": "2026-09-30",
  "arac": "tools/olc-bulut.mjs --etkilesim (başsız tarayıcı, 1920 açık tema; gen verilen denemede o genişlik)",
- "toplam": 80,
- "gecen": 80,
+ "toplam": 86,
+ "gecen": 86,
  "denemeler": [
   {
    "ad": "İzin talepleri: formun PDF'i açılır, e-posta talep edene",
@@ -290,6 +290,48 @@
    "gen": 1920,
    "sayfa": "maket/personel.html",
    "hash": "#/roller",
+   "gecti": true
+  },
+  {
+   "ad": "ekipman atamaları: kartta tür + belge; Görüntüle belgeyi açar",
+   "gen": 1920,
+   "sayfa": "maket/personel.html",
+   "hash": "#/p/mk",
+   "gecti": true
+  },
+  {
+   "ad": "ekipman ataması eklenir: yüklenen belgenin kendisi kartta, Görüntüle onu açar, İndir aynen indirir; sayfa yenilenince kalır",
+   "gen": 1920,
+   "sayfa": "maket/personel.html",
+   "hash": "#/p/mk/atama",
+   "gecti": true
+  },
+  {
+   "ad": "ekipman ataması: boş gönderilirse tür, tarih düzgün, belge istenir; odak türde",
+   "gen": 1920,
+   "sayfa": "maket/personel.html",
+   "hash": "#/p/mk/atama",
+   "gecti": true
+  },
+  {
+   "ad": "ekipman ataması kaldırılır (onay), belge değiştirilir",
+   "gen": 1920,
+   "sayfa": "maket/personel.html",
+   "hash": "#/p/mk",
+   "gecti": true
+  },
+  {
+   "ad": "atanmadığı tür: Plan aç özetinde uyarı (engel değil)",
+   "gen": 1920,
+   "sayfa": "maket/plan-ac.html",
+   "hash": "#/?tesis=t12",
+   "gecti": true
+  },
+  {
+   "ad": "atanmadığı tür: açık raporda uyarı şeridi (engel değil), imzalı raporda yok",
+   "gen": 1920,
+   "sayfa": "maket/rapor.html",
+   "hash": "#/r/ET-1009",
    "gecti": true
   },
   {

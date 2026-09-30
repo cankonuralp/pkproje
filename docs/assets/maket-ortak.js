@@ -894,6 +894,7 @@
     var ad = el.dataset.dosya, d = MK.DOSYA[ad];
     if (d && d.dosya) MK.indir(ad, d.dosya); else if (d && d.url) MK.indirUrl(ad, d.url); else MK.bildir("Örnek kayıt: " + ad + " dosyası makette yok.");
   };
+  MK.eylem["dosya-indir"] = MK.eylem["foto-indir"];   /* yüklenen herhangi bir dosya aynen iner (ekipman ataması belgesi, L4) */
   /* ekrandaki tablo → satırlar (kart etiketi ve gizli yazı hariç; "12.500,00 TL" sayı olur) — Excel'e aktarılan liste ekrandakiyle aynı */
   MK.tablodanSatirlar = function (tablo) {
     var metin = function (h) {

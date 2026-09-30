@@ -916,6 +916,17 @@
     if (!MV.yetkiliOlabilir(p)) e.push("Meslek yetkili kişi meslekleri arasında değil");
     return e;
   };
+  /* EKİPMAN ATAMALARI (L4, 2026-09-30, reisim: "denetçi hesaplarının profillerinde personel kartlarında yani, ekipman atamaları kısmı olsun
+     ekipman ataması yapılsın ve atama belgesi yüklensin görülebilsin indirilebilsin"): denetçinin hangi ekipman TÜRÜNE atandığı + atama
+     belgesi (PDF). Atanmadığı türde plan ve rapor yalnız UYARI (engel değil). Örnek atamalar UYDURMA; belgeleri makette yok. */
+  MV.ATAMALAR = [];
+  [["mk", ["HT", "KS", "FL", "KK", "KP", "TP", "ZV", "YA", "KU", "PR"], "2024-03-11"], ["ea", ["ET", "AT", "YK", "DP", "YG", "TR"], "2024-05-20"],
+    ["hp", ["KU", "HT", "FL", "PR", "IS", "KS", "LP"], "2023-11-06"], ["sy", ["HT", "KS", "FL"], "2025-02-17"], ["dk", ["ET", "AT"], "2025-06-02"]].forEach(function (x) {
+    x[1].forEach(function (t) { MV.ATAMALAR.push({ id: "at" + (MV.ATAMALAR.length + 1), k: x[0], tur: t, tarih: x[2], dosya: "atama-" + x[0] + "-" + t.toLowerCase() + ".pdf" }); });
+  });
+  MV.atamalari = function (k) { return MV.ATAMALAR.filter(function (a) { return a.k === k; }); };
+  MV.atandi = function (k, tur) { return MV.ATAMALAR.some(function (a) { return a.k === k && a.tur === tur; }); };
+
   /* plan kabulü için kişi eksikleri (§3.2 madde 2b–2c; 2a İSG-KATİP plan × tesis başına, burada değil) */
   MV.kabulEksik = function (p) {
     if (!p.hesap || p.hesap.roller.indexOf("inspector") < 0) return null;

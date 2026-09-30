@@ -540,6 +540,8 @@
         (r.kopya && r.durum === "taslak" ? MK.serit("bilgi", "copy", "Bilgiler " + '<span class="a-rapor-no">' + r.kopya + "</span> raporundan kopyalandı; test değerleri, fotoğraflar ve sonuç bu ekipman için girilir.") : "") +
         /* meslek uyarısı (V4; §3.2 öneri 2c → karar): engel değil */
         (!MV.meslekYetkili(r.kisi, t) ? MK.serit("uyari", "triangle-alert", "Mesleğiniz (" + kacis(MV.meslekAd(p)) + ") " + kacis(t.ad).toLocaleLowerCase("tr") + " için yetkili meslekler arasında değil. Rapor yazılabilir; teknik yönetici onayda görür.") : "") +
+        /* ekipman ataması (L4, 2026-09-30): açık raporda, yazan bu türe atanmamışsa uyarı, engel değil; meslek uyarısı varsa o yeter */
+        (!oku && MV.meslekYetkili(r.kisi, t) && !MV.atandi(r.kisi, t.k) ? MK.serit("uyari", "file-check", kacis(p.ad) + " " + kacis(t.ad).toLocaleLowerCase("tr") + " türüne atanmamış (Personel › Ekipman atamaları). Rapor yazılabilir; teknik yönetici onayda görür.") : "") +
         (r.geri && !oku ? MK.serit("uyari", "undo-2", "<b>Geri gönderildi</b> · " + kacis(MV.kisi(r.geri.kim).ad) + " · " + MK.zamanYaz(r.geri.zaman) + ": “" + kacis(r.geri.gerekce) + "”") : "") +
         (oku ? MK.serit("bilgi", "lock", r.durum === "onayda" ? "Teknik yönetici onayında · " + kacis(yon.ad) + (r.gonderildi ? " · " + MK.zamanYaz(r.gonderildi) : "")
           : r.durum === "imzada" ? "İmzaya gönderildi" : r.durum === "imzali" ? "Tamamlandı · son imza atıldı, müşteriye açıldı" : "Muayene uzmanı imzası bekleniyor") : "") +

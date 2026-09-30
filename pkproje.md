@@ -2035,6 +2035,13 @@ revizyon, alan kopyalama, hafif kusur devri, meslek eşleşme denetimi).
 - Emsal ürünler: https://opwire.app/iso-17020-periyodik-kontrol-yazilimi/ · https://17020muayene.vidco.com.tr/ · https://akuple.com/asansor-kontrol-yazilimi/ · https://ensyazilim.com/
 
 ## 11 · Değişiklik günlüğü
+- 2026-09-30 (174): **L4 · Personel kartında Ekipman atamaları** (§9 kırkıncı tur; soru cevabı: atama ekipman TÜRÜNE). Inspector'ın kartında
+  "Ekipman atamaları" bölümü + yüz: atandığı türler (tür · branş · atama tarihi · atama belgesi); satırda **Görüntüle** (belge açılır),
+  **İndir** (yüklenen dosya aynen iner), **Değiştir**, kaldır (onay). **Atama ekle** penceresi: tür (atanmamışlar), atama tarihi, belge
+  (zorunlu). Hiç ataması olmayan inspector'da kartta uyarı. Atanmadığı türde **yalnız uyarı**: Plan aç özetinde "ekipte bu türe atanmış
+  denetçi yok", açık saha raporunda şerit (imzalı raporda yok; meslek uyarısı varsa o yeter). Örnek atamalar uydurma (mk, ea, hp, sy, dk;
+  raporlarıyla tutarlı). MV.ATAMALAR kalıcı. Ölçüm: m1 304/304 · 86/86 (6 yeni) · 152/152; m6 80/80 · 19/19 · 40/40; m8 184/184 · 106/106
+  · 92/92; gözle 1920 + 375.
 - 2026-09-30 (173): **L6 · Plan aç'ta ekipman seçimi (kapsam) kalktı** (§9 kırkıncı tur). Plan aç'ın 4. bölümü (ekipman listesi, Kontrolü
   gelenleri seç / Hepsini seç / Seçimi temizle, süzgeç) kalktı; bölümler 1–4. Tesisin bütün kayıtlı ekipmanı plana girer — başka açık planda
   olan da ("aynı ekipman iki açık planda olmaz" kısıtı kalktı). Özet: "N ekipman · N tür · hepsi plana girer" + tür başına tablo (ekipte
