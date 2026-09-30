@@ -926,7 +926,7 @@ a.a-yuz:hover { border-color: var(--kenar-alan); background: var(--zemin); }
 .a-kriter-ad { display: flex; gap: 8px; margin: 0; font-weight: 600; }
 .a-kriter-no { flex: none; min-width: 20px; white-space: nowrap; color: var(--yazi2); font-variant-numeric: tabular-nums; }
 .a-kriter-cevap { min-width: 0; }
-.a-madde-bilgi-tus { margin: -10px 0 -10px -10px; vertical-align: middle; color: var(--yazi2); }   /* madde açıklaması (214); dokunma alanı tuş boyu, satırı büyütmez */
+.a-madde-bilgi-tus { margin: -10px 0; vertical-align: middle; color: var(--yazi2); }   /* madde açıklaması (214); dokunma alanı tuş boyu, satırı büyütmez; sol eksi pay yok, simge metinden ≥ 9 px uzak (O1) */
 .a-madde-bilgi { grid-column: 1 / -1; display: grid; gap: 4px; margin: 0; padding: 8px 12px; background: var(--bilgi-zemin); color: var(--bilgi-yazi); border-radius: var(--r-orta); }
 .a-madde-bilgi p { margin: 0; } .a-madde-bilgi .a-alt-satir { color: inherit; }
 .a-kriter-cevap-foto { display: flex; align-items: center; gap: 6px; }   /* "Uygun değil" maddede kamera simgesi seçimin solunda (213) */
@@ -1000,8 +1000,10 @@ a.a-yuz:hover { border-color: var(--kenar-alan); background: var(--zemin); }
 .a-format-liste { margin: 10px 0 0; }
 .a-format-liste summary { cursor: pointer; min-height: var(--tus-y); display: flex; align-items: center; font-weight: 600; }
 .a-format-liste ol, .a-format-liste ul { margin: 4px 0 0; padding-left: 20px; display: grid; gap: 4px; font-size: var(--boy-kucuk); }
-.a-tablo-nokta .a-k-ad { width: 30%; } .a-tablo-nokta .a-k-zx { width: 14%; } .a-tablo-nokta .a-k-zs { width: 20%; } .a-tablo-nokta .a-k-ik { width: 10%; }
-.a-tablo-nokta .a-k-not { width: 16%; } .a-tablo-nokta .a-k-eylem { width: 10%; }
+/* RCD testi sütunu da pay alır (2026-09-30, O1: genişliği yoktu, iki kutu ve başlık Sonuç'un üstüne kayıyordu) */
+.a-tablo-nokta .a-k-ad { width: 22%; } .a-tablo-nokta .a-k-zx { width: 12%; } .a-tablo-nokta .a-k-zs { width: 17%; } .a-tablo-nokta .a-k-ik { width: 9%; }
+.a-tablo-nokta .a-k-rcdt { width: 20%; } .a-tablo-nokta .a-k-not { width: 13%; } .a-tablo-nokta .a-k-eylem { width: 7%; }
+.a-cift-girdi > .a-girdi { flex: 1 1 0; min-width: 0; }
 .a-tablo-rcd .a-k-ad { width: 38%; } .a-tablo-rcd .a-k-id { width: 16%; } .a-tablo-rcd .a-k-td { width: 16%; } .a-tablo-rcd .a-k-not { width: 20%; } .a-tablo-rcd .a-k-eylem { width: 10%; }
 .a-tablo-olcum .a-k-ad { width: 42%; } .a-tablo-olcum .a-k-no { width: 24%; } .a-tablo-olcum .a-k-kal { width: 24%; } .a-tablo-olcum .a-k-eylem { width: 10%; }
 /* rapor: gerekli cihaz satırları (2026-09-28) */

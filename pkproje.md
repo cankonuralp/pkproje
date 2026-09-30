@@ -2034,6 +2034,12 @@ Ek (aynı gün, reisim birebir): *"pasife al tuşu raporlarda değil ekipmanlar 
 seri no olmamasına rağmen seri no soruyor ekipman kopyalarken ve değiştirilememesine rağmen ekipman türü soruyor gibi gözüküyor ekipman kodu
 ve ekipman bölümü sorsun yeterli"* (Kaydet ve kopyala penceresinin görüntüsüyle) → **N10:** kopyalarken yalnız ekipman kodu ve ekipman
 bölümü (kullanım yeri) sorulur; seri no ve tür alanı yok.
+**Kırk ikinci tur (2026-09-30, reisim birebir; saha raporunun 5.1 ölçüm noktası tablosu ve "Uygun değil" işaretli maddelerin görüntüleriyle):**
+*"kayık yazılar var, uygun değil işaretlenen durumlar için kusur açıklaması kısmı gelmesin, fotoğraf eklenirse fotoğrafın altına ilgili madde
+yazacak şekilde kusur açıklamaları kısmına gelsin"* → **O1:** ölçüm noktası tablosunda RCD testi sütunu başlığı ve kutuları Sonuç sütununa
+kayıyordu, madde (i) simgesi metne yapışıktı — düzeltildi. **O2:** "Uygun değil" maddede Kusur açıklaması alanı yok (madde metni kusurun
+kendisi); fotoğraf eklenirse Kusur açıklamaları bölümünde fotoğraf ve altında ilgili madde. Kusur derecesi (hafif / ağır) Bakanlık formatlı
+türde kalır: sonucu (hafif / ağır kusurlu) o belirler, reisim "gelmesin" demedi.
 
 **Açık kalanlar:** ~~Ana sayfada İSGGM duyuruları~~ (2026-09-27: makette eklendi; okuma işi uygulamada) (reisim 2026-09-26: *"Ana sayfada isgüm duyurularını gösterebilir miyiz ? Bunu
 yapılacaklar listesine ekle"*; öneri: ÇSGB İSGGM duyurular sayfası — https://www.csgb.gov.tr/isggm/duyurular/ — sunucuda günde birkaç kez
@@ -2067,6 +2073,10 @@ revizyon, alan kopyalama, hafif kusur devri, meslek eşleşme denetimi).
 - Emsal ürünler: https://opwire.app/iso-17020-periyodik-kontrol-yazilimi/ · https://17020muayene.vidco.com.tr/ · https://akuple.com/asansor-kontrol-yazilimi/ · https://ensyazilim.com/
 
 ## 11 · Değişiklik günlüğü
+- 2026-09-30 (188): **O1 · Saha raporunda kayık yazılar** (§9 kırk ikinci tur). 5.1 ölçüm noktası tablosunda "RCD testi IΔ · TΔ" sütununun
+  genişliği tanımlı değildi: başlık harf harf alt alta, IΔ / TΔ kutuları Sonuç rozetinin altına eziliyordu → sütunlar yeniden paylaştırıldı
+  (RCD testi %20), iki kutu hücreyi eşit böler. Madde (i) simgesi metne 4–5 px yapışıktı (sol eksi pay) → pay kalktı, en az 9 px. 2 yeni deneme
+  (eski CSS'le ikisi de düşüyor, yenisiyle 1920 · 1080 · 375 · 320'de geçiyor).
 - 2026-09-30 (187): **N11 · Pasife al raporda değil, ekipmanda** (§9 kırk birinci tur ek). Plan içindeki rapor satırında "Pasife al" kalktı
   (Yeni raporda yalnız Sil); pasife alma ekipman satırında (raporu olmayan ekipmanda Pasife al, pasifte Etkinleştir). Rapor pasife alma
   penceresi ve işleyicisi kaldırıldı; onunla ilgili 1 durum ve 2 deneme kalktı, 1 yeni deneme. Onaylar'daki "Pasif raporlar" sekmesi eski
