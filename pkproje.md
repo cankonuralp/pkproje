@@ -2014,6 +2014,12 @@ revizyon, alan kopyalama, hafif kusur devri, meslek eşleşme denetimi).
 - Emsal ürünler: https://opwire.app/iso-17020-periyodik-kontrol-yazilimi/ · https://17020muayene.vidco.com.tr/ · https://akuple.com/asansor-kontrol-yazilimi/ · https://ensyazilim.com/
 
 ## 11 · Değişiklik günlüğü
+- 2026-09-30 (168): **K5 · 211 Formatı güncelle** (§9 otuz dokuzuncu tur). Rapor açıldığı format sürümünü tutar (`r.sablon`, türün şablon
+  sürümü). Türün formatı yenilendiyse açık (Yeni / geri gönderilmiş) raporda şerit: "Bu rapor eski format sürümüyle açıldı (…); güncel sürüm
+  …" + **Formatı güncelle**: maddeler yeni formata çekilir, eşleşen maddenin cevabı korunur, yeni madde Uygun gelir (§3.8 kural 3). Kopya
+  her zaman güncel formatla açılır. Örnek: TP-1005 eski sürümle (v1, son madde yok). Gönderilmiş raporda yok (salt okunur). Ölçüm: m8
+  184/184 · 104/104 (2 yeni) · 92/92; planlar 128/128 · 58/58 · 64/64; gözle 1920.
+
 - 2026-09-30 (167): **K4 · 212 Mesai takibi** (§9 otuz dokuzuncu tur). Günlük **normal 480 dk + mesai 220 dk** (Firma ayarları › Mesai
   takibi: aç/kapa, iki süre; yalnız yönetici; geçersiz süre kaydedilmez). Raporun süresi ekipman türünün kontrol süresi (Ekipman türleri, dk);
   kişinin o gün oluşturduğu pasif olmayan raporların süresi önce normali, sonra mesaiyi doldurur. **Günlük süre çubuğu** (tek üretici

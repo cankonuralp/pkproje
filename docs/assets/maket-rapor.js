@@ -43,6 +43,7 @@
     var cihazDoldur = function () { r.cihaz = MV.turCihazlari(t).map(function (c) { return MV.eklenebilirCihazlar(r.kisi, [c])[0]; }).filter(Boolean).map(function (v) { return v.id; }); };
     /* Bakanlık formatlı tür (ZPKR01 · ZPKR02, 2026-09-27): ekipman detayları ve tespitler formattan; topraklamada ölçüm noktaları ve RCD
        satırları (noktalar önceki rapordan gelir, Zx her kontrolde yeniden ölçülür) */
+    r.sablon = t.sablon || "";   /* raporun açıldığı format sürümü (211) */
     var F = MV.formatYapi(t); r.F = F; r.detay = {}; r.tespit = {}; r.metod = t.olcumMetot || ""; r.nokta = []; r.rcdler = []; r.pd = []; r.zi = [];   /* ölçüm metodu türden (2026-09-28) */
     var ornekBilgi = function () {
       F.detay.forEach(function (x) { r.detay[x.k] = x.ornek; });
@@ -100,6 +101,8 @@
       }
       if (e.kod === "AT-2005") cihazDoldur();
       if (e.kod === "KP-1004") dolu();   /* onaya hazır */
+      /* 211 (2026-09-30): eski format sürümüyle açılmış rapor — o sürümde son madde yoktu; "Formatı güncelle" örneği */
+      if (e.kod === "TP-1005") { r.sablon = "v1 · 01.06.2025"; r.kriter.pop(); }
       if (e.kod === "ZV-1007") {   /* branş yöneticisi geri gönderdi: test değerleri eksik */
         dolu(); r.test = ts.map(function () { return ""; }); r.foto = 1;
         r.geri = { kim: "sy", zaman: "2026-09-23T15:10", gerekce: "Yük deneyi değerleri yazılmamış: dinamik ve statik deney yüklerini girin." };
@@ -524,6 +527,10 @@
       /* günlük süre (212): raporu yazan inspector'ın bugünkü süresi, bu raporun süresi */
         (oku ? "" : '<div class="a-rapor-mesai">' + MK.mesaiCubugu(r.kisi, MV.tur(r.e.tur).sure || 0, "r-mesai-sebep") + "</div>") +
       '<div class="a-uyari-serit">' + MV.durumSerit(MV.rapor(r.no)) +
+        /* FORMATI GÜNCELLE (2026-09-30, 211): firmanın rapor formatı yenilendiyse açık raporda; eşleşen maddelerin cevabı korunur */
+        (!oku && r.sablon && t.sablon && r.sablon !== t.sablon ? '<div class="a-serit a-serit-bilgi" id="r-format-serit">' + ikon("refresh-cw", "a-ikon-kucuk") +
+          "<span>Bu rapor eski format sürümüyle açıldı (" + kacis(r.sablon) + "); güncel sürüm " + kacis(t.sablon) + ".</span>" +
+          MK.tus({ eylem: "format-guncelle", ad: "Formatı güncelle", ikon: "refresh-cw", sinif: "a-tus-ikincil a-serit-tus" }) + "</div>" : "") +
         (r.kopya && r.durum === "taslak" ? MK.serit("bilgi", "copy", "Bilgiler " + '<span class="a-rapor-no">' + r.kopya + "</span> raporundan kopyalandı; test değerleri, fotoğraflar ve sonuç bu ekipman için girilir.") : "") +
         /* meslek uyarısı (V4; §3.2 öneri 2c → karar): engel değil */
         (!MV.meslekYetkili(r.kisi, t) ? MK.serit("uyari", "triangle-alert", "Mesleğiniz (" + kacis(MV.meslekAd(p)) + ") " + kacis(t.ad).toLocaleLowerCase("tr") + " için yetkili meslekler arasında değil. Rapor yazılabilir; teknik yönetici onayda görür.") : "") +
@@ -583,7 +590,7 @@
     var p = MV.PLANLAR.filter(function (x) { return x.id === pid; })[0];
     if (p && Array.isArray(p.gecmis)) p.gecmis.push({ z: simdi, kim: r.kisi, ne: "Ekipman kopyalandı", ayrinti: e.kod + " → " + kod + " · " + no, s: p.gecmis.length });
     KAYIT[no] = JSON.parse(JSON.stringify({ marka: r.marka, model: r.model, imal: r.imal, amac: r.amac, bolumAd: r.bolumAd, detay: r.detay, tespit: r.tespit, cihaz: r.cihaz,
-      kriter: r.kriter.map(function (x) { return { c: x.c, not: "" }; }), konum: d.konum || r.konum, seri: d.seri, kayit: simdi, olustu: simdi, bas: simdi, kopya: r.no }));
+      kriter: MV.kriterler(r.t).map(function (ad, i) { var x = r.kriter[i]; return { c: x ? x.c : "uygun", not: "" }; }),   /* kopya güncel formatla açılır (211) */ konum: d.konum || r.konum, seri: d.seri, kayit: simdi, olustu: simdi, bas: simdi, kopya: r.no }));
     return { kod: kod, no: no };
   }
   var kayitMetin = function (r) { return r.degisti ? "Kaydedilmemiş değişiklik var" : r.kayit ? "Son kayıt " + MK.zamanYaz(r.kayit) : "Henüz kaydedilmedi"; };
@@ -845,6 +852,14 @@
       delete KAYIT[no]; Object.keys(R).forEach(function (k) { if (R[k] && R[k].no === no) delete R[k]; });
       MK.kaliciYaz(); location.href = MK.adres(13, pid ? "#/plan/" + pid : "#/");   /* rapor plandan da kalkar (Planlar ortak kayda bakar) */
     } });
+  };
+  X["format-guncelle"] = function () {
+    var r = aktif(); if (!r || r.durum !== "taslak") return;
+    var yeni = MV.kriterler(r.t), once = r.kriter.length, eklenen = Math.max(0, yeni.length - once);
+    r.kriter = yeni.map(function (ad, i) { return r.kriter[i] || { c: "uygun", not: "" }; });   /* eşleşen madde cevabını korur, yeni madde Uygun gelir (§3.8 kural 3) */
+    r.sablon = r.t.sablon; degisti(r); ciz();
+    var h = document.querySelector("h1"); if (h) h.focus();
+    MK.bildir("Format güncellendi (" + r.sablon + "): " + (eklenen ? eklenen + " yeni madde eklendi (Uygun)" : "madde değişmedi") + "; cevaplar korundu.");
   };
   X["kopya-ac"] = function () {
     var r = aktif(); if (!r) return;

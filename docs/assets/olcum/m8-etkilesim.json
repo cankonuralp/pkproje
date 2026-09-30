@@ -2,8 +2,8 @@
  "maket": "m8",
  "tarih": "2026-09-30",
  "arac": "tools/olc-bulut.mjs --etkilesim (başsız tarayıcı, 1920 açık tema; gen verilen denemede o genişlik)",
- "toplam": 102,
- "gecen": 102,
+ "toplam": 104,
+ "gecen": 104,
  "denemeler": [
   {
    "ad": "önceki kontrolün hafif kusuru listelenir; Giderilmedi → bu raporun kusurlarına girer, sonuç önerisi Uygun değil",
@@ -164,6 +164,20 @@
    "gen": 1920,
    "sayfa": "maket/rapor.html",
    "hash": "#/r/ET-1009",
+   "gecti": true
+  },
+  {
+   "ad": "eski format sürümüyle açılmış raporda Formatı güncelle: yeni madde Uygun eklenir, önceki cevaplar korunur, şerit kalkar (sayfa yenilense de)",
+   "gen": 1920,
+   "sayfa": "maket/rapor.html",
+   "hash": "#/r/TP-1005",
+   "gecti": true
+  },
+  {
+   "ad": "güncel formatla açılmış raporda Formatı güncelle yok",
+   "gen": 1920,
+   "sayfa": "maket/rapor.html",
+   "hash": "#/r/KS-1006",
    "gecti": true
   },
   {
