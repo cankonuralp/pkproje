@@ -2061,6 +2061,11 @@ revizyon, alan kopyalama, hafif kusur devri, meslek eşleşme denetimi).
 - Emsal ürünler: https://opwire.app/iso-17020-periyodik-kontrol-yazilimi/ · https://17020muayene.vidco.com.tr/ · https://akuple.com/asansor-kontrol-yazilimi/ · https://ensyazilim.com/
 
 ## 11 · Değişiklik günlüğü
+- 2026-09-30 (183): **N7 · Onaylar: vekil yok, mekanik yönetici / elektrik yönetici** (§9 kırk birinci tur). "Elektrik · vekil" sekmesi ve
+  vekil onayı kalktı; her yönetici yalnız kendi branşını görür. Üstte **Makette bakış** (Mekanik yönetici · Elektrik yönetici — yalnız
+  "kime nasıl görünür" gösterimi, uygulamada yok): seçilince kullanıcı (Selin Yıldız / Can Öztürk), kuyruk, Tüm raporlar, Revize istekleri,
+  Pasif raporlar ve menü balonu o yöneticinin. Rapor ekranında bakış raporun branşından. 4 deneme gerekçeyle güncellendi. Ölçüm: m9 200/200
+  · 49/49 · 100/100; gözle 1920.
 - 2026-09-30 (182): **N6 · Günlük süre üst çubukta, açılır pencere** (§9 kırk birinci tur). Giriş yapan kişi denetçiyse ve mesai takibi açıksa
   üst çubukta tek satır: saat · "Günlük süre" · harcanan / toplam dk (telefonda kısalır, 320'de yalnız harcanan). Basınca pencere: normal ve
   mesai çubukları, rapor ekranında "Bu rapor: N dk", ayarların yeri. Plan içi ve rapordaki kalıcı çubuk kalktı; yalnız süre dolunca

@@ -202,7 +202,7 @@
    "gecti": true
   },
   {
-   "ad": "vekil: elektrik kuyruğu açılır, elektrik raporu onaylanır",
+   "ad": "elektrik yönetici bakışı: elektrik kuyruğu Can Öztürk'te, elektrik raporu onun adına onaylanır (vekil yok)",
    "gen": 1920,
    "sayfa": "maket/onaylar.html",
    "hash": "#/",
@@ -251,7 +251,7 @@
    "gecti": true
   },
   {
-   "ad": "190: vekil branş seçiliyken Tüm raporlar o branşın; elektrik raporunda durum değiştirilir; kendi branşına dönünce mekanik",
+   "ad": "190: elektrik yönetici bakışında Tüm raporlar o branşın; elektrik raporunda durum değiştirilir; kendi branşına dönünce mekanik",
    "gen": 1920,
    "sayfa": "maket/onaylar.html",
    "hash": "#/",

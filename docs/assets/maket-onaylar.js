@@ -10,15 +10,26 @@
 (function () {
   "use strict";
   var $ = MK.$, kacis = MK.kacis, ikon = MK.ikon, kirp = MK.kirp, rozet = MK.rozet, SZ = MK.SZ;
-  var BEN = "sy", BENIM = "m", BRANS = "m";   /* 100: branş yöneticisi yokken başka branşın kuyruğu vekil olarak açılır (?brans=e) */
+  /* N7 (2026-09-30, reisim: "onaylar kısmında elektrik vekil yazıyor … elektrik vekil değil … Mekanik yönetici ve elektrik yönetici var"):
+     vekil sekmesi kalktı. Her yönetici yalnız kendi branşını görür; "Makette bakış" seçimi kimin ne gördüğünü gösterir (uygulamada yok):
+     mekanik yönetici Selin Yıldız (#/…), elektrik yönetici Can Öztürk (#/…?brans=e). Rapor ekranında bakış raporun branşından. */
+  var BAKIS = "m", BEN = "sy", BENIM = "m", BRANS = "m";
+  var YONETICI = { m: { k: "sy", rol: "Mekanik yönetici · Inspector" }, e: { k: "co", rol: "Elektrik yönetici" } };
+  var ek = function () { return BAKIS === "e" ? "?brans=e" : ""; };
+  function bakisKur(b) {
+    BAKIS = BRANS = BENIM = b; BEN = YONETICI[b].k; MK.BEN = BEN;
+    var u = document.querySelector(".a-kullanici"), p = MV.kisi(BEN);
+    if (u && p) { u.querySelector(".a-avatar").textContent = MV.bas(p.ad); u.querySelector(".a-kullanici-ad").textContent = p.ad; u.querySelector(".a-kullanici-rol").textContent = YONETICI[b].rol; }
+    if (MK.takipCiz) MK.takipCiz();
+  }
   var brans = function (r) { return MV.tur(MV.ekipman(r.kod).tur).b; };
   var kuyruk = function () { return MV.RAPORLAR.filter(function (r) { return r.durum === "onayda" && brans(r) === BRANS; }).sort(function (a, b) { return a.gonderildi < b.gonderildi ? 1 : -1; }); };   /* en yeni üstte (reisim 2026-09-26) */
   /* pasif raporlar (2026-09-28, T2; reisim: "inspector pasife alabilir … aktif etme ve silme yalnız yönetici"): branşın pasif raporları */
   var pasifler = function () { return MV.RAPORLAR.filter(function (r) { return r.pasif && brans(r) === BENIM; }).sort(function (a, b) { return a.pasifZaman < b.pasifZaman ? 1 : -1; }); };
-  /* 190 (2026-09-29): Tüm raporlar seçili branşın — kendi branşı ya da vekil olduğu branş (#/tum?brans=e) */
+  /* 190 (2026-09-29): Tüm raporlar bakıştaki yöneticinin branşının (#/tum, elektrik #/tum?brans=e) */
   var tumu = function () { return MV.RAPORLAR.filter(function (r) { return !r.pasif && brans(r) === BRANS; }); };
   var TUM_BRANS = null;
-  var tumAdres = function () { return BRANS === BENIM ? "#/tum" : "#/tum?brans=" + BRANS; };
+  var tumAdres = function () { return "#/tum" + ek(); };
   var saatFarki = function (iso) { return Math.round((new Date(MK.simdi() + ":00Z") - new Date(iso + ":00Z")) / 36e5); };
   var bekleme = function (iso) { var h = saatFarki(iso); return h < 1 ? "az önce" : h < 24 ? h + " saattir" : Math.floor(h / 24) + " gündür"; };
 
@@ -52,14 +63,15 @@
   ];
   /* 192 (2026-09-29): inspector'ın revize istekleri — seçili branşın tamamlanan raporları */
   var istekler = function () { return MV.RAPORLAR.filter(function (r) { return r.revizeIstek && r.durum === "imzali" && brans(r) === BRANS; }).sort(function (a, b) { return a.revizeIstek.zaman < b.revizeIstek.zaman ? 1 : -1; }); };
-  var istekAdres = function () { return BRANS === BENIM ? "#/istekler" : "#/istekler?brans=" + BRANS; };
+  var istekAdres = function () { return "#/istekler" + ek(); };
   function sekmeler(gor) {   /* gor: "kuyruk" · "tum" · "istek" · "pasif" */
-    $("a-uyari").innerHTML = '<div class="a-sekmeler a-bolum-serit" role="group" aria-label="Kuyruk">' + ["m", "e"].map(function (b) {
-      var n = MV.RAPORLAR.filter(function (r) { return r.durum === "onayda" && brans(r) === b; }).length;
-      return '<a class="a-sekme" href="' + (b === BENIM ? "#/" : "#/?brans=" + b) + '" aria-pressed="' + (gor === "kuyruk" && BRANS === b) + '">' + MV.bransAd(b) + (b === BENIM ? "" : " · vekil") + " <b>" + n + "</b></a>";
-    }).join("") + '<a class="a-sekme" href="' + tumAdres() + '" aria-pressed="' + (gor === "tum") + '">Tüm raporlar' + (BRANS === BENIM ? "" : " · " + MV.bransAd(BRANS).toLocaleLowerCase("tr") + " vekil") + " <b>" + tumu().length + "</b></a>" +
+    $("a-uyari").innerHTML = '<div class="a-pano-anahtar a-bolum-serit"><span class="a-etiket a-etiket-satir">Makette bakış</span><div class="a-sekmeler" role="group" aria-label="Bakış">' +
+        [["m", "Mekanik yönetici"], ["e", "Elektrik yönetici"]].map(function (x) { return '<a class="a-sekme" href="#/' + (x[0] === "e" ? "?brans=e" : "") + '"' + (BAKIS === x[0] ? ' aria-current="page"' : "") + ">" + x[1] + "</a>"; }).join("") + "</div></div>" +
+      '<div class="a-sekmeler a-bolum-serit" role="group" aria-label="Onaylar">' +
+      '<a class="a-sekme" href="#/' + ek() + '" aria-pressed="' + (gor === "kuyruk") + '">Onay kuyruğu · ' + MV.bransAd(BAKIS).toLocaleLowerCase("tr") + " <b>" + kuyruk().length + "</b></a>" +
+      '<a class="a-sekme" href="' + tumAdres() + '" aria-pressed="' + (gor === "tum") + '">Tüm raporlar <b>' + tumu().length + "</b></a>" +
       '<a class="a-sekme" href="' + istekAdres() + '" aria-pressed="' + (gor === "istek") + '">Revize istekleri <b>' + istekler().length + "</b></a>" +
-      '<a class="a-sekme" href="#/pasif" aria-pressed="' + (gor === "pasif") + '">Pasif raporlar <b>' + pasifler().length + "</b></a></div>";
+      '<a class="a-sekme" href="#/pasif' + ek() + '" aria-pressed="' + (gor === "pasif") + '">Pasif raporlar <b>' + pasifler().length + "</b></a></div>";
   }
   var PASIF_SUTUN = [SUTUN[0], SUTUN[1], SUTUN[2],
     { k: "pasif", baslik: "Pasife alındı", kart: "govde", sira: 4, hucre: function (r) { return '<span class="a-kart-etiket">Pasife alındı</span><span class="a-tarih-gun">' + MK.zamanYaz(r.pasifZaman) + "</span>"; } },
@@ -169,7 +181,7 @@
      102'nin "Onayı geri al"ı da durur (tek tıkla kuyruğa döner) */
   function raporCiz(r) {
     var e = MV.ekipman(r.kod), t = MV.tur(e.tur), ts = MV.tesis(r.tesis), rv = r.revizyonlar && r.revizyonlar[0];
-    $("a-nesne").innerHTML = MK.kirinti([["Onaylar", "#/"], ["Tüm raporlar", brans(r) === BENIM ? "#/tum" : "#/tum?brans=" + brans(r)], [r.no]]) +
+    $("a-nesne").innerHTML = MK.kirinti([["Onaylar", "#/"], ["Tüm raporlar", "#/tum" + (brans(r) === "e" ? "?brans=e" : "")], [r.no]]) +
       '<div class="a-nesne-bas"><div class="a-nesne-kimlik"><div class="a-nesne-baslik"><h1 tabindex="-1">' + r.no + (rv ? "-" + rv.ad : "") + "</h1>" + rozet(MV.raporDurum(r)) + "</div>" +
         '<p class="a-nesne-alt">' + ikon("wrench", "a-ikon-kucuk") + '<span><span class="a-kod">' + e.kod + "</span> · " + kacis(t.ad) + " · " + kacis(ts.ad) + " · " + kacis(MV.kisi(r.kisi).ad) + "</span></p></div>" +
         '<div class="a-eylem-cubugu">' + (r.arsiv ? MK.tus({ eylem: "arsiv-geri", ad: "Arşivden geri getir", ikon: "undo-2", veri: { no: r.no } }) : r.durum === "imzali"
@@ -227,14 +239,12 @@
 
   /* ── GÖRÜNÜM ────────────────────────────────────────────────────────────────────────────────────────── */
   function rota() {
-    BRANS = /[?&]brans=e/.test(location.hash) ? "e" : /[?&]brans=m/.test(location.hash) ? "m" : BRANS;
-    if (location.hash === "#/" || location.hash === "") BRANS = BENIM;
-    if (location.hash === "#/pasif") return { v: "liste", pasif: true };
-    if (location.hash === "#/istekler") { BRANS = BENIM; return { v: "liste", istek: true }; }
-    if (/^#\/istekler\?brans=[a-z]$/.test(location.hash)) return { v: "liste", istek: true };
-    if (location.hash === "#/tum") { BRANS = BENIM; return { v: "liste", tum: true }; }
-    if (/^#\/tum\?brans=[a-z]$/.test(location.hash)) return { v: "liste", tum: true };
-    var m = /^#\/r\/([A-Za-z0-9-]+)(\/geri)?$/.exec(location.hash);
+    var h = location.hash, y = h.replace(/\?.*$/, ""), m = /^#\/r\/([A-Za-z0-9-]+)(\/geri)?$/.exec(h), rp = m && MV.rapor(m[1]);
+    var b = m ? (rp ? brans(rp) : BAKIS) : /[?&]brans=e/.test(h) ? "e" : "m";
+    if (b !== BAKIS || MK.BEN !== BEN) bakisKur(b);
+    if (y === "#/pasif") return { v: "liste", pasif: true };
+    if (y === "#/istekler") return { v: "liste", istek: true };
+    if (y === "#/tum") return { v: "liste", tum: true };
     return m ? { v: "rapor", no: m[1], pencere: !!m[2] } : { v: "liste" };
   }
   function goster(odakla) {
@@ -253,7 +263,7 @@
     var r = MV.rapor(rota().no), s = sonraki(r);
     r.durum = "onaylandi"; r.onay = { kim: BEN, zaman: MK.simdi(), vekil: brans(r) !== BENIM };
     s = s === r ? null : s;
-    location.hash = s ? "#/r/" + s.no : BRANS === BENIM ? "#/" : "#/?brans=" + BRANS;
+    location.hash = s ? "#/r/" + s.no : "#/" + ek();
     MK.bildir(r.no + " onaylandı; muayene uzmanı imzasında, " + MV.kisi(r.kisi).ad + " imzalayınca tamamlanır." + (s ? " Sıradaki rapor açıldı." : " Kuyruk boş."));
   };
   X["onay-geri-al"] = function () {
@@ -321,7 +331,7 @@
     if (!r.ilkGonderim) r.ilkGonderim = r.gonderildi;   /* ilk gönderim korunur (performans: yazım süresi) */
     r.durum = "taslak"; r.geri = { kim: BEN, zaman: MK.simdi(), gerekce: W.gerekce.trim() }; r.gonderildi = null;
     $("a-pencere").close(); s = s === r ? null : s;
-    location.hash = s ? "#/r/" + s.no : BRANS === BENIM ? "#/" : "#/?brans=" + BRANS;
+    location.hash = s ? "#/r/" + s.no : "#/" + ek();
     MK.bildir(r.no + " geri gönderildi; " + MV.kisi(r.kisi).ad + " raporun üstünde gerekçeyi görür.");
   };
   MK.onGirdi = function (e) {
