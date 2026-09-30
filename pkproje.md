@@ -2052,6 +2052,20 @@ atladık, başka atladığımız bir iş var mı analiz et sayfayı test veriler
 firma ayarları personel kısmının altında değil ayrı bir modül olsun , ekran daha verimli kullanılsın."* → **R1:** Firma ayarları ayrı modül
 (Tanımlar grubunda), bölümler ızgarada, solda bölüm listesi. **R2:** kullanıcı menüsünde Hesabım (profil, parola değiştir) ve Çıkış yap; giriş
 sayfası (parolamı unuttum, geçici parolayla ilk giriş — M1'de vardı, bağlantısı yoktu) çıkıştan açılır. Eksik iş analizi ve soru listesi reisim'e.
+**R3 · Eksik iş analizi (2026-09-30; bütün maket sayfaları örnek veriyle gezildi, tam ölçümle birlikte; §4.9 ve §5 notlarıyla karşılaştırıldı).**
+Reisim'in kararına sunuldu, hiçbiri yapılmadı:
+- *Hesap / erişim:* (1) **"hesap oluşturma" kimin için?** — personel hesabı (Personel › giriş hesabı aç, geçici parola) ve müşteri hesabı
+  (Parolayı gönder) var; yeni **firmanın probata'ya kendi kaydı** (deneme süresi, alt alan adı seçimi) yok. (2) **Müşteri panelinde** Çıkış yap ve
+  parola değiştir yok. (3) **Yetkisiz sayfa**, **oturum süresi doldu**, **sayfa bulunamadı** ekranları yok. (4) Firma yöneticisi için **iki adımlı
+  giriş** (e-postaya kod) yok. (5) **KVKK aydınlatma metni** ve kullanım koşulları (giriş sayfasının altında; müşteride ilk girişte onay) yok.
+- *TS EN ISO/IEC 17020 kayıtları (§4.9'da yazılı, ekranı yok):* (6) **Şikâyet ve itiraz kaydı** (kayıt → inceleme → karar → müşteriye yanıt;
+  yalnız prosedür belgesi var). (7) **Hareket kaydı** (kim, ne zaman, ne yaptı): rol yetkisi var, görüntüleme ekranı yok. (8) **Denetçi yerinde
+  gözetimi** (yetkinlik izleme kaydı) yok. (9) İç tetkik ve YGG kayıtları: Dökümanlar'a belge olarak girebilir, ayrı ekran şart değil.
+- *Kullanımı kolaylaştıran:* (10) **Üst çubukta genel arama** (müşteri, ekipman kodu, seri no, rapor no). (11) **Rapor doğrulama**: PDF'teki
+  QR ile raporun gerçek olduğunu gösteren sayfa (dosya değil, yalnız no · tarih · sonuç; kalıcı açık dosya bağlantısı kuralına dokunmaz). (12)
+  **Ekipman etiketi** (QR'lı, sonraki kontrol tarihli muayene etiketi) basma. (13) **Takvim görünümü** (planlar ay / hafta, denetçiye göre).
+  (14) Raporu müşteriye **e-postayla gönderme** (portal var; bildirim kurmak reisim kararı, anayasa 1.3). (15) **Müşteri memnuniyet anketi**.
+  (16) Firmanın bütün verisini **dışa aktarma** (KVKK, ayrılan firma).
 
 **Açık kalanlar:** ~~Ana sayfada İSGGM duyuruları~~ (2026-09-27: makette eklendi; okuma işi uygulamada) (reisim 2026-09-26: *"Ana sayfada isgüm duyurularını gösterebilir miyiz ? Bunu
 yapılacaklar listesine ekle"*; öneri: ÇSGB İSGGM duyurular sayfası — https://www.csgb.gov.tr/isggm/duyurular/ — sunucuda günde birkaç kez
@@ -2085,6 +2099,8 @@ revizyon, alan kopyalama, hafif kusur devri, meslek eşleşme denetimi).
 - Emsal ürünler: https://opwire.app/iso-17020-periyodik-kontrol-yazilimi/ · https://17020muayene.vidco.com.tr/ · https://akuple.com/asansor-kontrol-yazilimi/ · https://ensyazilim.com/
 
 ## 11 · Değişiklik günlüğü
+- 2026-09-30 (194): **R3 · Eksik iş analizi** (§9 kırk üçüncü tur): 16 madde, dört başlık (hesap / erişim · 17020 kayıtları · kolaylık);
+  hiçbiri yapılmadı, reisim seçecek. Tam ölçüm bu teslimde koşuldu (sonuç commit mesajında).
 - 2026-09-30 (193): **R2 · Hesabım ve Çıkış yap** (§9 kırk üçüncü tur). Üst çubuktaki kullanıcı menüsü: **Hesabım** · Taleplerim · İzin talebi ·
   Masraf formu · **Çıkış yap**. Çıkış giriş sayfasına gider (M1'den beri makette olan giriş, **Parolamı unuttum** ve geçici parolayla ilk giriş
   artık bağlı). **Hesabım** sayfası (hesap.html): kişisel bilgiler (Personel kaydından, salt okunur; değişikliği firma yöneticisi yapar), **mobil
