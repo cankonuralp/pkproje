@@ -476,14 +476,14 @@
       : p.basladi ? (d === "tamam" ? tno(p.basladi) + (p.bitti.slice(0, 10) !== p.basladi.slice(0, 10) ? " – " + tno(p.bitti) : "") : "Başladı: " + tno(p.basladi)) : "";
     var kontrol = "";
     if (d === "kabul" || calisir(p)) kontrol =
-      '<div class="a-alt-bolum"><div class="a-alt-bas"><h3 class="a-alt-baslik" id="a-ekipman-baslik">Ekipmanlar</h3><span class="a-sayac" id="a-sayac-e"></span>' +
+      '<div class="a-alt-bolum a-plan-bolum"><div class="a-alt-bas"><h3 class="a-alt-baslik" id="a-ekipman-baslik">Ekipmanlar</h3><span class="a-sayac" id="a-sayac-e"></span>' +
         /* 2026-09-27 (reisim: "ekipan listesinbi excelden export etme ve inport etme olsun"): Excel'e aktar her zaman; Excel'den yükle
            ekipman eklenebilen durumda (denetimde) */
         '<div class="a-bolum-tuslar">' + MK.tus({ eylem: "excel-disa", ad: "Excel'e aktar", ikon: "download", sinif: "a-tus-ikincil", veri: { id: p.id } }) +
         (ekipmanAcik(p) ? MK.tus({ eylem: "excel-ice", ad: "Excel'den yükle", ikon: "upload", sinif: "a-tus-ikincil", veri: { id: p.id } }) +
           '<button class="a-tus a-tus-ikincil" type="button" data-eylem="ekle-ac" data-id="' + p.id + '">' + ikon("plus", "a-ikon-kucuk") + "Ekipman ekle</button>" : "") + "</div>" +
         "</div>" + MK.suzgecHtml("e") + '<div class="a-liste-kap" id="a-liste-e"></div><div id="a-sayfa-e"></div></div>' +
-      (calisir(p) ? '<div class="a-alt-bolum"><div class="a-alt-bas"><h3 class="a-alt-baslik" id="a-rapor-baslik" tabindex="-1">Raporlar</h3><span class="a-sayac" id="a-sayac-r"></span>' +
+      (calisir(p) ? '<div class="a-alt-bolum a-plan-bolum"><div class="a-alt-bas"><h3 class="a-alt-baslik" id="a-rapor-baslik" tabindex="-1">Raporlar</h3><span class="a-sayac" id="a-sayac-r"></span>' +
         (raporlar(p).length ? '<div class="a-bolum-tuslar">' + MK.tus({ eylem: "toplu-pdf", ad: "PDF indir", ikon: "download", sinif: "a-tus-ikincil", veri: { id: p.id } }) +
           '<button class="a-ikon-tus" type="button" data-eylem="saat-ac" data-id="' + p.id + '" aria-label="Rapor saatlerini hizala" title="Rapor saatlerini hizala">' + ikon("clock") + "</button></div>" : "") + "</div>" +
         MK.suzgecHtml("r") + '<div class="a-liste-kap" id="a-liste-r"></div><div id="a-sayfa-r"></div></div>' : "");

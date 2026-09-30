@@ -453,7 +453,7 @@ html[data-giris="fare"] .a-girdi:focus, html[data-giris="fare"] .a-alan:focus { 
 .a-adim-red .a-adim-isaret { border-color: var(--hata-yazi); background: var(--hata-zemin); color: var(--hata-yazi); }
 .a-adim-govde { min-width: 0; }
 .a-adim-bas { display: flex; align-items: baseline; flex-wrap: wrap; gap: 2px 10px; min-height: 28px; padding-top: 4px; }
-.a-adim-baslik { margin: 0; font-size: var(--boy-bolum); font-weight: var(--kal-bolum); }
+.a-adim-baslik { margin: 0; font-size: var(--boy-baslik); font-weight: var(--kal-baslik); }   /* 2026-09-29: plan içi başlıkları büyük (reisim) */
 .a-adim-bekliyor .a-adim-baslik { color: var(--yazi2); }
 .a-adim-durum { font-size: var(--boy-etiket); font-weight: 700; color: var(--yazi3); }
 .a-adim-tamam .a-adim-durum { color: var(--onay-yazi); }
@@ -492,6 +492,12 @@ html[data-giris="fare"] .a-girdi:focus, html[data-giris="fare"] .a-alan:focus { 
 .a-alt-baslik { margin: 0; font-size: var(--boy-govde); font-weight: 700; }
 .a-alt-bas.a-alt-bas-ic { margin-top: 24px; }   /* bölüm içindeki ikinci alt başlık (M2 müşteri girişi → ek girişler) */
 .a-alt-bolum .a-suzgec { margin-bottom: 8px; }
+/* plan içi Ekipmanlar · Raporlar (2026-09-29, reisim: "başlıklar büyük olmalı başlıklar ve bölümler birbirinden ayrıldığı belli olmuyor"):
+   başlık sayfa başlığı boyunda, bölümün üstünde kalın ayırıcı ve boşluk; kart içine alınmaz (kenarlar sayfa kenarıyla hizalı kalır, kalıp) */
+.a-plan-bolum { padding-top: 16px; border-top: 2px solid var(--kenar-alan); }
+.a-plan-bolum + .a-plan-bolum { margin-top: 16px; }
+.a-plan-bolum > .a-alt-bas { margin-bottom: 12px; }
+.a-plan-bolum .a-alt-baslik { font-size: var(--boy-baslik); }
 .a-bolum-tus { margin-left: auto; }
 .a-bolum-tuslar { margin-left: auto; display: flex; flex-wrap: wrap; justify-content: flex-end; gap: 8px; }   /* başlık sağında birden çok tuş */
 .a-excel-kap { margin-top: 8px; }   /* Excel önizlemesi (iki-üç sütun; telefonda da okunur) */

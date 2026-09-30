@@ -1941,6 +1941,11 @@ kısmında tamamla tuşu olsun diyince kontrol listesi tamamlandı desin sonra e
 açılmadan görünür (Y1). Inspector plan içinde oluşturduğu raporu silebilir (Y2; 2026-09-28'deki "silme yalnız yönetici" bununla değişti).
 "Kabul edildi" durumu kalır. Denetim adımında **Tamamla** → "Kontrol listesi tamamlandı"; en altta **Tamamla** → plan tamamlandı (Y3).
 
+**Otuz sekizinci tur — plan içi ve rapor görünüşü (2026-09-29, reisim birebir):** *"Plan içinde raporlar ve ekşpmanlar başlıkları büyük olmalı
+başlıklar ve bölümşer birbirinden ayrıldıpı belli olmuyor, Raporlar içerisinde hepsine uygula ve güncelle mobilde yazmamalı sadece işaretleri
+gözükmeli çünkü çok çirkin duruyor"* → Z1 plan içi başlıkları ve bölüm ayrımı · Z2 saha raporunda telefonda "Hepsini işaretle" ve "Güncelle"
+yalnız simge.
+
 **Açık kalanlar:** ~~Ana sayfada İSGGM duyuruları~~ (2026-09-27: makette eklendi; okuma işi uygulamada) (reisim 2026-09-26: *"Ana sayfada isgüm duyurularını gösterebilir miyiz ? Bunu
 yapılacaklar listesine ekle"*; öneri: ÇSGB İSGGM duyurular sayfası — https://www.csgb.gov.tr/isggm/duyurular/ — sunucuda günde birkaç kez
 okunur (pg-boss işi, §8.9), Ana sayfada son 5 duyuru başlık + tarih + kaynağa bağlantı; yalnız ekranda, bildirim yok; sayfa RSS vermiyorsa
@@ -1973,6 +1978,12 @@ revizyon, alan kopyalama, hafif kusur devri, meslek eşleşme denetimi).
 - Emsal ürünler: https://opwire.app/iso-17020-periyodik-kontrol-yazilimi/ · https://17020muayene.vidco.com.tr/ · https://akuple.com/asansor-kontrol-yazilimi/ · https://ensyazilim.com/
 
 ## 11 · Değişiklik günlüğü
+- 2026-09-29 (160): **Z1 · Plan içi başlıkları büyük, bölümler ayrık** (§9 otuz sekizinci tur, görünüş). Plan içindeki adım başlıkları
+  (Planlandı · Kabul · Denetim · Tamamlama) ile **Ekipmanlar** ve **Raporlar** başlıkları sayfa başlığı boyunda (yazı ölçeğinden
+  `--boy-baslik`); Ekipmanlar ve Raporlar bölümlerinin üstünde kalın ayırıcı çizgi ve boşluk. Önce kart denendi: içerik sayfa kenarından
+  34 px içeri kaydı, tablolar daraldı (ölçüm 32/128'e düştü, kalıbın kenar hizası kuralı) → kart bırakıldı, ayırıcı çizgi seçildi. Ölçüm:
+  planlar 128/128 · 56/56 (1 yeni) · 64/64; gözle 1920 + 375.
+
 - 2026-09-29 (159): **Y3 · Kontrol listesi Tamamla, en altta plan Tamamla** (§9 otuz sekizinci tur, düzeltme). Plan içinde iki adım:
   Denetim adımının altında (ekipman ve rapor listelerinden sonra) **Tamamla** → "Kontrol listesi tamamlandı" (Denetim adımı ✓, plan
   Denetimde kalır; "Kontrol listesini yeniden aç" ile geri alınır); ardından Tamamlama adımında **Tamamla** → plan Tamamlandı. Kontrol listesi
