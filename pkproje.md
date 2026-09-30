@@ -2013,6 +2013,17 @@ revizyon, alan kopyalama, hafif kusur devri, meslek eşleşme denetimi).
 - Emsal ürünler: https://opwire.app/iso-17020-periyodik-kontrol-yazilimi/ · https://17020muayene.vidco.com.tr/ · https://akuple.com/asansor-kontrol-yazilimi/ · https://ensyazilim.com/
 
 ## 11 · Değişiklik günlüğü
+- 2026-09-30 (165): **K2 · 204–210 Kaydet ve kopyala · telefonda İşlemler menüsü** (§9 otuz dokuzuncu tur). Saha rapor ekranında Kaydet ·
+  Onaya gönder · Sil'in yanında **Kaydet ve kopyala** (gönderilmiş / imzalı raporda **Kopyala**; her raporda). Pencere yeni ekipmanın kodunu
+  (zorunlu; A–Z, 0–9, tire, 3–20 hane; firmada eşsiz), seri noyu ve kullanım yerini sorar, tür aynı. Önce rapor kaydedilir; yeni ekipman ve
+  raporu (her zaman Yeni) bu raporun bilgileriyle açılır: ekipman bilgileri, ekipman detayları ve tespitler, ölçüm cihazları, madde cevapları
+  kopyalanır; "Uygun değil" maddenin kusur açıklaması / derecesi / fotoğrafı, test ve ölçüm değerleri, fotoğraflar, sonuç, notlar
+  kopyalanmaz. Yeni raporda "… raporundan kopyalandı" şeridi; ekipman ve rapor plana girer (plan hareket kaydına "Ekipman kopyalandı").
+  **Telefonda** bütün tuşlar tek **İşlemler** menüsünde (Onaya gönder · Kaydet · Kaydet ve kopyala · Sil; Sil en altta), masaüstü ve tablette
+  yan yana. Plan, ortak kayıttan gelen kopya ekipman ve raporları alır; rapor sırası ortak kayıttaki en büyük sıradan sürer. Yeni ikonlar
+  (Lucide 1.47.0, araçla): copy, ellipsis-vertical. Ölçüm: m8 184/184 · 98/98 (5 yeni) · 92/92 (3 durum menüden bağımsız basacak şekilde
+  güncellendi); planlar 128/128 · 56/56 · 64/64; m9 200/200 · 49/49 · 100/100; gözle 1920 + 375.
+
 - 2026-09-30 (164): **K1 · 203 Raporu olan ekipmanda Rapor oluştur yok** (§9 otuz dokuzuncu tur; 2026-09-28'deki "sınırsız" kararı
   değişti). Ekipman başına bir rapor: rapor oluşturulunca tuş gider; rapor silinir ya da pasife alınırsa geri gelir. "Aynı ekipmanın ikinci
   raporu" denemesi kalktı, öteki denemeler raporu olmayan ekipmana geçti. Ölçüm: planlar 128/128 · 56/56 · 64/64; m1 78/78; m8 93/93.

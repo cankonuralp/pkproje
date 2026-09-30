@@ -2,8 +2,8 @@
  "maket": "m8",
  "tarih": "2026-09-30",
  "arac": "tools/olc-bulut.mjs --etkilesim (başsız tarayıcı, 1920 açık tema; gen verilen denemede o genişlik)",
- "toplam": 93,
- "gecen": 93,
+ "toplam": 98,
+ "gecen": 98,
  "denemeler": [
   {
    "ad": "önceki kontrolün hafif kusuru listelenir; Giderilmedi → bu raporun kusurlarına girer, sonuç önerisi Uygun değil",
@@ -101,6 +101,41 @@
    "gen": 1920,
    "sayfa": "maket/rapor.html",
    "hash": "#/r/KS-1006",
+   "gecti": true
+  },
+  {
+   "ad": "Kaydet ve kopyala: kod sorulur, yeni ekipman bu raporun bilgileriyle açılır (madde cevapları gelir, kusur açıklaması / test / fotoğraf gelmez), yeni rapora gidilir, plana girer",
+   "gen": 1920,
+   "sayfa": "maket/rapor.html",
+   "hash": "#/r/ET-1009",
+   "gecti": true
+  },
+  {
+   "ad": "Kaydet ve kopyala: firmada kayıtlı kod verilemez (pencere söyler, kopyalanmaz)",
+   "gen": 1920,
+   "sayfa": "maket/rapor.html",
+   "hash": "#/r/ET-1009",
+   "gecti": true
+  },
+  {
+   "ad": "gönderilmiş raporda da Kopyala (Kaydet yok); kopya Yeni",
+   "gen": 1920,
+   "sayfa": "maket/rapor.html",
+   "hash": "#/r/HT-1001",
+   "gecti": true
+  },
+  {
+   "ad": "telefonda tek İşlemler menüsü: Onaya gönder · Kaydet · Kaydet ve kopyala · Sil; tuşlar yan yana görünmez",
+   "gen": 375,
+   "sayfa": "maket/rapor.html",
+   "hash": "#/r/ET-1009",
+   "gecti": true
+  },
+  {
+   "ad": "masaüstünde tuşlar yan yana (Sil · Kaydet ve kopyala · Kaydet · Onaya gönder), İşlemler menüsü görünmez",
+   "gen": 1920,
+   "sayfa": "maket/rapor.html",
+   "hash": "#/r/ET-1009",
    "gecti": true
   },
   {

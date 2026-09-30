@@ -512,6 +512,7 @@
         /* Ön izle (reisim 2026-09-28: "en sağ üstte ön izleme tuşu olmalı PDF çıktısını ön izleyebilmeliyim ön izle halinde PDF halini indirebilmeliyim") */
         '<div class="a-eylem-cubugu">' + MK.tus({ eylem: "on-izle", ad: "Ön izle", ikon: "eye", sinif: "a-tus-ikincil" }) + "</div></div>" +
       '<div class="a-uyari-serit">' + MV.durumSerit(MV.rapor(r.no)) +
+        (r.kopya && r.durum === "taslak" ? MK.serit("bilgi", "copy", "Bilgiler " + '<span class="a-rapor-no">' + r.kopya + "</span> raporundan kopyalandı; test değerleri, fotoğraflar ve sonuç bu ekipman için girilir.") : "") +
         /* meslek uyarısı (V4; §3.2 öneri 2c → karar): engel değil */
         (!MV.meslekYetkili(r.kisi, t) ? MK.serit("uyari", "triangle-alert", "Mesleğiniz (" + kacis(MV.meslekAd(p)) + ") " + kacis(t.ad).toLocaleLowerCase("tr") + " için yetkili meslekler arasında değil. Rapor yazılabilir; teknik yönetici onayda görür.") : "") +
         (r.geri && !oku ? MK.serit("uyari", "undo-2", "<b>Geri gönderildi</b> · " + kacis(MV.kisi(r.geri.kim).ad) + " · " + MK.zamanYaz(r.geri.zaman) + ": “" + kacis(r.geri.gerekce) + "”") : "") +
@@ -526,10 +527,9 @@
          kaydet gönder diye iki tuş olsun"); 2026-09-29 (reisim: "Raporu komple silebilmek için sil tuşu olsun kaydet tuşunun yanında olsun. /
          Kaydet gönder sil tuşları sanki bir barın içinde gibi değil bağımsız dursunlar"): çubuk yok, tuşlar kendi gölgeleriyle; Sil düzenlenebilen
          her raporda (silinebilir) */
-      (oku ? "" : '<div class="a-rapor-eylem">' +
-        (silinebilir(r) ? MK.tus({ eylem: "rapor-sil-ac", ad: "Sil", ikon: "x", sinif: "a-tus-ikincil a-tus-sil" }) : "") +
-        MK.tus({ eylem: "kaydet", ad: "Kaydet", ikon: "check", sinif: "a-tus-ikincil" }) +
-        MK.tus({ eylem: "onaya-gonder", ad: "Onaya gönder", ikon: "send" }) + "</div>");
+      /* 2026-09-30 (204–210): "Kaydet ve kopyala" her raporda (gönderilmişte "Kopyala" — kaydedilecek bir şey yok); telefonda bütün tuşlar
+         tek "İşlemler" menüsünde (masaüstü ve tablette yan yana) */
+      eylemHtml(r, oku);
     document.title = e.kod + " · " + r.no + " · probata maket";
     if (odak) { var fo = $(odak); if (fo) fo.focus(); }
   }
@@ -538,6 +538,42 @@
   /* düzenlenebilen (Yeni ya da geri gönderilmiş) rapor inspector'da silinir (2026-09-29, reisim: "oluşan rapor inspector tarafından da
      silinebilsin"); gönderilen rapor salt okunur, tuşu yok */
   var silinebilir = function (r) { return r.durum === "taslak"; };
+  function eylemHtml(r, oku) {
+    var l = (oku ? [] : [silinebilir(r) ? ["rapor-sil-ac", "Sil", "x", "a-tus-ikincil a-tus-sil"] : null]).concat([
+      ["kopya-ac", oku ? "Kopyala" : "Kaydet ve kopyala", "copy", "a-tus-ikincil"]]).concat(oku ? [] : [
+      ["kaydet", "Kaydet", "check", "a-tus-ikincil"], ["onaya-gonder", "Onaya gönder", "send", "a-tus-birincil"]]).filter(Boolean);
+    return '<div class="a-rapor-eylem">' + l.map(function (x) { return MK.tus({ eylem: x[0], ad: x[1], ikon: x[2], sinif: x[3] + " a-rapor-tus" }); }).join("") +
+      '<div class="a-secici a-rapor-islemler"><button class="a-tus a-tus-birincil" type="button" data-secici-ac="islemler" id="r-islemler" aria-haspopup="menu" aria-expanded="false">' +
+        ikon("ellipsis-vertical", "a-ikon-kucuk") + "İşlemler</button>" +
+        '<div class="a-secici-liste" role="menu" aria-label="İşlemler" hidden>' + l.slice().reverse().map(function (x) {   /* menüde birincil üstte, Sil en altta */
+          return '<button class="a-secenek' + (x[0] === "rapor-sil-ac" ? " a-tus-sil" : "") + '" type="button" role="menuitem" data-eylem="' + x[0] + '">' + x[1] + "</button>"; }).join("") +
+      "</div></div></div>";
+  }
+  /* KAYDET VE KOPYALA (2026-09-30, 204–209): yeni ekipmanın kodu (zorunlu, firmada eşsiz), seri no ve kullanım yeri sorulur; tür aynı. Yeni
+     ekipman bu raporun bilgileriyle açılır: ekipman bilgileri, ekipman detayları ve tespitler, ölçüm cihazları, madde cevapları kopyalanır;
+     "Uygun değil" maddenin kusur açıklaması, derecesi ve fotoğrafı, test ve ölçüm değerleri, fotoğraflar, sonuç, notlar kopyalanmaz. Kopya
+     her zaman Yeni; sonra yeni ekipmanın raporuna gidilir. */
+  var kodDurumu = function (kod) {
+    if (!kod) return "Ekipman kodunu yazın.";
+    if (/[^A-Z0-9-]/.test(kod)) return "Kodda yalnız A–Z, 0–9 ve tire olabilir (Türkçe harf ve boşluk yok).";
+    if (kod.length < 3 || kod.length > 20) return "Kod 3 ile 20 hane arasında olmalı.";
+    if (!/^[A-Z0-9]+(-[A-Z0-9]+)*$/.test(kod)) return "Tire başta, sonda ya da art arda olamaz.";
+    if (MV.ekipman(kod)) return kod + " firmada başka bir ekipmanda kayıtlı. Aynı kod iki ekipmana verilemez.";
+    return "";
+  };
+  var siraOku = function (no) { var m = /^[^-]+-\d{4}-(\d+)-/.exec(no || ""); return m ? +m[1] : 0; };
+  function kopyala(r, d) {
+    var kod = d.kod, e = r.e, pid = r.ts.pid || (MV.rapor(r.no) || {}).plan, simdi = MK.simdi();
+    MV.EKIPMAN.push({ kod: kod, tur: e.tur, tesis: e.tesis, konum: d.konum || r.konum || e.konum, onceki: null, ilk: true, plan: pid, marka: r.marka, model: r.model,
+      imal: r.imal, seri: d.seri, eklendi: simdi, kopyaKaynak: e.kod });
+    var sira = MV.RAPORLAR.reduce(function (m, x) { return Math.max(m, siraOku(x.no)); }, 0) + 1, no = MV.raporNo("0926", sira).replace(/^[^-]+/, MV.firmaKodu());
+    MV.RAPORLAR.push({ no: no, kod: kod, tesis: e.tesis, plan: pid, kisi: r.kisi, olustu: simdi, durum: "taslak", sonuc: null, gonderildi: null, onay: null, imza: null, kopya: r.no });
+    var p = MV.PLANLAR.filter(function (x) { return x.id === pid; })[0];
+    if (p && Array.isArray(p.gecmis)) p.gecmis.push({ z: simdi, kim: r.kisi, ne: "Ekipman kopyalandı", ayrinti: e.kod + " → " + kod + " · " + no, s: p.gecmis.length });
+    KAYIT[no] = JSON.parse(JSON.stringify({ marka: r.marka, model: r.model, imal: r.imal, amac: r.amac, bolumAd: r.bolumAd, detay: r.detay, tespit: r.tespit, cihaz: r.cihaz,
+      kriter: r.kriter.map(function (x) { return { c: x.c, not: "" }; }), konum: d.konum || r.konum, seri: d.seri, kayit: simdi, olustu: simdi, bas: simdi, kopya: r.no }));
+    return { kod: kod, no: no };
+  }
   var kayitMetin = function (r) { return r.degisti ? "Kaydedilmemiş değişiklik var" : r.kayit ? "Son kayıt " + MK.zamanYaz(r.kayit) : "Henüz kaydedilmedi"; };
   var fotolar = MK.fotolar;
   function sigortaHtml(r, oku) {
@@ -573,6 +609,20 @@
   var W = null;
   function pencereCiz(odak) {
     var d = W.d, h = W.hata;
+    if (W.tur === "kopya") {
+      var ek = W.r.e;
+      $("a-pencere-baslik").textContent = (W.oku ? "Kopyala" : "Kaydet ve kopyala") + " · yeni ekipman";
+      $("a-pencere-govde").innerHTML = '<p class="a-pencere-metin"><span class="a-kod">' + ek.kod + "</span> · " + kacis(W.r.t.ad) + " raporunun bilgileriyle yeni ekipman ve raporu açılır" +
+          (W.oku ? "" : "; bu rapor önce kaydedilir") + ". Test değerleri, fotoğraflar ve sonuç kopyalanmaz.</p>" +
+        '<div class="a-form">' +
+        MK.alan({ id: "w-kod", etiket: "Ekipman kodu", zorunlu: true, hata: h.kod, girdi: MK.girdi({ id: "w-kod", alan: "kod", deger: d.kod, sinif: "a-girdi-kod", hata: h.kod, ek: ' maxlength="20" spellcheck="false" placeholder="' + ek.kod.replace(/\d+$/, "") + '…"' }) }) +
+        MK.alan({ id: "w-tur", etiket: "Ekipman türü", girdi: '<input class="a-girdi a-girdi-oku" id="w-tur" readonly value="' + kacis(W.r.t.ad) + '">' }) +
+        MK.alan({ id: "w-seri", etiket: "Seri no", girdi: MK.girdi({ id: "w-seri", alan: "seri", deger: d.seri, ek: ' maxlength="30"' }) }) +
+        MK.alan({ id: "w-konum", etiket: "Kullanım yeri", girdi: MK.girdi({ id: "w-konum", alan: "konum", deger: d.konum, ek: ' maxlength="60"' }) }) + "</div>";
+      $("a-pencere-alt").innerHTML = MK.tus({ eylem: "pencere-kapat", ad: "Vazgeç", sinif: "a-tus-ikincil" }) + MK.tus({ eylem: "pencere-kaydet", ad: W.oku ? "Kopyala" : "Kaydet ve kopyala", ikon: "copy" });
+      if (odak) { var ko = $(odak); if (ko) { ko.focus(); if (ko.setSelectionRange) ko.setSelectionRange(ko.value.length, ko.value.length); } }
+      return;
+    }
     if (W.tur === "sigorta") {
       $("a-pencere-baslik").textContent = W.x ? "Sigorta " + W.x.no + (W.x.durum === "onayli" ? " · düzelt" : " · kontrol et") : "Sigorta ekle";
       $("a-pencere-govde").innerHTML = (W.x && W.x.guven === "dusuk" && W.x.durum !== "onayli" ? '<div class="a-serit-kap">' + MK.serit("uyari", "triangle-alert", "Okuma emin değil: etiketi panoda gözle kontrol edip değeri düzeltin.") + "</div>" : "") +
@@ -646,10 +696,21 @@
     else if (o.tur === "cihaz") (document.querySelector("#a-pencere [data-cihaz-sec]") || document.querySelector('#a-pencere [data-eylem="pencere-kapat"]')).focus();
     else if (o.tur === "nokta" || o.tur === "rcd") $("w-ad").focus();
     else if (o.tur === "pd" || o.tur === "zi") $("w-yer").focus();
+    else if (o.tur === "kopya") $("w-kod").focus();
     else $(o.x ? "w-tip" : "w-no").focus();
   }
   function pencereKaydet() {
     var d = W.d, h = {}, r = W.r;
+    if (W.tur === "kopya") {
+      d.kod = String(d.kod || "").replace(/\s+/g, "").replace(/[a-z]/g, function (c) { return c.toUpperCase(); });
+      var kh = kodDurumu(d.kod); if (kh) { W.hata = { kod: kh }; pencereCiz("w-kod"); return; }
+      if (!W.oku) { r.kayit = MK.simdi(); r.degisti = false; }
+      var y = kopyala(r, { kod: d.kod, seri: String(d.seri || "").trim(), konum: String(d.konum || "").trim() });
+      W = null; $("a-pencere").close(); MK.kaliciYaz();
+      location.hash = "#/r/" + y.kod + "?no=" + y.no + "&durum=taslak";
+      MK.bildir((r.degisti === false ? "Rapor kaydedildi; " : "") + y.kod + " açıldı: " + y.no + ". Bilgiler " + r.e.kod + " raporundan kopyalandı.");
+      return;
+    }
     if (W.tur === "pd" || W.tur === "zi") {
       var A = SATIR_ALAN[W.tur], tur = W.tur;
       if (!String(d.yer || "").trim()) h.yer = "Yazılmalı.";
@@ -771,6 +832,10 @@
       delete KAYIT[no]; Object.keys(R).forEach(function (k) { if (R[k] && R[k].no === no) delete R[k]; });
       MK.kaliciYaz(); location.href = MK.adres(13, pid ? "#/plan/" + pid : "#/");   /* rapor plandan da kalkar (Planlar ortak kayda bakar) */
     } });
+  };
+  X["kopya-ac"] = function () {
+    var r = aktif(); if (!r) return;
+    pencereAc({ tur: "kopya", r: r, oku: r.durum !== "taslak", d: { kod: "", seri: "", konum: r.konum || "" } });
   };
   X["kaydet"] = function () {
     var r = aktif(); r.kayit = MK.simdi(); r.degisti = false; $("r-kayit").textContent = kayitMetin(r);

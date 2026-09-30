@@ -152,6 +152,20 @@
     kaydet(p, p.acildi, "za", "Plan açıldı", p.ekp.length + " ekipman · " + p.ekip.map(function (k) { return KISI[k].ad; }).join(", "));
     PLANLAR.push(p);
   });
+  /* saha rapor ekranında "Kaydet ve kopyala" ile açılan ekipman ve rapor (2026-09-30, 204–209) ortak kayıttan plana girer; plan hangi
+     hâlde olursa olsun (örnek veriden kurulmuş ya da tarayıcıda kayıtlı). Rapor sırası ortak kayıttaki en büyük sıranın ardından sürer. */
+  var siraOku = function (no) { var m = /^[^-]+-\d{4}-(\d+)-/.exec(no || ""); return m ? +m[1] : 0; };
+  PLANLAR.forEach(function (p) {
+    MV.EKIPMAN.filter(function (e) { return e.plan === p.id && e.kopyaKaynak && p.ekp.indexOf(e.kod) < 0; }).forEach(function (e) { p.ekp.push(e.kod); p.sonradan.push(e.kod); });
+    p.ekp.forEach(function (kod) {
+      var e = MV.ekipman(kod);
+      if (!SICIL[kod] && e) SICIL[kod] = { kod: kod, tur: turBul(e.tur), konum: e.konum, tesis: p.id, onceki: null, eklendi: e.eklendi || null, seri: e.seri || "" };
+    });
+    MV.RAPORLAR.filter(function (r) { return r.plan === p.id && !p.rapor.some(function (x) { return x.no === r.no; }); }).forEach(function (r) {
+      p.rapor.push({ no: r.no, kod: r.kod, durum: r.durum, olustu: r.olustu, sonuc: r.sonuc });
+    });
+  });
+  MV.RAPORLAR.forEach(function (r) { raporSira = Math.max(raporSira, siraOku(r.no) + 1); });
   /* rapor durumu ortak kayıttan (onay, geri gönderme, imza başka ekranda) */
   /* pasife alınan (inspector) ve yöneticinin sildiği rapor da ortak kayıttan (2026-09-28, T2) */
   PLANLAR.forEach(function (p) {
