@@ -309,6 +309,7 @@ html[data-giris="fare"] .a-girdi:focus, html[data-giris="fare"] .a-alan:focus { 
   text-decoration: underline; text-decoration-color: transparent; text-underline-offset: 3px;
 }
 .a-no:hover { text-decoration-color: currentColor; }
+.a-no-tus { padding: 0; border: 0; background: none; font: inherit; font-weight: 600; cursor: pointer; }   /* düğme olan kimlik bağlantısı (gelir-gider ayı, L3) */
 .a-musteri-ad { font-weight: 600; }   /* Planlar: kalın olan müşteri adı, proje adı normal (2026-09-29) */
 .a-hucre-satir { display: flex; align-items: flex-start; gap: 6px; min-width: 0; }
 .a-hucre-satir > .a-kirp, .a-adres, .a-ekip { flex: 1 1 auto; min-width: 0; }

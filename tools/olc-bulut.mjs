@@ -319,7 +319,8 @@ export const DURUMLAR = {
     { ad: "gider · red gerekçesi boş gönderildi", hash: "#/g/G-0926-006", adim: [["tikla", '[data-eylem="gider-red-ac"]'], ["tikla", '[data-eylem="gider-reddet"]']] },
     { ad: "giderler · Excel'e aktar", hash: "#/giderler", adim: [["tikla", '[data-eylem="gider-excel-disa"]']] },
     { ad: "giderler · Excel'den yükle, önizleme", hash: "#/giderler", adim: [["tikla", '[data-eylem="gider-excel-ice"]'], ["tikla", '[data-eylem="gider-excel-sec"]']] },
-    { ad: "gelir-gider · bu ay (bordro tahmini)", hash: "#/gelir-gider" },
+    { ad: "gelir-gider · toplam (varsayılan, aylara göre döküm)", hash: "#/gelir-gider" },
+    { ad: "gelir-gider · bu ay (bordro tahmini)", hash: "#/gelir-gider", adim: [["tikla", "#gg-ay"], ["tikla", '[data-secim="gg-ay"][data-deger="2026-09"]']] },
     { ad: "gelir-gider · Kasım 2025", hash: "#/gelir-gider", adim: [["tikla", "#gg-ay"], ["tikla", '[data-secim="gg-ay"][data-deger="2025-11"]']] },
     { ad: "gelir-gider · dönem listesi açık", hash: "#/gelir-gider", adim: [["tikla", "#gg-ay"]] }
   ] },
@@ -1022,7 +1023,11 @@ export const DENEMELER = {
     { ad: "iş listesinde Kâr sütunu (tutar ve yüzde)", hash: "#/", bekle: '/%/.test(document.querySelector("#a-liste tbody tr td[data-alan=kar]").textContent)' },
     { ad: "iş sayfasında kârlılık: gelir, masraf, inspector, genel pay, kâr %33,1", hash: "#/is/P-0926-025", bekle: '/%33,1/.test(document.querySelector("section[aria-labelledby=a-b-kar]").textContent) && /Mert Kaya 1 gün/.test(document.querySelector("section[aria-labelledby=a-b-kar]").textContent) && /Genel gider payı/.test(document.querySelector("section[aria-labelledby=a-b-kar]").textContent)' },
     { ad: "aynı gün iki işe giden inspector'ın günü işlere bölünür", hash: "#/", bekle: 'Math.abs(MV.isKarlilik(MV.isKaydi("P-0925-015")).gun + MV.isKarlilik(MV.isKaydi("P-0925-017")).gun - 2) < 0.02' },
-    { ad: "gelir-gider: Eylül 2026, 4 iş, sabit giderler satırda", hash: "#/gelir-gider", bekle: 'document.querySelector("#a-sekme-gg").getAttribute("aria-current") === "page" && /Araç kira/.test(document.querySelector("#a-gg").textContent) && document.querySelector("section[aria-labelledby=a-b-ggis] .a-sayac").textContent === "4 iş" && document.querySelector("#a-gider-tuslar").hidden' },
+    /* 2026-09-30 (L3, reisim: "toplam gelir gider bilanço kısmıda olsun şu an ay/ay gösteriyor"): varsayılan dönem Toplam; aylık görünüm
+       denemesi Eylül 2026'yı artık seçerek açar */
+    { ad: "gelir-gider: varsayılan Toplam — kalemler bütün ayların toplamı, aylara göre döküm + toplam satırı", hash: "#/gelir-gider", bekle: '/^Toplam · Eylül 2025 – Eylül 2026$/.test(document.querySelector("#a-sayac").textContent) && (() => { const a = ["2025-09","2025-10","2025-11","2025-12","2026-01","2026-02","2026-03","2026-04","2026-05","2026-06","2026-07","2026-08","2026-09"], d = MV.donemGelirGider(a), g = a.reduce((n, x) => n + MV.ayGelirGider(x).gelir, 0), sat = document.querySelectorAll(".a-tablo-ggay tbody tr"); return Math.abs(d.gelir - g) < 0.01 && sat.length === 14 && /Toplam/.test(sat[13].textContent) && /Araç kira[\\s\\S]*13 ay/.test(document.querySelector("#a-gg").textContent); })()' },
+    { ad: "gelir-gider: dökümde aya tıklayınca o ay açılır, odak dönemde", hash: "#/gelir-gider", adim: [["tikla", '[data-eylem="gg-ay-sec"][data-ay="2025-11"]']], bekle: 'document.querySelector("#a-sayac").textContent === "Kasım 2025" && document.querySelector("section[aria-labelledby=a-b-ggis] .a-sayac").textContent === "2 iş" && document.activeElement.id === "gg-ay"' },
+    { ad: "gelir-gider: Eylül 2026, 4 iş, sabit giderler satırda", hash: "#/gelir-gider", adim: [["tikla", "#gg-ay"], ["tikla", '[data-secim="gg-ay"][data-deger="2026-09"]']], bekle: 'document.querySelector("#a-sekme-gg").getAttribute("aria-current") === "page" && /Araç kira/.test(document.querySelector("#a-gg").textContent) && document.querySelector("section[aria-labelledby=a-b-ggis] .a-sayac").textContent === "4 iş" && document.querySelector("#a-gider-tuslar").hidden' },
     { ad: "gelir-gider: dönem Kasım 2025 → 2 iş, odak seçimde", hash: "#/gelir-gider", adim: [["tikla", "#gg-ay"], ["tikla", '[data-secim="gg-ay"][data-deger="2025-11"]']], bekle: 'document.querySelector("#a-sayac").textContent === "Kasım 2025" && document.querySelector("section[aria-labelledby=a-b-ggis] .a-sayac").textContent === "2 iş" && document.activeElement.id === "gg-ay"' },
   ],
   m15: [

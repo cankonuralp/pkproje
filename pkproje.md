@@ -2033,6 +2033,11 @@ revizyon, alan kopyalama, hafif kusur devri, meslek eşleşme denetimi).
 - Emsal ürünler: https://opwire.app/iso-17020-periyodik-kontrol-yazilimi/ · https://17020muayene.vidco.com.tr/ · https://akuple.com/asansor-kontrol-yazilimi/ · https://ensyazilim.com/
 
 ## 11 · Değişiklik günlüğü
+- 2026-09-30 (172): **L3 · Gelir-gider'de toplam** (§9 kırkıncı tur). Muhasebe › Gelir-gider'de Dönem listesinin başında **Toplam** (varsayılan):
+  ilk işin ayından bu aya kadar bütün aylar toplanır — üç yüz (toplam gelir, gider, kâr), kalem kalem toplam tablo (maaşlar, masraflar, sabit
+  giderler "N ay × aylık"), altında **Aylara göre** döküm (dönem · iş · gelir · gider · kâr, en altta toplam satırı; ay adına basınca o ay
+  açılır). Tek ay görünümü aynen durur. Makette uydurma veride iş az olduğu için toplam kâr çok eksi görünür (hesap doğru, veri seyrek).
+  Ölçüm: m14 200/200 · 47/47 (2 yeni, 1 güncellendi) · 100/100; m1 280/280 · 80/80 · 140/140; gözle 1920 + 375.
 - 2026-09-30 (171): **L5 · Müşteri hesabında parola tıklayınca gider · Ön bilgilendirme formu gönder** (§9 kırkıncı tur). Müşteri (ve ek
   giriş) e-postayla kaydedilince giriş açılır ama parola gitmez: durum "Parola gönderilmedi"; müşteri kartında **Parolayı gönder**, ek giriş
   satırında **Parolayı gönder** / **Yeniden gönder** (pasif müşteride yok). Kartta Parolayı gönder'in yanında **Ön bilgilendirme formu

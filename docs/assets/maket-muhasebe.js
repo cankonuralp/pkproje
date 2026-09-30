@@ -179,7 +179,8 @@
   }
   /* GELİR-GİDER (2026-09-27, reisim: "gelir gidere göre bilançoda olacak"): ay seçilir; o ayın gelir (denetlenen işlerin raporlananı), maaşlar
      (bordro işverene maliyeti), masraflar ve sabit giderler; işlerin kârı. Bilanço (varlık / borç) firmanın muhasebe programında (VARSAYIM). */
-  var GG = { ay: MK.BUGUN.slice(0, 7) };
+  /* 2026-09-30 (L3): dönem listesinin başında "Toplam" (varsayılan): ilk işin ayından bu aya kadar bütün aylar toplanır, altında aylara göre döküm */
+  var GG = { ay: "toplam" };
   var ggAylar = function () { var l = [], d = new Date(MK.BUGUN.slice(0, 7) + "-01T12:00:00"); for (var i = 0; i < 13; i++) { l.push(d.toISOString().slice(0, 7)); d.setMonth(d.getMonth() - 1); } return l; };
   var GG_SUTUN = [
     { k: "no", baslik: "Proje no", kart: "ust", sira: 1, hucre: function (x) { return '<a class="a-no" href="#/is/' + x.no + '">' + x.no + '</a><span class="a-alt-satir">' + MK.tarihYaz(x.tarih) + "</span>"; } },
@@ -188,11 +189,40 @@
     { k: "gider", baslik: "Gider", kart: "govde", sira: 4, hucre: function (x) { return '<span class="a-kart-etiket">Gider</span><span class="a-sayi">' + para(MV.isKarlilik(x).gider) + "</span>"; } },
     { k: "kar", baslik: "Kâr", kart: "govde", sira: 5, hucre: function (x) { return '<span class="a-kart-etiket">Kâr</span>' + karYaz(MV.isKarlilik(x)); } }
   ];
+  var ggToplamAylar = function () { var ilk = MV.ISLER.map(function (x) { return x.tarih.slice(0, 7); }).sort()[0]; return ggAylar().filter(function (a) { return !ilk || a >= ilk; }).reverse(); };
+  var tutarHucre = function (ad, t, kar) { return '<span class="a-kart-etiket">' + ad + '</span><span class="a-sayi' + (kar && t < 0 ? " a-uyari-metin" : "") + '">' + para(t) + "</span>"; };
+  var AY_SUTUN = [   /* aylara göre döküm; son satır toplam */
+    { k: "no", baslik: "Dönem", kart: "ust", sira: 1, hucre: function (x) { return x.toplam ? "<b>Toplam</b>" : '<button class="a-no a-no-tus" type="button" data-eylem="gg-ay-sec" data-ay="' + x.am.ay + '">' + MV.ayAd(x.am.ay) + "</button>" + (x.am.bordroVar ? "" : '<span class="a-alt-satir">maaş tahmini</span>'); } },
+    { k: "musteri", baslik: "İş", kart: "govde", sira: 2, hucre: function (x) { return '<span class="a-kart-etiket">İş</span><span class="a-sayi">' + x.isler.length + "</span>"; } },
+    { k: "gelir", baslik: "Gelir", kart: "govde", sira: 3, hucre: function (x) { return tutarHucre("Gelir", x.gelir); } },
+    { k: "gider", baslik: "Gider", kart: "govde", sira: 4, hucre: function (x) { return tutarHucre("Gider", x.gider); } },
+    { k: "kar", baslik: "Kâr", kart: "govde", sira: 5, hucre: function (x) { return tutarHucre("Kâr", x.kar, true); } }
+  ];
+  function ggToplamCiz() {
+    var aylar = ggToplamAylar(), d = MV.donemGelirGider(aylar), n = d.ay;
+    $("a-sayac").innerHTML = "<b>Toplam</b> · " + MV.ayAd(aylar[0]) + " – " + MV.ayAd(aylar[n - 1]);
+    $("a-uyari").innerHTML = d.tahmini ? '<div class="a-uyari-serit">' + MK.serit("bilgi", "history", d.tahmini + " ayın bordroları yüklenmedi; o ayların maaşları son bordrodan tahmini.") + "</div>" : "";
+    var satir = [
+      { ad: "Gelir", ayrinti: d.isler.length + " iş · raporlanan, KDV hariç", tutar: d.gelir },
+      { ad: "Maaşlar", ayrinti: n + " ay · bordro, işverene maliyet" + (d.tahmini ? " · " + d.tahmini + " ay tahmini" : ""), tutar: d.maas, eksi: true },
+      { ad: "İşe bağlı masraflar", ayrinti: "KDV hariç", tutar: d.masraf, eksi: true },
+      { ad: "Genel masraflar", ayrinti: "işe bağlı olmayan, KDV hariç", tutar: d.genel, eksi: true }
+    ].concat(MV.SABIT_GIDER.map(function (x) { return { ad: x.ad, ayrinti: "sabit gider · " + n + " ay × " + para(x.aylik) + (x.not ? " · " + kacis(x.not) : ""), tutar: x.aylik * n, eksi: true }; }))
+      .concat([{ ad: "Kâr", ayrinti: d.oran === null ? "gelir yok" : yuzde(d.oran), tutar: d.kar, toplam: true }]);
+    var ayl = d.aylar.slice().reverse().concat([{ toplam: true, isler: d.isler, gelir: d.gelir, gider: d.gider, kar: d.kar }]);
+    $("a-gg").innerHTML = '<div class="a-yuzler">' + yuz("Toplam gelir", "file-text", para(d.gelir), "KDV hariç · " + d.isler.length + " iş") + yuz("Toplam gider", "receipt", para(d.gider), n + " ay · maaş, masraf, sabit") +
+        yuz("Toplam kâr", "chart-column", para(d.kar), d.oran === null ? "gelir yok" : yuzde(d.oran), d.kar < 0) + "</div>" +
+      '<section class="a-bolum" aria-labelledby="a-b-gg"><div class="a-alt-bas"><h2 class="a-alt-baslik" id="a-b-gg">Gelir ve giderler · toplam</h2></div>' +
+        '<div class="a-liste-kap">' + MK.tablo({ baslik: "Gelir ve giderler, toplam", sinif: "a-tablo-karlilik", sutunlar: KAR_SUTUN, kayitlar: satir }) + "</div></section>" +
+      '<section class="a-bolum" aria-labelledby="a-b-ggay"><div class="a-alt-bas"><h2 class="a-alt-baslik" id="a-b-ggay">Aylara göre</h2><span class="a-sayac"><b>' + n + "</b> ay</span></div>" +
+        '<div class="a-liste-kap">' + MK.tablo({ baslik: "Aylara göre gelir ve gider", sinif: "a-tablo-iskar a-tablo-ggay", sutunlar: AY_SUTUN, kayitlar: ayl }) + "</div></section>";
+  }
   function ggCiz() {
+    $("a-suzgec-kap").innerHTML = '<div class="a-form a-gg-donem">' + MK.alan({ id: "gg-ay", etiket: "Dönem", girdi: MK.secim({ id: "gg-ay", ad: "Dönem", deger: GG.ay, secenekler: [["toplam", "Toplam"]].concat(ggAylar().map(function (a) { return [a, MV.ayAd(a)]; })) }) }) + "</div>";
+    if (GG.ay === "toplam") return ggToplamCiz();
     var d = MV.ayGelirGider(GG.ay), am = d.am;
     $("a-sayac").innerHTML = "<b>" + MV.ayAd(GG.ay) + "</b>";
     $("a-uyari").innerHTML = am.bordroVar ? "" : '<div class="a-uyari-serit">' + MK.serit("bilgi", "history", MV.ayAd(GG.ay) + " bordroları yüklenmedi; maaşlar son bordrodan tahmini.") + "</div>";
-    $("a-suzgec-kap").innerHTML = '<div class="a-form a-gg-donem">' + MK.alan({ id: "gg-ay", etiket: "Dönem", girdi: MK.secim({ id: "gg-ay", ad: "Dönem", deger: GG.ay, secenekler: ggAylar().map(function (a) { return [a, MV.ayAd(a)]; }) }) }) + "</div>";
     var satir = [
       { ad: "Gelir", ayrinti: d.isler.length + " iş · raporlanan, KDV hariç", tutar: d.gelir },
       { ad: "Maaşlar", ayrinti: am.kisi + " kişi · bordro, işverene maliyet" + (am.bordroVar ? "" : " · tahmini"), tutar: kr(am.maasIns + am.maasDiger), eksi: true },
@@ -435,6 +465,7 @@
     $(W.tip === "fatura" ? "w-no" : "w-tutar").focus();
   }
   var X = MK.eylem;
+  X["gg-ay-sec"] = function (el) { GG.ay = el.dataset.ay; ggCiz(); var t = $("gg-ay"); if (t) t.focus(); window.scrollTo(0, 0); };
   X["fatura-kaydet"] = function () {
     var x = W.is, h = {}, no = W.no.trim().toLocaleUpperCase("en"), fi = tarihIso(W.tarih);
     if (!no) h.no = "Fatura no yazılmalı.";

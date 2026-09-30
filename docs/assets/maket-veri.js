@@ -1285,6 +1285,17 @@
     return { am: am, isler: isler, gelir: gelir, gider: gider, kar: kurus(gelir - gider), oran: gelir ? Math.round((gelir - gider) / gelir * 1000) / 10 : null };
   };
 
+  /* TOPLAM (L3, 2026-09-30, reisim: "toplam gelir gider bilanço kısmıda olsun şu an ay/ay gösteriyor"): verilen aylar (eskiden yeniye)
+     toplanır; her kalem ayların toplamı, sabit giderler ay sayısıyla. Aylar ayrıca tek tek (aylara göre döküm). */
+  MV.donemGelirGider = function (aylar) {
+    var l = aylar.map(MV.ayGelirGider), top = function (f) { return kurus(l.reduce(function (n, d) { return n + f(d); }, 0)); };
+    var gelir = top(function (d) { return d.gelir; }), gider = top(function (d) { return d.gider; });
+    return { aylar: l, ay: aylar.length, isler: [].concat.apply([], l.map(function (d) { return d.isler; })), gelir: gelir, gider: gider, kar: kurus(gelir - gider),
+      oran: gelir ? Math.round((gelir - gider) / gelir * 1000) / 10 : null,
+      maas: top(function (d) { return d.am.maasIns + d.am.maasDiger; }), masraf: top(function (d) { return d.am.masraf; }), genel: top(function (d) { return d.am.genel; }),
+      tahmini: l.filter(function (d) { return !d.am.bordroVar; }).length };
+  };
+
   /* belge (MB.belge) için raporun dolu verisi; İSG-KATİP kaydı rapor tarihinde geçerli olan (önceki kayıtlar dahil) */
   MV.raporBelge = function (r) {
     var e = MV.ekipman(r.kod), t = MV.tur(e.tur), ts = MV.tesis(r.tesis), p = MV.kisi(r.kisi), gun = r.olustu.slice(0, 10);

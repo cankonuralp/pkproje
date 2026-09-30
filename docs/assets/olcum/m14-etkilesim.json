@@ -2,8 +2,8 @@
  "maket": "m14",
  "tarih": "2026-09-30",
  "arac": "tools/olc-bulut.mjs --etkilesim (başsız tarayıcı, 1920 açık tema; gen verilen denemede o genişlik)",
- "toplam": 45,
- "gecen": 45,
+ "toplam": 47,
+ "gecen": 47,
  "denemeler": [
   {
    "ad": "Giderler: masraf formunun PDF'i açılır, e-posta talep edene (Mert Kaya)",
@@ -304,6 +304,20 @@
    "gen": 1920,
    "sayfa": "maket/muhasebe.html",
    "hash": "#/",
+   "gecti": true
+  },
+  {
+   "ad": "gelir-gider: varsayılan Toplam — kalemler bütün ayların toplamı, aylara göre döküm + toplam satırı",
+   "gen": 1920,
+   "sayfa": "maket/muhasebe.html",
+   "hash": "#/gelir-gider",
+   "gecti": true
+  },
+  {
+   "ad": "gelir-gider: dökümde aya tıklayınca o ay açılır, odak dönemde",
+   "gen": 1920,
+   "sayfa": "maket/muhasebe.html",
+   "hash": "#/gelir-gider",
    "gecti": true
   },
   {
