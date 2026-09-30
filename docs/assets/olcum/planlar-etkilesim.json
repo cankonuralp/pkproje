@@ -2,8 +2,8 @@
  "maket": "planlar",
  "tarih": "2026-09-30",
  "arac": "tools/olc-bulut.mjs --etkilesim (başsız tarayıcı, 1920 açık tema; gen verilen denemede o genişlik)",
- "toplam": 56,
- "gecen": 56,
+ "toplam": 57,
+ "gecen": 57,
  "denemeler": [
   {
    "ad": "Planlar listesi: müşteri adı kalın (≥ 600), proje adı normal (400)",
@@ -329,6 +329,13 @@
   },
   {
    "ad": "plan içi: Ekipmanlar ve Raporlar ayrı bölümlerde (üstte kalın ayırıcı), başlıkları sayfa başlığı boyunda; adım başlıkları da",
+   "gen": 1920,
+   "sayfa": "maket/planlarim.html",
+   "hash": "#/plan/1",
+   "gecti": true
+  },
+  {
+   "ad": "kalıcı: plan içinde oluşturulan rapor, eklenen ekipman ve not sayfa yenilenince yerinde",
    "gen": 1920,
    "sayfa": "maket/planlarim.html",
    "hash": "#/plan/1",

@@ -1978,6 +1978,13 @@ revizyon, alan kopyalama, hafif kusur devri, meslek eşleşme denetimi).
 - Emsal ürünler: https://opwire.app/iso-17020-periyodik-kontrol-yazilimi/ · https://17020muayene.vidco.com.tr/ · https://akuple.com/asansor-kontrol-yazilimi/ · https://ensyazilim.com/
 
 ## 11 · Değişiklik günlüğü
+- 2026-09-30 (162): **Kalıcılık hatası: plan içinde oluşturulan rapor / eklenen ekipman yenilemede kayboluyordu** (ölçerken bulundu). Plan
+  listesi ortak veriye geçince (U4) plan her açılışta örnek veriden yeniden kuruluyordu → plan içinde oluşturulan rapor, eklenen ekipman,
+  hareket kaydı ve notlar sayfa yenilenince gidiyordu. Düzeltme: tarayıcıda kayıtlı hâli olan plan yeniden kurulmaz, örnek veri yalnız ilk
+  açılışta. **Ölçüm aracı da düzeltildi:** yenileme adımı olan denemede sonuç artık yenilenmiş sayfada ölçülür (önceden yenilemeden önceki
+  sayfa beklenen sonucu verince deneme geçiyor, hata gizleniyordu). Yeni kalıcı deneme (rapor + ekipman + not → yenile); olumsuz kanıt: eski
+  kodda düşüyor (56/57). Ölçüm: planlar 128/128 · 57/57 · 64/64; öteki modüllerin yeni kuralla ölçümü sürüyor.
+
 - 2026-09-29 (161): **Z2 · Telefonda Güncelle ve Hepsini işaretle yalnız simge** (§9 otuz sekizinci tur, görünüş). Saha raporunda bölüm
   başlıklarındaki **Güncelle** (Firma bilgileri) ve **Hepsini işaretle** (kriterler) telefonda kare, yalnız simge (adı erişilebilir adda ve
   ipucunda); masaüstü ve tablette yazılı. Telefonda başlık satırı tek sırada kalır (uzun başlık iki satıra iner, ok alta düşmez). Ölçüm: m8

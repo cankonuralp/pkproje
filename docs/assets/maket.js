@@ -56,7 +56,13 @@
   /* Firma geneli ekipman sicili (modül 7): kod → kayıt. Plan yalnız KODLARI tutar; ekipman tesise aittir, kalıcıdır. */
   var SICIL = {};
   var kodSira = 1001;
+  /* ⛔ 2026-09-29 (ölçerken bulundu): plan listesi ortak veriye geçince (U4) plan her açılışta örnek veriden yeniden kuruluyordu → plan içinde
+     oluşturulan rapor, eklenen ekipman, hareket ve notlar sayfa yenilenince kayboluyordu. Tarayıcıda kayıtlı hâli olan plan (ekipman, rapor,
+     hareket listeleri ortak kayıttan geldiyse) yeniden kurulmaz; örnek veri yalnız ilk açılışta. */
+  var KAYITLI = {};
+  PLANLAR.forEach(function (p) { if (Array.isArray(p.ekp) && Array.isArray(p.rapor) && Array.isArray(p.gecmis)) KAYITLI[p.id] = true; });
   PLANLAR.forEach(function (p) {
+    if (KAYITLI[p.id]) { p.sonradan = p.sonradan || []; return; }
     p.ekp = []; p.sonradan = []; p.rapor = []; p.gecmis = [];
     if (p.ortak) {   /* plan 10: ekipman ortak veriden (kod sırası kaymaz) */
       MV.EKIPMAN.filter(function (e) { return e.plan === p.id; }).forEach(function (e, i) {
@@ -80,6 +86,7 @@
   /* raporlar oluşturulma sırasıyla (21 → 22 → 23 Eyl) numaralanır: sıra firmada kesintisiz artar */
   [9, 8, 1].forEach(function (id) {
     var p = PLANLAR.filter(function (x) { return x.id === id; })[0], dagilim = [];
+    if (KAYITLI[id]) return;
     ["onaylandi", "onayda", "taslak"].forEach(function (d) { for (var k = 0; k < (p.rap[d] || 0); k++) dagilim.push(d); });
     dagilim.forEach(function (d, k) {
       if (d === "onaylandi" && id === 9 && k < 10) d = "imzali";   /* 106 (2026-09-26): Raporlar maketiyle aynı — plan 9'da 10 imzalı */
@@ -88,7 +95,7 @@
     });
   });
   /* plan 10 raporları ortak veriden (aynı numara, durum, sonuç) */
-  PLANLAR.filter(function (p) { return p.ortak; }).forEach(function (p) {
+  PLANLAR.filter(function (p) { return p.ortak && !KAYITLI[p.id]; }).forEach(function (p) {
     MV.RAPORLAR.filter(function (r) { return r.plan === p.id; }).forEach(function (r) { p.rapor.push({ no: r.no, kod: r.kod, durum: r.durum, olustu: r.olustu, sonuc: r.sonuc }); raporSira++; });
   });   /* sıra kesintisiz: yeni açılan rapor plan 10'un raporlarından sonra numara alır */
   /* Hareket kaydı (reisim: "istediği zaman istediği tepkiyi verebilsin, bu hareketler kayıt altında kalsın") */
@@ -96,6 +103,7 @@
   /* 2026-09-26 (reisim): plan saat taşımaz, başlangıç ve bitiş TARİHİ taşır (plan için belirlenen süre) */
   PLANLAR.forEach(function (p) { p.bitTarih = p.bitTarih || p.tarih; });
   PLANLAR.forEach(function (p) {
+    if (KAYITLI[p.id]) return;
     kaydet(p, p.acildi, "za", "Plan açıldı", p.ekp.length - p.sonradan.length + " ekipman · " + p.ekip.map(function (k) { return KISI[k].ad; }).join(", "));
     if (p.kabul) kaydet(p, p.kabul, BEN, "Plan kabul edildi", "Tarafsızlık beyanı onaylandı");
     if (p.reddedildi) kaydet(p, p.reddedildi, BEN, "Plan reddedildi", "Gerekçe: " + p.gerekce);
@@ -104,7 +112,7 @@
     p.rapor.forEach(function (r) { kaydet(p, r.olustu, BEN, "Rapor oluşturuldu", r.no + " · " + r.kod); });
     if (p.bitti) kaydet(p, p.bitti, BEN, "Plan tamamlandı");
   });
-  kaydet(PLANLAR[0], "2026-09-22T15:20", "za", "Not", "Tesis 12:00–13:00 arası öğle arası veriyor; bu saatte üretim holüne girilmiyor.");
+  if (!KAYITLI[PLANLAR[0].id]) kaydet(PLANLAR[0], "2026-09-22T15:20", "za", "Not", "Tesis 12:00–13:00 arası öğle arası veriyor; bu saatte üretim holüne girilmiyor.");
 
   /* ── SAYFALAR ARASI KALICI (2026-09-28, Kalem M; reisim: "tüm site maket üzerinde aktif çalışabilsin") ─────────────────────────
      Planlar'ın kendi durumu (planlar, sicil, numara sırası) tarayıcıda saklanır (MK.kalici); Plan aç'ta açılan planlar (MV.ACILAN_PLANLAR)
