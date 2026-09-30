@@ -1227,6 +1227,12 @@ a.a-yuz:hover { border-color: var(--kenar-alan); background: var(--zemin); }
   /* plan içi etiket : değer satırları telefonda alt alta (kimlik bölünmez, taşmasın) */
   .a-satir { grid-template-columns: minmax(0, 1fr); gap: 2px; }
   .a-satirlar-form { grid-template-columns: minmax(0, 1fr); gap: 14px; padding: 12px; }
+  /* telefonda yalnız simge (2026-09-29, reisim): rapor bölüm başlığındaki Güncelle · Hepsini işaretle; ad aria-label'da */
+  .a-tus-simge-tel { width: var(--tus-y); padding: 0; }
+  .a-tus-simge-tel .a-tus-yazi, .a-tus-simge-tel .a-tus-ok { display: none; }
+  .a-bolum-acilir > summary.a-alt-bas { flex-wrap: nowrap; }   /* başlık satırı tek sıra: başlık gerekirse iki satıra iner, ok alta düşmez */
+  .a-bolum-acilir > summary.a-alt-bas > h2 { min-width: 0; }
+  .a-bolum-acilir > summary.a-alt-bas > .a-sayac { white-space: nowrap; }
   /* tarih seçici telefonda alanın genişliğinde (kartın dışına taşmaz); gün tuşları arası boşluksuz, yükseklik 44 kalır */
   .a-zaman-tarih { flex-basis: 100%; }   /* telefonda tarih tam satır, saat : dakika altında; takvim alanın genişliğinde */
   .a-zaman .a-secici-liste.a-zaman-liste { width: 100%; max-width: none; padding: 6px; }

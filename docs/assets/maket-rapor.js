@@ -258,7 +258,8 @@
   var topluMenu = function (bas, son, ad, buyuk) {
     var id = buyuk ? "r-kth" : "r-kt" + bas;
     return '<div class="a-secici a-kriter-toplu' + (buyuk ? " a-bolum-tus" : "") + '">' +
-      (buyuk ? '<button class="a-tus a-tus-ikincil" type="button" data-secici-ac="toplu" id="' + id + '" aria-haspopup="menu" aria-expanded="false">' + ikon("circle-alert", "a-ikon-kucuk") + "Hepsini işaretle" + ikon("chevron-down", "a-ikon-kucuk") + "</button>"
+      (buyuk ? '<button class="a-tus a-tus-ikincil a-tus-simge-tel" type="button" data-secici-ac="toplu" id="' + id + '" aria-haspopup="menu" aria-expanded="false" aria-label="Hepsini işaretle" title="Hepsini işaretle">' +
+          ikon("circle-alert", "a-ikon-kucuk") + '<span class="a-tus-yazi">Hepsini işaretle</span>' + ikon("chevron-down", "a-ikon-kucuk a-tus-ok") + "</button>"
         : '<button class="a-ikon-tus" type="button" data-secici-ac="toplu" id="' + id + '" aria-haspopup="menu" aria-expanded="false" aria-label="' + ad.replace(/<[^>]*>/g, "") + ' · hepsini işaretle" title="Hepsini işaretle">' + ikon("circle-alert") + "</button>") +
       '<div class="a-secici-liste" role="menu" aria-label="Hepsini işaretle" hidden>' + TOPLU.map(function (x) {
         return '<button class="a-secenek" type="button" role="menuitem" data-eylem="kriter-toplu" data-deger="' + x[0] + '" data-bas="' + bas + '" data-son="' + son + '" data-odak="' + id + '">' + x[1] + "</button>"; }).join("") + "</div></div>";
@@ -434,7 +435,9 @@
         satir("İSG-KATİP sözleşme ID", isg ? '<span class="a-kod">' + isg.no + "</span>" : '<span class="a-uyari-metin">Yok</span>') +
         (F ? satir("Periyodik kontrol metodu ve kapsamı", kacis(MV.metotYazi(t))) : "") +
         metinAlan(r, oku, "bolumAd", "Ekipman bölümü", 60) + "</dl>",
-      oku ? "" : MK.tus({ eylem: "firma-guncelle", ad: "Güncelle", ikon: "refresh-cw", sinif: "a-tus-ikincil a-bolum-tus" }));
+      /* telefonda yalnız simge (2026-09-29, reisim: "hepsine uygula ve güncelle mobilde yazmamalı sadece işaretleri gözükmeli") */
+      oku ? "" : '<button class="a-tus a-tus-ikincil a-bolum-tus a-tus-simge-tel" type="button" data-eylem="firma-guncelle" aria-label="Güncelle" title="Güncelle">' +
+        ikon("refresh-cw", "a-ikon-kucuk") + '<span class="a-tus-yazi">Güncelle</span></button>');
     /* 2 · EKİPMAN BİLGİLERİ elle girilir (reisim 2026-09-27: "otomatik girili gibi gözüküyor o kısım elle girilecek"); daha önce kontrol
        edilmiş ekipmanda son raporun değerleri başlangıç olarak gelir, değiştirilebilir; kod ve tür plandan. Formatlı türde alanlar formattan
        (2.1 ekipman detayları · 2.2 tespitler); marka, model, seri no formatta yok. */

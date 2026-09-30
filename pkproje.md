@@ -1978,6 +1978,11 @@ revizyon, alan kopyalama, hafif kusur devri, meslek eşleşme denetimi).
 - Emsal ürünler: https://opwire.app/iso-17020-periyodik-kontrol-yazilimi/ · https://17020muayene.vidco.com.tr/ · https://akuple.com/asansor-kontrol-yazilimi/ · https://ensyazilim.com/
 
 ## 11 · Değişiklik günlüğü
+- 2026-09-29 (161): **Z2 · Telefonda Güncelle ve Hepsini işaretle yalnız simge** (§9 otuz sekizinci tur, görünüş). Saha raporunda bölüm
+  başlıklarındaki **Güncelle** (Firma bilgileri) ve **Hepsini işaretle** (kriterler) telefonda kare, yalnız simge (adı erişilebilir adda ve
+  ipucunda); masaüstü ve tablette yazılı. Telefonda başlık satırı tek sırada kalır (uzun başlık iki satıra iner, ok alta düşmez). Ölçüm: m8
+  184/184 · 93/93 (2 yeni: telefonda simge + ok hizası, masaüstünde yazı) · 92/92; 320'de taşma yok; gözle 375.
+
 - 2026-09-29 (160): **Z1 · Plan içi başlıkları büyük, bölümler ayrık** (§9 otuz sekizinci tur, görünüş). Plan içindeki adım başlıkları
   (Planlandı · Kabul · Denetim · Tamamlama) ile **Ekipmanlar** ve **Raporlar** başlıkları sayfa başlığı boyunda (yazı ölçeğinden
   `--boy-baslik`); Ekipmanlar ve Raporlar bölümlerinin üstünde kalın ayırıcı çizgi ve boşluk. Önce kart denendi: içerik sayfa kenarından
