@@ -2,8 +2,8 @@
  "maket": "planlar",
  "tarih": "2026-09-30",
  "arac": "tools/olc-bulut.mjs --etkilesim (başsız tarayıcı, 1920 açık tema; gen verilen denemede o genişlik)",
- "toplam": 58,
- "gecen": 58,
+ "toplam": 60,
+ "gecen": 60,
  "denemeler": [
   {
    "ad": "Planlar listesi: müşteri adı kalın (≥ 600), proje adı normal (400)",
@@ -262,6 +262,20 @@
    "gen": 1920,
    "sayfa": "maket/planlarim.html",
    "hash": "#/",
+   "gecti": true
+  },
+  {
+   "ad": "İSG-KATİP eksik planda uyarı var ama Kabul et çalışır (L2, 2026-09-30)",
+   "gen": 1920,
+   "sayfa": "maket/planlarim.html",
+   "hash": "#/plan/5",
+   "gecti": true
+  },
+  {
+   "ad": "İSG-KATİP eksik planda şerit \"yine de kabul edilebilir\" der",
+   "gen": 1920,
+   "sayfa": "maket/planlarim.html",
+   "hash": "#/plan/4",
    "gecti": true
   },
   {

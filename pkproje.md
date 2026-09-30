@@ -1982,6 +1982,25 @@ zorunlu (§3.7'ye). **212** mesai takibi: rapor sürelerine göre günlük çubu
 oluşturulamaz (reisim'in açık kararı: engel); süreler ve aç/kapa Firma ayarları'nda, yalnız yönetici. Maket sırası: K1 Rapor oluştur ·
 K2 Kaydet ve kopyala + telefonda İşlemler · K3 kusur fotoğrafı · K4 mesai takibi · K5 Formatı güncelle · K6 madde açıklaması.
 
+**Kırkıncı tur (2026-09-30, reisim birebir; teklif formunun ekran görüntüsüyle):** *"teklif verirken excel ile ekipman export etme olsun,
+İSG katip sözleşmesi ile alakalı zorunlulukarı kaldır sadece uyarı olsun isg katip sözleşmesi yok diyipte plan kabul edememezlik olmasın
+mesela ya da sözleşmeler askıda kalmasın muhasebede gelir gider kısmında toplam gelir gider bilanço kısmıda olsun şu an ay/ay gösteriyor,
+denetöi hesaplarının profillerinde personel kartlarında yani, ekipman atamaları kısmı olsun ekipman ataması yapılsın ve atama belgesi
+yüklensin görülebilsin indirilebilsin yüklendikten sonra, müşteri hesabı açılır açılmaz parola gönderilmesin parola biz tıklayınca
+gönderilsin , plan açılırken kapsam kısmı olmasın zaten denetçi plan içinde ekipmanları görüyor istediğini ve veya gerekeni yapar belki
+revize rapor gerekicek, belki sahada aynı ekipmana yine rapor istenicek bu açıdan kısıtlama olmasın."* Üç soruya cevap: Rapor oluştur —
+*"tuş gitsin kararımda kesinim kapsam kalkınca derken demek istediğim şu; plan açarken ekipman seçerek rapor açarsak ve plan ona göre gelir
+de denetçi tüm ekipmanları göremesse sorun olur onu belirtmeye çalışmıştım o yüzden plan açarken ekipman seçme kısmı olmasın dedim, denetçi
+tüm ekipmanları görebilmeli(mekanikçi mekanik elektrikçi elektrik ekipmanalrını), oluşturulan rapor silinirse vs tekrar rapor oluştur tuşu
+gelecek tabiki"* · ekipman ataması → **ekipman türü** (öneri) · teklifte Excel → **içe + dışa aktar** (öneri).
+→ **Kararlar:** L1 teklifte ekipman listesi Excel'den içe (kalemler tür başına adetle dolar) ve dışa · L2 İSG-KATİP eksikliği plan
+kabulünü engellemez, yalnız uyarı · L3 Gelir-gider'de toplam (bütün dönemler) bilanço ve aylara göre döküm · L4 personel kartında
+**Ekipman atamaları** (tür + atama belgesi PDF; görüntüle, indir); atanmadığı türde yalnız uyarı · L5 müşteri hesabı açılınca parola
+gitmez, "Parolayı gönder" ile gider · L6 Plan aç'ta ekipman seçimi (kapsam) kalkar; tesisin bütün ekipmanı plana girer, denetçi kendi
+branşının ekipmanını görür; 203 geçerli (raporu olan ekipmanda Rapor oluştur yok, rapor silinince gelir).
+Ek (aynı gün, reisim birebir): *"ön bilgilendirme formu gönder tuşu olsun kartı ekranında parolayı gönder tuşunun yanında"* → L5'e katıldı:
+müşteri kartında Parolayı gönder'in yanında **Ön bilgilendirme formu gönder** (müşterinin e-postasına; son gönderim tarihi kartta).
+
 **Açık kalanlar:** ~~Ana sayfada İSGGM duyuruları~~ (2026-09-27: makette eklendi; okuma işi uygulamada) (reisim 2026-09-26: *"Ana sayfada isgüm duyurularını gösterebilir miyiz ? Bunu
 yapılacaklar listesine ekle"*; öneri: ÇSGB İSGGM duyurular sayfası — https://www.csgb.gov.tr/isggm/duyurular/ — sunucuda günde birkaç kez
 okunur (pg-boss işi, §8.9), Ana sayfada son 5 duyuru başlık + tarih + kaynağa bağlantı; yalnız ekranda, bildirim yok; sayfa RSS vermiyorsa
@@ -2014,6 +2033,9 @@ revizyon, alan kopyalama, hafif kusur devri, meslek eşleşme denetimi).
 - Emsal ürünler: https://opwire.app/iso-17020-periyodik-kontrol-yazilimi/ · https://17020muayene.vidco.com.tr/ · https://akuple.com/asansor-kontrol-yazilimi/ · https://ensyazilim.com/
 
 ## 11 · Değişiklik günlüğü
+- 2026-09-30 (170): **L2 · İSG-KATİP eksiği plan kabulünü engellemez** (§9 kırkıncı tur). Plan içinde "Kabul et" artık yalnız tarafsızlık
+  beyanı okunmadıysa kapalı; İSG-KATİP ID'si yok / geç onay / bitmiş plan için şerit kalır ve "Plan yine de kabul edilebilir." der. Sözleşme,
+  plan aç, müşteri ve onay ekranlarında İSG-KATİP zaten yalnız uyarıydı (bakıldı, engel yok). Ölçüm: planlar 128/128 · 60/60 (2 yeni) · 64/64.
 - 2026-09-30 (169): **K6 · 214 Madde açıklaması (i)** (§9 otuz dokuzuncu tur, "diğer önerilerini kabul ediyorum"). Saha raporunda her
   muayene maddesinin adının yanında bilgi (i) tuşu; basınca maddenin altında açılır: maddede neye bakılacağı (firma formatındaki açıklama)
   ve türün standartları; ikinci basışta kapanır. Açıklaması tanımlı olmayan maddede "Bu madde için firma formatında açıklama tanımlı

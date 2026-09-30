@@ -317,7 +317,8 @@
     return '<span class="a-hucre-satir" title="' + kacis(tam) + '">' + ikon("users", "a-ikon-kucuk a-kart-ikon") + '<span class="a-ekip">' + adlar + "</span></span>";
   }
   /* Satırda TEK eylem tuşu: Kabul et → Denetime başla → Devam et. Denetime başla tarihe bağlı değil (reisim 10);
-     Kabul et'in İSG-KATİP ön koşulu durur (reisim 24: öneri kabul). */
+     2026-09-30 (L2, reisim: "isg katip sözleşmesi yok diyipte plan kabul edememezlik olmasın"): İSG-KATİP ön koşulu
+     kalktı, eksik yalnız uyarı şeridi; Kabul et'i yalnız okunmamış tarafsızlık beyanı kapatır. */
   /* 2026-09-26 (reisim: "kabul etme işi planın içinde olsun ki denetçi tarafsızlık beyanını okuyarak kabul etsin … kabul et yazan yerde
      sadece görüntüle yazsın daha sonra değişmesin"): listede her durumda tek tuş "Görüntüle" */
   function listeEylem(p) {
@@ -358,7 +359,7 @@
      telefonda aynı tuşlar altta yapışkan çubukta (kalıp 2). Tek birincil tuş (anayasa 2.7). */
   function planEylem(p) {   /* şu anki adımın tuşları — adımda ve telefonun alt çubuğunda aynı üretici */
     var sid = "a-plan-sebep-" + p.id;
-    if (p.durum === "bekliyor") return tus("reddet", p, "Reddet", "", false, "a-tus-ikincil") + tus("kabul", p, "Kabul et", "check", !!p.eksik || !p.beyanOkundu, "", sid);
+    if (p.durum === "bekliyor") return tus("reddet", p, "Reddet", "", false, "a-tus-ikincil") + tus("kabul", p, "Kabul et", "check", !p.beyanOkundu, "", sid);   /* 2026-09-30 (L2): İSG-KATİP eksiği kabulü engellemez, yalnız uyarı */
     /* 2026-09-29 (reisim: "ekipman ekleme kısmında tamamla tuşu olsun diyince kontrol listesi tamamlandı desin sonra en aşağıda tamamla
        yazsın ona tıklayınca komple tamamlandı olsun"): iki adım — Denetim'de kontrol listesi, en altta plan */
     if (p.durum === "denetimde") return p.kontrolTamam ? tus("tamamla", p, "Tamamla", "circle-check") : tus("kontrol-tamamla", p, "Tamamla", "list-checks");
@@ -487,8 +488,8 @@
     var a2;
     if (d === "bekliyor") a2 = adim(2, "aktif", "Kabul", "",
       '<blockquote class="a-beyan"><p class="a-beyan-baslik">Tarafsızlık ve çıkar çatışması beyanı</p><p>' + BEYAN + "</p></blockquote>" +
-      (p.eksik ? serit("uyari", "triangle-alert", kacis(p.eksik), sid) : "") +
-      '<label class="a-onay-kutusu a-beyan-onay"><input type="checkbox" data-beyan="' + p.id + '"' + (p.beyanOkundu ? " checked" : "") + "><span>Tarafsızlık beyanını okudum, kabul ediyorum</span></label>" +
+      (p.eksik ? serit("uyari", "triangle-alert", kacis(p.eksik) + " Plan yine de kabul edilebilir.") : "") +
+      '<label class="a-onay-kutusu a-beyan-onay"><input type="checkbox" data-beyan="' + p.id + '"' + (p.beyanOkundu ? " checked" : "") + '><span id="' + sid + '">Tarafsızlık beyanını okudum, kabul ediyorum</span></label>' +
       '<div class="a-adim-eylem"><div class="a-adim-tuslar">' + eylem + "</div></div>");
     else if (d === "red") a2 = adim(2, "red", "Kabul", tno(p.reddedildi), serit("hata", "circle-x", "Gerekçe: " + kacis(p.gerekce || "")));
     else a2 = adim(2, "tamam", "Kabul", tno(p.kabul),
@@ -647,7 +648,7 @@
   };
   var X = MK.eylem, pl = function (el) { return bul(+el.dataset.id); };
   X.tekrar = function () { VERI = "dolu"; goster(false); };
-  X.kabul = function (el) { var p = pl(el); if (p && p.durum === "bekliyor" && !p.eksik && p.beyanOkundu) { p.durum = "kabul"; p.kabul = simdi(); kaydet(p, simdi(), BEN, "Plan kabul edildi", "Tarafsızlık beyanı onaylandı"); goster(false); MK.bildir("Plan kabul edildi."); } };
+  X.kabul = function (el) { var p = pl(el); if (p && p.durum === "bekliyor" && p.beyanOkundu) { p.durum = "kabul"; p.kabul = simdi(); kaydet(p, simdi(), BEN, "Plan kabul edildi", "Tarafsızlık beyanı onaylandı"); goster(false); MK.bildir("Plan kabul edildi."); } };
   X.devam = function (el) { var p = pl(el); if (p) git(p.id); };
   X["kontrol-tamamla"] = function (el) {
     var p = pl(el); if (!p || p.durum !== "denetimde" || p.kontrolTamam) return;
