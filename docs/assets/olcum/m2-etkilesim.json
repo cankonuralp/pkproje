@@ -2,8 +2,8 @@
  "maket": "m2",
  "tarih": "2026-09-30",
  "arac": "tools/olc-bulut.mjs --etkilesim (başsız tarayıcı, 1920 açık tema; gen verilen denemede o genişlik)",
- "toplam": 24,
- "gecen": 24,
+ "toplam": 26,
+ "gecen": 26,
  "denemeler": [
   {
    "ad": "müşteriler: Müşteri girişi kullanılmadı → 2 / 11",
@@ -48,7 +48,14 @@
    "gecti": true
   },
   {
-   "ad": "müşteri ekle: e-postayla → müşteri girişi kendiliğinden açılır",
+   "ad": "müşteri ekle: e-postayla → giriş açılır, parola GİTMEZ",
+   "gen": 1920,
+   "sayfa": "maket/musteriler.html",
+   "hash": "#/yeni",
+   "gecti": true
+  },
+  {
+   "ad": "yeni müşteride Parolayı gönder → parola gider",
    "gen": 1920,
    "sayfa": "maket/musteriler.html",
    "hash": "#/yeni",
@@ -90,10 +97,17 @@
    "gecti": true
   },
   {
-   "ad": "ek giriş: açılır, parola gönderildi",
+   "ad": "ek giriş: açılır, parola gönderilmedi; satırdaki Parolayı gönder ile gider",
    "gen": 1920,
    "sayfa": "maket/musteriler.html",
    "hash": "#/m/m5/kullanici-ekle",
+   "gecti": true
+  },
+  {
+   "ad": "müşteri kartında Ön bilgilendirme formu gönder (Parolayı gönder'in yanında) → onay → gönderim tarihi kartta",
+   "gen": 1920,
+   "sayfa": "maket/musteriler.html",
+   "hash": "#/m/m5",
    "gecti": true
   },
   {

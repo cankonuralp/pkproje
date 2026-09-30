@@ -6,8 +6,8 @@
    Bakış: planlama ekibi. Veri ortak (maket-veri.js), UYDURMA.
    2. tur (2026-09-25, reisim: "Tüm önerilerin uygundur" — sorular 44–50, pkproje.md §9 on üçüncü tur) + genel ilke (38/39: teknik
    ayrıntı yok, kural uyarıdır engel değil):
-   · 33 → müşteri girişi KENDİLİĞİNDEN açılır: müşterinin e-postası kullanıcı adı, sistemin ürettiği parola o adrese gider; personel
-     "Müşteri gözüyle bak" ile müşterinin gördüğünü açar, "Parolayı yeniden gönder" ile yardım eder. Davet yok.
+   · 33 → müşteri girişi KENDİLİĞİNDEN açılır: müşterinin e-postası kullanıcı adı; parolayı sistem üretir, 2026-09-30'dan beri (L5) yalnız
+     personel "Parolayı gönder" deyince o adrese gider; "Müşteri gözüyle bak" ile müşterinin gördüğünü açar. Davet yok.
    · 44 → ana giriş bütün tesisleri görür; kişiye özel EK GİRİŞ bütün ya da seçili tesislerle sınırlanır.
    · 45 / 46 → vergi no ve SGK DETSİS no ZORUNLU DEĞİL: eksikse kayıt olur, sayfada uyarı çıkar; aynısı başka kayıtta varsa pencere
      uyarır, "Yine de kaydet" ile kaydedilir. SGK no raporda gerekir → rapor imzalanırken yeniden hatırlatılır (M9).
@@ -20,7 +20,10 @@
   "use strict";
   var $ = MK.$, kacis = MK.kacis, ikon = MK.ikon, kirp = MK.kirp, rozet = MK.rozet, bilgi = MK.bilgi;
   var BUGUN = MK.BUGUN, YAKIN = MV.esik("tesis");   /* firma ayarı (49; Firma ayarları, 202); başlangıç 30 gün */
+  /* 2026-09-30 (L5, reisim: "müşteri hesabı açılır açılmaz parola gönderilmesin parola biz tıklayınca gönderilsin"): giriş açılınca durum
+     "hazir" (parola gönderilmedi); parola yalnız "Parolayı gönder" ile gider. Kartta yanında "Ön bilgilendirme formu gönder". */
   var HESAP = { etkin: { ad: "Etkin", rozet: "a-rozet-tamam" }, gonderildi: { ad: "Parola gönderildi", rozet: "a-rozet-bekliyor" },
+    hazir: { ad: "Parola gönderilmedi", rozet: "a-rozet-bekliyor" },
     yok: { ad: "E-posta yok", rozet: "a-rozet-bekliyor" }, pasif: { ad: "Kapalı", rozet: "a-rozet-notr" } };
   var PASIF = { ad: "Pasif", rozet: "a-rozet-notr" };
   var kalan = function (t) { return MK.gunFarki(BUGUN, t); };
@@ -127,19 +130,26 @@
     } },
     { k: "son", baslik: "Son giriş", kart: "govde", sira: 3, hucre: function (k) {
       /* henüz girmediyse sütunda giriş tarihi yok: "Girmedi" + parolanın gittiği gün (tabloda başlık "Son giriş" kalır) */
+      if (k.durum === "hazir") return '<span class="a-kart-etiket">Son giriş</span><span class="a-uyari-metin">Parola gönderilmedi</span>';
       if (k.durum === "gonderildi") return '<span class="a-kart-etiket">Son giriş</span><span><span class="a-uyari-metin">Girmedi</span><span class="a-tarih-saat">parola ' + MK.zamanYaz(k.gonderildi) + "</span></span>";
       return '<span class="a-kart-etiket">Son giriş</span><span class="a-tarih-saat">' + MK.zamanYaz(k.son) + "</span>";
     } },
-    { k: "durum", baslik: "Durum", kart: "rozet", sira: 1, hucre: function (k) { return rozet(HESAP[k.durum]); } }
+    { k: "durum", baslik: "Durum", kart: "rozet", sira: 1, hucre: function (k) { return rozet(HESAP[k.durum]); } },
+    { k: "eylem", baslik: "İşlem", gizliBaslik: true, kart: "eylem", sira: 9, hucre: function (k) {
+      if (MV.musteri(k.m).pasif) return "";
+      return MK.tus({ eylem: "ek-parola-gonder", ad: k.durum === "hazir" ? "Parolayı gönder" : "Yeniden gönder", ikon: "send", sinif: "a-tus-ikincil", veri: { i: MV.MUSTERI_KULLANICI.indexOf(k) } });
+    } }
   ];
   function girisHtml(m) {
     var g = m.pasif ? { durum: "pasif" } : m.giris, ek = ekGiris(m);
-    var durum = g.durum === "pasif" ? "Müşteri pasif; giriş kapalı" : g.durum === "etkin" ? "Son giriş " + MK.zamanYaz(g.son) : g.durum === "gonderildi" ? "Parola " + MK.zamanYaz(g.gonderildi) + " tarihinde gönderildi; henüz girmedi" : "Müşterinin e-postası yok";
+    var durum = g.durum === "pasif" ? "Müşteri pasif; giriş kapalı" : g.durum === "etkin" ? "Son giriş " + MK.zamanYaz(g.son) : g.durum === "gonderildi" ? "Parola " + MK.zamanYaz(g.gonderildi) + " tarihinde gönderildi; henüz girmedi" : g.durum === "hazir" ? "Giriş açık; parola henüz gönderilmedi" : "Müşterinin e-postası yok";
     return '<section class="a-bolum" aria-labelledby="a-b-giris"><div class="a-alt-bas"><h2 class="a-alt-baslik" id="a-b-giris">Müşteri girişi</h2>' + rozet(HESAP[g.durum]) + "</div>" +
-      '<dl class="a-bilgi">' + bilgi("Kullanıcı adı", g.durum === "yok" ? '<span class="a-uyari-metin">E-posta yazılınca giriş açılır</span>' : kacis(m.eposta), true) + bilgi("Durum", durum, true) + bilgi("Gördüğü tesisler", "Bütün tesisler") + "</dl>" +
+      '<dl class="a-bilgi">' + bilgi("Kullanıcı adı", g.durum === "yok" ? '<span class="a-uyari-metin">E-posta yazılınca giriş açılır</span>' : kacis(m.eposta), true) + bilgi("Durum", durum, true) + bilgi("Gördüğü tesisler", "Bütün tesisler") +
+        bilgi("Ön bilgilendirme formu", m.onBilgi ? MK.zamanYaz(m.onBilgi) + " tarihinde gönderildi" : '<span class="a-deger-yok">Gönderilmedi</span>', true) + "</dl>" +
       (g.durum === "pasif" ? "" : '<div class="a-bolum-eylem">' + (g.durum === "yok" ? MK.tus({ eylem: "musteri-duzenle", ad: "E-posta yaz", ikon: "pencil", sinif: "a-tus-ikincil" })
         : '<a class="a-tus a-tus-ikincil" href="musteri.html#/?musteri=' + m.id + '">' + ikon("eye", "a-ikon-kucuk") + "Müşteri gözüyle bak</a>" +
-          MK.tus({ eylem: "parola-gonder", ad: "Parolayı yeniden gönder", ikon: "send", sinif: "a-tus-ikincil" })) + "</div>") +
+          MK.tus({ eylem: "parola-gonder", ad: g.durum === "hazir" ? "Parolayı gönder" : "Parolayı yeniden gönder", ikon: "send", sinif: "a-tus-ikincil" }) +
+          MK.tus({ eylem: "on-bilgi-gonder", ad: "Ön bilgilendirme formu gönder", ikon: "file-text", sinif: "a-tus-ikincil" })) + "</div>") +
       '<div class="a-alt-bas a-alt-bas-ic"><h3 class="a-alt-baslik">Ek girişler</h3><span class="a-sayac"><b>' + ek.length + "</b> kişi</span>" +
         (m.pasif ? "" : MK.tus({ eylem: "kullanici-ac", ad: "Ek giriş ekle", ikon: "user-plus", sinif: "a-tus-ikincil a-bolum-tus" })) + "</div>" +
       '<div class="a-liste-kap">' + (ek.length ? MK.tablo({ baslik: "Ek girişler", sinif: "a-tablo-mkullanici", sutunlar: KULLANICI_SUTUN, kayitlar: ek })
@@ -271,7 +281,7 @@
         A("kisa", "Kısa ad", d.kisa, { ek: ' maxlength="40"', ipucu: "Listelerde görünür." }) + A("vd", "Vergi dairesi", d.vd, { ek: ' maxlength="40"' }) +
         A("vno", "Vergi no", d.vno, { sinif: "a-girdi-sicil", ek: ' inputmode="numeric" maxlength="11"', ipucu: "Boşsa kayıt olur, müşteri sayfasında hatırlatılır." }) +
         A("eposta", "E-posta", d.eposta, { sinif: "a-girdi-eposta", genis: true, ek: ' type="email" inputmode="email" maxlength="120"',
-          ipucu: W.id ? "Müşteri girişinin kullanıcı adı; faturalar da bu adrese." : "Kaydedince müşteri girişi bu adresle açılır, parola bu adrese gider." }) +
+          ipucu: W.id ? "Müşteri girişinin kullanıcı adı; faturalar da bu adrese." : "Kaydedince müşteri girişi bu adresle açılır; parola siz gönderince gider." }) +
         /* 2026-09-27 (reisim): telefon müşteri kaydında; rapordaki firma bilgileri buradan gelir, inspector değiştirmez */
         A("tel", "Telefon", d.tel, { sinif: "a-girdi-sicil", ek: ' type="tel" inputmode="tel" maxlength="20"' }) +
         A("ilgili", "İlgili kişi", d.ilgili, { genis: true, ek: ' maxlength="80"', ipucu: "Ad ve görev." }) + "</div>";
@@ -291,8 +301,8 @@
     } else if (W.tur === "kullanici") {
       $("a-pencere-baslik").textContent = "Ek giriş ekle";
       var t = etkinTesisler(MV.musteri(W.m));
-      kaydet = { ad: "Girişi aç, parolayı gönder", ikon: "send" };
-      govde = '<p class="a-pencere-ozet"><b>' + kacis(MV.musteri(W.m).unvan) + "</b><br>Kişiye özel giriş; parolayı sistem üretip bu e-postaya gönderir.</p>" + '<div class="a-form">' +
+      kaydet = { ad: "Girişi aç", ikon: "check" };
+      govde = '<p class="a-pencere-ozet"><b>' + kacis(MV.musteri(W.m).unvan) + "</b><br>Kişiye özel giriş; parolayı sistem üretir, siz “Parolayı gönder” deyince bu e-postaya gider.</p>" + '<div class="a-form">' +
         A("ad", "Ad soyad", d.ad, { zorunlu: true, ek: ' maxlength="80"' }) + A("eposta", "E-posta", d.eposta, { zorunlu: true, sinif: "a-girdi-eposta", ek: ' type="email" inputmode="email" maxlength="120"' }) +
         '<div class="a-alan-grup a-alan-genis"><p class="a-etiket">Gördüğü tesisler</p>' +
           '<label class="a-onay-kutusu"><input type="radio" name="w-kapsam" data-kapsam="hepsi"' + (d.kapsam === "hepsi" ? " checked" : "") + "><span>Bütün tesisler<span class=\"a-alt-satir\">Sonradan eklenen tesis de görünür.</span></span></label>" +
@@ -358,10 +368,26 @@
     pencereAc("pasif", { kim: musteri ? "musteri" : "tesis", hedef: musteri ? MV.musteri(r.id) : MV.tesis(r.id), m: musteri ? r.id : null, t: musteri ? null : r.id });
   };
   X["parola-gonder"] = function () {
+    var m = MV.musteri(sayfa().id), ilk = m.giris.durum === "hazir";
+    if (m.giris.durum !== "etkin") { m.giris.durum = "gonderildi"; m.giris.gonderildi = MK.simdi(); }
+    MK.bildir((ilk ? "Parola " : "Yeni parola ") + m.eposta + " adresine gönderildi.");
+    yenile(); var t = document.querySelector('[data-eylem="parola-gonder"]'); if (t) t.focus();
+  };
+  X["ek-parola-gonder"] = function (el) {
+    var k = MV.MUSTERI_KULLANICI[+el.dataset.i]; if (!k) return;
+    var ilk = k.durum === "hazir"; if (k.durum !== "etkin") { k.durum = "gonderildi"; k.gonderildi = MK.simdi(); }
+    MK.bildir((ilk ? "Parola " : "Yeni parola ") + k.eposta + " adresine gönderildi.");
+    yenile(); var t = document.querySelector('[data-eylem="ek-parola-gonder"][data-i="' + el.dataset.i + '"]'); if (t) t.focus();
+  };
+  /* 2026-09-30 (reisim: "ön bilgilendirme formu gönder tuşu olsun kartı ekranında parolayı gönder tuşunun yanında"): firmanın ön
+     bilgilendirme formu müşterinin e-postasına gider; son gönderim kartta. Formun içeriği firmanın kendi formatı (soru, §9 kırkıncı tur). */
+  X["on-bilgi-gonder"] = function () {
     var m = MV.musteri(sayfa().id);
-    if (m.giris.durum !== "etkin") m.giris.gonderildi = MK.simdi();
-    MK.bildir("Yeni parola " + m.eposta + " adresine gönderildi.");
-    yenile();
+    MK.onayla({ baslik: "Ön bilgilendirme formu gönder", metin: "Firmanızın ön bilgilendirme formu <b>" + kacis(m.eposta) + "</b> adresine gönderilir." +
+      (m.onBilgi ? " Son gönderim: " + MK.zamanYaz(m.onBilgi) + "." : ""), tus: "Gönder", tamam: function () {
+      m.onBilgi = MK.simdi(); MK.bildir("Ön bilgilendirme formu " + m.eposta + " adresine gönderildi.");
+      yenile(); var t = document.querySelector('[data-eylem="on-bilgi-gonder"]'); if (t) t.focus();
+    } });
   };
   X["pencere-kaydet"] = function () {
     var dn = denetle(), onay = W.uyariGoruldu;
@@ -376,19 +402,19 @@
       var m = W.id ? MV.musteri(W.id) : { id: "m" + (MV.MUSTERILER.length + 1), acilis: BUGUN, uygunsuz: 0, giris: { durum: "yok" } };
       Object.assign(m, { unvan: d.unvan.trim(), kisa: d.kisa.trim() || d.unvan.trim().split(" ").slice(0, 2).join(" "), vd: d.vd.trim(), vno: d.vno, eposta: d.eposta.trim(), tel: d.tel.trim(), ilgili: d.ilgili.trim() });
       var yeniGiris = m.eposta && m.giris.durum === "yok";
-      if (yeniGiris) m.giris = { durum: "gonderildi", gonderildi: MK.simdi() };
+      if (yeniGiris) m.giris = { durum: "hazir" };
       if (!m.eposta) m.giris = { durum: "yok" };
       if (!W.id) MV.MUSTERILER.push(m);
       hedef = "#/m/" + m.id;
-      ileti = (W.id ? "Müşteri güncellendi." : m.kisa + " eklendi.") + (yeniGiris ? " Müşteri girişi açıldı, parola " + m.eposta + " adresine gönderildi." : !m.eposta && !W.id ? " E-posta yok; müşteri girişi e-posta yazılınca açılır." : "");
+      ileti = (W.id ? "Müşteri güncellendi." : m.kisa + " eklendi.") + (yeniGiris ? " Müşteri girişi açıldı; parolayı “Parolayı gönder” ile gönderin." : !m.eposta && !W.id ? " E-posta yok; müşteri girişi e-posta yazılınca açılır." : "");
     } else if (W.tur === "tesis") {
       var t = W.id ? MV.tesis(W.id) : { id: "t" + (MV.TESISLER.length + 1), m: W.m, ekipman: 0, son: "", sonraki: BUGUN };
       Object.assign(t, { ad: d.ad.trim(), adres: d.adres.trim(), ilce: d.ilce.trim(), il: d.il, sgk: d.sgk });
       if (!W.id) MV.TESISLER.push(t);
       hedef = "#/t/" + t.id; ileti = W.id ? "Tesis güncellendi." : t.ad + " eklendi.";
     } else if (W.tur === "kullanici") {
-      MV.MUSTERI_KULLANICI.push({ m: W.m, ad: d.ad.trim(), eposta: d.eposta, tesis: d.kapsam === "hepsi" ? "hepsi" : d.tesis.slice(), durum: "gonderildi", gonderildi: MK.simdi() });
-      hedef = "#/m/" + W.m; ileti = d.ad.trim() + " için giriş açıldı; parola " + d.eposta + " adresine gönderildi.";
+      MV.MUSTERI_KULLANICI.push({ m: W.m, ad: d.ad.trim(), eposta: d.eposta, tesis: d.kapsam === "hepsi" ? "hepsi" : d.tesis.slice(), durum: "hazir" });
+      hedef = "#/m/" + W.m; ileti = d.ad.trim() + " için giriş açıldı; parolayı “Parolayı gönder” ile gönderin.";
     } else {
       var x = W.hedef, ac = !!x.pasif;
       x.pasif = ac ? null : BUGUN;

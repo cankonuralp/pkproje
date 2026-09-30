@@ -2033,6 +2033,11 @@ revizyon, alan kopyalama, hafif kusur devri, meslek eşleşme denetimi).
 - Emsal ürünler: https://opwire.app/iso-17020-periyodik-kontrol-yazilimi/ · https://17020muayene.vidco.com.tr/ · https://akuple.com/asansor-kontrol-yazilimi/ · https://ensyazilim.com/
 
 ## 11 · Değişiklik günlüğü
+- 2026-09-30 (171): **L5 · Müşteri hesabında parola tıklayınca gider · Ön bilgilendirme formu gönder** (§9 kırkıncı tur). Müşteri (ve ek
+  giriş) e-postayla kaydedilince giriş açılır ama parola gitmez: durum "Parola gönderilmedi"; müşteri kartında **Parolayı gönder**, ek giriş
+  satırında **Parolayı gönder** / **Yeniden gönder** (pasif müşteride yok). Kartta Parolayı gönder'in yanında **Ön bilgilendirme formu
+  gönder**: onay penceresi → müşterinin e-postasına; son gönderim "Ön bilgilendirme formu" satırında. İki eski deneme (açılınca "parola
+  gönderildi") kural değiştiği için güncellendi. Ölçüm: m2 104/104 · 26/26 · 52/52; gözle 1920.
 - 2026-09-30 (170): **L2 · İSG-KATİP eksiği plan kabulünü engellemez** (§9 kırkıncı tur). Plan içinde "Kabul et" artık yalnız tarafsızlık
   beyanı okunmadıysa kapalı; İSG-KATİP ID'si yok / geç onay / bitmiş plan için şerit kalır ve "Plan yine de kabul edilebilir." der. Sözleşme,
   plan aç, müşteri ve onay ekranlarında İSG-KATİP zaten yalnız uyarıydı (bakıldı, engel yok). Ölçüm: planlar 128/128 · 60/60 (2 yeni) · 64/64.

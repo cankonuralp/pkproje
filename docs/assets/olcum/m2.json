@@ -1,7 +1,7 @@
 {
  "maket": "m2",
  "sayfa": "maket/musteriler.html",
- "tarih": "2026-09-29",
+ "tarih": "2026-09-30",
  "arac": "başsız HeadlessChrome/141.0.7390.37 · puppeteer-core · tools/olc-bulut.mjs + tools/olc-maket.js",
  "yontem": "python3 http.server (docs/), her durum × genişlik × tema taze yükleme ve ayrı oturum, geçişler kapalı; 1920×1080 · 1080×810 · 375×812 × açık/koyu; 1080'de çekmece açık ayrıca.",
  "toplam": 104,
@@ -371,7 +371,7 @@
    "tusY": 34,
    "tusGen": [
     99,
-    222
+    271
    ],
    "satirY": 52,
    "birincil": null,
@@ -409,7 +409,7 @@
    "tusY": 34,
    "tusGen": [
     99,
-    222
+    271
    ],
    "satirY": 52,
    "birincil": null,
@@ -447,7 +447,7 @@
    "tusY": 44,
    "tusGen": [
     102,
-    234
+    287
    ],
    "satirY": 56,
    "birincil": null,
@@ -485,7 +485,7 @@
    "tusY": 44,
    "tusGen": [
     102,
-    234
+    287
    ],
    "satirY": 56,
    "birincil": null,
@@ -523,7 +523,7 @@
    "tusY": 44,
    "tusGen": [
     102,
-    234
+    287
    ],
    "satirY": 56,
    "birincil": null,
@@ -561,7 +561,7 @@
    "tusY": 44,
    "tusGen": [
     102,
-    234
+    287
    ],
    "satirY": 56,
    "birincil": null,
@@ -599,7 +599,7 @@
    "tusY": 44,
    "tusGen": [
     109,
-    234
+    287
    ],
    "satirY": 247,
    "birincil": null,
@@ -637,7 +637,7 @@
    "tusY": 44,
    "tusGen": [
     109,
-    234
+    287
    ],
    "satirY": 247,
    "birincil": null,
@@ -675,7 +675,7 @@
    "tusY": 34,
    "tusGen": [
     99,
-    222
+    271
    ],
    "satirY": 52,
    "birincil": null,
@@ -713,7 +713,7 @@
    "tusY": 34,
    "tusGen": [
     99,
-    222
+    271
    ],
    "satirY": 52,
    "birincil": null,
@@ -751,7 +751,7 @@
    "tusY": 44,
    "tusGen": [
     102,
-    234
+    287
    ],
    "satirY": 56,
    "birincil": null,
@@ -789,7 +789,7 @@
    "tusY": 44,
    "tusGen": [
     102,
-    234
+    287
    ],
    "satirY": 56,
    "birincil": null,
@@ -827,7 +827,7 @@
    "tusY": 44,
    "tusGen": [
     102,
-    234
+    287
    ],
    "satirY": 56,
    "birincil": null,
@@ -865,7 +865,7 @@
    "tusY": 44,
    "tusGen": [
     102,
-    234
+    287
    ],
    "satirY": 56,
    "birincil": null,
@@ -903,7 +903,7 @@
    "tusY": 44,
    "tusGen": [
     109,
-    234
+    287
    ],
    "satirY": 241,
    "birincil": null,
@@ -941,7 +941,7 @@
    "tusY": 44,
    "tusGen": [
     109,
-    234
+    287
    ],
    "satirY": 241,
    "birincil": null,
@@ -2499,7 +2499,7 @@
    "tusY": 34,
    "tusGen": [
     78,
-    222
+    271
    ],
    "satirY": 52,
    "birincil": null,
@@ -2537,7 +2537,7 @@
    "tusY": 34,
    "tusGen": [
     78,
-    222
+    271
    ],
    "satirY": 52,
    "birincil": null,
@@ -2575,7 +2575,7 @@
    "tusY": 44,
    "tusGen": [
     81,
-    234
+    287
    ],
    "satirY": 56,
    "birincil": null,
@@ -2613,7 +2613,7 @@
    "tusY": 44,
    "tusGen": [
     81,
-    234
+    287
    ],
    "satirY": 56,
    "birincil": null,
@@ -2651,7 +2651,7 @@
    "tusY": 44,
    "tusGen": [
     81,
-    234
+    287
    ],
    "satirY": 56,
    "birincil": null,
@@ -2689,7 +2689,7 @@
    "tusY": 44,
    "tusGen": [
     81,
-    234
+    287
    ],
    "satirY": 56,
    "birincil": null,
@@ -2727,7 +2727,7 @@
    "tusY": 44,
    "tusGen": [
     109,
-    234
+    287
    ],
    "satirY": 247,
    "birincil": null,
@@ -2765,7 +2765,7 @@
    "tusY": 44,
    "tusGen": [
     109,
-    234
+    287
    ],
    "satirY": 247,
    "birincil": null,
@@ -3107,7 +3107,7 @@
    "tusY": 34,
    "tusGen": [
     78,
-    227
+    271
    ],
    "satirY": 52,
    "birincil": null,
@@ -3145,7 +3145,7 @@
    "tusY": 34,
    "tusGen": [
     78,
-    227
+    271
    ],
    "satirY": 52,
    "birincil": null,
@@ -3183,7 +3183,7 @@
    "tusY": 44,
    "tusGen": [
     81,
-    240
+    287
    ],
    "satirY": 56,
    "birincil": null,
@@ -3221,7 +3221,7 @@
    "tusY": 44,
    "tusGen": [
     81,
-    240
+    287
    ],
    "satirY": 56,
    "birincil": null,
@@ -3259,7 +3259,7 @@
    "tusY": 44,
    "tusGen": [
     81,
-    240
+    287
    ],
    "satirY": 56,
    "birincil": null,
@@ -3297,7 +3297,7 @@
    "tusY": 44,
    "tusGen": [
     81,
-    240
+    287
    ],
    "satirY": 56,
    "birincil": null,
@@ -3334,8 +3334,8 @@
    "eksikIkon": 0,
    "tusY": 44,
    "tusGen": [
-    93,
-    240
+    109,
+    287
    ],
    "satirY": 247,
    "birincil": null,
@@ -3372,8 +3372,8 @@
    "eksikIkon": 0,
    "tusY": 44,
    "tusGen": [
-    93,
-    240
+    109,
+    287
    ],
    "satirY": 247,
    "birincil": null,
@@ -3411,7 +3411,7 @@
    "tusY": 34,
    "tusGen": [
     78,
-    222
+    271
    ],
    "satirY": 52,
    "birincil": null,
@@ -3449,7 +3449,7 @@
    "tusY": 34,
    "tusGen": [
     78,
-    222
+    271
    ],
    "satirY": 52,
    "birincil": null,
@@ -3487,7 +3487,7 @@
    "tusY": 44,
    "tusGen": [
     81,
-    234
+    287
    ],
    "satirY": 56,
    "birincil": null,
@@ -3525,7 +3525,7 @@
    "tusY": 44,
    "tusGen": [
     81,
-    234
+    287
    ],
    "satirY": 56,
    "birincil": null,
@@ -3563,7 +3563,7 @@
    "tusY": 44,
    "tusGen": [
     81,
-    234
+    287
    ],
    "satirY": 56,
    "birincil": null,
@@ -3601,7 +3601,7 @@
    "tusY": 44,
    "tusGen": [
     81,
-    234
+    287
    ],
    "satirY": 56,
    "birincil": null,
@@ -3639,7 +3639,7 @@
    "tusY": 44,
    "tusGen": [
     109,
-    234
+    287
    ],
    "satirY": 247,
    "birincil": null,
@@ -3677,7 +3677,7 @@
    "tusY": 44,
    "tusGen": [
     109,
-    234
+    287
    ],
    "satirY": 247,
    "birincil": null,
