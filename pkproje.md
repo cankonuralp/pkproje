@@ -590,9 +590,11 @@ açıldı** ekranı (uyarılı kişi şeridi, el ile ID'nin sözleşmeye kaydı,
   ilk giriş yapılmadı · saat çakışması (76) · kapsamdaki türe ekipte yetkili meslekten kimse yok. "Kabul edemez" kalktı.
 - **İSG-KATİP ID** sözleşmeden kendiliğinden gelir (M5); yoksa plan açan el ile yazar, "sözleşmeye de kaydet" işaretliyse tesisin iş sözleşmesine
   eklenir (bir dahaki planda kendiliğinden gelir). Boş bırakılırsa plan açılır, uyarı kalır.
-- **Tek sayfa** (74). **Tesiste açık plan varken ikinci plan açılır** (77); o plandaki ekipman bu plana alınamaz.
-- **Kapsam** (78): kontrolü eşik içinde gelen ve ilk kontrolü yapılacak kayıtlı ekipman seçili gelir (eşik firma ayarı, başlangıç 30 gün).
-  **"Sahada kaydedilecek yeni ekipman" alanı kalktı**: yeni ekipmanı denetçi sahada plana ekler; **kapsam boş da** plan açılır.
+- **Tek sayfa** (74). **Tesiste açık plan varken ikinci plan açılır** (77). ~~O plandaki ekipman bu plana alınamaz.~~ (2026-09-30, L6: kısıt kalktı)
+- ~~**Kapsam** (78): kontrolü eşik içinde gelen … seçili gelir.~~ **2026-09-30 (L6, §9 kırkıncı tur): ekipman seçimi YOK** — tesisin bütün
+  kayıtlı ekipmanı plana girer; özet tür başına sayıyı, "kontrolü geliyor" sayısını (eşik firma ayarı, 30 gün) ve ekipte yetkili olanı
+  gösterir. Denetçi plan içinde bütün ekipmanı görür (branş süzgeciyle kendi branşını ayırır), gerekeni raporlar.
+  **"Sahada kaydedilecek yeni ekipman" alanı kalktı**: yeni ekipmanı denetçi sahada plana ekler; ekipmansız tesiste de plan açılır.
 - **Sorumlu denetçi yok** (79), ekip eşit. **"Plan aç" tuşu** plan açma yetkisi olana (80): makette Ana sayfa'nın planlama ve yönetici
   görünümünde; Planlar maketi denetçi gözünden olduğu (ve dondurulduğu) için orada gösterilmedi — uygulamada rol yetkisiyle görünür.
 - Tahmini süre tür sürelerinden (M3), yalnız ipucu. Proje no kaydedince sunucu verir (numara biçimi firmaya göre, §3.7). Makette sayfalar
@@ -2033,6 +2035,12 @@ revizyon, alan kopyalama, hafif kusur devri, meslek eşleşme denetimi).
 - Emsal ürünler: https://opwire.app/iso-17020-periyodik-kontrol-yazilimi/ · https://17020muayene.vidco.com.tr/ · https://akuple.com/asansor-kontrol-yazilimi/ · https://ensyazilim.com/
 
 ## 11 · Değişiklik günlüğü
+- 2026-09-30 (173): **L6 · Plan aç'ta ekipman seçimi (kapsam) kalktı** (§9 kırkıncı tur). Plan aç'ın 4. bölümü (ekipman listesi, Kontrolü
+  gelenleri seç / Hepsini seç / Seçimi temizle, süzgeç) kalktı; bölümler 1–4. Tesisin bütün kayıtlı ekipmanı plana girer — başka açık planda
+  olan da ("aynı ekipman iki açık planda olmaz" kısıtı kalktı). Özet: "N ekipman · N tür · hepsi plana girer" + tür başına tablo (ekipte
+  yetkili · kontrolü geliyor · ekipman). Plan içinde denetçi bütün ekipmanı görür, branş süzgeci duruyor. 203 geçerli (raporu olan
+  ekipmanda Rapor oluştur yok). §3.4-M6 varsayımları yerinde düzeltildi. Seçime dayanan 7 deneme gerekçeyle yeniden yazıldı. Ölçüm: m6
+  80/80 · 19/19 · 40/40; planlar 128/128 · 60/60 · 64/64; gözle 1920.
 - 2026-09-30 (172): **L3 · Gelir-gider'de toplam** (§9 kırkıncı tur). Muhasebe › Gelir-gider'de Dönem listesinin başında **Toplam** (varsayılan):
   ilk işin ayından bu aya kadar bütün aylar toplanır — üç yüz (toplam gelir, gider, kâr), kalem kalem toplam tablo (maaşlar, masraflar, sabit
   giderler "N ay × aylık"), altında **Aylara göre** döküm (dönem · iş · gelir · gider · kâr, en altta toplam satırı; ay adına basınca o ay

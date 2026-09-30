@@ -781,7 +781,7 @@ a.a-yuz:hover { border-color: var(--kenar-alan); background: var(--zemin); }
 .a-tablo-aday .a-k-ad { width: 19%; } .a-tablo-aday .a-k-isg { width: 17%; } .a-tablo-aday .a-k-ekipnet { width: 11%; }
 .a-tablo-aday .a-k-gun { width: 15%; } .a-tablo-aday .a-k-uyari { width: 26%; } .a-tablo-aday .a-k-durum { width: 12%; }
 .a-tablo-kapsamozet .a-k-tur { width: 30%; } .a-tablo-kapsamozet .a-k-kayitli { width: 12%; } .a-tablo-kapsamozet .a-k-yeni { width: 12%; }
-.a-tablo-kapsamozet .a-k-yetkili { width: 32%; } .a-tablo-kapsamozet .a-k-toplam { width: 14%; }
+.a-tablo-kapsamozet .a-k-yetkili { width: 32%; } .a-tablo-kapsamozet .a-k-toplam { width: 14%; } .a-tablo-kapsamozet .a-k-geldi { width: 24%; }
 
 /* kayda giden kırpılabilir ad bağlantısı (ünvan, tesis adı, kişi): dokunma hedefi denetim yüksekliği, kırpma zinciri (kalıp 4) */
 .a-ad-bag { display: flex; align-items: center; min-height: var(--tus-y); min-width: 0; color: var(--onay-yazi); font-weight: 600; text-decoration: none; }

@@ -6,14 +6,14 @@
  "gecen": 19,
  "denemeler": [
   {
-   "ad": "tesisten gelince: tarih sonraki kontrol, 6 / 6 seçili",
+   "ad": "tesisten gelince: tarih sonraki kontrol; ekipman seçimi yok, özette 6 ekipman hepsi plana girer",
    "gen": 1920,
    "sayfa": "maket/plan-ac.html",
    "hash": "#/?tesis=t2",
    "gecti": true
   },
   {
-   "ad": "müşteri değişince tesis ve kapsam sıfırlanır",
+   "ad": "müşteri değişince tesis sıfırlanır",
    "gen": 1920,
    "sayfa": "maket/plan-ac.html",
    "hash": "#/?tesis=t2",
@@ -76,24 +76,24 @@
    "gecti": true
   },
   {
-   "ad": "açık plandaki ekipman seçilemez; açık plan şeridi (açıklama cümlesi yok), Planı aç açık",
+   "ad": "açık planlı tesis: ekipman yine plana girer (kısıt yok); açık plan şeridi (açıklama cümlesi yok)",
    "gen": 1920,
    "sayfa": "maket/plan-ac.html",
    "hash": "#/?tesis=t8",
    "gecti": true
   },
   {
-   "ad": "sahada yeni ekipman alanı yok; Hepsini seç",
+   "ad": "sahada yeni ekipman alanı yok; 24 ekipman tür başına özette",
    "gen": 1920,
    "sayfa": "maket/plan-ac.html",
    "hash": "#/?tesis=t12",
    "gecti": true
   },
   {
-   "ad": "kapsam boş da açılır",
+   "ad": "açılan plana tesisin bütün ekipmanı girer (başka açık planda olan da)",
    "gen": 1920,
    "sayfa": "maket/plan-ac.html",
-   "hash": "#/?tesis=t2",
+   "hash": "#/?tesis=t8",
    "gecti": true
   },
   {
@@ -132,7 +132,7 @@
    "gecti": true
   },
   {
-   "ad": "telefonda ekipman süzgeci levhada (tür)",
+   "ad": "telefonda özet tür başına kart (seçim listesi yok)",
    "gen": 375,
    "sayfa": "maket/plan-ac.html",
    "hash": "#/?tesis=t12",
