@@ -8,8 +8,8 @@
   390,
   430
  ],
- "toplam": 44,
- "temiz": 44,
+ "toplam": 48,
+ "temiz": 48,
  "durumlar": [
   {
    "ad": "ekipman türleri · katalog",
@@ -148,6 +148,42 @@
   },
   {
    "ad": "tür ekle · boş gönderildi",
+   "gen": 430,
+   "temiz": true,
+   "tasma": 0,
+   "disari": [],
+   "kucukAlan": [],
+   "alan": 5
+  },
+  {
+   "ad": "tür ekle · Diğer (Ek-III dışı) seçildi, Branş alanı",
+   "gen": 320,
+   "temiz": true,
+   "tasma": 0,
+   "disari": [],
+   "kucukAlan": [],
+   "alan": 5
+  },
+  {
+   "ad": "tür ekle · Diğer (Ek-III dışı) seçildi, Branş alanı",
+   "gen": 360,
+   "temiz": true,
+   "tasma": 0,
+   "disari": [],
+   "kucukAlan": [],
+   "alan": 5
+  },
+  {
+   "ad": "tür ekle · Diğer (Ek-III dışı) seçildi, Branş alanı",
+   "gen": 390,
+   "temiz": true,
+   "tasma": 0,
+   "disari": [],
+   "kucukAlan": [],
+   "alan": 5
+  },
+  {
+   "ad": "tür ekle · Diğer (Ek-III dışı) seçildi, Branş alanı",
    "gen": 430,
    "temiz": true,
    "tasma": 0,

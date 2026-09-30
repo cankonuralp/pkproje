@@ -147,6 +147,7 @@
       else if (MV.KATALOG.some(function (t) { return t.k === d.k; })) h.k = d.k + " kodu " + MV.tur(d.k).ad + " türünde kullanılıyor.";
     }
     if (!d.g) h.g = "Ek-III grubu seçilmeli (branş buradan gelir).";
+    else if (d.g === "ekdisi" && !d.b) h.b = "Ek-III dışı türde branş seçilmeli.";
     if (!/^\d{1,3}$/.test(String(d.periyot)) || +d.periyot < 1 || +d.periyot > 120) h.periyot = "Periyot 1–120 ay.";
     if (d.sure && !/^\d{1,3}$/.test(String(d.sure))) h.sure = "Dakika olarak; boş bırakılabilir.";
     return h;
@@ -174,7 +175,8 @@
       govde = '<div class="a-form">' +
         A("ad", "Tür adı", d.ad, { zorunlu: true, genis: true, ek: ' maxlength="60"' }) +
         A("k", "Kod", d.k, { zorunlu: true, sinif: "a-girdi-sicil", ek: ' maxlength="3"' + (W.id ? " readonly" : ""), ipucu: W.id ? "Kod değişmez (ekipman kodlarında kullanılıyor)." : "2–3 harf; ekipman kodu öneki." }) +
-        A("g", "Ek-III grubu", "", { zorunlu: true, girdi: MK.secim({ id: "w-g", ad: "Ek-III grubu", deger: d.g, secenekler: MV.GRUPLAR.map(function (g) { return [g.k, g.ad, MV.bransAd(g.b)]; }), ipucu: "Grup seçin", gecersiz: !!h.g, tanim: "w-g-ipucu" }), ipucu: "Branş ve onaylayan yönetici gruptan gelir." }) +
+        A("g", "Ek-III grubu", "", { zorunlu: true, girdi: MK.secim({ id: "w-g", ad: "Ek-III grubu", deger: d.g, secenekler: MV.GRUPLAR.map(function (g) { return [g.k, g.ad, g.b ? MV.bransAd(g.b) : "branş seçilir"]; }), ipucu: "Grup seçin", gecersiz: !!h.g, tanim: "w-g-ipucu" }), ipucu: d.g === "ekdisi" ? "Ek-III dışı: meslek kuralı uygulanmaz." : "Branş ve onaylayan yönetici gruptan gelir." }) +
+        (d.g === "ekdisi" ? A("b", "Branş", "", { zorunlu: true, girdi: MK.secim({ id: "w-b", ad: "Branş", deger: d.b || "", secenekler: [["m", "Mekanik"], ["e", "Elektrik"]], ipucu: "Branş seçin", gecersiz: !!h.b, tanim: "w-b-ipucu" }), ipucu: "Onaylayan yönetici branştan gelir." }) : "") +
         A("periyot", "Periyot (ay)", d.periyot, { zorunlu: true, sinif: "a-girdi-sicil", ek: ' inputmode="numeric" maxlength="3"', ipucu: "Sonraki kontrol önerisi bununla hesaplanır." }) +
         A("sure", "Tahmini kontrol süresi (dk)", d.sure, { sinif: "a-girdi-sicil", ek: ' inputmode="numeric" maxlength="3"', ipucu: "İsteğe bağlı; plan saat önerisinde kullanılır." }) +
         (W.id ? "" : dosyaSec(d)) +
@@ -196,7 +198,7 @@
   function pencereAc(tur, id) {
     var t = id ? MV.tur(id) : null;
     W = { tur: tur, id: id || null, hata: {}, d: tur === "format" ? { dosya: "", not: "" }
-      : t ? { ad: t.ad, k: t.k, g: t.g, periyot: String(t.periyot), sure: t.sure ? String(t.sure) : "", std: t.std.slice(), cihaz: t.cihaz.slice(), dosya: "", olcum: t.olcumMetot || "" }
+      : t ? { ad: t.ad, k: t.k, g: t.g, periyot: String(t.periyot), sure: t.sure ? String(t.sure) : "", std: t.std.slice(), cihaz: t.cihaz.slice(), dosya: "", olcum: t.olcumMetot || "", b: t.b }
       : { ad: "", k: "", g: "", periyot: "12", sure: "", std: [], cihaz: [], dosya: "" } };
     pencereCiz(); if (!$("a-pencere").open) $("a-pencere").showModal();
     var ilk = $("a-pencere-govde").querySelector("input:not([readonly]), .a-tus"); if (ilk) ilk.focus();
@@ -257,7 +259,7 @@
     } else {
       var g = MV.grup(d.g);
       t = W.id ? MV.tur(W.id) : { k: d.k, pdf: [] };
-      Object.assign(t, { ad: d.ad.trim(), g: d.g, b: g.b, periyot: +d.periyot, sure: d.sure ? +d.sure : null, std: d.std.slice(), cihaz: d.cihaz.slice() });
+      Object.assign(t, { ad: d.ad.trim(), g: d.g, b: g.b || d.b, periyot: +d.periyot, sure: d.sure ? +d.sure : null, std: d.std.slice(), cihaz: d.cihaz.slice() });
       if (d.olcum) t.olcumMetot = d.olcum;
       if (!W.id) {
         if (d.dosya) t.pdf.unshift({ surum: "v1", tarih: MK.tarihYaz(MK.BUGUN), dosya: d.dosya });
@@ -270,7 +272,7 @@
     MK.bildir(ileti);
   };
   MK.onGirdi = function (e) { var k = e.target.dataset && e.target.dataset.alan; if (k && W) W.d[k] = k === "k" ? e.target.value.toUpperCase().replace(/[^A-Z]/g, "") : e.target.value; };
-  MK.onSecim = function (id, deger) { if (W && id === "w-g") { W.d.g = deger; delete W.hata.g; pencereCiz("w-g"); } else if (W && id === "w-olcum") { W.d.olcum = deger; pencereCiz("w-olcum"); } };
+  MK.onSecim = function (id, deger) { if (W && id === "w-g") { W.d.g = deger; delete W.hata.g; pencereCiz("w-g"); } else if (W && id === "w-b") { W.d.b = deger; delete W.hata.b; pencereCiz("w-b"); } else if (W && id === "w-olcum") { W.d.olcum = deger; pencereCiz("w-olcum"); } };
   document.addEventListener("change", function (e) {
     var c = e.target.dataset && e.target.dataset.cihazTur;
     if (c && W) { var j = W.d.cihaz.indexOf(c); if (e.target.checked && j < 0) W.d.cihaz.push(c); else if (!e.target.checked && j >= 0) W.d.cihaz.splice(j, 1); return; }

@@ -14,7 +14,10 @@
     { k: "kaldirma", ad: "Kaldırma ve iletme", b: "m" },
     { k: "iskele", ad: "İskeleler", b: "m" },
     { k: "diger", ad: "Diğer tesisatlar, tezgâhlar, iş makineleri", b: "m" },
-    { k: "elektrik", ad: "Elektrik tesisatları", b: "e" }
+    { k: "elektrik", ad: "Elektrik tesisatları", b: "e" },
+    /* N4 (2026-09-30, reisim: "ek 3 grubu içerisinde olmayanlar için diğer seçeneği olsun"): Ek-III dışı tür; branşı türde seçilir,
+       Ek-III meslek kuralı uygulanmaz (meslek uyarısı çıkmaz) */
+    { k: "ekdisi", ad: "Diğer (Ek-III dışı)", b: null, ekdisi: true }
   ];
   /* Meslekler ve izin verdikleri gruplar — yürürlükteki Ek-III metninden birebir (pkproje.md §4.6, 2026-09-22).
      ⛔ "Teknisyen" yetkili kişi OLAMAZ (metinde hiç geçmiyor). b: branş (iskele-yalnız meslekler mekanik sayıldı — varsayım). */
@@ -341,7 +344,7 @@
   MV.tur = function (k) { return MV.KATALOG.filter(function (t) { return t.k === k; })[0]; };
   MV.grup = function (k) { return MV.GRUPLAR.filter(function (g) { return g.k === k; })[0]; };
   /* türün yetkili meslekleri: grubuna izin veren meslekler (§4.6, birebir) */
-  MV.yetkiliMeslekler = function (t) { return MV.MESLEKLER.filter(function (m) { return m.g.indexOf(t.g) >= 0; }); };
+  MV.yetkiliMeslekler = function (t) { return MV.MESLEKLER.filter(function (m) { return t.g === "ekdisi" || m.g.indexOf(t.g) >= 0; }); };
 
   /* ── STANDART KÜTÜPHANESİ bilgisi (M7, 2026-09-24): sürüm, dosya, yükleyen — ÖRNEK (numaralar gerçek standart numaraları,
      sürüm yılları ve atamalar doğrulanmadı; firma kendi satın aldığı kopyayı yükler, dosya firma dışına açılmaz, anayasa 5.1).
@@ -1067,7 +1070,7 @@
     return [{ id: r.no + "-1", kriter: ok.kriter, aciklama: ok.aciklama, rapor: r.no, tarih: r.olustu.slice(0, 10), sinif: sinifli ? "Hafif kusur" : "Uygun değil" }];
   };
   /* inspector'ın mesleği türün yetkili meslekleri arasında mı (§3.2 öneri 2c → karar: uyarı, engel değil) */
-  MV.meslekYetkili = function (kisi, t) { var p = MV.kisi(kisi), m = p && MV.meslek(p.meslek); return !!m && m.g.indexOf(t.g) >= 0; };
+  MV.meslekYetkili = function (kisi, t) { var p = MV.kisi(kisi), m = p && MV.meslek(p.meslek); return !!m && (t.g === "ekdisi" || m.g.indexOf(t.g) >= 0); };
   MV.acikUygunsuz = function (mid) { return MV.uygunsuzluklar(mid).filter(function (u) { return u.durum === "acik"; }).length; };
   /* ── TEKLİFLER (modül 11; M12, faz 2, 2026-09-24) — müşteri, tesis, kalem (ekipman türü × adet × birim fiyat), durum (§3.1).
      Fiyat listesi firma ayarı (ÖRNEK tutarlar, TL, KDV hariç); KDV %20. No T-AAYY-SIRA (proje no'nun düzeni; öneri). Plan açılan her tesisin

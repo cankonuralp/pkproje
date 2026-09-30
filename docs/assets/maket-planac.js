@@ -53,7 +53,7 @@
   /* ── INSPECTOR ADAYI: bu tesis ve tarih için kabul ön koşulları (§3.2 madde 2) + aynı gün başka plan ─────────── */
   var adaylar = function () { return MV.PERSONEL.filter(function (p) { return p.durum === "etkin" && p.hesap && p.hesap.roller.indexOf("inspector") >= 0; }); };
   /* türe yetkili: meslek Ek-III grubuna izin veriyor (M1 2. tur: firma grup yetkilendirmesi kalktı; yetkisizlik yalnız uyarı) */
-  var yetkili = function (p, tur) { return MV.meslek(p.meslek).g.indexOf(tur.g) >= 0; };
+  var yetkili = function (p, tur) { return tur.g === "ekdisi" || MV.meslek(p.meslek).g.indexOf(tur.g) >= 0; };   /* Ek-III dışı türde meslek kuralı yok (N4) */
   /* İSG-KATİP: sözleşmeden gelen ID (M5) ya da el ile yazılan; durum yok · gec · bitti · tamam — hepsi yalnız uyarı */
   var sozId = function (k) { return MV.isgTesis(F.tesis).filter(function (y) { return y.k === k; })[0]; };
   /* 2026-09-26 (reisim: "planlar açılırken başlangıç ve bitiş saatleri sormasın"): çakışma gün aralığıyla — plan günü seçilen aralıkta */

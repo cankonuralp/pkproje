@@ -2061,6 +2061,9 @@ revizyon, alan kopyalama, hafif kusur devri, meslek eşleşme denetimi).
 - Emsal ürünler: https://opwire.app/iso-17020-periyodik-kontrol-yazilimi/ · https://17020muayene.vidco.com.tr/ · https://akuple.com/asansor-kontrol-yazilimi/ · https://ensyazilim.com/
 
 ## 11 · Değişiklik günlüğü
+- 2026-09-30 (180): **N4 · Ek-III grubunda "Diğer (Ek-III dışı)"** (§9 kırk birinci tur). Ekipman türü formunda grup listesinin sonunda; seçilince
+  **Branş** alanı çıkar (zorunlu; onaylayan yönetici branştan). Ek-III dışı türde Ek-III meslek kuralı uygulanmaz (meslek uyarısı yok;
+  Plan aç'ta "yetkili" sayılır). Ölçüm: m3 96/96 · 24/24 (1 yeni) · 48/48; m6 80/80 · 20/20 · 40/40.
 - 2026-09-30 (179): **N3 · Cihaz türünde ekipman grubu yok** (§9 kırk birinci tur). "Cihaz türü ekle" yalnız adı sorar; cihazın hangi ekipman
   türünde kullanılacağı Ekipman türleri'nde seçilir. Cihaz sayfası ve tür listesi "kullanıldığı ekipman türleri"ni oradan okur; Ana sayfa'da
   kalibrasyon uyarısının branşı da (MV.cihazBranslari). Ölçüm aralığı alanına örnek ("ör. 0–1000 V"). 2 deneme gerekçeyle güncellendi.

@@ -2,8 +2,8 @@
  "maket": "m3",
  "tarih": "2026-09-30",
  "arac": "tools/olc-bulut.mjs --etkilesim (başsız tarayıcı, 1920 açık tema; gen verilen denemede o genişlik)",
- "toplam": 23,
- "gecen": 23,
+ "toplam": 24,
+ "gecen": 24,
  "denemeler": [
   {
    "ad": "formatlı türde ölçüm metodu türde yazar (ET: Üç Uçlu Karşılaştırma)",
@@ -87,6 +87,13 @@
    "gen": 1920,
    "sayfa": "maket/ekipman-turleri.html",
    "hash": "#/tur/ET",
+   "gecti": true
+  },
+  {
+   "ad": "tür ekle: Diğer (Ek-III dışı) — Branş seçilmeden kaydedilmez, seçilince kaydedilir; meslek uyarısı yok",
+   "gen": 1920,
+   "sayfa": "maket/ekipman-turleri.html",
+   "hash": "#/yeni",
    "gecti": true
   },
   {
