@@ -14,11 +14,11 @@
     "genislik": 1080,
     "ekranIcinde": true,
     "cekmeceGen": 300,
-    "madde": 16,
+    "madde": 17,
     "kesikAd": 0,
     "kucukMadde": 0,
     "menuGorunur": 691,
-    "menuIcerik": 938,
+    "menuIcerik": 984,
     "yatayTasma": 0,
     "sonMaddeAcilir": true,
     "perde": true,
@@ -28,11 +28,11 @@
     "genislik": 1080,
     "ekranIcinde": true,
     "cekmeceGen": 300,
-    "madde": 16,
+    "madde": 17,
     "kesikAd": 0,
     "kucukMadde": 0,
     "menuGorunur": 691,
-    "menuIcerik": 938,
+    "menuIcerik": 984,
     "yatayTasma": 0,
     "sonMaddeAcilir": true,
     "perde": true,
@@ -2778,7 +2778,7 @@
    "hatalar": []
   },
   {
-   "ad": "ana sayfa · inspector",
+   "ad": "ana sayfa · denetçi",
    "gen": 1920,
    "tema": "acik",
    "gorunum": "liste",
@@ -2816,7 +2816,7 @@
    "hatalar": []
   },
   {
-   "ad": "ana sayfa · inspector",
+   "ad": "ana sayfa · denetçi",
    "gen": 1920,
    "tema": "koyu",
    "gorunum": "liste",
@@ -2854,7 +2854,7 @@
    "hatalar": []
   },
   {
-   "ad": "ana sayfa · inspector",
+   "ad": "ana sayfa · denetçi",
    "gen": 1080,
    "tema": "acik",
    "gorunum": "liste",
@@ -2892,7 +2892,7 @@
    "hatalar": []
   },
   {
-   "ad": "ana sayfa · inspector",
+   "ad": "ana sayfa · denetçi",
    "gen": 1080,
    "tema": "koyu",
    "gorunum": "liste",
@@ -2930,7 +2930,7 @@
    "hatalar": []
   },
   {
-   "ad": "ana sayfa · inspector",
+   "ad": "ana sayfa · denetçi",
    "gen": 810,
    "tema": "acik",
    "gorunum": "liste",
@@ -2968,7 +2968,7 @@
    "hatalar": []
   },
   {
-   "ad": "ana sayfa · inspector",
+   "ad": "ana sayfa · denetçi",
    "gen": 810,
    "tema": "koyu",
    "gorunum": "liste",
@@ -3006,7 +3006,7 @@
    "hatalar": []
   },
   {
-   "ad": "ana sayfa · inspector",
+   "ad": "ana sayfa · denetçi",
    "gen": 375,
    "tema": "acik",
    "gorunum": "liste",
@@ -3044,7 +3044,7 @@
    "hatalar": []
   },
   {
-   "ad": "ana sayfa · inspector",
+   "ad": "ana sayfa · denetçi",
    "gen": 375,
    "tema": "koyu",
    "gorunum": "liste",
@@ -4906,7 +4906,7 @@
    "hatalar": []
   },
   {
-   "ad": "personel · kart (inspector, eksiksiz)",
+   "ad": "personel · kart (denetçi, eksiksiz)",
    "gen": 1920,
    "tema": "acik",
    "gorunum": "liste",
@@ -4944,7 +4944,7 @@
    "hatalar": []
   },
   {
-   "ad": "personel · kart (inspector, eksiksiz)",
+   "ad": "personel · kart (denetçi, eksiksiz)",
    "gen": 1920,
    "tema": "koyu",
    "gorunum": "liste",
@@ -4982,7 +4982,7 @@
    "hatalar": []
   },
   {
-   "ad": "personel · kart (inspector, eksiksiz)",
+   "ad": "personel · kart (denetçi, eksiksiz)",
    "gen": 1080,
    "tema": "acik",
    "gorunum": "liste",
@@ -5020,7 +5020,7 @@
    "hatalar": []
   },
   {
-   "ad": "personel · kart (inspector, eksiksiz)",
+   "ad": "personel · kart (denetçi, eksiksiz)",
    "gen": 1080,
    "tema": "koyu",
    "gorunum": "liste",
@@ -5058,7 +5058,7 @@
    "hatalar": []
   },
   {
-   "ad": "personel · kart (inspector, eksiksiz)",
+   "ad": "personel · kart (denetçi, eksiksiz)",
    "gen": 810,
    "tema": "acik",
    "gorunum": "liste",
@@ -5096,7 +5096,7 @@
    "hatalar": []
   },
   {
-   "ad": "personel · kart (inspector, eksiksiz)",
+   "ad": "personel · kart (denetçi, eksiksiz)",
    "gen": 810,
    "tema": "koyu",
    "gorunum": "liste",
@@ -5134,7 +5134,7 @@
    "hatalar": []
   },
   {
-   "ad": "personel · kart (inspector, eksiksiz)",
+   "ad": "personel · kart (denetçi, eksiksiz)",
    "gen": 375,
    "tema": "acik",
    "gorunum": "liste",
@@ -5172,7 +5172,7 @@
    "hatalar": []
   },
   {
-   "ad": "personel · kart (inspector, eksiksiz)",
+   "ad": "personel · kart (denetçi, eksiksiz)",
    "gen": 375,
    "tema": "koyu",
    "gorunum": "liste",
@@ -9162,7 +9162,7 @@
    "hatalar": []
   },
   {
-   "ad": "personel · kart, ataması olmayan inspector (uyarı)",
+   "ad": "personel · kart, ataması olmayan denetçi (uyarı)",
    "gen": 1920,
    "tema": "acik",
    "gorunum": "liste",
@@ -9200,7 +9200,7 @@
    "hatalar": []
   },
   {
-   "ad": "personel · kart, ataması olmayan inspector (uyarı)",
+   "ad": "personel · kart, ataması olmayan denetçi (uyarı)",
    "gen": 1920,
    "tema": "koyu",
    "gorunum": "liste",
@@ -9238,7 +9238,7 @@
    "hatalar": []
   },
   {
-   "ad": "personel · kart, ataması olmayan inspector (uyarı)",
+   "ad": "personel · kart, ataması olmayan denetçi (uyarı)",
    "gen": 1080,
    "tema": "acik",
    "gorunum": "liste",
@@ -9276,7 +9276,7 @@
    "hatalar": []
   },
   {
-   "ad": "personel · kart, ataması olmayan inspector (uyarı)",
+   "ad": "personel · kart, ataması olmayan denetçi (uyarı)",
    "gen": 1080,
    "tema": "koyu",
    "gorunum": "liste",
@@ -9314,7 +9314,7 @@
    "hatalar": []
   },
   {
-   "ad": "personel · kart, ataması olmayan inspector (uyarı)",
+   "ad": "personel · kart, ataması olmayan denetçi (uyarı)",
    "gen": 810,
    "tema": "acik",
    "gorunum": "liste",
@@ -9352,7 +9352,7 @@
    "hatalar": []
   },
   {
-   "ad": "personel · kart, ataması olmayan inspector (uyarı)",
+   "ad": "personel · kart, ataması olmayan denetçi (uyarı)",
    "gen": 810,
    "tema": "koyu",
    "gorunum": "liste",
@@ -9390,7 +9390,7 @@
    "hatalar": []
   },
   {
-   "ad": "personel · kart, ataması olmayan inspector (uyarı)",
+   "ad": "personel · kart, ataması olmayan denetçi (uyarı)",
    "gen": 375,
    "tema": "acik",
    "gorunum": "liste",
@@ -9428,7 +9428,7 @@
    "hatalar": []
   },
   {
-   "ad": "personel · kart, ataması olmayan inspector (uyarı)",
+   "ad": "personel · kart, ataması olmayan denetçi (uyarı)",
    "gen": 375,
    "tema": "koyu",
    "gorunum": "liste",

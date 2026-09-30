@@ -13,7 +13,9 @@
    talebi, masraf formu; ileride eklenecek talepler) Personel grubunda → 16 modül.
    2026-09-28 (reisim: "dökümanlar modülü olsun standartlar bunun altında olsun, eğitimler, muayene kriterleri, standartlar ve diğer
    dökümanlar bu kısımda tutulsun"): 4 Standartlar → Dökümanlar (yol dokumanlar); 10 Eğitimler ayrı menü değil, Dökümanlar'ın sekmesi
-   → 15 modül. */
+   → 15 modül.
+   2026-09-30 (R1, reisim: "firma ayarları personel kısmının altında değil ayrı bir modül olsun , ekran daha verimli kullanılsın"): 22 Firma
+   ayarları (imza yöntemi, rapor, mesai, uyarı eşikleri, fiyat listesi, sabit giderler, firma bilgileri) Tanımlar grubunda → 16 modül. */
 
 export interface Modul {
   /** pkproje.md §3.1 numarası */
@@ -57,6 +59,7 @@ export const MODUL_GRUPLARI: readonly ModulGrubu[] = [
   { grup: "Tanımlar", moduller: [
     { no: 5, ad: "Ekipman türleri", yol: "ekipman-turleri", ikon: "layers" },
     { no: 4, ad: "Dökümanlar", yol: "dokumanlar", ikon: "book-open" },
+    { no: 22, ad: "Firma ayarları", yol: "firma-ayarlari", ikon: "settings" },
   ] },
 ];
 

@@ -68,7 +68,7 @@
     12: ["yaz", "kendi", "gor", "gor", "yaz", "gor"], 7: ["yaz", "yaz", "gor", "gor", "yaz", "yok"], 8: ["gor", "kendi", "yaz", "yaz", "yaz", "yok"],
     9: ["gor", "kendi", "yaz", "yaz", "yaz", "yok"], 2: ["gor", "kendi", "gor", "gor", "yaz", "yok"], 10: ["gor", "kendi", "yaz", "yaz", "yaz", "yok"],
     18: ["yok", "yok", "yok", "yok", "yaz", "yaz"], 19: ["gor", "kendi", "brans", "brans", "gor", "yok"], 5: ["gor", "gor", "yaz", "yaz", "yaz", "yok"],
-    4: ["gor", "gor", "yaz", "yaz", "yaz", "yok"], 21: ["kendi", "kendi", "kendi", "kendi", "yaz", "kendi"], hareket: ["yok", "yok", "yok", "yok", "gor", "yok"]
+    4: ["gor", "gor", "yaz", "yaz", "yaz", "yok"], 21: ["kendi", "kendi", "kendi", "kendi", "yaz", "kendi"], 22: ["yok", "yok", "yok", "yok", "yaz", "yok"], hareket: ["yok", "yok", "yok", "yok", "gor", "yok"]
   };
   MV.MATRIS_ONERI = JSON.parse(JSON.stringify(MV.MATRIS));
   MV.DUZEY = {
@@ -662,6 +662,8 @@
   /* imza yöntemi firma ayarı (2026-09-29, §9 otuz altıncı tur 177, 178, 180): raporun son imzası ve iç belgeler bu yöntemle; aracı site yok.
      mobil: her belge için telefona ayrı imza isteği, PIN telefonda (operatöre doğrudan bağlantı) · eimza: bilgisayardaki imza aracımız
      (AKİS kurulu), kart PIN'i bir kez, her belge ayrı imzalanır. "İndir, imzala, yükle" yedek yol her iki yöntemde durur. */
+  /* zimmet teslim formunda firma adına teslim edenin başlangıcı (196): Firma ayarları'ndaki kişi, yoksa ilk etkin firma yöneticisi */
+  MV.zimmetEden = function () { var k = MV.FIRMA.zimmetEden; return MV.kisi(k) ? k : (MV.PERSONEL.filter(function (x) { return x.durum === "etkin" && x.hesap && x.hesap.roller.indexOf("yonetici") >= 0; })[0] || MV.PERSONEL[0]).id; };
   MV.IMZA_YONTEM = {
     mobil: { k: "mobil", ad: "Mobil imza", kisa: "mobil imza", etiket: "telefonda PIN, her belge ayrı", acik: "Her belge için telefona imza isteği gelir, PIN telefonda girilir." },
     eimza: { k: "eimza", ad: "E-imza", kisa: "e-imza", etiket: "kart ve imza aracı, tek PIN", acik: "Bilgisayardaki imza aracı açılır, kart PIN'i bir kez girilir; her belge ayrı imzalanır." }

@@ -2,8 +2,8 @@
  "maket": "m1",
  "tarih": "2026-09-30",
  "arac": "tools/olc-bulut.mjs --etkilesim (başsız tarayıcı, 1920 açık tema; gen verilen denemede o genişlik)",
- "toplam": 87,
- "gecen": 87,
+ "toplam": 90,
+ "gecen": 90,
  "denemeler": [
   {
    "ad": "İzin talepleri: formun PDF'i açılır, e-posta talep edene",
@@ -293,10 +293,31 @@
    "gecti": true
   },
   {
-   "ad": "Firma ayarları: ön bilgilendirme formu yüklenir; müşteri kartında gönderimde o dosya (sayfalar arası)",
+   "ad": "Firma ayarları ayrı modül: menüde Tanımlar grubunda, Personel'de sekmesi yok; eski adres (Personel #/ayarlar) yeni sayfaya gider",
    "gen": 1920,
    "sayfa": "maket/personel.html",
-   "hash": "#/ayarlar",
+   "hash": "#/",
+   "gecti": true
+  },
+  {
+   "ad": "Firma ayarları: bölümler kart, geniş ekranda iki sütun ve solda bölüm listesi; fiyat listesi tam genişlik; bölüm listesinden bölüme gidilir",
+   "gen": 1920,
+   "sayfa": "maket/firma-ayarlari.html",
+   "hash": "#/",
+   "gecti": true
+  },
+  {
+   "ad": "Firma ayarları · Firma bilgileri: ticari ad değişir, kalıcı (yenilemeden sonra da); boş bırakılınca uyarı",
+   "gen": 1920,
+   "sayfa": "maket/firma-ayarlari.html",
+   "hash": "#/",
+   "gecti": true
+  },
+  {
+   "ad": "Firma ayarları: ön bilgilendirme formu yüklenir; müşteri kartında gönderimde o dosya (sayfalar arası)",
+   "gen": 1920,
+   "sayfa": "maket/firma-ayarlari.html",
+   "hash": "#/",
    "gecti": true
   },
   {
@@ -393,15 +414,15 @@
   {
    "ad": "200: saklama süresi 5 yıl başlar, en kısa seçenek 5; 10 yıl seçilince kaydedilir (yeniden yüklemede kalıcı)",
    "gen": 1920,
-   "sayfa": "maket/personel.html",
-   "hash": "#/ayarlar",
+   "sayfa": "maket/firma-ayarlari.html",
+   "hash": "#/",
    "gecti": true
   },
   {
    "ad": "5 yılı dolan raporlar: varsayılan Sistemde kalsın; Arşiv seçilince yer alanı ve uyarı, yer girilince uyarı kalkar; Silinsin seçilir (sayfalar arası kalıcı)",
    "gen": 1920,
-   "sayfa": "maket/personel.html",
-   "hash": "#/ayarlar",
+   "sayfa": "maket/firma-ayarlari.html",
+   "hash": "#/",
    "gecti": true
   },
   {
@@ -414,50 +435,50 @@
   {
    "ad": "Firma ayarları: zimmet teslim edeninin başlangıcı değişince formda o kişi gelir; eski imzalı formun teslim edeni değişmez",
    "gen": 1920,
-   "sayfa": "maket/personel.html",
-   "hash": "#/ayarlar",
+   "sayfa": "maket/firma-ayarlari.html",
+   "hash": "#/",
    "gecti": true
   },
   {
    "ad": "Firma ayarları · Rapor: Uygun değil maddede fotoğraf başlangıçta zorunlu, kapatılınca isteğe bağlı (kalıcı)",
    "gen": 1920,
-   "sayfa": "maket/personel.html",
-   "hash": "#/ayarlar",
+   "sayfa": "maket/firma-ayarlari.html",
+   "hash": "#/",
    "gecti": true
   },
   {
    "ad": "Firma ayarları · Mesai takibi: başlangıç açık, 480 / 220 dk; normal 450 kaydedilir, geçersiz kaydedilmez; kapatılınca süre alanları gizlenir (kalıcı)",
    "gen": 1920,
-   "sayfa": "maket/personel.html",
-   "hash": "#/ayarlar",
+   "sayfa": "maket/firma-ayarlari.html",
+   "hash": "#/",
    "gecti": true
   },
   {
    "ad": "Firma ayarları: dört uyarı eşiği başlangıçla (30/30/30/60); kalibrasyon 60 seçilince Ölçüm cihazları süzgeci ve şeridi 60 gün (sayfalar arası)",
    "gen": 1920,
-   "sayfa": "maket/personel.html",
-   "hash": "#/ayarlar",
+   "sayfa": "maket/firma-ayarlari.html",
+   "hash": "#/",
    "gecti": true
   },
   {
    "ad": "Firma ayarları: eğitim tekrarı 90 gün → Eğitimler süzgeci ve şeridi 90 gün (sayfalar arası)",
    "gen": 1920,
-   "sayfa": "maket/personel.html",
-   "hash": "#/ayarlar",
+   "sayfa": "maket/firma-ayarlari.html",
+   "hash": "#/",
    "gecti": true
   },
   {
    "ad": "Firma ayarları: kontrolü yaklaşan tesis 45 gün → Müşteriler süzgeci 45 gün (sayfalar arası)",
    "gen": 1920,
-   "sayfa": "maket/personel.html",
-   "hash": "#/ayarlar",
+   "sayfa": "maket/firma-ayarlari.html",
+   "hash": "#/",
    "gecti": true
   },
   {
    "ad": "Firma ayarları: firma kodu ab → AB kaydedilir, geçersiz A1 kaydedilmez (uyarı, eski kod kalır); yeniden yüklemede AB",
    "gen": 1920,
-   "sayfa": "maket/personel.html",
-   "hash": "#/ayarlar",
+   "sayfa": "maket/firma-ayarlari.html",
+   "hash": "#/",
    "gecti": true
   },
   {
@@ -470,15 +491,15 @@
   {
    "ad": "Firma ayarları: Hava tankı fiyatı 1.000 kaydedilir, okunamayan tutar kaydedilmez; Teklifler'de Hava tankı 1.000,00 TL (sayfalar arası)",
    "gen": 1920,
-   "sayfa": "maket/personel.html",
-   "hash": "#/ayarlar",
+   "sayfa": "maket/firma-ayarlari.html",
+   "hash": "#/",
    "gecti": true
   },
   {
    "ad": "Firma ayarları: sabit gider eklenir (ad + tutar), biri kaldırılır; Muhasebe gelir-gider özetinde yeni gider var, kaldırılan yok (sayfalar arası)",
    "gen": 1920,
-   "sayfa": "maket/personel.html",
-   "hash": "#/ayarlar",
+   "sayfa": "maket/firma-ayarlari.html",
+   "hash": "#/",
    "gecti": true
   },
   {

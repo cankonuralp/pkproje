@@ -1459,3 +1459,20 @@ a.a-yuz:hover { border-color: var(--kenar-alan); background: var(--zemin); }
 [data-kagit] { display: none !important; }
 .a-ornek-sayfa { display: flex; flex-direction: column; gap: 10px; }
 
+
+/* FİRMA AYARLARI (modül 22, R1 2026-09-30; reisim: "ayrı bir modül olsun , ekran daha verimli kullanılsın"): bölümler kart, iki sütunlu
+   ızgara (sığmayınca tek sütun); fiyat listesi ve sabit giderler tam genişlik, fiyatlar dört sütuna kadar. Geniş bantta solda bölüm listesi. */
+.a-ayar-duzen { display: grid; gap: 16px; }
+.a-ayar-nav { display: none; }
+.a-ayar-izgara { display: grid; grid-template-columns: repeat(auto-fill, minmax(min(100%, 420px), 1fr)); gap: 16px; align-items: start; }
+.a-ayar-izgara > .a-bolum { margin: 0; min-width: 0; padding: 16px; background: var(--kart); border: 1px solid var(--kenar); border-radius: var(--r-buyuk); }
+.a-ayar-izgara > .a-bolum .a-alt-bas { margin-top: 0; }
+.a-ayar-genis { grid-column: 1 / -1; }
+.a-ayar-izgara .a-ayar-fiyat { grid-template-columns: repeat(auto-fill, minmax(min(100%, 200px), 1fr)); }
+.a-ayar-nav-liste { list-style: none; margin: 0; padding: 0; display: grid; gap: 2px; }
+.a-ayar-nav-oge { display: flex; align-items: center; min-height: 36px; padding: 0 12px; border-radius: var(--r-orta); color: var(--yazi2); text-decoration: none; font-weight: 600; }
+.a-ayar-nav-oge:hover { background: var(--zemin2); color: var(--yazi); }
+@media (min-width: 1280px) {
+  .a-ayar-duzen { grid-template-columns: 200px minmax(0, 1fr); align-items: start; }
+  .a-ayar-nav { display: block; position: sticky; top: calc(var(--ust-y) + 16px); }
+}

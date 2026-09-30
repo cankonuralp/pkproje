@@ -58,17 +58,18 @@
      anasayfa olmalı"); modül değil, giriş sonrası açılan sayfa — MENU sabitine girmez.
      2026-09-28 (reisim: "talepler kısmı olsun denetçi izin talebi masraf formu ekleme"): Talepler (21) Personel grubunda.
      2026-09-28 (reisim: "dökümanlar modülü olsun standartlar bunun altında olsun, eğitimler, muayene kriterleri, standartlar ve diğer
-     dökümanlar bu kısımda tutulsun"): Standartlar (4) → Dökümanlar; Eğitimler (10) menüden kalktı, Dökümanlar'ın sekmesi (sayfası kalır). */
+     dökümanlar bu kısımda tutulsun"): Standartlar (4) → Dökümanlar; Eğitimler (10) menüden kalktı, Dökümanlar'ın sekmesi (sayfası kalır).
+     2026-09-30 (R1, reisim: "firma ayarları personel kısmının altında değil ayrı bir modül olsun"): Firma ayarları (22) Tanımlar grubunda. */
   var MENU = [
     { grup: "İş takibi", ogeler: [["Planlar", "calendar-check", 13], ["Raporlar", "file-text", 14], ["Onaylar", "badge-check", 15], ["Uyarılar", "alarm-clock", 20]] },
     { grup: "Müşteri", ogeler: [["Müşteriler", "building-2", 3], ["Teklifler", "file-pen-line", 11], ["Sözleşmeler", "scroll-text", 12]] },
     { grup: "Varlık", ogeler: [["Ölçüm cihazları", "gauge", 8], ["Zimmetler", "package", 9]] },
     { grup: "Personel", ogeler: [["Personel", "users", 2], ["Talepler", "inbox", 21]] },
     { grup: "Finans", ogeler: [["Muhasebe", "wallet", 18], ["Performans", "chart-column", 19]] },
-    { grup: "Tanımlar", ogeler: [["Ekipman türleri", "layers", 5], ["Dökümanlar", "book-open", 4]] }
+    { grup: "Tanımlar", ogeler: [["Ekipman türleri", "layers", 5], ["Dökümanlar", "book-open", 4], ["Firma ayarları", "settings", 22]] }
   ];
   /* hazır maketler: menüden tıklanınca gidilir (toplu bakışta tıklanır prototip, MAKET-PLANI §3.3); olmayan → bildirim */
-  var SAYFALAR = { 13: "planlarim.html", 2: "personel.html", 3: "musteriler.html", 5: "ekipman-turleri.html", 8: "olcum-cihazlari.html", 9: "zimmetler.html", 12: "sozlesmeler.html", 4: "standartlar.html", 14: "raporlar.html", 15: "onaylar.html", 20: "uyarilar.html", 11: "teklifler.html", 18: "muhasebe.html", 19: "performans.html", 10: "egitimler.html", 21: "talepler.html" };
+  var SAYFALAR = { 13: "planlarim.html", 2: "personel.html", 3: "musteriler.html", 5: "ekipman-turleri.html", 8: "olcum-cihazlari.html", 9: "zimmetler.html", 12: "sozlesmeler.html", 4: "standartlar.html", 14: "raporlar.html", 15: "onaylar.html", 20: "uyarilar.html", 11: "teklifler.html", 18: "muhasebe.html", 19: "performans.html", 10: "egitimler.html", 21: "talepler.html", 22: "firma-ayarlari.html" };
   MK.sayfaAdresi = function (no) { return SAYFALAR[no] || null; };
   /* menü dışı maket ekranları (ör. plan açma); hazır olunca buraya yazılır, bağlantılar kendiliğinden açılır */
   var EK_SAYFALAR = { ana: "anasayfa.html", giris: "giris.html", "plan-ac": "plan-ac.html", rapor: "rapor.html", musteri: "musteri.html", "is-sozlesmesi": "sozlesmeler.html" };
@@ -124,7 +125,7 @@
       document.body.appendChild(d);
     }
     $("a-mesai-pencere-govde").innerHTML = MK.mesaiCubugu(MK.BEN, MK.MESAI_BU != null ? MK.MESAI_BU : null) +
-      '<p class="a-ipucu">Raporların süresi ekipman türünün kontrol süresidir; önce normal süre, sonra mesai dolar. Süreler Personel › Firma ayarları › Mesai takibi\'nde.</p>';
+      '<p class="a-ipucu">Raporların süresi ekipman türünün kontrol süresidir; önce normal süre, sonra mesai dolar. Süreler Firma ayarları › Mesai takibi\'nde.</p>';
     d.showModal(); d.querySelector('.a-pencere-alt [data-eylem="pencere-kapat"]').focus();
   };
   MK.takipCiz = function () { MENU.forEach(function (g) { g.ogeler.forEach(function (x) { var e = $("a-menu-takip-" + x[2]); if (e) { var h = takipHtml(x[2]); if (e.innerHTML !== h) e.innerHTML = h; } }); }); MK.mesaiUstCiz(); };
@@ -819,7 +820,7 @@
     d.showModal(); $("a-onay-alt").querySelector('[data-eylem="pencere-kapat"]').focus();
   };
   /* ── İÇ BELGE İMZASI — TEK ÜRETİCİ (2026-09-29, V3; §9 otuz altıncı tur 180: iç belgeler de mobil imza ya da e-imza) ──────────
-     MK.imzaAl({ belge, imzacilar: [ad, …], tamam(imza) }) — firmanın yöntemiyle (MV.imzaYontem, Personel · Firma ayarları) her imzacı
+     MK.imzaAl({ belge, imzacilar: [ad, …], tamam(imza) }) — firmanın yöntemiyle (MV.imzaYontem, Firma ayarları) her imzacı
      sırayla kendi PIN'ini girer: mobil imzada kendi telefonunda, e-imzada kendi kartıyla. imza = { yontem, zaman, imzacilar: [{ ad, zaman }] }.
      ⛔ Makette telefon ekranı ve imza aracı TAKLİT; gerçek uygulamada istek operatöre / bilgisayardaki imza aracına gider, imza belgeye
      sunucuda gömülür. Islak imza + tarama yükleme her belgede yedek yol olarak durur. */

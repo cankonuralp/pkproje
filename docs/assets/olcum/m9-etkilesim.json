@@ -127,8 +127,8 @@
   {
    "ad": "Firma ayarları: imza yöntemi E-imza seçilir → Raporlar'ın imza penceresi E-imza (sayfalar arası)",
    "gen": 1920,
-   "sayfa": "maket/personel.html",
-   "hash": "#/ayarlar",
+   "sayfa": "maket/firma-ayarlari.html",
+   "hash": "#/",
    "gecti": true
   },
   {

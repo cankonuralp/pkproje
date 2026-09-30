@@ -13,7 +13,7 @@
 <body>
 <!-- MAKET M1 · Personel (modül 1 + 2, 2. tur 2026-09-25: Kullanıcılar buraya katıldı) — ONAYLANDI 2026-09-25. Kabuk maket-ortak.js MK.kabuk().
      Adres: #/ liste · #/roller rol yetkileri · #/p/<id> personel kartı · #/p/<id>/hesap giriş hesabı aç ya da yeni geçici parola ·
-     #/p/<id>/belge özlük belgesi ekle · #/p/<id>/zimmet-formu zimmet teslim formu (PDF önizleme, imzalı tarama yükleme) · #/yeni ve #/p/<id>/duzenle form · #/izinler izin talepleri (2026-09-28; /red/<no>: gerekçeyle reddet) · #/ayarlar firma ayarları (2026-09-29: imza yöntemi). -->
+     #/p/<id>/belge özlük belgesi ekle · #/p/<id>/zimmet-formu zimmet teslim formu (PDF önizleme, imzalı tarama yükleme) · #/yeni ve #/p/<id>/duzenle form · #/izinler izin talepleri (2026-09-28; /red/<no>: gerekçeyle reddet) · #/ayarlar → Firma ayarları modülüne yönlenir (R1, 2026-09-30). -->
 <main class="a-icerik" id="a-icerik">
   <div id="a-liste-gorunum">
     <div class="a-sayfa-bas">
@@ -22,7 +22,7 @@
       <a class="a-tus a-tus-birincil a-bolum-tus" href="#/yeni"><svg class="a-ikon a-ikon-kucuk" aria-hidden="true"><use href="../vendor/lucide-1.47.0/ikonlar.svg#i-plus"/></svg>Personel ekle</a>
     </div>
     <nav class="a-sekmeler a-sekmeler-sayfa" aria-label="Personel bölümleri">
-      <a class="a-sekme" href="#/" aria-current="page">Personel</a><a class="a-sekme" href="#/roller">Rol yetkileri</a><a class="a-sekme" href="#/izinler">İzin talepleri</a><a class="a-sekme" href="#/ayarlar">Firma ayarları</a>
+      <a class="a-sekme" href="#/" aria-current="page">Personel</a><a class="a-sekme" href="#/roller">Rol yetkileri</a><a class="a-sekme" href="#/izinler">İzin talepleri</a>
     </nav>
     <div id="a-suzgec-kap"></div>
     <div class="a-liste-kap" id="a-liste"></div>
@@ -30,7 +30,7 @@
   <div id="a-roller-gorunum" hidden>
     <div class="a-sayfa-bas" id="a-roller-bas"></div>
     <nav class="a-sekmeler a-sekmeler-sayfa" aria-label="Personel bölümleri">
-      <a class="a-sekme" href="#/">Personel</a><a class="a-sekme" href="#/roller" aria-current="page">Rol yetkileri</a><a class="a-sekme" href="#/izinler">İzin talepleri</a><a class="a-sekme" href="#/ayarlar">Firma ayarları</a>
+      <a class="a-sekme" href="#/">Personel</a><a class="a-sekme" href="#/roller" aria-current="page">Rol yetkileri</a><a class="a-sekme" href="#/izinler">İzin talepleri</a>
     </nav>
     <div id="a-roller"></div>
   </div>
@@ -38,18 +38,10 @@
   <div id="a-izin-gorunum" hidden>
     <div class="a-sayfa-bas"><h1 tabindex="-1">Personel</h1><span class="a-sayac" id="a-izin-sayac" aria-live="polite"></span></div>
     <nav class="a-sekmeler a-sekmeler-sayfa" aria-label="Personel bölümleri">
-      <a class="a-sekme" href="#/">Personel</a><a class="a-sekme" href="#/roller">Rol yetkileri</a><a class="a-sekme" href="#/izinler" aria-current="page">İzin talepleri</a><a class="a-sekme" href="#/ayarlar">Firma ayarları</a>
+      <a class="a-sekme" href="#/">Personel</a><a class="a-sekme" href="#/roller">Rol yetkileri</a><a class="a-sekme" href="#/izinler" aria-current="page">İzin talepleri</a>
     </nav>
     <div id="a-izin-uyari"></div>
     <div class="a-liste-kap" id="a-izin-liste"></div>
-  </div>
-  <!-- FİRMA AYARLARI (2026-09-29, §9 otuz altıncı tur 178: imza yöntemini firma seçer — mobil imza ya da e-imza) -->
-  <div id="a-ayar-gorunum" hidden>
-    <div class="a-sayfa-bas"><h1 tabindex="-1">Personel</h1></div>
-    <nav class="a-sekmeler a-sekmeler-sayfa" aria-label="Personel bölümleri">
-      <a class="a-sekme" href="#/">Personel</a><a class="a-sekme" href="#/roller">Rol yetkileri</a><a class="a-sekme" href="#/izinler">İzin talepleri</a><a class="a-sekme" href="#/ayarlar" aria-current="page">Firma ayarları</a>
-    </nav>
-    <div id="a-ayarlar"></div>
   </div>
   <section id="a-nesne" aria-label="Personel kartı" hidden></section>
   <section id="a-form-gorunum" aria-label="Personel formu" hidden></section>

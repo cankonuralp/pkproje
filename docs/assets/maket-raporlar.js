@@ -135,7 +135,7 @@
         (r.arsiv ? '<p class="a-bos-satir">Dosya arşivde.</p>' : r.durum === "taslak" ? '<p class="a-bos-satir">Taslak: PDF yok.</p>' : MK.dosyaOnizle(r.imzaDosya, MB.belge(t, MV.raporBelge(r)))) + "</section>";
   }
 
-  /* ── SON İMZA PENCERESİ (2026-09-29, V2; §9 otuz altıncı tur 177, 178): yöntem FİRMA AYARI (Personel · Firma ayarları), aracı site yok ──
+  /* ── SON İMZA PENCERESİ (2026-09-29, V2; §9 otuz altıncı tur 177, 178): yöntem FİRMA AYARI (Firma ayarları), aracı site yok ──
      mobil imza: "İmzaya gönder" → her rapor için telefona ayrı istek, PIN telefonda (makette telefon ekranı taklit edilir) ·
      e-imza: "İmza aracını aç" → bilgisayardaki imza aracımız (AKİS kurulu), kart PIN'i bir kez, her rapor ayrı imzalanır ·
      yedek yol: indir, imzala, yükle. Raporlar asla birleşmez (99). W.adim: "sec" (yöntem) · "arac" (imza aracı) · "telefon" (telefon ekranı) */

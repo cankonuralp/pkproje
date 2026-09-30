@@ -2047,6 +2047,12 @@ değişir zaten"* → **P1:** topraklama (ZPKR01) raporunda fotoğraf bölümü 
 otomatik Uygun / Yetersiz sonucu kalktı; formatın "Sonuç (Uygunluk notu)" sütunu denetçinin seçtiği Not-1 … Not-11. Kusur açıklaması bölümü
 olmayan türler, örnek PDF'leri gelince formata göre yapılır (şimdi dokunulmaz); rapor ekranında temel disiplin, ayrıntı formatla gelir.
 
+**Kırk üçüncü tur (2026-09-30, reisim birebir):** *"giriş sayfası, profil , şifre değiştirme, hesap oluşturma, parolamı unuttum gibi temel şeyleri
+atladık, başka atladığımız bir iş var mı analiz et sayfayı test verileriyle kullan eksik iş ya da eklense faydalı olacak iş var mı kontrol et,
+firma ayarları personel kısmının altında değil ayrı bir modül olsun , ekran daha verimli kullanılsın."* → **R1:** Firma ayarları ayrı modül
+(Tanımlar grubunda), bölümler ızgarada, solda bölüm listesi. **R2:** kullanıcı menüsünde Hesabım (profil, parola değiştir) ve Çıkış yap; giriş
+sayfası (parolamı unuttum, geçici parolayla ilk giriş — M1'de vardı, bağlantısı yoktu) çıkıştan açılır. Eksik iş analizi ve soru listesi reisim'e.
+
 **Açık kalanlar:** ~~Ana sayfada İSGGM duyuruları~~ (2026-09-27: makette eklendi; okuma işi uygulamada) (reisim 2026-09-26: *"Ana sayfada isgüm duyurularını gösterebilir miyiz ? Bunu
 yapılacaklar listesine ekle"*; öneri: ÇSGB İSGGM duyurular sayfası — https://www.csgb.gov.tr/isggm/duyurular/ — sunucuda günde birkaç kez
 okunur (pg-boss işi, §8.9), Ana sayfada son 5 duyuru başlık + tarih + kaynağa bağlantı; yalnız ekranda, bildirim yok; sayfa RSS vermiyorsa
@@ -2079,6 +2085,12 @@ revizyon, alan kopyalama, hafif kusur devri, meslek eşleşme denetimi).
 - Emsal ürünler: https://opwire.app/iso-17020-periyodik-kontrol-yazilimi/ · https://17020muayene.vidco.com.tr/ · https://akuple.com/asansor-kontrol-yazilimi/ · https://ensyazilim.com/
 
 ## 11 · Değişiklik günlüğü
+- 2026-09-30 (192): **R1 · Firma ayarları ayrı modül, ekran verimli** (§9 kırk üçüncü tur). Personel'in "Firma ayarları" sekmesi kalktı;
+  yan menüde Tanımlar grubunda **Firma ayarları** (modül 22, ikon settings; uygulamanın modül kaydı ve rotası da, 16 modül). Personel'in eski
+  adresi (#/ayarlar) yeni sayfaya gider. Ekran: her bölüm bir kart, geniş ekranda iki-üç sütunlu ızgara ve solda bölüm listesi (tıklayınca bölüme
+  gider); fiyat listesi ve sabit giderler tam genişlik, fiyatlar altı sütuna kadar (1920'de sayfa boyu 2669 → 1925 px, 1440 ölçüsü eskiydi).
+  Yeni bölüm **Firma bilgileri** (rapor başlığındaki künye: ticari ad, adres, rapor e-postası, akreditasyon no, nüsha sayısı; boşsa uyarı).
+  Rol yetkilerinde modül 22 yalnız firma yöneticisine açık (başlangıç önerisi). Davranış aynı; 15 deneme yeni adrese taşındı, 3 yeni deneme.
 - 2026-09-30 (191): **P2 · Topraklama 5.1 · 5.2: uygunluk notu denetçinin seçimi** (§9 kırk ikinci tur ek). Formatın "Sonuç (Uygunluk
   notu)" sütunu artık seçim: Not-1 … Not-11 (formatın 11 notu; metinleri tablonun altındaki "Uygunluk notları"nda). Otomatik "Not-x · ağır" /
   "Uygun" / "Yetersiz · ağır" rozetleri ve RCD test değerinde kendiliğinden kırmızı işaret kalktı; Ia, Zs, Ik1 hesabı duruyor (formatın sütunları).
