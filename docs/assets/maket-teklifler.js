@@ -104,7 +104,9 @@
       (m ? "" : '<section class="a-bolum" aria-labelledby="a-b-aday"><div class="a-alt-bas"><h2 class="a-alt-baslik" id="a-b-aday">Müşteri bilgileri</h2></div><dl class="a-satirlar">' +
         [["Ünvan", t.aday.unvan], ["Vergi dairesi / no", [t.aday.vd, t.aday.vno].filter(Boolean).join(" · ")], ["Adres", t.aday.adres + ", " + t.aday.ilce + " / " + t.aday.il],
           ["E-posta", t.aday.eposta], ["Telefon", t.aday.tel], ["Yetkili", t.aday.yetkili]].map(function (x) { return '<div class="a-satir"><dt>' + x[0] + "</dt><dd>" + (x[1] ? kacis(x[1]) : "-") + "</dd></div>"; }).join("") + "</dl></section>") +
-      '<section class="a-bolum" aria-labelledby="a-b-kalem"><div class="a-alt-bas"><h2 class="a-alt-baslik" id="a-b-kalem">Kalemler</h2><span class="a-sayac"><b>' + t.kalemler.length + "</b> tür</span></div>" +
+      '<section class="a-bolum" aria-labelledby="a-b-kalem"><div class="a-alt-bas"><h2 class="a-alt-baslik" id="a-b-kalem">Kalemler</h2><span class="a-sayac"><b>' + t.kalemler.length + "</b> tür" +
+        (t.ekipmanlar && t.ekipmanlar.length ? " · <b>" + t.ekipmanlar.length + "</b> ekipman (Excel'den)" : "") + "</span>" +
+        (excelKaynak(t).l.length ? '<div class="a-eylem-cubugu a-bolum-tus">' + MK.tus({ eylem: "excel-disa", ad: "Excel'e aktar", ikon: "download", sinif: "a-tus-ikincil" }) + "</div>" : "") + "</div>" +
         '<div class="a-liste-kap">' + MK.tablo({ baslik: "Teklif kalemleri", sinif: kabul ? "a-tablo-kalem a-tablo-kalem-rapor" : "a-tablo-kalem", sutunlar: KS, kayitlar: t.kalemler }) + "</div>" +
         '<dl class="a-bilgi a-bolum-serit">' + bilgi("Ara toplam", para(top)) + bilgi("KDV %" + oran(t), para(kdvli(top, oran(t)) - top)) + bilgi("Genel toplam", "<b>" + para(kdvli(top, oran(t))) + "</b>") +
           (kabul ? bilgi("Raporlanan tutar", para(raporlu)) : "") + "</dl></section>";
@@ -114,7 +116,7 @@
   var F = null;
   function formAc(t, kopya) {
     var k = t || kopya;
-    F = { no: t ? t.no : null, tip: k && k.aday ? "aday" : "kayitli", aday: Object.assign({}, ADAY_BOS, k && k.aday ? k.aday : {}), m: k && k.m ? k.m : "", tesis: k && k.tesis ? k.tesis : "", ek: k && k.m ? MV.teklifTesisleri(k).slice(1) : [], kdv: String(oran(k)), gecerlilik: String(k ? k.gecerlilik : 30), not: "", hata: {},
+    F = { no: t ? t.no : null, ekipmanlar: k && k.ekipmanlar ? k.ekipmanlar.map(function (x) { return Object.assign({}, x); }) : [], tip: k && k.aday ? "aday" : "kayitli", aday: Object.assign({}, ADAY_BOS, k && k.aday ? k.aday : {}), m: k && k.m ? k.m : "", tesis: k && k.tesis ? k.tesis : "", ek: k && k.m ? MV.teklifTesisleri(k).slice(1) : [], kdv: String(oran(k)), gecerlilik: String(k ? k.gecerlilik : 30), not: "", hata: {},
       kalemler: k ? k.kalemler.map(function (x) { return { tur: x.tur, adet: String(x.adet), fiyat: String(x.fiyat) }; }) : [{ tur: "", adet: "1", fiyat: "" }] };
     var q = /[?&]tesis=(t\d+)/.exec(location.hash); if (!k && q && MV.tesis(q[1])) { F.tesis = q[1]; F.m = MV.tesis(q[1]).m; }
   }
@@ -155,8 +157,13 @@
               '<div class="a-alan-grup"><p class="a-etiket">Tutar</p><p class="a-kalem-tutar" id="f-tutar-' + i + '">' + (a > 0 && f > 0 ? para(a * f) : "—") + "</p></div>" +
               MK.tus({ eylem: "kalem-sil", ad: "Kaldır", ikon: "x", sinif: "a-tus-ikincil a-kalem-sil", veri: { i: i }, kapali: F.kalemler.length === 1 }) + "</div>";
           }).join("") + (h.kalem ? '<p class="a-ipucu a-ipucu-uyari">' + h.kalem + "</p>" : "") +
+          (F.ekipmanlar.length ? '<p class="a-bolum-aciklama a-bolum-serit">Excel\'den yüklenen ekipman listesi: <b>' + F.ekipmanlar.length + "</b> ekipman; teklifle saklanır.</p>" : "") +
           '<div class="a-eylem-cubugu a-bolum-serit">' + (F.tip === "aday" ? "" : MK.tus({ eylem: "doldur", ad: "Tesisteki ekipmandan doldur", ikon: "list-checks", sinif: "a-tus-ikincil", kapali: !F.tesis })) +
+            /* 2026-09-30 (L1, reisim: "teklif verirken excel ile ekipman export etme olsun"; soru cevabı: içe + dışa) */
+            MK.tus({ eylem: "excel-ice", ad: "Excel'den yükle", ikon: "upload", sinif: "a-tus-ikincil" }) +
+            MK.tus({ eylem: "excel-disa", ad: "Excel'e aktar", ikon: "download", sinif: "a-tus-ikincil", kapali: !excelKaynak(null).l.length, sebepId: "f-excel-sebep" }) +
             MK.tus({ eylem: "kalem-ekle", ad: "Kalem ekle", ikon: "plus", sinif: "a-tus-ikincil" }) + "</div>" +
+          (excelKaynak(null).l.length ? "" : '<p class="a-ipucu" id="f-excel-sebep">Excel\'e aktarılacak ekipman yok: tesis seçin ya da Excel\'den yükleyin.</p>') +
           '<dl class="a-bilgi a-bolum-serit" id="f-toplam">' + toplamHtml(top) + "</dl></section>" +
       "</div>" +
       '<div class="a-form-eylem">' +
@@ -287,10 +294,11 @@
     var kal = F.kalemler.map(function (k) { return { tur: k.tur, adet: +k.adet, fiyat: sayi(k.fiyat) }; }), t = F.no ? MV.teklif(F.no) : null;
     var aday = F.tip === "aday", tl = !aday && F.ek.length ? [F.tesis].concat(F.ek) : null;
     var ad = aday ? Object.keys(F.aday).reduce(function (o, x) { o[x] = F.aday[x].trim(); return o; }, {}) : null;
-    if (t) Object.assign(t, { m: aday ? null : F.m, tesis: aday ? null : F.tesis, aday: ad, tesisler: tl, kdv: +F.kdv, gecerlilik: +F.gecerlilik, kalemler: kal });
+    var ekl = F.ekipmanlar.length ? F.ekipmanlar.slice() : null;
+    if (t) Object.assign(t, { m: aday ? null : F.m, tesis: aday ? null : F.tesis, aday: ad, tesisler: tl, kdv: +F.kdv, gecerlilik: +F.gecerlilik, kalemler: kal, ekipmanlar: ekl });
     else {
       var n = T.filter(function (x) { return x.no.indexOf("T-0926-") === 0; }).length + 1;
-      t = { no: "T-0926-" + ("00" + n).slice(-3), m: aday ? null : F.m, tesis: aday ? null : F.tesis, aday: ad, durum: "taslak", tarih: MK.BUGUN, gonderildi: null, sonuc: null, gerekce: "", tesisler: tl, kdv: +F.kdv, gecerlilik: +F.gecerlilik, hazirlayan: "za", kalemler: kal };
+      t = { no: "T-0926-" + ("00" + n).slice(-3), m: aday ? null : F.m, tesis: aday ? null : F.tesis, aday: ad, durum: "taslak", tarih: MK.BUGUN, gonderildi: null, sonuc: null, gerekce: "", tesisler: tl, kdv: +F.kdv, gecerlilik: +F.gecerlilik, hazirlayan: "za", kalemler: kal, ekipmanlar: ekl };
       T.push(t);
     }
     F = null; location.hash = "#/t/" + t.no; MK.bildir(t.no + " kaydedildi (taslak).");
@@ -300,6 +308,86 @@
   X["red-kaydet"] = function () {
     if (W.gerekce.trim().length < 5) { W.hata = "Gerekçe yazılmalı."; redCiz("w-gerekce"); return; }
     var t = W.t; t.durum = "red"; t.sonuc = MK.BUGUN; t.gerekce = W.gerekce.trim(); $("a-pencere").close(); teklifCiz(t); MK.bildir(t.no + " reddedildi olarak kaydedildi.");
+  };
+  /* ── EXCEL (L1, 2026-09-30): ekipman listesi içe (tür başına adetle kalemlere) ve dışa (yüklenen liste, yoksa tesisin kayıtlı ekipmanı).
+     Gerçek .xlsx / .csv okunur ve yazılır (MK.tabloOku, MK.xlsx); planın Excel'iyle aynı düzen (şablon, satır satır denetim). */
+  var EX = null;
+  function excelKaynak(t) {   /* t: teklif sayfası; null: form */
+    var ekl = t ? t.ekipmanlar : F && F.ekipmanlar, tip = t ? (t.aday ? "aday" : "kayitli") : F && F.tip, tsl = t ? (t.m ? MV.teklifTesisleri(t) : []) : F && F.tesis ? [F.tesis].concat(F.ek) : [];
+    if (ekl && ekl.length) return { l: ekl, ne: "Excel'den yüklenen liste" };
+    if (tip === "aday" || !tsl.length) return { l: [], ne: "" };
+    return { l: MV.EKIPMAN.filter(function (e) { return tsl.indexOf(e.tesis) >= 0; }).map(function (e) { return { kod: e.kod, tur: e.tur, konum: e.konum || "", seri: e.seri || "" }; }), ne: "tesisteki kayıtlı ekipman" };
+  }
+  var exTablo = function (bas, satirlar) {
+    return '<table class="a-belge-tablo"><thead><tr>' + bas.map(function (b) { return '<th scope="col">' + b + "</th>"; }).join("") + "</tr></thead><tbody>" +
+      satirlar.map(function (r) { return "<tr>" + r.map(function (h) { return "<td>" + h + "</td>"; }).join("") + "</tr>"; }).join("") + "</tbody></table>";
+  };
+  function exPencere(baslik, govde, alt) {
+    $("a-pencere").dataset.kip = "excel"; $("a-pencere-baslik").textContent = baslik; $("a-pencere-govde").innerHTML = govde; $("a-pencere-alt").innerHTML = alt;
+    if (!$("a-pencere").open) $("a-pencere").showModal(); $("a-pencere-govde").scrollTop = 0;
+  }
+  var exAd = function (t) { return (t ? t.no : F.no || "yeni-teklif") + "-ekipmanlar.xlsx"; };
+  X["excel-disa"] = function () {
+    var r = rota(), t = r.v === "teklif" ? MV.teklif(r.no) : null, k = excelKaynak(t); if (!k.l.length) return;
+    EX = { t: t, k: k };
+    exPencere("Excel'e aktar", '<p class="a-pencere-ozet"><b>' + k.l.length + " ekipman</b> · " + k.ne + " · " + exAd(t) + "</p>" +
+      '<div class="a-excel-kap">' + exTablo(["Ekipman", "Konum · seri no"], k.l.map(function (e) { var tr = MV.tur(e.tur);
+        return [(e.kod ? '<span class="a-kod">' + kacis(e.kod) + "</span> " : "") + kacis(tr ? tr.ad : e.tur) + '<span class="a-alt-satir">' + (tr ? MV.bransAd(tr.b) : "") + "</span>", kacis(e.konum || "—") + '<span class="a-alt-satir">' + kacis(e.seri || "") + "</span>"]; })) + "</div>",
+      MK.tus({ eylem: "pencere-kapat", ad: "Kapat", sinif: "a-tus-ikincil" }) + MK.tus({ eylem: "excel-indir", ad: "İndir", ikon: "download" }));
+    $("a-pencere-alt").querySelector(".a-tus-birincil").focus({ preventScroll: true });
+  };
+  X["excel-indir"] = function () {
+    if (!EX) return;
+    MK.indir(exAd(EX.t), MK.xlsx("Ekipmanlar", [["Kod", "Ekipman türü", "Konum", "Seri no", "Branş", "Birim fiyat (TL)"]].concat(EX.k.l.map(function (e) {
+      var tr = MV.tur(e.tur); return [e.kod || "", tr ? tr.ad : e.tur, e.konum || "", e.seri || "", tr ? MV.bransAd(tr.b) : "", tr ? MV.para(MV.FIYAT[tr.k]).replace(" TL", "") : ""];
+    }))));
+  };
+  function exIceCiz() {
+    var gecerli = EX.satirlar.filter(function (x) { return x.ok; });
+    exPencere("Excel'den yükle", '<p class="a-pencere-ozet">Müşterinin ekipman listesi. Sütunlar: Kod · Ekipman türü · Konum · Seri no; yalnız tür zorunlu. Geçerli satırlar tür başına adetle kalemlere eklenir, fiyat fiyat listesinden.</p>' +
+      '<div class="a-dosya-sec">' + MK.tus({ eylem: "excel-sablon", ad: "Şablonu indir", ikon: "file-spreadsheet", sinif: "a-tus-ikincil" }) +
+        MK.tus({ eylem: "excel-sec", ad: EX.dosya ? "Başka dosya seç" : "Dosya seç", ikon: "upload", sinif: "a-tus-ikincil" }) +
+        '<span class="a-dosya-ad">' + (EX.dosya ? kacis(EX.dosya) : '<span class="a-deger-yok">Dosya seçilmedi</span>') + "</span></div>" +
+      (EX.dosya ? '<div class="a-excel-kap">' + exTablo(["Satır", "Ekipman", "Durum"], EX.satirlar.map(function (x, i) {
+        return [String(i + 2), (x.kod ? '<span class="a-kod">' + kacis(x.kod) + "</span> " : "") + kacis(x.turAd) + '<span class="a-alt-satir">' + kacis(x.konum) + "</span>",
+          x.ok ? rozet({ ad: "Eklenecek", rozet: "a-rozet-tamam" }) : '<span class="a-uyari-metin a-hata-metin">' + kacis(x.neden) + "</span>"];
+      })) + "</div>" : ""),
+      MK.tus({ eylem: "pencere-kapat", ad: "Vazgeç", sinif: "a-tus-ikincil" }) + MK.tus({ eylem: "excel-yukle", ad: "Kalemlere ekle" + (EX.dosya ? " (" + gecerli.length + ")" : ""), ikon: "upload", kapali: !EX.dosya || !gecerli.length }));
+  }
+  var exSatirlar = function (ham) {
+    if (ham.length && /kod|tür/i.test((ham[0][0] || "") + (ham[0][1] || ""))) ham = ham.slice(1);
+    var kodlar = {};
+    return ham.filter(function (h) { return h.some(function (x) { return String(x || "").trim(); }); }).map(function (h) {
+      var kod = String(h[0] || "").trim().toLocaleUpperCase("tr"), ta = String(h[1] || "").trim(), t = MV.KATALOG.filter(function (x) { return MK.tr(x.ad) === MK.tr(ta) || x.k === ta.toUpperCase(); })[0];
+      var ayni = kod && kodlar[kod]; if (kod) kodlar[kod] = 1;
+      return { kod: kod, turAd: ta || "—", tur: t ? t.k : "", konum: String(h[2] || "").trim(), seri: String(h[3] || "").trim(), ok: !!t && !ayni,
+        neden: !ta ? "Tür yok, atlanır" : !t ? "Tür bulunamadı, atlanır" : ayni ? "Kod dosyada iki kez, atlanır" : "" };
+    });
+  };
+  X["excel-ice"] = function () { EX = { dosya: "", satirlar: [] }; exIceCiz(); document.querySelector('#a-pencere [data-eylem="excel-sec"]').focus(); };
+  X["excel-sablon"] = function () { MK.indir("teklif-ekipman-sablonu.xlsx", MK.xlsx("Ekipmanlar", [["Kod", "Ekipman türü", "Konum", "Seri no"], ["", "Hava tankı", "Kazan dairesi", "HT-24-118"]])); };
+  var exOrnek = function () { return [["Kod", "Ekipman türü", "Konum", "Seri no"], ["", "Hava tankı", "Kazan dairesi", "HT-24-118"], ["", "Hava tankı", "Boya hattı", ""], ["FL-01", "Forklift", "Sevkiyat", "FL-22-431"],
+    ["", "Elektrik iç tesisatı", "Fabrika binası", ""], ["", "Vinç kancası", "Depo", ""]]; };
+  X["excel-sec"] = function () {
+    MK.dosyaSec({ kabul: ".xlsx,.csv", ornek: "musteri-ekipman-listesi.xlsx" }, function (ad, f) {
+      var sonra = function () { exIceCiz(); var y = document.querySelector('#a-pencere [data-eylem="excel-yukle"]'); if (y && !y.disabled) y.focus({ preventScroll: true }); };
+      if (!f) { EX.dosya = ad; EX.satirlar = exSatirlar(exOrnek()); sonra(); return; }
+      MK.tabloOku(f).then(function (ham) { EX.dosya = ad; EX.satirlar = exSatirlar(ham); sonra(); })
+        .catch(function () { EX.dosya = ""; EX.satirlar = []; exIceCiz(); MK.bildir(ad + " okunamadı; .xlsx ya da .csv seçin."); });
+    });
+  };
+  X["excel-yukle"] = function () {
+    if (!EX || !F) return;
+    var ok = EX.satirlar.filter(function (x) { return x.ok; }), atla = EX.satirlar.length - ok.length, sayac = {};
+    ok.forEach(function (x) { sayac[x.tur] = (sayac[x.tur] || 0) + 1; F.ekipmanlar.push({ kod: x.kod, tur: x.tur, konum: x.konum, seri: x.seri }); });
+    F.kalemler = F.kalemler.filter(function (k) { return k.tur; });   /* boş ilk satır kalkar */
+    Object.keys(sayac).forEach(function (tk) {
+      var k = F.kalemler.filter(function (y) { return y.tur === tk; })[0];
+      if (k) k.adet = String((+k.adet || 0) + sayac[tk]); else F.kalemler.push({ tur: tk, adet: String(sayac[tk]), fiyat: MV.para(MV.FIYAT[tk]).replace(" TL", "") });
+    });
+    if (!F.kalemler.length) F.kalemler = [{ tur: "", adet: "1", fiyat: "" }];
+    F.hata = {}; EX = null; $("a-pencere").close(); formCiz("f-tur-0");
+    MK.bildir(ok.length + " ekipman " + Object.keys(sayac).length + " türle kalemlere eklendi" + (atla ? "; " + atla + " satır atlandı." : "."));
   };
   /* 2026-09-27: teklif yazdırma penceresinden PDF olur (uygulamada firmanın teklif formatıyla, §3.7) */
   X["pdf"] = function () { var n = $("a-nesne"); MK.yazdir(n.querySelector("h1").textContent, [].map.call(n.querySelectorAll(".a-nesne-bas, section.a-bolum"), function (e) { return e.outerHTML; }).join("")); };

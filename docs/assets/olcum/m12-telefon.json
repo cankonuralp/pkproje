@@ -8,8 +8,8 @@
   390,
   430
  ],
- "toplam": 48,
- "temiz": 48,
+ "toplam": 56,
+ "temiz": 56,
  "durumlar": [
   {
    "ad": "teklifler · liste",
@@ -226,6 +226,78 @@
    "disari": [],
    "kucukAlan": [],
    "alan": 6
+  },
+  {
+   "ad": "teklif Excel'den yükle · satır önizlemesi (biri atlanır)",
+   "gen": 320,
+   "temiz": true,
+   "tasma": 0,
+   "disari": [],
+   "kucukAlan": [],
+   "alan": 6
+  },
+  {
+   "ad": "teklif Excel'den yükle · satır önizlemesi (biri atlanır)",
+   "gen": 360,
+   "temiz": true,
+   "tasma": 0,
+   "disari": [],
+   "kucukAlan": [],
+   "alan": 6
+  },
+  {
+   "ad": "teklif Excel'den yükle · satır önizlemesi (biri atlanır)",
+   "gen": 390,
+   "temiz": true,
+   "tasma": 0,
+   "disari": [],
+   "kucukAlan": [],
+   "alan": 6
+  },
+  {
+   "ad": "teklif Excel'den yükle · satır önizlemesi (biri atlanır)",
+   "gen": 430,
+   "temiz": true,
+   "tasma": 0,
+   "disari": [],
+   "kucukAlan": [],
+   "alan": 6
+  },
+  {
+   "ad": "teklif Excel'e aktar · tesisteki kayıtlı ekipman önizlemesi",
+   "gen": 320,
+   "temiz": true,
+   "tasma": 0,
+   "disari": [],
+   "kucukAlan": [],
+   "alan": 5
+  },
+  {
+   "ad": "teklif Excel'e aktar · tesisteki kayıtlı ekipman önizlemesi",
+   "gen": 360,
+   "temiz": true,
+   "tasma": 0,
+   "disari": [],
+   "kucukAlan": [],
+   "alan": 5
+  },
+  {
+   "ad": "teklif Excel'e aktar · tesisteki kayıtlı ekipman önizlemesi",
+   "gen": 390,
+   "temiz": true,
+   "tasma": 0,
+   "disari": [],
+   "kucukAlan": [],
+   "alan": 5
+  },
+  {
+   "ad": "teklif Excel'e aktar · tesisteki kayıtlı ekipman önizlemesi",
+   "gen": 430,
+   "temiz": true,
+   "tasma": 0,
+   "disari": [],
+   "kucukAlan": [],
+   "alan": 5
   },
   {
    "ad": "yeni teklif · tesisteki ekipmandan dolduruldu",

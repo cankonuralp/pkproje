@@ -2035,6 +2035,13 @@ revizyon, alan kopyalama, hafif kusur devri, meslek eşleşme denetimi).
 - Emsal ürünler: https://opwire.app/iso-17020-periyodik-kontrol-yazilimi/ · https://17020muayene.vidco.com.tr/ · https://akuple.com/asansor-kontrol-yazilimi/ · https://ensyazilim.com/
 
 ## 11 · Değişiklik günlüğü
+- 2026-09-30 (175): **L1 · Teklifte ekipman listesi Excel içe + dışa** (§9 kırkıncı tur; soru cevabı: içe + dışa). Teklif formunda Kalemler'in
+  altında **Excel'den yükle**: müşterinin ekipman listesi (Kod · Ekipman türü · Konum · Seri no; yalnız tür zorunlu, adıyla ya da koduyla),
+  şablon, satır satır önizleme ("Eklenecek" / "Tür bulunamadı, atlanır" / "Kod dosyada iki kez"); **Kalemlere ekle** geçerli satırları tür
+  başına adetle kalemlere ekler (fiyat fiyat listesinden; aynı tür varsa adet artar). Liste teklifle saklanır. **Excel'e aktar**: yüklenen
+  liste, yoksa kayıtlı müşterinin seçili tesis(ler)indeki ekipman; önizleme + gerçek .xlsx (kod, tür, konum, seri no, branş, birim fiyat);
+  liste yoksa kapalı ve nedeni yazılı. Teklif sayfasında da Excel'e aktar ve "N ekipman (Excel'den)". Ölçüm: m12 112/112 · 19/19 (3 yeni:
+  örnek dosyayla ekle + kaydet, gerçek .xlsx okuma, dışa aktarma + kapalı durum) · 56/56; gözle 1920 + 375.
 - 2026-09-30 (174): **L4 · Personel kartında Ekipman atamaları** (§9 kırkıncı tur; soru cevabı: atama ekipman TÜRÜNE). Inspector'ın kartında
   "Ekipman atamaları" bölümü + yüz: atandığı türler (tür · branş · atama tarihi · atama belgesi); satırda **Görüntüle** (belge açılır),
   **İndir** (yüklenen dosya aynen iner), **Değiştir**, kaldır (onay). **Atama ekle** penceresi: tür (atanmamışlar), atama tarihi, belge

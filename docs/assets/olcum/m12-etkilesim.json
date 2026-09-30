@@ -2,9 +2,30 @@
  "maket": "m12",
  "tarih": "2026-09-30",
  "arac": "tools/olc-bulut.mjs --etkilesim (başsız tarayıcı, 1920 açık tema; gen verilen denemede o genişlik)",
- "toplam": 16,
- "gecen": 16,
+ "toplam": 19,
+ "gecen": 19,
  "denemeler": [
+  {
+   "ad": "teklif Excel'den yükle: geçerli satırlar tür başına adetle kalemlere (fiyat listesinden), bulunamayan tür atlanır; kaydedince liste teklifte, teklif sayfasında Excel'e aktar",
+   "gen": 1920,
+   "sayfa": "maket/teklifler.html",
+   "hash": "#/yeni",
+   "gecti": true
+  },
+  {
+   "ad": "teklif Excel'den yükle: gerçek .xlsx okunur (başlık satırı atlanır, tür kodla da tanınır)",
+   "gen": 1920,
+   "sayfa": "maket/teklifler.html",
+   "hash": "#/yeni",
+   "gecti": true
+  },
+  {
+   "ad": "teklif Excel'e aktar: kayıtlı müşteride tesisin ekipmanı önizlenir, İndir gerçek .xlsx; listesiz kayıtsız müşteride kapalı + neden",
+   "gen": 1920,
+   "sayfa": "maket/teklifler.html",
+   "hash": "#/yeni?tesis=t2",
+   "gecti": true
+  },
   {
    "ad": "teklif PDF: önizleme, İndir önizlemedeki sayfaların PDF'i",
    "gen": 1920,
