@@ -2061,6 +2061,11 @@ revizyon, alan kopyalama, hafif kusur devri, meslek eşleşme denetimi).
 - Emsal ürünler: https://opwire.app/iso-17020-periyodik-kontrol-yazilimi/ · https://17020muayene.vidco.com.tr/ · https://akuple.com/asansor-kontrol-yazilimi/ · https://ensyazilim.com/
 
 ## 11 · Değişiklik günlüğü
+- 2026-09-30 (184): **N8 · Arayüzde her yerde "denetçi"** (§9 kırk birinci tur). Bütün maket metinlerinde "Inspector / inspector" (ekleriyle:
+  inspector'ın → denetçinin, inspector'a → denetçiye …) "Denetçi / denetçi" oldu: rol adı, sütun ve süzgeç başlıkları, şeritler, bildirimler,
+  kullanıcı rolleri. Kod anahtarları (rol kodu "inspector", #/inspector rotası, işlev adları) aynen; çeviride iki kod adı yanlışlıkla değişti,
+  tam ölçüm yakaladı, düzeltildi. N5'ten kalan bir deneme (menü adı balonla birleşince) düzeltildi. Sunumlar (plan-ici, toplu-bakış) üretilen
+  sayfa, dokunulmadı. Ölçüm (bütün maketler): durum 2184/2184 · etkileşim 604/604 · telefon 1092/1092 · olumsuz kanıt 3/3.
 - 2026-09-30 (183): **N7 · Onaylar: vekil yok, mekanik yönetici / elektrik yönetici** (§9 kırk birinci tur). "Elektrik · vekil" sekmesi ve
   vekil onayı kalktı; her yönetici yalnız kendi branşını görür. Üstte **Makette bakış** (Mekanik yönetici · Elektrik yönetici — yalnız
   "kime nasıl görünür" gösterimi, uygulamada yok): seçilince kullanıcı (Selin Yıldız / Can Öztürk), kuyruk, Tüm raporlar, Revize istekleri,

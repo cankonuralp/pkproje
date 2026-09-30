@@ -1,6 +1,6 @@
 /* ══ probata MAKET M6 — Plan aç (modül 13, planlama ekibi) · 2. TUR, ONAY BEKLİYOR (2026-09-26) ═══════════════════════════
-   Kaynak: MAKET-PLANI M6 ("müşteri → tesis → tarih → inspector → ekipman kapsamı; proje no sunucuda"), pkproje.md §3.4 (plan
-   bilgisi: proje no · başlangıç · adres · inspector · İSG-KATİP · açıklama + kapsam tür başına; tesiste kayıtlı ekipmanı plana
+   Kaynak: MAKET-PLANI M6 ("müşteri → tesis → tarih → denetçi → ekipman kapsamı; proje no sunucuda"), pkproje.md §3.4 (plan
+   bilgisi: proje no · başlangıç · adres · denetçi · İSG-KATİP · açıklama + kapsam tür başına; tesiste kayıtlı ekipmanı plana
    planlama ekibi de alır — karar 22), §3.5 (proje no P-AAYY-SIRA, sunucu verir), §3.2 madde 2 (kabul ön koşulları: İSG-KATİP,
    EKİPNET, meslek × tür). Tek sayfa form: bölümler sırayla dolar, sağ altta özet; eksikler planı açmayı ENGELLEMEZ (varsayım),
    kabulü durdurur ve özette adıyla yazılır. Kullanıcı: planlama ekibinden Zeynep Arslan. UYDURMA veri.

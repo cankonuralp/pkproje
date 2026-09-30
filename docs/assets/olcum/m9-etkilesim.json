@@ -6,7 +6,7 @@
  "gecen": 49,
  "denemeler": [
   {
-   "ad": "pasif rapor inspector'ın Raporlar listesinde yok, adresiyle de açılmaz (2026-09-29)",
+   "ad": "pasif rapor denetçinin Raporlar listesinde yok, adresiyle de açılmaz (2026-09-29)",
    "gen": 1920,
    "sayfa": "maket/raporlar.html",
    "hash": "#/",
@@ -216,7 +216,7 @@
    "gecti": true
   },
   {
-   "ad": "Pasif raporlar sekmesi: inspector'ın pasife aldığı rapor listede; Aktif et → pasif kalkar",
+   "ad": "Pasif raporlar sekmesi: denetçinin pasife aldığı rapor listede; Aktif et → pasif kalkar",
    "gen": 1920,
    "sayfa": "maket/onaylar.html",
    "hash": "#/",
@@ -230,14 +230,14 @@
    "gecti": true
   },
   {
-   "ad": "Raporlar: inspector'da Düzelt (R) tuşu yok; revize teknik yöneticide (2026-09-29)",
+   "ad": "Raporlar: denetçide Düzelt (R) tuşu yok; revize teknik yöneticide (2026-09-29)",
    "gen": 1920,
    "sayfa": "maket/raporlar.html",
    "hash": "#/r/KM-0926-760-f535b",
    "gecti": true
   },
   {
-   "ad": "onay özeti (V4): inspector mesleği ve önceki kontrolden devreden hafif kusur",
+   "ad": "onay özeti (V4): denetçi mesleği ve önceki kontrolden devreden hafif kusur",
    "gen": 1920,
    "sayfa": "maket/onaylar.html",
    "hash": "#/r/KM-0926-787-42b08",
@@ -286,21 +286,21 @@
    "gecti": true
   },
   {
-   "ad": "191: durum değişikliği raporun üstünde şerit (Onaylar); inspector Raporlar'da ve saha raporunda da görür (sayfalar arası)",
+   "ad": "191: durum değişikliği raporun üstünde şerit (Onaylar); denetçi Raporlar'da ve saha raporunda da görür (sayfalar arası)",
    "gen": 1920,
    "sayfa": "maket/onaylar.html",
    "hash": "#/r/KM-0926-787-42b08",
    "gecti": true
   },
   {
-   "ad": "192: inspector Revize iste (kısa gerekçe reddedilir) → Onaylar Revize istekleri → Revizeye gönder, gerekçe istekten",
+   "ad": "192: denetçi Revize iste (kısa gerekçe reddedilir) → Onaylar Revize istekleri → Revizeye gönder, gerekçe istekten",
    "gen": 1920,
    "sayfa": "maket/raporlar.html",
    "hash": "#/r/KM-0926-760-f535b",
    "gecti": true
   },
   {
-   "ad": "192: Revize istekleri → Revizeye gönder (gerekçe istekten gelir) → R1, istek kalkar; öteki istek Reddet → inspector görür",
+   "ad": "192: Revize istekleri → Revizeye gönder (gerekçe istekten gelir) → R1, istek kalkar; öteki istek Reddet → denetçi görür",
    "gen": 1920,
    "sayfa": "maket/onaylar.html",
    "hash": "#/",
@@ -321,7 +321,7 @@
    "gecti": true
   },
   {
-   "ad": "Revizeye gönder: R1 açılır, Yeni; tamamlanan sürüm saklanır; inspector Raporlar'da gerekçeyi görür (sayfalar arası)",
+   "ad": "Revizeye gönder: R1 açılır, Yeni; tamamlanan sürüm saklanır; denetçi Raporlar'da gerekçeyi görür (sayfalar arası)",
    "gen": 1920,
    "sayfa": "maket/onaylar.html",
    "hash": "#/r/KM-0926-760-f535b",

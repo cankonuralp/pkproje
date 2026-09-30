@@ -1,5 +1,5 @@
 /* ══ probata MAKET M14 — Muhasebe (modül 18, faz 2) · ONAY BEKLİYOR (toplu maket, 2026-09-24) ═══════════════════════════════════════
-   Kaynak: pkproje.md §3 (akış: "… inspector son imza → müşteriye açıldı → fatura → tahsilat → iş kapandı → arşiv"), §3.1 modül 18 (fatura,
+   Kaynak: pkproje.md §3 (akış: "… denetçi son imza → müşteriye açıldı → fatura → tahsilat → iş kapandı → arşiv"), §3.1 modül 18 (fatura,
    tahsilat, iş kapanışı), §3.2 madde 5 (her rapor teklif kalemine bağlanır; birim fiyat oradan), §7 (fatura / tahsilat).
    Ekranlar: işler (#/) · faturalar (#/faturalar) · iş sayfası (#/is/<proje no>: raporlar × birim fiyat, faturalar, geçmiş) · fatura sayfası
    (#/f/<no>: kalemler, KDV, tahsilatlar) · fatura kaydet penceresi (#/is/<no>/fatura) · tahsilat penceresi (#/f/<no>/tahsilat) ·
@@ -169,12 +169,12 @@
     var satir = [
       { ad: "Gelir", ayrinti: k.rapor + " rapor · raporlanan, KDV hariç", tutar: k.gelir },
       { ad: "İşe bağlı masraflar", ayrinti: "KDV hariç, reddedilen hariç", tutar: k.dogrudan, eksi: true },
-      { ad: "Inspector maliyeti", ayrinti: k.kisiler.length ? k.kisiler.map(function (x) { return kacis(MV.kisi(x.kisi).ad) + " " + sayiTr(x.gun) + " gün × " + para(x.gunluk); }).join(" · ") : "rapor yok", tutar: k.personel, eksi: true },
+      { ad: "Denetçi maliyeti", ayrinti: k.kisiler.length ? k.kisiler.map(function (x) { return kacis(MV.kisi(x.kisi).ad) + " " + sayiTr(x.gun) + " gün × " + para(x.gunluk); }).join(" · ") : "rapor yok", tutar: k.personel, eksi: true },
       { ad: "Genel gider payı", ayrinti: sayiTr(k.gun) + " kişi-gün × " + para(k.gunPay) + " (araç, ofis, vergi, genel masraf, diğer personel)", tutar: k.genel, eksi: true },
       { ad: "Kâr", ayrinti: yuzde(k.oran) + " · KDV hariç", tutar: k.kar, toplam: true }
     ];
     return '<section class="a-bolum" aria-labelledby="a-b-kar"><div class="a-alt-bas"><h2 class="a-alt-baslik" id="a-b-kar">Kârlılık</h2><span class="a-sayac"><b>' + yuzde(k.oran) + "</b> kâr</span></div>" +
-      (k.tahmini ? '<div class="a-uyari-serit">' + MK.serit("bilgi", "history", MV.ayAd(k.ay) + " bordroları yüklenmedi; inspector maliyeti son bordrodan tahmini.") + "</div>" : "") +
+      (k.tahmini ? '<div class="a-uyari-serit">' + MK.serit("bilgi", "history", MV.ayAd(k.ay) + " bordroları yüklenmedi; denetçi maliyeti son bordrodan tahmini.") + "</div>" : "") +
       '<div class="a-liste-kap">' + MK.tablo({ baslik: "Kârlılık", sinif: "a-tablo-karlilik", sutunlar: KAR_SUTUN, kayitlar: satir }) + "</div></section>";
   }
   /* GELİR-GİDER (2026-09-27, reisim: "gelir gidere göre bilançoda olacak"): ay seçilir; o ayın gelir (denetlenen işlerin raporlananı), maaşlar
@@ -416,7 +416,7 @@
   function giderPencere(odak) {
     var h = W.hata, g = W.g;
     $("a-pencere-baslik").textContent = g ? "Gider · " + g.no : "Gider ekle" + (W.sabitIs ? " · " + W.sabitIs : "");
-    /* reddetme: gerekçe yazılır (en az 5 karakter), inspector plan içinde görür */
+    /* reddetme: gerekçe yazılır (en az 5 karakter), denetçi plan içinde görür */
     if (W.redKip) {
       $("a-pencere-govde").innerHTML = '<p class="a-pencere-ozet"><b>' + g.no + "</b> · " + kacis(gTur(g.tur).ad) + " · " + para(g.tutar) + " · " + kacis(MV.kisi(g.kisi).ad) + "</p>" +
         '<div class="a-form">' + MK.alan({ id: "w-gerekce", etiket: "Red gerekçesi", zorunlu: true, genis: true, hata: h.gerekce,
@@ -590,11 +590,11 @@
   X["gider-red-ac"] = function () { W.redKip = true; W.hata = {}; giderPencere(); };
   X["gider-red-vazgec"] = function () { W.redKip = false; W.hata = {}; giderPencere("w-tur"); };
   X["gider-reddet"] = function () {
-    if (W.gerekce.trim().length < 5) { W.hata = { gerekce: "Gerekçe en az 5 karakter; inspector plan içinde görür." }; giderPencere(); return; }
+    if (W.gerekce.trim().length < 5) { W.hata = { gerekce: "Gerekçe en az 5 karakter; denetçi plan içinde görür." }; giderPencere(); return; }
     var g = W.g, r = rota(); g.durum = "red"; g.red = W.gerekce.trim(); g.onaylayan = "ad";
     $("a-pencere").close();
     if (r.v === "is") isCiz(MV.isKaydi(r.no)); else { history.replaceState(null, "", "#/giderler"); uyariCiz("g"); MK.suzgecKur("g"); }
-    MK.bildir(g.no + " reddedildi; gerekçe inspector'ın plan içinde görünür.");
+    MK.bildir(g.no + " reddedildi; gerekçe denetçinin plan içinde görünür.");
   };
   X["gider-belge"] = function () {
     MK.dosyaSec({ kabul: "image/*,.pdf", enCokMB: 10, ornek: "fis-" + (W.tarih || MK.BUGUN).replace(/-/g, "") + "-" + (W.tur || "gider") + ".pdf" }, function (ad) {

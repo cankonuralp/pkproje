@@ -5,7 +5,7 @@
    türün listesinden, zimmetten eklenir; ekipman bilgileri elle; sonuç seçmeli, seçilmezse kriterlere göre; Kaydet + Onaya gönder hep
    görünür; bölümler her girişte kapalı; fotoğraf kameradan ya da galeriden; firma bilgileri salt okunur, Güncelle ile kayıttan),
    §4.2 (Ek-III 1.7), §4.5 (her kusur ayrı), §9 yirmi üçüncü tur (madde Uygun · Uygun değil · Uygulanamaz; sonuç Uygun · Uygun değil;
-   başlangıç ve bitiş el ile; sonraki kontrol kendiliğinden, el ile değişir; bütün başlıklar açılır kapanır), §8.10 (sigorta okuma ÖNERİ; inspector onaylamadan kaydedilmez). Önce tablet ve telefon.
+   başlangıç ve bitiş el ile; sonraki kontrol kendiliğinden, el ile değişir; bütün başlıklar açılır kapanır), §8.10 (sigorta okuma ÖNERİ; denetçi onaylamadan kaydedilmez). Önce tablet ve telefon.
    Örnekler Planlar'daki plan 1'in (P-0926-031, Merkez Fabrika, denetimde) raporları: aynı numara, aynı durum. UYDURMA veri. */
 (function () {
   "use strict";
@@ -77,7 +77,7 @@
     /* örnek içerik yalnız ekipmanın tohum raporunda; aynı ekipmana sonradan açılan rapor boş başlar (2026-09-28, sınırsız rapor) */
     var tohum = MV.RAPORLAR.filter(function (x) { return x.kod === e.kod && x.plan; })[0];
     if (!tohum || tohum.no === r.no) {
-      if (e.kod === "ET-1009") {   /* elektrik iç tesisatı (ZPKR02): yarıda; pano sigortaları okunmadı; inspector'ın zimmetinde kalibrasyonu geçmiş cihaz */
+      if (e.kod === "ET-1009") {   /* elektrik iç tesisatı (ZPKR02): yarıda; pano sigortaları okunmadı; denetçinin zimmetinde kalibrasyonu geçmiş cihaz */
         ornekBilgi(); r.tespit = { degisiklik: "Yok", etiket: "Var" };
         [0, 1, 2].forEach(function (i) { r.kriter[i].c = i === 2 ? "uygundegil" : "uygun"; });
         r.kriter[2].foto = 1; r.kriter[2].derece = "hafif"; r.kriter[2].not = "Tali pano TP-2 duvara yalnız üstten sabitlenmiş; alt bağlantı yok.";
@@ -405,7 +405,7 @@
   }
   function ciz(odak) {
     var kod = (/^#\/r\/([A-Z0-9-]+)/.exec(location.hash) || [])[1], r = kod ? rapor(kod) : null;
-    /* pasif rapor saha ekranında açılmaz — eski bağlantı, geçmiş, açık sekme (2026-09-29, reisim: "Pasife alınan raporlar inspectorlere
+    /* pasif rapor saha ekranında açılmaz — eski bağlantı, geçmiş, açık sekme (2026-09-29, reisim: "Pasife alınan raporlar denetçilere
        gözükmesin sadece yöneticilere gözüksün") */
     var pasif = r && MV.rapor(r.no) && MV.rapor(r.no).pasif;
     if (!r || pasif) {
@@ -438,8 +438,8 @@
        (firma, e-posta, adres, İSG-KATİP ID, rapor no) raporda değişmez (160); telefon ve ekipman bölümü elle.
        2026-09-29 (reisim: "Plan içeriğinde "SGK destis no:" ksımı yok olmalı"): SGK DETSİS no saha ekranında yok; tesis kaydından
        rapor PDF'ine gider (Ek-III zorunlu alanı, maket-belge.js). */
-    /* 2026-09-27 (reisim): firma adı, e-posta, telefon, adres, rapor no inspector'da DEĞİŞMEZ — plan açılırken planlamacı girer ya da
-       kendiliğinden oluşur; yanlışsa planlamacı Müşteriler'den düzeltir, inspector "Güncelle" ile güncel bilgiyi çeker.
+    /* 2026-09-27 (reisim): firma adı, e-posta, telefon, adres, rapor no denetçide DEĞİŞMEZ — plan açılırken planlamacı girer ya da
+       kendiliğinden oluşur; yanlışsa planlamacı Müşteriler'den düzeltir, denetçi "Güncelle" ile güncel bilgiyi çeker.
        Formatlı türde kontrol metodu (türden, yalnız standartlar) formattaki gibi bu bölümde: "Periyodik kontrol metodu ve kapsamı". */
     S.firma = bolum(no("firma", 1), "r-b1", "Firma bilgileri", '<dl class="a-satirlar a-satirlar-form">' +
         satir("Firma adı", kacis(mus.unvan)) +
@@ -518,7 +518,7 @@
     S.not = bolum(F ? F.bolumler.not : el ? 9 : 8, "r-b9", F ? "Notlar" : "Muayene uzmanı yorumu",
       '<textarea class="a-alan a-alan-ince" id="r-notlar" data-alan="notlar" maxlength="500" aria-label="' + (F ? "Notlar" : "Muayene uzmanı yorumu") + '"' + (oku ? " readonly" : "") + ">" + kacis(r.notlar) + "</textarea>" +
       (F && F.notlar ? '<details class="a-format-liste"><summary>Uygunluk notları (Not-1 … Not-' + F.notlar.length + ")</summary><ol>" + F.notlar.map(function (x) { return "<li>" + kacis(x) + "</li>"; }).join("") + "</ol></details>" : ""));
-    /* yetkili kişi: raporu yazan inspector'ın personel kaydından (değişmez); imza son imzada */
+    /* yetkili kişi: raporu yazan denetçinin personel kaydından (değişmez); imza son imzada */
     S.yetkili = F ? bolum(F.bolumler.yetkili, "r-by", "Yetkili kişi", '<dl class="a-satirlar">' + satir("Ad soyad", kacis(p.ad)) + satir("Meslek", kacis(MV.meslekAd(p))) +
       satir("Yetkili kişi kayıt no", '<span class="a-kod">' + p.ekipnet + "</span>") + satir("Nüsha sayısı", String(MV.FIRMA.nusha)) + "</dl>") : "";
     var SIRA = !F ? ["firma", "ekipman", "cihaz", "kriter", "test", "sigorta", "devir", "foto", "sonuc", "not"]
@@ -531,7 +531,7 @@
         (oku ? "" : '<p class="a-adim-not a-rapor-kayit" id="r-kayit">' + kayitMetin(r) + "</p>") + "</div>" +
         /* Ön izle (reisim 2026-09-28: "en sağ üstte ön izleme tuşu olmalı PDF çıktısını ön izleyebilmeliyim ön izle halinde PDF halini indirebilmeliyim") */
         '<div class="a-eylem-cubugu">' + MK.tus({ eylem: "on-izle", ad: "Ön izle", ikon: "eye", sinif: "a-tus-ikincil" }) + "</div></div>" +
-      /* günlük süre (212): raporu yazan inspector'ın bugünkü süresi, bu raporun süresi */
+      /* günlük süre (212): raporu yazan denetçinin bugünkü süresi, bu raporun süresi */
         /* N6 (2026-09-30): günlük süre üst çubukta (açılır; bu raporun süresi pencerede); burada yalnız süre dolunca neden */
         (!oku && MV.mesai().acik && MV.gunlukSure(r.kisi).dolu ? '<div class="a-rapor-mesai">' + MK.serit("uyari", "clock", "Günlük süre doldu; yeni rapor ve kopya oluşturulamaz.", "r-mesai-sebep") + "</div>" : "") +
       '<div class="a-uyari-serit">' + MV.durumSerit(MV.rapor(r.no)) +
@@ -564,7 +564,7 @@
   }
   /* formatın sonuç cümlesi TAM (reisim 2026-09-28: "telefonda … ile bitiyor tam metin okunamıyor"): seçilen sonuçla biter, seçilmediyse iki seçenek */
   var sonucCumle = function (r) { return kacis(r.F.sonuc) + " " + (r.sonuc === "kullanilir" ? "<b>uygundur</b>" : r.sonuc === "kullanilamaz" ? "<b>uygun değildir</b>" : "uygundur / uygun değildir") + "."; };
-  /* düzenlenebilen (Yeni ya da geri gönderilmiş) rapor inspector'da silinir (2026-09-29, reisim: "oluşan rapor inspector tarafından da
+  /* düzenlenebilen (Yeni ya da geri gönderilmiş) rapor denetçide silinir (2026-09-29, reisim: "oluşan rapor denetçi tarafından da
      silinebilsin"); gönderilen rapor salt okunur, tuşu yok */
   var silinebilir = function (r) { return r.durum === "taslak"; };
   function eylemHtml(r, oku) {
@@ -691,7 +691,7 @@
         return MK.alan({ id: "w-" + a[0], etiket: a[1], zorunlu: !j, hata: h[a[0]], girdi: MK.girdi({ id: "w-" + a[0], alan: a[0], deger: d[a[0]], sinif: j ? "a-girdi-sicil" : "", ek: j ? ' inputmode="decimal" maxlength="7"' : ' maxlength="60"', hata: h[a[0]] }) }); }).join("") + "</div>";
       $("a-pencere-alt").innerHTML = MK.tus({ eylem: "pencere-kapat", ad: "Vazgeç", sinif: "a-tus-ikincil" }) + MK.tus({ eylem: "pencere-kaydet", ad: W.i === null ? "Ekle" : "Kaydet", ikon: W.i === null ? "plus" : "check" });
     } else if (W.tur === "cihaz") {
-      /* yalnız o satırın cihaz türünden, inspector'ın zimmetindeki kalibrasyonu geçerli cihazlar; yoksa söylenir (reisim 2026-09-28) */
+      /* yalnız o satırın cihaz türünden, denetçinin zimmetindeki kalibrasyonu geçerli cihazlar; yoksa söylenir (reisim 2026-09-28) */
       var ct = MV.cihazTuru(W.c), l = MV.eklenebilirCihazlar(W.r.kisi, [W.c]);
       $("a-pencere-baslik").textContent = "Cihaz ekle · " + ct.ad;
       $("a-pencere-govde").innerHTML = (h.sec ? '<div class="a-serit-kap">' + MK.serit("hata", "circle-x", h.sec) + "</div>" : "") +
@@ -982,8 +982,8 @@
   }
 
   MK.goster = function (odakla) { ACIK = {}; UY = null; ciz(); if (odakla) { window.scrollTo(0, 0); var h = document.querySelector("#a-rapor h1"); if (h) h.focus({ preventScroll: true }); } };
-  /* kabuk: raporu yazan inspector (elektrik raporunu Elif Aydın, mekaniği Mert Kaya) */
+  /* kabuk: raporu yazan denetçi (elektrik raporunu Elif Aydın, mekaniği Mert Kaya) */
   var ilk = aktif(), ben = MV.kisi(ilk ? ilk.kisi : "mk");
-  MK.kabuk({ modul: 13, kullanici: { bas: MV.bas(ben.ad), ad: ben.ad, rol: "Inspector" } });
+  MK.kabuk({ modul: 13, kullanici: { bas: MV.bas(ben.ad), ad: ben.ad, rol: "Denetçi" } });
   ciz();
 })();

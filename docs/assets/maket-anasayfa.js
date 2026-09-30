@@ -29,8 +29,8 @@
     { k: "tarih", baslik: "Başlangıç", kart: "govde", sira: 2, hucre: function (p) {
       return '<span class="a-kart-etiket">Başlangıç</span><span class="a-tarih-saat">' + MK.gunYaz(p.tarih) + "</span>";
     } },
-    { k: "ekip", baslik: "Inspector", kart: "govde", sira: 3, hucre: function (p) {
-      return '<span class="a-kart-etiket">Inspector</span>' + kacis(p.ekip.map(function (k) { return MV.kisi(k).ad; }).join(", "));
+    { k: "ekip", baslik: "Denetçi", kart: "govde", sira: 3, hucre: function (p) {
+      return '<span class="a-kart-etiket">Denetçi</span>' + kacis(p.ekip.map(function (k) { return MV.kisi(k).ad; }).join(", "));
     } },
     { k: "durum", baslik: "Durum", kart: "rozet", sira: 1, hucre: function (p) { return rozet(MV.PLAN_DURUM[p.durum]); } }
   ];
@@ -42,7 +42,7 @@
     { k: "tarih", baslik: "Gönderildi", kart: "govde", sira: 2, hucre: function (r) {
       return '<span class="a-kart-etiket">Gönderildi</span><span class="a-tarih-saat">' + MK.zamanYaz(r.gonderildi) + '</span><span class="a-alt-satir">' + saatFarki(r.gonderildi) + " bekliyor</span>";
     } },
-    { k: "ekip", baslik: "Inspector", kart: "govde", sira: 3, hucre: function (r) { return '<span class="a-kart-etiket">Inspector</span>' + kacis(MV.kisi(r.kisi).ad); } },
+    { k: "ekip", baslik: "Denetçi", kart: "govde", sira: 3, hucre: function (r) { return '<span class="a-kart-etiket">Denetçi</span>' + kacis(MV.kisi(r.kisi).ad); } },
     { k: "durum", baslik: "Durum", kart: "rozet", sira: 1, hucre: function (r) { return rozet(MV.RAPOR_DURUM.onayda); } }
   ];
   var TESIS_SUTUN = [
@@ -81,7 +81,7 @@
         yuz({ ikon: "play", ad: "Denetimdeki plan", sayi: denetim.length, href: "planlarim.html", not: denetim.length ? denetim[0].plan : "yok" }) +
         yuz({ ikon: "file-pen-line", ad: "Taslak rapor", sayi: taslak.length, href: "raporlar.html", not: geri.length ? geri.length + " geri gönderildi" : "onaya gönderilmedi", uyari: geri.length > 0 }) +
         yuz({ ikon: "file-signature", ad: "Son imzanı bekleyen", sayi: imza.length, href: "raporlar.html#/imza", not: "onaylandı, imza bekliyor", uyari: imza.length > 0 }) +
-        /* N6 (2026-09-30, reisim: "inspectorün anasayfasında gözüksün her inspectorünki kendisi için hesaplansın"): kişinin kendi günlük süresi */
+        /* N6 (2026-09-30, reisim: "denetçinin anasayfasında gözüksün her denetçininki kendisi için hesaplansın"): kişinin kendi günlük süresi */
         (MV.mesai().acik ? (function () { var g = MV.gunlukSure(k); return yuz({ ikon: "clock", ad: "Günlük süre", sayi: (g.normal + g.mesai) + " dk", href: "#", eylem: "mesai-ac",
           not: "normal " + g.normal + " / " + g.m.normal + " · mesai " + g.mesai + " / " + g.m.mesai + (g.dolu ? " · doldu" : ""), uyari: g.dolu }); })() : "") +
         yuz({ ikon: "package", ad: "Zimmetinde", sayi: z.length, href: "zimmetler.html#/?kisi=" + k, not: zk.length ? zk.length + " cihazın kalibrasyonu uyarıda" : "uyarı yok", uyari: zk.length > 0 }) +

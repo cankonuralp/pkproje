@@ -336,7 +336,7 @@
    "alan": 0
   },
   {
-   "ad": "ana sayfa · inspector",
+   "ad": "ana sayfa · denetçi",
    "gen": 320,
    "temiz": true,
    "tasma": 0,
@@ -345,7 +345,7 @@
    "alan": 0
   },
   {
-   "ad": "ana sayfa · inspector",
+   "ad": "ana sayfa · denetçi",
    "gen": 360,
    "temiz": true,
    "tasma": 0,
@@ -354,7 +354,7 @@
    "alan": 0
   },
   {
-   "ad": "ana sayfa · inspector",
+   "ad": "ana sayfa · denetçi",
    "gen": 390,
    "temiz": true,
    "tasma": 0,
@@ -363,7 +363,7 @@
    "alan": 0
   },
   {
-   "ad": "ana sayfa · inspector",
+   "ad": "ana sayfa · denetçi",
    "gen": 430,
    "temiz": true,
    "tasma": 0,
@@ -588,7 +588,7 @@
    "alan": 0
   },
   {
-   "ad": "personel · kart (inspector, eksiksiz)",
+   "ad": "personel · kart (denetçi, eksiksiz)",
    "gen": 320,
    "temiz": true,
    "tasma": 0,
@@ -597,7 +597,7 @@
    "alan": 0
   },
   {
-   "ad": "personel · kart (inspector, eksiksiz)",
+   "ad": "personel · kart (denetçi, eksiksiz)",
    "gen": 360,
    "temiz": true,
    "tasma": 0,
@@ -606,7 +606,7 @@
    "alan": 0
   },
   {
-   "ad": "personel · kart (inspector, eksiksiz)",
+   "ad": "personel · kart (denetçi, eksiksiz)",
    "gen": 390,
    "temiz": true,
    "tasma": 0,
@@ -615,7 +615,7 @@
    "alan": 0
   },
   {
-   "ad": "personel · kart (inspector, eksiksiz)",
+   "ad": "personel · kart (denetçi, eksiksiz)",
    "gen": 430,
    "temiz": true,
    "tasma": 0,
@@ -1092,7 +1092,7 @@
    "alan": 1
   },
   {
-   "ad": "personel · kart, ataması olmayan inspector (uyarı)",
+   "ad": "personel · kart, ataması olmayan denetçi (uyarı)",
    "gen": 320,
    "temiz": true,
    "tasma": 0,
@@ -1101,7 +1101,7 @@
    "alan": 0
   },
   {
-   "ad": "personel · kart, ataması olmayan inspector (uyarı)",
+   "ad": "personel · kart, ataması olmayan denetçi (uyarı)",
    "gen": 360,
    "temiz": true,
    "tasma": 0,
@@ -1110,7 +1110,7 @@
    "alan": 0
   },
   {
-   "ad": "personel · kart, ataması olmayan inspector (uyarı)",
+   "ad": "personel · kart, ataması olmayan denetçi (uyarı)",
    "gen": 390,
    "temiz": true,
    "tasma": 0,
@@ -1119,7 +1119,7 @@
    "alan": 0
   },
   {
-   "ad": "personel · kart, ataması olmayan inspector (uyarı)",
+   "ad": "personel · kart, ataması olmayan denetçi (uyarı)",
    "gen": 430,
    "temiz": true,
    "tasma": 0,

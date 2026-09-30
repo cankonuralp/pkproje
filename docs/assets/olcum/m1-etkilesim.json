@@ -167,7 +167,7 @@
    "gecti": true
   },
   {
-   "ad": "personel: Inspector çipi 9 / 15",
+   "ad": "personel: Denetçi çipi 9 / 15",
    "gen": 1920,
    "sayfa": "maket/personel.html",
    "hash": "#/",
@@ -230,7 +230,7 @@
    "gecti": true
   },
   {
-   "ad": "kart: yetkili meslek değilse inspector verilebilir, uyarı yazar",
+   "ad": "kart: yetkili meslek değilse denetçi verilebilir, uyarı yazar",
    "gen": 1920,
    "sayfa": "maket/personel.html",
    "hash": "#/p/za",
@@ -601,7 +601,7 @@
    "gecti": true
   },
   {
-   "ad": "ana sayfa: rol anahtarı → inspector bölümü ve kişi",
+   "ad": "ana sayfa: rol anahtarı → denetçi bölümü ve kişi",
    "gen": 1920,
    "sayfa": "maket/anasayfa.html",
    "hash": "#/yonetici",

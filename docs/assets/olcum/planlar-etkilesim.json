@@ -321,7 +321,7 @@
    "gecti": true
   },
   {
-   "ad": "pasife alınan rapor inspector'da eski bağlantıyla da açılmaz (saha ekranı: pasif, yalnız yöneticiler görür)",
+   "ad": "pasife alınan rapor denetçide eski bağlantıyla da açılmaz (saha ekranı: pasif, yalnız yöneticiler görür)",
    "gen": 1920,
    "sayfa": "maket/planlarim.html",
    "hash": "#/plan/1",

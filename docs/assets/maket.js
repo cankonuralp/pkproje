@@ -25,9 +25,9 @@
   var SAYFA = { e: 10, r: 20 };
 
   var KISI = {
-    mk: { ad: "Mert Kaya", brans: "Mekanik", rol: "Inspector" },
-    ea: { ad: "Elif Aydın", brans: "Elektrik", rol: "Inspector" },
-    bs: { ad: "Burak Şahin", brans: "Mekanik", rol: "Inspector" },
+    mk: { ad: "Mert Kaya", brans: "Mekanik", rol: "Denetçi" },
+    ea: { ad: "Elif Aydın", brans: "Elektrik", rol: "Denetçi" },
+    bs: { ad: "Burak Şahin", brans: "Mekanik", rol: "Denetçi" },
     za: { ad: "Zeynep Arslan", brans: "", rol: "Planlama" }
   };
   var BEN = "mk";
@@ -118,7 +118,7 @@
      Planlar'ın kendi durumu (planlar, sicil, numara sırası) tarayıcıda saklanır (MK.kalici); Plan aç'ta açılan planlar (MV.ACILAN_PLANLAR)
      listeye alınır; burada eklenen ekipman ve oluşturulan rapor ortak kayda (MV.EKIPMAN · MV.RAPORLAR) yazılır → saha raporu, Onaylar,
      Raporlar aynı kaydı görür; rapor durumları ortak kayıttan okunur (onay, geri gönderme, imza başka ekranda olur). */
-  MV.PERSONEL.forEach(function (x) { if (!KISI[x.id]) KISI[x.id] = { ad: x.ad, brans: "", rol: "Inspector" }; });
+  MV.PERSONEL.forEach(function (x) { if (!KISI[x.id]) KISI[x.id] = { ad: x.ad, brans: "", rol: "Denetçi" }; });
   var turBul = function (k) { return KATALOG.filter(function (t) { return t.k === k; })[0] || MV.tur(k); };
   MK.kalici("planlar", function () {
     return { sicil: Object.keys(SICIL).map(function (k) { return Object.assign({}, SICIL[k], { tur: SICIL[k].tur.k }); }), raporSira: raporSira, kodSira: kodSira };
@@ -167,7 +167,7 @@
   });
   MV.RAPORLAR.forEach(function (r) { raporSira = Math.max(raporSira, siraOku(r.no) + 1); });
   /* rapor durumu ortak kayıttan (onay, geri gönderme, imza başka ekranda) */
-  /* pasife alınan (inspector) ve yöneticinin sildiği rapor da ortak kayıttan (2026-09-28, T2) */
+  /* pasife alınan (denetçi) ve yöneticinin sildiği rapor da ortak kayıttan (2026-09-28, T2) */
   PLANLAR.forEach(function (p) {
     p.rapor = p.rapor.filter(function (r) { return !!MV.rapor(r.no); });
     p.rapor.forEach(function (r) { var m = MV.rapor(r.no); r.durum = m.durum === "geri" ? "taslak" : m.durum; r.sonuc = m.sonuc; r.pasif = !!m.pasif; });
@@ -195,7 +195,7 @@
   var simdi = MK.simdi, tr = MK.tr, kirp = MK.kirp, rozet = MK.rozet, bilgi = MK.bilgi, serit = MK.serit, SZ = MK.SZ;
   var bul = function (id) { return PLANLAR.filter(function (x) { return x.id === id; })[0]; };
   var bransAd = function (b) { return b === "m" ? "Mekanik" : "Elektrik"; };
-  var raporlar = function (p) { return p.rapor.filter(function (r) { return !r.pasif; }); };   /* pasif rapor inspector'da görünmez (2026-09-28, T2) */
+  var raporlar = function (p) { return p.rapor.filter(function (r) { return !r.pasif; }); };   /* pasif rapor denetçide görünmez (2026-09-28, T2) */
   var raporuVar = function (p, kod) { return raporlar(p).filter(function (r) { return r.kod === kod; })[0]; };
   /* rapor oluşturulabilir: kabul edilen plan da (2026-09-29, reisim: "Planı kabul ettikten sonra denetime başla tuşu olmasına gerek yok
      gereksiz") — ilk rapor oluşturulunca plan kendiliğinden "Denetimde" olur, başlama zamanı o an */
@@ -230,7 +230,7 @@
     adres: function (p) { return p.il + " " + p.ilce + " " + p.adres; }, ekip: function (p) { return KISI[p.ekip[0]].ad; },
     baslangic: function (p) { return p.tarih + " " + p.bas; }, durum: function (p) { return DURUM[p.durum].sira; }
   };
-  var SIRA_AD = { no: "Proje no", ad: "Proje adı", musteri: "Müşteri", adres: "Adres", ekip: "Inspector", baslangic: "Başlangıç", durum: "Durum" };
+  var SIRA_AD = { no: "Proje no", ad: "Proje adı", musteri: "Müşteri", adres: "Adres", ekip: "Denetçi", baslangic: "Başlangıç", durum: "Durum" };
   function siraEtiket(v) {
     if (v === "varsayilan") return "En yeni tarih önce";
     var x = v.split("-"), artan = x[1] === "artan";
@@ -334,7 +334,7 @@
       return '<span class="a-hucre-satir">' + ikon("map-pin", "a-ikon-kucuk a-kart-ikon") + '<span class="a-adres">' +
         kirp(p.adres, "a-adres-sokak", p.adres + ", " + p.ilce + " / " + p.il) + '<span class="a-adres-il">' + p.ilce + " / " + p.il + "</span></span></span>";
     } },
-    { k: "ekip", baslik: "Inspector", kart: "govde", sira: 6, hucre: ekipHtml },
+    { k: "ekip", baslik: "Denetçi", kart: "govde", sira: 6, hucre: ekipHtml },
     { k: "baslangic", baslik: "Başlangıç", kart: "govde", sira: 4, hucre: function (p) {
       return '<span class="a-tarih-gun">' + tno(p.tarih) + "</span>" + (p.bitTarih !== p.tarih ? '<span class="a-tarih-saat">– ' + tno(p.bitTarih) + "</span>" : "");
     } },
@@ -431,9 +431,9 @@
     { k: "eylem", baslik: "İşlem", gizliBaslik: true, kart: "eylem", sira: 9, hucre: function (r) {
       var d = r.durum === "taslak" ? ["pencil", "Raporu düzenle"] : ["file-text", "Raporu aç"];
       /* 2026-09-24 (toplu maket M8): saha rapor ekranı maketi geldi — tuş o ekrana gider (numara ve durum adresle taşınır).
-         2026-09-28 (reisim: "rapor pasif … inspector pasife alabilir, pasif raporu görmez; aktif etme ve silme yalnız yönetici"): gönderilmemiş
+         2026-09-28 (reisim: "rapor pasif … denetçi pasife alabilir, pasif raporu görmez; aktif etme ve silme yalnız yönetici"): gönderilmemiş
          (Yeni) raporda "Pasife al"; gönderilen rapor onay akışında, pasife alınmaz */
-      /* 2026-09-29 (reisim: "oluşan rapor inspector tarafından da silinebilsin"): Yeni raporda Sil de (onay penceresiyle) */
+      /* 2026-09-29 (reisim: "oluşan rapor denetçi tarafından da silinebilsin"): Yeni raporda Sil de (onay penceresiyle) */
       return '<div class="a-eylem"><div class="a-eylem-tuslar">' + (r.durum === "taslak" && calisir(AKTIF) ? '<button class="a-ikon-tus" type="button" data-eylem="rapor-pasif-ac" data-no="' + r.no + '" aria-label="' + r.no + ' pasife al" title="Pasife al">' + ikon("ban") + "</button>" +
           '<button class="a-ikon-tus a-tus-sil" type="button" data-eylem="rapor-sil-ac" data-no="' + r.no + '" aria-label="' + r.no + ' sil" title="Sil">' + ikon("trash-2") + "</button>" : "") +
         MK.git({ hedef: "rapor", hash: "#/r/" + r.kod + "?no=" + r.no + "&durum=" + r.durum, ad: d[1], ikon: d[0], ne: "Saha rapor ekranı" }) + "</div></div>";
@@ -482,7 +482,7 @@
         satir("İSG-KATİP sözleşme ID", isg) +
         satir("Başlangıç tarihi", tno(p.tarih)) +
         satir("Bitiş tarihi", tno(p.bitTarih)) +
-        satir("Inspector", p.ekip.map(function (k) { return KISI[k].ad + ' <span class="a-alt-inline">' + KISI[k].brans + "</span>"; }).join(" · ")) +
+        satir("Denetçi", p.ekip.map(function (k) { return KISI[k].ad + ' <span class="a-alt-inline">' + KISI[k].brans + "</span>"; }).join(" · ")) +
         satir("Adres", kacis(p.adres) + ", " + p.ilce + " / " + p.il) +
         satir("Açıklama", p.aciklama ? kacis(p.aciklama) : "-") +
       "</dl>" +
@@ -534,7 +534,7 @@
       : d === "tamam" ? '<div class="a-adim-eylem"><div class="a-adim-tuslar">' + eylem + "</div></div>" + sahaListe(p)
       : "");
     /* Proje notları (5. tur, reisim: "hareketler kısmını kaldır"): hareket kaydı tutulmaya devam eder (p.gecmis, denetim
-       izi) ama plan içinde gösterilmez; burada yalnız notlar. Kim yazar/görür: plandaki inspector'lar + planlama ekibi;
+       izi) ama plan içinde gösterilmez; burada yalnız notlar. Kim yazar/görür: plandaki denetçiler + planlama ekibi;
        müşteri görmez; not silinmez (karar 27). */
     /* masraf ve izin plan içinde değil, kullanıcının kendi alanından: üst çubukta ad → Taleplerim (reisim 2026-09-28: "masraf yazmak için
        ilgili tuş planın içinde olmasın … her kullanıcı profilinden yapacak") */
@@ -684,7 +684,7 @@
   };
   X["ekipman-pasif"] = function (el) { var p = pl(el), e = SICIL[el.dataset.kod]; e.pasif = true; kaydet(p, simdi(), BEN, "Ekipman pasife alındı", e.kod); goster(false); MK.bildir(e.kod + " pasife alındı; rapor açılamaz. Etkinleştir ile geri alınır."); };
   X["ekipman-etkin"] = function (el) { var p = pl(el), e = SICIL[el.dataset.kod]; e.pasif = false; kaydet(p, simdi(), BEN, "Ekipman etkinleştirildi", e.kod); goster(false); MK.bildir(e.kod + " yeniden etkin."); };
-  /* rapor pasife alma (2026-09-28, T2): inspector gönderilmemiş raporu pasife alır, pasif rapor listesinden kalkar; aktif etme ve silme
+  /* rapor pasife alma (2026-09-28, T2): denetçi gönderilmemiş raporu pasife alır, pasif rapor listesinden kalkar; aktif etme ve silme
      teknik yöneticide (Onaylar → Pasif raporlar). Ortak kayda yazılır. */
   X["rapor-pasif-ac"] = function (el) {
     $("a-pencere").dataset.kip = "pasif"; $("a-pencere-baslik").textContent = "Raporu pasife al";
@@ -964,7 +964,7 @@
   /* pencere kapanınca adres plan içine döner (sunum çerçevesi #/plan/1/ekle ile açar) */
   $("a-ekle-pencere").addEventListener("close", function () { var r = rota(); if (r && r.ekle) history.replaceState(null, "", "#/plan/" + r.id); });
 
-  MK.kabuk({ modul: 13, kullanici: { bas: "MK", ad: "Mert Kaya", rol: "Inspector · Makine Mühendisi" } });
+  MK.kabuk({ modul: 13, kullanici: { bas: "MK", ad: "Mert Kaya", rol: "Denetçi · Makine Mühendisi" } });
   $("a-suzgec-kap").innerHTML = MK.suzgecHtml("l");   /* Planlar süzgeci de aynı üreticiden (kalıp 15) */
   MK.seciciCiz("l"); goster(false);
 })();

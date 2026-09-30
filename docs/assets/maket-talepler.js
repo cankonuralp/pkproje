@@ -2,7 +2,7 @@
    Kaynak: pkproje.md §9 otuzuncu tur (reisim: "Masraf formu ve personelin bireysel olarak isteyeceği şeyler sol panelde gözüksün masraf
    plana özel değil genel de olabilir sonuçta muhasebe modülü de denetçide gözükmeyeceği için talepler kısmı olsun denetçi izin talebi
    masraf formu ekleme ve ileride ekleyeceğimiz bir şey olursa buradan ekler").
-   Kullanıcı: Mert Kaya (inspector) — yalnız kendi talepleri. Talep türleri MV.TALEP_TURLERI (yenisi oraya eklenir):
+   Kullanıcı: Mert Kaya (denetçi) — yalnız kendi talepleri. Talep türleri MV.TALEP_TURLERI (yenisi oraya eklenir):
    · İzin talebi → firma yöneticisinin onayına (onay ekranı sonra; öneri: Personel'de) · bekliyor → onaylandı / reddedildi
    · Masraf formu → Muhasebe'de "Onay bekliyor" (plan içinden gönderilenle aynı kayıt, MV.GIDERLER); iş seçilmezse genel masraf
    Bekleyen talep geri çekilebilir. UYDURMA veri. */
@@ -181,6 +181,6 @@
     if (odakla && !W) { window.scrollTo(0, 0); var hh = document.querySelector("#a-icerik h1"); if (hh) hh.focus({ preventScroll: true }); }
   }
   MK.goster = goster;
-  MK.kabuk({ modul: 21, kullanici: { bas: "MK", ad: "Mert Kaya", rol: "Inspector" } });
+  MK.kabuk({ modul: 21, kullanici: { bas: "MK", ad: "Mert Kaya", rol: "Denetçi" } });
   goster(false);
 })();

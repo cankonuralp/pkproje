@@ -198,7 +198,7 @@
   /* ── TESİS SAYFASI ─────────────────────────────────────────────────────────────────────────────── */
   var ISG_SUTUN = function (t) {
     return [
-      { k: "kisi", baslik: "Inspector", kart: "ust", sira: 1, hucre: function (x) { var p = MV.kisi(x.k); return '<a class="a-ad-bag" href="personel.html#/p/' + p.id + '">' + kirp(p.ad) + "</a>"; } },
+      { k: "kisi", baslik: "Denetçi", kart: "ust", sira: 1, hucre: function (x) { var p = MV.kisi(x.k); return '<a class="a-ad-bag" href="personel.html#/p/' + p.id + '">' + kirp(p.ad) + "</a>"; } },
       { k: "no", baslik: "Sözleşme ID", kart: "govde", sira: 2, hucre: function (x) { return '<span class="a-kart-etiket">Sözleşme ID</span><span class="a-kod">' + x.no + "</span>"; } },
       { k: "onay", baslik: "Onay tarihi", kart: "govde", sira: 3, hucre: function (x) { return '<span class="a-kart-etiket">Onay tarihi</span>' + (x.onay ? MK.tarihYaz(x.onay) : '<span class="a-deger-yok">—</span>'); } },
       { k: "durum", baslik: "Açık plan için", kart: "rozet", sira: 1, hucre: function (x) {
@@ -283,7 +283,7 @@
         A("vno", "Vergi no", d.vno, { sinif: "a-girdi-sicil", ek: ' inputmode="numeric" maxlength="11"', ipucu: "Boşsa kayıt olur, müşteri sayfasında hatırlatılır." }) +
         A("eposta", "E-posta", d.eposta, { sinif: "a-girdi-eposta", genis: true, ek: ' type="email" inputmode="email" maxlength="120"',
           ipucu: W.id ? "Müşteri girişinin kullanıcı adı; faturalar da bu adrese." : "Kaydedince müşteri girişi bu adresle açılır; parola siz gönderince gider." }) +
-        /* 2026-09-27 (reisim): telefon müşteri kaydında; rapordaki firma bilgileri buradan gelir, inspector değiştirmez */
+        /* 2026-09-27 (reisim): telefon müşteri kaydında; rapordaki firma bilgileri buradan gelir, denetçi değiştirmez */
         A("tel", "Telefon", d.tel, { sinif: "a-girdi-sicil", ek: ' type="tel" inputmode="tel" maxlength="20"' }) +
         A("ilgili", "İlgili kişi", d.ilgili, { genis: true, ek: ' maxlength="80"', ipucu: "Ad ve görev." }) + "</div>";
     } else if (W.tur === "tesis") {

@@ -27,7 +27,7 @@
    "gecti": true
   },
   {
-   "ad": "meslek uyarısı: mesleği türe yetkili olmayan inspector raporu yazabilir, şerit uyarır",
+   "ad": "meslek uyarısı: mesleği türe yetkili olmayan denetçi raporu yazabilir, şerit uyarır",
    "gen": 1920,
    "sayfa": "maket/rapor.html",
    "hash": "#/r/ET-1009?no=KM-0926-801-aaaaa&durum=taslak",
@@ -580,7 +580,7 @@
    "gecti": true
   },
   {
-   "ad": "geri gönderilen raporda da Sil var (inspector siler; onay penceresi geçmişin de silineceğini söyler)",
+   "ad": "geri gönderilen raporda da Sil var (denetçi siler; onay penceresi geçmişin de silineceğini söyler)",
    "gen": 1920,
    "sayfa": "maket/rapor.html",
    "hash": "#/r/ZV-1007",

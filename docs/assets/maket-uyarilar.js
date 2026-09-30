@@ -3,7 +3,7 @@
    (eğitim tekrarı bitmeden uyarı), anayasa 1.3 (reisim demeden bildirim KURULMAZ: uyarı yalnız ekranda — bu liste, menü sayacı ve ilgili
    sayfalardaki şeritler; e-posta, SMS, anlık bildirim yok). Yalnız reisim'in istedikleri: KALİBRASYON BİTİŞİ ve EĞİTİM TEKRARI; ötekiler soru.
    Uyarı koşula bağlıdır: koşul kalkınca (kalibrasyon yenilenince, eğitim tekrarlanınca) kendiliğinden düşer; "okundu" yok (soru).
-   Kullanıcı: Ayşe Demir (firma yöneticisi, hepsini görür; inspector yalnız kendisininkini — rol × modül önerisi). UYDURMA veri. */
+   Kullanıcı: Ayşe Demir (firma yöneticisi, hepsini görür; denetçi yalnız kendisininkini — rol × modül önerisi). UYDURMA veri. */
 (function () {
   "use strict";
   var $ = MK.$, kacis = MK.kacis, ikon = MK.ikon, kirp = MK.kirp, rozet = MK.rozet, SZ = MK.SZ;

@@ -3,7 +3,7 @@
    §3.2 madde 3 (onay türün BRANŞINA göre ilgili yöneticiye gider), §4.9 (17020: kayıtlar ne zaman, hangi metot, hangi öge — gözden
    geçirme). Kullanıcı: Selin Yıldız (mekanik branş yöneticisi) — kuyruğunda yalnız mekanik raporlar; elektrik Can Öztürk'te.
    Ekranlar: kuyruk (#/) · onay ekranı (#/r/<no>: gözden geçirme özeti + PDF önizlemesi, Onayla / Geri gönder) · geri gönder penceresi
-   (#/r/<no>/geri; gerekçe zorunlu). Onaylanan rapor inspector'ın son imzasına gider; sıradaki rapor açılır.
+   (#/r/<no>/geri; gerekçe zorunlu). Onaylanan rapor denetçinin son imzasına gider; sıradaki rapor açılır.
    Tüm raporlar (#/tum, 2026-09-29, reisim: "herhangi bir süreçteki rapor imzalanıp tamamlanmış hariç teknik yönetici tarafından durumu
    değiştirilebilsin imzalanıp tamamlanan rapor revizeye gönderilebilsin"): branşın bütün raporları; tamamlanmamış raporda "Durumu değiştir",
    tamamlanan raporda "Revizeye gönder" (yeni sürüm R1, R2 …; önceki imzalı sürüm saklanır). UYDURMA veri. */
@@ -14,7 +14,7 @@
      vekil sekmesi kalktı. Her yönetici yalnız kendi branşını görür; "Makette bakış" seçimi kimin ne gördüğünü gösterir (uygulamada yok):
      mekanik yönetici Selin Yıldız (#/…), elektrik yönetici Can Öztürk (#/…?brans=e). Rapor ekranında bakış raporun branşından. */
   var BAKIS = "m", BEN = "sy", BENIM = "m", BRANS = "m";
-  var YONETICI = { m: { k: "sy", rol: "Mekanik yönetici · Inspector" }, e: { k: "co", rol: "Elektrik yönetici" } };
+  var YONETICI = { m: { k: "sy", rol: "Mekanik yönetici · Denetçi" }, e: { k: "co", rol: "Elektrik yönetici" } };
   var ek = function () { return BAKIS === "e" ? "?brans=e" : ""; };
   function bakisKur(b) {
     BAKIS = BRANS = BENIM = b; BEN = YONETICI[b].k; MK.BEN = BEN;
@@ -24,7 +24,7 @@
   }
   var brans = function (r) { return MV.tur(MV.ekipman(r.kod).tur).b; };
   var kuyruk = function () { return MV.RAPORLAR.filter(function (r) { return r.durum === "onayda" && brans(r) === BRANS; }).sort(function (a, b) { return a.gonderildi < b.gonderildi ? 1 : -1; }); };   /* en yeni üstte (reisim 2026-09-26) */
-  /* pasif raporlar (2026-09-28, T2; reisim: "inspector pasife alabilir … aktif etme ve silme yalnız yönetici"): branşın pasif raporları */
+  /* pasif raporlar (2026-09-28, T2; reisim: "denetçi pasife alabilir … aktif etme ve silme yalnız yönetici"): branşın pasif raporları */
   var pasifler = function () { return MV.RAPORLAR.filter(function (r) { return r.pasif && brans(r) === BENIM; }).sort(function (a, b) { return a.pasifZaman < b.pasifZaman ? 1 : -1; }); };
   /* 190 (2026-09-29): Tüm raporlar bakıştaki yöneticinin branşının (#/tum, elektrik #/tum?brans=e) */
   var tumu = function () { return MV.RAPORLAR.filter(function (r) { return !r.pasif && brans(r) === BRANS; }); };
@@ -40,7 +40,7 @@
       { k: "eski", ad: "24 saatten eski", test: function (r) { return saatFarki(r.gonderildi) >= 24; } }
     ],
     seciciler: [
-      { k: "kisi", ad: "Inspector", secenek: function () {
+      { k: "kisi", ad: "Denetçi", secenek: function () {
         var l = kuyruk().map(function (r) { return r.kisi; }).filter(function (x, i, a) { return a.indexOf(x) === i; });
         return [["tumu", "Tümü"]].concat(l.map(function (k) { return [k, MV.kisi(k).ad]; }));
       }, gecer: function (r, v) { return v === "tumu" || r.kisi === v; } },
@@ -54,14 +54,14 @@
   var SUTUN = [
     { k: "no", baslik: "Rapor no", kart: "ust", sira: 1, hucre: function (r) { var ts = MV.tesis(r.tesis); return '<a class="a-no" href="#/r/' + r.no + '">' + r.no + "</a>" + kirp(MV.musteri(ts.m).kisa + " / " + ts.ad, "a-alt-satir"); } },
     { k: "ekipman", baslik: "Ekipman", kart: "govde", sira: 2, hucre: function (r) { var e = MV.ekipman(r.kod); return '<span class="a-hucre-satir"><span class="a-kod">' + e.kod + "</span>" + kirp(MV.tur(e.tur).ad) + "</span>"; } },
-    { k: "kisi", baslik: "Inspector", kart: "govde", sira: 3, hucre: function (r) { return '<span class="a-kart-etiket">Inspector</span>' + kirp(MV.kisi(r.kisi).ad); } },
+    { k: "kisi", baslik: "Denetçi", kart: "govde", sira: 3, hucre: function (r) { return '<span class="a-kart-etiket">Denetçi</span>' + kirp(MV.kisi(r.kisi).ad); } },
     { k: "gonderildi", baslik: "Gönderildi", kart: "govde", sira: 4, hucre: function (r) {
       var h = saatFarki(r.gonderildi);
       return '<span class="a-kart-etiket">Gönderildi</span><span><span class="a-tarih-gun">' + MK.zamanYaz(r.gonderildi) + '</span><span class="' + (h >= 24 ? "a-uyari-metin" : "a-tarih-saat") + '">' + bekleme(r.gonderildi) + " bekliyor</span></span>";
     } },
     { k: "sonuc", baslik: "Sonuç", kart: "rozet", sira: 1, hucre: function (r) { var s = MV.sonucAd(r); return rozet(s === "Uygun" ? { ad: "Uygun", rozet: "a-rozet-tamam" } : { ad: s, rozet: /^(Kusurlu|Ağır)/.test(s) ? "a-rozet-red" : "a-rozet-bekliyor" }); } }
   ];
-  /* 192 (2026-09-29): inspector'ın revize istekleri — seçili branşın tamamlanan raporları */
+  /* 192 (2026-09-29): denetçinin revize istekleri — seçili branşın tamamlanan raporları */
   var istekler = function () { return MV.RAPORLAR.filter(function (r) { return r.revizeIstek && r.durum === "imzali" && brans(r) === BRANS; }).sort(function (a, b) { return a.revizeIstek.zaman < b.revizeIstek.zaman ? 1 : -1; }); };
   var istekAdres = function () { return "#/istekler" + ek(); };
   function sekmeler(gor) {   /* gor: "kuyruk" · "tum" · "istek" · "pasif" */
@@ -99,7 +99,7 @@
     sekmeler("kuyruk");
     MK.listeCiz({ on: "o", kayitlar: kuyruk(), sayacId: "a-sayac", listeId: "a-liste",
       sirala: function (l) { return l.slice().sort(function (a, b) { return a.gonderildi < b.gonderildi ? 1 : -1; }); },
-      bosVeri: { ikon: "circle-check", baslik: "Kuyruk boş", metin: "Onayınızı bekleyen rapor yok. Inspector'lar onaya gönderdikçe burada en eskisi üstte sıralanır." },
+      bosVeri: { ikon: "circle-check", baslik: "Kuyruk boş", metin: "Onayınızı bekleyen rapor yok. Denetçiler onaya gönderdikçe burada en eskisi üstte sıralanır." },
       tablo: { baslik: "Onay kuyruğu", sinif: "a-tablo-onay", sutunlar: SUTUN, href: function (r) { return "#/r/" + r.no; } } });
     $("a-sayfa").innerHTML = "";
   }
@@ -115,7 +115,7 @@
     seciciler: [
       { k: "durum", ad: "Durum", secenek: function () { return [["tumu", "Tümü"]].concat(DURUMLAR.map(function (d) { return [d, durumAd(d)]; })); },
         gecer: function (r, v) { return v === "tumu" || r.durum === v; } },
-      { k: "kisi", ad: "Inspector", secenek: function () {
+      { k: "kisi", ad: "Denetçi", secenek: function () {
         var l = tumu().map(function (r) { return r.kisi; }).filter(function (x, i, a) { return a.indexOf(x) === i; });
         return [["tumu", "Tümü"]].concat(l.map(function (k) { return [k, MV.kisi(k).ad]; }));
       }, gecer: function (r, v) { return v === "tumu" || r.kisi === v; } }
@@ -148,13 +148,13 @@
       ts.length ? [true, ts.length + " test değeri · hepsi sınır içinde"] : null,
       [!gecti.length, b.cihaz.length + " ölçüm cihazı" + (gecti.length ? " · kalibrasyonu geçmiş: " + gecti.map(function (v) { return v.seri; }).join(", ") : " · kalibrasyonu geçerli")],
       [true, "2 fotoğraf"],
-      /* V4 (2026-09-29): önceki kontrolden devreden hafif kusurlar ve inspector'ın mesleği — ikisi de uyarı, engel değil */
+      /* V4 (2026-09-29): önceki kontrolden devreden hafif kusurlar ve denetçinin mesleği — ikisi de uyarı, engel değil */
       (function () {
         var dv = MV.devredenKusurlar(r.kod, r.olustu); if (!dv.length) return null;
         var d = r.devir || {}, gm = dv.filter(function (x) { return d[x.id] === "devam"; }).length, gd = dv.filter(function (x) { return d[x.id] === "giderildi"; }).length;
         return [!gm && gd === dv.length, "Önceki kontrolden " + dv.length + (MV.kusurSinifli(t) ? " hafif kusur · " : " kusur · ") + [gd ? gd + " giderildi" : "", gm ? gm + " giderilmedi" : "", dv.length - gd - gm ? (dv.length - gd - gm) + " işaretlenmedi" : ""].filter(Boolean).join(" · ")];
       })(),
-      [MV.meslekYetkili(r.kisi, t), "Inspector: " + MV.kisi(r.kisi).ad + " · " + MV.meslekAd(MV.kisi(r.kisi)) + (MV.meslekYetkili(r.kisi, t) ? "" : " · bu türe yetkili meslekler arasında değil")],
+      [MV.meslekYetkili(r.kisi, t), "Denetçi: " + MV.kisi(r.kisi).ad + " · " + MV.meslekAd(MV.kisi(r.kisi)) + (MV.meslekYetkili(r.kisi, t) ? "" : " · bu türe yetkili meslekler arasında değil")],
       [true, "Sonuç ve kanaat: " + (/^Kusurlu|Ağır/.test(s) && MV.kusurSinifli(t) ? "giderilene kadar kullanılamaz" : "kullanılabilir")]
     ].filter(Boolean);
   }
@@ -194,14 +194,14 @@
       (r.geri && r.durum === "taslak" ? '<div class="a-uyari-serit">' + MK.serit("uyari", "undo-2", "<b>" + (rv && rv.zaman === r.geri.zaman ? "Revizeye gönderildi (" + rv.ad + ")" : "Geri gönderildi") + "</b> · " +
         kacis(MV.kisi(r.geri.kim).ad) + " · " + MK.zamanYaz(r.geri.zaman) + ": “" + kacis(r.geri.gerekce) + "”") + "</div>" : "") +
       '<section class="a-bolum" aria-labelledby="a-b-pdf"><div class="a-alt-bas"><h2 class="a-alt-baslik" id="a-b-pdf">' + (r.imzaDosya ? "İmzalı PDF" : "Rapor (PDF önizlemesi)") + '</h2><span class="a-sayac">' + (r.imza ? "imzalı" : "imzasız") + "</span></div>" +
-        (r.arsiv ? '<p class="a-bos-satir">Dosya arşivde.</p>' : r.durum === "taslak" ? '<p class="a-bos-satir">Yeni: rapor inspector\'da, PDF yok.</p>' : MK.dosyaOnizle(r.imzaDosya, MB.belge(t, MV.raporBelge(r)))) + "</section>";
+        (r.arsiv ? '<p class="a-bos-satir">Dosya arşivde.</p>' : r.durum === "taslak" ? '<p class="a-bos-satir">Yeni: rapor denetçi\'da, PDF yok.</p>' : MK.dosyaOnizle(r.imzaDosya, MB.belge(t, MV.raporBelge(r)))) + "</section>";
   }
   var sonraki = function (r) { var q = kuyruk(), i = q.indexOf(r); return q[i + 1] || q[0] || null; };
 
   /* ── PENCERELER: geri gönder · durumu değiştir · revizeye gönder (W.tip) ──────────────────────────────────── */
   var W = null;
   /* durumu değiştir: tamamlanmamış rapor Yeni / onayda / imza bekliyor durumlarından birine alınır; "Tamamlandı"ya yalnız imzayla geçilir.
-     Yeni'ye alınan rapor inspector'a döner: gerekçe geri gönderimdeki gibi zorunlu (inspector neyi düzelteceğini bilmeli); ötekilerde isteğe bağlı */
+     Yeni'ye alınan rapor denetçiye döner: gerekçe geri gönderimdeki gibi zorunlu (denetçi neyi düzelteceğini bilmeli); ötekilerde isteğe bağlı */
   var HEDEF = ["taslak", "onayda", "onaylandi"];
   var gerekceZorunlu = function () { return W.tip !== "istekRed" && (W.tip !== "durum" || W.hedef === "taslak"); };
   function pencereCiz(odak) {
@@ -211,7 +211,7 @@
       (W.tip === "durum" ? '<div class="a-alan-grup a-alan-genis"><p class="a-etiket">Şu an: ' + kacis(MV.raporDurum(r).ad) + "</p>" + HEDEF.filter(function (d) { return d !== r.durum; }).map(function (d) {
           return '<label class="a-onay-kutusu"><input type="radio" name="w-hedef" data-hedef value="' + d + '"' + (W.hedef === d ? " checked" : "") + "><span>" + kacis(durumAd(d)) + "</span></label>"; }).join("") +
           (W.hedefHata ? '<p class="a-ipucu a-ipucu-uyari" id="w-hedef-ipucu">' + W.hedefHata + "</p>" : "") + "</div>" : "") +
-      (W.tip === "revize" ? '<p class="a-pencere-metin">Rapor ' + r.no + "-R" + rv + " olarak inspector'a döner; tamamlanan sürüm ve imzalı PDF'i saklanır. Rapor yeniden onay ve imzadan geçer.</p>" : "") +
+      (W.tip === "revize" ? '<p class="a-pencere-metin">Rapor ' + r.no + "-R" + rv + " olarak denetçiye döner; tamamlanan sürüm ve imzalı PDF'i saklanır. Rapor yeniden onay ve imzadan geçer.</p>" : "") +
       '<div class="a-alan-grup"><label class="a-etiket" for="w-gerekce">Gerekçe' + (gerekceZorunlu() ? ' <span class="a-zorunlu">zorunlu</span>' : "") + '</label><textarea class="a-alan" id="w-gerekce" data-alan="gerekce" maxlength="400"' + (W.hata ? ' aria-invalid="true"' : "") +
         ' aria-describedby="w-gerekce-ipucu" placeholder="' + (W.tip === "revize" ? "Raporda neyin düzeltileceği" : "Hangi bölümde ne eksik ya da yanlış") + '">' + kacis(W.gerekce) + "</textarea>" +
         '<p class="a-ipucu' + (W.hata ? " a-ipucu-uyari" : "") + '" id="w-gerekce-ipucu">' + (W.hata || "") + "</p></div>";
@@ -222,7 +222,7 @@
     if (odak) { var el = typeof odak === "string" && odak.charAt(0) !== "#" && odak.charAt(0) !== "[" ? $(odak) : document.querySelector("#a-pencere " + odak); if (el) el.focus(); }
   }
   function pencereAc(r, tip) {
-    W = { r: r, tip: tip || "geri", gerekce: tip === "revize" && r.revizeIstek ? r.revizeIstek.gerekce : "", hata: "", hedef: null, hedefHata: "" }; pencereCiz();   /* revizede inspector'ın istek gerekçesi başlangıç */ if (!$("a-pencere").open) $("a-pencere").showModal();
+    W = { r: r, tip: tip || "geri", gerekce: tip === "revize" && r.revizeIstek ? r.revizeIstek.gerekce : "", hata: "", hedef: null, hedefHata: "" }; pencereCiz();   /* revizede denetçinin istek gerekçesi başlangıç */ if (!$("a-pencere").open) $("a-pencere").showModal();
     var ilk = document.querySelector("#a-pencere [data-hedef]") || $("w-gerekce"); ilk.focus();
   }
   /* durum değişikliği ve revize kayıt altında (r.durumGecmis: kim, ne zaman, eskisi, yenisi, gerekçe); ekranda geçmiş listesi yok (§11 98) */
@@ -250,7 +250,7 @@
   function goster(odakla) {
     var r = rota(), rp = r.no ? MV.rapor(r.no) : null;
     $("a-liste-gorunum").hidden = r.v !== "liste"; $("a-nesne").hidden = r.v === "liste";
-    if (r.tum && TUM_BRANS !== BRANS) { MK.suzgecSifirla("t"); TUM_BRANS = BRANS; }   /* branş değişince süzgeç (inspector, sayfa) baştan */
+    if (r.tum && TUM_BRANS !== BRANS) { MK.suzgecSifirla("t"); TUM_BRANS = BRANS; }   /* branş değişince süzgeç (denetçi, sayfa) baştan */
     if (r.pasif) pasifCiz(); else if (r.istek) istekCiz(); else if (r.tum) { $("a-suzgec-kap").innerHTML = MK.suzgecHtml("t"); MK.suzgecKur("t"); }
     else if (r.v === "liste") { $("a-suzgec-kap").innerHTML = MK.suzgecHtml("o"); MK.suzgecKur("o"); } else onayCiz(rp);
     document.title = (r.v === "rapor" ? (rp ? rp.no + " · onay" : "Rapor bulunamadı") : r.tum ? "Tüm raporlar · Onaylar" : r.istek ? "Revize istekleri · Onaylar" : "Onaylar") + " · probata maket";
@@ -292,12 +292,12 @@
   X["revize-ac"] = function (el) { pencereAc(MV.rapor(el.dataset.no), "revize"); };
   X["durum-kaydet"] = function () {
     var r = W.r, g = W.gerekce.trim(), z = MK.simdi(), eski = MV.raporDurum(r).ad;
-    W.hedefHata = W.hedef ? "" : "Yeni durumu seçin."; W.hata = gerekceZorunlu() && g.length < 10 ? "Yeni'ye alınan rapor inspector'a döner: gerekçe en az 10 karakter olmalı." : "";
+    W.hedefHata = W.hedef ? "" : "Yeni durumu seçin."; W.hata = gerekceZorunlu() && g.length < 10 ? "Yeni'ye alınan rapor denetçiye döner: gerekçe en az 10 karakter olmalı." : "";
     if (W.hedefHata || W.hata) { pencereCiz(W.hedefHata ? "[data-hedef]" : "w-gerekce"); return; }
     gecmisYaz(r, W.hedef, g, z);
     if (W.hedef === "taslak") inspectoraDon(r, g, z);
     else {
-      /* geri gönderilmiş rapor inspector düzeltmeden ileri alınırsa geri gönderim yine kayıtta kalır (performans: geri gönderilen) */
+      /* geri gönderilmiş rapor denetçi düzeltmeden ileri alınırsa geri gönderim yine kayıtta kalır (performans: geri gönderilen) */
       if (r.geri) { r.duzeltmeler = (r.duzeltmeler || []).concat([{ geri: r.geri.zaman, gonderim: z }]); r.geri = null; }
       if (!r.gonderildi) r.gonderildi = z; if (!r.ilkGonderim) r.ilkGonderim = r.gonderildi;
       r.imzaGonderildi = null; r.imza = null;
@@ -307,18 +307,18 @@
     $("a-pencere").close(); yenidenCiz(r.no);
     MK.bildir(r.no + ": " + eski + " → " + MV.raporDurum(r).ad + ".");
   };
-  /* imzalı (tamamlanan) rapor revizeye: yeni sürüm (R1, R2 …) Yeni olarak inspector'a döner; tamamlanan sürüm ve imzalı PDF'i sürümde saklanır */
+  /* imzalı (tamamlanan) rapor revizeye: yeni sürüm (R1, R2 …) Yeni olarak denetçiye döner; tamamlanan sürüm ve imzalı PDF'i sürümde saklanır */
   X["arsiv-geri"] = function (el) {   /* 201: arşivden geri getir — dosya sisteme döner, müşteride yeniden görünür */
     var r = MV.rapor(el.dataset.no); r.arsiv = null; yenidenCiz(r.no); MK.bildir(r.no + " arşivden geri getirildi; müşteri portalında yeniden görünür.");
   };
   X["istek-red-ac"] = function (el) { pencereAc(MV.rapor(el.dataset.no), "istekRed"); };
-  X["istek-reddet"] = function () {   /* gerekçe isteğe bağlı; inspector raporunda görür */
+  X["istek-reddet"] = function () {   /* gerekçe isteğe bağlı; denetçi raporunda görür */
     var r = W.r; r.revizeRed = { kim: BEN, zaman: MK.simdi(), gerekce: W.gerekce.trim() }; r.revizeIstek = null;
     $("a-pencere").close(); yenidenCiz(r.no); MK.bildir(r.no + " revize isteği reddedildi.");
   };
   X["revize-gonder"] = function () {
     var r = W.r, g = W.gerekce.trim(), z = MK.simdi();
-    if (g.length < 10) { W.hata = "Gerekçe en az 10 karakter olmalı: inspector neyi düzelteceğini bilmeli."; pencereCiz("w-gerekce"); return; }
+    if (g.length < 10) { W.hata = "Gerekçe en az 10 karakter olmalı: denetçi neyi düzelteceğini bilmeli."; pencereCiz("w-gerekce"); return; }
     r.revizyonlar = r.revizyonlar || [];
     r.revizyonlar.unshift({ ad: "R" + (r.revizyonlar.length + 1), zaman: z, kim: BEN, gerekce: g, onceki: { onay: r.onay, imza: r.imza, imzaDosya: r.imzaDosya || null, sonuc: r.sonuc } });
     gecmisYaz(r, "taslak", g, z); inspectoraDon(r, g, z); r.imzaDosya = null; r.revizeIstek = null; r.revizeRed = null;
@@ -326,7 +326,7 @@
     MK.bildir(r.no + "-" + r.revizyonlar[0].ad + " açıldı; " + MV.kisi(r.kisi).ad + " raporun üstünde gerekçeyi görür. Tamamlanan sürüm saklandı.");
   };
   X["geri-gonder"] = function () {
-    if (W.gerekce.trim().length < 10) { W.hata = "Gerekçe en az 10 karakter olmalı: inspector neyi düzelteceğini bilmeli."; pencereCiz("w-gerekce"); return; }
+    if (W.gerekce.trim().length < 10) { W.hata = "Gerekçe en az 10 karakter olmalı: denetçi neyi düzelteceğini bilmeli."; pencereCiz("w-gerekce"); return; }
     var r = W.r, s = sonraki(r);
     if (!r.ilkGonderim) r.ilkGonderim = r.gonderildi;   /* ilk gönderim korunur (performans: yazım süresi) */
     r.durum = "taslak"; r.geri = { kim: BEN, zaman: MK.simdi(), gerekce: W.gerekce.trim() }; r.gonderildi = null;
@@ -341,6 +341,6 @@
   };
   $("a-pencere").addEventListener("close", function () { if ($("a-pencere").open) return; W = null; var r = rota(); if (r.pencere) history.replaceState(null, "", "#/r/" + r.no); });
 
-  MK.kabuk({ modul: 15, kullanici: { bas: "SY", ad: "Selin Yıldız", rol: "Mekanik yönetici · Inspector" } });
+  MK.kabuk({ modul: 15, kullanici: { bas: "SY", ad: "Selin Yıldız", rol: "Mekanik yönetici · Denetçi" } });
   goster(false);
 })();

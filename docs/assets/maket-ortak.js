@@ -105,7 +105,7 @@
       return '<span class="a-balon ' + r[1] + '" title="' + t[r[0]] + " " + t.ad[r[0]] + '">' + t[r[0]] + '<span class="a-gizli"> ' + t.ad[r[0]] + "</span></span>"; }).join("");
   }
   /* N6 (2026-09-30, reisim: "Günlük süre takibi … yukarıda satır gibi gözüksün açılıp kapatılabilsin sürekli ekranda olmasın pop-up gibi olsun
-     … her inspectorünki kendisi için hesaplansın"): üst çubukta giriş yapan denetçinin günlük süresi tek satır; basınca pencere (normal ve
+     … her denetçininki kendisi için hesaplansın"): üst çubukta giriş yapan denetçinin günlük süresi tek satır; basınca pencere (normal ve
      mesai çubukları); mesai takibi kapalıysa ya da kişi denetçi değilse yok. Veri değişince yenilenir (MK.takipCiz ile). */
   MK.mesaiUstCiz = function () {
     var k = $("a-mesai-ust-kap"); if (!k || typeof MV === "undefined" || !MV.gunlukSure) return;

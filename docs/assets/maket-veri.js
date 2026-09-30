@@ -48,8 +48,8 @@
 
   /* Roller (pkproje.md §2; "firma yöneticisi" taslakta varsayım). Bir kişinin birden çok rolü olabilir; ekran yetkisi birleşim. */
   MV.ROLLER = [
-    { k: "planlama", ad: "Planlama ekibi", kisa: "Planlama", acik: "Plan açar, inspector atar; müşteri, tesis ve teklifleri yürütür." },
-    { k: "inspector", ad: "Inspector", kisa: "Inspector", acik: "Kendisine atanan planı kabul eder, sahada rapor hazırlar, son imzayı atar." },
+    { k: "planlama", ad: "Planlama ekibi", kisa: "Planlama", acik: "Plan açar, denetçi atar; müşteri, tesis ve teklifleri yürütür." },
+    { k: "inspector", ad: "Denetçi", kisa: "Denetçi", acik: "Kendisine atanan planı kabul eder, sahada rapor hazırlar, son imzayı atar." },
     { k: "mekyon", ad: "Mekanik yönetici", kisa: "Mek. yönetici", acik: "Mekanik branş raporlarını onaylar ya da gerekçeyle geri gönderir." },
     { k: "elkyon", ad: "Elektrik yönetici", kisa: "Elk. yönetici", acik: "Elektrik branş raporlarını onaylar ya da gerekçeyle geri gönderir." },
     { k: "yonetici", ad: "Firma yöneticisi", kisa: "Firma yön.", acik: "Personel hesapları, rol yetkileri ve firma ayarları; hareket kaydını görür." },
@@ -61,7 +61,7 @@
   /* Rol × modül görünürlüğü — başlangıç düzeni (reisim 2026-09-25, 32: "başlangıç olarak uygun ama admin istediği gibi rollerin
      yetkilerini değiştirebilmeli" → firma yöneticisi Personel › Rol yetkileri'nde değiştirir; MATRIS_ONERI "önerilen düzene dön" içindir).
      Düzey: yaz (görür ve değiştirir) · gor (görür) · brans (yalnız kendi branşı) · kendi (yalnız kendi kayıtları) · yok.
-     Sıra: planlama · inspector · mekyon · elkyon · yonetici · muhasebe. "hareket" = Hareket kaydı (denetim izi; karar 30: yöneticiye). */
+     Sıra: planlama · denetçi · mekyon · elkyon · yonetici · muhasebe. "hareket" = Hareket kaydı (denetim izi; karar 30: yöneticiye). */
   MV.MATRIS = {
     13: ["yaz", "kendi", "gor", "gor", "yaz", "yok"], 14: ["gor", "kendi", "brans", "brans", "gor", "yok"], 15: ["yok", "yok", "brans", "brans", "gor", "yok"],
     20: ["gor", "kendi", "gor", "gor", "gor", "yok"], 3: ["yaz", "gor", "gor", "gor", "yaz", "gor"], 11: ["yaz", "yok", "gor", "gor", "yaz", "gor"],
@@ -131,7 +131,7 @@
   /* mobil imza telefonu (195, 2026-09-29): isteğe bağlı; UYDURMA numara (0500 000 00 …), yalnız mobil imza isteği için */
   ["mk", "ea", "sy", "co", "ok", "ta", "hp"].forEach(function (k, i) { var p = MV.kisi(k); if (p) p.imzaTel = "0500 000 00 " + ("0" + (i + 1)).slice(-2); });
   /* ── MAAŞ VE BORDRO (2026-09-27, reisim: "personel ekranında maaşlar ve bordrolarda olacak oraya yüklenebilecek bordrolar") — her ay kişi
-     başına bordro yüklenir (PDF) ve tutarları yazılır (brüt, net, işverene maliyet); kişinin maliyeti son bordrodan. İş kârlılığında inspector
+     başına bordro yüklenir (PDF) ve tutarları yazılır (brüt, net, işverene maliyet); kişinin maliyeti son bordrodan. İş kârlılığında denetçi
      payı = günlük maliyet × işte çalıştığı gün; günlük = aylık işverene maliyet ÷ 22 iş günü (VARSAYIM). Tutarlar UYDURMA (meslek + kıdem);
      işverene maliyet ≈ brüt × 1,2275 (SGK işveren + işsizlik payı, teşvik hariç; VARSAYIM). */
   var BRUT = { "mak-muh": 90000, "elk-muh": 90000, "ee-muh": 104000, "ins-muh": 88000, "tog-elk": 86000, "mak-tek": 66000, "mak-ytek": 70000, "elk-tek": 64000, teknisyen: 52000, diger: 72000 };
@@ -904,7 +904,7 @@
     return k < 0 ? "gecti" : k <= MV.esik("kal") ? "yakin" : "gecerli";
   };
 
-  /* sonraki kontrol = son imzalı kontrol + türün periyodu (inspector gerekçeyle değiştirebilir, §4.7) */
+  /* sonraki kontrol = son imzalı kontrol + türün periyodu (denetçi gerekçeyle değiştirebilir, §4.7) */
   MV.sonrakiKontrol = function (e) {
     if (!e.onceki) return null;
     var d = new Date(e.onceki.tarih + "T12:00:00"); d.setMonth(d.getMonth() + MV.tur(e.tur).periyot);
@@ -912,7 +912,7 @@
   };
   MV.meslekAd = function (p) { return p.meslek === "diger" ? p.meslekMetin : MV.meslek(p.meslek).ad; };
   MV.bas = function (ad) { return ad.split(" ").map(function (x) { return x.charAt(0); }).join("").slice(0, 2).toLocaleUpperCase("tr"); };
-  /* yetkili kişi (inspector) olabilir mi: meslek en az bir gruba izin veriyor (teknisyen/diğer değil) */
+  /* yetkili kişi (denetçi) olabilir mi: meslek en az bir gruba izin veriyor (teknisyen/diğer değil) */
   MV.yetkiliOlabilir = function (p) { return MV.meslek(p.meslek).g.length > 0; };
   /* eksik bilgi — UYARI, engel değil (reisim 2026-09-25, 39: "sadece uyarsın, ama yapılabilir olsun"; 38: grup yetkilendirmesi
      gibi teknik ayrıntı yok). Personel (M1) bunu kullanır; aşağıdaki kabulEksik M6 Plan aç'ın eski kuralı, sırası gelince buna döner. */
@@ -1058,7 +1058,7 @@
   };
   /* DEVREDEN HAFİF KUSURLAR (2026-09-29, V4; §3.2 öneri maddesi → karar, §9 otuz altıncı tur 187): ekipmanın bu rapordan önceki son imzalı
      raporu "Hafif kusurlu"ysa kusurları sonraki kontrolde kendiliğinden listelenir (Ek-III 1.9.1: hafif kusur bir sonraki periyodik kontrole
-     kadar giderilir); inspector her biri için "Giderildi" / "Giderilmedi" der. Yalnız kusur sınıflı (Bakanlık formatı yürürlükte) türde. */
+     kadar giderilir); denetçi her biri için "Giderildi" / "Giderilmedi" der. Yalnız kusur sınıflı (Bakanlık formatı yürürlükte) türde. */
   /* 199 (2026-09-29): kusur sınıfı olmayan türde önceki rapor "Kusurlu"ysa onun kusuru da listelenir (sinif: "Kusurlu"); sınıflı türde yalnız hafif */
   MV.devredenKusurlar = function (kod, once) {
     var e = MV.ekipman(kod), t = e && MV.tur(e.tur); if (!t) return [];
@@ -1069,7 +1069,7 @@
     var ok = MV.ornekKusur(t, sinifli);
     return [{ id: r.no + "-1", kriter: ok.kriter, aciklama: ok.aciklama, rapor: r.no, tarih: r.olustu.slice(0, 10), sinif: sinifli ? "Hafif kusur" : "Uygun değil" }];
   };
-  /* inspector'ın mesleği türün yetkili meslekleri arasında mı (§3.2 öneri 2c → karar: uyarı, engel değil) */
+  /* denetçinin mesleği türün yetkili meslekleri arasında mı (§3.2 öneri 2c → karar: uyarı, engel değil) */
   MV.meslekYetkili = function (kisi, t) { var p = MV.kisi(kisi), m = p && MV.meslek(p.meslek); return !!m && (t.g === "ekdisi" || m.g.indexOf(t.g) >= 0); };
   MV.acikUygunsuz = function (mid) { return MV.uygunsuzluklar(mid).filter(function (u) { return u.durum === "acik"; }).length; };
   /* ── TEKLİFLER (modül 11; M12, faz 2, 2026-09-24) — müşteri, tesis, kalem (ekipman türü × adet × birim fiyat), durum (§3.1).
@@ -1216,8 +1216,8 @@
     ["2026-09-23", "diger", 350, null, null, "Kargo, cihaz kalibrasyona gönderildi", 1]].map(function (x) {
     return { tarih: x[0], tur: x[1], tutar: x[2], oran: MV.giderTur(x[1]).kdv, is: x[3], kisi: x[4], aciklama: x[5], belge: x[6] ? "fis-" + x[0].replace(/-/g, "") + "-" + x[1] + ".pdf" : "", kaydeden: "ad" };
   });
-  /* 2026-09-27 (reisim: "inspector masraf formu ekleyebilsin … muhasebe tarafında onaylanır ödenince ödendi olur, ekstradan muhasebe el ile de
-     masraf ekleyebilir"): kaynak "form" (inspector plan içinden gönderir) ya da "muhasebe" (elle); durum bekliyor → onaylandi → odendi, ya da red */
+  /* 2026-09-27 (reisim: "denetçi masraf formu ekleyebilsin … muhasebe tarafında onaylanır ödenince ödendi olur, ekstradan muhasebe el ile de
+     masraf ekleyebilir"): kaynak "form" (denetçi plan içinden gönderir) ya da "muhasebe" (elle); durum bekliyor → onaylandi → odendi, ya da red */
   MV.GIDER_DURUM = { bekliyor: { ad: "Onay bekliyor", rozet: "a-rozet-bekliyor" }, onaylandi: { ad: "Onaylandı", rozet: "a-rozet-kabul" },
     odendi: { ad: "Ödendi", rozet: "a-rozet-tamam" }, red: { ad: "Reddedildi", rozet: "a-rozet-red" } };
   /* örnek: personelli giderler masraf formundan; eylülün son dördü onay / ödeme sürecinde */
@@ -1256,11 +1256,11 @@
   MV.gider = function (no) { return MV.GIDERLER.filter(function (g) { return g.no === no; })[0]; };
   MV.isGiderleri = function (no) { return MV.GIDERLER.filter(function (g) { return g.is === no; }); };
 
-  /* ── KÂRLILIK (2026-09-27, reisim: "plan yapıldığında inspector maaşı yakıt araç kira bedeli ofis giderleri vergiler vb tüm giderler etki
+  /* ── KÂRLILIK (2026-09-27, reisim: "plan yapıldığında denetçi maaşı yakıt araç kira bedeli ofis giderleri vergiler vb tüm giderler etki
      edecek şekilde kazanç ve gider hesaplanarak kar hesaplanacak kar yüzdesi yazacak iş başına"; iskelet, dağıtım yöntemi VARSAYIM) —
-     iş kârı = gelir (raporlanan, KDV hariç) − işe bağlı masraflar (KDV hariç, reddedilen hariç) − inspector maliyeti (günlük maliyet × işte
-     rapor yazdığı gün) − genel gider payı. Genel gider = ayın sabit giderleri + işe bağlı olmayan masrafları + inspector olmayan personelin
-     maliyeti; inspector-gününe eşit dağıtılır (÷ inspector sayısı ÷ 22 iş günü). Sabit giderler firma ayarı; tutarlar UYDURMA. */
+     iş kârı = gelir (raporlanan, KDV hariç) − işe bağlı masraflar (KDV hariç, reddedilen hariç) − denetçi maliyeti (günlük maliyet × işte
+     rapor yazdığı gün) − genel gider payı. Genel gider = ayın sabit giderleri + işe bağlı olmayan masrafları + denetçi olmayan personelin
+     maliyeti; denetçi-gününe eşit dağıtılır (÷ denetçi sayısı ÷ 22 iş günü). Sabit giderler firma ayarı; tutarlar UYDURMA. */
   MV.SABIT_GIDER = [{ k: "arac", ad: "Araç kira", aylik: 42000, not: "2 araç" }, { k: "ofis", ad: "Ofis kirası", aylik: 28000, not: "" },
     { k: "ofisgider", ad: "Ofis giderleri", aylik: 7500, not: "elektrik, su, internet" }, { k: "vergi", ad: "Vergi ve harçlar", aylik: 12000, not: "" }];
   MV.sabitToplam = function () { return MV.SABIT_GIDER.reduce(function (n, x) { return n + x.aylik; }, 0); };
@@ -1280,7 +1280,7 @@
   var gunRapor = function (k, g) { var n = 0; MV.ISLER.forEach(function (y) { y.raporlar.forEach(function (no) { var r = MV.rapor(no); if (r.kisi === k && r.olustu.slice(0, 10) === g) n++; }); }); return n; };
   MV.isKarlilik = function (x) {
     var ay = x.tarih.slice(0, 7), am = MV.ayMaliyet(ay), o = MV.isOzet(x), kg = {};
-    /* kişi-gün: kişinin o gün bu işte yazdığı rapor ÷ o gün bütün işlerde yazdığı rapor (aynı gün iki işe giden inspector'ın günü bölünür) */
+    /* kişi-gün: kişinin o gün bu işte yazdığı rapor ÷ o gün bütün işlerde yazdığı rapor (aynı gün iki işe giden denetçinin günü bölünür) */
     x.raporlar.map(MV.rapor).forEach(function (r) { var g = r.olustu.slice(0, 10); (kg[r.kisi] = kg[r.kisi] || {})[g] = (kg[r.kisi][g] || 0) + 1; });
     var kisiler = Object.keys(kg).map(function (k) {
       var gun = Object.keys(kg[k]).reduce(function (n, g) { return n + kg[k][g] / gunRapor(k, g); }, 0);
@@ -1447,7 +1447,7 @@
       return { kirmizi: MV.TESISLER.reduce(function (n, t) { return n + MV.isgEksik({ tesisler: [t.id] }).length; }, 0), ad: { kirmizi: "İSG-KATİP eksik ya da bitmiş" } };
     },
     /* 35. tur 163 (reisim 2026-09-29): bekleyen sarı, süresi geçen kırmızı. Makette firma geneli; uygulamada kişinin kendi işleri
-       (planı kabul edecek inspector, imzalayacak inspector, onaylayacak branş yöneticisi). Süre sınırları başlangıç değeri (firma ayarı). */
+       (planı kabul edecek denetçi, imzalayacak denetçi, onaylayacak branş yöneticisi). Süre sınırları başlangıç değeri (firma ayarı). */
     13: function () {   /* planlar: kabul bekleyen · plan günü gelmiş / geçmiş ve hâlâ kabul bekleyen */
       var l = MV.PLANLAR.filter(function (p) { return p.durum === "bekliyor"; });
       var gec = l.filter(function (p) { return p.tarih <= MK.BUGUN; }).length;

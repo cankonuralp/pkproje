@@ -1,14 +1,14 @@
 /* ══ probata MAKET M9 — Raporlar · son imza · PDF (modül 14, 16) · ONAY BEKLİYOR (toplu maket, 2026-09-24) ══════════════════════
-   Kaynak: pkproje.md §3 (akış: rapor taslak → yönetici onayında → onaylandı / geri gönderildi → inspector son imza → müşteriye açıldı;
+   Kaynak: pkproje.md §3 (akış: rapor taslak → yönetici onayında → onaylandı / geri gönderildi → denetçi son imza → müşteriye açıldı;
    imzasız yayın yok), §1.1 (reisim: "pdf imzalamaya gönderilebilecek … aracı firmalar ile de yapılabilir, indirilip … ara yazılımlar ile
    imzalamada seçilebilir, bu kısım ilgili modül tasarımı esnasında tekrar tartışılır"), §4.3 (5070 güvenli e-imza), §8.3 (PDF sunucuda).
-   Kullanıcı: Mert Kaya (inspector) — kendi raporları (rol × modül önerisi "kendi", M1). Ekranlar: liste (#/) · rapor sayfası (#/r/<no>:
+   Kullanıcı: Mert Kaya (denetçi) — kendi raporları (rol × modül önerisi "kendi", M1). Ekranlar: liste (#/) · rapor sayfası (#/r/<no>:
    PDF önizlemesi, MB.belge tek üretici; durum geçmişi 2026-09-28'de kalktı) · son imza penceresi (#/imza; tekli ya da toplu). UYDURMA veri. */
 (function () {
   "use strict";
   var $ = MK.$, kacis = MK.kacis, ikon = MK.ikon, kirp = MK.kirp, rozet = MK.rozet, SZ = MK.SZ;
   var BEN = "mk";
-  var benim = function () { return MV.RAPORLAR.filter(function (r) { return r.kisi === BEN && !r.pasif; }); };   /* pasif rapor inspector'da görünmez (2026-09-28) */
+  var benim = function () { return MV.RAPORLAR.filter(function (r) { return r.kisi === BEN && !r.pasif; }); };   /* pasif rapor denetçide görünmez (2026-09-28) */
   var imzaBekleyen = function () { return benim().filter(function (r) { return r.durum === "onaylandi"; }); };
   var ekp = function (r) { return MV.ekipman(r.kod); };
   var yeniden = function (r) { return r.durum === "taslak"; };
@@ -94,8 +94,8 @@
   }
   function raporCiz(r) {
     sureDenetle();
-    /* pasif rapor inspector'da hiçbir yoldan açılmaz — eski bağlantı, geçmiş, açık sekme (2026-09-29, reisim: "Pasife alınan raporlar
-       inspectorlere gözükmesin sadece yöneticilere gözüksün"; sunucuda: yetkisiz = yok) */
+    /* pasif rapor denetçide hiçbir yoldan açılmaz — eski bağlantı, geçmiş, açık sekme (2026-09-29, reisim: "Pasife alınan raporlar
+       denetçilere gözükmesin sadece yöneticilere gözüksün"; sunucuda: yetkisiz = yok) */
     if (!r || r.kisi !== BEN || r.pasif) {
       $("a-nesne").innerHTML = MK.kirinti([["Raporlar", "#/"]]) + '<h1 class="a-gizli" tabindex="-1">Rapor bulunamadı</h1>' +
         MK.bos({ ikon: "circle-alert", baslik: "Rapor bulunamadı", metin: r && r.pasif && r.kisi === BEN ? "Bu rapor pasife alındı; yalnız yöneticiler görür." : "Bu adreste size ait rapor yok.", eylem: '<a class="a-tus a-tus-ikincil" href="#/">' + ikon("arrow-left", "a-ikon-kucuk") + "Raporlara dön</a>" });
@@ -110,7 +110,7 @@
           (r.durum === "onaylandi" ? MK.tus({ eylem: "imza-ac", ad: "İmzala", ikon: "file-signature", veri: { no: r.no } }) : "") +
           (r.durum === "imzada" ? MK.tus({ eylem: "istek-geri", ad: "İsteği geri çek", ikon: "undo-2", sinif: "a-tus-ikincil", veri: { no: r.no } }) +
             MK.tus({ eylem: "telefon-ac", ad: "Telefonda onayla", ikon: "smartphone", veri: { no: r.no } }) : "") +
-          /* 192 (2026-09-29): tamamlanan raporda inspector revize ister (gerekçe zorunlu); revizeye gönderen teknik yönetici */
+          /* 192 (2026-09-29): tamamlanan raporda denetçi revize ister (gerekçe zorunlu); revizeye gönderen teknik yönetici */
           (r.durum === "imzali" ? (r.revizeIstek ? MK.tus({ eylem: "revize-istek-geri", ad: "Revize isteğini geri çek", ikon: "undo-2", sinif: "a-tus-ikincil", veri: { no: r.no } })
             : MK.tus({ eylem: "revize-iste-ac", ad: "Revize iste", ikon: "file-pen-line", sinif: "a-tus-ikincil", veri: { no: r.no } })) : "") +
           (yeniden(r) ? '<a class="a-tus a-tus-birincil" href="' + raporEkrani(r) + '">' + ikon("pencil", "a-ikon-kucuk") + "Raporu düzenle</a>" : "") + "</div></div>" +
@@ -313,7 +313,7 @@
       var h = document.querySelector("#a-nesne h1"); if (h) h.focus(); MK.bildir(r.no + " imzalı PDF'i silindi; imza bekliyor.");
     } });
   };
-  /* 103 → 2026-09-29: imzalı raporu revizeye teknik yönetici gönderir (Onaylar · Tüm raporlar); inspector revize raporu Yeni olarak görür */
+  /* 103 → 2026-09-29: imzalı raporu revizeye teknik yönetici gönderir (Onaylar · Tüm raporlar); denetçi revize raporu Yeni olarak görür */
   /* toplu PDF (§3.8 kural 7; reisim 2026-09-28: "Raporlar ekranında ve planlarda … toplu pdf indirme tuşu olsun"): süzgeçten geçen
      raporların PDF'i tek dosyada, her rapor kendi sayfalarında; taslağın PDF'i yok */
   X["toplu-pdf"] = function () {
@@ -330,6 +330,6 @@
   /* kapanış olayı eşzamansız gelir: o arada pencere yeniden açıldıysa (ör. Vazgeç → hemen "Telefonda onayla") yeni durum silinmez */
   $("a-pencere").addEventListener("close", function () { if ($("a-pencere").open) return; W = null; var r = rota(); if (r.pencere || r.telefon) history.replaceState(null, "", "#/"); });
 
-  MK.kabuk({ modul: 14, kullanici: { bas: "MK", ad: "Mert Kaya", rol: "Inspector" } });
+  MK.kabuk({ modul: 14, kullanici: { bas: "MK", ad: "Mert Kaya", rol: "Denetçi" } });
   goster(false);
 })();

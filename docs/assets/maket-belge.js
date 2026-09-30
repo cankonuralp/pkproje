@@ -1,7 +1,7 @@
 /* ══ probata MAKET — RAPOR BELGESİ, TEK ÜRETİCİ (M7 şablon önizlemesi · M9 onay ekranı, rapor görünümü, PDF) ══════════════════
    Sunucuda üretilen PDF'in iskeleti (§8.3); Ek-III 1.7'nin dokuz bölümü + fotoğraf eki (§4.2), başlıkta firma künyesi ve akreditasyon
    markası yeri (§4.8). MB.belge(tür, o): o yoksa BOŞ ŞABLON (her alanın nereden dolduğu yazılır), varsa dolu rapor —
-   o = { e (ekipman), ts (tesis), m (müşteri), p (inspector), isg, cihaz[], tarih, bas, bit, sonraki, no, sonuc ("Uygun" | "Hafif kusurlu" |
+   o = { e (ekipman), ts (tesis), m (müşteri), p (denetçi), isg, cihaz[], tarih, bas, bit, sonraki, no, sonuc ("Uygun" | "Hafif kusurlu" |
    "Kusurlu"), imza: { zaman } | null }. UYDURMA veri. (2026-09-24, M9'da maket-sablon.js'ten taşındı.) */
 (function () {
   "use strict";
@@ -51,9 +51,9 @@
         bilgi("Marka / model", d(o && (R ? rv((R.marka + " " + R.model).trim()) : kacis(o.e.marka + " " + o.e.model)), "ekipman etiketi")) + bilgi("İmal yılı", d(o && (R ? rv(R.imal) : o.e.imal), "ekipman etiketi")) +
         bilgi("Seri no", d(o && '<span class="a-kod">' + (R ? rv(R.seri) : o.e.seri) + "</span>", "ekipman etiketi")) + bilgi("Kullanım yeri", d(o && kacis(R ? R.konum : o.e.konum), "ekipman konumu")) +
         bilgi("Kullanım amacı", d(o && (R ? rv(R.amac) : "Üretim ve sevkiyat"), "saha")) + "</dl>") +
-      bolum("4", "Test değerleri", tablo(["Ölçüm", "Değer", "Sınır"], test.map(function (x, i) { return [x.ad, R ? (R.test[i] ? kacis(R.test[i]) + " " + x.birim : "-") : o ? x.ornek + " " + x.birim : bos, MV.sinirYaz(x)]; }), o ? "" : "saha: inspector ölçer")) +
+      bolum("4", "Test değerleri", tablo(["Ölçüm", "Değer", "Sınır"], test.map(function (x, i) { return [x.ad, R ? (R.test[i] ? kacis(R.test[i]) + " " + x.birim : "-") : o ? x.ornek + " " + x.birim : bos, MV.sinirYaz(x)]; }), o ? "" : "saha: denetçi ölçer")) +
       bolum("5", "Ölçüm cihazları", o ? tablo(["Cihaz", "Cihaz no", "Kalibrasyon tarihi"], o.cihaz.length ? o.cihaz.map(function (v) { return [kacis(v.ad), '<span class="a-kod">' + v.seri + "</span>", MK.tarihYaz(v.kal[0].tarih)]; }) : [[bos, bos, bos]])
-        : '<p class="a-bolum-aciklama">' + kaynak("inspector'ın zimmetindeki, bu grup için uygun cihazlar otomatik gelir (seçilmez)") + "</p>") +
+        : '<p class="a-bolum-aciklama">' + kaynak("denetçinin zimmetindeki, bu grup için uygun cihazlar otomatik gelir (seçilmez)") + "</p>") +
       bolum("6", "Muayene kriterleri", tablo(["No", "Muayene kriteri", "Sonuç"], kriter.map(function (k, i) {
         return [String(i + 1), kacis(k), R ? sonucAd(R.kriter[i]) : o ? (hafif && i === ok.i ? hafifAd : kusurlu && i === ok.i ? agirAd : "Uygun") : '<span class="a-belge-kutu"></span>Uygun · uygun değil · uygulanamaz'];
       }), o ? "" : "saha: her madde ayrı")) +
@@ -65,7 +65,7 @@
         bilgi("Ad soyad", d(o && kacis(o.p.ad), "personel")) + bilgi("Meslek", d(o && kacis(MV.meslekAd(o.p)), "personel")) +
         bilgi("Diploma no", d(o && '<span class="a-kod">' + o.p.diploma + "</span>", "personel")) + bilgi("Oda sicil no", d(o && (o.p.oda ? '<span class="a-kod">' + o.p.oda + "</span>" : bos), "personel")) +
         bilgi("EKİPNET kayıt no", d(o && '<span class="a-kod">' + o.p.ekipnet + "</span>", "personel")) + bilgi("Nüsha sayısı", f.nusha + (o ? "" : kaynak("firma ayarı"))) + "</dl>" +
-        '<div class="a-belge-imza">' + (!o ? "İmza" : o.imza ? "Güvenli elektronik imza" + imzaYolu(o.imza) + " · " + kacis(o.p.ad) + " · " + MK.zamanYaz(o.imza.zaman) : "İmzasız — inspector son imzayı atınca geçerli olur ve müşteriye açılır.") + "</div>") +
+        '<div class="a-belge-imza">' + (!o ? "İmza" : o.imza ? "Güvenli elektronik imza" + imzaYolu(o.imza) + " · " + kacis(o.p.ad) + " · " + MK.zamanYaz(o.imza.zaman) : "İmzasız — denetçi son imzayı atınca geçerli olur ve müşteriye açılır.") + "</div>") +
       bolum("Ek", "Fotoğraflar", fotoHtml(R ? R.foto : 2)) +
       '<footer class="a-belge-alt"><span>' + kacis(f.ad) + " · " + formKod + "</span></footer></article>";
   };

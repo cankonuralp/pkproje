@@ -152,7 +152,7 @@
   var KISILER = MV.PERSONEL.filter(function (p) { return p.durum === "etkin" && p.hesap && p.hesap.roller.indexOf("inspector") >= 0; });
   var kisiOz = function (p) { return ozet(raporlar(p.id), geriler(p.id)); };
   MK.suzgecTanimla("p", { ad: "Personelde ara", ipucu: "Ad, meslek", birim: "kişi", cipler: [],
-    seciciler: [{ k: "gorunum", ad: "Görünüm", bas: "yazan", secenek: function () { return [["yazan", "Rapor yazanlar"], ["hepsi", "Bütün inspector'lar"]]; },
+    seciciler: [{ k: "gorunum", ad: "Görünüm", bas: "yazan", secenek: function () { return [["yazan", "Rapor yazanlar"], ["hepsi", "Bütün denetçiler"]]; },
       gecer: function (p, v) { return v === "hepsi" || p.o.rapor > 0 || p.o.geri > 0; } },
       { k: "sira", ad: "Sıralama", siralama: true, secenek: function () {
       return [["varsayilan", "Kazanç (çoktan aza)"], ["rapor-azalan", "Rapor (çoktan aza)"], ["ort-azalan", "Gün başı (çoktan aza)"], ["ad-artan", "Ad (A–Z)"]].concat(
@@ -178,7 +178,7 @@
         return x.slice().sort(function (a, b) { var p = k === "ad" ? a.ad : a.o[k], q = k === "ad" ? b.ad : b.o[k];
           return (k === "ad" ? p.localeCompare(q, "tr") : p < q ? -1 : p > q ? 1 : 0) * yon || a.ad.localeCompare(b.ad, "tr"); });
       },
-      bosVeri: { ikon: "users", baslik: "Inspector yok", metin: "Inspector rolündeki personel burada görünür." },
+      bosVeri: { ikon: "users", baslik: "Denetçi yok", metin: "Denetçi rolündeki personel burada görünür." },
       tablo: { baslik: "Personel performansı", sinif: "a-tablo-perf", sutunlar: K_SUTUN, sz: "p", href: function (p) { return "#/p/" + p.id; } } });
   }
   /* kişi sayfasında branş anahtarı yok (kişinin raporlarının hepsi; pano branşı orada uygulanmaz) */
@@ -255,7 +255,7 @@
   function kisiCiz(p) {
     if (!p) {
       $("a-nesne").innerHTML = MK.kirinti([["Performans", "#/"]]) + '<h1 class="a-gizli" tabindex="-1">Kişi bulunamadı</h1>' +
-        MK.bos({ ikon: "circle-alert", baslik: "Kişi bulunamadı", metin: "Bu adreste inspector yok.", eylem: '<a class="a-tus a-tus-ikincil" href="#/">' + ikon("arrow-left", "a-ikon-kucuk") + "Panoya dön</a>" });
+        MK.bos({ ikon: "circle-alert", baslik: "Kişi bulunamadı", metin: "Bu adreste denetçi yok.", eylem: '<a class="a-tus a-tus-ikincil" href="#/">' + ikon("arrow-left", "a-ikon-kucuk") + "Panoya dön</a>" });
       return;
     }
     var rl = raporlar(p.id), o = ozet(rl, geriler(p.id)), g = {};
@@ -304,6 +304,6 @@
     MK.indir("performans-" + MK.BUGUN + ".xlsx", MK.xlsx("Performans", MK.tablodanSatirlar(t)));
   };
   MK.onGirdi = function (e) { var k = e.target.dataset && e.target.dataset.alan; if (k === "bas" || k === "bit") A[k] = e.target.value; };
-  MK.kabuk({ modul: 19, kullanici: BEN ? { bas: "MK", ad: "Mert Kaya", rol: "Inspector" } : { bas: "AD", ad: "Ayşe Demir", rol: "Firma yöneticisi" } });
+  MK.kabuk({ modul: 19, kullanici: BEN ? { bas: "MK", ad: "Mert Kaya", rol: "Denetçi" } : { bas: "AD", ad: "Ayşe Demir", rol: "Firma yöneticisi" } });
   goster(false);
 })();

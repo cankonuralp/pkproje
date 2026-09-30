@@ -31,7 +31,7 @@
   /* ── SÜZGEÇ (kalıp 15 üretici; kalıp 8: çipler ve/veya; Çalışanlar/Ayrılanlar görünüm anahtarı → seçici, anahtar almaz) ── */
   MK.suzgecTanimla("p", { ad: "Personelde ara", ipucu: "Ad, meslek, EKİPNET", birim: "kişi",
     cipler: [
-      { k: "inspector", ad: "Inspector", test: inspector },
+      { k: "inspector", ad: "Denetçi", test: inspector },
       { k: "eksik", ad: "Bilgisi eksik", test: function (p) { return MV.eksikBilgi(p).length > 0; } },
       { k: "m", ad: "Mekanik", grup: "brans", test: function (p) { return bransi(p) === "m"; } },
       { k: "e", ad: "Elektrik", grup: "brans", test: function (p) { return bransi(p) === "e"; } },
@@ -254,7 +254,7 @@
   }
 
   /* EKİPMAN ATAMALARI (L4, 2026-09-30): denetçinin atandığı ekipman türleri + atama belgesi; belge görüntülenir, iner, değiştirilir; atama
-     kaldırılır. Atanmadığı türde plan ve rapor yalnız uyarı. Yalnız inspector rolündeki kişide. */
+     kaldırılır. Atanmadığı türde plan ve rapor yalnız uyarı. Yalnız denetçi rolündeki kişide. */
   var ATAMA_SUTUN = [
     { k: "tur", baslik: "Ekipman türü", kart: "ust", sira: 1, hucre: function (a) { var t = MV.tur(a.tur); return "<span>" + kirp(t.ad) + '<span class="a-alt-satir">' + MV.bransAd(t.b) + "</span></span>"; } },
     { k: "tarih", baslik: "Atama tarihi", kart: "govde", sira: 2, hucre: function (a) { return '<span class="a-kart-etiket">Atama tarihi</span><span class="a-tarih-saat">' + MK.tarihYaz(a.tarih) + "</span>"; } },
@@ -585,7 +585,7 @@
           alan("brans", "Branş", '<input class="a-girdi a-girdi-oku a-girdi-sicil" id="f-brans" readonly value="' + (m ? MV.bransAd(m.b) : "—") + '" aria-describedby="f-brans-ipucu">', "Meslekten gelir.", false) +
           alan("diploma", "Diploma no", girdi("diploma", "a-girdi-sicil", F.diploma, ' maxlength="20"'), "", false) +
           alan("oda", "Oda sicil no", girdi("oda", "a-girdi-sicil", F.oda, ' maxlength="20" inputmode="numeric"'), "", false) +
-          alan("ekipnet", "EKİPNET kayıt no", girdi("ekipnet", "a-girdi-sicil", F.ekipnet, ' maxlength="20" inputmode="numeric"'), "Inspector'da boşsa uyarı görünür.", false) +
+          alan("ekipnet", "EKİPNET kayıt no", girdi("ekipnet", "a-girdi-sicil", F.ekipnet, ' maxlength="20" inputmode="numeric"'), "Denetçide boşsa uyarı görünür.", false) +
         "</div></section>" +
         '<section class="a-form-bolum" aria-labelledby="f-b4"><h2 id="f-b4">Giriş hesabı</h2>' +
           '<p class="a-bolum-aciklama">' + (p && p.hesap ? "Roller: " + p.hesap.roller.map(function (r) { return MV.rol(r).ad; }).join(", ") : "Hesap yok") + "</p>" +
