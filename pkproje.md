@@ -2079,6 +2079,11 @@ revizyon, alan kopyalama, hafif kusur devri, meslek eşleşme denetimi).
 - Emsal ürünler: https://opwire.app/iso-17020-periyodik-kontrol-yazilimi/ · https://17020muayene.vidco.com.tr/ · https://akuple.com/asansor-kontrol-yazilimi/ · https://ensyazilim.com/
 
 ## 11 · Değişiklik günlüğü
+- 2026-09-30 (191): **P2 · Topraklama 5.1 · 5.2: uygunluk notu denetçinin seçimi** (§9 kırk ikinci tur ek). Formatın "Sonuç (Uygunluk
+  notu)" sütunu artık seçim: Not-1 … Not-11 (formatın 11 notu; metinleri tablonun altındaki "Uygunluk notları"nda). Otomatik "Not-x · ağır" /
+  "Uygun" / "Yetersiz · ağır" rozetleri ve RCD test değerinde kendiliğinden kırmızı işaret kalktı; Ia, Zs, Ik1 hesabı duruyor (formatın sütunları).
+  Seçilen not kusursa (metni "Uygun." ya da "…uygundur." değilse) Kusur açıklamalarına "Not-N: metin" olarak girer; "(Ağır kusur)" yazan not
+  ağır sayılır. Not seçimi zorunlu alan (gönderirken uyarır). PDF'te 5.1 · 5.2 sonucu seçilen not. 4 deneme yeniden yazıldı.
 - 2026-09-30 (190): **P1 · Topraklama raporunda fotoğraf yok** (§9 kırk ikinci tur ek). Bakanlık formatında (ZPKR01) fotoğraf bölümü
   olmadığı için saha raporundaki "Ek · Fotoğraflar" bölümü, fotoğraf zorunluluğu ve PDF'in fotoğraf eki sayfası kalktı. Kural: formatında
   fotoğraf bölümü olan türde (ZPKR02 8. bölüm) ve formatsız türde fotoğraf durur. 1 deneme güncellendi, 1 yeni.

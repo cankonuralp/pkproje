@@ -89,12 +89,13 @@
         [0, 1, 2, 3, 4].forEach(function (i) { r.nokta[i].zx = F.noktalar[i][3]; }); r.nokta[1].rcdId = "22"; r.nokta[1].rcdTd = "25";
         r.nokta.push({ ad: "Kapı motoru — sevkiyat", egri: "C", In: 10, zx: "2,6", rcd: "", priz: false });
         r.rcdler[0].id = F.rcd[0][4]; r.rcdler[0].td = F.rcd[0][5];
+        [1, 1, 1, 1, 4].forEach(function (v, i) { r.nokta[i].not = v; }); r.nokta[6].not = 2; r.rcdler[0].not = 1;   /* seçilmiş notlar (P2); Ofis prizleri yarıda */
       }
       /* plan 10 (2026-09-28; reisim: "en son attığım rapor formatına göre sonuç o şekilde gözükecek biçimde örnekler"): son formatlarla —
          ET-2001 Tamamlandı · Uygun · ET-2002 hafif kusur (formatın maddesi) · AT-2003 ağır kusur (Zx sınırı aşıyor, RCD yok → Not-2) ·
          ET-2004 yarıda · AT-2005 ilk kontrol, boş */
       if (e.kod === "ET-2002") { var ok = MV.ornekKusur(t, true), x = r.kriter[ok.i]; x.c = "uygundegil"; x.derece = "hafif"; x.foto = 1; r.sonuc = "kullanilamaz"; }
-      if (e.kod === "AT-2003") { r.nokta.push({ ad: "Kapı motoru — sevkiyat", egri: "C", In: 10, zx: "2,6", rcd: "", priz: false }); r.sonuc = "kullanilamaz"; r.notlar = "Kapı motoru hattına 30 mA RCD takılması ya da koruma değerinin düşürülmesi önerilir."; }
+      if (e.kod === "AT-2003") { r.nokta.push({ ad: "Kapı motoru — sevkiyat", egri: "C", In: 10, zx: "2,6", rcd: "", priz: false, not: 2 }); r.sonuc = "kullanilamaz"; r.notlar = "Kapı motoru hattına 30 mA RCD takılması ya da koruma değerinin düşürülmesi önerilir."; }
       if (e.kod === "ET-2004") {
         ornekBilgi(); r.tespit = { degisiklik: "Yok", etiket: "Var" }; cihazDoldur();
         [0, 1, 2, 3, 4].forEach(function (i) { r.kriter[i].c = "uygun"; }); r.test[0] = "0,19"; r.test[1] = "0,17"; r.foto = 1;
@@ -149,16 +150,22 @@
   var KRITER = [["uygun", "Uygun"], ["uygundegil", "Uygun değil"], ["uygulanamaz", "Uygulanamaz"]];
   var kusurlar = function (r) { return r.kriter.filter(function (x) { return x.c === "uygundegil"; }); };
   var sinirDisi = function (r) { return MV.testler(r.t).some(function (x, i) { return testSonuc(x, r.test[i]) === false; }); };
-  /* topraklama (ZPKR01): RCD testi IΔ ≤ IΔn ve TΔ ≤ 200 ms; ölçüm noktası ağır kusurlu (Not-2, Not-5) ise uygun değil */
-  var rcdSonuc = function (x) { var i = sayi(x.id), d = sayi(x.td); return isNaN(i) || isNaN(d) ? null : i <= x.idn && d <= 200; };
-  var olcumKusur = function (r) { return r.nokta.some(function (n) { return MV.noktaHesap(n).agir; }) || r.rcdler.some(function (x) { return rcdSonuc(x) === false; }); };
+  /* topraklama (ZPKR01) 5.1 · 5.2 sonucu: denetçinin seçtiği uygunluk notu (P2, 2026-09-30, reisim: "uygun uygunsuz olayınıda kaldıralım, onun
+     yerine yan sekmede not1, not 2 not 3 diye 11 e kadar seçene olsun bakanlık formatını bozmayalım"). Otomatik Uygun / Yetersiz yok; notun
+     anlamı formatın metninden: "Uygun." ya da "…uygundur." → kusur değil, "(Ağır kusur)" → ağır, öteki → kusur */
+  var rcdSonuc = function (x) { return !(isNaN(sayi(x.id)) || isNaN(sayi(x.td))) || null; };   /* yalnız değer girildi mi (zorunlu alan) */
+  var NOTLAR = function (r) { return r.F && r.F.notlar ? r.F.notlar.map(function (x, i) { return [String(i + 1), "Not-" + (i + 1)]; }) : []; };
+  var notMetin = function (r, n) { return n && r.F && r.F.notlar ? r.F.notlar[n - 1] || "" : ""; };
+  var notKusur = function (r, n) { var m = notMetin(r, n); return !!m && !/^Uygun\.|uygundur\.$/.test(m); };
+  var notAgir = function (r, n) { return /Ağır kusur/.test(notMetin(r, n)); };
+  var olcumKusur = function (r) { return r.nokta.concat(r.rcdler).some(function (x) { return notKusur(r, +x.not); }); };
   /* iç tesisat 6.1 · 6.2 · 6.3 satırları: formatın fonksiyon testi ağır kusur tanımlarıyla (MV.linyeHesap · pdHesap · ziHesap) */
   var ik3 = function (r) { var i = MV.testler(r.t).map(function (x) { return x.k; }).indexOf("ik3"); return i < 0 ? "" : r.test[i]; };
   var linyeSonuc = function (r, x) { return MV.linyeHesap(x, ik3(r)); };
-  var noktaRcd = function (n) { return n.rcd ? MV.rcdTestYeter(+n.rcd, n.rcdId, n.rcdTd) : null; };
+  var noktaRcd = function (n) { return n.rcd ? !(isNaN(sayi(n.rcdId)) || isNaN(sayi(n.rcdTd))) || null : null; };   /* yalnız değer girildi mi (P2) */
   var fonkKusur = function (r) {
     return (r.sigorta || []).some(function (x) { var h = linyeSonuc(r, x); return h && !h.uygun; }) || r.pd.some(function (x) { var h = MV.pdHesap(x); return h && !h.uygun; }) ||
-      r.zi.some(function (x) { var h = MV.ziHesap(x); return h && !h.uygun; }) || r.nokta.some(function (n) { return noktaRcd(n) === false; });
+      r.zi.some(function (x) { var h = MV.ziHesap(x); return h && !h.uygun; });
   };
   /* önceki kontrolden devreden hafif kusurlar (V4, 2026-09-29): "Giderilmedi" denen bu raporun hafif kusuru olur */
   var devreden = function (r) { return MV.devredenKusurlar(r.e.kod, r.olustu || MK.simdi()); };
@@ -184,8 +191,9 @@
       if (MV.kusurFotoZorunlu() && !(x.foto > 0)) l.push({ bolum: "r-b4", alan: "#r-kf" + i }); });
     ts.forEach(function (x, i) { if (testZorunlu(x) && !testDolu(x, r.test[i])) l.push({ bolum: "r-b5", alan: "#r-t" + i }); });
     if (F && F.noktalar) {
-      r.nokta.forEach(function (n, i) { if (isNaN(sayi(n.zx))) l.push({ bolum: "r-b5", alan: "#r-zx" + i }); if (n.rcd && noktaRcd(n) === null) l.push({ bolum: "r-b5", alan: "#r-ni" + i }); });
-      r.rcdler.forEach(function (x, i) { if (rcdSonuc(x) === null) l.push({ bolum: "r-b5", alan: "#r-ri" + i }); });
+      r.nokta.forEach(function (n, i) { if (isNaN(sayi(n.zx))) l.push({ bolum: "r-b5", alan: "#r-zx" + i }); if (n.rcd && noktaRcd(n) === null) l.push({ bolum: "r-b5", alan: "#r-ni" + i });
+        if (!n.not) l.push({ bolum: "r-b5", alan: "#r-nn" + i }); });
+      r.rcdler.forEach(function (x, i) { if (rcdSonuc(x) === null) l.push({ bolum: "r-b5", alan: "#r-ri" + i }); if (!x.not) l.push({ bolum: "r-b5", alan: "#r-rn" + i }); });
     }
     if (fotoVar(r) && r.foto < 1) l.push({ bolum: "r-b7", alan: "#r-b7 .a-fotolar" });
     return l;
@@ -323,11 +331,13 @@
   var metodHtml = function (r) {
     return '<dl class="a-satirlar"><div class="a-satir"><dt>Ölçüm metodu</dt><dd id="r-metod">' + (r.metod ? kacis(r.metod) : '<span class="a-uyari-metin">Ekipman türünde belirlenmemiş</span>') + "</dd></div></dl>";
   };
-  /* topraklama ölçüm noktası: Ia = eğri çarpanı × In, Zs = 230 V / Ia, Ik1 = 230 V / Zx, uygunluk notu formata göre (MV.noktaHesap) */
-  var notRozet = function (h) { return h.not === null ? '<span class="a-deger-yok">—</span>' : rozet({ ad: "Not-" + h.not + (h.agir ? " · ağır" : ""), rozet: h.agir ? "a-rozet-red" : "a-rozet-tamam" }); };
+  /* topraklama ölçüm noktası: Ia = eğri çarpanı × In, Zs = 230 V / Ia, Ik1 = 230 V / Zx hesaplanır; uygunluk notunu denetçi seçer (P2) */
+  var notSecim = function (r, oku, id, x, ad) {
+    return '<span class="a-kart-etiket">Uygunluk notu</span>' + (oku ? (x.not ? "Not-" + x.not : '<span class="a-deger-yok">—</span>')
+      : MK.secim({ id: id, ad: ad + " · uygunluk notu", deger: x.not ? String(x.not) : "", secenekler: NOTLAR(r), ipucu: "Seçin", gecersiz: uyar(r, !x.not) }));
+  };
   /* 6.1 · 6.2 · 6.3 satır sonucu: değer yoksa —, uygun değilse nedeni başlıkta */
   var hesapRozet = function (h) { return !h ? '<span class="a-deger-yok">—</span>' : h.uygun ? rozet({ ad: "Uygun", rozet: "a-rozet-tamam" }) : '<span title="' + kacis(h.neden.join("; ")) + '">' + rozet({ ad: "Uygun değil · ağır", rozet: "a-rozet-red" }) + "</span>"; };
-  var rcdRozet = function (s) { return s === null ? '<span class="a-deger-yok">—</span>' : rozet(s ? { ad: "Uygun", rozet: "a-rozet-tamam" } : { ad: "Yetersiz · ağır", rozet: "a-rozet-red" }); };
   function olcumHtml(r, oku) {
     var F = r.F, n = F.bolumler.kontrol;
     var kaldir = function (eylem, i, ad) { return oku ? "" : '<div class="a-eylem"><div class="a-eylem-tuslar"><button class="a-ikon-tus" type="button" data-eylem="' + eylem + '" data-i="' + i + '" aria-label="' + kacis(ad) + ' kaldır" title="Kaldır">' + ikon("x") + "</button></div></div>"; };
@@ -340,12 +350,12 @@
       { k: "ik", baslik: "Ik1", kart: "govde", sira: 4, hucre: function (x) { var h = MV.noktaHesap(x); return ki("Ik1") + '<span id="r-ik' + r.nokta.indexOf(x) + '">' + (h.ik ? h.ik + " A" : "—") + "</span>"; } },
       /* RCD'li noktada RCD testi (IΔ, TΔ; formatın 5.1 sütunları) */
       { k: "rcdt", baslik: "RCD testi IΔ · TΔ", kart: "govde", sira: 5, hucre: function (x) {
-        var i = r.nokta.indexOf(x), yan = noktaRcd(x) === false || uyar(r, noktaRcd(x) === null) ? ' aria-invalid="true"' : "";
+        var i = r.nokta.indexOf(x), yan = uyar(r, noktaRcd(x) === null) ? ' aria-invalid="true"' : "";
         if (!x.rcd) return ki("RCD testi IΔ · TΔ") + '<span class="a-deger-yok">—</span>';
         return ki("RCD testi IΔ · TΔ") + (oku ? (kacis(x.rcdId) || "-") + " mA · " + (kacis(x.rcdTd) || "-") + " ms" : '<span class="a-cift-girdi">' +
           MK.girdi({ id: "r-ni" + i, alan: "ni" + i, deger: x.rcdId, sinif: "a-girdi-sicil", ek: ' inputmode="decimal" maxlength="5" aria-label="' + kacis(x.ad) + ' · RCD IΔ (mA)"' + yan }) +
           MK.girdi({ id: "r-nt" + i, alan: "nt" + i, deger: x.rcdTd, sinif: "a-girdi-sicil", ek: ' inputmode="decimal" maxlength="5" aria-label="' + kacis(x.ad) + ' · RCD TΔ (ms)"' + yan }) + "</span>"); } },
-      { k: "not", baslik: "Sonuç", kart: "rozet", sira: 1, hucre: function (x) { return '<span id="r-not' + r.nokta.indexOf(x) + '">' + notRozet(MV.noktaHesap(x)) + "</span>"; } }
+      { k: "not", baslik: "Uygunluk notu", kart: "govde", sira: 6, hucre: function (x) { return notSecim(r, oku, "r-nn" + r.nokta.indexOf(x), x, x.ad); } }
     ].concat(oku ? [] : [{ k: "eylem", baslik: "İşlem", gizliBaslik: true, kart: "eylem", sira: 9, hucre: function (x) { return kaldir("nokta-kaldir", r.nokta.indexOf(x), x.ad); } }]);
     var RCD = [
       { k: "ad", baslik: "Pano", kart: "ust", sira: 1, hucre: function (x) { return kacis(x.ad) + '<span class="a-alt-satir">Tip ' + x.tip + " · " + x.In + " A · IΔn " + x.idn + " mA" +
@@ -354,7 +364,7 @@
         return ki("IΔ (mA)") + (oku ? (kacis(x.id) || "-") : MK.girdi({ id: "r-ri" + i, alan: "ri" + i, deger: x.id, sinif: "a-girdi-sicil", hata: uyar(r, rcdSonuc(x) === null), ek: ' inputmode="decimal" maxlength="5" aria-label="' + kacis(x.ad) + ' · IΔ (mA)"' })); } },
       { k: "td", baslik: "TΔ (ms)", kart: "govde", sira: 3, hucre: function (x) { var i = r.rcdler.indexOf(x);
         return ki("TΔ (ms)") + (oku ? (kacis(x.td) || "-") : MK.girdi({ id: "r-rt" + i, alan: "rt" + i, deger: x.td, sinif: "a-girdi-sicil", hata: uyar(r, rcdSonuc(x) === null), ek: ' inputmode="decimal" maxlength="5" aria-label="' + kacis(x.ad) + ' · TΔ (ms)"' })); } },
-      { k: "not", baslik: "Sonuç", kart: "rozet", sira: 1, hucre: function (x) { return '<span id="r-rs' + r.rcdler.indexOf(x) + '">' + rcdRozet(rcdSonuc(x)) + "</span>"; } }
+      { k: "not", baslik: "Uygunluk notu", kart: "govde", sira: 4, hucre: function (x) { return notSecim(r, oku, "r-rn" + r.rcdler.indexOf(x), x, x.ad + " RCD"); } }
     ].concat(oku ? [] : [{ k: "eylem", baslik: "İşlem", gizliBaslik: true, kart: "eylem", sira: 9, hucre: function (x) { return kaldir("rcd-kaldir", r.rcdler.indexOf(x), x.ad); } }]);
     return metodHtml(r, oku) +
       '<h3 class="a-kriter-grup">' + n + ".1 · Çevrim empedansı ölçümleri</h3>" +
@@ -392,9 +402,9 @@
     r.kriter.forEach(function (x, i) { if (x.c === "uygundegil") l.push([kriterNo(t, i) + " · " + kr[i], ad2(DERECE, x.derece) || (MV.kusurSinifli(t) ? "Derece seçilmedi" : "Uygun değil"), "",
       fotoAdlari(x).join(", "), i]); });   /* açıklama yok (O2): madde metni kusurun kendisi; 5. öğe madde sırası (fotoğraf silme) */
     MV.testler(t).forEach(function (x, i) { if (testSonuc(x, r.test[i]) === false) l.push([x.ad, "Ağır kusur", r.test[i] + " " + x.birim + " · sınır " + MV.sinirYaz(x)]); });
-    r.nokta.forEach(function (x) { var h = MV.noktaHesap(x); if (h.agir) l.push([x.ad, "Ağır kusur", "Not-" + h.not + ": " + F.notlar[h.not - 1]]); });
-    r.rcdler.forEach(function (x) { if (rcdSonuc(x) === false) l.push([x.ad + " · RCD", "Ağır kusur", "RCD performans testi yetersiz (IΔ " + x.id + " mA · TΔ " + x.td + " ms)."]); });
-    r.nokta.forEach(function (x) { if (noktaRcd(x) === false) l.push([x.ad + " · RCD", "Ağır kusur", "RCD performans testi yetersiz (IΔ " + x.rcdId + " mA · TΔ " + x.rcdTd + " ms)."]); });
+    /* 5.1 · 5.2: seçilen uygunluk notu kusursa (P2) */
+    r.nokta.forEach(function (x) { if (notKusur(r, +x.not)) l.push([x.ad, notAgir(r, +x.not) ? "Ağır kusur" : "Kusur", "Not-" + x.not + ": " + notMetin(r, +x.not)]); });
+    r.rcdler.forEach(function (x) { if (notKusur(r, +x.not)) l.push([x.ad + " · RCD", notAgir(r, +x.not) ? "Ağır kusur" : "Kusur", "Not-" + x.not + ": " + notMetin(r, +x.not)]); });
     (r.sigorta || []).forEach(function (x) { var h = linyeSonuc(r, x); if (h && !h.uygun) l.push(["6.1 · " + x.no + " " + x.devre, "Ağır kusur", h.neden.join("; ") + "."]); });
     r.pd.forEach(function (x) { var h = MV.pdHesap(x); if (h && !h.uygun) l.push(["6.2 · " + x.yer, "Ağır kusur", h.neden.join("; ") + "."]); });
     r.zi.forEach(function (x) { var h = MV.ziHesap(x); if (h && !h.uygun) l.push(["6.3 · " + x.yer, "Ağır kusur", h.neden.join("; ") + "."]); });
@@ -812,12 +822,11 @@
     } else if (/^[ds]-/.test(k)) r[k[0] === "d" ? "detay" : "tespit"][k.slice(2)] = e.target.value;
     else if (/^zx\d+$/.test(k)) {   /* ölçüm noktası: Ik1 ve not yerinde hesaplanır, odak kaçmaz */
       var n = r.nokta[+k.slice(2)], h; n.zx = e.target.value; h = MV.noktaHesap(n);
-      $("r-ik" + k.slice(2)).textContent = h.ik ? h.ik + " A" : "—"; $("r-not" + k.slice(2)).innerHTML = notRozet(h);
+      $("r-ik" + k.slice(2)).textContent = h.ik ? h.ik + " A" : "—";
     } else if (/^n[it]\d+$/.test(k)) {   /* ölçüm noktası RCD testi */
       var nn = r.nokta[+k.slice(2)]; nn[k[1] === "i" ? "rcdId" : "rcdTd"] = e.target.value;
-      [$("r-ni" + k.slice(2)), $("r-nt" + k.slice(2))].forEach(function (g) { if (noktaRcd(nn) === false) g.setAttribute("aria-invalid", "true"); else g.removeAttribute("aria-invalid"); });
     } else if (/^r[it]\d+$/.test(k)) {
-      var x2 = r.rcdler[+k.slice(2)]; x2[k[1] === "i" ? "id" : "td"] = e.target.value; $("r-rs" + k.slice(2)).innerHTML = rcdRozet(rcdSonuc(x2));
+      var x2 = r.rcdler[+k.slice(2)]; x2[k[1] === "i" ? "id" : "td"] = e.target.value;
     }
     degisti(r); ozetYenile(r);
   };
@@ -829,6 +838,7 @@
     var r = aktif(); if (/^r-kc\d+$/.test(id)) { r.kriter[+id.slice(4)].c = deger; degisti(r); ciz(id); }
     else if (id === "r-sonuc") { r.sonuc = deger; degisti(r); ciz(id); }
     else if (/^r-kd\d+$/.test(id)) { r.kriter[+id.slice(4)].derece = deger; degisti(r); ciz(id); }
+    else if (/^r-[nr]n\d+$/.test(id)) { r[id[2] === "n" ? "nokta" : "rcdler"][+id.slice(4)].not = +deger; degisti(r); ciz(id); }   /* uygunluk notu (P2) */
     else if (/^r-dv\d+$/.test(id)) { var x = devreden(r)[+id.slice(4)]; if (x) { (r.devir = r.devir || {})[x.id] = deger; degisti(r); ciz(id); } }
     else if (/^r-[ds]-/.test(id)) { r[id[2] === "d" ? "detay" : "tespit"][id.slice(4)] = deger; degisti(r); ciz(id); }
   };
@@ -969,7 +979,7 @@
   /* ortak kayıttaki sonuç adı (Onaylar, Raporlar, Planlar bunu yazar): formatlı türde hafif / ağır, ötekinde Kusurlu */
   function sonucAdi(r) {
     if (r.sonuc !== "kullanilamaz") return "Uygun";
-    var l = kusurListe(r), agir = l.some(function (x) { return /Ağır/.test(x[1]); }) || sinirDisi(r) || olcumKusur(r) || fonkKusur(r);
+    var l = kusurListe(r), agir = l.some(function (x) { return /Ağır/.test(x[1]); }) || sinirDisi(r) || fonkKusur(r);   /* 5.1 · 5.2 ağırlığı notun metninden, listede (P2) */
     return !MV.kusurSinifli(r.t) ? "Kusurlu" : agir ? "Ağır kusurlu" : l.length ? "Hafif kusurlu" : "Kusurlu";
   }
   function gonder(r) {

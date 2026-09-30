@@ -284,7 +284,7 @@
         if (!n) return "<tr>" + bosSatir(12) + "</tr>";
         var h = MV.noktaHesap(n);
         return "<tr><td>" + (i + 1) + "</td><td>" + k(n.ad) + "</td><td>" + k(n.In) + "</td><td>" + k(n.egri) + "</td><td>" + h.ia + "</td><td>" + (h.ik || "") + "</td><td>" + k(n.zx) + "</td><td>" + String(h.zs).replace(".", ",") + "</td><td>" +
-          (n.rcd ? (n.rcdTip || "A") + " · " + n.In + " A / " + n.rcd + " mA" : "") + "</td><td>" + k(n.rcdId || "") + "</td><td>" + k(n.rcdTd || "") + "</td><td>" + (h.not ? "Not-" + h.not : "") + "</td></tr>";
+          (n.rcd ? (n.rcdTip || "A") + " · " + n.In + " A / " + n.rcd + " mA" : "") + "</td><td>" + k(n.rcdId || "") + "</td><td>" + k(n.rcdTd || "") + "</td><td>" + (R ? (n.not ? "Not-" + n.not : "") : h.not ? "Not-" + h.not : "") + "</td></tr>";   /* saha raporunda seçilen not (P2), örnekte hesaplanan */
       }).join("") + "</table>";
     var rcdl = R ? R.rcdler : o ? F.rcd.map(function (x) { return { ad: x[0], tip: x[1], In: x[2], idn: x[3], id: x[4] || "220", td: x[5] || "180" }; }) : [];
     var sTablo = '<table class="rb-t rb-kucuk"><colgroup><col style="width:6%"><col style="width:14%"><col style="width:8%"><col style="width:8%"><col style="width:8%"><col style="width:9%"><col style="width:14%"><col style="width:9%"><col style="width:9%"><col style="width:7%"><col style="width:8%"></colgroup>' +
@@ -293,7 +293,7 @@
       '<tr><th class="rb-e">RCD Tipi</th><th class="rb-e">Dayanma akımı In (A)</th><th class="rb-e">Açma akımı IΔn (mA)</th><th class="rb-e">Açma zamanı gecikmesi (ms)</th><th class="rb-e">RCD Tipi</th><th class="rb-e">Açma akımı IΔn (mA)</th><th class="rb-e">Test açma zamanı TΔ (ms)</th></tr>' +
       [0, 1].concat(rcdl.length > 2 ? rcdl.slice(2).map(function (x, i) { return i + 2; }) : []).map(function (i) {
         var x = rcdl[i]; if (!x) return "<tr><td>N=" + (i + 1) + "</td>" + bosSatir(10) + "</tr>";
-        var ok2 = x.id !== "" && x.td !== "" ? (parseFloat(String(x.id).replace(",", ".")) <= x.idn && parseFloat(String(x.td).replace(",", ".")) <= 200 ? "Not-1" : "Not-7") : "";
+        var ok2 = R ? (x.not ? "Not-" + x.not : "") : x.id !== "" && x.td !== "" ? (parseFloat(String(x.id).replace(",", ".")) <= x.idn && parseFloat(String(x.td).replace(",", ".")) <= 200 ? "Not-1" : "Not-7") : "";
         return "<tr><td>N=" + (i + 1) + "</td><td>" + k(x.ad) + "</td><td>" + k(x.tip) + "</td><td>" + k(x.In) + "</td><td>" + k(x.idn) + "</td><td>" + k(x.gecikme || "") + "</td><td>" + k(x.sonPano || "") + "</td><td>" + k(x.tip) + "</td><td>" + k(x.idn) + "</td><td>" + k(x.td) + "</td><td>" + ok2 + "</td></tr>";
       }).join("") + "</table>";
     var kutu1 = function (bas, ic, sinif) { return '<table class="rb-t">' + bolumBas(bas) + '<tr><td class="rb-kutu ' + (sinif || "") + '">' + ic + "</td></tr></table>"; };

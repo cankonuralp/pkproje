@@ -496,7 +496,7 @@
    "gecti": true
   },
   {
-   "ad": "5.1 ölçüm noktası RCD testi: IΔ > IΔn → işaretlenir, kusur listesinde (odak yerinde)",
+   "ad": "5.1 ölçüm noktası RCD testi değeri girilir; otomatik Yetersiz işareti yok, sonucu uygunluk notu söyler (P2; odak yerinde)",
    "gen": 1920,
    "sayfa": "maket/rapor.html",
    "hash": "#/r/AT-1010",
@@ -559,14 +559,14 @@
    "gecti": true
   },
   {
-   "ad": "topraklama: Zx sınırı aşan, RCD'siz nokta Not-2 ağır; kusur listesinde",
+   "ad": "topraklama: 5.1 · 5.2 sonucu seçilen uygunluk notu, rozet yok; Not-2 (ağır) kusur listesinde, Not-4 kusur değil (P2)",
    "gen": 1920,
    "sayfa": "maket/rapor.html",
    "hash": "#/r/AT-1010",
    "gecti": true
   },
   {
-   "ad": "topraklama: Zx yazınca Ik1 ve not yerinde hesaplanır (odak yerinde)",
+   "ad": "topraklama: Zx yazınca Ik1 yerinde hesaplanır, seçilen not değişmez (odak yerinde)",
    "gen": 1920,
    "sayfa": "maket/rapor.html",
    "hash": "#/r/AT-1010",
@@ -580,7 +580,7 @@
    "gecti": true
   },
   {
-   "ad": "topraklama: RCD yetersiz → ağır",
+   "ad": "topraklama: 5.2 uygunluk notu Not-1 … Not-11 arasından seçilir; kusurlu not (Not-7) kusur listesine girer (P2)",
    "gen": 1920,
    "sayfa": "maket/rapor.html",
    "hash": "#/r/AT-1010",
