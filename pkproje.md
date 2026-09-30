@@ -2061,6 +2061,10 @@ revizyon, alan kopyalama, hafif kusur devri, meslek eşleşme denetimi).
 - Emsal ürünler: https://opwire.app/iso-17020-periyodik-kontrol-yazilimi/ · https://17020muayene.vidco.com.tr/ · https://akuple.com/asansor-kontrol-yazilimi/ · https://ensyazilim.com/
 
 ## 11 · Değişiklik günlüğü
+- 2026-09-30 (178): **N2 · Plan içinde ekipman listesi denetçinin branşıyla açılır** (§9 kırk birinci tur). Planda o branştan ekipman varsa Branş
+  süzgeci denetçinin branşında gelir (mekanikçi mekanik, elektrikçi elektrik); "Tümü" ile bütün ekipman görünür. Bütün ekipmanı gören 7 eski
+  deneme önce "Tümü"ye alıyor (gerekçe denemede). Ölçüm: planlar 128/128 · 62/62 (1 yeni) · 64/64; m8 184/184 · 107/107 · 92/92; m1 304/304 ·
+  87/87 · 152/152.
 - 2026-09-30 (177): **N1 · Ön bilgilendirme formu firmanın formatı** (§9 kırk birinci tur). Personel › Firma ayarları'nda "Ön bilgilendirme
   formu" bölümü: firma PDF'ini yükler (aç · değiştir · kaldır); yüklenmediyse temel format KM-FR-OBF-01. Müşteri kartındaki gönderim
   penceresi hangisinin gideceğini yazar. §3.7'ye satır 15; saha formu listede zaten (satır 9). Ölçüm: m1 304/304 · 87/87 (1 yeni) · 152/152;

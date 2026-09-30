@@ -460,7 +460,13 @@
   function planCiz(p) {
     if (!p) { AKTIF = null; $("a-plan").innerHTML = '<nav class="a-kirinti" aria-label="Konum"><a href="#/">' + ikon("arrow-left", "a-ikon-kucuk") + "Planlar</a></nav>" +
       '<h1 class="a-gizli" tabindex="-1">' + (VERI === "hata" ? "Plan yüklenemedi" : "Plan bulunamadı") + "</h1>" + bos(VERI === "hata" ? "planHata" : "plan"); return; }
-    if (!AKTIF || AKTIF.id !== p.id) { MK.suzgecSifirla("e"); MK.suzgecSifirla("r"); NOTLAR_ACIK = false; }   /* başka plana geçince süzgeçler sıfırlanır */
+    if (!AKTIF || AKTIF.id !== p.id) {   /* başka plana geçince süzgeçler sıfırlanır */
+      MK.suzgecSifirla("e"); MK.suzgecSifirla("r"); NOTLAR_ACIK = false;
+      /* N2 (2026-09-30, reisim: "evet kendi branşıyla açılsın"): ekipman listesi denetçinin branşıyla açılır (planda o branştan ekipman
+         varsa); "Tümü" ile bütün ekipman görünür */
+      var bb = { Mekanik: "m", Elektrik: "e" }[KISI[BEN].brans];
+      if (bb && p.ekp.some(function (k) { return SICIL[k] && SICIL[k].tur.b === bb; })) SZ.e.sec.brans = bb;
+    }
     AKTIF = p;
     var d = p.durum, eylem = planEylem(p), sid = "a-plan-sebep-" + p.id;
     var isg = !p.isg ? '<span class="a-yuz-uyari">Yok</span>' : '<span class="a-kod">' + kacis(p.isg.no) + "</span>";
