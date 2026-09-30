@@ -306,7 +306,7 @@
       sayfa(nTablo + sTablo + kutu1("6. KUSUR AÇIKLAMALARI", kusurMetin(), "rb-kutu-ince") +
         '<p class="rb-dip">Nokta sayısı fazla olan tesislerde birden fazla form kullanılabilir. Ya da formun sadece 5. Bölümü çoğaltılabilir.<br>Kusur derecesi “*” hafif kusurlu ve “**” ağır kusurlu anlamında kullanılmaktadır. Değerlendirme “Uygun”, “Uygun Değil” ve “Uygulanamaz” olarak yapılmıştır.</p>' +
         kutu1("7. NOTLAR", R && R.notlar ? k(R.notlar) : "", "rb-kutu-ince") + sonuc1 + yetkili(9)) +
-      (R ? sayfa('<table class="rb-t">' + bolumBas("EK · FOTOĞRAFLAR") + '<tr><td class="rb-kutu rb-kutu-buyuk">' + fotoKutu() + "</td></tr></table>") : "") + "</article>";
+      "</article>";   /* formatta fotoğraf bölümü yok, ek sayfa da yok (P1, 2026-09-30) */
   }
   /* yardımcılar (resmî çıktı) */
   function nokta(v) { return v ? "<u>" + MK.kacis(String(v)) + "</u>" : "…………………"; }

@@ -2,8 +2,8 @@
  "maket": "m8",
  "tarih": "2026-09-30",
  "arac": "tools/olc-bulut.mjs --etkilesim (başsız tarayıcı, 1920 açık tema; gen verilen denemede o genişlik)",
- "toplam": 110,
- "gecen": 110,
+ "toplam": 111,
+ "gecen": 111,
  "denemeler": [
   {
    "ad": "önceki kontrolün hafif kusuru listelenir; Giderilmedi → bu raporun kusurlarına girer, sonuç önerisi Uygun değil",
@@ -545,7 +545,14 @@
    "gecti": true
   },
   {
-   "ad": "topraklama (ZPKR01): bölümler 1–9 + fotoğraf eki; pano sigortası yok",
+   "ad": "topraklama (ZPKR01): bölümler 1–9, fotoğraf yok (P1, formatta yok); pano sigortası yok",
+   "gen": 1920,
+   "sayfa": "maket/rapor.html",
+   "hash": "#/r/AT-1010",
+   "gecti": true
+  },
+  {
+   "ad": "topraklama: PDF'te fotoğraf eki yok (P1)",
    "gen": 1920,
    "sayfa": "maket/rapor.html",
    "hash": "#/r/AT-1010",

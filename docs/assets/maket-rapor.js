@@ -88,7 +88,7 @@
         ornekBilgi(); cihazDoldur();
         [0, 1, 2, 3, 4].forEach(function (i) { r.nokta[i].zx = F.noktalar[i][3]; }); r.nokta[1].rcdId = "22"; r.nokta[1].rcdTd = "25";
         r.nokta.push({ ad: "Kapı motoru — sevkiyat", egri: "C", In: 10, zx: "2,6", rcd: "", priz: false });
-        r.rcdler[0].id = F.rcd[0][4]; r.rcdler[0].td = F.rcd[0][5]; r.foto = 1;
+        r.rcdler[0].id = F.rcd[0][4]; r.rcdler[0].td = F.rcd[0][5];
       }
       /* plan 10 (2026-09-28; reisim: "en son attığım rapor formatına göre sonuç o şekilde gözükecek biçimde örnekler"): son formatlarla —
          ET-2001 Tamamlandı · Uygun · ET-2002 hafif kusur (formatın maddesi) · AT-2003 ağır kusur (Zx sınırı aşıyor, RCD yok → Not-2) ·
@@ -170,6 +170,9 @@
      olmasına rağmen doldurulmadıysa pop-up şekilde zorunlu alanlar doldurulmadı … fotoğraf eklemek her raporda zorunlu"). Temel zorunlular:
      fotoğraf (en az 1), türün ölçüm cihazları (kalibrasyonu geçerli), uygun değil maddenin formatlı türde derecesi (açıklama alanı yok, O2), test ve
      ölçüm değerleri (isteğe bağlı olanlar hariç). Başka format başka zorunluluk getirir (§3.7 satır 13). Zorunlu olmayan eksik gönderimi durdurmaz. */
+  /* P1 (2026-09-30, reisim: "fotoğraf olayını kaldıralım topraklama raporunda … bakanlık formatını bozmayalım"): formatında fotoğraf bölümü
+     olmayan türde (ZPKR01) fotoğraf bölümü yok, zorunlu da değil; formatsız türde her raporda */
+  var fotoVar = function (r) { return !r.F || !!r.F.bolumler.foto; };
   var otoSonuc = function (r) { return uygunDegil(r) ? "kullanilamaz" : "kullanilir"; };
   var SONUC = [["kullanilir", "Uygun"], ["kullanilamaz", "Uygun değil"]];
   var testZorunlu = function (x) { return !x.istege; };
@@ -184,7 +187,7 @@
       r.nokta.forEach(function (n, i) { if (isNaN(sayi(n.zx))) l.push({ bolum: "r-b5", alan: "#r-zx" + i }); if (n.rcd && noktaRcd(n) === null) l.push({ bolum: "r-b5", alan: "#r-ni" + i }); });
       r.rcdler.forEach(function (x, i) { if (rcdSonuc(x) === null) l.push({ bolum: "r-b5", alan: "#r-ri" + i }); });
     }
-    if (r.foto < 1) l.push({ bolum: "r-b7", alan: "#r-b7 .a-fotolar" });
+    if (fotoVar(r) && r.foto < 1) l.push({ bolum: "r-b7", alan: "#r-b7 .a-fotolar" });
     return l;
   }
 
@@ -513,8 +516,8 @@
         return "<li><b>" + kacis(x.kriter) + '</b><span class="a-alt-satir">' + kacis(x.aciklama) + " · " + x.rapor + " · " + MK.tarihYaz(x.tarih) + "</span>" +
           '<div class="a-kriter-cevap">' + (oku ? okuGirdi("r-dv" + i, ad2(sec, d) || "—") : MK.secim({ id: "r-dv" + i, ad: "Önceki hafif kusur " + (i + 1), deger: d, secenekler: sec, ipucu: "Seçin" })) + "</div></li>";
       }).join("") + "</ol>", '<span class="a-sayac"><b>' + dv.length + "</b> kusur</span>") : "";
-    /* fotoğraflar, sonuç ve yorum her raporda (reisim 2026-09-27); topraklama formatında fotoğraf bölümü yok → ek */
-    S.foto = bolum(F ? F.bolumler.foto || "Ek" : el ? 7 : 6, "r-b7", "Fotoğraflar", '<div class="a-fotolar' + (uyar(r, r.foto < 1) ? " a-alan-eksik" : "") + '">' + (oku ? "" : fotoMenu("foto-ekle")) + fotolar(r.foto, r.fotoAd, "", oku ? null : { eylem: "foto-sil" }) + "</div>");
+    /* fotoğraflar, sonuç ve yorum her raporda (reisim 2026-09-27); formatında fotoğraf bölümü yoksa fotoğraf yok (P1) */
+    S.foto = !fotoVar(r) ? "" : bolum(F ? F.bolumler.foto : el ? 7 : 6, "r-b7", "Fotoğraflar", '<div class="a-fotolar' + (uyar(r, r.foto < 1) ? " a-alan-eksik" : "") + '">' + (oku ? "" : fotoMenu("foto-ekle")) + fotolar(r.foto, r.fotoAd, "", oku ? null : { eylem: "foto-sil" }) + "</div>");
     /* sonuç ve kanaat muayene kriterleri gibi seçmeli: Uygun · Uygun değil; seçilmezse gönderilince kriterlere göre konur (reisim 2026-09-27);
        uygun değil madde varken "Uygun" uyarıdır, engel değil. Formatlı türde formatın sonuç cümlesi üstte. */
     S.sonuc = bolum(F ? F.bolumler.sonuc : el ? 8 : 7, "r-b8", "Sonuç ve kanaat", (F ? '<p class="a-format-metin" id="r-sonuc-metin">' + sonucCumle(r) + "</p>" : "") +

@@ -2040,6 +2040,12 @@ yazacak şekilde kusur açıklamaları kısmına gelsin"* → **O1:** ölçüm n
 kayıyordu, madde (i) simgesi metne yapışıktı — düzeltildi. **O2:** "Uygun değil" maddede Kusur açıklaması alanı yok (madde metni kusurun
 kendisi); fotoğraf eklenirse Kusur açıklamaları bölümünde fotoğraf ve altında ilgili madde. Kusur derecesi (hafif / ağır) Bakanlık formatlı
 türde kalır: sonucu (hafif / ağır kusurlu) o belirler, reisim "gelmesin" demedi.
+Ek (aynı gün, reisim birebir): *"fotoğraf olayını kaldıralım topraklama raporunda uygun uygunsuz olayınıda kaldıralım, onun yerine yan sekmede
+not1, not 2 not 3 diye 11 e kadar seçene olsun bakanlık formatını bozmayalım bölümü olmayan türlere henüz örnek pdf eklemedik büyük ihtimalle
+ekleyince olacak, bu rapor düzenleme işinde çok boğulmayalım temel disiplinlerini yapalım format ekledikçe değişiklik yapılır firmaya göre
+değişir zaten"* → **P1:** topraklama (ZPKR01) raporunda fotoğraf bölümü yok (formatta yok; zorunlu da değil). **P2:** 5.1 ve 5.2 tablolarında
+otomatik Uygun / Yetersiz sonucu kalktı; formatın "Sonuç (Uygunluk notu)" sütunu denetçinin seçtiği Not-1 … Not-11. Kusur açıklaması bölümü
+olmayan türler, örnek PDF'leri gelince formata göre yapılır (şimdi dokunulmaz); rapor ekranında temel disiplin, ayrıntı formatla gelir.
 
 **Açık kalanlar:** ~~Ana sayfada İSGGM duyuruları~~ (2026-09-27: makette eklendi; okuma işi uygulamada) (reisim 2026-09-26: *"Ana sayfada isgüm duyurularını gösterebilir miyiz ? Bunu
 yapılacaklar listesine ekle"*; öneri: ÇSGB İSGGM duyurular sayfası — https://www.csgb.gov.tr/isggm/duyurular/ — sunucuda günde birkaç kez
@@ -2073,6 +2079,9 @@ revizyon, alan kopyalama, hafif kusur devri, meslek eşleşme denetimi).
 - Emsal ürünler: https://opwire.app/iso-17020-periyodik-kontrol-yazilimi/ · https://17020muayene.vidco.com.tr/ · https://akuple.com/asansor-kontrol-yazilimi/ · https://ensyazilim.com/
 
 ## 11 · Değişiklik günlüğü
+- 2026-09-30 (190): **P1 · Topraklama raporunda fotoğraf yok** (§9 kırk ikinci tur ek). Bakanlık formatında (ZPKR01) fotoğraf bölümü
+  olmadığı için saha raporundaki "Ek · Fotoğraflar" bölümü, fotoğraf zorunluluğu ve PDF'in fotoğraf eki sayfası kalktı. Kural: formatında
+  fotoğraf bölümü olan türde (ZPKR02 8. bölüm) ve formatsız türde fotoğraf durur. 1 deneme güncellendi, 1 yeni.
 - 2026-09-30 (189): **O2 · Uygun değil maddede açıklama alanı yok; fotoğraf Kusur açıklamalarında, altında madde** (§9 kırk ikinci tur).
   Madde satırının altındaki "Kusur açıklaması" kutusu kalktı (zorunlu alanlardan da çıktı); kusur listesinde maddenin kendisi yazar. Kamera
   simgesiyle eklenen fotoğraf, formatlı türde Kusur açıklamaları bölümünde: fotoğraf (Görüntüle · İndir · Sil), hemen altında ilgili madde
