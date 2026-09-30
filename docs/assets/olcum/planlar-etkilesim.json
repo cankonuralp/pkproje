@@ -2,8 +2,8 @@
  "maket": "planlar",
  "tarih": "2026-09-30",
  "arac": "tools/olc-bulut.mjs --etkilesim (başsız tarayıcı, 1920 açık tema; gen verilen denemede o genişlik)",
- "toplam": 60,
- "gecen": 60,
+ "toplam": 61,
+ "gecen": 61,
  "denemeler": [
   {
    "ad": "Planlar listesi: müşteri adı kalın (≥ 600), proje adı normal (400)",
@@ -262,6 +262,13 @@
    "gen": 1920,
    "sayfa": "maket/planlarim.html",
    "hash": "#/",
+   "gecti": true
+  },
+  {
+   "ad": "plan içi başlığı: firma (müşteri) büyük, tesis altında küçük",
+   "gen": 1920,
+   "sayfa": "maket/planlarim.html",
+   "hash": "#/plan/1",
    "gecti": true
   },
   {

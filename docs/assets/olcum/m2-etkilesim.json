@@ -2,8 +2,8 @@
  "maket": "m2",
  "tarih": "2026-09-30",
  "arac": "tools/olc-bulut.mjs --etkilesim (başsız tarayıcı, 1920 açık tema; gen verilen denemede o genişlik)",
- "toplam": 26,
- "gecen": 26,
+ "toplam": 27,
+ "gecen": 27,
  "denemeler": [
   {
    "ad": "müşteriler: Müşteri girişi kullanılmadı → 2 / 11",
@@ -122,6 +122,13 @@
    "gen": 1920,
    "sayfa": "maket/musteriler.html",
    "hash": "#/m/m1",
+   "gecti": true
+  },
+  {
+   "ad": "tesis sayfası başlığı: firma büyük, altında Tesis: ad (L7)",
+   "gen": 1920,
+   "sayfa": "maket/musteriler.html",
+   "hash": "#/t/t2",
    "gecti": true
   },
   {

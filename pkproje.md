@@ -2002,6 +2002,9 @@ gitmez, "Parolayı gönder" ile gider · L6 Plan aç'ta ekipman seçimi (kapsam)
 branşının ekipmanını görür; 203 geçerli (raporu olan ekipmanda Rapor oluştur yok, rapor silinince gelir).
 Ek (aynı gün, reisim birebir): *"ön bilgilendirme formu gönder tuşu olsun kartı ekranında parolayı gönder tuşunun yanında"* → L5'e katıldı:
 müşteri kartında Parolayı gönder'in yanında **Ön bilgilendirme formu gönder** (müşterinin e-postasına; son gönderim tarihi kartta).
+Ek (aynı gün, reisim birebir; Plan açıldı ekranının görüntüsüyle): *"planlarda bu ekranda firma ismi önde olmalı tesis ismi değil bu her
+yerd eböyle olmalı neden başlıkta büyük harflerle tesis aşağıda küçük firma yazıyor tam tersi olmalı"* → **L7:** her başlıkta firma (müşteri)
+adı büyük ve önde, tesis adı altında küçük.
 
 **Açık kalanlar:** ~~Ana sayfada İSGGM duyuruları~~ (2026-09-27: makette eklendi; okuma işi uygulamada) (reisim 2026-09-26: *"Ana sayfada isgüm duyurularını gösterebilir miyiz ? Bunu
 yapılacaklar listesine ekle"*; öneri: ÇSGB İSGGM duyurular sayfası — https://www.csgb.gov.tr/isggm/duyurular/ — sunucuda günde birkaç kez
@@ -2035,6 +2038,11 @@ revizyon, alan kopyalama, hafif kusur devri, meslek eşleşme denetimi).
 - Emsal ürünler: https://opwire.app/iso-17020-periyodik-kontrol-yazilimi/ · https://17020muayene.vidco.com.tr/ · https://akuple.com/asansor-kontrol-yazilimi/ · https://ensyazilim.com/
 
 ## 11 · Değişiklik günlüğü
+- 2026-09-30 (176): **L7 · Başlıkta firma önde, tesis altında** (§9 kırkıncı tur ek). Bütün nesne başlıkları tarandı; tesisi öne koyan dört
+  yer düzeltildi: **plan içi** (başlık müşteri, altında tesis), **Plan açıldı** ekranı (proje no · firma ünvanı, altında tesis), **tesis sayfası**
+  (başlık firma ünvanı, altında "Tesis: ad"), **saha raporu** alt satırı (firma · tesis · kişi sırası). Planlar listesi zaten müşteri
+  kalın (X1). Ölçüm: planlar 128/128 · 61/61 · 64/64; m2 104/104 · 27/27 · 52/52; m6 80/80 · 20/20 · 40/40; m8 184/184 · 107/107 ·
+  92/92 (4 yeni deneme); gözle 1920.
 - 2026-09-30 (175): **L1 · Teklifte ekipman listesi Excel içe + dışa** (§9 kırkıncı tur; soru cevabı: içe + dışa). Teklif formunda Kalemler'in
   altında **Excel'den yükle**: müşterinin ekipman listesi (Kod · Ekipman türü · Konum · Seri no; yalnız tür zorunlu, adıyla ya da koduyla),
   şablon, satır satır önizleme ("Eklenecek" / "Tür bulunamadı, atlanır" / "Kod dosyada iki kez"); **Kalemlere ekle** geçerli satırları tür

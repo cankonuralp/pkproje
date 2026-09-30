@@ -239,8 +239,9 @@
     var s = SONUC, t = s.t, m = MV.musteri(t.m), ekip = s.ekip.map(MV.kisi), eksik = ekip.filter(function (p) { return s.D[p.id].eksik.length; });
     var top = kapsamToplam(s.k);
     $("a-nesne").innerHTML = MK.kirinti([["Planlar", MK.adres(13, "#/")], ["Plan aç", "#/"], [s.no]]) +
-      '<div class="a-nesne-bas"><div class="a-nesne-kimlik"><div class="a-nesne-baslik"><h1 tabindex="-1">' + s.no + " · " + kacis(t.ad) + "</h1>" + rozet(MV.PLAN_DURUM.bekliyor) + "</div>" +
-        '<p class="a-nesne-alt">' + ikon("building-2", "a-ikon-kucuk") + "<span>" + kacis(m.unvan) + "</span></p></div>" +
+      '<div class="a-nesne-bas"><div class="a-nesne-kimlik"><div class="a-nesne-baslik"><h1 tabindex="-1">' + s.no + " · " + kacis(m.unvan) + "</h1>" + rozet(MV.PLAN_DURUM.bekliyor) + "</div>" +
+        /* L7 (2026-09-30): başlıkta firma, altında tesis */
+        '<p class="a-nesne-alt">' + ikon("map-pin", "a-ikon-kucuk") + "<span>" + kacis(t.ad) + "</span></p></div>" +
         '<div class="a-eylem-cubugu"><a class="a-tus a-tus-ikincil" href="#/">' + ikon("plus", "a-ikon-kucuk") + "Yeni plan aç</a>" +
           '<a class="a-tus a-tus-birincil" href="' + MK.adres(13, "#/") + '">' + ikon("calendar-check", "a-ikon-kucuk") + "Planlar</a></div></div>" +
       '<div class="a-uyari-serit">' + MK.serit("onay", "circle-check", "Plan açıldı. " + kacis(ekip.map(function (p) { return p.ad; }).join(", ")) + " için Planlar ekranında “Kabul bekliyor”.") +

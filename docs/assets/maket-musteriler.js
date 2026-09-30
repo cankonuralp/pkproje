@@ -214,8 +214,9 @@
     /* 2026-09-26 (M5 2. tur): İSG-KATİP ID'leri tesisin iş sözleşmesinin içinde; sözleşme yoksa plan açarken el ile girilir */
     var soz = MV.tesisSozlesmesi(t.id, MK.BUGUN);
     $("a-nesne").innerHTML = MK.kirinti([["Müşteriler", "#/"], [m.kisa, "#/m/" + m.id], [t.ad]]) +
-      '<div class="a-nesne-bas"><div class="a-nesne-kimlik"><div class="a-nesne-baslik"><h1 tabindex="-1">' + kacis(t.ad) + "</h1>" + (t.pasif ? rozet(PASIF) : "") + "</div>" +
-        '<p class="a-nesne-alt">' + ikon("building-2", "a-ikon-kucuk") + '<a class="a-baglanti" href="#/m/' + m.id + '">' + kacis(m.unvan) + "</a></p></div>" +
+      '<div class="a-nesne-bas"><div class="a-nesne-kimlik"><div class="a-nesne-baslik"><h1 tabindex="-1">' + kacis(m.unvan) + "</h1>" + (t.pasif ? rozet(PASIF) : "") + "</div>" +
+        /* L7 (2026-09-30): tesis sayfasında da başlıkta firma, altında tesis (firma kırıntıdan açılır) */
+        '<p class="a-nesne-alt">' + ikon("map-pin", "a-ikon-kucuk") + "<span>Tesis: <b>" + kacis(t.ad) + "</b></span></p></div>" +
         '<div class="a-eylem-cubugu">' + pasifTus(t) + MK.tus({ eylem: "tesis-duzenle", ad: "Düzenle", ikon: "pencil", sinif: "a-tus-ikincil" }) + (t.pasif ? "" : planAc("#/?tesis=" + t.id)) + "</div></div>" +
       pasifSerit(t, "Tesis") +
       (e.length ? '<div class="a-serit-kap">' + MK.serit("uyari", "triangle-alert", "Eksik bilgi: " + e.join(" · ") + ". Kayıt engellenmez; raporun işyeri bölümünde gerekir, rapor imzalanırken yeniden hatırlatılır.") + "</div>" : "") +

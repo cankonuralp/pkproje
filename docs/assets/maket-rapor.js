@@ -525,7 +525,7 @@
       : ["firma", "ekipman", "cihaz", "tanim", "test", "devir", "kusur", "not", "sonuc", "yetkili", "foto"];
     $("a-rapor").innerHTML = MK.kirinti([["Planlar", MK.adres(13, "#/")], [PL.plan || PL.ad, PL.pid ? MK.adres(13, "#/plan/" + PL.pid) : MK.adres(13, "#/")], [r.no]]) +
       '<div class="a-nesne-bas"><div class="a-nesne-kimlik"><div class="a-nesne-baslik"><h1 tabindex="-1">' + e.kod + " · " + kacis(t.ad) + "</h1>" + rozet(DURUM[r.durum]) + "</div>" +
-        '<p class="a-nesne-alt">' + ikon("file-text", "a-ikon-kucuk") + '<span><span class="a-kod">' + r.no + "</span> · " + (F ? '<span class="a-kod">' + t.format + "</span> · " : "") + kacis(PL.ad) + " · " + kacis(MV.musteri(PL.m).kisa) + " · " + kacis(p.ad) + "</span></p>" +
+        '<p class="a-nesne-alt">' + ikon("file-text", "a-ikon-kucuk") + '<span><span class="a-kod">' + r.no + "</span> · " + (F ? '<span class="a-kod">' + t.format + "</span> · " : "") + kacis(MV.musteri(PL.m).kisa) + " · " + kacis(PL.ad) + " · " + kacis(p.ad) + "</span></p>" +   /* L7: firma önce, tesis sonra */
         /* son kayıt başlıkta (2026-09-29: tuşlar çubuksuz, yazı tuşların arkasında kalmasın) */
         (oku ? "" : '<p class="a-adim-not a-rapor-kayit" id="r-kayit">' + kayitMetin(r) + "</p>") + "</div>" +
         /* Ön izle (reisim 2026-09-28: "en sağ üstte ön izleme tuşu olmalı PDF çıktısını ön izleyebilmeliyim ön izle halinde PDF halini indirebilmeliyim") */

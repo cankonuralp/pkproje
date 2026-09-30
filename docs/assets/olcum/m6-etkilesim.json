@@ -2,8 +2,8 @@
  "maket": "m6",
  "tarih": "2026-09-30",
  "arac": "tools/olc-bulut.mjs --etkilesim (başsız tarayıcı, 1920 açık tema; gen verilen denemede o genişlik)",
- "toplam": 19,
- "gecen": 19,
+ "toplam": 20,
+ "gecen": 20,
  "denemeler": [
   {
    "ad": "tesisten gelince: tarih sonraki kontrol; ekipman seçimi yok, özette 6 ekipman hepsi plana girer",
@@ -115,6 +115,13 @@
    "gen": 1920,
    "sayfa": "maket/plan-ac.html",
    "hash": "#/?tesis=t2",
+   "gecti": true
+  },
+  {
+   "ad": "Plan açıldı ekranı: başlıkta proje no · firma, altında tesis (L7)",
+   "gen": 1920,
+   "sayfa": "maket/plan-ac.html",
+   "hash": "#/?tesis=t1",
    "gecti": true
   },
   {

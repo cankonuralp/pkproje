@@ -536,8 +536,9 @@
     $("a-plan").innerHTML =
       '<nav class="a-kirinti" aria-label="Konum"><a href="#/">' + ikon("arrow-left", "a-ikon-kucuk") + "Planlar</a>" +
         ikon("chevron-right", "a-ikon-kucuk") + '<span aria-current="page">' + p.no + "</span></nav>" +
-      '<div class="a-nesne-bas"><div class="a-nesne-kimlik"><div class="a-nesne-baslik"><h1 tabindex="-1">' + kacis(p.ad) + "</h1>" + rozet(DURUM[d]) + "</div>" +
-        '<p class="a-nesne-alt">' + ikon("building-2", "a-ikon-kucuk") + "<span>" + kacis(p.musteri) + "</span></p></div></div>" +
+      '<div class="a-nesne-bas"><div class="a-nesne-kimlik"><div class="a-nesne-baslik"><h1 tabindex="-1">' + kacis(p.musteri) + "</h1>" + rozet(DURUM[d]) + "</div>" +
+        /* 2026-09-30 (L7, reisim: "firma ismi önde olmalı tesis ismi değil bu her yerde böyle olmalı"): başlıkta firma, altında tesis */
+        '<p class="a-nesne-alt">' + ikon("map-pin", "a-ikon-kucuk") + "<span>" + kacis(p.ad) + "</span></p></div></div>" +
       '<ol class="a-akis" aria-label="Plan akışı">' + a1 + a2 + a3 + a4 + "</ol>" +
       '<section class="a-bolum a-notlar" aria-labelledby="a-not-baslik"><div class="a-alt-bas"><h2 class="a-alt-baslik" id="a-not-baslik">Proje notları</h2>' +
         '<span class="a-sayac"><b>' + notlar.length + "</b> not</span></div>" +

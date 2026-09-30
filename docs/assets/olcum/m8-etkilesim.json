@@ -2,8 +2,8 @@
  "maket": "m8",
  "tarih": "2026-09-30",
  "arac": "tools/olc-bulut.mjs --etkilesim (başsız tarayıcı, 1920 açık tema; gen verilen denemede o genişlik)",
- "toplam": 106,
- "gecen": 106,
+ "toplam": 107,
+ "gecen": 107,
  "denemeler": [
   {
    "ad": "önceki kontrolün hafif kusuru listelenir; Giderilmedi → bu raporun kusurlarına girer, sonuç önerisi Uygun değil",
@@ -185,6 +185,13 @@
    "gen": 1920,
    "sayfa": "maket/rapor.html",
    "hash": "#/r/ET-1009",
+   "gecti": true
+  },
+  {
+   "ad": "saha raporu alt satırı: firma önce, sonra tesis (L7)",
+   "gen": 1920,
+   "sayfa": "maket/rapor.html",
+   "hash": "#/r/KS-1006",
    "gecti": true
   },
   {
