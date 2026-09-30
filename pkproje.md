@@ -2028,6 +2028,12 @@ bekleyenler, yöneticiye bunlar + kendi branşında teknik yönetici onayındaki
 günlük süre takibi üst çubukta tek satır, basınca açılan pencere (sürekli ekranda değil), denetçinin Ana sayfasında; herkes için kendi
 süresi · N7 Onaylar sayfası: "vekil" yok, Mekanik yönetici / Elektrik yönetici; bakış seçimi yalnız "kime nasıl görünür" gösterimi · N8
 arayüzde "inspector" yerine her yerde **denetçi**.
+Ek (aynı gün; soru "Raporlar balonu kaldırılsın mı, kişiye göre mi?"), reisim birebir: *"kişiye göre olsun"* → **N9:** Raporlar balonu giriş
+yapan kişinin kendi raporları: kırmızı geri gönderilen, sarı onaya gönderilmemiş (Yeni); imza bekleyenler Onaylar'da (tekrar yok).
+Ek (aynı gün, reisim birebir): *"pasife al tuşu raporlarda değil ekipmanlar da olacak yanlış olmuş reisim"* → **N11** · *"ekipman bilgilerinde
+seri no olmamasına rağmen seri no soruyor ekipman kopyalarken ve değiştirilememesine rağmen ekipman türü soruyor gibi gözüküyor ekipman kodu
+ve ekipman bölümü sorsun yeterli"* (Kaydet ve kopyala penceresinin görüntüsüyle) → **N10:** kopyalarken yalnız ekipman kodu ve ekipman
+bölümü (kullanım yeri) sorulur; seri no ve tür alanı yok.
 
 **Açık kalanlar:** ~~Ana sayfada İSGGM duyuruları~~ (2026-09-27: makette eklendi; okuma işi uygulamada) (reisim 2026-09-26: *"Ana sayfada isgüm duyurularını gösterebilir miyiz ? Bunu
 yapılacaklar listesine ekle"*; öneri: ÇSGB İSGGM duyurular sayfası — https://www.csgb.gov.tr/isggm/duyurular/ — sunucuda günde birkaç kez
@@ -2061,6 +2067,9 @@ revizyon, alan kopyalama, hafif kusur devri, meslek eşleşme denetimi).
 - Emsal ürünler: https://opwire.app/iso-17020-periyodik-kontrol-yazilimi/ · https://17020muayene.vidco.com.tr/ · https://akuple.com/asansor-kontrol-yazilimi/ · https://ensyazilim.com/
 
 ## 11 · Değişiklik günlüğü
+- 2026-09-30 (185): **N9 · Raporlar balonu kişiye göre** (§9 kırk birinci tur ek). Giriş yapanın kendi raporları: kırmızı geri gönderilen
+  (düzeltilecek), sarı onaya gönderilmemiş Yeni; imza bekleyenler Onaylar balonunda (tekrar sayılmaz); raporu olmayanda balon yok. 2 deneme
+  gerekçeyle güncellendi. Ölçüm: m9 200/200 · 49/49 · 100/100; m10 48/48 · 15/15 · 24/24; planlar 128/128 · 63/63 · 64/64.
 - 2026-09-30 (184): **N8 · Arayüzde her yerde "denetçi"** (§9 kırk birinci tur). Bütün maket metinlerinde "Inspector / inspector" (ekleriyle:
   inspector'ın → denetçinin, inspector'a → denetçiye …) "Denetçi / denetçi" oldu: rol adı, sütun ve süzgeç başlıkları, şeritler, bildirimler,
   kullanıcı rolleri. Kod anahtarları (rol kodu "inspector", #/inspector rotası, işlev adları) aynen; çeviride iki kod adı yanlışlıkla değişti,

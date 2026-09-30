@@ -1453,10 +1453,12 @@
       var gec = l.filter(function (p) { return p.tarih <= MK.BUGUN; }).length;
       return { kirmizi: gec, sari: l.length - gec, ad: { kirmizi: "plan günü gelmiş, kabul bekleyen plan", sari: "kabul bekleyen plan" } };
     },
-    14: function () {   /* raporlar: son imza bekleyen · onaydan 24 saati geçmiş */
-      var l = MV.RAPORLAR.filter(function (r) { return r.durum === "onaylandi" && !r.pasif; });
-      var gec = l.filter(function (r) { return r.onay && saatFarki(r.onay.zaman) > 24; }).length;
-      return { kirmizi: gec, sari: l.length - gec, ad: { kirmizi: "son imzası 24 saati geçen rapor", sari: "son imza bekleyen rapor" } };
+    14: function (ben) {   /* raporlar (N9, 2026-09-30, reisim: "kişiye göre olsun"): giriş yapanın kendi raporları — geri gönderilen (kırmızı) ·
+      onaya gönderilmemiş Yeni (sarı); imza bekleyenler Onaylar balonunda (tekrar sayılmaz); raporu olmayanda balon yok */
+      if (!ben) return null;
+      var l = MV.RAPORLAR.filter(function (r) { return r.kisi === ben && !r.pasif && r.durum === "taslak"; });
+      var geri = l.filter(function (r) { return r.geri; }).length;
+      return { kirmizi: geri, sari: l.length - geri, ad: { kirmizi: "size geri gönderilen rapor", sari: "onaya gönderilmemiş raporunuz" } };
     },
     15: function (ben) {   /* onaylar (N5): denetçiye kendi muayene uzmanı imzası bekleyen raporları; branş yöneticisine bunlar + kendi branşında
       öteki muayene uzmanlarının onaya gönderdiği (teknik yönetici onayında) raporlar; gönderimden / onaydan 24 saati geçen kırmızı */
