@@ -670,6 +670,8 @@
     plan: { ad: "Plan açarken \u201ckontrolü geliyor\u201d", etiket: "sonraki kontrolü plan gününden en çok bu kadar gün sonra olan ekipman", v: 30, secenek: [15, 30, 45, 60, 90] },
     egitim: { ad: "Eğitim tekrarı", etiket: "tekrar tarihine bu kadar gün kala uyarı", v: 60, secenek: [30, 45, 60, 90, 120] }
   };
+  /* "Uygun değil" maddede fotoğraf zorunlu mu (2026-09-30, 213): firma ayarı, başlangıçta zorunlu (§3.7 satır 14) */
+  MV.kusurFotoZorunlu = function () { return MV.FIRMA.kusurFoto !== false; };
   MV.esik = function (k) { var x = +((MV.FIRMA.esik || {})[k]); return x > 0 ? x : MV.ESIK[k].v; };
   /* yeni rapor numarasının başındaki firma kodu: 2–4 büyük harf; eski numaralar değişmez */
   MV.firmaKodu = function () { var x = String(MV.FIRMA.raporKod || MV.FIRMA.kisa || "KM"); return /^[A-ZÇĞİÖŞÜ]{2,4}$/.test(x) ? x : "KM"; };

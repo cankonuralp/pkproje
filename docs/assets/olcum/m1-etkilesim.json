@@ -2,8 +2,8 @@
  "maket": "m1",
  "tarih": "2026-09-30",
  "arac": "tools/olc-bulut.mjs --etkilesim (başsız tarayıcı, 1920 açık tema; gen verilen denemede o genişlik)",
- "toplam": 78,
- "gecen": 78,
+ "toplam": 79,
+ "gecen": 79,
  "denemeler": [
   {
    "ad": "İzin talepleri: formun PDF'i açılır, e-posta talep edene",
@@ -364,6 +364,13 @@
   },
   {
    "ad": "Firma ayarları: zimmet teslim edeninin başlangıcı değişince formda o kişi gelir; eski imzalı formun teslim edeni değişmez",
+   "gen": 1920,
+   "sayfa": "maket/personel.html",
+   "hash": "#/ayarlar",
+   "gecti": true
+  },
+  {
+   "ad": "Firma ayarları · Rapor: Uygun değil maddede fotoğraf başlangıçta zorunlu, kapatılınca isteğe bağlı (kalıcı)",
    "gen": 1920,
    "sayfa": "maket/personel.html",
    "hash": "#/ayarlar",

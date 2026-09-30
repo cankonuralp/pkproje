@@ -175,7 +175,8 @@
     if (gecmis(r).length || eksikTur(r).length) l.push({ bolum: "r-b3", alan: "#r-b3 [data-eylem=cihaz-ekle-ac], #r-b3 .a-hata-metin" });
     kusurlar(r).forEach(function (x) { var i = r.kriter.indexOf(x);
       if (MV.kusurSinifli(r.t) && !x.derece) l.push({ bolum: "r-b4", alan: "#r-kd" + i });
-      if (!x.not.trim()) l.push({ bolum: "r-b4", alan: "#r-kn" + i }); });
+      if (!x.not.trim()) l.push({ bolum: "r-b4", alan: "#r-kn" + i });
+      if (MV.kusurFotoZorunlu() && !(x.foto > 0)) l.push({ bolum: "r-b4", alan: "#r-kf" + i }); });
     ts.forEach(function (x, i) { if (testZorunlu(x) && !testDolu(x, r.test[i])) l.push({ bolum: "r-b5", alan: "#r-t" + i }); });
     if (F && F.noktalar) {
       r.nokta.forEach(function (n, i) { if (isNaN(sayi(n.zx))) l.push({ bolum: "r-b5", alan: "#r-zx" + i }); if (n.rcd && noktaRcd(n) === null) l.push({ bolum: "r-b5", alan: "#r-ni" + i }); });
@@ -221,8 +222,10 @@
   };
   /* fotoğraf ekle: kameradan ya da galeriden (reisim 2026-09-27: "fotoğraf çek değil fotoğraf ekle yazsın galeriden de eklenebilsin");
      telefonda uygulama ikisini de sunar, makette küçük menü */
-  var fotoMenu = function (eylem, veri) {
-    return '<div class="a-secici a-foto-menu"><button class="a-tus a-tus-ikincil" type="button" data-secici-ac="foto" aria-haspopup="menu" aria-expanded="false">' + ikon("camera", "a-ikon-kucuk") + "Fotoğraf ekle</button>" +
+  /* simge: madde satırında yalnız kamera simgesi (2026-09-30, 213); id ve gecersiz zorunlu fotoğraf işaretine */
+  var fotoMenu = function (eylem, veri, simge) {
+    return '<div class="a-secici a-foto-menu">' + (simge ? '<button class="a-ikon-tus a-kusur-foto-tus" type="button" data-secici-ac="foto" id="' + simge.id + '" aria-haspopup="menu" aria-expanded="false" aria-label="' + simge.ad + '" title="Fotoğraf ekle"' + (simge.gecersiz ? ' aria-invalid="true"' : "") + ">" + ikon("camera") + "</button>"
+      : '<button class="a-tus a-tus-ikincil" type="button" data-secici-ac="foto" aria-haspopup="menu" aria-expanded="false">' + ikon("camera", "a-ikon-kucuk") + "Fotoğraf ekle</button>") +
       '<div class="a-secici-liste" role="menu" aria-label="Fotoğraf kaynağı" hidden>' +
       '<button class="a-secenek" type="button" role="menuitem" data-eylem="' + eylem + '" data-kaynak="kamera"' + (veri || "") + ">Kamera ile çek</button>" +
       '<button class="a-secenek" type="button" role="menuitem" data-eylem="' + eylem + '" data-kaynak="galeri"' + (veri || "") + ">Galeriden seç</button></div></div>";
@@ -239,15 +242,18 @@
   function kriterHtml(r, oku, i) {
     var t = r.t, x = r.kriter[i], ad = MV.kriterler(t)[i], no = kriterNo(t, i), kus = x.c === "uygundegil";
     return '<div class="a-kriter" id="r-k' + i + '"><p class="a-kriter-ad" id="r-ka' + i + '"><span class="a-kriter-no">' + no + "</span><span>" + kacis(ad) + "</span></p>" +
-      '<div class="a-kriter-cevap">' + (oku ? okuGirdi("r-kc" + i, ad2(KRITER, x.c)) : MK.secim({ id: "r-kc" + i, ad: "Madde " + no, deger: x.c, secenekler: KRITER, ipucu: "Seçin", tanim: "r-ka" + i, gecersiz: uyar(r, !x.c) })) + "</div>" +
+      /* 2026-09-30 (213): "Uygun değil" maddede satırın içinde fotoğraf simgesi; fotoğraf açıklamasıyla kusur açıklamalarına girer; zorunluluk
+         firma ayarı (MV.kusurFotoZorunlu, başlangıçta zorunlu) */
+      '<div class="a-kriter-cevap' + (kus && !oku ? " a-kriter-cevap-foto" : "") + '">' + (kus && !oku ? fotoMenu("kusur-foto", ' data-i="' + i + '"', { id: "r-kf" + i, ad: "Madde " + no + " fotoğraf ekle", gecersiz: uyar(r, MV.kusurFotoZorunlu() && !(x.foto > 0)) }) : "") +
+        (oku ? okuGirdi("r-kc" + i, ad2(KRITER, x.c)) : MK.secim({ id: "r-kc" + i, ad: "Madde " + no, deger: x.c, secenekler: KRITER, ipucu: "Seçin", tanim: "r-ka" + i, gecersiz: uyar(r, !x.c) })) + "</div>" +
       (kus ? '<div class="a-kriter-kusur">' +
         /* hafif / ağır yalnız Bakanlık formatı yürürlükteki türde (§4.5, Ek-III 1.9.1) */
         (MV.kusurSinifli(t) ? MK.alan({ id: "r-kd" + i, etiket: "Kusur derecesi", zorunlu: !oku,
           girdi: oku ? okuGirdi("r-kd" + i, ad2(DERECE, x.derece)) : MK.secim({ id: "r-kd" + i, ad: "Kusur derecesi", deger: x.derece || "", secenekler: DERECE, ipucu: "Seçin", tanim: "r-kd" + i + "-ipucu", gecersiz: uyar(r, !x.derece) }) }) : "") +
         MK.alan({ id: "r-kn" + i, etiket: "Kusur açıklaması", zorunlu: !oku,
           girdi: '<textarea class="a-alan a-alan-ince" id="r-kn' + i + '" data-alan="kn' + i + '" maxlength="300" aria-describedby="r-kn' + i + '-ipucu"' + (oku ? " readonly" : "") + (uyar(r, !x.not.trim()) ? ' aria-invalid="true"' : "") + ">" + kacis(x.not) + "</textarea>" }) +
-        /* "Fotoğraf ekle" fotoğrafların önünde: menüsü hep solda açılır, dar ekranda taşmaz (2026-09-28) */
-        '<div class="a-fotolar">' + (oku ? "" : fotoMenu("kusur-foto", ' data-i="' + i + '"')) + fotolar(x.foto || 0, x.fotoAd, "Madde " + no, oku ? null : { eylem: "kusur-foto-sil", veri: { k: i } }) + "</div></div>" : "") + "</div>";
+        (x.foto > 0 ? '<div class="a-fotolar">' + fotolar(x.foto, x.fotoAd, "Madde " + no, oku ? null : { eylem: "kusur-foto-sil", veri: { k: i } }) + "</div>"
+          : !oku && MV.kusurFotoZorunlu() ? '<p class="a-ipucu' + (uyar(r, true) ? " a-ipucu-uyari" : "") + '">Fotoğraf zorunlu: satırdaki kamera simgesiyle ekleyin.</p>' : "") + "</div>" : "") + "</div>";
   }
   /* ünlem menüsü (§3.8 kural 3, reisim 2026-09-28: "ünlem işareti olur ve oradan seçilerek hepsini uygun yap hepsini uygunsuz yap ya da
      hepsini uygulanamaz yap"): grubun başlığında, o grubun bütün maddelerini tek seferde işaretler; madde madde değiştirmek serbest */
@@ -364,9 +370,12 @@
       (oku ? "" : '<div class="a-eylem-cubugu a-bolum-serit">' + MK.tus({ eylem: "satir-ekle", ad: tur === "pd" ? "Bölüm ekle" : "Yer ekle", ikon: "plus", sinif: "a-tus-ikincil", veri: { tur: tur } }) + "</div>");
   }
   /* kusur açıklamaları (formatlı tür): uygun değil maddeler, sınır dışı ölçümler, uygunsuz ölçüm noktaları ve RCD'ler tek listede */
+  /* kusurlu maddenin fotoğraf adları (örnek kayıtta dosya yok: fotograf-N.jpg) — kusur açıklamalarında ve PDF'te fotoğrafa atıf */
+  var fotoAdlari = function (x) { var l = []; for (var j = 0; j < (x.foto || 0); j++) l.push((x.fotoAd || [])[j] || "fotograf-" + (j + 1) + ".jpg"); return l; };
   function kusurListe(r) {
     var l = [], F = r.F, t = r.t, kr = MV.kriterler(t);
-    r.kriter.forEach(function (x, i) { if (x.c === "uygundegil") l.push([kriterNo(t, i) + " · " + kr[i], ad2(DERECE, x.derece) || (MV.kusurSinifli(t) ? "Derece seçilmedi" : "Uygun değil"), x.not || "Açıklama yazılmadı"]); });
+    r.kriter.forEach(function (x, i) { if (x.c === "uygundegil") l.push([kriterNo(t, i) + " · " + kr[i], ad2(DERECE, x.derece) || (MV.kusurSinifli(t) ? "Derece seçilmedi" : "Uygun değil"), x.not || "Açıklama yazılmadı",
+      fotoAdlari(x).join(", ")]); });
     MV.testler(t).forEach(function (x, i) { if (testSonuc(x, r.test[i]) === false) l.push([x.ad, "Ağır kusur", r.test[i] + " " + x.birim + " · sınır " + MV.sinirYaz(x)]); });
     r.nokta.forEach(function (x) { var h = MV.noktaHesap(x); if (h.agir) l.push([x.ad, "Ağır kusur", "Not-" + h.not + ": " + F.notlar[h.not - 1]]); });
     r.rcdler.forEach(function (x) { if (rcdSonuc(x) === false) l.push([x.ad + " · RCD", "Ağır kusur", "RCD performans testi yetersiz (IΔ " + x.id + " mA · TΔ " + x.td + " ms)."]); });
@@ -380,7 +389,8 @@
   function kusurHtml(r) {
     var l = kusurListe(r);
     /* uygun değil işaretlenen her madde ve uygun olmayan ölçüm; kusur derecesi yazısı yok (reisim 2026-09-28: "hafif kusur ağır kusur vs yazmasın") */
-    return (l.length ? '<ol class="a-kusur-liste">' + l.map(function (x) { return "<li><b>" + kacis(x[0]) + '</b><span class="a-alt-satir">' + kacis(x[2]) + "</span></li>"; }).join("") + "</ol>"
+    return (l.length ? '<ol class="a-kusur-liste">' + l.map(function (x) { return "<li><b>" + kacis(x[0]) + '</b><span class="a-alt-satir">' + kacis(x[2]) + "</span>" +
+      (x[3] ? '<span class="a-alt-satir a-kusur-foto">' + ikon("camera", "a-ikon-kucuk") + "Fotoğraf: " + kacis(x[3]) + "</span>" : "") + "</li>"; }).join("") + "</ol>"
         : '<p class="a-bos-satir">Kusur yok.</p>') +
       (r.F.agirKusur ? '<details class="a-format-liste"><summary>Ağır kusur sayılan durumlar</summary><ul>' + r.F.agirKusur.map(function (x) { return "<li>" + kacis(x) + "</li>"; }).join("") + "</ul></details>" : "");
   }

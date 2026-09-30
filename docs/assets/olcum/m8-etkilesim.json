@@ -2,8 +2,8 @@
  "maket": "m8",
  "tarih": "2026-09-30",
  "arac": "tools/olc-bulut.mjs --etkilesim (başsız tarayıcı, 1920 açık tema; gen verilen denemede o genişlik)",
- "toplam": 98,
- "gecen": 98,
+ "toplam": 101,
+ "gecen": 101,
  "denemeler": [
   {
    "ad": "önceki kontrolün hafif kusuru listelenir; Giderilmedi → bu raporun kusurlarına girer, sonuç önerisi Uygun değil",
@@ -133,6 +133,27 @@
   },
   {
    "ad": "masaüstünde tuşlar yan yana (Sil · Kaydet ve kopyala · Kaydet · Onaya gönder), İşlemler menüsü görünmez",
+   "gen": 1920,
+   "sayfa": "maket/rapor.html",
+   "hash": "#/r/ET-1009",
+   "gecti": true
+  },
+  {
+   "ad": "Uygun değil seçilince madde satırında (seçimin hizasında) kamera simgesi; Uygun'da yok",
+   "gen": 1920,
+   "sayfa": "maket/rapor.html",
+   "hash": "#/r/ET-1009",
+   "gecti": true
+  },
+  {
+   "ad": "fotoğrafsız Uygun değil maddeyle gönderilmez (zorunlu, simge kırmızı); fotoğraf eklenince kusur açıklamalarında fotoğraf adıyla",
+   "gen": 1920,
+   "sayfa": "maket/rapor.html",
+   "hash": "#/r/ET-1009",
+   "gecti": true
+  },
+  {
+   "ad": "Firma ayarında fotoğraf isteğe bağlıysa fotoğrafsız Uygun değil maddeyle gönderilebilir",
    "gen": 1920,
    "sayfa": "maket/rapor.html",
    "hash": "#/r/ET-1009",

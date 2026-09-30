@@ -967,6 +967,7 @@ Reisim yeni bir tane söyledikçe bu tabloya satır eklenir.
 | 11 | **Masraf formu** | Talepler (masraf) | **var — temel format `KM-FR-MSR-01`** (2026-09-28, T8; iskelet `MB.TALEP_FORMAT.masraf`) | aynı: firma formatı, PDF, e-posta |
 | 12 | **Cihaz ara kontrol / bakım kaydı** | Ölçüm cihazları › cihaz | temel format `KM-FR-ARA-01` (2026-09-28) | firma kendi formatını kullanabilir; günlük / haftalık / aylık / 6 aylık bakım mantığı aynı (reisim 2026-09-28) |
 | 13 | **Rapor içeriği kuralları** | Saha raporu · final rapor | Bakanlık formatı ya da firma formatı | zorunlu alanlar (temel: fotoğraf en az 1, cihazlar, kusur açıklaması), sonuç cümlesi, kusur listesi biçimi — format eklendikçe o formata göre (§3.8) |
+| 14 | **"Uygun değil" maddede fotoğraf zorunluluğu** | Saha raporu (M8) · Firma ayarları | var — başlangıçta **zorunlu** (2026-09-30, 213) | firma isterse isteğe bağlı (Firma ayarları › Rapor) |
 Firma özelleştirmesi **iskelet olarak hazırlanır**; her firmada o firmanın formatına göre sitenin ilgili kısmı ayrıca düzenlenir (reisim 2026-09-28:
 *"bu tarz firmaya göre pdf vb format eklenince ona göre şekil alacak kısımları … sen iskelet olarak hazırla firmaya göre her seferinde sitenin bu
 kısımlarını düzenleriz, bunlar oluşturduğumuz listeye yaz ve firma özelleştirmeleri listesi olarak kenarda tut"*).
@@ -2013,6 +2014,14 @@ revizyon, alan kopyalama, hafif kusur devri, meslek eşleşme denetimi).
 - Emsal ürünler: https://opwire.app/iso-17020-periyodik-kontrol-yazilimi/ · https://17020muayene.vidco.com.tr/ · https://akuple.com/asansor-kontrol-yazilimi/ · https://ensyazilim.com/
 
 ## 11 · Değişiklik günlüğü
+- 2026-09-30 (166): **K3 · 213 Kusur fotoğrafı satırda, kusur açıklamalarında, zorunlu (firma ayarı)** (§9 otuz dokuzuncu tur). Uygun
+  maddeye fotoğraf yok; genel Fotoğraflar bölümü aynen. "Uygun değil" seçilen maddenin satırında, seçimin yanında **kamera simgesi** (kamera ile
+  çek / galeriden seç); eklenen fotoğraf açıklamanın altında listelenir ve **Kusur açıklamaları**nda açıklamayla birlikte ("Fotoğraf: ad"),
+  rapor PDF'inde de kusura atıfla. **Zorunlu** (başlangıç): fotoğrafsız "Uygun değil" maddeyle gönderilmez, simge kırmızı ve "Fotoğraf
+  zorunlu" yazısı. Firma ayarları › **Rapor**: "“Uygun değil” işaretlenen maddede fotoğraf zorunlu" (kapatılınca isteğe bağlı, kalıcı);
+  §3.7 satır 14. Telefonda kusurlu maddede kamera + seçim maddenin altında tam satır. Ölçüm: m8 184/184 · 101/101 (3 yeni) · 92/92; m1 280/280
+  · 79/79 (1 yeni) · 140/140; gözle 1920 + 375.
+
 - 2026-09-30 (165): **K2 · 204–210 Kaydet ve kopyala · telefonda İşlemler menüsü** (§9 otuz dokuzuncu tur). Saha rapor ekranında Kaydet ·
   Onaya gönder · Sil'in yanında **Kaydet ve kopyala** (gönderilmiş / imzalı raporda **Kopyala**; her raporda). Pencere yeni ekipmanın kodunu
   (zorunlu; A–Z, 0–9, tire, 3–20 hane; firmada eşsiz), seri noyu ve kullanım yerini sorar, tür aynı. Önce rapor kaydedilir; yeni ekipman ve

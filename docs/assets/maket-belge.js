@@ -320,7 +320,7 @@
   var SONUC_AD = { uygun: "Uygun", uygundegil: "Uygun değil", uygulanamaz: "Uygulanamaz" };
   function sonucAd(x) { return x && x.c ? SONUC_AD[x.c] + (x.c === "uygundegil" && x.derece ? " · " + (x.derece === "agir" ? "ağır" : "hafif") : "") : "-"; }
   function kusurHtml(l) {
-    return l && l.length ? "<ol class=\"a-belge-notlar\">" + l.map(function (x) { return "<li><b>" + kacis(x[0]) + "</b>: " + kacis(x[2]) + "</li>"; }).join("") + "</ol>" : '<p class="a-deger-yok">Kusur yok.</p>';
+    return l && l.length ? "<ol class=\"a-belge-notlar\">" + l.map(function (x) { return "<li><b>" + kacis(x[0]) + "</b>: " + kacis(x[2]) + (x[3] ? " (Fotoğraf: " + kacis(x[3]) + ")" : "") + "</li>"; })   /* kusurun fotoğrafına atıf (2026-09-30, 213) */.join("") + "</ol>" : '<p class="a-deger-yok">Kusur yok.</p>';
   }
   function sonucKutu(o, kusurlu) {
     var R = o && o.r, uygun = R ? R.sonuc === "kullanilir" : o && !kusurlu, degil = R ? R.sonuc === "kullanilamaz" : kusurlu;
