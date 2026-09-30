@@ -2067,6 +2067,10 @@ revizyon, alan kopyalama, hafif kusur devri, meslek eşleşme denetimi).
 - Emsal ürünler: https://opwire.app/iso-17020-periyodik-kontrol-yazilimi/ · https://17020muayene.vidco.com.tr/ · https://akuple.com/asansor-kontrol-yazilimi/ · https://ensyazilim.com/
 
 ## 11 · Değişiklik günlüğü
+- 2026-09-30 (187): **N11 · Pasife al raporda değil, ekipmanda** (§9 kırk birinci tur ek). Plan içindeki rapor satırında "Pasife al" kalktı
+  (Yeni raporda yalnız Sil); pasife alma ekipman satırında (raporu olmayan ekipmanda Pasife al, pasifte Etkinleştir). Rapor pasife alma
+  penceresi ve işleyicisi kaldırıldı; onunla ilgili 1 durum ve 2 deneme kalktı, 1 yeni deneme. Onaylar'daki "Pasif raporlar" sekmesi eski
+  kayıtlar için duruyor. Ölçüm: planlar 120/120 · 62/62 · 60/60; m9 200/200 · 49/49 · 100/100.
 - 2026-09-30 (186): **N10 · Kaydet ve kopyala: yalnız kod ve bölüm** (§9 kırk birinci tur ek). Pencerede Ekipman kodu (zorunlu) ve Ekipman
   bölümü (kullanım yeri); seri no ve salt okunur tür alanı kalktı (tür üstteki yazıda; seri no her formatta yok, varsa yeni raporda yazılır).
   1 deneme gerekçeyle güncellendi. Ölçüm: m8 184/184 · 107/107 · 92/92.

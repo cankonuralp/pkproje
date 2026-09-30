@@ -8,8 +8,8 @@
   390,
   430
  ],
- "toplam": 64,
- "temiz": 64,
+ "toplam": 60,
+ "temiz": 60,
  "durumlar": [
   {
    "ad": "plan 10 · son formatlarla açılmış plan (iç tesisat + topraklama), raporlar sonuçlu",
@@ -544,42 +544,6 @@
   },
   {
    "ad": "plan içi · Excel'den yükle, satırlar denetlendi",
-   "gen": 430,
-   "temiz": true,
-   "tasma": 0,
-   "disari": [],
-   "kucukAlan": [],
-   "alan": 5
-  },
-  {
-   "ad": "plan içi · raporu pasife al penceresi",
-   "gen": 320,
-   "temiz": true,
-   "tasma": 0,
-   "disari": [],
-   "kucukAlan": [],
-   "alan": 5
-  },
-  {
-   "ad": "plan içi · raporu pasife al penceresi",
-   "gen": 360,
-   "temiz": true,
-   "tasma": 0,
-   "disari": [],
-   "kucukAlan": [],
-   "alan": 5
-  },
-  {
-   "ad": "plan içi · raporu pasife al penceresi",
-   "gen": 390,
-   "temiz": true,
-   "tasma": 0,
-   "disari": [],
-   "kucukAlan": [],
-   "alan": 5
-  },
-  {
-   "ad": "plan içi · raporu pasife al penceresi",
    "gen": 430,
    "temiz": true,
    "tasma": 0,

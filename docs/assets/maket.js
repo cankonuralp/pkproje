@@ -432,10 +432,10 @@
       var d = r.durum === "taslak" ? ["pencil", "Raporu düzenle"] : ["file-text", "Raporu aç"];
       /* 2026-09-24 (toplu maket M8): saha rapor ekranı maketi geldi — tuş o ekrana gider (numara ve durum adresle taşınır).
          2026-09-28 (reisim: "rapor pasif … denetçi pasife alabilir, pasif raporu görmez; aktif etme ve silme yalnız yönetici"): gönderilmemiş
-         (Yeni) raporda "Pasife al"; gönderilen rapor onay akışında, pasife alınmaz */
+         (Yeni) raporda "Pasife al"; gönderilen rapor onay akışında, pasife alınmaz.
+         2026-09-30 (N11, reisim: "pasife al tuşu raporlarda değil ekipmanlarda olacak"): raporda Pasife al kalktı; pasife alma ekipman satırında */
       /* 2026-09-29 (reisim: "oluşan rapor denetçi tarafından da silinebilsin"): Yeni raporda Sil de (onay penceresiyle) */
-      return '<div class="a-eylem"><div class="a-eylem-tuslar">' + (r.durum === "taslak" && calisir(AKTIF) ? '<button class="a-ikon-tus" type="button" data-eylem="rapor-pasif-ac" data-no="' + r.no + '" aria-label="' + r.no + ' pasife al" title="Pasife al">' + ikon("ban") + "</button>" +
-          '<button class="a-ikon-tus a-tus-sil" type="button" data-eylem="rapor-sil-ac" data-no="' + r.no + '" aria-label="' + r.no + ' sil" title="Sil">' + ikon("trash-2") + "</button>" : "") +
+      return '<div class="a-eylem"><div class="a-eylem-tuslar">' + (r.durum === "taslak" && calisir(AKTIF) ? '<button class="a-ikon-tus a-tus-sil" type="button" data-eylem="rapor-sil-ac" data-no="' + r.no + '" aria-label="' + r.no + ' sil" title="Sil">' + ikon("trash-2") + "</button>" : "") +
         MK.git({ hedef: "rapor", hash: "#/r/" + r.kod + "?no=" + r.no + "&durum=" + r.durum, ad: d[1], ikon: d[0], ne: "Saha rapor ekranı" }) + "</div></div>";
     } }
   ];
@@ -684,14 +684,6 @@
   };
   X["ekipman-pasif"] = function (el) { var p = pl(el), e = SICIL[el.dataset.kod]; e.pasif = true; kaydet(p, simdi(), BEN, "Ekipman pasife alındı", e.kod); goster(false); MK.bildir(e.kod + " pasife alındı; rapor açılamaz. Etkinleştir ile geri alınır."); };
   X["ekipman-etkin"] = function (el) { var p = pl(el), e = SICIL[el.dataset.kod]; e.pasif = false; kaydet(p, simdi(), BEN, "Ekipman etkinleştirildi", e.kod); goster(false); MK.bildir(e.kod + " yeniden etkin."); };
-  /* rapor pasife alma (2026-09-28, T2): denetçi gönderilmemiş raporu pasife alır, pasif rapor listesinden kalkar; aktif etme ve silme
-     teknik yöneticide (Onaylar → Pasif raporlar). Ortak kayda yazılır. */
-  X["rapor-pasif-ac"] = function (el) {
-    $("a-pencere").dataset.kip = "pasif"; $("a-pencere-baslik").textContent = "Raporu pasife al";
-    $("a-pencere-govde").innerHTML = '<p class="a-pencere-metin"><span class="a-rapor-no">' + el.dataset.no + "</span> pasife alınır ve listenizden kalkar.</p>";
-    $("a-pencere-alt").innerHTML = MK.tus({ eylem: "pencere-kapat", ad: "Vazgeç", sinif: "a-tus-ikincil" }) + MK.tus({ eylem: "rapor-pasif", ad: "Pasife al", ikon: "ban", veri: { no: el.dataset.no } });
-    $("a-pencere").showModal(); $("a-pencere-alt").querySelector('[data-eylem="pencere-kapat"]').focus();
-  };
   X["rapor-sil-ac"] = function (el) {
     var p = AKTIF, no = el.dataset.no, r = p.rapor.filter(function (x) { return x.no === no; })[0]; if (!r || r.durum !== "taslak") return;
     MK.onayla({ baslik: "Raporu sil", metin: '<span class="a-rapor-no">' + no + "</span> · " + kacis(r.kod) + " raporu ve içine yazılan her şey silinir; geri alınamaz.", tus: "Sil", tamam: function () {
@@ -699,13 +691,6 @@
       kaydet(p, simdi(), BEN, "Rapor silindi", no + " · " + r.kod); goster(false); var b = $("a-rapor-baslik"); if (b) b.focus();
       MK.bildir(no + " silindi.");
     } });
-  };
-  X["rapor-pasif"] = function (el) {
-    var p = AKTIF, r = p.rapor.filter(function (x) { return x.no === el.dataset.no; })[0], m = MV.rapor(r.no);
-    r.pasif = true; if (m) { m.pasif = true; m.pasifKim = BEN; m.pasifZaman = simdi(); }
-    kaydet(p, simdi(), BEN, "Rapor pasife alındı", r.no + " · " + r.kod);
-    $("a-pencere").close(); goster(false); var b = $("a-rapor-baslik"); if (b) b.focus();
-    MK.bildir(r.no + " pasife alındı.");
   };
   /* toplu PDF (§3.8 kural 7; reisim 2026-09-28): süzgeçten geçen raporların PDF'i tek dosyada, her rapor kendi sayfalarında; taslağın PDF'i
      yok (Raporlar ile aynı), taslak rapor rapor ekranındaki Ön izle'den */

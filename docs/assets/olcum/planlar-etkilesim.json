@@ -2,8 +2,8 @@
  "maket": "planlar",
  "tarih": "2026-09-30",
  "arac": "tools/olc-bulut.mjs --etkilesim (başsız tarayıcı, 1920 açık tema; gen verilen denemede o genişlik)",
- "toplam": 63,
- "gecen": 63,
+ "toplam": 62,
+ "gecen": 62,
  "denemeler": [
   {
    "ad": "Planlar listesi: müşteri adı kalın (≥ 600), proje adı normal (400)",
@@ -105,13 +105,6 @@
   },
   {
    "ad": "raporu olan ekipmanda Rapor oluştur yok; rapor oluşturulunca tuş gider, rapor silinince geri gelir",
-   "gen": 1920,
-   "sayfa": "maket/planlarim.html",
-   "hash": "#/plan/1",
-   "gecti": true
-  },
-  {
-   "ad": "raporu pasife al: pencere, Pasife al → listeden kalkar, ortak kayıtta pasif, odak Raporlar başlığında",
    "gen": 1920,
    "sayfa": "maket/planlarim.html",
    "hash": "#/plan/1",
@@ -321,13 +314,6 @@
    "gecti": true
   },
   {
-   "ad": "pasife alınan rapor denetçide eski bağlantıyla da açılmaz (saha ekranı: pasif, yalnız yöneticiler görür)",
-   "gen": 1920,
-   "sayfa": "maket/planlarim.html",
-   "hash": "#/plan/1",
-   "gecti": true
-  },
-  {
    "ad": "plan içinde Yeni raporda Sil: onayla → rapor plandan ve ortak kayıttan kalkar; gönderilmiş raporda Sil yok",
    "gen": 1920,
    "sayfa": "maket/planlarim.html",
@@ -388,6 +374,13 @@
    "gen": 1920,
    "sayfa": "maket/planlarim.html",
    "hash": "#/",
+   "gecti": true
+  },
+  {
+   "ad": "rapor satırında Pasife al yok (yalnız Sil); ekipman satırında Pasife al var",
+   "gen": 1920,
+   "sayfa": "maket/planlarim.html",
+   "hash": "#/plan/1",
    "gecti": true
   },
   {
