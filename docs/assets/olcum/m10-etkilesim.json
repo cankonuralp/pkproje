@@ -2,8 +2,8 @@
  "maket": "m10",
  "tarih": "2026-09-30",
  "arac": "tools/olc-bulut.mjs --etkilesim (başsız tarayıcı, 1920 açık tema; gen verilen denemede o genişlik)",
- "toplam": 11,
- "gecen": 11,
+ "toplam": 15,
+ "gecen": 15,
  "denemeler": [
   {
    "ad": "ara kontrol uyarıları listede (gecikmiş OC-009)",
@@ -13,9 +13,37 @@
    "gecti": true
   },
   {
-   "ad": "Planlar, Raporlar, Onaylar balonları: bekleyen sarı, süresi geçen kırmızı; başka sayfada aynı",
+   "ad": "Planlar, Raporlar balonları; Onaylar balonu firma yöneticisinde yok (kişiye göre)",
    "gen": 1920,
    "sayfa": "maket/uyarilar.html",
+   "hash": "#/",
+   "gecti": true
+  },
+  {
+   "ad": "Onaylar balonu mekanik yöneticide: kendi branşında onay bekleyen 8 rapor (5 tanesi 24 saati geçmiş)",
+   "gen": 1920,
+   "sayfa": "maket/onaylar.html",
+   "hash": "#/",
+   "gecti": true
+  },
+  {
+   "ad": "Onaylar balonu denetçide: kendi muayene uzmanı imzasını bekleyen 4 rapor",
+   "gen": 1920,
+   "sayfa": "maket/raporlar.html",
+   "hash": "#/",
+   "gecti": true
+  },
+  {
+   "ad": "Talepler balonu talebin iletildiği kişide: firma yöneticisinde 4 (1 izin + 3 masraf), denetçide yok",
+   "gen": 1920,
+   "sayfa": "maket/personel.html",
+   "hash": "#/",
+   "gecti": true
+  },
+  {
+   "ad": "Talepler balonu denetçide yok",
+   "gen": 1920,
+   "sayfa": "maket/talepler.html",
    "hash": "#/",
    "gecti": true
   },
@@ -27,14 +55,14 @@
    "gecti": true
   },
   {
-   "ad": "yan menü balonları başka sayfada da aynı: cihazlar 3 · 4 · 12, personel 1 · 4, sözleşmeler 2, muhasebe 1",
+   "ad": "yan menü balonları başka sayfada da aynı: cihazlar 3 · 4 (yeşil yok), dökümanlar (eğitim) 1 · 4, personelde yok, sözleşmeler 2, muhasebe 1",
    "gen": 1920,
    "sayfa": "maket/planlarim.html",
    "hash": "#/",
    "gecti": true
   },
   {
-   "ad": "balon veriyle güncellenir: kalibrasyonu ve ara kontrolü yenilenen cihaz kırmızıdan yeşile geçer (sayfa yenilenmeden)",
+   "ad": "balon veriyle güncellenir: kalibrasyonu ve ara kontrolü yenilenen cihaz kırmızıdan düşer, yeşil balon çıkmaz (sayfa yenilenmeden)",
    "gen": 1920,
    "sayfa": "maket/planlarim.html",
    "hash": "#/",

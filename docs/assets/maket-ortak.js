@@ -100,7 +100,7 @@
      (tıklama, yazma) yenilenir. Daraltılmış menüde yalnız en önemli renk görünür. */
   var TAKIP_RENK = [["kirmizi", "a-balon-kirmizi"], ["sari", "a-balon-sari"], ["yesil", "a-balon-yesil"]];
   function takipHtml(no) {
-    var t = typeof MV !== "undefined" && MV.takip ? MV.takip(no) : null; if (!t) return "";
+    var t = typeof MV !== "undefined" && MV.takip ? MV.takip(no, MK.BEN) : null; if (!t) return "";
     return TAKIP_RENK.filter(function (r) { return t[r[0]]; }).map(function (r) {
       return '<span class="a-balon ' + r[1] + '" title="' + t[r[0]] + " " + t.ad[r[0]] + '">' + t[r[0]] + '<span class="a-gizli"> ' + t.ad[r[0]] + "</span></span>"; }).join("");
   }
@@ -112,6 +112,8 @@
      o = { modul: §3.1 no, kullanici: { bas, ad, rol }, sayac: { no: "ipucu" } }. <main id="a-icerik"> kabuğun içine alınır. */
   var I = function (ad) { return '<svg class="a-ikon" aria-hidden="true"><use href="' + IKON + ad + '"/></svg>'; };
   MK.kabuk = function (o) {
+    /* N5 (2026-09-30): giriş yapan kişi (personel no) — kişiye göre balonlar (Onaylar, Talepler) ve günlük süre; makette sayfanın kullanıcısı */
+    if (o.kullanici && typeof MV !== "undefined" && MV.PERSONEL) { var bk = MV.PERSONEL.filter(function (p) { return p.ad === o.kullanici.ad; })[0]; MK.BEN = bk ? bk.id : null; }
     var ana = $("a-icerik"), kok = document.createElement("div");
     kok.className = "a-kabuk"; kok.id = "a-kabuk";
     /* 2026-09-24 (M11): MÜŞTERİ PANELİ kabuğu — firmanın modül menüsü yok; üst çubukta marka, tema ve müşteri kullanıcısı.

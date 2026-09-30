@@ -2061,6 +2061,14 @@ revizyon, alan kopyalama, hafif kusur devri, meslek eşleşme denetimi).
 - Emsal ürünler: https://opwire.app/iso-17020-periyodik-kontrol-yazilimi/ · https://17020muayene.vidco.com.tr/ · https://akuple.com/asansor-kontrol-yazilimi/ · https://ensyazilim.com/
 
 ## 11 · Değişiklik günlüğü
+- 2026-09-30 (181): **N5 · Yan menü balonları yalnız iş olunca, kişiye göre** (§9 kırk birinci tur). **Ölçüm cihazları:** yalnız süresi geçen
+  (kırmızı) ve yaklaşan (sarı); yeşil "sorunsuz" kalktı. **Dökümanlar:** eğitim tekrarı geçen · yaklaşan (Personel'deki eğitim balonu buraya
+  taşındı; eğitimler Dökümanlar'ın içinde). **Onaylar** giriş yapan kişiye göre: denetçiye kendi muayene uzmanı imzasını bekleyen raporlar;
+  mekanik / elektrik yöneticiye bunlar + kendi branşında öteki muayene uzmanlarının onaya gönderdiği raporlar; 24 saati geçen kırmızı; iş
+  yoksa balon yok (firma yöneticisinde yok). **Talepler:** talebin iletildiği kişide bekleyen talep (izin → firma yöneticisi; masraf formu →
+  muhasebe ve firma yöneticisi). Makette "giriş yapan" = sayfanın kullanıcısı (MK.BEN). Raporlar balonu değişmedi (firma geneli son imza
+  bekleyen; soru). 6 deneme gerekçeyle güncellendi, 4 yeni. Ölçüm: m10 48/48 · 15/15 · 24/24; m9 200/200 · 49/49 · 100/100; planlar
+  128/128 · 62/62 · 64/64; m1, m4, talepler, m16 temiz.
 - 2026-09-30 (180): **N4 · Ek-III grubunda "Diğer (Ek-III dışı)"** (§9 kırk birinci tur). Ekipman türü formunda grup listesinin sonunda; seçilince
   **Branş** alanı çıkar (zorunlu; onaylayan yönetici branştan). Ek-III dışı türde Ek-III meslek kuralı uygulanmaz (meslek uyarısı yok;
   Plan aç'ta "yetkili" sayılır). Ölçüm: m3 96/96 · 24/24 (1 yeni) · 48/48; m6 80/80 · 20/20 · 40/40.

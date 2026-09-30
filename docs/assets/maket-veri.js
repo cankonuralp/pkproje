@@ -1420,21 +1420,29 @@
   /* modül başına takip sayıları (yan menü balonları): { kirmizi, sari, yesil } ve her rengin adı; 0 olan balon çizilmez */
   var say = function (l, d) { return l.filter(function (u) { return u.durum === d; }).length; };
   var saatFarki = function (z) { return (new Date(MK.simdi() + ":00Z") - new Date(z + ":00Z")) / 36e5; };
+  /* N5 (2026-09-30, reisim 41. tur): balonlar yalnız iş olunca — yeşil yok; Onaylar ve Talepler giriş yapan kişiye göre (ben: personel no) */
+  var raporBrans = function (r) { var e = MV.ekipman(r.kod); return e ? MV.tur(e.tur).b : null; };
   MV.TAKIP = {
-    8: function () {   /* ölçüm cihazları: kalibrasyon ya da ara kontrol süresi geçen · yaklaşan · sorunsuz (kalibrasyondaki cihaz sayılmaz) */
-      var o = { kirmizi: 0, sari: 0, yesil: 0 };
+    8: function () {   /* ölçüm cihazları: kalibrasyon ya da ara kontrol süresi geçen · yaklaşan (sorunsuz sayılmaz; kalibrasyondaki cihaz sayılmaz) */
+      var o = { kirmizi: 0, sari: 0 };
       MV.VARLIKLAR.forEach(function (v) {
         var kd = MV.kalDurum(v); if (!kd || kd === "lab") return;
         var a = MV.araDurum(v), ad = a ? a.durum : "gecerli";
-        if (kd === "gecti" || ad === "gecti") o.kirmizi++; else if (kd === "yakin" || ad === "yakin") o.sari++; else o.yesil++;
+        if (kd === "gecti" || ad === "gecti") o.kirmizi++; else if (kd === "yakin" || ad === "yakin") o.sari++;
       });
-      return Object.assign(o, { ad: { kirmizi: "süresi geçen cihaz", sari: "süresi yaklaşan cihaz", yesil: "sorunsuz cihaz" } });
+      return Object.assign(o, { ad: { kirmizi: "süresi geçen cihaz", sari: "süresi yaklaşan cihaz" } });
     },
-    20: function () { var l = MV.uyarilar(); return { kirmizi: say(l, "gecti"), sari: say(l, "yakin"), ad: { kirmizi: "süresi geçen uyarı", sari: "yaklaşan uyarı" } }; },
-    2: function () {   /* personel: eğitim tekrarı geçen · yaklaşan */
+    4: function () {   /* dökümanlar: eğitim tekrarı geçen · yaklaşan (eğitimler Dökümanlar'ın içinde; önceden Personel'deydi) */
       var l = MV.EGITIMLER.map(function (x) { return { durum: MV.egitimDurum(x) }; });
       return { kirmizi: say(l, "gecti"), sari: say(l, "yakin"), ad: { kirmizi: "eğitim tekrarı geçen", sari: "eğitim tekrarı yaklaşan" } };
     },
+    21: function (ben) {   /* talepler: talebin iletildiği kişide bekleyen — izin firma yöneticisine, masraf formu muhasebeye (ve firma yöneticisine) */
+      var p = ben && MV.kisi(ben), r = p && p.hesap ? p.hesap.roller : [];
+      var n = (r.indexOf("yonetici") >= 0 ? MV.IZINLER.filter(function (x) { return x.durum === "bekliyor"; }).length : 0) +
+        (r.indexOf("yonetici") >= 0 || r.indexOf("muhasebe") >= 0 ? MV.GIDERLER.filter(function (g) { return g.kisi && g.durum === "bekliyor"; }).length : 0);
+      return { sari: n, ad: { sari: "size iletilen bekleyen talep" } };
+    },
+    20: function () { var l = MV.uyarilar(); return { kirmizi: say(l, "gecti"), sari: say(l, "yakin"), ad: { kirmizi: "süresi geçen uyarı", sari: "yaklaşan uyarı" } }; },
     12: function () {   /* sözleşmeler: açık planda İSG-KATİP ID'si eksik ya da bitmiş */
       return { kirmizi: MV.TESISLER.reduce(function (n, t) { return n + MV.isgEksik({ tesisler: [t.id] }).length; }, 0), ad: { kirmizi: "İSG-KATİP eksik ya da bitmiş" } };
     },
@@ -1450,16 +1458,21 @@
       var gec = l.filter(function (r) { return r.onay && saatFarki(r.onay.zaman) > 24; }).length;
       return { kirmizi: gec, sari: l.length - gec, ad: { kirmizi: "son imzası 24 saati geçen rapor", sari: "son imza bekleyen rapor" } };
     },
-    15: function () {   /* onaylar: onay bekleyen · gönderimden 24 saati geçmiş */
-      var l = MV.RAPORLAR.filter(function (r) { return r.durum === "onayda" && !r.pasif; });
-      var gec = l.filter(function (r) { return r.gonderildi && saatFarki(r.gonderildi) > 24; }).length;
-      return { kirmizi: gec, sari: l.length - gec, ad: { kirmizi: "onayı 24 saati geçen rapor", sari: "onay bekleyen rapor" } };
+    15: function (ben) {   /* onaylar (N5): denetçiye kendi muayene uzmanı imzası bekleyen raporları; branş yöneticisine bunlar + kendi branşında
+      öteki muayene uzmanlarının onaya gönderdiği (teknik yönetici onayında) raporlar; gönderimden / onaydan 24 saati geçen kırmızı */
+      var p = ben && MV.kisi(ben), r = p && p.hesap ? p.hesap.roller : [];
+      if (!p) return null;
+      var br = r.indexOf("mekyon") >= 0 ? "m" : r.indexOf("elkyon") >= 0 ? "e" : null;
+      var imza = MV.RAPORLAR.filter(function (x) { return x.durum === "onaylandi" && !x.pasif && x.kisi === ben; });
+      var onay = br ? MV.RAPORLAR.filter(function (x) { return x.durum === "onayda" && !x.pasif && x.kisi !== ben && raporBrans(x) === br; }) : [];
+      var gec = imza.filter(function (x) { return x.onay && saatFarki(x.onay.zaman) > 24; }).length + onay.filter(function (x) { return x.gonderildi && saatFarki(x.gonderildi) > 24; }).length;
+      return { kirmizi: gec, sari: imza.length + onay.length - gec, ad: { kirmizi: "24 saati geçen imza / onay bekleyen rapor", sari: "imzanızı ya da onayınızı bekleyen rapor" } };
     },
     18: function () {   /* muhasebe: vadesi geçen fatura */
       return { kirmizi: (MV.FATURALAR || []).filter(function (f) { return MV.faturaDurum(f) === "gecikti"; }).length, ad: { kirmizi: "vadesi geçen fatura" } };
     }
   };
-  MV.takip = function (no) { var f = MV.TAKIP[no]; return f ? f() : null; };
+  MV.takip = function (no, ben) { var f = MV.TAKIP[no]; return f ? f(ben) : null; };
   /* kalıcı maket: tohum kuruldu, bu tarayıcıdaki denemeler yerinde yüklenir (maket-ortak.js KALICI MAKET) */
   if (MK.kaliciMV) MK.kaliciMV(MV);
   MV.EGITIM_DURUM.yakin.ad = MV.esik("egitim") + " gün içinde";   /* kayıtlı eşikle (202) */
