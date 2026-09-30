@@ -636,6 +636,14 @@
     AT: []
   };
   MV.kriterGruplari = function (t) { var f = MV.formatYapi(t); return f && f.gozle ? f.gozle : null; };
+  /* MADDE AÇIKLAMASI (2026-09-30, 214): maddede neye bakılacağı — firmanın formatında madde başına tanımlanır (kodda, §8.3); tanımlı değilse
+     yalnız türün standartları gösterilir. UYDURMA örnek: basınçlı kaplar. */
+  MV.KRITER_ACIKLAMA = {
+    "Gövde ve kaynaklar: gözle muayene (korozyon, ezik)": "Gövde yüzeyinde korozyon, ezik, çatlak ve şekil bozukluğu; kaynak dikişlerinde gözenek, yarık ve taşma olup olmadığına gözle bakılır.",
+    "Emniyet ventili: ayar basıncı ve fonksiyon": "Ventil etiketindeki ayar basıncı kabın çalışma basıncıyla karşılaştırılır; ventilin açtığı ve mühürlü olduğu kontrol edilir.",
+    "Manometre: okunabilirlik ve kalibrasyon işareti": "Göstergenin okunaklı, sıfırda dönen ve çalışma basıncının işaretli olduğu; kalibrasyon etiketinin geçerli olduğu kontrol edilir."
+  };
+  MV.kriterAciklama = function (t, ad) { return MV.KRITER_ACIKLAMA[ad] || ""; };
   MV.kriterler = function (t) {
     var g = MV.kriterGruplari(t); if (g) return g.reduce(function (l, x) { return l.concat(x[1]); }, []);
     if (t && t.k === "AT") return [];

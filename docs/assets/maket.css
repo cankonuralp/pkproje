@@ -922,6 +922,9 @@ a.a-yuz:hover { border-color: var(--kenar-alan); background: var(--zemin); }
 .a-kriter-ad { display: flex; gap: 8px; margin: 0; font-weight: 600; }
 .a-kriter-no { flex: none; min-width: 20px; white-space: nowrap; color: var(--yazi2); font-variant-numeric: tabular-nums; }
 .a-kriter-cevap { min-width: 0; }
+.a-madde-bilgi-tus { margin: -10px 0 -10px -10px; vertical-align: middle; color: var(--yazi2); }   /* madde açıklaması (214); dokunma alanı tuş boyu, satırı büyütmez */
+.a-madde-bilgi { grid-column: 1 / -1; display: grid; gap: 4px; margin: 0; padding: 8px 12px; background: var(--bilgi-zemin); color: var(--bilgi-yazi); border-radius: var(--r-orta); }
+.a-madde-bilgi p { margin: 0; } .a-madde-bilgi .a-alt-satir { color: inherit; }
 .a-kriter-cevap-foto { display: flex; align-items: center; gap: 6px; }   /* "Uygun değil" maddede kamera simgesi seçimin solunda (213) */
 .a-kriter-cevap-foto > .a-secim { flex: 1 1 auto; min-width: 0; }
 .a-kusur-foto-tus[aria-invalid="true"] { color: var(--hata-yazi); border: 1px solid var(--hata-yazi); }
@@ -1245,7 +1248,7 @@ a.a-yuz:hover { border-color: var(--kenar-alan); background: var(--zemin); }
   .a-belge-kunye { order: 3; flex-basis: 100%; }
   /* saha raporu telefonda: madde solda, seçim sağda daha dar */
   .a-kriter { grid-template-columns: minmax(0, 1fr) 9.75rem; gap: 8px 10px; }
-  .a-kriter:has(.a-kriter-cevap-foto) { grid-template-columns: minmax(0, 1fr); }   /* kusurlu maddede kamera + seçim maddenin altında tam satır */
+  .a-kriter:has(.a-kriter-cevap-foto) { grid-template-columns: minmax(0, 1fr); row-gap: 12px; }   /* kusurlu maddede kamera + seçim maddenin altında tam satır */
   .a-kriter-genis { grid-template-columns: minmax(0, 1fr); }
   .a-suzgec-alanlar { grid-template-columns: repeat(2, minmax(0, 1fr)); }   /* alan alan arama telefonda iki sütun */
   /* plan içi etiket : değer satırları telefonda alt alta (kimlik bölünmez, taşmasın) */

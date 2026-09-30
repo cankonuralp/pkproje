@@ -2014,6 +2014,13 @@ revizyon, alan kopyalama, hafif kusur devri, meslek eşleşme denetimi).
 - Emsal ürünler: https://opwire.app/iso-17020-periyodik-kontrol-yazilimi/ · https://17020muayene.vidco.com.tr/ · https://akuple.com/asansor-kontrol-yazilimi/ · https://ensyazilim.com/
 
 ## 11 · Değişiklik günlüğü
+- 2026-09-30 (169): **K6 · 214 Madde açıklaması (i)** (§9 otuz dokuzuncu tur, "diğer önerilerini kabul ediyorum"). Saha raporunda her
+  muayene maddesinin adının yanında bilgi (i) tuşu; basınca maddenin altında açılır: maddede neye bakılacağı (firma formatındaki açıklama)
+  ve türün standartları; ikinci basışta kapanır. Açıklaması tanımlı olmayan maddede "Bu madde için firma formatında açıklama tanımlı
+  değil." yazar. Makette açıklama yalnız üç basınçlı kap maddesinde var (uydurma); gerçekte firma formatıyla gelir (§8.3). Telefonda kusurlu
+  maddenin iki satırı arasına 4 px aralık (tuşun dokunma alanı seçimle çakışmasın). Ölçüm: m8 184/184 · 106/106 (2 yeni) · 92/92; gözle
+  1920 + 375 (açık ve koyu tema).
+
 - 2026-09-30 (168): **K5 · 211 Formatı güncelle** (§9 otuz dokuzuncu tur). Rapor açıldığı format sürümünü tutar (`r.sablon`, türün şablon
   sürümü). Türün formatı yenilendiyse açık (Yeni / geri gönderilmiş) raporda şerit: "Bu rapor eski format sürümüyle açıldı (…); güncel sürüm
   …" + **Formatı güncelle**: maddeler yeni formata çekilir, eşleşen maddenin cevabı korunur, yeni madde Uygun gelir (§3.8 kural 3). Kopya
