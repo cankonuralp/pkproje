@@ -1946,6 +1946,27 @@ başlıklar ve bölümşer birbirinden ayrıldıpı belli olmuyor, Raporlar içe
 gözükmeli çünkü çok çirkin duruyor"* → Z1 plan içi başlıkları ve bölüm ayrımı · Z2 saha raporunda telefonda "Hepsini işaretle" ve "Güncelle"
 yalnız simge.
 
+**Otuz dokuzuncu tur — sorular (2026-09-30; reisim: *"elindeki tüm soruları toplu sor"*).** Kaynak: reisim'in 2026-09-30 istekleri (raporu olan
+ekipmanda Rapor oluştur gitsin · rapor içinde ekipmanı kopyala) ve kullandığı başka uygulamanın rapor ekranından çıkan öneriler (ekran
+görüntüsündeki veri gerçek, hiçbir yere yazılmadı).
+- **203 · Rapor oluştur geri gelsin mi:** raporu olan ekipmanda tuş gider. *Öneri:* rapor silinir ya da pasife alınırsa tuş geri gelir.
+- **204 · Kopyala tuşunun adı:** *Öneri:* "Kaydet ve kopyala" (önce bu raporu kaydeder, sonra kopyalar).
+- **205 · Yeni ekipman için sorulanlar:** *Öneri:* ekipman kodu (zorunlu, firmada eşsiz), seri no, kullanım yeri; tür aynı (değişmez).
+- **206 · Kopyalananlar:** *Öneri:* ekipman bilgileri (marka, model, imal yılı, kullanım amacı), ekipman detayları ve tespitler, ölçüm
+  cihazları, madde cevapları. **Kopyalanmaz:** test ve ölçüm değerleri, fotoğraflar, sonuç ve kanaat, notlar.
+- **207 · Kusur açıklamaları:** "Uygun değil" maddelerin kusur açıklaması ve derecesi de kopyalansın mı? *Öneri:* hayır; madde yine "Uygun
+  değil" gelir, açıklama boş (her ekipmanın kusuru kendine).
+- **208 · Kopyaladıktan sonra:** *Öneri:* doğrudan yeni ekipmanın raporu açılır (plan içine dönülmez).
+- **209 · Kopyala hangi raporda:** *Öneri:* düzenlenebilen (Yeni ya da geri gönderilmiş) raporda; gönderilmiş raporda da açık olsun mu?
+- **210 · Telefonda İşlemler menüsü:** *Öneri:* telefonda tek "İşlemler" tuşu (Kaydet · Onaya gönder · Kaydet ve kopyala · Sil); masaüstü ve
+  tablette tuşlar yan yana.
+- **211 · Formatı güncelle:** *Öneri:* firmanın rapor formatı yenilendiyse açık raporda "Formatı güncelle" (yalnız yeni sürüm varsa görünür;
+  eşleşen maddelerin cevabı korunur).
+- **212 · Mesai takibi:** rapor başına normal / fazla mesai süresi kullanılıyor mu? *Öneri:* kullanılıyorsa firmanın çalışma saatlerine göre
+  Performans'a ve bordroya; rapor ekranına panel konmaz.
+- **213 · Uygun maddeye fotoğraf:** bugün fotoğraf yalnız "Uygun değil" maddede. *Öneri:* her maddede isteğe bağlı küçük "Fotoğraf ekle".
+- **214 · Madde açıklaması:** *Öneri:* maddenin neye bakılacağını ve standarttaki yerini gösteren isteğe bağlı bilgi tuşu (i).
+
 **Açık kalanlar:** ~~Ana sayfada İSGGM duyuruları~~ (2026-09-27: makette eklendi; okuma işi uygulamada) (reisim 2026-09-26: *"Ana sayfada isgüm duyurularını gösterebilir miyiz ? Bunu
 yapılacaklar listesine ekle"*; öneri: ÇSGB İSGGM duyurular sayfası — https://www.csgb.gov.tr/isggm/duyurular/ — sunucuda günde birkaç kez
 okunur (pg-boss işi, §8.9), Ana sayfada son 5 duyuru başlık + tarih + kaynağa bağlantı; yalnız ekranda, bildirim yok; sayfa RSS vermiyorsa
@@ -1978,6 +1999,8 @@ revizyon, alan kopyalama, hafif kusur devri, meslek eşleşme denetimi).
 - Emsal ürünler: https://opwire.app/iso-17020-periyodik-kontrol-yazilimi/ · https://17020muayene.vidco.com.tr/ · https://akuple.com/asansor-kontrol-yazilimi/ · https://ensyazilim.com/
 
 ## 11 · Değişiklik günlüğü
+- 2026-09-30 (163): **Otuz dokuzuncu tur soruları (203–214)** §9'a yazıldı (reisim: *"elindeki tüm soruları toplu sor"*).
+
 - 2026-09-30 (162): **Kalıcılık hatası: plan içinde oluşturulan rapor / eklenen ekipman yenilemede kayboluyordu** (ölçerken bulundu). Plan
   listesi ortak veriye geçince (U4) plan her açılışta örnek veriden yeniden kuruluyordu → plan içinde oluşturulan rapor, eklenen ekipman,
   hareket kaydı ve notlar sayfa yenilenince gidiyordu. Düzeltme: tarayıcıda kayıtlı hâli olan plan yeniden kurulmaz, örnek veri yalnız ilk
