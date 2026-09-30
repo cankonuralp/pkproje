@@ -392,14 +392,15 @@
         if (e.pasif) return rozet({ ad: "Pasif", rozet: "a-rozet-notr" });
         return raporuVar(p, e.kod) ? '<span class="a-rapor-tik" title="Raporu var">' + ikon("circle-check") + '<span class="a-gizli">Raporu var</span></span>' : ""; } },
       /* 2026-09-26 (reisim): yanlış girilen ekipman PASİFE alınır (geri alınabilir); silme yalnız yönetici — maket denetçi gözünden, sil yok.
-         2026-09-28 (reisim: "rapor oluştur tuşu her zaman olsun, sınırsız"): raporu olan ekipmanda da "Rapor oluştur" — her basış yeni rapor */
+         2026-09-30 (reisim: "rapor oluştur tuşu gitsin"; 203): raporu olan ekipmanda "Rapor oluştur" yok; rapor silinir ya da pasife alınırsa
+         geri gelir (raporuVar pasif ve silinmiş raporu saymaz) */
       { k: "eylem", baslik: "İşlem", gizliBaslik: true, kart: "eylem", sira: 9, hucre: function (e) {
         if (!calisir(p)) return "";
         if (e.pasif) return '<div class="a-eylem"><div class="a-eylem-tuslar"><button class="a-tus a-tus-ikincil" type="button" data-eylem="ekipman-etkin" data-id="' + p.id + '" data-kod="' + e.kod + '">' +
           ikon("undo-2", "a-ikon-kucuk") + "Etkinleştir</button></div></div>";
         return '<div class="a-eylem"><div class="a-eylem-tuslar">' + (raporuVar(p, e.kod) ? "" : '<button class="a-ikon-tus" type="button" data-eylem="ekipman-pasif" data-id="' + p.id + '" data-kod="' + e.kod + '" aria-label="' + e.kod + ' pasife al" title="Pasife al">' + ikon("ban") + "</button>") +
-          '<button class="a-tus a-tus-ikincil" type="button" data-eylem="rapor-olustur" data-id="' + p.id + '" data-kod="' + e.kod + '">' +
-          ikon("file-plus", "a-ikon-kucuk") + "Rapor oluştur</button></div></div>";
+          (raporuVar(p, e.kod) ? "" : '<button class="a-tus a-tus-ikincil" type="button" data-eylem="rapor-olustur" data-id="' + p.id + '" data-kod="' + e.kod + '">' +
+          ikon("file-plus", "a-ikon-kucuk") + "Rapor oluştur</button>") + "</div></div>";
       } }
     ];
   }
@@ -647,7 +648,7 @@
   X["geri-al"] = function (el) { var p = pl(el); if (p && p.durum === "tamam") { p.durum = "denetimde"; p.bitti = null; kaydet(p, simdi(), BEN, "Tamamlama geri alındı"); goster(false); MK.bildir("Tamamlama geri alındı; plan yeniden denetime açıldı."); } };
   X["rapor-olustur"] = function (el) {
     var p = pl(el);
-    if (p && calisir(p)) {   /* sınırsız: aynı ekipmana yeni rapor (2026-09-28) */
+    if (p && calisir(p) && !raporuVar(p, el.dataset.kod)) {   /* ekipman başına bir rapor (2026-09-30, 203) */
       var r = { no: raporNo("0926", raporSira++).replace(/^[^-]+/, MV.firmaKodu()), kod: el.dataset.kod, durum: "taslak", olustu: simdi(), sonuc: null };
       if (p.durum === "kabul") { p.durum = "denetimde"; p.basladi = simdi(); kaydet(p, simdi(), BEN, "Denetime başlandı", "ilk rapor oluşturuldu"); }
       p.rapor.push(r); ortakEkipman(p, r.kod); ortakRapor(p, r); kaydet(p, simdi(), BEN, "Rapor oluşturuldu", r.no + " · " + r.kod); SZ.r.sayfa = 1;

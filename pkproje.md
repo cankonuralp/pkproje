@@ -1967,6 +1967,20 @@ görüntüsündeki veri gerçek, hiçbir yere yazılmadı).
 - **213 · Uygun maddeye fotoğraf:** bugün fotoğraf yalnız "Uygun değil" maddede. *Öneri:* her maddede isteğe bağlı küçük "Fotoğraf ekle".
 - **214 · Madde açıklaması:** *Öneri:* maddenin neye bakılacağını ve standarttaki yerini gösteren isteğe bağlı bilgi tuşu (i).
 
+**Otuz dokuzuncu tur — cevap (2026-09-30, reisim birebir):** *"208. Kaydetip kopyalayıp yeni oluşturulan ekipmana gitsin uygundur 209 her
+raporda kopyalanabilsin ama kopyalanan tabikide yeni olacak 213 hayır sadece tek bir fotoğraf ekleme yeri olacak maddeye göre fotoğraf ekleme
+eğer uygundeğil seçilirse bir madde o madde için maddenin sırasında fotoğraf işareti çıkar, uygunsuzluğun fotoğrafı koyulur ve açıklamasıyla
+birlikte kusur açıklamaları kısmına eklenir, zorunlu değildir firma zorunlu olmasını isterse zorunlu olur şimdilik zorunlu yap firmaya göre
+değişecekler listesine ekle mesai takibi kısmını ekle raporların süresine göre oradaki bar dolsın eğer mesaisi dolarsa daha fazla rapor
+oluşturamasın ve günlük 480 dk normal çalışma süresi 220 dk mesai süresi bu ayarlardan değiştirilebilsin açılıp kapatılabilsin sadece
+yöneticiler yapabilsin . Diğer önerilerini kabul ediyorum"* (ve öncesinde: *"rapor oluşturdan sonra rapor oluştur tuşu gitmesin demiştim şu an
+öyle vaz geçtim rapor oluştur tuşu gitsin"*) → **Kararlar:** 203–207, 210, 211, 214 öneri olduğu gibi. **208** kaydedip kopyalar, yeni
+ekipmanın raporuna gider. **209** her raporda (gönderilmiş, imzalı dahil) kopyalanır; kopya her zaman Yeni. **213** uygun maddeye fotoğraf
+yok; "Uygun değil" maddenin satırında fotoğraf işareti, fotoğraf açıklamasıyla kusur açıklamalarına; zorunluluk firma ayarı, şimdilik
+zorunlu (§3.7'ye). **212** mesai takibi: rapor sürelerine göre günlük çubuk dolar; normal 480 dk + mesai 220 dk dolunca yeni rapor
+oluşturulamaz (reisim'in açık kararı: engel); süreler ve aç/kapa Firma ayarları'nda, yalnız yönetici. Maket sırası: K1 Rapor oluştur ·
+K2 Kaydet ve kopyala + telefonda İşlemler · K3 kusur fotoğrafı · K4 mesai takibi · K5 Formatı güncelle · K6 madde açıklaması.
+
 **Açık kalanlar:** ~~Ana sayfada İSGGM duyuruları~~ (2026-09-27: makette eklendi; okuma işi uygulamada) (reisim 2026-09-26: *"Ana sayfada isgüm duyurularını gösterebilir miyiz ? Bunu
 yapılacaklar listesine ekle"*; öneri: ÇSGB İSGGM duyurular sayfası — https://www.csgb.gov.tr/isggm/duyurular/ — sunucuda günde birkaç kez
 okunur (pg-boss işi, §8.9), Ana sayfada son 5 duyuru başlık + tarih + kaynağa bağlantı; yalnız ekranda, bildirim yok; sayfa RSS vermiyorsa
@@ -1999,6 +2013,10 @@ revizyon, alan kopyalama, hafif kusur devri, meslek eşleşme denetimi).
 - Emsal ürünler: https://opwire.app/iso-17020-periyodik-kontrol-yazilimi/ · https://17020muayene.vidco.com.tr/ · https://akuple.com/asansor-kontrol-yazilimi/ · https://ensyazilim.com/
 
 ## 11 · Değişiklik günlüğü
+- 2026-09-30 (164): **K1 · 203 Raporu olan ekipmanda Rapor oluştur yok** (§9 otuz dokuzuncu tur; 2026-09-28'deki "sınırsız" kararı
+  değişti). Ekipman başına bir rapor: rapor oluşturulunca tuş gider; rapor silinir ya da pasife alınırsa geri gelir. "Aynı ekipmanın ikinci
+  raporu" denemesi kalktı, öteki denemeler raporu olmayan ekipmana geçti. Ölçüm: planlar 128/128 · 56/56 · 64/64; m1 78/78; m8 93/93.
+
 - 2026-09-30 (163): **Otuz dokuzuncu tur soruları (203–214)** §9'a yazıldı (reisim: *"elindeki tüm soruları toplu sor"*).
 
 - 2026-09-30 (162): **Kalıcılık hatası: plan içinde oluşturulan rapor / eklenen ekipman yenilemede kayboluyordu** (ölçerken bulundu). Plan

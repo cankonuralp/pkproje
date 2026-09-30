@@ -2,8 +2,8 @@
  "maket": "planlar",
  "tarih": "2026-09-30",
  "arac": "tools/olc-bulut.mjs --etkilesim (başsız tarayıcı, 1920 açık tema; gen verilen denemede o genişlik)",
- "toplam": 57,
- "gecen": 57,
+ "toplam": 56,
+ "gecen": 56,
  "denemeler": [
   {
    "ad": "Planlar listesi: müşteri adı kalın (≥ 600), proje adı normal (400)",
@@ -97,14 +97,14 @@
    "gecti": true
   },
   {
-   "ad": "ekipman satırında raporu olana yeşil tik (aşama yazısı yok), her satırda Rapor oluştur (2026-09-28)",
+   "ad": "ekipman satırında raporu olana yeşil tik (aşama yazısı yok), Rapor oluştur yalnız raporu olmayanda (2026-09-30)",
    "gen": 1920,
    "sayfa": "maket/planlarim.html",
    "hash": "#/plan/1",
    "gecti": true
   },
   {
-   "ad": "Rapor oluştur sınırsız: raporu olan ekipmana ikinci rapor, Raporlar'da iki satır",
+   "ad": "raporu olan ekipmanda Rapor oluştur yok; rapor oluşturulunca tuş gider, rapor silinince geri gelir",
    "gen": 1920,
    "sayfa": "maket/planlarim.html",
    "hash": "#/plan/1",
@@ -133,13 +133,6 @@
   },
   {
    "ad": "raporlar toplu PDF: süzgeçteki gönderilmiş raporlar tek PDF'te (taslak girmez)",
-   "gen": 1920,
-   "sayfa": "maket/planlarim.html",
-   "hash": "#/plan/1",
-   "gecti": true
-  },
-  {
-   "ad": "aynı ekipmanın ikinci raporu saha rapor ekranında boş açılır (numarayla ayrı)",
    "gen": 1920,
    "sayfa": "maket/planlarim.html",
    "hash": "#/plan/1",
