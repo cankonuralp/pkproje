@@ -2105,6 +2105,10 @@ revizyon, alan kopyalama, hafif kusur devri, meslek eşleşme denetimi).
 - Emsal ürünler: https://opwire.app/iso-17020-periyodik-kontrol-yazilimi/ · https://17020muayene.vidco.com.tr/ · https://akuple.com/asansor-kontrol-yazilimi/ · https://ensyazilim.com/
 
 ## 11 · Değişiklik günlüğü
+- 2026-09-30 (196): **S2 · Yetkisiz · Sayfa bulunamadı · Oturum süresi doldu** (§9 kırk üçüncü tur cevabı). hata.html: **#/yetkisiz** (kilit,
+  "Bu sayfayı görme yetkiniz yok", yöneticiden yetki isteyin) ve **sayfa bulunamadı** (bilinmeyen her adres); ikisinde de kabuk ve menü yerinde,
+  **Ana sayfaya dön** · **Geri dön**; kaydın adı / numarası yazılmaz. Giriş sayfasına **#/oturum** hâli: aynı giriş formu, üstte "Uzun süre işlem
+  yapılmadığı için oturumunuz kapandı"; girince kaldığı sayfaya (?donus=) döner. 3 durum kaydı, 3 deneme; file-question-mark ikonu.
 - 2026-09-30 (195): **S1 · Müşteri panelinde Çıkış yap** (§9 kırk üçüncü tur cevabı). Müşteri kullanıcısının adına basınca menü: yalnız
   **Çıkış yap** (giriş sayfasına; parolamı unuttum orada). Parola değiştirme müşteride şimdilik yok (reisim: "çıkış yap eklemen yeterli"). 1 deneme.
 - 2026-09-30 (194): **R3 · Eksik iş analizi** (§9 kırk üçüncü tur): 16 madde, dört başlık (hesap / erişim · 17020 kayıtları · kolaylık);

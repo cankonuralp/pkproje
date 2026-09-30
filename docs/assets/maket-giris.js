@@ -1,6 +1,6 @@
 /* ══ probata MAKET M1 — Giriş (modül 1) · ONAY BEKLİYOR (toplu maket, 2026-09-24) ═════════════════════════════════
    Kaynak: pkproje.md §2 (kiracı = alt alan adı; kullanıcı e-postayla), CLAUDE.md §2 (kimlik bizim kodumuzda), anayasa 5.3
-   (parola alanında tam sessizlik: sayfaya genel tuş dinleyicisi parola alanına dokunmaz). Hâller: #/ · #/hata · #/unuttum ·
+   (parola alanında tam sessizlik: sayfaya genel tuş dinleyicisi parola alanına dokunmaz). Hâller: #/ · #/hata · #/oturum (S2: oturum süresi doldu) · #/unuttum ·
    #/gonderildi · #/gecici (geçici parolayla ilk giriş). Hangi hesabın var olduğu ASLA söylenmez (yanlış e-posta ile yanlış parola
    aynı ileti; sıfırlamada "kayıtlıysa gönderildi"). Kurallar ve süreler reisim onaylı (37: "uygun").
    2. tur (2026-09-25): 34 "yönetici geçici parola verir, daha sonra kullanıcı parolasını değiştirebilir" → davet bağlantısıyla parola
@@ -45,7 +45,10 @@
         '<div class="a-giris-tuslar">' + MK.tus({ eylem: "belirle", ad: "Kaydet ve devam et", ikon: "check" }) +
           '<a class="a-baglanti" href="anasayfa.html">Şimdi değil</a></div>';
     } else {
+      /* S2 (2026-09-30, reisim: "3 bu ekranları ekle"): oturum süresi doldu — aynı giriş formu, üstte neden; girişten sonra kaldığı sayfaya
+         (?donus=<sayfa>) ya da Ana sayfaya. Yazılmamış işin korunduğu SÖYLENMEZ (uygulamada taslak kaydı ayrı iş) */
       f.innerHTML = bas("Giriş") +
+        (h === "#/oturum" ? MK.serit("bilgi", "clock", "Uzun süre işlem yapılmadığı için oturumunuz kapandı. Devam etmek için yeniden giriş yapın.") : "") +
         (h === "#/hata" ? MK.serit("hata", "circle-alert", "E-posta ya da parola yanlış. 5 hatalı denemeden sonra giriş 15 dakika kilitlenir.") : "") +
         epostaAlani() +
         parolaAlani("g-parola", "Parola", S.parola, "", S.hata.parola, "current-password") +
@@ -79,7 +82,8 @@
     /* maket: "hata" içeren parola yanlış sayılır, "gecici" içeren geçici parola sayılır; öteki her şey Ana sayfa'ya girer */
     if (/hata/.test(S.parola)) { location.hash = "#/hata"; return; }
     if (/gecici/.test(S.parola)) { location.hash = "#/gecici"; return; }
-    location.href = "anasayfa.html";
+    var d = /[?&]donus=([a-z-]+\.html)/.exec(location.search);   /* oturum süresi dolduysa kaldığı sayfa (yalnız maket sayfa adı) */
+    location.href = location.hash === "#/oturum" && d ? d[1] : "anasayfa.html";
   };
   X.sifirla = function () {
     S.hata = {};

@@ -1482,3 +1482,8 @@ a.a-yuz:hover { border-color: var(--kenar-alan); background: var(--zemin); }
 .a-secenek-ayrik { margin-top: 4px; border-top: 1px solid var(--kenar); border-radius: 0; }
 .a-ayar-izgara > .a-bolum .a-eylem-cubugu { margin-top: 12px; }
 .a-ayar-izgara .a-satirlar + .a-ipucu { margin-bottom: 12px; }
+
+/* YETKİSİZ · BULUNAMADI (S2, 2026-09-30): boş durum kalıbı, sayfanın ortasına yakın; iki tuş yan yana, sığmazsa alt alta */
+.a-hata-kap { display: flex; justify-content: center; padding-top: 8vh; }
+.a-hata-kap .a-bos { max-width: 520px; }
+.a-bos-tuslar { display: flex; flex-wrap: wrap; justify-content: center; gap: 8px; margin-top: 16px; }

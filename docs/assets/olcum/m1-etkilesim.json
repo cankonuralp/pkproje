@@ -2,8 +2,8 @@
  "maket": "m1",
  "tarih": "2026-09-30",
  "arac": "tools/olc-bulut.mjs --etkilesim (başsız tarayıcı, 1920 açık tema; gen verilen denemede o genişlik)",
- "toplam": 93,
- "gecen": 93,
+ "toplam": 96,
+ "gecen": 96,
  "denemeler": [
   {
    "ad": "İzin talepleri: formun PDF'i açılır, e-posta talep edene",
@@ -290,6 +290,27 @@
    "gen": 1920,
    "sayfa": "maket/personel.html",
    "hash": "#/roller",
+   "gecti": true
+  },
+  {
+   "ad": "yetkisiz sayfa: kilit, neden cümlesi, Ana sayfaya dön ve Geri dön; menü yerinde; Ana sayfaya dön çalışır",
+   "gen": 1920,
+   "sayfa": "maket/hata.html",
+   "hash": "#/yetkisiz",
+   "gecti": true
+  },
+  {
+   "ad": "sayfa bulunamadı: bilinmeyen adreste de aynı ekran",
+   "gen": 1920,
+   "sayfa": "maket/hata.html",
+   "hash": "#/yok/boyle-bir-sey",
+   "gecti": true
+  },
+  {
+   "ad": "oturum süresi doldu: giriş formu, üstte neden; girince kaldığı sayfaya döner",
+   "gen": 1920,
+   "sayfa": "maket/giris.html?donus=raporlar.html",
+   "hash": "#/oturum",
    "gecti": true
   },
   {
