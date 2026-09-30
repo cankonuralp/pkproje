@@ -150,8 +150,11 @@
           '<span class="a-ust-panel">' + kacis(o.musteri.firma || "Müşteri paneli") + '</span><div class="a-ust-bosluk"></div>' +
           '<button class="a-ikon-tus" type="button" data-eylem="tema" id="a-tema-tus" aria-label="Temayı değiştir">' +
             '<svg class="a-ikon a-tema-ay" aria-hidden="true"><use href="' + IKON + 'moon"/></svg><svg class="a-ikon a-tema-gunes" aria-hidden="true"><use href="' + IKON + 'sun"/></svg></button>' +
-          '<div class="a-kullanici"><span class="a-avatar" aria-hidden="true">' + kacis(o.kullanici.bas) + "</span>" +
-            '<span class="a-kullanici-yazi"><span class="a-kullanici-ad">' + kacis(o.kullanici.ad) + '</span><span class="a-kullanici-rol">' + kacis(o.kullanici.rol) + "</span></span></div>" +
+          /* S1 (2026-09-30, reisim: "çıkış yap eklemen yeterli"): müşteri kullanıcısının menüsünde yalnız Çıkış yap (giriş sayfasına) */
+          '<div class="a-secici a-kullanici-secici"><button class="a-kullanici" type="button" data-secici-ac="kullanici" aria-haspopup="menu" aria-expanded="false" aria-label="' + kacis(o.kullanici.ad) + ' · hesap">' +
+            '<span class="a-avatar" aria-hidden="true">' + kacis(o.kullanici.bas) + "</span>" +
+            '<span class="a-kullanici-yazi"><span class="a-kullanici-ad">' + kacis(o.kullanici.ad) + '</span><span class="a-kullanici-rol">' + kacis(o.kullanici.rol) + "</span></span></button>" +
+            '<div class="a-secici-liste" role="menu" aria-label="Hesap" hidden><a class="a-secenek" role="menuitem" href="' + MK.adres("giris", "#/") + '" data-cikis>Çıkış yap</a></div></div>' +
         "</header></div>";
       document.body.insertBefore(kok, ana);
       kok.querySelector(".a-govde").appendChild(ana);

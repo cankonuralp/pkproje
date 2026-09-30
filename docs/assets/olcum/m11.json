@@ -1,7 +1,7 @@
 {
  "maket": "m11",
  "sayfa": "maket/musteri.html",
- "tarih": "2026-09-29",
+ "tarih": "2026-09-30",
  "arac": "başsız HeadlessChrome/141.0.7390.37 · puppeteer-core · tools/olc-bulut.mjs + tools/olc-maket.js",
  "yontem": "python3 http.server (docs/), her durum × genişlik × tema taze yükleme ve ayrı oturum, geçişler kapalı; 1920×1080 · 1080×810 · 375×812 × açık/koyu; 1080'de çekmece açık ayrıca.",
  "toplam": 88,
@@ -14,11 +14,11 @@
     "genislik": 1080,
     "ekranIcinde": true,
     "cekmeceGen": 300,
-    "madde": 16,
+    "madde": 17,
     "kesikAd": 0,
     "kucukMadde": 0,
     "menuGorunur": 691,
-    "menuIcerik": 938,
+    "menuIcerik": 984,
     "yatayTasma": 0,
     "sonMaddeAcilir": true,
     "perde": true,
@@ -28,11 +28,11 @@
     "genislik": 1080,
     "ekranIcinde": true,
     "cekmeceGen": 300,
-    "madde": 16,
+    "madde": 17,
     "kesikAd": 0,
     "kucukMadde": 0,
     "menuGorunur": 691,
-    "menuIcerik": 938,
+    "menuIcerik": 984,
     "yatayTasma": 0,
     "sonMaddeAcilir": true,
     "perde": true,
@@ -2147,7 +2147,7 @@
    "tusY": 34,
    "tusGen": [
     99,
-    222
+    271
    ],
    "satirY": 52,
    "birincil": null,
@@ -2185,7 +2185,7 @@
    "tusY": 34,
    "tusGen": [
     99,
-    222
+    271
    ],
    "satirY": 52,
    "birincil": null,
@@ -2223,7 +2223,7 @@
    "tusY": 44,
    "tusGen": [
     102,
-    234
+    287
    ],
    "satirY": 56,
    "birincil": null,
@@ -2261,7 +2261,7 @@
    "tusY": 44,
    "tusGen": [
     102,
-    234
+    287
    ],
    "satirY": 56,
    "birincil": null,
@@ -2299,7 +2299,7 @@
    "tusY": 44,
    "tusGen": [
     102,
-    234
+    287
    ],
    "satirY": 56,
    "birincil": null,
@@ -2337,7 +2337,7 @@
    "tusY": 44,
    "tusGen": [
     102,
-    234
+    287
    ],
    "satirY": 56,
    "birincil": null,
@@ -2375,7 +2375,7 @@
    "tusY": 44,
    "tusGen": [
     109,
-    234
+    287
    ],
    "satirY": 247,
    "birincil": null,
@@ -2413,7 +2413,7 @@
    "tusY": 44,
    "tusGen": [
     109,
-    234
+    287
    ],
    "satirY": 247,
    "birincil": null,

@@ -2,9 +2,16 @@
  "maket": "m11",
  "tarih": "2026-09-30",
  "arac": "tools/olc-bulut.mjs --etkilesim (başsız tarayıcı, 1920 açık tema; gen verilen denemede o genişlik)",
- "toplam": 12,
- "gecen": 12,
+ "toplam": 13,
+ "gecen": 13,
  "denemeler": [
+  {
+   "ad": "müşteri paneli: ada basınca yalnız Çıkış yap; giriş sayfasına gider",
+   "gen": 1920,
+   "sayfa": "maket/musteri.html",
+   "hash": "#/",
+   "gecti": true
+  },
   {
    "ad": "193: revize sürerken müşteri önceki imzalı sürümü görür (numarası ekisiz, imzalı, yerine geçer notu yok)",
    "gen": 1920,

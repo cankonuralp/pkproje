@@ -2066,6 +2066,12 @@ Reisim'in kararına sunuldu, hiçbiri yapılmadı:
   **Ekipman etiketi** (QR'lı, sonraki kontrol tarihli muayene etiketi) basma. (13) **Takvim görünümü** (planlar ay / hafta, denetçiye göre).
   (14) Raporu müşteriye **e-postayla gönderme** (portal var; bildirim kurmak reisim kararı, anayasa 1.3). (15) **Müşteri memnuniyet anketi**.
   (16) Firmanın bütün verisini **dışa aktarma** (KVKK, ayrılan firma).
+Cevap (2026-09-30, reisim birebir): *"1 hayır, personele hesap oluşturmaktan bahsediyorum bu vb işleri ilerde kurgularız 2 çıkış yap eklemen
+yeterli 3 bu ekranları ekle 4 gerek yok 5 gerek yok6-7-8-9 a gerek yok 10 da ne kastettiğini göster 11 e imza veya mobil imza ile çözülecek 12
+gerek yok 13 gerek yok 14 gerek yok 15 gerek yok 16 yı anlamadım müşteri ekranında excel alma yok mu var sanki ?"* → **S1:** müşteri panelinde
+Çıkış yap. **S2:** yetkisiz sayfa · oturum süresi doldu · sayfa bulunamadı ekranları. 1 (personel hesabı açma makette var: Personel kartı › Giriş
+hesabı) ileride kurgulanır; 10 örnekle gösterildi, karar reisim'de; 11 e-imza / mobil imzayla çözülür (ayrı doğrulama sayfası yok); 4, 5, 6–9,
+12–15 yapılmaz; 16 açıklandı (müşteri ekranındaki Excel yalnız o müşterinin listesi).
 
 **Açık kalanlar:** ~~Ana sayfada İSGGM duyuruları~~ (2026-09-27: makette eklendi; okuma işi uygulamada) (reisim 2026-09-26: *"Ana sayfada isgüm duyurularını gösterebilir miyiz ? Bunu
 yapılacaklar listesine ekle"*; öneri: ÇSGB İSGGM duyurular sayfası — https://www.csgb.gov.tr/isggm/duyurular/ — sunucuda günde birkaç kez
@@ -2099,6 +2105,8 @@ revizyon, alan kopyalama, hafif kusur devri, meslek eşleşme denetimi).
 - Emsal ürünler: https://opwire.app/iso-17020-periyodik-kontrol-yazilimi/ · https://17020muayene.vidco.com.tr/ · https://akuple.com/asansor-kontrol-yazilimi/ · https://ensyazilim.com/
 
 ## 11 · Değişiklik günlüğü
+- 2026-09-30 (195): **S1 · Müşteri panelinde Çıkış yap** (§9 kırk üçüncü tur cevabı). Müşteri kullanıcısının adına basınca menü: yalnız
+  **Çıkış yap** (giriş sayfasına; parolamı unuttum orada). Parola değiştirme müşteride şimdilik yok (reisim: "çıkış yap eklemen yeterli"). 1 deneme.
 - 2026-09-30 (194): **R3 · Eksik iş analizi** (§9 kırk üçüncü tur): 16 madde, dört başlık (hesap / erişim · 17020 kayıtları · kolaylık);
   hiçbiri yapılmadı, reisim seçecek. Tam ölçüm bu teslimde koşuldu (sonuç commit mesajında).
 - 2026-09-30 (193): **R2 · Hesabım ve Çıkış yap** (§9 kırk üçüncü tur). Üst çubuktaki kullanıcı menüsü: **Hesabım** · Taleplerim · İzin talebi ·
