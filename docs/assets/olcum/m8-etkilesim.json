@@ -104,7 +104,7 @@
    "gecti": true
   },
   {
-   "ad": "Kaydet ve kopyala: kod sorulur, yeni ekipman bu raporun bilgileriyle açılır (madde cevapları gelir, kusur açıklaması / test / fotoğraf gelmez), yeni rapora gidilir, plana girer",
+   "ad": "Kaydet ve kopyala: yalnız kod ve bölüm sorulur, yeni ekipman bu raporun bilgileriyle açılır (madde cevapları gelir, kusur açıklaması / test / fotoğraf gelmez), yeni rapora gidilir, plana girer",
    "gen": 1920,
    "sayfa": "maket/rapor.html",
    "hash": "#/r/ET-1009",

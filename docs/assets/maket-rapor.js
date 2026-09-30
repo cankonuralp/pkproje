@@ -645,9 +645,9 @@
           (W.oku ? "" : "; bu rapor önce kaydedilir") + ". Test değerleri, fotoğraflar ve sonuç kopyalanmaz.</p>" +
         '<div class="a-form">' +
         MK.alan({ id: "w-kod", etiket: "Ekipman kodu", zorunlu: true, hata: h.kod, girdi: MK.girdi({ id: "w-kod", alan: "kod", deger: d.kod, sinif: "a-girdi-kod", hata: h.kod, ek: ' maxlength="20" spellcheck="false" placeholder="' + ek.kod.replace(/\d+$/, "") + '…"' }) }) +
-        MK.alan({ id: "w-tur", etiket: "Ekipman türü", girdi: '<input class="a-girdi a-girdi-oku" id="w-tur" readonly value="' + kacis(W.r.t.ad) + '">' }) +
-        MK.alan({ id: "w-seri", etiket: "Seri no", girdi: MK.girdi({ id: "w-seri", alan: "seri", deger: d.seri, ek: ' maxlength="30"' }) }) +
-        MK.alan({ id: "w-konum", etiket: "Kullanım yeri", girdi: MK.girdi({ id: "w-konum", alan: "konum", deger: d.konum, ek: ' maxlength="60"' }) }) + "</div>";
+        /* N10 (2026-09-30, reisim: "ekipman kodu ve ekipman bölümü sorsun yeterli"): tür değişmez (yazıda), seri no sorulmaz (her formatta yok;
+           varsa yeni raporda yazılır) */
+        MK.alan({ id: "w-konum", etiket: "Ekipman bölümü (kullanım yeri)", girdi: MK.girdi({ id: "w-konum", alan: "konum", deger: d.konum, ek: ' maxlength="60"' }) }) + "</div>";
       $("a-pencere-alt").innerHTML = MK.tus({ eylem: "pencere-kapat", ad: "Vazgeç", sinif: "a-tus-ikincil" }) + MK.tus({ eylem: "pencere-kaydet", ad: W.oku ? "Kopyala" : "Kaydet ve kopyala", ikon: "copy" });
       if (odak) { var ko = $(odak); if (ko) { ko.focus(); if (ko.setSelectionRange) ko.setSelectionRange(ko.value.length, ko.value.length); } }
       return;
@@ -735,7 +735,7 @@
       var kh = kodDurumu(d.kod); if (kh) { W.hata = { kod: kh }; pencereCiz("w-kod"); return; }
       if (MV.gunlukSure(r.kisi).dolu) { W.hata = { kod: "Günlük süre doldu (mesai takibi); bugün yeni rapor oluşturulamaz." }; pencereCiz("w-kod"); return; }   /* 212 */
       if (!W.oku) { r.kayit = MK.simdi(); r.degisti = false; }
-      var y = kopyala(r, { kod: d.kod, seri: String(d.seri || "").trim(), konum: String(d.konum || "").trim() });
+      var y = kopyala(r, { kod: d.kod, seri: "", konum: String(d.konum || "").trim() });
       W = null; $("a-pencere").close(); MK.kaliciYaz();
       location.hash = "#/r/" + y.kod + "?no=" + y.no + "&durum=taslak";
       MK.bildir((r.degisti === false ? "Rapor kaydedildi; " : "") + y.kod + " açıldı: " + y.no + ". Bilgiler " + r.e.kod + " raporundan kopyalandı.");

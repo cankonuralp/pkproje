@@ -2067,6 +2067,9 @@ revizyon, alan kopyalama, hafif kusur devri, meslek eşleşme denetimi).
 - Emsal ürünler: https://opwire.app/iso-17020-periyodik-kontrol-yazilimi/ · https://17020muayene.vidco.com.tr/ · https://akuple.com/asansor-kontrol-yazilimi/ · https://ensyazilim.com/
 
 ## 11 · Değişiklik günlüğü
+- 2026-09-30 (186): **N10 · Kaydet ve kopyala: yalnız kod ve bölüm** (§9 kırk birinci tur ek). Pencerede Ekipman kodu (zorunlu) ve Ekipman
+  bölümü (kullanım yeri); seri no ve salt okunur tür alanı kalktı (tür üstteki yazıda; seri no her formatta yok, varsa yeni raporda yazılır).
+  1 deneme gerekçeyle güncellendi. Ölçüm: m8 184/184 · 107/107 · 92/92.
 - 2026-09-30 (185): **N9 · Raporlar balonu kişiye göre** (§9 kırk birinci tur ek). Giriş yapanın kendi raporları: kırmızı geri gönderilen
   (düzeltilecek), sarı onaya gönderilmemiş Yeni; imza bekleyenler Onaylar balonunda (tekrar sayılmaz); raporu olmayanda balon yok. 2 deneme
   gerekçeyle güncellendi. Ölçüm: m9 200/200 · 49/49 · 100/100; m10 48/48 · 15/15 · 24/24; planlar 128/128 · 63/63 · 64/64.
