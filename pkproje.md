@@ -2073,6 +2073,12 @@ revizyon, alan kopyalama, hafif kusur devri, meslek eşleşme denetimi).
 - Emsal ürünler: https://opwire.app/iso-17020-periyodik-kontrol-yazilimi/ · https://17020muayene.vidco.com.tr/ · https://akuple.com/asansor-kontrol-yazilimi/ · https://ensyazilim.com/
 
 ## 11 · Değişiklik günlüğü
+- 2026-09-30 (189): **O2 · Uygun değil maddede açıklama alanı yok; fotoğraf Kusur açıklamalarında, altında madde** (§9 kırk ikinci tur).
+  Madde satırının altındaki "Kusur açıklaması" kutusu kalktı (zorunlu alanlardan da çıktı); kusur listesinde maddenin kendisi yazar. Kamera
+  simgesiyle eklenen fotoğraf, formatlı türde Kusur açıklamaları bölümünde: fotoğraf (Görüntüle · İndir · Sil), hemen altında ilgili madde
+  ("5.1.3 · Pano sabitlenmesi …"); madde satırında yalnız "1 fotoğraf · Kusur açıklamaları bölümünde". Kusur açıklamaları bölümü olmayan
+  türde fotoğraf maddenin altında kalır. Kusur derecesi (hafif / ağır) Bakanlık formatlı türde duruyor — sonucu o belirliyor. PDF'te madde
+  açıklamasız yazılır, fotoğraf adı yanında. 3 deneme güncellendi, 1 yeni (Kusur açıklamalarından fotoğraf silme).
 - 2026-09-30 (188): **O1 · Saha raporunda kayık yazılar** (§9 kırk ikinci tur). 5.1 ölçüm noktası tablosunda "RCD testi IΔ · TΔ" sütununun
   genişliği tanımlı değildi: başlık harf harf alt alta, IΔ / TΔ kutuları Sonuç rozetinin altına eziliyordu → sütunlar yeniden paylaştırıldı
   (RCD testi %20), iki kutu hücreyi eşit böler. Madde (i) simgesi metne 4–5 px yapışıktı (sol eksi pay) → pay kalktı, en az 9 px. 2 yeni deneme

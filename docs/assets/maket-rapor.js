@@ -80,7 +80,7 @@
       if (e.kod === "ET-1009") {   /* elektrik iç tesisatı (ZPKR02): yarıda; pano sigortaları okunmadı; denetçinin zimmetinde kalibrasyonu geçmiş cihaz */
         ornekBilgi(); r.tespit = { degisiklik: "Yok", etiket: "Var" };
         [0, 1, 2].forEach(function (i) { r.kriter[i].c = i === 2 ? "uygundegil" : "uygun"; });
-        r.kriter[2].foto = 1; r.kriter[2].derece = "hafif"; r.kriter[2].not = "Tali pano TP-2 duvara yalnız üstten sabitlenmiş; alt bağlantı yok.";
+        r.kriter[2].foto = 1; r.kriter[2].derece = "hafif";
         r.test[0] = "0,21"; r.foto = 1; r.amac = "Aydınlatma, priz ve makine besleme devreleri";
         r.cihaz = ["v1", "v2", "v3"];   /* v3 = tesisat test cihazı OC-003, kalibrasyonu 18.09.2026'da geçti; zimmette geçerli başkası yok */
       }
@@ -93,7 +93,7 @@
       /* plan 10 (2026-09-28; reisim: "en son attığım rapor formatına göre sonuç o şekilde gözükecek biçimde örnekler"): son formatlarla —
          ET-2001 Tamamlandı · Uygun · ET-2002 hafif kusur (formatın maddesi) · AT-2003 ağır kusur (Zx sınırı aşıyor, RCD yok → Not-2) ·
          ET-2004 yarıda · AT-2005 ilk kontrol, boş */
-      if (e.kod === "ET-2002") { var ok = MV.ornekKusur(t, true), x = r.kriter[ok.i]; x.c = "uygundegil"; x.derece = "hafif"; x.not = ok.aciklama; x.foto = 1; r.sonuc = "kullanilamaz"; }
+      if (e.kod === "ET-2002") { var ok = MV.ornekKusur(t, true), x = r.kriter[ok.i]; x.c = "uygundegil"; x.derece = "hafif"; x.foto = 1; r.sonuc = "kullanilamaz"; }
       if (e.kod === "AT-2003") { r.nokta.push({ ad: "Kapı motoru — sevkiyat", egri: "C", In: 10, zx: "2,6", rcd: "", priz: false }); r.sonuc = "kullanilamaz"; r.notlar = "Kapı motoru hattına 30 mA RCD takılması ya da koruma değerinin düşürülmesi önerilir."; }
       if (e.kod === "ET-2004") {
         ornekBilgi(); r.tespit = { degisiklik: "Yok", etiket: "Var" }; cihazDoldur();
@@ -168,7 +168,7 @@
   var sigortali = function (r) { return elektrik(r.t) && (!r.F || !!r.F.gozle); };   /* topraklama formatında pano sigortası yok, ölçüm noktaları var */
   /* ZORUNLU ALANLAR (§3.8 kural 5; reisim 2026-09-28: "Gönder derken gelen uyarı ekranı olmasın sadece eğer zorunlu doldurulması gereken yerler
      olmasına rağmen doldurulmadıysa pop-up şekilde zorunlu alanlar doldurulmadı … fotoğraf eklemek her raporda zorunlu"). Temel zorunlular:
-     fotoğraf (en az 1), türün ölçüm cihazları (kalibrasyonu geçerli), uygun değil maddenin açıklaması (ve formatlı türde derecesi), test ve
+     fotoğraf (en az 1), türün ölçüm cihazları (kalibrasyonu geçerli), uygun değil maddenin formatlı türde derecesi (açıklama alanı yok, O2), test ve
      ölçüm değerleri (isteğe bağlı olanlar hariç). Başka format başka zorunluluk getirir (§3.7 satır 13). Zorunlu olmayan eksik gönderimi durdurmaz. */
   var otoSonuc = function (r) { return uygunDegil(r) ? "kullanilamaz" : "kullanilir"; };
   var SONUC = [["kullanilir", "Uygun"], ["kullanilamaz", "Uygun değil"]];
@@ -178,7 +178,6 @@
     if (gecmis(r).length || eksikTur(r).length) l.push({ bolum: "r-b3", alan: "#r-b3 [data-eylem=cihaz-ekle-ac], #r-b3 .a-hata-metin" });
     kusurlar(r).forEach(function (x) { var i = r.kriter.indexOf(x);
       if (MV.kusurSinifli(r.t) && !x.derece) l.push({ bolum: "r-b4", alan: "#r-kd" + i });
-      if (!x.not.trim()) l.push({ bolum: "r-b4", alan: "#r-kn" + i });
       if (MV.kusurFotoZorunlu() && !(x.foto > 0)) l.push({ bolum: "r-b4", alan: "#r-kf" + i }); });
     ts.forEach(function (x, i) { if (testZorunlu(x) && !testDolu(x, r.test[i])) l.push({ bolum: "r-b5", alan: "#r-t" + i }); });
     if (F && F.noktalar) {
@@ -255,14 +254,18 @@
         (oku ? okuGirdi("r-kc" + i, ad2(KRITER, x.c)) : MK.secim({ id: "r-kc" + i, ad: "Madde " + no, deger: x.c, secenekler: KRITER, ipucu: "Seçin", tanim: "r-ka" + i, gecersiz: uyar(r, !x.c) })) + "</div>" +
       (bilgiAcik ? '<div class="a-madde-bilgi" id="r-kbi' + i + '">' + (MV.kriterAciklama(t, ad) ? "<p>" + kacis(MV.kriterAciklama(t, ad)) + "</p>" : '<p class="a-deger-yok">Bu madde için firma formatında açıklama tanımlı değil.</p>') +
         (t.std && t.std.length ? '<p class="a-alt-satir">Standart: ' + t.std.map(function (k) { var x = MV.standart(k); return x ? kacis(x.no + " — " + x.konu) : ""; }).filter(Boolean).join(" · ") + "</p>" : "") + "</div>" : "") +
-      (kus ? '<div class="a-kriter-kusur">' +
-        /* hafif / ağır yalnız Bakanlık formatı yürürlükteki türde (§4.5, Ek-III 1.9.1) */
-        (MV.kusurSinifli(t) ? MK.alan({ id: "r-kd" + i, etiket: "Kusur derecesi", zorunlu: !oku,
-          girdi: oku ? okuGirdi("r-kd" + i, ad2(DERECE, x.derece)) : MK.secim({ id: "r-kd" + i, ad: "Kusur derecesi", deger: x.derece || "", secenekler: DERECE, ipucu: "Seçin", tanim: "r-kd" + i + "-ipucu", gecersiz: uyar(r, !x.derece) }) }) : "") +
-        MK.alan({ id: "r-kn" + i, etiket: "Kusur açıklaması", zorunlu: !oku,
-          girdi: '<textarea class="a-alan a-alan-ince" id="r-kn' + i + '" data-alan="kn' + i + '" maxlength="300" aria-describedby="r-kn' + i + '-ipucu"' + (oku ? " readonly" : "") + (uyar(r, !x.not.trim()) ? ' aria-invalid="true"' : "") + ">" + kacis(x.not) + "</textarea>" }) +
-        (x.foto > 0 ? '<div class="a-fotolar">' + fotolar(x.foto, x.fotoAd, "Madde " + no, oku ? null : { eylem: "kusur-foto-sil", veri: { k: i } }) + "</div>"
-          : !oku && MV.kusurFotoZorunlu() ? '<p class="a-ipucu' + (uyar(r, true) ? " a-ipucu-uyari" : "") + '">Fotoğraf zorunlu: satırdaki kamera simgesiyle ekleyin.</p>' : "") + "</div>" : "") + "</div>";
+      /* O2 (2026-09-30, reisim: "uygun değil işaretlenen durumlar için kusur açıklaması kısmı gelmesin, fotoğraf eklenirse fotoğrafın altına
+         ilgili madde yazacak şekilde kusur açıklamaları kısmına gelsin"): açıklama alanı yok, madde metni kusurun kendisi. Formatlı türde
+         fotoğraf Kusur açıklamaları bölümünde, altında madde; burada yalnız kısa bilgi. Bölümü olmayan türde fotoğraf maddenin altında kalır */
+      (kus && kusurIc(r, oku, i, no) ? '<div class="a-kriter-kusur">' + kusurIc(r, oku, i, no) + "</div>" : "") + "</div>";
+  }
+  function kusurIc(r, oku, i, no) {
+    var t = r.t, x = r.kriter[i];
+    return (MV.kusurSinifli(t) ? MK.alan({ id: "r-kd" + i, etiket: "Kusur derecesi", zorunlu: !oku,   /* hafif / ağır yalnız Bakanlık formatlı türde (§4.5, Ek-III 1.9.1) */
+        girdi: oku ? okuGirdi("r-kd" + i, ad2(DERECE, x.derece)) : MK.secim({ id: "r-kd" + i, ad: "Kusur derecesi", deger: x.derece || "", secenekler: DERECE, ipucu: "Seçin", tanim: "r-kd" + i + "-ipucu", gecersiz: uyar(r, !x.derece) }) }) : "") +
+      (x.foto > 0 ? (r.F ? '<p class="a-ipucu a-kusur-foto-bilgi">' + ikon("camera", "a-ikon-kucuk") + x.foto + " fotoğraf · Kusur açıklamaları bölümünde</p>"
+          : '<div class="a-fotolar">' + fotolar(x.foto, x.fotoAd, "Madde " + no, oku ? null : { eylem: "kusur-foto-sil", veri: { k: i } }) + "</div>")
+        : !oku && MV.kusurFotoZorunlu() ? '<p class="a-ipucu' + (uyar(r, true) ? " a-ipucu-uyari" : "") + '">Fotoğraf zorunlu: satırdaki kamera simgesiyle ekleyin.</p>' : "");
   }
   /* ünlem menüsü (§3.8 kural 3, reisim 2026-09-28: "ünlem işareti olur ve oradan seçilerek hepsini uygun yap hepsini uygunsuz yap ya da
      hepsini uygulanamaz yap"): grubun başlığında, o grubun bütün maddelerini tek seferde işaretler; madde madde değiştirmek serbest */
@@ -383,8 +386,8 @@
   var fotoAdlari = function (x) { var l = []; for (var j = 0; j < (x.foto || 0); j++) l.push((x.fotoAd || [])[j] || "fotograf-" + (j + 1) + ".jpg"); return l; };
   function kusurListe(r) {
     var l = [], F = r.F, t = r.t, kr = MV.kriterler(t);
-    r.kriter.forEach(function (x, i) { if (x.c === "uygundegil") l.push([kriterNo(t, i) + " · " + kr[i], ad2(DERECE, x.derece) || (MV.kusurSinifli(t) ? "Derece seçilmedi" : "Uygun değil"), x.not || "Açıklama yazılmadı",
-      fotoAdlari(x).join(", ")]); });
+    r.kriter.forEach(function (x, i) { if (x.c === "uygundegil") l.push([kriterNo(t, i) + " · " + kr[i], ad2(DERECE, x.derece) || (MV.kusurSinifli(t) ? "Derece seçilmedi" : "Uygun değil"), "",
+      fotoAdlari(x).join(", "), i]); });   /* açıklama yok (O2): madde metni kusurun kendisi; 5. öğe madde sırası (fotoğraf silme) */
     MV.testler(t).forEach(function (x, i) { if (testSonuc(x, r.test[i]) === false) l.push([x.ad, "Ağır kusur", r.test[i] + " " + x.birim + " · sınır " + MV.sinirYaz(x)]); });
     r.nokta.forEach(function (x) { var h = MV.noktaHesap(x); if (h.agir) l.push([x.ad, "Ağır kusur", "Not-" + h.not + ": " + F.notlar[h.not - 1]]); });
     r.rcdler.forEach(function (x) { if (rcdSonuc(x) === false) l.push([x.ad + " · RCD", "Ağır kusur", "RCD performans testi yetersiz (IΔ " + x.id + " mA · TΔ " + x.td + " ms)."]); });
@@ -395,11 +398,14 @@
     devam(r).forEach(function (x) { l.push([x.kriter + " (önceki kontrolden, " + x.rapor + ")", x.sinif, x.aciklama]); });
     return l;
   }
-  function kusurHtml(r) {
+  function kusurHtml(r, oku) {
     var l = kusurListe(r);
     /* uygun değil işaretlenen her madde ve uygun olmayan ölçüm; kusur derecesi yazısı yok (reisim 2026-09-28: "hafif kusur ağır kusur vs yazmasın") */
-    return (l.length ? '<ol class="a-kusur-liste">' + l.map(function (x) { return "<li><b>" + kacis(x[0]) + '</b><span class="a-alt-satir">' + kacis(x[2]) + "</span>" +
-      (x[3] ? '<span class="a-alt-satir a-kusur-foto">' + ikon("camera", "a-ikon-kucuk") + "Fotoğraf: " + kacis(x[3]) + "</span>" : "") + "</li>"; }).join("") + "</ol>"
+    /* O2: fotoğraflı maddede önce fotoğraf, altında ilgili madde */
+    return (l.length ? '<ol class="a-kusur-liste">' + l.map(function (x) { var k = x[4], m = k === undefined ? null : r.kriter[k];
+      if (m && m.foto > 0) return '<li class="a-kusur-fotolu">' + fotolar(m.foto, m.fotoAd, "Madde " + kriterNo(r.t, k), oku ? null : { eylem: "kusur-foto-sil", veri: { k: k } }) +
+        '<span class="a-kusur-madde">' + kacis(x[0]) + "</span></li>";
+      return "<li><b>" + kacis(x[0]) + "</b>" + (x[2] ? '<span class="a-alt-satir">' + kacis(x[2]) + "</span>" : "") + "</li>"; }).join("") + "</ol>"
         : '<p class="a-bos-satir">Kusur yok.</p>') +
       (r.F.agirKusur ? '<details class="a-format-liste"><summary>Ağır kusur sayılan durumlar</summary><ul>' + r.F.agirKusur.map(function (x) { return "<li>" + kacis(x) + "</li>"; }).join("") + "</ul></details>" : "");
   }
@@ -499,7 +505,7 @@
     S.sigorta = sigortali(r) ? bolum(F ? F.bolumler.fonksiyon + ".1" : 6, "r-b6", F ? "Pano linye ve sigortaları" : "Pano sigortaları", sigortaHtml(r, oku)) : "";
     S.pd = F && F.linye ? bolum(F.bolumler.fonksiyon + ".2", "r-bp", "Potansiyel dengeleme iletkenleri", satirHtml(r, oku, "pd")) : "";
     S.zi = F && F.linye ? bolum(F.bolumler.fonksiyon + ".3", "r-bz", "Zemin izolasyonu", satirHtml(r, oku, "zi")) : "";
-    S.kusur = F ? bolum(F.bolumler.kusur, "r-bk", "Kusur açıklamaları", kusurHtml(r)) : "";
+    S.kusur = F ? bolum(F.bolumler.kusur, "r-bk", "Kusur açıklamaları", kusurHtml(r, oku)) : "";
     /* önceki kontrolden açık hafif kusurlar: her biri Giderildi / Giderilmedi; seçilmemesi gönderimi durdurmaz (kural uyarıdır) */
     var dv = devreden(r);
     S.devir = dv.length ? bolum("", "r-devir", MV.kusurSinifli(t) ? "Önceki kontrolden açık hafif kusurlar" : "Önceki kontrolden açık kusurlar", '<ol class="a-kusur-liste">' + dv.map(function (x, i) {
@@ -800,8 +806,7 @@
     else if (/^t\d+$/.test(k)) {   /* test değeri: sınır dışıysa kırmızı, odak yerinde */
       var i = +k.slice(1), x = MV.testler(r.t)[i]; r.test[i] = e.target.value;
       if (testSonuc(x, r.test[i]) === false || UY === r && testZorunlu(x) && !testDolu(x, r.test[i])) e.target.setAttribute("aria-invalid", "true"); else e.target.removeAttribute("aria-invalid");
-    } else if (/^kn\d+$/.test(k)) r.kriter[+k.slice(2)].not = e.target.value;
-    else if (/^[ds]-/.test(k)) r[k[0] === "d" ? "detay" : "tespit"][k.slice(2)] = e.target.value;
+    } else if (/^[ds]-/.test(k)) r[k[0] === "d" ? "detay" : "tespit"][k.slice(2)] = e.target.value;
     else if (/^zx\d+$/.test(k)) {   /* ölçüm noktası: Ik1 ve not yerinde hesaplanır, odak kaçmaz */
       var n = r.nokta[+k.slice(2)], h; n.zx = e.target.value; h = MV.noktaHesap(n);
       $("r-ik" + k.slice(2)).textContent = h.ik ? h.ik + " A" : "—"; $("r-not" + k.slice(2)).innerHTML = notRozet(h);

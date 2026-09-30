@@ -155,7 +155,7 @@
     };
     var kusurMetin = function () {
       var l = R ? o.kusurlar || [] : kusurlu ? [[ok.kriter, /Hafif/.test(o.sonuc) ? "Hafif kusur" : "Ağır kusur", ok.aciklama]] : [];
-      return l.length ? l.map(function (x) { return "<div>" + (/Hafif/.test(x[1]) ? "* " : "** ") + "<b>" + k(x[0]) + "</b>: " + k(x[2]) + "</div>"; }).join("") : "";
+      return l.length ? l.map(function (x) { return "<div>" + (/Hafif/.test(x[1]) ? "* " : "** ") + "<b>" + k(x[0]) + "</b>" + (x[2] ? ": " + k(x[2]) : "") + (x[3] ? " (Fotoğraf: " + k(x[3]) + ")" : "") + "</div>"; }).join("") : "";
     };
     var fotoKutu = function () { var n = R ? R.foto : o ? 2 : 0, h = ""; for (var i = 1; i <= n; i++) h += '<span class="rb-foto">Fotoğraf ' + i + "</span>"; return h; };
     var yetkili = function (num) {
@@ -320,7 +320,7 @@
   var SONUC_AD = { uygun: "Uygun", uygundegil: "Uygun değil", uygulanamaz: "Uygulanamaz" };
   function sonucAd(x) { return x && x.c ? SONUC_AD[x.c] + (x.c === "uygundegil" && x.derece ? " · " + (x.derece === "agir" ? "ağır" : "hafif") : "") : "-"; }
   function kusurHtml(l) {
-    return l && l.length ? "<ol class=\"a-belge-notlar\">" + l.map(function (x) { return "<li><b>" + kacis(x[0]) + "</b>: " + kacis(x[2]) + (x[3] ? " (Fotoğraf: " + kacis(x[3]) + ")" : "") + "</li>"; })   /* kusurun fotoğrafına atıf (2026-09-30, 213) */.join("") + "</ol>" : '<p class="a-deger-yok">Kusur yok.</p>';
+    return l && l.length ? "<ol class=\"a-belge-notlar\">" + l.map(function (x) { return "<li><b>" + kacis(x[0]) + "</b>" + (x[2] ? ": " + kacis(x[2]) : "") + (x[3] ? " (Fotoğraf: " + kacis(x[3]) + ")" : "") + "</li>"; })   /* kusurun fotoğrafına atıf (2026-09-30, 213) */.join("") + "</ol>" : '<p class="a-deger-yok">Kusur yok.</p>';
   }
   function sonucKutu(o, kusurlu) {
     var R = o && o.r, uygun = R ? R.sonuc === "kullanilir" : o && !kusurlu, degil = R ? R.sonuc === "kullanilamaz" : kusurlu;

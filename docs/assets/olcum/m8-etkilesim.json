@@ -2,8 +2,8 @@
  "maket": "m8",
  "tarih": "2026-09-30",
  "arac": "tools/olc-bulut.mjs --etkilesim (başsız tarayıcı, 1920 açık tema; gen verilen denemede o genişlik)",
- "toplam": 109,
- "gecen": 109,
+ "toplam": 110,
+ "gecen": 110,
  "denemeler": [
   {
    "ad": "önceki kontrolün hafif kusuru listelenir; Giderilmedi → bu raporun kusurlarına girer, sonuç önerisi Uygun değil",
@@ -104,7 +104,7 @@
    "gecti": true
   },
   {
-   "ad": "Kaydet ve kopyala: yalnız kod ve bölüm sorulur, yeni ekipman bu raporun bilgileriyle açılır (madde cevapları gelir, kusur açıklaması / test / fotoğraf gelmez), yeni rapora gidilir, plana girer",
+   "ad": "Kaydet ve kopyala: yalnız kod ve bölüm sorulur, yeni ekipman bu raporun bilgileriyle açılır (madde cevapları gelir, test / fotoğraf gelmez; O2 ile açıklama alanı yok), yeni rapora gidilir, plana girer",
    "gen": 1920,
    "sayfa": "maket/rapor.html",
    "hash": "#/r/ET-1009",
@@ -146,7 +146,7 @@
    "gecti": true
   },
   {
-   "ad": "fotoğrafsız Uygun değil maddeyle gönderilmez (zorunlu, simge kırmızı); fotoğraf eklenince kusur açıklamalarında fotoğraf adıyla",
+   "ad": "fotoğrafsız Uygun değil maddeyle gönderilmez (zorunlu, simge kırmızı); fotoğraf eklenince Kusur açıklamalarında: fotoğraf, altında madde (O2)",
    "gen": 1920,
    "sayfa": "maket/rapor.html",
    "hash": "#/r/ET-1009",
@@ -209,7 +209,7 @@
    "gecti": true
   },
   {
-   "ad": "Uygun değilde kusur açıklaması ve fotoğraf",
+   "ad": "Uygun değilde kusur açıklaması alanı yok (O2, reisim: \"kusur açıklaması kısmı gelmesin\"), fotoğraf simgesi var",
    "gen": 1920,
    "sayfa": "maket/rapor.html",
    "hash": "#/r/ET-1009",
@@ -728,6 +728,13 @@
   },
   {
    "ad": "gerçek fotoğraf eklenince küçük resim yok: adı + Görüntüle · İndir · Sil; Görüntüle fotoğrafın kendisini açar",
+   "gen": 1920,
+   "sayfa": "maket/rapor.html",
+   "hash": "#/r/ET-1009",
+   "gecti": true
+  },
+  {
+   "ad": "Kusur açıklamalarındaki madde fotoğrafı Sil ile kalkar; madde satırında yeniden Fotoğraf zorunlu (O2)",
    "gen": 1920,
    "sayfa": "maket/rapor.html",
    "hash": "#/r/ET-1009",

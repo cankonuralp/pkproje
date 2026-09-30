@@ -932,7 +932,8 @@ a.a-yuz:hover { border-color: var(--kenar-alan); background: var(--zemin); }
 .a-kriter-cevap-foto { display: flex; align-items: center; gap: 6px; }   /* "Uygun değil" maddede kamera simgesi seçimin solunda (213) */
 .a-kriter-cevap-foto > .a-secim { flex: 1 1 auto; min-width: 0; }
 .a-kusur-foto-tus[aria-invalid="true"] { color: var(--hata-yazi); border: 1px solid var(--hata-yazi); }
-.a-kusur-foto { display: inline-flex; align-items: center; gap: 4px; }
+.a-kusur-foto-bilgi { display: flex; align-items: center; gap: 6px; }   /* O2: madde satırında fotoğraf sayısı, fotoğrafın kendisi Kusur açıklamalarında */
+.a-kusur-madde { display: block; margin-top: 6px; font-weight: 600; }   /* O2: fotoğrafın altında ilgili madde */
 .a-kriter-kusur { grid-column: 1 / -1; display: grid; gap: 8px; }
 .a-kriter-uyari { grid-column: 1 / -1; margin: 0; }
 .a-kriter-sonuc { border-top: 0; padding-top: 0; }
