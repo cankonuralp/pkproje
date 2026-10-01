@@ -2123,6 +2123,17 @@ revizyon, alan kopyalama, hafif kusur devri, meslek eşleşme denetimi).
 - Emsal ürünler: https://opwire.app/iso-17020-periyodik-kontrol-yazilimi/ · https://17020muayene.vidco.com.tr/ · https://akuple.com/asansor-kontrol-yazilimi/ · https://ensyazilim.com/
 
 ## 11 · Değişiklik günlüğü
+- 2026-10-01 (211): **Ö5 · Uçtan uca deneme kapanışı** (§9 kırk dördüncü tur: "bir muayene firmasıymışsın gibi, 0 dan teklif plan açma denetim
+  yapma fatura kesme gibi tüm adımları … tek tek kontrol et dene, müşteri görünümüne de bak"). Kalıcı bir tarayıcı profilinde sırayla: müşteri ekle
+  (Deneme Kazan Sanayi A.Ş., uydurma) → tesis ekle → teklif T-0926-014 (2 hava tankı × 900 + 1 iç tesisat 3.500 = 6.360,00 TL KDV dahil) gönder →
+  kabul → iş sözleşmesi IS-0926-008 hazırla + imzalı yükle → Plan aç P-0926-041 (Mert Kaya + Elif Aydın) → kabul → ekipman ekle (HT-9001, ET-9002,
+  HT-9003, HT-9004) → rapor oluştur, doldur → zorunlu alan penceresi (boş rapor gönderilemiyor) → Elif'in geçersiz cihazı engelledi, Zimmetler'den
+  geçerli cihaz teslim → onaya gönder → Onaylar (mekanik + elektrik yönetici) onayla → Raporlar son imza (mobil, PIN) → Muhasebe fatura
+  KMF2026000000050 → iki tahsilat (kısmi + kalan; fazlası durdu) → ödendi → müşteri paneli (davet var, kullanıcı giriş yapmadığı için boş — doğru).
+  Bulgu ve düzeltmeler 203–210. Düzeltilmeyen gözlemler: (1) Gelir-gider "−%7.190 kâr" — hesap doğru, uydurma verinin ölçeği (13 ay maaş 20,5 M TL,
+  18 iş geliri 298 bin TL); veri ölçeği reisim'e soru. (2) Makette saat 23.09'da duruyor; rapor plan gününden (25.09) önce oluşturulup imzalanabildi
+  — uygulamada saat ilerler; plan gününden önce rapor açmak uyarı olmalı mı, reisim'e soru. (3) Yeni müşteride ilk giriş için düğme adı "Ek giriş ekle"
+  (ana giriş yokken "Giriş ekle" daha doğru) — küçük, soru listesinde.
 - 2026-10-01 (210): **Ö5h · Ekipman sayısı kayıtlı ekipmandan** (uçtan uca denemenin yedinci bulgusu: yeni tesis Kazan Fabrikası'na planda 4
   ekipman eklendi, müşteri kartında "Ekipman 0" görünüyordu — sayı tesis kaydındaki sabit alandandı). Tek yardımcı `MV.ekipmanSayisi(tesis)`;
   müşteri listesi, müşteri kartı, tesis kartı ve ana sayfa buna bağlandı. Tohum veride bir tesiste (Aktarma Merkezi) sabit sayı 21, kayıtlı ekipman
