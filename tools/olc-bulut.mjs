@@ -177,6 +177,9 @@ export const DURUMLAR = {
     { ad: "İSG-KATİP bitmiş denetçi (uyarı)", hash: "#/?tesis=t9", adim: [["tikla", "#p-a-ea"]] },
     { ad: "açık planlı tesis: ikinci plan, aynı gün uyarısı", hash: "#/?tesis=t8", adim: [["tikla", "#p-a-mk"]] },
     { ad: "24 ekipmanlı tesis: özette tür başına", hash: "#/?tesis=t12" },
+    /* Ö5 (2026-10-01): plan günü iş sözleşmesinin dışında → uyarı şeridi (engel değil) */
+    { ad: "plan günü sözleşme bitişinden sonra: 'İş sözleşmesi … bitti' uyarısı", hash: "#/?tesis=t6", bekle: '/İş sözleşmesi IS-1024-001 02\\.10\\.2025\\x27te bitti/.test(document.querySelector("#p-soz-uyari").textContent)' },
+    { ad: "plan günü sözleşme başlangıcından önce: 'başlıyor' uyarısı; içindeyken şerit yok", hash: "#/?tesis=t4", adim: [["js", 'sessionStorage.setItem("i", document.querySelector("#p-soz-uyari").textContent)'], ["yaz", "#p-tarih", "05.09.2026"]], bekle: 'sessionStorage.getItem("i") === "" && /İş sözleşmesi IS-0926-002 10\\.09\\.2026\\x27da başlıyor; plan günü sözleşmeden önce/.test(document.querySelector("#p-soz-uyari").textContent)' },
     { ad: "boş gönderildi", hash: "#/", adim: [["tikla", '[data-eylem="plani-ac"]']] },
     { ad: "tesisli, ekipsiz gönderildi", hash: "#/?tesis=t6", adim: [["tikla", '[data-eylem="plani-ac"]']] },
     { ad: "plan açıldı · uyarılı ekip, el ile ID sözleşmeye kaydedildi", hash: "#/?tesis=t4", adim: [["tikla", "#p-a-mk"], ["tikla", "#p-a-ea"], ["yaz", "#p-isg-ea", "S-2026-0470"], ["tikla", '[data-kaydet="ea"]'], ["tikla", '[data-eylem="plani-ac"]']] },

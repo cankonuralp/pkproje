@@ -102,7 +102,7 @@
           alan("tarih", "Başlangıç", girdi("tarih", "a-girdi-sicil", ' inputmode="numeric" maxlength="10" placeholder="GG.AA.YYYY"'), "", true) +
           alan("bitTarih", "Bitiş", girdi("bitTarih", "a-girdi-sicil", ' inputmode="numeric" maxlength="10" placeholder="GG.AA.YYYY"'), "", true) +
           '<div class="a-alan-grup a-alan-genis"><label class="a-etiket" for="p-aciklama">Açıklama</label><textarea class="a-alan a-alan-ince" id="p-aciklama" data-alan="aciklama" maxlength="300" placeholder="Giriş izni, refakat, saatler">' + kacis(F.aciklama) + "</textarea></div>" +
-          "</div>") + "</div>" +
+          '</div><div id="p-soz-uyari"></div>') + "</div>" +
         bolum(3, "b3", "Denetçi", '<div id="p-aday-kap"></div>', true) +
         bolum(4, "b4", "Özet ve uyarılar", '<div id="p-ozet-kap"></div>', true) +
       "</div>" +
@@ -116,6 +116,17 @@
     if (MV.acikPlan(t)) s += MK.serit("bilgi", "calendar-check", "Bu tesiste açık plan var: <b>" + t.plan + "</b> · " + MK.gunKisa(t.ptarih) + " · " + MV.PLAN_DURUM[t.pdurum].ad + ".");
     if (!MV.isgTesis(t.id).length) s += MK.serit("uyari", "triangle-alert", "Bu tesiste İSG-KATİP sözleşme ID'si yok.");
     return s ? '<div class="a-uyari-serit a-bolum-serit">' + s + "</div>" : "";
+  }
+  /* plan günü tesisin iş sözleşmesinin dışında (Ö5, 2026-10-01: sözleşme 24.09'da başlarken plan 23.09'a açılabiliyordu, uyarı yoktu).
+     Sözleşmesi hiç olmayan tesiste şerit yok (teklifsiz eski müşteriler); uyarıdır, engel değil */
+  function sozUyari(t, gun) {
+    if (!t || !gun || MV.tesisSozlesmesi(t.id, gun)) return "";
+    var l = MV.IS_SOZLESMELERI.filter(function (x) { return x.tesisler.indexOf(t.id) >= 0; }); if (!l.length) return "";
+    var sonra = l.filter(function (x) { return x.baslangic > gun; }).sort(function (a, b) { return a.baslangic < b.baslangic ? -1 : 1; })[0];
+    var once = l.slice().sort(function (a, b) { return a.bitis < b.bitis ? 1 : -1; })[0];
+    return '<div class="a-uyari-serit a-bolum-serit">' + (sonra
+      ? MK.serit("uyari", "triangle-alert", "İş sözleşmesi " + sonra.no + " " + MK.tarihEk(sonra.baslangic, "de") + " başlıyor; plan günü sözleşmeden önce.")
+      : MK.serit("uyari", "triangle-alert", "İş sözleşmesi " + once.no + " " + MK.tarihEk(once.bitis, "de") + " bitti; plan günü sözleşmenin dışında.")) + "</div>";
   }
   /* bölüm 3 ve 4: tarih, saat, seçim değişince yeniden çizilir; yazılan alana dokunmaz (odak kaçmaz) */
   var ADAY_SUTUN = [
@@ -146,6 +157,7 @@
   function bagimliCiz(odak) {
     var t = F.tesis ? MV.tesis(F.tesis) : null, k = t ? kapsam() : [];
     /* bölüm 3: adaylar; durum hücreleri aynı hesabı paylaşır */
+    $("p-soz-uyari").innerHTML = sozUyari(t, tarihIso(F.tarih));
     var D = {}; adaylar().forEach(function (p) { D[p.id] = adayDurum(p); });
     var sutun = ADAY_SUTUN.map(function (s) { return Object.assign({}, s, { hucre: function (p) { return s.hucre(p, D[p.id]); } }); });
     $("p-aday-kap").innerHTML = !t ? '<p class="a-bos-satir">Önce tesis seçin.</p>'

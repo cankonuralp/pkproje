@@ -2123,6 +2123,10 @@ revizyon, alan kopyalama, hafif kusur devri, meslek eşleşme denetimi).
 - Emsal ürünler: https://opwire.app/iso-17020-periyodik-kontrol-yazilimi/ · https://17020muayene.vidco.com.tr/ · https://akuple.com/asansor-kontrol-yazilimi/ · https://ensyazilim.com/
 
 ## 11 · Değişiklik günlüğü
+- 2026-10-01 (204): **Ö5b · Plan aç: plan günü iş sözleşmesinin dışındaysa uyarı** (uçtan uca denemenin ikinci bulgusu: teklif kabul →
+  iş sözleşmesi 24.09'da başlıyor, Plan aç tarihi kendiliğinden bugün 23.09 geliyor, uyarı yoktu). Tarihler bölümünün altında sarı şerit:
+  "İş sözleşmesi IS-… GG.AA.YYYY'de başlıyor; plan günü sözleşmeden önce." ya da "… bitti; plan günü sözleşmenin dışında." Tarih yazdıkça
+  güncellenir. Uyarıdır, engel değil. Sözleşmesi hiç olmayan tesiste şerit yok (eski müşteriler teklifsiz). İki ölçüm kilidi (m6).
 - 2026-10-01 (203): **Ö5a · Tarihten sonraki ek yılın okunuşuna göre** (§9 kırk dördüncü tur, uçtan uca denemenin ilk bulgusu). Teklif
   gönderilince bildirim "geçerlilik 23.10.2026'e kadar" diyordu; doğrusu "'ya". Tek yardımcı `MK.tarihEk(tarih, "e" | "de" | "den")`: yılın son
   okunan sözcüğüne (birler, sıfırsa onlar, o da sıfırsa yüz / bin) göre ünlü uyumu ve sert ünsüz (2026'ya · 2027'de · 2025'ten · 2030'a).
