@@ -2088,6 +2088,8 @@ isimlerini süzgeç değil filtre olarak değiştir."* → **Ö1** imzalı rapor
 klasörüne otomatik kayıt · **Ö3** müşteri panelinde toplu indirme, uygunsuzlar Excel'inde "Rapor" bağlantısı · **Ö4** "Süzgeç" → "Filtre",
 müşteri filtresi yüzlerce firmaya uygun · **Ö5** uçtan uca deneme (teklif → plan → denetim → onay → imza → fatura → tahsilat → müşteri) ·
 **Ö6** rol beklentileri araştırması.
+Ek (aynı gün, iş sürerken, reisim birebir): *"her tura başlamadan önce bana sorma turları sırayla yap"* → turlar arasında onay sorulmaz, kalemler
+sırayla yapılır, her biri ölçülüp kaydedilir.
 
 **Açık kalanlar:** ~~Ana sayfada İSGGM duyuruları~~ (2026-09-27: makette eklendi; okuma işi uygulamada) (reisim 2026-09-26: *"Ana sayfada isgüm duyurularını gösterebilir miyiz ? Bunu
 yapılacaklar listesine ekle"*; öneri: ÇSGB İSGGM duyurular sayfası — https://www.csgb.gov.tr/isggm/duyurular/ — sunucuda günde birkaç kez
@@ -2121,6 +2123,12 @@ revizyon, alan kopyalama, hafif kusur devri, meslek eşleşme denetimi).
 - Emsal ürünler: https://opwire.app/iso-17020-periyodik-kontrol-yazilimi/ · https://17020muayene.vidco.com.tr/ · https://akuple.com/asansor-kontrol-yazilimi/ · https://ensyazilim.com/
 
 ## 11 · Değişiklik günlüğü
+- 2026-10-01 (200): **Ö1 · İmzalı raporlar ayrı PDF, müşteri / tesis klasörlü ZIP** (§9 kırk dördüncü tur). Müşteriler listesinde (filtreye uyan
+  müşteriler), müşteri kartında ve tesis sayfasında **İmzalı raporlar (ZIP)**; Raporlar ekranında **Ayrı PDF'ler (ZIP)** (filtreye uyan
+  raporlar). ZIP'te her imzalı rapor ayrı PDF, yolu `Müşteri unvanı/Tesis/RAPOR-NO.pdf`, ayrıca ICINDEKILER.txt (yol · ekipman · tarih · sonuç).
+  Yalnız imzalı (tamamlanmış) raporlar; revizyonda müşterinin gördüğü son sürüm. Makette PDF'ler ekrandaki kâğıttan gerçekten üretilir (Ada
+  Makina 22 rapor ≈ 16 sn, ~20 MB); uygulamada PDF'ler sunucuda imzalı saklanır, ZIP arka planda hazırlanır. Ortak üretici MK.pdfZip /
+  MK.raporZip. 2 deneme.
 - 2026-10-01 (199): **Ö4 · "Süzgeç" → "Filtre"; uzun seçenek listesi aranır** (§9 kırk dördüncü tur). Ekranda görünen bütün "Süzgeç / süzgeç"
   yazıları "Filtre / filtre" (levha başlığı, Filtreler kutusu, "n filtre uygulandı", "Filtreye uyan … yok", bildirimler); kod adları aynı.
   Kalıp 19 (8'den fazla seçenekte arama kutusu) filtrelere de uygulandı: masaüstünde açılır listenin üstünde **Ara**; telefonda Filtre

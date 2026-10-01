@@ -321,6 +321,10 @@
     if (!l.length) { MK.bildir("Filtrede PDF'i olan rapor yok; taslak rapor PDF'e girmez."); return; }
     MK.pdfGoster({ dosya: "raporlar-" + MK.BUGUN + ".pdf", baslik: l.length + " rapor", icerik: l.map(function (r) { return MB.belge(MV.tur(ekp(r).tur), MV.raporBelge(r)); }).join("") });
   };
+  /* Ö1 (2026-10-01): filtreye uyan imzalı raporlar ayrı ayrı PDF, müşteri / tesis klasörlü ZIP */
+  X["rapor-zip"] = function () {
+    MK.raporZip(MK.taban("r", benim()).filter(function (r) { return MK.cipGecer("r", r); }), "imzali-raporlar-" + MK.BUGUN + ".zip");
+  };
   /* 2026-09-27: rapor belgesi yazdırma penceresinden PDF olur (uygulamada PDF sunucuda üretilir); imza penceresinde seçili raporların hepsi, her biri ayrı sayfa */
   X["pdf"] = function () {
     var l = $("a-pencere").open && W ? W.l : [MV.rapor(rota().no)];

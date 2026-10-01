@@ -2,9 +2,23 @@
  "maket": "m2",
  "tarih": "2026-10-01",
  "arac": "tools/olc-bulut.mjs --etkilesim (başsız tarayıcı, 1920 açık tema; gen verilen denemede o genişlik)",
- "toplam": 27,
- "gecen": 27,
+ "toplam": 29,
+ "gecen": 29,
  "denemeler": [
+  {
+   "ad": "tesis sayfasında İmzalı raporlar (ZIP): her imzalı rapor ayrı PDF, Müşteri/Tesis klasöründe, içindekiler listesiyle",
+   "gen": 1920,
+   "sayfa": "maket/musteriler.html",
+   "hash": "#/t/t16",
+   "gecti": true
+  },
+  {
+   "ad": "müşteri listesinde İmzalı raporlar (ZIP) filtreye uyan müşterilerin raporlarını alır; imzalısı olmayanda söyler, inmez",
+   "gen": 1920,
+   "sayfa": "maket/musteriler.html",
+   "hash": "#/",
+   "gecti": true
+  },
   {
    "ad": "müşteriler: Müşteri girişi kullanılmadı → 2 / 11",
    "gen": 1920,

@@ -794,6 +794,44 @@
     });
   };
 
+  /* Ö1 (2026-10-01, reisim: "raporların her birisini pdf olarak imzalı halleri ve şirketler egöre ayrılmış şekilde indirebiliyor olmam lazım"):
+     birden çok belge → her biri AYRI PDF, klasör yoluyla tek ZIP. o = { dosya, belgeler: [{ yol: "Müşteri/Tesis/NO.pdf", html }], ekler?: [[ad, metin]] }.
+     Belgeler sırayla görünmez bir kâğıtta kurulur (ekran kâğıdının aynısı), PDF'e çevrilir; ilerleme bildirimde. Uygulamada PDF'ler sunucuda
+     zaten imzalı saklanır, ZIP arka planda hazırlanır. Dönen söz: { ad, dosyalar } (denetim MK.SON_ZIP'ten okur). */
+  MK.klasorAd = function (t) { return String(t || "Adsız").replace(/[\\/:*?"<>|]+/g, "-").replace(/\s+/g, " ").trim().slice(0, 80); };
+  MK.pdfZip = function (o) {
+    var host = document.createElement("div"), cikti = [], n = o.belgeler.length;
+    host.setAttribute("aria-hidden", "true"); host.style.cssText = "position:fixed;left:-20000px;top:0;width:900px;pointer-events:none";
+    document.body.appendChild(host);
+    MK.bildir("PDF'ler hazırlanıyor: 0 / " + n + "…");
+    return o.belgeler.reduce(function (z, b, i) {
+      return z.then(function () {
+        var kap = document.createElement("div"); kap.className = "a-kagit"; kap.setAttribute("data-ad", b.yol); kap.innerHTML = b.html; host.appendChild(kap);
+        return MK.kagitPdf(kagitAc(kap)).then(function (blob) { return blob.arrayBuffer(); }).then(function (a) {
+          cikti.push([b.yol, new Uint8Array(a)]); host.innerHTML = ""; MK.bildir("PDF'ler hazırlanıyor: " + (i + 1) + " / " + n + "…");
+        });
+      });
+    }, Promise.resolve()).then(function () {
+      host.remove();
+      var dosyalar = cikti.concat(o.ekler || []);
+      MK.SON_ZIP = { ad: o.dosya, dosyalar: dosyalar.map(function (d) { return d[0]; }) };
+      MK.indir(o.dosya, MK.zip(dosyalar));
+      return MK.SON_ZIP;
+    }, function (e) { host.remove(); MK.bildir("PDF'ler hazırlanamadı: " + (e && e.message || e)); throw e; });
+  };
+  /* imzalı raporlar → müşteri / tesis klasörlü ZIP (Raporlar, Müşteriler, müşteri kartı, müşteri paneli aynı yoldan). klasor(r): "Müşteri/Tesis" */
+  MK.raporZip = function (raporlar, dosya, klasor) {
+    var l = raporlar.filter(function (r) { return r.durum === "imzali"; });
+    if (!l.length) { MK.bildir("Filtrede imzalı rapor yok; yalnız imzalı (tamamlanmış) raporlar indirilir."); return Promise.resolve(null); }
+    var satir = [];
+    var belgeler = l.map(function (r) {
+      var e = MV.ekipman(r.kod), t = MV.tesis(r.tesis), m = t && MV.musteri(t.m), yol = (klasor ? klasor(r, m, t) : MK.klasorAd(m && m.unvan) + "/" + MK.klasorAd(t && t.ad)) + "/" + MV.surumNo(r) + ".pdf";
+      satir.push(yol + "  ·  " + (e ? e.kod + " " + MV.tur(e.tur).ad : r.kod) + "  ·  " + MK.tarihYaz(r.olustu.slice(0, 10)) + "  ·  " + MV.sonucAd(r));
+      return { yol: yol, html: MB.belge(MV.tur(e.tur), MV.raporBelge(r)) };
+    });
+    return MK.pdfZip({ dosya: dosya, belgeler: belgeler, ekler: [["ICINDEKILER.txt", "İmzalı raporlar · " + MV.FIRMA.ad + " · " + MK.tarihYaz(MK.BUGUN) + "\r\n" + l.length + " rapor\r\n\r\n" + satir.join("\r\n") + "\r\n"]] });
+  };
+
   /* ── DOSYA: seç · indir · yazdır · Excel (reisim 2026-09-27: "maket site nasıl çalışması gerekiyorsa çalışsın maket olduğu için çalışmayan
      yerler de dahil"). Seçilen dosya TARAYICIDA kalır (sunucuya gitmez, sayfa yenilenince gider); adıyla MK.DOSYA'da tutulur, "Aç" onu gösterir.
      Otomatik ölçüm (MAKET_ORNEK) dosya penceresini açamaz: örnek ad kullanılır. Dış kütüphane yok (anayasa: dış CDN yok). */

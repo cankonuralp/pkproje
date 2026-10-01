@@ -603,6 +603,9 @@ export const DENEMELER = {
     { ad: "ana sayfa: mekanik yöneticide onay kuyruğu en eski üstte", sayfa: "maket/anasayfa.html", hash: "#/mekyon", bekle: '(function () { var l = MV.RAPORLAR.filter(function (r) { return r.durum === "onayda" && MV.tur(MV.ekipman(r.kod).tur).b === "m"; }).sort(function (a, b) { return a.gonderildi < b.gonderildi ? -1 : 1; }); return document.querySelector("#a-icerik tbody tr a.a-no").textContent === l[0].no; })()' },
   ],
   m2: [
+    /* Ö1 (2026-10-01, reisim: "raporların her birisini pdf olarak imzalı halleri ve şirketler egöre ayrılmış şekilde indirebiliyor olmam lazım") */
+    { ad: "tesis sayfasında İmzalı raporlar (ZIP): her imzalı rapor ayrı PDF, Müşteri/Tesis klasöründe, içindekiler listesiyle", hash: "#/t/t16", sure: 60000, adim: [["tikla", '[data-eylem="rapor-zip"]']], bekle: '!!MK.SON_ZIP && MK.SON_ZIP.dosyalar.join("|") === "Ada Makina San. ve Tic. A.Ş./Enerji Merkezi/KM-0926-796-b1d97.pdf|ICINDEKILER.txt" && /\\.zip$/.test(MK.SON_INDIRME.ad) && MK.SON_INDIRME.boyut > 10000' },
+    { ad: "müşteri listesinde İmzalı raporlar (ZIP) filtreye uyan müşterilerin raporlarını alır; imzalısı olmayanda söyler, inmez", hash: "#/", adim: [["yaz", "[data-ara]", "zzz-yok"], ["tikla", '[data-eylem="rapor-zip-liste"]']], bekle: '!MK.SON_ZIP && /imzalı rapor yok/.test(document.querySelector("#a-bildirim-metin").textContent)' },
     /* 2026-09-25 (2. tur, reisim 44–50 "Tüm önerilerin uygundur"): davet → kendiliğinden müşteri girişi · vergi / SGK no uyarı, engel
        değil · pasif · il / ilçe seçim listesi */
     { ad: "müşteriler: Müşteri girişi kullanılmadı → 2 / 11", hash: "#/", adim: [["tikla", '[data-cip="girmedi"]']], bekle: 'document.querySelector("#a-sayac").textContent === "2 / 11 müşteri"' },

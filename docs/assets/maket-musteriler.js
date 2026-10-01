@@ -162,7 +162,7 @@
     $("a-nesne").innerHTML = MK.kirinti([["Müşteriler", "#/"], [m.kisa]]) +
       '<div class="a-nesne-bas"><div class="a-nesne-kimlik"><div class="a-nesne-baslik"><h1 tabindex="-1">' + kacis(m.unvan) + "</h1>" + (m.pasif ? rozet(PASIF) : "") + "</div>" +
         '<p class="a-nesne-alt">' + ikon("building-2", "a-ikon-kucuk") + "<span>" + (m.vd ? kacis(m.vd) + " VD · " : "") + (m.vno ? "VKN " + m.vno : "Vergi no yok") + "</span></p></div>" +
-        '<div class="a-eylem-cubugu">' + pasifTus(m) + MK.tus({ eylem: "musteri-duzenle", ad: "Düzenle", ikon: "pencil", sinif: "a-tus-ikincil" }) + (m.pasif ? "" : planAc("#/?musteri=" + m.id)) + "</div></div>" +
+        '<div class="a-eylem-cubugu">' + pasifTus(m) + MK.tus({ eylem: "musteri-duzenle", ad: "Düzenle", ikon: "pencil", sinif: "a-tus-ikincil" }) + MK.tus({ eylem: "rapor-zip", ad: "İmzalı raporlar (ZIP)", ikon: "download", sinif: "a-tus-ikincil", veri: { m: m.id } }) + (m.pasif ? "" : planAc("#/?musteri=" + m.id)) + "</div></div>" +
       pasifSerit(m, "Müşteri") +
       (e.length ? '<div class="a-serit-kap">' + MK.serit("uyari", "triangle-alert", "Eksik bilgi: " + e.join(" · ") + ".") + "</div>" : "") +
       '<div class="a-yuzler">' +
@@ -217,7 +217,7 @@
       '<div class="a-nesne-bas"><div class="a-nesne-kimlik"><div class="a-nesne-baslik"><h1 tabindex="-1">' + kacis(m.unvan) + "</h1>" + (t.pasif ? rozet(PASIF) : "") + "</div>" +
         /* L7 (2026-09-30): tesis sayfasında da başlıkta firma, altında tesis (firma kırıntıdan açılır) */
         '<p class="a-nesne-alt">' + ikon("map-pin", "a-ikon-kucuk") + "<span>Tesis: <b>" + kacis(t.ad) + "</b></span></p></div>" +
-        '<div class="a-eylem-cubugu">' + pasifTus(t) + MK.tus({ eylem: "tesis-duzenle", ad: "Düzenle", ikon: "pencil", sinif: "a-tus-ikincil" }) + (t.pasif ? "" : planAc("#/?tesis=" + t.id)) + "</div></div>" +
+        '<div class="a-eylem-cubugu">' + pasifTus(t) + MK.tus({ eylem: "tesis-duzenle", ad: "Düzenle", ikon: "pencil", sinif: "a-tus-ikincil" }) + MK.tus({ eylem: "rapor-zip", ad: "İmzalı raporlar (ZIP)", ikon: "download", sinif: "a-tus-ikincil", veri: { t: t.id } }) + (t.pasif ? "" : planAc("#/?tesis=" + t.id)) + "</div></div>" +
       pasifSerit(t, "Tesis") +
       (e.length ? '<div class="a-serit-kap">' + MK.serit("uyari", "triangle-alert", "Eksik bilgi: " + e.join(" · ") + ". Kayıt engellenmez; raporun işyeri bölümünde gerekir, rapor imzalanırken yeniden hatırlatılır.") + "</div>" : "") +
       '<div class="a-yuzler">' +
@@ -358,6 +358,22 @@
   MK.goster = goster;
 
   var X = MK.eylem, sayfa = function () { return rota(); };
+  /* Ö1 (2026-10-01, reisim: "raporların her birisini pdf olarak imzalı halleri ve şirketler egöre ayrılmış şekilde indirebiliyor olmam lazım"):
+     imzalı raporlar ayrı ayrı PDF, ZIP içinde müşteri / tesis klasörlerinde. Listede: filtreye uyan müşterilerin hepsi; kartta: o müşteri
+     ya da o tesis. Yalnız imzalı (tamamlanmış) raporlar; revizyonda son sürüm (müşterinin gördüğü). */
+  var imzaliRaporlar = function (musteriler, tesis) {
+    var ids = musteriler.map(function (m) { return m.id; });
+    return MV.RAPORLAR.filter(function (r) { var t = MV.tesis(r.tesis); return t && (tesis ? t.id === tesis : ids.indexOf(t.m) >= 0) && !r.pasif; })
+      .map(function (r) { return MV.musteriSurumu(r) || r; }).filter(function (r, i, l) { return r && l.indexOf(r) === i; });
+  };
+  X["rapor-zip-liste"] = function () {
+    var l = MK.taban("m", MV.MUSTERILER).filter(function (m) { return MK.cipGecer("m", m); });
+    MK.raporZip(imzaliRaporlar(l), "imzali-raporlar-" + (l.length === 1 ? MK.klasorAd(l[0].kisa).toLocaleLowerCase("tr").replace(/ /g, "-") : l.length + "-musteri") + "-" + MK.BUGUN + ".zip");
+  };
+  X["rapor-zip"] = function (el) {
+    var m = el.dataset.m ? MV.musteri(el.dataset.m) : MV.musteri(MV.tesis(el.dataset.t).m), t = el.dataset.t ? MV.tesis(el.dataset.t) : null;
+    MK.raporZip(imzaliRaporlar([m], t && t.id), "imzali-raporlar-" + MK.klasorAd(m.kisa + (t ? " " + t.ad : "")).toLocaleLowerCase("tr").replace(/ /g, "-") + "-" + MK.BUGUN + ".zip");
+  };
   var yenile = function () { goster(false); };
   X["musteri-ac"] = function () { pencereAc("musteri"); };
   X["musteri-duzenle"] = function () { var r = sayfa(); pencereAc("musteri", { m: r.id, id: r.id }); };
