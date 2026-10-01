@@ -703,6 +703,33 @@
   /* yeni rapor numarasının başındaki firma kodu: 2–4 büyük harf; eski numaralar değişmez */
   MV.firmaKodu = function () { var x = String(MV.FIRMA.raporKod || MV.FIRMA.kisa || "KM"); return /^[A-ZÇĞİÖŞÜ]{2,4}$/.test(x) ? x : "KM"; };
   /* 200 (2026-09-29): süre 5 yıl taban, firma uzatabilir (kısaltamaz) */
+  /* Ö2 (2026-10-01, reisim: "müşteriye göre kendi bulutuna kurabilir o buluta otomatik kayıt ettirebiliyor olmam lazım"): BULUT KAYDI.
+     Firma bir bulut hesabı bağlar (Firma ayarları); her müşteri için klasör (müşteri kartı; açık / kapalı, klasör adı, istenirse müşterinin
+     paylaştığı klasör). Rapor imzalanınca imzalı PDF kendiliğinden o klasöre yazılır; kayıt listesi Firma ayarları'nda (hata olursa yeniden
+     dene). Klasör düzeni: kök / Müşteri / Tesis [/ Yıl] / RAPOR-NO.pdf. Uyarı (engel değil): bulut yurt dışında saklıyorsa raporlar Türkiye
+     dışına çıkar (§8.8, 09-SUNUCU-VE-VERI; KVKK sorumluluğu firmanın). Makette bağlantı ve yazma taklittir; uygulamada sağlayıcının yetkili
+     erişimi (OAuth) ve iş kuyruğu (pg-boss). */
+  MV.BULUT_SAGLAYICI = [
+    ["gdrive", "Google Drive", true], ["onedrive", "Microsoft OneDrive / SharePoint", true], ["dropbox", "Dropbox", true],
+    ["yandex", "Yandex Disk", true], ["sftp", "Kendi sunucunuz (SFTP / WebDAV)", false]
+  ];   /* [k, ad, yurt dışında saklayabilir] */
+  MV.BULUT_DUZEN = [["mt", "Müşteri / Tesis"], ["mty", "Müşteri / Tesis / Yıl"], ["my", "Müşteri / Yıl"]];
+  MV.bulut = function () { var b = MV.FIRMA.bulut || {}; return { saglayici: b.saglayici || "", bagli: !!b.bagli, hesap: b.hesap || "", kok: b.kok || "probata Raporlar", duzen: b.duzen || "mt", kayitlar: b.kayitlar || [] }; };
+  MV.musteriBulut = function (m) { var x = (m && m.bulut) || {}; return { acik: x.acik !== false, klasor: x.klasor || "", paylasim: x.paylasim || "" }; };
+  var kAd = function (t) { return String(t || "Adsız").replace(/[\\/:*?"<>|]+/g, "-").replace(/\s+/g, " ").trim().slice(0, 80); };
+  MV.bulutYol = function (r) {
+    var b = MV.bulut(), t = MV.tesis(r.tesis), m = t && MV.musteri(t.m), mb = MV.musteriBulut(m), yil = r.olustu.slice(0, 4);
+    var bas = mb.paylasim ? "Paylaşılan klasör (" + kAd(m.kisa) + ")" : b.kok + "/" + kAd(mb.klasor || (m && m.unvan));
+    return bas + "/" + (b.duzen === "my" ? yil : kAd(t && t.ad) + (b.duzen === "mty" ? "/" + yil : "")) + "/" + MV.surumNo(r) + ".pdf";
+  };
+  /* imza anında çağrılır (Raporlar · son imza: dosya / e-imza / mobil); bağlı değilse ya da müşteride kapalıysa bir şey yapmaz */
+  MV.bulutaKaydet = function (r) {
+    var b = MV.bulut(), t = MV.tesis(r.tesis), m = t && MV.musteri(t.m);
+    if (!b.bagli || !MV.musteriBulut(m).acik) return null;
+    var k = { zaman: MK && MK.simdi ? MK.simdi() : "", no: MV.surumNo(r), yol: MV.bulutYol(r), durum: "kaydedildi" };
+    MV.FIRMA.bulut = Object.assign({}, MV.FIRMA.bulut, { kayitlar: [k].concat(b.kayitlar).slice(0, 50) });
+    return k;
+  };
   MV.saklama = function () { var x = MV.FIRMA.saklama || {}; return { yontem: MV.SAKLAMA[x.yontem] ? x.yontem : "kalsin", yer: x.yer || "", yil: Math.max(5, +x.yil || 5) }; };
   /* 201 (2026-09-29): arşive taşınan raporun künyesi sistemde kalır (r.arsiv = { yer, zaman }); dosyası arşivde, müşteri portalından kalkar,
      firma geri getirebilir. Künye ve PDF yeri tek üreticiden. */

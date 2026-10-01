@@ -205,7 +205,7 @@
     var zaman = MK.simdi(), y = MV.imzaYontem();
     if (W.y === "dosya") {
       if (!W.yuklendi) { W.hata = "Önce imzalı PDF'leri yükleyin."; pencereCiz('[data-eylem="imzali-yukle"]'); return; }
-      W.l.forEach(function (r) { r.durum = "imzali"; r.imza = { zaman: zaman, yontem: "dosya" }; r.imzaDosya = W.dosya[r.no]; });   /* yüklenen imzalı PDF raporda saklanır */
+      W.l.forEach(function (r) { r.durum = "imzali"; r.imza = { zaman: zaman, yontem: "dosya" }; r.imzaDosya = W.dosya[r.no]; MV.bulutaKaydet(r); });   /* Ö2: imzalı PDF bulut klasörüne · yüklenen imzalı PDF raporda saklanır */
       var n = W.l.length, tek = n === 1 ? W.l[0] : null; $("a-pencere").close(); yenile(tek);
       MK.bildir(n + " rapor imzalandı, tamamlandı ve müşteriye açıldı."); return;
     }
@@ -250,7 +250,7 @@
   X["arac-imzala"] = function () {
     if (pinYok()) return;
     var zaman = MK.simdi(), n = W.l.length, tek = n === 1 ? W.l[0] : null;
-    W.l.forEach(function (r) { r.durum = "imzali"; r.imza = { zaman: zaman, yontem: "eimza" }; });   /* her rapor ayrı imza; PIN bir kez */
+    W.l.forEach(function (r) { r.durum = "imzali"; r.imza = { zaman: zaman, yontem: "eimza" }; MV.bulutaKaydet(r); });   /* Ö2: imzalı PDF bulut klasörüne · her rapor ayrı imza; PIN bir kez */
     $("a-pencere").close(); yenile(tek);
     MK.bildir(n + " rapor e-imzayla imzalandı (her biri ayrı), tamamlandı ve müşteriye açıldı.");
   };
@@ -260,7 +260,7 @@
   };
   X["tel-onayla"] = function () {
     if (pinYok()) return;
-    var r = W.l[W.i]; r.durum = "imzali"; r.imza = { zaman: MK.simdi(), yontem: "mobil" }; r.imzaGonderildi = null; r.imzaSuresi = null;
+    var r = W.l[W.i]; r.durum = "imzali"; r.imza = { zaman: MK.simdi(), yontem: "mobil" }; r.imzaGonderildi = null; r.imzaSuresi = null; MV.bulutaKaydet(r);   /* Ö2 */
     telefonSonraki(r, "mobil imzayla imzalandı, müşteriye açıldı");
   };
   X["tel-reddet"] = function () {   /* telefonda reddedilen istek: rapor yeniden imza bekler */

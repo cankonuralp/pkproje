@@ -2,8 +2,8 @@
  "maket": "m9",
  "tarih": "2026-10-01",
  "arac": "tools/olc-bulut.mjs --etkilesim (başsız tarayıcı, 1920 açık tema; gen verilen denemede o genişlik)",
- "toplam": 49,
- "gecen": 49,
+ "toplam": 50,
+ "gecen": 50,
  "denemeler": [
   {
    "ad": "pasif rapor denetçinin Raporlar listesinde yok, adresiyle de açılmaz (2026-09-29)",
@@ -73,6 +73,13 @@
    "gen": 1920,
    "sayfa": "maket/onaylar.html",
    "hash": "#/r/KM-0926-775-03cf4",
+   "gecti": true
+  },
+  {
+   "ad": "bulut bağlıyken rapor imzalanınca imzalı PDF müşterinin klasörüne kendiliğinden kaydedilir (Müşteri/Tesis/NO.pdf)",
+   "gen": 1920,
+   "sayfa": "maket/raporlar.html",
+   "hash": "#/r/KM-0926-770-a99c1",
    "gecti": true
   },
   {

@@ -2123,6 +2123,13 @@ revizyon, alan kopyalama, hafif kusur devri, meslek eşleşme denetimi).
 - Emsal ürünler: https://opwire.app/iso-17020-periyodik-kontrol-yazilimi/ · https://17020muayene.vidco.com.tr/ · https://akuple.com/asansor-kontrol-yazilimi/ · https://ensyazilim.com/
 
 ## 11 · Değişiklik günlüğü
+- 2026-10-01 (202): **Ö2 · Müşteriye göre bulut klasörüne otomatik kayıt** (§9 kırk dördüncü tur). Firma ayarları › **Bulut kaydı**: bulut seçimi
+  (Google Drive · OneDrive / SharePoint · Dropbox · Yandex Disk · kendi sunucunuz SFTP / WebDAV), hesap bağlama, ana klasör, klasör düzeni
+  (Müşteri / Tesis · Müşteri / Tesis / Yıl · Müşteri / Yıl), "İmzalı raporların hepsini gönder", son kayıtlar. Yurt dışında saklayan bulutta
+  uyarı şeridi (raporlar Türkiye dışına çıkar; §8.8 ve 09-SUNUCU-VE-VERI ile çelişir, karar firmanın — engel değil). Müşteri kartı › **Bulut
+  klasörü**: kendiliğinden kaydet aç / kapa, klasör adı (boşsa ünvan), müşterinin paylaştığı klasör (doluysa oraya). Rapor imzalanınca (dosya
+  yükleme, e-imza, mobil imza) imzalı PDF kendiliğinden kaydedilir (MV.bulutaKaydet). Makette bağlantı ve yazma taklit; uygulamada sağlayıcı
+  izni (OAuth) ve iş kuyruğu, hata olursa yeniden dene. 3 deneme.
 - 2026-10-01 (201): **Ö3 · Müşteri panelinde toplu indirme ve "Rapor" bağlantılı Excel** (§9 kırk dördüncü tur). Raporlar sekmesinde **Excel
   indir** (filtreye uyan raporlar; ilk sütun mavi altı çizili **Rapor** bağlantısı — tıklayınca o rapor panelde açılır, giriş ister) ve **Toplu indir
   (ZIP)** (imzalı raporlar ayrı PDF, tesis klasörlü). Uygunsuzluklar sekmesinde **Uygunsuzları indir** (Excel; ilk sütun Rapor bağlantısı) ve

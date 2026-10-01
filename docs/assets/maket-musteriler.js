@@ -192,7 +192,23 @@
         (m.pasif ? "" : MK.tus({ eylem: "tesis-ac", ad: "Tesis ekle", ikon: "plus", sinif: "a-tus-ikincil a-bolum-tus" })) + "</div>" +
         '<div class="a-liste-kap">' + (t.length ? MK.tablo({ baslik: "Tesisler", sinif: "a-tablo-tesis", sutunlar: TESIS_SUTUN, kayitlar: t, href: function (x) { return "#/t/" + x.id; } })
           : '<p class="a-bos-satir">Bu müşterinin tesisi yok.</p>') + "</div></section>" +
-      girisHtml(m);
+      girisHtml(m) + bulutHtml(m);
+  }
+  /* Ö2 (2026-10-01, reisim: "müşteriye göre kendi bulutuna kurabilir o buluta otomatik kayıt ettirebiliyor olmam lazım"): müşterinin bulut
+     klasörü — imzalanan raporu kendiliğinden kaydet (aç / kapa), klasör adı (boşsa ünvan), istenirse müşterinin paylaştığı klasör. Firma
+     bulutu bağlı değilse Firma ayarları'na yönlendirir. */
+  function bulutHtml(m) {
+    var b = MV.bulut(), mb = MV.musteriBulut(m), ornek = MV.RAPORLAR.filter(function (r) { var t = MV.tesis(r.tesis); return r.durum === "imzali" && t && t.m === m.id; })[0];
+    var son = b.kayitlar.filter(function (k) { return MV.RAPORLAR.some(function (r) { return MV.surumNo(r) === k.no && MV.tesis(r.tesis).m === m.id; }); }).length;
+    return '<section class="a-bolum" aria-labelledby="a-b-bulut"><div class="a-alt-bas"><h2 class="a-alt-baslik" id="a-b-bulut">Bulut klasörü</h2>' +
+        '<span class="a-sayac">' + (!b.bagli ? "bulut bağlı değil" : mb.acik ? "otomatik kayıt açık" : "kapalı") + "</span></div>" +
+      (!b.bagli ? '<p class="a-ipucu">Firmanın bulut hesabı bağlı değil; bağlanınca imzalanan raporlar bu müşterinin klasörüne kendiliğinden kaydedilir.</p>' +
+        '<div class="a-eylem-cubugu a-eylem-sol"><a class="a-tus a-tus-ikincil" href="' + MK.adres(22, "#/") + '">' + ikon("settings", "a-ikon-kucuk") + "Firma ayarları › Bulut kaydı</a></div>" :
+        '<label class="a-onay-kutusu"><input type="checkbox" data-mbulut="acik"' + (mb.acik ? " checked" : "") + "><span>İmzalanan raporu bu müşterinin klasörüne kendiliğinden kaydet</span></label>" +
+        '<div class="a-form">' + MK.alan({ id: "m-bulut-klasor", etiket: "Klasör adı", sonuc: "Boşsa ünvan kullanılır.", girdi: MK.girdi({ id: "m-bulut-klasor", deger: mb.klasor, ek: ' data-mbulut="klasor" maxlength="80" placeholder="' + kacis(m.unvan) + '"' }) }) +
+          MK.alan({ id: "m-bulut-paylasim", etiket: "Müşterinin paylaştığı klasör (isteğe bağlı)", sonuc: "Doluysa raporlar firmanın klasörü yerine buraya kaydedilir.", girdi: MK.girdi({ id: "m-bulut-paylasim", deger: mb.paylasim, ek: ' data-mbulut="paylasim" maxlength="300" placeholder="Paylaşım bağlantısı"' }) }) + "</div>" +
+        (ornek ? '<p class="a-ipucu">Yol: <span class="a-kod" id="m-bulut-yol">' + kacis(MV.bulutYol(ornek)) + "</span>" + (son ? " · " + son + " rapor kaydedildi" : "") + "</p>" : "")) +
+      "</section>";
   }
 
   /* ── TESİS SAYFASI ─────────────────────────────────────────────────────────────────────────────── */
@@ -457,6 +473,12 @@
   };
   document.addEventListener("change", function (e) {
     var t = e.target;
+    if (t.dataset.mbulut) {   /* Ö2: müşterinin bulut klasörü ayarı; alandan çıkınca kaydedilir */
+      var mm = MV.musteri(rota().id), od = t.id || null, k = t.dataset.mbulut;
+      mm.bulut = Object.assign({}, MV.musteriBulut(mm)); mm.bulut[k] = k === "acik" ? t.checked : t.value.trim(); MV.MUSTERILER = MV.MUSTERILER.slice();
+      goster(false); var o = od ? $(od) : document.querySelector('[data-mbulut="acik"]'); if (o) o.focus();
+      MK.bildir(k === "acik" ? (t.checked ? "Otomatik bulut kaydı açık." : "Bu müşteri için bulut kaydı kapalı.") : "Bulut klasörü kaydedildi."); return;
+    }
     if (t.dataset.kapsam) { W.d.kapsam = t.dataset.kapsam; pencereCiz(); $("a-pencere-govde").querySelector('[data-kapsam="' + W.d.kapsam + '"]').focus(); }
     else if (t.dataset.tesis) { var i = W.d.tesis.indexOf(t.dataset.tesis); if (t.checked && i < 0) W.d.tesis.push(t.dataset.tesis); else if (!t.checked && i >= 0) W.d.tesis.splice(i, 1); }
   });

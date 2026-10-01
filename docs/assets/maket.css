@@ -1500,3 +1500,7 @@ a.a-yuz:hover { border-color: var(--kenar-alan); background: var(--zemin); }
 .a-levha-kayan { max-height: 240px; overflow-y: auto; }
 .a-levha-liste .a-secenek[aria-selected="true"] .a-ikon { visibility: visible; }
 .a-levha-liste .a-secenek[aria-selected="true"] { font-weight: 700; }
+
+/* BULUT KAYDI (Ö2, 2026-10-01): bağlı hesap satırı */
+.a-bulut-hesap { display: inline-flex; align-items: center; gap: 6px; font-weight: 600; color: var(--onay-yazi); }
+.a-ipucu .a-kod { white-space: normal; overflow-wrap: anywhere; }   /* Ö2: uzun klasör yolu kartı taşırmaz */

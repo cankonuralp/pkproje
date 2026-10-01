@@ -2,8 +2,8 @@
  "maket": "m1",
  "tarih": "2026-10-01",
  "arac": "tools/olc-bulut.mjs --etkilesim (başsız tarayıcı, 1920 açık tema; gen verilen denemede o genişlik)",
- "toplam": 98,
- "gecen": 98,
+ "toplam": 100,
+ "gecen": 100,
  "denemeler": [
   {
    "ad": "İzin talepleri: formun PDF'i açılır, e-posta talep edene",
@@ -297,6 +297,20 @@
    "gen": 1920,
    "sayfa": "maket/firma-ayarlari.html",
    "hash": "#/",
+   "gecti": true
+  },
+  {
+   "ad": "Firma ayarları · Bulut kaydı: bulut seçilir (yurt dışı uyarısı), hesap bağlanır, imzalı raporların hepsi gönderilir; kapalı müşteri atlanır; kalıcı",
+   "gen": 1920,
+   "sayfa": "maket/firma-ayarlari.html",
+   "hash": "#/",
+   "gecti": true
+  },
+  {
+   "ad": "müşteri kartı · Bulut klasörü: bulut bağlı değilse Firma ayarları bağlantısı; bağlıyken aç / kapa ve klasör adı kaydedilir, yol değişir",
+   "gen": 1920,
+   "sayfa": "maket/musteriler.html",
+   "hash": "#/m/m1",
    "gecti": true
   },
   {

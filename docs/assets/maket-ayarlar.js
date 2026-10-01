@@ -7,7 +7,7 @@
    Adres: #/ (tek görünüm; eski Personel #/ayarlar buraya yönlenir). */
 (function () {
   "use strict";
-  var $ = MK.$, kacis = MK.kacis, X = MK.eylem;
+  var $ = MK.$, kacis = MK.kacis, ikon = MK.ikon, X = MK.eylem;
   var personelSec = function () { return MV.PERSONEL.filter(function (x) { return x.durum === "etkin"; }).map(function (x) { return [x.id, x.ad, MV.meslekAd(x)]; }); };
   var varsayilanEden = MV.zimmetEden;
   /* firma künyesi (R1): rapor başlığı ve belgelerde görünür; boş bırakılırsa uyarı */
@@ -112,7 +112,7 @@
             MK.alan({ id: "ay-sg-not-" + i, etiket: "Not", girdi: MK.girdi({ id: "ay-sg-not-" + i, deger: x.not || "", ek: ' data-sg-not="' + i + '" maxlength="80"' }) }) +
             MK.tus({ eylem: "sg-sil", ad: "Kaldır", ikon: "x", sinif: "a-tus-ikincil a-kalem-sil", veri: { i: i } }) + "</div>";
         }).join("") +
-        '<div class="a-eylem-cubugu a-bolum-serit">' + MK.tus({ eylem: "sg-ekle", ad: "Sabit gider ekle", ikon: "plus", sinif: "a-tus-ikincil" }) + "</div></section>" + disaCiz();
+        '<div class="a-eylem-cubugu a-bolum-serit">' + MK.tus({ eylem: "sg-ekle", ad: "Sabit gider ekle", ikon: "plus", sinif: "a-tus-ikincil" }) + "</div></section>" + bulutCiz() + disaCiz();
   }
 
   X["sg-ekle"] = function () {
@@ -134,6 +134,45 @@
     MK.onayla({ baslik: "Ön bilgilendirme formunu kaldır", metin: "<b>" + kacis(MV.FIRMA.onBilgiDosya) + "</b> kaldırılır; müşterilere temel format gider.", tus: "Kaldır", tamam: function () {
       delete MV.FIRMA.onBilgiDosya; ayarCiz(); MK.bildir("Ön bilgilendirme formu kaldırıldı; temel format kullanılıyor."); var b = document.querySelector('[data-eylem="obf-yukle"]'); if (b) b.focus();
     } });
+  };
+  /* ── BULUT KAYDI (Ö2, 2026-10-01; reisim: "müşteriye göre kendi bulutuna kurabilir o buluta otomatik kayıt ettirebiliyor olmam lazım"):
+     bulut hesabı bağlanır; rapor imzalanınca imzalı PDF müşterinin klasörüne kendiliğinden yazılır (MV.bulutaKaydet). Müşteri başına aç / kapa,
+     klasör adı ve paylaşılan klasör müşteri kartında. Bulut yurt dışında saklıyorsa uyarı (engel değil). Makette bağlantı taklit. ───────── */
+  function bulutCiz() {
+    var b = MV.bulut(), sg = MV.BULUT_SAGLAYICI.filter(function (x) { return x[0] === b.saglayici; })[0];
+    var ornek = MV.RAPORLAR.filter(function (r) { return r.durum === "imzali"; })[0];
+    return '<section class="a-bolum" aria-labelledby="a-b-bulut"><div class="a-alt-bas"><h2 class="a-alt-baslik" id="a-b-bulut">Bulut kaydı</h2>' +
+        '<span class="a-sayac">' + (b.bagli ? "bağlı" : "bağlı değil") + "</span></div>" +
+      '<p class="a-ipucu">Rapor imzalanınca imzalı PDF müşterinin bulut klasörüne kendiliğinden kaydedilir. Müşteri başına aç / kapa ve klasör adı müşteri kartında.</p>' +
+      '<div class="a-form">' +
+        '<div class="a-alan-grup"><label class="a-etiket" for="ay-bulut-s">Bulut</label>' + MK.secim({ id: "ay-bulut-s", ad: "Bulut", deger: b.saglayici, secenekler: MV.BULUT_SAGLAYICI.map(function (x) { return [x[0], x[1]]; }), ipucu: "Seçin" }) + "</div>" +
+        '<div class="a-alan-grup"><label class="a-etiket" for="ay-bulut-d">Klasör düzeni</label>' + MK.secim({ id: "ay-bulut-d", ad: "Klasör düzeni", deger: b.duzen, secenekler: MV.BULUT_DUZEN }) + "</div>" +
+        MK.alan({ id: "ay-bulut-kok", etiket: "Ana klasör", girdi: MK.girdi({ id: "ay-bulut-kok", deger: b.kok, ek: ' data-bulut-kok maxlength="80"' }) }) +
+      "</div>" +
+      (sg && sg[2] ? MK.serit("uyari", "triangle-alert", sg[1] + " verileri Türkiye dışında saklayabilir: raporlar yurt dışına çıkar (KVKK sorumluluğu firmanın). Kendi sunucunuz seçeneği veriyi Türkiye'de tutar.") : "") +
+      '<div class="a-eylem-cubugu a-eylem-sol">' + (!b.saglayici ? "" : b.bagli
+        ? '<span class="a-bulut-hesap">' + ikon("circle-check", "a-ikon-kucuk") + "Bağlı: " + kacis(b.hesap) + "</span>" + MK.tus({ eylem: "bulut-hepsi", ad: "İmzalı raporların hepsini gönder", ikon: "upload", sinif: "a-tus-ikincil" }) + MK.tus({ eylem: "bulut-kes", ad: "Bağlantıyı kes", ikon: "x", sinif: "a-tus-ikincil" })
+        : MK.tus({ eylem: "bulut-bagla", ad: sg[1] + " hesabını bağla", ikon: "log-in" })) + "</div>" +
+      (ornek ? '<p class="a-ipucu">Örnek yol: <span class="a-kod">' + kacis(MV.bulutYol(ornek)) + "</span></p>" : "") +
+      (b.kayitlar.length ? '<p class="a-etiket a-disa-gecmis-bas">Son kayıtlar</p><ul class="a-disa-gecmis" id="a-bulut-kayit">' + b.kayitlar.slice(0, 5).map(function (x) {
+        return "<li>" + MK.zamanYaz(x.zaman) + " · <b>" + kacis(x.no) + '</b> <span class="a-alt-satir">' + kacis(x.yol) + "</span></li>"; }).join("") + "</ul>" : "") +
+      "</section>";
+  }
+  var bulutYaz = function (d) { MV.FIRMA.bulut = Object.assign({}, MV.FIRMA.bulut, d); };
+  X["bulut-bagla"] = function () {
+    /* makette taklit: uygulamada sağlayıcının giriş penceresi açılır, izin verilince geri dönülür */
+    bulutYaz({ bagli: true, hesap: MV.FIRMA.eposta || "rapor@firma.example" }); ayarCiz();
+    var b = document.querySelector('[data-eylem="bulut-hepsi"]'); if (b) b.focus(); MK.bildir("Bulut bağlandı; bundan sonra imzalanan raporlar kendiliğinden kaydedilir.");
+  };
+  X["bulut-kes"] = function () {
+    MK.onayla({ baslik: "Bulut bağlantısını kes", metin: "Raporlar artık buluta kaydedilmez; bulutta kaydedilmiş dosyalar silinmez.", tus: "Bağlantıyı kes", tamam: function () {
+      bulutYaz({ bagli: false, hesap: "" }); ayarCiz(); var b = document.querySelector('[data-eylem="bulut-bagla"]'); if (b) b.focus(); MK.bildir("Bulut bağlantısı kesildi.");
+    } });
+  };
+  X["bulut-hepsi"] = function () {
+    var n = 0; MV.RAPORLAR.filter(function (r) { return r.durum === "imzali" && !r.pasif; }).forEach(function (r) { if (MV.bulutaKaydet(MV.musteriSurumu(r) || r)) n++; });
+    ayarCiz(); var b = document.querySelector('[data-eylem="bulut-hepsi"]'); if (b) b.focus();
+    MK.bildir(n + " imzalı rapor buluta gönderildi (kapalı müşteriler atlandı).");
   };
   /* ── VERİLERİ DIŞA AKTAR (S3, 2026-10-01; reisim: "16 olsun" — firma probata'yı bırakırken ya da yedek için bütün verisini tek seferde alır).
      Seçilen her bölüm ayrı Excel, hepsi tek ZIP. Uygulamada raporların ve yüklenen belgelerin PDF'leri de klasörlerde gelir, büyük firmada
@@ -261,6 +300,8 @@
   };
   MK.onSecim = function (id, deger) {
     var m;
+    if (id === "ay-bulut-s") { bulutYaz({ saglayici: deger, bagli: false, hesap: "" }); ayarCiz(); $(id).focus(); MK.bildir("Bulut: " + MV.BULUT_SAGLAYICI.filter(function (x) { return x[0] === deger; })[0][1] + "; hesabı bağlayın."); return; }
+    if (id === "ay-bulut-d") { bulutYaz({ duzen: deger }); ayarCiz(); $(id).focus(); MK.bildir("Klasör düzeni: " + MV.BULUT_DUZEN.filter(function (x) { return x[0] === deger; })[0][1] + "."); return; }
     if (id === "ay-nusha") { MV.FIRMA.nusha = +deger; ayarCiz(); $(id).focus(); MK.bildir("Rapor nüsha sayısı " + deger + "."); return; }
     if (id === "ay-yil") { var sk0 = MV.saklama(); MV.FIRMA.saklama = { yontem: sk0.yontem, yer: sk0.yer, yil: +deger }; ayarCiz(); $(id).focus(); MK.bildir("Saklama süresi " + deger + " yıl."); return; }   /* 5 taban: listede 5'ten kısa yok */
     if ((m = /^ay-esik-(\w+)$/.exec(id))) {
@@ -272,6 +313,7 @@
   };
   document.addEventListener("change", function (e) {
     var t = e.target;
+    if (t.hasAttribute && t.hasAttribute("data-bulut-kok")) { bulutYaz({ kok: t.value.trim() || "probata Raporlar" }); ayarCiz(); $("ay-bulut-kok").focus(); MK.bildir("Ana klasör kaydedildi."); return; }
     if (t.dataset && t.dataset.disa) {   /* dışa aktarılacak bölüm seçimi */
       var sl = secili().slice(), j = sl.indexOf(t.dataset.disa); if (t.checked && j < 0) sl.push(t.dataset.disa); else if (!t.checked && j >= 0) sl.splice(j, 1);
       DS.sec = DIS.map(function (x) { return x[0]; }).filter(function (k) { return sl.indexOf(k) >= 0; }); return;
