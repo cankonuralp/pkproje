@@ -2074,6 +2074,8 @@ hesabı) ileride kurgulanır; 10 örnekle gösterildi, karar reisim'de; 11 e-imz
 12–15 yapılmaz; 16 açıklandı (müşteri ekranındaki Excel yalnız o müşterinin listesi).
 Ek (2026-10-01, reisim birebir; genel arama örnek görüntüyle gösterildikten ve 16 "firma probata'yı bırakırken bütün verisini tek seferde alabilsin"
 diye açıklandıktan sonra): *"Genel aramaya gerek yok 16 olsun"* → genel arama yapılmaz; **S3:** Firma ayarları'nda **Verileri dışa aktar**.
+Ek (2026-10-01, reisim birebir): *"Sütun adları türkçe olsun ve örnek çıktı ver"* → **S4:** dışa aktarımdaki bütün sütun adları Türkçe (kod adı
+kalmaz, denetimle); örnek ZIP reisim'e verildi.
 
 **Açık kalanlar:** ~~Ana sayfada İSGGM duyuruları~~ (2026-09-27: makette eklendi; okuma işi uygulamada) (reisim 2026-09-26: *"Ana sayfada isgüm duyurularını gösterebilir miyiz ? Bunu
 yapılacaklar listesine ekle"*; öneri: ÇSGB İSGGM duyurular sayfası — https://www.csgb.gov.tr/isggm/duyurular/ — sunucuda günde birkaç kez
@@ -2107,6 +2109,12 @@ revizyon, alan kopyalama, hafif kusur devri, meslek eşleşme denetimi).
 - Emsal ürünler: https://opwire.app/iso-17020-periyodik-kontrol-yazilimi/ · https://17020muayene.vidco.com.tr/ · https://akuple.com/asansor-kontrol-yazilimi/ · https://ensyazilim.com/
 
 ## 11 · Değişiklik günlüğü
+- 2026-10-01 (198): **S4 · Dışa aktarımda sütunlar Türkçe, hücreler okunur** (§9 kırk üçüncü tur ek). Her tablonun sütunları tek tek tanımlı
+  (21 tablo; ör. "Ekipman kodu", "Bölüm (kullanım yeri)", "Kalibrasyon bitişi"); kimlik kodları ada çevrilir (müşteri unvanı, tesis adı, personel
+  adı, ekipman / cihaz / eğitim / izin / gider türü, durumlar); tarihler GG.AA.YYYY (saatliler GG.AA.YYYY SS:DD); iç içe kayıtlar tek hücrede
+  okunur cümle (önceki kontrol: tarih · sonuç · rapor no · denetçi; onay: zaman · onaylayan; son ara kontrol; İSG-KATİP no · onay). Başka tablonun
+  kopyası olan iç alanlar atlanır (tesisin plan özeti). Yeni bir alan eklenip sütunu yazılmazsa ya da hücre okunmazsa denetim düşer
+  (MK.disaCevrilmemis). Örnek ZIP reisim'e verildi. 1 deneme.
 - 2026-10-01 (197): **S3 · Verileri dışa aktar** (§9 kırk üçüncü tur ek, reisim: "16 olsun"; genel arama yapılmadı). Firma ayarları'nda yeni
   bölüm: dokuz bölümden seçilenler (müşteriler ve tesisler · ekipmanlar · planlar · raporlar · teklifler ve sözleşmeler · personel · ölçüm
   cihazları ve zimmetler · muhasebe · dökümanlar) her biri ayrı Excel, hepsi **tek ZIP**; makette gerçekten iner (PDF yerine OKUBENI.txt).

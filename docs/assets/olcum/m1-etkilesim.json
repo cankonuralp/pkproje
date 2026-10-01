@@ -2,8 +2,8 @@
  "maket": "m1",
  "tarih": "2026-10-01",
  "arac": "tools/olc-bulut.mjs --etkilesim (başsız tarayıcı, 1920 açık tema; gen verilen denemede o genişlik)",
- "toplam": 97,
- "gecen": 97,
+ "toplam": 98,
+ "gecen": 98,
  "denemeler": [
   {
    "ad": "İzin talepleri: formun PDF'i açılır, e-posta talep edene",
@@ -294,6 +294,13 @@
   },
   {
    "ad": "Verileri dışa aktar: seçilen bölümlerle ZIP iner, son dışa aktarımlarda görünür ve kalıcı; hiç bölüm seçilmezse uyarır, inmez",
+   "gen": 1920,
+   "sayfa": "maket/firma-ayarlari.html",
+   "hash": "#/",
+   "gecti": true
+  },
+  {
+   "ad": "Verileri dışa aktar: kod adıyla kalan sütun yok, okunmayan hücre ([object …], undefined, NaN) yok; kimlikler ada çevrili",
    "gen": 1920,
    "sayfa": "maket/firma-ayarlari.html",
    "hash": "#/",

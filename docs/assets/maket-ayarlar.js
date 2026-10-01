@@ -139,15 +139,68 @@
      Seçilen her bölüm ayrı Excel, hepsi tek ZIP. Uygulamada raporların ve yüklenen belgelerin PDF'leri de klasörlerde gelir, büyük firmada
      arka planda hazırlanır (iş kuyruğu), bağlantı kısa ömürlü ve yalnız firma yöneticisinin hesabıyla açılır (anayasa 5.1). Makette Excel'ler
      gerçekten iner; PDF yerine OKUBENI.txt. Her dışa aktarım kayda geçer (tarih, kim, bölümler). ─────────────────────────────────────────── */
-  var BAS = { kod: "Kod", ad: "Ad", unvan: "Unvan", kisa: "Kısa ad", no: "No", tarih: "Tarih", durum: "Durum", tur: "Tür", tesis: "Tesis", musteri: "Müşteri",
-    eposta: "E-posta", tel: "Telefon", il: "İl", ilce: "İlçe", adres: "Adres", vergi: "Vergi no", seri: "Seri no", konum: "Bölüm", plan: "Plan", kisi: "Kişi",
-    sonuc: "Sonuç", tutar: "Tutar", aylik: "Aylık", not: "Not", meslek: "Meslek", basla: "İşe başlama", bit: "Bitiş", bas: "Başlangıç",
-    id: "Kimlik", k: "Kod", m: "Müşteri", t: "Tür", vd: "Vergi dairesi", vno: "Vergi no", ilgili: "İlgili kişi", rev: "Revizyon", yukleyen: "Yükleyen",
-    son: "Son giriş", gonderildi: "Gönderildi", ekipman: "Ekipman sayısı", tekrar: "Tekrar", belge: "Belge", kurum: "Kurum", dosya: "Dosya",
-    diploma: "Diploma no", oda: "Oda sicil no", ekipnet: "EKİPNET no", olustu: "Oluşturuldu", ilk: "İlk kontrol", marka: "Marka", model: "Model",
-    cihazTur: "Cihaz türü", env: "Envanter no", eden: "Teslim eden", alan: "Teslim alan", foto: "Fotoğraf", gun: "Gün", aciklama: "Açıklama",
-    baslangic: "Başlangıç", bitis: "Bitiş", teklif: "Teklif", tesisler: "Tesisler", onay: "Onay", pdf: "PDF", v: "Varlık", imzaTel: "Mobil imza telefonu",
-    sonraki: "Sonraki kontrol", gonderim: "Gönderim", imza: "İmza", kdv: "KDV", vade: "Vade", brut: "Brüt", net: "Net", maliyet: "Maliyet", ay: "Ay" };
+  /* S4 (2026-10-01, reisim: "Sütun adları türkçe olsun ve örnek çıktı ver"): her tablonun sütunları tek tek, Türkçe adla; kimlik kodları okunur
+     ada (müşteri, tesis, kişi, ekipman türü), tarihler GG.AA.YYYY, evet/hayır Türkçe. ATLA: başka tablonun kopyası olan iç alanlar (tesisin
+     plan özeti, işin plan sırası). Listede olmayan yeni bir düz alan çıkarsa MK.disaCevrilmemis onu söyler (denetim). */
+  var tarihYaz = function (v) { var t = String(v || ""); return /^\d{4}-\d{2}-\d{2}T\d{2}:\d{2}/.test(t) ? MK.zamanYaz(t) : /^\d{4}-\d{2}-\d{2}$/.test(t) ? MK.tarihYaz(t) : t; };
+  var kisiAd = function (id) { var p = MV.kisi(id); return p ? p.ad : id === "depo" ? "Depo" : id === "lab" ? "Kalibrasyon laboratuvarı" : id || ""; };
+  var BIC = {
+    t: tarihYaz, kisi: kisiAd, kisiler: function (v) { return (Array.isArray(v) ? v : String(v || "").split(",")).filter(Boolean).map(kisiAd).join(", "); },
+    musteri: function (id) { var m = MV.musteri(id); return m ? m.unvan : id || ""; }, tesis: function (id) { var x = MV.tesis(id); return x ? x.ad : id === "hepsi" ? "Bütün tesisler" : id || ""; },
+    tesisler: function (v) { return (Array.isArray(v) ? v : String(v || "").split(",")).filter(Boolean).map(function (id) { var x = MV.tesis(id); return x ? x.ad : id; }).join(", "); },
+    tur: function (k) { var x = MV.tur(k); return x ? x.ad : k || ""; }, meslek: function (k, o) { return o ? MV.meslekAd(o) : k; },
+    egitim: function (k) { var x = MV.egitimTuru(k); return x ? x.ad : k; }, izin: function (k) { var x = MV.izinTur(k); return x ? x.ad : k; },
+    gider: function (k) { return MV.giderTur(k).ad; }, cihaz: function (k) { var x = MV.CIHAZ_TURLERI.filter(function (c) { return c.k === k; })[0]; return x ? x.ad : k; },
+    plan: function (k) { return (MV.PLAN_DURUM[k] || {}).ad || k; }, rapor: function (k) { return (MV.RAPOR_DURUM[k] || {}).ad || k; },
+    izinDurum: function (k) { return (MV.IZIN_DURUM[k] || {}).ad || k; }, giderDurum: function (k) { return (MV.GIDER_DURUM[k] || {}).ad || k; },
+    varlik: function (id) { var v = MV.varlik(id); return v ? v.ad + (v.env ? " (" + v.env + ")" : "") : id; },
+    durum: function (k) { return { etkin: "Etkin", pasif: "Pasif", ayrildi: "Ayrıldı", hazir: "Parola gönderilmedi", kabul: "Kabul edildi", red: "Reddedildi", bekliyor: "Bekliyor", gonderildi: "Gönderildi", taslak: "Taslak" }[k] || k; },
+    /* iç içe kayıtlar okunur tek hücreye */
+    onceki: function (x) { return x && typeof x === "object" ? [tarihYaz(x.tarih), x.sonuc, x.rapor, kisiAd(x.kisi)].filter(Boolean).join(" · ") : x === true ? "Var" : x; },
+    kimZaman: function (x) { return x && typeof x === "object" ? [tarihYaz(x.zaman), kisiAd(x.kim)].filter(Boolean).join(" · ") : tarihYaz(x); },
+    geri: function (x) { return x && typeof x === "object" ? x.gerekce + " (" + [tarihYaz(x.zaman), kisiAd(x.kim)].filter(Boolean).join(" · ") + ")" : x; },
+    sayi: function (x) { return Array.isArray(x) ? x.length : x; },
+    ara: function (x) { var l = Array.isArray(x) ? x : x ? [x] : []; var y = l[l.length - 1]; return y && typeof y === "object" ? [tarihYaz(y.tarih), y.sonuc, kisiAd(y.kim)].filter(Boolean).join(" · ") : tarihYaz(y); },
+    isg: function (x) { return x && typeof x === "object" ? [x.no, x.onay ? "onay " + tarihYaz(x.onay) : ""].filter(Boolean).join(" · ") : x === true ? "Var" : x; },
+    rap: function (x) { return x && typeof x === "object" ? Object.keys(x).map(function (k) { return ((MV.RAPOR_DURUM[k] || {}).ad || k) + " " + x[k]; }).join(" · ") : x; },
+    siklik: function (x) { return (Array.isArray(x) ? x : [x]).filter(Boolean).map(function (v) { return String(v).replace(/^(\d+)(ay|yil|gun)$/, function (m, n, b) { return n + " " + { ay: "ay", yil: "yıl", gun: "gün" }[b]; }); }).join(", "); },
+    varlikTur: function (k) { return { cihaz: "Ölçüm cihazı", arac: "Araç", diger: "Diğer" }[k] || k; },
+    kaynak: function (k) { return { form: "Masraf formu", muhasebe: "Muhasebe kaydı" }[k] || k; },
+    yenileme: function (k) { return { yok: "Yok", otomatik: "Otomatik" }[k] || k; },
+    ay: function (v) { var m = /^(\d{4})-(\d{2})$/.exec(String(v)); return m ? m[2] + "." + m[1] : v; },
+    hesap: function (h) { return h && h.roller ? "Açık · " + h.roller.map(function (k) { return (MV.ROLLER.filter(function (r) { return r.k === k; })[0] || {}).ad || k; }).join(", ") : "Yok"; }
+  };
+  /* [alan, Türkçe sütun adı, biçim?] */
+  var SUTUN = {
+    musteriler: [["id", "Müşteri kodu"], ["unvan", "Unvan"], ["kisa", "Kısa ad"], ["vd", "Vergi dairesi"], ["vno", "Vergi no"], ["eposta", "E-posta"], ["ilgili", "İlgili kişi"], ["acilis", "Kayıt tarihi", "t"], ["uygunsuz", "Açık uygunsuzluk sayısı"]],
+    tesisler: [["id", "Tesis kodu"], ["m", "Müşteri", "musteri"], ["ad", "Tesis adı"], ["adres", "Adres"], ["ilce", "İlçe"], ["il", "İl"], ["sgk", "SGK sicil no"], ["ekipman", "Ekipman sayısı"], ["son", "Son kontrol", "t"], ["sonraki", "Sonraki kontrol", "t"], ["plan", "Son plan no"]],
+    "musteri-kullanicilari": [["m", "Müşteri", "musteri"], ["ad", "Ad soyad"], ["eposta", "E-posta"], ["tesis", "Gördüğü tesis", "tesis"], ["durum", "Hesap durumu", "durum"], ["son", "Son giriş", "t"], ["gonderildi", "Parola gönderildi", "t"]],
+    ekipmanlar: [["kod", "Ekipman kodu"], ["tur", "Ekipman türü", "tur"], ["tesis", "Tesis", "tesis"], ["konum", "Bölüm (kullanım yeri)"], ["marka", "Marka"], ["model", "Model"], ["seri", "Seri no"], ["imal", "İmal yılı"], ["ilk", "İlk kontrol"], ["onceki", "Önceki kontrol", "onceki"], ["eskiKod", "Eski kod"], ["plan", "Plan sırası"]],
+    planlar: [["no", "Plan no"], ["ad", "Proje / tesis adı"], ["musteri", "Müşteri"], ["adres", "Adres"], ["ilce", "İlçe"], ["il", "İl"], ["tarih", "Plan tarihi", "t"], ["bitTarih", "Bitiş tarihi", "t"], ["bas", "Başlangıç saati"], ["bit", "Bitiş saati"],
+      ["ekip", "Denetçiler", "kisiler"], ["m", "Mekanik ekipman"], ["e", "Elektrik ekipmanı"], ["yeni", "Yeni ekipman"], ["disarida", "Kapsam dışı ekipman"], ["durum", "Durum", "plan"], ["acildi", "Açıldı", "t"], ["kabul", "Kabul edildi", "t"],
+      ["basladi", "Denetime başlandı", "t"], ["bitti", "Tamamlandı", "t"], ["reddedildi", "Reddedildi", "t"], ["gerekce", "Red gerekçesi"], ["aciklama", "Açıklama"], ["eksik", "Eksik / uyarı"], ["isg", "İSG-KATİP", "isg"], ["ortak", "Ortak plan"], ["rap", "Raporlar (duruma göre)", "rap"], ["id", "Plan sırası"]],
+    raporlar: [["no", "Rapor no"], ["kod", "Ekipman kodu"], ["tesis", "Tesis", "tesis"], ["plan", "Plan sırası"], ["kisi", "Denetçi", "kisi"], ["olustu", "Oluşturuldu", "t"], ["ilkGonderim", "İlk onaya gönderim", "t"], ["gonderildi", "Son onaya gönderim", "t"],
+      ["durum", "Durum", "rapor"], ["sonuc", "Sonuç"], ["onay", "Onaylandı", "kimZaman"], ["imza", "İmzalandı", "kimZaman"], ["geri", "Geri gönderme gerekçesi", "geri"], ["duzeltmeler", "Düzeltme sayısı", "sayi"]],
+    teklifler: [["no", "Teklif no"], ["m", "Müşteri", "musteri"], ["tesis", "Tesis", "tesis"], ["tarih", "Teklif tarihi", "t"], ["gonderildi", "Gönderildi", "t"], ["gecerlilik", "Geçerlilik (gün)"], ["durum", "Durum", "durum"], ["sonuc", "Karar tarihi", "t"], ["gerekce", "Red gerekçesi"], ["hazirlayan", "Hazırlayan", "kisi"]],
+    "is-sozlesmeleri": [["no", "Sözleşme no"], ["m", "Müşteri", "musteri"], ["tesisler", "Tesisler", "tesisler"], ["teklif", "Teklif no"], ["baslangic", "Başlangıç", "t"], ["bitis", "Bitiş", "t"], ["vade", "Ödeme vadesi (gün)"], ["yenileme", "Yenileme", "yenileme"], ["dosya", "İmzalı sözleşme yüklü"]],
+    "isg-katip": [["no", "İSG-KATİP sözleşme no"], ["t", "Tesis", "tesis"], ["k", "Denetçi", "kisi"], ["onay", "Onay tarihi", "t"], ["bitis", "Bitiş", "t"], ["girdi", "Giren", "kisi"], ["pdf", "Belge"], ["onceki", "Önceki dönemden"], ["id", "Kayıt no"]],
+    personel: [["id", "Personel kodu"], ["ad", "Ad soyad"], ["meslek", "Meslek", "meslek"], ["diploma", "Diploma no"], ["oda", "Oda sicil no"], ["ekipnet", "EKİPNET no"], ["eposta", "E-posta"], ["imzaTel", "Mobil imza telefonu"], ["basla", "İşe başlama", "t"], ["ayrildi", "Ayrılış", "t"], ["durum", "Durum", "durum"], ["hesap", "Giriş hesabı · roller", "hesap"]],
+    egitimler: [["kisi", "Personel", "kisi"], ["k", "Eğitim", "egitim"], ["tarih", "Eğitim tarihi", "t"], ["tekrar", "Tekrar tarihi", "t"], ["kurum", "Kurum"], ["belge", "Belge yüklü"], ["id", "Kayıt no"]],
+    "ekipman-atamalari": [["k", "Personel", "kisi"], ["tur", "Ekipman türü", "tur"], ["tarih", "Atama tarihi", "t"], ["dosya", "Atama belgesi"], ["id", "Kayıt no"]],
+    izinler: [["no", "Talep no"], ["kisi", "Personel", "kisi"], ["tur", "İzin türü", "izin"], ["bas", "Başlangıç", "t"], ["bit", "Bitiş", "t"], ["gun", "Gün"], ["aciklama", "Açıklama"], ["durum", "Durum", "izinDurum"], ["gonderildi", "Gönderildi", "t"], ["karar", "Karar", "t"], ["onaylayan", "Karar veren", "kisi"], ["belge", "Belge"]],
+    "olcum-cihazlari": [["env", "Envanter no"], ["ad", "Ad"], ["tur", "Varlık türü", "varlikTur"], ["cihazTur", "Cihaz türü", "cihaz"], ["marka", "Marka"], ["model", "Model"], ["seri", "Seri no"], ["aralik", "Ölçüm aralığı"], ["bitis", "Kalibrasyon bitişi", "t"], ["araSiklik", "Ara kontrol sıklığı", "siklik"],
+      ["ara", "Son ara kontrol", "ara"], ["rapor", "Kalibrasyon rapor no"], ["plaka", "Plaka"], ["yil", "Model yılı"], ["id", "Kayıt no"]],
+    "zimmet-hareketleri": [["tarih", "Tarih", "t"], ["v", "Varlık", "varlik"], ["eden", "Teslim eden", "kisi"], ["alan", "Teslim alan", "kisi"], ["foto", "Fotoğraf sayısı"], ["not", "Not"], ["onay", "Teslim alan onayı", "t"], ["yetkili", "Yetkili", "kisi"], ["id", "Kayıt no"]],
+    isler: [["no", "İş (plan) no"], ["m", "Müşteri", "musteri"], ["tesis", "Tesis", "tesis"], ["tarih", "Tarih", "t"], ["pdurum", "Plan durumu", "plan"], ["ekip", "Denetçiler", "kisiler"], ["raporlar", "Raporlar"], ["faturalar", "Faturalar"]],
+    faturalar: [["no", "Fatura no"], ["is", "İş (plan) no"], ["m", "Müşteri", "musteri"], ["tarih", "Fatura tarihi", "t"], ["vadeGun", "Vade (gün)"], ["vade", "Vade tarihi", "t"], ["raporlar", "Raporlar"], ["kaydeden", "Kaydeden", "kisi"]],
+    giderler: [["no", "Gider no"], ["tarih", "Tarih", "t"], ["tur", "Tür", "gider"], ["tutar", "Tutar (KDV dahil)"], ["oran", "KDV oranı (%)"], ["is", "İş (plan) no"], ["kisi", "Personel", "kisi"], ["aciklama", "Açıklama"], ["belge", "Belge"],
+      ["kaynak", "Kaynak", "kaynak"], ["gonderildi", "Gönderildi", "t"], ["durum", "Durum", "giderDurum"], ["onaylayan", "Onaylayan", "kisi"], ["odeme", "Ödeme tarihi", "t"], ["kaydeden", "Kaydeden", "kisi"]],
+    bordrolar: [["kisi", "Personel", "kisi"], ["ay", "Ay", "ay"], ["brut", "Brüt (TL)"], ["net", "Net (TL)"], ["maliyet", "İşveren maliyeti (TL)"], ["dosya", "Bordro belgesi"], ["yuklendi", "Yüklendi", "t"], ["yukleyen", "Yükleyen", "kisi"]],
+    "sabit-giderler": [["ad", "Gider"], ["aylik", "Aylık (TL)"], ["not", "Not"], ["k", "Kod"]],
+    dokumanlar: [["kod", "Belge kodu"], ["ad", "Belge adı"], ["tur", "Tür"], ["rev", "Revizyon"], ["tarih", "Tarih", "t"], ["yukleyen", "Yükleyen", "kisi"], ["dosya", "Dosya"], ["k", "Kayıt no"]]
+  };
+  var ATLA = { tesisler: ["pid", "pdurum", "ptarih", "pekip", "psaat"], isler: ["pid"], personel: ["meslekMetin"] };   /* plan özetinin kopyası (asıl kayıt Planlar'da); meslekMetin Meslek sütununda */
+  var basAd = function (tablo, k) { return (SUTUN[tablo] || []).some(function (x) { return x[0] === k; }) || (ATLA[tablo] || []).indexOf(k) >= 0; };
   var DIS = [
     ["musteri", "Müşteriler ve tesisler", function () { return [["musteriler", MV.MUSTERILER], ["tesisler", MV.TESISLER], ["musteri-kullanicilari", MV.MUSTERI_KULLANICI]]; }],
     ["ekipman", "Ekipmanlar", function () { return [["ekipmanlar", MV.EKIPMAN]]; }],
@@ -161,15 +214,24 @@
   ];
   var DS = { sec: null };
   var secili = function () { return DS.sec || DIS.map(function (x) { return x[0]; }); };
-  /* nesne dizisi → satırlar: düz alanlar (metin, sayı, evet/hayır; metin dizisi virgülle) sütun olur; iç içe kayıtlar ayrı dosyada */
-  function satirlar(l) {
-    l = l || [];
-    var duz = function (v) { return v == null || typeof v !== "object" || (Array.isArray(v) && v.every(function (y) { return y == null || typeof y !== "object"; })); };
-    if (l.length && Array.isArray(l[0])) return [l[0].map(function (x, i) { return "Sütun " + (i + 1); })].concat(l.map(function (r) { return r.map(function (v) { return v == null ? "" : typeof v === "object" ? "" : v; }); }));
-    var anahtar = []; l.forEach(function (o) { Object.keys(o || {}).forEach(function (k) { if (anahtar.indexOf(k) < 0 && duz(o[k])) anahtar.push(k); }); });
-    return [anahtar.map(function (k) { return BAS[k] || k; })].concat(l.map(function (o) { return anahtar.map(function (k) {
-      var v = o[k]; return v == null ? "" : Array.isArray(v) ? v.join(", ") : typeof v === "boolean" ? (v ? "Evet" : "Hayır") : v; }); }));
+  var duzMu = function (v) { return v == null || typeof v !== "object" || (Array.isArray(v) && v.every(function (y) { return y == null || typeof y !== "object"; })); };
+  /* tablo → satırlar: tanımlı sütunlar sırayla, değer biçimlenir (iç içe kayıtlar ayrı dosyada) */
+  function satirlar(tablo, l) {
+    var sut = SUTUN[tablo] || [];
+    return [sut.map(function (x) { return x[1]; })].concat((l || []).map(function (o) { return sut.map(function (x) {
+      var v = o[x[0]]; if ((v == null || v === "") && x[2] !== "hesap") return "";
+      var c = x[2] ? BIC[x[2]](v, o) : v;
+      if (c != null && typeof c === "object") c = Array.isArray(c) && c.every(function (y) { return y == null || typeof y !== "object"; }) ? c.join(", ") : "";   /* biçimsiz iç içe kayıt hücreye düşmez */
+      return Array.isArray(c) ? c.join(", ") : typeof c === "boolean" ? (c ? "Evet" : "Hayır") : c == null ? "" : c; }); }));
   }
+  /* denetim için: listede olmayan (çevrilmemiş) düz alanlar ve okunmayan hücreler ("[object …]", undefined, NaN) — boş olmalı */
+  MK.disaCevrilmemis = function () {
+    var l = []; DIS.forEach(function (x) { x[2]().forEach(function (d) {
+      (d[1] || []).forEach(function (o) { Object.keys(o || {}).forEach(function (k) { if (duzMu(o[k]) && !basAd(d[0], k) && l.indexOf(d[0] + "." + k) < 0) l.push(d[0] + "." + k); }); });
+      var sat = satirlar(d[0], d[1]);   /* okunmayan hücre de kusur sayılır */
+      sat.slice(1).forEach(function (r) { r.forEach(function (h, i) { if (/\[object |undefined|NaN/.test(String(h)) && l.indexOf(d[0] + ":" + sat[0][i]) < 0) l.push(d[0] + ":" + sat[0][i]); }); }); }); });
+    return l;
+  };
   function disaCiz() {
     var s = secili(), gecmis = MV.FIRMA.disaAktarim || [];
     return '<section class="a-bolum" aria-labelledby="a-b-disa"><div class="a-alt-bas"><h2 class="a-alt-baslik" id="a-b-disa">Verileri dışa aktar</h2></div>' +
@@ -187,7 +249,7 @@
     if (!s.length) { MK.bildir("En az bir bölüm seçin."); var c = document.querySelector("[data-disa]"); if (c) c.focus(); return; }
     var gun = MK.BUGUN, dosyalar = [];
     DIS.filter(function (x) { return s.indexOf(x[0]) >= 0; }).forEach(function (x) {
-      x[2]().forEach(function (d) { dosyalar.push([x[0] + "/" + d[0] + ".xlsx", MK.xlsxBayt(d[0], satirlar(d[1]))]); });
+      x[2]().forEach(function (d) { dosyalar.push([x[0] + "/" + d[0] + ".xlsx", MK.xlsxBayt(d[0], satirlar(d[0], d[1]))]); });
     });
     dosyalar.push(["OKUBENI.txt", "probata · " + MV.FIRMA.ad + " · veri dışa aktarımı · " + gun + "\r\nHer bölüm ayrı Excel dosyasında.\r\n" +
       (s.indexOf("rapor") >= 0 ? "Uygulamada raporların PDF'leri rapor/pdf/ klasörüne, yüklenen belgeler ilgili bölümün belgeler/ klasörüne konur (makette PDF üretilmez).\r\n" : "")]);
