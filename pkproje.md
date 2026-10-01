@@ -2072,6 +2072,8 @@ gerek yok 13 gerek yok 14 gerek yok 15 gerek yok 16 yı anlamadım müşteri ekr
 Çıkış yap. **S2:** yetkisiz sayfa · oturum süresi doldu · sayfa bulunamadı ekranları. 1 (personel hesabı açma makette var: Personel kartı › Giriş
 hesabı) ileride kurgulanır; 10 örnekle gösterildi, karar reisim'de; 11 e-imza / mobil imzayla çözülür (ayrı doğrulama sayfası yok); 4, 5, 6–9,
 12–15 yapılmaz; 16 açıklandı (müşteri ekranındaki Excel yalnız o müşterinin listesi).
+Ek (2026-10-01, reisim birebir; genel arama örnek görüntüyle gösterildikten ve 16 "firma probata'yı bırakırken bütün verisini tek seferde alabilsin"
+diye açıklandıktan sonra): *"Genel aramaya gerek yok 16 olsun"* → genel arama yapılmaz; **S3:** Firma ayarları'nda **Verileri dışa aktar**.
 
 **Açık kalanlar:** ~~Ana sayfada İSGGM duyuruları~~ (2026-09-27: makette eklendi; okuma işi uygulamada) (reisim 2026-09-26: *"Ana sayfada isgüm duyurularını gösterebilir miyiz ? Bunu
 yapılacaklar listesine ekle"*; öneri: ÇSGB İSGGM duyurular sayfası — https://www.csgb.gov.tr/isggm/duyurular/ — sunucuda günde birkaç kez
@@ -2105,6 +2107,12 @@ revizyon, alan kopyalama, hafif kusur devri, meslek eşleşme denetimi).
 - Emsal ürünler: https://opwire.app/iso-17020-periyodik-kontrol-yazilimi/ · https://17020muayene.vidco.com.tr/ · https://akuple.com/asansor-kontrol-yazilimi/ · https://ensyazilim.com/
 
 ## 11 · Değişiklik günlüğü
+- 2026-10-01 (197): **S3 · Verileri dışa aktar** (§9 kırk üçüncü tur ek, reisim: "16 olsun"; genel arama yapılmadı). Firma ayarları'nda yeni
+  bölüm: dokuz bölümden seçilenler (müşteriler ve tesisler · ekipmanlar · planlar · raporlar · teklifler ve sözleşmeler · personel · ölçüm
+  cihazları ve zimmetler · muhasebe · dökümanlar) her biri ayrı Excel, hepsi **tek ZIP**; makette gerçekten iner (PDF yerine OKUBENI.txt).
+  Uygulamada raporların ve yüklenen belgelerin PDF'leri klasörlerde, büyük firmada arka planda hazırlanır, bağlantı 24 saat ve yalnız firma
+  yöneticisinin hesabıyla (anayasa 5.1). Her dışa aktarım "Son dışa aktarımlar"da (zaman, kim, bölüm sayısı, dosya). ZIP / Excel yazıcısı ikili
+  dosya alacak biçimde genişledi (MK.zip, MK.xlsxBayt; MK.xlsx aynı). 1 deneme.
 - 2026-09-30 (196): **S2 · Yetkisiz · Sayfa bulunamadı · Oturum süresi doldu** (§9 kırk üçüncü tur cevabı). hata.html: **#/yetkisiz** (kilit,
   "Bu sayfayı görme yetkiniz yok", yöneticiden yetki isteyin) ve **sayfa bulunamadı** (bilinmeyen her adres); ikisinde de kabuk ve menü yerinde,
   **Ana sayfaya dön** · **Geri dön**; kaydın adı / numarası yazılmaz. Giriş sayfasına **#/oturum** hâli: aynı giriş formu, üstte "Uzun süre işlem

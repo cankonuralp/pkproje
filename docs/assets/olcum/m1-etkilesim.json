@@ -1,9 +1,9 @@
 {
  "maket": "m1",
- "tarih": "2026-09-30",
+ "tarih": "2026-10-01",
  "arac": "tools/olc-bulut.mjs --etkilesim (başsız tarayıcı, 1920 açık tema; gen verilen denemede o genişlik)",
- "toplam": 96,
- "gecen": 96,
+ "toplam": 97,
+ "gecen": 97,
  "denemeler": [
   {
    "ad": "İzin talepleri: formun PDF'i açılır, e-posta talep edene",
@@ -290,6 +290,13 @@
    "gen": 1920,
    "sayfa": "maket/personel.html",
    "hash": "#/roller",
+   "gecti": true
+  },
+  {
+   "ad": "Verileri dışa aktar: seçilen bölümlerle ZIP iner, son dışa aktarımlarda görünür ve kalıcı; hiç bölüm seçilmezse uyarır, inmez",
+   "gen": 1920,
+   "sayfa": "maket/firma-ayarlari.html",
+   "hash": "#/",
    "gecti": true
   },
   {

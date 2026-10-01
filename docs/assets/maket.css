@@ -1487,3 +1487,8 @@ a.a-yuz:hover { border-color: var(--kenar-alan); background: var(--zemin); }
 .a-hata-kap { display: flex; justify-content: center; padding-top: 8vh; }
 .a-hata-kap .a-bos { max-width: 520px; }
 .a-bos-tuslar { display: flex; flex-wrap: wrap; justify-content: center; gap: 8px; margin-top: 16px; }
+
+/* VERİLERİ DIŞA AKTAR (S3, 2026-10-01): bölüm seçimi iki sütun (sığmazsa tek), son dışa aktarımlar kısa liste */
+.a-disa-bolumler { border: 0; margin: 8px 0 0; padding: 0; display: grid; grid-template-columns: repeat(auto-fill, minmax(min(100%, 260px), 1fr)); gap: 0 16px; }
+.a-disa-gecmis-bas { margin: 16px 0 4px; }
+.a-disa-gecmis { list-style: none; margin: 0; padding: 0; display: grid; gap: 6px; font-size: var(--boy-kucuk); }

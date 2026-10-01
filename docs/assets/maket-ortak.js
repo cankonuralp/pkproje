@@ -956,11 +956,11 @@
   /* ── ZIP (sıkıştırmasız yazma; okurken deflate tarayıcının DecompressionStream'i ile) ── */
   var CRC = (function () { var t = []; for (var n = 0; n < 256; n++) { var c = n; for (var k = 0; k < 8; k++) c = c & 1 ? 0xEDB88320 ^ (c >>> 1) : c >>> 1; t[n] = c >>> 0; } return t; })();
   var crc32 = function (b) { var c = 0xFFFFFFFF; for (var i = 0; i < b.length; i++) c = CRC[(c ^ b[i]) & 255] ^ (c >>> 8); return (c ^ 0xFFFFFFFF) >>> 0; };
-  function zipYaz(dosyalar) {   /* [[ad, metin]] → Uint8Array */
+  function zipYaz(dosyalar) {   /* [[ad, metin ya da Uint8Array]] → Uint8Array */
     var te = new TextEncoder(), parca = [], merkez = [], ofs = 0;
     var u16 = function (v) { return [v & 255, (v >>> 8) & 255]; }, u32 = function (v) { return [v & 255, (v >>> 8) & 255, (v >>> 16) & 255, (v >>> 24) & 255]; };
     dosyalar.forEach(function (x) {
-      var ad = te.encode(x[0]), veri = te.encode(x[1]), c = crc32(veri);
+      var ad = te.encode(x[0]), veri = typeof x[1] === "string" ? te.encode(x[1]) : x[1], c = crc32(veri);
       var yerel = [].concat(u32(0x04034b50), u16(20), u16(0x0800), u16(0), u16(0), u16(0x21), u32(c), u32(veri.length), u32(veri.length), u16(ad.length), u16(0));
       parca.push(new Uint8Array(yerel), ad, veri);
       merkez.push(new Uint8Array([].concat(u32(0x02014b50), u16(20), u16(20), u16(0x0800), u16(0), u16(0), u16(0x21), u32(c), u32(veri.length), u32(veri.length),
@@ -975,7 +975,11 @@
   }
   var xe = function (v) { return String(v).replace(/[<>&"]/g, function (c) { return { "<": "&lt;", ">": "&gt;", "&": "&amp;", '"': "&quot;" }[c]; }); };
   /* satırlar (ilki başlık) → .xlsx Blob; sayı hücresi sayı olarak yazılır */
-  MK.xlsx = function (sayfa, satirlar) {
+  /* S3 (2026-10-01): verileri dışa aktarma birden çok Excel'i tek ZIP'e koyar → ZIP ve Excel baytları dışa açık */
+  MK.zip = function (dosyalar) { return new Blob([zipYaz(dosyalar)], { type: "application/zip" }); };
+  MK.xlsxBayt = function (sayfa, satirlar) { return xlsxYaz(sayfa, satirlar); };
+  MK.xlsx = function (sayfa, satirlar) { return new Blob([xlsxYaz(sayfa, satirlar)], { type: "application/vnd.openxmlformats-officedocument.spreadsheetml.sheet" }); };
+  function xlsxYaz(sayfa, satirlar) {
     var sutun = function (i) { var s = ""; i++; while (i) { var m = (i - 1) % 26; s = String.fromCharCode(65 + m) + s; i = Math.floor((i - 1) / 26); } return s; };
     var govde = satirlar.map(function (r, ri) {
       return '<row r="' + (ri + 1) + '">' + r.map(function (h, ci) {
@@ -991,8 +995,8 @@
       ["xl/styles.xml", '<?xml version="1.0" encoding="UTF-8" standalone="yes"?><styleSheet xmlns="http://schemas.openxmlformats.org/spreadsheetml/2006/main"><fonts count="2"><font><sz val="11"/><name val="Calibri"/></font><font><b/><sz val="11"/><name val="Calibri"/></font></fonts><fills count="2"><fill><patternFill patternType="none"/></fill><fill><patternFill patternType="gray125"/></fill></fills><borders count="1"><border><left/><right/><top/><bottom/><diagonal/></border></borders><cellStyleXfs count="1"><xf numFmtId="0" fontId="0" fillId="0" borderId="0"/></cellStyleXfs><cellXfs count="2"><xf numFmtId="0" fontId="0" fillId="0" borderId="0" xfId="0"/><xf numFmtId="0" fontId="1" fillId="0" borderId="0" xfId="0" applyFont="1"/></cellXfs><cellStyles count="1"><cellStyle name="Normal" xfId="0" builtinId="0"/></cellStyles></styleSheet>'],
       ["xl/worksheets/sheet1.xml", '<?xml version="1.0" encoding="UTF-8" standalone="yes"?><worksheet xmlns="http://schemas.openxmlformats.org/spreadsheetml/2006/main"><sheetData>' + govde + "</sheetData></worksheet>"]
     ]);
-    return new Blob([z], { type: "application/vnd.openxmlformats-officedocument.spreadsheetml.sheet" });
-  };
+    return z;
+  }
   /* .xlsx / .csv → Promise<satırlar (metin dizisi)>; Excel tarih sayısı gün.ay.yıl'a çevrilir (MK.excelTarih) */
   var inflate = function (b) { return new Response(new Blob([b]).stream().pipeThrough(new DecompressionStream("deflate-raw"))).arrayBuffer().then(function (x) { return new Uint8Array(x); }); };
   function zipOku(buf) {

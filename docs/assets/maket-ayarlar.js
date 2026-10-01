@@ -112,7 +112,7 @@
             MK.alan({ id: "ay-sg-not-" + i, etiket: "Not", girdi: MK.girdi({ id: "ay-sg-not-" + i, deger: x.not || "", ek: ' data-sg-not="' + i + '" maxlength="80"' }) }) +
             MK.tus({ eylem: "sg-sil", ad: "Kaldır", ikon: "x", sinif: "a-tus-ikincil a-kalem-sil", veri: { i: i } }) + "</div>";
         }).join("") +
-        '<div class="a-eylem-cubugu a-bolum-serit">' + MK.tus({ eylem: "sg-ekle", ad: "Sabit gider ekle", ikon: "plus", sinif: "a-tus-ikincil" }) + "</div></section>";
+        '<div class="a-eylem-cubugu a-bolum-serit">' + MK.tus({ eylem: "sg-ekle", ad: "Sabit gider ekle", ikon: "plus", sinif: "a-tus-ikincil" }) + "</div></section>" + disaCiz();
   }
 
   X["sg-ekle"] = function () {
@@ -135,6 +135,68 @@
       delete MV.FIRMA.onBilgiDosya; ayarCiz(); MK.bildir("Ön bilgilendirme formu kaldırıldı; temel format kullanılıyor."); var b = document.querySelector('[data-eylem="obf-yukle"]'); if (b) b.focus();
     } });
   };
+  /* ── VERİLERİ DIŞA AKTAR (S3, 2026-10-01; reisim: "16 olsun" — firma probata'yı bırakırken ya da yedek için bütün verisini tek seferde alır).
+     Seçilen her bölüm ayrı Excel, hepsi tek ZIP. Uygulamada raporların ve yüklenen belgelerin PDF'leri de klasörlerde gelir, büyük firmada
+     arka planda hazırlanır (iş kuyruğu), bağlantı kısa ömürlü ve yalnız firma yöneticisinin hesabıyla açılır (anayasa 5.1). Makette Excel'ler
+     gerçekten iner; PDF yerine OKUBENI.txt. Her dışa aktarım kayda geçer (tarih, kim, bölümler). ─────────────────────────────────────────── */
+  var BAS = { kod: "Kod", ad: "Ad", unvan: "Unvan", kisa: "Kısa ad", no: "No", tarih: "Tarih", durum: "Durum", tur: "Tür", tesis: "Tesis", musteri: "Müşteri",
+    eposta: "E-posta", tel: "Telefon", il: "İl", ilce: "İlçe", adres: "Adres", vergi: "Vergi no", seri: "Seri no", konum: "Bölüm", plan: "Plan", kisi: "Kişi",
+    sonuc: "Sonuç", tutar: "Tutar", aylik: "Aylık", not: "Not", meslek: "Meslek", basla: "İşe başlama", bit: "Bitiş", bas: "Başlangıç",
+    id: "Kimlik", k: "Kod", m: "Müşteri", t: "Tür", vd: "Vergi dairesi", vno: "Vergi no", ilgili: "İlgili kişi", rev: "Revizyon", yukleyen: "Yükleyen",
+    son: "Son giriş", gonderildi: "Gönderildi", ekipman: "Ekipman sayısı", tekrar: "Tekrar", belge: "Belge", kurum: "Kurum", dosya: "Dosya",
+    diploma: "Diploma no", oda: "Oda sicil no", ekipnet: "EKİPNET no", olustu: "Oluşturuldu", ilk: "İlk kontrol", marka: "Marka", model: "Model",
+    cihazTur: "Cihaz türü", env: "Envanter no", eden: "Teslim eden", alan: "Teslim alan", foto: "Fotoğraf", gun: "Gün", aciklama: "Açıklama",
+    baslangic: "Başlangıç", bitis: "Bitiş", teklif: "Teklif", tesisler: "Tesisler", onay: "Onay", pdf: "PDF", v: "Varlık", imzaTel: "Mobil imza telefonu",
+    sonraki: "Sonraki kontrol", gonderim: "Gönderim", imza: "İmza", kdv: "KDV", vade: "Vade", brut: "Brüt", net: "Net", maliyet: "Maliyet", ay: "Ay" };
+  var DIS = [
+    ["musteri", "Müşteriler ve tesisler", function () { return [["musteriler", MV.MUSTERILER], ["tesisler", MV.TESISLER], ["musteri-kullanicilari", MV.MUSTERI_KULLANICI]]; }],
+    ["ekipman", "Ekipmanlar", function () { return [["ekipmanlar", MV.EKIPMAN]]; }],
+    ["plan", "Planlar", function () { return [["planlar", MV.PLANLAR]]; }],
+    ["rapor", "Raporlar (liste ve PDF'ler)", function () { return [["raporlar", MV.RAPORLAR]]; }],
+    ["teklif", "Teklifler ve sözleşmeler", function () { return [["teklifler", MV.TEKLIFLER], ["is-sozlesmeleri", MV.IS_SOZLESMELERI], ["isg-katip", MV.ISG]]; }],
+    ["personel", "Personel, eğitimler, atamalar, izinler", function () { return [["personel", MV.PERSONEL], ["egitimler", MV.EGITIMLER], ["ekipman-atamalari", MV.ATAMALAR], ["izinler", MV.IZINLER]]; }],
+    ["varlik", "Ölçüm cihazları ve zimmetler", function () { return [["olcum-cihazlari", MV.VARLIKLAR], ["zimmet-hareketleri", MV.ZIMMET]]; }],
+    ["muhasebe", "Muhasebe (işler, faturalar, giderler, bordrolar)", function () { return [["isler", MV.ISLER], ["faturalar", MV.FATURALAR], ["giderler", MV.GIDERLER], ["bordrolar", MV.BORDROLAR], ["sabit-giderler", MV.SABIT_GIDER]]; }],
+    ["dokuman", "Dökümanlar", function () { return [["dokumanlar", MV.DOKUMANLAR]]; }]
+  ];
+  var DS = { sec: null };
+  var secili = function () { return DS.sec || DIS.map(function (x) { return x[0]; }); };
+  /* nesne dizisi → satırlar: düz alanlar (metin, sayı, evet/hayır; metin dizisi virgülle) sütun olur; iç içe kayıtlar ayrı dosyada */
+  function satirlar(l) {
+    l = l || [];
+    var duz = function (v) { return v == null || typeof v !== "object" || (Array.isArray(v) && v.every(function (y) { return y == null || typeof y !== "object"; })); };
+    if (l.length && Array.isArray(l[0])) return [l[0].map(function (x, i) { return "Sütun " + (i + 1); })].concat(l.map(function (r) { return r.map(function (v) { return v == null ? "" : typeof v === "object" ? "" : v; }); }));
+    var anahtar = []; l.forEach(function (o) { Object.keys(o || {}).forEach(function (k) { if (anahtar.indexOf(k) < 0 && duz(o[k])) anahtar.push(k); }); });
+    return [anahtar.map(function (k) { return BAS[k] || k; })].concat(l.map(function (o) { return anahtar.map(function (k) {
+      var v = o[k]; return v == null ? "" : Array.isArray(v) ? v.join(", ") : typeof v === "boolean" ? (v ? "Evet" : "Hayır") : v; }); }));
+  }
+  function disaCiz() {
+    var s = secili(), gecmis = MV.FIRMA.disaAktarim || [];
+    return '<section class="a-bolum" aria-labelledby="a-b-disa"><div class="a-alt-bas"><h2 class="a-alt-baslik" id="a-b-disa">Verileri dışa aktar</h2></div>' +
+      '<p class="a-ipucu">Firmanın kayıtları tek ZIP dosyasında: her bölüm ayrı Excel; raporların ve yüklenen belgelerin PDF\'leri klasörlerde. İndirme bağlantısı 24 saat geçerli, yalnız sizin hesabınızla açılır.</p>' +
+      '<fieldset class="a-disa-bolumler"><legend class="a-gizli">Dışa aktarılacak bölümler</legend>' + DIS.map(function (x) {
+        return '<label class="a-onay-kutusu"><input type="checkbox" data-disa="' + x[0] + '"' + (s.indexOf(x[0]) >= 0 ? " checked" : "") + "><span>" + x[1] + "</span></label>";
+      }).join("") + "</fieldset>" +
+      '<div class="a-eylem-cubugu a-eylem-sol">' + MK.tus({ eylem: "disa-aktar", ad: "Dışa aktar (ZIP)", ikon: "download" }) + "</div>" +
+      (gecmis.length ? '<p class="a-etiket a-disa-gecmis-bas">Son dışa aktarımlar</p><ul class="a-disa-gecmis">' + gecmis.slice(0, 5).map(function (g) {
+        return "<li>" + MK.zamanYaz(g.zaman) + " · " + kacis(g.kisi) + ' <span class="a-alt-satir">' + g.bolum + " bölüm · " + kacis(g.ad) + "</span></li>"; }).join("") + "</ul>" : "") +
+      "</section>";
+  }
+  X["disa-aktar"] = function () {
+    var s = secili();
+    if (!s.length) { MK.bildir("En az bir bölüm seçin."); var c = document.querySelector("[data-disa]"); if (c) c.focus(); return; }
+    var gun = MK.BUGUN, dosyalar = [];
+    DIS.filter(function (x) { return s.indexOf(x[0]) >= 0; }).forEach(function (x) {
+      x[2]().forEach(function (d) { dosyalar.push([x[0] + "/" + d[0] + ".xlsx", MK.xlsxBayt(d[0], satirlar(d[1]))]); });
+    });
+    dosyalar.push(["OKUBENI.txt", "probata · " + MV.FIRMA.ad + " · veri dışa aktarımı · " + gun + "\r\nHer bölüm ayrı Excel dosyasında.\r\n" +
+      (s.indexOf("rapor") >= 0 ? "Uygulamada raporların PDF'leri rapor/pdf/ klasörüne, yüklenen belgeler ilgili bölümün belgeler/ klasörüne konur (makette PDF üretilmez).\r\n" : "")]);
+    var ad = "probata-" + MV.firmaKodu().toLocaleLowerCase("tr") + "-veriler-" + gun + ".zip";
+    MK.indir(ad, MK.zip(dosyalar));
+    var ben = MV.kisi(MK.BEN);
+    MV.FIRMA.disaAktarim = [{ zaman: MK.simdi(), kisi: ben ? ben.ad : "—", bolum: s.length, ad: ad }].concat(MV.FIRMA.disaAktarim || []);
+    ayarCiz(); var b = document.querySelector('[data-eylem="disa-aktar"]'); if (b) b.focus();
+  };
   MK.onSecim = function (id, deger) {
     var m;
     if (id === "ay-nusha") { MV.FIRMA.nusha = +deger; ayarCiz(); $(id).focus(); MK.bildir("Rapor nüsha sayısı " + deger + "."); return; }
@@ -148,6 +210,10 @@
   };
   document.addEventListener("change", function (e) {
     var t = e.target;
+    if (t.dataset && t.dataset.disa) {   /* dışa aktarılacak bölüm seçimi */
+      var sl = secili().slice(), j = sl.indexOf(t.dataset.disa); if (t.checked && j < 0) sl.push(t.dataset.disa); else if (!t.checked && j >= 0) sl.splice(j, 1);
+      DS.sec = DIS.map(function (x) { return x[0]; }).filter(function (k) { return sl.indexOf(k) >= 0; }); return;
+    }
     if (t.dataset && t.dataset.kunye) {   /* firma künyesi: alandan çıkınca kaydedilir */
       var kk = t.dataset.kunye, od0 = t.id; MV.FIRMA[kk] = t.value.trim(); ayarCiz(); var o0 = $(od0); if (o0) o0.focus();
       MK.bildir(KUNYE.filter(function (x) { return x[0] === kk; })[0][1] + " kaydedildi."); return;
