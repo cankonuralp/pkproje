@@ -2,8 +2,8 @@
  "maket": "planlar",
  "tarih": "2026-10-01",
  "arac": "tools/olc-bulut.mjs --etkilesim (başsız tarayıcı, 1920 açık tema; gen verilen denemede o genişlik)",
- "toplam": 64,
- "gecen": 64,
+ "toplam": 65,
+ "gecen": 65,
  "denemeler": [
   {
    "ad": "Planlar listesi: müşteri adı kalın (≥ 600), proje adı normal (400)",
@@ -322,6 +322,13 @@
   },
   {
    "ad": "kabul edilen planda Denetime başla yok; ekipmanlarda Rapor oluştur var, ilk rapor planı Denetimde yapar (başlama zamanı o an)",
+   "gen": 1920,
+   "sayfa": "maket/planlarim.html",
+   "hash": "#/plan/2",
+   "gecti": true
+  },
+  {
+   "ad": "P1: plan günü gelmeden (plan 3, 24.09) Rapor oluştur kapalı, nedeni şeritte; eylem de rapor açmaz",
    "gen": 1920,
    "sayfa": "maket/planlarim.html",
    "hash": "#/plan/3",

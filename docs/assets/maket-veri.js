@@ -786,6 +786,9 @@
     MV.EKIPMAN.push({ kod: x[0], tur: x[1], tesis: "t16", konum: x[2], ilk: ilk, plan: 10, marka: MARKA[i % MARKA.length], model: x[1] + "-" + (300 + i * 7), imal: 2015 + i, seri: "SN" + (731200 + i * 37),
       onceki: null });
   });
+  /* planın günü (başlangıç): Plan aç'ta açılan plan ya da tohum planı (tesisin pid / ptarih). P1 (2026-10-01): plan günü gelmeden rapor yok */
+  MV.planGunu = function (pid) { var a = MV.ACILAN_PLANLAR.filter(function (x) { return x.id === pid; })[0]; if (a) return a.tarih;
+    var t = MV.TESISLER.filter(function (x) { return x.pid === pid; })[0]; return t ? t.ptarih : null; };
   /* tesisin ekipman sayısı kayıtlı ekipmandan (Ö5, 2026-10-01: yeni tesise planda eklenen 4 ekipman müşteri kartında 0 görünüyordu — sayı
      tesis kaydındaki sabit alandandı) */
   MV.ekipmanSayisi = function (t) { return MV.EKIPMAN.filter(function (e) { return e.tesis === t.id; }).length; };

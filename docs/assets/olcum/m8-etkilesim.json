@@ -2,8 +2,8 @@
  "maket": "m8",
  "tarih": "2026-10-01",
  "arac": "tools/olc-bulut.mjs --etkilesim (başsız tarayıcı, 1920 açık tema; gen verilen denemede o genişlik)",
- "toplam": 111,
- "gecen": 111,
+ "toplam": 112,
+ "gecen": 112,
  "denemeler": [
   {
    "ad": "önceki kontrolün hafif kusuru listelenir; Giderilmedi → bu raporun kusurlarına girer, sonuç önerisi Uygun değil",
@@ -105,6 +105,13 @@
   },
   {
    "ad": "Kaydet ve kopyala: yalnız kod ve bölüm sorulur, yeni ekipman bu raporun bilgileriyle açılır (madde cevapları gelir, test / fotoğraf gelmez; O2 ile açıklama alanı yok), yeni rapora gidilir, plana girer",
+   "gen": 1920,
+   "sayfa": "maket/rapor.html",
+   "hash": "#/r/ET-1009",
+   "gecti": true
+  },
+  {
+   "ad": "P1: Kaydet ve kopyala plan günü gelmeden açılmaz (pencere söyler, kopyalanmaz)",
    "gen": 1920,
    "sayfa": "maket/rapor.html",
    "hash": "#/r/ET-1009",

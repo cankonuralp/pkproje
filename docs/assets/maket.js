@@ -200,6 +200,9 @@
   /* rapor oluşturulabilir: kabul edilen plan da (2026-09-29, reisim: "Planı kabul ettikten sonra denetime başla tuşu olmasına gerek yok
      gereksiz") — ilk rapor oluşturulunca plan kendiliğinden "Denetimde" olur, başlama zamanı o an */
   var calisir = function (p) { return p.durum === "kabul" || p.durum === "denetimde" || p.durum === "tamam"; };
+  /* P1 (2026-10-01, reisim: "Plan günü gelmeden rapor açılmasına izin vermesin sistem"): plan günü (başlangıç) gelmeden rapor oluşturulamaz —
+     uyarı değil ENGEL (reisim'in açık kararı); düğme kapalı, neden plan içinde şeritte */
+  var erken = function (p) { return p.tarih > BUGUN; };
   var ekipmanAcik = function (p) { return p.durum === "kabul" || p.durum === "denetimde"; };   /* ekipman eklenir, Excel'den yüklenir */
 
   var q = new URLSearchParams(location.search);
@@ -415,7 +418,7 @@
           ikon("undo-2", "a-ikon-kucuk") + "Etkinleştir</button></div></div>";
         return '<div class="a-eylem"><div class="a-eylem-tuslar">' + (raporuVar(p, e.kod) ? "" : '<button class="a-ikon-tus" type="button" data-eylem="ekipman-pasif" data-id="' + p.id + '" data-kod="' + e.kod + '" aria-label="' + e.kod + ' pasife al" title="Pasife al">' + ikon("ban") + "</button>") +
           (raporuVar(p, e.kod) ? "" : '<button class="a-tus a-tus-ikincil" type="button" data-eylem="rapor-olustur" data-id="' + p.id + '" data-kod="' + e.kod + '"' +
-            (MV.gunlukSure(BEN).dolu ? ' disabled aria-describedby="a-mesai-sebep"' : "") + ">" +
+            (erken(p) ? ' disabled aria-describedby="a-erken-sebep"' : MV.gunlukSure(BEN).dolu ? ' disabled aria-describedby="a-mesai-sebep"' : "") + ">" +
           ikon("file-plus", "a-ikon-kucuk") + "Rapor oluştur</button>") + "</div></div>";
       } }
     ];
@@ -509,6 +512,7 @@
     if (d === "kabul" || calisir(p)) kontrol =
       /* günlük süre (212): dolunca Rapor oluştur kapalı, sebep çubukta */
       /* N6 (2026-09-30): günlük süre üst çubukta (açılır); burada yalnız süre dolunca neden */
+      (erken(p) ? '<div class="a-mesai-dolu-serit">' + MK.serit("uyari", "calendar", "Plan günü " + tno(p.tarih) + "; rapor o gün oluşturulabilir.", "a-erken-sebep") + "</div>" : "") +
       (d !== "tamam" && MV.mesai().acik && MV.gunlukSure(BEN).dolu ? '<div class="a-mesai-dolu-serit">' + MK.serit("uyari", "clock", "Günlük süre doldu (normal " + MV.mesai().normal + " + mesai " + MV.mesai().mesai + " dk); bugün yeni rapor oluşturulamaz.", "a-mesai-sebep") + "</div>" : "") +
       '<div class="a-alt-bolum a-plan-bolum"><div class="a-alt-bas"><h3 class="a-alt-baslik" id="a-ekipman-baslik">Ekipmanlar</h3><span class="a-sayac" id="a-sayac-e"></span>' +
         /* 2026-09-27 (reisim: "ekipan listesinbi excelden export etme ve inport etme olsun"): Excel'e aktar her zaman; Excel'den yükle
@@ -674,6 +678,7 @@
   X["geri-al"] = function (el) { var p = pl(el); if (p && p.durum === "tamam") { p.durum = "denetimde"; p.bitti = null; kaydet(p, simdi(), BEN, "Tamamlama geri alındı"); goster(false); MK.bildir("Tamamlama geri alındı; plan yeniden denetime açıldı."); } };
   X["rapor-olustur"] = function (el) {
     var p = pl(el);
+    if (p && calisir(p) && erken(p)) { MK.bildir("Plan günü " + tno(p.tarih) + "; rapor o gün oluşturulabilir."); return; }   /* P1 */
     if (p && calisir(p) && MV.gunlukSure(BEN).dolu) { MK.bildir("Günlük süre doldu (mesai takibi); bugün yeni rapor oluşturulamaz."); return; }   /* 212 */
     if (p && calisir(p) && !raporuVar(p, el.dataset.kod)) {   /* ekipman başına bir rapor (2026-09-30, 203) */
       var r = { no: raporNo("0926", raporSira++).replace(/^[^-]+/, MV.firmaKodu()), kod: el.dataset.kod, durum: "taslak", olustu: simdi(), sonuc: null };

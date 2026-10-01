@@ -2109,6 +2109,13 @@ müşteri filtresi yüzlerce firmaya uygun · **Ö5** uçtan uca deneme (teklif 
 Ek (aynı gün, iş sürerken, reisim birebir): *"her tura başlamadan önce bana sorma turları sırayla yap"* → turlar arasında onay sorulmaz, kalemler
 sırayla yapılır, her biri ölçülüp kaydedilir.
 
+**Kırk beşinci tur (2026-10-01, reisim birebir; Ö1–Ö6 kanıt özetindeki üç soruya ve rol araştırmasına cevap):** *"Plan günü gelmeden rapor
+açılmasına izin vermesin sistem 3 olsun önerdiklerine gerek yok, müşteri girişine şunu ekleyebiliriz, muayene personeli  belgeleri kısmı olur o
+müşteriye giden muayene personelinin firmanın izin verdiği belgelerini görür (ekipnet belgesi isg belgeleri vs)"* → **P1** plan günü gelmeden rapor
+oluşturulamaz (engel — reisim'in açık kararı, "kural uyarıdır" genel ilkesinin istisnası) · **P2** soru 3 evet: müşterinin girişi yokken düğme
+"Giriş ekle" · rol araştırmasının önerileri (§3.9) ve soru 1 (örnek veri ölçeği) yapılmaz · **P3** müşteri panelinde **Muayene personeli
+belgeleri**: o müşteriye giden muayene personelinin, firmanın izin verdiği belgeleri (EKİPNET belgesi, İSG belgeleri vb.).
+
 **Açık kalanlar:** ~~Ana sayfada İSGGM duyuruları~~ (2026-09-27: makette eklendi; okuma işi uygulamada) (reisim 2026-09-26: *"Ana sayfada isgüm duyurularını gösterebilir miyiz ? Bunu
 yapılacaklar listesine ekle"*; öneri: ÇSGB İSGGM duyurular sayfası — https://www.csgb.gov.tr/isggm/duyurular/ — sunucuda günde birkaç kez
 okunur (pg-boss işi, §8.9), Ana sayfada son 5 duyuru başlık + tarih + kaynağa bağlantı; yalnız ekranda, bildirim yok; sayfa RSS vermiyorsa
@@ -2146,6 +2153,12 @@ revizyon, alan kopyalama, hafif kusur devri, meslek eşleşme denetimi).
 - Emsal ürünler: https://opwire.app/iso-17020-periyodik-kontrol-yazilimi/ · https://17020muayene.vidco.com.tr/ · https://akuple.com/asansor-kontrol-yazilimi/ · https://ensyazilim.com/
 
 ## 11 · Değişiklik günlüğü
+- 2026-10-01 (213): **P1 · Plan günü gelmeden rapor oluşturulamaz — ENGEL** (§9 kırk beşinci tur; reisim'in açık kararı, "kural uyarıdır"
+  genel ilkesinin istisnası; mesai sınırı ve eşsiz kod gibi). Plan içinde plan günü (başlangıç) bugünden sonraysa "Rapor oluştur" kapalı, nedeni
+  şeritte ("Plan günü GG.AA.YYYY; rapor o gün oluşturulabilir."); eylem de reddeder. Saha raporundaki "Kaydet ve kopyala" da planın gününe bakar
+  (`MV.planGunu`: Plan aç'ta açılan plan ya da tohum planı). Kırılan deneme (2026-10-01): "kabul edilen planda … ilk rapor planı Denetimde yapar"
+  plan 3'te (24.09) koşuyordu, artık orada rapor açılamaz → bugünkü plan 2'ye (23.09) taşındı. Yeni kilitler: planlar etkileşim (plan 3 engeli;
+  düzeltmesiz 64/65 düştü) · m8 etkileşim (kopya engeli; düzeltmesiz 111/112 düştü).
 - 2026-10-01 (212): **Ö6 · Rol beklentileri araştırması** (§9 kırk dördüncü tur) → yeni **§3.9**: altı rol (muayene uzmanı, teknik yönetici,
   planlama, firma yöneticisi, muhasebe, müşteri) için beklenti · makette var · açık öneri tablosu ve öncelik sırası; kaynaklar §10. Hiçbiri
   yapılmadı — reisim karar verir. Ayrıca 2026-09-25'te bir düzenlemede silinmiş "## 4 · Mevzuat bulguları" başlığı geri kondu.
