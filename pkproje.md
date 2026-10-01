@@ -2153,6 +2153,10 @@ revizyon, alan kopyalama, hafif kusur devri, meslek eşleşme denetimi).
 - Emsal ürünler: https://opwire.app/iso-17020-periyodik-kontrol-yazilimi/ · https://17020muayene.vidco.com.tr/ · https://akuple.com/asansor-kontrol-yazilimi/ · https://ensyazilim.com/
 
 ## 11 · Değişiklik günlüğü
+- 2026-10-01 (214): **P2 · Girişi olmayan müşteride "Giriş ekle"** (§9 kırk beşinci tur, "3 olsun"). Müşteri kartında giriş hiç yoksa (e-posta
+  yazılmamış, ek giriş yok) düğme ve pencere başlığı "Giriş ekle"; giriş varsa "Ek giriş ekle". Düzeltme: 211'deki gözlemim eksikti — Deneme
+  Kazan'ın e-postasıyla açılmış ana girişi vardı (kullanıcı henüz girmemişti), orada "Ek giriş ekle" doğruydu; değişiklik yalnız girişsiz müşteride
+  görünür. Kilit m2 etkileşim; düzeltmesiz 30/31 düştü.
 - 2026-10-01 (213): **P1 · Plan günü gelmeden rapor oluşturulamaz — ENGEL** (§9 kırk beşinci tur; reisim'in açık kararı, "kural uyarıdır"
   genel ilkesinin istisnası; mesai sınırı ve eşsiz kod gibi). Plan içinde plan günü (başlangıç) bugünden sonraysa "Rapor oluştur" kapalı, nedeni
   şeritte ("Plan günü GG.AA.YYYY; rapor o gün oluşturulabilir."); eylem de reddeder. Saha raporundaki "Kaydet ve kopyala" da planın gününe bakar

@@ -2,9 +2,16 @@
  "maket": "m2",
  "tarih": "2026-10-01",
  "arac": "tools/olc-bulut.mjs --etkilesim (başsız tarayıcı, 1920 açık tema; gen verilen denemede o genişlik)",
- "toplam": 30,
- "gecen": 30,
+ "toplam": 31,
+ "gecen": 31,
  "denemeler": [
+  {
+   "ad": "P2: girişi olmayan müşteride düğme ve pencere başlığı \"Giriş ekle\"; girişi olanda \"Ek giriş ekle\"",
+   "gen": 1920,
+   "sayfa": "maket/musteriler.html",
+   "hash": "#/m/m5",
+   "gecti": true
+  },
   {
    "ad": "tesis kartı · planda eklenen ekipman Ekipman sayısına girer (müşteri kartında da)",
    "gen": 1920,

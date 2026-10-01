@@ -140,6 +140,8 @@
       return MK.tus({ eylem: "ek-parola-gonder", ad: k.durum === "hazir" ? "Parolayı gönder" : "Yeniden gönder", ikon: "send", sinif: "a-tus-ikincil", veri: { i: MV.MUSTERI_KULLANICI.indexOf(k) } });
     } }
   ];
+  /* P2 (2026-10-01, reisim: "3 olsun"): müşterinin hiç girişi yoksa (e-posta yazılmamış, ek giriş yok) düğme "Giriş ekle"; varsa "Ek giriş ekle" */
+  var girisAd = function (m) { return !m.pasif && m.giris.durum === "yok" && !ekGiris(m).length ? "Giriş ekle" : "Ek giriş ekle"; };
   function girisHtml(m) {
     var g = m.pasif ? { durum: "pasif" } : m.giris, ek = ekGiris(m);
     var durum = g.durum === "pasif" ? "Müşteri pasif; giriş kapalı" : g.durum === "etkin" ? "Son giriş " + MK.zamanYaz(g.son) : g.durum === "gonderildi" ? "Parola " + MK.zamanYaz(g.gonderildi) + " tarihinde gönderildi; henüz girmedi" : g.durum === "hazir" ? "Giriş açık; parola henüz gönderilmedi" : "Müşterinin e-postası yok";
@@ -151,7 +153,7 @@
           MK.tus({ eylem: "parola-gonder", ad: g.durum === "hazir" ? "Parolayı gönder" : "Parolayı yeniden gönder", ikon: "send", sinif: "a-tus-ikincil" }) +
           MK.tus({ eylem: "on-bilgi-gonder", ad: "Ön bilgilendirme formu gönder", ikon: "file-text", sinif: "a-tus-ikincil" })) + "</div>") +
       '<div class="a-alt-bas a-alt-bas-ic"><h3 class="a-alt-baslik">Ek girişler</h3><span class="a-sayac"><b>' + ek.length + "</b> kişi</span>" +
-        (m.pasif ? "" : MK.tus({ eylem: "kullanici-ac", ad: "Ek giriş ekle", ikon: "user-plus", sinif: "a-tus-ikincil a-bolum-tus" })) + "</div>" +
+        (m.pasif ? "" : MK.tus({ eylem: "kullanici-ac", ad: girisAd(m), ikon: "user-plus", sinif: "a-tus-ikincil a-bolum-tus" })) + "</div>" +
       '<div class="a-liste-kap">' + (ek.length ? MK.tablo({ baslik: "Ek girişler", sinif: "a-tablo-mkullanici", sutunlar: KULLANICI_SUTUN, kayitlar: ek })
         : '<p class="a-bos-satir">Ek giriş yok.</p>') + "</div></section>";
   }
@@ -316,7 +318,7 @@
           ek: ' maxlength="40"' }) +
         A("sgk", "SGK DETSİS no", d.sgk, { genis: true, sinif: "a-girdi-sgk", ek: ' inputmode="numeric" maxlength="26"', ipucu: "26 hane. Boşsa kayıt olur; rapor imzalanırken hatırlatılır." }) + "</div>";
     } else if (W.tur === "kullanici") {
-      $("a-pencere-baslik").textContent = "Ek giriş ekle";
+      $("a-pencere-baslik").textContent = girisAd(MV.musteri(W.m));
       var t = etkinTesisler(MV.musteri(W.m));
       kaydet = { ad: "Girişi aç", ikon: "check" };
       govde = '<p class="a-pencere-ozet"><b>' + kacis(MV.musteri(W.m).unvan) + "</b><br>Kişiye özel giriş; parolayı sistem üretir, siz “Parolayı gönder” deyince bu e-postaya gider.</p>" + '<div class="a-form">' +
