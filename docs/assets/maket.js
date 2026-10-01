@@ -696,7 +696,7 @@
      yok (Raporlar ile aynı), taslak rapor rapor ekranındaki Ön izle'den */
   X["toplu-pdf"] = function (el) {
     var p = pl(el), l = MK.taban("r", raporlar(p)).filter(function (r) { return MK.cipGecer("r", r) && r.durum !== "taslak"; }).map(function (r) { return MV.rapor(r.no); }).filter(Boolean);
-    if (!l.length) { MK.bildir("Süzgeçte gönderilmiş rapor yok; taslak rapor PDF'e girmez."); return; }
+    if (!l.length) { MK.bildir("Filtrede gönderilmiş rapor yok; taslak rapor PDF'e girmez."); return; }
     l.sort(function (a, b) { return a.no < b.no ? -1 : 1; });
     MK.pdfGoster({ dosya: p.no + "-raporlar.pdf", baslik: p.no + " · " + l.length + " rapor", icerik: l.map(function (r) { return MB.belge(MV.tur(MV.ekipman(r.kod).tur), MV.raporBelge(r)); }).join("") });
   };
@@ -878,7 +878,7 @@
       var p = E.plan, n = E.secili.length;
       E.secili.forEach(function (kod) { p.ekp.push(kod); p.sonradan.push(kod); ortakEkipman(p, kod); kaydet(p, simdi(), BEN, "Kayıtlı ekipman plana alındı", kod + " · " + SICIL[kod].tur.ad); });
       var gorunur = kaydaGit(E.secili[0]);
-      ekleKapat(); goster(false); MK.bildir(n + " kayıtlı ekipman plana eklendi" + (gorunur ? "." : "; süzgeç yüzünden listede görünmüyor."));
+      ekleKapat(); goster(false); MK.bildir(n + " kayıtlı ekipman plana eklendi" + (gorunur ? "." : "; filtre yüzünden listede görünmüyor."));
     }
   };
   X["yeni-kaydet"] = function () {
@@ -887,7 +887,7 @@
       SICIL[kod] = { kod: kod, tur: E.tur, konum: E.konum.trim() || "Konum yazılmadı", tesis: p.id, onceki: null, eklendi: simdi(), seri: E.seri.trim() };
       p.ekp.push(kod); p.sonradan.push(kod); ortakEkipman(p, kod); kaydet(p, simdi(), BEN, "Ekipman eklendi", kod + " · " + E.tur.ad);
       var gor = kaydaGit(kod);
-      ekleKapat(); goster(false); MK.bildir(kod + " plana eklendi" + (gor ? ". Raporu satırındaki “Rapor oluştur” açar." : "; süzgeç yüzünden listede görünmüyor."));
+      ekleKapat(); goster(false); MK.bildir(kod + " plana eklendi" + (gor ? ". Raporu satırındaki “Rapor oluştur” açar." : "; filtre yüzünden listede görünmüyor."));
     }
   };
   X["not-ekle"] = function (el) {

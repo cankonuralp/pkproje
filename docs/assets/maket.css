@@ -1492,3 +1492,9 @@ a.a-yuz:hover { border-color: var(--kenar-alan); background: var(--zemin); }
 .a-disa-bolumler { border: 0; margin: 8px 0 0; padding: 0; display: grid; grid-template-columns: repeat(auto-fill, minmax(min(100%, 260px), 1fr)); gap: 0 16px; }
 .a-disa-gecmis-bas { margin: 16px 0 4px; }
 .a-disa-gecmis { list-style: none; margin: 0; padding: 0; display: grid; gap: 6px; font-size: var(--boy-kucuk); }
+
+/* FİLTRE LEVHASI · UZUN LİSTE (Ö4, 2026-10-01): 8'den fazla seçenek (ör. yüzlerce müşteri) çip değil — arama kutusu + kayan dikey liste */
+.a-levha-liste { border: 1px solid var(--kenar); border-radius: var(--r-orta); padding: 6px; background: var(--kart); }
+.a-levha-kayan { max-height: 240px; overflow-y: auto; }
+.a-levha-liste .a-secenek[aria-selected="true"] .a-ikon { visibility: visible; }
+.a-levha-liste .a-secenek[aria-selected="true"] { font-weight: 700; }

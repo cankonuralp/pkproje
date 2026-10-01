@@ -159,7 +159,7 @@
       document.body.insertBefore(kok, ana);
       kok.querySelector(".a-govde").appendChild(ana);
       document.body.insertAdjacentHTML("beforeend",
-        '<dialog class="a-pencere" id="a-levha" aria-labelledby="a-levha-baslik"><div class="a-pencere-bas"><h2 id="a-levha-baslik">Süzgeç</h2>' +
+        '<dialog class="a-pencere" id="a-levha" aria-labelledby="a-levha-baslik"><div class="a-pencere-bas"><h2 id="a-levha-baslik">Filtre</h2>' +
           '<button class="a-ikon-tus" type="button" data-eylem="levha-kapat" aria-label="Kapat">' + I("x") + "</button></div>" +
           '<div class="a-pencere-govde" id="a-levha-govde"></div><div class="a-pencere-alt">' +
           '<button class="a-tus a-tus-ikincil" type="button" data-eylem="temizle">Temizle</button>' +
@@ -204,7 +204,7 @@
     MK.mesaiUstCiz();
     /* süzgeç levhası (telefonda seçiciler) ve bildirim — her sayfada bir tane */
     document.body.insertAdjacentHTML("beforeend",
-      '<dialog class="a-pencere" id="a-levha" aria-labelledby="a-levha-baslik"><div class="a-pencere-bas"><h2 id="a-levha-baslik">Süzgeç</h2>' +
+      '<dialog class="a-pencere" id="a-levha" aria-labelledby="a-levha-baslik"><div class="a-pencere-bas"><h2 id="a-levha-baslik">Filtre</h2>' +
         '<button class="a-ikon-tus" type="button" data-eylem="levha-kapat" aria-label="Kapat">' + I("x") + "</button></div>" +
         '<div class="a-pencere-govde" id="a-levha-govde"></div><div class="a-pencere-alt">' +
         '<button class="a-tus a-tus-ikincil" type="button" data-eylem="temizle">Temizle</button>' +
@@ -240,7 +240,7 @@
   MK.suzgecHtml = function (on) {
     var t = SZ_TANIM[on], secicili = t.seciciler.length > 0;
     return '<details class="a-suzgec-kutu" data-kutu="' + on + '"' + (kutuAcik(on) ? " open" : "") + '><summary class="a-suzgec-bas">' + ikon("sliders-horizontal", "a-ikon-kucuk") +
-      '<span class="a-suzgec-baslik">Süzgeçler</span><span class="a-suzgec-say" hidden></span>' + ikon("chevron-down", "a-ikon-kucuk a-acilir-ok") + "</summary>" +
+      '<span class="a-suzgec-baslik">Filtreler</span><span class="a-suzgec-say" hidden></span>' + ikon("chevron-down", "a-ikon-kucuk a-acilir-ok") + "</summary>" +
       '<div class="a-suzgec" data-sz="' + on + '"' + (secicili ? "" : " data-secicisiz") + ">" +
       /* alan alan arama; genel aramanın yerinde, ilk sırada (reisim 2026-09-28: "ekipman türüne rapor numarasına göre ayrı ayrı arayabilmeliyim"): tanim.alanlar = [{ k, ad, ipucu, metin(kayıt) }] */
       (t.alanlar ? '<div class="a-suzgec-alanlar" style="flex-basis:' + t.alanlar.length * 212 + 'px">' + t.alanlar.map(function (x) {
@@ -251,8 +251,8 @@
         '<input type="search" data-ara="' + on + '" placeholder="' + t.ipucu + '" autocomplete="off">' +
         '<button class="a-ara-sil" type="button" data-eylem="ara-sil" aria-label="Aramayı temizle">' + ikon("x", "a-ikon-kucuk") + "</button></label>") +
       (secicili ? '<button class="a-suzgec-tus" type="button" data-eylem="levha-ac" aria-haspopup="dialog">' + ikon("sliders-horizontal") +
-        'Süzgeç <span class="a-suzgec-rozet" hidden></span></button>' : "") +
-      (t.cipler.length ? '<div class="a-cipler" role="group" aria-label="' + t.birim + ' durumu süzgeci"></div>' : "") +
+        'Filtre <span class="a-suzgec-rozet" hidden></span></button>' : "") +
+      (t.cipler.length ? '<div class="a-cipler" role="group" aria-label="' + t.birim + ' durumu filtresi"></div>' : "") +
       '<div class="a-suzgec-sag"><div class="a-seciciler"></div>' +
         '<button class="a-temizle" type="button" data-eylem="temizle">' + ikon("filter-x", "a-ikon-kucuk") + "Temizle</button></div>" +
       "</div></details>";
@@ -261,7 +261,7 @@
   function kutuSay(on) {
     var k = kap(on), y = k && k.closest(".a-suzgec-kutu") && k.closest(".a-suzgec-kutu").querySelector(".a-suzgec-say"); if (!y) return;
     var n = (SZ[on].ara.trim() ? 1 : 0) + SZ[on].secili.length + aktifSecici(on) + alanSay(on);
-    y.hidden = !n; y.textContent = n ? n + " süzgeç uygulandı" : "";
+    y.hidden = !n; y.textContent = n ? n + " filtre uygulandı" : "";
   }
   /* seçicinin başlangıç değeri `bas` (verilmezse "tumu"). `bas` taşıyan seçici GÖRÜNÜM ANAHTARIDIR (ör. Çalışanlar /
      Ayrılanlar / Hepsi, kalıp 8: "süzgeç değil görünüm anahtarı"): süzgeç sayılmaz, Temizle onu sıfırlamaz (sıralama gibi) */
@@ -307,7 +307,7 @@
       return '<div class="a-secici' + (x.siralama ? " a-secici-sira" : "") + '" data-secici="' + x.k + '">' +
         '<button class="a-secici-tus" type="button" aria-haspopup="listbox" aria-expanded="false" data-secici-ac="' + x.k + '">' +
         '<span class="a-secici-etiket">' + x.ad + '</span><span class="a-secici-deger">' + kacis(gor[1]) + "</span>" + ikon("chevron-down", "a-ikon-kucuk") + "</button>" +
-        '<div class="a-secici-liste" role="listbox" aria-label="' + x.ad + '" hidden>' +
+        '<div class="a-secici-liste" role="listbox" aria-label="' + x.ad + '" hidden>' + uzunAra(sec, x.ad) +
         sec.map(function (o) {
           return '<button class="a-secenek" type="button" role="option" aria-selected="' + (o[0] === SZ[on].sec[x.k]) + '" data-sec="' + x.k + '" data-deger="' + kacis(o[0]) + '">' +
             ikon("check", "a-ikon-kucuk") + '<span class="a-kirp">' + kacis(o[1]) + "</span></button>";
@@ -317,12 +317,28 @@
     if (r) { r.hidden = !n; r.textContent = n || ""; }
     if ($("a-levha").open && $("a-levha").dataset.sz === on) levhaCiz(on);
   };
+  /* Ö4 (2026-10-01, reisim: "filtrede tek tek firmalar var yüzlerce firma olunca kullanışlı değil daha mantıklı filtreler yap"): kalıp 19
+     filtrelerde de — 8'den fazla seçenekte arama kutusu; telefonda uzun liste çip değil, aranır ve kayan dikey liste (seçili en üstte) */
+  var UZUN = 8;
+  function uzunAra(sec, ad) {
+    return sec.length > UZUN ? '<input class="a-girdi a-secim-ara" type="search" data-secim-ara="1" placeholder="Ara" aria-label="' + kacis(ad) + ' içinde ara" autocomplete="off">' +
+      '<p class="a-bos-satir a-secim-yok" hidden>Bu adla seçenek yok.</p>' : "";
+  }
   function levhaCiz(on) {
     $("a-levha").dataset.sz = on;
     $("a-levha-govde").innerHTML = SZ_TANIM[on].seciciler.map(function (x) {
+      var sec = x.secenek(), cur = SZ[on].sec[x.k];
+      if (sec.length > UZUN) {
+        var sirali = sec.filter(function (o) { return o[0] === cur; }).concat(sec.filter(function (o) { return o[0] !== cur; }));
+        return '<div class="a-levha-grup"><p class="a-levha-grup-ad">' + x.ad + '</p><div class="a-levha-liste" role="listbox" aria-label="' + x.ad + '">' + uzunAra(sec, x.ad) +
+          '<div class="a-levha-kayan">' + sirali.map(function (o) {
+            return '<button class="a-secenek" type="button" role="option" aria-selected="' + (o[0] === cur) + '" data-sec="' + x.k + '" data-deger="' + kacis(o[0]) + '">' +
+              ikon("check", "a-ikon-kucuk") + '<span class="a-kirp">' + kacis(o[1]) + "</span></button>";
+          }).join("") + "</div></div></div>";
+      }
       return '<div class="a-levha-grup"><p class="a-levha-grup-ad">' + x.ad + '</p><div class="a-levha-secenekler">' +
-        x.secenek().map(function (o) {
-          return '<button class="a-cip" type="button" aria-pressed="' + (o[0] === SZ[on].sec[x.k]) + '" data-sec="' + x.k + '" data-deger="' + kacis(o[0]) + '">' + kacis(o[1]) + "</button>";
+        sec.map(function (o) {
+          return '<button class="a-cip" type="button" aria-pressed="' + (o[0] === cur) + '" data-sec="' + x.k + '" data-deger="' + kacis(o[0]) + '">' + kacis(o[1]) + "</button>";
         }).join("") + "</div></div>";
     }).join("");
   }
@@ -399,7 +415,7 @@
   MK.bosSuzgec = function (on) {
     return MK.imkansiz(on)
       ? MK.bos({ ikon: "circle-alert", baslik: SZ_TANIM[on].imkansiz, metin: "“ve” seçiliyken aynı gruptan iki çip birlikte hiçbir kayda uymaz. “veya” ile ikisine uyanlar birlikte listelenir.", eylem: '<button class="a-tus a-tus-ikincil" type="button" data-kip="veya">“veya”ya geç</button>' }, on)
-      : MK.bos({ ikon: "search", baslik: "Süzgece uyan " + SZ_TANIM[on].birim + " yok", metin: "Arama ya da süzgeç değiştirilince liste yeniden dolar.", eylem: '<button class="a-tus a-tus-ikincil" type="button" data-eylem="temizle">Süzgeci temizle</button>' }, on);
+      : MK.bos({ ikon: "search", baslik: "Filtreye uyan " + SZ_TANIM[on].birim + " yok", metin: "Arama ya da filtre değiştirilince liste yeniden dolar.", eylem: '<button class="a-tus a-tus-ikincil" type="button" data-eylem="temizle">Süzgeci temizle</button>' }, on);
   };
   /* bir süzgeçli listeyi baştan sona çizer (çipler, sayaç, liste, sayfalayıcı): o = { on, kayitlar, sayacId, listeId,
      sayfaId?, tablo: {…MK.tablo}, bosVeri (MK.bos nesnesi ya da html), sirala(liste)? } */
@@ -1246,7 +1262,7 @@
     if (t.id === "a-imza-pin" && IMZ) { IMZ.pin = t.value.replace(/\D/g, ""); if (IMZ.pin !== t.value) t.value = IMZ.pin; return; }   /* iç belge imzası PIN */
     if (zamanYaz(t)) return;   /* tarih / saat alanı */
     if (t.dataset && t.dataset.secimAra) {   /* seçim alanının arama kutusu: seçenekleri süzer */
-      var q = MK.tr(t.value.trim()), l = t.closest(".a-secici-liste"), n = 0;
+      var q = MK.tr(t.value.trim()), l = t.closest(".a-secici-liste, .a-levha-liste"), n = 0;
       l.querySelectorAll(".a-secenek").forEach(function (b) { var g = !q || MK.tr(b.textContent).indexOf(q) >= 0; b.hidden = !g; if (g) n++; });
       l.querySelector(".a-secim-yok").hidden = n > 0; return;
     }

@@ -318,7 +318,7 @@
      raporların PDF'i tek dosyada, her rapor kendi sayfalarında; taslağın PDF'i yok */
   X["toplu-pdf"] = function () {
     var l = MK.taban("r", benim()).filter(function (r) { return MK.cipGecer("r", r) && r.durum !== "taslak"; }).sort(function (a, b) { return a.no < b.no ? -1 : 1; });
-    if (!l.length) { MK.bildir("Süzgeçte PDF'i olan rapor yok; taslak rapor PDF'e girmez."); return; }
+    if (!l.length) { MK.bildir("Filtrede PDF'i olan rapor yok; taslak rapor PDF'e girmez."); return; }
     MK.pdfGoster({ dosya: "raporlar-" + MK.BUGUN + ".pdf", baslik: l.length + " rapor", icerik: l.map(function (r) { return MB.belge(MV.tur(ekp(r).tur), MV.raporBelge(r)); }).join("") });
   };
   /* 2026-09-27: rapor belgesi yazdırma penceresinden PDF olur (uygulamada PDF sunucuda üretilir); imza penceresinde seçili raporların hepsi, her biri ayrı sayfa */

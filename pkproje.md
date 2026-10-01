@@ -2077,6 +2077,18 @@ diye açıklandıktan sonra): *"Genel aramaya gerek yok 16 olsun"* → genel ara
 Ek (2026-10-01, reisim birebir): *"Sütun adları türkçe olsun ve örnek çıktı ver"* → **S4:** dışa aktarımdaki bütün sütun adları Türkçe (kod adı
 kalmaz, denetimle); örnek ZIP reisim'e verildi.
 
+**Kırk dördüncü tur (2026-10-01, reisim birebir; telefonda Planlar süzgeç levhasının görüntüsüyle — müşteri çipleri tek tek):** *"böyle uygun ama
+raporların her birisini pdf olarak imzalı halleri ve şirketler egöre ayrılmış şekilde indirebiliyor olmam lazım , ve hatta müşteriye göre kendi
+bulutuna kurabilir o buluta otomatik kayıt ettirebiliyor olmam lazım , bunu kurgula sonra, bir muayene firmasıymışsın gibi, 0 dan teklif plan açma
+denetim yapma fatura kesme gibi tüm adımları sitenin tüm fonksiyonlarını tek tek kontrol et dene, müşteri görünümüne de bak, hangi roldeki
+personelin bu uygulamadan beklentileri neler olabilir o role göre internetten derin araştırma ve analiz yapıp bak. Müşteri gözünde toplu indirme
+uygunsuzları toplu indirme excel olarak indirme ve excel de link olmalı, linke tıklayınca ilgili rapor açılmalı. "rapor" yazsın tıklayınca açılsın
+mesela. attığım görselde gördüğün gibi filtrede tek tek firmalar var yüzlerce firma olunca kullanışlı değil daha mantıklı filtreler yap ve
+isimlerini süzgeç değil filtre olarak değiştir."* → **Ö1** imzalı rapor PDF'leri müşteri / tesis klasörlü indirme · **Ö2** müşteriye göre bulut
+klasörüne otomatik kayıt · **Ö3** müşteri panelinde toplu indirme, uygunsuzlar Excel'inde "Rapor" bağlantısı · **Ö4** "Süzgeç" → "Filtre",
+müşteri filtresi yüzlerce firmaya uygun · **Ö5** uçtan uca deneme (teklif → plan → denetim → onay → imza → fatura → tahsilat → müşteri) ·
+**Ö6** rol beklentileri araştırması.
+
 **Açık kalanlar:** ~~Ana sayfada İSGGM duyuruları~~ (2026-09-27: makette eklendi; okuma işi uygulamada) (reisim 2026-09-26: *"Ana sayfada isgüm duyurularını gösterebilir miyiz ? Bunu
 yapılacaklar listesine ekle"*; öneri: ÇSGB İSGGM duyurular sayfası — https://www.csgb.gov.tr/isggm/duyurular/ — sunucuda günde birkaç kez
 okunur (pg-boss işi, §8.9), Ana sayfada son 5 duyuru başlık + tarih + kaynağa bağlantı; yalnız ekranda, bildirim yok; sayfa RSS vermiyorsa
@@ -2109,6 +2121,11 @@ revizyon, alan kopyalama, hafif kusur devri, meslek eşleşme denetimi).
 - Emsal ürünler: https://opwire.app/iso-17020-periyodik-kontrol-yazilimi/ · https://17020muayene.vidco.com.tr/ · https://akuple.com/asansor-kontrol-yazilimi/ · https://ensyazilim.com/
 
 ## 11 · Değişiklik günlüğü
+- 2026-10-01 (199): **Ö4 · "Süzgeç" → "Filtre"; uzun seçenek listesi aranır** (§9 kırk dördüncü tur). Ekranda görünen bütün "Süzgeç / süzgeç"
+  yazıları "Filtre / filtre" (levha başlığı, Filtreler kutusu, "n filtre uygulandı", "Filtreye uyan … yok", bildirimler); kod adları aynı.
+  Kalıp 19 (8'den fazla seçenekte arama kutusu) filtrelere de uygulandı: masaüstünde açılır listenin üstünde **Ara**; telefonda Filtre
+  levhasında uzun liste (ör. müşteriler) çip değil, **arama kutusu + kayan dikey liste**, seçili en üstte. Yüzlerce müşteride yazarak bulunur.
+  Bütün modüllerin filtreleri tek üreticiden geldiği için hepsinde geçerli. 2 deneme yeni, 1 güncellendi.
 - 2026-10-01 (198): **S4 · Dışa aktarımda sütunlar Türkçe, hücreler okunur** (§9 kırk üçüncü tur ek). Her tablonun sütunları tek tek tanımlı
   (21 tablo; ör. "Ekipman kodu", "Bölüm (kullanım yeri)", "Kalibrasyon bitişi"); kimlik kodları ada çevrilir (müşteri unvanı, tesis adı, personel
   adı, ekipman / cihaz / eğitim / izin / gider türü, durumlar); tarihler GG.AA.YYYY (saatliler GG.AA.YYYY SS:DD); iç içe kayıtlar tek hücrede

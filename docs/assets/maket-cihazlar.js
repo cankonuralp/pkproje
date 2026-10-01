@@ -359,7 +359,7 @@
   /* ara kontrol kayıtlarının PDF'i: süzgeçten geçen YAPILMIŞ kayıtlar, tarih sırasıyla; temel format (firma formatı §3.7 satır 12) */
   X["ara-pdf"] = function () {
     var v = aktif(), l = MK.taban("a", v.ara).filter(function (x) { return !x.planli && MK.cipGecer("a", x); }).sort(function (a, b) { return a.tarih < b.tarih ? -1 : 1; });
-    if (!l.length) { MK.bildir("PDF için yapılmış ara kontrol kaydı yok (süzgeci değiştirin)."); return; }
+    if (!l.length) { MK.bildir("PDF için yapılmış ara kontrol kaydı yok (filtreyi değiştirin)."); return; }
     MK.pdfGoster({ dosya: v.env.toLowerCase() + "-ara-kontroller.pdf", baslik: v.env + " · ara kontrol kayıtları", icerik: MB.araKontrolFormu({ v: v, kayitlar: l, tarih: BUGUN }) });
   };
   /* ── CİHAZ TÜRLERİ (T7) ── */

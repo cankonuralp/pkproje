@@ -2,8 +2,8 @@
  "maket": "planlar",
  "tarih": "2026-10-01",
  "arac": "tools/olc-bulut.mjs --etkilesim (başsız tarayıcı, 1920 açık tema; gen verilen denemede o genişlik)",
- "toplam": 62,
- "gecen": 62,
+ "toplam": 64,
+ "gecen": 64,
  "denemeler": [
   {
    "ad": "Planlar listesi: müşteri adı kalın (≥ 600), proje adı normal (400)",
@@ -27,7 +27,7 @@
    "gecti": true
   },
   {
-   "ad": "süzgeç kutusu: süzgeç seçilince sayı, başlığa basınca kapanır (sayı görünür kalır)",
+   "ad": "filtre kutusu: filtre seçilince sayı (Ö4: \"filtre\" adı), başlığa basınca kapanır (sayı görünür kalır)",
    "gen": 1920,
    "sayfa": "maket/planlarim.html",
    "hash": "#/",
@@ -227,6 +227,20 @@
    "gen": 1920,
    "sayfa": "maket/planlarim.html",
    "hash": "#/plan/9",
+   "gecti": true
+  },
+  {
+   "ad": "telefonda Filtre levhası: Müşteri (8'den fazla seçenek) çip değil, aranır liste; yazınca süzülür, seçilince uygulanır ve seçili en üstte",
+   "gen": 375,
+   "sayfa": "maket/planlarim.html",
+   "hash": "#/",
+   "gecti": true
+  },
+  {
+   "ad": "masaüstünde Müşteri filtresi aranır; başlık \"Filtreler\"",
+   "gen": 1920,
+   "sayfa": "maket/planlarim.html",
+   "hash": "#/",
    "gecti": true
   },
   {
