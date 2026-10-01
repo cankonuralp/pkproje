@@ -1178,6 +1178,8 @@ tarih-saat, fotoğraflar, form) · **Eğitim kaydı** (personel, eğitim, belge,
    fotoğraf, cihaz ekleme, kaydet, onaya gönder) çevrimdışı çalışır: kayıt cihazda saklanır, bağlantı gelince sırayla sunucuya gider; ekranlar
    ve iş kuralları mağaza uygulamasına (iOS / Android sarmalayıcı) taşınabilecek şekilde yazılır — öneri, kodlamada karara bağlanacak.
    **Sunucu ve veri tasarrufu kuralları (2026-09-29, onaylı): `09-SUNUCU-VE-VERI.md`** — kod bu dosyaya göre yazılır, her madde kilit testiyle.
+   **Arka uç kurgusu (2026-10-01, TASLAK — onay bekliyor): `ARKA-UC.md`** — modül modül veri, dosya, çevrimdışı kuyruk, mağaza uygulaması,
+   yapay zekâ (fotoğraftan okuma, S.A.Y chat), arşiv, yedek, işletim; kararını isteyen sekiz madde başta (K1–K8).
 2. **Veri:** PostgreSQL + satır seviyesi güvenlik (firma ve müşteri izolasyonu veritabanında) + dosya deposu
    (fotoğraf/PDF). Gerekçe: rapor arşivi ve süzme ilişkisel iş; dışa aktarım standart; güvenlik sunucuda.
    **2026-09-18 revizyon (reisim: "illa bir şey kurmaya gerek var mı? localhost ve yerel depolama"):** Supabase ve
@@ -2116,6 +2118,17 @@ oluşturulamaz (engel — reisim'in açık kararı, "kural uyarıdır" genel ilk
 "Giriş ekle" · rol araştırmasının önerileri (§3.9) ve soru 1 (örnek veri ölçeği) yapılmaz · **P3** müşteri panelinde **Muayene personeli
 belgeleri**: o müşteriye giden muayene personelinin, firmanın izin verdiği belgeleri (EKİPNET belgesi, İSG belgeleri vb.).
 
+**Kırk altıncı tur (2026-10-01, reisim birebir; "ne iş kaldı" cevabından sonra):** *"Tamam şimdi backend kurgusunu yapalım nasıl siteyi yazarken
+layzload, gerekli verileri jsona yazıp ordan okuma, blob görsel koruma yedekleme raporları arşivleme vb aklıma gelmeyen listelemediğim ne varsa
+siteyi gez nerde nasıl ni kurgu yapmalıyız tasarla ve bana sun en önemli kritik şeylerden bazılarıda çevrimdışı çalışma ve fotoğraftan okuyup
+sigorta vs yazmak bir de rapor sayfasında pop up sohbet tuşu koyup S.A.Y chat diye bir şey yapmayı planlıyorum sadece kanul edilip rapor yazılmay
+başlayan planlarda olsun mantığı şöyle olacak: tıklayınca sadece bu sitenin kullanımına özel kurgulanmış bir şekilde claud çalışacak bunun için
+özel olarak eğiteceğiz ama her kullanıcı kendi hesabından girip kendi tokenlarını harcayacak aynı şey sigorta topraklama noktası vs yazarken
+fotoğraftan okuma yapacak sistem içinde geçerli ve çevrimdışı çalışmaya gelince çevrimdışı yazılan raporlar çevrimdışı kuyruğunda olacak ,
+çevrimdışı iken ram de kaydolacak çevrimiçi olunca gönderilebilecek uygulama olarakta çıkacağız ona göre çevrimdışı iken ram e kaydedip göndermekte
+olacak şekilde düşün bir tasarım kurgula şu an tam olarak nasıl yapabiliriz bilemedim . Aklıma gelmeyen bir şey varsa yardım et."* → **`ARKA-UC.md`**
+(taslak); karar bekleyen **K1–K8** belgenin başında.
+
 **Açık kalanlar:** ~~Ana sayfada İSGGM duyuruları~~ (2026-09-27: makette eklendi; okuma işi uygulamada) (reisim 2026-09-26: *"Ana sayfada isgüm duyurularını gösterebilir miyiz ? Bunu
 yapılacaklar listesine ekle"*; öneri: ÇSGB İSGGM duyurular sayfası — https://www.csgb.gov.tr/isggm/duyurular/ — sunucuda günde birkaç kez
 okunur (pg-boss işi, §8.9), Ana sayfada son 5 duyuru başlık + tarih + kaynağa bağlantı; yalnız ekranda, bildirim yok; sayfa RSS vermiyorsa
@@ -2153,6 +2166,13 @@ revizyon, alan kopyalama, hafif kusur devri, meslek eşleşme denetimi).
 - Emsal ürünler: https://opwire.app/iso-17020-periyodik-kontrol-yazilimi/ · https://17020muayene.vidco.com.tr/ · https://akuple.com/asansor-kontrol-yazilimi/ · https://ensyazilim.com/
 
 ## 11 · Değişiklik günlüğü
+- 2026-10-01 (216): **Arka uç kurgusu — `ARKA-UC.md` (taslak, onay bekliyor)** (§9 kırk altıncı tur). 09-SUNUCU-VE-VERI'yi modül modül uygular ve
+  eksikleri tasarlar: tanım verisi sürümlü JSON, firma verisi PostgreSQL (dosyaya yazılmaz, nedeniyle) · üç katmanlı geç yükleme · fotoğraf yükleme
+  ve gizli görüntüleme · çevrimdışı paket + çıkış kuyruğu (işlem kimliği, sıra, çakışma, saat, sürüm uyumu) · Capacitor ile mağaza uygulaması ·
+  yapay zekâ (sunucu üzerinden, katı JSON şemalı fotoğraf okuma, öneri kartlı S.A.Y chat, veri en aza, deneme setiyle ölçüm) · PDF, imza, arşiv,
+  yedek (aylık geri yükleme denemesi) · arka plan işleri · güvenlik / KVKK · "aklına gelmeyenler" (12) · modül × arka uç tablosu · yapım sırası.
+  Belgeden doğrulanan iki gerçek: Claude'un çalışma yeri yalnız ABD / küresel seçilebiliyor (Türkiye / AB yok → K1, 09-G3 ile çelişki); claude.ai
+  aboneliği başka uygulamada kullanılamaz, API anahtarı gerekir (→ K2). "RAM'e kaydet" yerine kalıcı cihaz deposu önerildi (K4). Kod yok.
 - 2026-10-01 (215): **P3 · Müşteri panelinde "Muayene personeli" belgeleri** (§9 kırk beşinci tur). Müşteri panelinde yeni sekme: kullanıcının
   tesislerine giden muayene personeli (imzalı raporu olan ya da açık / açılmış planda ekipte olan), son gidiş tarihi ve tesisler, yalnız firmanın
   izin verdiği belgeler (Aç → PDF). Eğitim sertifikasında geçerlilik tarihi; tekrarı geçmişse kırmızı "süresi geçti". Firma ayarları › **Müşteriye
