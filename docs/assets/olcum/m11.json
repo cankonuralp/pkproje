@@ -65,7 +65,10 @@
    "kartTutarsiz": 0,
    "eksikIkon": 0,
    "tusY": 34,
-   "tusGen": null,
+   "tusGen": [
+    123,
+    161
+   ],
    "satirY": 46,
    "birincil": null,
    "pencereGen": null,
@@ -100,7 +103,10 @@
    "kartTutarsiz": 0,
    "eksikIkon": 0,
    "tusY": 34,
-   "tusGen": null,
+   "tusGen": [
+    123,
+    161
+   ],
    "satirY": 46,
    "birincil": null,
    "pencereGen": null,
@@ -135,7 +141,10 @@
    "kartTutarsiz": 0,
    "eksikIkon": 0,
    "tusY": 44,
-   "tusGen": null,
+   "tusGen": [
+    128,
+    170
+   ],
    "satirY": 56,
    "birincil": null,
    "pencereGen": null,
@@ -170,7 +179,10 @@
    "kartTutarsiz": 0,
    "eksikIkon": 0,
    "tusY": 44,
-   "tusGen": null,
+   "tusGen": [
+    128,
+    170
+   ],
    "satirY": 56,
    "birincil": null,
    "pencereGen": null,
@@ -205,7 +217,10 @@
    "kartTutarsiz": 0,
    "eksikIkon": 0,
    "tusY": 44,
-   "tusGen": null,
+   "tusGen": [
+    128,
+    170
+   ],
    "satirY": 56,
    "birincil": null,
    "pencereGen": null,
@@ -240,7 +255,10 @@
    "kartTutarsiz": 0,
    "eksikIkon": 0,
    "tusY": 44,
-   "tusGen": null,
+   "tusGen": [
+    128,
+    170
+   ],
    "satirY": 56,
    "birincil": null,
    "pencereGen": null,
@@ -275,7 +293,10 @@
    "kartTutarsiz": 0,
    "eksikIkon": 0,
    "tusY": 44,
-   "tusGen": null,
+   "tusGen": [
+    172,
+    172
+   ],
    "satirY": 228,
    "birincil": null,
    "pencereGen": null,
@@ -310,7 +331,10 @@
    "kartTutarsiz": 0,
    "eksikIkon": 0,
    "tusY": 44,
-   "tusGen": null,
+   "tusGen": [
+    172,
+    172
+   ],
    "satirY": 228,
    "birincil": null,
    "pencereGen": null,
@@ -347,7 +371,7 @@
    "tusY": 34,
    "tusGen": [
     178,
-    178
+    215
    ],
    "satirY": 54,
    "birincil": null,
@@ -385,7 +409,7 @@
    "tusY": 34,
    "tusGen": [
     178,
-    178
+    215
    ],
    "satirY": 54,
    "birincil": null,
@@ -423,7 +447,7 @@
    "tusY": 44,
    "tusGen": [
     187,
-    187
+    227
    ],
    "satirY": 77,
    "birincil": null,
@@ -461,7 +485,7 @@
    "tusY": 44,
    "tusGen": [
     187,
-    187
+    227
    ],
    "satirY": 77,
    "birincil": null,
@@ -499,7 +523,7 @@
    "tusY": 44,
    "tusGen": [
     187,
-    187
+    227
    ],
    "satirY": 90,
    "birincil": null,
@@ -537,7 +561,7 @@
    "tusY": 44,
    "tusGen": [
     187,
-    187
+    227
    ],
    "satirY": 90,
    "birincil": null,
@@ -651,7 +675,7 @@
    "tusY": 34,
    "tusGen": [
     78,
-    178
+    215
    ],
    "satirY": 54,
    "birincil": null,
@@ -689,7 +713,7 @@
    "tusY": 34,
    "tusGen": [
     78,
-    178
+    215
    ],
    "satirY": 54,
    "birincil": null,
@@ -727,7 +751,7 @@
    "tusY": 44,
    "tusGen": [
     81,
-    187
+    227
    ],
    "satirY": 77,
    "birincil": null,
@@ -765,7 +789,7 @@
    "tusY": 44,
    "tusGen": [
     81,
-    187
+    227
    ],
    "satirY": 77,
    "birincil": null,
@@ -803,7 +827,7 @@
    "tusY": 44,
    "tusGen": [
     81,
-    187
+    227
    ],
    "satirY": 90,
    "birincil": null,
@@ -841,7 +865,7 @@
    "tusY": 44,
    "tusGen": [
     81,
-    187
+    227
    ],
    "satirY": 90,
    "birincil": null,
@@ -1561,7 +1585,10 @@
    "kartTutarsiz": 0,
    "eksikIkon": 0,
    "tusY": 34,
-   "tusGen": null,
+   "tusGen": [
+    123,
+    161
+   ],
    "satirY": null,
    "birincil": null,
    "pencereGen": null,
@@ -1596,7 +1623,10 @@
    "kartTutarsiz": 0,
    "eksikIkon": 0,
    "tusY": 34,
-   "tusGen": null,
+   "tusGen": [
+    123,
+    161
+   ],
    "satirY": null,
    "birincil": null,
    "pencereGen": null,
@@ -1631,7 +1661,10 @@
    "kartTutarsiz": 0,
    "eksikIkon": 0,
    "tusY": 44,
-   "tusGen": null,
+   "tusGen": [
+    128,
+    170
+   ],
    "satirY": null,
    "birincil": null,
    "pencereGen": null,
@@ -1666,7 +1699,10 @@
    "kartTutarsiz": 0,
    "eksikIkon": 0,
    "tusY": 44,
-   "tusGen": null,
+   "tusGen": [
+    128,
+    170
+   ],
    "satirY": null,
    "birincil": null,
    "pencereGen": null,
@@ -1701,7 +1737,10 @@
    "kartTutarsiz": 0,
    "eksikIkon": 0,
    "tusY": 44,
-   "tusGen": null,
+   "tusGen": [
+    128,
+    170
+   ],
    "satirY": null,
    "birincil": null,
    "pencereGen": null,
@@ -1736,7 +1775,10 @@
    "kartTutarsiz": 0,
    "eksikIkon": 0,
    "tusY": 44,
-   "tusGen": null,
+   "tusGen": [
+    128,
+    170
+   ],
    "satirY": null,
    "birincil": null,
    "pencereGen": null,
@@ -1771,7 +1813,10 @@
    "kartTutarsiz": 0,
    "eksikIkon": 0,
    "tusY": 44,
-   "tusGen": null,
+   "tusGen": [
+    172,
+    172
+   ],
    "satirY": null,
    "birincil": null,
    "pencereGen": null,
@@ -1806,7 +1851,10 @@
    "kartTutarsiz": 0,
    "eksikIkon": 0,
    "tusY": 44,
-   "tusGen": null,
+   "tusGen": [
+    172,
+    172
+   ],
    "satirY": null,
    "birincil": null,
    "pencereGen": null,
@@ -1843,7 +1891,7 @@
    "tusY": 34,
    "tusGen": [
     178,
-    178
+    215
    ],
    "satirY": 54,
    "birincil": null,
@@ -1881,7 +1929,7 @@
    "tusY": 34,
    "tusGen": [
     178,
-    178
+    215
    ],
    "satirY": 54,
    "birincil": null,
@@ -1919,7 +1967,7 @@
    "tusY": 44,
    "tusGen": [
     187,
-    187
+    227
    ],
    "satirY": 77,
    "birincil": null,
@@ -1957,7 +2005,7 @@
    "tusY": 44,
    "tusGen": [
     187,
-    187
+    227
    ],
    "satirY": 77,
    "birincil": null,
@@ -1995,7 +2043,7 @@
    "tusY": 44,
    "tusGen": [
     187,
-    187
+    227
    ],
    "satirY": 90,
    "birincil": null,
@@ -2033,7 +2081,7 @@
    "tusY": 44,
    "tusGen": [
     187,
-    187
+    227
    ],
    "satirY": 90,
    "birincil": null,
@@ -2374,7 +2422,7 @@
    "eksikIkon": 0,
    "tusY": 44,
    "tusGen": [
-    109,
+    122,
     287
    ],
    "satirY": 247,
@@ -2412,7 +2460,7 @@
    "eksikIkon": 0,
    "tusY": 44,
    "tusGen": [
-    109,
+    122,
     287
    ],
    "satirY": 247,

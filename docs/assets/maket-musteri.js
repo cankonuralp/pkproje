@@ -173,7 +173,11 @@
       $("a-sekmeler").innerHTML = sekme("", "Raporlar", !u && !pl && !sz) + sekme("uygunsuz", "Uygunsuzluklar", u, ' <span class="a-cip-sayi">' + acik + "</span>") +
         sekme("plan", "Planlanan kontroller", pl) + sekme("sozlesme", "Sözleşmeler", sz);
       $("a-uyari").innerHTML = !KUL ? '<div class="a-serit-kap">' + MK.serit("uyari", "triangle-alert", "Bu müşterinin giriş yapan kullanıcısı yok.") + "</div>" : "";
-      document.querySelector('[data-eylem="excel-ac"]').hidden = !u;
+      /* Ö3 (2026-10-01, reisim: "Müşteri gözünde toplu indirme uygunsuzları toplu indirme excel olarak indirme ve excel de link olmalı"):
+         Raporlar sekmesinde Excel + Toplu indir (ZIP); Uygunsuzluklar sekmesinde Uygunsuzları indir (Excel) + Uygunsuz raporlar (ZIP) */
+      $("a-bas-tuslar").innerHTML = pl || sz ? "" : u
+        ? MK.tus({ eylem: "uygunsuz-zip", ad: "Uygunsuz raporlar (ZIP)", ikon: "download", sinif: "a-tus-ikincil" }) + MK.tus({ eylem: "excel-ac", ad: "Uygunsuzları indir", ikon: "file-check" })
+        : MK.tus({ eylem: "rapor-excel", ad: "Excel indir", ikon: "file-check", sinif: "a-tus-ikincil" }) + MK.tus({ eylem: "rapor-zip-m", ad: "Toplu indir (ZIP)", ikon: "download" });
       if (pl || sz) { $("a-suzgec-kap").innerHTML = ""; $("a-sayfa").innerHTML = ""; if (pl) planCiz(); else sozCiz(); }
       else { $("a-suzgec-kap").innerHTML = MK.suzgecHtml(u ? "u" : "m"); MK.suzgecKur(u ? "u" : "m"); }
     } else if (r.v === "soz") sozSayfa(MV.isSozlesmesi(r.no));
@@ -189,8 +193,24 @@
   X["excel-indir"] = function () {
     var l = uygunsuzlar().filter(function (u) { return u.durum === "acik"; });
     $("a-pencere").close();
-    MK.indir("uygunsuzluklar-" + MK.BUGUN + ".xlsx", MK.xlsx("Uygunsuzluklar", [["Ekipman kodu", "Ekipman türü", "Tesis", "Sınıf", "Kriter", "Açıklama", "Rapor no", "Kontrol tarihi"]].concat(l.map(function (u) {
-      return [u.e.kod, u.t.ad, MV.tesis(u.tesis).ad, u.sinif, u.kriter, u.aciklama, u.rapor.no, MK.tarihYaz(u.tarih)]; }))));
+    MK.indir("uygunsuzluklar-" + MK.BUGUN + ".xlsx", MK.xlsx("Uygunsuzluklar", [["Rapor", "Ekipman kodu", "Ekipman türü", "Tesis", "Sınıf", "Kriter", "Açıklama", "Rapor no", "Kontrol tarihi"]].concat(l.map(function (u) {
+      return [{ metin: "Rapor", url: raporUrl(u.rapor) }, u.e.kod, u.t.ad, MV.tesis(u.tesis).ad, u.sinif, u.kriter, u.aciklama, u.rapor.no, MK.tarihYaz(u.tarih)]; }))));
+  };
+  /* Excel'deki "Rapor" bağlantısı müşteri panelinde o raporu açar (giriş ister; uygulamada https://<firma>.probata.com.tr/portal/r/<no>) */
+  var raporUrl = function (r) { return new URL("musteri.html" + (q !== "m1" ? "?musteri=" + q : "") + "#/r/" + r.no, location.href).href; };
+  var filtreli = function () { return MK.taban("m", raporlar()).filter(function (r) { return MK.cipGecer("m", r); }); };
+  var zipAd = function (ek) { return MK.klasorAd(M.kisa).toLocaleLowerCase("tr").replace(/ /g, "-") + "-" + ek + "-" + MK.BUGUN + ".zip"; };
+  /* müşterinin ZIP'i tesis klasörlü (müşteri adı klasörü gereksiz: hepsi kendisinin) */
+  var tesisKlasor = function (r, m, t) { return MK.klasorAd(t && t.ad); };
+  X["rapor-zip-m"] = function () { MK.raporZip(filtreli().map(MV.musteriSurumu).filter(Boolean), zipAd("raporlar"), tesisKlasor); };
+  X["uygunsuz-zip"] = function () {
+    var l = []; MK.taban("u", uygunsuzlar()).filter(function (u) { return MK.cipGecer("u", u); }).forEach(function (u) { if (l.indexOf(u.rapor) < 0) l.push(u.rapor); });
+    MK.raporZip(l.map(MV.musteriSurumu).filter(Boolean), zipAd("uygunsuz-raporlar"), tesisKlasor);
+  };
+  X["rapor-excel"] = function () {
+    var l = filtreli().sort(function (a, b) { return a.olustu < b.olustu ? 1 : -1; });
+    MK.indir("raporlar-" + MK.BUGUN + ".xlsx", MK.xlsx("Raporlar", [["Rapor", "Rapor no", "Ekipman kodu", "Ekipman türü", "Tesis", "Kontrol tarihi", "Sonraki kontrol", "Sonuç"]].concat(l.map(function (r) {
+      var e = MV.ekipman(r.kod); return [{ metin: "Rapor", url: raporUrl(r) }, MV.surumNo(r), e.kod, MV.tur(e.tur).ad, MV.tesis(r.tesis).ad, MK.tarihYaz(r.olustu.slice(0, 10)), MK.tarihYaz(sonraki(r)), MV.sonucAd(r)]; }))));
   };
   /* imzalı rapor ya da sözleşme belgesi yazdırma penceresinden PDF olur */
   X["pdf"] = function () {

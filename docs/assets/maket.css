@@ -1249,6 +1249,8 @@ a.a-yuz:hover { border-color: var(--kenar-alan); background: var(--zemin); }
   .a-nesne-bas .a-eylem-cubugu { flex: 1 1 100%; justify-content: stretch; }
   .a-nesne-bas .a-eylem-cubugu .a-tus { flex: 1 1 0; }
   .a-sayfa-bas .a-bolum-tus { margin-left: 0; flex: 1 1 100%; }
+  .a-sayfa-bas .a-bolum-tuslar { margin-left: 0; flex: 1 1 100%; justify-content: stretch; }   /* Ö3: başlıktaki tuş grubu da tam satır, tuşlar eşit */
+  .a-sayfa-bas .a-bolum-tuslar > .a-tus { flex: 1 1 0; }
   .a-yuzler { grid-template-columns: repeat(2, minmax(0, 1fr)); gap: 8px; }
   /* giriş: marka panosu üstte ince şerit, form altında */
   .a-giris { grid-template-columns: minmax(0, 1fr); grid-template-rows: auto 1fr; }

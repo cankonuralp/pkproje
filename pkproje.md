@@ -2123,6 +2123,11 @@ revizyon, alan kopyalama, hafif kusur devri, meslek eşleşme denetimi).
 - Emsal ürünler: https://opwire.app/iso-17020-periyodik-kontrol-yazilimi/ · https://17020muayene.vidco.com.tr/ · https://akuple.com/asansor-kontrol-yazilimi/ · https://ensyazilim.com/
 
 ## 11 · Değişiklik günlüğü
+- 2026-10-01 (201): **Ö3 · Müşteri panelinde toplu indirme ve "Rapor" bağlantılı Excel** (§9 kırk dördüncü tur). Raporlar sekmesinde **Excel
+  indir** (filtreye uyan raporlar; ilk sütun mavi altı çizili **Rapor** bağlantısı — tıklayınca o rapor panelde açılır, giriş ister) ve **Toplu indir
+  (ZIP)** (imzalı raporlar ayrı PDF, tesis klasörlü). Uygunsuzluklar sekmesinde **Uygunsuzları indir** (Excel; ilk sütun Rapor bağlantısı) ve
+  **Uygunsuz raporlar (ZIP)**. Excel yazıcısı bağlantı hücresi alır ({ metin, url } → HYPERLINK, mavi altı çizili). Telefonda başlıktaki tuş
+  grubu tam satır. Uygulamada bağlantı https://<firma>.probata.com.tr/portal/r/<rapor no>. 2 deneme.
 - 2026-10-01 (200): **Ö1 · İmzalı raporlar ayrı PDF, müşteri / tesis klasörlü ZIP** (§9 kırk dördüncü tur). Müşteriler listesinde (filtreye uyan
   müşteriler), müşteri kartında ve tesis sayfasında **İmzalı raporlar (ZIP)**; Raporlar ekranında **Ayrı PDF'ler (ZIP)** (filtreye uyan
   raporlar). ZIP'te her imzalı rapor ayrı PDF, yolu `Müşteri unvanı/Tesis/RAPOR-NO.pdf`, ayrıca ICINDEKILER.txt (yol · ekipman · tarih · sonuç).

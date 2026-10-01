@@ -12,13 +12,13 @@
 </head>
 <body>
 <!-- MAKET M11 · Müşteri Paneli (modül 17) — ONAY BEKLİYOR. Müşterinin kendi girişi; firmanın modül menüsü YOK. Yalnız kendi imzalı raporları.
-     Adres: #/ raporlar · #/uygunsuz uygunsuzluklar · #/r/<rapor no> rapor (PDF) · #/excel "Uygunsuzları indir" önizlemesi · ?musteri=<id> (firma ekranından önizleme) -->
+     Adres: #/ raporlar · #/uygunsuz uygunsuzluklar · #/r/<rapor no> rapor (PDF) · #/excel "Uygunsuzları indir" önizlemesi · Ö3 (2026-10-01): raporlar Excel + toplu ZIP, uygunsuz raporlar ZIP · ?musteri=<id> (firma ekranından önizleme) -->
 <main class="a-icerik" id="a-icerik">
   <div id="a-liste-gorunum">
     <div class="a-sayfa-bas">
       <h1 tabindex="-1">Raporlarınız</h1>
       <span class="a-sayac" id="a-sayac" aria-live="polite"></span>
-      <button class="a-tus a-tus-birincil a-bolum-tus" type="button" data-eylem="excel-ac"><svg class="a-ikon a-ikon-kucuk" aria-hidden="true"><use href="../vendor/lucide-1.47.0/ikonlar.svg#i-file-check"/></svg>Uygunsuzları indir</button>
+      <div class="a-bolum-tuslar" id="a-bas-tuslar"></div>
     </div>
     <p class="a-bolum-aciklama" id="a-alt"></p>
     <nav class="a-sekmeler a-sekmeler-sayfa" aria-label="Panel görünümleri" id="a-sekmeler"></nav>
