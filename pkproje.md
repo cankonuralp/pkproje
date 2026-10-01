@@ -2123,6 +2123,10 @@ revizyon, alan kopyalama, hafif kusur devri, meslek eşleşme denetimi).
 - Emsal ürünler: https://opwire.app/iso-17020-periyodik-kontrol-yazilimi/ · https://17020muayene.vidco.com.tr/ · https://akuple.com/asansor-kontrol-yazilimi/ · https://ensyazilim.com/
 
 ## 11 · Değişiklik günlüğü
+- 2026-10-01 (210): **Ö5h · Ekipman sayısı kayıtlı ekipmandan** (uçtan uca denemenin yedinci bulgusu: yeni tesis Kazan Fabrikası'na planda 4
+  ekipman eklendi, müşteri kartında "Ekipman 0" görünüyordu — sayı tesis kaydındaki sabit alandandı). Tek yardımcı `MV.ekipmanSayisi(tesis)`;
+  müşteri listesi, müşteri kartı, tesis kartı ve ana sayfa buna bağlandı. Tohum veride bir tesiste (Aktarma Merkezi) sabit sayı 21, kayıtlı ekipman
+  20'ydi; artık 20 görünür. Kilit m2 etkileşimde (tesise ekipman eklenince sayı bir artar); düzeltmesiz 29/30 düştü, düzeltmeyle 30/30.
 - 2026-10-01 (209): **Ö5g · Müşteri Excel'indeki "Rapor" bağlantısı doğru müşterinin panelini açar** (uçtan uca denemenin altıncı bulgusu;
   Ö3'ün (201) hatası). Panel müşteriyi adresin `#` kısmından okuyor; bağlantı `?musteri=` değerini `#`'ten önceye yazıyordu → Ada Makina dışındaki
   müşteride Excel'den tıklanan rapor Ada Makina panelinde açılırdı. Bağlantı artık `musteri.html#/r/<no>?musteri=<id>`. Kilit m11 etkileşimde:

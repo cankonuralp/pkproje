@@ -55,7 +55,7 @@
       return '<span class="a-kart-etiket">Sonraki kontrol</span><span class="a-tarih-saat">' + MK.tarihYaz(t.sonraki) + "</span>" +
         '<span class="a-alt-satir' + (k < 0 ? " a-uyari-metin" : "") + '">' + (k < 0 ? -k + " gün geçti" : k === 0 ? "bugün" : k + " gün kaldı") + "</span>";
     } },
-    { k: "ekip", baslik: "Ekipman", kart: "govde", sira: 3, hucre: function (t) { return '<span class="a-kart-etiket">Ekipman</span>' + t.ekipman; } },
+    { k: "ekip", baslik: "Ekipman", kart: "govde", sira: 3, hucre: function (t) { return '<span class="a-kart-etiket">Ekipman</span>' + MV.ekipmanSayisi(t); } },
     { k: "durum", baslik: "İşlem", gizliBaslik: true, kart: "eylem", sira: 9, hucre: function (t) {
       return '<div class="a-eylem"><div class="a-eylem-tuslar"><a class="a-tus a-tus-birincil" href="plan-ac.html#/?tesis=' + t.id + '">' + ikon("calendar-check", "a-ikon-kucuk") + "Plan aç</a></div></div>";
     } }

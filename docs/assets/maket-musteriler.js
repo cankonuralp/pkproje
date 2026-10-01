@@ -28,7 +28,7 @@
   var PASIF = { ad: "Pasif", rozet: "a-rozet-notr" };
   var kalan = function (t) { return MK.gunFarki(BUGUN, t); };
   var etkinTesisler = function (m) { return MV.tesisleri(m.id).filter(function (t) { return !t.pasif; }); };
-  var ekipmanSayisi = function (m) { return etkinTesisler(m).reduce(function (n, t) { return n + t.ekipman; }, 0); };
+  var ekipmanSayisi = function (m) { return etkinTesisler(m).reduce(function (n, t) { return n + MV.ekipmanSayisi(t); }, 0); };
   var enYakin = function (m) { return etkinTesisler(m).map(function (t) { return t.sonraki; }).sort()[0]; };
   var yakin = function (tarih) { return !!tarih && kalan(tarih) <= YAKIN; };
   var isgsiz = function (m) { return etkinTesisler(m).filter(function (t) { return !MV.isgTesis(t.id).length; }); };
@@ -120,7 +120,7 @@
     { k: "isg", baslik: "İSG-KATİP", kart: "govde", sira: 4, hucre: function (t) {
       var n = MV.isgTesis(t.id).length; return '<span class="a-kart-etiket">İSG-KATİP</span>' + (n ? '<span class="a-sayi">' + n + " kayıt</span>" : '<span class="a-uyari-metin">Kayıt yok</span>');
     } },
-    { k: "ekipman", baslik: "Ekipman", kart: "govde", sira: 5, hucre: function (t) { return '<span class="a-sayi"><span class="a-kart-etiket">Ekipman</span>' + t.ekipman + "</span>"; } },
+    { k: "ekipman", baslik: "Ekipman", kart: "govde", sira: 5, hucre: function (t) { return '<span class="a-sayi"><span class="a-kart-etiket">Ekipman</span>' + MV.ekipmanSayisi(t) + "</span>"; } },
     { k: "sonraki", baslik: "Sonraki kontrol", kart: "rozet", sira: 1, hucre: function (t) { return t.pasif ? rozet(PASIF) : tarihHtml(t.sonraki); } }
   ];
   var KULLANICI_SUTUN = [
@@ -238,7 +238,7 @@
       (e.length ? '<div class="a-serit-kap">' + MK.serit("uyari", "triangle-alert", "Eksik bilgi: " + e.join(" · ") + ". Kayıt engellenmez; raporun işyeri bölümünde gerekir, rapor imzalanırken yeniden hatırlatılır.") + "</div>" : "") +
       '<div class="a-yuzler">' +
         /* 2026-09-26 (M3 2. tur): ekipmanlar planın içinde → yüz tesisin planını açar (plan yoksa yalnız sayı) */
-        yuz({ ikon: "wrench", ad: "Ekipman", sayi: t.ekipman, hedef: t.pid ? 13 : null, hash: "#/plan/" + t.pid, ne: "Planlar" }) +
+        yuz({ ikon: "wrench", ad: "Ekipman", sayi: MV.ekipmanSayisi(t), hedef: t.pid ? 13 : null, hash: "#/plan/" + t.pid, ne: "Planlar" }) +
         yuz({ ikon: "scroll-text", ad: "İSG-KATİP sözleşme ID", sayi: isg.length, hedef: soz ? 12 : null, hash: soz ? "#/s/" + soz.no : "", ne: "Sözleşmeler", uyari: !isg.length, not: soz ? "sözleşme " + soz.no : "iş sözleşmesi yok" }) +
         yuz({ ikon: "clock", ad: "Son kontrol", sayi: t.son ? MK.gunKisa(t.son) : "—", not: t.son ? MK.ayYil(t.son) : "ilk kontrol" }) +
         yuz({ ikon: "alarm-clock", ad: "Sonraki kontrol", sayi: MK.gunKisa(t.sonraki), not: k < 0 ? -k + " gün geçti" : k === 0 ? "bugün" : k + " gün sonra", uyari: k <= YAKIN }) +

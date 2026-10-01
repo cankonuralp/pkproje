@@ -786,6 +786,9 @@
     MV.EKIPMAN.push({ kod: x[0], tur: x[1], tesis: "t16", konum: x[2], ilk: ilk, plan: 10, marka: MARKA[i % MARKA.length], model: x[1] + "-" + (300 + i * 7), imal: 2015 + i, seri: "SN" + (731200 + i * 37),
       onceki: null });
   });
+  /* tesisin ekipman sayısı kayıtlı ekipmandan (Ö5, 2026-10-01: yeni tesise planda eklenen 4 ekipman müşteri kartında 0 görünüyordu — sayı
+     tesis kaydındaki sabit alandandı) */
+  MV.ekipmanSayisi = function (t) { return MV.EKIPMAN.filter(function (e) { return e.tesis === t.id; }).length; };
   /* kod değiştirme yalnız yöneticide, eski kod geçmişte kalır (§3.5 karar 19) — bir örnek */
   MV.EKIPMAN[4].eskiKod = [{ kod: "TP-05", tarih: "2024-02-12", kim: "sy", gerekce: "Etiket yenilendi, firma kod düzenine geçildi" }];   /* TP-1005 */
   MV.ekipman = function (kod) { return MV.EKIPMAN.filter(function (e) { return e.kod === kod; })[0]; };

@@ -2,9 +2,16 @@
  "maket": "m2",
  "tarih": "2026-10-01",
  "arac": "tools/olc-bulut.mjs --etkilesim (başsız tarayıcı, 1920 açık tema; gen verilen denemede o genişlik)",
- "toplam": 29,
- "gecen": 29,
+ "toplam": 30,
+ "gecen": 30,
  "denemeler": [
+  {
+   "ad": "tesis kartı · planda eklenen ekipman Ekipman sayısına girer (müşteri kartında da)",
+   "gen": 1920,
+   "sayfa": "maket/musteriler.html",
+   "hash": "#/t/t2",
+   "gecti": true
+  },
   {
    "ad": "tesis sayfasında İmzalı raporlar (ZIP): her imzalı rapor ayrı PDF, Müşteri/Tesis klasöründe, içindekiler listesiyle",
    "gen": 1920,
