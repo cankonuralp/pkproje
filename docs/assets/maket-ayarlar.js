@@ -112,7 +112,7 @@
             MK.alan({ id: "ay-sg-not-" + i, etiket: "Not", girdi: MK.girdi({ id: "ay-sg-not-" + i, deger: x.not || "", ek: ' data-sg-not="' + i + '" maxlength="80"' }) }) +
             MK.tus({ eylem: "sg-sil", ad: "Kaldır", ikon: "x", sinif: "a-tus-ikincil a-kalem-sil", veri: { i: i } }) + "</div>";
         }).join("") +
-        '<div class="a-eylem-cubugu a-bolum-serit">' + MK.tus({ eylem: "sg-ekle", ad: "Sabit gider ekle", ikon: "plus", sinif: "a-tus-ikincil" }) + "</div></section>" + bulutCiz() + disaCiz();
+        '<div class="a-eylem-cubugu a-bolum-serit">' + MK.tus({ eylem: "sg-ekle", ad: "Sabit gider ekle", ikon: "plus", sinif: "a-tus-ikincil" }) + "</div></section>" + bulutCiz() + personelBelgeCiz() + disaCiz();
   }
 
   X["sg-ekle"] = function () {
@@ -156,6 +156,20 @@
       (ornek ? '<p class="a-ipucu">Örnek yol: <span class="a-kod">' + kacis(MV.bulutYol(ornek)) + "</span></p>" : "") +
       (b.kayitlar.length ? '<p class="a-etiket a-disa-gecmis-bas">Son kayıtlar</p><ul class="a-disa-gecmis" id="a-bulut-kayit">' + b.kayitlar.slice(0, 5).map(function (x) {
         return "<li>" + MK.zamanYaz(x.zaman) + " · <b>" + kacis(x.no) + '</b> <span class="a-alt-satir">' + kacis(x.yol) + "</span></li>"; }).join("") + "</ul>" : "") +
+      "</section>";
+  }
+  /* ── MÜŞTERİYE AÇIK PERSONEL BELGELERİ (P3, 2026-10-01; reisim: "o müşteriye giden muayene personelinin firmanın izin verdiği belgelerini
+     görür (ekipnet belgesi isg belgeleri vs)"): müşteri panelinde "Muayene personeli" sekmesinde yalnız işaretli türler görünür ───────── */
+  function personelBelgeCiz() {
+    var izin = MV.musteriBelgeIzni(), hassas = izin.filter(function (k) { return MV.MUSTERI_BELGE_TUR.some(function (x) { return x[0] === k && x[2]; }); });
+    return '<section class="a-bolum" aria-labelledby="a-b-mbelge"><div class="a-alt-bas"><h2 class="a-alt-baslik" id="a-b-mbelge">Müşteriye açık personel belgeleri</h2>' +
+        '<span class="a-sayac"><b>' + izin.length + "</b> tür</span></div>" +
+      '<p class="a-ipucu">Müşteri panelinde "Muayene personeli" sekmesinde, o müşteriye giden muayene personelinin yalnız işaretli belgeleri görünür.</p>' +
+      '<fieldset class="a-disa-bolumler"><legend class="a-gizli">Müşteriye açık belge türleri</legend>' + MV.MUSTERI_BELGE_TUR.map(function (x) {
+        return '<label class="a-onay-kutusu"><input type="checkbox" data-mbelge="' + x[0] + '"' + (izin.indexOf(x[0]) >= 0 ? " checked" : "") + "><span>" + kacis(x[1]) +
+          (x[2] ? ' <span class="a-alt-satir">kişisel veri</span>' : "") + "</span></label>"; }).join("") + "</fieldset>" +
+      (hassas.length ? MK.serit("uyari", "triangle-alert", "Kişisel veri içeren belge müşteriye açık: " + hassas.map(function (k) { return MV.MUSTERI_BELGE_TUR.filter(function (x) { return x[0] === k; })[0][1]; }).join(", ") +
+        ". Personelin açık rızası gerekebilir (KVKK); karar firmanın.") : "") +
       "</section>";
   }
   var bulutYaz = function (d) { MV.FIRMA.bulut = Object.assign({}, MV.FIRMA.bulut, d); };
@@ -314,6 +328,13 @@
   document.addEventListener("change", function (e) {
     var t = e.target;
     if (t.hasAttribute && t.hasAttribute("data-bulut-kok")) { bulutYaz({ kok: t.value.trim() || "probata Raporlar" }); ayarCiz(); $("ay-bulut-kok").focus(); MK.bildir("Ana klasör kaydedildi."); return; }
+    if (t.dataset && t.dataset.mbelge) {   /* P3: müşteriye açık personel belgesi türü */
+      var mb = MV.musteriBelgeIzni().slice(), k = t.dataset.mbelge, ad = MV.MUSTERI_BELGE_TUR.filter(function (x) { return x[0] === k; })[0][1];
+      if (t.checked && mb.indexOf(k) < 0) mb.push(k); else if (!t.checked) mb = mb.filter(function (x) { return x !== k; });
+      MV.FIRMA.musteriBelge = MV.MUSTERI_BELGE_TUR.map(function (x) { return x[0]; }).filter(function (x) { return mb.indexOf(x) >= 0; });
+      ayarCiz(); var c = document.querySelector('[data-mbelge="' + k + '"]'); if (c) c.focus();
+      MK.bildir(ad + (t.checked ? " müşterilere açıldı." : " müşterilere kapatıldı.")); return;
+    }
     if (t.dataset && t.dataset.disa) {   /* dışa aktarılacak bölüm seçimi */
       var sl = secili().slice(), j = sl.indexOf(t.dataset.disa); if (t.checked && j < 0) sl.push(t.dataset.disa); else if (!t.checked && j >= 0) sl.splice(j, 1);
       DS.sec = DIS.map(function (x) { return x[0]; }).filter(function (k) { return sl.indexOf(k) >= 0; }); return;

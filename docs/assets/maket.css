@@ -1035,6 +1035,12 @@ a.a-yuz:hover { border-color: var(--kenar-alan); background: var(--zemin); }
 /* müşteri paneli: planlanan kontroller ve sözleşmeler (reisim 81, 134; 2026-09-26) */
 .a-tablo-mplan .a-k-tesis { width: 34%; } .a-tablo-mplan .a-k-plan { width: 26%; } .a-tablo-mplan .a-k-sonraki { width: 20%; } .a-tablo-mplan .a-k-durum { width: 20%; }
 .a-tablo-msoz .a-k-no { width: 20%; } .a-tablo-msoz .a-k-tesis { width: 36%; } .a-tablo-msoz .a-k-donem { width: 26%; } .a-tablo-msoz .a-k-durum { width: 18%; }
+/* P3 (2026-10-01): müşteri panelinde muayene personeli belgeleri — belge adı solda, Aç sağda; telefonda kartta alt alta */
+.a-tablo-mpersonel .a-k-kisi { width: 26%; } .a-tablo-mpersonel .a-k-son { width: 22%; } .a-tablo-mpersonel .a-k-belge { width: 52%; }
+.a-personel-belgeler { list-style: none; margin: 0; padding: 0; display: grid; gap: 6px; width: 100%; }
+.a-personel-belgeler li { display: flex; align-items: center; justify-content: space-between; gap: 12px; min-width: 0; }
+.a-personel-belgeler .a-hucre-metin { min-width: 0; overflow-wrap: anywhere; }
+.a-personel-belgeler .a-tus { flex: none; }
 .a-tablo-uygunsuz .a-k-ekipman { width: 20%; } .a-tablo-uygunsuz .a-k-kusur { width: 32%; } .a-tablo-uygunsuz .a-k-rapor { width: 20%; }
 .a-tablo-uygunsuz .a-k-tarih { width: 12%; } .a-tablo-uygunsuz .a-k-durum { width: 16%; }
 

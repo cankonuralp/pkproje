@@ -2153,6 +2153,14 @@ revizyon, alan kopyalama, hafif kusur devri, meslek eşleşme denetimi).
 - Emsal ürünler: https://opwire.app/iso-17020-periyodik-kontrol-yazilimi/ · https://17020muayene.vidco.com.tr/ · https://akuple.com/asansor-kontrol-yazilimi/ · https://ensyazilim.com/
 
 ## 11 · Değişiklik günlüğü
+- 2026-10-01 (215): **P3 · Müşteri panelinde "Muayene personeli" belgeleri** (§9 kırk beşinci tur). Müşteri panelinde yeni sekme: kullanıcının
+  tesislerine giden muayene personeli (imzalı raporu olan ya da açık / açılmış planda ekipte olan), son gidiş tarihi ve tesisler, yalnız firmanın
+  izin verdiği belgeler (Aç → PDF). Eğitim sertifikasında geçerlilik tarihi; tekrarı geçmişse kırmızı "süresi geçti". Firma ayarları › **Müşteriye
+  açık personel belgeleri**: tür başına aç / kapa — EKİPNET kayıt belgesi, diploma, oda kaydı, ekipman atama belgesi, her eğitim sertifikası;
+  kişisel veri olanlar (kimlik, sağlık raporu, iş sözleşmesi, diğer) işaretli, açılınca KVKK uyarısı (engel değil). Başlangıç: EKİPNET + İSG
+  eğitim sertifikaları (17020 bilgilendirme hariç). Özlük belge türleri ve dosyası personel sayfasından ortak veriye taşındı (`MV.OZLUK_TUR`,
+  `MV.ozluk`; personel kartı aynı kaydı kullanır). Kilitler m11 etkileşim (izinli türler · Firma ayarları → müşteri paneli sayfalar arası · KVKK
+  uyarısı); düzeltmesiz 16/19 düştü. Uygulamada belge indirme kısa ömürlü yetkili bağlantıyla (anayasa 5.1).
 - 2026-10-01 (214): **P2 · Girişi olmayan müşteride "Giriş ekle"** (§9 kırk beşinci tur, "3 olsun"). Müşteri kartında giriş hiç yoksa (e-posta
   yazılmamış, ek giriş yok) düğme ve pencere başlığı "Giriş ekle"; giriş varsa "Ek giriş ekle". Düzeltme: 211'deki gözlemim eksikti — Deneme
   Kazan'ın e-postasıyla açılmış ana girişi vardı (kullanıcı henüz girmemişti), orada "Ek giriş ekle" doğruydu; değişiklik yalnız girişsiz müşteride

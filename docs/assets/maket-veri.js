@@ -1007,6 +1007,41 @@
   MV.EGITIM_DURUM = { gecti: { ad: "Tekrarı geçti", rozet: "a-rozet-red" }, yakin: { ad: "60 gün içinde", rozet: "a-rozet-bekliyor" }, gecerli: { ad: "Geçerli", rozet: "a-rozet-tamam" } };
   MV.egitimBelgeAdi = function (x) { return typeof x.belge === "string" ? x.belge : "egitim-" + x.kisi + "-" + x.k + "-" + x.tarih.slice(0, 4) + ".pdf"; };   /* yüklenen dosyanın adı, örnek kayıtta üretilen ad */
 
+  /* ── PERSONEL BELGELERİ · MÜŞTERİYE AÇIK OLANLAR (P3, 2026-10-01; reisim: "müşteri girişine … muayene personeli belgeleri kısmı olur o
+     müşteriye giden muayene personelinin firmanın izin verdiği belgelerini görür (ekipnet belgesi isg belgeleri vs)") ─────────────────────
+     Özlük dosyası (40) yalnız firma yöneticisinde; müşteriye yalnız firmanın Firma ayarları'nda izin verdiği türler görünür. Başlangıç: EKİPNET
+     kayıt belgesi + İSG eğitim sertifikaları; kimlik, sağlık raporu, iş sözleşmesi kapalı (KVKK: özel nitelikli / özlük bilgisi). */
+  MV.OZLUK_TUR = [["is", "İş sözleşmesi"], ["diploma", "Diploma"], ["oda", "Oda kaydı"], ["ekipnet", "EKİPNET kayıt belgesi"], ["kimlik", "Kimlik belgesi"],
+    ["saglik", "Sağlık raporu"], ["diger", "Diğer"]];
+  MV.ozluk = function (p) {
+    if (!p.ozluk) {   /* örnek: işe girişte iş sözleşmesi + kaydında var olan mesleki belgeler (tarih işe başlama) */
+      p.ozluk = [{ tur: "is", tarih: p.basla, dosya: "is-sozlesmesi.pdf" }];
+      ["diploma", "oda", "ekipnet"].forEach(function (k) { if (p.belge && p.belge[k]) p.ozluk.push({ tur: k, tarih: p.basla, dosya: k + ".pdf" }); });
+    }
+    return p.ozluk;
+  };
+  /* müşteriye açılabilecek belge türleri: özlük türleri + eğitim sertifikaları + ekipman atama belgesi; hassas olanlar işaretli */
+  MV.MUSTERI_BELGE_TUR = [["ekipnet", "EKİPNET kayıt belgesi"], ["diploma", "Diploma"], ["oda", "Oda kaydı"], ["atama", "Ekipman atama belgesi"]]
+    .concat(MV.EGITIM_TURLERI.map(function (t) { return ["eg:" + t.k, t.ad + " sertifikası"]; }))
+    .concat([["kimlik", "Kimlik belgesi", true], ["saglik", "Sağlık raporu", true], ["is", "İş sözleşmesi", true], ["diger", "Diğer", true]]);
+  MV.musteriBelgeIzni = function () { return MV.FIRMA.musteriBelge || ["ekipnet", "eg:isg", "eg:yuksek", "eg:ilkyardim", "eg:elektrik", "eg:yangin"]; };
+  /* kişinin müşteriye açık belgeleri: { ad, dosya, tarih, gecerli (eğitimde tekrar tarihi) } */
+  MV.musteriyeAcikBelgeler = function (p) {
+    var izin = MV.musteriBelgeIzni(), ad = function (k) { return MV.MUSTERI_BELGE_TUR.filter(function (x) { return x[0] === k; })[0][1]; }, l = [];
+    MV.ozluk(p).forEach(function (b) { if (izin.indexOf(b.tur) >= 0 && b.dosya) l.push({ k: b.tur, ad: ad(b.tur) + (b.aciklama ? " · " + b.aciklama : ""), dosya: b.dosya, tarih: b.tarih }); });
+    if (izin.indexOf("atama") >= 0) MV.ATAMALAR.filter(function (a) { return a.k === p.id && a.dosya; }).forEach(function (a) { l.push({ k: "atama", ad: "Ekipman atama belgesi · " + MV.tur(a.tur).ad, dosya: a.dosya, tarih: a.tarih }); });
+    MV.egitimleri(p.id).forEach(function (x) { if (izin.indexOf("eg:" + x.k) >= 0 && x.belge) l.push({ k: "eg:" + x.k, ad: ad("eg:" + x.k), dosya: MV.egitimBelgeAdi(x), tarih: x.tarih, gecerli: x.tekrar }); });
+    return l;
+  };
+  /* müşterinin tesislerine giden muayene personeli: imzalı raporu olan, ya da açık / açılmış planda ekipte olan; son gidiş tarihi */
+  MV.musteriPersoneli = function (tesisIdleri) {
+    var o = {}, ekle = function (k, gun, tid) { if (!k || !MV.kisi(k)) return; var x = o[k] = o[k] || { p: MV.kisi(k), son: "", tesis: [] }; if (gun > x.son) x.son = gun; if (x.tesis.indexOf(tid) < 0) x.tesis.push(tid); };
+    MV.RAPORLAR.forEach(function (r) { if (r.durum === "imzali" && tesisIdleri.indexOf(r.tesis) >= 0) ekle(r.kisi, r.olustu.slice(0, 10), r.tesis); });
+    MV.TESISLER.forEach(function (t) { if (tesisIdleri.indexOf(t.id) >= 0 && MV.acikPlan(t)) (t.pekip || []).forEach(function (k) { ekle(k, t.ptarih, t.id); }); });
+    MV.ACILAN_PLANLAR.forEach(function (a) { if (tesisIdleri.indexOf(a.tesis) >= 0) a.ekip.forEach(function (k) { ekle(k, a.tarih, a.tesis); }); });
+    return Object.keys(o).map(function (k) { return o[k]; }).sort(function (a, b) { return a.son < b.son ? 1 : a.son > b.son ? -1 : a.p.ad.localeCompare(b.p.ad, "tr"); });
+  };
+
   /* ── RAPORLAR (modül 14–16; M9, 2026-09-24) — firma geneli rapor kaydı. Planlar maketindeki plan raporları AYNI numarayla
      (sıra 760'tan: plan 9 → 8 → 1; Planlar'daki dağılım ve sonuç kuralı), geçen yılın imzalı raporları ekipman kaydından.
      Durum: taslak → onayda → onaylandı (son imza bekliyor) → imzalı (müşteriye açık). Planlar'ın "Onaylandı"sı burada onaylandı + imzalı.

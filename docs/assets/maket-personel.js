@@ -278,16 +278,9 @@
   }
 
   /* özlük dosyası (40): kişinin belgeleri; yalnız firma yöneticisi görür (KVKK: özlük bilgisi). Eğitim sertifikaları Eğitimler'de. */
-  var BELGE_TUR = [["is", "İş sözleşmesi"], ["diploma", "Diploma"], ["oda", "Oda kaydı"], ["ekipnet", "EKİPNET kayıt belgesi"], ["kimlik", "Kimlik belgesi"],
-    ["saglik", "Sağlık raporu"], ["diger", "Diğer"]];
+  var BELGE_TUR = MV.OZLUK_TUR;   /* P3 (2026-10-01): tür listesi ve özlük dosyası ortak veride (müşteri panelinde izinli belgeler de buradan) */
   var belgeAd = function (k) { return BELGE_TUR.filter(function (x) { return x[0] === k; })[0][1]; };
-  function ozluk(p) {
-    if (!p.ozluk) {   /* örnek: işe girişte iş sözleşmesi + kaydında var olan mesleki belgeler (tarih işe başlama) */
-      p.ozluk = [{ tur: "is", tarih: p.basla, dosya: "is-sozlesmesi.pdf" }];
-      ["diploma", "oda", "ekipnet"].forEach(function (k) { if (p.belge && p.belge[k]) p.ozluk.push({ tur: k, tarih: p.basla, dosya: k + ".pdf" }); });
-    }
-    return p.ozluk;
-  }
+  var ozluk = MV.ozluk;
   var OZLUK_SUTUN = [
     { k: "belge", baslik: "Belge", kart: "ust", sira: 1, hucre: function (b) {
       return '<span class="a-hucre-satir">' + ikon("file-check", "a-ikon-kucuk") + '<span class="a-hucre-metin">' + kirp(belgeAd(b.tur)) + (b.aciklama ? kirp(b.aciklama, "a-alt-satir") : "") + "</span></span>";

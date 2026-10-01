@@ -2,9 +2,30 @@
  "maket": "m11",
  "tarih": "2026-10-01",
  "arac": "tools/olc-bulut.mjs --etkilesim (başsız tarayıcı, 1920 açık tema; gen verilen denemede o genişlik)",
- "toplam": 16,
- "gecen": 16,
+ "toplam": 19,
+ "gecen": 19,
  "denemeler": [
+  {
+   "ad": "P3: Muayene personeli — yalnız bu müşteriye gidenler, yalnız izinli türler (başlangıç: EKİPNET + İSG eğitimleri; diploma, iş sözleşmesi yok)",
+   "gen": 1920,
+   "sayfa": "maket/musteri.html",
+   "hash": "#/personel",
+   "gecti": true
+  },
+  {
+   "ad": "P3: Firma ayarları'nda Diploma açılıp EKİPNET kapatılınca müşteri panelinde Diploma görünür, EKİPNET kalkar (sayfalar arası)",
+   "gen": 1920,
+   "sayfa": "maket/firma-ayarlari.html",
+   "hash": "#/",
+   "gecti": true
+  },
+  {
+   "ad": "P3: kişisel veri içeren tür (Kimlik belgesi) açılınca Firma ayarları'nda KVKK uyarısı",
+   "gen": 1920,
+   "sayfa": "maket/firma-ayarlari.html",
+   "hash": "#/",
+   "gecti": true
+  },
   {
    "ad": "müşteri paneli · Raporlar: Excel indir (ilk sütun \"Rapor\" bağlantısı) ve Toplu indir (ZIP) tuşları; Excel iner",
    "gen": 1920,

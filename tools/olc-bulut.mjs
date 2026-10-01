@@ -268,6 +268,7 @@ export const DURUMLAR = {
   ] },
   /* müşteri paneli: firmanın yan menüsü ve çekmecesi yok → kabuksuz (çekmece ölçülmez) */
   m11: { sayfa: "maket/musteri.html", durumlar: [
+    { ad: "müşteri paneli · Muayene personeli (P3: izinli belgeler)", hash: "#/personel", kabuksuz: true },
     { ad: "müşteri paneli · raporlar", hash: "#/", kabuksuz: true },
     { ad: "müşteri paneli · uygunsuzluklar", hash: "#/uygunsuz", kabuksuz: true },
     { ad: "uygunsuzları indir (Excel önizlemesi)", hash: "#/excel", kabuksuz: true },
@@ -1018,6 +1019,10 @@ export const DENEMELER = {
     { ad: "personel kartı eğitim yüzü kayıttan (Kaan Er: tekrarı geçti)", sayfa: "maket/personel.html", hash: "#/p/ke", bekle: '/1 tekrarı geçti/.test(document.querySelector(".a-yuzler").textContent)' },
   ],
   m11: [
+    /* P3 (2026-10-01, reisim: "o müşteriye giden muayene personelinin firmanın izin verdiği belgelerini görür (ekipnet belgesi isg belgeleri vs)") */
+    { ad: "P3: Muayene personeli — yalnız bu müşteriye gidenler, yalnız izinli türler (başlangıç: EKİPNET + İSG eğitimleri; diploma, iş sözleşmesi yok)", hash: "#/personel", bekle: '(t => /Elif Aydın/.test(t) && /Mert Kaya/.test(t) && !/Burak Şahin/.test(t) && /EKİPNET kayıt belgesi/.test(t) && /Temel İSG eğitimi sertifikası/.test(t) && !/Diploma|İş sözleşmesi|Kimlik/.test(t))(document.querySelector("#a-liste").textContent) && document.querySelectorAll("#a-liste [data-eylem=pdf-goster]").length > 0' },
+    { ad: "P3: Firma ayarları'nda Diploma açılıp EKİPNET kapatılınca müşteri panelinde Diploma görünür, EKİPNET kalkar (sayfalar arası)", sayfa: "maket/firma-ayarlari.html", hash: "#/", sure: 9000, adim: [["tikla", '[data-mbelge="diploma"]'], ["tikla", '[data-mbelge="ekipnet"]'], ["js", 'sessionStorage.setItem("b", MV.musteriBelgeIzni().join(",")); setTimeout(function () { location.href = "musteri.html#/personel"; }, 400)']], bekle: '/musteri\\.html$/.test(location.pathname) && sessionStorage.getItem("b") === "diploma,eg:isg,eg:yuksek,eg:ilkyardim,eg:elektrik,eg:yangin" && /Diploma/.test(document.querySelector("#a-liste").textContent) && !/EKİPNET kayıt belgesi/.test(document.querySelector("#a-liste").textContent)' },
+    { ad: "P3: kişisel veri içeren tür (Kimlik belgesi) açılınca Firma ayarları'nda KVKK uyarısı", sayfa: "maket/firma-ayarlari.html", hash: "#/", adim: [["tikla", '[data-mbelge="kimlik"]']], bekle: '/Kişisel veri içeren belge müşteriye açık: Kimlik belgesi/.test(document.querySelector("#a-b-mbelge").closest("section").textContent) && document.activeElement === document.querySelector(\'[data-mbelge="kimlik"]\')' },
     /* Ö3 (2026-10-01, reisim: "Müşteri gözünde toplu indirme uygunsuzları toplu indirme excel olarak indirme ve excel de link olmalı ... "rapor" yazsın") */
     { ad: "müşteri paneli · Raporlar: Excel indir (ilk sütun \"Rapor\" bağlantısı) ve Toplu indir (ZIP) tuşları; Excel iner", hash: "#/", adim: [["tikla", '[data-eylem="rapor-excel"]']], bekle: '/^raporlar-[0-9-]+\\.xlsx$/.test(MK.SON_INDIRME.ad) && MK.SON_INDIRME.boyut > 3000 && !!document.querySelector(\'[data-eylem="rapor-zip-m"]\')' },
     /* Ö5 (2026-10-01): Excel'deki "Rapor" bağlantısı o müşterinin panelinde açılır (Ada Makina dışında da) */
