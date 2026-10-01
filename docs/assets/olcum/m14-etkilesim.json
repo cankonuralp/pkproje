@@ -2,11 +2,18 @@
  "maket": "m14",
  "tarih": "2026-10-01",
  "arac": "tools/olc-bulut.mjs --etkilesim (başsız tarayıcı, 1920 açık tema; gen verilen denemede o genişlik)",
- "toplam": 48,
- "gecen": 47,
+ "toplam": 49,
+ "gecen": 48,
  "denemeler": [
   {
    "ad": "Plan aç'ta açılan plan (tarayıcıda kayıtlı) raporlarıyla İşler listesinde, Faturaya hazır",
+   "gen": 1920,
+   "sayfa": "maket/muhasebe.html",
+   "hash": "#/",
+   "gecti": true
+  },
+  {
+   "ad": "Fatura tarihi: son imzadan (22.09) önce olamaz; plan günü (24.09) sonra olsa da 23.09 kaydedilir",
    "gen": 1920,
    "sayfa": "maket/muhasebe.html",
    "hash": "#/",

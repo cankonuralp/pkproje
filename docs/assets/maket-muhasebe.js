@@ -377,6 +377,7 @@
   /* 136 (2026-09-26): fatura iş başına; istenirse müşteri başına toplu (aynı müşterinin faturaya hazır bütün işleri) */
   var hazirIsler = function (x) { return I.filter(function (y) { return y.m === x.m && oz(y).hazir.length; }); };
   var pencereRaporlari = function () { return W.isler.reduce(function (l, y) { return l.concat(oz(y).hazir.map(function (r) { return r.no; })); }, []); };
+  var sonImza = function () { return pencereRaporlari().map(MV.rapor).reduce(function (s, r) { var g = r && r.imza ? r.imza.zaman.slice(0, 10) : ""; return g > s ? g : s; }, ""); };
   function faturaPencere(odak) {
     var x = W.is, h = W.hata, soz = MV.tesisSozlesmesi(x.tesis, x.tarih), vg = soz ? soz.vade : 30, fi = tarihIso(W.tarih);
     var gecici = { raporlar: pencereRaporlari() }, o = { hazir: gecici.raporlar, surec: W.isler.reduce(function (l, y) { return l.concat(oz(y).surec); }, []) };
@@ -473,7 +474,9 @@
     else if (MV.fatura(no)) h.no = no + " zaten kayıtlı.";
     if (!fi) h.tarih = "GG.AA.YYYY biçiminde geçerli bir tarih.";
     else if (fi > MK.BUGUN) h.tarih = "İleri tarihli fatura kaydedilmez.";
-    else if (fi < x.tarih) h.tarih = "Denetimden (" + MK.tarihYaz(x.tarih) + ") önce olamaz.";
+    /* Ö5 (2026-10-01): ölçü faturaya giren raporların imzası — denetim günü değil (denemede raporlar plan gününden önce imzalanmıştı, geçerli
+       fatura "Denetimden önce olamaz" diye kaydedilemiyordu). İmzasız rapor faturaya girmez; fatura son imzadan önce kesilmez. */
+    else if (fi < sonImza()) h.tarih = "Faturaya giren son rapor " + MK.tarihEk(sonImza(), "de") + " imzalandı; fatura bundan önce olamaz.";
     W.hata = h; var hk = Object.keys(h);
     if (hk.length) { faturaPencere("w-" + hk[0]); return; }
     var soz = MV.tesisSozlesmesi(x.tesis, x.tarih), vg = soz ? soz.vade : 30, v = new Date(fi + "T12:00:00"); v.setDate(v.getDate() + vg);

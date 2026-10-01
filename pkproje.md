@@ -2123,6 +2123,11 @@ revizyon, alan kopyalama, hafif kusur devri, meslek eşleşme denetimi).
 - Emsal ürünler: https://opwire.app/iso-17020-periyodik-kontrol-yazilimi/ · https://17020muayene.vidco.com.tr/ · https://akuple.com/asansor-kontrol-yazilimi/ · https://ensyazilim.com/
 
 ## 11 · Değişiklik günlüğü
+- 2026-10-01 (207): **Ö5e · Fatura tarihinin ölçüsü raporların imzası** (uçtan uca denemenin beşinci bulgusu: raporlar 23.09'da imzalanmıştı,
+  plan günü 25.09'du; 23.09 tarihli fatura "Denetimden önce olamaz" diye kaydedilemiyordu). Kural artık: fatura, faturaya giren raporların en
+  son imzasından önce olamaz ("Faturaya giren son rapor GG.AA.YYYY'de imzalandı; fatura bundan önce olamaz."). İmzasız rapor zaten faturaya
+  girmez. Denemede KMF2026000000050 (3 rapor, 6.360,00 TL KDV dahil — teklifle aynı) kaydedildi; 3.000,00 TL + 3.360,00 TL tahsilatla ödendi
+  (fazla tutar "fazlası kaydedilmez" diye durdu). Ölçüm kilidi (m14 etkileşim); eski kurala dönünce düştüğü görüldü (48/49).
 - 2026-10-01 (206): **Ö5d · Plan aç'ta açılan planın işi Muhasebe'de** (uçtan uca denemenin dördüncü bulgusu: P-0926-041'in üç imzalı raporu
   vardı, Muhasebe › İşler'de yoktu, fatura kesilemiyordu). İşler tohum veriden kuruluyordu; tarayıcıda açılan planlar sonra yükleniyordu. Kayıt
   yüklendikten sonra raporu olan her açılmış plan iş olur (raporlar eklenir; plan en az denetimde). Denemede P-0926-041 "Faturaya hazır" geldi.
