@@ -2123,6 +2123,12 @@ revizyon, alan kopyalama, hafif kusur devri, meslek eşleşme denetimi).
 - Emsal ürünler: https://opwire.app/iso-17020-periyodik-kontrol-yazilimi/ · https://17020muayene.vidco.com.tr/ · https://akuple.com/asansor-kontrol-yazilimi/ · https://ensyazilim.com/
 
 ## 11 · Değişiklik günlüğü
+- 2026-10-01 (205): **Ö5c · Raporlar'da "Makette bakış": Mert Kaya · mekanik / Elif Aydın · elektrik** (uçtan uca denemenin üçüncü bulgusu:
+  elektrik raporu ET-9002 teknik yönetici onayından geçti ama son imzaya gelemedi — Raporlar makette yalnız Mert Kaya'nın gözündendi). Onaylar'daki
+  gibi bakış seçimi (#/ · #/?kisi=ea); üst çubukta kişinin adı, imza şeridi ve mobil imza isteği o kişinin. Rapor sayfasında bakış raporun
+  denetçisinden, kırıntı aynı bakışa döner. Uygulamada yok: herkes kendi raporlarını görür. Denemede ET-9002 Elif olarak mobil imzayla
+  imzalandı, müşteriye açıldı. İki ölçüm kilidi (m9). Not: denemede Elif'in zimmetindeki tesisat test cihazı (OC-003) kalibrasyonu geçmişti
+  (maketin bilerek koyduğu engel); Zimmetler'den depodaki OC-019 teslim edilince rapor gönderilebildi — akış doğru çalıştı.
 - 2026-10-01 (204): **Ö5b · Plan aç: plan günü iş sözleşmesinin dışındaysa uyarı** (uçtan uca denemenin ikinci bulgusu: teklif kabul →
   iş sözleşmesi 24.09'da başlıyor, Plan aç tarihi kendiliğinden bugün 23.09 geliyor, uyarı yoktu). Tarihler bölümünün altında sarı şerit:
   "İş sözleşmesi IS-… GG.AA.YYYY'de başlıyor; plan günü sözleşmeden önce." ya da "… bitti; plan günü sözleşmenin dışında." Tarih yazdıkça

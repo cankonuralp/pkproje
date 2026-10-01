@@ -7,7 +7,17 @@
 (function () {
   "use strict";
   var $ = MK.$, kacis = MK.kacis, ikon = MK.ikon, kirp = MK.kirp, rozet = MK.rozet, SZ = MK.SZ;
-  var BEN = "mk";
+  /* "Makette bakış" (Ö5, 2026-10-01; uçtan uca denemede elektrik raporu son imzaya gelemiyordu, ekran yalnız Mert Kaya'nındı): mekanik
+     denetçi Mert Kaya (#/…), elektrik denetçi Elif Aydın (#/…?kisi=ea). Rapor sayfasında bakış raporun denetçisinden. Uygulamada yok:
+     herkes kendi raporlarını görür. */
+  var BEN = "mk", DENETCI = { mk: "Denetçi · mekanik", ea: "Denetçi · elektrik" };
+  var ek = function () { return BEN === "ea" ? "?kisi=ea" : ""; };
+  function bakisKur(k) {
+    BEN = k; MK.BEN = k;
+    var u = document.querySelector(".a-kullanici"), p = MV.kisi(k);
+    if (u && p) { u.querySelector(".a-avatar").textContent = MV.bas(p.ad); u.querySelector(".a-kullanici-ad").textContent = p.ad; u.querySelector(".a-kullanici-rol").textContent = DENETCI[k]; }
+    if (MK.takipCiz) MK.takipCiz();
+  }
   var benim = function () { return MV.RAPORLAR.filter(function (r) { return r.kisi === BEN && !r.pasif; }); };   /* pasif rapor denetçide görünmez (2026-09-28) */
   var imzaBekleyen = function () { return benim().filter(function (r) { return r.durum === "onaylandi"; }); };
   var ekp = function (r) { return MV.ekipman(r.kod); };
@@ -71,12 +81,14 @@
   function uyariCiz() {
     sureDenetle();
     var l = imzaBekleyen(), t = telefonda(), sd = l.filter(function (r) { return r.imzaSuresi; });
-    $("a-uyari").innerHTML = l.length || t.length ? '<div class="a-uyari-serit">' +
+    $("a-uyari").innerHTML = '<div class="a-pano-anahtar a-bolum-serit"><span class="a-etiket a-etiket-satir">Makette bakış</span><div class="a-sekmeler" role="group" aria-label="Bakış">' +
+      [["mk", "Mert Kaya · mekanik"], ["ea", "Elif Aydın · elektrik"]].map(function (x) { return '<a class="a-sekme" href="#/' + (x[0] === "ea" ? "?kisi=ea" : "") + '"' + (BEN === x[0] ? ' aria-current="page"' : "") + ">" + x[1] + "</a>"; }).join("") + "</div></div>" +
+      (l.length || t.length ? '<div class="a-uyari-serit">' +
       (sd.length ? MK.serit("uyari", "clock", "<b>" + sd.length + " imza isteğinin süresi doldu</b> (telefonda " + ISTEK_DK + " dakika içinde onaylanmadı); yeniden gönderin.") : "") +
       (l.length ? '<div class="a-serit a-serit-uyari">' + ikon("file-signature", "a-ikon-kucuk") + "<span><b>" + l.length + " rapor imzanızı bekliyor</b></span>" +
         MK.tus({ eylem: "imza-ac", ad: "İmzala (" + l.length + ")", sinif: "a-tus-ikincil a-serit-tus" }) + "</div>" : "") +
       (t.length ? '<div class="a-serit a-serit-bilgi">' + ikon("smartphone", "a-ikon-kucuk") + "<span><b>" + t.length + " imza isteği telefonunuzda bekliyor</b></span>" +
-        MK.tus({ eylem: "telefon-ac", ad: "Telefonda onayla", sinif: "a-tus-ikincil a-serit-tus" }) + "</div>" : "") + "</div>" : "";
+        MK.tus({ eylem: "telefon-ac", ad: "Telefonda onayla", sinif: "a-tus-ikincil a-serit-tus" }) + "</div>" : "") + "</div>" : "");
   }
   function listeCiz() {
     uyariCiz();
@@ -97,13 +109,13 @@
     /* pasif rapor denetçide hiçbir yoldan açılmaz — eski bağlantı, geçmiş, açık sekme (2026-09-29, reisim: "Pasife alınan raporlar
        denetçilere gözükmesin sadece yöneticilere gözüksün"; sunucuda: yetkisiz = yok) */
     if (!r || r.kisi !== BEN || r.pasif) {
-      $("a-nesne").innerHTML = MK.kirinti([["Raporlar", "#/"]]) + '<h1 class="a-gizli" tabindex="-1">Rapor bulunamadı</h1>' +
+      $("a-nesne").innerHTML = MK.kirinti([["Raporlar", "#/" + ek()]]) + '<h1 class="a-gizli" tabindex="-1">Rapor bulunamadı</h1>' +
         MK.bos({ ikon: "circle-alert", baslik: "Rapor bulunamadı", metin: r && r.pasif && r.kisi === BEN ? "Bu rapor pasife alındı; yalnız yöneticiler görür." : "Bu adreste size ait rapor yok.", eylem: '<a class="a-tus a-tus-ikincil" href="#/">' + ikon("arrow-left", "a-ikon-kucuk") + "Raporlara dön</a>" });
       return;
     }
     var e = ekp(r), t = MV.tur(e.tur), ts = MV.tesis(r.tesis), m = MV.musteri(ts.m), portal = MV.musteriKullanicilari(m.id).filter(function (x) { return x.durum === "etkin"; });
     var yon = MV.kisi(MV.YONETICI[t.b]);
-    $("a-nesne").innerHTML = MK.kirinti([["Raporlar", "#/"], [r.no]]) +
+    $("a-nesne").innerHTML = MK.kirinti([["Raporlar", "#/" + ek()], [r.no]]) +
       '<div class="a-nesne-bas"><div class="a-nesne-kimlik"><div class="a-nesne-baslik"><h1 tabindex="-1">' + r.no + (r.revizyonlar && r.revizyonlar.length ? "-" + r.revizyonlar[0].ad : "") + "</h1>" + rozet(MV.raporDurum(r)) + "</div>" +
         '<p class="a-nesne-alt">' + ikon("wrench", "a-ikon-kucuk") + '<span><span class="a-kod">' + e.kod + "</span> · " + kacis(t.ad) + " · " + kacis(ts.ad) + " · " + kacis(m.kisa) + "</span></p></div>" +
         '<div class="a-eylem-cubugu">' + MK.tus({ eylem: "pdf", ad: "PDF indir", ikon: "file-text", sinif: "a-tus-ikincil" }) +
@@ -224,7 +236,10 @@
 
   /* ── GÖRÜNÜM ────────────────────────────────────────────────────────────────────────────────────────── */
   function rota() {
-    var h = location.hash, m;
+    var m = /^#\/r\/([A-Za-z0-9-]+)$/.exec(location.hash), rp = m && MV.rapor(m[1]);
+    var k = rp && DENETCI[rp.kisi] ? rp.kisi : m ? BEN : /[?&]kisi=ea/.test(location.hash) ? "ea" : "mk";
+    if (k !== BEN || MK.BEN !== BEN) bakisKur(k);
+    var h = location.hash.replace(/\?.*$/, "");
     if (h === "#/imza") return { v: "liste", pencere: true };
     if (h === "#/telefon") return { v: "liste", telefon: true };
     if ((m = /^#\/r\/([A-Za-z0-9-]+)$/.exec(h))) return { v: "rapor", no: m[1] };
@@ -332,7 +347,7 @@
   };
   MK.onGirdi = function (e) { if (W && W.tip === "revizeIstek" && e.target.id === "w-gerekce") { W.gerekce = e.target.value; return; } if (W && e.target.id === "w-pin") { W.pin = e.target.value.replace(/\D/g, ""); if (W.pin !== e.target.value) e.target.value = W.pin; } };
   /* kapanış olayı eşzamansız gelir: o arada pencere yeniden açıldıysa (ör. Vazgeç → hemen "Telefonda onayla") yeni durum silinmez */
-  $("a-pencere").addEventListener("close", function () { if ($("a-pencere").open) return; W = null; var r = rota(); if (r.pencere || r.telefon) history.replaceState(null, "", "#/"); });
+  $("a-pencere").addEventListener("close", function () { if ($("a-pencere").open) return; W = null; var r = rota(); if (r.pencere || r.telefon) history.replaceState(null, "", "#/" + ek()); });
 
   MK.kabuk({ modul: 14, kullanici: { bas: "MK", ad: "Mert Kaya", rol: "Denetçi" } });
   goster(false);

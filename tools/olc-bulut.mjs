@@ -232,7 +232,10 @@ export const DURUMLAR = {
   ] },
   m9: { sayfa: "maket/raporlar.html", durumlar: [
     { ad: "raporlar · denetçinin listesi + imza şeridi", hash: "#/" },
-    { ad: "raporlar · imza bekleyen çipi", hash: "#/", adim: [["tikla", '[data-sz="r"] [data-cip="imza"]']] },
+    /* Ö5 (2026-10-01): "Makette bakış" — elektrik denetçisinin raporları da son imzaya gelir */
+    { ad: "raporlar · Makette bakış Elif Aydın: yalnız onun raporları, üst çubukta adı, imza penceresinde elektrik raporu", hash: "#/?kisi=ea", adim: [["tikla", '[data-eylem="imza-ac"]']], bekle: 'document.querySelector(".a-kullanici-ad").textContent === "Elif Aydın" && document.querySelector(\'#a-uyari a[aria-current="page"]\').textContent === "Elif Aydın · elektrik" && /ET-2002/.test(document.querySelector("#a-pencere").textContent) && !/KK-1078/.test(document.querySelector("#a-pencere").textContent) && [...document.querySelectorAll("#a-liste tbody tr")].every(tr => /\\b(ET|AT|YK|DP|JN)-/.test(tr.textContent))' },
+    { ad: "raporlar · bakış rapordan: Elif\'in raporu açılınca üst çubuk Elif, kırıntı ?kisi=ea", hash: "#/r/KM-0926-797-f716e", bekle: 'document.querySelector(".a-kullanici-ad").textContent === "Elif Aydın" && document.querySelector(\'#a-nesne .a-kirinti a[href="#/?kisi=ea"]\') !== null' },
+    { ad: "raporlar · imza bekleyen çipi", hash: "#/", adim:[["tikla", '[data-sz="r"] [data-cip="imza"]']] },
     { ad: "rapor · imza bekliyor (PDF önizlemesi)", hash: "#/r/KM-0926-770-a99c1" },
     { ad: "rapor · müşteriye açık, imzalı", hash: "#/r/KM-0926-760-f535b" },
     { ad: "rapor · geri gönderilmiş taslak", hash: "#/r/KM-0926-792-9ce3b" },
