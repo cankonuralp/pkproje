@@ -2123,6 +2123,13 @@ revizyon, alan kopyalama, hafif kusur devri, meslek eşleşme denetimi).
 - Emsal ürünler: https://opwire.app/iso-17020-periyodik-kontrol-yazilimi/ · https://17020muayene.vidco.com.tr/ · https://akuple.com/asansor-kontrol-yazilimi/ · https://ensyazilim.com/
 
 ## 11 · Değişiklik günlüğü
+- 2026-10-01 (203): **Ö5a · Tarihten sonraki ek yılın okunuşuna göre** (§9 kırk dördüncü tur, uçtan uca denemenin ilk bulgusu). Teklif
+  gönderilince bildirim "geçerlilik 23.10.2026'e kadar" diyordu; doğrusu "'ya". Tek yardımcı `MK.tarihEk(tarih, "e" | "de" | "den")`: yılın son
+  okunan sözcüğüne (birler, sıfırsa onlar, o da sıfırsa yüz / bin) göre ünlü uyumu ve sert ünsüz (2026'ya · 2027'de · 2025'ten · 2030'a).
+  Altı yer buna bağlandı: teklif geçerliliği (kart + bildirim), Dökümanlar yerine geçen standart (liste + dosya satırı), ölçüm cihazı kalibrasyon
+  şeritleri, Plan aç İSG-KATİP bitişi. Ölçüm m12'ye kilit eklendi. Denemede iki şüphe yeniden üretilemedi: boş hava tankı raporu "Zorunlu
+  alanlar doldurulmadı" penceresini açıyor (HT-9004 ile sıfırdan denendi); ekipman ekle tür araması süzüyor (önceki görüntü deneme betiğimin
+  odak sırasından).
 - 2026-10-01 (202): **Ö2 · Müşteriye göre bulut klasörüne otomatik kayıt** (§9 kırk dördüncü tur). Firma ayarları › **Bulut kaydı**: bulut seçimi
   (Google Drive · OneDrive / SharePoint · Dropbox · Yandex Disk · kendi sunucunuz SFTP / WebDAV), hesap bağlama, ana klasör, klasör düzeni
   (Müşteri / Tesis · Müşteri / Tesis / Yıl · Müşteri / Yıl), "İmzalı raporların hepsini gönder", son kayıtlar. Yurt dışında saklayan bulutta

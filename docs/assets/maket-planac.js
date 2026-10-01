@@ -68,7 +68,7 @@
       : el ? { tur: "elle", no: el } : { tur: "yok" };
     if (isg.tur === "yok") e.push("İSG-KATİP sözleşme ID'si yok");
     else if (isg.tur === "gec") e.push("İSG-KATİP onayı geç");
-    else if (isg.tur === "bitti") e.push("İSG-KATİP sözleşmesi " + MK.tarihYaz(x.bitis) + "'de bitmiş");
+    else if (isg.tur === "bitti") e.push("İSG-KATİP sözleşmesi " + MK.tarihEk(x.bitis, "de") + " bitmiş");
     if (!p.ekipnet) e.push("EKİPNET kayıt numarası yok");
     if (!MV.yetkiliOlabilir(p)) e.push("Meslek yetkili kişi olamaz");
     if (p.hesap.durum !== "etkin") e.push("İlk girişini yapmadı");

@@ -98,7 +98,7 @@
       (kabul ? '<div class="a-serit-kap">' + MK.serit("onay", "circle-check", "Kabul edildi " + MK.tarihYaz(t.sonuc) + "." + (m ? "" : " Müşteri kayıtlı değil: “Müşteri olarak kaydet” ile müşteri ve tesis açılır, sonra iş sözleşmesi ve plan.")) + "</div>" : "") +
       '<div class="a-serit-kap"><dl class="a-bilgi">' + bilgi("Hazırlanan", MK.tarihYaz(t.tarih) + '<span class="a-alt-satir">' + kacis(MV.kisi(t.hazirlayan).ad) + "</span>") +
         bilgi("Gönderildi", t.gonderildi ? MK.tarihYaz(t.gonderildi) : '<span class="a-deger-yok">Henüz değil</span>') +
-        bilgi("Geçerlilik", t.gecerlilik + " gün" + (t.gonderildi ? '<span class="a-alt-satir">' + MK.tarihYaz(bitis(t)) + "'e kadar</span>" : "")) +
+        bilgi("Geçerlilik", t.gecerlilik + " gün" + (t.gonderildi ? '<span class="a-alt-satir">' + MK.tarihEk(bitis(t), "e") + " kadar</span>" : "")) +
         bilgi("İlgili kişi", kacis(m ? m.ilgili : t.aday.yetkili || "-")) + "</dl></div>" +
       /* kayıtlı olmayan müşterinin elle girilen bilgileri */
       (m ? "" : '<section class="a-bolum" aria-labelledby="a-b-aday"><div class="a-alt-bas"><h2 class="a-alt-baslik" id="a-b-aday">Müşteri bilgileri</h2></div><dl class="a-satirlar">' +
@@ -303,7 +303,7 @@
     }
     F = null; location.hash = "#/t/" + t.no; MK.bildir(t.no + " kaydedildi (taslak).");
   };
-  X["gonder"] = function () { var t = MV.teklif(rota().no); t.durum = "gonderildi"; t.gonderildi = MK.BUGUN; teklifCiz(t); MK.bildir(t.no + " gönderildi olarak işaretlendi; geçerlilik " + MK.tarihYaz(bitis(t)) + "'e kadar."); };
+  X["gonder"] = function () { var t = MV.teklif(rota().no); t.durum = "gonderildi"; t.gonderildi = MK.BUGUN; teklifCiz(t); MK.bildir(t.no + " gönderildi olarak işaretlendi; geçerlilik " + MK.tarihEk(bitis(t), "e") + " kadar."); };
   X["kabul"] = function () { var t = MV.teklif(rota().no); t.durum = "kabul"; t.sonuc = MK.BUGUN; teklifCiz(t); MK.bildir(t.no + " kabul edildi. Sıradaki: iş sözleşmesi, sonra plan."); };
   X["red-kaydet"] = function () {
     if (W.gerekce.trim().length < 5) { W.hata = "Gerekçe yazılmalı."; redCiz("w-gerekce"); return; }

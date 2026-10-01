@@ -284,6 +284,8 @@ export const DURUMLAR = {
     { ad: "teklifler · liste", hash: "#/" },
     { ad: "teklif · kabul edildi, raporlanan adet", hash: "#/t/T-0926-001" },
     { ad: "teklif · gönderildi", hash: "#/t/T-0926-010" },
+    /* Ö5 (2026-10-01): tarihten sonraki ek yılın okunuşuna göre ("23.10.2026'e" yanlıştı) */
+    { ad: "teklif · geçerlilik 'ya kadar; tarih eki yılın okunuşuna göre (2026'ya · 2027'de · 2025'ten · 2030'a)", hash: "#/t/T-0926-010", bekle: '/\\d{4}\\x27ya kadar/.test(document.querySelector("#a-icerik").textContent) && !/\\d{4}\\x27e kadar/.test(document.querySelector("#a-icerik").textContent) && MK.tarihEk("2026-10-23", "e") === "23.10.2026\\x27ya" && MK.tarihEk("2027-01-02", "de") === "02.01.2027\\x27de" && MK.tarihEk("2025-01-02", "den") === "02.01.2025\\x27ten" && MK.tarihEk("2030-01-02", "e") === "02.01.2030\\x27a"' },
     { ad: "teklif · reddedildi", hash: "#/t/T-0926-008" },
     { ad: "red gerekçesi penceresi · boş", hash: "#/t/T-0926-009/red", adim: [["tikla", '[data-eylem="red-kaydet"]']] },
     { ad: "yeni teklif · boş", hash: "#/yeni" },

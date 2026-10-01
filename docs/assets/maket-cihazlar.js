@@ -127,9 +127,9 @@
     }
     if (SON_CIHAZ !== v.id) { MK.suzgecSifirla("a"); SON_CIHAZ = v.id; }   /* başka cihaza geçince ara kontrol süzgeci baştan */
     var d = MV.kalDurum(v), kim = MV.kimde(v.id), k = kalan(v.bitis), as = araEn(v), t = MV.cihazTuru(v.cihazTur), h = MV.hareketler(v.id);
-    var serit = d === "gecti" ? MK.serit("hata", "circle-x", "Kalibrasyonu " + MK.tarihYaz(v.bitis) + "'de bitti." + (kim !== "depo" && kim !== "lab" ? " " + kacis(MV.kisi(kim).ad) + " zimmetinde: bu cihazın geldiği raporlar yönetici onayına gönderilemez. Kalibrasyona gönderin ya da zimmetten alın." : ""))
-      : d === "yakin" ? MK.serit("uyari", "triangle-alert", "Kalibrasyon " + MK.tarihYaz(v.bitis) + "'de bitiyor (" + k + " gün). Bitince bu cihazın geldiği raporlar onaya gönderilemez.")
-      : d === "lab" ? MK.serit("bilgi", "flask-conical", "Kalibrasyonda (" + MK.tarihYaz(h[0].tarih) + "'den beri). Yeni sertifika gelince kalibrasyon kaydı eklenir, cihaz depoya döner.") : "";
+    var serit = d === "gecti" ? MK.serit("hata", "circle-x", "Kalibrasyonu " + MK.tarihEk(v.bitis, "de") + " bitti." + (kim !== "depo" && kim !== "lab" ? " " + kacis(MV.kisi(kim).ad) + " zimmetinde: bu cihazın geldiği raporlar yönetici onayına gönderilemez. Kalibrasyona gönderin ya da zimmetten alın." : ""))
+      : d === "yakin" ? MK.serit("uyari", "triangle-alert", "Kalibrasyon " + MK.tarihEk(v.bitis, "de") + " bitiyor (" + k + " gün). Bitince bu cihazın geldiği raporlar onaya gönderilemez.")
+      : d === "lab" ? MK.serit("bilgi", "flask-conical", "Kalibrasyonda (" + MK.tarihEk(h[0].tarih, "den") + " beri). Yeni sertifika gelince kalibrasyon kaydı eklenir, cihaz depoya döner.") : "";
     $("a-nesne").innerHTML = MK.kirinti([["Ölçüm cihazları", "#/"], [v.env]]) +
       '<div class="a-nesne-bas"><div class="a-nesne-kimlik"><div class="a-nesne-baslik"><h1 tabindex="-1">' + v.env + " · " + kacis(v.ad) + "</h1>" + rozet(KAL[d]) + "</div>" +
         '<p class="a-nesne-alt">' + ikon("gauge", "a-ikon-kucuk") + "<span>" + kacis(v.marka + " " + v.model) + " · seri " + v.seri + "</span></p></div>" +

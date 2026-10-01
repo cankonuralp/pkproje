@@ -21,6 +21,15 @@
   MK.tarihNo = function (iso) { return iso.slice(8, 10) + "." + iso.slice(5, 7) + "." + iso.slice(0, 4); };
   MK.gunYaz = MK.gunKisa = MK.ayYil = MK.tarihYaz = MK.tarihNo;
   MK.zamanYaz = function (z) { return MK.tarihNo(z) + " " + z.slice(11, 16); };
+  /* tarihten sonra gelen ek, yılın okunuşuna göre (Ö5, 2026-10-01: "23.10.2026'e kadar" yanlıştı → "'ya"): son sözcük birler basamağı,
+     o sıfırsa onlar, o da sıfırsa yüz / bin. tur: "e" (yönelme) · "de" (bulunma) · "den" (ayrılma). MK.tarihEk("2026-10-23", "e") → "23.10.2026'ya" */
+  var SAYI_SON = [["bin", "yüz"], ["bir", "iki", "üç", "dört", "beş", "altı", "yedi", "sekiz", "dokuz"], ["on", "yirmi", "otuz", "kırk", "elli", "altmış", "yetmiş", "seksen", "doksan"]];
+  MK.tarihEk = function (iso, tur) {
+    var y = iso.slice(0, 4), b = +y[3], o = +y[2], s = b ? SAYI_SON[1][b - 1] : o ? SAYI_SON[2][o - 1] : +y[1] ? "yüz" : "bin";
+    var sesli = s.replace(/[^aeıioöuü]/g, ""), son = sesli[sesli.length - 1], ince = "eiöü".indexOf(son) >= 0, ac = /[aeıioöuü]$/.test(s), sert = /[fstkçşhp]$/.test(s);
+    var ek = tur === "e" ? (ac ? "y" : "") + (ince ? "e" : "a") : (sert ? "t" : "d") + (ince ? "e" : "a") + (tur === "den" ? "n" : "");
+    return MK.tarihNo(iso) + "'" + ek;
+  };
   MK.simdi = function () { return MK.BUGUN + "T" + MK.SAAT; };
   /* iki tarih arası gün (b − a); "bugün"e göre kalan gün için gunFarki(MK.BUGUN, x) */
   MK.gunFarki = function (a, b) { return Math.round((new Date(b.slice(0, 10) + "T12:00:00") - new Date(a.slice(0, 10) + "T12:00:00")) / 864e5); };

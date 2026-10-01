@@ -50,7 +50,7 @@
     } },
     { k: "rapor", baslik: "Rapor", kart: "govde", sira: 4, hucre: function (s) { return '<span class="a-kart-etiket">Bu sürümle rapor</span><span class="a-sayi">' + raporSayisi(s) + "</span>"; } },
     { k: "yuklendi", baslik: "Yüklendi", kart: "govde", sira: 5, hucre: function (s) { return '<span class="a-kart-etiket">Yüklendi</span><span>' + MK.tarihYaz(s.tarih) + kirp(MV.kisi(s.yukleyen).ad, "a-alt-satir") + "</span>"; } },
-    { k: "durum", baslik: "Durum", kart: "rozet", sira: 1, hucre: function (s) { return rozet(durum(s)) + (s.yerine ? '<span class="a-alt-satir">' + MK.gunKisa(s.bitti) + "'e kadar</span>" : ""); } }
+    { k: "durum", baslik: "Durum", kart: "rozet", sira: 1, hucre: function (s) { return rozet(durum(s)) + (s.yerine ? '<span class="a-alt-satir">' + MK.tarihEk(s.bitti, "e") + " kadar</span>" : ""); } }
   ];
   function listeCiz() {
     MK.listeCiz({ on: "s", kayitlar: S, sayacId: "a-sayac", listeId: "a-liste",
@@ -93,7 +93,7 @@
       '<section class="a-bolum" aria-labelledby="a-b-surum"><div class="a-alt-bas"><h2 class="a-alt-baslik" id="a-b-surum">Sürümler</h2><span class="a-sayac"><b>' + surumler.length + "</b> sürüm</span></div>" +
         '<ol class="a-gecmis">' + surumler.map(function (x) {
           return '<li><span class="a-gecmis-zaman">' + MK.tarihYaz(x.tarih) + '</span><span class="a-gecmis-ne"><b>' + (x.k === s.k ? kacis(ad(x)) : '<a class="a-baglanti" href="#/s/' + x.k + '">' + kacis(ad(x)) + "</a>") + "</b> " + rozet(durum(x)) +
-            '<span class="a-not-metin">' + kacis(x.dosya.ad) + " · " + boyut(x.dosya.kb) + " · " + raporSayisi(x) + " rapor · yükleyen " + kacis(MV.kisi(x.yukleyen).ad) + (x.bitti ? " · " + MK.tarihYaz(x.bitti) + "'e kadar" : "") + "</span>" + MK.pdfTus(x.dosya.ad, "Aç", "a-tus-ikincil a-gecmis-tus") + "</span></li>";
+            '<span class="a-not-metin">' + kacis(x.dosya.ad) + " · " + boyut(x.dosya.kb) + " · " + raporSayisi(x) + " rapor · yükleyen " + kacis(MV.kisi(x.yukleyen).ad) + (x.bitti ? " · " + MK.tarihEk(x.bitti, "e") + " kadar" : "") + "</span>" + MK.pdfTus(x.dosya.ad, "Aç", "a-tus-ikincil a-gecmis-tus") + "</span></li>";
         }).join("") + "</ol></section>" +
       '<section class="a-bolum" aria-labelledby="a-b-rapor"><div class="a-alt-bas"><h2 class="a-alt-baslik" id="a-b-rapor">Raporda</h2>' +
         "</div>" +
