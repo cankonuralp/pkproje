@@ -1007,7 +1007,25 @@ Yeni format, ekipman türü ya da PDF eklendiğinde de geçerlidir; ekran başı
    yüklenen dosyanın KENDİSİNİ gösterir (örnek kayıtta temel format); her yüklemenin yanında Aç · Değiştir · Sil; silme onayla. Dosya
    kaydın zorunlu parçasıysa (imzalı form, imzalı rapor) silinince kayıt bir önceki duruma döner.
 
- (2026-09-18 araştırması; kaynaklar bölüm 10)
+### 3.9 · Rol beklentileri — araştırma ve analiz (2026-10-01, §9 kırk dördüncü tur; reisim: *"hangi roldeki personelin bu uygulamadan beklentileri neler olabilir o role göre internetten derin araştırma ve analiz yapıp bak"*)
+Yöntem: emsal saha / muayene yazılımlarının herkese açık sayfaları, ISO/IEC 17020 ve akreditasyon rehberleri, İSG uzmanı forumları ve
+rehberleri, saha hizmeti (FSM) ve faturalama yazılımı yazıları (kaynaklar §10, "Rol araştırması"). Her rol: **beklenti** → makette **var** →
+**açık** (öneri; karar reisim'in, hiçbiri kendiliğinden yapılmaz). Rakip uygulamalardan gerçek veri alınmadı.
+
+| Rol | Beklenti (kaynaklardan) | Makette var | Açık — öneri / soru |
+|---|---|---|---|
+| **Muayene uzmanı (denetçi, sahada)** | İnternetsiz form doldurma, bağlanınca eşitleme; QR / etiketten doğru ekipmana erişim; fotoğraf; önceki raporu görme; tek dokunuşla firma formatlı PDF; e-imza / mobil imza; az yazı, çok seçim; günlük iş listesi | Planlar (kabul / red), plan içi, saha raporu (madde seçimi, ölçüm cihazı, fotoğraf, önceki kusur devri, Kaydet ve kopyala), zorunlu alan penceresi, mobil / e-imza, mesai çubuğu, telefon düzeni | **Çevrimdışı çalışma** (§8: sonraki faz, şema hazır) — sahada en çok istenen; **QR / etiket okutma** ile ekipman açma; sesle not; rapor süresi hedefi göstergesi |
+| **Teknik yönetici (branş, ISO 17020)** | Rapor gözden geçirme ve onay kuyruğu; denetçinin yetkinliğinin izlenmesi (rapor incelemesi, sahada gözlem, tanıklık, belirli sıklıkta); cihaz kalibrasyonu; yöntem ve form sürümü yönetimi; geri gönderme gerekçesiyle iz | Onaylar (kuyruk, 24 saat kırmızı, geri gönder / revize, durum değiştir, pasif), vekil branş, kalibrasyon uyarıları, Formatı güncelle, personel kartında atama ve eğitimler | **Gözetim / tanıklık kaydı** (denetçi başına "son sahada gözlem" tarihi ve sıklık uyarısı — 17020'nin açık şartı); **geri gönderme nedenleri istatistiği** (hangi madde sık hatalı) |
+| **Planlama ekibi** | Yetki / sertifika eşleşmeli atama (süresi geçen sertifikalı kişi atanamaz uyarısı); takvim, çakışma, yol / bölge; periyodu gelen ekipman listesi; müşteriye ön bildirim | Plan aç (meslek yetkisi, ekipman ataması, İSG-KATİP, çakışma uyarıları, Ö5b sözleşme dışı gün), Uyarılar (periyodu gelen), Ön bilgilendirme formu | **Takvim görünümü** (kişi × gün); **bölge / il gruplama** ile aynı güne tesis toplama; periyodu gelen ekipmandan **tek tuşla teklif / plan** |
+| **Firma yöneticisi (sahip)** | Rapor tamamlanma süresi, kişi başı verim, gelir / kâr, geciken alacak, uyum riski (süresi geçen kalibrasyon, sertifika); tek ekranda özet | Ana sayfa (rol başına), Performans (24/48 saat, kişi başı kazanç), Muhasebe gelir-gider, iş kârlılığı, Firma ayarları, Verileri dışa aktar | **Haftalık özet e-postası** (bildirim kuralı gereği reisim kararı); müşteri bazında kârlılık; dönemsel karşılaştırma (bu ay / geçen yıl aynı ay) |
+| **Muhasebe** | İşe bağlı faturalama (imzalı rapor → fatura), sözleşme vadesi, geciken alacak uyarısı, kısmi tahsilat, e-Fatura programına aktarım, masraf onayı | Muhasebe (işler, faturaya hazır, fatura, tahsilat, vadesi geçen, giderler, masraf formu, bordro), Excel içe / dışa | **e-Fatura / muhasebe programına aktarım dosyası** (hangi program kullanılıyor — soru); **toplu faturalama** (ay sonu, müşteri başına tek fatura) |
+| **Müşteri (İSG uzmanı / işveren)** | Bütün raporlara tek yerden erişim, Excel / ZIP indirme; uygunsuzlukların takibi ve "Eksiklik giderildi" kaydı (İSG-KATİP'te de girilir); bir sonraki kontrol tarihi ve yaklaşınca hatırlatma; uygunsuz ekipmana "kullanılamaz" işaretlemesi; tekrar kontrol talebi | Müşteri paneli (raporlar, uygunsuzluklar, planlanan kontroller, sözleşmeler, Excel "Rapor" bağlantılı, ZIP), bulut klasörüne otomatik kayıt (Ö2) | **"Eksiklik giderildi" + kanıt fotoğrafı** müşteri panelinden, firmaya "tekrar kontrol" talebi olarak düşsün; **ekipman etiketi / QR** (müşteri okutunca son rapor); sonraki kontrol hatırlatması (bildirim — reisim kararı) |
+
+**Önceliğe göre öneri (benim sıralamam):** (1) müşteri panelinden "Eksiklik giderildi / tekrar kontrol talebi" — işverenin yasal yükümlülüğü ve
+firmaya yeni iş; (2) teknik yöneticiye gözetim / tanıklık kaydı — 17020 denetiminde sorulan; (3) planlamaya takvim görünümü; (4) çevrimdışı
+saha (zaten planlı, sonraki faz); (5) QR etiket. Bildirim gerektirenler (hatırlatma, haftalık özet) reisim demeden kurulmaz (anayasa 1.3).
+
+## 4 · Mevzuat bulguları (2026-09-18 araştırması; kaynaklar bölüm 10)
 
 ### 4.1 Çerçeve
 - **İş Ekipmanlarının Kullanımında Sağlık ve Güvenlik Şartları Yönetmeliği** (RG 25/4/2013, 28628). Son büyük
@@ -2120,9 +2138,17 @@ revizyon, alan kopyalama, hafif kusur devri, meslek eşleşme denetimi).
 - Reisim'in verdiği ek kaynaklar: https://www.tse.org.tr/duyuru/tse-is-ekipmanlari-egitimi-2026-agustos/ ·
   https://www.emo.org.tr/ekler/0f370ccd0984068_ek.pdf — ⚠️ EMO belgesi 2026-09-22'de açıldı, **meslek listesi
   içermiyordu**; meslek yetkileri bu yüzden yönetmeliğin kendisinden alındı (yukarıdaki birincil kaynak).
+- Rol araştırması (2026-10-01, §3.9): ISO/IEC 17020 denetçi izleme — https://a2la.org/inspector-monitoring-from-an-iso-iec-17020-perspective/ ·
+  https://nata.com.au/files/2021/05/ISO_IEC-17020-Assessment-Worksheet.pdf · İSG-KATİP ve uygunsuzluk takibi — https://isgfrm.com/threads/isg-katip-uezerinden-periyodik-kontrol-takibi-nasil-yapilir.32284/ ·
+  https://www.ekipmantakip.com.tr/rehber/ · https://isgbys.com/blog/is-ekipmanlari-periyodik-kontrol · saha yazılımı beklentileri —
+  https://vizyontechyazilim.com/blog/periyodik-kontrol-sureci-nasil-dijitallestirilir · http://www.vidco.com.tr/periyodik-kontrol-yazilimi ·
+  teknisyen yönetimi / sertifika süresi — https://fieldzenpro.com/technician-management-software · https://daarsoft.com/inspection-management-software/
 - Emsal ürünler: https://opwire.app/iso-17020-periyodik-kontrol-yazilimi/ · https://17020muayene.vidco.com.tr/ · https://akuple.com/asansor-kontrol-yazilimi/ · https://ensyazilim.com/
 
 ## 11 · Değişiklik günlüğü
+- 2026-10-01 (212): **Ö6 · Rol beklentileri araştırması** (§9 kırk dördüncü tur) → yeni **§3.9**: altı rol (muayene uzmanı, teknik yönetici,
+  planlama, firma yöneticisi, muhasebe, müşteri) için beklenti · makette var · açık öneri tablosu ve öncelik sırası; kaynaklar §10. Hiçbiri
+  yapılmadı — reisim karar verir. Ayrıca 2026-09-25'te bir düzenlemede silinmiş "## 4 · Mevzuat bulguları" başlığı geri kondu.
 - 2026-10-01 (211): **Ö5 · Uçtan uca deneme kapanışı** (§9 kırk dördüncü tur: "bir muayene firmasıymışsın gibi, 0 dan teklif plan açma denetim
   yapma fatura kesme gibi tüm adımları … tek tek kontrol et dene, müşteri görünümüne de bak"). Kalıcı bir tarayıcı profilinde sırayla: müşteri ekle
   (Deneme Kazan Sanayi A.Ş., uydurma) → tesis ekle → teklif T-0926-014 (2 hava tankı × 900 + 1 iç tesisat 3.500 = 6.360,00 TL KDV dahil) gönder →
