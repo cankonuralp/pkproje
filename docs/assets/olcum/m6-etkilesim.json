@@ -2,9 +2,23 @@
  "maket": "m6",
  "tarih": "2026-10-01",
  "arac": "tools/olc-bulut.mjs --etkilesim (başsız tarayıcı, 1920 açık tema; gen verilen denemede o genişlik)",
- "toplam": 20,
- "gecen": 20,
+ "toplam": 22,
+ "gecen": 22,
  "denemeler": [
+  {
+   "ad": "plan günü sözleşme bitişinden sonra: 'İş sözleşmesi … bitti' uyarısı",
+   "gen": 1920,
+   "sayfa": "maket/plan-ac.html",
+   "hash": "#/?tesis=t6",
+   "gecti": true
+  },
+  {
+   "ad": "plan günü sözleşme başlangıcından önce: 'başlıyor' uyarısı; içindeyken şerit yok",
+   "gen": 1920,
+   "sayfa": "maket/plan-ac.html",
+   "hash": "#/?tesis=t4",
+   "gecti": true
+  },
   {
    "ad": "tesisten gelince: tarih sonraki kontrol; ekipman seçimi yok, özette 6 ekipman hepsi plana girer",
    "gen": 1920,

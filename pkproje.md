@@ -2123,6 +2123,11 @@ revizyon, alan kopyalama, hafif kusur devri, meslek eşleşme denetimi).
 - Emsal ürünler: https://opwire.app/iso-17020-periyodik-kontrol-yazilimi/ · https://17020muayene.vidco.com.tr/ · https://akuple.com/asansor-kontrol-yazilimi/ · https://ensyazilim.com/
 
 ## 11 · Değişiklik günlüğü
+- 2026-10-01 (208): **Ö5f · Kilit düzeltmesi: 203–205'in kilitleri gerçekten denetlemiyordu.** Ölçüm aracının durum kümesi (`olc-bulut.mjs
+  <grup>`) `bekle` koşulunu değerlendirmez, yalnız ekranı ölçer; 203, 204 ve 205'te "kilit eklendi" dediğim beş deneme oraya konmuştu, geçmeleri bir
+  şey kanıtlamıyordu (commit mesajlarında da öyle yazdım — yanlıştı). Beşi `--etkilesim` kümesine taşındı; Elif bakışı kilidinin koşulu da
+  düzeltildi (tarih ile kod arasında sözcük sınırı yok → rapor numarasının denetçisi kayıttan). Her biri düzeltmesiz dosyayla düşüyor (m12 19/20,
+  m6 20/22, m9 50/52), düzeltmeyle geçiyor (m12 20/20, m6 22/22, m9 52/52). Durum kümesinde başka `bekle`li deneme yok (sayıldı).
 - 2026-10-01 (207): **Ö5e · Fatura tarihinin ölçüsü raporların imzası** (uçtan uca denemenin beşinci bulgusu: raporlar 23.09'da imzalanmıştı,
   plan günü 25.09'du; 23.09 tarihli fatura "Denetimden önce olamaz" diye kaydedilemiyordu). Kural artık: fatura, faturaya giren raporların en
   son imzasından önce olamaz ("Faturaya giren son rapor GG.AA.YYYY'de imzalandı; fatura bundan önce olamaz."). İmzasız rapor zaten faturaya
@@ -2136,17 +2141,17 @@ revizyon, alan kopyalama, hafif kusur devri, meslek eşleşme denetimi).
   elektrik raporu ET-9002 teknik yönetici onayından geçti ama son imzaya gelemedi — Raporlar makette yalnız Mert Kaya'nın gözündendi). Onaylar'daki
   gibi bakış seçimi (#/ · #/?kisi=ea); üst çubukta kişinin adı, imza şeridi ve mobil imza isteği o kişinin. Rapor sayfasında bakış raporun
   denetçisinden, kırıntı aynı bakışa döner. Uygulamada yok: herkes kendi raporlarını görür. Denemede ET-9002 Elif olarak mobil imzayla
-  imzalandı, müşteriye açıldı. İki ölçüm kilidi (m9). Not: denemede Elif'in zimmetindeki tesisat test cihazı (OC-003) kalibrasyonu geçmişti
+  imzalandı, müşteriye açıldı. İki ölçüm kilidi m9 etkileşimde (208'de taşındı). Not: denemede Elif'in zimmetindeki tesisat test cihazı (OC-003) kalibrasyonu geçmişti
   (maketin bilerek koyduğu engel); Zimmetler'den depodaki OC-019 teslim edilince rapor gönderilebildi — akış doğru çalıştı.
 - 2026-10-01 (204): **Ö5b · Plan aç: plan günü iş sözleşmesinin dışındaysa uyarı** (uçtan uca denemenin ikinci bulgusu: teklif kabul →
   iş sözleşmesi 24.09'da başlıyor, Plan aç tarihi kendiliğinden bugün 23.09 geliyor, uyarı yoktu). Tarihler bölümünün altında sarı şerit:
   "İş sözleşmesi IS-… GG.AA.YYYY'de başlıyor; plan günü sözleşmeden önce." ya da "… bitti; plan günü sözleşmenin dışında." Tarih yazdıkça
-  güncellenir. Uyarıdır, engel değil. Sözleşmesi hiç olmayan tesiste şerit yok (eski müşteriler teklifsiz). İki ölçüm kilidi (m6).
+  güncellenir. Uyarıdır, engel değil. Sözleşmesi hiç olmayan tesiste şerit yok (eski müşteriler teklifsiz). İki ölçüm kilidi m6 etkileşimde (208'de taşındı).
 - 2026-10-01 (203): **Ö5a · Tarihten sonraki ek yılın okunuşuna göre** (§9 kırk dördüncü tur, uçtan uca denemenin ilk bulgusu). Teklif
   gönderilince bildirim "geçerlilik 23.10.2026'e kadar" diyordu; doğrusu "'ya". Tek yardımcı `MK.tarihEk(tarih, "e" | "de" | "den")`: yılın son
   okunan sözcüğüne (birler, sıfırsa onlar, o da sıfırsa yüz / bin) göre ünlü uyumu ve sert ünsüz (2026'ya · 2027'de · 2025'ten · 2030'a).
   Altı yer buna bağlandı: teklif geçerliliği (kart + bildirim), Dökümanlar yerine geçen standart (liste + dosya satırı), ölçüm cihazı kalibrasyon
-  şeritleri, Plan aç İSG-KATİP bitişi. Ölçüm m12'ye kilit eklendi. Denemede iki şüphe yeniden üretilemedi: boş hava tankı raporu "Zorunlu
+  şeritleri, Plan aç İSG-KATİP bitişi. Ölçüm kilidi m12 etkileşimde (208'de taşındı). Denemede iki şüphe yeniden üretilemedi: boş hava tankı raporu "Zorunlu
   alanlar doldurulmadı" penceresini açıyor (HT-9004 ile sıfırdan denendi); ekipman ekle tür araması süzüyor (önceki görüntü deneme betiğimin
   odak sırasından).
 - 2026-10-01 (202): **Ö2 · Müşteriye göre bulut klasörüne otomatik kayıt** (§9 kırk dördüncü tur). Firma ayarları › **Bulut kaydı**: bulut seçimi

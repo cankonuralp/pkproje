@@ -2,9 +2,23 @@
  "maket": "m9",
  "tarih": "2026-10-01",
  "arac": "tools/olc-bulut.mjs --etkilesim (başsız tarayıcı, 1920 açık tema; gen verilen denemede o genişlik)",
- "toplam": 50,
- "gecen": 50,
+ "toplam": 52,
+ "gecen": 52,
  "denemeler": [
+  {
+   "ad": "raporlar · Makette bakış Elif Aydın: yalnız onun raporları, üst çubukta adı, imza penceresinde elektrik raporu",
+   "gen": 1920,
+   "sayfa": "maket/raporlar.html",
+   "hash": "#/?kisi=ea",
+   "gecti": true
+  },
+  {
+   "ad": "raporlar · bakış rapordan: Elif'in raporu açılınca üst çubuk Elif, kırıntı ?kisi=ea",
+   "gen": 1920,
+   "sayfa": "maket/raporlar.html",
+   "hash": "#/r/KM-0926-797-f716e",
+   "gecti": true
+  },
   {
    "ad": "pasif rapor denetçinin Raporlar listesinde yok, adresiyle de açılmaz (2026-09-29)",
    "gen": 1920,
