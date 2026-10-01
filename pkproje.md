@@ -2123,6 +2123,10 @@ revizyon, alan kopyalama, hafif kusur devri, meslek eşleşme denetimi).
 - Emsal ürünler: https://opwire.app/iso-17020-periyodik-kontrol-yazilimi/ · https://17020muayene.vidco.com.tr/ · https://akuple.com/asansor-kontrol-yazilimi/ · https://ensyazilim.com/
 
 ## 11 · Değişiklik günlüğü
+- 2026-10-01 (206): **Ö5d · Plan aç'ta açılan planın işi Muhasebe'de** (uçtan uca denemenin dördüncü bulgusu: P-0926-041'in üç imzalı raporu
+  vardı, Muhasebe › İşler'de yoktu, fatura kesilemiyordu). İşler tohum veriden kuruluyordu; tarayıcıda açılan planlar sonra yükleniyordu. Kayıt
+  yüklendikten sonra raporu olan her açılmış plan iş olur (raporlar eklenir; plan en az denetimde). Denemede P-0926-041 "Faturaya hazır" geldi.
+  Ölçüm kilidi (m14 etkileşim) — düzeltme kapatılınca düştüğü görüldü (47/48), açıkken 48/48.
 - 2026-10-01 (205): **Ö5c · Raporlar'da "Makette bakış": Mert Kaya · mekanik / Elif Aydın · elektrik** (uçtan uca denemenin üçüncü bulgusu:
   elektrik raporu ET-9002 teknik yönetici onayından geçti ama son imzaya gelemedi — Raporlar makette yalnız Mert Kaya'nın gözündendi). Onaylar'daki
   gibi bakış seçimi (#/ · #/?kisi=ea); üst çubukta kişinin adı, imza şeridi ve mobil imza isteği o kişinin. Rapor sayfasında bakış raporun

@@ -2,9 +2,17 @@
  "maket": "m14",
  "tarih": "2026-10-01",
  "arac": "tools/olc-bulut.mjs --etkilesim (başsız tarayıcı, 1920 açık tema; gen verilen denemede o genişlik)",
- "toplam": 47,
+ "toplam": 48,
  "gecen": 47,
  "denemeler": [
+  {
+   "ad": "Plan aç'ta açılan plan (tarayıcıda kayıtlı) raporlarıyla İşler listesinde, Faturaya hazır",
+   "gen": 1920,
+   "sayfa": "maket/muhasebe.html",
+   "hash": "#/",
+   "gecti": false,
+   "hata": "beklenen sonuç yok"
+  },
   {
    "ad": "Giderler: masraf formunun PDF'i açılır, e-posta talep edene (Mert Kaya)",
    "gen": 1920,

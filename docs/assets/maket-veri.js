@@ -1506,5 +1506,14 @@
   MV.takip = function (no, ben) { var f = MV.TAKIP[no]; return f ? f(ben) : null; };
   /* kalıcı maket: tohum kuruldu, bu tarayıcıdaki denemeler yerinde yüklenir (maket-ortak.js KALICI MAKET) */
   if (MK.kaliciMV) MK.kaliciMV(MV);
+  /* Plan aç'ta açılan plan raporu oluşunca Muhasebe'de iş olur (Ö5, 2026-10-01: uçtan uca denemede P-0926-041'in üç imzalı raporu vardı,
+     işler listesinde yoktu — işler tohumdan kuruluyor, tarayıcıdaki planlar sonra yükleniyordu). Planda rapor olmuşsa plan en az denetimde. */
+  MV.ACILAN_PLANLAR.forEach(function (a) {
+    var rl = MV.RAPORLAR.filter(function (r) { return r.plan === a.id; }).map(function (r) { return r.no; }); if (!rl.length) return;
+    var is = MV.isKaydi(a.no), t = MV.tesis(a.tesis);
+    if (!is) MV.ISLER.push(is = { no: a.no, tesis: a.tesis, m: t.m, tarih: a.tarih, pid: a.id, pdurum: t.pid === a.id && t.pdurum === "tamam" ? "tamam" : "denetimde",
+      ekip: a.ekip.slice(), raporlar: [], faturalar: [] });
+    rl.forEach(function (no) { if (is.raporlar.indexOf(no) < 0) is.raporlar.push(no); });
+  });
   MV.EGITIM_DURUM.yakin.ad = MV.esik("egitim") + " gün içinde";   /* kayıtlı eşikle (202) */
 })();
