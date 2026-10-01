@@ -2,14 +2,21 @@
  "maket": "m11",
  "tarih": "2026-10-01",
  "arac": "tools/olc-bulut.mjs --etkilesim (başsız tarayıcı, 1920 açık tema; gen verilen denemede o genişlik)",
- "toplam": 15,
- "gecen": 15,
+ "toplam": 16,
+ "gecen": 16,
  "denemeler": [
   {
    "ad": "müşteri paneli · Raporlar: Excel indir (ilk sütun \"Rapor\" bağlantısı) ve Toplu indir (ZIP) tuşları; Excel iner",
    "gen": 1920,
    "sayfa": "maket/musteri.html",
    "hash": "#/",
+   "gecti": true
+  },
+  {
+   "ad": "müşteri paneli (Başak Un) · Excel'deki Rapor bağlantısı Başak Un panelinde o raporu açar",
+   "gen": 1920,
+   "sayfa": "maket/musteri.html",
+   "hash": "#/?musteri=m9",
    "gecti": true
   },
   {

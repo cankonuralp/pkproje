@@ -2123,6 +2123,12 @@ revizyon, alan kopyalama, hafif kusur devri, meslek eşleşme denetimi).
 - Emsal ürünler: https://opwire.app/iso-17020-periyodik-kontrol-yazilimi/ · https://17020muayene.vidco.com.tr/ · https://akuple.com/asansor-kontrol-yazilimi/ · https://ensyazilim.com/
 
 ## 11 · Değişiklik günlüğü
+- 2026-10-01 (209): **Ö5g · Müşteri Excel'indeki "Rapor" bağlantısı doğru müşterinin panelini açar** (uçtan uca denemenin altıncı bulgusu;
+  Ö3'ün (201) hatası). Panel müşteriyi adresin `#` kısmından okuyor; bağlantı `?musteri=` değerini `#`'ten önceye yazıyordu → Ada Makina dışındaki
+  müşteride Excel'den tıklanan rapor Ada Makina panelinde açılırdı. Bağlantı artık `musteri.html#/r/<no>?musteri=<id>`. Kilit m11 etkileşimde:
+  Başak Un panelinden Excel indir → ilk satırın bağlantısı açılır → Başak Un panelinde o rapor; düzeltmesiz 15/16 düştü, düzeltmeyle 16/16.
+  Ayrıca denemede: yeni müşteri Deneme Kazan'ın panelinde rapor görünmüyor, çünkü giriş daveti var ama kullanıcı henüz giriş yapmadı ("Bu
+  müşterinin giriş yapan kullanıcısı yok" şeridi) — doğru davranış, değişiklik yok.
 - 2026-10-01 (208): **Ö5f · Kilit düzeltmesi: 203–205'in kilitleri gerçekten denetlemiyordu.** Ölçüm aracının durum kümesi (`olc-bulut.mjs
   <grup>`) `bekle` koşulunu değerlendirmez, yalnız ekranı ölçer; 203, 204 ve 205'te "kilit eklendi" dediğim beş deneme oraya konmuştu, geçmeleri bir
   şey kanıtlamıyordu (commit mesajlarında da öyle yazdım — yanlıştı). Beşi `--etkilesim` kümesine taşındı; Elif bakışı kilidinin koşulu da

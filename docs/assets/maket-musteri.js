@@ -197,7 +197,8 @@
       return [{ metin: "Rapor", url: raporUrl(u.rapor) }, u.e.kod, u.t.ad, MV.tesis(u.tesis).ad, u.sinif, u.kriter, u.aciklama, u.rapor.no, MK.tarihYaz(u.tarih)]; }))));
   };
   /* Excel'deki "Rapor" bağlantısı müşteri panelinde o raporu açar (giriş ister; uygulamada https://<firma>.probata.com.tr/portal/r/<no>) */
-  var raporUrl = function (r) { return new URL("musteri.html" + (q !== "m1" ? "?musteri=" + q : "") + "#/r/" + r.no, location.href).href; };
+  /* müşteri adresin # kısmından okunur (q); Ö5 (2026-10-01): bağlantı ?musteri'yi #'ten önce yazıyordu, Ada Makina dışında yanlış panel açılırdı */
+  var raporUrl = function (r) { return new URL("musteri.html#/r/" + r.no + (q !== "m1" ? "?musteri=" + q : ""), location.href).href; };
   var filtreli = function () { return MK.taban("m", raporlar()).filter(function (r) { return MK.cipGecer("m", r); }); };
   var zipAd = function (ek) { return MK.klasorAd(M.kisa).toLocaleLowerCase("tr").replace(/ /g, "-") + "-" + ek + "-" + MK.BUGUN + ".zip"; };
   /* müşterinin ZIP'i tesis klasörlü (müşteri adı klasörü gereksiz: hepsi kendisinin) */
