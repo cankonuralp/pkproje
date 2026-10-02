@@ -68,7 +68,8 @@
   const ekranda = R => R.right > 0 && R.left < innerWidth;
   /* 2026-09-27: açık açılır katman (seçim listesi, tarih seçici) altındaki içeriğin üstünden geçer — tasarım gereği, yapışkan çubukla
      aynı muafiyet: katmanın içindeki bir öğe dışındakiyle karşılaştırılmaz; katmanın kendi içindeki öğeler eskisi gibi sayılır. */
-  const katman = e => e.closest(".a-secici-liste:not([hidden])");
+  /* 2026-10-02 (Z2): yüzen yan pencere (S.A.Y, data-katman) de içeriğin üstünde katman — aynı muafiyet; panelin kendi içi eskisi gibi sayılır */
+  const katman = e => e.closest(".a-secici-liste:not([hidden]), [data-katman]:not([hidden])");
   const cakismaSay = muaf => { let n = 0; const bs = et.map(e => [e, e.getBoundingClientRect(), yapiskanAta(e), katman(e)]).filter(x => ekranda(x[1]));
     for (let i = 0; i < bs.length; i++) for (let j = i + 1; j < bs.length; j++) {
       const [a, A, ya, ka] = bs[i], [b, B, yb, kb] = bs[j]; if (a.contains(b) || b.contains(a)) continue;

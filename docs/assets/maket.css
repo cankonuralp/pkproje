@@ -957,6 +957,38 @@ a.a-yuz:hover { border-color: var(--kenar-alan); background: var(--zemin); }
 /* rapor tuşları (2026-09-29, reisim: "bir barın içinde gibi değil bağımsız dursunlar"): çubuk yok — altta yapışkan, her tuş kendi gölgesiyle */
 .a-rapor-eylem { position: sticky; bottom: 16px; z-index: 10; display: flex; justify-content: flex-end; gap: 12px; margin: 16px 0 0; pointer-events: none; }
 .a-rapor-eylem .a-tus { pointer-events: auto; box-shadow: var(--golge-2); }
+/* S.A.Y (Z2, 2026-10-02): düğme eylem çubuğunun solunda; panel masaüstü / tablette sağda yan pencere (üst çubuğun altında), telefonda tam ekran */
+.a-rapor-eylem .a-say-ac { margin-right: auto; }
+.a-say {
+  position: fixed; right: 16px; top: calc(var(--ust-y) + 16px); bottom: 16px; z-index: 70; width: min(420px, calc(100vw - 32px));
+  display: flex; flex-direction: column; background: var(--kart); border: 1px solid var(--kenar); border-radius: var(--r-buyuk); box-shadow: var(--golge-2);
+}
+.a-say[hidden] { display: none; }
+.a-say-bas { display: flex; align-items: flex-start; justify-content: space-between; gap: 12px; padding: 14px 16px; border-bottom: 1px solid var(--kenar); }
+.a-say-bas h2 { margin: 0; font-size: var(--boy-bolum); font-weight: var(--kal-baslik); }
+.a-say-alt { margin: 2px 0 0; color: var(--yazi2); font-size: var(--boy-kucuk); }
+.a-say-govde { flex: 1 1 auto; overflow-y: auto; padding: 14px 16px; display: flex; flex-direction: column; gap: 10px; }
+.a-say-bos { margin: 0; color: var(--yazi2); }
+.a-say-liste { list-style: none; margin: 0; padding: 0; display: flex; flex-direction: column; gap: 10px; }
+.a-say-mesaj { max-width: 92%; padding: 10px 12px; border-radius: var(--r-orta); overflow-wrap: anywhere; }
+.a-say-mesaj p { margin: 0; }
+.a-say-mesaj p + p { margin-top: 6px; }
+.a-say-ben { align-self: flex-end; background: var(--vurgu); color: var(--vurgu-uzeri); }
+.a-say-o { align-self: flex-start; background: var(--zemin2); color: var(--yazi); }
+.a-say-eksik { list-style: none; margin: 8px 0 0; padding: 0; display: grid; gap: 6px; }
+.a-say-eksik li { display: flex; align-items: center; justify-content: space-between; gap: 8px; }
+.a-say-oneri { margin-top: 8px; padding: 10px 12px; background: var(--kart); border: 1px solid var(--kenar-alan); border-radius: var(--r-orta); }
+.a-say-oneri-bas { display: flex; align-items: center; gap: 6px; color: var(--yazi2); font-size: var(--boy-kucuk); font-weight: 600; }
+.a-say-oneri-metin { margin-top: 4px !important; }
+.a-say-oneri-tuslar { display: flex; justify-content: flex-end; flex-wrap: wrap; gap: 8px; margin-top: 10px; }
+.a-say-oneri-durum { display: flex; align-items: center; gap: 6px; margin-top: 8px !important; color: var(--onay-yazi); font-weight: 600; }
+.a-say-oneri-red { color: var(--yazi2); }
+.a-say-alt-kisim { padding: 12px 16px; border-top: 1px solid var(--kenar); display: grid; gap: 8px; }
+.a-say-hizli { display: flex; flex-wrap: wrap; gap: 6px; }
+.a-say-yaz { display: flex; gap: 6px; }
+.a-say-yaz .a-girdi { flex: 1 1 auto; min-width: 0; }
+.a-say-gonder { flex: none; border: 1px solid var(--kenar-alan); }
+.a-say-not { margin: 0; color: var(--yazi2); font-size: var(--boy-etiket); }
 .a-tus-sil { color: var(--hata-yazi); }
 /* günlük süre çubuğu (2026-09-30, 212): normal · mesai */
 .a-rapor-mesai { margin: 12px 0 0; } .a-rapor-mesai:empty { display: none; }
@@ -1263,6 +1295,9 @@ a.a-yuz:hover { border-color: var(--kenar-alan); background: var(--zemin); }
   .a-rapor-eylem { bottom: calc(8px + env(safe-area-inset-bottom)); gap: 8px; }
   .a-rapor-eylem .a-tus { flex: 1 1 0; }
   .a-rapor-eylem > .a-rapor-tus { display: none; }
+  .a-rapor-eylem .a-say-ac { flex: none; }
+  .a-say-ac .a-say-yazi { display: none; }   /* telefonda yalnız simge (adı aria-label'da); İşlemler tam satır kalır */
+  .a-say { inset: 0; width: auto; border: 0; border-radius: 0; z-index: 80; }
   .a-rapor-islemler { display: flex; flex: 1 1 auto; }
   .a-rapor-islemler > .a-tus { width: 100%; }
   /* nesne sayfası: tuşlar başlığın altında tam satır; sayfa başı tuşu başlığın altına iner */
@@ -1404,6 +1439,8 @@ a.a-yuz:hover { border-color: var(--kenar-alan); background: var(--zemin); }
    logolar kalsın"). Orta ve dar bantta çekmece aynen kalır, ikon rayına dönüşmez (anayasa 2.11). Şerit 64 px:
    12 + 40 (simge tuşu) + 12. Ad görünmez ama ekran okuyucu okur; grup başlığı yerine ince çizgi; sayaç simgenin köşesinde. */
 @media (min-width: 1280px) {
+  /* Z2 S.A.Y: geniş bantta panel raporun üstüne binmez — içerik panel kadar daralır (Kaydet / Onaya gönder görünür kalır); daha darda yan pencere üstte durur */
+  .a-say-acik .a-icerik { padding-right: calc(min(420px, 100vw - 32px) + 32px); }
   .a-ikon-tus.a-daralt-tus { display: inline-flex; }
   .a-kabuk { transition: grid-template-columns var(--sure) var(--egri); }
   .a-kabuk-dar { grid-template-columns: 64px minmax(0, 1fr); }

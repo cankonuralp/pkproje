@@ -2183,6 +2183,16 @@ revizyon, alan kopyalama, hafif kusur devri, meslek eşleşme denetimi).
 - Emsal ürünler: https://opwire.app/iso-17020-periyodik-kontrol-yazilimi/ · https://17020muayene.vidco.com.tr/ · https://akuple.com/asansor-kontrol-yazilimi/ · https://ensyazilim.com/
 
 ## 11 · Değişiklik günlüğü
+- 2026-10-02 (222): **Z2 · S.A.Y saha asistanı makette** (§9 kırk altıncı tur + kırk yedinci tur "makete dökülecekler"; ARKA-UC K6, §5.3).
+  Rapor eylem çubuğunun solunda "S.A.Y" düğmesi — yalnız firma yapay zekâyı açtıysa ve rapor düzenlenirken (Yeni / geri gönderilmiş; onaydaki,
+  imzalı raporda yok). Panel masaüstünde sağda yan pencere (geniş ekranda rapor panel kadar daralır, Kaydet / Onaya gönder görünür kalır),
+  telefonda tam ekran. Hızlı sorular: eksik alanlar (bölüm bölüm, "Git" alana götürür) · kusur derecesi önerisi (Bakanlık formatlı türde,
+  derecesi boş "Uygun değil" maddeler) · sonuç önerisi. Öneri kartında **Uygula / Vazgeç**: Uygula denetçinin seçimiyle aynı yoldan yazar
+  (rapor "kaydedilmemiş değişiklik" olur, kaydetmek denetçide); S.A.Y imzalamaz, göndermez, silmez. Her mesaj kişinin bu ayki kullanımına
+  (Firma ayarları › Yapay zekâ) yazılır; anahtar yoksa soru almaz, sınır dolduysa uyarır (engel değil). Sohbet kaydedilmez; müşteri adı,
+  adres, kişi adı gönderilmez (notta). Makette serbest soru cevaplanmaz (uygulamada Claude). Yeni dosya `docs/assets/maket-say.js`; ikon
+  message-circle (Lucide 1.47.0). Ölçüm aracı: yüzen yan pencere `data-katman` ile açılır liste gibi katman sayılır. Kilit: m8 etkileşim 3,
+  durum 1 (masaüstü, tablet, telefon; açık / koyu).
 - 2026-10-02 (221): **Z6 · Giriş ekranı** (reisim, ekran görüntüsüyle: *"giriş ekranı daha düzgün bir şey olsun güzel durmuyor"*). Marka panosu
   yarıdan 5/12'ye daraldı ve doldu: logo, "Periyodik Kontrol Yönetimi", tek cümle tanım ("Tekliften arşive, muayenenin bütün akışı tek yerde."),
   üç madde (plan · sahada tablet · müşteri paneli). Form kâğıt zeminde, dikey ve yatay ortalı kartta (en çok 420px); alanlar kart genişliğinde.

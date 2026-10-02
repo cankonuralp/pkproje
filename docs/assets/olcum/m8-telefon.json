@@ -1,6 +1,6 @@
 {
  "maket": "m8",
- "tarih": "2026-10-01",
+ "tarih": "2026-10-02",
  "arac": "tools/olc-bulut.mjs --telefon (başsız tarayıcı, telefon taklidi: dokunmatik, meta viewport, 3x; açık tema)",
  "genislikler": [
   320,
@@ -8,8 +8,8 @@
   390,
   430
  ],
- "toplam": 92,
- "temiz": 92,
+ "toplam": 96,
+ "temiz": 96,
  "durumlar": [
   {
    "ad": "önceki kontrolden açık hafif kusur (V4) · Giderilmedi seçildi",
@@ -838,6 +838,42 @@
    "disari": [],
    "kucukAlan": [],
    "alan": 0
+  },
+  {
+   "ad": "S.A.Y açık: eksik alanlar ve sonuç önerisi (Z2)",
+   "gen": 320,
+   "temiz": true,
+   "tasma": 0,
+   "disari": [],
+   "kucukAlan": [],
+   "alan": 38
+  },
+  {
+   "ad": "S.A.Y açık: eksik alanlar ve sonuç önerisi (Z2)",
+   "gen": 360,
+   "temiz": true,
+   "tasma": 0,
+   "disari": [],
+   "kucukAlan": [],
+   "alan": 38
+  },
+  {
+   "ad": "S.A.Y açık: eksik alanlar ve sonuç önerisi (Z2)",
+   "gen": 390,
+   "temiz": true,
+   "tasma": 0,
+   "disari": [],
+   "kucukAlan": [],
+   "alan": 38
+  },
+  {
+   "ad": "S.A.Y açık: eksik alanlar ve sonuç önerisi (Z2)",
+   "gen": 430,
+   "temiz": true,
+   "tasma": 0,
+   "disari": [],
+   "kucukAlan": [],
+   "alan": 38
   }
  ]
 }

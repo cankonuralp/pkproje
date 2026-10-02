@@ -1,10 +1,31 @@
 {
  "maket": "m8",
- "tarih": "2026-10-01",
+ "tarih": "2026-10-02",
  "arac": "tools/olc-bulut.mjs --etkilesim (başsız tarayıcı, 1920 açık tema; gen verilen denemede o genişlik)",
- "toplam": 112,
- "gecen": 112,
+ "toplam": 115,
+ "gecen": 115,
  "denemeler": [
+  {
+   "ad": "Z2: S.A.Y düğmesi yalnız firma yapay zekâyı açtıysa ve düzenlenen raporda (onaydaki raporda yok)",
+   "gen": 1920,
+   "sayfa": "maket/rapor.html",
+   "hash": "#/r/ET-1009",
+   "gecti": true
+  },
+  {
+   "ad": "Z2: sonuç önerisi — Vazgeç rapora yazmaz, Uygula yazar (kaydedilmemiş değişiklik); her mesaj kişinin bu ayki kullanımına; Esc kapatır, odak düğmeye döner",
+   "gen": 1920,
+   "sayfa": "maket/rapor.html",
+   "hash": "#/r/ET-1009",
+   "gecti": true
+  },
+  {
+   "ad": "Z2: eksik alanlar listesi Git ile alana gider; Uygun değil maddeye kusur derecesi önerisi Uygula ile yazılır; anahtar yoksa S.A.Y soru almaz",
+   "gen": 1920,
+   "sayfa": "maket/rapor.html",
+   "hash": "#/r/ET-1009",
+   "gecti": true
+  },
   {
    "ad": "önceki kontrolün hafif kusuru listelenir; Giderilmedi → bu raporun kusurlarına girer, sonuç önerisi Uygun değil",
    "gen": 1920,

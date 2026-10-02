@@ -431,7 +431,7 @@
       $("a-rapor").innerHTML = MK.kirinti([["Planlar", MK.adres(13, "#/")]]) + '<h1 class="a-gizli" tabindex="-1">Rapor bulunamadı</h1>' +
         MK.bos({ ikon: "circle-alert", baslik: "Rapor bulunamadı", metin: pasif ? "Bu rapor pasife alındı; yalnız yöneticiler görür." : "Bu ekipman için açılmış rapor yok. Rapor, plan içinde ekipmanın satırındaki “Rapor oluştur” ile açılır.",
           eylem: '<a class="a-tus a-tus-ikincil" href="' + MK.adres(13, "#/plan/1") + '">' + ikon("arrow-left", "a-ikon-kucuk") + "Plana dön</a>" });
-      document.title = "Rapor bulunamadı · probata maket"; return;
+      document.title = "Rapor bulunamadı · probata maket"; if (MK.sayGuncelle) MK.sayGuncelle(null, true); return;
     }
     var t = r.t, e = r.e, oku = r.durum !== "taslak", F = r.F;
     MK.MESAI_BU = oku ? null : (MV.tur(e.tur).sure || 0);   /* N6: günlük süre penceresinde "Bu rapor: N dk" */
@@ -580,6 +580,7 @@
       eylemHtml(r, oku);
     document.title = e.kod + " · " + r.no + " · probata maket";
     if (odak) { var fo = $(odak); if (fo) fo.focus(); }
+    if (MK.sayGuncelle) MK.sayGuncelle(r, oku);
   }
   /* formatın sonuç cümlesi TAM (reisim 2026-09-28: "telefonda … ile bitiyor tam metin okunamıyor"): seçilen sonuçla biter, seçilmediyse iki seçenek */
   var sonucCumle = function (r) { return kacis(r.F.sonuc) + " " + (r.sonuc === "kullanilir" ? "<b>uygundur</b>" : r.sonuc === "kullanilamaz" ? "<b>uygun değildir</b>" : "uygundur / uygun değildir") + "."; };
@@ -587,10 +588,14 @@
      silinebilsin"); gönderilen rapor salt okunur, tuşu yok */
   var silinebilir = function (r) { return r.durum === "taslak"; };
   function eylemHtml(r, oku) {
+    /* Z2 (2026-10-02; ARKA-UC K6 · §5.3): S.A.Y düğmesi eylem çubuğunun solunda — yalnız düzenlenen (Yeni / geri gönderilmiş) raporda ve firma
+       yapay zekâyı açtıysa; panel maket-say.js */
+    var say = !oku && MV.yz().acik ? '<button class="a-tus a-tus-ikincil a-say-ac" type="button" data-eylem="say-ac" aria-haspopup="dialog" aria-controls="a-say" aria-expanded="' +
+      !!(MK.sayAcik && MK.sayAcik()) + '" aria-label="S.A.Y — saha asistanı">' + ikon("message-circle", "a-ikon-kucuk") + '<span class="a-say-yazi">S.A.Y</span></button>' : "";
     var l = (oku ? [] : [silinebilir(r) ? ["rapor-sil-ac", "Sil", "x", "a-tus-ikincil a-tus-sil"] : null]).concat([
       ["kopya-ac", oku ? "Kopyala" : "Kaydet ve kopyala", "copy", "a-tus-ikincil"]]).concat(oku ? [] : [
       ["kaydet", "Kaydet", "check", "a-tus-ikincil"], ["onaya-gonder", "Onaya gönder", "send", "a-tus-birincil"]]).filter(Boolean);
-    return '<div class="a-rapor-eylem">' + l.map(function (x) { return MK.tus({ eylem: x[0], ad: x[1], ikon: x[2], sinif: x[3] + " a-rapor-tus" }); }).join("") +
+    return '<div class="a-rapor-eylem">' + say + l.map(function (x) { return MK.tus({ eylem: x[0], ad: x[1], ikon: x[2], sinif: x[3] + " a-rapor-tus" }); }).join("") +
       '<div class="a-secici a-rapor-islemler"><button class="a-tus a-tus-birincil" type="button" data-secici-ac="islemler" id="r-islemler" aria-haspopup="menu" aria-expanded="false">' +
         ikon("ellipsis-vertical", "a-ikon-kucuk") + "İşlemler</button>" +
         '<div class="a-secici-liste" role="menu" aria-label="İşlemler" hidden>' + l.slice().reverse().map(function (x) {   /* menüde birincil üstte, Sil en altta */
@@ -1000,6 +1005,9 @@
       (oto ? " Sonuç kriterlere göre: " + (r.sonuc === "kullanilir" ? "Uygun" : "Uygun değil") + "." : ""));
   }
 
+  /* Z2: S.A.Y'ın okuyabildiği (yalnız açık rapor) ve öneriyi uygulayabildiği yollar — öneri, denetçinin seçimiyle aynı yoldan (MK.onSecim) yazılır */
+  MK.sayBag = { rapor: aktif, eksik: zorunluEksik, git: eksikeGit, kusurlar: kusurlar, kriterNo: kriterNo, otoSonuc: otoSonuc, uygunDegil: uygunDegil,
+    SONUC: SONUC, DERECE: DERECE, ad2: ad2, sinifli: function (r) { return MV.kusurSinifli(r.t); }, kriterAd: function (r, i) { return MV.kriterler(r.t)[i]; } };
   MK.goster = function (odakla) { ACIK = {}; UY = null; ciz(); if (odakla) { window.scrollTo(0, 0); var h = document.querySelector("#a-rapor h1"); if (h) h.focus({ preventScroll: true }); } };
   /* kabuk: raporu yazan denetçi (elektrik raporunu Elif Aydın, mekaniği Mert Kaya) */
   var ilk = aktif(), ben = MV.kisi(ilk ? ilk.kisi : "mk");
