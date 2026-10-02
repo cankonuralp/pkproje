@@ -143,6 +143,11 @@ iş görünür.
 kişisel veri maskelenir (e-posta, telefon, kimlik no).
 
 **G3 · Veri yurt dışına çıkmaz** (§8.8): e-posta, hata izleme, yapay zekâ ile sigorta okuma (§8.10) gibi her dış servis buna göre seçilir.
+**İstisna — yapay zekâ (reisim 2026-10-02, `ARKA-UC.md` K1 kabul):** Claude yalnız ABD / küresel çalışıyor; fotoğraftan okuma ve S.A.Y chat bu yüzden
+yurt dışına veri gönderir. Koşullar: (1) firma ayarıyla açılır, başlangıçta **kapalı**; (2) gönderilen veri en aza iner — fotoğrafta konum bilgisi
+yok, metinde müşteri unvanı, adres, kişi adı, telefon, SGK / İSG-KATİP numarası **maskelenir**; (3) çağrı yalnız sunucudan, firmanın API anahtarıyla
+(K2); (4) KVKK yurt dışı aktarım koşulu (standart sözleşme / açık rıza) hukukçuya teyit ettirilir. Kilit: yapay zekâya giden gövdede maskelenmesi
+gereken alan yok (örnek raporla test).
 
 **G4 · E-posta** dosya eki ya da kalıcı bağlantı taşımaz; bağlantı giriş gerektirir (A2). Gönderim kendi alan adımızdan (SPF / DKIM / DMARC), sonucu kayıtlı.
 

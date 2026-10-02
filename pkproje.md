@@ -1178,7 +1178,7 @@ tarih-saat, fotoğraflar, form) · **Eğitim kaydı** (personel, eğitim, belge,
    fotoğraf, cihaz ekleme, kaydet, onaya gönder) çevrimdışı çalışır: kayıt cihazda saklanır, bağlantı gelince sırayla sunucuya gider; ekranlar
    ve iş kuralları mağaza uygulamasına (iOS / Android sarmalayıcı) taşınabilecek şekilde yazılır — öneri, kodlamada karara bağlanacak.
    **Sunucu ve veri tasarrufu kuralları (2026-09-29, onaylı): `09-SUNUCU-VE-VERI.md`** — kod bu dosyaya göre yazılır, her madde kilit testiyle.
-   **Arka uç kurgusu (2026-10-01, TASLAK — onay bekliyor): `ARKA-UC.md`** — modül modül veri, dosya, çevrimdışı kuyruk, mağaza uygulaması,
+   **Arka uç kurgusu (2026-10-01; K1–K6 kabul, K7–K8 kabul edilmedi 2026-10-02): `ARKA-UC.md`** — modül modül veri, dosya, çevrimdışı kuyruk, mağaza uygulaması,
    yapay zekâ (fotoğraftan okuma, S.A.Y chat), arşiv, yedek, işletim; kararını isteyen sekiz madde başta (K1–K8).
 2. **Veri:** PostgreSQL + satır seviyesi güvenlik (firma ve müşteri izolasyonu veritabanında) + dosya deposu
    (fotoğraf/PDF). Gerekçe: rapor arşivi ve süzme ilişkisel iş; dışa aktarım standart; güvenlik sunucuda.
@@ -2128,6 +2128,11 @@ fotoğraftan okuma yapacak sistem içinde geçerli ve çevrimdışı çalışmay
 çevrimdışı iken ram de kaydolacak çevrimiçi olunca gönderilebilecek uygulama olarakta çıkacağız ona göre çevrimdışı iken ram e kaydedip göndermekte
 olacak şekilde düşün bir tasarım kurgula şu an tam olarak nasıl yapabiliriz bilemedim . Aklıma gelmeyen bir şey varsa yardım et."* → **`ARKA-UC.md`**
 (taslak); karar bekleyen **K1–K8** belgenin başında.
+Ek (2026-10-02, reisim birebir; K1–K8 alt alta sorulunca): *"7 ve 8 hariç kabul ediyorum"* → **K1–K6 kabul**: yapay zekâ firma ayarıyla açılır,
+başlangıçta kapalı, veri maskelenir, KVKK hukukçuya (09-G3'e istisna yazıldı) · firma kendi API anahtarını girer, kişi başı sayaç ve sınır · model
+başlangıçta Opus 5.5, gerekirse Sonnet 5.5, ölçümle · çevrimdışı veri kalıcı cihaz deposunda (şifreli), RAM'de değil · mağaza uygulaması Capacitor ·
+S.A.Y chat yalnız öneri verir. **K7** (probata'nın firmalardan ücret alması modülü) ve **K8** (kayıp cihaz: uzaktan oturum kapatma + yerel veri
+silme, çevrimdışı oturum 7 gün) **kabul edilmedi** — yapılmaz.
 
 **Açık kalanlar:** ~~Ana sayfada İSGGM duyuruları~~ (2026-09-27: makette eklendi; okuma işi uygulamada) (reisim 2026-09-26: *"Ana sayfada isgüm duyurularını gösterebilir miyiz ? Bunu
 yapılacaklar listesine ekle"*; öneri: ÇSGB İSGGM duyurular sayfası — https://www.csgb.gov.tr/isggm/duyurular/ — sunucuda günde birkaç kez
@@ -2166,6 +2171,9 @@ revizyon, alan kopyalama, hafif kusur devri, meslek eşleşme denetimi).
 - Emsal ürünler: https://opwire.app/iso-17020-periyodik-kontrol-yazilimi/ · https://17020muayene.vidco.com.tr/ · https://akuple.com/asansor-kontrol-yazilimi/ · https://ensyazilim.com/
 
 ## 11 · Değişiklik günlüğü
+- 2026-10-02 (217): **Arka uç kararları K1–K6 kabul, K7–K8 kabul edilmedi** (§9 kırk altıncı tur eki). `ARKA-UC.md` başlığı ve karar tablosu
+  işaretlendi (✔ / ✘), §4.6'dan 7 gün ve uzaktan silme, §9'dan probata faturalaması çıkarıldı; `09-SUNUCU-VE-VERI.md` G3'e yapay zekâ istisnası
+  koşullarıyla (kapalı başlar, maskeleme, sunucudan, KVKK teyidi) ve kilit tarifiyle yazıldı. Kod yok.
 - 2026-10-01 (216): **Arka uç kurgusu — `ARKA-UC.md` (taslak, onay bekliyor)** (§9 kırk altıncı tur). 09-SUNUCU-VE-VERI'yi modül modül uygular ve
   eksikleri tasarlar: tanım verisi sürümlü JSON, firma verisi PostgreSQL (dosyaya yazılmaz, nedeniyle) · üç katmanlı geç yükleme · fotoğraf yükleme
   ve gizli görüntüleme · çevrimdışı paket + çıkış kuyruğu (işlem kimliği, sıra, çakışma, saat, sürüm uyumu) · Capacitor ile mağaza uygulaması ·

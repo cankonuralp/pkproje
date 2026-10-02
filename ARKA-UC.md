@@ -1,4 +1,4 @@
-# ARKA UÇ KURGUSU — probata (TASLAK, ONAY BEKLİYOR · 2026-10-01)
+# ARKA UÇ KURGUSU — probata (TASLAK · 2026-10-01; K1–K6 KABUL, K7–K8 KABUL EDİLMEDİ — 2026-10-02)
 
 > Reisim (2026-10-01, birebir): *"Tamam şimdi backend kurgusunu yapalım nasıl siteyi yazarken layzload, gerekli verileri jsona yazıp ordan
 > okuma, blob görsel koruma yedekleme raporları arşivleme vb aklıma gelmeyen listelemediğim ne varsa siteyi gez nerde nasıl ni kurgu yapmalıyız
@@ -15,18 +15,20 @@
 
 ---
 
-## 0 · Senin kararını isteyenler (önerimle)
+## 0 · Kararlar (2026-10-02, reisim birebir: *"7 ve 8 hariç kabul ediyorum"*)
+**K1–K6 kabul** (öneri karar oldu) · **K7 ve K8 kabul edilmedi** (yapılmaz; reisim isterse yeniden açılır).
 
-| # | Konu | Önerim | Neden |
+
+| # | Konu | Önerim → karar | Neden |
 |---|---|---|---|
-| K1 | **Yapay zekâda veri yurt dışına çıkar.** Claude'un çalıştığı yer yalnız "ABD" ya da "küresel" seçilebiliyor; Türkiye / AB seçeneği yok (Anthropic belgesi, `inference_geo`). 09-G3 "veri yurt dışına çıkmaz" diyor. | Yapay zekâ **firma ayarıyla açılır** (başlangıçta kapalı); açan firma yurt dışı aktarımı kabul eder (KVKK: standart sözleşme / açık rıza — hukukçuya teyit). Gönderilen veri **en aza** iner (§5.4). 09-G3'e bu istisna yazılır. | Fotoğraftan okuma ve S.A.Y chat bunsuz yapılamaz; §8.10 pano fotoğrafı için bunu zaten kabul etmişti, chat rapor içeriği (müşteri adı, adres) taşır. |
-| K2 | **"Her kullanıcı kendi token'ını harcasın."** Claude.ai abonelikleri (Pro / Max) başka bir uygulamanın içinde kullanılamaz; uygulamalar Anthropic **API anahtarıyla** çalışır ve ayrı ücretlenir. | **Firma kendi API anahtarını** Firma ayarları'na girer (şifreli saklanır, ekranda gösterilmez); harcama firmanın Anthropic hesabından. Biz **kişi başına** kullanımı sayarız, firma kişi başı aylık sınır koyar. İsteyen kullanıcı kendi anahtarını da girebilir (seçenek). | Denetçiye API anahtarı aldırmak sahada zor; firma tek anahtarla yönetir, kişi başı sayaç "herkes kendi harcamasını görür"ü karşılar. |
-| K3 | **Model** | S.A.Y chat ve fotoğraftan okuma için başlangıçta **Claude Opus 5.5** ($4 / $20 milyon token); maliyet sorun olursa **Sonnet 5.5** ($2 / $10) — seçim firma ayarı, ölçümle karar. | Fiyat farkı 2 kat; doğruluk farkını kendi örnek fotoğraflarımızla ölçmeden ucuza inmeyiz (§5.5 deneme seti). |
-| K4 | **"RAM'e kaydet" yerine cihaz deposu.** RAM uygulama kapanınca, telefon belleği boşaltınca, pil bitince silinir; sahada rapor kaybı demek. | Çevrimdışı yazılan her şey **cihazın kalıcı deposuna** yazılır (tarayıcıda IndexedDB, mağaza uygulamasında SQLite), şifreli. RAM yalnız ekranda açık olanı tutar. | Senin istediğin "çevrimiçi olunca gönder" aynen kalır; yalnız bekleme yeri kalıcı olur. |
-| K5 | **Mağaza uygulaması: sarmalayıcı** | Aynı kod **Capacitor** ile iOS / Android uygulaması olur (kamera, dosya, SQLite, arka planda gönderme eklentileriyle); masaüstü tarayıcıda PWA. | iPhone'da PWA'nın arka plan gönderimi yok ve tarayıcı depoyu boşaltabiliyor; saha için uygulama şart. Tek kod tabanı kalır. |
-| K6 | **S.A.Y chat ne yapabilir** | **Öneri verir, kendisi yazmaz.** Raporu okur, soruları cevaplar, "şu alanı şöyle doldur" önerisini **onay düğmesiyle** gösterir; denetçi onaylamadan rapora hiçbir şey yazılmaz (sigorta okumadaki §8.10 kuralıyla aynı). | Rapor imzalı resmî belge; sorumluluk denetçide kalmalı. |
-| K7 | **probata'nın firmalardan ücret alması (abonelik)** | Ayrı modül olarak tasarlanır (§9.1); şu an hiçbir yerde yok. | Ürünün gelir tarafı; firma açma, dondurma, plan sınırları buna bağlı. |
-| K8 | **Kayıp / çalınan cihaz** | Yönetici, kişinin oturumlarını uzaktan kapatır; uygulama bir sonraki bağlantıda cihazdaki çevrimdışı veriyi siler; çevrimdışı oturum en çok **7 gün** geçerli. | Cihazda müşteri ve rapor verisi durur (KVKK). |
+| K1 ✔ | **Yapay zekâda veri yurt dışına çıkar.** Claude'un çalıştığı yer yalnız "ABD" ya da "küresel" seçilebiliyor; Türkiye / AB seçeneği yok (Anthropic belgesi, `inference_geo`). 09-G3 "veri yurt dışına çıkmaz" diyor. | Yapay zekâ **firma ayarıyla açılır** (başlangıçta kapalı); açan firma yurt dışı aktarımı kabul eder (KVKK: standart sözleşme / açık rıza — hukukçuya teyit). Gönderilen veri **en aza** iner (§5.4). 09-G3'e bu istisna yazılır. | Fotoğraftan okuma ve S.A.Y chat bunsuz yapılamaz; §8.10 pano fotoğrafı için bunu zaten kabul etmişti, chat rapor içeriği (müşteri adı, adres) taşır. |
+| K2 ✔ | **"Her kullanıcı kendi token'ını harcasın."** Claude.ai abonelikleri (Pro / Max) başka bir uygulamanın içinde kullanılamaz; uygulamalar Anthropic **API anahtarıyla** çalışır ve ayrı ücretlenir. | **Firma kendi API anahtarını** Firma ayarları'na girer (şifreli saklanır, ekranda gösterilmez); harcama firmanın Anthropic hesabından. Biz **kişi başına** kullanımı sayarız, firma kişi başı aylık sınır koyar. İsteyen kullanıcı kendi anahtarını da girebilir (seçenek). | Denetçiye API anahtarı aldırmak sahada zor; firma tek anahtarla yönetir, kişi başı sayaç "herkes kendi harcamasını görür"ü karşılar. |
+| K3 ✔ | **Model** | S.A.Y chat ve fotoğraftan okuma için başlangıçta **Claude Opus 5.5** ($4 / $20 milyon token); maliyet sorun olursa **Sonnet 5.5** ($2 / $10) — seçim firma ayarı, ölçümle karar. | Fiyat farkı 2 kat; doğruluk farkını kendi örnek fotoğraflarımızla ölçmeden ucuza inmeyiz (§5.5 deneme seti). |
+| K4 ✔ | **"RAM'e kaydet" yerine cihaz deposu.** RAM uygulama kapanınca, telefon belleği boşaltınca, pil bitince silinir; sahada rapor kaybı demek. | Çevrimdışı yazılan her şey **cihazın kalıcı deposuna** yazılır (tarayıcıda IndexedDB, mağaza uygulamasında SQLite), şifreli. RAM yalnız ekranda açık olanı tutar. | Senin istediğin "çevrimiçi olunca gönder" aynen kalır; yalnız bekleme yeri kalıcı olur. |
+| K5 ✔ | **Mağaza uygulaması: sarmalayıcı** | Aynı kod **Capacitor** ile iOS / Android uygulaması olur (kamera, dosya, SQLite, arka planda gönderme eklentileriyle); masaüstü tarayıcıda PWA. | iPhone'da PWA'nın arka plan gönderimi yok ve tarayıcı depoyu boşaltabiliyor; saha için uygulama şart. Tek kod tabanı kalır. |
+| K6 ✔ | **S.A.Y chat ne yapabilir** | **Öneri verir, kendisi yazmaz.** Raporu okur, soruları cevaplar, "şu alanı şöyle doldur" önerisini **onay düğmesiyle** gösterir; denetçi onaylamadan rapora hiçbir şey yazılmaz (sigorta okumadaki §8.10 kuralıyla aynı). | Rapor imzalı resmî belge; sorumluluk denetçide kalmalı. |
+| K7 ✘ kabul edilmedi | **probata'nın firmalardan ücret alması (abonelik)** | Ayrı modül olarak tasarlanır (§9.1); şu an hiçbir yerde yok. | Ürünün gelir tarafı; firma açma, dondurma, plan sınırları buna bağlı. |
+| K8 ✘ kabul edilmedi | **Kayıp / çalınan cihaz** | Yönetici, kişinin oturumlarını uzaktan kapatır; uygulama bir sonraki bağlantıda cihazdaki çevrimdışı veriyi siler; çevrimdışı oturum en çok **7 gün** geçerli. | Cihazda müşteri ve rapor verisi durur (KVKK). |
 
 ---
 
@@ -123,8 +125,9 @@ Cihaz saati değiştirilebilir. Her işlem **cihaz zamanı + sunucunun aldığı
 saatinden, cihaz saati sunucudan 10 dakikadan fazla saparsa uyarı. Saat dilimi tek: Europe/Istanbul.
 
 ### 4.6 Cihazdaki verinin güvenliği
-Cihaz deposu şifreli (anahtar giriş anında türetilir, uygulama kilidinde bellekten düşer); çevrimdışı oturum en çok 7 gün; yönetici uzaktan oturumu
-kapatınca bir sonraki bağlantıda yerel veri silinir (K8). Telefon kilidi / biyometri ile uygulamaya dönüş (mağaza uygulamasında).
+Cihaz deposu şifreli (anahtar giriş anında türetilir, uygulama kilidinde bellekten düşer). Telefon kilidi / biyometri ile uygulamaya dönüş (mağaza
+uygulamasında). ~~Çevrimdışı oturum en çok 7 gün; yönetici uzaktan kapatınca yerel veri silinir~~ — **K8 kabul edilmedi (2026-10-02)**: bu kurallar
+kurulmaz; çevrimdışı oturumun süresi ve kayıp cihaz reisim isterse yeniden açılır.
 
 ### 4.7 Sürüm uyumu (unutulması kolay)
 Mağaza uygulamasının eski sürümü haftalarca kullanılabilir ve kuyruğunda eski biçimde işlem tutar. Bu yüzden: API **sürümlü**; sunucu en az bir
@@ -209,7 +212,7 @@ giriş token; Opus 5.5'te bir okuma ≈ 1–3 sent, Sonnet 5.5'te yarısı; sohb
 - **Denetim izi** her yazmada; yönetici "kim neyi ne zaman değiştirdi"yi görür.
 
 ## 9 · Aklına gelmeyenler (listelemediğin ama gerekenler)
-1. **probata'nın faturalaması** (K7): firma açma, deneme süresi, plan sınırı (kullanıcı / rapor / depo), ödeme, gecikince salt okunur (09-E6 dondurma).
+1. ~~**probata'nın faturalaması** (K7)~~ — **kabul edilmedi (2026-10-02)**, tasarlanmaz: firma açma, deneme süresi, plan sınırı (kullanıcı / rapor / depo), ödeme, gecikince salt okunur (09-E6 dondurma).
 2. **Yönetim paneli (bizim)**: firma aç / dondur, alt alan adı, firma özelleştirmesi (§3.7) yayını, destek için kayıt görüntüleme (yetkili, izli).
 3. **Deneme (staging) ortamı**: yayından önce aynı yapı, uydurma veriyle; yedek geri yükleme denemesi burada.
 4. **Hata ve sağlık izleme** Türkiye'de (06, 09-G3): hata kaydı, yavaş sorgu, kuyruk birikmesi, depo dolması — eşik aşılınca bize (firmaya değil) haber.
