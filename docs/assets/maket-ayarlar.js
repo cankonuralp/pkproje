@@ -81,7 +81,11 @@
           (TD("a-b-mesai", "input[data-mesai-acik]", m.acik) ? '<div class="a-form">' +
             MK.alan({ id: "ay-mesai-normal", etiket: "Günlük normal çalışma (dk)", hata: h["mesai-normal"], girdi: MK.girdi({ id: "ay-mesai-normal", deger: h["mesai-normal"] ? AY["mesai-normal"] : String(m.normal), sinif: "a-girdi-sicil", hata: h["mesai-normal"], ek: ' data-mesai="normal" inputmode="numeric" maxlength="4"' }) }) +
             MK.alan({ id: "ay-mesai-mesai", etiket: "Günlük mesai (dk)", hata: h["mesai-mesai"], girdi: MK.girdi({ id: "ay-mesai-mesai", deger: h["mesai-mesai"] ? AY["mesai-mesai"] : String(m.mesai), sinif: "a-girdi-sicil", hata: h["mesai-mesai"], ek: ' data-mesai="mesai" inputmode="numeric" maxlength="4"' }) }) +
-            "</div>" : "") + '<p class="a-ipucu">Raporun süresi ekipman türünün kontrol süresidir (Ekipman türleri). Önce normal süre, sonra mesai dolar.</p></section>';
+            /* AA2 (2026-10-02): yıllık fazla çalışma sınırı (İş Kanunu 41: en çok 270 saat); günlük toplam 660 dk'yı aşarsa uyarı (63. madde) */
+            MK.alan({ id: "ay-mesai-yillik", etiket: "Yıllık fazla çalışma sınırı (saat)", hata: h["mesai-yillik"], sonuc: h["mesai-yillik"] ? "" : "Kanunda en çok 270 saat. Dolan kişide o yıl mesai kullanılmaz.",
+              girdi: MK.girdi({ id: "ay-mesai-yillik", deger: h["mesai-yillik"] ? AY["mesai-yillik"] : String(m.yillik), sinif: "a-girdi-sicil", hata: h["mesai-yillik"], ek: ' data-mesai="yillik" inputmode="numeric" maxlength="3"' }) }) +
+            "</div>" + (m.normal + m.mesai > MV.YASAL.gunlukDk ? MK.serit("uyari", "triangle-alert", "Günlük toplam " + (m.normal + m.mesai) + " dk: İş Kanunu'na göre günlük çalışma 11 saati (660 dk) aşamaz.") : "") : "") +
+          '<p class="a-ipucu">Raporun süresi ekipman türünün kontrol süresidir (Ekipman türleri). Önce normal süre, sonra mesai dolar. Fazla çalışma için çalışanın yılda bir yazılı onayı gerekir.</p></section>';
       })() +
       '<section class="a-bolum" aria-labelledby="a-b-esik"><div class="a-alt-bas"><h2 class="a-alt-baslik" id="a-b-esik">Uyarı eşikleri</h2></div><div class="a-form">' +
         Object.keys(MV.ESIK).map(function (k) {
@@ -455,13 +459,13 @@
       MV.FIRMA.saklama = { yontem: "arsiv", yer: t.value.trim(), yil: MV.saklama().yil }; ayarCiz(); MK.bildir(t.value.trim() ? "Arşiv yeri kaydedildi." : "Arşiv yeri boş: süresi dolan raporlar sistemde kalır."); return;
     }
     if (t.hasAttribute && t.hasAttribute("data-mesai-acik")) {
-      var ms = MV.mesai(); MV.FIRMA.mesai = { acik: t.checked, normal: ms.normal, mesai: ms.mesai }; ayarCiz(); var ma = document.querySelector("[data-mesai-acik]"); if (ma) ma.focus();
+      var ms = MV.mesai(); MV.FIRMA.mesai = { acik: t.checked, normal: ms.normal, mesai: ms.mesai, yillik: ms.yillik }; ayarCiz(); var ma = document.querySelector("[data-mesai-acik]"); if (ma) ma.focus();
       MK.bildir(t.checked ? "Mesai takibi açık." : "Mesai takibi kapalı; günlük süre sınırı yok."); return;
     }
     if (t.dataset && t.dataset.mesai) {   /* 0–1440 dk tam sayı; geçersizse eski değer kalır */
       var mk = t.dataset.mesai, mv = t.value.trim(), mo = t.id, m0 = MV.mesai();
-      if (/^\d{1,4}$/.test(mv) && +mv <= 1440 && (mk === "mesai" || +mv > 0)) { m0[mk] = +mv; MV.FIRMA.mesai = m0; delete AY.hata["mesai-" + mk]; ayarCiz(); MK.bildir((mk === "normal" ? "Günlük normal çalışma " : "Günlük mesai ") + mv + " dk."); }
-      else { AY.hata["mesai-" + mk] = mk === "normal" ? "1–1440 arası dakika yazın. Kaydedilmedi." : "0–1440 arası dakika yazın. Kaydedilmedi."; AY["mesai-" + mk] = t.value; ayarCiz(); }
+      if (/^\d{1,4}$/.test(mv) && +mv <= (mk === "yillik" ? MV.YASAL.yillikSaat : 1440) && (mk !== "normal" || +mv > 0)) { m0[mk] = +mv; MV.FIRMA.mesai = m0; delete AY.hata["mesai-" + mk]; ayarCiz(); MK.bildir(mk === "yillik" ? "Yıllık fazla çalışma sınırı " + mv + " saat." : (mk === "normal" ? "Günlük normal çalışma " : "Günlük mesai ") + mv + " dk."); }
+      else { AY.hata["mesai-" + mk] = mk === "yillik" ? "0–270 saat yazın (kanundaki üst sınır 270). Kaydedilmedi." : mk === "normal" ? "1–1440 arası dakika yazın. Kaydedilmedi." : "0–1440 arası dakika yazın. Kaydedilmedi."; AY["mesai-" + mk] = t.value; ayarCiz(); }
       var mf = $(mo); if (mf) mf.focus(); return;
     }
     if (t.hasAttribute && t.hasAttribute("data-rapor-kod")) {   /* 2–4 büyük harf; geçersizse eski kod kalır */

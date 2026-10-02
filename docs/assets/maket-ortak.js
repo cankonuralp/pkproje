@@ -121,8 +121,8 @@
     var k = $("a-mesai-ust-kap"); if (!k || typeof MV === "undefined" || !MV.gunlukSure) return;
     var p = MK.BEN && MV.kisi(MK.BEN), ok = p && p.hesap && p.hesap.roller.indexOf("inspector") >= 0 && MV.mesai().acik;
     if (!ok) { if (k.innerHTML) k.innerHTML = ""; return; }
-    var g = MV.gunlukSure(MK.BEN), h = '<button class="a-mesai-ust' + (g.dolu ? " a-mesai-ust-dolu" : "") + '" type="button" data-eylem="mesai-ac" id="a-mesai-ust" aria-haspopup="dialog" aria-label="Günlük süre ' + (g.normal + g.mesai) + " / " + (g.m.normal + g.m.mesai) + ' dakika; ayrıntı">' +
-      ikon("clock", "a-ikon-kucuk") + '<span class="a-mesai-ust-ad">Günlük süre</span><span class="a-mesai-ust-sayi">' + (g.normal + g.mesai) + '<span class="a-mesai-ust-en"> / ' + (g.m.normal + g.m.mesai) + "</span> dk</span></button>";
+    var g = MV.gunlukSure(MK.BEN), h = '<button class="a-mesai-ust' + (g.dolu ? " a-mesai-ust-dolu" : "") + '" type="button" data-eylem="mesai-ac" id="a-mesai-ust" aria-haspopup="dialog" aria-label="Günlük süre ' + (g.normal + g.mesai) + " / " + (g.m.normal + g.hak) + ' dakika; ayrıntı">' +
+      ikon("clock", "a-ikon-kucuk") + '<span class="a-mesai-ust-ad">Günlük süre</span><span class="a-mesai-ust-sayi">' + (g.normal + g.mesai) + '<span class="a-mesai-ust-en"> / ' + (g.m.normal + g.hak) + "</span> dk</span></button>";
     if (k.innerHTML !== h) k.innerHTML = h;
   };
   /* ── ÇEVRİMDIŞI (Z4, 2026-10-02; reisim: "çevrimdışı yazılan raporlar çevrimdışı kuyruğunda olacak … çevrimiçi olunca gönderilebilecek";
@@ -1018,8 +1018,12 @@
     };
     return '<div class="a-mesai"><p class="a-mesai-baslik">' + ikon("clock", "a-ikon-kucuk") + "Günlük süre · " + kacis((MV.kisi(kisi) || {}).ad || "") +
         (buRapor != null ? '<span class="a-mesai-bu">Bu rapor: ' + buRapor + " dk</span>" : "") + "</p>" +
-      bar("Normal", g.normal, g.m.normal, "a-mesai-normal") + bar("Mesai", g.mesai, g.m.mesai, "a-mesai-fazla") +
-      (g.dolu ? MK.serit("uyari", "triangle-alert", "Günlük süre doldu (normal " + g.m.normal + " + mesai " + g.m.mesai + " dk); yeni rapor oluşturulamaz.", sebep) : "") + "</div>";
+      bar("Normal", g.normal, g.m.normal, "a-mesai-normal") + bar("Mesai", g.mesai, g.hak, "a-mesai-fazla") +
+      /* AA2: yıllık fazla çalışma (saat) — kanunda en çok 270; dolunca o gün mesai hakkı yok */
+      '<p class="a-mesai-yil">Bu yıl fazla çalışma: <b>' + Math.round((g.yil.kullanilan + g.mesai) / 6) / 10 + "</b> / " + g.m.yillik + " saat" +
+        (g.yil.kalan < g.m.mesai ? " · " + (g.yil.kalan ? "kalan " + g.yil.kalan + " dk" : "<b>doldu</b>") : "") + "</p>" +
+      (!g.yil.kalan ? MK.serit("uyari", "triangle-alert", "Yıllık fazla çalışma sınırı (" + g.m.yillik + " saat) doldu: bugün yalnız normal süre (" + g.m.normal + " dk) kullanılabilir.") : "") +
+      (g.dolu ? MK.serit("uyari", "triangle-alert", "Günlük süre doldu (normal " + g.m.normal + " + mesai " + g.hak + " dk); yeni rapor oluşturulamaz.", sebep) : "") + "</div>";
   };
   /* FOTOĞRAF LİSTESİ — TEK ÜRETİCİ (rapor, kusurlu madde, zimmet). 2026-09-29 (reisim: "Fotoğraf eklendiğinde thumnail olmasın sadece
      görselin adı yazsın, görüntüle, indir , sil tuşları olsun"; 09-SUNUCU-VE-VERI A: küçük kopya üretilmez): her fotoğraf bir satır —

@@ -370,7 +370,7 @@
    "gecti": true
   },
   {
-   "ad": "mesai takibi: üst çubukta günlük süre satırı, basınca pencerede normal x / 480, mesai y / 220; plan içinde kalıcı çubuk yok; süre dolunca Rapor oluştur kapalı ve sebep yazılı",
+   "ad": "mesai takibi: üst çubukta günlük süre satırı, basınca pencerede normal x / 480, mesai y / 180; plan içinde kalıcı çubuk yok; süre dolunca Rapor oluştur kapalı ve sebep yazılı",
    "gen": 1920,
    "sayfa": "maket/planlarim.html",
    "hash": "#/plan/1",

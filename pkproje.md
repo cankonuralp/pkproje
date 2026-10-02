@@ -2206,6 +2206,14 @@ revizyon, alan kopyalama, hafif kusur devri, meslek eşleşme denetimi).
 - Emsal ürünler: https://opwire.app/iso-17020-periyodik-kontrol-yazilimi/ · https://17020muayene.vidco.com.tr/ · https://akuple.com/asansor-kontrol-yazilimi/ · https://ensyazilim.com/
 
 ## 11 · Değişiklik günlüğü
+- 2026-10-02 (229): **AA2 · Yıllık fazla çalışma sınırı** (§9 kırk sekizinci tur: *"Mesai süresi her gün kullanılamasın yıllık izin verilen mesaiye göre
+  sınırlansın internetten araştır"*). Araştırma: 4857 sayılı İş Kanunu **41. madde — fazla çalışma yılda en çok 270 saat**; **63. madde — günlük
+  çalışma 11 saati (660 dk) aşamaz**; fazla çalışma için işçinin yılda bir yazılı onayı (Çalışma Süreleri Yönetmeliği). Sonuç: (1) başlangıç
+  mesai **220 → 180 dk** (480 + 220 = 700 dk günlük 11 saati aşıyordu); Firma ayarları'nda toplam 660'ı aşarsa uyarı (engel değil). (2) Firma
+  ayarı **"Yıllık fazla çalışma sınırı (saat)"** — başlangıç ve üst sınır 270; 270'ten büyüğü kaydedilmez. (3) Kişinin bu yıl kullandığı fazla
+  çalışma sınırı doldurunca **o gün mesai hakkı yok**, az kaldıysa hak kalan kadar; günlük süre penceresinde "Bu yıl fazla çalışma: x / 270 saat"
+  ve doldu uyarısı; üst çubuk ve ana sayfa özeti hakla. Örnek veride Burak Şahin'in sınırı dolu. Kilit: m1 + m8 birer etkileşim (önceki kodda
+  düşüyor); 3 eski denetim 220 → 180 (tarih + gerekçe). Tam ölçüm 18 grup temiz.
 - 2026-10-02 (228): **AA11 · Yeni kayıt formları boş açılır** (§9 kırk sekizinci tur eki: *"örnek yazılar yazılı olarak geliyor, silip bir şey yazmam
   gerekiyor"*). Bütün sayfaların yeni kayıt formları tarandı (tarayıcıda açılıp değeri dolu metin alanı arandı): örnek değerle gelenler boşaltıldı,
   yerine silik ipucu — sözleşme başlangıç (sabit bir tarih yazılıydı), süre (12), vade (30) · teklif geçerlilik (30) · ekipman türü periyot (12) ·

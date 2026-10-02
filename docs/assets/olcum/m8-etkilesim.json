@@ -2,9 +2,16 @@
  "maket": "m8",
  "tarih": "2026-10-02",
  "arac": "tools/olc-bulut.mjs --etkilesim (başsız tarayıcı, 1920 açık tema; gen verilen denemede o genişlik)",
- "toplam": 121,
- "gecen": 121,
+ "toplam": 122,
+ "gecen": 122,
  "denemeler": [
+  {
+   "ad": "AA2: yıllık fazla çalışma sınırı dolan kişide o gün mesai hakkı yok — pencerede Bu yıl … / 270 saat · doldu, süre normalle dolar; az kalan kişide hak kalan kadar",
+   "gen": 1920,
+   "sayfa": "maket/rapor.html",
+   "hash": "#/r/ET-1009",
+   "gecti": true
+  },
   {
    "ad": "Z2: S.A.Y düğmesi yalnız firma yapay zekâyı açtıysa ve düzenlenen raporda (onaydaki raporda yok)",
    "gen": 1920,

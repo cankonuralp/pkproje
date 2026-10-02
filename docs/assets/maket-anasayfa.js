@@ -83,7 +83,7 @@
         yuz({ ikon: "file-signature", ad: "Son imzanı bekleyen", sayi: imza.length, href: "raporlar.html#/imza", not: "onaylandı, imza bekliyor", uyari: imza.length > 0 }) +
         /* N6 (2026-09-30, reisim: "denetçinin anasayfasında gözüksün her denetçininki kendisi için hesaplansın"): kişinin kendi günlük süresi */
         (MV.mesai().acik ? (function () { var g = MV.gunlukSure(k); return yuz({ ikon: "clock", ad: "Günlük süre", sayi: (g.normal + g.mesai) + " dk", href: "#", eylem: "mesai-ac",
-          not: "normal " + g.normal + " / " + g.m.normal + " · mesai " + g.mesai + " / " + g.m.mesai + (g.dolu ? " · doldu" : ""), uyari: g.dolu }); })() : "") +
+          not: "normal " + g.normal + " / " + g.m.normal + " · mesai " + g.mesai + " / " + g.hak + (g.dolu ? " · doldu" : ""), uyari: g.dolu }); })() : "") +
         yuz({ ikon: "package", ad: "Zimmetinde", sayi: z.length, href: "zimmetler.html#/?kisi=" + k, not: zk.length ? zk.length + " cihazın kalibrasyonu uyarıda" : "uyarı yok", uyari: zk.length > 0 }) +
         "</div>" +
         liste("Açık planların", "a-tablo-anaplan", PLAN_SUTUN, planlar(function (t) { return benim(t) && ACIK.indexOf(t.pdurum) >= 0; }).map(planSatir),

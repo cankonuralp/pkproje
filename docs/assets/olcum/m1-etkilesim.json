@@ -2,9 +2,16 @@
  "maket": "m1",
  "tarih": "2026-10-02",
  "arac": "tools/olc-bulut.mjs --etkilesim (başsız tarayıcı, 1920 açık tema; gen verilen denemede o genişlik)",
- "toplam": 107,
- "gecen": 107,
+ "toplam": 108,
+ "gecen": 108,
  "denemeler": [
+  {
+   "ad": "AA2: Firma ayarları › Mesai takibi — yıllık sınır 270 saat başlar, 300 kaydedilmez (kanunun üst sınırı), 200 kaydedilir; günlük toplam 660 dk'yı aşarsa uyarı",
+   "gen": 1920,
+   "sayfa": "maket/firma-ayarlari.html",
+   "hash": "#/",
+   "gecti": true
+  },
   {
    "ad": "İzin talepleri: formun PDF'i açılır, e-posta talep edene",
    "gen": 1920,
@@ -559,7 +566,7 @@
    "gecti": true
   },
   {
-   "ad": "Firma ayarları · Mesai takibi: başlangıç açık, 480 / 220 dk; normal 450 kaydedilir, geçersiz kaydedilmez; kapatılınca süre alanları gizlenir (kalıcı)",
+   "ad": "Firma ayarları · Mesai takibi: başlangıç açık, 480 / 180 dk; normal 450 kaydedilir, geçersiz kaydedilmez; kapatılınca süre alanları gizlenir (kalıcı)",
    "gen": 1920,
    "sayfa": "maket/firma-ayarlari.html",
    "hash": "#/",

@@ -1008,6 +1008,7 @@ a.a-yuz:hover { border-color: var(--kenar-alan); background: var(--zemin); }
 /* N6 (2026-09-30): üst çubukta günlük süre satırı (denetçi); basınca pencere */
 .a-mesai-ust { display: inline-flex; align-items: center; gap: 6px; min-height: var(--tus-y); margin-right: 8px; padding: 0 12px; border: 1px solid var(--kenar); border-radius: var(--r-tam); background: var(--kart); color: var(--yazi); font: inherit; font-size: var(--boy-kucuk); font-weight: 600; white-space: nowrap; cursor: pointer; }
 .a-mesai-ust-sayi { font-variant-numeric: tabular-nums; }
+.a-mesai-yil { margin: 4px 0 0; color: var(--yazi2); font-size: var(--boy-kucuk); }   /* AA2: yıllık fazla çalışma satırı */
 .a-mesai-ust-dolu { border-color: var(--uyari-yazi); color: var(--uyari-yazi); }
 .a-mesai-ust-kap:empty { display: none; }   /* Z4: boş kap üst çubukta boşluk almasın (320'de taşma) */
 .a-baglanti-ust { border-color: var(--uyari-yazi); background: var(--uyari-zemin); color: var(--uyari-yazi); }   /* Z4: çevrimdışı çipi (şeridin uyarı çifti) */

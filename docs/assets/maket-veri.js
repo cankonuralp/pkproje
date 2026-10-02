@@ -687,16 +687,26 @@
   /* MESAİ TAKİBİ (2026-09-30, 212): günlük normal çalışma 480 dk + mesai 220 dk (firma ayarı, aç/kapa; yalnız yönetici). Raporun süresi
      ekipman türünün kontrol süresi (Ekipman türleri, dk). Kişinin o gün oluşturduğu (pasif olmayan) raporların süresi önce normali, sonra
      mesaiyi doldurur; ikisi dolunca yeni rapor oluşturulamaz (reisim'in açık kararı: engel). */
+  /* AA2 (2026-10-02, reisim: "Mesai süresi her gün kullanılamasın yıllık izin verilen mesaiye göre sınırlansın internetten araştır"):
+     İş Kanunu (4857) 41. madde: fazla çalışma yılda en çok 270 saat; 63. madde: günlük çalışma 11 saati (660 dk) aşamaz; fazla çalışma için
+     işçinin yılda bir yazılı onayı (Çalışma Süreleri Yönetmeliği). Başlangıç mesai 220 → 180 dk (480 + 180 = 660). Yıllık sınır firma ayarı
+     (en çok 270 saat). Kişinin bu yıl kullandığı fazla çalışma (MV.YILLIK_FAZLA, dk) sınırı doldurunca o gün mesai hakkı yok. */
+  MV.YASAL = { yillikSaat: 270, gunlukDk: 660 };
   MV.mesai = function () {
-    var x = MV.FIRMA.mesai || {}, n = +x.normal, m = +x.mesai;
-    return { acik: x.acik !== false, normal: n > 0 ? n : 480, mesai: x.mesai !== undefined && x.mesai !== "" && m >= 0 ? m : 220 };
+    var x = MV.FIRMA.mesai || {}, n = +x.normal, m = +x.mesai, y = +x.yillik;
+    return { acik: x.acik !== false, normal: n > 0 ? n : 480, mesai: x.mesai !== undefined && x.mesai !== "" && m >= 0 ? m : 180,
+      yillik: x.yillik !== undefined && x.yillik !== "" && y >= 0 && y <= MV.YASAL.yillikSaat ? y : MV.YASAL.yillikSaat };
   };
+  /* bu yıl (bugünden önce) kullanılan fazla çalışma, dk — UYDURMA: Burak Şahin sınırı doldurmuş, Hakan Polat'ın 5 saati kalmış */
+  MV.YILLIK_FAZLA = { mk: 9360, ea: 4200, sy: 1800, co: 2400, bs: 16200, hp: 15900 };
   MV.raporSuresi = function (r) { var e = MV.ekipman(r.kod); return e ? MV.tur(e.tur).sure || 0 : 0; };
   MV.gunlukSure = function (kisi, gun) {
     gun = gun || MK.BUGUN;
     var m = MV.mesai(), t = MV.RAPORLAR.filter(function (r) { return r.kisi === kisi && !r.pasif && (r.olustu || "").slice(0, 10) === gun; })
       .reduce(function (n, r) { return n + MV.raporSuresi(r); }, 0);
-    return { toplam: t, normal: Math.min(t, m.normal), mesai: Math.min(Math.max(t - m.normal, 0), m.mesai), dolu: m.acik && t >= m.normal + m.mesai, m: m };
+    var kul = (MV.YILLIK_FAZLA || {})[kisi] || 0, kalan = Math.max(0, m.yillik * 60 - kul), hak = Math.min(m.mesai, kalan);   /* AA2: yıllık sınır */
+    return { toplam: t, normal: Math.min(t, m.normal), mesai: Math.min(Math.max(t - m.normal, 0), hak), hak: hak, dolu: m.acik && t >= m.normal + hak, m: m,
+      yil: { kullanilan: kul, kalan: kalan, sinir: m.yillik * 60 } };
   };
   MV.kusurFotoZorunlu = function () { return false; };   /* AA9 (2026-10-02): "Uygun değil"de fotoğraf zorunluluğu yok (firma ayarı kalktı) */
   MV.esik = function (k) { var x = +((MV.FIRMA.esik || {})[k]); return x > 0 ? x : MV.ESIK[k].v; };
