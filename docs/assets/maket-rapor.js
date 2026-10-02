@@ -234,6 +234,7 @@
      emin olunmayanlar tek tek uygulanır; uygulanmayan rapora yazılmaz (§8.10). Yapay zekâ kapalıysa ya da anahtar yoksa okumaz, nedenini söyler
      (elle giriş her zaman açık). Her okuma kişinin bu ayki kullanımına yazılır. */
   var okuyabilir = function (r) {
+    if (MK.cevrimdisi()) { MK.bildir("Bağlantı yok: fotoğraftan okuma bağlantı gelince yapılır. Değerleri elle girebilirsiniz."); return false; }
     var h = MV.yzHazir(r.kisi); if (h) { MK.bildir("Fotoğraftan okunamadı. " + h + " Değerleri elle girebilirsiniz."); return false; }
     MV.yzKullan(r.kisi, "okuma"); return true;
   };
@@ -566,7 +567,8 @@
       : F.gozle ? ["firma", "ekipman", "termal", "cihaz", "kriter", "test", "sigorta", "pd", "zi", "devir", "kusur", "foto", "not", "sonuc", "yetkili"]
       : ["firma", "ekipman", "cihaz", "tanim", "test", "devir", "kusur", "not", "sonuc", "yetkili", "foto"];
     $("a-rapor").innerHTML = MK.kirinti([["Planlar", MK.adres(13, "#/")], [PL.plan || PL.ad, PL.pid ? MK.adres(13, "#/plan/" + PL.pid) : MK.adres(13, "#/")], [r.no]]) +
-      '<div class="a-nesne-bas"><div class="a-nesne-kimlik"><div class="a-nesne-baslik"><h1 tabindex="-1">' + e.kod + " · " + kacis(t.ad) + "</h1>" + rozet(DURUM[r.durum]) + "</div>" +
+      '<div class="a-nesne-bas"><div class="a-nesne-kimlik"><div class="a-nesne-baslik"><h1 tabindex="-1">' + e.kod + " · " + kacis(t.ad) + "</h1>" + rozet(DURUM[r.durum]) +
+        (MV.rapor(r.no) && MV.rapor(r.no).bekliyor ? rozet({ ad: "Gönderilmedi · bağlantı bekleniyor", rozet: "a-rozet-bekliyor" }) : "") + "</div>" +
         '<p class="a-nesne-alt">' + ikon("file-text", "a-ikon-kucuk") + '<span><span class="a-kod">' + r.no + "</span> · " + (F ? '<span class="a-kod">' + t.format + "</span> · " : "") + kacis(MV.musteri(PL.m).kisa) + " · " + kacis(PL.ad) + " · " + kacis(p.ad) + "</span></p>" +   /* L7: firma önce, tesis sonra */
         /* son kayıt başlıkta (2026-09-29: tuşlar çubuksuz, yazı tuşların arkasında kalmasın) */
         (oku ? "" : '<p class="a-adim-not a-rapor-kayit" id="r-kayit">' + kayitMetin(r) + "</p>") + "</div>" +
@@ -924,6 +926,8 @@
   };
   X["kaydet"] = function () {
     var r = aktif(); r.kayit = MK.simdi(); r.degisti = false; $("r-kayit").textContent = kayitMetin(r);
+    /* Z4: çevrimdışıyken cihaza kaydedilir, kuyruğa girer (bağlantı gelince gider) */
+    if (MK.cevrimdisi()) { MK.kuyrugaEkle("rapor.kaydet", "Rapor kaydı · " + r.no); MK.bildir("Cihaza kaydedildi; bağlantı gelince gönderilecek."); return; }
     MK.bildir("Rapor kaydedildi.");
   };
   X["firma-guncelle"] = function (el, e) {
@@ -1062,7 +1066,10 @@
     var gri2 = gri || kay.geri;
     Object.assign(kay, { durum: "onayda", gonderildi: r.gonderildi, sonuc: sonucAdi(r), geri: null, devir: JSON.parse(JSON.stringify(r.devir || {})), ilkGonderim: kay.ilkGonderim || r.gonderildi,
       duzeltmeler: (kay.duzeltmeler || []).concat(gri2 ? [{ geri: gri2.zaman, gonderim: r.gonderildi }] : []) });
+ /* Z4 (ARKA-UC §4.3): çevrimdışıyken gönderim cihazda bekler — rapor salt okunur olur, Onaylar'a bağlantı gelince düşer */
+    var cd = MK.cevrimdisi(); if (cd) { kay.bekliyor = true; MK.kuyrugaEkle("rapor.gonder", "Onaya gönder · " + r.no, r.no); }
     ciz(); window.scrollTo(0, 0); var h = document.querySelector("#a-rapor h1"); if (h) h.focus({ preventScroll: true });
+    if (cd) { MK.bildir("Cihaza kaydedildi: bağlantı gelince onaya gider (" + MV.kisi(YON[r.t.b]).ad + ")."); return; }
     MK.bildir("Onaya gönderildi: " + MV.kisi(YON[r.t.b]).ad + ", " + MV.bransAd(r.t.b).toLocaleLowerCase("tr") + " branş yöneticisi." +
       (oto ? " Sonuç kriterlere göre: " + (r.sonuc === "kullanilir" ? "Uygun" : "Uygun değil") + "." : ""));
   }

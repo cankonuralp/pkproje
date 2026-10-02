@@ -2183,6 +2183,15 @@ revizyon, alan kopyalama, hafif kusur devri, meslek eşleşme denetimi).
 - Emsal ürünler: https://opwire.app/iso-17020-periyodik-kontrol-yazilimi/ · https://17020muayene.vidco.com.tr/ · https://akuple.com/asansor-kontrol-yazilimi/ · https://ensyazilim.com/
 
 ## 11 · Değişiklik günlüğü
+- 2026-10-02 (224): **Z4 · Çevrimdışı gösterge ve kuyruk makette** (§9 kırk altıncı tur: *"çevrimdışı yazılan raporlar çevrimdışı kuyruğunda
+  olacak … çevrimiçi olunca gönderilebilecek"*; ARKA-UC K4 kalıcı cihaz deposu, §4.2–4.3). Bağlantı yokken üst çubukta **"Çevrimdışı · n bekliyor"**
+  (uyarı rengi; telefonda üst çubuk dolu olduğu için çubuğun hemen altında tam genişlik şerit); tıklayınca pencere: ne olduğu, "Çevrimdışı hazır: N plan · son eşitleme", bağlantı gerektirenler (son imza,
+  onay, fotoğraftan okuma, S.A.Y), gönderilmeyi bekleyen işlemler. Raporda **Kaydet** ve **Onaya gönder** cihaza yazılır, kuyruğa girer; gönderilen
+  rapor "Gönderilmedi · bağlantı bekleniyor" işaretiyle salt okunur olur ve **Onaylar'a (kuyruk, ana sayfa, menü balonu) bağlantı gelince düşer**.
+  Kuyruk cihaz deposunda — sayfa yenilense / kapansa da durur; bağlantı gelince (hangi sayfada olursa) sırayla gider, bildirimde sayısı. Çevrimdışıyken
+  fotoğraftan okuma ve S.A.Y çalışmaz, nedenini söyler; elle giriş açık. Makette bağlantı yan menünün altındaki **"Bağlantıyı kes / aç"** ile denenir
+  (tarayıcının kendi çevrimdışı hâli de sayılır); "Denemeleri sıfırla" kuyruğu da siler. Makette kuyruğa girenler yalnız rapor Kaydet / Onaya gönder
+  (plan kabul, fotoğraf, talepler uygulamada aynı kuyrukla). İkonlar wifi-off, cloud-upload. Kilit: m8 etkileşim 3, durum 1.
 - 2026-10-02 (223): **Z3 · Fotoğraftan okuma: topraklama ölçüm noktası + etiket plakası** (§9 kırk altıncı tur: *"sigorta topraklama noktası
   vs yazarken fotoğraftan okuma"*; ARKA-UC K1, §5.2). Topraklama raporunda (5.1) "Fotoğraftan oku": Zx'i boş noktaların ölçü aleti ekranı okunur;
   formatsız türlerde Ekipman bilgileri'nde "Etiketten oku": marka, model, seri no, imal yılı. Okunan değerler **öneri kartında** — emin olunanlar

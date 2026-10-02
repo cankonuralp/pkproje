@@ -125,6 +125,59 @@
       ikon("clock", "a-ikon-kucuk") + '<span class="a-mesai-ust-ad">Günlük süre</span><span class="a-mesai-ust-sayi">' + (g.normal + g.mesai) + '<span class="a-mesai-ust-en"> / ' + (g.m.normal + g.m.mesai) + "</span> dk</span></button>";
     if (k.innerHTML !== h) k.innerHTML = h;
   };
+  /* ── ÇEVRİMDIŞI (Z4, 2026-10-02; reisim: "çevrimdışı yazılan raporlar çevrimdışı kuyruğunda olacak … çevrimiçi olunca gönderilebilecek";
+     ARKA-UC K4 (RAM değil kalıcı cihaz deposu), §4.2 paket, §4.3 çıkış kuyruğu): cihazda yapılan iş hemen uygulanmış görünür ve kuyruğa yazılır;
+     bağlantı gelince sırayla gider (Onaylar'a o zaman düşer). Üst çubukta "Çevrimdışı · n bekliyor"; tıklayınca kuyruk ve paket. Makette
+     bağlantı yan menünün altındaki "Bağlantıyı kes / aç" ile denenir (tarayıcının kendi çevrimdışı hâli de sayılır); kuyruk cihaz deposunda
+     (localStorage) — sayfa kapansa da kalır. Kuyruğa girenler makette: rapor Kaydet ve Onaya gönder. ─────────────────────────────────── */
+  var BAG_AD = "probata-maket-baglanti";
+  var BAG = (function () { try { return JSON.parse(localStorage.getItem(BAG_AD)) || {}; } catch (e) { return {}; } })();
+  BAG.kuyruk = BAG.kuyruk || [];
+  var bagYaz = function () { try { localStorage.setItem(BAG_AD, JSON.stringify(BAG)); } catch (e) { /* depo yoksa bu sayfada bellekte kalır */ } };
+  MK.cevrimdisi = function () { return !!BAG.kesik || navigator.onLine === false; };
+  MK.kuyruk = function () { return BAG.kuyruk.slice(); };
+  MK.kuyrugaEkle = function (tur, ad, no) { BAG.kuyruk.push({ tur: tur, ad: ad, no: no || null, zaman: MK.simdi() }); bagYaz(); MK.baglantiCiz(); };
+  MK.baglantiCiz = function () {
+    var k = $("a-baglanti-ust-kap"); if (!k) return;
+    var n = BAG.kuyruk.length, h = !MK.cevrimdisi() ? "" : '<button class="a-mesai-ust a-baglanti-ust" type="button" data-eylem="baglanti-ac" id="a-baglanti-ust" aria-haspopup="dialog" aria-label="Çevrimdışı' +
+      (n ? ", " + n + " işlem gönderilmeyi bekliyor" : "") + '; ayrıntı">' + ikon("wifi-off", "a-ikon-kucuk") + '<span class="a-mesai-ust-ad">Çevrimdışı</span>' + (n ? '<span class="a-mesai-ust-sayi">' + n + '<span class="a-mesai-ust-en"> bekliyor</span></span>' : "") + "</button>";
+    if (k.innerHTML !== h) k.innerHTML = h;
+    document.body.classList.toggle("a-cevrimdisi", !!h);   /* telefonda şerit kadar boşluk */
+    var t = $("a-maket-baglanti"); if (t) t.textContent = BAG.kesik ? "Bağlantıyı aç" : "Bağlantıyı kes";
+  };
+  /* bağlantı gelince: kuyruk sırayla gider (makette bir seferde); bekleyen raporlar Onaylar'a düşer */
+  function kuyrukGonder() {
+    if (MK.cevrimdisi() || !BAG.kuyruk.length) return;
+    var l = BAG.kuyruk; BAG.kuyruk = []; bagYaz();
+    if (typeof MV !== "undefined" && MV.rapor) l.forEach(function (x) { var r = x.no && MV.rapor(x.no); if (r && r.bekliyor) delete r.bekliyor; });
+    MK.baglantiCiz(); if (MK.goster) MK.goster(); MK.kaliciYaz();
+    MK.bildir("Bağlantı geldi: bekleyen " + l.length + " işlem gönderildi.");
+  }
+  MK.eylem = MK.eylem || {};
+  MK.eylem["maket-baglanti"] = function (el) {
+    BAG.kesik = !BAG.kesik; if (BAG.kesik) BAG.esitleme = MK.simdi(); bagYaz(); MK.baglantiCiz(); el.focus();
+    if (BAG.kesik) MK.bildir("Bağlantı kesildi (maket denemesi): yaptıklarınız cihaza kaydedilir, bağlantı gelince gider.");
+    else if (BAG.kuyruk.length) setTimeout(kuyrukGonder, 400); else MK.bildir("Bağlantı geldi; bekleyen işlem yok.");
+  };
+  window.addEventListener("offline", function () { if (!BAG.esitleme || !BAG.kesik) { BAG.esitleme = MK.simdi(); bagYaz(); } MK.baglantiCiz(); });
+  window.addEventListener("online", function () { MK.baglantiCiz(); setTimeout(kuyrukGonder, 400); });
+  MK.eylem["baglanti-ac"] = function () {
+    var d = $("a-baglanti-pencere");
+    if (!d) {
+      d = document.createElement("dialog"); d.className = "a-pencere a-pencere-mesai"; d.id = "a-baglanti-pencere"; d.setAttribute("aria-labelledby", "a-baglanti-pencere-baslik");
+      d.innerHTML = '<div class="a-pencere-bas"><h2 id="a-baglanti-pencere-baslik">Çevrimdışı</h2><button class="a-ikon-tus" type="button" data-eylem="pencere-kapat" aria-label="Kapat">' + ikon("x") + "</button></div>" +
+        '<div class="a-pencere-govde" id="a-baglanti-pencere-govde"></div><div class="a-pencere-alt"><button class="a-tus a-tus-ikincil" type="button" data-eylem="pencere-kapat">Kapat</button></div>';
+      document.body.appendChild(d);
+    }
+    var l = BAG.kuyruk, plan = typeof MV !== "undefined" && MV.TESISLER ? MV.TESISLER.filter(function (t) { return (t.pdurum === "kabul" || t.pdurum === "denetimde") && (!MK.BEN || (t.pekip || []).indexOf(MK.BEN) >= 0); }).length : 0;
+    $("a-baglanti-pencere-govde").innerHTML =
+      MK.serit("bilgi", "wifi-off", "İnternet yok. Yaptıklarınız bu cihaza kaydedilir (uygulama kapansa da kaybolmaz) ve bağlantı gelince sırayla gönderilir.") +
+      '<p class="a-ipucu">Çevrimdışı hazır: <b>' + plan + " plan</b>" + (BAG.esitleme ? " · son eşitleme " + MK.zamanYaz(BAG.esitleme) : "") + ". Bağlantı gerektirenler: son imza, onay, fotoğraftan okuma, S.A.Y.</p>" +
+      (l.length ? '<p class="a-etiket a-disa-gecmis-bas">Gönderilmeyi bekleyen (' + l.length + ')</p><ol class="a-disa-gecmis" id="a-kuyruk">' + l.map(function (x) {
+          return "<li>" + ikon("cloud-upload", "a-ikon-kucuk") + " <b>" + kacis(x.ad) + '</b> <span class="a-alt-satir">' + MK.zamanYaz(x.zaman) + "</span></li>"; }).join("") + "</ol>"
+        : '<p class="a-bos-satir">Gönderilmeyi bekleyen işlem yok.</p>');
+    d.showModal(); d.querySelector('.a-pencere-alt [data-eylem="pencere-kapat"]').focus();
+  };
   MK.mesaiAc = function () {
     var d = $("a-mesai-pencere");
     if (!d) {
@@ -182,7 +235,8 @@
         '<img class="a-cubuk-isaret" src="../marka/probata-isaret-koyu-zemin.svg" alt="probata" width="25" height="32">' +
         '<button class="a-ikon-tus a-cubuk-kapat" type="button" data-eylem="cekmece-kapat" aria-label="Menüyü kapat">' + I("x") + "</button></div>" +
         '<nav class="a-menu" id="a-menu" aria-label="Modüller">' + menuHtml(o) + "</nav>" +
-        '<div class="a-cubuk-alt"><span>Maket · uydurma veri</span><button class="a-cubuk-sifirla" type="button" data-eylem="maket-sifirla">Denemeleri sıfırla</button></div></aside>' +
+        '<div class="a-cubuk-alt"><span>Maket · uydurma veri</span><button class="a-cubuk-sifirla" type="button" data-eylem="maket-baglanti" id="a-maket-baglanti">' + (BAG.kesik ? "Bağlantıyı aç" : "Bağlantıyı kes") + "</button>" +
+          '<button class="a-cubuk-sifirla" type="button" data-eylem="maket-sifirla">Denemeleri sıfırla</button></div></aside>' +
       '<div class="a-perde" data-eylem="cekmece-kapat"></div>' +
       '<div class="a-govde"><header class="a-ust">' +
         '<button class="a-menu-tus" type="button" data-eylem="cekmece-ac" aria-label="Menüyü aç" aria-controls="a-cubuk" aria-expanded="false">' + I("menu") + "</button>" +
@@ -192,6 +246,7 @@
         '<img class="a-ust-isaret a-isaret-acik" src="../marka/probata-isaret-renkli.svg" alt="probata" width="25" height="32">' +
         '<img class="a-ust-isaret a-isaret-koyu" src="../marka/probata-isaret-koyu-zemin.svg" alt="probata" width="25" height="32">' +
         '<div class="a-ust-bosluk"></div>' +
+        '<span class="a-mesai-ust-kap" id="a-baglanti-ust-kap"></span>' +   /* Z4: çevrimdışı · bekleyen işlem */
         '<span class="a-mesai-ust-kap" id="a-mesai-ust-kap"></span>' +   /* N6: günlük süre satırı (denetçi) */
         '<button class="a-ikon-tus" type="button" data-eylem="tema" id="a-tema-tus" aria-label="Temayı değiştir">' +
           '<svg class="a-ikon a-tema-ay" aria-hidden="true"><use href="' + IKON + 'moon"/></svg><svg class="a-ikon a-tema-gunes" aria-hidden="true"><use href="' + IKON + 'sun"/></svg></button>' +
@@ -210,7 +265,7 @@
       "</header></div>";
     document.body.insertBefore(kok, ana);
     kok.querySelector(".a-govde").appendChild(ana);
-    MK.mesaiUstCiz();
+    MK.mesaiUstCiz(); MK.baglantiCiz(); setTimeout(kuyrukGonder, 600);   /* başka sayfada bağlantı geldiyse bekleyenler gider */
     /* süzgeç levhası (telefonda seçiciler) ve bildirim — her sayfada bir tane */
     document.body.insertAdjacentHTML("beforeend",
       '<dialog class="a-pencere" id="a-levha" aria-labelledby="a-levha-baslik"><div class="a-pencere-bas"><h2 id="a-levha-baslik">Filtre</h2>' +
@@ -1178,7 +1233,7 @@
   MK.eylem["maket-sifirla"] = function (el) {
     if (!el.dataset.onay) { el.dataset.onay = "1"; el.textContent = "Onayla: bütün denemeler silinir"; return; }
     sifirlandi = true; clearTimeout(yazZaman);
-    try { localStorage.removeItem(DEPO_AD); } catch (e) { /* yok */ }
+    try { localStorage.removeItem(DEPO_AD); localStorage.removeItem(BAG_AD); } catch (e) { /* yok */ }
     try { if (DDB) DDB.close(); indexedDB.deleteDatabase(DDB_AD); } catch (e) { /* yok */ }
     location.reload();
   };

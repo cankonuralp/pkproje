@@ -1014,11 +1014,20 @@ a.a-yuz:hover { border-color: var(--kenar-alan); background: var(--zemin); }
 .a-mesai-ust { display: inline-flex; align-items: center; gap: 6px; min-height: var(--tus-y); margin-right: 8px; padding: 0 12px; border: 1px solid var(--kenar); border-radius: var(--r-tam); background: var(--kart); color: var(--yazi); font: inherit; font-size: var(--boy-kucuk); font-weight: 600; white-space: nowrap; cursor: pointer; }
 .a-mesai-ust-sayi { font-variant-numeric: tabular-nums; }
 .a-mesai-ust-dolu { border-color: var(--uyari-yazi); color: var(--uyari-yazi); }
+.a-mesai-ust-kap:empty { display: none; }   /* Z4: boş kap üst çubukta boşluk almasın (320'de taşma) */
+.a-baglanti-ust { border-color: var(--uyari-yazi); background: var(--uyari-zemin); color: var(--uyari-yazi); }   /* Z4: çevrimdışı çipi (şeridin uyarı çifti) */
 .a-pencere-mesai { width: min(480px, calc(100vw - 32px)); }
 .a-pencere-mesai .a-mesai { border: 0; padding: 0; background: none; }
 .a-mesai-dolu-serit { margin: 0 0 12px; }
 @media (max-width: 599.98px) { .a-mesai-ust-ad { display: none; } .a-mesai-ust { padding: 0 10px; margin-right: 4px; } }
 @media (max-width: 399.98px) { .a-mesai-ust-en { display: none; } .a-mesai-ust { padding: 0 8px; margin-right: 0; } }   /* 320: satır taşmasın (toplam pencerede) */
+/* Z4: telefonda üst çubuk dolu (320'de çip sığmıyor) → çevrimdışı çipi üst çubuğun hemen altında tam genişlik şerit; içerik şerit kadar aşağı iner */
+@media (max-width: 599.98px) {
+  .a-baglanti-ust { position: absolute; left: 0; right: 0; top: 100%; justify-content: center; margin: 0; border-width: 0 0 1px; border-radius: 0; }
+  .a-baglanti-ust .a-mesai-ust-ad, .a-baglanti-ust .a-mesai-ust-en { display: inline; }
+  .a-cevrimdisi .a-icerik { margin-top: var(--tus-y); }
+  #a-baglanti-ust-kap { display: contents; }   /* kap üst çubuğun akışında yer (ve boşluk) almasın; şerit mutlak konumlu */
+}
 /* telefonda tek "İşlemler" menüsü (2026-09-30, 210); masaüstü ve tablette tuşlar yan yana */
 .a-rapor-islemler { display: none; pointer-events: auto; }
 .a-rapor-islemler .a-secici-liste { top: auto; bottom: calc(100% + 6px); left: auto; right: 0; min-width: 240px; }

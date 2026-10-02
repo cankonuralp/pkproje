@@ -2,8 +2,8 @@
  "maket": "m8",
  "tarih": "2026-10-02",
  "arac": "tools/olc-bulut.mjs --etkilesim (başsız tarayıcı, 1920 açık tema; gen verilen denemede o genişlik)",
- "toplam": 118,
- "gecen": 118,
+ "toplam": 121,
+ "gecen": 121,
  "denemeler": [
   {
    "ad": "Z2: S.A.Y düğmesi yalnız firma yapay zekâyı açtıysa ve düzenlenen raporda (onaydaki raporda yok)",
@@ -14,6 +14,27 @@
   },
   {
    "ad": "Z2: sonuç önerisi — Vazgeç rapora yazmaz, Uygula yazar (kaydedilmemiş değişiklik); her mesaj kişinin bu ayki kullanımına; Esc kapatır, odak düğmeye döner",
+   "gen": 1920,
+   "sayfa": "maket/rapor.html",
+   "hash": "#/r/ET-1009",
+   "gecti": true
+  },
+  {
+   "ad": "Z4: çevrimdışı Kaydet ve Onaya gönder kuyruğa girer; üst çubukta Çevrimdışı · 2 bekliyor; sayfa yenilense de kuyruk ve Gönderilmedi işareti durur; rapor Onaylar kuyruğunda yok",
+   "gen": 1920,
+   "sayfa": "maket/rapor.html",
+   "hash": "#/r/KP-1004",
+   "gecti": true
+  },
+  {
+   "ad": "Z4: bağlantı gelince bekleyenler gönderilir — kuyruk boşalır, işaret kalkar, rapor Onaylar kuyruğuna düşer, bildirimde sayı",
+   "gen": 1920,
+   "sayfa": "maket/rapor.html",
+   "hash": "#/r/KP-1004",
+   "gecti": true
+  },
+  {
+   "ad": "Z4: çevrimdışıyken fotoğraftan okuma okumaz (bağlantı gelince), S.A.Y soru almaz ve nedenini söyler; elle giriş açık",
    "gen": 1920,
    "sayfa": "maket/rapor.html",
    "hash": "#/r/ET-1009",

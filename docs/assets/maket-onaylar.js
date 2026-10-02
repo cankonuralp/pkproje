@@ -23,7 +23,7 @@
     if (MK.takipCiz) MK.takipCiz();
   }
   var brans = function (r) { return MV.tur(MV.ekipman(r.kod).tur).b; };
-  var kuyruk = function () { return MV.RAPORLAR.filter(function (r) { return r.durum === "onayda" && brans(r) === BRANS; }).sort(function (a, b) { return a.gonderildi < b.gonderildi ? 1 : -1; }); };   /* en yeni üstte (reisim 2026-09-26) */
+  var kuyruk = function () { return MV.RAPORLAR.filter(function (r) { return r.durum === "onayda" && !r.bekliyor && brans(r) === BRANS; })   /* Z4: cihazda bekleyen gönderim bağlantı gelince düşer */.sort(function (a, b) { return a.gonderildi < b.gonderildi ? 1 : -1; }); };   /* en yeni üstte (reisim 2026-09-26) */
   /* pasif raporlar (2026-09-28, T2; reisim: "denetçi pasife alabilir … aktif etme ve silme yalnız yönetici"): branşın pasif raporları */
   var pasifler = function () { return MV.RAPORLAR.filter(function (r) { return r.pasif && brans(r) === BENIM; }).sort(function (a, b) { return a.pasifZaman < b.pasifZaman ? 1 : -1; }); };
   /* 190 (2026-09-29): Tüm raporlar bakıştaki yöneticinin branşının (#/tum, elektrik #/tum?brans=e) */

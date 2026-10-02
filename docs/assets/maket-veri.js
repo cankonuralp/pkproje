@@ -1565,7 +1565,7 @@
       if (!p) return null;
       var br = r.indexOf("mekyon") >= 0 ? "m" : r.indexOf("elkyon") >= 0 ? "e" : null;
       var imza = MV.RAPORLAR.filter(function (x) { return x.durum === "onaylandi" && !x.pasif && x.kisi === ben; });
-      var onay = br ? MV.RAPORLAR.filter(function (x) { return x.durum === "onayda" && !x.pasif && x.kisi !== ben && raporBrans(x) === br; }) : [];
+      var onay = br ? MV.RAPORLAR.filter(function (x) { return x.durum === "onayda" && !x.pasif && !x.bekliyor && x.kisi !== ben && raporBrans(x) === br; }) : [];
       var gec = imza.filter(function (x) { return x.onay && saatFarki(x.onay.zaman) > 24; }).length + onay.filter(function (x) { return x.gonderildi && saatFarki(x.gonderildi) > 24; }).length;
       return { kirmizi: gec, sari: imza.length + onay.length - gec, ad: { kirmizi: "24 saati geçen imza / onay bekleyen rapor", sari: "imzanızı ya da onayınızı bekleyen rapor" } };
     },

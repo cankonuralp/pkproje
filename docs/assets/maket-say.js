@@ -12,7 +12,7 @@
   var S = { acik: false, mesaj: [], n: 0 };   /* mesaj: { kim: "ben" | "say", html, oneri?: { id, deger, ad, durum } } */
   var HIZLI = [["eksik", "Eksik alanlar neler?"], ["derece", "Kusur derecesi öner"], ["sonuc", "Sonuç ne olmalı?"]];
 
-  var anahtarVar = function () { return !MV.yzHazir(MK.BEN); };
+  var anahtarVar = function () { return !MV.yzHazir(MK.BEN) && !MK.cevrimdisi(); };   /* Z4: bağlantı yokken de soru almaz */
   function sinirDoldu() {
     var z = MV.yz(), p = MK.BEN && MV.kisi(MK.BEN), k = MV.YZ_KULLANIM.filter(function (x) { return x.k === MK.BEN; })[0];
     return !!(k && !(p && p.yzAnahtar) && z.sinir !== "" && +z.sinir > 0 && k.usd >= +z.sinir);
@@ -40,7 +40,8 @@
     kap.innerHTML = '<div class="a-say-bas"><div><h2 id="a-say-baslik">S.A.Y</h2><p class="a-say-alt">Saha asistanı · öneri verir, rapora siz uygularsınız</p></div>' +
         '<button class="a-ikon-tus" type="button" data-eylem="say-kapat" aria-label="S.A.Y\'ı kapat">' + ikon("x") + "</button></div>" +
       '<div class="a-say-govde" id="a-say-govde">' +
-        (!anah ? MK.serit("uyari", "key-round", "API anahtarı girilmedi (Firma ayarları › Yapay zekâ): S.A.Y cevap veremez.") : "") +
+        (MK.cevrimdisi() ? MK.serit("uyari", "wifi-off", "Bağlantı yok: S.A.Y bağlantı gelince çalışır. Raporu yazmaya devam edebilirsiniz.")
+          : !anah ? MK.serit("uyari", "key-round", "API anahtarı girilmedi (Firma ayarları › Yapay zekâ): S.A.Y cevap veremez.") : "") +
         (anah && sinirDoldu() ? MK.serit("uyari", "triangle-alert", "Bu ay kişi başı sınırınız doldu; yönetici Firma ayarları'ndan artırabilir.") : "") +
         (bos ? '<p class="a-say-bos">Bu raporu okudum. Eksikleri sorabilir, kusur derecesi ya da sonuç için öneri isteyebilirsiniz. Önerileri siz onaylamadan rapora hiçbir şey yazılmaz.</p>' : "") +
         '<ol class="a-say-liste" aria-live="polite">' + S.mesaj.map(mesajHtml).join("") + "</ol></div>" +

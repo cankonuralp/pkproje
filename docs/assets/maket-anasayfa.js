@@ -125,7 +125,7 @@
   /* branş yöneticisi: kendi branşının onay kuyruğu (en eski üstte, M9 ile aynı sıra) */
   function yoneticiBolumu(b, k) {
     return function () {
-      var kuyruk = MV.RAPORLAR.filter(function (r) { return r.durum === "onayda" && raporBrans(r) === b; }).sort(function (x, y) { return x.gonderildi < y.gonderildi ? -1 : 1; });
+      var kuyruk = MV.RAPORLAR.filter(function (r) { return r.durum === "onayda" && !r.bekliyor && raporBrans(r) === b; }).sort(function (x, y) { return x.gonderildi < y.gonderildi ? -1 : 1; });
       var geri = MV.RAPORLAR.filter(function (r) { return r.geri && r.geri.kim === k; });
       var kal = kalUyari().filter(function (v) { return MV.cihazBranslari(v.cihazTur).indexOf(b) >= 0; });
       var imza = MV.RAPORLAR.filter(function (r) { return r.durum === "onaylandi" && raporBrans(r) === b; });
