@@ -1,7 +1,7 @@
 {
  "maket": "m3",
  "sayfa": "maket/ekipman-turleri.html",
- "tarih": "2026-09-30",
+ "tarih": "2026-10-02",
  "arac": "başsız HeadlessChrome/141.0.7390.37 · puppeteer-core · tools/olc-bulut.mjs + tools/olc-maket.js",
  "yontem": "python3 http.server (docs/), her durum × genişlik × tema taze yükleme ve ayrı oturum, geçişler kapalı; 1920×1080 · 1080×810 · 375×812 × açık/koyu; 1080'de çekmece açık ayrıca.",
  "toplam": 96,
@@ -14,11 +14,11 @@
     "genislik": 1080,
     "ekranIcinde": true,
     "cekmeceGen": 300,
-    "madde": 16,
+    "madde": 17,
     "kesikAd": 0,
     "kucukMadde": 0,
-    "menuGorunur": 691,
-    "menuIcerik": 938,
+    "menuGorunur": 643,
+    "menuIcerik": 984,
     "yatayTasma": 0,
     "sonMaddeAcilir": true,
     "perde": true,
@@ -28,11 +28,11 @@
     "genislik": 1080,
     "ekranIcinde": true,
     "cekmeceGen": 300,
-    "madde": 16,
+    "madde": 17,
     "kesikAd": 0,
     "kucukMadde": 0,
-    "menuGorunur": 691,
-    "menuIcerik": 938,
+    "menuGorunur": 643,
+    "menuIcerik": 984,
     "yatayTasma": 0,
     "sonMaddeAcilir": true,
     "perde": true,
@@ -297,7 +297,7 @@
     351,
     351
    ],
-   "satirY": 247,
+   "satirY": 220,
    "birincil": null,
    "pencereGen": null,
    "icerik": 375,
@@ -335,7 +335,7 @@
     351,
     351
    ],
-   "satirY": 247,
+   "satirY": 220,
    "birincil": null,
    "pencereGen": null,
    "icerik": 375,
@@ -1209,7 +1209,7 @@
     108,
     351
    ],
-   "satirY": 247,
+   "satirY": 220,
    "birincil": null,
    "pencereGen": 375,
    "icerik": 375,
@@ -1247,7 +1247,7 @@
     108,
     351
    ],
-   "satirY": 247,
+   "satirY": 220,
    "birincil": null,
    "pencereGen": 375,
    "icerik": 375,
@@ -1513,7 +1513,7 @@
     108,
     351
    ],
-   "satirY": 247,
+   "satirY": 220,
    "birincil": null,
    "pencereGen": 375,
    "icerik": 375,
@@ -1551,7 +1551,7 @@
     108,
     351
    ],
-   "satirY": 247,
+   "satirY": 220,
    "birincil": null,
    "pencereGen": 375,
    "icerik": 375,
@@ -1817,7 +1817,7 @@
     69,
     351
    ],
-   "satirY": 247,
+   "satirY": 220,
    "birincil": null,
    "pencereGen": 375,
    "icerik": 375,
@@ -1855,7 +1855,7 @@
     69,
     351
    ],
-   "satirY": 247,
+   "satirY": 220,
    "birincil": null,
    "pencereGen": 375,
    "icerik": 375,
@@ -3107,7 +3107,7 @@
    "tusY": 34,
    "tusGen": [
     99,
-    155
+    187
    ],
    "satirY": 46,
    "birincil": null,
@@ -3145,7 +3145,7 @@
    "tusY": 34,
    "tusGen": [
     99,
-    155
+    187
    ],
    "satirY": 46,
    "birincil": null,
@@ -3183,7 +3183,7 @@
    "tusY": 44,
    "tusGen": [
     102,
-    163
+    197
    ],
    "satirY": 56,
    "birincil": null,
@@ -3221,7 +3221,7 @@
    "tusY": 44,
    "tusGen": [
     102,
-    163
+    197
    ],
    "satirY": 56,
    "birincil": null,
@@ -3259,7 +3259,7 @@
    "tusY": 44,
    "tusGen": [
     102,
-    163
+    197
    ],
    "satirY": 56,
    "birincil": null,
@@ -3297,7 +3297,7 @@
    "tusY": 44,
    "tusGen": [
     102,
-    163
+    197
    ],
    "satirY": 56,
    "birincil": null,
@@ -3334,8 +3334,8 @@
    "eksikIkon": 0,
    "tusY": 44,
    "tusGen": [
-    109,
-    163
+    146,
+    197
    ],
    "satirY": 158,
    "birincil": null,
@@ -3372,8 +3372,8 @@
    "eksikIkon": 0,
    "tusY": 44,
    "tusGen": [
-    109,
-    163
+    146,
+    197
    ],
    "satirY": 158,
    "birincil": null,

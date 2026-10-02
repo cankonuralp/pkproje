@@ -2206,6 +2206,10 @@ revizyon, alan kopyalama, hafif kusur devri, meslek eşleşme denetimi).
 - Emsal ürünler: https://opwire.app/iso-17020-periyodik-kontrol-yazilimi/ · https://17020muayene.vidco.com.tr/ · https://akuple.com/asansor-kontrol-yazilimi/ · https://ensyazilim.com/
 
 ## 11 · Değişiklik günlüğü
+- 2026-10-02 (227): **AA5 · Ekipman türleri Mekanik / Elektrik sekmeleri** (§9 kırk sekizinci tur: *"ekipman türleri içerisinde mekanik ve elektrik
+  olarak ayrılsın"*). Liste iki sekmede (`#/` Mekanik, `#/elektrik` Elektrik; sekmede tür sayısı); branş sütunu ve branş süzgeci kalktı, Ek-III
+  grubu seçicisi sekmenin branşındaki gruplarla; tür sayfasının kırıntısı türün sekmesine döner. Kilit: m3 etkileşim (eski sayfada düşüyor); 1 eski
+  denetim (branş süzgeci) tarih + gerekçeyle sekmeye çevrildi.
 - 2026-10-02 (226): **AA6 + AA7 + AA9 · Rapor: standart açılır, tek toplu tuş, madde açıklaması pencerede, Uygun değil sade** (§9 kırk sekizinci tur).
   AA7: kriter grup başlığındaki küçük ünlem toplu tuşu kalktı (bölüm başlığındaki "Hepsini işaretle" tek); madde (i) satır altında açılmıyor,
   **pencerede** açılıyor: firmanın açıklaması + **referans standartlar**; standarda basınca AA6: **firmanın Dökümanlar'a yüklediği standardın güncel

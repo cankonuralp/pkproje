@@ -22,7 +22,6 @@
   var FORMAT = { zorunlu: { ad: "zorunlu", rozet: "a-rozet-kabul" }, taslak: { ad: "taslak", rozet: "a-rozet-notr" } };
   var RF = { var: { ad: "Yüklendi", rozet: "a-rozet-tamam" }, yok: { ad: "Yüklenmedi", rozet: "a-rozet-bekliyor" } };
   var ekipmanSay = function (t) { return MV.EKIPMAN.filter(function (e) { return e.tur === t.k; }).length; };
-  var bransHtml = function (b) { return '<span class="a-hucre-satir">' + ikon(b === "m" ? "cog" : "zap", "a-ikon-kucuk") + MV.bransAd(b) + "</span>"; };
   /* rapor formatı: firmanın yüklediği PDF'ler, en yenisi başta. Maket: rapor şablonu olan türde bir sürüm yüklenmiş sayılır. */
   MV.KATALOG.forEach(function (t) {
     if (t.pdf) return;
@@ -41,15 +40,13 @@
       { k: "stdsiz", ad: "Standart seçilmemiş", test: function (t) { return !t.std.length; } }
     ],
     seciciler: [
-      { k: "brans", ad: "Branş", secenek: function () { return [["tumu", "Tümü"], ["m", "Mekanik"], ["e", "Elektrik"]]; }, gecer: function (t, v) { return v === "tumu" || t.b === v; } },
-      { k: "grup", ad: "Ek-III grubu", secenek: function () { return [["tumu", "Tümü"]].concat(MV.GRUPLAR.map(function (g) { return [g.k, g.ad]; })); }, gecer: function (t, v) { return v === "tumu" || t.g === v; } }
+      { k: "grup", ad: "Ek-III grubu", secenek: function () { return [["tumu", "Tümü"]].concat(MV.GRUPLAR.filter(function (g) { return !g.b || g.b === BR; }).map(function (g) { return [g.k, g.ad]; })); }, gecer: function (t, v) { return v === "tumu" || t.g === v; } }
     ],
     metin: function (t) { return [t.ad, t.k, t.format || ""].concat(t.std.map(function (s) { return MV.standart(s).no; })).join(" "); },
     imkansiz: "" }, function () { listeCiz(); });
   var SUTUN = [
     { k: "tur", baslik: "Tür", kart: "ust", sira: 1, hucre: function (t) { return '<a class="a-ad-bag" href="#/tur/' + t.k + '">' + kirp(t.ad) + '</a><span class="a-alt-satir">Kod ' + t.k + " · " + ekipmanSay(t) + " ekipman</span>"; } },
     { k: "grup", baslik: "Ek-III grubu", kart: "govde", sira: 2, hucre: function (t) { return '<span class="a-kart-etiket">Ek-III grubu</span>' + kirp(MV.grup(t.g).ad); } },
-    { k: "brans", baslik: "Branş", kart: "govde", sira: 3, hucre: function (t) { return bransHtml(t.b); } },
     { k: "periyot", baslik: "Periyot", kart: "govde", sira: 4, hucre: function (t) { return '<span class="a-sayi"><span class="a-kart-etiket">Periyot</span>' + t.periyot + " ay</span>"; } },
     { k: "format", baslik: "Bakanlık formatı", kart: "govde", sira: 5, hucre: function (t) {
       return '<span class="a-kart-etiket">Bakanlık formatı</span>' + (t.format ? '<span class="a-hucre-satir"><span class="a-kod">' + t.format + "</span>" + rozet(FORMAT[t.formatDurum]) + "</span>" : '<span class="a-deger-yok">Yayımlanmadı</span>');
@@ -59,9 +56,17 @@
       return rozet(RF[p ? "var" : "yok"]) + (p ? '<span class="a-tarih-saat">' + kacis(p.surum) + " · " + kacis(p.tarih) + "</span>" : "");
     } }
   ];
+  /* AA5 (2026-10-02): liste branşa göre iki sekme — Mekanik (#/) · Elektrik (#/elektrik); branş sütunu ve süzgeci gereksizleşti */
+  var BR = "m";
+  function sekmeCiz() {
+    $("a-tur-sekmeler").innerHTML = [["m", "#/", "Mekanik"], ["e", "#/elektrik", "Elektrik"]].map(function (x) {
+      return '<a class="a-sekme" href="' + x[1] + '"' + (BR === x[0] ? ' aria-current="page"' : "") + ">" + ikon(x[0] === "m" ? "cog" : "zap", "a-ikon-kucuk") + x[2] +
+        ' <span class="a-cip-sayi">' + MV.KATALOG.filter(function (t) { return t.b === x[0]; }).length + "</span></a>"; }).join("");
+  }
   function listeCiz() {
-    MK.listeCiz({ on: "t", kayitlar: MV.KATALOG, sayacId: "a-sayac", listeId: "a-liste",
-      sirala: function (l) { return l.slice().sort(function (a, b) { return a.b === b.b ? a.ad.localeCompare(b.ad, "tr") : a.b === "m" ? -1 : 1; }); },
+    sekmeCiz();
+    MK.listeCiz({ on: "t", kayitlar: MV.KATALOG.filter(function (t) { return t.b === BR; }), sayacId: "a-sayac", listeId: "a-liste",
+      sirala: function (l) { return l.slice().sort(function (a, b) { return a.ad.localeCompare(b.ad, "tr"); }); },
       bosVeri: { ikon: "layers", baslik: "Ekipman türü yok", metin: "“Tür ekle” ile ilk tür ve rapor formatı eklenir." },
       tablo: { baslik: "Ekipman türleri", sinif: "a-tablo-tur", sutunlar: SUTUN, href: function (t) { return "#/tur/" + t.k; } } });
   }
@@ -90,7 +95,7 @@
       return;
     }
     var g = MV.grup(t.g), n = ekipmanSay(t), onay = t.b === "m" ? "Mekanik yönetici" : "Elektrik yönetici", p = guncel(t);
-    $("a-nesne").innerHTML = MK.kirinti([["Ekipman türleri", "#/"], [t.ad]]) +
+    $("a-nesne").innerHTML = MK.kirinti([["Ekipman türleri · " + MV.bransAd(t.b), t.b === "e" ? "#/elektrik" : "#/"], [t.ad]]) +
       '<div class="a-nesne-bas"><div class="a-nesne-kimlik"><div class="a-nesne-baslik"><h1 tabindex="-1">' + kacis(t.ad) + "</h1></div>" +
         '<p class="a-nesne-alt">' + ikon("layers", "a-ikon-kucuk") + "<span>Kod " + t.k + " · " + kacis(g.ad) + "</span></p></div>" +
         '<div class="a-eylem-cubugu"><a class="a-tus a-tus-ikincil" href="#/tur/' + t.k + '/duzenle">' + ikon("pencil", "a-ikon-kucuk") + "Düzenle</a>" +
@@ -209,14 +214,16 @@
   function rota() {
     var h = location.hash, m;
     if (h === "#/yeni") return { v: "liste", pencere: "tur" };
+    if (h === "#/elektrik") return { v: "liste", b: "e" };
     if ((m = /^#\/tur\/([A-Z]{2,3})(?:\/(duzenle|format))?$/.exec(h))) return { v: "tur", id: m[1], pencere: m[2] && MV.tur(m[1]) ? (m[2] === "format" ? "format" : "tur") : null };
     return { v: "liste" };
   }
   function goster(odakla) {
     var r = rota(), t = r.id ? MV.tur(r.id) : null;
     $("a-liste-gorunum").hidden = r.v !== "liste"; $("a-nesne").hidden = r.v === "liste";
+    if (r.v === "liste" && r.pencere !== "tur") { BR = r.b || "m"; MK.seciciCiz("t"); }
     if (r.v === "liste") listeCiz(); else turCiz(t);
-    document.title = (r.v === "liste" ? "Ekipman türleri" : t ? t.ad : "Tür bulunamadı") + " · probata maket";
+    document.title = (r.v === "liste" ? "Ekipman türleri · " + MV.bransAd(BR) : t ? t.ad : "Tür bulunamadı") + " · probata maket";
     if (odakla) { window.scrollTo(0, 0); var h = document.querySelector("#a-icerik > :not([hidden]) h1"); if (h) h.focus({ preventScroll: true }); }
     if (r.pencere) pencereAc(r.pencere, r.id); else if ($("a-pencere").open) $("a-pencere").close();
   }

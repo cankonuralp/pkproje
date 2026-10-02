@@ -62,14 +62,14 @@
    "gecti": true
   },
   {
-   "ad": "türler: Rapor formatı yüklenmedi çipi",
+   "ad": "türler: Rapor formatı yüklenmedi çipi (Mekanik sekmesinde)",
    "gen": 1920,
    "sayfa": "maket/ekipman-turleri.html",
    "hash": "#/",
    "gecti": true
   },
   {
-   "ad": "türler: branş Elektrik",
+   "ad": "AA5: türler Mekanik / Elektrik sekmelerinde — Mekanik açılır, Elektrik sekmesinde yalnız elektrik türleri, sekmede sayı; branş süzgeci yok",
    "gen": 1920,
    "sayfa": "maket/ekipman-turleri.html",
    "hash": "#/",
