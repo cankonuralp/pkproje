@@ -1045,7 +1045,9 @@
      "Zorunlu alanlar doldurulmadı" penceresi; kapanınca ekran ilk eksik alana kayar */
   X["onaya-gonder"] = function () {
     var r = aktif(), eks = zorunluEksik(r);
-    if (!eks.length) { gonder(r); return; }
+    /* AA8 (2026-10-02): gönderim geri alınamaz (teknik yönetici kararına kadar rapor kilitlenir) → onay penceresi */
+    if (!eks.length) { MK.onayla({ baslik: "Rapor onaya gönderilsin mi?", metin: r.no + " teknik yöneticinin onayına gider. Onaylanana ya da geri gönderilene kadar raporda değişiklik yapılamaz.",
+      tus: "Onaya gönder", tamam: function () { gonder(r); } }); return; }
     UY = r; eks.forEach(function (x) { ACIK[x.bolum] = true; }); ciz();
     pencereAc({ tur: "zorunlu", r: r, d: {}, eks: eks });
   };

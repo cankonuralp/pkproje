@@ -2206,6 +2206,16 @@ revizyon, alan kopyalama, hafif kusur devri, meslek eşleşme denetimi).
 - Emsal ürünler: https://opwire.app/iso-17020-periyodik-kontrol-yazilimi/ · https://17020muayene.vidco.com.tr/ · https://akuple.com/asansor-kontrol-yazilimi/ · https://ensyazilim.com/
 
 ## 11 · Değişiklik günlüğü
+- 2026-10-02 (232): **AA8 · Uyarı ve onay pencereleri taraması** (§9 kırk sekizinci tur: *"yapılan işlemlerde uyarı pop-up larını unutma ama sitedeki
+  tüm işlemler için bi kontrol et bu açıdan, giriş çıkış,şifre değişme , rapor gönderme vb."*). Tarama: 25 ekranda görünen her işlem tuşu ve açtığı
+  pencerenin içindeki tuşlar (241 işlem) başsız tarayıcıda tek tek tıklandı; her biri için bildirim, onay penceresi, açılan pencere ya da adres
+  değişimi kaydedildi. Geri bildirimsiz görünenlerin hepsi dosya seçici, pencere içi alan hatası ya da menü daraltma çıktı; eksik olanlar ve
+  düzeltmeleri: **Çıkış yap** artık onay sorar (cihazda gönderilmemiş işlem varsa söyler) ve giriş sayfasında "Çıkış yaptınız; oturumunuz
+  kapatıldı" yazar · **Giriş** sonrası Ana sayfa'da "Giriş yapıldı. Hoş geldiniz." · geçici parola sonrası "Yeni parolanız kaydedildi" ·
+  **Rapor Onaya gönder** önce onay sorar (gönderilince teknik yönetici kararına kadar rapor kilitlenir) · **Hesabı kapat** ve **Teklif kabul**
+  onay sorar · **Denemeleri sıfırla** iki adımlı tuş yerine aynı onay penceresi. Parola değiştir zaten "Parolanız değiştirildi" bildiriyor; silme
+  işlemlerinin hepsi zaten onay penceresinden geçiyor. Sayfalar arası bildirim tek mekanizma (`MK.sonrakiBildir`). Kilit: m1 4 + m8 1 yeni
+  etkileşim (önceki kodda düşüyor) ve 2 yeni durum; onaylı işlemleri yapan 21 eski denetime onay adımı eklendi (tarih + gerekçe).
 - 2026-10-02 (231): **AA4 · Araçlar modülü (araç takip + fotoğraflı teslim tutanağı → zimmet)** (§9 kırk sekizinci tur: *"bir de araç takip modülü
   olsun hangi aracın kimde olduğu belli olsun takip edilebilsin elinde araç olanlar sadece kendi aracını yöneticiler her aracı kimde olduğunu vs
   görsün aracın teslim alımı veya teslim verimi üzerine fotoğraflı zimmet oluşturma olsun zimmetlere otomatik oradan gitsin örnek bi şablon

@@ -49,6 +49,7 @@
          (?donus=<sayfa>) ya da Ana sayfaya. Yazılmamış işin korunduğu SÖYLENMEZ (uygulamada taslak kaydı ayrı iş) */
       f.innerHTML = bas("Giriş") +
         (h === "#/oturum" ? MK.serit("bilgi", "clock", "Uzun süre işlem yapılmadığı için oturumunuz kapandı. Devam etmek için yeniden giriş yapın.") : "") +
+        (h === "#/cikis" ? MK.serit("onay", "circle-check", "Çıkış yaptınız; oturumunuz kapatıldı.") : "") +   /* AA8 */
         (h === "#/hata" ? MK.serit("hata", "circle-alert", "E-posta ya da parola yanlış. 5 hatalı denemeden sonra giriş 15 dakika kilitlenir.") : "") +
         epostaAlani() +
         parolaAlani("g-parola", "Parola", S.parola, "", S.hata.parola, "current-password") +
@@ -83,6 +84,7 @@
     if (/hata/.test(S.parola)) { location.hash = "#/hata"; return; }
     if (/gecici/.test(S.parola)) { location.hash = "#/gecici"; return; }
     var d = /[?&]donus=([a-z-]+\.html)/.exec(location.search);   /* oturum süresi dolduysa kaldığı sayfa (yalnız maket sayfa adı) */
+    MK.sonrakiBildir("Giriş yapıldı. Hoş geldiniz.");   /* AA8 */
     location.href = location.hash === "#/oturum" && d ? d[1] : "anasayfa.html";
   };
   X.sifirla = function () {
@@ -95,6 +97,7 @@
     if (S.p1.length < 10 || !/[A-Za-zÇĞİÖŞÜçğıöşü]/.test(S.p1) || !/\d/.test(S.p1)) S.hata.p1 = "En az 10 karakter; harf ve rakam içermeli.";
     else if (S.p1 !== S.p2) S.hata.p2 = "İki parola aynı değil.";
     if (Object.keys(S.hata).length) { ciz(); $(S.hata.p1 ? "g-p1" : "g-p2").focus(); return; }
+    MK.sonrakiBildir("Yeni parolanız kaydedildi. Hoş geldiniz.");   /* AA8 */
     location.href = "anasayfa.html";
   };
   document.addEventListener("keydown", function (e) {   /* Enter formu gönderir (yalnız Enter; parola içeriğine dokunulmaz) */

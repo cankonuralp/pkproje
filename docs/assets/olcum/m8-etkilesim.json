@@ -2,8 +2,8 @@
  "maket": "m8",
  "tarih": "2026-10-02",
  "arac": "tools/olc-bulut.mjs --etkilesim (başsız tarayıcı, 1920 açık tema; gen verilen denemede o genişlik)",
- "toplam": 122,
- "gecen": 122,
+ "toplam": 123,
+ "gecen": 123,
  "denemeler": [
   {
    "ad": "AA2: yıllık fazla çalışma sınırı dolan kişide o gün mesai hakkı yok — pencerede Bu yıl … / 270 saat · doldu, süre normalle dolar; az kalan kişide hak kalan kadar",
@@ -857,6 +857,13 @@
    "gen": 1920,
    "sayfa": "maket/planlarim.html",
    "hash": "#/plan/1",
+   "gecti": true
+  },
+  {
+   "ad": "AA8: Onaya gönder önce onay sorar; Vazgeç'te rapor gönderilmez",
+   "gen": 1920,
+   "sayfa": "maket/rapor.html",
+   "hash": "#/r/KP-1004",
    "gecti": true
   }
  ]

@@ -8,8 +8,8 @@
   390,
   430
  ],
- "toplam": 152,
- "temiz": 152,
+ "toplam": 156,
+ "temiz": 156,
  "durumlar": [
   {
    "ad": "izin talepleri · bekleyen üstte",
@@ -184,6 +184,42 @@
   },
   {
    "ad": "giriş · yanlış bilgi",
+   "gen": 430,
+   "temiz": true,
+   "tasma": 0,
+   "disari": [],
+   "kucukAlan": [],
+   "alan": 2
+  },
+  {
+   "ad": "giriş · çıkış yapıldı (AA8)",
+   "gen": 320,
+   "temiz": true,
+   "tasma": 0,
+   "disari": [],
+   "kucukAlan": [],
+   "alan": 2
+  },
+  {
+   "ad": "giriş · çıkış yapıldı (AA8)",
+   "gen": 360,
+   "temiz": true,
+   "tasma": 0,
+   "disari": [],
+   "kucukAlan": [],
+   "alan": 2
+  },
+  {
+   "ad": "giriş · çıkış yapıldı (AA8)",
+   "gen": 390,
+   "temiz": true,
+   "tasma": 0,
+   "disari": [],
+   "kucukAlan": [],
+   "alan": 2
+  },
+  {
+   "ad": "giriş · çıkış yapıldı (AA8)",
    "gen": 430,
    "temiz": true,
    "tasma": 0,

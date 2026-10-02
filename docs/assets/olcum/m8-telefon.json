@@ -8,8 +8,8 @@
   390,
   430
  ],
- "toplam": 108,
- "temiz": 108,
+ "toplam": 112,
+ "temiz": 112,
  "durumlar": [
   {
    "ad": "önceki kontrolden açık hafif kusur (V4) · Giderilmedi seçildi",
@@ -982,6 +982,42 @@
    "disari": [],
    "kucukAlan": [],
    "alan": 38
+  },
+  {
+   "ad": "Onaya gönder onay penceresi (AA8)",
+   "gen": 320,
+   "temiz": true,
+   "tasma": 0,
+   "disari": [],
+   "kucukAlan": [],
+   "alan": 19
+  },
+  {
+   "ad": "Onaya gönder onay penceresi (AA8)",
+   "gen": 360,
+   "temiz": true,
+   "tasma": 0,
+   "disari": [],
+   "kucukAlan": [],
+   "alan": 19
+  },
+  {
+   "ad": "Onaya gönder onay penceresi (AA8)",
+   "gen": 390,
+   "temiz": true,
+   "tasma": 0,
+   "disari": [],
+   "kucukAlan": [],
+   "alan": 19
+  },
+  {
+   "ad": "Onaya gönder onay penceresi (AA8)",
+   "gen": 430,
+   "temiz": true,
+   "tasma": 0,
+   "disari": [],
+   "kucukAlan": [],
+   "alan": 19
   }
  ]
 }

@@ -823,7 +823,12 @@
   };
   X["rol-kaydet"] = function () { var p = aktif(); p.hesap.roller = SECILI.slice(); SECILI = null; kartCiz(p); bolumeGit("a-b-hesap"); MK.bildir("Roller kaydedildi; yeni yetkiler hemen geçerli."); };
   X["rol-geri"] = function () { SECILI = null; kartCiz(aktif()); bolumeGit("a-b-hesap"); };
-  X["hesap-kapat"] = function () { var p = aktif(); p.hesap.durum = "pasif"; SECILI = null; kartCiz(p); bolumeGit("a-b-hesap"); MK.bildir(p.ad + ": hesap kapatıldı, açık oturumları sonlandı."); };
+  X["hesap-kapat"] = function () {   /* AA8: onay penceresi */
+    var p = aktif();
+    MK.onayla({ baslik: "Hesap kapatılsın mı?", metin: p.ad + " artık giriş yapamaz, açık oturumları sonlanır. Kayıtları silinmez; hesap yeniden açılabilir.", tus: "Hesabı kapat", tamam: function () {
+      p.hesap.durum = "pasif"; SECILI = null; kartCiz(p); bolumeGit("a-b-hesap"); MK.bildir(p.ad + ": hesap kapatıldı, açık oturumları sonlandı.");
+    } });
+  };
   X["hesap-yeniden"] = function () { var p = aktif(); p.hesap.durum = "etkin"; kartCiz(p); bolumeGit("a-b-hesap"); MK.bildir(p.ad + ": hesap yeniden açıldı. Parolasını hatırlamıyorsa yeni geçici parola verin."); };
   X["hesap-onayla"] = function () {
     var p = MV.kisi(W.kisi); if (!epostaGecerli(W.eposta) || !W.roller.length) return;

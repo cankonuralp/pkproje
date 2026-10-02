@@ -304,7 +304,10 @@
     F = null; location.hash = "#/t/" + t.no; MK.bildir(t.no + " kaydedildi (taslak).");
   };
   X["gonder"] = function () { var t = MV.teklif(rota().no); t.durum = "gonderildi"; t.gonderildi = MK.BUGUN; teklifCiz(t); MK.bildir(t.no + " gönderildi olarak işaretlendi; geçerlilik " + MK.tarihEk(bitis(t), "e") + " kadar."); };
-  X["kabul"] = function () { var t = MV.teklif(rota().no); t.durum = "kabul"; t.sonuc = MK.BUGUN; teklifCiz(t); MK.bildir(t.no + " kabul edildi. Sıradaki: iş sözleşmesi, sonra plan."); };
+  X["kabul"] = function () {   /* AA8: onay penceresi */
+    var t0 = MV.teklif(rota().no);
+    MK.onayla({ baslik: "Teklif kabul edildi mi?", metin: t0.no + " kabul edildi olarak işaretlenir; sıradaki adım iş sözleşmesi.", tus: "Kabul edildi", tamam: function () { var t = MV.teklif(rota().no); t.durum = "kabul"; t.sonuc = MK.BUGUN; teklifCiz(t); MK.bildir(t.no + " kabul edildi. Sıradaki: iş sözleşmesi, sonra plan."); } });
+  };
   X["red-kaydet"] = function () {
     if (W.gerekce.trim().length < 5) { W.hata = "Gerekçe yazılmalı."; redCiz("w-gerekce"); return; }
     var t = W.t; t.durum = "red"; t.sonuc = MK.BUGUN; t.gerekce = W.gerekce.trim(); $("a-pencere").close(); teklifCiz(t); MK.bildir(t.no + " reddedildi olarak kaydedildi.");

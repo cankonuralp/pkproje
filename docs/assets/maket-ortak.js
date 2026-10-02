@@ -198,7 +198,13 @@
   /* ── KABUK — Planlar maketinin kabuğu (5. tur + 6. tur daraltma), aynen ───────────────────────────────────
      o = { modul: §3.1 no, kullanici: { bas, ad, rol }, sayac: { no: "ipucu" } }. <main id="a-icerik"> kabuğun içine alınır. */
   var I = function (ad) { return '<svg class="a-ikon" aria-hidden="true"><use href="' + IKON + ad + '"/></svg>'; };
+  /* AA8 (2026-10-02, reisim: "yapılan işlemlerde uyarı pop-up larını unutma ... giriş çıkış, şifre değişme, rapor gönderme vb."): işlem başka
+     sayfaya geçerek bitiyorsa (giriş, parola belirleme) sonucu o sayfa açılınca bildirim olarak söylenir — TEK MEKANİZMA */
+  var SB_AD = "probata-sonraki-bildirim";
+  MK.sonrakiBildir = function (m) { try { sessionStorage.setItem(SB_AD, m); } catch (e) { /* yok */ } };
+  var sonrakiGoster = function () { var m = null; try { m = sessionStorage.getItem(SB_AD); sessionStorage.removeItem(SB_AD); } catch (e) { /* yok */ } if (m && $("a-bildirim")) MK.bildir(m); };
   MK.kabuk = function (o) {
+    setTimeout(sonrakiGoster, 0);
     /* N5 (2026-09-30): giriş yapan kişi (personel no) — kişiye göre balonlar (Onaylar, Talepler) ve günlük süre; makette sayfanın kullanıcısı */
     if (o.kullanici && typeof MV !== "undefined" && MV.PERSONEL) { var bk = MV.PERSONEL.filter(function (p) { return p.ad === o.kullanici.ad; })[0]; MK.BEN = bk ? bk.id : null; }
     var ana = $("a-icerik"), kok = document.createElement("div");
@@ -217,7 +223,7 @@
           '<div class="a-secici a-kullanici-secici"><button class="a-kullanici" type="button" data-secici-ac="kullanici" aria-haspopup="menu" aria-expanded="false" aria-label="' + kacis(o.kullanici.ad) + ' · hesap">' +
             '<span class="a-avatar" aria-hidden="true">' + kacis(o.kullanici.bas) + "</span>" +
             '<span class="a-kullanici-yazi"><span class="a-kullanici-ad">' + kacis(o.kullanici.ad) + '</span><span class="a-kullanici-rol">' + kacis(o.kullanici.rol) + "</span></span></button>" +
-            '<div class="a-secici-liste" role="menu" aria-label="Hesap" hidden><a class="a-secenek" role="menuitem" href="' + MK.adres("giris", "#/") + '" data-cikis>Çıkış yap</a></div></div>' +
+            '<div class="a-secici-liste" role="menu" aria-label="Hesap" hidden><a class="a-secenek" role="menuitem" href="' + MK.adres("giris", "#/cikis") + '" data-cikis>Çıkış yap</a></div></div>' +
         "</header></div>";
       document.body.insertBefore(kok, ana);
       kok.querySelector(".a-govde").appendChild(ana);
@@ -261,7 +267,7 @@
                (kişisel bilgiler, mobil imza telefonu, parola) ve Çıkış yap (giriş sayfasına; parolamı unuttum orada) */
             '<a class="a-secenek" role="menuitem" href="' + MK.adres("hesap", "#/") + '">Hesabım</a>' +
             [["#/", "Taleplerim"], ["#/yeni/izin", "İzin talebi"], ["#/yeni/masraf", "Masraf formu"]].map(function (x) { return '<a class="a-secenek" role="menuitem" href="' + MK.adres(21, x[0]) + '">' + x[1] + "</a>"; }).join("") +
-            '<a class="a-secenek a-secenek-ayrik" role="menuitem" href="' + MK.adres("giris", "#/") + '" data-cikis>Çıkış yap</a>' +
+            '<a class="a-secenek a-secenek-ayrik" role="menuitem" href="' + MK.adres("giris", "#/cikis") + '" data-cikis>Çıkış yap</a>' +
           "</div></div>" +
       "</header></div>";
     document.body.insertBefore(kok, ana);
@@ -1261,7 +1267,9 @@
   MK.eylem = MK.eylem || {};
   /* sıfırla: iki adım (ilk basış onay ister), sonra tohum veriyle yeniden açılır */
   MK.eylem["maket-sifirla"] = function (el) {
-    if (!el.dataset.onay) { el.dataset.onay = "1"; el.textContent = "Onayla: bütün denemeler silinir"; return; }
+    /* AA8: iki adımlı tuş yerine onay penceresi (sitenin her yerinde aynı) */
+    if (!el.dataset.onay) { MK.onayla({ baslik: "Denemeler sıfırlansın mı?", metin: "Bu tarayıcıda yaptığınız bütün denemeler silinir; maket örnek veriye döner.", tus: "Sıfırla",
+      tamam: function () { el.dataset.onay = "1"; MK.eylem["maket-sifirla"](el); } }); return; }
     sifirlandi = true; clearTimeout(yazZaman);
     try { localStorage.removeItem(DEPO_AD); localStorage.removeItem(BAG_AD); } catch (e) { /* yok */ }
     try { if (DDB) DDB.close(); indexedDB.deleteDatabase(DDB_AD); } catch (e) { /* yok */ }
@@ -1320,6 +1328,13 @@
      MK.onTikla(e) → true dönerse iş bitti (sayfaya özgü öznitelikler) · MK.eylem[ad](el, e) · MK.onGirdi(e) ·
      MK.onTus(e) → true dönerse iş bitti · MK.onSecim(id, deger) · MK.goster(odakla) adres değişince. */
   MK.eylem = MK.eylem || {};   /* ortak eylemler (PDF görüntüleyici) önce kaydolur */
+  /* AA8: Çıkış yap onay sorar; cihazda gönderilmemiş işlem varsa söyler (Z4) */
+  document.addEventListener("click", function (e) {
+    var c = e.target.closest && e.target.closest("[data-cikis]"); if (!c) return;
+    e.preventDefault(); e.stopPropagation(); var n = MK.kuyruk ? MK.kuyruk().length : 0;
+    MK.onayla({ baslik: "Çıkış yapılsın mı?", metin: (n ? "Bu cihazda gönderilmemiş " + n + " işlem var; bağlantı gelene kadar gönderilmez. " : "") +
+      "Oturumunuz kapanır; kaydetmediğiniz değişiklikler kaybolur.", tus: "Çıkış yap", tamam: function () { location.href = c.getAttribute("href"); } });
+  }, true);
   document.addEventListener("click", function (e) {
     if (!e.target.closest(".a-secici")) listeleriKapat(null);
     if (zamanTikla(e)) return;

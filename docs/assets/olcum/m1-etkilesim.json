@@ -2,8 +2,8 @@
  "maket": "m1",
  "tarih": "2026-10-02",
  "arac": "tools/olc-bulut.mjs --etkilesim (başsız tarayıcı, 1920 açık tema; gen verilen denemede o genişlik)",
- "toplam": 109,
- "gecen": 109,
+ "toplam": 113,
+ "gecen": 113,
  "denemeler": [
   {
    "ad": "AA3: Personel › bordro Onaya gönder → kişinin Onaylar › Diğer belgelerine düşer, satırda Onay bekliyor",
@@ -766,6 +766,34 @@
    "gen": 1920,
    "sayfa": "maket/anasayfa.html",
    "hash": "#/mekyon",
+   "gecti": true
+  },
+  {
+   "ad": "AA8: Çıkış yap önce onay sorar; Çıkış yap'a basınca giriş sayfasında \"Çıkış yaptınız\"",
+   "gen": 1920,
+   "sayfa": "maket/hesap.html",
+   "hash": "#/",
+   "gecti": true
+  },
+  {
+   "ad": "AA8: Çıkış onayında Vazgeç → sayfada kalınır",
+   "gen": 1920,
+   "sayfa": "maket/hesap.html",
+   "hash": "#/",
+   "gecti": true
+  },
+  {
+   "ad": "AA8: giriş yapınca Ana sayfa'da \"Hoş geldiniz\" bildirimi",
+   "gen": 1920,
+   "sayfa": "maket/giris.html",
+   "hash": "#/",
+   "gecti": true
+  },
+  {
+   "ad": "AA8: Hesabı kapat onay sorar; Vazgeç'te hesap açık kalır",
+   "gen": 1920,
+   "sayfa": "maket/personel.html",
+   "hash": "#/p/mk",
    "gecti": true
   }
  ]
