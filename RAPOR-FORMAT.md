@@ -4,9 +4,9 @@
 > kurgulayabileceğim bir sistem tasarla ben müşteriye sunduğumda kendi rapor formatını yükleyip istediği gibi şekillendirebilecek
 > kurgulayabileceği bir sistem tasarlamamız gerkeli yoksa her rapor format yüklemesinde tek tek benim uğraşmam gerekli."*
 >
-> **Durum: TASARIM — onay bekliyor.** Makette "Format kurucu" ekranı (Ekipman türleri › tür › Format kurucu) bu belgeyi gösterir.
-> **§8.3 kararı değişiyor:** "şablonlar firma × tür başına kodda, site içi düzenleyici yok" → **"format, firmanın format kurucusunda
-> tutulan sürümlü bir tanım (JSON); saha ekranı ve PDF bu tanımdan çizilir; çizen motor kodda tektir"**. Reisim onaylayınca §8.3 güncellenir.
+> **Durum: ONAYLI (2026-10-02, reisim: *"Tamam yapalım"*).** Makette "Format kurucu" ekranı (Ekipman türleri › tür › Format kurucu) bu belgeyi gösterir.
+> **§8.3 kararı değişti:** "şablonlar firma × tür başına kodda, site içi düzenleyici yok" → **"format, firmanın format kurucusunda
+> tutulan sürümlü bir tanım (JSON); saha ekranı ve PDF bu tanımdan çizilir; çizen motor kodda tektir"**. §8.3 güncellendi (pkproje.md).
 
 ## 0 · Neden
 

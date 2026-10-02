@@ -1,4 +1,4 @@
-/* ══ probata MAKET — Format kurucu (Ekipman türleri › tür › Format kurucu) · AA10, 2026-10-02, TASARIM — ONAY BEKLİYOR ══════════════
+/* ══ probata MAKET — Format kurucu (Ekipman türleri › tür › Format kurucu) · AA10, 2026-10-02 — §8.3 kararı onaylı (reisim: "Tamam yapalım") ══════════════
    Reisim (2026-10-02, §9 kırk sekizinci tur): "Bu söylediklerimi tek bir rapor özelinde değil, tüm raporları bu şekilde kurgulayabileceğim bir
    sistem tasarla ben müşteriye sunduğumda kendi rapor formatını yükleyip istediği gibi şekillendirebilecek kurgulayabileceği bir sistem
    tasarlamamız gerkeli yoksa her rapor format yüklemesinde tek tek benim uğraşmam gerekli." Tasarım: RAPOR-FORMAT.md (üç katman: yapı ·
@@ -95,7 +95,7 @@
         '<p class="a-nesne-alt">' + ikon("layout-list", "a-ikon-kucuk") + "<span>" + F.bolumler.length + " bölüm · " + (t.format ? "Bakanlık formatı " + t.format + " (zorunlu alanlar kilitli)" : "firma formatı") + "</span></p></div>" +
         '<div class="a-eylem-cubugu">' + MK.tus({ eylem: "kb-pdf", ad: "PDF önizle", ikon: "file-text", sinif: "a-tus-ikincil" }) +
           MK.tus({ eylem: "kb-yayinla", ad: "Yayınla", ikon: "upload", kapali: !F.taslak, sebepId: F.taslak ? "" : "kb-yayin-sebep" }) + "</div></div>" +
-      '<div class="a-serit-kap">' + MK.serit("bilgi", "info", "Tasarım maketi (onay bekliyor): firma formatını kendisi kurar; saha ekranı ve PDF bu tanımdan çizilir. Açık raporlar başladıkları sürümle kalır, yeni raporlar yayındaki sürümle açılır.") +
+      '<div class="a-serit-kap">' + MK.serit("bilgi", "info", "Firma formatını kendisi kurar; saha ekranı ve PDF bu tanımdan çizilir. Açık raporlar başladıkları sürümle kalır, yeni raporlar yayındaki sürümle açılır.") +
         (F.taslak && d.length ? MK.serit("uyari", "triangle-alert", "Yayından önce bakılacak: " + d.map(kacis).join(" · ")) : "") +
         (F.taslak ? "" : '<p class="a-gizli" id="kb-yayin-sebep">Değişiklik yok; yayındaki sürüm güncel.</p>') + "</div>" +
       '<div class="a-kurucu">' +

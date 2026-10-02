@@ -1613,7 +1613,7 @@ a.a-yuz:hover { border-color: var(--kenar-alan); background: var(--zemin); }
 .a-bulut-hesap { display: inline-flex; align-items: center; gap: 6px; font-weight: 600; color: var(--onay-yazi); }
 .a-ipucu .a-kod { white-space: normal; overflow-wrap: anywhere; }   /* Ö2: uzun klasör yolu kartı taşırmaz */
 
-/* ══ FORMAT KURUCU (AA10, 2026-10-02 — tasarım maketi): bölümler · düzenleyici · kurallar + önizleme. Telefonda tek sütun, ortada iki,
+/* ══ FORMAT KURUCU (AA10, 2026-10-02 — §8.3 onaylı): bölümler · düzenleyici · kurallar + önizleme. Telefonda tek sütun, ortada iki,
    geniş bantta üç sütun. */
 .a-kurucu { display: grid; gap: 16px; grid-template-columns: minmax(0, 1fr); align-items: start; }
 .a-kurucu-sol, .a-kurucu-sag { display: grid; gap: 16px; min-width: 0; }

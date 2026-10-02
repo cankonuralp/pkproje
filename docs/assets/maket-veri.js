@@ -656,7 +656,7 @@
   MV.testler = function (t) { return t && MV.TUR_TESTLER[t.k] || MV.TESTLER[t.g] || MV.TESTLER.diger; };
   MV.sinirYaz = function (x) { if (!x.op) return "—"; return (x.op === "<=" ? "≤ " : "≥ ") + String(x.sinir).replace(".", ",") + " " + x.birim + (x.not ? " (" + x.not + ")" : ""); };
   /* hafif / ağır kusur yalnız Bakanlık formatı YÜRÜRLÜKTE olan türde (§4.5, Ek-III 1.9.1) */
-  /* ── FORMAT TANIMI (AA10, 2026-10-02 — TASARIM, onay bekliyor; RAPOR-FORMAT.md). Firmanın tür başına kurduğu rapor formatı: bölümler
+  /* ── FORMAT TANIMI (AA10, 2026-10-02 — §8.3 onaylı; RAPOR-FORMAT.md). Firmanın tür başına kurduğu rapor formatı: bölümler
      (her biri bir blok), kurallar, sürüm. Saha ekranı ve PDF bu tanımdan çizilecek (motor kod aşamasında). Makette tanım ilk açılışta
      türün bugünkü yapısından kurulur (kriterler, test değerleri, cihazlar); firma kurucuda değiştirir, yayınlar. */
   MV.FORMAT_BLOK = {

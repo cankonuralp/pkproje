@@ -50,7 +50,8 @@ kalıcı, reisim her işlevi kendisi dener; makette geçici çözüm olabilir, n
 - **Arka plan işleri — onaylı (§8.9):** PostgreSQL üstünde iş kuyruğu (pg-boss); ayrı servis yok.
 - **Sigorta okuma — onaylı (§8.10):** pano fotoğrafından okuma görsel yapay zekâ ile; değer **öneri** olarak
   düşer, inspector onaylamadan kaydedilmez.
-- **Rapor şablonları — onaylı (§8.3):** firma × ekipman türü başına **kodda**; site içi düzenleyici yok.
+- **Rapor formatları — onaylı (§8.3, 2026-10-02 değişti):** firma × ekipman türü başına, **firmanın Format kurucusunda** kurulan sürümlü
+  tanım; saha ekranı ve PDF bu tanımdan çizilir, çizen motor kodda tek (`RAPOR-FORMAT.md`). Eski "kodda, site içi düzenleyici yok" kalktı.
 - **PostgreSQL**: yerelde projeyle gelen **gömülü sürüm** (npm paketi, kurulum yok, veri `data/` altında);
   yayında yönetilen PostgreSQL. Satır seviyesi kiracı izolasyonu veritabanında; her sorgu kiracı süzgeçli tek veri
   erişim katmanından geçer (anayasa 7, 07-YETKI §1).
@@ -67,7 +68,7 @@ pkproje/
   CLAUDE.md                 bu dosya
   pkproje.md                alan bilgisi · kurgu · kararlar · açık sorular
   MAKET-PLANI.md            toplu maket çalışmasının talimatı ve durumu (2026-09-24; bulut oturumu için)
-  RAPOR-FORMAT.md           firmanın kendi rapor formatını kurduğu sistem (2026-10-02, AA10 — tasarım, onay bekliyor; §8.3 önerisi)
+  RAPOR-FORMAT.md           firmanın kendi rapor formatını kurduğu sistem (2026-10-02, AA10 — onaylı, §8.3)
   ARKA-UC.md                arka uç kurgusu (2026-10-01; K1–K6 kabul, K7–K8 kabul edilmedi — 2026-10-02): veri, dosya, çevrimdışı, uygulama, yapay zekâ, yedek
   ANAYASA.md · TASARIM-KALIBI.md · 00–08-*.md · 09-SUNUCU-VE-VERI.md · EKSIKLER-VE-ONERILER.md
                             kural dosyaları (ANAYASA/KALIP'a madde yalnız reisim onayıyla eklenir)

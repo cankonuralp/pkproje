@@ -99,7 +99,7 @@
       '<div class="a-nesne-bas"><div class="a-nesne-kimlik"><div class="a-nesne-baslik"><h1 tabindex="-1">' + kacis(t.ad) + "</h1></div>" +
         '<p class="a-nesne-alt">' + ikon("layers", "a-ikon-kucuk") + "<span>Kod " + t.k + " · " + kacis(g.ad) + "</span></p></div>" +
         '<div class="a-eylem-cubugu"><a class="a-tus a-tus-ikincil" href="#/tur/' + t.k + '/duzenle">' + ikon("pencil", "a-ikon-kucuk") + "Düzenle</a>" +
-          /* AA10: firmanın kendi formatını kurduğu ekran (tasarım maketi) */
+          /* AA10: firmanın kendi formatını kurduğu ekran (§8.3, 2026-10-02 onaylı) */
           '<a class="a-tus a-tus-ikincil" href="#/tur/' + t.k + '/kurucu">' + ikon("layout-list", "a-ikon-kucuk") + "Format kurucu</a>" +
           '<a class="a-tus a-tus-birincil" href="#/tur/' + t.k + '/format">' + ikon("file-plus", "a-ikon-kucuk") + (p ? "Yeni format yükle" : "Rapor formatı yükle") + "</a></div></div>" +
       '<div class="a-yuzler">' +

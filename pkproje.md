@@ -159,7 +159,7 @@ Kurallar (reisim'in sözünden türeyen, ürün kuralı olarak):
 | 3 | Müşteri & Tesis | Müşteri; tesis (adres, SGK DETSİS no); müşteri kullanıcıları (e-posta) |
 | 4 | Standart Kütüphanesi | Firma başına; firma kendi yükler; kontrol metodu standardı buradan seçilir |
 | 5 | Ekipman Türü Kataloğu | Ek-III grubu, branş, periyot, standart(lar), Bakanlık format kodu — 2026-09-26: **firma tür ekler** ve her türe **kendi rapor formatını PDF olarak yükler** (sürümlü); akreditasyon ve yetkili meslek ayrıntısı yok |
-| 6 | Rapor Şablonları (kodda) | Firma × ekipman türü: kontrol kriterleri + PDF formatı, sürümlü; site içi düzenleyici yok |
+| 6 | Rapor Şablonları (Format kurucu) | Firma × ekipman türü: firmanın kurduğu sürümlü format tanımı (Ekipman türleri › tür › Format kurucu; §8.3, 2026-10-02) |
 | 7 | Ekipman | Tesise bağlı, kalıcı; özellik değerleri; rapor geçmişi; sonraki kontrol tarihi; durum (kullanılabilir / kullanılamaz) — 2026-09-26: **ayrı ekran değil, planın içinde**; denetçi sahada ekler, sonraki yıllarda önceki raporundan "Rapor oluştur" |
 | 8 | Ölçüm Cihazı | Ad, seri no, envanter no, kalibrasyon tarihi, sertifika, ara kontrol; 30 gün uyarı |
 | 9 | Zimmet | Varlık: cihaz, araç, diğer. Her teslim ayrı kayıt: teslim eden → alan, tarih-saat, fotoğraflar, zimmet formu. Anlık "kimde" + tam geçmiş |
@@ -327,7 +327,7 @@ gibi genel isimler olsun"*
 · **Yan menüde firma panelindeki bütün modüller** (§3.1'in 17'si), 6 grupta: İş takibi (Planlar · Raporlar · Onaylar ·
   Uyarılar) · Müşteri (Müşteriler · Teklifler · Sözleşmeler) · Varlık (Ekipmanlar · Ölçüm cihazları · Zimmetler) ·
   Personel (Personel · Eğitimler) · Finans (Muhasebe · Performans) · Tanımlar (Ekipman türleri · Standartlar ·
-  Kullanıcılar). Menüde yok: 6 Rapor Şablonları (kodda), 16 PDF Üretimi (sunucu işi), 17 Müşteri Paneli (müşterinin
+  Kullanıcılar). Menüde yok: 6 Rapor Şablonları (Ekipman türleri içinde Format kurucu, 2026-10-02), 16 PDF Üretimi (sunucu işi), 17 Müşteri Paneli (müşterinin
   kendi girişi). Sığmayan yükseklikte yalnız menü kayar.
 · **Menü ve ekran adları genel**, kişiye bağlı değil: Planlarım → **Planlar**, Raporlarım → **Raporlar**, Zimmetim →
   **Zimmetler**; sayfa başlığı, kırıntı ve sekme adı da.
@@ -485,7 +485,7 @@ yükle**). **Ekipmanlar ekranı kalktı** (`maket/ekipmanlar.html` artık Ekipma
   şablonu önizlemesini (M7) açar; yeni yüklenen PDF makette açılmaz.
 - ⚠️ **§8.3 kararıyla ilişki:** onaylı karar "rapor şablonları firma × tür başına **kodda**, site içi düzenleyici yok" idi. Firmanın PDF yüklemesi
   bu kararı değiştiriyor: format firmadan gelir. PDF'in rapora nasıl dönüşeceği (bizim kodladığımız şablon mu, PDF'ten çıkarılan sorular mı)
-  M8'de reisim'le kararlaştırılacak; §8.3 o zaman güncellenir.
+  M8'de reisim'le kararlaştırılacak; §8.3 o zaman güncellenir. → **2026-10-02 karar:** firma formatını Format kurucuda kendisi kurar (§8.3).
 - **Akreditasyon yazılmaz** (reisim: *"bunu bilmek periyodik kontrol firması yetkililerinin sorumluluğu"*): sütun, çip, rozet ve satır kalktı.
 - **Yetkili meslekler bölümü yok** (52): yetkisiz denetçi plana alınırsa yalnız uyarı (M1, M6).
 - **Periyot türde** (53); tek ekipmanın sonraki kontrol tarihi planda / raporda elle değiştirilir (M8'in sırası gelince).
@@ -630,7 +630,7 @@ sürüm penceresi**) · **rapor şablonu önizlemesi** (`maket/sablon.html#/<tü
   kullandıkları sürümü gösterir**. Aynı numara + sürüm ikinci kez yüklenemez. Numara ve yıllar **örnek** (doğrulanmadı).
 - Kontrol metodu: standart **tür düzeyinde** atanır (M3), inspector rapor anında türün standartlarından seçer; türde standart yoksa üretici
   talimatı / risk değerlendirmesi (Ek-III 1.7.1.1) — §3'teki açık soruya öneri.
-- Şablon **kodda**, site içinde düzenlenmez; önizleme salt okunur. PDF sunucuda üretilir (§8.3); önizleme onun iskeleti, ekrana göre akar.
+- ~~Şablon **kodda**, site içinde düzenlenmez~~ → 2026-10-02: firma Format kurucuda kurar (§8.3); önizleme salt okunur. PDF sunucuda üretilir (§8.3); önizleme onun iskeleti, ekrana göre akar.
 - Rapor başlığı: firma logosu, ticari ad, adres, akreditasyon no, akreditasyon markası yeri (§4.8); form: Bakanlık formatı zorunlu türde
   format kodu (ör. ZPKR02), öteki türde firma form kodu (makette `KM-FR-<tür>-<sürüm>`).
 - Alan kaynakları (rapor zinciri §3.2 madde 1): işyeri ünvanı ← müşteri · SGK sicil ve adres ← tesis · sözleşme no ← İSG-KATİP kaydı (M5) ·
@@ -1186,12 +1186,12 @@ tarih-saat, fotoğraflar, form) · **Eğitim kaydı** (personel, eğitim, belge,
    Docker **kalktı**. Yerelde kurulum yok: PostgreSQL projeyle birlikte gelen gömülü sürümle çalışır (npm paketi,
    ilk `npm install`'da iner, veriler proje klasöründe), dosyalar yerel klasörde, giriş/kimlik bizim kodumuzda.
    Yayında aynı yazılım: yönetilen PostgreSQL + S3 uyumlu dosya deposu; tek yapılandırma dosyası değişir.
-3. **8.3 Rapor çıktısı:** sunucuda üretilen PDF; şablonlar **firma × ekipman türü başına kodda** (§3), sürümlü;
-   Bakanlık formatlarını birebir üretir. Site içinde şablon düzenleyici yok.
-   ⏳ **2026-10-02 öneri (AA10, reisim onayı bekliyor):** reisim *"tüm raporları bu şekilde kurgulayabileceğim bir sistem tasarla ben müşteriye sunduğumda kendi
-   rapor formatını yükleyip istediği gibi şekillendirebilecek"* dedi → format **firmanın format kurucusunda tutulan sürümlü bir tanım** (yapı · kurallar ·
-   görünüm), saha ekranı ve PDF bu tanımdan çizilir, çizen motor kodda tek. Tasarım `RAPOR-FORMAT.md`; maketi Ekipman türleri › tür › Format kurucu.
-   Onaylanırsa bu madde böyle değişir; onaylanana kadar yukarıdaki karar geçerli.
+3. **8.3 Rapor çıktısı — DEĞİŞTİ 2026-10-02** (reisim: *"Tamam yapalım"*, §9 kırk dokuzuncu tur): rapor formatı **firmanın Format
+   kurucusunda** (Ekipman türleri › tür) kurulan **sürümlü bir tanımdır** — yapı (bölümler / bloklar) · kurallar · görünüm. Saha ekranı ve
+   sunucuda üretilen PDF bu tanımdan çizilir; **çizen motor kodda tek**, firmalar arasında ortak. Başlangıç: hazır şablon (Bakanlık formatları
+   birebir + genel türler) · boş · firmanın kendi formatını yükleyip yapay zekâ taslağı (öneri). Bakanlık formatlı türde zorunlu bölümler
+   kilitli. Açık raporlar başladıkları sürümle kalır. Tasarım: `RAPOR-FORMAT.md`.
+   ~~Eski karar (2026-09-22): şablonlar firma × ekipman türü başına kodda, site içinde şablon düzenleyici yok.~~
 4. **E-imza:** açık karar. Seçenekler: (a) 5070 e-imza, yetkili kişinin token/kartı ile masaüstünde imza (PAdES);
    (b) mobil imza; (c) bulut imza servisi; (d) ıslak imza + tarama. Ürün hepsini "imza yöntemi" olarak tanır,
    firma seçer. Yöntemler reisim'le ayrı kalem.
@@ -1305,7 +1305,7 @@ tarih-saat, fotoğraflar, form) · **Eğitim kaydı** (personel, eğitim, belge,
 4. Fotoğraf → rapor başına en az 1.
 5. Standartlar → firmanın kendi PDF'leri, firma başına yüklenir; kontrol metodu standardı buradan **seçilir**.
    **(2026-09-22 ikinci tur)** Rapor şablonu firma tarafından yüklenmez: **firma × ekipman türü başına kodda**
-   yazılır, site içi düzenleyici yoktur. Önceki "firma PDF formatını yükler" yorumum **düzeltildi**.
+   yazılır, site içi düzenleyici yoktur. Önceki "firma PDF formatını yükler" yorumum **düzeltildi**. → **2026-10-02 değişti:** §8.3 (Format kurucu).
 6. İSG-KATİP sözleşme no → zorunlu; aralık denetimi yok (sözleşme yüklenmiyor).
    **(2026-09-22 ikinci tur)** Numaranın yanında **onay tarihi** de girilir; plan kabulünde
    "onay tarihi ≤ kontrol tarihi − 1 gün" denetlenir.
@@ -1316,7 +1316,7 @@ tarih-saat, fotoğraflar, form) · **Eğitim kaydı** (personel, eğitim, belge,
 11. Emsal uygulamanın PDF çıktısını indirme izni verildi; çözümleme yerel dosyada (§6).
 12. Tablet → ayrı uygulama değil; aynı web uygulaması, tablete uyarlanmış biçemle.
 **İkinci tur cevapları (2026-09-22):** 13. Alt alan adı → teyit edildi, ürün birden çok firmaya satılır.
-14. SGK sicil numarası → müşteride değil **tesiste**. 15. Rapor şablonları → **kodda**, firma × ekipman türü.
+14. SGK sicil numarası → müşteride değil **tesiste**. 15. Rapor şablonları → ~~**kodda**~~ firmanın Format kurucusunda (2026-10-02, §8.3), firma × ekipman türü.
 16. Çatı → **Next.js** (SvelteKit düştü). 17. Mimari → **modüler**, tek dosya yok. 18. Barındırma → **Türkiye'de
 sunucu**, joker SSL alt alan adları. 19. Arka plan işleri → **pg-boss**. 20. Sigorta okuma → görsel yapay zekâ,
 **insan onayı şart**. 21. Yönetici → **branşa göre ikiye** ayrılır.
@@ -2169,9 +2169,13 @@ tüm raporları bu şekilde kurgulayabileceğim bir sistem tasarla ben müşteri
 → kalemler AA1–AA10 (§11 225–): AA1 sade giriş · AA2 yıllık fazla çalışma sınırı · AA3 Onaylar › Diğer (bordro, eğitim, zimmet formu; mobil / e-imza
 akışı) · AA4 Araç takip modülü · AA5 ekipman türleri mekanik / elektrik · AA6 rapordaki standarda tıklayınca firmanın yüklediği standart açılır ·
 AA7 küçük toplu tuş kalkar, madde (i) pop-up · AA8 bütün işlemlerde uyarı / onay pencereleri taraması · AA9 "Uygun değil"de fotoğraf zorunluluğu
-ve kusur derecesi kalkar · AA10 firmanın kendi rapor formatını kurduğu sistem (**§8.3 "şablon kodda, site içi düzenleyici yok" kararı değişiyor**).
+ve kusur derecesi kalkar · AA10 firmanın kendi rapor formatını kurduğu sistem (**§8.3 "şablon kodda, site içi düzenleyici yok" kararı değişti — kırk dokuzuncu tur**).
 Ek (aynı gün, reisim birebir): *"bir işlem yaparken örnek yazılar yazılı olarak geliyor, silip bir şey yazmam gerekiyor onu da düzelt.."* → AA11:
 yeni kayıt formları boş açılır (örnek değer alana yazılmaz; gerekiyorsa yalnız silik ipucu).
+
+**Kırk dokuzuncu tur (2026-10-02, reisim birebir):** §8.3 önerisi (AA10) anlatıldıktan sonra *"Tamam yapalım"* → **§8.3 kararı değişti** (§11 234):
+rapor formatı firmanın Format kurucusunda kurulan sürümlü bir tanımdır; saha ekranı ve PDF bu tanımdan çizilir, çizen motor kodda tektir
+(`RAPOR-FORMAT.md`). Eski "şablon kodda, site içi düzenleyici yok" kararı kalktı.
 
 **Açık kalanlar:** ~~Ana sayfada İSGGM duyuruları~~ (2026-09-27: makette eklendi; okuma işi uygulamada) (reisim 2026-09-26: *"Ana sayfada isgüm duyurularını gösterebilir miyiz ? Bunu
 yapılacaklar listesine ekle"*; öneri: ÇSGB İSGGM duyurular sayfası — https://www.csgb.gov.tr/isggm/duyurular/ — sunucuda günde birkaç kez
@@ -2210,6 +2214,11 @@ revizyon, alan kopyalama, hafif kusur devri, meslek eşleşme denetimi).
 - Emsal ürünler: https://opwire.app/iso-17020-periyodik-kontrol-yazilimi/ · https://17020muayene.vidco.com.tr/ · https://akuple.com/asansor-kontrol-yazilimi/ · https://ensyazilim.com/
 
 ## 11 · Değişiklik günlüğü
+- 2026-10-02 (234): **§8.3 kararı değişti — rapor formatı firmanın Format kurucusunda** (§9 kırk dokuzuncu tur, reisim: *"Tamam yapalım"*).
+  §8.3 yeni karar: format firma × tür başına Format kurucuda kurulan sürümlü tanım; saha ekranı ve PDF bu tanımdan, çizen motor kodda tek;
+  eski "kodda, site içi düzenleyici yok" üstü çizili kaldı. Aynı kararı tekrar eden yerler (§3.1 modül 6, §3 menü notu, M3 notu, M7 notu,
+  §9 ikinci tur 5 ve 15) yeni karara bağlandı; CLAUDE.md §2 ve dizin haritası, RAPOR-FORMAT.md durumu "onaylı"; Format kurucu maketindeki
+  "onay bekliyor" ifadesi kalktı. Ekran ve davranış değişmedi.
 - 2026-10-02 (233): **AA10 · Firmanın kendi rapor formatını kurduğu sistem — tasarım + Format kurucu maketi** (§9 kırk sekizinci tur: *"Bu söylediklerimi
   tek bir rapor özelinde değil, tüm raporları bu şekilde kurgulayabileceğim bir sistem tasarla ben müşteriye sunduğumda kendi rapor formatını yükleyip
   istediği gibi şekillendirebilecek kurgulayabileceği bir sistem tasarlamamız gerkeli yoksa her rapor format yüklemesinde tek tek benim
