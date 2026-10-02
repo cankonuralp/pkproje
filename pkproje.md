@@ -2134,6 +2134,18 @@ başlangıçta Opus 5.5, gerekirse Sonnet 5.5, ölçümle · çevrimdışı veri
 S.A.Y chat yalnız öneri verir. **K7** (probata'nın firmalardan ücret alması modülü) ve **K8** (kayıp cihaz: uzaktan oturum kapatma + yerel veri
 silme, çevrimdışı oturum 7 gün) **kabul edilmedi** — yapılmaz.
 
+**Kırk yedinci tur (2026-10-02, reisim birebir).** (1) *"Müşterinin token ekleyeceği yeri ekledin mi makete"* → Y1 (§11 218). (2) *"Çıkış yap, giriş
+yap parola değiştir firma ayarları modülü hiç bir şey göremedim firma  ayarları nerdeydi, bi bak konuşup yapmadığımız eksik kalan ne iş var komple
+bi bak"* → neden: Pages yayını 2026-09-30'dan beri onay bekleyen bir işin arkasında kalmıştı (iptal edildi, yayın 2026-10-02'de çıktı); eksik
+listesi verildi. (3) Firma ayarları ekran görüntüsüyle: *"konuşup makete dökmediklerimizi dök,karar bekleyenleri ertele şu açık temada menü
+rengi sorusunu sorma değişmeyecek. Ayrıca ilk görselde gördüğün gibi verileri dışa aktar butonu çok aşağıda kalmış onu hizala. yapılan
+değişikliklerin yanına minik bir kaydet butonu koy yoksa kaydedildiği anlaşılmıyor."* → Z1 (§11 219); makete dökülecekler: S.A.Y sohbeti,
+ölçüm noktası ve etiket için fotoğraftan okuma, çevrimdışı gösterge; **ertelendi:** öteki türlerin rapor formatları (PDF bekliyor), §3.7 firma
+özelleştirmeleri, personel hesabı açma, ilk açılışta toplu Excel içe aktarma; **kapandı:** açık temada yan menü rengi (değişmeyecek). (4) Müşteriye
+açık personel belgeleri görüntüsüyle: *"bu kısımda eğer ben bir belge türü eklersem listeye ekleniyor mu"* → hayır (liste sabit); *"eklenmiyorsa
+eklensin ilk fotoğrafta rapor nüshası demiş o ne demek ,?"* → Z5; nüsha: resmî rapor künyesindeki "Nüsha sayısı" satırı (rapor kaç kopya
+düzenlendi), yalnız o satıra basılır.
+
 **Açık kalanlar:** ~~Ana sayfada İSGGM duyuruları~~ (2026-09-27: makette eklendi; okuma işi uygulamada) (reisim 2026-09-26: *"Ana sayfada isgüm duyurularını gösterebilir miyiz ? Bunu
 yapılacaklar listesine ekle"*; öneri: ÇSGB İSGGM duyurular sayfası — https://www.csgb.gov.tr/isggm/duyurular/ — sunucuda günde birkaç kez
 okunur (pg-boss işi, §8.9), Ana sayfada son 5 duyuru başlık + tarih + kaynağa bağlantı; yalnız ekranda, bildirim yok; sayfa RSS vermiyorsa
@@ -2171,6 +2183,13 @@ revizyon, alan kopyalama, hafif kusur devri, meslek eşleşme denetimi).
 - Emsal ürünler: https://opwire.app/iso-17020-periyodik-kontrol-yazilimi/ · https://17020muayene.vidco.com.tr/ · https://akuple.com/asansor-kontrol-yazilimi/ · https://ensyazilim.com/
 
 ## 11 · Değişiklik günlüğü
+- 2026-10-02 (219): **Z1 · Firma ayarları: boşluksuz yerleşim + bölüm başına Kaydet** (§9 kırk yedinci tur). Bölümler satırlı ızgara yerine
+  sütunlu yerleşimde: her bölüm kendi sütununda üsttekinin hemen altında; uzun "Müşteriye açık personel belgeleri"nin yanında "Verileri dışa
+  aktar" artık aşağıda kalmıyor (fiyat listesi, sabit giderler yine tam genişlik). Değişiklik artık hemen kaydedilmez: bölümün taslağına yazılır,
+  başlığın yanında "Kaydedilmedi · Vazgeç · Kaydet" çıkar; Kaydet taslağı uygular (geçersiz değer yine kaydedilmez, alanın altında söylenir),
+  Vazgeç kayıtlı değere döner; başka bölüm kaydedilince taslak durur; alan açan seçimler (yapay zekâ, mesai, arşiv) taslakta da alanlarını
+  gösterir; dışa aktarım seçimi ve API anahtarı kendi tuşlarıyla. Kilit: yerleşim (her bölümle üstteki arası ≤ 18px, geniş ekranda yan yana) ve
+  taslak (Kaydet'e kadar kaydedilmez, Vazgeç) — ikisi de eski kodda düşüyor (ölçüldü); 17 ayar denetimi Kaydet adımıyla güncellendi.
 - 2026-10-02 (218): **Firma ayarları › Yapay zekâ + Hesabım kişisel anahtar** (K1–K3'ün maketi; reisim: *"Müşterinin token ekleyeceği yeri
   ekledin mi makete"*). Firma ayarlarında yeni bölüm: Kapalı/Açık (kapalı başlar) · açıkken KVKK yurt dışı aktarım uyarısı · API anahtarı
   (parola alanı, `sk-ant-` biçim denetimi; kayıttan sonra yalnız `sk-ant-…` + son 4 hane görünür, Değiştir / Kaldır) · model (Opus 5.5 /
@@ -2784,7 +2803,7 @@ revizyon, alan kopyalama, hafif kusur devri, meslek eşleşme denetimi).
   ad kalan yeri doldurur, sığmazsa kırpılır (bugünkü veride hiçbiri kırpılmıyor — ölçüldü: "Ölçüm cihazları" 111/111 px). Renk **dolu**:
   rozet çiftinin tersi (kırmızı `--hata-yazi` zemin / `--hata-zemin` yazı, sarı aynı biçimde, yeşil menü sayacının `--onay` çifti) — aynı
   ölçülü çiftler, palet ve token değişmedi. Koyu temada parlak (pembe-kırmızı, sarı, yeşil); açık temada doygun koyu (kırmızı, kahve-sarı,
-  yeşil) — açık temada da parlak sarı / kırmızı istenirse yan menü için ayrı renk değişkeni gerekir, bu palet kararı reisim'in (açık soru).
+  yeşil) — açık temada da parlak sarı / kırmızı istenirse yan menü için ayrı renk değişkeni gerekir, bu palet kararı reisim'in (~~açık soru~~ — **kapandı 2026-10-02**, reisim: *"şu açık temada menü rengi sorusunu sorma değişmeyecek"*).
   Yan menü kayar ama çubuğu görünmez (`scrollbar-width: none`; daraltılmış menüde zaten öyleydi). Yalnız maket (`docs/assets/maket.css`);
   uygulama kabuğu (`src/`) koda geçişte aynı kurala çekilir. 18 maket temiz: durum 1976/1976 · etkileşim 475/475 · telefon 988/988 ·
   olumsuz kanıt 3/3; açık / koyu / daraltılmış menü ekran görüntüsüyle gözle bakıldı.

@@ -2,8 +2,8 @@
  "maket": "m1",
  "tarih": "2026-10-02",
  "arac": "tools/olc-bulut.mjs --etkilesim (başsız tarayıcı, 1920 açık tema; gen verilen denemede o genişlik)",
- "toplam": 103,
- "gecen": 103,
+ "toplam": 104,
+ "gecen": 104,
  "denemeler": [
   {
    "ad": "İzin talepleri: formun PDF'i açılır, e-posta talep edene",
@@ -391,7 +391,14 @@
    "gecti": true
   },
   {
-   "ad": "Firma ayarları: bölümler kart, geniş ekranda iki sütun ve solda bölüm listesi; fiyat listesi tam genişlik; bölüm listesinden bölüme gidilir",
+   "ad": "Firma ayarları: bölümler kart, geniş ekranda yan yana sütunlar ve solda bölüm listesi; her bölüm üsttekinin hemen altında (boşluk ≤ 18px, Z1: dışa aktar aşağıda kalmaz); fiyat listesi tam genişlik; bölüm listesinden bölüme gidilir",
+   "gen": 1920,
+   "sayfa": "maket/firma-ayarlari.html",
+   "hash": "#/",
+   "gecti": true
+  },
+  {
+   "ad": "Z1: değişiklik bölümün Kaydet'ine kadar kaydedilmez (başlıkta Kaydedilmedi + Kaydet); başka bölüm kaydedilince taslak durur; Vazgeç kayıtlı değere döner",
    "gen": 1920,
    "sayfa": "maket/firma-ayarlari.html",
    "hash": "#/",

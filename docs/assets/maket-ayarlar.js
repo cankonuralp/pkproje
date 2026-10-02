@@ -2,8 +2,8 @@
    Reisim 2026-09-30: "firma ayarları personel kısmının altında değil ayrı bir modül olsun , ekran daha verimli kullanılsın." Önceden
    Personel'in 4. sekmesiydi (2026-09-29, 202: dağınık ayarlar tek yerde); içerik ve davranış aynı, buraya taşındı. Ekran: geniş ekranda
    solda bölüm listesi, bölümler iki sütunlu ızgarada (fiyat listesi ve sabit giderler tam genişlik, fiyatlar dört sütun); telefonda tek sütun.
-   Yeni: Firma bilgileri (rapor başlığındaki künye: ticari ad, adres, e-posta, akreditasyon no, nüsha). Alandan çıkınca kaydedilir;
-   geçersiz değer kaydedilmez, alanın altında söylenir (uyarı, engel değil). Görür ve değiştirir: firma yöneticisi (rol yetkileri, 22).
+   Yeni: Firma bilgileri (rapor başlığındaki künye: ticari ad, adres, e-posta, akreditasyon no, nüsha). Değişiklik bölümün Kaydet
+   tuşuyla kaydedilir (Z1, 2026-10-02); geçersiz değer kaydedilmez, alanın altında söylenir (uyarı, engel değil). Görür ve değiştirir: firma yöneticisi (rol yetkileri, 22).
    Adres: #/ (tek görünüm; eski Personel #/ayarlar buraya yönlenir). */
 (function () {
   "use strict";
@@ -53,10 +53,10 @@
             var x = MV.SAKLAMA[k];
             return '<label class="a-onay-kutusu"><input type="radio" name="ay-saklama" data-saklama value="' + k + '"' + (sk.yontem === k ? " checked" : "") + "><span>" + x.ad + " — " + x.etiket + "</span></label>";
           }).join("") + "</div>" +
-          (sk.yontem === "arsiv" ? MK.alan({ id: "ay-arsiv", etiket: "Arşiv yeri", girdi: '<input class="a-girdi" id="ay-arsiv" data-arsiv-yeri maxlength="200" value="' + kacis(sk.yer) + '" placeholder="Bulut sağlayıcısı ve klasör">',
+          (TD("a-b-saklama", 'input[name="ay-saklama"]', sk.yontem) === "arsiv" ? MK.alan({ id: "ay-arsiv", etiket: "Arşiv yeri", girdi: '<input class="a-girdi" id="ay-arsiv" data-arsiv-yeri maxlength="200" value="' + kacis(sk.yer) + '" placeholder="Bulut sağlayıcısı ve klasör">',
               uyari: sk.yer.trim() ? "" : "Arşiv yeri girilmedi: yeri girilene kadar süresi dolan raporlar sistemde kalır." }) : "") + "</section>";
       })() + ayarDigerCiz();
-    navCiz();
+    navCiz(); taslakYukle();
   }
   /* 202 (2026-09-29): dağınık firma ayarları tek yerde — uyarı eşikleri · rapor numarasının firma kodu · fiyat listesi · sabit giderler.
      Alandan çıkınca kaydedilir; geçersiz değer kaydedilmez, alanın altında söylenir (uyarı, engel değil: öteki alanlar çalışır) */
@@ -79,7 +79,7 @@
         var m = MV.mesai();
         return '<section class="a-bolum" aria-labelledby="a-b-mesai"><div class="a-alt-bas"><h2 class="a-alt-baslik" id="a-b-mesai">Mesai takibi</h2></div>' +
           '<label class="a-onay-kutusu"><input type="checkbox" data-mesai-acik' + (m.acik ? " checked" : "") + "><span>Açık — günlük süre dolunca yeni rapor oluşturulamaz</span></label>" +
-          (m.acik ? '<div class="a-form">' +
+          (TD("a-b-mesai", "input[data-mesai-acik]", m.acik) ? '<div class="a-form">' +
             MK.alan({ id: "ay-mesai-normal", etiket: "Günlük normal çalışma (dk)", hata: h["mesai-normal"], girdi: MK.girdi({ id: "ay-mesai-normal", deger: h["mesai-normal"] ? AY["mesai-normal"] : String(m.normal), sinif: "a-girdi-sicil", hata: h["mesai-normal"], ek: ' data-mesai="normal" inputmode="numeric" maxlength="4"' }) }) +
             MK.alan({ id: "ay-mesai-mesai", etiket: "Günlük mesai (dk)", hata: h["mesai-mesai"], girdi: MK.girdi({ id: "ay-mesai-mesai", deger: h["mesai-mesai"] ? AY["mesai-mesai"] : String(m.mesai), sinif: "a-girdi-sicil", hata: h["mesai-mesai"], ek: ' data-mesai="mesai" inputmode="numeric" maxlength="4"' }) }) +
             "</div>" : "") + '<p class="a-ipucu">Raporun süresi ekipman türünün kontrol süresidir (Ekipman türleri). Önce normal süre, sonra mesai dolar.</p></section>';
@@ -121,6 +121,8 @@
   };
   X["sg-sil"] = function (el) {
     var i = +el.dataset.i, x = MV.SABIT_GIDER[i]; MV.SABIT_GIDER = MV.SABIT_GIDER.filter(function (y, j) { return j !== i; }); AY.hata = {};
+    var ts = TS["a-b-sabit"];   /* Z1: kaldırılan satırın taslağı düşer, alttaki satırların taslağı yeni sırasına kayar */
+    if (ts) { var y = {}; Object.keys(ts).forEach(function (k) { var m = /^#ay-sg-(ad|tutar|not)-(\d+)$/.exec(k); if (!m) { y[k] = ts[k]; return; } var j = +m[2]; if (j !== i) y[j > i ? "#ay-sg-" + m[1] + "-" + (j - 1) : k] = ts[k]; }); TS["a-b-sabit"] = y; }
     ayarCiz(); var e = $("ay-sg-ad-" + Math.min(i, MV.SABIT_GIDER.length - 1)) || document.querySelector('[data-eylem="sg-ekle"]'); e.focus();
     MK.bildir((x.ad || "Adsız gider") + " kaldırıldı.");
   };
@@ -180,7 +182,7 @@
       '<p class="a-ipucu">Fotoğraftan okuma (sigorta, topraklama noktası, etiket) ve rapor sayfasındaki S.A.Y sohbeti. Firmanın Anthropic hesabıyla çalışır; harcama o hesaptan.</p>' +
       '<div role="radiogroup" aria-labelledby="a-b-yz">' + [["0", "Kapalı"], ["1", "Açık"]].map(function (x) {
         return '<label class="a-onay-kutusu"><input type="radio" name="ay-yz" data-yz-acik value="' + x[0] + '"' + ((z.acik ? "1" : "0") === x[0] ? " checked" : "") + "><span>" + x[1] + "</span></label>"; }).join("") + "</div>" +
-      (!z.acik ? "" :
+      (TD("a-b-yz", 'input[name="ay-yz"]', z.acik ? "1" : "0") !== "1" ? "" :
         MK.serit("uyari", "triangle-alert", "Fotoğraf ve maskelenmiş rapor bilgisi (müşteri adı, adres, kişi adı, numaralar gönderilmez) yurt dışına, Anthropic'e (ABD) gider. KVKK yurt dışı aktarım koşulları firmanın sorumluluğunda.") +
         '<div class="a-form">' +
           (kayitli
@@ -204,7 +206,10 @@
     var v = ($("ay-yz-anahtar") || {}).value || "";
     v = v.trim();
     if (!/^sk-ant-[A-Za-z0-9_-]{16,}$/.test(v)) { YZ.hata = v ? "Geçerli bir Anthropic API anahtarı değil (sk-ant- ile başlar)." : "Anahtarı yapıştırın."; ayarCiz(); $("ay-yz-anahtar").focus(); return; }
-    YZ.hata = ""; YZ.yaz = false; yzYaz({ anahtar: MV.anahtarIzi(v) }); v = "";   /* yalnız son 4 hane tutulur */
+    /* Z1: taslakta "Açık" seçiliyken anahtar kaydedilirse açık da kaydedilir (anahtarı giren yapay zekâyı açmak istiyor) */
+    var ta = TS["a-b-yz"] && TS["a-b-yz"]['input[name="ay-yz"]'], d = { anahtar: MV.anahtarIzi(v) };
+    if (ta) { d.acik = ta.deger === "1"; delete TS["a-b-yz"]['input[name="ay-yz"]']; if (!Object.keys(TS["a-b-yz"]).length) delete TS["a-b-yz"]; }
+    YZ.hata = ""; YZ.yaz = false; yzYaz(d); v = "";   /* yalnız son 4 hane tutulur */
     ayarCiz(); var b = document.querySelector('[data-eylem="yz-anahtar-degistir"]'); if (b) b.focus(); MK.bildir("API anahtarı kaydedildi.");
   };
   X["yz-anahtar-degistir"] = function () { YZ.yaz = true; YZ.hata = ""; ayarCiz(); $("ay-yz-anahtar").focus(); };
@@ -368,7 +373,7 @@
     MV.FIRMA.disaAktarim = [{ zaman: MK.simdi(), kisi: ben ? ben.ad : "—", bolum: s.length, ad: ad }].concat(MV.FIRMA.disaAktarim || []);
     ayarCiz(); var b = document.querySelector('[data-eylem="disa-aktar"]'); if (b) b.focus();
   };
-  MK.onSecim = function (id, deger) {
+  function secimUygula(id, deger) {
     var m;
     if (id === "ay-bulut-s") { bulutYaz({ saglayici: deger, bagli: false, hesap: "" }); ayarCiz(); $(id).focus(); MK.bildir("Bulut: " + MV.BULUT_SAGLAYICI.filter(function (x) { return x[0] === deger; })[0][1] + "; hesabı bağlayın."); return; }
     if (id === "ay-bulut-d") { bulutYaz({ duzen: deger }); ayarCiz(); $(id).focus(); MK.bildir("Klasör düzeni: " + MV.BULUT_DUZEN.filter(function (x) { return x[0] === deger; })[0][1] + "."); return; }
@@ -381,9 +386,8 @@
     }
     if (id === "ay-yz-model") { yzYaz({ model: deger }); ayarCiz(); $(id).focus(); MK.bildir("Model: " + MV.YZ_MODEL.filter(function (x) { return x[0] === deger; })[0][1] + "."); return; }
     if (id === "ay-zeden") { MV.FIRMA.zimmetEden = deger; ayarCiz(); $(id).focus(); MK.bildir("Zimmet formunda teslim eden başlangıçta: " + MV.kisi(deger).ad + "."); return; }
-  };
-  document.addEventListener("change", function (e) {
-    var t = e.target;
+  }
+  function uygula(t) {
     if (t.hasAttribute && t.hasAttribute("data-bulut-kok")) { bulutYaz({ kok: t.value.trim() || "probata Raporlar" }); ayarCiz(); $("ay-bulut-kok").focus(); MK.bildir("Ana klasör kaydedildi."); return; }
     if (t.hasAttribute && t.hasAttribute("data-yz-acik")) {
       yzYaz({ acik: t.value === "1" }); YZ.hata = ""; ayarCiz(); var q0 = document.querySelector('[data-yz-acik][value="' + t.value + '"]'); if (q0) q0.focus();
@@ -452,6 +456,82 @@
       MV.FIRMA.imza = t.value; ayarCiz(); var s = document.querySelector('[data-imza-yontem][value="' + t.value + '"]'); if (s) s.focus();
       MK.bildir("İmza yöntemi: " + MV.imzaYontem().ad + ". Raporlar ve iç belgeler bu yöntemle imzalanır."); return;
     }
+  }
+  /* ── TASLAK + BÖLÜM KAYDET (Z1, 2026-10-02; reisim: "yapılan değişikliklerin yanına minik bir kaydet butonu koy yoksa kaydedildiği
+     anlaşılmıyor"): değişiklik hemen kaydedilmez, bölümün taslağına yazılır; bölüm başlığının yanında Kaydet ve Vazgeç çıkar. Kaydet
+     taslağı sırayla uygular (geçersiz değer yine kaydedilmez, alanın altında söylenir); Vazgeç kayıtlı değerlere döner. Yeniden çizimde
+     taslak alanlara geri yazılır. Aç / kapa ile alan açan seçimler (yapay zekâ, mesai, arşiv) taslakta da alanlarını gösterir.
+     Taslağa girmeyenler: dışa aktarılacak bölüm seçimi (Dışa aktar tuşu var), API anahtarı (kendi tuşu var), eylem tuşları. ─────── */
+  var TS = {};
+  var muaf = function (t) { return t.dataset.disa != null || t.id === "ay-yz-anahtar" || !t.closest("#a-ayarlar"); };
+  var YENIDEN = ["data-yz-acik", "data-mesai-acik", "data-saklama"];   /* alan açıp kapatan seçimler: taslakta da yeniden çizilir */
+  function secici(t) {
+    if (t.type === "radio") return 'input[name="' + t.name + '"]';
+    if (t.id) return "#" + t.id;
+    return t.tagName.toLowerCase() + Array.prototype.filter.call(t.attributes, function (a) { return a.name.indexOf("data-") === 0; }).map(function (a) { return "[" + a.name + '="' + a.value + '"]'; }).join("");
+  }
+  function TD(b, k, varsayilan) { var x = TS[b] && TS[b][k]; return x ? x.deger : varsayilan; }
+  function bolumIsaretle(sec) {
+    if (!sec || sec.querySelector(".a-ayar-kaydet")) return;
+    var b = sec.getAttribute("aria-labelledby");
+    sec.querySelector(".a-alt-bas").insertAdjacentHTML("beforeend", '<span class="a-bolum-tuslar a-ayar-kaydet"><span class="a-ayar-kaydet-not">Kaydedilmedi</span>' +
+      MK.tus({ eylem: "ayar-vazgec", ad: "Vazgeç", sinif: "a-tus-ikincil", veri: { bolum: b } }) + MK.tus({ eylem: "ayar-kaydet", ad: "Kaydet", ikon: "check", veri: { bolum: b } }) + "</span>");
+  }
+  function taslakEkle(t) {
+    var sec = t.closest("section.a-bolum"), b = sec.getAttribute("aria-labelledby"), k = secici(t);
+    (TS[b] = TS[b] || {})[k] = { tip: t.type === "radio" ? "radyo" : t.type === "checkbox" ? "kutu" : "girdi", deger: t.type === "checkbox" ? t.checked : t.value };
+    bolumIsaretle(sec);
+  }
+  function secimGoster(id, deger) {
+    var tus = $(id); if (!tus) return;
+    var kap = tus.closest(".a-secici"), sec = kap.querySelector('[data-secim="' + id + '"][data-deger="' + deger + '"]');
+    kap.querySelectorAll("[data-secim]").forEach(function (o) { o.setAttribute("aria-selected", String(o === sec)); });
+    if (sec) { var s = tus.querySelector(".a-kirp"), a = sec.querySelector(".a-kirp").textContent; s.textContent = a; s.title = a; s.classList.remove("a-secim-bos"); }
+  }
+  function taslakYukle() {
+    Object.keys(TS).forEach(function (b) {
+      var sec = document.querySelector('#a-ayarlar section[aria-labelledby="' + b + '"]'); if (!sec) { delete TS[b]; return; }
+      Object.keys(TS[b]).forEach(function (k) {
+        var x = TS[b][k];
+        if (x.tip === "secim") { secimGoster(x.id, x.deger); return; }
+        var t = sec.querySelector(x.tip === "radyo" ? k + '[value="' + x.deger + '"]' : k); if (!t) return;
+        if (x.tip === "kutu") t.checked = x.deger; else if (x.tip === "radyo") t.checked = true; else t.value = x.deger;
+      });
+      bolumIsaretle(sec);
+    });
+  }
+  var baslikOdak = function (b) { var h = $(b); if (h) { h.setAttribute("tabindex", "-1"); h.focus(); } };
+  X["ayar-kaydet"] = function (el) {
+    var b = el.dataset.bolum, l = TS[b] || {}, ad = $(b).textContent, mesaj = [], eski = MK.bildir;
+    delete TS[b]; MK.bildir = function (m) { mesaj.push(m); };
+    try {
+      Object.keys(l).forEach(function (k) {
+        var x = l[k];
+        if (x.tip === "secim") { secimUygula(x.id, x.deger); return; }
+        var t = document.querySelector('#a-ayarlar section[aria-labelledby="' + b + '"] ' + (x.tip === "radyo" ? k + '[value="' + x.deger + '"]' : k)); if (!t) return;
+        if (x.tip === "kutu") t.checked = x.deger; else if (x.tip === "radyo") t.checked = true; else t.value = x.deger;
+        uygula(t);
+      });
+    } finally { MK.bildir = eski; }
+    ayarCiz();
+    var hata = document.querySelector('#a-ayarlar section[aria-labelledby="' + b + '"] [aria-invalid="true"]');
+    if (hata) { hata.focus(); MK.bildir(ad + ": bazı alanlar kaydedilmedi; nedeni alanın altında."); return; }
+    baslikOdak(b); MK.bildir(mesaj.length === 1 ? mesaj[0] : ad + " kaydedildi.");
+  };
+  X["ayar-vazgec"] = function (el) {
+    var b = el.dataset.bolum; delete TS[b]; ayarCiz(); baslikOdak(b); MK.bildir($(b).textContent + ": değişiklikler geri alındı.");
+  };
+  MK.onSecim = function (id, deger) {
+    var tus = $(id), sec = tus && tus.closest("#a-ayarlar section.a-bolum"); if (!sec) return;
+    var b = sec.getAttribute("aria-labelledby"); (TS[b] = TS[b] || {})["secim:" + id] = { tip: "secim", id: id, deger: deger };
+    secimGoster(id, deger); bolumIsaretle(sec);
+  };
+  document.addEventListener("input", function (e) { var t = e.target; if (t.closest && !muaf(t) && t.type !== "search") bolumIsaretle(t.closest("section.a-bolum")); });
+  document.addEventListener("change", function (e) {
+    var t = e.target; if (!t.closest || !t.closest("#a-ayarlar") || t.type === "search") return;
+    if (muaf(t)) { uygula(t); return; }
+    taslakEkle(t);
+    if (YENIDEN.some(function (a) { return t.hasAttribute(a); })) { var k = secici(t), v = t.value; ayarCiz(); var q = document.querySelector(t.type === "radio" ? k + '[value="' + v + '"]' : k); if (q) q.focus(); }
   });
   MK.goster = function () { ayarCiz(); };
   MK.kabuk({ modul: 22, kullanici: { bas: "AD", ad: "Ayşe Demir", rol: "Firma yöneticisi" } });
