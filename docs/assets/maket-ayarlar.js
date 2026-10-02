@@ -112,7 +112,7 @@
             MK.alan({ id: "ay-sg-not-" + i, etiket: "Not", girdi: MK.girdi({ id: "ay-sg-not-" + i, deger: x.not || "", ek: ' data-sg-not="' + i + '" maxlength="80"' }) }) +
             MK.tus({ eylem: "sg-sil", ad: "Kaldır", ikon: "x", sinif: "a-tus-ikincil a-kalem-sil", veri: { i: i } }) + "</div>";
         }).join("") +
-        '<div class="a-eylem-cubugu a-bolum-serit">' + MK.tus({ eylem: "sg-ekle", ad: "Sabit gider ekle", ikon: "plus", sinif: "a-tus-ikincil" }) + "</div></section>" + bulutCiz() + personelBelgeCiz() + disaCiz();
+        '<div class="a-eylem-cubugu a-bolum-serit">' + MK.tus({ eylem: "sg-ekle", ad: "Sabit gider ekle", ikon: "plus", sinif: "a-tus-ikincil" }) + "</div></section>" + bulutCiz() + yzCiz() + personelBelgeCiz() + disaCiz();
   }
 
   X["sg-ekle"] = function () {
@@ -158,6 +158,62 @@
         return "<li>" + MK.zamanYaz(x.zaman) + " · <b>" + kacis(x.no) + '</b> <span class="a-alt-satir">' + kacis(x.yol) + "</span></li>"; }).join("") + "</ul>" : "") +
       "</section>";
   }
+  /* ── YAPAY ZEKÂ (Y1, 2026-10-02; ARKA-UC.md K1–K3 kabul — reisim: "Müşterinin token ekleyeceği yeri ekledin mi makete"): fotoğraftan okuma
+     ve S.A.Y chat firmanın Anthropic API anahtarıyla; başlangıçta kapalı; açıkken yurt dışı uyarısı (09-G3 istisnası); model; kişi başı aylık
+     sınır; bu ayın kişi başı kullanımı. Anahtar bir kez yazılır, bir daha gösterilmez (yalnız son 4 hane). ─────────────────────────────── */
+  var YZ = { hata: "", yaz: false };
+  function yzCiz() {
+    var z = MV.yz(), kayitli = !!z.anahtar && !YZ.yaz;
+    var sinirli = z.sinir !== "" && +z.sinir > 0;
+    var SUT = [
+      { k: "kisi", baslik: "Kişi", kart: "ust", sira: 1, hucre: function (x) { var p = MV.kisi(x.k); return kacis(p.ad) + (p.yzAnahtar ? '<span class="a-alt-satir">kendi anahtarı</span>' : ""); } },
+      { k: "okuma", baslik: "Fotoğraftan okuma", kart: "govde", sira: 2, hucre: function (x) { return '<span class="a-kart-etiket">Fotoğraftan okuma</span>' + x.okuma; } },
+      { k: "mesaj", baslik: "S.A.Y mesajı", kart: "govde", sira: 3, hucre: function (x) { return '<span class="a-kart-etiket">S.A.Y mesajı</span>' + x.mesaj; } },
+      { k: "usd", baslik: "Harcama", kart: "govde", sira: 4, hucre: function (x) { return '<span class="a-kart-etiket">Harcama</span>$' + x.usd.toFixed(2).replace(".", ","); } },
+      { k: "durum", baslik: "Sınır", kart: "rozet", sira: 1, hucre: function (x) {
+        if (MV.kisi(x.k).yzAnahtar) return '<span class="a-deger-yok">kendi hesabından</span>';
+        if (!sinirli) return '<span class="a-deger-yok">sınırsız</span>';
+        var o = x.usd / +z.sinir; return MK.rozet(o >= 1 ? { ad: "Doldu", rozet: "a-rozet-red" } : o >= 0.8 ? { ad: "%" + Math.round(o * 100), rozet: "a-rozet-bekliyor" } : { ad: "%" + Math.round(o * 100), rozet: "a-rozet-tamam" }); } }
+    ];
+    return '<section class="a-bolum" aria-labelledby="a-b-yz"><div class="a-alt-bas"><h2 class="a-alt-baslik" id="a-b-yz">Yapay zekâ</h2>' +
+        '<span class="a-sayac">' + (z.acik ? "açık" : "kapalı") + "</span></div>" +
+      '<p class="a-ipucu">Fotoğraftan okuma (sigorta, topraklama noktası, etiket) ve rapor sayfasındaki S.A.Y sohbeti. Firmanın Anthropic hesabıyla çalışır; harcama o hesaptan.</p>' +
+      '<div role="radiogroup" aria-labelledby="a-b-yz">' + [["0", "Kapalı"], ["1", "Açık"]].map(function (x) {
+        return '<label class="a-onay-kutusu"><input type="radio" name="ay-yz" data-yz-acik value="' + x[0] + '"' + ((z.acik ? "1" : "0") === x[0] ? " checked" : "") + "><span>" + x[1] + "</span></label>"; }).join("") + "</div>" +
+      (!z.acik ? "" :
+        MK.serit("uyari", "triangle-alert", "Fotoğraf ve maskelenmiş rapor bilgisi (müşteri adı, adres, kişi adı, numaralar gönderilmez) yurt dışına, Anthropic'e (ABD) gider. KVKK yurt dışı aktarım koşulları firmanın sorumluluğunda.") +
+        '<div class="a-form">' +
+          (kayitli
+            ? '<div class="a-alan-grup a-alan-genis"><p class="a-etiket">API anahtarı</p><p class="a-yz-anahtar">' + ikon("key-round", "a-ikon-kucuk") + '<span class="a-kod">' + kacis(z.anahtar) + "</span> kayıtlı</p>" +
+                '<div class="a-eylem-cubugu a-eylem-sol">' + MK.tus({ eylem: "yz-anahtar-degistir", ad: "Değiştir", ikon: "pencil", sinif: "a-tus-ikincil" }) + MK.tus({ eylem: "yz-anahtar-kaldir", ad: "Kaldır", ikon: "trash-2", sinif: "a-tus-ikincil" }) + "</div></div>"
+            : MK.alan({ id: "ay-yz-anahtar", etiket: "API anahtarı", genis: true, hata: YZ.hata, sonuc: YZ.hata ? "" : "Anthropic Console'dan alınır (sk-ant- ile başlar). Şifreli saklanır, bir daha gösterilmez.",
+                girdi: '<input class="a-girdi" id="ay-yz-anahtar" type="password" autocomplete="off" spellcheck="false" maxlength="200" aria-describedby="ay-yz-anahtar-ipucu"' + (YZ.hata ? ' aria-invalid="true"' : "") + ">" }) +
+              '<div class="a-eylem-cubugu a-eylem-sol a-alan-genis">' + MK.tus({ eylem: "yz-anahtar-kaydet", ad: "Anahtarı kaydet", ikon: "check" }) + (z.anahtar ? MK.tus({ eylem: "yz-anahtar-vazgec", ad: "Vazgeç", sinif: "a-tus-ikincil" }) : "") + "</div>") +
+          '<div class="a-alan-grup"><label class="a-etiket" for="ay-yz-model">Model</label>' + MK.secim({ id: "ay-yz-model", ad: "Model", deger: z.model, secenekler: MV.YZ_MODEL }) + "</div>" +
+          MK.alan({ id: "ay-yz-sinir", etiket: "Kişi başı aylık sınır ($)", hata: AY.hata["yz-sinir"], sonuc: AY.hata["yz-sinir"] ? "" : "Boş: sınırsız. Dolunca o ay yalnız yönetici artırır.",
+            girdi: MK.girdi({ id: "ay-yz-sinir", deger: AY.hata["yz-sinir"] ? AY["yz-sinir"] : String(z.sinir), sinif: "a-girdi-sicil", hata: AY.hata["yz-sinir"], ek: ' data-yz-sinir inputmode="decimal" maxlength="6"' }) }) +
+        "</div>" +
+        (!z.anahtar ? MK.serit("uyari", "key-round", "Anahtar girilmedi: fotoğraftan okuma ve S.A.Y çalışmaz.") : "") +
+        '<p class="a-etiket a-disa-gecmis-bas">Bu ay kullanım (kişi başına)</p>' +
+        '<div class="a-liste-kap">' + MK.tablo({ baslik: "Yapay zekâ kullanımı", sinif: "a-tablo-yz", sutunlar: SUT, kayitlar: MV.YZ_KULLANIM }) + "</div>" +
+        '<p class="a-ipucu">Kendi anahtarını Hesabım\'da giren kullanıcı kendi Anthropic hesabından harcar; firmanın sınırı ona uygulanmaz.</p>') +
+      "</section>";
+  }
+  var yzYaz = function (d) { MV.FIRMA.yz = Object.assign({}, MV.yz(), d); };
+  X["yz-anahtar-kaydet"] = function () {
+    var v = ($("ay-yz-anahtar") || {}).value || "";
+    v = v.trim();
+    if (!/^sk-ant-[A-Za-z0-9_-]{16,}$/.test(v)) { YZ.hata = v ? "Geçerli bir Anthropic API anahtarı değil (sk-ant- ile başlar)." : "Anahtarı yapıştırın."; ayarCiz(); $("ay-yz-anahtar").focus(); return; }
+    YZ.hata = ""; YZ.yaz = false; yzYaz({ anahtar: MV.anahtarIzi(v) }); v = "";   /* yalnız son 4 hane tutulur */
+    ayarCiz(); var b = document.querySelector('[data-eylem="yz-anahtar-degistir"]'); if (b) b.focus(); MK.bildir("API anahtarı kaydedildi.");
+  };
+  X["yz-anahtar-degistir"] = function () { YZ.yaz = true; YZ.hata = ""; ayarCiz(); $("ay-yz-anahtar").focus(); };
+  X["yz-anahtar-vazgec"] = function () { YZ.yaz = false; YZ.hata = ""; ayarCiz(); var b = document.querySelector('[data-eylem="yz-anahtar-degistir"]'); if (b) b.focus(); };
+  X["yz-anahtar-kaldir"] = function () {
+    MK.onayla({ baslik: "API anahtarını kaldır", metin: "Fotoğraftan okuma ve S.A.Y, yeni anahtar girilene kadar çalışmaz (kendi anahtarı olanlar hariç).", tus: "Kaldır", tamam: function () {
+      yzYaz({ anahtar: "" }); ayarCiz(); $("ay-yz-anahtar").focus(); MK.bildir("API anahtarı kaldırıldı.");
+    } });
+  };
   /* ── MÜŞTERİYE AÇIK PERSONEL BELGELERİ (P3, 2026-10-01; reisim: "o müşteriye giden muayene personelinin firmanın izin verdiği belgelerini
      görür (ekipnet belgesi isg belgeleri vs)"): müşteri panelinde "Muayene personeli" sekmesinde yalnız işaretli türler görünür ───────── */
   function personelBelgeCiz() {
@@ -323,11 +379,22 @@
       MV.EGITIM_DURUM.yakin.ad = MV.esik("egitim") + " gün içinde"; ayarCiz(); $(id).focus();
       MK.bildir(MV.ESIK[m[1]].ad + " eşiği " + deger + " gün; uyarılar bu eşikle."); return;
     }
+    if (id === "ay-yz-model") { yzYaz({ model: deger }); ayarCiz(); $(id).focus(); MK.bildir("Model: " + MV.YZ_MODEL.filter(function (x) { return x[0] === deger; })[0][1] + "."); return; }
     if (id === "ay-zeden") { MV.FIRMA.zimmetEden = deger; ayarCiz(); $(id).focus(); MK.bildir("Zimmet formunda teslim eden başlangıçta: " + MV.kisi(deger).ad + "."); return; }
   };
   document.addEventListener("change", function (e) {
     var t = e.target;
     if (t.hasAttribute && t.hasAttribute("data-bulut-kok")) { bulutYaz({ kok: t.value.trim() || "probata Raporlar" }); ayarCiz(); $("ay-bulut-kok").focus(); MK.bildir("Ana klasör kaydedildi."); return; }
+    if (t.hasAttribute && t.hasAttribute("data-yz-acik")) {
+      yzYaz({ acik: t.value === "1" }); YZ.hata = ""; ayarCiz(); var q0 = document.querySelector('[data-yz-acik][value="' + t.value + '"]'); if (q0) q0.focus();
+      MK.bildir(t.value === "1" ? "Yapay zekâ açıldı." : "Yapay zekâ kapatıldı; fotoğraftan okuma ve S.A.Y görünmez."); return;
+    }
+    if (t.hasAttribute && t.hasAttribute("data-yz-sinir")) {
+      var sv = t.value.trim().replace(",", ".");
+      if (sv !== "" && !(/^\d+(\.\d{1,2})?$/.test(sv))) { AY.hata["yz-sinir"] = "Sayı yazılmalı (ör. 20). Kaydedilmedi."; AY["yz-sinir"] = t.value; ayarCiz(); $("ay-yz-sinir").focus(); return; }
+      delete AY.hata["yz-sinir"]; yzYaz({ sinir: sv === "" ? "" : +sv }); ayarCiz(); $("ay-yz-sinir").focus();
+      MK.bildir(sv === "" ? "Kişi başı sınır kaldırıldı." : "Kişi başı aylık sınır $" + sv.replace(".", ",") + "."); return;
+    }
     if (t.dataset && t.dataset.mbelge) {   /* P3: müşteriye açık personel belgesi türü */
       var mb = MV.musteriBelgeIzni().slice(), k = t.dataset.mbelge, ad = MV.MUSTERI_BELGE_TUR.filter(function (x) { return x[0] === k; })[0][1];
       if (t.checked && mb.indexOf(k) < 0) mb.push(k); else if (!t.checked) mb = mb.filter(function (x) { return x !== k; });

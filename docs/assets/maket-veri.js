@@ -730,6 +730,15 @@
     MV.FIRMA.bulut = Object.assign({}, MV.FIRMA.bulut, { kayitlar: [k].concat(b.kayitlar).slice(0, 50) });
     return k;
   };
+  /* ── YAPAY ZEKÂ (Y1, 2026-10-02; ARKA-UC.md K1–K3, reisim: "7 ve 8 hariç kabul ediyorum" → "Müşterinin token ekleyeceği yeri ekledin mi makete"):
+     fotoğraftan okuma ve S.A.Y chat firmanın Anthropic API anahtarıyla çalışır; başlangıçta KAPALI; kişi başı aylık sınır (ABD doları — Anthropic
+     dolarla ücretlendirir); isteyen kullanıcı kendi anahtarını girer (Hesabım). Anahtarın kendisi makette de SAKLANMAZ, yalnız son 4 hanesi
+     (uygulamada sunucuda şifreli; ekranda bir daha gösterilmez). Kullanım sayıları UYDURMA, bu ay. */
+  MV.YZ_MODEL = [["opus", "Claude Opus 5.5", "daha doğru · 1 milyon token: giriş $4, çıkış $20"], ["sonnet", "Claude Sonnet 5.5", "yarı fiyat · 1 milyon token: giriş $2, çıkış $10"]];
+  MV.yz = function () { var x = MV.FIRMA.yz || {}; return { acik: !!x.acik, anahtar: x.anahtar || "", model: x.model === "sonnet" ? "sonnet" : "opus", sinir: x.sinir === "" ? "" : x.sinir != null ? x.sinir : 20 }; };
+  MV.anahtarIzi = function (v) { return "sk-ant-…" + String(v).slice(-4); };
+  MV.YZ_KULLANIM = [{ k: "mk", okuma: 42, mesaj: 118, usd: 17.4 }, { k: "ea", okuma: 57, mesaj: 64, usd: 20.6 }, { k: "bs", okuma: 9, mesaj: 12, usd: 2.3 },
+    { k: "hp", okuma: 21, mesaj: 30, usd: 6.9 }, { k: "dk", okuma: 0, mesaj: 3, usd: 0.4 }];
   MV.saklama = function () { var x = MV.FIRMA.saklama || {}; return { yontem: MV.SAKLAMA[x.yontem] ? x.yontem : "kalsin", yer: x.yer || "", yil: Math.max(5, +x.yil || 5) }; };
   /* 201 (2026-09-29): arşive taşınan raporun künyesi sistemde kalır (r.arsiv = { yer, zaman }); dosyası arşivde, müşteri portalından kalkar,
      firma geri getirebilir. Künye ve PDF yeri tek üreticiden. */

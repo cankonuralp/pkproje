@@ -2171,6 +2171,13 @@ revizyon, alan kopyalama, hafif kusur devri, meslek eşleşme denetimi).
 - Emsal ürünler: https://opwire.app/iso-17020-periyodik-kontrol-yazilimi/ · https://17020muayene.vidco.com.tr/ · https://akuple.com/asansor-kontrol-yazilimi/ · https://ensyazilim.com/
 
 ## 11 · Değişiklik günlüğü
+- 2026-10-02 (218): **Firma ayarları › Yapay zekâ + Hesabım kişisel anahtar** (K1–K3'ün maketi; reisim: *"Müşterinin token ekleyeceği yeri
+  ekledin mi makete"*). Firma ayarlarında yeni bölüm: Kapalı/Açık (kapalı başlar) · açıkken KVKK yurt dışı aktarım uyarısı · API anahtarı
+  (parola alanı, `sk-ant-` biçim denetimi; kayıttan sonra yalnız `sk-ant-…` + son 4 hane görünür, Değiştir / Kaldır) · model (Opus 5.5 /
+  Sonnet 5.5, fiyatlarıyla) · kişi başı aylık sınır ($, boş = sınırsız) · "Anahtar girilmedi" uyarısı · bu ay kişi başına kullanım tablosu
+  (okuma, S.A.Y mesajı, harcama, sınır rozeti; kendi anahtarı olan "kendi hesabından"). Hesabım'da "Yapay zekâ anahtarım" yalnız firma
+  yapay zekâyı açtıysa görünür. Tam anahtar hiçbir yerde saklanmaz (localStorage dahil, kilitle). Ölçüm aracında liste çerçevesine ayarlar
+  ızgarasının kenarlı bölümü eklendi (tarihli gerekçe). Kilit: m1 etkileşim 3 yeni adım, m9 yeni durum.
 - 2026-10-02 (217): **Arka uç kararları K1–K6 kabul, K7–K8 kabul edilmedi** (§9 kırk altıncı tur eki). `ARKA-UC.md` başlığı ve karar tablosu
   işaretlendi (✔ / ✘), §4.6'dan 7 gün ve uzaktan silme, §9'dan probata faturalaması çıkarıldı; `09-SUNUCU-VE-VERI.md` G3'e yapay zekâ istisnası
   koşullarıyla (kapalı başlar, maskeleme, sunucudan, KVKK teyidi) ve kilit tarifiyle yazıldı. Kod yok.

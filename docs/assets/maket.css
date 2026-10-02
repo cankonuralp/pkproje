@@ -1041,6 +1041,9 @@ a.a-yuz:hover { border-color: var(--kenar-alan); background: var(--zemin); }
 .a-personel-belgeler li { display: flex; align-items: center; justify-content: space-between; gap: 12px; min-width: 0; }
 .a-personel-belgeler .a-hucre-metin { min-width: 0; overflow-wrap: anywhere; }
 .a-personel-belgeler .a-tus { flex: none; }
+/* Y1 (2026-10-02): Firma ayarları › Yapay zekâ — kayıtlı anahtarın izi, kullanım tablosu */
+.a-yz-anahtar { display: flex; align-items: center; gap: 8px; margin: 0 0 8px; }
+.a-tablo-yz .a-k-kisi { width: 32%; } .a-tablo-yz .a-k-okuma { width: 18%; } .a-tablo-yz .a-k-mesaj { width: 16%; } .a-tablo-yz .a-k-usd { width: 16%; } .a-tablo-yz .a-k-durum { width: 18%; }
 .a-tablo-uygunsuz .a-k-ekipman { width: 20%; } .a-tablo-uygunsuz .a-k-kusur { width: 32%; } .a-tablo-uygunsuz .a-k-rapor { width: 20%; }
 .a-tablo-uygunsuz .a-k-tarih { width: 12%; } .a-tablo-uygunsuz .a-k-durum { width: 16%; }
 

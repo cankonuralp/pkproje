@@ -9,7 +9,7 @@
 (function () {
   "use strict";
   var $ = MK.$, kacis = MK.kacis, ikon = MK.ikon, X = MK.eylem;
-  var H = { hata: {}, tel: null };
+  var H = { hata: {}, tel: null, yz: "", yzYaz: false };
   var ben = function () { return MV.kisi(MK.BEN); };
   var satir = function (dt, dd) { return '<div class="a-satir"><dt>' + dt + "</dt><dd>" + dd + "</dd></div>"; };
   function parola(id, etiket, ipucu, hata, oto) {
@@ -33,6 +33,17 @@
           parola("h-p1", "Yeni parola", "En az 10 karakter; harf ve rakam içerir.", h.p1, "new-password") +
           parola("h-p2", "Yeni parola (tekrar)", "Aynısını yazın.", h.p2, "new-password") + "</div>" +
         '<div class="a-eylem-cubugu a-eylem-sol">' + MK.tus({ eylem: "parola-degistir", ad: "Parolayı değiştir", ikon: "key-round" }) + "</div></section>" +
+      /* Y1 (2026-10-02, ARKA-UC.md K2): isteyen kullanıcı kendi Anthropic anahtarını girer, kendi hesabından harcar; yalnız firma yapay zekâyı
+         açtıysa; anahtar bir daha gösterilmez (yalnız son 4 hane) */
+      (MV.yz().acik ? '<section class="a-bolum" aria-labelledby="h-b-yz"><div class="a-alt-bas"><h2 class="a-alt-baslik" id="h-b-yz">Yapay zekâ anahtarım</h2></div>' +
+        '<p class="a-ipucu">İsteğe bağlı. Kendi Anthropic API anahtarınızı girerseniz fotoğraftan okuma ve S.A.Y sizin hesabınızdan harcar; girmezseniz firmanın anahtarı ve sınırı geçerli.</p>' +
+        (p.yzAnahtar && !H.yzYaz
+          ? '<p class="a-yz-anahtar">' + ikon("key-round", "a-ikon-kucuk") + '<span class="a-kod">' + kacis(p.yzAnahtar) + "</span> kayıtlı · harcama sizin hesabınızdan</p>" +
+            '<div class="a-eylem-cubugu a-eylem-sol">' + MK.tus({ eylem: "h-yz-degistir", ad: "Değiştir", ikon: "pencil", sinif: "a-tus-ikincil" }) + MK.tus({ eylem: "h-yz-kaldir", ad: "Kaldır", ikon: "trash-2", sinif: "a-tus-ikincil" }) + "</div>"
+          : '<div class="a-form a-form-tek">' + MK.alan({ id: "h-yz", etiket: "API anahtarı", hata: H.yz, sonuc: H.yz ? "" : (MV.yz().anahtar ? "Şu an firmanın anahtarı kullanılıyor." : "Firmanın anahtarı yok: kendi anahtarınız olmadan çalışmaz."),
+              girdi: '<input class="a-girdi" id="h-yz" type="password" autocomplete="off" spellcheck="false" maxlength="200" aria-describedby="h-yz-ipucu"' + (H.yz ? ' aria-invalid="true"' : "") + ">" }) + "</div>" +
+            '<div class="a-eylem-cubugu a-eylem-sol">' + MK.tus({ eylem: "h-yz-kaydet", ad: "Anahtarı kaydet", ikon: "check" }) + (p.yzAnahtar ? MK.tus({ eylem: "h-yz-vazgec", ad: "Vazgeç", sinif: "a-tus-ikincil" }) : "") + "</div>") +
+        "</section>" : "") +
       '<section class="a-bolum" aria-labelledby="h-b-oturum"><div class="a-alt-bas"><h2 class="a-alt-baslik" id="h-b-oturum">Oturum</h2></div>' +
         '<dl class="a-satirlar">' + satir("Adres", "ornek.probata.com.tr") + satir("Bu cihaz", "Açık oturum") + "</dl>" +
         '<div class="a-eylem-cubugu a-eylem-sol"><a class="a-tus a-tus-ikincil" href="' + MK.adres("giris", "#/") + '" data-cikis>' + ikon("log-out", "a-ikon-kucuk") + "Çıkış yap</a></div></section>";
@@ -48,6 +59,19 @@
     var ilk = ["p0", "p1", "p2"].filter(function (k) { return h[k]; })[0];
     if (ilk) { $("h-p0").value = p0; $("h-p1").value = p1; $("h-p2").value = p2; $("h-" + ilk).focus(); return; }   /* yazılanlar kalır */
     $("h-p0").focus(); MK.bildir("Parolanız değiştirildi. Öteki cihazlardaki oturumlar kapatıldı.");
+  };
+  X["h-yz-kaydet"] = function () {
+    var v = ($("h-yz") || {}).value || ""; v = v.trim();
+    if (!/^sk-ant-[A-Za-z0-9_-]{16,}$/.test(v)) { H.yz = v ? "Geçerli bir Anthropic API anahtarı değil (sk-ant- ile başlar)." : "Anahtarı yapıştırın."; ciz(); $("h-yz").focus(); return; }
+    H.yz = ""; H.yzYaz = false; ben().yzAnahtar = MV.anahtarIzi(v); v = "";   /* yalnız son 4 hane */
+    ciz(); document.querySelector('[data-eylem="h-yz-degistir"]').focus(); MK.bildir("Anahtarınız kaydedildi; harcama sizin hesabınızdan.");
+  };
+  X["h-yz-degistir"] = function () { H.yzYaz = true; H.yz = ""; ciz(); $("h-yz").focus(); };
+  X["h-yz-vazgec"] = function () { H.yzYaz = false; H.yz = ""; ciz(); document.querySelector('[data-eylem="h-yz-degistir"]').focus(); };
+  X["h-yz-kaldir"] = function () {
+    MK.onayla({ baslik: "Anahtarınızı kaldırın", metin: "Bundan sonra firmanın anahtarı ve sınırı geçerli olur.", tus: "Kaldır", tamam: function () {
+      delete ben().yzAnahtar; ciz(); $("h-yz").focus(); MK.bildir("Anahtarınız kaldırıldı; firmanın anahtarı kullanılacak.");
+    } });
   };
   document.addEventListener("change", function (e) {
     var t = e.target; if (!t.hasAttribute || !t.hasAttribute("data-hesap-tel")) return;

@@ -1,9 +1,9 @@
 {
  "maket": "m1",
- "tarih": "2026-10-01",
+ "tarih": "2026-10-02",
  "arac": "tools/olc-bulut.mjs --etkilesim (başsız tarayıcı, 1920 açık tema; gen verilen denemede o genişlik)",
- "toplam": 100,
- "gecen": 100,
+ "toplam": 103,
+ "gecen": 103,
  "denemeler": [
   {
    "ad": "İzin talepleri: formun PDF'i açılır, e-posta talep edene",
@@ -290,6 +290,27 @@
    "gen": 1920,
    "sayfa": "maket/personel.html",
    "hash": "#/roller",
+   "gecti": true
+  },
+  {
+   "ad": "Y1: Yapay zekâ başlangıçta kapalı; açılınca yurt dışı uyarısı; yanlış anahtar kaydedilmez; doğrusu yalnız son 4 hanesiyle görünür, tam anahtar tarayıcıda da saklanmaz (sayfa yenilense de)",
+   "gen": 1920,
+   "sayfa": "maket/firma-ayarlari.html",
+   "hash": "#/",
+   "gecti": true
+  },
+  {
+   "ad": "Y1: kişi başı sınır $10 olunca $20,60 harcayan Elif'te Doldu; yanlış sınır kaydedilmez; model Sonnet 5.5 seçilir",
+   "gen": 1920,
+   "sayfa": "maket/firma-ayarlari.html",
+   "hash": "#/",
+   "gecti": true
+  },
+  {
+   "ad": "Y1: Hesabım'da 'Yapay zekâ anahtarım' yalnız firma açtıysa; kişisel anahtar yalnız son 4 hanesiyle kaydedilir, sayfalar arası kalıcı",
+   "gen": 1920,
+   "sayfa": "maket/hesap.html",
+   "hash": "#/",
    "gecti": true
   },
   {

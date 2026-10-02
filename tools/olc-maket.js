@@ -110,7 +110,8 @@
   const pad = parseFloat(getComputedStyle(icEl).paddingLeft);
   r.icerik = Math.round(ic.width); r.liste = li ? Math.round(li.getBoundingClientRect().width) : null;
   /* 2026-09-24 (toplu maket, M6): liste form bölümünün (.a-form-bolum, kenarlı kart) içindeyse çerçeve bölümün İÇ genişliği */
-  const cerceve = li && li.closest(".a-adim-icerik, .a-form-bolum");
+  /* 2026-10-02 (Y1): Firma ayarları ızgarasındaki bölüm de kenarlı kart (.a-ayar-izgara > .a-bolum) → aynı kural */
+  const cerceve = li && li.closest(".a-adim-icerik, .a-form-bolum, .a-ayar-izgara > .a-bolum");
   const icGen = e => { const c = getComputedStyle(e); return e.clientWidth - parseFloat(c.paddingLeft) - parseFloat(c.paddingRight); };
   r.kenarFarki = li ? Math.round((cerceve ? icGen(cerceve) : ic.width - 2 * pad) - li.getBoundingClientRect().width) : null;
   const th = li && li.querySelector(".a-tablo thead");
