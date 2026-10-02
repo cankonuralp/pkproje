@@ -2183,6 +2183,13 @@ revizyon, alan kopyalama, hafif kusur devri, meslek eşleşme denetimi).
 - Emsal ürünler: https://opwire.app/iso-17020-periyodik-kontrol-yazilimi/ · https://17020muayene.vidco.com.tr/ · https://akuple.com/asansor-kontrol-yazilimi/ · https://ensyazilim.com/
 
 ## 11 · Değişiklik günlüğü
+- 2026-10-02 (223): **Z3 · Fotoğraftan okuma: topraklama ölçüm noktası + etiket plakası** (§9 kırk altıncı tur: *"sigorta topraklama noktası
+  vs yazarken fotoğraftan okuma"*; ARKA-UC K1, §5.2). Topraklama raporunda (5.1) "Fotoğraftan oku": Zx'i boş noktaların ölçü aleti ekranı okunur;
+  formatsız türlerde Ekipman bilgileri'nde "Etiketten oku": marka, model, seri no, imal yılı. Okunan değerler **öneri kartında** — emin olunanlar
+  "Önerileri uygula (n)" ile, emin olunmayan (imal yılı, bir Zx) tek tek "Uygula" ile yazılır; Vazgeç yazmaz; uygulanan "kaydedilmemiş değişiklik"
+  olur. Sigorta okuması dahil üç okuma da **yapay zekâ kapalıysa / anahtar yoksa okumaz**, nedenini söyler (elle giriş hep açık; K1: başlangıçta
+  kapalı) — eski sigorta denetimleri "yapay zekâ açık" adımıyla güncellendi. Her okuma kişinin bu ayki kullanımına yazılır (`MV.yzKullan`,
+  `MV.yzHazir` ortak; S.A.Y da bunları kullanır). Kilit: m8 etkileşim 3 yeni (eski kodda düşüyor), durum 2 yeni.
 - 2026-10-02 (222): **Z2 · S.A.Y saha asistanı makette** (§9 kırk altıncı tur + kırk yedinci tur "makete dökülecekler"; ARKA-UC K6, §5.3).
   Rapor eylem çubuğunun solunda "S.A.Y" düğmesi — yalnız firma yapay zekâyı açtıysa ve rapor düzenlenirken (Yeni / geri gönderilmiş; onaydaki,
   imzalı raporda yok). Panel masaüstünde sağda yan pencere (geniş ekranda rapor panel kadar daralır, Kaydet / Onaya gönder görünür kalır),

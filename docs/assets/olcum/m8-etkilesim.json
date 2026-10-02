@@ -2,8 +2,8 @@
  "maket": "m8",
  "tarih": "2026-10-02",
  "arac": "tools/olc-bulut.mjs --etkilesim (başsız tarayıcı, 1920 açık tema; gen verilen denemede o genişlik)",
- "toplam": 115,
- "gecen": 115,
+ "toplam": 118,
+ "gecen": 118,
  "denemeler": [
   {
    "ad": "Z2: S.A.Y düğmesi yalnız firma yapay zekâyı açtıysa ve düzenlenen raporda (onaydaki raporda yok)",
@@ -17,6 +17,27 @@
    "gen": 1920,
    "sayfa": "maket/rapor.html",
    "hash": "#/r/ET-1009",
+   "gecti": true
+  },
+  {
+   "ad": "Z3: yapay zekâ kapalıyken Fotoğraftan oku (sigorta) okumaz, nedenini söyler; açılınca okur ve okuma kişinin kullanımına yazılır",
+   "gen": 1920,
+   "sayfa": "maket/rapor.html",
+   "hash": "#/r/ET-1009",
+   "gecti": true
+  },
+  {
+   "ad": "Z3: etiketten oku — marka, model, seri öneri olarak düşer, uygulanmadan alana yazılmaz; Önerileri uygula yazar, emin olunmayan imal yılı tek tek; Vazgeç yazmaz",
+   "gen": 1920,
+   "sayfa": "maket/rapor.html",
+   "hash": "#/r/KP-1004",
+   "gecti": true
+  },
+  {
+   "ad": "Z3: topraklama — Zx'i boş noktalar fotoğraftan okunur (öneri), emin olunanlar toplu uygulanır, emin olunmayan tek tek; Vazgeç yazmaz",
+   "gen": 1920,
+   "sayfa": "maket/rapor.html",
+   "hash": "#/r/AT-1010",
    "gecti": true
   },
   {

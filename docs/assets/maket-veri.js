@@ -736,6 +736,19 @@
      (uygulamada sunucuda şifreli; ekranda bir daha gösterilmez). Kullanım sayıları UYDURMA, bu ay. */
   MV.YZ_MODEL = [["opus", "Claude Opus 5.5", "daha doğru · 1 milyon token: giriş $4, çıkış $20"], ["sonnet", "Claude Sonnet 5.5", "yarı fiyat · 1 milyon token: giriş $2, çıkış $10"]];
   MV.yz = function () { var x = MV.FIRMA.yz || {}; return { acik: !!x.acik, anahtar: x.anahtar || "", model: x.model === "sonnet" ? "sonnet" : "opus", sinir: x.sinir === "" ? "" : x.sinir != null ? x.sinir : 20 }; };
+  /* Z3 (2026-10-02): yapay zekâ kullanılabilir mi (kişi için) — boşsa hazır, doluysa nedeni (uyarı metni) */
+  MV.yzHazir = function (k) {
+    var z = MV.yz(), p = k && MV.kisi(k);
+    if (!z.acik) return "Yapay zekâ kapalı: firma yöneticisi Firma ayarları › Yapay zekâ'dan açar.";
+    if (!z.anahtar && !(p && p.yzAnahtar)) return "API anahtarı girilmedi (Firma ayarları › Yapay zekâ).";
+    return "";
+  };
+  /* kişinin bu ayki kullanımına bir okuma / mesaj (makette yaklaşık 2 sent) */
+  MV.yzKullan = function (k, alan) {
+    var l = MV.YZ_KULLANIM, x = l.filter(function (y) { return y.k === k; })[0];
+    if (!x) { x = { k: k, okuma: 0, mesaj: 0, usd: 0 }; l.push(x); }
+    x[alan]++; x.usd = Math.round((x.usd + 0.02) * 100) / 100; MV.YZ_KULLANIM = l.slice();
+  };
   MV.anahtarIzi = function (v) { return "sk-ant-…" + String(v).slice(-4); };
   MV.YZ_KULLANIM = [{ k: "mk", okuma: 42, mesaj: 118, usd: 17.4 }, { k: "ea", okuma: 57, mesaj: 64, usd: 20.6 }, { k: "bs", okuma: 9, mesaj: 12, usd: 2.3 },
     { k: "hp", okuma: 21, mesaj: 30, usd: 6.9 }, { k: "dk", okuma: 0, mesaj: 3, usd: 0.4 }];

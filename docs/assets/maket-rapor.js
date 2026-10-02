@@ -229,6 +229,22 @@
     if (oku) return satir(etiket, r[k] ? (saat ? MK.zamanYaz(r[k]) : MK.tarihNo(r[k])) : "-");
     return satir(etiket, MK.zaman({ id: id, ad: etiket, deger: r[k], saat: saat, tanim: id + "-ipucu" }) + (h ? '<p class="a-ipucu a-ipucu-uyari" id="' + id + '-ipucu">' + h + "</p>" : ""), id);
   };
+  /* ── FOTOĞRAFTAN OKUMA (Z3, 2026-10-02; reisim: "sigorta topraklama noktası vs yazarken fotoğraftan okuma"; ARKA-UC K1, §5.2): sigorta
+     (pano), topraklama ölçüm noktaları (ölçü aletinin ekranı), ekipman etiket plakası. Okunan değer ÖNERİ olarak düşer; emin olunanlar toplu,
+     emin olunmayanlar tek tek uygulanır; uygulanmayan rapora yazılmaz (§8.10). Yapay zekâ kapalıysa ya da anahtar yoksa okumaz, nedenini söyler
+     (elle giriş her zaman açık). Her okuma kişinin bu ayki kullanımına yazılır. */
+  var okuyabilir = function (r) {
+    var h = MV.yzHazir(r.kisi); if (h) { MK.bildir("Fotoğraftan okunamadı. " + h + " Değerleri elle girebilirsiniz."); return false; }
+    MV.yzKullan(r.kisi, "okuma"); return true;
+  };
+  function oneriKart(o) {   /* o: { id, baslik, satirlar: [{ ad, deger, dusuk, tek: { eylem, veri } }], uygula, vazgec } */
+    var n = o.satirlar.filter(function (x) { return !x.dusuk; }).length;
+    return '<div class="a-oneri-kart a-bolum-serit" id="' + o.id + '"><p class="a-oneri-bas">' + ikon("camera", "a-ikon-kucuk") + o.baslik + "</p>" +
+      '<ul class="a-oneri-liste">' + o.satirlar.map(function (x) {
+        return '<li><span class="a-oneri-ad">' + kacis(x.ad) + '</span><span class="a-oneri-sag"><span class="a-kod">' + kacis(x.deger) + "</span>" +
+          (x.dusuk ? rozet({ ad: "Emin değil", rozet: "a-rozet-bekliyor" }) + MK.tus({ eylem: x.tek.eylem, ad: "Uygula", sinif: "a-tus-ikincil", veri: x.tek.veri }) : rozet({ ad: "Öneri", rozet: "a-rozet-notr" })) + "</span></li>"; }).join("") + "</ul>" +
+      '<div class="a-oneri-tuslar">' + MK.tus({ eylem: o.vazgec, ad: "Vazgeç", sinif: "a-tus-ikincil" }) + (n ? MK.tus({ eylem: o.uygula, ad: "Önerileri uygula (" + n + ")", ikon: "check" }) : "") + "</div></div>";
+  }
   var metinAlan = function (r, oku, k, etiket, en, ek) {
     return satir(etiket, oku ? (kacis(r[k]) || "-") : MK.girdi({ id: "r-" + k, alan: k, deger: r[k], ek: ' maxlength="' + en + '"' + (ek || ""),
       hata: false }), oku ? null : "r-" + k);
@@ -369,7 +385,9 @@
     return metodHtml(r, oku) +
       '<h3 class="a-kriter-grup">' + n + ".1 · Çevrim empedansı ölçümleri</h3>" +
       (r.nokta.length ? '<div class="a-liste-kap">' + MK.tablo({ baslik: "Çevrim empedansı ölçümleri", sinif: "a-tablo-nokta", sutunlar: NOKTA, kayitlar: r.nokta }) + "</div>" : '<p class="a-bos-satir">Ölçüm noktası yok.</p>') +
-      (oku ? "" : '<div class="a-eylem-cubugu a-bolum-serit">' + MK.tus({ eylem: "nokta-ekle", ad: "Nokta ekle", ikon: "plus", sinif: "a-tus-ikincil" }) + "</div>") +
+      (oku ? "" : (r.noktaOneri && r.noktaOneri.length ? oneriKart({ id: "r-nokta-oneri", baslik: "Ölçü aletinin ekranından okunan Zx", uygula: "nokta-oneri-uygula", vazgec: "nokta-oneri-vazgec",
+          satirlar: r.noktaOneri.map(function (x) { return { ad: r.nokta[x.i].ad, deger: x.zx + " Ω", dusuk: x.dusuk, tek: { eylem: "nokta-oneri-tek", veri: { i: x.i } } }; }) }) : "") +
+        '<div class="a-eylem-cubugu a-bolum-serit">' + MK.tus({ eylem: "nokta-oku", ad: "Fotoğraftan oku", ikon: "camera", sinif: "a-tus-ikincil" }) + MK.tus({ eylem: "nokta-ekle", ad: "Nokta ekle", ikon: "plus", sinif: "a-tus-ikincil" }) + "</div>") +
       '<h3 class="a-kriter-grup">' + n + ".2 · RCD testleri</h3>" +
       (r.rcdler.length ? '<div class="a-liste-kap">' + MK.tablo({ baslik: "RCD testleri", sinif: "a-tablo-rcd", sutunlar: RCD, kayitlar: r.rcdler }) + "</div>" : '<p class="a-bos-satir">RCD yok.</p>') +
       (oku ? "" : '<div class="a-eylem-cubugu a-bolum-serit">' + MK.tus({ eylem: "rcd-ekle", ad: "RCD ekle", ikon: "plus", sinif: "a-tus-ikincil" }) + "</div>");
@@ -480,7 +498,11 @@
     /* 2 · EKİPMAN BİLGİLERİ elle girilir (reisim 2026-09-27: "otomatik girili gibi gözüküyor o kısım elle girilecek"); daha önce kontrol
        edilmiş ekipmanda son raporun değerleri başlangıç olarak gelir, değiştirilebilir; kod ve tür plandan. Formatlı türde alanlar formattan
        (2.1 ekipman detayları · 2.2 tespitler); marka, model, seri no formatta yok. */
-    S.ekipman = bolum(no("ekipman", 2), "r-b2", "Ekipman bilgileri", F ? ekipmanFormat(r, oku) : '<dl class="a-satirlar a-satirlar-form">' +
+    S.ekipman = bolum(no("ekipman", 2), "r-b2", "Ekipman bilgileri", F ? ekipmanFormat(r, oku) : (oku ? "" : '<div class="a-eylem-cubugu a-eylem-sol">' +
+        MK.tus({ eylem: "etiket-oku", ad: "Etiketten oku", ikon: "camera", sinif: "a-tus-ikincil" }) + "</div>" +
+        (r.etiket && r.etiket.length ? oneriKart({ id: "r-etiket-oneri", baslik: "Etiket plakasından okunan", uygula: "etiket-uygula", vazgec: "etiket-vazgec",
+          satirlar: r.etiket.map(function (x) { return { ad: x.ad, deger: x.v, dusuk: x.dusuk, tek: { eylem: "etiket-tek", veri: { k: x.k } } }; }) }) : "")) +
+        '<dl class="a-satirlar a-satirlar-form">' +
         satir("Kod", '<span class="a-kod">' + e.kod + "</span>") + satir("Ekipman türü", kacis(t.ad)) +
         /* 2026-09-27 (reisim: "metod kısmı olsun ama sadece ekipman türü eklerken belirlene"): raporda seçilmez, türden okunur */
         satir("Kontrol metodu", kacis(MV.metotYazi(t))) +
@@ -922,12 +944,52 @@
     MK.bildir(v.ad + " rapordan kaldırıldı; satırı boş kaldı.");
   };
   X["sigorta-oku"] = function () {
-    var r = aktif();
+    var r = aktif(); if (!okuyabilir(r)) return;
     r.pano = true;
     r.sigorta = SIGORTA.map(function (s) { return { no: s[0], devre: s[1], tip: s[2], akim: s[3], kutup: s[4], rcd: s[5], icu: s[4] > 1 ? "10" : "6", faz: "", npen: "", pe: "", ib: "", iz: "", id: "", td: "", guven: s[6] || "yuksek", durum: "oneri" }; });
     ciz(); var t = document.querySelector('[data-eylem="sigorta-oku"]'); if (t) t.focus();
     MK.bildir("Pano fotoğrafından " + r.sigorta.length + " sigorta okundu; öneriler onayınızı bekliyor.");
   };
+  /* Z3: etiket plakası — marka, model, seri no, imal yılı (imal yılı çoğu plakada silik: emin değil) */
+  var ETIKET = [["marka", "Marka"], ["model", "Model"], ["seri", "Seri no"], ["imal", "İmal yılı"]];
+  var odakla = function (sec) { var b = document.querySelector(sec); if (b) b.focus(); };
+  X["etiket-oku"] = function () {
+    var r = aktif(); if (!okuyabilir(r)) return;
+    r.etiket = ETIKET.map(function (x) { return { k: x[0], ad: x[1], v: String(r.e[x[0]] || ""), dusuk: x[0] === "imal" }; }).filter(function (x) { return x.v; });
+    ACIK["r-b2"] = true; ciz(); odakla('#r-etiket-oneri [data-eylem="etiket-uygula"]');
+    MK.bildir("Etiketten " + r.etiket.length + " bilgi okundu; uygulamadan rapora yazılmaz.");
+  };
+  var etiketYaz = function (r, l) { l.forEach(function (x) { r[x.k] = x.v; }); r.etiket = r.etiket.filter(function (x) { return l.indexOf(x) < 0; }); if (!r.etiket.length) r.etiket = null; degisti(r); };
+  X["etiket-uygula"] = function () {
+    var r = aktif(), l = r.etiket.filter(function (x) { return !x.dusuk; }); etiketYaz(r, l);
+    ciz(); odakla(r.etiket ? '#r-etiket-oneri [data-eylem="etiket-tek"]' : '[data-eylem="etiket-oku"]');
+    MK.bildir(l.map(function (x) { return x.ad; }).join(", ") + " rapora yazıldı." + (r.etiket ? " Emin olunmayanları tek tek kontrol edin." : ""));
+  };
+  X["etiket-tek"] = function (el) {
+    var r = aktif(), x = r.etiket.filter(function (y) { return y.k === el.dataset.k; })[0]; etiketYaz(r, [x]);
+    ciz(); odakla(r.etiket ? "#r-etiket-oneri button" : "#r-" + x.k); MK.bildir(x.ad + " rapora yazıldı: " + x.v + ".");
+  };
+  X["etiket-vazgec"] = function () { var r = aktif(); r.etiket = null; ciz(); odakla('[data-eylem="etiket-oku"]'); MK.bildir("Etiketten okunanlar uygulanmadı."); };
+  /* Z3: ölçüm noktaları — Zx'i boş noktaların ölçü aleti ekranı fotoğrafı; okunan Zx öneri (biri emin değil) */
+  X["nokta-oku"] = function () {
+    var r = aktif(); if (!okuyabilir(r)) return;
+    var bos = []; r.nokta.forEach(function (n, i) { if (!String(n.zx).trim()) bos.push(i); });
+    if (!bos.length) { MK.bildir("Zx'i boş ölçüm noktası yok; okunacak değer kalmadı."); return; }
+    r.noktaOneri = bos.map(function (i, j) { var f = r.F.noktalar[i]; return { i: i, zx: (f && f[3]) || "0," + (31 + (i * 7) % 40), dusuk: j === 1 }; });
+    ciz(); odakla('#r-nokta-oneri [data-eylem="nokta-oneri-uygula"], #r-nokta-oneri button');
+    MK.bildir(bos.length + " noktanın Zx değeri okundu; uygulamadan rapora yazılmaz.");
+  };
+  var noktaYaz = function (r, l) { l.forEach(function (x) { r.nokta[x.i].zx = x.zx; }); r.noktaOneri = r.noktaOneri.filter(function (x) { return l.indexOf(x) < 0; }); if (!r.noktaOneri.length) r.noktaOneri = null; degisti(r); };
+  X["nokta-oneri-uygula"] = function () {
+    var r = aktif(), l = r.noktaOneri.filter(function (x) { return !x.dusuk; }); noktaYaz(r, l);
+    ciz(); odakla(r.noktaOneri ? '#r-nokta-oneri [data-eylem="nokta-oneri-tek"]' : '[data-eylem="nokta-oku"]');
+    MK.bildir(l.length + " noktanın Zx değeri yazıldı." + (r.noktaOneri ? " Emin olunmayanı tek tek kontrol edin." : ""));
+  };
+  X["nokta-oneri-tek"] = function (el) {
+    var r = aktif(), x = r.noktaOneri.filter(function (y) { return y.i === +el.dataset.i; })[0]; noktaYaz(r, [x]);
+    ciz(); odakla(r.noktaOneri ? "#r-nokta-oneri button" : "#r-zx" + x.i); MK.bildir(r.nokta[x.i].ad + " · Zx " + x.zx + " Ω yazıldı.");
+  };
+  X["nokta-oneri-vazgec"] = function () { var r = aktif(); r.noktaOneri = null; ciz(); odakla('[data-eylem="nokta-oku"]'); MK.bildir("Okunan Zx değerleri uygulanmadı."); };
   X["sigorta-onayla"] = function () {
     var r = aktif(), n = 0; r.sigorta.forEach(function (x) { if (x.durum !== "onayli" && x.guven !== "dusuk") { x.durum = "onayli"; n++; } });
     ciz("r-b6-b"); MK.bildir(n + " öneri onaylandı; emin olunmayan satırlar tek tek kontrol edilir.");

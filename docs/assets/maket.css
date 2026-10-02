@@ -957,6 +957,14 @@ a.a-yuz:hover { border-color: var(--kenar-alan); background: var(--zemin); }
 /* rapor tuşları (2026-09-29, reisim: "bir barın içinde gibi değil bağımsız dursunlar"): çubuk yok — altta yapışkan, her tuş kendi gölgesiyle */
 .a-rapor-eylem { position: sticky; bottom: 16px; z-index: 10; display: flex; justify-content: flex-end; gap: 12px; margin: 16px 0 0; pointer-events: none; }
 .a-rapor-eylem .a-tus { pointer-events: auto; box-shadow: var(--golge-2); }
+/* FOTOĞRAFTAN OKUMA ÖNERİSİ (Z3, 2026-10-02): okunan değerler kartta; uygulanmadan rapora yazılmaz */
+.a-oneri-kart { padding: 12px 14px; border: 1px solid var(--kenar-alan); border-radius: var(--r-orta); background: var(--zemin2); }
+.a-oneri-bas { display: flex; align-items: center; gap: 6px; margin: 0 0 8px; font-weight: 600; }
+.a-oneri-liste { list-style: none; margin: 0; padding: 0; display: grid; gap: 6px; }
+.a-oneri-liste li { display: flex; align-items: center; flex-wrap: wrap; gap: 6px 10px; }
+.a-oneri-ad { flex: 1 1 auto; min-width: 0; }
+.a-oneri-sag { display: flex; align-items: center; gap: 8px; margin-left: auto; white-space: nowrap; }   /* değer + rozet (+ Uygula) birlikte; sığmazsa alt satıra, sağa */
+.a-oneri-tuslar { display: flex; justify-content: flex-end; flex-wrap: wrap; gap: 8px; margin-top: 10px; }
 /* S.A.Y (Z2, 2026-10-02): düğme eylem çubuğunun solunda; panel masaüstü / tablette sağda yan pencere (üst çubuğun altında), telefonda tam ekran */
 .a-rapor-eylem .a-say-ac { margin-right: auto; }
 .a-say {

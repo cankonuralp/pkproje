@@ -12,16 +12,12 @@
   var S = { acik: false, mesaj: [], n: 0 };   /* mesaj: { kim: "ben" | "say", html, oneri?: { id, deger, ad, durum } } */
   var HIZLI = [["eksik", "Eksik alanlar neler?"], ["derece", "Kusur derecesi öner"], ["sonuc", "Sonuç ne olmalı?"]];
 
-  var anahtarVar = function () { var p = MK.BEN && MV.kisi(MK.BEN); return !!MV.yz().anahtar || !!(p && p.yzAnahtar); };
+  var anahtarVar = function () { return !MV.yzHazir(MK.BEN); };
   function sinirDoldu() {
     var z = MV.yz(), p = MK.BEN && MV.kisi(MK.BEN), k = MV.YZ_KULLANIM.filter(function (x) { return x.k === MK.BEN; })[0];
     return !!(k && !(p && p.yzAnahtar) && z.sinir !== "" && +z.sinir > 0 && k.usd >= +z.sinir);
   }
-  function sayac() {   /* bu ayki kullanım: mesaj + yaklaşık harcama (makette sabit 2 sent) */
-    var l = MV.YZ_KULLANIM, k = l.filter(function (x) { return x.k === MK.BEN; })[0];
-    if (!k) { k = { k: MK.BEN, okuma: 0, mesaj: 0, usd: 0 }; l.push(k); }
-    k.mesaj++; k.usd = Math.round((k.usd + 0.02) * 100) / 100; MV.YZ_KULLANIM = l.slice();
-  }
+  var sayac = function () { MV.yzKullan(MK.BEN, "mesaj"); };   /* bu ayki kullanım: mesaj + yaklaşık harcama */
 
   /* panel kabukta bir kez kurulur (rapor yeniden çizilince silinmesin) */
   var kap = document.createElement("aside");
