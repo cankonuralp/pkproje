@@ -278,8 +278,8 @@
   }
 
   /* özlük dosyası (40): kişinin belgeleri; yalnız firma yöneticisi görür (KVKK: özlük bilgisi). Eğitim sertifikaları Eğitimler'de. */
-  var BELGE_TUR = MV.OZLUK_TUR;   /* P3 (2026-10-01): tür listesi ve özlük dosyası ortak veride (müşteri panelinde izinli belgeler de buradan) */
-  var belgeAd = function (k) { return BELGE_TUR.filter(function (x) { return x[0] === k; })[0][1]; };
+  /* P3 (2026-10-01): tür listesi ve özlük dosyası ortak veride (müşteri panelinde izinli belgeler de buradan); Z5: firmanın eklediği türler dahil */
+  var belgeAd = function (k) { return MV.ozlukTur().filter(function (x) { return x[0] === k; })[0][1]; };
   var ozluk = MV.ozluk;
   var OZLUK_SUTUN = [
     { k: "belge", baslik: "Belge", kart: "ust", sira: 1, hucre: function (b) {
@@ -533,7 +533,7 @@
   function belgeCiz(odak) {
     var p = MV.kisi(B.kisi);
     $("a-belge-govde").innerHTML = '<p class="a-pencere-ozet"><b>' + kacis(p.ad) + "</b> · özlük dosyası</p>" + '<div class="a-form">' +
-      MK.alan({ id: "b-tur", etiket: "Belge", zorunlu: true, genis: true, girdi: MK.secim({ id: "b-tur", ad: "Belge", deger: B.tur, secenekler: BELGE_TUR, ipucu: "Belge seçin" }) }) +
+      MK.alan({ id: "b-tur", etiket: "Belge", zorunlu: true, genis: true, girdi: MK.secim({ id: "b-tur", ad: "Belge", deger: B.tur, secenekler: MV.ozlukTur(), ipucu: "Belge seçin" }) }) +
       MK.alan({ id: "b-aciklama", etiket: "Açıklama", genis: true, ipucu: "İsteğe bağlı (ör. yenileme tarihi).", girdi: MK.girdi({ id: "b-aciklama", deger: B.aciklama, ek: ' maxlength="80"' }) }) +
       '<div class="a-alan-grup a-alan-genis"><p class="a-etiket">Dosya <span class="a-zorunlu">zorunlu</span></p>' +
         '<div class="a-dosya-sec" id="b-dosya">' + (B.dosya ? MK.dosyaAlan({ ad: B.dosya, degistir: "dosya-sec", sil: "belge-dosya-kaldir" }) : MK.tus({ eylem: "dosya-sec", ad: "Dosya seç", ikon: "file-plus", sinif: "a-tus-ikincil" })) + "</div>" +

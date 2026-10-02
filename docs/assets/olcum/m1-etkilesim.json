@@ -2,8 +2,8 @@
  "maket": "m1",
  "tarih": "2026-10-02",
  "arac": "tools/olc-bulut.mjs --etkilesim (başsız tarayıcı, 1920 açık tema; gen verilen denemede o genişlik)",
- "toplam": 104,
- "gecen": 104,
+ "toplam": 106,
+ "gecen": 106,
  "denemeler": [
   {
    "ad": "İzin talepleri: formun PDF'i açılır, e-posta talep edene",
@@ -399,6 +399,20 @@
   },
   {
    "ad": "Z1: değişiklik bölümün Kaydet'ine kadar kaydedilmez (başlıkta Kaydedilmedi + Kaydet); başka bölüm kaydedilince taslak durur; Vazgeç kayıtlı değere döner",
+   "gen": 1920,
+   "sayfa": "maket/firma-ayarlari.html",
+   "hash": "#/",
+   "gecti": true
+  },
+  {
+   "ad": "Z5: Belge türü ekle — boş ad ve var olan ad (diploma) eklenmez; Sürücü belgesi (kişisel veri) listeye kapalı eklenir, işaretlenip kaydedilince KVKK uyarısı; Personel'de özlük belgesi türü olarak seçilir (sayfalar arası)",
+   "gen": 1920,
+   "sayfa": "maket/firma-ayarlari.html",
+   "hash": "#/",
+   "gecti": true
+  },
+  {
+   "ad": "Z5: eklenen tür, o türde yüklü belge varken kaldırılamaz (söyler); belge yokken onayla kaldırılır, müşteriye açık listeden de düşer",
    "gen": 1920,
    "sayfa": "maket/firma-ayarlari.html",
    "hash": "#/",

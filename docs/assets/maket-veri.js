@@ -1022,6 +1022,10 @@
      kayıt belgesi + İSG eğitim sertifikaları; kimlik, sağlık raporu, iş sözleşmesi kapalı (KVKK: özel nitelikli / özlük bilgisi). */
   MV.OZLUK_TUR = [["is", "İş sözleşmesi"], ["diploma", "Diploma"], ["oda", "Oda kaydı"], ["ekipnet", "EKİPNET kayıt belgesi"], ["kimlik", "Kimlik belgesi"],
     ["saglik", "Sağlık raporu"], ["diger", "Diğer"]];
+  /* Z5 (2026-10-02, reisim: "eklenmiyorsa eklensin"): firmanın eklediği belge türleri (Firma ayarları) — { k: "ek1", ad, kisisel } ; özlük
+     belgesi yüklerken (Personel) ve müşteriye açık belgeler listesinde kendiliğinden çıkar. "Diğer" hep sonda. */
+  MV.belgeTurEk = function () { return MV.FIRMA.belgeTurEk || []; };
+  MV.ozlukTur = function () { var t = MV.OZLUK_TUR; return t.slice(0, -1).concat(MV.belgeTurEk().map(function (x) { return [x.k, x.ad]; }), [t[t.length - 1]]); };
   MV.ozluk = function (p) {
     if (!p.ozluk) {   /* örnek: işe girişte iş sözleşmesi + kaydında var olan mesleki belgeler (tarih işe başlama) */
       p.ozluk = [{ tur: "is", tarih: p.basla, dosya: "is-sozlesmesi.pdf" }];
@@ -1030,13 +1034,16 @@
     return p.ozluk;
   };
   /* müşteriye açılabilecek belge türleri: özlük türleri + eğitim sertifikaları + ekipman atama belgesi; hassas olanlar işaretli */
-  MV.MUSTERI_BELGE_TUR = [["ekipnet", "EKİPNET kayıt belgesi"], ["diploma", "Diploma"], ["oda", "Oda kaydı"], ["atama", "Ekipman atama belgesi"]]
-    .concat(MV.EGITIM_TURLERI.map(function (t) { return ["eg:" + t.k, t.ad + " sertifikası"]; }))
-    .concat([["kimlik", "Kimlik belgesi", true], ["saglik", "Sağlık raporu", true], ["is", "İş sözleşmesi", true], ["diger", "Diğer", true]]);
+  MV.musteriBelgeTur = function () {
+    return [["ekipnet", "EKİPNET kayıt belgesi"], ["diploma", "Diploma"], ["oda", "Oda kaydı"], ["atama", "Ekipman atama belgesi"]]
+      .concat(MV.EGITIM_TURLERI.map(function (t) { return ["eg:" + t.k, t.ad + " sertifikası"]; }))
+      .concat(MV.belgeTurEk().map(function (x) { return [x.k, x.ad, !!x.kisisel, true]; }))   /* 4. öğe: firmanın eklediği */
+      .concat([["kimlik", "Kimlik belgesi", true], ["saglik", "Sağlık raporu", true], ["is", "İş sözleşmesi", true], ["diger", "Diğer", true]]);
+  };
   MV.musteriBelgeIzni = function () { return MV.FIRMA.musteriBelge || ["ekipnet", "eg:isg", "eg:yuksek", "eg:ilkyardim", "eg:elektrik", "eg:yangin"]; };
   /* kişinin müşteriye açık belgeleri: { ad, dosya, tarih, gecerli (eğitimde tekrar tarihi) } */
   MV.musteriyeAcikBelgeler = function (p) {
-    var izin = MV.musteriBelgeIzni(), ad = function (k) { return MV.MUSTERI_BELGE_TUR.filter(function (x) { return x[0] === k; })[0][1]; }, l = [];
+    var izin = MV.musteriBelgeIzni(), ad = function (k) { return MV.musteriBelgeTur().filter(function (x) { return x[0] === k; })[0][1]; }, l = [];
     MV.ozluk(p).forEach(function (b) { if (izin.indexOf(b.tur) >= 0 && b.dosya) l.push({ k: b.tur, ad: ad(b.tur) + (b.aciklama ? " · " + b.aciklama : ""), dosya: b.dosya, tarih: b.tarih }); });
     if (izin.indexOf("atama") >= 0) MV.ATAMALAR.filter(function (a) { return a.k === p.id && a.dosya; }).forEach(function (a) { l.push({ k: "atama", ad: "Ekipman atama belgesi · " + MV.tur(a.tur).ad, dosya: a.dosya, tarih: a.tarih }); });
     MV.egitimleri(p.id).forEach(function (x) { if (izin.indexOf("eg:" + x.k) >= 0 && x.belge) l.push({ k: "eg:" + x.k, ad: ad("eg:" + x.k), dosya: MV.egitimBelgeAdi(x), tarih: x.tarih, gecerli: x.tekrar }); });

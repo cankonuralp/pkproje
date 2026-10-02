@@ -1484,6 +1484,9 @@ a.a-yuz:hover { border-color: var(--kenar-alan); background: var(--zemin); }
 /* Z1: kaydedilmemiş değişikliği olan bölümün başlığında not + Vazgeç + Kaydet (başlığın sağında; sığmazsa alt satıra iner) */
 .a-ayar-kaydet { align-items: center; }
 .a-ayar-kaydet-not { color: var(--uyari-yazi); font-size: var(--boy-kucuk); font-weight: 600; }
+/* Z5: firmanın eklediği belge türü satırı — kutu solda, Kaldır sağda; ekleme formu listenin altında */
+.a-belge-ek-satir { display: flex; align-items: center; justify-content: space-between; gap: 8px; }
+.a-belge-ekle { margin-top: 12px; }
 .a-ayar-izgara .a-ayar-fiyat { grid-template-columns: repeat(auto-fill, minmax(min(100%, 200px), 1fr)); }
 .a-ayar-nav-liste { list-style: none; margin: 0; padding: 0; display: grid; gap: 2px; }
 .a-ayar-nav-oge { display: flex; align-items: center; min-height: 36px; padding: 0 12px; border-radius: var(--r-orta); color: var(--yazi2); text-decoration: none; font-weight: 600; }

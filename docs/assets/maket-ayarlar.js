@@ -221,18 +221,52 @@
   };
   /* ── MÜŞTERİYE AÇIK PERSONEL BELGELERİ (P3, 2026-10-01; reisim: "o müşteriye giden muayene personelinin firmanın izin verdiği belgelerini
      görür (ekipnet belgesi isg belgeleri vs)"): müşteri panelinde "Muayene personeli" sekmesinde yalnız işaretli türler görünür ───────── */
+  /* Z5 (2026-10-02, reisim: "bu kısımda eğer ben bir belge türü eklersem listeye ekleniyor mu" · "eklenmiyorsa eklensin"): "Belge türü ekle"
+     firmaya yeni özlük belge türü ekler; Personel'de belge yüklerken seçilir, burada müşteriye açılabilir (başlangıçta kapalı). Kişisel veri
+     işaretlenirse açılınca KVKK uyarısı. Kaldır: yalnız o türde yüklü belge yoksa. Ekleme ve kaldırma tuşla, hemen (taslağa girmez). */
+  var BT = { ac: false, hata: "", ad: "", kisisel: false };
+  var btKullanim = function (k) { return MV.PERSONEL.filter(function (p) { return MV.ozluk(p).some(function (b) { return b.tur === k; }); }).length; };
   function personelBelgeCiz() {
-    var izin = MV.musteriBelgeIzni(), hassas = izin.filter(function (k) { return MV.MUSTERI_BELGE_TUR.some(function (x) { return x[0] === k && x[2]; }); });
+    var TUR = MV.musteriBelgeTur(), izin = MV.musteriBelgeIzni(), hassas = izin.filter(function (k) { return TUR.some(function (x) { return x[0] === k && x[2]; }); });
     return '<section class="a-bolum" aria-labelledby="a-b-mbelge"><div class="a-alt-bas"><h2 class="a-alt-baslik" id="a-b-mbelge">Müşteriye açık personel belgeleri</h2>' +
         '<span class="a-sayac"><b>' + izin.length + "</b> tür</span></div>" +
       '<p class="a-ipucu">Müşteri panelinde "Muayene personeli" sekmesinde, o müşteriye giden muayene personelinin yalnız işaretli belgeleri görünür.</p>' +
-      '<fieldset class="a-disa-bolumler"><legend class="a-gizli">Müşteriye açık belge türleri</legend>' + MV.MUSTERI_BELGE_TUR.map(function (x) {
-        return '<label class="a-onay-kutusu"><input type="checkbox" data-mbelge="' + x[0] + '"' + (izin.indexOf(x[0]) >= 0 ? " checked" : "") + "><span>" + kacis(x[1]) +
-          (x[2] ? ' <span class="a-alt-satir">kişisel veri</span>' : "") + "</span></label>"; }).join("") + "</fieldset>" +
-      (hassas.length ? MK.serit("uyari", "triangle-alert", "Kişisel veri içeren belge müşteriye açık: " + hassas.map(function (k) { return MV.MUSTERI_BELGE_TUR.filter(function (x) { return x[0] === k; })[0][1]; }).join(", ") +
+      '<fieldset class="a-disa-bolumler"><legend class="a-gizli">Müşteriye açık belge türleri</legend>' + TUR.map(function (x) {
+        var kutu = '<label class="a-onay-kutusu"><input type="checkbox" data-mbelge="' + x[0] + '"' + (izin.indexOf(x[0]) >= 0 ? " checked" : "") + "><span>" + kacis(x[1]) +
+          (x[2] || x[3] ? ' <span class="a-alt-satir">' + [x[3] ? "firmanın eklediği" : "", x[2] ? "kişisel veri" : ""].filter(Boolean).join(" · ") + "</span>" : "") + "</span></label>";
+        return !x[3] ? kutu : '<div class="a-belge-ek-satir">' + kutu + MK.tus({ eylem: "bt-kaldir", ad: "Kaldır", ikon: "x", sinif: "a-tus-ikincil", veri: { k: x[0] } }) + "</div>"; }).join("") + "</fieldset>" +
+      (hassas.length ? MK.serit("uyari", "triangle-alert", "Kişisel veri içeren belge müşteriye açık: " + hassas.map(function (k) { return TUR.filter(function (x) { return x[0] === k; })[0][1]; }).join(", ") +
         ". Personelin açık rızası gerekebilir (KVKK); karar firmanın.") : "") +
+      (BT.ac ? '<div class="a-form a-belge-ekle">' +
+          MK.alan({ id: "ay-bt-ad", etiket: "Yeni belge türü", genis: true, hata: BT.hata, sonuc: BT.hata ? "" : "Personel'de özlük belgesi yüklerken seçilir; müşteriye açmak için listede işaretleyin.",
+            girdi: MK.girdi({ id: "ay-bt-ad", deger: BT.ad, hata: BT.hata, ek: ' maxlength="60"' }) }) +
+          '<label class="a-onay-kutusu a-alan-genis"><input type="checkbox" id="ay-bt-kisisel"' + (BT.kisisel ? " checked" : "") + "><span>Kişisel veri içerir (KVKK)</span></label>" +
+          '<div class="a-eylem-cubugu a-eylem-sol a-alan-genis">' + MK.tus({ eylem: "bt-vazgec", ad: "Vazgeç", sinif: "a-tus-ikincil" }) + MK.tus({ eylem: "bt-ekle-kaydet", ad: "Türü ekle", ikon: "check" }) + "</div></div>"
+        : '<div class="a-eylem-cubugu a-eylem-sol">' + MK.tus({ eylem: "bt-ac", ad: "Belge türü ekle", ikon: "plus", sinif: "a-tus-ikincil" }) + "</div>") +
       "</section>";
   }
+  X["bt-ac"] = function () { BT = { ac: true, hata: "", ad: "", kisisel: false }; ayarCiz(); $("ay-bt-ad").focus(); };
+  X["bt-vazgec"] = function () { BT.ac = false; ayarCiz(); document.querySelector('[data-eylem="bt-ac"]').focus(); };
+  X["bt-ekle-kaydet"] = function () {
+    var ad = ($("ay-bt-ad").value || "").trim(), kis = $("ay-bt-kisisel").checked, kk = function (v) { return v.toLocaleLowerCase("tr"); };
+    BT.ad = ad; BT.kisisel = kis;
+    BT.hata = !ad ? "Türün adını yazın." : MV.musteriBelgeTur().concat(MV.ozlukTur()).some(function (x) { return kk(x[1]) === kk(ad) || kk(x[1]) === kk(ad + " sertifikası"); }) ? "Bu adla bir belge türü zaten var." : "";
+    if (BT.hata) { ayarCiz(); $("ay-bt-ad").focus(); return; }
+    var n = 1; while (MV.belgeTurEk().some(function (x) { return x.k === "ek" + n; })) n++;
+    MV.FIRMA.belgeTurEk = MV.belgeTurEk().concat([{ k: "ek" + n, ad: ad, kisisel: kis }]); BT = { ac: false, hata: "", ad: "", kisisel: false };
+    ayarCiz(); document.querySelector('[data-mbelge="ek' + n + '"]').focus();
+    MK.bildir(ad + " eklendi; Personel'de belge yüklerken seçilebilir. Müşteriye açmak için işaretleyip kaydedin.");
+  };
+  X["bt-kaldir"] = function (el) {
+    var k = el.dataset.k, x = MV.belgeTurEk().filter(function (y) { return y.k === k; })[0], n = btKullanim(k);
+    if (n) { MK.bildir(x.ad + " kaldırılamaz: " + n + " personelde bu türde yüklü belge var."); el.focus(); return; }
+    MK.onayla({ baslik: "Belge türünü kaldır", metin: "<b>" + kacis(x.ad) + "</b> listeden ve müşteriye açık belgelerden kalkar.", tus: "Kaldır", tamam: function () {
+      MV.FIRMA.belgeTurEk = MV.belgeTurEk().filter(function (y) { return y.k !== k; });
+      if (MV.FIRMA.musteriBelge) MV.FIRMA.musteriBelge = MV.FIRMA.musteriBelge.filter(function (y) { return y !== k; });
+      if (TS["a-b-mbelge"]) delete TS["a-b-mbelge"]['input[data-mbelge="' + k + '"]'];
+      ayarCiz(); document.querySelector('[data-eylem="bt-ac"]').focus(); MK.bildir(x.ad + " kaldırıldı.");
+    } });
+  };
   var bulutYaz = function (d) { MV.FIRMA.bulut = Object.assign({}, MV.FIRMA.bulut, d); };
   X["bulut-bagla"] = function () {
     /* makette taklit: uygulamada sağlayıcının giriş penceresi açılır, izin verilince geri dönülür */
@@ -400,9 +434,9 @@
       MK.bildir(sv === "" ? "Kişi başı sınır kaldırıldı." : "Kişi başı aylık sınır $" + sv.replace(".", ",") + "."); return;
     }
     if (t.dataset && t.dataset.mbelge) {   /* P3: müşteriye açık personel belgesi türü */
-      var mb = MV.musteriBelgeIzni().slice(), k = t.dataset.mbelge, ad = MV.MUSTERI_BELGE_TUR.filter(function (x) { return x[0] === k; })[0][1];
+      var mb = MV.musteriBelgeIzni().slice(), k = t.dataset.mbelge, ad = MV.musteriBelgeTur().filter(function (x) { return x[0] === k; })[0][1];
       if (t.checked && mb.indexOf(k) < 0) mb.push(k); else if (!t.checked) mb = mb.filter(function (x) { return x !== k; });
-      MV.FIRMA.musteriBelge = MV.MUSTERI_BELGE_TUR.map(function (x) { return x[0]; }).filter(function (x) { return mb.indexOf(x) >= 0; });
+      MV.FIRMA.musteriBelge = MV.musteriBelgeTur().map(function (x) { return x[0]; }).filter(function (x) { return mb.indexOf(x) >= 0; });
       ayarCiz(); var c = document.querySelector('[data-mbelge="' + k + '"]'); if (c) c.focus();
       MK.bildir(ad + (t.checked ? " müşterilere açıldı." : " müşterilere kapatıldı.")); return;
     }
@@ -463,7 +497,7 @@
      taslak alanlara geri yazılır. Aç / kapa ile alan açan seçimler (yapay zekâ, mesai, arşiv) taslakta da alanlarını gösterir.
      Taslağa girmeyenler: dışa aktarılacak bölüm seçimi (Dışa aktar tuşu var), API anahtarı (kendi tuşu var), eylem tuşları. ─────── */
   var TS = {};
-  var muaf = function (t) { return t.dataset.disa != null || t.id === "ay-yz-anahtar" || !t.closest("#a-ayarlar"); };
+  var muaf = function (t) { return t.dataset.disa != null || t.id === "ay-yz-anahtar" || !!t.closest(".a-belge-ekle") || !t.closest("#a-ayarlar"); };
   var YENIDEN = ["data-yz-acik", "data-mesai-acik", "data-saklama"];   /* alan açıp kapatan seçimler: taslakta da yeniden çizilir */
   function secici(t) {
     if (t.type === "radio") return 'input[name="' + t.name + '"]';

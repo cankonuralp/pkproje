@@ -2183,6 +2183,11 @@ revizyon, alan kopyalama, hafif kusur devri, meslek eşleşme denetimi).
 - Emsal ürünler: https://opwire.app/iso-17020-periyodik-kontrol-yazilimi/ · https://17020muayene.vidco.com.tr/ · https://akuple.com/asansor-kontrol-yazilimi/ · https://ensyazilim.com/
 
 ## 11 · Değişiklik günlüğü
+- 2026-10-02 (220): **Z5 · Belge türü ekle** (§9 kırk yedinci tur; reisim: *"eklenmiyorsa eklensin"*). Firma ayarları › Müşteriye açık personel
+  belgeleri'nde "Belge türü ekle": ad + "kişisel veri içerir"; boş ya da var olan ad eklenmez (alanın altında söylenir). Eklenen tür listeye
+  "firmanın eklediği" notuyla, müşteriye kapalı düşer; Personel'de özlük belgesi yüklerken tür olarak seçilir; kişisel veri işaretliyse
+  müşteriye açılınca KVKK uyarısı. Kaldır: o türde yüklü belge varken olmaz (kaç personelde olduğunu söyler), yoksa onayla. Tür listeleri
+  sabit değil, firmanın eklediklerinden üretilir (`MV.ozlukTur`, `MV.musteriBelgeTur`). Kilit: m1 etkileşim 2 yeni denetim (eski kodda düşüyor).
 - 2026-10-02 (219): **Z1 · Firma ayarları: boşluksuz yerleşim + bölüm başına Kaydet** (§9 kırk yedinci tur). Bölümler satırlı ızgara yerine
   sütunlu yerleşimde: her bölüm kendi sütununda üsttekinin hemen altında; uzun "Müşteriye açık personel belgeleri"nin yanında "Verileri dışa
   aktar" artık aşağıda kalmıyor (fiyat listesi, sabit giderler yine tam genişlik). Değişiklik artık hemen kaydedilmez: bölümün taslağına yazılır,
