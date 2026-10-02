@@ -17,7 +17,7 @@
     "madde": 17,
     "kesikAd": 0,
     "kucukMadde": 0,
-    "menuGorunur": 691,
+    "menuGorunur": 643,
     "menuIcerik": 984,
     "yatayTasma": 0,
     "sonMaddeAcilir": true,
@@ -31,7 +31,7 @@
     "madde": 17,
     "kesikAd": 0,
     "kucukMadde": 0,
-    "menuGorunur": 691,
+    "menuGorunur": 643,
     "menuIcerik": 984,
     "yatayTasma": 0,
     "sonMaddeAcilir": true,
@@ -4550,8 +4550,8 @@
    "eksikIkon": 0,
    "tusY": 44,
    "tusGen": [
-    351,
-    351
+    309,
+    309
    ],
    "satirY": null,
    "birincil": null,
@@ -4588,8 +4588,8 @@
    "eksikIkon": 0,
    "tusY": 44,
    "tusGen": [
-    351,
-    351
+    309,
+    309
    ],
    "satirY": null,
    "birincil": null,

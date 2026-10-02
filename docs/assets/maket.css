@@ -930,8 +930,11 @@ a.a-yuz:hover { border-color: var(--kenar-alan); background: var(--zemin); }
 .a-kriter-no { flex: none; min-width: 20px; white-space: nowrap; color: var(--yazi2); font-variant-numeric: tabular-nums; }
 .a-kriter-cevap { min-width: 0; }
 .a-madde-bilgi-tus { margin: -10px 0; vertical-align: middle; color: var(--yazi2); }   /* madde açıklaması (214); dokunma alanı tuş boyu, satırı büyütmez; sol eksi pay yok, simge metinden ≥ 9 px uzak (O1) */
-.a-madde-bilgi { grid-column: 1 / -1; display: grid; gap: 4px; margin: 0; padding: 8px 12px; background: var(--bilgi-zemin); color: var(--bilgi-yazi); border-radius: var(--r-orta); }
-.a-madde-bilgi p { margin: 0; } .a-madde-bilgi .a-alt-satir { color: inherit; }
+/* AA6/AA7 (2026-10-02): madde açıklaması pencerede; referans standart bağlantı gibi, basınca firmanın yüklediği standart açılır */
+.a-standart-liste { display: grid; gap: 6px; }
+.a-standart-bag { display: inline-flex; align-items: center; gap: 8px; min-height: var(--tus-y); padding: 0; border: 0; background: none; color: var(--onay-yazi); font: inherit; text-align: left; text-decoration: underline; text-underline-offset: 3px; cursor: pointer; }
+.a-standart-bag b { font-weight: 700; }
+.a-standart-satir { vertical-align: middle; }   /* metot satırında; dokunma yüksekliği tuş boyu */
 .a-kriter-cevap-foto { display: flex; align-items: center; gap: 6px; }   /* "Uygun değil" maddede kamera simgesi seçimin solunda (213) */
 .a-kriter-cevap-foto > .a-secim { flex: 1 1 auto; min-width: 0; }
 .a-kusur-foto-tus[aria-invalid="true"] { color: var(--hata-yazi); border: 1px solid var(--hata-yazi); }

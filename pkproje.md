@@ -2206,6 +2206,14 @@ revizyon, alan kopyalama, hafif kusur devri, meslek eşleşme denetimi).
 - Emsal ürünler: https://opwire.app/iso-17020-periyodik-kontrol-yazilimi/ · https://17020muayene.vidco.com.tr/ · https://akuple.com/asansor-kontrol-yazilimi/ · https://ensyazilim.com/
 
 ## 11 · Değişiklik günlüğü
+- 2026-10-02 (226): **AA6 + AA7 + AA9 · Rapor: standart açılır, tek toplu tuş, madde açıklaması pencerede, Uygun değil sade** (§9 kırk sekizinci tur).
+  AA7: kriter grup başlığındaki küçük ünlem toplu tuşu kalktı (bölüm başlığındaki "Hepsini işaretle" tek); madde (i) satır altında açılmıyor,
+  **pencerede** açılıyor: firmanın açıklaması + **referans standartlar**; standarda basınca AA6: **firmanın Dökümanlar'a yüklediği standardın güncel
+  sürümü** görüntüleyicide açılır; aynı bağlantı Firma bilgileri'ndeki "Periyodik kontrol metodu ve kapsamı" / "Kontrol metodu" satırındaki her
+  standartta. AA9: "Uygun değil" maddede **fotoğraf zorunlu değil** (Firma ayarları'ndaki ayar ve "Rapor" bölümü kalktı; kamera simgesi isteğe bağlı
+  durur) ve **kusur derecesi sorulmaz** (eski raporda seçilmişse salt okunur görünür; derecesiz sonuç "Kusurlu"); S.A.Y'ın derece önerisi kalktı.
+  Not: Hafif kusur devri (V4) eski raporların derecesiyle çalışır; yeni raporlarda derece olmadığı için devre girmez — format sisteminde (AA10)
+  firma isterse dereceyi açabilir. Kilit: m8 etkileşim 4 yeni / güncellenmiş (önceki kodda düşüyor), m1 1; 9 eski denetim tarih + gerekçeyle güncellendi.
 - 2026-10-02 (225): **AA1 · Sade giriş** (§9 kırk sekizinci tur: *"tek renk sdadece giriş işlemleri olan bi sayfa olsun basit bi sayfa olsun"*).
   Z6'nın marka panosu ve açıklamaları kalktı: tek zemin, ortada logo (temaya göre), altında giriş kartı (en çok 400px), en altta küçük maket notu.
   Kilit: m1 etkileşim AA1 (eski sayfada düşüyor).

@@ -65,9 +65,8 @@
   var tlOku = function (v) { var t = String(v).trim().replace(/\s*TL$/i, ""); return /^\d{1,3}(\.\d{3})*(,\d{1,2})?$|^\d+(,\d{1,2})?$/.test(t) ? parseFloat(t.replace(/\./g, "").replace(",", ".")) : NaN; };
   function ayarDigerCiz() {
     var h = AY.hata, kod = MV.firmaKodu();
-    return '<section class="a-bolum" aria-labelledby="a-b-rapor"><div class="a-alt-bas"><h2 class="a-alt-baslik" id="a-b-rapor">Rapor</h2></div>' +
-        /* 213 (2026-09-30): "Uygun değil" maddede fotoğraf zorunluluğu firmaya göre; başlangıçta zorunlu (§3.7 satır 14) */
-        '<label class="a-onay-kutusu"><input type="checkbox" data-kusur-foto' + (MV.kusurFotoZorunlu() ? " checked" : "") + '><span>"Uygun değil" işaretlenen maddede fotoğraf zorunlu</span></label></section>' +
+    /* AA9 (2026-10-02): "Rapor" bölümü (Uygun değilde fotoğraf zorunlu ayarı) kalktı — fotoğraf zorunlu değil */
+    return "" +
       /* N1 (2026-09-30, reisim: "ön bilgilendirme formu her firmanın kendi formatına göre değişir"): firma PDF'ini yükler; müşteri kartındaki
          "Ön bilgilendirme formu gönder" bunu gönderir; yüklenmediyse temel format KM-FR-OBF-01 (§3.7 satır 15) */
       '<section class="a-bolum" aria-labelledby="a-b-obf"><div class="a-alt-bas"><h2 class="a-alt-baslik" id="a-b-obf">Ön bilgilendirme formu</h2></div>' +
@@ -464,10 +463,6 @@
       if (/^\d{1,4}$/.test(mv) && +mv <= 1440 && (mk === "mesai" || +mv > 0)) { m0[mk] = +mv; MV.FIRMA.mesai = m0; delete AY.hata["mesai-" + mk]; ayarCiz(); MK.bildir((mk === "normal" ? "Günlük normal çalışma " : "Günlük mesai ") + mv + " dk."); }
       else { AY.hata["mesai-" + mk] = mk === "normal" ? "1–1440 arası dakika yazın. Kaydedilmedi." : "0–1440 arası dakika yazın. Kaydedilmedi."; AY["mesai-" + mk] = t.value; ayarCiz(); }
       var mf = $(mo); if (mf) mf.focus(); return;
-    }
-    if (t.hasAttribute && t.hasAttribute("data-kusur-foto")) {
-      MV.FIRMA.kusurFoto = t.checked; ayarCiz(); var kf = document.querySelector("[data-kusur-foto]"); if (kf) kf.focus();
-      MK.bildir(t.checked ? "“Uygun değil” maddede fotoğraf zorunlu." : "“Uygun değil” maddede fotoğraf isteğe bağlı."); return;
     }
     if (t.hasAttribute && t.hasAttribute("data-rapor-kod")) {   /* 2–4 büyük harf; geçersizse eski kod kalır */
       var kd = t.value.trim().toLocaleUpperCase("tr");

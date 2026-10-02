@@ -186,9 +186,8 @@
   function zorunluEksik(r) {
     var ts = MV.testler(r.t), F = r.F, l = [];
     if (gecmis(r).length || eksikTur(r).length) l.push({ bolum: "r-b3", alan: "#r-b3 [data-eylem=cihaz-ekle-ac], #r-b3 .a-hata-metin" });
-    kusurlar(r).forEach(function (x) { var i = r.kriter.indexOf(x);
-      if (MV.kusurSinifli(r.t) && !x.derece) l.push({ bolum: "r-b4", alan: "#r-kd" + i });
-      if (MV.kusurFotoZorunlu() && !(x.foto > 0)) l.push({ bolum: "r-b4", alan: "#r-kf" + i }); });
+    /* AA9 (2026-10-02, reisim: "Uygun değil denilen seçeneklerde fotoğraf koyma zorunluluğu olmasın , kusur derecesi seçtirtmesin"):
+       Uygun değil madde için fotoğraf ve kusur derecesi zorunlu alan değil (derece hiç sorulmaz) */
     ts.forEach(function (x, i) { if (testZorunlu(x) && !testDolu(x, r.test[i])) l.push({ bolum: "r-b5", alan: "#r-t" + i }); });
     if (F && F.noktalar) {
       r.nokta.forEach(function (n, i) { if (isNaN(sayi(n.zx))) l.push({ bolum: "r-b5", alan: "#r-zx" + i }); if (n.rcd && noktaRcd(n) === null) l.push({ bolum: "r-b5", alan: "#r-ni" + i });
@@ -269,19 +268,15 @@
     for (var a = 0; a < g.length; a++) { if (i < g[a][1].length) return MV.formatYapi(t).bolumler.kontrol + "." + (a + 1) + "." + (i + 1); i -= g[a][1].length; }
     return "";
   }
-  var BILGI = {};   /* açık madde açıklamaları (sayfada kaldıkça) */
   function kriterHtml(r, oku, i) {
     var t = r.t, x = r.kriter[i], ad = MV.kriterler(t)[i], no = kriterNo(t, i), kus = x.c === "uygundegil";
     /* 214 (2026-09-30): madde adının yanında bilgi (i) — açılınca maddede neye bakılacağı ve türün standartları, maddenin altında */
-    var bilgiAcik = !!BILGI[r.no + ":" + i];
     return '<div class="a-kriter" id="r-k' + i + '"><p class="a-kriter-ad" id="r-ka' + i + '"><span class="a-kriter-no">' + no + "</span><span>" + kacis(ad) +
-      '<button class="a-ikon-tus a-madde-bilgi-tus" type="button" data-eylem="madde-bilgi" data-i="' + i + '" id="r-kb' + i + '" aria-expanded="' + bilgiAcik + '" aria-controls="r-kbi' + i + '" aria-label="Madde ' + no + ' açıklaması" title="Açıklama">' + ikon("info", "a-ikon-kucuk") + "</button></span></p>" +
+      '<button class="a-ikon-tus a-madde-bilgi-tus" type="button" data-eylem="madde-bilgi" data-i="' + i + '" id="r-kb' + i + '" aria-haspopup="dialog" aria-label="Madde ' + no + ' açıklaması" title="Açıklama">' + ikon("info", "a-ikon-kucuk") + "</button></span></p>" +
       /* 2026-09-30 (213): "Uygun değil" maddede satırın içinde fotoğraf simgesi; fotoğraf açıklamasıyla kusur açıklamalarına girer; zorunluluk
-         firma ayarı (MV.kusurFotoZorunlu, başlangıçta zorunlu) */
-      '<div class="a-kriter-cevap' + (kus && !oku ? " a-kriter-cevap-foto" : "") + '">' + (kus && !oku ? fotoMenu("kusur-foto", ' data-i="' + i + '"', { id: "r-kf" + i, ad: "Madde " + no + " fotoğraf ekle", gecersiz: uyar(r, MV.kusurFotoZorunlu() && !(x.foto > 0)) }) : "") +
+         AA9 (2026-10-02): fotoğraf isteğe bağlı (zorunlu değil) */
+      '<div class="a-kriter-cevap' + (kus && !oku ? " a-kriter-cevap-foto" : "") + '">' + (kus && !oku ? fotoMenu("kusur-foto", ' data-i="' + i + '"', { id: "r-kf" + i, ad: "Madde " + no + " fotoğraf ekle" }) : "") +
         (oku ? okuGirdi("r-kc" + i, ad2(KRITER, x.c)) : MK.secim({ id: "r-kc" + i, ad: "Madde " + no, deger: x.c, secenekler: KRITER, ipucu: "Seçin", tanim: "r-ka" + i, gecersiz: uyar(r, !x.c) })) + "</div>" +
-      (bilgiAcik ? '<div class="a-madde-bilgi" id="r-kbi' + i + '">' + (MV.kriterAciklama(t, ad) ? "<p>" + kacis(MV.kriterAciklama(t, ad)) + "</p>" : '<p class="a-deger-yok">Bu madde için firma formatında açıklama tanımlı değil.</p>') +
-        (t.std && t.std.length ? '<p class="a-alt-satir">Standart: ' + t.std.map(function (k) { var x = MV.standart(k); return x ? kacis(x.no + " — " + x.konu) : ""; }).filter(Boolean).join(" · ") + "</p>" : "") + "</div>" : "") +
       /* O2 (2026-09-30, reisim: "uygun değil işaretlenen durumlar için kusur açıklaması kısmı gelmesin, fotoğraf eklenirse fotoğrafın altına
          ilgili madde yazacak şekilde kusur açıklamaları kısmına gelsin"): açıklama alanı yok, madde metni kusurun kendisi. Formatlı türde
          fotoğraf Kusur açıklamaları bölümünde, altında madde; burada yalnız kısa bilgi. Bölümü olmayan türde fotoğraf maddenin altında kalır */
@@ -289,11 +284,12 @@
   }
   function kusurIc(r, oku, i, no) {
     var t = r.t, x = r.kriter[i];
-    return (MV.kusurSinifli(t) ? MK.alan({ id: "r-kd" + i, etiket: "Kusur derecesi", zorunlu: !oku,   /* hafif / ağır yalnız Bakanlık formatlı türde (§4.5, Ek-III 1.9.1) */
+    /* AA9: kusur derecesi sorulmaz; eski raporda seçilmişse salt okunur gösterilir */
+    return (oku && x.derece ? MK.alan({ id: "r-kd" + i, etiket: "Kusur derecesi",   /* hafif / ağır yalnız Bakanlık formatlı türde (§4.5, Ek-III 1.9.1) */
         girdi: oku ? okuGirdi("r-kd" + i, ad2(DERECE, x.derece)) : MK.secim({ id: "r-kd" + i, ad: "Kusur derecesi", deger: x.derece || "", secenekler: DERECE, ipucu: "Seçin", tanim: "r-kd" + i + "-ipucu", gecersiz: uyar(r, !x.derece) }) }) : "") +
       (x.foto > 0 ? (r.F ? '<p class="a-ipucu a-kusur-foto-bilgi">' + ikon("camera", "a-ikon-kucuk") + x.foto + " fotoğraf · Kusur açıklamaları bölümünde</p>"
           : '<div class="a-fotolar">' + fotolar(x.foto, x.fotoAd, "Madde " + no, oku ? null : { eylem: "kusur-foto-sil", veri: { k: i } }) + "</div>")
-        : !oku && MV.kusurFotoZorunlu() ? '<p class="a-ipucu' + (uyar(r, true) ? " a-ipucu-uyari" : "") + '">Fotoğraf zorunlu: satırdaki kamera simgesiyle ekleyin.</p>' : "");
+        : "");
   }
   /* ünlem menüsü (§3.8 kural 3, reisim 2026-09-28: "ünlem işareti olur ve oradan seçilerek hepsini uygun yap hepsini uygunsuz yap ya da
      hepsini uygulanamaz yap"): grubun başlığında, o grubun bütün maddelerini tek seferde işaretler; madde madde değiştirmek serbest */
@@ -491,7 +487,7 @@
         satir("Rapor no", '<span class="a-kod">' + r.no + "</span>") +
         tarihAlan(r, oku, "rtarih", "Rapor tarihi", false) +
         satir("İSG-KATİP sözleşme ID", isg ? '<span class="a-kod">' + isg.no + "</span>" : '<span class="a-uyari-metin">Yok</span>') +
-        (F ? satir("Periyodik kontrol metodu ve kapsamı", kacis(MV.metotYazi(t))) : "") +
+        (F ? satir("Periyodik kontrol metodu ve kapsamı", metotBag(t)) : "") +
         metinAlan(r, oku, "bolumAd", "Ekipman bölümü", 60) + "</dl>",
       /* telefonda yalnız simge (2026-09-29, reisim: "hepsine uygula ve güncelle mobilde yazmamalı sadece işaretleri gözükmeli") */
       oku ? "" : '<button class="a-tus a-tus-ikincil a-bolum-tus a-tus-simge-tel" type="button" data-eylem="firma-guncelle" aria-label="Güncelle" title="Güncelle">' +
@@ -506,7 +502,7 @@
         '<dl class="a-satirlar a-satirlar-form">' +
         satir("Kod", '<span class="a-kod">' + e.kod + "</span>") + satir("Ekipman türü", kacis(t.ad)) +
         /* 2026-09-27 (reisim: "metod kısmı olsun ama sadece ekipman türü eklerken belirlene"): raporda seçilmez, türden okunur */
-        satir("Kontrol metodu", kacis(MV.metotYazi(t))) +
+        satir("Kontrol metodu", metotBag(t)) +
         metinAlan(r, oku, "marka", "Marka", 40) + metinAlan(r, oku, "model", "Model", 40) + metinAlan(r, oku, "seri", "Seri no", 30) +
         metinAlan(r, oku, "imal", "İmal yılı", 4, ' inputmode="numeric"') + metinAlan(r, oku, "konum", "Kullanım yeri", 60) + metinAlan(r, oku, "amac", "Kullanım amacı", 120) +
         satir("Önceki kontrol", e.onceki ? MK.tarihYaz(e.onceki.tarih) + " · " + kacis(e.onceki.sonuc) + ' · <span class="a-rapor-no">' + e.onceki.rapor + "</span>" : "İlk kontrol") + "</dl>");
@@ -525,7 +521,8 @@
     S.kriter = !r.kriter.length ? "" : bolum(no("kontrol", 4), "r-b4", F ? "Gözle kontrol kriterleri" : "Muayene kriterleri",
       (gr ? gr.map(function (g, gi) {
         var ad = F.bolumler.kontrol + "." + (gi + 1) + " · " + kacis(g[0]);
-        var h = '<div class="a-kriter-grup-bas"><h3 class="a-kriter-grup">' + ad + "</h3>" + (oku ? "" : topluMenu(i0, i0 + g[1].length, ad)) + "</div>" +
+        /* AA7 (2026-10-02, reisim: "ikisi de aynı işe yarıyor kırmızı küçük olanı kaldır"): grup başlığındaki küçük ünlem kalktı; bölüm başlığındaki "Hepsini işaretle" kalır */
+        var h = '<div class="a-kriter-grup-bas"><h3 class="a-kriter-grup">' + ad + "</h3></div>" +
           g[1].map(function (x, j) { return kriterHtml(r, oku, i0 + j); }).join("");
         i0 += g[1].length; return h; }).join("")
         : r.kriter.map(function (x, i) { return kriterHtml(r, oku, i); }).join("")),
@@ -911,7 +908,39 @@
       MK.kaliciYaz(); location.href = MK.adres(13, pid ? "#/plan/" + pid : "#/");   /* rapor plandan da kalkar (Planlar ortak kayda bakar) */
     } });
   };
-  X["madde-bilgi"] = function (el) { var r = aktif(), i = +el.dataset.i, k = r && r.no + ":" + i; if (!r) return; BILGI[k] = !BILGI[k]; ciz("r-kb" + i); };
+  /* AA7 (2026-10-02, reisim: "ünleme tıklayınca aşağıda bir şeyler açılıyor … onun yerine pop-up açılsın hangi standarttan referans aldığı
+     yazsın, ve tıklayınca standart açılsın pop-up"): madde açıklaması pencerede — firmanın açıklaması + referans standartlar; standarda basınca
+     firmanın yüklediği standart (Dökümanlar) görüntüleyicide açılır (AA6) */
+  /* AA6 (2026-10-02, reisim: "standartlar açıklamasındaki herhangi bir standarta tıklarsa sistemde şirketin yüklediği standartı pop-up
+     olarak açsın"): kontrol metodu satırında her standart ayrı bağlantı (kayıtlı standart değilse düz yazı) */
+  function metotBag(t) {
+    return MV.turMetot(t).map(function (m) { return m.k && MV.standart(m.k) ? '<button class="a-standart-bag a-standart-satir" type="button" data-eylem="standart-ac" data-k="' + m.k + '">' + kacis(m.no || m.konu) + "</button>" : kacis(m.no || m.konu); }).join(", ");
+  }
+  var stdTus = function (k) { var x = MV.standart(k); return x ? '<button class="a-standart-bag" type="button" data-eylem="standart-ac" data-k="' + x.k + '">' + ikon("book-open", "a-ikon-kucuk") + "<b>" + kacis(x.no) + "</b> — " + kacis(x.konu) + "</button>" : ""; };
+  X["madde-bilgi"] = function (el) {
+    var r = aktif(), i = +el.dataset.i; if (!r) return;
+    var t = r.t, ad = MV.kriterler(t)[i], ac = MV.kriterAciklama(t, ad), d = $("a-madde-pencere");
+    if (!d) {
+      d = document.createElement("dialog"); d.className = "a-pencere a-pencere-mesai"; d.id = "a-madde-pencere"; d.setAttribute("aria-labelledby", "a-madde-pencere-baslik");
+      d.innerHTML = '<div class="a-pencere-bas"><h2 id="a-madde-pencere-baslik"></h2><button class="a-ikon-tus" type="button" data-eylem="pencere-kapat" aria-label="Kapat">' + ikon("x") + "</button></div>" +
+        '<div class="a-pencere-govde" id="a-madde-pencere-govde"></div><div class="a-pencere-alt"><button class="a-tus a-tus-ikincil" type="button" data-eylem="pencere-kapat">Kapat</button></div>';
+      document.body.appendChild(d);
+      d.addEventListener("close", function () { var b = $(d.dataset.odak); if (b) b.focus(); });
+    }
+    d.dataset.odak = el.id;
+    $("a-madde-pencere-baslik").textContent = "Madde " + kriterNo(t, i) + " · " + ad;
+    $("a-madde-pencere-govde").innerHTML = (ac ? "<p>" + kacis(ac) + "</p>" : '<p class="a-deger-yok">Bu madde için firma formatında açıklama tanımlı değil.</p>') +
+      '<p class="a-etiket a-disa-gecmis-bas">Referans standartlar</p>' +
+      (t.std && t.std.length ? '<div class="a-standart-liste">' + t.std.map(stdTus).join("") + "</div>" : '<p class="a-deger-yok">Bu türe standart bağlanmamış (Ekipman türleri).</p>');
+    d.showModal(); var b = d.querySelector("[data-eylem=standart-ac]") || d.querySelector(".a-pencere-alt [data-eylem=pencere-kapat]"); b.focus();
+  };
+  /* AA6: standarda basınca firmanın yüklediği standart açılır (güncel sürüm) */
+  X["standart-ac"] = function (el) {
+    var x = MV.standart(el.dataset.k); if (!x) return;
+    var guncel = MV.STANDARTLAR.filter(function (y) { return y.no === x.no && !y.bitti; })[0] || x;
+    if (!guncel.dosya) { MK.bildir(x.no + " için yüklenmiş dosya yok (Dökümanlar)."); return; }
+    MK.pdfGoster({ dosya: guncel.dosya.ad, baslik: guncel.no + " — " + guncel.konu, sayfa: 3 });
+  };
   X["format-guncelle"] = function () {
     var r = aktif(); if (!r || r.durum !== "taslak") return;
     var yeni = MV.kriterler(r.t), once = r.kriter.length, eklenen = Math.max(0, yeni.length - once);
@@ -1052,7 +1081,7 @@
   function sonucAdi(r) {
     if (r.sonuc !== "kullanilamaz") return "Uygun";
     var l = kusurListe(r), agir = l.some(function (x) { return /Ağır/.test(x[1]); }) || sinirDisi(r) || fonkKusur(r);   /* 5.1 · 5.2 ağırlığı notun metninden, listede (P2) */
-    return !MV.kusurSinifli(r.t) ? "Kusurlu" : agir ? "Ağır kusurlu" : l.length ? "Hafif kusurlu" : "Kusurlu";
+    return !MV.kusurSinifli(r.t) ? "Kusurlu" : agir ? "Ağır kusurlu" : l.some(function (x) { return /Hafif/.test(x[1]); }) ? "Hafif kusurlu" : "Kusurlu";   /* AA9: derece sorulmayınca "Kusurlu" */
   }
   function gonder(r) {
     UY = null;

@@ -10,7 +10,7 @@
   "use strict";
   var $ = MK.$, kacis = MK.kacis, ikon = MK.ikon, X = MK.eylem, B = function () { return MK.sayBag; };
   var S = { acik: false, mesaj: [], n: 0 };   /* mesaj: { kim: "ben" | "say", html, oneri?: { id, deger, ad, durum } } */
-  var HIZLI = [["eksik", "Eksik alanlar neler?"], ["derece", "Kusur derecesi öner"], ["sonuc", "Sonuç ne olmalı?"]];
+  var HIZLI = [["eksik", "Eksik alanlar neler?"], ["sonuc", "Sonuç ne olmalı?"]];   /* AA9: kusur derecesi sorulmadığı için öneri de yok */
 
   var anahtarVar = function () { return !MV.yzHazir(MK.BEN) && !MK.cevrimdisi(); };   /* Z4: bağlantı yokken de soru almaz */
   function sinirDoldu() {
@@ -43,7 +43,7 @@
         (MK.cevrimdisi() ? MK.serit("uyari", "wifi-off", "Bağlantı yok: S.A.Y bağlantı gelince çalışır. Raporu yazmaya devam edebilirsiniz.")
           : !anah ? MK.serit("uyari", "key-round", "API anahtarı girilmedi (Firma ayarları › Yapay zekâ): S.A.Y cevap veremez.") : "") +
         (anah && sinirDoldu() ? MK.serit("uyari", "triangle-alert", "Bu ay kişi başı sınırınız doldu; yönetici Firma ayarları'ndan artırabilir.") : "") +
-        (bos ? '<p class="a-say-bos">Bu raporu okudum. Eksikleri sorabilir, kusur derecesi ya da sonuç için öneri isteyebilirsiniz. Önerileri siz onaylamadan rapora hiçbir şey yazılmaz.</p>' : "") +
+        (bos ? '<p class="a-say-bos">Bu raporu okudum. Eksikleri sorabilir, sonuç için öneri isteyebilirsiniz. Önerileri siz onaylamadan rapora hiçbir şey yazılmaz.</p>' : "") +
         '<ol class="a-say-liste" aria-live="polite">' + S.mesaj.map(mesajHtml).join("") + "</ol></div>" +
       '<div class="a-say-alt-kisim">' +
         '<div class="a-say-hizli">' + HIZLI.map(function (x) { return '<button class="a-cip" type="button" data-eylem="say-hizli" data-k="' + x[0] + '"' + (anah ? "" : " disabled") + ">" + x[1] + "</button>"; }).join("") + "</div>" +
@@ -81,16 +81,6 @@
       return [{ html: "<p>" + l.length + " zorunlu alan boş:</p><ul class=\"a-say-eksik\">" + sira.map(function (id) {
         return "<li><span>" + kacis(bolumAd(id)) + " · " + g[id].length + " alan</span>" + MK.tus({ eylem: "say-git", ad: "Git", ikon: "arrow-right", sinif: "a-tus-ikincil", veri: { i: l.indexOf(g[id][0]) } }) + "</li>"; }).join("") + "</ul>" }];
     }
-    if (k === "derece") {
-      if (!b.sinifli(r)) return [{ html: "<p>Bu türün formatında kusur derecesi (hafif / ağır) yok.</p>" }];
-      var bos = []; r.kriter.forEach(function (x, i) { if (x.c === "uygundegil" && !x.derece) bos.push(i); });
-      if (!bos.length) return [{ html: "<p>Derecesi seçilmemiş “Uygun değil” madde yok.</p>" }];
-      return [{ html: "<p>" + bos.length + " maddede derece seçilmemiş. Madde metnine göre önerim:</p>" }].concat(bos.slice(0, 5).map(function (i) {
-        var ad = b.kriterAd(r, i), agir = /topraklama|koruma|kaçak akım|RCD|fren|halat|kanca|emniyet|kilit|acil/i.test(ad), d = agir ? "agir" : "hafif";
-        return { html: "<p>" + (agir ? "Can güvenliğini doğrudan ilgilendiren bir madde." : "Can güvenliğini doğrudan ilgilendirmiyor görünüyor; yerinde gördüğünüz duruma göre siz karar verin.") + "</p>",
-          oneri: { id: "r-kd" + i, deger: d, ad: "Madde " + b.kriterNo(r.t, i) + " · " + kacis(ad.length > 60 ? ad.slice(0, 57) + "…" : ad) + " → Kusur derecesi: <b>" + b.ad2(b.DERECE, d) + "</b>" } };
-      }));
-    }
     if (k === "sonuc") {
       var o = b.otoSonuc(r), n = b.kusurlar(r).length, ad2 = b.ad2(b.SONUC, o);
       var neden = n ? n + " madde “Uygun değil” işaretli." : b.uygunDegil(r) ? "Ölçüm ya da test sonuçlarında sınır dışı değer var." : "“Uygun değil” madde ve sınır dışı ölçüm yok.";
@@ -110,7 +100,7 @@
   X["say-hizli"] = function (el) { var k = el.dataset.k; sor(HIZLI.filter(function (x) { return x[0] === k; })[0][1], k); var f = kap.querySelector('[data-eylem="say-hizli"][data-k="' + k + '"]'); if (f) f.focus(); };
   X["say-gonder"] = function () {
     var g = $("a-say-girdi"), v = (g.value || "").trim(); if (!v) { g.focus(); return; }
-    var k = /eksik/i.test(v) ? "eksik" : /derece|hafif|ağır/i.test(v) ? "derece" : /sonuç|kanaat/i.test(v) ? "sonuc" : "serbest";
+    var k = /eksik/i.test(v) ? "eksik" : /sonuç|kanaat/i.test(v) ? "sonuc" : "serbest";
     sor(v, k); $("a-say-girdi").focus();
   };
   X["say-git"] = function (el) { var x = (S.eksik || [])[+el.dataset.i]; if (!x) return; if (window.matchMedia("(max-width: 767.98px)").matches) kapat(); B().git(x); };

@@ -698,7 +698,7 @@
       .reduce(function (n, r) { return n + MV.raporSuresi(r); }, 0);
     return { toplam: t, normal: Math.min(t, m.normal), mesai: Math.min(Math.max(t - m.normal, 0), m.mesai), dolu: m.acik && t >= m.normal + m.mesai, m: m };
   };
-  MV.kusurFotoZorunlu = function () { return MV.FIRMA.kusurFoto !== false; };
+  MV.kusurFotoZorunlu = function () { return false; };   /* AA9 (2026-10-02): "Uygun değil"de fotoğraf zorunluluğu yok (firma ayarı kalktı) */
   MV.esik = function (k) { var x = +((MV.FIRMA.esik || {})[k]); return x > 0 ? x : MV.ESIK[k].v; };
   /* yeni rapor numarasının başındaki firma kodu: 2–4 büyük harf; eski numaralar değişmez */
   MV.firmaKodu = function () { var x = String(MV.FIRMA.raporKod || MV.FIRMA.kisa || "KM"); return /^[A-ZÇĞİÖŞÜ]{2,4}$/.test(x) ? x : "KM"; };
@@ -863,7 +863,7 @@
   /* kontrol metodu (Ek-III 1.7.1.1) YALNIZ ekipman türünde belirlenir (reisim 2026-09-27: "metod kısmı olsun ama sadece ekipman türü eklerken
      belirlene"); raporda seçilmez, türün standartlarından okunur; türde standart yoksa üretici talimatı (karar 82). [{ no, konu }] */
   MV.turMetot = function (t) {
-    return t.std.length ? t.std.map(function (k) { var s = MV.standart(k); return { no: s.no + ":" + s.surum, konu: s.konu }; }) : [{ no: "", konu: "Üretici talimatı" }];
+    return t.std.length ? t.std.map(function (k) { var s = MV.standart(k); return { k: s.k, no: s.no + ":" + s.surum, konu: s.konu }; }) : [{ no: "", konu: "Üretici talimatı" }];
   };
   /* 2026-09-27 (reisim: "kontrol metodunda sadece standartlar yazsın açıklaması değil örneğin 'TS EN 1579, TS EN 2134'"): yalnız numara:sürüm */
   MV.metotYazi = function (t) { return MV.turMetot(t).map(function (m) { return m.no || m.konu; }).join(", "); };

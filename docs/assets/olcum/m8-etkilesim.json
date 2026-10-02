@@ -62,7 +62,7 @@
    "gecti": true
   },
   {
-   "ad": "Z2: eksik alanlar listesi Git ile alana gider; Uygun değil maddeye kusur derecesi önerisi Uygula ile yazılır; anahtar yoksa S.A.Y soru almaz",
+   "ad": "Z2: eksik alanlar listesi Git ile alana gider; anahtar yoksa S.A.Y soru almaz",
    "gen": 1920,
    "sayfa": "maket/rapor.html",
    "hash": "#/r/ET-1009",
@@ -118,14 +118,14 @@
    "gecti": true
   },
   {
-   "ad": "ünlem menüsü: grubun maddelerini hepsini uygun değil yapar, odak ünlemde (§3.8 kural 3)",
+   "ad": "Hepsini işaretle: bütün maddeleri uygun değil yapar, odak tuşta (§3.8 kural 3)",
    "gen": 1920,
    "sayfa": "maket/rapor.html",
    "hash": "#/r/ET-1009",
    "gecti": true
   },
   {
-   "ad": "ünlem menüsü: her grup başlığında bir tane (iç tesisat 7 grup), üç seçenek",
+   "ad": "AA7: grup başlıklarında küçük toplu tuş yok; bölüm başlığında tek Hepsini işaretle, üç seçenek",
    "gen": 1920,
    "sayfa": "maket/rapor.html",
    "hash": "#/r/ET-1009",
@@ -209,21 +209,21 @@
    "gecti": true
   },
   {
-   "ad": "Uygun değil seçilince madde satırında (seçimin hizasında) kamera simgesi; Uygun'da yok",
+   "ad": "Uygun değil seçilince madde satırında (seçimin hizasında) kamera simgesi (isteğe bağlı, AA9); Uygun'da yok",
    "gen": 1920,
    "sayfa": "maket/rapor.html",
    "hash": "#/r/ET-1009",
    "gecti": true
   },
   {
-   "ad": "fotoğrafsız Uygun değil maddeyle gönderilmez (zorunlu, simge kırmızı); fotoğraf eklenince Kusur açıklamalarında: fotoğraf, altında madde (O2)",
+   "ad": "AA9: fotoğrafsız Uygun değil madde zorunlu alan sayılmaz (simge kırmızı değil); fotoğraf eklenince Kusur açıklamalarında: fotoğraf, altında madde (O2)",
    "gen": 1920,
    "sayfa": "maket/rapor.html",
    "hash": "#/r/ET-1009",
    "gecti": true
   },
   {
-   "ad": "Firma ayarında fotoğraf isteğe bağlıysa fotoğrafsız Uygun değil maddeyle gönderilebilir",
+   "ad": "AA9: kusur derecesi sorulmaz — Uygun değil maddede derece alanı yok, zorunlu alanlarda da yok",
    "gen": 1920,
    "sayfa": "maket/rapor.html",
    "hash": "#/r/ET-1009",
@@ -244,14 +244,14 @@
    "gecti": true
   },
   {
-   "ad": "madde açıklaması (i): madde adının yanında bilgi tuşu; açılınca neye bakılacağı ve standart, ikinci basışta kapanır",
+   "ad": "AA7: madde (i) pencerede açılır — açıklama + referans standartlar; standarda basınca firmanın yüklediği standart görüntüleyicide (AA6); kapanınca odak (i)'de",
    "gen": 1920,
    "sayfa": "maket/rapor.html",
    "hash": "#/r/KS-1006",
    "gecti": true
   },
   {
-   "ad": "madde açıklaması tanımlı olmayan maddede \"tanımlı değil\" yazar",
+   "ad": "madde açıklaması tanımlı olmayan maddede \"tanımlı değil\" yazar (pencerede)",
    "gen": 1920,
    "sayfa": "maket/rapor.html",
    "hash": "#/r/ET-1009",
@@ -594,7 +594,7 @@
    "gecti": true
   },
   {
-   "ad": "iç tesisat: gözle kontrol 7 grup, 27 madde; uygun değil madde kusur listesinde, derece yazısı yok (reisim 2026-09-28)",
+   "ad": "iç tesisat: gözle kontrol 7 grup, 27 madde; uygun değil madde kusur listesinde, derece yazısı ve derece alanı yok (2026-09-28; alan AA9 ile kalktı)",
    "gen": 1920,
    "sayfa": "maket/rapor.html",
    "hash": "#/r/ET-1009",
@@ -811,7 +811,7 @@
    "gecti": true
   },
   {
-   "ad": "Kusur açıklamalarındaki madde fotoğrafı Sil ile kalkar; madde satırında yeniden Fotoğraf zorunlu (O2)",
+   "ad": "Kusur açıklamalarındaki madde fotoğrafı Sil ile kalkar; madde satırında kamera simgesi kalır, zorunluluk yazısı yok (O2, AA9)",
    "gen": 1920,
    "sayfa": "maket/rapor.html",
    "hash": "#/r/ET-1009",
