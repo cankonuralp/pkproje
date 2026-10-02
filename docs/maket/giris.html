@@ -13,22 +13,15 @@
 <body>
 <!-- MAKET M1 · Giriş (modül 1) — ONAY BEKLİYOR. Kabuksuz sayfa: firma kullanıcıları kendi alt alan adında girer.
      Adres: #/ giriş · #/hata yanlış bilgi · #/unuttum parola sıfırlama · #/gonderildi · #/gecici geçici parolayla ilk giriş. -->
+<!-- AA1 (2026-10-02, reisim: "sol taraftaki açıklamaları vs kaldır … tek renk sdadece giriş işlemleri olan bi sayfa olsun basit bi sayfa olsun"):
+     tek zemin, ortada logo + giriş kartı; marka panosu ve açıklamalar yok. Maket notu sayfanın en altında küçük. -->
 <main class="a-giris">
-  <div class="a-giris-marka">
-    <img src="../marka/probata-yatay-koyu-zemin.svg" alt="probata" width="148" height="37">
-    <!-- Z6 (2026-10-02, reisim: "giriş ekranı daha düzgün bir şey olsun güzel durmuyor"): marka panosu boş kalmasın — ne olduğu tek cümle + üç madde -->
-    <div class="a-giris-tanim">
-      <p class="a-giris-slogan">Periyodik Kontrol Yönetimi</p>
-      <p class="a-giris-baslik">Tekliften arşive, muayenenin bütün akışı tek yerde.</p>
-      <ul class="a-giris-maddeler">
-        <li><svg class="a-ikon" aria-hidden="true"><use href="../vendor/lucide-1.47.0/ikonlar.svg#i-calendar-check"/></svg>Plan, denetçi ve ekipman bir arada</li>
-        <li><svg class="a-ikon" aria-hidden="true"><use href="../vendor/lucide-1.47.0/ikonlar.svg#i-tablet-smartphone"/></svg>Sahada tablette rapor, ofiste onay</li>
-        <li><svg class="a-ikon" aria-hidden="true"><use href="../vendor/lucide-1.47.0/ikonlar.svg#i-file-signature"/></svg>İmzalı rapor müşteri panelinde</li>
-      </ul>
-    </div>
+  <div class="a-giris-form">
+    <img class="a-giris-logo a-isaret-acik" src="../marka/probata-yatay-renkli.svg" alt="probata" width="148" height="37">
+    <img class="a-giris-logo a-isaret-koyu" src="../marka/probata-yatay-koyu-zemin.svg" alt="probata" width="148" height="37">
+    <div class="a-giris-kart" id="a-giris-form"></div>
     <p class="a-giris-alt">Maket · uydurma veri</p>
   </div>
-  <div class="a-giris-form"><div class="a-giris-kart" id="a-giris-form"></div></div>
 </main>
 <script src="../assets/maket-ortak.js"></script>
 <script src="../assets/maket-giris.js"></script>

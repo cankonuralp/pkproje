@@ -2146,6 +2146,29 @@ açık personel belgeleri görüntüsüyle: *"bu kısımda eğer ben bir belge t
 eklensin ilk fotoğrafta rapor nüshası demiş o ne demek ,?"* → Z5; nüsha: resmî rapor künyesindeki "Nüsha sayısı" satırı (rapor kaç kopya
 düzenlendi), yalnız o satıra basılır.
 
+**Kırk sekizinci tur (2026-10-02, reisim birebir; giriş ekranı, bir mobil imza sitesinin imza pencereleri ve rapor ekranından görüntülerle — imza
+sitesi görüntülerindeki kişi adı ve e-posta depoya girmez, yalnız akış fikir olarak alınır):** *"reisim şimdisol taraftaki açıklamaları vs kaldır
+sol tarafın bu kadar geiş ve farklı renkte olması na gerek yok , tek renk sdadece giriş işlemleri olan bi sayfa olsun basit bi sayfa olsun.  Mesai
+süresi her gün kullanılamasın yıllık izin verilen mesaiye göre sınırlansın internetten araştır. Onaylar kısmında diğer kısmı olsun muhasebeciden
+onaya maaş bordrosu gönderilirse veya eğitim zimmet formu gönderilirse oradan onaylanabilsin mobil veya e imza ile  ayrıca mobil imza sitesinden
+site içi görüntüler elde ettim neyi nasıl yaptığına dair fikir sahibi olabilirsin buradan, bir de araç takip modülü olsun hangi aracın kimde olduğu
+belli olsun takip edilebilsin elinde araç olanlar sadece kendi aracını yöneticiler her aracı kimde olduğunu vs görsün aracın teslim alımı veya
+teslim verimi üzerine fotoğraflı zimmet oluşturma olsun zimmetlere otomatik oradan gitsin örnek bi şablon oluştur inceleyip düzenleriz, ekipman
+türleri içerisinde mekanik ve elektrik olarak ayrılsın.4. görselde rapor hazırlarken ekrandan çektiğim görselde denetçi standartlar açıklamasındaki
+herhangi bir standarta tıklarsa sistemde şirketin yüklediği standartı pop-up olarak açsın. 5. görselde 2 tuş var hepsini uygulanamaz uygun yap vs
+için ikisi de aynı işe yarıyor kırmızı küçük olanı kaldır, onun altında da  örneğin 5.1.1 maddesinin yanındaki ünleme tıklayınca aşağıda bir şeyler
+açılıyor standartlar yazıyor, onun yerine pop-up açılsın hangi standarttan referans aldığı yazsın, ve tıklayınca standart açılsın pop-up. Bu arada
+yapılan işlemlerde uyarı pop-up larını unutma ama sitedeki tüm işlemler için bi kontrol et bu açıdan, giriş çıkış,şifre değişme , rapor gönderme vb.
+Uygun değil denilen seçeneklerde fotoğraf koyma zorunluluğu olmasın , kusur derecesi seçtirtmesin. Bu söylediklerimi tek bir rapor özelinde değil,
+tüm raporları bu şekilde kurgulayabileceğim bir sistem tasarla ben müşteriye sunduğumda kendi rapor formatını yükleyip istediği gibi
+şekillendirebilecek kurgulayabileceği bir sistem tasarlamamız gerkeli yoksa her rapor format yüklemesinde tek tek benim uğraşmam gerekli."*
+→ kalemler AA1–AA10 (§11 225–): AA1 sade giriş · AA2 yıllık fazla çalışma sınırı · AA3 Onaylar › Diğer (bordro, eğitim, zimmet formu; mobil / e-imza
+akışı) · AA4 Araç takip modülü · AA5 ekipman türleri mekanik / elektrik · AA6 rapordaki standarda tıklayınca firmanın yüklediği standart açılır ·
+AA7 küçük toplu tuş kalkar, madde (i) pop-up · AA8 bütün işlemlerde uyarı / onay pencereleri taraması · AA9 "Uygun değil"de fotoğraf zorunluluğu
+ve kusur derecesi kalkar · AA10 firmanın kendi rapor formatını kurduğu sistem (**§8.3 "şablon kodda, site içi düzenleyici yok" kararı değişiyor**).
+Ek (aynı gün, reisim birebir): *"bir işlem yaparken örnek yazılar yazılı olarak geliyor, silip bir şey yazmam gerekiyor onu da düzelt.."* → AA11:
+yeni kayıt formları boş açılır (örnek değer alana yazılmaz; gerekiyorsa yalnız silik ipucu).
+
 **Açık kalanlar:** ~~Ana sayfada İSGGM duyuruları~~ (2026-09-27: makette eklendi; okuma işi uygulamada) (reisim 2026-09-26: *"Ana sayfada isgüm duyurularını gösterebilir miyiz ? Bunu
 yapılacaklar listesine ekle"*; öneri: ÇSGB İSGGM duyurular sayfası — https://www.csgb.gov.tr/isggm/duyurular/ — sunucuda günde birkaç kez
 okunur (pg-boss işi, §8.9), Ana sayfada son 5 duyuru başlık + tarih + kaynağa bağlantı; yalnız ekranda, bildirim yok; sayfa RSS vermiyorsa
@@ -2183,6 +2206,9 @@ revizyon, alan kopyalama, hafif kusur devri, meslek eşleşme denetimi).
 - Emsal ürünler: https://opwire.app/iso-17020-periyodik-kontrol-yazilimi/ · https://17020muayene.vidco.com.tr/ · https://akuple.com/asansor-kontrol-yazilimi/ · https://ensyazilim.com/
 
 ## 11 · Değişiklik günlüğü
+- 2026-10-02 (225): **AA1 · Sade giriş** (§9 kırk sekizinci tur: *"tek renk sdadece giriş işlemleri olan bi sayfa olsun basit bi sayfa olsun"*).
+  Z6'nın marka panosu ve açıklamaları kalktı: tek zemin, ortada logo (temaya göre), altında giriş kartı (en çok 400px), en altta küçük maket notu.
+  Kilit: m1 etkileşim AA1 (eski sayfada düşüyor).
 - 2026-10-02 (224): **Z4 · Çevrimdışı gösterge ve kuyruk makette** (§9 kırk altıncı tur: *"çevrimdışı yazılan raporlar çevrimdışı kuyruğunda
   olacak … çevrimiçi olunca gönderilebilecek"*; ARKA-UC K4 kalıcı cihaz deposu, §4.2–4.3). Bağlantı yokken üst çubukta **"Çevrimdışı · n bekliyor"**
   (uyarı rengi; telefonda üst çubuk dolu olduğu için çubuğun hemen altında tam genişlik şerit); tıklayınca pencere: ne olduğu, "Çevrimdışı hazır: N plan · son eşitleme", bağlantı gerektirenler (son imza,
