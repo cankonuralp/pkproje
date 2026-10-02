@@ -2134,7 +2134,7 @@ başlangıçta Opus 5.5, gerekirse Sonnet 5.5, ölçümle · çevrimdışı veri
 S.A.Y chat yalnız öneri verir. **K7** (probata'nın firmalardan ücret alması modülü) ve **K8** (kayıp cihaz: uzaktan oturum kapatma + yerel veri
 silme, çevrimdışı oturum 7 gün) **kabul edilmedi** — yapılmaz.
 
-**Kırk yedinci tur (2026-10-02, reisim birebir).** (1) *"Müşterinin token ekleyeceği yeri ekledin mi makete"* → Y1 (§11 218). (2) *"Çıkış yap, giriş
+**Kırk yedinci tur (2026-10-02, reisim birebir).** (5) Giriş ekranı görüntüsüyle: *"giriş ekranı daha düzgün bir şey olsun güzel durmuyor"* → Z6 (§11 221). (1) *"Müşterinin token ekleyeceği yeri ekledin mi makete"* → Y1 (§11 218). (2) *"Çıkış yap, giriş
 yap parola değiştir firma ayarları modülü hiç bir şey göremedim firma  ayarları nerdeydi, bi bak konuşup yapmadığımız eksik kalan ne iş var komple
 bi bak"* → neden: Pages yayını 2026-09-30'dan beri onay bekleyen bir işin arkasında kalmıştı (iptal edildi, yayın 2026-10-02'de çıktı); eksik
 listesi verildi. (3) Firma ayarları ekran görüntüsüyle: *"konuşup makete dökmediklerimizi dök,karar bekleyenleri ertele şu açık temada menü
@@ -2183,6 +2183,10 @@ revizyon, alan kopyalama, hafif kusur devri, meslek eşleşme denetimi).
 - Emsal ürünler: https://opwire.app/iso-17020-periyodik-kontrol-yazilimi/ · https://17020muayene.vidco.com.tr/ · https://akuple.com/asansor-kontrol-yazilimi/ · https://ensyazilim.com/
 
 ## 11 · Değişiklik günlüğü
+- 2026-10-02 (221): **Z6 · Giriş ekranı** (reisim, ekran görüntüsüyle: *"giriş ekranı daha düzgün bir şey olsun güzel durmuyor"*). Marka panosu
+  yarıdan 5/12'ye daraldı ve doldu: logo, "Periyodik Kontrol Yönetimi", tek cümle tanım ("Tekliften arşive, muayenenin bütün akışı tek yerde."),
+  üç madde (plan · sahada tablet · müşteri paneli). Form kâğıt zeminde, dikey ve yatay ortalı kartta (en çok 420px); alanlar kart genişliğinde.
+  Telefonda üstte logo şeridi, maddeler gizli, form tam genişlik. Palet ve token değişmedi. Kilit: m1 etkileşim (eski sayfada düşüyor).
 - 2026-10-02 (220): **Z5 · Belge türü ekle** (§9 kırk yedinci tur; reisim: *"eklenmiyorsa eklensin"*). Firma ayarları › Müşteriye açık personel
   belgeleri'nde "Belge türü ekle": ad + "kişisel veri içerir"; boş ya da var olan ad eklenmez (alanın altında söylenir). Eklenen tür listeye
   "firmanın eklediği" notuyla, müşteriye kapalı düşer; Personel'de özlük belgesi yüklerken tür olarak seçilir; kişisel veri işaretliyse

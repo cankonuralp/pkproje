@@ -821,15 +821,27 @@ a.a-yuz:hover { border-color: var(--kenar-alan); background: var(--zemin); }
 .a-gecmis-zimmet .a-not-metin { margin-top: 4px; }
 
 /* GİRİŞ EKRANI (kabuksuz): iki pano — marka (petrol, yan menüyle aynı zemin) · form. Kap dolar; alanlar veri tipine göre. */
-.a-giris { min-height: 100vh; display: grid; grid-template-columns: minmax(0, 1fr) minmax(0, 1fr); background: var(--kart); }
+/* Z6 (2026-10-02, reisim: "giriş ekranı daha düzgün bir şey olsun güzel durmuyor"): marka panosu dar (5/12) ve dolu — logo, tanım, üç madde;
+   form kâğıt zeminde ortada kart (en çok 420px), alanlar kart genişliğinde. Palet ve token değişmedi. */
+.a-giris { min-height: 100vh; display: grid; grid-template-columns: minmax(0, 5fr) minmax(0, 7fr); background: var(--zemin); }
 .a-giris-marka {
-  display: flex; flex-direction: column; justify-content: space-between; gap: 24px; padding: 32px var(--bosluk-sayfa);
+  display: flex; flex-direction: column; justify-content: space-between; gap: 32px; padding: 40px clamp(24px, 4vw, 64px);
   background: var(--cubuk-zemin); color: var(--cubuk-yazi);
 }
 .a-giris-marka img { width: 180px; height: auto; display: block; }
-.a-giris-slogan { margin: 12px 0 0; color: var(--cubuk-yazi2); font-size: var(--boy-bolum); }
+.a-giris-tanim { max-width: 440px; }
+.a-giris-slogan { margin: 0; color: var(--cubuk-yazi2); font-size: var(--boy-kucuk); font-weight: 600; letter-spacing: .04em; text-transform: uppercase; }
+.a-giris-baslik { margin: 10px 0 0; font-size: calc(var(--boy-baslik) * 1.4); line-height: 1.25; font-weight: var(--kal-baslik); color: var(--cubuk-yazi); }
+.a-giris-maddeler { list-style: none; margin: 28px 0 0; padding: 0; display: grid; gap: 14px; color: var(--cubuk-yazi2); }
+.a-giris-maddeler li { display: flex; align-items: center; gap: 12px; }
+.a-giris-maddeler .a-ikon { flex: none; width: 20px; height: 20px; color: var(--cubuk-yazi); }
 .a-giris-alt { margin: 0; color: var(--cubuk-yazi2); font-size: var(--boy-etiket); }
-.a-giris-form { display: flex; flex-direction: column; justify-content: center; gap: 14px; padding: 32px var(--bosluk-sayfa); min-width: 0; }
+.a-giris-form { display: flex; align-items: center; justify-content: center; padding: 32px var(--bosluk-sayfa); min-width: 0; }
+.a-giris-kart {
+  width: min(100%, 420px); display: flex; flex-direction: column; gap: 14px; padding: 32px;
+  background: var(--kart); border: 1px solid var(--kenar); border-radius: var(--r-buyuk); box-shadow: var(--golge-1);
+}
+.a-giris-kart .a-parola, .a-giris-kart .a-girdi-eposta, .a-giris-kart .a-serit, .a-giris-kart .a-giris-ayrac { width: 100%; }
 .a-giris-form h1 { margin: 0; font-size: var(--boy-baslik); font-weight: var(--kal-baslik); }
 .a-giris-adres { margin: 2px 0 0; color: var(--yazi2); font-size: var(--boy-kucuk); overflow-wrap: anywhere; }
 .a-giris-form .a-serit { width: min(100%, 360px); }
@@ -846,7 +858,6 @@ a.a-yuz:hover { border-color: var(--kenar-alan); background: var(--zemin); }
 .a-baglanti { display: inline-flex; align-items: center; min-height: var(--tus-y); color: var(--onay-yazi); font-weight: 600; text-decoration: none; }
 .a-baglanti:hover { text-decoration: underline; }
 .a-giris-ayrac { width: min(100%, 360px); margin: 6px 0 0; padding-top: 12px; border-top: 1px solid var(--kenar); color: var(--yazi2); font-size: var(--boy-kucuk); }
-:root[data-tema="koyu"] .a-giris { background: var(--zemin); }
 
 /* M7 — standart kütüphanesi listesi */
 .a-tablo-standart .a-k-std { width: 30%; } .a-tablo-standart .a-k-surum { width: 9%; } .a-tablo-standart .a-k-tur { width: 20%; }
@@ -1265,8 +1276,9 @@ a.a-yuz:hover { border-color: var(--kenar-alan); background: var(--zemin); }
   .a-giris { grid-template-columns: minmax(0, 1fr); grid-template-rows: auto 1fr; }
   .a-giris-marka { flex-direction: row; align-items: center; padding: 14px var(--bosluk-sayfa); }
   .a-giris-marka img { width: 132px; }
-  .a-giris-slogan, .a-giris-alt { display: none; }
-  .a-giris-form { justify-content: flex-start; padding-top: 24px; }
+  .a-giris-tanim, .a-giris-alt { display: none; }
+  .a-giris-form { align-items: stretch; justify-content: flex-start; padding: 24px var(--bosluk-sayfa); }
+  .a-giris-kart { width: 100%; padding: 0; background: none; border: 0; box-shadow: none; }
   .a-giris-tuslar .a-tus { flex: 1 1 100%; }
   /* belge önizlemesi telefonda: iç boşluk daralır; iki logo üstte iki uçta, künye altında tam satır (e-posta bölünmesin) */
   .a-belge { padding: 12px; }

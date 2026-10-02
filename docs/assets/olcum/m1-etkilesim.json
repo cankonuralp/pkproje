@@ -2,8 +2,8 @@
  "maket": "m1",
  "tarih": "2026-10-02",
  "arac": "tools/olc-bulut.mjs --etkilesim (başsız tarayıcı, 1920 açık tema; gen verilen denemede o genişlik)",
- "toplam": 106,
- "gecen": 106,
+ "toplam": 107,
+ "gecen": 107,
  "denemeler": [
   {
    "ad": "İzin talepleri: formun PDF'i açılır, e-posta talep edene",
@@ -675,6 +675,13 @@
    "gen": 1920,
    "sayfa": "maket/kullanicilar.html",
    "hash": "#/k/mk",
+   "gecti": true
+  },
+  {
+   "ad": "Z6: giriş — telefon dışında marka panosunda tanım + 3 madde, form kâğıt zeminde ortalanmış kartta (en çok 420px), alanlar kart genişliğinde; telefonda maddeler gizli, form tam genişlik",
+   "gen": 1920,
+   "sayfa": "maket/giris.html",
+   "hash": "#/",
    "gecti": true
   },
   {
