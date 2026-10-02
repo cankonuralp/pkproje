@@ -475,6 +475,46 @@
       }).join("") + "</div>" +
       '<footer class="a-belge-alt"><span>' + kacis(f.ad) + " · " + formKod + " · temel format</span></footer></article>";
   };
+  /* ── ARAÇ TESLİM TUTANAĞI — TEMEL FORMAT (AA4, 2026-10-02; reisim: "aracın teslim alımı veya teslim verimi üzerine fotoğraflı zimmet
+     oluşturma olsun … örnek bi şablon oluştur inceleyip düzenleriz"). o = { h (zimmet hareketi) } ya da { bos: true } (şablon: boş alanlar);
+     o.imza: teslim alanın mobil / e-imzası (Onaylar › Diğer). Kalemler MV.ARAC_KONTROL, açılar MV.ARAC_FOTO — ÖRNEK, düzenlenecek. */
+  MB.aracTutanak = function (o) {
+    var f = MV.FIRMA, formKod = f.kisa + "-FR-ARC-01", h = o.h, v = h ? MV.varlik(h.v) : null, t = h ? MV.tutanak(h) : null;
+    var bos = '<span class="a-belge-bos" aria-label="boş"></span>', yok = '<span class="a-deger-yok">kayıtta yok</span>';
+    var kisi = function (k) { return k === "depo" ? "Depo" : kacis(MV.kisi(k).ad) + '<span class="a-alt-satir">' + kacis(MV.meslekAd(MV.kisi(k))) + "</span>"; };
+    var kutu = function (dolu) { return '<span class="a-belge-kutu' + (dolu ? " a-belge-kutu-dolu" : "") + '"></span>'; };
+    var kontrol = MV.ARAC_KONTROL.map(function (x, i) {
+      var var_ = t && t.kontrol ? t.kontrol.indexOf(x[0]) >= 0 : null;
+      return [String(i + 1), kacis(x[1]), t && !t.kontrol ? yok : kutu(var_ === true) + " Var", t && !t.kontrol ? "" : kutu(var_ === false) + " Yok"];
+    });
+    var fotolar = MV.ARAC_FOTO.map(function (x) {
+      var ad = t && t.foto ? (t.foto.filter(function (y) { return y[0] === x[0]; })[0] || [])[1] : null;
+      return [kacis(x[1]), !h ? bos : t.foto ? (ad ? '<span class="a-kod">' + kacis(ad) + "</span>" : '<span class="a-deger-yok">çekilmedi</span>') : yok];
+    });
+    var imzalar = h ? [["Teslim eden", h.eden], ["Teslim alan", h.alan]] : [["Teslim eden", null], ["Teslim alan", null]];
+    return '<article class="a-belge" aria-label="Araç teslim tutanağı">' +
+      '<header class="a-belge-bas"><div class="a-belge-logo" role="img" aria-label="Firma logosu yeri">Logo</div>' +
+        '<div class="a-belge-kunye"><b>' + kacis(f.ad) + "</b><span>" + kacis(f.adres) + "</span></div></header>" +
+      '<div class="a-belge-baslik"><h2>Araç teslim tutanağı</h2><p>Aracın teslim alınması ve teslim edilmesi · zimmet kaydına eklenir</p></div>' +
+      '<dl class="a-bilgi">' + bilgi("Tutanak no", h ? '<span class="a-kod">' + t.no + "</span>" : bos) + bilgi("Tarih ve saat", h ? MK.zamanYaz(h.tarih) : bos) +
+        bilgi("Plaka", v ? '<span class="a-kod">' + kacis(v.plaka) + "</span>" : bos) + bilgi("Araç", v ? kacis(v.ad + " · " + v.marka + " " + v.model + " · " + v.yil) : bos) +
+        bilgi("Teslim eden", h ? kisi(h.eden) : bos) + bilgi("Teslim alan", h ? kisi(h.alan) : bos) + "</dl>" +
+      bolum("1", "Aracın durumu", "",
+        '<dl class="a-bilgi">' + bilgi("Kilometre", h ? (t.km != null ? MV.kmYaz(t.km) + " km" : yok) : bos) +
+          bilgi("Yakıt seviyesi", h ? (t.yakit ? MV.YAKIT_AD[t.yakit] : yok) : ["Boş", "1/4", "1/2", "3/4", "Dolu"].map(function (y) { return '<span class="a-belge-yakit">' + kutu(false) + y + "</span>"; }).join("")) + "</dl>") +
+      bolum("2", "Araçta olanlar", MV.ARAC_KONTROL.length + " kalem", tablo(["#", "Kalem", "Var", "Yok"], kontrol)) +
+      bolum("3", "Hasar ve notlar", "", h ? "<p>" + (t.hasar ? kacis(t.hasar) : "Hasar ya da not yazılmadı.") + "</p>" : '<p class="a-belge-satirlar">' + bos + bos + bos + "</p>") +
+      bolum("4", "Fotoğraflar", MV.ARAC_FOTO.length + " açı", tablo(["Açı", "Dosya"], fotolar)) +
+      bolum("5", "Taahhüt", "",
+        "<p>Yukarıda durumu yazılı aracı, belirtilen kilometre ve yakıt seviyesiyle, listedeki kalemlerle teslim aldım. Aracı yalnız iş için, trafik " +
+        "kurallarına uyarak kullanacağımı; kaza, hasar, arıza ve trafik cezalarını gecikmeden bildireceğimi; istendiğinde eksiksiz iade edeceğimi kabul ederim.</p>") +
+      '<div class="a-belge-imzalar">' + imzalar.map(function (x, i) {
+        var ad = x[1] ? (x[1] === "depo" ? "Depo · firma adına" : MV.kisi(x[1]).ad) : "";
+        var im = o.imza && i === 1 ? kacis(ad) + " · " + MK.imzaYaz(o.imza) : "";
+        return "<div><b>" + x[0] + "</b><span>" + kacis(ad || "Ad soyad") + '</span><div class="a-belge-imza' + (im ? " a-belge-imzali" : "") + '">' + (im || "Tarih · imza") + "</div></div>";
+      }).join("") + "</div>" +
+      '<footer class="a-belge-alt"><span>' + kacis(f.ad) + " · " + formKod + " · temel format</span></footer></article>";
+  };
   MB.zimmetFormu = function (o) {
     var alan = o.alan || { ad: o.p.ad, alt: MV.meslekAd(o.p) };
     var f = MV.FIRMA, formKod = f.kisa + "-FR-ZMT-01";

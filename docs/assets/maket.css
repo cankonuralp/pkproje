@@ -1159,6 +1159,21 @@ a.a-yuz:hover { border-color: var(--kenar-alan); background: var(--zemin); }
 .a-tablo-bordro .a-k-ay { width: 16%; } .a-tablo-bordro .a-k-brut { width: 12%; } .a-tablo-bordro .a-k-net { width: 12%; }
 .a-tablo-bordro .a-k-maliyet { width: 14%; } .a-tablo-bordro .a-k-onay { width: 14%; } .a-tablo-bordro .a-k-eylem { width: 32%; }
 .a-tablo-bordro .a-eylem-tuslar { flex-wrap: wrap; }
+/* AA4 Araçlar: liste, tutanaklar, tutanak penceresinin kontrol kutuları ve açı açı fotoğraf satırları */
+.a-tablo-arac .a-k-arac { width: 22%; } .a-tablo-arac .a-k-kimde { width: 16%; } .a-tablo-arac .a-k-km { width: 11%; }
+.a-tablo-arac .a-k-muayene, .a-tablo-arac .a-k-sigorta, .a-tablo-arac .a-k-kasko { width: 13%; } .a-tablo-arac .a-k-durum { width: 12%; }
+.a-tablo-tutanak .a-k-tarih { width: 14%; } .a-tablo-tutanak .a-k-arac { width: 14%; } .a-tablo-tutanak .a-k-kim { width: 30%; }
+.a-tablo-tutanak .a-k-km { width: 12%; } .a-tablo-tutanak .a-k-foto { width: 12%; } .a-tablo-tutanak .a-k-eylem { width: 18%; }
+.a-arac-kontrol { border: 0; margin: 0; padding: 0; min-width: 0; }
+.a-arac-kutular { display: grid; grid-template-columns: repeat(auto-fill, minmax(200px, 1fr)); gap: 4px 16px; }
+.a-arac-foto { list-style: none; margin: 0; padding: 0; display: grid; gap: 8px; }
+.a-arac-foto > li { display: flex; align-items: center; gap: 12px; flex-wrap: wrap; min-height: 44px; }
+.a-arac-foto-aci { flex: 0 0 168px; font-weight: 600; }
+.a-arac-foto > li > .a-foto-liste { flex: 1 1 240px; min-width: 0; margin: 0; }
+/* boş şablonda elle doldurulacak satır */
+.a-belge-bos { display: inline-block; width: 100%; max-width: 220px; min-height: 1.2em; border-bottom: 1px solid var(--kenar); }
+.a-belge-satirlar .a-belge-bos { display: block; max-width: none; min-height: 1.8em; }
+.a-belge-yakit { display: inline-block; margin-right: 16px; white-space: nowrap; }
 /* 2026-09-27 kârlılık (iş sayfası, gelir-gider) ve işlerin kârı */
 .a-tablo-karlilik .a-k-ad { width: 24%; } .a-tablo-karlilik .a-k-ayrinti { width: 52%; } .a-tablo-karlilik .a-k-tutar { width: 24%; }
 .a-tablo-karlilik td[data-alan="tutar"], .a-tablo-karlilik th:last-child { text-align: right; }
@@ -1435,7 +1450,7 @@ a.a-yuz:hover { border-color: var(--kenar-alan); background: var(--zemin); }
   .a-tablo-fkalem td[data-kart="govde"], .a-tablo-perf td[data-kart="govde"], .a-tablo-gunluk td[data-kart="govde"]:has(.a-kart-etiket),
   .a-tablo-egitim td[data-kart="govde"]:has(.a-kart-etiket), .a-tablo-egitimtur td[data-kart="govde"],
   .a-tablo-gider td[data-kart="govde"]:has(.a-kart-etiket), .a-tablo-isgider td[data-kart="govde"]:has(.a-kart-etiket),
-  .a-tablo-bordro td[data-kart="govde"],
+  .a-tablo-bordro td[data-kart="govde"], .a-tablo-arac td[data-kart="govde"], .a-tablo-tutanak td[data-kart="govde"],
   .a-tablo-karlilik td[data-kart="govde"]:has(.a-kart-etiket), .a-tablo-iskar td[data-kart="govde"]:has(.a-kart-etiket),
   .a-tablo-kriterbelge td[data-kart="govde"]:has(.a-kart-etiket) { display: flex; align-items: center; justify-content: space-between; gap: 8px; }
   .a-tablo-matris .a-kart-etiket, .a-tablo-yetkinlik .a-kart-etiket, .a-tablo-isgid .a-kart-etiket,
@@ -1443,7 +1458,7 @@ a.a-yuz:hover { border-color: var(--kenar-alan); background: var(--zemin); }
   .a-tablo-issoz .a-kart-etiket, .a-tablo-iskapsam .a-kart-etiket, .a-tablo-is .a-kart-etiket, .a-tablo-fatura .a-kart-etiket,
   .a-tablo-isfatura .a-kart-etiket, .a-tablo-israpor .a-kart-etiket, .a-tablo-tahsilat .a-kart-etiket, .a-tablo-fkalem .a-kart-etiket,
   .a-tablo-perf .a-kart-etiket, .a-tablo-gunluk .a-kart-etiket, .a-tablo-egitim .a-kart-etiket, .a-tablo-egitimtur .a-kart-etiket,
-  .a-tablo-gider .a-kart-etiket, .a-tablo-isgider .a-kart-etiket, .a-tablo-bordro .a-kart-etiket,
+  .a-tablo-gider .a-kart-etiket, .a-tablo-isgider .a-kart-etiket, .a-tablo-bordro .a-kart-etiket, .a-tablo-arac .a-kart-etiket, .a-tablo-tutanak .a-kart-etiket,
   .a-tablo-karlilik .a-kart-etiket, .a-tablo-iskar .a-kart-etiket, .a-tablo-kriterbelge .a-kart-etiket { display: inline; }
   /* M1 2. tur: zimmet, özlük ve Ana sayfa listeleri kartta etiket: değer; rol yetkileri kartında seçim alanı değerin yerinde */
   .a-tablo-kzimmet td[data-kart="govde"], .a-tablo-kegitim td[data-kart="govde"], .a-tablo-ozluk td[data-kart="govde"], .a-tablo-atama td[data-kart="govde"], .a-tablo-ana td[data-kart="govde"] { display: flex; align-items: baseline; justify-content: space-between; flex-wrap: wrap; gap: 4px 8px; }

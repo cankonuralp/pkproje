@@ -15,7 +15,9 @@
    dökümanlar bu kısımda tutulsun"): 4 Standartlar → Dökümanlar (yol dokumanlar); 10 Eğitimler ayrı menü değil, Dökümanlar'ın sekmesi
    → 15 modül.
    2026-09-30 (R1, reisim: "firma ayarları personel kısmının altında değil ayrı bir modül olsun , ekran daha verimli kullanılsın"): 22 Firma
-   ayarları (imza yöntemi, rapor, mesai, uyarı eşikleri, fiyat listesi, sabit giderler, firma bilgileri) Tanımlar grubunda → 16 modül. */
+   ayarları (imza yöntemi, rapor, mesai, uyarı eşikleri, fiyat listesi, sabit giderler, firma bilgileri) Tanımlar grubunda → 16 modül.
+   2026-10-02 (AA4, reisim: "bir de araç takip modülü olsun hangi aracın kimde olduğu belli olsun takip edilebilsin"): 23 Araçlar Varlık
+   grubunda (araç kimde, kilometre, belge bitişleri, fotoğraflı teslim tutanağı → zimmet) → 17 modül. */
 
 export interface Modul {
   /** pkproje.md §3.1 numarası */
@@ -47,6 +49,7 @@ export const MODUL_GRUPLARI: readonly ModulGrubu[] = [
   { grup: "Varlık", moduller: [
     { no: 8, ad: "Ölçüm cihazları", yol: "olcum-cihazlari", ikon: "gauge" },
     { no: 9, ad: "Zimmetler", yol: "zimmetler", ikon: "package" },
+    { no: 23, ad: "Araçlar", yol: "araclar", ikon: "car" },
   ] },
   { grup: "Personel", moduller: [
     { no: 2, ad: "Personel", yol: "personel", ikon: "users" },

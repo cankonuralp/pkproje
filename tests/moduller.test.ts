@@ -14,7 +14,9 @@
    2026-09-28 (reisim: "dökümanlar modülü olsun … eğitimler, muayene kriterleri, standartlar ve diğer dökümanlar bu kısımda"): 4 Standartlar
    → Dökümanlar, 10 Eğitimler Dökümanlar'ın içinde → 15 modül, menüde olmayanlar 1, 6, 7, 10, 16, 17. Denetim aynı.
    2026-09-30 (R1, reisim: "firma ayarları personel kısmının altında değil ayrı bir modül olsun"): 22 Firma ayarları eklendi → 16 modül;
-   numara aralığı 1–22. Denetim aynı, beklenen sayılar güncellendi. */
+   numara aralığı 1–22. Denetim aynı, beklenen sayılar güncellendi.
+   2026-10-02 (AA4, reisim: "bir de araç takip modülü olsun hangi aracın kimde olduğu belli olsun takip edilebilsin"): 23 Araçlar eklendi
+   (Varlık grubu) → 17 modül; numara aralığı 1–23. Denetim aynı, beklenen sayılar güncellendi. */
 import assert from "node:assert/strict";
 import { existsSync, readdirSync, readFileSync, statSync } from "node:fs";
 import { join } from "node:path";
@@ -35,11 +37,11 @@ test("maket menüsü tek kaynakta: menü sabiti yalnız maket-ortak.js'te", () =
   assert.deepEqual(tasiyan, ["maket-ortak.js"]);
 });
 
-test("16 modül, numaralar tekil; menüde olmayanlar 1 (Personel'in içinde), 6, 7 (planın içinde), 10 (Dökümanlar'ın içinde), 16, 17", () => {
+test("17 modül, numaralar tekil; menüde olmayanlar 1 (Personel'in içinde), 6, 7 (planın içinde), 10 (Dökümanlar'ın içinde), 16, 17", () => {
   const nolar = MODULLER.map((m) => m.no);
-  assert.equal(nolar.length, 16);
-  assert.equal(new Set(nolar).size, 16);
-  const yok = Array.from({ length: 22 }, (_, i) => i + 1).filter((n) => !nolar.includes(n));
+  assert.equal(nolar.length, 17);
+  assert.equal(new Set(nolar).size, 17);
+  const yok = Array.from({ length: 23 }, (_, i) => i + 1).filter((n) => !nolar.includes(n));
   assert.deepEqual(yok, [1, 6, 7, 10, 16, 17]);
 });
 

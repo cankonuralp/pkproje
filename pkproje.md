@@ -2206,6 +2206,18 @@ revizyon, alan kopyalama, hafif kusur devri, meslek eşleşme denetimi).
 - Emsal ürünler: https://opwire.app/iso-17020-periyodik-kontrol-yazilimi/ · https://17020muayene.vidco.com.tr/ · https://akuple.com/asansor-kontrol-yazilimi/ · https://ensyazilim.com/
 
 ## 11 · Değişiklik günlüğü
+- 2026-10-02 (231): **AA4 · Araçlar modülü (araç takip + fotoğraflı teslim tutanağı → zimmet)** (§9 kırk sekizinci tur: *"bir de araç takip modülü
+  olsun hangi aracın kimde olduğu belli olsun takip edilebilsin elinde araç olanlar sadece kendi aracını yöneticiler her aracı kimde olduğunu vs
+  görsün aracın teslim alımı veya teslim verimi üzerine fotoğraflı zimmet oluşturma olsun zimmetlere otomatik oradan gitsin örnek bi şablon
+  oluştur inceleyip düzenleriz"*). Yan menüde Varlık grubunda **Araçlar (modül 23)**; uygulamanın modül kaydı ve rotası (17 modül); rol yetkisi
+  denetçide "yalnız kendi", yöneticide "değiştirir". **Yönetici** (`#/`): bütün araçlar — kimde, son kilometre, muayene / trafik sigortası / kasko
+  bitişi (30 gün kala sarı, geçince kırmızı). **Sürücü** (`#/benim`, makette Mert Kaya): yalnız kendi zimmetindeki araç ve kendi tutanakları;
+  başka araç açılmaz. **Teslim tutanağı** penceresi: araç, teslim alan (kişi ya da depo), tarih-saat, kilometre (son tutanaktan küçük olamaz),
+  yakıt, araçta olanlar (10 kalem), hasar notu, **açı açı fotoğraf** (ön, arka, sol, sağ, gösterge, iç; eksik açı yalnız uyarı). Kaydedince
+  **zimmet hareketi kendiliğinden oluşur** (Zimmetler'de aynı kayıt) ve teslim alan kişiyse tutanak **Onaylar › Diğer belgeler**'ine imzaya düşer.
+  **Şablon** sekmesi: boş tutanak (temel format KM-FR-ARC-01) — kalemler ve açılar ÖRNEK, reisim inceleyip düzenleyecek. Zimmetler'deki araç
+  sayfasından Araçlar'a bağlantı; Verileri dışa aktar araç alanlarını ve tutanağı Türkçe sütunlarla verir (ölçümde yakalandı). car, clipboard-check ikonları eklendi. Kilit: yeni `araclar` ölçüm grubu (15 durum · 11 etkileşim · telefon);
+  sürücü süzgeci, Onaylar'a gönderim ve km kuralı bozulunca 5 denetim düşüyor. Modül sayısı denetimi 16 → 17 (tarih + gerekçe).
 - 2026-10-02 (230): **AA3 · Onaylar › Diğer belgeler + imza penceresi** (§9 kırk sekizinci tur: *"Onaylar kısmında diğer kısmı olsun muhasebeciden
   onaya maaş bordrosu gönderilirse veya eğitim zimmet formu gönderilirse oradan onaylanabilsin mobil veya e imza ile"* · *"mobil imza sitesinden
   site içi görüntüler elde ettim neyi nasıl yaptığına dair fikir sahibi olabilirsin"*). Onaylar'da **Diğer belgeler** sekmesi (`#/diger`): kişinin

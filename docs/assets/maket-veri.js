@@ -68,7 +68,8 @@
     12: ["yaz", "kendi", "gor", "gor", "yaz", "gor"], 7: ["yaz", "yaz", "gor", "gor", "yaz", "yok"], 8: ["gor", "kendi", "yaz", "yaz", "yaz", "yok"],
     9: ["gor", "kendi", "yaz", "yaz", "yaz", "yok"], 2: ["gor", "kendi", "gor", "gor", "yaz", "yok"], 10: ["gor", "kendi", "yaz", "yaz", "yaz", "yok"],
     18: ["yok", "yok", "yok", "yok", "yaz", "yaz"], 19: ["gor", "kendi", "brans", "brans", "gor", "yok"], 5: ["gor", "gor", "yaz", "yaz", "yaz", "yok"],
-    4: ["gor", "gor", "yaz", "yaz", "yaz", "yok"], 21: ["kendi", "kendi", "kendi", "kendi", "yaz", "kendi"], 22: ["yok", "yok", "yok", "yok", "yaz", "yok"], hareket: ["yok", "yok", "yok", "yok", "gor", "yok"]
+    4: ["gor", "gor", "yaz", "yaz", "yaz", "yok"], 21: ["kendi", "kendi", "kendi", "kendi", "yaz", "kendi"], 22: ["yok", "yok", "yok", "yok", "yaz", "yok"],
+    23: ["gor", "kendi", "gor", "gor", "yaz", "yok"], hareket: ["yok", "yok", "yok", "yok", "gor", "yok"]
   };
   MV.MATRIS_ONERI = JSON.parse(JSON.stringify(MV.MATRIS));
   MV.DUZEY = {
@@ -906,9 +907,10 @@
             { tarih: (y - 2) + bit.slice(4), bitis: (y - 1) + bit.slice(4), lab: LAB[(i + 1) % 2], sertifika: "KL-" + (y - 2) + "-" + (300 + i * 11), sonuc: "Uygun" }],
       ara: ARASIZ.indexOf(c[1]) >= 0 ? [] : [{ tarih: c[4], siklik: "6ay", kim: i % 2 ? "co" : "sy", yontem: "Referans değerle karşılaştırma", sonuc: "Uygun" }], rapor: 12 + (i * 7) % 40 };
   }).concat([
-    { id: "a1", tur: "arac", ad: "Hafif ticari araç", plaka: "00 MAK 001", marka: "Delta", model: "Van", yil: 2022 },
-    { id: "a2", tur: "arac", ad: "Hafif ticari araç", plaka: "00 MAK 002", marka: "Delta", model: "Van", yil: 2023 },
-    { id: "a3", tur: "arac", ad: "Binek araç", plaka: "00 MAK 003", marka: "Orion", model: "Sedan", yil: 2021 },
+    /* AA4 (2026-10-02, Araçlar): muayene, trafik sigortası, kasko bitişi, sonraki bakım kilometresi — tarihler UYDURMA */
+    { id: "a1", tur: "arac", ad: "Hafif ticari araç", plaka: "00 MAK 001", marka: "Delta", model: "Van", yil: 2022, yakit: "dizel", muayene: "2027-03-14", sigorta: "2026-10-18", kasko: "2027-01-09", bakimKm: 35000 },
+    { id: "a2", tur: "arac", ad: "Hafif ticari araç", plaka: "00 MAK 002", marka: "Delta", model: "Van", yil: 2023, yakit: "dizel", muayene: "2028-02-02", sigorta: "2027-02-01", kasko: "2027-02-01", bakimKm: 25000 },
+    { id: "a3", tur: "arac", ad: "Binek araç", plaka: "00 MAK 003", marka: "Orion", model: "Sedan", yil: 2021, yakit: "benzin", muayene: "2026-09-12", sigorta: "2027-05-10", kasko: "", bakimKm: 60000 },
     { id: "d1", tur: "diger", ad: "Saha tableti", env: "TB-01", marka: "Pars", model: "10 inç" }, { id: "d2", tur: "diger", ad: "Saha tableti", env: "TB-02", marka: "Pars", model: "10 inç" },
     { id: "d3", tur: "diger", ad: "Saha tableti", env: "TB-03", marka: "Pars", model: "10 inç" },
     { id: "d4", tur: "diger", ad: "Yüksekte çalışma emniyet seti", env: "KKD-11", marka: "Vega", model: "Tam vücut kemeri + lanyard" },
@@ -933,6 +935,34 @@
     ["d3", "2026-05-11T09:50", "depo", "bs", 2, ""], ["d4", "2026-04-01T08:30", "depo", "mk", 3, "Son muayene etiketi 03/2026."], ["d5", "2026-01-20T09:10", "depo", "dk", 1, ""]
   ];
   MV.ZIMMET = H.map(function (h, i) { return { id: "z" + (i + 1), v: h[0], tarih: h[1], eden: h[2], alan: h[3], foto: h[4], not: h[5], onay: h[3] !== "lab" && h[3] !== "depo" ? h[1].slice(0, 10) : null, yetkili: "za" }; });
+  /* ── ARAÇ TESLİM TUTANAĞI (AA4, 2026-10-02; reisim: "aracın teslim alımı veya teslim verimi üzerine fotoğraflı zimmet oluşturma olsun
+     zimmetlere otomatik oradan gitsin örnek bi şablon oluştur inceleyip düzenleriz"). Tutanak = zimmet hareketinin kendisi (ikinci kayıt yok):
+     h.tutanak = { no, km, yakit, kontrol: [araçta olan kalemler], hasar, foto: [[açı, dosya]] }. Kalemler ve açılar ÖRNEK şablon. Tohumdaki
+     eski hareketlerde tutanak yok: kilometre nottan okunur, öteki alanlar "kayıtta yok". */
+  MV.ARAC_KONTROL = [["ruhsat", "Ruhsat"], ["police", "Trafik sigortası poliçesi"], ["anahtar", "Anahtar (2 adet)"], ["yangin", "Yangın söndürücü"],
+    ["ilkyardim", "İlk yardım çantası"], ["ucgen", "Reflektör (üçgen)"], ["stepne", "Stepne"], ["kriko", "Kriko ve bijon anahtarı"], ["hgs", "HGS etiketi"], ["yelek", "Reflektörlü yelek"]];
+  MV.ARAC_FOTO = [["on", "Ön"], ["arka", "Arka"], ["sol", "Sol yan"], ["sag", "Sağ yan"], ["gosterge", "Gösterge (km ve yakıt)"], ["ic", "İç"]];
+  MV.YAKIT_AD = { bos: "Boş", ceyrek: "1/4", yarim: "1/2", ucceyrek: "3/4", dolu: "Dolu" };
+  MV.kmYaz = function (n) { return String(n).replace(/\B(?=(\d{3})+(?!\d))/g, "."); };
+  MV.tutanak = function (h) {
+    if (h.tutanak) return h.tutanak;
+    var m = /Km ([\d.]+)/.exec(h.not || "");
+    return { no: "AT-" + h.tarih.slice(5, 7) + h.tarih.slice(2, 4) + "-" + h.id.slice(1).padStart(3, "0"), km: m ? +m[1].replace(/\./g, "") : null, yakit: null, kontrol: null,
+      hasar: (h.not || "").replace(/^Km [\d.]+ ·? ?/, ""), foto: null, eski: true };
+  };
+  MV.tutanakNo = function (t) { return "AT-" + t.slice(5, 7) + t.slice(2, 4) + "-" + String(MV.ZIMMET.length + 1).padStart(3, "0"); };
+  /* son tutanaktaki kilometre */
+  MV.aracKm = function (vid) { var l = MV.hareketler(vid); for (var i = 0; i < l.length; i++) { var k = MV.tutanak(l[i]).km; if (k != null) return k; } return null; };
+  /* belge bitişi: gecti · yakin (eşik içinde; kalibrasyonla aynı firma ayarı) · gecerli · yok */
+  MV.aracTarihDurum = function (t) {
+    if (!t) return "yok";
+    var k = Math.round((new Date(t + "T12:00:00") - new Date(MK.BUGUN + "T12:00:00")) / 864e5);
+    return k < 0 ? "gecti" : k <= MV.esik("kal") ? "yakin" : "gecerli";
+  };
+  MV.aracUyarilari = function (v) {
+    return [["muayene", "Muayene"], ["sigorta", "Trafik sigortası"], ["kasko", "Kasko"]].map(function (b) { return { ad: b[1], t: v[b[0]], d: MV.aracTarihDurum(v[b[0]]) }; })
+      .filter(function (x) { return x.d === "gecti" || x.d === "yakin"; });
+  };
   MV.hareketler = function (vid) { return MV.ZIMMET.filter(function (z) { return z.v === vid; }).sort(function (a, b) { return a.tarih < b.tarih ? 1 : -1; }); };
   MV.kimde = function (vid) { var h = MV.hareketler(vid)[0]; return h ? h.alan : "depo"; };
   MV.yerAdi = function (k) { return k === "depo" ? "Depo" : k === "lab" ? "Kalibrasyonda" : MV.kisi(k).ad; };
@@ -1588,7 +1618,7 @@
      eğitim zimmet formu gönderilirse oradan onaylanabilsin mobil veya e imza ile"): kişinin onayına / imzasına gönderilen belgeler — bordro
      (muhasebe gönderir), eğitim formu, zimmet formu. Onaylar › Diğer'de görülür, mobil imza ya da e-imzayla onaylanır, gerekirse geri gönderilir.
      durum: bekliyor · imzali · geri. UYDURMA. */
-  MV.BELGE_ONAY_TUR = { bordro: { ad: "Maaş bordrosu", ikon: "wallet" }, egitim: { ad: "Eğitim formu", ikon: "graduation-cap" }, zimmet: { ad: "Zimmet formu", ikon: "package" } };
+  MV.BELGE_ONAY_TUR = { bordro: { ad: "Maaş bordrosu", ikon: "wallet" }, egitim: { ad: "Eğitim formu", ikon: "graduation-cap" }, zimmet: { ad: "Zimmet formu", ikon: "package" }, arac: { ad: "Araç teslim tutanağı", ikon: "car" } };
   MV.BELGE_ONAY = [
     { id: "bo1", tur: "bordro", ad: "Eylül 2026 maaş bordrosu", kisi: "sy", gonderen: "ga", gonderildi: "2026-09-22T17:10", durum: "bekliyor", ay: "2026-09", dosya: "bordro-2026-09.pdf" },
     { id: "bo2", tur: "egitim", ad: "Yüksekte çalışma eğitimi katılım formu", kisi: "sy", gonderen: "ga", gonderildi: "2026-09-21T10:30", durum: "bekliyor", dosya: "egitim-katilim-formu.pdf" },

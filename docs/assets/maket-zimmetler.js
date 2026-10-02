@@ -123,6 +123,7 @@
       '<div class="a-nesne-bas"><div class="a-nesne-kimlik"><div class="a-nesne-baslik"><h1 tabindex="-1">' + kimlik + " · " + kacis(v.ad) + "</h1>" + rozet(durum(v)) + "</div>" +
         '<p class="a-nesne-alt">' + ikon(TUR[v.tur].ikon, "a-ikon-kucuk") + "<span>" + TUR[v.tur].ad + " · " + kacis(v.marka + " " + v.model) + (v.yil ? " · " + v.yil : "") + "</span></p></div>" +
         '<div class="a-eylem-cubugu">' + (v.tur === "cihaz" ? MK.git({ hedef: 8, hash: "#/c/" + v.id, ad: "Cihaz ve kalibrasyon", ikon: "gauge", ne: "Ölçüm cihazları" }) : "") +
+          (v.tur === "arac" ? MK.git({ hedef: 23, hash: "#/a/" + v.id, ad: "Araç ve tutanaklar", ikon: "car", ne: "Araçlar" }) : "") +
           (k !== "depo" && k !== "lab" ? '<a class="a-tus a-tus-ikincil" href="' + MK.adres(2, "#/p/" + k + "/zimmet-formu") + '">' + ikon("file-signature", "a-ikon-kucuk") + "Zimmet formu</a>" : "") +
         (k === "lab" ? "" : MK.tus({ eylem: "teslim-ac", ad: "Teslim et", ikon: "arrow-right-left", veri: { varlik: v.id } })) + "</div></div>" +
       (MV.kalDurum(v) === "gecti" && k !== "depo" ? '<div class="a-serit-kap">' + MK.serit("hata", "circle-x", "Kalibrasyonu geçmiş cihaz " + kacis(MV.yerAdi(k)) + " zimmetinde: raporları onaya gönderilemez. Depoya alın ya da kalibrasyona gönderin.") + "</div>" : "") +

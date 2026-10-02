@@ -284,7 +284,11 @@
   }
   MK.goster = goster;
   var X = MK.eylem;
-  X["belge-goster"] = function (el) { var x = belge(el); MK.pdfGoster({ dosya: x.dosya, baslik: x.ad, sayfa: 1 }); };
+  X["belge-goster"] = function (el) {
+    var x = belge(el), h = x.hareket && MV.ZIMMET.filter(function (z) { return z.id === x.hareket; })[0];
+    /* AA4: Araçlar'dan gelen teslim tutanağı kendi içeriğiyle açılır */
+    MK.pdfGoster(h ? { dosya: x.dosya, baslik: x.ad, icerik: MB.aracTutanak({ h: h, imza: x.imza }) } : { dosya: x.dosya, baslik: x.ad, sayfa: 1 });
+  };
   X["belge-imzala"] = function (el) {
     var x = belge(el);
     MK.imzaAl({ belge: x.ad, imzacilar: [MV.kisi(BEN).ad], tamam: function (im) {

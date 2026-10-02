@@ -378,6 +378,24 @@ export const DURUMLAR = {
     { ad: "PDF görüntüleyici · eğitim sertifikası", hash: "#/k/g31", adim: [["tikla", '#a-pencere [data-eylem="pdf-goster"]']] }
   ] },
   /* 2026-09-28 (reisim: "talepler kısmı olsun denetçi izin talebi masraf formu ekleme"): Talepler (modül 21) */
+  /* AA4 (2026-10-02): Araçlar — yönetici ve sürücü görünümü, tutanak penceresi, şablon, tutanak PDF'i */
+  araclar: { sayfa: "maket/araclar.html", durumlar: [
+    { ad: "araçlar · liste (kimde, km, belge bitişleri)", hash: "#/" },
+    { ad: "tutanaklar · liste", hash: "#/tutanaklar" },
+    { ad: "şablon · boş tutanak", hash: "#/sablon" },
+    { ad: "araç · zimmette, sigorta yaklaşıyor", hash: "#/a/a1" },
+    { ad: "araç · depoda, muayene geçti", hash: "#/a/a3" },
+    { ad: "araç bulunamadı", hash: "#/a/yok" },
+    { ad: "tutanak penceresi · araç seçili", hash: "#/tutanak/a3" },
+    { ad: "tutanak penceresi · boş kaydedildi", hash: "#/tutanak", adim: [["tikla", '[data-eylem="tutanak-kaydet"]']] },
+    { ad: "tutanak penceresi · kişiye teslim, kalem ve fotoğraf", hash: "#/tutanak/a3", adim: [["tikla", "#w-alan"], ["tikla", '[data-secim="w-alan"][data-deger="bs"]'], ["tikla", '[data-kontrol="ruhsat"]'], ["tikla", '[data-eylem="tfoto-ekle"][data-aci="on"]']] },
+    { ad: "tutanak PDF'i", hash: "#/a/a1", adim: [["tikla", '[data-eylem="tutanak-goster"]']] },
+    { ad: "sürücü · aracım", hash: "#/benim" },
+    { ad: "sürücü · kendi aracı", hash: "#/benim/a/a1" },
+    { ad: "sürücü · başkasının aracı açılmaz", hash: "#/benim/a/a2" },
+    { ad: "sürücü · teslim et penceresi", hash: "#/benim/tutanak" },
+    { ad: "sürücü · tutanaklarım", hash: "#/benim/tutanaklar" }
+  ] },
   talepler: { sayfa: "maket/talepler.html", durumlar: [
     { ad: "taleplerim · izin özeti, liste", hash: "#/" },
     { ad: "yeni talep menüsü açık", hash: "#/", adim: [["tikla", '[data-secici-ac="yeni-talep"]']] },
@@ -1234,6 +1252,22 @@ export const DENEMELER = {
     { ad: "kişiye geçiş: günlük iş, muhasebe iş bağlantısı", hash: "#/", adim: [["tikla", '#a-p-liste a[href="#/p/mk"]']], bekle: 'location.hash === "#/p/mk" && document.querySelectorAll(".a-tablo-gunluk tbody tr").length === 3 && !!document.querySelector(\'.a-tablo-gunluk a[href^="muhasebe.html#/is/"]\')' },
     { ad: "kişide dönem korunur (panodan geçen yıl → kişi)", hash: "#/", adim: [["tikla", '[data-donem="gecen"]'], ["tikla", '#a-p-liste a[href="#/p/hp"]']], bekle: 'document.querySelector(\'[data-donem="gecen"]\').getAttribute("aria-pressed") === "true" && document.querySelectorAll(".a-tablo-gunluk tbody tr").length > 0' },
     { ad: "menüde Performans hazır maketi açar (Muhasebe'den)", sayfa: "maket/muhasebe.html", hash: "#/", adim: [["tikla", '#a-menu a[href="performans.html"]']], bekle: '/performans\\.html$/.test(location.pathname) && !!document.querySelector(".a-grafik")' },
+  ],
+  /* AA4 (2026-10-02; reisim: "araç takip modülü olsun hangi aracın kimde olduğu belli olsun takip edilebilsin elinde araç olanlar sadece kendi
+     aracını yöneticiler her aracı kimde olduğunu vs görsün aracın teslim alımı veya teslim verimi üzerine fotoğraflı zimmet oluşturma olsun
+     zimmetlere otomatik oradan gitsin örnek bi şablon oluştur") */
+  araclar: [
+    { ad: "AA4: menüde Varlık grubunda Araçlar, etkin", hash: "#/", bekle: '[...document.querySelectorAll(".a-menu-grup")].some(g => g.textContent === "Varlık" && /Araçlar/.test(g.nextElementSibling.textContent)) && [...document.querySelectorAll("[aria-current=page]")].some(a => a.textContent.trim() === "Araçlar")' },
+    { ad: "AA4: yönetici bütün araçları görür — kimde, son km, geçmiş muayene kırmızı", hash: "#/", bekle: 'document.querySelectorAll("#a-liste tbody tr").length === 3 && [...document.querySelectorAll("#a-liste tbody tr")].some(tr => /00 MAK 001/.test(tr.textContent) && /Mert Kaya/.test(tr.textContent) && /34\\.905 km/.test(tr.textContent)) && [...document.querySelectorAll("#a-liste tbody tr")].some(tr => /00 MAK 003/.test(tr.textContent) && /Belge süresi geçti/.test(tr.textContent))' },
+    { ad: "AA4: tutanak kaydedilir → zimmet hareketi oluşur, teslim alanın Onaylar'ına imzaya düşer", hash: "#/tutanak/a3", adim: [["tikla", "#w-alan"], ["tikla", '[data-secim="w-alan"][data-deger="sy"]'], ["yaz", "#w-km", "58800"], ["tikla", "#w-yakit"], ["tikla", '[data-secim="w-yakit"][data-deger="yarim"]'], ["tikla", '[data-kontrol="ruhsat"]'], ["tikla", '[data-eylem="tfoto-ekle"][data-aci="on"]'], ["tikla", '[data-eylem="tutanak-kaydet"]']], bekle: 'location.hash === "#/a/a3" && MV.kimde("a3") === "sy" && MV.aracKm("a3") === 58800 && MV.hareketler("a3")[0].tutanak.kontrol.join() === "ruhsat" && MV.hareketler("a3")[0].foto === 1 && MV.BELGE_ONAY.some(b => b.tur === "arac" && b.kisi === "sy" && b.durum === "bekliyor") && /Selin Yıldız/.test(document.querySelector("#a-nesne .a-yuzler").textContent)' },
+    { ad: "AA4: aynı tutanak Onaylar › Diğer belgeler'de görünür ve kendi içeriğiyle açılır", hash: "#/tutanak/a2", sure: 6000, adim: [["tikla", "#w-alan"], ["tikla", '[data-secim="w-alan"][data-deger="sy"]'], ["yaz", "#w-km", "13000"], ["tikla", "#w-yakit"], ["tikla", '[data-secim="w-yakit"][data-deger="dolu"]'], ["tikla", '[data-eylem="tutanak-kaydet"]'], ["js", 'setTimeout(function () { location.href = "onaylar.html#/diger"; }, 300)']], bekle: '/onaylar\\.html$/.test(location.pathname) && (() => { const tr = [...document.querySelectorAll("#a-liste tbody tr")].filter(x => /Araç teslim tutanağı · 00 MAK 002/.test(x.textContent))[0], p = document.querySelector("#a-pdf"); if (!tr) return false; if (!p || !p.open) { tr.querySelector("[data-eylem=belge-goster]").click(); return false; } return /13\\.000 km/.test(document.querySelector("#a-pdf-govde").textContent); })()' },
+    { ad: "AA4: kilometre eksik ya da son tutanaktan küçükse kaydedilmez", hash: "#/tutanak/a1", adim: [["tikla", "#w-alan"], ["tikla", '[data-secim="w-alan"][data-deger="depo"]'], ["yaz", "#w-km", "100"], ["tikla", "#w-yakit"], ["tikla", '[data-secim="w-yakit"][data-deger="dolu"]'], ["tikla", '[data-eylem="tutanak-kaydet"]']], bekle: 'document.querySelector("#a-pencere").open && document.querySelector("#w-km").getAttribute("aria-invalid") === "true" && /küçük olamaz/.test(document.querySelector("#a-pencere-govde").textContent) && MV.kimde("a1") === "mk"' },
+    { ad: "AA4: fotoğrafsız açı ve işaretlenmeyen kalem yalnız uyarı", hash: "#/tutanak/a3", bekle: '/6 açı fotoğrafsız/.test(document.querySelector("#a-pencere-govde").textContent) && /İşaretlenmeyen 10 kalem/.test(document.querySelector("#a-pencere-govde").textContent)' },
+    { ad: "AA4: sürücü yalnız kendi aracını görür, şablon sekmesi yok, başkasının aracı açılmaz", hash: "#/benim", adim: [["js", 'sessionStorage.setItem("s", [document.querySelectorAll("#a-liste tbody tr").length, /00 MAK 002/.test(document.querySelector("#a-liste").textContent), !!document.querySelector("a.a-sekme[href=\'#/sablon\']"), document.querySelector("#a-baslik").textContent].join())'], ["js", 'location.hash = "#/benim/a/a2"']], bekle: 'sessionStorage.getItem("s") === "1,false,false,Aracım" && /sizin zimmetinizde değil/.test(document.querySelector("#a-nesne").textContent) && /Mert Kaya/.test(document.querySelector(".a-kullanici, #a-kabuk, body").textContent)' },
+    { ad: "AA4: sürücü aracı depoya teslim eder → aracı kalmaz", hash: "#/benim/tutanak", adim: [["yaz", "#w-km", "35100"], ["tikla", "#w-yakit"], ["tikla", '[data-secim="w-yakit"][data-deger="dolu"]'], ["tikla", '[data-eylem="tutanak-kaydet"]']], bekle: 'location.hash === "#/benim" && MV.kimde("a1") === "depo" && /Üzerinizde araç yok/.test(document.querySelector("#a-liste").textContent) && !MV.BELGE_ONAY.some(b => b.tur === "arac" && b.kisi === "depo")' },
+    { ad: "AA4: şablon — boş tutanak, kontrol kalemleri ve fotoğraf açıları", hash: "#/sablon", bekle: '/Araç teslim tutanağı/.test(document.querySelector("#a-liste").textContent) && /FR-ARC-01/.test(document.querySelector("#a-liste").textContent) && /Reflektörlü yelek/.test(document.querySelector("#a-liste").textContent) && /Gösterge \\(km ve yakıt\\)/.test(document.querySelector("#a-liste").textContent)' },
+    { ad: "AA4: tutanak PDF'i — eski hareket, nottaki km", hash: "#/a/a1", adim: [["tikla", '[data-eylem="tutanak-goster"]']], bekle: 'document.querySelector("#a-pdf").open && /00 MAK 001/.test(document.querySelector("#a-pdf-govde").textContent) && /34\\.905 km/.test(document.querySelector("#a-pdf-govde").textContent) && /kayıtta yok/.test(document.querySelector("#a-pdf-govde").textContent)' },
+    { ad: "AA4: Zimmetler'deki araç sayfasından Araçlar'a", sayfa: "maket/zimmetler.html", hash: "#/v/a1", adim: [["tikla", 'a[href="araclar.html#/a/a1"]']], bekle: '/araclar\\.html$/.test(location.pathname) && location.hash === "#/a/a1" && /Teslim tutanakları/.test(document.querySelector("#a-nesne").textContent)' }
   ],
   talepler: [
     { ad: "menüde Personel grubunda Talepler, etkin", hash: "#/", bekle: '[...document.querySelectorAll(".a-menu-grup")].some(g => g.textContent === "Personel" && /Talepler/.test(g.nextElementSibling.textContent)) && [...document.querySelectorAll("[aria-current=page]")].some(a => a.textContent.trim() === "Talepler")' },

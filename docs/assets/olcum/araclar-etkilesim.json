@@ -1,0 +1,86 @@
+{
+ "maket": "araclar",
+ "tarih": "2026-10-02",
+ "arac": "tools/olc-bulut.mjs --etkilesim (başsız tarayıcı, 1920 açık tema; gen verilen denemede o genişlik)",
+ "toplam": 11,
+ "gecen": 11,
+ "denemeler": [
+  {
+   "ad": "AA4: menüde Varlık grubunda Araçlar, etkin",
+   "gen": 1920,
+   "sayfa": "maket/araclar.html",
+   "hash": "#/",
+   "gecti": true
+  },
+  {
+   "ad": "AA4: yönetici bütün araçları görür — kimde, son km, geçmiş muayene kırmızı",
+   "gen": 1920,
+   "sayfa": "maket/araclar.html",
+   "hash": "#/",
+   "gecti": true
+  },
+  {
+   "ad": "AA4: tutanak kaydedilir → zimmet hareketi oluşur, teslim alanın Onaylar'ına imzaya düşer",
+   "gen": 1920,
+   "sayfa": "maket/araclar.html",
+   "hash": "#/tutanak/a3",
+   "gecti": true
+  },
+  {
+   "ad": "AA4: aynı tutanak Onaylar › Diğer belgeler'de görünür ve kendi içeriğiyle açılır",
+   "gen": 1920,
+   "sayfa": "maket/araclar.html",
+   "hash": "#/tutanak/a2",
+   "gecti": true
+  },
+  {
+   "ad": "AA4: kilometre eksik ya da son tutanaktan küçükse kaydedilmez",
+   "gen": 1920,
+   "sayfa": "maket/araclar.html",
+   "hash": "#/tutanak/a1",
+   "gecti": true
+  },
+  {
+   "ad": "AA4: fotoğrafsız açı ve işaretlenmeyen kalem yalnız uyarı",
+   "gen": 1920,
+   "sayfa": "maket/araclar.html",
+   "hash": "#/tutanak/a3",
+   "gecti": true
+  },
+  {
+   "ad": "AA4: sürücü yalnız kendi aracını görür, şablon sekmesi yok, başkasının aracı açılmaz",
+   "gen": 1920,
+   "sayfa": "maket/araclar.html",
+   "hash": "#/benim",
+   "gecti": true
+  },
+  {
+   "ad": "AA4: sürücü aracı depoya teslim eder → aracı kalmaz",
+   "gen": 1920,
+   "sayfa": "maket/araclar.html",
+   "hash": "#/benim/tutanak",
+   "gecti": true
+  },
+  {
+   "ad": "AA4: şablon — boş tutanak, kontrol kalemleri ve fotoğraf açıları",
+   "gen": 1920,
+   "sayfa": "maket/araclar.html",
+   "hash": "#/sablon",
+   "gecti": true
+  },
+  {
+   "ad": "AA4: tutanak PDF'i — eski hareket, nottaki km",
+   "gen": 1920,
+   "sayfa": "maket/araclar.html",
+   "hash": "#/a/a1",
+   "gecti": true
+  },
+  {
+   "ad": "AA4: Zimmetler'deki araç sayfasından Araçlar'a",
+   "gen": 1920,
+   "sayfa": "maket/zimmetler.html",
+   "hash": "#/v/a1",
+   "gecti": true
+  }
+ ]
+}
