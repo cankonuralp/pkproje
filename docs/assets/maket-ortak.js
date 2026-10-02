@@ -950,16 +950,41 @@
      ⛔ Makette telefon ekranı ve imza aracı TAKLİT; gerçek uygulamada istek operatöre / bilgisayardaki imza aracına gider, imza belgeye
      sunucuda gömülür. Islak imza + tarama yükleme her belgede yedek yol olarak durur. */
   var IMZ = null;
+  /* AA3 (2026-10-02, reisim: "mobil imza sitesinden site içi görüntüler elde ettim neyi nasıl yaptığına dair fikir sahibi olabilirsin"):
+     imza penceresi — başlıkta imzacı; isteğe bağlı imza sebebi ve yeri; yöntem seçilir (firmanın yöntemi başta seçili): USB e-imza
+     (gereksinimler: imza aracı, kart okuyucu, nitelikli sertifika; 5070 sayılı Kanun'a göre güvenli elektronik imza) · mobil imza (telefona
+     istek gider; ekrandaki parmak izi telefondakiyle aynı mı bakılır; adımlar: uyarı gelir → parmak izini doğrula → şifreyi gir). Makette
+     telefon / kart yok: PIN bu pencerede girilir. Uydurma parmak izi belgenin adından üretilir. */
+  var parmakIzi = function (metin) {
+    var h = 2166136261, l = []; for (var k = 0; k < 20; k++) { for (var i = 0; i < metin.length; i++) h = Math.imul(h ^ metin.charCodeAt(i) ^ k, 16777619) >>> 0; l.push(("000" + (h & 0xffff).toString(16).toUpperCase()).slice(-4)); }
+    return l;
+  };
   function imzaCiz(odak) {
-    var y = MV.imzaYontem(), n = IMZ.o.imzacilar.length, ad = IMZ.o.imzacilar[IMZ.i];
-    $("a-imza-baslik").textContent = (y.k === "mobil" ? "Telefon · mobil imza isteği" : "probata imza aracı") + (n > 1 ? " (" + (IMZ.i + 1) + " / " + n + ")" : "");
-    $("a-imza-govde").innerHTML = MK.serit("bilgi", y.k === "mobil" ? "smartphone" : "usb", y.k === "mobil" ? "Maket: " + kacis(ad) + " telefonundaki imza isteği" : "Maket: bilgisayardaki imza aracı · kart takılı · " + kacis(ad)) +
-      '<p class="a-pencere-metin"><b>probata</b> · ' + kacis(IMZ.o.belge) + " belgesini imzalamak için " + (y.k === "mobil" ? "mobil imza" : "kart") + " PIN'inizi girin.</p>" +
-      '<div class="a-alan-grup"><label class="a-etiket" for="a-imza-pin">' + (y.k === "mobil" ? "Mobil imza PIN" : "Kart PIN") + '</label><input class="a-girdi" id="a-imza-pin" type="password" inputmode="numeric" autocomplete="off" maxlength="8" value="' + kacis(IMZ.pin) + '"' +
+    var n = IMZ.o.imzacilar.length, ad = IMZ.o.imzacilar[IMZ.i], mob = IMZ.y === "mobil", p = MV.PERSONEL.filter(function (x) { return x.ad === ad; })[0];
+    $("a-imza-baslik").textContent = "İmzacı: " + ad + (n > 1 ? " (" + (IMZ.i + 1) + " / " + n + ")" : "");
+    var iz = parmakIzi(IMZ.o.belge + "|" + ad);
+    $("a-imza-govde").innerHTML =
+      '<p class="a-pencere-metin"><b>' + kacis(IMZ.o.belge) + "</b></p>" +
+      '<div class="a-form a-imza-ek"><div class="a-alan-grup"><label class="a-etiket" for="a-imza-sebep">İmza sebebi <span class="a-alt-inline">isteğe bağlı</span></label><input class="a-girdi" id="a-imza-sebep" maxlength="60" placeholder="ör. Onay" value="' + kacis(IMZ.sebep || "") + '"></div>' +
+        '<div class="a-alan-grup"><label class="a-etiket" for="a-imza-yer">İmza yeri <span class="a-alt-inline">isteğe bağlı</span></label><input class="a-girdi" id="a-imza-yer" maxlength="40" placeholder="ör. Gebze" value="' + kacis(IMZ.yer || "") + '"></div></div>' +
+      '<div class="a-imza-yontem" role="radiogroup" aria-label="İmza yöntemi">' + [["eimza", "usb", "USB e-imza"], ["mobil", "smartphone", "Mobil imza"]].map(function (x) {
+        return '<button class="a-imza-secenek" type="button" role="radio" data-eylem="imza-yontem" data-y="' + x[0] + '" aria-checked="' + (IMZ.y === x[0]) + '">' + ikon(x[1]) + x[2] + "</button>"; }).join("") + "</div>" +
+      (mob
+        ? '<div class="a-imza-kutu"><p class="a-imza-kutu-bas">' + ikon("smartphone", "a-ikon-kucuk") + "İstek gidecek telefon: <b>" + kacis((p && p.imzaTel) || "kayıtlı değil") + "</b></p>" +
+            '<p class="a-etiket">Parmak izi</p><p class="a-imza-iz" aria-label="Parmak izi">' + iz.join(" ") + "</p>" +
+            '<p class="a-ipucu a-ipucu-uyari">Bu parmak izinin telefonunuzdaki ile aynı olduğunu doğrulayın.</p>' +
+            '<ol class="a-imza-adim"><li><b>1</b> Uyarı gelir</li><li><b>2</b> Parmak izini doğrula</li><li><b>3</b> Şifreni gir</li></ol></div>'
+        : '<div class="a-imza-kutu"><p class="a-imza-kutu-bas">' + ikon("list-checks", "a-ikon-kucuk") + "Gereksinimler</p>" +
+            '<ul class="a-imza-gerek"><li>' + ikon("circle-check", "a-ikon-kucuk") + "İmza aracı yüklü bilgisayar</li><li>" + ikon("circle-check", "a-ikon-kucuk") + "USB akıllı kart okuyucu</li><li>" +
+              ikon("circle-check", "a-ikon-kucuk") + "Nitelikli elektronik sertifika (e-imza kartı)</li></ul></div>" +
+          MK.serit("bilgi", "info", "Bu imza 5070 sayılı Elektronik İmza Kanunu'na göre güvenli elektronik imzadır.")) +
+      '<div class="a-alan-grup"><label class="a-etiket" for="a-imza-pin">' + (mob ? "Mobil imza şifresi (makette: telefonda girilen)" : "Kart PIN") + '</label><input class="a-girdi" id="a-imza-pin" type="password" inputmode="numeric" autocomplete="off" maxlength="8" value="' + kacis(IMZ.pin) + '"' +
         (IMZ.hata ? ' aria-invalid="true" aria-describedby="a-imza-ipucu"' : "") + ">" + (IMZ.hata ? '<p class="a-ipucu a-ipucu-uyari" id="a-imza-ipucu">' + IMZ.hata + "</p>" : "") + "</div>";
     $("a-imza-alt").innerHTML = MK.tus({ eylem: "pencere-kapat", ad: "Vazgeç", sinif: "a-tus-ikincil" }) + MK.tus({ eylem: "imza-pin-onay", ad: "İmzala", ikon: "file-signature" });
-    if (odak !== false) $("a-imza-pin").focus();
+    if (odak !== false) $(typeof odak === "string" ? odak : "a-imza-pin").focus();
   }
+  MK.eylem = MK.eylem || {};
+  MK.eylem["imza-yontem"] = function (el) { if (!IMZ) return; IMZ.y = el.dataset.y; IMZ.hata = ""; imzaCiz(); var b = document.querySelector('[data-eylem="imza-yontem"][data-y="' + IMZ.y + '"]'); if (b) b.focus(); };
   MK.imzaAl = function (o) {
     var d = $("a-imza-pencere");
     if (!d) {
@@ -980,7 +1005,7 @@
     if (!/^\d{4,8}$/.test(IMZ.pin)) { IMZ.hata = "PIN 4–8 rakam olmalı."; imzaCiz(); return; }
     IMZ.imzalar.push({ ad: IMZ.o.imzacilar[IMZ.i], zaman: MK.simdi() }); IMZ.i++; IMZ.pin = ""; IMZ.hata = "";
     if (IMZ.i < IMZ.o.imzacilar.length) { imzaCiz(); return; }
-    var o = IMZ.o, im = { yontem: IMZ.y, zaman: MK.simdi(), imzacilar: IMZ.imzalar };
+    var o = IMZ.o, im = { yontem: IMZ.y, zaman: MK.simdi(), imzacilar: IMZ.imzalar, sebep: (IMZ.sebep || "").trim(), yer: (IMZ.yer || "").trim() };
     $("a-imza-pencere").close(); o.tamam(im);
   };
   MK.eylem["onay-tamam"] = function () { var o = ONAY; ONAY = null; $("a-onay-pencere").close(); if (o && o.tamam) o.tamam(); };
@@ -1370,6 +1395,7 @@
       var a = t.dataset.alanAra.split("|"); SZ[a[0]].alan[a[1]] = t.value; SZ[a[0]].sayfa = 1; yenile(a[0]); return;
     }
     if (t.id === "a-imza-pin" && IMZ) { IMZ.pin = t.value.replace(/\D/g, ""); if (IMZ.pin !== t.value) t.value = IMZ.pin; return; }   /* iç belge imzası PIN */
+    if ((t.id === "a-imza-sebep" || t.id === "a-imza-yer") && IMZ) { IMZ[t.id === "a-imza-sebep" ? "sebep" : "yer"] = t.value; return; }   /* AA3: isteğe bağlı */
     if (zamanYaz(t)) return;   /* tarih / saat alanı */
     if (t.dataset && t.dataset.secimAra) {   /* seçim alanının arama kutusu: seçenekleri süzer */
       var q = MK.tr(t.value.trim()), l = t.closest(".a-secici-liste, .a-levha-liste"), n = 0;

@@ -2206,6 +2206,15 @@ revizyon, alan kopyalama, hafif kusur devri, meslek eşleşme denetimi).
 - Emsal ürünler: https://opwire.app/iso-17020-periyodik-kontrol-yazilimi/ · https://17020muayene.vidco.com.tr/ · https://akuple.com/asansor-kontrol-yazilimi/ · https://ensyazilim.com/
 
 ## 11 · Değişiklik günlüğü
+- 2026-10-02 (230): **AA3 · Onaylar › Diğer belgeler + imza penceresi** (§9 kırk sekizinci tur: *"Onaylar kısmında diğer kısmı olsun muhasebeciden
+  onaya maaş bordrosu gönderilirse veya eğitim zimmet formu gönderilirse oradan onaylanabilsin mobil veya e imza ile"* · *"mobil imza sitesinden
+  site içi görüntüler elde ettim neyi nasıl yaptığına dair fikir sahibi olabilirsin"*). Onaylar'da **Diğer belgeler** sekmesi (`#/diger`): kişinin
+  onayına gönderilen bordro, eğitim formu, zimmet formu — Görüntüle · Geri gönder · **Onayla ve imzala** (firmanın imza yöntemiyle). Personel ›
+  Maaş ve bordrolar'da her bordroya **Onaya gönder** (işlem sütununda) ve onay durumu sütunu. İmza penceresi yeniden kuruldu (görüntülerden
+  yalnız akış fikri alındı; ad, e-posta gibi içerik alınmadı): başlıkta imzacı, isteğe bağlı imza sebebi ve yeri, yöntem seçimi (mobil imza ·
+  USB e-imza); USB'de gereksinimler ve 5070 sayılı Kanun şeridi, mobilde telefon, **parmak izi** (onay kodu öbekleri — telefonda görünenle
+  aynı olmalı) ve üç adım. Yan menüde Onaylar balonu bekleyen belgeleri de sayar. Kilit: m9 + m1 etkileşimleri (önceki kodda 4 + 2 düşüyor); m10 balon denetimi 3 → 6;
+  Onaylar balon sayıları 8 → 11, 7 → 10 ve zimmet imza başlığı denetimi tarih + gerekçeyle güncellendi. Tam ölçüm 18 grup temiz.
 - 2026-10-02 (229): **AA2 · Yıllık fazla çalışma sınırı** (§9 kırk sekizinci tur: *"Mesai süresi her gün kullanılamasın yıllık izin verilen mesaiye göre
   sınırlansın internetten araştır"*). Araştırma: 4857 sayılı İş Kanunu **41. madde — fazla çalışma yılda en çok 270 saat**; **63. madde — günlük
   çalışma 11 saati (660 dk) aşamaz**; fazla çalışma için işçinin yılda bir yazılı onayı (Çalışma Süreleri Yönetmeliği). Sonuç: (1) başlangıç

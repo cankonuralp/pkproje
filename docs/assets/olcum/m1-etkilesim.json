@@ -2,9 +2,16 @@
  "maket": "m1",
  "tarih": "2026-10-02",
  "arac": "tools/olc-bulut.mjs --etkilesim (başsız tarayıcı, 1920 açık tema; gen verilen denemede o genişlik)",
- "toplam": 108,
- "gecen": 108,
+ "toplam": 109,
+ "gecen": 109,
  "denemeler": [
+  {
+   "ad": "AA3: Personel › bordro Onaya gönder → kişinin Onaylar › Diğer belgelerine düşer, satırda Onay bekliyor",
+   "gen": 1920,
+   "sayfa": "maket/personel.html",
+   "hash": "#/p/mk",
+   "gecti": true
+  },
   {
    "ad": "AA2: Firma ayarları › Mesai takibi — yıllık sınır 270 saat başlar, 300 kaydedilmez (kanunun üst sınırı), 200 kaydedilir; günlük toplam 660 dk'yı aşarsa uyarı",
    "gen": 1920,

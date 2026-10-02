@@ -1577,12 +1577,26 @@
       var imza = MV.RAPORLAR.filter(function (x) { return x.durum === "onaylandi" && !x.pasif && x.kisi === ben; });
       var onay = br ? MV.RAPORLAR.filter(function (x) { return x.durum === "onayda" && !x.pasif && !x.bekliyor && x.kisi !== ben && raporBrans(x) === br; }) : [];
       var gec = imza.filter(function (x) { return x.onay && saatFarki(x.onay.zaman) > 24; }).length + onay.filter(function (x) { return x.gonderildi && saatFarki(x.gonderildi) > 24; }).length;
-      return { kirmizi: gec, sari: imza.length + onay.length - gec, ad: { kirmizi: "24 saati geçen imza / onay bekleyen rapor", sari: "imzanızı ya da onayınızı bekleyen rapor" } };
+      var belge = MV.BELGE_ONAY.filter(function (x) { return x.kisi === ben && x.durum === "bekliyor"; }).length;   /* AA3: Onaylar › Diğer */
+      return { kirmizi: gec, sari: imza.length + onay.length - gec + belge, ad: { kirmizi: "24 saati geçen imza / onay bekleyen rapor", sari: "imzanızı ya da onayınızı bekleyen rapor / belge" } };
     },
     18: function () {   /* muhasebe: vadesi geçen fatura */
       return { kirmizi: (MV.FATURALAR || []).filter(function (f) { return MV.faturaDurum(f) === "gecikti"; }).length, ad: { kirmizi: "vadesi geçen fatura" } };
     }
   };
+  /* ── BELGE ONAYLARI (AA3, 2026-10-02, reisim: "Onaylar kısmında diğer kısmı olsun muhasebeciden onaya maaş bordrosu gönderilirse veya
+     eğitim zimmet formu gönderilirse oradan onaylanabilsin mobil veya e imza ile"): kişinin onayına / imzasına gönderilen belgeler — bordro
+     (muhasebe gönderir), eğitim formu, zimmet formu. Onaylar › Diğer'de görülür, mobil imza ya da e-imzayla onaylanır, gerekirse geri gönderilir.
+     durum: bekliyor · imzali · geri. UYDURMA. */
+  MV.BELGE_ONAY_TUR = { bordro: { ad: "Maaş bordrosu", ikon: "wallet" }, egitim: { ad: "Eğitim formu", ikon: "graduation-cap" }, zimmet: { ad: "Zimmet formu", ikon: "package" } };
+  MV.BELGE_ONAY = [
+    { id: "bo1", tur: "bordro", ad: "Eylül 2026 maaş bordrosu", kisi: "sy", gonderen: "ga", gonderildi: "2026-09-22T17:10", durum: "bekliyor", ay: "2026-09", dosya: "bordro-2026-09.pdf" },
+    { id: "bo2", tur: "egitim", ad: "Yüksekte çalışma eğitimi katılım formu", kisi: "sy", gonderen: "ga", gonderildi: "2026-09-21T10:30", durum: "bekliyor", dosya: "egitim-katilim-formu.pdf" },
+    { id: "bo3", tur: "zimmet", ad: "Zimmet teslim formu · ölçüm cihazı", kisi: "sy", gonderen: "ga", gonderildi: "2026-09-19T09:15", durum: "bekliyor", dosya: "zimmet-teslim-formu.pdf" },
+    { id: "bo4", tur: "bordro", ad: "Ağustos 2026 maaş bordrosu", kisi: "sy", gonderen: "ga", gonderildi: "2026-08-25T16:00", durum: "imzali", imza: { yontem: "mobil", zaman: "2026-08-26T09:12" }, ay: "2026-08", dosya: "bordro-2026-08.pdf" },
+    { id: "bo5", tur: "bordro", ad: "Eylül 2026 maaş bordrosu", kisi: "co", gonderen: "ga", gonderildi: "2026-09-22T17:12", durum: "bekliyor", ay: "2026-09", dosya: "bordro-2026-09.pdf" }
+  ];
+  MV.belgeOnaylari = function (ben) { return MV.BELGE_ONAY.filter(function (x) { return x.kisi === ben; }); };
   MV.takip = function (no, ben) { var f = MV.TAKIP[no]; return f ? f(ben) : null; };
   /* kalıcı maket: tohum kuruldu, bu tarayıcıdaki denemeler yerinde yüklenir (maket-ortak.js KALICI MAKET) */
   if (MK.kaliciMV) MK.kaliciMV(MV);

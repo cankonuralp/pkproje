@@ -2,9 +2,23 @@
  "maket": "m9",
  "tarih": "2026-10-02",
  "arac": "tools/olc-bulut.mjs --etkilesim (başsız tarayıcı, 1920 açık tema; gen verilen denemede o genişlik)",
- "toplam": 52,
- "gecen": 52,
+ "toplam": 54,
+ "gecen": 54,
  "denemeler": [
+  {
+   "ad": "AA3: Onaylar › Diğer belgeler — 3 bekleyen belge; Onayla ve imzala → imza penceresi (imzacı, isteğe bağlı sebep, yöntem); mobil imzayla imzalanır, durum İmzalandı, sayı düşer",
+   "gen": 1920,
+   "sayfa": "maket/onaylar.html",
+   "hash": "#/diger",
+   "gecti": true
+  },
+  {
+   "ad": "AA3: imza penceresi — USB e-imzada gereksinimler ve 5070 notu, mobil imzada telefon, parmak izi ve 3 adım; Geri gönder onayla geri gider",
+   "gen": 1920,
+   "sayfa": "maket/onaylar.html",
+   "hash": "#/diger",
+   "gecti": true
+  },
   {
    "ad": "raporlar · Makette bakış Elif Aydın: yalnız onun raporları, üst çubukta adı, imza penceresinde elektrik raporu",
    "gen": 1920,
@@ -195,7 +209,7 @@
    "gecti": true
   },
   {
-   "ad": "onay kuyruğu: 8 mekanik rapor, elektrik ayrı",
+   "ad": "onay kuyruğu: 8 mekanik rapor, elektrik ayrı (balonda + 3 belge)",
    "gen": 1920,
    "sayfa": "maket/onaylar.html",
    "hash": "#/",

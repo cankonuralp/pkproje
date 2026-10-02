@@ -304,12 +304,18 @@
      aylık bordro PDF'i + tutarları; maaş satırları son bordrodan; günlük maliyet iş kârlılığına girer (Muhasebe). Firma yöneticisi ve Muhasebe
      rolü görür (reisim 2026-09-29, 35. tur 174). */
   var para = MV.para;
+  var bordroOnay = function (b) { return MV.BELGE_ONAY.filter(function (x) { return x.tur === "bordro" && x.kisi === b.kisi && x.ay === b.ay; })[0]; };
   var BORDRO_SUTUN = [
     { k: "ay", baslik: "Dönem", kart: "ust", sira: 1, hucre: function (b) { return "<span>" + MV.ayAd(b.ay) + '<span class="a-alt-satir">yüklendi ' + MK.tarihYaz(b.yuklendi) + "</span></span>"; } },
     { k: "brut", baslik: "Brüt", kart: "govde", sira: 2, hucre: function (b) { return '<span class="a-kart-etiket">Brüt</span><span class="a-sayi">' + para(b.brut) + "</span>"; } },
     { k: "net", baslik: "Net", kart: "govde", sira: 3, hucre: function (b) { return '<span class="a-kart-etiket">Net</span><span class="a-sayi">' + para(b.net) + "</span>"; } },
     { k: "maliyet", baslik: "İşverene maliyet", kart: "govde", sira: 4, hucre: function (b) { return '<span class="a-kart-etiket">İşverene maliyet</span><span class="a-sayi">' + para(b.maliyet) + "</span>"; } },
-    { k: "eylem", baslik: "İşlem", gizliBaslik: true, kart: "eylem", sira: 9, hucre: function (b) { return '<div class="a-eylem"><div class="a-eylem-tuslar">' + MK.dosyaAlan({ ad: b.dosya, degistir: "bordro-degistir", sil: "bordro-sil", veri: { ay: b.ay } }) + "</div></div>"; } }
+    /* AA3 (2026-10-02): bordro çalışanın onayına / imzasına gönderilir (Onaylar › Diğer); durum burada */
+    { k: "onay", baslik: "Onay", kart: "rozet", sira: 1, hucre: function (b) { var o = bordroOnay(b);
+      return !o ? rozet({ ad: "Gönderilmedi", rozet: "a-rozet-notr" })
+        : rozet(o.durum === "imzali" ? { ad: "İmzalandı", rozet: "a-rozet-tamam" } : o.durum === "geri" ? { ad: "Geri gönderildi", rozet: "a-rozet-red" } : { ad: "Onay bekliyor", rozet: "a-rozet-bekliyor" }); } },
+    { k: "eylem", baslik: "İşlem", gizliBaslik: true, kart: "eylem", sira: 9, hucre: function (b) { return '<div class="a-eylem"><div class="a-eylem-tuslar">' + MK.dosyaAlan({ ad: b.dosya, degistir: "bordro-degistir", sil: "bordro-sil", veri: { ay: b.ay } }) +
+      (bordroOnay(b) ? "" : MK.tus({ eylem: "bordro-onaya", ad: "Onaya gönder", ikon: "send", sinif: "a-tus-ikincil", veri: { ay: b.ay } })) + "</div></div>"; } }
   ];
   function maasHtml(p) {
     var l = MV.kisiBordrolari(p.id), s = l[0];
@@ -772,6 +778,13 @@
   X["zform-pdf"] = function () { var n = $("a-nesne"); MK.yazdir(formNo(aktif()) + " · zimmet teslim formu", [].map.call(n.children, function (e) { return e.matches(".a-kirinti") ? "" : e.outerHTML; }).join("")); };
   X["hesap-ac"] = function () { location.hash = "#/p/" + aktif().id + "/hesap"; };
   X["belge-ekle"] = function () { location.hash = "#/p/" + aktif().id + "/belge"; };
+  X["bordro-onaya"] = function (el) {
+    var p = aktif(), b = MV.BORDROLAR.filter(function (x) { return x.kisi === p.id && x.ay === el.dataset.ay; })[0];
+    MK.onayla({ baslik: "Bordroyu onaya gönder", metin: "<b>" + kacis(MV.ayAd(b.ay)) + "</b> bordrosu " + kacis(p.ad) + " kişisinin onayına gider; mobil imza ya da e-imzayla onaylar (Onaylar › Diğer).", tus: "Onaya gönder", tamam: function () {
+      MV.BELGE_ONAY.push({ id: "bo" + (MV.BELGE_ONAY.length + 1), tur: "bordro", ad: MV.ayAd(b.ay) + " maaş bordrosu", kisi: p.id, gonderen: MK.BEN || "ga", gonderildi: MK.simdi(), durum: "bekliyor", ay: b.ay, dosya: b.dosya });
+      MV.BELGE_ONAY = MV.BELGE_ONAY.slice(); kartCiz(p); bolumeGit("a-b-maas"); MK.bildir(MV.ayAd(b.ay) + " bordrosu " + p.ad + " onayına gönderildi.");
+    } });
+  };
   X["bordro-ekle"] = function () { location.hash = "#/p/" + aktif().id + "/bordro"; };
   X["bordro-dosya-kaldir"] = function () { if (!BR) return; BR.dosya = ""; bordroCiz(); document.querySelector('#a-bordro-pencere [data-eylem="bordro-dosya"]').focus(); };
   X["belge-dosya-kaldir"] = function () { if (!B) return; B.dosya = ""; belgeCiz(); document.querySelector('#a-belge-pencere [data-eylem="dosya-sec"]').focus(); };

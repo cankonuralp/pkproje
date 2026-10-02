@@ -8,8 +8,8 @@
   390,
   430
  ],
- "toplam": 120,
- "temiz": 120,
+ "toplam": 132,
+ "temiz": 132,
  "durumlar": [
   {
    "ad": "raporlar · denetçinin listesi + imza şeridi",
@@ -730,6 +730,114 @@
    "disari": [],
    "kucukAlan": [],
    "alan": 0
+  },
+  {
+   "ad": "Onaylar · Diğer belgeler (bordro, eğitim, zimmet formu)",
+   "gen": 320,
+   "temiz": true,
+   "tasma": 0,
+   "disari": [],
+   "kucukAlan": [],
+   "alan": 0
+  },
+  {
+   "ad": "Onaylar · Diğer belgeler (bordro, eğitim, zimmet formu)",
+   "gen": 360,
+   "temiz": true,
+   "tasma": 0,
+   "disari": [],
+   "kucukAlan": [],
+   "alan": 0
+  },
+  {
+   "ad": "Onaylar · Diğer belgeler (bordro, eğitim, zimmet formu)",
+   "gen": 390,
+   "temiz": true,
+   "tasma": 0,
+   "disari": [],
+   "kucukAlan": [],
+   "alan": 0
+  },
+  {
+   "ad": "Onaylar · Diğer belgeler (bordro, eğitim, zimmet formu)",
+   "gen": 430,
+   "temiz": true,
+   "tasma": 0,
+   "disari": [],
+   "kucukAlan": [],
+   "alan": 0
+  },
+  {
+   "ad": "imza penceresi · mobil imza (parmak izi, adımlar)",
+   "gen": 320,
+   "temiz": true,
+   "tasma": 0,
+   "disari": [],
+   "kucukAlan": [],
+   "alan": 3
+  },
+  {
+   "ad": "imza penceresi · mobil imza (parmak izi, adımlar)",
+   "gen": 360,
+   "temiz": true,
+   "tasma": 0,
+   "disari": [],
+   "kucukAlan": [],
+   "alan": 3
+  },
+  {
+   "ad": "imza penceresi · mobil imza (parmak izi, adımlar)",
+   "gen": 390,
+   "temiz": true,
+   "tasma": 0,
+   "disari": [],
+   "kucukAlan": [],
+   "alan": 3
+  },
+  {
+   "ad": "imza penceresi · mobil imza (parmak izi, adımlar)",
+   "gen": 430,
+   "temiz": true,
+   "tasma": 0,
+   "disari": [],
+   "kucukAlan": [],
+   "alan": 3
+  },
+  {
+   "ad": "imza penceresi · USB e-imza (gereksinimler)",
+   "gen": 320,
+   "temiz": true,
+   "tasma": 0,
+   "disari": [],
+   "kucukAlan": [],
+   "alan": 3
+  },
+  {
+   "ad": "imza penceresi · USB e-imza (gereksinimler)",
+   "gen": 360,
+   "temiz": true,
+   "tasma": 0,
+   "disari": [],
+   "kucukAlan": [],
+   "alan": 3
+  },
+  {
+   "ad": "imza penceresi · USB e-imza (gereksinimler)",
+   "gen": 390,
+   "temiz": true,
+   "tasma": 0,
+   "disari": [],
+   "kucukAlan": [],
+   "alan": 3
+  },
+  {
+   "ad": "imza penceresi · USB e-imza (gereksinimler)",
+   "gen": 430,
+   "temiz": true,
+   "tasma": 0,
+   "disari": [],
+   "kucukAlan": [],
+   "alan": 3
   },
   {
    "ad": "geri gönder penceresi · kısa gerekçe",

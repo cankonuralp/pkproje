@@ -71,7 +71,8 @@
       '<a class="a-sekme" href="#/' + ek() + '" aria-pressed="' + (gor === "kuyruk") + '">Onay kuyruğu · ' + MV.bransAd(BAKIS).toLocaleLowerCase("tr") + " <b>" + kuyruk().length + "</b></a>" +
       '<a class="a-sekme" href="' + tumAdres() + '" aria-pressed="' + (gor === "tum") + '">Tüm raporlar <b>' + tumu().length + "</b></a>" +
       '<a class="a-sekme" href="' + istekAdres() + '" aria-pressed="' + (gor === "istek") + '">Revize istekleri <b>' + istekler().length + "</b></a>" +
-      '<a class="a-sekme" href="#/pasif' + ek() + '" aria-pressed="' + (gor === "pasif") + '">Pasif raporlar <b>' + pasifler().length + "</b></a></div>";
+      '<a class="a-sekme" href="#/pasif' + ek() + '" aria-pressed="' + (gor === "pasif") + '">Pasif raporlar <b>' + pasifler().length + "</b></a>" +
+      '<a class="a-sekme" href="#/diger' + ek() + '" aria-pressed="' + (gor === "diger") + '">Diğer belgeler <b>' + MV.belgeOnaylari(BEN).filter(function (x) { return x.durum === "bekliyor"; }).length + "</b></a></div>";
   }
   var PASIF_SUTUN = [SUTUN[0], SUTUN[1], SUTUN[2],
     { k: "pasif", baslik: "Pasife alındı", kart: "govde", sira: 4, hucre: function (r) { return '<span class="a-kart-etiket">Pasife alındı</span><span class="a-tarih-gun">' + MK.zamanYaz(r.pasifZaman) + "</span>"; } },
@@ -89,6 +90,29 @@
     $("a-liste").innerHTML = l.length ? MK.tablo({ baslik: "Revize istekleri", sinif: "a-tablo-onay", sutunlar: ISTEK_SUTUN, kayitlar: l, href: function (r) { return "#/r/" + r.no; } })
       : MK.bos({ ikon: "circle-check", baslik: "Revize isteği yok", metin: "" });
   }
+  /* ── DİĞER BELGELER (AA3, 2026-10-02, reisim: "Onaylar kısmında diğer kısmı olsun muhasebeciden onaya maaş bordrosu gönderilirse veya
+     eğitim zimmet formu gönderilirse oradan onaylanabilsin mobil veya e imza ile"): bakıştaki yöneticinin onayına gönderilen belgeler; Görüntüle ·
+     Onayla ve imzala (imza penceresi: mobil imza ya da USB e-imza) · Geri gönder. Bekleyenler üstte. */
+  var BDURUM = { bekliyor: { ad: "Onay bekliyor", rozet: "a-rozet-bekliyor" }, imzali: { ad: "İmzalandı", rozet: "a-rozet-tamam" }, geri: { ad: "Geri gönderildi", rozet: "a-rozet-red" } };
+  var DIGER_SUTUN = [
+    { k: "belge", baslik: "Belge", kart: "ust", sira: 1, hucre: function (x) { return "<span>" + kacis(x.ad) + '<span class="a-alt-satir">' + MV.BELGE_ONAY_TUR[x.tur].ad + "</span></span>"; } },
+    { k: "gonderen", baslik: "Gönderen", kart: "govde", sira: 2, hucre: function (x) { return '<span class="a-kart-etiket">Gönderen</span>' + kacis((MV.kisi(x.gonderen) || {}).ad || "—"); } },
+    { k: "zaman", baslik: "Gönderildi", kart: "govde", sira: 3, hucre: function (x) { return '<span class="a-kart-etiket">Gönderildi</span><span class="a-tarih-gun">' + MK.zamanYaz(x.gonderildi) + "</span>"; } },
+    { k: "durum", baslik: "Durum", kart: "rozet", sira: 1, hucre: function (x) { return rozet(BDURUM[x.durum]) + (x.imza ? '<span class="a-tarih-saat">' + MK.imzaYaz(x.imza) + "</span>" : ""); } },
+    { k: "eylem", baslik: "İşlem", gizliBaslik: true, kart: "eylem", sira: 9, hucre: function (x) {
+      return '<div class="a-eylem"><div class="a-eylem-tuslar">' + MK.tus({ eylem: "belge-goster", ad: "Görüntüle", ikon: "eye", sinif: "a-tus-ikincil", veri: { id: x.id } }) +
+        (x.durum === "bekliyor" ? MK.tus({ eylem: "belge-geri", ad: "Geri gönder", sinif: "a-tus-ikincil", veri: { id: x.id } }) + MK.tus({ eylem: "belge-imzala", ad: "Onayla ve imzala", ikon: "file-signature", veri: { id: x.id } }) : "") +
+        "</div></div>"; } }
+  ];
+  function digerCiz(odak) {
+    var l = MV.belgeOnaylari(BEN).slice().sort(function (a, b) { return (a.durum === "bekliyor") !== (b.durum === "bekliyor") ? (a.durum === "bekliyor" ? -1 : 1) : a.gonderildi < b.gonderildi ? 1 : -1; });
+    sekmeler("diger"); $("a-suzgec-kap").innerHTML = ""; $("a-sayfa").innerHTML = "";
+    $("a-sayac").innerHTML = "<b>" + l.filter(function (x) { return x.durum === "bekliyor"; }).length + "</b> bekliyor";
+    $("a-liste").innerHTML = l.length ? MK.tablo({ baslik: "Diğer belgeler", sinif: "a-tablo-belge-onay", sutunlar: DIGER_SUTUN, kayitlar: l })
+      : MK.bos({ ikon: "circle-check", baslik: "Onayınızı bekleyen belge yok", metin: "Bordro, eğitim ve zimmet formları onayınıza gönderildikçe burada görünür." });
+    if (odak) { var o = document.querySelector(odak); if (o) o.focus(); }
+  }
+  var belge = function (el) { return MV.BELGE_ONAY.filter(function (x) { return x.id === el.dataset.id; })[0]; };
   function pasifCiz() {
     var l = pasifler(); sekmeler("pasif"); $("a-suzgec-kap").innerHTML = ""; $("a-sayfa").innerHTML = "";
     $("a-sayac").innerHTML = "<b>" + l.length + "</b> rapor";
@@ -243,6 +267,7 @@
     var b = m ? (rp ? brans(rp) : BAKIS) : /[?&]brans=e/.test(h) ? "e" : "m";
     if (b !== BAKIS || MK.BEN !== BEN) bakisKur(b);
     if (y === "#/pasif") return { v: "liste", pasif: true };
+    if (y === "#/diger") return { v: "liste", diger: true };
     if (y === "#/istekler") return { v: "liste", istek: true };
     if (y === "#/tum") return { v: "liste", tum: true };
     return m ? { v: "rapor", no: m[1], pencere: !!m[2] } : { v: "liste" };
@@ -251,14 +276,28 @@
     var r = rota(), rp = r.no ? MV.rapor(r.no) : null;
     $("a-liste-gorunum").hidden = r.v !== "liste"; $("a-nesne").hidden = r.v === "liste";
     if (r.tum && TUM_BRANS !== BRANS) { MK.suzgecSifirla("t"); TUM_BRANS = BRANS; }   /* branş değişince süzgeç (denetçi, sayfa) baştan */
-    if (r.pasif) pasifCiz(); else if (r.istek) istekCiz(); else if (r.tum) { $("a-suzgec-kap").innerHTML = MK.suzgecHtml("t"); MK.suzgecKur("t"); }
+    if (r.pasif) pasifCiz(); else if (r.diger) digerCiz(); else if (r.istek) istekCiz(); else if (r.tum) { $("a-suzgec-kap").innerHTML = MK.suzgecHtml("t"); MK.suzgecKur("t"); }
     else if (r.v === "liste") { $("a-suzgec-kap").innerHTML = MK.suzgecHtml("o"); MK.suzgecKur("o"); } else onayCiz(rp);
-    document.title = (r.v === "rapor" ? (rp ? rp.no + " · onay" : "Rapor bulunamadı") : r.tum ? "Tüm raporlar · Onaylar" : r.istek ? "Revize istekleri · Onaylar" : "Onaylar") + " · probata maket";
+    document.title = (r.v === "rapor" ? (rp ? rp.no + " · onay" : "Rapor bulunamadı") : r.tum ? "Tüm raporlar · Onaylar" : r.diger ? "Diğer belgeler · Onaylar" : r.istek ? "Revize istekleri · Onaylar" : "Onaylar") + " · probata maket";
     if (odakla) { window.scrollTo(0, 0); var hh = document.querySelector("#a-icerik > :not([hidden]) h1"); if (hh) hh.focus({ preventScroll: true }); }
     if (r.pencere && rp && rp.durum === "onayda") pencereAc(rp, "geri"); else if ($("a-pencere").open) $("a-pencere").close();
   }
   MK.goster = goster;
   var X = MK.eylem;
+  X["belge-goster"] = function (el) { var x = belge(el); MK.pdfGoster({ dosya: x.dosya, baslik: x.ad, sayfa: 1 }); };
+  X["belge-imzala"] = function (el) {
+    var x = belge(el);
+    MK.imzaAl({ belge: x.ad, imzacilar: [MV.kisi(BEN).ad], tamam: function (im) {
+      x.durum = "imzali"; x.imza = im; MV.BELGE_ONAY = MV.BELGE_ONAY.slice(); digerCiz('#a-uyari [href^="#/diger"]'); if (MK.takipCiz) MK.takipCiz();
+      MK.bildir(x.ad + " onaylandı ve imzalandı (" + MK.imzaYaz(im) + "); " + (MV.kisi(x.gonderen) || {}).ad + " görür.");
+    } });
+  };
+  X["belge-geri"] = function (el) {
+    var x = belge(el);
+    MK.onayla({ baslik: "Belgeyi geri gönder", metin: "<b>" + kacis(x.ad) + "</b> imzalanmadan " + kacis((MV.kisi(x.gonderen) || {}).ad || "gönderene") + " geri gider.", tus: "Geri gönder", tamam: function () {
+      x.durum = "geri"; x.geri = MK.simdi(); MV.BELGE_ONAY = MV.BELGE_ONAY.slice(); digerCiz('#a-uyari [href^="#/diger"]'); if (MK.takipCiz) MK.takipCiz(); MK.bildir(x.ad + " geri gönderildi.");
+    } });
+  };
   X["onayla"] = function () {
     var r = MV.rapor(rota().no), s = sonraki(r);
     r.durum = "onaylandi"; r.onay = { kim: BEN, zaman: MK.simdi(), vekil: brans(r) !== BENIM };

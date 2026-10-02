@@ -728,6 +728,7 @@ a.a-yuz:hover { border-color: var(--kenar-alan); background: var(--zemin); }
 .a-tablo-ozluk .a-k-belge { width: 52%; } .a-tablo-ozluk .a-k-tarih { width: 24%; } .a-tablo-ozluk .a-k-eylem { width: 24%; }
 .a-tablo-atama .a-dosya-ad { display: inline-flex; align-items: center; gap: 6px; min-width: 0; overflow-wrap: anywhere; }
 .a-tablo-atama .a-eylem-tuslar { flex-wrap: wrap; }   /* dar ekranda dört tuş alt satıra iner, taşmaz */
+.a-tablo.a-tablo-belge-onay .a-eylem-tuslar { flex-wrap: wrap; }   /* AA3: dar ekranda üç tuş alt satıra iner, taşmaz */
 .a-tablo-atama .a-k-tur { width: 22%; } .a-tablo-atama .a-k-tarih { width: 13%; } .a-tablo-atama .a-k-belge { width: 25%; } .a-tablo-atama .a-k-eylem { width: 40%; }   /* L4: ekipman atamaları */
 .a-tablo-ana .a-k-plan { width: 38%; } .a-tablo-ana .a-k-tarih { width: 24%; } .a-tablo-ana .a-k-ekip { width: 22%; } .a-tablo-ana .a-k-durum { width: 16%; }
 .a-matris-sabit { display: inline-flex; flex-direction: column; align-items: flex-start; gap: 2px; }
@@ -952,6 +953,21 @@ a.a-yuz:hover { border-color: var(--kenar-alan); background: var(--zemin); }
 /* rapor tuşları (2026-09-29, reisim: "bir barın içinde gibi değil bağımsız dursunlar"): çubuk yok — altta yapışkan, her tuş kendi gölgesiyle */
 .a-rapor-eylem { position: sticky; bottom: 16px; z-index: 10; display: flex; justify-content: flex-end; gap: 12px; margin: 16px 0 0; pointer-events: none; }
 .a-rapor-eylem .a-tus { pointer-events: auto; box-shadow: var(--golge-2); }
+/* İMZA PENCERESİ (AA3, 2026-10-02): yöntem seçimi (USB e-imza · mobil imza), gereksinimler / parmak izi kutusu, adımlar */
+.a-imza-ek { margin: 12px 0; }
+.a-imza-yontem { display: grid; grid-template-columns: repeat(2, minmax(0, 1fr)); gap: 8px; margin: 0 0 12px; }
+.a-imza-secenek { display: inline-flex; align-items: center; justify-content: center; gap: 8px; min-height: var(--tus-y); padding: 8px 12px; border: 1px solid var(--kenar-alan); border-radius: var(--r-orta); background: var(--kart); color: var(--yazi); font: inherit; font-weight: 600; cursor: pointer; }
+.a-imza-secenek[aria-checked="true"] { border-color: var(--vurgu); box-shadow: inset 0 0 0 1px var(--vurgu); }
+.a-imza-kutu { display: grid; gap: 8px; margin: 0 0 12px; padding: 12px 14px; border: 1px solid var(--kenar-alan); border-radius: var(--r-orta); background: var(--zemin2); }
+.a-imza-kutu p { margin: 0; }
+.a-imza-kutu-bas { display: flex; align-items: center; gap: 6px; font-weight: 600; }
+.a-imza-iz { font-family: ui-monospace, Menlo, Consolas, monospace; font-size: var(--boy-kucuk); letter-spacing: .06em; word-spacing: .4em; line-height: 1.8; overflow-wrap: anywhere; }
+.a-imza-adim { list-style: none; margin: 0; padding: 0; display: grid; grid-template-columns: repeat(3, minmax(0, 1fr)); gap: 8px; }
+.a-imza-adim li { display: flex; flex-direction: column; align-items: center; gap: 4px; padding: 8px; border: 1px solid var(--kenar); border-radius: var(--r-orta); background: var(--kart); text-align: center; font-size: var(--boy-kucuk); }
+.a-imza-adim b { display: inline-flex; align-items: center; justify-content: center; width: 24px; height: 24px; border-radius: 50%; background: var(--vurgu); color: var(--vurgu-uzeri); }
+.a-imza-gerek { list-style: none; margin: 0; padding: 0; display: grid; gap: 4px; }
+.a-imza-gerek li { display: flex; align-items: center; gap: 8px; }
+.a-imza-gerek .a-ikon { color: var(--onay-yazi); }
 /* FOTOĞRAFTAN OKUMA ÖNERİSİ (Z3, 2026-10-02): okunan değerler kartta; uygulanmadan rapora yazılmaz */
 .a-oneri-kart { padding: 12px 14px; border: 1px solid var(--kenar-alan); border-radius: var(--r-orta); background: var(--zemin2); }
 .a-oneri-bas { display: flex; align-items: center; gap: 6px; margin: 0 0 8px; font-weight: 600; }
@@ -1100,6 +1116,7 @@ a.a-yuz:hover { border-color: var(--kenar-alan); background: var(--zemin); }
 /* Y1 (2026-10-02): Firma ayarları › Yapay zekâ — kayıtlı anahtarın izi, kullanım tablosu */
 .a-yz-anahtar { display: flex; align-items: center; gap: 8px; margin: 0 0 8px; }
 .a-tablo-yz .a-k-kisi { width: 32%; } .a-tablo-yz .a-k-okuma { width: 18%; } .a-tablo-yz .a-k-mesaj { width: 16%; } .a-tablo-yz .a-k-usd { width: 16%; } .a-tablo-yz .a-k-durum { width: 18%; }
+.a-tablo-belge-onay .a-k-belge { width: 26%; } .a-tablo-belge-onay .a-k-gonderen { width: 13%; } .a-tablo-belge-onay .a-k-zaman { width: 14%; } .a-tablo-belge-onay .a-k-durum { width: 15%; } .a-tablo-belge-onay .a-k-eylem { width: 32%; }   /* AA3 */
 .a-tablo-uygunsuz .a-k-ekipman { width: 20%; } .a-tablo-uygunsuz .a-k-kusur { width: 32%; } .a-tablo-uygunsuz .a-k-rapor { width: 20%; }
 .a-tablo-uygunsuz .a-k-tarih { width: 12%; } .a-tablo-uygunsuz .a-k-durum { width: 16%; }
 
@@ -1139,8 +1156,9 @@ a.a-yuz:hover { border-color: var(--kenar-alan); background: var(--zemin); }
 .a-tablo-gider .a-k-tutar { width: 16%; } .a-tablo-gider .a-k-durum { width: 15%; } .a-tablo-gider .a-k-belge { width: 13%; }
 .a-tablo-isgider .a-k-no { width: 15%; } .a-tablo-isgider .a-k-tur { width: 25%; } .a-tablo-isgider .a-k-kisi { width: 16%; }
 .a-tablo-isgider .a-k-tutar { width: 17%; } .a-tablo-isgider .a-k-durum { width: 15%; } .a-tablo-isgider .a-k-belge { width: 12%; }
-.a-tablo-bordro .a-k-ay { width: 24%; } .a-tablo-bordro .a-k-brut { width: 20%; } .a-tablo-bordro .a-k-net { width: 20%; }
-.a-tablo-bordro .a-k-maliyet { width: 22%; } .a-tablo-bordro .a-k-eylem { width: 14%; }
+.a-tablo-bordro .a-k-ay { width: 16%; } .a-tablo-bordro .a-k-brut { width: 12%; } .a-tablo-bordro .a-k-net { width: 12%; }
+.a-tablo-bordro .a-k-maliyet { width: 14%; } .a-tablo-bordro .a-k-onay { width: 14%; } .a-tablo-bordro .a-k-eylem { width: 32%; }
+.a-tablo-bordro .a-eylem-tuslar { flex-wrap: wrap; }
 /* 2026-09-27 kârlılık (iş sayfası, gelir-gider) ve işlerin kârı */
 .a-tablo-karlilik .a-k-ad { width: 24%; } .a-tablo-karlilik .a-k-ayrinti { width: 52%; } .a-tablo-karlilik .a-k-tutar { width: 24%; }
 .a-tablo-karlilik td[data-alan="tutar"], .a-tablo-karlilik th:last-child { text-align: right; }
