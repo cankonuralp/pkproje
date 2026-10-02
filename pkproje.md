@@ -2206,6 +2206,12 @@ revizyon, alan kopyalama, hafif kusur devri, meslek eşleşme denetimi).
 - Emsal ürünler: https://opwire.app/iso-17020-periyodik-kontrol-yazilimi/ · https://17020muayene.vidco.com.tr/ · https://akuple.com/asansor-kontrol-yazilimi/ · https://ensyazilim.com/
 
 ## 11 · Değişiklik günlüğü
+- 2026-10-02 (228): **AA11 · Yeni kayıt formları boş açılır** (§9 kırk sekizinci tur eki: *"örnek yazılar yazılı olarak geliyor, silip bir şey yazmam
+  gerekiyor"*). Bütün sayfaların yeni kayıt formları tarandı (tarayıcıda açılıp değeri dolu metin alanı arandı): örnek değerle gelenler boşaltıldı,
+  yerine silik ipucu — sözleşme başlangıç (sabit bir tarih yazılıydı), süre (12), vade (30) · teklif geçerlilik (30) · ekipman türü periyot (12) ·
+  eğitim türü tekrar (12) · eğitim kaydının görünmeyen kurum değeri ("Firma içi"). Bilerek kalanlar: tarih alanlarında **bugün** (reisim
+  2026-09-27: "otomatik dolu gelsin"), teklif KDV %20 (yasal oran) ve adet 1, Firma ayarları (kayıtlı değerin kendisi), bağımlı seçimlerdeki salt
+  okunur "Önce müşteri seçin". Kilit: m3 / m12 / m13 / m16 birer etkileşim (önceki kodda düşüyor); eski 5 denetime değer yazma adımı eklendi.
 - 2026-10-02 (227): **AA5 · Ekipman türleri Mekanik / Elektrik sekmeleri** (§9 kırk sekizinci tur: *"ekipman türleri içerisinde mekanik ve elektrik
   olarak ayrılsın"*). Liste iki sekmede (`#/` Mekanik, `#/elektrik` Elektrik; sekmede tür sayısı); branş sütunu ve branş süzgeci kalktı, Ek-III
   grubu seçicisi sekmenin branşındaki gruplarla; tür sayfasının kırıntısı türün sekmesine döner. Kilit: m3 etkileşim (eski sayfada düşüyor); 1 eski

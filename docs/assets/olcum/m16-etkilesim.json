@@ -2,9 +2,16 @@
  "maket": "m16",
  "tarih": "2026-10-02",
  "arac": "tools/olc-bulut.mjs --etkilesim (başsız tarayıcı, 1920 açık tema; gen verilen denemede o genişlik)",
- "toplam": 13,
- "gecen": 13,
+ "toplam": 14,
+ "gecen": 14,
  "denemeler": [
+  {
+   "ad": "AA11: eğitim türü ekle formunda tekrar süresi yazılı gelmez, yalnız silik ipucu",
+   "gen": 1920,
+   "sayfa": "maket/egitimler.html",
+   "hash": "#/turler/yeni",
+   "gecti": true
+  },
   {
    "ad": "eğitim sertifikası açılır (kayıt penceresinin üstünde)",
    "gen": 1920,

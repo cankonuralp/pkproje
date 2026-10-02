@@ -182,7 +182,7 @@
         A("k", "Kod", d.k, { zorunlu: true, sinif: "a-girdi-sicil", ek: ' maxlength="3"' + (W.id ? " readonly" : ""), ipucu: W.id ? "Kod değişmez (ekipman kodlarında kullanılıyor)." : "2–3 harf; ekipman kodu öneki." }) +
         A("g", "Ek-III grubu", "", { zorunlu: true, girdi: MK.secim({ id: "w-g", ad: "Ek-III grubu", deger: d.g, secenekler: MV.GRUPLAR.map(function (g) { return [g.k, g.ad, g.b ? MV.bransAd(g.b) : "branş seçilir"]; }), ipucu: "Grup seçin", gecersiz: !!h.g, tanim: "w-g-ipucu" }), ipucu: d.g === "ekdisi" ? "Ek-III dışı: meslek kuralı uygulanmaz." : "Branş ve onaylayan yönetici gruptan gelir." }) +
         (d.g === "ekdisi" ? A("b", "Branş", "", { zorunlu: true, girdi: MK.secim({ id: "w-b", ad: "Branş", deger: d.b || "", secenekler: [["m", "Mekanik"], ["e", "Elektrik"]], ipucu: "Branş seçin", gecersiz: !!h.b, tanim: "w-b-ipucu" }), ipucu: "Onaylayan yönetici branştan gelir." }) : "") +
-        A("periyot", "Periyot (ay)", d.periyot, { zorunlu: true, sinif: "a-girdi-sicil", ek: ' inputmode="numeric" maxlength="3"', ipucu: "Sonraki kontrol önerisi bununla hesaplanır." }) +
+        A("periyot", "Periyot (ay)", d.periyot, { zorunlu: true, sinif: "a-girdi-sicil", ek: ' inputmode="numeric" maxlength="3" placeholder="ör. 12"', ipucu: "Sonraki kontrol önerisi bununla hesaplanır." }) +
         A("sure", "Tahmini kontrol süresi (dk)", d.sure, { sinif: "a-girdi-sicil", ek: ' inputmode="numeric" maxlength="3"', ipucu: "İsteğe bağlı; plan saat önerisinde kullanılır." }) +
         (W.id ? "" : dosyaSec(d)) +
         (W.id && MV.formatYapi(MV.tur(W.id)) ? MK.alan({ id: "w-olcum", etiket: "Ölçüm metodu", genis: true, girdi: MK.secim({ id: "w-olcum", ad: "Ölçüm metodu", deger: d.olcum, ipucu: "Seçin",
@@ -204,7 +204,8 @@
     var t = id ? MV.tur(id) : null;
     W = { tur: tur, id: id || null, hata: {}, d: tur === "format" ? { dosya: "", not: "" }
       : t ? { ad: t.ad, k: t.k, g: t.g, periyot: String(t.periyot), sure: t.sure ? String(t.sure) : "", std: t.std.slice(), cihaz: t.cihaz.slice(), dosya: "", olcum: t.olcumMetot || "", b: t.b }
-      : { ad: "", k: "", g: "", periyot: "12", sure: "", std: [], cihaz: [], dosya: "" } };
+      : { ad: "", k: "", g: "", periyot: "", sure: "",   /* AA11 (2026-10-02, reisim: "örnek yazılar yazılı olarak geliyor, silip bir şey yazmam gerekiyor"): yeni kayıtta alan boş, yalnız silik ipucu */
+        std: [], cihaz: [], dosya: "" } };
     pencereCiz(); if (!$("a-pencere").open) $("a-pencere").showModal();
     var ilk = $("a-pencere-govde").querySelector("input:not([readonly]), .a-tus"); if (ilk) ilk.focus();
   }

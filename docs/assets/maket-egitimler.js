@@ -103,11 +103,11 @@
     $("a-pencere-baslik").textContent = W.t ? W.t.ad + " · düzenle" : "Eğitim türü ekle";
     $("a-pencere-govde").innerHTML = '<div class="a-form">' +
       MK.alan({ id: "w-ad", etiket: "Eğitim", zorunlu: true, genis: true, hata: h.ad, girdi: MK.girdi({ id: "w-ad", alan: "ad", deger: d.ad, ek: ' maxlength="60"', hata: h.ad }) }) +
-      MK.alan({ id: "w-tekrar", etiket: "Tekrar süresi (ay)", zorunlu: true, hata: h.tekrar, girdi: MK.girdi({ id: "w-tekrar", alan: "tekrar", deger: d.tekrar, sinif: "a-girdi-sicil", ek: ' inputmode="numeric" maxlength="3"', hata: h.tekrar }) }) + "</div>";
+      MK.alan({ id: "w-tekrar", etiket: "Tekrar süresi (ay)", zorunlu: true, hata: h.tekrar, girdi: MK.girdi({ id: "w-tekrar", alan: "tekrar", deger: d.tekrar, sinif: "a-girdi-sicil", ek: ' inputmode="numeric" maxlength="3" placeholder="ör. 12"', hata: h.tekrar }) }) + "</div>";
     $("a-pencere-alt").innerHTML = MK.tus({ eylem: "pencere-kapat", ad: "Vazgeç", sinif: "a-tus-ikincil" }) + MK.tus({ eylem: "tur-kaydet", ad: "Kaydet", ikon: "check" });
     if (odak) { var el = $(odak); if (el) el.focus(); }
   }
-  function turAc(t) { W = { tip: "tur", t: t || null, d: { ad: t ? t.ad : "", tekrar: t ? String(t.tekrar) : "12" }, hata: {} }; turFormCiz(); if (!$("a-pencere").open) $("a-pencere").showModal(); $("w-ad").focus(); }
+  function turAc(t) { W = { tip: "tur", t: t || null, d: { ad: t ? t.ad : "", tekrar: t ? String(t.tekrar) : "" }, hata: {} }; turFormCiz(); if (!$("a-pencere").open) $("a-pencere").showModal(); $("w-ad").focus(); }
   function kayitCiz(x) {
     var p = MV.kisi(x.kisi), t = MV.egitimTuru(x.k), d = MV.egitimDurum(x), k = kalan(x);
     var gecmis = E.filter(function (y) { return y.kisi === x.kisi && y.k === x.k && y !== x; }).sort(function (a, b) { return a.tarih < b.tarih ? 1 : -1; });
@@ -123,7 +123,8 @@
     $("a-pencere-alt").innerHTML = MK.tus({ eylem: "pencere-kapat", ad: "Kapat", sinif: "a-tus-ikincil" }) + (x.onceki ? "" : MK.tus({ eylem: "tekrar", ad: "Tekrarı kaydet", ikon: "refresh-cw", veri: { id: x.id } }));
   }
   function formAc(d, tekrar) {
-    W = { tip: "form", tekrar: !!tekrar, d: Object.assign({ kisi: "", k: "", tarih: MK.BUGUN.slice(8, 10) + "." + MK.BUGUN.slice(5, 7) + "." + MK.BUGUN.slice(0, 4), kurum: "Firma içi", belge: false }, d), hata: {} };
+    W = { tip: "form", tekrar: !!tekrar, d: Object.assign({ kisi: "", k: "", tarih: MK.BUGUN.slice(8, 10) + "." + MK.BUGUN.slice(5, 7) + "." + MK.BUGUN.slice(0, 4), kurum: "", belge: false }   /* AA11 (2026-10-02, reisim: "örnek yazılar yazılı olarak geliyor, silip bir şey yazmam gerekiyor"): yeni kayıtta alan boş, yalnız silik ipucu */
+     , d), hata: {} };
     formCiz(); if (!$("a-pencere").open) $("a-pencere").showModal();
     $(W.d.kisi && W.d.k ? "w-tarih" : W.d.kisi ? "w-k" : "w-kisi").focus();
   }

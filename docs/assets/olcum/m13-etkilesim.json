@@ -2,9 +2,16 @@
  "maket": "m13",
  "tarih": "2026-10-02",
  "arac": "tools/olc-bulut.mjs --etkilesim (başsız tarayıcı, 1920 açık tema; gen verilen denemede o genişlik)",
- "toplam": 10,
- "gecen": 10,
+ "toplam": 11,
+ "gecen": 11,
  "denemeler": [
+  {
+   "ad": "AA11: yeni sözleşmede başlangıç, süre ve vade yazılı gelmez",
+   "gen": 1920,
+   "sayfa": "maket/sozlesmeler.html",
+   "hash": "#/yeni?teklif=T-0926-001",
+   "gecti": true
+  },
   {
    "ad": "liste: 12 sözleşme, imza bekleyen üstte; hizmet sözleşmesi bitişi için şerit yok",
    "gen": 1920,

@@ -178,7 +178,7 @@
   var F = null;
   function formAc() {
     var q = /[?&]teklif=([A-Z0-9-]+)/.exec(location.hash), t = q ? MV.teklif(q[1]) : null;
-    F = { teklif: t ? t.no : "", m: t ? t.m : "", tesisler: t ? MV.teklifTesisleri(t).slice() : [], baslangic: "24.09.2026", sure: "12", vade: "30", yenileme: "yok", hata: {} };
+    F = { teklif: t ? t.no : "", m: t ? t.m : "", tesisler: t ? MV.teklifTesisleri(t).slice() : [], baslangic: "", sure: "", vade: "", yenileme: "yok", hata: {} };   /* AA11 (2026-10-02, reisim: "örnek yazılar yazılı olarak geliyor, silip bir şey yazmam gerekiyor"): yeni kayıtta alan boş, yalnız silik ipucu */ 
   }
   function formCiz(odak) {
     var h = F.hata, m = F.m ? MV.musteri(F.m) : null;
@@ -197,8 +197,8 @@
           (h.tesisler ? '<p class="a-ipucu a-ipucu-uyari">' + h.tesisler + "</p>" : "") + "</section>" +
         '<section class="a-form-bolum" aria-labelledby="f-b2"><h2 id="f-b2">Süre ve ödeme</h2><div class="a-form">' +
           MK.alan({ id: "f-baslangic", etiket: "Başlangıç", zorunlu: true, hata: h.baslangic, ipucu: "GG.AA.YYYY", girdi: MK.girdi({ id: "f-baslangic", alan: "baslangic", deger: F.baslangic, sinif: "a-girdi-sicil", ek: ' inputmode="numeric" maxlength="10"', hata: h.baslangic }) }) +
-          MK.alan({ id: "f-sure", etiket: "Süre (ay)", zorunlu: true, hata: h.sure, ipucu: "Çoğu periyot 12 ay", girdi: MK.girdi({ id: "f-sure", alan: "sure", deger: F.sure, sinif: "a-girdi-sicil", ek: ' inputmode="numeric" maxlength="2"', hata: h.sure }) }) +
-          MK.alan({ id: "f-vade", etiket: "Ödeme vadesi (gün)", zorunlu: true, hata: h.vade, ipucu: "Fatura tarihinden", girdi: MK.girdi({ id: "f-vade", alan: "vade", deger: F.vade, sinif: "a-girdi-sicil", ek: ' inputmode="numeric" maxlength="3"', hata: h.vade }) }) +
+          MK.alan({ id: "f-sure", etiket: "Süre (ay)", zorunlu: true, hata: h.sure, ipucu: "Çoğu periyot 12 ay", girdi: MK.girdi({ id: "f-sure", alan: "sure", deger: F.sure, sinif: "a-girdi-sicil", ek: ' inputmode="numeric" maxlength="2" placeholder="ör. 12"', hata: h.sure }) }) +
+          MK.alan({ id: "f-vade", etiket: "Ödeme vadesi (gün)", zorunlu: true, hata: h.vade, ipucu: "Fatura tarihinden", girdi: MK.girdi({ id: "f-vade", alan: "vade", deger: F.vade, sinif: "a-girdi-sicil", ek: ' inputmode="numeric" maxlength="3" placeholder="ör. 30"', hata: h.vade }) }) +
           '<div class="a-alan-grup a-alan-genis"><p class="a-etiket">Yenileme</p><div class="a-sekmeler" role="group" aria-label="Yenileme">' +
             '<button type="button" class="a-sekme" data-yenileme="yok" aria-pressed="' + (F.yenileme === "yok") + '">Yeni teklifle</button>' +
             '<button type="button" class="a-sekme" data-yenileme="otomatik" aria-pressed="' + (F.yenileme === "otomatik") + '">Kendiliğinden</button></div></div>' +

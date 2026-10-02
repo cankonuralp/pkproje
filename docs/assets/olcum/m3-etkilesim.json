@@ -2,9 +2,16 @@
  "maket": "m3",
  "tarih": "2026-10-02",
  "arac": "tools/olc-bulut.mjs --etkilesim (başsız tarayıcı, 1920 açık tema; gen verilen denemede o genişlik)",
- "toplam": 24,
- "gecen": 24,
+ "toplam": 25,
+ "gecen": 25,
  "denemeler": [
+  {
+   "ad": "AA11: Tür ekle formu boş açılır — periyot yazılı gelmez, yalnız silik ipucu",
+   "gen": 1920,
+   "sayfa": "maket/ekipman-turleri.html",
+   "hash": "#/yeni",
+   "gecti": true
+  },
   {
    "ad": "formatlı türde ölçüm metodu türde yazar (ET: Üç Uçlu Karşılaştırma)",
    "gen": 1920,

@@ -116,7 +116,7 @@
   var F = null;
   function formAc(t, kopya) {
     var k = t || kopya;
-    F = { no: t ? t.no : null, ekipmanlar: k && k.ekipmanlar ? k.ekipmanlar.map(function (x) { return Object.assign({}, x); }) : [], tip: k && k.aday ? "aday" : "kayitli", aday: Object.assign({}, ADAY_BOS, k && k.aday ? k.aday : {}), m: k && k.m ? k.m : "", tesis: k && k.tesis ? k.tesis : "", ek: k && k.m ? MV.teklifTesisleri(k).slice(1) : [], kdv: String(oran(k)), gecerlilik: String(k ? k.gecerlilik : 30), not: "", hata: {},
+    F = { no: t ? t.no : null, ekipmanlar: k && k.ekipmanlar ? k.ekipmanlar.map(function (x) { return Object.assign({}, x); }) : [], tip: k && k.aday ? "aday" : "kayitli", aday: Object.assign({}, ADAY_BOS, k && k.aday ? k.aday : {}), m: k && k.m ? k.m : "", tesis: k && k.tesis ? k.tesis : "", ek: k && k.m ? MV.teklifTesisleri(k).slice(1) : [], kdv: String(oran(k)), gecerlilik: k ? String(k.gecerlilik) : "", not: "", hata: {},
       kalemler: k ? k.kalemler.map(function (x) { return { tur: x.tur, adet: String(x.adet), fiyat: String(x.fiyat) }; }) : [{ tur: "", adet: "1", fiyat: "" }] };
     var q = /[?&]tesis=(t\d+)/.exec(location.hash); if (!k && q && MV.tesis(q[1])) { F.tesis = q[1]; F.m = MV.tesis(q[1]).m; }
   }
@@ -143,7 +143,7 @@
             return '<label class="a-onay-kutusu"><input type="checkbox" data-ektesis="' + x.id + '"' + (F.ek.indexOf(x.id) >= 0 ? " checked" : "") + "><span>" + kacis(x.ad) + "</span></label>"; }).join("") + "</div>" : "") +
           "</div>") + "</section>" +
         '<section class="a-form-bolum" aria-labelledby="f-b2"><h2 id="f-b2">Koşullar</h2><div class="a-form">' +
-          MK.alan({ id: "f-gecerlilik", etiket: "Geçerlilik (gün)", zorunlu: true, hata: h.gecerlilik, ipucu: "Gönderildiği günden", girdi: MK.girdi({ id: "f-gecerlilik", alan: "gecerlilik", deger: F.gecerlilik, sinif: "a-girdi-sicil", ek: ' inputmode="numeric" maxlength="3"', hata: h.gecerlilik }) }) +
+          MK.alan({ id: "f-gecerlilik", etiket: "Geçerlilik (gün)", zorunlu: true, hata: h.gecerlilik, ipucu: "Gönderildiği günden", girdi: MK.girdi({ id: "f-gecerlilik", alan: "gecerlilik", deger: F.gecerlilik, sinif: "a-girdi-sicil", ek: ' inputmode="numeric" maxlength="3" placeholder="ör. 30"', hata: h.gecerlilik }) }) +
           MK.alan({ id: "f-kdv", etiket: "KDV (%)", zorunlu: true, hata: h.kdv, girdi: MK.girdi({ id: "f-kdv", alan: "kdv", deger: F.kdv, sinif: "a-girdi-sicil", ek: ' inputmode="numeric" maxlength="2"', hata: h.kdv }) }) +
           '<div class="a-alan-grup a-alan-genis"><label class="a-etiket" for="f-not">Not</label><textarea class="a-alan a-alan-ince" id="f-not" data-alan="not" maxlength="300" placeholder="Ödeme, ulaşım, ek koşullar">' + kacis(F.not) + "</textarea></div>" +
         "</div></section></div>" +

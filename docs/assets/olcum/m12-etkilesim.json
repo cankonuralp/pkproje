@@ -2,9 +2,16 @@
  "maket": "m12",
  "tarih": "2026-10-02",
  "arac": "tools/olc-bulut.mjs --etkilesim (başsız tarayıcı, 1920 açık tema; gen verilen denemede o genişlik)",
- "toplam": 20,
- "gecen": 20,
+ "toplam": 21,
+ "gecen": 21,
  "denemeler": [
+  {
+   "ad": "AA11: yeni teklifte geçerlilik yazılı gelmez, yalnız silik ipucu",
+   "gen": 1920,
+   "sayfa": "maket/teklifler.html",
+   "hash": "#/yeni",
+   "gecti": true
+  },
   {
    "ad": "teklif · geçerlilik 'ya kadar; tarih eki yılın okunuşuna göre (2026'ya · 2027'de · 2025'ten · 2030'a)",
    "gen": 1920,
