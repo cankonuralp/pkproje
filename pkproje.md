@@ -2177,6 +2177,10 @@ yeni kayıt formları boş açılır (örnek değer alana yazılmaz; gerekiyorsa
 rapor formatı firmanın Format kurucusunda kurulan sürümlü bir tanımdır; saha ekranı ve PDF bu tanımdan çizilir, çizen motor kodda tektir
 (`RAPOR-FORMAT.md`). Eski "şablon kodda, site içi düzenleyici yok" kararı kalktı.
 
+**Ellinci tur (2026-10-02, reisim birebir):** *"Araç tutanağı şablonuna bakalım"* → şablon gösterildi; ardından *"Reisim tüm formatlar san daha önce
+attığım bakanlık formatları a benzesin  elektrik topraklama ve panı için atmıştım"* → bütün iç belgelerin temel formatı Bakanlık formatlarının
+(ZPKR01 topraklama, ZPKR02 elektrik iç tesisatı / pano) görünümünde (§11 235). Tutanağın kalem ve açı soruları açık kalıyor.
+
 **Açık kalanlar:** ~~Ana sayfada İSGGM duyuruları~~ (2026-09-27: makette eklendi; okuma işi uygulamada) (reisim 2026-09-26: *"Ana sayfada isgüm duyurularını gösterebilir miyiz ? Bunu
 yapılacaklar listesine ekle"*; öneri: ÇSGB İSGGM duyurular sayfası — https://www.csgb.gov.tr/isggm/duyurular/ — sunucuda günde birkaç kez
 okunur (pg-boss işi, §8.9), Ana sayfada son 5 duyuru başlık + tarih + kaynağa bağlantı; yalnız ekranda, bildirim yok; sayfa RSS vermiyorsa
@@ -2214,6 +2218,13 @@ revizyon, alan kopyalama, hafif kusur devri, meslek eşleşme denetimi).
 - Emsal ürünler: https://opwire.app/iso-17020-periyodik-kontrol-yazilimi/ · https://17020muayene.vidco.com.tr/ · https://akuple.com/asansor-kontrol-yazilimi/ · https://ensyazilim.com/
 
 ## 11 · Değişiklik günlüğü
+- 2026-10-02 (235): **Bütün iç belgeler Bakanlık formatı görünümünde** (§9 ellinci tur: *"tüm formatlar san daha önce attığım bakanlık formatları
+  a benzesin elektrik topraklama ve panı için atmıştım"*). Temel formatlı 8 belge — rapor şablonu önizlemesi, saha formu, ölçüm cihazı ara kontrol
+  kayıtları, izin / masraf talep formu, iş sözleşmesi, araç teslim tutanağı, rapor formatı önizlemesi (Format kurucu), zimmet teslim formu — tek
+  başlık üreticisinden (`MB.resmiBas`) ZPKR01 / ZPKR02'nin başlık tablosunu alır: logo · firma künyesi · akreditasyon · BELGE ADI · doküman kodu,
+  yayım tarihi, revizyon no / tarihi, yürürlük tarihi; başlık kâğıtta **her sayfada tekrar eder**. Bölüm başlıkları Bakanlık formatının pembe
+  şeridi, etiket hücreleri mavi, bütün tablo ve bilgi alanları siyah çerçeveli, Carlito yazı tipi, A4 sayfa; köşe yuvarlama ve gölge yok. Yayım
+  ve revizyon bilgileri uydurma (firma kendi formatında girer). Ekran listeleri ve uygulama görünümü değişmedi; yalnız belge / PDF.
 - 2026-10-02 (234): **§8.3 kararı değişti — rapor formatı firmanın Format kurucusunda** (§9 kırk dokuzuncu tur, reisim: *"Tamam yapalım"*).
   §8.3 yeni karar: format firma × tür başına Format kurucuda kurulan sürümlü tanım; saha ekranı ve PDF bu tanımdan, çizen motor kodda tek;
   eski "kodda, site içi düzenleyici yok" üstü çizili kaldı. Aynı kararı tekrar eden yerler (§3.1 modül 6, §3 menü notu, M3 notu, M7 notu,

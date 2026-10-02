@@ -1642,3 +1642,32 @@ a.a-yuz:hover { border-color: var(--kenar-alan); background: var(--zemin); }
   .a-kurucu { grid-template-columns: 280px minmax(0, 1fr) 340px; }
   .a-kurucu-sag { grid-column: auto; grid-template-columns: minmax(0, 1fr); }
 }
+
+/* ══ TEMEL FORMAT = BAKANLIK GÖRÜNÜMÜ (2026-10-02, reisim: "tüm formatlar daha önce attığım bakanlık formatlarına benzesin"): iç belgeler
+   (.a-belge.a-resmi) .rb-sayfa'nın kâğıdını, yazı tipini ve çerçeveli tablolarını kullanır; bölüm başlığı .rb-bb, etiket hücresi .rb-e
+   renginde; köşe yuvarlama, gölge, silik yazı yok. */
+.rb-sayfa.a-resmi { font-size: 12px; }
+.a-resmi-alt { margin: -6px 0 10px; font-size: 11px; text-align: center; }
+.a-resmi .rb-bas-ad, .a-resmi .a-belge-bolum h3 > span:first-child { text-transform: uppercase; }   /* Bakanlık formatındaki gibi büyük harf (yalnız görünüm) */
+.a-resmi p { margin: 0 0 8px; }
+.a-resmi .a-belge-bolum { margin: 0 0 10px; }
+.a-resmi .a-belge-bolum h3 { margin: 0; padding: 1px 3px; border: 1px solid #000; border-radius: 0; background: #f1dbdb; color: #000; font-size: 12px; font-weight: 700; }
+.a-resmi .a-belge-bolum h3 + * { margin-top: -1px; }
+.a-resmi .a-belge-bolum h4 { margin: 6px 0 4px; font-size: 12px; }
+.a-resmi .a-belge-madde, .a-resmi .a-deger-yok, .a-resmi .a-alt-satir { color: #000; font-size: 11px; font-weight: 400; }
+.a-resmi .a-bilgi { display: grid; grid-template-columns: repeat(2, minmax(0, 1fr)); gap: 0; margin: 0 0 10px; padding: 0; background: none; border: 0; border-top: 1px solid #000; border-left: 1px solid #000; border-radius: 0; }
+.a-resmi .a-bilgi-oge { display: grid; grid-template-columns: 38% minmax(0, 1fr); border-right: 1px solid #000; border-bottom: 1px solid #000; }
+.a-resmi .a-bilgi-tam, .a-resmi .a-bilgi-cift { grid-column: 1 / -1; }
+.a-resmi .a-bilgi dt { padding: 1px 3px; background: #dbe4f0; color: #000; font-size: 12px; font-weight: 400; border-right: 1px solid #000; }
+.a-resmi .a-bilgi dd { margin: 0; padding: 1px 3px; font-weight: 400; }
+.a-resmi .a-belge-tablo { font-size: 12px; }
+.a-resmi .a-belge-tablo th { background: #dbe4f0; color: #000; font-weight: 700; }
+.a-resmi .a-belge-tablo th, .a-resmi .a-belge-tablo td { padding: 1px 3px; border-color: #000; }
+.a-resmi .a-belge-kutu { border: 1px solid #000; border-radius: 0; width: 11px; height: 11px; margin-right: 4px; }
+.a-resmi .a-belge-kutu-dolu { background: #000; }
+.a-resmi .a-belge-bos { border-bottom-color: #000; }
+.a-resmi .a-belge-imzalar { gap: 0; margin-top: 10px; border-top: 1px solid #000; border-left: 1px solid #000; }
+.a-resmi .a-belge-imzalar > div { padding: 2px 3px; border-right: 1px solid #000; border-bottom: 1px solid #000; font-size: 12px; }
+.a-resmi .a-belge-imza { min-height: 40px; margin-top: 4px; border: 0; border-radius: 0; color: #000; font-size: 10px; }
+.a-resmi .a-belge-alt { margin-top: 10px; padding-top: 4px; border-top: 1px solid #000; color: #000; font-size: 9px; }
+.a-resmi .a-kod { font: inherit; background: none; padding: 0; color: #000; }

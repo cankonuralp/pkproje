@@ -12,6 +12,19 @@
   /* imza yolu (2026-09-29, V2): mobil imza · e-imza · yüklenen imzalı PDF; eski kayıtta yol yok */
   var imzaYolu = function (i) { return i && i.yontem ? " (" + (MV.IMZA_YONTEM[i.yontem] ? MV.IMZA_YONTEM[i.yontem].kisa : "imzalı PDF yüklendi") + ")" : ""; };
   window.MB = {};
+  /* ── TEMEL FORMATIN BAŞLIĞI (2026-10-02, reisim: "tüm formatlar daha önce attığım bakanlık formatlarına benzesin elektrik topraklama ve
+     pano için atmıştım"): bütün iç belgeler (rapor şablonu, saha formu, ara kontrol, talep formları, sözleşme, araç tutanağı, zimmet formu)
+     Bakanlık formatlarının (ZPKR01 / ZPKR02) başlık tablosunu kullanır — logo · firma künyesi · akreditasyon · BELGE ADI · doküman bilgileri;
+     belge .rb-sayfa olduğu için kâğıtta her sayfanın başında tekrar eder. Yayım / revizyon bilgileri uydurma (firma kendi formatında girer). */
+  MB.resmiBas = function (ad, kod, alt) {
+    var f = MV.FIRMA;
+    return '<table class="rb-bas"><colgroup><col style="width:11%"><col style="width:29%"><col style="width:10%"><col style="width:28%"><col style="width:22%"></colgroup><tr>' +
+      '<td class="rb-logo">LOGO</td><td class="rb-firma"><b>' + kacis(f.ad) + "</b><br>" + kacis(f.adres) + '</td><td class="rb-logo">AKR.</td>' +
+      '<td class="rb-bas-ad">' + kacis(ad) + "</td>" +
+      '<td class="rb-dok"><div><span>Doküman Kodu</span>: ' + kod + '</div><div><span>Yayım Tarihi</span>: 01.09.2026</div><div><span>Revizyon No</span>: 00</div>' +
+      '<div><span>Revizyon Tarihi</span>: -</div><div><span>Yürürlük Tarihi</span>: 01.09.2026</div></td></tr></table>' +
+      (alt ? '<p class="a-resmi-alt">' + alt + "</p>" : "");
+  };
   MB.belge = function (t, o) {
     if (MV.formatYapi(t)) return resmiBelge(t, o, MV.formatYapi(t));   /* Bakanlık formatlı tür: resmî PDF'in birebir düzeni (2026-09-28) */
     var f = MV.FIRMA, std = t.std.map(MV.standart), zorunlu = MV.kusurSinifli(t), grup = MV.grup(t.g);
@@ -23,11 +36,8 @@
     var hafifAd = "Uygun değil", agirAd = "Uygun değil";   /* reisim 2026-09-26: madde sonucu Uygun · Uygun değil · Uygulanamaz */
     var kriter = MV.kriterler(t), test = MV.testler(t), ok = MV.ornekKusur(t, hafif);
     var surum = t.pdf && t.pdf[0] ? t.pdf[0].surum : t.sablon ? t.sablon.split(" · ")[0] : "v1", formKod = zorunlu ? t.format : f.kisa + "-FR-" + t.k + "-" + surum.slice(1);
-    return '<article class="a-belge" aria-label="Rapor önizlemesi">' +
-      '<header class="a-belge-bas"><div class="a-belge-logo" role="img" aria-label="Firma logosu yeri">Logo</div>' +
-        '<div class="a-belge-kunye"><b>' + kacis(f.ad) + "</b><span>" + kacis(f.adres) + "</span><span>" + kacis(f.eposta) + " · Akreditasyon no <span class=\"a-kod\">" + f.akr + "</span></span></div>" +
-        '<div class="a-belge-logo" role="img" aria-label="Akreditasyon markası yeri">Akreditasyon markası</div></header>' +
-      '<div class="a-belge-baslik"><h2>Periyodik kontrol raporu</h2><p>' + kacis(t.ad) + " · " + kacis(grup.ad) + "</p></div>" +
+    return '<article class="a-belge" aria-label="Rapor önizlemesi"><div class="rb-sayfa a-resmi">' +
+      MB.resmiBas(t.ad + " periyodik kontrol raporu", formKod, kacis(grup.ad)) +
       '<dl class="a-bilgi">' + bilgi("Rapor no", o ? '<span class="a-kod">' + o.no + "</span>" : bos + kaynak("sunucu, rapor oluşturulurken"), true) +
         bilgi("Form", '<span class="a-kod">' + formKod + "</span>") +
         bilgi("Format sürümü", kacis(surum)) + "</dl>" +
@@ -67,7 +77,7 @@
         bilgi("EKİPNET kayıt no", d(o && '<span class="a-kod">' + o.p.ekipnet + "</span>", "personel")) + bilgi("Nüsha sayısı", f.nusha + (o ? "" : kaynak("firma ayarı"))) + "</dl>" +
         '<div class="a-belge-imza">' + (!o ? "İmza" : o.imza ? "Güvenli elektronik imza" + imzaYolu(o.imza) + " · " + kacis(o.p.ad) + " · " + MK.zamanYaz(o.imza.zaman) : "İmzasız — denetçi son imzayı atınca geçerli olur ve müşteriye açılır.") + "</div>") +
       bolum("Ek", "Fotoğraflar", fotoHtml(R ? R.foto : 2)) +
-      '<footer class="a-belge-alt"><span>' + kacis(f.ad) + " · " + formKod + "</span></footer></article>";
+      '<footer class="a-belge-alt"><span>' + kacis(f.ad) + " · " + formKod + "</span></footer></div></article>";
   };
   /* ══ RESMÎ FORMAT ÇIKTISI (2026-09-28; reisim: "sana verdiğim pdfler gibi gözükmüyor … sanki uygulamanın temasına göre bir pdf oluşuyor
      birebir aynı pdf çıktısı olmalı final raporu") — ZPKR01 / ZPKR02 PDF'lerinin sayfa düzeni birebir: A4, siyah-beyaz, başlık tablosu (logo ·
@@ -353,10 +363,8 @@
   MB.sahaFormu = function (o) {
     var f = MV.FIRMA, p = o.p, formKod = f.kisa + "-FR-SAH-01";
     var satirlar = o.ekipmanlar.map(function (e, i) { return [String(i + 1), '<span class="a-kod">' + kacis(e.kod) + "</span>", kacis(e.tur.ad), kacis(e.konum)]; });
-    return '<article class="a-belge" aria-label="Saha formu önizlemesi">' +
-      '<header class="a-belge-bas"><div class="a-belge-logo" role="img" aria-label="Firma logosu yeri">Logo</div>' +
-        '<div class="a-belge-kunye"><b>' + kacis(f.ad) + "</b><span>" + kacis(f.adres) + "</span></div></header>" +
-      '<div class="a-belge-baslik"><h2>Saha formu</h2><p>' + kacis(p.musteri) + " · " + kacis(p.ad) + "</p></div>" +
+    return '<article class="a-belge" aria-label="Saha formu önizlemesi"><div class="rb-sayfa a-resmi">' +
+      MB.resmiBas("Saha formu", formKod, kacis(p.musteri) + " · " + kacis(p.ad)) +
       '<dl class="a-bilgi">' + bilgi("Form no", '<span class="a-kod">' + o.no + "</span>") + bilgi("Proje no", '<span class="a-kod">' + p.no + "</span>") +
         bilgi("Tarih", MK.tarihYaz(p.tarih) + (p.bitTarih && p.bitTarih !== p.tarih ? " – " + MK.tarihYaz(p.bitTarih) : "")) +
         bilgi("Adres", kacis(p.adres) + ", " + kacis(p.ilce) + " / " + kacis(p.il), true) + "</dl>" +
@@ -368,7 +376,7 @@
         return "<div><b>" + x[0] + "</b><span>" + kacis(x[1]) + '</span><div class="a-belge-imza' + (im ? " a-belge-imzali" : "") + '">' +
           (im ? o.imza.imzacilar.map(function (y) { return kacis(y.ad) + " · " + MK.imzaYaz({ yontem: o.imza.yontem, zaman: y.zaman }); }).join("<br>") : "Tarih · imza" + (i === 0 ? " · kaşe" : "")) + "</div></div>";
       }).join("") + "</div>" +
-      '<footer class="a-belge-alt"><span>' + kacis(f.ad) + " · " + formKod + " · temel format</span></footer></article>";
+      '<footer class="a-belge-alt"><span>' + kacis(f.ad) + " · " + formKod + " · temel format</span></footer></div></article>";
   };
   /* ARA KONTROL KAYITLARI — temel format KM-FR-ARA-01 (2026-09-28, T7; reisim: "ara kontrol kayıtları PDF indir … bizim formatımızla";
      firma kendi formatını isterse o firmaya özel üretilir, §3.7 satır 12). o = { v (cihaz), kayitlar[] (yapılmış, tarih sırası), tarih } */
@@ -378,10 +386,8 @@
       return [String(i + 1), MK.tarihYaz(x.tarih), x.siklik ? kacis(MV.araSiklik(x.siklik).ad) : "Tek seferlik", kacis(x.yontem || "—"), x.kim ? kacis(MV.kisi(x.kim).ad) : "—", kacis(x.sonuc || "—")];
     });
     var ilk = o.kayitlar[0].tarih, son = o.kayitlar[o.kayitlar.length - 1].tarih;
-    return '<article class="a-belge" aria-label="Ara kontrol kayıtları önizlemesi">' +
-      '<header class="a-belge-bas"><div class="a-belge-logo" role="img" aria-label="Firma logosu yeri">Logo</div>' +
-        '<div class="a-belge-kunye"><b>' + kacis(f.ad) + "</b><span>" + kacis(f.adres) + "</span></div></header>" +
-      '<div class="a-belge-baslik"><h2>Ölçüm cihazı ara kontrol kayıtları</h2><p>' + kacis(v.env + " · " + v.ad) + "</p></div>" +
+    return '<article class="a-belge" aria-label="Ara kontrol kayıtları önizlemesi"><div class="rb-sayfa a-resmi">' +
+      MB.resmiBas("Ölçüm cihazı ara kontrol kayıtları", formKod, kacis(v.env + " · " + v.ad)) +
       '<dl class="a-bilgi">' + bilgi("Cihaz kodu", '<span class="a-kod">' + kacis(v.env) + "</span>") + bilgi("Marka / model", kacis([v.marka, v.model].filter(Boolean).join(" "))) +
         bilgi("Seri no", '<span class="a-kod">' + kacis(v.seri) + "</span>") + bilgi("Ölçüm aralığı", kacis(v.aralik)) +
         bilgi("Kalibrasyon geçerliliği", MK.tarihYaz(v.bitis)) + bilgi("Dönem", MK.tarihYaz(ilk) + (son !== ilk ? " – " + MK.tarihYaz(son) : "")) + "</dl>" +
@@ -389,7 +395,7 @@
       '<div class="a-belge-imzalar">' + [["Kontrol eden", "Ad soyad"], ["Onaylayan", "Teknik yönetici"]].map(function (x) {
         return "<div><b>" + x[0] + "</b><span>" + x[1] + '</span><div class="a-belge-imza">Tarih · imza</div></div>';
       }).join("") + "</div>" +
-      '<footer class="a-belge-alt"><span>' + kacis(f.ad) + " · " + formKod + " · temel format · " + MK.tarihYaz(o.tarih) + "</span></footer></article>";
+      '<footer class="a-belge-alt"><span>' + kacis(f.ad) + " · " + formKod + " · temel format · " + MK.tarihYaz(o.tarih) + "</span></footer></div></article>";
   };
   /* ── TALEP FORMLARI — izin talebi · masraf formu (2026-09-28, T8; reisim: "izin talebi ve masraf formu için her müşteri … kendi formatını
      yükleyebilsin o formata göre pdf çıktısı olacak, ve son hali hem sisteme kaydolduğu gibi mail olarakta iletilecek … sen iskelet olarak
@@ -440,10 +446,8 @@
   /* o = { tip: "izin" | "masraf", x (kayıt), durum ({ ad }) } */
   MB.talepFormu = function (o) {
     var f = MV.FIRMA, F = MB.TALEP_FORMAT[o.tip], x = o.x, p = MV.kisi(x.kisi), formKod = f.kisa + "-FR-" + F.kod;
-    return '<article class="a-belge" aria-label="' + F.baslik + ' önizlemesi">' +
-      '<header class="a-belge-bas"><div class="a-belge-logo" role="img" aria-label="Firma logosu yeri">Logo</div>' +
-        '<div class="a-belge-kunye"><b>' + kacis(f.ad) + "</b><span>" + kacis(f.adres) + "</span></div></header>" +
-      '<div class="a-belge-baslik"><h2>' + F.baslik + "</h2><p>" + F.alt + "</p></div>" +
+    return '<article class="a-belge" aria-label="' + F.baslik + ' önizlemesi"><div class="rb-sayfa a-resmi">' +
+      MB.resmiBas(F.baslik, formKod, F.alt) +
       '<dl class="a-bilgi">' + bilgi("Form no", '<span class="a-kod">' + kacis(x.no) + "</span>") + bilgi("Gönderildi", MK.zamanYaz(x.gonderildi)) +
         bilgi("Personel", kacis(p.ad) + '<span class="a-alt-satir">' + kacis(MV.meslekAd(p)) + "</span>") + bilgi("Durum", kacis(o.durum.ad)) + "</dl>" +
       bolum("1", "Talep", "", '<dl class="a-bilgi">' + F.alanlar.map(function (a) { return bilgi(a[0], a[1](x), a[0] === "Açıklama"); }).join("") + "</dl>") +
@@ -453,16 +457,14 @@
         return "<div><b>" + y[0] + "</b><span>" + kacis(i.ad) + '</span><div class="a-belge-imza' + (i.onay ? " a-belge-imzali" : "") + '">' +
           (i.onay ? (i.zaman ? MK.zamanYaz(i.zaman) + " · " : "") + i.onay : "Tarih · imza") + "</div></div>";
       }).join("") + "</div>" +
-      '<footer class="a-belge-alt"><span>' + kacis(f.ad) + " · " + formKod + " · temel format</span></footer></article>";
+      '<footer class="a-belge-alt"><span>' + kacis(f.ad) + " · " + formKod + " · temel format</span></footer></div></article>";
   };
   MB.isSozlesmesi = function (o) {
     var f = MV.FIRMA, x = o.x, m = MV.musteri(x.m), formKod = f.kisa + "-FR-SZL-01";
     var satirlar = x.tesisler.map(function (tid, i) { var t = MV.tesis(tid); return [String(i + 1), "<b>" + kacis(t.ad) + "</b><br>" + kacis(t.adres || "") + '<br><span class="a-belge-madde">' + kacis([t.ilce, t.il].filter(Boolean).join(" / ")) + "</span>"]; });
     var imza = [["Hizmet veren", f.ad, x.imza.firma], ["Hizmet alan", m.unvan, x.imza.musteri]];
-    return '<article class="a-belge" aria-label="İş sözleşmesi önizlemesi">' +
-      '<header class="a-belge-bas"><div class="a-belge-logo" role="img" aria-label="Firma logosu yeri">Logo</div>' +
-        '<div class="a-belge-kunye"><b>' + kacis(f.ad) + "</b><span>" + kacis(f.adres) + "</span></div></header>" +
-      '<div class="a-belge-baslik"><h2>Periyodik kontrol hizmet sözleşmesi</h2><p>İş ekipmanlarının periyodik kontrolü</p></div>' +
+    return '<article class="a-belge" aria-label="İş sözleşmesi önizlemesi"><div class="rb-sayfa a-resmi">' +
+      MB.resmiBas("Periyodik kontrol hizmet sözleşmesi", formKod, "İş ekipmanlarının periyodik kontrolü") +
       '<dl class="a-bilgi">' + bilgi("Sözleşme no", '<span class="a-kod">' + x.no + "</span>") + bilgi("Süre", MK.tarihYaz(x.baslangic) + " – " + MK.tarihYaz(x.bitis)) +
         bilgi("Hizmet alan", kacis(m.unvan)) + bilgi("Ödeme vadesi", x.vade + " gün") + "</dl>" +
       bolum("1", "Kapsamdaki tesisler", x.tesisler.length + " tesis", tablo(["#", "Tesis"], satirlar)) +
@@ -473,7 +475,7 @@
         return "<div><b>" + y[0] + "</b><span>" + kacis(y[1]) + '</span><div class="a-belge-imza' + (y[2] ? " a-belge-imzali" : "") + '">' +
           (y[2] ? MK.tarihYaz(y[2]) + " · imzalı" : "Tarih · imza") + "</div></div>";
       }).join("") + "</div>" +
-      '<footer class="a-belge-alt"><span>' + kacis(f.ad) + " · " + formKod + " · temel format</span></footer></article>";
+      '<footer class="a-belge-alt"><span>' + kacis(f.ad) + " · " + formKod + " · temel format</span></footer></div></article>";
   };
   /* ── ARAÇ TESLİM TUTANAĞI — TEMEL FORMAT (AA4, 2026-10-02; reisim: "aracın teslim alımı veya teslim verimi üzerine fotoğraflı zimmet
      oluşturma olsun … örnek bi şablon oluştur inceleyip düzenleriz"). o = { h (zimmet hareketi) } ya da { bos: true } (şablon: boş alanlar);
@@ -492,10 +494,8 @@
       return [kacis(x[1]), !h ? bos : t.foto ? (ad ? '<span class="a-kod">' + kacis(ad) + "</span>" : '<span class="a-deger-yok">çekilmedi</span>') : yok];
     });
     var imzalar = h ? [["Teslim eden", h.eden], ["Teslim alan", h.alan]] : [["Teslim eden", null], ["Teslim alan", null]];
-    return '<article class="a-belge" aria-label="Araç teslim tutanağı">' +
-      '<header class="a-belge-bas"><div class="a-belge-logo" role="img" aria-label="Firma logosu yeri">Logo</div>' +
-        '<div class="a-belge-kunye"><b>' + kacis(f.ad) + "</b><span>" + kacis(f.adres) + "</span></div></header>" +
-      '<div class="a-belge-baslik"><h2>Araç teslim tutanağı</h2><p>Aracın teslim alınması ve teslim edilmesi · zimmet kaydına eklenir</p></div>' +
+    return '<article class="a-belge" aria-label="Araç teslim tutanağı"><div class="rb-sayfa a-resmi">' +
+      MB.resmiBas("Araç teslim tutanağı", formKod, "Aracın teslim alınması ve teslim edilmesi · zimmet kaydına eklenir") +
       '<dl class="a-bilgi">' + bilgi("Tutanak no", h ? '<span class="a-kod">' + t.no + "</span>" : bos) + bilgi("Tarih ve saat", h ? MK.zamanYaz(h.tarih) : bos) +
         bilgi("Plaka", v ? '<span class="a-kod">' + kacis(v.plaka) + "</span>" : bos) + bilgi("Araç", v ? kacis(v.ad + " · " + v.marka + " " + v.model + " · " + v.yil) : bos) +
         bilgi("Teslim eden", h ? kisi(h.eden) : bos) + bilgi("Teslim alan", h ? kisi(h.alan) : bos) + "</dl>" +
@@ -513,7 +513,7 @@
         var im = o.imza && i === 1 ? kacis(ad) + " · " + MK.imzaYaz(o.imza) : "";
         return "<div><b>" + x[0] + "</b><span>" + kacis(ad || "Ad soyad") + '</span><div class="a-belge-imza' + (im ? " a-belge-imzali" : "") + '">' + (im || "Tarih · imza") + "</div></div>";
       }).join("") + "</div>" +
-      '<footer class="a-belge-alt"><span>' + kacis(f.ad) + " · " + formKod + " · temel format</span></footer></article>";
+      '<footer class="a-belge-alt"><span>' + kacis(f.ad) + " · " + formKod + " · temel format</span></footer></div></article>";
   };
   /* ── FORMAT ÖNİZLEMESİ (AA10, 2026-10-02 — tasarım): Format kurucudaki tanımdan boş rapor PDF'i. Motorun PDF tarafının maketi: her bölüm
      bloğuna göre çizilir (alanlar boş, maddeler cevap kutularıyla, değerler sınırlarıyla). */
@@ -528,11 +528,9 @@
       else ic = '<p class="a-belge-madde">' + MV.FORMAT_BLOK[b.blok].aciklama + "</p>";
       return bolum(no, kacis(b.ad), MV.FORMAT_BLOK[b.blok].ad, ic);
     }).join("");
-    return '<article class="a-belge" aria-label="Rapor formatı önizlemesi">' +
-      '<header class="a-belge-bas"><div class="a-belge-logo" role="img" aria-label="Firma logosu yeri">Logo</div>' +
-        '<div class="a-belge-kunye"><b>' + kacis(f.ad) + "</b><span>" + kacis(f.adres) + "</span></div></header>" +
-      '<div class="a-belge-baslik"><h2>' + kacis(t.ad) + " periyodik kontrol raporu</h2><p>Format " + (F.taslak ? "taslağı (v" + (F.surum + 1) + ")" : "v" + F.surum) + (t.format ? " · Bakanlık formatı " + t.format : "") + "</p></div>" +
-      govde + '<footer class="a-belge-alt"><span>' + kacis(f.ad) + " · " + f.kisa + "-FR-" + t.k + " · format kurucudan</span></footer></article>";
+    return '<article class="a-belge" aria-label="Rapor formatı önizlemesi"><div class="rb-sayfa a-resmi">' +
+      MB.resmiBas(t.ad + " periyodik kontrol raporu", f.kisa + "-FR-" + t.k, "Format " + (F.taslak ? "taslağı (v" + (F.surum + 1) + ")" : "v" + F.surum) + (t.format ? " · Bakanlık formatı " + t.format : "")) +
+      govde + '<footer class="a-belge-alt"><span>' + kacis(f.ad) + " · " + f.kisa + "-FR-" + t.k + " · format kurucudan</span></footer></div></article>";
   };
   MB.zimmetFormu = function (o) {
     var alan = o.alan || { ad: o.p.ad, alt: MV.meslekAd(o.p) };
@@ -545,10 +543,8 @@
         v.seri ? '<span class="a-kod">' + v.seri + "</span>" : v.plaka ? kacis(v.plaka) : "—",
         MK.tarihYaz(z.tarih) + (v.tur === "cihaz" ? '<br><span class="a-belge-madde">kalibrasyon ' + MK.tarihYaz(v.bitis) + "</span>" : v.tur === "arac" ? '<br><span class="a-belge-madde">km teslimde yazılır</span>' : "")];
     });
-    return '<article class="a-belge" aria-label="Zimmet teslim formu önizlemesi">' +
-      '<header class="a-belge-bas"><div class="a-belge-logo" role="img" aria-label="Firma logosu yeri">Logo</div>' +
-        '<div class="a-belge-kunye"><b>' + kacis(f.ad) + "</b><span>" + kacis(f.adres) + "</span></div></header>" +
-      '<div class="a-belge-baslik"><h2>Zimmet teslim formu</h2><p>Personele teslim edilen ölçüm cihazı, araç ve diğer iş varlıkları</p></div>' +
+    return '<article class="a-belge" aria-label="Zimmet teslim formu önizlemesi"><div class="rb-sayfa a-resmi">' +
+      MB.resmiBas("Zimmet teslim formu", formKod, "Personele teslim edilen ölçüm cihazı, araç ve diğer iş varlıkları") +
       '<dl class="a-bilgi">' + bilgi("Form no", '<span class="a-kod">' + o.no + "</span>") + bilgi("Tarih", MK.tarihYaz(o.tarih)) +
         /* o.alan / o.eden (2026-09-29, 196): listeden personel ya da elle yazılan ad; yoksa kartın kişisi ve teslim eden */
         bilgi("Teslim alan", kacis(alan.ad) + (alan.alt ? '<span class="a-alt-satir">' + kacis(alan.alt) + "</span>" : "")) +
@@ -564,7 +560,7 @@
         return "<div><b>" + x[0] + "</b><span>" + kacis(x[1].ad) + '</span><div class="a-belge-imza' + (o.imzali ? " a-belge-imzali" : "") + '">' +
           (el ? kacis(x[1].ad) + " · " + MK.imzaYaz({ yontem: o.imza.yontem, zaman: el.zaman }) : o.imzali ? kacis(x[1].ad) + " · " + MK.tarihYaz(o.tarih) + " · imzalı" : "Tarih · imza") + "</div></div>";
       }).join("") + "</div>" +
-      '<footer class="a-belge-alt"><span>' + kacis(f.ad) + " · " + formKod + " · temel format</span></footer></article>";
+      '<footer class="a-belge-alt"><span>' + kacis(f.ad) + " · " + formKod + " · temel format</span></footer></div></article>";
   };
 
 })();
