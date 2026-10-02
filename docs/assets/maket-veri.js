@@ -656,6 +656,42 @@
   MV.testler = function (t) { return t && MV.TUR_TESTLER[t.k] || MV.TESTLER[t.g] || MV.TESTLER.diger; };
   MV.sinirYaz = function (x) { if (!x.op) return "—"; return (x.op === "<=" ? "≤ " : "≥ ") + String(x.sinir).replace(".", ",") + " " + x.birim + (x.not ? " (" + x.not + ")" : ""); };
   /* hafif / ağır kusur yalnız Bakanlık formatı YÜRÜRLÜKTE olan türde (§4.5, Ek-III 1.9.1) */
+  /* ── FORMAT TANIMI (AA10, 2026-10-02 — TASARIM, onay bekliyor; RAPOR-FORMAT.md). Firmanın tür başına kurduğu rapor formatı: bölümler
+     (her biri bir blok), kurallar, sürüm. Saha ekranı ve PDF bu tanımdan çizilecek (motor kod aşamasında). Makette tanım ilk açılışta
+     türün bugünkü yapısından kurulur (kriterler, test değerleri, cihazlar); firma kurucuda değiştirir, yayınlar. */
+  MV.FORMAT_BLOK = {
+    bilgi: { ad: "Bilgi alanları", ikon: "list", aciklama: "Etiket + alan türü (metin, sayı, tarih, seçim, evet / hayır); kayıttan gelen alanlar salt okunur." },
+    liste: { ad: "Kontrol listesi", ikon: "list-checks", aciklama: "Gruplar ve maddeler; cevap seti; madde başına açıklama ve referans standart." },
+    olcum: { ad: "Ölçüm tablosu", ikon: "table", aciklama: "Satırlar × sütunlar; sınır kuralıyla satır sonucu kendiliğinden Uygun / Uygun değil." },
+    test: { ad: "Test değerleri", ikon: "gauge", aciklama: "Tek tek değer + sınır." },
+    cihaz: { ad: "Ölçüm cihazları", ikon: "gauge", aciklama: "Türün cihaz türleri; zimmetten eklenir, kalibrasyonu denetlenir. Cihaz türleri tür sayfasında seçilir." },
+    foto: { ad: "Fotoğraflar", ikon: "camera", aciklama: "En az / en çok fotoğraf." },
+    kusur: { ad: "Kusur açıklamaları", ikon: "triangle-alert", aciklama: "Kendiliğinden dolar: Uygun değil maddeler ve sınır dışı ölçümler, fotoğraflarıyla." },
+    sonuc: { ad: "Sonuç ve kanaat", ikon: "badge-check", aciklama: "“… kullanılması uygundur / uygun değildir” cümlesi; kurallardaki sonuç önerisiyle." },
+    not: { ad: "Not / yorum", ikon: "message-square", aciklama: "Muayene uzmanının serbest yorumu." },
+    imza: { ad: "İmza alanları", ikon: "file-signature", aciklama: "Muayene uzmanı ve teknik yönetici; imza yöntemi Firma ayarları'ndan." }
+  };
+  MV.ALAN_TUR = { metin: "metin", sayi: "sayı", tarih: "tarih", secim: "seçim", evet: "evet / hayır" };
+  MV.formatBlokYeni = function (k) {
+    var b = { blok: k, ad: MV.FORMAT_BLOK[k].ad };
+    if (k === "bilgi") b.alanlar = []; if (k === "liste") { b.maddeler = []; b.cevap = ["Uygun", "Uygun değil", "Uygulanamaz"]; }
+    if (k === "olcum" || k === "test") b.sutunlar = []; if (k === "foto") { b.enaz = 0; b.encok = 20; }
+    return b;
+  };
+  MV.FORMAT_TANIM = {};
+  MV.formatTanim = function (t) {
+    if (MV.FORMAT_TANIM[t.k]) return MV.FORMAT_TANIM[t.k];
+    var kilit = !!t.format, b = function (k, ad, ek) { return Object.assign(MV.formatBlokYeni(k), { ad: ad, kilit: kilit && k !== "not" && k !== "foto" }, ek || {}); };
+    var std = MV.metotYazi(t);
+    return (MV.FORMAT_TANIM[t.k] = { surum: (t.pdf || []).length || 1, taslak: false, kurallar: { foto: false, derece: false, oneri: true },
+      bolumler: [
+        b("bilgi", "Firma bilgileri", { alanlar: [["Firma adı", "firma"], ["Adres", "tesis"], ["SGK sicil no", "tesis"], ["İSG-KATİP sözleşme ID", "sözleşme"], ["Kontrol tarihi", "plan"]].map(function (x) { return { ad: x[0], tur: "metin", kaynak: x[1], kilit: kilit }; }) }),
+        b("bilgi", "Ekipman bilgileri", { alanlar: [["Ekipman kodu", "", "metin"], ["Marka / model", "", "metin"], ["Seri no", "", "metin"], ["İmal yılı", "", "sayi"], ["Kullanım yeri", "", "metin"]].map(function (x) { return { ad: x[0], tur: x[2] }; }) }),
+        b("liste", "Muayene kriterleri", { maddeler: MV.kriterler(t).map(function (m) { return { metin: typeof m === "string" ? m : m.ad || m.metin, std: std }; }) }),
+        b("test", "Test değerleri", { sutunlar: MV.testler(t).map(function (x) { return { ad: x.ad, birim: x.birim || "", giris: true, kural: x.op ? MV.sinirYaz(x) : "" }; }) }),
+        b("cihaz", "Ölçüm cihazları"), b("foto", "Fotoğraflar"), b("kusur", "Kusur açıklamaları"), b("sonuc", "Sonuç ve kanaat"), b("not", "Muayene uzmanı yorumu"), b("imza", "İmzalar")
+      ] });
+  };
   MV.kusurSinifli = function (t) { return !!t.format && t.formatDurum === "zorunlu"; };
   /* kiracı firmanın künyesi (rapor başlığı, §4.2 ve §4.8: akredite kuruluş logosu + ticari ad + TÜRKAK markası) — UYDURMA */
   MV.FIRMA = { ad: "Örnek Muayene ve Kontrol Ltd. Şti.", kisa: "KM", adres: "Örnek Mahallesi Deneme Caddesi No: 1, Gebze / Kocaeli",

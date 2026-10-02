@@ -132,7 +132,15 @@ export const DURUMLAR = {
     { ad: "tür · jeneratör: kullanılacak cihazlar ve rapor bölümleri", hash: "#/tur/JN" },
     { ad: "PDF görüntüleyici · rapor formatı sürümü", hash: "#/tur/ET", adim: [["tikla", '[data-eylem="pdf-goster"]']] },
     { ad: "tesis sayfası · ekipman yüzü planı açar", sayfa: "maket/musteriler.html", hash: "#/t/t1" },
-    { ad: "tür düzenle · formatlı tür, ölçüm metodu seçimi (2026-09-28)", hash: "#/tur/ET/duzenle" }
+    { ad: "tür düzenle · formatlı tür, ölçüm metodu seçimi (2026-09-28)", hash: "#/tur/ET/duzenle" },
+    /* AA10 (2026-10-02): Format kurucu — tasarım maketi (RAPOR-FORMAT.md) */
+    { ad: "format kurucu · ilk bölüm (Bakanlık alanları kilitli)", hash: "#/tur/HT/kurucu" },
+    { ad: "format kurucu · kontrol listesi bölümü", hash: "#/tur/HT/kurucu/2" },
+    { ad: "format kurucu · test değerleri bölümü", hash: "#/tur/HT/kurucu/3" },
+    { ad: "format kurucu · Bölüm ekle menüsü açık", hash: "#/tur/HT/kurucu", adim: [["tikla", '[data-secici-ac="kb-ekle"]']] },
+    { ad: "format kurucu · taslak: yeni ölçüm tablosu, yayın öncesi uyarı", hash: "#/tur/HT/kurucu", adim: [["tikla", '[data-secici-ac="kb-ekle"]'], ["tikla", '[data-eylem="kb-ekle"][data-blok="olcum"]'], ["yaz", "#kb-yeni", "Et kalınlığı"], ["tikla", '[data-eylem="kb-sutun-ekle"]']] },
+    { ad: "format kurucu · PDF önizleme", hash: "#/tur/HT/kurucu", adim: [["tikla", '[data-eylem="kb-pdf"]']] },
+    { ad: "format kurucu · formatı olmayan tür", hash: "#/tur/FL/kurucu" }
   ] },
   /* M4 Ölçüm Cihazı · Zimmet · kalibrasyon uyarısı (2026-09-24) */
   m4: { sayfa: "maket/zimmetler.html", durumlar: [
@@ -741,6 +749,13 @@ export const DENEMELER = {
     { ad: "düzenle: Vazgeç → tür sayfasına döner", hash: "#/tur/ET/duzenle", adim: [["tikla", '#a-pencere [data-eylem="pencere-kapat"]']], bekle: 'location.hash === "#/tur/ET" && !document.querySelector("#a-pencere").open' },
     { ad: "eski Ekipmanlar bağlantısı Ekipman türlerine gider", sayfa: "maket/ekipmanlar.html", hash: "#/e/HT-1001", bekle: '/ekipman-turleri\\.html$/.test(location.pathname)' },
     { ad: "tesis sayfası: Ekipman yüzü tesisin planını açar", sayfa: "maket/musteriler.html", hash: "#/t/t1", adim: [["tikla", 'a.a-yuz[href^="planlarim.html"]']], bekle: '/planlarim\\.html$/.test(location.pathname) && location.hash === "#/plan/1"' },
+    /* AA10 (2026-10-02; reisim: "tüm raporları bu şekilde kurgulayabileceğim bir sistem tasarla ben müşteriye sunduğumda kendi rapor formatını yükleyip
+       istediği gibi şekillendirebilecek kurgulayabileceği bir sistem") */
+    { ad: "AA10: tür sayfasında Format kurucu → 10 bölüm, Bakanlık alanları silinemez, kurallarda fotoğraf zorunluluğu ve kusur derecesi kapalı", hash: "#/tur/HT", adim: [["tikla", 'a[href="#/tur/HT/kurucu"]']], bekle: 'location.hash === "#/tur/HT/kurucu" && document.querySelectorAll(".a-kurucu-bolum").length === 10 && !document.querySelector("[data-eylem=kb-sil]") && !document.querySelector("[data-kural=foto]").checked && !document.querySelector("[data-kural=derece]").checked && document.querySelector("[data-kural=oneri]").checked' },
+    { ad: "AA10: madde eklenir → taslak; Yayınla onay penceresiyle v2 olur, kalıcı", hash: "#/tur/HT/kurucu/2", sure: 6000, adim: [["yaz", "#kb-yeni", "Kapak contası"], ["tikla", '[data-eylem="kb-madde-ekle"]'], ["js", 'sessionStorage.setItem("t", /Taslak · v2/.test(document.querySelector(".a-nesne-baslik").textContent) ? "1" : "0")'], ["tikla", '[data-eylem="kb-yayinla"]'], ONAY_TAMAM, YENILE], bekle: 'sessionStorage.getItem("t") === "1" && /Yayında · v2/.test(document.querySelector(".a-nesne-baslik").textContent) && /Kapak contası/.test(document.querySelector(".a-kurucu-orta").textContent)' },
+    { ad: "AA10: yeni ölçüm tablosu, sınırsız sütun → yayın öncesi uyarı; silinebilir (onayla)", hash: "#/tur/HT/kurucu", adim: [["tikla", '[data-secici-ac="kb-ekle"]'], ["tikla", '[data-eylem="kb-ekle"][data-blok="olcum"]'], ["yaz", "#kb-yeni", "Et kalınlığı"], ["tikla", '[data-eylem="kb-sutun-ekle"]'], ["js", 'sessionStorage.setItem("u", /sınırı olmayan değer/.test(document.querySelector("#a-nesne .a-serit-kap").textContent) && document.querySelectorAll(".a-kurucu-bolum").length === 11 ? "1" : "0")'], ["tikla", '[data-eylem="kb-sil"]'], ONAY_TAMAM], bekle: 'sessionStorage.getItem("u") === "1" && document.querySelectorAll(".a-kurucu-bolum").length === 10' },
+    { ad: "AA10: bölüm sırası ↑ ile değişir", hash: "#/tur/HT/kurucu/5", adim: [["tikla", '[data-eylem="kb-yukari"][data-i="5"]']], bekle: 'document.querySelectorAll(".a-kurucu-bolum b")[4].textContent === "5 · Fotoğraflar" && location.hash === "#/tur/HT/kurucu/4"' },
+    { ad: "AA10: PDF önizleme bölümleri tanımdan çizer", hash: "#/tur/HT/kurucu", adim: [["tikla", '[data-eylem="kb-pdf"]']], bekle: 'document.querySelector("#a-pdf").open && /Hava tankı periyodik kontrol raporu/.test(document.querySelector("#a-pdf-govde").textContent) && /Muayene kriterleri/.test(document.querySelector("#a-pdf-govde").textContent)' },
   ],
   m4: [
     /* 2026-09-27 (reisim: "maket site nasıl çalışması gerekiyorsa çalışsın"): gerçek dosya indirme / yazdırma */

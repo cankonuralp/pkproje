@@ -8,8 +8,8 @@
   390,
   430
  ],
- "toplam": 48,
- "temiz": 48,
+ "toplam": 76,
+ "temiz": 76,
  "durumlar": [
   {
    "ad": "ekipman türleri · katalog",
@@ -442,6 +442,258 @@
    "disari": [],
    "kucukAlan": [],
    "alan": 4
+  },
+  {
+   "ad": "format kurucu · ilk bölüm (Bakanlık alanları kilitli)",
+   "gen": 320,
+   "temiz": true,
+   "tasma": 0,
+   "disari": [],
+   "kucukAlan": [],
+   "alan": 2
+  },
+  {
+   "ad": "format kurucu · ilk bölüm (Bakanlık alanları kilitli)",
+   "gen": 360,
+   "temiz": true,
+   "tasma": 0,
+   "disari": [],
+   "kucukAlan": [],
+   "alan": 2
+  },
+  {
+   "ad": "format kurucu · ilk bölüm (Bakanlık alanları kilitli)",
+   "gen": 390,
+   "temiz": true,
+   "tasma": 0,
+   "disari": [],
+   "kucukAlan": [],
+   "alan": 2
+  },
+  {
+   "ad": "format kurucu · ilk bölüm (Bakanlık alanları kilitli)",
+   "gen": 430,
+   "temiz": true,
+   "tasma": 0,
+   "disari": [],
+   "kucukAlan": [],
+   "alan": 2
+  },
+  {
+   "ad": "format kurucu · kontrol listesi bölümü",
+   "gen": 320,
+   "temiz": true,
+   "tasma": 0,
+   "disari": [],
+   "kucukAlan": [],
+   "alan": 2
+  },
+  {
+   "ad": "format kurucu · kontrol listesi bölümü",
+   "gen": 360,
+   "temiz": true,
+   "tasma": 0,
+   "disari": [],
+   "kucukAlan": [],
+   "alan": 2
+  },
+  {
+   "ad": "format kurucu · kontrol listesi bölümü",
+   "gen": 390,
+   "temiz": true,
+   "tasma": 0,
+   "disari": [],
+   "kucukAlan": [],
+   "alan": 2
+  },
+  {
+   "ad": "format kurucu · kontrol listesi bölümü",
+   "gen": 430,
+   "temiz": true,
+   "tasma": 0,
+   "disari": [],
+   "kucukAlan": [],
+   "alan": 2
+  },
+  {
+   "ad": "format kurucu · test değerleri bölümü",
+   "gen": 320,
+   "temiz": true,
+   "tasma": 0,
+   "disari": [],
+   "kucukAlan": [],
+   "alan": 2
+  },
+  {
+   "ad": "format kurucu · test değerleri bölümü",
+   "gen": 360,
+   "temiz": true,
+   "tasma": 0,
+   "disari": [],
+   "kucukAlan": [],
+   "alan": 2
+  },
+  {
+   "ad": "format kurucu · test değerleri bölümü",
+   "gen": 390,
+   "temiz": true,
+   "tasma": 0,
+   "disari": [],
+   "kucukAlan": [],
+   "alan": 2
+  },
+  {
+   "ad": "format kurucu · test değerleri bölümü",
+   "gen": 430,
+   "temiz": true,
+   "tasma": 0,
+   "disari": [],
+   "kucukAlan": [],
+   "alan": 2
+  },
+  {
+   "ad": "format kurucu · Bölüm ekle menüsü açık",
+   "gen": 320,
+   "temiz": true,
+   "tasma": 0,
+   "disari": [],
+   "kucukAlan": [],
+   "alan": 2
+  },
+  {
+   "ad": "format kurucu · Bölüm ekle menüsü açık",
+   "gen": 360,
+   "temiz": true,
+   "tasma": 0,
+   "disari": [],
+   "kucukAlan": [],
+   "alan": 2
+  },
+  {
+   "ad": "format kurucu · Bölüm ekle menüsü açık",
+   "gen": 390,
+   "temiz": true,
+   "tasma": 0,
+   "disari": [],
+   "kucukAlan": [],
+   "alan": 2
+  },
+  {
+   "ad": "format kurucu · Bölüm ekle menüsü açık",
+   "gen": 430,
+   "temiz": true,
+   "tasma": 0,
+   "disari": [],
+   "kucukAlan": [],
+   "alan": 2
+  },
+  {
+   "ad": "format kurucu · taslak: yeni ölçüm tablosu, yayın öncesi uyarı",
+   "gen": 320,
+   "temiz": true,
+   "tasma": 0,
+   "disari": [],
+   "kucukAlan": [],
+   "alan": 2
+  },
+  {
+   "ad": "format kurucu · taslak: yeni ölçüm tablosu, yayın öncesi uyarı",
+   "gen": 360,
+   "temiz": true,
+   "tasma": 0,
+   "disari": [],
+   "kucukAlan": [],
+   "alan": 2
+  },
+  {
+   "ad": "format kurucu · taslak: yeni ölçüm tablosu, yayın öncesi uyarı",
+   "gen": 390,
+   "temiz": true,
+   "tasma": 0,
+   "disari": [],
+   "kucukAlan": [],
+   "alan": 2
+  },
+  {
+   "ad": "format kurucu · taslak: yeni ölçüm tablosu, yayın öncesi uyarı",
+   "gen": 430,
+   "temiz": true,
+   "tasma": 0,
+   "disari": [],
+   "kucukAlan": [],
+   "alan": 2
+  },
+  {
+   "ad": "format kurucu · PDF önizleme",
+   "gen": 320,
+   "temiz": true,
+   "tasma": 0,
+   "disari": [],
+   "kucukAlan": [],
+   "alan": 2
+  },
+  {
+   "ad": "format kurucu · PDF önizleme",
+   "gen": 360,
+   "temiz": true,
+   "tasma": 0,
+   "disari": [],
+   "kucukAlan": [],
+   "alan": 2
+  },
+  {
+   "ad": "format kurucu · PDF önizleme",
+   "gen": 390,
+   "temiz": true,
+   "tasma": 0,
+   "disari": [],
+   "kucukAlan": [],
+   "alan": 2
+  },
+  {
+   "ad": "format kurucu · PDF önizleme",
+   "gen": 430,
+   "temiz": true,
+   "tasma": 0,
+   "disari": [],
+   "kucukAlan": [],
+   "alan": 2
+  },
+  {
+   "ad": "format kurucu · formatı olmayan tür",
+   "gen": 320,
+   "temiz": true,
+   "tasma": 0,
+   "disari": [],
+   "kucukAlan": [],
+   "alan": 2
+  },
+  {
+   "ad": "format kurucu · formatı olmayan tür",
+   "gen": 360,
+   "temiz": true,
+   "tasma": 0,
+   "disari": [],
+   "kucukAlan": [],
+   "alan": 2
+  },
+  {
+   "ad": "format kurucu · formatı olmayan tür",
+   "gen": 390,
+   "temiz": true,
+   "tasma": 0,
+   "disari": [],
+   "kucukAlan": [],
+   "alan": 2
+  },
+  {
+   "ad": "format kurucu · formatı olmayan tür",
+   "gen": 430,
+   "temiz": true,
+   "tasma": 0,
+   "disari": [],
+   "kucukAlan": [],
+   "alan": 2
   }
  ]
 }

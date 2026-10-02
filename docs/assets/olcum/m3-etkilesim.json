@@ -2,8 +2,8 @@
  "maket": "m3",
  "tarih": "2026-10-02",
  "arac": "tools/olc-bulut.mjs --etkilesim (başsız tarayıcı, 1920 açık tema; gen verilen denemede o genişlik)",
- "toplam": 25,
- "gecen": 25,
+ "toplam": 30,
+ "gecen": 30,
  "denemeler": [
   {
    "ad": "AA11: Tür ekle formu boş açılır — periyot yazılı gelmez, yalnız silik ipucu",
@@ -178,6 +178,41 @@
    "gen": 1920,
    "sayfa": "maket/musteriler.html",
    "hash": "#/t/t1",
+   "gecti": true
+  },
+  {
+   "ad": "AA10: tür sayfasında Format kurucu → 10 bölüm, Bakanlık alanları silinemez, kurallarda fotoğraf zorunluluğu ve kusur derecesi kapalı",
+   "gen": 1920,
+   "sayfa": "maket/ekipman-turleri.html",
+   "hash": "#/tur/HT",
+   "gecti": true
+  },
+  {
+   "ad": "AA10: madde eklenir → taslak; Yayınla onay penceresiyle v2 olur, kalıcı",
+   "gen": 1920,
+   "sayfa": "maket/ekipman-turleri.html",
+   "hash": "#/tur/HT/kurucu/2",
+   "gecti": true
+  },
+  {
+   "ad": "AA10: yeni ölçüm tablosu, sınırsız sütun → yayın öncesi uyarı; silinebilir (onayla)",
+   "gen": 1920,
+   "sayfa": "maket/ekipman-turleri.html",
+   "hash": "#/tur/HT/kurucu",
+   "gecti": true
+  },
+  {
+   "ad": "AA10: bölüm sırası ↑ ile değişir",
+   "gen": 1920,
+   "sayfa": "maket/ekipman-turleri.html",
+   "hash": "#/tur/HT/kurucu/5",
+   "gecti": true
+  },
+  {
+   "ad": "AA10: PDF önizleme bölümleri tanımdan çizer",
+   "gen": 1920,
+   "sayfa": "maket/ekipman-turleri.html",
+   "hash": "#/tur/HT/kurucu",
    "gecti": true
   }
  ]

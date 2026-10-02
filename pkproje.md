@@ -1188,6 +1188,10 @@ tarih-saat, fotoğraflar, form) · **Eğitim kaydı** (personel, eğitim, belge,
    Yayında aynı yazılım: yönetilen PostgreSQL + S3 uyumlu dosya deposu; tek yapılandırma dosyası değişir.
 3. **8.3 Rapor çıktısı:** sunucuda üretilen PDF; şablonlar **firma × ekipman türü başına kodda** (§3), sürümlü;
    Bakanlık formatlarını birebir üretir. Site içinde şablon düzenleyici yok.
+   ⏳ **2026-10-02 öneri (AA10, reisim onayı bekliyor):** reisim *"tüm raporları bu şekilde kurgulayabileceğim bir sistem tasarla ben müşteriye sunduğumda kendi
+   rapor formatını yükleyip istediği gibi şekillendirebilecek"* dedi → format **firmanın format kurucusunda tutulan sürümlü bir tanım** (yapı · kurallar ·
+   görünüm), saha ekranı ve PDF bu tanımdan çizilir, çizen motor kodda tek. Tasarım `RAPOR-FORMAT.md`; maketi Ekipman türleri › tür › Format kurucu.
+   Onaylanırsa bu madde böyle değişir; onaylanana kadar yukarıdaki karar geçerli.
 4. **E-imza:** açık karar. Seçenekler: (a) 5070 e-imza, yetkili kişinin token/kartı ile masaüstünde imza (PAdES);
    (b) mobil imza; (c) bulut imza servisi; (d) ıslak imza + tarama. Ürün hepsini "imza yöntemi" olarak tanır,
    firma seçer. Yöntemler reisim'le ayrı kalem.
@@ -2206,6 +2210,18 @@ revizyon, alan kopyalama, hafif kusur devri, meslek eşleşme denetimi).
 - Emsal ürünler: https://opwire.app/iso-17020-periyodik-kontrol-yazilimi/ · https://17020muayene.vidco.com.tr/ · https://akuple.com/asansor-kontrol-yazilimi/ · https://ensyazilim.com/
 
 ## 11 · Değişiklik günlüğü
+- 2026-10-02 (233): **AA10 · Firmanın kendi rapor formatını kurduğu sistem — tasarım + Format kurucu maketi** (§9 kırk sekizinci tur: *"Bu söylediklerimi
+  tek bir rapor özelinde değil, tüm raporları bu şekilde kurgulayabileceğim bir sistem tasarla ben müşteriye sunduğumda kendi rapor formatını yükleyip
+  istediği gibi şekillendirebilecek kurgulayabileceği bir sistem tasarlamamız gerkeli yoksa her rapor format yüklemesinde tek tek benim
+  uğraşmam gerekli."*). Tasarım **`RAPOR-FORMAT.md`** (kökte): üç katman (yapı · kurallar · görünüm), 10 blok (bilgi alanları, kontrol listesi,
+  ölçüm tablosu, test değerleri, ölçüm cihazları, fotoğraflar, kusur açıklamaları, sonuç, not, imza), kurallar (AA9'un iki kararı burada aç /
+  kapa: "Uygun değil"de fotoğraf zorunlu, kusur derecesi — ikisi de başlangıçta kapalı), başlangıç yolları (hazır şablon · boş · kendi
+  formatını yükle → yapay zekâ taslağı, öneri), sürüm ve yayın, veri, yapım sırası. **Maket:** Ekipman türleri › tür › **Format kurucu**
+  (`#/tur/<kod>/kurucu`): solda bölümler (sırala ↑↓, ekle — 10 blok, sil — onaylı), ortada seçili bölümün düzenleyicisi (ad, alanlar /
+  maddeler / değerler ekle-çıkar), sağda kurallar ve saha ekranı önizlemesi; **PDF önizle** tanımdan çizer; **Yayınla** onay penceresiyle
+  sürüm artırır, yayın öncesi denetim (sınırsız değer, boş bölüm) uyarır. Bakanlık formatlı türde zorunlu bölümler silinemez. Makette tanım
+  bu tarayıcıda kalır; saha raporu ekranı henüz tanımdan çizilmiyor (motor kod aşamasında). **§8.3'e öneri notu** düştü (onaylanınca karar
+  değişir). layout-list, list, table, message-square ikonları eklendi. Kilit: m3 5 etkileşim (önceki kodda düşüyor) + 7 durum.
 - 2026-10-02 (232): **AA8 · Uyarı ve onay pencereleri taraması** (§9 kırk sekizinci tur: *"yapılan işlemlerde uyarı pop-up larını unutma ama sitedeki
   tüm işlemler için bi kontrol et bu açıdan, giriş çıkış,şifre değişme , rapor gönderme vb."*). Tarama: 25 ekranda görünen her işlem tuşu ve açtığı
   pencerenin içindeki tuşlar (241 işlem) başsız tarayıcıda tek tek tıklandı; her biri için bildirim, onay penceresi, açılan pencere ya da adres

@@ -1612,3 +1612,33 @@ a.a-yuz:hover { border-color: var(--kenar-alan); background: var(--zemin); }
 /* BULUT KAYDI (Ö2, 2026-10-01): bağlı hesap satırı */
 .a-bulut-hesap { display: inline-flex; align-items: center; gap: 6px; font-weight: 600; color: var(--onay-yazi); }
 .a-ipucu .a-kod { white-space: normal; overflow-wrap: anywhere; }   /* Ö2: uzun klasör yolu kartı taşırmaz */
+
+/* ══ FORMAT KURUCU (AA10, 2026-10-02 — tasarım maketi): bölümler · düzenleyici · kurallar + önizleme. Telefonda tek sütun, ortada iki,
+   geniş bantta üç sütun. */
+.a-kurucu { display: grid; gap: 16px; grid-template-columns: minmax(0, 1fr); align-items: start; }
+.a-kurucu-sol, .a-kurucu-sag { display: grid; gap: 16px; min-width: 0; }
+.a-kurucu-orta { min-width: 0; margin: 0; }
+.a-kurucu-bolumler { list-style: none; margin: 0 0 8px; padding: 0; display: grid; gap: 4px; }
+.a-kurucu-bolum { display: flex; align-items: center; gap: 4px; border: 1px solid var(--kenar); border-radius: 8px; background: var(--kart); min-width: 0; }
+.a-kurucu-bolum > a { flex: 1 1 auto; display: flex; align-items: center; gap: 8px; min-width: 0; min-height: 44px; padding: 6px 8px; color: inherit; text-decoration: none; }
+.a-kurucu-secili { border-color: var(--vurgu); box-shadow: inset 3px 0 0 var(--vurgu); }
+.a-kurucu-bolum-ad { display: flex; flex-direction: column; min-width: 0; }
+.a-kurucu-bolum-ad b { overflow-wrap: anywhere; }
+.a-kurucu-sira { display: flex; flex: 0 0 auto; }
+.a-kurucu-ogeler { list-style: none; margin: 0 0 8px; padding: 0; display: grid; gap: 4px; }
+.a-kurucu-ogeler > li { display: flex; align-items: center; justify-content: space-between; gap: 8px; min-height: 44px; padding: 4px 0 4px 8px; border-bottom: 1px solid var(--kenar); }
+.a-kurucu-oge { display: flex; flex-direction: column; min-width: 0; overflow-wrap: anywhere; }
+.a-kurucu-ekle-satir { display: flex; gap: 8px; flex-wrap: wrap; }
+.a-kurucu-ekle-satir .a-girdi { flex: 1 1 200px; min-width: 0; }
+.a-kurucu-not { margin: 0 0 12px; color: var(--yazi2); }
+.a-kurucu-saha { margin: 0; padding-left: 0; list-style: none; display: grid; gap: 6px; }
+.a-kurucu-saha > li { display: flex; flex-direction: column; padding: 6px 8px; border-left: 3px solid var(--kenar); overflow-wrap: anywhere; }
+.a-kurucu-kurallar .a-onay-kutusu { margin-bottom: 8px; }
+@media (min-width: 768px) {
+  .a-kurucu { grid-template-columns: 260px minmax(0, 1fr); }
+  .a-kurucu-sag { grid-column: 1 / -1; grid-template-columns: repeat(2, minmax(0, 1fr)); }
+}
+@media (min-width: 1280px) {
+  .a-kurucu { grid-template-columns: 280px minmax(0, 1fr) 340px; }
+  .a-kurucu-sag { grid-column: auto; grid-template-columns: minmax(0, 1fr); }
+}

@@ -515,6 +515,25 @@
       }).join("") + "</div>" +
       '<footer class="a-belge-alt"><span>' + kacis(f.ad) + " · " + formKod + " · temel format</span></footer></article>";
   };
+  /* ── FORMAT ÖNİZLEMESİ (AA10, 2026-10-02 — tasarım): Format kurucudaki tanımdan boş rapor PDF'i. Motorun PDF tarafının maketi: her bölüm
+     bloğuna göre çizilir (alanlar boş, maddeler cevap kutularıyla, değerler sınırlarıyla). */
+  MB.formatOnizle = function (t, F) {
+    var f = MV.FIRMA, kutu = '<span class="a-belge-kutu"></span>', bosAlan = '<span class="a-belge-bos" aria-label="boş"></span>';
+    var govde = F.bolumler.map(function (b, i) {
+      var no = String(i + 1), ic;
+      if (b.blok === "bilgi") ic = '<dl class="a-bilgi">' + b.alanlar.map(function (a) { return bilgi(kacis(a.ad), a.kaynak ? '<span class="a-deger-yok">kayıttan · ' + kacis(a.kaynak) + "</span>" : bosAlan); }).join("") + "</dl>";
+      else if (b.blok === "liste") ic = tablo(["#", "Madde"].concat(b.cevap), b.maddeler.map(function (m, j) { return [String(j + 1), kacis(m.metin)].concat(b.cevap.map(function () { return kutu; })); }));
+      else if (b.blok === "olcum" || b.blok === "test") ic = tablo(["Değer", "Ölçülen", "Sınır", "Sonuç"], b.sutunlar.map(function (s) { return [kacis(s.ad) + (s.birim ? " (" + kacis(s.birim) + ")" : ""), bosAlan, s.kural ? kacis(s.kural) : "—", s.kural ? "kendiliğinden" : "—"]; }));
+      else if (b.blok === "imza") ic = '<div class="a-belge-imzalar"><div><b>Muayene uzmanı</b><span>Ad soyad</span><div class="a-belge-imza">Tarih · imza</div></div><div><b>Teknik yönetici</b><span>Ad soyad</span><div class="a-belge-imza">Tarih · imza</div></div></div>';
+      else ic = '<p class="a-belge-madde">' + MV.FORMAT_BLOK[b.blok].aciklama + "</p>";
+      return bolum(no, kacis(b.ad), MV.FORMAT_BLOK[b.blok].ad, ic);
+    }).join("");
+    return '<article class="a-belge" aria-label="Rapor formatı önizlemesi">' +
+      '<header class="a-belge-bas"><div class="a-belge-logo" role="img" aria-label="Firma logosu yeri">Logo</div>' +
+        '<div class="a-belge-kunye"><b>' + kacis(f.ad) + "</b><span>" + kacis(f.adres) + "</span></div></header>" +
+      '<div class="a-belge-baslik"><h2>' + kacis(t.ad) + " periyodik kontrol raporu</h2><p>Format " + (F.taslak ? "taslağı (v" + (F.surum + 1) + ")" : "v" + F.surum) + (t.format ? " · Bakanlık formatı " + t.format : "") + "</p></div>" +
+      govde + '<footer class="a-belge-alt"><span>' + kacis(f.ad) + " · " + f.kisa + "-FR-" + t.k + " · format kurucudan</span></footer></article>";
+  };
   MB.zimmetFormu = function (o) {
     var alan = o.alan || { ad: o.p.ad, alt: MV.meslekAd(o.p) };
     var f = MV.FIRMA, formKod = f.kisa + "-FR-ZMT-01";

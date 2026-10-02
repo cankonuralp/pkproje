@@ -99,6 +99,8 @@
       '<div class="a-nesne-bas"><div class="a-nesne-kimlik"><div class="a-nesne-baslik"><h1 tabindex="-1">' + kacis(t.ad) + "</h1></div>" +
         '<p class="a-nesne-alt">' + ikon("layers", "a-ikon-kucuk") + "<span>Kod " + t.k + " · " + kacis(g.ad) + "</span></p></div>" +
         '<div class="a-eylem-cubugu"><a class="a-tus a-tus-ikincil" href="#/tur/' + t.k + '/duzenle">' + ikon("pencil", "a-ikon-kucuk") + "Düzenle</a>" +
+          /* AA10: firmanın kendi formatını kurduğu ekran (tasarım maketi) */
+          '<a class="a-tus a-tus-ikincil" href="#/tur/' + t.k + '/kurucu">' + ikon("layout-list", "a-ikon-kucuk") + "Format kurucu</a>" +
           '<a class="a-tus a-tus-birincil" href="#/tur/' + t.k + '/format">' + ikon("file-plus", "a-ikon-kucuk") + (p ? "Yeni format yükle" : "Rapor formatı yükle") + "</a></div></div>" +
       '<div class="a-yuzler">' +
         /* Ekipmanlar ekranı yok → sayı yalnız bilgi */
@@ -216,6 +218,8 @@
     var h = location.hash, m;
     if (h === "#/yeni") return { v: "liste", pencere: "tur" };
     if (h === "#/elektrik") return { v: "liste", b: "e" };
+    /* AA10 (2026-10-02): format kurucu — #/tur/<kod>/kurucu[/<bölüm>] */
+    if ((m = /^#\/tur\/([A-Z]{2,3})\/kurucu(?:\/(\d+))?$/.exec(h))) return { v: "kurucu", id: m[1], sec: m[2] ? +m[2] : 0 };
     if ((m = /^#\/tur\/([A-Z]{2,3})(?:\/(duzenle|format))?$/.exec(h))) return { v: "tur", id: m[1], pencere: m[2] && MV.tur(m[1]) ? (m[2] === "format" ? "format" : "tur") : null };
     return { v: "liste" };
   }
@@ -223,8 +227,8 @@
     var r = rota(), t = r.id ? MV.tur(r.id) : null;
     $("a-liste-gorunum").hidden = r.v !== "liste"; $("a-nesne").hidden = r.v === "liste";
     if (r.v === "liste" && r.pencere !== "tur") { BR = r.b || "m"; MK.seciciCiz("t"); }
-    if (r.v === "liste") listeCiz(); else turCiz(t);
-    document.title = (r.v === "liste" ? "Ekipman türleri · " + MV.bransAd(BR) : t ? t.ad : "Tür bulunamadı") + " · probata maket";
+    if (r.v === "liste") listeCiz(); else if (r.v === "kurucu" && t) MK.kurucuCiz(t, r.sec); else turCiz(t);
+    document.title = (r.v === "liste" ? "Ekipman türleri · " + MV.bransAd(BR) : t ? (r.v === "kurucu" ? "Format kurucu · " : "") + t.ad : "Tür bulunamadı") + " · probata maket";
     if (odakla) { window.scrollTo(0, 0); var h = document.querySelector("#a-icerik > :not([hidden]) h1"); if (h) h.focus({ preventScroll: true }); }
     if (r.pencere) pencereAc(r.pencere, r.id); else if ($("a-pencere").open) $("a-pencere").close();
   }
@@ -279,7 +283,7 @@
     location.hash = "#/tur/" + t.k;
     MK.bildir(ileti);
   };
-  MK.onGirdi = function (e) { var k = e.target.dataset && e.target.dataset.alan; if (k && W) W.d[k] = k === "k" ? e.target.value.toUpperCase().replace(/[^A-Z]/g, "") : e.target.value; };
+  MK.onGirdi = function (e) { if (MK.kurucuGirdi && rota().v === "kurucu" && MK.kurucuGirdi(e)) return; var k = e.target.dataset && e.target.dataset.alan; if (k && W) W.d[k] = k === "k" ? e.target.value.toUpperCase().replace(/[^A-Z]/g, "") : e.target.value; };
   MK.onSecim = function (id, deger) { if (W && id === "w-g") { W.d.g = deger; delete W.hata.g; pencereCiz("w-g"); } else if (W && id === "w-b") { W.d.b = deger; delete W.hata.b; pencereCiz("w-b"); } else if (W && id === "w-olcum") { W.d.olcum = deger; pencereCiz("w-olcum"); } };
   document.addEventListener("change", function (e) {
     var c = e.target.dataset && e.target.dataset.cihazTur;

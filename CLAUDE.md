@@ -67,6 +67,7 @@ pkproje/
   CLAUDE.md                 bu dosya
   pkproje.md                alan bilgisi · kurgu · kararlar · açık sorular
   MAKET-PLANI.md            toplu maket çalışmasının talimatı ve durumu (2026-09-24; bulut oturumu için)
+  RAPOR-FORMAT.md           firmanın kendi rapor formatını kurduğu sistem (2026-10-02, AA10 — tasarım, onay bekliyor; §8.3 önerisi)
   ARKA-UC.md                arka uç kurgusu (2026-10-01; K1–K6 kabul, K7–K8 kabul edilmedi — 2026-10-02): veri, dosya, çevrimdışı, uygulama, yapay zekâ, yedek
   ANAYASA.md · TASARIM-KALIBI.md · 00–08-*.md · 09-SUNUCU-VE-VERI.md · EKSIKLER-VE-ONERILER.md
                             kural dosyaları (ANAYASA/KALIP'a madde yalnız reisim onayıyla eklenir)
