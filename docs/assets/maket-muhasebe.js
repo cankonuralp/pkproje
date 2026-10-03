@@ -390,7 +390,7 @@
       '<div class="a-form a-bolum-serit">' +
         MK.alan({ id: "w-no", etiket: "Fatura no", zorunlu: true, hata: h.no, girdi: MK.girdi({ id: "w-no", alan: "no", deger: W.no, ek: ' maxlength="16" spellcheck="false"', hata: h.no }) }) +
         MK.alan({ id: "w-tarih", etiket: "Fatura tarihi", zorunlu: true, hata: h.tarih, ipucu: vade ? "Vade " + MK.tarihYaz(vade) + " (" + vg + " gün, " + (soz ? "sözleşme " + soz.no : "varsayılan") + ")" : "GG.AA.YYYY",
-          girdi: MK.girdi({ id: "w-tarih", alan: "tarih", deger: W.tarih, sinif: "a-girdi-sicil", ek: ' inputmode="numeric" maxlength="10"', hata: h.tarih }) }) + "</div>";
+          girdi: MK.girdi({ id: "w-tarih", alan: "tarih", deger: W.tarih, sinif: "a-girdi-sicil", ek: ' inputmode="numeric" maxlength="10" data-takvim', hata: h.tarih }) }) + "</div>";
     $("a-pencere-alt").innerHTML = MK.tus({ eylem: "pencere-kapat", ad: "Vazgeç", sinif: "a-tus-ikincil" }) + MK.tus({ eylem: "fatura-kaydet", ad: "Faturayı kaydet", ikon: "check" });
     if (odak) $(odak).focus();
   }
@@ -399,7 +399,7 @@
     $("a-pencere-baslik").textContent = "Tahsilat ekle · " + f.no;
     $("a-pencere-govde").innerHTML = '<dl class="a-bilgi">' + bilgi("Müşteri", kacis(MV.musteri(f.m).kisa)) + bilgi("Fatura tutarı", para(ft(f).toplam)) + bilgi("Kalan", "<b>" + para(kalan) + "</b>") + "</dl>" +
       '<div class="a-form a-bolum-serit">' +
-        MK.alan({ id: "w-tarih", etiket: "Tahsilat tarihi", zorunlu: true, hata: h.tarih, girdi: MK.girdi({ id: "w-tarih", alan: "tarih", deger: W.tarih, sinif: "a-girdi-sicil", ek: ' inputmode="numeric" maxlength="10"', hata: h.tarih }) }) +
+        MK.alan({ id: "w-tarih", etiket: "Tahsilat tarihi", zorunlu: true, hata: h.tarih, girdi: MK.girdi({ id: "w-tarih", alan: "tarih", deger: W.tarih, sinif: "a-girdi-sicil", ek: ' inputmode="numeric" maxlength="10" data-takvim', hata: h.tarih }) }) +
         MK.alan({ id: "w-tutar", etiket: "Tutar (TL)", zorunlu: true, hata: h.tutar, ipucu: "Kısmi tahsilat olabilir; en çok kalan kadar", girdi: MK.girdi({ id: "w-tutar", alan: "tutar", deger: W.tutar, sinif: "a-girdi-sicil", ek: ' inputmode="decimal"', hata: h.tutar }) }) +
         MK.alan({ id: "w-yontem", etiket: "Yöntem", zorunlu: true, girdi: MK.secim({ id: "w-yontem", ad: "Yöntem", deger: W.yontem, secenekler: YONTEM.map(function (y) { return [y, y]; }), ipucu: "Yöntem seçin" }) }) +
         MK.alan({ id: "w-not", etiket: "Açıklama", genis: true, ipucu: "İsteğe bağlı; ör. çek no, dekont açıklaması", girdi: MK.girdi({ id: "w-not", alan: "not", deger: W.not, ek: ' maxlength="120"' }) }) + "</div>";

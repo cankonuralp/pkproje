@@ -193,7 +193,7 @@
           : MK.secim({ id: "w-arac", ad: "Araç", deger: d.arac, secenekler: araclar().map(function (x) { return [x.id, MV.varlikAdi(x), MV.yerAdi(MV.kimde(x.id))]; }), ipucu: "Araç seçin", gecersiz: !!h.arac, tanim: "w-arac-ipucu" }) }) +
       MK.alan({ id: "w-alan", etiket: "Teslim alan", zorunlu: true, hata: h.alan, sonuc: "Teslim eden: " + (k ? kacis(MV.yerAdi(k)) : "—"),
         girdi: MK.secim({ id: "w-alan", ad: "Teslim alan", deger: d.alan, secenekler: kisiler, ipucu: "Kişi ya da depo", gecersiz: !!h.alan, tanim: "w-alan-ipucu" }) }) +
-      MK.alan({ id: "w-zaman", etiket: "Tarih ve saat", zorunlu: true, hata: h.zaman, girdi: MK.girdi({ id: "w-zaman", alan: "zaman", deger: d.zaman, sinif: "a-girdi-seri", ek: ' inputmode="numeric" maxlength="16"', hata: h.zaman }) }) +
+      MK.alan({ id: "w-zaman", etiket: "Tarih ve saat", zorunlu: true, hata: h.zaman, girdi: MK.girdi({ id: "w-zaman", alan: "zaman", deger: d.zaman, sinif: "a-girdi-seri", ek: ' inputmode="numeric" maxlength="16" data-takvim="saatli"', hata: h.zaman }) }) +
       MK.alan({ id: "w-km", etiket: "Kilometre", zorunlu: true, hata: h.km, girdi: MK.girdi({ id: "w-km", alan: "km", deger: d.km, sinif: "a-girdi-sicil", ek: ' inputmode="numeric" maxlength="9"', hata: h.km }) }) +
       MK.alan({ id: "w-yakit", etiket: "Yakıt seviyesi", zorunlu: true, hata: h.yakit,
         girdi: MK.secim({ id: "w-yakit", ad: "Yakıt seviyesi", deger: d.yakit, secenekler: YAKIT, ipucu: "Seviye seçin", gecersiz: !!h.yakit, tanim: "w-yakit-ipucu" }) }) +

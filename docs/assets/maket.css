@@ -1680,3 +1680,9 @@ a.a-yuz:hover { border-color: var(--kenar-alan); background: var(--zemin); }
 .rb-logo-resim { display: block; max-width: 100%; max-height: 100px; margin: 0 auto; object-fit: contain; }
 .a-logo-satir { display: flex; align-items: center; gap: 12px; flex-wrap: wrap; }
 .a-logo-onizle { max-width: 120px; max-height: 56px; object-fit: contain; border: 1px solid var(--kenar); border-radius: var(--r-kucuk); background: #fff; padding: 4px; }
+
+/* ══ TAKVİM EKİ (2026-10-03, reisim: "tarihler takvim seçmeli olsun"): yazılı tarih kutusu + takvim simgesi; genişlik eski kutu kadar */
+.a-takvim-ek { width: min(100%, 220px); }
+.a-takvim-ek[data-takvim-ek="saatli"] { width: min(100%, 260px); }
+.a-takvim-ek > .a-zaman-tarih { flex: 1 1 auto; }
+.a-zaman-ikon:disabled { color: var(--yazi3); cursor: default; }

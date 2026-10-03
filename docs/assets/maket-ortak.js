@@ -641,6 +641,7 @@
     var k = el.closest("[data-zaman]"), kap = el.closest(".a-secici");
     if (el.dataset.zamanAc !== undefined) {
       var l = kap.querySelector(".a-zaman-liste"), ac = l.hidden; listeleriKapat(kap);
+      if (ac && k.dataset.takvimEk) k.dataset.deger = tarihOku(kap.querySelector("input").value.slice(0, 10)) || "";   /* yazılı alan: değer kutudan */
       if (ac) { k.dataset.ay = (k.dataset.deger || MK.BUGUN).slice(0, 7); l.innerHTML = zamanIc(k); }
       l.hidden = !ac; el.setAttribute("aria-expanded", String(ac));
       if (ac) (l.querySelector('[data-zaman-gun][aria-pressed="true"]') || l.querySelector(".a-zaman-bugun") || l.querySelector("[data-zaman-gun]")).focus();
@@ -650,6 +651,14 @@
       var t = new Date(+k.dataset.ay.slice(0, 4), +k.dataset.ay.slice(5, 7) - 1 + +el.dataset.zamanAy, 1);
       k.dataset.ay = t.getFullYear() + "-" + iki(t.getMonth() + 1); kap.querySelector(".a-zaman-liste").innerHTML = zamanIc(k);
       kap.querySelector('[data-zaman-ay="' + el.dataset.zamanAy + '"]').focus(); return true;
+    }
+    if (el.dataset.zamanGun && k.dataset.takvimEk) {   /* yazılı tarih kutusu: seçilen gün kutuya yazılır, sayfa kendi girdi akışıyla alır */
+      var gk = kap.querySelector("input"), zid = k.dataset.zaman, eski = gk.value.slice(11, 16);
+      gk.value = MK.tarihNo(el.dataset.zamanGun) + (k.dataset.takvimEk === "saatli" ? " " + (/^\d{2}:\d{2}$/.test(eski) ? eski : MK.SAAT) : "");
+      listeleriKapat(null);
+      gk.dispatchEvent(new Event("input", { bubbles: true })); gk.dispatchEvent(new Event("change", { bubbles: true }));
+      var gt = document.querySelector('[data-zaman="' + zid + '"] [data-zaman-ac]'); if (gt) gt.focus();
+      return true;
     }
     if (el.dataset.zamanGun) {
       zamanYay(k, saatliDeger(k, el.dataset.zamanGun)); MK.zamanAyarla(k.dataset.zaman, k.dataset.deger);
@@ -671,6 +680,29 @@
     }
     return false;
   }
+
+  /* ── TAKVİM EKİ (2026-10-03, reisim: "tarihler takvim seçmeli olsun" — Plan aç › Tarihler ekranıyla): yazılı her tarih kutusu
+     (`data-takvim`; saatli kutu `data-takvim="saatli"`) yanında takvim simgesi alır; takvim yukarıdaki tarih alanının takvimidir (ay geçişi,
+     Bugün). Seçilen gün kutuya GG.AA.YYYY yazılır (saatliyse saat korunur, yoksa şimdiki saat) ve kutunun kendi girdi olayı tetiklenir — her
+     sayfanın doğrulaması aynen çalışır. Elle yazmak açık. Sayfalar yeniden çizdikçe yeni kutular kendiliğinden donatılır. */
+  var TK = 0;
+  function takvimEkle() {
+    document.querySelectorAll("input[data-takvim]").forEach(function (g) {
+      if (g.closest(".a-takvim-ek")) return;
+      var odak = document.activeElement === g, s0 = g.selectionStart, s1 = g.selectionEnd;
+      var k = document.createElement("div"), kap = document.createElement("div");
+      k.className = "a-zaman a-takvim-ek"; k.dataset.zaman = "tk-" + (g.id || ++TK); k.dataset.takvimEk = g.dataset.takvim || "tarih";
+      k.dataset.deger = ""; k.dataset.saat = "0"; k.dataset.ay = MK.BUGUN.slice(0, 7);
+      kap.className = "a-secici a-zaman-tarih";
+      g.parentNode.insertBefore(k, g); k.appendChild(kap); kap.appendChild(g); g.classList.add("a-zaman-girdi");
+      var kapali = g.disabled || g.readOnly;
+      kap.insertAdjacentHTML("beforeend", '<button class="a-zaman-ikon" type="button" data-zaman-ac aria-haspopup="dialog" aria-expanded="false" aria-label="Takvimden seç"' +
+        (kapali ? " disabled" : "") + ">" + ikon("calendar", "a-ikon-kucuk") + '</button><div class="a-secici-liste a-zaman-liste" role="dialog" aria-label="Takvim" hidden></div>');
+      if (odak) { g.focus(); try { g.setSelectionRange(s0, s1); } catch (e) { /* seçim desteklenmeyen kutu */ } }
+    });
+  }
+  takvimEkle();
+  new MutationObserver(takvimEkle).observe(document.body, { childList: true, subtree: true });
 
   /* ── PDF GÖRÜNTÜLEYİCİ (reisim 2026-09-27: "Sistemde herhangi bir yere eklenen herhangi bir pdf daha sonradan açılıp incelenebilir
      olsun sdaece yüklemek olmaz") — TEK ÜRETİCİ: yüklenen her dosyanın yanında "Aç"; indirmeden sayfa sayfa incelenir. Pencere

@@ -521,7 +521,7 @@
       .sort(function (a, b) { return a[2] === b[2] ? a[1].localeCompare(b[1], "tr") : a[2] < b[2] ? 1 : -1; });
     $("a-atama-govde").innerHTML = '<p class="a-pencere-ozet"><b>' + kacis(p.ad) + "</b> · " + kacis(MV.meslekAd(p)) + "</p>" + '<div class="a-form">' +
       MK.alan({ id: "at-tur", etiket: "Ekipman türü", zorunlu: true, genis: true, hata: A.hata.tur, girdi: MK.secim({ id: "at-tur", ad: "Ekipman türü", deger: A.tur, secenekler: turler, ipucu: "Tür seçin", gecersiz: !!A.hata.tur, tanim: "at-tur-ipucu" }) }) +
-      MK.alan({ id: "at-tarih", etiket: "Atama tarihi", zorunlu: true, hata: A.hata.tarih, ipucu: "GG.AA.YYYY", girdi: MK.girdi({ id: "at-tarih", deger: A.tarih, sinif: "a-girdi-sicil", hata: A.hata.tarih, ek: ' inputmode="numeric" maxlength="10"' }) }) +
+      MK.alan({ id: "at-tarih", etiket: "Atama tarihi", zorunlu: true, hata: A.hata.tarih, ipucu: "GG.AA.YYYY", girdi: MK.girdi({ id: "at-tarih", deger: A.tarih, sinif: "a-girdi-sicil", hata: A.hata.tarih, ek: ' inputmode="numeric" maxlength="10" data-takvim' }) }) +
       '<div class="a-alan-grup a-alan-genis"><p class="a-etiket">Atama belgesi <span class="a-zorunlu">zorunlu</span></p>' +
         '<div class="a-dosya-sec" id="at-dosya">' + (A.dosya ? MK.dosyaAlan({ ad: A.dosya, degistir: "atama-dosya-sec", sil: "atama-dosya-kaldir" }) : MK.tus({ eylem: "atama-dosya-sec", ad: "Dosya seç", ikon: "file-plus", sinif: "a-tus-ikincil" })) +
         (A.hata.dosya ? '<p class="a-ipucu a-ipucu-uyari" id="at-dosya-ipucu">' + A.hata.dosya + "</p>" : "") + "</div></div></div>";
@@ -575,7 +575,7 @@
           alan("eposta", "İş e-postası", girdi("eposta", "a-girdi-eposta", F.eposta, ' type="email" maxlength="120" inputmode="email"'), "Giriş hesabı bu adresle açılır.", false, true) +
           /* 195 (2026-09-29): isteğe bağlı; yalnız mobil imza isteği için (KVKK: amaçla sınırlı, başka yerde gösterilmez) */
           alan("imzaTel", "Mobil imza telefonu", girdi("imzaTel", "a-girdi-sicil", F.imzaTel, ' type="tel" inputmode="tel" maxlength="14" placeholder="05XX XXX XX XX"'), "", false) +
-          alan("basla", "İşe başlama", girdi("basla", "a-girdi-sicil", F.basla, ' inputmode="numeric" maxlength="10" placeholder="GG.AA.YYYY"'), "", true) +
+          alan("basla", "İşe başlama", girdi("basla", "a-girdi-sicil", F.basla, ' inputmode="numeric" maxlength="10" data-takvim placeholder="GG.AA.YYYY"'), "", true) +
         "</div></section>" +
         '<section class="a-form-bolum" aria-labelledby="f-b2"><h2 id="f-b2">Meslek ve sicil</h2>' +
           (m && !m.g.length ? MK.serit("uyari", "triangle-alert", "Bu meslek yetkili kişi meslekleri arasında değil.") : "") +

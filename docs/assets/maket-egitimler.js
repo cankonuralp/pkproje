@@ -88,7 +88,7 @@
         MK.alan({ id: "w-kisi", etiket: "Personel", zorunlu: true, hata: h.kisi, girdi: MK.secim({ id: "w-kisi", ad: "Personel", deger: d.kisi, secenekler: KISILER.map(function (p) { return [p.id, p.ad, MV.meslekAd(p)]; }), ipucu: "Kişi seçin", gecersiz: !!h.kisi, tanim: h.kisi ? "w-kisi-ipucu" : "" }) }) +
         MK.alan({ id: "w-k", etiket: "Eğitim", zorunlu: true, hata: h.k, ipucu: t ? "Tekrar süresi " + t.tekrar + " ay" : "", girdi: MK.secim({ id: "w-k", ad: "Eğitim", deger: d.k, secenekler: TUR.map(function (x) { return [x.k, x.ad, x.tekrar + " ay"]; }), ipucu: "Eğitim seçin", gecersiz: !!h.k, tanim: t || h.k ? "w-k-ipucu" : "" }) }) +
         MK.alan({ id: "w-tarih", etiket: "Eğitim tarihi", zorunlu: true, hata: h.tarih, ipucu: ti && t ? "Tekrar " + MK.tarihYaz(ayEkle(ti, t.tekrar)) : "GG.AA.YYYY",
-          girdi: MK.girdi({ id: "w-tarih", alan: "tarih", deger: d.tarih, sinif: "a-girdi-sicil", ek: ' inputmode="numeric" maxlength="10"', hata: h.tarih }) }) +
+          girdi: MK.girdi({ id: "w-tarih", alan: "tarih", deger: d.tarih, sinif: "a-girdi-sicil", ek: ' inputmode="numeric" maxlength="10" data-takvim', hata: h.tarih }) }) +
         '<div class="a-alan-grup"><p class="a-etiket">Veren</p><div class="a-sekmeler" role="group" aria-label="Eğitimi veren">' +
           '<button type="button" class="a-sekme" data-kurum="Firma içi" aria-pressed="' + (d.kurum === "Firma içi") + '">Firma içi</button>' +
           '<button type="button" class="a-sekme" data-kurum="Dış eğitim kurumu" aria-pressed="' + (d.kurum === "Dış eğitim kurumu") + '">Dış kurum</button></div></div>' +

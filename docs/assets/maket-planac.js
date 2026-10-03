@@ -99,8 +99,8 @@
             : '<input class="a-girdi a-girdi-oku" id="p-tesis" readonly value="Önce müşteri seçin" aria-describedby="p-tesis-ipucu">', "", true, true) +
           "</div>" + (t ? tesisSeritleri(t) : "")) +
         bolum(2, "b2", "Tarihler", '<div class="a-form">' +
-          alan("tarih", "Başlangıç", girdi("tarih", "a-girdi-sicil", ' inputmode="numeric" maxlength="10" placeholder="GG.AA.YYYY"'), "", true) +
-          alan("bitTarih", "Bitiş", girdi("bitTarih", "a-girdi-sicil", ' inputmode="numeric" maxlength="10" placeholder="GG.AA.YYYY"'), "", true) +
+          alan("tarih", "Başlangıç", girdi("tarih", "a-girdi-sicil", ' inputmode="numeric" maxlength="10" data-takvim placeholder="GG.AA.YYYY"'), "", true) +
+          alan("bitTarih", "Bitiş", girdi("bitTarih", "a-girdi-sicil", ' inputmode="numeric" maxlength="10" data-takvim placeholder="GG.AA.YYYY"'), "", true) +
           '<div class="a-alan-grup a-alan-genis"><label class="a-etiket" for="p-aciklama">Açıklama</label><textarea class="a-alan a-alan-ince" id="p-aciklama" data-alan="aciklama" maxlength="300" placeholder="Giriş izni, refakat, saatler">' + kacis(F.aciklama) + "</textarea></div>" +
           '</div><div id="p-soz-uyari"></div>') + "</div>" +
         bolum(3, "b3", "Denetçi", '<div id="p-aday-kap"></div>', true) +

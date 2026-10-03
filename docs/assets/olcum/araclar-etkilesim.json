@@ -2,9 +2,16 @@
  "maket": "araclar",
  "tarih": "2026-10-03",
  "arac": "tools/olc-bulut.mjs --etkilesim (başsız tarayıcı, 1920 açık tema; gen verilen denemede o genişlik)",
- "toplam": 15,
- "gecen": 15,
+ "toplam": 16,
+ "gecen": 16,
  "denemeler": [
+  {
+   "ad": "Takvim: tutanakta Tarih ve saat takvimli; 1 Eylül seçilince 01.09.2026 16:40 (saat korunur)",
+   "gen": 1920,
+   "sayfa": "maket/araclar.html",
+   "hash": "#/",
+   "gecti": true
+  },
   {
    "ad": "AA4: menüde Varlık grubunda Araçlar, etkin",
    "gen": 1920,

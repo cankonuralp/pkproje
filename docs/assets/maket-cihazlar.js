@@ -234,7 +234,7 @@
       return MK.alan({ id: "w-" + id, etiket: etiket, zorunlu: o.zorunlu, genis: o.genis, ipucu: o.ipucu, hata: h[id],
         girdi: o.girdi || MK.girdi({ id: "w-" + id, alan: id, deger: deger, sinif: o.sinif, ek: o.ek, hata: h[id] }) });
     };
-    var tarih = ' inputmode="numeric" maxlength="10" placeholder="GG.AA.YYYY"', govde;
+    var tarih = ' inputmode="numeric" maxlength="10" data-takvim placeholder="GG.AA.YYYY"', govde;
     if (W.tur === "cihaz") {
       $("a-pencere-baslik").textContent = W.v ? W.v.env + " · düzenle" : "Cihaz ekle";
       govde = '<div class="a-form">' + A("env", "Cihaz kodu", d.env, { zorunlu: true, sinif: "a-girdi-sicil", ek: ' maxlength="12"', ipucu: "Firmanın cihaza verdiği kod (etiket); eşsiz." }) +

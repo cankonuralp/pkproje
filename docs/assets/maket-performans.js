@@ -185,8 +185,8 @@
   function anahtarlar(kisi) {
     return '<div class="a-pano-anahtar"><div class="a-sekmeler" role="group" aria-label="Dönem">' + Object.keys(DONEM).map(function (k) {
         return '<button type="button" class="a-sekme" data-donem="' + k + '" aria-pressed="' + (D.donem === k) + '">' + DONEM[k].ad + "</button>"; }).join("") + "</div>" +
-      (D.donem === "aralik" ? '<div class="a-pano-aralik">' + MK.alan({ id: "p-bas", etiket: "Başlangıç", girdi: MK.girdi({ id: "p-bas", alan: "bas", deger: A.bas, sinif: "a-girdi-sicil", ek: ' inputmode="numeric" maxlength="10" placeholder="GG.AA.YYYY"', hata: A.hata }) }) +
-        MK.alan({ id: "p-bit", etiket: "Bitiş", hata: A.hata, girdi: MK.girdi({ id: "p-bit", alan: "bit", deger: A.bit, sinif: "a-girdi-sicil", ek: ' inputmode="numeric" maxlength="10" placeholder="GG.AA.YYYY"', hata: A.hata }) }) +
+      (D.donem === "aralik" ? '<div class="a-pano-aralik">' + MK.alan({ id: "p-bas", etiket: "Başlangıç", girdi: MK.girdi({ id: "p-bas", alan: "bas", deger: A.bas, sinif: "a-girdi-sicil", ek: ' inputmode="numeric" maxlength="10" data-takvim placeholder="GG.AA.YYYY"', hata: A.hata }) }) +
+        MK.alan({ id: "p-bit", etiket: "Bitiş", hata: A.hata, girdi: MK.girdi({ id: "p-bit", alan: "bit", deger: A.bit, sinif: "a-girdi-sicil", ek: ' inputmode="numeric" maxlength="10" data-takvim placeholder="GG.AA.YYYY"', hata: A.hata }) }) +
         MK.tus({ eylem: "aralik-uygula", ad: "Uygula", sinif: "a-tus-ikincil" }) + "</div>" : "") +
       (kisi ? "" : '<div class="a-sekmeler" role="group" aria-label="Branş">' + Object.keys(BRANS).map(function (k) {
         return '<button type="button" class="a-sekme" data-brans="' + k + '" aria-pressed="' + (D.brans === k) + '">' + BRANS[k] + "</button>"; }).join("") + "</div>") +

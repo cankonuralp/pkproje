@@ -161,7 +161,7 @@
         girdi: MK.secim({ id: "w-varlik", ad: "Varlık", deger: d.varlik, secenekler: MV.VARLIKLAR.map(function (x) { return [x.id, MV.varlikAdi(x), MV.yerAdi(MV.kimde(x.id))]; }), ipucu: "Varlık seçin", gecersiz: !!h.varlik, tanim: "w-varlik-ipucu" }) }) +
       MK.alan({ id: "w-alan", etiket: "Teslim alan", zorunlu: true, hata: h.alan, ipucu: "Teslim eden: " + (k ? MV.yerAdi(k) : "—"),
         girdi: MK.secim({ id: "w-alan", ad: "Teslim alan", deger: d.alan, secenekler: kisiler, ipucu: "Kişi ya da depo", gecersiz: !!h.alan, tanim: "w-alan-ipucu" }) }) +
-      MK.alan({ id: "w-zaman", etiket: "Tarih ve saat", zorunlu: true, hata: h.zaman, girdi: MK.girdi({ id: "w-zaman", alan: "zaman", deger: d.zaman, sinif: "a-girdi-seri", ek: ' inputmode="numeric" maxlength="16"', hata: h.zaman }) }) +
+      MK.alan({ id: "w-zaman", etiket: "Tarih ve saat", zorunlu: true, hata: h.zaman, girdi: MK.girdi({ id: "w-zaman", alan: "zaman", deger: d.zaman, sinif: "a-girdi-seri", ek: ' inputmode="numeric" maxlength="16" data-takvim="saatli"', hata: h.zaman }) }) +
       (v && v.tur === "arac" ? MK.alan({ id: "w-km", etiket: "Kilometre", zorunlu: true, hata: h.km, girdi: MK.girdi({ id: "w-km", alan: "km", deger: d.km, sinif: "a-girdi-sicil", ek: ' inputmode="numeric" maxlength="9"', hata: h.km }) }) : "") +
       '<div class="a-alan-grup a-alan-genis"><label class="a-etiket" for="w-not">Durum notu</label><textarea class="a-alan a-alan-ince" id="w-not" data-alan="not" maxlength="300" placeholder="Eksik parça, hasar, aksesuarlar">' + kacis(d.not) + "</textarea></div>" +
       '<div class="a-alan-grup a-alan-genis"><p class="a-etiket">Fotoğraflar</p><div class="a-fotolar">' + fotolar(d.foto, "Teslim", d.fotoAd, { eylem: "foto-sil" }) +
