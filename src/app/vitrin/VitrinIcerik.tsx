@@ -5,9 +5,11 @@ import { useState } from "react";
 import { useBildir } from "../../components/bildirim/Bildirim";
 import { useOnayla } from "../../components/pencere/Onay";
 import { Pencere } from "../../components/pencere/Pencere";
+import { SecimAlani } from "../../components/secim/SecimAlani";
 import { Serit } from "../../components/serit/Serit";
 import { Tus, TusBaglanti } from "../../components/tus/Tus";
 import stil from "./vitrin.module.css";
+import { VitrinForm } from "./VitrinForm";
 import { VitrinListe } from "./VitrinListe";
 
 export function VitrinIcerik() {
@@ -15,6 +17,7 @@ export function VitrinIcerik() {
   const onayla = useOnayla();
   const [sonuc, setSonuc] = useState("—");
   const [pencere, setPencere] = useState(false);
+  const [notTur, setNotTur] = useState("genel");
   return (
     <>
       <div className={stil.sayfaBas}><h1>Vitrin</h1></div>
@@ -51,11 +54,17 @@ export function VitrinIcerik() {
         <p>Onay sonucu: <output data-sonuc="">{sonuc}</output></p>
       </section>
 
+      <VitrinForm />
+
       <VitrinListe />
 
       <Pencere acik={pencere} baslik="Not ekle" onKapat={() => setPencere(false)}
         alt={<><Tus tur="ikincil" onClick={() => setPencere(false)}>Vazgeç</Tus><Tus onClick={() => { setPencere(false); bildir("Not eklendi."); }}>Kaydet</Tus></>}>
         <label className={stil.alan}>Not<textarea rows={3} data-ilk-odak="" /></label>
+        <div className={stil.alanGrup}>
+          <label className={stil.etiket} htmlFor="v-not-tur">Not türü</label>
+          <SecimAlani id="v-not-tur" ad="Not türü" deger={notTur} secenekler={[["genel", "Genel"], ["eksik", "Eksik belge"], ["randevu", "Randevu"]]} degistir={setNotTur} />
+        </div>
       </Pencere>
     </>
   );

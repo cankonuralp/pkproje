@@ -1,0 +1,86 @@
+/* SEÇİM ALANI · SEÇENEK LİSTESİ · TARİH / SAAT — maketteki .a-secim, .a-secici-liste, .a-secenek, .a-zaman ailesiyle aynı
+   (docs/assets/maket.css). Liste konumu kabın: alanın altı, sığmazsa üstü (.ust); pencerede akış içinde (kayan pencere listeyi kesmesin). */
+.girdi {
+  width: 100%; height: var(--tus-y); padding: 0 12px;
+  border: 1px solid var(--kenar-alan); border-radius: var(--r-orta); background: var(--kart); color: var(--yazi);
+}
+.girdi::placeholder { color: var(--yazi3); }
+.girdi[aria-invalid="true"] { border-color: var(--hata-yazi); }
+.girdi:disabled { opacity: .45; cursor: not-allowed; }
+
+.secim { position: relative; min-width: 0; }
+.tus { display: flex; align-items: center; justify-content: space-between; gap: 8px; text-align: left; }
+.tus[aria-expanded="true"] > svg { transform: rotate(180deg); }
+.bos { color: var(--yazi3); }
+.kirp { display: block; min-width: 0; overflow: hidden; text-overflow: ellipsis; white-space: nowrap; }
+
+.liste {
+  position: absolute; left: 0; top: calc(100% + 6px); z-index: 40;
+  width: 100%; min-width: 220px; max-height: 320px; overflow-y: auto; padding: 6px;
+  background: var(--kart); border: 1px solid var(--kenar); border-radius: var(--r-orta); box-shadow: var(--golge-2);
+}
+.ust { top: auto; bottom: calc(100% + 6px); }
+dialog .secim .liste { position: static; margin-top: 6px; box-shadow: none; max-height: 240px; }
+.secenek {
+  width: 100%; min-height: var(--tus-y); padding: 0 12px;
+  display: flex; align-items: center; gap: 10px; text-align: left;
+  border: 0; border-radius: var(--r-kucuk); background: transparent; color: var(--yazi);
+}
+.secenek:hover, .secenek:focus-visible { background: var(--zemin2); }
+.secenek > svg { visibility: hidden; color: var(--onay-yazi); flex: none; }
+.secenek[aria-selected="true"] { font-weight: 600; }
+.secenek[aria-selected="true"] > svg { visibility: visible; }
+.ek { margin-left: auto; padding-left: 12px; color: var(--yazi3); font-size: var(--boy-etiket); white-space: nowrap; }
+.ara { margin: 0 0 6px; }
+.yok { margin: 0 0 6px; padding: 12px 14px; color: var(--yazi2); background: var(--kart); border: 1px dashed var(--kenar-alan); border-radius: var(--r-buyuk); }
+
+/* tarih / saat (reisim 2026-09-27, örnek ekranla): tarih · saat · dakika ayrı kutu, yazılır ya da simgeyle seçilir; gün tuşu --tus-y */
+.zaman { display: flex; flex-wrap: wrap; align-items: center; gap: 8px; }
+.zamanTarih, .zamanParca { position: relative; display: flex; box-shadow: inset 0 0 0 1px var(--kenar-alan); border-radius: var(--r-orta); background: var(--kart); }
+.zamanTarih:focus-within, .zamanParca:focus-within { box-shadow: inset 0 0 0 1px var(--yazi2); }
+.zamanTarih { flex: 2 1 11rem; min-width: 0; }
+.saatGrup { flex: 2 1 12.5rem; display: flex; align-items: center; gap: 8px; min-width: 0; }
+.zamanParca { flex: 1 1 5.75rem; min-width: 0; }
+.zamanGirdi {
+  flex: 1 1 0; min-width: 0; width: 100%; height: var(--tus-y); padding: 0 4px 0 12px;
+  border: 0; border-radius: var(--r-orta) 0 0 var(--r-orta); background: transparent; color: var(--yazi); font-variant-numeric: tabular-nums;
+}
+.zamanGirdi::placeholder { color: var(--yazi3); }
+.zamanGirdi[aria-invalid="true"] { box-shadow: inset 0 -2px 0 var(--hata-yazi); }
+.zamanSimge { flex: none; width: 36px; display: grid; place-items: center; border: 0; border-radius: 0 var(--r-orta) var(--r-orta) 0; background: transparent; color: var(--yazi2); }
+.zamanSimge:hover, .zamanSimge[aria-expanded="true"] { background: var(--zemin2); color: var(--yazi); }
+.ikiNokta { font-size: var(--boy-bolum); font-weight: 700; }
+.parcaListe { min-width: 0; max-height: 240px; }
+
+.takvim {
+  position: absolute; left: 0; top: calc(100% + 6px); z-index: 40;
+  width: 340px; max-width: calc(100vw - 32px); padding: 10px;
+  background: var(--kart); border: 1px solid var(--kenar); border-radius: var(--r-orta); box-shadow: var(--golge-2);
+}
+.takvimBas { display: flex; align-items: center; justify-content: space-between; gap: 8px; margin-bottom: 6px; }
+.ayAd { font-weight: 700; }
+.ayTus {
+  width: var(--tus-y); height: var(--tus-y); display: inline-flex; align-items: center; justify-content: center;
+  border: 0; border-radius: var(--r-orta); background: transparent; color: var(--yazi);
+}
+.ayTus:hover { background: var(--zemin2); }
+.gunler { display: grid; grid-template-columns: repeat(7, 1fr); gap: 2px; }
+.gunAd { display: grid; place-items: center; height: 28px; color: var(--yazi3); font-size: var(--boy-etiket); font-weight: 600; }
+.gun { height: var(--tus-y); border: 0; border-radius: var(--r-kucuk); background: transparent; color: var(--yazi); font-variant-numeric: tabular-nums; }
+.gun:hover, .gun:focus-visible { background: var(--zemin2); }
+.bugun { box-shadow: inset 0 0 0 1px var(--kenar-alan); font-weight: 700; }
+.gun[aria-pressed="true"] { background: var(--vurgu); color: var(--vurgu-uzeri); font-weight: 700; }
+.takvimAlt { display: flex; justify-content: flex-end; margin-top: 8px; padding-top: 8px; border-top: 1px solid var(--kenar); }
+/* takvim altı Bugün: ikincil tuş görünümü (maket .a-tus-ikincil) */
+.bugunTus {
+  height: var(--tus-y); padding: 0 12px; display: inline-flex; align-items: center;
+  border: 1px solid var(--kenar-alan); border-radius: var(--r-orta); background: var(--kart); color: var(--yazi); font-weight: 600;
+}
+.bugunTus:hover { background: var(--zemin2); }
+
+/* telefonda tarih tam satır, saat : dakika altında; takvim alanın genişliğinde, gün tuşları arası boşluksuz (yükseklik 44 kalır) */
+@media (max-width: 767.98px) {
+  .zamanTarih { flex-basis: 100%; }
+  .takvim { width: 100%; max-width: none; padding: 6px; }
+  .gunler { gap: 0; }
+}

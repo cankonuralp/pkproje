@@ -5,16 +5,15 @@
    yana kayar. Kutu açılır kapanır (reisim 2026-09-27); başlıkta uygulanan filtre sayısı; tercih bu tarayıcıda sayfa başına hatırlanır.
    Durum dışarıda (useSuzgec): bileşen yalnız çizer ve değişikliği bildirir. */
 import { usePathname } from "next/navigation";
-import { useEffect, useId, useRef, useState } from "react";
+import { useCallback, useEffect, useId, useRef, useState } from "react";
 import { Ikon } from "../ikon/Ikon";
 import { Pencere } from "../pencere/Pencere";
+import { SecenekArama, SecenekListesi, SecenekTusu, UZUN_LISTE, useDisariTiklama, ustteMi } from "../secim/SecenekListesi";
 import { Tus } from "../tus/Tus";
 import type { ListeKipi } from "./Liste";
-import { aktifSecici, suzgecVar, temizle, tr, uygulanan, type Secenek, type Secici, type SuzgecDurumu, type SuzgecTanimi } from "./suzgec";
+import { aktifSecici, suzgecVar, temizle, tr, uygulanan, type Secici, type SuzgecDurumu, type SuzgecTanimi } from "./suzgec";
 import stil from "./Filtre.module.css";
 
-/** 8'den fazla seçenekte arama kutusu (kalıp 19; maket Ö4 2026-10-01: "yüzlerce firma olunca kullanışlı değil") */
-const UZUN = 8;
 
 export function FiltreSatiri<K>({ on, tanim, durum, degistir, tb, kip = "tablo" }: {
   /** sayfadaki süzgecin kısa adı (açık / kapalı tercihi bununla hatırlanır) */
@@ -132,53 +131,31 @@ function Arama({ ad, ipucu, deger, degistir }: { ad: string; ipucu: string; dege
   );
 }
 
-/* seçici: etiket + değer, açılır liste (listbox). Dışarı tıklama ve Esc kapatır; açılınca seçili seçeneğe (uzun listede aramaya) odak. */
+/* seçici: etiket + değer + ortak seçenek listesi (klavye, uzun listede arama; kalıp 19). Dışarı tıklama ve Esc kapatır. */
 function FiltreSecici<K>({ secici, deger, degistir }: { secici: Secici<K>; deger: string; degistir: (v: string) => void }) {
   const [acik, setAcik] = useState(false);
-  const [ara, setAra] = useState("");
+  const [ust, setUst] = useState(false);
   const kap = useRef<HTMLDivElement>(null);
   const tus = useRef<HTMLButtonElement>(null);
   const listeId = useId();
+  const kapat = useCallback(() => setAcik(false), []);
+  useDisariTiklama(acik, kap, kapat);
   const secenekler = secici.secenek();
   const gor = secenekler.find((o) => o[0] === deger) ?? secenekler[0];
-  useEffect(() => {
-    if (!acik) return;
-    const l = kap.current?.querySelector<HTMLElement>("[data-secim-ara]") ?? kap.current?.querySelector<HTMLElement>('[aria-selected="true"]');
-    l?.focus();
-    const disari = (e: MouseEvent) => { if (!kap.current?.contains(e.target as Node)) setAcik(false); };
-    document.addEventListener("click", disari);
-    return () => document.removeEventListener("click", disari);
-  }, [acik]);
-  const q = tr(ara.trim());
-  const gorunen = secenekler.filter((o) => !q || tr(o[1]).includes(q));
   return (
-    <div className={secici.siralama ? `${stil.secici} ${stil.seciciSira}` : stil.secici} ref={kap} data-secici={secici.k}
-      onKeyDown={(e) => { if (e.key === "Escape" && acik) { e.stopPropagation(); setAcik(false); tus.current?.focus(); } }}>
-      <button ref={tus} className={stil.seciciTus} type="button" aria-haspopup="listbox" aria-expanded={acik} aria-controls={listeId}
-        onClick={() => { setAcik(!acik); setAra(""); }}>
+    <div className={secici.siralama ? `${stil.secici} ${stil.seciciSira}` : stil.secici} ref={kap} data-secici={secici.k}>
+      <button ref={tus} className={stil.seciciTus} type="button" aria-haspopup="listbox" aria-expanded={acik} aria-controls={acik ? listeId : undefined}
+        onClick={() => { if (!acik) setUst(ustteMi(tus.current)); setAcik(!acik); }}>
         <span className={stil.seciciEtiket}>{secici.ad}</span>
         <span className={stil.seciciDeger}>{gor?.[1]}</span>
         <Ikon ad="chevron-down" kucuk />
       </button>
-      <div className={stil.seciciListe} id={listeId} role="listbox" aria-label={secici.ad} hidden={!acik}>
-        {secenekler.length > UZUN && (
-          <>
-            <input className={`${stil.girdi} ${stil.secimAra}`} type="search" data-secim-ara="" placeholder="Ara" aria-label={`${secici.ad} içinde ara`}
-              autoComplete="off" value={ara} onChange={(e) => setAra(e.target.value)} />
-            {!gorunen.length && <p className={stil.secimYok}>Bu adla seçenek yok.</p>}
-          </>
-        )}
-        {gorunen.map((o) => <SecenekTus key={o[0]} o={o} secili={o[0] === deger} sec={() => { degistir(o[0]); setAcik(false); tus.current?.focus(); }} />)}
-      </div>
+      {acik && (
+        <SecenekListesi id={listeId} ad={secici.ad} secenekler={secenekler} deger={deger} ust={ust} sinif={stil.seciciListe}
+          sec={(v) => { degistir(v); setAcik(false); tus.current?.focus(); }}
+          kapat={(geri) => { setAcik(false); if (geri) tus.current?.focus(); }} />
+      )}
     </div>
-  );
-}
-
-function SecenekTus({ o, secili, sec }: { o: Secenek; secili: boolean; sec: () => void }) {
-  return (
-    <button className={stil.secenek} type="button" role="option" aria-selected={secili} data-deger={o[0]} onClick={sec}>
-      <Ikon ad="check" kucuk /><span className={stil.kirp}>{o[1]}</span>
-    </button>
   );
 }
 
@@ -186,7 +163,7 @@ function SecenekTus({ o, secili, sec }: { o: Secenek; secili: boolean; sec: () =
 function LevhaGrubu<K>({ secici, deger, degistir }: { secici: Secici<K>; deger: string; degistir: (v: string) => void }) {
   const [ara, setAra] = useState("");
   const secenekler = secici.secenek();
-  if (secenekler.length <= UZUN) {
+  if (secenekler.length <= UZUN_LISTE) {
     return (
       <div className={stil.levhaGrup}>
         <p className={stil.levhaAd}>{secici.ad}</p>
@@ -204,11 +181,9 @@ function LevhaGrubu<K>({ secici, deger, degistir }: { secici: Secici<K>; deger: 
     <div className={stil.levhaGrup}>
       <p className={stil.levhaAd}>{secici.ad}</p>
       <div className={stil.levhaListe} role="listbox" aria-label={secici.ad}>
-        <input className={`${stil.girdi} ${stil.secimAra}`} type="search" placeholder="Ara" aria-label={`${secici.ad} içinde ara`} autoComplete="off"
-          value={ara} onChange={(e) => setAra(e.target.value)} />
-        {!sirali.length && <p className={stil.secimYok}>Bu adla seçenek yok.</p>}
+        <SecenekArama ad={secici.ad} deger={ara} degistir={setAra} bos={!sirali.length} />
         <div className={stil.levhaKayan}>
-          {sirali.map((o) => <SecenekTus key={o[0]} o={o} secili={o[0] === deger} sec={() => degistir(o[0])} />)}
+          {sirali.map((o) => <SecenekTusu key={o[0]} o={o} secili={o[0] === deger} sec={() => degistir(o[0])} />)}
         </div>
       </div>
     </div>

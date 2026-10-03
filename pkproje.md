@@ -2335,6 +2335,12 @@ revizyon, alan kopyalama, hafif kusur devri, meslek eşleşme denetimi).
 - Emsal ürünler: https://opwire.app/iso-17020-periyodik-kontrol-yazilimi/ · https://17020muayene.vidco.com.tr/ · https://akuple.com/asansor-kontrol-yazilimi/ · https://ensyazilim.com/
 
 ## 11 · Değişiklik günlüğü
+- 2026-10-03 (276): **K0 Hazırlık 5: seçim alanı + takvimli tarih / saat** (tek üreticiler, `src/components/secim/`; maketteki `MK.secim`, `MK.zaman`).
+  Seçim alanı: yerli açılır liste yok (kalıp 19), girdi gibi düğme + temalı liste; 8'den fazla seçenekte arama; klavye ↑ ↓ Home End Enter Esc Tab ve harfle
+  atlama (kalıp 19 — makette yoktu, kodda var); liste alanın altında, sığmazsa üstünde; pencerede akış içinde, Esc yalnız listeyi kapatır. Filtre seçicileri
+  aynı listeyi kullanır. Tarih: GG.AA.YYYY yazılır ya da kutuya / simgeye tıklayınca takvim (ay geçişi, Bugün); takvimde olmayan gün işaretlenir. Saatli
+  alanda saat ve dakika ayrı, yazarken uyan değerler önerilir; saat : dakika tek grupta (öneri listesi dakikanın üstüne binmesin — uçtan uca test yakaladı).
+  Tarih yardımcıları React'siz (`tarih.ts`), birim 5/5 + bozan 2/2; uçtan uca 59/59.
 - 2026-10-03 (275): **K0 Hazırlık 4: liste ↔ kart + filtre satırı** (tek üreticiler, `src/components/liste/`; maketteki `MK.tablo`,
   `MK.suzgecHtml`, `MK.listeCiz`, sayfalayıcı ile aynı). Liste kabı 600 px ve üstünde tablo (600–960 sıkışık, tablet dikeyde de tablo), altında kart.
   Filtre: arama ya da alan alan arama kutuları · çipler (sayılı) + ve/veya · seçiciler (8'den fazla seçenekte arama) + Temizle sağda; telefonda seçiciler
