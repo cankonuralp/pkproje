@@ -2,7 +2,7 @@
  "maket": "m14",
  "tarih": "2026-10-03",
  "arac": "tools/olc-bulut.mjs --etkilesim (başsız tarayıcı, 1920 açık tema; gen verilen denemede o genişlik)",
- "toplam": 49,
+ "toplam": 52,
  "gecen": 49,
  "denemeler": [
   {
@@ -347,6 +347,30 @@
    "sayfa": "maket/muhasebe.html",
    "hash": "#/gelir-gider",
    "gecti": true
+  },
+  {
+   "ad": "BB5: Maaş bordrosu gönder — formattan: bordrosu olan herkes imzaya (Onaylar › Diğer), maaş bilgisi olmayan atlanır; ikinci açışta 'Bu dönem gönderildi', yeniden gönderilmez",
+   "gen": 1920,
+   "sayfa": "maket/muhasebe.html",
+   "hash": "#/",
+   "gecti": false,
+   "hata": "yok: [data-eylem=\"bg-gonder\"]"
+  },
+  {
+   "ad": "BB5: Elle yükle — dosyası olmayan gönderilmez (pencere söyler); Mert Kaya'ya PDF seçilince yalnız o imzaya gider ve Personel kartındaki bordrosu o dosya",
+   "gen": 1920,
+   "sayfa": "maket/muhasebe.html",
+   "hash": "#/",
+   "gecti": false,
+   "hata": "yok: [data-eylem=\"bg-yontem\"][data-y=\"elle\"]"
+  },
+  {
+   "ad": "BB5: Firma ayarları › Bordro formatı kaldırılınca Muhasebe'nin bordro penceresi elle yüklemeyle açılır (sayfalar arası)",
+   "gen": 1920,
+   "sayfa": "maket/firma-ayarlari.html",
+   "hash": "#/",
+   "gecti": false,
+   "hata": "beklenen sonuç yok"
   }
  ]
 }

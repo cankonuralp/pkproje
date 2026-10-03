@@ -3,15 +3,14 @@
  "tarih": "2026-10-03",
  "arac": "tools/olc-bulut.mjs --etkilesim (başsız tarayıcı, 1920 açık tema; gen verilen denemede o genişlik)",
  "toplam": 55,
- "gecen": 54,
+ "gecen": 55,
  "denemeler": [
   {
    "ad": "BB4: Onaylar denetçi bakışı — imzamı bekleyen raporlar; Hepsini imzala → imza penceresi, PIN → hepsi Tamamlandı (müşteriye açık), liste boşalır, Diğer belgeler'de denetçinin bordrosu",
    "gen": 1920,
    "sayfa": "maket/onaylar.html",
    "hash": "#/?kisi=mk",
-   "gecti": false,
-   "hata": "yok: #a-liste [data-eylem=\"rapor-imzala\"]:not([data-no])"
+   "gecti": true
   },
   {
    "ad": "AA3: Onaylar › Diğer belgeler — 3 bekleyen belge; Onayla ve imzala → imza penceresi (imzacı, isteğe bağlı sebep, yöntem); mobil imzayla imzalanır, durum İmzalandı, sayı düşer",

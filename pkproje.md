@@ -2322,6 +2322,12 @@ revizyon, alan kopyalama, hafif kusur devri, meslek eşleşme denetimi).
 - Emsal ürünler: https://opwire.app/iso-17020-periyodik-kontrol-yazilimi/ · https://17020muayene.vidco.com.tr/ · https://akuple.com/asansor-kontrol-yazilimi/ · https://ensyazilim.com/
 
 ## 11 · Değişiklik günlüğü
+- 2026-10-03 (265): **Muhasebe › Maaş bordrosu gönder** (§9 elli ikinci tur). Muhasebe'nin her sekmesinde tuş → pencere: dönem (varsayılan geçen
+  ay) · **Formattan oluştur** (Firma ayarları › Bordro formatı yüklüyse; kişinin bordrosu son maaş bilgisiyle oluşur) ya da **Elle yükle** (her
+  kişiye kendi PDF'i) · personel listesi (seç, bordro, durum: Hazır / Bordro yok / Bu dönem gönderildi / İmzalandı). İmzaya gönder → seçilen ve
+  bordrosu hazır olan her kişinin bordrosu Onaylar › Diğer belgeler'ine düşer, Personel kartındaki bordrolara yazılır; bordrosu olmayan
+  gönderilmez, bildirim sayısını söyler; aynı dönem ikinci kez gönderilmez. Firma ayarları'na **Bordro formatı** bölümü (yükle / değiştir /
+  kaldır; yoksa elle yükleme). Ölçüm: m14 durum 216/216, etkileşim 52/52, telefon 108/108; m1, m9 tam; olumsuz kanıt eski kodla 49/52.
 - 2026-10-03 (264): **Onaylar: bütün imzalar tek yerde — denetçi bakışı** (§9 elli ikinci tur). Onaylar'da "Makette bakış" dört kişi (Mekanik
   yönetici, Elektrik yönetici, Mert Kaya · denetçi, Elif Aydın · denetçi; uygulamada herkes kendi rolüyle görür). Denetçide iki sekme:
   **İmzamı bekleyen raporlar** (yönetici onayladı → son imza; Görüntüle · İmzala, birden çoksa Hepsini imzala; imza penceresi firmanın

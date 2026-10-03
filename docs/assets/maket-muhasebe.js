@@ -614,6 +614,7 @@
   MK.onZaman = function (id, d) { if (W && W.tip === "gider" && id === "w-tarih") { W.tarih = d; W.tarihYazi = ""; } };
   MK.onSecim = function (id, deger) {
     if (id === "gg-ay") { GG.ay = deger; ggCiz(); return; }
+    if (id === "bg-ay" && BG) { BG.ay = deger; BG.hata = ""; bgCiz("#bg-ay"); return; }
     if (!W) return;
     if (W.tip === "gider") {
       if (id === "w-tur") { W.tur = deger; W.oran = gTur(deger).kdv; delete W.hata.tur; }   /* tür seçilince oran türün varsayılanı; sonra değiştirilebilir */
@@ -626,6 +627,85 @@
     if (id === "w-yontem") { W.yontem = deger; tahsilatPencere(id); }
   };
   $("a-pencere").addEventListener("close", function () { if ($("a-pencere").open) return; W = null; var r = rota(); if (r.pencere) history.replaceState(null, "", r.v === "is" ? "#/is/" + r.no : r.v === "giderler" ? "#/giderler" : "#/f/" + r.no); });
+
+  /* ── MAAŞ BORDROSU GÖNDER (BB5, 2026-10-03, reisim: "muhasebe kısmında maaş bordrosu gönder tuşu olsun ve personellere maaş bordrosu göndersin
+     imzalamaları için eğer bir format varsa format yoksa el ile yükleyip gönderme seçeneği olsun her personele özel maaş bordrosunu yükleyip imzaya
+     yollasın muhasebeci"): dönem seçilir; firmanın bordro formatı varsa (Firma ayarları) kişinin bordrosu formattan, son maaş bilgisiyle oluşur;
+     yoksa ya da "Elle yükle" seçilirse her kişiye kendi PDF'i yüklenir. Seçilenler kişinin imzasına gider (Onaylar › Diğer belgeler) ve
+     Personel kartındaki bordrolara da yazılır. Bu dönem zaten imzaya gönderilmiş kişi uyarıyla gösterilir, yeniden gönderilmez. */
+  var BG = null;
+  var bgAylar = function () { var l = [], d = new Date(MK.BUGUN.slice(0, 7) + "-01T12:00:00"); for (var i = 0; i < 12; i++) { l.push(d.toISOString().slice(0, 7)); d.setMonth(d.getMonth() - 1); } return l; };
+  var bgKisiler = function () { return MV.PERSONEL.filter(function (p) { return p.durum === "etkin"; }).sort(function (a, b) { return a.ad.localeCompare(b.ad, "tr"); }); };
+  var bgGitti = function (p) { return MV.BELGE_ONAY.filter(function (x) { return x.tur === "bordro" && x.kisi === p.id && x.ay === BG.ay && x.durum !== "geri"; })[0]; };
+  var bgHazir = function (p) { return BG.yontem === "format" ? !!MV.kisiBordrolari(p.id)[0] : !!BG.dosya[p.id]; };
+  var bgGidecek = function () { return bgKisiler().filter(function (p) { return BG.sec.indexOf(p.id) >= 0 && !bgGitti(p) && bgHazir(p); }); };
+  var BG_SUTUN = [
+    { k: "sec", baslik: "Seç", kart: "ust", sira: 1, hucre: function (p) { var g = bgGitti(p);
+      return '<label class="a-onay-kutusu"><input type="checkbox" data-bg-kisi="' + p.id + '"' + (BG.sec.indexOf(p.id) >= 0 && !g ? " checked" : "") + (g ? " disabled" : "") + "><span><b>" + kacis(p.ad) + '</b><span class="a-alt-satir">' + kacis(MV.meslekAd(p)) + "</span></span></label>"; } },
+    { k: "bordro", baslik: "Bordro", kart: "govde", sira: 2, hucre: function (p) {
+      if (bgGitti(p)) return '<span class="a-kart-etiket">Bordro</span><span>' + kacis(bgGitti(p).dosya || "") + "</span>";
+      if (BG.yontem === "format") { var s = MV.kisiBordrolari(p.id)[0]; return '<span class="a-kart-etiket">Bordro</span>' + (s ? "<span>Formattan oluşur<span class=\"a-alt-satir\">net " + s.net.toLocaleString("tr-TR") + " TL · " + MV.ayAd(s.ay) + " maaşından</span></span>" : '<span class="a-uyari-metin">Maaş bilgisi yok; elle yükleyin</span>'); }
+      return '<span class="a-kart-etiket">Bordro</span>' + (BG.dosya[p.id] ? MK.dosyaAlan({ ad: BG.dosya[p.id], degistir: "bg-dosya", sil: "bg-dosya-sil", veri: { kisi: p.id } })
+        : MK.tus({ eylem: "bg-dosya", ad: "Dosya seç", ikon: "file-plus", sinif: "a-tus-ikincil", veri: { kisi: p.id } })); } },
+    { k: "durum", baslik: "Durum", kart: "rozet", sira: 1, hucre: function (p) { var g = bgGitti(p);
+      return g ? rozet(g.durum === "imzali" ? { ad: "İmzalandı", rozet: "a-rozet-tamam" } : { ad: "Bu dönem gönderildi", rozet: "a-rozet-bekliyor" }) : bgHazir(p) ? rozet({ ad: "Hazır", rozet: "a-rozet-tamam" }) : rozet({ ad: "Bordro yok", rozet: "a-rozet-red" }); } }
+  ];
+  function bgPencere() {
+    var d = $("a-bg-pencere");
+    if (!d) {
+      d = document.createElement("dialog"); d.className = "a-pencere a-pencere-form"; d.id = "a-bg-pencere"; d.setAttribute("aria-labelledby", "a-bg-baslik");
+      d.innerHTML = '<div class="a-pencere-bas"><h2 id="a-bg-baslik">Maaş bordrosu gönder</h2><button class="a-ikon-tus" type="button" data-eylem="pencere-kapat" aria-label="Kapat">' + ikon("x") + "</button></div>" +
+        '<div class="a-pencere-govde" id="a-bg-govde"></div><div class="a-pencere-alt" id="a-bg-alt"></div>';
+      d.addEventListener("close", function () { if (!d.open) BG = null; });
+      document.body.appendChild(d);
+    }
+    return d;
+  }
+  function bgCiz(odak) {
+    var fmt = MV.FIRMA.bordroFormat, n = bgGidecek().length;
+    $("a-bg-govde").innerHTML = '<p class="a-pencere-ozet">Seçilen personelin bordrosu imzasına gider; Onaylar › Diğer belgeler\'de mobil imza ya da e-imzayla imzalar.</p><div class="a-form">' +
+      MK.alan({ id: "bg-ay", etiket: "Dönem", zorunlu: true, girdi: MK.secim({ id: "bg-ay", ad: "Dönem", deger: BG.ay, secenekler: bgAylar().map(function (a) { return [a, MV.ayAd(a)]; }) }) }) +
+      '<div class="a-alan-grup"><p class="a-etiket">Bordro</p><div class="a-sekmeler" role="group" aria-label="Bordro nasıl hazırlanır">' +
+        '<button class="a-sekme" type="button" data-eylem="bg-yontem" data-y="format" aria-pressed="' + (BG.yontem === "format") + '">Formattan oluştur</button>' +
+        '<button class="a-sekme" type="button" data-eylem="bg-yontem" data-y="elle" aria-pressed="' + (BG.yontem === "elle") + '">Elle yükle</button></div></div></div>' +
+      (BG.yontem === "format" && !fmt ? MK.serit("uyari", "triangle-alert", "Firma ayarlarında bordro formatı yok; bordroları elle yükleyin ya da formatı Firma ayarları › Bordro formatı'ndan yükleyin.") : "") +
+      (BG.yontem === "format" && fmt ? MK.serit("bilgi", "file-text", "Format: <b>" + kacis(fmt) + "</b> · her kişinin bordrosu son maaş bilgisiyle bu formattan oluşur.") : "") +
+      '<div class="a-liste-kap a-bg-liste">' + MK.tablo({ baslik: "Personel", sinif: "a-tablo-bordro-gonder", sutunlar: BG_SUTUN, kayitlar: bgKisiler() }) + "</div>" +
+      (BG.hata ? '<p class="a-ipucu a-ipucu-uyari" id="bg-hata">' + BG.hata + "</p>" : "");
+    $("a-bg-alt").innerHTML = MK.tus({ eylem: "pencere-kapat", ad: "Vazgeç", sinif: "a-tus-ikincil" }) + MK.tus({ eylem: "bg-gonder", ad: n ? "İmzaya gönder (" + n + ")" : "İmzaya gönder", ikon: "send" });
+    if (odak) { var o = document.querySelector(odak); if (o) o.focus(); }
+  }
+  X["bordro-gonder-ac"] = function () {
+    var d = bgPencere(), ay = bgAylar()[1];   /* varsayılan: geçen ay */
+    BG = { ay: ay, yontem: MV.FIRMA.bordroFormat ? "format" : "elle", dosya: {}, sec: [], hata: "" };
+    BG.sec = bgKisiler().map(function (p) { return p.id; });
+    bgCiz(); d.showModal(); $("bg-ay").focus();
+  };
+  X["bg-yontem"] = function (el) { BG.yontem = el.dataset.y; BG.hata = ""; bgCiz('[data-eylem="bg-yontem"][data-y="' + BG.yontem + '"]'); };
+  X["bg-dosya"] = function (el) {
+    var k = el.dataset.kisi;
+    MK.dosyaSec({ kabul: ".pdf", enCokMB: 10, ornek: "bordro-" + BG.ay + "-" + k + ".pdf" }, function (ad) { if (BG.dosya[k] && BG.dosya[k] !== ad) MK.dosyaSil(BG.dosya[k]); BG.dosya[k] = ad; BG.hata = ""; bgCiz('[data-eylem="bg-dosya"][data-kisi="' + k + '"]'); });
+  };
+  X["bg-dosya-sil"] = function (el) { var k = el.dataset.kisi; if (BG.dosya[k]) MK.dosyaSil(BG.dosya[k]); delete BG.dosya[k]; bgCiz('[data-eylem="bg-dosya"][data-kisi="' + k + '"]'); };
+  X["bg-gonder"] = function () {
+    var l = bgGidecek();
+    if (!l.length) { BG.hata = BG.yontem === "elle" ? "Gönderilecek bordro yok: seçili kişilere bordro dosyası yükleyin." : "Gönderilecek bordro yok: kişi seçin."; bgCiz("#bg-ay"); return; }
+    var atla = bgKisiler().filter(function (p) { return BG.sec.indexOf(p.id) >= 0 && !bgGitti(p) && !bgHazir(p); }).length, ay = BG.ay, z = MK.simdi(), fmt = BG.yontem === "format";
+    l.forEach(function (p) {
+      var son = MV.kisiBordrolari(p.id)[0], dosya = fmt ? "bordro-" + ay + "-" + p.id + ".pdf" : BG.dosya[p.id], b = MV.BORDROLAR.filter(function (x) { return x.kisi === p.id && x.ay === ay; })[0];
+      if (!b && son) MV.BORDROLAR.push({ kisi: p.id, ay: ay, brut: son.brut, net: son.net, maliyet: son.maliyet, dosya: dosya, kaynak: fmt ? "format" : "elle" });
+      else if (b) b.dosya = dosya;
+      MV.BELGE_ONAY.push({ id: "bo" + (MV.BELGE_ONAY.length + 1), tur: "bordro", ad: MV.ayAd(ay) + " maaş bordrosu", kisi: p.id, gonderen: MK.BEN || "ga", gonderildi: z, durum: "bekliyor", ay: ay, dosya: dosya });
+    });
+    MV.BELGE_ONAY = MV.BELGE_ONAY.slice(); MV.BORDROLAR = MV.BORDROLAR.slice();
+    $("a-bg-pencere").close(); if (MK.takipCiz) MK.takipCiz(); var t = document.querySelector('[data-eylem="bordro-gonder-ac"]'); if (t) t.focus();
+    MK.bildir(l.length + " kişinin " + MV.ayAd(ay) + " bordrosu imzaya gönderildi" + (atla ? "; " + atla + " kişinin bordrosu olmadığı için gönderilmedi" : "") + ". Kişiler Onaylar › Diğer belgeler'de imzalar.");
+  };
+  document.addEventListener("change", function (e) {
+    var k = e.target.dataset && e.target.dataset.bgKisi; if (!k || !BG) return;
+    var i = BG.sec.indexOf(k); if (e.target.checked && i < 0) BG.sec.push(k); else if (!e.target.checked && i >= 0) BG.sec.splice(i, 1);
+    BG.hata = ""; bgCiz('[data-bg-kisi="' + k + '"]');
+  });
 
   /* ── GÖRÜNÜM ────────────────────────────────────────────────────────────────────────────────────────── */
   function rota() {

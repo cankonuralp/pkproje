@@ -695,7 +695,8 @@
   MV.kusurSinifli = function (t) { return !!t.format && t.formatDurum === "zorunlu"; };
   /* kiracı firmanın künyesi (rapor başlığı, §4.2 ve §4.8: akredite kuruluş logosu + ticari ad + TÜRKAK markası) — UYDURMA */
   MV.FIRMA = { ad: "Örnek Muayene ve Kontrol Ltd. Şti.", kisa: "KM", adres: "Örnek Mahallesi Deneme Caddesi No: 1, Gebze / Kocaeli",
-    eposta: "rapor@firma.example", akr: "AB-0000-M", nusha: 2, imza: "mobil" };
+    eposta: "rapor@firma.example", akr: "AB-0000-M", nusha: 2, imza: "mobil",
+    bordroFormat: "bordro-formati.pdf" };   /* BB5 (2026-10-03): firmanın bordro formatı; Muhasebe › Maaş bordrosu gönder bundan oluşturur, yoksa elle yükleme */
   /* imza yöntemi firma ayarı (2026-09-29, §9 otuz altıncı tur 177, 178, 180): raporun son imzası ve iç belgeler bu yöntemle; aracı site yok.
      mobil: her belge için telefona ayrı imza isteği, PIN telefonda (operatöre doğrudan bağlantı) · eimza: bilgisayardaki imza aracımız
      (AKİS kurulu), kart PIN'i bir kez, her belge ayrı imzalanır. "İndir, imzala, yükle" yedek yol her iki yöntemde durur. */

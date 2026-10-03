@@ -75,6 +75,12 @@
         (MV.FIRMA.onBilgiDosya ? '<div class="a-dosya-sec">' + MK.dosyaAlan({ ad: MV.FIRMA.onBilgiDosya, degistir: "obf-yukle", sil: "obf-sil" }) + "</div>"
           : '<p class="a-bolum-aciklama">Firma formatı yüklenmedi; müşteriye temel format (KM-FR-OBF-01) gider.</p><div class="a-eylem-cubugu a-eylem-sol">' +
             MK.tus({ eylem: "obf-yukle", ad: "Firma formatını yükle", ikon: "upload", sinif: "a-tus-ikincil" }) + "</div>") + "</section>" +
+      /* BB5 (2026-10-03, reisim: "eğer bir format varsa format yoksa el ile yükleyip gönderme seçeneği olsun"): firmanın bordro formatı; Muhasebe ›
+         Maaş bordrosu gönder kişinin bordrosunu bundan, son maaş bilgisiyle oluşturur. Yoksa bordrolar kişi kişi elle yüklenir. */
+      '<section class="a-bolum" aria-labelledby="a-b-bordro"><div class="a-alt-bas"><h2 class="a-alt-baslik" id="a-b-bordro">Bordro formatı</h2></div>' +
+        (MV.FIRMA.bordroFormat ? '<div class="a-dosya-sec">' + MK.dosyaAlan({ ad: MV.FIRMA.bordroFormat, degistir: "bordro-format-yukle", sil: "bordro-format-sil" }) + "</div>"
+          : '<p class="a-bolum-aciklama">Bordro formatı yüklenmedi; Muhasebe bordroları kişi kişi elle yükler.</p><div class="a-eylem-cubugu a-eylem-sol">' +
+            MK.tus({ eylem: "bordro-format-yukle", ad: "Bordro formatını yükle", ikon: "upload", sinif: "a-tus-ikincil" }) + "</div>") + "</section>" +
       /* 212 (2026-09-30): mesai takibi — aç/kapa, günlük normal ve mesai süresi (dk); raporun süresi ekipman türünün kontrol süresi */
       (function () {
         var m = MV.mesai();
@@ -137,6 +143,17 @@
       MV.FIRMA.onBilgiDosya = ad; ayarCiz(); MK.bildir("Ön bilgilendirme formu yüklendi; müşterilere bu gider.");
       var b = document.querySelector('#a-b-obf ~ * [data-eylem="obf-yukle"], [data-eylem="obf-yukle"]'); if (b) b.focus();
     });
+  };
+  X["bordro-format-yukle"] = function () {
+    MK.dosyaSec({ kabul: ".pdf,.xlsx", enCokMB: 10, ornek: "bordro-formati.pdf" }, function (ad) {
+      MV.FIRMA.bordroFormat = ad; ayarCiz(); MK.bildir("Bordro formatı yüklendi; Muhasebe bordroları bundan oluşturur.");
+      var b = document.querySelector('[data-eylem="bordro-format-yukle"]'); if (b) b.focus();
+    });
+  };
+  X["bordro-format-sil"] = function () {
+    MK.onayla({ baslik: "Bordro formatını kaldır", metin: "<b>" + kacis(MV.FIRMA.bordroFormat) + "</b> kaldırılır; bordrolar kişi kişi elle yüklenir.", tus: "Kaldır", tamam: function () {
+      delete MV.FIRMA.bordroFormat; ayarCiz(); MK.bildir("Bordro formatı kaldırıldı."); var b = document.querySelector('[data-eylem="bordro-format-yukle"]'); if (b) b.focus();
+    } });
   };
   X["obf-sil"] = function () {
     MK.onayla({ baslik: "Ön bilgilendirme formunu kaldır", metin: "<b>" + kacis(MV.FIRMA.onBilgiDosya) + "</b> kaldırılır; müşterilere temel format gider.", tus: "Kaldır", tamam: function () {
