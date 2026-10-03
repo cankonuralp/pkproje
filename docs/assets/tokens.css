@@ -47,7 +47,7 @@
 /* AÇIK tema (varsayılan) */
 :root, :root[data-tema="acik"] {
   color-scheme: light;
-  --zemin: #FAF9F6;   /* 2026-10-03 (reisim: "arka plan biraz daha açık bir renk olsun beyaza çok yakın olsun"); önce #F5F3EE (marka kâğıdı) */
+  --zemin: #F5F3EE;   /* 2026-10-03: bir ara #FAF9F6 yapıldı; reisim: "arka plandan vazgeçtim bu arada kalsın" → eski değer */
   --zemin2: #ECE9E1;
   --kart: #FFFFFF;
   --kenar: #DEDAD0;

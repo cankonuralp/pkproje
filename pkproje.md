@@ -1245,7 +1245,7 @@ tarih-saat, fotoğraflar, form) · **Eğitim kaydı** (personel, eğitim, belge,
      favicon, iOS ve PWA ikonları. Kullanım kuralları paketteki `OKU-BENI.md`'de: site üst çubuğu yatay-renkli
      (koyu zeminde koyu-zemin), PDF üst bilgisi yatay-sloganlı, koruma alanı işaret yüksekliğinin ¼'ü, ekranda
      en küçük yatay logo 120 px; renk değiştirme, esnetme, gölge YASAK.
-   · **Renkler (marka):** Petrol **#0F2A3D** · Onay yeşili **#1FA37A** · Kâğıt (zemin) **#F5F3EE** (2026-10-03: uygulamanın açık tema zemini #FAF9F6, reisim: "beyaza çok yakın"; marka kâğıdı #F5F3EE logoda aynen) · Slogan
+   · **Renkler (marka):** Petrol **#0F2A3D** · Onay yeşili **#1FA37A** · Kâğıt (zemin) **#F5F3EE** (2026-10-03: bir ara #FAF9F6 yapıldı, reisim vazgeçti; zemin yine #F5F3EE) · Slogan
      grisi **#4E5F6C** (son ikisi logo paketinin rehberinden). Bunlar dokunulmaz marka renkleridir (anayasa 2.4);
      ekranın geri kalan tonları (zemin kademeleri, metin kademeleri, kenarlık, uyarı/hata renkleri, koyu tema)
      bunlardan **türetilir** ve reisim onayıyla dondurulur → görsel sistem önerisi (öneri — onay bekliyor).
@@ -2332,6 +2332,8 @@ revizyon, alan kopyalama, hafif kusur devri, meslek eşleşme denetimi).
 - Emsal ürünler: https://opwire.app/iso-17020-periyodik-kontrol-yazilimi/ · https://17020muayene.vidco.com.tr/ · https://akuple.com/asansor-kontrol-yazilimi/ · https://ensyazilim.com/
 
 ## 11 · Değişiklik günlüğü
+- 2026-10-03 (271): **Arka plan eski hâline** (reisim: *"Arka plandan vazgeçtim bu arada kalsın"*). Açık tema zemini #FAF9F6 → yine **#F5F3EE**
+  (§11 270'in (3). maddesi geri alındı; öteki maddeler aynen). Kontrast 74 çift geçti.
 - 2026-10-03 (270): **S.A.Y üstte; ☰ sol barda; arka plan beyaza yakın; tablette ekipman tuşları tek satır; tuşa basınca başa atmaz** (§9 elli ikinci tur,
   akşam). (1) S.A.Y paneli geniş bantta içeriği daraltmıyordu ama kaydırıyordu (sağ iç boşluk) → kural kalktı, panel her şeyin üstünde. (2) Yan menüyü
   daraltan ☰ üst çubuktan sol barın başına (logonun sağı; daralınca şeridin tek simgesi); tablet / telefonda çekmeceyi açan ☰ üst çubukta kalır (menü
