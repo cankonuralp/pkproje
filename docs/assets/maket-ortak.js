@@ -642,11 +642,16 @@
   var zamanYay = function (k, yeni) { k.dataset.deger = yeni; k.dataset.ay = yeni.slice(0, 7); if (MK.onZaman) MK.onZaman(k.dataset.zaman, yeni); };
   var saatliDeger = function (k, gun, s, dk) { var d = k.dataset.deger || MK.simdi(); return k.dataset.saat === "1" ? gun + "T" + (s || d.slice(11, 13)) + ":" + (dk || d.slice(14, 16)) : gun; };
   /* yazma: tarih geçerli olunca, saat / dakika iki hane ve aralıkta olunca değer yayılır; saat yazarken uyan değerler listelenir */
+  var takvimTazele = function (k) { var l = k.querySelector(".a-zaman-liste"); if (l && !l.hidden) { k.dataset.ay = (k.dataset.deger || MK.BUGUN).slice(0, 7); l.innerHTML = zamanIc(k); } };
   function zamanYaz(t) {
     var k = t.closest("[data-zaman]"); if (!k) return false;
+    if (k.dataset.takvimEk) {   /* yazılı tarih kutusu: açık takvim yazılan güne gider; kutunun kendi akışı sürer (false) */
+      var gt = tarihOku(t.value.slice(0, 10)); if (gt) { k.dataset.deger = gt; takvimTazele(k); }
+      return false;
+    }
     if (t.dataset.zamanTarih !== undefined) {
       var g = tarihOku(t.value);
-      if (g) { t.removeAttribute("aria-invalid"); zamanYay(k, saatliDeger(k, g)); } else if (t.value.length >= 10) t.setAttribute("aria-invalid", "true");
+      if (g) { t.removeAttribute("aria-invalid"); zamanYay(k, saatliDeger(k, g)); takvimTazele(k); } else if (t.value.length >= 10) t.setAttribute("aria-invalid", "true");
       return true;
     }
     if (t.dataset.zamanParca) {
@@ -670,6 +675,26 @@
   });
   /* tıklamalar: true dönerse iş bitti */
   function zamanTikla(e) {
+    /* 2026-10-03 (reisim: "şu tarih ve saat kısımlarında , tıklayınca takvim veya saat açılsın, silip yaza da bileyim ama her türlü takvim
+       açılsın sadece yandaki tuşa basınca değil"): kutunun kendisine tıklayınca da takvim / saat listesi açılır; odak kutuda kalır, yazmak serbest */
+    var gi = e.target.closest && e.target.closest("input.a-zaman-girdi");
+    if (gi && gi.closest("[data-zaman]")) {
+      if (gi.disabled || gi.readOnly) return true;
+      var kk = gi.closest("[data-zaman]"), kp = gi.closest(".a-secici");
+      if (gi.dataset.zamanParca) {
+        var ppl = kp.querySelector(".a-parca-liste");
+        if (ppl.hidden) { listeleriKapat(kp); ppl.querySelectorAll(".a-secenek").forEach(function (b) { b.hidden = false; }); ppl.hidden = false; kp.querySelector("[data-zaman-liste]").setAttribute("aria-expanded", "true"); }
+        return true;
+      }
+      var tl = kp.querySelector(".a-zaman-liste");
+      if (tl && tl.hidden) {
+        listeleriKapat(kp);
+        if (kk.dataset.takvimEk) kk.dataset.deger = tarihOku(gi.value.slice(0, 10)) || "";
+        kk.dataset.ay = (kk.dataset.deger || MK.BUGUN).slice(0, 7); tl.innerHTML = zamanIc(kk); tl.hidden = false;
+        kp.querySelector("[data-zaman-ac]").setAttribute("aria-expanded", "true");
+      }
+      return true;
+    }
     var el = e.target.closest("[data-zaman-ac],[data-zaman-gun],[data-zaman-ay],[data-zaman-liste],[data-zaman-sec]"); if (!el) return false;
     var k = el.closest("[data-zaman]"), kap = el.closest(".a-secici");
     if (el.dataset.zamanAc !== undefined) {

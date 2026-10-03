@@ -2,9 +2,16 @@
  "maket": "m8",
  "tarih": "2026-10-03",
  "arac": "tools/olc-bulut.mjs --etkilesim (başsız tarayıcı, 1920 açık tema; gen verilen denemede o genişlik)",
- "toplam": 126,
- "gecen": 126,
+ "toplam": 127,
+ "gecen": 127,
  "denemeler": [
+  {
+   "ad": "Tarih / saat kutusuna tıklayınca takvim ve saat listesi açılır; yazınca takvim yazılan aya gider",
+   "gen": 1920,
+   "sayfa": "maket/rapor.html",
+   "hash": "#/r/ET-1009",
+   "gecti": true
+  },
   {
    "ad": "AA2: yıllık fazla çalışma sınırı dolan kişide o gün mesai hakkı yok — pencerede Bu yıl … / 270 saat · doldu, süre normalle dolar; az kalan kişide hak kalan kadar",
    "gen": 1920,

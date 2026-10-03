@@ -2,9 +2,16 @@
  "maket": "m6",
  "tarih": "2026-10-03",
  "arac": "tools/olc-bulut.mjs --etkilesim (başsız tarayıcı, 1920 açık tema; gen verilen denemede o genişlik)",
- "toplam": 23,
- "gecen": 23,
+ "toplam": 24,
+ "gecen": 24,
  "denemeler": [
+  {
+   "ad": "Plan aç: tarih kutusuna tıklayınca takvim açılır (yalnız simgeye değil); yazılan tarih takvimde",
+   "gen": 1920,
+   "sayfa": "maket/plan-ac.html",
+   "hash": "#/?tesis=t2",
+   "gecti": true
+  },
   {
    "ad": "Takvim: Başlangıç ve Bitiş takvimli; ay ileri, 5 Ekim seçilince kutuda 05.10.2026",
    "gen": 1920,
