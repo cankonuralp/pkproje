@@ -2,9 +2,44 @@
  "maket": "araclar",
  "tarih": "2026-10-03",
  "arac": "tools/olc-bulut.mjs --etkilesim (başsız tarayıcı, 1920 açık tema; gen verilen denemede o genişlik)",
- "toplam": 16,
- "gecen": 16,
+ "toplam": 21,
+ "gecen": 21,
  "denemeler": [
+  {
+   "ad": "Araç sayfasında Araç bilgileri: plaka, tür, marka, model, yıl, yakıt (Dizel)",
+   "gen": 1920,
+   "sayfa": "maket/araclar.html",
+   "hash": "#/a/a1",
+   "gecti": true
+  },
+  {
+   "ad": "Araç ekle: boş kayıtta zorunlu alanlar; kayıtlı plaka (00 mak 001) ikinci kez açılmaz",
+   "gen": 1920,
+   "sayfa": "maket/araclar.html",
+   "hash": "#/",
+   "gecti": true
+  },
+  {
+   "ad": "Araç ekle: 34 YTB 452 eklenir → kendi sayfası, bilgiler, kilometre 12.500, depoda; listede 4 araç",
+   "gen": 1920,
+   "sayfa": "maket/araclar.html",
+   "hash": "#/",
+   "gecti": true
+  },
+  {
+   "ad": "Araç düzenle: model değişir, plaka korunur; başlık 'Aracı düzenle'",
+   "gen": 1920,
+   "sayfa": "maket/araclar.html",
+   "hash": "#/a/a2",
+   "gecti": true
+  },
+  {
+   "ad": "Sürücü görünümünde Araç ekle ve Düzenle yok",
+   "gen": 1920,
+   "sayfa": "maket/araclar.html",
+   "hash": "#/benim/a/a1",
+   "gecti": true
+  },
   {
    "ad": "Takvim: tutanakta Tarih ve saat takvimli; 1 Eylül seçilince 01.09.2026 16:40 (saat korunur)",
    "gen": 1920,

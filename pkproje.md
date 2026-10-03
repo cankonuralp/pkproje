@@ -2197,7 +2197,7 @@ takvime bakar (§11 240). Ara mesaj: *"S.A.Y tuşu biraz daha büyük olsun, 2 r
 neden böyle bi kısım var"*. Nüsha: rapor sonundaki "Bu rapor … nüsha olarak hazırlanmıştır" cümlesine yazılan kopya sayısı (yönetmelik 1.7.9); ayar yalnız o
 sayıyı belirler. Ara mesaj: *"2 nüsha eklenirse 2 e- imza mı gerekir"* → hayır: e-imza dosyanın içinde, her kopya aynı imzayı taşır; rapor bir kez
 imzalanır (e-imzalı firmanın 1 mi 2 mi yazacağına dair resmî açıklama bulunamadı — firma seçer). Ara mesaj: *"araca tıklayınca gözüken ekranda aracın
-marka modeli plaka bilgileri de yazmalı"* · *"araç ekleme kısmıda göremedim"* → sırada.
+marka modeli plaka bilgileri de yazmalı"* · *"araç ekleme kısmıda göremedim"* → §11 242.
 Aynı gün ara mesajlar (reisim birebir): *"Şirket logosuda firma ayarlarından girilsin , raporlara otomatik çekilsin"* (§11 238) · *"Format
 tasarımcısında herhangi bir başlığa tıklayınca en baş arıyor, en başa atmasın başlığı düzenlediğimiz yere odaklansın(telefonda)"* (§11 237).
 
@@ -2238,6 +2238,11 @@ revizyon, alan kopyalama, hafif kusur devri, meslek eşleşme denetimi).
 - Emsal ürünler: https://opwire.app/iso-17020-periyodik-kontrol-yazilimi/ · https://17020muayene.vidco.com.tr/ · https://akuple.com/asansor-kontrol-yazilimi/ · https://ensyazilim.com/
 
 ## 11 · Değişiklik günlüğü
+- 2026-10-03 (242): **Araç ekle / düzenle + Araç bilgileri** (§9 elli ikinci tur ara mesajları). Araçlar listesinde "Araç ekle", araç sayfasında
+  "Düzenle" (yalnız yönetici; sürücü görünümünde yok). Alanlar: plaka (zorunlu, eşsiz — aynı plaka ikinci kez açılmaz, engel), araç türü, marka, model,
+  model yılı, yakıt (zorunlu); kayıt anındaki kilometre (yalnız eklerken; haftalık km ondan küçük yazılamaz), sonraki bakım km, muayene / trafik
+  sigortası / kasko bitişi (isteğe bağlı, takvimli; boşsa takip edilmez). Eklenen araç depoda başlar, listeye, km takibine ve belge balonuna girer.
+  Araç sayfasında yeni bölüm **Araç bilgileri**: plaka, araç türü, marka, model, model yılı, yakıt (+ kayıttaki km).
 - 2026-10-03 (241): **Tarihler takvimden seçilir** (§9 elli ikinci tur ara mesajı). Yazılı her tarih kutusu (`data-takvim`: Plan aç, iş sözleşmesi,
   eğitim, fatura, tahsilat, personel, performans aralığı, ölçüm cihazı; saatli: araç ve zimmet tutanağı) yanında takvim simgesi alır — saha
   raporundaki takvimin aynısı (ay geçişi, Bugün). Seçilen gün kutuya yazılır, sayfanın kendi doğrulaması aynen çalışır; saatli kutuda saat korunur.

@@ -1010,7 +1010,8 @@
   MV.aracKm = function (vid) {
     var l = MV.hareketler(vid).map(function (h) { return { t: h.tarih, km: MV.tutanak(h).km }; }).concat(MV.kmKayitlari(vid).map(function (x) { return { t: x.tarih, km: x.km }; }))
       .filter(function (x) { return x.km != null; }).sort(function (a, b) { return a.t < b.t ? 1 : a.t > b.t ? -1 : b.km - a.km; });
-    return l.length ? l[0].km : null;
+    var v = MV.varlik(vid);   /* 2026-10-03: eklenen aracın kayıttaki kilometresi, kayıt yoksa */
+    return l.length ? l[0].km : v && v.ilkKm != null ? v.ilkKm : null;
   };
   /* belge bitişi: gecti · yakin (eşik içinde; kalibrasyonla aynı firma ayarı) · gecerli · yok */
   MV.aracTarihDurum = function (t) {

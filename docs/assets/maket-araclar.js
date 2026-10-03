@@ -150,8 +150,9 @@
     var k = MV.kimde(v.id), h = MV.hareketler(v.id).filter(function (x) { return !BEN || x.eden === BEN || x.alan === BEN; }), u = MV.aracUyarilari(v), n = MV.aracKm(v.id);
     $("a-nesne").innerHTML = MK.kirinti([[BEN ? "Aracım" : "Araçlar", kok], [v.plaka]]) +
       '<div class="a-nesne-bas"><div class="a-nesne-kimlik"><div class="a-nesne-baslik"><h1 tabindex="-1">' + kacis(v.plaka) + " · " + kacis(v.ad) + "</h1>" + rozet(durum(v)) + "</div>" +
-        '<p class="a-nesne-alt">' + ikon("car", "a-ikon-kucuk") + "<span>" + kacis(v.marka + " " + v.model + " · " + v.yil + (v.yakit ? " · " + v.yakit : "")) + "</span></p></div>" +
-        '<div class="a-eylem-cubugu">' + (BEN ? "" : '<a class="a-tus a-tus-ikincil" href="zimmetler.html#/v/' + v.id + '">' + ikon("package", "a-ikon-kucuk") + "Zimmet kaydı</a>") +
+        '<p class="a-nesne-alt">' + ikon("car", "a-ikon-kucuk") + "<span>" + kacis(v.marka + " " + v.model + " · " + v.yil + (v.yakit ? " · " + yakitAd(v.yakit) : "")) + "</span></p></div>" +
+        '<div class="a-eylem-cubugu">' + (BEN ? "" : MK.tus({ eylem: "arac-duzenle", ad: "Düzenle", ikon: "pencil", sinif: "a-tus-ikincil", veri: { id: v.id } }) +
+          '<a class="a-tus a-tus-ikincil" href="zimmetler.html#/v/' + v.id + '">' + ikon("package", "a-ikon-kucuk") + "Zimmet kaydı</a>") +
           '<a class="a-tus a-tus-birincil" href="' + (BEN ? "#/benim/tutanak/" : "#/tutanak/") + v.id + '">' + ikon("clipboard-check", "a-ikon-kucuk") + (BEN ? "Teslim et" : "Teslim tutanağı") + "</a></div></div>" +
       (u.length ? '<div class="a-serit-kap">' + u.map(function (x) {
         return MK.serit(x.d === "gecti" ? "hata" : "uyari", x.d === "gecti" ? "circle-x" : "triangle-alert", x.ad + (x.d === "gecti" ? " süresi geçti (" : " bitiyor (") + MK.tarihYaz(x.t) + ")" + (x.d === "gecti" ? "; araç bu hâliyle trafiğe çıkmamalı." : "."));
@@ -161,6 +162,12 @@
         yuz({ ikon: "gauge", ad: "Kilometre", sayi: n == null ? "—" : MV.kmYaz(n), not: v.bakimKm ? "bakım " + MV.kmYaz(v.bakimKm) + " km" + (n != null && n >= v.bakimKm - 1000 ? " · yaklaştı" : "") : "", uyari: n != null && v.bakimKm && n >= v.bakimKm - 1000 }) +
         BELGE.map(function (b) { var d = MV.aracTarihDurum(v[b[0]]); return yuz({ ikon: "calendar", ad: b[1], sayi: v[b[0]] ? MK.tarihYaz(v[b[0]]) : "—", not: d === "gecti" ? "geçti" : d === "yakin" ? "yaklaşıyor" : "", uyari: d === "gecti" || d === "yakin" }); }).join("") +
       "</div>" +
+      /* 2026-10-03 (reisim: "araca tıklayınca gözüken ekranda aracın marka modeli plaka bilgileri de yazmalı"): kayıt bilgileri ayrı bölümde */
+      '<section class="a-bolum" aria-labelledby="a-b-bilgi"><div class="a-alt-bas"><h2 class="a-alt-baslik" id="a-b-bilgi">Araç bilgileri</h2></div><dl class="a-bilgi">' +
+        MK.bilgi("Plaka", '<span class="a-kod">' + kacis(v.plaka) + "</span>") + MK.bilgi("Araç türü", kacis(v.ad)) +
+        MK.bilgi("Marka", kacis(v.marka || "—")) + MK.bilgi("Model", kacis(v.model || "—")) +
+        MK.bilgi("Model yılı", v.yil ? String(v.yil) : "—") + MK.bilgi("Yakıt", kacis(yakitAd(v.yakit))) +
+        (v.ilkKm != null ? MK.bilgi("Kayıttaki kilometre", MV.kmYaz(v.ilkKm) + " km") : "") + "</dl></section>" +
       '<section class="a-bolum" aria-labelledby="a-b-kmh"><div class="a-alt-bas"><h2 class="a-alt-baslik" id="a-b-kmh">Haftalık kilometre</h2>' + kmRozet(v) + "</div>" +
         (k !== "depo" && k !== "lab" ? kmForm(v) : "") + kmGecmis(v) + "</section>" +
       '<section class="a-bolum" aria-labelledby="a-b-tutanak"><div class="a-alt-bas"><h2 class="a-alt-baslik" id="a-b-tutanak">Teslim tutanakları</h2><span class="a-sayac"><b>' + h.length + "</b> tutanak</span></div>" +
@@ -183,6 +190,7 @@
     return h;
   }
   function pencereCiz(odak) {
+    if (W.tip === "kayit") { kayitCiz(odak); return; }
     var d = W.d, h = W.hata, v = d.arac ? MV.varlik(d.arac) : null, k = v ? MV.kimde(v.id) : null;
     var kisiler = [["depo", "Depo", "iade"]].concat(MV.PERSONEL.filter(function (p) { return p.durum === "etkin"; }).map(function (p) { return [p.id, p.ad, MV.meslekAd(p)]; }));
     var eksik = MV.ARAC_KONTROL.filter(function (x) { return !d.kontrol[x[0]]; }).length, fotosuz = MV.ARAC_FOTO.filter(function (x) { return !d.foto[x[0]]; }).length;
@@ -219,6 +227,69 @@
     W = { hata: {}, d: { arac: vid || "", alan: BEN ? "depo" : "", zaman: z.slice(8, 10) + "." + z.slice(5, 7) + "." + z.slice(0, 4) + " " + z.slice(11, 16), km: "", yakit: "", kontrol: {}, hasar: "", foto: {} } };
     pencereCiz(); if (!$("a-pencere").open) $("a-pencere").showModal(); (BEN ? $("w-alan") : $("w-arac")).focus();
   }
+  /* ── ARAÇ EKLE / DÜZENLE (2026-10-03, reisim: "araç ekleme kısmıda göremedim") — yalnız yönetici. Plaka zorunlu ve eşsiz (engel: aynı
+     plaka iki araç olamaz); belge bitişleri isteğe bağlı (boşsa takip edilmez, balon çıkmaz); başlangıç kilometresi yalnız eklerken — haftalık
+     kilometre ve tutanak ondan küçük olamaz. */
+  var TURLER = ["Binek araç", "Hafif ticari araç", "Kamyonet", "Minibüs", "Kamyon"];
+  var YAKITLAR = [["benzin", "Benzin"], ["dizel", "Dizel"], ["lpg", "LPG"], ["elektrik", "Elektrik"], ["hibrit", "Hibrit"]];
+  function yakitAd(y) { var x = YAKITLAR.filter(function (a) { return a[0] === y; })[0]; return x ? x[1] : y || "—"; }
+  var plakaDuz = function (s) { return String(s || "").toLocaleUpperCase("tr").replace(/\s+/g, " ").trim(); };
+  var tarihIso = function (s) { var m = /^(\d{2})\.(\d{2})\.(\d{4})$/.exec(String(s).trim()); if (!m) return null; var iso = m[3] + "-" + m[2] + "-" + m[1], d = new Date(iso + "T12:00:00");
+    return isNaN(d) || d.getDate() !== +m[1] ? null : iso; };
+  var BELGE_AD = [["muayene", "Muayene bitişi"], ["sigorta", "Trafik sigortası bitişi"], ["kasko", "Kasko bitişi"]];
+  function kayitDenetle() {
+    var h = {}, d = W.d, p = plakaDuz(d.plaka), yil = +d.yil, ust = +MK.raporBugun.slice(0, 4) + 1;
+    if (!p) h.plaka = "Plaka yazılmalı.";
+    else if (!/^\d{2} ?[A-ZÇĞİÖŞÜ]{1,3} ?\d{2,4}$/.test(p)) h.plaka = "Plaka 34 ABC 123 biçiminde.";
+    else if (araclar().some(function (x) { return x.id !== W.id && plakaDuz(x.plaka).replace(/ /g, "") === p.replace(/ /g, ""); })) h.plaka = "Bu plaka kayıtlı; aynı plakayla ikinci araç açılmaz.";
+    if (!d.ad) h.ad = "Araç türü seçilmeli.";
+    if (!String(d.marka).trim()) h.marka = "Marka yazılmalı.";
+    if (!String(d.model).trim()) h.model = "Model yazılmalı.";
+    if (!/^\d{4}$/.test(String(d.yil).trim()) || yil < 1980 || yil > ust) h.yil = "Dört haneli yıl (1980–" + ust + ").";
+    if (!d.yakit) h.yakit = "Yakıt seçilmeli.";
+    if (!W.id && String(d.ilkKm).trim() && !/^\d[\d.]*$/.test(d.ilkKm)) h.ilkKm = "Yalnız rakam.";
+    if (String(d.bakimKm).trim() && !/^\d[\d.]*$/.test(d.bakimKm)) h.bakimKm = "Yalnız rakam.";
+    BELGE_AD.forEach(function (b) { if (String(d[b[0]]).trim() && !tarihIso(d[b[0]])) h[b[0]] = "GG.AA.YYYY biçiminde; boş bırakılabilir."; });
+    return h;
+  }
+  function kayitCiz(odak) {
+    var d = W.d, h = W.hata, gir = function (id, k, sinif, ek) { return MK.girdi({ id: id, alan: k, deger: d[k], sinif: sinif, ek: ek || "", hata: h[k] }); };
+    $("a-pencere-baslik").textContent = W.id ? "Aracı düzenle · " + MV.varlik(W.id).plaka : "Araç ekle";
+    $("a-pencere-govde").innerHTML = '<div class="a-form">' +
+      MK.alan({ id: "w-plaka", etiket: "Plaka", zorunlu: true, hata: h.plaka, girdi: gir("w-plaka", "plaka", "a-girdi-sicil", ' maxlength="12" autocapitalize="characters" placeholder="34 ABC 123"') }) +
+      MK.alan({ id: "w-ad", etiket: "Araç türü", zorunlu: true, hata: h.ad, girdi: MK.secim({ id: "w-ad", ad: "Araç türü", deger: d.ad, secenekler: TURLER.map(function (t) { return [t, t]; }), ipucu: "Tür seçin", gecersiz: !!h.ad, tanim: "w-ad-ipucu" }) }) +
+      MK.alan({ id: "w-marka", etiket: "Marka", zorunlu: true, hata: h.marka, girdi: gir("w-marka", "marka", "", ' maxlength="40"') }) +
+      MK.alan({ id: "w-model", etiket: "Model", zorunlu: true, hata: h.model, girdi: gir("w-model", "model", "", ' maxlength="40"') }) +
+      MK.alan({ id: "w-yil", etiket: "Model yılı", zorunlu: true, hata: h.yil, girdi: gir("w-yil", "yil", "a-girdi-sicil", ' inputmode="numeric" maxlength="4"') }) +
+      MK.alan({ id: "w-yakit", etiket: "Yakıt", zorunlu: true, hata: h.yakit, girdi: MK.secim({ id: "w-yakit", ad: "Yakıt", deger: d.yakit, secenekler: YAKITLAR, ipucu: "Yakıt seçin", gecersiz: !!h.yakit, tanim: "w-yakit-ipucu" }) }) +
+      (W.id ? "" : MK.alan({ id: "w-ilkKm", etiket: "Kilometre (kayıt anında)", hata: h.ilkKm, ipucu: "İsteğe bağlı; haftalık kilometre bundan küçük yazılamaz.", girdi: gir("w-ilkKm", "ilkKm", "a-girdi-sicil", ' inputmode="numeric" maxlength="9"') })) +
+      MK.alan({ id: "w-bakimKm", etiket: "Sonraki bakım kilometresi", hata: h.bakimKm, ipucu: "İsteğe bağlı; 1.000 km kala uyarır.", girdi: gir("w-bakimKm", "bakimKm", "a-girdi-sicil", ' inputmode="numeric" maxlength="9"') }) +
+      BELGE_AD.map(function (b) { return MK.alan({ id: "w-" + b[0], etiket: b[1], hata: h[b[0]], ipucu: "İsteğe bağlı; boşsa takip edilmez.", girdi: gir("w-" + b[0], b[0], "a-girdi-sicil", ' inputmode="numeric" maxlength="10" placeholder="GG.AA.YYYY" data-takvim') }); }).join("") +
+      "</div>";
+    $("a-pencere-alt").innerHTML = MK.tus({ eylem: "pencere-kapat", ad: "Vazgeç", sinif: "a-tus-ikincil" }) + MK.tus({ eylem: "arac-kaydet", ad: W.id ? "Kaydet" : "Aracı ekle", ikon: "check" });
+    if (odak) { var el = $(odak) || document.querySelector(odak); if (el) el.focus(); }
+  }
+  function kayitAc(id) {
+    var v = id ? MV.varlik(id) : null, tn = function (x) { return x ? MK.tarihNo(x) : ""; };
+    W = { tip: "kayit", id: id || null, hata: {}, d: v ? { plaka: v.plaka, ad: v.ad, marka: v.marka || "", model: v.model || "", yil: v.yil ? String(v.yil) : "", yakit: v.yakit || "",
+      bakimKm: v.bakimKm ? String(v.bakimKm) : "", muayene: tn(v.muayene), sigorta: tn(v.sigorta), kasko: tn(v.kasko) }
+      : { plaka: "", ad: "", marka: "", model: "", yil: "", yakit: "", ilkKm: "", bakimKm: "", muayene: "", sigorta: "", kasko: "" } };
+    kayitCiz(); if (!$("a-pencere").open) $("a-pencere").showModal(); $("w-plaka").focus();
+  }
+  X["arac-ekle"] = function () { kayitAc(null); };
+  X["arac-duzenle"] = function (el) { kayitAc(el.dataset.id); };
+  X["arac-kaydet"] = function () {
+    W.hata = kayitDenetle(); var hk = Object.keys(W.hata);
+    if (hk.length) { kayitCiz("w-" + hk[0]); return; }
+    var d = W.d, sayi = function (s) { return String(s).trim() ? +String(s).replace(/\./g, "") : null; }, v = W.id ? MV.varlik(W.id) : null, yeni = !v;
+    if (yeni) { var n = 1; while (MV.varlik("a" + n)) n++; v = { id: "a" + n, tur: "arac" }; }
+    v.plaka = plakaDuz(d.plaka); v.ad = d.ad; v.marka = String(d.marka).trim(); v.model = String(d.model).trim(); v.yil = +d.yil; v.yakit = d.yakit;
+    v.bakimKm = sayi(d.bakimKm); BELGE_AD.forEach(function (b) { v[b[0]] = tarihIso(d[b[0]]) || ""; });
+    if (yeni) { if (sayi(d.ilkKm) != null) v.ilkKm = sayi(d.ilkKm); MV.VARLIKLAR.push(v); }
+    $("a-pencere").close();
+    location.hash = "#/a/" + v.id;
+    MK.bildir(v.plaka + (yeni ? " eklendi; depoda. Teslim tutanağıyla kişiye verilir." : " bilgileri kaydedildi."));
+  };
   X["tutanak-ac"] = function () { pencereAc(rota().v === "arac" ? rota().id : ""); };
   X["tfoto-ekle"] = function (el) {
     var aci = el.dataset.aci;
@@ -289,6 +360,7 @@
     : '<a class="a-tus a-tus-ikincil" href="#/benim">' + ikon("user", "a-ikon-kucuk") + "Sürücü görünümü</a>";
 
   if (BEN) $("a-tutanak-ad").textContent = "Teslim et";
+  else document.querySelector('[data-eylem="tutanak-ac"]').insertAdjacentHTML("beforebegin", MK.tus({ eylem: "arac-ekle", ad: "Araç ekle", ikon: "plus", sinif: "a-tus-ikincil" }));
   MK.kabuk({ modul: 23, kullanici: BEN ? { bas: "MK", ad: "Mert Kaya", rol: "Denetçi" } : { bas: "AD", ad: "Ayşe Demir", rol: "Firma yöneticisi" } });
   goster(false);
 })();
