@@ -2208,6 +2208,9 @@ eğer windovsta çalışman gerekiyorsa buluttan çıkarıp projeyi normal pence
 cevapla."* → **Firma açma:** fikir doğru — her firma kendi alt alan adında, tek kod ve tek sunucu (alt alan adı firmayı seçer; firma başına ayrı kurulum
 yok); ekran paneli yapılmaz. Tek düzeltme: firmanın kaydı (kısa kod, alt alan adı, ilk firma yöneticisi) bir yerde oluşmalı → bizim kullandığımız
 komut satırı aracı (KOD-GECIS Y1). **Toplu içe aktarma** makette (§11 245). **Windows:** K0'ın ilk günü reisim'in bilgisayarında, yerel oturumda.
+Aynı gün (reisim birebir): *"2 önerinide kabul ediyorum, yeni firmaya hizmet için site açma işini nasıl yapabileceğimizi nasıl bi arapanel
+işimizi görür anlayamadım örnek göster"* → **G0 kabul:** "başlayalım" denince bütün maketler o günkü hâliyle onaylı sayılır. **G1 kabul:** geçmiş
+tarihe plan açılır, Plan aç'ta uyarı şeridiyle (§11 246). Firma açma örneği: §11 247.
 Aynı gün ara mesajlar (reisim birebir): *"Şirket logosuda firma ayarlarından girilsin , raporlara otomatik çekilsin"* (§11 238) · *"Format
 tasarımcısında herhangi bir başlığa tıklayınca en baş arıyor, en başa atmasın başlığı düzenlediğimiz yere odaklansın(telefonda)"* (§11 237).
 
@@ -2248,6 +2251,9 @@ revizyon, alan kopyalama, hafif kusur devri, meslek eşleşme denetimi).
 - Emsal ürünler: https://opwire.app/iso-17020-periyodik-kontrol-yazilimi/ · https://17020muayene.vidco.com.tr/ · https://akuple.com/asansor-kontrol-yazilimi/ · https://ensyazilim.com/
 
 ## 11 · Değişiklik günlüğü
+- 2026-10-03 (246): **Geçmiş tarihe plan açılır — uyarıyla (G1)** (§9 elli ikinci tur). Plan aç'ta plan günü bugünden önceyse engel kalktı;
+  sözleşme uyarılarının üstünde şerit: "Plan günü geçmiş bir tarih: GG.AA.YYYY." Plan yine açılır. Rapor engeli değişmedi (yalnız ileri tarih).
+  KOD-GECIS: G0 ve G1 kabul; ENGEL 10 → UYARI listesine.
 - 2026-10-03 (245): **Toplu içe aktarma (ilk kurulum)** (§9 elli ikinci tur). Firma ayarları › "Toplu içe aktarma (ilk kurulum)", tam genişlik bölüm:
   tür seçilir (müşteriler ve tesisler · ekipmanlar · ölçüm cihazları · personel · araçlar) → **Şablonu indir** (Türkçe sütunlar, * zorunlu, örnek
   satırlar) → **Excel seç** (.xlsx / .csv) → satır satır denetim tablosu: "Eklenecek" (varsa uyarı notu: vergi no boş, EKİPNET boş, müşteri kayıtlı →

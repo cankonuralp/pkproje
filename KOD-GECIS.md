@@ -15,10 +15,12 @@
 
 ## 0 · Başlamadan önce gereken kararlar (reisim)
 
-| # | Karar | Neden şimdi | Önerim |
+**İkisi de kabul (2026-10-03, reisim: *"2 önerinide kabul ediyorum"*).**
+
+| # | Karar | Neden şimdi | Karar |
 |---|---|---|---|
-| **G0** | **Maketlerin toplu onayı.** Onaylı: M1–M5, M13. Onay bekleyen: M6 Plan aç · M7 Dökümanlar · M8 Saha raporu · M9 Raporlar / Onaylar / imza / PDF · M10 Uyarılar · M11 Müşteri paneli · M12 Teklifler · M14 Muhasebe · M15 Performans · M16 Eğitimler · Talepler · Firma ayarları · Araçlar · Format kurucu · Onaylar › Diğer · giriş / hata ekranları · Hesabım · belge (Bakanlık görünümü) | Kural: *"bütün maketler onaylanmadan kod yok"* (CLAUDE.md §1, §9 yirmi birinci tur) | "Başlayalım" denince **bütün maketler bugünkü hâliyle onaylı** sayılır; kod sırasında çıkan düzeltme küçükse kodda, büyükse önce makette yapılır. |
-| **G1** | **Geçmiş tarihe plan açma.** Makette **engel** ("Geçmiş tarihe plan açılmaz"). Oysa rapor artık geçmiş güne açık (§11 239–240). | Sahada yapılmış ama sisteme sonradan girilecek işler planla açılamaz. | **Uyarı** olsun (genel ilke: kural uyarıdır); plan açılır, "geçmiş tarih" şeridi kalır. |
+| **G0** | **Maketlerin toplu onayı.** Onaylı: M1–M5, M13. Onay bekleyen: M6 Plan aç · M7 Dökümanlar · M8 Saha raporu · M9 Raporlar / Onaylar / imza / PDF · M10 Uyarılar · M11 Müşteri paneli · M12 Teklifler · M14 Muhasebe · M15 Performans · M16 Eğitimler · Talepler · Firma ayarları · Araçlar · Format kurucu · Onaylar › Diğer · giriş / hata ekranları · Hesabım · belge (Bakanlık görünümü) | Kural: *"bütün maketler onaylanmadan kod yok"* (CLAUDE.md §1, §9 yirmi birinci tur) | ✅ Kabul: "Başlayalım" denince **bütün maketler o günkü hâliyle onaylı** sayılır; kod sırasında çıkan düzeltme küçükse kodda, büyükse önce makette yapılır. |
+| **G1** | **Geçmiş tarihe plan açma.** Eskiden makette **engel** ("Geçmiş tarihe plan açılmaz"). Oysa rapor artık geçmiş güne açık (§11 239–240). | Sahada yapılmış ama sisteme sonradan girilecek işler planla açılamaz. | ✅ Kabul: **uyarı** — plan açılır, "Plan günü geçmiş bir tarih" şeridi (makette uygulandı, pkproje §11 246). |
 
 Kodu bekletmeyen ama **yayından önce** gereken kararlar §12'de.
 
@@ -213,9 +215,8 @@ denetlenir, çelişirse sunucu kazanır (ARKA-UC §4.4).
    haftalık km öncekinden küçük olamaz · tahsilat kalanı aşamaz · net maaş brütten büyük olamaz · günlük çalışma 660 dk'yı aşamaz.
 8. Ayrılan personele hesap açılmaz · aynı kişiye ikinci kez teslim edilmez · mobil imza telefonu yoksa mobil imzaya gönderilmez (öteki yol açık).
 9. Teklif yalnız taslakken düzenlenir · kullanılmış İSG-KATİP ID silinmez.
-10. **Geçmiş tarihe plan açılmaz** — ⚠️ G1: uyarıya dönmesi öneriliyor.
 
-**UYARI (kayıt olur, şerit / pencere söyler):** İSG-KATİP ID yok / geç onay / bitmiş · EKİPNET boş · meslek türe yetkili değil · türe ekipman ataması
+**UYARI (kayıt olur, şerit / pencere söyler):** plan günü geçmiş tarih (G1) · İSG-KATİP ID yok / geç onay / bitmiş · EKİPNET boş · meslek türe yetkili değil · türe ekipman ataması
 yok · saat ya da gün çakışması · plan günü iş sözleşmesi dışında · tesiste ikinci açık plan · vergi no / SGK DETSİS no boş ya da tekrar ("Yine de
 kaydet") · fotoğrafsız teslim · belgesi olmayan gider · haftada 3.000 km'den fazla artış · zorunlu olmayan alan eksik · "Uygun" seçildi ama uygun değil
 madde var · kalibrasyonu 30 gün içinde bitecek · aynı dönemin bordrosu var (yenisi yerine geçer) · yıllık izin hakkı aşılıyor · araç belgesi yaklaşıyor /
@@ -280,5 +281,5 @@ uydurma imza / yapay zekâ cevapları · çevrimdışı göstergenin elle açıl
 
 ---
 
-**Hazır mıyız:** kural tarafı ve yapım haritası hazır. Başlamak için **G0** (maketlerin toplu onayı) ve **G1** (geçmiş tarihe plan) cevapları yeter;
+**Hazır mıyız:** kural tarafı ve yapım haritası hazır. **G0** ve **G1** kabul edildi (2026-10-03); reisim "başlayalım" dediğinde
 ilk kalem **K0 Hazırlık** (paket seçimleri + ortak bileşenler).

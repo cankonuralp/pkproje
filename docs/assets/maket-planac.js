@@ -157,7 +157,8 @@
   function bagimliCiz(odak) {
     var t = F.tesis ? MV.tesis(F.tesis) : null, k = t ? kapsam() : [];
     /* bölüm 3: adaylar; durum hücreleri aynı hesabı paylaşır */
-    $("p-soz-uyari").innerHTML = sozUyari(t, tarihIso(F.tarih));
+    var g0 = tarihIso(F.tarih);
+    $("p-soz-uyari").innerHTML = (g0 && g0 < MK.BUGUN ? '<div class="a-uyari-serit a-bolum-serit">' + MK.serit("uyari", "triangle-alert", "Plan günü geçmiş bir tarih: " + MK.gunYaz(g0) + ".") + "</div>" : "") + sozUyari(t, g0);
     var D = {}; adaylar().forEach(function (p) { D[p.id] = adayDurum(p); });
     var sutun = ADAY_SUTUN.map(function (s) { return Object.assign({}, s, { hucre: function (p) { return s.hucre(p, D[p.id]); } }); });
     $("p-aday-kap").innerHTML = !t ? '<p class="a-bos-satir">Önce tesis seçin.</p>'
@@ -221,7 +222,8 @@
     if (!F.musteri) h.musteri = "Müşteri seçilmeli.";
     if (!F.tesis) h.tesis = "Tesis seçilmeli.";
     if (!gun) h.tarih = "GG.AA.YYYY biçiminde geçerli bir tarih.";
-    else if (gun < MK.BUGUN) h.tarih = "Geçmiş tarihe plan açılmaz.";
+    /* G1 (2026-10-03, reisim: "2 önerinide kabul ediyorum"): geçmiş tarihe plan açılır — engel değil, şeritte uyarı (sahada yapılmış iş
+       sonradan girilebilsin; rapor da geçmiş güne açık, §11 239–240) */
     var bit = tarihIso(F.bitTarih);
     if (!bit) h.bitTarih = "GG.AA.YYYY biçiminde geçerli bir tarih.";
     else if (gun && bit < gun) h.bitTarih = "Bitiş başlangıçtan önce olamaz.";
