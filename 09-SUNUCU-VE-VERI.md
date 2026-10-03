@@ -21,6 +21,9 @@
 **A1 · Depo kapalıdır.** Herkese açık okuma yok, listeleme yok. Nesne anahtarı tek üreticiden: `firma/{firma_id}/{modül}/{kayıt_id}/{dosya_id}`;
 anahtarda kişi adı, dosya adı, rapor no gibi okunur bilgi yok (ANAYASA 5.8). Dosyanın görünen adı veritabanında.
 Kilit: anonim istek 403 · anahtar üreticisi dışında anahtar birleştiren kod yok (tarama).
+**İstisna (2026-10-03, reisim: "evet okunur olsun"):** firmanın kendi deposunda **yalnız `arsiv/` altı okunur** — `arsiv/raporlar/YIL/Müşteri ünvanı/RaporNo[-Rn].pdf`,
+`arsiv/yedek/…` (firma arşivini kendi aracıyla açıp bulur). Bu yollar da tek üreticiden çıkar; ünvandaki `/` ve denetim karakterleri temizlenir. `calisma/` ve öteki
+dosyalar yukarıdaki gibi okunmaz kimlikle.
 
 **A2 · Tek indirme ucu.** Her dosya `GET /api/dosya/{dosya_id}` üzerinden. Sunucu oturumdan kullanıcıyı ve kiracıyı alır, dosyanın bağlı olduğu
 kaydı **RLS altında** okur (ör. müşteri yalnız kendi tesisinin tamamlanmış, son sürüm raporunun fotoğrafı), sonra dosyayı akıtır ya da
