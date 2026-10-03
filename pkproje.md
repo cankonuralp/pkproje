@@ -2327,6 +2327,10 @@ revizyon, alan kopyalama, hafif kusur devri, meslek eşleşme denetimi).
 - Emsal ürünler: https://opwire.app/iso-17020-periyodik-kontrol-yazilimi/ · https://17020muayene.vidco.com.tr/ · https://akuple.com/asansor-kontrol-yazilimi/ · https://ensyazilim.com/
 
 ## 11 · Değişiklik günlüğü
+- 2026-10-03 (268): **Pages önizlemesinde önbellek: betik ve stil adreslerine yayın sürümü** (reisim: *"açtım zaten ama hala sadece rapor ekranında
+  çıkıyor"* · *"saat 17.53 sen ne anlatıyosun"*). Neden: yeni S.A.Y 17:52'de (Türkiye) yayına çıkmıştı, tarayıcı eski betikleri önbellekten okuyordu
+  (adres aynı). `scripts/onizleme.ts` yayın kopyasındaki maket sayfalarında `assets/*.js|css` adreslerine `?v=<commit>` ekler; docs/ değişmez.
+  Doğrulandı: site/ derlemesinde Onaylar'da S.A.Y düğmesi sürümlü betikten yükleniyor.
 - 2026-10-03 (267): **Yapılmayan istek taraması + son durum sunumu** (§9 elli ikinci tur; reisim: *"söylediğim her şeyi yap söyleyipte yapmadıın
   şeyler de olmuş bi maket turu at bana sunum yap son durumu"* · *"bitince sunum yap"*). §9 kırk üçüncü – elli ikinci tur tek tek tarandı: istenip
   yapılmayan kalmadı (AA6 dahil hepsi §11'de). Açık: araç tutanağının kalem / açı soruları, öteki türlerin rapor formatı PDF'leri (reisim'den);
