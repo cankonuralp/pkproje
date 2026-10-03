@@ -2238,6 +2238,8 @@ revizyon, alan kopyalama, hafif kusur devri, meslek eşleşme denetimi).
 - Emsal ürünler: https://opwire.app/iso-17020-periyodik-kontrol-yazilimi/ · https://17020muayene.vidco.com.tr/ · https://akuple.com/asansor-kontrol-yazilimi/ · https://ensyazilim.com/
 
 ## 11 · Değişiklik günlüğü
+- 2026-10-03 (243): **S.A.Y tuşu iri** (§9 elli ikinci tur ara mesajı). Masaüstünde 104×40 px (önce 84×34), yazı 15 px kalın, simge 20 px;
+  telefonda adıyla görünür (önce yalnız simge), 96×44 px, İşlemler yanında kalan genişlikte.
 - 2026-10-03 (242): **Araç ekle / düzenle + Araç bilgileri** (§9 elli ikinci tur ara mesajları). Araçlar listesinde "Araç ekle", araç sayfasında
   "Düzenle" (yalnız yönetici; sürücü görünümünde yok). Alanlar: plaka (zorunlu, eşsiz — aynı plaka ikinci kez açılmaz, engel), araç türü, marka, model,
   model yılı, yakıt (zorunlu); kayıt anındaki kilometre (yalnız eklerken; haftalık km ondan küçük yazılamaz), sonraki bakım km, muayene / trafik

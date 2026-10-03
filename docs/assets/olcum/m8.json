@@ -1,7 +1,7 @@
 {
  "maket": "m8",
  "sayfa": "maket/rapor.html",
- "tarih": "2026-10-02",
+ "tarih": "2026-10-03",
  "arac": "başsız HeadlessChrome/141.0.7390.37 · puppeteer-core · tools/olc-bulut.mjs + tools/olc-maket.js",
  "yontem": "python3 http.server (docs/), her durum × genişlik × tema taze yükleme ve ayrı oturum, geçişler kapalı; 1920×1080 · 1080×810 · 375×812 × açık/koyu; 1080'de çekmece açık ayrıca.",
  "toplam": 224,
@@ -1206,7 +1206,7 @@
    "eksikIkon": 0,
    "tusY": 44,
    "tusGen": [
-    42,
+    44,
     351
    ],
    "satirY": 243,
@@ -1244,7 +1244,7 @@
    "eksikIkon": 0,
    "tusY": 44,
    "tusGen": [
-    42,
+    44,
     351
    ],
    "satirY": 243,
@@ -1510,7 +1510,7 @@
    "eksikIkon": 0,
    "tusY": 44,
    "tusGen": [
-    42,
+    44,
     351
    ],
    "satirY": 243,
@@ -1548,7 +1548,7 @@
    "eksikIkon": 0,
    "tusY": 44,
    "tusGen": [
-    42,
+    44,
     351
    ],
    "satirY": 243,
@@ -7590,7 +7590,7 @@
    "eksikIkon": 0,
    "tusY": 44,
    "tusGen": [
-    42,
+    44,
     351
    ],
    "satirY": 243,
@@ -7628,7 +7628,7 @@
    "eksikIkon": 0,
    "tusY": 44,
    "tusGen": [
-    42,
+    44,
     351
    ],
    "satirY": 243,
@@ -7894,7 +7894,7 @@
    "eksikIkon": 0,
    "tusY": 44,
    "tusGen": [
-    42,
+    44,
     351
    ],
    "satirY": 243,
@@ -7932,7 +7932,7 @@
    "eksikIkon": 0,
    "tusY": 44,
    "tusGen": [
-    42,
+    44,
     351
    ],
    "satirY": 243,
@@ -8198,7 +8198,7 @@
    "eksikIkon": 0,
    "tusY": 44,
    "tusGen": [
-    42,
+    44,
     351
    ],
    "satirY": null,
@@ -8236,7 +8236,7 @@
    "eksikIkon": 0,
    "tusY": 44,
    "tusGen": [
-    42,
+    44,
     351
    ],
    "satirY": null,

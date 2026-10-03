@@ -977,7 +977,9 @@ a.a-yuz:hover { border-color: var(--kenar-alan); background: var(--zemin); }
 .a-oneri-sag { display: flex; align-items: center; gap: 8px; margin-left: auto; white-space: nowrap; }   /* değer + rozet (+ Uygula) birlikte; sığmazsa alt satıra, sağa */
 .a-oneri-tuslar { display: flex; justify-content: flex-end; flex-wrap: wrap; gap: 8px; margin-top: 10px; }
 /* S.A.Y (Z2, 2026-10-02): düğme eylem çubuğunun solunda; panel masaüstü / tablette sağda yan pencere (üst çubuğun altında), telefonda tam ekran */
-.a-rapor-eylem .a-say-ac { margin-right: auto; }
+/* 2026-10-03 (reisim: "S.A.Y tuşu biraz daha büyük olsun"): öteki tuşlardan iri — yazı bölüm boyunda kalın, simge 20 px, yükseklik 40 */
+.a-rapor-eylem .a-say-ac { margin-right: auto; min-height: 40px; padding: 0 18px; gap: 8px; font-size: var(--boy-bolum); font-weight: 700; }
+.a-rapor-eylem .a-say-ac .a-ikon { width: 20px; height: 20px; }
 .a-say {
   position: fixed; right: 16px; top: calc(var(--ust-y) + 16px); bottom: 16px; z-index: 70; width: min(420px, calc(100vw - 32px));
   display: flex; flex-direction: column; background: var(--kart); border: 1px solid var(--kenar); border-radius: var(--r-buyuk); box-shadow: var(--golge-2);
@@ -1346,8 +1348,7 @@ a.a-yuz:hover { border-color: var(--kenar-alan); background: var(--zemin); }
   .a-rapor-eylem { bottom: calc(8px + env(safe-area-inset-bottom)); gap: 8px; }
   .a-rapor-eylem .a-tus { flex: 1 1 0; }
   .a-rapor-eylem > .a-rapor-tus { display: none; }
-  .a-rapor-eylem .a-say-ac { flex: none; }
-  .a-say-ac .a-say-yazi { display: none; }   /* telefonda yalnız simge (adı aria-label'da); İşlemler tam satır kalır */
+  .a-rapor-eylem .a-say-ac { flex: none; padding: 0 14px; }   /* 2026-10-03: telefonda da adıyla (önce yalnız simge); İşlemler kalan genişlikte */
   .a-say { inset: 0; width: auto; border: 0; border-radius: 0; z-index: 80; }
   .a-rapor-islemler { display: flex; flex: 1 1 auto; }
   .a-rapor-islemler > .a-tus { width: 100%; }
