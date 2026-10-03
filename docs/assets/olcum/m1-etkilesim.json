@@ -2,8 +2,8 @@
  "maket": "m1",
  "tarih": "2026-10-03",
  "arac": "tools/olc-bulut.mjs --etkilesim (başsız tarayıcı, 1920 açık tema; gen verilen denemede o genişlik)",
- "toplam": 123,
- "gecen": 123,
+ "toplam": 126,
+ "gecen": 126,
  "denemeler": [
   {
    "ad": "AA3: Personel › bordro Onaya gönder → kişinin Onaylar › Diğer belgelerine düşer, satırda Onay bekliyor",
@@ -864,6 +864,27 @@
    "gen": 1920,
    "sayfa": "maket/yonetim.html",
    "hash": "#/f/f2",
+   "gecti": true
+  },
+  {
+   "ad": "Depolama: kendi depo — boş form 4 hata; kovada erişim reddi; doğru bilgiyle bağlanır (AB), yedek yeri sizin deponuz, gizli anahtar saklanmaz",
+   "gen": 1920,
+   "sayfa": "maket/firma-ayarlari.html",
+   "hash": "#/",
+   "gecti": true
+  },
+  {
+   "ad": "Yedek: sıklık Saatlik taslakta (Kaydet çıkar) → Kaydet: sonraki yedek 17:00; Şimdi yedekle listeye Elle satırı; İndir ZIP",
+   "gen": 1920,
+   "sayfa": "maket/firma-ayarlari.html",
+   "hash": "#/",
+   "gecti": true
+  },
+  {
+   "ad": "Depolama: bağlantıyı kes onay sorar → probata deposuna döner",
+   "gen": 1920,
+   "sayfa": "maket/firma-ayarlari.html",
+   "hash": "#/",
    "gecti": true
   }
  ]

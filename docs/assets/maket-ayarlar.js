@@ -120,7 +120,7 @@
             MK.alan({ id: "ay-sg-not-" + i, etiket: "Not", girdi: MK.girdi({ id: "ay-sg-not-" + i, deger: x.not || "", ek: ' data-sg-not="' + i + '" maxlength="80"' }) }) +
             MK.tus({ eylem: "sg-sil", ad: "Kaldır", ikon: "x", sinif: "a-tus-ikincil a-kalem-sil", veri: { i: i } }) + "</div>";
         }).join("") +
-        '<div class="a-eylem-cubugu a-bolum-serit">' + MK.tus({ eylem: "sg-ekle", ad: "Sabit gider ekle", ikon: "plus", sinif: "a-tus-ikincil" }) + "</div></section>" + bulutCiz() + yzCiz() + personelBelgeCiz() + iceCiz() + disaCiz();
+        '<div class="a-eylem-cubugu a-bolum-serit">' + MK.tus({ eylem: "sg-ekle", ad: "Sabit gider ekle", ikon: "plus", sinif: "a-tus-ikincil" }) + "</div></section>" + depoCiz() + bulutCiz() + yzCiz() + personelBelgeCiz() + iceCiz() + disaCiz();
   }
 
   X["sg-ekle"] = function () {
@@ -286,6 +286,108 @@
       if (TS["a-b-mbelge"]) delete TS["a-b-mbelge"]['input[data-mbelge="' + k + '"]'];
       ayarCiz(); document.querySelector('[data-eylem="bt-ac"]').focus(); MK.bildir(x.ad + " kaldırıldı.");
     } });
+  };
+  /* ── DEPOLAMA VE YEDEK (2026-10-03, KOD-GECIS G2 + G3; reisim: "yedekleme işlemi de ayarlardan belirlenebilir olaun saatlik günlük gb. Arşiv için
+     ekstra bulut bağlamak isterse yine ayarlardan bağlayabilsin" · "Evet başla"): veritabanı Supabase'de (AB); fotoğraf ve PDF'ler başlangıçta
+     probata deposunda, firma isterse KENDİ S3 uyumlu deposunu bağlar (yer ve ücret firmanın; dosyalar oradan kısa ömürlü bağlantıyla iner).
+     Yedek: sıklık (kapalı / saatlik / günlük / haftalık), saat, saklama süresi; yer firmanın deposu (bağlı değilse probata deposunda en çok 7 gün).
+     probata ayrıca bütün veritabanını yedekler (felaket kurtarma). Makette bağlantı taklit: kova adında "hata" geçerse erişim reddedilir. ─── */
+  var DEPO_YER = [["tr", "Türkiye"], ["ab", "Avrupa Birliği"], ["diger", "Başka ülke"]];
+  var YEDEK_SIK = [["kapali", "Kapalı"], ["saatlik", "Saatlik"], ["gunluk", "Günlük"], ["haftalik", "Haftalık (Pazartesi)"]];
+  var YEDEK_GUN = [7, 14, 30, 90, 365];
+  var DP = { ac: false, hata: {}, yer: "tr" };   /* kendi depo bağlama formu (taslağa girmez: kendi tuşu var) */
+  var gunEkle = function (g, n) { var d = new Date(g + "T12:00:00"); d.setDate(d.getDate() + n); return d.getFullYear() + "-" + ("0" + (d.getMonth() + 1)).slice(-2) + "-" + ("0" + d.getDate()).slice(-2); };
+  var depo = function () { return MV.FIRMA.depo || { tur: "probata" }; };
+  function yedek() {
+    var y = Object.assign({ sik: "gunluk", saat: "03", gun: 30 }, MV.FIRMA.yedek || {});
+    if (!y.kayitlar) y.kayitlar = [0, 1, 2].map(function (i) { return { zaman: gunEkle(MK.BUGUN, -i) + "T03:00", tur: "oto", mb: 46 - i, yer: "probata" }; });
+    return y;
+  }
+  var yedekYaz = function (d) { MV.FIRMA.yedek = Object.assign(yedek(), d); };
+  function sonrakiYedek(y) {
+    var simdi = MK.simdi(), g = MK.BUGUN;
+    if (y.sik === "kapali") return "";
+    if (y.sik === "saatlik") { var s = +MK.SAAT.slice(0, 2) + 1; return s > 23 ? gunEkle(g, 1) + "T00:00" : g + "T" + ("0" + s).slice(-2) + ":00"; }
+    if (y.sik === "gunluk") { var t = g + "T" + y.saat + ":00"; return t > simdi ? t : gunEkle(g, 1) + "T" + y.saat + ":00"; }
+    var gun = (8 - new Date(g + "T12:00:00").getDay()) % 7, h = gunEkle(g, gun) + "T" + y.saat + ":00";   /* Pazartesi */
+    return h > simdi ? h : gunEkle(g, gun + 7) + "T" + y.saat + ":00";
+  }
+  var mbYaz = function (mb) { return mb >= 1024 ? (mb / 1024).toLocaleString("tr-TR", { maximumFractionDigits: 1 }) + " GB" : mb + " MB"; };
+  var yerAd = function (x) { return x === "probata" ? "probata deposu" : "Sizin deponuz"; };
+  var Y_SUT = [
+    { k: "zaman", baslik: "Zaman", kart: "ust", sira: 1, hucre: function (x) { return MK.zamanYaz(x.zaman); } },
+    { k: "tur", baslik: "Tür", kart: "govde", sira: 2, hucre: function (x) { return '<span class="a-kart-etiket">Tür</span>' + (x.tur === "oto" ? "Otomatik" : "Elle"); } },
+    { k: "boyut", baslik: "Boyut", kart: "govde", sira: 3, hucre: function (x) { return '<span class="a-kart-etiket">Boyut</span><span class="a-sayi">' + mbYaz(x.mb) + "</span>"; } },
+    { k: "yer", baslik: "Yer", kart: "govde", sira: 4, hucre: function (x) { return '<span class="a-kart-etiket">Yer</span>' + yerAd(x.yer); } },
+    { k: "eylem", baslik: "İşlem", gizliBaslik: true, kart: "eylem", sira: 5, hucre: function (x) { return MK.tus({ eylem: "yedek-indir", ad: "İndir", ikon: "download", sinif: "a-tus-ikincil", veri: { zaman: x.zaman } }); } }
+  ];
+  function depoCiz() {
+    var d = depo(), y = yedek(), bagli = d.tur === "kendi", h = DP.hata, son = sonrakiYedek(y);
+    var KUL = { mb: 3277, dosya: 1240, indir: 5939 };   /* uydurma: bu ayın ölçümü (09-B10) */
+    return '<section class="a-bolum a-ayar-genis" aria-labelledby="a-b-depo"><div class="a-alt-bas"><h2 class="a-alt-baslik" id="a-b-depo">Depolama ve yedek</h2>' +
+        '<span class="a-sayac">' + (bagli ? "kendi deponuz" : "probata deposu") + "</span></div>" +
+      '<p class="a-etiket">Dosya deposu (fotoğraf, PDF, belge)</p>' +
+      '<dl class="a-bilgi">' + MK.bilgi("Şu an", bagli ? kacis(d.kova) + '<span class="a-alt-satir">' + kacis(d.uc) + " · " + DEPO_YER.filter(function (x) { return x[0] === d.yer; })[0][1] + "</span>" : "probata deposu (Avrupa Birliği)") +
+        MK.bilgi("Kullanım", '<span class="a-sayi">' + mbYaz(KUL.mb) + "</span> · " + KUL.dosya.toLocaleString("tr-TR") + " dosya") + MK.bilgi("Bu ay indirme", '<span class="a-sayi">' + mbYaz(KUL.indir) + "</span>") +
+        (bagli ? MK.bilgi("Taşıma", ikon("circle-check", "a-ikon-kucuk") + " Mevcut dosyalar taşındı ve doğrulandı", "cift") : "") + "</dl>" +
+      (bagli ? (d.yer === "diger" ? MK.serit("uyari", "triangle-alert", "Deponuz Türkiye ve AB dışında: fotoğraf ve raporlar oraya çıkar (KVKK sorumluluğu firmanın).") : "") +
+          '<div class="a-eylem-cubugu a-eylem-sol">' + MK.tus({ eylem: "depo-kes", ad: "Bağlantıyı kes", ikon: "x", sinif: "a-tus-ikincil" }) + "</div>"
+        : DP.ac ? '<div class="a-depo-form"><div class="a-form">' +
+            MK.alan({ id: "ay-depo-uc", etiket: "Uç adresi", zorunlu: true, hata: h.uc, girdi: MK.girdi({ id: "ay-depo-uc", hata: h.uc, deger: DP.uc, ek: ' maxlength="200" spellcheck="false" autocapitalize="off" inputmode="url" placeholder="https://…"' }) }) +
+            MK.alan({ id: "ay-depo-kova", etiket: "Kova (bucket) adı", zorunlu: true, hata: h.kova, girdi: MK.girdi({ id: "ay-depo-kova", hata: h.kova, deger: DP.kova, ek: ' maxlength="63" spellcheck="false" autocapitalize="off"' }) }) +
+            MK.alan({ id: "ay-depo-erisim", etiket: "Erişim anahtarı", zorunlu: true, hata: h.erisim, girdi: MK.girdi({ id: "ay-depo-erisim", hata: h.erisim, deger: DP.erisim, ek: ' maxlength="128" spellcheck="false" autocapitalize="off"' }) }) +
+            MK.alan({ id: "ay-depo-gizli", etiket: "Gizli anahtar", zorunlu: true, hata: h.gizli, girdi: '<input class="a-girdi" id="ay-depo-gizli" type="password" autocomplete="off" maxlength="200" aria-describedby="ay-depo-gizli-ipucu"' + (h.gizli ? ' aria-invalid="true"' : "") + ">" }) +
+            '<div class="a-alan-grup"><label class="a-etiket" for="ay-depo-yer">Depo nerede</label>' + MK.secim({ id: "ay-depo-yer", ad: "Depo nerede", deger: DP.yer, secenekler: DEPO_YER }) + "</div></div>" +
+            (DP.yer === "diger" ? MK.serit("uyari", "triangle-alert", "Türkiye ve AB dışında: fotoğraf ve raporlar oraya çıkar (KVKK sorumluluğu firmanın).") : "") +
+            (h.baglanti ? MK.serit("hata", "circle-x", h.baglanti) : "") +
+            '<div class="a-eylem-cubugu a-eylem-sol">' + MK.tus({ eylem: "depo-bagla", ad: "Bağlan ve dene", ikon: "log-in" }) + MK.tus({ eylem: "depo-vazgec", ad: "Vazgeç", sinif: "a-tus-ikincil" }) + "</div></div>"
+          : '<div class="a-eylem-cubugu a-eylem-sol">' + MK.tus({ eylem: "depo-ac", ad: "Kendi depomuzu bağla", ikon: "cloud-upload", sinif: "a-tus-ikincil" }) + "</div>") +
+      '<p class="a-etiket a-disa-gecmis-bas">Yedek</p><div class="a-form a-ayar-yedek">' +
+        '<div class="a-alan-grup"><label class="a-etiket" for="ay-yedek-sik">Sıklık</label>' + MK.secim({ id: "ay-yedek-sik", ad: "Yedek sıklığı", deger: y.sik, secenekler: YEDEK_SIK }) + "</div>" +
+        '<div class="a-alan-grup"><label class="a-etiket" for="ay-yedek-saat">Saat (günlük, haftalık)</label>' + MK.secim({ id: "ay-yedek-saat", ad: "Yedek saati", deger: y.saat, secenekler: Array.apply(null, Array(24)).map(function (x, i) { var s = ("0" + i).slice(-2); return [s, s + ":00"]; }) }) + "</div>" +
+        '<div class="a-alan-grup"><label class="a-etiket" for="ay-yedek-gun">Saklama</label>' + MK.secim({ id: "ay-yedek-gun", ad: "Yedek saklama süresi", deger: String(y.gun), secenekler: YEDEK_GUN.map(function (g) { return [String(g), g + " gün"]; }) }) + "</div></div>" +
+      '<dl class="a-bilgi">' + MK.bilgi("Yedek yeri", bagli ? "Sizin deponuz · " + kacis(d.kova) + "/yedek/" : "probata deposu (en çok 7 gün)") + MK.bilgi("Sonraki yedek", son ? MK.zamanYaz(son) : '<span class="a-deger-yok">Kapalı</span>') + "</dl>" +
+      (bagli ? "" : MK.serit("uyari", "triangle-alert", "Kendi deponuz bağlı değil: yedekleriniz probata deposunda en çok 7 gün tutulur. Daha uzun saklama için deponuzu bağlayın ya da yedeği indirin.")) +
+      '<div class="a-eylem-cubugu a-eylem-sol">' + MK.tus({ eylem: "yedek-simdi", ad: "Şimdi yedekle", ikon: "archive", sinif: "a-tus-ikincil" }) + "</div>" +
+      '<p class="a-etiket a-disa-gecmis-bas">Son yedekler</p>' +
+      (y.kayitlar.length ? '<div class="a-liste-kap" id="a-yedek-liste">' + MK.tablo({ baslik: "Son yedekler", sinif: "a-tablo-yedek", sutunlar: Y_SUT, kayitlar: y.kayitlar.slice(0, 5) }) + "</div>"
+        : '<p class="a-bos-satir">Henüz yedek yok.</p>') +
+      '<p class="a-ipucu">probata ayrıca bütün veritabanını her gün yedekler (sunucu arızasına karşı); sizin yedekleriniz buna ek.</p></section>';
+  }
+  document.addEventListener("input", function (e) { var m = /^ay-depo-(uc|kova|erisim)$/.exec(e.target.id || ""); if (m) DP[m[1]] = e.target.value; });   /* yeniden çizimde yazılan kalır (gizli anahtar hariç) */
+  X["depo-ac"] = function () { DP = { ac: true, hata: {}, yer: "tr" }; ayarCiz(); $("ay-depo-uc").focus(); };
+  X["depo-vazgec"] = function () { DP.ac = false; DP.hata = {}; ayarCiz(); document.querySelector('[data-eylem="depo-ac"]').focus(); };
+  X["depo-bagla"] = function () {
+    var h = {}, uc = ($("ay-depo-uc").value || "").trim(), kova = ($("ay-depo-kova").value || "").trim(), er = ($("ay-depo-erisim").value || "").trim(), gz = $("ay-depo-gizli").value || "";
+    if (!uc) h.uc = "Uç adresi yazılmalı."; else if (!/^https:\/\/[^\s/]+\.[^\s/]+/.test(uc)) h.uc = "https:// ile başlayan bir adres olmalı.";
+    if (!kova) h.kova = "Kova adı yazılmalı."; else if (!/^[a-z0-9][a-z0-9.-]{1,61}[a-z0-9]$/.test(kova)) h.kova = "3–63 karakter; küçük harf, rakam, nokta ve tire.";
+    if (!er) h.erisim = "Erişim anahtarı yazılmalı.";
+    if (!gz) h.gizli = "Gizli anahtar yazılmalı.";
+    DP.uc = uc; DP.kova = kova; DP.erisim = er;
+    if (!Object.keys(h).length && /hata/.test(kova)) h.baglanti = "Bağlanılamadı: depo erişimi reddetti. Anahtarların bu kovaya yazma izni olduğunu kontrol edin.";   /* maket */
+    DP.hata = h;
+    var ilk = ["uc", "kova", "erisim", "gizli"].filter(function (k) { return h[k]; })[0];
+    if (ilk || h.baglanti) { ayarCiz(); $(ilk ? "ay-depo-" + ilk : "ay-depo-uc").focus(); return; }
+    gz = "";   /* gizli anahtar şifreli saklanır, bir daha gösterilmez (makette tutulmaz) */
+    MV.FIRMA.depo = { tur: "kendi", uc: uc, kova: kova, yer: DP.yer, anahtar: "…" + er.slice(-4), bagli: MK.simdi() };
+    DP = { ac: false, hata: {}, yer: "tr" }; ayarCiz();
+    document.querySelector('[data-eylem="depo-kes"]').focus();
+    MK.bildir("Deponuz bağlandı. Mevcut dosyalar arka planda taşınıyor; doğrulanınca probata deposundan silinir.");
+  };
+  X["depo-kes"] = function () {
+    MK.onayla({ baslik: "Depo bağlantısı kesilsin mi?", metin: "Dosyalarınız önce probata deposuna geri taşınır, sonra bağlantı kesilir. Sizin deponuzdaki kopyalar silinmez.", tus: "Bağlantıyı kes", tamam: function () {
+      delete MV.FIRMA.depo; ayarCiz(); document.querySelector('[data-eylem="depo-ac"]').focus(); MK.bildir("Depo bağlantısı kesildi; dosyalar probata deposuna taşınıyor.");
+    } });
+  };
+  X["yedek-simdi"] = function () {
+    var y = yedek(), k = { zaman: MK.simdi(), tur: "elle", mb: 47, yer: depo().tur === "kendi" ? "kendi" : "probata" };
+    yedekYaz({ kayitlar: [k].concat(y.kayitlar) }); ayarCiz(); document.querySelector('[data-eylem="yedek-simdi"]').focus();
+    MK.bildir("Yedek alındı: " + MK.zamanYaz(k.zaman) + " · " + yerAd(k.yer) + ".");
+  };
+  X["yedek-indir"] = function (el) {
+    var z = el.dataset.zaman, ad = "probata-" + MV.firmaKodu().toLocaleLowerCase("tr") + "-yedek-" + z.replace("T", "-").replace(":", "") + ".zip";
+    MK.indir(ad, MK.zip([["OKUBENI.txt", "probata · " + MV.FIRMA.ad + " · yedek " + MK.zamanYaz(z) + "\r\nUygulamada veritabanı dökümü ve dosya listesi bu pakette (makette örnek).\r\n"]]));
+    MK.bildir("Yedek indiriliyor: " + ad);
   };
   var bulutYaz = function (d) { MV.FIRMA.bulut = Object.assign({}, MV.FIRMA.bulut, d); };
   X["bulut-bagla"] = function () {
@@ -627,6 +729,9 @@
     var m;
     if (id === "ay-bulut-s") { bulutYaz({ saglayici: deger, bagli: false, hesap: "" }); ayarCiz(); $(id).focus(); MK.bildir("Bulut: " + MV.BULUT_SAGLAYICI.filter(function (x) { return x[0] === deger; })[0][1] + "; hesabı bağlayın."); return; }
     if (id === "ay-bulut-d") { bulutYaz({ duzen: deger }); ayarCiz(); $(id).focus(); MK.bildir("Klasör düzeni: " + MV.BULUT_DUZEN.filter(function (x) { return x[0] === deger; })[0][1] + "."); return; }
+    if (id === "ay-yedek-sik") { yedekYaz({ sik: deger }); ayarCiz(); $(id).focus(); MK.bildir("Yedek: " + YEDEK_SIK.filter(function (x) { return x[0] === deger; })[0][1].toLocaleLowerCase("tr") + "."); return; }
+    if (id === "ay-yedek-saat") { yedekYaz({ saat: deger }); ayarCiz(); $(id).focus(); MK.bildir("Yedek saati " + deger + ":00."); return; }
+    if (id === "ay-yedek-gun") { yedekYaz({ gun: +deger }); ayarCiz(); $(id).focus(); MK.bildir("Yedekler " + deger + " gün saklanır."); return; }
     if (id === "ay-nusha") { MV.FIRMA.nusha = +deger; ayarCiz(); $(id).focus(); MK.bildir("Rapor nüsha sayısı " + deger + "."); return; }
     if (id === "ay-yil") { var sk0 = MV.saklama(); MV.FIRMA.saklama = { yontem: sk0.yontem, yer: sk0.yer, yil: +deger }; ayarCiz(); $(id).focus(); MK.bildir("Saklama süresi " + deger + " yıl."); return; }   /* 5 taban: listede 5'ten kısa yok */
     if ((m = /^ay-esik-(\w+)$/.exec(id))) {
@@ -709,7 +814,7 @@
      taslak alanlara geri yazılır. Aç / kapa ile alan açan seçimler (yapay zekâ, mesai, arşiv) taslakta da alanlarını gösterir.
      Taslağa girmeyenler: dışa aktarılacak bölüm seçimi (Dışa aktar tuşu var), API anahtarı (kendi tuşu var), eylem tuşları. ─────── */
   var TS = {};
-  var muaf = function (t) { return t.dataset.disa != null || t.id === "ay-yz-anahtar" || !!t.closest(".a-belge-ekle") || !t.closest("#a-ayarlar"); };
+  var muaf = function (t) { return t.dataset.disa != null || t.id === "ay-yz-anahtar" || !!t.closest(".a-belge-ekle") || !!t.closest(".a-depo-form") || !t.closest("#a-ayarlar"); };
   var YENIDEN = ["data-yz-acik", "data-mesai-acik", "data-saklama"];   /* alan açıp kapatan seçimler: taslakta da yeniden çizilir */
   function secici(t) {
     if (t.type === "radio") return 'input[name="' + t.name + '"]';
@@ -768,6 +873,7 @@
     var b = el.dataset.bolum; delete TS[b]; ayarCiz(); baslikOdak(b); MK.bildir($(b).textContent + ": değişiklikler geri alındı.");
   };
   MK.onSecim = function (id, deger) {
+    if (id === "ay-depo-yer") { DP.yer = deger; ["uc", "kova", "erisim"].forEach(function (k) { var e = $("ay-depo-" + k); if (e) DP[k] = e.value; }); ayarCiz(); $(id).focus(); return; }   /* bağlama formu: taslağa girmez */
     if (id === "ay-ia-tur") { IA.tur = deger; IA.dosya = ""; IA.satirlar = []; iaYenile("#ay-ia-tur"); return; }   /* içe aktarma türü: bölüm kaydı değil */
     var tus = $(id), sec = tus && tus.closest("#a-ayarlar section.a-bolum"); if (!sec) return;
     var b = sec.getAttribute("aria-labelledby"); (TS[b] = TS[b] || {})["secim:" + id] = { tip: "secim", id: id, deger: deger };

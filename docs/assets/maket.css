@@ -1104,6 +1104,10 @@ a.a-yuz:hover { border-color: var(--kenar-alan); background: var(--zemin); }
 /* müşteri paneli: muayene firmasının logosu yeri (reisim 112, 2026-09-26) */
 .a-ust-firma-logo { display: inline-flex; align-items: center; justify-content: center; flex: none; width: 64px; height: 32px; border: 1px dashed var(--kenar);
   border-radius: 6px; color: var(--yazi2); font-size: var(--boy-etiket); font-weight: 600; }
+/* Firma ayarları › Depolama ve yedek (2026-10-03, G2 + G3) */
+.a-tablo-yedek .a-k-zaman { width: 24%; } .a-tablo-yedek .a-k-tur { width: 14%; } .a-tablo-yedek .a-k-boyut { width: 14%; }
+.a-tablo-yedek .a-k-yer { width: 26%; } .a-tablo-yedek .a-k-eylem { width: 22%; }
+.a-depo-form { margin: 12px 0 0; } .a-ayar-yedek { margin: 0 0 12px; }
 /* probata yönetim (2026-10-03): firma listesi + firma sayfasındaki "sonrası" adımları */
 .a-tablo-yfirma .a-k-firma { width: 40%; } .a-tablo-yfirma .a-k-kod { width: 12%; } .a-tablo-yfirma .a-k-durum { width: 18%; }
 .a-tablo-yfirma .a-k-acilis { width: 16%; } .a-tablo-yfirma .a-k-kullanici { width: 14%; }
@@ -1460,7 +1464,7 @@ a.a-yuz:hover { border-color: var(--kenar-alan); background: var(--zemin); }
   .a-tablo-fkalem td[data-kart="govde"], .a-tablo-perf td[data-kart="govde"], .a-tablo-gunluk td[data-kart="govde"]:has(.a-kart-etiket),
   .a-tablo-egitim td[data-kart="govde"]:has(.a-kart-etiket), .a-tablo-egitimtur td[data-kart="govde"],
   .a-tablo-gider td[data-kart="govde"]:has(.a-kart-etiket), .a-tablo-isgider td[data-kart="govde"]:has(.a-kart-etiket),
-  .a-tablo-bordro td[data-kart="govde"], .a-tablo-arac td[data-kart="govde"], .a-tablo-yfirma td[data-kart="govde"], .a-tablo-tutanak td[data-kart="govde"], .a-tablo-kmhafta td[data-kart="govde"],
+  .a-tablo-bordro td[data-kart="govde"], .a-tablo-arac td[data-kart="govde"], .a-tablo-yfirma td[data-kart="govde"], .a-tablo-yedek td[data-kart="govde"], .a-tablo-tutanak td[data-kart="govde"], .a-tablo-kmhafta td[data-kart="govde"],
   .a-tablo-karlilik td[data-kart="govde"]:has(.a-kart-etiket), .a-tablo-iskar td[data-kart="govde"]:has(.a-kart-etiket),
   .a-tablo-kriterbelge td[data-kart="govde"]:has(.a-kart-etiket) { display: flex; align-items: center; justify-content: space-between; gap: 8px; }
   .a-tablo-matris .a-kart-etiket, .a-tablo-yetkinlik .a-kart-etiket, .a-tablo-isgid .a-kart-etiket,

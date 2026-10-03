@@ -2252,6 +2252,7 @@ ve aynı kodumuz çalışır, firma farkı görmez; fark kurulum / bakımın kim
 benzetmesi). İkisi de PostgreSQL olduğu için sonradan biri ötekine taşınabilir. G3 açık.
 Aynı gün (reisim birebir): *"Supabase kullanalım sebebi ise eğer bir sorun olurda kiraladığım server yetersiz gelirse sorun olur ama supabase de öyle bi ihtimal görmüyorum"* → **G3 kabul: Supabase** (§8.8 değişti, §11 253). Not: Supabase'de de sınır var (paket gücü), ama tıkla
 büyütülür, taşıma gerekmez.
+Aynı gün (reisim birebir): *"Evet başla"* → Firma ayarları › **Depolama ve yedek** maketi (§11 254).
 Aynı gün ara mesajlar (reisim birebir): *"Şirket logosuda firma ayarlarından girilsin , raporlara otomatik çekilsin"* (§11 238) · *"Format
 tasarımcısında herhangi bir başlığa tıklayınca en baş arıyor, en başa atmasın başlığı düzenlediğimiz yere odaklansın(telefonda)"* (§11 237).
 
@@ -2292,6 +2293,13 @@ revizyon, alan kopyalama, hafif kusur devri, meslek eşleşme denetimi).
 - Emsal ürünler: https://opwire.app/iso-17020-periyodik-kontrol-yazilimi/ · https://17020muayene.vidco.com.tr/ · https://akuple.com/asansor-kontrol-yazilimi/ · https://ensyazilim.com/
 
 ## 11 · Değişiklik günlüğü
+- 2026-10-03 (254): **Firma ayarları › Depolama ve yedek** (§9 elli ikinci tur; KOD-GECIS G2 + G3). Tam genişlik bölüm: **Dosya deposu** — şu an
+  (probata deposu, AB ya da firmanın kendi deposu), kullanım (GB, dosya sayısı, bu ay indirme; 09-B10), **Kendi depomuzu bağla**: uç adresi, kova,
+  erişim anahtarı, gizli anahtar (bir daha gösterilmez, saklanmaz), depo yeri (Türkiye / AB / başka ülke → KVKK uyarısı); **Bağlan ve dene**
+  (biçim denetimi, erişim reddi söylenir); bağlanınca mevcut dosyalar taşınır ve doğrulanır; **Bağlantıyı kes** onaylı (dosyalar probata deposuna
+  geri taşınır). **Yedek** — sıklık (kapalı / saatlik / günlük / haftalık), saat, saklama (7–365 gün) bölümün Kaydet'iyle; yedek yeri (kendi depo
+  yoksa probata deposunda en çok 7 gün, uyarı), sonraki yedek, **Şimdi yedekle**, son yedekler listesi + **İndir**. probata'nın bütün veritabanı
+  yedeği ayrıca (felaket kurtarma). Makette bağlantı taklit (kova adında "hata" → reddedilir).
 - 2026-10-03 (253): **G3 kabul — Supabase** (§9 elli ikinci tur). §8.8 barındırma değişti (veritabanı + depo Supabase AB, uygulama AB'de hazır
   barındırma); CLAUDE.md §2 ve §8, 09-G3 (veri AB'de; KVKK hukukçu teyidi), KOD-GECIS G2 / G3 güncellendi. Yığın ve tasarım aynı. Kod ve maket değişmedi.
 - 2026-10-03 (252): **Sunucu ↔ Supabase farkı açıklandı** (§9 elli ikinci tur ara mesajı). Kod ve maket değişmedi.

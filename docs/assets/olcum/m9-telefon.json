@@ -8,8 +8,8 @@
   390,
   430
  ],
- "toplam": 148,
- "temiz": 148,
+ "toplam": 156,
+ "temiz": 156,
  "durumlar": [
   {
    "ad": "raporlar · denetçinin listesi + imza şeridi",
@@ -442,6 +442,78 @@
    "disari": [],
    "kucukAlan": [],
    "alan": 4
+  },
+  {
+   "ad": "firma ayarları · depolama ve yedek: kendi depo bağlama formu, hatalı",
+   "gen": 320,
+   "temiz": true,
+   "tasma": 0,
+   "disari": [],
+   "kucukAlan": [],
+   "alan": 49
+  },
+  {
+   "ad": "firma ayarları · depolama ve yedek: kendi depo bağlama formu, hatalı",
+   "gen": 360,
+   "temiz": true,
+   "tasma": 0,
+   "disari": [],
+   "kucukAlan": [],
+   "alan": 49
+  },
+  {
+   "ad": "firma ayarları · depolama ve yedek: kendi depo bağlama formu, hatalı",
+   "gen": 390,
+   "temiz": true,
+   "tasma": 0,
+   "disari": [],
+   "kucukAlan": [],
+   "alan": 49
+  },
+  {
+   "ad": "firma ayarları · depolama ve yedek: kendi depo bağlama formu, hatalı",
+   "gen": 430,
+   "temiz": true,
+   "tasma": 0,
+   "disari": [],
+   "kucukAlan": [],
+   "alan": 49
+  },
+  {
+   "ad": "firma ayarları · depolama ve yedek: kendi depo bağlı, elle yedek",
+   "gen": 320,
+   "temiz": true,
+   "tasma": 0,
+   "disari": [],
+   "kucukAlan": [],
+   "alan": 45
+  },
+  {
+   "ad": "firma ayarları · depolama ve yedek: kendi depo bağlı, elle yedek",
+   "gen": 360,
+   "temiz": true,
+   "tasma": 0,
+   "disari": [],
+   "kucukAlan": [],
+   "alan": 45
+  },
+  {
+   "ad": "firma ayarları · depolama ve yedek: kendi depo bağlı, elle yedek",
+   "gen": 390,
+   "temiz": true,
+   "tasma": 0,
+   "disari": [],
+   "kucukAlan": [],
+   "alan": 45
+  },
+  {
+   "ad": "firma ayarları · depolama ve yedek: kendi depo bağlı, elle yedek",
+   "gen": 430,
+   "temiz": true,
+   "tasma": 0,
+   "disari": [],
+   "kucukAlan": [],
+   "alan": 45
   },
   {
    "ad": "yönetim · firmalar",
