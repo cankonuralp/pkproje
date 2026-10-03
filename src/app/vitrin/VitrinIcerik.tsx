@@ -9,6 +9,7 @@ import { SecimAlani } from "../../components/secim/SecimAlani";
 import { Serit } from "../../components/serit/Serit";
 import { Tus, TusBaglanti } from "../../components/tus/Tus";
 import stil from "./vitrin.module.css";
+import { VitrinBilgi } from "./VitrinBilgi";
 import { VitrinForm } from "./VitrinForm";
 import { VitrinListe } from "./VitrinListe";
 
@@ -55,6 +56,8 @@ export function VitrinIcerik() {
       </section>
 
       <VitrinForm />
+
+      <VitrinBilgi />
 
       <VitrinListe />
 

@@ -2335,6 +2335,12 @@ revizyon, alan kopyalama, hafif kusur devri, meslek eşleşme denetimi).
 - Emsal ürünler: https://opwire.app/iso-17020-periyodik-kontrol-yazilimi/ · https://17020muayene.vidco.com.tr/ · https://akuple.com/asansor-kontrol-yazilimi/ · https://ensyazilim.com/
 
 ## 11 · Değişiklik günlüğü
+- 2026-10-03 (278): **K0 Hazırlık 6: bilgi yüzleri, bilgi listesi, koşul listesi, form sayfası, uzun tuş** — K0'ın ortak bileşenleri tamam (kalıp 20 a, b, d;
+  kalıp 12). Yüz: sayı + not, uyarı notu uyarı renginde, bağlantıysa listeye gider; telefonda iki sütun. Form: bölüm kartları (en az 440 px), iki sütunlu
+  ızgara, alan altında yalnız hata / uyarı / sonuç (girdiye bağlı), telefonda yapışkan tuş çubuğu. Uzun tuş: iş sürerken ikinci basış yok sayılır, dönen
+  simge + adım + 3 sn sonra süre, hata yutulmaz (bildirim). Birim 2/2 + bozan 1/1; uçtan uca 18/18 (bu dosya). §11 277'nin raporlayıcısı ilk koşuda
+  kararsız testi adıyla gösterdi: telefonda sayfalayıcı, "Sayfa 3"e basınca odak tuşta kalmadı (yerelde 4 tam koşunun 1'inde; tek başına 15/15, işlemci
+  yavaşlatmalı 12/12 geçti — kök neden ÖLÇÜLEMEDİ). Test gevşetilmedi; düşerse odağın nerede olduğu mesajda yazar.
 - 2026-10-03 (277): **CI uçtan uca adımı düştü** (reisim: *"Run failed"*) — 28e4689 çalışma dalında uçtan uca adımda düştü, aynı commit main'de geçti;
   yerelde 3 tekrarda 177/177, hata tekrarlanmadı; CI günlüğü dış sunucuda, okunamadı (ölçemedim). En güçlü aday: geliştirme sunucusu sayfayı ilk istekte
   derliyor, yavaş CI'da ilk testin 5 sn beklemesi aşılıyor. Düzeltme: testlerden önce sayfalar bir kez derlenir (`e2e/hazirla.ts`); CI'da düşen test artık

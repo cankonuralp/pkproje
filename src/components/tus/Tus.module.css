@@ -12,3 +12,13 @@
 .ikincil:hover:not(:disabled) { background: var(--zemin2); }
 .tehlike { background: var(--hata-yazi); color: var(--kart); }
 .tus:disabled { opacity: .45; cursor: not-allowed; }
+
+/* UZUN TUŞ (kalıp 12): iş sürerken dönen simge + adım + 3 sn sonra geçen süre; ikinci basış yok sayılır (imleç bekleme) */
+.mesgul { cursor: progress; }
+.donen {
+  width: 14px; height: 14px; flex: none; border-radius: var(--r-tam);
+  border: 2px solid currentColor; border-right-color: transparent; animation: don .8s linear infinite;
+}
+.sure { font-weight: 500; opacity: .8; font-variant-numeric: tabular-nums; }
+@keyframes don { to { transform: rotate(360deg); } }
+@media (prefers-reduced-motion: reduce) { .donen { animation-duration: 2.4s; } }

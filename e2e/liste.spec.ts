@@ -10,6 +10,11 @@ import { expect, test, type Page } from "@playwright/test";
 const liste = (page: Page) => page.locator('section[aria-labelledby="v-liste"]');
 const sayac = (page: Page) => liste(page).locator("[data-sayac]");
 const satirlar = (page: Page) => liste(page).locator("tbody tr");
+/** odaktaki öğe: etiket + erişilebilir ad (gölge DOM içindeyse kökün adı) — teşhis için */
+const odaktaki = (page: Page) => page.evaluate(() => {
+  const e = document.activeElement;
+  return e ? `${e.tagName} ${e.getAttribute("aria-label") ?? e.id ?? ""}`.trim() : "yok";
+});
 
 test.beforeEach(async ({ page }) => {
   await page.goto("/vitrin");
@@ -50,11 +55,12 @@ test("sayfalayıcı: 10'ar, 3 sayfa, odak yeni sayfanın tuşunda", async ({ pag
   await nav.getByRole("button", { name: "Sayfa 3" }).click();
   await expect(nav).toContainText("21–23 / 23");
   await expect(satirlar(page)).toHaveCount(3);
-  await expect(nav.getByRole("button", { name: "Sayfa 3" })).toBeFocused();
+  /* 2026-10-03: tam koşuların birinde (telefon) odak burada kayboldu, yeniden üretilemedi — düşerse odağın nerede olduğu mesajda yazar */
+  await expect.poll(() => odaktaki(page), { message: "odak Sayfa 3 tuşunda değil" }).toBe("BUTTON Sayfa 3");
   await expect(nav.getByRole("button", { name: "Sonraki sayfa" })).toBeDisabled();
   /* "Önceki" ile gelinen sayfada odak o sayfanın tuşunda (yerli tıklama odağı kendiliğinden vermez) */
   await nav.getByRole("button", { name: "Önceki sayfa" }).click();
-  await expect(nav.getByRole("button", { name: "Sayfa 2" })).toBeFocused();
+  await expect.poll(() => odaktaki(page), { message: "odak Sayfa 2 tuşunda değil" }).toBe("BUTTON Sayfa 2");
 });
 
 /* Temizle masaüstünde satırın sağında, telefonda levhada */
