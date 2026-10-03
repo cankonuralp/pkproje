@@ -573,7 +573,7 @@
    "gecti": true
   },
   {
-   "ad": "5 yılı dolan raporlar: varsayılan Sistemde kalsın; Arşiv seçilince yer alanı ve uyarı, yer girilince uyarı kalkar; Silinsin seçilir (sayfalar arası kalıcı)",
+   "ad": "Saklama: seçenek radyoları yok; süre dolunca deponuzdan silinir; 10 yıl kaydedilince depo bölümü 10 yıl der",
    "gen": 1920,
    "sayfa": "maket/firma-ayarlari.html",
    "hash": "#/",

@@ -81,9 +81,11 @@ sorgu kaydı üst sınırlı ve budanır (06); denetim izi silinmez ama sayfalı
 
 ## C · Veri ömrü, arşiv, yedek
 
-**C1 · ANAYASA 4.12'nin bu projedeki hâli** (reisim 2026-09-29, 185): belge / rapor / fotoğraf **kendiliğinden silinmez**. Tek istisna: 5 yılı dolan rapor,
+**C1 · 2026-10-03 değişti (reisim: "2 olsun", KOD-GECIS ENGEL 11):** imzalı rapor PDF'i ve aylık arşiv yedeği firmanın deposunda saklama süresi
+(en az 5 yıl, firma 6–20 yıla uzatabilir) dolunca silinir, 30 gün önce liste; süre dolmadan hiçbir şey silinmez. Aşağıdaki eski metin (sistemde
+kalsın / arşiv / sil seçimi) tarihsel. ~~**C1 · ANAYASA 4.12'nin bu projedeki hâli** (reisim 2026-09-29, 185): belge / rapor / fotoğraf **kendiliğinden silinmez**. Tek istisna: 5 yılı dolan rapor,
 **firma Firma ayarları'nda "Silinsin" seçtiyse** silinir — silinecekler 30 gün önce firma yöneticisine liste olarak gösterilir, silinen çöp kutusuna
-gider ve 30 gün geri alınabilir, her silme denetim izine yazılır. "Bulut arşivine taşınsın" seçildiyse C2. Seçim yoksa rapor sistemde kalır.
+gider ve 30 gün geri alınabilir, her silme denetim izine yazılır. "Bulut arşivine taşınsın" seçildiyse C2. Seçim yoksa rapor sistemde kalır.~~
 
 **C2 · Arşive güvenli taşıma.** Kopyala → arşivdeki nesnenin özetini (SHA-256) kaynakla karşılaştır → künyeyi "arşivde" yap → ancak sonra kaynağı sil.
 Bir adım düşerse kaynak kalır, iş yeniden dener (idempotent), hata görünür. Künye sistemde kalır (rapor no, ekipman, tarih, arşiv yeri); müşteri

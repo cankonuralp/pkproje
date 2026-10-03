@@ -705,14 +705,7 @@
     mobil: { k: "mobil", ad: "Mobil imza", kisa: "mobil imza", etiket: "telefonda PIN, her belge ayrı", acik: "Her belge için telefona imza isteği gelir, PIN telefonda girilir." },
     eimza: { k: "eimza", ad: "E-imza", kisa: "e-imza", etiket: "kart ve imza aracı, tek PIN", acik: "Bilgisayardaki imza aracı açılır, kart PIN'i bir kez girilir; her belge ayrı imzalanır." }
   };
-  /* 5 yıl dolan raporlar (2026-09-29, §9 otuz altıncı tur 185; reisim: "5 yıl sonra silme olmasın firmaya göre belirlediği bulut sisteminde
-     arşive çekilsin isterse istemez ise silinsin" · "isteğe bağlı olsun ister silinsin ister arşivlensin"): firma ayarı. Kendiliğinden silme
-     yok; "Sil" seçilirse silinecekler 30 gün önce listelenir, silinen 30 gün geri alınabilir (185 önerisi). Ayar yoksa (eski kayıt) sistemde kalır. */
-  MV.SAKLAMA = {
-    kalsin: { k: "kalsin", ad: "Sistemde kalsın", etiket: "rapor silinmez, arşive de taşınmaz" },
-    arsiv: { k: "arsiv", ad: "Bulut arşivine taşınsın", etiket: "firmanın belirlediği arşive, sistemden kalkar" },
-    sil: { k: "sil", ad: "Silinsin", etiket: "30 gün önce liste, silinen 30 gün geri alınabilir" }
-  };
+  /* MV.SAKLAMA (kalsın / arşiv / sil) 2026-10-03'te kalktı (reisim: "2 olsun"): yalnız saklama süresi, en az 5 yıl — MV.saklama() */
   /* uyarı eşikleri (202, 2026-09-29): dağınık sabitler Firma ayarları'nda tek yerde; kayıtta yoksa başlangıç değeri. Eşik uyarıdır, engel değil */
   MV.ESIK = {
     kal: { ad: "Kalibrasyon bitişi", etiket: "cihazın kalibrasyonu bu kadar gün kala uyarı", v: 30, secenek: [15, 30, 45, 60, 90] },
@@ -799,7 +792,7 @@
   MV.anahtarIzi = function (v) { return "sk-ant-…" + String(v).slice(-4); };
   MV.YZ_KULLANIM = [{ k: "mk", okuma: 42, mesaj: 118, usd: 17.4 }, { k: "ea", okuma: 57, mesaj: 64, usd: 20.6 }, { k: "bs", okuma: 9, mesaj: 12, usd: 2.3 },
     { k: "hp", okuma: 21, mesaj: 30, usd: 6.9 }, { k: "dk", okuma: 0, mesaj: 3, usd: 0.4 }];
-  MV.saklama = function () { var x = MV.FIRMA.saklama || {}; return { yontem: MV.SAKLAMA[x.yontem] ? x.yontem : "kalsin", yer: x.yer || "", yil: Math.max(5, +x.yil || 5) }; };
+  MV.saklama = function () { var x = MV.FIRMA.saklama || {}; return { yil: Math.max(5, +x.yil || 5) }; };   /* 2026-10-03: yalnız süre (en az 5); süre dolunca depodan silinir */
   /* 201 (2026-09-29): arşive taşınan raporun künyesi sistemde kalır (r.arsiv = { yer, zaman }); dosyası arşivde, müşteri portalından kalkar,
      firma geri getirebilir. Künye ve PDF yeri tek üreticiden. */
   MV.arsivSerit = function (r) {

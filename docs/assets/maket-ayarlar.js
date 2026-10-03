@@ -48,18 +48,15 @@
       /* zimmet teslim formunda firma adına teslim edenin başlangıç değeri (196, 2026-09-29); formda değiştirilebilir, elle de yazılır */
       '<section class="a-bolum" aria-labelledby="a-b-zeden"><div class="a-alt-bas"><h2 class="a-alt-baslik" id="a-b-zeden">Zimmet teslim formu</h2></div><div class="a-form">' +
         '<div class="a-alan-grup"><label class="a-etiket" for="ay-zeden">Teslim eden (başlangıç)</label>' + MK.secim({ id: "ay-zeden", ad: "Teslim eden (başlangıç)", deger: varsayilanEden(), secenekler: personelSec(), ipucu: "Seçin" }) + "</div></div></section>" +
-      /* 5 yıl dolan raporlar (185, 2026-09-29): firma seçer — sistemde kalsın · bulut arşivine taşınsın · silinsin */
+      /* Rapor saklama süresi (185, 2026-09-29 → 2026-10-03 değişti, reisim: "2 olsun" — KOD-GECIS ENGEL 11): en az 5 yıl (yasal), firma 6–20 yıla
+         uzatabilir; süre dolunca imzalı rapor PDF'leri ve aylık arşiv yedekleri FİRMANIN DEPOSUNDAN silinir, 30 gün önce liste. Eski seçenekler
+         (sistemde kalsın / arşive taşınsın / silinsin) kalktı: raporlar zaten firmanın deposunda düzenli arşivleniyor. */
       (function () {
         var sk = MV.saklama();
-        return '<section class="a-bolum" aria-labelledby="a-b-saklama"><div class="a-alt-bas"><h2 class="a-alt-baslik" id="a-b-saklama">Saklama süresi dolan raporlar</h2></div>' +
+        return '<section class="a-bolum" aria-labelledby="a-b-saklama"><div class="a-alt-bas"><h2 class="a-alt-baslik" id="a-b-saklama">Rapor saklama süresi</h2></div>' +
           '<div class="a-form"><div class="a-alan-grup"><label class="a-etiket" for="ay-yil">Saklama süresi</label>' +
-            MK.secim({ id: "ay-yil", ad: "Saklama süresi", deger: String(sk.yil), secenekler: [5, 6, 7, 8, 9, 10, 15, 20].map(function (y) { return [String(y), y + " yıl"]; }), ipucu: "Seçin" }) + "</div></div>" +
-          '<div role="radiogroup" aria-labelledby="a-b-saklama">' + Object.keys(MV.SAKLAMA).map(function (k) {
-            var x = MV.SAKLAMA[k];
-            return '<label class="a-onay-kutusu"><input type="radio" name="ay-saklama" data-saklama value="' + k + '"' + (sk.yontem === k ? " checked" : "") + "><span>" + x.ad + " — " + x.etiket + "</span></label>";
-          }).join("") + "</div>" +
-          (TD("a-b-saklama", 'input[name="ay-saklama"]', sk.yontem) === "arsiv" ? MK.alan({ id: "ay-arsiv", etiket: "Arşiv yeri", girdi: '<input class="a-girdi" id="ay-arsiv" data-arsiv-yeri maxlength="200" value="' + kacis(sk.yer) + '" placeholder="Bulut sağlayıcısı ve klasör">',
-              uyari: sk.yer.trim() ? "" : "Arşiv yeri girilmedi: yeri girilene kadar süresi dolan raporlar sistemde kalır." }) : "") + "</section>";
+            MK.secim({ id: "ay-yil", ad: "Saklama süresi", deger: String(sk.yil), secenekler: [5, 6, 7, 8, 9, 10, 15, 20].map(function (y) { return [String(y), y + " yıl" + (y === 5 ? " (yasal en az)" : "")]; }), ipucu: "Seçin" }) + "</div></div>" +
+          '<p class="a-ipucu">Süre dolunca imzalı rapor PDF\'leri ve aylık arşiv yedekleri deponuzdan silinir; silinecekler 30 gün önce size listelenir.</p></section>';
       })() + ayarDigerCiz();
     navCiz(); taslakYukle();
   }
@@ -324,7 +321,7 @@
     { k: "zaman", baslik: "Zaman", kart: "ust", sira: 1, hucre: function (x) { return MK.zamanYaz(x.zaman); } },
     { k: "tur", baslik: "Tür", kart: "govde", sira: 2, hucre: function (x) { return '<span class="a-kart-etiket">Tür</span>' + (x.tur === "ay" ? "Aylık arşiv" : "Otomatik"); } },
     { k: "boyut", baslik: "Boyut", kart: "govde", sira: 3, hucre: function (x) { return '<span class="a-kart-etiket">Boyut</span><span class="a-sayi">' + mbYaz(x.mb) + "</span>"; } },
-    { k: "yer", baslik: "Saklama", kart: "govde", sira: 4, hucre: function (x) { return '<span class="a-kart-etiket">Saklama</span>' + (x.tur === "ay" ? "5 yıl" : yedek().gun + " gün"); } },
+    { k: "yer", baslik: "Saklama", kart: "govde", sira: 4, hucre: function (x) { return '<span class="a-kart-etiket">Saklama</span>' + (x.tur === "ay" ? MV.saklama().yil + " yıl" : yedek().gun + " gün"); } },
     { k: "eylem", baslik: "İşlem", gizliBaslik: true, kart: "eylem", sira: 5, hucre: function (x) { return MK.tus({ eylem: "yedek-indir", ad: "İndir", ikon: "download", sinif: "a-tus-ikincil", veri: { zaman: x.zaman } }); } }
   ];
   function depoCiz() {
@@ -346,14 +343,14 @@
       '<p class="a-etiket a-disa-gecmis-bas">Düzenli arşiv (kendiliğinden)</p>' +
       '<dl class="a-bilgi">' + MK.bilgi("Rapor arşivi", '<span class="a-kod a-depo-yol">' + kacis(d.kova) + "/arsiv/raporlar/YIL/Müşteri/</span>" + '<span class="a-alt-satir">imzalanan her rapor PDF\'i hemen yazılır</span>', "cift") +
         MK.bilgi("Arşivde", '<span class="a-sayi">' + imzali.length + "</span> imzalı rapor" + (sonImza ? '<span class="a-alt-satir">son ' + (sonImza.length > 10 ? MK.zamanYaz(sonImza) : MK.tarihYaz(sonImza)) + "</span>" : "")) +
-        MK.bilgi("Otomatik silme", "5 yıl dolunca" + '<span class="a-alt-satir">raporlar ve aylık yedekler; silinecekler 30 gün önce size listelenir</span>') + "</dl>" +
-      MK.serit("bilgi", "info", "probata 5 yıl dolmadan hiçbir dosyayı silmez. Deponuzda dosyaları kendiniz silerseniz geri getirilemez; bu sorumluluk firmanızındır.") +
+        MK.bilgi("Otomatik silme", "Saklama süresi dolunca (" + MV.saklama().yil + " yıl)" + '<span class="a-alt-satir">raporlar ve aylık yedekler; silinecekler 30 gün önce size listelenir</span>') + "</dl>" +
+      MK.serit("bilgi", "info", "probata saklama süresi dolmadan hiçbir dosyayı silmez. Deponuzda dosyaları kendiniz silerseniz geri getirilemez; bu sorumluluk firmanızındır.") +
       '<p class="a-etiket a-disa-gecmis-bas">Yedek (kendiliğinden)</p><div class="a-form a-ayar-yedek">' +
         '<div class="a-alan-grup"><label class="a-etiket" for="ay-yedek-sik">Sıklık</label>' + MK.secim({ id: "ay-yedek-sik", ad: "Yedek sıklığı", deger: y.sik, secenekler: YEDEK_SIK }) + "</div>" +
         '<div class="a-alan-grup"><label class="a-etiket" for="ay-yedek-saat">Saat (günlük, haftalık)</label>' + MK.secim({ id: "ay-yedek-saat", ad: "Yedek saati", deger: y.saat, secenekler: Array.apply(null, Array(24)).map(function (x, i) { var s = ("0" + i).slice(-2); return [s, s + ":00"]; }) }) + "</div>" +
         '<div class="a-alan-grup"><label class="a-etiket" for="ay-yedek-gun">Yedeklerin saklanması</label>' + MK.secim({ id: "ay-yedek-gun", ad: "Yedeklerin saklanması", deger: String(y.gun), secenekler: YEDEK_GUN.map(function (g) { return [String(g), g + " gün"]; }) }) + "</div></div>" +
       '<dl class="a-bilgi">' + MK.bilgi("Yedek yeri", '<span class="a-kod a-depo-yol">' + kacis(d.kova) + "/arsiv/yedek/</span>", "cift") +
-        MK.bilgi("Aylık arşiv yedeği", "Her ayın ilk yedeği 5 yıl") + MK.bilgi("Sonraki yedek", ok ? MK.zamanYaz(sonrakiYedek(y)) : '<span class="a-deger-yok">Depo bekleniyor</span>') + "</dl>" +
+        MK.bilgi("Aylık arşiv yedeği", "Her ayın ilk yedeği " + MV.saklama().yil + " yıl") + MK.bilgi("Sonraki yedek", ok ? MK.zamanYaz(sonrakiYedek(y)) : '<span class="a-deger-yok">Depo bekleniyor</span>') + "</dl>" +
       '<p class="a-etiket a-disa-gecmis-bas">Son yedekler</p>' +
       '<div class="a-liste-kap" id="a-yedek-liste">' + MK.tablo({ baslik: "Son yedekler", sinif: "a-tablo-yedek", sutunlar: Y_SUT, kayitlar: y.kayitlar.slice(0, 6) }) + "</div></section>";
   }
@@ -727,7 +724,7 @@
     if (id === "ay-yedek-saat") { yedekYaz({ saat: deger }); ayarCiz(); $(id).focus(); MK.bildir("Yedek saati " + deger + ":00."); return; }
     if (id === "ay-yedek-gun") { yedekYaz({ gun: +deger }); ayarCiz(); $(id).focus(); MK.bildir("Yedekler " + deger + " gün saklanır."); return; }
     if (id === "ay-nusha") { MV.FIRMA.nusha = +deger; ayarCiz(); $(id).focus(); MK.bildir("Rapor nüsha sayısı " + deger + "."); return; }
-    if (id === "ay-yil") { var sk0 = MV.saklama(); MV.FIRMA.saklama = { yontem: sk0.yontem, yer: sk0.yer, yil: +deger }; ayarCiz(); $(id).focus(); MK.bildir("Saklama süresi " + deger + " yıl."); return; }   /* 5 taban: listede 5'ten kısa yok */
+    if (id === "ay-yil") { MV.FIRMA.saklama = { yil: +deger }; ayarCiz(); $(id).focus(); MK.bildir("Saklama süresi " + deger + " yıl."); return; }   /* 5 taban: listede 5'ten kısa yok */
     if ((m = /^ay-esik-(\w+)$/.exec(id))) {
       var es = {}; Object.keys(MV.ESIK).forEach(function (k) { es[k] = MV.esik(k); }); es[m[1]] = +deger; MV.FIRMA.esik = es;
       MV.EGITIM_DURUM.yakin.ad = MV.esik("egitim") + " gün içinde"; ayarCiz(); $(id).focus();
@@ -762,13 +759,6 @@
     if (t.dataset && t.dataset.kunye) {   /* firma künyesi: alandan çıkınca kaydedilir */
       var kk = t.dataset.kunye, od0 = t.id; MV.FIRMA[kk] = t.value.trim(); ayarCiz(); var o0 = $(od0); if (o0) o0.focus();
       MK.bildir(KUNYE.filter(function (x) { return x[0] === kk; })[0][1] + " kaydedildi."); return;
-    }
-    if (t.hasAttribute && t.hasAttribute("data-saklama")) {
-      MV.FIRMA.saklama = { yontem: t.value, yer: MV.saklama().yer, yil: MV.saklama().yil }; ayarCiz(); var q = document.querySelector('[data-saklama][value="' + t.value + '"]'); if (q) q.focus();
-      MK.bildir("5 yılı dolan raporlar: " + MV.SAKLAMA[t.value].ad.toLocaleLowerCase("tr") + "."); return;
-    }
-    if (t.hasAttribute && t.hasAttribute("data-arsiv-yeri")) {   /* arşiv yeri: alandan çıkınca kaydedilir, uyarı güncellenir */
-      MV.FIRMA.saklama = { yontem: "arsiv", yer: t.value.trim(), yil: MV.saklama().yil }; ayarCiz(); MK.bildir(t.value.trim() ? "Arşiv yeri kaydedildi." : "Arşiv yeri boş: süresi dolan raporlar sistemde kalır."); return;
     }
     if (t.hasAttribute && t.hasAttribute("data-mesai-acik")) {
       var ms = MV.mesai(); MV.FIRMA.mesai = { acik: t.checked, normal: ms.normal, mesai: ms.mesai, yillik: ms.yillik }; ayarCiz(); var ma = document.querySelector("[data-mesai-acik]"); if (ma) ma.focus();
@@ -809,7 +799,7 @@
      Taslağa girmeyenler: dışa aktarılacak bölüm seçimi (Dışa aktar tuşu var), API anahtarı (kendi tuşu var), eylem tuşları. ─────── */
   var TS = {};
   var muaf = function (t) { return t.dataset.disa != null || t.id === "ay-yz-anahtar" || !!t.closest(".a-belge-ekle") || !!t.closest(".a-depo-form") || !t.closest("#a-ayarlar"); };
-  var YENIDEN = ["data-yz-acik", "data-mesai-acik", "data-saklama"];   /* alan açıp kapatan seçimler: taslakta da yeniden çizilir */
+  var YENIDEN = ["data-yz-acik", "data-mesai-acik"];   /* alan açıp kapatan seçimler: taslakta da yeniden çizilir */
   function secici(t) {
     if (t.type === "radio") return 'input[name="' + t.name + '"]';
     if (t.id) return "#" + t.id;
