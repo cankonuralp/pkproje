@@ -2243,6 +2243,9 @@ Ara mesaj (reisim birebir; önceki ürünün alan adı depo açık olduğu için
 → o proje tek dosyalık, istemci ağırlıklı bir uygulamaydı; Firebase sunucusuz hızlı başlatır, küçük ölçekte ücretsiz kotası yeter. Bedeli kural
 dosyalarında yaşanmış olarak duruyor: kota (03 "kota yiyici #1", ANAYASA 14), kimlik bileti sınırı (07), dal dal dinleme. Bu üründe çok firma, sunucuda PDF,
 satır seviyesi izolasyon, Türkiye'de veri ve maliyet kontrolü gerektiği için PostgreSQL seçildi (§8, 2026-09-22). G3 açık.
+Ara mesaj (reisim birebir): *"Anlayamadım sunucu kurmak ve supabase kullanmak tamamen aynı şey mi nasıl farklar var"* → ikisinde de aynı PostgreSQL
+ve aynı kodumuz çalışır, firma farkı görmez; fark kurulum / bakımın kimde olduğu, verinin nerede durduğu ve ücretin biçimi (boş daire ↔ döşeli otel
+benzetmesi). İkisi de PostgreSQL olduğu için sonradan biri ötekine taşınabilir. G3 açık.
 Aynı gün ara mesajlar (reisim birebir): *"Şirket logosuda firma ayarlarından girilsin , raporlara otomatik çekilsin"* (§11 238) · *"Format
 tasarımcısında herhangi bir başlığa tıklayınca en baş arıyor, en başa atmasın başlığı düzenlediğimiz yere odaklansın(telefonda)"* (§11 237).
 
@@ -2283,6 +2286,7 @@ revizyon, alan kopyalama, hafif kusur devri, meslek eşleşme denetimi).
 - Emsal ürünler: https://opwire.app/iso-17020-periyodik-kontrol-yazilimi/ · https://17020muayene.vidco.com.tr/ · https://akuple.com/asansor-kontrol-yazilimi/ · https://ensyazilim.com/
 
 ## 11 · Değişiklik günlüğü
+- 2026-10-03 (252): **Sunucu ↔ Supabase farkı açıklandı** (§9 elli ikinci tur ara mesajı). Kod ve maket değişmedi.
 - 2026-10-03 (251): **Önceki üründe neden Firebase sorusu** (§9 elli ikinci tur ara mesajı) + G3'te Firebase ücret açıklaması düzeltildi (Realtime Database
   indirilen veriye, Firestore okumaya göre). Kod ve maket değişmedi.
 - 2026-10-03 (250): **G3 açık — Supabase mi kiralık sunucu mu** (§9 elli ikinci tur ara mesajı). KOD-GECIS §0'a G3 eklendi. Kod ve maket değişmedi.
