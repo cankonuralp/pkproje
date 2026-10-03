@@ -148,12 +148,12 @@ iş görünür.
 kişisel veri maskelenir (e-posta, telefon, kimlik no).
 
 **G3 · Veri yeri** (§8.8). ~~Veri yurt dışına çıkmaz~~ — **2026-10-03 değişti (reisim: Supabase, KOD-GECIS G3):** veritabanı ve dosyalar AB'de (Supabase,
-Frankfurt); başka bölgeye (ABD vb.) çıkmaz. KVKK yurt dışı aktarım şartı (standart sözleşme / bildirim) yayından önce hukukçuya teyit ettirilir; e-posta,
+Frankfurt); başka bölgeye (ABD vb.) çıkmaz. KVKK hukukçu teyidi yapılmaz (reisim 2026-10-03: *"kvkk falan yapma yok gerek yok öyle bir şeye zaten herkes kendi raporunu kendi tutacak"*); e-posta,
 hata izleme gibi her dış servis Türkiye ya da AB'de seçilir.
 **İstisna — yapay zekâ (reisim 2026-10-02, `ARKA-UC.md` K1 kabul):** Claude yalnız ABD / küresel çalışıyor; fotoğraftan okuma ve S.A.Y chat bu yüzden
 yurt dışına veri gönderir. Koşullar: (1) firma ayarıyla açılır, başlangıçta **kapalı**; (2) gönderilen veri en aza iner — fotoğrafta konum bilgisi
 yok, metinde müşteri unvanı, adres, kişi adı, telefon, SGK / İSG-KATİP numarası **maskelenir**; (3) çağrı yalnız sunucudan, firmanın API anahtarıyla
-(K2); (4) KVKK yurt dışı aktarım koşulu (standart sözleşme / açık rıza) hukukçuya teyit ettirilir. Kilit: yapay zekâya giden gövdede maskelenmesi
+(K2); (4) ~~KVKK yurt dışı aktarım koşulu hukukçuya teyit ettirilir~~ — yapılmaz (reisim 2026-10-03). Kilit: yapay zekâya giden gövdede maskelenmesi
 gereken alan yok (örnek raporla test).
 
 **G4 · E-posta** dosya eki ya da kalıcı bağlantı taşımaz; bağlantı giriş gerektirir (A2). Gönderim kendi alan adımızdan (SPF / DKIM / DMARC), sonucu kayıtlı.

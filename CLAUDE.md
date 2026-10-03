@@ -46,8 +46,8 @@ kalıcı, reisim her işlevi kendisi dener; makette geçici çözüm olabilir, n
   modülün tablosuna doğrudan dokunmaz, o modülün dışa açtığı fonksiyonları kullanır; ortak çekirdek
   `src/server/`; sayfalar iş mantığı taşımaz. ⛔ Tek dosya derleme ve tek küresel ad alanı YOK.
 - **Barındırma — §8.8, 2026-10-03 değişti (KOD-GECIS G3):** veritabanı + dosya deposu **Supabase** (yönetilen PostgreSQL, AB — Frankfurt);
-  uygulama AB bölgesinde hazır barındırmada (ör. Vercel); her firma kendi alt alan adında (`*.<ürün>.com.tr`), joker SSL. Veri AB'de →
-  KVKK yurt dışı aktarım şartı yayından önce hukukçuya. Yığın aynı (PostgreSQL + RLS, kendi girişimiz, pg-boss).
+  uygulama AB bölgesinde hazır barındırmada (ör. Vercel); her firma kendi alt alan adında (`*.<ürün>.com.tr`), joker SSL. Veri AB'de; KVKK hukukçu işi
+  yapılmaz (reisim 2026-10-03: raporları her firma kendi deposunda tutar). Yığın aynı (PostgreSQL + RLS, kendi girişimiz, pg-boss).
 - **Arka plan işleri — onaylı (§8.9):** PostgreSQL üstünde iş kuyruğu (pg-boss); ayrı servis yok.
 - **Sigorta okuma — onaylı (§8.10):** pano fotoğrafından okuma görsel yapay zekâ ile; değer **öneri** olarak
   düşer, inspector onaylamadan kaydedilmez.
