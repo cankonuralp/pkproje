@@ -1,0 +1,14 @@
+/* TUŞ — tek üretici (kalıp 1: içerik kadar geniş). Maketteki .a-tus ailesiyle aynı (docs/assets/maket.css "TUŞLAR"). */
+.tus {
+  height: var(--tus-y); padding: 0 12px;
+  display: inline-flex; align-items: center; justify-content: center; gap: 6px;
+  border: 1px solid transparent; border-radius: var(--r-orta);
+  font: inherit; font-weight: 600; white-space: nowrap; text-decoration: none; cursor: pointer;
+  transition: background var(--sure) var(--egri), border-color var(--sure) var(--egri);
+}
+.birincil { background: var(--birincil); color: var(--birincil-uzeri); }
+.birincil:hover:not(:disabled) { background: var(--birincil-2); }
+.ikincil { background: var(--kart); color: var(--yazi); border-color: var(--kenar-alan); }
+.ikincil:hover:not(:disabled) { background: var(--zemin2); }
+.tehlike { background: var(--hata-yazi); color: var(--kart); }
+.tus:disabled { opacity: .45; cursor: not-allowed; }

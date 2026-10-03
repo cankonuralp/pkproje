@@ -16,7 +16,9 @@
    2026-09-30 (R1, reisim: "firma ayarları personel kısmının altında değil ayrı bir modül olsun"): 22 Firma ayarları eklendi → 16 modül;
    numara aralığı 1–22. Denetim aynı, beklenen sayılar güncellendi.
    2026-10-02 (AA4, reisim: "bir de araç takip modülü olsun hangi aracın kimde olduğu belli olsun takip edilebilsin"): 23 Araçlar eklendi
-   (Varlık grubu) → 17 modül; numara aralığı 1–23. Denetim aynı, beklenen sayılar güncellendi. */
+   (Varlık grubu) → 17 modül; numara aralığı 1–23. Denetim aynı, beklenen sayılar güncellendi.
+   2026-10-03 (K0, reisim: "Makette eksik kalmadıysa koda geç"): ortak bileşenlerin uçtan uca denetimi için TEK modül dışı rota "vitrin"
+   (yalnız geliştirmede açılır, yayında 404 — src/app/vitrin/page.tsx). İstisna adıyla yazıldı; başka modül dışı rota hâlâ yakalanır. */
 import assert from "node:assert/strict";
 import { existsSync, readdirSync, readFileSync, statSync } from "node:fs";
 import { join } from "node:path";
@@ -45,9 +47,11 @@ test("17 modül, numaralar tekil; menüde olmayanlar 1 (Personel'in içinde), 6,
   assert.deepEqual(yok, [1, 6, 7, 10, 16, 17]);
 });
 
+const GELISTIRME_ROTASI = "vitrin";
+
 test("her modülün rota klasörü var ve src/app'te modül dışı rota yok", () => {
   const app = join(KOK, "src", "app");
-  const klasorler = readdirSync(app).filter((ad) => statSync(join(app, ad)).isDirectory()).sort();
+  const klasorler = readdirSync(app).filter((ad) => statSync(join(app, ad)).isDirectory() && ad !== GELISTIRME_ROTASI).sort();
   const yollar = MODULLER.filter((m) => m.yol !== "").map((m) => m.yol).sort();
   assert.deepEqual(klasorler, yollar);
   for (const y of yollar) assert.ok(existsSync(join(app, y, "page.tsx")), `${y}/page.tsx yok`);

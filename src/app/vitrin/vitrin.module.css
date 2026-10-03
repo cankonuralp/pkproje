@@ -1,0 +1,8 @@
+/* yalnız geliştirme vitrini */
+.sayfaBas { margin: 0 0 12px; }
+.sayfaBas h1 { margin: 0; font-size: var(--boy-baslik); font-weight: var(--kal-baslik); }
+.bolum { display: flex; flex-direction: column; gap: 8px; margin: 0 0 20px; }
+.bolum h2 { margin: 0; font-size: var(--boy-bolum); font-weight: var(--kal-bolum); }
+.sira { display: flex; flex-wrap: wrap; gap: 8px; align-items: center; }
+.alan { display: flex; flex-direction: column; gap: 4px; font-weight: 500; }
+.alan textarea { padding: 8px; border: 1px solid var(--kenar-alan); border-radius: var(--r-orta); background: var(--kart); }

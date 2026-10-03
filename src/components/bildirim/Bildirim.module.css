@@ -1,0 +1,15 @@
+/* BİLDİRİM — altta ortada kısa ileti (maketteki .a-bildirim ile aynı). Telefonda alttaki yapışkan çubuğun üstünde. */
+.bildirim {
+  position: fixed; left: 50%; bottom: 24px; z-index: 90; transform: translate(-50%, 16px);
+  display: flex; align-items: center; gap: 8px; max-width: calc(100vw - 32px);
+  padding: 10px 14px; border-radius: var(--r-orta);
+  background: var(--vurgu); color: var(--vurgu-uzeri); box-shadow: var(--golge-2);
+  font-weight: 600; opacity: 0; pointer-events: none;
+  transition: opacity var(--sure) var(--egri), transform var(--sure) var(--egri);
+}
+.gorunur { opacity: 1; transform: translate(-50%, 0); }
+.bildirim > svg { color: var(--marka-onay); flex: none; }
+
+@media (max-width: 767.98px) {
+  .bildirim { bottom: calc(var(--tus-y) + 40px); }
+}

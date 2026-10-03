@@ -1,6 +1,8 @@
 import type { Metadata, Viewport } from "next";
 import type { ReactNode } from "react";
+import { BildirimSaglayici } from "../components/bildirim/Bildirim";
 import { Kabuk } from "../components/kabuk/Kabuk";
+import { OnaySaglayici } from "../components/pencere/Onay";
 import "../styles/yazi.css";
 import "../styles/tokens.css";
 import "../styles/temel.css";
@@ -31,7 +33,12 @@ export default function KokDuzen({ children }: { children: ReactNode }) {
         <script dangerouslySetInnerHTML={{ __html: ILK_BOYAMA_BETIGI }} />
       </head>
       <body>
-        <Kabuk>{children}</Kabuk>
+        {/* bildirim ve onay penceresi her sayfada tek (MK.bildir / MK.onayla'nın karşılığı) */}
+        <BildirimSaglayici>
+          <OnaySaglayici>
+            <Kabuk>{children}</Kabuk>
+          </OnaySaglayici>
+        </BildirimSaglayici>
       </body>
     </html>
   );

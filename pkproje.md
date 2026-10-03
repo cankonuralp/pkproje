@@ -2335,6 +2335,11 @@ revizyon, alan kopyalama, hafif kusur devri, meslek eşleşme denetimi).
 - Emsal ürünler: https://opwire.app/iso-17020-periyodik-kontrol-yazilimi/ · https://17020muayene.vidco.com.tr/ · https://akuple.com/asansor-kontrol-yazilimi/ · https://ensyazilim.com/
 
 ## 11 · Değişiklik günlüğü
+- 2026-10-03 (274): **K0 Hazırlık 3: tuş · şerit · bildirim · onay penceresi** (tek üreticiler, `src/components/`; maketteki `.a-tus`, `.a-serit`,
+  `MK.bildir`, `MK.onayla` ile aynı görünüm ve davranış). Tuş: birincil / ikincil / tehlike, yüksekliği `--tus-y` (34 · dokunmatik 44), içerik kadar geniş.
+  Şerit: bilgi / uyarı / onay / hata, sağda isteğe bağlı tek eylem; hata şeridi ekran okuyucuya hemen okunur. Bildirim: altta ortada, 4 sn. Onay
+  penceresi: odak **Vazgeç**'te (Enter yanlışlıkla silmez), Esc = vazgeç; telefonda alttan levha. Bildirim ve onay her sayfada tek (kök düzen). Geliştirme
+  vitrini `/vitrin` (yalnız geliştirmede; yayında "Sayfa bulunamadı"; menüde yok). Uçtan uca 24/24; olumsuz kanıt: bileşenler bozulunca 12 + levha 1 düşer.
 - 2026-10-03 (273): **K0 Hazırlık 2: uygulama kabuğu maketle eşit** — menünün üstünde gruptan bağımsız **Ana sayfa** (kök adres `/`), Planlar `/planlar`;
   geniş bantta menüyü daraltan ☰ **sol barın başında** (logonun sağı; daralınca 64 px şeridin tek simgesi; maket §11 270), orta / dar bantta çekmece ☰ üst
   çubukta. Uçtan uca 9/9 (masaüstü · tablet · telefon); olumsuz kanıt eski kabukla 4 düşer. Kullanıcı alanı ve menü balonları oturum (K1) ve veri gelince.

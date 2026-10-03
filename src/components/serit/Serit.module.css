@@ -1,0 +1,12 @@
+/* ŞERİT — engel değil bilgi (kalıp 20 d). Maketteki .a-serit ile aynı. */
+.serit {
+  display: flex; align-items: flex-start; gap: 8px; margin: 0; padding: 8px 12px;
+  border-radius: var(--r-orta); font-size: var(--boy-kucuk); font-weight: 500;
+}
+.serit > svg { margin-top: 2px; flex: none; }
+.metin { flex: 1 1 auto; min-width: 0; }
+.eylem { flex: none; margin: -3px -4px -3px 0; }
+.bilgi { background: var(--bilgi-zemin); color: var(--bilgi-yazi); }
+.uyari { background: var(--uyari-zemin); color: var(--uyari-yazi); }
+.onay { background: var(--onay-zemin); color: var(--onay-yazi); }
+.hata { background: var(--hata-zemin); color: var(--hata-yazi); }

@@ -1,0 +1,27 @@
+/* PENCERE / LEVHA — maketteki .a-pencere ile aynı; telefonda alttan levha, alt tuş çubuğu yapışkan (kalıp 2, 6). */
+.pencere {
+  width: 520px; max-width: calc(100vw - 32px); padding: 0;
+  border: 1px solid var(--kenar); border-radius: var(--r-buyuk);
+  background: var(--kart); color: var(--yazi); box-shadow: var(--golge-2);
+}
+.genis { width: 760px; }
+.pencere::backdrop { background: var(--perde); }
+.bas { display: flex; align-items: center; justify-content: space-between; gap: 12px; padding: 12px 12px 6px 16px; }
+.bas h2 { margin: 0; font-size: var(--boy-bolum); font-weight: var(--kal-bolum); }
+.kapat {
+  width: var(--tus-y); height: var(--tus-y); flex: none; display: inline-flex; align-items: center; justify-content: center;
+  border: 1px solid transparent; border-radius: var(--r-orta); background: transparent; color: var(--yazi); cursor: pointer;
+}
+.kapat:hover { background: var(--zemin2); }
+.govde { padding: 4px 16px 12px; }
+.metin { margin: 0 0 10px; }
+.alt { display: flex; justify-content: flex-end; gap: 8px; padding: 10px 16px 12px; border-top: 1px solid var(--kenar); }
+
+@media (max-width: 767.98px) {
+  .pencere {
+    width: 100vw; max-width: 100vw; margin: auto 0 0; border-radius: var(--r-buyuk) var(--r-buyuk) 0 0; border-bottom: 0;
+    max-height: 88vh; overflow-y: auto;
+  }
+  .alt { position: sticky; bottom: 0; background: var(--kart); flex-wrap: wrap; }
+  .alt > * { flex: 1 1 0; }
+}
