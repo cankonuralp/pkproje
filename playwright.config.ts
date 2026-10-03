@@ -14,7 +14,10 @@ export default defineConfig({
   fullyParallel: false,
   workers: 1,
   retries: 0,
-  reporter: [["list"]],
+  /* CI'da düşen test GitHub'da adıyla not (annotation) olarak görünür — günlük ayrı sunucuda, not API'den okunur (2026-10-03) */
+  reporter: process.env.CI ? [["list"], ["github"]] : [["list"]],
+  /* sayfalar testlerden önce bir kez derlenir (e2e/hazirla.ts) */
+  globalSetup: "./e2e/hazirla.ts",
   use: {
     baseURL: `http://127.0.0.1:${KAPI}`,
     launchOptions: hazir ? { executablePath: hazir } : {},

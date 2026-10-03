@@ -2335,6 +2335,10 @@ revizyon, alan kopyalama, hafif kusur devri, meslek eşleşme denetimi).
 - Emsal ürünler: https://opwire.app/iso-17020-periyodik-kontrol-yazilimi/ · https://17020muayene.vidco.com.tr/ · https://akuple.com/asansor-kontrol-yazilimi/ · https://ensyazilim.com/
 
 ## 11 · Değişiklik günlüğü
+- 2026-10-03 (277): **CI uçtan uca adımı düştü** (reisim: *"Run failed"*) — 28e4689 çalışma dalında uçtan uca adımda düştü, aynı commit main'de geçti;
+  yerelde 3 tekrarda 177/177, hata tekrarlanmadı; CI günlüğü dış sunucuda, okunamadı (ölçemedim). En güçlü aday: geliştirme sunucusu sayfayı ilk istekte
+  derliyor, yavaş CI'da ilk testin 5 sn beklemesi aşılıyor. Düzeltme: testlerden önce sayfalar bir kez derlenir (`e2e/hazirla.ts`); CI'da düşen test artık
+  GitHub'da adıyla not olarak görünür (Playwright github raporlayıcısı) — bir dahaki düşüşte sebep doğrudan okunur.
 - 2026-10-03 (276): **K0 Hazırlık 5: seçim alanı + takvimli tarih / saat** (tek üreticiler, `src/components/secim/`; maketteki `MK.secim`, `MK.zaman`).
   Seçim alanı: yerli açılır liste yok (kalıp 19), girdi gibi düğme + temalı liste; 8'den fazla seçenekte arama; klavye ↑ ↓ Home End Enter Esc Tab ve harfle
   atlama (kalıp 19 — makette yoktu, kodda var); liste alanın altında, sığmazsa üstünde; pencerede akış içinde, Esc yalnız listeyi kapatır. Filtre seçicileri
