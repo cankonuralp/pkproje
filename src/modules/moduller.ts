@@ -23,7 +23,7 @@ export interface Modul {
   /** pkproje.md §3.1 numarası */
   no: number;
   ad: string;
-  /** adres parçası (ASCII); Planlar ana sayfadır */
+  /** adres parçası (ASCII) */
   yol: string;
   /** Lucide ikon adı (src/components/ikon/lucide-1.47.0/ikonlar.svg) */
   ikon: string;
@@ -36,7 +36,7 @@ export interface ModulGrubu {
 
 export const MODUL_GRUPLARI: readonly ModulGrubu[] = [
   { grup: "İş takibi", moduller: [
-    { no: 13, ad: "Planlar", yol: "", ikon: "calendar-check" },
+    { no: 13, ad: "Planlar", yol: "planlar", ikon: "calendar-check" },
     { no: 14, ad: "Raporlar", yol: "raporlar", ikon: "file-text" },
     { no: 15, ad: "Onaylar", yol: "onaylar", ikon: "badge-check" },
     { no: 20, ad: "Uyarılar", yol: "uyarilar", ikon: "alarm-clock" },
@@ -68,7 +68,11 @@ export const MODUL_GRUPLARI: readonly ModulGrubu[] = [
 
 export const MODULLER: readonly Modul[] = MODUL_GRUPLARI.flatMap((g) => g.moduller);
 
-/** adres parçasından modül; "" Planlar'dır */
+/* 2026-10-03 (K0, kabuk maketle eşit): menünün üstünde gruptan bağımsız "Ana sayfa" (maket M1, reisim 41: "herkes için bir ana sayfa") —
+   uygulamanın kök adresi; Planlar artık /planlar (maket: anasayfa.html · planlarim.html). Modül değil (§3.1 numarası yok). */
+export const ANA_SAYFA = { ad: "Ana sayfa", yol: "", ikon: "house" } as const;
+
+/** adres parçasından modül ("" Ana sayfa'dır, modül değil) */
 export function modulBul(yol: string): Modul | undefined {
   return MODULLER.find((m) => m.yol === yol);
 }

@@ -4,7 +4,7 @@ import type { Modul } from "../../modules/moduller";
 import { BosDurum } from "../bos/BosDurum";
 import stil from "./ModulSayfasi.module.css";
 
-export function ModulSayfasi({ modul }: { modul: Modul }) {
+export function ModulSayfasi({ modul }: { modul: Pick<Modul, "ad" | "ikon"> }) {
   return (
     <>
       <div className={stil.sayfaBas}>

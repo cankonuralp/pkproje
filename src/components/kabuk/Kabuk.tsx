@@ -4,14 +4,14 @@
    · Geniş (≥ 1280) menü sabit; orta ve dar (< 1280) ☰ çekmecesi (anayasa 2.11: ikon rayına dönüşmez).
    · Sığmayan yükseklikte YALNIZ menü kayar; logo yerinde kalır.
    · Tema: açık / koyu, tercih bu cihazda saklanır (anahtar maketle aynı: "probata-tema").
-   · Daraltma (maket 6. tur, reisim 2026-09-24 "uygun"): geniş bantta üst çubuğun solundaki ☰ menüyü 64 px simge
+   · Daraltma (maket 6. tur, reisim 2026-09-24 "uygun"): geniş bantta sol barın başındaki ☰ (2026-10-03; önce üst çubuktaydı) menüyü 64 px simge
      şeridine indirir / açar; ad görünmez (ekran okuyucu okur), üstüne gelince ipucu. Tercih bu cihazda ("probata-menu").
      Orta ve dar bantta etkisiz: orada ☰ çekmeceyi açar (anayasa 2.11). */
 import Image from "next/image";
 import Link from "next/link";
 import { usePathname } from "next/navigation";
 import { useEffect, useState, useSyncExternalStore, type ReactNode } from "react";
-import { MODUL_GRUPLARI } from "../../modules/moduller";
+import { ANA_SAYFA, MODUL_GRUPLARI } from "../../modules/moduller";
 import { KALIP } from "../../styles/kalip";
 import { Ikon } from "../ikon/Ikon";
 import stil from "./Kabuk.module.css";
@@ -83,8 +83,24 @@ export function Kabuk({ children }: { children: ReactNode }) {
           <button className={`${stil.ikonTus} ${stil.cubukKapat}`} type="button" onClick={() => setAcik(false)} aria-label="Menüyü kapat">
             <Ikon ad="x" />
           </button>
+          {/* 2026-10-03 (reisim: "şu 3 çizgiyi sol barın içine taşı"): geniş bantta daraltan ☰ sol barın başında (logonun sağı; daralınca
+              şeridin tek simgesi). Orta ve dar bantta çekmeceyi açan ☰ üst çubukta kalır (menü kapalıyken başka yer yok). */}
+          <button className={`${stil.ikonTus} ${stil.daraltTus}`} type="button" onClick={daralt}
+            aria-label={dar ? "Menüyü genişlet" : "Menüyü daralt"} aria-controls="ana-menu" aria-expanded={!dar}>
+            <Ikon ad="menu" />
+          </button>
         </div>
         <nav className={stil.menu} aria-label="Modüller">
+          {/* gruptan bağımsız Ana sayfa (maket M1) */}
+          <ul className={stil.menuListe} aria-label={ANA_SAYFA.ad}>
+            <li>
+              <Link className={stil.menuBaglanti} href="/" aria-current={yol === "/" ? "page" : undefined}
+                title={serit ? ANA_SAYFA.ad : undefined} onClick={() => setAcik(false)}>
+                <Ikon ad={ANA_SAYFA.ikon} />
+                <span className={stil.menuAd}>{ANA_SAYFA.ad}</span>
+              </Link>
+            </li>
+          </ul>
           {MODUL_GRUPLARI.map((g, i) => (
             <div key={g.grup}>
               <p className={stil.menuGrup} id={`menu-grup-${i}`}>{g.grup}</p>
@@ -111,10 +127,6 @@ export function Kabuk({ children }: { children: ReactNode }) {
         <header className={stil.ust}>
           <button className={`${stil.ikonTus} ${stil.menuTus}`} type="button" onClick={() => setAcik(true)}
             aria-label="Menüyü aç" aria-controls="ana-menu" aria-expanded={acik}>
-            <Ikon ad="menu" />
-          </button>
-          <button className={`${stil.ikonTus} ${stil.daraltTus}`} type="button" onClick={daralt}
-            aria-label={dar ? "Menüyü genişlet" : "Menüyü daralt"} aria-controls="ana-menu" aria-expanded={!dar}>
             <Ikon ad="menu" />
           </button>
           <Image className={`${stil.ustIsaret} ${stil.isaretAcik}`} src={isaretRenkli} alt="probata" unoptimized />

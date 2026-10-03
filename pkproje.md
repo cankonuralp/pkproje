@@ -2335,6 +2335,9 @@ revizyon, alan kopyalama, hafif kusur devri, meslek eşleşme denetimi).
 - Emsal ürünler: https://opwire.app/iso-17020-periyodik-kontrol-yazilimi/ · https://17020muayene.vidco.com.tr/ · https://akuple.com/asansor-kontrol-yazilimi/ · https://ensyazilim.com/
 
 ## 11 · Değişiklik günlüğü
+- 2026-10-03 (273): **K0 Hazırlık 2: uygulama kabuğu maketle eşit** — menünün üstünde gruptan bağımsız **Ana sayfa** (kök adres `/`), Planlar `/planlar`;
+  geniş bantta menüyü daraltan ☰ **sol barın başında** (logonun sağı; daralınca 64 px şeridin tek simgesi; maket §11 270), orta / dar bantta çekmece ☰ üst
+  çubukta. Uçtan uca 9/9 (masaüstü · tablet · telefon); olumsuz kanıt eski kabukla 4 düşer. Kullanıcı alanı ve menü balonları oturum (K1) ve veri gelince.
 - 2026-10-03 (272): **KOD BAŞLADI — K0 Hazırlık 1: paketler ve uçtan uca test düzeni** (§9 elli ikinci tur). G0 uygulandı (bütün maketler bu tarihteki
   hâliyle onaylı). Paketler: `zod` 4.6.5 (ortak şema), `@playwright/test` 1.63.0 (yalnız test). `playwright.config.ts` (masaüstü 1920 · tablet 1080 ·
   telefon 375; Next geliştirme sunucusu projenin yoluyla, yalnız 127.0.0.1; makinedeki Chromium varsa o), `e2e/kabuk.spec.ts` (ilk denetim: kabuk
