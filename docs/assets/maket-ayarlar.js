@@ -294,7 +294,9 @@
      Firmanın KENDİ S3 uyumlu deposu firma açılırken bağlanır (Yönetim › Firma aç; depo yoksa firma açılmaz) — burada kesilemez, yalnız
      DEĞİŞTİRİLİR (yeni depo denenir, dosyalar ve arşiv taşınır, doğrulanınca eski depo bırakılır). Düzenli arşiv kendiliğinden: imzalanan her
      raporun PDF'i depoda arsiv/raporlar/YIL/Müşteri/ altına yazılır; yedekler arsiv/yedek/ altına seçilen sıklıkla (saatlik / günlük /
-     haftalık; elle yedek yok); her ayın ilk yedeği 5 yıl saklanır; raporlara ve aylık yedeklere 5 yıl silme koruması (kısaltılamaz).
+     haftalık; elle yedek yok); her ayın ilk yedeği 5 yıl saklanır. 2026-10-03 (reisim: "depoda 5 sene sonra silcek şekilde kodla , müşteri deposunu
+     bağladıktan sonra siler silmez kendi bilir"): bizim kod raporları ve aylık yedekleri 5 yıl dolmadan silmez, 5 yıl dolunca siler (30 gün önce
+     liste); firmanın kendi deposunda elle sildiği dosya firmanın sorumluluğu (depo kilidi kullanılmaz).
      Depoya erişilemezse yükleme cihazlarda bekler, yedek alınamaz; şerit söyler. Makette bağlantı taklit (kova adında "hata" → reddedilir). */
   var YEDEK_SIK = [["saatlik", "Saatlik"], ["gunluk", "Günlük"], ["haftalik", "Haftalık (Pazartesi)"]];
   var YEDEK_GUN = [30, 90, 365];
@@ -344,7 +346,8 @@
       '<p class="a-etiket a-disa-gecmis-bas">Düzenli arşiv (kendiliğinden)</p>' +
       '<dl class="a-bilgi">' + MK.bilgi("Rapor arşivi", '<span class="a-kod a-depo-yol">' + kacis(d.kova) + "/arsiv/raporlar/YIL/Müşteri/</span>" + '<span class="a-alt-satir">imzalanan her rapor PDF\'i hemen yazılır</span>', "cift") +
         MK.bilgi("Arşivde", '<span class="a-sayi">' + imzali.length + "</span> imzalı rapor" + (sonImza ? '<span class="a-alt-satir">son ' + (sonImza.length > 10 ? MK.zamanYaz(sonImza) : MK.tarihYaz(sonImza)) + "</span>" : "")) +
-        MK.bilgi("Silme koruması", "5 yıl" + '<span class="a-alt-satir">raporlar ve aylık yedekler; yasal süre, kısaltılamaz</span>') + "</dl>" +
+        MK.bilgi("Otomatik silme", "5 yıl dolunca" + '<span class="a-alt-satir">raporlar ve aylık yedekler; silinecekler 30 gün önce size listelenir</span>') + "</dl>" +
+      MK.serit("bilgi", "info", "probata 5 yıl dolmadan hiçbir dosyayı silmez. Deponuzda dosyaları kendiniz silerseniz geri getirilemez; bu sorumluluk firmanızındır.") +
       '<p class="a-etiket a-disa-gecmis-bas">Yedek (kendiliğinden)</p><div class="a-form a-ayar-yedek">' +
         '<div class="a-alan-grup"><label class="a-etiket" for="ay-yedek-sik">Sıklık</label>' + MK.secim({ id: "ay-yedek-sik", ad: "Yedek sıklığı", deger: y.sik, secenekler: YEDEK_SIK }) + "</div>" +
         '<div class="a-alan-grup"><label class="a-etiket" for="ay-yedek-saat">Saat (günlük, haftalık)</label>' + MK.secim({ id: "ay-yedek-saat", ad: "Yedek saati", deger: y.saat, secenekler: Array.apply(null, Array(24)).map(function (x, i) { var s = ("0" + i).slice(-2); return [s, s + ":00"]; }) }) + "</div>" +

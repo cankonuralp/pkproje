@@ -874,7 +874,7 @@
    "gecti": true
   },
   {
-   "ad": "Depolama: firmanın deposu bağlı (kesme yok); rapor arşivi yolu, 5 yıl silme koruması, aylık arşiv yedeği; Şimdi yedekle yok",
+   "ad": "Depolama: firmanın deposu bağlı (kesme yok); rapor arşivi yolu, 5 yıl dolunca otomatik silme (elle silme firmanın sorumluluğu), aylık arşiv yedeği; Şimdi yedekle yok",
    "gen": 1920,
    "sayfa": "maket/firma-ayarlari.html",
    "hash": "#/",

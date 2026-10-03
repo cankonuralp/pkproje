@@ -2254,6 +2254,7 @@ Aynı gün (reisim birebir): *"Supabase kullanalım sebebi ise eğer bir sorun o
 büyütülür, taşıma gerekmez.
 Aynı gün (reisim birebir): *"Evet başla"* → Firma ayarları › **Depolama ve yedek** maketi (§11 254).
 Aynı gün (reisim birebir): *"yedekleme deposu olmadan şirket açılmasına izin verilmesin probata  gün saklar gibi bir alternatif olamaz, müşteriler hukuken raporları 5 yıl arşivlemek durumunda ona göre kurgula tekrar"* · ara mesajlar *"elle yedekleme olmasın"* · *"kendi depolarında da yedekleri ve raporlar düzenli arşivlensin"* → yeniden kurgu (§11 255): firmanın **kendi deposu firma açılırken zorunlu** (Yönetim › Firma aç; yoksa firma açılmaz), probata'da firma dosyası / yedeği tutulmaz; depo kesilemez, yalnız değiştirilir. Depoda **düzenli arşiv**: imzalanan her rapor PDF'i `arsiv/raporlar/YIL/Müşteri/`'ye hemen; yedekler `arsiv/yedek/`'e seçilen sıklıkla (saatlik / günlük / haftalık; **elle yedek yok**); her ayın ilk yedeği ve raporlar **5 yıl silme korumalı** (kısaltılamaz).
+Aynı gün (reisim birebir; depo kilidinin her sağlayıcıda olmadığı söylenince): *"biz kurgulayalım, depoda 5 sene sonra silcek şekilde kodla , müşteri deposunu bağladıktan sonra siler silmez kendi bilir"* → depo kilidi yok; **bizim kod 5 yıl dolmadan silmez, 5 yıl dolunca depodan siler** (30 gün önce liste); firmanın kendi deposunda elle sildiği dosya firmanın sorumluluğu (§11 256). Açık soru: Firma ayarları › "Saklama süresi dolan raporlar" (5–20 yıl, sistemde kalsın / arşive taşınsın / silinsin) bununla nasıl birleşir.
 Aynı gün ara mesajlar (reisim birebir): *"Şirket logosuda firma ayarlarından girilsin , raporlara otomatik çekilsin"* (§11 238) · *"Format
 tasarımcısında herhangi bir başlığa tıklayınca en baş arıyor, en başa atmasın başlığı düzenlediğimiz yere odaklansın(telefonda)"* (§11 237).
 
@@ -2294,6 +2295,7 @@ revizyon, alan kopyalama, hafif kusur devri, meslek eşleşme denetimi).
 - Emsal ürünler: https://opwire.app/iso-17020-periyodik-kontrol-yazilimi/ · https://17020muayene.vidco.com.tr/ · https://akuple.com/asansor-kontrol-yazilimi/ · https://ensyazilim.com/
 
 ## 11 · Değişiklik günlüğü
+- 2026-10-03 (256): **Depoda 5 yıl dolunca otomatik silme** (§9 elli ikinci tur). Firma ayarları › Depolama: "Silme koruması · kısaltılamaz" yerine "Otomatik silme · 5 yıl dolunca" (30 gün önce liste) + bilgi şeridi (probata 5 yıl dolmadan silmez; elle silme firmanın sorumluluğu). KOD-GECIS ENGEL 11, Y2b; CLAUDE.md §7 otomatik silme satırı.
 - 2026-10-03 (255): **Depo zorunlu, düzenli arşiv, elle yedek yok** (§9 elli ikinci tur). Yönetim › Firma aç'a "Firmanın deposu" bölümü (uç, kova,
   erişim + gizli anahtar, depo yeri; **Bağlan ve dene**): depo bağlanmadan **Firmayı aç** reddedilir (şerit, onay penceresi açılmaz); depo alanı
   değişince yeniden denenmeli; firma listesinde ve sayfasında depo durumu (Bağlı / Erişilemiyor). Firma ayarları › Depolama ve yedek yeniden: yalnız
