@@ -38,7 +38,7 @@
     20: "Uyarılar: süresi yaklaşan ve geçen işler (kalibrasyon, belge, sözleşme, eğitim).",
     3: "Müşteriler: müşteri ve tesis kartları, müşteri girişi, tesisin ekipmanları (Excel'den toplu yükleme).",
     11: "Teklifler: teklif hazırlayın, müşteriye gönderin; kabul edilen teklif sözleşmeye ve plana gider.",
-    12: "Sözleşmeler: firmalar arası iş sözleşmesi ve içindeki İSG-KATİP sözleşme ID'leri (tesis × denetçi).",
+    12: "Sözleşmeler: firmalar arası iş sözleşmesi ve içindeki İSG-KATİP SÖZLEŞME ID'leri (tesis × denetçi).",
     8: "Ölçüm cihazları: kalibrasyon ve ara kontroller; süresi geçen cihaz raporda uyarı verir.",
     9: "Zimmetler: kime hangi cihaz verildi; teslim formu Onaylar'da imzalanır.",
     23: "Araçlar: araç belgeleri, haftalık kilometre ve teslim tutanakları.",

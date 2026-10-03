@@ -492,7 +492,7 @@
     var raporsuz = p.ekp.filter(function (k) { return !raporuVar(p, k); }).length;
     /* 1 · Planlandı — plan bilgisi ve kapsam */
     var a1 = adim(1, "tamam", "Planlandı", tno(p.acildi),
-      /* 2026-09-26 (reisim): İSG-KATİP sözleşme ID (onay tarihi yok) · başlangıç ve bitiş tarihi (plan süresi) · teklif içeriği (tür × adet) ·
+      /* 2026-09-26 (reisim): İSG-KATİP SÖZLEŞME ID (onay tarihi yok) · başlangıç ve bitiş tarihi (plan süresi) · teklif içeriği (tür × adet) ·
          adres · açıklama */
       /* 2026-09-27 (reisim, örnek ekranla: "bu kadar basit aslında istediğim şey bu"): etiket : değer satırları alt alta, altında
          ayrı kutuda teklif içeriği tablosu (muayene alanı · muayene türü · adet), tam genişlik */
@@ -505,8 +505,8 @@
       '<dl class="a-satirlar">' +
         satir("Proje no", '<span class="a-kod">' + p.no + "</span>") +
         satir("Firma adı", kdeger("unvan")) +
-        satir("İSG-KATİP sözleşme ID", kdeger("isg")) +
-        satir("SGK DETSİS no", kdeger("sgk")) +
+        satir("İSG-KATİP SÖZLEŞME ID", kdeger("isg")) +
+        satir("SGK DETSİS NO", kdeger("sgk")) +
         satir("Başlangıç tarihi", tno(p.tarih)) +
         satir("Bitiş tarihi", tno(p.bitTarih)) +
         satir("Denetçi", p.ekip.map(function (k) { return KISI[k].ad + ' <span class="a-alt-inline">' + KISI[k].brans + "</span>"; }).join(" · ")) +

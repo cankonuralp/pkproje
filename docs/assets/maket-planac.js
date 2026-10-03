@@ -66,7 +66,7 @@
     var gun = tarihIso(F.tarih), x = sozId(p.id), el = (F.isg[p.id] || "").trim(), e = [];
     var isg = x ? (x.bitis && gun && x.bitis < gun ? { tur: "bitti", x: x } : gun && !MV.isgUygun(x.onay, gun) ? { tur: "gec", x: x } : { tur: "tamam", x: x })
       : el ? { tur: "elle", no: el } : { tur: "yok" };
-    if (isg.tur === "yok") e.push("İSG-KATİP sözleşme ID'si yok");
+    if (isg.tur === "yok") e.push("İSG-KATİP SÖZLEŞME ID'si yok");
     else if (isg.tur === "gec") e.push("İSG-KATİP onayı geç");
     else if (isg.tur === "bitti") e.push("İSG-KATİP sözleşmesi " + MK.tarihEk(x.bitis, "de") + " bitmiş");
     if (!p.ekipnet) e.push("EKİPNET kayıt numarası yok");
@@ -114,7 +114,7 @@
   function tesisSeritleri(t) {
     var s = "";
     if (MV.acikPlan(t)) s += MK.serit("bilgi", "calendar-check", "Bu tesiste açık plan var: <b>" + t.plan + "</b> · " + MK.gunKisa(t.ptarih) + " · " + MV.PLAN_DURUM[t.pdurum].ad + ".");
-    if (!MV.isgTesis(t.id).length) s += MK.serit("uyari", "triangle-alert", "Bu tesiste İSG-KATİP sözleşme ID'si yok.");
+    if (!MV.isgTesis(t.id).length) s += MK.serit("uyari", "triangle-alert", "Bu tesiste İSG-KATİP SÖZLEŞME ID'si yok.");
     return s ? '<div class="a-uyari-serit a-bolum-serit">' + s + "</div>" : "";
   }
   /* plan günü tesisin iş sözleşmesinin dışında (Ö5, 2026-10-01: sözleşme 24.09'da başlarken plan 23.09'a açılabiliyordu, uyarı yoktu).
@@ -134,8 +134,8 @@
       return '<label class="a-onay-kutusu"><input type="checkbox" id="p-a-' + p.id + '" data-aday="' + p.id + '"' + (F.ekip.indexOf(p.id) >= 0 ? " checked" : "") + ">" +
         "<span>" + kacis(p.ad) + '<span class="a-alt-satir">' + kacis(MV.meslekAd(p)) + "</span></span></label>";
     } },
-    { k: "isg", baslik: "İSG-KATİP sözleşme ID", kart: "govde", sira: 2, hucre: function (p, d) {
-      return '<span class="a-kart-etiket">İSG-KATİP sözleşme ID</span>' + (d.isg.tur === "yok" ? '<span class="a-uyari-metin">Yok</span>'
+    { k: "isg", baslik: "İSG-KATİP SÖZLEŞME ID", kart: "govde", sira: 2, hucre: function (p, d) {
+      return '<span class="a-kart-etiket">İSG-KATİP SÖZLEŞME ID</span>' + (d.isg.tur === "yok" ? '<span class="a-uyari-metin">Yok</span>'
         : d.isg.tur === "elle" ? '<span class="a-kod">' + kacis(d.isg.no) + "</span>"
         : '<span><span class="a-kod">' + kacis(d.isg.x.no) + "</span>" + (d.isg.tur === "gec" ? '<span class="a-uyari-metin">Geç onay · ' + MK.gunKisa(d.isg.x.onay) + "</span>"
           : d.isg.tur === "bitti" ? '<span class="a-uyari-metin">Bitmiş · ' + MK.gunKisa(d.isg.x.bitis) + "</span>" : "") + "</span>");
@@ -170,7 +170,7 @@
   function idGirisleri(D) {
     var l = F.ekip.filter(function (k) { return !sozId(k); }), soz = MV.tesisSozlesmesi(F.tesis, MK.BUGUN);
     if (!l.length) return "";
-    return '<div class="a-bolum-serit"><h3 class="a-alt-baslik">İSG-KATİP sözleşme ID</h3>' +
+    return '<div class="a-bolum-serit"><h3 class="a-alt-baslik">İSG-KATİP SÖZLEŞME ID</h3>' +
       '<div class="a-form">' + l.map(function (k) {
         var p = MV.kisi(k);
         return MK.alan({ id: "p-isg-" + k, etiket: kacis(p.ad), girdi: '<input class="a-girdi a-girdi-seri" id="p-isg-' + k + '" data-isg="' + k + '" autocomplete="off" maxlength="30" value="' + kacis(F.isg[k] || "") + '" aria-describedby="p-isg-' + k + '-ipucu">' }) +
@@ -262,7 +262,7 @@
         '<div class="a-eylem-cubugu"><a class="a-tus a-tus-ikincil" href="#/">' + ikon("plus", "a-ikon-kucuk") + "Yeni plan aç</a>" +
           '<a class="a-tus a-tus-birincil" href="' + MK.adres(13, "#/") + '">' + ikon("calendar-check", "a-ikon-kucuk") + "Planlar</a></div></div>" +
       '<div class="a-uyari-serit">' + MK.serit("onay", "circle-check", "Plan açıldı. " + kacis(ekip.map(function (p) { return p.ad; }).join(", ")) + " için Planlar ekranında “Kabul bekliyor”.") +
-        (s.kaydedilen.length ? MK.serit("bilgi", "scroll-text", s.kaydedilen.map(function (k) { return kacis(MV.kisi(k).ad); }).join(", ") + " için İSG-KATİP sözleşme ID'si iş sözleşmesine de kaydedildi.") : "") +
+        (s.kaydedilen.length ? MK.serit("bilgi", "scroll-text", s.kaydedilen.map(function (k) { return kacis(MV.kisi(k).ad); }).join(", ") + " için İSG-KATİP SÖZLEŞME ID'si iş sözleşmesine de kaydedildi.") : "") +
         eksik.map(function (p) {
           var d = s.D[p.id];
           return '<div class="a-serit a-serit-uyari">' + ikon("triangle-alert", "a-ikon-kucuk") + "<span><b>" + kacis(p.ad) + "</b> — uyarı: " + kacis(d.eksik.join(" · ")) + ".</span>" +
@@ -271,7 +271,7 @@
       '<section class="a-bolum" aria-labelledby="a-b-plan"><div class="a-alt-bas"><h2 class="a-alt-baslik" id="a-b-plan">Plan bilgisi</h2></div>' +
         '<dl class="a-bilgi">' + bilgi("Proje no", '<span class="a-kod">' + s.no + "</span>") + bilgi("Başlangıç", MK.gunYaz(s.gun)) + bilgi("Bitiş", MK.gunYaz(s.bitGun)) +
           bilgi("Adres", kacis(t.adres) + ", " + t.ilce + " / " + t.il, true) + bilgi("Ekip", kacis(ekip.map(function (p) { return p.ad; }).join(", ")), true) +
-          bilgi("İSG-KATİP sözleşme ID", ekip.map(function (p) { var d = s.D[p.id]; return kacis(p.ad) + ": " + (d.isg.x ? '<span class="a-kod">' + kacis(d.isg.x.no) + "</span>" : d.isg.tur === "elle" ? '<span class="a-kod">' + kacis(d.isg.no) + "</span>" : '<span class="a-uyari-metin">yok</span>'); }).join("<br>"), true) +
+          bilgi("İSG-KATİP SÖZLEŞME ID", ekip.map(function (p) { var d = s.D[p.id]; return kacis(p.ad) + ": " + (d.isg.x ? '<span class="a-kod">' + kacis(d.isg.x.no) + "</span>" : d.isg.tur === "elle" ? '<span class="a-kod">' + kacis(d.isg.no) + "</span>" : '<span class="a-uyari-metin">yok</span>'); }).join("<br>"), true) +
           bilgi("Ekipman", top ? top + " ekipman · " + s.k.length + " tür" : "Tesiste kayıtlı ekipman yok") + bilgi("Açıklama", s.aciklama ? kacis(s.aciklama) : '<span class="a-deger-yok">Yok</span>', true) + "</dl></section>";
   }
 

@@ -685,7 +685,7 @@
     var std = MV.metotYazi(t);
     return (MV.FORMAT_TANIM[t.k] = { surum: (t.pdf || []).length || 1, taslak: false, kurallar: { foto: false, derece: false, oneri: true },
       bolumler: [
-        b("bilgi", "Firma bilgileri", { alanlar: [["Firma adı", "firma"], ["Adres", "tesis"], ["SGK sicil no", "tesis"], ["İSG-KATİP sözleşme ID", "sözleşme"], ["Kontrol tarihi", "plan"]].map(function (x) { return { ad: x[0], tur: "metin", kaynak: x[1], kilit: kilit }; }) }),
+        b("bilgi", "Firma bilgileri", { alanlar: [["Firma adı", "firma"], ["Adres", "tesis"], ["SGK sicil no", "tesis"], ["İSG-KATİP SÖZLEŞME ID", "sözleşme"], ["Kontrol tarihi", "plan"]].map(function (x) { return { ad: x[0], tur: "metin", kaynak: x[1], kilit: kilit }; }) }),
         b("bilgi", "Ekipman bilgileri", { alanlar: [["Ekipman kodu", "", "metin"], ["Marka / model", "", "metin"], ["Seri no", "", "metin"], ["İmal yılı", "", "sayi"], ["Kullanım yeri", "", "metin"]].map(function (x) { return { ad: x[0], tur: x[2] }; }) }),
         b("liste", "Muayene kriterleri", { maddeler: MV.kriterler(t).map(function (m) { return { metin: typeof m === "string" ? m : m.ad || m.metin, std: std }; }) }),
         b("test", "Test değerleri", { sutunlar: MV.testler(t).map(function (x) { return { ad: x.ad, birim: x.birim || "", giris: true, kural: x.op ? MV.sinirYaz(x) : "" }; }) }),
@@ -1549,10 +1549,10 @@
      oradan tüm raporlara sirayet edebilmeil kaydet tuşu olmalı" · "planlamacı herhangi bir plana düzenle diyip ilgili şeyleri düzenleyebilmeli,
      denetçi güncelle dediğin de o güncel bilgileri çekebilmeli yazdığı raporları ve plan ekranı ona göre düzeltebilmeli … planlamacı direk raporun
      içine ve veya plana etki edip denetçinin işine karışamaması için denetçi güncelle demeden olmamalı … her denetçinin raporuna sadece kendisi
-     müdahele edebilmeli"). Taban: müşteri ünvanı, tesis adresi ve SGK DETSİS no'su, İSG-KATİP sözleşme ID (denetçinin iş sözleşmesindeki ID'si,
+     müdahele edebilmeli"). Taban: müşteri ünvanı, tesis adresi ve SGK DETSİS NO'su, İSG-KATİP SÖZLEŞME ID (denetçinin iş sözleşmesindeki ID'si,
      yoksa planınki). Planlamacı Düzenle ile p.duzen = { alan, zaman, kim } yazar; bu GÜNCEL künyedir. Raporun künyesi (MV.RAPORLAR[x].kunye) ve
      denetçinin plan ekranındaki künye (p.gorulen[kişi]) KOPYADIR: planlamacının değişikliği onlara yalnız denetçi "Güncelle"ye basınca geçer. */
-  MV.PLAN_ALAN = [["unvan", "Firma adı"], ["adres", "Adres"], ["isg", "İSG-KATİP sözleşme ID"], ["sgk", "SGK DETSİS no"]];
+  MV.PLAN_ALAN = [["unvan", "Firma adı"], ["adres", "Adres"], ["isg", "İSG-KATİP SÖZLEŞME ID"], ["sgk", "SGK DETSİS NO"]];
   MV.planBul = function (id) { return MV.PLANLAR.filter(function (x) { return x.id === id; })[0]; };
   MV.planKunye = function (pid, kisi, ts, taban) {
     var p = pid != null ? MV.planBul(pid) : null;

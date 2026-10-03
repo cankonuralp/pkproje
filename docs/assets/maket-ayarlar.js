@@ -435,7 +435,7 @@
   var bul = function (l, v, alan) { return l.filter(function (x) { return iaTr(x[alan || "ad"]) === iaTr(v) || iaTr(x.k) === iaTr(v); })[0]; };
   /* tür: ad · şablon sütunları (* zorunlu) · örnek satır · satır denetimi (h → { ok, neden, uyari, ozet, kayit }) · içe aktarma · kullanıldı mı */
   var IA_TUR = {
-    musteri: { ad: "Müşteriler ve tesisler", dosya: "musteriler", sutun: ["Müşteri ünvanı*", "Vergi dairesi", "Vergi no", "E-posta", "Tesis adı*", "Adres*", "İl*", "İlçe", "SGK DETSİS no"],
+    musteri: { ad: "Müşteriler ve tesisler", dosya: "musteriler", sutun: ["Müşteri ünvanı*", "Vergi dairesi", "Vergi no", "E-posta", "Tesis adı*", "Adres*", "İl*", "İlçe", "SGK DETSİS NO"],
       ornek: [["Örnek Gıda San. A.Ş.", "Gebze", "1234567890", "isg@ornek-gida.example", "Merkez Fabrika", "OSB 3. Cadde No: 5", "Kocaeli", "Gebze", ""],
         ["Örnek Gıda San. A.Ş.", "Gebze", "1234567890", "isg@ornek-gida.example", "Depo", "OSB 9. Cadde No: 2", "Kocaeli", "Dilovası", ""],
         ["Deneme Metal Ltd.", "Tuzla", "", "", "Atölye", "Sanayi Sitesi B Blok No: 14", "İstanbul", "Tuzla", ""]],
@@ -446,7 +446,7 @@
           iaTesis(u, t) ? "Bu tesis zaten kayıtlı" : onceki.some(function (o) { return o.ok && iaTr(o.u) === iaTr(u) && iaTr(o.t) === iaTr(t); }) ? "Dosyada aynı tesis iki kez" : "";
         var vno = String(h[2] || "").replace(/\D/g, ""), uy = [];
         if (!vno) uy.push("vergi no boş"); else if (MV.MUSTERILER.some(function (m) { return m.vno === vno && iaTr(m.unvan) !== iaTr(u); })) uy.push("vergi no başka müşteride");
-        if (!String(h[8] || "").trim()) uy.push("SGK DETSİS no boş");
+        if (!String(h[8] || "").trim()) uy.push("SGK DETSİS NO boş");
         var var_ = MV.MUSTERILER.filter(function (m) { return iaTr(m.unvan) === iaTr(u); })[0];
         if (var_) uy.push("müşteri kayıtlı, tesis ona eklenir");
         return { ok: !neden, neden: neden, uyari: uy.join(" · "), u: u, t: t, ozet: kacis(u) + " · " + kacis(t) + '<span class="a-alt-satir">' + kacis(il || String(h[6] || "")) + (h[7] ? " / " + kacis(h[7]) : "") + "</span>",

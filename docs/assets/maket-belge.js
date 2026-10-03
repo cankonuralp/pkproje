@@ -53,8 +53,8 @@
         /* 2026-10-03: o.kunye = raporun künye kopyası (planlamacının düzenlemesi denetçi Güncelle'ye basınca gelir) */
         bilgi("Firma ünvanı", o ? kacis(K ? K.unvan : o.m.unvan) : bos, true) +
         bilgi("Adres", o ? kacis(K ? K.adres : o.ts.adres + ", " + o.ts.ilce + " / " + o.ts.il) : bos, true) +
-        bilgi("SGK DETSİS no", o ? '<span class="a-kod a-kod-uzun">' + kacis(K ? K.sgk : o.ts.sgk) + "</span>" : bos, "cift") +
-        bilgi("İSG-KATİP sözleşme ID", o ? ((K ? K.isg : o.isg && o.isg.no) ? '<span class="a-kod">' + kacis(K ? K.isg : o.isg.no) + "</span>" : '<span class="a-uyari-metin">Yok</span>') : bos) + "</dl>") +
+        bilgi("SGK DETSİS NO", o ? '<span class="a-kod a-kod-uzun">' + kacis(K ? K.sgk : o.ts.sgk) + "</span>" : bos, "cift") +
+        bilgi("İSG-KATİP SÖZLEŞME ID", o ? ((K ? K.isg : o.isg && o.isg.no) ? '<span class="a-kod">' + kacis(K ? K.isg : o.isg.no) + "</span>" : '<span class="a-uyari-metin">Yok</span>') : bos) + "</dl>") +
       bolum("2", "Kontrol bilgileri", '<dl class="a-bilgi">' +
         bilgi("Başlangıç", d(o && MK.tarihYaz(o.tarih) + " " + (o.bas || "09:12"), "saha: rapor açıldı")) +
         bilgi("Bitiş", d(o && MK.tarihYaz(o.tarih) + " " + (o.bit || "09:48"), "saha: onaya gönderildi")) +
@@ -149,7 +149,7 @@
     var firma = '<table class="rb-t"><colgroup><col style="width:19%"><col style="width:36%"><col style="width:28%"><col style="width:17%"></colgroup>' + bolumBas(et ? "1.FİRMA BİLGİLERİ" : "1. FİRMA BİLGİLERİ", 4) +
       '<tr><td class="rb-e">Firma Adı</td><td>' + (o ? k(o.kunye ? o.kunye.unvan : o.m.unvan) : "") + '</td><td class="rb-e">Rapor Numarası</td><td>' + (o ? k(o.no) : "") + "</td></tr>" +
       '<tr><td class="rb-e" rowspan="5">Periyodik Kontrol Adresi</td><td rowspan="5">' + (o && o.kunye ? k(o.kunye.adres) : ts ? k(ts.adres + ", " + ts.ilce + " / " + ts.il) : "") + '</td><td class="rb-e">Rapor Tarihi</td><td>' + (o ? tarih(o.tarih) : "") + "</td></tr>" +
-      '<tr><td class="rb-e">İSG-KATİP Sözleşme ID</td><td>' + (o && o.kunye ? k(o.kunye.isg || "") : o && o.isg ? k(o.isg.no) : "") + "</td></tr>" +
+      '<tr><td class="rb-e">İSG-KATİP SÖZLEŞME ID</td><td>' + (o && o.kunye ? k(o.kunye.isg || "") : o && o.isg ? k(o.isg.no) : "") + "</td></tr>" +
       '<tr><td class="rb-e">Periyodik Kontrol Başlangıç Tarihi ve Saati</td><td>' + (o ? tsaat(o.tarih, o.bas) : "") + "</td></tr>" +
       '<tr><td class="rb-e">Periyodik Kontrol Bitiş Tarihi ve Saati</td><td>' + (o ? tsaat(o.tarih, o.bit) : "") + "</td></tr>" +
       '<tr><td class="rb-e">Bir Sonraki Periyodik Kontrol Tarihi</td><td>' + (o ? tarih(o.sonraki) : "") + "</td></tr>" +

@@ -481,7 +481,7 @@
     /* 1 · FİRMA BİLGİLERİ: türün rapor formatından bağımsız, her raporda aynı (reisim 2026-09-26); 2026-09-27 örnek ekranla: etiket solda,
        değer ya da alan sağda, satır satır; kontrol tarihleri de burada (ayrı "Kontrol bilgileri" bölümü kalktı). Kayıttan gelen değerler
        (firma, e-posta, adres, İSG-KATİP ID, rapor no) raporda değişmez (160); telefon ve ekipman bölümü elle.
-       2026-09-29 (reisim: "Plan içeriğinde "SGK destis no:" ksımı yok olmalı"): SGK DETSİS no saha ekranında yok; tesis kaydından
+       2026-09-29 (reisim: "Plan içeriğinde "SGK destis no:" ksımı yok olmalı"): SGK DETSİS NO saha ekranında yok; tesis kaydından
        rapor PDF'ine gider (Ek-III zorunlu alanı, maket-belge.js). */
     /* 2026-09-27 (reisim): firma adı, e-posta, telefon, adres, rapor no denetçide DEĞİŞMEZ — plan açılırken planlamacı girer ya da
        kendiliğinden oluşur; yanlışsa planlamacı Müşteriler'den düzeltir, denetçi "Güncelle" ile güncel bilgiyi çeker.
@@ -499,9 +499,9 @@
         satir("Adres", kacis(K.adres)) +
         satir("Rapor no", '<span class="a-kod">' + r.no + "</span>") +
         tarihAlan(r, oku, "rtarih", "Rapor tarihi", false) +
-        satir("İSG-KATİP sözleşme ID", K.isg ? '<span class="a-kod">' + kacis(K.isg) + "</span>" : '<span class="a-uyari-metin">Yok</span>') +
+        satir("İSG-KATİP SÖZLEŞME ID", K.isg ? '<span class="a-kod">' + kacis(K.isg) + "</span>" : '<span class="a-uyari-metin">Yok</span>') +
         /* 2026-10-03 (reisim: "raporlarda sgk destis no yu kaldrımışsın neden ? geri getir") — 2026-09-29'da saha ekranından kalkmıştı (X2) */
-        satir("SGK DETSİS no", K.sgk ? '<span class="a-kod a-kod-uzun">' + kacis(K.sgk) + "</span>" : '<span class="a-uyari-metin">Yok</span>') +
+        satir("SGK DETSİS NO", K.sgk ? '<span class="a-kod a-kod-uzun">' + kacis(K.sgk) + "</span>" : '<span class="a-uyari-metin">Yok</span>') +
         (F ? satir("Periyodik kontrol metodu ve kapsamı", metotBag(t)) : "") +
         metinAlan(r, oku, "bolumAd", "Ekipman bölümü", 60) + "</dl>",
       /* telefonda yalnız simge (2026-09-29, reisim: "hepsine uygula ve güncelle mobilde yazmamalı sadece işaretleri gözükmeli") */
