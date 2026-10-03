@@ -2,8 +2,8 @@
  "maket": "m8",
  "tarih": "2026-10-03",
  "arac": "tools/olc-bulut.mjs --etkilesim (başsız tarayıcı, 1920 açık tema; gen verilen denemede o genişlik)",
- "toplam": 123,
- "gecen": 123,
+ "toplam": 124,
+ "gecen": 124,
  "denemeler": [
   {
    "ad": "AA2: yıllık fazla çalışma sınırı dolan kişide o gün mesai hakkı yok — pencerede Bu yıl … / 270 saat · doldu, süre normalle dolar; az kalan kişide hak kalan kadar",
@@ -182,6 +182,13 @@
   },
   {
    "ad": "P1: Kaydet ve kopyala plan günü gelmeden açılmaz (pencere söyler, kopyalanmaz)",
+   "gen": 1920,
+   "sayfa": "maket/rapor.html",
+   "hash": "#/r/ET-1009",
+   "gecti": true
+  },
+  {
+   "ad": "P1: geçmiş günlü planda (10.09) Kaydet ve kopyala açık — engel yalnız ileri tarihte",
    "gen": 1920,
    "sayfa": "maket/rapor.html",
    "hash": "#/r/ET-1009",

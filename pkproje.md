@@ -2188,6 +2188,11 @@ failed mesajı gelsi girhubdan bana mail olarak"* → haftalık kilometre + ara�
 (235'te rapor şablonu dahil; ölçülerek doğrulandı). Push hatası: kod denetimi geçti, Pages yayın adımı GitHub'ın geçici bir hatasıyla düştü;
 ikinci e-posta benim yaptığım yeniden çalıştırmadan (aynı yayın paketi ikinci kez yüklendi) — sonraki push temiz yayınlar, yeniden çalıştırma
 yapılmaz.
+
+**Elli ikinci tur (2026-10-03, reisim birebir):** *"geçmişe yönelik günlerde rapor oluşturmayı engelleme geleceğe rapor yazmayı engelle"* (plan içi
+ekran görüntüsüyle) → kural zaten buydu (yalnız ileri tarih kapalı), ama makette bugün sabit 23.09.2026 ve şerit bugünü söylemiyordu; 24.09'daki plan
+geçmiş gibi okunuyordu. Metin bugünü ve kuralı söyler (§11 239). Ara mesaj: *"bu kısımda tarh"* · *"tarihler takvim seçmeli olsun"* (Plan aç ›
+Tarihler) → §11 240.
 Aynı gün ara mesajlar (reisim birebir): *"Şirket logosuda firma ayarlarından girilsin , raporlara otomatik çekilsin"* (§11 238) · *"Format
 tasarımcısında herhangi bir başlığa tıklayınca en baş arıyor, en başa atmasın başlığı düzenlediğimiz yere odaklansın(telefonda)"* (§11 237).
 
@@ -2228,6 +2233,10 @@ revizyon, alan kopyalama, hafif kusur devri, meslek eşleşme denetimi).
 - Emsal ürünler: https://opwire.app/iso-17020-periyodik-kontrol-yazilimi/ · https://17020muayene.vidco.com.tr/ · https://akuple.com/asansor-kontrol-yazilimi/ · https://ensyazilim.com/
 
 ## 11 · Değişiklik günlüğü
+- 2026-10-03 (239): **Rapor engeli yalnız ileri tarihte — metin bugünü söyler** (§9 elli ikinci tur). Kural değişmedi (P1, 213: plan günü bugün ya da
+  geçmişse rapor açık, ileri tarihte kapalı). Şerit, Rapor oluştur eylemi ve "Kaydet ve kopyala" penceresi tek metinden (`MK.erkenMetin`): "Plan günü
+  GG.AA.YYYY henüz gelmedi (bugün GG.AA.YYYY). Rapor plan gününden itibaren oluşturulur; geçmiş günlere açık, ileri tarihe kapalı." İki eski denetimin
+  metni güncellendi; yeni denetim: geçmiş günlü planda kopya açılır.
 - 2026-10-03 (238): **Firma logosu Firma ayarları'ndan; raporlara kendiliğinden gelir** (§9 elli birinci tur ara mesajı). Firma ayarları › Firma
   bilgileri'nde "Firma logosu": yükle (PNG, JPG, SVG; en çok 2 MB), önizleme, Değiştir, Kaldır (onaylı). Logo tek yerden (`MB.logo`) bütün
   başlıklara gider: Bakanlık formatlı raporlar (ZPKR01 / ZPKR02, her sayfa), temel formatlı raporlar ve bütün iç belgeler (araç tutanağı, zimmet
@@ -2402,7 +2411,7 @@ revizyon, alan kopyalama, hafif kusur devri, meslek eşleşme denetimi).
   görünür. Kilit m2 etkileşim; düzeltmesiz 30/31 düştü.
 - 2026-10-01 (213): **P1 · Plan günü gelmeden rapor oluşturulamaz — ENGEL** (§9 kırk beşinci tur; reisim'in açık kararı, "kural uyarıdır"
   genel ilkesinin istisnası; mesai sınırı ve eşsiz kod gibi). Plan içinde plan günü (başlangıç) bugünden sonraysa "Rapor oluştur" kapalı, nedeni
-  şeritte ("Plan günü GG.AA.YYYY; rapor o gün oluşturulabilir."); eylem de reddeder. Saha raporundaki "Kaydet ve kopyala" da planın gününe bakar
+  şeritte (2026-10-03: metin bugünü de söyler, §11 239); eylem de reddeder. Saha raporundaki "Kaydet ve kopyala" da planın gününe bakar
   (`MV.planGunu`: Plan aç'ta açılan plan ya da tohum planı). Kırılan deneme (2026-10-01): "kabul edilen planda … ilk rapor planı Denetimde yapar"
   plan 3'te (24.09) koşuyordu, artık orada rapor açılamaz → bugünkü plan 2'ye (23.09) taşındı. Yeni kilitler: planlar etkileşim (plan 3 engeli;
   düzeltmesiz 64/65 düştü) · m8 etkileşim (kopya engeli; düzeltmesiz 111/112 düştü).

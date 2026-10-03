@@ -202,6 +202,8 @@
   var calisir = function (p) { return p.durum === "kabul" || p.durum === "denetimde" || p.durum === "tamam"; };
   /* P1 (2026-10-01, reisim: "Plan günü gelmeden rapor açılmasına izin vermesin sistem"): plan günü (başlangıç) gelmeden rapor oluşturulamaz —
      uyarı değil ENGEL (reisim'in açık kararı); düğme kapalı, neden plan içinde şeritte */
+  /* 2026-10-03 (reisim: "geçmişe yönelik günlerde rapor oluşturmayı engelleme geleceğe rapor yazmayı engelle"): engel YALNIZ ileri tarihte —
+     plan günü bugün ya da geçmişse rapor açık. Kural aynıydı; şerit bugünü söylemediği için geçmiş gibi okunuyordu (makette bugün sabit). */
   var erken = function (p) { return p.tarih > BUGUN; };
   var ekipmanAcik = function (p) { return p.durum === "kabul" || p.durum === "denetimde"; };   /* ekipman eklenir, Excel'den yüklenir */
 
@@ -512,7 +514,7 @@
     if (d === "kabul" || calisir(p)) kontrol =
       /* günlük süre (212): dolunca Rapor oluştur kapalı, sebep çubukta */
       /* N6 (2026-09-30): günlük süre üst çubukta (açılır); burada yalnız süre dolunca neden */
-      (erken(p) ? '<div class="a-mesai-dolu-serit">' + MK.serit("uyari", "calendar", "Plan günü " + tno(p.tarih) + "; rapor o gün oluşturulabilir.", "a-erken-sebep") + "</div>" : "") +
+      (erken(p) ? '<div class="a-mesai-dolu-serit">' + MK.serit("uyari", "calendar", MK.erkenMetin(p.tarih), "a-erken-sebep") + "</div>" : "") +
       (d !== "tamam" && MV.mesai().acik && MV.gunlukSure(BEN).dolu ? '<div class="a-mesai-dolu-serit">' + MK.serit("uyari", "clock", "Günlük süre doldu (normal " + MV.mesai().normal + " + mesai " + MV.mesai().mesai + " dk); bugün yeni rapor oluşturulamaz.", "a-mesai-sebep") + "</div>" : "") +
       '<div class="a-alt-bolum a-plan-bolum"><div class="a-alt-bas"><h3 class="a-alt-baslik" id="a-ekipman-baslik">Ekipmanlar</h3><span class="a-sayac" id="a-sayac-e"></span>' +
         /* 2026-09-27 (reisim: "ekipan listesinbi excelden export etme ve inport etme olsun"): Excel'e aktar her zaman; Excel'den yükle
@@ -678,7 +680,7 @@
   X["geri-al"] = function (el) { var p = pl(el); if (p && p.durum === "tamam") { p.durum = "denetimde"; p.bitti = null; kaydet(p, simdi(), BEN, "Tamamlama geri alındı"); goster(false); MK.bildir("Tamamlama geri alındı; plan yeniden denetime açıldı."); } };
   X["rapor-olustur"] = function (el) {
     var p = pl(el);
-    if (p && calisir(p) && erken(p)) { MK.bildir("Plan günü " + tno(p.tarih) + "; rapor o gün oluşturulabilir."); return; }   /* P1 */
+    if (p && calisir(p) && erken(p)) { MK.bildir(MK.erkenMetin(p.tarih)); return; }   /* P1 */
     if (p && calisir(p) && MV.gunlukSure(BEN).dolu) { MK.bildir("Günlük süre doldu (mesai takibi); bugün yeni rapor oluşturulamaz."); return; }   /* 212 */
     if (p && calisir(p) && !raporuVar(p, el.dataset.kod)) {   /* ekipman başına bir rapor (2026-09-30, 203) */
       var r = { no: raporNo("0926", raporSira++).replace(/^[^-]+/, MV.firmaKodu()), kod: el.dataset.kod, durum: "taslak", olustu: simdi(), sonuc: null };

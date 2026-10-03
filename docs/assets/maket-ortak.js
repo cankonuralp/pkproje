@@ -11,6 +11,8 @@
   var MK = window.MK = {};
   var IKON = "../vendor/lucide-1.47.0/ikonlar.svg#i-";
   MK.BUGUN = "2026-09-23"; MK.SAAT = "16:40";
+  /* ileri tarihli plana rapor yok (P1); metin bugünü de söyler — geçmiş gün açık (2026-10-03) */
+  MK.erkenMetin = function (g) { return "Plan günü " + MK.tarihYaz(g) + " henüz gelmedi (bugün " + MK.tarihYaz(MK.BUGUN) + "). Rapor plan gününden itibaren oluşturulur; geçmiş günlere açık, ileri tarihe kapalı."; };
 
   /* ── YARDIMCILAR ─────────────────────────────────────────────────────────────────────────────────────── */
   var $ = MK.$ = function (id) { return document.getElementById(id); };
