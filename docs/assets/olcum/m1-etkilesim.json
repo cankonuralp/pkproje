@@ -2,8 +2,8 @@
  "maket": "m1",
  "tarih": "2026-10-03",
  "arac": "tools/olc-bulut.mjs --etkilesim (başsız tarayıcı, 1920 açık tema; gen verilen denemede o genişlik)",
- "toplam": 113,
- "gecen": 113,
+ "toplam": 115,
+ "gecen": 115,
  "denemeler": [
   {
    "ad": "AA3: Personel › bordro Onaya gönder → kişinin Onaylar › Diğer belgelerine düşer, satırda Onay bekliyor",
@@ -794,6 +794,20 @@
    "gen": 1920,
    "sayfa": "maket/personel.html",
    "hash": "#/p/mk",
+   "gecti": true
+  },
+  {
+   "ad": "Logo: Firma ayarları'ndan yüklenir, önizlenir; rapor ve belge başlıklarına kendiliğinden gelir (araç tutanağı şablonu)",
+   "gen": 1920,
+   "sayfa": "maket/firma-ayarlari.html",
+   "hash": "#/",
+   "gecti": true
+  },
+  {
+   "ad": "Logo kaldırılır (onaylı) → başlıkta yeniden \"LOGO\" yeri",
+   "gen": 1920,
+   "sayfa": "maket/firma-ayarlari.html",
+   "hash": "#/",
    "gecti": true
   }
  ]

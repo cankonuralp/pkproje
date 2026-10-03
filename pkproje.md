@@ -2228,6 +2228,11 @@ revizyon, alan kopyalama, hafif kusur devri, meslek eşleşme denetimi).
 - Emsal ürünler: https://opwire.app/iso-17020-periyodik-kontrol-yazilimi/ · https://17020muayene.vidco.com.tr/ · https://akuple.com/asansor-kontrol-yazilimi/ · https://ensyazilim.com/
 
 ## 11 · Değişiklik günlüğü
+- 2026-10-03 (238): **Firma logosu Firma ayarları'ndan; raporlara kendiliğinden gelir** (§9 elli birinci tur ara mesajı). Firma ayarları › Firma
+  bilgileri'nde "Firma logosu": yükle (PNG, JPG, SVG; en çok 2 MB), önizleme, Değiştir, Kaldır (onaylı). Logo tek yerden (`MB.logo`) bütün
+  başlıklara gider: Bakanlık formatlı raporlar (ZPKR01 / ZPKR02, her sayfa), temel formatlı raporlar ve bütün iç belgeler (araç tutanağı, zimmet
+  formu, talep formları, sözleşme, saha formu, ara kontrol, format önizlemesi). Yüklenmediyse "LOGO" yeri kalır. Kilit: m1 2 etkileşim (eski
+  kodda düşüyor).
 - 2026-10-03 (237): **Format kurucu: bölüme basınca başa atmaz** (§9 elli birinci tur ara mesajı). Aynı türün kurucusunda bölüm değişince sayfa en
   başa kaymıyor; düzenleyicinin başlığı görünmüyorsa ona kayıyor ve odak orada (telefonda bölüm listesi üstte, düzenleyici altta olduğu için).
   Kilit: m3 telefon (375) etkileşimi, eski kodda düşüyor; m3 152/152 · 31/31 · 76/76.

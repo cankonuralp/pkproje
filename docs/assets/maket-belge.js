@@ -16,10 +16,16 @@
      pano için atmıştım"): bütün iç belgeler (rapor şablonu, saha formu, ara kontrol, talep formları, sözleşme, araç tutanağı, zimmet formu)
      Bakanlık formatlarının (ZPKR01 / ZPKR02) başlık tablosunu kullanır — logo · firma künyesi · akreditasyon · BELGE ADI · doküman bilgileri;
      belge .rb-sayfa olduğu için kâğıtta her sayfanın başında tekrar eder. Yayım / revizyon bilgileri uydurma (firma kendi formatında girer). */
+  /* firma logosu (2026-10-03, reisim: "Şirket logosuda firma ayarlarından girilsin , raporlara otomatik çekilsin"): Firma ayarları › Firma
+     bilgileri'nde yüklenen resim; yüklenmediyse "LOGO" yeri. Bütün başlıklar (Bakanlık formatları + temel format) buradan alır. */
+  MB.logo = function () {
+    var a = MV.FIRMA.logo, d = a && MK.DOSYA[a];
+    return d ? '<img class="rb-logo-resim" src="' + d.url + '" alt="' + kacis(MV.FIRMA.ad) + ' logosu">' : "LOGO";
+  };
   MB.resmiBas = function (ad, kod, alt) {
     var f = MV.FIRMA;
     return '<table class="rb-bas"><colgroup><col style="width:11%"><col style="width:29%"><col style="width:10%"><col style="width:28%"><col style="width:22%"></colgroup><tr>' +
-      '<td class="rb-logo">LOGO</td><td class="rb-firma"><b>' + kacis(f.ad) + "</b><br>" + kacis(f.adres) + '</td><td class="rb-logo">AKR.</td>' +
+      '<td class="rb-logo">' + MB.logo() + '</td><td class="rb-firma"><b>' + kacis(f.ad) + "</b><br>" + kacis(f.adres) + '</td><td class="rb-logo">AKR.</td>' +
       '<td class="rb-bas-ad">' + kacis(ad) + "</td>" +
       '<td class="rb-dok"><div><span>Doküman Kodu</span>: ' + kod + '</div><div><span>Yayım Tarihi</span>: 01.09.2026</div><div><span>Revizyon No</span>: 00</div>' +
       '<div><span>Revizyon Tarihi</span>: -</div><div><span>Yürürlük Tarihi</span>: 01.09.2026</div></td></tr></table>' +
@@ -132,7 +138,7 @@
     var ts = o ? o.ts : null;
     var bas = function () {
       return '<table class="rb-bas"><colgroup><col style="width:11%"><col style="width:29%"><col style="width:10%"><col style="width:28%"><col style="width:22%"></colgroup><tr>' +
-        '<td class="rb-logo">' + (o ? "LOGO" : "") + '</td><td class="rb-firma">' + (o ? "<b>" + k(f.ad) + "</b><br>" + k(f.adres) : "") + '</td><td class="rb-logo">' + (o ? "AKR." : "") + "</td>" +
+        '<td class="rb-logo">' + (o ? MB.logo() : "") + '</td><td class="rb-firma">' + (o ? "<b>" + k(f.ad) + "</b><br>" + k(f.adres) : "") + '</td><td class="rb-logo">' + (o ? "AKR." : "") + "</td>" +
         '<td class="rb-bas-ad">' + k(rf.ad.toLocaleUpperCase("tr")) + "</td>" +
         '<td class="rb-dok"><div><span>Doküman Kodu</span>: ' + rf.k + '</div><div><span>Yayım Tarihi</span>: ' + tarih(rf.yayim) + '</div><div><span>Revizyon No</span>: -</div><div><span>Revizyon Tarihi</span>: -</div><div><span>Yürürlük Tarihi</span>: ' + tarih(rf.yururluk) + "</div></td></tr></table>";
     };

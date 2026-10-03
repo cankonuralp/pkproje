@@ -1676,3 +1676,7 @@ a.a-yuz:hover { border-color: var(--kenar-alan); background: var(--zemin); }
 .a-resmi .a-belge-imza { min-height: 40px; margin-top: 4px; border: 0; border-radius: 0; color: #000; font-size: 10px; }
 .a-resmi .a-belge-alt { margin-top: 10px; padding-top: 4px; border-top: 1px solid #000; color: #000; font-size: 9px; }
 .a-resmi .a-kod { font: inherit; background: none; padding: 0; color: #000; }
+/* firma logosu (2026-10-03): belge başlığında hücreye sığar; Firma ayarları'nda küçük önizleme */
+.rb-logo-resim { display: block; max-width: 100%; max-height: 100px; margin: 0 auto; object-fit: contain; }
+.a-logo-satir { display: flex; align-items: center; gap: 12px; flex-wrap: wrap; }
+.a-logo-onizle { max-width: 120px; max-height: 56px; object-fit: contain; border: 1px solid var(--kenar); border-radius: var(--r-kucuk); background: #fff; padding: 4px; }

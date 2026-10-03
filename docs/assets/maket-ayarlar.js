@@ -20,6 +20,11 @@
         return MK.alan({ id: "ay-k-" + x[0], etiket: x[1], genis: x[0] === "ad" || x[0] === "adres", uyari: String(f[x[0]] || "").trim() ? "" : "Boş: raporda bu alan boş çıkar.", sonuc: x[3],
           girdi: MK.girdi({ id: "ay-k-" + x[0], deger: f[x[0]] || "", ek: ' data-kunye="' + x[0] + '" maxlength="' + x[2] + '"' + (x[0] === "eposta" ? ' type="email" inputmode="email"' : "") }) });
       }).join("") +
+      /* firma logosu (2026-10-03): yüklenince raporların ve belgelerin başlığına kendiliğinden gelir */
+      '<div class="a-alan-grup a-alan-genis"><p class="a-etiket">Firma logosu</p>' + (f.logo ? '<div class="a-logo-satir">' +
+          (MK.DOSYA[f.logo] ? '<img class="a-logo-onizle" src="' + MK.DOSYA[f.logo].url + '" alt="Firma logosu">' : "") +
+          MK.dosyaAlan({ ad: f.logo, degistir: "logo-yukle", sil: "logo-sil" }) + "</div>"
+        : MK.tus({ eylem: "logo-yukle", ad: "Logo yükle", ikon: "upload", sinif: "a-tus-ikincil" })) + "</div>" +
       '<div class="a-alan-grup"><label class="a-etiket" for="ay-nusha">Rapor nüsha sayısı</label>' + MK.secim({ id: "ay-nusha", ad: "Rapor nüsha sayısı", deger: String(f.nusha || 2), secenekler: [1, 2, 3, 4].map(function (n) { return [String(n), n + " nüsha"]; }), ipucu: "Seçin" }) + "</div>" +
       "</div></section>";
   }
@@ -248,6 +253,18 @@
         : '<div class="a-eylem-cubugu a-eylem-sol">' + MK.tus({ eylem: "bt-ac", ad: "Belge türü ekle", ikon: "plus", sinif: "a-tus-ikincil" }) + "</div>") +
       "</section>";
   }
+  X["logo-yukle"] = function () {
+    MK.dosyaSec({ kabul: "image/png,image/jpeg,image/svg+xml", enCokMB: 2, ornek: "firma-logosu.png" }, function (ad) {
+      var eski = MV.FIRMA.logo; MV.FIRMA.logo = ad; if (eski && eski !== ad) MK.dosyaSil(eski);
+      ayarCiz(); var t = document.querySelector('[data-eylem="logo-yukle"]'); if (t) t.focus();
+      MK.bildir("Firma logosu kaydedildi; raporların ve belgelerin başlığına gelir.");
+    });
+  };
+  X["logo-sil"] = function () {
+    MK.onayla({ baslik: "Logo kaldırılsın mı?", metin: "Raporların ve belgelerin başlığında logo yerinde boş kutu çıkar.", tus: "Kaldır", tamam: function () {
+      var a = MV.FIRMA.logo; MV.FIRMA.logo = null; if (a) MK.dosyaSil(a); ayarCiz(); var t = document.querySelector('[data-eylem="logo-yukle"]'); if (t) t.focus(); MK.bildir("Firma logosu kaldırıldı.");
+    } });
+  };
   X["bt-ac"] = function () { BT = { ac: true, hata: "", ad: "", kisisel: false }; ayarCiz(); $("ay-bt-ad").focus(); };
   X["bt-vazgec"] = function () { BT.ac = false; ayarCiz(); document.querySelector('[data-eylem="bt-ac"]').focus(); };
   X["bt-ekle-kaydet"] = function () {
