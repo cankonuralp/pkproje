@@ -32,6 +32,9 @@ jobs:
       - run: npm test
       - run: npm run test:negatif
       - run: node scripts/next.ts build
+      # uçtan uca (K0, 2026-10-03): Playwright kendi Chromium'unu indirir; masaüstü · tablet · telefon
+      - run: npx playwright install --with-deps chromium
+      - run: npm run test:e2e
 
   yayin:
     name: Pages önizlemesi

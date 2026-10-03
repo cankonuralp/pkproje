@@ -37,6 +37,9 @@ modüller sırası gelince silinir, şimdi değil (MAKET-PLANI.md Durum). **M1 o
 (2026-09-26)**; **M3 onaylandı (2026-09-26)** (Ekipmanlar modülü kalktı, ekipmanlar planın içinde; tür başına firmanın rapor formatı PDF'i); **M4 onaylandı (2026-09-26)**; **M5 Sözleşmeler onaylandı (2026-09-26)** (M13 ile birleşti;
 İSG-KATİP ID'leri iş sözleşmesinin içinde, uyarı yalnız İSG-KATİP için); M6 Plan aç 2. tur incelemede; **2026-09-26 reisim: kalan modüllerin (M7–M16) soruları tek listede** (MAKET-PLANI.md), cevaplandı (pkproje.md §9 yirmi birinci tur), M6–M16 2. tur bitti, **reisim toplu gözden geçiriyor** — 2026-09-27/28 tur tur (pkproje.md §9 yirmi ikinci – otuz üçüncü tur, §11 90–111; maket artık sayfalar arası
 kalıcı, reisim her işlevi kendisi dener; makette geçici çözüm olabilir, nihai kodda olmaz); **bütün maketler onaylanmadan kod yok**; **2026-09-29 reisim: modül modül koda geçiş yok — her şey makette kalır, kod bütün maket bitince tek seferde, olabildiğince düzgün yazılır** (pkproje.md §9 otuz altıncı tur); genel ilke: teknik ayrıntı yok, kural uyarıdır engel değil (pkproje.md §9 on ikinci tur).
+**2026-10-03 KOD BAŞLADI** (reisim: *"Makette eksik kalmadıysa koda geç"*): G0 → bütün maketler bu tarihteki hâliyle onaylı; yapım sırası ve kurallar
+`KOD-GECIS.md` (K0 → K7). Paket izni kalıcı (reisim: *"İzin isteme ne gerekiyorsa yap"*); Windows'ta yapılması gereken iş çıkınca reisim'e söylenir.
+Uçtan uca test: `npm run test:e2e` (Playwright, `e2e/`).
 
 ## 2 · Yığın (pkproje.md §8 — **reisim 2026-09-22'de onayladı**)
 - **TypeScript + Next.js (App Router), standalone çıktı — onaylı 2026-09-22** (SvelteKit düştü). Tarayıcı
@@ -202,3 +205,13 @@ CI aynı zinciri her push'ta koşar (`.github/workflows/ci.yml`); main'de deneti
   üretilir, elle düzenlenmez (toplu bakış metni pkproje.md §3.6'dan, sayıları `docs/assets/olcum/`'dan okur). Sayfalar `noindex`; veri uydurma. İş akışı
   `.github/workflows/ci.yml` (Eksikler §1): her push'ta denetim; main'de denetim geçerse önizleme kurulur ve yayınlanır.
 - OneDrive: reisim'de kapalı, klasör adı Windows 10'dan kalma; dosyalar yerelde. Yedek = GitHub.
+
+<!-- BEGIN:nextjs-agent-rules -->
+
+# This is NOT the Next.js you know
+
+This version has breaking changes — APIs, conventions, and file structure may all differ from your training data. Read the relevant guide in `node_modules/next/dist/docs/` (resolved from this file's directory; in monorepos the `next` package may not be visible from the repo root) before writing any code. Heed deprecation notices.
+
+This block is written and re-added by `next dev` — verify at `node_modules/next/dist/server/lib/generate-agent-files.js`. Removing it from a diff only re-creates the uncommitted change; committing it with your work keeps the tree clean.
+
+<!-- END:nextjs-agent-rules -->

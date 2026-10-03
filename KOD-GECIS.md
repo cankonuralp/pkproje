@@ -9,7 +9,8 @@
 > `09-SUNUCU-VE-VERI.md` · `RAPOR-FORMAT.md` · `07-YETKI-VE-COKLU-KIRACI.md` · `EKSIKLER-VE-ONERILER.md` · maketin veri dosyası
 > (`docs/assets/maket-veri.js`, ~80 koleksiyon) ve maketteki bütün kayıt engelleme mesajları · uygulama iskeleti (`src/`, `tests/`).
 >
-> **Durum:** hazırlık bitti; kod **başlamadı**. Başlamak için §0'daki iki karar gerekir.
+> **Durum:** hazırlık bitti. **2026-10-03 kod başladı** (reisim: *"Makette eksik kalmadıysa koda geç , pc de yapman gereken iş olduğunda pc ye geçeriz"*) →
+> G0 uygulandı: bütün maketler bu tarihteki hâliyle onaylı. İlk kalem K0 Hazırlık.
 
 ---
 
@@ -82,8 +83,10 @@ paketleri) seçilmez ya da Windows'ta ölçülmeden eklenmez. Sunucuda PDF için
 erişim katmanı (ORM yok; RLS'yi gizlemesin) · girdi doğrulama tek şema kitaplığı (sunucu ve istemci aynı şemayı paylaşır) · parola özeti Node'un
 yerleşik kriptosu ya da WASM Argon2id (yerel eklenti yok) · pg-boss · S3 istemcisi (saf JS) · PDF: HTML → PDF sunucuda başsız Chromium
 (maketteki A4 kâğıt düzeni zaten HTML; birebir çıktı için en kısa yol) — Windows'ta ölçülecek, olmazsa saf JS PDF çizimi · PAdES imza gömme saf JS ·
-Excel saf JS · çevrimdışı: servis çalışanı + IndexedDB, mağaza uygulamasında Capacitor + SQLite (K5). **Her yeni paket için indirme izni reisim'den**
-(iskeletteki gibi) ve sürümü sabit.
+Excel saf JS · çevrimdışı: servis çalışanı + IndexedDB, mağaza uygulamasında Capacitor + SQLite (K5). **Paket izni (2026-10-03, reisim: *"İzin isteme ne
+gerekiyorsa yap pc de yapmamız daha iyi olacak şeyler için pc ye geçmemiz gerekince söyle"*): artık tek tek sorulmaz**; sürüm sabit, saf JS / WASM
+kuralı aynen, Windows'ta denenmesi gereken paket ya da iş çıkınca reisim'e "PC'ye geçelim" denir. K0'da eklenenler: `zod` 4.6.5 (şema) · `@playwright/test`
+1.63.0 (uçtan uca, yalnız test).
 
 ## 3 · Veri modeli (maketten çıkan tablolar)
 

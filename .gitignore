@@ -28,3 +28,7 @@ yerel/
 
 # Sohbet ciktilari - depoya GIRMEZ (reisim 2026-09-22)
 Claude outputs/
+
+# uçtan uca test çıktıları (Playwright)
+/test-results/
+/playwright-report/

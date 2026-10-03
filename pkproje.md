@@ -2294,6 +2294,9 @@ Aynı gün akşam (reisim birebir, ekran görüntüleriyle): *"hala say ı göre
 her şeyden üstte olmalı demiştim sana"* · *"şu 3 çizgiyi sol barın içine taşı arka plan biraz daha açık bir renk olsun beyaza çok yakın olsun , tablette
 raporu pasife al tuşu rapor oluştur tuşunu aşağıya taşırıyor, rapor oluşturduktan sonra sayfa başına atıyor, hatta herhangi bir tuşa basınca en başa
 atıyor buna daikkat etmek gerek"* · yazım sorusu *"neden sgk destsis no büyük harflerle başlayıp yazılıp no kısmı küçük"* → "Hepsi büyük harf" (§11 269–270).
+Aynı gün (reisim birebir): *"Mobilde aorun var mı ? Güncel maket linki atar mısın"* · *"Arka plandan vazgeçtim bu arada kalsın"* (§11 271) ·
+**koda geçiş:** *"Makette eksik kalmadıysa koda geç , pc de yapman gereken iş olduğunda pc ye geçeriz"* → **G0 uygulandı, kod başladı** (KOD-GECIS);
+paket izni sorulunca *"İzin isteme ne gerekiyorsa yap pc de yapmamız daha iyi olacak şeyler için pc ye geçmemiz gerekince söyle"* → paket izni kalıcı (§11 272).
 
 **Açık kalanlar:** ~~Ana sayfada İSGGM duyuruları~~ (2026-09-27: makette eklendi; okuma işi uygulamada) (reisim 2026-09-26: *"Ana sayfada isgüm duyurularını gösterebilir miyiz ? Bunu
 yapılacaklar listesine ekle"*; öneri: ÇSGB İSGGM duyurular sayfası — https://www.csgb.gov.tr/isggm/duyurular/ — sunucuda günde birkaç kez
@@ -2332,6 +2335,10 @@ revizyon, alan kopyalama, hafif kusur devri, meslek eşleşme denetimi).
 - Emsal ürünler: https://opwire.app/iso-17020-periyodik-kontrol-yazilimi/ · https://17020muayene.vidco.com.tr/ · https://akuple.com/asansor-kontrol-yazilimi/ · https://ensyazilim.com/
 
 ## 11 · Değişiklik günlüğü
+- 2026-10-03 (272): **KOD BAŞLADI — K0 Hazırlık 1: paketler ve uçtan uca test düzeni** (§9 elli ikinci tur). G0 uygulandı (bütün maketler bu tarihteki
+  hâliyle onaylı). Paketler: `zod` 4.6.5 (ortak şema), `@playwright/test` 1.63.0 (yalnız test). `playwright.config.ts` (masaüstü 1920 · tablet 1080 ·
+  telefon 375; Next geliştirme sunucusu projenin yoluyla, yalnız 127.0.0.1; makinedeki Chromium varsa o), `e2e/kabuk.spec.ts` (ilk denetim: kabuk
+  çizilir, yatay kayma yok), `npm run test:e2e`, CI'da uçtan uca adım. Paket izni kalıcı (KOD-GECIS §2, CLAUDE.md §1).
 - 2026-10-03 (271): **Arka plan eski hâline** (reisim: *"Arka plandan vazgeçtim bu arada kalsın"*). Açık tema zemini #FAF9F6 → yine **#F5F3EE**
   (§11 270'in (3). maddesi geri alındı; öteki maddeler aynen). Kontrast 74 çift geçti.
 - 2026-10-03 (270): **S.A.Y üstte; ☰ sol barda; arka plan beyaza yakın; tablette ekipman tuşları tek satır; tuşa basınca başa atmaz** (§9 elli ikinci tur,
