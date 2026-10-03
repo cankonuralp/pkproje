@@ -11,8 +11,13 @@
   var MK = window.MK = {};
   var IKON = "../vendor/lucide-1.47.0/ikonlar.svg#i-";
   MK.BUGUN = "2026-09-23"; MK.SAAT = "16:40";
-  /* ileri tarihli plana rapor yok (P1); metin bugünü de söyler — geçmiş gün açık (2026-10-03) */
-  MK.erkenMetin = function (g) { return "Plan günü " + MK.tarihYaz(g) + " henüz gelmedi (bugün " + MK.tarihYaz(MK.BUGUN) + "). Rapor plan gününden itibaren oluşturulur; geçmiş günlere açık, ileri tarihe kapalı."; };
+  /* ileri tarihli plana rapor yok (P1); metin bugünü de söyler — geçmiş gün açık (2026-10-03). Reisim 2026-10-03: *"03.10.2026 dayız yine rapor
+     oluşturamıyorum"* — makette bugün sabit 23.09 olduğu için gerçek bugüne açılan plan ileri tarih sayılıyordu. Bu engel GERÇEK takvime bakar
+     (sabit makette günden ileriyse); uydurma verinin geri kalanı sabit güne göre kalır. */
+  MK.raporBugun = (function () { var d = new Date(), g = d.getFullYear() + "-" + ("0" + (d.getMonth() + 1)).slice(-2) + "-" + ("0" + d.getDate()).slice(-2);
+    return g > MK.BUGUN ? g : MK.BUGUN; })();
+  MK.raporErken = function (g) { return !!g && g > MK.raporBugun; };
+  MK.erkenMetin = function (g) { return "Plan günü " + MK.tarihYaz(g) + " henüz gelmedi (bugün " + MK.tarihYaz(MK.raporBugun) + "). Rapor plan gününden itibaren oluşturulur; geçmiş günlere açık, ileri tarihe kapalı."; };
 
   /* ── YARDIMCILAR ─────────────────────────────────────────────────────────────────────────────────────── */
   var $ = MK.$ = function (id) { return document.getElementById(id); };

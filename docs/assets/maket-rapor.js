@@ -779,7 +779,7 @@
       d.kod = String(d.kod || "").replace(/\s+/g, "").replace(/[a-z]/g, function (c) { return c.toUpperCase(); });
       var kh = kodDurumu(d.kod); if (kh) { W.hata = { kod: kh }; pencereCiz("w-kod"); return; }
       if (MV.gunlukSure(r.kisi).dolu) { W.hata = { kod: "Günlük süre doldu (mesai takibi); bugün yeni rapor oluşturulamaz." }; pencereCiz("w-kod"); return; }   /* 212 */
-      var pg = MV.planGunu(r.e.plan); if (pg && pg > MK.BUGUN) { W.hata = { kod: MK.erkenMetin(pg) }; pencereCiz("w-kod"); return; }   /* P1 */
+      var pg = MV.planGunu(r.e.plan); if (MK.raporErken(pg)) { W.hata = { kod: MK.erkenMetin(pg) }; pencereCiz("w-kod"); return; }   /* P1 */
       if (!W.oku) { r.kayit = MK.simdi(); r.degisti = false; }
       var y = kopyala(r, { kod: d.kod, seri: "", konum: String(d.konum || "").trim() });
       W = null; $("a-pencere").close(); MK.kaliciYaz();

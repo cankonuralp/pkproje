@@ -204,7 +204,7 @@
      uyarı değil ENGEL (reisim'in açık kararı); düğme kapalı, neden plan içinde şeritte */
   /* 2026-10-03 (reisim: "geçmişe yönelik günlerde rapor oluşturmayı engelleme geleceğe rapor yazmayı engelle"): engel YALNIZ ileri tarihte —
      plan günü bugün ya da geçmişse rapor açık. Kural aynıydı; şerit bugünü söylemediği için geçmiş gibi okunuyordu (makette bugün sabit). */
-  var erken = function (p) { return p.tarih > BUGUN; };
+  var erken = function (p) { return MK.raporErken(p.tarih); };
   var ekipmanAcik = function (p) { return p.durum === "kabul" || p.durum === "denetimde"; };   /* ekipman eklenir, Excel'den yüklenir */
 
   var q = new URLSearchParams(location.search);

@@ -2192,7 +2192,9 @@ yapılmaz.
 **Elli ikinci tur (2026-10-03, reisim birebir):** *"geçmişe yönelik günlerde rapor oluşturmayı engelleme geleceğe rapor yazmayı engelle"* (plan içi
 ekran görüntüsüyle) → kural zaten buydu (yalnız ileri tarih kapalı), ama makette bugün sabit 23.09.2026 ve şerit bugünü söylemiyordu; 24.09'daki plan
 geçmiş gibi okunuyordu. Metin bugünü ve kuralı söyler (§11 239). Ara mesaj: *"bu kısımda tarh"* · *"tarihler takvim seçmeli olsun"* (Plan aç ›
-Tarihler) → §11 240.
+Tarihler) → §11 241. Ara mesaj: *"03.10.2026 dayız yine rapor oluşturamıyorum"* (bugüne açılan planda Rapor oluştur kapalı) → engel gerçek
+takvime bakar (§11 240). Ara mesaj: *"S.A.Y tuşu biraz daha büyük olsun, 2 rapor nüshası ne demek hala anlamadım onu bana açıkla lütfen ayarlarda
+neden böyle bi kısım var"*.
 Aynı gün ara mesajlar (reisim birebir): *"Şirket logosuda firma ayarlarından girilsin , raporlara otomatik çekilsin"* (§11 238) · *"Format
 tasarımcısında herhangi bir başlığa tıklayınca en baş arıyor, en başa atmasın başlığı düzenlediğimiz yere odaklansın(telefonda)"* (§11 237).
 
@@ -2233,6 +2235,9 @@ revizyon, alan kopyalama, hafif kusur devri, meslek eşleşme denetimi).
 - Emsal ürünler: https://opwire.app/iso-17020-periyodik-kontrol-yazilimi/ · https://17020muayene.vidco.com.tr/ · https://akuple.com/asansor-kontrol-yazilimi/ · https://ensyazilim.com/
 
 ## 11 · Değişiklik günlüğü
+- 2026-10-03 (240): **Rapor engeli gerçek takvime bakar** (§9 elli ikinci tur ara mesajı). Makette "bugün" uydurma veri için sabit 23.09.2026;
+  reisim gerçek bugüne (03.10.2026) plan açınca rapor kapalı kalıyordu. Engel artık gerçek tarihe bakar (`MK.raporBugun`: gerçek gün, sabit günden
+  ileriyse): bugün ve geçmiş açık, yalnız ileri tarih kapalı. Verinin geri kalanı sabit güne göre kalır. Nihai kodda zaten sunucunun günü.
 - 2026-10-03 (239): **Rapor engeli yalnız ileri tarihte — metin bugünü söyler** (§9 elli ikinci tur). Kural değişmedi (P1, 213: plan günü bugün ya da
   geçmişse rapor açık, ileri tarihte kapalı). Şerit, Rapor oluştur eylemi ve "Kaydet ve kopyala" penceresi tek metinden (`MK.erkenMetin`): "Plan günü
   GG.AA.YYYY henüz gelmedi (bugün GG.AA.YYYY). Rapor plan gününden itibaren oluşturulur; geçmiş günlere açık, ileri tarihe kapalı." İki eski denetimin

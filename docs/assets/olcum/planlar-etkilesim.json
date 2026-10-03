@@ -328,7 +328,7 @@
    "gecti": true
   },
   {
-   "ad": "P1: plan günü gelmeden (plan 3, 24.09) Rapor oluştur kapalı, nedeni şeritte; eylem de rapor açmaz",
+   "ad": "P1: plan günü gelmeden (plan 3, ileri tarih 15.01.2099) Rapor oluştur kapalı, nedeni şeritte; eylem de rapor açmaz",
    "gen": 1920,
    "sayfa": "maket/planlarim.html",
    "hash": "#/plan/3",
