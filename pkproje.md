@@ -2214,6 +2214,16 @@ tarihe plan açılır, Plan aç'ta uyarı şeridiyle (§11 246). Firma açma ör
 Firma açma için "ara panel" = firmaların değil, yalnız bizim girdiğimiz tek sayfalık yönetim ekranı (ör. yonetim.probata.com.tr); firma
 başına site kurulmaz, tek form bir kayıt açar ve adres hemen çalışır. Örnek makette: `maket/yonetim.html` (§11 247). Öneri: komut satırı aracı
 yerine bu küçük sayfa (reisim'in terminale ihtiyacı kalmaz); karar reisim'de.
+Aynı gün (reisim birebir): *"Yönetim sayfa önerini kabul ediyorum ama bir sorum var şimdi bu işlemler için supabase ve natro hosting kullanmayı
+düşünüyorum daha iyi bir önerin var mı ayrıca hosting yüne bize ait olur ama realtime database ve databese için her firma kendi sistemini kullansın,
+üye açarken firmanın açtığı üyelikleri bağlayalım database vb oraya kullansın benim üzerimden işletme maaliyeti yükü gitsin müşteri ne kadar canlı
+veri tapor kullanırsa ona göre kendi maaliyetlensin yedekleme işlemi de ayarlardan belirlenebilir olaun saatlik günlük gb. Arşiv için ekstra bulut
+bağlamak isterse yine ayarlardan bağlayabilsin isterse kendi serverına da kurabilsin maaliyetini kendi yönetebilsin"* · *"Olabilir mi böyle bir şey ?"*
+→ **Yönetim sayfası kabul** (KOD-GECIS Y1). Cevap (§11 248, KOD-GECIS G2 — karar reisim'de): olabilir, ama veritabanını firmaya taşımak yerine
+**en büyük maliyet kalemlerini** firmaya taşımak önerildi: dosya deposu (fotoğraf, PDF) firmanın kendi bulut hesabında, yedek ve arşiv hedefi ve
+sıklığı Firma ayarları'ndan, yapay zekâ zaten firmanın anahtarıyla (K2); büyük firma için ileride "kendi sunucusuna kurulum". **Supabase önerilmedi:**
+Türkiye bölgesi yok (en yakın Frankfurt; §8.8 "veri yurt dışına çıkmaz" ile çelişir), giriş ve RLS zaten bizde, gerçek zamanlı veritabanı
+gerekmiyor (09-B5). **Natro:** paylaşımlı hosting değil, kök erişimli sanal sunucu (VPS / VDS) olursa uygun.
 Aynı gün ara mesajlar (reisim birebir): *"Şirket logosuda firma ayarlarından girilsin , raporlara otomatik çekilsin"* (§11 238) · *"Format
 tasarımcısında herhangi bir başlığa tıklayınca en baş arıyor, en başa atmasın başlığı düzenlediğimiz yere odaklansın(telefonda)"* (§11 237).
 
@@ -2254,6 +2264,8 @@ revizyon, alan kopyalama, hafif kusur devri, meslek eşleşme denetimi).
 - Emsal ürünler: https://opwire.app/iso-17020-periyodik-kontrol-yazilimi/ · https://17020muayene.vidco.com.tr/ · https://akuple.com/asansor-kontrol-yazilimi/ · https://ensyazilim.com/
 
 ## 11 · Değişiklik günlüğü
+- 2026-10-03 (248): **Barındırma ve maliyet sorusu kayda geçti** (§9 elli ikinci tur). Yönetim sayfası kabul (KOD-GECIS Y1 karar). Supabase /
+  Natro / firma başına veritabanı sorusu ve önerim KOD-GECIS §0 **G2** (açık, karar reisim'de). Kod ve maket değişmedi.
 - 2026-10-03 (247): **probata yönetim — firma açma örneği** (§9 elli ikinci tur). `maket/yonetim.html`: firmaların görmediği, yalnız bizim
   ekibin sayfası (menüsüz kabuk, probata logosu + "Yönetim"). Firmalar listesi (ünvan, adres `xxx.probata.com.tr`, kısa kod, durum, açılış,
   kullanıcı) · **Firma aç**: ticari ünvan → alt alan adı ve kısa kod önerilir (elle değiştirilebilir), adres canlı görünür; ilk firma yöneticisi
