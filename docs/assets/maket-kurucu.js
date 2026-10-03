@@ -29,7 +29,7 @@
   /* seçili bölümün düzenleyicisi — bloğa göre */
   function duzenleyici() {
     var b = F.bolumler[SEC]; if (!b) return '<p class="a-bos-satir">Bölüm yok; soldan ekleyin.</p>';
-    var ust = '<div class="a-alt-bas"><h2 class="a-alt-baslik" id="a-kb-baslik">' + (SEC + 1) + " · " + kacis(b.ad) + "</h2>" +
+    var ust = '<div class="a-alt-bas"><h2 class="a-alt-baslik" id="a-kb-baslik" tabindex="-1">' + (SEC + 1) + " · " + kacis(b.ad) + "</h2>" +
       (b.kilit ? rozet({ ad: "Bakanlık alanı · silinemez", rozet: "a-rozet-notr" }) : MK.tus({ eylem: "kb-sil", ad: "Bölümü sil", ikon: "trash-2", sinif: "a-tus-ikincil a-bolum-tus" })) + "</div>" +
       '<div class="a-form">' + MK.alan({ id: "kb-ad", etiket: "Bölüm adı", zorunlu: true, genis: true, girdi: MK.girdi({ id: "kb-ad", alan: "ad", deger: b.ad, ek: ' maxlength="80"' }) }) + "</div>";
     var ic = "";

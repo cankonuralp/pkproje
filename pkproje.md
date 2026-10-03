@@ -2188,6 +2188,8 @@ failed mesajı gelsi girhubdan bana mail olarak"* → haftalık kilometre + ara�
 (235'te rapor şablonu dahil; ölçülerek doğrulandı). Push hatası: kod denetimi geçti, Pages yayın adımı GitHub'ın geçici bir hatasıyla düştü;
 ikinci e-posta benim yaptığım yeniden çalıştırmadan (aynı yayın paketi ikinci kez yüklendi) — sonraki push temiz yayınlar, yeniden çalıştırma
 yapılmaz.
+Aynı gün ara mesajlar (reisim birebir): *"Şirket logosuda firma ayarlarından girilsin , raporlara otomatik çekilsin"* (§11 238) · *"Format
+tasarımcısında herhangi bir başlığa tıklayınca en baş arıyor, en başa atmasın başlığı düzenlediğimiz yere odaklansın(telefonda)"* (§11 237).
 
 **Açık kalanlar:** ~~Ana sayfada İSGGM duyuruları~~ (2026-09-27: makette eklendi; okuma işi uygulamada) (reisim 2026-09-26: *"Ana sayfada isgüm duyurularını gösterebilir miyiz ? Bunu
 yapılacaklar listesine ekle"*; öneri: ÇSGB İSGGM duyurular sayfası — https://www.csgb.gov.tr/isggm/duyurular/ — sunucuda günde birkaç kez
@@ -2226,6 +2228,9 @@ revizyon, alan kopyalama, hafif kusur devri, meslek eşleşme denetimi).
 - Emsal ürünler: https://opwire.app/iso-17020-periyodik-kontrol-yazilimi/ · https://17020muayene.vidco.com.tr/ · https://akuple.com/asansor-kontrol-yazilimi/ · https://ensyazilim.com/
 
 ## 11 · Değişiklik günlüğü
+- 2026-10-03 (237): **Format kurucu: bölüme basınca başa atmaz** (§9 elli birinci tur ara mesajı). Aynı türün kurucusunda bölüm değişince sayfa en
+  başa kaymıyor; düzenleyicinin başlığı görünmüyorsa ona kayıyor ve odak orada (telefonda bölüm listesi üstte, düzenleyici altta olduğu için).
+  Kilit: m3 telefon (375) etkileşimi, eski kodda düşüyor; m3 152/152 · 31/31 · 76/76.
 - 2026-10-03 (236): **Araçlar: haftalık kilometre + belge balonu** (§9 elli birinci tur). Aracı kullanan kişi her hafta (Pazartesi–Pazar)
   göstergedeki kilometreyi yazar (sürücü görünümünde "Haftalık kilometre", araç sayfasında da); aynı hafta yeniden yazılırsa düzeltilir; son
   bilinen kilometreden küçüğü kaydedilmez, haftada 3.000 km'den fazla artış kaydedilir ama uyarılır. Araç sayfasında haftalık geçmiş: hafta ·

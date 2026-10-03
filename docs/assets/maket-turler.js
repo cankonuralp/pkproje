@@ -229,9 +229,17 @@
     if (r.v === "liste" && r.pencere !== "tur") { BR = r.b || "m"; MK.seciciCiz("t"); }
     if (r.v === "liste") listeCiz(); else if (r.v === "kurucu" && t) MK.kurucuCiz(t, r.sec); else turCiz(t);
     document.title = (r.v === "liste" ? "Ekipman türleri · " + MV.bransAd(BR) : t ? (r.v === "kurucu" ? "Format kurucu · " : "") + t.ad : "Tür bulunamadı") + " · probata maket";
-    if (odakla) { window.scrollTo(0, 0); var h = document.querySelector("#a-icerik > :not([hidden]) h1"); if (h) h.focus({ preventScroll: true }); }
+    /* 2026-10-03 (reisim: "Format tasarımcısında herhangi bir başlığa tıklayınca en başa atıyor, en başa atmasın başlığı düzenlediğimiz yere
+       odaklansın (telefonda)"): aynı türün kurucusunda bölüm değişince sayfa başa gitmez; düzenleyici görünmüyorsa ona kayar, odak başlığında */
+    var ayniKurucu = r.v === "kurucu" && SON && SON.v === "kurucu" && SON.id === r.id; SON = r;
+    if (odakla && ayniKurucu) {
+      var kb = $("a-kb-baslik"), ust = kb ? kb.getBoundingClientRect().top : 0;
+      if (kb && (ust < 0 || ust > window.innerHeight * 0.5)) kb.scrollIntoView({ block: "start" });
+      if (kb) kb.focus({ preventScroll: true });
+    } else if (odakla) { window.scrollTo(0, 0); var h = document.querySelector("#a-icerik > :not([hidden]) h1"); if (h) h.focus({ preventScroll: true }); }
     if (r.pencere) pencereAc(r.pencere, r.id); else if ($("a-pencere").open) $("a-pencere").close();
   }
+  var SON = null;
   MK.goster = goster;
   var X = MK.eylem;
   X["tur-ac"] = function () { location.hash = "#/yeni"; };

@@ -2,8 +2,8 @@
  "maket": "m3",
  "tarih": "2026-10-03",
  "arac": "tools/olc-bulut.mjs --etkilesim (başsız tarayıcı, 1920 açık tema; gen verilen denemede o genişlik)",
- "toplam": 30,
- "gecen": 30,
+ "toplam": 31,
+ "gecen": 31,
  "denemeler": [
   {
    "ad": "AA11: Tür ekle formu boş açılır — periyot yazılı gelmez, yalnız silik ipucu",
@@ -211,6 +211,13 @@
   {
    "ad": "AA10: PDF önizleme bölümleri tanımdan çizer",
    "gen": 1920,
+   "sayfa": "maket/ekipman-turleri.html",
+   "hash": "#/tur/HT/kurucu",
+   "gecti": true
+  },
+  {
+   "ad": "Format kurucu (telefon): bölüme basınca sayfa başa gitmez, düzenleyicinin başlığı görünür ve odakta",
+   "gen": 375,
    "sayfa": "maket/ekipman-turleri.html",
    "hash": "#/tur/HT/kurucu",
    "gecti": true
