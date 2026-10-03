@@ -2327,6 +2327,11 @@ revizyon, alan kopyalama, hafif kusur devri, meslek eşleşme denetimi).
 - Emsal ürünler: https://opwire.app/iso-17020-periyodik-kontrol-yazilimi/ · https://17020muayene.vidco.com.tr/ · https://akuple.com/asansor-kontrol-yazilimi/ · https://ensyazilim.com/
 
 ## 11 · Değişiklik günlüğü
+- 2026-10-03 (267): **Yapılmayan istek taraması + son durum sunumu** (§9 elli ikinci tur; reisim: *"söylediğim her şeyi yap söyleyipte yapmadıın
+  şeyler de olmuş bi maket turu at bana sunum yap son durumu"* · *"bitince sunum yap"*). §9 kırk üçüncü – elli ikinci tur tek tek tarandı: istenip
+  yapılmayan kalmadı (AA6 dahil hepsi §11'de). Açık: araç tutanağının kalem / açı soruları, öteki türlerin rapor formatı PDF'leri (reisim'den);
+  ertelenen: §3.7 firma özelleştirmeleri, personel hesabı açma ayrıntısı, alan adı ve mağaza hesapları (yayın öncesi). Sunum: claude.ai'de özel
+  slayt (11 slayt: bu tur, plan künyesi, Onaylar, bordro, S.A.Y, eğitim önerisi, maket turu, kararlar, açıklar, koda geçiş gündemi). Kod değişmedi.
 - 2026-10-03 (266): **S.A.Y her sayfada, yuvarlak düğme; eğitim önerisi** (§9 elli ikinci tur). Rapor çubuğundaki S.A.Y tuşu kalktı; her firma
   sayfasında sağ altta yuvarlak düğme (56 px; vurgu renklerinin geçişi, içte açık daire ve yıldız simgesi, "S.A.Y · Asistan"; telefonda yalnız
   daire, altta yapışkan çubuk varsa üstünde; rapor ekranında Kaydet / Onaya gönder'in üstünde). Panel daha yuvarlak, başlığı renkli, baloncuklar
