@@ -33,6 +33,54 @@
   };
   var km = function (v) { var n = MV.aracKm(v.id); return n == null ? '<span class="a-deger-yok">—</span>' : '<span class="a-sayi">' + MV.kmYaz(n) + " km</span>"; };
 
+  /* ── HAFTALIK KİLOMETRE (2026-10-03, reisim: "Araç km bilgisi haftalık girilebilecek bir sistem kurulsun her hafta araç kaç km de ise
+     kullanan kişi yazsın takibi olsun"): aracı kullanan kişi her hafta göstergedeki kilometreyi yazar; aynı hafta yeniden yazılırsa düzeltilir.
+     Son kilometreden küçük değer kaydedilmez; haftada 3.000 km'den fazla artış kaydedilir ama uyarılır. ── */
+  var KM_DURUM = { girildi: { ad: "Girildi", rozet: "a-rozet-tamam" }, bekliyor: { ad: "Bekliyor", rozet: "a-rozet-bekliyor" }, eksik: { ad: "Geçen hafta girilmedi", rozet: "a-rozet-red" } };
+  var kmRozet = function (v) { var d = MV.kmDurum(v); return d === "depoda" ? '<span class="a-deger-yok">Depoda</span>' : rozet(KM_DURUM[d]); };
+  var KG = {}, KH = {};   /* yazılan değer ve hata, araç başına */
+  var oncekiKm = function (vid, h) {   /* bu haftanın kendi kaydı dışındaki en yeni kilometre */
+    var l = MV.hareketler(vid).map(function (x) { return { t: x.tarih, km: MV.tutanak(x).km }; }).concat(MV.kmKayitlari(vid).filter(function (x) { return x.hafta !== h; }).map(function (x) { return { t: x.tarih, km: x.km }; }))
+      .filter(function (x) { return x.km != null; }).sort(function (a, b) { return a.t < b.t ? 1 : -1; });
+    return l.length ? l[0].km : null;
+  };
+  function kmForm(v) {
+    var h = MV.haftaBasi(MK.BUGUN), bu = MV.kmHafta(v.id, h), id = "km-" + v.id, son = oncekiKm(v.id, h), hata = KH[v.id];
+    var deger = KG[v.id] != null ? KG[v.id] : bu ? MV.kmYaz(bu.km) : "";
+    return '<div class="a-km-gir"><label class="a-etiket" for="' + id + '">' + kacis(v.plaka) + " · bu hafta (" + MV.haftaYaz(h) + ") kilometre" +
+        (bu ? " " + rozet(KM_DURUM.girildi) : "") + "</label>" +
+      '<div class="a-km-satir">' + MK.girdi({ id: id, deger: deger, sinif: "a-girdi-sicil", ek: ' data-km="' + v.id + '" inputmode="numeric" maxlength="9"', hata: hata }) +
+        MK.tus({ eylem: "km-kaydet", ad: bu ? "Düzelt" : "Kaydet", ikon: "check", veri: { v: v.id } }) + "</div>" +
+      '<p class="a-ipucu' + (hata ? " a-ipucu-uyari" : "") + '" id="' + id + '-ipucu">' + (hata || (son != null ? "Son bilinen: " + MV.kmYaz(son) + " km" : "")) + "</p></div>";
+  }
+  function kmGecmis(v) {
+    var l = MV.kmKayitlari(v.id), bu = MV.haftaBasi(MK.BUGUN); if (!l.length) return '<p class="a-bos-satir">Haftalık kilometre girilmedi.</p>';
+    var ilk = l[l.length - 1].hafta, satir = [];
+    for (var h = bu; h >= ilk; h = MV.haftaEkle(h, -1)) satir.push({ h: h, x: MV.kmHafta(v.id, h) });
+    satir.forEach(function (s, i) { var once = satir.slice(i + 1).filter(function (y) { return y.x; })[0]; s.yol = s.x && once ? s.x.km - once.x.km : null; });
+    return '<div class="a-liste-kap">' + MK.tablo({ baslik: "Haftalık kilometre", sinif: "a-tablo-kmhafta", kayitlar: satir, sutunlar: [
+      { k: "hafta", baslik: "Hafta", kart: "ust", sira: 1, hucre: function (s) { return MV.haftaYaz(s.h); } },
+      { k: "km", baslik: "Kilometre", kart: "govde", sira: 2, hucre: function (s) { return '<span class="a-kart-etiket">Kilometre</span>' + (s.x ? '<span class="a-sayi">' + MV.kmYaz(s.x.km) + "</span>" : rozet(s.h === bu ? KM_DURUM.bekliyor : { ad: "Girilmedi", rozet: "a-rozet-red" })); } },
+      { k: "yol", baslik: "Haftalık yol", kart: "govde", sira: 3, hucre: function (s) { return '<span class="a-kart-etiket">Haftalık yol</span>' + (s.yol != null ? '<span class="a-sayi">' + MV.kmYaz(s.yol) + " km</span>" : '<span class="a-deger-yok">—</span>'); } },
+      { k: "kim", baslik: "Giren", kart: "govde", sira: 4, hucre: function (s) { return '<span class="a-kart-etiket">Giren</span>' + (s.x ? "<span>" + kacis(MV.kisi(s.x.kisi).ad) + '<span class="a-alt-satir">' + MK.zamanYaz(s.x.tarih) + "</span></span>" : '<span class="a-deger-yok">—</span>'); } }
+    ] }) + "</div>";
+  }
+  X["km-kaydet"] = function (el) {
+    var vid = el.dataset.v, v = MV.varlik(vid), h = MV.haftaBasi(MK.BUGUN), ham = String(KG[vid] != null ? KG[vid] : ($("km-" + vid) || {}).value || "").trim(), son = oncekiKm(vid, h);
+    var n = +ham.replace(/\./g, "");
+    if (!/^\d[\d.]*$/.test(ham)) KH[vid] = "Göstergedeki kilometreyi yazın.";
+    else if (son != null && n < son) KH[vid] = "Son bilinen kilometreden (" + MV.kmYaz(son) + ") küçük olamaz.";
+    else delete KH[vid];
+    if (KH[vid]) { goster(false); var g = $("km-" + vid); if (g) g.focus(); return; }
+    var x = MV.kmHafta(vid, h), duz = !!x;
+    if (x) { x.km = n; x.kisi = BEN || MV.kimde(vid); x.tarih = MK.simdi(); }
+    else MV.KM_KAYIT.push({ id: "km" + (MV.KM_KAYIT.length + 1), v: vid, hafta: h, km: n, kisi: BEN || MV.kimde(vid), tarih: MK.simdi() });
+    MV.KM_KAYIT = MV.KM_KAYIT.slice(); delete KG[vid];
+    goster(false); if (MK.takipCiz) MK.takipCiz();
+    var t = document.querySelector('[data-eylem="km-kaydet"][data-v="' + vid + '"]'); if (t) t.focus();
+    MK.bildir(v.plaka + ": bu haftanın kilometresi " + (duz ? "düzeltildi" : "kaydedildi") + " (" + MV.kmYaz(n) + " km)." + (son != null && n - son > 3000 ? " Dikkat: son kayıttan " + MV.kmYaz(n - son) + " km fazla." : ""));
+  };
+
   /* ── LİSTE ─────────────────────────────────────────────────────────────────────────────────────── */
   var SUTUN = [
     { k: "arac", baslik: "Araç", kart: "ust", sira: 1, hucre: function (v) {
@@ -44,14 +92,16 @@
     { k: "muayene", baslik: "Muayene", kart: "govde", sira: 4, hucre: function (v) { return '<span class="a-kart-etiket">Muayene</span>' + belgeRozet(v.muayene); } },
     { k: "sigorta", baslik: "Trafik sigortası", kart: "govde", sira: 5, hucre: function (v) { return '<span class="a-kart-etiket">Trafik sigortası</span>' + belgeRozet(v.sigorta); } },
     { k: "kasko", baslik: "Kasko", kart: "govde", sira: 6, hucre: function (v) { return '<span class="a-kart-etiket">Kasko</span>' + belgeRozet(v.kasko); } },
+    { k: "hafta", baslik: "Bu hafta km", kart: "govde", sira: 7, hucre: function (v) { return '<span class="a-kart-etiket">Bu hafta km</span>' + kmRozet(v); } },
     { k: "durum", baslik: "Durum", kart: "rozet", sira: 1, hucre: function (v) { return rozet(durum(v)); } }
   ];
   function listeCiz() {
     var l = gorunen();
     $("a-sayac").innerHTML = "<b>" + l.length + "</b> araç";
-    $("a-liste").innerHTML = l.length ? MK.tablo({ baslik: "Araçlar", sinif: "a-tablo-arac", sutunlar: SUTUN, kayitlar: l, href: function (v) { return "#/" + (BEN ? "benim/" : "") + "a/" + v.id; } })
+    $("a-liste").innerHTML = (BEN && l.length ? '<section class="a-bolum a-km-bolum" aria-labelledby="a-b-km"><div class="a-alt-bas"><h2 class="a-alt-baslik" id="a-b-km">Haftalık kilometre</h2></div>' +
+        l.map(kmForm).join("") + "</section>" : "") + (l.length ? MK.tablo({ baslik: "Araçlar", sinif: "a-tablo-arac", sutunlar: SUTUN, kayitlar: l, href: function (v) { return "#/" + (BEN ? "benim/" : "") + "a/" + v.id; } })
       : MK.bos(BEN ? { ikon: "car", baslik: "Üzerinizde araç yok", metin: "Size bir araç teslim edilince burada görünür; teslim tutanağı Onaylar'a imzaya düşer." }
-        : { ikon: "car", baslik: "Araç yok", metin: "Araçlar Zimmetler'deki varlık listesinden gelir." });
+        : { ikon: "car", baslik: "Araç yok", metin: "Araçlar Zimmetler'deki varlık listesinden gelir." }));
   }
 
   /* ── TUTANAKLAR (aracın bütün teslim hareketleri) ─────────────────────────────────────────────────── */
@@ -111,6 +161,8 @@
         yuz({ ikon: "gauge", ad: "Kilometre", sayi: n == null ? "—" : MV.kmYaz(n), not: v.bakimKm ? "bakım " + MV.kmYaz(v.bakimKm) + " km" + (n != null && n >= v.bakimKm - 1000 ? " · yaklaştı" : "") : "", uyari: n != null && v.bakimKm && n >= v.bakimKm - 1000 }) +
         BELGE.map(function (b) { var d = MV.aracTarihDurum(v[b[0]]); return yuz({ ikon: "calendar", ad: b[1], sayi: v[b[0]] ? MK.tarihYaz(v[b[0]]) : "—", not: d === "gecti" ? "geçti" : d === "yakin" ? "yaklaşıyor" : "", uyari: d === "gecti" || d === "yakin" }); }).join("") +
       "</div>" +
+      '<section class="a-bolum" aria-labelledby="a-b-kmh"><div class="a-alt-bas"><h2 class="a-alt-baslik" id="a-b-kmh">Haftalık kilometre</h2>' + kmRozet(v) + "</div>" +
+        (k !== "depo" && k !== "lab" ? kmForm(v) : "") + kmGecmis(v) + "</section>" +
       '<section class="a-bolum" aria-labelledby="a-b-tutanak"><div class="a-alt-bas"><h2 class="a-alt-baslik" id="a-b-tutanak">Teslim tutanakları</h2><span class="a-sayac"><b>' + h.length + "</b> tutanak</span></div>" +
         (h.length ? '<div class="a-liste-kap">' + MK.tablo({ baslik: "Teslim tutanakları", sinif: "a-tablo-tutanak", sutunlar: T_SUTUN.filter(function (c) { return c.k !== "arac"; }), kayitlar: h }) + "</div>"
           : '<p class="a-bos-satir">Bu aracın tutanağı yok; depoda.</p>') + "</section>";
@@ -198,6 +250,7 @@
     MK.pdfGoster({ dosya: "arac-teslim-tutanagi-" + t.no + ".pdf", baslik: "Araç teslim tutanağı · " + v.plaka + " · " + t.no, icerik: MB.aracTutanak({ h: h }) });
   };
   MK.onGirdi = function (e) {
+    if (e.target.dataset && e.target.dataset.km) { KG[e.target.dataset.km] = e.target.value; return; }
     if (!W) return;
     if (e.target.dataset.kontrol) { W.d.kontrol[e.target.dataset.kontrol] = e.target.checked; var o = document.activeElement && document.activeElement.dataset.kontrol; pencereCiz(o ? '[data-kontrol="' + o + '"]' : null); return; }
     var k = e.target.dataset && e.target.dataset.alan; if (k) W.d[k] = e.target.value;

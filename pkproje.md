@@ -2181,6 +2181,14 @@ rapor formatı firmanın Format kurucusunda kurulan sürümlü bir tanımdır; s
 attığım bakanlık formatları a benzesin  elektrik topraklama ve panı için atmıştım"* → bütün iç belgelerin temel formatı Bakanlık formatlarının
 (ZPKR01 topraklama, ZPKR02 elektrik iç tesisatı / pano) görünümünde (§11 235). Tutanağın kalem ve açı soruları açık kalıyor.
 
+**Elli birinci tur (2026-10-03, reisim birebir):** *"Araç km bilgisi haftalık girilebilecek bir sistem kurulsun her hafta araç kaç km de ise kullanan
+kişi yazsın takibi olsun,  github push  fail mesajı geldi bilgin olsun her format derken rapor formatlarınıda kast ettim aklında olsun , bunları yap
+başka ne kaldı elimizde iş söyle"* · ara mesaj: *"Araçlarda sigorta kasko muayene yaklaşınca yan bar da bildirim balonu olsun uyrsın"* · *"Yine run
+failed mesajı gelsi girhubdan bana mail olarak"* → haftalık kilometre + araç belge balonu (§11 236). Rapor formatları da Bakanlık görünümünde
+(235'te rapor şablonu dahil; ölçülerek doğrulandı). Push hatası: kod denetimi geçti, Pages yayın adımı GitHub'ın geçici bir hatasıyla düştü;
+ikinci e-posta benim yaptığım yeniden çalıştırmadan (aynı yayın paketi ikinci kez yüklendi) — sonraki push temiz yayınlar, yeniden çalıştırma
+yapılmaz.
+
 **Açık kalanlar:** ~~Ana sayfada İSGGM duyuruları~~ (2026-09-27: makette eklendi; okuma işi uygulamada) (reisim 2026-09-26: *"Ana sayfada isgüm duyurularını gösterebilir miyiz ? Bunu
 yapılacaklar listesine ekle"*; öneri: ÇSGB İSGGM duyurular sayfası — https://www.csgb.gov.tr/isggm/duyurular/ — sunucuda günde birkaç kez
 okunur (pg-boss işi, §8.9), Ana sayfada son 5 duyuru başlık + tarih + kaynağa bağlantı; yalnız ekranda, bildirim yok; sayfa RSS vermiyorsa
@@ -2218,6 +2226,15 @@ revizyon, alan kopyalama, hafif kusur devri, meslek eşleşme denetimi).
 - Emsal ürünler: https://opwire.app/iso-17020-periyodik-kontrol-yazilimi/ · https://17020muayene.vidco.com.tr/ · https://akuple.com/asansor-kontrol-yazilimi/ · https://ensyazilim.com/
 
 ## 11 · Değişiklik günlüğü
+- 2026-10-03 (236): **Araçlar: haftalık kilometre + belge balonu** (§9 elli birinci tur). Aracı kullanan kişi her hafta (Pazartesi–Pazar)
+  göstergedeki kilometreyi yazar (sürücü görünümünde "Haftalık kilometre", araç sayfasında da); aynı hafta yeniden yazılırsa düzeltilir; son
+  bilinen kilometreden küçüğü kaydedilmez, haftada 3.000 km'den fazla artış kaydedilir ama uyarılır. Araç sayfasında haftalık geçmiş: hafta ·
+  kilometre · haftalık yol · giren; girilmeyen hafta "Girilmedi". Listede "Bu hafta km" sütunu (Girildi · Bekliyor · Geçen hafta girilmedi ·
+  Depoda). Son bilinen kilometre artık tutanak ve haftalık kayıtların en yenisi. **Yan menüde Araçlar balonu:** kırmızı = süresi geçen muayene /
+  trafik sigortası / kasko ya da geçen hafta girilmeyen kilometre; sarı = 30 gün içinde biten belge (kalibrasyonla aynı eşik) ya da bu hafta
+  bekleyen kilometre; yönetici bütün araçları, sürücü yalnız kendi aracını sayar. Araç belgeleri **Uyarılar**'a da düştü ("Araç belgesi" çipi).
+  Örnek kilometreler uydurma; 00 MAK 001 sonraki bakım 45.000 km. Kilit: araclar 4 yeni etkileşim (eski kodda düşüyor); km değerleri değişen 3
+  araç denetimi ve Uyarılar sayımı 16 → 18 olan 5 denetim tarih + gerekçeyle güncellendi.
 - 2026-10-02 (235): **Bütün iç belgeler Bakanlık formatı görünümünde** (§9 ellinci tur: *"tüm formatlar san daha önce attığım bakanlık formatları
   a benzesin elektrik topraklama ve panı için atmıştım"*). Temel formatlı 8 belge — rapor şablonu önizlemesi, saha formu, ölçüm cihazı ara kontrol
   kayıtları, izin / masraf talep formu, iş sözleşmesi, araç teslim tutanağı, rapor formatı önizlemesi (Format kurucu), zimmet teslim formu — tek

@@ -944,7 +944,7 @@
       ara: ARASIZ.indexOf(c[1]) >= 0 ? [] : [{ tarih: c[4], siklik: "6ay", kim: i % 2 ? "co" : "sy", yontem: "Referans değerle karşılaştırma", sonuc: "Uygun" }], rapor: 12 + (i * 7) % 40 };
   }).concat([
     /* AA4 (2026-10-02, Araçlar): muayene, trafik sigortası, kasko bitişi, sonraki bakım kilometresi — tarihler UYDURMA */
-    { id: "a1", tur: "arac", ad: "Hafif ticari araç", plaka: "00 MAK 001", marka: "Delta", model: "Van", yil: 2022, yakit: "dizel", muayene: "2027-03-14", sigorta: "2026-10-18", kasko: "2027-01-09", bakimKm: 35000 },
+    { id: "a1", tur: "arac", ad: "Hafif ticari araç", plaka: "00 MAK 001", marka: "Delta", model: "Van", yil: 2022, yakit: "dizel", muayene: "2027-03-14", sigorta: "2026-10-18", kasko: "2027-01-09", bakimKm: 45000 },
     { id: "a2", tur: "arac", ad: "Hafif ticari araç", plaka: "00 MAK 002", marka: "Delta", model: "Van", yil: 2023, yakit: "dizel", muayene: "2028-02-02", sigorta: "2027-02-01", kasko: "2027-02-01", bakimKm: 25000 },
     { id: "a3", tur: "arac", ad: "Binek araç", plaka: "00 MAK 003", marka: "Orion", model: "Sedan", yil: 2021, yakit: "benzin", muayene: "2026-09-12", sigorta: "2027-05-10", kasko: "", bakimKm: 60000 },
     { id: "d1", tur: "diger", ad: "Saha tableti", env: "TB-01", marka: "Pars", model: "10 inç" }, { id: "d2", tur: "diger", ad: "Saha tableti", env: "TB-02", marka: "Pars", model: "10 inç" },
@@ -987,8 +987,31 @@
       hasar: (h.not || "").replace(/^Km [\d.]+ ·? ?/, ""), foto: null, eski: true };
   };
   MV.tutanakNo = function (t) { return "AT-" + t.slice(5, 7) + t.slice(2, 4) + "-" + String(MV.ZIMMET.length + 1).padStart(3, "0"); };
-  /* son tutanaktaki kilometre */
-  MV.aracKm = function (vid) { var l = MV.hareketler(vid); for (var i = 0; i < l.length; i++) { var k = MV.tutanak(l[i]).km; if (k != null) return k; } return null; };
+  /* ── HAFTALIK KİLOMETRE (2026-10-03, reisim: "Araç km bilgisi haftalık girilebilecek bir sistem kurulsun her hafta araç kaç km de ise
+     kullanan kişi yazsın takibi olsun"): araç bir kişinin zimmetindeyken o kişi her hafta (Pazartesi–Pazar) göstergedeki kilometreyi yazar.
+     Bu haftanınki girilmediyse sarı, geçen haftanınki de yoksa kırmızı (uyarı, engel değil); depodaki araçta istenmez. Örnekler UYDURMA. */
+  MV.KM_KAYIT = [["a1", "2026-08-31", 41230, "mk", "2026-09-04T17:40"], ["a1", "2026-09-07", 41780, "mk", "2026-09-11T18:05"], ["a1", "2026-09-14", 42350, "mk", "2026-09-18T17:55"],
+    ["a2", "2026-08-31", 19880, "ea", "2026-09-04T16:20"], ["a2", "2026-09-14", 20940, "ea", "2026-09-19T10:10"], ["a2", "2026-09-21", 21300, "ea", "2026-09-22T08:30"]]
+    .map(function (x, i) { return { id: "km" + (i + 1), v: x[0], hafta: x[1], km: x[2], kisi: x[3], tarih: x[4] }; });
+  MV.haftaBasi = function (iso) { var d = new Date(iso.slice(0, 10) + "T12:00:00"); d.setDate(d.getDate() - (d.getDay() + 6) % 7); return d.toISOString().slice(0, 10); };
+  MV.haftaEkle = function (iso, n) { var d = new Date(iso + "T12:00:00"); d.setDate(d.getDate() + 7 * n); return d.toISOString().slice(0, 10); };
+  MV.haftaYaz = function (h) { var son = new Date(h + "T12:00:00"); son.setDate(son.getDate() + 6); return MK.tarihYaz(h).slice(0, 5) + " – " + MK.tarihYaz(son.toISOString().slice(0, 10)); };
+  MV.kmKayitlari = function (vid) { return MV.KM_KAYIT.filter(function (x) { return x.v === vid; }).sort(function (a, b) { return a.hafta < b.hafta ? 1 : -1; }); };
+  MV.kmHafta = function (vid, h) { return MV.KM_KAYIT.filter(function (x) { return x.v === vid && x.hafta === h; })[0] || null; };
+  /* bu hafta: girildi · bekliyor (bu hafta yok, geçen hafta var) · eksik (geçen hafta da yok) · depoda (istenmez) */
+  MV.kmDurum = function (v) {
+    var k = MV.kimde(v.id), bu = MV.haftaBasi(MK.BUGUN);
+    if (k === "depo" || k === "lab") return "depoda";
+    if (MV.kmHafta(v.id, bu)) return "girildi";
+    var teslim = (MV.hareketler(v.id)[0] || {}).tarih || "";
+    return MV.kmHafta(v.id, MV.haftaEkle(bu, -1)) || teslim.slice(0, 10) >= MV.haftaEkle(bu, -1) ? "bekliyor" : "eksik";
+  };
+  /* son bilinen kilometre: teslim tutanakları ve haftalık kayıtların en yenisi */
+  MV.aracKm = function (vid) {
+    var l = MV.hareketler(vid).map(function (h) { return { t: h.tarih, km: MV.tutanak(h).km }; }).concat(MV.kmKayitlari(vid).map(function (x) { return { t: x.tarih, km: x.km }; }))
+      .filter(function (x) { return x.km != null; }).sort(function (a, b) { return a.t < b.t ? 1 : a.t > b.t ? -1 : b.km - a.km; });
+    return l.length ? l[0].km : null;
+  };
   /* belge bitişi: gecti · yakin (eşik içinde; kalibrasyonla aynı firma ayarı) · gecerli · yok */
   MV.aracTarihDurum = function (t) {
     if (!t) return "yok";
@@ -1585,6 +1608,14 @@
       l.push({ id: "a-" + v.id, tur: "ara", ikon: "flask-conical", konu: v.env + " · " + v.ad, alt: "Ara kontrol", kisi: MV.kimde(v.id), tarih: a.tarih, durum: a.durum,
         href: MK.adres(8, "#/c/" + v.id), sonuc: (a.durum === "gecti" ? "gecikti · " : "yaklaşıyor · ") + MV.araSiklik(a.siklik).ad.toLocaleLowerCase("tr") });
     });
+    /* araç belgeleri (2026-10-03): muayene, trafik sigortası, kasko — geçen ya da eşik içinde biten */
+    MV.VARLIKLAR.forEach(function (v) {
+      if (v.tur !== "arac") return;
+      MV.aracUyarilari(v).forEach(function (x) {
+        l.push({ id: "v-" + v.id + "-" + x.ad, tur: "arac", ikon: "car", konu: v.plaka + " · " + v.ad, alt: x.ad, kisi: MV.kimde(v.id), tarih: x.t, durum: x.d,
+          href: MK.adres(23, "#/a/" + v.id), sonuc: x.d === "gecti" ? "süresi geçti" : MV.esik("kal") + " gün içinde bitiyor" });
+      });
+    });
     MV.EGITIMLER.forEach(function (x) {
       var d = MV.egitimDurum(x); if (d !== "gecti" && d !== "yakin") return;
       l.push({ id: "e-" + x.id, tur: "egt", ikon: "graduation-cap", konu: MV.egitimTuru(x.k).ad, alt: "Eğitim tekrarı", kisi: x.kisi, tarih: x.tekrar, durum: d,
@@ -1645,6 +1676,17 @@
       var gec = imza.filter(function (x) { return x.onay && saatFarki(x.onay.zaman) > 24; }).length + onay.filter(function (x) { return x.gonderildi && saatFarki(x.gonderildi) > 24; }).length;
       var belge = MV.BELGE_ONAY.filter(function (x) { return x.kisi === ben && x.durum === "bekliyor"; }).length;   /* AA3: Onaylar › Diğer */
       return { kirmizi: gec, sari: imza.length + onay.length - gec + belge, ad: { kirmizi: "24 saati geçen imza / onay bekleyen rapor", sari: "imzanızı ya da onayınızı bekleyen rapor / belge" } };
+    },
+    23: function (ben) {   /* araçlar (2026-10-03): haftalık kilometresi girilmeyen — yönetici bütün araçları, öteki kişi yalnız kendi aracını görür */
+      var p = ben && MV.kisi(ben), yon = !p || (p.hesap && p.hesap.roller.indexOf("yonetici") >= 0);
+      /* 2026-10-03 (reisim: "Araçlarda sigorta kasko muayene yaklaşınca yan bar da bildirim balonu olsun uyarsın"): süresi geçen belge kırmızı,
+         eşik içinde (kalibrasyonla aynı firma ayarı, başlangıç 30 gün) bitecek belge sarı — kilometre durumuyla birlikte */
+      var av = MV.VARLIKLAR.filter(function (v) { return v.tur === "arac" && (yon || MV.kimde(v.id) === ben); }), l = av.map(MV.kmDurum);
+      var b = av.reduce(function (t, v) { return t.concat(MV.aracUyarilari(v)); }, []);
+      return { kirmizi: l.filter(function (d) { return d === "eksik"; }).length + b.filter(function (x) { return x.d === "gecti"; }).length,
+        sari: l.filter(function (d) { return d === "bekliyor"; }).length + b.filter(function (x) { return x.d === "yakin"; }).length,
+        ad: { kirmizi: "süresi geçen araç belgesi (muayene, sigorta, kasko) ya da geçen hafta girilmeyen kilometre",
+          sari: "süresi yaklaşan araç belgesi ya da bu hafta bekleyen kilometre" } };
     },
     18: function () {   /* muhasebe: vadesi geçen fatura */
       return { kirmizi: (MV.FATURALAR || []).filter(function (f) { return MV.faturaDurum(f) === "gecikti"; }).length, ad: { kirmizi: "vadesi geçen fatura" } };

@@ -18,6 +18,7 @@
       { k: "kal", ad: "Kalibrasyon", grup: "tur", test: function (u) { return u.tur === "kal"; } },
       { k: "ara", ad: "Ara kontrol", grup: "tur", test: function (u) { return u.tur === "ara"; } },
       { k: "egt", ad: "Eğitim tekrarı", grup: "tur", test: function (u) { return u.tur === "egt"; } },
+      { k: "arac", ad: "Araç belgesi", grup: "tur", test: function (u) { return u.tur === "arac"; } },
       { k: "gecti", ad: "Süresi geçmiş", test: function (u) { return u.durum === "gecti"; } }
     ],
     seciciler: [{ k: "kisi", ad: "Kişi", secenek: function () {
@@ -31,7 +32,7 @@
       return '<span class="a-hucre-satir">' + ikon(u.ikon, "a-ikon-kucuk") + '<span class="a-adres"><a class="a-ad-bag" href="' + u.href + '">' + kirp(u.konu) + "</a>" + kirp(u.alt, "a-alt-satir") + "</span></span>";
     } },
     { k: "kisi", baslik: "Kimde / kim", kart: "govde", sira: 2, hucre: function (u) { return '<span class="a-kart-etiket">' + (u.tur === "egt" ? "Kişi" : "Kimde") + "</span>" + kirp(kisiAd(u.kisi)); } },
-    { k: "tarih", baslik: "Bitiş / tekrar", kart: "govde", sira: 3, hucre: function (u) { return '<span class="a-kart-etiket">' + (u.tur === "kal" ? "Kalibrasyon bitişi" : u.tur === "ara" ? "Ara kontrol" : "Tekrar tarihi") + "</span>" + MK.tarihYaz(u.tarih); } },
+    { k: "tarih", baslik: "Bitiş / tekrar", kart: "govde", sira: 3, hucre: function (u) { return '<span class="a-kart-etiket">' + (u.tur === "kal" ? "Kalibrasyon bitişi" : u.tur === "ara" ? "Ara kontrol" : u.tur === "arac" ? u.alt + " bitişi" : "Tekrar tarihi") + "</span>" + MK.tarihYaz(u.tarih); } },
     { k: "kalan", baslik: "Kalan", kart: "govde", sira: 4, hucre: function (u) {
       var k = kalan(u.tarih);
       return '<span class="a-kart-etiket">Kalan</span><span><span class="' + (k < 0 ? "a-uyari-metin a-hata-metin" : "a-uyari-metin") + '">' + (k < 0 ? -k + " gün geçti" : k === 0 ? "bugün" : k + " gün") + '</span><span class="a-alt-satir">' + kacis(u.sonuc) + "</span></span>";

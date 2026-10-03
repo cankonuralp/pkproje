@@ -1,6 +1,6 @@
 {
  "maket": "araclar",
- "tarih": "2026-10-02",
+ "tarih": "2026-10-03",
  "arac": "tools/olc-bulut.mjs --telefon (başsız tarayıcı, telefon taklidi: dokunmatik, meta viewport, 3x; açık tema)",
  "genislikler": [
   320,
@@ -126,7 +126,7 @@
    "tasma": 0,
    "disari": [],
    "kucukAlan": [],
-   "alan": 0
+   "alan": 1
   },
   {
    "ad": "araç · zimmette, sigorta yaklaşıyor",
@@ -135,7 +135,7 @@
    "tasma": 0,
    "disari": [],
    "kucukAlan": [],
-   "alan": 0
+   "alan": 1
   },
   {
    "ad": "araç · zimmette, sigorta yaklaşıyor",
@@ -144,7 +144,7 @@
    "tasma": 0,
    "disari": [],
    "kucukAlan": [],
-   "alan": 0
+   "alan": 1
   },
   {
    "ad": "araç · zimmette, sigorta yaklaşıyor",
@@ -153,7 +153,7 @@
    "tasma": 0,
    "disari": [],
    "kucukAlan": [],
-   "alan": 0
+   "alan": 1
   },
   {
    "ad": "araç · depoda, muayene geçti",
@@ -342,7 +342,7 @@
    "tasma": 0,
    "disari": [],
    "kucukAlan": [],
-   "alan": 0
+   "alan": 1
   },
   {
    "ad": "tutanak PDF'i",
@@ -351,7 +351,7 @@
    "tasma": 0,
    "disari": [],
    "kucukAlan": [],
-   "alan": 0
+   "alan": 1
   },
   {
    "ad": "tutanak PDF'i",
@@ -360,7 +360,7 @@
    "tasma": 0,
    "disari": [],
    "kucukAlan": [],
-   "alan": 0
+   "alan": 1
   },
   {
    "ad": "tutanak PDF'i",
@@ -369,7 +369,7 @@
    "tasma": 0,
    "disari": [],
    "kucukAlan": [],
-   "alan": 0
+   "alan": 1
   },
   {
    "ad": "sürücü · aracım",
@@ -378,7 +378,7 @@
    "tasma": 0,
    "disari": [],
    "kucukAlan": [],
-   "alan": 0
+   "alan": 1
   },
   {
    "ad": "sürücü · aracım",
@@ -387,7 +387,7 @@
    "tasma": 0,
    "disari": [],
    "kucukAlan": [],
-   "alan": 0
+   "alan": 1
   },
   {
    "ad": "sürücü · aracım",
@@ -396,7 +396,7 @@
    "tasma": 0,
    "disari": [],
    "kucukAlan": [],
-   "alan": 0
+   "alan": 1
   },
   {
    "ad": "sürücü · aracım",
@@ -405,7 +405,7 @@
    "tasma": 0,
    "disari": [],
    "kucukAlan": [],
-   "alan": 0
+   "alan": 1
   },
   {
    "ad": "sürücü · kendi aracı",
@@ -414,7 +414,7 @@
    "tasma": 0,
    "disari": [],
    "kucukAlan": [],
-   "alan": 0
+   "alan": 1
   },
   {
    "ad": "sürücü · kendi aracı",
@@ -423,7 +423,7 @@
    "tasma": 0,
    "disari": [],
    "kucukAlan": [],
-   "alan": 0
+   "alan": 1
   },
   {
    "ad": "sürücü · kendi aracı",
@@ -432,7 +432,7 @@
    "tasma": 0,
    "disari": [],
    "kucukAlan": [],
-   "alan": 0
+   "alan": 1
   },
   {
    "ad": "sürücü · kendi aracı",
@@ -441,7 +441,7 @@
    "tasma": 0,
    "disari": [],
    "kucukAlan": [],
-   "alan": 0
+   "alan": 1
   },
   {
    "ad": "sürücü · başkasının aracı açılmaz",
@@ -486,7 +486,7 @@
    "tasma": 0,
    "disari": [],
    "kucukAlan": [],
-   "alan": 4
+   "alan": 5
   },
   {
    "ad": "sürücü · teslim et penceresi",
@@ -495,7 +495,7 @@
    "tasma": 0,
    "disari": [],
    "kucukAlan": [],
-   "alan": 4
+   "alan": 5
   },
   {
    "ad": "sürücü · teslim et penceresi",
@@ -504,7 +504,7 @@
    "tasma": 0,
    "disari": [],
    "kucukAlan": [],
-   "alan": 4
+   "alan": 5
   },
   {
    "ad": "sürücü · teslim et penceresi",
@@ -513,7 +513,7 @@
    "tasma": 0,
    "disari": [],
    "kucukAlan": [],
-   "alan": 4
+   "alan": 5
   },
   {
    "ad": "sürücü · tutanaklarım",

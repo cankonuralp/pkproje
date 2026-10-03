@@ -1,6 +1,6 @@
 {
  "maket": "m10",
- "tarih": "2026-10-02",
+ "tarih": "2026-10-03",
  "arac": "tools/olc-bulut.mjs --etkilesim (başsız tarayıcı, 1920 açık tema; gen verilen denemede o genişlik)",
  "toplam": 15,
  "gecen": 15,
@@ -48,7 +48,7 @@
    "gecti": true
   },
   {
-   "ad": "16 uyarı (ara kontrol dahil), menü balonları 4 kırmızı + 12 sarı, en yakın tarih üstte",
+   "ad": "18 uyarı (ara kontrol ve araç belgeleri dahil), menü balonları 5 kırmızı + 13 sarı, en yakın tarih üstte",
    "gen": 1920,
    "sayfa": "maket/uyarilar.html",
    "hash": "#/",
@@ -76,21 +76,21 @@
    "gecti": true
   },
   {
-   "ad": "Eğitim tekrarı çipi (5 / 16)",
+   "ad": "Eğitim tekrarı çipi (5 / 18)",
    "gen": 1920,
    "sayfa": "maket/uyarilar.html",
    "hash": "#/",
    "gecti": true
   },
   {
-   "ad": "Süresi geçmiş (4): iki cihaz, bir ara kontrol + Kaan Er",
+   "ad": "Süresi geçmiş (5): iki cihaz, bir ara kontrol, Kaan Er + araç muayenesi",
    "gen": 1920,
    "sayfa": "maket/uyarilar.html",
    "hash": "#/",
    "gecti": true
   },
   {
-   "ad": "adresten kalibrasyon süzgeci (6)",
+   "ad": "adresten kalibrasyon süzgeci (6 / 18)",
    "gen": 1920,
    "sayfa": "maket/uyarilar.html",
    "hash": "#/?tur=kalibrasyon",

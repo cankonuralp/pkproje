@@ -1160,8 +1160,13 @@ a.a-yuz:hover { border-color: var(--kenar-alan); background: var(--zemin); }
 .a-tablo-bordro .a-k-maliyet { width: 14%; } .a-tablo-bordro .a-k-onay { width: 14%; } .a-tablo-bordro .a-k-eylem { width: 32%; }
 .a-tablo-bordro .a-eylem-tuslar { flex-wrap: wrap; }
 /* AA4 Araçlar: liste, tutanaklar, tutanak penceresinin kontrol kutuları ve açı açı fotoğraf satırları */
-.a-tablo-arac .a-k-arac { width: 22%; } .a-tablo-arac .a-k-kimde { width: 16%; } .a-tablo-arac .a-k-km { width: 11%; }
-.a-tablo-arac .a-k-muayene, .a-tablo-arac .a-k-sigorta, .a-tablo-arac .a-k-kasko { width: 13%; } .a-tablo-arac .a-k-durum { width: 12%; }
+.a-tablo-arac .a-k-arac { width: 18%; } .a-tablo-arac .a-k-kimde { width: 14%; } .a-tablo-arac .a-k-km { width: 10%; }
+.a-tablo-arac .a-k-muayene, .a-tablo-arac .a-k-sigorta, .a-tablo-arac .a-k-kasko { width: 11%; } .a-tablo-arac .a-k-hafta { width: 13%; } .a-tablo-arac .a-k-durum { width: 12%; }
+/* haftalık kilometre (2026-10-03) */
+.a-km-gir { display: grid; gap: 4px; margin: 0 0 12px; }
+.a-km-satir { display: flex; gap: 8px; flex-wrap: wrap; align-items: center; }
+.a-km-satir .a-girdi { flex: 0 1 180px; min-width: 0; }
+.a-tablo-kmhafta .a-k-hafta { width: 28%; } .a-tablo-kmhafta .a-k-km { width: 22%; } .a-tablo-kmhafta .a-k-yol { width: 20%; } .a-tablo-kmhafta .a-k-kim { width: 30%; }
 .a-tablo-tutanak .a-k-tarih { width: 14%; } .a-tablo-tutanak .a-k-arac { width: 14%; } .a-tablo-tutanak .a-k-kim { width: 30%; }
 .a-tablo-tutanak .a-k-km { width: 12%; } .a-tablo-tutanak .a-k-foto { width: 12%; } .a-tablo-tutanak .a-k-eylem { width: 18%; }
 .a-arac-kontrol { border: 0; margin: 0; padding: 0; min-width: 0; }
@@ -1450,7 +1455,7 @@ a.a-yuz:hover { border-color: var(--kenar-alan); background: var(--zemin); }
   .a-tablo-fkalem td[data-kart="govde"], .a-tablo-perf td[data-kart="govde"], .a-tablo-gunluk td[data-kart="govde"]:has(.a-kart-etiket),
   .a-tablo-egitim td[data-kart="govde"]:has(.a-kart-etiket), .a-tablo-egitimtur td[data-kart="govde"],
   .a-tablo-gider td[data-kart="govde"]:has(.a-kart-etiket), .a-tablo-isgider td[data-kart="govde"]:has(.a-kart-etiket),
-  .a-tablo-bordro td[data-kart="govde"], .a-tablo-arac td[data-kart="govde"], .a-tablo-tutanak td[data-kart="govde"],
+  .a-tablo-bordro td[data-kart="govde"], .a-tablo-arac td[data-kart="govde"], .a-tablo-tutanak td[data-kart="govde"], .a-tablo-kmhafta td[data-kart="govde"],
   .a-tablo-karlilik td[data-kart="govde"]:has(.a-kart-etiket), .a-tablo-iskar td[data-kart="govde"]:has(.a-kart-etiket),
   .a-tablo-kriterbelge td[data-kart="govde"]:has(.a-kart-etiket) { display: flex; align-items: center; justify-content: space-between; gap: 8px; }
   .a-tablo-matris .a-kart-etiket, .a-tablo-yetkinlik .a-kart-etiket, .a-tablo-isgid .a-kart-etiket,
@@ -1458,7 +1463,7 @@ a.a-yuz:hover { border-color: var(--kenar-alan); background: var(--zemin); }
   .a-tablo-issoz .a-kart-etiket, .a-tablo-iskapsam .a-kart-etiket, .a-tablo-is .a-kart-etiket, .a-tablo-fatura .a-kart-etiket,
   .a-tablo-isfatura .a-kart-etiket, .a-tablo-israpor .a-kart-etiket, .a-tablo-tahsilat .a-kart-etiket, .a-tablo-fkalem .a-kart-etiket,
   .a-tablo-perf .a-kart-etiket, .a-tablo-gunluk .a-kart-etiket, .a-tablo-egitim .a-kart-etiket, .a-tablo-egitimtur .a-kart-etiket,
-  .a-tablo-gider .a-kart-etiket, .a-tablo-isgider .a-kart-etiket, .a-tablo-bordro .a-kart-etiket, .a-tablo-arac .a-kart-etiket, .a-tablo-tutanak .a-kart-etiket,
+  .a-tablo-gider .a-kart-etiket, .a-tablo-isgider .a-kart-etiket, .a-tablo-bordro .a-kart-etiket, .a-tablo-arac .a-kart-etiket, .a-tablo-tutanak .a-kart-etiket, .a-tablo-kmhafta .a-kart-etiket,
   .a-tablo-karlilik .a-kart-etiket, .a-tablo-iskar .a-kart-etiket, .a-tablo-kriterbelge .a-kart-etiket { display: inline; }
   /* M1 2. tur: zimmet, özlük ve Ana sayfa listeleri kartta etiket: değer; rol yetkileri kartında seçim alanı değerin yerinde */
   .a-tablo-kzimmet td[data-kart="govde"], .a-tablo-kegitim td[data-kart="govde"], .a-tablo-ozluk td[data-kart="govde"], .a-tablo-atama td[data-kart="govde"], .a-tablo-ana td[data-kart="govde"] { display: flex; align-items: baseline; justify-content: space-between; flex-wrap: wrap; gap: 4px 8px; }
@@ -1657,7 +1662,7 @@ a.a-yuz:hover { border-color: var(--kenar-alan); background: var(--zemin); }
 .a-resmi .a-belge-madde, .a-resmi .a-deger-yok, .a-resmi .a-alt-satir { color: #000; font-size: 11px; font-weight: 400; }
 .a-resmi .a-bilgi { display: grid; grid-template-columns: repeat(2, minmax(0, 1fr)); gap: 0; margin: 0 0 10px; padding: 0; background: none; border: 0; border-top: 1px solid #000; border-left: 1px solid #000; border-radius: 0; }
 .a-resmi .a-bilgi-oge { display: grid; grid-template-columns: 38% minmax(0, 1fr); border-right: 1px solid #000; border-bottom: 1px solid #000; }
-.a-resmi .a-bilgi-tam, .a-resmi .a-bilgi-cift { grid-column: 1 / -1; }
+.a-resmi .a-bilgi-tam, .a-resmi .a-bilgi-cift { grid-column: 1 / -1;  grid-template-columns: 19% minmax(0, 1fr); }
 .a-resmi .a-bilgi dt { padding: 1px 3px; background: #dbe4f0; color: #000; font-size: 12px; font-weight: 400; border-right: 1px solid #000; }
 .a-resmi .a-bilgi dd { margin: 0; padding: 1px 3px; font-weight: 400; }
 .a-resmi .a-belge-tablo { font-size: 12px; }

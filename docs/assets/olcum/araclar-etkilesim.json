@@ -1,9 +1,9 @@
 {
  "maket": "araclar",
- "tarih": "2026-10-02",
+ "tarih": "2026-10-03",
  "arac": "tools/olc-bulut.mjs --etkilesim (başsız tarayıcı, 1920 açık tema; gen verilen denemede o genişlik)",
- "toplam": 11,
- "gecen": 11,
+ "toplam": 15,
+ "gecen": 15,
  "denemeler": [
   {
    "ad": "AA4: menüde Varlık grubunda Araçlar, etkin",
@@ -80,6 +80,34 @@
    "gen": 1920,
    "sayfa": "maket/zimmetler.html",
    "hash": "#/v/a1",
+   "gecti": true
+  },
+  {
+   "ad": "KM: sürücü bu haftanın kilometresini yazar → Girildi, araç sayfasında görünür, Araçlar balonunun sarısı azalır",
+   "gen": 1920,
+   "sayfa": "maket/araclar.html",
+   "hash": "#/benim",
+   "gecti": true
+  },
+  {
+   "ad": "KM: son bilinen kilometreden küçük değer kaydedilmez",
+   "gen": 1920,
+   "sayfa": "maket/araclar.html",
+   "hash": "#/benim",
+   "gecti": true
+  },
+  {
+   "ad": "KM: araç sayfasında haftalık geçmiş — girilmeyen hafta işaretli, haftalık yol hesaplı",
+   "gen": 1920,
+   "sayfa": "maket/araclar.html",
+   "hash": "#/a/a2",
+   "gecti": true
+  },
+  {
+   "ad": "Araçlar balonu: muayenesi geçmiş araç kırmızı, sigortası yaklaşan + km bekleyen sarı; Uyarılar'da araç belgeleri",
+   "gen": 1920,
+   "sayfa": "maket/araclar.html",
+   "hash": "#/",
    "gecti": true
   }
  ]
