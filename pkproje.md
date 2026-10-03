@@ -2235,10 +2235,14 @@ Ara mesaj (reisim birebir): *"Sunucum yokki benim"* → fiziksel makine gerekmez
 (VPS / VDS)** kiralanır; şimdi gerekmez, K7 Yayın'da alınır (maket ve kod yerelde sürer). Kurulum betiği + adım adım kılavuz K7'de hazırlanır (KOD-GECIS §12).
 Ara mesaj (reisim birebir): *"Ya firebase ya da supabase kullanıcaz ne sunucusundan bahsediyorsun anlamadım kafandan ne geçiyor"* → açık karar
 **G3** (KOD-GECIS §0): hazır servis mi, kiralık sunucu mu. Önerim: hazır servis isteniyorsa **Supabase** (veritabanı PostgreSQL + RLS; iskeletin
-tasarımı aynen taşınır, okuma başına ücret yok), **Firebase değil** (Firestore belge okuma başına ücretli — eski kota sorunu geri gelir — ve PostgreSQL
-tasarımı baştan yazılır). Engel: Supabase'in Türkiye bölgesi yok (en yakın Frankfurt) → §8.8 "veri yurt dışına çıkmaz" değişir, KVKK yurt dışı
+tasarımı aynen taşınır, okuma başına ücret yok), **Firebase değil** (Realtime Database indirilen veri miktarına, Firestore belge okumasına göre ücretli — eski kota sorunu geri
+gelir — ve PostgreSQL tasarımı baştan yazılır). Engel: Supabase'in Türkiye bölgesi yok (en yakın Frankfurt) → §8.8 "veri yurt dışına çıkmaz" değişir, KVKK yurt dışı
 aktarım şartları hukukçuya teyit ettirilir. Google'ın Türkiye bölgesi (Turkcell ile) 2028–2029 bekleniyor. Uygulamanın kendisi (Next.js) ayrıca
 hazır bir barındırmada çalışır (ör. Vercel, AB bölgesi).
+Ara mesaj (reisim birebir; önceki ürünün alan adı depo açık olduğu için yazılmadı): *"Madem sunucu ile iş oluyordu ….com da neden firebase kullandık"*
+→ o proje tek dosyalık, istemci ağırlıklı bir uygulamaydı; Firebase sunucusuz hızlı başlatır, küçük ölçekte ücretsiz kotası yeter. Bedeli kural
+dosyalarında yaşanmış olarak duruyor: kota (03 "kota yiyici #1", ANAYASA 14), kimlik bileti sınırı (07), dal dal dinleme. Bu üründe çok firma, sunucuda PDF,
+satır seviyesi izolasyon, Türkiye'de veri ve maliyet kontrolü gerektiği için PostgreSQL seçildi (§8, 2026-09-22). G3 açık.
 Aynı gün ara mesajlar (reisim birebir): *"Şirket logosuda firma ayarlarından girilsin , raporlara otomatik çekilsin"* (§11 238) · *"Format
 tasarımcısında herhangi bir başlığa tıklayınca en baş arıyor, en başa atmasın başlığı düzenlediğimiz yere odaklansın(telefonda)"* (§11 237).
 
@@ -2279,6 +2283,8 @@ revizyon, alan kopyalama, hafif kusur devri, meslek eşleşme denetimi).
 - Emsal ürünler: https://opwire.app/iso-17020-periyodik-kontrol-yazilimi/ · https://17020muayene.vidco.com.tr/ · https://akuple.com/asansor-kontrol-yazilimi/ · https://ensyazilim.com/
 
 ## 11 · Değişiklik günlüğü
+- 2026-10-03 (251): **Önceki üründe neden Firebase sorusu** (§9 elli ikinci tur ara mesajı) + G3'te Firebase ücret açıklaması düzeltildi (Realtime Database
+  indirilen veriye, Firestore okumaya göre). Kod ve maket değişmedi.
 - 2026-10-03 (250): **G3 açık — Supabase mi kiralık sunucu mu** (§9 elli ikinci tur ara mesajı). KOD-GECIS §0'a G3 eklendi. Kod ve maket değişmedi.
 - 2026-10-03 (249): **G2 kabul — barındırma ve maliyet** (§9 elli ikinci tur). KOD-GECIS G2 karar oldu; kota, indirme trafiği ve iki katmanlı yedek
   açıklaması G2 satırına eklendi. Sıradaki: Firma ayarları › "Depolama ve yedek" maketi (reisim onayıyla). Kod ve maket değişmedi.
