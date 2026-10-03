@@ -4,7 +4,9 @@
    (ünvan, kısa kod, alt alan adı) + ilk firma yöneticisinin hesabı. Alt alan adı joker SSL ile hemen çalışır; ayrı kurulum yok.
    · #/ firmalar (adres, kısa kod, durum, açılış, kullanıcı) · #/yeni firma aç · #/f/<id> firma: bilgiler, ilk giriş bilgileri (geçici
      parola YALNIZ bir kez gösterilir), yöneticiye yeni geçici parola, dondur / etkinleştir (veri silinmez).
-   Firmalar uydurma; yayında bu sayfa ayrı adreste (ör. yonetim.probata.com.tr), yalnız bizim hesaplarımızla ve iki adımlı girişle açılır. */
+   Firmalar uydurma; yayında bu sayfa ayrı adreste (ör. yonetim.probata.com.tr), yalnız bizim hesaplarımızla ve iki adımlı girişle açılır.
+   2026-10-03 (reisim: "yedekleme deposu olmadan şirket açılmasına izin verilmesin probata gün saklar gibi bir alternatif olamaz, müşteriler hukuken
+   raporları 5 yıl arşivlemek durumunda"): firmanın KENDİ deposu (MK.depoAlanlar) bağlanıp denenmeden firma AÇILMAZ (engel); listede depo durumu. */
 (function () {
   "use strict";
   var $ = MK.$, kacis = MK.kacis, ikon = MK.ikon, X = MK.eylem;
@@ -12,15 +14,18 @@
   var AYRILMIS = ["www", "yonetim", "api", "mail", "destek", "probata", "test", "demo"];
   var DURUM = { etkin: { ad: "Etkin", rozet: "a-rozet-tamam" }, dondu: { ad: "Dondurulmuş", rozet: "a-rozet-red" } };
   var FIRMALAR = [
-    { id: "f1", unvan: "Örnek Muayene ve Kontrol Ltd. Şti.", kod: "KM", alt: "ornek", durum: "etkin", acilis: "2026-09-01", kullanici: 16, yon: "Ayşe Demir", eposta: "ayse.demir@ornek-muayene.example" },
-    { id: "f2", unvan: "Deneme Periyodik Kontrol A.Ş.", kod: "DP", alt: "deneme", durum: "etkin", acilis: "2026-09-15", kullanici: 7, yon: "Burak Tan", eposta: "burak.tan@deneme-kontrol.example" },
-    { id: "f3", unvan: "Örnek Test ve Muayene Ltd. Şti.", kod: "OT", alt: "ornektest", durum: "dondu", acilis: "2026-06-02", kullanici: 4, yon: "Selin Ak", eposta: "selin.ak@ornek-test.example" }
+    { id: "f1", unvan: "Örnek Muayene ve Kontrol Ltd. Şti.", kod: "KM", alt: "ornek", durum: "etkin", acilis: "2026-09-01", kullanici: 16, yon: "Ayşe Demir", eposta: "ayse.demir@ornek-muayene.example", depo: { kova: "km-probata", uc: "https://depo.ornek.example", yer: "tr", durum: "bagli" } },
+    { id: "f2", unvan: "Deneme Periyodik Kontrol A.Ş.", kod: "DP", alt: "deneme", durum: "etkin", acilis: "2026-09-15", kullanici: 7, yon: "Burak Tan", eposta: "burak.tan@deneme-kontrol.example", depo: { kova: "dp-arsiv", uc: "https://s3.deneme.example", yer: "ab", durum: "bagli" } },
+    { id: "f3", unvan: "Örnek Test ve Muayene Ltd. Şti.", kod: "OT", alt: "ornektest", durum: "dondu", acilis: "2026-06-02", kullanici: 4, yon: "Selin Ak", eposta: "selin.ak@ornek-test.example", depo: { kova: "ot-yedek", uc: "https://depo.ornektest.example", yer: "tr", durum: "erisilemiyor" } }
   ];
   MK.kalici("yonetim", function () { return FIRMALAR; }, function (v) { if (Array.isArray(v)) FIRMALAR = v; });
-  var F = { d: {}, hata: {}, elle: {} };   /* firma aç formu: değerler, hatalar, elle değiştirilen alanlar (öneri artık ezmez) */
+  var DEPO_DURUM = { bagli: { ad: "Bağlı", rozet: "a-rozet-tamam" }, erisilemiyor: { ad: "Erişilemiyor", rozet: "a-rozet-red" } };
+  var bosForm = function () { return { d: {}, hata: {}, elle: {}, depo: { yer: "tr" }, depoHata: {}, depoOk: false }; };
+  var F = bosForm();   /* firma aç formu: değerler, hatalar, elle değiştirilen alanlar (öneri artık ezmez) */
   var PAROLA = {};                          /* firma no → bu oturumda bir kez gösterilecek geçici parola (kaydedilmez) */
   var firma = function (id) { return FIRMALAR.filter(function (f) { return f.id === id; })[0]; };
   var rozet = function (d) { return MK.rozet(DURUM[d]); };
+  var depoRozet = function (f) { return MK.rozet(DEPO_DURUM[(f.depo || {}).durum || "erisilemiyor"]); };
   var adres = function (alt) { return alt + "." + ALAN; };
 
   /* ünvandan öneri: alt alan adı ilk kelime (Türkçe harf → a–z), kısa kod ilk iki kelimenin baş harfleri */
@@ -44,8 +49,9 @@
     } },
     { k: "kod", baslik: "Kısa kod", kart: "govde", sira: 3, hucre: function (f) { return '<span class="a-kart-etiket">Kısa kod</span><span class="a-kod">' + kacis(f.kod) + "</span>"; } },
     { k: "durum", baslik: "Durum", kart: "rozet", sira: 2, hucre: function (f) { return rozet(f.durum); } },
-    { k: "acilis", baslik: "Açılış", kart: "govde", sira: 4, hucre: function (f) { return '<span class="a-kart-etiket">Açılış</span>' + MK.tarihYaz(f.acilis); } },
-    { k: "kullanici", baslik: "Kullanıcı", kart: "govde", sira: 5, hucre: function (f) { return '<span class="a-kart-etiket">Kullanıcı</span><span class="a-sayi">' + f.kullanici + "</span>"; } }
+    { k: "depo", baslik: "Depo", kart: "govde", sira: 4, hucre: function (f) { return '<span class="a-kart-etiket">Depo</span>' + depoRozet(f); } },
+    { k: "acilis", baslik: "Açılış", kart: "govde", sira: 5, hucre: function (f) { return '<span class="a-kart-etiket">Açılış</span>' + MK.tarihYaz(f.acilis); } },
+    { k: "kullanici", baslik: "Kullanıcı", kart: "govde", sira: 6, hucre: function (f) { return '<span class="a-kart-etiket">Kullanıcı</span><span class="a-sayi">' + f.kullanici + "</span>"; } }
   ];
   function listeCiz() {
     var etkin = FIRMALAR.filter(function (f) { return f.durum === "etkin"; }).length;
@@ -77,12 +83,23 @@
         alan("y-yon", "yon", "Ad soyad", ' maxlength="80"') +
         alan("y-eposta", "eposta", "E-posta (giriş adı)", ' type="email" maxlength="120" spellcheck="false" autocapitalize="off"') +
       "</div></section>" +
+      '<section class="a-bolum" aria-labelledby="y-b-depo"><div class="a-alt-bas"><h2 class="a-alt-baslik" id="y-b-depo">Firmanın deposu (raporlar, fotoğraflar, yedekler)</h2>' +
+        '<span class="a-sayac" id="y-depo-durum">' + (F.depoOk ? "bağlandı" : "bağlanmadı") + "</span></div>" +
+        (h.depo ? MK.serit("hata", "circle-x", h.depo) : "") +
+        MK.depoAlanlar("y-depo", F.depo, F.depoHata) +
+        '<div class="a-eylem-cubugu a-eylem-sol">' + (F.depoOk ? '<span class="a-bulut-hesap">' + ikon("circle-check", "a-ikon-kucuk") + "Bağlandı: " + kacis(F.depo.kova) + "</span>" : MK.tus({ eylem: "y-depo-dene", ad: "Bağlan ve dene", ikon: "log-in", sinif: "a-tus-ikincil" })) + "</div></section>" +
       '<div class="a-eylem-cubugu a-eylem-sol">' + MK.tus({ eylem: "firma-ac", ad: "Firmayı aç", ikon: "check" }) +
         '<a class="a-tus a-tus-ikincil" href="#/">Vazgeç</a></div>';
     if (odak) { var e = $(odak); if (e) e.focus(); }
   }
   MK.onGirdi = function (e) {
-    var t = e.target, k = t.dataset && t.dataset.alan; if (!k || !/^y-/.test(t.id)) return;
+    var t = e.target, m = /^y-depo-(uc|kova|erisim|gizli)$/.exec(t.id || "");
+    if (m) {   /* depo alanı değişti: bağlantı yeniden denenmeli */
+      if (m[1] !== "gizli") F.depo[m[1]] = t.value;
+      if (F.depoOk) { F.depoOk = false; formCiz(t.id); }
+      return;
+    }
+    var k = t.dataset && t.dataset.alan; if (!k || !/^y-/.test(t.id)) return;
     F.d[k] = t.value; F.elle[k] = true;
     if (k === "unvan") {   /* elle değiştirilmemişse alt alan adı ve kısa kod ünvandan önerilir */
       var o = oneri(t.value);
@@ -107,18 +124,32 @@
     if (!(d.yon || "").trim()) h.yon = "Ad soyad yazılmalı.";
     if (!(d.eposta || "").trim()) h.eposta = "E-posta yazılmalı.";
     else if (!/^[^\s@]+@[^\s@]+\.[^\s@]+$/.test(d.eposta.trim())) h.eposta = "Geçerli bir e-posta değil.";
+    if (!F.depoOk) h.depo = "Depo bağlanmadan firma açılamaz: deponun bilgilerini girip “Bağlan ve dene”ye basın. Raporlar 5 yıl, yedekler firmanın deposunda saklanır.";
     return h;
   }
+  MK.onSecim = function (id, deger) {
+    if (id !== "y-depo-yer") return;
+    F.depo.yer = deger; F.depoOk = false; formCiz(id);
+  };
+  X["y-depo-dene"] = function () {
+    var d = Object.assign({}, F.depo, { gizli: $("y-depo-gizli").value });
+    F.depoHata = MK.depoDenetle(d); F.depoOk = !Object.keys(F.depoHata).length;
+    if (F.depoOk) delete F.hata.depo;
+    var ilk = ["uc", "kova", "erisim", "gizli"].filter(function (k) { return F.depoHata[k]; })[0];
+    formCiz(ilk ? "y-depo-" + ilk : F.depoOk ? "firma-ac-tus" : "y-depo-uc");
+    if (F.depoOk) { var b = document.querySelector('[data-eylem="firma-ac"]'); if (b) b.focus(); MK.bildir("Depo bağlandı: " + F.depo.kova.trim() + " (yazma ve okuma denendi)."); }
+  };
   X["firma-ac"] = function () {
     F.hata = denetle();
-    var ilk = ["unvan", "alt", "kod", "yon", "eposta"].filter(function (k) { return F.hata[k]; })[0];
-    if (ilk) { formCiz("y-" + ilk); return; }
+    var ilk = ["unvan", "alt", "kod", "yon", "eposta", "depo"].filter(function (k) { return F.hata[k]; })[0];
+    if (ilk) { formCiz(ilk === "depo" ? "y-depo-uc" : "y-" + ilk); return; }
     var d = F.d, alt = d.alt.trim();
     MK.onayla({ baslik: "Firma açılsın mı?", metin: adres(alt) + " hemen çalışır; " + d.yon.trim() + " ilk girişte geçici parolayla girip kendi parolasını belirler.", tus: "Firmayı aç",
       tamam: function () {
         var id = "f" + (FIRMALAR.reduce(function (m, f) { return Math.max(m, +f.id.slice(1)); }, 0) + 1);
-        FIRMALAR.push({ id: id, unvan: d.unvan.trim(), kod: d.kod.trim().toUpperCase(), alt: alt, durum: "etkin", acilis: MK.raporBugun, kullanici: 1, yon: d.yon.trim(), eposta: d.eposta.trim() });
-        PAROLA[id] = parolaUret(); F = { d: {}, hata: {}, elle: {} };
+        FIRMALAR.push({ id: id, unvan: d.unvan.trim(), kod: d.kod.trim().toUpperCase(), alt: alt, durum: "etkin", acilis: MK.raporBugun, kullanici: 1, yon: d.yon.trim(), eposta: d.eposta.trim(),
+          depo: { kova: F.depo.kova.trim(), uc: F.depo.uc.trim(), yer: F.depo.yer || "tr", durum: "bagli" } });
+        PAROLA[id] = parolaUret(); F = bosForm();
         location.hash = "#/f/" + id; MK.bildir("Firma açıldı: " + adres(alt));
       } });
   };
@@ -146,7 +177,9 @@
         MK.bilgi("Ticari ünvan", kacis(f.unvan), "cift") + MK.bilgi("Adres", '<span class="a-kod">' + kacis(adres(f.alt)) + "</span>", "cift") +
         MK.bilgi("Kısa kod", '<span class="a-kod">' + kacis(f.kod) + "</span>") + MK.bilgi("Açılış", MK.tarihYaz(f.acilis)) +
         MK.bilgi("İlk firma yöneticisi", kacis(f.yon) + '<span class="a-alt-satir">' + kacis(f.eposta) + "</span>") + MK.bilgi("Kullanıcı", String(f.kullanici)) +
+        MK.bilgi("Depo", f.depo ? kacis(f.depo.kova) + " " + depoRozet(f) + '<span class="a-alt-satir">' + kacis(f.depo.uc) + " · " + MK.DEPO_YER.filter(function (x) { return x[0] === f.depo.yer; })[0][1] + "</span>" : depoRozet(f), "cift") +
       "</dl></section>" +
+      (f.depo && f.depo.durum === "erisilemiyor" ? '<div class="a-serit-kap">' + MK.serit("hata", "circle-x", "Depoya erişilemiyor: yeni fotoğraf ve raporlar cihazlarda bekliyor, yedek alınamıyor. Firma yöneticisi Firma ayarları › Depolama ve yedek'te uyarıyı görüyor.") + "</div>" : "") +
       '<section class="a-bolum" aria-labelledby="y-b-sonra"><div class="a-alt-bas"><h2 class="a-alt-baslik" id="y-b-sonra">Sonrası firmanın kendi sitesinde</h2></div>' +
         '<ol class="a-yonetim-adim"><li>Firma yöneticisi adrese girer, geçici parolayla kendi parolasını belirler.</li>' +
         "<li>Firma ayarları: logo, künye, imza yöntemi, rapor formatları.</li>" +

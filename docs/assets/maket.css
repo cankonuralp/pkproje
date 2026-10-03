@@ -1106,11 +1106,11 @@ a.a-yuz:hover { border-color: var(--kenar-alan); background: var(--zemin); }
   border-radius: 6px; color: var(--yazi2); font-size: var(--boy-etiket); font-weight: 600; }
 /* Firma ayarları › Depolama ve yedek (2026-10-03, G2 + G3) */
 .a-tablo-yedek .a-k-zaman { width: 24%; } .a-tablo-yedek .a-k-tur { width: 14%; } .a-tablo-yedek .a-k-boyut { width: 14%; }
-.a-tablo-yedek .a-k-yer { width: 26%; } .a-tablo-yedek .a-k-eylem { width: 22%; }
-.a-depo-form { margin: 12px 0 0; } .a-ayar-yedek { margin: 0 0 12px; }
+.a-tablo-yedek .a-k-yer { width: 26%; } /* Saklama sütunu */ .a-tablo-yedek .a-k-eylem { width: 22%; }
+.a-depo-form { margin: 12px 0 0; } .a-ayar-yedek { margin: 0 0 12px; } .a-kod.a-depo-yol { white-space: normal; overflow-wrap: anywhere; }
 /* probata yönetim (2026-10-03): firma listesi + firma sayfasındaki "sonrası" adımları */
-.a-tablo-yfirma .a-k-firma { width: 40%; } .a-tablo-yfirma .a-k-kod { width: 12%; } .a-tablo-yfirma .a-k-durum { width: 18%; }
-.a-tablo-yfirma .a-k-acilis { width: 16%; } .a-tablo-yfirma .a-k-kullanici { width: 14%; }
+.a-tablo-yfirma .a-k-firma { width: 34%; } .a-tablo-yfirma .a-k-kod { width: 10%; } .a-tablo-yfirma .a-k-durum { width: 14%; } .a-tablo-yfirma .a-k-depo { width: 14%; }
+.a-tablo-yfirma .a-k-acilis { width: 14%; } .a-tablo-yfirma .a-k-kullanici { width: 14%; }
 .a-yonetim-adim { margin: 0; padding-left: 20px; } .a-yonetim-adim li { margin: 0 0 6px; }
 .a-tablo-mrapor .a-k-no { width: 22%; } .a-tablo-mrapor .a-k-ekipman { width: 22%; } .a-tablo-mrapor .a-k-tesis { width: 16%; }
 .a-tablo-mrapor .a-k-tarih { width: 12%; } .a-tablo-mrapor .a-k-sonraki { width: 13%; } .a-tablo-mrapor .a-k-sonuc { width: 15%; }

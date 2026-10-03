@@ -2253,6 +2253,7 @@ benzetmesi). İkisi de PostgreSQL olduğu için sonradan biri ötekine taşınab
 Aynı gün (reisim birebir): *"Supabase kullanalım sebebi ise eğer bir sorun olurda kiraladığım server yetersiz gelirse sorun olur ama supabase de öyle bi ihtimal görmüyorum"* → **G3 kabul: Supabase** (§8.8 değişti, §11 253). Not: Supabase'de de sınır var (paket gücü), ama tıkla
 büyütülür, taşıma gerekmez.
 Aynı gün (reisim birebir): *"Evet başla"* → Firma ayarları › **Depolama ve yedek** maketi (§11 254).
+Aynı gün (reisim birebir): *"yedekleme deposu olmadan şirket açılmasına izin verilmesin probata  gün saklar gibi bir alternatif olamaz, müşteriler hukuken raporları 5 yıl arşivlemek durumunda ona göre kurgula tekrar"* · ara mesajlar *"elle yedekleme olmasın"* · *"kendi depolarında da yedekleri ve raporlar düzenli arşivlensin"* → yeniden kurgu (§11 255): firmanın **kendi deposu firma açılırken zorunlu** (Yönetim › Firma aç; yoksa firma açılmaz), probata'da firma dosyası / yedeği tutulmaz; depo kesilemez, yalnız değiştirilir. Depoda **düzenli arşiv**: imzalanan her rapor PDF'i `arsiv/raporlar/YIL/Müşteri/`'ye hemen; yedekler `arsiv/yedek/`'e seçilen sıklıkla (saatlik / günlük / haftalık; **elle yedek yok**); her ayın ilk yedeği ve raporlar **5 yıl silme korumalı** (kısaltılamaz).
 Aynı gün ara mesajlar (reisim birebir): *"Şirket logosuda firma ayarlarından girilsin , raporlara otomatik çekilsin"* (§11 238) · *"Format
 tasarımcısında herhangi bir başlığa tıklayınca en baş arıyor, en başa atmasın başlığı düzenlediğimiz yere odaklansın(telefonda)"* (§11 237).
 
@@ -2293,6 +2294,13 @@ revizyon, alan kopyalama, hafif kusur devri, meslek eşleşme denetimi).
 - Emsal ürünler: https://opwire.app/iso-17020-periyodik-kontrol-yazilimi/ · https://17020muayene.vidco.com.tr/ · https://akuple.com/asansor-kontrol-yazilimi/ · https://ensyazilim.com/
 
 ## 11 · Değişiklik günlüğü
+- 2026-10-03 (255): **Depo zorunlu, düzenli arşiv, elle yedek yok** (§9 elli ikinci tur). Yönetim › Firma aç'a "Firmanın deposu" bölümü (uç, kova,
+  erişim + gizli anahtar, depo yeri; **Bağlan ve dene**): depo bağlanmadan **Firmayı aç** reddedilir (şerit, onay penceresi açılmaz); depo alanı
+  değişince yeniden denenmeli; firma listesinde ve sayfasında depo durumu (Bağlı / Erişilemiyor). Firma ayarları › Depolama ve yedek yeniden: yalnız
+  firmanın deposu (durum, son deneme, kullanım; **Bağlantıyı dene** · **Depoyu değiştir** → dene, onay, taşı; kesme yok), **Düzenli arşiv** (rapor
+  yolu, arşivdeki imzalı rapor sayısı, 5 yıl silme koruması), **Yedek** (saatlik / günlük / haftalık — kapalı yok; saat; saklama 30–365 gün; aylık
+  arşiv yedeği 5 yıl; sonraki yedek; son yedekler + İndir) — "Şimdi yedekle" ve "probata deposu" kalktı. Depo formu ortak üretici (MK.depoAlanlar /
+  MK.depoDenetle). KOD-GECIS ENGEL 10–11, Y2b.
 - 2026-10-03 (254): **Firma ayarları › Depolama ve yedek** (§9 elli ikinci tur; KOD-GECIS G2 + G3). Tam genişlik bölüm: **Dosya deposu** — şu an
   (probata deposu, AB ya da firmanın kendi deposu), kullanım (GB, dosya sayısı, bu ay indirme; 09-B10), **Kendi depomuzu bağla**: uç adresi, kova,
   erişim anahtarı, gizli anahtar (bir daha gösterilmez, saklanmaz), depo yeri (Türkiye / AB / başka ülke → KVKK uyarısı); **Bağlan ve dene**

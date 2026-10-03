@@ -2803,7 +2803,7 @@
    "tusY": 34,
    "tusGen": [
     82,
-    213
+    199
    ],
    "satirY": 46,
    "birincil": null,
@@ -2841,7 +2841,7 @@
    "tusY": 34,
    "tusGen": [
     82,
-    213
+    199
    ],
    "satirY": 46,
    "birincil": null,
@@ -2879,7 +2879,7 @@
    "tusY": 44,
    "tusGen": [
     84,
-    224
+    210
    ],
    "satirY": 56,
    "birincil": null,
@@ -2917,7 +2917,7 @@
    "tusY": 44,
    "tusGen": [
     84,
-    224
+    210
    ],
    "satirY": 56,
    "birincil": null,
@@ -2955,7 +2955,7 @@
    "tusY": 44,
    "tusGen": [
     70,
-    224
+    210
    ],
    "satirY": 56,
    "birincil": null,
@@ -2993,7 +2993,7 @@
    "tusY": 44,
    "tusGen": [
     70,
-    224
+    210
    ],
    "satirY": 56,
    "birincil": null,
@@ -3031,7 +3031,7 @@
    "tusY": 44,
    "tusGen": [
     84,
-    224
+    210
    ],
    "satirY": 191,
    "birincil": null,
@@ -3069,7 +3069,7 @@
    "tusY": 44,
    "tusGen": [
     84,
-    224
+    210
    ],
    "satirY": 191,
    "birincil": null,
@@ -3107,7 +3107,7 @@
    "tusY": 34,
    "tusGen": [
     78,
-    213
+    199
    ],
    "satirY": 46,
    "birincil": null,
@@ -3145,7 +3145,7 @@
    "tusY": 34,
    "tusGen": [
     78,
-    213
+    199
    ],
    "satirY": 46,
    "birincil": null,
@@ -3183,7 +3183,7 @@
    "tusY": 44,
    "tusGen": [
     81,
-    224
+    210
    ],
    "satirY": 56,
    "birincil": null,
@@ -3221,7 +3221,7 @@
    "tusY": 44,
    "tusGen": [
     81,
-    224
+    210
    ],
    "satirY": 56,
    "birincil": null,
@@ -3259,7 +3259,7 @@
    "tusY": 44,
    "tusGen": [
     70,
-    224
+    210
    ],
    "satirY": 56,
    "birincil": null,
@@ -3297,7 +3297,7 @@
    "tusY": 44,
    "tusGen": [
     70,
-    224
+    210
    ],
    "satirY": 56,
    "birincil": null,
@@ -3335,7 +3335,7 @@
    "tusY": 44,
    "tusGen": [
     81,
-    224
+    210
    ],
    "satirY": 191,
    "birincil": null,
@@ -3373,7 +3373,7 @@
    "tusY": 44,
    "tusGen": [
     81,
-    224
+    210
    ],
    "satirY": 191,
    "birincil": null,
@@ -3690,7 +3690,7 @@
    "hatalar": []
   },
   {
-   "ad": "firma ayarları · depolama ve yedek: kendi depo bağlama formu, hatalı",
+   "ad": "firma ayarları · depolama ve yedek: depoyu değiştir formu, hatalı",
    "gen": 1920,
    "tema": "acik",
    "gorunum": "liste",
@@ -3728,7 +3728,7 @@
    "hatalar": []
   },
   {
-   "ad": "firma ayarları · depolama ve yedek: kendi depo bağlama formu, hatalı",
+   "ad": "firma ayarları · depolama ve yedek: depoyu değiştir formu, hatalı",
    "gen": 1920,
    "tema": "koyu",
    "gorunum": "liste",
@@ -3766,7 +3766,7 @@
    "hatalar": []
   },
   {
-   "ad": "firma ayarları · depolama ve yedek: kendi depo bağlama formu, hatalı",
+   "ad": "firma ayarları · depolama ve yedek: depoyu değiştir formu, hatalı",
    "gen": 1080,
    "tema": "acik",
    "gorunum": "liste",
@@ -3804,7 +3804,7 @@
    "hatalar": []
   },
   {
-   "ad": "firma ayarları · depolama ve yedek: kendi depo bağlama formu, hatalı",
+   "ad": "firma ayarları · depolama ve yedek: depoyu değiştir formu, hatalı",
    "gen": 1080,
    "tema": "koyu",
    "gorunum": "liste",
@@ -3842,7 +3842,7 @@
    "hatalar": []
   },
   {
-   "ad": "firma ayarları · depolama ve yedek: kendi depo bağlama formu, hatalı",
+   "ad": "firma ayarları · depolama ve yedek: depoyu değiştir formu, hatalı",
    "gen": 810,
    "tema": "acik",
    "gorunum": "liste",
@@ -3880,7 +3880,7 @@
    "hatalar": []
   },
   {
-   "ad": "firma ayarları · depolama ve yedek: kendi depo bağlama formu, hatalı",
+   "ad": "firma ayarları · depolama ve yedek: depoyu değiştir formu, hatalı",
    "gen": 810,
    "tema": "koyu",
    "gorunum": "liste",
@@ -3918,7 +3918,7 @@
    "hatalar": []
   },
   {
-   "ad": "firma ayarları · depolama ve yedek: kendi depo bağlama formu, hatalı",
+   "ad": "firma ayarları · depolama ve yedek: depoyu değiştir formu, hatalı",
    "gen": 375,
    "tema": "acik",
    "gorunum": "liste",
@@ -3956,7 +3956,7 @@
    "hatalar": []
   },
   {
-   "ad": "firma ayarları · depolama ve yedek: kendi depo bağlama formu, hatalı",
+   "ad": "firma ayarları · depolama ve yedek: depoyu değiştir formu, hatalı",
    "gen": 375,
    "tema": "koyu",
    "gorunum": "liste",
@@ -3994,7 +3994,7 @@
    "hatalar": []
   },
   {
-   "ad": "firma ayarları · depolama ve yedek: kendi depo bağlı, elle yedek",
+   "ad": "firma ayarları · depolama ve yedek: depoya erişilemiyor",
    "gen": 1920,
    "tema": "acik",
    "gorunum": "liste",
@@ -4032,7 +4032,7 @@
    "hatalar": []
   },
   {
-   "ad": "firma ayarları · depolama ve yedek: kendi depo bağlı, elle yedek",
+   "ad": "firma ayarları · depolama ve yedek: depoya erişilemiyor",
    "gen": 1920,
    "tema": "koyu",
    "gorunum": "liste",
@@ -4070,7 +4070,7 @@
    "hatalar": []
   },
   {
-   "ad": "firma ayarları · depolama ve yedek: kendi depo bağlı, elle yedek",
+   "ad": "firma ayarları · depolama ve yedek: depoya erişilemiyor",
    "gen": 1080,
    "tema": "acik",
    "gorunum": "liste",
@@ -4108,7 +4108,7 @@
    "hatalar": []
   },
   {
-   "ad": "firma ayarları · depolama ve yedek: kendi depo bağlı, elle yedek",
+   "ad": "firma ayarları · depolama ve yedek: depoya erişilemiyor",
    "gen": 1080,
    "tema": "koyu",
    "gorunum": "liste",
@@ -4146,7 +4146,7 @@
    "hatalar": []
   },
   {
-   "ad": "firma ayarları · depolama ve yedek: kendi depo bağlı, elle yedek",
+   "ad": "firma ayarları · depolama ve yedek: depoya erişilemiyor",
    "gen": 810,
    "tema": "acik",
    "gorunum": "liste",
@@ -4184,7 +4184,7 @@
    "hatalar": []
   },
   {
-   "ad": "firma ayarları · depolama ve yedek: kendi depo bağlı, elle yedek",
+   "ad": "firma ayarları · depolama ve yedek: depoya erişilemiyor",
    "gen": 810,
    "tema": "koyu",
    "gorunum": "liste",
@@ -4222,7 +4222,7 @@
    "hatalar": []
   },
   {
-   "ad": "firma ayarları · depolama ve yedek: kendi depo bağlı, elle yedek",
+   "ad": "firma ayarları · depolama ve yedek: depoya erişilemiyor",
    "gen": 375,
    "tema": "acik",
    "gorunum": "liste",
@@ -4260,7 +4260,7 @@
    "hatalar": []
   },
   {
-   "ad": "firma ayarları · depolama ve yedek: kendi depo bağlı, elle yedek",
+   "ad": "firma ayarları · depolama ve yedek: depoya erişilemiyor",
    "gen": 375,
    "tema": "koyu",
    "gorunum": "liste",
@@ -4553,7 +4553,7 @@
     112,
     112
    ],
-   "satirY": 168,
+   "satirY": 194,
    "birincil": null,
    "pencereGen": null,
    "icerik": 375,
@@ -4591,7 +4591,7 @@
     112,
     112
    ],
-   "satirY": 168,
+   "satirY": 194,
    "birincil": null,
    "pencereGen": null,
    "icerik": 375,
@@ -4627,7 +4627,7 @@
    "tusY": 34,
    "tusGen": [
     78,
-    120
+    156
    ],
    "satirY": null,
    "birincil": null,
@@ -4665,7 +4665,7 @@
    "tusY": 34,
    "tusGen": [
     78,
-    120
+    156
    ],
    "satirY": null,
    "birincil": null,
@@ -4703,7 +4703,7 @@
    "tusY": 44,
    "tusGen": [
     81,
-    125
+    164
    ],
    "satirY": null,
    "birincil": null,
@@ -4741,7 +4741,7 @@
    "tusY": 44,
    "tusGen": [
     81,
-    125
+    164
    ],
    "satirY": null,
    "birincil": null,
@@ -4779,7 +4779,7 @@
    "tusY": 44,
    "tusGen": [
     81,
-    125
+    164
    ],
    "satirY": null,
    "birincil": null,
@@ -4817,7 +4817,7 @@
    "tusY": 44,
    "tusGen": [
     81,
-    125
+    164
    ],
    "satirY": null,
    "birincil": null,
@@ -4855,7 +4855,7 @@
    "tusY": 44,
    "tusGen": [
     81,
-    125
+    164
    ],
    "satirY": null,
    "birincil": null,
@@ -4893,7 +4893,7 @@
    "tusY": 44,
    "tusGen": [
     81,
-    125
+    164
    ],
    "satirY": null,
    "birincil": null,
@@ -6755,7 +6755,7 @@
    "tusY": 34,
    "tusGen": [
     78,
-    213
+    199
    ],
    "satirY": 46,
    "birincil": null,
@@ -6793,7 +6793,7 @@
    "tusY": 34,
    "tusGen": [
     78,
-    213
+    199
    ],
    "satirY": 46,
    "birincil": null,
@@ -6831,7 +6831,7 @@
    "tusY": 44,
    "tusGen": [
     81,
-    224
+    210
    ],
    "satirY": 56,
    "birincil": null,
@@ -6869,7 +6869,7 @@
    "tusY": 44,
    "tusGen": [
     81,
-    224
+    210
    ],
    "satirY": 56,
    "birincil": null,
@@ -6907,7 +6907,7 @@
    "tusY": 44,
    "tusGen": [
     70,
-    224
+    210
    ],
    "satirY": 56,
    "birincil": null,
@@ -6945,7 +6945,7 @@
    "tusY": 44,
    "tusGen": [
     70,
-    224
+    210
    ],
    "satirY": 56,
    "birincil": null,
@@ -6983,7 +6983,7 @@
    "tusY": 44,
    "tusGen": [
     81,
-    224
+    210
    ],
    "satirY": 191,
    "birincil": null,
@@ -7021,7 +7021,7 @@
    "tusY": 44,
    "tusGen": [
     81,
-    224
+    210
    ],
    "satirY": 191,
    "birincil": null,

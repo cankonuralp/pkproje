@@ -541,6 +541,33 @@
       (o.hata ? ' aria-invalid="true"' : "") + ' aria-describedby="' + o.id + '-ipucu"' + (o.ek || "") + ">";
   };
 
+  /* ── DEPO (yedek + dosyalar) — TEK ÜRETİCİ (2026-10-03, reisim: "yedekleme deposu olmadan şirket açılmasına izin verilmesin probata gün saklar
+     gibi bir alternatif olamaz, müşteriler hukuken raporları 5 yıl arşivlemek durumunda"): firmanın kendi S3 uyumlu deposu. Yönetim › Firma aç
+     ve Firma ayarları › Depoyu değiştir aynı alanları kullanır. p = id öneki, d = { uc, kova, erisim, yer }, h = hatalar. Makette bağlantı
+     taklit: kova adında "hata" geçerse depo erişimi reddeder. */
+  MK.DEPO_YER = [["tr", "Türkiye"], ["ab", "Avrupa Birliği"], ["diger", "Başka ülke"]];
+  MK.depoAlanlar = function (p, d, h) {
+    var g = function (k, etiket, ek) { return MK.alan({ id: p + "-" + k, etiket: etiket, zorunlu: true, hata: h[k], girdi: MK.girdi({ id: p + "-" + k, hata: h[k], deger: d[k], ek: ek }) }); };
+    return '<div class="a-form">' +
+      g("uc", "Uç adresi", ' maxlength="200" spellcheck="false" autocapitalize="off" inputmode="url" placeholder="https://…"') +
+      g("kova", "Kova (bucket) adı", ' maxlength="63" spellcheck="false" autocapitalize="off"') +
+      g("erisim", "Erişim anahtarı", ' maxlength="128" spellcheck="false" autocapitalize="off"') +
+      MK.alan({ id: p + "-gizli", etiket: "Gizli anahtar", zorunlu: true, hata: h.gizli, girdi: '<input class="a-girdi" id="' + p + '-gizli" type="password" autocomplete="off" maxlength="200" aria-describedby="' + p + '-gizli-ipucu"' + (h.gizli ? ' aria-invalid="true"' : "") + ">" }) +
+      '<div class="a-alan-grup"><label class="a-etiket" for="' + p + '-yer">Depo nerede</label>' + MK.secim({ id: p + "-yer", ad: "Depo nerede", deger: d.yer || "tr", secenekler: MK.DEPO_YER }) + "</div></div>" +
+      (d.yer === "diger" ? MK.serit("uyari", "triangle-alert", "Türkiye ve AB dışında: fotoğraf, rapor ve yedekler oraya çıkar (KVKK sorumluluğu firmanın).") : "") +
+      (h.baglanti ? MK.serit("hata", "circle-x", h.baglanti) : "");
+  };
+  /* d.gizli düğmeye basınca alandan okunur; dönen nesne boşsa bağlantı kuruldu */
+  MK.depoDenetle = function (d) {
+    var h = {}, uc = (d.uc || "").trim(), kova = (d.kova || "").trim();
+    if (!uc) h.uc = "Uç adresi yazılmalı."; else if (!/^https:\/\/[^\s/]+\.[^\s/]+/.test(uc)) h.uc = "https:// ile başlayan bir adres olmalı.";
+    if (!kova) h.kova = "Kova adı yazılmalı."; else if (!/^[a-z0-9][a-z0-9.-]{1,61}[a-z0-9]$/.test(kova)) h.kova = "3–63 karakter; küçük harf, rakam, nokta ve tire.";
+    if (!(d.erisim || "").trim()) h.erisim = "Erişim anahtarı yazılmalı.";
+    if (!d.gizli) h.gizli = "Gizli anahtar yazılmalı.";
+    if (!Object.keys(h).length && /hata/.test(kova)) h.baglanti = "Bağlanılamadı: depo erişimi reddetti. Anahtarların bu kovaya yazma izni olduğunu kontrol edin.";
+    return h;
+  };
+
   /* ── SEÇİM ALANI (kalıp 19: yerli açılır liste YOK) — formdaki tek seçim: düğme + temalı liste ──────────────
      secim({ id, ad, deger, secenekler: [[deger, etiket, ek?]], ipucu }) — seçilince MK.onSecim(id, deger) çağrılır. */
   MK.secim = function (o) {
