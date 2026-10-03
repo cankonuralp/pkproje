@@ -2198,6 +2198,10 @@ neden böyle bi kısım var"*. Nüsha: rapor sonundaki "Bu rapor … nüsha olar
 sayıyı belirler. Ara mesaj: *"2 nüsha eklenirse 2 e- imza mı gerekir"* → hayır: e-imza dosyanın içinde, her kopya aynı imzayı taşır; rapor bir kez
 imzalanır (e-imzalı firmanın 1 mi 2 mi yazacağına dair resmî açıklama bulunamadı — firma seçer). Ara mesaj: *"araca tıklayınca gözüken ekranda aracın
 marka modeli plaka bilgileri de yazmalı"* · *"araç ekleme kısmıda göremedim"* → §11 242.
+Aynı gün (reisim birebir): *"şimdi siteyi maketten normale geçirmek için hazırlık yap backend kurallarını vb şeyleri yaz ve veya kurallardan oku
+hazır olunca söyle başlayalım eksiğimiz olmasın dikkat et"* → **`KOD-GECIS.md`** (§11 244): kural dosyaları ve pkproje tam okunup tek haritada
+toplandı; başlamak için iki karar: **G0** maketlerin toplu onayı · **G1** geçmiş tarihe plan açma (makette engel; öneri uyarı). Yayından önce gerekenler
+(Y1 probata yönetim paneli maketlenmedi · Y2 ilk açılışta toplu Excel içe aktarma · sunucu, e-posta, operatör, KVKK, mağaza hesapları) belgede.
 Aynı gün ara mesajlar (reisim birebir): *"Şirket logosuda firma ayarlarından girilsin , raporlara otomatik çekilsin"* (§11 238) · *"Format
 tasarımcısında herhangi bir başlığa tıklayınca en baş arıyor, en başa atmasın başlığı düzenlediğimiz yere odaklansın(telefonda)"* (§11 237).
 
@@ -2238,6 +2242,12 @@ revizyon, alan kopyalama, hafif kusur devri, meslek eşleşme denetimi).
 - Emsal ürünler: https://opwire.app/iso-17020-periyodik-kontrol-yazilimi/ · https://17020muayene.vidco.com.tr/ · https://akuple.com/asansor-kontrol-yazilimi/ · https://ensyazilim.com/
 
 ## 11 · Değişiklik günlüğü
+- 2026-10-03 (244): **Koda geçiş hazırlığı — `KOD-GECIS.md`** (§9 elli ikinci tur). Kaynak: ANAYASA, TASARIM-KALIBI, pkproje (§1–§9 tam, §11
+  başlıkları), ARKA-UC, 09, RAPOR-FORMAT, 07, EKSİKLER, maket veri dosyası (~80 koleksiyon), maketteki kayıt engelleme mesajları, iskelet. İçerik:
+  başlama kararları (G0, G1) · bağlayıcı kaynak sırası · çekirdek parçalar ve paket ilkeleri (Windows'ta yerel eklenti yok) · veri modeli (modül başına
+  tablolar, veritabanında benzersizlikler) · rol × modül başlangıç düzeni + özel eylemler · durum makineleri · numaralar · firma ayarları (14 bölüm) ·
+  sabit tanımlar · ENGEL / UYARI kataloğu · yapım sırası K0–K7 · kilit ve kabul testi planı (maketin ~700 davranış denetimi) · yayın öncesi kararlar
+  (Y1–Y9) · makette kalacak geçici çözümler · riskler. Kod başlamadı.
 - 2026-10-03 (243): **S.A.Y tuşu iri** (§9 elli ikinci tur ara mesajı). Masaüstünde 104×40 px (önce 84×34), yazı 15 px kalın, simge 20 px;
   telefonda adıyla görünür (önce yalnız simge), 96×44 px, İşlemler yanında kalan genişlikte.
 - 2026-10-03 (242): **Araç ekle / düzenle + Araç bilgileri** (§9 elli ikinci tur ara mesajları). Araçlar listesinde "Araç ekle", araç sayfasında
