@@ -45,8 +45,9 @@ kalıcı, reisim her işlevi kendisi dener; makette geçici çözüm olabilir, n
 - **Modüler mimari — onaylı (pkproje.md §8.11):** her iş modülü `src/modules/<modül>/` içinde; modül başka
   modülün tablosuna doğrudan dokunmaz, o modülün dışa açtığı fonksiyonları kullanır; ortak çekirdek
   `src/server/`; sayfalar iş mantığı taşımaz. ⛔ Tek dosya derleme ve tek küresel ad alanı YOK.
-- **Barındırma — onaylı (§8.8):** gerçek uygulama Türkiye'de sunucuda, her firma kendi alt alan adında
-  (`*.<ürün>.com.tr`), joker SSL; veri yurt dışına çıkmaz.
+- **Barındırma — §8.8, 2026-10-03 değişti (KOD-GECIS G3):** veritabanı + dosya deposu **Supabase** (yönetilen PostgreSQL, AB — Frankfurt);
+  uygulama AB bölgesinde hazır barındırmada (ör. Vercel); her firma kendi alt alan adında (`*.<ürün>.com.tr`), joker SSL. Veri AB'de →
+  KVKK yurt dışı aktarım şartı yayından önce hukukçuya. Yığın aynı (PostgreSQL + RLS, kendi girişimiz, pg-boss).
 - **Arka plan işleri — onaylı (§8.9):** PostgreSQL üstünde iş kuyruğu (pg-boss); ayrı servis yok.
 - **Sigorta okuma — onaylı (§8.10):** pano fotoğrafından okuma görsel yapay zekâ ile; değer **öneri** olarak
   düşer, inspector onaylamadan kaydedilmez.
@@ -60,7 +61,7 @@ kalıcı, reisim her işlevi kendisi dener; makette geçici çözüm olabilir, n
 - **Kimlik/giriş** bizim kodumuzda (firma kullanıcıları + müşteri hesapları e-posta ile); kiracı = alt alan adı.
 - **PDF** sunucuda üretilir; şablon firma künyesi + form kodu + bölüm iskeleti taşır (`pkproje.md` §4.2, §4.8).
 - **Test**: Node 24 yerleşik koşucu `node --test` (TypeScript'i doğrudan koşar). Tarayıcı uçtan uca: Playwright
-  (ilk ekranlar çıkınca). Docker YOK, Supabase YOK (2026-09-18 kararı).
+  (ilk ekranlar çıkınca). Docker YOK. Yerelde gömülü PostgreSQL; yayında Supabase (2026-10-03, G3; 2026-09-18'deki "Supabase yok" yerel geliştirme içindi).
 
 ## 3 · Dizin haritası (iskelet 2026-09-23; ★ = henüz boş, modüllerle dolar)
 ```
@@ -191,7 +192,7 @@ CI aynı zinciri her push'ta koşar (`.github/workflows/ci.yml`); main'de deneti
   tarihleri ve olayları olduğu gibi duruyor. Bu dosyalara bir daha gerçek ad yazılmaz.
 - **GitHub Pages = statik ÖNİZLEME ortamı** (maket, prototip ekran, örnek veriyle kontrol): reisim buradan bakar,
   ben tarayıcı bölmemde ölçerim. Pages **sunucu tarafını çalıştıramaz** (veritabanı, giriş, PDF üretimi) ve kiracı
-  başına alt alan adı vermez → gerçek uygulama **Türkiye'de sunucuda** (pkproje.md §8.8).
+  başına alt alan adı vermez → gerçek uygulama Supabase + AB'de hazır barındırma (pkproje.md §8.8, 2026-10-03).
 - **Yayın (2026-09-23, iskelet): GitHub Pages GitHub Actions'tan** yayınlar (reisim: *"ilk yayını yap"* → Pages önizlemesi):
   sitenin kökü `docs/` (maket + sunum, adresler aynı), `…/uygulama/` uygulamanın statik önizlemesi (sunucu, veritabanı,
   giriş orada ÇALIŞMAZ). Önceki düzen (main `/docs` doğrudan) kalktı. https://cankonuralp.github.io/pkproje/

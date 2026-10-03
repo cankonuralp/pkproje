@@ -1209,6 +1209,10 @@ tarih-saat, fotoğraflar, form) · **Eğitim kaydı** (personel, eğitim, belge,
    **KARAR (reisim 2026-09-22, ikinci tur):** gerçek uygulama **Türkiye'de sunucuda** çalışır; her firma kendi
    **alt alan adında** (`*.<ürün>.com.tr`), **joker SSL**. Veri yurt dışına çıkmaz → KVKK yurt dışı aktarım yükü
    doğmaz. **GitHub Pages yalnız önizleme.** Yukarıdaki (a)/(b) seçeneklerinden **(a) seçildi**.
+   **DEĞİŞTİ (2026-10-03, reisim: *"Supabase kullanalım sebebi ise eğer bir sorun olurda kiraladığım server yetersiz gelirse sorun olur ama supabase de öyle bi ihtimal görmüyorum"*, KOD-GECIS G3):** veritabanı ve dosya deposu **Supabase** (yönetilen PostgreSQL, AB —
+   Frankfurt); uygulama (Next.js) hazır barındırmada AB bölgesinde (ör. Vercel), alt alan adları + joker SSL orada. Yığın aynı (PostgreSQL + RLS,
+   kendi giriş sistemimiz, pg-boss). **Veri AB'de durur → KVKK yurt dışı aktarım şartı yayından önce hukukçuya teyit ettirilir.** Yerelde gömülü
+   PostgreSQL sürer. PostgreSQL olduğu için ileride Türkiye'ye taşınabilir.
    Depo **herkese açık** (`github.com/cankonuralp/pkproje`), GitHub Pro yok.
    Sonuç: kaynak kodun tamamı ve buradaki ürün kurgusu kamuya açıktır; sır/anahtar asla koda yazılmaz, gerçek veri
    asla depoya girmez (CLAUDE.md §8 tarama kuralı). Kural dosyaları 2026-09-22'de kök klasöre taşındı ve
@@ -2246,6 +2250,8 @@ satır seviyesi izolasyon, Türkiye'de veri ve maliyet kontrolü gerektiği içi
 Ara mesaj (reisim birebir): *"Anlayamadım sunucu kurmak ve supabase kullanmak tamamen aynı şey mi nasıl farklar var"* → ikisinde de aynı PostgreSQL
 ve aynı kodumuz çalışır, firma farkı görmez; fark kurulum / bakımın kimde olduğu, verinin nerede durduğu ve ücretin biçimi (boş daire ↔ döşeli otel
 benzetmesi). İkisi de PostgreSQL olduğu için sonradan biri ötekine taşınabilir. G3 açık.
+Aynı gün (reisim birebir): *"Supabase kullanalım sebebi ise eğer bir sorun olurda kiraladığım server yetersiz gelirse sorun olur ama supabase de öyle bi ihtimal görmüyorum"* → **G3 kabul: Supabase** (§8.8 değişti, §11 253). Not: Supabase'de de sınır var (paket gücü), ama tıkla
+büyütülür, taşıma gerekmez.
 Aynı gün ara mesajlar (reisim birebir): *"Şirket logosuda firma ayarlarından girilsin , raporlara otomatik çekilsin"* (§11 238) · *"Format
 tasarımcısında herhangi bir başlığa tıklayınca en baş arıyor, en başa atmasın başlığı düzenlediğimiz yere odaklansın(telefonda)"* (§11 237).
 
@@ -2286,6 +2292,8 @@ revizyon, alan kopyalama, hafif kusur devri, meslek eşleşme denetimi).
 - Emsal ürünler: https://opwire.app/iso-17020-periyodik-kontrol-yazilimi/ · https://17020muayene.vidco.com.tr/ · https://akuple.com/asansor-kontrol-yazilimi/ · https://ensyazilim.com/
 
 ## 11 · Değişiklik günlüğü
+- 2026-10-03 (253): **G3 kabul — Supabase** (§9 elli ikinci tur). §8.8 barındırma değişti (veritabanı + depo Supabase AB, uygulama AB'de hazır
+  barındırma); CLAUDE.md §2 ve §8, 09-G3 (veri AB'de; KVKK hukukçu teyidi), KOD-GECIS G2 / G3 güncellendi. Yığın ve tasarım aynı. Kod ve maket değişmedi.
 - 2026-10-03 (252): **Sunucu ↔ Supabase farkı açıklandı** (§9 elli ikinci tur ara mesajı). Kod ve maket değişmedi.
 - 2026-10-03 (251): **Önceki üründe neden Firebase sorusu** (§9 elli ikinci tur ara mesajı) + G3'te Firebase ücret açıklaması düzeltildi (Realtime Database
   indirilen veriye, Firestore okumaya göre). Kod ve maket değişmedi.

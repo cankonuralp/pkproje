@@ -142,7 +142,9 @@ iş görünür.
 **G2 · Özel nitelikli veri ve maaş.** Sağlık raporu, özlük dosyası, bordro yalnız yetkili rol görür; her açılış erişim kaydına yazılır. Log ve hata kaydında
 kişisel veri maskelenir (e-posta, telefon, kimlik no).
 
-**G3 · Veri yurt dışına çıkmaz** (§8.8): e-posta, hata izleme, yapay zekâ ile sigorta okuma (§8.10) gibi her dış servis buna göre seçilir.
+**G3 · Veri yeri** (§8.8). ~~Veri yurt dışına çıkmaz~~ — **2026-10-03 değişti (reisim: Supabase, KOD-GECIS G3):** veritabanı ve dosyalar AB'de (Supabase,
+Frankfurt); başka bölgeye (ABD vb.) çıkmaz. KVKK yurt dışı aktarım şartı (standart sözleşme / bildirim) yayından önce hukukçuya teyit ettirilir; e-posta,
+hata izleme gibi her dış servis Türkiye ya da AB'de seçilir.
 **İstisna — yapay zekâ (reisim 2026-10-02, `ARKA-UC.md` K1 kabul):** Claude yalnız ABD / küresel çalışıyor; fotoğraftan okuma ve S.A.Y chat bu yüzden
 yurt dışına veri gönderir. Koşullar: (1) firma ayarıyla açılır, başlangıçta **kapalı**; (2) gönderilen veri en aza iner — fotoğrafta konum bilgisi
 yok, metinde müşteri unvanı, adres, kişi adı, telefon, SGK / İSG-KATİP numarası **maskelenir**; (3) çağrı yalnız sunucudan, firmanın API anahtarıyla
