@@ -2231,6 +2231,8 @@ işlemci / bellek / diskidir, aylık sabit ücret. Canlı dinleyici yok; veri sa
 Fotoğraf / PDF firmanın deposundan kısa ömürlü imzalı bağlantıyla doğrudan iner → indirme trafiği firmanın hesabına. Yedek iki katman: (1) bizim
 veritabanı yedeğimiz (bütün firmalar, sürekli + gece; biz öderiz, metin verisi küçük) — felaket kurtarma; (2) firmanın kendi yedeği: Firma ayarları'nda
 sıklık / saklama süresi, işi bizim sunucu arka planda koşar, çıktı firmanın deposuna yazılır (yer firmanın).
+Ara mesaj (reisim birebir): *"Sunucum yokki benim"* → fiziksel makine gerekmez: Türkiye'deki bir sağlayıcıdan (ör. Natro) aylık **sanal sunucu
+(VPS / VDS)** kiralanır; şimdi gerekmez, K7 Yayın'da alınır (maket ve kod yerelde sürer). Kurulum betiği + adım adım kılavuz K7'de hazırlanır (KOD-GECIS §12).
 Aynı gün ara mesajlar (reisim birebir): *"Şirket logosuda firma ayarlarından girilsin , raporlara otomatik çekilsin"* (§11 238) · *"Format
 tasarımcısında herhangi bir başlığa tıklayınca en baş arıyor, en başa atmasın başlığı düzenlediğimiz yere odaklansın(telefonda)"* (§11 237).
 
