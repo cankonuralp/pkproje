@@ -259,16 +259,16 @@
       '<aside class="a-cubuk" id="a-cubuk" aria-label="Ana menü"><div class="a-cubuk-bas">' +
         '<img class="a-cubuk-logo" src="../marka/probata-yatay-koyu-zemin.svg" alt="probata" width="148" height="37">' +
         '<img class="a-cubuk-isaret" src="../marka/probata-isaret-koyu-zemin.svg" alt="probata" width="25" height="32">' +
-        '<button class="a-ikon-tus a-cubuk-kapat" type="button" data-eylem="cekmece-kapat" aria-label="Menüyü kapat">' + I("x") + "</button></div>" +
+        '<button class="a-ikon-tus a-cubuk-kapat" type="button" data-eylem="cekmece-kapat" aria-label="Menüyü kapat">' + I("x") + "</button>" +
+        /* masaüstünde (≥ 1280) yan menüyü daraltır/genişletir — 2026-10-03 (reisim: "şu 3 çizgiyi sol barın içine taşı"): üst çubuktan sol barın
+           başına (logonun sağı; daralınca şeridin tek simgesi); tablet/telefonda çekmeceyi açan ☰ üst çubukta kalır (menü kapalıyken başka yer yok) */
+        '<button class="a-ikon-tus a-daralt-tus" type="button" data-eylem="menu-daralt" aria-label="Menüyü daralt" aria-controls="a-cubuk" aria-expanded="true">' + I("menu") + "</button></div>" +
         '<nav class="a-menu" id="a-menu" aria-label="Modüller">' + menuHtml(o) + "</nav>" +
         '<div class="a-cubuk-alt"><span>Maket · uydurma veri</span><button class="a-cubuk-sifirla" type="button" data-eylem="maket-baglanti" id="a-maket-baglanti">' + (BAG.kesik ? "Bağlantıyı aç" : "Bağlantıyı kes") + "</button>" +
           '<button class="a-cubuk-sifirla" type="button" data-eylem="maket-sifirla">Denemeleri sıfırla</button></div></aside>' +
       '<div class="a-perde" data-eylem="cekmece-kapat"></div>' +
       '<div class="a-govde"><header class="a-ust">' +
         '<button class="a-menu-tus" type="button" data-eylem="cekmece-ac" aria-label="Menüyü aç" aria-controls="a-cubuk" aria-expanded="false">' + I("menu") + "</button>" +
-        /* masaüstünde (≥ 1280) yan menüyü daraltır/genişletir; tablet/telefondaki ☰ ile aynı yer, aynı simge
-           (reisim 2026-09-24: "standart üç alt alta çizgi görünümü olsun") */
-        '<button class="a-ikon-tus a-daralt-tus" type="button" data-eylem="menu-daralt" aria-label="Menüyü daralt" aria-controls="a-cubuk" aria-expanded="true">' + I("menu") + "</button>" +
         '<img class="a-ust-isaret a-isaret-acik" src="../marka/probata-isaret-renkli.svg" alt="probata" width="25" height="32">' +
         '<img class="a-ust-isaret a-isaret-koyu" src="../marka/probata-isaret-koyu-zemin.svg" alt="probata" width="25" height="32">' +
         '<div class="a-ust-bosluk"></div>' +
@@ -1613,6 +1613,13 @@
     if (acik) { e.preventDefault(); listeleriKapat(null); acik.focus(); return; }
     var kb = $("a-kabuk"); if (kb && kb.classList.contains("a-cekmece-acik")) cekmece(false);
   }, true);
-  window.addEventListener("hashchange", function () { if (MK.goster) MK.goster(true); });
+  /* 2026-10-03 (reisim: "herhangi bir tuşa basınca en başa atıyor buna daikkat etmek gerek"): adres değişince sayfa başa yalnız BAŞKA bir yere
+     gidilince atar; aynı yerde pencere açılıp kapanınca (#/plan/6 ↔ #/plan/6/ekle) ya da yalnız seçim değişince (?kisi=…) yer korunur */
+  var sonAdres = location.hash.replace(/\?.*$/, "");
+  window.addEventListener("hashchange", function () {
+    var yeni = location.hash.replace(/\?.*$/, ""), eski = sonAdres; sonAdres = yeni;
+    var ayniYer = yeni === eski || yeni.indexOf(eski + "/") === 0 || eski.indexOf(yeni + "/") === 0;
+    if (MK.goster) MK.goster(!ayniYer);
+  });
   window.addEventListener("resize", function () { Object.keys(KIP_LISTE).forEach(function (on) { if ($(KIP_LISTE[on])) MK.listeKipi(on); }); });
 })();

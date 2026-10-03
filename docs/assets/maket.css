@@ -1438,6 +1438,10 @@ body:has(.a-rapor-eylem) .a-say-fab { bottom: 88px; }   /* rapor: sağ alttaki K
   .a-tablo .a-sirala { white-space: normal; text-align: left; flex-wrap: wrap; row-gap: 0; letter-spacing: 0; }
   /* Planlar listesi: durum rozeti tek kelime ("Tamamlandı") → durum sütunu eylemden pay alır */
   .a-tablo-plan .a-k-durum { width: 13.5%; } .a-tablo-plan .a-k-eylem { width: 15.25%; }
+  /* 2026-10-03 (reisim: "tablette raporu pasife al tuşu rapor oluştur tuşunu aşağıya taşırıyor"): plan içi ekipman satırında Pasife al simgesi ve
+     Rapor oluştur tek satırda — işlem sütunu çoğu satırda boş kalan Rapor sütunundan pay alır */
+  .a-tablo-ekipman .a-k-rapor { width: 8%; } .a-tablo-ekipman .a-k-eylem { width: 25.5%; }
+  .a-tablo-ekipman .a-eylem-tuslar { flex-wrap: nowrap; }
   /* Muhasebe iş raporları: 16 karakterlik fatura no bölünmez → fatura sütunu fiyattan pay alır */
   .a-tablo-israpor .a-k-fatura { width: 21%; } .a-tablo-israpor .a-k-fiyat { width: 15%; }
 }
@@ -1520,14 +1524,14 @@ body:has(.a-rapor-eylem) .a-say-fab { bottom: 88px; }   /* rapor: sağ alttaki K
    logolar kalsın"). Orta ve dar bantta çekmece aynen kalır, ikon rayına dönüşmez (anayasa 2.11). Şerit 64 px:
    12 + 40 (simge tuşu) + 12. Ad görünmez ama ekran okuyucu okur; grup başlığı yerine ince çizgi; sayaç simgenin köşesinde. */
 @media (min-width: 1280px) {
-  /* Z2 S.A.Y: geniş bantta panel raporun üstüne binmez — içerik panel kadar daralır (Kaydet / Onaya gönder görünür kalır); daha darda yan pencere üstte durur */
-  .a-say-acik .a-icerik { padding-right: calc(min(420px, 100vw - 32px) + 32px); }
-  .a-ikon-tus.a-daralt-tus { display: inline-flex; }
+  /* 2026-10-03 (reisim: "asistan tuşuna basınca sayfayı kaydırıyor olmaz her şeyden üstte olmalı"): S.A.Y paneli içeriği daraltmaz, üstünde durur */
+  .a-ikon-tus.a-daralt-tus { display: inline-flex; color: var(--cubuk-yazi); }
+  .a-ikon-tus.a-daralt-tus:hover { background: var(--cubuk-secili); }
   .a-kabuk { transition: grid-template-columns var(--sure) var(--egri); }
   .a-kabuk-dar { grid-template-columns: 64px minmax(0, 1fr); }
   .a-kabuk-dar .a-cubuk-bas { justify-content: center; padding: 0; }
   .a-kabuk-dar .a-cubuk-logo { display: none; }
-  .a-kabuk-dar .a-cubuk-isaret { display: block; }
+  .a-kabuk-dar .a-cubuk-isaret { display: none; }   /* daralınca şeritte yalnız ☰ (genişletir) */
   .a-kabuk-dar .a-menu { scrollbar-width: none; padding-right: 12px; }   /* simge şeridi 12 + 40 + 12 (kalıp) */
   .a-kabuk-dar .a-menu-grup { height: 1px; margin: 8px 4px; padding: 0; overflow: hidden; font-size: 0; background: var(--cubuk-secili); }
   .a-kabuk-dar .a-menu-grup:first-child { margin-top: 4px; }

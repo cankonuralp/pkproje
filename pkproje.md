@@ -1245,7 +1245,7 @@ tarih-saat, fotoğraflar, form) · **Eğitim kaydı** (personel, eğitim, belge,
      favicon, iOS ve PWA ikonları. Kullanım kuralları paketteki `OKU-BENI.md`'de: site üst çubuğu yatay-renkli
      (koyu zeminde koyu-zemin), PDF üst bilgisi yatay-sloganlı, koruma alanı işaret yüksekliğinin ¼'ü, ekranda
      en küçük yatay logo 120 px; renk değiştirme, esnetme, gölge YASAK.
-   · **Renkler (marka):** Petrol **#0F2A3D** · Onay yeşili **#1FA37A** · Kâğıt (zemin) **#F5F3EE** · Slogan
+   · **Renkler (marka):** Petrol **#0F2A3D** · Onay yeşili **#1FA37A** · Kâğıt (zemin) **#F5F3EE** (2026-10-03: uygulamanın açık tema zemini #FAF9F6, reisim: "beyaza çok yakın"; marka kâğıdı #F5F3EE logoda aynen) · Slogan
      grisi **#4E5F6C** (son ikisi logo paketinin rehberinden). Bunlar dokunulmaz marka renkleridir (anayasa 2.4);
      ekranın geri kalan tonları (zemin kademeleri, metin kademeleri, kenarlık, uyarı/hata renkleri, koyu tema)
      bunlardan **türetilir** ve reisim onayıyla dondurulur → görsel sistem önerisi (öneri — onay bekliyor).
@@ -2289,6 +2289,11 @@ sayfa değiiince vs geçmiş silinmez geçmiş olayı önemli"* → S.A.Y zaten 
 (önceki "sohbet kaydedilmez, sayfadan çıkınca silinir" kararı bu sözle kalktı) — sayfa değişince, yenilenince ve açık bırakılan panelle birlikte
 kalır; her mesaj hangi sayfada / raporda sorulduğunu taşır; rapor önerisi yalnız o rapor açıkken uygulanır; "Sohbeti temizle" (§11 266). Kodda:
 S.A.Y uygulamanın kalıcı kabuğunda (Next.js ortak yerleşim) tek bileşen, geçmiş kişinin hesabında. · *"tamam devam et bitince sunum yap"*.
+Aynı gün akşam (reisim birebir, ekran görüntüleriyle): *"hala say ı göremedim bitmedi mi işin ?"* · *"açtım zaten ama hala sadece rapor ekranında çıkıyor"*
+· *"saat 17.53 sen ne anlatıyosun"* · *"ctrl f5 yapınca düzeldi"* (neden: tarayıcı önbelleği → §11 268) · *"ama asistan tuşuna basınca sayfayı kaydırıyor olmaz
+her şeyden üstte olmalı demiştim sana"* · *"şu 3 çizgiyi sol barın içine taşı arka plan biraz daha açık bir renk olsun beyaza çok yakın olsun , tablette
+raporu pasife al tuşu rapor oluştur tuşunu aşağıya taşırıyor, rapor oluşturduktan sonra sayfa başına atıyor, hatta herhangi bir tuşa basınca en başa
+atıyor buna daikkat etmek gerek"* · yazım sorusu *"neden sgk destsis no büyük harflerle başlayıp yazılıp no kısmı küçük"* → "Hepsi büyük harf" (§11 269–270).
 
 **Açık kalanlar:** ~~Ana sayfada İSGGM duyuruları~~ (2026-09-27: makette eklendi; okuma işi uygulamada) (reisim 2026-09-26: *"Ana sayfada isgüm duyurularını gösterebilir miyiz ? Bunu
 yapılacaklar listesine ekle"*; öneri: ÇSGB İSGGM duyurular sayfası — https://www.csgb.gov.tr/isggm/duyurular/ — sunucuda günde birkaç kez
@@ -2327,6 +2332,19 @@ revizyon, alan kopyalama, hafif kusur devri, meslek eşleşme denetimi).
 - Emsal ürünler: https://opwire.app/iso-17020-periyodik-kontrol-yazilimi/ · https://17020muayene.vidco.com.tr/ · https://akuple.com/asansor-kontrol-yazilimi/ · https://ensyazilim.com/
 
 ## 11 · Değişiklik günlüğü
+- 2026-10-03 (270): **S.A.Y üstte; ☰ sol barda; arka plan beyaza yakın; tablette ekipman tuşları tek satır; tuşa basınca başa atmaz** (§9 elli ikinci tur,
+  akşam). (1) S.A.Y paneli geniş bantta içeriği daraltmıyordu ama kaydırıyordu (sağ iç boşluk) → kural kalktı, panel her şeyin üstünde. (2) Yan menüyü
+  daraltan ☰ üst çubuktan sol barın başına (logonun sağı; daralınca şeridin tek simgesi); tablet / telefonda çekmeceyi açan ☰ üst çubukta kalır (menü
+  kapalıyken başka yer yok). 2026-09-24'teki "aynı yer, aynı simge" kararı bu sözle değişti; uygulama kabuğu (src/components) kodda aynı yapılacak.
+  (3) Açık tema zemini #F5F3EE → **#FAF9F6** (`tokens.css` tek kaynak + docs kopyası; kontrast 74 çift geçti; palet değişikliği reisim'in açık isteği).
+  (4) Plan içi ekipman tablosu 600–960 px kapta: işlem sütunu Rapor sütunundan pay alır, Pasife al + Rapor oluştur tek satır (768 / 820 / 1024'te ölçüldü).
+  (5) Adres değişince sayfa başa yalnız başka yere gidilince atar; aynı yerde pencere açılıp kapanınca (#/plan/1 ↔ #/plan/1/ekle, Muhasebe fatura / gider
+  penceresi vb.) ve yalnız seçim değişince (?kisi=…) yer korunur (maket-ortak; bütün sayfalar). Plan içinde Rapor oluştur başa atmadı (1440 ve 820'de
+  ölçüldü); başka bir tuşta sürerse reisim'den hangisi olduğu istenecek.
+- 2026-10-03 (269): **"SGK DETSİS NO" ve "İSG-KATİP SÖZLEŞME ID" her yerde büyük harf** (reisim: *"neden sgk destsis no büyük harflerle başlayıp
+  yazılıp no kısmı küçük aynı şey isg katip sözleşme id de de var"*; seçenekler sorulunca: **"Hepsi büyük harf"**). Plan ekranı, saha raporu, rapor PDF'i
+  (firma bilgileri + Bakanlık tablosundaki "İSG-KATİP Sözleşme ID" satırı), müşteri / tesis, sözleşmeler, Plan aç, Firma ayarları (Excel sütunu),
+  S.A.Y yardım metni; ölçüm aracındaki denetim metinleri aynı. Bakanlık formatındaki "SGK Sicil Numarası" resmî satır adı olduğu için değişmedi.
 - 2026-10-03 (268): **Pages önizlemesinde önbellek: betik ve stil adreslerine yayın sürümü** (reisim: *"açtım zaten ama hala sadece rapor ekranında
   çıkıyor"* · *"saat 17.53 sen ne anlatıyosun"*). Neden: yeni S.A.Y 17:52'de (Türkiye) yayına çıkmıştı, tarayıcı eski betikleri önbellekten okuyordu
   (adres aynı). `scripts/onizleme.ts` yayın kopyasındaki maket sayfalarında `assets/*.js|css` adreslerine `?v=<commit>` ekler; docs/ değişmez.

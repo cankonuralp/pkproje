@@ -231,8 +231,9 @@
     document.title = (r.v === "liste" ? "Ekipman türleri · " + MV.bransAd(BR) : t ? (r.v === "kurucu" ? "Format kurucu · " : "") + t.ad : "Tür bulunamadı") + " · probata maket";
     /* 2026-10-03 (reisim: "Format tasarımcısında herhangi bir başlığa tıklayınca en başa atıyor, en başa atmasın başlığı düzenlediğimiz yere
        odaklansın (telefonda)"): aynı türün kurucusunda bölüm değişince sayfa başa gitmez; düzenleyici görünmüyorsa ona kayar, odak başlığında */
-    var ayniKurucu = r.v === "kurucu" && SON && SON.v === "kurucu" && SON.id === r.id; SON = r;
-    if (odakla && ayniKurucu) {
+    var ayniKurucu = r.v === "kurucu" && SON && SON.v === "kurucu" && SON.id === r.id, bolumDegisti = ayniKurucu && SON.sec !== r.sec; SON = r;
+    /* 2026-10-03: ortak kabuk aynı yerde alt adrese geçişte odakla = false verir (sayfa başa atmasın); bölüm değişince odak yine düzenleyicide */
+    if ((odakla || bolumDegisti) && ayniKurucu) {
       var kb = $("a-kb-baslik"), ust = kb ? kb.getBoundingClientRect().top : 0;
       if (kb && (ust < 0 || ust > window.innerHeight * 0.5)) kb.scrollIntoView({ block: "start" });
       if (kb) kb.focus({ preventScroll: true });

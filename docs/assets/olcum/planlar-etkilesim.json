@@ -2,8 +2,8 @@
  "maket": "planlar",
  "tarih": "2026-10-03",
  "arac": "tools/olc-bulut.mjs --etkilesim (başsız tarayıcı, 1920 açık tema; gen verilen denemede o genişlik)",
- "toplam": 68,
- "gecen": 68,
+ "toplam": 71,
+ "gecen": 70,
  "denemeler": [
   {
    "ad": "Planlar listesi: müşteri adı kalın (≥ 600), proje adı normal (400)",
@@ -370,7 +370,7 @@
    "gecti": true
   },
   {
-   "ad": "Plan içi künye satırları: Firma adı, İSG-KATİP sözleşme ID, SGK DETSİS no, Adres (reisim 2026-10-03: SGK DETSİS plan ekranında olmalı)",
+   "ad": "Plan içi künye satırları: Firma adı, İSG-KATİP SÖZLEŞME ID, SGK DETSİS NO, Adres (reisim 2026-10-03: SGK DETSİS plan ekranında olmalı)",
    "gen": 1920,
    "sayfa": "maket/planlarim.html",
    "hash": "#/plan/1",
@@ -378,6 +378,28 @@
   },
   {
    "ad": "S.A.Y geçmişi kalıcı: Planlar'da sorulan soru ve açık panel Onaylar sayfasına geçince yerinde, yer ayracı 'Planlar'; Sohbeti temizle onayla siler",
+   "gen": 1920,
+   "sayfa": "maket/planlarim.html",
+   "hash": "#/",
+   "gecti": true
+  },
+  {
+   "ad": "S.A.Y paneli açılınca içerik daralmaz, kaymaz (üstte durur)",
+   "gen": 1920,
+   "sayfa": "maket/planlarim.html",
+   "hash": "#/",
+   "gecti": false,
+   "hata": "beklenen sonuç yok"
+  },
+  {
+   "ad": "pencere adresle açılıp kapanınca sayfa başa atmaz (plan içi: Ekipman ekle → kapat, yer korunur)",
+   "gen": 1920,
+   "sayfa": "maket/planlarim.html",
+   "hash": "#/plan/1",
+   "gecti": true
+  },
+  {
+   "ad": "☰ (menüyü daralt) sol barın içinde, üst çubukta değil",
    "gen": 1920,
    "sayfa": "maket/planlarim.html",
    "hash": "#/",
