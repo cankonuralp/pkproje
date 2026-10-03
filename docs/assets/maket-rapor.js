@@ -626,8 +626,8 @@
   function eylemHtml(r, oku) {
     /* Z2 (2026-10-02; ARKA-UC K6 · §5.3): S.A.Y düğmesi eylem çubuğunun solunda — yalnız düzenlenen (Yeni / geri gönderilmiş) raporda ve firma
        yapay zekâyı açtıysa; panel maket-say.js */
-    var say = !oku && MV.yz().acik ? '<button class="a-tus a-tus-ikincil a-say-ac" type="button" data-eylem="say-ac" aria-haspopup="dialog" aria-controls="a-say" aria-expanded="' +
-      !!(MK.sayAcik && MK.sayAcik()) + '" aria-label="S.A.Y — saha asistanı">' + ikon("message-circle", "a-ikon-kucuk") + '<span class="a-say-yazi">S.A.Y</span></button>' : "";
+    /* BB6 (2026-10-03): S.A.Y düğmesi artık her sayfada sağ altta (maket-say.js); eylem çubuğunda yok */
+    var say = "";
     var l = (oku ? [] : [silinebilir(r) ? ["rapor-sil-ac", "Sil", "x", "a-tus-ikincil a-tus-sil"] : null]).concat([
       ["kopya-ac", oku ? "Kopyala" : "Kaydet ve kopyala", "copy", "a-tus-ikincil"]]).concat(oku ? [] : [
       ["kaydet", "Kaydet", "check", "a-tus-ikincil"], ["onaya-gonder", "Onaya gönder", "send", "a-tus-birincil"]]).filter(Boolean);

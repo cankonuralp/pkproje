@@ -891,6 +891,7 @@ a.a-yuz:hover { border-color: var(--kenar-alan); background: var(--zemin); }
 .a-satir + .a-satir { border-top: 1px solid var(--kenar); }
 .a-satir dt { font-weight: 700; }
 .a-satir dd { margin: 0; overflow-wrap: anywhere; }
+.a-satir dd .a-kod { white-space: normal; overflow-wrap: anywhere; }   /* 2026-10-03 (ölçerken bulundu): 26 haneli SGK DETSİS no 320 px telefonda 7 px taşıyordu */
 /* rapor firma ve ekipman bilgileri (2026-09-29, reisim: "gereksiz uzun satırlar var … yan yana yazılabilecek şekilde"): etiket üstte,
    alanlar iki sütun yan yana; telefonda tek sütun. Çoklu seçim tam satır. */
 .a-satirlar-form { display: grid; grid-template-columns: repeat(2, minmax(0, 1fr)); gap: 16px 24px; padding: 16px; }
@@ -978,25 +979,44 @@ a.a-yuz:hover { border-color: var(--kenar-alan); background: var(--zemin); }
 .a-oneri-sag { display: flex; align-items: center; gap: 8px; margin-left: auto; white-space: nowrap; }   /* değer + rozet (+ Uygula) birlikte; sığmazsa alt satıra, sağa */
 .a-oneri-tuslar { display: flex; justify-content: flex-end; flex-wrap: wrap; gap: 8px; margin-top: 10px; }
 /* S.A.Y (Z2, 2026-10-02): düğme eylem çubuğunun solunda; panel masaüstü / tablette sağda yan pencere (üst çubuğun altında), telefonda tam ekran */
-/* 2026-10-03 (reisim: "S.A.Y tuşu biraz daha büyük olsun"): öteki tuşlardan iri — yazı bölüm boyunda kalın, simge 20 px, yükseklik 40 */
-.a-rapor-eylem .a-say-ac { margin-right: auto; min-height: 40px; padding: 0 18px; gap: 8px; font-size: var(--boy-bolum); font-weight: 700; }
-.a-rapor-eylem .a-say-ac .a-ikon { width: 20px; height: 20px; }
+/* BB6 (2026-10-03, reisim: "her yer de gözükecek … daha şık … daha yuvarlak daha ilgi çekici"): rapor çubuğundaki düğme kalktı; her sayfada sağ altta
+   yuvarlak düğme (renkler token: vurgu → vurgu-2 geçişi, içte açık daire). Telefonda yalnız daire; altta yapışkan çubuk olan sayfada çubuğun üstünde. */
+.a-say-fab {
+  position: fixed; right: 20px; bottom: 20px; z-index: 65; display: inline-flex; align-items: center; gap: 10px; height: 56px; padding: 0 22px 0 8px;
+  border: 0; border-radius: 999px; background: linear-gradient(135deg, var(--vurgu-2), var(--vurgu)); color: var(--vurgu-uzeri);
+  box-shadow: var(--golge-2); font: inherit; font-weight: 700; cursor: pointer; transition: transform .15s ease, box-shadow .15s ease;
+}
+.a-say-fab:hover { transform: translateY(-2px); }
+.a-say-fab:focus-visible { outline: 3px solid var(--odak); outline-offset: 3px; }
+.a-say-fab[hidden] { display: none; }
+.a-say-fab-ikon, .a-say-avatar { display: grid; place-items: center; flex: none; width: 40px; height: 40px; border-radius: 50%; background: var(--vurgu-uzeri); color: var(--vurgu); }
+.a-say-fab-ikon .a-ikon, .a-say-avatar .a-ikon { width: 22px; height: 22px; }
+.a-say-fab-yazi { display: flex; flex-direction: column; align-items: flex-start; font-size: var(--boy-bolum); line-height: 1.1; letter-spacing: .02em; }
+.a-say-fab-yazi small { font-size: var(--boy-etiket); font-weight: 500; opacity: .85; letter-spacing: 0; }
+body:has(.a-rapor-eylem) .a-say-fab { bottom: 88px; }   /* rapor: sağ alttaki Kaydet / Onaya gönder ile çakışmasın */
+@media (min-width: 768px) { body.a-say-var .a-icerik { padding-bottom: 96px; } }   /* sayfanın sonu düğmenin altında kalmasın */
 .a-say {
   position: fixed; right: 16px; top: calc(var(--ust-y) + 16px); bottom: 16px; z-index: 70; width: min(420px, calc(100vw - 32px));
-  display: flex; flex-direction: column; background: var(--kart); border: 1px solid var(--kenar); border-radius: var(--r-buyuk); box-shadow: var(--golge-2);
+  display: flex; flex-direction: column; background: var(--kart); border: 1px solid var(--kenar); border-radius: calc(var(--r-buyuk) * 2); box-shadow: var(--golge-2); overflow: hidden;
 }
 .a-say[hidden] { display: none; }
-.a-say-bas { display: flex; align-items: flex-start; justify-content: space-between; gap: 12px; padding: 14px 16px; border-bottom: 1px solid var(--kenar); }
+.a-say-bas { display: flex; align-items: center; gap: 12px; padding: 14px 16px; background: linear-gradient(135deg, var(--vurgu-2), var(--vurgu)); color: var(--vurgu-uzeri); }
+.a-say-kimlik { flex: 1 1 auto; min-width: 0; }
+.a-say-bas .a-say-alt { color: inherit; opacity: .85; }
+.a-say-bas .a-ikon-tus { color: inherit; }
 .a-say-bas h2 { margin: 0; font-size: var(--boy-bolum); font-weight: var(--kal-baslik); }
 .a-say-alt { margin: 2px 0 0; color: var(--yazi2); font-size: var(--boy-kucuk); }
 .a-say-govde { flex: 1 1 auto; overflow-y: auto; padding: 14px 16px; display: flex; flex-direction: column; gap: 10px; }
 .a-say-bos { margin: 0; color: var(--yazi2); }
 .a-say-liste { list-style: none; margin: 0; padding: 0; display: flex; flex-direction: column; gap: 10px; }
-.a-say-mesaj { max-width: 92%; padding: 10px 12px; border-radius: var(--r-orta); overflow-wrap: anywhere; }
+.a-say-mesaj { max-width: 92%; padding: 10px 14px; border-radius: calc(var(--r-orta) * 2); overflow-wrap: anywhere; }
+.a-say-bekleyen { margin: 6px 0 0; padding-left: 18px; display: grid; gap: 4px; }
+.a-say-bekleyen a { display: inline-flex; align-items: center; min-height: var(--tus-y); }   /* dokunma hedefi (telefonda 44) */
+.a-say-yer { align-self: center; color: var(--yazi2); font-size: var(--boy-etiket); font-weight: 600; }   /* geçmişte yer ayracı: "Onaylar", "Rapor KM-…" */
 .a-say-mesaj p { margin: 0; }
 .a-say-mesaj p + p { margin-top: 6px; }
-.a-say-ben { align-self: flex-end; background: var(--vurgu); color: var(--vurgu-uzeri); }
-.a-say-o { align-self: flex-start; background: var(--zemin2); color: var(--yazi); }
+.a-say-ben { align-self: flex-end; background: var(--vurgu); color: var(--vurgu-uzeri); border-bottom-right-radius: var(--r-orta); }
+.a-say-o { align-self: flex-start; background: var(--zemin2); color: var(--yazi); border-bottom-left-radius: var(--r-orta); }
 .a-say-eksik { list-style: none; margin: 8px 0 0; padding: 0; display: grid; gap: 6px; }
 .a-say-eksik li { display: flex; align-items: center; justify-content: space-between; gap: 8px; }
 .a-say-oneri { margin-top: 8px; padding: 10px 12px; background: var(--kart); border: 1px solid var(--kenar-alan); border-radius: var(--r-orta); }
@@ -1287,6 +1307,10 @@ a.a-yuz:hover { border-color: var(--kenar-alan); background: var(--zemin); }
 
 /* dar (< 768): arama + Süzgeç üstte; çipler yana kayar; seçiciler + Temizle levhada; pencere alttan levha */
 @media (max-width: 767.98px) {
+  /* BB6: telefonda S.A.Y yalnız daire; altta yapışkan çubuk varsa üstünde */
+  .a-say-fab { right: 16px; bottom: 16px; padding: 8px; }
+  .a-say-fab-yazi { display: none; }
+  body:has(#a-icerik .a-eylem-cubugu-alt, #a-icerik .a-form-eylem) .a-say-fab { bottom: calc(var(--tus-y) + 32px); }
   .a-kullanici-yazi { display: none; }
   /* ⛔ 2026-09-25 (320 px): müşteri panelinde "Müşteri paneli" tek satırda kalınca kullanıcı simgesi 21 px taşıyordu */
   .a-ust-panel { min-width: 0; white-space: normal; line-height: 1.2; }

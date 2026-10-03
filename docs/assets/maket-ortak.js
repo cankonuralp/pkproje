@@ -212,6 +212,12 @@
   var sonrakiGoster = function () { var m = null; try { m = sessionStorage.getItem(SB_AD); sessionStorage.removeItem(SB_AD); } catch (e) { /* yok */ } if (m && $("a-bildirim")) MK.bildir(m); };
   MK.kabuk = function (o) {
     setTimeout(sonrakiGoster, 0);
+    MK.MODUL = o.modul;
+    /* BB6 (2026-10-03): S.A.Y her firma sayfasında (müşteri paneli ve probata Yönetim'de yok); sayfanın betiğinden sonra yüklenir */
+    if (!o.musteri && !o.yonetim && !document.querySelector('script[src*="maket-say.js"]')) {
+      var oz = document.querySelector('script[src*="maket-ortak.js"]'), sy = document.createElement("script");
+      sy.src = oz.getAttribute("src").replace("maket-ortak.js", "maket-say.js"); document.body.appendChild(sy);
+    }
     /* N5 (2026-09-30): giriş yapan kişi (personel no) — kişiye göre balonlar (Onaylar, Talepler) ve günlük süre; makette sayfanın kullanıcısı */
     if (o.kullanici && typeof MV !== "undefined" && MV.PERSONEL) { var bk = MV.PERSONEL.filter(function (p) { return p.ad === o.kullanici.ad; })[0]; MK.BEN = bk ? bk.id : null; }
     var ana = $("a-icerik"), kok = document.createElement("div");

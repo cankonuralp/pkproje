@@ -2,14 +2,28 @@
  "maket": "m9",
  "tarih": "2026-10-03",
  "arac": "tools/olc-bulut.mjs --etkilesim (başsız tarayıcı, 1920 açık tema; gen verilen denemede o genişlik)",
- "toplam": 55,
- "gecen": 55,
+ "toplam": 57,
+ "gecen": 57,
  "denemeler": [
   {
    "ad": "BB4: Onaylar denetçi bakışı — imzamı bekleyen raporlar; Hepsini imzala → imza penceresi, PIN → hepsi Tamamlandı (müşteriye açık), liste boşalır, Diğer belgeler'de denetçinin bordrosu",
    "gen": 1920,
    "sayfa": "maket/onaylar.html",
    "hash": "#/?kisi=mk",
+   "gecti": true
+  },
+  {
+   "ad": "BB6: S.A.Y Onaylar'da da — yapay zekâ kapalıyken düğme yok; açılınca sağ altta; Beni ne bekliyor? kişinin balonlarını sayfa bağlantısıyla sayar; Bu sayfada ne yapılır? Onaylar'ı anlatır; kapatınca odak düğmede",
+   "gen": 1920,
+   "sayfa": "maket/onaylar.html",
+   "hash": "#/?kisi=mk",
+   "gecti": true
+  },
+  {
+   "ad": "BB6: müşteri panelinde S.A.Y yok (yalnız firma kullanıcıları)",
+   "gen": 1920,
+   "sayfa": "maket/musteri.html",
+   "hash": "#/",
    "gecti": true
   },
   {

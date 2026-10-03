@@ -2284,6 +2284,11 @@ söyleyipte yapmadıın şeyler de olmuş bi maket turu at bana sunum yap son du
 tekrar kurgula ve daha şık bi tasarım yap daha yuvarlak daha ilgi çekici olsun , onu eğitme işini maket bittikten sonra mı yapalım önce mi öneri
 ver ?"* · **makette son tur:** *"devam et tüm işleri bitir, sonra koda geçelim yoksa buradan test etmek artık manasızlaştı devamını koddan yaparız
 kod kısmına başlamadan önce tekrar konuşalım"* → kalan maket işleri (BB4–BB7) biter; koda geçmeden önce reisim'le konuşulur.
+Aynı gün (reisim birebir): *"Her sayfaya tek tek say eklemektense say boy işaretini kalıcı ön görünüme ekleyemez misin her yerden tek boy yönetilir
+sayfa değiiince vs geçmiş silinmez geçmiş olayı önemli"* → S.A.Y zaten tek dosyadan, kabuktan yükleniyordu; değişen: **sohbet geçmişi kalıcı**
+(önceki "sohbet kaydedilmez, sayfadan çıkınca silinir" kararı bu sözle kalktı) — sayfa değişince, yenilenince ve açık bırakılan panelle birlikte
+kalır; her mesaj hangi sayfada / raporda sorulduğunu taşır; rapor önerisi yalnız o rapor açıkken uygulanır; "Sohbeti temizle" (§11 266). Kodda:
+S.A.Y uygulamanın kalıcı kabuğunda (Next.js ortak yerleşim) tek bileşen, geçmiş kişinin hesabında. · *"tamam devam et bitince sunum yap"*.
 
 **Açık kalanlar:** ~~Ana sayfada İSGGM duyuruları~~ (2026-09-27: makette eklendi; okuma işi uygulamada) (reisim 2026-09-26: *"Ana sayfada isgüm duyurularını gösterebilir miyiz ? Bunu
 yapılacaklar listesine ekle"*; öneri: ÇSGB İSGGM duyurular sayfası — https://www.csgb.gov.tr/isggm/duyurular/ — sunucuda günde birkaç kez
@@ -2322,6 +2327,22 @@ revizyon, alan kopyalama, hafif kusur devri, meslek eşleşme denetimi).
 - Emsal ürünler: https://opwire.app/iso-17020-periyodik-kontrol-yazilimi/ · https://17020muayene.vidco.com.tr/ · https://akuple.com/asansor-kontrol-yazilimi/ · https://ensyazilim.com/
 
 ## 11 · Değişiklik günlüğü
+- 2026-10-03 (266): **S.A.Y her sayfada, yuvarlak düğme; eğitim önerisi** (§9 elli ikinci tur). Rapor çubuğundaki S.A.Y tuşu kalktı; her firma
+  sayfasında sağ altta yuvarlak düğme (56 px; vurgu renklerinin geçişi, içte açık daire ve yıldız simgesi, "S.A.Y · Asistan"; telefonda yalnız
+  daire, altta yapışkan çubuk varsa üstünde; rapor ekranında Kaydet / Onaya gönder'in üstünde). Panel daha yuvarlak, başlığı renkli, baloncuklar
+  yuvarlak. Rapor ekranında (düzenlenen rapor) eski sorular (eksikler, sonuç önerisi); öteki sayfalarda **Beni ne bekliyor?** (kişinin yan
+  menü balonları, sayfa bağlantılarıyla) ve **Bu sayfada ne yapılır?**. Kural aynı: firma yapay zekâyı açtıysa görünür (makette Firma ayarları ›
+  Yapay zekâ'dan açılır, sayfalar arası kalır); müşteri paneli ve Yönetim'de yok. Kabuk betiği yükler (MK.kabuk). **Geçmiş kalıcı** (reisim'in
+  ara mesajı): sohbet ve panelin açık hâli sayfa değişince / yenilenince kalır, yer ayracı ("Onaylar", "Rapor KM-…"), rapor önerisi ve "Git"
+  yalnız o rapor açıkken, "Sohbeti temizle" (onay penceresiyle). Ölçerken bulunan ve düzeltilen: plan içi 26 haneli SGK DETSİS no 320 px telefonda
+  7 px taşıyordu (BB2'den); ölçüm aracı panel açıkken içerik genişliğini yanlış hesaplıyordu (iki yanın iç boşluğu ayrı sayılır oldu). İki denetim tarih + gerekçeyle
+  güncellendi (eski iri tuş; onaydaki raporda düğme yok → genel sorular), yeni denetimler: Onaylar'da S.A.Y, müşteri panelinde yok.
+  **Eğitim önerisi (reisim sordu: "onu eğitme işini maket bittikten sonra mı yapalım önce mi"):** **sonra, kodun K5 adımında.** S.A.Y'ı
+  "eğitmek" model eğitmek (ince ayar) değildir — gerekmez, pahalı ve her firmaya ayrı olmaz. Doğru yol: (1) **bilgi seti** — firmanın
+  Dökümanlar'ı (talimat, standart), ekipman türü kriterleri ve rapor formatları, mevzuat özetleri; S.A.Y soruya bunlardan alıntıyla cevap verir;
+  (2) **araçlar** — ekrandaki kaydı okuma ve öneri verme (bugünkü makette kurallı taklidi var); (3) **deneme seti** — reisim'in gerçek saha
+  sorularından 50–100 soru-doğru cevap; her değişiklikte bu setle ölçülür. Makette şimdi yapılacak bir şey yok: kurgu hazır; bilgi seti
+  ve deneme seti gerçek kodla, gerçek dökümanlarla kurulur. Reisim'den o adımda istenecek: sık sorulan saha soruları ve firmanın dökümanları.
 - 2026-10-03 (265): **Muhasebe › Maaş bordrosu gönder** (§9 elli ikinci tur). Muhasebe'nin her sekmesinde tuş → pencere: dönem (varsayılan geçen
   ay) · **Formattan oluştur** (Firma ayarları › Bordro formatı yüklüyse; kişinin bordrosu son maaş bilgisiyle oluşur) ya da **Elle yükle** (her
   kişiye kendi PDF'i) · personel listesi (seç, bordro, durum: Hazır / Bordro yok / Bu dönem gönderildi / İmzalandı). İmzaya gönder → seçilen ve

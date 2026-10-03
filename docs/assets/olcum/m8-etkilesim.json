@@ -20,14 +20,14 @@
    "gecti": true
   },
   {
-   "ad": "S.A.Y tuşu iri: en az 40 px yüksek, 15 px kalın yazı, adı görünür",
+   "ad": "S.A.Y düğmesi yuvarlak, iri: 56 px, tam yuvarlak köşe, adı görünür (masaüstü); Kaydet / Onaya gönder ile çakışmaz",
    "gen": 1920,
    "sayfa": "maket/rapor.html",
    "hash": "#/r/ET-1009",
    "gecti": true
   },
   {
-   "ad": "Z2: S.A.Y düğmesi yalnız firma yapay zekâyı açtıysa ve düzenlenen raporda (onaydaki raporda yok)",
+   "ad": "Z2/BB6: S.A.Y düğmesi yalnız firma yapay zekâyı açtıysa; düzenlenen raporda rapor soruları, onaydaki raporda genel sorular",
    "gen": 1920,
    "sayfa": "maket/rapor.html",
    "hash": "#/r/ET-1009",

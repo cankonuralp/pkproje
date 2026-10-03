@@ -2,8 +2,8 @@
  "maket": "planlar",
  "tarih": "2026-10-03",
  "arac": "tools/olc-bulut.mjs --etkilesim (başsız tarayıcı, 1920 açık tema; gen verilen denemede o genişlik)",
- "toplam": 67,
- "gecen": 67,
+ "toplam": 68,
+ "gecen": 68,
  "denemeler": [
   {
    "ad": "Planlar listesi: müşteri adı kalın (≥ 600), proje adı normal (400)",
@@ -374,6 +374,13 @@
    "gen": 1920,
    "sayfa": "maket/planlarim.html",
    "hash": "#/plan/1",
+   "gecti": true
+  },
+  {
+   "ad": "S.A.Y geçmişi kalıcı: Planlar'da sorulan soru ve açık panel Onaylar sayfasına geçince yerinde, yer ayracı 'Planlar'; Sohbeti temizle onayla siler",
+   "gen": 1920,
+   "sayfa": "maket/planlarim.html",
+   "hash": "#/",
    "gecti": true
   },
   {

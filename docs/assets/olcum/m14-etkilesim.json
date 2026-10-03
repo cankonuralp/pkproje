@@ -3,7 +3,7 @@
  "tarih": "2026-10-03",
  "arac": "tools/olc-bulut.mjs --etkilesim (başsız tarayıcı, 1920 açık tema; gen verilen denemede o genişlik)",
  "toplam": 52,
- "gecen": 49,
+ "gecen": 52,
  "denemeler": [
   {
    "ad": "Plan aç'ta açılan plan (tarayıcıda kayıtlı) raporlarıyla İşler listesinde, Faturaya hazır",
@@ -353,24 +353,21 @@
    "gen": 1920,
    "sayfa": "maket/muhasebe.html",
    "hash": "#/",
-   "gecti": false,
-   "hata": "yok: [data-eylem=\"bg-gonder\"]"
+   "gecti": true
   },
   {
    "ad": "BB5: Elle yükle — dosyası olmayan gönderilmez (pencere söyler); Mert Kaya'ya PDF seçilince yalnız o imzaya gider ve Personel kartındaki bordrosu o dosya",
    "gen": 1920,
    "sayfa": "maket/muhasebe.html",
    "hash": "#/",
-   "gecti": false,
-   "hata": "yok: [data-eylem=\"bg-yontem\"][data-y=\"elle\"]"
+   "gecti": true
   },
   {
    "ad": "BB5: Firma ayarları › Bordro formatı kaldırılınca Muhasebe'nin bordro penceresi elle yüklemeyle açılır (sayfalar arası)",
    "gen": 1920,
    "sayfa": "maket/firma-ayarlari.html",
    "hash": "#/",
-   "gecti": false,
-   "hata": "beklenen sonuç yok"
+   "gecti": true
   }
  ]
 }

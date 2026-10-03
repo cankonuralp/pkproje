@@ -114,7 +114,8 @@
   /* 2026-10-02 (Y1): Firma ayarları ızgarasındaki bölüm de kenarlı kart (.a-ayar-izgara > .a-bolum) → aynı kural */
   const cerceve = li && li.closest(".a-adim-icerik, .a-form-bolum, .a-ayar-izgara > .a-bolum");
   const icGen = e => { const c = getComputedStyle(e); return e.clientWidth - parseFloat(c.paddingLeft) - parseFloat(c.paddingRight); };
-  r.kenarFarki = li ? Math.round((cerceve ? icGen(cerceve) : ic.width - 2 * pad) - li.getBoundingClientRect().width) : null;
+  /* 2026-10-03 (BB6): içerik genişliği iki yanın kendi iç boşluğuyla — S.A.Y paneli açıkken sağ boşluk paneli kadar geniş; eski "2 × sol boşluk" yanlış fark veriyordu */
+  r.kenarFarki = li ? Math.round((cerceve ? icGen(cerceve) : ic.width - pad - parseFloat(getComputedStyle(icEl).paddingRight)) - li.getBoundingClientRect().width) : null;
   const th = li && li.querySelector(".a-tablo thead");
   r.listeKipi = !th ? "(liste yok)" : getComputedStyle(th).display === "none" ? "kart" : "tablo";
   const sz = document.querySelector(".a-suzgec");
