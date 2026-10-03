@@ -2224,6 +2224,13 @@ bağlamak isterse yine ayarlardan bağlayabilsin isterse kendi serverına da kur
 sıklığı Firma ayarları'ndan, yapay zekâ zaten firmanın anahtarıyla (K2); büyük firma için ileride "kendi sunucusuna kurulum". **Supabase önerilmedi:**
 Türkiye bölgesi yok (en yakın Frankfurt; §8.8 "veri yurt dışına çıkmaz" ile çelişir), giriş ve RLS zaten bizde, gerçek zamanlı veritabanı
 gerekmiyor (09-B5). **Natro:** paylaşımlı hosting değil, kök erişimli sanal sunucu (VPS / VDS) olursa uygun.
+Aynı gün (reisim birebir): *"Teisim senin önerin daha mantıklı peki veritabanı bizde olunca realtime database kotasıda bizden bi gidecek en çok
+kota yiyen şey oydu firebase de ve yedekleme işlemleri de bizim sistemden mi dönecek tam olarak ne olacak bi açıklar mısın"* → **G2 kabul** (§11 249).
+Açıklama: kendi sunucumuzdaki PostgreSQL'de okuma / yazma başına ücret ve kota yok (Firebase'deki gibi belge okuma sayılmaz); sınır sunucunun
+işlemci / bellek / diskidir, aylık sabit ücret. Canlı dinleyici yok; veri sayfa açılışında, sayfalı ve yalnız gereken sütunlarla iner (09-B3, B5).
+Fotoğraf / PDF firmanın deposundan kısa ömürlü imzalı bağlantıyla doğrudan iner → indirme trafiği firmanın hesabına. Yedek iki katman: (1) bizim
+veritabanı yedeğimiz (bütün firmalar, sürekli + gece; biz öderiz, metin verisi küçük) — felaket kurtarma; (2) firmanın kendi yedeği: Firma ayarları'nda
+sıklık / saklama süresi, işi bizim sunucu arka planda koşar, çıktı firmanın deposuna yazılır (yer firmanın).
 Aynı gün ara mesajlar (reisim birebir): *"Şirket logosuda firma ayarlarından girilsin , raporlara otomatik çekilsin"* (§11 238) · *"Format
 tasarımcısında herhangi bir başlığa tıklayınca en baş arıyor, en başa atmasın başlığı düzenlediğimiz yere odaklansın(telefonda)"* (§11 237).
 
@@ -2264,6 +2271,8 @@ revizyon, alan kopyalama, hafif kusur devri, meslek eşleşme denetimi).
 - Emsal ürünler: https://opwire.app/iso-17020-periyodik-kontrol-yazilimi/ · https://17020muayene.vidco.com.tr/ · https://akuple.com/asansor-kontrol-yazilimi/ · https://ensyazilim.com/
 
 ## 11 · Değişiklik günlüğü
+- 2026-10-03 (249): **G2 kabul — barındırma ve maliyet** (§9 elli ikinci tur). KOD-GECIS G2 karar oldu; kota, indirme trafiği ve iki katmanlı yedek
+  açıklaması G2 satırına eklendi. Sıradaki: Firma ayarları › "Depolama ve yedek" maketi (reisim onayıyla). Kod ve maket değişmedi.
 - 2026-10-03 (248): **Barındırma ve maliyet sorusu kayda geçti** (§9 elli ikinci tur). Yönetim sayfası kabul (KOD-GECIS Y1 karar). Supabase /
   Natro / firma başına veritabanı sorusu ve önerim KOD-GECIS §0 **G2** (açık, karar reisim'de). Kod ve maket değişmedi.
 - 2026-10-03 (247): **probata yönetim — firma açma örneği** (§9 elli ikinci tur). `maket/yonetim.html`: firmaların görmediği, yalnız bizim
