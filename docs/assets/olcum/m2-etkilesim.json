@@ -2,9 +2,16 @@
  "maket": "m2",
  "tarih": "2026-10-03",
  "arac": "tools/olc-bulut.mjs --etkilesim (başsız tarayıcı, 1920 açık tema; gen verilen denemede o genişlik)",
- "toplam": 31,
- "gecen": 31,
+ "toplam": 32,
+ "gecen": 32,
  "denemeler": [
+  {
+   "ad": "Tesis › Ekipmanlar: Excel'den yükle — kayıtlı kod ve bilinmeyen tür atlanır, 2 ekipman tesise eklenir (son kontrol geçmişiyle), liste ve sayı güncellenir",
+   "gen": 1920,
+   "sayfa": "maket/musteriler.html",
+   "hash": "#/t/t1",
+   "gecti": true
+  },
   {
    "ad": "P2: girişi olmayan müşteride düğme ve pencere başlığı \"Giriş ekle\"; girişi olanda \"Ek giriş ekle\"",
    "gen": 1920,

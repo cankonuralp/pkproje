@@ -568,6 +568,85 @@
     return h;
   };
 
+  /* ── EKİPMAN EXCEL — TEK ÜRETİCİ (2026-10-03, reisim: "toplu ekipman yükleme derken örneğin ben bir müşteri oluşturdum teklif vermeden,
+     eski müşterimdi, oluşturduğum müşterinin ekipmanlarını toplu excel ile aktarabilmeliyim sadece teklif verirken yapabiliyorum bunu ama plan
+     açarkende işime yarar ona göre kurgula"): bir TESİSİN ekipmanları Excel'den yüklenir — müşteri kartı › tesis ve Plan aç aynı pencereyi
+     kullanır. Şablon (Türkçe sütunlar, * zorunlu) → dosya → satır satır denetim (kod eşsiz ve biçimli, tür katalogda, dosyada iki kez yok;
+     son kontrol tarihi / sonucu eski müşterinin geçmişi, isteğe bağlı) → "Yükle (N)": geçerli satırlar tesise eklenir; plan açılınca o tesisin
+     bütün ekipmanı plana girer (L6). MK.ekipmanExcel({ tesis, bitti(n) }) */
+  var EXK = null, EXK_SUTUN = ["Ekipman kodu*", "Ekipman türü*", "Kullanım yeri", "Marka", "Model", "Seri no", "İmal yılı", "Son kontrol tarihi", "Son kontrol sonucu"];
+  var EXK_SONUC = ["Uygun", "Hafif kusurlu", "Kusurlu"];
+  function exkSatirlar(ham) {
+    if (ham.length && /kod/i.test(String(ham[0][0] || ""))) ham = ham.slice(1);
+    var l = [];
+    ham.filter(function (h) { return h.some(function (x) { return String(x || "").trim(); }); }).forEach(function (h) {
+      var kod = String(h[0] || "").trim().toLocaleUpperCase("tr").replace(/\s+/g, ""), tad = MK.tr(String(h[1] || "").trim());
+      var tur = MV.KATALOG.filter(function (t) { return MK.tr(t.ad) === tad || MK.tr(t.k) === tad; })[0];
+      var ham7 = h[7], tarih = (function (v) { var m = /^(\d{1,2})\.(\d{1,2})\.(\d{4})$/.exec(String(v || "").trim()); return m ? m[3] + "-" + ("0" + m[2]).slice(-2) + "-" + ("0" + m[1]).slice(-2) : ""; })(MK.excelTarih(ham7 == null ? "" : ham7));
+      var sonuc = EXK_SONUC.filter(function (x) { return MK.tr(x) === MK.tr(String(h[8] || "").trim()); })[0] || "";
+      var neden = !kod ? "Ekipman kodu boş" : !/^[A-Z0-9](?:[A-Z0-9]|-(?=[A-Z0-9])){2,19}$/.test(kod) ? "Kod: A–Z, 0–9, tire; 3–20 hane" :
+        MV.ekipman(kod) ? "Bu kod kayıtlı" : l.some(function (o) { return o.ok && o.kod === kod; }) ? "Dosyada aynı kod iki kez" : !tur ? "Ekipman türü bulunamadı" : "";
+      var uy = [], yil = String(h[6] || "").trim();
+      if (yil && !/^\d{4}$/.test(yil)) uy.push("imal yılı okunmadı, boş girer");
+      if (String(ham7 || "").trim() && !tarih) uy.push("son kontrol tarihi okunmadı");
+      if (tarih && !sonuc) uy.push("son kontrol sonucu yok");
+      l.push({ ok: !neden, neden: neden, uyari: uy.join(" · "), kod: kod, tur: tur, h: h, tarih: tarih, sonuc: sonuc, yil: /^\d{4}$/.test(yil) ? +yil : "" });
+    });
+    return l;
+  }
+  function exkCiz(odak) {
+    var d = $("a-exk-pencere"), x = EXK, gec = x.satirlar.filter(function (r) { return r.ok; }).length;
+    $("a-exk-baslik").textContent = "Ekipmanları Excel'den yükle · " + x.tesis.ad;
+    $("a-exk-govde").innerHTML = '<p class="a-pencere-ozet">Sütunlar: ' + EXK_SUTUN.join(" · ") + ". Şablonu indirip doldurun; her satır denetlenir, yalnız geçerli satırlar tesise eklenir.</p>" +
+      '<div class="a-dosya-sec">' + MK.tus({ eylem: "exk-sablon", ad: "Şablonu indir", ikon: "file-spreadsheet", sinif: "a-tus-ikincil" }) +
+        MK.tus({ eylem: "exk-sec", ad: x.dosya ? "Başka dosya seç" : "Excel seç", ikon: "upload", sinif: "a-tus-ikincil" }) +
+        '<span class="a-dosya-ad">' + (x.dosya ? kacis(x.dosya) : '<span class="a-deger-yok">Dosya seçilmedi</span>') + "</span></div>" +
+      (x.dosya ? '<div class="a-excel-kap"><table class="a-belge-tablo"><thead><tr><th scope="col">Satır</th><th scope="col">Ekipman</th><th scope="col">Durum</th></tr></thead><tbody>' +
+        x.satirlar.map(function (r, i) {
+          return "<tr><td>" + (i + 2) + '</td><td><span class="a-kod">' + kacis(r.kod || String(r.h[0] || "—")) + "</span> " + kacis(r.tur ? r.tur.ad : String(r.h[1] || "")) +
+            '<span class="a-alt-satir">' + kacis(String(r.h[2] || "")) + (r.tarih ? " · son kontrol " + MK.tarihYaz(r.tarih) + (r.sonuc ? " " + r.sonuc : "") : "") + "</span></td><td>" +
+            (r.ok ? MK.rozet({ ad: "Eklenecek", rozet: "a-rozet-tamam" }) + (r.uyari ? '<span class="a-alt-satir">' + kacis(r.uyari) + "</span>" : "") : '<span class="a-uyari-metin a-hata-metin">' + kacis(r.neden) + "</span>") + "</td></tr>";
+        }).join("") + "</tbody></table></div>" : "");
+    $("a-exk-alt").innerHTML = MK.tus({ eylem: "pencere-kapat", ad: "Vazgeç", sinif: "a-tus-ikincil" }) +
+      MK.tus({ eylem: "exk-yukle", ad: "Yükle" + (x.dosya ? " (" + gec + ")" : ""), ikon: "upload", kapali: !x.dosya || !gec });
+    if (!d.open) d.showModal();
+    var f = odak && d.querySelector(odak); if (f && !f.disabled) f.focus();
+  }
+  MK.ekipmanExcel = function (o) {
+    if (!$("a-exk-pencere")) {
+      var d = document.createElement("dialog"); d.className = "a-pencere a-pencere-form"; d.id = "a-exk-pencere"; d.setAttribute("aria-labelledby", "a-exk-baslik");
+      d.innerHTML = '<div class="a-pencere-bas"><h2 id="a-exk-baslik"></h2><button class="a-ikon-tus" type="button" data-eylem="pencere-kapat" aria-label="Kapat">' + ikon("x") + "</button></div>" +
+        '<div class="a-pencere-govde" id="a-exk-govde"></div><div class="a-pencere-alt" id="a-exk-alt"></div>';
+      document.body.appendChild(d);
+    }
+    EXK = { tesis: o.tesis, bitti: o.bitti, dosya: "", satirlar: [] }; exkCiz('[data-eylem="exk-sec"]');
+  };
+  MK.eylem = MK.eylem || {};
+  MK.eylem["exk-sablon"] = function () { MK.indir("ekipman-yukleme-sablonu.xlsx", MK.xlsx("Ekipmanlar", [EXK_SUTUN, ["HT-2001", "Hava tankı", "Kompresör odası", "Örnek", "HT-500", "SN-1001", "2018", "12.10.2025", "Uygun"], ["FL-2002", "Forklift", "Sevkiyat", "Örnek", "F25", "", "", "", ""]])); };
+  MK.eylem["exk-sec"] = function () {
+    var x = EXK;
+    /* makette örnek dosya: iki geçerli satır, kayıtlı kod, türü bulunamayan satır */
+    var ornek = function () { var k = MV.EKIPMAN[0]; return [EXK_SUTUN, ["HT-7101", "Hava tankı", "Kompresör odası", "Örnek", "HT-500", "SN-7101", "2019", "14.10.2025", "Uygun"],
+      ["FL-7102", "Forklift", "Sevkiyat", "Örnek", "F25", "SN-7102", "2016", "20.09.2025", "Hafif kusurlu"], [k.kod, MV.tur(k.tur).ad, "", "", "", "", "", "", ""], ["XX-7103", "Uçan halı", "", "", "", "", "", "", ""]]; };
+    MK.dosyaSec({ kabul: ".xlsx,.csv", ornek: x.tesis.ad + "-ekipmanlar.xlsx" }, function (ad, f) {
+      if (!f) { x.dosya = ad; x.satirlar = exkSatirlar(ornek()); exkCiz('[data-eylem="exk-yukle"]'); return; }
+      MK.tabloOku(f).then(function (ham) { x.dosya = ad; x.satirlar = exkSatirlar(ham); exkCiz('[data-eylem="exk-yukle"]'); })
+        .catch(function () { x.dosya = ""; x.satirlar = []; exkCiz(); MK.bildir(ad + " okunamadı; .xlsx ya da .csv seçin."); });
+    });
+  };
+  MK.eylem["exk-yukle"] = function () {
+    var x = EXK, ok = x.satirlar.filter(function (r) { return r.ok; }), atla = x.satirlar.length - ok.length;
+    ok.forEach(function (r) {
+      var h = r.h, t = function (i) { return String(h[i] || "").trim(); };
+      MV.EKIPMAN.push({ kod: r.kod, tur: r.tur.k, tesis: x.tesis.id, konum: t(2), marka: t(3), model: t(4), seri: t(5), imal: r.yil, ilk: !r.tarih,
+        onceki: r.tarih ? { tarih: r.tarih, sonuc: r.sonuc || "Uygun", rapor: null, kisi: null, disari: true } : null, eklendi: MK.simdi() });
+    });
+    MV.EKIPMAN = MV.EKIPMAN.slice(); x.tesis.ekipman = MV.ekipmanSayisi(x.tesis);
+    $("a-exk-pencere").close(); MK.kaliciYaz();
+    MK.bildir(ok.length + " ekipman " + x.tesis.ad + " tesisine eklendi" + (atla ? "; " + atla + " satır atlandı." : "."));
+    if (x.bitti) x.bitti(ok.length);
+  };
+
   /* ── SEÇİM ALANI (kalıp 19: yerli açılır liste YOK) — formdaki tek seçim: düğme + temalı liste ──────────────
      secim({ id, ad, deger, secenekler: [[deger, etiket, ek?]], ipucu }) — seçilince MK.onSecim(id, deger) çağrılır. */
   MK.secim = function (o) {

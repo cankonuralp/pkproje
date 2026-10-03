@@ -396,7 +396,7 @@
   function oncekiHtml(e) {
     if (!e.onceki) return '<span class="a-ilk">İlk kontrol</span>';
     var sinif = e.onceki.sonuc === "Uygun" ? "" : e.onceki.sonuc === "Kusurlu" ? " a-sonuc-hata" : " a-sonuc-uyari";
-    return '<span class="a-kart-etiket">Önceki kontrol</span><span class="a-onceki' + sinif + '" title="' + e.onceki.rapor + '">' + ayYil(e.onceki.tarih) + " · " + e.onceki.sonuc + "</span>";
+    return '<span class="a-kart-etiket">Önceki kontrol</span><span class="a-onceki' + sinif + '" title="' + (e.onceki.rapor || "eski kayıt (Excel)") + '">' + ayYil(e.onceki.tarih) + " · " + e.onceki.sonuc + "</span>";
   }
   function ekpSutun(p) {
     return [

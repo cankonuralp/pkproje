@@ -324,7 +324,7 @@
     var F = r.F, e = r.e, n = F.bolumler.ekipman;
     return '<dl class="a-satirlar a-satirlar-form">' + satir("Kod", '<span class="a-kod">' + e.kod + "</span>") + satir("Ekipman türü", kacis(r.t.ad)) +
         metinAlan(r, oku, "konum", "Kullanım yeri", 60) +
-        satir("Önceki kontrol", e.onceki ? MK.tarihYaz(e.onceki.tarih) + " · " + kacis(e.onceki.sonuc) + ' · <span class="a-rapor-no">' + e.onceki.rapor + "</span>" : "İlk kontrol") + "</dl>" +
+        satir("Önceki kontrol", e.onceki ? MK.tarihYaz(e.onceki.tarih) + " · " + kacis(e.onceki.sonuc) + (e.onceki.rapor ? ' · <span class="a-rapor-no">' + e.onceki.rapor + "</span>" : " · eski kayıt (Excel)") : "İlk kontrol") + "</dl>" +
       '<h3 class="a-kriter-grup">' + n + ".1 · Ekipman detayları</h3>" +
       '<dl class="a-satirlar a-satirlar-form">' + F.detay.map(function (x) { return bilgiAlan(r, oku, "detay", x); }).join("") + "</dl>" +
       '<h3 class="a-kriter-grup">' + n + ".2 · Tespitler</h3>" +
@@ -505,7 +505,7 @@
         satir("Kontrol metodu", metotBag(t)) +
         metinAlan(r, oku, "marka", "Marka", 40) + metinAlan(r, oku, "model", "Model", 40) + metinAlan(r, oku, "seri", "Seri no", 30) +
         metinAlan(r, oku, "imal", "İmal yılı", 4, ' inputmode="numeric"') + metinAlan(r, oku, "konum", "Kullanım yeri", 60) + metinAlan(r, oku, "amac", "Kullanım amacı", 120) +
-        satir("Önceki kontrol", e.onceki ? MK.tarihYaz(e.onceki.tarih) + " · " + kacis(e.onceki.sonuc) + ' · <span class="a-rapor-no">' + e.onceki.rapor + "</span>" : "İlk kontrol") + "</dl>");
+        satir("Önceki kontrol", e.onceki ? MK.tarihYaz(e.onceki.tarih) + " · " + kacis(e.onceki.sonuc) + (e.onceki.rapor ? ' · <span class="a-rapor-no">' + e.onceki.rapor + "</span>" : " · eski kayıt (Excel)") : "İlk kontrol") + "</dl>");
     S.termal = F && F.bolumler.termal ? bolum(F.bolumler.termal, "r-bt", "Termal kamera bilgileri", termalHtml(r, oku)) : "";
     /* ÖLÇÜM CİHAZLARI (reisim 2026-09-28: "hangi cihaz kullanılacaksa o sabit yazsın, onun hizasında bilgileri … cihaz yoksa cihaz ekle
        tuşu olsun, kaldırınca komple satır silinmesin … sadece ilgili satırdaki cihaz"): türün her gerekli cihazı sabit bir satır; eklenen

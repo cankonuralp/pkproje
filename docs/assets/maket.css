@@ -778,6 +778,7 @@ a.a-yuz:hover { border-color: var(--kenar-alan); background: var(--zemin); }
 .a-tablo-hareket .a-k-tarih { width: 14%; } .a-tablo-hareket .a-k-varlik { width: 26%; } .a-tablo-hareket .a-k-kim { width: 28%; }
 .a-tablo-hareket .a-k-foto { width: 10%; } .a-tablo-hareket .a-k-form { width: 22%; }
 .a-tablo-isg .a-k-kisi { width: 28%; } .a-tablo-isg .a-k-no { width: 22%; } .a-tablo-isg .a-k-onay { width: 20%; } .a-tablo-isg .a-k-durum { width: 30%; }
+.a-tablo-tekp .a-k-kod { width: 65%; } .a-tablo-tekp .a-k-son { width: 35%; }   /* tesisin ekipmanları (2026-10-03) */
 /* M6 (plan aç): kapsam ekipmanı · inspector adayı · kapsam tür başına */
 .a-tablo-planekp .a-k-sec { width: 20%; } .a-tablo-planekp .a-k-tur { width: 24%; } .a-tablo-planekp .a-k-konum { width: 20%; }
 .a-tablo-planekp .a-k-sonraki { width: 18%; } .a-tablo-planekp .a-k-durum { width: 18%; }

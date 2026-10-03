@@ -226,6 +226,24 @@
       } }
     ];
   };
+  /* 2026-10-03 (reisim: "… oluşturduğum müşterinin ekipmanlarını toplu excel ile aktarabilmeliyim …"): tesisin ekipmanları burada listelenir ve
+     Excel'den yüklenir (teklif vermeden, eski müşteri); plan açılınca hepsi plana girer. İlk 10 satır; geri kalanı sayıyla. */
+  var EKP_SUTUN = [
+    { k: "kod", baslik: "Ekipman", kart: "ust", sira: 1, hucre: function (e) { return '<span class="a-kod">' + kacis(e.kod) + "</span> " + kacis(MV.tur(e.tur).ad) + (e.konum ? '<span class="a-alt-satir">' + kacis(e.konum) + "</span>" : ""); } },
+    { k: "son", baslik: "Son kontrol", kart: "govde", sira: 2, hucre: function (e) { return '<span class="a-kart-etiket">Son kontrol</span>' + (e.onceki ? MK.tarihYaz(e.onceki.tarih) + '<span class="a-alt-satir">' + kacis(e.onceki.sonuc || "") + "</span>" : '<span class="a-deger-yok">İlk kontrol</span>'); } }
+  ];
+  function ekipmanBolum(t) {
+    var l = MV.EKIPMAN.filter(function (e) { return e.tesis === t.id; });
+    return '<section class="a-bolum" aria-labelledby="a-b-ekp"><div class="a-alt-bas"><h2 class="a-alt-baslik" id="a-b-ekp">Ekipmanlar</h2><span class="a-sayac"><b>' + l.length + "</b> ekipman</span>" +
+        '<span class="a-bolum-tuslar">' + MK.tus({ eylem: "tesis-exk", ad: "Excel'den yükle", ikon: "file-spreadsheet", sinif: "a-tus-ikincil", veri: { id: t.id } }) + "</span></div>" +
+      (l.length ? '<div class="a-liste-kap">' + MK.tablo({ baslik: "Tesisin ekipmanları", sinif: "a-tablo-tekp", sutunlar: EKP_SUTUN, kayitlar: l.slice(0, 10) }) + "</div>" +
+          (l.length > 10 ? '<p class="a-ipucu">… ve ' + (l.length - 10) + " ekipman daha; hepsi plan açılınca plana girer.</p>" : "")
+        : '<p class="a-bos-satir">Kayıtlı ekipman yok. Eski listenizi Excel\'den yükleyebilirsiniz; plan açılınca hepsi plana girer.</p>') + "</section>";
+  }
+  MK.eylem["tesis-exk"] = function (el) {
+    var t = MV.tesis(el.dataset.id);
+    MK.ekipmanExcel({ tesis: t, bitti: function () { if (MK.goster) MK.goster(false); var b = document.querySelector('[data-eylem="tesis-exk"]'); if (b) b.focus(); } });
+  };
   function tesisCiz(t) {
     if (!t) return bulunamadi("Tesis bulunamadı");
     var m = MV.musteri(t.m), isg = MV.isgTesis(t.id), k = kalan(t.sonraki), e = eksikTesis(t);
@@ -248,6 +266,7 @@
       '<section class="a-bolum" aria-labelledby="a-b-tbilgi"><div class="a-alt-bas"><h2 class="a-alt-baslik" id="a-b-tbilgi">Tesis bilgileri</h2></div>' +
         '<dl class="a-bilgi">' + bilgi("İşyeri ünvanı", kacis(m.unvan), true) + bilgi("Adres", t.adres ? kacis(t.adres) : '<span class="a-yuz-uyari">Boş</span>', true) +
           bilgi("SGK DETSİS no", t.sgk ? '<span class="a-kod a-kod-uzun">' + t.sgk + "</span>" : '<span class="a-yuz-uyari">Boş</span>', "cift") + bilgi("İl", t.il || yok) + bilgi("İlçe", t.ilce || yok) + "</dl></section>" +
+      ekipmanBolum(t) +
       '<section class="a-bolum" aria-labelledby="a-b-isg"><div class="a-alt-bas"><h2 class="a-alt-baslik" id="a-b-isg">İSG-KATİP sözleşme ID\'leri</h2><span class="a-sayac"><b>' + isg.length + "</b> ID</span>" +
         (soz ? MK.git({ hedef: 12, hash: "#/s/" + soz.no, ad: "Sözleşmede aç", ikon: "arrow-right", sinif: "a-tus-ikincil a-bolum-tus", ne: "Sözleşmeler" }) : "") + "</div>" +
         '<div class="a-liste-kap">' + (isg.length ? MK.tablo({ baslik: "İSG-KATİP sözleşme ID'leri", sinif: "a-tablo-isg", sutunlar: ISG_SUTUN(t), kayitlar: isg })

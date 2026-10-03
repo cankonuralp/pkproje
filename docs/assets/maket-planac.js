@@ -213,10 +213,13 @@
         bilgi("Ekip", ekip.length ? kacis(ekip.map(function (p) { return p.ad; }).join(", ")) : '<span class="a-deger-yok">Seçilmedi</span>', true) +
         bilgi("Ekipman", top ? top + " ekipman · " + k.length + " tür · hepsi plana girer" : '<span class="a-deger-yok">Tesiste kayıtlı ekipman yok; denetçi sahada ekler</span>', true) + "</dl>" +
       (k.length ? '<div class="a-liste-kap a-bolum-serit">' + MK.tablo({ baslik: "Tesisteki ekipman tür başına", sinif: "a-tablo-kapsamozet", sutunlar: KSUTUN, kayitlar: k }) + "</div>" : "") +
+      /* 2026-10-03 (reisim: "… plan açarkende işime yarar"): teklifsiz eski müşterinin ekipmanı burada da Excel'den tesise yüklenir (MK.ekipmanExcel) */
+      (F.tesis ? '<div class="a-eylem-cubugu a-eylem-sol a-bolum-serit">' + MK.tus({ eylem: "pa-exk", ad: "Ekipmanları Excel'den yükle", ikon: "file-spreadsheet", sinif: "a-tus-ikincil" }) + "</div>" : "") +
       (sat.length ? '<ul class="a-kosullar a-bolum-serit" aria-label="Uyarılar">' + sat.join("") + "</ul>" : "");
   }
 
   /* ── DENETİM VE KAYIT ─────────────────────────────────────────────────────────────────────────────────── */
+  MK.eylem["pa-exk"] = function () { var t = MV.tesis(F.tesis); if (t) MK.ekipmanExcel({ tesis: t, bitti: function () { bagimliCiz(); var b = document.querySelector('[data-eylem="pa-exk"]'); if (b) b.focus(); } }); };
   function denetle() {
     var h = {}, gun = tarihIso(F.tarih);
     if (!F.musteri) h.musteri = "Müşteri seçilmeli.";
