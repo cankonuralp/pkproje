@@ -1687,3 +1687,11 @@ a.a-yuz:hover { border-color: var(--kenar-alan); background: var(--zemin); }
 .a-takvim-ek[data-takvim-ek="saatli"] { width: min(100%, 260px); }
 .a-takvim-ek > .a-zaman-tarih { flex: 1 1 auto; }
 .a-zaman-ikon:disabled { color: var(--yazi3); cursor: default; }
+
+/* ══ TOPLU İÇE AKTARMA (2026-10-03, reisim: "ilk açılışta toplu excel yüklemeyi yapalım"): Firma ayarları'nda tam genişlik bölüm */
+.a-ia-sutun { margin: 8px 0; font-weight: 600; overflow-wrap: anywhere; }
+.a-ia-ozet { margin: 12px 0 0; }
+.a-tablo-ia th:nth-child(1) { width: 14%; }
+.a-tablo-ia th:nth-child(2) { width: 50%; }
+.a-tablo-ia th:nth-child(3) { width: 36%; }
+.a-tablo-ia .a-alt-satir { display: block; }

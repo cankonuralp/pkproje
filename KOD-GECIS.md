@@ -46,6 +46,7 @@ webpack (Turbopack değil) · telemetri kapalı · `node --test` + olumsuz kanı
 → Seçilen her paket **saf JavaScript ya da WebAssembly** olmalı; yerel `.node` eklentisi isteyen paket (ör. bazı parola özeti, görüntü işleme
 paketleri) seçilmez ya da Windows'ta ölçülmeden eklenmez. Sunucuda PDF için başsız tarayıcı gerekiyorsa (aşağıda) Windows'ta çalışıp çalışmadığı
 **ölçülecek — bugün ölçemedim**.
+**Windows (reisim 2026-10-03: *"eğer windovsta çalışman gerekiyorsa buluttan çıkarıp projeyi normal pencereden devam edelim"*):** maket bulutta biter; **K0'ın ilk günü** (paket seçimi ve ilk derleme) reisim'in Windows bilgisayarında, yerel oturumda yapılır — paketler orada denenir (Uygulama Denetimi). Sonraki işler bulutta ya da yerelde sürebilir; CI her push'ta Linux'ta da denetler.
 
 **Çekirdek (tek üretici; her biri kendi kilit testiyle doğar — 09):**
 
@@ -111,7 +112,7 @@ Her tabloda: `firma_id` + RLS (ENABLE + FORCE + politika) · `id` · `surum` · 
 ## 4 · Yetki
 
 **Roller** (kişiye küme olarak, ekran yetkisi birleşimdir; `MV.ROLLER`): planlama · denetçi · mekanik yönetici · elektrik yönetici · firma yöneticisi ·
-muhasebe. **Müşteri kullanıcısı** ayrı tür (yalnız müşteri paneli). Bizim tarafın "süper yönetici"si yönetim panelinde (§12 Y1).
+muhasebe. **Müşteri kullanıcısı** ayrı tür (yalnız müşteri paneli). Bizim taraf (firma açma, dondurma) ekransız, komut satırı aracıyla (§12 Y1).
 
 **Düzeyler:** değiştirir · görür · branşı · kendi · yok. Başlangıç düzeni (firma yöneticisi değiştirir, "önerilen düzene dön"; yöneticinin Personel'i sabit):
 
@@ -251,8 +252,8 @@ denetimleri geçer → 1920 · 1080 · 375 × açık / koyu gözle → commit + 
 
 | # | Konu | Durum | Önerim |
 |---|---|---|---|
-| **Y1** | **probata yönetim paneli** (bizim taraf): firma açma, alt alan adı, ilk firma yöneticisi hesabı, dondurma | **maketlenmedi** (K7 ücret modülü reddedildi; firmayı açmak ayrı ihtiyaç) | Küçük iç ekran; K1'de yalnız komut satırı aracıyla firma açılır, ekran yayından önce |
-| **Y2** | **İlk açılışta toplu Excel içe aktarma** (müşteri, tesis, ekipman, cihaz, personel) | ertelendi (§9 kırk yedinci tur) | Firmanın eski verisiyle başlaması için gerekli; K4 sonunda, şablonlu + hata satırı raporu + geri alma |
+| **Y1** | **Firma açma** (her firma kendi alt alan adında: `ornekfirma.probata.com.tr`) | **karar 2026-10-03:** ekran paneli **yok** (reisim: *"şirket açma paneline gerek yok"*). Tek kod, tek sunucu; alt alan adı firmayı seçer. Firmayı **biz** komut satırı aracıyla açarız: firma kaydı + kısa kod + alt alan adı + ilk firma yöneticisi hesabı (geçici parola) | K1'de `firma-ac` aracı (sunucuda, yalnız biz); dondurma aynı araçla tek bayrak (07). Joker SSL sayesinde alt alan adı için ayrı ayar gerekmez |
+| **Y2** | **İlk açılışta toplu Excel içe aktarma** | **maketlendi 2026-10-03** (Firma ayarları › Toplu içe aktarma: müşteri + tesis, ekipman, ölçüm cihazı, personel, araç; şablon, satır satır denetim, geri alma) | K2 sonunda; sunucuda aynı denetim, tek işlem (hepsi ya da hiçbiri), denetim izine |
 | Y3 | Sunucu sağlayıcı (Türkiye: yönetilen PostgreSQL + S3 + yedek ikinci veri merkezi) · alan adı `probata.com.tr` | "vakti gelince" (182–183) | K5 başında; operatör IP yetkisi sabit adres ister |
 | Y4 | E-posta servisi (Türkiye, SPF / DKIM / DMARC) | açık | K5 |
 | Y5 | Mobil imza operatör sözleşmesi (probata yapar — 179), zaman damgası; e-imza aracı için kod imzalama sertifikası | karar var, sözleşme yok | K3 sonunda başvuru (test ortamı) |

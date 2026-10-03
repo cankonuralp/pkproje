@@ -120,7 +120,7 @@
             MK.alan({ id: "ay-sg-not-" + i, etiket: "Not", girdi: MK.girdi({ id: "ay-sg-not-" + i, deger: x.not || "", ek: ' data-sg-not="' + i + '" maxlength="80"' }) }) +
             MK.tus({ eylem: "sg-sil", ad: "Kaldır", ikon: "x", sinif: "a-tus-ikincil a-kalem-sil", veri: { i: i } }) + "</div>";
         }).join("") +
-        '<div class="a-eylem-cubugu a-bolum-serit">' + MK.tus({ eylem: "sg-ekle", ad: "Sabit gider ekle", ikon: "plus", sinif: "a-tus-ikincil" }) + "</div></section>" + bulutCiz() + yzCiz() + personelBelgeCiz() + disaCiz();
+        '<div class="a-eylem-cubugu a-bolum-serit">' + MK.tus({ eylem: "sg-ekle", ad: "Sabit gider ekle", ikon: "plus", sinif: "a-tus-ikincil" }) + "</div></section>" + bulutCiz() + yzCiz() + personelBelgeCiz() + iceCiz() + disaCiz();
   }
 
   X["sg-ekle"] = function () {
@@ -403,6 +403,199 @@
       sat.slice(1).forEach(function (r) { r.forEach(function (h, i) { if (/\[object |undefined|NaN/.test(String(h)) && l.indexOf(d[0] + ":" + sat[0][i]) < 0) l.push(d[0] + ":" + sat[0][i]); }); }); }); });
     return l;
   };
+  /* ── İLK KURULUM · TOPLU İÇE AKTARMA (2026-10-03, reisim: "ilk açılışta toplu excel yüklemeyi yapalım") ────────────────────────
+     Firma eski listelerini Excel'den yükler: müşteri + tesis · ekipman · ölçüm cihazı · personel · araç. Her tür için şablon (sütunlar
+     Türkçe, ilk satır başlık); her satır elle eklemedeki kurallarla denetlenir: eşsizlik ve zorunlu alan ENGEL (satır atlanır), öteki
+     eksikler uyarı (satır girer, notu yazar). Yalnız geçerli satırlar içe aktarılır. Her içe aktarma kaydı tutulur; son içe aktarma, kayıtları
+     henüz kullanılmadıysa (plan, rapor, zimmet, hesap…) "Geri al" ile kaldırılır. Sıra önerisi: önce müşteriler (ekipman tesise bağlanır).
+     Uygulamada: sunucuda aynı denetim, tek işlem (hepsi ya da hiçbiri), denetim izine. */
+  var IA = { tur: "musteri", dosya: "", satirlar: [] };
+  var iaTr = function (s) { return MK.tr(String(s == null ? "" : s).trim()); };
+  var iaTarih = function (v) { var s = MK.excelTarih(String(v == null ? "" : v).trim()), m = /^(\d{2})\.(\d{2})\.(\d{4})$/.exec(s); if (!m) return null;
+    var iso = m[3] + "-" + m[2] + "-" + m[1], d = new Date(iso + "T12:00:00"); return isNaN(d) || d.getDate() !== +m[1] ? null : iso; };
+  var iaPlaka = function (s) { return String(s || "").toLocaleUpperCase("tr").replace(/\s+/g, " ").trim(); };
+  var iaKod = function (s) { return String(s || "").replace(/\s+/g, "").replace(/[a-z]/g, function (c) { return c.toUpperCase(); }); };   /* A–Z yalnız (5.5) */
+  var iaTesis = function (unvan, tesisAd) {
+    var m = MV.MUSTERILER.filter(function (x) { return iaTr(x.unvan) === iaTr(unvan) || iaTr(x.kisa) === iaTr(unvan); })[0];
+    return m ? MV.TESISLER.filter(function (t) { return t.m === m.id && iaTr(t.ad) === iaTr(tesisAd); })[0] : null;
+  };
+  var YAKIT_IA = [["benzin", "Benzin"], ["dizel", "Dizel"], ["lpg", "LPG"], ["elektrik", "Elektrik"], ["hibrit", "Hibrit"]];
+  var bul = function (l, v, alan) { return l.filter(function (x) { return iaTr(x[alan || "ad"]) === iaTr(v) || iaTr(x.k) === iaTr(v); })[0]; };
+  /* tür: ad · şablon sütunları (* zorunlu) · örnek satır · satır denetimi (h → { ok, neden, uyari, ozet, kayit }) · içe aktarma · kullanıldı mı */
+  var IA_TUR = {
+    musteri: { ad: "Müşteriler ve tesisler", dosya: "musteriler", sutun: ["Müşteri ünvanı*", "Vergi dairesi", "Vergi no", "E-posta", "Tesis adı*", "Adres*", "İl*", "İlçe", "SGK DETSİS no"],
+      ornek: [["Örnek Gıda San. A.Ş.", "Gebze", "1234567890", "isg@ornek-gida.example", "Merkez Fabrika", "OSB 3. Cadde No: 5", "Kocaeli", "Gebze", ""],
+        ["Örnek Gıda San. A.Ş.", "Gebze", "1234567890", "isg@ornek-gida.example", "Depo", "OSB 9. Cadde No: 2", "Kocaeli", "Dilovası", ""],
+        ["Deneme Metal Ltd.", "Tuzla", "", "", "Atölye", "Sanayi Sitesi B Blok No: 14", "İstanbul", "Tuzla", ""]],
+      hatali: function () { return ["", "", "", "", "Şube", "Liman Yolu No: 3", "Kocaeli", "", ""]; },
+      denetle: function (h, onceki) {
+        var u = String(h[0] || "").trim(), t = String(h[4] || "").trim(), il = MV.ILLER.filter(function (x) { return iaTr(x) === iaTr(h[6]); })[0];
+        var neden = !u ? "Müşteri ünvanı boş" : !t ? "Tesis adı boş" : !String(h[5] || "").trim() ? "Adres boş" : !il ? "İl bulunamadı" :
+          iaTesis(u, t) ? "Bu tesis zaten kayıtlı" : onceki.some(function (o) { return o.ok && iaTr(o.u) === iaTr(u) && iaTr(o.t) === iaTr(t); }) ? "Dosyada aynı tesis iki kez" : "";
+        var vno = String(h[2] || "").replace(/\D/g, ""), uy = [];
+        if (!vno) uy.push("vergi no boş"); else if (MV.MUSTERILER.some(function (m) { return m.vno === vno && iaTr(m.unvan) !== iaTr(u); })) uy.push("vergi no başka müşteride");
+        if (!String(h[8] || "").trim()) uy.push("SGK DETSİS no boş");
+        var var_ = MV.MUSTERILER.filter(function (m) { return iaTr(m.unvan) === iaTr(u); })[0];
+        if (var_) uy.push("müşteri kayıtlı, tesis ona eklenir");
+        return { ok: !neden, neden: neden, uyari: uy.join(" · "), u: u, t: t, ozet: kacis(u) + " · " + kacis(t) + '<span class="a-alt-satir">' + kacis(il || String(h[6] || "")) + (h[7] ? " / " + kacis(h[7]) : "") + "</span>",
+          h: h, il: il, vno: vno };
+      },
+      ekle: function (x, ids) {
+        var m = MV.MUSTERILER.filter(function (k) { return iaTr(k.unvan) === iaTr(x.u); })[0];
+        if (!m) { m = { id: "m" + (MV.MUSTERILER.length + 1), unvan: x.u, kisa: x.u.split(" ").slice(0, 2).join(" "), vd: String(x.h[1] || "").trim(), vno: x.vno, eposta: String(x.h[3] || "").trim(),
+          tel: "", ilgili: "", acilis: MK.BUGUN, uygunsuz: 0, giris: { durum: String(x.h[3] || "").trim() ? "hazir" : "yok" } }; MV.MUSTERILER.push(m); ids.push("m:" + m.id); }
+        var t = { id: "t" + (MV.TESISLER.length + 1), m: m.id, ad: x.t, adres: String(x.h[5]).trim(), ilce: String(x.h[7] || "").trim(), il: x.il, sgk: String(x.h[8] || "").replace(/\D/g, ""), ekipman: 0, son: "", sonraki: "" };
+        MV.TESISLER.push(t); ids.push("t:" + t.id);
+      } },
+    ekipman: { ad: "Ekipmanlar", dosya: "ekipmanlar", sutun: ["Ekipman kodu*", "Ekipman türü*", "Müşteri ünvanı*", "Tesis adı*", "Kullanım yeri", "Marka", "Model", "Seri no", "İmal yılı"],
+      ornek: [["HT-2001", "Hava tankı", "Ada Makina San. ve Tic. A.Ş.", "Depo", "Kompresör odası", "Örnek", "HT-500", "SN-1001", "2018"],
+        ["FL-2002", "Forklift", "Ada Makina San. ve Tic. A.Ş.", "Depo", "Sevkiyat", "Örnek", "F25", "", ""]],
+      hatali: function () { return [MV.EKIPMAN[0].kod, MV.tur(MV.EKIPMAN[0].tur).ad, "Ada Makina San. ve Tic. A.Ş.", "Depo", "", "", "", "", ""]; },
+      denetle: function (h, onceki) {
+        var kod = iaKod(h[0]), tur = bul(MV.KATALOG, h[1]), t = iaTesis(h[2], h[3]);
+        var neden = !kod ? "Ekipman kodu boş" : !/^[A-Z0-9](?:[A-Z0-9]|-(?=[A-Z0-9])){2,19}$/.test(kod) ? "Kod: A–Z, 0–9, tire; 3–20 hane" :
+          MV.ekipman(kod) ? "Bu kod kayıtlı" : onceki.some(function (o) { return o.ok && o.kod === kod; }) ? "Dosyada aynı kod iki kez" :
+          !tur ? "Ekipman türü bulunamadı" : !t ? "Müşteri / tesis bulunamadı (önce müşterileri yükleyin)" : "";
+        var yil = String(h[8] || "").trim();
+        return { ok: !neden, neden: neden, uyari: yil && !/^\d{4}$/.test(yil) ? "imal yılı okunmadı, boş girer" : "", kod: kod, tur: tur, t: t, h: h,
+          ozet: '<span class="a-kod">' + kacis(kod || String(h[0] || "")) + "</span> " + kacis(tur ? tur.ad : String(h[1] || "")) + '<span class="a-alt-satir">' + kacis(String(h[2] || "")) + " · " + kacis(String(h[3] || "")) + "</span>" };
+      },
+      ekle: function (x, ids) {
+        var yil = String(x.h[8] || "").trim();
+        MV.EKIPMAN.push({ kod: x.kod, tur: x.tur.k, tesis: x.t.id, konum: String(x.h[4] || "").trim(), onceki: null, ilk: true, marka: String(x.h[5] || "").trim(), model: String(x.h[6] || "").trim(),
+          seri: String(x.h[7] || "").trim(), imal: /^\d{4}$/.test(yil) ? +yil : "" });
+        x.t.ekipman = (x.t.ekipman || 0) + 1; ids.push("e:" + x.kod);
+      } },
+    cihaz: { ad: "Ölçüm cihazları", dosya: "olcum-cihazlari", sutun: ["Cihaz kodu*", "Cihaz türü*", "Marka", "Seri no", "Ölçüm aralığı", "Kalibrasyon bitişi*"],
+      ornek: [["OC-201", "Topraklama ölçer", "Örnek", "CS-77001", "0–2000 Ω", "15.03.2027"], ["OC-202", "Multimetre", "Örnek", "CS-77002", "", "01.11.2026"]],
+      hatali: function () { var c = MV.VARLIKLAR.filter(function (v) { return v.tur === "cihaz"; })[0]; return [c.env, c.ad, "", "", "", "01.01.2027"]; },
+      denetle: function (h, onceki) {
+        var env = String(h[0] || "").trim().toLocaleUpperCase("tr"), ct = bul(MV.CIHAZ_TURLERI, h[1]), bit = iaTarih(h[5]);
+        var neden = !env ? "Cihaz kodu boş" : MV.VARLIKLAR.some(function (v) { return v.tur === "cihaz" && iaTr(v.env) === iaTr(env); }) ? "Bu cihaz kodu kayıtlı" :
+          onceki.some(function (o) { return o.ok && o.env === env; }) ? "Dosyada aynı kod iki kez" : !ct ? "Cihaz türü bulunamadı" : !bit ? "Kalibrasyon bitişi GG.AA.YYYY olmalı" : "";
+        return { ok: !neden, neden: neden, uyari: bit && bit < MK.BUGUN ? "kalibrasyonu geçmiş" : "", env: env, ct: ct, bit: bit, h: h,
+          ozet: '<span class="a-kod">' + kacis(env || String(h[0] || "")) + "</span> " + kacis(ct ? ct.ad : String(h[1] || "")) + '<span class="a-alt-satir">Kalibrasyon ' + kacis(bit ? MK.tarihYaz(bit) : String(h[5] || "")) + "</span>" };
+      },
+      ekle: function (x, ids) {
+        var v = { id: "v" + (MV.VARLIKLAR.length + 1), tur: "cihaz", ad: x.ct.ad, cihazTur: x.ct.k, env: x.env, marka: String(x.h[2] || "").trim() || "—", model: "", seri: String(x.h[3] || "").trim(),
+          aralik: String(x.h[4] || "").trim() || "—", bitis: x.bit, araSiklik: [], kal: [], ara: [], rapor: 0 };
+        while (MV.varlik(v.id)) v.id = "v" + (+v.id.slice(1) + 1);
+        MV.VARLIKLAR.push(v); ids.push("v:" + v.id);
+      } },
+    personel: { ad: "Personel", dosya: "personel", sutun: ["Ad soyad*", "Meslek*", "İşe başlama*", "E-posta", "Diploma no", "Oda sicil no", "EKİPNET no"],
+      ornek: [["Deniz Yılmaz", "Elektrik mühendisi", "01.03.2021", "deniz.yilmaz@firma.example", "", "", ""], ["Ece Kara", "Makine mühendisi", "15.06.2023", "", "", "", ""]],
+      hatali: function () { return ["Can Yıldırım", "Muhasebeci", "01.01.2020", "", "", "", ""]; },
+      denetle: function (h, onceki) {
+        var ad = String(h[0] || "").trim(), ms = bul(MV.MESLEKLER, h[1]), bas = iaTarih(h[2]), ep = String(h[3] || "").trim();
+        var neden = !ad ? "Ad soyad boş" : !ms ? "Meslek bulunamadı" : !bas ? "İşe başlama GG.AA.YYYY olmalı" : bas > MK.BUGUN ? "İşe başlama ileri tarih" :
+          ep && MV.PERSONEL.some(function (p) { return iaTr(p.eposta) === iaTr(ep); }) ? "Bu e-posta başka personelde" :
+          ep && onceki.some(function (o) { return o.ok && iaTr(o.ep) === iaTr(ep); }) ? "Dosyada aynı e-posta iki kez" : "";
+        var uy = []; if (MV.PERSONEL.some(function (p) { return iaTr(p.ad) === iaTr(ad); })) uy.push("aynı adlı personel var"); if (!String(h[6] || "").trim()) uy.push("EKİPNET no boş");
+        return { ok: !neden, neden: neden, uyari: uy.join(" · "), ad: ad, ms: ms, bas: bas, ep: ep, h: h,
+          ozet: kacis(ad) + '<span class="a-alt-satir">' + kacis(ms ? ms.ad : String(h[1] || "")) + (bas ? " · " + MK.tarihYaz(bas) : "") + "</span>" };
+      },
+      ekle: function (x, ids) {
+        var p = { id: "y" + MV.PERSONEL.length, ad: x.ad, eposta: x.ep, imzaTel: "", basla: x.bas, meslek: x.ms.k, meslekMetin: "", diploma: String(x.h[4] || "").trim(), oda: String(x.h[5] || "").trim(),
+          ekipnet: String(x.h[6] || "").trim(), durum: "etkin", hesap: null, yetki: {}, belge: {}, sayilar: { isg: 0, zimmet: 0, egitim: 0, egitimYakin: 0, plan: 0 } };
+        while (MV.kisi(p.id)) p.id = "y" + (+p.id.slice(1) + 1);
+        MV.PERSONEL.push(p); ids.push("p:" + p.id);
+      } },
+    arac: { ad: "Araçlar", dosya: "araclar", sutun: ["Plaka*", "Araç türü*", "Marka*", "Model*", "Model yılı*", "Yakıt*", "Kilometre", "Muayene bitişi", "Trafik sigortası bitişi", "Kasko bitişi"],
+      ornek: [["34 ABC 101", "Hafif ticari araç", "Örnek", "Van", "2021", "Dizel", "68000", "10.05.2027", "01.02.2027", ""]],
+      hatali: function () { var a = MV.VARLIKLAR.filter(function (v) { return v.tur === "arac"; })[0]; return [a.plaka, a.ad, a.marka, a.model, String(a.yil), "Dizel", "", "", "", ""]; },
+      denetle: function (h, onceki) {
+        var p = iaPlaka(h[0]), tur = ["Binek araç", "Hafif ticari araç", "Kamyonet", "Minibüs", "Kamyon"].filter(function (t) { return iaTr(t) === iaTr(h[1]); })[0],
+          yk = YAKIT_IA.filter(function (y) { return iaTr(y[1]) === iaTr(h[5]) || y[0] === iaTr(h[5]); })[0], yil = +String(h[4] || "").trim(), km = String(h[6] || "").replace(/\D/g, "");
+        var ayni = function (a, b) { return a.replace(/ /g, "") === b.replace(/ /g, ""); };
+        var neden = !p ? "Plaka boş" : !/^\d{2} ?[A-ZÇĞİÖŞÜ]{1,3} ?\d{2,4}$/.test(p) ? "Plaka 34 ABC 123 biçiminde" :
+          MV.VARLIKLAR.some(function (v) { return v.tur === "arac" && ayni(iaPlaka(v.plaka), p); }) ? "Bu plaka kayıtlı" : onceki.some(function (o) { return o.ok && ayni(o.p, p); }) ? "Dosyada aynı plaka iki kez" :
+          !tur ? "Araç türü bulunamadı" : !String(h[2] || "").trim() || !String(h[3] || "").trim() ? "Marka ve model zorunlu" : !(yil >= 1980 && yil <= +MK.BUGUN.slice(0, 4) + 1) ? "Model yılı geçersiz" : !yk ? "Yakıt bulunamadı" : "";
+        var bel = [7, 8, 9].map(function (i) { return String(h[i] || "").trim() ? iaTarih(h[i]) : ""; });
+        return { ok: !neden, neden: neden, uyari: bel.some(function (b) { return b === null; }) ? "okunmayan belge tarihi boş girer" : "", p: p, tur: tur, yk: yk, yil: yil, km: km, bel: bel, h: h,
+          ozet: '<span class="a-kod">' + kacis(p || String(h[0] || "")) + "</span> " + kacis(String(h[2] || "") + " " + String(h[3] || "")) + '<span class="a-alt-satir">' + kacis(tur || String(h[1] || "")) + "</span>" };
+      },
+      ekle: function (x, ids) {
+        var n = 1; while (MV.varlik("a" + n)) n++;
+        var v = { id: "a" + n, tur: "arac", ad: x.tur, plaka: x.p, marka: String(x.h[2]).trim(), model: String(x.h[3]).trim(), yil: x.yil, yakit: x.yk[0], muayene: x.bel[0] || "", sigorta: x.bel[1] || "", kasko: x.bel[2] || "", bakimKm: null };
+        if (x.km) v.ilkKm = +x.km;
+        MV.VARLIKLAR.push(v); ids.push("a:" + v.id);
+      } }
+  };
+  /* geri alma: kayıt sonradan kullanıldıysa (plan, rapor, zimmet, hesap, km) geri alınmaz — elle silinir / pasife alınır */
+  var kullanildi = function (r) {
+    var t = r.slice(0, 1), id = r.slice(2);
+    if (t === "m") return MV.TESISLER.some(function (x) { return x.m === id && (x.plan || MV.EKIPMAN.some(function (e) { return e.tesis === x.id; })); }) || (MV.TEKLIFLER || []).some(function (x) { return x.m === id; });
+    if (t === "t") return MV.EKIPMAN.some(function (e) { return e.tesis === id; }) || MV.ACILAN_PLANLAR.some(function (p) { return p.tesis === id; });
+    if (t === "e") return MV.RAPORLAR.some(function (x) { return x.kod === id; });
+    if (t === "v" || t === "a") return MV.ZIMMET.some(function (z) { return z.v === id; }) || (MV.KM_KAYIT || []).some(function (k) { return k.v === id; });
+    if (t === "p") { var p = MV.kisi(id); return !!(p && p.hesap) || MV.ZIMMET.some(function (z) { return z.alan === id || z.eden === id; }) || MV.RAPORLAR.some(function (x) { return x.kisi === id; }); }
+    return false;
+  };
+  function iceCiz() {
+    var T = IA_TUR[IA.tur], ok = IA.satirlar.filter(function (x) { return x.ok; }), gecmis = (MV.FIRMA.iceAktarim || []), son = gecmis[0];
+    return '<section class="a-bolum a-ayar-genis" aria-labelledby="a-b-ice"><div class="a-alt-bas"><h2 class="a-alt-baslik" id="a-b-ice">Toplu içe aktarma (ilk kurulum)</h2></div>' +
+      '<div class="a-form"><div class="a-alan-grup"><label class="a-etiket" for="ay-ia-tur">Ne yüklenecek</label>' +
+        MK.secim({ id: "ay-ia-tur", ad: "Ne yüklenecek", deger: IA.tur, secenekler: Object.keys(IA_TUR).map(function (k) { return [k, IA_TUR[k].ad]; }), ipucu: "Seçin" }) + "</div></div>" +
+      '<p class="a-etiket a-ia-sutun">Sütunlar: ' + T.sutun.map(kacis).join(" · ") + "</p>" +
+      '<div class="a-dosya-sec">' + MK.tus({ eylem: "ia-sablon", ad: "Şablonu indir", ikon: "file-spreadsheet", sinif: "a-tus-ikincil" }) +
+        MK.tus({ eylem: "ia-sec", ad: IA.dosya ? "Başka dosya seç" : "Excel seç", ikon: "upload", sinif: "a-tus-ikincil" }) +
+        '<span class="a-dosya-ad">' + (IA.dosya ? kacis(IA.dosya) : '<span class="a-deger-yok">Dosya seçilmedi</span>') + "</span></div>" +
+      (IA.dosya ? '<p class="a-ia-ozet" id="a-ia-ozet"><b>' + ok.length + "</b> satır içe aktarılacak · <b>" + (IA.satirlar.length - ok.length) + "</b> satır atlanacak</p>" +
+        '<div class="a-excel-kap">' + MK.tablo({ baslik: "Satır denetimi", sinif: "a-tablo-ia", sutunlar: [
+          { k: "no", baslik: "Satır", hucre: function (x) { return String(x.no); } },
+          { k: "kayit", baslik: "Kayıt", hucre: function (x) { return x.ozet; } },
+          { k: "durum", baslik: "Durum", hucre: function (x) { return x.ok ? '<span class="a-rozet a-rozet-tamam">Eklenecek</span>' + (x.uyari ? '<span class="a-alt-satir a-uyari-metin">' + kacis(x.uyari) + "</span>" : "") :
+            '<span class="a-uyari-metin a-hata-metin">' + kacis(x.neden) + "</span>"; } }], kayitlar: IA.satirlar }) + "</div>" +
+        '<div class="a-eylem-cubugu a-eylem-sol">' + MK.tus({ eylem: "ia-aktar", ad: "İçe aktar (" + ok.length + ")", ikon: "check", kapali: !ok.length }) +
+          MK.tus({ eylem: "ia-temizle", ad: "Vazgeç", sinif: "a-tus-ikincil" }) + "</div>" : "") +
+      (gecmis.length ? '<p class="a-etiket a-disa-gecmis-bas">Son içe aktarımlar</p><ul class="a-disa-gecmis">' + gecmis.slice(0, 5).map(function (g, i) {
+        return "<li>" + MK.zamanYaz(g.zaman) + " · " + kacis(IA_TUR[g.tur].ad) + " · " + g.adet + " kayıt" + (g.geri ? ' <span class="a-alt-satir">geri alındı</span>' : "") +
+          (i === 0 && !g.geri ? " " + MK.tus({ eylem: "ia-geri", ad: "Geri al", ikon: "undo-2", sinif: "a-tus-ikincil a-tus-kucuk" }) : "") + "</li>"; }).join("") + "</ul>" : "") +
+      "</section>";
+  }
+  var iaYenile = function (odak) { ayarCiz(); var e = odak && document.querySelector(odak); if (e) e.focus({ preventScroll: false }); };
+  var iaSatirlar = function (ham) {
+    if (ham.length && /\*|ünvan|kod|ad soyad|plaka/i.test(String(ham[0][0] || ""))) ham = ham.slice(1);
+    ham = ham.filter(function (h) { return h.some(function (c) { return String(c == null ? "" : c).trim(); }); });
+    var l = []; ham.forEach(function (h, i) { var x = IA_TUR[IA.tur].denetle(h, l); x.no = i + 2; x.id = String(i); l.push(x); }); return l;
+  };
+  X["ia-sablon"] = function () { var T = IA_TUR[IA.tur]; MK.indir(T.dosya + "-yukleme-sablonu.xlsx", MK.xlsx(T.ad, [T.sutun].concat(T.ornek))); };
+  X["ia-sec"] = function () {
+    MK.dosyaSec({ kabul: ".xlsx,.csv", ornek: IA_TUR[IA.tur].dosya + ".xlsx" }, function (ad, f) {
+      var bitir = function (ham) { IA.dosya = ad; IA.satirlar = iaSatirlar(ham); iaYenile('[data-eylem="ia-aktar"]:not([disabled])') ; if (!document.activeElement || document.activeElement === document.body) iaYenile("#a-ia-ozet"); };
+      /* maket: dosya penceresi yerine şablonun örnek satırları + denetimi göstermek için bir hatalı satır (şablonun kendisi temiz) */
+      if (!f) { bitir([IA_TUR[IA.tur].sutun].concat(IA_TUR[IA.tur].ornek, [IA_TUR[IA.tur].hatali()])); return; }
+      MK.tabloOku(f).then(bitir).catch(function () { MK.bildir(ad + " okunamadı; .xlsx ya da .csv seçin."); });
+    });
+  };
+  X["ia-temizle"] = function () { IA.dosya = ""; IA.satirlar = []; iaYenile('[data-eylem="ia-sec"]'); };
+  X["ia-aktar"] = function () {
+    var T = IA_TUR[IA.tur], ok = IA.satirlar.filter(function (x) { return x.ok; }), atla = IA.satirlar.length - ok.length, ids = [];
+    if (!ok.length) return;
+    ok.forEach(function (x) { T.ekle(x, ids); });
+    var ben = MV.kisi(MK.BEN);
+    MV.FIRMA.iceAktarim = [{ zaman: MK.simdi(), tur: IA.tur, adet: ok.length, kim: ben ? ben.ad : "—", dosya: IA.dosya, ids: ids }].concat(MV.FIRMA.iceAktarim || []);
+    IA.dosya = ""; IA.satirlar = [];
+    iaYenile('[data-eylem="ia-geri"]');
+    MK.bildir(T.ad + ": " + ok.length + " kayıt içe aktarıldı" + (atla ? "; " + atla + " satır atlandı." : "."));
+  };
+  X["ia-geri"] = function () {
+    var g = (MV.FIRMA.iceAktarim || [])[0]; if (!g || g.geri) return;
+    var dolu = g.ids.filter(kullanildi);
+    if (dolu.length) { MK.bildir("Geri alınamaz: içe aktarılan " + dolu.length + " kayıt kullanılmaya başlandı (plan, rapor, zimmet ya da hesap). Kayıtları tek tek düzeltin ya da pasife alın."); return; }
+    MK.onayla({ baslik: "İçe aktarmayı geri al", metin: kacis(IA_TUR[g.tur].ad) + ": " + g.adet + " kayıt kaldırılır.", tus: "Geri al", tamam: function () {
+      g.ids.forEach(function (r) {
+        var t = r.slice(0, 1), id = r.slice(2), sil = function (l, f) { var i = l.findIndex(f); if (i >= 0) l.splice(i, 1); };
+        if (t === "m") sil(MV.MUSTERILER, function (x) { return x.id === id; });
+        if (t === "t") sil(MV.TESISLER, function (x) { return x.id === id; });
+        if (t === "e") { var e = MV.ekipman(id), ts = e && MV.tesis(e.tesis); if (ts) ts.ekipman = Math.max(0, (ts.ekipman || 1) - 1); sil(MV.EKIPMAN, function (x) { return x.kod === id; }); }
+        if (t === "v" || t === "a") sil(MV.VARLIKLAR, function (x) { return x.id === id; });
+        if (t === "p") sil(MV.PERSONEL, function (x) { return x.id === id; });
+      });
+      g.geri = MK.simdi();
+      iaYenile("#a-b-ice"); MK.bildir(IA_TUR[g.tur].ad + ": içe aktarma geri alındı (" + g.adet + " kayıt).");
+    } });
+  };
   function disaCiz() {
     var s = secili(), gecmis = MV.FIRMA.disaAktarim || [];
     return '<section class="a-bolum" aria-labelledby="a-b-disa"><div class="a-alt-bas"><h2 class="a-alt-baslik" id="a-b-disa">Verileri dışa aktar</h2></div>' +
@@ -575,6 +768,7 @@
     var b = el.dataset.bolum; delete TS[b]; ayarCiz(); baslikOdak(b); MK.bildir($(b).textContent + ": değişiklikler geri alındı.");
   };
   MK.onSecim = function (id, deger) {
+    if (id === "ay-ia-tur") { IA.tur = deger; IA.dosya = ""; IA.satirlar = []; iaYenile("#ay-ia-tur"); return; }   /* içe aktarma türü: bölüm kaydı değil */
     var tus = $(id), sec = tus && tus.closest("#a-ayarlar section.a-bolum"); if (!sec) return;
     var b = sec.getAttribute("aria-labelledby"); (TS[b] = TS[b] || {})["secim:" + id] = { tip: "secim", id: id, deger: deger };
     secimGoster(id, deger); bolumIsaretle(sec);

@@ -2,8 +2,8 @@
  "maket": "m1",
  "tarih": "2026-10-03",
  "arac": "tools/olc-bulut.mjs --etkilesim (başsız tarayıcı, 1920 açık tema; gen verilen denemede o genişlik)",
- "toplam": 115,
- "gecen": 115,
+ "toplam": 119,
+ "gecen": 119,
  "denemeler": [
   {
    "ad": "AA3: Personel › bordro Onaya gönder → kişinin Onaylar › Diğer belgelerine düşer, satırda Onay bekliyor",
@@ -304,6 +304,34 @@
    "gen": 1920,
    "sayfa": "maket/personel.html",
    "hash": "#/roller",
+   "gecti": true
+  },
+  {
+   "ad": "İçe aktarma · müşteriler: 3 satır eklenecek, ünvanı boş satır atlanır; İçe aktar → 2 müşteri + 3 tesis, geçmişte kayıt",
+   "gen": 1920,
+   "sayfa": "maket/firma-ayarlari.html",
+   "hash": "#/",
+   "gecti": true
+  },
+  {
+   "ad": "İçe aktarma · ekipman: kayıtlı kod atlanır; iki ekipman tesise bağlanır; Geri al onay penceresiyle ikisini kaldırır",
+   "gen": 1920,
+   "sayfa": "maket/firma-ayarlari.html",
+   "hash": "#/",
+   "gecti": true
+  },
+  {
+   "ad": "İçe aktarma · geri alma kullanılmış kayıtta yapılmaz (personele hesap açıldıysa); kayıtlar kalır",
+   "gen": 1920,
+   "sayfa": "maket/firma-ayarlari.html",
+   "hash": "#/",
+   "gecti": true
+  },
+  {
+   "ad": "İçe aktarma · araç: kayıtlı plaka atlanır, yeni araç kayıttaki kilometresiyle girer; ölçüm cihazı: kayıtlı kod atlanır",
+   "gen": 1920,
+   "sayfa": "maket/firma-ayarlari.html",
+   "hash": "#/",
    "gecti": true
   },
   {

@@ -2202,6 +2202,12 @@ Aynı gün (reisim birebir): *"şimdi siteyi maketten normale geçirmek için ha
 hazır olunca söyle başlayalım eksiğimiz olmasın dikkat et"* → **`KOD-GECIS.md`** (§11 244): kural dosyaları ve pkproje tam okunup tek haritada
 toplandı; başlamak için iki karar: **G0** maketlerin toplu onayı · **G1** geçmiş tarihe plan açma (makette engel; öneri uyarı). Yayından önce gerekenler
 (Y1 probata yönetim paneli maketlenmedi · Y2 ilk açılışta toplu Excel içe aktarma · sunucu, e-posta, operatör, KVKK, mağaza hesapları) belgede.
+Aynı gün, KOD-GECIS'e cevap (reisim birebir; örnek alt alan adındaki firma adı depo açık olduğu için alınmadı): *"her firma için ayrı site yapıcaz
+örneğin ….probata.com.tr bunun için şirket açma paneline gerek yok diye düşündüm fikrim hatalıysa düzeltelim, ilk açılışta toplu excel yüklemeyi yapalım,
+eğer windovsta çalışman gerekiyorsa buluttan çıkarıp projeyi normal pencereden devam edelim. Yapman gerekenleri yapıp makete uygula diğer sorularımı
+cevapla."* → **Firma açma:** fikir doğru — her firma kendi alt alan adında, tek kod ve tek sunucu (alt alan adı firmayı seçer; firma başına ayrı kurulum
+yok); ekran paneli yapılmaz. Tek düzeltme: firmanın kaydı (kısa kod, alt alan adı, ilk firma yöneticisi) bir yerde oluşmalı → bizim kullandığımız
+komut satırı aracı (KOD-GECIS Y1). **Toplu içe aktarma** makette (§11 245). **Windows:** K0'ın ilk günü reisim'in bilgisayarında, yerel oturumda.
 Aynı gün ara mesajlar (reisim birebir): *"Şirket logosuda firma ayarlarından girilsin , raporlara otomatik çekilsin"* (§11 238) · *"Format
 tasarımcısında herhangi bir başlığa tıklayınca en baş arıyor, en başa atmasın başlığı düzenlediğimiz yere odaklansın(telefonda)"* (§11 237).
 
@@ -2242,6 +2248,13 @@ revizyon, alan kopyalama, hafif kusur devri, meslek eşleşme denetimi).
 - Emsal ürünler: https://opwire.app/iso-17020-periyodik-kontrol-yazilimi/ · https://17020muayene.vidco.com.tr/ · https://akuple.com/asansor-kontrol-yazilimi/ · https://ensyazilim.com/
 
 ## 11 · Değişiklik günlüğü
+- 2026-10-03 (245): **Toplu içe aktarma (ilk kurulum)** (§9 elli ikinci tur). Firma ayarları › "Toplu içe aktarma (ilk kurulum)", tam genişlik bölüm:
+  tür seçilir (müşteriler ve tesisler · ekipmanlar · ölçüm cihazları · personel · araçlar) → **Şablonu indir** (Türkçe sütunlar, * zorunlu, örnek
+  satırlar) → **Excel seç** (.xlsx / .csv) → satır satır denetim tablosu: "Eklenecek" (varsa uyarı notu: vergi no boş, EKİPNET boş, müşteri kayıtlı →
+  tesis ona eklenir …) ya da atlanma nedeni (zorunlu alan boş, kayıtlı kod / plaka / cihaz kodu, dosyada iki kez, tür / meslek / tesis bulunamadı,
+  geçersiz tarih) → **İçe aktar (N)**. Son içe aktarımlar listelenir; sonuncusu, kayıtları henüz kullanılmadıysa (plan, rapor, zimmet, hesap, km)
+  onay penceresiyle **Geri al**. Ekipman tesise müşteri ünvanı + tesis adıyla bağlanır (önce müşteriler). Makette örnek dosya şablonun satırları +
+  bir hatalı satır. KOD-GECIS: Y1 firma açma panelsiz (komut satırı aracı), Y2 maketlendi, Windows notu.
 - 2026-10-03 (244): **Koda geçiş hazırlığı — `KOD-GECIS.md`** (§9 elli ikinci tur). Kaynak: ANAYASA, TASARIM-KALIBI, pkproje (§1–§9 tam, §11
   başlıkları), ARKA-UC, 09, RAPOR-FORMAT, 07, EKSİKLER, maket veri dosyası (~80 koleksiyon), maketteki kayıt engelleme mesajları, iskelet. İçerik:
   başlama kararları (G0, G1) · bağlayıcı kaynak sırası · çekirdek parçalar ve paket ilkeleri (Windows'ta yerel eklenti yok) · veri modeli (modül başına
