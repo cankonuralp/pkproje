@@ -8,8 +8,8 @@
   390,
   430
  ],
- "toplam": 156,
- "temiz": 156,
+ "toplam": 164,
+ "temiz": 164,
  "durumlar": [
   {
    "ad": "raporlar · denetçinin listesi + imza şeridi",
@@ -1408,6 +1408,78 @@
   },
   {
    "ad": "onaylar · tamamlanan rapor ekranı (Revizeye gönder)",
+   "gen": 430,
+   "temiz": true,
+   "tasma": 0,
+   "disari": [],
+   "kucukAlan": [],
+   "alan": 0
+  },
+  {
+   "ad": "onaylar · denetçi bakışı, imzamı bekleyen raporlar (BB4)",
+   "gen": 320,
+   "temiz": true,
+   "tasma": 0,
+   "disari": [],
+   "kucukAlan": [],
+   "alan": 0
+  },
+  {
+   "ad": "onaylar · denetçi bakışı, imzamı bekleyen raporlar (BB4)",
+   "gen": 360,
+   "temiz": true,
+   "tasma": 0,
+   "disari": [],
+   "kucukAlan": [],
+   "alan": 0
+  },
+  {
+   "ad": "onaylar · denetçi bakışı, imzamı bekleyen raporlar (BB4)",
+   "gen": 390,
+   "temiz": true,
+   "tasma": 0,
+   "disari": [],
+   "kucukAlan": [],
+   "alan": 0
+  },
+  {
+   "ad": "onaylar · denetçi bakışı, imzamı bekleyen raporlar (BB4)",
+   "gen": 430,
+   "temiz": true,
+   "tasma": 0,
+   "disari": [],
+   "kucukAlan": [],
+   "alan": 0
+  },
+  {
+   "ad": "onaylar · denetçi bakışı, diğer belgeler (bordro, zimmet, eğitim)",
+   "gen": 320,
+   "temiz": true,
+   "tasma": 0,
+   "disari": [],
+   "kucukAlan": [],
+   "alan": 0
+  },
+  {
+   "ad": "onaylar · denetçi bakışı, diğer belgeler (bordro, zimmet, eğitim)",
+   "gen": 360,
+   "temiz": true,
+   "tasma": 0,
+   "disari": [],
+   "kucukAlan": [],
+   "alan": 0
+  },
+  {
+   "ad": "onaylar · denetçi bakışı, diğer belgeler (bordro, zimmet, eğitim)",
+   "gen": 390,
+   "temiz": true,
+   "tasma": 0,
+   "disari": [],
+   "kucukAlan": [],
+   "alan": 0
+  },
+  {
+   "ad": "onaylar · denetçi bakışı, diğer belgeler (bordro, zimmet, eğitim)",
    "gen": 430,
    "temiz": true,
    "tasma": 0,

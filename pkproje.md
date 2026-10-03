@@ -2276,6 +2276,14 @@ düzenle diyip ilgili şeyleri düzenleyebilmeli, denetçi güncelle dediğin de
 göre düzeltebilmeli (örneğin firma ünvanı adres vb) ama planlamacı direk raporun içine ve veya plana etki edip denetçinin işine karışamaması için
 denetçi güncelle demeden olmamalı. dikkat et ne demek istediğimi iyi analiz et her denetçinin raporuna sadece kendisi müdahele edebilmeli."*
 → §3.4 Plan künyesi, §11 263.
+Aynı gün (reisim birebir): *"onaylar kısmına raporlar harici diğer kısmı eklemeni istemiştim, maaş bordro imzaları, zimmet , t"* + *"tüm
+imzalamalar buradan yürütülecek diye"* → Onaylar'a denetçi bakışı: imzamı bekleyen raporlar (son imza) + Diğer belgeler (§11 264). ·
+*"muhasebe kısmında maaş bordrosu gönder tuşu olsun ve personellere maaş bordrosu göndersin imzalamaları için eğer bir format varsa format yoksa el
+ile yükleyip gönderme seçeneği olsun her personele özel maaş bordrosunu yükleyip imzaya yollasın muhasebeci"* · *"söylediğim her şeyi yap
+söyleyipte yapmadıın şeyler de olmuş bi maket turu at bana sunum yap son durumu"* · *"bu say botu plan içinde değil her yer de gözükecek şekilde
+tekrar kurgula ve daha şık bi tasarım yap daha yuvarlak daha ilgi çekici olsun , onu eğitme işini maket bittikten sonra mı yapalım önce mi öneri
+ver ?"* · **makette son tur:** *"devam et tüm işleri bitir, sonra koda geçelim yoksa buradan test etmek artık manasızlaştı devamını koddan yaparız
+kod kısmına başlamadan önce tekrar konuşalım"* → kalan maket işleri (BB4–BB7) biter; koda geçmeden önce reisim'le konuşulur.
 
 **Açık kalanlar:** ~~Ana sayfada İSGGM duyuruları~~ (2026-09-27: makette eklendi; okuma işi uygulamada) (reisim 2026-09-26: *"Ana sayfada isgüm duyurularını gösterebilir miyiz ? Bunu
 yapılacaklar listesine ekle"*; öneri: ÇSGB İSGGM duyurular sayfası — https://www.csgb.gov.tr/isggm/duyurular/ — sunucuda günde birkaç kez
@@ -2314,6 +2322,14 @@ revizyon, alan kopyalama, hafif kusur devri, meslek eşleşme denetimi).
 - Emsal ürünler: https://opwire.app/iso-17020-periyodik-kontrol-yazilimi/ · https://17020muayene.vidco.com.tr/ · https://akuple.com/asansor-kontrol-yazilimi/ · https://ensyazilim.com/
 
 ## 11 · Değişiklik günlüğü
+- 2026-10-03 (264): **Onaylar: bütün imzalar tek yerde — denetçi bakışı** (§9 elli ikinci tur). Onaylar'da "Makette bakış" dört kişi (Mekanik
+  yönetici, Elektrik yönetici, Mert Kaya · denetçi, Elif Aydın · denetçi; uygulamada herkes kendi rolüyle görür). Denetçide iki sekme:
+  **İmzamı bekleyen raporlar** (yönetici onayladı → son imza; Görüntüle · İmzala, birden çoksa Hepsini imzala; imza penceresi firmanın
+  yöntemiyle, her rapor ayrı imza, PIN bir kez; imzalanan rapor tamamlanır, müşteriye açılır, firmanın deposuna arşivlenir) ve **Diğer
+  belgeler** (bordro, zimmet, eğitim, araç tutanağı). Örnek veri: Mert Kaya'ya Eylül bordrosu + zimmet formu (bekliyor), eğitim formu (imzalı);
+  Elif Aydın'a Eylül bordrosu. Raporlar'daki imza şeridi makette yerinde kaldı (mobil telefon ve indir-imzala-yükle denemeleri orada); kodda
+  imzanın tek merkezi Onaylar. Bir denetim gerekçeyle güncellendi (Onaylar balonu 4 → 4 rapor + 2 belge). Ölçüm: m9 328/328, etkileşim 55/55,
+  telefon 164/164; m1, m14, araçlar tam; olumsuz kanıt eski kodla 54/55.
 - 2026-10-03 (263): **Plan künyesi: planlamacı Düzenle, denetçi Güncelle; SGK DETSİS no geri** (§9 elli ikinci tur). Plan içinde Firma adı, Adres,
   İSG-KATİP sözleşme ID, SGK DETSİS no; "Makette bakış" (Mert Kaya · denetçi / Zeynep Arslan · planlamacı; uygulamada yok). Planlamacı Düzenle →
   dört alan → Kaydet (plan kaydı + hareket). Denetçi şeritte değişen alanları görür; Güncelle plan ekranını ve yalnız kendi taslak raporlarını

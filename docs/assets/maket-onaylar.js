@@ -15,11 +15,18 @@
      mekanik yönetici Selin Yıldız (#/…), elektrik yönetici Can Öztürk (#/…?brans=e). Rapor ekranında bakış raporun branşından. */
   var BAKIS = "m", BEN = "sy", BENIM = "m", BRANS = "m";
   var YONETICI = { m: { k: "sy", rol: "Mekanik yönetici · Denetçi" }, e: { k: "co", rol: "Elektrik yönetici" } };
-  var ek = function () { return BAKIS === "e" ? "?brans=e" : ""; };
+  /* BB4 (2026-10-03, reisim: "onaylar kısmına raporlar harici diğer kısmı eklemeni istemiştim, maaş bordro imzaları, zimmet , t" + "tüm
+     imzalamalar buradan yürütülecek"): denetçi bakışı — imzasını bekleyen raporlar (son imza) + Diğer belgeler (bordro, zimmet, eğitim, araç
+     tutanağı); her imza Onaylar'dan. */
+  var DENETCI = { mk: "Denetçi · mekanik", ea: "Denetçi · elektrik" }, DEN = null;
+  var BAKISLAR = [["m", "Mekanik yönetici", "#/"], ["e", "Elektrik yönetici", "#/?brans=e"], ["mk", "Mert Kaya · denetçi", "#/?kisi=mk"], ["ea", "Elif Aydın · denetçi", "#/?kisi=ea"]];
+  var ek = function () { return BAKIS === "e" ? "?brans=e" : DEN ? "?kisi=" + DEN : ""; };
   function bakisKur(b) {
-    BAKIS = BRANS = BENIM = b; BEN = YONETICI[b].k; MK.BEN = BEN;
+    BAKIS = b; DEN = DENETCI[b] ? b : null;
+    if (DEN) BEN = b; else { BRANS = BENIM = b; BEN = YONETICI[b].k; }
+    MK.BEN = BEN;
     var u = document.querySelector(".a-kullanici"), p = MV.kisi(BEN);
-    if (u && p) { u.querySelector(".a-avatar").textContent = MV.bas(p.ad); u.querySelector(".a-kullanici-ad").textContent = p.ad; u.querySelector(".a-kullanici-rol").textContent = YONETICI[b].rol; }
+    if (u && p) { u.querySelector(".a-avatar").textContent = MV.bas(p.ad); u.querySelector(".a-kullanici-ad").textContent = p.ad; u.querySelector(".a-kullanici-rol").textContent = DEN ? DENETCI[b] : YONETICI[b].rol; }
     if (MK.takipCiz) MK.takipCiz();
   }
   var brans = function (r) { return MV.tur(MV.ekipman(r.kod).tur).b; };
@@ -64,15 +71,39 @@
   /* 192 (2026-09-29): denetçinin revize istekleri — seçili branşın tamamlanan raporları */
   var istekler = function () { return MV.RAPORLAR.filter(function (r) { return r.revizeIstek && r.durum === "imzali" && brans(r) === BRANS; }).sort(function (a, b) { return a.revizeIstek.zaman < b.revizeIstek.zaman ? 1 : -1; }); };
   var istekAdres = function () { return "#/istekler" + ek(); };
-  function sekmeler(gor) {   /* gor: "kuyruk" · "tum" · "istek" · "pasif" */
-    $("a-uyari").innerHTML = '<div class="a-pano-anahtar a-bolum-serit"><span class="a-etiket a-etiket-satir">Makette bakış</span><div class="a-sekmeler" role="group" aria-label="Bakış">' +
-        [["m", "Mekanik yönetici"], ["e", "Elektrik yönetici"]].map(function (x) { return '<a class="a-sekme" href="#/' + (x[0] === "e" ? "?brans=e" : "") + '"' + (BAKIS === x[0] ? ' aria-current="page"' : "") + ">" + x[1] + "</a>"; }).join("") + "</div></div>" +
+  var bekleyenBelge = function () { return MV.belgeOnaylari(BEN).filter(function (x) { return x.durum === "bekliyor"; }).length; };
+  function sekmeler(gor) {   /* gor: "kuyruk" · "tum" · "istek" · "pasif" · "diger" · "imza" (denetçi) */
+    var bakis = '<div class="a-pano-anahtar a-bolum-serit"><span class="a-etiket a-etiket-satir">Makette bakış</span><div class="a-sekmeler" role="group" aria-label="Bakış">' +
+        BAKISLAR.map(function (x) { return '<a class="a-sekme" href="' + x[2] + '"' + (BAKIS === x[0] ? ' aria-current="page"' : "") + ">" + x[1] + "</a>"; }).join("") + "</div></div>";
+    if (DEN) { $("a-uyari").innerHTML = bakis + '<div class="a-sekmeler a-bolum-serit" role="group" aria-label="Onaylar">' +
+      '<a class="a-sekme" href="#/' + ek() + '" aria-pressed="' + (gor === "imza") + '">İmzamı bekleyen raporlar <b>' + imzaBekleyen().length + "</b></a>" +
+      '<a class="a-sekme" href="#/diger' + ek() + '" aria-pressed="' + (gor === "diger") + '">Diğer belgeler <b>' + bekleyenBelge() + "</b></a></div>"; return; }
+    $("a-uyari").innerHTML = bakis +
       '<div class="a-sekmeler a-bolum-serit" role="group" aria-label="Onaylar">' +
       '<a class="a-sekme" href="#/' + ek() + '" aria-pressed="' + (gor === "kuyruk") + '">Onay kuyruğu · ' + MV.bransAd(BAKIS).toLocaleLowerCase("tr") + " <b>" + kuyruk().length + "</b></a>" +
       '<a class="a-sekme" href="' + tumAdres() + '" aria-pressed="' + (gor === "tum") + '">Tüm raporlar <b>' + tumu().length + "</b></a>" +
       '<a class="a-sekme" href="' + istekAdres() + '" aria-pressed="' + (gor === "istek") + '">Revize istekleri <b>' + istekler().length + "</b></a>" +
       '<a class="a-sekme" href="#/pasif' + ek() + '" aria-pressed="' + (gor === "pasif") + '">Pasif raporlar <b>' + pasifler().length + "</b></a>" +
-      '<a class="a-sekme" href="#/diger' + ek() + '" aria-pressed="' + (gor === "diger") + '">Diğer belgeler <b>' + MV.belgeOnaylari(BEN).filter(function (x) { return x.durum === "bekliyor"; }).length + "</b></a></div>";
+      '<a class="a-sekme" href="#/diger' + ek() + '" aria-pressed="' + (gor === "diger") + '">Diğer belgeler <b>' + bekleyenBelge() + "</b></a></div>";
+  }
+  /* ── İMZAMI BEKLEYEN RAPORLAR (denetçi, BB4): yönetici onayladı → muayene uzmanının son imzası; imza penceresi firmanın yöntemiyle (mobil /
+     e-imza). İmzalanan rapor tamamlanır, müşteriye açılır, firmanın deposuna arşivlenir (MV.bulutaKaydet). */
+  var imzaBekleyen = function () { return MV.RAPORLAR.filter(function (r) { return r.kisi === BEN && r.durum === "onaylandi" && !r.pasif; }).sort(function (a, b) { return (a.onay || {}).zaman < (b.onay || {}).zaman ? -1 : 1; }); };
+  var IMZA_SUTUN = [
+    { k: "no", baslik: "Rapor no", kart: "ust", sira: 1, hucre: function (r) { var ts = MV.tesis(r.tesis); return '<a class="a-no" href="' + MK.adres(14, "#/r/" + r.no) + '">' + r.no + "</a>" + kirp(MV.musteri(ts.m).kisa + " / " + ts.ad, "a-alt-satir"); } },
+    SUTUN[1],
+    { k: "onay", baslik: "Onaylandı", kart: "govde", sira: 3, hucre: function (r) { return '<span class="a-kart-etiket">Onaylandı</span><span><span class="a-tarih-gun">' + (r.onay ? MK.zamanYaz(r.onay.zaman) : "—") + "</span>" + (r.onay && MV.kisi(r.onay.kim) ? kirp(MV.kisi(r.onay.kim).ad, "a-alt-satir") : "") + "</span>"; } },
+    { k: "eylem", baslik: "İşlem", gizliBaslik: true, kart: "eylem", sira: 9, hucre: function (r) {
+      return '<div class="a-eylem"><div class="a-eylem-tuslar">' + MK.git({ hedef: 14, hash: "#/r/" + r.no, ad: "Görüntüle", ikon: "eye" }) +
+        MK.tus({ eylem: "rapor-imzala", ad: "İmzala", ikon: "file-signature", veri: { no: r.no } }) + "</div></div>"; } }
+  ];
+  function imzaCiz() {
+    var l = imzaBekleyen(); sekmeler("imza"); $("a-suzgec-kap").innerHTML = ""; $("a-sayfa").innerHTML = "";
+    $("a-sayac").innerHTML = "<b>" + l.length + "</b> rapor imzanızı bekliyor";
+    $("a-liste").innerHTML = l.length ? (l.length > 1 ? '<div class="a-serit a-serit-uyari a-bolum-serit">' + ikon("file-signature", "a-ikon-kucuk") + "<span><b>" + l.length + " rapor imzanızı bekliyor</b> · her rapor ayrı imzalanır, PIN bir kez</span>" +
+        MK.tus({ eylem: "rapor-imzala", ad: "Hepsini imzala (" + l.length + ")", sinif: "a-tus-ikincil a-serit-tus" }) + "</div>" : "") +
+      MK.tablo({ baslik: "İmzamı bekleyen raporlar", sinif: "a-tablo-onay", sutunlar: IMZA_SUTUN, kayitlar: l })
+      : MK.bos({ ikon: "circle-check", baslik: "İmzanızı bekleyen rapor yok", metin: "Yöneticiniz raporunuzu onaylayınca son imza için burada görünür." });
   }
   var PASIF_SUTUN = [SUTUN[0], SUTUN[1], SUTUN[2],
     { k: "pasif", baslik: "Pasife alındı", kart: "govde", sira: 4, hucre: function (r) { return '<span class="a-kart-etiket">Pasife alındı</span><span class="a-tarih-gun">' + MK.zamanYaz(r.pasifZaman) + "</span>"; } },
@@ -263,9 +294,10 @@
 
   /* ── GÖRÜNÜM ────────────────────────────────────────────────────────────────────────────────────────── */
   function rota() {
-    var h = location.hash, y = h.replace(/\?.*$/, ""), m = /^#\/r\/([A-Za-z0-9-]+)(\/geri)?$/.exec(h), rp = m && MV.rapor(m[1]);
-    var b = m ? (rp ? brans(rp) : BAKIS) : /[?&]brans=e/.test(h) ? "e" : "m";
+    var h = location.hash, y = h.replace(/\?.*$/, ""), m = /^#\/r\/([A-Za-z0-9-]+)(\/geri)?$/.exec(h), rp = m && MV.rapor(m[1]), kk = /[?&]kisi=(mk|ea)/.exec(h);
+    var b = m ? (rp ? brans(rp) : DEN ? "m" : BAKIS) : kk ? kk[1] : /[?&]brans=e/.test(h) ? "e" : "m";
     if (b !== BAKIS || MK.BEN !== BEN) bakisKur(b);
+    if (DEN) return y === "#/diger" ? { v: "liste", diger: true } : { v: "liste", imza: true };
     if (y === "#/pasif") return { v: "liste", pasif: true };
     if (y === "#/diger") return { v: "liste", diger: true };
     if (y === "#/istekler") return { v: "liste", istek: true };
@@ -276,7 +308,7 @@
     var r = rota(), rp = r.no ? MV.rapor(r.no) : null;
     $("a-liste-gorunum").hidden = r.v !== "liste"; $("a-nesne").hidden = r.v === "liste";
     if (r.tum && TUM_BRANS !== BRANS) { MK.suzgecSifirla("t"); TUM_BRANS = BRANS; }   /* branş değişince süzgeç (denetçi, sayfa) baştan */
-    if (r.pasif) pasifCiz(); else if (r.diger) digerCiz(); else if (r.istek) istekCiz(); else if (r.tum) { $("a-suzgec-kap").innerHTML = MK.suzgecHtml("t"); MK.suzgecKur("t"); }
+    if (r.imza) imzaCiz(); else if (r.pasif) pasifCiz(); else if (r.diger) digerCiz(); else if (r.istek) istekCiz(); else if (r.tum) { $("a-suzgec-kap").innerHTML = MK.suzgecHtml("t"); MK.suzgecKur("t"); }
     else if (r.v === "liste") { $("a-suzgec-kap").innerHTML = MK.suzgecHtml("o"); MK.suzgecKur("o"); } else onayCiz(rp);
     document.title = (r.v === "rapor" ? (rp ? rp.no + " · onay" : "Rapor bulunamadı") : r.tum ? "Tüm raporlar · Onaylar" : r.diger ? "Diğer belgeler · Onaylar" : r.istek ? "Revize istekleri · Onaylar" : "Onaylar") + " · probata maket";
     if (odakla) { window.scrollTo(0, 0); var hh = document.querySelector("#a-icerik > :not([hidden]) h1"); if (hh) hh.focus({ preventScroll: true }); }
@@ -294,6 +326,15 @@
     MK.imzaAl({ belge: x.ad, imzacilar: [MV.kisi(BEN).ad], tamam: function (im) {
       x.durum = "imzali"; x.imza = im; MV.BELGE_ONAY = MV.BELGE_ONAY.slice(); digerCiz('#a-uyari [href^="#/diger"]'); if (MK.takipCiz) MK.takipCiz();
       MK.bildir(x.ad + " onaylandı ve imzalandı (" + MK.imzaYaz(im) + "); " + (MV.kisi(x.gonderen) || {}).ad + " görür.");
+    } });
+  };
+  X["rapor-imzala"] = function (el) {
+    var l = el.dataset.no ? [MV.rapor(el.dataset.no)].filter(Boolean) : imzaBekleyen(); if (!l.length) return;
+    MK.imzaAl({ belge: l.length > 1 ? l.length + " muayene raporu (" + l.map(function (r) { return r.no; }).join(", ") + ")" : l[0].no + " · muayene raporu", imzacilar: [MV.kisi(BEN).ad], tamam: function (im) {
+      l.forEach(function (r) { r.durum = "imzali"; r.imza = { zaman: im.zaman, yontem: im.yontem }; MV.bulutaKaydet(r); });
+      MV.RAPORLAR = MV.RAPORLAR.slice(); imzaCiz(); if (MK.takipCiz) MK.takipCiz();
+      var o = document.querySelector('#a-uyari [aria-pressed="true"]'); if (o) o.focus();
+      MK.bildir(l.length + " rapor imzalandı (" + MK.imzaYaz(im) + "), tamamlandı ve müşteriye açıldı.");
     } });
   };
   X["belge-geri"] = function (el) {

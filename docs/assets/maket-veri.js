@@ -1716,7 +1716,12 @@
     { id: "bo2", tur: "egitim", ad: "Yüksekte çalışma eğitimi katılım formu", kisi: "sy", gonderen: "ga", gonderildi: "2026-09-21T10:30", durum: "bekliyor", dosya: "egitim-katilim-formu.pdf" },
     { id: "bo3", tur: "zimmet", ad: "Zimmet teslim formu · ölçüm cihazı", kisi: "sy", gonderen: "ga", gonderildi: "2026-09-19T09:15", durum: "bekliyor", dosya: "zimmet-teslim-formu.pdf" },
     { id: "bo4", tur: "bordro", ad: "Ağustos 2026 maaş bordrosu", kisi: "sy", gonderen: "ga", gonderildi: "2026-08-25T16:00", durum: "imzali", imza: { yontem: "mobil", zaman: "2026-08-26T09:12" }, ay: "2026-08", dosya: "bordro-2026-08.pdf" },
-    { id: "bo5", tur: "bordro", ad: "Eylül 2026 maaş bordrosu", kisi: "co", gonderen: "ga", gonderildi: "2026-09-22T17:12", durum: "bekliyor", ay: "2026-09", dosya: "bordro-2026-09.pdf" }
+    { id: "bo5", tur: "bordro", ad: "Eylül 2026 maaş bordrosu", kisi: "co", gonderen: "ga", gonderildi: "2026-09-22T17:12", durum: "bekliyor", ay: "2026-09", dosya: "bordro-2026-09.pdf" },
+    /* BB4 (2026-10-03): denetçilerin de imzası Onaylar'da — bordro, zimmet, eğitim */
+    { id: "bo6", tur: "bordro", ad: "Eylül 2026 maaş bordrosu", kisi: "mk", gonderen: "ga", gonderildi: "2026-09-22T17:14", durum: "bekliyor", ay: "2026-09", dosya: "bordro-2026-09.pdf" },
+    { id: "bo7", tur: "zimmet", ad: "Zimmet teslim formu · ölçüm cihazı", kisi: "mk", gonderen: "ga", gonderildi: "2026-09-20T11:00", durum: "bekliyor", dosya: "zimmet-teslim-formu.pdf" },
+    { id: "bo8", tur: "egitim", ad: "Kaldırma ekipmanları eğitimi katılım formu", kisi: "mk", gonderen: "ga", gonderildi: "2026-09-18T15:20", durum: "imzali", imza: { yontem: "mobil", zaman: "2026-09-18T16:02" }, dosya: "egitim-katilim-formu.pdf" },
+    { id: "bo9", tur: "bordro", ad: "Eylül 2026 maaş bordrosu", kisi: "ea", gonderen: "ga", gonderildi: "2026-09-22T17:16", durum: "bekliyor", ay: "2026-09", dosya: "bordro-2026-09.pdf" }
   ];
   MV.belgeOnaylari = function (ben) { return MV.BELGE_ONAY.filter(function (x) { return x.kisi === ben; }); };
   MV.takip = function (no, ben) { var f = MV.TAKIP[no]; return f ? f(ben) : null; };
