@@ -2211,6 +2211,9 @@ komut satırı aracı (KOD-GECIS Y1). **Toplu içe aktarma** makette (§11 245).
 Aynı gün (reisim birebir): *"2 önerinide kabul ediyorum, yeni firmaya hizmet için site açma işini nasıl yapabileceğimizi nasıl bi arapanel
 işimizi görür anlayamadım örnek göster"* → **G0 kabul:** "başlayalım" denince bütün maketler o günkü hâliyle onaylı sayılır. **G1 kabul:** geçmiş
 tarihe plan açılır, Plan aç'ta uyarı şeridiyle (§11 246). Firma açma örneği: §11 247.
+Firma açma için "ara panel" = firmaların değil, yalnız bizim girdiğimiz tek sayfalık yönetim ekranı (ör. yonetim.probata.com.tr); firma
+başına site kurulmaz, tek form bir kayıt açar ve adres hemen çalışır. Örnek makette: `maket/yonetim.html` (§11 247). Öneri: komut satırı aracı
+yerine bu küçük sayfa (reisim'in terminale ihtiyacı kalmaz); karar reisim'de.
 Aynı gün ara mesajlar (reisim birebir): *"Şirket logosuda firma ayarlarından girilsin , raporlara otomatik çekilsin"* (§11 238) · *"Format
 tasarımcısında herhangi bir başlığa tıklayınca en baş arıyor, en başa atmasın başlığı düzenlediğimiz yere odaklansın(telefonda)"* (§11 237).
 
@@ -2251,6 +2254,13 @@ revizyon, alan kopyalama, hafif kusur devri, meslek eşleşme denetimi).
 - Emsal ürünler: https://opwire.app/iso-17020-periyodik-kontrol-yazilimi/ · https://17020muayene.vidco.com.tr/ · https://akuple.com/asansor-kontrol-yazilimi/ · https://ensyazilim.com/
 
 ## 11 · Değişiklik günlüğü
+- 2026-10-03 (247): **probata yönetim — firma açma örneği** (§9 elli ikinci tur). `maket/yonetim.html`: firmaların görmediği, yalnız bizim
+  ekibin sayfası (menüsüz kabuk, probata logosu + "Yönetim"). Firmalar listesi (ünvan, adres `xxx.probata.com.tr`, kısa kod, durum, açılış,
+  kullanıcı) · **Firma aç**: ticari ünvan → alt alan adı ve kısa kod önerilir (elle değiştirilebilir), adres canlı görünür; ilk firma yöneticisi
+  ad + e-posta; denetim: zorunlu alanlar, alt alan adı 3–30 a–z 0–9 tire, kayıtlı / ayrılmış ad (www, yonetim, api …), kısa kod iki harf ve eşsiz;
+  onay penceresi → firma sayfası: **geçici parola yalnız bir kez** (Kopyala; sayfadan çıkınca bir daha görünmez), sonrası adımları (ilk giriş,
+  Firma ayarları, Toplu içe aktarma, Personel) · **Dondur** (onaylı; veri silinmez) / **Etkinleştir** · yöneticiye yeni geçici parola. Firmalar
+  uydurma. KOD-GECIS Y1: komut satırı aracı yerine bu küçük sayfa önerildi, karar reisim'de.
 - 2026-10-03 (246): **Geçmiş tarihe plan açılır — uyarıyla (G1)** (§9 elli ikinci tur). Plan aç'ta plan günü bugünden önceyse engel kalktı;
   sözleşme uyarılarının üstünde şerit: "Plan günü geçmiş bir tarih: GG.AA.YYYY." Plan yine açılır. Rapor engeli değişmedi (yalnız ileri tarih).
   KOD-GECIS: G0 ve G1 kabul; ENGEL 10 → UYARI listesine.

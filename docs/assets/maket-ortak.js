@@ -219,11 +219,17 @@
     /* 2026-09-24 (M11): MÜŞTERİ PANELİ kabuğu — firmanın modül menüsü yok; üst çubukta marka, tema ve müşteri kullanıcısı.
        o.musteri = { ad: müşteri kısa adı, firma: muayene firmasının adı }. Aynı üst çubuk sınıfları (ikinci aile yok).
        2026-09-26 (reisim 112): üst çubukta muayene firmasının logosu (makette logo yeri + firma adı), probata logosu yok. */
-    if (o.musteri) {
+    /* 2026-10-03 (reisim: "nasıl bi arapanel işimizi görür anlayamadım örnek göster"): o.yonetim — probata YÖNETİM sayfası (yalnız bizim
+       ekip; firmaların modül menüsü yok). Aynı menüsüz kabuk: solda probata logosu + "Yönetim" yazısı. */
+    if (o.musteri || o.yonetim) {
       kok.className = "a-kabuk a-kabuk-musteri";
       kok.innerHTML = '<div class="a-govde"><header class="a-ust">' +
-          '<span class="a-ust-firma-logo" role="img" aria-label="' + kacis(o.musteri.firma || "Firma") + ' logosu">Logo</span>' +
-          '<span class="a-ust-panel">' + kacis(o.musteri.firma || "Müşteri paneli") + '</span><div class="a-ust-bosluk"></div>' +
+          (o.yonetim
+            ? '<img class="a-ust-logo a-ust-logo-acik" src="../marka/probata-yatay-renkli.svg" alt="probata" width="112" height="28">' +
+              '<img class="a-ust-logo a-ust-logo-koyu" src="../marka/probata-yatay-koyu-zemin.svg" alt="probata" width="112" height="28">' +
+              '<span class="a-ust-panel">' + kacis(o.yonetim) + '</span><div class="a-ust-bosluk"></div>'
+            : '<span class="a-ust-firma-logo" role="img" aria-label="' + kacis(o.musteri.firma || "Firma") + ' logosu">Logo</span>' +
+              '<span class="a-ust-panel">' + kacis(o.musteri.firma || "Müşteri paneli") + '</span><div class="a-ust-bosluk"></div>') +
           '<button class="a-ikon-tus" type="button" data-eylem="tema" id="a-tema-tus" aria-label="Temayı değiştir">' +
             '<svg class="a-ikon a-tema-ay" aria-hidden="true"><use href="' + IKON + 'moon"/></svg><svg class="a-ikon a-tema-gunes" aria-hidden="true"><use href="' + IKON + 'sun"/></svg></button>' +
           /* S1 (2026-09-30, reisim: "çıkış yap eklemen yeterli"): müşteri kullanıcısının menüsünde yalnız Çıkış yap (giriş sayfasına) */

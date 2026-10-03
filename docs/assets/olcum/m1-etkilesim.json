@@ -2,8 +2,8 @@
  "maket": "m1",
  "tarih": "2026-10-03",
  "arac": "tools/olc-bulut.mjs --etkilesim (başsız tarayıcı, 1920 açık tema; gen verilen denemede o genişlik)",
- "toplam": 119,
- "gecen": 119,
+ "toplam": 123,
+ "gecen": 123,
  "denemeler": [
   {
    "ad": "AA3: Personel › bordro Onaya gönder → kişinin Onaylar › Diğer belgelerine düşer, satırda Onay bekliyor",
@@ -836,6 +836,34 @@
    "gen": 1920,
    "sayfa": "maket/firma-ayarlari.html",
    "hash": "#/",
+   "gecti": true
+  },
+  {
+   "ad": "Yönetim: ünvandan alt alan adı + kısa kod önerilir, firma açılır (onaylı) → firma sayfası, adres, geçici parola, bildirim",
+   "gen": 1920,
+   "sayfa": "maket/yonetim.html",
+   "hash": "#/yeni",
+   "gecti": true
+  },
+  {
+   "ad": "Yönetim: geçici parola yalnız bir kez — listeye dönüp gelince görünmez; firma listede (4 firma)",
+   "gen": 1920,
+   "sayfa": "maket/yonetim.html",
+   "hash": "#/yeni",
+   "gecti": true
+  },
+  {
+   "ad": "Yönetim: boş form açılmaz; kayıtlı alt alan adı (deneme) ve kısa kod (DP), ayrılmış ad (www) reddedilir",
+   "gen": 1920,
+   "sayfa": "maket/yonetim.html",
+   "hash": "#/yeni",
+   "gecti": true
+  },
+  {
+   "ad": "Yönetim: firma dondurulur (onaylı) → Dondurulmuş, şerit, yeni parola kapalı; Etkinleştir geri açar",
+   "gen": 1920,
+   "sayfa": "maket/yonetim.html",
+   "hash": "#/f/f2",
    "gecti": true
   }
  ]
