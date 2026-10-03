@@ -2,8 +2,8 @@
  "maket": "m1",
  "tarih": "2026-10-03",
  "arac": "tools/olc-bulut.mjs --etkilesim (başsız tarayıcı, 1920 açık tema; gen verilen denemede o genişlik)",
- "toplam": 128,
- "gecen": 128,
+ "toplam": 127,
+ "gecen": 127,
  "denemeler": [
   {
    "ad": "AA3: Personel › bordro Onaya gönder → kişinin Onaylar › Diğer belgelerine düşer, satırda Onay bekliyor",
@@ -356,13 +356,6 @@
    "gecti": true
   },
   {
-   "ad": "Verileri dışa aktar: seçilen bölümlerle ZIP iner, son dışa aktarımlarda görünür ve kalıcı; hiç bölüm seçilmezse uyarır, inmez",
-   "gen": 1920,
-   "sayfa": "maket/firma-ayarlari.html",
-   "hash": "#/",
-   "gecti": true
-  },
-  {
    "ad": "Firma ayarları · Bulut kaydı: bulut seçilir (yurt dışı uyarısı), hesap bağlanır, imzalı raporların hepsi gönderilir; kapalı müşteri atlanır; kalıcı",
    "gen": 1920,
    "sayfa": "maket/firma-ayarlari.html",
@@ -374,13 +367,6 @@
    "gen": 1920,
    "sayfa": "maket/musteriler.html",
    "hash": "#/m/m1",
-   "gecti": true
-  },
-  {
-   "ad": "Verileri dışa aktar: kod adıyla kalan sütun yok, okunmayan hücre ([object …], undefined, NaN) yok; kimlikler ada çevrili",
-   "gen": 1920,
-   "sayfa": "maket/firma-ayarlari.html",
-   "hash": "#/",
    "gecti": true
   },
   {
@@ -433,7 +419,14 @@
    "gecti": true
   },
   {
-   "ad": "Firma ayarları: bölümler kart, geniş ekranda yan yana sütunlar ve solda bölüm listesi; her bölüm üsttekinin hemen altında (boşluk ≤ 18px, Z1: dışa aktar aşağıda kalmaz); fiyat listesi tam genişlik; bölüm listesinden bölüme gidilir",
+   "ad": "Firma ayarları: bölümler kart, geniş ekranda yan yana sütunlar ve solda bölüm listesi; her bölüm üsttekinin hemen altında (boşluk ≤ 18px; 2026-10-03: yapay zekâ ve personel belgeleri tam genişlik, dışa aktar kalktı); fiyat listesi tam genişlik; bölüm listesinden bölüme gidilir",
+   "gen": 1920,
+   "sayfa": "maket/firma-ayarlari.html",
+   "hash": "#/",
+   "gecti": true
+  },
+  {
+   "ad": "Firma ayarları: Yapay zekâ açılınca öteki bölümler yerinden oynamaz (yapay zekâ ve personel belgeleri tam genişlik); Verileri dışa aktar yok",
    "gen": 1920,
    "sayfa": "maket/firma-ayarlari.html",
    "hash": "#/",
