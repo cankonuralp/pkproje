@@ -7,6 +7,7 @@ import { useBildir } from "../../components/bildirim/Bildirim";
 import { Alan, FormBolum, FormEylem, FormIzgara, FormSayfa, Girdi } from "../../components/form/Form";
 import { Tus } from "../../components/tus/Tus";
 import { UzunTus } from "../../components/tus/UzunTus";
+import { ekipmanKodu } from "../../sema/ortak";
 import stil from "./vitrin.module.css";
 
 /* alan ve girdisi aynı id ile bağlanır: id tek sabitte (çift id kilidi) */
@@ -17,6 +18,9 @@ export function VitrinBilgi() {
   const bildir = useBildir();
   const [kod, setKod] = useState("");
   const [kosu, setKosu] = useState(0);
+  /* sunucunun kullanacağı şemanın aynısı (src/sema/ortak.ts) — ekranda anında, sunucuda kesin */
+  const kodSonuc = ekipmanKodu.safeParse(kod);
+  const kodHata = kod && !kodSonuc.success ? kodSonuc.error.issues[0].message : undefined;
   return (
     <section className={stil.bolum} aria-labelledby="v-bilgi">
       <h2 id="v-bilgi">Bilgi ve form</h2>
@@ -41,8 +45,8 @@ export function VitrinBilgi() {
       <FormSayfa>
         <FormBolum baslik="Ekipman" id="v-fb-ekipman">
           <FormIzgara>
-            <Alan id={ID.kod} etiket="Ekipman kodu" zorunlu hata={kod && !/^[A-Z]{2}-\d+$/.test(kod) ? "Kod iki harf, tire ve sayıdır (ör. KP-10)." : undefined}>
-              <Girdi id={ID.kod} value={kod} onChange={(e) => setKod(e.target.value.toLocaleUpperCase("tr"))} hata={!!kod && !/^[A-Z]{2}-\d+$/.test(kod)} />
+            <Alan id={ID.kod} etiket="Ekipman kodu" zorunlu hata={kodHata}>
+              <Girdi id={ID.kod} value={kod} onChange={(e) => setKod(e.target.value)} hata={!!kodHata} />
             </Alan>
             <Alan id={ID.seri} etiket="Seri no" uyari="Bu seri no başka bir kayıtta da var.">
               <Girdi id={ID.seri} defaultValue="SN-0001" mesajli />

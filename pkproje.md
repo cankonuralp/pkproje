@@ -2335,6 +2335,10 @@ revizyon, alan kopyalama, hafif kusur devri, meslek eşleşme denetimi).
 - Emsal ürünler: https://opwire.app/iso-17020-periyodik-kontrol-yazilimi/ · https://17020muayene.vidco.com.tr/ · https://akuple.com/asansor-kontrol-yazilimi/ · https://ensyazilim.com/
 
 ## 11 · Değişiklik günlüğü
+- 2026-10-03 (279): **K0 Hazırlık 7: ortak şema kitaplığı** (`src/sema/ortak.ts`, zod; KOD-GECIS §2 "sunucu ve istemci aynı şemayı paylaşır") — K0 bitti.
+  Yapı taşları: metin · e-posta (kırpılır, küçülür) · parola (karar 37) · ekipman kodu (A–Z 0–9 tire 3–20; büyük harfe yerelden bağımsız, i → I) · cihaz kodu ·
+  fatura no · tarih / zaman (takvimde olmayan gün yok) · tutar (kuruş tam sayı; "1.234,56") · sürüm · kimlik; hatalar alan → ileti haritası. zod'un kendi
+  iletileri Türkçe. Vitrin formundaki ekipman kodu aynı şemayı kullanır. Birim 7/7 + bozan 3/3.
 - 2026-10-03 (278): **K0 Hazırlık 6: bilgi yüzleri, bilgi listesi, koşul listesi, form sayfası, uzun tuş** — K0'ın ortak bileşenleri tamam (kalıp 20 a, b, d;
   kalıp 12). Yüz: sayı + not, uyarı notu uyarı renginde, bağlantıysa listeye gider; telefonda iki sütun. Form: bölüm kartları (en az 440 px), iki sütunlu
   ızgara, alan altında yalnız hata / uyarı / sonuç (girdiye bağlı), telefonda yapışkan tuş çubuğu. Uzun tuş: iş sürerken ikinci basış yok sayılır, dönen

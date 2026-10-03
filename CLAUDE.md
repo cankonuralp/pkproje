@@ -81,6 +81,7 @@ pkproje/
   src/app/                  sayfalar (iş mantığı YOK): Planlar ana sayfa + modül başına bir rota klasörü (kayıtla birebir)
   src/modules/moduller.ts   MODÜL KAYDI — yan menünün ve rotaların tek kaynağı (15 modül, 6 grup, onaylı maketle aynı; 2026-09-25 Kullanıcılar Personel'e katıldı; 2026-09-26 Ekipmanlar planın içine; 2026-09-28 Talepler eklendi, Standartlar → Dökümanlar, Eğitimler Dökümanlar'ın içinde)
   src/modules/<modül>/      ★ her iş modülü: server/ (veri erişimi + iş kuralları, dışa açılan fonksiyonlar) · ui/ · şema · testler
+  src/sema/ortak.ts         ORTAK ŞEMA (zod): girdi doğrulamanın tek kaynağı, sunucu ve istemci aynı şemayı kullanır (2026-10-03)
   src/server/db/            gömülü PostgreSQL (gomulu.ts) · göç koşucusu (goc.ts, gocler/NNNN_ad.sql, her göç idempotent) ·
                             kiracı süzgeçli TEK erişim katmanı (kiraci.ts: kiraciIcinde) — pg YALNIZ burada içe aktarılır
   src/server/kiraci/        kiracı çözümleme (alt alan adı → firma kısa adı) · ★ yetki (tek `canDo`) · ★ güvenli yazıcılar

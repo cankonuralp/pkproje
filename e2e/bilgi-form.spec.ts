@@ -37,11 +37,11 @@ test("bilgi listesi ve koşullar: geniş öge telefonda tam satır; koşul türl
 test("form alanı: hata altında, girdi geçersiz ve mesajına bağlı; uyarı kaydı durdurmaz", async ({ page }) => {
   const kod = page.getByLabel("Ekipman kodu");
   await expect(page.locator('label[for="v-kod"]')).toContainText("zorunlu");
-  await kod.fill("kp");
+  /* ileti ortak şemadan (src/sema/ortak.ts ekipmanKodu) — sunucuyla aynı kural */
+  await kod.fill("k");
   await expect(kod).toHaveAttribute("aria-invalid", "true");
-  await expect(kod).toHaveAccessibleDescription("Kod iki harf, tire ve sayıdır (ör. KP-10).");
+  await expect(kod).toHaveAccessibleDescription("Kod: A–Z, 0–9, tire; 3–20 hane");
   await kod.fill("kp-10");
-  await expect(kod).toHaveValue("KP-10");
   await expect(kod).not.toHaveAttribute("aria-invalid", "true");
   await expect(page.getByLabel("Seri no")).toHaveAccessibleDescription("Bu seri no başka bir kayıtta da var.");
 });
