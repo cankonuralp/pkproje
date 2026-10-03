@@ -346,6 +346,12 @@ simgeleri ikon dosyalarından çıktı (51). **Onaylandı** (*"uygun"*) → uygu
 **Yorumlarım (5. tur; 29–31) — reisim kabul etti (*"tüm önerilerin uygun"*, 2026-09-23):** menü grupları ve sırası yukarıdaki gibi (her gün
 kullanılan üstte, tanımlar altta) · hareket kaydı plan içinde değil, rol × modül belirlenirken yöneticiye "Hareket kaydı"
 (denetim izi) olarak açılsın · bu tur uygunsa Planlar + plan içi dondurulur ve iskelet kalemi açılır.
+**Plan künyesi (2026-10-03, §9 elli ikinci tur, §11 263):** plan içinde Firma adı · Adres · İSG-KATİP sözleşme ID · **SGK DETSİS no** satırları
+(2026-09-29'da kaldırılan SGK satırı reisim'in 2026-10-03 sözüyle geri geldi). **Planlamacı "Düzenle"** ile dördünü değiştirir, Kaydet → plan
+kaydına düşer ve hareket kaydı yazılır; **denetçinin ekranına ve raporlarına kendiliğinden geçmez**. Denetçi plan ekranında ve raporda
+"Planlamacı plan bilgilerini değiştirdi" şeridini görür; **Güncelle**'ye basınca yeni künye onun plan ekranına ve **yalnız kendi taslak /
+geri gönderilmiş raporlarına** geçer; onaydaki ve imzalı raporlar değişmez, başka denetçinin raporuna dokunulmaz (her denetçi yalnız kendi
+raporuna müdahale eder). Yeni rapor denetçinin gördüğü künyeyle açılır; rapor PDF'i raporun kendi künyesinden çizilir.
 
 ### 3.5 · Numara sistemi (reisim 2026-09-23: *"mantıklı şekilde proje numarası atama sistemi kur, aynı şekilde raporlar için de eşsiz isimlendirmeler olmalı"*)
 **Karar:** üç numara da **firmada eşsizdir**; veritabanında benzersizlik kısıtı taşır. Ayrıntılar **karar** (17–21,
@@ -551,7 +557,8 @@ ekle / düzenle** · **sözleşme şablonu** · form: sözleşme hazırla.
 - **Sözleşmeler = firma ile fabrika arasındaki iş sözleşmesi** (reisim). Ayrı "İSG-KATİP kayıtları" sekmesi kalktı; M5 ve M13 birleşti.
 - **İSG-KATİP bilgisi iş sözleşmesinin içinde, tesis başına:** denetçi → **sözleşme ID** (reisim: *"sözleşme id denetçiye göre değişir"*).
   Kişi × tesis için tek güncel ID; yenisi girilince eskisi "önceki" olur.
-- **SGK DETSİS no tek yerde, tesiste** (M2); sözleşmede ve raporda oradan görünür (B).
+- **SGK DETSİS no tek yerde, tesiste** (M2); sözleşmede ve raporda oradan görünür (B). 2026-10-03: planlamacı planın künyesinde (firma adı,
+  adres, İSG-KATİP ID, SGK DETSİS no) plana özel düzeltme yapabilir; denetçi Güncelle'ye basınca raporlarına geçer (§3.4 Plan künyesi).
 - **ID'nin yolu (C, "ikisi de"):** sözleşmede girilir → plan açarken seçilen denetçinin ID'si kendiliğinden gelir → rapor plandan alır; ID yoksa
   plan açan el ile yazar ("sözleşmeye de kaydet") ve raporda da düzeltilebilir. **Plan açma ve rapor tarafı M6 / M8'in sırası gelince.**
 - **İSG-KATİP PDF'i her ID'nin yanında, isteğe bağlı** (D) · **onay tarihi isteğe bağlı** (E); girilmişse kontrolden sonraki onay yalnız
@@ -2262,6 +2269,13 @@ Aynı gün (reisim birebir, Firma ayarları ekran görüntüsüyle): *"ekranın 
 Aynı gün (reisim birebir, rapor Firma bilgileri ekran görüntüsüyle): *"şu tarih ve saat kısımlarında , tıklayınca takvim veya saat açılsın, silip yaza da bileyim ama her türlü takvim açılsın sadece yandaki tuşa basınca değil"* → §11 261. Ekipman Excel isteği (reisim birebir): *"ayrıca toplu ekipman yükleme derken örneğin ben bir müşteri oluşturdum teklif vermeden, eski müşterimdi, oluşturduğum müşterinin ekipmanlarını toplu excel ile aktarabilmeliyim sadece teklif verirken yapabiliyorum bunu ama plan açarkende işime yarar ona göre kurgula"* → §11 262. Aynı gün gelen öteki istekler (sırayla yapılıyor): müşterinin ekipmanlarını teklifsiz Excel'le yükleme (müşteri kartı + Plan aç) · İSG-KATİP sözleşme ID ve SGK DETSİS no plan ekranında elle, Kaydet · raporda SGK DETSİS no geri (*"raporlarda sgk destis no yu kaldrımışsın neden ? geri getir"* — 2026-09-29'daki "Plan içeriğinde SGK destis no kısmı yok olmalı" saha ekranından kaldırma diye uygulanmıştı) · planlamacı Düzenle / denetçi Güncelle (her rapora yalnız sahibi) · Onaylar'da bütün imzalar · Muhasebe'den bordro gönder · S.A.Y her sayfada · yapılmayan isteklerin taraması ve son durum sunumu.
 Aynı gün ara mesajlar (reisim birebir): *"Şirket logosuda firma ayarlarından girilsin , raporlara otomatik çekilsin"* (§11 238) · *"Format
 tasarımcısında herhangi bir başlığa tıklayınca en baş arıyor, en başa atmasın başlığı düzenlediğimiz yere odaklansın(telefonda)"* (§11 237).
+Aynı gün (reisim birebir): *"isg katip sözleşme id ve sgk destis no el ile girilebilir olmalı, plan ekranında olmalı oradan tüm raporlara sirayet
+edebilmeil kaydet tuşu olmalı."* · *"raporlarda sgk destis no yu kaldrımışsın neden ? geri getir"* (cevabım: 2026-09-29'da *"Plan içeriğinde SGK
+destis no kısmı yok olmalı"* demiştin, o sözle saha raporundan ve plandan kalkmıştı; son söz geçerli, geri geldi) · *"planlamacı herhangi bir plana
+düzenle diyip ilgili şeyleri düzenleyebilmeli, denetçi güncelle dediğin de o güncel bilgileri çekebilmeli yazdığı raporları ve plan ekranı ona
+göre düzeltebilmeli (örneğin firma ünvanı adres vb) ama planlamacı direk raporun içine ve veya plana etki edip denetçinin işine karışamaması için
+denetçi güncelle demeden olmamalı. dikkat et ne demek istediğimi iyi analiz et her denetçinin raporuna sadece kendisi müdahele edebilmeli."*
+→ §3.4 Plan künyesi, §11 263.
 
 **Açık kalanlar:** ~~Ana sayfada İSGGM duyuruları~~ (2026-09-27: makette eklendi; okuma işi uygulamada) (reisim 2026-09-26: *"Ana sayfada isgüm duyurularını gösterebilir miyiz ? Bunu
 yapılacaklar listesine ekle"*; öneri: ÇSGB İSGGM duyurular sayfası — https://www.csgb.gov.tr/isggm/duyurular/ — sunucuda günde birkaç kez
@@ -2300,6 +2314,13 @@ revizyon, alan kopyalama, hafif kusur devri, meslek eşleşme denetimi).
 - Emsal ürünler: https://opwire.app/iso-17020-periyodik-kontrol-yazilimi/ · https://17020muayene.vidco.com.tr/ · https://akuple.com/asansor-kontrol-yazilimi/ · https://ensyazilim.com/
 
 ## 11 · Değişiklik günlüğü
+- 2026-10-03 (263): **Plan künyesi: planlamacı Düzenle, denetçi Güncelle; SGK DETSİS no geri** (§9 elli ikinci tur). Plan içinde Firma adı, Adres,
+  İSG-KATİP sözleşme ID, SGK DETSİS no; "Makette bakış" (Mert Kaya · denetçi / Zeynep Arslan · planlamacı; uygulamada yok). Planlamacı Düzenle →
+  dört alan → Kaydet (plan kaydı + hareket). Denetçi şeritte değişen alanları görür; Güncelle plan ekranını ve yalnız kendi taslak raporlarını
+  yeniler, onaydaki / imzalı ve başkasının raporu aynı kalır. Rapor ekranı: künye raporun kendi kopyası (ortak kayıtta), SGK DETSİS no satırı
+  geri, şerit + Güncelle yalnız taslakta; PDF (bilgi bloğu + Bakanlık tablosu) raporun künyesinden. Kırılan iki denetim tarih + gerekçeyle
+  güncellendi ("SGK DETSİS ekranda yok" → "var"; Güncelle bildirimi). Ölçüm: planlar etkileşim 67/67, m8 128/128; olumsuz kanıt eski kodla
+  planlar 65/67, m8 124/128.
 - 2026-10-03 (262): **Tesisin ekipmanları Excel'den (teklifsiz) — müşteri kartı ve Plan aç** (§9 elli ikinci tur). Tek üretici MK.ekipmanExcel (maket-ortak): şablon (Ekipman kodu*, Ekipman türü*, Kullanım yeri, Marka, Model, Seri no, İmal yılı, Son kontrol tarihi, Son kontrol sonucu) → dosya → satır satır denetim (kod biçimi ve eşsiz, tür katalogda, dosyada iki kez yok; uyarı: imal yılı / tarih okunmadı, sonuç yok) → Yükle (N). Son kontrol bilgisi eski müşterinin geçmişi olarak ekipmana yazılır ("eski kayıt (Excel)"). Müşteriler › tesis sayfasına **Ekipmanlar** bölümü (ilk 10 + sayı, Excel'den yükle); Plan aç özetinin altında **Ekipmanları Excel'den yükle** (plan açılınca hepsi plana girer).
 - 2026-10-03 (261): **Tarih / saat kutusuna tıklayınca takvim ve saat listesi açılır** (§9 elli ikinci tur). Yalnız yandaki simgeye değil, kutunun kendisine tıklayınca da (maket-ortak, bütün sayfalar: tarih alanı ve takvim eki); odak kutuda kalır, yazmak serbest; yazılan tarih açık takvimi o aya götürür.
 - 2026-10-03 (260): **Firma ayarları düzeni; Verileri dışa aktar kalktı** (§9 elli ikinci tur). Yapay zekâ ve Müşteriye açık personel belgeleri tam genişlik (yapay zekâ açılınca öteki bölümler yerinden oynamaz; belge türleri üç sütun); Bulut kaydı dar bölümlerin yanına; Verileri dışa aktar (S3, S4) bölümü ve kodu kaldırıldı (firmanın verisi zaten kendi deposunda, yedekler indirilebilir).

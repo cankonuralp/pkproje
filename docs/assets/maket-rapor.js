@@ -117,6 +117,17 @@
   var duz = function (r) { var o = {}; Object.keys(r).forEach(function (k) { if (YERLI.indexOf(k) < 0) o[k] = r[k]; }); return JSON.parse(JSON.stringify(o)); };
   MK.kalici("raporlar", function () { Object.keys(R).forEach(function (k) { if (R[k]) KAYIT[R[k].no] = duz(R[k]); }); return KAYIT; }, function (d) { KAYIT = d || {}; });
   /* bir ekipmanın birden çok raporu olabilir (2026-09-28: "Rapor oluştur" sınırsız): rapor numarası adreste (?no=) — önbellek kod + numara */
+  /* künye (2026-10-03, MV.planKunye): raporun kopyası ortak kayıtta (MV.RAPORLAR[x].kunye), yoksa bu tarayıcının kaydında; ilk kez açılan eski
+     raporda plan bilgisinin TABANI (planlamacının düzenlemesinden önceki) — düzenleme denetçinin Güncelle'siyle gelir */
+  var kunyePid = function (r) { return (MV.rapor(r.no) || {}).plan || r.ts.pid; };
+  function kunyeAl(r) {
+    var kay = MV.rapor(r.no);
+    if (kay) { if (!kay.kunye) kay.kunye = r.kunye || MV.planKunye(kunyePid(r), r.kisi, r.ts, true); return kay.kunye; }
+    if (!r.kunye) r.kunye = MV.planKunye(kunyePid(r), r.kisi, r.ts, true);
+    return r.kunye;
+  }
+  var kunyeGuncel = function (r) { return MV.planKunye(kunyePid(r), r.kisi, r.ts, false); };
+  function kunyeYaz(r, k) { var kay = MV.rapor(r.no), c = JSON.parse(JSON.stringify(k)); r.kunye = c; if (kay) { kay.kunye = c; MV.RAPORLAR = MV.RAPORLAR.slice(); } degisti(r); }
   function rapor(kod) {
     var e = MV.ekipman(kod), k = PLAN_EKP.indexOf(e), q = sorgu();
     if (!e) return null;
@@ -448,7 +459,7 @@
           eylem: '<a class="a-tus a-tus-ikincil" href="' + MK.adres(13, "#/plan/1") + '">' + ikon("arrow-left", "a-ikon-kucuk") + "Plana dön</a>" });
       document.title = "Rapor bulunamadı · probata maket"; if (MK.sayGuncelle) MK.sayGuncelle(null, true); return;
     }
-    var t = r.t, e = r.e, oku = r.durum !== "taslak", F = r.F;
+    var t = r.t, e = r.e, oku = r.durum !== "taslak", F = r.F, K = kunyeAl(r), KF = MV.kunyeFark(kunyeGuncel(r), K);
     MK.MESAI_BU = oku ? null : (MV.tur(e.tur).sure || 0);   /* N6: günlük süre penceresinde "Bu rapor: N dk" */
     EKS = {}; if (UY === r && !oku) zorunluEksik(r).forEach(function (x) { EKS[x.bolum] = true; });
     var PL = r.ts, p = MV.kisi(r.kisi), yon = MV.kisi(YON[t.b]), isg = MV.isgTesis(PL.id).filter(function (x) { return x.k === r.kisi; })[0], ci = cihazlar(r);
@@ -475,18 +486,22 @@
     /* 2026-09-27 (reisim): firma adı, e-posta, telefon, adres, rapor no denetçide DEĞİŞMEZ — plan açılırken planlamacı girer ya da
        kendiliğinden oluşur; yanlışsa planlamacı Müşteriler'den düzeltir, denetçi "Güncelle" ile güncel bilgiyi çeker.
        Formatlı türde kontrol metodu (türden, yalnız standartlar) formattaki gibi bu bölümde: "Periyodik kontrol metodu ve kapsamı". */
-    S.firma = bolum(no("firma", 1), "r-b1", "Firma bilgileri", '<dl class="a-satirlar a-satirlar-form">' +
-        satir("Firma adı", kacis(mus.unvan)) +
+    S.firma = bolum(no("firma", 1), "r-b1", "Firma bilgileri", (!oku && KF.length ? '<div class="a-serit-kap">' + MK.serit("bilgi", "refresh-cw",
+        "Planlamacı plan bilgilerini değiştirdi: " + KF.join(", ") + ". Raporunuza almak için Güncelle'ye basın.") + "</div>" : "") + '<dl class="a-satirlar a-satirlar-form">' +
+        /* 2026-10-03: künye (firma adı, adres, İSG-KATİP, SGK DETSİS) raporun KENDİ kopyası; planlamacının değişikliği Güncelle ile gelir */
+        satir("Firma adı", kacis(K.unvan)) +
         satir("E-posta", kacis(mus.eposta)) +
         satir("Telefon", mus.tel ? kacis(mus.tel) : "-") +
         tarihAlan(r, oku, "bas", "Periyodik kontrol başlangıç tarihi ve saati", true) +
         tarihAlan(r, oku, "bit", "Periyodik kontrol bitiş tarihi ve saati", true) +
         tarihAlan(r, oku, "sonraki", "Bir sonraki periyodik kontrol tarihi", false) +
         tarihAlan(r, oku, "takip", "Takip kontrol tarihi", false) +
-        satir("Adres", kacis(PL.adres + ", " + PL.ilce + " / " + PL.il)) +
+        satir("Adres", kacis(K.adres)) +
         satir("Rapor no", '<span class="a-kod">' + r.no + "</span>") +
         tarihAlan(r, oku, "rtarih", "Rapor tarihi", false) +
-        satir("İSG-KATİP sözleşme ID", isg ? '<span class="a-kod">' + isg.no + "</span>" : '<span class="a-uyari-metin">Yok</span>') +
+        satir("İSG-KATİP sözleşme ID", K.isg ? '<span class="a-kod">' + kacis(K.isg) + "</span>" : '<span class="a-uyari-metin">Yok</span>') +
+        /* 2026-10-03 (reisim: "raporlarda sgk destis no yu kaldrımışsın neden ? geri getir") — 2026-09-29'da saha ekranından kalkmıştı (X2) */
+        satir("SGK DETSİS no", K.sgk ? '<span class="a-kod a-kod-uzun">' + kacis(K.sgk) + "</span>" : '<span class="a-uyari-metin">Yok</span>') +
         (F ? satir("Periyodik kontrol metodu ve kapsamı", metotBag(t)) : "") +
         metinAlan(r, oku, "bolumAd", "Ekipman bölümü", 60) + "</dl>",
       /* telefonda yalnız simge (2026-09-29, reisim: "hepsine uygula ve güncelle mobilde yazmamalı sadece işaretleri gözükmeli") */
@@ -641,7 +656,8 @@
     MV.EKIPMAN.push({ kod: kod, tur: e.tur, tesis: e.tesis, konum: d.konum || r.konum || e.konum, onceki: null, ilk: true, plan: pid, marka: r.marka, model: r.model,
       imal: r.imal, seri: d.seri, eklendi: simdi, kopyaKaynak: e.kod });
     var sira = MV.RAPORLAR.reduce(function (m, x) { return Math.max(m, siraOku(x.no)); }, 0) + 1, no = MV.raporNo("0926", sira).replace(/^[^-]+/, MV.firmaKodu());
-    MV.RAPORLAR.push({ no: no, kod: kod, tesis: e.tesis, plan: pid, kisi: r.kisi, olustu: simdi, durum: "taslak", sonuc: null, gonderildi: null, onay: null, imza: null, kopya: r.no });
+    MV.RAPORLAR.push({ no: no, kod: kod, tesis: e.tesis, plan: pid, kisi: r.kisi, olustu: simdi, durum: "taslak", sonuc: null, gonderildi: null, onay: null, imza: null, kopya: r.no,
+      kunye: JSON.parse(JSON.stringify(kunyeAl(r))) });   /* kopya kaynağın künyesiyle açılır */
     var p = MV.PLANLAR.filter(function (x) { return x.id === pid; })[0];
     if (p && Array.isArray(p.gecmis)) p.gecmis.push({ z: simdi, kim: r.kisi, ne: "Ekipman kopyalandı", ayrinti: e.kod + " → " + kod + " · " + no, s: p.gecmis.length });
     KAYIT[no] = JSON.parse(JSON.stringify({ marka: r.marka, model: r.model, imal: r.imal, amac: r.amac, bolumAd: r.bolumAd, detay: r.detay, tespit: r.tespit, cihaz: r.cihaz,
@@ -895,7 +911,7 @@
   function belgeVeri(r) {
     var isg = MV.isgTesis(r.ts.id).filter(function (x) { return x.k === r.kisi; })[0];
     return { e: r.e, ts: r.ts, m: MV.musteri(r.ts.m), p: MV.kisi(r.kisi), isg: isg, cihaz: cihazlar(r), tarih: r.rtarih || r.bas.slice(0, 10), bas: r.bas.slice(11, 16),
-      bit: r.bit.slice(11, 16), sonraki: r.sonraki, no: r.no, sonuc: r.sonuc === "kullanilamaz" ? "Kusurlu" : "Uygun", imza: null, r: r, kusurlar: kusurListe(r) };
+      bit: r.bit.slice(11, 16), sonraki: r.sonraki, no: r.no, sonuc: r.sonuc === "kullanilamaz" ? "Kusurlu" : "Uygun", imza: null, r: r, kusurlar: kusurListe(r), kunye: kunyeAl(r) };
   }
   X["on-izle"] = function () { var r = aktif(); MK.pdfGoster({ dosya: r.no + ".pdf", baslik: r.no, icerik: MB.belge(r.t, belgeVeri(r)), sayfa: 1 }); };
   X["rapor-sil-ac"] = function () {   /* plan içinde de aynı (maket.js) */
@@ -961,8 +977,10 @@
   };
   X["firma-guncelle"] = function (el, e) {
     if (e) e.preventDefault();   /* başlık çubuğundaki tuş bölümü açıp kapatmasın */
+    var r = aktif(), g = kunyeGuncel(r), f = MV.kunyeFark(g, kunyeAl(r));
+    if (r.durum === "taslak" && f.length) kunyeYaz(r, g);   /* yalnız raporun sahibi, yalnız taslakta (bu sayfa sahibin ekranı) */
     ciz(); var t = document.querySelector('[data-eylem="firma-guncelle"]'); if (t) t.focus();
-    MK.bildir("Firma bilgileri müşteri kaydından güncellendi.");
+    MK.bildir(!f.length ? "Firma bilgileri güncel." : r.durum === "taslak" ? "Plan bilgileri raporunuza alındı: " + f.join(", ") + "." : "Gönderilmiş raporun firma bilgileri değişmez.");
   };
   X["cihaz-ekle-ac"] = function (el) { var r = aktif(); pencereAc({ tur: "cihaz", r: r, c: el.dataset.tur, d: { sec: [] } }); };
   X["cihaz-ekle"] = function () {

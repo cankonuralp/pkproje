@@ -2,8 +2,8 @@
  "maket": "planlar",
  "tarih": "2026-10-03",
  "arac": "tools/olc-bulut.mjs --etkilesim (başsız tarayıcı, 1920 açık tema; gen verilen denemede o genişlik)",
- "toplam": 65,
- "gecen": 65,
+ "toplam": 67,
+ "gecen": 67,
  "denemeler": [
   {
    "ad": "Planlar listesi: müşteri adı kalın (≥ 600), proje adı normal (400)",
@@ -357,6 +357,20 @@
   },
   {
    "ad": "plan içi: Ekipmanlar ve Raporlar ayrı bölümlerde (üstte kalın ayırıcı), başlıkları sayfa başlığı boyunda; adım başlıkları da",
+   "gen": 1920,
+   "sayfa": "maket/planlarim.html",
+   "hash": "#/plan/1",
+   "gecti": true
+  },
+  {
+   "ad": "Plan künyesi: planlamacı Düzenle → Kaydet; denetçinin plan ekranı ve raporları Güncelle'ye kadar eski künyede, Güncelle yalnız kendi taslak raporlarını değiştirir (onaydaki ve başkasınınki aynı)",
+   "gen": 1920,
+   "sayfa": "maket/planlarim.html",
+   "hash": "#/plan/1",
+   "gecti": true
+  },
+  {
+   "ad": "Plan içi künye satırları: Firma adı, İSG-KATİP sözleşme ID, SGK DETSİS no, Adres (reisim 2026-10-03: SGK DETSİS plan ekranında olmalı)",
    "gen": 1920,
    "sayfa": "maket/planlarim.html",
    "hash": "#/plan/1",

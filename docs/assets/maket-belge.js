@@ -37,7 +37,7 @@
     var d = function (deger, kay) { return o ? deger : bos + kaynak(kay); };
     var sonraki = o ? o.sonraki : null, hafif = o && /Hafif/.test(o.sonuc), kusurlu = o && /^Kusurlu/.test(o.sonuc);
     /* o.r: saha raporunun kendisi (M8 "Ön izle", 2026-09-28) — değerler rapordan; boş alan "-" */
-    var R = o && o.r, rv = function (v) { return v && String(v).trim() ? kacis(v) : "-"; };
+    var R = o && o.r, K = o && o.kunye, rv = function (v) { return v && String(v).trim() ? kacis(v) : "-"; };
     /* hafif / ağır yalnız Bakanlık formatı yürürlükte olan türde (§4.5, Ek-III 1.9.1); öteki türde "Kusurlu" */
     var hafifAd = "Uygun değil", agirAd = "Uygun değil";   /* reisim 2026-09-26: madde sonucu Uygun · Uygun değil · Uygulanamaz */
     var kriter = MV.kriterler(t), test = MV.testler(t), ok = MV.ornekKusur(t, hafif);
@@ -50,10 +50,11 @@
       /* 1 · FİRMA BİLGİLERİ — türün rapor formatından bağımsız, her raporda aynı blok (reisim 2026-09-26: "1 genel bilgiler değil firma
          bilgileri olacak formattan bağımsız her rapor için ortak olacak"); değerler müşteri, tesis ve iş sözleşmesinden */
       bolum("1", "Firma bilgileri", '<dl class="a-bilgi">' +
-        bilgi("Firma ünvanı", o ? kacis(o.m.unvan) : bos, true) +
-        bilgi("Adres", o ? kacis(o.ts.adres + ", " + o.ts.ilce + " / " + o.ts.il) : bos, true) +
-        bilgi("SGK DETSİS no", o ? '<span class="a-kod a-kod-uzun">' + o.ts.sgk + "</span>" : bos, "cift") +
-        bilgi("İSG-KATİP sözleşme ID", o ? (o.isg ? '<span class="a-kod">' + o.isg.no + "</span>" : '<span class="a-uyari-metin">Yok</span>') : bos) + "</dl>") +
+        /* 2026-10-03: o.kunye = raporun künye kopyası (planlamacının düzenlemesi denetçi Güncelle'ye basınca gelir) */
+        bilgi("Firma ünvanı", o ? kacis(K ? K.unvan : o.m.unvan) : bos, true) +
+        bilgi("Adres", o ? kacis(K ? K.adres : o.ts.adres + ", " + o.ts.ilce + " / " + o.ts.il) : bos, true) +
+        bilgi("SGK DETSİS no", o ? '<span class="a-kod a-kod-uzun">' + kacis(K ? K.sgk : o.ts.sgk) + "</span>" : bos, "cift") +
+        bilgi("İSG-KATİP sözleşme ID", o ? ((K ? K.isg : o.isg && o.isg.no) ? '<span class="a-kod">' + kacis(K ? K.isg : o.isg.no) + "</span>" : '<span class="a-uyari-metin">Yok</span>') : bos) + "</dl>") +
       bolum("2", "Kontrol bilgileri", '<dl class="a-bilgi">' +
         bilgi("Başlangıç", d(o && MK.tarihYaz(o.tarih) + " " + (o.bas || "09:12"), "saha: rapor açıldı")) +
         bilgi("Bitiş", d(o && MK.tarihYaz(o.tarih) + " " + (o.bit || "09:48"), "saha: onaya gönderildi")) +
@@ -146,13 +147,13 @@
     var bolumBas = function (ad, sutun) { return '<tr><th class="rb-bb" colspan="' + (sutun || 1) + '">' + ad + "</th></tr>"; };
     /* 1 · FİRMA BİLGİLERİ (iki formatta aynı) */
     var firma = '<table class="rb-t"><colgroup><col style="width:19%"><col style="width:36%"><col style="width:28%"><col style="width:17%"></colgroup>' + bolumBas(et ? "1.FİRMA BİLGİLERİ" : "1. FİRMA BİLGİLERİ", 4) +
-      '<tr><td class="rb-e">Firma Adı</td><td>' + (o ? k(o.m.unvan) : "") + '</td><td class="rb-e">Rapor Numarası</td><td>' + (o ? k(o.no) : "") + "</td></tr>" +
-      '<tr><td class="rb-e" rowspan="5">Periyodik Kontrol Adresi</td><td rowspan="5">' + (ts ? k(ts.adres + ", " + ts.ilce + " / " + ts.il) : "") + '</td><td class="rb-e">Rapor Tarihi</td><td>' + (o ? tarih(o.tarih) : "") + "</td></tr>" +
-      '<tr><td class="rb-e">İSG-KATİP Sözleşme ID</td><td>' + (o && o.isg ? k(o.isg.no) : "") + "</td></tr>" +
+      '<tr><td class="rb-e">Firma Adı</td><td>' + (o ? k(o.kunye ? o.kunye.unvan : o.m.unvan) : "") + '</td><td class="rb-e">Rapor Numarası</td><td>' + (o ? k(o.no) : "") + "</td></tr>" +
+      '<tr><td class="rb-e" rowspan="5">Periyodik Kontrol Adresi</td><td rowspan="5">' + (o && o.kunye ? k(o.kunye.adres) : ts ? k(ts.adres + ", " + ts.ilce + " / " + ts.il) : "") + '</td><td class="rb-e">Rapor Tarihi</td><td>' + (o ? tarih(o.tarih) : "") + "</td></tr>" +
+      '<tr><td class="rb-e">İSG-KATİP Sözleşme ID</td><td>' + (o && o.kunye ? k(o.kunye.isg || "") : o && o.isg ? k(o.isg.no) : "") + "</td></tr>" +
       '<tr><td class="rb-e">Periyodik Kontrol Başlangıç Tarihi ve Saati</td><td>' + (o ? tsaat(o.tarih, o.bas) : "") + "</td></tr>" +
       '<tr><td class="rb-e">Periyodik Kontrol Bitiş Tarihi ve Saati</td><td>' + (o ? tsaat(o.tarih, o.bit) : "") + "</td></tr>" +
       '<tr><td class="rb-e">Bir Sonraki Periyodik Kontrol Tarihi</td><td>' + (o ? tarih(o.sonraki) : "") + "</td></tr>" +
-      '<tr><td class="rb-e">SGK Sicil Numarası</td><td colspan="3">' + (ts ? k(ts.sgk) : "") + "</td></tr>" +
+      '<tr><td class="rb-e">SGK Sicil Numarası</td><td colspan="3">' + (o && o.kunye ? k(o.kunye.sgk || "") : ts ? k(ts.sgk) : "") + "</td></tr>" +
       '<tr><td class="rb-e">Periyodik Kontrol Metodu ve Kapsamı</td><td colspan="3"><ul class="rb-liste">' + F.dayanak.map(function (x) { return "<li>" + k(x) + "</li>"; }).join("") + "</ul></td></tr></table>";
     /* ölçüm aletleri / termal kamera: iki cihaz yan yana, beş satır */
     var cihazTablo = function (baslik, l) {

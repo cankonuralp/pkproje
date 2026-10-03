@@ -12,42 +12,6 @@
  "temiz": 56,
  "durumlar": [
   {
-   "ad": "tesis sayfası · ekipman Excel penceresi, örnek dosya denetlendi (2026-10-03)",
-   "gen": 320,
-   "temiz": true,
-   "tasma": 0,
-   "disari": [],
-   "kucukAlan": [],
-   "alan": 0
-  },
-  {
-   "ad": "tesis sayfası · ekipman Excel penceresi, örnek dosya denetlendi (2026-10-03)",
-   "gen": 360,
-   "temiz": true,
-   "tasma": 0,
-   "disari": [],
-   "kucukAlan": [],
-   "alan": 0
-  },
-  {
-   "ad": "tesis sayfası · ekipman Excel penceresi, örnek dosya denetlendi (2026-10-03)",
-   "gen": 390,
-   "temiz": true,
-   "tasma": 0,
-   "disari": [],
-   "kucukAlan": [],
-   "alan": 0
-  },
-  {
-   "ad": "tesis sayfası · ekipman Excel penceresi, örnek dosya denetlendi (2026-10-03)",
-   "gen": 430,
-   "temiz": true,
-   "tasma": 0,
-   "disari": [],
-   "kucukAlan": [],
-   "alan": 0
-  },
-  {
    "ad": "müşteriler · liste",
    "gen": 320,
    "temiz": true,
@@ -508,6 +472,42 @@
   },
   {
    "ad": "müşteri · pasif, tesisleri de pasif",
+   "gen": 430,
+   "temiz": true,
+   "tasma": 0,
+   "disari": [],
+   "kucukAlan": [],
+   "alan": 0
+  },
+  {
+   "ad": "tesis sayfası · ekipman Excel penceresi, örnek dosya denetlendi (2026-10-03)",
+   "gen": 320,
+   "temiz": true,
+   "tasma": 0,
+   "disari": [],
+   "kucukAlan": [],
+   "alan": 0
+  },
+  {
+   "ad": "tesis sayfası · ekipman Excel penceresi, örnek dosya denetlendi (2026-10-03)",
+   "gen": 360,
+   "temiz": true,
+   "tasma": 0,
+   "disari": [],
+   "kucukAlan": [],
+   "alan": 0
+  },
+  {
+   "ad": "tesis sayfası · ekipman Excel penceresi, örnek dosya denetlendi (2026-10-03)",
+   "gen": 390,
+   "temiz": true,
+   "tasma": 0,
+   "disari": [],
+   "kucukAlan": [],
+   "alan": 0
+  },
+  {
+   "ad": "tesis sayfası · ekipman Excel penceresi, örnek dosya denetlendi (2026-10-03)",
    "gen": 430,
    "temiz": true,
    "tasma": 0,

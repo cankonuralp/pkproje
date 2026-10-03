@@ -2,8 +2,8 @@
  "maket": "m8",
  "tarih": "2026-10-03",
  "arac": "tools/olc-bulut.mjs --etkilesim (başsız tarayıcı, 1920 açık tema; gen verilen denemede o genişlik)",
- "toplam": 127,
- "gecen": 127,
+ "toplam": 128,
+ "gecen": 128,
  "denemeler": [
   {
    "ad": "Tarih / saat kutusuna tıklayınca takvim ve saat listesi açılır; yazınca takvim yazılan aya gider",
@@ -433,7 +433,7 @@
    "gecti": true
   },
   {
-   "ad": "firma bilgileri satırları: tarih · saat · dakika ayrı, otomatik dolu, SGK DETSİS no ekranda yok (2026-09-29), takip kontrol; metot seçilmez",
+   "ad": "firma bilgileri satırları: tarih · saat · dakika ayrı, otomatik dolu, SGK DETSİS no ekranda var (2026-10-03), takip kontrol; metot seçilmez",
    "gen": 1920,
    "sayfa": "maket/rapor.html",
    "hash": "#/r/ET-1009",
@@ -762,7 +762,7 @@
    "gecti": true
   },
   {
-   "ad": "SGK DETSİS no ekranda yok ama rapor PDF'inde tesis kaydından var (Ek-III zorunlu alanı; 2026-09-29)",
+   "ad": "SGK DETSİS no rapor PDF'inde tesis kaydından (Ek-III zorunlu alanı; 2026-09-29) ve 2026-10-03'ten beri ekranda da",
    "gen": 1920,
    "sayfa": "maket/rapor.html",
    "hash": "#/r/ET-1009",
@@ -867,10 +867,17 @@
    "gecti": true
   },
   {
-   "ad": "Güncelle: firma bilgileri kayıttan, bölüm açık kalır",
+   "ad": "Güncelle: plan değişmediyse 'Firma bilgileri güncel', bölüm açık kalır",
    "gen": 1920,
    "sayfa": "maket/rapor.html",
    "hash": "#/r/ET-1009",
+   "gecti": true
+  },
+  {
+   "ad": "Plan künyesi: planlamacı düzenledi → rapor eski künyede kalır, şerit söyler; Güncelle'yle firma adı ve SGK DETSİS no rapora geçer (BB2)",
+   "gen": 1920,
+   "sayfa": "maket/rapor.html",
+   "hash": "#/r/KP-1004?no=KM-0926-789-cd2b6&durum=taslak",
    "gecti": true
   },
   {

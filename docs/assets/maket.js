@@ -31,6 +31,13 @@
     za: { ad: "Zeynep Arslan", brans: "", rol: "Planlama" }
   };
   var BEN = "mk";
+  /* plan künyesi (2026-10-03, reisim: "planlamacı herhangi bir plana düzenle diyip ilgili şeyleri düzenleyebilmeli, denetçi güncelle dediğin de o
+     güncel bilgileri çekebilmeli … denetçi güncelle demeden olmamalı"): "Makette bakış" yalnız makette (uygulamada herkes kendi rolüyle görür).
+     Planlamacı (Zeynep Arslan) künyeyi düzenler (p.duzen); denetçi kendi kopyasını görür (p.gorulen[kisi]), Güncelle'ye basınca kopya ve kendi
+     taslak raporları yenilenir. Onaydaki ve imzalı raporlar değişmez; başkasının raporuna dokunulmaz. */
+  var PLAN_GOZ = "denetci", DUZENLE = null;
+  var kunyeGuncelP = function (p, kisi) { return MV.planKunye(p.id, kisi, null, false); };
+  var kunyeGor = function (p) { return PLAN_GOZ === "planlama" ? kunyeGuncelP(p, null) : (p.gorulen && p.gorulen[BEN]) || MV.planKunye(p.id, BEN, null, true); };
   /* Ekipman türü kataloğu (modül 5'in maketteki karşılığı). 14 tür > 8 → seçim alanında arama (kalıp 19).
      2026-09-24 (M3): türler ortak katalogdan (maket-veri.js MV.PLAN_KATALOG) — aynı 14 tür, aynı kod, ad, branş ve sıra. */
   var KATALOG = MV.PLAN_KATALOG;
@@ -135,7 +142,8 @@
   function ortakRapor(p, r) {
     if (MV.rapor(r.no)) return;
     var e = MV.ekipman(r.kod), b = MV.tur(e.tur).b, kisi = p.ekip.filter(function (k) { var x = MV.kisi(k), m = x && MV.meslek(x.meslek); return m && m.g.indexOf(MV.tur(e.tur).g) >= 0; })[0] || (b === "e" ? "ea" : "mk");
-    MV.RAPORLAR.push({ no: r.no, kod: r.kod, tesis: e.tesis, plan: p.id, kisi: kisi, olustu: r.olustu, durum: r.durum, sonuc: null, gonderildi: null, onay: null, imza: null });
+    MV.RAPORLAR.push({ no: r.no, kod: r.kod, tesis: e.tesis, plan: p.id, kisi: kisi, olustu: r.olustu, durum: r.durum, sonuc: null, gonderildi: null, onay: null, imza: null,
+      kunye: (p.gorulen && p.gorulen[kisi]) || MV.planKunye(p.id, kisi, null, true) });   /* yeni rapor denetçinin gördüğü künyeyle açılır */
   }
   /* Plan aç'ta açılan planlar: tesisin kayıtlı ekipmanı kapsamda, yeni ekipmanı denetçi sahada ekler */
   MV.ACILAN_PLANLAR.forEach(function (a) {
@@ -474,7 +482,13 @@
     }
     AKTIF = p;
     var d = p.durum, eylem = planEylem(p), sid = "a-plan-sebep-" + p.id;
-    var isg = !p.isg ? '<span class="a-yuz-uyari">Yok</span>' : '<span class="a-kod">' + kacis(p.isg.no) + "</span>";
+    var K = kunyeGor(p), KF = PLAN_GOZ === "denetci" ? MV.kunyeFark(kunyeGuncelP(p, BEN), K) : [];
+    var kdeger = function (a) { return K[a] ? (a === "isg" || a === "sgk" ? '<span class="a-kod">' + kacis(K[a]) + "</span>" : kacis(K[a])) : a === "isg" ? '<span class="a-yuz-uyari">Yok</span>' : "-"; };
+    var kunyeHtml = DUZENLE === p.id && PLAN_GOZ === "planlama"
+      ? '<div class="a-kunye-form" role="group" aria-label="Plan bilgilerini düzenle"><div class="a-kunye-alanlar">' + MV.PLAN_ALAN.map(function (a) {
+          return MK.alan({ id: "a-kunye-" + a[0], etiket: a[1], genis: a[0] === "adres" || a[0] === "unvan", girdi: MK.girdi({ id: "a-kunye-" + a[0], alan: a[0], deger: K[a[0]] }) }); }).join("") + "</div>" +
+        '<div class="a-form-eylem">' + MK.tus({ eylem: "kunye-vazgec", ad: "Vazgeç", sinif: "a-tus-ikincil", veri: { id: p.id } }) + MK.tus({ eylem: "kunye-kaydet", ad: "Kaydet", ikon: "check", veri: { id: p.id } }) + "</div></div>"
+      : "";
     var raporsuz = p.ekp.filter(function (k) { return !raporuVar(p, k); }).length;
     /* 1 · Planlandı — plan bilgisi ve kapsam */
     var a1 = adim(1, "tamam", "Planlandı", tno(p.acildi),
@@ -482,13 +496,21 @@
          adres · açıklama */
       /* 2026-09-27 (reisim, örnek ekranla: "bu kadar basit aslında istediğim şey bu"): etiket : değer satırları alt alta, altında
          ayrı kutuda teklif içeriği tablosu (muayene alanı · muayene türü · adet), tam genişlik */
+      '<div class="a-pano-anahtar"><span class="a-etiket a-etiket-satir">Makette bakış</span><div class="a-sekmeler" role="group" aria-label="Bakış">' +
+        [["denetci", KISI[BEN].ad + " · denetçi"], ["planlama", KISI.za.ad + " · planlamacı"]].map(function (x) { return '<button class="a-sekme" type="button" data-eylem="plan-goz" data-goz="' + x[0] + '" data-id="' + p.id + '" aria-pressed="' + (PLAN_GOZ === x[0]) + '">' + x[1] + "</button>"; }).join("") + "</div>" +
+        (PLAN_GOZ === "planlama" && DUZENLE !== p.id ? MK.tus({ eylem: "kunye-duzenle", ad: "Düzenle", ikon: "pencil", sinif: "a-tus-ikincil", veri: { id: p.id } }) : "") + "</div>" +
+      (KF.length ? '<div class="a-serit a-serit-uyari" id="a-kunye-serit">' + ikon("refresh-cw", "a-ikon-kucuk") + "<span>Planlamacı plan bilgilerini değiştirdi: <b>" + KF.join(", ") + "</b>. Güncelle'ye basınca planınıza ve taslak raporlarınıza geçer.</span>" +
+        MK.tus({ eylem: "kunye-guncelle", ad: "Güncelle", ikon: "refresh-cw", sinif: "a-tus-ikincil a-serit-tus", veri: { id: p.id } }) + "</div>" : "") +
+      kunyeHtml +
       '<dl class="a-satirlar">' +
         satir("Proje no", '<span class="a-kod">' + p.no + "</span>") +
-        satir("İSG-KATİP sözleşme ID", isg) +
+        satir("Firma adı", kdeger("unvan")) +
+        satir("İSG-KATİP sözleşme ID", kdeger("isg")) +
+        satir("SGK DETSİS no", kdeger("sgk")) +
         satir("Başlangıç tarihi", tno(p.tarih)) +
         satir("Bitiş tarihi", tno(p.bitTarih)) +
         satir("Denetçi", p.ekip.map(function (k) { return KISI[k].ad + ' <span class="a-alt-inline">' + KISI[k].brans + "</span>"; }).join(" · ")) +
-        satir("Adres", kacis(p.adres) + ", " + p.ilce + " / " + p.il) +
+        satir("Adres", kdeger("adres")) +
         satir("Açıklama", p.aciklama ? kacis(p.aciklama) : "-") +
       "</dl>" +
       '<section class="a-teklif" aria-labelledby="a-teklif-b"><h3 class="a-teklif-baslik" id="a-teklif-b">Teklif içeriği</h3>' +
@@ -549,7 +571,7 @@
     $("a-plan").innerHTML =
       '<nav class="a-kirinti" aria-label="Konum"><a href="#/">' + ikon("arrow-left", "a-ikon-kucuk") + "Planlar</a>" +
         ikon("chevron-right", "a-ikon-kucuk") + '<span aria-current="page">' + p.no + "</span></nav>" +
-      '<div class="a-nesne-bas"><div class="a-nesne-kimlik"><div class="a-nesne-baslik"><h1 tabindex="-1">' + kacis(p.musteri) + "</h1>" + rozet(DURUM[d]) + "</div>" +
+      '<div class="a-nesne-bas"><div class="a-nesne-kimlik"><div class="a-nesne-baslik"><h1 tabindex="-1">' + kacis(K.unvan || p.musteri) + "</h1>" + rozet(DURUM[d]) + "</div>" +
         /* 2026-09-30 (L7, reisim: "firma ismi önde olmalı tesis ismi değil bu her yerde böyle olmalı"): başlıkta firma, altında tesis */
         '<p class="a-nesne-alt">' + ikon("map-pin", "a-ikon-kucuk") + "<span>" + kacis(p.ad) + "</span></p></div></div>" +
       '<ol class="a-akis" aria-label="Plan akışı">' + a1 + a2 + a3 + a4 + "</ol>" +
@@ -900,6 +922,28 @@
   X["not-ekle"] = function (el) {
     var p = pl(el), ng = $("a-not-girdi"), metin = ng ? ng.value.trim() : "";
     if (p && metin.length >= 3) { kaydet(p, simdi(), BEN, "Not", metin); goster(false); MK.bildir("Not plana eklendi; planlama ekibi görür."); }
+  };
+  X["plan-goz"] = function (el) { PLAN_GOZ = el.dataset.goz; DUZENLE = null; goster(false); };
+  X["kunye-duzenle"] = function (el) { DUZENLE = +el.dataset.id; goster(false); var g = $("a-kunye-unvan"); if (g) g.focus(); };
+  X["kunye-vazgec"] = function () { DUZENLE = null; goster(false); };
+  X["kunye-kaydet"] = function (el) {
+    var p = pl(el); if (!p) return;
+    var once = kunyeGuncelP(p, null), alan = {}, deg = [];
+    MV.PLAN_ALAN.forEach(function (a) { var g = $("a-kunye-" + a[0]), v = g ? g.value.trim() : ""; alan[a[0]] = v; if (v !== String(once[a[0]] || "")) deg.push(a[1]); });
+    DUZENLE = null;
+    if (!deg.length) { goster(false); MK.bildir("Değişiklik yok."); return; }
+    p.duzen = { alan: alan, zaman: simdi(), kim: "za" }; kaydet(p, p.duzen.zaman, "za", "Plan bilgileri düzenlendi", deg.join(", "));
+    goster(false); MK.bildir("Kaydedildi; denetçiler Güncelle'ye basınca planlarına ve taslak raporlarına geçer.");
+  };
+  X["kunye-guncelle"] = function (el) {
+    var p = pl(el); if (!p) return;
+    if (!p.gorulen) p.gorulen = {};
+    p.gorulen[BEN] = kunyeGuncelP(p, BEN);
+    var benim = MV.RAPORLAR.filter(function (x) { return x.plan === p.id && x.kisi === BEN; }), tas = benim.filter(function (x) { return x.durum === "taslak" || x.durum === "geri"; });
+    tas.forEach(function (x) { x.kunye = MV.planKunye(p.id, x.kisi, MV.tesis(x.tesis), false); });
+    MV.RAPORLAR = MV.RAPORLAR.slice();
+    kaydet(p, simdi(), BEN, "Plan bilgileri güncellendi", tas.length + " taslak rapor");
+    goster(false); MK.bildir("Güncellendi: plan ekranınız ve " + tas.length + " taslak raporunuz." + (benim.length > tas.length ? " Onaydaki ve imzalı " + (benim.length - tas.length) + " rapor değişmez." : ""));
   };
   X["notlar-hepsi"] = function () { NOTLAR_ACIK = !NOTLAR_ACIK; goster(false); };
   X.reddet = function (el) {

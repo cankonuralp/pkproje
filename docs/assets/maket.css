@@ -1704,3 +1704,9 @@ a.a-yuz:hover { border-color: var(--kenar-alan); background: var(--zemin); }
 .a-tablo-ia th:nth-child(2) { width: 50%; }
 .a-tablo-ia th:nth-child(3) { width: 36%; }
 .a-tablo-ia .a-alt-satir { display: block; }
+
+/* plan künyesi (2026-10-03, BB2): planlamacının Düzenle formu plan içinde, alanlar iki sütun (telefonda tek) */
+.a-kunye-form { margin: 0 0 12px; padding: 12px 14px; border: 1px solid var(--kenar); border-radius: var(--r-buyuk); background: var(--kart); }
+.a-kunye-alanlar { display: grid; grid-template-columns: repeat(auto-fill, minmax(min(100%, 260px), 1fr)); gap: 12px 16px; }
+.a-kunye-form .a-form-eylem { margin-top: 12px; }
+#a-kunye-serit { margin: 0 0 12px; }

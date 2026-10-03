@@ -1544,6 +1544,26 @@
     { id: 9, no: "P-0926-025", ad: "Değirmen", musteri: "Başak Un Değirmenleri A.Ş.", adres: "İstasyon Caddesi No: 30", ilce: "Lüleburgaz", il: "Kırklareli", tarih: "2026-09-21", bas: "13:00", bit: "16:00", ekip: ["mk", "ea"], m: 16, e: 8, durum: "tamam", acildi: "2026-09-08T10:30", kabul: "2026-09-09T07:58", basladi: "2026-09-21T13:05", bitti: "2026-09-21T16:20", isg: { no: "S-2026-0398", onay: "2026-09-10" }, rap: { onaylandi: 14, onayda: 8 } }
   ];
   MV.ACILAN_PLANLAR = [];
+  /* ── PLAN BİLGİLERİ (künye) — 2026-10-03 (reisim: "isg katip sözleşme id ve sgk destis no el ile girilebilir olmalı, plan ekranında olmalı
+     oradan tüm raporlara sirayet edebilmeil kaydet tuşu olmalı" · "planlamacı herhangi bir plana düzenle diyip ilgili şeyleri düzenleyebilmeli,
+     denetçi güncelle dediğin de o güncel bilgileri çekebilmeli yazdığı raporları ve plan ekranı ona göre düzeltebilmeli … planlamacı direk raporun
+     içine ve veya plana etki edip denetçinin işine karışamaması için denetçi güncelle demeden olmamalı … her denetçinin raporuna sadece kendisi
+     müdahele edebilmeli"). Taban: müşteri ünvanı, tesis adresi ve SGK DETSİS no'su, İSG-KATİP sözleşme ID (denetçinin iş sözleşmesindeki ID'si,
+     yoksa planınki). Planlamacı Düzenle ile p.duzen = { alan, zaman, kim } yazar; bu GÜNCEL künyedir. Raporun künyesi (MV.RAPORLAR[x].kunye) ve
+     denetçinin plan ekranındaki künye (p.gorulen[kişi]) KOPYADIR: planlamacının değişikliği onlara yalnız denetçi "Güncelle"ye basınca geçer. */
+  MV.PLAN_ALAN = [["unvan", "Firma adı"], ["adres", "Adres"], ["isg", "İSG-KATİP sözleşme ID"], ["sgk", "SGK DETSİS no"]];
+  MV.planBul = function (id) { return MV.PLANLAR.filter(function (x) { return x.id === id; })[0]; };
+  MV.planKunye = function (pid, kisi, ts, taban) {
+    var p = pid != null ? MV.planBul(pid) : null;
+    if (!ts && p) ts = p.tesis ? MV.tesis(p.tesis) : MV.TESISLER.filter(function (x) { return x.pid === p.id; })[0];
+    var reg = ts && kisi ? MV.isgTesis(ts.id).filter(function (x) { return x.k === kisi; })[0] : null;
+    var pi = p && p.isg ? (p.isg.no !== undefined ? p.isg.no : p.isg) : "", pis = Array.isArray(pi) ? pi.filter(Boolean)[0] || "" : String(pi || "");
+    var k = { unvan: ts ? MV.musteri(ts.m).unvan : p ? p.musteri : "", adres: ts ? ts.adres + ", " + ts.ilce + " / " + ts.il : p ? p.adres + ", " + p.ilce + " / " + p.il : "",
+      isg: reg ? reg.no : pis, sgk: ts ? ts.sgk || "" : "", surum: "" };
+    if (!taban && p && p.duzen) { Object.keys(p.duzen.alan).forEach(function (a) { k[a] = p.duzen.alan[a]; }); k.surum = p.duzen.zaman; }
+    return k;
+  };
+  MV.kunyeFark = function (a, b) { return MV.PLAN_ALAN.filter(function (x) { return String(a[x[0]] || "") !== String(b[x[0]] || ""); }).map(function (x) { return x[1]; }); };
   /* ── TAKİP (2026-09-28, T6): süre takibi isteyen işler tek yerde hesaplanır; Uyarılar listesi, Sözleşmeler şeridi ve yan menünün
      renkli balonları aynı hesabı okur. Kırmızı = süresi geçen, sarı = yaklaşan, yeşil = sorunsuz (reisim: "cihazlarda süresi geçen cihaz
      sayısı kırmızı balon, yaklaşan sarı balon, sorunsuz cihazlar yeşil balon … diğer modüllerde de benzer takip"). */
