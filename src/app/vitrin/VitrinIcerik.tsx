@@ -8,6 +8,7 @@ import { Pencere } from "../../components/pencere/Pencere";
 import { Serit } from "../../components/serit/Serit";
 import { Tus, TusBaglanti } from "../../components/tus/Tus";
 import stil from "./vitrin.module.css";
+import { VitrinListe } from "./VitrinListe";
 
 export function VitrinIcerik() {
   const bildir = useBildir();
@@ -49,6 +50,8 @@ export function VitrinIcerik() {
         </div>
         <p>Onay sonucu: <output data-sonuc="">{sonuc}</output></p>
       </section>
+
+      <VitrinListe />
 
       <Pencere acik={pencere} baslik="Not ekle" onKapat={() => setPencere(false)}
         alt={<><Tus tur="ikincil" onClick={() => setPencere(false)}>Vazgeç</Tus><Tus onClick={() => { setPencere(false); bildir("Not eklendi."); }}>Kaydet</Tus></>}>

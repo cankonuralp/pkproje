@@ -18,3 +18,4 @@
   background: var(--kart); color: var(--yazi); font-weight: 600; white-space: nowrap; text-decoration: none;
 }
 .eylem:hover { background: var(--zemin2); }
+.eylemKap { margin-top: 16px; }

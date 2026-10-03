@@ -84,8 +84,9 @@ pkproje/
   src/server/db/            gömülü PostgreSQL (gomulu.ts) · göç koşucusu (goc.ts, gocler/NNNN_ad.sql, her göç idempotent) ·
                             kiracı süzgeçli TEK erişim katmanı (kiraci.ts: kiraciIcinde) — pg YALNIZ burada içe aktarılır
   src/server/kiraci/        kiracı çözümleme (alt alan adı → firma kısa adı) · ★ yetki (tek `canDo`) · ★ güvenli yazıcılar
-  src/components/           TEK ÜRETİCİLER: kabuk (yan menü + üst çubuk) · ikon · boş durum · ★ liste (tablo↔kart) ·
-                            ★ süzgeç satırı · ★ seçim alanı · ★ uzun tuş
+  src/components/           TEK ÜRETİCİLER: kabuk (yan menü + üst çubuk) · ikon · boş durum · tuş · şerit · bildirim · pencere + onay ·
+                            liste (tablo↔kart, süzgeç mantığı liste/suzgec.ts) · filtre satırı · sayfalayıcı · ★ seçim alanı · ★ uzun tuş
+                            (geliştirme vitrini /vitrin: yalnız geliştirmede, yayında 404)
   src/styles/               tokens.css (TEK KAYNAK; docs kopyası testle aynı) · yazi.css (Sora) · temel.css · kalip.ts
   public/vendor/            üçüncü parti kendi kökenimizden, adında sürüm (lucide-1.47.0 ikonları)
   scripts/                  next.ts (telemetri kapalı + webpack) · gelistir.ts (npm run dev) · onizleme.ts + onizleme-sun.ts

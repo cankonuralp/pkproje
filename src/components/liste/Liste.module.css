@@ -1,0 +1,60 @@
+/* LİSTE — maketteki .a-liste-kap / .a-tablo (docs/assets/maket.css "LİSTE" + iki kap sorgusu) ile aynı. Eşik kalip.ts kartEsigi (600);
+   600–960 sıkışık tablo (tablet dikey), altı kart (anayasa 3.3: kap sorgusu, ekran değil). */
+.kap { container-type: inline-size; container-name: liste; min-width: 0; }
+.tablo {
+  width: 100%; table-layout: fixed; border-collapse: separate; border-spacing: 0;
+  background: var(--kart); border: 1px solid var(--kenar); border-radius: var(--r-buyuk);
+}
+.tablo th {
+  height: calc(var(--tus-y) + 2px); padding: 0 10px; text-align: left; vertical-align: middle;
+  font-size: var(--boy-etiket); font-weight: var(--kal-etiket); letter-spacing: .02em;
+  color: var(--yazi3); background: var(--zemin2); border-bottom: 1px solid var(--kenar);
+}
+.tablo th:first-child { border-top-left-radius: var(--r-buyuk); }
+.tablo th:last-child { border-top-right-radius: var(--r-buyuk); }
+/* satır yüksekliği eşit: tuşlu satır ile tuşsuz satır aynı boy (maket 4. tur) */
+/* --sira: kartta diziliş; hücre kendi değerini satır içi verir (Liste.tsx), vermezse 5 */
+.tablo td { --sira: 5; height: calc(var(--tus-y) + 12px); padding: 6px 10px; vertical-align: middle; border-top: 1px solid var(--kenar); min-width: 0; }
+.tablo tbody tr:first-child td { border-top: 0; }
+.tablo tbody tr[data-href] { cursor: pointer; }
+.tablo tbody tr:hover td { background: var(--zemin); }
+.sirala {
+  min-height: var(--tus-y); margin: 0 -6px; padding: 0 6px;
+  display: inline-flex; align-items: center; gap: 6px; max-width: calc(100% + 12px);
+  border: 0; border-radius: var(--r-kucuk); background: transparent; color: inherit;
+  font: inherit; letter-spacing: inherit; text-align: left;
+}
+.sirala:hover { color: var(--yazi); background: var(--kenar); }
+.sirala > svg { opacity: .6; }
+.tablo th[aria-sort] .sirala { color: var(--yazi); }
+.tablo th[aria-sort] .sirala > svg { opacity: 1; }
+.kirp { display: block; min-width: 0; overflow: hidden; text-overflow: ellipsis; white-space: nowrap; }
+.kartEtiket { display: none; color: var(--yazi3); font-size: var(--boy-etiket); font-weight: var(--kal-etiket); }
+
+@container liste (min-width: 600px) and (max-width: 959.98px) {
+  .tablo th { padding: 4px 6px; white-space: normal; line-height: 1.25; }
+  .tablo td { padding: 6px; font-size: var(--boy-kucuk); overflow-wrap: break-word; }
+  .sirala { white-space: normal; text-align: left; flex-wrap: wrap; row-gap: 0; letter-spacing: 0; }
+}
+
+/* kap < 600: aynı tablo KARTA döner. Başlık tamamen kalkar (gizlenen başlıktaki sıralama tuşları odaklanabilir kalıyordu — maket
+   2026-09-23 "çakışma 2"); kartta sıralamayı süzgeç satırındaki seçici yapar. */
+@container liste (max-width: 599.98px) {
+  .tablo, .tablo tbody, .tablo tr, .tablo td { display: block; }
+  .tablo { background: transparent; border: 0; }
+  .tablo thead { display: none; }
+  .tablo tbody { display: grid; gap: 10px; grid-template-columns: repeat(auto-fill, minmax(min(100%, 300px), 1fr)); }
+  .tablo tr {
+    display: grid; grid-template-columns: minmax(0, 1fr) auto; gap: 4px 10px; align-content: start;
+    padding: 12px; background: var(--kart); border: 1px solid var(--kenar); border-radius: var(--r-buyuk);
+  }
+  .tablo tbody tr[data-href]:hover { border-color: var(--kenar-alan); }
+  .tablo tbody tr:hover td { background: transparent; }
+  .tablo td { grid-column: 1 / -1; order: var(--sira); height: auto; padding: 0; border: 0; }
+  .tablo td[data-kart="ust"] { grid-column: 1; grid-row: 1; align-self: center; }
+  .tablo td[data-kart="rozet"] { grid-column: 2; grid-row: 1; justify-self: end; align-self: center; max-width: 7rem; text-align: right; }
+  /* ilk kartta da tuş ayırıcısı (maket 4. tur: taban kural "ilk satırın üst kenarı yok" eziyordu — aynı özgüllük, sonra gelir) */
+  .tablo tbody tr td[data-kart="eylem"] { margin-top: 4px; padding-top: 10px; border-top: 1px solid var(--kenar); }
+  .tablo td[data-kart="eylem"]:empty { display: none; }
+  .kartEtiket { display: block; }
+}

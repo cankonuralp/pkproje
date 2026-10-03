@@ -2335,6 +2335,11 @@ revizyon, alan kopyalama, hafif kusur devri, meslek eşleşme denetimi).
 - Emsal ürünler: https://opwire.app/iso-17020-periyodik-kontrol-yazilimi/ · https://17020muayene.vidco.com.tr/ · https://akuple.com/asansor-kontrol-yazilimi/ · https://ensyazilim.com/
 
 ## 11 · Değişiklik günlüğü
+- 2026-10-03 (275): **K0 Hazırlık 4: liste ↔ kart + filtre satırı** (tek üreticiler, `src/components/liste/`; maketteki `MK.tablo`,
+  `MK.suzgecHtml`, `MK.listeCiz`, sayfalayıcı ile aynı). Liste kabı 600 px ve üstünde tablo (600–960 sıkışık, tablet dikeyde de tablo), altında kart.
+  Filtre: arama ya da alan alan arama kutuları · çipler (sayılı) + ve/veya · seçiciler (8'den fazla seçenekte arama) + Temizle sağda; telefonda seçiciler
+  ve sıralama "Filtre" levhasında. Dürüst sayaç (3 / 23), dört boş durum (veri yok · görünüm boş · filtre boş · imkânsız birleşim), sıralama tabloda
+  başlıktan, sayfa boyu kalıptan. Süzgeç mantığı React'siz (`suzgec.ts`), birim testi 9/9 + bozan 3/3; uçtan uca 43/43.
 - 2026-10-03 (274): **K0 Hazırlık 3: tuş · şerit · bildirim · onay penceresi** (tek üreticiler, `src/components/`; maketteki `.a-tus`, `.a-serit`,
   `MK.bildir`, `MK.onayla` ile aynı görünüm ve davranış). Tuş: birincil / ikincil / tehlike, yüksekliği `--tus-y` (34 · dokunmatik 44), içerik kadar geniş.
   Şerit: bilgi / uyarı / onay / hata, sağda isteğe bağlı tek eylem; hata şeridi ekran okuyucuya hemen okunur. Bildirim: altta ortada, 4 sn. Onay

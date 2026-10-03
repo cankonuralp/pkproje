@@ -1,0 +1,20 @@
+/* sayaç ve sayfalayıcı — maketteki .a-sayac / .a-sayfalar ile aynı */
+.sayac { color: var(--yazi2); font-size: var(--boy-kucuk); }
+.sayac b { color: var(--yazi); font-weight: 700; }
+.sayfalar { display: flex; align-items: center; justify-content: space-between; flex-wrap: wrap; gap: 8px; margin-top: 8px; }
+.sayfaBilgi { color: var(--yazi2); font-size: var(--boy-kucuk); font-variant-numeric: tabular-nums; }
+.sayfaTuslar { display: flex; flex-wrap: wrap; gap: 4px; }
+.sayfa {
+  min-width: var(--tus-y); height: var(--tus-y); padding: 0 8px;
+  display: inline-flex; align-items: center; justify-content: center;
+  border: 1px solid var(--kenar-alan); border-radius: var(--r-orta); background: var(--kart); color: var(--yazi);
+  font-weight: 600; font-variant-numeric: tabular-nums;
+}
+.sayfa:hover:not(:disabled) { background: var(--zemin2); }
+.sayfa[aria-current="page"] { background: var(--vurgu); border-color: var(--vurgu); color: var(--vurgu-uzeri); }
+.sayfa:disabled { opacity: .45; cursor: default; }
+.sayfaAra { display: inline-flex; align-items: center; justify-content: center; min-width: 20px; color: var(--yazi3); }
+/* telefonda ±1 komşular gizlenir → tek satır (maket 2026-09-24: 15 tuş iki satıra taşıyordu) */
+@media (max-width: 767.98px) {
+  .komsu { display: none; }
+}
