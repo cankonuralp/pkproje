@@ -89,6 +89,7 @@ pkproje/
   src/modules/ekipman-turleri/ EKİPMAN TÜRLERİ (2026-10-04): katalog (Mekanik / Elektrik), tür sayfası, rapor formatı PDF sürümleri
   src/modules/olcum-cihazlari/ ÖLÇÜM CİHAZLARI (2026-10-04): cihaz, cihaz türü, kalibrasyon kaydı + sertifika, kalibrasyon durumu (eşik firma ayarı)
   src/modules/zimmetler/    ZİMMETLER (2026-10-04): kimde (son hareketten), değişmez teslim hareketleri + fotoğraf, demirbaş
+  src/modules/araclar/      ARAÇLAR (2026-10-04): araç (zimmet varlığı), değişmez teslim tutanağı + açı fotoğrafları, haftalık kilometre
   src/tanim/iller.ts        81 il + 973 ilçe (açık veri, MIT; bir kez alındı)
   src/modules/<modül>/      ★ her iş modülü: server/ (veri erişimi + iş kuralları, dışa açılan fonksiyonlar) · ui/ · şema · testler
   src/tanim/tanimlar.ts     SABİT TANIMLAR (durum adları, eğri çarpanları, mesai sınırları …): şemalı, karma adlı JSON → /api/tanim (2026-10-04)

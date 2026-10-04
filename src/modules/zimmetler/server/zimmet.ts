@@ -11,6 +11,7 @@ import { dosyaYukle } from "../../../server/dosya/dosya.ts";
 import { hesabinPersoneli } from "../../../server/kimlik/hesap.ts";
 import { duzey, type YetkiHesabi } from "../../../server/yetki/canDo.ts";
 import { dogrula, type DogrulamaHatalari } from "../../../sema/ortak.ts";
+import { aracOzetleri } from "../../araclar/server/araclar.ts";
 import { cihazOzetleri } from "../../olcum-cihazlari/server/cihazlar.ts";
 import { personelSecenekleri } from "../../personel/server/personel.ts";
 import { DemirbasGirdisi, TeslimGirdisi } from "../sema.ts";
@@ -18,11 +19,12 @@ import { DemirbasGirdisi, TeslimGirdisi } from "../sema.ts";
 const MODUL = 9;
 export const DOSYA_MODULU = "zimmet";
 const DEMIRBAS = tablo({ ad: "demirbas", sutunlar: ["kod", "ad", "pasif"] });
-const HAREKET = tablo({ ad: "zimmet_hareket", sutunlar: ["cihaz_id", "demirbas_id", "eden_personel", "alan_personel", "zaman", "km", "notu"] });
+const HAREKET = tablo({ ad: "zimmet_hareket", sutunlar: ["cihaz_id", "demirbas_id", "arac_id", "eden_personel", "alan_personel", "zaman", "km", "notu"] });
 const UUID = /^[0-9a-f]{8}-[0-9a-f]{4}-[0-9a-f]{4}-[0-9a-f]{4}-[0-9a-f]{12}$/;
 
 export interface Kisi extends YetkiHesabi { ad: string }
-export type VarlikTuru = "c" | "d";
+/** c ölçüm cihazı · d diğer demirbaş · a araç (Araçlar modülü; teslimi araç tutanağıyla) */
+export type VarlikTuru = "c" | "d" | "a";
 /** kimde: depo · kalibrasyonda · bir personel */
 export type Kimde = { tip: "depo" } | { tip: "lab" } | { tip: "kisi"; id: string; ad: string };
 export interface VarlikSatiri { anahtar: string; tur: VarlikTuru; id: string; kod: string; ad: string; kimde: Kimde; bitis: string | null; son: { zaman: string; eden: string; alan: string } | null }
@@ -39,23 +41,26 @@ const degistirir = (kim: YetkiHesabi) => duzey(kim, MODUL) === "yaz";
 export const zimmetDegistirir = degistirir;
 
 /** son hareketlere göre kimde (cihaz ve demirbaş; değer: alan personel kimliği ya da null = depo). Ölçüm cihazları "kendi" düzeyi bunu kullanır. */
-export async function kimdeHaritasi(db: Sorgulayici): Promise<{ cihaz: Map<string, string | null>; demirbas: Map<string, string | null> }> {
+export async function kimdeHaritasi(db: Sorgulayici): Promise<{ cihaz: Map<string, string | null>; demirbas: Map<string, string | null>; arac: Map<string, string | null> }> {
   const c = await db.sorgu<{ id: string; alan: string | null }>(
     "SELECT DISTINCT ON (cihaz_id) cihaz_id::text AS id, alan_personel::text AS alan FROM zimmet_hareket WHERE cihaz_id IS NOT NULL ORDER BY cihaz_id, zaman DESC, olustu DESC");
   const d = await db.sorgu<{ id: string; alan: string | null }>(
     "SELECT DISTINCT ON (demirbas_id) demirbas_id::text AS id, alan_personel::text AS alan FROM zimmet_hareket WHERE demirbas_id IS NOT NULL ORDER BY demirbas_id, zaman DESC, olustu DESC");
-  return { cihaz: new Map(c.rows.map((x) => [x.id, x.alan])), demirbas: new Map(d.rows.map((x) => [x.id, x.alan])) };
+  const a = await db.sorgu<{ id: string; alan: string | null }>(
+    "SELECT DISTINCT ON (arac_id) arac_id::text AS id, alan_personel::text AS alan FROM zimmet_hareket WHERE arac_id IS NOT NULL ORDER BY arac_id, zaman DESC, olustu DESC");
+  return { cihaz: new Map(c.rows.map((x) => [x.id, x.alan])), demirbas: new Map(d.rows.map((x) => [x.id, x.alan])), arac: new Map(a.rows.map((x) => [x.id, x.alan])) };
 }
 
-type HareketDb = { id: string; cihaz_id: string | null; demirbas_id: string | null; eden_personel: string | null; alan_personel: string | null; zaman: Date; km: number | null; notu: string | null };
+type HareketDb = { id: string; cihaz_id: string | null; demirbas_id: string | null; arac_id: string | null; eden_personel: string | null; alan_personel: string | null; zaman: Date; km: number | null; notu: string | null };
 
 /** bütün varlıklar + hareketler (tek seferde; listeler bundan süzülür) */
 async function durum(db: Sorgulayici) {
-  const [cihazlar, demirbaslar, kisiler, hareketler, fotolar] = [
+  const [cihazlar, araclar, demirbaslar, kisiler, hareketler, fotolar] = [
     await cihazOzetleri(db),
+    await aracOzetleri(db),
     (await db.sorgu<{ id: string; kod: string; ad: string }>("SELECT id::text, kod, ad FROM demirbas WHERE pasif IS NULL")).rows,
     await personelSecenekleri(db),
-    (await db.sorgu<HareketDb>("SELECT id::text, cihaz_id::text, demirbas_id::text, eden_personel::text, alan_personel::text, zaman, km, notu FROM zimmet_hareket ORDER BY zaman DESC, olustu DESC")).rows,
+    (await db.sorgu<HareketDb>("SELECT id::text, cihaz_id::text, demirbas_id::text, arac_id::text, eden_personel::text, alan_personel::text, zaman, km, notu FROM zimmet_hareket ORDER BY zaman DESC, olustu DESC")).rows,
     (await db.sorgu<{ id: string; kayit_id: string }>("SELECT id::text, kayit_id::text FROM dosya WHERE modul = $1 AND cop IS NULL ORDER BY olustu", [DOSYA_MODULU])).rows,
   ];
   const kisiAd = new Map(kisiler.map((k) => [k.id, k.ad]));
@@ -68,9 +73,10 @@ async function durum(db: Sorgulayici) {
   const varlikAdi = new Map<string, { kod: string; ad: string }>([
     ...cihazlar.map((c) => [`c:${c.id}`, { kod: c.kod, ad: c.tur }] as const),
     ...demirbaslar.map((d) => [`d:${d.id}`, { kod: d.kod, ad: d.ad }] as const),
+    ...araclar.map((a) => [`a:${a.id}`, { kod: a.plaka, ad: a.ad }] as const),
   ]);
   const hareketSatirlari: (HareketSatiri & { edenId: string | null; alanId: string | null })[] = hareketler.map((h) => {
-    const anahtar = h.cihaz_id ? `c:${h.cihaz_id}` : `d:${h.demirbas_id}`;
+    const anahtar = h.cihaz_id ? `c:${h.cihaz_id}` : h.arac_id ? `a:${h.arac_id}` : `d:${h.demirbas_id}`;
     const v = varlikAdi.get(anahtar) ?? { kod: "—", ad: "Kaldırılan varlık" };
     return { id: h.id, varlik: anahtar, varlikKod: v.kod, varlikAd: v.ad, zaman: h.zaman.toISOString(), eden: yer(h.eden_personel), alan: yer(h.alan_personel),
       alanKisi: !!h.alan_personel, km: h.km, notu: h.notu, fotolar: fotoHaritasi.get(h.id) ?? [], edenId: h.eden_personel, alanId: h.alan_personel };
@@ -85,6 +91,7 @@ async function durum(db: Sorgulayici) {
   const varliklar: VarlikSatiri[] = [
     ...cihazlar.map((c) => ({ anahtar: `c:${c.id}`, tur: "c" as const, id: c.id, kod: c.kod, ad: c.tur, bitis: c.bitis, kimde: kimde(`c:${c.id}`, c.konum === "lab") })),
     ...demirbaslar.map((d) => ({ anahtar: `d:${d.id}`, tur: "d" as const, id: d.id, kod: d.kod, ad: d.ad, bitis: null, kimde: kimde(`d:${d.id}`, false) })),
+    ...araclar.map((a) => ({ anahtar: `a:${a.id}`, tur: "a" as const, id: a.id, kod: a.plaka, ad: a.ad, bitis: null, kimde: kimde(`a:${a.id}`, false) })),
   ].map((v) => { const h = son.get(v.anahtar); return { ...v, son: h ? { zaman: h.zaman, eden: h.eden, alan: h.alan } : null }; });
   return { varliklar, hareketler: hareketSatirlari, kisiler };
 }
@@ -107,7 +114,7 @@ export async function zimmetListeleri(db: Sorgulayici, kim: Kisi): Promise<{ var
 }
 
 export async function varlikKarti(db: Sorgulayici, kim: Kisi, anahtar: string): Promise<VarlikKarti | null> {
-  if (!/^[cd]:[0-9a-f-]{36}$/.test(anahtar)) return null;
+  if (!/^[cda]:[0-9a-f-]{36}$/.test(anahtar)) return null;
   const l = await zimmetListeleri(db, kim);
   const v = l?.varliklar.find((x) => x.anahtar === anahtar);
   if (!v) return null;
@@ -160,3 +167,17 @@ export async function demirbasEkle(db: Sorgulayici, kim: Kisi, girdi: unknown): 
   return { durum: "tamam", id: (await ekle(db, DEMIRBAS, { kod: g.veri.kod, ad: g.veri.ad }, { kim: kim.ad, ne: "demirbas.ekle" })).id };
 }
 
+/** ARAÇ TESLİMİ — Araçlar modülünün teslim tutanağı buradan zimmet hareketi yazar (ikinci liste yok). Yetki, kilometre ve tutanak denetimi
+    ÇAĞIRANDA (modül 23; araç satırı çağıranda kilitli). Teslim eden burada, son hareketten; alan çalışan bir personel ya da depo (null). */
+export async function aracHareketiYaz(db: Sorgulayici, kim: Kisi, p: { aracId: string; alan: string | null; zaman: string; km: number; notu: string | null }):
+  Promise<{ durum: "tamam"; id: string; eden: string | null } | { durum: "gecersiz"; hatalar: DogrulamaHatalari }> {
+  if (!UUID.test(p.aracId)) return { durum: "gecersiz", hatalar: { arac: "Araç seçilmeli." } };
+  const son = (await db.sorgu<{ alan: string | null }>(
+    "SELECT alan_personel::text AS alan FROM zimmet_hareket WHERE arac_id = $1 ORDER BY zaman DESC, olustu DESC LIMIT 1", [p.aracId])).rows[0];
+  const eden = son?.alan ?? null;
+  if (p.alan && !(await personelSecenekleri(db)).some((k) => k.id === p.alan)) return { durum: "gecersiz", hatalar: { alan: "Teslim alan seçilmeli." } };
+  if (eden === p.alan) return { durum: "gecersiz", hatalar: { alan: p.alan ? "Araç zaten bu kişinin zimmetinde." : "Araç zaten depoda." } };
+  const r = await ekle(db, HAREKET, { arac_id: p.aracId, eden_personel: eden, alan_personel: p.alan, zaman: `${p.zaman}:00+03:00`, km: p.km, notu: p.notu },
+    { kim: kim.ad, ne: "zimmet.arac_teslim" });
+  return { durum: "tamam", id: r.id, eden };
+}

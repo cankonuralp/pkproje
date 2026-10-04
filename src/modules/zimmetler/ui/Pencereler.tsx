@@ -1,7 +1,7 @@
 "use client";
 /* ZİMMET PENCERELERİ (maket zimmetler.html pencereCiz): teslim et (varlık · teslim alan: kişi ya da depo · tarih-saat · durum notu · fotoğraflar,
    isteğe bağlı — fotoğrafsızsa uyarı yazar, karar 62; kalibrasyonu geçmiş cihaz kişiye verilirken uyarı, karar 59) · demirbaş ekle. Teslim
-   eden sunucuda o anki "kimde"den yazılır. Karar sunucuda. */
+   eden sunucuda o anki "kimde"den yazılır. Araç burada seçilmez: teslimi Araçlar'daki teslim tutanağıyla (kilometre, yakıt, açı fotoğrafları). Karar sunucuda. */
 import { useRouter } from "next/navigation";
 import { useRef, useState, useTransition } from "react";
 import { useBildir } from "../../../components/bildirim/Bildirim";
@@ -52,7 +52,7 @@ export function TeslimPenceresi({ kapat, varliklar, kisiler, bugun, varlik = "" 
         <FormIzgara>
           <Alan id={TID.varlik} etiket="Varlık" zorunlu genis hata={h.varlik} sonuc={v ? `Şu an: ${kimdeAd(v.kimde)}` : undefined}>
             <SecimAlani id={TID.varlik} ad="Varlık" deger={d.varlik} ipucu="Varlık seçin" gecersiz={!!h.varlik} tanim={ipucuId(TID.varlik)}
-              secenekler={varliklar.map((x) => [x.anahtar, `${x.kod} · ${x.ad}`, kimdeAd(x.kimde)] as const)} degistir={(x) => setD({ ...d, varlik: x })} />
+              secenekler={varliklar.filter((x) => x.tur !== "a").map((x) => [x.anahtar, `${x.kod} · ${x.ad}`, kimdeAd(x.kimde)] as const)} degistir={(x) => setD({ ...d, varlik: x })} />
           </Alan>
           <Alan id={TID.alan} etiket="Teslim alan" zorunlu hata={h.alan} sonuc={`Teslim eden: ${v ? kimdeAd(v.kimde) : "—"}`}>
             <SecimAlani id={TID.alan} ad="Teslim alan" deger={d.alan} ipucu="Kişi ya da depo" gecersiz={!!h.alan} tanim={ipucuId(TID.alan)}

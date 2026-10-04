@@ -24,6 +24,7 @@ function kimdeTanim(varliklar: readonly VarlikSatiri[], bugun: string): SuzgecTa
     metin: (v) => `${v.kod} ${v.ad} ${kimdeAd(v.kimde)}`,
     cipler: [
       { k: "c", ad: "Ölçüm cihazı", grup: "tur", test: (v) => v.tur === "c" },
+      { k: "a", ad: "Araç", grup: "tur", test: (v) => v.tur === "a" },
       { k: "d", ad: "Diğer", grup: "tur", test: (v) => v.tur === "d" },
       { k: "depo", ad: "Depoda", test: (v) => v.kimde.tip === "depo" },
       { k: "gecti", ad: "Kalibrasyonu geçmiş cihaz", test: (v) => kalGecti(v, bugun) },
@@ -69,6 +70,7 @@ function hareketTanim(hareketler: readonly HareketSatiri[]): SuzgecTanimi<Hareke
     metin: (h) => `${h.varlikKod} ${h.varlikAd} ${h.eden} ${h.alan} ${h.notu ?? ""}`,
     cipler: [
       { k: "c", ad: "Ölçüm cihazı", grup: "tur", test: (h) => h.varlik.startsWith("c:") },
+      { k: "a", ad: "Araç", grup: "tur", test: (h) => h.varlik.startsWith("a:") },
       { k: "d", ad: "Diğer", grup: "tur", test: (h) => h.varlik.startsWith("d:") },
       { k: "fotosuz", ad: "Fotoğrafsız", test: (h) => !h.fotolar.length },
     ],

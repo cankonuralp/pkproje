@@ -1,0 +1,28 @@
+/* Araçlar ekranları (maket araclar.html: .a-ad-bag, .a-hucre-satir, .a-km-gir, .a-arac-kutular, .a-arac-foto) */
+.ad {
+  display: inline-flex; align-items: center; min-height: var(--tus-y);
+  color: var(--onay-yazi); font-weight: 600; font-variant-numeric: tabular-nums; text-decoration: underline; text-decoration-color: transparent; text-underline-offset: 3px;
+}
+.ad:hover { text-decoration-color: currentColor; }
+.hucreSatir { display: flex; align-items: flex-start; gap: 6px; min-width: 0; }
+.sayi { font-variant-numeric: tabular-nums; }
+.kmGir { display: grid; gap: 6px; padding: 12px 0; border-top: 1px solid var(--kenar); }
+.kmGir:first-of-type { border-top: 0; }
+.kmSatir { display: flex; flex-wrap: wrap; align-items: flex-start; gap: 8px; }
+.kmSatir > :first-child { flex: 0 1 200px; }
+.etiket { font-weight: 600; }
+.ipucu { margin: 0; color: var(--yazi2); font-size: var(--boy-kucuk); }
+.ipucuHata { margin: 0; color: var(--hata-yazi); font-size: var(--boy-kucuk); font-weight: 600; }
+.kutular { display: grid; grid-template-columns: repeat(auto-fill, minmax(200px, 1fr)); gap: 4px 16px; margin: 0; padding: 0; border: 0; }
+.kutu { display: flex; align-items: center; gap: 8px; min-height: var(--tus-y); }
+.kutu input { width: 18px; height: 18px; accent-color: var(--birincil); }
+.acilar { list-style: none; margin: 0; padding: 0; display: grid; grid-template-columns: repeat(auto-fill, minmax(220px, 1fr)); gap: 12px; }
+.acilar li { display: grid; gap: 6px; }
+.dosya { width: 100%; min-height: var(--tus-y); font: inherit; color: var(--yazi); }
+.notAlan { width: 100%; min-height: 72px; padding: 8px 10px; border: 1px solid var(--kenar-alan); border-radius: var(--r-orta); background: var(--kart); color: var(--yazi); font: inherit; resize: vertical; }
+.bosSatir { margin: 0; padding: 14px 0; color: var(--yazi2); font-size: var(--boy-kucuk); }
+.fotolar { display: flex; flex-wrap: wrap; gap: 8px; }
+.foto { width: 120px; height: 90px; border-radius: var(--r-orta); overflow: hidden; border: 1px solid var(--kenar); }
+.fotoKap { display: grid; gap: 4px; font-size: var(--boy-kucuk); color: var(--yazi2); }
+.liste { margin: 0; padding-left: 18px; }
+.tuslar { display: flex; flex-wrap: wrap; justify-content: flex-end; gap: 8px; }

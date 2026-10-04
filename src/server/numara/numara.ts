@@ -15,6 +15,8 @@ export const NUMARA_TURLERI = {
   sozlesme: { onek: "IS", donem: "ay" },
   gider: { onek: "G", donem: "ay" },
   izin: { onek: "I", donem: "ay" },
+  /* araç teslim tutanağı (maket araclar.html MV.tutanakNo: AT-AAYY-SIRA) */
+  tutanak: { onek: "AT", donem: "ay" },
 } as const;
 export type NumaraTuru = keyof typeof NUMARA_TURLERI;
 

@@ -1,5 +1,5 @@
 /* VARLIK SAYFASI (maket zimmetler.html #/v/<id>): başlık + durum · Teslim et · kalibrasyon şeridi · yüzler (kimde, hareket, fotoğraf) · teslim
-   geçmişi. Adres /zimmetler/varlik/c/<id> (ölçüm cihazı) ya da /d/<id> (diğer). Görmeyen ("kendi" düzeyinde başkasının zimmeti): bulunamadı. */
+   geçmişi. Adres /zimmetler/varlik/c/<id> (ölçüm cihazı), /a/<id> (araç; teslimi Araçlar'da) ya da /d/<id> (diğer). Görmeyen ("kendi" düzeyinde başkasının zimmeti): bulunamadı. */
 import type { Metadata } from "next";
 import { notFound } from "next/navigation";
 import { Yuz, Yuzler } from "../../../../../../components/bilgi/Bilgi";
@@ -32,7 +32,8 @@ export default async function Sayfa({ params }: { params: Promise<{ tur: string;
       <NesneBasi baslik={`${v.kod} · ${v.ad}`} rozet={<DurumRozeti v={v} bugun={bugun} />} altIkon={TUR_IKON[v.tur]} alt={TUR_AD[v.tur]}
         tuslar={<>
           {v.tur === "c" && <TusBaglanti href={`/olcum-cihazlari/${v.id}`} ikon="gauge">Cihaz ve kalibrasyon</TusBaglanti>}
-          {yaz && v.kimde.tip !== "lab" && l && <TeslimTusu varlik={v.anahtar} varliklar={l.varliklar} kisiler={l.kisiler} bugun={bugun} />}
+          {v.tur === "a" && <TusBaglanti href={`/araclar/${v.id}`} ikon="car">Araç ve tutanaklar</TusBaglanti>}
+          {yaz && v.tur !== "a" && v.kimde.tip !== "lab" && l && <TeslimTusu varlik={v.anahtar} varliklar={l.varliklar} kisiler={l.kisiler} bugun={bugun} />}
         </>} />
       {kalGecti(v, bugun) && v.kimde.tip === "kisi" &&
         <SeritKap><Serit tur="hata" ikon="circle-x">Kalibrasyonu geçmiş cihaz {v.kimde.ad} zimmetinde: raporları onaya gönderilemez. Depoya alın ya da kalibrasyona gönderin.</Serit></SeritKap>}

@@ -2341,6 +2341,18 @@ revizyon, alan kopyalama, hafif kusur devri, meslek eşleşme denetimi).
 - Emsal ürünler: https://opwire.app/iso-17020-periyodik-kontrol-yazilimi/ · https://17020muayene.vidco.com.tr/ · https://akuple.com/asansor-kontrol-yazilimi/ · https://ensyazilim.com/
 
 ## 11 · Değişiklik günlüğü
+- 2026-10-04 (301): **K2 Araçlar 1: araç, teslim tutanağı, haftalık kilometre** (maket araclar.html, AA4 + 2026-10-03). Göç 0016 (arac — plaka
+  firmada eşsiz, boşluk yok sayılır, veritabanı da tutar; belge bitişleri isteğe bağlı · zimmet_hareket'e arac_id, tek varlık denetimi üç varlıklı ·
+  arac_tutanagi — hareketin eki, DEĞİŞMEZ: no AT-AAYY-SIRA, yakıt, araçta olanlar, hasar · arac_km — araç × hafta (Pazartesi) bir kayıt, aynı hafta
+  düzeltilir). Araç bir zimmet varlığı: "kimde" Zimmetler'in hareketlerinden, tutanak zimmet hareketini Zimmetler'in işleviyle yazar (ikinci liste
+  yok); Zimmetler'de "Araç" türü görünür ama oradan teslim edilmez (kilometre + tutanak gerekir). Kilometre son bilinenden küçük olamaz (ENGEL:
+  tutanak + haftalık, kendi haftasının kaydı hariç); haftada 3.000 km'den fazla artış kaydedilir, uyarılır. Fotoğraf açı başına (Ön, Arka, Sol, Sağ,
+  Gösterge, İç), isteğe bağlı, yalnız JPEG / PNG; biri reddedilirse tutanak hiç kaydedilmez. Yetki: yöneticiler ekler / düzenler / her araca tutanak,
+  planlama görür, denetçi (sürücü) yalnız kendi zimmetindeki aracı ve taraf olduğu tutanakları görür, yalnız kendi aracını teslim eder, haftalık
+  kilometreyi yazar; muhasebe görmez. Belge (muayene, trafik sigortası, kasko) eşiği kalibrasyon eşiğiyle aynı firma ayarı. Sayfalar: /araclar
+  (sürücüde "Aracım" + haftalık kilometre) · /araclar/tutanaklar · /araclar/sablon (örnek kalemler ve açılar, yalnız yönetici) · /araclar/<id>.
+  Sonraki kalemlere kalan: tutanağın imzaya düşmesi (Onaylar › Diğer) ve PDF'i Onaylar / PDF kalemlerinde; şablonun firmaca düzenlenmesi Format
+  kurucuda; yan menü balonu ve Uyarılar'a belge bitişi Uyarılar kaleminde.
 - 2026-10-04 (300): **K2 Zimmetler 1: kimde, hareketler, teslim, demirbaş** (maket zimmetler.html, M4 2. tur). Göç 0015 (demirbas — "diğer" varlık, kod
   firmada eşsiz; zimmet_hareket — her teslim ayrı ve DEĞİŞMEZ kayıt: uygulama rolüne yalnız ekleme / okuma hakkı; tek varlık CHECK; cihaz,
   demirbaş, personel aynı firmaya bağlı). "Kimde" son hareketten; teslim eden SUNUCUDA o anki kimde'den yazılır (istemciden alınmaz); kalibrasyondaki
