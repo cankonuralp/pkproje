@@ -85,7 +85,9 @@ pkproje/
   src/modules/<modül>/      ★ her iş modülü: server/ (veri erişimi + iş kuralları, dışa açılan fonksiyonlar) · ui/ · şema · testler
   src/sema/ortak.ts         ORTAK ŞEMA (zod): girdi doğrulamanın tek kaynağı, sunucu ve istemci aynı şemayı kullanır (2026-10-03)
   src/server/db/            gömülü PostgreSQL (gomulu.ts) · göç koşucusu (goc.ts, gocler/NNNN_ad.sql, her göç idempotent) ·
-                            kiracı süzgeçli TEK erişim katmanı (kiraci.ts: kiraciIcinde) — pg YALNIZ burada içe aktarılır
+                            kiracı süzgeçli TEK erişim katmanı (kiraci.ts: kiraciIcinde) — pg YALNIZ burada içe aktarılır ·
+                            GÜVENLİ YAZICI (yazici.ts: tablo / ekle / guncelle / izYaz — sürüm kilidi + denetim izi; modül ve sayfa ham
+                            yazma SQL'i taşımaz, 2026-10-04)
   src/server/kiraci/        kiracı çözümleme (alt alan adı → firma kısa adı; istek.ts: istekKiracisi) · ★ güvenli yazıcılar
   src/server/kimlik/        parola özeti (scrypt) · giriş · oturum (belirteç özeti, kilit) — 2026-10-04 · istek.ts (oturumGerekli, modulGorur,
                             güvenli dönüş adresi) · eylemler.ts (giriş / çıkış sunucu eylemleri)
@@ -164,7 +166,9 @@ CI aynı zinciri her push'ta koşar (`.github/workflows/ci.yml`); main'de deneti
   tek kaynağı (src ↔ docs) · kalıp sayıları (kabuk eşikleri yalnız kalıp bantları; daraltma yalnız geniş bantta, uygulama +
   maket) · ikonlar · menü = onaylı maket · rota = modül kaydı · kontrast (74 çift) ·
   kiracı süzgeci (pg yalnız src/server/db; her kiracı tablosunda ENABLE + FORCE RLS + politika) · kiracı izolasyonu
-  GERÇEK PostgreSQL'de (iki firma, WITH CHECK, uygulama rolü süper kullanıcı değil, göç idempotent).
+  GERÇEK PostgreSQL'de (iki firma, WITH CHECK, uygulama rolü süper kullanıcı değil, göç idempotent) · giriş / oturum / kilit · yetki
+  aynaları · güvenli yazıcı (sürüm kilidi, sütun listesi, gizli alan) · denetim izi değişmez + kim / zaman veritabanı damgası · ham yazma yasağı
+  (2026-10-04).
 - Sonra: Playwright + erişilebilirlik (ilk ekranlar) · görsel regresyon (referans ekran) · hata alarmı (yayında;
   kayıt yapısı ilk günden).
 

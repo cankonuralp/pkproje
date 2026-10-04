@@ -100,6 +100,12 @@ test("KİLİT: hesapta 5 hatalı deneme → 15 dk kilit; kilitliyken doğru paro
   assert.equal(!kilitli.tamam && kilitli.neden, "kilitli");
   const acik = await girisYap(havuz, A, { eposta: "kilit@deneme.example", parola: PAROLA_A, ip: "10.1.0.7", simdi: sonra(21) });
   assert.equal(acik.tamam, true);
+  /* 2026-10-04 (K1 güvenli yazıcı): kilit ve giriş denetim izine düşer; "kim" girenin hesabı (veritabanı damgası) */
+  const izler = (await kiraciIcinde(havuz, A, (db) => db.sorgu<{ ne: string; hesap_id: string | null }>(
+    "SELECT d.ne, d.hesap_id::text FROM denetim_izi d JOIN hesap h ON h.id::text = d.nesne_id WHERE h.eposta = 'kilit@deneme.example' ORDER BY d.id"))).rows;
+  assert.deepEqual(izler.map((i) => i.ne), ["giris.hesap_kilitlendi", "giris.yapildi"]);
+  assert.equal(izler[0].hesap_id, null, "kilitte oturum yok");
+  assert.ok(acik.tamam && izler[1].hesap_id === acik.hesap.id);
 });
 
 test("KİLİT: aynı IP'den farklı e-postalarla 5 hata → IP 15 dk kilitli; olmayan hesap için yanıt aynı", async () => {

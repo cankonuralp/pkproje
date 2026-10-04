@@ -2335,6 +2335,14 @@ revizyon, alan kopyalama, hafif kusur devri, meslek eşleşme denetimi).
 - Emsal ürünler: https://opwire.app/iso-17020-periyodik-kontrol-yazilimi/ · https://17020muayene.vidco.com.tr/ · https://akuple.com/asansor-kontrol-yazilimi/ · https://ensyazilim.com/
 
 ## 11 · Değişiklik günlüğü
+- 2026-10-04 (283): **K1 Çekirdek 4: güvenli yazıcı ve denetim izi** (09-D1, D3). Modüller kayıt ekler / değiştirirken tek yazıcıdan geçer
+  (`src/server/db/yazici.ts`): yazılabilir sütunlar tabloya göre listelidir (kimlik, firma, sürüm, zaman damgası hiçbir zaman formdan yazılmaz; liste dışı
+  ad SQL'e girmez); **iyimser kilit** — kayıt ekranda açıldıktan sonra başkası değiştirdiyse kaydetme reddedilir ("başkası değiştirdi"), sessizce
+  ezilmez; aynı anda üç kaydetmeden yalnız biri geçer (ölçüldü). Yalnız değişen alanlar yazılır ve **denetim izine eski / yeni + gerekçe** olarak düşer;
+  parola özeti gibi gizli alanların değeri ize yazılmaz. Başka firmanın kaydı "yok" döner (varlığı söylenmez). **Denetim izi değişmez:** uygulama
+  güncelleyemez / silemez, veritabanı tetiği tablo sahibine bile izin vermez; **kim ve ne zaman veritabanında damgalanır** (oturumdaki hesap işlemin
+  bağlamından, saat veritabanından) — kod başka bir kişi ya da geçmiş tarih yazamaz. Giriş, hesap kilidi ve IP kilidi de ize düşer. Kilit: modül ve
+  sayfa kodunda ham `INSERT / UPDATE / DELETE` yok (yazma yalnız çekirdekten). Testler gerçek PostgreSQL'de iki firmayla; olumsuz kanıt 5 bozma.
 - 2026-10-04 (282): **K1 Çekirdek 3: giriş ekranı, ara katman, oturumlu rotalar, çıkış, yetkisiz / bulunamadı ekranları.** Firma adresin alt alan
   adından çözülür (`<firma>.<ana alan>`); giriş o firmanın içinde yapılır, başka firmanın hesabı denenemez. Uygulama rotaları `(uygulama)` grubunda ve
   hepsi oturum ister (yerleşim `oturumGerekli()`); oturum yoksa ya da düştüyse giriş ekranına, girişten sonra kaldığı sayfaya döner (S2). Yan menü

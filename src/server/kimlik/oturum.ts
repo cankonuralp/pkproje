@@ -6,6 +6,7 @@
    · Oturum okunurken roller ve durum HER SEFERİNDE hesaptan okunur — rol istemciden gelmez, düşürülen yetki hemen geçerlidir (09-E4). */
 import { createHash, randomBytes } from "node:crypto";
 import { kiraciIcinde, type Havuz } from "../db/kiraci.ts";
+import { izYaz } from "../db/yazici.ts";
 import type { Rol } from "../yetki/tanim.ts";
 import { parolaDogru, sahteDenetim } from "./parola.ts";
 
@@ -42,12 +43,18 @@ export async function girisYap(havuz: Havuz, firmaId: string, g: { eposta: strin
         `INSERT INTO giris_kilidi (ip, hatali_deneme, son) VALUES ($1, 1, $2)
          ON CONFLICT (firma_id, ip) DO UPDATE SET hatali_deneme = CASE WHEN giris_kilidi.kilit_bitis IS NOT NULL AND giris_kilidi.kilit_bitis <= $2 THEN 1 ELSE giris_kilidi.hatali_deneme + 1 END,
            kilit_bitis = NULL, son = $2 RETURNING hatali_deneme`, [ip, simdi])).rows[0].hatali_deneme;
-      if (ipYeni >= KILIT_ESIGI) await db.sorgu("UPDATE giris_kilidi SET kilit_bitis = $2, hatali_deneme = 0 WHERE ip = $1", [ip, kilit]);
+      if (ipYeni >= KILIT_ESIGI) {
+        await db.sorgu("UPDATE giris_kilidi SET kilit_bitis = $2, hatali_deneme = 0 WHERE ip = $1", [ip, kilit]);
+        await izYaz(db, { kim: "bilinmiyor", ne: "giris.ip_kilitlendi", ayrinti: { ip, bitis: kilit.toISOString() } });
+      }
       if (h && h.durum !== "pasif") {
         const sayi = (h.kilit_bitis && h.kilit_bitis <= simdi ? 0 : h.hatali_deneme) + 1;
         await db.sorgu("UPDATE hesap SET hatali_deneme = $2, kilit_bitis = $3 WHERE id = $1",
           [h.id, sayi >= KILIT_ESIGI ? 0 : sayi, sayi >= KILIT_ESIGI ? kilit : null]);
-        if (sayi >= KILIT_ESIGI) return { tamam: false, neden: "kilitli", kilitBitis: kilit };
+        if (sayi >= KILIT_ESIGI) {
+          await izYaz(db, { kim: h.eposta, ne: "giris.hesap_kilitlendi", nesne: "hesap", nesneId: h.id, ayrinti: { ip, bitis: kilit.toISOString() } });
+          return { tamam: false, neden: "kilitli", kilitBitis: kilit };
+        }
       }
       if (ipYeni >= KILIT_ESIGI) return { tamam: false, neden: "kilitli", kilitBitis: kilit };
       return { tamam: false, neden: "hatali" };
@@ -58,7 +65,9 @@ export async function girisYap(havuz: Havuz, firmaId: string, g: { eposta: strin
     const bitis = new Date(simdi.getTime() + MUTLAK_GUN * 86_400_000);
     await db.sorgu("INSERT INTO oturum (ozet, hesap_id, olustu, son_kullanim, bitis, ip, tarayici) VALUES ($1, $2, $3, $3, $4, $5, $6)",
       [belirtecOzeti(belirtec), h.id, simdi, bitis, ip, g.tarayici?.slice(0, 300) ?? null]);
-    await db.sorgu("INSERT INTO denetim_izi (kim, ne, ayrinti) VALUES ($1, 'Giriş yapıldı', $2)", [h.eposta, JSON.stringify({ ip })]);
+    /* iz: giren hesap işlemin bağlamına yazılır → veritabanı "kim"i oradan damgalar (0003) */
+    await db.sorgu("SELECT set_config('app.hesap_id', $1, true)", [h.id]);
+    await izYaz(db, { kim: h.eposta, ne: "giris.yapildi", nesne: "hesap", nesneId: h.id, ayrinti: { ip } });
     return { tamam: true, belirtec, bitis, hesap: { id: h.id, firmaId: h.firma_id, ad: h.ad, eposta: h.eposta, roller: h.roller, durum: h.durum as "ilk" | "etkin" } };
   });
 }

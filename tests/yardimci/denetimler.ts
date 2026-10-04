@@ -234,6 +234,15 @@ export function kiraciDisiErisim(metinler: readonly { ad: string; metin: string 
     .map(({ ad }) => ad);
 }
 
+/** ham yazma SQL'i (INSERT INTO · UPDATE … SET · DELETE FROM · TRUNCATE) yalnız çekirdekte (src/server/); modüller ve sayfalar güvenli
+    yazıcıdan yazar (src/server/db/yazici.ts: sürüm kilidi + denetim izi — 09-D1, D3). K1 2026-10-04. */
+export function hamYazma(metinler: readonly { ad: string; metin: string }[]): string[] {
+  return metinler
+    .filter(({ ad }) => !ad.startsWith("src/server/"))
+    .filter(({ metin }) => /\bINSERT\s+INTO\b|\bUPDATE\s+\w+\s+SET\b|\bDELETE\s+FROM\b|\bTRUNCATE\b/i.test(metin))
+    .map(({ ad }) => ad);
+}
+
 /** firma_id taşıyan (ya da firma) her tablo: ENABLE + FORCE ROW LEVEL SECURITY + en az bir politika */
 export function rlsEksikTablolar(sqlMetinleri: readonly string[]): string[] {
   const sql = sqlMetinleri.join("\n").replace(/--[^\n]*/g, "");

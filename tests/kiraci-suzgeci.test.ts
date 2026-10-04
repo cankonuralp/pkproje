@@ -5,12 +5,18 @@
    Olumsuz kanıt: tests/bozan/kilitler.bozan.ts. */
 import assert from "node:assert/strict";
 import { test } from "node:test";
-import { dosyalar, kiraciDisiErisim, oku, rlsEksikTablolar } from "./yardimci/denetimler.ts";
+import { dosyalar, hamYazma, kiraciDisiErisim, oku, rlsEksikTablolar } from "./yardimci/denetimler.ts";
 
 test("uygulama kodu veritabanına yalnız src/server/db üzerinden erişir", () => {
   const metinler = dosyalar("src", [".ts", ".tsx"]).map((ad) => ({ ad, metin: oku(ad) }));
   assert.ok(metinler.length > 10);
   assert.deepEqual(kiraciDisiErisim(metinler), []);
+});
+
+/* 2026-10-04 (K1, güvenli yazıcı): modül ve sayfa ham yazma SQL'i taşımaz; yazma yalnız src/server/ çekirdeğinden (yazici.ts) */
+test("modüller ve sayfalar veritabanına ham SQL ile yazmaz (güvenli yazıcıdan geçer)", () => {
+  const metinler = dosyalar("src", [".ts", ".tsx"]).map((ad) => ({ ad, metin: oku(ad) }));
+  assert.deepEqual(hamYazma(metinler), []);
 });
 
 test("firma_id taşıyan her tablo RLS'yi açar, zorlar ve politika taşır", () => {

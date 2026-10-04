@@ -27,13 +27,15 @@ export function havuzKur(ayar: UygulamaBaglantisi): pg.Pool {
   return new pg.Pool({ ...ayar, max: 10 });
 }
 
-/** İşi verilen kiracının içinde, tek işlemde koşar. Hata geri alınır ve YUKARI fırlatılır (yutulmaz). */
-export async function kiraciIcinde<T>(havuz: pg.Pool, firmaId: string, is: (db: Sorgulayici) => Promise<T>): Promise<T> {
+/** İşi verilen kiracının içinde, tek işlemde koşar. Hata geri alınır ve YUKARI fırlatılır (yutulmaz).
+    `hesapId` verilirse işlemin bağlamına yazılır (`app.hesap_id`): denetim izinin "kim"i buradan damgalanır (0003), koddan değil. */
+export async function kiraciIcinde<T>(havuz: pg.Pool, firmaId: string, is: (db: Sorgulayici) => Promise<T>, secenek: { hesapId?: string } = {}): Promise<T> {
   if (!UUID.test(firmaId)) throw new Error("Geçersiz firma kimliği");
+  if (secenek.hesapId !== undefined && !UUID.test(secenek.hesapId)) throw new Error("Geçersiz hesap kimliği");
   const baglanti = await havuz.connect();
   try {
     await baglanti.query("BEGIN");
-    await baglanti.query("SELECT set_config('app.firma_id', $1, true)", [firmaId]);
+    await baglanti.query("SELECT set_config('app.firma_id', $1, true), set_config('app.hesap_id', $2, true)", [firmaId, secenek.hesapId ?? ""]);
     const sonuc = await is({ sorgu: (metin, degerler) => baglanti.query(metin, degerler as unknown[]) });
     await baglanti.query("COMMIT");
     return sonuc;

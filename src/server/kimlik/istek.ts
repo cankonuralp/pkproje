@@ -8,6 +8,7 @@ import { cookies, headers } from "next/headers";
 import { redirect } from "next/navigation";
 import { cache } from "react";
 import { havuz } from "../db/havuz.ts";
+import { kiraciIcinde, type Sorgulayici } from "../db/kiraci.ts";
 import { istekKiracisi, type IstekKiracisi } from "../kiraci/istek.ts";
 import { canDo } from "../yetki/canDo.ts";
 import type { ModulAnahtari } from "../yetki/tanim.ts";
@@ -47,4 +48,10 @@ export function guvenliDonus(yol: string | null | undefined): yol is string {
 /** modüle girebilir mi (sayfa düzeyi) — kayıt düzeyi denetimi modül işlevinde ayrıca */
 export function modulGorur(o: IstekOturumu, modul: ModulAnahtari): boolean {
   return canDo(o, modul, "gor");
+}
+
+/** Oturumdaki kişinin işlemi: kiracı isteğin alt alan adından, hesap oturumdan (denetim izinin "kim"i — 0003). Modül yazıcıları buradan koşar;
+    kiracı ya da hesap kimliği istemciden alınmaz (09-E2). */
+export function oturumIslemi<T>(o: IstekOturumu, is: (db: Sorgulayici) => Promise<T>): Promise<T> {
+  return kiraciIcinde(havuz(), o.kiraci.firmaId, is, { hesapId: o.id });
 }

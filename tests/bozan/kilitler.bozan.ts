@@ -7,7 +7,7 @@ import { KALIP } from "../../src/styles/kalip.ts";
 import { MODUL_GRUPLARI } from "../../src/modules/moduller.ts";
 import {
   bantDisiDaraltma, ciftIdler, ciftSeciciler, ciftTanimliDegiskenler, daralmisSerit, degiskenDegeri, dosyalar, eksikIkonlar, girdiYaziHatalari, kalipDisiEsikler,
-  kiraciDisiErisim, kullanilanIkonlar, maketIkonlari, maketMenusu, oku, parantezHatasi, rlsEksikTablolar, tanimsizDegiskenler, testKapisiEksikleri, tokenGovdesi,
+  hamYazma, kiraciDisiErisim, kullanilanIkonlar, maketIkonlari, maketMenusu, oku, parantezHatasi, rlsEksikTablolar, tanimsizDegiskenler, testKapisiEksikleri, tokenGovdesi,
 } from "../yardimci/denetimler.ts";
 
 const kabuk = oku("src/components/kabuk/Kabuk.module.css");
@@ -114,6 +114,13 @@ test("kiracı süzgeci: sayfa pg içe aktarınca ya da sorgu yazınca yakalanır
   assert.deepEqual(kiraciDisiErisim([{ ad: "src/app/page.tsx", metin: 'import pg from "pg";' }]), ["src/app/page.tsx"]);
   assert.deepEqual(kiraciDisiErisim([{ ad: "src/modules/x.ts", metin: "await havuz.query('SELECT * FROM denetim_izi')" }]), ["src/modules/x.ts"]);
   assert.deepEqual(kiraciDisiErisim([{ ad: "src/server/db/kiraci.ts", metin: 'import pg from "pg"; x.query("")' }]), []);
+});
+
+test("ham yazma: modülde UPDATE / INSERT / DELETE yakalanır, çekirdekte serbest", () => {
+  assert.deepEqual(hamYazma([{ ad: "src/modules/personel/server/kaydet.ts", metin: "db.sorgu(`UPDATE hesap SET roller = $1`)" }]), ["src/modules/personel/server/kaydet.ts"]);
+  assert.deepEqual(hamYazma([{ ad: "src/app/x/page.tsx", metin: "insert into denetim_izi (kim) values (1)" }]), ["src/app/x/page.tsx"]);
+  assert.deepEqual(hamYazma([{ ad: "src/modules/x.ts", metin: "DELETE FROM oturum" }]), ["src/modules/x.ts"]);
+  assert.deepEqual(hamYazma([{ ad: "src/server/db/yazici.ts", metin: "UPDATE hesap SET ad = $1" }]), []);
 });
 
 test("RLS: göçte FORCE ya da politika eksik tablo yakalanır", () => {
