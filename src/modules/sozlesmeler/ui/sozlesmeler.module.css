@@ -1,0 +1,24 @@
+/* Sözleşmeler ekranları (maket sozlesmeler.html: .a-no, .a-onay-kutusu, .a-alt-bas-ic, .a-kosullar) */
+.no {
+  display: inline-flex; align-items: center; min-height: var(--tus-y);
+  color: var(--onay-yazi); font-weight: 600; font-variant-numeric: tabular-nums; text-decoration: underline; text-decoration-color: transparent; text-underline-offset: 3px;
+}
+.no:hover { text-decoration-color: currentColor; }
+.tarih { display: block; font-variant-numeric: tabular-nums; }
+.uyari { display: block; color: var(--uyari-yazi); font-size: var(--boy-kucuk); font-weight: 600; }
+.kutular { display: grid; grid-template-columns: repeat(auto-fill, minmax(240px, 1fr)); gap: 4px 16px; margin: 0; padding: 0; border: 0; }
+.kutu { display: flex; align-items: flex-start; gap: 8px; min-height: var(--tus-y); padding-top: 10px; }
+.kutu input { width: 18px; height: 18px; margin: 2px 0 0; accent-color: var(--birincil); }
+.etiket { font-weight: 600; margin: 0 0 6px; }
+.hata { margin: 4px 0 0; color: var(--hata-yazi); font-size: var(--boy-kucuk); font-weight: 600; }
+.ipucu { margin: 4px 0 0; color: var(--yazi2); font-size: var(--boy-kucuk); }
+.dosya { width: 100%; min-height: var(--tus-y); font: inherit; color: var(--yazi); }
+.tesisBas { display: flex; flex-wrap: wrap; align-items: center; justify-content: space-between; gap: 8px; margin: 16px 0 8px; }
+.tesisBas:first-child { margin-top: 0; }
+.tesisAd { margin: 0; font-size: var(--boy-govde); font-weight: 600; }
+.sgk { color: var(--yazi2); font-size: var(--boy-kucuk); font-variant-numeric: tabular-nums; }
+.bosSatir { margin: 0; padding: 10px 0; color: var(--yazi2); font-size: var(--boy-kucuk); }
+.tuslar { display: flex; flex-wrap: wrap; justify-content: flex-end; gap: 8px; }
+.sablonlar { list-style: none; margin: 0 0 12px; padding: 0; display: grid; gap: 8px; }
+.sablonlar li { display: flex; flex-wrap: wrap; align-items: center; gap: 8px; justify-content: space-between; }
+.secenekler { display: flex; flex-wrap: wrap; gap: 8px; }

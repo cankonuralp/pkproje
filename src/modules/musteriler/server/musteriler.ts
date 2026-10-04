@@ -162,3 +162,13 @@ export async function tesisPasif(db: Sorgulayici, kim: Kisi, id: string, surum: 
     { kim: kim.ad, ne: pasif ? "tesis.pasif" : "tesis.etkinlestir" });
   return cevir(r) ?? { durum: "tamam", id, surum: (r as { surum: number }).surum };
 }
+
+/** öteki modüller için müşteri + tesis özeti (yetki ÇAĞIRANDA; Sözleşmeler kendi düzeyine göre gösterir). Pasif müşteri ve tesis dahil, işaretli. */
+export async function musteriOzetleri(db: Sorgulayici): Promise<{ id: string; unvan: string; kisa: string; vd: string | null; vno: string | null; pasif: boolean;
+  tesisler: { id: string; ad: string; il: string | null; ilce: string | null; sgk: string | null; pasif: boolean }[] }[]> {
+  const m = (await db.sorgu<{ id: string; unvan: string; kisa: string; vd: string | null; vno: string | null; pasif: string | null }>("SELECT id::text, unvan, kisa, vd, vno, pasif FROM musteri")).rows;
+  const t = (await db.sorgu<TesisSatirDb>(TESIS_SEC)).rows;
+  return m.map((x) => ({ id: x.id, unvan: x.unvan, kisa: x.kisa, vd: x.vd, vno: x.vno, pasif: !!x.pasif,
+    tesisler: t.filter((y) => y.musteri_id === x.id).map((y) => ({ id: y.id, ad: y.ad, il: y.il, ilce: y.ilce, sgk: y.sgk, pasif: !!y.pasif })).sort((a, b) => a.ad.localeCompare(b.ad, "tr")) }))
+    .sort((a, b) => a.kisa.localeCompare(b.kisa, "tr"));
+}

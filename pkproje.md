@@ -2341,6 +2341,18 @@ revizyon, alan kopyalama, hafif kusur devri, meslek eşleşme denetimi).
 - Emsal ürünler: https://opwire.app/iso-17020-periyodik-kontrol-yazilimi/ · https://17020muayene.vidco.com.tr/ · https://akuple.com/asansor-kontrol-yazilimi/ · https://ensyazilim.com/
 
 ## 11 · Değişiklik günlüğü
+- 2026-10-04 (302): **K2 Sözleşmeler 1: iş sözleşmesi, İSG-KATİP ID, sözleşme şablonu** (maket sozlesmeler.html, M5 + M13 2. tur). Göç 0017
+  (is_sozlesmesi — no IS-AAYY-SIRA numara üreticisinden, müşteri + kapsam tesisleri aynı firmaya bağlı, imza tarihi ile imzalı PDF birlikte (CHECK) ·
+  is_sozlesmesi_tesis — kapsam, sonradan değişmez · isg_katip — TESİS × DENETÇİ başına geçerli tek ID (kısmi eşsiz dizin), yeni ID eskisini "önceki"
+  yapar, kullanılmamış ID kaldırılır (kayıt kalır), kullanılmış (kullanildi — Planlar yazar) yalnız düzeltilir · sozlesme_sablon — firmanın PDF
+  şablonu, sürümlü; silme hakkı hiçbirinde yok). Durum: imza bekliyor → (imzalı PDF yüklenince) yürürlükte → (bitiş geçince) süresi doldu; hizmet
+  sözleşmesi için uyarı / şerit yok (reisim 2026-09-26). Yetki: planlama + yönetici değiştirir; muhasebe ve teknik roller görür; denetçi yalnız
+  kendi İSG-KATİP ID'si olan sözleşmeyi ve yalnız kendi ID'sini görür, imzalı sözleşmeyi açamaz. Dosya erişimi: imzalı sözleşme gören, İSG PDF'i
+  ID'yi gören, şablon yalnız değiştiren. Planlar için dışa açık: isgIdBul (tesis × denetçi). Sayfalar: /sozlesmeler · /sozlesmeler/yeni ·
+  /sozlesmeler/<id>. Sonraki kalemlere kalan: dayanak teklif (Teklifler), sözleşme metni PDF'i (PDF kalemi), açık plana bağlı İSG uyarıları
+  (ID eksik, geç onay, plan günü bitişten sonra — Planlar), Word şablonu (dosya yolu şimdilik PDF).
+- 2026-10-04 (301 düzeltme): Araçlar › Tutanaklar ve Şablon sayfaları sunucuda istemci işlevi çağırdığı için açılmıyordu; sekme yardımcısı ortak
+  dosyaya taşındı, uçtan uca test iki sayfayı da açıp denetliyor.
 - 2026-10-04 (301): **K2 Araçlar 1: araç, teslim tutanağı, haftalık kilometre** (maket araclar.html, AA4 + 2026-10-03). Göç 0016 (arac — plaka
   firmada eşsiz, boşluk yok sayılır, veritabanı da tutar; belge bitişleri isteğe bağlı · zimmet_hareket'e arac_id, tek varlık denetimi üç varlıklı ·
   arac_tutanagi — hareketin eki, DEĞİŞMEZ: no AT-AAYY-SIRA, yakıt, araçta olanlar, hasar · arac_km — araç × hafta (Pazartesi) bir kayıt, aynı hafta
