@@ -2341,6 +2341,14 @@ revizyon, alan kopyalama, hafif kusur devri, meslek eşleşme denetimi).
 - Emsal ürünler: https://opwire.app/iso-17020-periyodik-kontrol-yazilimi/ · https://17020muayene.vidco.com.tr/ · https://akuple.com/asansor-kontrol-yazilimi/ · https://ensyazilim.com/
 
 ## 11 · Değişiklik günlüğü
+- 2026-10-04 (299): **K2 Ölçüm cihazları 1: cihaz, cihaz türü, kalibrasyon kaydı** (maket olcum-cihazlari.html, M4 2. tur; T7). Göç 0014 (cihaz_turu —
+  firmanın listesi, ad eşsiz; olcum_cihazi — firmanın etiketi KOD eşsiz, düzenlenir, konum depo / kalibrasyonda; kalibrasyon — bitiş ≥ tarih, sonuç,
+  isteğe bağlı sertifika PDF'i, kaldırılır silinmez; hepsi aynı firmaya bağlı). Liste: kalibrasyon uyarı şeritleri (geçti · eşik içinde; eşik Firma
+  ayarları › Uyarı eşikleri, başlangıç 30 gün), çipler, Cihaz türü seçicisi. Cihaz sayfası: rozet + şerit, yüzler, bilgiler, kalibrasyon kayıtları
+  (sertifikayı aç, kaldır), Kalibrasyona gönder / Depoya al (kalibrasyon kaydı eklenince depoya döner). Geçerli bitiş = "uygun" kayıtların en geç
+  bitişi. Cihaz türü "Yeni tür…" ile formdan eklenir (Türkçe büyük / küçük harf farkıyla aynı ad tekrar açılmaz). Denetçinin "kendi" düzeyi Zimmetler
+  kalemine kadar kayıt göstermez. Kişi zimmeti (Teslim et), ara kontrol programları, raporda "kalibrasyonu geçen cihazla onaya gönderilemez" kendi
+  kalemlerinde.
 - 2026-10-04 (298): **K2 Ekipman türleri 1: katalog, tür sayfası, rapor formatı PDF'i** (maket ekipman-turleri.html, M3 onaylı 2026-09-26; AA5). Göç 0013
   (ekipman_turu: firmada eşsiz, DEĞİŞMEZ 2–3 harf kod — veritabanı tetiği; tur_format: sürümlü PDF, kaldırılır silinmez; tür + format + dosya AYNI
   firmada bağlı; dosya tablosuna (firma_id, id) eşsizliği). Katalog Mekanik / Elektrik sekmeli; tür ekle / düzenle (Ek-III dışında branş seçilir,
