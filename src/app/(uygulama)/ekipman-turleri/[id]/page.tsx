@@ -1,5 +1,5 @@
-/* TÜR SAYFASI (maket ekipman-turleri.html #/tur/<kod>): başlık + işlemler · yüzler · rapor formatı sürümleri · kontrol kuralları. Kullanılacak
-   ölçüm cihazları, standartlar ve rapor bölümleri o modüllerin kalemiyle gelir. Görmeyen / başka firmanın kaydı: bulunamadı. */
+/* TÜR SAYFASI (maket ekipman-turleri.html #/tur/<kod>): başlık + işlemler · yüzler · rapor formatı sürümleri · kullanılacak ölçüm cihazları ·
+   kontrol metodu standartları · kontrol kuralları. Rapor bölümleri Format kurucu kaleminde. Görmeyen / başka firmanın kaydı: bulunamadı. */
 import type { Metadata } from "next";
 import { notFound } from "next/navigation";
 import { Bilgi, BilgiListesi, Yuz, Yuzler } from "../../../../components/bilgi/Bilgi";
@@ -7,7 +7,9 @@ import { Yetkisiz } from "../../../../components/hata/Hata";
 import { Bolum, DegerYok, Kirinti, NesneBasi, SeritKap } from "../../../../components/sayfa/Sayfa";
 import { Serit } from "../../../../components/serit/Serit";
 import { bransAd, grupBul } from "../../../../modules/ekipman-turleri/sema";
-import { turDegistirir, turKarti } from "../../../../modules/ekipman-turleri/server/turler";
+import { baglantiSecenekleri, turDegistirir, turKarti } from "../../../../modules/ekipman-turleri/server/turler";
+import { BaglantiTusu } from "../../../../modules/ekipman-turleri/ui/Baglantilar";
+import stil from "../../../../modules/ekipman-turleri/ui/turler.module.css";
 import { FormatTablosu } from "../../../../modules/ekipman-turleri/ui/FormatTablosu";
 import { TurTuslari } from "../../../../modules/ekipman-turleri/ui/KartTuslari";
 import { tarihYaz } from "../../../../modules/ekipman-turleri/ui/ortak";
@@ -21,7 +23,7 @@ export default async function Sayfa({ params }: { params: Promise<{ id: string }
   const o = await modulOturumu(MODUL.no);
   if (!o) return <Yetkisiz />;
   const { id } = await params;
-  const t = await oturumIslemi(o, (db) => turKarti(db, o, id));
+  const [t, sec] = await oturumIslemi(o, async (db) => [await turKarti(db, o, id), await baglantiSecenekleri(db, o)] as const);
   if (!t) notFound();
   const yaz = turDegistirir(o);
   const g = grupBul(t.grup), onay = t.brans === "m" ? "Mekanik yönetici" : "Elektrik yönetici", p = t.formatlar[0];
@@ -38,6 +40,16 @@ export default async function Sayfa({ params }: { params: Promise<{ id: string }
       <Bolum id="b-format" baslik="Rapor formatı" sayac={p ? <><b>{t.formatlar.length}</b> sürüm</> : undefined}>
         {p ? <FormatTablosu formatlar={t.formatlar} kaldirabilir={yaz} />
           : <SeritKap><Serit tur="uyari" ikon="file-plus">Bu türün rapor formatı yüklenmedi. PDF yüklenince bu türde rapor oluşturulur.</Serit></SeritKap>}
+      </Bolum>
+      <Bolum id="b-tur-cihaz" baslik="Kullanılacak ölçüm cihazları" sayac={<><b>{t.cihazTurleri.length}</b> cihaz türü</>}
+        tuslar={yaz && sec && <BaglantiTusu turId={t.id} surum={t.surum} standartlar={t.standartlar.map((x) => x.no)} cihazTurleri={t.cihazTurleri.map((x) => x.id)} secenekler={sec} />}>
+        {t.cihazTurleri.length ? <ul className={stil.bagListe}>{t.cihazTurleri.map((c) => <li key={c.id}>{c.ad}</li>)}</ul>
+          : <SeritKap><Serit tur="uyari" ikon="gauge">Ölçüm cihazı seçilmemiş; raporda cihaz şartı aranmaz.</Serit></SeritKap>}
+      </Bolum>
+      <Bolum id="b-tur-std" baslik="Kontrol metodu standartları" sayac={<><b>{t.standartlar.length}</b> standart</>}>
+        {t.standartlar.length ? <ul className={stil.bagListe}>{t.standartlar.map((s) => <li key={s.no}><span>{s.id ? `${s.no}:${s.surumAdi}` : s.no}
+          <span className={stil.altMetin}>{s.konu ?? "Kütüphanede güncel sürüm yok"}</span></span></li>)}</ul>
+          : <SeritKap><Serit tur="uyari" ikon="triangle-alert">Standart seçilmemiş; raporda kontrol metodu “Üretici talimatı” yazar.</Serit></SeritKap>}
       </Bolum>
       <Bolum id="b-kural" baslik="Kontrol kuralları">
         <BilgiListesi>

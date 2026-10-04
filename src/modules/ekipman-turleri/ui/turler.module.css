@@ -10,3 +10,10 @@
 .dosya { width: 100%; min-height: var(--tus-y); font: inherit; color: var(--yazi); }
 .bosSatir { margin: 0; padding: 14px 0; color: var(--yazi2); font-size: var(--boy-kucuk); }
 .tuslar { display: flex; flex-wrap: wrap; justify-content: flex-end; gap: 8px; }
+.kutular { display: grid; gap: 4px; margin: 0 0 16px; padding: 0; border: 0; }
+.kutu { display: flex; align-items: flex-start; gap: 8px; min-height: var(--tus-y); padding-top: 10px; }
+.kutu input { width: 18px; height: 18px; margin: 2px 0 0; accent-color: var(--birincil); }
+.etiket { font-weight: 600; margin: 0 0 4px; }
+.altMetin { display: block; color: var(--yazi2); font-size: var(--boy-kucuk); }
+.bagListe { margin: 0; padding: 0; list-style: none; display: grid; gap: 8px; }
+.bagListe li { display: flex; align-items: flex-start; gap: 8px; }

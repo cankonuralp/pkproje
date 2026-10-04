@@ -4,7 +4,7 @@
 import { depo } from "../../../server/dosya/depo";
 import { ayniKoken } from "../../../server/kimlik/koken";
 import { istekOturumu, oturumIslemi } from "../../../server/kimlik/istek";
-import { formatKaldir, formatYukle, turKaydet } from "../server/turler";
+import { baglantiKaydet, formatKaldir, formatYukle, turKaydet } from "../server/turler";
 
 export interface PencereDurumu { tamam?: boolean; id?: string; sira?: number; hatalar?: Record<string, string>; genel?: string }
 
@@ -48,5 +48,14 @@ export async function formatKaldirEylemi(formatId: string, surum: number): Promi
   const r = await oturumIslemi(o, (db) => formatKaldir(db, o, String(formatId), Number(surum)));
   if (r.durum === "tamam") return { tamam: true };
   if (r.durum === "gecersiz") return { genel: "Kaldırılamadı." };
+  return { genel: SONUC[r.durum] };
+}
+
+export async function baglantiKaydetEylemi(turId: string, surum: number, standartlar: unknown, cihazTurleri: unknown): Promise<PencereDurumu> {
+  const o = await oturum(); if (typeof o === "string") return { genel: o };
+  const liste = (x: unknown) => (Array.isArray(x) ? x.filter((y): y is string => typeof y === "string") : []);
+  const r = await oturumIslemi(o, (db) => baglantiKaydet(db, o, typeof turId === "string" ? turId : "", Number(surum), { standartlar: liste(standartlar), cihazTurleri: liste(cihazTurleri) }));
+  if (r.durum === "tamam") return { tamam: true, id: r.id };
+  if (r.durum === "gecersiz") return { hatalar: r.hatalar };
   return { genel: SONUC[r.durum] };
 }

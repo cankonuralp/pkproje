@@ -8,18 +8,21 @@ import type { Depo } from "../../../server/dosya/depo.ts";
 import { dosyaYukle } from "../../../server/dosya/dosya.ts";
 import { canDo, duzey, type YetkiHesabi } from "../../../server/yetki/canDo.ts";
 import { dogrula, type DogrulamaHatalari } from "../../../sema/ortak.ts";
-import { TurGirdisi, turBransi } from "../sema.ts";
+import { guncelStandartlar } from "../../dokumanlar/server/dokumanlar.ts";
+import { cihazTuruOzetleri } from "../../olcum-cihazlari/server/cihazlar.ts";
+import { BaglantiGirdisi, TurGirdisi, turBransi } from "../sema.ts";
 
 const MODUL = 5;
 export const DOSYA_MODULU = "ekipman_turu";
-const TUR = tablo({ ad: "ekipman_turu", sutunlar: ["kod", "ad", "grup", "brans", "periyot", "sure"] });
+const TUR = tablo({ ad: "ekipman_turu", sutunlar: ["kod", "ad", "grup", "brans", "periyot", "sure", "kontrol_std", "cihaz_turleri"] });
 const FORMAT = tablo({ ad: "tur_format", sutunlar: ["tur_id", "sira", "dosya_id", "notu", "kaldirildi"] });
 const UUID = /^[0-9a-f]{8}-[0-9a-f]{4}-[0-9a-f]{4}-[0-9a-f]{4}-[0-9a-f]{12}$/;
 
 export interface Kisi extends YetkiHesabi { ad: string }
 export interface FormatSurumu { id: string; sira: number; dosyaId: string; dosyaAd: string; notu: string | null; olustu: string; surum: number }
 export interface TurSatiri { id: string; kod: string; ad: string; grup: string; brans: "m" | "e"; periyot: number; sure: number | null; format: Pick<FormatSurumu, "sira" | "olustu"> | null }
-export interface TurKarti extends TurSatiri { surum: number; formatlar: FormatSurumu[] }
+export interface TurStandardi { no: string; id: string | null; surumAdi: string | null; konu: string | null }
+export interface TurKarti extends TurSatiri { surum: number; formatlar: FormatSurumu[]; standartlar: TurStandardi[]; cihazTurleri: { id: string; ad: string }[] }
 
 export type Yazma =
   | { durum: "tamam"; id: string; surum: number }
@@ -39,6 +42,7 @@ export async function turDosyasiGorulur(db: Sorgulayici, kisi: YetkiHesabi, kayi
 
 type TurDb = { id: string; kod: string; ad: string; grup: string; brans: "m" | "e"; periyot: number; sure: number | null; surum: number };
 const TUR_SEC = "SELECT id::text, kod, ad, grup, brans, periyot, sure, surum FROM ekipman_turu";
+type BagDb = { kontrol_std: string[]; cihaz_turleri: string[] };
 
 export async function turListesi(db: Sorgulayici, kim: Kisi): Promise<TurSatiri[] | null> {
   if (duzey(kim, MODUL) === "yok") return null;
@@ -58,7 +62,13 @@ export async function turKarti(db: Sorgulayici, kim: Kisi, id: string): Promise<
     `SELECT f.id::text, f.sira, f.dosya_id::text, d.ad, f.notu, f.olustu, f.surum FROM tur_format f JOIN dosya d ON d.id = f.dosya_id AND d.firma_id = f.firma_id
       WHERE f.tur_id = $1 AND f.kaldirildi IS NULL ORDER BY f.sira DESC`, [id]);
   const formatlar = f.rows.map((x) => ({ id: x.id, sira: x.sira, dosyaId: x.dosya_id, dosyaAd: x.ad, notu: x.notu, olustu: gun(x.olustu), surum: x.surum }));
-  return { ...t, formatlar, format: formatlar[0] ? { sira: formatlar[0].sira, olustu: formatlar[0].olustu } : null };
+  const b = (await db.sorgu<BagDb>("SELECT kontrol_std, cihaz_turleri::text[] AS cihaz_turleri FROM ekipman_turu WHERE id = $1", [id])).rows[0];
+  const [std, ct] = [await guncelStandartlar(db), await cihazTuruOzetleri(db)];
+  return {
+    ...t, formatlar, format: formatlar[0] ? { sira: formatlar[0].sira, olustu: formatlar[0].olustu } : null,
+    standartlar: b.kontrol_std.map((no) => { const g = std.find((x) => x.no === no); return { no, id: g?.id ?? null, surumAdi: g?.surumAdi ?? null, konu: g?.konu ?? null }; }),
+    cihazTurleri: b.cihaz_turleri.map((c) => ct.find((x) => x.id === c)).filter((x): x is { id: string; ad: string } => !!x),
+  };
 }
 
 /** tür ekle (id boş) ya da düzenle. Kod yalnız eklerken; firmada eşsiz (maketle aynı ileti). */
@@ -110,4 +120,31 @@ export async function formatKaldir(db: Sorgulayici, kim: Kisi, formatId: string,
   const r = await guncelle(db, FORMAT, formatId, surum, { kaldirildi: new Date().toISOString() }, { kim: kim.ad, ne: "ekipman_turu.format_kaldir" });
   if (r.durum === "cakisma" || r.durum === "yok") return { durum: r.durum };
   return { durum: "tamam", id: formatId, surum: r.surum };
+}
+
+/** bağlantı seçenekleri (pencere için): güncel standartlar + firmanın cihaz türleri; yalnız "yaz" */
+export async function baglantiSecenekleri(db: Sorgulayici, kim: Kisi): Promise<{ standartlar: { no: string; konu: string }[]; cihazTurleri: { id: string; ad: string }[] } | null> {
+  if (!degistirir(kim)) return null;
+  return { standartlar: (await guncelStandartlar(db)).map(({ no, konu }) => ({ no, konu })), cihazTurleri: await cihazTuruOzetleri(db) };
+}
+
+/** kontrol metodu standartları + kullanılacak ölçüm cihazı türleri: standart kütüphanede güncel sürümü olan numara, cihaz türü bu firmanın olmalı */
+export async function baglantiKaydet(db: Sorgulayici, kim: Kisi, id: string, surum: number, girdi: unknown): Promise<Yazma> {
+  if (!degistirir(kim)) return { durum: "yetkisiz" };
+  if (!UUID.test(id) || !(await db.sorgu("SELECT 1 FROM ekipman_turu WHERE id = $1", [id])).rowCount) return { durum: "yok" };
+  const g = dogrula(BaglantiGirdisi, girdi);
+  if (!g.tamam) return { durum: "gecersiz", hatalar: g.hatalar };
+  const nolar = new Set((await guncelStandartlar(db)).map((x) => x.no)), turler = new Set((await cihazTuruOzetleri(db)).map((x) => x.id));
+  if (g.veri.standartlar.some((n) => !nolar.has(n))) return { durum: "gecersiz", hatalar: { standartlar: "Standart kütüphanede yok." } };
+  if (g.veri.cihazTurleri.some((c) => !turler.has(c))) return { durum: "gecersiz", hatalar: { cihazTurleri: "Cihaz türü bulunamadı." } };
+  if (!Number.isSafeInteger(surum) || surum < 0) return { durum: "cakisma" };
+  const r = await guncelle(db, TUR, id, surum, { kontrol_std: g.veri.standartlar, cihaz_turleri: g.veri.cihazTurleri }, { kim: kim.ad, ne: "ekipman_turu.baglanti" });
+  if (r.durum === "cakisma" || r.durum === "yok") return { durum: r.durum };
+  return { durum: "tamam", id, surum: r.surum };
+}
+
+/** Dökümanlar için: standardı (numarayla) kontrol metodu olarak kullanan türler. Yetki ÇAĞIRANDA. */
+export async function standardiKullananTurler(db: Sorgulayici, no: string): Promise<{ id: string; ad: string; brans: "m" | "e" }[]> {
+  return (await db.sorgu<{ id: string; ad: string; brans: "m" | "e" }>("SELECT id::text, ad, brans FROM ekipman_turu WHERE $1 = ANY (kontrol_std)", [no])).rows
+    .sort((a, b) => a.ad.localeCompare(b.ad, "tr"));
 }

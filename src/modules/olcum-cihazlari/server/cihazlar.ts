@@ -72,6 +72,11 @@ export async function cihazOzetleri(db: Sorgulayici): Promise<Pick<CihazSatiri, 
   return (await db.sorgu<CihazDb>(`${CIHAZ_SEC} WHERE c.pasif IS NULL`)).rows.map((x) => ({ id: x.id, kod: x.kod, tur: x.tur, konum: x.konum, bitis: x.bitis }));
 }
 
+/** öteki modüller için cihaz türleri (yetki ÇAĞIRANDA; Ekipman türleri bağlantısı) */
+export async function cihazTuruOzetleri(db: Sorgulayici): Promise<CihazTuru[]> {
+  return (await db.sorgu<CihazTuru>("SELECT id::text, ad FROM cihaz_turu")).rows.sort((a, b) => a.ad.localeCompare(b.ad, "tr"));
+}
+
 export async function cihazTurleri(db: Sorgulayici, kim: Kisi): Promise<CihazTuru[]> {
   if (!gorur(kim)) return [];
   return (await db.sorgu<CihazTuru>("SELECT id::text, ad FROM cihaz_turu")).rows.sort((a, b) => a.ad.localeCompare(b.ad, "tr"));

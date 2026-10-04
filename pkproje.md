@@ -2341,6 +2341,11 @@ revizyon, alan kopyalama, hafif kusur devri, meslek eşleşme denetimi).
 - Emsal ürünler: https://opwire.app/iso-17020-periyodik-kontrol-yazilimi/ · https://17020muayene.vidco.com.tr/ · https://akuple.com/asansor-kontrol-yazilimi/ · https://ensyazilim.com/
 
 ## 11 · Değişiklik günlüğü
+- 2026-10-04 (305): **K2 Ekipman türü bağlantıları: kontrol metodu standartları + kullanılacak ölçüm cihazları** (maket ekipman-turleri.html yirmi
+  dördüncü tur). Göç 0020 (ekipman_turu'na kontrol_std (standart NUMARALARI) ve cihaz_turleri; en çok 20'şer — CHECK). Standart numarayla bağlı:
+  Dökümanlar'da yeni sürüm yüklenince tür sayfası ve rapor güncel sürümü gösterir; kütüphanede güncel sürümü olmayan numara seçilmez. Cihaz türü bu
+  firmanın olmalı (sunucu denetler; başka firmanın kimliği "bulunamadı"). Tür sayfasında iki bölüm + "Metot ve cihazlar" penceresi (yalnız
+  değiştiren); standart sayfasında "Kullanan ekipman türleri". Raporda cihaz şartı (her türden kalibrasyonu geçerli cihaz) Raporlar kaleminde.
 - 2026-10-04 (304): **K2 Eğitimler: eğitim türleri, kayıtlar, tekrar takibi** (maket egitimler.html, M16; Dökümanlar'ın sekmesi, yetkisi modül 10).
   Göç 0019 (egitim_turu — firmanın eklediği ad (büyük / küçük harf farkıyla eşsiz) + tekrar süresi 1–120 ay; egitim_kaydi — kişi × tür × tarih, tekrar
   tarihi kayıt anında türün süresinden yazılır (tür süresi sonradan değişse geçmiş kayıt değişmez), kişi × eğitim başına TEK güncel kayıt (kısmi eşsiz

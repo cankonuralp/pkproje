@@ -27,3 +27,9 @@ export type TurGirdisi = z.output<typeof TurGirdisi>;
 
 /** kaydedilecek branş: grubunki; Ek-III dışında seçilen */
 export const turBransi = (t: Pick<TurGirdisi, "grup" | "brans">) => grupBul(t.grup)?.b ?? t.brans!;
+
+/** tür bağlantıları: kontrol metodu standart numaraları + kullanılacak ölçüm cihazı türleri (en çok 20'şer; tekrar yok) */
+export const BaglantiGirdisi = z.object({
+  standartlar: z.array(z.string().min(3).max(40), { error: "Geçersiz standart." }).max(20, "En çok 20 standart.").transform((l) => [...new Set(l)]),
+  cihazTurleri: z.array(z.string().regex(/^[0-9a-f-]{36}$/), { error: "Geçersiz cihaz türü." }).max(20, "En çok 20 cihaz türü.").transform((l) => [...new Set(l)]),
+});
