@@ -6,6 +6,7 @@
    · Oturum okunurken roller ve durum HER SEFERİNDE hesaptan okunur — rol istemciden gelmez, düşürülen yetki hemen geçerlidir (09-E4). */
 import { createHash, randomBytes } from "node:crypto";
 import { kiraciIcinde, type Havuz } from "../db/kiraci.ts";
+import type { Rol } from "../yetki/tanim.ts";
 import { parolaDogru, sahteDenetim } from "./parola.ts";
 
 export const KILIT_ESIGI = 5;
@@ -13,7 +14,6 @@ export const KILIT_SURE_DK = 15;
 export const HAREKETSIZ_SAAT = 12;
 export const MUTLAK_GUN = 14;
 
-export type Rol = "planlama" | "denetci" | "mekanik_yonetici" | "elektrik_yonetici" | "firma_yoneticisi" | "muhasebe";
 export interface OturumHesabi { id: string; firmaId: string; ad: string; eposta: string; roller: Rol[]; durum: "ilk" | "etkin" }
 
 export type GirisSonucu =

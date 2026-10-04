@@ -2335,6 +2335,12 @@ revizyon, alan kopyalama, hafif kusur devri, meslek eşleşme denetimi).
 - Emsal ürünler: https://opwire.app/iso-17020-periyodik-kontrol-yazilimi/ · https://17020muayene.vidco.com.tr/ · https://akuple.com/asansor-kontrol-yazilimi/ · https://ensyazilim.com/
 
 ## 11 · Değişiklik günlüğü
+- 2026-10-04 (281): **K1 Çekirdek 2: tek yetki denetimi `canDo` ve rol düzeni** (`src/server/yetki/`). Rol listesi, başlangıç düzeyi tablosu (yaz · gor ·
+  brans · kendi · yok) ve özel eylemler tek tanımda; ayna testleri bunu veritabanının rol CHECK'ine, onaylı maketin matrisine (MV.MATRIS) ve KOD-GECIS §4
+  tablosuna bağlar. Ekran yetkisi rollerin birleşimi; kayıt bilgisi (sahip, branş, atananlar) sunucuda okunur. Firma matrisi yalnız tanımlı düzeylerle
+  okunur (bozuk değer kapalı); firma yöneticisi Personel / Firma ayarları / Hareket kaydı yetkisini kendinden alamaz. **Dört göz:** teknik yönetici kendi
+  yazdığı raporu onaylayamaz / geri gönderemez (kod kararı; makette tek kişinin iki rolü örneği yoktu). Tanımsız rol ve eylem adı (toString, __proto__ …)
+  hiçbir şey vermez. Test 8/8, bozan 3/3.
 - 2026-10-04 (280): **K1 Çekirdek 1: hesap, parola özeti, oturum** (reisim: *"site güvenliği, kaynak koddan rol değiştirme sızma veri çalma gibi şeylere
   dikkat et"*). Göç 0002: `hesap` · `oturum` · `giris_kilidi` (hepsi RLS, firma bağlamında). Parola Node'un scrypt'iyle özetlenir (düz parola yok); oturum
   belirteci 32 bayt rasgele, veritabanında yalnız SHA-256 özeti. Kilit (karar 37): hesapta ve IP'de 5 hata → 15 dk; yanıt hesabın varlığını söylemez.
