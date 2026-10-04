@@ -40,6 +40,11 @@ const ayEkle = (iso: string, n: number) => {
   return new Date(Date.UTC(y, m - 1 + n, Math.min(g, son))).toISOString().slice(0, 10);
 };
 export const tarihNo = (iso: string) => `${iso.slice(8, 10)}.${iso.slice(5, 7)}.${iso.slice(0, 4)}`;
+const TR_ZAMAN = new Intl.DateTimeFormat("en-CA", { timeZone: "Europe/Istanbul", year: "numeric", month: "2-digit", day: "2-digit", hour: "2-digit", minute: "2-digit", hourCycle: "h23" });
+/** zaman damgasının Türkiye'deki günü "GG.AA.YYYY" (sunucu ve tarayıcıda aynı sonuç) */
+export const gunNo = (zaman: string) => tarihNo(TR_ZAMAN.format(new Date(zaman)).slice(0, 10));
+/** zaman damgası "GG.AA.YYYY SS:DD" (Türkiye saati) */
+export const zamanNo = (zaman: string) => { const s = TR_ZAMAN.format(new Date(zaman)); return `${tarihNo(s.slice(0, 10))} ${s.slice(12, 17)}`; };
 /* yılın son okunan sözcüğüne göre -de / -da / -te / -ta (maket MK.tarihEk "de"): 2026'da · 2027'de · 2023'te */
 const BIRLER = ["", "de", "de", "te", "te", "te", "da", "de", "de", "da"], ONLAR = ["", "da", "de", "da", "ta", "de", "ta", "te", "de", "da"];
 export const tarihDe = (iso: string) => {
@@ -122,3 +127,55 @@ export const PLAN_DURUM = {
   tamamlandi: ["Tamamlandı", "tamam"], reddedildi: ["Reddedildi", "red"],
 } as const;
 export type PlanDurumu = keyof typeof PLAN_DURUM;
+
+/* ── PLAN İÇİ (310; maket planlarim.html 4.–5. tur) ─────────────────────────────────────────────────────────────── */
+/** Reddet (maket a-red-pencere): gerekçe zorunlu */
+export const RedGirdisi = z.object({
+  gerekce: z.preprocess(kirp, z.string({ error: "Gerekçe yazılmadan plan reddedilemez." }).min(3, "Gerekçe yazılmadan plan reddedilemez.").max(500, "En çok 500 karakter.")),
+});
+/** Proje notu (karar 27): değişmez, silinmez */
+export const NotGirdisi = z.object({
+  metin: z.preprocess((s) => (typeof s === "string" ? s.trim() : s), z.string({ error: "Not boş olamaz." }).min(1, "Not boş olamaz.").max(500, "En çok 500 karakter.")),
+});
+const SGK = /^[0-9]{26}$/;
+/** Plan künyesi (§3.4 "Plan künyesi"): planlamacı Düzenle — firma adı, adres, SGK DETSİS NO, denetçi başına İSG-KATİP SÖZLEŞME ID */
+export const KunyeGirdisi = z.object({
+  firmaAdi: z.preprocess(kirp, z.string({ error: "Firma adı boş olamaz." }).min(1, "Firma adı boş olamaz.").max(200, "En çok 200 karakter.")),
+  adres: z.preprocess(bos, z.string().max(300, "En çok 300 karakter.").nullable()),
+  sgk: z.preprocess((s) => { const v = bos(s); return typeof v === "string" ? v.replace(/\s+/g, "") : v; },
+    z.string().regex(SGK, "SGK DETSİS NO 26 haneli olmalı.").nullable()),
+  isg: z.record(z.string().regex(UUID), z.preprocess(bos, z.string().max(30, "İSG-KATİP SÖZLEŞME ID en çok 30 karakter.").nullable())).default({}),
+});
+export type KunyeGirdisi = z.output<typeof KunyeGirdisi>;
+
+/** ekipman kodu yazarken: boşluk atılır, küçük harf büyüğe (yalnız a–z; dile bağlı harf katlama yok, anayasa 5.5) */
+export const kodNormal = (v: string) => v.replace(/\s+/g, "").replace(/[a-z]/g, (c) => c.toUpperCase());
+export type KodTuru = "bos" | "hata" | "tamam" | "tesiste";
+/** kodun biçimi (maket kodDurum ilk dört satır); biçim uygunsa null — eşsizlik sunucuda */
+export function kodBicimi(kod: string): { tur: KodTuru; metin: string } | null {
+  if (!kod) return { tur: "bos", metin: "Etiketteki kodu yazın: harf (A–Z), rakam ve tire. Kod firmada eşsiz olmalı." };
+  if (/[^A-Z0-9-]/.test(kod)) return { tur: "hata", metin: "Kodda yalnız A–Z, 0–9 ve tire olabilir (Türkçe harf ve boşluk yok)." };
+  if (kod.length < 3 || kod.length > 20) return { tur: "hata", metin: "Kod 3 ile 20 hane arasında olmalı." };
+  if (!/^[A-Z0-9]+(-[A-Z0-9]+)*$/.test(kod)) return { tur: "hata", metin: "Tire başta, sonda ya da art arda olamaz." };
+  return null;
+}
+/** yeni ekipman (maket ekleCiz "Yeni ekipman"): kod + tür zorunlu; seri no, konum isteğe bağlı */
+export const YeniEkipmanGirdisi = z.object({
+  kod: z.preprocess((s) => (typeof s === "string" ? kodNormal(s) : s), z.string({ error: "Ekipman kodu boş" })
+    .superRefine((k, bag) => { const b = kodBicimi(k); if (b) bag.addIssue({ code: "custom", message: b.metin }); })),
+  tur: z.string({ error: "Ekipman türü seçilmeli." }).regex(UUID, "Ekipman türü seçilmeli."),
+  seri: z.preprocess(bos, z.string().max(30, "En çok 30 karakter.").nullable()),
+  konum: z.preprocess(bos, z.string().max(60, "En çok 60 karakter.").nullable()),
+});
+
+/** plan akışının adımları (maket adim): tamam ✓ · aktif (şu an) · bekliyor (sırada) · red × */
+export type AdimDurumu = "tamam" | "aktif" | "bekliyor" | "red";
+export function akisAdimlari(d: PlanDurumu, kontrolTamam: boolean): [AdimDurumu, AdimDurumu, AdimDurumu, AdimDurumu] {
+  const kt = d === "denetimde" && kontrolTamam;
+  return [
+    "tamam",
+    d === "bekliyor" ? "aktif" : d === "reddedildi" ? "red" : "tamam",
+    d === "tamamlandi" || kt ? "tamam" : d === "kabul" || d === "denetimde" ? "aktif" : "bekliyor",
+    d === "tamamlandi" ? "tamam" : kt ? "aktif" : "bekliyor",
+  ];
+}

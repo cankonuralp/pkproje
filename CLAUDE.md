@@ -99,8 +99,9 @@ pkproje/
   src/modules/rapor-format/ RAPOR FORMATI (2026-10-04, 308): sürümlü tanım (rapor_format, göç 0022: taslak → yayında → eski; yayınlanan değişmez) ·
                             şablondan başlat · taslak kaydet · yayınla (kilitli Bakanlık öğesi ENGEL, öteki denetim uyarı) · yayındaki format;
                             ekran: tür sayfası "Rapor şablonu" + önizleme /ekipman-turleri/<tür>/sablon/<sürüm>
-  src/modules/planlar/      PLANLAR (2026-10-04, 309; modül 13): plan + plan ekibi (göç 0023; proje no sunucuda, değişmez; künye kayıttan) ·
-                            Plan aç /planlar/ac (uyarılar sema.ts'te saf, engel değil) · plan sayfası /planlar/<id>; liste ve plan içi sıradaki kalem
+  src/modules/planlar/      PLANLAR (2026-10-04, 309–310; modül 13): plan + plan ekibi (göç 0023; proje no sunucuda, değişmez; künye kayıttan) ·
+                            Plan aç /planlar/ac (uyarılar sema.ts'te saf, engel değil) · liste /planlar · plan içi /planlar/<id> (server/plan-ici.ts:
+                            akış kabul/red/kontrol/tamamla, künye düzenle/güncelle, plan ekipmanı, proje notları; geçişler göç 0024 tetiğinde)
   src/modules/ekipman/      EKİPMAN (2026-10-04, 309): tesisin kalıcı ekipman kaydı (kod firmada eşsiz; eski kod başkasına verilmez — ekipman_kodu)
   src/tanim/iller.ts        81 il + 973 ilçe (açık veri, MIT; bir kez alındı)
   src/modules/<modül>/      ★ her iş modülü: server/ (veri erişimi + iş kuralları, dışa açılan fonksiyonlar) · ui/ · şema · testler

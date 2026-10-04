@@ -38,13 +38,14 @@ test("plan aç: engel, canlı uyarılar, proje no ve künye; denetçi yalnız ke
   /* aç → plan sayfası: sunucunun verdiği proje no, künye kayıttan, ID planda */
   await page.getByRole("button", { name: "Planı aç" }).click();
   await expect(page).toHaveURL(/\/planlar\/[0-9a-f-]{36}$/, { timeout: 30_000 });
-  const baslik = page.getByRole("heading", { level: 1 });
-  await expect(baslik).toHaveText(new RegExp(`^P-\\d{4}-\\d{3,6} · ${E2E_PLAN.musteri.replace(/\./g, "\\.")}$`));
+  /* 310: başlıkta firma adı (L7), proje no kırıntıda ve plan bilgisinde; ekipman teklif içeriğinde */
+  await expect(page.getByRole("heading", { level: 1 })).toHaveText(E2E_PLAN.musteri);
+  await expect(page.getByRole("navigation", { name: "Konum" })).toContainText(/P-\d{4}-\d{3,6}/);
   const planAdresi = new URL(page.url()).pathname;
   await expect(page.getByText("Kabul bekliyor", { exact: true })).toBeVisible();
   await expect(page.getByText("Deneme Cad. No 1, Gebze / Kocaeli")).toBeVisible();
   await expect(page.getByText(isgNo)).toBeVisible();
-  await expect(page.getByText("2 ekipman · 1 tür")).toBeVisible();
+  await expect(page.getByRole("row", { name: /Hava tankı\s+Periyodik kontrol\s+2/ })).toBeVisible();
 
   /* denetçi: Plan aç yok, form yetkisiz, içinde olduğu planı görür */
   await context.clearCookies();
@@ -56,7 +57,7 @@ test("plan aç: engel, canlı uyarılar, proje no ve künye; denetçi yalnız ke
   await page.goto("/planlar/ac");
   await expect(page.getByText("Bu sayfayı görme yetkiniz yok")).toBeVisible();
   await page.goto(planAdresi);
-  await expect(page.getByRole("heading", { level: 1 })).toHaveText(new RegExp(`· ${E2E_PLAN.musteri.replace(/\./g, "\\.")}$`));
+  await expect(page.getByRole("heading", { level: 1 })).toHaveText(E2E_PLAN.musteri);
   await expect(page.getByRole("link", { name: "Yeni plan aç" })).toHaveCount(0);
 
   /* muhasebe: Planlar'ı göremez */

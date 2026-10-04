@@ -25,11 +25,13 @@ import {
   type AcikPlan, type Aday, type IsgKaydi, type KapsamSatiri, type PlanDurumu, type Tur,
 } from "../sema.ts";
 
-const MODUL = 13;
-const PLAN = tablo({ ad: "plan", sutunlar: ["no", "tesis_id", "baslangic", "bitis", "aciklama", "durum", "firma_adi", "adres", "sgk", "acan"] });
-const EKIP = tablo({ ad: "plan_ekip", sutunlar: ["plan_id", "personel_id", "isg_no", "isg_id"] });
-const UUID = /^[0-9a-f]{8}-[0-9a-f]{4}-[0-9a-f]{4}-[0-9a-f]{4}-[0-9a-f]{12}$/;
-const ACIK: PlanDurumu[] = ["bekliyor", "kabul", "denetimde"];
+export const MODUL = 13;
+export const PLAN = tablo({ ad: "plan", sutunlar: ["no", "tesis_id", "baslangic", "bitis", "aciklama", "durum", "firma_adi", "adres", "sgk", "acan",
+  "beyan", "kabul_eden", "red_eden", "red_gerekce", "kontrol_tamam", "kunye_surum"] });
+export const EKIP = tablo({ ad: "plan_ekip", sutunlar: ["plan_id", "personel_id", "isg_no", "isg_id", "kunye_surum", "gorulen"] });
+export const PLAN_EKIPMAN = tablo({ ad: "plan_ekipman", sutunlar: ["plan_id", "ekipman_id", "sonradan", "ekleyen"] });
+export const UUID = /^[0-9a-f]{8}-[0-9a-f]{4}-[0-9a-f]{4}-[0-9a-f]{4}-[0-9a-f]{12}$/;
+export const ACIK: PlanDurumu[] = ["bekliyor", "kabul", "denetimde"];
 const GUN = new Intl.DateTimeFormat("en-CA", { timeZone: "Europe/Istanbul", year: "numeric", month: "2-digit", day: "2-digit" });
 /** Türkiye'de bugünün takvim günü "YYYY-MM-DD" */
 export const bugunTr = (d = new Date()) => GUN.format(d);
@@ -49,7 +51,7 @@ export interface PlanAcVerisi {
   isgYazar: boolean;
 }
 
-async function acikPlanlar(db: Sorgulayici): Promise<AcikPlan[]> {
+export async function acikPlanlar(db: Sorgulayici): Promise<AcikPlan[]> {
   const p = (await db.sorgu<{ id: string; no: string; baslangic: string; bitis: string; tesis_id: string }>(
     "SELECT id::text, no, baslangic::text, bitis::text, tesis_id::text FROM plan WHERE durum = ANY ($1)", [ACIK])).rows;
   const e = (await db.sorgu<{ plan_id: string; personel_id: string }>(
@@ -123,6 +125,10 @@ export async function planAc(db: Sorgulayici, depo: Depo, kim: Kisi, firmaId: st
     }
     await ekle(db, EKIP, { plan_id: p.id, personel_id: e.personel, isg_no: kayit?.no ?? e.isgNo, isg_id: kayit?.id ?? null }, { kim: kim.ad, ne: "plan.ekip", gerekce: no });
     if (kayit) await isgKullanildi(db, kim, kayit.id, bugun);
+  }
+  /* tesisin etkin ekipmanının hepsi plana girer (L6; kapsam seçimi yok) */
+  for (const e of (await tesisEkipmanlari(db, v.tesis)).filter((x) => !x.pasif)) {
+    await ekle(db, PLAN_EKIPMAN, { plan_id: p.id, ekipman_id: e.id, sonradan: false, ekleyen: kim.ad }, { kim: kim.ad, ne: "plan.ekipman", gerekce: no });
   }
   return { durum: "tamam", id: p.id, no };
 }

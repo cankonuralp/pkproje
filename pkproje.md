@@ -2341,6 +2341,30 @@ revizyon, alan kopyalama, hafif kusur devri, meslek eşleşme denetimi).
 - Emsal ürünler: https://opwire.app/iso-17020-periyodik-kontrol-yazilimi/ · https://17020muayene.vidco.com.tr/ · https://akuple.com/asansor-kontrol-yazilimi/ · https://ensyazilim.com/
 
 ## 11 · Değişiklik günlüğü
+- 2026-10-04 (310): **K3 Planlar listesi + plan içi akış** (donmuş referans ekran: maket planlarim.html 2.–5. tur; §3.4 karar 9–12, 26–28, "Plan
+  künyesi"). **Liste** `/planlar`: Proje no · Proje adı · Müşteri · Adres · Denetçi · Başlangıç · Durum · Görüntüle; süzgeç proje adı + proje no
+  kutuları, Durum / Tarih (bugün, bu hafta, önümüzdeki 7 gün) / Müşteri / Branş; sütun başlığıyla sıralama (kartta "Sıralama"), varsayılan en yeni
+  tarih üstte. Denetçi yalnız ekibinde olduğu planları görür (sunucuda). **Plan içi** `/planlar/<id>`: başlıkta firma adı (künyeden, L7), altında
+  tesis, proje no kırıntıda; dikey akış Planlandı → Kabul → Denetim → Tamamlama (tamamlandı ✓ · şu an · sırada · reddedildi ×, yalnız tarih);
+  telefonda şu anki adımın tuşları altta yapışkan çubukta. Planlandı: künye satırları + Teklif içeriği (tür × adet, plan açılırkenki); planlamacı
+  **Düzenle** (firma adı, adres, SGK DETSİS NO, denetçi başına İSG-KATİP ID), denetçinin gördüğü künye kendiliğinden değişmez — şerit + **Güncelle**
+  (taslak raporlara geçiş Raporlar kalemiyle). Kabul: tarafsızlık beyanı (firma ayarı `beyan`, boşsa varsayılan; kabul anındaki metin plana
+  yazılır, değişmez), okunmadan Kabul et kapalı (sebebi yazılı); Reddet gerekçe ister; ikisi de YALNIZ plandaki denetçi (plan_kabul_red).
+  Denetim: Ekipmanlar (süzgeç alan alan + çipler + Branş, 10'ar sayfa; Kod + Yeni rozeti, tür, konum, branş, önceki kontrol, rapor / Pasif;
+  Pasife al / Etkinleştir) + Raporlar (Raporlar kalemiyle dolar); **Ekipman ekle** iki yol — yeni (kod yazarken denetlenir: biçim · bu planda var ·
+  bu tesiste kayıtlı → "Kayıtlı ekipmanı seç" · başka tesiste · eski kod · kullanılabilir; tür, seri no, konum) ya da tesiste kayıtlı ekipmanı plana
+  al; yalnız Kabul edildi / Denetimde (tamamlanmışta kapalı, 12). Kontrol listesi Tamamla → plan Tamamla (raporsuz ekipman engellemez, sayısı
+  yazar, 11) ⇄ Tamamlamayı geri al (plan yeniden denetime, kontrol listesi açık). Altta **Proje notları** (ekipteki denetçiler + Planlar "yaz";
+  yönetici "görür" ve muhasebe görmez; değişmez, silinmez; son 6, Tümünü göster). Göç 0024: plan akış sütunları + **akış tetiği** (yeni plan
+  yalnız Kabul bekliyor; izinli geçişler bekliyor → kabul / reddedildi, kabul → denetimde, denetimde ⇄ tamamlandı; kabul / red / başlama /
+  bitiş / kontrol zamanı ve kabul eden / reddeden HESAP veritabanında damgalanır; beyan, red gerekçesi değişmez) · plan_ekip künye sürümü +
+  görülen künye · **plan_ekipman** (planın ekipmanı; plan açılırken tesisin etkin ekipmanı, denetimde eklenenler "sonradan"; ekipman planın
+  tesisinde olmalı, tamamlanmış / reddedilmiş plana eklenmez — tetik; 0023 planlarına bir kez dolduruldu) · **plan_not** (yazan hesap tetikle,
+  yalnız SELECT / INSERT). "İlk rapor oluşturulunca Denetimde" işlevi (`denetimeBasla`) Raporlar modülü için dışa açık. **Ertelenen:** Excel'e
+  aktar / Excel'den yükle (ekipman), rapor saatlerini hizala, toplu PDF, Saha formu, "Rapor oluştur" (Raporlar / saha raporu kalemi); N2
+  (ekipman listesinin denetçinin branşıyla açılması — kişinin branşı personel kaydından okunacak). Kilit: tests/plan-ici.test.ts (7; gerçek
+  PostgreSQL, iki firma: akış ve damgalar, red, künye, notlar, ekipman kodu ve ekleme, liste görünürlüğü, kiracı + rol düzeni + sahte rol) +
+  bozan 4 (akış tetiği, not damgası, sunucuda kabul yetkisi, künye saklama) + e2e/plan-ici.spec.ts (üç genişlik) + 309 e2e'si yeni başlığa uyarlandı.
 - 2026-10-04 (309): **K3 Plan aç: ekipman kaydı, plan, plan ekibi; uyarılar engel değil** (maket plan-ac.html M6 2. tur; §3.4–3.5; L2, L4, L6, G1,
   Ö5b; KOD-GECIS §3, §5). Göç 0023: **ekipman** (tesisin kalıcı kaydı; tür kataloğa bağlı; kod FİRMADA EŞSİZ, A–Z 0–9 tire, 3–20; silinmez, pasife
   alınır; sistem öncesi son kontrol ayrı sütunda) + **ekipman_kodu** (verilen her kod geçmişe yazılır; kod değişse de eski kod başka ekipmana
