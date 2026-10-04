@@ -2335,6 +2335,12 @@ revizyon, alan kopyalama, hafif kusur devri, meslek eşleşme denetimi).
 - Emsal ürünler: https://opwire.app/iso-17020-periyodik-kontrol-yazilimi/ · https://17020muayene.vidco.com.tr/ · https://akuple.com/asansor-kontrol-yazilimi/ · https://ensyazilim.com/
 
 ## 11 · Değişiklik günlüğü
+- 2026-10-04 (280): **K1 Çekirdek 1: hesap, parola özeti, oturum** (reisim: *"site güvenliği, kaynak koddan rol değiştirme sızma veri çalma gibi şeylere
+  dikkat et"*). Göç 0002: `hesap` · `oturum` · `giris_kilidi` (hepsi RLS, firma bağlamında). Parola Node'un scrypt'iyle özetlenir (düz parola yok); oturum
+  belirteci 32 bayt rasgele, veritabanında yalnız SHA-256 özeti. Kilit (karar 37): hesapta ve IP'de 5 hata → 15 dk; yanıt hesabın varlığını söylemez.
+  Roller hesaptan her istekte okunur (istemci rol yollayamaz); rol / durum / parola değişince o hesabın oturumları veritabanı tetiğiyle hemen düşer
+  (09-E4). Firma A'nın belirteci firma B'de geçmez. **Oturum süresi (teknik seçim):** 12 saat hareketsizlik, en geç 14 gün. Gerçek PostgreSQL'de iki
+  firmalı test 9/9; bozan 2/2 (tetik ve politika kalkınca açık gerçekten açılır).
 - 2026-10-03 (279): **K0 Hazırlık 7: ortak şema kitaplığı** (`src/sema/ortak.ts`, zod; KOD-GECIS §2 "sunucu ve istemci aynı şemayı paylaşır") — K0 bitti.
   Yapı taşları: metin · e-posta (kırpılır, küçülür) · parola (karar 37) · ekipman kodu (A–Z 0–9 tire 3–20; büyük harfe yerelden bağımsız, i → I) · cihaz kodu ·
   fatura no · tarih / zaman (takvimde olmayan gün yok) · tutar (kuruş tam sayı; "1.234,56") · sürüm · kimlik; hatalar alan → ileti haritası. zod'un kendi

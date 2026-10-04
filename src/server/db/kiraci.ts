@@ -19,6 +19,9 @@ export interface UygulamaBaglantisi {
   password: string;
 }
 
+/** havuz türü dışarıya bu adla açılır: modüller `pg`'yi içe aktarmaz (tests/kiraci-suzgeci.test.ts) */
+export type Havuz = pg.Pool;
+
 /** Uygulama rolüyle bağlantı havuzu (süper kullanıcı DEĞİL; RLS'yi aşamaz). */
 export function havuzKur(ayar: UygulamaBaglantisi): pg.Pool {
   return new pg.Pool({ ...ayar, max: 10 });
