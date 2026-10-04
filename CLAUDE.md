@@ -94,6 +94,8 @@ pkproje/
   src/modules/sozlesmeler/  SÖZLEŞMELER (2026-10-04): iş sözleşmesi + kapsam + imzalı PDF, İSG-KATİP ID (tesis × denetçi), sözleşme şablonu
   src/modules/dokumanlar/   DÖKÜMANLAR (2026-10-04): standart kütüphanesi (sürümlü PDF), diğer dökümanlar; kriter belgeleri src/tanim/kriterler.ts
   src/modules/egitimler/    EĞİTİMLER (2026-10-04; Dökümanlar sekmesi, modül 10): eğitim türleri, kayıtlar, tekrar tarihi, sertifika
+  src/format/               FORMAT MOTORU (2026-10-04, RAPOR-FORMAT.md): tanim.ts (şema) · hesap.ts (ZPKK formülleri, saf) · motor.ts (değerlendir,
+                            yayın denetimi) · sablonlar.ts (ZPKR01, ZPKR02, kompresör) — saha ekranı ve PDF aynı tanımdan
   src/tanim/iller.ts        81 il + 973 ilçe (açık veri, MIT; bir kez alındı)
   src/modules/<modül>/      ★ her iş modülü: server/ (veri erişimi + iş kuralları, dışa açılan fonksiyonlar) · ui/ · şema · testler
   src/tanim/tanimlar.ts     SABİT TANIMLAR (durum adları, eğri çarpanları, mesai sınırları …): şemalı, karma adlı JSON → /api/tanim (2026-10-04)

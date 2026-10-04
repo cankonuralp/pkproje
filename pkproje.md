@@ -2341,6 +2341,13 @@ revizyon, alan kopyalama, hafif kusur devri, meslek eşleşme denetimi).
 - Emsal ürünler: https://opwire.app/iso-17020-periyodik-kontrol-yazilimi/ · https://17020muayene.vidco.com.tr/ · https://akuple.com/asansor-kontrol-yazilimi/ · https://ensyazilim.com/
 
 ## 11 · Değişiklik günlüğü
+- 2026-10-04 (307): **K3 Format motoru 1: tanım şeması, değerlendirme, hazır şablonlar** (RAPOR-FORMAT.md §1–5, §9.1; KOD-GECIS K3 ilk kalemi).
+  src/format/: tanim.ts (şema sürüm 1 — 10 blok, kurallar, görünüm; bütün kimlikler tekil, cevaplar kimlikle; istemciden / yapay zekâdan gelen tanım
+  şemadan geçmezse yazılmaz) · hesap.ts (ZPKK01 / ZPKK02 formülleri, maketle aynı sayılar: Zs = 230 / (çarpan × In), RCD IΔ ≤ IΔn ve TΔ ≤ 200 ms,
+  linye Icu / Ib ≤ In ≤ Iz / N-PEN / PE Çizelge 8, PD 6–25 ve tamamlayıcı ≥ 4 mm², zemin > 50 kΩ) · motor.ts (eksikler — uyarı, engel değil;
+  kusurlar — olumsuz madde, kusurlu uygunluk notu, hesabı / sütun sınırı tutmayan satır, sınır dışı değer; sonuç önerisi; yayın denetimi —
+  boş bölüm, sınırsız tablo, sonuç / imza yok, kilitli Bakanlık öğesi silinmiş) · sablonlar.ts (ZPKR01, ZPKR02 Bakanlık yazımıyla birebir ve
+  kilitli; kompresör genel; örnek değer yok). Saha ekranı ve PDF çizimi, tanımın veritabanında saklanması ve sürümü sonraki kalemlerde.
 - 2026-10-04 (306): **K2 Personel dosyası: özlük, ekipman atamaları, maaş ve bordrolar, zimmetindekiler + imzalı zimmet formu, eğitimler** (maket
   personel.html; reisim 40, L4, 2026-09-27). Göç 0021 (ozluk_belgesi — tür listeden; ekipman_atamasi — kişi × tür başına TEK geçerli atama (kısmi eşsiz
   dizin), atama belgesi zorunlu, tarih ileri olamaz; bordro — kişi × ay başına tek geçerli bordro, CHECK net ≤ brüt ≤ işverene maliyet, aynı dönemin
