@@ -92,6 +92,10 @@ pkproje/
                             kiracı süzgeçli TEK erişim katmanı (kiraci.ts: kiraciIcinde) — pg YALNIZ burada içe aktarılır ·
                             GÜVENLİ YAZICI (yazici.ts: tablo / ekle / guncelle / izYaz — sürüm kilidi + denetim izi; modül ve sayfa ham
                             yazma SQL'i taşımaz, 2026-10-04)
+  src/server/db/gocler/0000, 0008–0010  YAYIN SERTLEŞTİRME (2026-10-04): Supabase API rolleri şemaya giremez (0000 önce, 0008 temizlik + doğrulama),
+                            rol süre sınırları (0009), işlev arama yolu (0010) — kilit tests/yayin.test.ts (Supabase taklidi, süper kullanıcı olmayan sahip)
+  src/server/db/havuz.ts    ortamdan bağlantı: ağda şifresiz bağlantı YOK (PROBATA_VT_SSL=dogrula → kok-sertifika.ts Supabase kökü); Vercel'de boşta bekleme
+  vercel.json               deneme yayını (Vercel fra1, https://probata-deneme.vercel.app; veritabanı Supabase eu-central-1 — pkproje.md §11 293)
   src/server/kiraci/        kiracı çözümleme (alt alan adı → firma kısa adı; istek.ts: istekKiracisi) · ★ güvenli yazıcılar
   src/server/kimlik/        parola özeti (scrypt) · giriş · oturum (belirteç özeti, kilit) — 2026-10-04 · istek.ts (oturumGerekli, modulGorur,
                             güvenli dönüş adresi) · eylemler.ts (giriş / çıkış sunucu eylemleri)

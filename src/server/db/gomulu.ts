@@ -28,8 +28,8 @@ export interface GomuluAyar {
 
 export interface GomuluKume {
   uygulama: UygulamaBaglantisi;
-  /** sahip (yönetici) bağlantısı — yalnız göç ve test kurulumu için */
-  sahipIstemci(): pg.Client;
+  /** sahip (yönetici) bağlantısı — yalnız göç ve test kurulumu için (veritabanı verilmezse uygulamanınki) */
+  sahipIstemci(veritabani?: string): pg.Client;
   durdur(): Promise<void>;
 }
 
@@ -87,7 +87,7 @@ export async function gomuluBaslat(ayar: GomuluAyar): Promise<GomuluKume> {
 
   return {
     uygulama: { host: "127.0.0.1", port: ayar.port, database: VERITABANI, user: UYGULAMA_ROLU, password: uygulamaSifre },
-    sahipIstemci: () => sahipIstemci(),
+    sahipIstemci: (veritabani?: string) => sahipIstemci(veritabani),
     durdur: () => kume.stop(),
   };
 }

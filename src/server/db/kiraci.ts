@@ -21,14 +21,28 @@ export interface UygulamaBaglantisi {
   database: string;
   user: string;
   password: string;
+  /** şifreli bağlantı: sunucu sertifikası yalnız bu kökle doğrulanır (yayın, src/server/db/havuz.ts); yoksa yerel (127.0.0.1) */
+  kokSertifika?: string;
+  /** havuzdaki en çok bağlantı (yayında barındırma örneği başına az tutulur; Supabase havuzlayıcısı paylaşılır) */
+  enCok?: number;
 }
 
 /** havuz türü dışarıya bu adla açılır: modüller `pg`'yi içe aktarmaz (tests/kiraci-suzgeci.test.ts) */
 export type Havuz = pg.Pool;
 
-/** Uygulama rolüyle bağlantı havuzu (süper kullanıcı DEĞİL; RLS'yi aşamaz). */
+/** Uygulama rolüyle bağlantı havuzu (süper kullanıcı DEĞİL; RLS'yi aşamaz). Kök sertifika verilmişse bağlantı TLS'li ve sunucu doğrulanır
+    (rejectUnauthorized: true — sertifikası tutmayan sunucuya parola gönderilmez).
+    2026-10-04 (yayın denetimi): boştaki bağlantı sunucu tarafında koparsa (veritabanı / havuzlayıcı yeniden başladı) havuz 'error' yayar;
+    dinleyici yoksa bu yakalanmamış istisna olur ve süreci düşürebilir → günlüğe yazılır, havuz kendini toparlar. Bağlanma 5 sn'de, boştaki
+    bağlantı 5 sn'de bırakılır (sunucusuz ortamda askıdaki örnek bağlantı tutmasın). */
 export function havuzKur(ayar: UygulamaBaglantisi): pg.Pool {
-  return new pg.Pool({ ...ayar, max: 10 });
+  const { kokSertifika, enCok, ...baglanti } = ayar;
+  const havuz = new pg.Pool({
+    ...baglanti, max: enCok ?? 10, connectionTimeoutMillis: 5000, idleTimeoutMillis: 5000,
+    ssl: kokSertifika ? { ca: kokSertifika, rejectUnauthorized: true } : false,
+  });
+  havuz.on("error", (e) => { console.error("[veritabanı] boştaki bağlantı koptu:", e.message); });
+  return havuz;
 }
 
 /** İşi verilen kiracının içinde, tek işlemde koşar. Hata geri alınır ve YUKARI fırlatılır (yutulmaz).
@@ -37,6 +51,10 @@ export async function kiraciIcinde<T>(havuz: pg.Pool, firmaId: string, is: (db: 
   if (!UUID.test(firmaId)) throw new Error("Geçersiz firma kimliği");
   if (secenek.hesapId !== undefined && !UUID.test(secenek.hesapId)) throw new Error("Geçersiz hesap kimliği");
   const baglanti = await havuz.connect();
+  /* ödünçteyken bağlantı koparsa istemci 'error' yayar (havuz o sırada dinlemez) → yakalanmamış istisna olmasın; hata sorgudan zaten döner */
+  let kopuk: Error | undefined;
+  const dinle = (e: Error) => { kopuk = e; };
+  baglanti.on("error", dinle);
   try {
     await baglanti.query("BEGIN");
     await baglanti.query("SELECT set_config('app.firma_id', $1, true), set_config('app.hesap_id', $2, true)", [firmaId, secenek.hesapId ?? ""]);
@@ -44,10 +62,12 @@ export async function kiraciIcinde<T>(havuz: pg.Pool, firmaId: string, is: (db: 
     await baglanti.query("COMMIT");
     return sonuc;
   } catch (hata) {
-    await baglanti.query("ROLLBACK");
+    /* geri alma da düşerse (bağlantı kopmuş) ASIL hata yukarı gider; bozuk bağlantı havuza geri konmaz */
+    try { await baglanti.query("ROLLBACK"); } catch (e) { kopuk ??= e as Error; }
     throw hata;
   } finally {
-    baglanti.release();
+    baglanti.off("error", dinle);
+    baglanti.release(kopuk);
   }
 }
 

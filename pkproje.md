@@ -2335,6 +2335,23 @@ revizyon, alan kopyalama, hafif kusur devri, meslek eşleşme denetimi).
 - Emsal ürünler: https://opwire.app/iso-17020-periyodik-kontrol-yazilimi/ · https://17020muayene.vidco.com.tr/ · https://akuple.com/asansor-kontrol-yazilimi/ · https://ensyazilim.com/
 
 ## 11 · Değişiklik günlüğü
+- 2026-10-04 (293): **Deneme yayını: Supabase (Frankfurt) + Vercel (fra1) — §8.8'in ilk adımı K7'den öne alındı** (reisim: *"sitenin şu anki durumunu
+  görmiyorum, maket değil"* → *"supabase açtım, extension olarak claude a bağladım"*; ardından Vercel bağlandı). Adres **https://probata-deneme.vercel.app**
+  (firma kısa adı `probata-deneme`, ana alan `vercel.app`); Vercel Kimlik Doğrulaması açık: yalnız Vercel hesabıyla girilmiş kişi siteyi görür, sonra
+  uygulamanın kendi girişi. Veritabanı Supabase projesi `probata` (eu-central-1, PostgreSQL 17); uygulama paylaşımlı havuzlayıcıya işlem kipinde
+  (6543) `probata_uygulama` rolüyle, **TLS + Supabase kök sertifikası doğrulamalı** bağlanır (ağ üzerinden şifresiz bağlantı kodda reddedilir). Rol
+  parolası Supabase'e düz değil SCRAM özetiyle verildi; sırlar (veritabanı parolası, sır ana anahtarı) yalnız Vercel'in "sensitive" ortam
+  değişkenlerinde. Uydurma deneme firması + "Deneme Yönetici" (geçici parola, ilk girişte değiştirilir). **Güvenlik (bağımsız denetim + ölçüm):**
+  Supabase her yeni tabloyu herkese açık API rollerine (anon / authenticated / service_role) varsayılan olarak açıyordu → 0000 (tablolardan önce
+  kapatır), 0008 (temizler + sonucu DOĞRULAR; etkisiz kalırsa göç hata verir), 0009 (uygulama rolüne sorgu 15 sn / boşta işlem 30 sn sınırı), 0010
+  (işlevlerin arama yolu sabit; Supabase güvenlik denetimi temiz, yalnız bilerek politikasız bırakılan göç kaydı bilgi notu). Kopan bağlantı artık
+  süreci düşürmez (havuz + ödünç bağlantı 'error' dinleyicisi, bozuk bağlantı havuza dönmez), bağlanma 5 sn, boşta 5 sn; Vercel'de boştaki
+  bağlantılar kapanana dek işlev açık tutulur (attachDatabasePool karşılığı, ek paket yok). Supabase'teki şema yereldekiyle **parmak iziyle aynı**
+  (8/8: sütun, kısıt, politika, tetik, işlev, dizin, RLS, uygulama yetkisi). Kilit: tests/yayin.test.ts (13; göçler Supabase gibi süper kullanıcı
+  OLMAYAN sahip rolüyle) + tests/bozan/yayin.bozan.ts (2). **Açık / sonra:** dosya deposu Vercel'de geçici (/tmp) — kalıcı depo K7 (Supabase Storage);
+  Vercel GitHub uygulaması kurulmadığı için her gönderide siteyi ben yeniden yayınlarım; Vercel Hobby ticari kullanıma kapalı — gerçek firmalar
+  gelmeden Pro; **Claude'a bağlı Supabase eklentisi BYPASSRLS'li `postgres` rolüyle bütün veriyi görebilir — gerçek veri girmeden önce eklenti bu
+  projeden ayrılır ya da salt okunur + tek projeye daraltılır** (denetim bulgusu; karar reisim'in); pg-boss işçisi sunucusuz ortamda koşmaz (K5'te çözülür).
 - 2026-10-04 (292): **K2 Personel 3: giriş hesabı ve roller** (maket personel.html; karar 32, 33, 34, 37; ENGEL 8). Firma yöneticisi kişinin kartından
   **hesap açar** (giriş e-postası + en az bir rol); **geçici parola yalnız bir kez** pencerede görünür (Kopyala / Tamam; kapanınca sayfadan da silinir,
   veritabanında yalnız özeti, denetim izine yazılmaz); kişi o parolayla girince "Parolayı değiştir"e gelir. **Yeni geçici parola** eski parolayı ve
