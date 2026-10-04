@@ -2335,6 +2335,13 @@ revizyon, alan kopyalama, hafif kusur devri, meslek eşleşme denetimi).
 - Emsal ürünler: https://opwire.app/iso-17020-periyodik-kontrol-yazilimi/ · https://17020muayene.vidco.com.tr/ · https://akuple.com/asansor-kontrol-yazilimi/ · https://ensyazilim.com/
 
 ## 11 · Değişiklik günlüğü
+- 2026-10-04 (289): **K1 Çekirdek 10: beklenmeyen hata ekranı — K1 tamam.** Bir sayfa beklenmedik biçimde düşerse "Bu sayfa açılamadı · Beklenmeyen
+  bir sorun oldu; yaptığınız son işlem kaydedilmemiş olabilir. Yeniden deneyin; sürerse firma yöneticinize bildirin." + **Yeniden dene** + **Ana sayfaya
+  dön**; oturumlu sayfalarda menü yerinde kalır. Hatanın iç ayrıntısı (sorgu, dosya yolu) ekrana çıkmaz; yayında yalnız kısa başvuru kodu. **Makette bu
+  ekran yoktu — metin benim önerim, reisim'in gözüne.** Geliştirme sayfalarının yayın kapısı düzene taşındı (altına eklenen her sayfa yayında 404;
+  kilit testi). K1 kalemleri: giriş · oturum · kiracı · canDo · güvenli yazıcı · denetim izi · dosya ucu · numara · ayarlar · tanımlar · API sürümü ·
+  hata / yetkisiz / bulunamadı / oturum doldu — hepsi kilitli. Açık kalan (bilerek ileride): parola sıfırlama e-postası (K5), S3 depo (K7),
+  müşteri portalı ikinci RLS katmanı (09-E5, müşteri modülüyle K2), dondurulmuş firma bayrağı (09-E6, yönetim paneliyle).
 - 2026-10-04: CI'da (6739afa, telefon) sayfalayıcıda "Sayfa 3"e basınca odak "Sayfa 1" tuşunda kaldı (2026-10-03'te eklenen tanılama yakaladı).
   Yerelde yeniden üretemedim (30/30). Odak artık hedef sayfanın numarasıyla, her çizimden sonra o tuş odak alana kadar verilir (önceki hâli tek
   çizimde kaçırırsa bir daha denemiyordu). Test gevşetilmedi; yeniden düşerse tanılama yine nerede kaldığını yazar.

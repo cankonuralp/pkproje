@@ -78,6 +78,8 @@ test("oturum kapısı: uygulama düzeni oturum ister, modül sayfası modül num
     assert.match(sayfa, /modulBul\("[a-z-]+"\)|<ModulSayfasi modul=\{MODUL\}/, m.yol);
   }
   assert.match(oku("src/components/modul/ModulSayfasi.tsx"), /modulGorur\(o, modul\.no/);
+  /* 2026-10-04: geliştirme sayfaları yayında kapalı — koruma düzende (altına eklenen her sayfa kapsanır) */
+  assert.match(oku("src/app/(gelistirme)/layout.tsx"), /if \(process\.env\.NODE_ENV === "production"\) notFound\(\);/);
 });
 
 test("adresler ASCII ve tekil", () => {
