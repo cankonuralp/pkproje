@@ -1,9 +1,11 @@
 {
   "permissions": {
     "allow": [
+      "Bash",
       "mcp__Supabase",
       "mcp__Vercel",
-      "mcp__Claude_Code_Remote__read_documentation"
+      "mcp__github",
+      "mcp__Claude_Code_Remote"
     ]
   }
 }
