@@ -1,0 +1,34 @@
+/* maketteki .a-giris ailesi (AA1, 2026-10-02: tek zemin; ortada logo, altında giriş kartı en çok 400 px) */
+.giris { min-height: 100vh; background: var(--zemin); }
+.form { min-height: 100vh; display: flex; flex-direction: column; align-items: center; justify-content: center; gap: 20px; padding: 32px var(--bosluk-sayfa); min-width: 0; }
+.logo { width: 160px; height: auto; display: block; }
+.koyu, :root[data-tema="koyu"] .acik { display: none; }
+:root[data-tema="koyu"] .koyu { display: block; }
+.kart {
+  width: min(100%, 400px); display: flex; flex-direction: column; gap: 14px; padding: 28px;
+  background: var(--kart); border: 1px solid var(--kenar); border-radius: var(--r-buyuk); box-shadow: var(--golge-1);
+}
+.baslik { margin: 0; font-size: var(--boy-baslik); font-weight: var(--kal-baslik); }
+.adres { margin: 2px 0 0; color: var(--yazi2); font-size: var(--boy-kucuk); overflow-wrap: anywhere; }
+.alan { min-width: 0; }
+.etiket { display: block; margin: 0 0 6px; font-size: var(--boy-kucuk); font-weight: 600; }
+.girdi {
+  width: 100%; height: var(--tus-y); padding: 0 12px;
+  border: 1px solid var(--kenar-alan); border-radius: var(--r-orta); background: var(--kart); color: var(--yazi);
+}
+.girdi[aria-invalid="true"] { border-color: var(--hata-yazi); }
+/* göster / gizle düğmesi alanın YANINDA (içinde değil: etkileşimli öğeler üst üste binmez, anayasa 11.7) */
+.parola { display: flex; gap: 6px; }
+.parola .girdi { flex: 1 1 auto; min-width: 0; }
+.goster {
+  width: var(--tus-y); height: var(--tus-y); flex: none; display: inline-flex; align-items: center; justify-content: center;
+  border: 1px solid var(--kenar-alan); border-radius: var(--r-orta); background: var(--kart); color: var(--yazi2);
+}
+.goster:hover { color: var(--yazi); background: var(--zemin2); }
+.tuslar { display: flex; align-items: center; flex-wrap: wrap; gap: 8px 16px; }
+.ayrac { margin: 6px 0 0; padding-top: 12px; border-top: 1px solid var(--kenar); color: var(--yazi2); font-size: var(--boy-kucuk); }
+@media (max-width: 767.98px) {
+  .form { justify-content: flex-start; padding-top: 40px; }
+  .kart { padding: 20px; }
+  .tuslar > * { flex: 1 1 100%; }
+}

@@ -2335,6 +2335,22 @@ revizyon, alan kopyalama, hafif kusur devri, meslek eşleşme denetimi).
 - Emsal ürünler: https://opwire.app/iso-17020-periyodik-kontrol-yazilimi/ · https://17020muayene.vidco.com.tr/ · https://akuple.com/asansor-kontrol-yazilimi/ · https://ensyazilim.com/
 
 ## 11 · Değişiklik günlüğü
+- 2026-10-04 (282): **K1 Çekirdek 3: giriş ekranı, ara katman, oturumlu rotalar, çıkış, yetkisiz / bulunamadı ekranları.** Firma adresin alt alan
+  adından çözülür (`<firma>.<ana alan>`); giriş o firmanın içinde yapılır, başka firmanın hesabı denenemez. Uygulama rotaları `(uygulama)` grubunda ve
+  hepsi oturum ister (yerleşim `oturumGerekli()`); oturum yoksa ya da düştüyse giriş ekranına, girişten sonra kaldığı sayfaya döner (S2). Yan menü
+  rolün görebildiği modüllerle çizilir; adresi elle yazınca "Bu sayfayı görme yetkiniz yok" çıkar, modülün içeriği çizilmez (yetki sunucuda, istemciden
+  rol gelmez). Çıkış sunucudaki oturumu siler, eski çerez yeniden takılsa da geçmez. **Güvenlik başlıkları:** her istekte ayrı nonce'lu CSP
+  (`'strict-dynamic'`, satır içi betik / olay işleyicisi çalışmaz), çerçeveye gömme yok, `nosniff`, yayında HSTS. **Çerez:** yayında `__Host-probata`
+  (Secure, alan adı yazılmaz → yalnız o firmanın adresine gider), HttpOnly, SameSite=Lax; geliştirmede `probata-oturum`. Sunucu eylemlerinde köken
+  denetimi (Next'in kendi denetimine ek). Dönüş adresi yalnız site içi yol (açık yönlendirme yok). **Oturum süresi:** 12 saat hareketsizlik, en çok 14 gün.
+  **Bilinen sınır (yazılı):** IP kilidi istemci IP'sini `X-Forwarded-For`'un ilk değerinden alır — barındırma (Vercel) bu başlığı kendisi yazar; başka
+  ortamda ters vekil şarttır, yoksa IP kilidi aşılabilir (hesap kilidi yine işler). **Geçici parolayla ilk girişte parola değiştirme** sonraki K1
+  kalemi. **Pages'teki uygulama önizlemesi kalktı:** durağan çıktı sunucu eylemi, ara katman ve çerez çalıştıramıyor; Pages'te yalnız maket ve sunumlar
+  kalır (`…/uygulama/` artık yok). Geliştirme vitrini `(gelistirme)` grubunda, yayında 404. `npm run dev` ilk açılışta uydurma "deneme" firmasını ve
+  yönetici hesabını kurar; parola rasgele, yalnız `data/gelistirme-hesap.txt`'de (git dışı). Uçtan uca: geçici veritabanında iki uydurma firma
+  (`scripts/e2e-sunucu.ts`), `e2e/giris.spec.ts` (kiracı çerezi, kurcalanmış çerez, rol, kilit, açık yönlendirme, CSP). Üretim derlemesi (standalone)
+  geçici veritabanıyla Chromium'da denendi: giriş → kaldığı sayfa, `__Host-probata` Secure + HttpOnly + Lax, HSTS, CSP'de `unsafe-inline` / `unsafe-eval` yok,
+  sayfalar biçimli çizildi, `/vitrin` 404.
 - 2026-10-04 (281): **K1 Çekirdek 2: tek yetki denetimi `canDo` ve rol düzeni** (`src/server/yetki/`). Rol listesi, başlangıç düzeyi tablosu (yaz · gor ·
   brans · kendi · yok) ve özel eylemler tek tanımda; ayna testleri bunu veritabanının rol CHECK'ine, onaylı maketin matrisine (MV.MATRIS) ve KOD-GECIS §4
   tablosuna bağlar. Ekran yetkisi rollerin birleşimi; kayıt bilgisi (sahip, branş, atananlar) sunucuda okunur. Firma matrisi yalnız tanımlı düzeylerle

@@ -1,7 +1,7 @@
 import type { Metadata, Viewport } from "next";
+import { headers } from "next/headers";
 import type { ReactNode } from "react";
 import { BildirimSaglayici } from "../components/bildirim/Bildirim";
-import { Kabuk } from "../components/kabuk/Kabuk";
 import { OnaySaglayici } from "../components/pencere/Onay";
 import "../styles/yazi.css";
 import "../styles/tokens.css";
@@ -26,18 +26,18 @@ export const viewport: Viewport = {
 const ILK_BOYAMA_BETIGI = `(function(){var d=document.documentElement,t,m;try{t=localStorage.getItem("probata-tema");m=localStorage.getItem("probata-menu")}catch(e){}
 d.setAttribute("data-tema",t==="acik"||t==="koyu"?t:(matchMedia("(prefers-color-scheme: dark)").matches?"koyu":"acik"));if(m==="dar")d.setAttribute("data-menu","dar")})()`;
 
-export default function KokDuzen({ children }: { children: ReactNode }) {
+export default async function KokDuzen({ children }: { children: ReactNode }) {
+  /* CSP nonce'u ara katmandan (src/proxy.ts); satır içi tek betiğimiz onu taşır. */
+  const nonce = (await headers()).get("x-nonce") ?? undefined;
   return (
     <html lang="tr" suppressHydrationWarning>
       <head>
-        <script dangerouslySetInnerHTML={{ __html: ILK_BOYAMA_BETIGI }} />
+        <script nonce={nonce} dangerouslySetInnerHTML={{ __html: ILK_BOYAMA_BETIGI }} />
       </head>
       <body>
-        {/* bildirim ve onay penceresi her sayfada tek (MK.bildir / MK.onayla'nın karşılığı) */}
+        {/* bildirim ve onay penceresi her sayfada tek (MK.bildir / MK.onayla'nın karşılığı); kabuk rota grubunun düzeninde */}
         <BildirimSaglayici>
-          <OnaySaglayici>
-            <Kabuk>{children}</Kabuk>
-          </OnaySaglayici>
+          <OnaySaglayici>{children}</OnaySaglayici>
         </BildirimSaglayici>
       </body>
     </html>

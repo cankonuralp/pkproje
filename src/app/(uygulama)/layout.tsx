@@ -1,0 +1,15 @@
+/* UYGULAMA DÜZENİ — oturum ister (09-E2/E4). Oturum yoksa girişe; menü yalnız kişinin görebildiği modüller (canDo, sunucuda). Kişinin rolleri
+   veritabanından okunur; tarayıcıya yalnız ad ve rol ADI gider (kimlik, e-posta, rol kodu gönderilmez). */
+import type { ReactNode } from "react";
+import { Kabuk } from "../../components/kabuk/Kabuk";
+import { MODULLER } from "../../modules/moduller";
+import { modulGorur, oturumGerekli } from "../../server/kimlik/istek";
+import { ROL_ADI } from "../../server/yetki/tanim";
+import type { ModulAnahtari } from "../../server/yetki/tanim";
+
+export default async function UygulamaDuzeni({ children }: { children: ReactNode }) {
+  const o = await oturumGerekli();
+  const gorunur = MODULLER.filter((m) => modulGorur(o, m.no as ModulAnahtari)).map((m) => m.no);
+  const rol = o.roller.map((r) => ROL_ADI[r]).join(" · ") || "Rolsüz";
+  return <Kabuk kullanici={{ ad: o.ad, rol }} gorunur={gorunur}>{children}</Kabuk>;
+}

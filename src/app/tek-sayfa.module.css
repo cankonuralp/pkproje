@@ -1,0 +1,3 @@
+/* kabuksuz tek kutulu sayfa (bulunamadı): ortada, en çok 560 px */
+.tek { min-height: 100vh; display: flex; align-items: center; justify-content: center; padding: 32px var(--bosluk-sayfa); background: var(--zemin); }
+.tek > * { width: min(100%, 560px); }

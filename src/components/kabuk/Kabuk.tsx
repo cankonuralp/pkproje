@@ -6,13 +6,16 @@
    · Tema: açık / koyu, tercih bu cihazda saklanır (anahtar maketle aynı: "probata-tema").
    · Daraltma (maket 6. tur, reisim 2026-09-24 "uygun"): geniş bantta sol barın başındaki ☰ (2026-10-03; önce üst çubuktaydı) menüyü 64 px simge
      şeridine indirir / açar; ad görünmez (ekran okuyucu okur), üstüne gelince ipucu. Tercih bu cihazda ("probata-menu").
-     Orta ve dar bantta etkisiz: orada ☰ çekmeceyi açar (anayasa 2.11). */
+     Orta ve dar bantta etkisiz: orada ☰ çekmeceyi açar (anayasa 2.11).
+   · K1 (2026-10-04): menüde yalnız kişinin görebildiği modüller (gorunur: sunucuda canDo ile hesaplanır — yapamayacağı yer çizilmez, anayasa 7.4;
+     KAPI değildir, her sayfa sunucuda ayrıca denetler). Sağ üstte kullanıcı (baş harfler, ad, rol) ve menüsünde Çıkış yap (maket). */
 import Image from "next/image";
 import Link from "next/link";
 import { usePathname } from "next/navigation";
 import { useEffect, useState, useSyncExternalStore, type ReactNode } from "react";
 import { ANA_SAYFA, MODUL_GRUPLARI } from "../../modules/moduller";
 import { KALIP } from "../../styles/kalip";
+import { cikisEylemi } from "../../server/kimlik/eylemler";
 import { Ikon } from "../ikon/Ikon";
 import stil from "./Kabuk.module.css";
 import isaretKoyu from "./marka/probata-isaret-koyu-zemin.svg";
@@ -56,7 +59,46 @@ function TemaTusu() {
   );
 }
 
-export function Kabuk({ children }: { children: ReactNode }) {
+export interface KabukKullanicisi { ad: string; rol: string }
+
+/** baş harfler (en çok iki; Türkçe büyük harf) */
+const basHarfler = (ad: string) => ad.trim().split(/\s+/).filter(Boolean).slice(0, 2).map((p) => p[0].toLocaleUpperCase("tr")).join("");
+
+function KullaniciMenusu({ kullanici }: { kullanici: KabukKullanicisi }) {
+  const [acik, setAcik] = useState(false);
+  useEffect(() => {
+    if (!acik) return;
+    const kapat = (e: Event) => { if (!(e.target as Element).closest?.("[data-kullanici-menu]")) setAcik(false); };
+    const tus = (e: KeyboardEvent) => { if (e.key === "Escape") setAcik(false); };
+    document.addEventListener("pointerdown", kapat);
+    document.addEventListener("keydown", tus);
+    return () => { document.removeEventListener("pointerdown", kapat); document.removeEventListener("keydown", tus); };
+  }, [acik]);
+  return (
+    <div className={stil.kullaniciKap} data-kullanici-menu="">
+      <button className={stil.kullanici} type="button" aria-haspopup="menu" aria-expanded={acik} onClick={() => setAcik(!acik)}
+        aria-label={`${kullanici.ad} · kendi işlemlerim`}>
+        <span className={stil.avatar} aria-hidden="true">{basHarfler(kullanici.ad)}</span>
+        <span className={stil.kullaniciYazi}><span className={stil.kullaniciAd}>{kullanici.ad}</span><span className={stil.kullaniciRol}>{kullanici.rol}</span></span>
+      </button>
+      {acik && (
+        <div className={stil.kullaniciListe} role="menu" aria-label="Kendi işlemlerim">
+          <form action={cikisEylemi}>
+            <button className={stil.secenek} type="submit" role="menuitem"><Ikon ad="log-out" kucuk />Çıkış yap</button>
+          </form>
+        </div>
+      )}
+    </div>
+  );
+}
+
+export function Kabuk({ children, kullanici, gorunur }: {
+  children: ReactNode;
+  /** oturumdaki kişi (yoksa — geliştirme vitrini — kullanıcı alanı çizilmez) */
+  kullanici?: KabukKullanicisi;
+  /** görebildiği modüllerin §3.1 numaraları (verilmezse hepsi — yalnız vitrin / önizleme) */
+  gorunur?: readonly number[];
+}) {
   const [acik, setAcik] = useState(false);
   const dar = useSyncExternalStore(menuAboneOl, menuDarMi, () => false);
   const serit = useSyncExternalStore(bantAboneOl, genisBantMi, () => false) && dar;
@@ -101,7 +143,8 @@ export function Kabuk({ children }: { children: ReactNode }) {
               </Link>
             </li>
           </ul>
-          {MODUL_GRUPLARI.map((g, i) => (
+          {MODUL_GRUPLARI.map((g) => ({ ...g, moduller: g.moduller.filter((m) => !gorunur || gorunur.includes(m.no)) }))
+            .filter((g) => g.moduller.length > 0).map((g, i) => (
             <div key={g.grup}>
               <p className={stil.menuGrup} id={`menu-grup-${i}`}>{g.grup}</p>
               <ul className={stil.menuListe} aria-labelledby={`menu-grup-${i}`}>
@@ -133,6 +176,7 @@ export function Kabuk({ children }: { children: ReactNode }) {
           <Image className={`${stil.ustIsaret} ${stil.isaretKoyu}`} src={isaretKoyu} alt="probata" unoptimized />
           <div className={stil.ustBosluk} />
           <TemaTusu />
+          {kullanici && <KullaniciMenusu kullanici={kullanici} />}
         </header>
         <main className={stil.icerik}>{children}</main>
       </div>

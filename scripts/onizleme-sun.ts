@@ -32,4 +32,4 @@ createServer((istek, yanit) => {
   }
   yanit.writeHead(200, { "Content-Type": TUR[extname(dosya)] ?? "application/octet-stream", "Cache-Control": "no-cache" });
   createReadStream(dosya).pipe(yanit);
-}).listen(KAPI, "127.0.0.1", () => console.log(`Önizleme: http://127.0.0.1:${KAPI}${ONEK}/uygulama/`));
+}).listen(KAPI, "127.0.0.1", () => console.log(`Önizleme: http://127.0.0.1:${KAPI}${ONEK}/`));

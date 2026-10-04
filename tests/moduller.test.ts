@@ -18,7 +18,9 @@
    2026-10-02 (AA4, reisim: "bir de araç takip modülü olsun hangi aracın kimde olduğu belli olsun takip edilebilsin"): 23 Araçlar eklendi
    (Varlık grubu) → 17 modül; numara aralığı 1–23. Denetim aynı, beklenen sayılar güncellendi.
    2026-10-03 (K0, reisim: "Makette eksik kalmadıysa koda geç"): ortak bileşenlerin uçtan uca denetimi için TEK modül dışı rota "vitrin"
-   (yalnız geliştirmede açılır, yayında 404 — src/app/vitrin/page.tsx). İstisna adıyla yazıldı; başka modül dışı rota hâlâ yakalanır. */
+   (yalnız geliştirmede açılır, yayında 404 — src/app/vitrin/page.tsx). İstisna adıyla yazıldı; başka modül dışı rota hâlâ yakalanır.
+   2026-10-04 (K1, reisim: "site güvenliği … sızma"): rotalar gruplara ayrıldı — (uygulama) oturumlu, (acik) giriş, (gelistirme) vitrin. Denetim aynı
+   (modül kaydı = uygulama rotaları); ek olarak açık rotalar adıyla sayılır ve uygulama düzeninin oturum istediği denetlenir. */
 import assert from "node:assert/strict";
 import { existsSync, readdirSync, readFileSync, statSync } from "node:fs";
 import { join } from "node:path";
@@ -47,15 +49,32 @@ test("17 modül, numaralar tekil; menüde olmayanlar 1 (Personel'in içinde), 6,
   assert.deepEqual(yok, [1, 6, 7, 10, 16, 17]);
 });
 
-const GELISTIRME_ROTASI = "vitrin";
+/* 2026-10-04 (K1, giriş + oturum): rotalar üç grupta — (uygulama) oturum ister ve modül kaydıyla birebir; (acik) yalnız giriş; (gelistirme) yalnız
+   vitrin (yayında 404). Oturumsuz açılan her rota adıyla burada: listeye eklenmeyen yeni bir açık rota testi düşürür (sızma kapısı). */
+const ACIK_ROTALAR = ["giris"];
+const GELISTIRME_ROTALARI = ["vitrin"];
+const klasorlerOf = (yol: string) => readdirSync(yol).filter((ad) => statSync(join(yol, ad)).isDirectory()).sort();
 
 test("her modülün rota klasörü var ve src/app'te modül dışı rota yok", () => {
   const app = join(KOK, "src", "app");
-  const klasorler = readdirSync(app).filter((ad) => statSync(join(app, ad)).isDirectory() && ad !== GELISTIRME_ROTASI).sort();
+  assert.deepEqual(klasorlerOf(app), ["(acik)", "(gelistirme)", "(uygulama)"]);
+  const uygulama = join(app, "(uygulama)");
   const yollar = MODULLER.filter((m) => m.yol !== "").map((m) => m.yol).sort();
-  assert.deepEqual(klasorler, yollar);
-  for (const y of yollar) assert.ok(existsSync(join(app, y, "page.tsx")), `${y}/page.tsx yok`);
-  assert.ok(existsSync(join(app, "page.tsx")), "Planlar ana sayfası yok");
+  assert.deepEqual(klasorlerOf(uygulama), yollar);
+  for (const y of yollar) assert.ok(existsSync(join(uygulama, y, "page.tsx")), `${y}/page.tsx yok`);
+  assert.ok(existsSync(join(uygulama, "page.tsx")), "Ana sayfa yok");
+  assert.deepEqual(klasorlerOf(join(app, "(acik)")), ACIK_ROTALAR);
+  assert.deepEqual(klasorlerOf(join(app, "(gelistirme)")), GELISTIRME_ROTALARI);
+});
+
+test("oturum kapısı: uygulama düzeni oturum ister, modül sayfası modül numarasıyla yetki denetler", () => {
+  const duzen = oku("src/app/(uygulama)/layout.tsx");
+  assert.match(duzen, /await oturumGerekli\(\)/);
+  for (const m of MODULLER.filter((x) => x.yol !== "")) {
+    const sayfa = oku(`src/app/(uygulama)/${m.yol}/page.tsx`);
+    assert.match(sayfa, /modulBul\("[a-z-]+"\)|<ModulSayfasi modul=\{MODUL\}/, m.yol);
+  }
+  assert.match(oku("src/components/modul/ModulSayfasi.tsx"), /modulGorur\(o, modul\.no/);
 });
 
 test("adresler ASCII ve tekil", () => {

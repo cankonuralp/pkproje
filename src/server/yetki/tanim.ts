@@ -31,3 +31,9 @@ export const SABIT: Partial<Record<ModulAnahtari, Partial<Record<Rol, Duzey>>>> 
 
 /** branş yöneticisinin branşı: m mekanik · e elektrik */
 export const ROL_BRANS: Partial<Record<Rol, "m" | "e">> = { mekanik_yonetici: "m", elektrik_yonetici: "e" };
+
+/** ekranda rol adı (maket MV.ROLLER "ad") */
+export const ROL_ADI: Record<Rol, string> = {
+  planlama: "Planlama ekibi", denetci: "Denetçi", mekanik_yonetici: "Mekanik yönetici", elektrik_yonetici: "Elektrik yönetici",
+  firma_yoneticisi: "Firma yöneticisi", muhasebe: "Muhasebe",
+};

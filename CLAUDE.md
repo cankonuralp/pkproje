@@ -78,14 +78,17 @@ pkproje/
   ARKA-UC.md                arka uç kurgusu (2026-10-01; K1–K6 kabul, K7–K8 kabul edilmedi — 2026-10-02): veri, dosya, çevrimdışı, uygulama, yapay zekâ, yedek
   ANAYASA.md · TASARIM-KALIBI.md · 00–08-*.md · 09-SUNUCU-VE-VERI.md · EKSIKLER-VE-ONERILER.md
                             kural dosyaları (ANAYASA/KALIP'a madde yalnız reisim onayıyla eklenir)
-  src/app/                  sayfalar (iş mantığı YOK): Planlar ana sayfa + modül başına bir rota klasörü (kayıtla birebir)
+  src/app/                  sayfalar (iş mantığı YOK), üç rota grubu (2026-10-04): (uygulama)/ oturum ister — Planlar ana sayfa + modül başına bir
+                            rota klasörü (kayıtla birebir) · (acik)/giris · (gelistirme)/vitrin (yayında 404)
+  src/proxy.ts              ara katman: her istekte nonce'lu CSP + güvenlik başlıkları (Next 16'da middleware'in adı proxy)
   src/modules/moduller.ts   MODÜL KAYDI — yan menünün ve rotaların tek kaynağı (15 modül, 6 grup, onaylı maketle aynı; 2026-09-25 Kullanıcılar Personel'e katıldı; 2026-09-26 Ekipmanlar planın içine; 2026-09-28 Talepler eklendi, Standartlar → Dökümanlar, Eğitimler Dökümanlar'ın içinde)
   src/modules/<modül>/      ★ her iş modülü: server/ (veri erişimi + iş kuralları, dışa açılan fonksiyonlar) · ui/ · şema · testler
   src/sema/ortak.ts         ORTAK ŞEMA (zod): girdi doğrulamanın tek kaynağı, sunucu ve istemci aynı şemayı kullanır (2026-10-03)
   src/server/db/            gömülü PostgreSQL (gomulu.ts) · göç koşucusu (goc.ts, gocler/NNNN_ad.sql, her göç idempotent) ·
                             kiracı süzgeçli TEK erişim katmanı (kiraci.ts: kiraciIcinde) — pg YALNIZ burada içe aktarılır
-  src/server/kiraci/        kiracı çözümleme (alt alan adı → firma kısa adı) · ★ güvenli yazıcılar
-  src/server/kimlik/        parola özeti (scrypt) · giriş · oturum (belirteç özeti, kilit) — 2026-10-04
+  src/server/kiraci/        kiracı çözümleme (alt alan adı → firma kısa adı; istek.ts: istekKiracisi) · ★ güvenli yazıcılar
+  src/server/kimlik/        parola özeti (scrypt) · giriş · oturum (belirteç özeti, kilit) — 2026-10-04 · istek.ts (oturumGerekli, modulGorur,
+                            güvenli dönüş adresi) · eylemler.ts (giriş / çıkış sunucu eylemleri)
   src/server/yetki/         TEK YETKİ: tanim.ts (roller, matris, sabitler) · canDo.ts (canDo, canDoEylem) — ayna testi: DB CHECK · maket · KOD-GECIS §4
   src/components/           TEK ÜRETİCİLER: kabuk (yan menü + üst çubuk) · ikon · boş durum · tuş · şerit · bildirim · pencere + onay ·
                             liste (tablo↔kart, süzgeç mantığı liste/suzgec.ts) · filtre satırı · sayfalayıcı · seçim alanı + tarih/saat (secim/) · bilgi yüzleri / bilgi listesi / koşullar (bilgi/) · form sayfası (form/) · uzun tuş (tus/UzunTus)
@@ -108,14 +111,15 @@ pkproje/
 **Uygulama (iskelet, 2026-09-23 — hepsi çalışıyor):**
 ```bash
 npm install              # gömülü PostgreSQL ikilileri burada iner; başka kurulum yok
-npm run dev              # gömülü PostgreSQL (127.0.0.1:54320, data/pg) + Next → http://127.0.0.1:3000
+npm run dev              # gömülü PostgreSQL (127.0.0.1:54320, data/pg) + Next → http://deneme.localhost:3000
+                         # (ilk açılışta uydurma "deneme" firması + yönetici; parola data/gelistirme-hesap.txt'de)
 npm test                 # node --test; çıktıda "fail 0" yoksa zincir DURUR (gerçek PostgreSQL testi dahil)
 npm run test:negatif     # tests/bozan/ — her kilit gerçekten yakalıyor mu (N/N)
 npm run check            # next typegen + tsc (tip denetimi)
 npm run lint             # eslint (Next + TypeScript kuralları)
 npm run build            # ÖNCE test; düşerse derleme yok (standalone çıktı)
-npm run build:onizleme   # ÖNCE test; Pages sitesi site/ (kök: docs, /uygulama/: uygulamanın statik önizlemesi)
-npm run onizle           # site/'yi Pages'teki gibi /pkproje/ altında sunar → http://127.0.0.1:8780/pkproje/uygulama/
+npm run build:onizleme   # ÖNCE test; Pages sitesi site/ (yalnız docs: maket + sunum; uygulama önizlemesi 2026-10-04 kalktı)
+npm run onizle           # site/'yi Pages'teki gibi /pkproje/ altında sunar → http://127.0.0.1:8780/pkproje/
 ```
 ⛔ Next'i çıplak `next` ile değil `scripts/next.ts` üzerinden çalıştır: telemetri kapalı (anayasa 5.2) ve **webpack** —
 reisim'in Windows'unda Uygulama Denetimi Next'in yerel derleyicisini engelliyor, Turbopack çalışmıyor (2026-09-23).
@@ -202,8 +206,8 @@ CI aynı zinciri her push'ta koşar (`.github/workflows/ci.yml`); main'de deneti
   ben tarayıcı bölmemde ölçerim. Pages **sunucu tarafını çalıştıramaz** (veritabanı, giriş, PDF üretimi) ve kiracı
   başına alt alan adı vermez → gerçek uygulama Supabase + AB'de hazır barındırma (pkproje.md §8.8, 2026-10-03).
 - **Yayın (2026-09-23, iskelet): GitHub Pages GitHub Actions'tan** yayınlar (reisim: *"ilk yayını yap"* → Pages önizlemesi):
-  sitenin kökü `docs/` (maket + sunum, adresler aynı), `…/uygulama/` uygulamanın statik önizlemesi (sunucu, veritabanı,
-  giriş orada ÇALIŞMAZ). Önceki düzen (main `/docs` doğrudan) kalktı. https://cankonuralp.github.io/pkproje/
+  sitenin kökü `docs/` (maket + sunum, adresler aynı). `…/uygulama/` statik önizlemesi **2026-10-04 kalktı** (giriş, ara
+  katman, sunucu eylemleri durağan çıktıda çalışmaz; pkproje.md §11 282). Önceki düzen (main `/docs` doğrudan) kalktı. https://cankonuralp.github.io/pkproje/
   (görsel sistem) · `…/plan-ici.html` (plan içi ve yan menü sunumu) · `…/maket/planlarim.html` (maket; `#/plan/<id>` plan içi,
   `#/plan/<id>/ekle` ekipman ekle) · `…/toplu-bakis.html` (16 maketin toplu bakışı, 2026-09-24). Üç sunum `tools/sunum-uret.mjs` ile
   üretilir, elle düzenlenmez (toplu bakış metni pkproje.md §3.6'dan, sayıları `docs/assets/olcum/`'dan okur). Sayfalar `noindex`; veri uydurma. İş akışı

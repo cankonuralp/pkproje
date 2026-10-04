@@ -96,3 +96,31 @@
   :global([data-menu="dar"]) .menuBaglanti { justify-content: center; gap: 0; padding: 0; }
   :global([data-menu="dar"]) .menuAd { position: absolute; width: 1px; height: 1px; overflow: hidden; clip: rect(0 0 0 0); white-space: nowrap; }
 }
+
+/* KULLANICI (maket .a-kullanici / .a-avatar; telefonda yalnız baş harfler) — K1 2026-10-04 */
+.kullaniciKap { position: relative; flex: none; }
+.kullanici {
+  display: flex; align-items: center; gap: 10px; min-height: var(--tus-y); padding: 2px 4px;
+  border: 0; border-radius: var(--r-orta); background: none; color: inherit; font: inherit; text-align: left; cursor: pointer;
+}
+.kullanici:hover { background: var(--zemin2); }
+.avatar {
+  width: 32px; height: 32px; flex: none; border-radius: var(--r-tam);
+  display: inline-flex; align-items: center; justify-content: center;
+  background: var(--vurgu); color: var(--vurgu-uzeri); font-size: var(--boy-kucuk); font-weight: 700;
+}
+.kullaniciYazi { display: flex; flex-direction: column; line-height: 1.25; min-width: 0; }
+.kullaniciAd { font-weight: 600; font-size: var(--boy-kucuk); }
+.kullaniciRol { color: var(--yazi3); font-size: var(--boy-etiket); }
+.kullaniciListe {
+  position: absolute; right: 0; top: calc(100% + 6px); z-index: 40; min-width: 200px; padding: 6px;
+  background: var(--kart); border: 1px solid var(--kenar); border-radius: var(--r-orta); box-shadow: var(--golge-2);
+}
+.secenek {
+  width: 100%; min-height: var(--tus-y); padding: 0 12px; display: flex; align-items: center; gap: 10px; text-align: left;
+  border: 0; border-radius: var(--r-kucuk); background: transparent; color: var(--yazi); font: inherit;
+}
+.secenek:hover, .secenek:focus-visible { background: var(--zemin2); }
+@media (max-width: 767.98px) {
+  .kullaniciYazi { display: none; }
+}

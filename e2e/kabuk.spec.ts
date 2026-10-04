@@ -4,6 +4,10 @@
    · geniş bantta menüyü daraltan ☰ SOL BARIN İÇİNDE (reisim 2026-10-03: "şu 3 çizgiyi sol barın içine taşı"), menü 64 px şeride iner;
    · orta / dar bantta çekmeceyi açan ☰ üst çubukta (maketteki olc-bulut denetimleriyle aynı ölçüt). */
 import { expect, test } from "@playwright/test";
+import { girisli } from "./yardimci";
+
+/* 2026-10-04 (K1): uygulama oturum ister — her test firma yöneticisi olarak girer (bütün modülleri görür) */
+test.beforeEach(async ({ page }) => { await girisli(page, "yonetici"); });
 
 test("ana sayfa: kabuk çizilir, başlık doğru, yatay kayma yok", async ({ page }) => {
   await page.goto("/");

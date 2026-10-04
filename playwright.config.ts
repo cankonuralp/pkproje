@@ -6,7 +6,10 @@
 import { defineConfig, devices } from "@playwright/test";
 import { existsSync } from "node:fs";
 
-const KAPI = 3100;
+import { E2E_FIRMA, E2E_KAPI as KAPI } from "./e2e/hesaplar";
+
+/* K1 (2026-10-04): uygulama kiracı ister → testler firma alt alan adında (Chromium *.localhost'u kendisi 127.0.0.1'e çözer). Sunucu geçici
+   veritabanıyla açılır (scripts/e2e-sunucu.ts: uydurma iki firma + rol başına hesap). */
 const hazir = process.env.PROBATA_CHROMIUM || (existsSync("/opt/pw-browsers/chromium") ? "/opt/pw-browsers/chromium" : undefined);
 
 export default defineConfig({
@@ -19,7 +22,7 @@ export default defineConfig({
   /* sayfalar testlerden önce bir kez derlenir (e2e/hazirla.ts) */
   globalSetup: "./e2e/hazirla.ts",
   use: {
-    baseURL: `http://127.0.0.1:${KAPI}`,
+    baseURL: `http://${E2E_FIRMA.kisaAd}.localhost:${KAPI}`,
     launchOptions: hazir ? { executablePath: hazir } : {},
   },
   projects: [
@@ -28,8 +31,8 @@ export default defineConfig({
     { name: "telefon", use: { ...devices["Desktop Chrome"], viewport: { width: 375, height: 812 }, hasTouch: true } },
   ],
   webServer: {
-    command: `node scripts/next.ts dev --hostname 127.0.0.1 --port ${KAPI}`,
-    url: `http://127.0.0.1:${KAPI}`,
+    command: "node scripts/e2e-sunucu.ts",
+    url: `http://127.0.0.1:${KAPI}/giris`,
     reuseExistingServer: !process.env.CI,
     timeout: 180_000,
     env: { NEXT_TELEMETRY_DISABLED: "1" },
