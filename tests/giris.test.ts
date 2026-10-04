@@ -7,7 +7,7 @@ import { after, before, test } from "node:test";
 import pg from "pg";
 import type { GomuluKume } from "../src/server/db/gomulu.ts";
 import { havuzKur, kiraciIcinde } from "../src/server/db/kiraci.ts";
-import { belirtecOzeti, cikisYap, girisYap, oturumOku } from "../src/server/kimlik/oturum.ts";
+import { belirtecOzeti, cikisYap, girisYap, oturumOku, parolaDegistir } from "../src/server/kimlik/oturum.ts";
 import { parolaDogru, parolaOzeti } from "../src/server/kimlik/parola.ts";
 import { testKumesi } from "./yardimci/kume.ts";
 
@@ -148,4 +148,26 @@ test("uygulama rolü hesap silemez (pasife alınır), oturum tablosunu kiracıs�
   assert.equal(r.rows[0].n, 0);
   const h = await havuz.query("SELECT count(*)::int AS n FROM hesap");
   assert.equal(h.rows[0].n, 0);
+});
+
+/* 2026-10-04 (K1, karar 34 + 37): geçici parolayla ilk giriş → parola değiştir */
+test("PAROLA: 'ilk' hesap mevcut parolasız değiştirir, durum etkin olur, eski oturumlar düşer, yeni oturum açılır; etkin hesap mevcut parolasız değiştiremez", async () => {
+  const id = await hesapEkle(A, "ilk@deneme.example", "geciciParola1", ["denetci"], "ilk");
+  const eski = await girisYap(havuz, A, { eposta: "ilk@deneme.example", parola: "geciciParola1", ip: "10.4.0.1", simdi: T0 });
+  assert.ok(eski.tamam && eski.hesap.durum === "ilk");
+  assert.deepEqual(await parolaDegistir(havuz, A, id, { yeni: "geciciParola1", ip: "10.4.0.1", simdi: T0 }), { tamam: false, neden: "ayni" });
+  const r = await parolaDegistir(havuz, A, id, { yeni: "yeniParola22", ip: "10.4.0.1", simdi: sonra(1) });
+  assert.ok(r.tamam);
+  if (eski.tamam) assert.equal(await oturumOku(havuz, A, eski.belirtec, sonra(2)), null, "eski oturum düştü");
+  if (r.tamam) assert.equal((await oturumOku(havuz, A, r.belirtec, sonra(2)))?.durum, "etkin");
+  assert.deepEqual(await girisYap(havuz, A, { eposta: "ilk@deneme.example", parola: "geciciParola1", ip: "10.4.0.2", simdi: sonra(3) }), { tamam: false, neden: "hatali" });
+  /* artık etkin: mevcut parola zorunlu */
+  assert.deepEqual(await parolaDegistir(havuz, A, id, { yeni: "baskaParola33", ip: "10.4.0.1", simdi: sonra(4) }), { tamam: false, neden: "mevcut_yanlis" });
+  assert.deepEqual(await parolaDegistir(havuz, A, id, { yeni: "baskaParola33", mevcut: "yanlisParola9", ip: "10.4.0.1", simdi: sonra(4) }), { tamam: false, neden: "mevcut_yanlis" });
+  assert.ok((await parolaDegistir(havuz, A, id, { yeni: "baskaParola33", mevcut: "yeniParola22", ip: "10.4.0.1", simdi: sonra(5) })).tamam);
+  /* başka firmanın hesabı değiştirilemez */
+  assert.deepEqual(await parolaDegistir(havuz, B, id, { yeni: "sizmaParola44", ip: "10.4.0.1", simdi: sonra(6) }), { tamam: false, neden: "yok" });
+  const iz = await kiraciIcinde(havuz, A, (db) => db.sorgu<{ hesap_id: string }>("SELECT hesap_id::text FROM denetim_izi WHERE ne = 'hesap.parola_degisti' AND nesne_id = $1", [id]));
+  assert.equal(iz.rows.length, 2);
+  assert.ok(iz.rows.every((x) => x.hesap_id === id));
 });

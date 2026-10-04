@@ -14,7 +14,9 @@ export default async function GirisSayfasi({ searchParams }: { searchParams: Pro
   const neden = q.neden === "oturum" || q.neden === "cikis" ? q.neden : undefined;
   const donus = typeof q.donus === "string" && guvenliDonus(q.donus) ? q.donus : undefined;
   /* oturum varsa dönüş adresine (giriş eylemi çerezi yazınca bu sayfa da yeniden çizilir; yönlendirme ikisinde aynı olmalı — 2026-10-04 e2e yakaladı) */
-  if (await istekOturumu()) redirect(donus ?? "/");
+  const o = await istekOturumu();
+  if (o?.durum === "ilk") redirect(`/giris/parola${donus ? `?donus=${encodeURIComponent(donus)}` : ""}`);
+  if (o) redirect(donus ?? "/");
   const kiraci = await istekKiracisi();
   const adres = ((await headers()).get("host") ?? "").replace(/:\d+$/, "");
   return <GirisFormu neden={neden} donus={donus} adres={adres} firmaVar={!!kiraci} />;

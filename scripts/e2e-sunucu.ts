@@ -4,7 +4,7 @@
 import { mkdtempSync } from "node:fs";
 import { tmpdir } from "node:os";
 import { join } from "node:path";
-import { E2E_FIRMA, E2E_HESAPLAR, E2E_KAPI, E2E_PAROLA } from "../e2e/hesaplar.ts";
+import { E2E_FIRMA, E2E_HESAPLAR, E2E_ILK, E2E_KAPI, E2E_PAROLA } from "../e2e/hesaplar.ts";
 import { gomuluBaslat } from "../src/server/db/gomulu.ts";
 import { havuzKur, kiraciIcinde } from "../src/server/db/kiraci.ts";
 import { parolaOzeti } from "../src/server/kimlik/parola.ts";
@@ -24,6 +24,9 @@ for (const f of firmalar) {
   await kiraciIcinde(havuz, f.id, async (db) => {
     for (const h of Object.values(E2E_HESAPLAR)) {
       await db.sorgu("INSERT INTO hesap (eposta, ad, parola_ozeti, roller, durum) VALUES ($1, $2, $3, $4, 'etkin')", [h.eposta, h.ad, ozet, h.roller]);
+    }
+    for (const h of E2E_ILK) {
+      await db.sorgu("INSERT INTO hesap (eposta, ad, parola_ozeti, roller, durum) VALUES ($1, $2, $3, $4, 'ilk')", [h.eposta, h.ad, ozet, h.roller]);
     }
   });
 }

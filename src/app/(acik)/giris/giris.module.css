@@ -25,6 +25,10 @@
   border: 1px solid var(--kenar-alan); border-radius: var(--r-orta); background: var(--kart); color: var(--yazi2);
 }
 .goster:hover { color: var(--yazi); background: var(--zemin2); }
+.ipucu { margin: 6px 0 0; font-size: var(--boy-etiket); color: var(--yazi3); }
+.ipucuUyari { color: var(--hata-yazi); font-weight: 600; }
+.baglanti { display: inline-flex; align-items: center; justify-content: center; min-height: var(--tus-y); color: var(--onay-yazi); font-weight: 600; text-decoration: none; }
+.baglanti:hover { text-decoration: underline; }
 .tuslar { display: flex; align-items: center; flex-wrap: wrap; gap: 8px 16px; }
 .ayrac { margin: 6px 0 0; padding-top: 12px; border-top: 1px solid var(--kenar); color: var(--yazi2); font-size: var(--boy-kucuk); }
 @media (max-width: 767.98px) {

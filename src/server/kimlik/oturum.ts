@@ -8,7 +8,7 @@ import { createHash, randomBytes } from "node:crypto";
 import { kiraciIcinde, type Havuz } from "../db/kiraci.ts";
 import { izYaz } from "../db/yazici.ts";
 import type { Rol } from "../yetki/tanim.ts";
-import { parolaDogru, sahteDenetim } from "./parola.ts";
+import { parolaDogru, parolaOzeti, sahteDenetim } from "./parola.ts";
 
 export const KILIT_ESIGI = 5;
 export const KILIT_SURE_DK = 15;
@@ -91,4 +91,30 @@ export async function oturumOku(havuz: Havuz, firmaId: string, belirtec: string 
 export async function cikisYap(havuz: Havuz, firmaId: string, belirtec: string | undefined): Promise<void> {
   if (!belirtec || !BELIRTEC.test(belirtec)) return;
   await kiraciIcinde(havuz, firmaId, (db) => db.sorgu("DELETE FROM oturum WHERE ozet = $1", [belirtecOzeti(belirtec)]));
+}
+
+export type ParolaSonucu = { tamam: true; belirtec: string; bitis: Date } | { tamam: false; neden: "mevcut_yanlis" | "ayni" | "yok" };
+
+/** Parola değiştir (karar 34, 37). Geçici parolayla ilk girişte ("ilk") mevcut parola sorulmaz; öteki her durumda mevcut parola ZORUNLU.
+    Parola değişince hesabın BÜTÜN oturumları düşer (0002 tetiği: başka cihazda açık kalan oturum da kapanır); bu cihaz için yeni oturum açılır.
+    Durum "ilk" → "etkin". İz: "hesap.parola_degisti" (değer yazılmaz). */
+export async function parolaDegistir(havuz: Havuz, firmaId: string, hesapId: string, p: { yeni: string; mevcut?: string; ip: string; tarayici?: string; simdi?: Date }): Promise<ParolaSonucu> {
+  const simdi = p.simdi ?? new Date();
+  const ozet = await parolaOzeti(p.yeni);
+  return kiraciIcinde(havuz, firmaId, async (db) => {
+    const h = (await db.sorgu<{ eposta: string; durum: string; parola_ozeti: string | null }>(
+      "SELECT eposta, durum, parola_ozeti FROM hesap WHERE id = $1 FOR UPDATE", [hesapId])).rows[0];
+    if (!h || h.durum === "pasif" || !h.parola_ozeti) return { tamam: false, neden: "yok" } as const;
+    if (h.durum !== "ilk" || p.mevcut !== undefined) {
+      if (p.mevcut === undefined || !(await parolaDogru(p.mevcut, h.parola_ozeti))) return { tamam: false, neden: "mevcut_yanlis" } as const;
+    }
+    if (await parolaDogru(p.yeni, h.parola_ozeti)) return { tamam: false, neden: "ayni" } as const;
+    await db.sorgu("UPDATE hesap SET parola_ozeti = $2, durum = CASE WHEN durum = 'ilk' THEN 'etkin' ELSE durum END, hatali_deneme = 0, kilit_bitis = NULL WHERE id = $1", [hesapId, ozet]);
+    const belirtec = randomBytes(32).toString("base64url");
+    const bitis = new Date(simdi.getTime() + MUTLAK_GUN * 86_400_000);
+    await db.sorgu("INSERT INTO oturum (ozet, hesap_id, olustu, son_kullanim, bitis, ip, tarayici) VALUES ($1, $2, $3, $3, $4, $5, $6)",
+      [belirtecOzeti(belirtec), hesapId, simdi, bitis, p.ip.slice(0, 64) || "bilinmiyor", p.tarayici?.slice(0, 300) ?? null]);
+    await izYaz(db, { kim: h.eposta, ne: "hesap.parola_degisti", nesne: "hesap", nesneId: hesapId, ayrinti: { ilk: h.durum === "ilk" } });
+    return { tamam: true, belirtec, bitis } as const;
+  }, { hesapId });
 }

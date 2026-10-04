@@ -2335,6 +2335,12 @@ revizyon, alan kopyalama, hafif kusur devri, meslek eşleşme denetimi).
 - Emsal ürünler: https://opwire.app/iso-17020-periyodik-kontrol-yazilimi/ · https://17020muayene.vidco.com.tr/ · https://akuple.com/asansor-kontrol-yazilimi/ · https://ensyazilim.com/
 
 ## 11 · Değişiklik günlüğü
+- 2026-10-04 (286): **K1 Çekirdek 7: geçici parolayla ilk giriş — parolayı değiştir** (karar 34, 37; maket giris.html #/gecici). "İlk giriş bekleniyor"
+  durumundaki hesap girince "Parolayı değiştir" ekranına gelir (kaldığı sayfa korunur); **"Şimdi değil" ile geçilebilir** (karar 34). Yeni parola en az
+  10 karakter, harf + rakam; iki alan aynı olmalı; geçici parolayla aynı olamaz. Kaydedilince hesap "etkin" olur, **o hesabın başka cihazlardaki bütün
+  oturumları düşer**, bu cihaz yeni oturumla devam eder, eski parola artık girmez; denetim izine "hesap.parola_degisti" (değer yok). Etkin hesap parolasını
+  ancak **mevcut parolasıyla** değiştirebilir (Hesabım ekranı K2'de bu işlevi kullanacak). Başka firmanın hesabı değiştirilemez. Parola sıfırlama
+  (e-posta bağlantısı, 30 dk) e-posta bağdaştırıcısıyla K5'te.
 - 2026-10-04 (285): **K1 Çekirdek 6: dosya ucu** (09-A1–A4). Depo kapalı; nesne anahtarı tek üreticiden ve yalnız kimliklerden
   (`firma/…/modül/kayıt/dosya` — ad, rapor no yok); veritabanı da anahtarın kaydın kendisine ait olduğunu denetler (başka firmanın anahtarı yazılamaz),
   dosyanın içeriği sonradan değiştirilemez, dosya silinmez (çöp). **Yükleme:** tür içeriğin ilk baytlarından (uzantıya bakılmaz) — JPEG, PNG, PDF,

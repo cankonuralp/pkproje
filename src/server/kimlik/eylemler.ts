@@ -4,12 +4,12 @@
    dönüş adresine gidilir (açık yönlendirme yok). */
 import { cookies, headers } from "next/headers";
 import { redirect } from "next/navigation";
-import { z } from "../../sema/ortak.ts";
+import { parola as parolaSemasi, z } from "../../sema/ortak.ts";
 import { havuz } from "../db/havuz.ts";
 import { anaAlan, istekKiracisi } from "../kiraci/istek.ts";
 import { kiraciAdiCoz } from "../kiraci/coz.ts";
-import { CEREZ, cerezAyari, guvenliDonus } from "./istek.ts";
-import { cikisYap, girisYap } from "./oturum.ts";
+import { CEREZ, cerezAyari, guvenliDonus, istekOturumu } from "./istek.ts";
+import { cikisYap, girisYap, parolaDegistir } from "./oturum.ts";
 
 export interface GirisDurumu { hata?: string; eposta?: string; yonlendir?: string }
 
@@ -56,7 +56,31 @@ export async function girisEylemi(_onceki: GirisDurumu, form: FormData): Promise
   }
   (await cookies()).set(CEREZ, sonuc.belirtec, cerezAyari(sonuc.bitis));
   /* yönlendirme istemcide TAM sayfa geçişiyle (eylem içinden yönlendirilen sayfa yeni çerezi aynı istekte görmüyor — 2026-10-04 e2e yakaladı) */
-  return { yonlendir: guvenliDonus(g.data.donus) ? g.data.donus : "/" };
+  const donus = guvenliDonus(g.data.donus) ? g.data.donus : "/";
+  /* geçici parolayla ilk giriş: parola değiştirme önerilir ("Şimdi değil" ile geçilebilir — karar 34) */
+  if (sonuc.hesap.durum === "ilk") return { yonlendir: `/giris/parola${donus !== "/" ? `?donus=${encodeURIComponent(donus)}` : ""}` };
+  return { yonlendir: donus };
+}
+
+export interface ParolaDurumu { hata?: { p1?: string; p2?: string; genel?: string }; yonlendir?: string }
+
+/** geçici parolayla ilk girişte yeni parola (maket giris.html #/gecici). Oturumdaki hesap için; kiracı ve hesap istemciden alınmaz. */
+export async function parolaBelirleEylemi(_onceki: ParolaDurumu, form: FormData): Promise<ParolaDurumu> {
+  if (!(await ayniKoken())) return { hata: { genel: "İstek reddedildi. Sayfayı yenileyip yeniden deneyin." } };
+  const o = await istekOturumu();
+  if (!o) return { yonlendir: "/giris?neden=oturum" };
+  const p1 = String(form.get("p1") ?? ""), p2 = String(form.get("p2") ?? "");
+  const s = parolaSemasi.safeParse(p1);
+  if (!s.success) return { hata: { p1: s.error.issues[0]?.message ?? "En az 10 karakter; harf ve rakam içermeli." } };
+  if (p1 !== p2) return { hata: { p2: "İki parola aynı değil." } };
+  const h = await headers();
+  const r = await parolaDegistir(havuz(), o.kiraci.firmaId, o.id, { yeni: p1, ip: await istemciIp(), tarayici: h.get("user-agent") ?? undefined });
+  if (!r.tamam) {
+    return { hata: r.neden === "ayni" ? { p1: "Yeni parola geçici parolayla aynı olamaz." } : { genel: "Parola değiştirilemedi. Yeniden giriş yapıp deneyin." } };
+  }
+  (await cookies()).set(CEREZ, r.belirtec, cerezAyari(r.bitis));
+  const donus = String(form.get("donus") ?? "");
+  return { yonlendir: guvenliDonus(donus) ? donus : "/" };
 }
 
 export async function cikisEylemi(): Promise<void> {
