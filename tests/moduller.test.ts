@@ -53,11 +53,14 @@ test("17 modül, numaralar tekil; menüde olmayanlar 1 (Personel'in içinde), 6,
    vitrin (yayında 404). Oturumsuz açılan her rota adıyla burada: listeye eklenmeyen yeni bir açık rota testi düşürür (sızma kapısı). */
 const ACIK_ROTALAR = ["giris"];
 const GELISTIRME_ROTALARI = ["vitrin"];
+/* 2026-10-04 (K1, dosya ucu): api/ yalnız tanımlı uçları taşır — her uç oturumu ve yetkiyi kendisi denetler (09-A2) */
+const API_UCLARI = ["dosya"];
 const klasorlerOf = (yol: string) => readdirSync(yol).filter((ad) => statSync(join(yol, ad)).isDirectory()).sort();
 
 test("her modülün rota klasörü var ve src/app'te modül dışı rota yok", () => {
   const app = join(KOK, "src", "app");
-  assert.deepEqual(klasorlerOf(app), ["(acik)", "(gelistirme)", "(uygulama)"]);
+  assert.deepEqual(klasorlerOf(app), ["(acik)", "(gelistirme)", "(uygulama)", "api"]);
+  assert.deepEqual(klasorlerOf(join(app, "api")), API_UCLARI);
   const uygulama = join(app, "(uygulama)");
   const yollar = MODULLER.filter((m) => m.yol !== "").map((m) => m.yol).sort();
   assert.deepEqual(klasorlerOf(uygulama), yollar);

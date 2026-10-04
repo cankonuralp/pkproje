@@ -31,12 +31,14 @@ export function proxy(istek: NextRequest) {
      güvenli site içi yol olarak kullanılır (guvenliDonus). */
   baslik.set("x-probata-yol", istek.nextUrl.pathname + istek.nextUrl.search);
   const yanit = NextResponse.next({ request: { headers: baslik } });
-  yanit.headers.set("Content-Security-Policy", csp);
+  /* dosya ucu kendi sıkı CSP'sini ve gömme sınırını yazar (src/server/dosya/dosya.ts indirmeBasliklari); sayfa CSP'si onu ezmesin */
+  const dosyaUcu = istek.nextUrl.pathname.startsWith("/api/dosya/");
+  if (!dosyaUcu) yanit.headers.set("Content-Security-Policy", csp);
   yanit.headers.set("X-Content-Type-Options", "nosniff");
   yanit.headers.set("Referrer-Policy", "same-origin");
   yanit.headers.set("Permissions-Policy", "camera=(self), microphone=(), geolocation=(), payment=(), usb=()");
   yanit.headers.set("Cross-Origin-Opener-Policy", "same-origin");
-  yanit.headers.set("X-Frame-Options", "DENY");
+  if (!dosyaUcu) yanit.headers.set("X-Frame-Options", "DENY");
   if (!gelistirme) yanit.headers.set("Strict-Transport-Security", "max-age=63072000; includeSubDomains");
   return yanit;
 }

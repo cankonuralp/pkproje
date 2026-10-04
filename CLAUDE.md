@@ -91,6 +91,9 @@ pkproje/
   src/server/kiraci/        kiracı çözümleme (alt alan adı → firma kısa adı; istek.ts: istekKiracisi) · ★ güvenli yazıcılar
   src/server/kimlik/        parola özeti (scrypt) · giriş · oturum (belirteç özeti, kilit) — 2026-10-04 · istek.ts (oturumGerekli, modulGorur,
                             güvenli dönüş adresi) · eylemler.ts (giriş / çıkış sunucu eylemleri)
+  src/server/dosya/         TEK DOSYA YOLU: anahtar üreticisi (yalnız kimlik) · tür baytlardan + EXIF silme (tur.ts) · kapalı depo bağdaştırıcısı
+                            (klasör; yayında S3) · yükle / indirilebilir + modül erişim kaydı (kaydı olmayan modülün dosyası kimseye açılmaz) ·
+                            tek uç src/app/api/dosya/[id] · görsel yalnız <GizliResim> (components/gizli-resim)
   src/server/numara/        TEK NUMARA ÜRETİCİ (proje P-AAYY-SIRA · rapor XX-AAYY-SIRA-EK kesintisiz · teklif / sözleşme / gider / izin; sayaç işlem içinde)
   src/server/yetki/         TEK YETKİ: tanim.ts (roller, matris, sabitler) · canDo.ts (canDo, canDoEylem) — ayna testi: DB CHECK · maket · KOD-GECIS §4
   src/components/           TEK ÜRETİCİLER: kabuk (yan menü + üst çubuk) · ikon · boş durum · tuş · şerit · bildirim · pencere + onay ·

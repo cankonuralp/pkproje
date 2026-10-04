@@ -2335,6 +2335,16 @@ revizyon, alan kopyalama, hafif kusur devri, meslek eşleşme denetimi).
 - Emsal ürünler: https://opwire.app/iso-17020-periyodik-kontrol-yazilimi/ · https://17020muayene.vidco.com.tr/ · https://akuple.com/asansor-kontrol-yazilimi/ · https://ensyazilim.com/
 
 ## 11 · Değişiklik günlüğü
+- 2026-10-04 (285): **K1 Çekirdek 6: dosya ucu** (09-A1–A4). Depo kapalı; nesne anahtarı tek üreticiden ve yalnız kimliklerden
+  (`firma/…/modül/kayıt/dosya` — ad, rapor no yok); veritabanı da anahtarın kaydın kendisine ait olduğunu denetler (başka firmanın anahtarı yazılamaz),
+  dosyanın içeriği sonradan değiştirilemez, dosya silinmez (çöp). **Yükleme:** tür içeriğin ilk baytlarından (uzantıya bakılmaz) — JPEG, PNG, PDF,
+  Excel, CSV (gereken yerde; Excel'in Türkçe CSV'si de); **SVG ve HTML hiçbir koşulda**, sınır sunucuda; fotoğrafın konum / cihaz bilgisi (EXIF,
+  PNG metin parçaları) silinir, görüntüye dokunulmaz; PDF işlenmez. **İndirme tek uçtan** (`/api/dosya/{kimlik}`): oturumsuz 403; başka firmanın,
+  çöpteki ya da bağlı kaydı göremeyen kişinin dosyası 404 (varlığı söylenmez); her modül "bu kaydı kim görür" denetimini kendi ekler, **eklemeyen
+  modülün dosyası kimseye açılmaz**. Yanıt: özel önbellek, `nosniff`, görsel / Excel sandbox'ta, Excel her zaman indirilir, dosya adı başlığa satır
+  sokamaz. Görsel yalnız `<GizliResim>` ile (adres `<img src>`'ye yazılmaz, oturum boyunca bir kez iner, görünür alana girince). **Ölçemediklerim:**
+  PDF'in tarayıcı görüntüleyicisinde satır içi açılışı (başsız tarayıcı PDF'i indirir) ve gerçek bir modülde baştan sona yükle → göster (ilk dosya
+  bağlayan modülde, K2). S3 bağdaştırıcısı K7'de (Supabase).
 - 2026-10-04 (284): **K1 Çekirdek 5: numara üretici** (§3.5, KOD-GECIS §6; `src/server/numara/`). Proje `P-AAYY-SIRA` (ayda 001'den), rapor
   `XX-AAYY-SIRA-EK` (XX firmanın rapor kodu veritabanından, SIRA firmada kesintisiz, EK 5 hane rasgele, revizyon `-R1`), teklif `T-` · sözleşme
   `IS-` · gider `G-` · izin `I-` + `AAYY-SIRA`. **AAYY Türkiye saatiyle** (30 Eylül 23:30 TSİ hâlâ Eylül; 1 Ekim 00:30 TSİ Ekim). Numara kaydı oluşturan
