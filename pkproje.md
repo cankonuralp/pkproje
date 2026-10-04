@@ -2335,6 +2335,14 @@ revizyon, alan kopyalama, hafif kusur devri, meslek eşleşme denetimi).
 - Emsal ürünler: https://opwire.app/iso-17020-periyodik-kontrol-yazilimi/ · https://17020muayene.vidco.com.tr/ · https://akuple.com/asansor-kontrol-yazilimi/ · https://ensyazilim.com/
 
 ## 11 · Değişiklik günlüğü
+- 2026-10-04 (284): **K1 Çekirdek 5: numara üretici** (§3.5, KOD-GECIS §6; `src/server/numara/`). Proje `P-AAYY-SIRA` (ayda 001'den), rapor
+  `XX-AAYY-SIRA-EK` (XX firmanın rapor kodu veritabanından, SIRA firmada kesintisiz, EK 5 hane rasgele, revizyon `-R1`), teklif `T-` · sözleşme
+  `IS-` · gider `G-` · izin `I-` + `AAYY-SIRA`. **AAYY Türkiye saatiyle** (30 Eylül 23:30 TSİ hâlâ Eylül; 1 Ekim 00:30 TSİ Ekim). Numara kaydı oluşturan
+  işlemin içinde alınır: işlem düşerse sıra da geri alınır (**rapor sırasında boşluk kalmaz**); aynı anda alınan 20 numara 20 farklı ve ardışık
+  (ölçüldü); sayaç yalnız ileri gider (veritabanı tetiği — verilmiş numara yeniden verilmez), firmalar birbirinin sayacını görmez. Önek firma ayarından
+  verilebilir (Firma ayarları kalemi). Olumsuz kanıt 3 bozma (oku-sonra-yaz sayaç, ileri tetiği, saat dilimi).
+- 2026-10-04: CI'da (a733ddb, tablet) bildirim kaybolmadı: zamanlayıcı bileşen yeniden bağlanınca siliniyor, "görünür" kalıyordu → zamanlayıcı
+  görünür duruma bağlı etkiye taşındı (06bdcf1). Yerelde yeniden üretemedim; kök neden koddan çıkarıldı.
 - 2026-10-04 (283): **K1 Çekirdek 4: güvenli yazıcı ve denetim izi** (09-D1, D3). Modüller kayıt ekler / değiştirirken tek yazıcıdan geçer
   (`src/server/db/yazici.ts`): yazılabilir sütunlar tabloya göre listelidir (kimlik, firma, sürüm, zaman damgası hiçbir zaman formdan yazılmaz; liste dışı
   ad SQL'e girmez); **iyimser kilit** — kayıt ekranda açıldıktan sonra başkası değiştirdiyse kaydetme reddedilir ("başkası değiştirdi"), sessizce
