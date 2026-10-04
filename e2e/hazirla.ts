@@ -47,6 +47,11 @@ export default async function hazirla(_ayar: FullConfig) {
   await ac("/dokumanlar/egitimler");
   await ac("/dokumanlar/egitimler/turler");
   if (kart) { await ac(kart); await ac(`${kart}/duzenle`); }
+  /* 2026-10-04: kaydı test sırasında açılan ayrıntı sayfaları da önceden derlensin (olmayan kimlik "bulunamadı" çizer, rota yine derlenir) —
+     ana dalda e2e/musteriler.spec kaydet sonrası /musteriler/<id> soğuk derlemede 5 sn'yi aştı (CI 321ce19, 94ec1ea). */
+  const YOK = "00000000-0000-4000-8000-000000000000";
+  for (const y of [`/musteriler/${YOK}`, `/musteriler/tesis/${YOK}`, `/ekipman-turleri/${YOK}`, `/olcum-cihazlari/${YOK}`, `/araclar/${YOK}`,
+    `/sozlesmeler/${YOK}`, `/dokumanlar/standart/${YOK}`, "/dokumanlar/kriterler/ZPKK01", `/zimmetler/varlik/d/${YOK}`]) await ac(y);
   await ac("/giris/parola");
   await tarayici.close();
 }
