@@ -96,6 +96,9 @@ pkproje/
   src/modules/egitimler/    EĞİTİMLER (2026-10-04; Dökümanlar sekmesi, modül 10): eğitim türleri, kayıtlar, tekrar tarihi, sertifika
   src/format/               FORMAT MOTORU (2026-10-04, RAPOR-FORMAT.md): tanim.ts (şema) · hesap.ts (ZPKK formülleri, saf) · motor.ts (değerlendir,
                             yayın denetimi) · sablonlar.ts (ZPKR01, ZPKR02, kompresör) — saha ekranı ve PDF aynı tanımdan
+  src/modules/rapor-format/ RAPOR FORMATI (2026-10-04, 308): sürümlü tanım (rapor_format, göç 0022: taslak → yayında → eski; yayınlanan değişmez) ·
+                            şablondan başlat · taslak kaydet · yayınla (kilitli Bakanlık öğesi ENGEL, öteki denetim uyarı) · yayındaki format;
+                            ekran: tür sayfası "Rapor şablonu" + önizleme /ekipman-turleri/<tür>/sablon/<sürüm>
   src/tanim/iller.ts        81 il + 973 ilçe (açık veri, MIT; bir kez alındı)
   src/modules/<modül>/      ★ her iş modülü: server/ (veri erişimi + iş kuralları, dışa açılan fonksiyonlar) · ui/ · şema · testler
   src/tanim/tanimlar.ts     SABİT TANIMLAR (durum adları, eğri çarpanları, mesai sınırları …): şemalı, karma adlı JSON → /api/tanim (2026-10-04)
@@ -172,6 +175,12 @@ GÖZLE doğrula** (masaüstü 1920 · tablet 1080 · telefon 375; açık + koyu 
 doğrulandı**; ölçülemeyen "ölçemedim") → **kanıt özeti** ("ne baktım · nerede · ne gördüm"; ilk iki satır UYUM ve
 ETKİ ALANI). Bir teslimde **BİR kalem**. Reisim'e test ödevi verilmez.
 CI aynı zinciri her push'ta koşar (`.github/workflows/ci.yml`); main'de denetim geçmeden Pages'e yayın olmaz.
+**PC'de (Windows) yerel deneme YOK (2026-10-04, reisim: *"windowsta postgreSQL ile neden çalışalımki her işimizi internette supabase de vs
+yapıcaz windowsta localhostta vs deneme yapmak istemiyorum"*):** PC'de gömülü PostgreSQL, `npm test`, `npm run dev`, yerel uçtan uca koşulmaz;
+PC'de yalnız `npm run check` + `npm run lint` (veritabanısız). Test kapısı CI'da: kalem dalı push → CI yeşil (tip · lint · test fail 0 · olumsuz
+kanıt · derleme · uçtan uca üç genişlik; günlük: check-runs annotations) → göç Supabase'e (`goc` kaydıyla) → `main` fast-forward + push → Vercel
+`main`'den yayınlar. Testler Supabase'e yazmaz (canlı veriye deneme yazması yok, anayasa 6.5). Gözle doğrulama yayında; oturum isteyen ekranda
+giriş reisim'in (parolayı ben yazmam) — bakılamayan "ölçemedim" diye yazılır.
 **Askıda (gerçek sunucuya çıkınca açılır):** canlı veriye elle dokunma (anayasa 6) · gerçek cihaz teyidi (11.2) ·
 üretim doğrulaması. **Açık:** `git push` (her teslim push ile biter, 0.3) · GitHub Pages önizlemesi (bkz. §8).
 

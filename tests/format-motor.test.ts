@@ -4,7 +4,7 @@
 import assert from "node:assert/strict";
 import { test } from "node:test";
 import { linyeHesap, noktaHesap, pdHesap, rcdTestYeter, sayiOku, sinirSonucu, ziHesap } from "../src/format/hesap.ts";
-import { degerlendir, kilitliKimlikler, yayinDenetimi } from "../src/format/motor.ts";
+import { degerlendir, kilitDenetimi, kilitliKimlikler, yayinDenetimi } from "../src/format/motor.ts";
 import { SABLONLAR } from "../src/format/sablonlar.ts";
 import { Cevaplar, FormatTanimi, type FormatGirdisi } from "../src/format/tanim.ts";
 
@@ -63,6 +63,39 @@ test("yayın denetimi: boş bölüm, sınırsız tablo, sonuç / imza yok, kilit
   const l = yayinDenetimi(t, SABLONLAR.ZPKR02.tanim);
   for (const p of ["“Boş tablo” tablosunda", "İmza alanları bölümü yok.", "zorunlu öğesi silinmiş: fonk", "silinmiş: g1_1", "silinmiş: ik3", "silinmiş: imza"])
     assert.ok(l.some((x) => x.includes(p)), `${p} — ${l.join(" | ")}`);
+});
+
+/* 2026-10-04 (308, RAPOR-FORMAT §3 "silinemez, yalnız sırası / görünümü değişir; eksikse yayınlanmaz — tek engel"): kilitli öğenin yalnız silinmesi
+   değil, özünün değişmesi, kilidinin kaldırılması, zorunluluğunun gevşemesi ve resmî form kodunun / başlığının değişmesi de engel. */
+test("kilit denetimi: sıra serbest, kilitsiz ekleme serbest; kilitli öğe silinemez, değişmez, kilidi / zorunluluğu kalkmaz; form kodu sabit", () => {
+  const k = SABLONLAR.ZPKR02.tanim;
+  const t = T("ZPKR02");
+  t.bolumler.reverse();
+  const ek = t.bolumler.find((b) => b.id === "ekipman");
+  if (ek?.blok === "bilgi") { ek.alanlar.reverse(); ek.alanlar.push({ id: "firma_ek", ad: "Firma ek alanı", tur: "metin", zorunlu: false, kilit: false }); }
+  t.kurallar.foto = true;
+  assert.deepEqual(kilitDenetimi(t, k), [], "sıra, kilitsiz yeni alan ve kurallar serbest");
+  const d = T("ZPKR02");
+  const b = (id: string) => d.bolumler.find((x) => x.id === id)!;
+  const ekipman = b("ekipman"), fonk = b("fonk"), linye = b("linye"), gozle = b("gozle"), sonuc = b("sonuc");
+  if (ekipman.blok === "bilgi") {
+    ekipman.alanlar.find((a) => a.id === "sebeke")!.secenekler = ["TT"];
+    ekipman.alanlar.find((a) => a.id === "kurulus")!.zorunlu = false;
+    ekipman.alanlar.find((a) => a.id === "gerilim")!.kilit = false;
+  }
+  if (fonk.blok === "test") fonk.degerler.find((x) => x.id === "zx")!.sinir = 5;
+  if (linye.blok === "olcum") { linye.sutunlar = linye.sutunlar.filter((s) => s.id !== "icu"); linye.enAz = 0; }
+  if (gozle.blok === "liste") gozle.cevaplar = ["Uygun", "Uygun değil"];
+  if (sonuc.blok === "sonuc") sonuc.cumle = "Başka cümle";
+  d.gorunum.formKodu = "ZPKR99";
+  const l = kilitDenetimi(d, k);
+  for (const p of ["değiştirilmiş: sebeke", "zorunluluğu kaldırılmış: kurulus", "kilidi kaldırılmış: gerilim", "değiştirilmiş: zx", "silinmiş: linye.icu",
+    "değiştirilmiş: linye", "değiştirilmiş: gozle", "değiştirilmiş: sonuc", "form kodu ve başlığı değiştirilemez: ZPKR02"]) {
+    assert.ok(l.some((x) => x.includes(p)), `${p} — ${l.join(" | ")}`);
+  }
+  assert.deepEqual(kilitDenetimi(T("KOMPRESOR"), SABLONLAR.KOMPRESOR.tanim), []);
+  const kom = T("KOMPRESOR"); kom.bolumler = []; kom.gorunum.baslik = "Başka";
+  assert.deepEqual(kilitDenetimi(kom, SABLONLAR.KOMPRESOR.tanim), [], "kilitsiz (genel) şablonda engel yok");
 });
 
 test("değerlendirme ZPKR02: boş rapor eksikleri listeler; olumsuz madde, sınır dışı değer, linye kusuru kusur listesine düşer; öneri uygun değil", () => {

@@ -1,0 +1,26 @@
+/* Rapor formatı ekranları (maket maket.css .a-kurucu-*, .a-kurucu-saha): sürüm tablosu tuşları, önizleme bölümleri. Bölüm kartları kabı doldurur
+   (kalıp 10); uzun alan listeleri geniş ekranda sütunlara akar, telefonda tek sütun. Renk / ölçü yalnız tokens.css değişkenlerinden. */
+.tuslar { display: flex; flex-wrap: wrap; justify-content: flex-end; gap: 8px; }
+.etiket { margin: 12px 0 4px; font-weight: 600; }
+.bolumler { display: grid; gap: 12px; margin: 0; padding: 0; list-style: none; }
+.bolum { min-width: 0; padding: 14px; border: 1px solid var(--kenar); border-radius: var(--r-buyuk); background: var(--kart); }
+.bolumBas { display: flex; align-items: center; flex-wrap: wrap; gap: 6px 10px; margin: 0 0 8px; }
+.bolumAd { margin: 0; font-size: var(--boy-govde); font-weight: 700; overflow-wrap: anywhere; }
+.satir { margin: 0 0 8px; color: var(--yazi2); overflow-wrap: anywhere; }
+.grup { margin: 0 0 8px; }
+.grupAd { margin: 8px 0 4px; font-size: var(--boy-kucuk); font-weight: 700; color: var(--yazi2); overflow-wrap: anywhere; }
+.ogeler, .maddeler { margin: 0; padding: 0; list-style: none; columns: 3 280px; column-gap: 24px; }
+.maddeler { counter-reset: madde; }
+.oge { display: flex; flex-direction: column; break-inside: avoid; padding: 6px 0; border-bottom: 1px solid var(--kenar); min-width: 0; }
+.maddeler .oge { counter-increment: madde; }
+.maddeler .oge .ogeAd::before { content: counter(madde) ". "; color: var(--yazi3); font-variant-numeric: tabular-nums; }
+.ogeAd { display: flex; align-items: flex-start; gap: 6px; overflow-wrap: anywhere; }
+.ogeAlt { color: var(--yazi2); font-size: var(--boy-kucuk); overflow-wrap: anywhere; }
+.kilit { display: inline-flex; flex: none; margin-top: 2px; color: var(--onay-yazi); }
+.dayanak { margin: 0; padding-left: 18px; }
+.dayanak li { padding: 2px 0; overflow-wrap: anywhere; }
+
+@media (max-width: 767.98px) {
+  .bolum { padding: 12px; }
+  .ogeler, .maddeler { columns: 1; }
+}

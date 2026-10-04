@@ -149,6 +149,14 @@ export async function standardiKullananTurler(db: Sorgulayici, no: string): Prom
     .sort((a, b) => a.ad.localeCompare(b.ad, "tr"));
 }
 
+/** Rapor formatı için (src/modules/rapor-format): tek türün kimliği, adı, kodu, branşı; yoksa null. kilitle: türün satırı işlem sonuna dek
+    kilitlenir — aynı türün format işlemleri (taslak başlat, yayınla) sıraya girer, iki yayın aynı sırayı alamaz. Yetki ÇAĞIRANDA. */
+export async function turOzeti(db: Sorgulayici, id: string, secenek: { kilitle?: boolean } = {}): Promise<{ id: string; ad: string; kod: string; brans: "m" | "e" } | null> {
+  if (!UUID.test(id)) return null;
+  return (await db.sorgu<{ id: string; ad: string; kod: string; brans: "m" | "e" }>(
+    `SELECT id::text, ad, kod, brans FROM ekipman_turu WHERE id = $1${secenek.kilitle ? " FOR UPDATE" : ""}`, [id])).rows[0] ?? null;
+}
+
 /** Personel için (ekipman ataması): bütün türlerin adı ve branşı. Yetki ÇAĞIRANDA. */
 export async function turOzetleri(db: Sorgulayici): Promise<{ id: string; ad: string; brans: "m" | "e" }[]> {
   return (await db.sorgu<{ id: string; ad: string; brans: "m" | "e" }>("SELECT id::text, ad, brans FROM ekipman_turu")).rows

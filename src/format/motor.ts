@@ -4,7 +4,9 @@
    · kusurlar: liste maddesinde olumsuz cevap (cevap setinin 2. öğesi) · seçilen uygunluk notu kusursa · hesabı ya da sütun sınırı tutmayan satır ·
      sınır dışı test değeri. Kusur açıklamaları bölümü bundan dolar.
    · öneri: kural açıksa herhangi kusur → "uygun_degil", yoksa "uygun". Denetçi sonucu kendisi seçer.
-   Yayın denetimi (§5): boş bölüm, cevap seti eksik liste, sınırı / hesabı / notu olmayan ölçüm tablosu, kilitli (Bakanlık) öğenin silinmesi. */
+   Yayın denetimi (§5): boş bölüm, cevap seti eksik liste, sınırı / hesabı / notu olmayan ölçüm tablosu — UYARI (yayın olur).
+   Kilitli öğe denetimi (§3, 2026-10-04): kilitli (Bakanlık) öğe silinmiş / değiştirilmiş / kilidi kaldırılmış — ENGEL (yayınlanmaz).
+   ⛔ Bu dosya yalnız ./hesap.ts ve ./tanim.ts'i içe aktarır (olumsuz kanıt kopyası bu iki yolu çevirir). */
 import { linyeHesap, noktaHesap, pdHesap, rcdTestYeter, sayiOku, sinirSonucu, ziHesap } from "./hesap.ts";
 import type { Bolum, BolumOf, Cevaplar, FormatTanimi } from "./tanim.ts";
 
@@ -122,15 +124,96 @@ export function kilitliKimlikler(t: FormatTanimi): Set<string> {
   }
   return s;
 }
-function butunKimlikler(t: FormatTanimi): Set<string> {
-  const s = new Set<string>();
+
+/* ── KİLİTLİ ÖĞE DENETİMİ (RAPOR-FORMAT §1 "Bakanlık formatlı türde zorunlu alanlar kilitli", §3 "silinemez, yalnız sırası / görünümü değişir;
+   eksikse yayınlanmaz (bu tek engel: resmî formatın kendisi)"). 2026-10-04 (308): yalnız "silinmiş mi" değil — kilitli öğe yerinde, kilidi
+   duruyor ve ÖZÜ aynı (ad, alan türü, seçenekler, kayıttan gelen kaynak, sınır, madde metni, cevap seti, hesap, uygunluk notları, sonuç cümlesi);
+   zorunlu olan isteğe bağlıya, en az satır sayısı aşağıya çekilemez. Sırası serbest, kilitli bölüme yeni (kilitsiz) öğe eklenebilir. Kaynak
+   SUNUCUDA seçilir (hazır şablon koddan, önceki yayın veritabanından) — istemcinin yolladığı tanımdaki "kilit" bayrağına güvenilmez. */
+const oz = (o: Record<string, unknown>) => JSON.stringify(o, (_k, v) => (v === undefined ? undefined : v));
+const bolumOzu = (b: Bolum) => oz({
+  blok: b.blok, ad: b.ad,
+  ...(b.blok === "liste" ? { cevaplar: b.cevaplar } : {}),
+  ...(b.blok === "olcum" ? { hesap: b.hesap, notlar: b.notlar, satir: b.satir } : {}),
+  ...(b.blok === "sonuc" ? { cumle: b.cumle } : {}),
+  ...(b.blok === "imza" ? { imzalar: b.imzalar } : {}),
+});
+type AlanT = BolumOf<"bilgi">["alanlar"][number];
+type MaddeT = BolumOf<"liste">["gruplar"][number]["maddeler"][number];
+type DegerT = BolumOf<"test">["degerler"][number];
+type SutunT = BolumOf<"olcum">["sutunlar"][number];
+const alanOzu = (a: AlanT) => oz({ ad: a.ad, tur: a.tur, secenekler: a.secenekler, kaynak: a.kaynak, birim: a.birim });
+const maddeOzu = (m: MaddeT) => oz({ metin: m.metin, std: m.std });
+const degerOzu = (d: DegerT) => oz({ ad: d.ad, birim: d.birim, metin: d.metin, op: d.op, sinir: d.sinir });
+const sutunOzu = (s: SutunT) => oz({ ad: s.ad, birim: s.birim, giris: s.giris, secenekler: s.secenekler, op: s.op, sinir: s.sinir });
+
+interface Ogeler { bolum: Map<string, Bolum>; alan: Map<string, AlanT>; madde: Map<string, MaddeT>; deger: Map<string, DegerT> }
+function ogeler(t: FormatTanimi): Ogeler {
+  const o: Ogeler = { bolum: new Map(), alan: new Map(), madde: new Map(), deger: new Map() };
   for (const b of t.bolumler) {
-    s.add(b.id);
-    if (b.blok === "bilgi") for (const a of b.alanlar) s.add(a.id);
-    if (b.blok === "liste") for (const g of b.gruplar) for (const m of g.maddeler) s.add(m.id);
-    if (b.blok === "test") for (const d of b.degerler) s.add(d.id);
+    o.bolum.set(b.id, b);
+    if (b.blok === "bilgi") for (const a of b.alanlar) o.alan.set(a.id, a);
+    if (b.blok === "liste") for (const g of b.gruplar) for (const m of g.maddeler) o.madde.set(m.id, m);
+    if (b.blok === "test") for (const d of b.degerler) o.deger.set(d.id, d);
   }
-  return s;
+  return o;
+}
+
+/** kaynağın kilitli öğeleri taslakta korunmuş mu; boş liste = engel yok */
+export function kilitDenetimi(t: FormatTanimi, kaynak: FormatTanimi): string[] {
+  const l: string[] = [], y = ogeler(t);
+  const sorun = (ne: "silinmiş" | "değiştirilmiş" | "kilidi kaldırılmış" | "zorunluluğu kaldırılmış", id: string, ad: string) =>
+    l.push(`Bakanlık formatının zorunlu öğesi ${ne}: ${id} (“${ad}”).`);
+  let kilitVar = false;
+  for (const b of kaynak.bolumler) {
+    if (b.kilit) {
+      kilitVar = true;
+      const n = y.bolum.get(b.id);
+      if (!n) sorun("silinmiş", b.id, b.ad);
+      else if (bolumOzu(n) !== bolumOzu(b)) sorun("değiştirilmiş", b.id, b.ad);
+      else if (!n.kilit) sorun("kilidi kaldırılmış", b.id, b.ad);
+      else if (b.blok === "olcum" && n.blok === "olcum") {
+        if (n.enAz < b.enAz) sorun("değiştirilmiş", b.id, `${b.ad} · en az satır`);
+        for (const s of b.sutunlar) {
+          const ns = n.sutunlar.find((x) => x.id === s.id);
+          if (!ns) sorun("silinmiş", `${b.id}.${s.id}`, `${b.ad} · ${s.ad}`);
+          else if (sutunOzu(ns) !== sutunOzu(s)) sorun("değiştirilmiş", `${b.id}.${s.id}`, `${b.ad} · ${s.ad}`);
+          else if (s.zorunlu && !ns.zorunlu) sorun("zorunluluğu kaldırılmış", `${b.id}.${s.id}`, `${b.ad} · ${s.ad}`);
+        }
+      }
+    }
+    const altlar: readonly (readonly [kind: "alan" | "madde" | "deger", id: string, ad: string, kilit: boolean])[] =
+      b.blok === "bilgi" ? b.alanlar.map((a) => ["alan", a.id, a.ad, a.kilit] as const)
+        : b.blok === "liste" ? b.gruplar.flatMap((g) => g.maddeler.map((m) => ["madde", m.id, m.metin, m.kilit] as const))
+          : b.blok === "test" ? b.degerler.map((d) => ["deger", d.id, d.ad, d.kilit] as const) : [];
+    for (const [kind, id, ad, kilit] of altlar) {
+      if (!kilit) continue;
+      kilitVar = true;
+      if (kind === "alan") {
+        const e = (b as BolumOf<"bilgi">).alanlar.find((x) => x.id === id)!, n = y.alan.get(id);
+        if (!n) sorun("silinmiş", id, ad);
+        else if (alanOzu(n) !== alanOzu(e)) sorun("değiştirilmiş", id, ad);
+        else if (!n.kilit) sorun("kilidi kaldırılmış", id, ad);
+        else if (e.zorunlu && !n.zorunlu) sorun("zorunluluğu kaldırılmış", id, ad);
+      } else if (kind === "madde") {
+        const e = (b as BolumOf<"liste">).gruplar.flatMap((g) => g.maddeler).find((x) => x.id === id)!, n = y.madde.get(id);
+        if (!n) sorun("silinmiş", id, ad);
+        else if (maddeOzu(n) !== maddeOzu(e)) sorun("değiştirilmiş", id, ad);
+        else if (!n.kilit) sorun("kilidi kaldırılmış", id, ad);
+      } else {
+        const e = (b as BolumOf<"test">).degerler.find((x) => x.id === id)!, n = y.deger.get(id);
+        if (!n) sorun("silinmiş", id, ad);
+        else if (degerOzu(n) !== degerOzu(e)) sorun("değiştirilmiş", id, ad);
+        else if (!n.kilit) sorun("kilidi kaldırılmış", id, ad);
+        else if (e.zorunlu && !n.zorunlu) sorun("zorunluluğu kaldırılmış", id, ad);
+      }
+    }
+  }
+  /* resmî formatın kimliği: form kodu ve başlık (PDF üst bilgisi) — kilitli öğesi olan kaynakta değişmez */
+  if (kilitVar && kaynak.gorunum.formKodu && (t.gorunum.formKodu !== kaynak.gorunum.formKodu || t.gorunum.baslik !== kaynak.gorunum.baslik)) {
+    l.push(`Bakanlık formatının form kodu ve başlığı değiştirilemez: ${kaynak.gorunum.formKodu} (“${kaynak.gorunum.baslik}”).`);
+  }
+  return l;
 }
 
 /** yayın öncesi denetim (RAPOR-FORMAT §5) — boşsa yayınlanır. kaynak: kilitli alanların geldiği önceki sürüm / hazır şablon */
@@ -148,9 +231,6 @@ export function yayinDenetimi(t: FormatTanimi, kaynak?: FormatTanimi | null): st
   }
   if (!t.bolumler.some((b) => b.blok === "sonuc")) l.push("Sonuç ve kanaat bölümü yok.");
   if (!t.bolumler.some((b) => b.blok === "imza")) l.push("İmza alanları bölümü yok.");
-  if (kaynak) {
-    const var_ = butunKimlikler(t);
-    for (const k of kilitliKimlikler(kaynak)) if (!var_.has(k)) l.push(`Bakanlık formatının zorunlu öğesi silinmiş: ${k}.`);
-  }
+  if (kaynak) l.push(...kilitDenetimi(t, kaynak));
   return l;
 }

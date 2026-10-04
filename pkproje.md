@@ -2341,6 +2341,27 @@ revizyon, alan kopyalama, hafif kusur devri, meslek eşleşme denetimi).
 - Emsal ürünler: https://opwire.app/iso-17020-periyodik-kontrol-yazilimi/ · https://17020muayene.vidco.com.tr/ · https://akuple.com/asansor-kontrol-yazilimi/ · https://ensyazilim.com/
 
 ## 11 · Değişiklik günlüğü
+- 2026-10-04 (308): **K3 Rapor formatı veritabanında: taslak → yayında → eski; şablondan başlat, önizle, yayınla** (RAPOR-FORMAT.md §4–5, §7;
+  KOD-GECIS §3 "rapor_format", §5). Göç 0022 (rapor_format — tür başına TEK taslak ve TEK yayındaki sürüm (kısmi eşsiz dizinler), sıra v1, v2 …;
+  tanım jsonb (her yazma ve okumada şemadan geçer, en çok ~1 MB), şema sürümü, kaynak hazır şablon, sürüm notu, yayınlayan; tür ile aynı firmaya
+  bağlı, RLS. Tetik: yeni satır yalnız taslak; YAYINLANAN SÜRÜM DEĞİŞMEZ ve geri alınamaz (yalnız yayında → eski) — imzalı raporun PDF'i hangi
+  sürümle çizildiyse o sürümle yeniden üretilir; yayın zamanı ve yayınlayan hesap veritabanında işlem bağlamından damgalanır; silme hakkı yok).
+  Modül `src/modules/rapor-format/` (yetki modül 5: "gör" sürümleri ve tanımı görür — denetçi raporu bu tanımdan yazacak; başlatmak, kaydetmek,
+  yayınlamak yalnız "yaz"; muhasebe görmez): hazır şablondan ya da yayınlanmış sürümden taslak başlat (taslak varsa istemcinin gördüğü sürümle yerine
+  geçer) · taslak kaydet (şemadan geçmeyen ya da büyük tanım yazılmaz; Format kurucu K4 bunu kullanacak) · yayın denetimi · yayınla · türün yayındaki
+  formatı (Raporlar için) · sürüm oku (PDF için). **Kilitli öğe denetimi** (`src/format/motor.ts` kilitDenetimi): Bakanlık öğesi silinmiş, özü
+  değiştirilmiş (ad, alan türü, seçenekler, kayıttan gelen kaynak, sınır, madde metni, cevap seti, hesap, uygunluk notları, sonuç cümlesi), kilidi ya
+  da zorunluluğu kaldırılmış, form kodu / başlığı değişmişse ENGEL — yayınlanmaz; kaynak SUNUCUDA seçilir (hazır şablon koddan + yayındaki sürüm),
+  istemcinin "kilit" bayrağına güvenilmez; sıra serbest, kilitsiz öğe eklenebilir. Yayın denetiminin öteki maddeleri (boş bölüm, sınırsız tablo …)
+  UYARI. Ekran: tür sayfasında "Rapor şablonu" yüzü ve bölümü (sürüm tablosu Taslak / Yayında / Eski, Önizle, Yayınla; Şablondan başlat penceresi) +
+  önizleme sayfası `/ekipman-turleri/<tür>/sablon/<sürüm>` (yüzler, yayın denetimi, kurallar, görünüm, saha ekranı önizlemesi: bölüm bölüm alanlar,
+  maddeler, ölçüm sütunları ve sınırları, test değerleri; Bakanlık öğesi kilitli). Makette karşılığı Format kurucunun önizlemesi ve Yayınla'sı;
+  düzenleyici K4. Kilit: tests/rapor-format.test.ts (8; gerçek PostgreSQL, iki firma: yetki, rol düzeni değişince yetki, sahte rol, firma sızıntısı,
+  değişmezlik, damga uydurulamaz) + format-motor (kilit denetimi) + bozan 3 (tetik, motor, şablon kaynağı) + e2e/rapor-format.spec.ts (üç genişlik).
+  Yerelde (aşağıdaki karardan önce) 8/8 · 9/9 · 3/3 · e2e 3/3 geçti. **Yöntem (reisim, aynı gün):** *"windowsta postgreSQL ile neden çalışalımki her
+  işimizi internette supabase de vs yapıcaz windowsta localhostta vs deneme yapmak istemiyorum"* → PC'de yerel PostgreSQL / `npm test` / localhost
+  yok; test kapısı CI'da, sonra Supabase göçü ve main → Vercel (CLAUDE.md §5). PC'de tam testin takılması (Windows'ta gömülü PostgreSQL 18
+  kapanışı) bu kararla konu dışı kaldı; düzeltmesi geri alındı.
 - 2026-10-04 (307): **K3 Format motoru 1: tanım şeması, değerlendirme, hazır şablonlar** (RAPOR-FORMAT.md §1–5, §9.1; KOD-GECIS K3 ilk kalemi).
   src/format/: tanim.ts (şema sürüm 1 — 10 blok, kurallar, görünüm; bütün kimlikler tekil, cevaplar kimlikle; istemciden / yapay zekâdan gelen tanım
   şemadan geçmezse yazılmaz) · hesap.ts (ZPKK01 / ZPKK02 formülleri, maketle aynı sayılar: Zs = 230 / (çarpan × In), RCD IΔ ≤ IΔn ve TΔ ≤ 200 ms,
