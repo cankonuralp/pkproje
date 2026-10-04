@@ -4,7 +4,7 @@
    K1 (2026-10-04): ilk açılışta UYDURMA bir deneme firması ("deneme") ve firma yöneticisi hesabı kurulur; parolası RASGELE üretilir ve yalnız
    data/gelistirme-hesap.txt'ye yazılır (data/ git dışı). Yalnız yerel geliştirme içindir; yayında böyle bir hesap yoktur. */
 import { randomBytes } from "node:crypto";
-import { existsSync, writeFileSync } from "node:fs";
+import { existsSync, readFileSync, writeFileSync } from "node:fs";
 import { join } from "node:path";
 import { gomuluBaslat } from "../src/server/db/gomulu.ts";
 import { havuzKur, kiraciIcinde } from "../src/server/db/kiraci.ts";
@@ -39,6 +39,11 @@ const HESAP_DOSYASI = join(process.cwd(), "data", "gelistirme-hesap.txt");
   console.log(`Deneme girişi: http://deneme.localhost:3000 — e-posta ve parola ${HESAP_DOSYASI} dosyasında.`);
 }
 
+/* sır ana anahtarı (firma sırlarını şifreler — src/server/ayar/sir.ts): yerelde data/ altında, ilk açılışta rasgele; yayında ortam değişkeni */
+const SIR_DOSYASI = join(process.cwd(), "data", "sir-anahtari");
+if (!existsSync(SIR_DOSYASI)) writeFileSync(SIR_DOSYASI, randomBytes(32).toString("base64"), { mode: 0o600 });
+const sirAnahtari = readFileSync(SIR_DOSYASI, "utf8").trim();
+
 let kapaniyor = false;
 const kapat = async (kod: number) => {
   if (kapaniyor) return;
@@ -53,6 +58,6 @@ const u = kume.uygulama;
 // yalnız bu makine (next dev varsayılanı yerel ağa da açar); <firma>.localhost tarayıcıda 127.0.0.1'e çözülür
 const kod = await nextCalistir("dev", {
   PROBATA_VT_SUNUCU: u.host, PROBATA_VT_KAPI: String(u.port), PROBATA_VT_AD: u.database,
-  PROBATA_VT_KULLANICI: u.user, PROBATA_VT_PAROLA: u.password,
+  PROBATA_VT_KULLANICI: u.user, PROBATA_VT_PAROLA: u.password, PROBATA_SIR_ANAHTARI: sirAnahtari,
 }, ["--hostname", "127.0.0.1"]);
 await kapat(kod);

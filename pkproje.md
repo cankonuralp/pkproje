@@ -2335,6 +2335,15 @@ revizyon, alan kopyalama, hafif kusur devri, meslek eşleşme denetimi).
 - Emsal ürünler: https://opwire.app/iso-17020-periyodik-kontrol-yazilimi/ · https://17020muayene.vidco.com.tr/ · https://akuple.com/asansor-kontrol-yazilimi/ · https://ensyazilim.com/
 
 ## 11 · Değişiklik günlüğü
+- 2026-10-04 (287): **K1 Çekirdek 8: firma ayarları ve şifreli sırlar** (KOD-GECIS §7, ARKA-UC §8; `src/server/ayar/`). Ayar bölümleri (firma bilgileri ·
+  imza yöntemi · mesai · uyarı eşikleri · numara önekleri · saklama · yapay zekâ) biçimi ve başlangıç değerleriyle tek yerde (§7: nüsha 2, mesai 480 /
+  180 dk, yıllık fazla çalışma ≤ 270 saat, günlük ≤ 660 dk, eşikler 30 / 30 / 30 / 60 gün, saklama 5 yıl — 5'in altı yazılamaz). Hiç kaydedilmemiş
+  bölüm başlangıç değeriyle okunur; bozuk kayıt uygulamayı düşürmez (o alan başlangıca döner). Yazma sürüm kilidiyle ve denetim izine; ilk kaydı aynı
+  anda iki kişi yaparsa ikincisi "başkası değiştirdi" alır. **Sırlar** (yapay zekâ API anahtarı, bulut erişimi, imza sağlayıcı) veritabanında yalnız
+  şifreli (AES-256-GCM); ana anahtar ortam değişkeninde (`PROBATA_SIR_ANAHTARI`); şifreli metin firmaya ve sırrın adına bağlı — başka firmaya ya da
+  başka ada kopyalanırsa çözülmez; ekranda yalnız son 4 hane; iz değeri taşımaz; ana anahtar yoksa sır yazılmaz (düz metne düşmez). Yerelde ana anahtar
+  `data/sir-anahtari` (git dışı). **Yayın öncesi (K7):** ana anahtarın yedeği ayrı ve güvenli yerde tutulmalı — kaybolursa kayıtlı sırlar (firmaların
+  API anahtarları) yeniden girilmek zorunda kalır. Ekranı (Firma ayarları modülü) K4'te.
 - 2026-10-04 (286): **K1 Çekirdek 7: geçici parolayla ilk giriş — parolayı değiştir** (karar 34, 37; maket giris.html #/gecici). "İlk giriş bekleniyor"
   durumundaki hesap girince "Parolayı değiştir" ekranına gelir (kaldığı sayfa korunur); **"Şimdi değil" ile geçilebilir** (karar 34). Yeni parola en az
   10 karakter, harf + rakam; iki alan aynı olmalı; geçici parolayla aynı olamaz. Kaydedilince hesap "etkin" olur, **o hesabın başka cihazlardaki bütün
