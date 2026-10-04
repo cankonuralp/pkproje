@@ -6,3 +6,22 @@
 }
 .ad:hover { text-decoration-color: currentColor; }
 .hucreSatir { display: flex; align-items: flex-start; gap: 6px; min-width: 0; }
+/* giriş hesabı ve roller (maket .a-secim-listesi, .a-etiket-ust, .a-bolum-eylem, .a-gecici-parola) */
+.secimListesi { list-style: none; margin: 0; padding: 0; border: 1px solid var(--kenar); border-radius: var(--r-orta); }
+.secimListesi li + li { border-top: 1px solid var(--kenar); }
+.secimSatir { display: flex; align-items: flex-start; gap: 10px; min-height: var(--tus-y); padding: 8px 12px; cursor: pointer; }
+.secimSatir input { width: 20px; height: 20px; margin: 2px 0 0; flex: none; accent-color: var(--onay-yazi); }
+.secimMetin { min-width: 0; }
+.rolAd { font-weight: 600; }
+.altSatir { display: block; color: var(--yazi2); font-size: var(--boy-kucuk); font-weight: 400; }
+.uyari { display: block; color: var(--uyari-yazi); font-size: var(--boy-etiket); font-weight: 600; }
+.aciklama { margin: 0 0 8px; color: var(--yazi2); font-size: var(--boy-kucuk); }
+.bolumSerit { margin: 10px 0 0; }
+.etiketUst { display: block; margin: 14px 0 6px; font-size: var(--boy-kucuk); font-weight: 600; }
+.zorunlu { color: var(--yazi3); font-size: var(--boy-etiket); font-weight: 600; }
+.bolumEylem { display: flex; justify-content: flex-end; align-items: center; flex-wrap: wrap; gap: 8px; margin: 12px 0 0; }
+.adimNot { margin: 0 auto 0 0; color: var(--yazi2); font-size: var(--boy-kucuk); }
+.geciciParola {
+  margin: 0 0 12px; padding: 12px 14px; border: 1px dashed var(--kenar-alan); border-radius: var(--r-orta); background: var(--zemin2);
+  font-size: var(--boy-baslik); letter-spacing: .06em; overflow-wrap: anywhere;
+}

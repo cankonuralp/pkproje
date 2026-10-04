@@ -4,6 +4,7 @@
 import { ayniKoken } from "../../../server/kimlik/koken";
 import { istekOturumu, oturumIslemi } from "../../../server/kimlik/istek";
 import { personelEkle, personelGuncelle } from "../server/personel";
+import { hesapAc, hesapKapat, hesapYenidenAc, rolleriKaydet, yeniGeciciParola, type HesapSonucu } from "../../../server/kimlik/hesapYonetimi";
 
 export interface FormDurumu { hatalar?: Record<string, string>; genel?: string; yonlendir?: string }
 
@@ -25,4 +26,34 @@ export async function personelKaydetEylemi(_onceki: FormDurumu, form: FormData):
   if (r.durum === "tamam") return { yonlendir: `/personel/${r.id}` };
   if (r.durum === "gecersiz") return { hatalar: r.hatalar };
   return { genel: SONUC[r.durum] };
+}
+
+/* ── giriş hesabı (karar 33–34): yetki ve kurallar src/server/kimlik/hesapYonetimi.ts içinde ── */
+export interface HesapDurumu { tamam?: boolean; parola?: string; hatalar?: Record<string, string>; genel?: string }
+
+async function hesapIslemi(is: (o: NonNullable<Awaited<ReturnType<typeof istekOturumu>>>) => Promise<HesapSonucu<{ parola?: string }>>): Promise<HesapDurumu> {
+  if (!(await ayniKoken())) return { genel: "İstek reddedildi. Sayfayı yenileyip yeniden deneyin." };
+  const o = await istekOturumu();
+  if (!o) return { genel: "Oturumunuz kapandı. Yeniden giriş yapın." };
+  const r = await is(o);
+  if (r.durum === "tamam") return { tamam: true, parola: r.parola };
+  if (r.durum === "gecersiz") return { hatalar: r.hatalar };
+  if (r.durum === "red") return { genel: r.neden };
+  return { genel: r.durum === "yetkisiz" ? SONUC.yetkisiz : SONUC.yok };
+}
+
+export async function hesapAcEylemi(personelId: string, eposta: string, roller: string[]): Promise<HesapDurumu> {
+  return hesapIslemi((o) => oturumIslemi(o, (db) => hesapAc(db, o, personelId, { eposta, roller })));
+}
+export async function geciciParolaEylemi(personelId: string): Promise<HesapDurumu> {
+  return hesapIslemi((o) => oturumIslemi(o, (db) => yeniGeciciParola(db, o, personelId)));
+}
+export async function hesapKapatEylemi(personelId: string): Promise<HesapDurumu> {
+  return hesapIslemi((o) => oturumIslemi(o, (db) => hesapKapat(db, o, personelId)));
+}
+export async function hesapYenidenAcEylemi(personelId: string): Promise<HesapDurumu> {
+  return hesapIslemi((o) => oturumIslemi(o, (db) => hesapYenidenAc(db, o, personelId)));
+}
+export async function rolleriKaydetEylemi(personelId: string, roller: string[]): Promise<HesapDurumu> {
+  return hesapIslemi((o) => oturumIslemi(o, (db) => rolleriKaydet(db, o, personelId, roller)));
 }

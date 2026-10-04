@@ -4,14 +4,16 @@ import type { Metadata } from "next";
 import { notFound } from "next/navigation";
 import { Bilgi, BilgiListesi } from "../../../../components/bilgi/Bilgi";
 import { Yetkisiz } from "../../../../components/hata/Hata";
-import { AltSatir, Bolum, DegerYok, Kirinti, Kod, NesneBasi, Rozet, Rozetler, SeritKap } from "../../../../components/sayfa/Sayfa";
+import { AltSatir, Bolum, DegerYok, Kirinti, Kod, NesneBasi, SeritKap } from "../../../../components/sayfa/Sayfa";
 import { Serit } from "../../../../components/serit/Serit";
 import { TusBaglanti } from "../../../../components/tus/Tus";
 import { MODULLER, modulBul } from "../../../../modules/moduller";
 import { eksikBilgi, personelKarti } from "../../../../modules/personel/server/personel";
-import { bransAd, bransi, DurumRozeti, HESAP_DURUM, meslekAdi, RolRozeti, tarihYaz } from "../../../../modules/personel/ui/ortak";
+import { yetkiliOlabilir } from "../../../../modules/personel/sema";
+import { HesapBolumu } from "../../../../modules/personel/ui/HesapBolumu";
+import { bransAd, bransi, DurumRozeti, meslekAdi, tarihYaz } from "../../../../modules/personel/ui/ortak";
 import { modulOturumu, oturumIslemi } from "../../../../server/kimlik/istek";
-import { canDo, duzey } from "../../../../server/yetki/canDo";
+import { canDo, canDoEylem, duzey } from "../../../../server/yetki/canDo";
 import type { ModulAnahtari } from "../../../../server/yetki/tanim";
 
 const MODUL = modulBul("personel")!;
@@ -49,17 +51,9 @@ export default async function Sayfa({ params }: { params: Promise<{ id: string }
           {p.durum === "ayrildi" && <Bilgi etiket="Ayrılış">{tarihYaz(p.ayrildi)}</Bilgi>}
         </BilgiListesi>
       </Bolum>
-      <Bolum id="b-hesap" baslik="Giriş hesabı ve roller">
-        {h ? (
-          <BilgiListesi>
-            <Bilgi etiket="Durum"><Rozet tur={HESAP_DURUM[h.durum].tur}>{HESAP_DURUM[h.durum].ad}</Rozet></Bilgi>
-            <Bilgi etiket="Giriş e-postası" genis>{h.eposta}</Bilgi>
-            <Bilgi etiket={h.durum === "ilk" ? "Geçici parola verildi" : "Son giriş"}>{zamanYaz(h.durum === "ilk" ? h.olustu : h.sonGiris)}</Bilgi>
-            <Bilgi etiket="Görebildiği modül">{gorulen} / {MODULLER.length}</Bilgi>
-            <Bilgi etiket="Roller" genis><Rozetler>{h.roller.map((r) => <RolRozeti key={r} r={r} />)}</Rozetler></Bilgi>
-          </BilgiListesi>
-        ) : <p>{p.durum === "etkin" ? "Giriş hesabı yok." : "Ayrılan personele hesap açılmaz."}</p>}
-      </Bolum>
+      <HesapBolumu personelId={p.id} ad={p.ad} meslekAdi={meslekAdi(p)} eposta={p.eposta} personelEtkin={p.durum === "etkin"}
+        yonetebilir={canDoEylem(o, "hesap_ac_kapat")} yetkiliOlabilir={yetkiliOlabilir(p.meslek)}
+        hesap={h && { durum: h.durum, roller: h.roller, eposta: h.eposta, zaman: zamanYaz(h.durum === "ilk" ? h.olustu : h.sonGiris), gorulen: `${gorulen} / ${MODULLER.length}` }} />
     </>
   );
 }

@@ -14,3 +14,8 @@ export async function girisli(page: Page, kim: keyof typeof E2E_HESAPLAR = "yone
   await girisYap(page, kim);
   await expect(page.locator("header")).toContainText(E2E_HESAPLAR[kim].ad);
 }
+
+/** tam sayfa yüklemesinden sonra React bağlanana kadar bekle (bağlanmadan önceki tıklama kaybolur — src/components/hazir/Hazir.tsx) */
+export async function hazir(page: Page) {
+  await expect(page.locator("html[data-hazir]")).toHaveCount(1);
+}

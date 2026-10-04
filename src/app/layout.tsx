@@ -2,6 +2,7 @@ import type { Metadata, Viewport } from "next";
 import { headers } from "next/headers";
 import type { ReactNode } from "react";
 import { BildirimSaglayici } from "../components/bildirim/Bildirim";
+import { Hazir } from "../components/hazir/Hazir";
 import { OnaySaglayici } from "../components/pencere/Onay";
 import "../styles/yazi.css";
 import "../styles/tokens.css";
@@ -38,6 +39,7 @@ export default async function KokDuzen({ children }: { children: ReactNode }) {
         {/* bildirim ve onay penceresi her sayfada tek (MK.bildir / MK.onayla'nın karşılığı); kabuk rota grubunun düzeninde */}
         <BildirimSaglayici>
           <OnaySaglayici>{children}</OnaySaglayici>
+          <Hazir />
         </BildirimSaglayici>
       </body>
     </html>

@@ -2335,6 +2335,15 @@ revizyon, alan kopyalama, hafif kusur devri, meslek eşleşme denetimi).
 - Emsal ürünler: https://opwire.app/iso-17020-periyodik-kontrol-yazilimi/ · https://17020muayene.vidco.com.tr/ · https://akuple.com/asansor-kontrol-yazilimi/ · https://ensyazilim.com/
 
 ## 11 · Değişiklik günlüğü
+- 2026-10-04 (292): **K2 Personel 3: giriş hesabı ve roller** (maket personel.html; karar 32, 33, 34, 37; ENGEL 8). Firma yöneticisi kişinin kartından
+  **hesap açar** (giriş e-postası + en az bir rol); **geçici parola yalnız bir kez** pencerede görünür (Kopyala / Tamam; kapanınca sayfadan da silinir,
+  veritabanında yalnız özeti, denetim izine yazılmaz); kişi o parolayla girince "Parolayı değiştir"e gelir. **Yeni geçici parola** eski parolayı ve
+  açık oturumları düşürür. **Hesabı kapat** (onay penceresi) → giremez; **yeniden aç** → girer (ayrılan personelde açılmaz). **Roller**: rollerin
+  açıklamasıyla liste, "Kaydedilmemiş değişiklik var", kaydedince yeni yetki hemen geçerli ve kişinin açık oturumu düşer. Meslek yetkili değilse Denetçi
+  satırında uyarı (engel değil). **Firmada en az bir firma yöneticisi kalır:** son yönetici rolünü bırakamaz, hesabı kapatılamaz; iki yönetici aynı anda
+  birbirinin rolünü alırsa yalnız biri geçer (veritabanı işlem kilidi — ölçüldü). Geçici parola üç öbek, karışan harf yok (I, l, O, 0, 1).
+  Test altyapısı: sayfa hazır işareti (`html[data-hazir]`) ve testlerden önce bütün oturumlu sayfaları tarayıcıyla açan ısıtma — geliştirme
+  sunucusunun test ortasında derlemesi onay penceresini bozuyordu (yalnız ilk projede, geliştirme kipine özgü).
 - 2026-10-04 (291): **K2 Personel 2: liste, kart, ekle / düzenle ekranları** (maket personel.html). Liste: süzgeç (Denetçi · Bilgisi eksik · Mekanik /
   Elektrik · Giriş hesabı yok; Rol, Meslek, Görünüm — Çalışanlar varsayılan), tablo ↔ kart, eksik bilgi satırda uyarı. Kart: kimlik ve sicil, giriş
   hesabı ve roller (durum, giriş e-postası, son giriş, görebildiği modül, roller), eksik bilgi şeridi, Düzenle (yalnız firma yöneticisi). Form: maketin
