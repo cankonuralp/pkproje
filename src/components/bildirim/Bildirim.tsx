@@ -1,7 +1,7 @@
 "use client";
 /* BİLDİRİM — tek üretici (maket MK.bildir). Her kullanıcı eyleminin sonucu söylenir (anayasa 2.8: sessiz başarı yok); ekran
    okuyucu duyar (role=status, aria-live). Kullanım: const bildir = useBildir(); bildir("Kaydedildi."); 4 sn sonra kaybolur. */
-import { createContext, useCallback, useContext, useEffect, useRef, useState, type ReactNode } from "react";
+import { createContext, useCallback, useContext, useEffect, useState, type ReactNode } from "react";
 import { Ikon } from "../ikon/Ikon";
 import stil from "./Bildirim.module.css";
 
@@ -15,13 +15,16 @@ export function useBildir() {
 export function BildirimSaglayici({ children }: { children: ReactNode }) {
   const [metin, setMetin] = useState("");
   const [gorunur, setGorunur] = useState(false);
-  const zaman = useRef<ReturnType<typeof setTimeout> | null>(null);
-  const bildir = useCallback((yeni: string) => {
-    setMetin(yeni); setGorunur(true);
-    if (zaman.current) clearTimeout(zaman.current);
-    zaman.current = setTimeout(() => setGorunur(false), SURE_MS);
-  }, []);
-  useEffect(() => () => { if (zaman.current) clearTimeout(zaman.current); }, []);
+  /* her bildirim yeni sayı: aynı metin art arda gelse de süre baştan başlar */
+  const [sira, setSira] = useState(0);
+  const bildir = useCallback((yeni: string) => { setMetin(yeni); setGorunur(true); setSira((s) => s + 1); }, []);
+  /* 2026-10-04: zamanlayıcı görünür duruma bağlı etkide. Önceki hâli (ref'te zamanlayıcı + yalnız sökülürken temizleme) bileşen yeniden
+     bağlandığında (geliştirmede Fast Refresh) zamanlayıcıyı silip "görünür"ü bırakıyordu → bildirim kaybolmuyordu (CI, tablet, a733ddb). */
+  useEffect(() => {
+    if (!gorunur) return;
+    const t = setTimeout(() => setGorunur(false), SURE_MS);
+    return () => clearTimeout(t);
+  }, [gorunur, sira]);
   return (
     <BildirimBag.Provider value={bildir}>
       {children}
