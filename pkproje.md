@@ -2341,6 +2341,14 @@ revizyon, alan kopyalama, hafif kusur devri, meslek eşleşme denetimi).
 - Emsal ürünler: https://opwire.app/iso-17020-periyodik-kontrol-yazilimi/ · https://17020muayene.vidco.com.tr/ · https://akuple.com/asansor-kontrol-yazilimi/ · https://ensyazilim.com/
 
 ## 11 · Değişiklik günlüğü
+- 2026-10-04 (300): **K2 Zimmetler 1: kimde, hareketler, teslim, demirbaş** (maket zimmetler.html, M4 2. tur). Göç 0015 (demirbas — "diğer" varlık, kod
+  firmada eşsiz; zimmet_hareket — her teslim ayrı ve DEĞİŞMEZ kayıt: uygulama rolüne yalnız ekleme / okuma hakkı; tek varlık CHECK; cihaz,
+  demirbaş, personel aynı firmaya bağlı). "Kimde" son hareketten; teslim eden SUNUCUDA o anki kimde'den yazılır (istemciden alınmaz); kalibrasyondaki
+  cihaz teslim edilmez, aynı yere teslim ve ayrılan personele teslim reddedilir. Fotoğraf isteğe bağlı (62; yalnız JPEG / PNG, EXIF silinir; biri
+  reddedilirse teslim hiç kaydedilmez), GizliResim ile gösterilir, hareketi gören açar. Kalibrasyonu geçmiş cihaz kişiye verilirken uyarı (59).
+  Denetçinin "kendi" düzeyi: yalnız kendi zimmeti + taraf olduğu hareketler; Ölçüm cihazlarında da artık kendi zimmetindeki cihazları görür.
+  Sayfalar: /zimmetler (Kimde) · /zimmetler/hareketler · /zimmetler/varlik/<c|d>/<id>. Araç varlığı Araçlar kalemiyle; zimmet formu (imzalı
+  formda mı) personel özlük kalemiyle.
 - 2026-10-04 (299): **K2 Ölçüm cihazları 1: cihaz, cihaz türü, kalibrasyon kaydı** (maket olcum-cihazlari.html, M4 2. tur; T7). Göç 0014 (cihaz_turu —
   firmanın listesi, ad eşsiz; olcum_cihazi — firmanın etiketi KOD eşsiz, düzenlenir, konum depo / kalibrasyonda; kalibrasyon — bitiş ≥ tarih, sonuç,
   isteğe bağlı sertifika PDF'i, kaldırılır silinmez; hepsi aynı firmaya bağlı). Liste: kalibrasyon uyarı şeritleri (geçti · eşik içinde; eşik Firma

@@ -1,0 +1,17 @@
+/* Zimmetler ekranları (maket zimmetler.html: .a-ad-bag, .a-hucre-satir, .a-gecmis-zimmet, .a-fotolar) */
+.ad {
+  display: inline-flex; align-items: center; min-height: var(--tus-y);
+  color: var(--onay-yazi); font-weight: 600; font-variant-numeric: tabular-nums; text-decoration: underline; text-decoration-color: transparent; text-underline-offset: 3px;
+}
+.ad:hover { text-decoration-color: currentColor; }
+.hucreSatir { display: flex; align-items: flex-start; gap: 6px; min-width: 0; }
+.gecmis { list-style: none; margin: 0; padding: 0; display: grid; gap: 12px; }
+.gecmis li { display: grid; gap: 4px; padding: 12px 0; border-top: 1px solid var(--kenar); }
+.gecmis li:first-child { border-top: 0; }
+.zaman { color: var(--yazi2); font-size: var(--boy-kucuk); font-variant-numeric: tabular-nums; }
+.not { color: var(--yazi2); font-size: var(--boy-kucuk); }
+.fotolar { display: flex; flex-wrap: wrap; gap: 8px; }
+.foto { width: 96px; height: 72px; border-radius: var(--r-orta); overflow: hidden; border: 1px solid var(--kenar); }
+.dosya { width: 100%; min-height: var(--tus-y); font: inherit; color: var(--yazi); }
+.notAlan { width: 100%; min-height: 72px; padding: 8px 10px; border: 1px solid var(--kenar-alan); border-radius: var(--r-orta); background: var(--kart); color: var(--yazi); font: inherit; resize: vertical; }
+.bosSatir { margin: 0; padding: 14px 0; color: var(--yazi2); font-size: var(--boy-kucuk); }

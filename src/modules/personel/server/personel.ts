@@ -126,3 +126,10 @@ export async function personelAyrildi(db: Sorgulayici, kim: Kisi, id: string, su
     throw h;
   }
 }
+
+/** öteki modüller için etkin personel seçenekleri (zimmet teslim alanı, plan denetçisi …): yetki ÇAĞIRANDA, yalnız ad ve meslek */
+export async function personelSecenekleri(db: Sorgulayici): Promise<{ id: string; ad: string; meslek: string; meslekMetin: string | null }[]> {
+  return (await db.sorgu<{ id: string; ad: string; meslek: string; meslek_metin: string | null }>(
+    "SELECT id::text, ad, meslek, meslek_metin FROM personel WHERE durum = 'etkin'")).rows
+    .map((x) => ({ id: x.id, ad: x.ad, meslek: x.meslek, meslekMetin: x.meslek_metin })).sort((a, b) => a.ad.localeCompare(b.ad, "tr"));
+}

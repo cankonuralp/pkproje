@@ -8,7 +8,9 @@ import { ekle, guncelle, tablo, type Iz } from "../../../server/db/yazici.ts";
 import type { Depo } from "../../../server/dosya/depo.ts";
 import { dosyaYukle } from "../../../server/dosya/dosya.ts";
 import { duzey, type YetkiHesabi } from "../../../server/yetki/canDo.ts";
+import { hesabinPersoneli } from "../../../server/kimlik/hesap.ts";
 import { dogrula, type DogrulamaHatalari } from "../../../sema/ortak.ts";
+import { kimdeHaritasi } from "../../zimmetler/server/zimmet.ts";
 import { CihazGirdisi, kalDurum, KalibrasyonGirdisi, YENI_TUR, type KalDurum } from "../sema.ts";
 
 const MODUL = 8;
@@ -33,6 +35,13 @@ export type Yazma =
   | { durum: "cakisma" } | { durum: "yok" } | { durum: "yetkisiz" };
 
 const gorur = (kim: YetkiHesabi) => ["gor", "yaz"].includes(duzey(kim, MODUL));
+/** "kendi" düzeyi (denetçi): yalnız kendi zimmetindeki cihazlar (Zimmetler modülünün "kimde" bilgisinden); kişisi yoksa hiçbiri */
+async function kendiCihazlari(db: Sorgulayici, kim: YetkiHesabi): Promise<Set<string> | null> {
+  if (duzey(kim, MODUL) !== "kendi") return null;
+  const p = await hesabinPersoneli(db, kim.id);
+  const k = await kimdeHaritasi(db);
+  return new Set(p ? [...k.cihaz].filter(([, kisi]) => kisi === p).map(([id]) => id) : []);
+}
 const degistirir = (kim: YetkiHesabi) => duzey(kim, MODUL) === "yaz";
 export const cihazDegistirir = degistirir;
 export const bugunTr = () => new Intl.DateTimeFormat("en-CA", { timeZone: "Europe/Istanbul", year: "numeric", month: "2-digit", day: "2-digit" }).format(new Date());
@@ -58,6 +67,11 @@ const satir = (x: CihazDb, bugun: string, esik: number): CihazSatiri => ({
   durum: kalDurum(x.bitis, x.konum, bugun, esik),
 });
 
+/** öteki modüller için cihaz özeti (yetki ÇAĞIRANDA; Zimmetler kendi düzeyine göre süzer) */
+export async function cihazOzetleri(db: Sorgulayici): Promise<Pick<CihazSatiri, "id" | "kod" | "tur" | "konum" | "bitis">[]> {
+  return (await db.sorgu<CihazDb>(`${CIHAZ_SEC} WHERE c.pasif IS NULL`)).rows.map((x) => ({ id: x.id, kod: x.kod, tur: x.tur, konum: x.konum, bitis: x.bitis }));
+}
+
 export async function cihazTurleri(db: Sorgulayici, kim: Kisi): Promise<CihazTuru[]> {
   if (!gorur(kim)) return [];
   return (await db.sorgu<CihazTuru>("SELECT id::text, ad FROM cihaz_turu")).rows.sort((a, b) => a.ad.localeCompare(b.ad, "tr"));
@@ -66,14 +80,17 @@ export async function cihazTurleri(db: Sorgulayici, kim: Kisi): Promise<CihazTur
 export async function cihazListesi(db: Sorgulayici, kim: Kisi): Promise<{ cihazlar: CihazSatiri[]; esik: number } | null> {
   if (duzey(kim, MODUL) === "yok") return null;
   const esik = await kalibrasyonEsigi(db);
-  if (!gorur(kim)) return { cihazlar: [], esik };
+  const kendi = await kendiCihazlari(db, kim);
+  if (!gorur(kim) && !kendi) return { cihazlar: [], esik };
   const bugun = bugunTr();
   const r = await db.sorgu<CihazDb>(`${CIHAZ_SEC} WHERE c.pasif IS NULL`);
-  return { cihazlar: r.rows.map((x) => satir(x, bugun, esik)).sort((a, b) => (a.bitis ?? "") < (b.bitis ?? "") ? -1 : (a.bitis ?? "") > (b.bitis ?? "") ? 1 : a.kod.localeCompare(b.kod)), esik };
+  return { cihazlar: r.rows.filter((x) => !kendi || kendi.has(x.id)).map((x) => satir(x, bugun, esik)).sort((a, b) => (a.bitis ?? "") < (b.bitis ?? "") ? -1 : (a.bitis ?? "") > (b.bitis ?? "") ? 1 : a.kod.localeCompare(b.kod)), esik };
 }
 
 export async function cihazKarti(db: Sorgulayici, kim: Kisi, id: string): Promise<(CihazKarti & { esik: number }) | null> {
-  if (!UUID.test(id) || !gorur(kim)) return null;
+  if (!UUID.test(id)) return null;
+  const kendi = await kendiCihazlari(db, kim);
+  if (kendi ? !kendi.has(id) : !gorur(kim)) return null;
   const x = (await db.sorgu<CihazDb>(`${CIHAZ_SEC} WHERE c.id = $1`, [id])).rows[0];
   if (!x) return null;
   const esik = await kalibrasyonEsigi(db);
