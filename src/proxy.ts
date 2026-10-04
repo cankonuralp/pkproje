@@ -5,8 +5,14 @@
    · nosniff, sıkı Referrer-Policy, kamera yalnız kendi kökenimiz (saha fotoğrafı), konum / mikrofon kapalı, yayında HSTS.
    Kiracı ve oturum burada DEĞİL, sayfada / eylemde veritabanıyla denetlenir (ara katman veritabanına gitmez). */
 import { NextResponse, type NextRequest } from "next/server";
+import { API_SURUMU, istemciEskiMi } from "./server/api-surum";
 
 export function proxy(istek: NextRequest) {
+  const api = istek.nextUrl.pathname.startsWith("/api/");
+  /* eski cihaz uygulaması: veri yazmadan önce durdurulur (src/server/api-surum.ts) */
+  if (api && istek.nextUrl.pathname !== "/api/surum" && istemciEskiMi(istek.headers.get("x-probata-istemci"))) {
+    return NextResponse.json({ hata: "Uygulamanın yeni sürümünü yükleyin.", api: API_SURUMU }, { status: 426, headers: { "X-Probata-Api": String(API_SURUMU), "Cache-Control": "no-store" } });
+  }
   const nonce = Buffer.from(crypto.randomUUID()).toString("base64");
   const gelistirme = process.env.NODE_ENV === "development";
   const csp = [
@@ -40,6 +46,7 @@ export function proxy(istek: NextRequest) {
   yanit.headers.set("Cross-Origin-Opener-Policy", "same-origin");
   if (!dosyaUcu) yanit.headers.set("X-Frame-Options", "DENY");
   if (!gelistirme) yanit.headers.set("Strict-Transport-Security", "max-age=63072000; includeSubDomains");
+  if (api) yanit.headers.set("X-Probata-Api", String(API_SURUMU));
   return yanit;
 }
 

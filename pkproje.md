@@ -2335,6 +2335,13 @@ revizyon, alan kopyalama, hafif kusur devri, meslek eşleşme denetimi).
 - Emsal ürünler: https://opwire.app/iso-17020-periyodik-kontrol-yazilimi/ · https://17020muayene.vidco.com.tr/ · https://akuple.com/asansor-kontrol-yazilimi/ · https://ensyazilim.com/
 
 ## 11 · Değişiklik günlüğü
+- 2026-10-04 (288): **K1 Çekirdek 9: sabit tanımlar ve API sürümü** (ARKA-UC §2.1). Herkes için aynı, yavaş değişen tanımlar tek yerde
+  (`src/tanim/tanimlar.ts`, şemadan geçer) ve cihaza **karma adlı JSON** olarak iner (`/api/tanim/<ad>.<karma>.json`): içerik değişince adı değişir,
+  aynı ad sonsuz önbellekte kalır (çevrimdışı pakete K3'te girer); dizin `/api/tanim/dizin`; oturum gerekir. İlk tanımlar onaylı kaynaklardan: plan ve
+  rapor durum adları (maketle ayna testi), eğri çarpanları (B 5 · C 10 · D 15), yasal mesai sınırları (660 dk, 270 saat). Öteki tanımlar (il / ilçe,
+  meslekler, Bakanlık formatları, Not-1…11 metinleri) kaynağı gelince eklenir — uydurulmaz. **API sürümü:** her `/api` yanıtı `X-Probata-Api: 1`;
+  cihaz uygulaması (K6) `X-Probata-Istemci` gönderir, desteklenen en eskiden eskiyse ya da başlık bozuksa **426 "Uygulamanın yeni sürümünü yükleyin"**
+  (eski istemci yeni şemaya veri yazamaz); `/api/surum` sürümü söyler.
 - 2026-10-04 (287): **K1 Çekirdek 8: firma ayarları ve şifreli sırlar** (KOD-GECIS §7, ARKA-UC §8; `src/server/ayar/`). Ayar bölümleri (firma bilgileri ·
   imza yöntemi · mesai · uyarı eşikleri · numara önekleri · saklama · yapay zekâ) biçimi ve başlangıç değerleriyle tek yerde (§7: nüsha 2, mesai 480 /
   180 dk, yıllık fazla çalışma ≤ 270 saat, günlük ≤ 660 dk, eşikler 30 / 30 / 30 / 60 gün, saklama 5 yıl — 5'in altı yazılamaz). Hiç kaydedilmemiş
