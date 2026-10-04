@@ -127,7 +127,8 @@ test("RLS: göçte FORCE ya da politika eksik tablo yakalanır", () => {
   const sql = dosyalar("src/server/db/gocler", [".sql"]).map(oku);
   assert.deepEqual(rlsEksikTablolar(sql), []);
   assert.equal(rlsEksikTablolar(sql.map((s) => s.replace("ALTER TABLE denetim_izi FORCE ROW LEVEL SECURITY;", ""))).length, 1);
-  const yeniTablo = "CREATE TABLE IF NOT EXISTS plan (\n  id uuid PRIMARY KEY,\n  firma_id uuid NOT NULL\n);";
+  /* 2026-10-04 (309): sahte tablonun adı "plan" idi; göç 0023 gerçek plan tablosunu RLS'li kurunca aynı ad yakalanmaz oldu → hiç olmayan ad */
+  const yeniTablo = "CREATE TABLE IF NOT EXISTS sahte_kiraci_tablosu (\n  id uuid PRIMARY KEY,\n  firma_id uuid NOT NULL\n);";
   assert.equal(rlsEksikTablolar([...sql, yeniTablo]).length, 1);
 });
 
