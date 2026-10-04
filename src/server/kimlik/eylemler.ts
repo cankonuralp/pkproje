@@ -6,8 +6,8 @@ import { cookies, headers } from "next/headers";
 import { redirect } from "next/navigation";
 import { parola as parolaSemasi, z } from "../../sema/ortak.ts";
 import { havuz } from "../db/havuz.ts";
-import { anaAlan, istekKiracisi } from "../kiraci/istek.ts";
-import { kiraciAdiCoz } from "../kiraci/coz.ts";
+import { istekKiracisi } from "../kiraci/istek.ts";
+import { ayniKoken, istemciIp } from "./koken.ts";
 import { CEREZ, cerezAyari, guvenliDonus, istekOturumu } from "./istek.ts";
 import { cikisYap, girisYap, parolaDegistir } from "./oturum.ts";
 
@@ -18,23 +18,6 @@ const GirisSemasi = z.object({
   parola: z.string().max(200),
   donus: z.string().max(200).optional(),
 });
-
-/** aynı köken: Origin başlığının alt alanı isteğin alt alanıyla aynı olmalı (kiracılar arası sahte form da reddedilir) */
-async function ayniKoken(): Promise<boolean> {
-  const h = await headers();
-  const origin = h.get("origin"), host = h.get("host");
-  if (!origin || !host) return false;
-  try {
-    const o = new URL(origin);
-    return o.host === host && kiraciAdiCoz(o.host, anaAlan()) === kiraciAdiCoz(host, anaAlan());
-  } catch { return false; }
-}
-
-/** istemcinin IP'si: barındırmanın koyduğu ilk X-Forwarded-For değeri (yayında platform yazar); yoksa "yerel". Yalnız IP kilidi için. */
-async function istemciIp(): Promise<string> {
-  const h = await headers();
-  return (h.get("x-forwarded-for")?.split(",")[0]?.trim() || h.get("x-real-ip") || "yerel").slice(0, 64);
-}
 
 export async function girisEylemi(_onceki: GirisDurumu, form: FormData): Promise<GirisDurumu> {
   if (!(await ayniKoken())) return { hata: "İstek reddedildi. Sayfayı yenileyip yeniden deneyin." };

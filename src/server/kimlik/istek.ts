@@ -55,3 +55,9 @@ export function modulGorur(o: IstekOturumu, modul: ModulAnahtari): boolean {
 export function oturumIslemi<T>(o: IstekOturumu, is: (db: Sorgulayici) => Promise<T>): Promise<T> {
   return kiraciIcinde(havuz(), o.kiraci.firmaId, is, { hesapId: o.id });
 }
+
+/** modül sayfasının kapısı: oturum ister (yoksa girişe), modülü göremiyorsa null (sayfa Yetkisiz çizer). Ekranı yapılan modül sayfaları bunu çağırır. */
+export async function modulOturumu(no: number): Promise<IstekOturumu | null> {
+  const o = await oturumGerekli();
+  return modulGorur(o, no as ModulAnahtari) ? o : null;
+}

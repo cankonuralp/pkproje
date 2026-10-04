@@ -1,0 +1,43 @@
+/* maketteki sayfa / nesne başlığı, kırıntı, bölüm, rozet, sekme ailesi (maket.css .a-sayfa-bas, .a-kirinti, .a-nesne-*, .a-alt-bas, .a-rozet, .a-sekme) */
+.sayfaBas { display: flex; align-items: baseline; flex-wrap: wrap; gap: 4px 12px; margin: 0 0 12px; }
+.sayfaBas h1 { margin: 0; font-size: var(--boy-baslik); font-weight: var(--kal-baslik); letter-spacing: -.01em; }
+.sagda { margin-left: auto; display: flex; flex-wrap: wrap; justify-content: flex-end; gap: 8px; }
+.kirinti { display: flex; align-items: center; flex-wrap: wrap; gap: 2px 6px; margin: -6px 0 4px; color: var(--yazi3); font-size: var(--boy-kucuk); }
+.kirinti a {
+  display: inline-flex; align-items: center; gap: 6px; min-height: var(--tus-y); margin-left: -8px; padding: 0 10px 0 8px;
+  border-radius: var(--r-orta); color: var(--yazi); font-weight: 600; text-decoration: none;
+}
+.kirinti a:hover { background: var(--zemin2); }
+.kirinti [aria-current] { color: var(--yazi2); font-variant-numeric: tabular-nums; }
+.nesneBas { display: flex; align-items: flex-start; flex-wrap: wrap; gap: 8px 20px; margin: 0 0 16px; }
+.nesneKimlik { flex: 1 1 320px; min-width: 0; }
+.nesneBaslik { display: flex; align-items: center; flex-wrap: wrap; gap: 6px 10px; }
+.nesneBaslik h1 { margin: 0; font-size: var(--boy-baslik); font-weight: var(--kal-baslik); letter-spacing: -.01em; overflow-wrap: anywhere; }
+.nesneAlt { display: flex; align-items: center; gap: 6px; margin: 4px 0 0; color: var(--yazi2); }
+.eylemCubugu { display: flex; align-items: center; justify-content: flex-end; flex-wrap: wrap; gap: 8px; flex: none; }
+.bolum { margin: 0 0 20px; }
+.altBas { display: flex; align-items: center; flex-wrap: wrap; gap: 6px 12px; margin: 0 0 8px; }
+.altBaslik { margin: 0; font-size: var(--boy-govde); font-weight: 700; }
+.aciklama { margin: 0 0 8px; color: var(--yazi2); font-size: var(--boy-kucuk); }
+.seritKap { margin: 0 0 16px; }
+.rozet {
+  display: inline-flex; align-items: center; gap: 6px; min-height: 22px; padding: 2px 8px; max-width: 100%;
+  border-radius: var(--r-tam); font-size: var(--boy-etiket); font-weight: 700; line-height: 1.2;
+}
+.bekliyor { background: var(--uyari-zemin); color: var(--uyari-yazi); }
+.kabul { background: var(--bilgi-zemin); color: var(--bilgi-yazi); }
+.denetimde { background: var(--vurgu); color: var(--vurgu-uzeri); }
+.tamam { background: var(--onay-zemin); color: var(--onay-yazi); }
+.red { background: var(--hata-zemin); color: var(--hata-yazi); }
+.notr { background: var(--zemin2); color: var(--yazi2); }
+.rozetler { display: flex; flex-wrap: wrap; gap: 4px; min-width: 0; }
+.sekmeler { display: inline-flex; flex-wrap: wrap; max-width: 100%; gap: 2px; padding: 3px; margin: 0 0 12px; border: 1px solid var(--kenar-alan); border-radius: calc(var(--tus-y) / 2 + 4px); background: var(--kart); }
+.sekme {
+  min-height: var(--tus-y); padding: 0 14px; display: inline-flex; align-items: center; gap: 6px;
+  border: 0; border-radius: var(--r-tam); background: transparent; color: var(--yazi2); font-weight: 600; white-space: nowrap; text-decoration: none;
+}
+.sekme[aria-current="page"] { background: var(--zemin2); color: var(--yazi); }
+.kod { font-weight: 700; font-variant-numeric: tabular-nums; letter-spacing: .01em; white-space: nowrap; }
+.altSatir { display: block; color: var(--yazi2); font-size: var(--boy-kucuk); font-weight: 400; }
+.yok { color: var(--yazi3); }
+.uyariMetin { display: block; color: var(--uyari-yazi); font-size: var(--boy-etiket); font-weight: 600; }

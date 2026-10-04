@@ -23,8 +23,10 @@ const havuz = havuzKur(kume.uygulama);
 const ozet = await parolaOzeti(E2E_PAROLA);
 for (const f of firmalar) {
   await kiraciIcinde(havuz, f.id, async (db) => {
+    /* her hesap bir personele bağlı (karar 33): uydurma personel kaydı + hesabı */
     for (const h of Object.values(E2E_HESAPLAR)) {
-      await db.sorgu("INSERT INTO hesap (eposta, ad, parola_ozeti, roller, durum) VALUES ($1, $2, $3, $4, 'etkin')", [h.eposta, h.ad, ozet, h.roller]);
+      const p = (await db.sorgu<{ id: string }>("INSERT INTO personel (ad, eposta, basla, meslek) VALUES ($1, $2, '2024-01-15', 'mak-muh') RETURNING id::text", [h.ad, h.eposta])).rows[0].id;
+      await db.sorgu("INSERT INTO hesap (eposta, ad, parola_ozeti, roller, durum, personel_id) VALUES ($1, $2, $3, $4, 'etkin', $5)", [h.eposta, h.ad, ozet, h.roller, p]);
     }
     for (const h of E2E_ILK) {
       await db.sorgu("INSERT INTO hesap (eposta, ad, parola_ozeti, roller, durum) VALUES ($1, $2, $3, $4, 'ilk')", [h.eposta, h.ad, ozet, h.roller]);

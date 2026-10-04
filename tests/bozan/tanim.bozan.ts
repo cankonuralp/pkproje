@@ -13,7 +13,7 @@ let sira = 0;
 async function bozuk<T>(dosya: string, eski: string, yeni: string): Promise<T> {
   let k = readFileSync(dosya, "utf8");
   assert.ok(k.includes(eski), `bozulacak satır kaynakta yok: ${eski}`);
-  k = k.replace(eski, yeni).replace('from "../sema/ortak.ts"', `from "${pathToFileURL(resolve("src/sema/ortak.ts")).href}"`);
+  k = k.replace(eski, yeni).replace('from "./veri.ts"', `from "${pathToFileURL(resolve("src/tanim/veri.ts")).href}"`);
   const yol = join(klasor, `${sira++}.ts`);
   writeFileSync(yol, k);
   return import(pathToFileURL(yol).href);

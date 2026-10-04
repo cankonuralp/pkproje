@@ -2335,6 +2335,16 @@ revizyon, alan kopyalama, hafif kusur devri, meslek eşleşme denetimi).
 - Emsal ürünler: https://opwire.app/iso-17020-periyodik-kontrol-yazilimi/ · https://17020muayene.vidco.com.tr/ · https://akuple.com/asansor-kontrol-yazilimi/ · https://ensyazilim.com/
 
 ## 11 · Değişiklik günlüğü
+- 2026-10-04 (291): **K2 Personel 2: liste, kart, ekle / düzenle ekranları** (maket personel.html). Liste: süzgeç (Denetçi · Bilgisi eksik · Mekanik /
+  Elektrik · Giriş hesabı yok; Rol, Meslek, Görünüm — Çalışanlar varsayılan), tablo ↔ kart, eksik bilgi satırda uyarı. Kart: kimlik ve sicil, giriş
+  hesabı ve roller (durum, giriş e-postası, son giriş, görebildiği modül, roller), eksik bilgi şeridi, Düzenle (yalnız firma yöneticisi). Form: maketin
+  bölümleri ve iletileri; hatalı gönderimde yazılanlar silinmez; yetkili olmayan meslekte uyarı şeridi. Denetçi yalnız kendi kartını görür, başkasının
+  adresi "Sayfa bulunamadı", formu "yetkiniz yok"; muhasebe Personel'i göremez (gerçek sunucuda uçtan uca). Ortak sayfa parçaları tek üreticide
+  (kırıntı, sayfa / nesne başlığı, bölüm, rozet, sekmeler). Güvenlik: "use server" dosyaları yalnız "…Eylemi" işlevlerini dışa açar (kilit) — köken
+  denetimi yardımcıları ayrı modüle taşındı. **Makette olmayan:** "ayrıldı olarak işaretle" tuşu makette yok (sunucu işlevi hazır; yeri reisim'e soru).
+  Kartın bilgi yüzleri (İSG-KATİP, zimmet, atama, eğitim, açık plan) ve maaş / atama / zimmet / eğitim / özlük bölümleri o modüllerle gelir.
+- 2026-10-04: CI a019a12 düştü (e2e: tanım dizini sırası yanlış yazılmıştı). Kök neden süreç: kayıt zincirim uçtan uca testleri koşmuyordu → artık her
+  commit'ten önce tam e2e (3 genişlik) geçmeden push yok.
 - 2026-10-04 (290): **K2 Personel 1: veri ve sunucu işlevleri** (maket personel.html; `src/modules/personel/`). Personel tablosu (ad, iş e-postası,
   mobil imza telefonu, işe başlama, meslek + "diğer" adı, diploma / oda sicil / EKİPNET no, durum + ayrılış); giriş hesabı personele bağlı (karar 33).
   Zorunlu yalnız ad soyad, işe başlama, meslek (karar 39); iletiler maketle aynı. Meslekler ve Ek-III grupları sabit tanımlarda (maketle ayna testi;

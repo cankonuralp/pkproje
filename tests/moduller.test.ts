@@ -26,7 +26,7 @@ import { existsSync, readdirSync, readFileSync, statSync } from "node:fs";
 import { join } from "node:path";
 import { test } from "node:test";
 import { MODULLER, MODUL_GRUPLARI } from "../src/modules/moduller.ts";
-import { KOK, maketMenusu, oku } from "./yardimci/denetimler.ts";
+import { dosyalar, KOK, maketMenusu, oku } from "./yardimci/denetimler.ts";
 
 test("menü onaylı maketle birebir (grup · sıra · ad · ikon · §3.1 no)", () => {
   const maket = maketMenusu(oku("docs/assets/maket-ortak.js"));
@@ -75,9 +75,14 @@ test("oturum kapısı: uygulama düzeni oturum ister, modül sayfası modül num
   assert.match(duzen, /await oturumGerekli\(\)/);
   for (const m of MODULLER.filter((x) => x.yol !== "")) {
     const sayfa = oku(`src/app/(uygulama)/${m.yol}/page.tsx`);
-    assert.match(sayfa, /modulBul\("[a-z-]+"\)|<ModulSayfasi modul=\{MODUL\}/, m.yol);
+    /* 2026-10-04: ekranı yapılan modül kendi sayfasını çizer; kapısı modulOturumu(<modül no>) — yetkisizse içerik çizilmez */
+    assert.match(sayfa, /<ModulSayfasi modul=\{MODUL\}|await modulOturumu\(MODUL\.no\)[\s\S]*if \(!o\) return <Yetkisiz \/>/, m.yol);
   }
   assert.match(oku("src/components/modul/ModulSayfasi.tsx"), /modulGorur\(o, modul\.no/);
+  /* modülün alt sayfaları (kart, form …) da aynı kapıdan: her page.tsx modül kapısını çağırır */
+  for (const ad of dosyalar("src/app/(uygulama)", [".tsx"]).filter((d) => d.endsWith("/page.tsx") && d.split("/").length > 5)) {
+    assert.match(oku(ad), /await modulOturumu\(MODUL\.no\)[\s\S]*if \(!o\) return <Yetkisiz \/>/, ad);
+  }
   /* 2026-10-04: geliştirme sayfaları yayında kapalı — koruma düzende (altına eklenen her sayfa kapsanır) */
   assert.match(oku("src/app/(gelistirme)/layout.tsx"), /if \(process\.env\.NODE_ENV === "production"\) notFound\(\);/);
 });
@@ -86,4 +91,17 @@ test("adresler ASCII ve tekil", () => {
   const yollar = MODULLER.map((m) => m.yol);
   assert.equal(new Set(yollar).size, yollar.length);
   for (const y of yollar) assert.match(y, /^[a-z0-9-]*$/);
+});
+
+/* 2026-10-04 (K2, reisim: "kaynak koddan rol değiştirme sızma"): "use server" dosyasından dışa açılan HER işlev istemciden çağrılabilen bir uçtur.
+   Bu dosyalar yalnız adı "…Eylemi" olan eylemleri (ve tür tanımlarını) dışa açar; yardımcı işlev sızdırmaz. */
+test("sunucu eylemi dosyaları yalnız '…Eylemi' işlevlerini dışa açar", () => {
+  const eylemDosyalari = dosyalar("src", [".ts", ".tsx"]).filter((ad) => /^\s*(\/\*[\s\S]*?\*\/\s*)?["']use server["']/.test(oku(ad)));
+  assert.ok(eylemDosyalari.length >= 1);
+  for (const ad of eylemDosyalari) {
+    const m = oku(ad);
+    const disari = [...m.matchAll(/^export\s+(?:async\s+)?(function|const|let|var|class|default)\s*(\w*)/gm)].map((x) => `${x[1]} ${x[2]}`);
+    assert.deepEqual(disari.filter((x) => !/^function \w+Eylemi$/.test(x)), [], ad);
+    assert.ok(!/^export\s*\{/m.test(m), `${ad}: toplu dışa açma yok`);
+  }
 });

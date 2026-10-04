@@ -1,7 +1,7 @@
 /* PERSONEL GİRDİSİ — formun ve sunucunun TEK şeması (maket personel.html formu; karar 39: zorunlu yalnız ad, işe başlama, meslek). İletiler maketle aynı.
    Ekranda tarih GG.AA.YYYY; şema ISO bekler (dönüşüm formda). Meslek anahtarı sabit tanımlarda olmalı (Ek-III listesi). */
 import { tarih, z } from "../../sema/ortak.ts";
-import { TANIMLAR } from "../../tanim/tanimlar.ts";
+import { TANIMLAR } from "../../tanim/veri.ts";
 
 const bos = (s: unknown) => (typeof s === "string" && s.trim() === "" ? null : typeof s === "string" ? s.trim() : s);
 const MESLEKLER = TANIMLAR.meslekler.map((m) => m.k);

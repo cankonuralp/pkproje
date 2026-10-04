@@ -83,7 +83,8 @@ pkproje/
   src/proxy.ts              ara katman: her istekte nonce'lu CSP + güvenlik başlıkları (Next 16'da middleware'in adı proxy) · /api sürüm başlığı,
                             eski cihaz istemcisi 426 (src/server/api-surum.ts)
   src/modules/moduller.ts   MODÜL KAYDI — yan menünün ve rotaların tek kaynağı (15 modül, 6 grup, onaylı maketle aynı; 2026-09-25 Kullanıcılar Personel'e katıldı; 2026-09-26 Ekipmanlar planın içine; 2026-09-28 Talepler eklendi, Standartlar → Dökümanlar, Eğitimler Dökümanlar'ın içinde)
-  src/modules/personel/     PERSONEL (2026-10-04): sema.ts (form + sunucu tek şema) · server/personel.ts (liste, kart, ekle, güncelle, ayrıldı; yetki içeride)
+  src/modules/personel/     PERSONEL (2026-10-04): sema.ts (form + sunucu tek şema) · server/personel.ts (liste, kart, ekle, güncelle, ayrıldı; yetki içeride) ·
+                            ui/ (liste, form, sunucu eylemleri — "use server" dosyası yalnız …Eylemi dışa açar)
   src/modules/<modül>/      ★ her iş modülü: server/ (veri erişimi + iş kuralları, dışa açılan fonksiyonlar) · ui/ · şema · testler
   src/tanim/tanimlar.ts     SABİT TANIMLAR (durum adları, eğri çarpanları, mesai sınırları …): şemalı, karma adlı JSON → /api/tanim (2026-10-04)
   src/sema/ortak.ts         ORTAK ŞEMA (zod): girdi doğrulamanın tek kaynağı, sunucu ve istemci aynı şemayı kullanır (2026-10-03)
@@ -101,7 +102,7 @@ pkproje/
                             anahtar PROBATA_SIR_ANAHTARI; firma + ada bağlı; ekranda son 4)
   src/server/numara/        TEK NUMARA ÜRETİCİ (proje P-AAYY-SIRA · rapor XX-AAYY-SIRA-EK kesintisiz · teklif / sözleşme / gider / izin; sayaç işlem içinde)
   src/server/yetki/         TEK YETKİ: tanim.ts (roller, matris, sabitler) · canDo.ts (canDo, canDoEylem) — ayna testi: DB CHECK · maket · KOD-GECIS §4
-  src/components/           TEK ÜRETİCİLER: kabuk (yan menü + üst çubuk) · ikon · boş durum · tuş · şerit · bildirim · pencere + onay ·
+  src/components/           TEK ÜRETİCİLER: sayfa/ (kırıntı, sayfa / nesne başlığı, bölüm, rozet, sekmeler) · kabuk (yan menü + üst çubuk) · ikon · boş durum · tuş · şerit · bildirim · pencere + onay ·
                             liste (tablo↔kart, süzgeç mantığı liste/suzgec.ts) · filtre satırı · sayfalayıcı · seçim alanı + tarih/saat (secim/) · bilgi yüzleri / bilgi listesi / koşullar (bilgi/) · form sayfası (form/) · uzun tuş (tus/UzunTus)
                             (geliştirme vitrini /vitrin: yalnız geliştirmede, yayında 404)
   src/styles/               tokens.css (TEK KAYNAK; docs kopyası testle aynı) · yazi.css (Sora) · temel.css · kalip.ts
