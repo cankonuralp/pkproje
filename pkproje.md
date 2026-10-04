@@ -2341,6 +2341,13 @@ revizyon, alan kopyalama, hafif kusur devri, meslek eşleşme denetimi).
 - Emsal ürünler: https://opwire.app/iso-17020-periyodik-kontrol-yazilimi/ · https://17020muayene.vidco.com.tr/ · https://akuple.com/asansor-kontrol-yazilimi/ · https://ensyazilim.com/
 
 ## 11 · Değişiklik günlüğü
+- 2026-10-04 (297): **K2 Müşteriler 1: müşteri ve tesis ekranları** (maket musteriler.html, M2 onaylı 2026-09-26; reisim: *"tüm ekranları yap"*). Göç 0012
+  (musteri, tesis; RLS ENABLE + FORCE + politika; tesis firma + müşteri BİRLİKTE bağlı — başka firmanın müşterisine satır yazılamaz; müşteri e-postası
+  firmada tek; silme hakkı yok). Liste (süzgeç, İl, Görünüm: etkin / pasif / hepsi) · müşteri sayfası (bilgiler, tesisler, eksik bilgi şeridi) · tesis
+  sayfası · pencereler: müşteri / tesis ekle-düzenle, pasif yap / yeniden etkinleştir. Vergi no ve SGK DETSİS NO tekrarı UYARI ("Yine de kaydet",
+  gerekçe denetim izine). Müşteri pasif → etkin tesisleri onunla pasif, dönünce yalnız onlar döner. İl / ilçe: 81 il, 973 ilçe (src/tanim/iller.ts;
+  MIT lisanslı açık veriden bir kez alındı). Ortak SecimAlani'na `etiketsiz` (tablo hücresinde erişilebilir ad). Müşteri girişi, ekipman / kontrol /
+  İSG-KATİP / uygunsuzluk sütunları ve yüzleri kendi kalemlerinde (sayı uydurulmaz).
 - 2026-10-04 (296): **K2 Personel 4: Rol yetkileri sekmesi** (maket personel.html #/roller; reisim 32). Personel sayfasında "Personel · Rol yetkileri"
   sekmeleri. Modül × rol tablosu (telefonda kart), düzey rozetleri ve açıklaması; firma yöneticisi "Rol yetkilerini düzenle" → hücre başına seçim,
   "Önerilen düzene dön", değişiklik sayısı, Vazgeç / Kaydet. Firma yöneticisinin Personel / Firma ayarları / Hareket kaydı hücresi "sabit". Kayıt firma

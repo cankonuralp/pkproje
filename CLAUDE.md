@@ -85,6 +85,8 @@ pkproje/
   src/modules/moduller.ts   MODÜL KAYDI — yan menünün ve rotaların tek kaynağı (15 modül, 6 grup, onaylı maketle aynı; 2026-09-25 Kullanıcılar Personel'e katıldı; 2026-09-26 Ekipmanlar planın içine; 2026-09-28 Talepler eklendi, Standartlar → Dökümanlar, Eğitimler Dökümanlar'ın içinde)
   src/modules/personel/     PERSONEL (2026-10-04): sema.ts (form + sunucu tek şema) · server/personel.ts (liste, kart, ekle, güncelle, ayrıldı; yetki içeride) ·
                             ui/ (liste, form, sunucu eylemleri — "use server" dosyası yalnız …Eylemi dışa açar)
+  src/modules/musteriler/   MÜŞTERİLER (2026-10-04): sema.ts · server/musteriler.ts (liste, kart, kaydet + uyarı onayı, pasif zinciri) · ui/ (liste, pencereler)
+  src/tanim/iller.ts        81 il + 973 ilçe (açık veri, MIT; bir kez alındı)
   src/modules/<modül>/      ★ her iş modülü: server/ (veri erişimi + iş kuralları, dışa açılan fonksiyonlar) · ui/ · şema · testler
   src/tanim/tanimlar.ts     SABİT TANIMLAR (durum adları, eğri çarpanları, mesai sınırları …): şemalı, karma adlı JSON → /api/tanim (2026-10-04)
   src/sema/ortak.ts         ORTAK ŞEMA (zod): girdi doğrulamanın tek kaynağı, sunucu ve istemci aynı şemayı kullanır (2026-10-03)

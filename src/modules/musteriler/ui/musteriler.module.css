@@ -1,0 +1,11 @@
+/* Müşteriler ekranları (maket musteriler.html: .a-ad-bag, .a-hucre-satir, .a-adres, .a-kod-uzun) */
+.ad {
+  display: inline-flex; align-items: center; min-height: var(--tus-y);
+  color: var(--onay-yazi); font-weight: 600; text-decoration: underline; text-decoration-color: transparent; text-underline-offset: 3px;
+  overflow-wrap: anywhere;
+}
+.ad:hover { text-decoration-color: currentColor; }
+.hucreSatir { display: flex; align-items: flex-start; gap: 6px; min-width: 0; }
+.sayi { font-variant-numeric: tabular-nums; font-weight: 600; }
+.kodUzun { overflow-wrap: anywhere; word-break: break-all; }
+.bosSatir { margin: 0; padding: 14px 0; color: var(--yazi2); font-size: var(--boy-kucuk); }
