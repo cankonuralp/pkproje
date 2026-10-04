@@ -16,13 +16,9 @@ import { Tus } from "../../../components/tus/Tus";
 import { kmYaz } from "../sema";
 import type { AracSatiri, KmSatiri, TutanakSatiri } from "../server/araclar";
 import { kmKaydetEylemi } from "./eylemler";
-import { AracDurumu, BelgeHucre, haftaYaz, kimdeAd, KmRozeti, kmMetin, zamanYaz } from "./ortak";
+import { AracDurumu, aracSekmeleri, BelgeHucre, haftaYaz, kimdeAd, KmRozeti, kmMetin, zamanYaz } from "./ortak";
 import { AracPenceresi, TutanakGorunumu, TutanakPenceresi } from "./Pencereler";
 import stil from "./araclar.module.css";
-
-export function aracSekmeleri(yaz: boolean, kendi: boolean) {
-  return [[kendi ? "Aracım" : "Araçlar", "/araclar"], ["Tutanaklar", "/araclar/tutanaklar"], ...(yaz ? [["Şablon", "/araclar/sablon"] as const] : [])] as const;
-}
 
 function aracTanim(): SuzgecTanimi<AracSatiri> {
   return {

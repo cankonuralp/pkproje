@@ -38,6 +38,12 @@ test("araç: ekle, teslim tutanağı, sürücü haftalık kilometre", async ({ p
   await expect(page.getByText(/Tutanak AT-\d{4}-\d{3} kaydedildi/)).toBeVisible({ timeout: 30_000 });
   await expect(page.getByText("Zimmette").first()).toBeVisible();
   await expect(page.getByRole("button", { name: "Tutanak" }).first()).toBeAttached();
+  await page.goto("/araclar/tutanaklar");
+  await hazir(page);
+  await expect(page.getByRole("link", { name: plaka }).first()).toBeAttached();
+  await page.goto("/araclar/sablon");
+  await hazir(page);
+  await expect(page.getByRole("heading", { name: "Araçta olanlar" })).toBeVisible();
 
   /* sürücü: kendi aracını görür, kilometre yazar, araç ekleyemez */
   await context.clearCookies();

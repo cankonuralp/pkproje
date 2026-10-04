@@ -32,3 +32,8 @@ export function AracDurumu({ v }: { v: Pick<AracSatiri, "belgeler" | "kimde"> })
 }
 
 export const kmMetin = (n: number | null) => (n == null ? null : `${kmYaz(n)} km`);
+
+/** bölüm sekmeleri (sunucu sayfaları da kullanır: bu dosya istemci dosyası DEĞİL) */
+export function aracSekmeleri(yaz: boolean, kendi: boolean) {
+  return [[kendi ? "Aracım" : "Araçlar", "/araclar"], ["Tutanaklar", "/araclar/tutanaklar"], ...(yaz ? [["Şablon", "/araclar/sablon"] as const] : [])] as const;
+}

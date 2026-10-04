@@ -7,7 +7,7 @@ import { Serit } from "../../../../components/serit/Serit";
 import { modulBul } from "../../../../modules/moduller";
 import { ARAC_FOTO, ARAC_KONTROL, YAKIT_SEVIYE } from "../../../../modules/araclar/sema";
 import { aracDegistirir } from "../../../../modules/araclar/server/araclar";
-import { aracSekmeleri } from "../../../../modules/araclar/ui/AracListesi";
+import { aracSekmeleri } from "../../../../modules/araclar/ui/ortak";
 import stil from "../../../../modules/araclar/ui/araclar.module.css";
 import { modulOturumu } from "../../../../server/kimlik/istek";
 

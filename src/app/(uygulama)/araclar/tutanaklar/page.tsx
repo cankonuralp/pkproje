@@ -5,7 +5,8 @@ import { SayfaBasi, Sekmeler } from "../../../../components/sayfa/Sayfa";
 import { BosDurum } from "../../../../components/bos/BosDurum";
 import { modulBul } from "../../../../modules/moduller";
 import { aracDegistirir, aracListesi, tutanakListesi } from "../../../../modules/araclar/server/araclar";
-import { aracSekmeleri, TutanakTablosu } from "../../../../modules/araclar/ui/AracListesi";
+import { TutanakTablosu } from "../../../../modules/araclar/ui/AracListesi";
+import { aracSekmeleri } from "../../../../modules/araclar/ui/ortak";
 import { modulOturumu, oturumIslemi } from "../../../../server/kimlik/istek";
 
 const MODUL = modulBul("araclar")!;
