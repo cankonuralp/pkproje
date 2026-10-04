@@ -1220,6 +1220,12 @@ tarih-saat, fotoğraflar, form) · **Eğitim kaydı** (personel, eğitim, belge,
    Frankfurt); uygulama (Next.js) hazır barındırmada AB bölgesinde (ör. Vercel), alt alan adları + joker SSL orada. Yığın aynı (PostgreSQL + RLS,
    kendi giriş sistemimiz, pg-boss). **Veri AB'de durur → KVKK yurt dışı aktarım şartı yayından önce hukukçuya teyit ettirilir.** Yerelde gömülü
    PostgreSQL sürer. PostgreSQL olduğu için ileride Türkiye'ye taşınabilir.
+   **DEĞİŞTİ (2026-10-04, reisim: *"her müşterim kendi supabase hesabını bağlasın … aylık 25 dolarlık paket 1 şirket için yeter"* → *"tamam supabase
+   kararını yaz"*, §11 294):** **her firma kendi Supabase projesinde** (veritabanı + dosya deposu firmanın kendi Supabase hesabında, Pro paket, faturayı
+   firma öder). Firma yalnız "Supabase hesabımı bağla" der ve onaylar; projeyi, tabloları, güvenlik ayarlarını ve sonraki güncellemeleri **uygulama
+   otomatik** kurar (Supabase hesap bağlama + yönetim API'si — K7'de doğrulanır; firmaya anahtar kopyalatılmaz). Küçük bir **merkez kayıt** yalnız
+   "hangi alt alan adı → hangi Supabase projesi" ve şifreli bağlantı bilgisini tutar. RLS ikinci kat olarak kalır. Firma Supabase'i ödemezse sistemi
+   durur → sözleşmeye yazılır. Deneme veritabanı (probata-deneme) ilk firmanın projesi gibi kalır.
    Depo **herkese açık** (`github.com/cankonuralp/pkproje`), GitHub Pro yok.
    Sonuç: kaynak kodun tamamı ve buradaki ürün kurgusu kamuya açıktır; sır/anahtar asla koda yazılmaz, gerçek veri
    asla depoya girmez (CLAUDE.md §8 tarama kuralı). Kural dosyaları 2026-09-22'de kök klasöre taşındı ve
@@ -2335,6 +2341,10 @@ revizyon, alan kopyalama, hafif kusur devri, meslek eşleşme denetimi).
 - Emsal ürünler: https://opwire.app/iso-17020-periyodik-kontrol-yazilimi/ · https://17020muayene.vidco.com.tr/ · https://akuple.com/asansor-kontrol-yazilimi/ · https://ensyazilim.com/
 
 ## 11 · Değişiklik günlüğü
+- 2026-10-04 (294): **Her firma kendi Supabase projesinde** (reisim önerisi + *"tamam supabase kararını yaz devam et"*; §8.8). Gerekçe: veri ve fatura
+  firmanın, firmalar arası sızma yapıdan kalkar, barındırma maliyeti firmada. Pro (25 $/ay): 8 GB veritabanı rahat yeter; belirleyici dosya alanı
+  (100 GB) — saklama 5–20 yıl, büyük arşivde ileride ucuz depo. İş K7'ye: hesap bağlama, otomatik proje kurulumu, her projeye göç + 0008 doğrulaması,
+  merkez kayıt, bağlantının firmaya göre seçilmesi. Reisim için deneme sitesinde ayrıca yönetici hesabı açıldı (uydurma e-posta).
 - 2026-10-04 (293): **Deneme yayını: Supabase (Frankfurt) + Vercel (fra1) — §8.8'in ilk adımı K7'den öne alındı** (reisim: *"sitenin şu anki durumunu
   görmiyorum, maket değil"* → *"supabase açtım, extension olarak claude a bağladım"*; ardından Vercel bağlandı). Adres **https://probata-deneme.vercel.app**
   (firma kısa adı `probata-deneme`, ana alan `vercel.app`); Vercel Kimlik Doğrulaması açık: yalnız Vercel hesabıyla girilmiş kişi siteyi görür, sonra

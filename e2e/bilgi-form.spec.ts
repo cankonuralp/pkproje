@@ -19,8 +19,11 @@ test("bilgi yüzleri: bağlantılı yüz listesine gider; uyarı notu uyarı ren
     const [y, b] = [await planlar.boundingBox(), await bolum(page).boundingBox()];
     expect(y!.width).toBeLessThan(b!.width * 0.55);
   }
+  await expect(planlar).toHaveAttribute("href", "/planlar");
   await planlar.click();
-  await expect(page).toHaveURL(/\/planlar$/);
+  /* 2026-10-04: vitrin oturumsuz açılır; Planlar oturum ister → giriş ekranına, dönüş adresi Planlar. Eski beklenti yalnız "/planlar" idi ve
+     yönlenmeden önceki anı yakalarsa geçiyordu (yarış; masaüstü projesinde düştü). İki doğru sonucun ikisi de kabul. */
+  await expect(page).toHaveURL(/\/planlar$|\/giris\?donus=%2Fplanlar$/);
 });
 
 test("bilgi listesi ve koşullar: geniş öge telefonda tam satır; koşul türleri ayrı", async ({ page }, bilgi) => {
