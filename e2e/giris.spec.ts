@@ -131,3 +131,30 @@ test("hesaplar: yanlış firmanın adresinde aynı e-posta ve parola o firmanın
   await page.getByRole("button", { name: "Giriş yap" }).click();
   await expect(page.locator("form").getByRole("alert")).toContainText("E-posta ya da parola yanlış.");
 });
+
+test("GİRİŞ EKRANI (2026-10-04): tema tuşu temayı değiştirir; 'Beni hatırla' işaretsizse çerez oturumluk, işaretliyse kalıcı", async ({ page, context }) => {
+  await page.goto("/giris");
+  const tema = page.getByRole("button", { name: /temaya geç/ });
+  const once = await page.locator("html").getAttribute("data-tema");
+  await tema.click();
+  await expect(page.locator("html")).not.toHaveAttribute("data-tema", once ?? "");
+  await tema.click();
+  await expect(page.locator("html")).toHaveAttribute("data-tema", once ?? "");
+  const hatirla = page.getByLabel("Beni hatırla");
+  await expect(hatirla).not.toBeChecked();
+  await page.getByLabel("E-posta").fill(E2E_HESAPLAR.yonetici.eposta);
+  await page.getByLabel("Parola", { exact: true }).fill(E2E_PAROLA);
+  await page.getByRole("button", { name: "Giriş yap" }).click();
+  await expect(page).not.toHaveURL(/\/giris/);
+  const oturumluk = (await context.cookies()).find((c) => c.name === "probata-oturum");
+  expect(oturumluk?.expires).toBe(-1);   // tarayıcı kapanınca silinir
+  await context.clearCookies();
+  await page.goto("/giris");
+  await page.getByLabel("E-posta").fill(E2E_HESAPLAR.yonetici.eposta);
+  await page.getByLabel("Parola", { exact: true }).fill(E2E_PAROLA);
+  await page.getByLabel("Beni hatırla").check();
+  await page.getByRole("button", { name: "Giriş yap" }).click();
+  await expect(page).not.toHaveURL(/\/giris/);
+  const kalici = (await context.cookies()).find((c) => c.name === "probata-oturum");
+  expect(kalici!.expires).toBeGreaterThan(Date.now() / 1000 + 13 * 86_400);
+});

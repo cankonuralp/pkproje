@@ -17,17 +17,18 @@ const GirisSemasi = z.object({
   eposta: z.string().trim().toLowerCase().max(254),
   parola: z.string().max(200),
   donus: z.string().max(200).optional(),
+  hatirla: z.literal("1").optional(),
 });
 
 export async function girisEylemi(_onceki: GirisDurumu, form: FormData): Promise<GirisDurumu> {
   if (!(await ayniKoken())) return { hata: "İstek reddedildi. Sayfayı yenileyip yeniden deneyin." };
   const kiraci = await istekKiracisi();
   if (!kiraci) return { hata: "Bu adreste kayıtlı bir firma yok." };
-  const g = GirisSemasi.safeParse({ eposta: form.get("eposta"), parola: form.get("parola"), donus: form.get("donus") || undefined });
+  const g = GirisSemasi.safeParse({ eposta: form.get("eposta"), parola: form.get("parola"), donus: form.get("donus") || undefined, hatirla: form.get("hatirla") || undefined });
   if (!g.success || !g.data.eposta || !g.data.parola) return { hata: "E-posta ve parola yazılmalı.", eposta: String(form.get("eposta") ?? "").slice(0, 254) };
   const h = await headers();
   const sonuc = await girisYap(havuz(), kiraci.firmaId, {
-    eposta: g.data.eposta, parola: g.data.parola, ip: await istemciIp(), tarayici: h.get("user-agent") ?? undefined,
+    eposta: g.data.eposta, parola: g.data.parola, ip: await istemciIp(), tarayici: h.get("user-agent") ?? undefined, hatirla: g.data.hatirla === "1",
   });
   if (!sonuc.tamam) {
     return {
@@ -37,7 +38,7 @@ export async function girisEylemi(_onceki: GirisDurumu, form: FormData): Promise
         : "E-posta ya da parola yanlış. 5 hatalı denemeden sonra giriş 15 dakika kilitlenir.",
     };
   }
-  (await cookies()).set(CEREZ, sonuc.belirtec, cerezAyari(sonuc.bitis));
+  (await cookies()).set(CEREZ, sonuc.belirtec, cerezAyari(sonuc.bitis, sonuc.hesap.hatirla));
   /* yönlendirme istemcide TAM sayfa geçişiyle (eylem içinden yönlendirilen sayfa yeni çerezi aynı istekte görmüyor — 2026-10-04 e2e yakaladı) */
   const donus = guvenliDonus(g.data.donus) ? g.data.donus : "/";
   /* geçici parolayla ilk giriş: parola değiştirme önerilir ("Şimdi değil" ile geçilebilir — karar 34) */
@@ -57,11 +58,11 @@ export async function parolaBelirleEylemi(_onceki: ParolaDurumu, form: FormData)
   if (!s.success) return { hata: { p1: s.error.issues[0]?.message ?? "En az 10 karakter; harf ve rakam içermeli." } };
   if (p1 !== p2) return { hata: { p2: "İki parola aynı değil." } };
   const h = await headers();
-  const r = await parolaDegistir(havuz(), o.kiraci.firmaId, o.id, { yeni: p1, ip: await istemciIp(), tarayici: h.get("user-agent") ?? undefined });
+  const r = await parolaDegistir(havuz(), o.kiraci.firmaId, o.id, { yeni: p1, ip: await istemciIp(), tarayici: h.get("user-agent") ?? undefined, hatirla: o.hatirla });
   if (!r.tamam) {
     return { hata: r.neden === "ayni" ? { p1: "Yeni parola geçici parolayla aynı olamaz." } : { genel: "Parola değiştirilemedi. Yeniden giriş yapıp deneyin." } };
   }
-  (await cookies()).set(CEREZ, r.belirtec, cerezAyari(r.bitis));
+  (await cookies()).set(CEREZ, r.belirtec, cerezAyari(r.bitis, o.hatirla));
   const donus = String(form.get("donus") ?? "");
   return { yonlendir: guvenliDonus(donus) ? donus : "/" };
 }

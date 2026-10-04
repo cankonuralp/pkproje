@@ -2,7 +2,8 @@
    · Giriş firma bağlamında: alt alan adından çözülen firma → kiraciIcinde (RLS). Başka firmanın hesabı görünmez, denenemez.
    · Kilit (karar 37): hesapta 5 hata → 15 dk; aynı IP'den firmada 5 hata → 15 dk. Kilitliyken parola denetlenmez bile.
    · Yanıt hesabın var olup olmadığını söylemez (tek ileti, eşit süre).
-   · Belirteç 32 bayt rasgele; veritabanında yalnız SHA-256 özeti. Hareketsizlik 12 saat, mutlak süre 14 gün (2026-10-04, teknik seçim).
+   · Belirteç 32 bayt rasgele; veritabanında yalnız SHA-256 özeti. Hareketsizlik 12 saat, mutlak süre 14 gün (2026-10-04, teknik seçim);
+     "Beni hatırla" işaretliyse hareketsizlik 7 gün (mutlak yine 14 gün; 0011).
    · Oturum okunurken roller ve durum HER SEFERİNDE hesaptan okunur — rol istemciden gelmez, düşürülen yetki hemen geçerlidir (09-E4). */
 import { createHash, randomBytes } from "node:crypto";
 import { kiraciIcinde, type Havuz } from "../db/kiraci.ts";
@@ -14,8 +15,9 @@ export const KILIT_ESIGI = 5;
 export const KILIT_SURE_DK = 15;
 export const HAREKETSIZ_SAAT = 12;
 export const MUTLAK_GUN = 14;
+export const HATIRLA_HAREKETSIZ_GUN = 7;
 
-export interface OturumHesabi { id: string; firmaId: string; ad: string; eposta: string; roller: Rol[]; durum: "ilk" | "etkin" }
+export interface OturumHesabi { id: string; firmaId: string; ad: string; eposta: string; roller: Rol[]; durum: "ilk" | "etkin"; hatirla?: boolean }
 
 export type GirisSonucu =
   | { tamam: true; belirtec: string; hesap: OturumHesabi; bitis: Date }
@@ -27,7 +29,7 @@ const dk = (n: number) => n * 60_000;
 
 interface HesapSatiri { id: string; firma_id: string; ad: string; eposta: string; roller: Rol[]; durum: string; parola_ozeti: string | null; hatali_deneme: number; kilit_bitis: Date | null }
 
-export async function girisYap(havuz: Havuz, firmaId: string, g: { eposta: string; parola: string; ip: string; tarayici?: string; simdi?: Date }): Promise<GirisSonucu> {
+export async function girisYap(havuz: Havuz, firmaId: string, g: { eposta: string; parola: string; ip: string; tarayici?: string; hatirla?: boolean; simdi?: Date }): Promise<GirisSonucu> {
   const simdi = g.simdi ?? new Date();
   const eposta = g.eposta.trim().toLowerCase();
   const ip = g.ip.slice(0, 64) || "bilinmiyor";
@@ -63,12 +65,12 @@ export async function girisYap(havuz: Havuz, firmaId: string, g: { eposta: strin
     await db.sorgu("DELETE FROM giris_kilidi WHERE ip = $1", [ip]);
     const belirtec = randomBytes(32).toString("base64url");
     const bitis = new Date(simdi.getTime() + MUTLAK_GUN * 86_400_000);
-    await db.sorgu("INSERT INTO oturum (ozet, hesap_id, olustu, son_kullanim, bitis, ip, tarayici) VALUES ($1, $2, $3, $3, $4, $5, $6)",
-      [belirtecOzeti(belirtec), h.id, simdi, bitis, ip, g.tarayici?.slice(0, 300) ?? null]);
+    await db.sorgu("INSERT INTO oturum (ozet, hesap_id, olustu, son_kullanim, bitis, ip, tarayici, hatirla) VALUES ($1, $2, $3, $3, $4, $5, $6, $7)",
+      [belirtecOzeti(belirtec), h.id, simdi, bitis, ip, g.tarayici?.slice(0, 300) ?? null, g.hatirla === true]);
     /* iz: giren hesap işlemin bağlamına yazılır → veritabanı "kim"i oradan damgalar (0003) */
     await db.sorgu("SELECT set_config('app.hesap_id', $1, true)", [h.id]);
     await izYaz(db, { kim: h.eposta, ne: "giris.yapildi", nesne: "hesap", nesneId: h.id, ayrinti: { ip } });
-    return { tamam: true, belirtec, bitis, hesap: { id: h.id, firmaId: h.firma_id, ad: h.ad, eposta: h.eposta, roller: h.roller, durum: h.durum as "ilk" | "etkin" } };
+    return { tamam: true, belirtec, bitis, hesap: { id: h.id, firmaId: h.firma_id, ad: h.ad, eposta: h.eposta, roller: h.roller, durum: h.durum as "ilk" | "etkin", hatirla: g.hatirla === true } };
   });
 }
 
@@ -77,14 +79,15 @@ export async function oturumOku(havuz: Havuz, firmaId: string, belirtec: string 
   if (!belirtec || !BELIRTEC.test(belirtec)) return null;
   const ozet = belirtecOzeti(belirtec);
   return kiraciIcinde(havuz, firmaId, async (db) => {
-    const r = (await db.sorgu<HesapSatiri & { son_kullanim: Date; bitis: Date }>(
-      `SELECT h.id, h.firma_id, h.ad, h.eposta, h.roller, h.durum, o.son_kullanim, o.bitis FROM oturum o JOIN hesap h ON h.id = o.hesap_id WHERE o.ozet = $1`, [ozet])).rows[0];
+    const r = (await db.sorgu<HesapSatiri & { son_kullanim: Date; bitis: Date; hatirla: boolean }>(
+      `SELECT h.id, h.firma_id, h.ad, h.eposta, h.roller, h.durum, o.son_kullanim, o.bitis, o.hatirla FROM oturum o JOIN hesap h ON h.id = o.hesap_id WHERE o.ozet = $1`, [ozet])).rows[0];
     if (!r) return null;
-    const dolmus = r.bitis <= simdi || simdi.getTime() - r.son_kullanim.getTime() > HAREKETSIZ_SAAT * 3_600_000;
+    const hareketsizSinir = r.hatirla ? HATIRLA_HAREKETSIZ_GUN * 86_400_000 : HAREKETSIZ_SAAT * 3_600_000;
+    const dolmus = r.bitis <= simdi || simdi.getTime() - r.son_kullanim.getTime() > hareketsizSinir;
     if (dolmus || r.durum === "pasif") { await db.sorgu("DELETE FROM oturum WHERE ozet = $1", [ozet]); return null; }
     /* son kullanım dakikada bir yazılır (her istekte yazma yok — 09 veri tasarrufu) */
     if (simdi.getTime() - r.son_kullanim.getTime() > 60_000) await db.sorgu("UPDATE oturum SET son_kullanim = $2 WHERE ozet = $1", [ozet, simdi]);
-    return { id: r.id, firmaId: r.firma_id, ad: r.ad, eposta: r.eposta, roller: r.roller, durum: r.durum as "ilk" | "etkin" };
+    return { id: r.id, firmaId: r.firma_id, ad: r.ad, eposta: r.eposta, roller: r.roller, durum: r.durum as "ilk" | "etkin", hatirla: r.hatirla };
   });
 }
 
@@ -98,7 +101,7 @@ export type ParolaSonucu = { tamam: true; belirtec: string; bitis: Date } | { ta
 /** Parola değiştir (karar 34, 37). Geçici parolayla ilk girişte ("ilk") mevcut parola sorulmaz; öteki her durumda mevcut parola ZORUNLU.
     Parola değişince hesabın BÜTÜN oturumları düşer (0002 tetiği: başka cihazda açık kalan oturum da kapanır); bu cihaz için yeni oturum açılır.
     Durum "ilk" → "etkin". İz: "hesap.parola_degisti" (değer yazılmaz). */
-export async function parolaDegistir(havuz: Havuz, firmaId: string, hesapId: string, p: { yeni: string; mevcut?: string; ip: string; tarayici?: string; simdi?: Date }): Promise<ParolaSonucu> {
+export async function parolaDegistir(havuz: Havuz, firmaId: string, hesapId: string, p: { yeni: string; mevcut?: string; ip: string; tarayici?: string; hatirla?: boolean; simdi?: Date }): Promise<ParolaSonucu> {
   const simdi = p.simdi ?? new Date();
   const ozet = await parolaOzeti(p.yeni);
   return kiraciIcinde(havuz, firmaId, async (db) => {
@@ -112,8 +115,8 @@ export async function parolaDegistir(havuz: Havuz, firmaId: string, hesapId: str
     await db.sorgu("UPDATE hesap SET parola_ozeti = $2, durum = CASE WHEN durum = 'ilk' THEN 'etkin' ELSE durum END, hatali_deneme = 0, kilit_bitis = NULL WHERE id = $1", [hesapId, ozet]);
     const belirtec = randomBytes(32).toString("base64url");
     const bitis = new Date(simdi.getTime() + MUTLAK_GUN * 86_400_000);
-    await db.sorgu("INSERT INTO oturum (ozet, hesap_id, olustu, son_kullanim, bitis, ip, tarayici) VALUES ($1, $2, $3, $3, $4, $5, $6)",
-      [belirtecOzeti(belirtec), hesapId, simdi, bitis, p.ip.slice(0, 64) || "bilinmiyor", p.tarayici?.slice(0, 300) ?? null]);
+    await db.sorgu("INSERT INTO oturum (ozet, hesap_id, olustu, son_kullanim, bitis, ip, tarayici, hatirla) VALUES ($1, $2, $3, $3, $4, $5, $6, $7)",
+      [belirtecOzeti(belirtec), hesapId, simdi, bitis, p.ip.slice(0, 64) || "bilinmiyor", p.tarayici?.slice(0, 300) ?? null, p.hatirla === true]);
     await izYaz(db, { kim: h.eposta, ne: "hesap.parola_degisti", nesne: "hesap", nesneId: hesapId, ayrinti: { ilk: h.durum === "ilk" } });
     return { tamam: true, belirtec, bitis } as const;
   }, { hesapId });

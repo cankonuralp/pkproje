@@ -45,7 +45,8 @@ function bantAboneOl(bildir: () => void) {
 }
 const genisBantMi = () => matchMedia(GENIS_BANT).matches;
 
-function TemaTusu() {
+/** açık / koyu tema tuşu (kabukta ve giriş ekranında; 2026-10-04 reisim: "giriş ekranında gece modu ayarı tuşu yok") */
+export function TemaTusu({ sinif }: { sinif?: string }) {
   const koyu = useSyncExternalStore(temaAboneOl, temaOku, () => null) === "koyu";
   const degistir = () => {
     const yeni = koyu ? "acik" : "koyu";
@@ -53,7 +54,7 @@ function TemaTusu() {
     try { localStorage.setItem("probata-tema", yeni); } catch { /* tarayıcı saklamaya izin vermiyorsa tercih yalnız bu sayfada kalır */ }
   };
   return (
-    <button className={stil.ikonTus} type="button" onClick={degistir} aria-label={koyu ? "Açık temaya geç" : "Koyu temaya geç"}>
+    <button className={sinif ?? stil.ikonTus} type="button" onClick={degistir} aria-label={koyu ? "Açık temaya geç" : "Koyu temaya geç"}>
       <Ikon ad={koyu ? "sun" : "moon"} />
     </button>
   );

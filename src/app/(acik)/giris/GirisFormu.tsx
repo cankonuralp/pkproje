@@ -4,6 +4,7 @@
 import Image from "next/image";
 import { useActionState, useEffect, useState } from "react";
 import { Ikon } from "../../../components/ikon/Ikon";
+import { TemaTusu } from "../../../components/kabuk/Kabuk";
 import isaretKoyu from "../../../components/kabuk/marka/probata-yatay-koyu-zemin.svg";
 import logoRenkli from "../../../components/kabuk/marka/probata-yatay-renkli.svg";
 import { Serit } from "../../../components/serit/Serit";
@@ -14,12 +15,15 @@ import stil from "./giris.module.css";
 export function GirisFormu({ neden, donus, adres, firmaVar }: { neden?: "oturum" | "cikis"; donus?: string; adres: string; firmaVar: boolean }) {
   const [durum, eylem, gonderiyor] = useActionState<GirisDurumu, FormData>(girisEylemi, {});
   const [goster, setGoster] = useState(false);
+  /* React eylem bitince formu sıfırlar → işaret durumda tutulur (hatalı denemeden sonra kaybolmasın) */
+  const [hatirla, setHatirla] = useState(false);
   /* başarılı giriş: sunucunun verdiği site içi adrese tam geçiş (çerez kesin gider); yalnız "/" ile başlayan yol (sunucu da süzdü) */
   useEffect(() => {
     if (durum.yonlendir?.startsWith("/") && !durum.yonlendir.startsWith("//")) window.location.replace(durum.yonlendir);
   }, [durum.yonlendir]);
   return (
     <main className={stil.giris}>
+      <TemaTusu sinif={stil.tema} />
       <div className={stil.form}>
         <Image className={`${stil.logo} ${stil.acik}`} src={logoRenkli} alt="probata" width={148} height={37} priority unoptimized />
         <Image className={`${stil.logo} ${stil.koyu}`} src={isaretKoyu} alt="probata" width={148} height={37} unoptimized />
@@ -47,6 +51,11 @@ export function GirisFormu({ neden, donus, adres, firmaVar }: { neden?: "oturum"
               </button>
             </div>
           </div>
+          <label className={stil.hatirla}>
+            <input type="checkbox" name="hatirla" value="1" checked={hatirla} onChange={(e) => setHatirla(e.target.checked)} />
+            <span>Beni hatırla</span>
+          </label>
+          <p className={stil.ipucu} id="g-hatirla-ipucu">{hatirla ? "Bu cihazda 14 güne kadar açık kalır. Ortak bilgisayarda işaretlemeyin." : "Tarayıcı kapanınca oturum kapanır."}</p>
           {donus && <input type="hidden" name="donus" value={donus} />}
           <div className={stil.tuslar}>
             <Tus type="submit" ikon="log-in" disabled={gonderiyor || !firmaVar || !!durum.yonlendir} aria-busy={gonderiyor || undefined}>Giriş yap</Tus>

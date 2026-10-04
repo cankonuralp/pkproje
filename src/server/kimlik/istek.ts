@@ -16,7 +16,8 @@ import { oturumOku, type OturumHesabi } from "./oturum.ts";
 
 const YAYIN = process.env.NODE_ENV === "production";
 export const CEREZ = YAYIN ? "__Host-probata" : "probata-oturum";
-export const cerezAyari = (bitis: Date) => ({ httpOnly: true, secure: YAYIN, sameSite: "lax" as const, path: "/", expires: bitis });
+/** "Beni hatırla" işaretsizse çerez oturumluktur (tarayıcı kapanınca silinir); işaretliyse oturumun mutlak bitişine kadar kalır */
+export const cerezAyari = (bitis: Date, hatirla = true) => ({ httpOnly: true, secure: YAYIN, sameSite: "lax" as const, path: "/", ...(hatirla ? { expires: bitis } : {}) });
 
 export type IstekOturumu = OturumHesabi & { kiraci: IstekKiracisi };
 

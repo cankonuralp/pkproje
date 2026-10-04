@@ -1,5 +1,13 @@
 /* maketteki .a-giris ailesi (AA1, 2026-10-02: tek zemin; ortada logo, altında giriş kartı en çok 400 px) */
-.giris { min-height: 100vh; background: var(--zemin); }
+.giris { min-height: 100vh; background: var(--zemin); position: relative; }
+/* tema tuşu sağ üst köşede (kabuktaki ikon tuşunun eşi) */
+.tema {
+  position: absolute; top: 12px; right: 12px; width: var(--tus-y); height: var(--tus-y); display: inline-flex; align-items: center; justify-content: center;
+  border: 1px solid var(--kenar-alan); border-radius: var(--r-orta); background: var(--kart); color: var(--yazi2);
+}
+.tema:hover { color: var(--yazi); background: var(--zemin2); }
+.hatirla { display: inline-flex; align-items: center; gap: 8px; min-height: var(--tus-y); font-size: var(--boy-kucuk); cursor: pointer; }
+.hatirla input { width: 18px; height: 18px; margin: 0; accent-color: var(--onay-yazi); }
 .form { min-height: 100vh; display: flex; flex-direction: column; align-items: center; justify-content: center; gap: 20px; padding: 32px var(--bosluk-sayfa); min-width: 0; }
 .logo { width: 160px; height: auto; display: block; }
 .koyu, :root[data-tema="koyu"] .acik { display: none; }
@@ -25,6 +33,7 @@
   border: 1px solid var(--kenar-alan); border-radius: var(--r-orta); background: var(--kart); color: var(--yazi2);
 }
 .goster:hover { color: var(--yazi); background: var(--zemin2); }
+.hatirla + .ipucu { margin-top: -10px; }
 .ipucu { margin: 6px 0 0; font-size: var(--boy-etiket); color: var(--yazi3); }
 .ipucuUyari { color: var(--hata-yazi); font-weight: 600; }
 .baglanti { display: inline-flex; align-items: center; justify-content: center; min-height: var(--tus-y); color: var(--onay-yazi); font-weight: 600; text-decoration: none; }

@@ -2341,6 +2341,10 @@ revizyon, alan kopyalama, hafif kusur devri, meslek eşleşme denetimi).
 - Emsal ürünler: https://opwire.app/iso-17020-periyodik-kontrol-yazilimi/ · https://17020muayene.vidco.com.tr/ · https://akuple.com/asansor-kontrol-yazilimi/ · https://ensyazilim.com/
 
 ## 11 · Değişiklik günlüğü
+- 2026-10-04 (295): **Giriş ekranı: tema tuşu + "Beni hatırla"** (reisim: *"giriş ekranında, gece modu ayarı tuşu yok, beni hatırla tuşu yok"*; makette
+  yoktu, reisim isteği). Sağ üstte kabuktaki tema tuşunun eşi. "Beni hatırla" işaretsiz (varsayılan): çerez oturumluk, tarayıcı kapanınca biter
+  (sunucuda 12 saat hareketsizlik / 14 gün); işaretli: çerez 14 gün kalıcı, hareketsizlik 7 gün, mutlak 14 gün. Altında açıklama ("ortak bilgisayarda
+  işaretlemeyin"). Göç 0011 (oturum.hatirla). Kilit: tests/giris.test.ts + e2e/giris.spec.ts.
 - 2026-10-04 (294): **Her firma kendi Supabase projesinde** (reisim önerisi + *"tamam supabase kararını yaz devam et"*; §8.8). Gerekçe: veri ve fatura
   firmanın, firmalar arası sızma yapıdan kalkar, barındırma maliyeti firmada. Pro (25 $/ay): 8 GB veritabanı rahat yeter; belirleyici dosya alanı
   (100 GB) — saklama 5–20 yıl, büyük arşivde ileride ucuz depo. İş K7'ye: hesap bağlama, otomatik proje kurulumu, her projeye göç + 0008 doğrulaması,

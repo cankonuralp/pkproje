@@ -66,6 +66,25 @@ test("doğru parola giriş yapar; veritabanında belirteç değil yalnız özeti
   assert.equal(await oturumOku(havuz, A, g.belirtec, sonra(6)), null);
 });
 
+test("BENİ HATIRLA (2026-10-04): işaretsiz oturum 12 saat hareketsizlikte düşer; işaretli 7 güne kadar sürer, 14 günde mutlaka biter", async () => {
+  const saat = (n: number) => sonra(n * 60);
+  const kisa = await girisYap(havuz, A, { eposta: "kisi@deneme.example", parola: PAROLA_A, ip: "10.4.0.1", simdi: T0 });
+  const uzun = await girisYap(havuz, A, { eposta: "kisi@deneme.example", parola: PAROLA_A, ip: "10.4.0.2", hatirla: true, simdi: T0 });
+  assert.ok(kisa.tamam && uzun.tamam);
+  if (!kisa.tamam || !uzun.tamam) return;
+  assert.equal(kisa.hesap.hatirla, false);
+  assert.equal(uzun.hesap.hatirla, true);
+  assert.equal(await oturumOku(havuz, A, kisa.belirtec, saat(13)), null, "işaretsiz: 13 saat hareketsiz → düşer");
+  const ertesiGun = await oturumOku(havuz, A, uzun.belirtec, saat(30));
+  assert.equal(ertesiGun?.hatirla, true, "işaretli: ertesi gün açık");
+  assert.equal(await oturumOku(havuz, A, uzun.belirtec, saat(30 + 8 * 24)), null, "işaretli: 8 gün hareketsiz → düşer");
+  const uzun2 = await girisYap(havuz, A, { eposta: "kisi@deneme.example", parola: PAROLA_A, ip: "10.4.0.3", hatirla: true, simdi: T0 });
+  assert.ok(uzun2.tamam);
+  if (!uzun2.tamam) return;
+  for (let gun = 6; gun <= 13; gun += 6) assert.ok(await oturumOku(havuz, A, uzun2.belirtec, saat(gun * 24)), `${gun}. gün açık`);
+  assert.equal(await oturumOku(havuz, A, uzun2.belirtec, saat(14 * 24 + 1)), null, "işaretli de olsa 14 günde biter");
+});
+
 test("KİRACI: firma A'nın belirteci firma B'nin adresinde geçmez; A'nın parolası B'de geçmez", async () => {
   const g = await girisYap(havuz, A, { eposta: "kisi@deneme.example", parola: PAROLA_A, ip: "10.0.0.2", simdi: T0 });
   assert.ok(g.tamam);
