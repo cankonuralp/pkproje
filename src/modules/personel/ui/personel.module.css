@@ -28,3 +28,10 @@
 
 /* rol yetkileri: "Önerilen düzene dön" tablonun üstünde, solda (maket .a-matris-arac — 375'te alttaki çubuğa sığmıyordu) */
 .matrisArac { display: flex; flex-wrap: wrap; gap: 8px; margin: 0 0 12px; }
+/* personel dosyası bölümleri (maket .a-bos-satir, .a-sayi, .a-zimmet-form-durum, .a-eylem-tuslar) */
+.bos { margin: 0; padding: 14px 0; color: var(--yazi2); font-size: var(--boy-kucuk); }
+.sayi { font-variant-numeric: tabular-nums; font-weight: 600; }
+.dosya { width: 100%; min-height: var(--tus-y); font: inherit; color: var(--yazi); }
+.satirTus { display: flex; flex-wrap: wrap; align-items: center; gap: 8px; }
+.formDurum { display: flex; flex-wrap: wrap; align-items: center; gap: 8px; margin: 0 0 12px; }
+.formDurum > :first-child { flex: 1 1 320px; }

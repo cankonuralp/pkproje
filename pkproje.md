@@ -2341,6 +2341,15 @@ revizyon, alan kopyalama, hafif kusur devri, meslek eşleşme denetimi).
 - Emsal ürünler: https://opwire.app/iso-17020-periyodik-kontrol-yazilimi/ · https://17020muayene.vidco.com.tr/ · https://akuple.com/asansor-kontrol-yazilimi/ · https://ensyazilim.com/
 
 ## 11 · Değişiklik günlüğü
+- 2026-10-04 (306): **K2 Personel dosyası: özlük, ekipman atamaları, maaş ve bordrolar, zimmetindekiler + imzalı zimmet formu, eğitimler** (maket
+  personel.html; reisim 40, L4, 2026-09-27). Göç 0021 (ozluk_belgesi — tür listeden; ekipman_atamasi — kişi × tür başına TEK geçerli atama (kısmi eşsiz
+  dizin), atama belgesi zorunlu, tarih ileri olamaz; bordro — kişi × ay başına tek geçerli bordro, CHECK net ≤ brüt ≤ işverene maliyet, aynı dönemin
+  yenisi eskisini kaldırır (saklanır), gelecek ay yok; zimmet_formu — kapsam yükleme anındaki zimmetten SUNUCUDA yazılır, zimmet değişince form
+  "eskidi"). Belgeler yalnız PDF, zorunlu; reddedilen belgede kayıt hiç yazılmaz. Silme hakkı yok (kaldirildi). Yetki: özlük ve bordro yalnız
+  Personel'de "yaz" (görmek dahil; dosya erişimi de); atama ve zimmet formu kartı gören (denetçi yalnız kendi kartında); değiştirmek "yaz". Kartta
+  günlük maliyet = son bordronun işverene maliyeti / 22 iş günü. Dışa açık: atananTurler (plan / rapor uyarısı için). Sonraki kalemlere: bordronun
+  çalışana onaya / imzaya gönderilmesi (Onaylar), Muhasebe'nin bordro görünürlüğü (Muhasebe), zimmet formu PDF'inin sistemden üretilip mobil / e-imza
+  ile imzalanması (PDF + Onaylar), atanmadığı türde plan / rapor uyarısı (Planlar, Raporlar).
 - 2026-10-04 (305): **K2 Ekipman türü bağlantıları: kontrol metodu standartları + kullanılacak ölçüm cihazları** (maket ekipman-turleri.html yirmi
   dördüncü tur). Göç 0020 (ekipman_turu'na kontrol_std (standart NUMARALARI) ve cihaz_turleri; en çok 20'şer — CHECK). Standart numarayla bağlı:
   Dökümanlar'da yeni sürüm yüklenince tür sayfası ve rapor güncel sürümü gösterir; kütüphanede güncel sürümü olmayan numara seçilmez. Cihaz türü bu

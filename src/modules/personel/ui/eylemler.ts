@@ -5,11 +5,19 @@ import { ayniKoken } from "../../../server/kimlik/koken";
 import { istekOturumu, oturumIslemi } from "../../../server/kimlik/istek";
 import { personelEkle, personelGuncelle } from "../server/personel";
 import { matrisKaydet } from "../../../server/yetki/matris";
+import { depo } from "../../../server/dosya/depo";
+import type { Sorgulayici } from "../../../server/db/kiraci";
+import {
+  atamaBelgeDegistir, atamaEkle, atamaKaldir, bordroKaldir, bordroYukle, DosyaHatasi, ozlukBelgeDegistir, ozlukEkle, ozlukKaldir, zimmetFormuYukle,
+  type Yazma as DosyaYazma,
+} from "../server/dosyalar";
 import { hesapAc, hesapKapat, hesapYenidenAc, rolleriKaydet, yeniGeciciParola, type HesapSonucu } from "../../../server/kimlik/hesapYonetimi";
 
 export interface FormDurumu { hatalar?: Record<string, string>; genel?: string; yonlendir?: string }
 
 const ALANLAR = ["ad", "eposta", "imzaTel", "basla", "meslek", "meslekMetin", "diploma", "oda", "ekipnet"] as const;
+type Oturum = NonNullable<Awaited<ReturnType<typeof istekOturumu>>>;
+type Belge = { ad: string; bayt: Uint8Array };
 const SONUC = {
   yetkisiz: "Bu işlem için yetkiniz yok.",
   cakisma: "Bu kayıt siz açtıktan sonra başkası tarafından değiştirildi. Sayfayı yenileyip yeniden deneyin.",
@@ -70,4 +78,62 @@ export async function rolYetkiKaydetEylemi(surum: number, matris: unknown): Prom
   if (r.durum === "yetkisiz") return { genel: SONUC.yetkisiz };
   if (r.durum === "cakisma") return { genel: SONUC.cakisma };
   return { genel: "Rol yetkileri kaydedilemedi: geçersiz değer." };
+}
+
+/* ── PERSONEL DOSYASI (özlük, ekipman ataması, bordro, imzalı zimmet formu): yetki, doğrulama ve dosya denetimi personel/server/dosyalar.ts içinde.
+   Kişi ve kiracı oturumdan; istemciden gelen kimlik / sürüm yalnız "hangi kayıt, hangi sürümü gördüm". ── */
+export interface DosyaDurumu { tamam?: boolean; hatalar?: Record<string, string>; genel?: string }
+const yazi = (x: FormDataEntryValue | null) => (typeof x === "string" ? x : "");
+async function pdfOku(f: FormDataEntryValue | null): Promise<{ ad: string; bayt: Uint8Array } | "buyuk" | null> {
+  if (!(f instanceof File) || f.size === 0) return null;
+  if (f.size > 25 << 20) return "buyuk";
+  return { ad: f.name, bayt: new Uint8Array(await f.arrayBuffer()) };
+}
+async function dosyaIslemi(form: FormData, is: (o: NonNullable<Awaited<ReturnType<typeof istekOturumu>>>, belge: { ad: string; bayt: Uint8Array } | null) => Promise<DosyaYazma>): Promise<DosyaDurumu> {
+  if (!(await ayniKoken())) return { genel: "İstek reddedildi. Sayfayı yenileyip yeniden deneyin." };
+  const o = await istekOturumu();
+  if (!o) return { genel: "Oturumunuz kapandı. Yeniden giriş yapın." };
+  const b = await pdfOku(form.get("dosya"));
+  if (b === "buyuk") return { hatalar: { dosya: "PDF en çok 25 MB." } };
+  try {
+    const r = await is(o, b);
+    return r.durum === "tamam" ? { tamam: true } : r.durum === "gecersiz" ? { hatalar: r.hatalar } : { genel: SONUC[r.durum] };
+  } catch (h) {
+    if (h instanceof DosyaHatasi) return { hatalar: { dosya: h.message } };
+    throw h;
+  }
+}
+const ISLER = {
+  ozluk: (db: Sorgulayici, o: Oturum, f: FormData, b: Belge | null) =>
+    ozlukEkle(db, depo(), o, o.kiraci.firmaId, yazi(f.get("personel")), { tur: yazi(f.get("tur")), aciklama: yazi(f.get("aciklama")) }, b),
+  atama: (db: Sorgulayici, o: Oturum, f: FormData, b: Belge | null) =>
+    atamaEkle(db, depo(), o, o.kiraci.firmaId, yazi(f.get("personel")), { tur: yazi(f.get("tur")), tarih: yazi(f.get("tarih")) }, b),
+  bordro: (db: Sorgulayici, o: Oturum, f: FormData, b: Belge | null) =>
+    bordroYukle(db, depo(), o, o.kiraci.firmaId, yazi(f.get("personel")), { ay: yazi(f.get("ay")), brut: yazi(f.get("brut")), net: yazi(f.get("net")), maliyet: yazi(f.get("maliyet")) }, b),
+  zimmet: (db: Sorgulayici, o: Oturum, f: FormData, b: Belge | null) => zimmetFormuYukle(db, depo(), o, o.kiraci.firmaId, yazi(f.get("personel")), b),
+} as const;
+const DEGISTIR = { ozluk: ozlukBelgeDegistir, atama: atamaBelgeDegistir } as const;
+const KALDIR = { ozluk: ozlukKaldir, atama: atamaKaldir, bordro: bordroKaldir } as const;
+
+/** yeni kayıt + belge: tür formdan ("ozluk" | "atama" | "bordro" | "zimmet") */
+export async function personelBelgeEkleEylemi(form: FormData): Promise<DosyaDurumu> {
+  const ne = yazi(form.get("ne"));
+  if (!(ne in ISLER)) return { genel: SONUC.yok };
+  return dosyaIslemi(form, (o, b) => oturumIslemi(o, (db) => ISLER[ne as keyof typeof ISLER](db, o, form, b)));
+}
+/** var olan satırın belgesini değiştir */
+export async function personelBelgeDegistirEylemi(form: FormData): Promise<DosyaDurumu> {
+  const ne = yazi(form.get("ne"));
+  if (!(ne in DEGISTIR)) return { genel: SONUC.yok };
+  return dosyaIslemi(form, async (o, b) => (b ? oturumIslemi(o, (db) => DEGISTIR[ne as keyof typeof DEGISTIR](db, depo(), o, o.kiraci.firmaId, yazi(form.get("id")), Number(form.get("surum")), b))
+    : { durum: "gecersiz", hatalar: { dosya: "PDF seçilmeli." } }));
+}
+/** satırı kaldır (silinmez; saklanır) */
+export async function personelBelgeKaldirEylemi(ne: string, id: string, surum: number): Promise<DosyaDurumu> {
+  if (!(await ayniKoken())) return { genel: "İstek reddedildi. Sayfayı yenileyip yeniden deneyin." };
+  const o = await istekOturumu();
+  if (!o) return { genel: "Oturumunuz kapandı. Yeniden giriş yapın." };
+  if (!(ne in KALDIR) || typeof id !== "string") return { genel: SONUC.yok };
+  const r = await oturumIslemi(o, (db) => KALDIR[ne as keyof typeof KALDIR](db, o, id, Number(surum)));
+  return r.durum === "tamam" ? { tamam: true } : r.durum === "gecersiz" ? { hatalar: r.hatalar } : { genel: SONUC[r.durum] };
 }

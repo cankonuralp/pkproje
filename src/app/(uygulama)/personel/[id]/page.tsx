@@ -1,5 +1,5 @@
-/* PERSONEL KARTI (maket personel.html #/p/<id>; anayasa 2.7 nesne sayfası). Bu kalemde: kimlik ve sicil + giriş hesabı ve roller (görünüm).
-   Hesap işlemleri, rol yetkileri, maaş, atama, zimmet, eğitim, özlük bölümleri kendi kalemlerinde (K2). Görmeyen / başka firmanın kaydı: bulunamadı. */
+/* PERSONEL KARTI (maket personel.html #/p/<id>; anayasa 2.7 nesne sayfası): kimlik ve sicil · giriş hesabı ve roller · ekipman atamaları (denetçi) ·
+   zimmetindekiler + imzalı zimmet formu · eğitimler · maaş ve bordrolar + özlük dosyası (yalnız "yaz"). Görmeyen / başka firmanın kaydı: bulunamadı. */
 import type { Metadata } from "next";
 import { notFound } from "next/navigation";
 import { Bilgi, BilgiListesi } from "../../../../components/bilgi/Bilgi";
@@ -8,8 +8,11 @@ import { AltSatir, Bolum, DegerYok, Kirinti, Kod, NesneBasi, SeritKap } from "..
 import { Serit } from "../../../../components/serit/Serit";
 import { TusBaglanti } from "../../../../components/tus/Tus";
 import { MODULLER, modulBul } from "../../../../modules/moduller";
+import { kisininEgitimleri } from "../../../../modules/egitimler/server/egitimler";
+import { bugunTr, gunlukMaliyet, IS_GUNU, personelDosyasi } from "../../../../modules/personel/server/dosyalar";
 import { eksikBilgi, personelKarti } from "../../../../modules/personel/server/personel";
 import { yetkiliOlabilir } from "../../../../modules/personel/sema";
+import { AtamaBolumu, BordroBolumu, EgitimBolumu, OzlukBolumu, ZimmetBolumu } from "../../../../modules/personel/ui/DosyaBolumleri";
 import { HesapBolumu } from "../../../../modules/personel/ui/HesapBolumu";
 import { bransAd, bransi, DurumRozeti, meslekAdi, tarihYaz } from "../../../../modules/personel/ui/ortak";
 import { modulOturumu, oturumIslemi } from "../../../../server/kimlik/istek";
@@ -27,6 +30,9 @@ export default async function Sayfa({ params }: { params: Promise<{ id: string }
   const { id } = await params;
   const p = await oturumIslemi(o, (db) => personelKarti(db, o, id));
   if (!p) notFound();
+  const [dosya, egitimler] = await oturumIslemi(o, async (db) => [await personelDosyasi(db, o, p.id), await kisininEgitimleri(db, o, p.id)] as const);
+  if (!dosya) notFound();
+  const bugun = bugunTr();
   const yaz = duzey(o, MODUL.no as ModulAnahtari) === "yaz";
   const b = bransi(p.meslek), e = eksikBilgi(p), h = p.hesapAyrinti;
   const denetci = !!h?.roller.includes("denetci");
@@ -54,6 +60,11 @@ export default async function Sayfa({ params }: { params: Promise<{ id: string }
       <HesapBolumu personelId={p.id} ad={p.ad} meslekAdi={meslekAdi(p)} eposta={p.eposta} personelEtkin={p.durum === "etkin"}
         yonetebilir={canDoEylem(o, "hesap_ac_kapat")} yetkiliOlabilir={yetkiliOlabilir(p.meslek)}
         hesap={h && { durum: h.durum, roller: h.roller, eposta: h.eposta, zaman: zamanYaz(h.durum === "ilk" ? h.olustu : h.sonGiris), gorulen: `${gorulen} / ${MODULLER.length}` }} />
+      {denetci && <AtamaBolumu personelId={p.id} etkin={p.durum === "etkin"} dosya={dosya} bugun={bugun} />}
+      <ZimmetBolumu personelId={p.id} dosya={dosya} bugun={bugun} />
+      {egitimler && <EgitimBolumu egitimler={egitimler} />}
+      {dosya.bordrolar && <BordroBolumu personelId={p.id} dosya={dosya} bugun={bugun} gunluk={gunlukMaliyet(dosya.bordrolar[0])} isGunu={IS_GUNU} />}
+      {dosya.ozluk && <OzlukBolumu personelId={p.id} dosya={dosya} bugun={bugun} />}
     </>
   );
 }

@@ -181,3 +181,9 @@ export async function aracHareketiYaz(db: Sorgulayici, kim: Kisi, p: { aracId: s
     { kim: kim.ad, ne: "zimmet.arac_teslim" });
   return { durum: "tamam", id: r.id, eden };
 }
+
+/** Personel kartı için: o anda kişinin zimmetindeki varlıklar (son hareketten; teslim zamanı son hareketin zamanı). Yetki ÇAĞIRANDA. */
+export async function kisininVarliklari(db: Sorgulayici, personelId: string): Promise<VarlikSatiri[]> {
+  const s = await durum(db);
+  return s.varliklar.filter((v) => v.kimde.tip === "kisi" && v.kimde.id === personelId).sort((a, b) => a.kod.localeCompare(b.kod));
+}

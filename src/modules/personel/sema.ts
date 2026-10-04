@@ -1,6 +1,6 @@
 /* PERSONEL GİRDİSİ — formun ve sunucunun TEK şeması (maket personel.html formu; karar 39: zorunlu yalnız ad, işe başlama, meslek). İletiler maketle aynı.
    Ekranda tarih GG.AA.YYYY; şema ISO bekler (dönüşüm formda). Meslek anahtarı sabit tanımlarda olmalı (Ek-III listesi). */
-import { tarih, z } from "../../sema/ortak.ts";
+import { tarih, tutar, z } from "../../sema/ortak.ts";
 import { TANIMLAR } from "../../tanim/veri.ts";
 
 const bos = (s: unknown) => (typeof s === "string" && s.trim() === "" ? null : typeof s === "string" ? s.trim() : s);
@@ -28,3 +28,24 @@ export const meslek = (k: string) => TANIMLAR.meslekler.find((m) => m.k === k);
 /** yetkili kişi (denetçi) olabilir mi: meslek en az bir Ek-III grubuna izin veriyor (teknisyen / diğer değil) */
 export const yetkiliOlabilir = (k: string) => (meslek(k)?.g.length ?? 0) > 0;
 export const bransAd = (b: string | null | undefined) => (b === "m" ? "Mekanik" : b === "e" ? "Elektrik" : "—");
+
+/* ── PERSONEL DOSYASI (maket personel.html: özlük, ekipman atamaları, maaş ve bordrolar) ── */
+export const OZLUK_TURLERI = [["is", "İş sözleşmesi"], ["diploma", "Diploma"], ["oda", "Oda kaydı"], ["ekipnet", "EKİPNET kayıt belgesi"], ["kimlik", "Kimlik belgesi"],
+  ["saglik", "Sağlık raporu"], ["diger", "Diğer"]] as const;
+export const ozlukTurAd = (k: string) => OZLUK_TURLERI.find((x) => x[0] === k)?.[1] ?? "Diğer";
+export const OzlukGirdisi = z.object({
+  tur: z.enum(OZLUK_TURLERI.map((x) => x[0]) as [string, ...string[]], { error: "Belge türü seçilmeli." }),
+  aciklama: z.preprocess((s) => (typeof s === "string" ? (s.trim() === "" ? null : s.trim()) : s), z.string().max(120, "En çok 120 karakter.").nullable()),
+});
+export const AtamaGirdisi = z.object({
+  tur: z.string({ error: "Ekipman türü seçilmeli." }).regex(/^[0-9a-f-]{36}$/, "Ekipman türü seçilmeli."),
+  tarih,
+});
+export const BordroGirdisi = z.object({
+  ay: z.string({ error: "Dönem seçilmeli." }).regex(/^\d{4}-(0[1-9]|1[0-2])$/, "Dönem seçilmeli."),
+  brut: tutar, net: tutar, maliyet: tutar,
+}).superRefine((b, bag) => {
+  if (b.brut <= 0) bag.addIssue({ code: "custom", path: ["brut"], message: "Brüt sıfırdan büyük olmalı." });
+  if (b.net <= 0 || b.net > b.brut) bag.addIssue({ code: "custom", path: ["net"], message: "Net, brütten büyük olamaz." });
+  if (b.maliyet < b.brut) bag.addIssue({ code: "custom", path: ["maliyet"], message: "İşverene maliyet brütten küçük olamaz." });
+});

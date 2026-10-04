@@ -3,9 +3,11 @@
    2026-10-04 (K2): ekipman türünün rapor formatı PDF'i — türü görebilen açar · ölçüm cihazının kalibrasyon sertifikası — cihazı görebilen açar ·
    zimmet teslim fotoğrafı (araç tutanağı açıları dahil) — hareketi görebilen açar · imzalı iş sözleşmesi — sözleşmeyi gören (gör / yaz) açar ·
    İSG-KATİP PDF'i — ID'yi gören (denetçi yalnız kendi ID'sininkini) · sözleşme şablonu — yalnız değiştirebilen · standart ve döküman PDF'i — Dökümanlar'ı gören ·
-   eğitim sertifikası — kaydı gören (denetçi yalnız kendisininkini). */
+   eğitim sertifikası — kaydı gören (denetçi yalnız kendisininkini) · özlük belgesi ve bordro — yalnız Personel'de "yaz" · ekipman atama belgesi ve
+   imzalı zimmet formu — kişinin kartını gören (denetçi yalnız kendisininkini). */
 import { DOSYA as DOK_DOSYA, dokumanDosyasiGorulur, standartDosyasiGorulur } from "../../modules/dokumanlar/server/dokumanlar.ts";
 import { DOSYA_MODULU as EGITIM_DOSYASI, egitimDosyasiGorulur } from "../../modules/egitimler/server/egitimler.ts";
+import { DOSYA as PER_DOSYA, gizliDosyaGorulur, kartDosyasiGorulur } from "../../modules/personel/server/dosyalar.ts";
 import { DOSYA_MODULU as TUR_DOSYASI, turDosyasiGorulur } from "../../modules/ekipman-turleri/server/turler.ts";
 import { DOSYA_MODULU as CIHAZ_DOSYASI, cihazDosyasiGorulur } from "../../modules/olcum-cihazlari/server/cihazlar.ts";
 import { DOSYA as SOZ_DOSYA, isgDosyasiGorulur, sablonDosyasiGorulur, sozlesmeDosyasiGorulur } from "../../modules/sozlesmeler/server/sozlesmeler.ts";
@@ -23,4 +25,8 @@ export const DOSYA_ERISIMI: ErisimKaydi = Object.freeze({
   [DOK_DOSYA.standart]: (db, kisi, kayitId) => standartDosyasiGorulur(db, kisi as YetkiHesabi, kayitId),
   [DOK_DOSYA.dokuman]: (db, kisi, kayitId) => dokumanDosyasiGorulur(db, kisi as YetkiHesabi, kayitId),
   [EGITIM_DOSYASI]: (db, kisi, kayitId) => egitimDosyasiGorulur(db, kisi as YetkiHesabi, kayitId),
+  [PER_DOSYA.ozluk]: (db, kisi, kayitId) => gizliDosyaGorulur(db, kisi as YetkiHesabi, "ozluk_belgesi", kayitId),
+  [PER_DOSYA.bordro]: (db, kisi, kayitId) => gizliDosyaGorulur(db, kisi as YetkiHesabi, "bordro", kayitId),
+  [PER_DOSYA.atama]: (db, kisi, kayitId) => kartDosyasiGorulur(db, kisi as YetkiHesabi, "ekipman_atamasi", kayitId),
+  [PER_DOSYA.zimmetFormu]: (db, kisi, kayitId) => kartDosyasiGorulur(db, kisi as YetkiHesabi, "zimmet_formu", kayitId),
 });

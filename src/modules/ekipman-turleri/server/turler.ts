@@ -148,3 +148,9 @@ export async function standardiKullananTurler(db: Sorgulayici, no: string): Prom
   return (await db.sorgu<{ id: string; ad: string; brans: "m" | "e" }>("SELECT id::text, ad, brans FROM ekipman_turu WHERE $1 = ANY (kontrol_std)", [no])).rows
     .sort((a, b) => a.ad.localeCompare(b.ad, "tr"));
 }
+
+/** Personel için (ekipman ataması): bütün türlerin adı ve branşı. Yetki ÇAĞIRANDA. */
+export async function turOzetleri(db: Sorgulayici): Promise<{ id: string; ad: string; brans: "m" | "e" }[]> {
+  return (await db.sorgu<{ id: string; ad: string; brans: "m" | "e" }>("SELECT id::text, ad, brans FROM ekipman_turu")).rows
+    .sort((a, b) => (a.brans === b.brans ? a.ad.localeCompare(b.ad, "tr") : a.brans === "m" ? -1 : 1));
+}

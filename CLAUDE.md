@@ -84,6 +84,7 @@ pkproje/
                             eski cihaz istemcisi 426 (src/server/api-surum.ts)
   src/modules/moduller.ts   MODÜL KAYDI — yan menünün ve rotaların tek kaynağı (15 modül, 6 grup, onaylı maketle aynı; 2026-09-25 Kullanıcılar Personel'e katıldı; 2026-09-26 Ekipmanlar planın içine; 2026-09-28 Talepler eklendi, Standartlar → Dökümanlar, Eğitimler Dökümanlar'ın içinde)
   src/modules/personel/     PERSONEL (2026-10-04): sema.ts (form + sunucu tek şema) · server/personel.ts (liste, kart, ekle, güncelle, ayrıldı; yetki içeride) ·
+                            server/dosyalar.ts (özlük, ekipman ataması, bordro, imzalı zimmet formu; 2026-10-04) ·
                             ui/ (liste, form, sunucu eylemleri — "use server" dosyası yalnız …Eylemi dışa açar)
   src/modules/musteriler/   MÜŞTERİLER (2026-10-04): sema.ts · server/musteriler.ts (liste, kart, kaydet + uyarı onayı, pasif zinciri) · ui/ (liste, pencereler)
   src/modules/ekipman-turleri/ EKİPMAN TÜRLERİ (2026-10-04): katalog (Mekanik / Elektrik), tür sayfası, rapor formatı PDF sürümleri
