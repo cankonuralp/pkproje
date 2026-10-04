@@ -2341,6 +2341,11 @@ revizyon, alan kopyalama, hafif kusur devri, meslek eşleşme denetimi).
 - Emsal ürünler: https://opwire.app/iso-17020-periyodik-kontrol-yazilimi/ · https://17020muayene.vidco.com.tr/ · https://akuple.com/asansor-kontrol-yazilimi/ · https://ensyazilim.com/
 
 ## 11 · Değişiklik günlüğü
+- 2026-10-04 (296): **K2 Personel 4: Rol yetkileri sekmesi** (maket personel.html #/roller; reisim 32). Personel sayfasında "Personel · Rol yetkileri"
+  sekmeleri. Modül × rol tablosu (telefonda kart), düzey rozetleri ve açıklaması; firma yöneticisi "Rol yetkilerini düzenle" → hücre başına seçim,
+  "Önerilen düzene dön", değişiklik sayısı, Vazgeç / Kaydet. Firma yöneticisinin Personel / Firma ayarları / Hareket kaydı hücresi "sabit". Kayıt firma
+  ayarlarında (rol_yetki), sürüm kilidiyle; oturum her okunduğunda yüklenip canDo'ya gider → değişiklik o rollerdeki herkes için bir sonraki istekte geçerli.
+  Bozuk / bilinmeyen değer önerilen düzene döner. Kilit: tests/rol-yetki.test.ts (gerçek PostgreSQL, iki firma) + bozan + e2e/rol-yetki.spec.ts.
 - 2026-10-04 (295): **Giriş ekranı: tema tuşu + "Beni hatırla"** (reisim: *"giriş ekranında, gece modu ayarı tuşu yok, beni hatırla tuşu yok"*; makette
   yoktu, reisim isteği). Sağ üstte kabuktaki tema tuşunun eşi. "Beni hatırla" işaretsiz (varsayılan): çerez oturumluk, tarayıcı kapanınca biter
   (sunucuda 12 saat hareketsizlik / 14 gün); işaretli: çerez 14 gün kalıcı, hareketsizlik 7 gün, mutlak 14 gün. Altında açıklama ("ortak bilgisayarda

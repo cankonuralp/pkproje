@@ -7,7 +7,7 @@ import { Ikon } from "../ikon/Ikon";
 import { SecenekListesi, useDisariTiklama, ustteMi, type SecimSecenegi } from "./SecenekListesi";
 import stil from "./Secim.module.css";
 
-export function SecimAlani({ id, ad, deger, secenekler, degistir, ipucu = "Seçin", gecersiz = false, tanim, kapali = false }: {
+export function SecimAlani({ id, ad, deger, secenekler, degistir, ipucu = "Seçin", gecersiz = false, tanim, kapali = false, etiketsiz = false }: {
   /** düğmenin id'si (etiket for= ile bağlanır) */
   id: string;
   /** listenin erişilebilir adı (alanın etiketi) */
@@ -20,6 +20,8 @@ export function SecimAlani({ id, ad, deger, secenekler, degistir, ipucu = "Seçi
   /** aria-describedby (alanın altındaki hata / uyarı) */
   tanim?: string;
   kapali?: boolean;
+  /** görünür etiketi olmayan alan (tablo hücresi): düğmenin erişilebilir adı `ad` olur */
+  etiketsiz?: boolean;
 }) {
   const [acik, setAcik] = useState(false);
   const [ust, setUst] = useState(false);
@@ -33,6 +35,7 @@ export function SecimAlani({ id, ad, deger, secenekler, degistir, ipucu = "Seçi
     <div className={stil.secim} ref={kap} data-secim-kap={id}>
       <button ref={tus} className={`${stil.girdi} ${stil.tus}`} type="button" id={id} role="combobox" aria-haspopup="listbox" aria-expanded={acik}
         aria-controls={acik ? listeId : undefined} aria-invalid={gecersiz || undefined} aria-describedby={tanim} disabled={kapali}
+        aria-label={etiketsiz ? ad : undefined}
         onClick={() => { if (!acik) setUst(ustteMi(tus.current)); setAcik(!acik); }}>
         <span className={gor ? stil.kirp : `${stil.kirp} ${stil.bos}`} title={gor?.[1] ?? ipucu}>{gor?.[1] ?? ipucu}</span>
         <Ikon ad="chevron-down" kucuk />

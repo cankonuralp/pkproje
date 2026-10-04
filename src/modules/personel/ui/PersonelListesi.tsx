@@ -4,7 +4,7 @@
 import { KartEtiket, Kirp, type Sutun } from "../../../components/liste/Liste";
 import { Sayac, SuzgecliListe, useSuzgec } from "../../../components/liste/SuzgecliListe";
 import type { SuzgecTanimi } from "../../../components/liste/suzgec";
-import { AltSatir, DegerYok, Kod, Rozetler, SayfaBasi } from "../../../components/sayfa/Sayfa";
+import { AltSatir, DegerYok, Kod, Rozetler, SayfaBasi, Sekmeler } from "../../../components/sayfa/Sayfa";
 import type { ReactNode } from "react";
 import { Ikon } from "../../../components/ikon/Ikon";
 import { ROL_ADI, ROLLER } from "../../../server/yetki/tanim";
@@ -56,6 +56,7 @@ export function PersonelListesi({ kayitlar, tuslar }: { kayitlar: ListeSatiri[];
   return (
     <>
       <SayfaBasi baslik="Personel" sayac={<Sayac s={s} />} tuslar={tuslar} />
+      <Sekmeler ad="Personel bölümleri" ogeler={[["Personel", "/personel"], ["Rol yetkileri", "/personel/roller"]]} secili="/personel" />
       <SuzgecliListe s={s} on="p" baslik="Personel" sutunlar={SUTUNLAR} anahtar={(p) => p.id} href={(p) => `/personel/${p.id}`}
         bosVeri={{ ikon: "users", baslik: "Personel kaydı yok", metin: "“Personel ekle” ile ilk kişi kaydedilir." }} />
     </>

@@ -4,6 +4,7 @@
 import { ayniKoken } from "../../../server/kimlik/koken";
 import { istekOturumu, oturumIslemi } from "../../../server/kimlik/istek";
 import { personelEkle, personelGuncelle } from "../server/personel";
+import { matrisKaydet } from "../../../server/yetki/matris";
 import { hesapAc, hesapKapat, hesapYenidenAc, rolleriKaydet, yeniGeciciParola, type HesapSonucu } from "../../../server/kimlik/hesapYonetimi";
 
 export interface FormDurumu { hatalar?: Record<string, string>; genel?: string; yonlendir?: string }
@@ -56,4 +57,17 @@ export async function hesapYenidenAcEylemi(personelId: string): Promise<HesapDur
 }
 export async function rolleriKaydetEylemi(personelId: string, roller: string[]): Promise<HesapDurumu> {
   return hesapIslemi((o) => oturumIslemi(o, (db) => rolleriKaydet(db, o, personelId, roller)));
+}
+
+/* ── rol yetkileri (maket personel.html #/roller; reisim 32): yetki ve temizleme src/server/yetki/matris.ts içinde ── */
+export interface MatrisDurumu { tamam?: boolean; surum?: number; genel?: string }
+export async function rolYetkiKaydetEylemi(surum: number, matris: unknown): Promise<MatrisDurumu> {
+  if (!(await ayniKoken())) return { genel: "İstek reddedildi. Sayfayı yenileyip yeniden deneyin." };
+  const o = await istekOturumu();
+  if (!o) return { genel: "Oturumunuz kapandı. Yeniden giriş yapın." };
+  const r = await oturumIslemi(o, (db) => matrisKaydet(db, o, Number(surum), matris));
+  if (r.durum === "tamam" || r.durum === "degisiklik_yok") return { tamam: true, surum: r.surum };
+  if (r.durum === "yetkisiz") return { genel: SONUC.yetkisiz };
+  if (r.durum === "cakisma") return { genel: SONUC.cakisma };
+  return { genel: "Rol yetkileri kaydedilemedi: geçersiz değer." };
 }

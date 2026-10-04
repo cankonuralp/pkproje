@@ -25,3 +25,6 @@
   margin: 0 0 12px; padding: 12px 14px; border: 1px dashed var(--kenar-alan); border-radius: var(--r-orta); background: var(--zemin2);
   font-size: var(--boy-baslik); letter-spacing: .06em; overflow-wrap: anywhere;
 }
+
+/* rol yetkileri: "Önerilen düzene dön" tablonun üstünde, solda (maket .a-matris-arac — 375'te alttaki çubuğa sığmıyordu) */
+.matrisArac { display: flex; flex-wrap: wrap; gap: 8px; margin: 0 0 12px; }

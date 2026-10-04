@@ -6,7 +6,8 @@
    · Kayıt bilgisi (sahip, branş, atananlar) çağıranın SUNUCUDA veritabanından okuduğu kayıttan gelir — istemcinin gövdesinden alınmaz. */
 import { DUZEYLER, MATRIS_ONERI, ROL_BRANS, ROLLER, SABIT, type Duzey, type Matris, type ModulAnahtari, type Rol } from "./tanim.ts";
 
-export interface YetkiHesabi { id: string; roller: readonly Rol[] }
+/** matris: firmanın kaydettiği rol yetkileri (oturum okunurken veritabanından gelir — src/server/kimlik/oturum.ts); yoksa önerilen düzen */
+export interface YetkiHesabi { id: string; roller: readonly Rol[]; matris?: Partial<Matris> | null }
 /** kaydın yetkiyi etkileyen alanları (sunucuda okunur) */
 export interface YetkiKaydi { sahip?: string | null; brans?: "m" | "e" | null; atananlar?: readonly string[] }
 
@@ -25,6 +26,7 @@ export function rolDuzeyi(rol: Rol, modul: ModulAnahtari, matris?: Partial<Matri
 
 /** hesabın modüldeki en yüksek düzeyi (rollerin birleşimi) */
 export function duzey(h: YetkiHesabi, modul: ModulAnahtari, matris?: Partial<Matris> | null): Duzey {
+  matris ??= h.matris;
   let en: Duzey = "yok";
   for (const r of h.roller) {
     if (!(ROLLER as readonly string[]).includes(r)) continue;   // tanımsız rol hiçbir şey vermez
@@ -53,6 +55,7 @@ export function canDo(h: YetkiHesabi | null, modul: ModulAnahtari, eylem: "gor" 
   return kendisi(h, kayit);   // kendi: yalnız kendi kaydı (gör + değiştir)
 }
 function duzeyRolle(h: YetkiHesabi, modul: ModulAnahtari, istenen: Duzey, matris?: Partial<Matris> | null) {
+  matris ??= h.matris;
   return h.roller.some((r) => SIRA[rolDuzeyi(r, modul, matris)] >= SIRA[istenen]);
 }
 

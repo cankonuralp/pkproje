@@ -8,7 +8,8 @@
 import { createHash, randomBytes } from "node:crypto";
 import { kiraciIcinde, type Havuz } from "../db/kiraci.ts";
 import { izYaz } from "../db/yazici.ts";
-import type { Rol } from "../yetki/tanim.ts";
+import type { Matris, Rol } from "../yetki/tanim.ts";
+import { matrisTemizle } from "../yetki/matris.ts";
 import { parolaDogru, parolaOzeti, sahteDenetim } from "./parola.ts";
 
 export const KILIT_ESIGI = 5;
@@ -17,7 +18,7 @@ export const HAREKETSIZ_SAAT = 12;
 export const MUTLAK_GUN = 14;
 export const HATIRLA_HAREKETSIZ_GUN = 7;
 
-export interface OturumHesabi { id: string; firmaId: string; ad: string; eposta: string; roller: Rol[]; durum: "ilk" | "etkin"; hatirla?: boolean }
+export interface OturumHesabi { id: string; firmaId: string; ad: string; eposta: string; roller: Rol[]; durum: "ilk" | "etkin"; hatirla?: boolean; matris?: Matris | null }
 
 export type GirisSonucu =
   | { tamam: true; belirtec: string; hesap: OturumHesabi; bitis: Date }
@@ -87,7 +88,10 @@ export async function oturumOku(havuz: Havuz, firmaId: string, belirtec: string 
     if (dolmus || r.durum === "pasif") { await db.sorgu("DELETE FROM oturum WHERE ozet = $1", [ozet]); return null; }
     /* son kullanım dakikada bir yazılır (her istekte yazma yok — 09 veri tasarrufu) */
     if (simdi.getTime() - r.son_kullanim.getTime() > 60_000) await db.sorgu("UPDATE oturum SET son_kullanim = $2 WHERE ozet = $1", [ozet, simdi]);
-    return { id: r.id, firmaId: r.firma_id, ad: r.ad, eposta: r.eposta, roller: r.roller, durum: r.durum as "ilk" | "etkin", hatirla: r.hatirla };
+    /* firmanın rol yetkileri (Personel › Rol yetkileri) her istekte taze: değişiklik hemen geçerli */
+    const m = (await db.sorgu<{ m: unknown }>("SELECT deger->'matris' AS m FROM firma_ayar WHERE bolum = 'rol_yetki'")).rows[0]?.m;
+    const matris = m && typeof m === "object" && Object.keys(m).length ? matrisTemizle(m) : null;
+    return { id: r.id, firmaId: r.firma_id, ad: r.ad, eposta: r.eposta, roller: r.roller, durum: r.durum as "ilk" | "etkin", hatirla: r.hatirla, matris };
   });
 }
 

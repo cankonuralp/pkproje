@@ -4,6 +4,7 @@
 import { z } from "../../sema/ortak.ts";
 import type { Sorgulayici } from "../db/kiraci.ts";
 import { ekle, guncelle, tablo, type GuncelleSonucu, type Iz } from "../db/yazici.ts";
+import { DUZEYLER } from "../yetki/tanim.ts";
 
 const onek = z.string().regex(/^[A-Z]{1,4}$/, "Önek: 1–4 büyük harf");
 const gun = (en: number, cok: number) => z.number().int().min(en).max(cok);
@@ -34,6 +35,8 @@ export const AYAR_BOLUMLERI = {
   saklama: z.object({ yil: gun(5, 20).default(5) }),
   /** Yapay zekâ (aç / kapa, kişi başı aylık sınır); API anahtarı sırlarda */
   yapay_zeka: z.object({ acik: z.boolean().default(false), kisi_aylik_sinir: gun(0, 100000).default(200) }),
+  /** Rol yetkileri (Personel › Rol yetkileri; reisim 32): modül → rol sırasıyla 6 düzey. Boş = önerilen düzen. Okuma / yazma src/server/yetki/matris.ts */
+  rol_yetki: z.object({ matris: z.record(z.string().regex(/^(\d{1,2}|hareket)$/), z.array(z.enum(DUZEYLER)).length(6)).default({}) }),
 } as const;
 export type AyarBolumu = keyof typeof AYAR_BOLUMLERI;
 export type Ayar<B extends AyarBolumu> = z.infer<(typeof AYAR_BOLUMLERI)[B]>;

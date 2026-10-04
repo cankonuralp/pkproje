@@ -16,7 +16,7 @@ let sira = 0;
 async function bozuk<T>(dosya: string, ...degisim: [string, string][]): Promise<T> {
   let k = readFileSync(dosya, "utf8");
   for (const [eski, yeni] of degisim) { assert.ok(k.includes(eski), `bozulacak satır kaynakta yok: ${eski}`); k = k.split(eski).join(yeni); }
-  k = k.replace(/from "\.\.\/db\/([\w.]+)"/g, (_, a) => `from "${mutlak(`src/server/db/${a}`)}"`).replace(/from "\.\.\/\.\.\/sema\/([\w.]+)"/g, (_, a) => `from "${mutlak(`src/sema/${a}`)}"`);
+  k = k.replace(/from "\.\.\/(db|yetki)\/([\w.]+)"/g, (_, d, a) => `from "${mutlak(`src/server/${d}/${a}`)}"`).replace(/from "\.\.\/\.\.\/sema\/([\w.]+)"/g, (_, a) => `from "${mutlak(`src/sema/${a}`)}"`);
   const yol = join(klasor, `${sira++}-${dosya.split("/").pop()}`);
   writeFileSync(yol, k);
   return import(pathToFileURL(yol).href);

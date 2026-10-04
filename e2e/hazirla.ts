@@ -35,6 +35,7 @@ export default async function hazirla(_ayar: FullConfig) {
   await ac("/personel");
   const kart = await sayfa.locator('a[href^="/personel/"]:not([href="/personel/yeni"])').first().getAttribute("href");
   await ac("/personel/yeni");
+  await ac("/personel/roller");
   if (kart) { await ac(kart); await ac(`${kart}/duzenle`); }
   await ac("/giris/parola");
   await tarayici.close();
