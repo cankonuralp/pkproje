@@ -206,3 +206,11 @@ export async function kartDosyasiGorulur(db: Sorgulayici, kisi: YetkiHesabi, tab
   const p = await kayitKisisi(db, tablo_, kayitId);
   return !!p && (await kartGorur(db, kisi, p));
 }
+
+/** Planlar için (Plan aç uyarısı "ekipte bu türe atanmış denetçi yok", L4): kişi → atandığı türler (geçerli atamalar). Yetki ÇAĞIRANDA. */
+export async function atamaHaritasi(db: Sorgulayici): Promise<Record<string, string[]>> {
+  const r = await db.sorgu<{ personel_id: string; tur_id: string }>("SELECT personel_id::text, tur_id::text FROM ekipman_atamasi WHERE kaldirildi IS NULL");
+  const h: Record<string, string[]> = {};
+  for (const x of r.rows) (h[x.personel_id] ??= []).push(x.tur_id);
+  return h;
+}

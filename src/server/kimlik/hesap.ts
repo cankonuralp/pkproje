@@ -16,6 +16,13 @@ export async function personelHesaplari(db: Sorgulayici, personelIdleri: readonl
   return new Map(r.rows.map((x) => [x.personel_id, { id: x.id, personelId: x.personel_id, eposta: x.eposta, durum: x.durum, roller: x.roller, sonGiris: x.son, olustu: x.olustu }]));
 }
 
+/** belli roldeki AÇIK (ilk / etkin) hesaplar, personeliyle — Planlar'ın denetçi adayları için (Personel üzerinden; yetki ÇAĞIRANDA) */
+export async function roldekiHesaplar(db: Sorgulayici, rol: Rol): Promise<{ id: string; personelId: string; durum: "ilk" | "etkin" }[]> {
+  return (await db.sorgu<{ id: string; personel_id: string; durum: "ilk" | "etkin" }>(
+    "SELECT id::text, personel_id::text, durum FROM hesap WHERE personel_id IS NOT NULL AND durum <> 'pasif' AND $1 = ANY (roller)", [rol])).rows
+    .map((x) => ({ id: x.id, personelId: x.personel_id, durum: x.durum }));
+}
+
 /** oturumdaki hesabın personel kaydı (yoksa null) — "kendi" düzeyi için */
 export async function hesabinPersoneli(db: Sorgulayici, hesapId: string): Promise<string | null> {
   return (await db.sorgu<{ p: string | null }>("SELECT personel_id::text AS p FROM hesap WHERE id = $1", [hesapId])).rows[0]?.p ?? null;

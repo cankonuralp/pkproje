@@ -2341,6 +2341,24 @@ revizyon, alan kopyalama, hafif kusur devri, meslek eşleşme denetimi).
 - Emsal ürünler: https://opwire.app/iso-17020-periyodik-kontrol-yazilimi/ · https://17020muayene.vidco.com.tr/ · https://akuple.com/asansor-kontrol-yazilimi/ · https://ensyazilim.com/
 
 ## 11 · Değişiklik günlüğü
+- 2026-10-04 (309): **K3 Plan aç: ekipman kaydı, plan, plan ekibi; uyarılar engel değil** (maket plan-ac.html M6 2. tur; §3.4–3.5; L2, L4, L6, G1,
+  Ö5b; KOD-GECIS §3, §5). Göç 0023: **ekipman** (tesisin kalıcı kaydı; tür kataloğa bağlı; kod FİRMADA EŞSİZ, A–Z 0–9 tire, 3–20; silinmez, pasife
+  alınır; sistem öncesi son kontrol ayrı sütunda) + **ekipman_kodu** (verilen her kod geçmişe yazılır; kod değişse de eski kod başka ekipmana
+  verilmez — veritabanı tetiği) · **plan** (proje no P-AAYY-SIRA sunucu verir, firmada eşsiz, sonradan DEĞİŞMEZ — tetik; tesis değişmez;
+  bitiş ≥ başlangıç; durum Kabul bekliyor → Kabul edildi → Denetimde → Tamamlandı · Reddedildi; KÜNYE plan açılırken kayıttan: firma adı = müşteri
+  ünvanı, adres "adres, ilçe / il", SGK DETSİS NO) · **plan_ekip** (plan × denetçi + İSG-KATİP SÖZLEŞME ID; sözleşmeden gelir ya da el ile, boş
+  kalabilir). Hepsi RLS, silme hakkı yok. Modüller `src/modules/planlar/` (modül 13; plan açmak yalnız Planlar "yaz"; denetçi "kendi" = içinde olduğu
+  plan; muhasebe görmez) ve `src/modules/ekipman/` (şimdilik tesisin ekipmanını okur; ekle / pasif plan içinde). Plan aç ekranı `/planlar/ac`
+  (?musteri / ?tesis ön seçim): 1 Müşteri ve tesis · 2 Tarihler · 3 Denetçi (aday = denetçi rolündeki hesabı olan etkin personel; İSG-KATİP ID
+  tesisin kaydından, yoksa el ile + yazma yetkisi ve yürürlükte sözleşme varsa "Sözleşmeye de kaydet") · 4 Özet ve uyarılar (tesisin bütün ekipmanı
+  tür başına, kontrolü geçmiş / yaklaşan). ENGEL yalnız tesis, geçerli tarih, bitiş ≥ başlangıç, en az bir denetçi, pasif tesis; UYARI (plan açılır,
+  plan sayfasında da yazar): İSG-KATİP ID yok / onay geç / sözleşme bitmiş, EKİPNET yok, meslek yetkili olamaz, ilk girişini yapmadı, aynı günlerde
+  başka plan, tesiste açık plan, geçmiş tarih, sözleşme dışı, türe yetkili meslek yok, türe atanmış denetçi yok. Plan sayfası `/planlar/<id>`: başlık
+  proje no · müşteri, durum, uyarılar, plan bilgisi, tür başına ekipman. Planlar sayfasında "Plan aç" (yalnız yetkisi olana); liste ve plan içi
+  (kabul / red, denetim, ekipman ekle, raporlar, tamamla, künye düzenle) sıradaki kalem. **Ertelenen:** "Ekipmanları Excel'den yükle" (maket M6) —
+  ekipman ekle ile birlikte plan içi kaleminde. Kilit: tests/planlar.test.ts (8; gerçek PostgreSQL, iki firma: numara / künye / ID, engel ve uyarı,
+  yetki, rol değiştirme, firma sızıntısı, değişmez alanlar, ekipman kodu geçmişi) + bozan 2 (kod geçmişi tetiği, proje no tetiği) +
+  e2e/planlar.spec.ts (üç genişlik; tohum: her firmaya uydurma müşteri + tesis + tür + iki ekipman).
 - 2026-10-04 (308): **K3 Rapor formatı veritabanında: taslak → yayında → eski; şablondan başlat, önizle, yayınla** (RAPOR-FORMAT.md §4–5, §7;
   KOD-GECIS §3 "rapor_format", §5). Göç 0022 (rapor_format — tür başına TEK taslak ve TEK yayındaki sürüm (kısmi eşsiz dizinler), sıra v1, v2 …;
   tanım jsonb (her yazma ve okumada şemadan geçer, en çok ~1 MB), şema sürümü, kaynak hazır şablon, sürüm notu, yayınlayan; tür ile aynı firmaya

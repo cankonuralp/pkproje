@@ -42,6 +42,7 @@ export default async function hazirla(_ayar: FullConfig) {
   await ac("/zimmetler/hareketler");
   await ac("/araclar/tutanaklar");
   await ac("/sozlesmeler/yeni");
+  await ac("/planlar/ac");
   await ac("/dokumanlar/kriterler");
   await ac("/dokumanlar/diger");
   await ac("/dokumanlar/egitimler");
@@ -51,7 +52,7 @@ export default async function hazirla(_ayar: FullConfig) {
      ana dalda e2e/musteriler.spec kaydet sonrası /musteriler/<id> soğuk derlemede 5 sn'yi aştı (CI 321ce19, 94ec1ea). */
   const YOK = "00000000-0000-4000-8000-000000000000";
   for (const y of [`/musteriler/${YOK}`, `/musteriler/tesis/${YOK}`, `/ekipman-turleri/${YOK}`, `/ekipman-turleri/${YOK}/sablon/${YOK}`, `/olcum-cihazlari/${YOK}`, `/araclar/${YOK}`,
-    `/sozlesmeler/${YOK}`, `/dokumanlar/standart/${YOK}`, "/dokumanlar/kriterler/ZPKK01", `/zimmetler/varlik/d/${YOK}`]) await ac(y);
+    `/sozlesmeler/${YOK}`, `/planlar/${YOK}`, `/dokumanlar/standart/${YOK}`, "/dokumanlar/kriterler/ZPKK01", `/zimmetler/varlik/d/${YOK}`]) await ac(y);
   await ac("/giris/parola");
   await tarayici.close();
 }

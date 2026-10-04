@@ -157,8 +157,8 @@ export async function turOzeti(db: Sorgulayici, id: string, secenek: { kilitle?:
     `SELECT id::text, ad, kod, brans FROM ekipman_turu WHERE id = $1${secenek.kilitle ? " FOR UPDATE" : ""}`, [id])).rows[0] ?? null;
 }
 
-/** Personel için (ekipman ataması): bütün türlerin adı ve branşı. Yetki ÇAĞIRANDA. */
-export async function turOzetleri(db: Sorgulayici): Promise<{ id: string; ad: string; brans: "m" | "e" }[]> {
-  return (await db.sorgu<{ id: string; ad: string; brans: "m" | "e" }>("SELECT id::text, ad, brans FROM ekipman_turu")).rows
+/** Personel (ekipman ataması) ve Planlar (plan özeti) için: bütün türlerin adı, kodu, branşı, Ek-III grubu, periyodu. Yetki ÇAĞIRANDA. */
+export async function turOzetleri(db: Sorgulayici): Promise<{ id: string; ad: string; kod: string; brans: "m" | "e"; grup: string; periyot: number }[]> {
+  return (await db.sorgu<{ id: string; ad: string; kod: string; brans: "m" | "e"; grup: string; periyot: number }>("SELECT id::text, ad, kod, brans, grup, periyot FROM ekipman_turu")).rows
     .sort((a, b) => (a.brans === b.brans ? a.ad.localeCompare(b.ad, "tr") : a.brans === "m" ? -1 : 1));
 }

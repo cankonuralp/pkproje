@@ -4,7 +4,7 @@
    Yazmalar güvenli yazıcıdan (sürüm kilidi + denetim izi). Liste yalnız listenin sütunlarını döndürür (09-B3). */
 import type { Sorgulayici } from "../../../server/db/kiraci.ts";
 import { ekle, guncelle, tablo, type Iz } from "../../../server/db/yazici.ts";
-import { hesabinPersoneli, hesapEpostaEsitle, personelHesaplari, type HesapOzeti } from "../../../server/kimlik/hesap.ts";
+import { hesabinPersoneli, hesapEpostaEsitle, personelHesaplari, roldekiHesaplar, type HesapOzeti } from "../../../server/kimlik/hesap.ts";
 import { canDo, duzey, type YetkiHesabi } from "../../../server/yetki/canDo.ts";
 import type { Matris } from "../../../server/yetki/tanim.ts";
 import { dogrula, type DogrulamaHatalari } from "../../../sema/ortak.ts";
@@ -132,4 +132,24 @@ export async function personelSecenekleri(db: Sorgulayici): Promise<{ id: string
   return (await db.sorgu<{ id: string; ad: string; meslek: string; meslek_metin: string | null }>(
     "SELECT id::text, ad, meslek, meslek_metin FROM personel WHERE durum = 'etkin'")).rows
     .map((x) => ({ id: x.id, ad: x.ad, meslek: x.meslek, meslekMetin: x.meslek_metin })).sort((a, b) => a.ad.localeCompare(b.ad, "tr"));
+}
+
+/** Planlar için (Plan aç): denetçi adayları — çalışan, hesabı açık (ilk ya da etkin) ve rolleri arasında denetçi olan kişiler; eksik bilgi
+    (EKİPNET, meslek, ilk giriş) Planlar'da UYARI olarak gösterilir, engel değil (karar 38–39, M6). Yetki ÇAĞIRANDA. */
+export async function denetciAdaylari(db: Sorgulayici): Promise<{ id: string; ad: string; meslek: string; meslekMetin: string | null; ekipnet: string | null; hesapDurum: "ilk" | "etkin" }[]> {
+  const hesaplar = new Map((await roldekiHesaplar(db, "denetci")).map((h) => [h.personelId, h.durum]));
+  if (!hesaplar.size) return [];
+  return (await db.sorgu<{ id: string; ad: string; meslek: string; meslek_metin: string | null; ekipnet: string | null }>(
+    "SELECT id::text, ad, meslek, meslek_metin, ekipnet FROM personel WHERE durum = 'etkin' AND id = ANY ($1::uuid[])", [[...hesaplar.keys()]])).rows
+    .map((x) => ({ id: x.id, ad: x.ad, meslek: x.meslek, meslekMetin: x.meslek_metin, ekipnet: x.ekipnet, hesapDurum: hesaplar.get(x.id)! }))
+    .sort((a, b) => a.ad.localeCompare(b.ad, "tr"));
+}
+
+/** Planlar için (plan kartı): verilen kişilerin adı ve mesleki bilgisi — ayrılan personel dahil (eski planlarda adı görünsün). Yetki ÇAĞIRANDA. */
+export async function personelOzetleri(db: Sorgulayici, idler: readonly string[]): Promise<{ id: string; ad: string; meslek: string; meslekMetin: string | null; ekipnet: string | null }[]> {
+  const l = idler.filter((x) => /^[0-9a-f-]{36}$/.test(x));
+  if (!l.length) return [];
+  return (await db.sorgu<{ id: string; ad: string; meslek: string; meslek_metin: string | null; ekipnet: string | null }>(
+    "SELECT id::text, ad, meslek, meslek_metin, ekipnet FROM personel WHERE id = ANY ($1::uuid[])", [l])).rows
+    .map((x) => ({ id: x.id, ad: x.ad, meslek: x.meslek, meslekMetin: x.meslek_metin, ekipnet: x.ekipnet }));
 }

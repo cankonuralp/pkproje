@@ -20,7 +20,7 @@ const MODUL = 12;
 export const DOSYA = { sozlesme: "is_sozlesmesi", isg: "isg_katip", sablon: "sozlesme_sablon" } as const;
 const SOZ = tablo({ ad: "is_sozlesmesi", sutunlar: ["no", "musteri_id", "baslangic", "bitis", "vade", "yenileme", "musteri_imza", "imzali_dosya"] });
 const KAPSAM = tablo({ ad: "is_sozlesmesi_tesis", sutunlar: ["sozlesme_id", "tesis_id"] });
-const ISG = tablo({ ad: "isg_katip", sutunlar: ["tesis_id", "personel_id", "no", "onay", "bitis", "dosya_id", "onceki", "kaldirildi"] });
+const ISG = tablo({ ad: "isg_katip", sutunlar: ["tesis_id", "personel_id", "no", "onay", "bitis", "dosya_id", "onceki", "kaldirildi", "kullanildi"] });
 const SABLON = tablo({ ad: "sozlesme_sablon", sutunlar: ["surum_no", "dosya_id", "kaldirildi"] });
 const UUID = /^[0-9a-f]{8}-[0-9a-f]{4}-[0-9a-f]{4}-[0-9a-f]{4}-[0-9a-f]{12}$/;
 
@@ -232,6 +232,31 @@ export async function isgIdBul(db: Sorgulayici, tesisId: string, personelId: str
   if (!UUID.test(tesisId) || !UUID.test(personelId)) return null;
   return (await db.sorgu<{ id: string; no: string; onay: string | null; bitis: string | null }>(
     "SELECT id::text, no, onay::text, bitis::text FROM isg_katip WHERE tesis_id = $1 AND personel_id = $2 AND NOT onceki AND kaldirildi IS NULL", [tesisId, personelId])).rows[0] ?? null;
+}
+
+/** Planlar için (Plan aç): tesisin geçerli İSG-KATİP SÖZLEŞME ID'leri, denetçi başına. Yetki ÇAĞIRANDA. */
+export async function tesisIsgKayitlari(db: Sorgulayici, tesisId: string): Promise<{ id: string; personelId: string; no: string; onay: string | null; bitis: string | null }[]> {
+  if (!UUID.test(tesisId)) return [];
+  return (await db.sorgu<{ id: string; personel_id: string; no: string; onay: string | null; bitis: string | null }>(
+    "SELECT id::text, personel_id::text, no, onay::text, bitis::text FROM isg_katip WHERE tesis_id = $1 AND NOT onceki AND kaldirildi IS NULL", [tesisId])).rows
+    .map((x) => ({ id: x.id, personelId: x.personel_id, no: x.no, onay: x.onay, bitis: x.bitis }));
+}
+
+/** Planlar için (Plan aç uyarısı "plan günü iş sözleşmesinin dışında", Ö5b): tesisi kapsayan iş sözleşmeleri. Yetki ÇAĞIRANDA. */
+export async function tesisSozlesmeleri(db: Sorgulayici, tesisId: string): Promise<{ id: string; no: string; baslangic: string; bitis: string }[]> {
+  if (!UUID.test(tesisId)) return [];
+  return (await db.sorgu<{ id: string; no: string; baslangic: string; bitis: string }>(
+    `SELECT s.id::text, s.no, s.baslangic::text, s.bitis::text FROM is_sozlesmesi s JOIN is_sozlesmesi_tesis k ON k.sozlesme_id = s.id AND k.firma_id = s.firma_id
+      WHERE k.tesis_id = $1 ORDER BY s.baslangic DESC`, [tesisId])).rows;
+}
+
+/** Planlar için: İSG-KATİP ID'si bir planda kullanıldı (kullanılmış ID silinmez, yalnız düzeltilir — M5 G). İlk kullanım tarihi kalır. */
+export async function isgKullanildi(db: Sorgulayici, kim: { ad: string }, isgId: string, tarih: string): Promise<void> {
+  if (!UUID.test(isgId)) return;
+  const r = (await db.sorgu<{ surum: number; kullanildi: string | null }>("SELECT surum, kullanildi::text FROM isg_katip WHERE id = $1 FOR UPDATE", [isgId])).rows[0];
+  if (!r || r.kullanildi) return;
+  const g = await guncelle(db, ISG, isgId, r.surum, { kullanildi: tarih }, { kim: kim.ad, ne: "isg.kullanildi" });
+  if (g.durum === "cakisma" || g.durum === "yok") throw new Error("İSG-KATİP kaydı kullanıldı olarak işaretlenemedi");
 }
 
 export async function sablonlar(db: Sorgulayici, kim: Kisi): Promise<SablonSatiri[]> {

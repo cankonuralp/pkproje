@@ -1,0 +1,16 @@
+/* Planlar ekranları (maket plan-ac.html, planlarim.html: .a-onay-kutusu, .a-uyari-metin, .a-kod, .a-sayi, .a-alan). Renk / ölçü tokens.css'ten. */
+.uyari { color: var(--uyari-yazi); font-weight: 600; }
+.sayi { font-variant-numeric: tabular-nums; font-weight: 600; }
+.kod { font-weight: 700; font-variant-numeric: tabular-nums; letter-spacing: .01em; overflow-wrap: anywhere; }
+.secim { display: flex; align-items: flex-start; gap: 8px; min-height: var(--tus-y); cursor: pointer; }
+.secim input { width: 18px; height: 18px; margin: 3px 0 0; flex: none; accent-color: var(--birincil); }
+.altMetin { display: block; color: var(--yazi2); font-size: var(--boy-kucuk); }
+.not { width: 100%; min-height: 72px; padding: 8px 10px; border: 1px solid var(--kenar-alan); border-radius: var(--r-orta); background: var(--kart); color: var(--yazi); font: inherit; resize: vertical; }
+.seritler { display: grid; gap: 8px; margin: 12px 0 0; }
+.altBaslik { margin: 16px 0 8px; font-size: var(--boy-govde); font-weight: 700; }
+.bosSatir { margin: 0; padding: 14px 0; color: var(--yazi2); font-size: var(--boy-kucuk); }
+.isgSatiri { display: grid; gap: 4px; }
+.kutu { display: flex; align-items: center; gap: 8px; min-height: var(--tus-y); }
+.kutu input { width: 18px; height: 18px; margin: 0; accent-color: var(--birincil); }
+.tablo { margin: 12px 0 0; }
+.satir { display: block; }
