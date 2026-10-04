@@ -2335,6 +2335,15 @@ revizyon, alan kopyalama, hafif kusur devri, meslek eşleşme denetimi).
 - Emsal ürünler: https://opwire.app/iso-17020-periyodik-kontrol-yazilimi/ · https://17020muayene.vidco.com.tr/ · https://akuple.com/asansor-kontrol-yazilimi/ · https://ensyazilim.com/
 
 ## 11 · Değişiklik günlüğü
+- 2026-10-04 (290): **K2 Personel 1: veri ve sunucu işlevleri** (maket personel.html; `src/modules/personel/`). Personel tablosu (ad, iş e-postası,
+  mobil imza telefonu, işe başlama, meslek + "diğer" adı, diploma / oda sicil / EKİPNET no, durum + ayrılış); giriş hesabı personele bağlı (karar 33).
+  Zorunlu yalnız ad soyad, işe başlama, meslek (karar 39); iletiler maketle aynı. Meslekler ve Ek-III grupları sabit tanımlarda (maketle ayna testi;
+  teknisyen yetkili kişi olamaz). **Yetki sunucuda:** firma yöneticisi ekler / değiştirir; planlama ve branş yöneticileri görür; muhasebe görmez; denetçi
+  yalnız kendi kartını görür ve **düzenleyemez** (meslek ve sicil numaraları yönetici işi — "kendi" düzeyi burada yalnız görmedir). Başka firmanın kaydı
+  "yok". İş e-postası firmada tek kişide; değişince giriş e-postası da değişir. **Ayrılan silinmez**; ayrılış tarihi işe başlamadan önce olamaz;
+  ayrılınca giriş hesabı veritabanı tetiğiyle kapanır, açık oturumu düşer. Eksik bilgi (EKİPNET boş, meslek yetkili değil) yalnız denetçide ve uyarı.
+  Ekranlar (liste, kart, form) sıradaki kalemde.
+- 2026-10-04: CI "Run failed" iletileri (6739afa, 2062f41): ikisi de sayfalayıcı odak hatası, düzeltme 37034be'den önceki koşular; 37034be yeşil.
 - 2026-10-04 (289): **K1 Çekirdek 10: beklenmeyen hata ekranı — K1 tamam.** Bir sayfa beklenmedik biçimde düşerse "Bu sayfa açılamadı · Beklenmeyen
   bir sorun oldu; yaptığınız son işlem kaydedilmemiş olabilir. Yeniden deneyin; sürerse firma yöneticinize bildirin." + **Yeniden dene** + **Ana sayfaya
   dön**; oturumlu sayfalarda menü yerinde kalır. Hatanın iç ayrıntısı (sorgu, dosya yolu) ekrana çıkmaz; yayında yalnız kısa başvuru kodu. **Makette bu

@@ -28,6 +28,17 @@ test("AYNA: plan ve rapor durum adları = onaylı maket (MV.PLAN_DURUM, MV.RAPOR
   assert.deepEqual(TANIMLAR.durumlar.rapor, al("RAPOR_DURUM"));
 });
 
+test("AYNA: Ek-III grupları ve meslekler = onaylı maket (MV.GRUPLAR, MV.MESLEKLER — Ek-III metninden)", () => {
+  const js = oku("docs/assets/maket-veri.js");
+  const govde = /MV\.GRUPLAR = (\[[\s\S]*?\n\s*\]);[\s\S]*?var MBKT = (\[[^\]]*\]);\s*MV\.MESLEKLER = (\[[\s\S]*?\n\s*\]);/.exec(js);
+  assert.ok(govde, "maket tanımları bulunamadı");
+  const gruplar = JSON.parse(JSON.stringify(vm.runInNewContext(`(${govde[1]})`))) as { k: string; ad: string; b: string | null }[];
+  const meslekler = JSON.parse(JSON.stringify(vm.runInNewContext(`var MBKT = ${govde[2]}; (${govde[3]})`))) as unknown[];
+  assert.deepEqual(TANIMLAR.ek3_gruplari, gruplar.map((x) => ({ k: x.k, ad: x.ad, b: x.b })));
+  assert.deepEqual(TANIMLAR.meslekler, meslekler);
+  assert.ok(TANIMLAR.meslekler.find((m) => m.k === "teknisyen")?.g.length === 0, "teknisyen yetkili kişi olamaz");
+});
+
 test("AYNA: eğri çarpanları ve yasal mesai sınırları = KOD-GECIS", () => {
   const md = oku("KOD-GECIS.md");
   assert.ok(md.includes("eğri çarpanları (B 5 · C 10 · D 15)"));

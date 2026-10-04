@@ -5,6 +5,10 @@
    önceki kiracı sızmaz. `pg` bu klasör dışında içe aktarılmaz (tests/kiraci-suzgeci.test.ts denetler). */
 import pg from "pg";
 
+/* takvim tarihi (DATE) metin olarak gelir ("YYYY-MM-DD"): sunucunun saat dilimi günü kaydırmasın, yazıcının "değişti mi" karşılaştırması
+   formdan gelen değerle aynı biçimde yapılsın (2026-10-04, personel işe başlama tarihi) */
+pg.types.setTypeParser(1082, (v: string) => v);
+
 const UUID = /^[0-9a-f]{8}-[0-9a-f]{4}-[0-9a-f]{4}-[0-9a-f]{4}-[0-9a-f]{12}$/;
 
 export interface Sorgulayici {
