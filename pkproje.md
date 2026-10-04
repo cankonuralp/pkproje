@@ -2341,6 +2341,13 @@ revizyon, alan kopyalama, hafif kusur devri, meslek eşleşme denetimi).
 - Emsal ürünler: https://opwire.app/iso-17020-periyodik-kontrol-yazilimi/ · https://17020muayene.vidco.com.tr/ · https://akuple.com/asansor-kontrol-yazilimi/ · https://ensyazilim.com/
 
 ## 11 · Değişiklik günlüğü
+- 2026-10-04 (304): **K2 Eğitimler: eğitim türleri, kayıtlar, tekrar takibi** (maket egitimler.html, M16; Dökümanlar'ın sekmesi, yetkisi modül 10).
+  Göç 0019 (egitim_turu — firmanın eklediği ad (büyük / küçük harf farkıyla eşsiz) + tekrar süresi 1–120 ay; egitim_kaydi — kişi × tür × tarih, tekrar
+  tarihi kayıt anında türün süresinden yazılır (tür süresi sonradan değişse geçmiş kayıt değişmez), kişi × eğitim başına TEK güncel kayıt (kısmi eşsiz
+  dizin), tekrarı kaydedilince eskisi önceki; sertifika PDF'i isteğe bağlı; silme hakkı yok). Tarih ileri olamaz, güncel kayıttan eski tarihli tekrar
+  olamaz (ENGEL). Tekrarı geçen / eşik içinde yaklaşan için şerit (eşik firma ayarı uyari_esikleri.egitim). Yetki: yöneticiler yazar; planlama görür;
+  denetçi yalnız kendi kayıtlarını ve sertifikasını görür; muhasebe görmez. Personel kartı için dışa açık kisininEgitimleri. Sayfalar:
+  /dokumanlar/egitimler · /dokumanlar/egitimler/turler. Yan menü balonu ve Uyarılar listesi Uyarılar kaleminde.
 - 2026-10-04 (303): **K2 Dökümanlar 1: standart kütüphanesi (sürümlü), muayene kriterleri, diğer dökümanlar** (maket standartlar.html, M7).
   Göç 0018 (standart — her satır bir sürüm; numara başına TEK güncel sürüm (kısmi eşsiz dizin), numara + sürüm eşsiz; yeni sürüm eskisini "bitti"
   tarihiyle önceki yapar, dosyası saklanır; güncel kaldırılınca bir önceki yeniden güncel · dokuman — ad, tür (listeden), kod, revizyon, PDF;

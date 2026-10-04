@@ -1,0 +1,11 @@
+/* Eğitimler ekranları (maket egitimler.html: .a-ad-bag, .a-tarih-gun, .a-uyari-metin) */
+.ad {
+  display: inline-flex; align-items: center; min-height: var(--tus-y); padding: 0; border: 0; background: none; font: inherit; text-align: left; cursor: pointer;
+  color: var(--onay-yazi); font-weight: 600; text-decoration: underline; text-decoration-color: transparent; text-underline-offset: 3px;
+}
+.ad:hover { text-decoration-color: currentColor; }
+.tarih { display: block; font-variant-numeric: tabular-nums; }
+.uyari { display: block; color: var(--uyari-yazi); font-size: var(--boy-kucuk); font-weight: 600; }
+.dosya { width: 100%; min-height: var(--tus-y); font: inherit; color: var(--yazi); }
+.tuslar { display: flex; flex-wrap: wrap; justify-content: flex-end; gap: 8px; }
+.seritler { display: grid; gap: 8px; margin: 0 0 12px; }
