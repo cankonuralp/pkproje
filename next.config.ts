@@ -12,6 +12,8 @@ const ikonOzeti = createHash("sha256").update(readFileSync(`public/${IKON_DOSYAS
 
 const ortak: NextConfig = {
   poweredByHeader: false,
+  /* sunucu eylemiyle dosya yükleme (rapor formatı PDF'i en çok 25 MB — src/server/dosya/tur.ts SINIR); varsayılan 1 MB */
+  experimental: { serverActions: { bodySizeLimit: "26mb" } },
   env: { NEXT_PUBLIC_IKON_ADRESI: `/${IKON_DOSYASI}?v=${ikonOzeti}` },
 };
 

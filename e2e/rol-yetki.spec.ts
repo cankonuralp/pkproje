@@ -4,10 +4,17 @@
 import { expect, test } from "@playwright/test";
 import { girisli, hazir } from "./yardimci";
 
-test("rol yetkileri: yönetici değiştirir, denetçinin menüsü değişir; önerilen düzene dönülür", async ({ page, context }) => {
+test("rol yetkileri: yönetici değiştirir, denetçinin menüsü değişir; önerilen düzene dönülür", async ({ page, context }, bilgi) => {
   await girisli(page, "yonetici");
   await page.goto("/personel/roller");
   await hazir(page);
+  /* 2026-10-04: matris FİRMA GENELİ tek ayar; üç genişlik aynı anda koşar → değiştiren adım yalnız masaüstünde (öteki projeler aynı anda
+     değiştirip birbirinin beklediği düzeni bozuyordu). Tablet ve telefonda sayfa, sekme ve tablo açılır. */
+  if (bilgi.project.name !== "masaustu") {
+    await expect(page.getByRole("navigation", { name: "Personel bölümleri" }).getByRole("link", { name: "Rol yetkileri" })).toHaveAttribute("aria-current", "page");
+    await expect(page.getByRole("button", { name: "Rol yetkilerini düzenle" })).toBeVisible();
+    return;
+  }
   await expect(page.getByRole("navigation", { name: "Personel bölümleri" }).getByRole("link", { name: "Rol yetkileri" })).toHaveAttribute("aria-current", "page");
   await expect(page.getByText("Önerilen başlangıç düzeni")).toBeVisible();
   await page.getByRole("button", { name: "Rol yetkilerini düzenle" }).click();

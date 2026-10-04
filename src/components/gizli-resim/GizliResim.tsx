@@ -2,7 +2,9 @@
 /* GİZLİ RESİM — depodaki görsel YALNIZ bu bileşenle gösterilir (09-A3): adres <img src>'ye yazılmaz; görsel oturumlu istekle kimliğinden
    indirilir, blob: adresine çevrilir, oturum boyunca önbellekte kalır (aynı dosya ikinci kez inmez — B2), görünür alana girince yüklenir.
    İnemezse görsel yerine kısa ileti (sessiz boşluk yok). */
-import { useEffect, useRef, useState } from "react";
+import { useEffect, useRef, useState, type ReactNode } from "react";
+import { Ikon } from "../ikon/Ikon";
+import { tusSinifi } from "../tus/Tus";
 import stil from "./GizliResim.module.css";
 
 const onbellek = new Map<string, Promise<string>>();
@@ -48,4 +50,11 @@ export function GizliResim({ dosyaId, alt, className }: { dosyaId: string; alt: 
       {adres ? <img src={adres} alt={alt} loading="lazy" decoding="async" className={stil.resim} /> : hata ? <span className={stil.hata}>Görsel açılamadı</span> : null}
     </span>
   );
+}
+
+/** DOSYAYI AÇ (PDF): depodaki dosyanın adresi yalnız bu dosyada üretilir (tests/dosya.test.ts TARAMA). Yeni sekmede, oturumlu tek uçtan
+    (yetki ve kiracı orada); kalıcı herkese açık bağlantı değildir. */
+export function DosyaAcTusu({ dosyaId, children, ikon = "eye" }: { dosyaId: string; children: ReactNode; ikon?: string }) {
+  if (!UUID.test(dosyaId)) return null;
+  return <a className={tusSinifi("ikincil")} href={`/api/dosya/${dosyaId}`} target="_blank" rel="noopener"><Ikon ad={ikon} kucuk />{children}</a>;
 }

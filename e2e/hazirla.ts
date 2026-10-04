@@ -37,6 +37,7 @@ export default async function hazirla(_ayar: FullConfig) {
   await ac("/personel/yeni");
   await ac("/personel/roller");
   await ac("/musteriler");
+  await ac("/ekipman-turleri?brans=e");
   if (kart) { await ac(kart); await ac(`${kart}/duzenle`); }
   await ac("/giris/parola");
   await tarayici.close();

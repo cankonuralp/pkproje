@@ -2341,6 +2341,13 @@ revizyon, alan kopyalama, hafif kusur devri, meslek eşleşme denetimi).
 - Emsal ürünler: https://opwire.app/iso-17020-periyodik-kontrol-yazilimi/ · https://17020muayene.vidco.com.tr/ · https://akuple.com/asansor-kontrol-yazilimi/ · https://ensyazilim.com/
 
 ## 11 · Değişiklik günlüğü
+- 2026-10-04 (298): **K2 Ekipman türleri 1: katalog, tür sayfası, rapor formatı PDF'i** (maket ekipman-turleri.html, M3 onaylı 2026-09-26; AA5). Göç 0013
+  (ekipman_turu: firmada eşsiz, DEĞİŞMEZ 2–3 harf kod — veritabanı tetiği; tur_format: sürümlü PDF, kaldırılır silinmez; tür + format + dosya AYNI
+  firmada bağlı; dosya tablosuna (firma_id, id) eşsizliği). Katalog Mekanik / Elektrik sekmeli; tür ekle / düzenle (Ek-III dışında branş seçilir,
+  öteki grupta gruptan); rapor formatı yükle (yalnız baytlardan PDF, 25 MB; sunucu eylemi gövde sınırı 26 MB) · sürümler (kullanımda / önceki, PDF'i
+  aç, kaldır). Dosya erişimi: türü gören açar (src/server/dosya/erisim.ts); dosya adresini yalnız GizliResim.tsx üretir (DosyaAcTusu). ⚑ Deneme
+  yayınında Vercel tek istekte en çok 4,5 MB alır ve dosyalar geçici klasörde durur — kalıcı depo (Supabase Storage, doğrudan yükleme) K7. Kullanılacak
+  ölçüm cihazları, standartlar, ölçüm metodu, Bakanlık formatı ve Format kurucu kendi kalemlerinde. Müşteri girişi müşteri paneliyle (K3) birlikte.
 - 2026-10-04 (297): **K2 Müşteriler 1: müşteri ve tesis ekranları** (maket musteriler.html, M2 onaylı 2026-09-26; reisim: *"tüm ekranları yap"*). Göç 0012
   (musteri, tesis; RLS ENABLE + FORCE + politika; tesis firma + müşteri BİRLİKTE bağlı — başka firmanın müşterisine satır yazılamaz; müşteri e-postası
   firmada tek; silme hakkı yok). Liste (süzgeç, İl, Görünüm: etkin / pasif / hepsi) · müşteri sayfası (bilgiler, tesisler, eksik bilgi şeridi) · tesis

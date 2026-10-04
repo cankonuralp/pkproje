@@ -1,6 +1,9 @@
 /* DOSYA ERİŞİM KAYDI — modül başına "bu kişi bu kaydı görebilir mi" denetimi (09-A2). Modül dosya bağladığında kendi denetimini buraya ekler
    (ör. personel: özlük belgesi yalnız kendisi + yönetici; rapor: canDo + kendi / branş). Kaydı olmayan modülün dosyası KİMSEYE açılmaz.
-   K1 (2026-10-04): henüz dosya bağlayan modül yok → boş. */
+   2026-10-04 (K2): ekipman türünün rapor formatı PDF'i — türü görebilen açar. */
+import { DOSYA_MODULU as TUR_DOSYASI, turDosyasiGorulur } from "../../modules/ekipman-turleri/server/turler.ts";
 import type { ErisimKaydi } from "./dosya.ts";
 
-export const DOSYA_ERISIMI: ErisimKaydi = Object.freeze({});
+export const DOSYA_ERISIMI: ErisimKaydi = Object.freeze({
+  [TUR_DOSYASI]: (db, kisi, kayitId) => turDosyasiGorulur(db, kisi as Parameters<typeof turDosyasiGorulur>[1], kayitId),
+});
