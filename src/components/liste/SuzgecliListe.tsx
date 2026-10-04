@@ -89,14 +89,19 @@ export function SuzgecliListe<K>({ s, on, baslik, sutunlar, anahtar, href, bosVe
    yeni sayfanın tuşuna geçer (yeniden çizimde kaybolmaz) */
 export function Sayfalayici({ birim, toplam, boy, sayfa, degistir }: { birim: string; toplam: number; boy: number; sayfa: number; degistir: (n: number) => void }) {
   const kap = useRef<HTMLElement>(null);
-  const odakla = useRef(false);
+  /* odaklanacak sayfa NUMARASI (bayrak değil): tuş hangi çizimde DOM'a gelirse gelsin o sayfanın tuşu odak alır. 2026-10-04: CI'da (telefon) odak
+     "Sayfa 1"de kaldı (6739afa); yerelde yeniden üretilemedi. Önceki hâli yalnız [sayfa] değişince bir kez "aria-current"ı arıyordu — o çizimde
+     kaçırılırsa bir daha denemiyordu. Şimdi her çizimden sonra, hedef sayfanın tuşu odak alana kadar. */
+  const hedef = useRef<number | null>(null);
   useEffect(() => {
-    if (!odakla.current) return;
-    kap.current?.querySelector<HTMLButtonElement>('[aria-current="page"]')?.focus();
-    odakla.current = false;
-  }, [sayfa]);
+    if (hedef.current === null || hedef.current !== sayfa) return;
+    const tus = kap.current?.querySelector<HTMLButtonElement>(`button[aria-label="Sayfa ${sayfa}"]`);
+    if (!tus) return;
+    tus.focus();
+    if (document.activeElement === tus) hedef.current = null;
+  });
   const n = Math.ceil(toplam / boy);
-  const git = (i: number) => { odakla.current = true; degistir(i); };
+  const git = (i: number) => { hedef.current = i; degistir(i); };
   return (
     <nav className={stil.sayfalar} aria-label={`${birim} sayfaları`} ref={kap}>
       <span className={stil.sayfaBilgi}>{(sayfa - 1) * boy + 1}–{Math.min(toplam, sayfa * boy)} / {toplam}</span>

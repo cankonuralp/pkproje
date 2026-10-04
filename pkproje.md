@@ -2335,6 +2335,9 @@ revizyon, alan kopyalama, hafif kusur devri, meslek eşleşme denetimi).
 - Emsal ürünler: https://opwire.app/iso-17020-periyodik-kontrol-yazilimi/ · https://17020muayene.vidco.com.tr/ · https://akuple.com/asansor-kontrol-yazilimi/ · https://ensyazilim.com/
 
 ## 11 · Değişiklik günlüğü
+- 2026-10-04: CI'da (6739afa, telefon) sayfalayıcıda "Sayfa 3"e basınca odak "Sayfa 1" tuşunda kaldı (2026-10-03'te eklenen tanılama yakaladı).
+  Yerelde yeniden üretemedim (30/30). Odak artık hedef sayfanın numarasıyla, her çizimden sonra o tuş odak alana kadar verilir (önceki hâli tek
+  çizimde kaçırırsa bir daha denemiyordu). Test gevşetilmedi; yeniden düşerse tanılama yine nerede kaldığını yazar.
 - 2026-10-04 (288): **K1 Çekirdek 9: sabit tanımlar ve API sürümü** (ARKA-UC §2.1). Herkes için aynı, yavaş değişen tanımlar tek yerde
   (`src/tanim/tanimlar.ts`, şemadan geçer) ve cihaza **karma adlı JSON** olarak iner (`/api/tanim/<ad>.<karma>.json`): içerik değişince adı değişir,
   aynı ad sonsuz önbellekte kalır (çevrimdışı pakete K3'te girer); dizin `/api/tanim/dizin`; oturum gerekir. İlk tanımlar onaylı kaynaklardan: plan ve
