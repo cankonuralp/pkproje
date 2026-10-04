@@ -2,7 +2,8 @@
    (ör. personel: özlük belgesi yalnız kendisi + yönetici; rapor: canDo + kendi / branş). Kaydı olmayan modülün dosyası KİMSEYE açılmaz.
    2026-10-04 (K2): ekipman türünün rapor formatı PDF'i — türü görebilen açar · ölçüm cihazının kalibrasyon sertifikası — cihazı görebilen açar ·
    zimmet teslim fotoğrafı (araç tutanağı açıları dahil) — hareketi görebilen açar · imzalı iş sözleşmesi — sözleşmeyi gören (gör / yaz) açar ·
-   İSG-KATİP PDF'i — ID'yi gören (denetçi yalnız kendi ID'sininkini) · sözleşme şablonu — yalnız değiştirebilen. */
+   İSG-KATİP PDF'i — ID'yi gören (denetçi yalnız kendi ID'sininkini) · sözleşme şablonu — yalnız değiştirebilen · standart ve döküman PDF'i — Dökümanlar'ı gören. */
+import { DOSYA as DOK_DOSYA, dokumanDosyasiGorulur, standartDosyasiGorulur } from "../../modules/dokumanlar/server/dokumanlar.ts";
 import { DOSYA_MODULU as TUR_DOSYASI, turDosyasiGorulur } from "../../modules/ekipman-turleri/server/turler.ts";
 import { DOSYA_MODULU as CIHAZ_DOSYASI, cihazDosyasiGorulur } from "../../modules/olcum-cihazlari/server/cihazlar.ts";
 import { DOSYA as SOZ_DOSYA, isgDosyasiGorulur, sablonDosyasiGorulur, sozlesmeDosyasiGorulur } from "../../modules/sozlesmeler/server/sozlesmeler.ts";
@@ -17,4 +18,6 @@ export const DOSYA_ERISIMI: ErisimKaydi = Object.freeze({
   [SOZ_DOSYA.sozlesme]: (db, kisi, kayitId) => sozlesmeDosyasiGorulur(db, kisi as YetkiHesabi, kayitId),
   [SOZ_DOSYA.isg]: (db, kisi, kayitId) => isgDosyasiGorulur(db, kisi as YetkiHesabi, kayitId),
   [SOZ_DOSYA.sablon]: (db, kisi) => sablonDosyasiGorulur(db, kisi as YetkiHesabi),
+  [DOK_DOSYA.standart]: (db, kisi, kayitId) => standartDosyasiGorulur(db, kisi as YetkiHesabi, kayitId),
+  [DOK_DOSYA.dokuman]: (db, kisi, kayitId) => dokumanDosyasiGorulur(db, kisi as YetkiHesabi, kayitId),
 });

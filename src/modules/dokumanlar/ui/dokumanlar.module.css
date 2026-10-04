@@ -1,0 +1,16 @@
+/* Dökümanlar ekranları (maket standartlar.html: .a-no, .a-gecmis, .a-kosullar) */
+.no {
+  display: inline-flex; align-items: center; min-height: var(--tus-y);
+  color: var(--onay-yazi); font-weight: 600; font-variant-numeric: tabular-nums; text-decoration: underline; text-decoration-color: transparent; text-underline-offset: 3px;
+}
+.no:hover { text-decoration-color: currentColor; }
+.dosya { width: 100%; min-height: var(--tus-y); font: inherit; color: var(--yazi); }
+.tuslar { display: flex; flex-wrap: wrap; justify-content: flex-end; gap: 8px; }
+.surumler { list-style: none; margin: 0; padding: 0; display: grid; }
+.surumler li { display: flex; flex-wrap: wrap; align-items: center; justify-content: space-between; gap: 8px; padding: 12px 0; border-top: 1px solid var(--kenar); }
+.surumler li:first-child { border-top: 0; }
+.surumNe { display: grid; gap: 2px; min-width: 0; }
+.not { color: var(--yazi2); font-size: var(--boy-kucuk); }
+.notlar { margin: 0; padding-left: 20px; display: grid; gap: 8px; }
+.madde { display: grid; gap: 4px; }
+.kaynak { color: var(--yazi2); font-size: var(--boy-kucuk); }

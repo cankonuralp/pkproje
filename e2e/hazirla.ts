@@ -42,6 +42,8 @@ export default async function hazirla(_ayar: FullConfig) {
   await ac("/zimmetler/hareketler");
   await ac("/araclar/tutanaklar");
   await ac("/sozlesmeler/yeni");
+  await ac("/dokumanlar/kriterler");
+  await ac("/dokumanlar/diger");
   if (kart) { await ac(kart); await ac(`${kart}/duzenle`); }
   await ac("/giris/parola");
   await tarayici.close();

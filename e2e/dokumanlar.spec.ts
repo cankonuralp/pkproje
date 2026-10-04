@@ -1,0 +1,59 @@
+/* NEREDEN GELDİ: K2 Dökümanlar (2026-10-04) — maket standartlar.html (M7). Gerçek tarayıcıda, üç genişlikte: standart yükle (PDF zorunlu,
+   numara büyük harfe) → standart sayfası "Güncel" → yeni sürüm yükle → eskisi "Önceki" · muayene kriterleri belgesi açılır · diğer döküman
+   yükle · denetçi görür, yükleyemez. Her proje kendi uydurma standart numarasını açar. */
+import { expect, test } from "@playwright/test";
+import { girisli, hazir } from "./yardimci";
+
+const PDF = { name: "standart.pdf", mimeType: "application/pdf", buffer: Buffer.from("%PDF-1.4\n1 0 obj<<>>endobj\ntrailer<<>>\n%%EOF\n") };
+
+test("dökümanlar: standart ve yeni sürümü, kriter belgesi, diğer döküman; denetçi yalnız görür", async ({ page, context }, bilgi) => {
+  test.setTimeout(90_000);   // ilk koşuda sayfalar soğuk derlenir
+  const no = `TS EN ${100 + ["masaustu", "tablet", "telefon"].indexOf(bilgi.project.name) * 10 + bilgi.retry}`;
+  await girisli(page, "yonetici");
+  await page.goto("/dokumanlar");
+  await hazir(page);
+  await page.getByRole("button", { name: "Standart yükle" }).click();
+  const p = page.getByRole("dialog", { name: "Standart yükle" });
+  await p.getByLabel("Standart no").fill(no.toLowerCase());
+  await p.getByLabel("Sürüm").fill("2016");
+  await p.getByLabel("Konu").fill("Deneme konu");
+  await p.getByRole("button", { name: "Yükle" }).click();
+  await expect(p.getByText("PDF dosyası eklenmeli.")).toBeVisible();
+  await p.getByLabel("Dosya (PDF)").setInputFiles(PDF);
+  await p.getByRole("button", { name: "Yükle" }).click();
+  await expect(page).toHaveURL(/\/dokumanlar\/standart\/[0-9a-f-]{36}$/, { timeout: 30_000 });
+  await expect(page.getByRole("heading", { level: 1, name: `${no}:2016` })).toBeVisible();
+
+  await hazir(page);
+  await page.getByRole("button", { name: "Yeni sürüm yükle" }).click();
+  const y = page.getByRole("dialog", { name: `Yeni sürüm yükle · ${no}` });
+  await y.getByLabel("Sürüm").fill("2020");
+  await y.getByLabel("Dosya (PDF)").setInputFiles(PDF);
+  await y.getByRole("button", { name: "Yeni sürümü yükle" }).click();
+  await expect(page.getByRole("heading", { level: 1, name: `${no}:2020` })).toBeVisible({ timeout: 30_000 });
+  await expect(page.getByRole("link", { name: `${no}:2016` })).toBeVisible();
+
+  await page.goto("/dokumanlar/kriterler");
+  await hazir(page);
+  await page.getByRole("link", { name: "ZPKK01" }).click();
+  await expect(page.getByRole("heading", { level: 1, name: "ZPKK01" })).toBeVisible({ timeout: 30_000 });
+
+  await page.goto("/dokumanlar/diger");
+  await hazir(page);
+  await page.getByRole("button", { name: "Döküman yükle" }).click();
+  const d = page.getByRole("dialog", { name: "Döküman yükle" });
+  await d.getByLabel("Döküman adı").fill(`Prosedür ${bilgi.project.name}`);
+  await d.getByRole("combobox", { name: "Tür" }).click();
+  await d.getByRole("option", { name: "Prosedür" }).click();
+  await d.getByLabel("Dosya (PDF)").setInputFiles(PDF);
+  await d.getByRole("button", { name: "Yükle" }).click();
+  await expect(page.getByText(`Prosedür ${bilgi.project.name}`, { exact: true }).first()).toBeAttached({ timeout: 30_000 });
+
+  /* denetçi: görür, yükleyemez */
+  await context.clearCookies();
+  await girisli(page, "denetci");
+  await page.goto("/dokumanlar");
+  await hazir(page);
+  await expect(page.getByRole("link", { name: no }).first()).toBeAttached();
+  await expect(page.getByRole("button", { name: "Standart yükle" })).toHaveCount(0);
+});

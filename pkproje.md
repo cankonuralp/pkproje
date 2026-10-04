@@ -2341,6 +2341,14 @@ revizyon, alan kopyalama, hafif kusur devri, meslek eşleşme denetimi).
 - Emsal ürünler: https://opwire.app/iso-17020-periyodik-kontrol-yazilimi/ · https://17020muayene.vidco.com.tr/ · https://akuple.com/asansor-kontrol-yazilimi/ · https://ensyazilim.com/
 
 ## 11 · Değişiklik günlüğü
+- 2026-10-04 (303): **K2 Dökümanlar 1: standart kütüphanesi (sürümlü), muayene kriterleri, diğer dökümanlar** (maket standartlar.html, M7).
+  Göç 0018 (standart — her satır bir sürüm; numara başına TEK güncel sürüm (kısmi eşsiz dizin), numara + sürüm eşsiz; yeni sürüm eskisini "bitti"
+  tarihiyle önceki yapar, dosyası saklanır; güncel kaldırılınca bir önceki yeniden güncel · dokuman — ad, tür (listeden), kod, revizyon, PDF;
+  silme hakkı yok, kaldırılan satır kalır). Kontrol kriterleri belgeleri (ZPKK01, ZPKK02) kodda: src/tanim/kriterler.ts (maketteki veriden bir
+  kez aktarıldı; düzenlenmez). Yetki: yöneticiler yükler / değiştirir / kaldırır; denetçi ve planlama görür ve PDF'i açar (reisim: "muayene
+  personellerinin standartlara ulaşabilmesini istiyorum"); muhasebe görmez. Ekipman türleri standarda NUMARAYLA bağlanacak (Ekipman türleri ×
+  standart kalemi): yeni sürüm türlere kendiliğinden geçer; dışa açık guncelStandartlar. Sayfalar: /dokumanlar (Standartlar) · /dokumanlar/
+  standart/<id> · /dokumanlar/kriterler(/<kod>) · /dokumanlar/diger. Eğitimler sekmesi ayrı kalem.
 - 2026-10-04 (302): **K2 Sözleşmeler 1: iş sözleşmesi, İSG-KATİP ID, sözleşme şablonu** (maket sozlesmeler.html, M5 + M13 2. tur). Göç 0017
   (is_sozlesmesi — no IS-AAYY-SIRA numara üreticisinden, müşteri + kapsam tesisleri aynı firmaya bağlı, imza tarihi ile imzalı PDF birlikte (CHECK) ·
   is_sozlesmesi_tesis — kapsam, sonradan değişmez · isg_katip — TESİS × DENETÇİ başına geçerli tek ID (kısmi eşsiz dizin), yeni ID eskisini "önceki"
