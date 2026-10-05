@@ -119,7 +119,8 @@ test("akış: hazırla (numara sunucuda, hazırlayan veritabanında) → taslak 
   assert.deepEqual([k.durum, k.hazirlayan, k.tarih, k.musteri, k.tesisler.map((t) => t.ad), k.kalemSayisi, k.ekipmanSayisi, k.tutar],
     ["taslak", "Deneme Planlama", bugunTr(), "Deneme Bir", ["Merkez", "Depo"], 2, 3, 2 * 125000 + 90000]);
   assert.equal(kdvli(k.tutar, k.kdv), 408000, "KDV %20 dahil");
-  assert.deepEqual(k.izin, { duzenle: false, gonder: false, sonuc: false, musteriKaydet: false, kopyala: false }, "muhasebe yalnız görür");
+  assert.deepEqual(k.izin, { duzenle: false, gonder: false, sonuc: false, musteriKaydet: false, bagla: false, kopyala: false, sozlesme: false, planAc: false },
+    "muhasebe yalnız görür");
   assert.equal((await a(MEK, (db) => teklifKarti(db, MEK, r.id)))!.no, r.no, "mekanik yönetici görür");
   assert.equal(await a(DEN, (db) => teklifKarti(db, DEN, r.id)), null, "denetçi görmez");
   /* taslak düzenlenir: kalem ve tesis eşitlenir; eski sürümle yazan çakışır */
@@ -129,7 +130,7 @@ test("akış: hazırla (numara sunucuda, hazırlayan veritabanında) → taslak 
   k = (await a(PLAN, (db) => teklifKarti(db, PLAN, r.id)))!;
   assert.deepEqual([k.kalemler.map((x) => [x.turAd, x.adet, x.fiyat]), k.tesisler.map((t) => t.ad), k.hazirlayan], [[["Hava tankı", 3, 100000]], ["Merkez"], "Deneme Planlama"],
     "hazırlayan düzenleyenle değişmez");
-  assert.deepEqual(k.izin, { duzenle: true, gonder: true, sonuc: false, musteriKaydet: false, kopyala: true });
+  assert.deepEqual(k.izin, { duzenle: true, gonder: true, sonuc: false, musteriKaydet: false, bagla: false, kopyala: true, sozlesme: false, planAc: false });
   /* kabul / red yalnız gönderilmişe */
   assert.equal((await a(PLAN, async (db) => teklifKabul(db, PLAN, r.id, await surum(r.id)))).durum, "red");
   const g = tamam(await a(PLAN, async (db) => teklifGonder(db, PLAN, r.id, await surum(r.id))));
