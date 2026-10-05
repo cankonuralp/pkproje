@@ -6,6 +6,7 @@
 import { useRef, type TransitionStartFunction } from "react";
 import { useBildir } from "../../../components/bildirim/Bildirim";
 import { fotografiKucult } from "../../../components/foto/kucult";
+import { DosyaAcTusu } from "../../../components/gizli-resim/GizliResim";
 import { useOnayla } from "../../../components/pencere/Onay";
 import { Tus, tusSinifi } from "../../../components/tus/Tus";
 import type { SahaRaporu } from "../server/raporlar";
@@ -49,8 +50,8 @@ export function FotoListesi({ v, bolumId, madde, oku, gecersiz, mesgul, baslat, 
             <li key={f.dosya}>
               <span className={stil.fotoAd}>{f.ad}</span>
               <span className={stil.fotoTuslar}>
-                <a className={tusSinifi("ikincil")} href={`/api/dosya/${f.dosya}`} target="_blank" rel="noopener">Görüntüle</a>
-                <a className={tusSinifi("ikincil")} href={`/api/dosya/${f.dosya}?indir=1`}>İndir</a>
+                <DosyaAcTusu dosyaId={f.dosya}>Görüntüle</DosyaAcTusu>
+                <DosyaAcTusu dosyaId={f.dosya} ikon="download" indir>İndir</DosyaAcTusu>
                 {!oku && <Tus tur="ikincil" ikon="trash-2" disabled={mesgul} aria-label={`${f.ad} sil`} onClick={() => sil(f.dosya, f.ad)}>Sil</Tus>}
               </span>
             </li>

@@ -53,8 +53,9 @@ export function GizliResim({ dosyaId, alt, className }: { dosyaId: string; alt: 
 }
 
 /** DOSYAYI AÇ (PDF): depodaki dosyanın adresi yalnız bu dosyada üretilir (tests/dosya.test.ts TARAMA). Yeni sekmede, oturumlu tek uçtan
-    (yetki ve kiracı orada); kalıcı herkese açık bağlantı değildir. */
-export function DosyaAcTusu({ dosyaId, children, ikon = "eye" }: { dosyaId: string; children: ReactNode; ikon?: string }) {
+    (yetki ve kiracı orada); kalıcı herkese açık bağlantı değildir. indir: aynı uç, ek olarak indirilir (312). */
+export function DosyaAcTusu({ dosyaId, children, ikon = "eye", indir = false }: { dosyaId: string; children: ReactNode; ikon?: string; indir?: boolean }) {
   if (!UUID.test(dosyaId)) return null;
+  if (indir) return <a className={tusSinifi("ikincil")} href={`/api/dosya/${dosyaId}?indir=1`}><Ikon ad={ikon} kucuk />{children}</a>;
   return <a className={tusSinifi("ikincil")} href={`/api/dosya/${dosyaId}`} target="_blank" rel="noopener"><Ikon ad={ikon} kucuk />{children}</a>;
 }

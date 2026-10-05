@@ -147,7 +147,7 @@ export interface SahaRaporu {
   ekipmanBilgi: EkipmanBilgisi; tarih: RaporTarihleri;
   cevaplar: Cevaplar; tanim: FormatTanimi; formatSira: number;
   cihazlar: CihazSatiri[];
-  /** fotoğraflar (bölüme ya da maddeye bağlı); indirme tek uçtan (/api/dosya/<id>), raporu görene */
+  /** fotoğraflar (bölüme ya da maddeye bağlı); indirme tek uçtan (DosyaAcTusu), raporu görene */
   fotolar: RaporFoto[];
   /** Cihaz ekle penceresi: yazanın zimmetindeki, kalibrasyonu geçerli cihazlar tür başına; tür gerekli cihaz türü vermiyorsa "*" altında hepsi
       (yalnız düzenleyebilene). Seçilen cihaz kendi türünün satırına yazılır. */
