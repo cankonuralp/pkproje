@@ -2341,6 +2341,35 @@ revizyon, alan kopyalama, hafif kusur devri, meslek eşleşme denetimi).
 - Emsal ürünler: https://opwire.app/iso-17020-periyodik-kontrol-yazilimi/ · https://17020muayene.vidco.com.tr/ · https://akuple.com/asansor-kontrol-yazilimi/ · https://ensyazilim.com/
 
 ## 11 · Değişiklik günlüğü
+- 2026-10-05 (311): **K3 Saha raporu 1: rapor oluştur, saha ekranı (format tanımından), kaydet, ölçüm cihazı, onaya gönder, sil** (maket rapor.html
+  M8, planlarim.html RAP_SUTUN; KOD-GECIS §3–§6, §9 ENGEL 1, 2, 5, 6; RAPOR-FORMAT §5, §7). Kurallar, maket ve kod önce iki araştırma ajanıyla
+  tarandı; çelişkiler şöyle kapandı (öneriler uygulandı): **durum kodları sabit tanımlarla aynı** (taslak "Yeni" · onayda · onaylandi · imzada ·
+  imzali "Tamamlandı") · **raporda pasif yok** (N11; Sil = "silindi" damgası, yalnız Yeni) · **plan × ekipman başına tek etkin rapor** (203; silinince
+  "Rapor oluştur" geri gelir) · **zorunlu alan eksikken onaya gönderilmez** (ENGEL 5; sonuç hariç — seçilmediyse önerisi yazılır, "Sonuç kriterlere
+  göre: …") · **bitiş başlangıçtan önce olamaz** (engel, veritabanında). Göç 0025: **rapor** (numara XX-AAYY-SIRA-EK, revizyon, plan / ekipman / tür /
+  açıldığı FORMAT SÜRÜMÜ — türün yayındaki sürümü, yazan personel + hesap, künye KOPYASI, ekipman bilgileri, başlangıç açılışta, bitiş / sonraki
+  kontrol / rapor tarihi elle seçilmediyse gönderimde, cevaplar JSON, cihazlar, fotoğraflar, sonuç + otomatik mi, ilk / son gönderim, silindi) ·
+  **rapor_akis** tetiği (açılış yalnız Yeni, kabul edilmiş planda, ekipteki denetçi adına, planda + etkin ekipmana, yayındaki formatla; numara /
+  plan / ekipman / tür / yazan değişmez; içerik yalnız Yeni'de; tamamlanan değişmez; format yalnız daha yeni yayına geçer; bu kalemde yalnız
+  taslak → onayda açık, öteki geçişler Onaylar / imza kalemleriyle) · **rapor_hareket** (oluştur / gönder / sil; yalnız tetik yazar, elle yazılamaz;
+  yazan hesap ve zaman veritabanından). Modül `src/modules/raporlar/`: **Rapor oluştur** (yalnız plandaki denetçi; ENGEL 1 ileri tarihli plan —
+  maket metni; pasif ekipman; tek rapor; yayında format yok; Raporlar'ı göremeyen açamaz; bütün maddeler "Uygun" açılır; ilk rapor planı Denetimde
+  yapar) · **saha ekranı** `/raporlar/<id>` (1 Firma bilgileri: künye kopyası salt okunur + kontrol tarihleri + planlamacı değiştirdiyse şerit ve
+  Güncelle — yalnız yazanın Yeni raporlarına geçer · 2 Ekipman bilgileri: elle, ekipman kaydından başlar; formatın kendi ekipman bilgi bölümü buraya
+  katılır, formatın sorduğu alan tekrar edilmez · sonra formatın bölümleri tanımdan: bilgi, kontrol maddeleri + Hepsini işaretle, ölçüm tablosu
+  satır ekle / sil + canlı sonuç + uygunluk notu, test değerleri + sınır, ölçüm cihazları, kusur açıklamaları kendiliğinden, sonuç ve kanaat + öneri
+  + "Uygun" uyarısı, not, yetkili kişi) · **Kaydet** (yalnız yazan, Yeni, sürüm kilidi; cihaz / fotoğraf sayısı istemciden alınmaz) · **Ölçüm
+  cihazı** (türün gerekli cihaz türü başına satır; yalnız yazanın zimmetindeki, kalibrasyonu geçerli cihaz; tür liste vermiyorsa her geçerli cihaz)
+  · **Onaya gönder** (sorulur; eksikse "Zorunlu alanlar doldurulmadı" penceresi eksikleri sayar, alana götürür, rapor kaydedilir; cihaz eksik /
+  kalibrasyon geçmiş ENGEL 2; bildirim "Onaya gönderildi: <yönetici>, <branş> branş yöneticisi.") · **Sil** (yazan ya da teknik yönetici, Yeni).
+  Plan içinde Raporlar listesi (20'şer, süzgeç, durum çipleri; Raporu düzenle / Raporu aç; kendi Yeni raporunda Sil), ekipman satırında "Rapor
+  oluştur" + yeşil tik; raporu olan ekipman pasife alınmaz. **Ertelenen** (araştırmanın bölümüne göre sıradaki kalemler): fotoğraf ekle (C4: şablonda
+  en az 1 fotoğraf, C18: bölüm başına sayı) · Kaydet ve kopyala · Formatı güncelle · mesai (ENGEL 3) · madde (i) penceresi · çevrimdışı işlem kimliği ·
+  Onaylar (C1 dört göz kalkar, C5 denetçi "İmzamı bekleyen") · PDF · imza · Raporlar listesi · revizyon · müşteri paneli. Ekranda bölümler açık
+  geliyor (maket "kapalı" diyor; başlıktaki tuşla kapanır). Kilit: tests/raporlar.test.ts (11; gerçek PostgreSQL, iki firma) + bozan 3 (akış tetiği,
+  ENGEL 1 sunucuda, kalibrasyon denetimi) + e2e/saha-raporu.spec.ts (üç genişlik; tohum: Saha Tesisi + HT-0201, Manometre MN-01 denetçinin
+  zimmetinde, HT'nin yayındaki formatı kompresör şablonu). Bulunan sürücü hatası: pg JS dizisini JSON değil Postgres dizisi yollar — jsonb dizileri
+  JSON metni olarak yazılır.
 - 2026-10-04 (310): **K3 Planlar listesi + plan içi akış** (donmuş referans ekran: maket planlarim.html 2.–5. tur; §3.4 karar 9–12, 26–28, "Plan
   künyesi"). **Liste** `/planlar`: Proje no · Proje adı · Müşteri · Adres · Denetçi · Başlangıç · Durum · Görüntüle; süzgeç proje adı + proje no
   kutuları, Durum / Tarih (bugün, bu hafta, önümüzdeki 7 gün) / Müşteri / Branş; sütun başlığıyla sıralama (kartta "Sıralama"), varsayılan en yeni

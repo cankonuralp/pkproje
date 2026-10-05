@@ -72,6 +72,13 @@ export async function cihazOzetleri(db: Sorgulayici): Promise<Pick<CihazSatiri, 
   return (await db.sorgu<CihazDb>(`${CIHAZ_SEC} WHERE c.pasif IS NULL`)).rows.map((x) => ({ id: x.id, kod: x.kod, tur: x.tur, konum: x.konum, bitis: x.bitis }));
 }
 
+/** Raporlar için: etkin cihazlar türü, marka / model / seri ve geçerli kalibrasyon bitişiyle (yetki ÇAĞIRANDA; kimde olduğu Zimmetler'den) */
+export async function raporCihazlari(db: Sorgulayici): Promise<{ id: string; kod: string; turId: string; tur: string; marka: string | null; model: string | null;
+  seri: string | null; konum: "depo" | "lab"; bitis: string | null }[]> {
+  return (await db.sorgu<CihazDb>(`${CIHAZ_SEC} WHERE c.pasif IS NULL`)).rows
+    .map((x) => ({ id: x.id, kod: x.kod, turId: x.tur_id, tur: x.tur, marka: x.marka, model: x.model, seri: x.seri, konum: x.konum, bitis: x.bitis }));
+}
+
 /** öteki modüller için cihaz türleri (yetki ÇAĞIRANDA; Ekipman türleri bağlantısı) */
 export async function cihazTuruOzetleri(db: Sorgulayici): Promise<CihazTuru[]> {
   return (await db.sorgu<CihazTuru>("SELECT id::text, ad FROM cihaz_turu")).rows.sort((a, b) => a.ad.localeCompare(b.ad, "tr"));

@@ -121,3 +121,11 @@
   }
   .cubukAlt > * { flex: 1 1 0; min-width: 0; }
 }
+
+/* ── PLAN İÇİ · RAPORLAR (311; maket planlarim.html .a-rapor-tik, .a-ikon-tus, .a-tus-sil, .a-tarih-saat) ── */
+.raporTik { display: inline-flex; color: var(--onay-yazi); }
+.sonucUygun { color: var(--onay-yazi); font-weight: 600; }
+.zaman { font-variant-numeric: tabular-nums; white-space: nowrap; }
+/* simge tuşu (Pasife al, Sil): kare, adı aria-label'da; iki sınıf — Tus'un kendi dolgusunun önüne geçer */
+.eylemTuslar .ikonTus { width: var(--tus-y); padding: 0; }
+.eylemTuslar .silTus { color: var(--hata-yazi); }

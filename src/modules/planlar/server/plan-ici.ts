@@ -19,11 +19,13 @@ import { ekipmanEkle as ekipmanKaydet, ekipmanlar, ekipmanPasif as ekipmanPasifY
 import { turOzetleri } from "../../ekipman-turleri/server/turler.ts";
 import { musteriOzetleri } from "../../musteriler/server/musteriler.ts";
 import { personelOzetleri } from "../../personel/server/personel.ts";
+import { ekipmanRaporuVar, planRaporlari, raporKunyeleriniYaz, type PlanRaporu } from "../../raporlar/server/plan-baglanti.ts";
 import { KunyeGirdisi, kodBicimi, kodNormal, NotGirdisi, RedGirdisi, YeniEkipmanGirdisi, type KodTuru, type PlanDurumu } from "../sema.ts";
 import { bugunTr, EKIP, MODUL, PLAN, PLAN_EKIPMAN, planKarti, UUID, type Kisi, type PlanKarti } from "./planlar.ts";
 
 const NOT = tablo({ ad: "plan_not", sutunlar: ["plan_id", "metin", "yazan"] });
 const EKIPMAN_MODULU = 7;
+const RAPORLAR_MODULU = 14;
 
 export type PlanYazma =
   | { durum: "tamam"; bildirim: string; id?: string }
@@ -37,7 +39,7 @@ interface PlanSatiri {
   kunye_surum: number; surum: number; kabul: Date | null; kabul_eden: string | null; beyan: string | null; red: Date | null; red_eden: string | null;
   red_gerekce: string | null; basladi: Date | null; kontrol_tamam: Date | null; bitti: Date | null; olustu: Date;
 }
-interface Kunye { firma_adi: string; adres: string | null; sgk: string | null; isg_no: string | null }
+export interface Kunye { firma_adi: string; adres: string | null; sgk: string | null; isg_no: string | null }
 interface EkipSatiri { id: string; personel_id: string; isg_no: string | null; isg_id: string | null; kunye_surum: number; gorulen: Kunye | null; surum: number }
 
 async function planOku(db: Sorgulayici, id: string): Promise<PlanSatiri | null> {
@@ -80,6 +82,8 @@ const iz = (kim: Kisi, ne: string, p: { no: string }, gerekce?: string): Iz => (
 /* ── İZİNLER (ekranın tuşları da buradan; yazma işlevleri aynı kuralla yeniden denetler) ──────────────────────────────── */
 export interface PlanIzni {
   kabulRed: boolean; kontrol: boolean; kunyeDuzenle: boolean; kunyeGuncelle: boolean; not: boolean; ekipmanEkle: boolean; ekipmanPasif: boolean;
+  /** plandaki denetçi, plan kabul edilmiş / denetimde / tamamlanmış, plan günü gelmiş (ENGEL 1: ileri tarihli plana rapor açılmaz) */
+  raporOlustur: boolean;
 }
 function izinler(kim: Kisi, e: Erisim): PlanIzni {
   const d = e.p.durum, isci = e.uye || e.yazar;
@@ -91,6 +95,7 @@ function izinler(kim: Kisi, e: Erisim): PlanIzni {
     not: isci,
     ekipmanEkle: isci && duzey(kim, EKIPMAN_MODULU) === "yaz" && (d === "kabul" || d === "denetimde"),
     ekipmanPasif: isci && canDoEylem(kim, "ekipman_pasif") && (d === "kabul" || d === "denetimde" || d === "tamamlandi"),
+    raporOlustur: e.uye && duzey(kim, RAPORLAR_MODULU) !== "yok" && canDoEylem(kim, "rapor_olustur", { atananlar: e.atananlar }) && (d === "kabul" || d === "denetimde" || d === "tamamlandi") && e.p.baslangic <= bugunTr(),
   };
 }
 
@@ -151,8 +156,10 @@ export interface PlanIci {
   /** tesiste kayıtlı, plana alınmamış, etkin ekipman (yalnız ekleyebilene) */
   kayitli: { id: string; kod: string; tur: string; konum: string | null; onceki: string | null }[];
   turler: { id: string; ad: string; kod: string; brans: "m" | "e" }[];
-  /** planın raporları — Raporlar kalemiyle dolar */
-  raporlar: { no: string; ekipmanId: string; durum: string }[];
+  /** planın etkin raporları (silinen / pasif görünmez); benim = isteyenin yazdığı rapor (Raporu düzenle / Sil yalnız onda) */
+  raporlar: (PlanRaporu & { benim: boolean })[];
+  /** plan günü henüz gelmedi (rapor açılmaz; şerit söyler) */
+  erken: boolean;
   /** proje notları; göremeyene null */
   notlar: { id: string; metin: string; yazan: string; zaman: string }[] | null;
   izin: PlanIzni;
@@ -210,7 +217,7 @@ export async function planIci(db: Sorgulayici, kim: Kisi, id: string): Promise<P
     kunyeGuncel: izin.kunyeDuzenle ? { firmaAdi: p.firma_adi, adres: p.adres, sgk: p.sgk, isg: isgListesi(false) } : null,
     teklif: [...teklif.values()].sort((a, b) => (a.brans === b.brans ? a.ad.localeCompare(b.ad, "tr") : a.brans === "m" ? -1 : 1)),
     ekipman, kayitli, turler: izin.ekipmanEkle ? turler.map((t) => ({ id: t.id, ad: t.ad, kod: t.kod, brans: t.brans })) : [],
-    raporlar: [], notlar, izin,
+    raporlar: (await planRaporlari(db, id)).map((r) => ({ ...r, benim: !!r.hesapId && r.hesapId === kim.id })), erken: p.baslangic > bugunTr(), notlar, izin,
   };
 }
 
@@ -314,8 +321,13 @@ export async function kunyeGuncelle(db: Sorgulayici, kim: Kisi, id: string): Pro
   if (!e) return { durum: "yok" };
   if (!e.benim) return { durum: "yetkisiz" };
   if (!izinler(kim, e).kunyeGuncelle) return { durum: "tamam", bildirim: "Plan bilgileri zaten güncel." };
-  const r = await guncelle(db, EKIP, e.benim.id, e.benim.surum, { gorulen: null, kunye_surum: e.p.kunye_surum }, iz(kim, "plan.kunye_guncelle", e.p));
-  return sonuc(r, "Plan bilgileri güncellendi.");
+  const z = iz(kim, "plan.kunye_guncelle", e.p);
+  const r = await guncelle(db, EKIP, e.benim.id, e.benim.surum, { gorulen: null, kunye_surum: e.p.kunye_surum }, z);
+  if (r.durum !== "tamam" && r.durum !== "degisiklik_yok") return sonuc(r, "");
+  /* yeni künye denetçinin YALNIZ kendi Yeni raporlarına geçer (onaydaki / imzalı ve başkasının raporu değişmez) */
+  const n = await raporKunyeleriniYaz(db, z, id, e.benim.personel_id,
+    { firma_adi: e.p.firma_adi, adres: e.p.adres, sgk: e.p.sgk, isg_no: e.benim.isg_no }, e.p.kunye_surum);
+  return { durum: "tamam", bildirim: n ? `Plan bilgileri güncellendi; ${n} taslak raporunuza da geçti.` : "Plan bilgileri güncellendi." };
 }
 
 /* ── PROJE NOTLARI ───────────────────────────────────────────────────────────────────────────────────────────── */
@@ -397,7 +409,35 @@ export async function ekipmanPasif(db: Sorgulayici, kim: Kisi, id: string, ekipm
   if (!UUID.test(ekipmanId) || !(await db.sorgu("SELECT 1 FROM plan_ekipman WHERE plan_id = $1 AND ekipman_id = $2", [id, ekipmanId])).rowCount) return { durum: "yok" };
   const x = (await ekipmanlar(db, [ekipmanId]))[0];
   if (!x) return { durum: "yok" };
+  if (pasif === true && (await ekipmanRaporuVar(db, id, ekipmanId))) return { durum: "red", neden: `${x.kod} için bu planda rapor var; raporu olan ekipman pasife alınmaz.` };
   if (x.pasif === (pasif === true)) return { durum: "tamam", bildirim: pasif ? `${x.kod} zaten pasif.` : `${x.kod} zaten etkin.` };
   const r = await ekipmanPasifYaz(db, iz(kim, pasif ? "plan.ekipman_pasif" : "plan.ekipman_etkin", e.p, x.kod), ekipmanId, surum, pasif === true);
   return sonuc(r, pasif ? `${x.kod} pasife alındı; rapor açılamaz. Etkinleştir ile geri alınır.` : `${x.kod} yeniden etkin.`);
+}
+
+/* ── RAPORLAR İÇİN (modül 14 bu işlevlerle plana bakar; yetki burada: planı görebilen) ─────────────────────────────── */
+export interface RaporPlani {
+  id: string; no: string; durum: PlanDurumu; tesisId: string; baslangic: string; atananlar: string[];
+  /** isteyenin plandaki personeli (ekipte değilse null) */
+  personelId: string | null;
+  /** isteyenin gördüğü künye (Güncelle'ye basmadıysa eski) ve sürümü; ekipte değilse güncel künye */
+  kunye: Kunye; kunyeSurum: number;
+  /** güncel künye (isteyenin İSG-KATİP ID'siyle) ve sürümü */
+  guncelKunye: Kunye; guncelSurum: number;
+}
+/** planı görebilene planın rapor için gereken bilgisi; göremeyene null */
+export async function raporIcinPlan(db: Sorgulayici, kim: Kisi, planId: string): Promise<RaporPlani | null> {
+  const e = await erisim(db, kim, planId);
+  if (!e) return null;
+  const { p, benim } = e;
+  const guncelKunye: Kunye = { firma_adi: p.firma_adi, adres: p.adres, sgk: p.sgk, isg_no: benim?.isg_no ?? null };
+  return {
+    id: p.id, no: p.no, durum: p.durum, tesisId: p.tesis_id, baslangic: p.baslangic, atananlar: e.atananlar, personelId: benim?.personel_id ?? null,
+    kunye: benim?.gorulen ?? guncelKunye, kunyeSurum: benim && benim.gorulen ? benim.kunye_surum : p.kunye_surum, guncelKunye, guncelSurum: p.kunye_surum,
+  };
+}
+/** ekipman bu planda mı (rapor yalnız plandaki ekipmana açılır). Yetki ÇAĞIRANDA. */
+export async function plandakiEkipman(db: Sorgulayici, planId: string, ekipmanId: string): Promise<boolean> {
+  if (!UUID.test(planId) || !UUID.test(ekipmanId)) return false;
+  return !!(await db.sorgu("SELECT 1 FROM plan_ekipman WHERE plan_id = $1 AND ekipman_id = $2", [planId, ekipmanId])).rowCount;
 }

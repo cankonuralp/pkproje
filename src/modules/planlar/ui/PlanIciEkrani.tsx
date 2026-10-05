@@ -2,7 +2,9 @@
 /* PLAN İÇİ (maket planlarim.html #/plan/<id>, 4.–5. tur; donmuş referans ekran): dikey akış Planlandı → Kabul → Denetim → Tamamlama. Her adım durum
    (tamamlandı ✓ · şu an · sırada · reddedildi ×) ve yalnız tarih gösterir (2026-09-27). Şu anki adımın tuşları adımın içinde; telefonda altta
    yapışkan çubukta (kalıp 2, tek birincil tuş). Kabul: tarafsızlık beyanı okunmadan Kabul et kapalı (sebebi yazılı); Reddet gerekçe ister.
-   Denetim: kontrol listesi = Ekipmanlar + Raporlar; Tamamla iki adım (kontrol listesi → plan). Künye: planlamacı Düzenle; denetçi Güncelle.
+   Denetim: kontrol listesi = Ekipmanlar + Raporlar (311: Rapor oluştur ekipman satırında, raporlar kendi süzgeçli listesinde); plan günü gelmediyse
+   nedeni şeritte (P1 2026-10-01 + 2026-10-03: "geleceğe rapor yazmayı engelle" — geçmiş açık); Tamamla iki adım (kontrol listesi → plan).
+   Künye: planlamacı Düzenle; denetçi Güncelle.
    Altta Proje notları (hareket listesi gösterilmez — 5. tur). Yetki ve geçiş kuralı sunucuda; buradaki tuşlar yalnız izinli olanı gösterir. */
 import { useRouter } from "next/navigation";
 import { useState, useTransition, type ReactNode } from "react";
@@ -17,11 +19,12 @@ import { Tus } from "../../../components/tus/Tus";
 import { meslek } from "../../personel/sema";
 import { akisAdimlari, gunNo, tarihNo, type AdimDurumu } from "../sema";
 import type { PlanIci } from "../server/plan-ici";
-import { EkipmanBolumu } from "./EkipmanBolumu";
+import { EkipmanBolumu, ERKEN_ID } from "./EkipmanBolumu";
 import {
   kontrolListesiEylemi, kunyeDuzenleEylemi, kunyeGuncelleEylemi, planKabulEylemi, planReddetEylemi, planTamamlaEylemi, tamamlamaGeriAlEylemi, type PlanYaniti,
 } from "./eylemler";
 import { ProjeNotlari } from "./ProjeNotlari";
+import { RaporBolumu } from "./RaporBolumu";
 import stil from "./planlar.module.css";
 
 const ETIKET: Record<AdimDurumu, string> = { tamam: "Tamamlandı", aktif: "Şu an", bekliyor: "Sırada", red: "Reddedildi" };
@@ -196,13 +199,13 @@ export function PlanIciEkrani({ v }: { v: PlanIci }) {
     <Adim no={3} durum={adim[2]} baslik="Denetim" ozet={a3ozet}>
       {d === "reddedildi" && <p className={stil.adimNot}>Plan reddedildi; denetim yok.</p>}
       {d === "kabul" && <p className={stil.adimNot}>İlk rapor oluşturulunca denetim başlar.</p>}
-      {calisir && <EkipmanBolumu v={v} />}
-      {calisir && (
-        <section className={stil.planBolum} aria-labelledby={`raporlar-${k.id}`}>
-          <div className={stil.altBas}><h3 id={`raporlar-${k.id}`} tabIndex={-1}>Raporlar</h3></div>
-          {v.raporlar.length ? null : <p className={stil.bosSatir}>Bu planda rapor yok.</p>}
-        </section>
+      {calisir && v.erken && (
+        <Serit tur="uyari" ikon="calendar" id={ERKEN_ID}>
+          Plan günü {tarihNo(k.baslangic)} henüz gelmedi (bugün {tarihNo(v.bugun)}). Rapor plan gününden itibaren oluşturulur; geçmiş günlere açık, ileri tarihe kapalı.
+        </Serit>
       )}
+      {calisir && <EkipmanBolumu v={v} />}
+      {calisir && <RaporBolumu v={v} />}
       {d === "denetimde" && !kt && eylemKutusu(raporsuz ? `${raporsuz} ekipmanın bu planda raporu yok.` : "Bütün ekipmanların raporu açıldı.")}
       {kt && <>
         <Serit tur="onay" ikon="circle-check">Kontrol listesi tamamlandı.</Serit>

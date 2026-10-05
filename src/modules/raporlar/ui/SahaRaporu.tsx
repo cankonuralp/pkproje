@@ -1,0 +1,330 @@
+"use client";
+/* SAHA RAPORU (modül 14; maket rapor.html M8 + maket-rapor.js ciz, eylemHtml, gonder, zorunluEksik, eksikeGit; KOD-GECIS §5 Rapor, §9 ENGEL 2 · 5;
+   RAPOR-FORMAT §7). Kırıntı Planlar › plan no › rapor no · başlıkta "<ekipman kodu> · <tür>" + durum rozeti · altında rapor no · müşteri · tesis ·
+   yazan (L7: firma önce, tesis sonra) · düzenlenirken son kayıt.
+   Bölümler: 1 Firma bilgileri (künye raporun KENDİ kopyası, salt okunur — planlamacı değiştirdiyse şeritte "Güncelle"; kontrol tarihleri
+   burada: başlangıç rapor açılınca yazılır, zorunlu; bitiş, sonraki kontrol ve rapor tarihi elle seçilmediyse Onaya gönderde sunucu yazar —
+   ekranda başlangıç değişince sonraki kontrol ve rapor tarihi ondan önerilir, elle seçilen kalır), 2 Ekipman bilgileri (elle; ekipman
+   kaydından başlar), sonra türün formatının bölümleri sırasıyla (Bloklar). Formatın yalnız kayıttan gelen alanlardan oluşan bilgi bölümü
+   (hazır şablonlarda "Firma bilgileri") 1. bölümün kopyası olduğundan ayrıca çizilmez; format cihaz bölümü vermiyor ama tür cihaz istiyorsa
+   "Ölçüm cihazları" sabit bölüm olur.
+   Kaydet + Onaya gönder hep görünür, altta yapışkan (reisim 2026-09-27); Sil yanında (2026-09-29), sorulur (AA8). Onaya gönder önce kaydeder;
+   sonuç seçilmediyse önerisi yazılır (reisim 2026-09-27); zorunlu alan eksikse (ENGEL 5) ya da cihaz eksik / kalibrasyonu geçmişse (ENGEL 2)
+   gönderilmez: "Zorunlu alanlar doldurulmadı" penceresi eksikleri sayar, her biri alanına götürür; boş alanlar kırmızı (aria-invalid), doldurdukça işaret
+   kalkar (maket UY / zorunluEksik). Göndermeden önce sorulur (maket gonder: "Rapor onaya gönderilsin mi?"). Gönderilen rapor salt okunur (kilit
+   şeridi). Formatın kendi ekipman bilgi bölümü (ör. kompresör) 2. bölüme katılır; formatın sorduğu alan sabit satırda tekrar edilmez (marka,
+   model, imal yılı …). Yetki, kural ve ENGEL sunucuda; buradaki tuşlar yalnız izinli olanı gösterir. */
+import { useRouter } from "next/navigation";
+import { useMemo, useState, useTransition, type ReactNode } from "react";
+import { useBildir } from "../../../components/bildirim/Bildirim";
+import { Girdi, ipucuId } from "../../../components/form/Form";
+import { Ikon } from "../../../components/ikon/Ikon";
+import { useOnayla } from "../../../components/pencere/Onay";
+import { Pencere, pencereMetinSinifi } from "../../../components/pencere/Pencere";
+import { DegerYok, Kirinti, Kod, NesneBasi, Rozet, SeritKap } from "../../../components/sayfa/Sayfa";
+import { tarihNo } from "../../../components/secim/tarih";
+import { Serit } from "../../../components/serit/Serit";
+import { Tus } from "../../../components/tus/Tus";
+import { degerlendir } from "../../../format/motor";
+import type { Cevaplar } from "../../../format/tanim";
+import { ayEkle, RAPOR_DURUM, type EkipmanBilgisi, type RaporDurumu, type RaporTarihleri } from "../sema";
+import type { SahaRaporu as SahaRaporuVerisi } from "../server/raporlar";
+import { alanId, BilgiBlok, FormatBolumu, OkuGirdi, RaporBolumu, Satir, Satirlar, TarihKutusu, type Baglam, type Kaynak } from "./Bloklar";
+import { CihazBolumu } from "./CihazBolumu";
+import { onayaGonderEylemi, raporKaydetEylemi, raporKunyeGuncelleEylemi, raporSilEylemi, type RaporYaniti } from "./eylemler";
+import stil from "./raporlar.module.css";
+
+type Gorunum = SahaRaporuVerisi;
+type EkipmanAnahtari = keyof EkipmanBilgisi;
+type TarihAnahtari = keyof RaporTarihleri;
+interface Eksik { bolum: string; alan: string; ad: string }
+
+/** sabit bölümlerin kimliği (format kimliklerinde tire olmaz → çakışmaz) */
+const SABIT = { firma: "sabit-firma", ekipman: "sabit-ekipman", cihaz: "sabit-cihaz" } as const;
+const EID = (k: EkipmanAnahtari) => `r-ek-${k}`;
+const TID = (k: TarihAnahtari) => alanId(`tarih.${k}`);
+const KILIT: Record<Exclude<RaporDurumu, "taslak">, string> = {
+  onayda: "Teknik yönetici onayında", onaylandi: "Muayene uzmanı imzası bekleniyor", imzada: "İmzaya gönderildi",
+  imzali: "Tamamlandı · son imza atıldı, müşteriye açıldı",
+};
+/** sunucunun alan hatası anahtarı → ekrandaki ad (üst şeritte "ad: ileti") */
+const ALAN_ADI: Record<string, string> = {
+  "ekipman.marka": "Marka", "ekipman.model": "Model", "ekipman.seri": "Seri no", "ekipman.imal": "İmal yılı", "ekipman.konum": "Kullanım yeri",
+  "ekipman.amac": "Kullanım amacı", "ekipman.bolum": "Ekipman bölümü", "tarih.bas": "Başlangıç tarihi", "tarih.bit": "Bitiş tarihi",
+  "tarih.sonraki": "Bir sonraki periyodik kontrol tarihi", "tarih.takip": "Takip kontrol tarihi", "tarih.rapor": "Rapor tarihi",
+};
+
+const TR_ZAMAN = new Intl.DateTimeFormat("en-CA", { timeZone: "Europe/Istanbul", year: "numeric", month: "2-digit", day: "2-digit", hour: "2-digit", minute: "2-digit", hourCycle: "h23" });
+/** zaman damgası → "GG.AA.YYYY SS:DD" (Türkiye saati; sunucuda ve tarayıcıda aynı) */
+const zamanNo = (z: string) => { const s = TR_ZAMAN.format(new Date(z)); return `${tarihNo(s.slice(0, 10))} ${s.slice(12, 17)}`; };
+/** ekrandaki saatli değer "YYYY-MM-DDTHH:MM" → "GG.AA.YYYY SS:DD" */
+const saatliNo = (s: string) => `${tarihNo(s)} ${s.slice(11, 16)}`;
+const bosla = <T extends Record<string, string | null>>(o: T) => Object.fromEntries(Object.entries(o).map(([k, x]) => [k, x ?? ""])) as { [K in keyof T]: string };
+
+export function SahaRaporu({ v }: { v: Gorunum }) {
+  const router = useRouter();
+  const bildir = useBildir();
+  const onayla = useOnayla();
+  const [bekliyor, baslat] = useTransition();
+  const [ekipman, setEkipman] = useState(() => bosla(v.ekipmanBilgi));
+  const [tarih, setTarih] = useState(() => bosla(v.tarih));
+  const [cevaplar, setCevaplar] = useState<Cevaplar>(v.cevaplar);
+  /* sonraki kontrol ve rapor tarihi elle seçilene kadar başlangıçtan gelir (maket sonrakiEl / rtarihEl) */
+  const [elle, setElle] = useState({ sonraki: !!v.tarih.sonraki, rapor: !!v.tarih.rapor });
+  const [kirli, setKirli] = useState(false);
+  const [sonKayit, setSonKayit] = useState<string | null>(v.surum > 0 ? v.degisti : null);
+  const [isaretli, setIsaretli] = useState<ReadonlySet<string>>(() => new Set());
+  const [eksikler, setEksikler] = useState<Eksik[] | null>(null);
+  const [genel, setGenel] = useState<string | null>(null);
+  const [alanHata, setAlanHata] = useState<Record<string, string>>({});
+  const [kapali, setKapali] = useState<ReadonlySet<string>>(() => new Set());
+  /* yazmadan sonra sayfa yenilenip yeni sürüm gelene kadar yazan tuşlar kapalı: bildirim yenilemeden önce çıkar, hemen basılan ikinci tuş eski
+     sürümle gidip "değiştirildi" denmesin (yenilenen veri yeni nesnedir — aynı nesne = henüz gelmedi) */
+  const [yenilenen, setYenilenen] = useState<Gorunum | null>(null);
+  const mesgul = bekliyor || yenilenen === v;
+  const yenile = () => { setYenilenen(v); router.refresh(); window.setTimeout(() => setYenilenen(null), 20_000); };   /* yenileme düşerse tuşlar açılır */
+  const oku = !v.izin.duzenle;
+
+  /* canlı değerlendirme: cihaz sayısı raporun kendi listesinden (sunucu da öyle sayar), fotoğraf bu sürümde yok */
+  const d = useMemo(() => degerlendir(v.tanim, { ...cevaplar, cihaz: v.cihazlar.filter((x) => x.cihaz).length, foto: 0 }), [v.tanim, v.cihazlar, cevaplar]);
+  /* şu an boş olan zorunlu alanlar (format + sabit tarihler + gerekli cihazlar); işaret yalnız Onaya gönder'in dediği VE hâlâ boş olanda */
+  const canli = useMemo(() => {
+    const s = new Set(d.eksikler.map((e) => e.alan));
+    if (!tarih.bas) s.add("tarih.bas");
+    for (const x of v.cihazlar) if (!x.cihaz || x.cihaz.eksik || x.cihaz.gecti) s.add(`cihaz.${x.turId}`);
+    return s;
+  }, [d, tarih.bas, v.cihazlar]);
+  const gecersiz = (alan: string) => isaretli.has(alan) && canli.has(alan);
+
+  const kaynaklar: Record<Kaynak, string | null> = {
+    firma_adi: v.kunye.firmaAdi, tesis_adresi: v.kunye.adres, sgk: v.kunye.sgk, isg_id: v.kunye.isgNo,
+    kontrol_tarihi: tarih.bas ? tarihNo(tarih.bas) : null, rapor_no: v.no, ekipman_kodu: v.ekipman.kod, ekipman_adi: v.tur.ad,
+    seri_no: ekipman.seri || null, kullanim_yeri: ekipman.konum || null,
+  };
+  const yaz = (f: (c: Cevaplar) => Cevaplar) => { setCevaplar(f); setKirli(true); };
+  const bag: Baglam = {
+    v, c: cevaplar, yaz, d, oku, gecersiz, kaynak: (k) => kaynaklar[k],
+    cihaz: (bolumId) => <CihazBolumu v={v} bolumId={bolumId} oku={oku} gecersiz={gecersiz} mesgul={mesgul} yenile={yenile} />,
+  };
+
+  /* format bölümleri: yalnız kayıttan gelen alanlı bilgi bölümü 1. bölümün kopyası — çizilmez; adında "ekipman" geçen bilgi bölümü 2. bölüme
+     katılır (maket: formatlı türde "Ekipman bilgileri" formattan) */
+  const tr = (x: string) => x.toLocaleLowerCase("tr");
+  const ekipmanBlogu = (b: (typeof v.tanim.bolumler)[number]) => b.blok === "bilgi" && tr(b.ad).includes("ekipman") && b.alanlar.some((a) => !a.kaynak);
+  const katilan = v.tanim.bolumler.filter(ekipmanBlogu).flatMap((b) => (b.blok === "bilgi" ? [b] : []));
+  const bolumler = v.tanim.bolumler.filter((b) => !ekipmanBlogu(b) && !(b.blok === "bilgi" && b.alanlar.length > 0 && b.alanlar.every((a) => a.kaynak)));
+  /* formatın elle sorduğu alan sabit satırda tekrar edilmez (kayıttan gelen alan sabit satırdan okunur, gizlenmez) */
+  const formatAdlari = v.tanim.bolumler.flatMap((b) => (b.blok === "bilgi" ? b.alanlar.filter((a) => !a.kaynak).map((a) => tr(a.ad)) : []));
+  const formatta = (...l: string[]) => formatAdlari.some((ad) => l.some((x) => ad.includes(x)));
+  const cihazEk = !v.tanim.bolumler.some((b) => b.blok === "cihaz") && v.cihazlar.length > 0;
+  const sabitSay = cihazEk ? 3 : 2;
+  const cihazEksik = v.cihazlar.some((x) => gecersiz(`cihaz.${x.turId}`));
+  const bolumEksik = (id: string) => d.eksikler.some((e) => e.bolum === id && gecersiz(e.alan));
+  const acik = (id: string) => !kapali.has(id);
+  const degistir = (id: string) => (a: boolean) => setKapali((k) => { const y = new Set(k); if (a) y.delete(id); else y.add(id); return y; });
+
+  /* ── yazma ── */
+  const ekipmanYaz = (k: EkipmanAnahtari, x: string) => { setEkipman((e) => ({ ...e, [k]: x })); setKirli(true); };
+  const tarihYaz = (k: TarihAnahtari, x: string) => {
+    const oto = { sonraki: !elle.sonraki, rapor: !elle.rapor };
+    setTarih((t) => {
+      const y = { ...t, [k]: x };
+      if (k === "bas" && x) {
+        if (oto.sonraki) y.sonraki = ayEkle(x.slice(0, 10), v.tur.periyot);
+        if (oto.rapor) y.rapor = x.slice(0, 10);
+      }
+      return y;
+    });
+    if (k === "sonraki" || k === "rapor") setElle((e) => ({ ...e, [k]: true }));
+    setKirli(true);
+  };
+  const girdi = () => ({ ekipman, tarih, cevaplar });
+  const kaydedildi = () => { setKirli(false); setSonKayit(new Date().toISOString()); setGenel(null); setAlanHata({}); };
+  const yanitHatasi = (r: RaporYaniti) => {
+    const h = r.hatalar ?? {}, ilk = Object.keys(h)[0];
+    setAlanHata(h);
+    setGenel(r.genel ?? (ilk ? `${ALAN_ADI[ilk] ? `${ALAN_ADI[ilk]}: ` : ""}${h[ilk]}` : "İşlem yapılamadı."));
+  };
+
+  const kaydet = () => baslat(async () => {
+    const r = await raporKaydetEylemi(v.id, v.surum, girdi());
+    if (r.tamam) { kaydedildi(); bildir(r.bildirim ?? "Rapor kaydedildi."); yenile(); return; }
+    yanitHatasi(r);
+  });
+  const gonder = async () => {
+    if (!(await onayla({ baslik: "Rapor onaya gönderilsin mi?", tus: "Onaya gönder",
+      metin: `${v.no} teknik yöneticinin onayına gider. Onaylanana ya da geri gönderilene kadar raporda değişiklik yapılamaz.` }))) return;
+    gonderIc();
+  };
+  const gonderIc = () => baslat(async () => {
+    const r = await onayaGonderEylemi(v.id, v.surum, girdi());
+    if (r.eksikler) {   /* rapor kaydedildi, gönderilmedi */
+      kaydedildi(); setIsaretli(new Set(r.eksikler.map((e) => e.alan))); setKapali(new Set()); setEksikler(r.eksikler); yenile();
+      return;
+    }
+    if (r.tamam) { kaydedildi(); setIsaretli(new Set()); bildir(r.bildirim ?? "Rapor onaya gönderildi."); yenile(); window.scrollTo({ top: 0 }); return; }
+    yanitHatasi(r);
+  });
+  const sil = async () => {
+    if (!(await onayla({ baslik: "Raporu sil", metin: `${v.no} · ${v.ekipman.kod} raporu ve içine yazılan her şey silinir; geri alınamaz.`, tus: "Sil", tehlike: true }))) return;
+    baslat(async () => {
+      const r = await raporSilEylemi(v.id, v.surum);
+      if (r.tamam) { bildir(r.bildirim ?? "Rapor silindi."); router.push(`/planlar/${v.plan.id}`); return; }
+      yanitHatasi(r);
+    });
+  };
+  const kunyeGuncelle = () => baslat(async () => {
+    const r = await raporKunyeGuncelleEylemi(v.id);
+    if (r.tamam) { setGenel(null); bildir(r.bildirim ?? "Plan bilgileri güncellendi."); yenile(); return; }
+    yanitHatasi(r);
+  });
+  /* eksiğe git (maket eksikeGit): pencere kapanır, bölümler açılır, alana kayılır ve odaklanır (pencerenin odak iadesinden sonra). Listedeki
+     eksiğe ya da Tamam'a basınca; X / Esc yalnız kapatır (odak Onaya gönder'e döner, kişi nereye gideceğini kendi seçer) */
+  const git = (e: Eksik) => {
+    setEksikler(null);
+    setKapali(new Set());
+    window.setTimeout(() => {
+      const el = document.getElementById(alanId(e.alan)) ?? document.getElementById(`b-${e.bolum}-b`);
+      if (!el) return;
+      const hedef = el.matches("input, textarea, button") ? el : el.querySelector<HTMLElement>("input, textarea, button") ?? el;
+      el.scrollIntoView({ block: "center" });
+      hedef.focus({ preventScroll: true });
+    }, 60);
+  };
+  const tamam = () => (eksikler?.length ? git(eksikler[0]) : setEksikler(null));
+
+  /* ── alan çizicileri ── */
+  const metinSatiri = (k: EkipmanAnahtari, etiket: string, en: number, sayisal = false) => {
+    const id = EID(k), h = alanHata[`ekipman.${k}`];
+    return (
+      <Satir key={k} etiket={etiket} htmlFor={id}>
+        {oku ? <OkuGirdi id={id} deger={ekipman[k]} /> : <Girdi id={id} value={ekipman[k]} maxLength={en} inputMode={sayisal ? "numeric" : undefined} hata={!!h}
+          onChange={(e) => ekipmanYaz(k, e.target.value)} />}
+        {h && <p className={stil.alanHata} id={ipucuId(id)}>{h}</p>}
+      </Satir>
+    );
+  };
+  const tarihUyari = (k: TarihAnahtari) =>
+    k === "bit" && tarih.bas && tarih.bit && tarih.bit < tarih.bas ? "Bitiş başlangıçtan önce."
+      : k === "sonraki" && tarih.bas && tarih.sonraki && tarih.sonraki <= tarih.bas.slice(0, 10) ? "Kontrol tarihinden sonra olmalı." : null;
+  const tarihSatiri = (k: TarihAnahtari, etiket: string, saat: boolean, zorunlu = false) => {
+    const id = TID(k), alan = `tarih.${k}`, gec = gecersiz(alan);
+    const h = alanHata[alan] ?? (gec ? "Tarih ve saat seçilmeli." : null), u = h ? null : tarihUyari(k);
+    return (
+      <Satir key={k} etiket={etiket} htmlFor={id} zorunlu={zorunlu && !oku}>
+        {oku ? <OkuGirdi id={id} deger={tarih[k] ? (saat ? saatliNo(tarih[k]) : tarihNo(tarih[k])) : ""} /> : <>
+          <TarihKutusu id={id} ad={etiket} saat={saat} deger={tarih[k]} degistir={(x) => tarihYaz(k, x)} gecersiz={gec} tanim={h || u ? ipucuId(id) : undefined} />
+          {(h || u) && <p className={h ? stil.alanHata : stil.alanUyari} id={ipucuId(id)}>{h ?? u}</p>}
+        </>}
+      </Satir>
+    );
+  };
+  const metot = v.tur.kontrolStd.length ? v.tur.kontrolStd.join(" · ") : <DegerYok>-</DegerYok>;
+  const onceki = v.ekipman.onceki;
+
+  /* ── şeritler ── */
+  const seritler: ReactNode[] = [];
+  if (genel) seritler.push(<Serit key="hata" tur="hata" ikon="circle-alert">{genel}</Serit>);
+  if (v.izin.duzenle && v.kunyeFark.length) {
+    seritler.push(
+      <Serit key="kunye" tur="bilgi" ikon="refresh-cw" eylem={<Tus tur="ikincil" ikon="refresh-cw" disabled={mesgul} onClick={kunyeGuncelle}>Güncelle</Tus>}>
+        Planlamacı plan bilgilerini değiştirdi: <b>{v.kunyeFark.join(", ")}</b>. Raporunuza almak için Güncelle&apos;ye basın.
+      </Serit>,
+    );
+  }
+  if (v.durum !== "taslak") {
+    seritler.push(<Serit key="kilit" tur="bilgi" ikon="lock">{KILIT[v.durum]}{v.durum === "onayda" && v.gonderildi ? ` · ${zamanNo(v.gonderildi)}` : null}</Serit>);
+  } else if (!v.izin.duzenle) {
+    seritler.push(<Serit key="kilit" tur="bilgi" ikon="lock">Rapor yazılıyor; yalnız raporu yazan muayene uzmanı düzenler.</Serit>);
+  }
+
+  const [durumAd, rozet] = RAPOR_DURUM[v.durum];
+  return (
+    <>
+      <Kirinti ogeler={[["Planlar", "/planlar"], [v.plan.no, `/planlar/${v.plan.id}`], [v.no]]} />
+      <NesneBasi baslik={`${v.ekipman.kod} · ${v.tur.ad}`} rozet={<Rozet tur={rozet}>{durumAd}</Rozet>} altIkon="file-text"
+        alt={<><Kod>{v.no}</Kod> · {v.plan.musteriKisa} · {v.plan.tesisAd} · {v.yazan.ad}</>}
+        tuslar={v.izin.duzenle && (
+          <p className={kirli ? `${stil.kayit} ${stil.kirli}` : stil.kayit} aria-live="polite">
+            {kirli ? "Kaydedilmemiş değişiklik var" : sonKayit ? `Son kayıt ${zamanNo(sonKayit)}` : "Kaydedildi"}
+          </p>
+        )} />
+      {seritler.length > 0 && <SeritKap>{seritler}</SeritKap>}
+
+      <div className={stil.bolumler}>
+        <RaporBolumu id={SABIT.firma} no={1} baslik="Firma bilgileri" acik={acik(SABIT.firma)} degistir={degistir(SABIT.firma)}
+          eksik={gecersiz("tarih.bas") || gecersiz("tarih.bit")}>
+          <Satirlar>
+            <Satir etiket="Firma adı">{v.kunye.firmaAdi}</Satir>
+            <Satir etiket="E-posta">{v.kunye.eposta ?? <DegerYok>-</DegerYok>}</Satir>
+            <Satir etiket="Telefon">{v.kunye.tel ?? <DegerYok>-</DegerYok>}</Satir>
+            {tarihSatiri("bas", "Periyodik kontrol başlangıç tarihi ve saati", true, true)}
+            {tarihSatiri("bit", "Periyodik kontrol bitiş tarihi ve saati", true)}
+            {tarihSatiri("sonraki", "Bir sonraki periyodik kontrol tarihi", false)}
+            {tarihSatiri("takip", "Takip kontrol tarihi", false)}
+            <Satir etiket="Adres">{v.kunye.adres ?? <DegerYok>-</DegerYok>}</Satir>
+            <Satir etiket="Rapor no"><Kod>{v.no}</Kod></Satir>
+            {tarihSatiri("rapor", "Rapor tarihi", false)}
+            <Satir etiket="İSG-KATİP SÖZLEŞME ID">{v.kunye.isgNo ? <span className={stil.kodUzun}>{v.kunye.isgNo}</span> : <span className={stil.uyari}>Yok</span>}</Satir>
+            <Satir etiket="SGK DETSİS NO">{v.kunye.sgk ? <span className={stil.kodUzun}>{v.kunye.sgk}</span> : <span className={stil.uyari}>Yok</span>}</Satir>
+            <Satir etiket="Periyodik kontrol metodu ve kapsamı">{metot}</Satir>
+            {metinSatiri("bolum", "Ekipman bölümü", 60)}
+          </Satirlar>
+        </RaporBolumu>
+
+        <RaporBolumu id={SABIT.ekipman} no={2} baslik="Ekipman bilgileri" acik={acik(SABIT.ekipman)} degistir={degistir(SABIT.ekipman)}
+          eksik={katilan.some((b) => bolumEksik(b.id))}>
+          <Satirlar>
+            <Satir etiket="Kod"><Kod>{v.ekipman.kod}</Kod></Satir>
+            <Satir etiket="Ekipman türü">{v.tur.ad}</Satir>
+            <Satir etiket="Kontrol metodu">{metot}</Satir>
+            {!formatta("marka") && metinSatiri("marka", "Marka", 40)}
+            {!formatta("model") && metinSatiri("model", "Model", 40)}
+            {!formatta("seri no") && metinSatiri("seri", "Seri no", 30)}
+            {!formatta("imal") && metinSatiri("imal", "İmal yılı", 4, true)}
+            {!formatta("kullanım yeri") && metinSatiri("konum", "Kullanım yeri", 60)}
+            {!formatta("kullanım amacı") && metinSatiri("amac", "Kullanım amacı", 120)}
+            <Satir etiket="Önceki kontrol">
+              {onceki ? `${tarihNo(onceki.tarih)} · ${onceki.sonuc ?? "-"} · eski kayıt (Excel)` : "İlk kontrol"}
+            </Satir>
+          </Satirlar>
+          {katilan.map((b) => <BilgiBlok key={b.id} b={b} bag={bag} />)}
+        </RaporBolumu>
+
+        {cihazEk && (
+          <RaporBolumu id={SABIT.cihaz} no={3} baslik="Ölçüm cihazları" acik={acik(SABIT.cihaz)} degistir={degistir(SABIT.cihaz)} eksik={cihazEksik}>
+            {bag.cihaz(SABIT.cihaz)}
+          </RaporBolumu>
+        )}
+
+        {bolumler.map((b, i) => (
+          <FormatBolumu key={b.id} b={b} no={sabitSay + i + 1} bag={bag} acik={acik(b.id)} degistir={degistir(b.id)}
+            eksik={bolumEksik(b.id) || (b.blok === "cihaz" && cihazEksik)} />
+        ))}
+      </div>
+
+      {(v.izin.duzenle || v.izin.sil) && (
+        <div className={stil.eylem}>
+          {v.izin.sil && <Tus tur="ikincil" ikon="trash-2" className={stil.silTus} disabled={mesgul} onClick={sil}>Sil</Tus>}
+          {v.izin.duzenle && <>
+            <Tus tur="ikincil" ikon="check" disabled={mesgul} onClick={kaydet}>Kaydet</Tus>
+            <Tus ikon="send" disabled={mesgul} onClick={gonder}>Onaya gönder</Tus>
+          </>}
+        </div>
+      )}
+
+      <Pencere acik={!!eksikler} baslik="Zorunlu alanlar doldurulmadı" onKapat={() => setEksikler(null)} alt={<Tus onClick={tamam}>Tamam</Tus>}>
+        <p className={pencereMetinSinifi}>Eksik alanlar kırmızıyla işaretlendi. Rapor kaydedildi, gönderilmedi.</p>
+        <ul className={stil.eksikListe}>
+          {(eksikler ?? []).map((e, i) => (
+            <li key={`${e.alan}-${i}`}>
+              <button className={stil.eksikTus} type="button" data-ilk-odak={i === 0 ? "" : undefined} onClick={() => git(e)}>
+                <Ikon ad="circle-alert" kucuk /><span>{e.ad}</span>
+              </button>
+            </li>
+          ))}
+        </ul>
+      </Pencere>
+    </>
+  );
+}

@@ -102,6 +102,10 @@ pkproje/
   src/modules/planlar/      PLANLAR (2026-10-04, 309–310; modül 13): plan + plan ekibi (göç 0023; proje no sunucuda, değişmez; künye kayıttan) ·
                             Plan aç /planlar/ac (uyarılar sema.ts'te saf, engel değil) · liste /planlar · plan içi /planlar/<id> (server/plan-ici.ts:
                             akış kabul/red/kontrol/tamamla, künye düzenle/güncelle, plan ekipmanı, proje notları; geçişler göç 0024 tetiğinde)
+  src/modules/raporlar/     RAPORLAR (2026-10-05, 311; modül 14): saha raporu (göç 0025 rapor: plan × ekipman başına tek etkin rapor, açıldığı
+                            format sürümü, künye kopyası, cevaplar JSON, cihazlar; durum ve içerik değişmezliği tetikte) · server/raporlar.ts (oluştur,
+                            saha verisi, kaydet, onaya gönder: ENGEL 1 / 2 / 5, sil, cihaz) · server/plan-baglanti.ts (Planlar'ın rapora baktığı tek yer)
+                            · ekran /raporlar/<id> (format tanımından çizilir: ui/Bloklar.tsx)
   src/modules/ekipman/      EKİPMAN (2026-10-04, 309): tesisin kalıcı ekipman kaydı (kod firmada eşsiz; eski kod başkasına verilmez — ekipman_kodu)
   src/tanim/iller.ts        81 il + 973 ilçe (açık veri, MIT; bir kez alındı)
   src/modules/<modül>/      ★ her iş modülü: server/ (veri erişimi + iş kuralları, dışa açılan fonksiyonlar) · ui/ · şema · testler

@@ -47,3 +47,14 @@ export async function ekipmanEkle(db: Sorgulayici, iz: Iz, e: { tesisId: string;
 export async function ekipmanPasif(db: Sorgulayici, iz: Iz, id: string, surum: number, pasif: boolean): Promise<GuncelleSonucu> {
   return guncelle(db, EKIPMAN, id, surum, { pasif: pasif ? new Date() : null }, iz);
 }
+
+/** Raporlar için: ekipmanın etiket bilgileri (raporun ekipman bölümünün başlangıç değeri); yoksa null. Yetki ÇAĞIRANDA. */
+export async function ekipmanEtiketi(db: Sorgulayici, id: string): Promise<{ id: string; kod: string; turId: string; tesisId: string; pasif: boolean; marka: string | null;
+  model: string | null; seri: string | null; imal: number | null; konum: string | null; disKontrol: string | null; disSonuc: string | null } | null> {
+  if (!UUID.test(id)) return null;
+  const x = (await db.sorgu<{ id: string; kod: string; tur_id: string; tesis_id: string; pasif: Date | null; marka: string | null; model: string | null; seri: string | null;
+    imal: number | null; konum: string | null; dis_kontrol: string | null; dis_sonuc: string | null }>(
+    "SELECT id::text, kod, tur_id::text, tesis_id::text, pasif, marka, model, seri, imal, konum, dis_kontrol::text, dis_sonuc FROM ekipman WHERE id = $1", [id])).rows[0];
+  return x ? { id: x.id, kod: x.kod, turId: x.tur_id, tesisId: x.tesis_id, pasif: !!x.pasif, marka: x.marka, model: x.model, seri: x.seri, imal: x.imal, konum: x.konum,
+    disKontrol: x.dis_kontrol, disSonuc: x.dis_sonuc } : null;
+}

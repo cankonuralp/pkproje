@@ -162,3 +162,12 @@ export async function turOzetleri(db: Sorgulayici): Promise<{ id: string; ad: st
   return (await db.sorgu<{ id: string; ad: string; kod: string; brans: "m" | "e"; grup: string; periyot: number }>("SELECT id::text, ad, kod, brans, grup, periyot FROM ekipman_turu")).rows
     .sort((a, b) => (a.brans === b.brans ? a.ad.localeCompare(b.ad, "tr") : a.brans === "m" ? -1 : 1));
 }
+
+/** Raporlar için: türün adı, kodu, branşı, Ek-III grubu, periyodu, kontrol metodu standartları ve gerekli ölçüm cihazı türleri. Yetki ÇAĞIRANDA. */
+export async function turRaporBilgisi(db: Sorgulayici, id: string): Promise<{ id: string; ad: string; kod: string; brans: "m" | "e"; grup: string; periyot: number;
+  kontrolStd: string[]; cihazTurleri: string[] } | null> {
+  if (!UUID.test(id)) return null;
+  const x = (await db.sorgu<{ id: string; ad: string; kod: string; brans: "m" | "e"; grup: string; periyot: number; kontrol_std: string[]; cihaz_turleri: string[] }>(
+    "SELECT id::text, ad, kod, brans, grup, periyot, kontrol_std, cihaz_turleri::text[] AS cihaz_turleri FROM ekipman_turu WHERE id = $1", [id])).rows[0];
+  return x ? { id: x.id, ad: x.ad, kod: x.kod, brans: x.brans, grup: x.grup, periyot: x.periyot, kontrolStd: x.kontrol_std, cihazTurleri: x.cihaz_turleri } : null;
+}

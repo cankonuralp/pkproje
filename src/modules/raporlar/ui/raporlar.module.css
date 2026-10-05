@@ -1,0 +1,160 @@
+/* SAHA RAPORU (311; maket maket.css "M8 — saha raporu": .a-bolum-rapor, .a-bolum-acilir, .a-satirlar-form, .a-kriter*, .a-kusur-liste,
+   .a-format-metin, .a-rapor-eylem, .a-cihaz-grup; rapor.html). Bölümler alt alta kart, her başlık açılır kapanır (reisim 2026-09-26); firma ve
+   ekipman bilgileri etiket üstte, iki sütun yan yana (2026-09-29), telefonda tek sütun. Madde satırı solda madde, sağda cevap; telefonda alt
+   alta. Ölçüm tablosu yalnız kendi kabında yatay kayar (sayfa kaymaz). Renk / ölçü yalnız tokens.css değişkenlerinden. */
+.bolumler { display: grid; gap: 16px; min-width: 0; }
+.bolum {
+  min-width: 0; padding: 10px 14px 14px; background: var(--kart); border: 1px solid var(--kenar); border-radius: var(--r-buyuk);
+  scroll-margin-top: calc(var(--ust-y) + 12px);
+}
+.bolumBas { display: flex; align-items: center; flex-wrap: wrap; gap: 6px 12px; min-height: var(--tus-y); }
+.bolumBaslik {
+  margin: 0; min-width: 0; font-size: var(--boy-bolum); font-weight: var(--kal-bolum); overflow-wrap: anywhere;
+  scroll-margin-top: calc(var(--ust-y) + 12px);
+}
+.bolumNo { color: var(--yazi2); font-variant-numeric: tabular-nums; }
+.bolumSag { display: flex; align-items: center; flex-wrap: wrap; justify-content: flex-end; gap: 8px; margin-left: auto; }
+.acTus, .ikonTus {
+  display: inline-flex; align-items: center; justify-content: center; flex: none; width: var(--tus-y); height: var(--tus-y); padding: 0;
+  border: 0; border-radius: var(--r-orta); background: transparent; color: var(--yazi2);
+}
+.acTus:hover { background: var(--zemin2); color: var(--yazi); }
+.acTus[aria-expanded="false"] > svg { transform: rotate(-90deg); }
+.ikonTus:hover { background: var(--zemin2); color: var(--hata-yazi); }
+.ikonTus:disabled { opacity: .45; cursor: not-allowed; }
+.bolumIc { display: grid; gap: 12px; margin-top: 8px; min-width: 0; }
+.sayac { color: var(--yazi2); font-size: var(--boy-kucuk); white-space: nowrap; }
+.sayac b { color: var(--yazi); font-weight: 700; }
+
+/* etiket : değer satırları (maket .a-satirlar-form): etiket üstte, iki sütun; çoklu seçim tam satır */
+.satirlar { display: grid; grid-template-columns: repeat(2, minmax(0, 1fr)); gap: 16px 24px; margin: 0; }
+.satir { display: grid; align-content: start; gap: 6px; min-width: 0; }
+.satir > dt { font-size: var(--boy-kucuk); font-weight: 600; }
+.satir > dd { margin: 0; min-width: 0; overflow-wrap: anywhere; }
+.satirGenis { grid-column: 1 / -1; }
+.zorunlu { color: var(--yazi3); font-size: var(--boy-etiket); font-weight: 600; }
+/* salt okunur alan (maket .a-girdi-oku): gönderilmiş raporda değer kutuda kalır, düzenlenmez */
+input.oku { background: var(--zemin2); border-color: var(--kenar); color: var(--yazi); }
+.tarih { min-width: 0; border-radius: var(--r-orta); }
+/* Onaya gönder'in işaretlediği boş zorunlu alan: kırmızı çerçeve (girdinin kendisi aria-invalid) */
+.gecersiz { box-shadow: 0 0 0 2px var(--hata-yazi); }
+.alanHata { margin: 6px 0 0; color: var(--hata-yazi); font-size: var(--boy-etiket); font-weight: 600; }
+.alanUyari { margin: 6px 0 0; color: var(--uyari-yazi); font-size: var(--boy-etiket); font-weight: 600; }
+.uyari { color: var(--uyari-yazi); font-weight: 600; }
+.hataMetin { color: var(--hata-yazi); font-weight: 600; }
+.onay { color: var(--onay-yazi); font-weight: 600; }
+/* uzun kimlik (26 haneli SGK DETSİS no) telefonda taşmaz (maket 2026-10-03) */
+.kodUzun { font-weight: 700; font-variant-numeric: tabular-nums; letter-spacing: .01em; overflow-wrap: anywhere; }
+.coklu { display: grid; gap: 2px; padding: 2px 6px; border-radius: var(--r-orta); }
+.kutu { display: flex; align-items: flex-start; gap: 8px; min-height: var(--tus-y); padding-top: 8px; cursor: pointer; }
+.kutu input { width: 18px; height: 18px; margin: 2px 0 0; flex: none; accent-color: var(--birincil); }
+.cokluOku { margin: 0; padding-left: 18px; }
+
+/* kontrol maddeleri (maket .a-kriter): solda madde, sağda cevap; "Uygun değil"de altında kusur açıklaması (ve formatta açıksa derece) */
+.grup { min-width: 0; }
+.grupBaslik { margin: 8px 0 0; padding-bottom: 4px; font-size: var(--boy-govde); font-weight: 700; color: var(--yazi2); overflow-wrap: anywhere; }
+.madde { display: grid; grid-template-columns: minmax(0, 1fr) 13rem; align-items: center; gap: 8px 16px; padding: 12px 0; border-top: 1px solid var(--kenar); }
+.maddeSonuc { border-top: 0; padding-top: 0; }
+.maddeSol { min-width: 0; }
+.maddeAd { display: flex; gap: 8px; margin: 0; font-weight: 600; overflow-wrap: anywhere; }
+.maddeNo { flex: none; min-width: 20px; white-space: nowrap; color: var(--yazi2); font-variant-numeric: tabular-nums; }
+.maddeCevap { position: relative; min-width: 0; }
+.maddeBilgi { margin: -4px 0 -6px 28px; color: var(--yazi2); font-size: var(--boy-kucuk); }
+.maddeBilgi > summary { display: inline-flex; align-items: center; gap: 6px; min-height: var(--tus-y); cursor: pointer; list-style: none; }
+.maddeBilgi > summary::-webkit-details-marker { display: none; }
+.maddeBilgi p { margin: 0 0 8px; overflow-wrap: anywhere; }
+.maddeKusur { grid-column: 1 / -1; display: grid; grid-template-columns: minmax(0, 1fr) 13rem; align-items: start; gap: 8px 16px; }
+.maddeKusur > :only-child { grid-column: 1 / -1; }
+.maddeUyari { grid-column: 1 / -1; margin: 0; font-size: var(--boy-kucuk); }
+.etiket { display: block; margin: 0 0 6px; font-size: var(--boy-kucuk); font-weight: 600; }
+.metinAlan {
+  display: block; width: 100%; min-height: 72px; padding: 8px 10px; border: 1px solid var(--kenar-alan); border-radius: var(--r-orta);
+  background: var(--kart); color: var(--yazi); font: inherit; resize: vertical;
+}
+.metinAlan[aria-invalid="true"] { border-color: var(--hata-yazi); box-shadow: 0 0 0 1px var(--hata-yazi); }
+.metinAlan:read-only { background: var(--zemin2); border-color: var(--kenar); resize: none; }
+
+/* "Hepsini işaretle" menüsü (maket topluMenu, bölüm başlığında; 2026-09-29) */
+.menuKap { position: relative; }
+.menu {
+  position: absolute; right: 0; top: calc(100% + 6px); z-index: 40; min-width: 240px; padding: 6px;
+  background: var(--kart); border: 1px solid var(--kenar); border-radius: var(--r-orta); box-shadow: var(--golge-2);
+}
+.menuOge {
+  display: flex; align-items: center; width: 100%; min-height: var(--tus-y); padding: 0 12px; text-align: left; white-space: nowrap;
+  border: 0; border-radius: var(--r-kucuk); background: transparent; color: var(--yazi);
+}
+.menuOge:hover, .menuOge:focus-visible { background: var(--zemin2); }
+
+/* ölçüm tablosu: satır başına bir ölçüm; dar ekranda yalnız tablo kabı yatay kayar */
+.tabloKap { min-width: 0; overflow-x: auto; border: 1px solid var(--kenar); border-radius: var(--r-orta); }
+.olcumTablo { width: 100%; border-collapse: collapse; font-size: var(--boy-kucuk); }
+.olcumTablo th, .olcumTablo td { padding: 6px 8px; text-align: left; vertical-align: top; border-bottom: 1px solid var(--kenar); }
+.olcumTablo th { background: var(--zemin2); color: var(--yazi2); font-weight: 600; white-space: nowrap; }
+.olcumTablo td { min-width: 6.5rem; }
+.olcumTablo tbody tr:last-child td { border-bottom: 0; }
+.olcumTablo td.satirNo { min-width: 0; padding-top: 14px; color: var(--yazi2); font-variant-numeric: tabular-nums; }
+.olcumTablo td.sonucHucre { min-width: 9rem; }
+.olcumTablo td.islemHucre { min-width: 0; }
+/* tablo içindeki seçim listesi akışta açılır — kayan kap kesmesin (pencere içindeki seçimle aynı karar: Secim.module.css "dialog .secim .liste") */
+.olcumTablo [data-secim-kap] [role="listbox"] { position: static; margin-top: 6px; box-shadow: none; max-height: 240px; }
+.birim { font-weight: 400; }
+.sinir { display: block; color: var(--yazi3); font-size: var(--boy-etiket); font-weight: 400; }
+.neden { margin: 4px 0 0; padding-left: 16px; color: var(--hata-yazi); }
+.oneri { display: block; margin-top: 4px; color: var(--yazi2); }
+.tabloAlt { display: flex; align-items: center; flex-wrap: wrap; gap: 8px 12px; }
+.ipucuMetin { color: var(--yazi2); font-size: var(--boy-kucuk); }
+.notlar { color: var(--yazi2); font-size: var(--boy-kucuk); }
+.notlar > summary { display: inline-flex; align-items: center; min-height: var(--tus-y); cursor: pointer; font-weight: 600; }
+.notlar ol { display: grid; gap: 4px; margin: 4px 0 0; padding-left: 20px; }
+
+/* kusur açıklamaları · sonuç cümlesi · imzalar */
+.kusurListe { display: grid; gap: 8px; margin: 0; padding-left: 20px; }
+.kusurListe li { overflow-wrap: anywhere; }
+.cumle { margin: 0; color: var(--yazi2); overflow-wrap: anywhere; }
+.cumle b { color: var(--yazi); }
+.imzalar { display: grid; grid-template-columns: repeat(auto-fit, minmax(min(100%, 14rem), 1fr)); gap: 12px; margin: 0; padding: 0; list-style: none; }
+.imza { display: grid; gap: 6px; min-width: 0; }
+.imzaKutu {
+  display: flex; align-items: center; justify-content: center; min-height: 64px; padding: 8px; text-align: center;
+  border: 1px dashed var(--kenar-alan); border-radius: var(--r-kucuk); color: var(--yazi2); font-size: var(--boy-kucuk);
+}
+.bosSatir { margin: 0; padding: 6px 0; color: var(--yazi2); font-size: var(--boy-kucuk); }
+
+/* Kaydet · Onaya gönder · Sil: sayfa kaysa da görünür, altta yapışkan (reisim 2026-09-27); telefonda tuşlar tam genişlik */
+.eylem {
+  position: sticky; bottom: 0; z-index: 10; display: flex; justify-content: flex-end; flex-wrap: wrap; gap: 8px;
+  margin: 16px calc(var(--bosluk-sayfa) * -1) calc(var(--bosluk-sayfa) * -1);
+  padding: 8px var(--bosluk-sayfa) calc(8px + env(safe-area-inset-bottom));
+  background: var(--kart); border-top: 1px solid var(--kenar);
+}
+button.silTus { color: var(--hata-yazi); }
+.kayit { margin: 0; color: var(--yazi2); font-size: var(--boy-kucuk); }
+.kirli { color: var(--uyari-yazi); font-weight: 600; }
+.eksikListe { display: grid; gap: 4px; margin: 12px 0 0; padding: 0; list-style: none; }
+.eksikTus {
+  display: flex; align-items: center; gap: 8px; width: 100%; min-height: var(--tus-y); padding: 6px 10px; text-align: left;
+  border: 0; border-radius: var(--r-orta); background: transparent; color: var(--hata-yazi); font-weight: 600;
+}
+.eksikTus:hover, .eksikTus:focus-visible { background: var(--zemin2); }
+
+/* ölçüm cihazları (maket CIHAZ_SATIR, .a-cihaz-grup): satırda cihaz ya da "Cihaz ekle"; pencerede zimmetteki geçerli cihazlar */
+.cihazKap { display: grid; gap: 10px; min-width: 0; }
+.ustTuslar { display: flex; justify-content: flex-end; flex-wrap: wrap; gap: 8px; }
+.hucreSatir { display: inline-flex; align-items: center; flex-wrap: wrap; gap: 6px 8px; min-width: 0; }
+.eylemHucre { display: flex; justify-content: flex-end; }
+.cihazGrup { margin: 0; padding: 0; border: 0; min-width: 0; }
+.secimListesi { display: grid; gap: 4px; margin: 0; padding: 0; list-style: none; }
+.secimSatir { display: flex; align-items: flex-start; gap: 10px; min-height: var(--tus-y); padding: 6px 8px; border-radius: var(--r-orta); cursor: pointer; }
+.secimSatir:hover { background: var(--zemin2); }
+.secimSatir input { width: 18px; height: 18px; margin: 3px 0 0; flex: none; accent-color: var(--birincil); }
+.altMetin { display: block; color: var(--yazi2); font-size: var(--boy-kucuk); }
+
+@media (max-width: 767.98px) {
+  .bolum { padding: 8px 12px 12px; }
+  .satirlar { grid-template-columns: minmax(0, 1fr); gap: 14px; }
+  .madde { grid-template-columns: minmax(0, 1fr); }
+  .maddeKusur { grid-template-columns: minmax(0, 1fr); }
+  .maddeBilgi { margin-left: 0; }
+  .eylem > * { flex: 1 1 auto; }
+}

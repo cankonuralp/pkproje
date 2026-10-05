@@ -23,6 +23,11 @@ export async function roldekiHesaplar(db: Sorgulayici, rol: Rol): Promise<{ id: 
     .map((x) => ({ id: x.id, personelId: x.personel_id, durum: x.durum }));
 }
 
+/** belli roldeki ETKİN hesapların adları — Raporlar'ın "Onaya gönderildi: <yönetici>" bildirimi için (yetki ÇAĞIRANDA) */
+export async function roldekiHesapAdlari(db: Sorgulayici, rol: Rol): Promise<string[]> {
+  return (await db.sorgu<{ ad: string }>("SELECT ad FROM hesap WHERE durum = 'etkin' AND $1 = ANY (roller) ORDER BY ad", [rol])).rows.map((x) => x.ad);
+}
+
 /** oturumdaki hesabın personel kaydı (yoksa null) — "kendi" düzeyi için */
 export async function hesabinPersoneli(db: Sorgulayici, hesapId: string): Promise<string | null> {
   return (await db.sorgu<{ p: string | null }>("SELECT personel_id::text AS p FROM hesap WHERE id = $1", [hesapId])).rows[0]?.p ?? null;

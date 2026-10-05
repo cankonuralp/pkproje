@@ -1,7 +1,11 @@
 "use client";
 /* PLAN İÇİ · EKİPMANLAR (maket planlarim.html ekpSutun, ekleCiz; 3.–4. tur): süzgeç alan alan (Ekipman türü, Ekipman kodu — 2026-09-28) + çipler
    (Raporu yok / var, Denetimde eklendi, Önceki kontrolde kusur) + Branş; 10'ar sayfa. Satır: Kod (+ Yeni) · Ekipman türü · Konum · Branş · Önceki
-   kontrol · Rapor (tik / Pasif) · İşlem (Pasife al / Etkinleştir — raporu olmayan ekipmanda; rapor oluştur Raporlar kalemiyle).
+   kontrol · Rapor (yeşil tik — 2026-09-28 "rapor varsa küçük yeşil bir tik" / Pasif) · İşlem (raporu olmayan ekipmanda: Pasife al simgesi /
+   Etkinleştir + Rapor oluştur — 311; 2026-09-30 203: raporu olan ekipmanda ikisi de yok, rapor silinince geri gelir; 2026-10-03 "tablette pasife al
+   tuşu rapor oluştur tuşunu aşağıya taşırıyor" → Pasife al simge, işlem sütunu Rapor sütunundan pay alır). Rapor oluştur yalnız plandaki denetçiye
+   (izin sunucuda; plan günü gelmeden kapalı — ENGEL 1, neden plan içinde şeritte); başarıda plan içinde kalınır, bildirim ve Raporlar satırındaki
+   "Raporu düzenle" saha rapor ekranını açar (maket rapor-olustur).
    Ekipman ekle iki yol: YENİ (kodu personel etiketten yazar; yazarken denetlenir: bu planda var · bu tesiste kayıtlı → "Kayıtlı ekipmanı seç" ·
    başka tesiste · eski kod · kullanılabilir) ya da TESİSTE KAYITLI ekipmanı plana al. Eşsizlik sunucuda ve veritabanında da. */
 import { useRouter } from "next/navigation";
@@ -19,10 +23,18 @@ import { Tus } from "../../../components/tus/Tus";
 import { KALIP } from "../../../styles/kalip";
 import { kodBicimi, kodNormal, tarihNo, type KodTuru } from "../sema";
 import type { PlanEkipmani, PlanIci } from "../server/plan-ici";
+import { raporOlusturEylemi } from "../../raporlar/ui/eylemler";
 import { ekipmanPasifEylemi, kayitliEkleEylemi, kodDurumuEylemi, yeniEkipmanEylemi } from "./eylemler";
 import stil from "./planlar.module.css";
 
 const bransAd = (b: "m" | "e") => (b === "m" ? "Mekanik" : "Elektrik");
+/** plan günü gelmedi şeridinin id'si (PlanIciEkrani çizer; kapalı Rapor oluştur sebebini buradan okur) */
+export const ERKEN_ID = "plan-erken-sebep";
+/* sütun genişlikleri: Rapor oluştur varken işlem sütunu Rapor sütunundan pay alır (maket .a-tablo-ekipman, 2026-10-03) */
+const GENISLIK = {
+  sade: { kod: "14%", tur: "22%", konum: "18%", brans: "11%", onceki: "14%", rapor: "8%", eylem: "13%" },
+  rapor: { kod: "10%", tur: "15%", konum: "14%", brans: "10.5%", onceki: "17%", rapor: "8%", eylem: "25.5%" },
+} as const;
 const ayYil = (iso: string) => `${iso.slice(5, 7)}.${iso.slice(0, 4)}`;
 
 function tanim(raporlu: Set<string>): SuzgecTanimi<PlanEkipmani> {
@@ -68,32 +80,51 @@ export function EkipmanBolumu({ v }: { v: PlanIci }) {
   }, [kod, planId]);
   const durum: { tur: KodTuru; metin: string; ekipmanId?: string } = kodBicimi(kod) ?? (kd?.kod === kod ? kd : { tur: "bos", metin: "Kod denetleniyor…" });
 
+  const g = GENISLIK[v.izin.raporOlustur ? "rapor" : "sade"];
   const sutunlar: Sutun<PlanEkipmani>[] = [
-    { k: "kod", genislik: "14%", baslik: "Kod", kart: "ust", sira: 1, hucre: (e) => <><span className={stil.kod}>{e.kod}</span>{e.sonradan && <span className={stil.yeni}>Yeni</span>}</> },
-    { k: "tur", genislik: "22%", baslik: "Ekipman türü", kart: "govde", sira: 2, hucre: (e) => <Kirp>{e.tur}</Kirp> },
-    { k: "konum", genislik: "18%", baslik: "Konum", kart: "govde", sira: 3, hucre: (e) => <span className={stil.hucreSatir}><Ikon ad="map-pin" kucuk /><Kirp>{e.konum ?? "—"}</Kirp></span> },
-    { k: "brans", genislik: "11%", baslik: "Branş", kart: "govde", sira: 4, hucre: (e) => <span className={stil.hucreSatir}><Ikon ad={e.brans === "m" ? "cog" : "zap"} kucuk />{bransAd(e.brans)}</span> },
-    { k: "onceki", genislik: "14%", baslik: "Önceki kontrol", kart: "govde", sira: 5, hucre: (e) => !e.onceki ? <span className={stil.ilk}>İlk kontrol</span> : (
+    { k: "kod", genislik: g.kod, baslik: "Kod", kart: "ust", sira: 1, hucre: (e) => <><span className={stil.kod}>{e.kod}</span>{e.sonradan && <span className={stil.yeni}>Yeni</span>}</> },
+    { k: "tur", genislik: g.tur, baslik: "Ekipman türü", kart: "govde", sira: 2, hucre: (e) => <Kirp>{e.tur}</Kirp> },
+    { k: "konum", genislik: g.konum, baslik: "Konum", kart: "govde", sira: 3, hucre: (e) => <span className={stil.hucreSatir}><Ikon ad="map-pin" kucuk /><Kirp>{e.konum ?? "—"}</Kirp></span> },
+    { k: "brans", genislik: g.brans, baslik: "Branş", kart: "govde", sira: 4, hucre: (e) => <span className={stil.hucreSatir}><Ikon ad={e.brans === "m" ? "cog" : "zap"} kucuk />{bransAd(e.brans)}</span> },
+    { k: "onceki", genislik: g.onceki, baslik: "Önceki kontrol", kart: "govde", sira: 5, hucre: (e) => !e.onceki ? <span className={stil.ilk}>İlk kontrol</span> : (
       <><KartEtiket>Önceki kontrol</KartEtiket><span className={e.onceki.sonuc === "Kusurlu" ? stil.sonucHata : e.onceki.sonuc && e.onceki.sonuc !== "Uygun" ? stil.sonucUyari : undefined}
         title="eski kayıt (Excel)">{ayYil(e.onceki.tarih)}{e.onceki.sonuc && ` · ${e.onceki.sonuc}`}</span></>
     ) },
-    { k: "rapor", genislik: "8%", baslik: "Rapor", kart: "rozet", sira: 1, hucre: (e) => e.pasif ? <Rozet tur="notr">Pasif</Rozet>
-      : raporlu.has(e.id) ? <span className={stil.hucreSatir} title="Raporu var"><Ikon ad="circle-check" /><span className="gizli">Raporu var</span></span> : null },
-    ...(v.izin.ekipmanPasif ? [{ k: "eylem", genislik: "13%", baslik: "İşlem", gizliBaslik: true, siralanmaz: true, kart: "eylem", sira: 9, hucre: (e: PlanEkipmani) => (
-      raporlu.has(e.id) ? null : (
+    { k: "rapor", genislik: g.rapor, baslik: "Rapor", kart: "rozet", sira: 1, hucre: (e) => e.pasif ? <Rozet tur="notr">Pasif</Rozet>
+      : raporlu.has(e.id) ? <span className={stil.raporTik} title="Raporu var"><Ikon ad="circle-check" /><span className="gizli">Raporu var</span></span> : null },
+    ...(v.izin.ekipmanPasif || v.izin.raporOlustur ? [{ k: "eylem", genislik: g.eylem, baslik: "İşlem", gizliBaslik: true, siralanmaz: true, kart: "eylem", sira: 9, hucre: (e: PlanEkipmani) => {
+      if (raporlu.has(e.id)) return null;
+      const olustur = v.izin.raporOlustur && !e.pasif;
+      if (!v.izin.ekipmanPasif && !olustur) return null;
+      return (
         <div className={stil.eylemTuslar}>
-          {e.pasif
+          {v.izin.ekipmanPasif && (e.pasif
             ? <Tus tur="ikincil" ikon="undo-2" disabled={bekliyor} onClick={() => pasif(e, false)}>Etkinleştir</Tus>
-            : <Tus tur="ikincil" ikon="ban" disabled={bekliyor} aria-label={`${e.kod} pasife al`} onClick={() => pasif(e, true)}>Pasife al</Tus>}
+            : <Tus tur="ikincil" ikon="ban" className={stil.ikonTus} disabled={bekliyor} aria-label={`${e.kod} pasife al`} title="Pasife al"
+              onClick={() => pasif(e, true)}><span className="gizli">Pasife al</span></Tus>)}
+          {olustur && (
+            <Tus tur="ikincil" ikon="file-plus" disabled={bekliyor || v.erken} aria-label={`${e.kod} için rapor oluştur`}
+              aria-describedby={v.erken ? ERKEN_ID : undefined} onClick={() => raporAc(e)}>Rapor oluştur</Tus>
+          )}
         </div>
-      )
-    ) } satisfies Sutun<PlanEkipmani>] : []),
+      );
+    } } satisfies Sutun<PlanEkipmani>] : []),
   ];
 
   function pasif(e: PlanEkipmani, p: boolean) {
     baslat(async () => {
       const r = await ekipmanPasifEylemi(planId, e.id, e.surum, p);
       bildir(r.tamam ? r.bildirim ?? "Kaydedildi." : r.genel ?? "Kaydedilemedi.");
+      router.refresh();
+    });
+  }
+
+  /* Rapor oluştur (311): sunucu numarayı verir, ilk rapor planı Denetimde yapar; başarıda saha rapor ekranına geçilir */
+  function raporAc(e: PlanEkipmani) {
+    baslat(async () => {
+      const r = await raporOlusturEylemi(planId, e.id);
+      if (r.tamam) { bildir(r.bildirim ?? "Rapor oluşturuldu."); router.refresh(); return; }
+      bildir(r.genel ?? Object.values(r.hatalar ?? {})[0] ?? "Rapor oluşturulamadı.");
       router.refresh();
     });
   }

@@ -172,3 +172,10 @@ export async function musteriOzetleri(db: Sorgulayici): Promise<{ id: string; un
     tesisler: t.filter((y) => y.musteri_id === x.id).map((y) => ({ id: y.id, ad: y.ad, adres: y.adres, il: y.il, ilce: y.ilce, sgk: y.sgk, pasif: !!y.pasif })).sort((a, b) => a.ad.localeCompare(b.ad, "tr")) }))
     .sort((a, b) => a.kisa.localeCompare(b.kisa, "tr"));
 }
+
+/** Raporlar için: tesisin adı, müşterisinin ünvanı / kısa adı, e-postası, telefonu (raporun künyesine kopyalanır); yoksa null. Yetki ÇAĞIRANDA. */
+export async function tesisMusteriIletisim(db: Sorgulayici, tesisId: string): Promise<{ tesisAd: string; unvan: string; kisa: string; eposta: string | null; tel: string | null } | null> {
+  if (!/^[0-9a-f-]{36}$/.test(tesisId)) return null;
+  return (await db.sorgu<{ tesisAd: string; unvan: string; kisa: string; eposta: string | null; tel: string | null }>(
+    `SELECT t.ad AS "tesisAd", m.unvan, m.kisa, m.eposta, m.tel FROM tesis t JOIN musteri m ON m.id = t.musteri_id AND m.firma_id = t.firma_id WHERE t.id = $1`, [tesisId])).rows[0] ?? null;
+}
