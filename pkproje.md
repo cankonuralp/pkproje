@@ -2341,13 +2341,19 @@ revizyon, alan kopyalama, hafif kusur devri, meslek eşleşme denetimi).
 - Emsal ürünler: https://opwire.app/iso-17020-periyodik-kontrol-yazilimi/ · https://17020muayene.vidco.com.tr/ · https://akuple.com/asansor-kontrol-yazilimi/ · https://ensyazilim.com/
 
 ## 11 · Değişiklik günlüğü
+- 2026-10-05 (CI kararlılığı): CI iş günlüğü okunarak (git'in GitHub kimliğiyle, yalnız okuma) uçtan uca düşüşlerin sebebi bulundu: 180 testlik koşunun
+  sonuna doğru Next geliştirme sunucusunun yığını kendi eşiğine (bellek sınırının %80'i; sınır makine belleğinin yarısı) dayanıyor, sunucu test
+  ortasında kendini yeniden başlatıyordu ("Server is approaching the used memory threshold, restarting…") — o anda koşan test düşüyordu.
+  Düzeltme yalnız uçtan uca sunucusunda: 12 GB yığın ve webpack bellek iyileştirmesi; uçtan uca beklemesi 15 sn (geliştirme sunucusu sunucu
+  eylemini ilk çağrıda derliyor; beklenen şey aynı). İmza olumsuz kanıtı ayrı firmada kurulur (tür kodu firmada eşsiz).
 - 2026-10-05 (317): **K3 Son imza — indir, imzala, yükle** (araştırma §8; karar 99, 104, 114, 187; 09-F1). Göç **0027**: `imza_istegi` (kesin
   imzasız PDF bir kez üretilir, SHA-256; rapor × revizyon başına tek bekleyen), `rapor_surumu` (imzalı sürüm DEĞİŞMEZ; bağlam raporun kendisinden
   tetikle; künye, yazan, cihazlar, içerik kopyalanır), `uygunsuzluk` ("Uygun" olmayan imzalı rapordan; aynı ekipmanın sonraki imzalı sürümü
   öncekileri "giderildi" kapatır); rapor yalnız imzalı sürümle Tamamlandı'ya geçer. İmzalı PDF kabulü: tür PDF, ilk baytları hazırlanan PDF'in
   kendisi, eklenen kısımda /Type /Sig + /ByteRange + /Contents (kriptografik zincir doğrulaması sonraki fazda). Rapor ekranında "İmzala" →
   "İmzasız PDF'i indir" + "İmzalı PDF'i yükle"; tamamlanan raporda "İmzalı PDF". Kilit: onaylar.test +3 (gerçek PG), bozan +1 (imza kuralı).
-  Açık: e2e imza adımı, Supabase'e 0027 (CI yeşil olunca), Onaylar'da denetçinin "İmzamı bekleyen raporlar"ı (C5), toplu imza.
+  e2e saha raporu: denetçi İmzala → imzasız PDF'i indir → imzalı PDF'i yükle → Tamamlandı. Açık: Onaylar'da denetçinin "İmzamı bekleyen
+  raporlar"ı (C5) ve toplu imza (Raporlar listesiyle).
 - 2026-10-05 (313–314 çapraz inceleme düzeltmeleri; dört bakış + her bulguya çürütme denemesi, 7 bulgu doğrulandı): (1) **eski raporun
   fotoğraf sayısı** — 312'den önce açılan raporda `cevaplar.foto` tek sayıydı, yeni şemadan geçmiyordu: onay özeti "hepsi uygun" gösteriyor, Kaydet
   gerçek cevapları boşuyla eziyordu → şema sayıyı boş kayda çevirir (sayılar zaten raporun listesinden hesaplanır); fotoğraf eklerken cevaplar

@@ -10,7 +10,8 @@
    313: gönderilmiş raporda "Kopyala" → pencere (kod + bölüm) → aynı kodla durur ("bu planda zaten var") → yeni kodla yeni ekipmanın Yeni raporu açılır
    (başlık "<kod> · Hava tankı", kaynak şeridi). Kod her koşu ve genişlikte ayrı (firmada eşsiz).
    314 Onaylar: mekanik yönetici kuyruktan raporu açar → kısa gerekçeyle geri gönderilmez → gerekçeyle geri gönderir → denetçi rapor ekranında
-   "Geri gönderildi" şeridini görür, yeniden gönderir → yönetici onaylar → Tüm raporlar'da "Muayene uzmanı imzası". */
+   "Geri gönderildi" şeridini görür, yeniden gönderir → yönetici onaylar → onay ekranında "Muayene uzmanı imzası".
+   317 Son imza: denetçi İmzala → imzasız PDF'i indirir → imzalı PDF'i yükler → Tamamlandı, İmzalı PDF. */
 import { readFileSync } from "node:fs";
 import { expect, test, type Locator, type Page } from "@playwright/test";
 import { E2E_HESAPLAR, E2E_PLAN, E2E_SAHA } from "./hesaplar";
@@ -230,4 +231,21 @@ test("saha raporu: rapor oluştur, eksikle gönderilmez, doldur + cihaz ekle, on
   await expect(page.getByText("Muayene uzmanı imzası", { exact: true }).filter({ visible: true }).first()).toBeVisible({ timeout: 30_000 });
   await expect(page.getByRole("button", { name: "Onayı geri al" })).toBeVisible();
   await expect(page.getByRole("button", { name: "Onayla", exact: true })).toHaveCount(0);
+
+  /* 317 son imza: denetçi İmzala → imzasız PDF'i indir → imzalı PDF'i yükle (imzasız baytlar + artımlı imza sözlüğü; gerçek e-imza aracının
+     yaptığı gibi özgün baytlar korunur) → Tamamlandı, İmzalı PDF */
+  await context.clearCookies();
+  await girisli(page, "denetci");
+  await page.goto(raporAdresi);
+  await hazir(page);
+  await page.getByRole("button", { name: "İmzala", exact: true }).click();
+  await expect(page.getByText("İmzasız PDF hazır; indirip imzalayın, imzalı PDF'i yükleyin.").first()).toBeVisible({ timeout: 60_000 });
+  const [imzasiz] = await Promise.all([page.waitForEvent("download", { timeout: 60_000 }), page.getByRole("link", { name: "İmzasız PDF'i indir" }).click()]);
+  const ham = readFileSync((await imzasiz.path())!);
+  expect(ham.subarray(0, 5).toString("latin1")).toBe("%PDF-");
+  const imzali = Buffer.concat([ham, Buffer.from("\n2 0 obj << /Type /Sig /Filter /Adobe.PPKLite /ByteRange [0 10 20 30] /Contents <00ff> >> endobj\n%%EOF\n", "latin1")]);
+  await page.getByLabel("İmzalı PDF'i yükle").setInputFiles({ name: "imzali.pdf", mimeType: "application/pdf", buffer: imzali });
+  await expect(page.getByText(`${raporNo} imzalandı, tamamlandı ve müşteriye açıldı.`).first()).toBeVisible({ timeout: 60_000 });
+  await expect(page.getByRole("link", { name: "İmzalı PDF" })).toBeVisible({ timeout: 30_000 });
+  await expect(page.getByText("Tamamlandı", { exact: true }).filter({ visible: true }).first()).toBeVisible();
 });

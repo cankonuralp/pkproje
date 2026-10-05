@@ -21,6 +21,9 @@ export default defineConfig({
   reporter: process.env.CI ? [["list"], ["github"]] : [["list"]],
   /* sayfalar testlerden önce bir kez derlenir (e2e/hazirla.ts) */
   globalSetup: "./e2e/hazirla.ts",
+  /* 2026-10-05: geliştirme sunucusu sunucu eylemini ilk çağrıda derler; CI'da 5 sn'lik varsayılan bekleme bazen yetmiyordu (rapor formatı yükleme
+     bildirimi, giriş sonrası kabuk). Beklenen şey aynı, yalnız bekleme süresi geliştirme sunucusunun gecikmesine göre */
+  expect: { timeout: 15_000 },
   use: {
     baseURL: `http://${E2E_FIRMA.kisaAd}.localhost:${KAPI}`,
     launchOptions: hazir ? { executablePath: hazir } : {},

@@ -13,7 +13,9 @@ const ikonOzeti = createHash("sha256").update(readFileSync(`public/${IKON_DOSYAS
 const ortak: NextConfig = {
   poweredByHeader: false,
   /* sunucu eylemiyle dosya yükleme (rapor formatı PDF'i en çok 25 MB — src/server/dosya/tur.ts SINIR); varsayılan 1 MB */
-  experimental: { serverActions: { bodySizeLimit: "26mb" } },
+  /* webpackMemoryOptimizations: yalnız uçtan uca geliştirme sunucusunda (scripts/e2e-sunucu.ts) — uzun koşuda bellek eşiğine dayanıp yeniden
+     başlamasın (Next belgesi: düşük riskli, derlemeyi biraz yavaşlatır) */
+  experimental: { serverActions: { bodySizeLimit: "26mb" }, webpackMemoryOptimizations: process.env.PROBATA_WEBPACK_BELLEK === "1" },
   env: { NEXT_PUBLIC_IKON_ADRESI: `/${IKON_DOSYASI}?v=${ikonOzeti}` },
   /* PDF motoru (src/belge/pdf.ts, 316): Chromium paketleri derlemeye katılmaz (düğüm modülü olarak yüklenir); belge CSS'i, yazı tipi ve sunucusuz
      Chromium ikilisi yalnız PDF basan uçların izine eklenir */

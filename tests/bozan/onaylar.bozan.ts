@@ -108,7 +108,9 @@ test("0026'daki gerekçe kuralı kalkınca rapor gerekçesiz Yeni'ye döner (kil
 });
 
 test("0027'deki imza kuralı kalkınca onaylanmış rapor imzalı sürüm olmadan Tamamlandı'ya geçer", async () => {
-  const k = await kur(havuz, A);
+  /* ayrı firma: ilk testin firması aynı tür kodunu zaten taşıyor (tür kodu firmada eşsiz) */
+  const A2 = (await supa.sahip.query<{ id: string }>("INSERT INTO firma (kisa_ad, ad, rapor_kodu) VALUES ('deneme-a2', 'Deneme A2', 'DB') RETURNING id")).rows[0].id;
+  const k = await kur(havuz, A2);
   await k.is(k.yon, (db) => db.sorgu("UPDATE rapor SET durum = 'onaylandi' WHERE id = $1", [k.rapor]));
   await k.is(k.den, (db) => db.sorgu("UPDATE rapor SET durum = 'imzali' WHERE id = $1", [k.rapor]));
   const r = (await supa.sahip.query<{ durum: string; s: string }>(
