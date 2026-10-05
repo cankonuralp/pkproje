@@ -2341,14 +2341,28 @@ revizyon, alan kopyalama, hafif kusur devri, meslek eşleşme denetimi).
 - Emsal ürünler: https://opwire.app/iso-17020-periyodik-kontrol-yazilimi/ · https://17020muayene.vidco.com.tr/ · https://akuple.com/asansor-kontrol-yazilimi/ · https://ensyazilim.com/
 
 ## 11 · Değişiklik günlüğü
+- 2026-10-05 (320–323 çapraz inceleme düzeltmeleri; dört bakış + her bulguya çürütme denemesi, 9 bulgu doğrulandı, 6 elendi). Göç **0035**
+  (Supabase'e henüz uygulanmamıştı, yerinde düzeltildi): müşteriye açık **eğitim sertifikası başlangıçta YOK** — eskiden ayar yokken bütün eğitim
+  türleri (firma içi ve sonradan eklenenler dahil) müşteriye gidiyordu ve firma kapatamıyordu; maketteki gibi firma tür başına açar (TS
+  başlangıcı `egitim: []`, "hepsi" seçeneği kalktı). Özlük belgesinin adı **tür · açıklama** (aynı türden iki belge ayırt edilir; açıklamasızda
+  yükleme tarihi). Göç **0036**: uygunsuzluğun **kriteri ayrı sütun** (imzada motorun kusur kriteri yazılır; metnin başı olduğu CHECK'li, sonra
+  değişmez) — müşterinin listesi ve Excel'i Kriter / Açıklama'yı artık ilk ": " ile bölmüyor (kilitli Bakanlık maddesinin kendisinde ": " var);
+  `musteri_surum_raporu()` — "Giderildi · <tarih> kontrolünde" tarihi **kapatan raporun müşteriye açık son sürümünden** (gideren rapor revize
+  edilince tarih kayboluyordu). Panel: **Planlanan kontroller pasif ekipmanın eski raporunu saymaz** (sürekli "N gün geçti" gösteriyordu); tesis
+  yoksa boş durum. **Toplu indirme (ZIP) toplam 500 MB sınırı** — listedeki boyutlardan indirmeden önce, inerken de sayılarak; aşımda ayrı ileti
+  ("bağlantı" hatası sanılmasın), bellekte tek büyük kopya yok (ZIP parçaları doğrudan dosyaya). Muayene personelinde her "Aç" tuşunun
+  erişilebilir adı "<kişi> · <belge> aç" (maket). Üç sekmenin sayacı Raporlar'daki biçimde. Elenen: önbellek başlığı (eskiden beri, kural gereği),
+  aynı adlı tesis klasörü (maketle aynı), "son gidiş"te plan tarihi (maketle aynı). Kilit: musteri-paneli.test (pasif, revize edilen gideren,
+  kriter, açıklama, eğitim başlangıcı), disa.test (ZIP sınırı, kriterli parçalama), bozan +1 (eğitim başlangıcı).
 - 2026-10-05 (323): **K3 Müşteri paneli › Muayene personeli belgeleri** (maket musteri.html #/personel personelCiz; P3 2026-10-01 reisim:
   "müşteri girişine … muayene personeli belgeleri kısmı olur o müşteriye giden muayene personelinin firmanın izin verdiği belgelerini görür
   (ekipnet belgesi isg belgeleri vs)"). Göç **0035**: müşteri rolü personel, özlük, eğitim, atama ve ayar tablolarına HİÇ dokunmaz; iki işlev
   yalnız gerekeni döndürür (sahibin haklarıyla, firma ve müşteri süzgeci açık yazılı): `musteri_personeli()` — görebildiği tesislere GİDEN kişi
   (son imzalı raporu yazan ya da AÇIK planın ekibinde): ad, meslek, son gidiş, tesisler (başka kişisel alan yok); `musteri_personel_belgeleri()`
-  — bu kişilerin firmanın müşteriye açtığı belgeleri. Firma ayarı **musteri_belge** (özlük türleri · eğitim sertifikaları: hepsi ya da seçili
-  türler · ekipman atama belgesi); başlangıç: **EKİPNET + bütün eğitim sertifikaları** (maketteki varsayılan; veritabanı ayar yokken aynısını
-  uygular — kilitli). Ayarın ekranı Firma ayarları kalemiyle (K4). Dosya politikası yalnız listedeki belgenin dosyasını açar. Panelde beşinci
+  — bu kişilerin firmanın müşteriye açtığı belgeleri. Firma ayarı **musteri_belge** (özlük türleri · seçili eğitim türlerinin sertifikaları ·
+  ekipman atama belgesi); başlangıç: **yalnız EKİPNET**, eğitim sertifikası yok (firma tür başına açar — maketin ayar ekranında tür başına onay
+  kutusu, "hepsi" yok; ilk sürümdeki "bütün eğitim sertifikaları" başlangıcı 320–323 incelemesinde düzeltildi; veritabanı ayar yokken aynısını
+  uygular — kilitli). Özlük belgesinin adı tür · açıklama (maket). Ayarın ekranı Firma ayarları kalemiyle (K4). Dosya politikası yalnız listedeki belgenin dosyasını açar. Panelde beşinci
   sekme **Muayene personeli** (/portal/personel): kişi ve meslek, son gidiş ve tesisler, belgeler (eğitimde geçerlilik — süresi geçtiyse uyarı;
   "Aç"). Kilit: musteri-paneli.test +1 (plan ekibi ve rapor yazanı, gitmeyen yok, ek giriş kapsamı, öteki müşteri / firma, başlangıç ayarı TS
   ile aynı, ayar değişince türler, yalnız listedeki belgenin dosyası, personel tablolarına doğrudan erişim yok, uygulama rolü işlevleri

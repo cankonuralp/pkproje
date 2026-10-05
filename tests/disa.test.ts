@@ -8,6 +8,7 @@ import { zipBayt } from "../src/components/disa/zip.ts";
 import { guvenliUrl, xlsxBayt, xmlKacis } from "../src/components/disa/xlsx.ts";
 import { adParcasi, klasorAdi } from "../src/modules/musteri-paneli/ui/ad.ts";
 import { kusurParcala } from "../src/modules/musteri-paneli/ui/kusur.ts";
+import { raporZipi, ZIP_BAYT_SINIR, ZIP_SINIR, ZipSiniri, type ZipRaporu } from "../src/modules/musteri-paneli/ui/zipla.ts";
 import { zipAc } from "./yardimci/zip.ts";
 
 const metin = (b: Uint8Array | undefined) => new TextDecoder().decode(b);
@@ -54,6 +55,31 @@ test("yardımcılar: güvenli adres yalnız http(s); XML kaçışı; kusur metni
   assert.deepEqual(kusurParcala("Emniyet ventili: Mühür kırık"), { kriter: "Emniyet ventili", aciklama: "Mühür kırık" });
   assert.deepEqual(kusurParcala("Yalıtım direnci: 0,4 MΩ (sınır ≥ 1 MΩ)"), { kriter: "Yalıtım direnci", aciklama: "0,4 MΩ (sınır ≥ 1 MΩ)" });
   assert.deepEqual(kusurParcala("Topraklama yok"), { kriter: "Topraklama yok", aciklama: "" });
+  /* kriter kayıtta ayrıysa (0036) ondan bölünür — kriterin kendisinde ": " olabilir (kilitli Bakanlık maddesi) */
+  const kr = "Kablo renk kodları Nötr: Mavi Toprak: Sarı/ Yeşil";
+  assert.deepEqual(kusurParcala(`${kr}: renkler karışık`, kr), { kriter: kr, aciklama: "renkler karışık" });
+  assert.deepEqual(kusurParcala(kr, kr), { kriter: kr, aciklama: "" });
+  assert.deepEqual(kusurParcala("A: b", "X"), { kriter: "A", aciklama: "b" }, "kriter metnin başı değilse eski ayrıştırma");
+});
+
+test("toplu indirme sınırları (320–323 incelemesi): en çok 300 rapor ve 500 MB; listedeki boyut indirmeden ÖNCE denetlenir (hiç dosya inmez), boyut bilinmiyorsa inerken sayılır ve aşan anda durur; aşım ayrı hata türü; sınır içinde tesis klasörlü ZIP", async () => {
+  const alici = (bayt: number) => { const alinan: string[] = []; return { alinan, al: async (d: string) => { alinan.push(d); return new Uint8Array(bayt).fill(65); } }; };
+  const r = (i: number, boyut: number, tesis = "Merkez"): ZipRaporu => ({ dosya: `d${i}`, no: `DA-0126-000${i}`, tesis, boyut });
+  const sinirMi = (e: unknown, ileti: RegExp) => e instanceof ZipSiniri && ileti.test(e.message);
+  const x1 = alici(1);
+  await assert.rejects(raporZipi(Array.from({ length: ZIP_SINIR + 1 }, (_, i) => r(i, 1)), () => {}, x1.al), (e) => sinirMi(e, /En çok 300 rapor/));
+  assert.equal(x1.alinan.length, 0);
+  const x2 = alici(1);
+  await assert.rejects(raporZipi([r(1, ZIP_BAYT_SINIR), r(2, 1)], () => {}, x2.al), (e) => sinirMi(e, /en çok 500 MB birlikte indirilir/));
+  assert.equal(x2.alinan.length, 0, "listedeki boyut aşıyorsa hiçbir dosya inmez");
+  const x3 = alici(6);
+  await assert.rejects(raporZipi([r(1, 0), r(2, 0), r(3, 0)], () => {}, x3.al, 10), (e) => sinirMi(e, /Süzgeçle daraltın/));
+  assert.deepEqual(x3.alinan, ["d1", "d2"], "boyut bilinmiyorsa inerken sayılır; aşan anda durur (üçüncü inmez)");
+  const x4 = alici(3), ilerleme: number[] = [];
+  const z = zipAc(new Uint8Array(Buffer.concat(await raporZipi([r(1, 3), r(2, 3, "Depo"), r(1, 3)], (i) => ilerleme.push(i), x4.al, 10))));
+  assert.deepEqual([...z.keys()].sort(), ["Depo/DA-0126-0002.pdf", "Merkez/DA-0126-0001 (2).pdf", "Merkez/DA-0126-0001.pdf"]);
+  assert.equal(metin(z.get("Depo/DA-0126-0002.pdf")), "AAA");
+  assert.deepEqual(ilerleme, [0, 1, 2, 3]);
 });
 
 test("toplu indirme adları (321): tesis klasörü ve dosya adı yol olamaz (/ ters bölü .. sürücü), denetim ve Windows'un yasak karakterleri boşluk, boşsa 'Tesis'", () => {

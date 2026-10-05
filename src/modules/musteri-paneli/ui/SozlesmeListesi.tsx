@@ -23,7 +23,7 @@ const SUTUNLAR: Sutun<PanelSozlesmesi>[] = [
 export function PanelSozlesmeListesi({ v }: { v: PanelSozlesmeleri }) {
   return (
     <>
-      <SayfaBasi baslik="Sözleşmeler" sayac={<span className={stil.sayi} role="status"><b>{v.sozlesmeler.length}</b> sözleşme</span>} />
+      <SayfaBasi baslik="Sözleşmeler" sayac={<span className={stil.sayac} role="status"><b>{v.sozlesmeler.length}</b> sözleşme</span>} />
       <p className={stil.alt}>{v.musteri?.unvan ?? "—"}</p>
       <PanelSekmeleri acikUygunsuz={v.acikUygunsuz} secili="/portal/sozlesme" />
       {v.sozlesmeler.length

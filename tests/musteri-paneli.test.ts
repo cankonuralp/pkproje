@@ -10,7 +10,9 @@
    322 SÖZLEŞMELER (maket #/sozlesme; karar 134 "görünür, panelden imza atılmaz"; göç 0034): sözleşmenin yalnız numara / dönem / imza / PDF
    sütunları; kendi müşterisi ve görebildiği tesis kapsamı; imzalı PDF'in yalnız şu anki sürümü.
    323 MUAYENE PERSONELİ (maket #/personel; P3 "o müşteriye giden muayene personelinin firmanın izin verdiği belgelerini görür"; göç 0035):
-   müşteri rolü personel tablolarına dokunmaz; iki işlev yalnız tesislerine giden kişileri ve firmanın açtığı belgeleri döndürür. */
+   müşteri rolü personel tablolarına dokunmaz; iki işlev yalnız tesislerine giden kişileri ve firmanın açtığı belgeleri döndürür.
+   320–323 ÇAPRAZ İNCELEME (göç 0035 düzeltmesi, 0036): eğitim sertifikası başlangıçta kapalı; özlük belgesinin adı tür · açıklama; uygunsuzluğun
+   kriteri ayrı; gideren rapor revize edilince "giderildi" tarihi kapatan raporun son sürümünden; pasif ekipman sonraki kontrolü belirlemez. */
 import assert from "node:assert/strict";
 import { mkdtempSync, rmSync } from "node:fs";
 import { tmpdir } from "node:os";
@@ -25,6 +27,7 @@ import { girisYap } from "../src/server/kimlik/oturum.ts";
 import { anaGeciciParola, ekGeciciParola, ekGirisEkle, girisBilgisi, girisPasif } from "../src/modules/musteriler/server/girisler.ts";
 import { musteriKaydet, musteriPasif } from "../src/modules/musteriler/server/musteriler.ts";
 import { panelPersoneli, panelPlanlari, panelRaporlari, panelRaporu, panelSozlesmeleri, panelSozlesmesi, panelUygunsuzluklari } from "../src/modules/musteri-paneli/server/panel.ts";
+import { kusurParcala } from "../src/modules/musteri-paneli/ui/kusur.ts";
 import { atamaEkle, ozlukEkle } from "../src/modules/personel/server/dosyalar.ts";
 import { egitimKaydet, egitimTuruKaydet } from "../src/modules/egitimler/server/egitimler.ts";
 import { baslangic } from "../src/server/ayar/ayar.ts";
@@ -285,15 +288,15 @@ test("İKİNCİ KATMAN (09-E5): müşteri rolü yalnız kendi müşterisinin, ke
 });
 
 /** tarihli rapor: taslakken rapor tarihi (kusurluysa "Uygun değil" madde + sonuç) yazılır, gönderilir, onaylanır, imzalanır */
-async function tarihli(tesis: string, kod: string, tarih: string, kusurlu: boolean): Promise<string> {
+async function tarihli(tesis: string, kod: string, tarih: string, kusurlu: boolean, sonraki: string | null = null): Promise<string> {
   const bas = bugunTr();
   const p = tamam(await a(FA.plan, (db) => planAc(db, depo, FA.plan, A, { tesis, baslangic: bas, bitis: bas, ekip: [{ personel: FA.denP, isgNo: `ISG-T${planSira++}`, kaydet: false }] }))).id;
   tamam(await a(FA.den, async (db) => planKabul(db, FA.den, p, (await planIci(db, FA.den, p))!.surum, true)));
   const h = tamam(await a(FA.den, (db) => raporOlustur(db, FA.den, p, FA.ekp[kod]))).id;
   await sql(A, kusurlu
-    ? `UPDATE rapor SET rapor_tarihi = $2, cevaplar = jsonb_set(cevaplar, '{madde,k1}', '{"c": "Uygun değil", "not": "Korozyon"}'::jsonb), sonuc = 'uygun_degil',
-       surum = surum + 1 WHERE id = $1`
-    : "UPDATE rapor SET rapor_tarihi = $2, sonuc = 'uygun', surum = surum + 1 WHERE id = $1", [h, tarih], FA.den.id);
+    ? `UPDATE rapor SET rapor_tarihi = $2, sonraki = coalesce($3::date, sonraki), cevaplar = jsonb_set(cevaplar, '{madde,k1}', '{"c": "Uygun değil", "not": "Korozyon"}'::jsonb),
+       sonuc = 'uygun_degil', surum = surum + 1 WHERE id = $1`
+    : "UPDATE rapor SET rapor_tarihi = $2, sonraki = coalesce($3::date, sonraki), sonuc = 'uygun', surum = surum + 1 WHERE id = $1", [h, tarih, sonraki], FA.den.id);
   await sql(A, "UPDATE rapor SET durum = 'onayda', surum = surum + 1 WHERE id = $1", [h], FA.den.id);
   await imzalaRapor(h);
   return h;
@@ -309,15 +312,31 @@ test("UYGUNSUZLUKLAR (320): müşteri rolü yalnız kendi müşterisinin ve tesi
   assert.equal(v.acikUygunsuz, v.uygunsuzluklar.length, "sekmedeki açık sayısı");
   const u1 = v.uygunsuzluklar.find((u) => u.raporId === k1)!;
   assert.deepEqual([u1.ekipmanKod, u1.turAd, u1.tesis, u1.tarih], ["HT-1", "Hava tankı", "Merkez", "2026-03-01"]);
+  /* kriter ayrı yazılır (0036): metin "kriter: açıklama", parçalama kayıttaki kritere göre */
+  assert.ok(u1.kriter && u1.metin === `${u1.kriter}: Korozyon`, JSON.stringify(u1));
+  assert.deepEqual(kusurParcala(u1.metin, u1.kriter), { kriter: u1.kriter, aciklama: "Korozyon" });
   assert.deepEqual(raporlar(await l(FA.m1, [FA.t1])), [k1], "ek giriş: seçili tesis");
   assert.deepEqual(raporlar(await l(FA.m2, null)), [k3], "öteki müşteri yalnız kendisininkini");
   assert.deepEqual((await l(FB.m1, null)).uygunsuzluklar, [], "B'nin müşterisi A'nın adresinde");
   assert.equal((await l(FB.m1, null)).acikUygunsuz, 0);
   /* giderildi: aynı ekipmanın daha yeni muayenesi — gideren kontrolün tarihiyle; açık sayısı düşer */
-  await tarihli(FA.t2, "HT-2", "2026-05-01", false);
+  const g = await tarihli(FA.t2, "HT-2", "2026-05-01", false);
   const v2 = await l(FA.m1, null);
   const u2 = v2.uygunsuzluklar.filter((u) => u.raporId === k2);
   assert.ok(u2.length >= 1 && u2.every((u) => !u.acik && u.giderildi === "2026-05-01"), JSON.stringify(u2));
+  /* gideren rapor revize edilir (kontrol tarihi düzeltilir): kapatan R0 müşteriye artık görünmez — tarih kapatan raporun müşteriye açık SON
+     sürümünden okunur, kaybolmaz (0036; 320–323 incelemesi) */
+  tamam(await a(FA.mek, async (db) => revizeyeGonder(db, FA.mek, g, await surum(g), { gerekce: "Kontrol tarihi yanlış yazılmış" })));
+  await sql(A, "UPDATE rapor SET rapor_tarihi = '2026-05-02', surum = surum + 1 WHERE id = $1", [g], FA.den.id);
+  await sql(A, "UPDATE rapor SET durum = 'onayda', surum = surum + 1 WHERE id = $1", [g], FA.den.id);
+  await imzalaRapor(g);
+  const u2r = (await l(FA.m1, null)).uygunsuzluklar.filter((u) => u.raporId === k2);
+  assert.ok(u2r.length === u2.length && u2r.every((u) => !u.acik && u.giderildi === "2026-05-02"), JSON.stringify(u2r));
+  const kap = (await sql<{ k: string }>(A, "SELECT kapatan_surum::text AS k FROM uygunsuzluk WHERE rapor_id = $1 LIMIT 1", [k2])).rows[0].k;
+  const rap = (mid: string) => m(mid, null, (db) => db.sorgu<{ r: string | null }>("SELECT musteri_surum_raporu($1)::text AS r", [kap])).then((x) => x.rows[0].r);
+  assert.equal(await rap(FA.m1), g, "kendi sürümünün raporu");
+  assert.equal(await rap(FA.m2), null, "öteki müşteri başka müşterinin sürümünün raporunu alamaz");
+  await assert.rejects(sql(A, "SELECT musteri_surum_raporu(gen_random_uuid())"), /permission denied/, "personel işlemi işlevi çağıramaz");
   assert.equal(v2.acikUygunsuz, v2.uygunsuzluklar.filter((u) => u.raporId === k1).length);
   /* revizyon: R1 imzalanınca R0'ın uygunsuzluğu (revizyonla kapandı) hiç görünmez; R1'inki açık, numarası -R1 */
   const once = v2.uygunsuzluklar.filter((u) => u.raporId === k1).map((u) => u.id);
@@ -430,7 +449,7 @@ test("SÖZLEŞMELER (322): müşteri rolü sözleşmenin yalnız numara / dönem
   assert.equal((await sql<{ n: number }>(A, "SELECT count(*)::int AS n FROM is_sozlesmesi WHERE id = ANY ($1::uuid[])", [[s1, s2, s3]])).rows[0].n, 3);
 });
 
-test("MUAYENE PERSONELİ (323): tesislerine giden kişiler (son imzalı raporu yazan ya da açık planın ekibi) ve firmanın müşteriye açtığı belgeler; başlangıç ayarı EKİPNET + eğitim sertifikaları, ayar değişince türler; belge dosyası yalnız listedekiyse iner; personel tablolarına doğrudan erişim yok; başka müşteri / firma görmez", async () => {
+test("MUAYENE PERSONELİ (323): tesislerine giden kişiler (son imzalı raporu yazan ya da açık planın ekibi) ve firmanın müşteriye açtığı belgeler; başlangıç ayarı yalnız EKİPNET (eğitim sertifikası kapalı), ayar değişince türler; özlük adı tür · açıklama; belge dosyası yalnız listedekiyse iner; personel tablolarına doğrudan erişim yok; başka müşteri / firma görmez", async () => {
   const yon = FA.yon;
   const q = async (metin: string, p: unknown[] = []) => (await sql<{ id: string }>(A, metin, p, yon.id)).rows[0].id;
   const p2 = await q("INSERT INTO personel (ad, basla, meslek, ekipnet) VALUES ('Deneme Plan', '2024-01-01', 'mak-muh', '124') RETURNING id::text");
@@ -441,11 +460,12 @@ test("MUAYENE PERSONELİ (323): tesislerine giden kişiler (son imzalı raporu y
   tamam(await a(FA.plan, (db) => planAc(db, depo, FA.plan, A, { tesis: FA.t1, baslangic: "2026-12-10", bitis: "2026-12-10", ekip: [{ personel: p2, isgNo: `ISG-Y${planSira++}`, kaydet: false }] })));
   /* belgeler */
   const pdf = (n: string) => ({ ad: `${n}.pdf`, bayt: new TextEncoder().encode(`%PDF-1.4\n% ${n}\n%%EOF\n`) });
-  const ozluk = async (kisi: string, tur: string) => {
-    const id = tamam(await a(yon, (db) => ozlukEkle(db, depo, yon, A, kisi, { tur, aciklama: "" }, pdf(tur)))).id;
+  const ozluk = async (kisi: string, tur: string, aciklama = "") => {
+    const id = tamam(await a(yon, (db) => ozlukEkle(db, depo, yon, A, kisi, { tur, aciklama }, pdf(`${tur}${aciklama}`)))).id;
     return (await sql<{ d: string }>(A, "SELECT dosya_id::text AS d FROM ozluk_belgesi WHERE id = $1", [id])).rows[0].d;
   };
   const ekipnet = await ozluk(FA.denP, "ekipnet"), kimlik = await ozluk(FA.denP, "kimlik"), gitmeyen = await ozluk(p3, "ekipnet");
+  const ekipnet2 = await ozluk(FA.denP, "ekipnet", "2026 yenilemesi");
   const egTur = tamam(await a(yon, (db) => egitimTuruKaydet(db, yon, null, 0, { ad: "İSG", tekrar: "12" }))).id;
   const egId = tamam(await a(yon, (db) => egitimKaydet(db, depo, yon, A, { personel: FA.denP, tur: egTur, tarih: "2026-01-10", kurum: "Firma içi" }, pdf("isg")))).id;
   const egitim = (await sql<{ d: string }>(A, "SELECT dosya_id::text AS d FROM egitim_kaydi WHERE id = $1", [egId])).rows[0].d;
@@ -453,27 +473,32 @@ test("MUAYENE PERSONELİ (323): tesislerine giden kişiler (son imzalı raporu y
   const atId = tamam(await a(yon, (db) => atamaEkle(db, depo, yon, A, FA.denP, { tur: htTur, tarih: "2026-01-05" }, pdf("atama")))).id;
   const atama = (await sql<{ d: string }>(A, "SELECT dosya_id::text AS d FROM ekipman_atamasi WHERE id = $1", [atId])).rows[0].d;
   const l = async (mid: string, t: string[] | null) => (await m(mid, t, (db) => panelPersoneli(db))).kisiler;
-  /* başlangıç ayarı (kayıt yok): EKİPNET + bütün eğitim sertifikaları; TS başlangıcıyla aynı */
-  assert.deepEqual(baslangic("musteri_belge"), { ozluk: ["ekipnet"], egitim: "hepsi", atama: false });
+  /* başlangıç ayarı (kayıt yok): yalnız EKİPNET, eğitim sertifikası yok (firma tür başına açar — maket; 320–323 incelemesi); TS başlangıcıyla aynı */
+  assert.deepEqual(baslangic("musteri_belge"), { ozluk: ["ekipnet"], egitim: [], atama: false });
   const v = await l(FA.m1, null);
   const den = v.find((x) => x.id === FA.denP)!, plan = v.find((x) => x.id === p2)!;
   assert.ok(den && plan && !v.some((x) => x.id === p3), "giden iki kişi; gitmeyen yok");
-  assert.deepEqual(den.belgeler.map((b) => b.ad), ["EKİPNET kayıt belgesi", "İSG sertifikası"]);
-  assert.equal(den.belgeler.find((b) => b.ad === "İSG sertifikası")!.gecerli, "2027-01-10", "eğitimin tekrar tarihi");
+  /* aynı türden iki belge ayırt edilir: tür · açıklama; açıklamasızın yükleme tarihi gösterilir. Eğitim sertifikası (firma tür açmadı) yok */
+  assert.deepEqual(den.belgeler.map((b) => [b.ad, b.yuklendi, b.dosya]),
+    [["EKİPNET kayıt belgesi", true, ekipnet], ["EKİPNET kayıt belgesi · 2026 yenilemesi", false, ekipnet2]]);
   assert.deepEqual([plan.ad, plan.son, plan.tesisAdlari, plan.belgeler], ["Deneme Plan", "2026-12-10", ["Merkez"], []]);
   assert.deepEqual((await l(FA.m1, [FA.t2])).map((x) => x.id), [FA.denP], "ek giriş: yalnız kapsamdaki tesise giden");
   assert.ok((await l(FA.m2, null)).every((x) => x.id !== p2), "öteki müşteri planı görmez");
   assert.deepEqual(await l(FB.m1, null), [], "başka firma");
   /* dosya: yalnız listedeki belge iner */
   assert.ok(await m(FA.m1, null, (db) => musteriDosyasi(db, ekipnet)));
-  assert.ok(await m(FA.m1, null, (db) => musteriDosyasi(db, egitim)));
-  for (const d of [kimlik, atama, gitmeyen]) assert.equal(await m(FA.m1, null, (db) => musteriDosyasi(db, d)), null, "müşteriye açılmamış / gitmeyen kişinin belgesi");
+  for (const d of [kimlik, atama, gitmeyen, egitim]) assert.equal(await m(FA.m1, null, (db) => musteriDosyasi(db, d)), null, "müşteriye açılmamış / gitmeyen kişinin belgesi");
   assert.equal(await kiraciIcinde(havuz, B, (db) => musteriDosyasi(db, ekipnet), { musteri: { id: FB.m1, tesisler: null } }), null, "başka firma");
-  /* ayar: özlük EKİPNET + kimlik, eğitim yok, atama açık */
-  await sql(A, "INSERT INTO firma_ayar (bolum, deger) VALUES ('musteri_belge', $1)", [{ ozluk: ["ekipnet", "kimlik"], egitim: [], atama: true }], yon.id);
+  /* ayar: özlük EKİPNET + kimlik, eğitimde İSG türü, atama açık */
+  await sql(A, "INSERT INTO firma_ayar (bolum, deger) VALUES ('musteri_belge', $1)", [{ ozluk: ["ekipnet", "kimlik"], egitim: [egTur], atama: true }], yon.id);
   const den2 = (await l(FA.m1, null)).find((x) => x.id === FA.denP)!;
-  assert.deepEqual(den2.belgeler.map((b) => b.ad), ["Ekipman atama belgesi · Hava tankı", "EKİPNET kayıt belgesi", "Kimlik belgesi"]);
+  assert.deepEqual(den2.belgeler.map((b) => b.ad),
+    ["Ekipman atama belgesi · Hava tankı", "EKİPNET kayıt belgesi", "EKİPNET kayıt belgesi · 2026 yenilemesi", "İSG sertifikası", "Kimlik belgesi"]);
+  assert.equal(den2.belgeler.find((b) => b.ad === "İSG sertifikası")!.gecerli, "2027-01-10", "eğitimin tekrar tarihi");
   assert.ok(await m(FA.m1, null, (db) => musteriDosyasi(db, kimlik)), "açılan tür iner");
+  assert.ok(await m(FA.m1, null, (db) => musteriDosyasi(db, egitim)), "açılan eğitim türünün sertifikası iner");
+  /* eğitim türü yeniden kapanınca sertifika inmez */
+  await sql(A, "UPDATE firma_ayar SET deger = $1, surum = surum + 1 WHERE bolum = 'musteri_belge'", [{ ozluk: ["ekipnet", "kimlik"], egitim: [], atama: true }], yon.id);
   assert.equal(await m(FA.m1, null, (db) => musteriDosyasi(db, egitim)), null, "kapatılan tür inmez");
   /* müşteri rolü personel tablolarına ve ayara doğrudan erişemez; uygulama rolü işlevleri çağıramaz */
   for (const t of ["ozluk_belgesi", "egitim_kaydi", "egitim_turu", "ekipman_atamasi", "firma_ayar", "plan_ekip"]) {
@@ -481,4 +506,32 @@ test("MUAYENE PERSONELİ (323): tesislerine giden kişiler (son imzalı raporu y
   }
   await assert.rejects(sql(A, "SELECT * FROM musteri_personeli()"), /permission denied/, "personel işlemi işlevi çağıramaz");
   await assert.rejects(sql(A, "SELECT * FROM musteri_personel_belgeleri()"), /permission denied/);
+});
+
+test("PLANLANAN KONTROLLER + PASİF (320–323 incelemesi): pasife alınan ekipmanın eski raporu tesisin sonraki kontrol tarihini belirlemez (firma tarafındaki kapsam hesabı gibi); raporu listede durur; tesissiz müşteride satır yok", async () => {
+  const q = async (metin: string, p: unknown[] = []) => (await sql<{ id: string }>(A, metin, p, FA.yon.id)).rows[0].id;
+  const m4 = await q("INSERT INTO musteri (unvan, kisa) VALUES ('Deneme Dört Sanayi A.Ş.', 'Deneme Dört') RETURNING id::text");
+  const t7 = await q("INSERT INTO tesis (musteri_id, ad) VALUES ($1, 'Batı') RETURNING id::text", [m4]);
+  const tur = (await sql<{ id: string }>(A, "SELECT id::text FROM ekipman_turu WHERE kod = 'HT'")).rows[0].id;
+  for (const kod of ["HT-7", "HT-8"]) FA.ekp[kod] = await q("INSERT INTO ekipman (tesis_id, tur_id, kod, ekleyen) VALUES ($1, $2, $3, 'x') RETURNING id::text", [t7, tur, kod]);
+  await tarihli(t7, "HT-7", "2025-01-10", false, "2026-01-10");
+  await tarihli(t7, "HT-8", "2026-03-01", false, "2027-03-01");
+  const sonraki = async () => (await m(m4, null, (db) => panelPlanlari(db))).satirlar.map((x) => [x.tesisId, x.sonraki]);
+  assert.deepEqual(await sonraki(), [[t7, "2026-01-10"]], "etkin iki ekipmanın en yakını");
+  await sql(A, "UPDATE ekipman SET pasif = now(), surum = surum + 1 WHERE id = $1", [FA.ekp["HT-7"]], FA.yon.id);
+  assert.deepEqual(await sonraki(), [[t7, "2027-03-01"]], "pasif ekipmanın eski tarihi sayılmaz");
+  const r = (await m(m4, null, (db) => panelRaporlari(db))).raporlar;
+  assert.deepEqual(r.map((x) => [x.ekipmanKod, x.ekipmanPasif]).sort(), [["HT-7", true], ["HT-8", false]], "pasifin raporu listede durur");
+  assert.ok(r.every((x) => x.boyut > 0), "imzalı PDF'in boyutu (toplu indirme sınırı)");
+  const m5 = await q("INSERT INTO musteri (unvan, kisa) VALUES ('Deneme Beş A.Ş.', 'Deneme Beş') RETURNING id::text");
+  assert.deepEqual((await m(m5, null, (db) => panelPlanlari(db))).satirlar, [], "tesissiz müşteri: satır yok (ekranda boş durum)");
+});
+
+test("KRİTER (0036): uygunsuzluğun kriteri metnin başı olmalı ve imzadan sonra değişmez; müşteri rolü kritere yazamaz", async () => {
+  const k = await tarihli(FA.t1, "HT-1", "2026-07-01", true);
+  const u = (await sql<{ id: string; kriter: string; metin: string }>(A, "SELECT id::text, kriter, metin FROM uygunsuzluk WHERE rapor_id = $1 LIMIT 1", [k])).rows[0];
+  assert.ok(u.kriter && u.metin.startsWith(`${u.kriter}: `), JSON.stringify(u));
+  await assert.rejects(sql(A, "UPDATE uygunsuzluk SET kriter = 'Başka', surum = surum + 1 WHERE id = $1", [u.id], FA.den.id), /içeriği değişmez|uygunsuzluk_kriter/);
+  await assert.rejects(sql(A, "UPDATE uygunsuzluk SET kriter = NULL, surum = surum + 1 WHERE id = $1", [u.id], FA.den.id), /içeriği değişmez/);
+  await assert.rejects(m(FA.m1, null, (db) => db.sorgu("UPDATE uygunsuzluk SET kriter = NULL")), /permission denied/);
 });

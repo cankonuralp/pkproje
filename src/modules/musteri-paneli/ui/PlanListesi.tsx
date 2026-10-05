@@ -5,6 +5,7 @@
    sütunları, 0032). */
 import { KartEtiket, Kirp, Liste, type Sutun } from "../../../components/liste/Liste";
 import { AltSatir, DegerYok, Rozet, SayfaBasi } from "../../../components/sayfa/Sayfa";
+import { BosDurum } from "../../../components/bos/BosDurum";
 import { tarihNo } from "../../../components/secim/tarih";
 import { PLAN_DURUM } from "../../planlar/sema";
 import type { PanelPlanlari, PanelPlanSatiri } from "../server/panel";
@@ -31,10 +32,12 @@ export function PanelPlanListesi({ v }: { v: PanelPlanlari }) {
   const planli = v.satirlar.filter((x) => x.plan).length;
   return (
     <>
-      <SayfaBasi baslik="Planlanan kontroller" sayac={<span className={stil.sayi} role="status"><b>{planli}</b> planlı</span>} />
+      <SayfaBasi baslik="Planlanan kontroller" sayac={<span className={stil.sayac} role="status"><b>{planli}</b> planlı</span>} />
       <p className={stil.alt}>{v.musteri?.unvan ?? "—"}</p>
       <PanelSekmeleri acikUygunsuz={v.acikUygunsuz} secili="/portal/plan" />
-      <Liste baslik="Planlanan kontroller" sutunlar={SUTUNLAR} kayitlar={v.satirlar} anahtar={(x) => x.tesisId} />
+      {v.satirlar.length
+        ? <Liste baslik="Planlanan kontroller" sutunlar={SUTUNLAR} kayitlar={v.satirlar} anahtar={(x) => x.tesisId} />
+        : <BosDurum ikon="calendar" baslik="Planlanan kontrol yok" metin="Tesisleriniz eklendiğinde planlanan kontroller burada görünür." />}
     </>
   );
 }

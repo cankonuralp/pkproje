@@ -42,7 +42,8 @@ export async function panelUygunsuzluklari(db: Sorgulayici): Promise<PanelUyguns
 }
 
 /** Planlanan kontroller (321; maket planCiz): görebildiği her tesis — açık planı (en yakını; başkaları da varsa sayısı) ve sonraki kontrol
-    (tesisteki her ekipmanın SON raporunun sonraki kontrol tarihlerinin en yakını) */
+    (tesisteki her ETKİN ekipmanın SON raporunun sonraki kontrol tarihlerinin en yakını — pasife alınan ekipmanın eski tarihi sayılmaz; firma
+    tarafındaki kapsam hesabı gibi, 320–323 incelemesi) */
 export interface PanelPlanSatiri { tesisId: string; tesis: string; yer: string | null; plan: MusteriPlani | null; digerPlan: number; sonraki: string | null }
 export interface PanelPlanlari extends PanelBasligi { satirlar: PanelPlanSatiri[] }
 export async function panelPlanlari(db: Sorgulayici): Promise<PanelPlanlari> {
@@ -51,6 +52,7 @@ export async function panelPlanlari(db: Sorgulayici): Promise<PanelPlanlari> {
   /* ekipmanın son raporu: en geç kontrol (yoksa imza) */
   const son = new Map<string, MusteriRaporu>();
   for (const r of raporlar) {
+    if (r.ekipmanPasif) continue;
     const o = son.get(r.ekipmanId), k = (x: MusteriRaporu) => `${x.kontrol ?? ""}|${x.imzalandi}`;
     if (!o || k(r) > k(o)) son.set(r.ekipmanId, r);
   }

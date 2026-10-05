@@ -1,7 +1,7 @@
 /* tarayıcıda üretilen dosyayı indirir (Excel, ZIP): bellekteki baytlardan geçici adres, tıklama, adres hemen bırakılır. Kalıcı / herkese açık
    bağlantı yok (anayasa 5.1) — dosya yalnız bu sekmede, kişinin zaten gördüğü veriden. */
-export function baytIndir(ad: string, bayt: Uint8Array, tur: string) {
-  const url = URL.createObjectURL(new Blob([bayt as BlobPart], { type: tur }));
+export function baytIndir(ad: string, bayt: Uint8Array | readonly Uint8Array[], tur: string) {
+  const url = URL.createObjectURL(new Blob((Array.isArray(bayt) ? bayt : [bayt]) as BlobPart[], { type: tur }));
   const a = document.createElement("a");
   a.href = url; a.download = ad; a.hidden = true;
   document.body.appendChild(a); a.click(); a.remove();

@@ -14,8 +14,9 @@ export function crc32(b: Uint8Array): number {
 
 export type ZipDosyasi = readonly [ad: string, icerik: string | Uint8Array];
 
-/** [[ad, metin ya da bayt]] → ZIP baytları; ad "/" ayraçlı göreli yol olmalı (mutlak yol, "..", ters bölü reddedilir — açan klasör dışına yazmasın) */
-export function zipBayt(dosyalar: readonly ZipDosyasi[]): Uint8Array {
+/** [[ad, metin ya da bayt]] → ZIP'in sıralı parçaları (içerik baytları KOPYALANMAZ — büyük toplu indirmede tek büyük kopya olmasın: parçalar
+    doğrudan Blob'a verilir); ad "/" ayraçlı göreli yol olmalı (mutlak yol, "..", ters bölü reddedilir — açan klasör dışına yazmasın) */
+export function zipParcalari(dosyalar: readonly ZipDosyasi[]): Uint8Array[] {
   if (dosyalar.length > 0xffff) throw new Error("ZIP: çok fazla dosya");
   const te = new TextEncoder(), parca: Uint8Array[] = [], merkez: Uint8Array[] = [];
   let ofs = 0;
@@ -43,7 +44,12 @@ export function zipBayt(dosyalar: readonly ZipDosyasi[]): Uint8Array {
   const son = new DataView(new ArrayBuffer(22));
   son.setUint32(0, 0x06054b50, true); son.setUint16(8, dosyalar.length, true); son.setUint16(10, dosyalar.length, true);
   son.setUint32(12, mb, true); son.setUint32(16, ofs, true);
-  const hepsi = [...parca, ...merkez, new Uint8Array(son.buffer)];
+  return [...parca, ...merkez, new Uint8Array(son.buffer)];
+}
+
+/** ZIP baytları tek parça (Excel gibi küçük dosyalar) */
+export function zipBayt(dosyalar: readonly ZipDosyasi[]): Uint8Array {
+  const hepsi = zipParcalari(dosyalar);
   const out = new Uint8Array(hepsi.reduce((n, x) => n + x.length, 0));
   let i = 0;
   for (const x of hepsi) { out.set(x, i); i += x.length; }

@@ -11,7 +11,9 @@
    8. (0033) Parola değişince kilit sıfırlanmasaydı yeni geçici parolanın sahibi kilitli kalırdı.
    9. (322, 0034) Sözleşme kapsamı tesis süzgecinden geçmeseydi seçili tesisli ek giriş sözleşmedeki öteki tesisleri görürdü.
   10. (323, 0035) Firma ayarındaki tür süzgeci olmasaydı müşteri personelin bütün özlük belgelerini (kimlik, sağlık raporu …) görürdü.
-  11. (323, 0035) Plan yolunda müşteri süzgeci olmasaydı başka müşterinin tesisine giden personel de listelenirdi. */
+  11. (323, 0035) Plan yolunda müşteri süzgeci olmasaydı başka müşterinin tesisine giden personel de listelenirdi.
+  12. (320–323 incelemesi, 0035) Eğitim türü süzgeci "ayar yoksa hepsi" olsaydı firmanın müşteriye açmadığı eğitim sertifikası (firma içi,
+      sonradan eklenen tür) müşteriye giderdi. */
 import assert from "node:assert/strict";
 import { copyFileSync, mkdirSync, mkdtempSync, readdirSync, readFileSync, rmSync, writeFileSync } from "node:fs";
 import { tmpdir } from "node:os";
@@ -184,7 +186,7 @@ const OZLUK_TUR = `
       AND o.tur IN (SELECT jsonb_array_elements_text(CASE WHEN jsonb_typeof(a.d->'ozluk') = 'array' THEN a.d->'ozluk' ELSE '["ekipnet"]'::jsonb END))`;
 const PLAN_MUSTERI = "WHERE p.firma_id = gecerli_firma() AND t.musteri_id = gecerli_musteri() AND musteri_tesis_gorur(p.tesis_id)";
 
-/** süper kullanıcıyla, tetiksiz: m1'in tesisinde AÇIK plan, ekibinde bir personel; personelin kimlik belgesi (özlük) */
+/** süper kullanıcıyla, tetiksiz: m1'in tesisinde AÇIK plan, ekibinde bir personel; personelin kimlik belgesi (özlük) ve firma içi eğitim sertifikası */
 async function personelKur(supa: SupabaseBenzeri, A: string, m1: string) {
   const t = (await supa.sahip.query<{ id: string }>("SELECT id::text FROM tesis WHERE firma_id = $1 AND musteri_id = $2 LIMIT 1", [A, m1])).rows[0].id;
   await supa.sahip.query("SET session_replication_role = replica");
@@ -195,6 +197,9 @@ async function personelKur(supa: SupabaseBenzeri, A: string, m1: string) {
       'Deneme', 'Deneme') RETURNING id::text`, [A, t]);
     await q("INSERT INTO plan_ekip (firma_id, plan_id, personel_id) VALUES ($1, $2, $3) RETURNING id::text", [A, plan, per]);
     await q("INSERT INTO ozluk_belgesi (firma_id, personel_id, tur, dosya_id) VALUES ($1, $2, 'kimlik', gen_random_uuid()) RETURNING id::text", [A, per]);
+    const tur = await q("INSERT INTO egitim_turu (firma_id, ad, tekrar_ay) VALUES ($1, 'Firma içi bilgilendirme', 12) RETURNING id::text", [A]);
+    await q(`INSERT INTO egitim_kaydi (firma_id, personel_id, tur_id, tarih, tekrar, kurum, dosya_id) VALUES ($1, $2, $3, '2026-01-10', '2027-01-10', 'Firma içi',
+      gen_random_uuid()) RETURNING id::text`, [A, per, tur]);
   } finally { await supa.sahip.query("SET session_replication_role = origin"); }
 }
 
@@ -212,4 +217,13 @@ test("0035'teki plan yolunda müşteri süzgeci kalkınca başka müşteri, öte
   const n = (await kiraciIcinde(havuz, A, (db) => db.sorgu<{ n: number }>("SELECT count(*)::int AS n FROM musteri_personeli()"),
     { musteri: { id: m2, tesisler: null } })).rows[0].n;
   assert.equal(n, 1, "öteki müşterinin planındaki personel göründü");
+});
+
+const EGITIM_KAPALI = "\n      AND jsonb_typeof(a.d->'egitim') = 'array' AND (a.d->'egitim') ? e.tur_id::text";
+test("0035'te eğitim türü süzgeci kalkınca (eski 'ayar yoksa hepsi') firmanın açmadığı eğitim sertifikası müşteriye gider (kilidin koruduğu açık)", async () => {
+  const { havuz, A, m1 } = await bozuk("musteri_bozuk12", EGITIM_KAPALI, "", "0035_");
+  await personelKur(acilan.at(-1)!.supa, A, m1);
+  const n = (await kiraciIcinde(havuz, A, (db) => db.sorgu<{ n: number }>("SELECT count(*)::int AS n FROM musteri_personel_belgeleri() WHERE kaynak = 'egitim'"),
+    { musteri: { id: m1, tesisler: null } })).rows[0].n;
+  assert.equal(n, 1, "açılmamış eğitim sertifikası müşteriye gitti");
 });

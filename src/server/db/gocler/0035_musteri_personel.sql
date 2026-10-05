@@ -5,9 +5,11 @@
 -- müşteri süzgeci açık yazılı — 0030'daki musteri_son_surum gibi):
 --   musteri_personeli(): müşterinin görebildiği tesislere GİDEN muayene personeli — son imzalı raporun yazanı ya da AÇIK planın ekibi; ad, meslek,
 --   son gidiş, tesisler. Başka kişisel alan (telefon, TC, adres …) yok.
---   musteri_personel_belgeleri(): bu kişilerin firmanın MÜŞTERİYE AÇTIĞI belgeleri — firma ayarı "musteri_belge" (özlük türleri, eğitim
---   sertifikaları: hepsi ya da seçili türler, ekipman atama belgesi); ayar yoksa başlangıç: yalnız EKİPNET + bütün eğitim sertifikaları (TS
---   başlangıcıyla aynı — src/server/ayar/ayar.ts, kilit testi). Kaldırılan / önceki kayıt ve dosyasız satır yok.
+--   musteri_personel_belgeleri(): bu kişilerin firmanın MÜŞTERİYE AÇTIĞI belgeleri — firma ayarı "musteri_belge" (özlük türleri, seçili eğitim
+--   türlerinin sertifikaları, ekipman atama belgesi); ayar yoksa başlangıç: yalnız EKİPNET, eğitim sertifikası YOK (eğitim türlerini firma kendisi
+--   açar ve firmanın tür başına açması gerekir — onaylı maketin ayar ekranında tür başına onay kutusu, "hepsi" yok; sonradan eklenen tür kapalı
+--   başlar. TS başlangıcıyla aynı — src/server/ayar/ayar.ts, kilit testi). Özlük belgesinin adı tür + açıklama (maket musteriyeAcikBelgeler).
+--   Kaldırılan / önceki kayıt ve dosyasız satır yok.
 -- Dosya politikası bu belgelerin dosyasını da açar (yalnız listedekiler).
 -- ⛔ Her göç IDEMPOTENT.
 
@@ -33,7 +35,7 @@ CREATE OR REPLACE FUNCTION musteri_personel_belgeleri() RETURNS TABLE (personel_
   LANGUAGE sql STABLE SECURITY DEFINER AS $$
   WITH a AS (SELECT coalesce((SELECT f.deger FROM firma_ayar f WHERE f.firma_id = gecerli_firma() AND f.bolum = 'musteri_belge'), '{}'::jsonb) AS d),
        k AS (SELECT m.personel_id FROM musteri_personeli() m)
-  SELECT o.personel_id, 'ozluk', o.tur, NULL::text, o.dosya_id, o.olustu::date, NULL::date
+  SELECT o.personel_id, 'ozluk', o.tur, o.aciklama, o.dosya_id, o.olustu::date, NULL::date
     FROM ozluk_belgesi o, a
     WHERE o.firma_id = gecerli_firma() AND o.personel_id IN (SELECT personel_id FROM k) AND o.kaldirildi IS NULL AND o.dosya_id IS NOT NULL
       AND o.tur IN (SELECT jsonb_array_elements_text(CASE WHEN jsonb_typeof(a.d->'ozluk') = 'array' THEN a.d->'ozluk' ELSE '["ekipnet"]'::jsonb END))
@@ -41,7 +43,7 @@ CREATE OR REPLACE FUNCTION musteri_personel_belgeleri() RETURNS TABLE (personel_
   SELECT e.personel_id, 'egitim', e.tur_id::text, t.ad, e.dosya_id, e.tarih, e.tekrar
     FROM egitim_kaydi e JOIN egitim_turu t ON t.firma_id = e.firma_id AND t.id = e.tur_id, a
     WHERE e.firma_id = gecerli_firma() AND e.personel_id IN (SELECT personel_id FROM k) AND NOT e.onceki AND e.dosya_id IS NOT NULL
-      AND (jsonb_typeof(a.d->'egitim') IS DISTINCT FROM 'array' OR (a.d->'egitim') ? e.tur_id::text)
+      AND jsonb_typeof(a.d->'egitim') = 'array' AND (a.d->'egitim') ? e.tur_id::text
   UNION ALL
   SELECT x.personel_id, 'atama', x.tur_id::text, et.ad, x.dosya_id, x.tarih, NULL::date
     FROM ekipman_atamasi x JOIN ekipman_turu et ON et.firma_id = x.firma_id AND et.id = x.tur_id, a

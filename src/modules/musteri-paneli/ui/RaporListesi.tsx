@@ -64,7 +64,7 @@ export function PanelRaporListesi({ v }: { v: PanelRaporlari }) {
   const s = useSuzgec(tanim(v.raporlar, v.tesisler), v.raporlar);
   const excel = () => baytIndir(`raporlar-${dosyaGunu()}.xlsx`, raporExceli(s.sonuc.liste), XLSX_TURU);
   const zip = useTopluIndir();
-  const topluIndir = () => zip.indir(s.sonuc.liste.map((r) => ({ dosya: r.dosya, no: r.no, tesis: r.tesis })),
+  const topluIndir = () => zip.indir(s.sonuc.liste.map((r) => ({ dosya: r.dosya, no: r.no, tesis: r.tesis, boyut: r.boyut })),
     `${adParcasi(v.musteri?.kisa ?? "musteri")}-raporlar-${dosyaGunu()}.zip`);
   const bos = !s.sonuc.liste.length;
   return (

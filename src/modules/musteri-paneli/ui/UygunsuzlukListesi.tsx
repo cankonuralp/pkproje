@@ -33,7 +33,7 @@ const SUTUNLAR: Sutun<MusteriUygunsuzlukSatiri>[] = [
     <><span className={stil.kod}>{u.ekipmanKod}</span><AltSatir><Kirp>{`${u.turAd} · ${u.tesis}`}</Kirp></AltSatir></>
   ) },
   { k: "kusur", genislik: "34%", baslik: "Kusur", kart: "govde", sira: 2, hucre: (u) => {
-    const k = kusurParcala(u.metin);
+    const k = kusurParcala(u.metin, u.kriter);
     return <><KartEtiket>Kusur</KartEtiket><span><span className={u.agir ? stil.agir : undefined}>{u.agir ? "Ağır · " : ""}</span>{k.kriter}{k.aciklama && <AltSatir>{k.aciklama}</AltSatir>}</span></>;
   } },
   { k: "rapor", genislik: "16%", baslik: "Rapor", kart: "govde", sira: 3, hucre: (u) => (
@@ -64,7 +64,7 @@ function tanim(tesisler: PanelUygunsuzluklari["tesisler"]): SuzgecTanimi<Musteri
 export function uygunsuzlukExceli(l: readonly MusteriUygunsuzlukSatiri[]): Uint8Array {
   return xlsxBayt("Uygunsuzluklar", [["Rapor", "Ekipman kodu", "Ekipman türü", "Tesis", "Sınıf", "Kriter", "Açıklama", "Rapor no", "Kontrol tarihi"],
     ...l.map((u) => {
-      const k = kusurParcala(u.metin);
+      const k = kusurParcala(u.metin, u.kriter);
       return [{ metin: "Rapor", url: raporAdresi(u.raporId) }, u.ekipmanKod, u.turAd, u.tesis, sinif(u), k.kriter, k.aciklama, u.raporNo, u.tarih ? tarihNo(u.tarih) : ""];
     })]);
 }
@@ -78,7 +78,7 @@ export function PanelUygunsuzlukListesi({ v }: { v: PanelUygunsuzluklari }) {
   /* süzgeçteki uygunsuzlukların raporları (her rapor bir kez, son imzalı PDF'i) */
   const zipRaporlari = () => {
     const l: ZipRaporu[] = [], gorulen = new Set<string>();
-    for (const u of s.sonuc.liste) if (u.raporDosya && !gorulen.has(u.raporId)) { gorulen.add(u.raporId); l.push({ dosya: u.raporDosya, no: u.raporNo, tesis: u.tesis }); }
+    for (const u of s.sonuc.liste) if (u.raporDosya && !gorulen.has(u.raporId)) { gorulen.add(u.raporId); l.push({ dosya: u.raporDosya, no: u.raporNo, tesis: u.tesis, boyut: u.raporBoyut }); }
     return l;
   };
   const topluIndir = () => zip.indir(zipRaporlari(), `${adParcasi(v.musteri?.kisa ?? "musteri")}-uygunsuz-raporlar-${dosyaGunu()}.zip`);

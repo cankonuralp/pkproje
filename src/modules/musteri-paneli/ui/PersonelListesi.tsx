@@ -23,8 +23,10 @@ const SUTUNLAR: Sutun<PanelPersonelSatiri>[] = [
           const k = b.gecerli ? gunFarki(b.gecerli) : null;
           return (
             <li key={b.dosya}>
-              <span>{b.ad}{b.gecerli && <AltSatir uyari={k !== null && k < 0}>{k !== null && k < 0 ? `süresi geçti: ${tarihNo(b.gecerli)}` : `geçerli: ${tarihNo(b.gecerli)}`}</AltSatir>}</span>
-              <DosyaAcTusu dosyaId={b.dosya} ikon="eye">Aç</DosyaAcTusu>
+              <span>{b.ad}{b.gecerli
+                ? <AltSatir uyari={k !== null && k < 0}>{k !== null && k < 0 ? `süresi geçti: ${tarihNo(b.gecerli)}` : `geçerli: ${tarihNo(b.gecerli)}`}</AltSatir>
+                : b.yuklendi && b.tarih && <AltSatir>{`yüklendi: ${tarihNo(b.tarih)}`}</AltSatir>}</span>
+              <DosyaAcTusu dosyaId={b.dosya} ikon="eye" etiket={`${x.ad} · ${b.ad} aç`}>Aç</DosyaAcTusu>
             </li>
           );
         })}</ul>
@@ -35,7 +37,7 @@ const SUTUNLAR: Sutun<PanelPersonelSatiri>[] = [
 export function PanelPersonelListesi({ v }: { v: PanelPersoneli }) {
   return (
     <>
-      <SayfaBasi baslik="Muayene personeli" sayac={<span className={stil.sayi} role="status"><b>{v.kisiler.length}</b> kişi</span>} />
+      <SayfaBasi baslik="Muayene personeli" sayac={<span className={stil.sayac} role="status"><b>{v.kisiler.length}</b> kişi</span>} />
       <p className={stil.alt}>{v.musteri?.unvan ?? "—"}</p>
       <PanelSekmeleri acikUygunsuz={v.acikUygunsuz} secili="/portal/personel" />
       {v.kisiler.length

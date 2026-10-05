@@ -13,7 +13,9 @@ import { linyeHesap, noktaHesap, pdHesap, rcdTestYeter, sayiOku, sinirSonucu, zi
 import type { Bolum, BolumOf, Cevaplar, FormatTanimi } from "./tanim.ts";
 
 export interface Eksik { bolum: string; alan: string; ad: string }
-export interface Kusur { bolum: string; ref: string; metin: string; agir: boolean }
+/** kriter: kusurun ölçütü (madde metni, ölçüm satırının etiketi, test değerinin adı); metin "kriter: açıklama" ya da yalnız kriter — kriter ayrı
+    tutulur, metinden geri ayrıştırılmaz (kriterin kendisinde ": " olabilir; 320–323 incelemesi) */
+export interface Kusur { bolum: string; ref: string; kriter: string; metin: string; agir: boolean }
 export interface SatirDegerlendirmesi { uygun: boolean | null; neden: string[]; oneriNot: number | null }
 export interface Degerlendirme {
   eksikler: Eksik[]; kusurlar: Kusur[]; oneri: "uygun" | "uygun_degil";
@@ -65,7 +67,7 @@ export function degerlendir(t: FormatTanimi, c: Cevaplar): Degerlendirme {
           const x = c.madde[m.id];
           if (!x || !b.cevaplar.includes(x.c)) { eksikler.push({ bolum: b.id, alan: m.id, ad: m.metin }); continue; }
           if (x.c !== b.cevaplar[1]) continue;
-          kusurlar.push({ bolum: b.id, ref: m.id, metin: x.not?.trim() ? `${m.metin}: ${x.not.trim()}` : m.metin, agir: t.kurallar.derece && x.derece === "agir" });
+          kusurlar.push({ bolum: b.id, ref: m.id, kriter: m.metin, metin: x.not?.trim() ? `${m.metin}: ${x.not.trim()}` : m.metin, agir: t.kurallar.derece && x.derece === "agir" });
           if (!x.not?.trim()) eksikler.push({ bolum: b.id, alan: `${m.id}.not`, ad: `${m.metin} · kusur açıklaması` });
           if (t.kurallar.derece && !x.derece) eksikler.push({ bolum: b.id, alan: `${m.id}.derece`, ad: `${m.metin} · kusur derecesi` });
           if (t.kurallar.foto && !(x.foto && x.foto > 0)) eksikler.push({ bolum: b.id, alan: `${m.id}.foto`, ad: `${m.metin} · fotoğraf` });
@@ -82,8 +84,8 @@ export function degerlendir(t: FormatTanimi, c: Cevaplar): Degerlendirme {
             const n = Number(s.not);
             const not = Number.isInteger(n) && n >= 1 ? b.notlar[n - 1] : undefined;
             if (!not) eksikler.push({ bolum: b.id, alan: satirAnahtari(b.id, i, "not"), ad: `${b.ad} · ${i + 1}. satır · uygunluk notu` });
-            else if (not.kusur) kusurlar.push({ bolum: b.id, ref: `${b.id}#${i}`, metin: `${etiket}: Not-${n} — ${not.metin}`, agir: not.agir });
-          } else if (d.uygun === false) kusurlar.push({ bolum: b.id, ref: `${b.id}#${i}`, metin: `${etiket}: ${d.neden.join("; ")}`, agir: false });
+            else if (not.kusur) kusurlar.push({ bolum: b.id, ref: `${b.id}#${i}`, kriter: etiket, metin: `${etiket}: Not-${n} — ${not.metin}`, agir: not.agir });
+          } else if (d.uygun === false) kusurlar.push({ bolum: b.id, ref: `${b.id}#${i}`, kriter: etiket, metin: `${etiket}: ${d.neden.join("; ")}`, agir: false });
           return d;
         });
         break;
@@ -95,7 +97,7 @@ export function degerlendir(t: FormatTanimi, c: Cevaplar): Degerlendirme {
           if (d.zorunlu && !dolu) eksikler.push({ bolum: b.id, alan: d.id, ad: d.ad });
           const r = d.metin ? null : sinirSonucu(d.op, d.sinir, v);
           degerler[d.id] = r;
-          if (r === false) kusurlar.push({ bolum: b.id, ref: d.id, metin: `${d.ad}: ${v}${d.birim ? ` ${d.birim}` : ""} (sınır ${d.op === "<=" ? "≤" : "≥"} ${virgul(d.sinir!)}${d.birim ? ` ${d.birim}` : ""})`, agir: false });
+          if (r === false) kusurlar.push({ bolum: b.id, ref: d.id, kriter: d.ad, metin: `${d.ad}: ${v}${d.birim ? ` ${d.birim}` : ""} (sınır ${d.op === "<=" ? "≤" : "≥"} ${virgul(d.sinir!)}${d.birim ? ` ${d.birim}` : ""})`, agir: false });
         }
         break;
       case "cihaz":

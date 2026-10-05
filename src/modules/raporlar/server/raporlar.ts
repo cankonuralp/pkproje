@@ -688,7 +688,7 @@ const YONTEM_AD: Record<string, string> = { dosya: "e-imzalı PDF", mobil: "mobi
 /** hazırlık anının kopyası (0028): imzalanan PDF'le aynı kaynaktan yazan ve cihazlar — imzalı sürüm bundan yazılır */
 interface IstekKopyasi { yazan?: BelgeVerisi["yazan"]; cihazlar?: BelgeVerisi["cihazlar"] }
 const SURUM = tablo({ ad: "rapor_surumu", sutunlar: ["rapor_id", "revizyon", "no", "imzasiz_dosya", "imzali_dosya", "imzali_sha256", "imza_yontem", "kunye", "personel", "cihazlar", "icerik"] });
-const UYGUNSUZLUK = tablo({ ad: "uygunsuzluk", sutunlar: ["surum_id", "kaynak", "ref", "metin", "agir"] });
+const UYGUNSUZLUK = tablo({ ad: "uygunsuzluk", sutunlar: ["surum_id", "kaynak", "ref", "kriter", "metin", "agir"] });
 async function bekleyenIstek(db: Sorgulayici, raporId: string, revizyon: number) {
   return (await db.sorgu<{ id: string; pdf_dosya: string; pdf_sha256: string; surum: number; kopya: IstekKopyasi }>(
     "SELECT id::text, pdf_dosya::text, pdf_sha256, surum, kopya FROM imza_istegi WHERE rapor_id = $1 AND revizyon = $2 AND durum = 'bekliyor'", [raporId, revizyon])).rows[0] ?? null;
@@ -762,7 +762,10 @@ export async function imzaliYukle(db: Sorgulayici, depo: Depo, kim: Kisi, firmaI
     const blok = new Map(v.belge.tanim.bolumler.map((x) => [x.id, x.blok]));
     for (const k of d.kusurlar) {
       const tur = blok.get(k.bolum);
-      await ekle(db, UYGUNSUZLUK, { surum_id: s.id, kaynak: tur === "olcum" ? "olcum" : tur === "test" ? "test" : "madde", ref: k.ref.slice(0, 60), metin: k.metin.slice(0, 1200), agir: !!k.agir }, iz);
+      /* kriter ayrı (müşteri listesinde ve Excel'de Kriter / Açıklama sütunları — 0036); metnin başı değilse (kırpılmış) yazılmaz */
+      const metin = k.metin.slice(0, 1200);
+      const kriter = k.kriter.length >= 1 && k.kriter.length <= 1000 && (metin === k.kriter || metin.startsWith(`${k.kriter}: `)) ? k.kriter : null;
+      await ekle(db, UYGUNSUZLUK, { surum_id: s.id, kaynak: tur === "olcum" ? "olcum" : tur === "test" ? "test" : "madde", ref: k.ref.slice(0, 60), kriter, metin, agir: !!k.agir }, iz);
     }
   }
   const g = await guncelle(db, ISTEK, istek.id, istek.surum, { durum: "tamam", imzali_dosya: y.id }, iz);

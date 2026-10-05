@@ -42,11 +42,12 @@ export const AYAR_BOLUMLERI = {
   /** Tarafsızlık ve çıkar çatışması beyanı (§3.7 satır 3; karar 26): kalite el kitabındaki metin; boşsa varsayılan. Kabul anındaki metin plana yazılır */
   beyan: z.object({ metin: z.string().trim().min(20).max(4000).default(VARSAYILAN_BEYAN) }),
   /** Müşteriye açık personel belgeleri (323; maket firma-ayarlari "Müşteriye açık personel belgeleri", P3): müşteri panelinin "Muayene personeli"
-      sekmesinde görünen türler — özlük türleri, eğitim sertifikaları (hepsi ya da seçili türler), ekipman atama belgesi. Başlangıç: EKİPNET +
-      bütün eğitim sertifikaları (veritabanı işlevi musteri_personel_belgeleri ayar yokken aynısını uygular — 0035, kilit testi) */
+      sekmesinde görünen türler — özlük türleri, seçili eğitim türlerinin sertifikaları, ekipman atama belgesi. Başlangıç: yalnız EKİPNET; eğitim
+      sertifikası yok (maketteki gibi tür başına açılır, "hepsi" yok; sonradan eklenen tür kapalı başlar — 320–323 incelemesi). Veritabanı işlevi
+      musteri_personel_belgeleri ayar yokken aynısını uygular (0035, kilit testi) */
   musteri_belge: z.object({
     ozluk: z.array(z.string().regex(/^[a-z0-9]{2,12}$/)).max(30).default(["ekipnet"]),
-    egitim: z.union([z.literal("hepsi"), z.array(z.string().regex(/^[0-9a-f-]{36}$/)).max(100)]).default("hepsi"),
+    egitim: z.array(z.string().regex(/^[0-9a-f-]{36}$/)).max(100).default([]),
     atama: z.boolean().default(false),
   }),
   /** Rol yetkileri (Personel › Rol yetkileri; reisim 32): modül → rol sırasıyla 6 düzey. Boş = önerilen düzen. Okuma / yazma src/server/yetki/matris.ts */

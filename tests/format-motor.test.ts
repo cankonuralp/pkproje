@@ -117,6 +117,11 @@ test("değerlendirme ZPKR02: boş rapor eksikleri listeler; olumsuz madde, sın�
     "Panodan ölçülen faz-toprak çevrim empedansı (Zx): 0,41 Ω (sınır ≤ 0,37 Ω)",
     "F3: Ib ≤ In ≤ Iz sağlanmıyor",
   ]);
+  /* kriter ayrı (metnin başı; müşteri listesi ve Excel Kriter / Açıklama'yı metinden ayrıştırmaz — 320–323 incelemesi) */
+  assert.deepEqual(r.kusurlar.map((k) => k.kriter), [
+    "Pano iç kapak, faza erişim engeli veya pleksi koruma", "Panodan ölçülen faz-toprak çevrim empedansı (Zx)", "F3",
+  ]);
+  assert.ok(r.kusurlar.every((k) => k.metin.startsWith(`${k.kriter}: `)));
   assert.equal(r.oneri, "uygun_degil");
   assert.deepEqual([r.degerler.zx, r.degerler.npe, r.degerler.zln], [false, true, null]);
   assert.deepEqual(r.satirlar.zi, [{ uygun: true, neden: [], oneriNot: null }]);
