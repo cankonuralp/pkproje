@@ -386,7 +386,7 @@ test("UYGUNSUZLUK + REVİZYON (319 incelemesi, 0033): revizyondan önce başka m
 test("SÖZLEŞMELER (322): müşteri rolü sözleşmenin yalnız numara / dönem / imza / PDF sütunlarını, kendi müşterisinin ve görebildiği tesis kapsamındaki sözleşmeleri okur; kapsamda yalnız görebildiği tesisler; imzalı PDF'in yalnız şu ankisi iner; başka müşteri ve firma görmez", async () => {
   const yon = FA.yon;
   const haz = async (musteri: string, tesisler: string[]) =>
-    tamam(await a(yon, (db) => sozlesmeHazirla(db, yon, { musteri, tesisler, baslangic: "2026-01-01", sure: 24, vade: 30, yenileme: "yok" }))).id;
+    tamam(await a(yon, (db) => sozlesmeHazirla(db, yon, { musteri, tesisler, baslangic: "2026-01-01", sure: "24", vade: "30", yenileme: "yok" }))).id;
   const s1 = await haz(FA.m1, [FA.t1, FA.t2]), s2 = await haz(FA.m1, [FA.t2]), s3 = await haz(FA.m2, [FA.t3]);
   const pdf = (n: number) => ({ ad: "imzali-sozlesme.pdf", bayt: new TextEncoder().encode(`%PDF-1.4\n% sözleşme ${n}\n%%EOF\n`) });
   const yukle = async (id: string, n: number) => {
