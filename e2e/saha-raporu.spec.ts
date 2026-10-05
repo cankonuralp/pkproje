@@ -242,7 +242,8 @@ test("saha raporu: rapor oluştur, eksikle gönderilmez, doldur + cihaz ekle, on
   /* 318: Raporlar listesi — denetçi kendi raporunu durumuyla görür, imza şeridi Onaylar'a götürür */
   await page.goto("/raporlar");
   await hazir(page);
-  await page.getByRole("searchbox", { name: "Raporlarda ara" }).fill(raporNo);
+  /* Raporlar alan alan aranır (rapor no · ekipman kodu · tür · tesis): ana arama kutusu yok, kutu alanın adıyla */
+  await page.getByRole("searchbox", { name: "Rapor no" }).fill(raporNo);
   await expect(page.getByRole("link", { name: raporNo }).first()).toBeVisible({ timeout: 30_000 });
   await expect(page.getByText("Muayene uzmanı imzası", { exact: true }).filter({ visible: true }).first()).toBeVisible();
   await expect(page.getByText(/\d+ rapor imzanızı bekliyor/).first()).toBeVisible();
