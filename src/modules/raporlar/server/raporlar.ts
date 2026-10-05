@@ -33,6 +33,9 @@ import { kimdeHaritasi } from "../../zimmetler/server/zimmet.ts";
 import { roldekiHesapAdlari } from "../../../server/kimlik/hesap.ts";
 import { ayEkle, kalibrasyonGecti, KopyaGirdisi, RaporKaydi, SONUC_AD, type EkipmanBilgisi, type RaporCihazi, type RaporDurumu, type RaporTarihleri } from "../sema.ts";
 import { mesaiDurumu } from "./plan-baglanti.ts";
+import { sonGeriGonderme } from "./onay-baglanti.ts";
+import { hesapAdlari } from "../../../server/kimlik/hesap.ts";
+import { TANIMLAR } from "../../../tanim/tanimlar.ts";
 
 const MODUL = 14;
 /** rapor fotoğrafının dosya modülü (dosya erişim kaydında: raporu gören açar) */
@@ -207,6 +210,8 @@ export interface SahaRaporu {
   guncelFormat: number | null;
   /** yazanın bugünkü süresi doldu (ENGEL 3): yeni rapor ve kopya açılmaz */
   mesaiDolu: boolean;
+  /** Yeni'ye geri dönmüş raporda son geri gönderme (U8; 314): kim, ne zaman, gerekçe */
+  geri: { kim: string; zaman: string; gerekce: string | null } | null;
   izin: { duzenle: boolean; sil: boolean; kopyala: boolean };
 }
 
@@ -269,6 +274,8 @@ export async function sahaRaporu(db: Sorgulayici, kim: Kisi, id: string): Promis
   const kopyala = e.sahip && !!plan && plan.personelId === r.personel_id && canDoEylem(kim, "rapor_olustur", { atananlar: plan.atananlar })
     && await ekipmanEklenebilir(db, kim, r.plan_id);
   const mesaiDolu = (duzenle || kopyala) && (await mesaiDurumu(db, r.personel_id, bugun)).dolu;
+  const sg = r.durum === "taslak" ? await sonGeriGonderme(db, r.id) : null;
+  const geri = sg ? { kim: (await hesapAdlari(db, [sg.hesapId])).get(sg.hesapId ?? "") ?? "—", zaman: sg.zaman, gerekce: sg.gerekce } : null;
   return {
     id: r.id, no: r.no, durum: r.durum, surum: r.surum, olustu: r.olustu.toISOString(), degisti: r.degisti.toISOString(), gonderildi: r.gonderildi?.toISOString() ?? null, bugun,
     plan: { id: r.plan_id, no: plan?.no ?? "—", tesisAd: iletisim?.tesisAd ?? "—", musteriKisa: iletisim?.kisa ?? "—" },
@@ -281,7 +288,7 @@ export async function sahaRaporu(db: Sorgulayici, kim: Kisi, id: string): Promis
     tarih: { bas: zamanOku(r.bas)!, bit: zamanOku(r.bit), sonraki: r.sonraki, takip: r.takip, rapor: r.rapor_tarihi },
     cevaplar: cev.success ? cev.data : Cevaplar.parse({}), tanim: format.tanim, formatSira: format.sira,
     cihazlar: satirlar, secilebilir, fotolar: r.fotolar,
-    kopyaKaynak, guncelFormat: yeni && yeni.sira > format.sira ? yeni.sira : null, mesaiDolu,
+    kopyaKaynak, guncelFormat: yeni && yeni.sira > format.sira ? yeni.sira : null, mesaiDolu, geri,
     izin: { duzenle, sil: r.durum === "taslak" && canDoEylem(kim, "rapor_sil", { sahip: r.hesap_id, durum: "Yeni", brans: tur.brans }), kopyala },
   };
 }
@@ -530,4 +537,42 @@ export async function raporFormatGuncelle(db: Sorgulayici, kim: Kisi, id: string
     rapor_tarihi: v.tarih.rapor, cevaplar: c, sonuc: c.sonuc || null, fotolar: jsonDizi(fotolar),
   }, { kim: kim.ad, ne: "rapor.format_guncelle", gerekce: `${e.r.no} · sürüm ${eski.sira} → ${yeni.sira}` });
   return sonuc(r, id, `Format güncellendi (sürüm ${yeni.sira}): ${eklenen ? `${eklenen} yeni madde eklendi (${ilk?.blok === "liste" ? ilk.cevaplar[0] : "Uygun"})` : "madde değişmedi"}; cevaplar korundu.`);
+}
+
+/* ── GÖZDEN GEÇİRME (Onaylar'ın onay ekranı; maket onaylar ozet; 17020 kayıt gözden geçirme — pkproje §4.9) ─────────────────────────── */
+export interface GozdenGecirmeMaddesi { tamam: boolean; metin: string }
+/** onaylayanın göreceği özet: İSG-KATİP, kontrol metodu, kriterler, ölçüm, test, cihaz ve kalibrasyon, fotoğraf, denetçinin mesleği (U1), sonuç
+    (U3). Hepsi uyarıdır, engel değil. Raporun kendi kayıtlarından ve açıldığı format sürümünden; yoksa null. Yetki ÇAĞIRANDA. */
+export async function gozdenGecirme(db: Sorgulayici, id: string): Promise<GozdenGecirmeMaddesi[] | null> {
+  const r = await raporOku(db, id);
+  if (!r) return null;
+  const tur = await turRaporBilgisi(db, r.tur_id), format = await formatSurumuOku(db, r.format_id);
+  if (!tur || !format) return null;
+  const c = Cevaplar.safeParse(r.cevaplar);
+  const d = degerle(format.tanim, c.success ? c.data : Cevaplar.parse({}), r);
+  const bloklar = (b: string) => new Set(format.tanim.bolumler.filter((x) => x.blok === b).map((x) => x.id));
+  const kusur = (b: string) => { const l = bloklar(b); return d.kusurlar.filter((k) => l.has(k.bolum)).length; };
+  const maddeSay = format.tanim.bolumler.reduce((n, b) => n + (b.blok === "liste" ? b.gruplar.reduce((m, g) => m + g.maddeler.length, 0) : 0), 0);
+  const testSay = format.tanim.bolumler.reduce((n, b) => n + (b.blok === "test" ? b.degerler.length : 0), 0);
+  const satirSay = Object.values(d.satirlar).reduce((n, l) => n + l.length, 0);
+  const { satirlar } = await cihazSatirlari(db, r, tur, bugunTr());
+  const cihazlar = satirlar.flatMap((x) => (x.cihaz ? [x.cihaz] : [])), gecti = cihazlar.filter((x) => x.gecti || x.eksik || x.lab);
+  const yazan = (await personelOzetleri(db, [r.personel_id]))[0];
+  const meslek = TANIMLAR.meslekler.find((m) => m.k === yazan?.meslek), yetkili = !!meslek && meslek.g.includes(tur.grup);
+  const l: GozdenGecirmeMaddesi[] = [
+    r.kunye.isg_no ? { tamam: true, metin: `İSG-KATİP ${r.kunye.isg_no}` } : { tamam: false, metin: "İSG-KATİP kaydı yok" },
+    { tamam: true, metin: `Kontrol metodu: ${tur.kontrolStd.length ? tur.kontrolStd.join(" · ") : "-"}` },
+  ];
+  if (maddeSay) { const k = kusur("liste"); l.push({ tamam: !k, metin: `${maddeSay} kriter yapıldı · ${k ? `${k} uygun değil madde` : "hepsi uygun"}` }); }
+  if (bloklar("olcum").size) { const k = kusur("olcum"); l.push({ tamam: !k, metin: `${satirSay} ölçüm satırı · ${k ? `${k} uygun değil satır` : "hepsi uygun"}` }); }
+  if (testSay) { const k = kusur("test"); l.push({ tamam: !k, metin: `${testSay} test değeri · ${k ? `${k} sınır dışı` : "hepsi sınır içinde"}` }); }
+  l.push(cihazlar.length
+    ? { tamam: !gecti.length, metin: `${cihazlar.length} ölçüm cihazı · ${gecti.length ? `kalibrasyonu geçmiş ya da geçersiz: ${gecti.map((x) => x.kod).join(", ")}` : "kalibrasyonu geçerli"}` }
+    : { tamam: !tur.cihazTurleri.length, metin: "Ölçüm cihazı yok" });
+  l.push({ tamam: true, metin: `${r.fotolar.length} fotoğraf` });
+  l.push({ tamam: yetkili, metin: `Denetçi: ${yazan?.ad ?? "—"} · ${meslek?.ad ?? yazan?.meslekMetin ?? "meslek yok"}${yetkili ? "" : " · bu türe yetkili meslekler arasında değil"}` });
+  const sonucAd = r.sonuc ? SONUC_AD[r.sonuc as keyof typeof SONUC_AD] : null;
+  l.push({ tamam: r.sonuc !== "uygun_degil", metin: `Sonuç: ${sonucAd ?? "seçilmedi"}${r.sonuc && r.sonuc_oto ? " (kriterlere göre)" : ""}` });
+  if (r.sonuc === "uygun" && d.kusurlar.length) l.push({ tamam: false, metin: "Uygun değil madde ya da sınır dışı test değeri varken sonuç “Uygun”." });
+  return l;
 }

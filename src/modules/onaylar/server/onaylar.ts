@@ -1,0 +1,157 @@
+/* ONAYLAR (modül 15; maket onaylar.html M9; KOD-GECIS §4 rapor_onayla / rapor_geri_gonder / rapor_durum_degistir, §5 Rapor; karar 102, 190,
+   191; N7 — vekil yok, her yönetici kendi branşını görür). Yetki her işlevde SUNUCUDA:
+   · Görme: Onaylar düzeyi — "gör" (firma yöneticisi) hepsi, "branşı" (branş yöneticisi) türün branşı; denetçi, planlama, muhasebe yok (C5 —
+     denetçinin "İmzamı bekleyen raporlar"ı imza kalemiyle gelir). Göremeyen rapor "yok" (var olduğu söylenmez).
+   · Onayla / Onayı geri al: rapor_onayla — türün branş yöneticisi. Kendi yazdığı raporu da onaylar (C1, reisim kararı pkproje §1: "hazırlayanın
+     kendi raporunu onaylaması da engellenmez"). Geri gönder: rapor_geri_gonder, gerekçe ≥ 10. Durumu değiştir: rapor_durum_degistir, Yeni /
+     onayda / onaylandı arasında (Tamamlandı'ya yalnız imzayla); Yeni'ye ise gerekçe ≥ 10; Onaylandı'ya almak onay sayılır (191).
+   · Kuyruk: branşın onaydaki raporları, en yeni üstte; onaylayınca ya da geri gönderince sıradaki rapor açılır.
+   Rapor tablosuna dokunulmaz: Raporlar'ın onay-baglanti.ts kapısından okunur ve yazılır; geçiş kuralları ve damgalar veritabanında (0026). */
+import type { Sorgulayici } from "../../../server/db/kiraci.ts";
+import type { Iz } from "../../../server/db/yazici.ts";
+import { canDo, canDoEylem, duzey, type YetkiHesabi } from "../../../server/yetki/canDo.ts";
+import { dogrula, type DogrulamaHatalari } from "../../../sema/ortak.ts";
+import { raporDurumYaz, raporOzetleri, type OnayGecisi, type RaporOzeti } from "../../raporlar/server/onay-baglanti.ts";
+import { gozdenGecirme, type GozdenGecirmeMaddesi } from "../../raporlar/server/raporlar.ts";
+import { RAPOR_DURUM } from "../../raporlar/sema.ts";
+import { DurumGirdisi, GeriGirdisi } from "../sema.ts";
+
+const MODUL = 15;
+export interface Kisi extends YetkiHesabi { ad: string }
+export type OnayYazma =
+  | { durum: "tamam"; bildirim: string; sonraki: string | null }
+  | { durum: "gecersiz"; hatalar: DogrulamaHatalari }
+  | { durum: "red"; neden: string }
+  | { durum: "yetkisiz" } | { durum: "cakisma" } | { durum: "yok" };
+
+export interface OnayIzni { onayla: boolean; geriGonder: boolean; onayGeriAl: boolean; durumDegistir: boolean }
+/** ekrana giden satır: yazan hesabın kimliği gitmez */
+export type OnaySatiri = Omit<RaporOzeti, "hesapId"> & { bekleme: string | null; eski: boolean; izin: OnayIzni };
+
+const kayit = (r: RaporOzeti) => ({ sahip: r.hesapId, brans: r.brans, durum: RAPOR_DURUM[r.durum][0] });
+const gorur = (kim: Kisi, r: RaporOzeti) => canDo(kim, MODUL, "gor", { sahip: r.hesapId, brans: r.brans });
+/** Onaylar menüsü ve sayfaları: düzeyi olan */
+export const onaylarGorur = (kim: Kisi) => duzey(kim, MODUL) !== "yok";
+
+function izinler(kim: Kisi, r: RaporOzeti): OnayIzni {
+  const k = kayit(r);
+  return {
+    onayla: r.durum === "onayda" && canDoEylem(kim, "rapor_onayla", k),
+    geriGonder: r.durum === "onayda" && canDoEylem(kim, "rapor_geri_gonder", k),
+    onayGeriAl: r.durum === "onaylandi" && canDoEylem(kim, "rapor_onayla", k),
+    durumDegistir: (r.durum === "taslak" || r.durum === "onayda" || r.durum === "onaylandi") && canDoEylem(kim, "rapor_durum_degistir", k),
+  };
+}
+/** bekleme yazısı (maket bekleme): az önce · N saattir · N gündür; 24 saatten eski işaretli */
+function beklemesi(gonderildi: string | null, simdi: number): { bekleme: string | null; eski: boolean } {
+  if (!gonderildi) return { bekleme: null, eski: false };
+  const h = Math.floor((simdi - Date.parse(gonderildi)) / 36e5);
+  return { bekleme: h < 1 ? "az önce" : h < 24 ? `${h} saattir` : `${Math.floor(h / 24)} gündür`, eski: h >= 24 };
+}
+function satir(kim: Kisi, r: RaporOzeti, simdi: number): OnaySatiri {
+  const x: Partial<RaporOzeti> = { ...r };
+  delete x.hesapId;
+  return { ...(x as Omit<RaporOzeti, "hesapId">), ...beklemesi(r.durum === "onayda" ? r.gonderildi : null, simdi), izin: izinler(kim, r) };
+}
+const enYeni = (a: RaporOzeti, b: RaporOzeti) => (b.gonderildi ?? "").localeCompare(a.gonderildi ?? "") || b.olustu.localeCompare(a.olustu);
+
+/** kişinin onay kuyruğu (görebildiği onaydaki raporlar, en yeni üstte) */
+async function kuyrukOzetleri(db: Sorgulayici, kim: Kisi): Promise<RaporOzeti[]> {
+  return (await raporOzetleri(db, { durumlar: ["onayda"] })).filter((r) => gorur(kim, r)).sort(enYeni);
+}
+
+export interface OnayListeleri { kuyruk: OnaySatiri[]; tumu: OnaySatiri[]; branslar: ("m" | "e")[] }
+/** Onay kuyruğu + Tüm raporlar (branşın bütün raporları; maket 190); Onaylar'ı göremeyene null */
+export async function onayListeleri(db: Sorgulayici, kim: Kisi): Promise<OnayListeleri | null> {
+  if (!onaylarGorur(kim)) return null;
+  const simdi = Date.now();
+  const tum = (await raporOzetleri(db)).filter((r) => gorur(kim, r));
+  return {
+    kuyruk: tum.filter((r) => r.durum === "onayda").sort(enYeni).map((r) => satir(kim, r, simdi)),
+    tumu: [...tum].sort((a, b) => b.olustu.localeCompare(a.olustu)).map((r) => satir(kim, r, simdi)),
+    branslar: [...new Set(tum.map((r) => r.brans))].sort(),
+  };
+}
+
+export interface OnayEkrani { r: OnaySatiri; ozet: GozdenGecirmeMaddesi[]; sira: number | null; kuyrukBoyu: number }
+/** onay ekranı: gözden geçirme özeti + sıra; göremeyene null */
+export async function onayEkrani(db: Sorgulayici, kim: Kisi, id: string): Promise<OnayEkrani | null> {
+  if (!onaylarGorur(kim)) return null;
+  const r = (await raporOzetleri(db, { id }))[0];
+  if (!r || !gorur(kim, r)) return null;
+  const q = r.durum === "onayda" ? await kuyrukOzetleri(db, kim) : [];
+  const i = q.findIndex((x) => x.id === id);
+  return { r: satir(kim, r, Date.now()), ozet: (await gozdenGecirme(db, id)) ?? [], sira: i >= 0 ? i + 1 : null, kuyrukBoyu: q.length };
+}
+
+/* ── EYLEMLER ────────────────────────────────────────────────────────────────────────────────────────────────── */
+async function bul(db: Sorgulayici, kim: Kisi, id: string): Promise<RaporOzeti | null> {
+  if (!onaylarGorur(kim)) return null;
+  const r = (await raporOzetleri(db, { id }))[0];
+  return r && gorur(kim, r) ? r : null;
+}
+/** kuyrukta bundan sonraki rapor (yoksa baştaki; kendisi değilse) — geçişten ÖNCE bakılır */
+async function sonrakiRapor(db: Sorgulayici, kim: Kisi, id: string): Promise<string | null> {
+  const q = await kuyrukOzetleri(db, kim), i = q.findIndex((x) => x.id === id);
+  const s = q[i + 1] ?? q[0];
+  return s && s.id !== id ? s.id : null;
+}
+const iz = (kim: Kisi, ne: string, r: RaporOzeti): Iz => ({ kim: kim.ad, ne, gerekce: r.no });
+async function yaz(db: Sorgulayici, kim: Kisi, r: RaporOzeti, surum: number, hedef: OnayGecisi, gerekce: string | null, ne: string): Promise<"tamam" | "cakisma" | "yok"> {
+  const g = await raporDurumYaz(db, iz(kim, ne, r), r.id, surum, hedef, gerekce);
+  return g.durum === "tamam" ? "tamam" : g.durum === "cakisma" ? "cakisma" : g.durum === "degisiklik_yok" ? "cakisma" : "yok";
+}
+const durumAd = (d: keyof typeof RAPOR_DURUM) => RAPOR_DURUM[d][0];
+
+/** Onayla (onayda → onaylandı): muayene uzmanının son imzasına gider; sıradaki rapor açılır */
+export async function onayla(db: Sorgulayici, kim: Kisi, id: string, surum: number): Promise<OnayYazma> {
+  const r = await bul(db, kim, id);
+  if (!r) return { durum: "yok" };
+  if (!canDoEylem(kim, "rapor_onayla", kayit(r))) return { durum: "yetkisiz" };
+  if (r.durum !== "onayda") return { durum: "red", neden: `Rapor onay kuyruğunda değil (şu an: ${durumAd(r.durum)}).` };
+  const s = await sonrakiRapor(db, kim, id);
+  const y = await yaz(db, kim, r, surum, "onaylandi", null, "rapor.onayla");
+  if (y !== "tamam") return { durum: y };
+  return { durum: "tamam", sonraki: s, bildirim: `${r.no} onaylandı; muayene uzmanı imzasında, ${r.denetci} imzalayınca tamamlanır.${s ? " Sıradaki rapor açıldı." : " Kuyruk boş."}` };
+}
+
+/** Geri gönder (onayda → Yeni): gerekçe zorunlu; denetçi raporun üstünde görür; sıradaki rapor açılır */
+export async function geriGonder(db: Sorgulayici, kim: Kisi, id: string, surum: number, girdi: unknown): Promise<OnayYazma> {
+  const r = await bul(db, kim, id);
+  if (!r) return { durum: "yok" };
+  if (!canDoEylem(kim, "rapor_geri_gonder", kayit(r))) return { durum: "yetkisiz" };
+  if (r.durum !== "onayda") return { durum: "red", neden: `Rapor onay kuyruğunda değil (şu an: ${durumAd(r.durum)}).` };
+  const g = dogrula(GeriGirdisi, girdi);
+  if (!g.tamam) return { durum: "gecersiz", hatalar: g.hatalar };
+  const s = await sonrakiRapor(db, kim, id);
+  const y = await yaz(db, kim, r, surum, "taslak", g.veri.gerekce, "rapor.geri_gonder");
+  if (y !== "tamam") return { durum: y };
+  return { durum: "tamam", sonraki: s, bildirim: `${r.no} geri gönderildi; ${r.denetci} raporun üstünde gerekçeyi görür.` };
+}
+
+/** Onayı geri al (onaylandı → onayda; 102): rapor yeniden kuyrukta */
+export async function onayGeriAl(db: Sorgulayici, kim: Kisi, id: string, surum: number): Promise<OnayYazma> {
+  const r = await bul(db, kim, id);
+  if (!r) return { durum: "yok" };
+  if (!canDoEylem(kim, "rapor_onayla", kayit(r))) return { durum: "yetkisiz" };
+  if (r.durum !== "onaylandi") return { durum: "red", neden: `Rapor onaylanmış değil (şu an: ${durumAd(r.durum)}).` };
+  const y = await yaz(db, kim, r, surum, "onayda", null, "rapor.onay_geri_al");
+  if (y !== "tamam") return { durum: y };
+  return { durum: "tamam", sonraki: null, bildirim: `${r.no} onayı geri alındı; rapor yeniden kuyrukta.` };
+}
+
+/** Durumu değiştir (190): tamamlanmamış rapor Yeni / onayda / onaylandı arasında; Yeni'ye gerekçe zorunlu; Onaylandı'ya almak onaydır (191) */
+export async function durumDegistir(db: Sorgulayici, kim: Kisi, id: string, surum: number, girdi: unknown): Promise<OnayYazma> {
+  const r = await bul(db, kim, id);
+  if (!r) return { durum: "yok" };
+  if (r.durum === "imzali") return { durum: "red", neden: "Tamamlanan raporun durumu değişmez; düzeltme revizyonla." };
+  if (r.durum === "imzada") return { durum: "red", neden: "İmzaya gönderilmiş raporun durumu değişmez." };
+  if (!canDoEylem(kim, "rapor_durum_degistir", kayit(r))) return { durum: "yetkisiz" };
+  const g = dogrula(DurumGirdisi, girdi);
+  if (!g.tamam) return { durum: "gecersiz", hatalar: g.hatalar };
+  const { hedef, gerekce } = g.veri;
+  if (hedef === r.durum) return { durum: "gecersiz", hatalar: { hedef: "Rapor zaten bu durumda." } };
+  const y = await yaz(db, kim, r, surum, hedef, gerekce || null, "rapor.durum_degistir");
+  if (y !== "tamam") return { durum: y };
+  return { durum: "tamam", sonraki: null, bildirim: `${r.no}: ${durumAd(r.durum)} → ${durumAd(hedef)}.` };
+}

@@ -7,6 +7,8 @@ export const E2E_HESAPLAR = {
   denetci: { eposta: "denetci@deneme.example", ad: "Deneme Denetçi", roller: ["denetci"] },
   muhasebe: { eposta: "muhasebe@deneme.example", ad: "Deneme Muhasebe", roller: ["muhasebe"] },
   kilit: { eposta: "kilit@deneme.example", ad: "Deneme Kilit", roller: ["planlama"] },
+  /* Onaylar (314): mekanik branş yöneticisi — Hava tankı (mekanik) raporlarını onaylar / geri gönderir */
+  mekanik: { eposta: "mekanik@deneme.example", ad: "Deneme Mekanik", roller: ["mekanik_yonetici"] },
 } as const;
 /* geçici parolayla ilk giriş (durum "ilk"): her proje (genişlik) kendi hesabını değiştirir — testler birbirinin parolasını bozmasın */
 export const E2E_ILK = ["masaustu", "tablet", "telefon"].map((p) => ({ eposta: `ilk-${p}@deneme.example`, ad: "Deneme İlk Giriş", roller: ["denetci"] }));

@@ -1,8 +1,9 @@
 /* NEREDEN GELDİ: KOD-GECIS §4 + 07 + anayasa 7.1 "rol aynaları: rol listesi, düzey tablosu, özel eylemler tek tanımdan; ayrı kopya varsa bir test
    bağlar" · 09-E4 (yetki her istekte sunucuda tek canDo) · reisim 2026-10-04: "kaynak koddan rol değiştirme sızma veri çalma gibi şeylere dikkat et".
    AYNA: src/server/yetki/tanim.ts ↔ veritabanı rol CHECK'i (0002_giris.sql) ↔ onaylı maketin matrisi (MV.MATRIS) ↔ KOD-GECIS §4 tablosu.
-   DAVRANIŞ: rollerin birleşimi, kendi / branş kaydı, firma matrisi (bozuk değer kapalı, yönetici kendini kilitleyemez), dört göz (kendi raporunu
-   onaylayamaz), tanımsız rol ve eylem adı hiçbir şey vermez. Olumsuz kanıt: tests/bozan/yetki.bozan.ts. */
+   DAVRANIŞ: rollerin birleşimi, kendi / branş kaydı, firma matrisi (bozuk değer kapalı, yönetici kendini kilitleyemez), onay yalnız türün
+   branşında (2026-10-05, 314: dört göz kalktı — reisim kararı pkproje §1 "hazırlayanın kendi raporunu onaylaması da engellenmez"), tanımsız rol ve
+   eylem adı hiçbir şey vermez. Olumsuz kanıt: tests/bozan/yetki.bozan.ts. */
 import assert from "node:assert/strict";
 import { test } from "node:test";
 import vm from "node:vm";
@@ -96,14 +97,17 @@ test("firma matrisi: firma denetçinin müşterilerini kapatabilir; yönetici Pe
   assert.equal(canDo(YONETICI, "hareket", "gor", undefined, firma), true);
 });
 
-test("özel eylemler: dört göz (kendi raporunu onaylayamaz), branş, vekil, durum kuralları", () => {
+test("özel eylemler: onay türün branşında (kendi raporu dahil), vekil, durum kuralları", () => {
   const rapor = { sahip: "d1", brans: "m" as const, durum: "Onayda" };
   assert.equal(canDoEylem(MEKYON, "rapor_onayla", rapor), true);
   assert.equal(canDoEylem(ELKYON, "rapor_onayla", rapor), false, "öteki branş");
   assert.equal(canDoEylem(ELKYON, "rapor_onayla", { ...rapor, vekil: true }), true, "vekil");
   assert.equal(canDoEylem(DENETCI, "rapor_onayla", rapor), false);
   const kendiRaporu = { sahip: "m1", brans: "m" as const, durum: "Onayda" };
-  assert.equal(canDoEylem(kisi("m1", "mekanik_yonetici", "denetci"), "rapor_onayla", kendiRaporu), false, "kendi raporunu onaylayamaz");
+  /* 2026-10-05 (314, C1): eskiden false (dört göz, 281'in kod kararı); reisim'in kararı tersi — kendi raporunu onaylamak engellenmez */
+  assert.equal(canDoEylem(kisi("m1", "mekanik_yonetici", "denetci"), "rapor_onayla", kendiRaporu), true, "kendi raporunu onaylar (reisim kararı)");
+  assert.equal(canDoEylem(kisi("m1", "mekanik_yonetici", "denetci"), "rapor_geri_gonder", kendiRaporu), true);
+  assert.equal(canDoEylem(kisi("e1", "elektrik_yonetici", "denetci"), "rapor_onayla", { ...kendiRaporu, sahip: "e1" }), false, "kendi raporu da olsa öteki branş onaylamaz");
   assert.equal(canDoEylem(DENETCI, "rapor_sil", { sahip: "d1", durum: "Yeni" }), true);
   assert.equal(canDoEylem(DENETCI, "rapor_sil", { sahip: "d1", durum: "Onayda" }), false);
   assert.equal(canDoEylem(DENETCI, "rapor_sil", { sahip: "d2", durum: "Yeni" }), false);

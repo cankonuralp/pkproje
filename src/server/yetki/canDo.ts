@@ -79,8 +79,9 @@ export const OZEL_EYLEMLER = {
   rapor_sil: (h: YetkiHesabi, k?: EylemKaydi) => (!!k && k.sahip === h.id && k.durum === "Yeni") || teknikYonetici(h, k),
   rapor_pasif: (h: YetkiHesabi, k?: EylemKaydi) => (!!k && k.sahip === h.id) || teknikYonetici(h, k),
   rapor_aktif: (h: YetkiHesabi, k?: EylemKaydi) => teknikYonetici(h, k),
-  rapor_onayla: (h: YetkiHesabi, k?: EylemKaydi) => teknikYonetici(h, k) && k?.sahip !== h.id,
-  rapor_geri_gonder: (h: YetkiHesabi, k?: EylemKaydi) => teknikYonetici(h, k) && k?.sahip !== h.id,
+  /* 2026-10-05 (314, C1): dört göz kalktı — reisim kararı (pkproje §1, §9 soru 1): "hazırlayanın kendi raporunu onaylaması da engellenmez" */
+  rapor_onayla: (h: YetkiHesabi, k?: EylemKaydi) => teknikYonetici(h, k),
+  rapor_geri_gonder: (h: YetkiHesabi, k?: EylemKaydi) => teknikYonetici(h, k),
   rapor_durum_degistir: (h: YetkiHesabi, k?: EylemKaydi) => teknikYonetici(h, k) && k?.durum !== "Tamamlandı",
   rapor_revizeye_gonder: (h: YetkiHesabi, k?: EylemKaydi) => teknikYonetici(h, k) && k?.durum === "Tamamlandı",
   rapor_revize_iste: (h: YetkiHesabi, k?: EylemKaydi) => !!k && k.sahip === h.id,

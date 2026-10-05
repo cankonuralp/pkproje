@@ -8,7 +8,9 @@
    scripts/e2e-sunucu.ts (E2E_SAHA): HT'nin yayındaki formatı hazır şablon KOMPRESOR, gerekli cihaz türü Manometre. Her proje kendi planını açar
    (rapor plan × ekipman başına tek) — öteki testlere dokunmaz.
    313: gönderilmiş raporda "Kopyala" → pencere (kod + bölüm) → aynı kodla durur ("bu planda zaten var") → yeni kodla yeni ekipmanın Yeni raporu açılır
-   (başlık "<kod> · Hava tankı", kaynak şeridi). Kod her koşu ve genişlikte ayrı (firmada eşsiz). */
+   (başlık "<kod> · Hava tankı", kaynak şeridi). Kod her koşu ve genişlikte ayrı (firmada eşsiz).
+   314 Onaylar: mekanik yönetici kuyruktan raporu açar → kısa gerekçeyle geri gönderilmez → gerekçeyle geri gönderir → denetçi rapor ekranında
+   "Geri gönderildi" şeridini görür, yeniden gönderir → yönetici onaylar → Tüm raporlar'da "Muayene uzmanı imzası". */
 import { expect, test, type Locator, type Page } from "@playwright/test";
 import { E2E_HESAPLAR, E2E_PLAN, E2E_SAHA } from "./hesaplar";
 import { girisli, hazir } from "./yardimci";
@@ -60,7 +62,7 @@ async function zamanYaz(page: Page, ad: string, gun: string, saat: string, dakik
 }
 
 test("saha raporu: rapor oluştur, eksikle gönderilmez, doldur + cihaz ekle, onaya gönder; planda durumuyla listelenir", async ({ page, context }) => {
-  test.setTimeout(120_000);   // ilk koşuda saha rapor ekranı soğuk derlenebilir
+  test.setTimeout(240_000);   // ilk koşuda saha rapor ekranı soğuk derlenebilir; akış onaya kadar uzun
   await girisli(page, "yonetici");
   const adres = await planAc(page);
   const planNo = (await page.getByRole("navigation", { name: "Konum" }).textContent())!.match(/P-\d{4}-\d{3,6}/)![0];
@@ -81,6 +83,7 @@ test("saha raporu: rapor oluştur, eksikle gönderilmez, doldur + cihaz ekle, on
   await expect(page.getByRole("heading", { level: 1 })).toHaveText(`${E2E_SAHA.ekipman} · ${E2E_SAHA.tur}`, { timeout: 30_000 });
   await expect(page.getByText("Yeni", { exact: true }).filter({ visible: true }).first()).toBeVisible();
   const raporAdresi = new URL(page.url()).pathname;
+  const raporNo = (await page.getByText(RAPOR_NO).first().textContent())!.match(RAPOR_NO)![0];
   const gun = bugunTr();
   await expect(zamanAlani(page, BASLANGIC).locator("input:not([data-parca])")).toHaveValue(gun);   // başlangıç rapor açılınca yazılır
 
@@ -168,4 +171,45 @@ test("saha raporu: rapor oluştur, eksikle gönderilmez, doldur + cihaz ekle, on
   await expect(page.getByText(/raporundan kopyalandı; test değerleri, fotoğraflar ve sonuç bu ekipman için girilir\./)).toBeVisible();
   await expect(page.getByText("Yeni", { exact: true }).filter({ visible: true }).first()).toBeVisible();
   await expect(page.getByRole("button", { name: "Onaya gönder" }).first()).toBeVisible();
+
+  /* 314 Onaylar: mekanik yönetici kuyruktan açar, gerekçeyle geri gönderir */
+  const onayEkrani = async () => {
+    await page.goto("/onaylar");
+    await hazir(page);
+    await page.getByRole("link", { name: raporNo }).first().click();
+    await expect(page.getByRole("heading", { level: 1 })).toHaveText(raporNo, { timeout: 30_000 });
+  };
+  await context.clearCookies();
+  await girisli(page, "mekanik");
+  await onayEkrani();
+  await expect(page.getByRole("region", { name: "Gözden geçirme" })).toContainText("ölçüm cihazı");
+  await page.getByRole("button", { name: "Geri gönder" }).click();
+  const geri = page.getByRole("dialog", { name: `Geri gönder · ${raporNo}` });
+  await geri.getByRole("textbox", { name: /^Gerekçe/ }).fill("kısa");
+  await geri.getByRole("button", { name: "Geri gönder" }).click();
+  await expect(geri).toContainText("en az 10 karakter", { timeout: 30_000 });
+  await geri.getByRole("textbox", { name: /^Gerekçe/ }).fill("Test değerleri yeniden yazılmalı");
+  await geri.getByRole("button", { name: "Geri gönder" }).click();
+  await expect(page.getByText(`${raporNo} geri gönderildi; `, { exact: false }).first()).toBeVisible({ timeout: 30_000 });
+
+  /* denetçi: rapor Yeni, üstünde gerekçe; yeniden gönderir */
+  await context.clearCookies();
+  await girisli(page, "denetci");
+  await page.goto(raporAdresi);
+  await hazir(page);
+  await expect(page.getByText(/Geri gönderildi · Deneme Mekanik · .*Test değerleri yeniden yazılmalı/)).toBeVisible({ timeout: 30_000 });
+  await onayaGonder(page);
+  await expect(page.getByText(/^Onaya gönderildi: /).first()).toBeVisible({ timeout: 30_000 });
+
+  /* yönetici onaylar → rapor Muayene uzmanı imzasında, Onayı geri al görünür */
+  await context.clearCookies();
+  await girisli(page, "mekanik");
+  await onayEkrani();
+  await page.getByRole("button", { name: "Onayla", exact: true }).click();
+  await expect(page.getByText(`${raporNo} onaylandı; muayene uzmanı imzasında`, { exact: false }).first()).toBeVisible({ timeout: 30_000 });
+  await page.goto(`/onaylar/${raporAdresi.split("/").pop()}`);
+  await hazir(page);
+  await expect(page.getByText("Muayene uzmanı imzası", { exact: true }).filter({ visible: true }).first()).toBeVisible({ timeout: 30_000 });
+  await expect(page.getByRole("button", { name: "Onayı geri al" })).toBeVisible();
+  await expect(page.getByRole("button", { name: "Onayla", exact: true })).toHaveCount(0);
 });

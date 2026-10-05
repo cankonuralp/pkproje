@@ -274,6 +274,14 @@ export function SahaRaporu({ v }: { v: Gorunum }) {
       </Serit>,
     );
   }
+  /* U8 (314): teknik yönetici geri gönderdiyse (ya da durumu Yeni'ye aldıysa) gerekçe raporun üstünde */
+  if (v.durum === "taslak" && v.geri) {
+    seritler.push(
+      <Serit key="geri" tur="uyari" ikon="undo-2">
+        <b>Geri gönderildi</b> · {v.geri.kim} · {zamanNo(v.geri.zaman)}{v.geri.gerekce ? <>: “{v.geri.gerekce}”</> : null}
+      </Serit>,
+    );
+  }
   if (v.durum === "taslak" && v.kopyaKaynak) {
     seritler.push(
       <Serit key="kopya" tur="bilgi" ikon="copy">

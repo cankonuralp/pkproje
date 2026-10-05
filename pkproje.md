@@ -2341,6 +2341,23 @@ revizyon, alan kopyalama, hafif kusur devri, meslek eşleşme denetimi).
 - Emsal ürünler: https://opwire.app/iso-17020-periyodik-kontrol-yazilimi/ · https://17020muayene.vidco.com.tr/ · https://akuple.com/asansor-kontrol-yazilimi/ · https://ensyazilim.com/
 
 ## 11 · Değişiklik günlüğü
+- 2026-10-05 (314): **K3 Onaylar: kuyruk, onay ekranı, Onayla, Geri gönder, Onayı geri al, Tüm raporlar ve Durumu değiştir** (maket onaylar.html
+  M9; karar 102, 190, 191; N7 vekil yok; KOD-GECIS §4). Göç **0026**: raporda onay zamanı ve onaylayan hesap (veritabanı damgası; Yeni ve onaydaki
+  raporda yok — CHECK); akış tetiği Yeni · onayda · onaylandı arasındaki geçişleri açar (Tamamlandı'ya yalnız imzayla, imzalı rapor değişmez);
+  **Yeni'ye dönüşte gerekçe en az 10 karakter** (veritabanı da ister; gerekçe işlemin ayarından okunur, hareket kaydına yazılır ve silinir — sonraki
+  geçişe taşınmaz); durum değişirken içerik değişmez; hareket adları gonder · onay · onay_geri · geri · durum. **C1 uygulandı: dört göz kalktı** —
+  reisim'in kararı (§1, §9 soru 1: "hazırlayanın kendi raporunu onaylaması da engellenmez"); 281'in "kod kararı" geri alındı, tests/yetki.test.ts
+  tarih ve gerekçeyle güncellendi, olumsuz kanıt branş kilidine çevrildi. **Kuyruk**: branşın onaydaki raporları, en yeni üstte; çipler Kusurlu ve
+  24 saatten eski, seçiciler Denetçi ve Tesis; bekleme "az önce / N saattir / N gündür". **Onay ekranı**: gözden geçirme (İSG-KATİP, kontrol metodu,
+  kriterler, ölçüm, test, cihaz ve kalibrasyon, fotoğraf, denetçinin mesleği — U1, sonuç ve U3; hepsi uyarı) + raporun tamamına bağlantı (PDF
+  önizlemesi PDF kalemiyle); Onayla ve Geri gönder sonrası sıradaki rapor açılır. **Tüm raporlar**: branşın bütün raporları (Durum, Denetçi;
+  rapor no ve tesis ayrı aranır). Branş yöneticisi kendi branşını görür ve işler; firma yöneticisi görür, işlemez (branş yöneticisi değil);
+  denetçi, planlama, muhasebe görmez (C5 — denetçinin "İmzamı bekleyen raporlar"ı imza kalemiyle). Rapor ekranında geri gönderilmiş raporun
+  üstünde "Geri gönderildi · kim · zaman: “gerekçe”" (U8). Onaylar rapor tablosuna dokunmaz: Raporlar'ın onay-baglanti.ts kapısından okur ve yazar.
+  Kilit: tests/onaylar.test.ts (6: kuyruk ve görme, onayla + C1 + damga, geri gönder + gerekçe sunucu ve veritabanı, onayı geri al ve durumu
+  değiştir, veritabanı geçişleri / damga / gerekçe taşınmaz / hareket elle yazılmaz, kiracı + rol), bozan +2 (gerekçe kuralı kalkınca gerekçesiz
+  geri döner; sunucuda rapor_onayla kalkınca firma yöneticisi onaylar), e2e saha raporu: mekanik yönetici geri gönderir → denetçi şeridi görür,
+  yeniden gönderir → yönetici onaylar.
 - 2026-10-05 (313): **K3 Saha raporu 3: Kaydet ve kopyala, Formatı güncelle, günlük süre (mesai)** (maket kopyala / pencereKaydet / format-guncelle,
   MV.gunlukSure; karar 204–209, N10, 211, 212; AA2; KOD-GECIS ENGEL 3). **Kaydet ve kopyala** (Yeni rapor; gönderilmişte adı **Kopyala**, kayıt
   yok): yalnız raporu yazan; pencere yalnız **ekipman kodu** ve **ekipman bölümü (kullanım yeri)** sorar; kod plan içi "Ekipman ekle" ile aynı

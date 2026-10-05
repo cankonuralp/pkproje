@@ -28,6 +28,13 @@ export async function roldekiHesapAdlari(db: Sorgulayici, rol: Rol): Promise<str
   return (await db.sorgu<{ ad: string }>("SELECT ad FROM hesap WHERE durum = 'etkin' AND $1 = ANY (roller) ORDER BY ad", [rol])).rows.map((x) => x.ad);
 }
 
+/** hesapların görünen adları (kimlik → ad) — hareket kaydındaki "kim" için (Raporlar: geri gönderen, onaylayan). Yetki ÇAĞIRANDA. */
+export async function hesapAdlari(db: Sorgulayici, idler: readonly (string | null)[]): Promise<Map<string, string>> {
+  const l = [...new Set(idler.filter((x): x is string => !!x && /^[0-9a-f-]{36}$/.test(x)))];
+  if (!l.length) return new Map();
+  return new Map((await db.sorgu<{ id: string; ad: string }>("SELECT id::text, ad FROM hesap WHERE id = ANY ($1::uuid[])", [l])).rows.map((x) => [x.id, x.ad]));
+}
+
 /** oturumdaki hesabın personel kaydı (yoksa null) — "kendi" düzeyi için */
 export async function hesabinPersoneli(db: Sorgulayici, hesapId: string): Promise<string | null> {
   return (await db.sorgu<{ p: string | null }>("SELECT personel_id::text AS p FROM hesap WHERE id = $1", [hesapId])).rows[0]?.p ?? null;

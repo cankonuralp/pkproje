@@ -32,7 +32,8 @@ test("sabit satırlar kalkınca firma yöneticisi kendini Personel'den kilitler"
   assert.equal(m.canDo(kisi("y", "firma_yoneticisi"), 2, "degistir", undefined, { 2: ["gor", "kendi", "gor", "gor", "yok", "yok"] } as never), false);
 });
 
-test("dört göz kalkınca yönetici kendi raporunu onaylar", async () => {
-  const m = await bozuk("rapor_onayla: (h: YetkiHesabi, k?: EylemKaydi) => teknikYonetici(h, k) && k?.sahip !== h.id,", "rapor_onayla: (h: YetkiHesabi, k?: EylemKaydi) => teknikYonetici(h, k),");
-  assert.equal(m.canDoEylem(kisi("m1", "mekanik_yonetici"), "rapor_onayla", { sahip: "m1", brans: "m" }), true);
+/* 2026-10-05 (314): dört göz kalktı (reisim kararı); yerine branş kilidi — branş denetimi kalkınca öteki branşın yöneticisi onaylar */
+test("branş denetimi kalkınca elektrik yöneticisi mekanik raporu onaylar", async () => {
+  const m = await bozuk("!!k?.brans && (branslari(h).includes(k.brans) || (!!k.vekil && branslari(h).length > 0))", "!!k?.brans && branslari(h).length > 0");
+  assert.equal(m.canDoEylem(kisi("e1", "elektrik_yonetici"), "rapor_onayla", { sahip: "d1", brans: "m" }), true);
 });
