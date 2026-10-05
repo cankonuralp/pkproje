@@ -6,7 +6,9 @@
 -- malzeme, diğer — tür başına varsayılan KDV oranı), tutar (fişteki KDV DAHİL tutar, KURUŞ) + KDV oranı, açıklama, isteğe bağlı iş (plan) ve
 -- personel, belge (fiş / fatura dosyası; yoksa uyarı, engel değil). Kaynak: "muhasebe" (elle — ödendi ya da ödenecek doğar) ya da "form" (denetçinin
 -- masraf formu — onay bekler; Talepler kalemiyle). Geçişler: bekliyor → onaylandı → ödendi; bekliyor → reddedildi (gerekçe 5–200). Reddedilen
--- değişmez; ödenen yalnız içerik düzeltmesi alır. Onaylayan, karar ve ödeme günü, kaydeden veritabanında (oturumdan). Silinmez.
+-- değişmez; ödenen yalnız içerik düzeltmesi alır. Onaylayan, karar ve ödeme günü, kaydeden veritabanında (oturumdan). Silinmez; tek istisna
+-- (330 Talepler): onay bekleyen masraf formunu GÖNDEREN geri çekebilir. Masraf formu yalnız gönderenin kendi adına (personeli hesabının
+-- personeli) yazılır.
 -- ⛔ Her göç IDEMPOTENT.
 
 CREATE TABLE IF NOT EXISTS gider (
@@ -55,13 +57,19 @@ CREATE OR REPLACE FUNCTION gider_koru() RETURNS trigger
   LANGUAGE plpgsql AS $$
 DECLARE bugun date := (now() AT TIME ZONE 'Europe/Istanbul')::date; ben uuid := NULLIF(current_setting('app.hesap_id', true), '')::uuid;
 BEGIN
-  IF TG_OP = 'DELETE' THEN RAISE EXCEPTION 'gider silinmez' USING ERRCODE = '23514'; END IF;
+  IF TG_OP = 'DELETE' THEN
+    IF OLD.kaynak = 'form' AND OLD.durum = 'bekliyor' AND ben IS NOT NULL AND OLD.kaydeden = ben THEN RETURN OLD; END IF;
+    RAISE EXCEPTION 'gider silinmez' USING ERRCODE = '23514';
+  END IF;
   IF NEW.tarih > bugun THEN RAISE EXCEPTION 'ileri tarihli gider kaydedilmez' USING ERRCODE = '23514'; END IF;
   IF NEW.odeme > bugun THEN RAISE EXCEPTION 'ileri tarihli ödeme kaydedilmez' USING ERRCODE = '23514'; END IF;
   IF TG_OP = 'INSERT' THEN
     NEW.kaydeden := ben; NEW.onaylayan := NULL; NEW.karar := NULL;
     IF NEW.kaynak = 'form' THEN
       IF NEW.durum <> 'bekliyor' THEN RAISE EXCEPTION 'masraf formu onay bekler' USING ERRCODE = '23514'; END IF;
+      IF NEW.personel_id IS DISTINCT FROM (SELECT h.personel_id FROM hesap h WHERE h.firma_id = NEW.firma_id AND h.id = ben) THEN
+        RAISE EXCEPTION 'masraf formu yalnız kendi adına gönderilir' USING ERRCODE = '23514';
+      END IF;
     ELSIF NEW.durum NOT IN ('odendi', 'onaylandi') THEN
       RAISE EXCEPTION 'elle girilen gider ödendi ya da ödenecek doğar' USING ERRCODE = '23514';
     ELSE
@@ -98,4 +106,4 @@ ALTER FUNCTION gider_koru() SET search_path = pg_catalog, public, pg_temp;
 REVOKE EXECUTE ON FUNCTION gider_koru() FROM PUBLIC;
 CREATE OR REPLACE TRIGGER gider_koru BEFORE INSERT OR UPDATE OR DELETE ON gider FOR EACH ROW EXECUTE FUNCTION gider_koru();
 
-GRANT SELECT, INSERT, UPDATE ON gider TO probata_uygulama;
+GRANT SELECT, INSERT, UPDATE, DELETE ON gider TO probata_uygulama;

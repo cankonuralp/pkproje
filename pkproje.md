@@ -2341,6 +2341,25 @@ revizyon, alan kopyalama, hafif kusur devri, meslek eşleşme denetimi).
 - Emsal ürünler: https://opwire.app/iso-17020-periyodik-kontrol-yazilimi/ · https://17020muayene.vidco.com.tr/ · https://akuple.com/asansor-kontrol-yazilimi/ · https://ensyazilim.com/
 
 ## 11 · Değişiklik günlüğü
+- 2026-10-06 (330): **K4 Talepler** (maket talepler.html, personel.html #/izinler; 2026-09-28 reisim: "personelin bireysel olarak isteyeceği
+  şeyler … denetçi izin talebi masraf formu ekleme"; izin onayı firma yöneticisinde, Personel'de; KOD-GECIS §3 "izin_talebi, masraf (gider'e
+  yazar) · izin onayı yönetici, masraf onayı muhasebe", §4 Talepler herkes "kendi", firma yöneticisi "değiştirir"). Göç **0042**: izin_talebi (no
+  I-AAYY-SIRA; tür yıllık / mazeret / hastalık — sağlık raporu / ücretsiz; başlangıç–bitiş, iş günü — hafta sonu sayılmaz, resmî tatil takvimi
+  sonra; açıklama; belge; bekliyor → onaylandı / reddedildi — gerekçe 5–200, karar veren ve zamanı veritabanında); personel.izin_hak (yıllık
+  izin hakkı, başlangıç 14 gün; düzenleme ekranı Personel / Firma ayarları kalemiyle). Tetik: talep YALNIZ kendi adına (hesabın personeli);
+  gönderilen talebin içeriği değişmez; karar verilmiş talep değişmez; onay bekleyeni yalnız talep eden geri çeker (silinir); belgeyi yalnız
+  talep eden değiştirir. **0040** (yerinde, Supabase'e uygulanmadı): masraf formu yalnız kendi adına; onay bekleyen masraf formunu gönderen geri
+  çekebilir (tek silme istisnası). Masraf formu Muhasebe'nin gider kaydına "Onay bekliyor" yazılır (Muhasebe'nin talep-baglanti.ts'i; iş yalnız
+  kişinin ekibinde olduğu başlamış plan — Planlar'ın talep-baglanti.ts'i); onayı Muhasebe'de. Ekranlar: /talepler (yüzler: yıllık izin hakkı,
+  kullanılan — bekleyen notu, kalan, onay bekleyen talep; izin ve masraf tek listede, tür / durum çipleri, yıl; "İzin talebi" — iş günü canlı,
+  yıllık izinde kalanı aşarsa uyarı, hastalıkta sağlık raporu; "Masraf formu" — iş, tarih, tür — KDV varsayılanı, tutar — KDV canlı, fiş;
+  talep penceresi — durum, karar veren, red gerekçesi, belge ekle / değiştir / kaldır, "Talebi geri çek"), /personel/izinler (Personel sekmesi
+  yalnız izin onaylayana; bekleyen üstte, kalan yıllık izin, aşım uyarısı, Onayla / gerekçeyle Reddet). Belge erişimi: izin belgesi talep eden
+  ve firma yöneticisi; masraf fişi Muhasebe'yi gören ve gönderen. Maketten fark: "Yeni talep" menüsü yerine iki tuş (İzin talebi · Masraf
+  formu). Sonraki: talep formunun imzası (V3) ve PDF · e-posta (T8) — Onaylar › Diğer kalemiyle. Kilit: talepler.test (yetki; izin — iş günü,
+  numara, kendi adına, belge ve erişim; yönetici kararı, değişmezlik, geri çekme; masraf formu — gider kaydı, iş seçeneği, kendi adına,
+  muhasebe onayı, geri çekme, fiş erişimi; firma sızıntısı), talep-sema.test (saf), bozan 3 (izinde ve masrafta "kendi adına", karar
+  değişmezliği), e2e üç genişlik (masraf formu, izin talebi, yönetici onayı, muhasebe görür, denetçi kararı görür).
 - 2026-10-06 (328 çapraz inceleme düzeltmeleri; dört bakış + çürütme: 23 bulgudan 20'si doğrulandı). **Gider Excel'i** (maket tutarOku / oranOku):
   Excel'in sakladığı sayı hücresi (nokta ondalık, uzun kesir — "999.996", formül sonucu) her ondalıkta okunup kuruşa yuvarlanır (önceden 1000 kat
   okunuyor ya da reddediliyordu), Türkçe yazım ortak şemayla; KDV oranı "20", "%20", "0,2" ya da yüzde biçimli hücre (0.2); tür yalnız kendi anahtarı

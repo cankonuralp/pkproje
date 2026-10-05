@@ -8,6 +8,7 @@ import { PersonelListesi } from "../../../modules/personel/ui/PersonelListesi";
 import { modulOturumu, oturumIslemi } from "../../../server/kimlik/istek";
 import { duzey } from "../../../server/yetki/canDo";
 import type { ModulAnahtari } from "../../../server/yetki/tanim";
+import { izinYonetir } from "../../../modules/talepler/server/talepler";
 
 const MODUL = modulBul("personel")!;
 export const metadata: Metadata = { title: MODUL.ad };
@@ -19,7 +20,7 @@ export default async function Sayfa() {
   return (
     <>
       <PersonelListesi kayitlar={liste.map((p) => ({ ...p, eksik: eksikBilgi(p) }))}
-        tuslar={duzey(o, MODUL.no as ModulAnahtari) === "yaz" && <TusBaglanti tur="birincil" href="/personel/yeni" ikon="plus">Personel ekle</TusBaglanti>} />
+        tuslar={duzey(o, MODUL.no as ModulAnahtari) === "yaz" && <TusBaglanti tur="birincil" href="/personel/yeni" ikon="plus">Personel ekle</TusBaglanti>} izinler={izinYonetir(o)} />
     </>
   );
 }

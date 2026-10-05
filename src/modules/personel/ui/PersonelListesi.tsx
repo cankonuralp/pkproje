@@ -4,12 +4,12 @@
 import { KartEtiket, Kirp, type Sutun } from "../../../components/liste/Liste";
 import { Sayac, SuzgecliListe, useSuzgec } from "../../../components/liste/SuzgecliListe";
 import type { SuzgecTanimi } from "../../../components/liste/suzgec";
-import { AltSatir, DegerYok, Kod, Rozetler, SayfaBasi, Sekmeler } from "../../../components/sayfa/Sayfa";
+import { AltSatir, DegerYok, Kod, Rozetler, SayfaBasi } from "../../../components/sayfa/Sayfa";
 import type { ReactNode } from "react";
 import { Ikon } from "../../../components/ikon/Ikon";
 import { ROL_ADI, ROLLER } from "../../../server/yetki/tanim";
 import type { PersonelSatiri } from "../server/personel";
-import { bransAd, bransi, DurumRozeti, HESAP_DURUM, meslekAdi, RolRozeti, tarihYaz } from "./ortak";
+import { bransAd, bransi, DurumRozeti, HESAP_DURUM, meslekAdi, PersonelSekmeleri, RolRozeti, tarihYaz } from "./ortak";
 import stil from "./personel.module.css";
 
 export type ListeSatiri = PersonelSatiri & { eksik: string[] };
@@ -51,12 +51,12 @@ const SUTUNLAR: Sutun<ListeSatiri>[] = [
   { k: "durum", genislik: "17%", baslik: "Durum", kart: "rozet", sira: 1, hucre: (p) => <><DurumRozeti d={p.durum} />{p.durum === "ayrildi" && <AltSatir>{tarihYaz(p.ayrildi)}</AltSatir>}</> },
 ];
 
-export function PersonelListesi({ kayitlar, tuslar }: { kayitlar: ListeSatiri[]; tuslar?: ReactNode }) {
+export function PersonelListesi({ kayitlar, tuslar, izinler = false }: { kayitlar: ListeSatiri[]; tuslar?: ReactNode; izinler?: boolean }) {
   const s = useSuzgec(tanim(kayitlar), kayitlar);
   return (
     <>
       <SayfaBasi baslik="Personel" sayac={<Sayac s={s} />} tuslar={tuslar} />
-      <Sekmeler ad="Personel bölümleri" ogeler={[["Personel", "/personel"], ["Rol yetkileri", "/personel/roller"]]} secili="/personel" />
+      <PersonelSekmeleri secili="/personel" izinler={izinler} />
       <SuzgecliListe s={s} on="p" baslik="Personel" sutunlar={SUTUNLAR} anahtar={(p) => p.id} href={(p) => `/personel/${p.id}`}
         bosVeri={{ ikon: "users", baslik: "Personel kaydı yok", metin: "“Personel ekle” ile ilk kişi kaydedilir." }} />
     </>

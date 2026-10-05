@@ -5,10 +5,12 @@
    İSG-KATİP PDF'i — ID'yi gören (denetçi yalnız kendi ID'sininkini) · sözleşme şablonu — yalnız değiştirebilen · standart ve döküman PDF'i — Dökümanlar'ı gören ·
    eğitim sertifikası — kaydı gören (denetçi yalnız kendisininkini) · özlük belgesi ve bordro — yalnız Personel'de "yaz" · ekipman atama belgesi ve
    imzalı zimmet formu — kişinin kartını gören (denetçi yalnız kendisininkini). 2026-10-05 (312): rapor fotoğrafı — raporu gören (Raporlar düzeyi:
-   denetçi kendi, branş yöneticisi branşı). 328: gider belgesi (fiş / fatura) — Muhasebe'yi gören (gör / yaz). */
+   denetçi kendi, branş yöneticisi branşı). 328: gider belgesi (fiş / fatura) — Muhasebe'yi gören (gör / yaz); 330: masraf formunun fişini gönderen
+   de · izin talebinin belgesi — talep eden ve firma yöneticisi. */
 import { DOSYA as DOK_DOSYA, dokumanDosyasiGorulur, standartDosyasiGorulur } from "../../modules/dokumanlar/server/dokumanlar.ts";
 import { DOSYA_MODULU as EGITIM_DOSYASI, egitimDosyasiGorulur } from "../../modules/egitimler/server/egitimler.ts";
 import { GIDER_DOSYA, giderDosyasiGorulur } from "../../modules/muhasebe/server/giderler.ts";
+import { IZIN_DOSYA, izinDosyasiGorulur } from "../../modules/talepler/server/talepler.ts";
 import { DOSYA as PER_DOSYA, gizliDosyaGorulur, kartDosyasiGorulur } from "../../modules/personel/server/dosyalar.ts";
 import { DOSYA_MODULU as TUR_DOSYASI, turDosyasiGorulur } from "../../modules/ekipman-turleri/server/turler.ts";
 import { DOSYA_MODULU as CIHAZ_DOSYASI, cihazDosyasiGorulur } from "../../modules/olcum-cihazlari/server/cihazlar.ts";
@@ -37,4 +39,5 @@ export const DOSYA_ERISIMI: ErisimKaydi = Object.freeze({
   [PDF_MODULU]: (db, kisi, kayitId) => raporDosyasiGorulur(db, kisi as YetkiHesabi, kayitId),
   [IMZALI_MODULU]: (db, kisi, kayitId) => raporDosyasiGorulur(db, kisi as YetkiHesabi, kayitId),
   [GIDER_DOSYA]: (db, kisi, kayitId) => giderDosyasiGorulur(db, kisi as YetkiHesabi, kayitId),
+  [IZIN_DOSYA]: (db, kisi, kayitId) => izinDosyasiGorulur(db, kisi as YetkiHesabi, kayitId),
 });

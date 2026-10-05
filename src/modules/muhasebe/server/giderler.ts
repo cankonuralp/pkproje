@@ -21,7 +21,7 @@ import { bugunTr, type Kisi, type Yazma } from "./muhasebe.ts";
 
 const MODUL = 18;
 export const GIDER_DOSYA = "gider";
-const GIDER = tablo({ ad: "gider", sutunlar: ["no", "tarih", "tur", "tutar", "oran", "aciklama", "plan_id", "personel_id", "belge", "kaynak", "durum", "red", "odeme"] });
+export const GIDER = tablo({ ad: "gider", sutunlar: ["no", "tarih", "tur", "tutar", "oran", "aciklama", "plan_id", "personel_id", "belge", "kaynak", "durum", "red", "odeme"] });
 const UUID = /^[0-9a-f]{8}-[0-9a-f]{4}-[0-9a-f]{4}-[0-9a-f]{4}-[0-9a-f]{12}$/;
 const gorur = (kim: YetkiHesabi) => ["gor", "yaz"].includes(duzey(kim, MODUL));
 const yazar = (kim: YetkiHesabi) => duzey(kim, MODUL) === "yaz";
@@ -74,15 +74,15 @@ export async function giderSecenekleri(db: Sorgulayici, kim: Kisi): Promise<Gide
 export type GiderBelgesi = { ad: string; bayt: Uint8Array } | null | "kaldir";
 /** belge okunamadı (bozuk görsel): eylem alan hatasına çevirir; işlem geri alınır */
 export class BelgeHatasi extends Error {}
-const BELGE_TUR = ["pdf", "jpeg", "png"] as const;
+export const BELGE_TUR = ["pdf", "jpeg", "png"] as const;
 /** belge kayıttan ÖNCE denetlenir (tür baytlardan, boyut); geçmezse gider de yazılmaz */
-function belgeHatasi(belge: GiderBelgesi): string | null {
+export function belgeHatasi(belge: GiderBelgesi): string | null {
   if (!belge || belge === "kaldir") return null;
   const t = belge.bayt.length ? turBul(belge.bayt, BELGE_TUR) : null;
   return !t ? "Belge PDF, JPEG ya da PNG olmalı." : belge.bayt.length > SINIR[t] ? "Belge çok büyük (PDF 25 MB, fotoğraf 8 MB)." : null;
 }
 /** belgeyi yazar; yeni sürümü döner (belge yoksa aynı sürüm) */
-async function belgeYaz(db: Sorgulayici, depo: Depo, kim: Kisi, firmaId: string, id: string, surum: number, belge: GiderBelgesi): Promise<number | Yazma> {
+export async function belgeYaz(db: Sorgulayici, depo: Depo, kim: Kisi, firmaId: string, id: string, surum: number, belge: GiderBelgesi): Promise<number | Yazma> {
   if (belge === null) return surum;
   let dosya: string | null = null;
   if (belge !== "kaldir") {
@@ -179,7 +179,9 @@ export async function giderExceliYukle(db: Sorgulayici, kim: Kisi, ham: unknown)
   return { durum: "tamam", id: "", eklenen: l.length, bildirim: `${l.length} gider Excel'den eklendi.` };
 }
 
-/** gider belgesi: muhasebeyi gören açar (09-A2 erişim kaydı) */
+/** gider belgesi: muhasebeyi gören açar; masraf formunun fişini gönderen de (330 Talepler) — 09-A2 erişim kaydı */
 export async function giderDosyasiGorulur(db: Sorgulayici, kim: YetkiHesabi, kayitId: string): Promise<boolean> {
-  return gorur(kim) && UUID.test(kayitId) && !!(await db.sorgu("SELECT 1 FROM gider WHERE id = $1", [kayitId])).rowCount;
+  if (!UUID.test(kayitId)) return false;
+  const g = (await db.sorgu<{ kaynak: string; kaydeden: string | null }>("SELECT kaynak, kaydeden::text FROM gider WHERE id = $1", [kayitId])).rows[0];
+  return !!g && (gorur(kim) || (g.kaynak === "form" && g.kaydeden === kim.id));
 }

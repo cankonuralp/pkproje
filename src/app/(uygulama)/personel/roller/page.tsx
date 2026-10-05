@@ -7,6 +7,7 @@ import { modulOturumu, oturumIslemi } from "../../../../server/kimlik/istek";
 import { canDoEylem } from "../../../../server/yetki/canDo";
 import { matrisOku } from "../../../../server/yetki/matris";
 import { MATRIS_ONERI, SABIT } from "../../../../server/yetki/tanim";
+import { izinYonetir } from "../../../../modules/talepler/server/talepler";
 
 const MODUL = modulBul("personel")!;
 export const metadata: Metadata = { title: "Rol yetkileri" };
@@ -23,5 +24,5 @@ export default async function Sayfa() {
   const { matris, surum } = await oturumIslemi(o, (db) => matrisOku(db));
   const sabit = Object.fromEntries(Object.entries(SABIT).map(([k, v]) => [k, Object.keys(v ?? {})]));
   return <RolYetkileri satirlar={SATIRLAR} matris={matris as unknown as Record<string, string[]>} oneri={MATRIS_ONERI as unknown as Record<string, string[]>}
-    sabit={sabit} surum={surum} duzenleyebilir={canDoEylem(o, "rol_yetki_degistir")} />;
+    sabit={sabit} surum={surum} duzenleyebilir={canDoEylem(o, "rol_yetki_degistir")} izinler={izinYonetir(o)} />;
 }

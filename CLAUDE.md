@@ -133,6 +133,10 @@ pkproje/
                             teklifler/server/rapor-bagi.ts (birim fiyat), sozlesmeler tesisSozlesmesi (vade) · 328: göç 0040 gider (elle ödendi /
                             ödenecek; masraf formu onay → ödendi / red) · server/giderler.ts · karlilik.ts (saf: iş kârı, ay / dönem gelir-gider) ·
                             excel.ts (gider içe / dışa) · ui/Giderler.tsx, ui/Karlilik.tsx · personel/server/muhasebe-baglanti.ts (bordro maliyeti)
+  src/modules/talepler/     TALEPLER (2026-10-06, 330; modül 21): göç 0042 izin_talebi (yalnız kendi adına; karar firma yöneticisinde) · sema.ts
+                            (izin şeması, iş günü) · server/talepler.ts (taleplerim, izin gönder / geri çek / belge, masraf formu — Muhasebe'nin
+                            muhasebe/server/talep-baglanti.ts'i, izin onay / red) · ui/Talepler.tsx, ui/IzinTalepleri.tsx (/personel/izinler) ·
+                            okuyucular: planlar/server/talep-baglanti.ts, personel/server/talep-baglanti.ts
   src/modules/performans/   PERFORMANS (2026-10-06, 329; modül 19): tablo yok (göç 0041 yalnız dizin) · hesap.ts (saf: dönem, özet, tamamlanma süresi,
                             zaman grafiği, süreç adımları, günlük iş, GÖRÜNÜRLÜK — kendi / branş / hepsi, kazanç) · server/performans.ts (pano, kişi) ·
                             ui/Performans.tsx · okuyucular: raporlar/server/performans-baglanti.ts, personel/server/performans-baglanti.ts

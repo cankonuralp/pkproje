@@ -8,7 +8,8 @@ import { useBildir } from "../../../components/bildirim/Bildirim";
 import { FormEylem } from "../../../components/form/Form";
 import { Ikon } from "../../../components/ikon/Ikon";
 import { KartEtiket, Liste, type Sutun } from "../../../components/liste/Liste";
-import { DegerYok, Rozet, SayfaBasi, Sekmeler, type RozetTuru } from "../../../components/sayfa/Sayfa";
+import { DegerYok, Rozet, SayfaBasi, type RozetTuru } from "../../../components/sayfa/Sayfa";
+import { PersonelSekmeleri } from "./ortak";
 import { SecimAlani } from "../../../components/secim/SecimAlani";
 import { Serit } from "../../../components/serit/Serit";
 import { Tus } from "../../../components/tus/Tus";
@@ -31,8 +32,8 @@ const DuzeyGoster = ({ d }: { d: string }) => (DUZEY[d] ? <Rozet tur={DUZEY[d].t
 const kopya = (t: Tablo): Tablo => Object.fromEntries(Object.entries(t).map(([k, v]) => [k, [...v]]));
 const ayni = (a: Tablo, b: Tablo) => Object.keys(b).every((k) => a[k]?.every((d, i) => d === b[k][i]));
 
-export function RolYetkileri({ satirlar, matris, oneri, sabit, surum, duzenleyebilir }: {
-  satirlar: MatrisSatiri[]; matris: Tablo; oneri: Tablo; sabit: Record<string, string[]>; surum: number; duzenleyebilir: boolean;
+export function RolYetkileri({ satirlar, matris, oneri, sabit, surum, duzenleyebilir, izinler = false }: {
+  satirlar: MatrisSatiri[]; matris: Tablo; oneri: Tablo; sabit: Record<string, string[]>; surum: number; duzenleyebilir: boolean; izinler?: boolean;
 }) {
   const router = useRouter();
   const bildir = useBildir();
@@ -69,7 +70,7 @@ export function RolYetkileri({ satirlar, matris, oneri, sabit, surum, duzenleyeb
   return (
     <>
       <SayfaBasi baslik="Personel" tuslar={duzenleyebilir && !taslak && <Tus ikon="pencil" onClick={() => { setHata(null); setTaslak(kopya(matris)); }}>Rol yetkilerini düzenle</Tus>} />
-      <Sekmeler ad="Personel bölümleri" ogeler={[["Personel", "/personel"], ["Rol yetkileri", "/personel/roller"]]} secili="/personel/roller" />
+      <PersonelSekmeleri secili="/personel/roller" izinler={izinler} />
       <Serit tur="bilgi" ikon="circle-alert">{ayni(gorunen, oneri) ? "Önerilen başlangıç düzeni" : "Firmanın kendi düzeni"}</Serit>
       <p className={stil.aciklama}>
         {Object.entries(DUZEY).map(([k, v], i) => <span key={k}>{i > 0 && " · "}<Rozet tur={v.tur}>{v.ad}</Rozet> {v.aciklama}</span>)} · — görmez
