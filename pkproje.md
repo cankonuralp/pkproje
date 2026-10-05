@@ -2341,6 +2341,16 @@ revizyon, alan kopyalama, hafif kusur devri, meslek eşleşme denetimi).
 - Emsal ürünler: https://opwire.app/iso-17020-periyodik-kontrol-yazilimi/ · https://17020muayene.vidco.com.tr/ · https://akuple.com/asansor-kontrol-yazilimi/ · https://ensyazilim.com/
 
 ## 11 · Değişiklik günlüğü
+- 2026-10-05 (322): **K3 Müşteri paneli › Sözleşmeler** (maket musteri.html #/sozlesme sozCiz, #/s/<no>; karar 134 "müşteri panelinde
+  görünür, panelden imza atılmaz"). Göç **0034**: müşteri rolü iş sözleşmesinin YALNIZ numara, dönem, müşteri imza tarihi ve imzalı PDF
+  sütunlarını okur (vade, yenileme, firma imzası yok; İSG-KATİP kayıtları ve sözleşme şablonu hiç yok); yalnız kendi müşterisinin ve kapsamında
+  görebildiği tesis bulunan sözleşmeleri (seçili tesisli ek girişte kapsamda yalnız o tesisler); dosya politikası rapor PDF'ine ek olarak
+  görebildiği sözleşmenin ŞU ANKİ imzalı PDF'ini açar (yeniden yüklenince eskisi inmez). Sözleşmeler modülünün `server/musteri-baglanti.ts`'i
+  verir (panel tablolara dokunmaz). Panelde dördüncü sekme **Sözleşmeler** (/portal/sozlesme): numara, tesisler, dönem, durum (İmza bekliyor ·
+  Yürürlükte · Süresi doldu); **sözleşme sayfası** (/portal/s/<id>): dönem, müşteri imzası, tesisler; imzalıysa PDF'i aç / PDF indir; imza
+  bekliyorsa "imzalı sözleşmeyi muayene firmasına iletin" — panelden imza atılmaz. Kilit: musteri-paneli.test +1 (sütun sınırı, iki müşteri,
+  ek giriş kapsamı ve kapsamdaki tesisler, başka firma, PDF'in yalnız şu ankisi, İSG-KATİP / şablon / yazma yasağı), bozan +1 (kapsam
+  süzgeci); e2e saha raporu: müşteri Planlanan kontroller ve Sözleşmeler sekmelerini açar. Sonraki: muayene personeli belgeleri (323).
 - 2026-10-05 (319 çapraz inceleme düzeltmeleri; dört bakış + her bulguya çürütme denemesi, 16 bulgu doğrulandı, 1 elendi). Göç **0033**:
   (1) müşteri rolü uygunsuzluğu yalnız **kendi sürümü müşteriye açıksa** görür (raporun son imzalı sürümü — 193): revizyondan önce başka
   muayeneyle "giderildi" kapanmış eski sürüm kusuru açık kalıyordu, görünürlük imza sırasına bağlıydı. (2) **Pasif müşterinin oturumları hemen

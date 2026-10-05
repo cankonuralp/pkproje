@@ -8,7 +8,8 @@
    5. (319 incelemesi, 0033) Uygunsuzluk kendi sürümünün açıklığına bağlanmasaydı revizyonla geçersiz kalmış sürümün kusuru müşteriye görünürdü.
    6. (0033) Pasif müşterinin oturumları düşürülmeseydi yeniden etkinleşince okunmamış eski belirteç geçerli olurdu.
    7. (0033) Müşterinin kayıtlı e-postası kullanıcı adı sayılmasaydı personel hesabı o adresi alır, müşterinin ana girişi açılamazdı.
-   8. (0033) Parola değişince kilit sıfırlanmasaydı yeni geçici parolanın sahibi kilitli kalırdı. */
+   8. (0033) Parola değişince kilit sıfırlanmasaydı yeni geçici parolanın sahibi kilitli kalırdı.
+   9. (322, 0034) Sözleşme kapsamı tesis süzgecinden geçmeseydi seçili tesisli ek giriş sözleşmedeki öteki tesisleri görürdü. */
 import assert from "node:assert/strict";
 import { copyFileSync, mkdirSync, mkdtempSync, readdirSync, readFileSync, rmSync, writeFileSync } from "node:fs";
 import { tmpdir } from "node:os";
@@ -158,4 +159,21 @@ test("0033'teki kilit sıfırlama kalkınca yeni parolada giriş kilitli kalır"
   await supa.sahip.query("UPDATE musteri_hesap SET parola_ozeti = 'scrypt$y', durum = 'ilk' WHERE id = $1", [h]);
   const k = (await supa.sahip.query<{ k: Date | null }>("SELECT kilit_bitis AS k FROM musteri_hesap WHERE id = $1", [h])).rows[0].k;
   assert.ok(k, "kilit kaldı");
+});
+
+const SOZ_TESIS = `      USING (EXISTS (SELECT 1 FROM tesis t WHERE t.firma_id = is_sozlesmesi_tesis.firma_id AND t.id = is_sozlesmesi_tesis.tesis_id));`;
+
+test("0034'teki kapsam süzgeci kalkınca seçili tesisli giriş sözleşmedeki öteki tesisleri görür", async () => {
+  const { havuz, A, m1 } = await bozuk("musteri_bozuk9", SOZ_TESIS, "      USING (true);", "0034_");
+  const supa = acilan.at(-1)!.supa;
+  const t1 = (await supa.sahip.query<{ id: string }>("SELECT id::text FROM tesis WHERE firma_id = $1 AND musteri_id = $2 LIMIT 1", [A, m1])).rows[0].id;
+  const t2 = (await supa.sahip.query<{ id: string }>("INSERT INTO tesis (firma_id, musteri_id, ad) VALUES ($1, $2, 'Depo') RETURNING id::text", [A, m1])).rows[0].id;
+  await supa.sahip.query("SET session_replication_role = replica");
+  try {
+    const z = (await supa.sahip.query<{ id: string }>(`INSERT INTO is_sozlesmesi (firma_id, no, musteri_id, baslangic, bitis, vade, yenileme)
+      VALUES ($1, 'IS-0126-001', $2, '2026-01-01', '2027-12-31', 30, 'yok') RETURNING id::text`, [A, m1])).rows[0].id;
+    for (const t of [t1, t2]) await supa.sahip.query("INSERT INTO is_sozlesmesi_tesis (firma_id, sozlesme_id, tesis_id) VALUES ($1, $2, $3)", [A, z, t]);
+  } finally { await supa.sahip.query("SET session_replication_role = origin"); }
+  const n = (await kiraciIcinde(havuz, A, (db) => db.sorgu<{ n: number }>("SELECT count(*)::int AS n FROM is_sozlesmesi_tesis"), { musteri: { id: m1, tesisler: [t1] } })).rows[0].n;
+  assert.equal(n, 2, "kapsam dışı tesis göründü");
 });

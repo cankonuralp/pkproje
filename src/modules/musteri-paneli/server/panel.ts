@@ -3,12 +3,15 @@
    işleminde çağrılır (src/server/kimlik/istek.ts musteriIslemi → probata_musteri): hangi satırın döneceğine veritabanının kısıtlayıcı politikaları
    karar verir (kendi müşterisi, tesis kapsamı, imzalı son sürüm). Panel öteki modüllerin tablolarına dokunmaz; Raporlar ve Müşteriler'in dışa
    açtığı işlevlerden okur. 319: Raporlar ve rapor sayfası (imzalı PDF); 320: Uygunsuzluklar + Excel (tarayıcıda, panelin aldığı veriden);
-   321: Planlanan kontroller (Planlar'ın musteri-baglanti.ts'i, 0032) + toplu indirme (ZIP, tarayıcıda); sözleşmeler ve personel belgeleri
-   sonraki kalemlerde. */
+   321: Planlanan kontroller (Planlar'ın musteri-baglanti.ts'i, 0032) + toplu indirme (ZIP, tarayıcıda); 322: Sözleşmeler (Sözleşmeler'in
+   musteri-baglanti.ts'i, 0034; panelden imza atılmaz — karar 134); personel belgeleri sonraki kalemde. */
 import type { Sorgulayici } from "../../../server/db/kiraci.ts";
 import { firmaKunyesi } from "../../../server/ayar/ayar.ts";
 import { musteriOzetleri } from "../../musteriler/server/musteriler.ts";
 import { musteriPlanlari, type MusteriPlani } from "../../planlar/server/musteri-baglanti.ts";
+import { musteriSozlesmeleri, type MusteriSozlesmesi } from "../../sozlesmeler/server/musteri-baglanti.ts";
+
+const GUN = new Intl.DateTimeFormat("en-CA", { timeZone: "Europe/Istanbul", year: "numeric", month: "2-digit", day: "2-digit" });
 import {
   musteriAcikUygunsuzluk, musteriRaporlari, musteriRaporu, musteriUygunsuzluklari, type MusteriRaporu, type MusteriUygunsuzlugu, type MusteriUygunsuzlukSatiri,
 } from "../../raporlar/server/musteri-baglanti.ts";
@@ -54,6 +57,22 @@ export async function panelPlanlari(db: Sorgulayici): Promise<PanelPlanlari> {
     const sonraki = [...son.values()].filter((r) => r.tesisId === t.id && r.sonraki).map((r) => r.sonraki!).sort()[0] ?? null;
     return { tesisId: t.id, tesis: t.ad, yer: t.yer, plan: p[0] ?? null, digerPlan: Math.max(0, p.length - 1), sonraki };
   }) };
+}
+
+/** Sözleşmeler (322; maket sozCiz): görebildiği sözleşmeler — kapsamdaki tesislerin adları (yalnız görebildikleri), dönem, durum */
+export interface PanelSozlesmesi extends MusteriSozlesmesi { tesisAdlari: string[] }
+export interface PanelSozlesmeleri extends PanelBasligi { sozlesmeler: PanelSozlesmesi[] }
+export async function panelSozlesmeleri(db: Sorgulayici, s: { id?: string } = {}): Promise<PanelSozlesmeleri> {
+  const b = await panelBasligi(db);
+  const ad = new Map(b.tesisler.map((t) => [t.id, t.ad]));
+  const l = await musteriSozlesmeleri(db, GUN.format(new Date()), s);
+  return { ...b, sozlesmeler: l.map((x) => ({ ...x, tesisAdlari: x.tesisler.map((t) => ad.get(t) ?? "—") })) };
+}
+/** sözleşme sayfası; göremeyene null (başka müşterinin sözleşmesi: var olduğu da söylenmez) */
+export async function panelSozlesmesi(db: Sorgulayici, id: string): Promise<{ b: PanelBasligi; s: PanelSozlesmesi } | null> {
+  const v = await panelSozlesmeleri(db, { id });
+  const s = v.sozlesmeler[0];
+  return s ? { b: v, s } : null;
 }
 
 /** rapor sayfası; göremeyene null (başka müşterinin ya da imzasız rapor: var olduğu bile söylenmez) */

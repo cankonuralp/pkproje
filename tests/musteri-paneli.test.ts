@@ -6,7 +6,9 @@
    320 UYGUNSUZLUKLAR (maket musteri.html #/uygunsuz; pkproje §1.1 "uygunsuzları indir … exceldeki ilgili yere tıklayınca rapora gidebilecek"): aynı
    kurulum — müşteri rolü yalnız kendi uygunsuzluklarını görür; Excel tarayıcıda bu veriden (yazıcı: tests/disa.test.ts).
    321 PLANLANAN KONTROLLER (maket #/plan; karar 81; göç 0032): müşteri rolü planın yalnız tesis / tarih / durum sütunlarını, kendi tesis
-   kapsamındaki AÇIK planlarda okur. */
+   kapsamındaki AÇIK planlarda okur.
+   322 SÖZLEŞMELER (maket #/sozlesme; karar 134 "görünür, panelden imza atılmaz"; göç 0034): sözleşmenin yalnız numara / dönem / imza / PDF
+   sütunları; kendi müşterisi ve görebildiği tesis kapsamı; imzalı PDF'in yalnız şu anki sürümü. */
 import assert from "node:assert/strict";
 import { mkdtempSync, rmSync } from "node:fs";
 import { tmpdir } from "node:os";
@@ -20,7 +22,8 @@ import { musteriCikis, musteriGirisiMi, musteriGirisYap, musteriOturumOku, muste
 import { girisYap } from "../src/server/kimlik/oturum.ts";
 import { anaGeciciParola, ekGeciciParola, ekGirisEkle, girisBilgisi, girisPasif } from "../src/modules/musteriler/server/girisler.ts";
 import { musteriKaydet, musteriPasif } from "../src/modules/musteriler/server/musteriler.ts";
-import { panelPlanlari, panelRaporlari, panelRaporu, panelUygunsuzluklari } from "../src/modules/musteri-paneli/server/panel.ts";
+import { panelPlanlari, panelRaporlari, panelRaporu, panelSozlesmeleri, panelSozlesmesi, panelUygunsuzluklari } from "../src/modules/musteri-paneli/server/panel.ts";
+import { imzaliYukle as sozlesmeImzaliYukle, sozlesmeHazirla } from "../src/modules/sozlesmeler/server/sozlesmeler.ts";
 import { onayla, revizeyeGonder } from "../src/modules/onaylar/server/onaylar.ts";
 import { planIci, planKabul, planReddet } from "../src/modules/planlar/server/plan-ici.ts";
 import { bugunTr, planAc, type Kisi } from "../src/modules/planlar/server/planlar.ts";
@@ -378,4 +381,46 @@ test("UYGUNSUZLUK + REVİZYON (319 incelemesi, 0033): revizyondan önce başka m
   assert.equal((await m(FA.m1, null, (db) => db.sorgu<{ n: number }>("SELECT count(*)::int AS n FROM uygunsuzluk WHERE id = ANY ($1::uuid[])", [once]))).rows[0].n, 0,
     "ham SQL de görmez");
   assert.equal((await sql<{ n: number }>(A, "SELECT count(*)::int AS n FROM uygunsuzluk WHERE id = ANY ($1::uuid[])", [once])).rows[0].n, once.length, "firma tarafında duruyor");
+});
+
+test("SÖZLEŞMELER (322): müşteri rolü sözleşmenin yalnız numara / dönem / imza / PDF sütunlarını, kendi müşterisinin ve görebildiği tesis kapsamındaki sözleşmeleri okur; kapsamda yalnız görebildiği tesisler; imzalı PDF'in yalnız şu ankisi iner; başka müşteri ve firma görmez", async () => {
+  const yon = FA.yon;
+  const haz = async (musteri: string, tesisler: string[]) =>
+    tamam(await a(yon, (db) => sozlesmeHazirla(db, yon, { musteri, tesisler, baslangic: "2026-01-01", sure: 24, vade: 30, yenileme: "yok" }))).id;
+  const s1 = await haz(FA.m1, [FA.t1, FA.t2]), s2 = await haz(FA.m1, [FA.t2]), s3 = await haz(FA.m2, [FA.t3]);
+  const pdf = (n: number) => ({ ad: "imzali-sozlesme.pdf", bayt: new TextEncoder().encode(`%PDF-1.4\n% sözleşme ${n}\n%%EOF\n`) });
+  const yukle = async (id: string, n: number) => {
+    const sur = (await sql<{ s: number }>(A, "SELECT surum AS s FROM is_sozlesmesi WHERE id = $1", [id])).rows[0].s;
+    tamam(await a(yon, (db) => sozlesmeImzaliYukle(db, depo, yon, A, id, sur, pdf(n))));
+    return (await sql<{ d: string }>(A, "SELECT imzali_dosya::text AS d FROM is_sozlesmesi WHERE id = $1", [id])).rows[0].d;
+  };
+  const d1 = await yukle(s1, 1);
+  const l = async (mid: string, t: string[] | null) => (await m(mid, t, (db) => panelSozlesmeleri(db))).sozlesmeler;
+  const v = await l(FA.m1, null);
+  assert.deepEqual(v.map((x) => x.id).sort(), [s1, s2].sort(), "kendi iki sözleşmesi");
+  const x1 = v.find((x) => x.id === s1)!, x2 = v.find((x) => x.id === s2)!;
+  assert.deepEqual([[...x1.tesisAdlari].sort(), x1.durum, x1.dosya, x1.musteriImza !== null], [["Depo", "Merkez"], "yururlukte", d1, true]);
+  assert.deepEqual([x2.durum, x2.dosya], ["imza", null], "imza bekliyor");
+  const kapsamli = await l(FA.m1, [FA.t1]);
+  assert.deepEqual(kapsamli.map((x) => [x.id, x.tesisAdlari]), [[s1, ["Merkez"]]], "ek giriş: yalnız kapsamdaki tesisin sözleşmesi, kapsamda yalnız o tesis");
+  assert.deepEqual((await l(FA.m2, null)).map((x) => x.id), [s3]);
+  assert.deepEqual(await l(FB.m1, null), [], "başka firmanın müşterisi");
+  assert.equal(await m(FA.m2, null, (db) => panelSozlesmesi(db, s1)), null, "başka müşterinin sözleşmesi yok sayılır");
+  assert.equal((await m(FA.m1, null, (db) => panelSozlesmesi(db, s1)))!.s.no, x1.no);
+  /* imzalı PDF: kendi sözleşmesinin şu ankisi; başkası ve kapsam dışı inemez; yeniden yüklenince eskisi inmez */
+  assert.ok(await m(FA.m1, null, (db) => musteriDosyasi(db, d1)), "kendi sözleşmesinin imzalı PDF'i");
+  assert.equal(await m(FA.m2, null, (db) => musteriDosyasi(db, d1)), null, "başka müşteri");
+  const d2 = await yukle(s2, 2);
+  assert.equal(await m(FA.m1, [FA.t1], (db) => musteriDosyasi(db, d2)), null, "kapsam dışı tesisin sözleşmesi");
+  const d1b = await yukle(s1, 3);
+  assert.equal(await m(FA.m1, null, (db) => musteriDosyasi(db, d1)), null, "eski imzalı PDF artık inmez");
+  assert.ok(await m(FA.m1, null, (db) => musteriDosyasi(db, d1b)));
+  /* ham SQL müşteri rolünde: yalnız izinli sütunlar; İSG-KATİP ve şablon yok; yazma yok */
+  for (const c of ["vade", "yenileme", "firma_imza", "*"]) {
+    await assert.rejects(m(FA.m1, null, (db) => db.sorgu(`SELECT ${c} FROM is_sozlesmesi`)), /permission denied/, c);
+  }
+  for (const t of ["isg_katip", "sozlesme_sablon"]) await assert.rejects(m(FA.m1, null, (db) => db.sorgu(`SELECT 1 FROM ${t} LIMIT 1`)), /permission denied/, t);
+  await assert.rejects(m(FA.m1, null, (db) => db.sorgu("UPDATE is_sozlesmesi SET bitis = '2030-01-01' WHERE id = $1", [s1])), /permission denied/);
+  /* firma tarafı etkilenmez */
+  assert.equal((await sql<{ n: number }>(A, "SELECT count(*)::int AS n FROM is_sozlesmesi WHERE id = ANY ($1::uuid[])", [[s1, s2, s3]])).rows[0].n, 3);
 });

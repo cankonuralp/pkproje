@@ -310,6 +310,14 @@ test("saha raporu: rapor oluştur, eksikle gönderilmez, doldur + cihaz ekle, on
   await expect(page.getByRole("heading", { level: 1, name: "Uygunsuzluklar" })).toBeVisible();
   if (acikSayi === 0) await expect(page.getByRole("button", { name: "Uygunsuzları indir" })).toBeDisabled();   // açık yoksa indirilecek yok
   else await expect(page.getByRole("button", { name: "Uygunsuzları indir" })).toBeEnabled();
+  /* 321 Planlanan kontroller · 322 Sözleşmeler sekmeleri (salt görüntü) */
+  const sekmeler = page.getByRole("navigation", { name: "Panel görünümleri" });
+  for (const [ad, yol] of [["Planlanan kontroller", "plan"], ["Sözleşmeler", "sozlesme"]] as const) {
+    await sekmeler.getByRole("link", { name: ad, exact: true }).click();
+    await expect(page).toHaveURL(new RegExp(`/portal/${yol}$`), { timeout: 30_000 });
+    await hazir(page);
+    await expect(page.getByRole("heading", { level: 1, name: ad })).toBeVisible();
+  }
   await page.getByRole("navigation", { name: "Panel görünümleri" }).getByRole("link", { name: "Raporlar", exact: true }).click();
   await expect(page).toHaveURL(/\/portal$/, { timeout: 30_000 });
   await hazir(page);
