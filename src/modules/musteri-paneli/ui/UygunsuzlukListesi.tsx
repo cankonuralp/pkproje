@@ -4,7 +4,8 @@
    "excel de link olmalı … "rapor" yazsın"). Görebildiği imzalı raporların uygunsuzlukları (ayrı kayıt, PDF'ten okunmaz — §3.2 madde 6), en yeni
    tespit üstte. Sütunlar Ekipman · Kusur · Rapor · Tespit · Durum (giderildiyse gideren kontrolün tarihi). Çipler Açık / Giderildi (aynı grup) ve
    Ağır; seçici Tesis. "Uygunsuzları indir": açık uygunsuzlukların önizlemesi (pencere) → .xlsx (satır başında "Rapor" bağlantısı; tarayıcıda,
-   panelin zaten aldığı veriden — yeni sunucu ucu yok). Görme sunucuda (müşteri rolü, veritabanı politikası). */
+   panelin zaten aldığı veriden — yeni sunucu ucu yok). 321: "Uygunsuz raporlar (ZIP)" — süzgeçteki uygunsuzlukların raporları (imzalı PDF,
+   tesis klasörlü). Görme sunucuda (müşteri rolü, veritabanı politikası). */
 import Link from "next/link";
 import { useState } from "react";
 import { baytIndir, dosyaGunu } from "../../../components/disa/indir";
@@ -13,12 +14,15 @@ import { KartEtiket, Kirp, type Sutun } from "../../../components/liste/Liste";
 import { Sayac, SuzgecliListe, useSuzgec } from "../../../components/liste/SuzgecliListe";
 import type { SuzgecTanimi } from "../../../components/liste/suzgec";
 import { Pencere, pencereMetinSinifi } from "../../../components/pencere/Pencere";
-import { AltSatir, Rozet, SayfaBasi } from "../../../components/sayfa/Sayfa";
+import { AltSatir, Rozet, SayfaBasi, SeritKap } from "../../../components/sayfa/Sayfa";
+import { Serit } from "../../../components/serit/Serit";
 import { tarihNo } from "../../../components/secim/tarih";
 import { Tus } from "../../../components/tus/Tus";
 import type { MusteriUygunsuzlukSatiri } from "../../raporlar/server/musteri-baglanti";
 import type { PanelUygunsuzluklari } from "../server/panel";
+import { adParcasi } from "./ad";
 import { kusurParcala } from "./kusur";
+import { useTopluIndir, type ZipRaporu } from "./topluIndir";
 import { PanelSekmeleri, raporAdresi } from "./ortak";
 import stil from "./panel.module.css";
 
@@ -70,12 +74,26 @@ export function PanelUygunsuzlukListesi({ v }: { v: PanelUygunsuzluklari }) {
   const [pencere, setPencere] = useState(false);
   const acik = v.uygunsuzluklar.filter((u) => u.acik);
   const indir = () => { baytIndir(`uygunsuzluklar-${dosyaGunu()}.xlsx`, uygunsuzlukExceli(acik), XLSX_TURU); setPencere(false); };
+  const zip = useTopluIndir();
+  /* süzgeçteki uygunsuzlukların raporları (her rapor bir kez, son imzalı PDF'i) */
+  const zipRaporlari = () => {
+    const l: ZipRaporu[] = [], gorulen = new Set<string>();
+    for (const u of s.sonuc.liste) if (u.raporDosya && !gorulen.has(u.raporId)) { gorulen.add(u.raporId); l.push({ dosya: u.raporDosya, no: u.raporNo, tesis: u.tesis }); }
+    return l;
+  };
+  const topluIndir = () => zip.indir(zipRaporlari(), `${adParcasi(v.musteri?.kisa ?? "musteri")}-uygunsuz-raporlar-${dosyaGunu()}.zip`);
   return (
     <>
       <SayfaBasi baslik="Uygunsuzluklar" sayac={<Sayac s={s} />}
-        tuslar={<Tus ikon="file-check" onClick={() => setPencere(true)} disabled={!acik.length}>Uygunsuzları indir</Tus>} />
+        tuslar={<>
+          <Tus tur="ikincil" ikon="download" onClick={topluIndir} disabled={!s.sonuc.liste.length || !!zip.ilerleme} aria-live="polite">
+            {zip.ilerleme ? `İndiriliyor ${zip.ilerleme}` : "Uygunsuz raporlar (ZIP)"}
+          </Tus>
+          <Tus ikon="file-check" onClick={() => setPencere(true)} disabled={!acik.length}>Uygunsuzları indir</Tus>
+        </>} />
       <p className={stil.alt}>{v.musteri?.unvan ?? "—"}</p>
       <PanelSekmeleri acikUygunsuz={v.acikUygunsuz} secili="/portal/uygunsuz" />
+      {zip.hata && <SeritKap><Serit tur="hata" ikon="circle-alert">{zip.hata}</Serit></SeritKap>}
       <SuzgecliListe s={s} on="u" baslik="Uygunsuzluklar" sutunlar={SUTUNLAR} anahtar={(u) => u.id} href={(u) => `/portal/r/${u.raporId}`}
         bosVeri={{ ikon: "circle-check", baslik: "Uygunsuzluk yok", metin: "İmzalı raporlarınızda uygunsuz bulunan ekipman yok." }} />
       <Pencere acik={pencere} genis baslik="Uygunsuzları indir (Excel)" onKapat={() => setPencere(false)} odak="#u-excel-indir"

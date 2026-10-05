@@ -27,6 +27,15 @@ export function gizliResimAdresi(dosyaId: string): Promise<string> {
   return s;
 }
 
+/** dosyanın baytları (toplu indirme — ZIP; 321): oturumlu tek uçtan, önbelleksiz; yetki ve kiracı uçta. PDF değilse hata. */
+export async function dosyaBaytlari(dosyaId: string): Promise<Uint8Array> {
+  if (!UUID.test(dosyaId)) throw new Error("Geçersiz dosya");
+  const y = await fetch(`/api/dosya/${dosyaId}?indir=1`, { credentials: "same-origin", cache: "no-store" });
+  if (!y.ok) throw new Error(String(y.status));
+  if ((y.headers.get("Content-Type") ?? "") !== "application/pdf") throw new Error("PDF değil");
+  return new Uint8Array(await y.arrayBuffer());
+}
+
 export function GizliResim({ dosyaId, alt, className }: { dosyaId: string; alt: string; className?: string }) {
   const kap = useRef<HTMLSpanElement>(null);
   const [adres, setAdres] = useState<string | null>(null);

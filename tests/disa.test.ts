@@ -6,6 +6,7 @@ import assert from "node:assert/strict";
 import { test } from "node:test";
 import { zipBayt } from "../src/components/disa/zip.ts";
 import { guvenliUrl, xlsxBayt, xmlKacis } from "../src/components/disa/xlsx.ts";
+import { adParcasi, klasorAdi } from "../src/modules/musteri-paneli/ui/ad.ts";
 import { kusurParcala } from "../src/modules/musteri-paneli/ui/kusur.ts";
 import { zipAc } from "./yardimci/zip.ts";
 
@@ -53,4 +54,15 @@ test("yardımcılar: güvenli adres yalnız http(s); XML kaçışı; kusur metni
   assert.deepEqual(kusurParcala("Emniyet ventili: Mühür kırık"), { kriter: "Emniyet ventili", aciklama: "Mühür kırık" });
   assert.deepEqual(kusurParcala("Yalıtım direnci: 0,4 MΩ (sınır ≥ 1 MΩ)"), { kriter: "Yalıtım direnci", aciklama: "0,4 MΩ (sınır ≥ 1 MΩ)" });
   assert.deepEqual(kusurParcala("Topraklama yok"), { kriter: "Topraklama yok", aciklama: "" });
+});
+
+test("toplu indirme adları (321): tesis klasörü ve dosya adı yol olamaz (/ ters bölü .. sürücü), denetim ve Windows'un yasak karakterleri boşluk, boşsa 'Tesis'", () => {
+  assert.equal(klasorAdi('Merkez/Depo\\Arka:Bölüm*?"<>|'), "Merkez Depo Arka Bölüm");
+  assert.equal(klasorAdi("..\u0000\u001f.."), "Tesis");
+  assert.equal(klasorAdi("  . Soğuk Hava Deposu .  "), "Soğuk Hava Deposu");
+  assert.equal(klasorAdi("C:"), "C");
+  assert.equal(klasorAdi("a".repeat(120)).length, 80);
+  assert.equal(adParcasi("DENEME İKİ Iğdır"), "deneme-iki-ığdır");
+  /* ZIP yazıcısı da yolu reddeder: klasorAdi çıktısı her zaman kabul edilir */
+  for (const x of ["../x", "/abs", "a/../b", "\\\\sunucu\\pay"]) assert.doesNotThrow(() => zipBayt([[`${klasorAdi(x)}/${klasorAdi("DA-0126-0001")}.pdf`, "x"]]), x);
 });

@@ -16,7 +16,7 @@ export interface MusteriRaporu {
   no: string; revizyon: number;
   /** revizyonsa yerine geçtiği önceki sürümün numarası */
   yerine: string | null;
-  ekipmanKod: string; turAd: string; tesisId: string; tesis: string;
+  ekipmanId: string; ekipmanKod: string; turAd: string; tesisId: string; tesis: string;
   kontrol: string | null; sonraki: string | null; sonuc: "uygun" | "uygun_degil" | null; imzalandi: string;
   /** imzalı PDF dosyasının kimliği (tek indirme ucundan, müşteri rolünde — kendi raporu) */
   dosya: string;
@@ -39,7 +39,7 @@ export async function musteriRaporlari(db: Sorgulayici, s: { id?: string } = {})
   const tesis = new Map((await musteriOzetleri(db)).flatMap((m) => m.tesisler.map((t) => [t.id, t.ad] as const)));
   return l.map((x) => ({
     id: x.rapor_id, no: x.no, revizyon: x.revizyon, yerine: yerine(x.no, x.revizyon),
-    ekipmanKod: ek.get(x.ekipman_id) ?? "—", turAd: tur.get(x.tur_id) ?? "—", tesisId: x.tesis_id, tesis: tesis.get(x.tesis_id) ?? "—",
+    ekipmanId: x.ekipman_id, ekipmanKod: ek.get(x.ekipman_id) ?? "—", turAd: tur.get(x.tur_id) ?? "—", tesisId: x.tesis_id, tesis: tesis.get(x.tesis_id) ?? "—",
     kontrol: x.kontrol_tarihi, sonraki: x.sonraki, sonuc: x.sonuc, imzalandi: x.imzalandi.toISOString(), dosya: x.imzali_dosya,
   }));
 }
@@ -55,9 +55,9 @@ export async function musteriRaporu(db: Sorgulayici, id: string): Promise<{ r: M
 }
 
 /** Uygunsuzluklar sekmesinin satırı (320; maket musteri.html #/uygunsuz U_SUTUN): kusurun ekipmanı, tesisi, metni (kriter: açıklama), raporu,
-    tespit (kontrol) tarihi, durumu — giderildiyse gideren kontrolün tarihi */
+    tespit (kontrol) tarihi, durumu — giderildiyse gideren kontrolün tarihi; raporDosya: raporun son imzalı PDF'i (toplu indirme — 321) */
 export interface MusteriUygunsuzlukSatiri {
-  id: string; raporId: string; raporNo: string; ekipmanKod: string; turAd: string; tesisId: string; tesis: string;
+  id: string; raporId: string; raporNo: string; raporDosya: string | null; ekipmanKod: string; turAd: string; tesisId: string; tesis: string;
   metin: string; agir: boolean; tarih: string | null; acik: boolean; giderildi: string | null;
 }
 
@@ -70,7 +70,8 @@ export async function musteriUygunsuzluklari(db: Sorgulayici): Promise<MusteriUy
      ORDER BY u.tarih DESC NULLS LAST, u.olustu DESC, u.metin`)).rows;
   if (!l.length) return [];
   /* raporun görünen numarası: uygunsuzluğun kendi sürümü (müşteriye açıksa), yoksa raporun son imzalı sürümü */
-  const son = new Map((await db.sorgu<{ rapor_id: string; no: string }>("SELECT rapor_id::text, no FROM rapor_surumu")).rows.map((x) => [x.rapor_id, x.no]));
+  const son = new Map((await db.sorgu<{ rapor_id: string; no: string; dosya: string }>("SELECT rapor_id::text, no, imzali_dosya::text AS dosya FROM rapor_surumu")).rows
+    .map((x) => [x.rapor_id, x]));
   const ekl = await ekipmanlar(db, [...new Set(l.map((x) => x.ekipman_id))]);
   const ek = new Map(ekl.map((e) => [e.id, e]));
   const tur = new Map((await turOzetleri(db)).map((t) => [t.id, t.ad]));
@@ -78,7 +79,7 @@ export async function musteriUygunsuzluklari(db: Sorgulayici): Promise<MusteriUy
   return l.map((x) => {
     const e = ek.get(x.ekipman_id);
     return {
-      id: x.id, raporId: x.rapor_id, raporNo: x.surum_no ?? son.get(x.rapor_id) ?? "—", ekipmanKod: e?.kod ?? "—", turAd: e ? tur.get(e.turId) ?? "—" : "—",
+      id: x.id, raporId: x.rapor_id, raporNo: x.surum_no ?? son.get(x.rapor_id)?.no ?? "—", raporDosya: son.get(x.rapor_id)?.dosya ?? null, ekipmanKod: e?.kod ?? "—", turAd: e ? tur.get(e.turId) ?? "—" : "—",
       tesisId: x.tesis_id, tesis: tesis.get(x.tesis_id) ?? "—", metin: x.metin, agir: x.agir, tarih: x.tarih, acik: x.kapanis === null,
       giderildi: x.kapanis === "giderildi" ? x.kapatan_tarih : null,
     };

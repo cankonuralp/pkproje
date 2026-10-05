@@ -13,3 +13,4 @@
 .onizleme th { padding: 6px 8px; border-bottom: 1px solid var(--kenar); color: var(--yazi2); font-weight: 600; text-align: left; }
 .onizleme td { padding: 6px 8px; border-bottom: 1px solid var(--kenar); vertical-align: top; overflow-wrap: anywhere; }
 .onizleme td:last-child, .onizleme th:last-child { width: 34%; }
+.sayi { font-variant-numeric: tabular-nums; }

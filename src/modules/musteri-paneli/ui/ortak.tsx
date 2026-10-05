@@ -12,10 +12,11 @@ export function SonucYazisi({ sonuc }: { sonuc: "uygun" | "uygun_degil" | null }
   return <span className={sonuc === "uygun" ? stil.sonucUygun : stil.sonucHata}>{sonuc === "uygun" ? "Uygun" : "Uygun değil"}</span>;
 }
 
-/** panel sekmeleri (maket musteri.html a-sekmeler): Raporlar · Uygunsuzluklar (açık sayısı); planlanan kontroller, sözleşmeler, muayene personeli
-    sonraki kalemde */
-export function PanelSekmeleri({ acikUygunsuz, secili }: { acikUygunsuz: number; secili: "/portal" | "/portal/uygunsuz" }) {
-  return <Sekmeler ad="Panel görünümleri" ogeler={[["Raporlar", "/portal"], [`Uygunsuzluklar (${acikUygunsuz})`, "/portal/uygunsuz"]]} secili={secili} />;
+/** panel sekmeleri (maket musteri.html a-sekmeler): Raporlar · Uygunsuzluklar (açık sayısı) · Planlanan kontroller (321); sözleşmeler ve muayene
+    personeli sonraki kalemlerde */
+export function PanelSekmeleri({ acikUygunsuz, secili }: { acikUygunsuz: number; secili: "/portal" | "/portal/uygunsuz" | "/portal/plan" }) {
+  return <Sekmeler ad="Panel görünümleri" secili={secili}
+    ogeler={[["Raporlar", "/portal"], [`Uygunsuzluklar (${acikUygunsuz})`, "/portal/uygunsuz"], ["Planlanan kontroller", "/portal/plan"]]} />;
 }
 
 /** Excel'deki "Rapor" bağlantısı: panelde raporu açar (giriş ister; kalıcı herkese açık dosya bağlantısı değil — anayasa 5.1) */

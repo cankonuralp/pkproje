@@ -4,7 +4,9 @@
    testi") · reisim 2026-10-04: "rol değiştirme, sızma, veri çalma; yetki her zaman sunucuda". GERÇEK PostgreSQL, iki firma, iki müşteri (319;
    göç 0030). Olumsuz kanıt: tests/bozan/musteri-paneli.bozan.ts.
    320 UYGUNSUZLUKLAR (maket musteri.html #/uygunsuz; pkproje §1.1 "uygunsuzları indir … exceldeki ilgili yere tıklayınca rapora gidebilecek"): aynı
-   kurulum — müşteri rolü yalnız kendi uygunsuzluklarını görür; Excel tarayıcıda bu veriden (yazıcı: tests/disa.test.ts). */
+   kurulum — müşteri rolü yalnız kendi uygunsuzluklarını görür; Excel tarayıcıda bu veriden (yazıcı: tests/disa.test.ts).
+   321 PLANLANAN KONTROLLER (maket #/plan; karar 81; göç 0032): müşteri rolü planın yalnız tesis / tarih / durum sütunlarını, kendi tesis
+   kapsamındaki AÇIK planlarda okur. */
 import assert from "node:assert/strict";
 import { mkdtempSync, rmSync } from "node:fs";
 import { tmpdir } from "node:os";
@@ -18,9 +20,9 @@ import { musteriCikis, musteriGirisiMi, musteriGirisYap, musteriOturumOku, muste
 import { girisYap } from "../src/server/kimlik/oturum.ts";
 import { anaGeciciParola, ekGeciciParola, ekGirisEkle, girisBilgisi, girisPasif } from "../src/modules/musteriler/server/girisler.ts";
 import { musteriKaydet, musteriPasif } from "../src/modules/musteriler/server/musteriler.ts";
-import { panelRaporlari, panelRaporu, panelUygunsuzluklari } from "../src/modules/musteri-paneli/server/panel.ts";
+import { panelPlanlari, panelRaporlari, panelRaporu, panelUygunsuzluklari } from "../src/modules/musteri-paneli/server/panel.ts";
 import { onayla, revizeyeGonder } from "../src/modules/onaylar/server/onaylar.ts";
-import { planIci, planKabul } from "../src/modules/planlar/server/plan-ici.ts";
+import { planIci, planKabul, planReddet } from "../src/modules/planlar/server/plan-ici.ts";
 import { bugunTr, planAc, type Kisi } from "../src/modules/planlar/server/planlar.ts";
 import { taslakBaslat, yayinla } from "../src/modules/rapor-format/server/formatlar.ts";
 import { imzaHazirla, imzaliYukle, raporListesi, raporOlustur } from "../src/modules/raporlar/server/raporlar.ts";
@@ -219,7 +221,7 @@ test("İKİNCİ KATMAN (09-E5): müşteri rolü yalnız kendi müşterisinin, ke
   assert.equal(await m(FA.m2, null, (db) => musteriDosyasi(db, v.r.dosya)), null, "başkasının imzalı PDF'i");
   assert.equal(await m(FA.m1, [FA.t2], (db) => musteriDosyasi(db, v.r.dosya)), null, "kapsam dışı tesisin PDF'i");
   /* ham SQL müşteri rolünde: panel dışı tablo yok, yazma yok, satırlar süzülü */
-  for (const t of ["rapor", "hesap", "musteri_hesap", "musteri_oturum", "personel", "imza_istegi", "denetim_izi", "plan"]) {
+  for (const t of ["rapor", "hesap", "musteri_hesap", "musteri_oturum", "personel", "imza_istegi", "denetim_izi", "plan_ekip"]) {
     await assert.rejects(m(FA.m1, null, (db) => db.sorgu(`SELECT 1 FROM ${t} LIMIT 1`)), /permission denied/, t);
   }
   await assert.rejects(m(FA.m1, null, (db) => db.sorgu("UPDATE musteri SET kisa = 'x'")), /permission denied/);
@@ -291,4 +293,35 @@ test("UYGUNSUZLUKLAR (320): müşteri rolü yalnız kendi müşterisinin ve tesi
   assert.ok(((await sql(A, "SELECT 1 FROM uygunsuzluk WHERE kapanis = 'revizyon' AND rapor_id = $1", [k1])).rowCount ?? 0) >= 1, "personel tarafında kayıt duruyor");
   /* müşteri rolü uygunsuzluğa yazamaz */
   await assert.rejects(m(FA.m1, null, (db) => db.sorgu("UPDATE uygunsuzluk SET metin = 'x'")), /permission denied/);
+});
+
+test("PLANLANAN KONTROLLER (321): müşteri rolü planın yalnız tesis / tarih / durum sütunlarını okur, yalnız kendi tesis kapsamındaki açık planları (reddedilen yok); tesis başına en yakın plan + sayısı; başka müşteri ve firma görmez", async () => {
+  /* yeni müşteri, iki tesis (yalnız bu testin planları) */
+  const q = async (metin: string, p: unknown[] = []) => (await sql<{ id: string }>(A, metin, p, FA.yon.id)).rows[0].id;
+  const m3 = await q("INSERT INTO musteri (unvan, kisa) VALUES ('Deneme Üç Sanayi A.Ş.', 'Deneme Üç') RETURNING id::text");
+  const t5 = await q("INSERT INTO tesis (musteri_id, ad, il, ilce) VALUES ($1, 'Kuzey', 'Kocaeli', 'Gebze') RETURNING id::text", [m3]);
+  const t6 = await q("INSERT INTO tesis (musteri_id, ad) VALUES ($1, 'Güney') RETURNING id::text", [m3]);
+  const ac = async (tesis: string, bas: string, bit: string) => tamam(await a(FA.plan, (db) => planAc(db, depo, FA.plan, A,
+    { tesis, baslangic: bas, bitis: bit, ekip: [{ personel: FA.denP, isgNo: `ISG-P${planSira++}`, kaydet: false }] }))).id;
+  await ac(t5, "2026-12-01", "2026-12-01");
+  const yakin = await ac(t5, "2026-11-10", "2026-11-11");
+  const red = await ac(t6, "2026-11-20", "2026-11-20");
+  tamam(await a(FA.den, async (db) => planReddet(db, FA.den, red, (await planIci(db, FA.den, red))!.surum, { gerekce: "Bu tarihte başka tesisteyim" })));
+  const v = await m(m3, null, (db) => panelPlanlari(db));
+  const k = v.satirlar.find((x) => x.tesisId === t5)!, g = v.satirlar.find((x) => x.tesisId === t6)!;
+  assert.deepEqual([k.tesis, k.yer, k.plan, k.digerPlan], ["Kuzey", "Gebze / Kocaeli", { tesisId: t5, baslangic: "2026-11-10", bitis: "2026-11-11", durum: "bekliyor" }, 1],
+    "en yakın açık plan + bir plan daha");
+  assert.deepEqual([g.plan, g.digerPlan], [null, 0], "reddedilen plan planlanan kontrol değil");
+  assert.deepEqual((await m(m3, [t6], (db) => panelPlanlari(db))).satirlar.map((x) => [x.tesisId, x.plan]), [[t6, null]], "ek giriş: yalnız kapsamdaki tesis");
+  /* ham SQL müşteri rolünde: yalnız izinli sütunlar, yalnız kendi açık planları */
+  assert.equal((await m(m3, null, (db) => db.sorgu<{ n: number }>("SELECT count(*)::int AS n FROM plan"))).rows[0].n, 2);
+  assert.equal((await m(FA.m1, null, (db) => db.sorgu<{ n: number }>("SELECT count(*)::int AS n FROM plan WHERE tesis_id = ANY ($1::uuid[])", [[t5, t6]]))).rows[0].n, 0, "başka müşteri");
+  assert.equal((await m(FB.m1, null, (db) => db.sorgu<{ n: number }>("SELECT count(*)::int AS n FROM plan"))).rows[0].n, 0, "başka firmanın müşterisi");
+  for (const c of ["no", "aciklama", "firma_adi", "adres", "sgk", "acan", "red_gerekce", "*"]) {
+    await assert.rejects(m(m3, null, (db) => db.sorgu(`SELECT ${c} FROM plan`)), /permission denied/, c);
+  }
+  await assert.rejects(m(m3, null, (db) => db.sorgu("UPDATE plan SET durum = 'tamamlandi' WHERE id = $1", [yakin])), /permission denied/);
+  await assert.rejects(m(m3, null, (db) => db.sorgu("SELECT 1 FROM plan_ekip LIMIT 1")), /permission denied/, "ekip görünmez");
+  /* firma tarafı etkilenmez */
+  assert.equal((await sql<{ n: number }>(A, "SELECT count(*)::int AS n FROM plan WHERE tesis_id = ANY ($1::uuid[])", [[t5, t6]])).rows[0].n, 3);
 });

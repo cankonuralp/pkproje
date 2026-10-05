@@ -2,7 +2,8 @@
 /* RAPORLARINIZ (maket musteri.html #/ — R_SUTUN, suzgecTanimla "m"): imzalı raporların son sürümleri, en yeni üstte, 20'şer. Sütunlar Rapor no ·
    Ekipman (kod + tür) · Tesis · Kontrol · Sonraki kontrol (60 gün içindeyse uyarı) · Sonuç. Çipler Uygunsuz ve Sonraki kontrol 60 gün içinde;
    seçiciler Tesis ve Yıl. Satır rapor sayfasını açar (imzalı PDF orada). Görme sunucuda (müşteri rolü). 320: sekmeler + "Excel indir" (süzgeçteki
-   raporlar, satır başında "Rapor" bağlantısı — maket Ö3; tarayıcıda, panelin zaten aldığı veriden; toplu indirme sonraki kalemde). */
+   raporlar, satır başında "Rapor" bağlantısı — maket Ö3; tarayıcıda, panelin zaten aldığı veriden). 321: "Toplu indir (ZIP)" — süzgeçteki
+   raporların imzalı PDF'leri, tesis klasörlü (ui/topluIndir.ts). */
 import Link from "next/link";
 import { baytIndir, dosyaGunu } from "../../../components/disa/indir";
 import { XLSX_TURU, xlsxBayt } from "../../../components/disa/xlsx";
@@ -10,11 +11,14 @@ import { Tus } from "../../../components/tus/Tus";
 import { KartEtiket, Kirp, type Sutun } from "../../../components/liste/Liste";
 import { Sayac, SuzgecliListe, useSuzgec } from "../../../components/liste/SuzgecliListe";
 import type { SuzgecTanimi } from "../../../components/liste/suzgec";
-import { AltSatir, SayfaBasi } from "../../../components/sayfa/Sayfa";
+import { AltSatir, SayfaBasi, SeritKap } from "../../../components/sayfa/Sayfa";
+import { Serit } from "../../../components/serit/Serit";
 import { tarihNo } from "../../../components/secim/tarih";
 import type { MusteriRaporu } from "../../raporlar/server/musteri-baglanti";
 import type { PanelRaporlari } from "../server/panel";
+import { adParcasi } from "./ad";
 import { gunFarki, PanelSekmeleri, raporAdresi, SonucYazisi } from "./ortak";
+import { useTopluIndir } from "./topluIndir";
 import stil from "./panel.module.css";
 
 const benzersiz = <T,>(l: readonly T[]) => [...new Set(l)];
@@ -59,12 +63,22 @@ export function raporExceli(l: readonly MusteriRaporu[]): Uint8Array {
 export function PanelRaporListesi({ v }: { v: PanelRaporlari }) {
   const s = useSuzgec(tanim(v.raporlar, v.tesisler), v.raporlar);
   const excel = () => baytIndir(`raporlar-${dosyaGunu()}.xlsx`, raporExceli(s.sonuc.liste), XLSX_TURU);
+  const zip = useTopluIndir();
+  const topluIndir = () => zip.indir(s.sonuc.liste.map((r) => ({ dosya: r.dosya, no: r.no, tesis: r.tesis })),
+    `${adParcasi(v.musteri?.kisa ?? "musteri")}-raporlar-${dosyaGunu()}.zip`);
+  const bos = !s.sonuc.liste.length;
   return (
     <>
       <SayfaBasi baslik="Raporlarınız" sayac={<Sayac s={s} />}
-        tuslar={<Tus tur="ikincil" ikon="file-check" onClick={excel} disabled={!s.sonuc.liste.length}>Excel indir</Tus>} />
+        tuslar={<>
+          <Tus tur="ikincil" ikon="file-check" onClick={excel} disabled={bos}>Excel indir</Tus>
+          <Tus ikon="download" onClick={topluIndir} disabled={bos || !!zip.ilerleme} aria-live="polite">
+            {zip.ilerleme ? `İndiriliyor ${zip.ilerleme}` : "Toplu indir (ZIP)"}
+          </Tus>
+        </>} />
       <p className={stil.alt}>{v.musteri?.unvan ?? "—"}</p>
       <PanelSekmeleri acikUygunsuz={v.acikUygunsuz} secili="/portal" />
+      {zip.hata && <SeritKap><Serit tur="hata" ikon="circle-alert">{zip.hata}</Serit></SeritKap>}
       <SuzgecliListe s={s} on="p" baslik="Raporlarınız" sutunlar={SUTUNLAR} anahtar={(r) => r.id} href={(r) => `/portal/r/${r.id}`}
         bosVeri={{ ikon: "file-text", baslik: "Henüz rapor yok", metin: "Raporlar imzalandığında burada görünür ve indirilebilir." }} />
     </>

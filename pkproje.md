@@ -2341,6 +2341,20 @@ revizyon, alan kopyalama, hafif kusur devri, meslek eşleşme denetimi).
 - Emsal ürünler: https://opwire.app/iso-17020-periyodik-kontrol-yazilimi/ · https://17020muayene.vidco.com.tr/ · https://akuple.com/asansor-kontrol-yazilimi/ · https://ensyazilim.com/
 
 ## 11 · Değişiklik günlüğü
+- 2026-10-05 (321): **K3 Müşteri paneli › Planlanan kontroller + toplu indirme (ZIP)** (maket musteri.html #/plan planCiz, "Toplu indir (ZIP)",
+  "Uygunsuz raporlar (ZIP)"; karar 81 "müşteri panelinde planlanan kontrol"; Ö3 2026-10-01 reisim: "Müşteri gözünde toplu indirme uygunsuzları
+  toplu indirme excel olarak indirme"). Göç **0032**: müşteri rolü planın YALNIZ tesis / tarih / durum sütunlarını okur (proje no, açıklama,
+  künye — firma adı, adres, SGK —, açan, red gerekçesi ve ekip yok), yalnız kendi tesis kapsamındaki AÇIK planlarda (Kabul bekliyor · Kabul
+  edildi · Denetimde; reddedilen ve tamamlanan plan "planlanan kontrol" değil) — kısıtlayıcı politika, yazma yok. Panelde üçüncü sekme
+  **Planlanan kontroller** (/portal/plan): görebildiği her tesis — en yakın açık planın tarihi (yoksa "Yok"; başka açık plan da varsa "+n plan
+  daha"), sonraki kontrol (tesisteki her ekipmanın SON raporunun sonraki kontrol tarihlerinin en yakını; 60 gün içindeyse uyarı), durum. Planı
+  Planlar modülünün `server/musteri-baglanti.ts`'i verir (panel plan tablosuna dokunmaz). **Toplu indir (ZIP)** (Raporlar) ve **Uygunsuz
+  raporlar (ZIP)** (Uygunsuzluklar): süzgeçteki raporların imzalı PDF'leri tarayıcıda oturumlu tek uçtan tek tek iner (müşteri rolünde — yetki
+  uçta), tesis klasörlü ZIP olur; tuşta ilerleme ("İndiriliyor 3 / 12"), bir dosya inemezse ZIP verilmez (eksik dosya yok), en çok 300 rapor.
+  Klasör / dosya adı yol olamaz (/ \ .. ve Windows'un yasak karakterleri). Yeni sunucu ucu yok. Kilit: musteri-paneli.test +1 (sütun sınırı —
+  no / açıklama / künye / açan / red gerekçesi / * reddedilir —, açık plan, kapsam, iki müşteri, başka firma, yazma ve ekip yasağı, en yakın plan
+  + sayısı), disa.test +1 (adlar), bozan +2 (sütun sınırı, açık plan süzgeci); e2e saha raporu sekmeler. Sonraki: sözleşmeler (322), muayene
+  personeli belgeleri (323).
 - 2026-10-05 (320): **K3 Müşteri paneli › Uygunsuzluklar + Excel** (maket musteri.html #/uygunsuz, "Uygunsuzları indir", Ö3; pkproje §1.1
   reisim: "uygunsuzları indir seçeneği olacak ve tüm uygunsuz raporları excel olarak indirip görebilecek ve exceldeki ilgili yere tıklayınca rapora
   gidebilecek … önceliğimiz müşteri kolaylığı"; 2026-10-01: "excel de link olmalı, linke tıklayınca ilgili rapor açılmalı. "rapor" yazsın").

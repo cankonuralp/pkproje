@@ -2,7 +2,9 @@
    geçici klasöre kopyalanır, bellekte bozulur, kopyadan koşulur.
    1. 0030'daki tesis kısıtı olmasaydı müşteri rolü kiracı politikasından geçen BÜTÜN tesisleri görürdü (başka müşterinin tesisleri).
    2. Uygulama rolü müşteri rolünü DEVRALSAYDI (INHERIT FALSE olmasaydı) kısıtlayıcı politikalar personel işlemine de uygulanır, firma ekranları
-      boş kalırdı. */
+      boş kalırdı.
+   3. (321, 0032) Plan sütun sınırı olmasaydı müşteri planın künyesini (firma adı, adres, SGK), açanı ve açıklamasını okurdu.
+   4. (321, 0032) Açık plan süzgeci olmasaydı müşteri reddedilen planı "planlanan kontrol" diye görürdü. */
 import assert from "node:assert/strict";
 import { copyFileSync, mkdirSync, mkdtempSync, readdirSync, readFileSync, rmSync, writeFileSync } from "node:fs";
 import { tmpdir } from "node:os";
@@ -24,13 +26,13 @@ let kume: GomuluKume;
 const gecici = mkdtempSync(join(tmpdir(), "musteri-paneli-bozan-"));
 const acilan: { supa: SupabaseBenzeri; havuz: Havuz }[] = [];
 
-/** göçleri bozarak Supabase taklidi veritabanı açar */
-async function bozuk(ad: string, eski: string, yeni: string) {
+/** göçleri bozarak (varsayılan 0030) Supabase taklidi veritabanı açar */
+async function bozuk(ad: string, eski: string, yeni: string, goc = "0030_") {
   const klasor = join(gecici, ad);
   mkdirSync(klasor);
   for (const g of readdirSync(GOC_KLASORU)) {
     if (!g.endsWith(".sql")) continue;
-    if (g.startsWith("0030_")) {
+    if (g.startsWith(goc)) {
       const k = readFileSync(join(GOC_KLASORU, g), "utf8");
       assert.ok(k.includes(eski), "bozulacak satır kaynakta yok");
       writeFileSync(join(klasor, g), k.replace(eski, yeni));
@@ -67,4 +69,29 @@ test("uygulama rolü müşteri rolünü devralınca personel işlemi de müşter
   const { havuz, A } = await bozuk("musteri_bozuk2", DEVRALMA, "GRANT probata_musteri TO probata_uygulama WITH INHERIT TRUE, SET TRUE;");
   const n = (await kiraciIcinde(havuz, A, (db) => db.sorgu<{ n: number }>("SELECT count(*)::int AS n FROM tesis"))).rows[0].n;
   assert.equal(n, 0, "personel işlemi müşteri kısıtına takıldı");
+});
+
+const PLAN_SUTUN = "GRANT SELECT (id, firma_id, tesis_id, baslangic, bitis, durum) ON plan TO probata_musteri;";
+const ACIK_PLAN = "USING (durum IN ('bekliyor', 'kabul', 'denetimde') AND musteri_tesis_gorur(tesis_id)";
+
+test("0032'deki sütun sınırı kalkınca müşteri planın künyesini ve açanını okur (kilidin koruduğu açık)", async () => {
+  const { havuz, A, m1 } = await bozuk("musteri_bozuk3", PLAN_SUTUN, "GRANT SELECT ON plan TO probata_musteri;", "0032_");
+  const r = await kiraciIcinde(havuz, A, (db) => db.sorgu("SELECT firma_adi, adres, sgk, acan, aciklama FROM plan"), { musteri: { id: m1, tesisler: null } });
+  assert.ok(Array.isArray(r.rows), "künye sütunları okundu");
+});
+
+test("0032'deki açık plan süzgeci kalkınca müşteri reddedilen planı görür", async () => {
+  const supaAd = "musteri_bozuk4";
+  const { havuz, A, m1 } = await bozuk(supaAd, ACIK_PLAN, "USING (musteri_tesis_gorur(tesis_id)", "0032_");
+  const supa = acilan.at(-1)!.supa;
+  const tesis = (await supa.sahip.query<{ id: string }>("SELECT id::text FROM tesis WHERE firma_id = $1 AND musteri_id = $2 LIMIT 1", [A, m1])).rows[0].id;
+  /* kurulum süper kullanıcıyla, tetiksiz (akış kuralları bu kanıtın konusu değil): reddedilmiş plan */
+  await supa.sahip.query("SET session_replication_role = replica");
+  try {
+    await supa.sahip.query(`INSERT INTO plan (firma_id, no, tesis_id, baslangic, bitis, durum, firma_adi, acan, red, red_eden, red_gerekce)
+      VALUES ($1, 'P-0126-001', $2, '2026-11-20', '2026-11-20', 'reddedildi', 'Deneme', 'Deneme', now(), 'Deneme', 'Başka tesisteyim')`, [A, tesis]);
+  } finally { await supa.sahip.query("SET session_replication_role = origin"); }
+  const n = (await kiraciIcinde(havuz, A, (db) => db.sorgu<{ n: number }>("SELECT count(*)::int AS n FROM plan WHERE durum = 'reddedildi'"),
+    { musteri: { id: m1, tesisler: null } })).rows[0].n;
+  assert.equal(n, 1, "reddedilen plan müşteriye göründü");
 });
