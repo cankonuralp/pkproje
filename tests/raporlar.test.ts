@@ -546,21 +546,22 @@ test("veritabanı: rapor Yeni açılır, türün yayındaki formatıyla, plandak
   await assert.rejects(deg("revizyon = 1"), /değişmez/);
   await assert.rejects(deg("format_id = $2", [FA.format2]), /daha yeni yayınlanmış/);
   await assert.rejects(deg("format_id = $2", [taslak]), /daha yeni yayınlanmış/, "taslak sürüme geçilmez");
-  /* geçişler: bu kalem yalnız Yeni → Teknik yönetici onayında */
-  await assert.rejects(deg("durum = 'onaylandi'"), /taslak durumundan onaylandi durumuna geçemez/);
-  await assert.rejects(deg("durum = 'imzali'"), /geçemez/);
+  /* geçişler: 311'de yalnız Yeni → onayda açıktı; 2026-10-05 (314, göç 0026) Yeni · onayda · onaylandı arası açıldı (onay, geri gönder,
+     durumu değiştir — tests/onaylar.test.ts). Tamamlandı'ya ve imzaya yalnız imza kalemiyle. */
+  await assert.rejects(deg("durum = 'imzali'"), /taslak durumundan imzali durumuna geçemez/);
+  await assert.rejects(deg("durum = 'imzada'"), /geçemez/);
   await deg("durum = 'onayda'");
   const s = (await sql<{ g: Date | null; ilk: Date | null }>(A, "SELECT gonderildi AS g, ilk_gonderim AS ilk FROM rapor WHERE id = $1", [x])).rows[0];
   assert.ok(s.g && s.ilk, "gönderme zamanı geçişte damgalanır");
   assert.deepEqual((await hareketler(x)).map((y) => y.slice(0, 3)), [["olustur", null, "taslak"], ["gonder", "taslak", "onayda"]]);
   await assert.rejects(deg("ekipman_bilgi = '{\"marka\": \"x\"}'::jsonb"), /yalnız Yeni rapor düzenlenir/);
-  await assert.rejects(deg("durum = 'onaylandi'"), /onayda durumundan onaylandi durumuna geçemez/);
-  await assert.rejects(deg("durum = 'taslak'"), /geçemez/);
+  await assert.rejects(deg("durum = 'imzali'"), /onayda durumundan imzali durumuna geçemez/);
+  await assert.rejects(deg("durum = 'taslak'"), /gerekçe en az 10/, "Yeni'ye dönüş gerekçesiz olmaz (0026)");
   /* tamamlanan (imzalı) rapor değişmez (ENGEL 6): o duruma geçiş sonraki kalemlerde — burada tetiksiz verilir */
   const su = kume.sahipIstemci(); await su.connect();
   try {
     await su.query("SET session_replication_role = replica");
-    await su.query("UPDATE rapor SET durum = 'imzali' WHERE id = $1", [x]);
+    await su.query("UPDATE rapor SET durum = 'imzali', onay = now() WHERE id = $1", [x]);   // 0026: imzalı raporda onay damgası var (CHECK)
   } finally { await su.end(); }
   await assert.rejects(deg("durum = 'onayda'"), /tamamlanan rapor değişmez/);
   await assert.rejects(deg("sonuc = 'uygun'"), /tamamlanan rapor değişmez/);
