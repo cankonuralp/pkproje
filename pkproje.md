@@ -2341,6 +2341,15 @@ revizyon, alan kopyalama, hafif kusur devri, meslek eşleşme denetimi).
 - Emsal ürünler: https://opwire.app/iso-17020-periyodik-kontrol-yazilimi/ · https://17020muayene.vidco.com.tr/ · https://akuple.com/asansor-kontrol-yazilimi/ · https://ensyazilim.com/
 
 ## 11 · Değişiklik günlüğü
+- 2026-10-05 (313–314 çapraz inceleme düzeltmeleri; dört bakış + her bulguya çürütme denemesi, 7 bulgu doğrulandı): (1) **eski raporun
+  fotoğraf sayısı** — 312'den önce açılan raporda `cevaplar.foto` tek sayıydı, yeni şemadan geçmiyordu: onay özeti "hepsi uygun" gösteriyor, Kaydet
+  gerçek cevapları boşuyla eziyordu → şema sayıyı boş kayda çevirir (sayılar zaten raporun listesinden hesaplanır); fotoğraf eklerken cevaplar
+  dosyadan önce okunur (depoda sahipsiz dosya kalmaz). (2) **mesai yarışı** — eşzamanlı açılışlar denetçi başına danışma kilidiyle sıraya girer.
+  (3) **gerekçe uzunluğu** kod noktasıyla (veritabanıyla aynı; "📷" bir karakter). (4) **onay penceresi** hata yanıtında yazılanı korur, kapatılanı
+  yeniden açmaz; işlem sürerken alanlar kapalı. (5) **Tüm raporlar** sıralama seçicisi (en yeni önce, rapor no, durum, denetçi). (6) **kopya
+  künyesi** denetçinin plandaki gördüğü künye (kaynağın eski künyesi taşınmaz). (7) **formatı güncelle**: cevabı yeni cevap setinde olmayan madde
+  sessizce "Uygun"a dönmez — seçim boşalır, açıklama kalır, bildirim "N maddenin cevabı yeni cevap setinde yok, yeniden seçin". Elenen (çürütüldü):
+  durumu değiştirde ENGEL 2 / 5 (yöneticinin bilinçli kararı, maket), kopyada cihaz zimmeti (aynı denetçi, gönderimde yeniden denetlenir).
 - 2026-10-05 (316): **K3 Kesin PDF motoru: başsız Chromium, "PDF indir"** (KOD-GECIS: HTML'den PDF'e başsız Chromium; araştırma: "önce
   Chromium ölçümü"; reisim 2026-09-28: "ön izle halinde PDF halini indirebilmeliyim"). `src/belge/pdf.ts`: önizlemeyle AYNI çizici ve CSS, A4,
   arka plan renkleriyle; yazı tipi (Carlito) ve fotoğraflar veri adresi olarak gömülü, sayfa dışarıya gitmez (ağ istekleri kesilir); her çağrı
@@ -2350,6 +2359,7 @@ revizyon, alan kopyalama, hafif kusur devri, meslek eşleşme denetimi).
   1.63 ile aynı Chromium sürümü; next.config: derlemeye katılmaz, yalnız PDF basan uçların izine eklenir). Ön izleme sayfasında **PDF indir**
   (/raporlar/<id>/pdf, imzasız; raporu görene, öteki 404). Vercel ölçümü için yalnız önizleme dağıtımında açık uç (/api/olcum/pdf, uydurma
   belge; yayında 404). Yerel ölçüm (Edge 140, Windows): ZPKR01 70 KB / 3,3 sn (soğuk), ZPKR02 75 KB / 1,5 sn, kompresör 55 KB / 0,9 sn.
+  **Vercel ölçümü (fra1, önizleme dağıtımı, ZPKR02 uydurma):** soğuk 3,3 sn, sıcak 0,47 sn, 66 KB — istek içinde üretim yeterli.
   Ertelenen: her sayfada tekrar eden başlık tablosu (şimdi yalnız ilk sayfada) ve sayfa numarası — imza kalemiyle. Kilit: tests/pdf.test.ts
   (gerçek Chromium: üç şablonda A4 PDF, Carlito gömülü, betik / dış adres yok), belge.test +1 (HTML yazıcı = React), bozan +1 (yazıcı kaçışı),
   e2e Ön izle'de PDF indir (dosya adı, %PDF-).

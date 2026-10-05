@@ -848,3 +848,29 @@ test("belge verisi: raporu gören alır (yazan, branş yöneticisi, planlama); �
   tamam(await a(FA.den1, (db) => fotoSil(db, FA.den1, r.id, d.surum, d.fotolar[0].dosya)));
   assert.equal((await bv(FA.den1))!.belge.fotolar.length, 0, "silinen fotoğraf belgede yok");
 });
+
+/* 2026-10-05 (313-314 çapraz inceleme): yeni sürümde cevap seti değişmişse eski cevap sessizce "Uygun"a dönmez — seçim boşalır (Onaya gönder
+   yeniden seçtirir), açıklama kalır, bildirim söyler */
+test("formatı güncelle: cevabı yeni cevap setinde olmayan madde boşalır, açıklaması kalır; bildirim yeniden seçtirir", async () => {
+  const id = await yeniPlan();
+  const r = tamam(await olustur(FA.den1, id, FA.ekp["HT-A1"]));
+  const sira = await a(FA.yon, async (db) => {
+    const y = (await db.sorgu<{ id: string; tanim: unknown }>("SELECT id::text, tanim FROM rapor_format WHERE tur_id = $1 AND durum = 'yayinda'", [FA.tur])).rows[0];
+    const t = structuredClone(y.tanim) as typeof KOMP;
+    for (const x of t.bolumler) if (x.blok === "liste") x.cevaplar = ["Uygun", "Kusurlu", "Uygulanamaz"];
+    const once = (await db.sorgu<{ surum: number }>("SELECT surum FROM rapor_format WHERE tur_id = $1 AND durum = 'taslak'", [FA.tur])).rows[0]?.surum ?? null;
+    const ts = tamam(await taslakBaslat(db, FA.yon, FA.tur, `surum:${y.id}`, once));
+    const k = tamam(await taslakKaydet(db, FA.yon, ts.id, ts.surum, t));
+    return tamam(await yayinla(db, FA.yon, ts.id, k.surum, "")).sira;
+  });
+  const v = (await sr(FA.den1, r.id))!;
+  const g = girdi();
+  const madde = Object.fromEntries(Object.keys(v.cevaplar.madde).map((m) => [m, { c: "Uygun" }]));
+  madde[MADDELER[0].id] = { c: "Uygun değil", not: "Korozyon" } as never;
+  const el = { ...g, cevaplar: { ...g.cevaplar, madde } };
+  assert.deepEqual(await a(FA.den1, (db) => raporFormatGuncelle(db, FA.den1, r.id, v.surum, el)),
+    { durum: "tamam", id: r.id, bildirim: `Format güncellendi (sürüm ${sira}): madde değişmedi; 1 maddenin cevabı yeni cevap setinde yok, yeniden seçin.` });
+  const d = (await sr(FA.den1, r.id))!;
+  assert.deepEqual(d.cevaplar.madde[MADDELER[0].id], { c: "", not: "Korozyon", foto: 0 }, "seçim boş, açıklama kaldı");
+  assert.deepEqual(d.cevaplar.madde[MADDELER[1].id], { c: "Uygun", foto: 0 });
+});

@@ -100,6 +100,8 @@ async function acilabilirPlan(db: Sorgulayici, kim: Kisi, planId: string): Promi
   if (plan.baslangic > bugun) {
     return { hata: { durum: "red", neden: `Plan günü ${tarihNo(plan.baslangic)} henüz gelmedi (bugün ${tarihNo(bugun)}). Rapor plan gününden itibaren oluşturulur; geçmiş günlere açık, ileri tarihe kapalı.` } };
   }
+  /* aynı denetçinin eşzamanlı açılışları sıraya girer (işlem sonuna dek): ikinci istek birincinin açtığı raporu sayar — süre yarışla aşılmaz */
+  await db.sorgu("SELECT pg_advisory_xact_lock(hashtext('mesai:' || $1))", [personelId]);
   if ((await mesaiDurumu(db, personelId, bugun)).dolu) return { hata: { durum: "red", neden: MESAI_DOLU } };
   return { p: { ...plan, personelId } };
 }
@@ -117,7 +119,7 @@ function kopyaCevaplari(t: FormatTanimi, kaynak: unknown): Cevaplar {
 }
 
 /** raporu açar (oluştur ve kopya ortak): ekipman planda ve etkin, bu planda etkin raporu yok (203), türün YAYINDA formatı var; ilk rapor planı
-    Denetimde yapar. Kopyada künye, ekipman bilgileri, cihazlar ve cevaplar kaynaktan (kopya kaynağın künyesiyle açılır — maket kopyala). */
+    Denetimde yapar. Kopyada ekipman bilgileri, cihazlar ve cevaplar kaynaktan; künye her zaman denetçinin plandaki gördüğü künye. */
 async function raporAc(db: Sorgulayici, kim: Kisi, plan: AcilanPlan, ekipmanId: string, kopya: { r: RaporSatiri; konum: string | null } | null,
   bildirim: (no: string, kod: string) => string): Promise<RaporYazma> {
   if (!(await plandakiEkipman(db, plan.id, ekipmanId))) return { durum: "yok" };
@@ -136,13 +138,15 @@ async function raporAc(db: Sorgulayici, kim: Kisi, plan: AcilanPlan, ekipmanId: 
   const k = kopya?.r;
   const iz: Iz = { kim: kim.ad, ne: k ? "rapor.kopya" : "rapor.olustur", gerekce: `${no} · ${plan.no} · ${e.kod}${k ? ` · kaynak ${k.no}` : ""}` };
   const ortak = { no, plan_id: plan.id, ekipman_id: ekipmanId, tur_id: tur.id, format_id: format.id, personel_id: plan.personelId, durum: "taslak" };
+  /* künye her zaman denetçinin plandaki GÖRDÜĞÜ künye (kopyada da): kaynağın eski künyesi taşınmaz, Güncelle tutarlı kalır (çapraz inceleme) */
+  const kunye = { ...plan.kunye, eposta: null, tel: null, ...(await iletisimi(db, plan.tesisId)) };
   const r = k ? await ekle(db, RAPOR, {
-    ...ortak, kunye: k.kunye, kunye_surum: k.kunye_surum,
+    ...ortak, kunye, kunye_surum: plan.kunyeSurum,
     /* ekipman bilgileri kaynaktan; seri no yeni ekipmanın (sorulmaz, raporda yazılır), kullanım yeri pencereden (boşsa kaynaktaki) */
     ekipman_bilgi: { ...k.ekipman_bilgi, seri: null, konum: kopya.konum ?? k.ekipman_bilgi.konum },
     cevaplar: kopyaCevaplari(format.tanim, k.cevaplar), cihazlar: jsonDizi(k.cihazlar), kopya_kaynak: k.id,
   }, iz) : await ekle(db, RAPOR, {
-    ...ortak, kunye: { ...plan.kunye, eposta: null, tel: null, ...(await iletisimi(db, plan.tesisId)) }, kunye_surum: plan.kunyeSurum,
+    ...ortak, kunye, kunye_surum: plan.kunyeSurum,
     ekipman_bilgi: { marka: e.marka, model: e.model, seri: e.seri, imal: e.imal ? String(e.imal) : null, konum: e.konum, amac: null, bolum: null } satisfies EkipmanBilgisi,
     cevaplar: ilkCevaplar(format.tanim),
   }, iz);
@@ -439,10 +443,13 @@ export async function fotoEkle(db: Sorgulayici, depo: Depo, kim: Kisi, firmaId: 
     if (b?.blok !== "foto") return { durum: "gecersiz", hatalar: { foto: "Fotoğrafın yeri bulunamadı." } };
     if (fotolar.filter((f) => f.bolum === b.id && !f.madde).length >= b.enCok) return { durum: "gecersiz", hatalar: { foto: `En çok ${b.enCok} fotoğraf.` } };
   }
+  /* cevaplar dosyadan ÖNCE okunur: okunamazsa depoya sahipsiz dosya yazılmaz */
+  const cev = Cevaplar.safeParse(e.r.cevaplar);
+  if (!cev.success) return { durum: "red", neden: "Raporun cevapları okunamadı; raporu yenileyip yeniden deneyin." };
   const y = await dosyaYukle(db, depo, { firmaId, modul: DOSYA_MODULU, kayitId: id, ad: dosya.ad, bayt: dosya.bayt, izinli: ["jpeg", "png"], kim: kim.ad, yukleyen: kim.id });
   if (!y.tamam) return { durum: "gecersiz", hatalar: { foto: y.neden === "tur" ? "Yalnız JPEG ya da PNG fotoğraf." : y.neden === "buyuk" ? "Fotoğraf çok büyük (en çok 8 MB)." : "Fotoğraf okunamadı." } };
   const yeni = [...fotolar, { dosya: y.id, ad: y.ad, bolum: hedef.bolum, madde: hedef.madde }];
-  const cevaplar = sayiliCevaplar(Cevaplar.parse(e.r.cevaplar), { cihazlar: e.r.cihazlar, fotolar: yeni });
+  const cevaplar = sayiliCevaplar(cev.data, { cihazlar: e.r.cihazlar, fotolar: yeni });
   return sonuc(await guncelle(db, RAPOR, id, surum, { fotolar: jsonDizi(yeni), cevaplar }, { kim: kim.ad, ne: "rapor.foto_ekle", gerekce: `${e.r.no} · ${y.ad}` }), id, `${y.ad} eklendi.`);
 }
 
@@ -500,20 +507,22 @@ export async function raporKopyala(db: Sorgulayici, kim: Kisi, id: string, surum
 
 /* ── FORMATI GÜNCELLE (211; RAPOR-FORMAT §5: rapor açıldığı sürümle kalır, Yeni raporda yazan güncel sürüme geçirebilir) ───────────── */
 /** cevapları yeni sürüme taşır: kimliği eşleşen alan, madde (seçim yeni setteyse), ölçüm tablosu ve test değeri korunur; yeni madde ilk cevapla */
-function formataUyarla(t: FormatTanimi, c: Cevaplar): { cevaplar: Cevaplar; eklenen: number } {
+function formataUyarla(t: FormatTanimi, c: Cevaplar): { cevaplar: Cevaplar; eklenen: number; dusen: number } {
   const y = ilkCevaplar(t);
-  let eklenen = 0;
+  let eklenen = 0, dusen = 0;
   for (const b of t.bolumler) {
     if (b.blok === "liste") for (const g of b.gruplar) for (const m of g.maddeler) {
       const x = c.madde[m.id];
       if (!x) eklenen++;
       else if (b.cevaplar.includes(x.c)) y.madde[m.id] = { ...x };
+      /* cevabı yeni sette yok: sessizce ilk cevaba dönmez — seçim boşalır (Onaya gönder yeniden seçtirir), açıklama ve derece kalır */
+      else { y.madde[m.id] = { ...x, c: "" }; dusen++; }
     }
     if (b.blok === "bilgi") for (const a of b.alanlar) if (Object.hasOwn(c.alan, a.id)) y.alan[a.id] = c.alan[a.id];
     if (b.blok === "olcum" && Object.hasOwn(c.tablo, b.id)) y.tablo[b.id] = c.tablo[b.id];
     if (b.blok === "test") for (const d of b.degerler) if (Object.hasOwn(c.deger, d.id)) y.deger[d.id] = c.deger[d.id];
   }
-  return { cevaplar: { ...y, sonuc: c.sonuc, yorum: c.yorum }, eklenen };
+  return { cevaplar: { ...y, sonuc: c.sonuc, yorum: c.yorum }, eklenen, dusen };
 }
 /** fotoğrafların yeri yeni sürümde yoksa (bölüm ya da madde kalktı) formatın ilk fotoğraf bölümüne taşınır — fotoğraf kaybolmaz, silinebilir kalır */
 function fotolariUyarla(t: FormatTanimi, l: RaporFoto[]): RaporFoto[] {
@@ -534,7 +543,7 @@ export async function raporFormatGuncelle(db: Sorgulayici, kim: Kisi, id: string
   const g = dogrula(RaporKaydi, kayit);
   if (!g.tamam) return { durum: "gecersiz", hatalar: g.hatalar };
   const v = g.veri;
-  const { cevaplar, eklenen } = formataUyarla(yeni.tanim, v.cevaplar);
+  const { cevaplar, eklenen, dusen } = formataUyarla(yeni.tanim, v.cevaplar);
   const fotolar = fotolariUyarla(yeni.tanim, e.r.fotolar);
   const c = sayiliCevaplar(cevaplar, { cihazlar: e.r.cihazlar, fotolar });
   const ilk = yeni.tanim.bolumler.find((b) => b.blok === "liste");
@@ -542,7 +551,8 @@ export async function raporFormatGuncelle(db: Sorgulayici, kim: Kisi, id: string
     format_id: yeni.id, ekipman_bilgi: v.ekipman, bas: zamanYaz(v.tarih.bas), bit: zamanYaz(v.tarih.bit), sonraki: v.tarih.sonraki, takip: v.tarih.takip,
     rapor_tarihi: v.tarih.rapor, cevaplar: c, sonuc: c.sonuc || null, fotolar: jsonDizi(fotolar),
   }, { kim: kim.ad, ne: "rapor.format_guncelle", gerekce: `${e.r.no} · sürüm ${eski.sira} → ${yeni.sira}` });
-  return sonuc(r, id, `Format güncellendi (sürüm ${yeni.sira}): ${eklenen ? `${eklenen} yeni madde eklendi (${ilk?.blok === "liste" ? ilk.cevaplar[0] : "Uygun"})` : "madde değişmedi"}; cevaplar korundu.`);
+  const madde = eklenen ? `${eklenen} yeni madde eklendi (${ilk?.blok === "liste" ? ilk.cevaplar[0] : "Uygun"})` : "madde değişmedi";
+  return sonuc(r, id, `Format güncellendi (sürüm ${yeni.sira}): ${madde}; ${dusen ? `${dusen} maddenin cevabı yeni cevap setinde yok, yeniden seçin.` : "cevaplar korundu."}`);
 }
 
 /* ── GÖZDEN GEÇİRME (Onaylar'ın onay ekranı; maket onaylar ozet; 17020 kayıt gözden geçirme — pkproje §4.9) ─────────────────────────── */

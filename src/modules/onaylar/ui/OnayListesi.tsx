@@ -18,6 +18,12 @@ export const zamanYaz = (z: string) => TR_ZAMAN.format(new Date(z)).replace(",",
 export const SONUC_ROZET: Record<string, readonly [string, RozetTuru]> = { uygun: ["Uygun", "tamam"], uygun_degil: ["Uygun değil", "red"] };
 const DURUM_SIRA: Record<RaporDurumu, number> = { taslak: 1, onayda: 2, onaylandi: 3, imzada: 4, imzali: 5 };
 const benzersiz = <T,>(l: readonly T[]) => [...new Set(l)];
+const SIRA_AD: Record<string, string> = { no: "Rapor no", durum: "Durum", denetci: "Denetçi" };
+function siraEtiketi(v: string) {
+  if (v === "varsayilan") return "En yeni önce";
+  const [s, y] = v.split("-"), artan = y === "artan";
+  return `${SIRA_AD[s] ?? s}: ${s === "durum" ? (artan ? "akış sırası" : "ters akış") : artan ? "A → Z" : "Z → A"}`;
+}
 
 const noHucre = (r: OnaySatiri) => <><Link className={stil.kod} href={`/onaylar/${r.id}`}>{r.no}</Link><AltSatir><Kirp>{`${r.musteri} / ${r.tesis}`}</Kirp></AltSatir></>;
 const ekipmanHucre = (r: OnaySatiri) => <span className={stil.hucreSatir}><span className={stil.kod}>{r.ekipmanKod}</span><Kirp>{r.turAd}</Kirp></span>;
@@ -75,8 +81,11 @@ function tumTanimi(l: readonly OnaySatiri[]): SuzgecTanimi<OnaySatiri> {
         gecer: (r, v) => v === "tumu" || r.durum === v },
       { k: "kisi", ad: "Denetçi", secenek: () => [["tumu", "Tümü"], ...benzersiz(l.map((r) => r.denetci)).sort((a, b) => a.localeCompare(b, "tr")).map((x) => [x, x] as const)],
         gecer: (r, v) => v === "tumu" || r.denetci === v },
+      { k: "sira", ad: "Sıralama", siralama: true, secenek: () => ["varsayilan", "no-artan", "no-azalan", "durum-artan", "durum-azalan", "denetci-artan", "denetci-azalan"]
+        .map((x) => [x, siraEtiketi(x)] as const), gecer: () => true },
     ],
     siraAnahtari: { no: (r) => r.no, durum: (r) => DURUM_SIRA[r.durum], denetci: (r) => r.denetci },
+    varsayilanSira: (a, b) => b.olustu.localeCompare(a.olustu),
   };
 }
 

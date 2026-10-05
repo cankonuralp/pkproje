@@ -153,7 +153,9 @@ test("kurallar: kusur derecesi açıksa sorulur ve ağır işaretlenir (AA9 baş
 
 test("cevaplar şeması sınırları tutar (istemciden gelen rapor içeriği)", () => {
   assert.equal(Cevaplar.safeParse({ foto: { foto: -1 } }).success, false);
-  assert.equal(Cevaplar.safeParse({ foto: 3 }).success, false, "2026-10-05 (C18): fotoğraf sayısı bölüm başına");
+  /* 2026-10-05 (C18): fotoğraf sayısı bölüm başına. Aynı gün çapraz inceleme: eski satırın tek sayısı reddedilmez, boş kayda çevrilir (sayı olarak
+     kabul edilmez — sunucu sayıları raporun kendi listesinden hesaplar); eskiden burada "reddedilir" bekleniyordu */
+  assert.deepEqual(Cevaplar.parse({ foto: 3 }).foto, {}, "sayı bölüm başına kayda çevrilmez, boşalır");
   assert.equal(Cevaplar.safeParse({ sonuc: "belki" }).success, false);
   assert.equal(Cevaplar.safeParse({ tablo: { a: Array.from({ length: 301 }, () => ({})) } }).success, false);
   assert.equal(Cevaplar.safeParse({ alan: { a: "x".repeat(2001) } }).success, false);
@@ -178,4 +180,13 @@ test("fotoğraf ve kusur açıklaması: bölüm başına sayı, şablonda en az 
   t.kurallar.foto = true;
   const f = degerlendir(t, C({ madde: { k1: { c: "Uygun değil", not: "x" }, k2: { c: "Uygun değil", not: "y", foto: 1 } } }));
   assert.ok(f.eksikler.some((e) => e.alan === "k1.foto") && !f.eksikler.some((e) => e.alan === "k2.foto"));
+});
+
+/* 2026-10-05 (313-314 çapraz inceleme): 312'den önce açılan raporlarda foto tek sayıydı — şema geriye uyumlu okur (sayı → boş kayıt; sunucu
+   sayıları raporun kendi listesinden yeniden hesaplar). Yoksa eski satır şemadan geçmez, cevaplar boş görünür ve Kaydet gerçek cevapları silerdi. */
+test("cevaplar: eski raporun sayı olan foto alanı okunur (boş kayıt), madde cevapları kaybolmaz", () => {
+  const c = Cevaplar.parse({ madde: { k1: { c: "Uygun değil", not: "Korozyon" } }, foto: 0 });
+  assert.deepEqual([c.foto, c.madde.k1], [{}, { c: "Uygun değil", not: "Korozyon" }]);
+  assert.deepEqual(Cevaplar.parse({ foto: 3 }).foto, {});
+  assert.equal(Cevaplar.safeParse({ foto: "3" }).success, false, "sayı dışında yanlış tür yine reddedilir");
 });

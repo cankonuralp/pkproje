@@ -34,7 +34,8 @@ export function OnayEkrani({ v, belge }: { v: Veri; belge: ReactNode }) {
 
   /* sonuç: sıradaki rapora ya da kuyruğa (onay, geri) · aynı ekranda (onayı geri al, durum) */
   const bitti = (y: OnayYaniti, git: boolean) => {
-    if (!y.tamam) { if (y.hatalar && pen) setPen({ ...pen, hatalar: y.hatalar }); else { setPen(null); setGenel(y.genel ?? "İşlem yapılamadı."); } return; }
+    /* işlevsel güncelleme: bekleme sırasında yazılan metin korunur, kapatılan pencere yeniden açılmaz */
+    if (!y.tamam) { if (y.hatalar) { const h = y.hatalar; setPen((p) => (p ? { ...p, hatalar: h } : p)); } else { setPen(null); setGenel(y.genel ?? "İşlem yapılamadı."); } return; }
     setPen(null); setGenel(null); bildir(y.bildirim ?? "Kaydedildi.");
     if (git) router.push(y.sonraki ? `/onaylar/${y.sonraki}` : "/onaylar"); else router.refresh();
   };
@@ -71,9 +72,9 @@ export function OnayEkrani({ v, belge }: { v: Veri; belge: ReactNode }) {
         {belge}
       </Bolum>
 
-      <Pencere acik={!!pen} baslik={`${pen?.tur === "durum" ? "Durumu değiştir" : "Geri gönder"} · ${r.no}`} onKapat={() => setPen(null)} odak={pen?.tur === "durum" ? "input[type=radio]" : `#${ID.gerekce}`}
+      <Pencere acik={!!pen} baslik={`${pen?.tur === "durum" ? "Durumu değiştir" : "Geri gönder"} · ${r.no}`} onKapat={() => { if (!bekliyor) setPen(null); }} odak={pen?.tur === "durum" ? "input[type=radio]" : `#${ID.gerekce}`}
         alt={<>
-          <Tus tur="ikincil" onClick={() => setPen(null)}>Vazgeç</Tus>
+          <Tus tur="ikincil" disabled={bekliyor} onClick={() => setPen(null)}>Vazgeç</Tus>
           <Tus ikon={pen?.tur === "durum" ? "refresh-cw" : "undo-2"} disabled={bekliyor} onClick={gonder}>{pen?.tur === "durum" ? "Durumu değiştir" : "Geri gönder"}</Tus>
         </>}>
         {pen?.tur === "durum" && (
@@ -81,7 +82,7 @@ export function OnayEkrani({ v, belge }: { v: Veri; belge: ReactNode }) {
             <legend>Şu an: {durumAd}</legend>
             {DURUM_HEDEF.filter((d) => d !== r.durum).map((d) => (
               <label key={d} className={stil.secim}>
-                <input type="radio" name={ID.hedef} value={d} checked={pen.hedef === d} onChange={() => setPen({ ...pen, hedef: d, hatalar: {} })} />
+                <input type="radio" name={ID.hedef} value={d} checked={pen.hedef === d} disabled={bekliyor} onChange={() => setPen((p) => (p ? { ...p, hedef: d, hatalar: {} } : p))} />
                 <span>{RAPOR_DURUM[d][0]}</span>
               </label>
             ))}
@@ -91,7 +92,7 @@ export function OnayEkrani({ v, belge }: { v: Veri; belge: ReactNode }) {
         <Alan id={ID.gerekce} etiket="Gerekçe" zorunlu={zorunlu} hata={pen?.hatalar.gerekce}>
           <textarea id={ID.gerekce} className={stil.gerekce} maxLength={400} value={pen?.gerekce ?? ""} aria-invalid={!!pen?.hatalar.gerekce || undefined}
             aria-describedby={pen?.hatalar.gerekce ? ipucuId(ID.gerekce) : undefined} placeholder="Hangi bölümde ne eksik ya da yanlış"
-            onChange={(e) => pen && setPen({ ...pen, gerekce: e.target.value, hatalar: { ...pen.hatalar, gerekce: "" } })} />
+            readOnly={bekliyor} onChange={(e) => { const g = e.target.value; setPen((p) => (p ? { ...p, gerekce: g, hatalar: { ...p.hatalar, gerekce: "" } } : p)); }} />
         </Alan>
       </Pencere>
     </>

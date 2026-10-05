@@ -110,7 +110,9 @@ export const Cevaplar = z.object({
   deger: z.record(z.string(), z.string().max(200)).default({}),
   /** fotoğraf bölümü başına fotoğraf sayısı (2026-10-05, C18: tek sayı iki fotoğraf bölümünü — termal ve fotoğraflar — ayırt edemiyordu);
       sunucu raporun kendi listesinden sayar */
-  foto: z.record(z.string(), z.number().int().min(0).max(200)).default({}),
+  /* 2026-10-05 (313-314 çapraz inceleme): 312'den önce açılan raporda tek sayı yazılıydı — sayı gelirse boş kayıt sayılır (sunucu sayıları
+     raporun kendi fotoğraf listesinden yeniden hesaplar, bilgi kaybı yok); yoksa eski satır şemadan geçmez, cevaplar boş görünürdü */
+  foto: z.preprocess((x) => (typeof x === "number" ? {} : x), z.record(z.string(), z.number().int().min(0).max(200))).default({}),
   cihaz: z.number().int().min(0).max(50).default(0),
   sonuc: z.enum(["", "uygun", "uygun_degil"]).default(""),
   yorum: z.string().max(4000).default(""),

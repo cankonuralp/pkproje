@@ -167,6 +167,10 @@ test("geri gönder: gerekçe ≥ 10 (sunucu ve veritabanı); rapor Yeni'ye döne
   assert.deepEqual(await a(FA.mek, (db) => geriGonder(db, FA.mek, h1, 1, { gerekce: "kısa" })),
     { durum: "gecersiz", hatalar: { gerekce: "Gerekçe en az 10 karakter olmalı: denetçi neyi düzelteceğini bilmeli." } });
   assert.equal((await a(FA.mek, (db) => geriGonder(db, FA.mek, h1, 1, { gerekce: "         x          " }))).durum, "gecersiz", "boşluklar sayılmaz");
+  /* 2026-10-05 (çapraz inceleme): karakter veritabanı gibi kod noktasıyla sayılır — UTF-16'da 11, gerçekte 9 karakter: sunucu reddeder (yakalanmamış
+     veritabanı hatası yerine) */
+  assert.deepEqual(await a(FA.mek, (db) => geriGonder(db, FA.mek, h1, 1, { gerekce: "Fotoyok\u{1F4F7}\u{1F4F7}" })),
+    { durum: "gecersiz", hatalar: { gerekce: "Gerekçe en az 10 karakter olmalı: denetçi neyi düzelteceğini bilmeli." } });
   assert.equal((await a(FA.yon, (db) => geriGonder(db, FA.yon, h1, 1, { gerekce: "Test değerleri eksik" }))).durum, "yetkisiz");
   const r = tamam(await a(FA.mek, (db) => geriGonder(db, FA.mek, h1, 1, { gerekce: "  Test değerleri   eksik  " })));
   assert.match(r.bildirim, /^DA-\S+ geri gönderildi; Deneme Bir raporun üstünde gerekçeyi görür\.$/);
