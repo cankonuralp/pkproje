@@ -53,8 +53,9 @@ test("17 modül, numaralar tekil; menüde olmayanlar 1 (Personel'in içinde), 6,
    vitrin (yayında 404). Oturumsuz açılan her rota adıyla burada: listeye eklenmeyen yeni bir açık rota testi düşürür (sızma kapısı). */
 const ACIK_ROTALAR = ["giris"];
 const GELISTIRME_ROTALARI = ["vitrin"];
-/* 2026-10-04 (K1, dosya ucu): api/ yalnız tanımlı uçları taşır — her uç oturumu ve yetkiyi kendisi denetler (09-A2) */
-const API_UCLARI = ["dosya", "surum", "tanim"];
+/* 2026-10-04 (K1, dosya ucu): api/ yalnız tanımlı uçları taşır — her uç oturumu ve yetkiyi kendisi denetler (09-A2).
+   2026-10-05 (316): olcum — PDF motorunun Vercel ölçümü, oturumsuz ama YALNIZ önizleme dağıtımında (aşağıdaki test kilitler; yayında 404) */
+const API_UCLARI = ["dosya", "olcum", "surum", "tanim"];
 const klasorlerOf = (yol: string) => readdirSync(yol).filter((ad) => statSync(join(yol, ad)).isDirectory()).sort();
 
 test("her modülün rota klasörü var ve src/app'te modül dışı rota yok", () => {
@@ -104,4 +105,12 @@ test("sunucu eylemi dosyaları yalnız '…Eylemi' işlevlerini dışa açar", (
     assert.deepEqual(disari.filter((x) => !/^function \w+Eylemi$/.test(x)), [], ad);
     assert.ok(!/^export\s*\{/m.test(m), `${ad}: toplu dışa açma yok`);
   }
+});
+
+/* 2026-10-05 (316): ölçüm ucu oturumsuz — yalnız Vercel önizleme dağıtımında açık; denetim her şeyden önce, yayında ve yerelde 404 */
+test("api/olcum yalnız önizleme dağıtımında: ilk iş VERCEL_ENV denetimi, değilse 404", () => {
+  const kaynak = readFileSync(join(KOK, "src", "app", "api", "olcum", "pdf", "route.ts"), "utf8");
+  const govde = kaynak.slice(kaynak.indexOf("export async function GET"));
+  assert.match(govde, /^export async function GET\(\) \{\n {2}if \(process\.env\.VERCEL_ENV !== "preview"\) return new Response\("Bulunamadı", \{ status: 404/);
+  assert.deepEqual(klasorlerOf(join(KOK, "src", "app", "api", "olcum")), ["pdf"]);
 });
