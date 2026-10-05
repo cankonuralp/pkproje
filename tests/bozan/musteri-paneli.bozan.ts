@@ -121,7 +121,8 @@ test("0033'teki son sürüm şartı kalkınca revizyonla geçersiz kalmış sür
     const rapor = "11111111-1111-4111-8111-111111111111", k = "22222222-2222-4222-8222-222222222222";
     const surum = async (rev: number) => (await q(`INSERT INTO rapor_surumu (firma_id, rapor_id, revizyon, no, plan_id, ekipman_id, tur_id, format_id, tesis_id, musteri_id,
       imzasiz_dosya, imzali_dosya, imzali_sha256, imza_yontem, kunye, personel, icerik)
-      VALUES ($1, $2, $3, 'DA-0126-0001', $4, $4, $4, $4, $5, $6, $4, $4, $7, 'dosya', '{}', '{}', '{}') RETURNING id::text`, [A, rapor, rev, k, t, m1, HEX(rev)])).rows[0].id;
+      VALUES ($1, $2, $3, $8, $4, $4, $4, $4, $5, $6, $4, $4, $7, 'dosya', '{}', '{}', '{}') RETURNING id::text`,
+      [A, rapor, rev, k, t, m1, HEX(rev), rev ? `DA-0126-0001-R${rev}` : "DA-0126-0001"])).rows[0].id;
     const r0 = await surum(0), r1 = await surum(1);
     await q(`INSERT INTO uygunsuzluk (firma_id, surum_id, rapor_id, ekipman_id, tesis_id, musteri_id, kaynak, ref, metin, kapanis, kapatan_surum, kapandi)
       VALUES ($1, $2, $3, $4, $5, $6, 'madde', 'k1', 'Eski sürümün kusuru', 'giderildi', $7, now())`, [A, r0, rapor, k, t, m1, r1]);
