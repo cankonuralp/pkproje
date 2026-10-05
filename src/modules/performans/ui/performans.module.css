@@ -1,0 +1,19 @@
+/* Performans ekranları (maket.css .a-pano-anahtar, .a-pano-aralik, .a-pano-donem, .a-sekme[aria-pressed], .a-ad-bag, .a-sayi) — ⛔ çıplak renk yok (2.9) */
+.anahtar { display: flex; flex-wrap: wrap; align-items: center; gap: 8px 12px; margin: 0 0 16px; }
+.grup { display: inline-flex; flex-wrap: wrap; max-width: 100%; gap: 2px; padding: 3px; border: 1px solid var(--kenar-alan); border-radius: calc(var(--tus-y) / 2 + 4px); background: var(--kart); }
+.sekme {
+  min-height: var(--tus-y); padding: 0 14px; display: inline-flex; align-items: center; border: 0; border-radius: var(--r-tam);
+  background: transparent; color: var(--yazi2); font: inherit; font-weight: 600; white-space: nowrap; cursor: pointer;
+}
+.sekme[aria-pressed="true"] { background: var(--zemin2); color: var(--yazi); }
+.aralik { display: flex; flex-wrap: wrap; align-items: flex-end; gap: 8px 12px; }
+.donem { margin: 0; color: var(--yazi2); font-size: var(--boy-kucuk); }
+.ad {
+  display: inline-flex; align-items: center; min-height: var(--tus-y); color: var(--onay-yazi); font-weight: 600;
+  text-decoration: underline; text-decoration-color: transparent; text-underline-offset: 3px;
+}
+.ad:hover { text-decoration-color: currentColor; }
+.no { color: var(--onay-yazi); font-weight: 600; font-variant-numeric: tabular-nums; }
+.sayi { font-variant-numeric: tabular-nums; }
+.uyari { color: var(--hata-yazi); font-weight: 600; }
+.ozet { margin: 0; color: var(--yazi2); }

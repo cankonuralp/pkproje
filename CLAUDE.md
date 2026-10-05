@@ -133,6 +133,10 @@ pkproje/
                             teklifler/server/rapor-bagi.ts (birim fiyat), sozlesmeler tesisSozlesmesi (vade) · 328: göç 0040 gider (elle ödendi /
                             ödenecek; masraf formu onay → ödendi / red) · server/giderler.ts · karlilik.ts (saf: iş kârı, ay / dönem gelir-gider) ·
                             excel.ts (gider içe / dışa) · ui/Giderler.tsx, ui/Karlilik.tsx · personel/server/muhasebe-baglanti.ts (bordro maliyeti)
+  src/modules/performans/   PERFORMANS (2026-10-06, 329; modül 19): tablo yok (göç 0041 yalnız dizin) · hesap.ts (saf: dönem, özet, tamamlanma süresi,
+                            zaman grafiği, süreç adımları, günlük iş, GÖRÜNÜRLÜK — kendi / branş / hepsi, kazanç) · server/performans.ts (pano, kişi) ·
+                            ui/Performans.tsx · okuyucular: raporlar/server/performans-baglanti.ts, personel/server/performans-baglanti.ts
+  src/components/grafik/    TEK GRAFİK ÜRETİCİSİ (329): dikey sütun (maket T9), etiket ölçülerek, gizli tablo (ekran okuyucu)
   src/modules/ekipman/      EKİPMAN (2026-10-04, 309): tesisin kalıcı ekipman kaydı (kod firmada eşsiz; eski kod başkasına verilmez — ekipman_kodu)
   src/modules/teklifler/    TEKLİFLER (2026-10-05, 324; modül 11): göç 0037 (teklif, teklif_kalem, teklif_tesis, fiyat_listesi; teklif_akis: yalnız taslak
                             düzenlenir, taslak → gönderildi → kabul / red, süresi dolan kabul / red edilmez, hazırlayan veritabanında) · server/teklifler.ts

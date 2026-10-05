@@ -2341,6 +2341,28 @@ revizyon, alan kopyalama, hafif kusur devri, meslek eşleşme denetimi).
 - Emsal ürünler: https://opwire.app/iso-17020-periyodik-kontrol-yazilimi/ · https://17020muayene.vidco.com.tr/ · https://akuple.com/asansor-kontrol-yazilimi/ · https://ensyazilim.com/
 
 ## 11 · Değişiklik günlüğü
+- 2026-10-06 (329): **K4 Performans** (maket performans.html M15; §1.1 "personellerin yaptığı işler, gün başı işler … gün başı rapor elde edilen
+  kazanç", §3.1 modül 19; reisim 2026-09-27 "24 saat içinde … 48 saatten uzun"; 2026-09-29 "yeni durumundan itibaren her rapor performansı
+  etkiler"; KOD-GECIS §3 "tablo yok — rapor ve durum geçişlerinden özet"). Tablo yok; göç **0041** yalnız dizin (raporun açılışı, hareketler).
+  Veri okuyucuları: Raporlar'ın performans-baglanti.ts'i (silinmemiş raporların planı, yazanı, türü, açılış, ilk / son gönderim, onay, ilk imza;
+  hareket kaydından geri gönderme → yeniden gönderim çiftleri; içerik, numara, yazan hesap dönmez), Personel'in performans-baglanti.ts'i (ad,
+  meslek, mesleğin branşı, çalışıyor mu, denetçi mi — iletişim ve mesleki numara dönmez), Planlar (tesis, proje no), Teklifler'in bağı (kazanç =
+  birim fiyat, KDV hariç). Hesap saf (performans/hesap.ts): dönem (bu ay · bu yıl · geçen yıl · tarih aralığı — 62 günden uzunsa aylık; en çok 5
+  yıl), özet (rapor, çalışılan gün = kişi × gün, gün başı, kazanç, gün başı kazanç, geri gönderilen — geri gönderme günü dönemde, son rapor),
+  tamamlanma süresi (açılış → ilk imza: 24 saat içinde · 24–48 · 48'den uzun), zaman grafiği (gün ya da ay; mekanik / elektrik), süreç adımları
+  (yazım, düzeltme, onay, son imza — ortalama saat), günlük iş (gün × tesis). **Görünürlük** sunucuda (KOD-GECIS §4): planlama ve firma yöneticisi
+  hepsi; branş yöneticisi yalnız branşının raporları ve kişileri (branş anahtarı sabit); denetçi ("kendi") Performans'ta kendi sayfasını görür,
+  KAZANÇSIZ (kazanç verisi de gelmez — maket 148); muhasebe göremez (firma matrisi açarsa görür). Ekranlar: /performans (dönem ve branş anahtarı
+  adreste, yüzler, tamamlanma süresi, "24 saat içinde tamamlanan" ve "48 saatten uzun süren" kişi grafikleri, günlük / aylık rapor, personel
+  başına kazanç, personel tablosu — süzgeç, Görünüm, sıralama; Excel'e aktar), /performans/<kişi> (aynı ölçüler, tamamlanma dağılımı, süreç
+  grafiği, günlük iş; Personel kartı ve iş no bağlantıları yalnız o modülü görene). Grafik tek üreticiden: components/grafik (dikey sütun, maket
+  T9: boşluksuz, taban çizgisi, değer üstte, etiket ölçülerek, gizli tablo). Kilit: performans.test (yetki ve matris; pano sayıları — silinen
+  sayılmaz, dönem dışı açılıp dönemde geri gönderilen sayılır, süre dilimleri, günlük grafik, branş anahtarı, geçersiz aralık; branş yöneticisi;
+  denetçi kendisi ve kazançsız; süreç ve günlük iş; firma sızıntısı), performans-hesap.test (saf), bozan 3 (kazanç görünürlüğü, branş süzgeci,
+  "kendi" süzgeci), e2e üç genişlik (pano, Bu yıl, Mekanik, kişi sayfası, taşma; denetçi; muhasebe).
+- 2026-10-06 (327/328 CI düzeltmeleri): muhasebe testi planı tamamlarken kontrol listesi ve bitiş damgası; e2e tohumunun tamamlanmış planı kabul /
+  kontrol / bitiş, imzalı raporu onay damgalı (CHECK'ler tetiksiz yazımda da denetlenir); muhasebe ve gider bozanları göçü işlevle bozar
+  (yeni metindeki "$$" "$" oluyordu).
 - 2026-10-06 (324–327 çapraz inceleme düzeltmeleri; dört bakış — güvenlik, veritabanı, mantık, arayüz — ve her bulguya çürütme denemesi: 24
   bulgudan 20'si doğrulandı, 4'ü elendi; fatura kilidi ve numara uzunluğu 327 düzeltmesinde). **Birim fiyat bağı** (rapor-bagi.ts): faturalanmış
   raporun bağı, fiyatı ve kaynağı FATURADAKİDİR (Muhasebe'nin teklif-baglanti.ts'inden) — sonradan kabul edilen yenileme teklifi faturalı raporu

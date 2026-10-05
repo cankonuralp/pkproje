@@ -1,0 +1,45 @@
+/* DİKEY SÜTUN GRAFİĞİ (maket.css .a-grafikler, .a-grafik, .a-sutun-*; 2026-09-28 T9) — ⛔ çıplak renk yok (2.9); seri rengi yalnız kimlik */
+.grafikler { display: grid; grid-template-columns: repeat(auto-fit, minmax(min(100%, 420px), 1fr)); gap: 12px; margin: 0 0 20px; }
+.grafik { margin: 0; padding: 14px 16px; min-width: 0; border: 1px solid var(--kenar); border-radius: var(--r-buyuk); background: var(--kart); }
+.bas { display: flex; flex-wrap: wrap; align-items: baseline; justify-content: space-between; gap: 4px 12px; margin: 0 0 10px; }
+.baslik { font-weight: 600; }
+.lejant { display: flex; flex-wrap: wrap; gap: 4px 12px; margin: 0; padding: 0; list-style: none; color: var(--yazi2); font-size: var(--boy-kucuk); }
+.lejant li { display: inline-flex; align-items: center; gap: 6px; }
+.renk { width: 10px; height: 10px; border-radius: 2px; }
+.seriM, .seriK { background: var(--onay); }
+.seriE { background: var(--vurgu-2); }
+.seriH { background: var(--hata-yazi); }
+.cizim { display: grid; grid-template-columns: 40px minmax(0, 1fr); grid-template-rows: 180px auto; column-gap: 8px; padding-top: 18px; }
+.eksen { position: relative; color: var(--yazi3); font-size: var(--boy-etiket); font-variant-numeric: tabular-nums; }
+.eksen span { position: absolute; right: 0; transform: translateY(50%); white-space: nowrap; }
+.alan {
+  display: flex; align-items: flex-end; justify-content: center; gap: 2px; min-width: 0;
+  background: linear-gradient(var(--kenar), var(--kenar)) 0 0 / 100% 1px no-repeat, linear-gradient(var(--kenar), var(--kenar)) 0 50% / 100% 1px no-repeat;
+  border-bottom: 1px solid var(--kenar-alan);
+}
+.sutun { position: relative; flex: 1 1 0; max-width: 96px; height: 100%; display: flex; align-items: flex-end; }
+.yigin { position: relative; width: 100%; display: flex; flex-direction: column-reverse; gap: 2px; }
+.yigin > span:not(.deger) { flex-basis: 0; min-height: 2px; }
+.yigin > span:last-child { border-radius: 4px 4px 0 0; }
+.deger {
+  position: absolute; bottom: 100%; left: 50%; transform: translateX(-50%); padding-bottom: 2px; white-space: nowrap;
+  color: var(--yazi); font-size: var(--boy-etiket); font-weight: 600; font-variant-numeric: tabular-nums;
+}
+/* yalnız üzerindeyken var: gizliyken sayfayı genişletmez */
+.ipucu {
+  position: absolute; bottom: calc(100% + 6px); left: 0; z-index: 2; min-width: 120px; padding: 6px 8px;
+  border: 1px solid var(--kenar); border-radius: var(--r-orta); background: var(--kart); box-shadow: var(--golge-2); color: var(--yazi2);
+  font-size: var(--boy-kucuk); line-height: 1.4; white-space: nowrap; pointer-events: none; display: none;
+}
+.ipucu b { display: block; color: var(--yazi); }
+.sag .ipucu { left: auto; right: 0; }
+.sutun:hover .ipucu { display: block; }
+.sutun:hover .yigin { filter: brightness(1.08); }
+.etiketler { grid-column: 2; position: relative; height: 1.4em; margin-top: 6px; color: var(--yazi2); font-size: var(--boy-etiket); }
+/* etiket sütununun ortasında (ölçülerek); çakışan gizli — metin hiç kırpılmaz */
+.etiketler > span { position: absolute; top: 0; left: 0; white-space: nowrap; }
+.etiketler > .seyrek { visibility: hidden; }
+.bos { margin: 0; color: var(--yazi2); }
+@media (max-width: 767.98px) {
+  .grafik { padding: 12px; }
+}
