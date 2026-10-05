@@ -29,7 +29,7 @@ async function bozuk(ad: string, eski: string, yeni: string) {
     if (g.startsWith("0040_")) {
       const k = readFileSync(join(GOC_KLASORU, g), "utf8");
       assert.ok(k.includes(eski), "bozulacak satır kaynakta yok");
-      writeFileSync(join(klasor, g), k.replace(eski, yeni));
+      writeFileSync(join(klasor, g), k.replace(eski, () => yeni));   // işlevle: yeni metindeki "$$" (plpgsql) "$" olmasın
     } else copyFileSync(join(GOC_KLASORU, g), join(klasor, g));
   }
   const supa = await supabaseBenzeri(kume, ad, klasor);
