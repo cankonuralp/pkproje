@@ -122,11 +122,15 @@ pkproje/
                             raporRevizeYaz)
   src/modules/musteri-paneli/ MÜŞTERİ PANELİ (2026-10-05, 319; modül 17): server/panel.ts (yalnız musteriIslemi içinde; Raporlar'ın musteri-baglanti.ts
                             ve Müşteriler'den okur; 0033 uygunsuzluk yalnız açık sürümün, pasif müşterinin oturumu hemen düşer) · ui/ (Raporlarınız; 320: Uygunsuzluklar /portal/uygunsuz, Excel tarayıcıda — ui/kusur.ts; 321: Planlanan kontroller /portal/plan — Planlar'ın
-                            server/musteri-baglanti.ts, göç 0032 sütun sınırlı —, toplu ZIP ui/topluIndir.ts + ui/ad.ts; 322: Sözleşmeler /portal/sozlesme + /portal/s/<id> — Sözleşmeler'in
+                            server/musteri-baglanti.ts, göç 0032 sütun sınırlı —, toplu ZIP ui/topluIndir.ts + ui/zipla.ts (saf; 300 rapor / 500 MB) + ui/ad.ts; 322: Sözleşmeler /portal/sozlesme + /portal/s/<id> — Sözleşmeler'in
                             server/musteri-baglanti.ts, göç 0034; 323: Muayene personeli /portal/personel — Personel'in server/musteri-baglanti.ts'i, göç 0035
                             veritabanı işlevleri musteri_personeli / musteri_personel_belgeleri, firma ayarı musteri_belge). Müşteri girişi yönetimi: musteriler/server/girisler.ts + ui/GirisBolumu.tsx;
                             giriş / oturum çekirdeği src/server/kimlik/musteri.ts; kabuk src/components/kabuk/MusteriKabugu.tsx
   src/modules/ekipman/      EKİPMAN (2026-10-04, 309): tesisin kalıcı ekipman kaydı (kod firmada eşsiz; eski kod başkasına verilmez — ekipman_kodu)
+  src/modules/teklifler/    TEKLİFLER (2026-10-05, 324; modül 11): göç 0037 (teklif, teklif_kalem, teklif_tesis, fiyat_listesi; teklif_akis: yalnız taslak
+                            düzenlenir, taslak → gönderildi → kabul / red, süresi dolan kabul / red edilmez, hazırlayan veritabanında) · server/teklifler.ts
+                            (liste, kart, seçenekler, kaydet / kopya, gönder, kabul, red, müşteri olarak kaydet — yaz: planlama + firma yön.) · ui/ (liste,
+                            form, eylemler) · rapor bağı raporlar/server/teklif-baglanti.ts (kabulden sonra imzalanan, türle) · tutarlar kuruş
   src/tanim/iller.ts        81 il + 973 ilçe (açık veri, MIT; bir kez alındı)
   src/modules/<modül>/      ★ her iş modülü: server/ (veri erişimi + iş kuralları, dışa açılan fonksiyonlar) · ui/ · şema · testler
   src/tanim/tanimlar.ts     SABİT TANIMLAR (durum adları, eğri çarpanları, mesai sınırları …): şemalı, karma adlı JSON → /api/tanim (2026-10-04)

@@ -63,3 +63,12 @@ export async function ekipmanEtiketi(db: Sorgulayici, id: string): Promise<{ id:
 export async function ekipmanKilitle(db: Sorgulayici, id: string): Promise<void> {
   if (UUID.test(id)) await db.sorgu("SELECT 1 FROM ekipman WHERE id = $1 FOR UPDATE", [id]);
 }
+
+/** Teklifler için ("tesisteki ekipmandan doldur" — maket teklifler.html doldur): tesis × tür başına ETKİN ekipman sayısı. Yetki ÇAĞIRANDA. */
+export async function tesisTurSayilari(db: Sorgulayici, tesisler: readonly string[]): Promise<{ tesisId: string; turId: string; adet: number }[]> {
+  const l = tesisler.filter((x) => UUID.test(x));
+  if (!l.length) return [];
+  return (await db.sorgu<{ tesis_id: string; tur_id: string; adet: number }>(
+    "SELECT tesis_id::text, tur_id::text, count(*)::int AS adet FROM ekipman WHERE pasif IS NULL AND tesis_id = ANY ($1::uuid[]) GROUP BY 1, 2", [l])).rows
+    .map((x) => ({ tesisId: x.tesis_id, turId: x.tur_id, adet: x.adet }));
+}

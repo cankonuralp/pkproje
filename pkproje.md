@@ -2341,6 +2341,20 @@ revizyon, alan kopyalama, hafif kusur devri, meslek eşleşme denetimi).
 - Emsal ürünler: https://opwire.app/iso-17020-periyodik-kontrol-yazilimi/ · https://17020muayene.vidco.com.tr/ · https://akuple.com/asansor-kontrol-yazilimi/ · https://ensyazilim.com/
 
 ## 11 · Değişiklik günlüğü
+- 2026-10-05 (324): **K4 Teklifler** (maket teklifler.html M12 2. tur; §3.1 modül 11, §3.2 madde 5; §9 yirmi birinci tur 119–124; 2026-09-27
+  kayıtlı olmayan müşteri). Göç **0037**: teklif (no T-AAYY-SIRA — numara üreticisi, önek firma ayarı; kayıtlı müşteri + bir ya da birden çok
+  tesis, ya da kayıtlı olmayan müşterinin bilgileri; geçerlilik gün, KDV %, not, Excel ekipman listesi yeri), kalem (tür × adet × birim fiyat,
+  KDV hariç, KURUŞ), fiyat listesi (tür başına; ekranı Firma ayarları kalemiyle). **Tetik:** yeni teklif taslak açılır, hazırlayan oturumdan
+  (istemciden değil); numara / tarih / hazırlayan değişmez; YALNIZ TASLAK düzenlenir (kalem ve tesis dahil); taslak → gönderildi (kalemsiz
+  gönderilmez; geçerlilik gönderilişten) → kabul / red (gerekçe ≥ 5); süresi dolan kabul / red edilmez (124, listede "Süresi doldu", yenisi
+  kopyalanır); tesis teklifin müşterisinin olmalı; kayıtlı olmayan müşterinin kabul edilen teklifi BİR KEZ müşteriye bağlanır (Müşteriler'in
+  işlevleriyle müşteri + "Merkez" tesisi). Yetki (modül 11): planlama ve firma yöneticisi yazar; branş yöneticileri ve muhasebe görür; denetçi
+  görmez. Ekranlar: liste (/teklifler; süzgeç), teklif hazırla / kopyala / tesisten başlat (/teklifler/yeni; "Tesisteki ekipmandan doldur" etkin
+  ekipman sayısından, fiyat listeden — satırda değişir; tutar ve KDV'li toplam canlı), teklif sayfası (kalemler; kabul edilmişte **Raporlanan**:
+  kabulden sonra imzalanan raporlar kaleme türüyle bağlanır — Raporlar'ın teklif-baglanti.ts'i; raporlanan tutar), düzenle (yalnız taslak).
+  Kilit: teklifler.test (yetki, akış, gönderilen değişmez — sunucu ve veritabanı, red, süresi dolan, kopya, kayıtlı olmayan müşteri, veritabanı
+  kuralları, firma sızıntısı), bozan 4 (içerik koruması, süre, tesis, hazırlayan damgası), e2e üç genişlik (hazırla → gönderildi → kabul;
+  muhasebe yalnız görür; denetçi göremez). Sonraki (325): Excel ekipman listesi içe / dışa ve teklif belgesi (yazdır / PDF).
 - 2026-10-05 (320–323 çapraz inceleme düzeltmeleri; dört bakış + her bulguya çürütme denemesi, 9 bulgu doğrulandı, 6 elendi). Göç **0035**
   (Supabase'e henüz uygulanmamıştı, yerinde düzeltildi): müşteriye açık **eğitim sertifikası başlangıçta YOK** — eskiden ayar yokken bütün eğitim
   türleri (firma içi ve sonradan eklenenler dahil) müşteriye gidiyordu ve firma kapatamıyordu; maketteki gibi firma tür başına açar (TS

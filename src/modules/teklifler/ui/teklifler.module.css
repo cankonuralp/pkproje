@@ -1,0 +1,30 @@
+/* Teklifler ekranları (maket teklifler.html: .a-no, .a-kalem, .a-kalem-tutar, .a-onay-kutusu) — ⛔ çıplak renk yok (2.9) */
+.no {
+  display: inline-flex; align-items: center; min-height: var(--tus-y);
+  color: var(--onay-yazi); font-weight: 600; font-variant-numeric: tabular-nums; text-decoration: underline; text-decoration-color: transparent; text-underline-offset: 3px;
+}
+.no:hover { text-decoration-color: currentColor; }
+.sayi { font-variant-numeric: tabular-nums; }
+.yok { color: var(--yazi2); }
+.kutular { display: grid; grid-template-columns: repeat(auto-fill, minmax(220px, 1fr)); gap: 4px 16px; margin: 0; padding: 0; border: 0; }
+.kutu { display: flex; align-items: flex-start; gap: 8px; min-height: var(--tus-y); padding-top: 10px; }
+.kutu input { width: 18px; height: 18px; margin: 2px 0 0; accent-color: var(--birincil); }
+.etiket { font-weight: 600; margin: 0 0 6px; }
+.hata { margin: 4px 0 0; color: var(--hata-yazi); font-size: var(--boy-kucuk); font-weight: 600; }
+.ipucu { margin: 4px 0 0; color: var(--yazi2); font-size: var(--boy-kucuk); }
+/* müşteri türü seçimi (maket a-sekmeler role=group, aria-pressed) */
+.tip { display: flex; flex-wrap: wrap; gap: 8px; margin: 0 0 12px; }
+/* kalem satırı: tür · adet · birim fiyat · tutar · kaldır; telefonda alt alta */
+.kalem { display: grid; grid-template-columns: minmax(200px, 2fr) minmax(80px, .6fr) minmax(120px, 1fr) minmax(110px, .9fr) auto; gap: 8px 12px; align-items: end;
+  padding: 10px 0; border-bottom: 1px solid var(--kenar); }
+.kalemTutar { margin: 0; min-height: var(--tus-y); display: flex; align-items: center; font-variant-numeric: tabular-nums; font-weight: 600; }
+.kalemEtiket { margin: 0 0 6px; color: var(--yazi2); font-size: var(--boy-kucuk); }
+@media (max-width: 767.98px) {
+  .kalem { grid-template-columns: 1fr 1fr; }
+  .kalem > :first-child { grid-column: 1 / -1; }
+}
+.eylemler { display: flex; flex-wrap: wrap; gap: 8px; margin: 12px 0 0; }
+.toplam { display: grid; grid-template-columns: repeat(auto-fill, minmax(180px, 1fr)); gap: 8px 16px; margin: 12px 0 0; }
+.toplam dt { color: var(--yazi2); font-size: var(--boy-kucuk); }
+.toplam dd { margin: 2px 0 0; font-variant-numeric: tabular-nums; }
+.gerekce { width: 100%; min-height: 96px; padding: 8px 10px; border: 1px solid var(--kenar-alan); border-radius: var(--r-orta); background: var(--kart); color: var(--yazi); font: inherit; resize: vertical; }

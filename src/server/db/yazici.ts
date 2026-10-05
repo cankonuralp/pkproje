@@ -110,3 +110,14 @@ export async function guncelle<S extends string>(db: Sorgulayici, t: TabloTanimi
   });
   return { durum: "tamam", surum: r.rows[0].surum, degisen };
 }
+
+/** Kaydı siler — yalnız tanımı olan tablodan, kimlikle; ize düşer. Silinebilirlik kuralı veritabanı tetiğinde ve çağıranda (ör. yalnız taslak
+    teklifin kalemi — 0037); silme hakkı olmayan tabloda veritabanı reddeder. Başka firmanın satırı RLS ile görünmez → false. */
+export async function sil<S extends string>(db: Sorgulayici, t: TabloTanimi<S>, id: string, iz: Iz): Promise<boolean> {
+  if (!AD.test(t.ad)) throw new Error(`Geçersiz tablo adı: ${t.ad}`);
+  if (!UUID.test(id)) return false;
+  const r = await db.sorgu(`DELETE FROM ${t.ad} WHERE id = $1`, [id]);
+  if (r.rowCount !== 1) return false;
+  await izYaz(db, { ...iz, nesne: t.ad, nesneId: id });
+  return true;
+}
