@@ -115,6 +115,8 @@ test("saha raporu: rapor oluştur, eksikle gönderilmez, doldur + cihaz ekle, on
   await expect(page.getByText("Rapor kaydedildi.").first()).toBeVisible({ timeout: 30_000 });
 
   /* fotoğraf (312): şablonda en az 1; uydurma JPEG (tarayıcı çözemez → küçültülmeden gider, sunucu baytlardan JPEG der) */
+  /* Kaydet'ten sonra sayfa yeni sürümle yenilenene kadar girdi kapalı (eski sürümle yüklenmesin); setInputFiles kapalı girdiyi beklemez */
+  await expect(page.getByLabel("Fotoğraf ekle", { exact: true })).toBeEnabled({ timeout: 30_000 });
   await page.getByLabel("Fotoğraf ekle", { exact: true }).setInputFiles({ name: "on.jpg", mimeType: "image/jpeg", buffer: Buffer.from(JPEG) });
   await expect(page.getByText("on.jpg eklendi.").first()).toBeVisible({ timeout: 30_000 });
   await expect(page.getByRole("link", { name: "Görüntüle" }).first()).toHaveAttribute("href", /^\/api\/dosya\/[0-9a-f-]{36}$/);
