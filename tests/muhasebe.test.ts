@@ -176,7 +176,7 @@ test("tahsilat: kısmi olabilir, kalanı aşamaz, fatura tarihinden önce ve ile
   assert.deepEqual([f.durum, f.kalan, f.sonOdeme, f.izin.tahsilat], ["odendi", 0, BUGUN(), false]);
   assert.equal((await k(T({}))).durum, "red", "ödenen faturaya tahsilat eklenmez");
   assert.equal((await a(MUH, (db) => isKarti(db, MUH, P1)))!.durum, "rapor", "plan tamamlanmadı");
-  await sahip("UPDATE plan SET durum = 'tamamlandi' WHERE id = $1", [P1]);
+  await sahip("UPDATE plan SET durum = 'tamamlandi', kontrol_tamam = now(), bitti = now() WHERE id = $1", [P1]);
   const x = (await a(MUH, (db) => isKarti(db, MUH, P1)))!;
   assert.deepEqual([x.durum, x.kapandi, x.gecmis.some((g) => g[1] === "İş kapandı")], ["kapandi", BUGUN(), true]);
 });

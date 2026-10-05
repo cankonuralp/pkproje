@@ -82,11 +82,14 @@ for (const f of firmalar) {
       const q = async (sql: string, p: unknown[]) => (await s2.query<{ id: string }>(sql, p)).rows[0].id;
       const e = await q("INSERT INTO ekipman (firma_id, tesis_id, tur_id, kod, ekleyen) VALUES ($1, $2, $3, $4, 'Deneme') RETURNING id::text",
         [f.id, tohum.tesisMuhasebe, tohum.tur, `HT-090${i + 1}`]);
-      const pl = await q(`INSERT INTO plan (firma_id, no, tesis_id, baslangic, bitis, durum, firma_adi, acan) VALUES ($1, $2, $3, current_date, current_date, 'tamamlandi',
-        $4, 'Deneme') RETURNING id::text`, [f.id, E2E_MUHASEBE.plan[proje], tohum.tesisMuhasebe, E2E_PLAN.musteri]);
+      /* tamamlanmış plan: kabul (beyanla), kontrol listesi ve bitiş damgalı (0024 plan_kabul_tutarli, plan_bitis_tutarli — tetikler kapalıyken de denetlenir) */
+      const pl = await q(`INSERT INTO plan (firma_id, no, tesis_id, baslangic, bitis, durum, firma_adi, acan, kabul, kabul_eden, beyan, kontrol_tamam, bitti)
+        VALUES ($1, $2, $3, current_date, current_date, 'tamamlandi', $4, 'Deneme', now(), 'Deneme Denetçi', 'Deneme tarafsızlık beyanı metni.', now(), now())
+        RETURNING id::text`, [f.id, E2E_MUHASEBE.plan[proje], tohum.tesisMuhasebe, E2E_PLAN.musteri]);
       const no = `${E2E_FIRMA.raporKodu}-0125-90${i + 1}-0000${i + 1}`;
-      const r = await q(`INSERT INTO rapor (firma_id, no, plan_id, ekipman_id, tur_id, format_id, personel_id, durum, kunye, rapor_tarihi, sonuc)
-        VALUES ($1, $2, $3, $4, $5, $6, $7, 'imzali', '{}', current_date, 'uygun') RETURNING id::text`, [f.id, no, pl, e, tohum.tur, format, tohum.denetciPersonel]);
+      /* imzalı rapor onay damgalı (0026 rapor_onay_tutarli) */
+      const r = await q(`INSERT INTO rapor (firma_id, no, plan_id, ekipman_id, tur_id, format_id, personel_id, durum, kunye, rapor_tarihi, sonuc, onay)
+        VALUES ($1, $2, $3, $4, $5, $6, $7, 'imzali', '{}', current_date, 'uygun', now()) RETURNING id::text`, [f.id, no, pl, e, tohum.tur, format, tohum.denetciPersonel]);
       await s2.query(`INSERT INTO rapor_surumu (firma_id, rapor_id, revizyon, no, plan_id, ekipman_id, tur_id, format_id, tesis_id, musteri_id, imzasiz_dosya, imzali_dosya,
         imzali_sha256, imza_yontem, sonuc, kontrol_tarihi, kunye, personel, icerik) VALUES ($1, $2, 0, $3, $4, $5, $6, $7, $8, $9, gen_random_uuid(), gen_random_uuid(),
         repeat('0', 64), 'dosya', 'uygun', current_date, '{}', '{}', '{}')`, [f.id, r, no, pl, e, tohum.tur, format, tohum.tesisMuhasebe, tohum.musteri]);
