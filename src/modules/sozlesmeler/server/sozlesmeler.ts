@@ -138,6 +138,15 @@ export async function sozlesmeSecenekleri(db: Sorgulayici, kim: Kisi) {
   };
 }
 
+/** Muhasebe için (327; maket MV.tesisSozlesmesi): tesisin verilen günde geçerli iş sözleşmesi (kapsamında, başlangıç ≤ gün ≤ bitiş; birden çoksa en
+    son başlayan) — ödeme vadesi buradan; yoksa null. Yetki ÇAĞIRANDA. */
+export async function tesisSozlesmesi(db: Sorgulayici, tesisId: string, gun: string): Promise<{ id: string; no: string; vade: number } | null> {
+  if (!UUID.test(tesisId) || !/^\d{4}-\d{2}-\d{2}$/.test(gun)) return null;
+  return (await db.sorgu<{ id: string; no: string; vade: number }>(
+    `SELECT s.id::text, s.no, s.vade FROM is_sozlesmesi s JOIN is_sozlesmesi_tesis k ON k.firma_id = s.firma_id AND k.sozlesme_id = s.id
+     WHERE k.tesis_id = $1 AND s.baslangic <= $2::date AND s.bitis >= $2::date ORDER BY s.baslangic DESC, s.no DESC LIMIT 1`, [tesisId, gun])).rows[0] ?? null;
+}
+
 /** sözleşme hazırla: numara (IS-AAYY-SIRA) işlem içinde; tesisler müşterinin, etkin tesisleri olmalı; firma imzası bugün, müşteri imzası bekler */
 export async function sozlesmeHazirla(db: Sorgulayici, kim: Kisi, girdi: unknown): Promise<Yazma> {
   if (!degistirir(kim)) return { durum: "yetkisiz" };

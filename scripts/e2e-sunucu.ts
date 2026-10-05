@@ -8,7 +8,7 @@ import { randomBytes } from "node:crypto";
 import { mkdtempSync } from "node:fs";
 import { tmpdir } from "node:os";
 import { join } from "node:path";
-import { E2E_FIRMA, E2E_HESAPLAR, E2E_ILK, E2E_KAPI, E2E_PAROLA, E2E_PLAN, E2E_SAHA } from "../e2e/hesaplar.ts";
+import { E2E_FIRMA, E2E_HESAPLAR, E2E_ILK, E2E_KAPI, E2E_MUHASEBE, E2E_PAROLA, E2E_PLAN, E2E_SAHA } from "../e2e/hesaplar.ts";
 import { taslakBaslat, yayinla, type Kisi } from "../src/modules/rapor-format/server/formatlar.ts";
 import { gomuluBaslat } from "../src/server/db/gomulu.ts";
 import { havuzKur, kiraciIcinde } from "../src/server/db/kiraci.ts";
@@ -56,7 +56,11 @@ for (const f of firmalar) {
     await db.sorgu("INSERT INTO kalibrasyon (cihaz_id, tarih, bitis, lab, sertifika, sonuc) VALUES ($1, CURRENT_DATE, CURRENT_DATE + 365, 'Deneme Kalibrasyon Lab.', 'KL-0001', 'uygun')", [c]);
     await db.sorgu("INSERT INTO zimmet_hareket (cihaz_id, alan_personel, zaman) VALUES ($1, $2, now())", [c, kisiler.denetci!.personel]);
     await db.sorgu("UPDATE ekipman_turu SET cihaz_turleri = ARRAY[$1::uuid] WHERE id = $2", [ct, u]);
-    return { yonetici: kisiler.yonetici!.hesap, tur: u };
+    /* muhasebe (327): fiyat listesinde HT; ayrı tesis (her projenin imzalı raporu aşağıda, süper kullanıcıyla) */
+    await db.sorgu("INSERT INTO fiyat_listesi (tur_id, fiyat) VALUES ($1, 90000)", [u]);
+    const tm = (await db.sorgu<{ id: string }>("INSERT INTO tesis (musteri_id, ad, adres, il, ilce) VALUES ($1, $2, 'Deneme Cad. No 4', 'Kocaeli', 'Gebze') RETURNING id::text",
+      [m, E2E_MUHASEBE.tesis])).rows[0].id;
+    return { yonetici: kisiler.yonetici!.hesap, tur: u, musteri: m, tesisMuhasebe: tm, denetciPersonel: kisiler.denetci!.personel };
   });
   /* HT'nin rapor formatı: hazır şablon KOMPRESOR → taslak → yayında (Rapor formatı modülünün işlevleri; yayınlayan yönetici, veritabanı damgası) */
   await kiraciIcinde(havuz, f.id, async (db) => {
@@ -66,6 +70,28 @@ for (const f of firmalar) {
     const y = await yayinla(db, kim, t.id, t.surum, "");
     if (y.durum !== "tamam") throw new Error(`HT rapor formatı yayınlanamadı: ${y.durum}`);
   }, { hesapId: tohum.yonetici });
+  /* muhasebe (327): her proje için tamamlanmış bir plan ve imzalı raporu (imza zinciri e2e/saha-raporu'nda denenir; burada yalnız muhasebenin
+     başlangıç durumu) — süper kullanıcıyla, tetiksiz, geçici veritabanı */
+  if (f.kisa_ad !== E2E_FIRMA.kisaAd) continue;
+  const s2 = kume.sahipIstemci();
+  await s2.connect();
+  try {
+    await s2.query("SET session_replication_role = replica");
+    const format = (await s2.query<{ id: string }>("SELECT id::text FROM rapor_format WHERE firma_id = $1 AND tur_id = $2 AND durum = 'yayinda'", [f.id, tohum.tur])).rows[0].id;
+    for (const [i, proje] of (["masaustu", "tablet", "telefon"] as const).entries()) {
+      const q = async (sql: string, p: unknown[]) => (await s2.query<{ id: string }>(sql, p)).rows[0].id;
+      const e = await q("INSERT INTO ekipman (firma_id, tesis_id, tur_id, kod, ekleyen) VALUES ($1, $2, $3, $4, 'Deneme') RETURNING id::text",
+        [f.id, tohum.tesisMuhasebe, tohum.tur, `HT-090${i + 1}`]);
+      const pl = await q(`INSERT INTO plan (firma_id, no, tesis_id, baslangic, bitis, durum, firma_adi, acan) VALUES ($1, $2, $3, current_date, current_date, 'tamamlandi',
+        $4, 'Deneme') RETURNING id::text`, [f.id, E2E_MUHASEBE.plan[proje], tohum.tesisMuhasebe, E2E_PLAN.musteri]);
+      const no = `${E2E_FIRMA.raporKodu}-0125-90${i + 1}-0000${i + 1}`;
+      const r = await q(`INSERT INTO rapor (firma_id, no, plan_id, ekipman_id, tur_id, format_id, personel_id, durum, kunye, rapor_tarihi, sonuc)
+        VALUES ($1, $2, $3, $4, $5, $6, $7, 'imzali', '{}', current_date, 'uygun') RETURNING id::text`, [f.id, no, pl, e, tohum.tur, format, tohum.denetciPersonel]);
+      await s2.query(`INSERT INTO rapor_surumu (firma_id, rapor_id, revizyon, no, plan_id, ekipman_id, tur_id, format_id, tesis_id, musteri_id, imzasiz_dosya, imzali_dosya,
+        imzali_sha256, imza_yontem, sonuc, kontrol_tarihi, kunye, personel, icerik) VALUES ($1, $2, 0, $3, $4, $5, $6, $7, $8, $9, gen_random_uuid(), gen_random_uuid(),
+        repeat('0', 64), 'dosya', 'uygun', current_date, '{}', '{}', '{}')`, [f.id, r, no, pl, e, tohum.tur, format, tohum.tesisMuhasebe, tohum.musteri]);
+    }
+  } finally { await s2.end(); }
 }
 await havuz.end();
 

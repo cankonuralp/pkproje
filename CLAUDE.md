@@ -127,6 +127,10 @@ pkproje/
                             server/musteri-baglanti.ts, göç 0034; 323: Muayene personeli /portal/personel — Personel'in server/musteri-baglanti.ts'i, göç 0035
                             veritabanı işlevleri musteri_personeli / musteri_personel_belgeleri, firma ayarı musteri_belge). Müşteri girişi yönetimi: musteriler/server/girisler.ts + ui/GirisBolumu.tsx;
                             giriş / oturum çekirdeği src/server/kimlik/musteri.ts; kabuk src/components/kabuk/MusteriKabugu.tsx
+  src/modules/muhasebe/     MUHASEBE (2026-10-05, 327; modül 18): göç 0039 (fatura, fatura_rapor, tahsilat; değişmez, kalanı aşmaz, son imzadan önce
+                            olamaz) · server/muhasebe.ts (işler = planlar, iş / fatura kartı, fatura kaydet / toplu, tahsilat) · ui/ (listeler, iş ve fatura
+                            parçaları, pencereler) · okuyucular: planlar/server/muhasebe-baglanti.ts, raporlar/server/muhasebe-baglanti.ts,
+                            teklifler/server/rapor-bagi.ts (birim fiyat), sozlesmeler tesisSozlesmesi (vade)
   src/modules/ekipman/      EKİPMAN (2026-10-04, 309): tesisin kalıcı ekipman kaydı (kod firmada eşsiz; eski kod başkasına verilmez — ekipman_kodu)
   src/modules/teklifler/    TEKLİFLER (2026-10-05, 324; modül 11): göç 0037 (teklif, teklif_kalem, teklif_tesis, fiyat_listesi; teklif_akis: yalnız taslak
                             düzenlenir, taslak → gönderildi → kabul / red, süresi dolan kabul / red edilmez, hazırlayan veritabanında) · server/teklifler.ts

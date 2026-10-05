@@ -19,10 +19,10 @@ import { musteriDegistirir, musteriIletisim, musteriKaydet, musteriOzetleri, tes
 import { planAcabilir } from "../../planlar/server/planlar.ts";
 import { sozlesmeDegistirir } from "../../sozlesmeler/server/sozlesmeler.ts";
 import { MusteriGirdisi, TesisGirdisi } from "../../musteriler/sema.ts";
-import { imzaliRaporlar } from "../../raporlar/server/teklif-baglanti.ts";
 import type { TeklifBelgesiVerisi } from "../../../belge/teklif.ts";
 import type { ExcelTuru, TeklifEkipmani } from "../excel.ts";
 import { bitisGunu, RedGirdisi, TeklifGirdisi, type Aday, type TeklifDurumu } from "../sema.ts";
+import { raporBaglari } from "./rapor-bagi.ts";
 
 const MODUL = 11;
 const TEKLIF = tablo({ ad: "teklif", sutunlar: ["no", "musteri_id", "aday", "durum", "gerekce", "gecerlilik", "kdv", "notlar", "ekipmanlar", "kopya_kaynak"] });
@@ -300,21 +300,13 @@ export async function teklifMusteriBagla(db: Sorgulayici, kim: Kisi, id: string,
   return { durum: "tamam", id, no: x.no, bildirim: `${x.no} ${m!.kisa} müşterisine bağlandı. Sıradaki: iş sözleşmesi, sonra plan.` };
 }
 
-/* RAPORLANAN (§3.2 madde 5): her rapor TEK teklife — raporun tesisi ve türü için, imza gününde (teklif tarihi ≤ imza günü) geçerli EN SON kabul
-   edilmiş teklif (yıllık yenilemede eski teklif yeni dönemin raporunu saymaz — 324 incelemesi). Pencere teklif tarihinden (maket
-   MV.kalemRaporlari: teklif sonrası raporlar). */
+/* RAPORLANAN (§3.2 madde 5): her rapor TEK teklife — raporun tesisini kapsayan, tarihi raporun açılış gününden sonra olmayan EN SON kabul edilmiş
+   teklif (rapor-bagi.ts; muhasebenin birim fiyatıyla aynı bağ). Yıllık yenilemede eski teklif yeni dönemin raporunu saymaz (324 incelemesi).
+   Sayılan: imzalı raporlar, türüyle. */
 async function raporlananlar(db: Sorgulayici, x: Satir, tesisler: string[]): Promise<Map<string, number>> {
-  const raporlar = await imzaliRaporlar(db, tesisler, x.tarih);
-  if (!raporlar.length) return new Map();
-  const rakip = (await db.sorgu<{ id: string; no: string; tarih: string; tesis_id: string; tur_id: string }>(
-    `SELECT t.id::text, t.no, t.tarih::text, s.tesis_id::text, k.tur_id::text FROM teklif t
-       JOIN teklif_tesis s ON s.firma_id = t.firma_id AND s.teklif_id = t.id JOIN teklif_kalem k ON k.firma_id = t.firma_id AND k.teklif_id = t.id
-     WHERE t.durum = 'kabul' AND s.tesis_id = ANY ($1::uuid[])`, [tesisler])).rows;
   const say = new Map<string, number>();
-  for (const r of raporlar) {
-    const aday = rakip.filter((y) => y.tesis_id === r.tesisId && y.tur_id === r.turId && y.tarih <= r.gun)
-      .sort((a, b) => (a.tarih === b.tarih ? a.no.localeCompare(b.no) : a.tarih.localeCompare(b.tarih))).at(-1);
-    if (aday?.id === x.id) say.set(r.turId, (say.get(r.turId) ?? 0) + 1);
+  for (const r of (await raporBaglari(db, tesisler)).values()) {
+    if (r.imzali && r.teklif?.id === x.id && tesisler.includes(r.tesisId)) say.set(r.turId, (say.get(r.turId) ?? 0) + 1);
   }
   return say;
 }

@@ -2341,6 +2341,25 @@ revizyon, alan kopyalama, hafif kusur devri, meslek eşleşme denetimi).
 - Emsal ürünler: https://opwire.app/iso-17020-periyodik-kontrol-yazilimi/ · https://17020muayene.vidco.com.tr/ · https://akuple.com/asansor-kontrol-yazilimi/ · https://ensyazilim.com/
 
 ## 11 · Değişiklik günlüğü
+- 2026-10-05 (327): **K4 Muhasebe › İşler, faturalar, tahsilat** (maket muhasebe.html M14; §3 akış "… müşteriye açıldı → fatura → tahsilat → iş
+  kapandı"; §3.2 madde 5; KOD-GECIS §3 Muhasebe). İŞ = plan: planın ilk raporu yazılınca iş görünür. **Birim fiyat** (Teklifler'in rapor-bagi.ts'i,
+  teklif sayfasının "Raporlanan"ıyla aynı bağ): raporun tesisini kapsayan, tarihi raporun açılışından sonra olmayan en son kabul edilmiş teklifin
+  kalemi; kalemin adedini aşan ya da kalemi olmayan "teklif dışı" (fiyat listesinden); teklif yoksa fiyat listesi; fiyat listesinde de yoksa fiyat
+  yok (fatura kaydedilmez, şeritte söylenir). **İş durumu**: vadesi geçti > faturaya hazır (imzalı, faturasız rapor) > tahsilat bekliyor > rapor
+  sürüyor (imza süreci ya da plan tamamlanmadı) > kapandı (son tahsilatın günü). Göç **0039**: fatura (dış no — 3 harf / rakam + yıl + 9 hane, firmada
+  eşsiz; tarih; vade = tarih + vade günü — tesisin o günkü iş sözleşmesinden, yoksa 30; KDV %20; ara / KDV / toplam KURUŞ), fatura_rapor (her rapor
+  TEK faturada; birim fiyat, kaynak ve teklif kayıt anında yazılır), tahsilat (yöntem: havale / EFT, çek, kredi kartı, nakit; açıklama). Tetikler:
+  ileri tarihli fatura / tahsilat yok; faturaya yalnız imzalı rapor ve yalnız fatura kaydedilirken; fatura tarihi faturaya giren raporun imzasından
+  önce olamaz; işlem sonunda ara toplam satırların toplamı (ertelenen denetim); tahsilat fatura tarihinden önce olamaz, kalanı aşamaz; fatura,
+  satır ve tahsilat değişmez, silinmez; kaydeden oturumdan. Ekranlar: /muhasebe (İşler; vadesi geçen alacak ve faturaya hazır işler şeridi),
+  /muhasebe/faturalar, iş sayfası (yüzler: raporlanan, faturalanan, tahsil edilen, açık alacak; iş: denetim, birim fiyatın dayanağı teklif, iş
+  sözleşmesi, ödeme vadesi; raporlar — birim fiyat ve kaynağı, fatura, durum, süzgeçli; faturalar; geçmiş; **Fatura kaydet** ve müşterinin
+  faturaya hazır bütün işleri için **Toplu fatura** — 136), fatura sayfası (alıcı, vade, işler, kalemler — teklif dışı işaretli, toplamlar,
+  tahsilatlar; **Tahsilat ekle**, kısmi olabilir). Yetki (modül 18): firma yöneticisi ve muhasebe; öteki roller ve "kendi" düzeyi görmez. Sonraki
+  (328): giderler, sabit giderler, kârlılık, gelir-gider; fatura özeti PDF'i. Kilit: muhasebe.test (yetki; birim fiyat ve teklif dışı; fatura no,
+  ileri tarih, son imza; tahsilat kalan / tarih / kısmi / ödendi, kapanış; vadesi geçti; toplu fatura; veritabanı kuralları; firma sızıntısı),
+  bozan 3 (tahsilat kalanı, tarihi, kaydeden damgası), e2e üç genişlik (tohum: proje başına tamamlanmış plan + imzalı rapor; fatura → tahsilat →
+  ödendi; denetçi göremez).
 - 2026-10-05 (326): **Sözleşmeler › Dayanak teklif** (maket sozlesmeler.html formu "Dayanak teklif — kabul edilen teklif; fiyatlar oradan" ve
   sözleşme sayfası "Dayanak teklif / Sistem öncesi"; 324 incelemesinin ertelenen bulgusu: teklif sayfasındaki "İş sözleşmesi" bağlamı taşımıyordu).
   Göç **0038**: is_sozlesmesi.teklif_id (aynı firmanın teklifine yabancı anahtar; tetik: AYNI müşterinin KABUL edilmiş teklifi olmalı, sonradan

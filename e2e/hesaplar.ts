@@ -21,3 +21,9 @@ export const E2E_PLAN = { musteri: "Deneme Plan Sanayi A.Ş.", tesis: "Merkez Fa
 /* saha raporu (311): Saha Tesisi'nin ekipmanı (tür HT · Hava tankı, yayında format = hazır şablon KOMPRESOR), türün gerekli ölçüm cihazı türü ve
    denetçinin zimmetindeki, kalibrasyonu geçerli uydurma cihaz */
 export const E2E_SAHA = { ekipman: "HT-0201", tur: "Hava tankı", cihazTuru: "Manometre", cihaz: "MN-01", marka: "Deneme", model: "M1", seri: "S-001" } as const;
+/* muhasebe (327): ayrı tesis; her projenin tamamlanmış planı (bir imzalı rapor, fiyat listesinden 900,00 TL) ve kaydedeceği fatura numarası */
+export const E2E_MUHASEBE = {
+  tesis: "Muhasebe Tesisi",
+  plan: { masaustu: "P-0125-901", tablet: "P-0125-902", telefon: "P-0125-903" },
+  fatura: { masaustu: "DMF202600000901", tablet: "DMF202600000902", telefon: "DMF202600000903" },
+} as const;
