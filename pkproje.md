@@ -2341,6 +2341,21 @@ revizyon, alan kopyalama, hafif kusur devri, meslek eşleşme denetimi).
 - Emsal ürünler: https://opwire.app/iso-17020-periyodik-kontrol-yazilimi/ · https://17020muayene.vidco.com.tr/ · https://akuple.com/asansor-kontrol-yazilimi/ · https://ensyazilim.com/
 
 ## 11 · Değişiklik günlüğü
+- 2026-10-06 (332): **K4 Ana sayfa** (maket anasayfa.html M1 2. tur — reisim 41: "role göre ama herkes için bir anasayfa olmalı"). Girişten sonra
+  herkes kök adrese gelir; içerik kişinin ROLLERİNE göre, birden çok rolü olan bölümleri sırayla (planlama, denetçi, branş yöneticisi, firma
+  yöneticisi, muhasebe) görür. **Denetçi:** kabul bekleyen plan (en yakını), denetimdeki plan, taslak rapor (geri gönderilen sayısı), son imzanı
+  bekleyen, zimmetinde (kalibrasyonu uyarıdaki cihaz); "Açık planların" listesi (yalnız kendi). **Planlama:** kabul bekleyen, reddedilen, bugün
+  başlayan plan, İSG-KATİP eksiği (açık planlarda ID yok / geç onaylı / bitmiş; el ile yazılan eksik sayılmaz); "Kontrolü N gün içinde gelen
+  tesisler" (açık planı olmayan; tesisin etkin ekipmanının sonraki kontrolü — son imzalı muayeneden, yoksa sistem öncesi kontrol + periyot —
+  en yakını; eşik firma ayarı) ve "Plan aç" (?tesis=). **Branş yöneticisi:** onayını bekleyen (en eskisi kaç saattir), geri gönderilen, muayene
+  uzmanı imzası bekleyen, kalibrasyon uyarısı; onay kuyruğu (en eski 5). **Firma yöneticisi:** açık plan, onayda rapor, muayene uzmanı imzası,
+  uyarı (kalibrasyon / eğitim / araç dökümü), bilgisi eksik personel; bugün başlayan planlar. **Muhasebe** (maketin dört rolü dışında; "herkes
+  için"): faturaya hazır iş, vadesi geçen fatura, onay bekleyen masraf. Sayılar modüllerin kendi yetkiye duyarlı işlevlerinden (planListesi
+  değil Planlar'ın anasayfa-baglanti.ts'i; raporListesi, onayListeleri, uyariListesi, personelListesi, muhasebe listeleri) — ana sayfa başka
+  modülün tablosuna dokunmaz. "Plan aç" yalnız plan açabilene. Duyurular: İSGGM, İSGÜM ve iş ekipmanları portalı bağlantıları; kaynaklardan
+  otomatik okuma (maket: "günde birkaç kez", §8.9) iş kuyruğu kalemiyle. Yan menü balonları (maket MV.TAKIP) sonraki kalem. Göç yok. Kilit:
+  anasayfa.test (denetçi, planlama — İSG eksiği ve yaklaşan tesis, firma yöneticisi, branş yöneticisi, muhasebe, çok rollü sıra, firma
+  sızıntısı), e2e üç genişlik.
 - 2026-10-06 (331): **K4 Uyarılar** (maket uyarilar.html M10, maket-veri.js MV.uyarilar; pkproje §3 "kalibrasyon bitişine 30 gün kala uyarı", §3.1
   modül 10 ve 20; anayasa 1.3 — YALNIZ ekranda, e-posta / SMS / anlık bildirim yok; KOD-GECIS §3 "tablo yok — koşuldan türetilir; okundu yok",
   §4 Uyarılar). Tablo ve göç yok: uyarı kayıtlardan türetilir, koşul kalkınca (kalibrasyon yenilenince, eğitim tekrarlanınca, belge yenilenince)

@@ -1,0 +1,14 @@
+/* Ana sayfa (maket anasayfa.html: .a-yuzler, .a-hucre-ust, .a-no, .a-kosullar.a-duyurular) — ⛔ çıplak renk yok (2.9) */
+.rol { margin: 0 0 24px; }
+.rolBaslik { margin: 0 0 8px; font-size: var(--boy-govde); font-weight: 700; color: var(--yazi2); }
+.no { color: var(--onay-yazi); font-weight: 600; font-variant-numeric: tabular-nums; text-decoration: underline; text-decoration-color: transparent; text-underline-offset: 3px; }
+.no:hover { text-decoration-color: currentColor; }
+.ust { display: block; font-weight: 700; }
+.alt { color: var(--yazi2); font-size: var(--boy-kucuk); }
+.bos { margin: 0 0 8px; color: var(--yazi2); }
+.kaynaklar { display: flex; flex-wrap: wrap; gap: 8px; }
+.kaynak {
+  display: inline-flex; align-items: center; min-height: var(--tus-y); padding: 0 14px; border: 1px solid var(--kenar-alan); border-radius: var(--r-tam);
+  background: var(--kart); color: var(--yazi); font-weight: 600; text-decoration: none;
+}
+.kaynak:hover { background: var(--zemin2); }
