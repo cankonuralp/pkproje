@@ -11,7 +11,8 @@
    (başlık "<kod> · Hava tankı", kaynak şeridi). Kod her koşu ve genişlikte ayrı (firmada eşsiz).
    314 Onaylar: mekanik yönetici kuyruktan raporu açar → kısa gerekçeyle geri gönderilmez → gerekçeyle geri gönderir → denetçi rapor ekranında
    "Geri gönderildi" şeridini görür, yeniden gönderir → yönetici onaylar → onay ekranında "Muayene uzmanı imzası".
-   317 Son imza: denetçi İmzala → imzasız PDF'i indirir → imzalı PDF'i yükler → Tamamlandı, İmzalı PDF. */
+   317 Son imza: denetçi İmzala → imzasız PDF'i indirir → imzalı PDF'i yükler → Tamamlandı, İmzalı PDF.
+   318 (C5): denetçi Onaylar'da "İmzamı bekleyen raporlar"dan raporu açar; Raporlar listesinde rapor durumuyla, imza şeridi. */
 import { readFileSync } from "node:fs";
 import { expect, test, type Locator, type Page } from "@playwright/test";
 import { E2E_HESAPLAR, E2E_PLAN, E2E_SAHA } from "./hesaplar";
@@ -236,7 +237,19 @@ test("saha raporu: rapor oluştur, eksikle gönderilmez, doldur + cihaz ekle, on
      yaptığı gibi özgün baytlar korunur) → Tamamlandı, İmzalı PDF */
   await context.clearCookies();
   await girisli(page, "denetci");
-  await page.goto(raporAdresi);
+  /* 318: Raporlar listesi — denetçi kendi raporunu durumuyla görür, imza şeridi Onaylar'a götürür */
+  await page.goto("/raporlar");
+  await hazir(page);
+  await page.getByRole("searchbox", { name: "Raporlarda ara" }).fill(raporNo);
+  await expect(page.getByRole("link", { name: raporNo }).first()).toBeVisible({ timeout: 30_000 });
+  await expect(page.getByText("Muayene uzmanı imzası", { exact: true }).filter({ visible: true }).first()).toBeVisible();
+  await expect(page.getByText(/\d+ rapor imzanızı bekliyor/).first()).toBeVisible();
+  /* C5: Onaylar → İmzamı bekleyen raporlar → rapor */
+  await page.getByRole("link", { name: "İmzamı bekleyen raporlar" }).click();
+  await expect(page).toHaveURL(/\/onaylar\/imza$/, { timeout: 30_000 });
+  await hazir(page);
+  await page.getByRole("link", { name: raporNo }).first().click();
+  await expect(page).toHaveURL(new RegExp(`${raporAdresi}$`), { timeout: 30_000 });
   await hazir(page);
   await page.getByRole("button", { name: "İmzala", exact: true }).click();
   await expect(page.getByText("İmzasız PDF hazır; indirip imzalayın, imzalı PDF'i yükleyin.").first()).toBeVisible({ timeout: 60_000 });

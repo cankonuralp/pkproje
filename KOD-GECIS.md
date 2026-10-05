@@ -131,7 +131,7 @@ muhasebe. **Müşteri kullanıcısı** ayrı tür (yalnız müşteri paneli). Bi
 | Planlar | değiştirir | kendi | görür | görür | değiştirir | — |
 | Ekipman (plan içinde) | değiştirir | değiştirir | görür | görür | değiştirir | — |
 | Raporlar | görür | kendi | branşı | branşı | görür | — |
-| Onaylar | — | — | branşı | branşı | görür | — |
+| Onaylar | — | kendi | branşı | branşı | görür | — |
 | Uyarılar | görür | kendi | görür | görür | görür | — |
 | Müşteriler | değiştirir | görür | görür | görür | değiştirir | görür |
 | Teklifler | değiştirir | — | görür | görür | değiştirir | görür |

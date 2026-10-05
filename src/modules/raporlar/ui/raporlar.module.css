@@ -167,3 +167,6 @@ button.silTus { color: var(--hata-yazi); }
   .maddeBilgi { margin-left: 0; }
   .eylem > * { flex: 1 1 auto; }
 }
+/* Raporlar listesi (318) */
+.kod { font-weight: 700; font-variant-numeric: tabular-nums; letter-spacing: .01em; overflow-wrap: anywhere; }
+.sonucHata { color: var(--hata-yazi); font-weight: 600; }

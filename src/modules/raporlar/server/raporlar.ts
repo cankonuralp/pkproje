@@ -33,7 +33,7 @@ import { kimdeHaritasi } from "../../zimmetler/server/zimmet.ts";
 import { roldekiHesapAdlari } from "../../../server/kimlik/hesap.ts";
 import { ayEkle, kalibrasyonGecti, KopyaGirdisi, RAPOR_DURUM, RaporKaydi, SONUC_AD, type EkipmanBilgisi, type RaporCihazi, type RaporDurumu, type RaporTarihleri } from "../sema.ts";
 import { mesaiDurumu } from "./plan-baglanti.ts";
-import { sonGeriGonderme } from "./onay-baglanti.ts";
+import { raporOzetleri, sonGeriGonderme, type RaporOzeti } from "./onay-baglanti.ts";
 import { hesapAdlari } from "../../../server/kimlik/hesap.ts";
 import { TANIMLAR } from "../../../tanim/tanimlar.ts";
 import { ayarOku, firmaKunyesi } from "../../../server/ayar/ayar.ts";
@@ -726,4 +726,21 @@ export async function imzaliYukle(db: Sorgulayici, depo: Depo, kim: Kisi, firmaI
   const g = await guncelle(db, ISTEK, istek.id, istek.surum, { durum: "tamam", imzali_dosya: y.id }, iz);
   if (g.durum !== "tamam") return { durum: "cakisma" };
   return sonuc(await guncelle(db, RAPOR, id, surum, { durum: "imzali" }, iz), id, `${e.r.no} imzalandı, tamamlandı ve müşteriye açıldı.`);
+}
+
+/* ── RAPORLAR LİSTESİ (modül 14 ana sayfası; maket raporlar.html #/ — 318) ─────────────────────────────────────────────────────────────── */
+/** listede bir rapor: yazan hesabın kimliği gitmez; benim = isteyenin yazdığı; geri = Yeni'ye geri dönmüş */
+export type RaporListeSatiri = Omit<RaporOzeti, "hesapId"> & { benim: boolean; geri: boolean };
+/** görebildiği raporlar (denetçi kendi, branş yöneticisi branşı, planlama ve firma yöneticisi hepsi); en yeni üstte. Göremeyene null. */
+export async function raporListesi(db: Sorgulayici, kim: Kisi): Promise<RaporListeSatiri[] | null> {
+  if (duzey(kim, MODUL) === "yok") return null;
+  const l = (await raporOzetleri(db)).filter((r) => canDo(kim, MODUL, "gor", { sahip: r.hesapId, brans: r.brans }));
+  const taslak = l.filter((r) => r.durum === "taslak").map((r) => r.id);
+  const geri = new Set(taslak.length ? (await db.sorgu<{ r: string }>(
+    "SELECT DISTINCT rapor_id::text AS r FROM rapor_hareket WHERE ne = 'geri' AND rapor_id = ANY ($1::uuid[])", [taslak])).rows.map((x) => x.r) : []);
+  return l.sort((a, b) => b.olustu.localeCompare(a.olustu)).map((r) => {
+    const x: Partial<RaporOzeti> = { ...r };
+    delete x.hesapId;
+    return { ...(x as Omit<RaporOzeti, "hesapId">), benim: !!r.hesapId && r.hesapId === kim.id, geri: r.durum === "taslak" && geri.has(r.id) };
+  });
 }

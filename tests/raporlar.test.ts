@@ -7,7 +7,8 @@
    alan), 6 (tamamlanan rapor değişmez) · RAPOR-FORMAT §5, §7 (rapor türün yayındaki sürümüyle açılır ve onunla kalır) · pkproje §3.4 "Plan künyesi"
    (planlamacının değişikliği denetçiye kendiliğinden geçmez; Güncelle yalnız kendi Yeni raporlarına) · reisim 2026-10-04: "rol değiştirme, sızma,
    veri çalma; yetki her zaman sunucuda". GERÇEK PostgreSQL, iki firma (311). Olumsuz kanıt: tests/bozan/raporlar.bozan.ts.
-   313: maket kopyala / pencereKaydet (Kaydet ve kopyala, karar 204–209, N10), format-guncelle (211), MV.gunlukSure (212, AA2; KOD-GECIS ENGEL 3). */
+   313: maket kopyala / pencereKaydet (Kaydet ve kopyala, karar 204–209, N10), format-guncelle (211), MV.gunlukSure (212, AA2; KOD-GECIS ENGEL 3).
+   318: maket raporlar.html #/ (Raporlar listesi: görebildiği raporlar, en yeni üstte, Geri gönderilen çipi). */
 import assert from "node:assert/strict";
 import { mkdtempSync, rmSync } from "node:fs";
 import { tmpdir } from "node:os";
@@ -26,8 +27,9 @@ import { taslakBaslat, taslakKaydet, yayinla } from "../src/modules/rapor-format
 import { ayEkle } from "../src/modules/raporlar/sema.ts";
 import {
   cihazEkle, cihazKaldir, fotoEkle, fotoSil, onayaGonder, raporBelgesiVerisi, raporFormatGuncelle, raporKaydet, raporKopyala, raporKunyeGuncelle, raporOlustur,
-  raporSil, sahaRaporu, type RaporYazma,
+  raporListesi, raporSil, sahaRaporu, type RaporYazma,
 } from "../src/modules/raporlar/server/raporlar.ts";
+import { raporDurumYaz } from "../src/modules/raporlar/server/onay-baglanti.ts";
 import { ayarOku, ayarYaz } from "../src/server/ayar/ayar.ts";
 import { dosyaIndirilebilir } from "../src/server/dosya/dosya.ts";
 import { DOSYA_ERISIMI } from "../src/server/dosya/erisim.ts";
@@ -873,4 +875,30 @@ test("formatı güncelle: cevabı yeni cevap setinde olmayan madde boşalır, a�
   const d = (await sr(FA.den1, r.id))!;
   assert.deepEqual(d.cevaplar.madde[MADDELER[0].id], { c: "", not: "Korozyon", foto: 0 }, "seçim boş, açıklama kaldı");
   assert.deepEqual(d.cevaplar.madde[MADDELER[1].id], { c: "Uygun", foto: 0 });
+});
+
+test("raporlar listesi: denetçi yalnız kendi raporlarını, branş yöneticisi branşını, planlama ve firma yöneticisi hepsini görür; öteki branş boş, muhasebe hiç; başka firma görmez; en yeni üstte; yazan hesap gitmez; geri gönderilen işaretli", async () => {
+  const id = await yeniPlan({ ekip: [FA.den1P, FA.den2P] });
+  const r1 = tamam(await olustur(FA.den1, id, FA.ekp["HT-A2"])).id;
+  const r2 = tamam(await olustur(FA.den2, id, FA.ekp["HT-A3"])).id;
+  const liste = (k: Kisi) => a(k, (db) => raporListesi(db, k));
+  const bunlar = async (k: Kisi) => (await liste(k))?.filter((r) => r.id === r1 || r.id === r2).map((r) => r.id) ?? null;
+  assert.deepEqual(await bunlar(FA.den1), [r1], "denetçi kendi raporu");
+  assert.deepEqual(await bunlar(FA.den2), [r2]);
+  for (const k of [FA.mek, FA.plan, FA.yon]) assert.deepEqual(await bunlar(k), [r2, r1], `${k.roller[0]} görür, en yeni üstte`);
+  assert.deepEqual(await bunlar(FA.elk), [], "öteki branşın yöneticisi");
+  assert.equal(await liste(FA.muh), null, "muhasebe Raporlar'ı görmez");
+  assert.deepEqual((await b(FB.yon, (db) => raporListesi(db, FB.yon)))!.filter((r) => r.id === r1 || r.id === r2), [], "başka firma");
+  const s = (await liste(FA.den1))!.find((r) => r.id === r1)!;
+  assert.equal("hesapId" in s, false, "yazan hesabın kimliği ekrana gitmez");
+  assert.deepEqual([s.benim, s.geri, s.durum, s.ekipmanKod, s.turAd, s.brans, s.tesis, s.musteri, s.il, s.denetci],
+    [true, false, "taslak", "HT-A2", "Hava tankı", "m", "Merkez", "Deneme", "Ankara", "Deneme Bir"]);
+  assert.equal((await liste(FA.mek))!.find((r) => r.id === r1)!.benim, false);
+  /* geri gönderilen: onayda → Yeni (gerekçeyle; Onaylar'ın yazdığı geçiş, hareket "geri") */
+  await a(FA.den1, (db) => db.sorgu("UPDATE rapor SET durum = 'onayda', surum = surum + 1 WHERE id = $1", [r1]));
+  const sv = (await sql<{ surum: number }>(A, "SELECT surum FROM rapor WHERE id = $1", [r1])).rows[0].surum;
+  assert.equal((await a(FA.mek, (db) => raporDurumYaz(db, { kim: "Deneme", ne: "rapor.geri_gonder" }, r1, sv, "taslak", "Ölçüm değerleri eksik kalmış"))).durum, "tamam");
+  const g = (await liste(FA.den1))!.find((r) => r.id === r1)!;
+  assert.deepEqual([g.durum, g.geri], ["taslak", true]);
+  assert.equal((await liste(FA.den2))!.find((r) => r.id === r2)!.geri, false);
 });

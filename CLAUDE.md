@@ -110,9 +110,10 @@ pkproje/
                             saha verisi, kaydet, onaya gönder: ENGEL 1 / 2 / 5, sil, cihaz) · server/plan-baglanti.ts (Planlar'ın rapora baktığı tek yer)
                             · ekran /raporlar/<id> (format tanımından çizilir: ui/Bloklar.tsx) · fotoğraflar (312: ui/FotoListesi.tsx, dosya modülü "rapor")
                             · Kaydet ve kopyala / Formatı güncelle / günlük süre — mesai (313: raporKopyala, raporFormatGuncelle, plan-baglanti mesaiDurumu;
-                            ui/KopyaPenceresi.tsx)
+                            ui/KopyaPenceresi.tsx) · liste /raporlar (318: raporListesi — görme kayıt kayıt; ui/RaporListesi.tsx)
   src/modules/onaylar/      ONAYLAR (2026-10-05, 314; modül 15): kuyruk, onay ekranı (gözden geçirme), Onayla / Geri gönder / Onayı geri al /
                             Durumu değiştir (göç 0026: geçişler, onay damgası, Yeni'ye gerekçe ≥ 10 veritabanında); rapora raporlar/server/onay-baglanti.ts'ten
+                            · İmzamı bekleyen raporlar /onaylar/imza (318, C5: denetçinin Onaylar'ı yalnız bu; kuyruk ve onay ekranı yöneticinin)
   src/modules/ekipman/      EKİPMAN (2026-10-04, 309): tesisin kalıcı ekipman kaydı (kod firmada eşsiz; eski kod başkasına verilmez — ekipman_kodu)
   src/tanim/iller.ts        81 il + 973 ilçe (açık veri, MIT; bir kez alındı)
   src/modules/<modül>/      ★ her iş modülü: server/ (veri erişimi + iş kuralları, dışa açılan fonksiyonlar) · ui/ · şema · testler

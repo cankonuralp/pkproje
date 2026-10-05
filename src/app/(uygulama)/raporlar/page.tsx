@@ -1,11 +1,20 @@
+/* RAPORLAR (modül 14; maket raporlar.html #/): görebildiği raporlar — denetçi kendi, branş yöneticisi branşı, planlama ve firma yöneticisi
+   hepsi (görme sunucuda, raporListesi). Rapor plan içinde oluşturulur; buradan açılır. */
 import type { Metadata } from "next";
-import { ModulSayfasi } from "../../../components/modul/ModulSayfasi";
+import { Yetkisiz } from "../../../components/hata/Hata";
 import { modulBul } from "../../../modules/moduller";
+import { raporListesi } from "../../../modules/raporlar/server/raporlar";
+import { RaporListesi } from "../../../modules/raporlar/ui/RaporListesi";
+import { modulOturumu, oturumIslemi } from "../../../server/kimlik/istek";
 
 const MODUL = modulBul("raporlar")!;
 
 export const metadata: Metadata = { title: MODUL.ad };
 
-export default function Sayfa() {
-  return <ModulSayfasi modul={MODUL} />;
+export default async function Sayfa() {
+  const o = await modulOturumu(MODUL.no);
+  if (!o) return <Yetkisiz />;
+  const l = await oturumIslemi(o, (db) => raporListesi(db, o));
+  if (!l) return <Yetkisiz />;
+  return <RaporListesi kayitlar={l} />;
 }

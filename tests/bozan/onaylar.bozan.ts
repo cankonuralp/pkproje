@@ -3,7 +3,9 @@
    1. Sunucuda rapor_onayla denetimi olmasaydı raporu gören ama onay yetkisi olmayan firma yöneticisi (Onaylar "gör") raporu onaylardı.
    2. 0026'daki gerekçe kuralı olmasaydı rapor gerekçesiz Yeni'ye döner, denetçi neyi düzelteceğini bilmezdi (sunucu dışından yazılan durum).
       (0027 akış işlevini yeniden yazdığı için kural iki göçten birlikte sökülür.)
-   3. (317) 0027'deki imza kuralı olmasaydı onaylanmış rapor imzalı sürüm olmadan Tamamlandı'ya geçer, müşteriye imzasız açılırdı. */
+   3. (317) 0027'deki imza kuralı olmasaydı onaylanmış rapor imzalı sürüm olmadan Tamamlandı'ya geçer, müşteriye imzasız açılırdı.
+   4. (318, C5) Sunucuda yönetici düzeyi denetimi olmasaydı Onaylar'da yalnız imzasını bekleyenleri gören denetçi kendi raporunun onay ekranını
+      açardı. */
 import assert from "node:assert/strict";
 import { copyFileSync, mkdirSync, mkdtempSync, readdirSync, readFileSync, rmSync, writeFileSync } from "node:fs";
 import { tmpdir } from "node:os";
@@ -130,5 +132,17 @@ test("sunucuda rapor_onayla denetimi kalkınca raporu yalnız gören firma yöne
     const k = await kur(h, C);
     const r = await k.is(k.yon, (db) => m.onayla(db, k.yon, k.rapor, 1));
     assert.equal(r.durum, "tamam", `firma yöneticisi onayladı: ${JSON.stringify(r)}`);
+  } finally { await h.end(); }
+});
+
+test("sunucuda yönetici düzeyi denetimi kalkınca denetçi kendi raporunun onay ekranını açar (C5)", async () => {
+  const m = await bozukModul<Onaylar>(ONAYLAR, "  if (!yoneticiMi(kim)) return null;", "");
+  const s = kume.sahipIstemci(); await s.connect();
+  const C = (await s.query<{ id: string }>("INSERT INTO firma (kisa_ad, ad, rapor_kodu) VALUES ('deneme-c2', 'Deneme C2', 'DE') RETURNING id").finally(() => s.end())).rows[0].id;
+  const h = havuzKur(kume.uygulama);
+  try {
+    const k = await kur(h, C);
+    const v = await k.is(k.den, (db) => m.onayEkrani(db, k.den, k.rapor));
+    assert.ok(v, "denetçi onay ekranını açtı");
   } finally { await h.end(); }
 });

@@ -14,7 +14,7 @@ const UUID = /^[0-9a-f]{8}-[0-9a-f]{4}-[0-9a-f]{4}-[0-9a-f]{4}-[0-9a-f]{12}$/;
 
 export interface RaporOzeti {
   id: string; no: string; durum: RaporDurumu; surum: number; planId: string; ekipmanKod: string; turAd: string; brans: "m" | "e";
-  musteri: string; tesis: string; tesisId: string; personelId: string; denetci: string;
+  musteri: string; musteriId: string; tesis: string; tesisId: string; il: string | null; personelId: string; denetci: string;
   /** yazan hesap (yetki kaydının sahibi; istemciye gönderilmez) */
   hesapId: string | null;
   sonuc: "uygun" | "uygun_degil" | null; gonderildi: string | null; onay: string | null; olustu: string;
@@ -33,13 +33,14 @@ export async function raporOzetleri(db: Sorgulayici, s: { durumlar?: readonly Ra
   if (!l.length) return [];
   const ek = new Map((await ekipmanlar(db, [...new Set(l.map((x) => x.ekipman_id))])).map((e) => [e.id, e]));
   const tur = new Map((await turOzetleri(db)).map((t) => [t.id, t]));
-  const yer = new Map((await musteriOzetleri(db)).flatMap((m) => m.tesisler.map((t) => [t.id, { tesis: t.ad, musteri: m.kisa }] as const)));
+  const yer = new Map((await musteriOzetleri(db)).flatMap((m) => m.tesisler.map((t) => [t.id, { tesis: t.ad, musteri: m.kisa, musteriId: m.id, il: t.il }] as const)));
   const ad = new Map((await personelOzetleri(db, [...new Set(l.map((x) => x.personel_id))])).map((x) => [x.id, x.ad]));
   return l.map((x) => {
     const e = ek.get(x.ekipman_id), t = tur.get(x.tur_id), y = e ? yer.get(e.tesisId) : undefined;
     return {
       id: x.id, no: x.no, durum: x.durum, surum: x.surum, planId: x.plan_id, ekipmanKod: e?.kod ?? "—", turAd: t?.ad ?? "—", brans: t?.brans ?? "m",
-      musteri: y?.musteri ?? "—", tesis: y?.tesis ?? "—", tesisId: e?.tesisId ?? "", personelId: x.personel_id, denetci: ad.get(x.personel_id) ?? "—",
+      musteri: y?.musteri ?? "—", musteriId: y?.musteriId ?? "", tesis: y?.tesis ?? "—", tesisId: e?.tesisId ?? "", il: y?.il ?? null,
+      personelId: x.personel_id, denetci: ad.get(x.personel_id) ?? "—",
       hesapId: x.hesap_id, sonuc: x.sonuc, gonderildi: x.gonderildi?.toISOString() ?? null, onay: x.onay?.toISOString() ?? null, olustu: x.olustu.toISOString(),
     };
   });

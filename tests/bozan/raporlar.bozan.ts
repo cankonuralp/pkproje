@@ -4,7 +4,8 @@
    2. Sunucuda ENGEL 1 (plan günü) denetimi olmasaydı ileri tarihli plana rapor açılırdı (KOD-GECIS §9-1).
    3. Sunucuda cihaz eklerken kalibrasyon denetimi olmasaydı kalibrasyonu geçmiş cihaz rapora eklenirdi (ENGEL 2'nin ilk kapısı).
    4. (312) Fotoğraf / cihaz sayısı istemciden alınsaydı fotoğrafsız, cihazsız rapor onaya giderdi.
-   5. (313) Sunucuda günlük süre (ENGEL 3) denetimi olmasaydı süre dolmuşken kopya ve yeni rapor açılırdı. */
+   5. (313) Sunucuda günlük süre (ENGEL 3) denetimi olmasaydı süre dolmuşken kopya ve yeni rapor açılırdı.
+   6. (318) Raporlar listesinde kayıt kayıt görme süzgeci olmasaydı denetçi başka denetçinin raporunu listede görürdü. */
 import assert from "node:assert/strict";
 import { copyFileSync, mkdirSync, mkdtempSync, readdirSync, readFileSync, rmSync, writeFileSync } from "node:fs";
 import { tmpdir } from "node:os";
@@ -175,5 +176,18 @@ test("sunucuda günlük süre denetimi kalkınca süre dolmuşken kopya açılı
     assert.ok(r.durum === "tamam", JSON.stringify(r));
     const k = await is(den, (db) => m.raporKopyala(db, den, r.id, 0, { kod: "HT-2", konum: null }, null));
     assert.equal(k.durum, "tamam", `süre dolmuşken kopya açıldı: ${JSON.stringify(k)}`);
+  } finally { await h.end(); }
+});
+
+test("sunucuda listenin görme süzgeci kalkınca denetçi başka denetçinin raporunu listede görür", async () => {
+  const m = await bozukModul<Raporlar>(RAPORLAR, `.filter((r) => canDo(kim, MODUL, "gor", { sahip: r.hesapId, brans: r.brans }));`, ";");
+  const { h, den, id, ekipman, is } = await saglam(bugunTr());
+  try {
+    const r = await is(den, (db) => m.raporOlustur(db, den, id, ekipman));
+    assert.ok(r.durum === "tamam", JSON.stringify(r));
+    const baska: Kisi = { id: (await is(den, (db) => db.sorgu<{ id: string }>(
+      "INSERT INTO hesap (eposta, ad, roller, durum) VALUES ('d2@deneme.example', 'Deneme', '{denetci}', 'etkin') RETURNING id::text"))).rows[0].id, ad: "Deneme", roller: ["denetci"] };
+    const l = await is(baska, (db) => m.raporListesi(db, baska));
+    assert.ok(l?.some((x) => x.id === r.id), "başka denetçinin raporu listede");
   } finally { await h.end(); }
 });

@@ -63,7 +63,7 @@
      Düzey: yaz (görür ve değiştirir) · gor (görür) · brans (yalnız kendi branşı) · kendi (yalnız kendi kayıtları) · yok.
      Sıra: planlama · denetçi · mekyon · elkyon · yonetici · muhasebe. "hareket" = Hareket kaydı (denetim izi; karar 30: yöneticiye). */
   MV.MATRIS = {
-    13: ["yaz", "kendi", "gor", "gor", "yaz", "yok"], 14: ["gor", "kendi", "brans", "brans", "gor", "yok"], 15: ["yok", "yok", "brans", "brans", "gor", "yok"],
+    13: ["yaz", "kendi", "gor", "gor", "yaz", "yok"], 14: ["gor", "kendi", "brans", "brans", "gor", "yok"], 15: ["yok", "kendi", "brans", "brans", "gor", "yok"],
     20: ["gor", "kendi", "gor", "gor", "gor", "yok"], 3: ["yaz", "gor", "gor", "gor", "yaz", "gor"], 11: ["yaz", "yok", "gor", "gor", "yaz", "gor"],
     12: ["yaz", "kendi", "gor", "gor", "yaz", "gor"], 7: ["yaz", "yaz", "gor", "gor", "yaz", "yok"], 8: ["gor", "kendi", "yaz", "yaz", "yaz", "yok"],
     9: ["gor", "kendi", "yaz", "yaz", "yaz", "yok"], 2: ["gor", "kendi", "gor", "gor", "yaz", "yok"], 10: ["gor", "kendi", "yaz", "yaz", "yaz", "yok"],

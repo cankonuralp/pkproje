@@ -1,7 +1,8 @@
 /* ONAYLAR (modül 15; maket onaylar.html M9; KOD-GECIS §4 rapor_onayla / rapor_geri_gonder / rapor_durum_degistir, §5 Rapor; karar 102, 190,
    191; N7 — vekil yok, her yönetici kendi branşını görür). Yetki her işlevde SUNUCUDA:
-   · Görme: Onaylar düzeyi — "gör" (firma yöneticisi) hepsi, "branşı" (branş yöneticisi) türün branşı; denetçi, planlama, muhasebe yok (C5 —
-     denetçinin "İmzamı bekleyen raporlar"ı imza kalemiyle gelir). Göremeyen rapor "yok" (var olduğu söylenmez).
+   · Görme: Onaylar düzeyi — "gör" (firma yöneticisi) hepsi, "branşı" (branş yöneticisi) türün branşı; denetçi "kendi" (C5, 2026-10-05: imzanın
+     tek merkezi Onaylar — yalnız İMZASINI BEKLEYEN kendi raporları; kuyruk, tüm raporlar ve onay ekranı yöneticinin); planlama, muhasebe yok.
+     Göremeyen rapor "yok" (var olduğu söylenmez).
    · Onayla / Onayı geri al: rapor_onayla — türün branş yöneticisi. Kendi yazdığı raporu da onaylar (C1, reisim kararı pkproje §1: "hazırlayanın
      kendi raporunu onaylaması da engellenmez"). Geri gönder: rapor_geri_gonder, gerekçe ≥ 10. Durumu değiştir: rapor_durum_degistir, Yeni /
      onayda / onaylandı arasında (Tamamlandı'ya yalnız imzayla); Yeni'ye ise gerekçe ≥ 10; Onaylandı'ya almak onay sayılır (191).
@@ -32,6 +33,8 @@ const kayit = (r: RaporOzeti) => ({ sahip: r.hesapId, brans: r.brans, durum: RAP
 const gorur = (kim: Kisi, r: RaporOzeti) => canDo(kim, MODUL, "gor", { sahip: r.hesapId, brans: r.brans });
 /** Onaylar menüsü ve sayfaları: düzeyi olan */
 export const onaylarGorur = (kim: Kisi) => duzey(kim, MODUL) !== "yok";
+/** kuyruk, tüm raporlar ve onay ekranı: yönetici düzeyi (branşı, gör, yaz); "kendi" (denetçi) yalnız imzasını bekleyenleri görür */
+const yoneticiMi = (kim: Kisi) => { const d = duzey(kim, MODUL); return d === "brans" || d === "gor" || d === "yaz"; };
 
 function izinler(kim: Kisi, r: RaporOzeti): OnayIzni {
   const k = kayit(r);
@@ -60,23 +63,34 @@ async function kuyrukOzetleri(db: Sorgulayici, kim: Kisi): Promise<RaporOzeti[]>
   return (await raporOzetleri(db, { durumlar: ["onayda"] })).filter((r) => gorur(kim, r)).sort(enYeni);
 }
 
-export interface OnayListeleri { kuyruk: OnaySatiri[]; tumu: OnaySatiri[]; branslar: ("m" | "e")[] }
-/** Onay kuyruğu + Tüm raporlar (branşın bütün raporları; maket 190); Onaylar'ı göremeyene null */
+export interface OnayListeleri {
+  /** yönetici düzeyi (kuyruk ve tüm raporlar onun); değilse yalnız imzasını bekleyen raporlar */
+  yonetici: boolean;
+  kuyruk: OnaySatiri[]; tumu: OnaySatiri[]; branslar: ("m" | "e")[];
+  /** kişinin YAZDIĞI, onaylanmış (son imzasını bekleyen) raporları — maket onaylar.html BB4 "İmzamı bekleyen raporlar"; onay sırasıyla (eski önce) */
+  imzaBekleyen: OnaySatiri[];
+}
+/** Onay kuyruğu + Tüm raporlar (branşın bütün raporları; maket 190) + İmzamı bekleyen raporlar (C5); Onaylar'ı göremeyene null */
 export async function onayListeleri(db: Sorgulayici, kim: Kisi): Promise<OnayListeleri | null> {
   if (!onaylarGorur(kim)) return null;
-  const simdi = Date.now();
-  const tum = (await raporOzetleri(db)).filter((r) => gorur(kim, r));
+  const simdi = Date.now(), yonetici = yoneticiMi(kim);
+  const hepsi = await raporOzetleri(db);
+  const tum = yonetici ? hepsi.filter((r) => gorur(kim, r)) : [];
+  const imzaBekleyen = hepsi.filter((r) => r.durum === "onaylandi" && !!r.hesapId && r.hesapId === kim.id && canDoEylem(kim, "rapor_son_imza", { sahip: r.hesapId }))
+    .sort((a, b) => (a.onay ?? "").localeCompare(b.onay ?? "")).map((r) => satir(kim, r, simdi));
   return {
+    yonetici,
     kuyruk: tum.filter((r) => r.durum === "onayda").sort(enYeni).map((r) => satir(kim, r, simdi)),
     tumu: [...tum].sort((a, b) => b.olustu.localeCompare(a.olustu)).map((r) => satir(kim, r, simdi)),
     branslar: [...new Set(tum.map((r) => r.brans))].sort(),
+    imzaBekleyen,
   };
 }
 
 export interface OnayEkrani { r: OnaySatiri; ozet: GozdenGecirmeMaddesi[]; sira: number | null; kuyrukBoyu: number }
 /** onay ekranı: gözden geçirme özeti + sıra; göremeyene null */
 export async function onayEkrani(db: Sorgulayici, kim: Kisi, id: string): Promise<OnayEkrani | null> {
-  if (!onaylarGorur(kim)) return null;
+  if (!yoneticiMi(kim)) return null;
   const r = (await raporOzetleri(db, { id }))[0];
   if (!r || !gorur(kim, r)) return null;
   const q = r.durum === "onayda" ? await kuyrukOzetleri(db, kim) : [];
@@ -86,7 +100,7 @@ export async function onayEkrani(db: Sorgulayici, kim: Kisi, id: string): Promis
 
 /* ── EYLEMLER ────────────────────────────────────────────────────────────────────────────────────────────────── */
 async function bul(db: Sorgulayici, kim: Kisi, id: string): Promise<RaporOzeti | null> {
-  if (!onaylarGorur(kim)) return null;
+  if (!yoneticiMi(kim)) return null;
   const r = (await raporOzetleri(db, { id }))[0];
   return r && gorur(kim, r) ? r : null;
 }

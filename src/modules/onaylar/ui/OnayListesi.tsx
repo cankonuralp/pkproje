@@ -7,7 +7,8 @@ import Link from "next/link";
 import { KartEtiket, Kirp, type Sutun } from "../../../components/liste/Liste";
 import { Sayac, SuzgecliListe, useSuzgec } from "../../../components/liste/SuzgecliListe";
 import type { SuzgecTanimi } from "../../../components/liste/suzgec";
-import { AltSatir, Rozet, SayfaBasi, Sekmeler, type RozetTuru } from "../../../components/sayfa/Sayfa";
+import { AltSatir, Rozet, SayfaBasi, Sekmeler, SeritKap, type RozetTuru } from "../../../components/sayfa/Sayfa";
+import { Serit } from "../../../components/serit/Serit";
 import { TusBaglanti } from "../../../components/tus/Tus";
 import { RAPOR_DURUM, type RaporDurumu } from "../../raporlar/sema";
 import type { OnayListeleri, OnaySatiri } from "../server/onaylar";
@@ -89,9 +90,12 @@ function tumTanimi(l: readonly OnaySatiri[]): SuzgecTanimi<OnaySatiri> {
   };
 }
 
-export function onaySekmeleri(v: Pick<OnayListeleri, "kuyruk" | "tumu" | "branslar">) {
+export function onaySekmeleri(v: Pick<OnayListeleri, "kuyruk" | "tumu" | "branslar" | "imzaBekleyen">) {
   const brans = v.branslar.length === 1 ? ` · ${v.branslar[0] === "m" ? "mekanik" : "elektrik"}` : "";
-  return [[`Onay kuyruğu${brans} (${v.kuyruk.length})`, "/onaylar"], [`Tüm raporlar (${v.tumu.length})`, "/onaylar/tum"]] as const;
+  const l: (readonly [string, string])[] = [[`Onay kuyruğu${brans} (${v.kuyruk.length})`, "/onaylar"], [`Tüm raporlar (${v.tumu.length})`, "/onaylar/tum"]];
+  /* yönetici aynı zamanda rapor yazıyorsa (ör. mekanik yönetici + denetçi) kendi imzası ayrı sekmede */
+  if (v.imzaBekleyen.length) l.push([`İmzamı bekleyen raporlar (${v.imzaBekleyen.length})`, "/onaylar/imza"]);
+  return l;
 }
 
 export function OnayKuyrugu({ v }: { v: OnayListeleri }) {
@@ -114,6 +118,42 @@ export function TumRaporlar({ v }: { v: OnayListeleri }) {
       <Sekmeler ad="Onaylar bölümleri" ogeler={onaySekmeleri(v)} secili="/onaylar/tum" />
       <SuzgecliListe s={s} on="t" baslik="Tüm raporlar" sutunlar={TUM_SUTUN} anahtar={(r) => r.id} href={(r) => `/onaylar/${r.id}`} siralanir
         bosVeri={{ ikon: "inbox", baslik: "Rapor yok", metin: "Branşınızda açılmış rapor yok." }} />
+    </>
+  );
+}
+
+/* İMZAMI BEKLEYEN RAPORLAR (C5; maket onaylar.html BB4 imzaCiz, IMZA_SUTUN): kişinin yazdığı, teknik yöneticinin onayladığı raporlar — son imza
+   rapor ekranında (İmzala → imzasız PDF'i indir → imzalı PDF'i yükle; her rapor ayrı). Denetçinin Onaylar'ı yalnız bu listedir. */
+const IMZA_SUTUN: Sutun<OnaySatiri>[] = [
+  { k: "no", genislik: "26%", baslik: "Rapor no", kart: "ust", sira: 1, hucre: (r) => (
+    <><Link className={stil.kod} href={`/raporlar/${r.id}`}>{r.no}</Link><AltSatir><Kirp>{`${r.musteri} / ${r.tesis}`}</Kirp></AltSatir></>
+  ) },
+  { k: "ekipman", genislik: "28%", baslik: "Ekipman", kart: "govde", sira: 2, hucre: ekipmanHucre },
+  { k: "onay", genislik: "24%", baslik: "Onaylandı", kart: "govde", sira: 3, hucre: (r) => (
+    <><KartEtiket>Onaylandı</KartEtiket><span className={stil.sayi}>{r.onay ? zamanYaz(r.onay) : "—"}</span></>
+  ) },
+  { k: "eylem", genislik: "22%", baslik: "İşlem", gizliBaslik: true, siralanmaz: true, kart: "eylem", sira: 9, hucre: (r) => (
+    <div className={stil.eylemTuslar}><TusBaglanti tur="birincil" ikon="file-signature" href={`/raporlar/${r.id}`}>İmzala</TusBaglanti></div>
+  ) },
+];
+function imzaTanimi(): SuzgecTanimi<OnaySatiri> {
+  return { ad: "İmza bekleyenlerde ara", ipucu: "Rapor no, kod, tesis", birim: "rapor", imkansiz: "", cipler: [], seciciler: [],
+    metin: (r) => [r.no, r.ekipmanKod, r.turAd, r.tesis, r.musteri].join(" ") };
+}
+export function ImzaBekleyen({ v }: { v: OnayListeleri }) {
+  const s = useSuzgec(imzaTanimi(), v.imzaBekleyen);
+  const n = v.imzaBekleyen.length;
+  return (
+    <>
+      <SayfaBasi baslik="Onaylar" sayac={<Sayac s={s} />} />
+      {v.yonetici && <Sekmeler ad="Onaylar bölümleri" ogeler={onaySekmeleri(v)} secili="/onaylar/imza" />}
+      {n > 0 && (
+        <SeritKap>
+          <Serit tur="uyari" ikon="file-signature"><b>{n} rapor imzanızı bekliyor</b> · her rapor ayrı imzalanır: raporu açın, İmzala.</Serit>
+        </SeritKap>
+      )}
+      <SuzgecliListe s={s} on="i" baslik="İmzamı bekleyen raporlar" sutunlar={IMZA_SUTUN} anahtar={(r) => r.id} href={(r) => `/raporlar/${r.id}`}
+        bosVeri={{ ikon: "circle-check", baslik: "İmzanızı bekleyen rapor yok", metin: "Teknik yönetici raporunuzu onaylayınca son imza için burada görünür." }} />
     </>
   );
 }

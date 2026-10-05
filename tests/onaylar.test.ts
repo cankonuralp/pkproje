@@ -106,7 +106,7 @@ before(async () => {
 });
 after(async () => { await havuz?.end(); await kume?.durdur(); rmSync(klasor, { recursive: true, force: true }); });
 
-test("kuyruk: branş yöneticisi yalnız kendi branşının onaydaki raporlarını görür, en yeni üstte; firma yöneticisi hepsini görür ama onaylamaz; denetçi, planlama, muhasebe ve başka firma görmez", async () => {
+test("kuyruk: branş yöneticisi yalnız kendi branşının onaydaki raporlarını görür, en yeni üstte; firma yöneticisi hepsini görür ama onaylamaz; denetçi kuyruğu görmez (yalnız imzasını bekleyenler); planlama, muhasebe ve başka firma görmez", async () => {
   const [h1, h2, e1] = await raporlar([[FA.den, "HT-1"], [FA.den, "HT-2"], [FA.den, "EP-1"]]);
   const mek = (await a(FA.mek, (db) => onayListeleri(db, FA.mek)))!;
   const benim = mek.kuyruk.filter((r) => [h1, h2, e1].includes(r.id));
@@ -121,8 +121,13 @@ test("kuyruk: branş yöneticisi yalnız kendi branşının onaydaki raporların
   const yonun = yon.kuyruk.filter((r) => [h1, h2, e1].includes(r.id));
   assert.equal(yonun.length, 3, "firma yöneticisi görür");
   assert.ok(yonun.every((r) => !r.izin.onayla && !r.izin.geriGonder && !r.izin.durumDegistir), "firma yöneticisi onaylamaz (branş yöneticisi değil)");
-  for (const k of [FA.den, FA.plan, FA.muh]) assert.equal(await a(k, (db) => onayListeleri(db, k)), null, `${k.roller[0]} Onaylar'ı görmez`);
-  assert.equal(await a(FA.den, (db) => onayEkrani(db, FA.den, h1)), null);
+  /* 2026-10-05 (318, C5): denetçinin Onaylar düzeyi "kendi" — imzanın tek merkezi Onaylar (pkproje §11 264; maket onaylar.html BB4). Önceki
+     "denetçi Onaylar'ı görmez" beklentisi bu kararla değişti; denetçi yine kuyruğu, tüm raporları ve onay ekranını görmez. */
+  const den = (await a(FA.den, (db) => onayListeleri(db, FA.den)))!;
+  assert.deepEqual([den.yonetici, den.kuyruk, den.tumu, den.branslar, den.imzaBekleyen], [false, [], [], [], []], "denetçi: kuyruk ve tüm raporlar yok");
+  for (const k of [FA.plan, FA.muh]) assert.equal(await a(k, (db) => onayListeleri(db, k)), null, `${k.roller[0]} Onaylar'ı görmez`);
+  assert.equal(await a(FA.den, (db) => onayEkrani(db, FA.den, h1)), null, "denetçi onay ekranını açamaz");
+  assert.equal((await a(FA.den, (db) => onayla(db, FA.den, h1, 1))).durum, "yok", "denetçi onaylayamaz");
   assert.equal(await a(FA.elk, (db) => onayEkrani(db, FA.elk, h1)), null, "öteki branşın raporu");
   assert.deepEqual((await b(FB.mek, (db) => onayListeleri(db, FB.mek)))!.kuyruk.filter((r) => [h1, h2, e1].includes(r.id)), [], "başka firma");
   assert.equal(await b(FB.mek, (db) => onayEkrani(db, FB.mek, h1)), null);
@@ -323,6 +328,11 @@ test("imzaya hazırla: yalnız raporu yazan, yalnız onaylanmış raporda; kesin
   assert.deepEqual(await hazirla(FA.den, h1), { durum: "tamam", id: h1, bildirim: "İmzasız PDF hazır; indirip imzalayın, imzalı PDF'i yükleyin." });
   tamam(await hazirla(FA.den, h1));
   assert.equal(uretilen - once, 1, "ikinci İmzala yeniden üretmez (imzalanacak bayt değişmesin)");
+  /* C5: İmzamı bekleyen raporlar — yalnız yazanın; yöneticinin sekmesinde başkasının raporu yok, öteki firma görmez */
+  const bekleyen = async (k: Kisi) => ((await a(k, (db) => onayListeleri(db, k)))?.imzaBekleyen ?? []).map((r) => r.id);
+  assert.ok((await bekleyen(FA.den)).includes(h1), "yazan imzasını bekleyeni görür");
+  for (const k of [FA.mek, FA.mekDen, FA.yon]) assert.equal((await bekleyen(k)).includes(h1), false, `${k.roller.join("+")} başkasının imzasını beklemez`);
+  assert.deepEqual((await b(FB.den, (db) => onayListeleri(db, FB.den)))!.imzaBekleyen, [], "başka firma");
   const i = (await sql<{ durum: string; h: string; sha: string; dsha: string; modul: string }>(A, `SELECT i.durum, i.hesap_id::text AS h, i.pdf_sha256 AS sha, d.sha256 AS dsha, d.modul
     FROM imza_istegi i JOIN dosya d ON d.id = i.pdf_dosya WHERE i.rapor_id = $1`, [h1])).rows;
   assert.equal(i.length, 1);
@@ -351,6 +361,7 @@ test("imzalı PDF: önek ve imza sözlüğü şart; tamamlanınca imzalı sürü
   assert.match(r.bildirim, /^DA-\S+ imzalandı, tamamlandı ve müşteriye açıldı\.$/);
   assert.equal((await satir(h1)).durum, "imzali");
   assert.deepEqual((await hareketler(h1)).at(-1)?.[0], "imza");
+  assert.equal((await a(FA.den, (db) => onayListeleri(db, FA.den)))!.imzaBekleyen.some((x) => x.id === h1), false, "imzalanan bekleyenlerden düşer");
   const sr = (await sql<{ no: string; rno: string; tesis: string; sonuc: string; imzalayan: string; firma: string; personel: { ad: string }; icerik: { format_sira: number } }>(A,
     `SELECT s.no, r.no AS rno, s.tesis_id::text AS tesis, s.sonuc, s.imzalayan_hesap::text AS imzalayan, s.kunye->>'firma_adi' AS firma, s.personel, s.icerik
      FROM rapor_surumu s JOIN rapor r ON r.id = s.rapor_id WHERE s.rapor_id = $1`, [h1])).rows;

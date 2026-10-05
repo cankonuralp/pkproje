@@ -2341,6 +2341,18 @@ revizyon, alan kopyalama, hafif kusur devri, meslek eşleşme denetimi).
 - Emsal ürünler: https://opwire.app/iso-17020-periyodik-kontrol-yazilimi/ · https://17020muayene.vidco.com.tr/ · https://akuple.com/asansor-kontrol-yazilimi/ · https://ensyazilim.com/
 
 ## 11 · Değişiklik günlüğü
+- 2026-10-05 (318): **K3 Raporlar listesi + denetçinin Onaylar'ı (C5)** (maket raporlar.html #/, onaylar.html BB4; §11 264; reisim 2026-09-26:
+  "sıralama tarihi olsun her zaman en yeni en yukarıda olsun", "raporlar modülünde kusurlu tuşunu kaldır"; 2026-09-28: "ekipman türüne rapor
+  numarasına göre ayrı ayrı arayabilmeliyim"). **Raporlar** (/raporlar): görebildiği raporlar — denetçi kendi, branş yöneticisi branşı, planlama
+  ve firma yöneticisi hepsi, muhasebe hiç (görme sunucuda, kayıt kayıt); en yeni üstte, 20'şer; alan alan arama (rapor no · ekipman kodu ·
+  ekipman türü · tesis), durum çipleri + Geri gönderilen, seçiciler Müşteri · İl · Sonuç · Yıl; satır raporu açar; imzasını bekleyen raporu
+  olana şerit → Onaylar. Yazan hesabın kimliği ekrana gitmez. **C5 uygulandı:** denetçinin Onaylar düzeyi "kendi" (üç ayna: tanim.ts, maket,
+  KOD-GECIS §4) — Onaylar'ı **yalnız "İmzamı bekleyen raporlar"** (kendi yazdığı, onaylanmış raporlar, onay sırasıyla; /onaylar/imza, yöneticide
+  ayrı sekme); kuyruk, Tüm raporlar ve onay ekranı yöneticinin (sunucuda yönetici düzeyi denetimi). Toplu imza açık: imza aracımızla (tek PIN,
+  her rapor ayrı imza — 177) gelir; indir-imzala-yükle yolunda her rapor kendi ekranında imzalanır. Kilit: raporlar.test +1 (liste görünürlüğü,
+  iki firma, geri işareti), onaylar.test (denetçi kuyruğu görmez, imza bekleyen yalnız yazanın, imzalanınca düşer — 314'ün "denetçi Onaylar'ı
+  görmez" beklentisi bu kararla tarih ve gerekçeyle değişti), bozan +2 (liste süzgeci, denetçinin onay ekranı); e2e saha raporu: denetçi
+  Raporlar'da raporu bulur, şeritten İmzamı bekleyen raporlar'a, oradan rapora geçip imzalar.
 - 2026-10-05 (CI kararlılığı): CI iş günlüğü okunarak (git'in GitHub kimliğiyle, yalnız okuma) uçtan uca düşüşlerin sebebi bulundu: 180 testlik koşunun
   sonuna doğru Next geliştirme sunucusunun yığını kendi eşiğine (bellek sınırının %80'i; sınır makine belleğinin yarısı) dayanıyor, sunucu test
   ortasında kendini yeniden başlatıyordu ("Server is approaching the used memory threshold, restarting…") — o anda koşan test düşüyordu.
