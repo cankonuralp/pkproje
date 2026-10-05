@@ -26,6 +26,8 @@ export interface TeklifFormDegeri {
 }
 export const BOS_ADAY: Aday = { unvan: "", vd: "", vno: "", adres: "", il: "", ilce: "", eposta: "", tel: "", yetkili: "" };
 const OZET = "tf-ozet";
+/* alan kimlikleri tek yerde (Alan ve girdisi aynı kimliği paylaşır — tests/ayni-id.test.ts) */
+const FID = { musteri: "f-musteri", tesis: "f-tesis", il: "f-a-il", ilce: "f-a-ilce", gecerlilik: "f-gecerlilik", kdv: "f-kdv", not: "f-not" } as const;
 const IL_SECENEK = Object.keys(IL_ILCE).map((x) => [x, x] as const);
 const kurus = (f: string) => { const r = tutar.safeParse(f); return r.success && r.data > 0 ? r.data : null; };
 /** hata anahtarı → alanın kimliği (odak) */
@@ -101,16 +103,16 @@ export function TeklifFormu({ secenekler, deger, id, surum, no, kopyaKaynak }: {
           {f.tip === "kayitli" ? (
             <>
               <FormIzgara>
-                <Alan id="f-musteri" etiket="Müşteri" zorunlu genis hata={h.musteri} sonuc={m?.unvan}>
-                  <SecimAlani id="f-musteri" ad="Müşteri" deger={f.musteri} ipucu="Müşteri seçin" gecersiz={!!h.musteri} tanim={ipucuId("f-musteri")}
+                <Alan id={FID.musteri} etiket="Müşteri" zorunlu genis hata={h.musteri} sonuc={m?.unvan}>
+                  <SecimAlani id={FID.musteri} ad="Müşteri" deger={f.musteri} ipucu="Müşteri seçin" gecersiz={!!h.musteri} tanim={ipucuId(FID.musteri)}
                     secenekler={secenekler.musteriler.map((x) => [x.id, x.kisa] as const)} degistir={(x) => { if (x !== f.musteri) yaz({ musteri: x, tesis: "", ekTesisler: [] }); }} />
                 </Alan>
-                <Alan id="f-tesis" etiket="Tesis" zorunlu genis hata={h.tesis}
+                <Alan id={FID.tesis} etiket="Tesis" zorunlu genis hata={h.tesis}
                   sonuc={f.tesis ? `${Object.values(m?.tesisler.find((t) => t.id === f.tesis)?.ekipman ?? {}).reduce((n, x) => n + x, 0)} kayıtlı ekipman` : undefined}>
-                  {m ? <SecimAlani id="f-tesis" ad="Tesis" deger={f.tesis} ipucu="Tesis seçin" gecersiz={!!h.tesis} tanim={ipucuId("f-tesis")}
+                  {m ? <SecimAlani id={FID.tesis} ad="Tesis" deger={f.tesis} ipucu="Tesis seçin" gecersiz={!!h.tesis} tanim={ipucuId(FID.tesis)}
                     secenekler={m.tesisler.map((t) => [t.id, t.ad, [t.ilce, t.il].filter(Boolean).join(" / ")] as const)}
                     degistir={(x) => yaz({ tesis: x, ekTesisler: f.ekTesisler.filter((y) => y !== x) })} />
-                    : <Girdi id="f-tesis" readOnly value="Önce müşteri seçin" />}
+                    : <Girdi id={FID.tesis} readOnly value="Önce müşteri seçin" />}
                 </Alan>
               </FormIzgara>
               {m && f.tesis && m.tesisler.length > 1 && (
@@ -132,14 +134,14 @@ export function TeklifFormu({ secenekler, deger, id, surum, no, kopyaKaynak }: {
               {A("vd", "Vergi dairesi", { tip: { maxLength: 40 } })}
               {A("vno", "Vergi no", { tip: { inputMode: "numeric", maxLength: 11 } })}
               {A("adres", "Adres", { zorunlu: true, genis: true, tip: { maxLength: 160 } })}
-              <Alan id="f-a-il" etiket="İl" zorunlu hata={h["aday.il"]}>
-                <SecimAlani id="f-a-il" ad="İl" deger={f.aday.il} secenekler={IL_SECENEK} ipucu="İl seçin" gecersiz={!!h["aday.il"]} degistir={(v) => adayYaz("il", v)} />
+              <Alan id={FID.il} etiket="İl" zorunlu hata={h["aday.il"]}>
+                <SecimAlani id={FID.il} ad="İl" deger={f.aday.il} secenekler={IL_SECENEK} ipucu="İl seçin" gecersiz={!!h["aday.il"]} degistir={(v) => adayYaz("il", v)} />
               </Alan>
-              <Alan id="f-a-ilce" etiket="İlçe" hata={h["aday.ilce"]}>
+              <Alan id={FID.ilce} etiket="İlçe" hata={h["aday.ilce"]}>
                 {f.aday.il
-                  ? <SecimAlani id="f-a-ilce" ad="İlçe" deger={f.aday.ilce} secenekler={(IL_ILCE[f.aday.il] ?? []).map((x) => [x, x] as const)} ipucu="İlçe seçin"
+                  ? <SecimAlani id={FID.ilce} ad="İlçe" deger={f.aday.ilce} secenekler={(IL_ILCE[f.aday.il] ?? []).map((x) => [x, x] as const)} ipucu="İlçe seçin"
                       gecersiz={!!h["aday.ilce"]} degistir={(v) => adayYaz("ilce", v)} />
-                  : <Girdi id="f-a-ilce" readOnly value="Önce il seçin" />}
+                  : <Girdi id={FID.ilce} readOnly value="Önce il seçin" />}
               </Alan>
               {A("eposta", "E-posta", { tip: { type: "email", inputMode: "email", maxLength: 120 } })}
               {A("tel", "Telefon", { tip: { type: "tel", inputMode: "tel", maxLength: 20 } })}
@@ -149,14 +151,14 @@ export function TeklifFormu({ secenekler, deger, id, surum, no, kopyaKaynak }: {
         </FormBolum>
         <FormBolum baslik="Koşullar" id="tf-b2">
           <FormIzgara>
-            <Alan id="f-gecerlilik" etiket="Geçerlilik (gün)" zorunlu hata={h.gecerlilik} sonuc="Gönderildiği günden">
-              <Girdi id="f-gecerlilik" value={f.gecerlilik} inputMode="numeric" maxLength={3} placeholder="ör. 30" hata={!!h.gecerlilik} mesajli onChange={(e) => yaz({ gecerlilik: e.target.value })} />
+            <Alan id={FID.gecerlilik} etiket="Geçerlilik (gün)" zorunlu hata={h.gecerlilik} sonuc="Gönderildiği günden">
+              <Girdi id={FID.gecerlilik} value={f.gecerlilik} inputMode="numeric" maxLength={3} placeholder="ör. 30" hata={!!h.gecerlilik} mesajli onChange={(e) => yaz({ gecerlilik: e.target.value })} />
             </Alan>
-            <Alan id="f-kdv" etiket="KDV (%)" zorunlu hata={h.kdv}>
-              <Girdi id="f-kdv" value={f.kdv} inputMode="numeric" maxLength={2} hata={!!h.kdv} onChange={(e) => yaz({ kdv: e.target.value })} />
+            <Alan id={FID.kdv} etiket="KDV (%)" zorunlu hata={h.kdv}>
+              <Girdi id={FID.kdv} value={f.kdv} inputMode="numeric" maxLength={2} hata={!!h.kdv} onChange={(e) => yaz({ kdv: e.target.value })} />
             </Alan>
-            <Alan id="f-not" etiket="Not" genis hata={h.notlar}>
-              <Girdi id="f-not" value={f.notlar} maxLength={300} placeholder="Ödeme, ulaşım, ek koşullar" hata={!!h.notlar} onChange={(e) => yaz({ notlar: e.target.value })} />
+            <Alan id={FID.not} etiket="Not" genis hata={h.notlar}>
+              <Girdi id={FID.not} value={f.notlar} maxLength={300} placeholder="Ödeme, ulaşım, ek koşullar" hata={!!h.notlar} onChange={(e) => yaz({ notlar: e.target.value })} />
             </Alan>
           </FormIzgara>
         </FormBolum>
