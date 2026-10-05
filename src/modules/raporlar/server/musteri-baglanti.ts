@@ -18,7 +18,7 @@ export interface MusteriRaporu {
   yerine: string | null;
   ekipmanKod: string; turAd: string; tesisId: string; tesis: string;
   kontrol: string | null; sonraki: string | null; sonuc: "uygun" | "uygun_degil" | null; imzalandi: string;
-  /** imzalı PDF (tek indirme ucu /api/dosya — müşteri rolünde, kendi raporu) */
+  /** imzalı PDF dosyasının kimliği (tek indirme ucundan, müşteri rolünde — kendi raporu) */
   dosya: string;
 }
 export interface MusteriUygunsuzlugu { id: string; raporId: string; kaynak: string; metin: string; agir: boolean; tarih: string | null; acik: boolean }

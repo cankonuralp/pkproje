@@ -159,7 +159,9 @@ test("kullanıcı adı firmada tek: personel hesabıyla ve öteki girişlerle ç
   const yon = FA.yon;
   /* müşteri e-postasını personelinkiyle değiştirmek: sunucu reddeder */
   const k = (await sql<{ surum: number }>(A, "SELECT surum FROM musteri WHERE id = $1", [FA.m2])).rows[0].surum;
-  const kaydet = (e: string, s: number) => a(yon, (db) => musteriKaydet(db, yon, FA.m2, s, { unvan: "Deneme İki Sanayi A.Ş.", kisa: "Deneme İki", eposta: e }, true));
+  /* eylemdeki gibi: bütün alanlar metin (boş = yok) */
+  const kaydet = (e: string, s: number) => a(yon, (db) => musteriKaydet(db, yon, FA.m2, s,
+    { unvan: "Deneme İki Sanayi A.Ş.", kisa: "Deneme İki", vd: "", vno: "", eposta: e, tel: "", ilgili: "" }, true));
   assert.equal((await kaydet("den@deneme-a.example", k)).durum, "gecersiz");
   /* veritabanı da: müşteri girişi personel e-postasıyla, personel hesabı müşteri girişinin e-postasıyla açılmaz */
   await assert.rejects(sql(A, "INSERT INTO musteri_hesap (musteri_id, eposta, ad) VALUES ($1, 'den@deneme-a.example', 'x')", [FA.m2]), /başka bir girişte/);
