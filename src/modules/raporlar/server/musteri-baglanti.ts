@@ -53,3 +53,39 @@ export async function musteriRaporu(db: Sorgulayici, id: string): Promise<{ r: M
      WHERE u.rapor_id = $1 ORDER BY u.metin`, [id])).rows;
   return { r, uygunsuzluklar: u.map((x) => ({ id: x.id, raporId: id, kaynak: x.kaynak, metin: x.metin, agir: x.agir, tarih: x.tarih, acik: x.kapanis === null })) };
 }
+
+/** Uygunsuzluklar sekmesinin satırı (320; maket musteri.html #/uygunsuz U_SUTUN): kusurun ekipmanı, tesisi, metni (kriter: açıklama), raporu,
+    tespit (kontrol) tarihi, durumu — giderildiyse gideren kontrolün tarihi */
+export interface MusteriUygunsuzlukSatiri {
+  id: string; raporId: string; raporNo: string; ekipmanKod: string; turAd: string; tesisId: string; tesis: string;
+  metin: string; agir: boolean; tarih: string | null; acik: boolean; giderildi: string | null;
+}
+
+/** müşterinin görebildiği uygunsuzluklar (revizyonla kapananlar hariç — veritabanı politikası), en yeni tespit üstte */
+export async function musteriUygunsuzluklari(db: Sorgulayici): Promise<MusteriUygunsuzlukSatiri[]> {
+  const l = (await db.sorgu<{ id: string; rapor_id: string; ekipman_id: string; tesis_id: string; metin: string; agir: boolean; tarih: string | null; kapanis: string | null;
+    surum_no: string | null; kapatan_tarih: string | null }>(
+    `SELECT u.id::text, u.rapor_id::text, u.ekipman_id::text, u.tesis_id::text, u.metin, u.agir, u.tarih, u.kapanis, s.no AS surum_no, k.kontrol_tarihi AS kapatan_tarih
+     FROM uygunsuzluk u LEFT JOIN rapor_surumu s ON s.id = u.surum_id LEFT JOIN rapor_surumu k ON k.id = u.kapatan_surum
+     ORDER BY u.tarih DESC NULLS LAST, u.olustu DESC, u.metin`)).rows;
+  if (!l.length) return [];
+  /* raporun görünen numarası: uygunsuzluğun kendi sürümü (müşteriye açıksa), yoksa raporun son imzalı sürümü */
+  const son = new Map((await db.sorgu<{ rapor_id: string; no: string }>("SELECT rapor_id::text, no FROM rapor_surumu")).rows.map((x) => [x.rapor_id, x.no]));
+  const ekl = await ekipmanlar(db, [...new Set(l.map((x) => x.ekipman_id))]);
+  const ek = new Map(ekl.map((e) => [e.id, e]));
+  const tur = new Map((await turOzetleri(db)).map((t) => [t.id, t.ad]));
+  const tesis = new Map((await musteriOzetleri(db)).flatMap((m) => m.tesisler.map((t) => [t.id, t.ad] as const)));
+  return l.map((x) => {
+    const e = ek.get(x.ekipman_id);
+    return {
+      id: x.id, raporId: x.rapor_id, raporNo: x.surum_no ?? son.get(x.rapor_id) ?? "—", ekipmanKod: e?.kod ?? "—", turAd: e ? tur.get(e.turId) ?? "—" : "—",
+      tesisId: x.tesis_id, tesis: tesis.get(x.tesis_id) ?? "—", metin: x.metin, agir: x.agir, tarih: x.tarih, acik: x.kapanis === null,
+      giderildi: x.kapanis === "giderildi" ? x.kapatan_tarih : null,
+    };
+  });
+}
+
+/** açık uygunsuzluk sayısı (panel sekmesi) */
+export async function musteriAcikUygunsuzluk(db: Sorgulayici): Promise<number> {
+  return (await db.sorgu<{ n: number }>("SELECT count(*)::int AS n FROM uygunsuzluk WHERE kapanis IS NULL")).rows[0].n;
+}

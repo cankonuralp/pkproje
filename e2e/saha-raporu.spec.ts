@@ -298,6 +298,21 @@ test("saha raporu: rapor oluştur, eksikle gönderilmez, doldur + cihaz ekle, on
   await hazir(page);
   await expect(page.getByRole("heading", { level: 1, name: "Raporlarınız" })).toBeVisible();
   await expect(page.locator("header")).toContainText(E2E_FIRMA.ad);
+  /* 320: Excel indir (süzgeçteki raporlar, satır başında "Rapor" bağlantısı) ve Uygunsuzluklar sekmesi (açık yoksa indirme kapalı) */
+  const [excel] = await Promise.all([page.waitForEvent("download", { timeout: 60_000 }), page.getByRole("button", { name: "Excel indir" }).click()]);
+  expect(excel.suggestedFilename()).toMatch(/^raporlar-\d{4}-\d{2}-\d{2}\.xlsx$/);
+  expect(readFileSync((await excel.path())!).subarray(0, 2).toString("latin1")).toBe("PK");
+  const uygSekme = page.getByRole("navigation", { name: "Panel görünümleri" }).getByRole("link", { name: /^Uygunsuzluklar \(\d+\)$/ });
+  const acikSayi = Number(/\((\d+)\)/.exec((await uygSekme.textContent()) ?? "")?.[1] ?? "0");
+  await uygSekme.click();
+  await expect(page).toHaveURL(/\/portal\/uygunsuz$/, { timeout: 30_000 });
+  await hazir(page);
+  await expect(page.getByRole("heading", { level: 1, name: "Uygunsuzluklar" })).toBeVisible();
+  if (acikSayi === 0) await expect(page.getByRole("button", { name: "Uygunsuzları indir" })).toBeDisabled();   // açık yoksa indirilecek yok
+  else await expect(page.getByRole("button", { name: "Uygunsuzları indir" })).toBeEnabled();
+  await page.getByRole("navigation", { name: "Panel görünümleri" }).getByRole("link", { name: "Raporlar", exact: true }).click();
+  await expect(page).toHaveURL(/\/portal$/, { timeout: 30_000 });
+  await hazir(page);
   await page.getByRole("searchbox", { name: "Raporlarda ara" }).fill(raporNo);
   await page.getByRole("link", { name: raporNo }).first().click();
   await expect(page.getByRole("heading", { level: 1 })).toHaveText(raporNo, { timeout: 30_000 });

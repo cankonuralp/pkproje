@@ -8,3 +8,8 @@
 .uygunsuzListe { margin: 0; padding-left: 18px; }
 .uygunsuzListe li { margin: 0 0 6px; }
 .agir { color: var(--hata-yazi); font-weight: 600; }
+/* "Uygunsuzları indir" önizlemesi (maket a-belge-tablo): iki sütun, telefonda da okunur */
+.onizleme { width: 100%; border-collapse: collapse; font-size: var(--boy-kucuk); }
+.onizleme th { padding: 6px 8px; border-bottom: 1px solid var(--kenar); color: var(--yazi2); font-weight: 600; text-align: left; }
+.onizleme td { padding: 6px 8px; border-bottom: 1px solid var(--kenar); vertical-align: top; overflow-wrap: anywhere; }
+.onizleme td:last-child, .onizleme th:last-child { width: 34%; }

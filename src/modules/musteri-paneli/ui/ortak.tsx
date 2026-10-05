@@ -1,4 +1,6 @@
-/* müşteri panelinin ortak küçük parçaları: sonuç yazısı (maket sonucHtml) ve bugüne gün farkı (Türkiye takvim günü) */
+/* müşteri panelinin ortak küçük parçaları: sonuç yazısı (maket sonucHtml), bugüne gün farkı (Türkiye takvim günü), panel sekmeleri, Excel'deki
+   rapor bağlantısı */
+import { Sekmeler } from "../../../components/sayfa/Sayfa";
 import stil from "./panel.module.css";
 
 const GUN = new Intl.DateTimeFormat("en-CA", { timeZone: "Europe/Istanbul", year: "numeric", month: "2-digit", day: "2-digit" });
@@ -9,3 +11,12 @@ export function SonucYazisi({ sonuc }: { sonuc: "uygun" | "uygun_degil" | null }
   if (!sonuc) return <span className={stil.sonucYok}>—</span>;
   return <span className={sonuc === "uygun" ? stil.sonucUygun : stil.sonucHata}>{sonuc === "uygun" ? "Uygun" : "Uygun değil"}</span>;
 }
+
+/** panel sekmeleri (maket musteri.html a-sekmeler): Raporlar · Uygunsuzluklar (açık sayısı); planlanan kontroller, sözleşmeler, muayene personeli
+    sonraki kalemde */
+export function PanelSekmeleri({ acikUygunsuz, secili }: { acikUygunsuz: number; secili: "/portal" | "/portal/uygunsuz" }) {
+  return <Sekmeler ad="Panel görünümleri" ogeler={[["Raporlar", "/portal"], [`Uygunsuzluklar (${acikUygunsuz})`, "/portal/uygunsuz"]]} secili={secili} />;
+}
+
+/** Excel'deki "Rapor" bağlantısı: panelde raporu açar (giriş ister; kalıcı herkese açık dosya bağlantısı değil — anayasa 5.1) */
+export const raporAdresi = (id: string) => new URL(`/portal/r/${encodeURIComponent(id)}`, window.location.origin).href;

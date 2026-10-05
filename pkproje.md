@@ -2341,6 +2341,22 @@ revizyon, alan kopyalama, hafif kusur devri, meslek eşleşme denetimi).
 - Emsal ürünler: https://opwire.app/iso-17020-periyodik-kontrol-yazilimi/ · https://17020muayene.vidco.com.tr/ · https://akuple.com/asansor-kontrol-yazilimi/ · https://ensyazilim.com/
 
 ## 11 · Değişiklik günlüğü
+- 2026-10-05 (320): **K3 Müşteri paneli › Uygunsuzluklar + Excel** (maket musteri.html #/uygunsuz, "Uygunsuzları indir", Ö3; pkproje §1.1
+  reisim: "uygunsuzları indir seçeneği olacak ve tüm uygunsuz raporları excel olarak indirip görebilecek ve exceldeki ilgili yere tıklayınca rapora
+  gidebilecek … önceliğimiz müşteri kolaylığı"; 2026-10-01: "excel de link olmalı, linke tıklayınca ilgili rapor açılmalı. "rapor" yazsın").
+  Panelde sekmeler: **Raporlar · Uygunsuzluklar (açık sayısı)**. **Uygunsuzluklar** (/portal/uygunsuz): görebildiği imzalı raporların
+  uygunsuzlukları (ayrı kayıt, PDF'ten okunmaz — §3.2 madde 6), en yeni tespit üstte, 20'şer; sütunlar Ekipman (kod, tür · tesis) · Kusur (ağır
+  işaretli; kriter + açıklama) · Rapor · Tespit · Durum (Açık / Giderildi — gideren kontrolün tarihiyle); çipler Açık / Giderildi (aynı grup,
+  ikisi birden imkânsız) ve Ağır kusur; seçici Tesis; satır raporu açar. **Uygunsuzları indir**: açık uygunsuzlukların önizlemesi (pencere, iki
+  sütun) → **.xlsx** (Rapor · Ekipman kodu · türü · Tesis · Sınıf · Kriter · Açıklama · Rapor no · Kontrol tarihi; ilk sütunda "Rapor" köprüsü
+  raporu panelde açar). Raporlar'da **Excel indir** (süzgeçteki raporlar; Rapor · no · ekipman · tür · tesis · kontrol · sonraki · sonuç). Excel
+  **tarayıcıda**, panelin müşteri rolünde zaten aldığı veriden üretilir — yeni sunucu ucu yok; görme veritabanında (revizyonla kapanan
+  uygunsuzluk müşteriye hiç görünmez, 0030). Tek üretici: `src/components/disa/` (ZIP yazıcı — toplu indirme de kullanacak — ve .xlsx yazıcı):
+  metin hücreleri satır içi metin (veri "=" ile başlasa da formül olmaz), köprü gerçek bağlantı ve yalnız http(s), XML kaçışı + denetim karakteri
+  atılır, ZIP'te zararlı yol (mutlak, "..") reddedilir. Kilit: tests/disa.test.ts (3: ZIP yapısı + CRC, xlsx parçaları / köprü / kaçış / formül,
+  yardımcılar), musteri-paneli.test +1 (kapsam, iki müşteri, ek giriş, giderilen tarihiyle, revizyon, açık sayısı, başka firma, yazma yasağı),
+  bozan +3 (adres şeması, XML kaçışı, ZIP yolu); e2e saha raporu: müşteri Excel indirir (PK), Uygunsuzluklar sekmesine geçer. Sonraki (321):
+  planlanan kontroller, sözleşmeler, muayene personeli belgeleri, toplu indirme (ZIP).
 - 2026-10-05 (318 çapraz inceleme düzeltmeleri; dört bakış — güvenlik, veritabanı, mantık, arayüz — + her bulguya çürütme denemesi, 18 bulgu
   doğrulandı). Göç **0031**: (1) **muayene tarihi imza gününden ileri olamaz** (Europe/Istanbul; ileri tarihli tek imzalı rapor ekipmanın açık ve
   gelecekteki bütün uygunsuzluklarını "giderildi" yapıyordu — revizyon da düzeltmiyordu); Onaya gönderde de: rapor tarihi kontrol başlangıcı ile

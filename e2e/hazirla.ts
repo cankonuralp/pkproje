@@ -52,6 +52,7 @@ export default async function hazirla(_ayar: FullConfig) {
   await ac("/onaylar/istekler");
   /* 319 müşteri paneli: personel oturumuyla ana sayfaya döner, rota yine derlenir */
   await ac("/portal");
+  await ac("/portal/uygunsuz");
   await ac("/raporlar");
   if (kart) { await ac(kart); await ac(`${kart}/duzenle`); }
   /* 2026-10-04: kaydı test sırasında açılan ayrıntı sayfaları da önceden derlensin (olmayan kimlik "bulunamadı" çizer, rota yine derlenir) —

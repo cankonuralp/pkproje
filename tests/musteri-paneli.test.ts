@@ -2,7 +2,9 @@
    girişi" (karar 33 ana giriş müşterinin e-postasıyla, 44 ek girişler bütün ya da seçili tesisler, L5 parola personel isteyince) · giris.html (35
    müşteri de aynı ekrandan) · 09-E5 ("müşteri kullanıcısı için RLS'de firma + müşteri + müşteriye açık — kilit: iki müşterili gerçek PostgreSQL
    testi") · reisim 2026-10-04: "rol değiştirme, sızma, veri çalma; yetki her zaman sunucuda". GERÇEK PostgreSQL, iki firma, iki müşteri (319;
-   göç 0030). Olumsuz kanıt: tests/bozan/musteri-paneli.bozan.ts. */
+   göç 0030). Olumsuz kanıt: tests/bozan/musteri-paneli.bozan.ts.
+   320 UYGUNSUZLUKLAR (maket musteri.html #/uygunsuz; pkproje §1.1 "uygunsuzları indir … exceldeki ilgili yere tıklayınca rapora gidebilecek"): aynı
+   kurulum — müşteri rolü yalnız kendi uygunsuzluklarını görür; Excel tarayıcıda bu veriden (yazıcı: tests/disa.test.ts). */
 import assert from "node:assert/strict";
 import { mkdtempSync, rmSync } from "node:fs";
 import { tmpdir } from "node:os";
@@ -16,7 +18,7 @@ import { musteriCikis, musteriGirisiMi, musteriGirisYap, musteriOturumOku, muste
 import { girisYap } from "../src/server/kimlik/oturum.ts";
 import { anaGeciciParola, ekGeciciParola, ekGirisEkle, girisBilgisi, girisPasif } from "../src/modules/musteriler/server/girisler.ts";
 import { musteriKaydet, musteriPasif } from "../src/modules/musteriler/server/musteriler.ts";
-import { panelRaporlari, panelRaporu } from "../src/modules/musteri-paneli/server/panel.ts";
+import { panelRaporlari, panelRaporu, panelUygunsuzluklari } from "../src/modules/musteri-paneli/server/panel.ts";
 import { onayla, revizeyeGonder } from "../src/modules/onaylar/server/onaylar.ts";
 import { planIci, planKabul } from "../src/modules/planlar/server/plan-ici.ts";
 import { bugunTr, planAc, type Kisi } from "../src/modules/planlar/server/planlar.ts";
@@ -241,4 +243,52 @@ test("İKİNCİ KATMAN (09-E5): müşteri rolü yalnız kendi müşterisinin, ke
   /* geçersiz bağlam: işlem açılmaz */
   await assert.rejects(m("kotu", null, async () => 1), /Geçersiz müşteri/);
   await assert.rejects(m(FA.m1, [], async () => 1), /Geçersiz müşteri/);
+});
+
+/** tarihli rapor: taslakken rapor tarihi (kusurluysa "Uygun değil" madde + sonuç) yazılır, gönderilir, onaylanır, imzalanır */
+async function tarihli(tesis: string, kod: string, tarih: string, kusurlu: boolean): Promise<string> {
+  const bas = bugunTr();
+  const p = tamam(await a(FA.plan, (db) => planAc(db, depo, FA.plan, A, { tesis, baslangic: bas, bitis: bas, ekip: [{ personel: FA.denP, isgNo: `ISG-T${planSira++}`, kaydet: false }] }))).id;
+  tamam(await a(FA.den, async (db) => planKabul(db, FA.den, p, (await planIci(db, FA.den, p))!.surum, true)));
+  const h = tamam(await a(FA.den, (db) => raporOlustur(db, FA.den, p, FA.ekp[kod]))).id;
+  await sql(A, kusurlu
+    ? `UPDATE rapor SET rapor_tarihi = $2, cevaplar = jsonb_set(cevaplar, '{madde,k1}', '{"c": "Uygun değil", "not": "Korozyon"}'::jsonb), sonuc = 'uygun_degil',
+       surum = surum + 1 WHERE id = $1`
+    : "UPDATE rapor SET rapor_tarihi = $2, sonuc = 'uygun', surum = surum + 1 WHERE id = $1", [h, tarih], FA.den.id);
+  await sql(A, "UPDATE rapor SET durum = 'onayda', surum = surum + 1 WHERE id = $1", [h], FA.den.id);
+  await imzalaRapor(h);
+  return h;
+}
+
+test("UYGUNSUZLUKLAR (320): müşteri rolü yalnız kendi müşterisinin ve tesis kapsamının uygunsuzluklarını görür, en yeni tespit üstte; giderilen gideren kontrolün tarihiyle, revizyonla kapanan hiç görünmez; açık sayısı; başka firma görmez", async () => {
+  const k1 = await tarihli(FA.t1, "HT-1", "2026-03-01", true), k2 = await tarihli(FA.t2, "HT-2", "2026-04-01", true), k3 = await tarihli(FA.t3, "HT-3", "2026-04-01", true);
+  const l = (mid: string, t: string[] | null) => m(mid, t, (db) => panelUygunsuzluklari(db));
+  const raporlar = (v: Awaited<ReturnType<typeof l>>) => [...new Set(v.uygunsuzluklar.map((u) => u.raporId))];
+  const v = await l(FA.m1, null);
+  assert.deepEqual(raporlar(v), [k2, k1], "kendi iki raporu, en yeni tespit üstte");
+  assert.ok(v.uygunsuzluklar.every((u) => u.acik && u.giderildi === null && /^DA-/.test(u.raporNo) && /Korozyon/.test(u.metin)), JSON.stringify(v.uygunsuzluklar));
+  assert.equal(v.acikUygunsuz, v.uygunsuzluklar.length, "sekmedeki açık sayısı");
+  const u1 = v.uygunsuzluklar.find((u) => u.raporId === k1)!;
+  assert.deepEqual([u1.ekipmanKod, u1.turAd, u1.tesis, u1.tarih], ["HT-1", "Hava tankı", "Merkez", "2026-03-01"]);
+  assert.deepEqual(raporlar(await l(FA.m1, [FA.t1])), [k1], "ek giriş: seçili tesis");
+  assert.deepEqual(raporlar(await l(FA.m2, null)), [k3], "öteki müşteri yalnız kendisininkini");
+  assert.deepEqual((await l(FB.m1, null)).uygunsuzluklar, [], "B'nin müşterisi A'nın adresinde");
+  assert.equal((await l(FB.m1, null)).acikUygunsuz, 0);
+  /* giderildi: aynı ekipmanın daha yeni muayenesi — gideren kontrolün tarihiyle; açık sayısı düşer */
+  await tarihli(FA.t2, "HT-2", "2026-05-01", false);
+  const v2 = await l(FA.m1, null);
+  const u2 = v2.uygunsuzluklar.filter((u) => u.raporId === k2);
+  assert.ok(u2.length >= 1 && u2.every((u) => !u.acik && u.giderildi === "2026-05-01"), JSON.stringify(u2));
+  assert.equal(v2.acikUygunsuz, v2.uygunsuzluklar.filter((u) => u.raporId === k1).length);
+  /* revizyon: R1 imzalanınca R0'ın uygunsuzluğu (revizyonla kapandı) hiç görünmez; R1'inki açık, numarası -R1 */
+  const once = v2.uygunsuzluklar.filter((u) => u.raporId === k1).map((u) => u.id);
+  tamam(await a(FA.mek, async (db) => revizeyeGonder(db, FA.mek, k1, await surum(k1), { gerekce: "Kusur açıklaması eksik yazılmış" })));
+  assert.deepEqual((await l(FA.m1, null)).uygunsuzluklar.filter((u) => u.raporId === k1).map((u) => u.id), once, "revize sürerken önceki sürümün uygunsuzlukları");
+  await sql(A, "UPDATE rapor SET durum = 'onayda', surum = surum + 1 WHERE id = $1", [k1], FA.den.id);
+  await imzalaRapor(k1);
+  const sonra = (await l(FA.m1, null)).uygunsuzluklar.filter((u) => u.raporId === k1);
+  assert.ok(sonra.length >= 1 && sonra.every((u) => u.acik && u.raporNo.endsWith("-R1") && !once.includes(u.id)), JSON.stringify(sonra));
+  assert.ok(((await sql(A, "SELECT 1 FROM uygunsuzluk WHERE kapanis = 'revizyon' AND rapor_id = $1", [k1])).rowCount ?? 0) >= 1, "personel tarafında kayıt duruyor");
+  /* müşteri rolü uygunsuzluğa yazamaz */
+  await assert.rejects(m(FA.m1, null, (db) => db.sorgu("UPDATE uygunsuzluk SET metin = 'x'")), /permission denied/);
 });

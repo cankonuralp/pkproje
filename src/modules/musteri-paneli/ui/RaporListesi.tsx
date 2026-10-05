@@ -1,8 +1,12 @@
 "use client";
 /* RAPORLARINIZ (maket musteri.html #/ — R_SUTUN, suzgecTanimla "m"): imzalı raporların son sürümleri, en yeni üstte, 20'şer. Sütunlar Rapor no ·
    Ekipman (kod + tür) · Tesis · Kontrol · Sonraki kontrol (60 gün içindeyse uyarı) · Sonuç. Çipler Uygunsuz ve Sonraki kontrol 60 gün içinde;
-   seçiciler Tesis ve Yıl. Satır rapor sayfasını açar (imzalı PDF orada). Görme sunucuda (müşteri rolü). */
+   seçiciler Tesis ve Yıl. Satır rapor sayfasını açar (imzalı PDF orada). Görme sunucuda (müşteri rolü). 320: sekmeler + "Excel indir" (süzgeçteki
+   raporlar, satır başında "Rapor" bağlantısı — maket Ö3; tarayıcıda, panelin zaten aldığı veriden; toplu indirme sonraki kalemde). */
 import Link from "next/link";
+import { baytIndir, dosyaGunu } from "../../../components/disa/indir";
+import { XLSX_TURU, xlsxBayt } from "../../../components/disa/xlsx";
+import { Tus } from "../../../components/tus/Tus";
 import { KartEtiket, Kirp, type Sutun } from "../../../components/liste/Liste";
 import { Sayac, SuzgecliListe, useSuzgec } from "../../../components/liste/SuzgecliListe";
 import type { SuzgecTanimi } from "../../../components/liste/suzgec";
@@ -10,7 +14,7 @@ import { AltSatir, SayfaBasi } from "../../../components/sayfa/Sayfa";
 import { tarihNo } from "../../../components/secim/tarih";
 import type { MusteriRaporu } from "../../raporlar/server/musteri-baglanti";
 import type { PanelRaporlari } from "../server/panel";
-import { gunFarki, SonucYazisi } from "./ortak";
+import { gunFarki, PanelSekmeleri, raporAdresi, SonucYazisi } from "./ortak";
 import stil from "./panel.module.css";
 
 const benzersiz = <T,>(l: readonly T[]) => [...new Set(l)];
@@ -44,12 +48,23 @@ function tanim(l: readonly MusteriRaporu[], tesisler: PanelRaporlari["tesisler"]
   };
 }
 
+const SONUC_AD = { uygun: "Uygun", uygun_degil: "Uygun değil" } as const;
+/** süzgeçteki raporlar → .xlsx (maket rapor-excel sütunları) */
+export function raporExceli(l: readonly MusteriRaporu[]): Uint8Array {
+  return xlsxBayt("Raporlar", [["Rapor", "Rapor no", "Ekipman kodu", "Ekipman türü", "Tesis", "Kontrol tarihi", "Sonraki kontrol", "Sonuç"],
+    ...l.map((r) => [{ metin: "Rapor", url: raporAdresi(r.id) }, r.no, r.ekipmanKod, r.turAd, r.tesis, r.kontrol ? tarihNo(r.kontrol) : "",
+      r.sonraki ? tarihNo(r.sonraki) : "", r.sonuc ? SONUC_AD[r.sonuc] : ""])]);
+}
+
 export function PanelRaporListesi({ v }: { v: PanelRaporlari }) {
   const s = useSuzgec(tanim(v.raporlar, v.tesisler), v.raporlar);
+  const excel = () => baytIndir(`raporlar-${dosyaGunu()}.xlsx`, raporExceli(s.sonuc.liste), XLSX_TURU);
   return (
     <>
-      <SayfaBasi baslik="Raporlarınız" sayac={<Sayac s={s} />} />
+      <SayfaBasi baslik="Raporlarınız" sayac={<Sayac s={s} />}
+        tuslar={<Tus tur="ikincil" ikon="file-check" onClick={excel} disabled={!s.sonuc.liste.length}>Excel indir</Tus>} />
       <p className={stil.alt}>{v.musteri?.unvan ?? "—"}</p>
+      <PanelSekmeleri acikUygunsuz={v.acikUygunsuz} secili="/portal" />
       <SuzgecliListe s={s} on="p" baslik="Raporlarınız" sutunlar={SUTUNLAR} anahtar={(r) => r.id} href={(r) => `/portal/r/${r.id}`}
         bosVeri={{ ikon: "file-text", baslik: "Henüz rapor yok", metin: "Raporlar imzalandığında burada görünür ve indirilebilir." }} />
     </>
