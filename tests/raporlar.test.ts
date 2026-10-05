@@ -286,15 +286,16 @@ test("saha raporu: yazan görür ve düzenler; başka denetçi, öteki branşın
   for (const kod of ["MN-01", "MN-04"]) assert.ok(sec.includes(kod), `${kod} zimmetinde, kalibrasyonu geçerli`);
   for (const kod of ["MN-02", "MN-03", "TM-01"]) assert.ok(!sec.includes(kod), `${kod} seçilemez (kalibrasyon geçmiş / başkasının zimmeti / başka tür)`);
   assert.equal(d.secilebilir["*"], undefined, "tür cihaz türü verdiyse yalnız o tür");
-  assert.deepEqual(d.izin, { duzenle: true, sil: true });
+  /* 2026-10-05 (313): izne "kopyala" eklendi (Kaydet ve kopyala — yalnız yazan) */
+  assert.deepEqual(d.izin, { duzenle: true, sil: true, kopyala: true });
   /* görme */
   assert.equal(await sr(FA.den2, r.id), null, "başka denetçi (Raporlar 'kendi')");
   const mek = (await sr(FA.mek, r.id))!;
   assert.deepEqual([mek.no, mek.izin.duzenle, mek.izin.sil, mek.secilebilir, mek.kunyeFark], [d.no, false, true, {}, []],
     "branş yöneticisi görür, düzenlemez (teknik yönetici Yeni'yi silebilir)");
   assert.equal(await sr(FA.elk, r.id), null, "öteki branşın yöneticisi");
-  assert.deepEqual((await sr(FA.plan, r.id))!.izin, { duzenle: false, sil: false }, "planlama görür");
-  assert.deepEqual((await sr(FA.yon, r.id))!.izin, { duzenle: false, sil: false }, "firma yöneticisi görür");
+  assert.deepEqual((await sr(FA.plan, r.id))!.izin, { duzenle: false, sil: false, kopyala: false }, "planlama görür");
+  assert.deepEqual((await sr(FA.yon, r.id))!.izin, { duzenle: false, sil: false, kopyala: false }, "firma yöneticisi görür");
   assert.equal(await sr(FA.muh, r.id), null);
   assert.equal(await b(FB.den1, (db) => sahaRaporu(db, FB.den1, r.id)), null, "başka firma kimliği bilse de");
   assert.equal(await b(FB.yon, (db) => sahaRaporu(db, FB.yon, r.id)), null);
@@ -790,7 +791,9 @@ test("formatı güncelle: yalnız yazanın Yeni raporu, daha yeni yayınlanmış
   const yeni = structuredClone(KOMP);
   for (const x of yeni.bolumler) if (x.blok === "liste") x.gruplar[0].maddeler.push({ id: "k_yeni", metin: "Deneme maddesi", kilit: false });
   const sira = await a(FA.yon, async (db) => {
-    const t = tamam(await taslakBaslat(db, FA.yon, FA.tur, `surum:${FA.format}`, null));
+    /* önceki testten kalan taslak varsa onun yerine (gördüğü taslak sürümüyle) */
+    const once = (await db.sorgu<{ surum: number }>("SELECT surum FROM rapor_format WHERE tur_id = $1 AND durum = 'taslak'", [FA.tur])).rows[0]?.surum ?? null;
+    const t = tamam(await taslakBaslat(db, FA.yon, FA.tur, `surum:${FA.format}`, once));
     const k = tamam(await taslakKaydet(db, FA.yon, t.id, t.surum, yeni));
     return tamam(await yayinla(db, FA.yon, t.id, k.surum, "")).sira;
   });
