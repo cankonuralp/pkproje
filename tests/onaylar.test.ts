@@ -3,7 +3,9 @@
    N7 vekil yok) · KOD-GECIS §4 (rapor_onayla / rapor_geri_gonder / rapor_durum_degistir; Onaylar düzeyi: branş yöneticisi branşı, firma
    yöneticisi görür, denetçi / planlama / muhasebe yok) · pkproje §1 (reisim: "hazırlayanın kendi raporunu onaylaması da engellenmez" — C1) ·
    reisim 2026-10-04: "rol değiştirme, sızma, veri çalma; yetki her zaman sunucuda". GERÇEK PostgreSQL, iki firma (314; göç 0026).
-   Olumsuz kanıt: tests/bozan/onaylar.bozan.ts. */
+   Olumsuz kanıt: tests/bozan/onaylar.bozan.ts.
+   317 SON İMZA (aynı kurulum): indir-imzala-yükle (araştırma §8; karar 99, 104, 114, 187; 09-F1) — imzasız kesin PDF bir kez, imzalı PDF'in öneki
+   ve imza sözlüğü, imzalı sürüm değişmez ve kopyalarla, uygunsuzluk açılır / sonraki sürümle kapanır, dosyayı raporu gören indirir. */
 import assert from "node:assert/strict";
 import { mkdtempSync, rmSync } from "node:fs";
 import { tmpdir } from "node:os";
@@ -16,7 +18,9 @@ import { MATRIS_ONERI } from "../src/server/yetki/tanim.ts";
 import { planIci, planKabul } from "../src/modules/planlar/server/plan-ici.ts";
 import { bugunTr, planAc, type Kisi } from "../src/modules/planlar/server/planlar.ts";
 import { taslakBaslat, yayinla } from "../src/modules/rapor-format/server/formatlar.ts";
-import { raporKaydet, raporOlustur, sahaRaporu } from "../src/modules/raporlar/server/raporlar.ts";
+import { imzaHazirla, imzaliYukle, raporKaydet, raporOlustur, sahaRaporu } from "../src/modules/raporlar/server/raporlar.ts";
+import { dosyaIndirilebilir } from "../src/server/dosya/dosya.ts";
+import { DOSYA_ERISIMI } from "../src/server/dosya/erisim.ts";
 import { durumDegistir, geriGonder, onayEkrani, onayGeriAl, onayla, onayListeleri, type OnayYazma } from "../src/modules/onaylar/server/onaylar.ts";
 import { testKumesi } from "./yardimci/kume.ts";
 
@@ -279,4 +283,120 @@ test("KİRACI + ROL: B'nin yöneticisi A'nın raporunda hiçbir şey yapamaz; On
   for (const is of isler) assert.equal((await a(SAHTE, (db) => is(db, SAHTE))).durum, "yok");
   const s = await satir(h1);
   assert.deepEqual([s.durum, s.surum], ["onayda", 1], "hiçbir şey yazılmadı");
+});
+
+/* ── 317 SON İMZA ───────────────────────────────────────────────────────────────────────────────────────────────── */
+/** uydurma "kesin PDF" üretici (Chromium'suz; gerçek motor tests/pdf.test.ts'te): her çağrı ayrı bayt, sayılır */
+let uretilen = 0;
+const uret = async () => new TextEncoder().encode(`%PDF-1.4\n% deneme belge ${++uretilen}\n1 0 obj << /Type /Catalog >> endobj\ntrailer << /Root 1 0 R >>\n%%EOF\n`);
+/** imzasız PDF + artımlı imza bölümü (PAdES gibi: özgün baytlar korunur, sonuna imza sözlüğü eklenir) */
+const imzala = (b: Uint8Array) => Buffer.concat([Buffer.from(b),
+  Buffer.from("\n2 0 obj << /Type /Sig /Filter /Adobe.PPKLite /ByteRange [0 10 20 30] /Contents <00ff00ff> >> endobj\n%%EOF\n", "latin1")]);
+const IMZA_GECERSIZ = "Yüklenen PDF bu raporun imzaya hazırlanan PDF'i değil ya da imza taşımıyor.";
+const imzasizBayt = async (raporId: string) => {
+  const x = (await sql<{ anahtar: string }>(A, "SELECT d.anahtar FROM imza_istegi i JOIN dosya d ON d.id = i.pdf_dosya WHERE i.rapor_id = $1 AND i.durum = 'bekliyor'", [raporId])).rows[0];
+  return depo.oku(x.anahtar);
+};
+const hazirla = (k: Kisi, id: string) => a(k, (db) => imzaHazirla(db, depo, k, A, id, uret));
+const yukle = (k: Kisi, id: string, surum: number, bayt: Uint8Array) => a(k, (db) => imzaliYukle(db, depo, k, A, id, surum, { ad: "imzali.pdf", bayt }));
+/** onaydaki rapora "Uygun değil" madde ve sonuç yazar (tetiksiz değil: taslakken yazılır, sonra gönderilir) — uygunsuzluk denemesi için */
+async function kusurluRapor(kod: string): Promise<string> {
+  const bas = bugunTr();
+  const id = tamam(await a(FA.plan, (db) => planAc(db, depo, FA.plan, A, { tesis: FA.tesis, baslangic: bas, bitis: bas,
+    ekip: [FA.denP, FA.mekP].map((p, i) => ({ personel: p, isgNo: `ISG-K${planSira++}-${i}`, kaydet: false })) }))).id;
+  tamam(await a(FA.den, async (db) => planKabul(db, FA.den, id, (await planIci(db, FA.den, id))!.surum, true)));
+  const r = tamam(await a(FA.den, (db) => raporOlustur(db, FA.den, id, FA.ekp[kod])));
+  await sql(A, `UPDATE rapor SET cevaplar = jsonb_set(cevaplar, '{madde,k1}', '{"c": "Uygun değil", "not": "Korozyon"}'::jsonb), sonuc = 'uygun_degil', surum = surum + 1
+    WHERE id = $1`, [r.id], FA.den.id);
+  await sql(A, "UPDATE rapor SET durum = 'onayda', surum = surum + 1 WHERE id = $1", [r.id], FA.den.id);
+  return r.id;
+}
+
+test("imzaya hazırla: yalnız raporu yazan, yalnız onaylanmış raporda; kesin PDF bir kez üretilir ve saklanır (SHA-256 istekte)", async () => {
+  const [h1] = await raporlar([[FA.den, "HT-4"]]);
+  assert.deepEqual(await hazirla(FA.den, h1), { durum: "red", neden: "Rapor imzaya hazır değil (şu an: Teknik yönetici onayında)." });
+  tamam(await a(FA.mek, (db) => onayla(db, FA.mek, h1, 1)));
+  assert.equal((await hazirla(FA.mek, h1)).durum, "yetkisiz", "yönetici görür, imzalamaz (yazan değil)");
+  assert.equal((await hazirla(FA.elk, h1)).durum, "yok");
+  assert.equal((await b(FB.den, (db) => imzaHazirla(db, depo, FB.den, B, h1, uret))).durum, "yok", "başka firma");
+  const once = uretilen;
+  assert.deepEqual(await hazirla(FA.den, h1), { durum: "tamam", id: h1, bildirim: "İmzasız PDF hazır; indirip imzalayın, imzalı PDF'i yükleyin." });
+  tamam(await hazirla(FA.den, h1));
+  assert.equal(uretilen - once, 1, "ikinci İmzala yeniden üretmez (imzalanacak bayt değişmesin)");
+  const i = (await sql<{ durum: string; h: string; sha: string; dsha: string; modul: string }>(A, `SELECT i.durum, i.hesap_id::text AS h, i.pdf_sha256 AS sha, d.sha256 AS dsha, d.modul
+    FROM imza_istegi i JOIN dosya d ON d.id = i.pdf_dosya WHERE i.rapor_id = $1`, [h1])).rows;
+  assert.equal(i.length, 1);
+  assert.deepEqual([i[0].durum, i[0].h, i[0].sha === i[0].dsha, i[0].modul], ["bekliyor", FA.den.id, true, "rapor_pdf"]);
+  const v = (await a(FA.den, (db) => sahaRaporu(db, FA.den, h1)))!;
+  assert.equal(v.imza?.hazir, true);
+  assert.ok(v.imza?.pdf);
+  assert.equal((await a(FA.mek, (db) => sahaRaporu(db, FA.mek, h1)))!.imza, null, "yönetici ekranında imza adımı yok");
+});
+
+test("imzalı PDF: önek ve imza sözlüğü şart; tamamlanınca imzalı sürüm kopyalarla, uygunsuzluk, hareket; dosyayı raporu gören indirir", async () => {
+  const h1 = await kusurluRapor("HT-2");
+  tamam(await a(FA.mek, (db) => onayla(db, FA.mek, h1, 2)));
+  const s0 = (await satir(h1)).surum;
+  assert.deepEqual(await yukle(FA.den, h1, s0, imzala(await uret())), { durum: "red", neden: "Önce imzasız PDF'i hazırlayıp indirin; imzalı PDF onun imzalanmış hâli olmalı." });
+  tamam(await hazirla(FA.den, h1));
+  const ham = await imzasizBayt(h1);
+  assert.deepEqual(await yukle(FA.den, h1, s0, imzala(await uret())), { durum: "gecersiz", hatalar: { dosya: IMZA_GECERSIZ } }, "başka PDF'in imzalısı");
+  assert.deepEqual(await yukle(FA.den, h1, s0, Buffer.concat([Buffer.from(ham), Buffer.from("\n% imzasız ek\n")])), { durum: "gecersiz", hatalar: { dosya: IMZA_GECERSIZ } }, "imza sözlüğü yok");
+  assert.deepEqual(await yukle(FA.den, h1, s0, ham), { durum: "gecersiz", hatalar: { dosya: IMZA_GECERSIZ } }, "imzasız PDF'in kendisi");
+  assert.equal((await yukle(FA.mek, h1, s0, imzala(ham))).durum, "yetkisiz");
+  assert.equal((await yukle(FA.den, h1, s0 - 1, imzala(ham))).durum, "cakisma");
+  assert.equal((await satir(h1)).durum, "onaylandi", "reddedilenler hiçbir şey yazmadı");
+  /* doğru imzalı PDF */
+  const r = tamam(await yukle(FA.den, h1, s0, imzala(ham)));
+  assert.match(r.bildirim, /^DA-\S+ imzalandı, tamamlandı ve müşteriye açıldı\.$/);
+  assert.equal((await satir(h1)).durum, "imzali");
+  assert.deepEqual((await hareketler(h1)).at(-1)?.[0], "imza");
+  const sr = (await sql<{ no: string; rno: string; tesis: string; sonuc: string; imzalayan: string; firma: string; personel: { ad: string }; icerik: { format_sira: number } }>(A,
+    `SELECT s.no, r.no AS rno, s.tesis_id::text AS tesis, s.sonuc, s.imzalayan_hesap::text AS imzalayan, s.kunye->>'firma_adi' AS firma, s.personel, s.icerik
+     FROM rapor_surumu s JOIN rapor r ON r.id = s.rapor_id WHERE s.rapor_id = $1`, [h1])).rows;
+  assert.equal(sr.length, 1);
+  assert.deepEqual([sr[0].no, sr[0].tesis, sr[0].sonuc, sr[0].imzalayan, sr[0].personel.ad, sr[0].icerik.format_sira], [sr[0].rno, FA.tesis, "uygun_degil", FA.den.id, "Deneme Bir", 1]);
+  const u = (await sql<{ kaynak: string; metin: string; kapanis: string | null }>(A, "SELECT kaynak, metin, kapanis FROM uygunsuzluk WHERE rapor_id = $1", [h1])).rows;
+  assert.ok(u.length >= 1 && u.some((x) => x.kaynak === "madde" && /Korozyon/.test(x.metin)) && u.every((x) => x.kapanis === null), JSON.stringify(u));
+  assert.equal((await sql<{ d: string }>(A, "SELECT durum AS d FROM imza_istegi WHERE rapor_id = $1", [h1])).rows[0].d, "tamam");
+  /* rapor ekranı: tamamlandı, imzalı PDF; içerik değişmez */
+  const v = (await a(FA.den, (db) => sahaRaporu(db, FA.den, h1)))!;
+  assert.deepEqual([v.durum, v.imza, !!v.imzali?.dosya], ["imzali", null, true]);
+  const indir = (k: Kisi) => a(k, (db) => dosyaIndirilebilir(db, k, v.imzali!.dosya, DOSYA_ERISIMI));
+  assert.ok(await indir(FA.den)); assert.ok(await indir(FA.mek)); assert.ok(await indir(FA.yon));
+  assert.equal(await indir(FA.elk), null); assert.equal(await indir(FA.muh), null);
+  assert.equal(await b(FB.den, (db) => dosyaIndirilebilir(db, FB.den, v.imzali!.dosya, DOSYA_ERISIMI)), null);
+  assert.equal((await yukle(FA.den, h1, (await satir(h1)).surum, imzala(ham))).durum, "red", "tamamlanan rapor yeniden imzalanmaz");
+});
+
+test("veritabanı: imzalı sürüm değişmez; imzalı sürüm olmadan tamamlanmaz; başka raporun dosyasıyla istek ve sürüm yazılmaz; yeni imzalı sürüm öncekinin uygunsuzluğunu kapatır", async () => {
+  /* önceki testin imzalı raporu (HT-2) — uygunsuzluğu açık */
+  const s1 = (await sql<{ id: string; rapor: string }>(A, "SELECT s.id::text, s.rapor_id::text AS rapor FROM rapor_surumu s JOIN ekipman e ON e.id = s.ekipman_id WHERE e.kod = 'HT-2'")).rows[0];
+  await assert.rejects(sql(A, "UPDATE rapor_surumu SET sonuc = 'uygun' WHERE id = $1", [s1.id]), /permission denied|değişmez/);
+  await assert.rejects(sql(A, "DELETE FROM rapor_surumu WHERE id = $1", [s1.id]), /permission denied|değişmez/);
+  await assert.rejects(sql(A, "UPDATE uygunsuzluk SET metin = 'sahte' WHERE rapor_id = $1", [s1.rapor]), /içeriği değişmez/);
+  await assert.rejects(sql(A, "DELETE FROM uygunsuzluk WHERE rapor_id = $1", [s1.rapor]), /permission denied/);
+  await assert.rejects(sql(A, "INSERT INTO uygunsuzluk (surum_id, kaynak, ref, metin) VALUES ($1, 'madde', 'k1', 'sahte')", [s1.id]), /yalnız imzalanan sürümle/);
+  /* onaylanmış rapor imzalı sürüm olmadan tamamlanmaz */
+  const [h3] = await raporlar([[FA.den, "HT-3"]]);
+  tamam(await a(FA.mek, (db) => onayla(db, FA.mek, h3, 1)));
+  await assert.rejects(sql(A, "UPDATE rapor SET durum = 'imzali' WHERE id = $1", [h3], FA.den.id), /imzalı sürüm olmadan/);
+  /* başka raporun PDF'iyle istek / sürüm */
+  const baska = (await sql<{ id: string; sha: string }>(A, "SELECT id::text, sha256 AS sha FROM dosya WHERE modul = 'rapor_imzali' AND kayit_id = $1", [s1.rapor])).rows[0];
+  await assert.rejects(sql(A, "INSERT INTO imza_istegi (rapor_id, pdf_dosya, pdf_sha256) VALUES ($1, $2, $3)", [h3, baska.id, baska.sha], FA.den.id), /bu raporun değil/);
+  await assert.rejects(sql(A, `INSERT INTO rapor_surumu (rapor_id, no, imzasiz_dosya, imzali_dosya, imzali_sha256, imza_yontem, kunye, personel, icerik)
+    VALUES ($1, 'x', $2, $2, $3, 'dosya', '{}', '{}', '{}')`, [h3, baska.id, baska.sha], FA.den.id), /bu raporun değil/);
+  /* aynı ekipmanın (HT-2) yeni imzalı raporu öncekinin açık uygunsuzluğunu kapatır (114) */
+  const [h4] = await raporlar([[FA.den, "HT-2"]]);
+  tamam(await a(FA.mek, (db) => onayla(db, FA.mek, h4, 1)));
+  tamam(await hazirla(FA.den, h4));
+  tamam(await yukle(FA.den, h4, (await satir(h4)).surum, imzala(await imzasizBayt(h4))));
+  const k = (await sql<{ kapanis: string; kapatan: string }>(A, "SELECT kapanis, kapatan_surum::text AS kapatan FROM uygunsuzluk WHERE rapor_id = $1", [s1.rapor])).rows;
+  const yeni = (await sql<{ id: string }>(A, "SELECT id::text FROM rapor_surumu WHERE rapor_id = $1", [h4])).rows[0].id;
+  assert.ok(k.length >= 1 && k.every((x) => x.kapanis === "giderildi" && x.kapatan === yeni), JSON.stringify(k));
+  assert.equal((await sql(A, "SELECT 1 FROM uygunsuzluk WHERE rapor_id = $1", [h4])).rowCount, 0, "Uygun rapor uygunsuzluk açmaz");
+  /* başka firma hiçbirini görmez */
+  assert.equal((await sql(B, "SELECT 1 FROM rapor_surumu")).rowCount, 0);
+  assert.equal((await sql(B, "SELECT 1 FROM uygunsuzluk")).rowCount, 0);
+  assert.equal((await sql(B, "SELECT 1 FROM imza_istegi")).rowCount, 0);
 });

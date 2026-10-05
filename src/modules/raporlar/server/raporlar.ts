@@ -31,13 +31,14 @@ import { denetimeBasla, ekipmanEklenebilir, kodDurumu, kunyeGuncelle, plandakiEk
 import { formatSurumuOku, yayindakiFormat } from "../../rapor-format/server/formatlar.ts";
 import { kimdeHaritasi } from "../../zimmetler/server/zimmet.ts";
 import { roldekiHesapAdlari } from "../../../server/kimlik/hesap.ts";
-import { ayEkle, kalibrasyonGecti, KopyaGirdisi, RaporKaydi, SONUC_AD, type EkipmanBilgisi, type RaporCihazi, type RaporDurumu, type RaporTarihleri } from "../sema.ts";
+import { ayEkle, kalibrasyonGecti, KopyaGirdisi, RAPOR_DURUM, RaporKaydi, SONUC_AD, type EkipmanBilgisi, type RaporCihazi, type RaporDurumu, type RaporTarihleri } from "../sema.ts";
 import { mesaiDurumu } from "./plan-baglanti.ts";
 import { sonGeriGonderme } from "./onay-baglanti.ts";
 import { hesapAdlari } from "../../../server/kimlik/hesap.ts";
 import { TANIMLAR } from "../../../tanim/tanimlar.ts";
 import { ayarOku, firmaKunyesi } from "../../../server/ayar/ayar.ts";
 import { kayitDosyasi } from "../../../server/dosya/dosya.ts";
+import { createHash } from "node:crypto";
 import { cihazKalibrasyonlari } from "../../olcum-cihazlari/server/cihazlar.ts";
 import { personelBelgeBilgisi } from "../../personel/server/personel.ts";
 import type { BelgeVerisi } from "../../../belge/veri.ts";
@@ -45,6 +46,8 @@ import type { BelgeVerisi } from "../../../belge/veri.ts";
 const MODUL = 14;
 /** rapor fotoğrafının dosya modülü (dosya erişim kaydında: raporu gören açar) */
 export const DOSYA_MODULU = "rapor";
+/** imzaya hazırlanan kesin imzasız PDF ve yüklenen imzalı PDF (317; kayıt = rapor; raporu gören açar) */
+export const PDF_MODULU = "rapor_pdf", IMZALI_MODULU = "rapor_imzali";
 /** raporda fotoğraf: fotoğraf bölümüne ya da "Uygun değil" maddeye bağlı (madde fotoğrafı Kusur açıklamalarına düşer — O2) */
 export interface RaporFoto { dosya: string; ad: string; bolum: string; madde: string | null }
 const FOTO_MADDE_EN_COK = 10;
@@ -222,6 +225,9 @@ export interface SahaRaporu {
   mesaiDolu: boolean;
   /** Yeni'ye geri dönmüş raporda son geri gönderme (U8; 314): kim, ne zaman, gerekçe */
   geri: { kim: string; zaman: string; gerekce: string | null } | null;
+  /** son imza (317): yazanın onaylanmış raporunda imzasız kesin PDF (hazırlandıysa) · tamamlanan raporda imzalı PDF */
+  imza: { hazir: boolean; pdf: string | null } | null;
+  imzali: { dosya: string; zaman: string; no: string } | null;
   izin: { duzenle: boolean; sil: boolean; kopyala: boolean };
 }
 
@@ -299,6 +305,9 @@ export async function sahaRaporu(db: Sorgulayici, kim: Kisi, id: string): Promis
     cevaplar: cev.success ? cev.data : Cevaplar.parse({}), tanim: format.tanim, formatSira: format.sira,
     cihazlar: satirlar, secilebilir, fotolar: r.fotolar,
     kopyaKaynak, guncelFormat: yeni && yeni.sira > format.sira ? yeni.sira : null, mesaiDolu, geri,
+    imza: r.durum === "onaylandi" && e.sahip && canDoEylem(kim, "rapor_son_imza", { sahip: r.hesap_id })
+      ? { hazir: true, pdf: (await bekleyenIstek(db, r.id, r.revizyon))?.pdf_dosya ?? null } : null,
+    imzali: r.durum === "imzali" ? await imzaliSurum(db, r.id, r.revizyon) : null,
     izin: { duzenle, sil: r.durum === "taslak" && canDoEylem(kim, "rapor_sil", { sahip: r.hesap_id, durum: "Yeni", brans: tur.brans }), kopyala },
   };
 }
@@ -636,4 +645,85 @@ export async function raporBelgesiVerisi(db: Sorgulayici, depo: Depo, kim: Kisi,
       imza: null,
     },
   };
+}
+
+/* ── SON İMZA — indir, imzala, yükle (317; göç 0027; karar 99, 104, 114, 187; araştırma §8) ───────────────────────────────────────── */
+const ISTEK = tablo({ ad: "imza_istegi", sutunlar: ["rapor_id", "revizyon", "yontem", "durum", "pdf_dosya", "pdf_sha256", "imzali_dosya"] });
+const SURUM = tablo({ ad: "rapor_surumu", sutunlar: ["rapor_id", "revizyon", "no", "imzasiz_dosya", "imzali_dosya", "imzali_sha256", "imza_yontem", "kunye", "personel", "cihazlar", "icerik"] });
+const UYGUNSUZLUK = tablo({ ad: "uygunsuzluk", sutunlar: ["surum_id", "kaynak", "ref", "metin", "agir"] });
+async function bekleyenIstek(db: Sorgulayici, raporId: string, revizyon: number) {
+  return (await db.sorgu<{ id: string; pdf_dosya: string; pdf_sha256: string; surum: number }>(
+    "SELECT id::text, pdf_dosya::text, pdf_sha256, surum FROM imza_istegi WHERE rapor_id = $1 AND revizyon = $2 AND durum = 'bekliyor'", [raporId, revizyon])).rows[0] ?? null;
+}
+async function imzaliSurum(db: Sorgulayici, raporId: string, revizyon: number) {
+  const x = (await db.sorgu<{ dosya: string; zaman: Date; no: string }>(
+    "SELECT imzali_dosya::text AS dosya, imzalandi AS zaman, no FROM rapor_surumu WHERE rapor_id = $1 AND revizyon = $2", [raporId, revizyon])).rows[0];
+  return x ? { dosya: x.dosya, zaman: x.zaman.toISOString(), no: x.no } : null;
+}
+const IMZA_GECERSIZ = "Yüklenen PDF bu raporun imzaya hazırlanan PDF'i değil ya da imza taşımıyor.";
+
+/** imzaya hazırla: yalnız raporu yazan (rapor_son_imza), rapor onaylanmış. Kesin imzasız PDF bir kez üretilir ve saklanır (SHA-256 istekte);
+    bekleyen istek varsa onun PDF'i döner (yeniden üretilmez — imzalanacak bayt değişmesin). uret: belge → PDF (sunucuda başsız Chromium). */
+export async function imzaHazirla(db: Sorgulayici, depo: Depo, kim: Kisi, firmaId: string, id: string,
+  uret: (v: BelgeVerisi) => Promise<Uint8Array>): Promise<RaporYazma> {
+  const e = await erisim(db, kim, id, true);
+  if (!e) return { durum: "yok" };
+  if (!e.sahip || !canDoEylem(kim, "rapor_son_imza", { sahip: e.r.hesap_id })) return { durum: "yetkisiz" };
+  if (e.r.durum !== "onaylandi") return { durum: "red", neden: `Rapor imzaya hazır değil (şu an: ${RAPOR_DURUM[e.r.durum][0]}).` };
+  if (await bekleyenIstek(db, id, e.r.revizyon)) return { durum: "tamam", id, bildirim: "İmzasız PDF hazır; indirip imzalayın, imzalı PDF'i yükleyin." };
+  const v = await raporBelgesiVerisi(db, depo, kim, id);
+  if (!v) return { durum: "yok" };
+  const pdf = await uret({ ...v.belge, kesin: true });
+  const y = await dosyaYukle(db, depo, { firmaId, modul: PDF_MODULU, kayitId: id, ad: `${e.r.no}.pdf`, bayt: pdf, izinli: ["pdf"], kim: kim.ad, yukleyen: kim.id });
+  if (!y.tamam) return { durum: "red", neden: "İmzasız PDF üretilemedi." };
+  await ekle(db, ISTEK, { rapor_id: id, revizyon: e.r.revizyon, yontem: "dosya", durum: "bekliyor", pdf_dosya: y.id, pdf_sha256: createHash("sha256").update(pdf).digest("hex") },
+    { kim: kim.ad, ne: "rapor.imza_hazirla", gerekce: e.r.no });
+  return { durum: "tamam", id, bildirim: "İmzasız PDF hazır; indirip imzalayın, imzalı PDF'i yükleyin." };
+}
+
+/** imzalı PDF'i yükle: yalnız yazan; bekleyen istek olmalı. Kabul: tür baytlardan PDF, İLK BAYTLARI imzaya hazırlanan PDF'in kendisi (PAdES
+    artımlı imza özgün baytları korur) ve eklenen kısımda imza sözlüğü (/Type /Sig, /ByteRange, /Contents) — kriptografik zincir doğrulaması
+    sonraki fazda. Aynı işlemde: imzalı sürüm (kopyalarla) → uygunsuzluklar (sonuç "Uygun" değilse; aynı ekipmanın önceki açıkları tetikle
+    kapanır) → istek tamam → rapor Tamamlandı (müşteriye açılır, 104). */
+export async function imzaliYukle(db: Sorgulayici, depo: Depo, kim: Kisi, firmaId: string, id: string, surum: number,
+  dosya: { ad: string; bayt: Uint8Array }): Promise<RaporYazma> {
+  const e = await erisim(db, kim, id, true);
+  if (!e) return { durum: "yok" };
+  if (!e.sahip || !canDoEylem(kim, "rapor_son_imza", { sahip: e.r.hesap_id })) return { durum: "yetkisiz" };
+  if (e.r.durum !== "onaylandi") return { durum: "red", neden: `Rapor imzaya hazır değil (şu an: ${RAPOR_DURUM[e.r.durum][0]}).` };
+  if (surum !== e.r.surum) return { durum: "cakisma" };
+  const istek = await bekleyenIstek(db, id, e.r.revizyon);
+  if (!istek) return { durum: "red", neden: "Önce imzasız PDF'i hazırlayıp indirin; imzalı PDF onun imzalanmış hâli olmalı." };
+  const ham = await kayitDosyasi(db, PDF_MODULU, id, istek.pdf_dosya);
+  if (!ham) return { durum: "red", neden: "İmzaya hazırlanan PDF bulunamadı; yeniden hazırlayın." };
+  const imzasiz = await depo.oku(ham.anahtar), b = dosya.bayt;
+  const ek = Buffer.from(b.subarray(imzasiz.length)).toString("latin1");
+  const onekTutar = b.length > imzasiz.length && Buffer.from(b.subarray(0, imzasiz.length)).equals(Buffer.from(imzasiz));
+  if (!onekTutar || !/\/Type\s*\/Sig\b/.test(ek) || !/\/ByteRange\s*\[/.test(ek) || !/\/Contents\s*</.test(ek)) {
+    return { durum: "gecersiz", hatalar: { dosya: IMZA_GECERSIZ } };
+  }
+  const y = await dosyaYukle(db, depo, { firmaId, modul: IMZALI_MODULU, kayitId: id, ad: `${e.r.no}-imzali.pdf`, bayt: b, izinli: ["pdf"], kim: kim.ad, yukleyen: kim.id });
+  if (!y.tamam) return { durum: "gecersiz", hatalar: { dosya: y.neden === "buyuk" ? "PDF çok büyük (en çok 25 MB)." : IMZA_GECERSIZ } };
+  const v = await raporBelgesiVerisi(db, depo, kim, id);
+  if (!v) return { durum: "yok" };
+  const iz: Iz = { kim: kim.ad, ne: "rapor.imza", gerekce: e.r.no };
+  /* imza anının kopyaları (§3.2-8): künye, yazan, cihazlar (kalibrasyonuyla), içerik — sonradan değişen kayıt imzalı raporu değiştirmez */
+  const s = await ekle(db, SURUM, {
+    rapor_id: id, revizyon: e.r.revizyon, no: e.r.no, imzasiz_dosya: istek.pdf_dosya, imzali_dosya: y.id,
+    imzali_sha256: createHash("sha256").update(b).digest("hex"), imza_yontem: "dosya",
+    kunye: e.r.kunye, personel: v.belge.yazan, cihazlar: jsonDizi(v.belge.cihazlar),
+    icerik: { cevaplar: v.belge.cevaplar, ekipman_bilgi: e.r.ekipman_bilgi, tarih: v.belge.tarih, format_id: e.r.format_id, format_sira: v.belge.formatSira },
+  }, iz);
+  /* uygunsuzluk: imzalı ve "Uygun" olmayan rapordan, motorun kusur listesinden */
+  if (e.r.sonuc === "uygun_degil") {
+    const d = degerle(v.belge.tanim, v.belge.cevaplar, e.r);
+    const blok = new Map(v.belge.tanim.bolumler.map((x) => [x.id, x.blok]));
+    for (const k of d.kusurlar) {
+      const tur = blok.get(k.bolum);
+      await ekle(db, UYGUNSUZLUK, { surum_id: s.id, kaynak: tur === "olcum" ? "olcum" : tur === "test" ? "test" : "madde", ref: k.ref.slice(0, 60), metin: k.metin.slice(0, 1200), agir: !!k.agir }, iz);
+    }
+  }
+  const g = await guncelle(db, ISTEK, istek.id, istek.surum, { durum: "tamam", imzali_dosya: y.id }, iz);
+  if (g.durum !== "tamam") return { durum: "cakisma" };
+  return sonuc(await guncelle(db, RAPOR, id, surum, { durum: "imzali" }, iz), id, `${e.r.no} imzalandı, tamamlandı ve müşteriye açıldı.`);
 }

@@ -4,8 +4,10 @@
 import { ayniKoken } from "../../../server/kimlik/koken";
 import { istekOturumu, oturumIslemi } from "../../../server/kimlik/istek";
 import { depo } from "../../../server/dosya/depo";
+import { belgePdf } from "../../../belge/pdf";
 import {
-  cihazEkle, cihazKaldir, fotoEkle, fotoSil, onayaGonder, raporFormatGuncelle, raporKaydet, raporKopyala, raporKunyeGuncelle, raporOlustur, raporSil, type RaporYazma,
+  cihazEkle, cihazKaldir, fotoEkle, fotoSil, imzaHazirla, imzaliYukle, onayaGonder, raporFormatGuncelle, raporKaydet, raporKopyala, raporKunyeGuncelle, raporOlustur,
+  raporSil, type RaporYazma,
 } from "../server/raporlar";
 
 export interface RaporYaniti {
@@ -67,4 +69,16 @@ export async function raporKopyalaEylemi(id: string, surum: number, girdi: unkno
 }
 export async function raporFormatGuncelleEylemi(id: string, surum: number, kayit: unknown): Promise<RaporYaniti> {
   return islem((o) => oturumIslemi(o, (db) => raporFormatGuncelle(db, o, metin(id), Number(surum), kayit)));
+}
+/** İmzala (317): onaylanmış raporun kesin imzasız PDF'i sunucuda bir kez üretilir (başsız Chromium) ve saklanır */
+export async function imzaHazirlaEylemi(id: string): Promise<RaporYaniti> {
+  return islem((o) => oturumIslemi(o, (db) => imzaHazirla(db, depo(), o, o.kiraci.firmaId, metin(id), belgePdf)));
+}
+/** imzalı PDF yükle (form: id, surum, dosya); önek, imza sözlüğü, yetki ve durum sunucuda */
+export async function imzaliYukleEylemi(form: FormData): Promise<RaporYaniti> {
+  const dosya = form.get("dosya");
+  if (!(dosya instanceof File) || dosya.size === 0) return { hatalar: { dosya: "İmzalı PDF seçilmeli." } };
+  if (dosya.size > 25 << 20) return { hatalar: { dosya: "PDF çok büyük (en çok 25 MB)." } };
+  const bayt = new Uint8Array(await dosya.arrayBuffer());
+  return islem((o) => oturumIslemi(o, (db) => imzaliYukle(db, depo(), o, o.kiraci.firmaId, metin(form.get("id")), Number(form.get("surum")), { ad: dosya.name, bayt })));
 }

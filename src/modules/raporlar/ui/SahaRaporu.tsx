@@ -34,6 +34,7 @@ import type { SahaRaporu as SahaRaporuVerisi } from "../server/raporlar";
 import { alanId, BilgiBlok, FormatBolumu, OkuGirdi, RaporBolumu, Satir, Satirlar, TarihKutusu, type Baglam, type Kaynak } from "./Bloklar";
 import { CihazBolumu } from "./CihazBolumu";
 import { FotoListesi } from "./FotoListesi";
+import { ImzaBolumu } from "./ImzaBolumu";
 import { KopyaPenceresi } from "./KopyaPenceresi";
 import {
   onayaGonderEylemi, raporFormatGuncelleEylemi, raporKaydetEylemi, raporKopyalaEylemi, raporKunyeGuncelleEylemi, raporSilEylemi, type RaporYaniti,
@@ -289,7 +290,9 @@ export function SahaRaporu({ v }: { v: Gorunum }) {
       </Serit>,
     );
   }
-  if (v.durum !== "taslak") {
+  /* son imza (317): imza şeridi kilit şeridinin yerine geçer (aynı şeyi iki kez söylemesin) */
+  if (v.imza || v.imzali) seritler.push(<ImzaBolumu key="imza" v={v} mesgul={mesgul} baslat={baslat} yenile={yenile} hata={setGenel} />);
+  else if (v.durum !== "taslak") {
     seritler.push(<Serit key="kilit" tur="bilgi" ikon="lock">{KILIT[v.durum]}{v.durum === "onayda" && v.gonderildi ? ` · ${zamanNo(v.gonderildi)}` : null}</Serit>);
   } else if (!v.izin.duzenle) {
     seritler.push(<Serit key="kilit" tur="bilgi" ikon="lock">Rapor yazılıyor; yalnız raporu yazan muayene uzmanı düzenler.</Serit>);

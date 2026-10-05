@@ -13,7 +13,7 @@ import { DOSYA_MODULU as TUR_DOSYASI, turDosyasiGorulur } from "../../modules/ek
 import { DOSYA_MODULU as CIHAZ_DOSYASI, cihazDosyasiGorulur } from "../../modules/olcum-cihazlari/server/cihazlar.ts";
 import { DOSYA as SOZ_DOSYA, isgDosyasiGorulur, sablonDosyasiGorulur, sozlesmeDosyasiGorulur } from "../../modules/sozlesmeler/server/sozlesmeler.ts";
 import { DOSYA_MODULU as ZIMMET_DOSYASI, zimmetDosyasiGorulur } from "../../modules/zimmetler/server/zimmet.ts";
-import { DOSYA_MODULU as RAPOR_DOSYASI, raporDosyasiGorulur } from "../../modules/raporlar/server/raporlar.ts";
+import { DOSYA_MODULU as RAPOR_DOSYASI, IMZALI_MODULU, PDF_MODULU, raporDosyasiGorulur } from "../../modules/raporlar/server/raporlar.ts";
 import type { YetkiHesabi } from "../yetki/canDo.ts";
 import type { ErisimKaydi } from "./dosya.ts";
 
@@ -32,4 +32,7 @@ export const DOSYA_ERISIMI: ErisimKaydi = Object.freeze({
   [PER_DOSYA.atama]: (db, kisi, kayitId) => kartDosyasiGorulur(db, kisi as YetkiHesabi, "ekipman_atamasi", kayitId),
   [PER_DOSYA.zimmetFormu]: (db, kisi, kayitId) => kartDosyasiGorulur(db, kisi as YetkiHesabi, "zimmet_formu", kayitId),
   [RAPOR_DOSYASI]: (db, kisi, kayitId) => raporDosyasiGorulur(db, kisi as YetkiHesabi, kayitId),
+  /* 317: imzaya hazırlanan ve imzalı PDF — raporu gören (müşteri erişimi müşteri paneli kalemiyle) */
+  [PDF_MODULU]: (db, kisi, kayitId) => raporDosyasiGorulur(db, kisi as YetkiHesabi, kayitId),
+  [IMZALI_MODULU]: (db, kisi, kayitId) => raporDosyasiGorulur(db, kisi as YetkiHesabi, kayitId),
 });

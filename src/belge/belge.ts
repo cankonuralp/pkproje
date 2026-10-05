@@ -97,7 +97,9 @@ export function raporBelgesi(v: BelgeVerisi): ReactNode {
       yerler.includes("uzman") ? h(Fragment, { key: "u" }, bilgiTablosu([
         ["Adı soyadı", v.yazan.ad], ["Mesleği", meslek], ["Yetkili kişi kayıt no (EKİPNET)", deger(v.yazan.ekipnet)], ["Diploma no", deger(v.yazan.diploma)],
         ["Oda sicil no", deger(v.yazan.oda)],
-        ["İmzası", v.imza ? `Güvenli elektronik imza (${v.imza.yontem}) · ${zamanNo(v.imza.zaman)}` : "İmzasız — muayene uzmanı son imzayı atınca geçerli olur.", true],
+        ["İmzası", v.imza ? `Güvenli elektronik imza (${v.imza.yontem}) · ${zamanNo(v.imza.zaman)}`
+          : v.kesin ? "Güvenli elektronik imza ile imzalanmıştır (imza bilgisi bu PDF'in elektronik imzasındadır)."
+            : "İmzasız — muayene uzmanı son imzayı atınca geçerli olur.", true],
       ])) : null,
       yerler.includes("teknik") ? h(Fragment, { key: "t" }, bilgiTablosu([["Onaylayan teknik yönetici", v.onay ? v.onay.ad : "-"], ["Onay zamanı", v.onay ? zamanNo(v.onay.zaman) : "-"]])) : null,
       h("p", { key: "n" }, nushaYazi(v.firma.nusha)));
@@ -166,7 +168,7 @@ export function raporBelgesi(v: BelgeVerisi): ReactNode {
       h("td", { className: "rb-dok" },
         h("div", null, h("span", null, "Doküman Kodu"), `: ${formKod}`), h("div", null, h("span", null, "Format sürümü"), `: ${v.formatSira}`),
         h("div", null, h("span", null, "Rapor No"), `: ${no}`), h("div", null, h("span", null, "Rapor Tarihi"), `: ${tarihNo(v.tarih.rapor)}`))))),
-    v.imza ? null : h("p", { className: "rb-taslak" }, "İmzasız önizleme — muayene uzmanının son imzasıyla geçerli olur."),
+    v.imza || v.kesin ? null : h("p", { className: "rb-taslak" }, "İmzasız önizleme — muayene uzmanının son imzasıyla geçerli olur."),
     bolum(yeniNo(), "Firma bilgileri", bilgiTablosu([
       ["Firma adı", v.kunye.firmaAdi, true], ["Periyodik kontrol adresi", deger(v.kunye.adres), true],
       ["Rapor numarası", no], ["Rapor tarihi", tarihNo(v.tarih.rapor)],

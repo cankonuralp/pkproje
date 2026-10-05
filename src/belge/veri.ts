@@ -28,4 +28,6 @@ export interface BelgeVerisi {
   onay: { ad: string; zaman: string } | null;
   /** son imza (imza kalemi); yoksa belge imzasızdır */
   imza: { zaman: string; yontem: string } | null;
+  /** imzaya hazırlanan KESİN belge (317): önizleme şeridi yok, imza hücresi elektronik imzayı söyler (imza PDF'in kendisinde) */
+  kesin?: boolean;
 }

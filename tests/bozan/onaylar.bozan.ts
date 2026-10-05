@@ -1,7 +1,9 @@
 /* OLUMSUZ KANIT — tests/onaylar.test.ts neyi koruyor (314). Kaynak diskte DEĞİŞTİRİLMEZ (anayasa 13.11): göçler / modül dosyası geçici klasöre
    kopyalanır, bellekte bozulur, kopyadan koşulur.
    1. Sunucuda rapor_onayla denetimi olmasaydı raporu gören ama onay yetkisi olmayan firma yöneticisi (Onaylar "gör") raporu onaylardı.
-   2. 0026'daki gerekçe kuralı olmasaydı rapor gerekçesiz Yeni'ye döner, denetçi neyi düzelteceğini bilmezdi (sunucu dışından yazılan durum). */
+   2. 0026'daki gerekçe kuralı olmasaydı rapor gerekçesiz Yeni'ye döner, denetçi neyi düzelteceğini bilmezdi (sunucu dışından yazılan durum).
+      (0027 akış işlevini yeniden yazdığı için kural iki göçten birlikte sökülür.)
+   3. (317) 0027'deki imza kuralı olmasaydı onaylanmış rapor imzalı sürüm olmadan Tamamlandı'ya geçer, müşteriye imzasız açılırdı. */
 import assert from "node:assert/strict";
 import { copyFileSync, mkdirSync, mkdtempSync, readdirSync, readFileSync, rmSync, writeFileSync } from "node:fs";
 import { tmpdir } from "node:os";
@@ -21,6 +23,10 @@ import { supabaseBenzeri, type SupabaseBenzeri } from "../yardimci/supabase.ts";
 
 const GEREKCE = `    IF NEW.durum = 'taslak' AND length(btrim(coalesce(current_setting('app.gerekce', true), ''))) < 10 THEN
       RAISE EXCEPTION 'denetçiye dönen raporda gerekçe en az 10 karakter' USING ERRCODE = '23514';
+    END IF;
+`;
+const IMZA = `    IF NEW.durum = 'imzali' AND NOT EXISTS (SELECT 1 FROM rapor_surumu s WHERE s.firma_id = NEW.firma_id AND s.rapor_id = NEW.id AND s.revizyon = NEW.revizyon) THEN
+      RAISE EXCEPTION 'imzalı sürüm olmadan rapor tamamlanmaz' USING ERRCODE = '23514';
     END IF;
 `;
 const ONAYLAR = "src/modules/onaylar/server/onaylar.ts";
@@ -79,10 +85,12 @@ before(async () => {
   mkdirSync(klasor);
   for (const ad of readdirSync(GOC_KLASORU)) {
     if (!ad.endsWith(".sql")) continue;
-    if (ad.startsWith("0026_")) {
-      const k = readFileSync(join(GOC_KLASORU, ad), "utf8");
-      assert.ok(k.includes(GEREKCE), "bozulacak satır kaynakta yok");
-      writeFileSync(join(klasor, ad), k.replace(GEREKCE, ""));
+    if (ad.startsWith("0026_") || ad.startsWith("0027_")) {
+      let k = readFileSync(join(GOC_KLASORU, ad), "utf8");
+      assert.ok(k.includes(GEREKCE), `bozulacak satır kaynakta yok: ${ad}`);
+      k = k.replace(GEREKCE, "");
+      if (ad.startsWith("0027_")) { assert.ok(k.includes(IMZA), "bozulacak imza satırı kaynakta yok"); k = k.replace(IMZA, ""); }
+      writeFileSync(join(klasor, ad), k);
     } else copyFileSync(join(GOC_KLASORU, ad), join(klasor, ad));
   }
   supa = await supabaseBenzeri(kume, "onay_bozuk", klasor);
@@ -97,6 +105,15 @@ test("0026'daki gerekçe kuralı kalkınca rapor gerekçesiz Yeni'ye döner (kil
   const r = (await supa.sahip.query<{ durum: string; g: string | null }>(
     "SELECT r.durum, (SELECT gerekce FROM rapor_hareket h WHERE h.rapor_id = r.id AND h.ne = 'geri') AS g FROM rapor r WHERE r.id = $1", [k.rapor])).rows[0];
   assert.deepEqual([r.durum, r.g], ["taslak", null], "rapor gerekçesiz geri döndü");
+});
+
+test("0027'deki imza kuralı kalkınca onaylanmış rapor imzalı sürüm olmadan Tamamlandı'ya geçer", async () => {
+  const k = await kur(havuz, A);
+  await k.is(k.yon, (db) => db.sorgu("UPDATE rapor SET durum = 'onaylandi' WHERE id = $1", [k.rapor]));
+  await k.is(k.den, (db) => db.sorgu("UPDATE rapor SET durum = 'imzali' WHERE id = $1", [k.rapor]));
+  const r = (await supa.sahip.query<{ durum: string; s: string }>(
+    "SELECT r.durum, (SELECT count(*) FROM rapor_surumu s WHERE s.rapor_id = r.id)::text AS s FROM rapor r WHERE r.id = $1", [k.rapor])).rows[0];
+  assert.deepEqual([r.durum, r.s], ["imzali", "0"], "imzasız rapor tamamlandı");
 });
 
 /* 2: göçler BOZULMAMIŞ — kümenin kendi veritabanı; bozulan sunucu kodu */
