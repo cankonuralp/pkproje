@@ -1,7 +1,7 @@
 /* MUHASEBE › İŞ SAYFASI (maket muhasebe.html #/is/<proje no> — isCiz; 327): başlık (proje no, durum; Plan · Tahsilat ekle · Toplu fatura · Fatura
    kaydet), şeritler (vadesi geçti, faturaya hazır, imza süreci, kapandı), yüzler (raporlanan, faturalanan, tahsil edilen, açık alacak), iş
-   (denetim, birim fiyatın dayanağı, iş sözleşmesi, ödeme vadesi), raporlar (birim fiyat ve kaynağı, fatura, durum), faturalar, geçmiş. Kârlılık
-   ve giderler 328'de. Görmeyen ya da raporu olmayan plan: bulunamadı. */
+   (denetim, birim fiyatın dayanağı, iş sözleşmesi, ödeme vadesi), raporlar (birim fiyat ve kaynağı, fatura, durum), faturalar, giderler ve
+   kârlılık (328: gelir − işe bağlı masraf − denetçi maliyeti − genel gider payı), geçmiş. Görmeyen ya da raporu olmayan plan: bulunamadı. */
 import type { Metadata } from "next";
 import Link from "next/link";
 import { notFound } from "next/navigation";
@@ -13,8 +13,12 @@ import { Serit } from "../../../../../components/serit/Serit";
 import { TusBaglanti } from "../../../../../components/tus/Tus";
 import { modulBul } from "../../../../../modules/moduller";
 import { IS_DURUM, para } from "../../../../../modules/muhasebe/sema";
+import { giderSecenekleri, isGiderleri } from "../../../../../modules/muhasebe/server/giderler";
 import { bugunTr, isKarti } from "../../../../../modules/muhasebe/server/muhasebe";
+import { IsGiderleri } from "../../../../../modules/muhasebe/ui/Giderler";
 import { FaturaKaydet, IsFaturalari, IsRaporlari, TahsilatEkle } from "../../../../../modules/muhasebe/ui/IsParcalari";
+import { IsKarliligi } from "../../../../../modules/muhasebe/ui/Karlilik";
+import { yuzde } from "../../../../../modules/muhasebe/ui/ortak";
 import { modulOturumu, oturumIslemi } from "../../../../../server/kimlik/istek";
 
 const MODUL = modulBul("muhasebe")!;
@@ -24,8 +28,12 @@ export default async function Sayfa({ params }: { params: Promise<{ id: string }
   const o = await modulOturumu(MODUL.no);
   if (!o) return <Yetkisiz />;
   const { id } = await params;
-  const x = await oturumIslemi(o, (db) => isKarti(db, o, id));
-  if (!x) notFound();
+  const v = await oturumIslemi(o, async (db) => {
+    const x = await isKarti(db, o, id);
+    return x && { x, giderler: (await isGiderleri(db, o, id)) ?? [], secenekler: x.izin.gider ? await giderSecenekleri(db, o) : null };
+  });
+  if (!v) notFound();
+  const { x } = v;
   const acik = x.faturalar.find((f) => f.id === x.acikFatura);
   const gec = x.faturalar.filter((f) => f.durum === "gecikti");
   return (
@@ -50,6 +58,7 @@ export default async function Sayfa({ params }: { params: Promise<{ id: string }
         <Yuz ikon="file-check" ad="Faturalanan" sayi={para(x.faturalanan)} not={`KDV dahil · ${x.faturalar.length} fatura`} />
         <Yuz ikon="wallet" ad="Tahsil edilen" sayi={para(x.tahsil)} />
         <Yuz ikon="clock" ad="Açık alacak" sayi={para(x.kalan)} uyari={x.durum === "gecikti"} not={x.durum === "gecikti" ? "vadesi geçti" : undefined} />
+        <Yuz ikon="chart-column" ad="Kâr" sayi={yuzde(x.karlilik.oran)} not={`${para(x.karlilik.kar)} · KDV hariç`} uyari={x.karlilik.kar < 0} />
       </Yuzler>
       <Bolum id="b-is" baslik="İş">
         <BilgiListesi>
@@ -66,6 +75,10 @@ export default async function Sayfa({ params }: { params: Promise<{ id: string }
       <Bolum id="b-is-fatura" baslik="Faturalar" sayac={<><b>{x.faturalar.length}</b> fatura</>}>
         {x.faturalar.length ? <IsFaturalari faturalar={x.faturalar} /> : <p>Henüz fatura yok.</p>}
       </Bolum>
+      <Bolum id="b-is-gider" baslik="Giderler">
+        <IsGiderleri giderler={v.giderler} secenekler={v.secenekler} isId={x.id} isNo={x.no} bugun={bugunTr()} />
+      </Bolum>
+      <IsKarliligi k={x.karlilik} />
       <Bolum id="b-is-gecmis" baslik="Geçmiş">
         <BilgiListesi>{x.gecmis.map((g, i) => <Bilgi key={i} etiket={tarihNo(g[0])} genis>{g[1]}{g[2] && <AltSatir>{g[2]}</AltSatir>}</Bilgi>)}</BilgiListesi>
       </Bolum>

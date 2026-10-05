@@ -6,17 +6,20 @@
    dokunmaz: Planlar, Raporlar, Teklifler, Sözleşmeler ve Müşteriler'in dışa açtığı işlevlerden okur. Tutarlar KURUŞ. */
 import type { Sorgulayici } from "../../../server/db/kiraci.ts";
 import { ekle, tablo, type Iz } from "../../../server/db/yazici.ts";
+import { ayarOku } from "../../../server/ayar/ayar.ts";
 import { hesapAdlari } from "../../../server/kimlik/hesap.ts";
 import { duzey, type YetkiHesabi } from "../../../server/yetki/canDo.ts";
 import { dogrula, type DogrulamaHatalari } from "../../../sema/ortak.ts";
 import { ekipmanlar } from "../../ekipman/server/ekipman.ts";
 import { turOzetleri } from "../../ekipman-turleri/server/turler.ts";
 import { musteriOzetleri } from "../../musteriler/server/musteriler.ts";
+import { personelMaliyetleri } from "../../personel/server/muhasebe-baglanti.ts";
 import { personelOzetleri } from "../../personel/server/personel.ts";
 import { muhasebePlanlari, type MuhasebePlani } from "../../planlar/server/muhasebe-baglanti.ts";
 import { muhasebeRaporlari, type MuhasebeRaporu } from "../../raporlar/server/muhasebe-baglanti.ts";
 import { tesisSozlesmesi } from "../../sozlesmeler/server/sozlesmeler.ts";
 import { raporBaglari, type FiyatKaynagi } from "../../teklifler/server/rapor-bagi.ts";
+import { donemGelirGider, isKarlilik, sonAylar, type DonemGelirGider, type IsKarlilik, type KarVerisi } from "../karlilik.ts";
 import { FaturaGirdisi, gunEkle, kdvTutari, para, TahsilatGirdisi, YONTEM, type FaturaDurumu, type IsDurumu, type Yontem } from "../sema.ts";
 
 const MODUL = 18;
@@ -61,7 +64,14 @@ async function oku(db: Sorgulayici, planIdleri: string[] | null) {
     "SELECT fatura_id::text, rapor_id::text, plan_id::text, tur_id::text, fiyat::text, kaynak, teklif_id::text FROM fatura_rapor")).rows;
   const tahsilatlar = (await db.sorgu<TahsilatDb>(
     "SELECT id::text, fatura_id::text, tarih::text, tutar::text, yontem, aciklama, kaydeden::text, olustu FROM tahsilat ORDER BY tarih, olustu")).rows;
-  return { raporlar, planlar, musteriler, tesisMusteri, baglar, faturalar, satirlar, tahsilatlar, bugun: bugunTr() };
+  /* kârlılık (328): giderler, personel maliyetleri (bordro), sabit giderler — iş başına ve dönem gelir-gideri karlilik.ts'te */
+  const giderler = (await db.sorgu<{ tarih: string; plan_id: string | null; tutar: string; oran: number; durum: string }>(
+    "SELECT tarih::text, plan_id::text, tutar::text, oran, durum FROM gider")).rows.map((g) => ({ tarih: g.tarih, planId: g.plan_id, tutar: Number(g.tutar), oran: g.oran, durum: g.durum }));
+  const pm = await personelMaliyetleri(db);
+  const sabit = (await ayarOku(db, "sabit_gider")).deger.kalemler;
+  const kar: KarVerisi = { raporlar: raporlar.map((r) => ({ planId: r.planId, personelId: r.personelId, gun: r.gun })), giderler, kisiler: pm.kisiler, bordrolar: pm.bordrolar,
+    sabitAylik: sabit.reduce((n, x) => n + x.aylik, 0) };
+  return { raporlar, planlar, musteriler, tesisMusteri, baglar, faturalar, satirlar, tahsilatlar, bugun: bugunTr(), kar, sabit };
 }
 type Veri = Awaited<ReturnType<typeof oku>>;
 
@@ -94,8 +104,10 @@ export interface IsSatiri {
   /** KDV hariç, kuruş: raporların birim fiyatları (faturalandıysa faturadaki) */
   raporlanan: number; fiyatsiz: number;
   faturalanan: number; tahsil: number; kalan: number; durum: IsDurumu; kapandi: string | null; faturaNolari: string[];
+  /** kâr (KDV hariç, kuruş) ve oranı (%; gelir yoksa 0) — karlilik.ts */
+  kar: number; karOran: number;
 }
-function isOzet(v: Veri, p: MuhasebePlani): IsSatiri & { raporlar: MuhasebeRaporu[]; faturalar: FaturaSatiri[] } {
+function isOzet(v: Veri, p: MuhasebePlani): IsSatiri & { raporlar: MuhasebeRaporu[]; faturalar: FaturaSatiri[]; karlilik: IsKarlilik } {
   const tm = v.tesisMusteri.get(p.tesisId);
   const raporlar = v.raporlar.filter((r) => r.planId === p.id);
   const faturali = new Map(v.satirlar.filter((s) => s.plan_id === p.id).map((s) => [s.rapor_id, s]));
@@ -108,14 +120,16 @@ function isOzet(v: Veri, p: MuhasebePlani): IsSatiri & { raporlar: MuhasebeRapor
     : surec.length || p.durum !== "tamamlandi" ? "rapor" : "kapandi";
   const kapandi = durum === "kapandi"
     ? v.tahsilatlar.filter((t) => faturalar.some((f) => f.id === t.fatura_id)).reduce((s, t) => (t.tarih > s ? t.tarih : s), "") || null : null;
+  const raporlanan = raporlar.reduce((n, r) => n + (fiyat(r) ?? 0), 0);
+  const karlilik = isKarlilik(v.kar, { id: p.id, tarih: p.baslangic, gelir: raporlanan });
   return {
     id: p.id, no: p.no, tarih: p.baslangic, musteriId: tm?.musteri.id ?? "", musteri: tm?.musteri.kisa ?? "—", unvan: tm?.musteri.unvan ?? "—", tesisId: p.tesisId,
     tesis: tm?.tesis.ad ?? "—", imzali: raporlar.length - surec.length, toplam: raporlar.length, faturali: faturali.size, hazir: hazir.length, surec: surec.length,
-    raporlanan: raporlar.reduce((n, r) => n + (fiyat(r) ?? 0), 0), fiyatsiz: raporlar.filter((r) => fiyat(r) === null).length,
-    faturalanan, tahsil, kalan, durum, kapandi, faturaNolari: faturalar.map((f) => f.no), raporlar, faturalar,
+    raporlanan, fiyatsiz: raporlar.filter((r) => fiyat(r) === null).length,
+    faturalanan, tahsil, kalan, durum, kapandi, faturaNolari: faturalar.map((f) => f.no), kar: karlilik.kar, karOran: karlilik.oran, raporlar, faturalar, karlilik,
   };
 }
-const satirOf = (o: ReturnType<typeof isOzet>): IsSatiri => { const { raporlar: _r, faturalar: _f, ...s } = o; void _r; void _f; return s; };
+const satirOf = (o: ReturnType<typeof isOzet>): IsSatiri => { const { raporlar: _r, faturalar: _f, karlilik: _k, ...s } = o; void _r; void _f; void _k; return s; };
 
 /** İşler listesi (planın ilk raporu yazılınca iş görünür), en yeni denetim üstte; göremeyene null */
 export async function isListesi(db: Sorgulayici, kim: Kisi): Promise<IsSatiri[] | null> {
@@ -147,7 +161,9 @@ export interface IsKarti extends IsSatiri {
   /** fatura: tek işin faturası; toplu: müşterinin faturaya hazır bütün işleri (birden çoksa) */
   onizleme: { tek: FaturaOnizleme | null; toplu: FaturaOnizleme | null };
   acikFatura: string | null;
-  izin: { fatura: boolean; tahsilat: boolean };
+  /** kârlılık (328): gelir − işe bağlı masraf − denetçi maliyeti − genel gider payı */
+  karlilik: IsKarlilik;
+  izin: { fatura: boolean; tahsilat: boolean; gider: boolean };
 }
 
 async function kalemler(db: Sorgulayici, l: { turId: string; fiyat: number | null; kaynak: FiyatKaynagi }[]): Promise<FaturaKalemi[]> {
@@ -219,8 +235,8 @@ export async function isKarti(db: Sorgulayici, kim: Kisi, planId: string): Promi
   return {
     ...satirOf(o), ekip, raporlar, faturalar: o.faturalar, teklif: raporlar.find((r) => r.teklif)?.teklif ?? null, sozlesme: soz, gecmis,
     onizleme: { tek, toplu: toplu && toplu.isler.length > 1 ? toplu : null },
-    acikFatura: o.faturalar.find((f) => f.kalan > 0)?.id ?? null,
-    izin: { fatura: yaz && o.hazir > 0, tahsilat: yaz && o.faturalar.some((f) => f.kalan > 0) },
+    acikFatura: o.faturalar.find((f) => f.kalan > 0)?.id ?? null, karlilik: o.karlilik,
+    izin: { fatura: yaz && o.hazir > 0, tahsilat: yaz && o.faturalar.some((f) => f.kalan > 0), gider: yaz },
   };
 }
 
@@ -246,6 +262,30 @@ export async function faturaKarti(db: Sorgulayici, kim: Kisi, id: string): Promi
     tahsilatlar: t.map((x) => ({ id: x.id, tarih: x.tarih, tutar: Number(x.tutar), yontem: YONTEM[x.yontem], aciklama: x.aciklama, kaydeden: x.kaydeden ? ad.get(x.kaydeden) ?? "—" : "—" }))
       .sort((a, b) => b.tarih.localeCompare(a.tarih)),
     izin: { tahsilat: yazar(kim) && o.kalan > 0 },
+  };
+}
+
+/* ── GELİR-GİDER (328; maket #/gelir-gider): ay ya da "toplam" (ilk işin ayından bu aya; en çok 36 ay) ──────────────────────────────── */
+export interface GelirGider {
+  /** seçilen: "toplam" ya da YYYY-AA */
+  secili: string; secenekler: string[]; aylar: string[]; donem: DonemGelirGider; sabit: { ad: string; aylik: number; not: string }[];
+  isler: (IsSatiri & { karlilik: IsKarlilik })[];
+}
+/** dönem seçenekleri: bu aydan geriye 13 ay (maket ggAylar) */
+const GG_AY = 13;
+export async function gelirGider(db: Sorgulayici, kim: Kisi, secim: string): Promise<GelirGider | null> {
+  if (!gorur(kim)) return null;
+  const v = await oku(db, null);
+  const buAy = v.bugun.slice(0, 7), secenek = sonAylar(buAy, GG_AY);
+  const secili = secenek.includes(secim) ? secim : "toplam";
+  const ilk = v.planlar.reduce((s, p) => (p.baslangic.slice(0, 7) < s ? p.baslangic.slice(0, 7) : s), buAy);
+  const aylar = secili === "toplam" ? sonAylar(buAy, 36).filter((a) => a >= ilk).reverse() : [secili];
+  const ozet = v.planlar.map((p) => isOzet(v, p));
+  const donem = donemGelirGider(v.kar, aylar, ozet.map((o) => ({ id: o.id, tarih: o.tarih, gelir: o.raporlanan })));
+  const icinde = new Set(donem.isler);
+  return {
+    secili, secenekler: secenek, aylar, donem, sabit: v.sabit,
+    isler: ozet.filter((o) => icinde.has(o.id)).map((o) => ({ ...satirOf(o), karlilik: o.karlilik })).sort((a, b) => b.tarih.localeCompare(a.tarih) || b.no.localeCompare(a.no)),
   };
 }
 

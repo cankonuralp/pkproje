@@ -45,3 +45,32 @@ export function gunEkle(gun: string, n: number): string {
   d.setUTCDate(d.getUTCDate() + n);
   return d.toISOString().slice(0, 10);
 }
+
+/* ── GİDERLER (328; maket MV.GIDER_TUR, KDV_ORAN, GIDER_DURUM) ── */
+/** başlangıç gider türleri ve varsayılan KDV oranları (KOD-GECIS §3 "başlangıç gider türleri + KDV varsayılanları") */
+export const GIDER_TUR = {
+  yakit: ["Yakıt", 20], konaklama: ["Konaklama", 10], yol: ["Yol", 20], kalibrasyon: ["Kalibrasyon", 20], sarf: ["Sarf malzeme", 20], diger: ["Diğer", 20],
+} as const;
+export type GiderTuru = keyof typeof GIDER_TUR;
+export const KDV_ORAN = [20, 10, 1, 0] as const;
+export const GIDER_DURUM = { bekliyor: ["Onay bekliyor", "bekliyor"], onaylandi: ["Onaylandı", "kabul"], odendi: ["Ödendi", "tamam"], red: ["Reddedildi", "red"] } as const;
+export type GiderDurumu = keyof typeof GIDER_DURUM;
+/** fişteki KDV dahil tutardan KDV ve KDV hariç (KURUŞ) */
+export const giderKdv = (tutar: number, oran: number) => { const kdv = Math.round((tutar * oran) / (100 + oran)); return { kdv, haric: tutar - kdv }; };
+const bosNull = (s: unknown) => (typeof s === "string" ? (s.trim() === "" ? null : s.trim()) : s ?? null);
+const UUID_ = /^[0-9a-f]{8}-[0-9a-f]{4}-[0-9a-f]{4}-[0-9a-f]{4}-[0-9a-f]{12}$/;
+export const GiderGirdisi = z.object({
+  tarih,
+  tur: z.enum(Object.keys(GIDER_TUR) as [GiderTuru, ...GiderTuru[]], { error: "Tür seçilmeli." }),
+  tutar: tutar.refine((n) => n > 0, { message: "Tutar sıfırdan büyük olmalı (ör. 1.250,00)." }).refine((n) => n <= 100_000_000_000, { message: "Tutar çok büyük." }),
+  oran: z.preprocess((s) => (typeof s === "string" ? Number(s) : s), z.number().refine((n) => (KDV_ORAN as readonly number[]).includes(n), "KDV oranı seçilmeli.")),
+  aciklama: z.preprocess(bosNull, z.string().max(120, "En çok 120 karakter.").nullable()),
+  is: z.preprocess(bosNull, z.string().regex(UUID_, "İş seçilmeli.").nullable()),
+  personel: z.preprocess(bosNull, z.string().regex(UUID_, "Personel seçilmeli.").nullable()),
+  /** yalnız yeni elle girilen giderde: ödendi mi, ödenecek mi */
+  odeme: z.enum(["odendi", "onaylandi"]).default("odendi"),
+});
+export type GiderGirdisi = z.output<typeof GiderGirdisi>;
+export const GiderRedGirdisi = z.object({
+  gerekce: z.preprocess((s) => (typeof s === "string" ? s.trim() : s), z.string({ error: "Gerekçe yazılmalı." }).min(5, "Gerekçe en az 5 karakter.").max(200, "En çok 200 karakter.")),
+});

@@ -10,6 +10,7 @@ import { tarihNo } from "../../../components/secim/tarih";
 import { Serit } from "../../../components/serit/Serit";
 import { FATURA_DURUM, IS_DURUM, para } from "../sema";
 import type { FaturaSatiri, IsSatiri } from "../server/muhasebe";
+import { KarHucre } from "./Karlilik";
 import { MuhasebeSekmeleri, gunFarki } from "./ortak";
 import stil from "./muhasebe.module.css";
 
@@ -21,16 +22,18 @@ const musteriSecici = <T extends { musteriId: string; musteri: string }>(l: read
 
 /* ── İŞLER ── */
 const IS_SUTUN: Sutun<IsSatiri>[] = [
-  { k: "no", genislik: "14%", baslik: "Proje no", kart: "ust", sira: 1, hucre: (x) => <><Link className={stil.no} href={`/muhasebe/is/${x.id}`}>{x.no}</Link><AltSatir>{tarihNo(x.tarih)}</AltSatir></> },
-  { k: "musteri", genislik: "22%", baslik: "Müşteri / tesis", kart: "govde", sira: 2, hucre: (x) => <span><Kirp>{x.musteri}</Kirp><AltSatir><Kirp>{x.tesis}</Kirp></AltSatir></span> },
-  { k: "rapor", genislik: "16%", baslik: "Rapor", kart: "govde", sira: 3, hucre: (x) => (
+  { k: "no", genislik: "12%", baslik: "Proje no", kart: "ust", sira: 1, hucre: (x) => <><Link className={stil.no} href={`/muhasebe/is/${x.id}`}>{x.no}</Link><AltSatir>{tarihNo(x.tarih)}</AltSatir></> },
+  { k: "musteri", genislik: "19%", baslik: "Müşteri / tesis", kart: "govde", sira: 2, hucre: (x) => <span><Kirp>{x.musteri}</Kirp><AltSatir><Kirp>{x.tesis}</Kirp></AltSatir></span> },
+  { k: "rapor", genislik: "13%", baslik: "Rapor", kart: "govde", sira: 3, hucre: (x) => (
     <><KartEtiket>Rapor</KartEtiket><span><span className={stil.sayi}>{x.imzali} / {x.toplam} imzalı</span><AltSatir>{x.faturali} faturalı</AltSatir></span></>
   ) },
-  { k: "tutar", genislik: "18%", baslik: "Raporlanan (KDV hariç)", kart: "govde", sira: 4, hucre: (x) => (
+  { k: "tutar", genislik: "16%", baslik: "Raporlanan (KDV hariç)", kart: "govde", sira: 4, hucre: (x) => (
     <><KartEtiket>Raporlanan (KDV hariç)</KartEtiket><span><span className={stil.sayi}>{para(x.raporlanan)}</span>{x.fiyatsiz > 0 && <AltSatir uyari>{x.fiyatsiz} rapor fiyatsız</AltSatir>}</span></>
   ) },
-  { k: "kalan", genislik: "16%", baslik: "Açık alacak", kart: "govde", sira: 5, hucre: (x) => <><KartEtiket>Açık alacak</KartEtiket>{kalanYaz(x.kalan, x.durum === "gecikti")}</> },
-  { k: "durum", genislik: "14%", baslik: "Durum", kart: "rozet", sira: 1, hucre: (x) => <Rozet tur={IS_DURUM[x.durum][1]}>{IS_DURUM[x.durum][0]}</Rozet> },
+  { k: "kalan", genislik: "14%", baslik: "Açık alacak", kart: "govde", sira: 5, hucre: (x) => <><KartEtiket>Açık alacak</KartEtiket>{kalanYaz(x.kalan, x.durum === "gecikti")}</> },
+  /* 328 (reisim 2026-09-27: "kar hesaplanacak kar yüzdesi yazacak iş başına") */
+  { k: "kar", genislik: "14%", baslik: "Kâr", kart: "govde", sira: 6, hucre: (x) => <><KartEtiket>Kâr</KartEtiket><KarHucre kar={x.kar} oran={x.karOran} /></> },
+  { k: "durum", genislik: "12%", baslik: "Durum", kart: "rozet", sira: 1, hucre: (x) => <Rozet tur={IS_DURUM[x.durum][1]}>{IS_DURUM[x.durum][0]}</Rozet> },
 ];
 function isTanim(l: readonly IsSatiri[]): SuzgecTanimi<IsSatiri> {
   return {

@@ -1,6 +1,7 @@
 /* NEREDEN GELDİ: K4 Muhasebe (327) — maket muhasebe.html (M14). Gerçek tarayıcıda, üç genişlikte: her projenin tamamlanmış planı ve imzalı raporu
    (scripts/e2e-sunucu.ts tohumu; fiyat listesinden 900,00 TL) → İşler listesi → iş sayfası "1 rapor faturaya hazır" → Fatura kaydet (no yazılmadan
-   reddedilir; KDV'li toplam) → fatura sayfası → Tahsilat ekle (kalan kadar) → "Ödendi" · Faturalar listesinde · denetçi Muhasebe'yi göremez. */
+   reddedilir; KDV'li toplam) → fatura sayfası → Tahsilat ekle (kalan kadar) → "Ödendi" · Faturalar listesinde · denetçi Muhasebe'yi göremez.
+   328: iş sayfasında Kârlılık · Giderler sekmesi → Gider ekle (tür seçilmeden reddedilir; türün KDV oranı, canlı KDV) → listede · Gelir-gider. */
 import { expect, test } from "@playwright/test";
 import { E2E_MUHASEBE } from "./hesaplar";
 import { girisli, hazir } from "./yardimci";
@@ -17,6 +18,7 @@ test("muhasebe: imzalı rapor faturalanır, tahsil edilir; denetçi göremez", a
   await expect(page).toHaveURL(/\/muhasebe\/is\/[0-9a-f-]{36}$/, { timeout: 30_000 });
   await expect(page.getByRole("heading", { level: 1, name: planNo })).toBeVisible();
   await expect(page.getByText("1 rapor faturaya hazır")).toBeVisible();
+  await expect(page.getByRole("heading", { name: "Kârlılık" })).toBeVisible();
 
   await hazir(page);
   await page.getByRole("button", { name: "Fatura kaydet" }).click();
@@ -43,4 +45,29 @@ test("muhasebe: imzalı rapor faturalanır, tahsil edilir; denetçi göremez", a
   await girisli(page, "denetci");
   await page.goto("/muhasebe/faturalar");
   await expect(page.getByText("Bu sayfayı görme yetkiniz yok")).toBeVisible();
+});
+
+test("muhasebe › giderler: gider ekle (türün KDV oranı, canlı KDV), listede; gelir-gider", async ({ page }, bilgi) => {
+  test.setTimeout(120_000);
+  const aciklama = `Deneme gider ${bilgi.project.name}`;
+  await girisli(page, "muhasebe");
+  await page.goto("/muhasebe/giderler");
+  await hazir(page);
+  await page.getByRole("button", { name: "Gider ekle" }).click();
+  const d = page.getByRole("dialog", { name: "Gider ekle" });
+  await d.getByRole("button", { name: "Gideri kaydet" }).click();
+  await expect(d.getByText("Tür seçilmeli.")).toBeVisible();
+  await d.getByRole("combobox", { name: "Tür" }).click();
+  await d.getByRole("option", { name: "Konaklama" }).click();
+  await d.getByLabel("Tutar (KDV dahil)").fill("1.100,00");
+  await expect(d.getByText("KDV 100,00 TL · KDV hariç 1.000,00 TL")).toBeVisible();
+  await d.getByLabel("Açıklama").fill(aciklama);
+  await d.getByRole("button", { name: "Gideri kaydet" }).click();
+  await expect(page.getByText(/^G-\d{4}-\d{3} kaydedildi: 1\.100,00 TL \(KDV dahil\), genel gider; belge eklenmedi\.$/)).toBeVisible({ timeout: 30_000 });
+  await expect(page.getByText(aciklama)).toBeVisible();
+
+  await page.goto("/muhasebe/gelir-gider");
+  await hazir(page);
+  await expect(page.getByRole("heading", { name: "Gelir ve giderler · toplam" })).toBeVisible();
+  await expect(page.getByRole("heading", { name: "Aylara göre" })).toBeVisible();
 });

@@ -50,6 +50,12 @@ export const AYAR_BOLUMLERI = {
     egitim: z.array(z.string().regex(/^[0-9a-f-]{36}$/)).max(100).default([]),
     atama: z.boolean().default(false),
   }),
+  /** Sabit giderler (328; maket MV.SABIT_GIDER — araç kira, ofis kirası, ofis giderleri, vergi ve harçlar …): ad, aylık tutar (KURUŞ), not.
+      Gelir-gider ve kârlılığın genel gider payı buradan; başlangıçta boş (firma girer — Firma ayarları) */
+  sabit_gider: z.object({
+    kalemler: z.array(z.object({ ad: z.string().trim().min(2).max(60), aylik: z.number().int().min(0).max(100_000_000_000), not: z.string().trim().max(80).default("") }))
+      .max(30).default([]),
+  }),
   /** Rol yetkileri (Personel › Rol yetkileri; reisim 32): modül → rol sırasıyla 6 düzey. Boş = önerilen düzen. Okuma / yazma src/server/yetki/matris.ts */
   rol_yetki: z.object({ matris: z.record(z.string().regex(/^(\d{1,2}|hareket)$/), z.array(z.enum(DUZEYLER)).length(6)).default({}) }),
 } as const;

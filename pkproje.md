@@ -2341,6 +2341,34 @@ revizyon, alan kopyalama, hafif kusur devri, meslek eşleşme denetimi).
 - Emsal ürünler: https://opwire.app/iso-17020-periyodik-kontrol-yazilimi/ · https://17020muayene.vidco.com.tr/ · https://akuple.com/asansor-kontrol-yazilimi/ · https://ensyazilim.com/
 
 ## 11 · Değişiklik günlüğü
+- 2026-10-06 (328): **K4 Muhasebe › Giderler, sabit giderler, kârlılık, gelir-gider** (maket muhasebe.html #/giderler, gider penceresi,
+  gider-excel-*, #/gelir-gider, iş sayfası "Giderler" ve "Kârlılık"; maket-veri.js MV.isKarlilik / ayMaliyet / ayGelirGider / donemGelirGider;
+  reisim 2026-09-27: "denetçi maaşı yakıt araç kira bedeli ofis giderleri vergiler vb tüm giderler etki edecek şekilde … kar yüzdesi yazacak iş
+  başına", "gelir gidere göre bilançoda olacak"; KOD-GECIS §5 gider durumları). Göç **0040**: gider (no G-AAYY-SIRA — numara üreticisi, önek firma
+  ayarı; tarih — ileri değil; tür: yakıt, konaklama, yol, kalibrasyon, sarf malzeme, diğer — tür başına varsayılan KDV oranı; tutar fişteki KDV
+  DAHİL, KURUŞ; KDV oranı %20 / %10 / %1 / %0; açıklama; isteğe bağlı iş ve personel; belge — PDF ya da fotoğraf, türü baytlardan, yoksa uyarı;
+  kaynak muhasebe ya da masraf formu). Durumlar: elle girilen "ödendi" ya da "ödenecek" doğar; masraf formu "onay bekliyor" → onaylandı (ödenecek)
+  → ödendi; onay bekleyen reddedilir (gerekçe 5–200). Tetik: silinmez; numara, kaynak, kaydeden değişmez; reddedilen değişmez; onaylayan, karar ve
+  ödeme günü yalnız durum değişirken; kaydeden / onaylayan oturumdan. Pencerede "Onayla" ve "Ödendi" içerik düzeltmesiyle AYNI işlemde. **Excel**:
+  dışa (süzülen liste: no, tarih, tür, tutar, KDV, KDV hariç, açıklama, proje no, personel, durum, ödeme, belge) ve içe (Tarih · Tür · Tutar · KDV
+  oranı · Açıklama · Proje no — sütunlar reisim'in örnek Excel'i gelince ona göre, VARSAYIM; tarayıcıda okunur, satır satır önizleme, sunucu yeniden
+  denetler, en çok 500 satır, geçerliler "ödendi"). **Sabit giderler** firma ayarı (sabit_gider: ad, aylık tutar, not; ekranı Firma ayarları
+  kalemiyle). **Kârlılık** (karlilik.ts, saf): iş kârı = gelir (raporlanan, KDV hariç) − işe bağlı masraflar (KDV hariç, reddedilen hariç) −
+  denetçi maliyeti (o ayın bordrosu — yoksa önceki son, o da yoksa ilk, "tahmini" — ÷ 22 iş günü × kişi-gün; kişi-gün: o gün bu işte yazdığı rapor
+  ÷ o gün yazdığı bütün raporlar) − genel gider payı (sabit giderler + işe bağlı olmayan masraflar + denetçi olmayan personelin maliyeti, denetçi
+  sayısına ve 22 güne bölünür; × kişi-gün). Personel tablolarına Personel'in muhasebe-baglanti.ts'inden (kişi, denetçi mi, bordronun işverene
+  maliyeti) bakılır. **Gelir-gider**: dönem "Toplam" (ilk işin ayından bu aya) ya da son 13 aydan biri; gelir (o dönem denetlenen işlerin
+  raporlananı), maaşlar, işe bağlı ve genel masraflar, sabit giderler, kâr; toplamda aylara göre döküm, ayda işlerin kârı. Bilanço (varlık / borç)
+  firmanın muhasebe programında (VARSAYIM). Ekranlar: Muhasebe sekmeleri İşler · Faturalar · **Giderler** · **Gelir-gider**; İşler listesinde Kâr
+  (tutar + oran); iş sayfasında Kâr yüzü, Giderler (Gider ekle — iş seçili) ve Kârlılık. Belge erişimi: Muhasebe'yi gören (gör / yaz). Sonraki:
+  masraf formu (Talepler kalemi; denetçi doldurur, onayda imza — V3), sabit gider ekranı (Firma ayarları), fatura özeti PDF'i, "Maaş bordrosu
+  gönder" (BB5). Kilit: muhasebe.test +6 (yetki ve "gör" düzeyi; elle ekle / ödenecek → ödendi, belge türü, ileri tarih, yabancı iş, sürüm; masraf
+  formu onayla / ödendi / reddet, veritabanı geçişleri ve damgaları; Excel yükle; kârlılık ve gelir-gider değerleri; firma sızıntısı), karlilik.test
+  (saf, elle hesaplanmış değerler; Excel satır denetimi), bozan 4 (red değişmezliği, form onayı, ileri tarih, kaydeden damgası), e2e üç genişlik
+  (iş sayfasında Kârlılık; Gider ekle — tür seçilmeden reddedilir, türün KDV oranı, canlı KDV; Gelir-gider).
+- 2026-10-05 (327 düzeltmesi, CI): uygulama rolünün faturada UPDATE hakkı olmadığından tahsilat tetiği ve sunucu faturayı satır kilidiyle (FOR
+  UPDATE) kilitleyemiyordu ("permission denied for table fatura") — ikisi de aynı danışma kilidini alır (0039 yerinde; Supabase'e henüz
+  uygulanmamıştı). Test, bozan ve e2e tohumundaki fatura numaraları 16 karaktere çekildi.
 - 2026-10-05 (327): **K4 Muhasebe › İşler, faturalar, tahsilat** (maket muhasebe.html M14; §3 akış "… müşteriye açıldı → fatura → tahsilat → iş
   kapandı"; §3.2 madde 5; KOD-GECIS §3 Muhasebe). İŞ = plan: planın ilk raporu yazılınca iş görünür. **Birim fiyat** (Teklifler'in rapor-bagi.ts'i,
   teklif sayfasının "Raporlanan"ıyla aynı bağ): raporun tesisini kapsayan, tarihi raporun açılışından sonra olmayan en son kabul edilmiş teklifin
