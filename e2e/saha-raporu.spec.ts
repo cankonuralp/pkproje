@@ -12,7 +12,9 @@
    314 Onaylar: mekanik yönetici kuyruktan raporu açar → kısa gerekçeyle geri gönderilmez → gerekçeyle geri gönderir → denetçi rapor ekranında
    "Geri gönderildi" şeridini görür, yeniden gönderir → yönetici onaylar → onay ekranında "Muayene uzmanı imzası".
    317 Son imza: denetçi İmzala → imzasız PDF'i indirir → imzalı PDF'i yükler → Tamamlandı, İmzalı PDF.
-   318 (C5): denetçi Onaylar'da "İmzamı bekleyen raporlar"dan raporu açar; Raporlar listesinde rapor durumuyla, imza şeridi. */
+   318 (C5): denetçi Onaylar'da "İmzamı bekleyen raporlar"dan raporu açar; Raporlar listesinde rapor durumuyla, imza şeridi.
+   318 revizyon: denetçi tamamlanan raporda Revize iste → mekanik yönetici Onaylar › Revize istekleri'nden Revizeye gönderir (isteğin gerekçesi
+   başlangıç) → denetçi raporu "<no>-R1" Yeni olarak, "Revizeye gönderildi (R1)" şeridiyle görür. */
 import { readFileSync } from "node:fs";
 import { expect, test, type Locator, type Page } from "@playwright/test";
 import { E2E_HESAPLAR, E2E_PLAN, E2E_SAHA } from "./hesaplar";
@@ -262,4 +264,29 @@ test("saha raporu: rapor oluştur, eksikle gönderilmez, doldur + cihaz ekle, on
   await expect(page.getByText(`${raporNo} imzalandı, tamamlandı ve müşteriye açıldı.`).first()).toBeVisible({ timeout: 60_000 });
   await expect(page.getByRole("link", { name: "İmzalı PDF" })).toBeVisible({ timeout: 30_000 });
   await expect(page.getByText("Tamamlandı", { exact: true }).filter({ visible: true }).first()).toBeVisible();
+
+  /* 318 revizyon */
+  await page.getByRole("button", { name: "Revize iste" }).click();
+  const istek = page.getByRole("dialog", { name: `Revize iste · ${raporNo}` });
+  await istek.getByRole("textbox", { name: /^Gerekçe/ }).fill("Seri numarası yanlış yazılmış");
+  await istek.getByRole("button", { name: "İsteği gönder" }).click();
+  await expect(page.getByText(`${raporNo} için revize isteği teknik yöneticiye gitti.`).first()).toBeVisible({ timeout: 30_000 });
+  await expect(page.getByText("Revize isteğiniz teknik yöneticide", { exact: false }).first()).toBeVisible({ timeout: 30_000 });
+  await context.clearCookies();
+  await girisli(page, "mekanik");
+  await page.goto("/onaylar/istekler");
+  await hazir(page);
+  await page.getByRole("searchbox", { name: "Revize isteklerinde ara" }).fill(raporNo);
+  await page.getByRole("button", { name: "Revizeye gönder" }).filter({ visible: true }).first().click();
+  const rev = page.getByRole("dialog", { name: `Revizeye gönder · ${raporNo}` });
+  await expect(rev.getByRole("textbox", { name: /^Gerekçe/ })).toHaveValue("Seri numarası yanlış yazılmış");
+  await rev.getByRole("button", { name: "Revizeye gönder" }).click();
+  await expect(page.getByText(`${raporNo}-R1 açıldı;`, { exact: false }).first()).toBeVisible({ timeout: 30_000 });
+  await context.clearCookies();
+  await girisli(page, "denetci");
+  await page.goto(raporAdresi);
+  await hazir(page);
+  await expect(page.getByText(/Revizeye gönderildi \(R1\) · Deneme Mekanik .*Seri numarası yanlış yazılmış/)).toBeVisible({ timeout: 30_000 });
+  await expect(page.getByText("Yeni", { exact: true }).filter({ visible: true }).first()).toBeVisible();
+  await expect(page.getByText(`${raporNo}-R1`).first()).toBeVisible();
 });

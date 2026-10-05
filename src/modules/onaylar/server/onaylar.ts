@@ -7,14 +7,20 @@
      kendi raporunu onaylaması da engellenmez"). Geri gönder: rapor_geri_gonder, gerekçe ≥ 10. Durumu değiştir: rapor_durum_degistir, Yeni /
      onayda / onaylandı arasında (Tamamlandı'ya yalnız imzayla); Yeni'ye ise gerekçe ≥ 10; Onaylandı'ya almak onay sayılır (191).
    · Kuyruk: branşın onaydaki raporları, en yeni üstte; onaylayınca ya da geri gönderince sıradaki rapor açılır.
+   · Revizyon (318; maket 131 V1, 141 W4): tamamlanan raporda Revizeye gönder (rapor_revizeye_gonder — türün branş yöneticisi; gerekçe ≥ 10;
+     rapor R1, R2 … olarak denetçiye Yeni döner, imzalı sürüm saklı) · denetçinin "Revize istekleri" (branşın bekleyen istekleri, en yeni üstte):
+     Reddet (gerekçe isteğe bağlı) ya da Revizeye gönder (isteğin gerekçesi başlangıç; gönderince istek kapanır).
    Rapor tablosuna dokunulmaz: Raporlar'ın onay-baglanti.ts kapısından okunur ve yazılır; geçiş kuralları ve damgalar veritabanında (0026). */
 import type { Sorgulayici } from "../../../server/db/kiraci.ts";
 import type { Iz } from "../../../server/db/yazici.ts";
 import { canDo, canDoEylem, duzey, type YetkiHesabi } from "../../../server/yetki/canDo.ts";
 import { dogrula, type DogrulamaHatalari } from "../../../sema/ortak.ts";
-import { raporDurumYaz, raporOzetleri, type OnayGecisi, type RaporOzeti } from "../../raporlar/server/onay-baglanti.ts";
+import {
+  bekleyenRevizeIstegi, raporDurumYaz, raporOzetleri, raporRevizeYaz, revizeIstegiReddet as istekReddet, revizeIstekleri, type OnayGecisi, type RaporOzeti,
+} from "../../raporlar/server/onay-baglanti.ts";
 import { gozdenGecirme, type GozdenGecirmeMaddesi } from "../../raporlar/server/raporlar.ts";
-import { RAPOR_DURUM } from "../../raporlar/sema.ts";
+import { gorunenNo, RAPOR_DURUM, RevizeGirdisi, RevizeRedGirdisi } from "../../raporlar/sema.ts";
+import { hesapAdlari } from "../../../server/kimlik/hesap.ts";
 import { DurumGirdisi, GeriGirdisi } from "../sema.ts";
 
 const MODUL = 15;
@@ -25,7 +31,7 @@ export type OnayYazma =
   | { durum: "red"; neden: string }
   | { durum: "yetkisiz" } | { durum: "cakisma" } | { durum: "yok" };
 
-export interface OnayIzni { onayla: boolean; geriGonder: boolean; onayGeriAl: boolean; durumDegistir: boolean }
+export interface OnayIzni { onayla: boolean; geriGonder: boolean; onayGeriAl: boolean; durumDegistir: boolean; revize: boolean }
 /** ekrana giden satır: yazan hesabın kimliği gitmez */
 export type OnaySatiri = Omit<RaporOzeti, "hesapId"> & { bekleme: string | null; eski: boolean; izin: OnayIzni };
 
@@ -43,6 +49,7 @@ function izinler(kim: Kisi, r: RaporOzeti): OnayIzni {
     geriGonder: r.durum === "onayda" && canDoEylem(kim, "rapor_geri_gonder", k),
     onayGeriAl: r.durum === "onaylandi" && canDoEylem(kim, "rapor_onayla", k),
     durumDegistir: (r.durum === "taslak" || r.durum === "onayda" || r.durum === "onaylandi") && canDoEylem(kim, "rapor_durum_degistir", k),
+    revize: r.durum === "imzali" && canDoEylem(kim, "rapor_revizeye_gonder", k),
   };
 }
 /** bekleme yazısı (maket bekleme): az önce · N saattir · N gündür; 24 saatten eski işaretli */
@@ -69,7 +76,12 @@ export interface OnayListeleri {
   kuyruk: OnaySatiri[]; tumu: OnaySatiri[]; branslar: ("m" | "e")[];
   /** kişinin YAZDIĞI, onaylanmış (son imzasını bekleyen) raporları — maket onaylar.html BB4 "İmzamı bekleyen raporlar"; onay sırasıyla (eski önce) */
   imzaBekleyen: OnaySatiri[];
+  /** görebildiği tamamlanan raporlardaki bekleyen revize istekleri (318; yalnız yönetici), en yeni üstte */
+  istekler: RevizeIstekSatiri[];
 }
+/** revize isteği: isteyenin adı, zaman, gerekçe; isteğin sürümü (Reddet onunla yazılır) */
+export interface RevizeIstekBilgisi { surum: number; kim: string; zaman: string; gerekce: string }
+export type RevizeIstekSatiri = OnaySatiri & { istek: RevizeIstekBilgisi };
 /** Onay kuyruğu + Tüm raporlar (branşın bütün raporları; maket 190) + İmzamı bekleyen raporlar (C5); Onaylar'ı göremeyene null */
 export async function onayListeleri(db: Sorgulayici, kim: Kisi): Promise<OnayListeleri | null> {
   if (!onaylarGorur(kim)) return null;
@@ -78,16 +90,26 @@ export async function onayListeleri(db: Sorgulayici, kim: Kisi): Promise<OnayLis
   const tum = yonetici ? hepsi.filter((r) => gorur(kim, r)) : [];
   const imzaBekleyen = hepsi.filter((r) => r.durum === "onaylandi" && !!r.hesapId && r.hesapId === kim.id && canDoEylem(kim, "rapor_son_imza", { sahip: r.hesapId }))
     .sort((a, b) => (a.onay ?? "").localeCompare(b.onay ?? "")).map((r) => satir(kim, r, simdi));
+  /* revize istekleri: görebildiği tamamlanan raporun şimdiki revizyonundaki bekleyen istek */
+  const tamam = new Map(tum.filter((r) => r.durum === "imzali").map((r) => [r.id, r]));
+  const ham = yonetici ? (await revizeIstekleri(db)).filter((x) => tamam.has(x.raporId)) : [];
+  const adlar = await hesapAdlari(db, ham.map((x) => x.hesapId));
+  const istekler = ham.map((x) => ({ ...satir(kim, tamam.get(x.raporId)!, simdi), istek: { surum: x.surum, kim: adlar.get(x.hesapId ?? "") ?? "—", zaman: x.zaman, gerekce: x.gerekce } }));
   return {
     yonetici,
     kuyruk: tum.filter((r) => r.durum === "onayda").sort(enYeni).map((r) => satir(kim, r, simdi)),
     tumu: [...tum].sort((a, b) => b.olustu.localeCompare(a.olustu)).map((r) => satir(kim, r, simdi)),
     branslar: [...new Set(tum.map((r) => r.brans))].sort(),
     imzaBekleyen,
+    istekler,
   };
 }
 
-export interface OnayEkrani { r: OnaySatiri; ozet: GozdenGecirmeMaddesi[]; sira: number | null; kuyrukBoyu: number }
+export interface OnayEkrani {
+  r: OnaySatiri; ozet: GozdenGecirmeMaddesi[]; sira: number | null; kuyrukBoyu: number;
+  /** tamamlanan raporda yazanın bekleyen revize isteği (318) */
+  istek: RevizeIstekBilgisi | null;
+}
 /** onay ekranı: gözden geçirme özeti + sıra; göremeyene null */
 export async function onayEkrani(db: Sorgulayici, kim: Kisi, id: string): Promise<OnayEkrani | null> {
   if (!yoneticiMi(kim)) return null;
@@ -95,7 +117,9 @@ export async function onayEkrani(db: Sorgulayici, kim: Kisi, id: string): Promis
   if (!r || !gorur(kim, r)) return null;
   const q = r.durum === "onayda" ? await kuyrukOzetleri(db, kim) : [];
   const i = q.findIndex((x) => x.id === id);
-  return { r: satir(kim, r, Date.now()), ozet: (await gozdenGecirme(db, id)) ?? [], sira: i >= 0 ? i + 1 : null, kuyrukBoyu: q.length };
+  const b = r.durum === "imzali" ? await bekleyenRevizeIstegi(db, r.id, r.revizyon) : null;
+  const istek = b ? { surum: b.surum, kim: (await hesapAdlari(db, [b.hesapId])).get(b.hesapId ?? "") ?? "—", zaman: b.zaman, gerekce: b.gerekce } : null;
+  return { r: satir(kim, r, Date.now()), ozet: (await gozdenGecirme(db, id)) ?? [], sira: i >= 0 ? i + 1 : null, kuyrukBoyu: q.length, istek };
 }
 
 /* ── EYLEMLER ────────────────────────────────────────────────────────────────────────────────────────────────── */
@@ -168,4 +192,34 @@ export async function durumDegistir(db: Sorgulayici, kim: Kisi, id: string, suru
   const y = await yaz(db, kim, r, surum, hedef, gerekce || null, "rapor.durum_degistir");
   if (y !== "tamam") return { durum: y };
   return { durum: "tamam", sonraki: null, bildirim: `${r.no}: ${durumAd(r.durum)} → ${durumAd(hedef)}.` };
+}
+
+/** Revizeye gönder (131 V1): tamamlanan rapor R(n+1) olarak denetçiye Yeni döner; gerekçe ≥ 10 (denetçi raporun üstünde görür); tamamlanan
+    sürüm ve imzalı PDF saklı; bekleyen revize isteği kapanır (veritabanı tetiği) */
+export async function revizeyeGonder(db: Sorgulayici, kim: Kisi, id: string, surum: number, girdi: unknown): Promise<OnayYazma> {
+  const r = await bul(db, kim, id);
+  if (!r) return { durum: "yok" };
+  if (r.durum !== "imzali") return { durum: "red", neden: `Revizeye yalnız tamamlanan rapor gönderilir (şu an: ${durumAd(r.durum)}).` };
+  if (!canDoEylem(kim, "rapor_revizeye_gonder", kayit(r))) return { durum: "yetkisiz" };
+  const g = dogrula(RevizeGirdisi, girdi);
+  if (!g.tamam) return { durum: "gecersiz", hatalar: g.hatalar };
+  const y = await raporRevizeYaz(db, iz(kim, "rapor.revizeye_gonder", r), r.id, surum, r.revizyon, g.veri.gerekce);
+  if (y.durum !== "tamam") return { durum: y.durum === "yok" ? "yok" : "cakisma" };
+  return { durum: "tamam", sonraki: null, bildirim: `${gorunenNo(r.kokNo, r.revizyon + 1)} açıldı; ${r.denetci} raporun üstünde gerekçeyi görür. Tamamlanan sürüm saklandı.` };
+}
+
+/** Revize isteğini reddet (141 W4): gerekçe isteğe bağlı; denetçi raporunda "Revize isteği reddedildi" şeridini görür, yeniden isteyebilir */
+export async function revizeIstegiReddet(db: Sorgulayici, kim: Kisi, id: string, istekSurum: number, girdi: unknown): Promise<OnayYazma> {
+  const r = await bul(db, kim, id);
+  if (!r) return { durum: "yok" };
+  if (r.durum !== "imzali") return { durum: "red", neden: "Bu raporda bekleyen revize isteği yok." };
+  if (!canDoEylem(kim, "rapor_revizeye_gonder", kayit(r))) return { durum: "yetkisiz" };
+  const g = dogrula(RevizeRedGirdisi, girdi);
+  if (!g.tamam) return { durum: "gecersiz", hatalar: g.hatalar };
+  const b = await bekleyenRevizeIstegi(db, r.id, r.revizyon);
+  if (!b) return { durum: "red", neden: "Bu raporda bekleyen revize isteği yok." };
+  if (!Number.isSafeInteger(istekSurum) || istekSurum < 0) return { durum: "cakisma" };
+  const y = await istekReddet(db, iz(kim, "rapor.revize_istek_red", r), { ...b, surum: istekSurum }, g.veri.gerekce || null);
+  if (y.durum !== "tamam") return { durum: y.durum === "yok" ? "yok" : "cakisma" };
+  return { durum: "tamam", sonraki: null, bildirim: `${r.no} revize isteği reddedildi.` };
 }

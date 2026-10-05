@@ -3,7 +3,7 @@
    İstemciden gelen kimlik ve sürüm yalnız "hangi rapor, hangi sürümü gördüm" bilgisidir; yetki vermez. */
 import { ayniKoken } from "../../../server/kimlik/koken";
 import { istekOturumu, oturumIslemi } from "../../../server/kimlik/istek";
-import { durumDegistir, geriGonder, onayGeriAl, onayla, type OnayYazma } from "../server/onaylar";
+import { durumDegistir, geriGonder, onayGeriAl, onayla, revizeIstegiReddet, revizeyeGonder, type OnayYazma } from "../server/onaylar";
 
 export interface OnayYaniti { tamam?: boolean; bildirim?: string; sonraki?: string | null; hatalar?: Record<string, string>; genel?: string }
 const SONUC = {
@@ -33,4 +33,10 @@ export async function onayGeriAlEylemi(id: string, surum: number): Promise<OnayY
 }
 export async function durumDegistirEylemi(id: string, surum: number, girdi: unknown): Promise<OnayYaniti> {
   return islem((o) => oturumIslemi(o, (db) => durumDegistir(db, o, metin(id), Number(surum), girdi)));
+}
+export async function revizeyeGonderEylemi(id: string, surum: number, girdi: unknown): Promise<OnayYaniti> {
+  return islem((o) => oturumIslemi(o, (db) => revizeyeGonder(db, o, metin(id), Number(surum), girdi)));
+}
+export async function revizeIstegiReddetEylemi(id: string, istekSurum: number, girdi: unknown): Promise<OnayYaniti> {
+  return islem((o) => oturumIslemi(o, (db) => revizeIstegiReddet(db, o, metin(id), Number(istekSurum), girdi)));
 }

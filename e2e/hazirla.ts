@@ -49,6 +49,7 @@ export default async function hazirla(_ayar: FullConfig) {
   await ac("/dokumanlar/egitimler/turler");
   await ac("/onaylar/tum");
   await ac("/onaylar/imza");
+  await ac("/onaylar/istekler");
   await ac("/raporlar");
   if (kart) { await ac(kart); await ac(`${kart}/duzenle`); }
   /* 2026-10-04: kaydı test sırasında açılan ayrıntı sayfaları da önceden derlensin (olmayan kimlik "bulunamadı" çizer, rota yine derlenir) —

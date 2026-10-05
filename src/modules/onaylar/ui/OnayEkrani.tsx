@@ -1,7 +1,8 @@
 "use client";
 /* ONAY EKRANI (maket onaylar.html onayCiz / raporCiz; 102, 190, 191): kırıntı Onaylar › (Tüm raporlar ›) rapor no · başlıkta rapor no + durum ·
    altında ekipman kodu · tür · tesis · denetçi · kuyruktaki sırası. Tuşlar duruma göre: onayda Durumu değiştir · Geri gönder · Onayla;
-   onaylandı Durumu değiştir · Onayı geri al; Yeni Durumu değiştir; Tamamlandı'da yok (revize ayrı kalem). Gözden geçirme özeti (uyarılar engel
+   onaylandı Durumu değiştir · Onayı geri al; Yeni Durumu değiştir; Tamamlandı'da Revizeye gönder (+ denetçinin bekleyen isteği varsa İsteği
+   reddet ve "Revize isteği" şeridi — 318). Gözden geçirme özeti (uyarılar engel
    değil) ve raporun tamamına bağlantı. Onaylayınca ya da geri gönderince sıradaki rapor açılır (kuyruk boşsa kuyruğa dönülür). Geri gönder ve
    Yeni'ye alma gerekçe ister (≥ 10). Yetki, kural ve geçiş sunucuda ve veritabanında; buradaki tuşlar yalnız izinli olanı gösterir. */
 import { useRouter } from "next/navigation";
@@ -17,6 +18,8 @@ import { RAPOR_DURUM } from "../../raporlar/sema";
 import { DURUM_HEDEF } from "../sema";
 import type { OnayEkrani as Veri } from "../server/onaylar";
 import { durumDegistirEylemi, geriGonderEylemi, onayGeriAlEylemi, onaylaEylemi, type OnayYaniti } from "./eylemler";
+import { zamanYaz } from "./OnayListesi";
+import { RevizePenceresi, type RevizeTuru } from "./RevizePenceresi";
 import stil from "./onaylar.module.css";
 
 const ID = { gerekce: "onay-gerekce", hedef: "onay-hedef" } as const;
@@ -29,6 +32,7 @@ export function OnayEkrani({ v, belge }: { v: Veri; belge: ReactNode }) {
   const [bekliyor, baslat] = useTransition();
   const [pen, setPen] = useState<Pen | null>(null);
   const [genel, setGenel] = useState<string | null>(null);
+  const [rev, setRev] = useState<RevizeTuru | null>(null);
   const { r } = v;
   const [durumAd, rozet] = RAPOR_DURUM[r.durum];
 
@@ -52,6 +56,8 @@ export function OnayEkrani({ v, belge }: { v: Veri; belge: ReactNode }) {
     {r.izin.geriGonder && <Tus tur="ikincil" ikon="undo-2" disabled={bekliyor} onClick={() => setPen({ tur: "geri", hedef: null, gerekce: "", hatalar: {} })}>Geri gönder</Tus>}
     {r.izin.onayGeriAl && <Tus tur="ikincil" ikon="undo-2" disabled={bekliyor} onClick={geriAl}>Onayı geri al</Tus>}
     {r.izin.onayla && <Tus ikon="check" disabled={bekliyor} onClick={onayla}>Onayla</Tus>}
+    {r.izin.revize && v.istek && <Tus tur="ikincil" disabled={bekliyor} onClick={() => setRev("red")}>İsteği reddet</Tus>}
+    {r.izin.revize && <Tus ikon="file-pen-line" disabled={bekliyor} onClick={() => setRev("revize")}>Revizeye gönder</Tus>}
   </>;
 
   return (
@@ -59,10 +65,11 @@ export function OnayEkrani({ v, belge }: { v: Veri; belge: ReactNode }) {
       <Kirinti ogeler={r.durum === "onayda" ? [["Onaylar", "/onaylar"], [r.no]] : [["Onaylar", "/onaylar"], ["Tüm raporlar", "/onaylar/tum"], [r.no]]} />
       <NesneBasi baslik={r.no} rozet={<Rozet tur={rozet}>{durumAd}</Rozet>} altIkon="wrench"
         alt={<><Kod>{r.ekipmanKod}</Kod> · {r.turAd} · {r.tesis} · {r.denetci}{v.sira ? ` · ${v.sira} / ${v.kuyrukBoyu}` : ""}</>} tuslar={tuslar} />
-      {(genel || r.durum === "taslak") && (
+      {(genel || r.durum === "taslak" || v.istek) && (
         <SeritKap>
           {genel && <Serit tur="hata" ikon="circle-alert">{genel}</Serit>}
           {r.durum === "taslak" && <Serit tur="bilgi" ikon="info">Yeni: rapor denetçide; onaya gönderilince kuyruğa düşer.</Serit>}
+          {v.istek && <Serit tur="uyari" ikon="file-pen-line"><b>Revize isteği</b> · {v.istek.kim} · {zamanYaz(v.istek.zaman)}: “{v.istek.gerekce}”</Serit>}
         </SeritKap>
       )}
       <Bolum id="onay-ozet" baslik="Gözden geçirme" sayac={r.bekleme ? <span className={r.eski ? stil.eski : stil.bekleme}>{r.bekleme} bekliyor</span> : undefined}>
@@ -71,6 +78,9 @@ export function OnayEkrani({ v, belge }: { v: Veri; belge: ReactNode }) {
       <Bolum id="onay-rapor" baslik="Rapor (önizleme)" tuslar={<TusBaglanti ikon="file-text" href={`/raporlar/${r.id}`}>Rapor ekranı</TusBaglanti>}>
         {belge}
       </Bolum>
+
+      {rev && <RevizePenceresi tur={rev} r={r} istek={v.istek} onKapat={() => setRev(null)}
+        bitti={(s) => { setRev(null); setGenel(s.genel ?? null); if (!s.genel) router.refresh(); }} />}
 
       <Pencere acik={!!pen} baslik={`${pen?.tur === "durum" ? "Durumu değiştir" : "Geri gönder"} · ${r.no}`} onKapat={() => { if (!bekliyor) setPen(null); }} odak={pen?.tur === "durum" ? "input[type=radio]" : `#${ID.gerekce}`}
         alt={<>

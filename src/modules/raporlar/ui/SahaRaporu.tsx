@@ -15,7 +15,10 @@
    şeridi). Formatın kendi ekipman bilgi bölümü (ör. kompresör) 2. bölüme katılır; formatın sorduğu alan sabit satırda tekrar edilmez (marka,
    model, imal yılı …). Yetki, kural ve ENGEL sunucuda; buradaki tuşlar yalnız izinli olanı gösterir.
    313: "Kaydet ve kopyala" (Yeni) / "Kopyala" (gönderilmiş) yeni ekipmanın raporunu açar ve oraya gider (karar 204–209); kopyadan açılan Yeni
-   raporda kaynak şeridi (U7); daha yeni format sürümü yayınlandıysa "Formatı güncelle" şeridi (U6, 211); günlük süre dolduysa neden şeridi (212). */
+   raporda kaynak şeridi (U7); daha yeni format sürümü yayınlandıysa "Formatı güncelle" şeridi (U6, 211); günlük süre dolduysa neden şeridi (212).
+   318 revizyon (maket raporlar.html 192, 131): tamamlanan raporda yazana "Revize iste" (gerekçe) → "Revize isteğiniz teknik yöneticide" şeridi
+   + "Revize isteğini geri çek"; reddedilirse "Revize isteği reddedildi" şeridi; revizeye gönderilen rapor Yeni açılır, üstünde "Revizeye
+   gönderildi (R1)" + gerekçe; rapor no revizyon ekiyle. */
 import { useRouter } from "next/navigation";
 import { useMemo, useState, useTransition, type ReactNode } from "react";
 import { useBildir } from "../../../components/bildirim/Bildirim";
@@ -36,8 +39,10 @@ import { CihazBolumu } from "./CihazBolumu";
 import { FotoListesi } from "./FotoListesi";
 import { ImzaBolumu } from "./ImzaBolumu";
 import { KopyaPenceresi } from "./KopyaPenceresi";
+import { RevizeIstePenceresi } from "./RevizeIstePenceresi";
 import {
-  onayaGonderEylemi, raporFormatGuncelleEylemi, raporKaydetEylemi, raporKopyalaEylemi, raporKunyeGuncelleEylemi, raporSilEylemi, type RaporYaniti,
+  onayaGonderEylemi, raporFormatGuncelleEylemi, raporKaydetEylemi, raporKopyalaEylemi, raporKunyeGuncelleEylemi, raporSilEylemi, revizeIstegiGeriCekEylemi,
+  revizeIsteEylemi, type RaporYaniti,
 } from "./eylemler";
 import stil from "./raporlar.module.css";
 
@@ -90,6 +95,7 @@ export function SahaRaporu({ v }: { v: Gorunum }) {
   const [alanHata, setAlanHata] = useState<Record<string, string>>({});
   const [kapali, setKapali] = useState<ReadonlySet<string>>(() => new Set());
   const [kopya, setKopya] = useState(false);
+  const [revizeAc, setRevizeAc] = useState(false);
   /* yazmadan sonra sayfa yenilenip yeni sürüm gelene kadar yazan tuşlar kapalı: bildirim yenilemeden önce çıkar, hemen basılan ikinci tuş eski
      sürümle gidip "değiştirildi" denmesin (yenilenen veri yeni nesnedir — aynı nesne = henüz gelmedi) */
   const [yenilenen, setYenilenen] = useState<Gorunum | null>(null);
@@ -206,6 +212,18 @@ export function SahaRaporu({ v }: { v: Gorunum }) {
     if (r.tamam) { kaydedildi(); router.push(`/raporlar/${v.id}/onizle`); return; }
     yanitHatasi(r);
   });
+  /* revize iste (318): başarıda pencere kapanır; gerekçe hatası pencerede, ötekisi üst şeritte */
+  const revizeIste = (gerekce: string) => new Promise<string | null>((bitti) => baslat(async () => {
+    const r = await revizeIsteEylemi(v.id, { gerekce });
+    if (r.tamam) { setRevizeAc(false); setGenel(null); bildir(r.bildirim ?? "Revize isteği gönderildi."); yenile(); bitti(null); return; }
+    if (r.hatalar?.gerekce) { bitti(r.hatalar.gerekce); return; }
+    setRevizeAc(false); setGenel(r.genel ?? "İstek gönderilemedi."); bitti(null);
+  }));
+  const revizeGeriCek = () => v.revize?.bekleyen && baslat(async () => {
+    const r = await revizeIstegiGeriCekEylemi(v.id, v.revize!.bekleyen!.surum);
+    if (r.tamam) { setGenel(null); bildir(r.bildirim ?? "Revize isteği geri çekildi."); yenile(); return; }
+    setGenel(r.genel ?? "İstek geri çekilemedi.");
+  });
   const formatGuncelle = () => baslat(async () => {
     const r = await raporFormatGuncelleEylemi(v.id, v.surum, girdi());
     if (r.tamam) { kaydedildi(); bildir(r.bildirim ?? "Format güncellendi."); yenile(); return; }
@@ -280,11 +298,25 @@ export function SahaRaporu({ v }: { v: Gorunum }) {
       </Serit>,
     );
   }
-  /* U8 (314): teknik yönetici geri gönderdiyse (ya da durumu Yeni'ye aldıysa) gerekçe raporun üstünde */
+  /* U8 (314): teknik yönetici geri gönderdiyse (ya da durumu Yeni'ye aldıysa) gerekçe raporun üstünde; revizeye gönderdiyse (318) "Revizeye gönderildi (R1)" */
   if (v.durum === "taslak" && v.geri) {
     seritler.push(
-      <Serit key="geri" tur="uyari" ikon="undo-2">
-        <b>Geri gönderildi</b> · {v.geri.kim} · {zamanNo(v.geri.zaman)}{v.geri.gerekce ? <>: “{v.geri.gerekce}”</> : null}
+      <Serit key="geri" tur="uyari" ikon={v.geri.revize ? "file-pen-line" : "undo-2"}>
+        <b>{v.geri.revize ? `Revizeye gönderildi (R${v.geri.revize})` : "Geri gönderildi"}</b> · {v.geri.kim} · {zamanNo(v.geri.zaman)}{v.geri.gerekce ? <>: “{v.geri.gerekce}”</> : null}
+      </Serit>,
+    );
+  }
+  /* revize isteği (318): bekleyen istek geri çekilebilir; reddedilen isteğin gerekçesi görünür (yeniden istenebilir) */
+  if (v.revize?.bekleyen) {
+    seritler.push(
+      <Serit key="revize" tur="bilgi" ikon="file-pen-line" eylem={<Tus tur="ikincil" ikon="undo-2" disabled={mesgul} onClick={revizeGeriCek}>Revize isteğini geri çek</Tus>}>
+        <b>Revize isteğiniz teknik yöneticide</b> · {zamanNo(v.revize.bekleyen.zaman)}: “{v.revize.bekleyen.gerekce}”
+      </Serit>,
+    );
+  } else if (v.revize?.red) {
+    seritler.push(
+      <Serit key="revize" tur="uyari" ikon="file-pen-line">
+        <b>Revize isteği reddedildi</b> · {v.revize.red.kim} · {zamanNo(v.revize.red.zaman)}{v.revize.red.gerekce ? <>: “{v.revize.red.gerekce}”</> : null}
       </Serit>,
     );
   }
@@ -319,6 +351,7 @@ export function SahaRaporu({ v }: { v: Gorunum }) {
           {v.izin.duzenle && kirli
             ? <Tus tur="ikincil" ikon="eye" disabled={mesgul} onClick={onizle}>Ön izle</Tus>
             : <TusBaglanti ikon="eye" href={`/raporlar/${v.id}/onizle`}>Ön izle</TusBaglanti>}
+          {v.revize?.iste && <Tus tur="ikincil" ikon="file-pen-line" disabled={mesgul} onClick={() => setRevizeAc(true)}>Revize iste</Tus>}
         </>} />
       {seritler.length > 0 && <SeritKap>{seritler}</SeritKap>}
 
@@ -384,6 +417,8 @@ export function SahaRaporu({ v }: { v: Gorunum }) {
           </>}
         </div>
       )}
+
+      {revizeAc && <RevizeIstePenceresi no={v.no} mesgul={mesgul} onKapat={() => setRevizeAc(false)} gonder={revizeIste} />}
 
       {kopya && <KopyaPenceresi kaydetVe={v.izin.duzenle} kaynakKod={v.ekipman.kod} turAd={v.tur.ad} konum={ekipman.konum} mesgul={mesgul}
         onKapat={() => setKopya(false)} kopyala={kopyala} />}

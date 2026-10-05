@@ -55,3 +55,16 @@ export function ayEkle(iso: string, ay: number): string {
   const son = new Date(Date.UTC(y, m - 1 + ay + 1, 0)).getUTCDate();
   return new Date(Date.UTC(y, m - 1 + ay, Math.min(g, son))).toISOString().slice(0, 10);
 }
+
+/* ── REVİZYON (318; göç 0029; maket raporlar.html "Revize iste", onaylar.html "Revizeye gönder" / "Reddet") ─────────────────────────────── */
+/** karakter sayısı veritabanıyla aynı ölçüde (kod noktası; PostgreSQL length) */
+const kodNoktasi = (s: string) => [...s].length;
+const gerekceMetni = z.preprocess((s) => (typeof s === "string" ? s.trim().replace(/\s+/g, " ") : ""), z.string().refine((g) => kodNoktasi(g) <= 400, "En çok 400 karakter."));
+/** Revize iste (yazan) ve Revizeye gönder (teknik yönetici): gerekçe zorunlu, en az 10 karakter — okuyan neyin düzeltileceğini bilmeli */
+export const RevizeGirdisi = z.object({
+  gerekce: gerekceMetni.refine((g) => kodNoktasi(g) >= 10, "Gerekçe en az 10 karakter olmalı: neyin düzeltileceği yazılmalı."),
+});
+/** revize isteğini reddet: gerekçe isteğe bağlı (yazan raporunda görür) */
+export const RevizeRedGirdisi = z.object({ gerekce: gerekceMetni });
+/** raporun görünen numarası (193): revizyonda "-R1", "-R2" … eki (imzalı sürümün numarasıyla aynı — göç 0027 rapor_surumu.no) */
+export const gorunenNo = (no: string, revizyon: number) => (revizyon > 0 ? `${no}-R${revizyon}` : no);

@@ -31,7 +31,10 @@ import { denetimeBasla, ekipmanEklenebilir, kodDurumu, kunyeGuncelle, plandakiEk
 import { formatSurumuOku, yayindakiFormat } from "../../rapor-format/server/formatlar.ts";
 import { kimdeHaritasi } from "../../zimmetler/server/zimmet.ts";
 import { roldekiHesapAdlari } from "../../../server/kimlik/hesap.ts";
-import { ayEkle, kalibrasyonGecti, KopyaGirdisi, RAPOR_DURUM, RaporKaydi, SONUC_AD, type EkipmanBilgisi, type RaporCihazi, type RaporDurumu, type RaporTarihleri } from "../sema.ts";
+import {
+  ayEkle, gorunenNo, kalibrasyonGecti, KopyaGirdisi, RAPOR_DURUM, RaporKaydi, RevizeGirdisi, SONUC_AD, type EkipmanBilgisi, type RaporCihazi, type RaporDurumu, type RaporTarihleri,
+} from "../sema.ts";
+import { istekAc, istekKapat, revizeDurumu } from "./revize.ts";
 import { mesaiDurumu } from "./plan-baglanti.ts";
 import { raporOzetleri, sonGeriGonderme, type RaporOzeti } from "./onay-baglanti.ts";
 import { hesapAdlari } from "../../../server/kimlik/hesap.ts";
@@ -224,8 +227,10 @@ export interface SahaRaporu {
   guncelFormat: number | null;
   /** yazanın bugünkü süresi doldu (ENGEL 3): yeni rapor ve kopya açılmaz */
   mesaiDolu: boolean;
-  /** Yeni'ye geri dönmüş raporda son geri gönderme (U8; 314): kim, ne zaman, gerekçe */
-  geri: { kim: string; zaman: string; gerekce: string | null } | null;
+  /** Yeni'ye geri dönmüş raporda son geri gönderme (U8; 314) ya da revizeye gönderme (318: revize = yeni revizyon, "R1"): kim, ne zaman, gerekçe */
+  geri: { kim: string; zaman: string; gerekce: string | null; revize: number | null } | null;
+  /** tamamlanan raporda yazanın revize isteği (318; maket raporlar.html 192): bekleyen istek (geri çekilir) · son ret · yeni istek açılabilir mi */
+  revize: { bekleyen: { zaman: string; gerekce: string; surum: number } | null; red: { kim: string; zaman: string; gerekce: string | null } | null; iste: boolean } | null;
   /** son imza (317): yazanın onaylanmış raporunda imzasız kesin PDF (hazırlandıysa) · tamamlanan raporda imzalı PDF */
   imza: { hazir: boolean; pdf: string | null } | null;
   imzali: { dosya: string; zaman: string; no: string } | null;
@@ -292,9 +297,19 @@ export async function sahaRaporu(db: Sorgulayici, kim: Kisi, id: string): Promis
     && await ekipmanEklenebilir(db, kim, r.plan_id);
   const mesaiDolu = (duzenle || kopyala) && (await mesaiDurumu(db, r.personel_id, bugun)).dolu;
   const sg = r.durum === "taslak" ? await sonGeriGonderme(db, r.id) : null;
-  const geri = sg ? { kim: (await hesapAdlari(db, [sg.hesapId])).get(sg.hesapId ?? "") ?? "—", zaman: sg.zaman, gerekce: sg.gerekce } : null;
+  const geri = sg ? { kim: (await hesapAdlari(db, [sg.hesapId])).get(sg.hesapId ?? "") ?? "—", zaman: sg.zaman, gerekce: sg.gerekce, revize: sg.revize } : null;
+  /* revize isteği (318): yalnız yazanın tamamlanan raporunda */
+  let revize: SahaRaporu["revize"] = null;
+  if (r.durum === "imzali" && e.sahip && canDoEylem(kim, "rapor_revize_iste", { sahip: r.hesap_id })) {
+    const d = await revizeDurumu(db, r.id, r.revizyon);
+    revize = {
+      bekleyen: d.bekleyen ? { zaman: d.bekleyen.zaman, gerekce: d.bekleyen.gerekce, surum: d.bekleyen.surum } : null,
+      red: d.red ? { kim: (await hesapAdlari(db, [d.red.hesapId])).get(d.red.hesapId ?? "") ?? "—", zaman: d.red.zaman, gerekce: d.red.gerekce } : null,
+      iste: !d.bekleyen,
+    };
+  }
   return {
-    id: r.id, no: r.no, durum: r.durum, surum: r.surum, olustu: r.olustu.toISOString(), degisti: r.degisti.toISOString(), gonderildi: r.gonderildi?.toISOString() ?? null, bugun,
+    id: r.id, no: gorunenNo(r.no, r.revizyon), durum: r.durum, surum: r.surum, olustu: r.olustu.toISOString(), degisti: r.degisti.toISOString(), gonderildi: r.gonderildi?.toISOString() ?? null, bugun,
     plan: { id: r.plan_id, no: plan?.no ?? "—", tesisAd: iletisim?.tesisAd ?? "—", musteriKisa: iletisim?.kisa ?? "—" },
     ekipman: { id: r.ekipman_id, kod: etiket?.kod ?? "—", onceki: etiket?.disKontrol ? { tarih: etiket.disKontrol, sonuc: etiket.disSonuc } : null },
     tur: { id: tur.id, ad: tur.ad, kod: tur.kod, brans: tur.brans, kontrolStd: tur.kontrolStd, periyot: tur.periyot },
@@ -305,7 +320,7 @@ export async function sahaRaporu(db: Sorgulayici, kim: Kisi, id: string): Promis
     tarih: { bas: zamanOku(r.bas)!, bit: zamanOku(r.bit), sonraki: r.sonraki, takip: r.takip, rapor: r.rapor_tarihi },
     cevaplar: cev.success ? cev.data : Cevaplar.parse({}), tanim: format.tanim, formatSira: format.sira,
     cihazlar: satirlar, secilebilir, fotolar: r.fotolar,
-    kopyaKaynak, guncelFormat: yeni && yeni.sira > format.sira ? yeni.sira : null, mesaiDolu, geri,
+    kopyaKaynak, guncelFormat: yeni && yeni.sira > format.sira ? yeni.sira : null, mesaiDolu, geri, revize,
     imza: r.durum === "onaylandi" && e.sahip && canDoEylem(kim, "rapor_son_imza", { sahip: r.hesap_id })
       ? { hazir: true, pdf: (await bekleyenIstek(db, r.id, r.revizyon))?.pdf_dosya ?? null } : null,
     imzali: r.durum === "imzali" ? await imzaliSurum(db, r.id, r.revizyon) : null,
@@ -639,7 +654,7 @@ export async function raporBelgesiVerisi(db: Sorgulayici, depo: Depo, kim: Kisi,
   /* tamamlanan raporun önizlemesi "imzasız" demez: imza zamanı ve yolu imzalı sürümden */
   const imzali = r.durum === "imzali" ? await imzaliSurum(db, r.id, r.revizyon) : null;
   return {
-    id: r.id, no: r.no, plan: { id: r.plan_id, no: plan?.no ?? "—" }, imzaliDosya: imzali?.dosya ?? null,
+    id: r.id, no: gorunenNo(r.no, r.revizyon), plan: { id: r.plan_id, no: plan?.no ?? "—" }, imzaliDosya: imzali?.dosya ?? null,
     belge: {
       firma: { ...(await firmaKunyesi(db)), nusha: (await ayarOku(db, "firma_bilgileri")).deger.nusha },
       no: r.no, revizyon: r.revizyon, formatSira: format.sira, durum: r.durum,
@@ -688,7 +703,7 @@ export async function imzaHazirla(db: Sorgulayici, depo: Depo, kim: Kisi, firmaI
   /* PDF motoru düşerse rapor ekranı hata sayfasına dönmez: neden şeritte (315–317 incelemesi) */
   let pdf: Uint8Array;
   try { pdf = await uret({ ...v.belge, kesin: true }); } catch { return { durum: "red", neden: "İmzasız PDF üretilemedi; biraz sonra yeniden deneyin." }; }
-  const y = await dosyaYukle(db, depo, { firmaId, modul: PDF_MODULU, kayitId: id, ad: `${e.r.no}.pdf`, bayt: pdf, izinli: ["pdf"], kim: kim.ad, yukleyen: kim.id });
+  const y = await dosyaYukle(db, depo, { firmaId, modul: PDF_MODULU, kayitId: id, ad: `${gorunenNo(e.r.no, e.r.revizyon)}.pdf`, bayt: pdf, izinli: ["pdf"], kim: kim.ad, yukleyen: kim.id });
   if (!y.tamam) return { durum: "red", neden: "İmzasız PDF üretilemedi." };
   const kopya: IstekKopyasi = { yazan: v.belge.yazan, cihazlar: v.belge.cihazlar };
   await ekle(db, ISTEK, { rapor_id: id, revizyon: e.r.revizyon, yontem: "dosya", durum: "bekliyor", pdf_dosya: y.id, pdf_sha256: createHash("sha256").update(pdf).digest("hex"),
@@ -715,11 +730,12 @@ export async function imzaliYukle(db: Sorgulayici, depo: Depo, kim: Kisi, firmaI
   const imzasiz = await depo.oku(ham.anahtar), b = dosya.bayt;
   /* önek + bir nesnedeki imza sözlüğü + ek özgün içeriği değiştirmez (imza-pdf.ts) */
   if (!imzaliPdfGecerli(imzasiz, b)) return { durum: "gecersiz", hatalar: { dosya: IMZA_GECERSIZ } };
-  const y = await dosyaYukle(db, depo, { firmaId, modul: IMZALI_MODULU, kayitId: id, ad: `${e.r.no}-imzali.pdf`, bayt: b, izinli: ["pdf"], kim: kim.ad, yukleyen: kim.id });
+  const gno = gorunenNo(e.r.no, e.r.revizyon);
+  const y = await dosyaYukle(db, depo, { firmaId, modul: IMZALI_MODULU, kayitId: id, ad: `${gno}-imzali.pdf`, bayt: b, izinli: ["pdf"], kim: kim.ad, yukleyen: kim.id });
   if (!y.tamam) return { durum: "gecersiz", hatalar: { dosya: y.neden === "buyuk" ? "PDF çok büyük (en çok 25 MB)." : IMZA_GECERSIZ } };
   const v = await raporBelgesiVerisi(db, depo, kim, id);
   if (!v) return { durum: "yok" };
-  const iz: Iz = { kim: kim.ad, ne: "rapor.imza", gerekce: e.r.no };
+  const iz: Iz = { kim: kim.ad, ne: "rapor.imza", gerekce: gno };
   /* imza anının kopyaları (§3.2-8): künye, yazan, cihazlar (kalibrasyonuyla), içerik — sonradan değişen kayıt imzalı raporu değiştirmez. Yazan ve
      cihazlar imzalanan PDF'in hazırlandığı andan (isteğin kopyası, 0028); içerik raporun kendisinden (onaylanmış rapor değişmez, onaydan
      çıkınca istek iptal olur) */
@@ -740,11 +756,11 @@ export async function imzaliYukle(db: Sorgulayici, depo: Depo, kim: Kisi, firmaI
   }
   const g = await guncelle(db, ISTEK, istek.id, istek.surum, { durum: "tamam", imzali_dosya: y.id }, iz);
   if (g.durum !== "tamam") return { durum: "cakisma" };
-  return sonuc(await guncelle(db, RAPOR, id, surum, { durum: "imzali" }, iz), id, `${e.r.no} imzalandı, tamamlandı ve müşteriye açıldı.`);
+  return sonuc(await guncelle(db, RAPOR, id, surum, { durum: "imzali" }, iz), id, `${gno} imzalandı, tamamlandı ve müşteriye açıldı.`);
 }
 
 /* ── RAPORLAR LİSTESİ (modül 14 ana sayfası; maket raporlar.html #/ — 318) ─────────────────────────────────────────────────────────────── */
-/** listede bir rapor: yazan hesabın kimliği gitmez; benim = isteyenin yazdığı; geri = Yeni'ye geri dönmüş */
+/** listede bir rapor: yazan hesabın kimliği gitmez; benim = isteyenin yazdığı; geri = Yeni'ye geri dönmüş (geri gönderilen ya da revizeye gönderilen) */
 export type RaporListeSatiri = Omit<RaporOzeti, "hesapId"> & { benim: boolean; geri: boolean };
 /** görebildiği raporlar (denetçi kendi, branş yöneticisi branşı, planlama ve firma yöneticisi hepsi); en yeni üstte. Göremeyene null. */
 export async function raporListesi(db: Sorgulayici, kim: Kisi): Promise<RaporListeSatiri[] | null> {
@@ -752,10 +768,40 @@ export async function raporListesi(db: Sorgulayici, kim: Kisi): Promise<RaporLis
   const l = (await raporOzetleri(db)).filter((r) => canDo(kim, MODUL, "gor", { sahip: r.hesapId, brans: r.brans }));
   const taslak = l.filter((r) => r.durum === "taslak").map((r) => r.id);
   const geri = new Set(taslak.length ? (await db.sorgu<{ r: string }>(
-    "SELECT DISTINCT rapor_id::text AS r FROM rapor_hareket WHERE ne = 'geri' AND rapor_id = ANY ($1::uuid[])", [taslak])).rows.map((x) => x.r) : []);
+    "SELECT DISTINCT rapor_id::text AS r FROM rapor_hareket WHERE ne IN ('geri', 'revize') AND rapor_id = ANY ($1::uuid[])", [taslak])).rows.map((x) => x.r) : []);
   return l.sort((a, b) => b.olustu.localeCompare(a.olustu)).map((r) => {
     const x: Partial<RaporOzeti> = { ...r };
     delete x.hesapId;
     return { ...(x as Omit<RaporOzeti, "hesapId">), benim: !!r.hesapId && r.hesapId === kim.id, geri: r.durum === "taslak" && geri.has(r.id) };
   });
+}
+
+/* ── REVİZE İSTEĞİ (318; göç 0029; maket raporlar.html 192 "Revize iste" · "Revize isteğini geri çek") ─────────────────────────────────── */
+/** tamamlanan raporda revize iste: yalnız raporu yazan (rapor_revize_iste), gerekçe ≥ 10; rapor başına tek bekleyen istek. Teknik yöneticinin
+    Onaylar'ındaki "Revize istekleri"ne düşer; revizeye gönderen yine yönetici. */
+export async function revizeIste(db: Sorgulayici, kim: Kisi, id: string, girdi: unknown): Promise<RaporYazma> {
+  const e = await erisim(db, kim, id, true);
+  if (!e) return { durum: "yok" };
+  if (!e.sahip || !canDoEylem(kim, "rapor_revize_iste", { sahip: e.r.hesap_id })) return { durum: "yetkisiz" };
+  if (e.r.durum !== "imzali") return { durum: "red", neden: "Revize yalnız tamamlanan raporda istenir." };
+  const g = dogrula(RevizeGirdisi, girdi);
+  if (!g.tamam) return { durum: "gecersiz", hatalar: g.hatalar };
+  if ((await revizeDurumu(db, id, e.r.revizyon)).bekleyen) return { durum: "red", neden: "Bu rapor için bekleyen bir revize isteğiniz var." };
+  const no = gorunenNo(e.r.no, e.r.revizyon);
+  await istekAc(db, { kim: kim.ad, ne: "rapor.revize_iste", gerekce: no }, id, e.r.revizyon, g.veri.gerekce);
+  return { durum: "tamam", id, bildirim: `${no} için revize isteği teknik yöneticiye gitti.` };
+}
+
+/** revize isteğini geri çek: yalnız isteyen (veritabanı da ister); istemcinin gördüğü isteğin sürümüyle */
+export async function revizeIstegiGeriCek(db: Sorgulayici, kim: Kisi, id: string, surum: number): Promise<RaporYazma> {
+  const e = await erisim(db, kim, id, true);
+  if (!e) return { durum: "yok" };
+  if (!e.sahip || !canDoEylem(kim, "rapor_revize_iste", { sahip: e.r.hesap_id })) return { durum: "yetkisiz" };
+  const b = (await revizeDurumu(db, id, e.r.revizyon)).bekleyen;
+  if (!b || b.hesapId !== kim.id) return { durum: "red", neden: "Bekleyen revize isteğiniz yok." };
+  if (!Number.isSafeInteger(surum) || surum < 0) return { durum: "cakisma" };
+  const no = gorunenNo(e.r.no, e.r.revizyon);
+  const s = await istekKapat(db, { kim: kim.ad, ne: "rapor.revize_istek_geri", gerekce: no }, { ...b, surum }, "geri_cekildi", null);
+  if (s.durum !== "tamam") return { durum: s.durum === "yok" ? "yok" : "cakisma" };
+  return { durum: "tamam", id, bildirim: `${no} revize isteği geri çekildi.` };
 }

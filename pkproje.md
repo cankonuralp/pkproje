@@ -2341,6 +2341,23 @@ revizyon, alan kopyalama, hafif kusur devri, meslek eşleşme denetimi).
 - Emsal ürünler: https://opwire.app/iso-17020-periyodik-kontrol-yazilimi/ · https://17020muayene.vidco.com.tr/ · https://akuple.com/asansor-kontrol-yazilimi/ · https://ensyazilim.com/
 
 ## 11 · Değişiklik günlüğü
+- 2026-10-05 (318 revizyon): **K3 Revizyon — Revize iste, Reddet, Geri çek, Revizeye gönder** (§11 131 V1, 141 W4 / 192, 142 W5 / 193; KOD-GECIS §4
+  rapor_revize_iste · rapor_revizeye_gonder, §5 Rapor; maket onaylar.html "Revize istekleri", raporlar.html "Revize iste"). Göç **0029**:
+  `rapor_revize_istegi` (yazan, tamamlanan raporunda gerekçeyle ≥ 10; rapor başına tek bekleyen; kapanış: yazan geri çeker · yönetici reddeder
+  — gerekçe isteğe bağlı · revizeye gönderilince kendiliğinden "revize"; kim ve ne zaman veritabanından, "yalnız yazan açar / geri çeker" ve
+  "revize yalnız rapor revizeye gönderilince" tetikte); akış: **Tamamlandı → Yeni yalnız revizeye gönderirken, revizyon TAM BİR artarak**
+  (gerekçe ≥ 10), revizyon başka yoldan değişmez; hareket "revize". İmzalı sürüm (R0'ın PDF'i, kopyaları) değişmeden kalır; rapor yeniden onay
+  ve imzadan geçer, yeni imzalı sürüm **no-R1** olarak yazılır ve öncekinin uygunsuzluklarını "revizyon" diye kapatır. Raporun görünen numarası
+  her yerde revizyon ekiyle (saha, listeler, onay, belge, dosya adları). Saha raporu: tamamlanan raporda yazana **Revize iste** (pencere,
+  gerekçe) → "Revize isteğiniz teknik yöneticide" + **Revize isteğini geri çek**; reddedilirse "Revize isteği reddedildi · ad · zaman:
+  gerekçe"; revizeye gönderilen rapor Yeni, üstünde "Revizeye gönderildi (R1)" + gerekçe. Onaylar: **Revize istekleri** sekmesi
+  (/onaylar/istekler — görebildiği tamamlanan raporların bekleyen istekleri, en yeni üstte; satırda Reddet ve Revizeye gönder), onay ekranında
+  tamamlanan raporda **Revizeye gönder** (+ **İsteği reddet** ve "Revize isteği" şeridi); pencere: "Rapor <no>-R1 olarak … döner; tamamlanan
+  sürüm ve imzalı PDF'i saklanır", isteğin gerekçesi başlangıç. Yetki sunucuda: revizeye gönder ve reddet türün branş yöneticisi (firma
+  yöneticisi görür, yapamaz; denetçi Onaylar'da yönetici değil), revize iste ve geri çek yalnız yazan. Müşteride yalnız son imzalı sürüm (193)
+  müşteri paneli kalemiyle. Kilit: onaylar.test +3 (revize iste / geri çek / reddet, revizeye gönder + R1 imzası + uygunsuzluk, veritabanı
+  kuralları), bozan +2 (revizyon kuralı, sunucuda rapor_revizeye_gonder); e2e saha raporu: Revize iste → Revize istekleri'nden Revizeye gönder
+  → denetçi R1 Yeni.
 - 2026-10-05 (315–317 çapraz inceleme düzeltmeleri; dört bakış — güvenlik, veritabanı, mantık, arayüz — + her bulguya çürütme denemesi, 15 bulgu
   doğrulandı). Göç **0028**: (1) **onaydan çıkan raporun bekleyen imza isteği iptal** (onayı geri al / durumu değiştir) — eskiden yeniden onaydan
   sonra eski içerikli PDF "hazır" kalıyor, imzalanıp yeni içerikle tamamlanıyordu; imzalı sürüm yalnız BEKLEYEN isteğin PDF'iyle yazılır.

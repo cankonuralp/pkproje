@@ -2,16 +2,19 @@
 /* ONAYLAR LİSTELERİ (maket onaylar.html #/ kuyruk, #/tum — 190): Onay kuyruğu (branşın onaydaki raporları, en yeni üstte; çipler Kusurlu ve
    24 saatten eski, seçiciler Denetçi ve Tesis; sütunlar Rapor no · Ekipman · Denetçi · Gönderildi · Sonuç) ve Tüm raporlar (branşın bütün
    raporları; rapor no ve tesis ayrı aranır, seçiciler Durum ve Denetçi). Satır onay ekranını açar. Bekleme sunucuda hesaplanır (az önce /
-   N saattir / N gündür). Yetki sunucuda: liste yalnız görülebilen raporları taşır. */
+   N saattir / N gündür). Yetki sunucuda: liste yalnız görülebilen raporları taşır. 318: İmzamı bekleyen raporlar (C5) ve Revize istekleri. */
 import Link from "next/link";
+import { useRouter } from "next/navigation";
+import { useState } from "react";
 import { KartEtiket, Kirp, type Sutun } from "../../../components/liste/Liste";
 import { Sayac, SuzgecliListe, useSuzgec } from "../../../components/liste/SuzgecliListe";
 import type { SuzgecTanimi } from "../../../components/liste/suzgec";
 import { AltSatir, Rozet, SayfaBasi, Sekmeler, SeritKap, type RozetTuru } from "../../../components/sayfa/Sayfa";
 import { Serit } from "../../../components/serit/Serit";
-import { TusBaglanti } from "../../../components/tus/Tus";
+import { Tus, TusBaglanti } from "../../../components/tus/Tus";
 import { RAPOR_DURUM, type RaporDurumu } from "../../raporlar/sema";
-import type { OnayListeleri, OnaySatiri } from "../server/onaylar";
+import type { OnayListeleri, OnaySatiri, RevizeIstekSatiri } from "../server/onaylar";
+import { RevizePenceresi, type RevizeTuru } from "./RevizePenceresi";
 import stil from "./onaylar.module.css";
 
 const TR_ZAMAN = new Intl.DateTimeFormat("tr-TR", { timeZone: "Europe/Istanbul", day: "2-digit", month: "2-digit", year: "numeric", hour: "2-digit", minute: "2-digit" });
@@ -90,9 +93,10 @@ function tumTanimi(l: readonly OnaySatiri[]): SuzgecTanimi<OnaySatiri> {
   };
 }
 
-export function onaySekmeleri(v: Pick<OnayListeleri, "kuyruk" | "tumu" | "branslar" | "imzaBekleyen">) {
+export function onaySekmeleri(v: Pick<OnayListeleri, "kuyruk" | "tumu" | "branslar" | "imzaBekleyen" | "istekler">) {
   const brans = v.branslar.length === 1 ? ` · ${v.branslar[0] === "m" ? "mekanik" : "elektrik"}` : "";
-  const l: (readonly [string, string])[] = [[`Onay kuyruğu${brans} (${v.kuyruk.length})`, "/onaylar"], [`Tüm raporlar (${v.tumu.length})`, "/onaylar/tum"]];
+  const l: (readonly [string, string])[] = [[`Onay kuyruğu${brans} (${v.kuyruk.length})`, "/onaylar"], [`Tüm raporlar (${v.tumu.length})`, "/onaylar/tum"],
+    [`Revize istekleri (${v.istekler.length})`, "/onaylar/istekler"]];
   /* yönetici aynı zamanda rapor yazıyorsa (ör. mekanik yönetici + denetçi) kendi imzası ayrı sekmede */
   if (v.imzaBekleyen.length) l.push([`İmzamı bekleyen raporlar (${v.imzaBekleyen.length})`, "/onaylar/imza"]);
   return l;
@@ -154,6 +158,46 @@ export function ImzaBekleyen({ v }: { v: OnayListeleri }) {
       )}
       <SuzgecliListe s={s} on="i" baslik="İmzamı bekleyen raporlar" sutunlar={IMZA_SUTUN} anahtar={(r) => r.id} href={(r) => `/raporlar/${r.id}`}
         bosVeri={{ ikon: "circle-check", baslik: "İmzanızı bekleyen rapor yok", metin: "Teknik yönetici raporunuzu onaylayınca son imza için burada görünür." }} />
+    </>
+  );
+}
+
+/* REVİZE İSTEKLERİ (318; maket onaylar.html 141 W4 istekCiz, ISTEK_SUTUN): görebildiği tamamlanan raporlarda muayene uzmanlarının bekleyen
+   istekleri, en yeni üstte; satırda Reddet ve Revizeye gönder (aynı pencere onay ekranında da). */
+function istekSutunlari(ac: (r: RevizeIstekSatiri, t: RevizeTuru) => void): Sutun<RevizeIstekSatiri>[] {
+  return [
+    { k: "no", genislik: "22%", baslik: "Rapor no", kart: "ust", sira: 1, hucre: noHucre },
+    { k: "ekipman", genislik: "20%", baslik: "Ekipman", kart: "govde", sira: 2, hucre: ekipmanHucre },
+    { k: "kisi", genislik: "14%", baslik: "Denetçi", kart: "govde", sira: 3, hucre: (r) => <><KartEtiket>Denetçi</KartEtiket><Kirp>{r.denetci}</Kirp></> },
+    { k: "istek", genislik: "24%", baslik: "İstek", kart: "govde", sira: 4, hucre: (r) => (
+      <><KartEtiket>İstek</KartEtiket><span><span className={stil.sayi}>{zamanYaz(r.istek.zaman)}</span><AltSatir><Kirp>{r.istek.gerekce}</Kirp></AltSatir></span></>
+    ) },
+    { k: "eylem", genislik: "20%", baslik: "İşlem", gizliBaslik: true, siralanmaz: true, kart: "eylem", sira: 9, hucre: (r) => (
+      <div className={stil.eylemTuslar}>
+        {r.izin.revize && <Tus tur="ikincil" onClick={() => ac(r, "red")}>Reddet</Tus>}
+        {r.izin.revize && <Tus tur="ikincil" ikon="file-pen-line" onClick={() => ac(r, "revize")}>Revizeye gönder</Tus>}
+      </div>
+    ) },
+  ];
+}
+function istekTanimi(): SuzgecTanimi<RevizeIstekSatiri> {
+  return { ad: "Revize isteklerinde ara", ipucu: "Rapor no, kod, tesis", birim: "istek", imkansiz: "", cipler: [], seciciler: [],
+    metin: (r) => [r.no, r.ekipmanKod, r.turAd, r.tesis, r.musteri, r.denetci, r.istek.gerekce].join(" ") };
+}
+export function RevizeIstekleri({ v }: { v: OnayListeleri }) {
+  const router = useRouter();
+  const s = useSuzgec(istekTanimi(), v.istekler);
+  const [pen, setPen] = useState<{ r: RevizeIstekSatiri; tur: RevizeTuru } | null>(null);
+  const [genel, setGenel] = useState<string | null>(null);
+  return (
+    <>
+      <SayfaBasi baslik="Onaylar" sayac={<Sayac s={s} />} />
+      <Sekmeler ad="Onaylar bölümleri" ogeler={onaySekmeleri(v)} secili="/onaylar/istekler" />
+      {genel && <SeritKap><Serit tur="hata" ikon="circle-alert">{genel}</Serit></SeritKap>}
+      <SuzgecliListe s={s} on="v" baslik="Revize istekleri" sutunlar={istekSutunlari((r, tur) => { setGenel(null); setPen({ r, tur }); })} anahtar={(r) => r.id}
+        href={(r) => `/onaylar/${r.id}`} bosVeri={{ ikon: "circle-check", baslik: "Revize isteği yok", metin: "Muayene uzmanı tamamlanan raporunda revize isterse burada görünür." }} />
+      {pen && <RevizePenceresi tur={pen.tur} r={pen.r} istek={pen.r.istek} onKapat={() => setPen(null)}
+        bitti={(x) => { setPen(null); setGenel(x.genel ?? null); if (!x.genel) router.refresh(); }} />}
     </>
   );
 }

@@ -7,7 +7,10 @@
    4. (318, C5) Sunucuda yönetici düzeyi denetimi olmasaydı Onaylar'da yalnız imzasını bekleyenleri gören denetçi kendi raporunun onay ekranını
       açardı.
    5. (0028, 315–317 incelemesi) Onaydan çıkan raporun bekleyen imza isteği iptal edilmeseydi eski içerikli PDF yeniden onaydan sonra da
-      "hazır" kalır, imzalanırdı. */
+      "hazır" kalır, imzalanırdı.
+   6. (318 revizyon, 0029) Revizyon kuralı olmasaydı raporun revizyonu elle değişir (imzalı sürüm numarası kayar, R1 atlanır).
+   7. (318) Sunucuda rapor_revizeye_gonder denetimi olmasaydı tamamlanan raporu yalnız gören firma yöneticisi revizeye gönderirdi.
+   Akış ve hareket işlevlerini sonraki göçler (0027, 0029) yeniden yazdığından her kural geçtiği bütün göçlerden birlikte sökülür. */
 import assert from "node:assert/strict";
 import { copyFileSync, mkdirSync, mkdtempSync, readdirSync, readFileSync, rmSync, writeFileSync } from "node:fs";
 import { tmpdir } from "node:os";
@@ -21,7 +24,7 @@ import { klasorDepo } from "../../src/server/dosya/depo.ts";
 import { planKabul } from "../../src/modules/planlar/server/plan-ici.ts";
 import { bugunTr, planAc, type Kisi } from "../../src/modules/planlar/server/planlar.ts";
 import { taslakBaslat, yayinla } from "../../src/modules/rapor-format/server/formatlar.ts";
-import { imzaHazirla, raporOlustur } from "../../src/modules/raporlar/server/raporlar.ts";
+import { imzaHazirla, imzaliYukle, raporOlustur } from "../../src/modules/raporlar/server/raporlar.ts";
 import { testKumesi } from "../yardimci/kume.ts";
 import { supabaseBenzeri, type SupabaseBenzeri } from "../yardimci/supabase.ts";
 
@@ -38,6 +41,12 @@ const IPTAL = `    IF OLD.durum = 'onaylandi' AND NEW.durum IN ('taslak', 'onayd
         WHERE firma_id = NEW.firma_id AND rapor_id = NEW.id AND revizyon = NEW.revizyon AND durum = 'bekliyor';
     END IF;
 `;
+const REVIZYON = `  IF NEW.revizyon IS DISTINCT FROM OLD.revizyon AND NOT revize THEN
+    RAISE EXCEPTION 'revizyon yalnız tamamlanan rapor revizeye gönderilirken bir artar' USING ERRCODE = '23514';
+  END IF;
+`;
+/** göç → sökülecek kurallar (aynı işlevi yeniden yazan her göçten) */
+const SOK: Record<string, string[]> = { "0026_": [GEREKCE], "0027_": [GEREKCE, IMZA], "0028_": [IPTAL], "0029_": [GEREKCE, IMZA, IPTAL, REVIZYON] };
 const ONAYLAR = "src/modules/onaylar/server/onaylar.ts";
 let kume: GomuluKume;
 let supa: SupabaseBenzeri;
@@ -94,17 +103,11 @@ before(async () => {
   mkdirSync(klasor);
   for (const ad of readdirSync(GOC_KLASORU)) {
     if (!ad.endsWith(".sql")) continue;
-    if (ad.startsWith("0026_") || ad.startsWith("0027_")) {
-      let k = readFileSync(join(GOC_KLASORU, ad), "utf8");
-      assert.ok(k.includes(GEREKCE), `bozulacak satır kaynakta yok: ${ad}`);
-      k = k.replace(GEREKCE, "");
-      if (ad.startsWith("0027_")) { assert.ok(k.includes(IMZA), "bozulacak imza satırı kaynakta yok"); k = k.replace(IMZA, ""); }
-      writeFileSync(join(klasor, ad), k);
-    } else if (ad.startsWith("0028_")) {
-      const k = readFileSync(join(GOC_KLASORU, ad), "utf8");
-      assert.ok(k.includes(IPTAL), "bozulacak iptal satırı kaynakta yok");
-      writeFileSync(join(klasor, ad), k.replace(IPTAL, ""));
-    } else copyFileSync(join(GOC_KLASORU, ad), join(klasor, ad));
+    const sok = SOK[ad.slice(0, 5)];
+    if (!sok) { copyFileSync(join(GOC_KLASORU, ad), join(klasor, ad)); continue; }
+    let k = readFileSync(join(GOC_KLASORU, ad), "utf8");
+    for (const x of sok) { assert.ok(k.includes(x), `bozulacak satır kaynakta yok: ${ad} · ${x.trim().slice(0, 50)}`); k = k.replace(x, ""); }
+    writeFileSync(join(klasor, ad), k);
   }
   supa = await supabaseBenzeri(kume, "onay_bozuk", klasor);
   [A] = (await supa.sahip.query<{ id: string }>("INSERT INTO firma (kisa_ad, ad, rapor_kodu) VALUES ('deneme-a', 'Deneme A', 'DA') RETURNING id")).rows.map((r) => r.id);
@@ -168,4 +171,33 @@ test("0028'deki iptal kuralı kalkınca onaydan çıkan raporun imza isteği bek
   await k.is(k.yon, (db) => db.sorgu("UPDATE rapor SET durum = 'onayda' WHERE id = $1", [k.rapor]));
   const d = (await supa.sahip.query<{ durum: string }>("SELECT durum FROM imza_istegi WHERE rapor_id = $1", [k.rapor])).rows.map((x) => x.durum);
   assert.deepEqual(d, ["bekliyor"], "onaydan çıkan raporun imza isteği iptal edilmedi");
+});
+
+test("0029'daki revizyon kuralı kalkınca raporun revizyonu elle değişir (kilidin koruduğu açık)", async () => {
+  const A4 = (await supa.sahip.query<{ id: string }>("INSERT INTO firma (kisa_ad, ad, rapor_kodu) VALUES ('deneme-a4', 'Deneme A4', 'DG') RETURNING id")).rows[0].id;
+  const k = await kur(havuz, A4);
+  await k.is(k.den, (db) => db.sorgu("UPDATE rapor SET revizyon = 3 WHERE id = $1", [k.rapor]));
+  const r = (await supa.sahip.query<{ revizyon: number }>("SELECT revizyon FROM rapor WHERE id = $1", [k.rapor])).rows[0];
+  assert.equal(r.revizyon, 3, "revizyon elle değişti");
+});
+
+test("sunucuda rapor_revizeye_gonder denetimi kalkınca tamamlanan raporu yalnız gören firma yöneticisi revizeye gönderir", async () => {
+  const m = await bozukModul<Onaylar>(ONAYLAR, `  if (!canDoEylem(kim, "rapor_revizeye_gonder", kayit(r))) return { durum: "yetkisiz" };
+  const g = dogrula(RevizeGirdisi, girdi);`, "  const g = dogrula(RevizeGirdisi, girdi);");
+  const s = kume.sahipIstemci(); await s.connect();
+  const C = (await s.query<{ id: string }>("INSERT INTO firma (kisa_ad, ad, rapor_kodu) VALUES ('deneme-c3', 'Deneme C3', 'DH') RETURNING id").finally(() => s.end())).rows[0].id;
+  const h = havuzKur(kume.uygulama);
+  try {
+    const k = await kur(h, C);
+    /* tamamla: onay (veritabanı rol bilmez), imzasız PDF, imzalı PDF */
+    await k.is(k.yon, (db) => db.sorgu("UPDATE rapor SET durum = 'onaylandi' WHERE id = $1", [k.rapor]));
+    const pdf = new TextEncoder().encode("%PDF-1.4\n1 0 obj << /Type /Catalog >> endobj\n%%EOF\n");
+    assert.equal((await k.is(k.den, (db) => imzaHazirla(db, depo, k.den, C, k.rapor, async () => pdf))).durum, "tamam");
+    const imzali = new Uint8Array(Buffer.concat([Buffer.from(pdf), Buffer.from("\n9 0 obj << /Type /Sig /ByteRange [0 1 2 3] /Contents <00> >> endobj\n%%EOF\n", "latin1")]));
+    const surum = async () => (await k.is(k.den, (db) => db.sorgu<{ surum: number }>("SELECT surum FROM rapor WHERE id = $1", [k.rapor]))).rows[0].surum;
+    const y = await k.is(k.den, async (db) => imzaliYukle(db, depo, k.den, C, k.rapor, await surum(), { ad: "imzali.pdf", bayt: imzali }));
+    assert.equal(y.durum, "tamam", JSON.stringify(y));
+    const r = await k.is(k.yon, async (db) => m.revizeyeGonder(db, k.yon, k.rapor, await surum(), { gerekce: "Ölçüm değerleri yanlış yazılmış" }));
+    assert.equal(r.durum, "tamam", `firma yöneticisi revizeye gönderdi: ${JSON.stringify(r)}`);
+  } finally { await h.end(); }
 });

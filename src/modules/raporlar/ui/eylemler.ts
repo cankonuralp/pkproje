@@ -7,7 +7,7 @@ import { depo } from "../../../server/dosya/depo";
 import { belgePdf } from "../../../belge/pdf";
 import {
   cihazEkle, cihazKaldir, fotoEkle, fotoSil, imzaHazirla, imzaliYukle, onayaGonder, raporFormatGuncelle, raporKaydet, raporKopyala, raporKunyeGuncelle, raporOlustur,
-  raporSil, type RaporYazma,
+  raporSil, revizeIste, revizeIstegiGeriCek, type RaporYazma,
 } from "../server/raporlar";
 
 export interface RaporYaniti {
@@ -81,4 +81,11 @@ export async function imzaliYukleEylemi(form: FormData): Promise<RaporYaniti> {
   if (dosya.size > 25 << 20) return { hatalar: { dosya: "PDF çok büyük (en çok 25 MB)." } };
   const bayt = new Uint8Array(await dosya.arrayBuffer());
   return islem((o) => oturumIslemi(o, (db) => imzaliYukle(db, depo(), o, o.kiraci.firmaId, metin(form.get("id")), Number(form.get("surum")), { ad: dosya.name, bayt })));
+}
+/* revize isteği (318): yalnız raporu yazan, tamamlanan raporda */
+export async function revizeIsteEylemi(id: string, girdi: unknown): Promise<RaporYaniti> {
+  return islem((o) => oturumIslemi(o, (db) => revizeIste(db, o, metin(id), girdi)));
+}
+export async function revizeIstegiGeriCekEylemi(id: string, surum: number): Promise<RaporYaniti> {
+  return islem((o) => oturumIslemi(o, (db) => revizeIstegiGeriCek(db, o, metin(id), Number(surum))));
 }

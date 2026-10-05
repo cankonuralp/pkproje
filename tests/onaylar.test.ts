@@ -5,7 +5,9 @@
    reisim 2026-10-04: "rol değiştirme, sızma, veri çalma; yetki her zaman sunucuda". GERÇEK PostgreSQL, iki firma (314; göç 0026).
    Olumsuz kanıt: tests/bozan/onaylar.bozan.ts.
    317 SON İMZA (aynı kurulum): indir-imzala-yükle (araştırma §8; karar 99, 104, 114, 187; 09-F1) — imzasız kesin PDF bir kez, imzalı PDF'in öneki
-   ve imza sözlüğü, imzalı sürüm değişmez ve kopyalarla, uygunsuzluk açılır / sonraki sürümle kapanır, dosyayı raporu gören indirir. */
+   ve imza sözlüğü, imzalı sürüm değişmez ve kopyalarla, uygunsuzluk açılır / sonraki sürümle kapanır, dosyayı raporu gören indirir.
+   318 REVİZYON (göç 0029; pkproje §11 131 V1, 141 W4, 142 W5; KOD-GECIS §4 rapor_revize_iste / rapor_revizeye_gonder): Revize iste (yazan) · geri çek ·
+   Reddet · Revizeye gönder (türün branş yöneticisi) → R1 Yeni, imzalı sürüm saklı, yeniden onay ve imzayla no-R1. */
 import assert from "node:assert/strict";
 import { mkdtempSync, rmSync } from "node:fs";
 import { tmpdir } from "node:os";
@@ -18,10 +20,14 @@ import { MATRIS_ONERI } from "../src/server/yetki/tanim.ts";
 import { planIci, planKabul } from "../src/modules/planlar/server/plan-ici.ts";
 import { bugunTr, planAc, type Kisi } from "../src/modules/planlar/server/planlar.ts";
 import { taslakBaslat, yayinla } from "../src/modules/rapor-format/server/formatlar.ts";
-import { imzaHazirla, imzaliYukle, raporKaydet, raporOlustur, sahaRaporu } from "../src/modules/raporlar/server/raporlar.ts";
+import {
+  imzaHazirla, imzaliYukle, raporKaydet, raporListesi, raporOlustur, revizeIste, revizeIstegiGeriCek, sahaRaporu,
+} from "../src/modules/raporlar/server/raporlar.ts";
 import { dosyaIndirilebilir } from "../src/server/dosya/dosya.ts";
 import { DOSYA_ERISIMI } from "../src/server/dosya/erisim.ts";
-import { durumDegistir, geriGonder, onayEkrani, onayGeriAl, onayla, onayListeleri, type OnayYazma } from "../src/modules/onaylar/server/onaylar.ts";
+import {
+  durumDegistir, geriGonder, onayEkrani, onayGeriAl, onayla, onayListeleri, revizeIstegiReddet, revizeyeGonder, type OnayYazma,
+} from "../src/modules/onaylar/server/onaylar.ts";
 import { testKumesi } from "./yardimci/kume.ts";
 
 let kume: GomuluKume;
@@ -112,7 +118,8 @@ test("kuyruk: branş yöneticisi yalnız kendi branşının onaydaki raporların
   const benim = mek.kuyruk.filter((r) => [h1, h2, e1].includes(r.id));
   assert.deepEqual(benim.map((r) => r.id), [h2, h1], "mekanik: yalnız mekanik, en yeni üstte");
   assert.deepEqual([benim[0].ekipmanKod, benim[0].turAd, benim[0].denetci, benim[0].durum, benim[0].bekleme], ["HT-2", "Hava tankı", "Deneme Bir", "onayda", "az önce"]);
-  assert.deepEqual(benim[0].izin, { onayla: true, geriGonder: true, onayGeriAl: false, durumDegistir: true });
+  /* 2026-10-05 (318): izne "revize" eklendi (Revizeye gönder — yalnız tamamlanan raporda) */
+  assert.deepEqual(benim[0].izin, { onayla: true, geriGonder: true, onayGeriAl: false, durumDegistir: true, revize: false });
   assert.equal("hesapId" in benim[0], false, "yazan hesabın kimliği ekrana gitmez");
   assert.deepEqual(mek.branslar, ["m"]);
   const elk = (await a(FA.elk, (db) => onayListeleri(db, FA.elk)))!;
@@ -485,4 +492,144 @@ test("uygunsuzluk: muayene tarihine göre kapanır — sonradan imzalanan eski m
   assert.ok(ek.length >= 1 && ek.every((x) => x.kapanis === "giderildi" && x.kapatan === yeni), `daha yeni muayene varken kusur giderilmiş doğar: ${JSON.stringify(ek)}`);
   const sonraki = await tarihliImzali("EP-1", "2026-04-01", false, FA.elk);
   assert.ok((await uyg(yeni)).every((x) => x.kapanis === "giderildi" && x.kapatan === sonraki), "daha yeni muayene kapatır");
+});
+
+/* ── 318 REVİZYON ───────────────────────────────────────────────────────────────────────────────────────────────── */
+/** onaylanıp imzalanmış (Tamamlandı) rapor; kusurlu: "Uygun değil" sonuçlu (uygunsuzluk açar) */
+async function imzaliRapor(kod: string, kusurlu = false): Promise<string> {
+  const h = kusurlu ? await kusurluRapor(kod) : (await raporlar([[FA.den, kod]]))[0];
+  const s0 = await surum(h);
+  tamam(await a(FA.mek, (db) => onayla(db, FA.mek, h, s0)));
+  tamam(await hazirla(FA.den, h));
+  tamam(await yukle(FA.den, h, await surum(h), imzala(await imzasizBayt(h))));
+  return h;
+}
+const revIste = (k: Kisi, id: string, gerekce: string) => a(k, (db) => revizeIste(db, k, id, { gerekce }));
+const istekleri = async (k: Kisi, id: string) => ((await a(k, (db) => onayListeleri(db, k)))?.istekler ?? []).filter((x) => x.id === id);
+const GEREKCE = "Korozyon notu yanlış maddeye yazıldı";
+
+test("revize iste: yalnız yazan, yalnız tamamlanan raporda, gerekçe ≥ 10, tek bekleyen; branş yöneticisi Revize istekleri'nde görür; geri çek yalnız isteyen; reddin gerekçesi yazanda, yeniden istenir", async () => {
+  const [o] = await raporlar([[FA.den, "HT-4"]]);
+  assert.deepEqual(await revIste(FA.den, o, "Ölçüm değerleri yanlış yazılmış"), { durum: "red", neden: "Revize yalnız tamamlanan raporda istenir." });
+  const h = await imzaliRapor("HT-4");
+  assert.equal((await revIste(FA.mek, h, "Ölçüm değerleri yanlış yazılmış")).durum, "yetkisiz", "yazan değil");
+  assert.equal((await revIste(FA.elk, h, "Ölçüm değerleri yanlış yazılmış")).durum, "yok");
+  assert.equal((await b(FB.den, (db) => revizeIste(db, FB.den, h, { gerekce: "Ölçüm değerleri yanlış yazılmış" }))).durum, "yok", "başka firma");
+  assert.deepEqual(await revIste(FA.den, h, "kısa"), { durum: "gecersiz", hatalar: { gerekce: "Gerekçe en az 10 karakter olmalı: neyin düzeltileceği yazılmalı." } });
+  assert.match(tamam(await revIste(FA.den, h, "Ölçüm   değerleri yanlış yazılmış")).bildirim, /^DA-\S+ için revize isteği teknik yöneticiye gitti\.$/);
+  assert.deepEqual(await revIste(FA.den, h, "İkinci istek denemesi yapılıyor"), { durum: "red", neden: "Bu rapor için bekleyen bir revize isteğiniz var." });
+  const v = (await a(FA.den, (db) => sahaRaporu(db, FA.den, h)))!;
+  assert.deepEqual([v.revize?.bekleyen?.gerekce, v.revize?.red, v.revize?.iste], ["Ölçüm değerleri yanlış yazılmış", null, false], "boşluklar sadeleşir");
+  assert.equal((await a(FA.mek, (db) => sahaRaporu(db, FA.mek, h)))!.revize, null, "yönetici ekranında istek adımı yok");
+  /* Onaylar: branş yöneticisi isteyenin adıyla görür, firma yöneticisi görür ama gönderemez; öteki branş, denetçi ve başka firma görmez */
+  const m = await istekleri(FA.mek, h);
+  assert.deepEqual([m.length, m[0]?.istek.kim, m[0]?.istek.gerekce, m[0]?.izin.revize], [1, "Deneme den", "Ölçüm değerleri yanlış yazılmış", true]);
+  assert.equal("hesapId" in m[0], false, "yazan hesabın kimliği ekrana gitmez");
+  const y = await istekleri(FA.yon, h);
+  assert.deepEqual([y.length, y[0]?.izin.revize], [1, false]);
+  assert.deepEqual(await istekleri(FA.elk, h), []);
+  assert.deepEqual(await istekleri(FA.den, h), [], "denetçinin Onaylar'ında istek listesi yok");
+  assert.deepEqual(await b(FB.mek, async (db) => ((await onayListeleri(db, FB.mek))?.istekler ?? []).filter((x) => x.id === h)), []);
+  assert.equal((await a(FA.mek, (db) => onayEkrani(db, FA.mek, h)))!.istek?.gerekce, "Ölçüm değerleri yanlış yazılmış");
+  /* geri çek: yalnız isteyen, gördüğü sürümle */
+  const is = v.revize!.bekleyen!.surum;
+  assert.equal((await a(FA.mek, (db) => revizeIstegiGeriCek(db, FA.mek, h, is))).durum, "yetkisiz");
+  assert.equal((await a(FA.den, (db) => revizeIstegiGeriCek(db, FA.den, h, is + 1))).durum, "cakisma");
+  assert.match(tamam(await a(FA.den, (db) => revizeIstegiGeriCek(db, FA.den, h, is))).bildirim, /revize isteği geri çekildi\.$/);
+  assert.deepEqual(await istekleri(FA.mek, h), [], "geri çekilen istek listeden düşer");
+  assert.deepEqual((await a(FA.den, (db) => sahaRaporu(db, FA.den, h)))!.revize, { bekleyen: null, red: null, iste: true });
+  /* yeniden iste → yönetici reddeder (gerekçe isteğe bağlı); yazan reddi görür, yeniden isteyebilir */
+  tamam(await revIste(FA.den, h, "Sonuç cümlesi eksik kalmış görünüyor"));
+  const is2 = (await istekleri(FA.mek, h))[0].istek.surum;
+  assert.equal((await a(FA.yon, (db) => revizeIstegiReddet(db, FA.yon, h, is2, {}))).durum, "yetkisiz", "firma yöneticisi reddedemez");
+  assert.equal((await a(FA.elk, (db) => revizeIstegiReddet(db, FA.elk, h, is2, {}))).durum, "yok");
+  assert.equal((await a(FA.den, (db) => revizeIstegiReddet(db, FA.den, h, is2, {}))).durum, "yok", "denetçi Onaylar'da yönetici değil");
+  assert.equal((await b(FB.mek, (db) => revizeIstegiReddet(db, FB.mek, h, is2, {}))).durum, "yok", "başka firma");
+  assert.match(tamam(await a(FA.mek, (db) => revizeIstegiReddet(db, FA.mek, h, is2, { gerekce: "Rapor doğru, revize gerekmez" }))).bildirim, /revize isteği reddedildi\.$/);
+  const d = (await a(FA.den, (db) => sahaRaporu(db, FA.den, h)))!;
+  assert.deepEqual([d.revize?.bekleyen, d.revize?.red?.kim, d.revize?.red?.gerekce, d.revize?.iste], [null, "Deneme mek", "Rapor doğru, revize gerekmez", true]);
+  assert.equal((await a(FA.mek, (db) => revizeIstegiReddet(db, FA.mek, h, is2 + 1, {}))).durum, "red", "reddedilmiş istek yeniden reddedilmez");
+  assert.equal((await satir(h)).durum, "imzali", "istek raporu değiştirmez");
+});
+
+test("revizeye gönder: yalnız türün branş yöneticisi, tamamlanan raporda, gerekçe ≥ 10; rapor R1 olarak Yeni döner, imzalı sürüm ve uygunsuzluğu saklı, bekleyen istek kapanır; yeniden onay ve imzayla R1 sürümü yazılır, öncekinin uygunsuzluğu revizyonla kapanır", async () => {
+  const h = await imzaliRapor("HT-1", true);
+  tamam(await revIste(FA.den, h, GEREKCE));
+  const s0 = await surum(h);
+  const gonder = (k: Kisi, s: number, gerekce: string) => a(k, (db) => revizeyeGonder(db, k, h, s, { gerekce }));
+  assert.equal((await gonder(FA.yon, s0, GEREKCE)).durum, "yetkisiz", "firma yöneticisi görür, revizeye gönderemez");
+  assert.equal((await gonder(FA.elk, s0, GEREKCE)).durum, "yok");
+  assert.equal((await gonder(FA.den, s0, GEREKCE)).durum, "yok", "denetçi revizeye gönderemez");
+  assert.equal((await b(FB.mek, (db) => revizeyeGonder(db, FB.mek, h, s0, { gerekce: GEREKCE }))).durum, "yok", "başka firma");
+  const KAPALI: Kisi = { ...FA.mek, matris: { ...MATRIS_ONERI, 15: ["yok", "yok", "yok", "brans", "gor", "yok"] } as never };
+  const DEN: Kisi = { ...FA.mek, roller: ["denetci"] };
+  const SAHTE: Kisi = { ...FA.den, roller: ["admin", "mekanik_yonetici_", "__proto__"] as never };
+  for (const k of [KAPALI, DEN, SAHTE]) assert.equal((await gonder(k, s0, GEREKCE)).durum, "yok", "Onaylar kapalı / rol düştü / sahte rol");
+  assert.equal((await gonder(FA.mek, s0, "kısa")).durum, "gecersiz");
+  assert.equal((await gonder(FA.mek, s0 - 1, GEREKCE)).durum, "cakisma");
+  assert.equal((await satir(h)).durum, "imzali", "reddedilenler hiçbir şey yazmadı");
+  const r = tamam(await gonder(FA.mek, s0, GEREKCE));
+  const kok = (await sql<{ no: string }>(A, "SELECT no FROM rapor WHERE id = $1", [h])).rows[0].no;
+  assert.equal(r.bildirim, `${kok}-R1 açıldı; Deneme Bir raporun üstünde gerekçeyi görür. Tamamlanan sürüm saklandı.`);
+  const x = (await sql<{ durum: string; revizyon: number; onay: Date | null; gonderildi: Date | null }>(A, "SELECT durum, revizyon, onay, gonderildi FROM rapor WHERE id = $1", [h])).rows[0];
+  assert.deepEqual([x.durum, x.revizyon, x.onay, x.gonderildi], ["taslak", 1, null, null]);
+  assert.deepEqual((await hareketler(h)).at(-1), ["revize", GEREKCE, FA.mek.id]);
+  const ist = (await sql<{ durum: string; k: string }>(A, "SELECT durum, kapatan_hesap::text AS k FROM rapor_revize_istegi WHERE rapor_id = $1 ORDER BY olustu DESC LIMIT 1", [h])).rows[0];
+  assert.deepEqual([ist.durum, ist.k], ["revize", FA.mek.id], "bekleyen istek yerine geldi");
+  assert.equal((await sql(A, "SELECT 1 FROM rapor_surumu WHERE rapor_id = $1 AND revizyon = 0", [h])).rowCount, 1, "tamamlanan sürüm saklı");
+  assert.ok(((await sql(A, "SELECT 1 FROM uygunsuzluk WHERE rapor_id = $1 AND kapanis IS NULL", [h])).rowCount ?? 0) >= 1, "uygunsuzluk yeni sürüm imzalanana dek açık");
+  /* denetçi: Yeni, R1, gerekçe şeritte, düzenler; listede R1 ve geri dönmüş; Yeni rapor yeniden revizeye gönderilmez */
+  const v = (await a(FA.den, (db) => sahaRaporu(db, FA.den, h)))!;
+  assert.deepEqual([v.no, v.durum, v.geri?.revize, v.geri?.gerekce, v.izin.duzenle, v.revize, v.imzali], [`${kok}-R1`, "taslak", 1, GEREKCE, true, null, null]);
+  assert.deepEqual(await istekleri(FA.mek, h), []);
+  const l = (await a(FA.den, (db) => raporListesi(db, FA.den)))!.find((y) => y.id === h)!;
+  assert.deepEqual([l.no, l.geri], [`${kok}-R1`, true]);
+  assert.equal((await gonder(FA.mek, await surum(h), "İkinci revize denemesi yapılıyor")).durum, "red", "Yeni rapor revizeye gönderilmez");
+  /* yeniden onaya, onay, imza → R1 imzalı sürümü; R0'ın uygunsuzluğu "revizyon" ile kapanır, içerik aynı kaldığından R1'inki açık */
+  await sql(A, "UPDATE rapor SET durum = 'onayda', surum = surum + 1 WHERE id = $1", [h], FA.den.id);
+  const s1 = await surum(h);
+  tamam(await a(FA.mek, (db) => onayla(db, FA.mek, h, s1)));
+  tamam(await hazirla(FA.den, h));
+  assert.equal(tamam(await yukle(FA.den, h, await surum(h), imzala(await imzasizBayt(h)))).bildirim, `${kok}-R1 imzalandı, tamamlandı ve müşteriye açıldı.`);
+  const sr = (await sql<{ no: string; revizyon: number; id: string }>(A, "SELECT no, revizyon, id::text FROM rapor_surumu WHERE rapor_id = $1 ORDER BY revizyon", [h])).rows;
+  assert.deepEqual(sr.map((z) => [z.no, z.revizyon]), [[kok, 0], [`${kok}-R1`, 1]]);
+  const u = (await sql<{ kapanis: string | null; kapatan: string | null; s: string }>(A,
+    "SELECT kapanis, kapatan_surum::text AS kapatan, surum_id::text AS s FROM uygunsuzluk WHERE rapor_id = $1", [h])).rows;
+  const eski = u.filter((z) => z.s === sr[0].id), yeni = u.filter((z) => z.s === sr[1].id);
+  assert.ok(eski.length >= 1 && eski.every((z) => z.kapanis === "revizyon" && z.kapatan === sr[1].id), JSON.stringify(u));
+  assert.ok(yeni.length >= 1 && yeni.every((z) => z.kapanis === null), JSON.stringify(u));
+  assert.equal((await a(FA.den, (db) => sahaRaporu(db, FA.den, h)))!.imzali?.no, `${kok}-R1`);
+});
+
+test("veritabanı: revizyon yalnız Tamamlandı → Yeni'de bir artar, gerekçeyle; tamamlanan rapor başka yoldan değişmez; revize isteğini yalnız yazan açar ve geri çeker, 'revize' elle yazılamaz, içerik ve kapanış değişmez; B görmez", async () => {
+  const h = await imzaliRapor("HT-3");
+  const gerekceli = (k: Kisi, metin: string, p: unknown[]) => a(k, async (db) => { await db.sorgu("SELECT set_config('app.gerekce', 'Yeterince uzun bir gerekçe', true)"); return db.sorgu(metin, p); });
+  await assert.rejects(gerekceli(FA.mek, "UPDATE rapor SET durum = 'taslak', revizyon = revizyon + 2 WHERE id = $1", [h]), /revizyon yalnız/);
+  await assert.rejects(gerekceli(FA.mek, "UPDATE rapor SET revizyon = revizyon + 1 WHERE id = $1", [h]), /revizyon yalnız/);
+  await assert.rejects(sql(A, "UPDATE rapor SET durum = 'taslak', revizyon = revizyon + 1 WHERE id = $1", [h], FA.mek.id), /gerekçe en az 10/);
+  await assert.rejects(gerekceli(FA.mek, "UPDATE rapor SET durum = 'onayda' WHERE id = $1", [h]), /tamamlanan rapor değişmez/);
+  await assert.rejects(gerekceli(FA.mek, "UPDATE rapor SET durum = 'taslak', revizyon = revizyon + 1, sonuc = 'uygun_degil' WHERE id = $1", [h]), /yalnız Yeni rapor düzenlenir/);
+  /* revize isteği */
+  const istekSql = (k: Kisi, gerekce = "Ölçüm değerleri yanlış yazılmış") =>
+    sql<{ id: string }>(A, "INSERT INTO rapor_revize_istegi (rapor_id, revizyon, gerekce) VALUES ($1, 0, $2) RETURNING id::text", [h, gerekce], k.id);
+  await assert.rejects(istekSql(FA.mek), /yalnız raporu yazan/);
+  await assert.rejects(istekSql(FA.den, "kısa"), /violates check constraint/);
+  await assert.rejects(sql(A, "INSERT INTO rapor_revize_istegi (rapor_id, revizyon, gerekce, durum) VALUES ($1, 0, 'Ölçüm değerleri yanlış yazılmış', 'revize')", [h], FA.den.id), /bekliyor açılır/);
+  const iid = (await istekSql(FA.den)).rows[0].id;
+  await assert.rejects(istekSql(FA.den), /duplicate key/);
+  await assert.rejects(sql(A, "UPDATE rapor_revize_istegi SET durum = 'revize' WHERE id = $1", [iid], FA.mek.id), /yalnız rapor revizeye gönderilince/);
+  await assert.rejects(sql(A, "UPDATE rapor_revize_istegi SET durum = 'geri_cekildi' WHERE id = $1", [iid], FA.mek.id), /yalnız isteyen/);
+  await assert.rejects(sql(A, "UPDATE rapor_revize_istegi SET gerekce = 'Başka bir gerekçe yazıldı' WHERE id = $1", [iid], FA.den.id), /değişmez/);
+  await assert.rejects(sql(A, "DELETE FROM rapor_revize_istegi WHERE id = $1", [iid], FA.den.id), /permission denied/);
+  assert.equal((await sql(B, "SELECT 1 FROM rapor_revize_istegi")).rowCount, 0, "B görmez");
+  /* reddedilen istek kapanır; kapanış zamanı ve kapatan veritabanından; kapanan bir daha değişmez */
+  await sql(A, "UPDATE rapor_revize_istegi SET durum = 'reddedildi', kapanis_gerekce = 'Gerek yok', kapandi = '2020-01-01' WHERE id = $1", [iid], FA.mek.id);
+  const k = (await sql<{ k: string; z: Date }>(A, "SELECT kapatan_hesap::text AS k, kapandi AS z FROM rapor_revize_istegi WHERE id = $1", [iid])).rows[0];
+  assert.equal(k.k, FA.mek.id);
+  assert.ok(k.z.getUTCFullYear() > 2020, "kapanış zamanı veritabanından");
+  await assert.rejects(sql(A, "UPDATE rapor_revize_istegi SET durum = 'geri_cekildi' WHERE id = $1", [iid], FA.den.id), /kapanmış revize isteği değişmez/);
+  /* tamamlanmamış rapora istek açılmaz; Yeni raporun revizyonu değişmez */
+  const [o] = await raporlar([[FA.den, "HT-3"]]);
+  await assert.rejects(sql(A, "INSERT INTO rapor_revize_istegi (rapor_id, revizyon, gerekce) VALUES ($1, 0, 'Ölçüm değerleri yanlış yazılmış')", [o], FA.den.id), /tamamlanan raporda/);
+  await assert.rejects(sql(A, "UPDATE rapor SET revizyon = 1 WHERE id = $1", [o], FA.den.id), /revizyon yalnız/);
 });
