@@ -10,8 +10,8 @@
   },
   "scripts": {
     "dev": "node scripts/gelistir.ts",
-    "test": "node --test \"tests/**/*.test.ts\"",
-    "test:negatif": "node --test \"tests/bozan/**/*.bozan.ts\"",
+    "test": "node --test --test-reporter=spec --test-reporter-destination=stdout --test-reporter=./tests/yardimci/github-raporcu.mjs --test-reporter-destination=stdout \"tests/**/*.test.ts\"",
+    "test:negatif": "node --test --test-reporter=spec --test-reporter-destination=stdout --test-reporter=./tests/yardimci/github-raporcu.mjs --test-reporter-destination=stdout \"tests/bozan/**/*.bozan.ts\"",
     "check": "node scripts/next.ts typegen && tsc --noEmit",
     "lint": "eslint .",
     "build": "npm test && node scripts/next.ts build",
