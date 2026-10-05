@@ -25,5 +25,5 @@ export const E2E_SAHA = { ekipman: "HT-0201", tur: "Hava tankı", cihazTuru: "Ma
 export const E2E_MUHASEBE = {
   tesis: "Muhasebe Tesisi",
   plan: { masaustu: "P-0125-901", tablet: "P-0125-902", telefon: "P-0125-903" },
-  fatura: { masaustu: "DMF202600000901", tablet: "DMF202600000902", telefon: "DMF202600000903" },
+  fatura: { masaustu: "DMF2026000000901", tablet: "DMF2026000000902", telefon: "DMF2026000000903" },
 } as const;

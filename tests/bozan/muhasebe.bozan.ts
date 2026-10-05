@@ -40,7 +40,7 @@ async function bozuk(ad: string, eski: string, yeni: string) {
   let f: string;
   try {
     f = await q(`INSERT INTO fatura (firma_id, no, musteri_id, tarih, vade_gun, vade, kdv, ara, kdv_tutar, toplam)
-      VALUES ($1, 'KMF202600000001', $2, current_date - 1, 30, current_date + 29, 20, 100000, 0, 100000) RETURNING id::text`, [A, m]);
+      VALUES ($1, 'KMF2026000000001', $2, current_date - 1, 30, current_date + 29, 20, 100000, 0, 100000) RETURNING id::text`, [A, m]);
   } finally { await supa.sahip.query("SET session_replication_role = origin"); }
   return { havuz, A, f };
 }

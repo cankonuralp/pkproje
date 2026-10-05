@@ -157,7 +157,9 @@ CREATE OR REPLACE FUNCTION tahsilat_koru() RETURNS trigger
 DECLARE f record; odenen bigint;
 BEGIN
   IF TG_OP <> 'INSERT' THEN RAISE EXCEPTION 'tahsilat değişmez, silinmez' USING ERRCODE = '23514'; END IF;
-  SELECT x.tarih, x.toplam INTO f FROM fatura x WHERE x.firma_id = NEW.firma_id AND x.id = NEW.fatura_id FOR UPDATE;
+  /* aynı faturaya aynı anda iki tahsilat kalanı birlikte aşmasın: danışma kilidi (uygulama rolünün faturada UPDATE hakkı yok, satır kilidi alamaz) */
+  PERFORM pg_advisory_xact_lock(hashtext('tahsilat:' || NEW.fatura_id::text));
+  SELECT x.tarih, x.toplam INTO f FROM fatura x WHERE x.firma_id = NEW.firma_id AND x.id = NEW.fatura_id;
   IF f IS NULL THEN RAISE EXCEPTION 'fatura yok' USING ERRCODE = '23503'; END IF;
   IF NEW.tarih > (now() AT TIME ZONE 'Europe/Istanbul')::date THEN RAISE EXCEPTION 'ileri tarihli tahsilat kaydedilmez' USING ERRCODE = '23514'; END IF;
   IF NEW.tarih < f.tarih THEN RAISE EXCEPTION 'tahsilat fatura tarihinden önce olamaz' USING ERRCODE = '23514'; END IF;

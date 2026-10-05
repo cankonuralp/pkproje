@@ -112,7 +112,7 @@ test("yetki (modül 18): muhasebe ve firma yöneticisi görür ve yazar; planlam
   for (const k of [PLAN, DEN, MEK, { ...MUH, matris: { 18: ["yok", "kendi", "yok", "yok", "yaz", "kendi"] } as never }]) {
     assert.equal(await a(k, (db) => isListesi(db, k)), null, k.roller[0]);
     assert.equal(await a(k, (db) => isKarti(db, k, P1)), null, k.roller[0]);
-    assert.equal((await a(k, (db) => faturaKaydet(db, k, P1, { no: "KMF202600000001", tarih: BUGUN() }))).durum, "yetkisiz");
+    assert.equal((await a(k, (db) => faturaKaydet(db, k, P1, { no: "KMF2026000000001", tarih: BUGUN() }))).durum, "yetkisiz");
   }
   for (const k of [MUH, YON]) assert.ok((await a(k, (db) => isListesi(db, k)))!.some((x) => x.id === P1), k.roller[0]);
 });
@@ -133,24 +133,24 @@ test("fatura: no biçimi ve eşsizliği, ileri tarih yok, son imzadan önce olam
   const k = (girdi: object) => a(MUH, (db) => faturaKaydet(db, MUH, P1, girdi));
   const g1 = await k({ no: "abc", tarih: BUGUN() });
   assert.ok(g1.durum === "gecersiz" && /16 karakter/.test(g1.hatalar.no), JSON.stringify(g1));
-  const g2 = await k({ no: "KMF202600000001", tarih: gunEkle(BUGUN(), 1) });
+  const g2 = await k({ no: "KMF2026000000001", tarih: gunEkle(BUGUN(), 1) });
   assert.deepEqual(g2, { durum: "gecersiz", hatalar: { tarih: "İleri tarihli fatura kaydedilmez." } });
-  const g3 = await k({ no: "KMF202600000001", tarih: gunEkle(BUGUN(), -1) });
+  const g3 = await k({ no: "KMF2026000000001", tarih: gunEkle(BUGUN(), -1) });
   assert.ok(g3.durum === "gecersiz" && /imzalandı; fatura bundan önce olamaz/.test(g3.hatalar.tarih), JSON.stringify(g3));
-  const r = tamam(await k({ no: " kmf202600000001 ", tarih: BUGUN() }));
+  const r = tamam(await k({ no: " kmf2026000000001 ", tarih: BUGUN() }));
   F1 = r.id;
-  assert.match(r.bildirim!, /KMF202600000001 kaydedildi: 2 rapor, 2\.700,00 TL/);
+  assert.match(r.bildirim!, /KMF2026000000001 kaydedildi: 2 rapor, 2\.700,00 TL/);
   const f = (await a(MUH, (db) => faturaKarti(db, MUH, F1)))!;
   assert.deepEqual([f.no, f.ara, f.kdvTutar, f.toplam, f.vade, f.vadeGun, f.sozlesme?.no, f.durum, f.kaydeden, f.unvan, f.vno, f.isler.map((x) => x.id)],
-    ["KMF202600000001", 225000, 45000, 270000, gunEkle(BUGUN(), 45), 45, "IS-1026-001", "bekliyor", "Deneme Muhasebe", "Deneme Bir Sanayi A.Ş.", "1234567890", [P1]]);
+    ["KMF2026000000001", 225000, 45000, 270000, gunEkle(BUGUN(), 45), 45, "IS-1026-001", "bekliyor", "Deneme Muhasebe", "Deneme Bir Sanayi A.Ş.", "1234567890", [P1]]);
   const x = (await a(MUH, (db) => isKarti(db, MUH, P1)))!;
   assert.deepEqual([x.durum, x.faturali, x.hazir, x.kalan, x.izin.fatura, x.izin.tahsilat], ["tahsilat", 2, 0, 270000, false, true]);
-  assert.equal((await k({ no: "KMF202600000002", tarih: BUGUN() })).durum, "red", "faturaya hazır rapor kalmadı");
+  assert.equal((await k({ no: "KMF2026000000002", tarih: BUGUN() })).durum, "red", "faturaya hazır rapor kalmadı");
   /* başka bir işin faturasında aynı no */
   const P2 = await planKur(t2);
   await rapor(P2, "HT-3");
-  const d = await a(MUH, (db) => faturaKaydet(db, MUH, P2, { no: "KMF202600000001", tarih: BUGUN() }));
-  assert.deepEqual(d, { durum: "gecersiz", hatalar: { no: "KMF202600000001 zaten kayıtlı." } });
+  const d = await a(MUH, (db) => faturaKaydet(db, MUH, P2, { no: "KMF2026000000001", tarih: BUGUN() }));
+  assert.deepEqual(d, { durum: "gecersiz", hatalar: { no: "KMF2026000000001 zaten kayıtlı." } });
   assert.ok((await a(YON, (db) => faturaListesi(db, YON)))!.some((y) => y.id === F1));
 });
 
@@ -179,7 +179,7 @@ test("tahsilat: kısmi olabilir, kalanı aşamaz, fatura tarihinden önce ve ile
 test("vadesi geçen fatura: durum 'Vadesi geçti', iş de vadesi geçti", async () => {
   const P3 = await planKur(t1);
   await rapor(P3, "HT-1");
-  const r = tamam(await a(YON, (db) => faturaKaydet(db, YON, P3, { no: "KMF202600000003", tarih: BUGUN() })));
+  const r = tamam(await a(YON, (db) => faturaKaydet(db, YON, P3, { no: "KMF2026000000003", tarih: BUGUN() })));
   await sahip("UPDATE fatura SET tarih = tarih - 60, vade = vade - 60 WHERE id = $1", [r.id]);
   assert.equal((await a(MUH, (db) => faturaKarti(db, MUH, r.id)))!.durum, "gecikti");
   assert.equal((await a(MUH, (db) => isKarti(db, MUH, P3)))!.durum, "gecikti");
@@ -191,7 +191,7 @@ test("toplu fatura: müşterinin faturaya hazır bütün işleri tek faturada", 
   const x = (await a(MUH, (db) => isKarti(db, MUH, P4)))!;
   assert.ok(x.onizleme.toplu && x.onizleme.toplu.isler.length >= 2, JSON.stringify(x.onizleme.toplu?.isler));
   const n = x.onizleme.toplu!.raporSayisi;
-  const r = tamam(await a(MUH, (db) => faturaKaydet(db, MUH, P4, { no: "KMF202600000004", tarih: BUGUN(), toplu: true })));
+  const r = tamam(await a(MUH, (db) => faturaKaydet(db, MUH, P4, { no: "KMF2026000000004", tarih: BUGUN(), toplu: true })));
   const f = (await a(MUH, (db) => faturaKarti(db, MUH, r.id)))!;
   assert.ok(f.isler.length >= 2 && f.isler.some((y) => y.id === P5) && f.raporSayisi === n);
   assert.equal((await a(MUH, (db) => isKarti(db, MUH, P5)))!.hazir, 0);
@@ -213,16 +213,16 @@ test("veritabanı: fatura / satır / tahsilat değişmez; satır yalnız faturay
     `INSERT INTO fatura (no, musteri_id, tarih, vade_gun, vade, kdv, ara, kdv_tutar, toplam) VALUES ($1, $2, $3, 30, $3::date + 30, 20, $4, 0, $4) RETURNING id::text`,
     [no, m1, tarih, ara]).then((x) => x.rows[0].id);
   await assert.rejects(tek(async (db) => {
-    const id = await fatura(db, "KMF202600000010", 1);
+    const id = await fatura(db, "KMF2026000000010", 1);
     await db.sorgu("INSERT INTO fatura_rapor (fatura_id, rapor_id, plan_id, tur_id, fiyat, kaynak) VALUES ($1, $2, $3, $4, 1, 'liste')", [id, imzasiz, P6, ht]);
   }), /yalnız imzalı rapor/);
   await assert.rejects(tek(async (db) => {
-    const id = await fatura(db, "KMF202600000011", 999);
+    const id = await fatura(db, "KMF2026000000011", 999);
     await db.sorgu("INSERT INTO fatura_rapor (fatura_id, rapor_id, plan_id, tur_id, fiyat, kaynak) VALUES ($1, $2, $3, $4, 1, 'liste')", [id, r6, P6, ht]);
   }), /tutarsız/);
-  await assert.rejects(tek((db) => fatura(db, "KMF202600000012", 1, gunEkle(BUGUN(), 1))), /ileri tarihli fatura/);
+  await assert.rejects(tek((db) => fatura(db, "KMF2026000000012", 1, gunEkle(BUGUN(), 1))), /ileri tarihli fatura/);
   await assert.rejects(tek(async (db) => {
-    const id = await fatura(db, "KMF202600000013", 1);
+    const id = await fatura(db, "KMF2026000000013", 1);
     await db.sorgu("INSERT INTO fatura_rapor (fatura_id, rapor_id, plan_id, tur_id, fiyat, kaynak) VALUES ($1, $2, $3, $4, 1, 'liste')", [id, r1, P1, ht]);
   }), /duplicate|unique|fatura_rapor/);
   const kim = (await sql<{ k: string }>(A, "SELECT kaydeden::text AS k FROM fatura WHERE id = $1", [F1])).rows[0].k;
@@ -236,6 +236,6 @@ test("firma sızıntısı: B, A'nın işini / faturasını görmez, tahsilat ekl
   assert.deepEqual(await b((db) => isListesi(db, YON_B)), []);
   assert.deepEqual(await b((db) => faturaListesi(db, YON_B)), []);
   assert.equal((await b((db) => tahsilatKaydet(db, YON_B, F1, { tarih: BUGUN(), tutar: "1", yontem: "nakit", aciklama: "" }))).durum, "yok");
-  assert.equal((await b((db) => faturaKaydet(db, YON_B, P1, { no: "ABC202600000001", tarih: BUGUN() }))).durum, "yok");
+  assert.equal((await b((db) => faturaKaydet(db, YON_B, P1, { no: "ABC2026000000001", tarih: BUGUN() }))).durum, "yok");
   for (const t of ["fatura", "fatura_rapor", "tahsilat"]) assert.equal((await sql<{ n: number }>(B, `SELECT count(*)::int AS n FROM ${t}`)).rows[0].n, 0, t);
 });

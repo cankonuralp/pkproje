@@ -289,7 +289,9 @@ export async function tahsilatKaydet(db: Sorgulayici, kim: Kisi, faturaId: strin
   const g = dogrula(TahsilatGirdisi, girdi);
   if (!g.tamam) return { durum: "gecersiz", hatalar: g.hatalar };
   const x = g.veri;
-  const f = (await db.sorgu<{ no: string; tarih: string; toplam: string }>("SELECT no, tarih::text, toplam::text FROM fatura WHERE id = $1 FOR UPDATE", [faturaId])).rows[0];
+  /* aynı faturaya aynı anda iki tahsilat: danışma kilidi (veritabanı tetiği de aynı kilidi alır; faturada satır kilidi yok — UPDATE hakkı yok) */
+  await db.sorgu("SELECT pg_advisory_xact_lock(hashtext('tahsilat:' || $1))", [faturaId]);
+  const f = (await db.sorgu<{ no: string; tarih: string; toplam: string }>("SELECT no, tarih::text, toplam::text FROM fatura WHERE id = $1", [faturaId])).rows[0];
   if (!f) return { durum: "yok" };
   const odenen = Number((await db.sorgu<{ n: string }>("SELECT coalesce(sum(tutar), 0)::text AS n FROM tahsilat WHERE fatura_id = $1", [faturaId])).rows[0].n);
   const kalan = Number(f.toplam) - odenen;
