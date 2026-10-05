@@ -15,7 +15,7 @@ import { ayarOku } from "../../../server/ayar/ayar.ts";
 import { personelHesaplari } from "../../../server/kimlik/hesap.ts";
 import { canDo, canDoEylem, duzey } from "../../../server/yetki/canDo.ts";
 import { dogrula, type DogrulamaHatalari } from "../../../sema/ortak.ts";
-import { ekipmanEkle as ekipmanKaydet, ekipmanlar, ekipmanPasif as ekipmanPasifYaz, koduKullanan, tesisEkipmanlari, type EkipmanOzeti } from "../../ekipman/server/ekipman.ts";
+import { ekipmanEkle as ekipmanKaydet, ekipmanKilitle, ekipmanlar, ekipmanPasif as ekipmanPasifYaz, koduKullanan, tesisEkipmanlari, type EkipmanOzeti } from "../../ekipman/server/ekipman.ts";
 import { turOzetleri } from "../../ekipman-turleri/server/turler.ts";
 import { musteriOzetleri } from "../../musteriler/server/musteriler.ts";
 import { personelOzetleri } from "../../personel/server/personel.ts";
@@ -156,8 +156,11 @@ export interface PlanIci {
   /** tesiste kayıtlı, plana alınmamış, etkin ekipman (yalnız ekleyebilene) */
   kayitli: { id: string; kod: string; tur: string; konum: string | null; onceki: string | null }[];
   turler: { id: string; ad: string; kod: string; brans: "m" | "e" }[];
-  /** planın etkin raporları (silinen / pasif görünmez); benim = isteyenin yazdığı rapor (Raporu düzenle / Sil yalnız onda) */
-  raporlar: (PlanRaporu & { benim: boolean })[];
+  /** planın etkin raporlarından isteyenin Raporlar düzeyinin gördükleri (denetçi kendi, branş yöneticisi branşı; silinen görünmez); benim =
+      isteyenin yazdığı rapor (Raporu düzenle / Sil yalnız onda). Yazan hesap / personel kimliği istemciye gitmez. */
+  raporlar: (Omit<PlanRaporu, "hesapId" | "personelId"> & { benim: boolean })[];
+  /** etkin raporu olan ekipmanlar (görülsün görülmesin): yeşil tik, "Rapor oluştur" gizlenir, raporsuz sayısı */
+  raporluEkipman: string[];
   /** plan günü henüz gelmedi (rapor açılmaz; şerit söyler) */
   erken: boolean;
   /** proje notları; göremeyene null */
@@ -188,6 +191,7 @@ export async function planIci(db: Sorgulayici, kim: Kisi, id: string): Promise<P
 
   const pe = (await db.sorgu<{ ekipman_id: string; sonradan: boolean }>("SELECT ekipman_id::text, sonradan FROM plan_ekipman WHERE plan_id = $1", [id])).rows;
   const turler = await turOzetleri(db), turBul = new Map(turler.map((t) => [t.id, t]));
+  const tumRaporlar = await planRaporlari(db, id);
   const ekp = await ekipmanlar(db, pe.map((x) => x.ekipman_id));
   const ekipman: PlanEkipmani[] = ekp.map((x) => {
     const t = turBul.get(x.turId);
@@ -217,7 +221,10 @@ export async function planIci(db: Sorgulayici, kim: Kisi, id: string): Promise<P
     kunyeGuncel: izin.kunyeDuzenle ? { firmaAdi: p.firma_adi, adres: p.adres, sgk: p.sgk, isg: isgListesi(false) } : null,
     teklif: [...teklif.values()].sort((a, b) => (a.brans === b.brans ? a.ad.localeCompare(b.ad, "tr") : a.brans === "m" ? -1 : 1)),
     ekipman, kayitli, turler: izin.ekipmanEkle ? turler.map((t) => ({ id: t.id, ad: t.ad, kod: t.kod, brans: t.brans })) : [],
-    raporlar: (await planRaporlari(db, id)).map((r) => ({ ...r, benim: !!r.hesapId && r.hesapId === kim.id })), erken: p.baslangic > bugunTr(), notlar, izin,
+    raporlar: duzey(kim, RAPORLAR_MODULU) === "yok" ? [] : tumRaporlar
+      .filter((r) => canDo(kim, RAPORLAR_MODULU, "gor", { sahip: r.hesapId, brans: turBul.get(r.turId)?.brans ?? null }))
+      .map(({ hesapId, personelId: _p, ...r }) => ({ ...r, benim: !!hesapId && hesapId === kim.id })),
+    raporluEkipman: [...new Set(tumRaporlar.map((r) => r.ekipmanId))], erken: p.baslangic > bugunTr(), notlar, izin,
   };
 }
 
@@ -407,6 +414,7 @@ export async function ekipmanPasif(db: Sorgulayici, kim: Kisi, id: string, ekipm
   if (!e) return { durum: "yok" };
   if (!izinler(kim, e).ekipmanPasif) return { durum: "yetkisiz" };
   if (!UUID.test(ekipmanId) || !(await db.sorgu("SELECT 1 FROM plan_ekipman WHERE plan_id = $1 AND ekipman_id = $2", [id, ekipmanId])).rowCount) return { durum: "yok" };
+  await ekipmanKilitle(db, ekipmanId);   /* rapor oluşturma ile aynı anda koşmasın (raporlar.raporOlustur da kilitler) */
   const x = (await ekipmanlar(db, [ekipmanId]))[0];
   if (!x) return { durum: "yok" };
   if (pasif === true && (await ekipmanRaporuVar(db, id, ekipmanId))) return { durum: "red", neden: `${x.kod} için bu planda rapor var; raporu olan ekipman pasife alınmaz.` };

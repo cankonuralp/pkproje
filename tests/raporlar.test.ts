@@ -207,9 +207,13 @@ test("rapor oluştur: yalnız plandaki denetçi, kabul edilmiş planda, plandaki
   /* plan: ilk rapor Denetimde yapar; Raporlar bölümünde görünür */
   p = (await ici(FA.den1, id))!;
   assert.equal(p.durum, "denetimde"); assert.ok(p.basladi);
-  assert.deepEqual(p.raporlar.map((x) => [x.id, x.no, x.ekipmanId, x.durum, x.sonuc, x.personelId, x.hesapId, x.surum, x.benim]),
-    [[r.id, s.no, a1, "taslak", null, FA.den1P, FA.den1.id, 0, true]]);
-  assert.deepEqual((await ici(FA.mek, id))!.raporlar.map((x) => [x.id, x.benim]), [[r.id, false]], "planı gören raporları görür; yazan değil");
+  assert.deepEqual(p.raporlar.map((x) => [x.id, x.no, x.ekipmanId, x.durum, x.sonuc, x.surum, x.benim]),
+    [[r.id, s.no, a1, "taslak", null, 0, true]]);
+  assert.ok(!("hesapId" in p.raporlar[0]) && !("personelId" in p.raporlar[0]), "yazan hesap / personel kimliği istemciye gitmez");
+  assert.deepEqual((await ici(FA.mek, id))!.raporlar.map((x) => [x.id, x.benim]), [[r.id, false]], "planı ve branşı gören raporları görür; yazan değil");
+  /* 2026-10-05 (311 çapraz inceleme): öteki branşın yöneticisi planı görür ama raporu plan içinden de görmez; tik yine doğru */
+  const elk = (await ici(FA.elk, id))!;
+  assert.deepEqual([elk.raporlar, elk.raporluEkipman], [[], [a1]], "öteki branş: rapor listede yok, ekipmanın raporu olduğu bilinir");
   /* ekipman başına bir rapor (203); denetimdeki plana başka ekipman */
   assert.deepEqual(await olustur(FA.den1, id, a1), { durum: "red", neden: "Bu ekipmanın bu planda raporu var." });
   tamam(await olustur(FA.den1, id, FA.ekp["HT-A3"]));

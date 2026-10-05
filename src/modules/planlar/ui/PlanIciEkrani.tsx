@@ -190,7 +190,7 @@ export function PlanIciEkrani({ v }: { v: PlanIci }) {
   );
 
   /* ── 3 · Denetim: kontrol listesi (Ekipmanlar + Raporlar) ── */
-  const raporlu = new Set(v.raporlar.map((r) => r.ekipmanId));
+  const raporlu = new Set(v.raporluEkipman);
   const raporsuz = v.ekipman.filter((e) => !e.pasif && !raporlu.has(e.id)).length;
   const calisir = d === "kabul" || d === "denetimde" || d === "tamamlandi";
   const a3ozet = kt ? `Kontrol listesi tamamlandı · ${gunNo(v.kontrolTamam!)}`

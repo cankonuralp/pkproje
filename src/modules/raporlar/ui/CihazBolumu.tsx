@@ -5,7 +5,7 @@
    yalnız o türden, raporu yazanın ZİMMETİNDEKİ kalibrasyonu geçerli cihazlar (liste sunucudan — SahaRaporu.secilebilir). Tür gerekli cihaz türü
    vermiyorsa ("*") üstte genel "Cihaz ekle": zimmetteki her geçerli cihaz; seçilen cihaz kendi türünün satırına yazılır (sunucuda).
    Eksik ya da kalibrasyonu geçmiş cihazla rapor onaya gönderilemez (ENGEL 2 — sunucu söyler, satır işaretlenir). */
-import { useState, useTransition } from "react";
+import { useState, type TransitionStartFunction } from "react";
 import { useBildir } from "../../../components/bildirim/Bildirim";
 import { Ikon } from "../../../components/ikon/Ikon";
 import { KartEtiket, Liste, type Sutun } from "../../../components/liste/Liste";
@@ -29,16 +29,17 @@ const ilkHata = (r: RaporYaniti, yedek: string) => r.genel ?? Object.values(r.ha
 
 interface Secim { turId: string; ad: string; secili: string; hata: string | null }
 
-export function CihazBolumu({ v, bolumId, oku, gecersiz, mesgul, yenile }: {
+export function CihazBolumu({ v, bolumId, oku, gecersiz, mesgul, baslat, yenile }: {
   v: SahaRaporu; bolumId: string; oku: boolean; gecersiz: (alan: string) => boolean;
+  /** üst ekranın işlemi (SahaRaporu useTransition): cihaz yazması sürerken öteki yazan tuşlar da kapalı */
+  baslat: TransitionStartFunction;
   /** rapor yazılıyor ya da yeni sürüm bekleniyor (SahaRaporu): tuşlar kapalı */
   mesgul: boolean;
   /** yazdıktan sonra yenile (yeni sürüm gelene kadar SahaRaporu tuşları kapalı tutar) */
   yenile: () => void;
 }) {
   const bildir = useBildir();
-  const [islem, baslat] = useTransition();
-  const bekliyor = islem || mesgul;
+  const bekliyor = mesgul;   /* ekle / kaldır üst ekranın işleminde: o sürerken Kaydet / Onaya gönder de kapalı */
   const [pencere, setPencere] = useState<Secim | null>(null);
   const genel = !oku && GENEL in v.secilebilir;
   const liste = pencere ? v.secilebilir[pencere.turId] ?? [] : [];

@@ -58,3 +58,8 @@ export async function ekipmanEtiketi(db: Sorgulayici, id: string): Promise<{ id:
   return x ? { id: x.id, kod: x.kod, turId: x.tur_id, tesisId: x.tesis_id, pasif: !!x.pasif, marka: x.marka, model: x.model, seri: x.seri, imal: x.imal, konum: x.konum,
     disKontrol: x.dis_kontrol, disSonuc: x.dis_sonuc } : null;
 }
+
+/** ekipmanın satırını işlem sonuna dek kilitler: pasife alma ile rapor oluşturma sıraya girer (biri ötekinin sonucunu görür). Yetki ÇAĞIRANDA. */
+export async function ekipmanKilitle(db: Sorgulayici, id: string): Promise<void> {
+  if (UUID.test(id)) await db.sorgu("SELECT 1 FROM ekipman WHERE id = $1 FOR UPDATE", [id]);
+}

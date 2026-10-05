@@ -70,7 +70,11 @@ export function SahaRaporu({ v }: { v: Gorunum }) {
   const [tarih, setTarih] = useState(() => bosla(v.tarih));
   const [cevaplar, setCevaplar] = useState<Cevaplar>(v.cevaplar);
   /* sonraki kontrol ve rapor tarihi elle seçilene kadar başlangıçtan gelir (maket sonrakiEl / rtarihEl) */
-  const [elle, setElle] = useState({ sonraki: !!v.tarih.sonraki, rapor: !!v.tarih.rapor });
+  /* kaydedilmiş değer başlangıçtan türetilenle aynıysa elle seçilmemiş sayılır (yeniden açılışta da başlangıca bağlı kalır) */
+  const [elle, setElle] = useState(() => {
+    const basGun = v.tarih.bas.slice(0, 10);
+    return { sonraki: !!v.tarih.sonraki && v.tarih.sonraki !== ayEkle(basGun, v.tur.periyot), rapor: !!v.tarih.rapor && v.tarih.rapor !== basGun };
+  });
   const [kirli, setKirli] = useState(false);
   const [sonKayit, setSonKayit] = useState<string | null>(v.surum > 0 ? v.degisti : null);
   const [isaretli, setIsaretli] = useState<ReadonlySet<string>>(() => new Set());
@@ -82,7 +86,7 @@ export function SahaRaporu({ v }: { v: Gorunum }) {
      sürümle gidip "değiştirildi" denmesin (yenilenen veri yeni nesnedir — aynı nesne = henüz gelmedi) */
   const [yenilenen, setYenilenen] = useState<Gorunum | null>(null);
   const mesgul = bekliyor || yenilenen === v;
-  const yenile = () => { setYenilenen(v); router.refresh(); window.setTimeout(() => setYenilenen(null), 20_000); };   /* yenileme düşerse tuşlar açılır */
+  const yenile = () => { setYenilenen(v); router.refresh(); window.setTimeout(() => setYenilenen((y) => (y === v ? null : y)), 20_000); };   /* yenileme düşerse tuşlar açılır */
   const oku = !v.izin.duzenle;
 
   /* canlı değerlendirme: cihaz sayısı raporun kendi listesinden (sunucu da öyle sayar), fotoğraf bu sürümde yok */
@@ -104,7 +108,7 @@ export function SahaRaporu({ v }: { v: Gorunum }) {
   const yaz = (f: (c: Cevaplar) => Cevaplar) => { setCevaplar(f); setKirli(true); };
   const bag: Baglam = {
     v, c: cevaplar, yaz, d, oku, gecersiz, kaynak: (k) => kaynaklar[k],
-    cihaz: (bolumId) => <CihazBolumu v={v} bolumId={bolumId} oku={oku} gecersiz={gecersiz} mesgul={mesgul} yenile={yenile} />,
+    cihaz: (bolumId) => <CihazBolumu v={v} bolumId={bolumId} oku={oku} gecersiz={gecersiz} mesgul={mesgul} baslat={baslat} yenile={yenile} />,
   };
 
   /* format bölümleri: yalnız kayıttan gelen alanlı bilgi bölümü 1. bölümün kopyası — çizilmez; adında "ekipman" geçen bilgi bölümü 2. bölüme

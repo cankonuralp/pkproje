@@ -64,7 +64,7 @@ export function EkipmanBolumu({ v }: { v: PlanIci }) {
   const router = useRouter();
   const bildir = useBildir();
   const [bekliyor, baslat] = useTransition();
-  const raporlu = new Set(v.raporlar.map((r) => r.ekipmanId));
+  const raporlu = new Set(v.raporluEkipman);
   const s = useSuzgec(tanim(raporlu), v.ekipman);
   const [ekle, setEkle] = useState<Ekle | null>(null);
   const [kd, setKd] = useState<{ kod: string; tur: KodTuru; metin: string; ekipmanId?: string } | null>(null);

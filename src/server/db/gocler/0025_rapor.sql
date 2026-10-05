@@ -120,7 +120,8 @@ BEGIN
     END IF;
     -- ekipman planda, etkin ve türü raporun türü
     IF NOT EXISTS (SELECT 1 FROM plan_ekipman pe JOIN ekipman e ON e.firma_id = pe.firma_id AND e.id = pe.ekipman_id
-                   WHERE pe.firma_id = NEW.firma_id AND pe.plan_id = NEW.plan_id AND pe.ekipman_id = NEW.ekipman_id AND e.tur_id = NEW.tur_id AND e.pasif IS NULL) THEN
+                   WHERE pe.firma_id = NEW.firma_id AND pe.plan_id = NEW.plan_id AND pe.ekipman_id = NEW.ekipman_id AND e.tur_id = NEW.tur_id AND e.pasif IS NULL
+                   FOR SHARE OF e) THEN
       RAISE EXCEPTION 'ekipman planda değil, pasif ya da türü uymuyor' USING ERRCODE = '23514';
     END IF;
     -- plan kabul edilmiş (Kabul edildi, Denetimde, Tamamlandı) ve yazan planın ekibinde

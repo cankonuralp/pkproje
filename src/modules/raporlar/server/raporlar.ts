@@ -15,7 +15,7 @@ import { canDo, canDoEylem, duzey, type YetkiHesabi } from "../../../server/yetk
 import { dogrula, type DogrulamaHatalari } from "../../../sema/ortak.ts";
 import { degerlendir, type Degerlendirme } from "../../../format/motor.ts";
 import { Cevaplar, type FormatTanimi } from "../../../format/tanim.ts";
-import { ekipmanEtiketi } from "../../ekipman/server/ekipman.ts";
+import { ekipmanEtiketi, ekipmanKilitle } from "../../ekipman/server/ekipman.ts";
 import { turRaporBilgisi } from "../../ekipman-turleri/server/turler.ts";
 import { tesisMusteriIletisim } from "../../musteriler/server/musteriler.ts";
 import { raporCihazlari } from "../../olcum-cihazlari/server/cihazlar.ts";
@@ -73,6 +73,7 @@ export async function raporOlustur(db: Sorgulayici, kim: Kisi, planId: string, e
     return { durum: "red", neden: `Plan günü ${tarihNo(plan.baslangic)} henüz gelmedi (bugün ${tarihNo(bugun)}). Rapor plan gününden itibaren oluşturulur; geçmiş günlere açık, ileri tarihe kapalı.` };
   }
   if (!(await plandakiEkipman(db, planId, ekipmanId))) return { durum: "yok" };
+  await ekipmanKilitle(db, ekipmanId);   /* pasife alma ile aynı anda koşmasın: ikisi de ekipmanın satırında sıraya girer */
   const e = await ekipmanEtiketi(db, ekipmanId);
   if (!e) return { durum: "yok" };
   if (e.pasif) return { durum: "red", neden: "Ekipman pasif; rapor açılamaz. Etkinleştir ile geri alınır." };
@@ -125,7 +126,7 @@ async function erisim(db: Sorgulayici, kim: Kisi, id: string, kilitle = false): 
 
 export interface CihazSatiri {
   turId: string; turAd: string;
-  cihaz: { id: string; kod: string; marka: string | null; model: string | null; seri: string | null; bitis: string | null; gecti: boolean; eksik: boolean } | null;
+  cihaz: { id: string; kod: string; marka: string | null; model: string | null; seri: string | null; bitis: string | null; gecti: boolean; eksik: boolean; lab: boolean } | null;
 }
 export interface SahaRaporu {
   id: string; no: string; durum: RaporDurumu; surum: number; olustu: string; degisti: string; gonderildi: string | null; bugun: string;
@@ -159,8 +160,8 @@ async function cihazSatirlari(db: Sorgulayici, r: RaporSatiri, tur: Erisim["tur"
     const x = r.cihazlar.find((y) => y.tur === turId), c = x ? tumu.find((y) => y.id === x.cihaz) : undefined;
     return {
       turId, turAd: turAdi.get(turId) ?? "Ölçüm cihazı",
-      cihaz: x ? (c ? { id: c.id, kod: c.kod, marka: c.marka, model: c.model, seri: c.seri, bitis: c.bitis, gecti: kalibrasyonGecti(c.bitis, bugun), eksik: false }
-        : { id: x.cihaz, kod: "—", marka: null, model: null, seri: null, bitis: null, gecti: true, eksik: true }) : null,
+      cihaz: x ? (c ? { id: c.id, kod: c.kod, marka: c.marka, model: c.model, seri: c.seri, bitis: c.bitis, gecti: kalibrasyonGecti(c.bitis, bugun), eksik: false, lab: c.konum === "lab" }
+        : { id: x.cihaz, kod: "—", marka: null, model: null, seri: null, bitis: null, gecti: true, eksik: true, lab: false }) : null,
     };
   });
   return { satirlar, tumu };
@@ -182,7 +183,8 @@ export async function sahaRaporu(db: Sorgulayici, kim: Kisi, id: string): Promis
   let secilebilir: SahaRaporu["secilebilir"] = {};
   if (duzenle) {
     const kimde = (await kimdeHaritasi(db)).cihaz;
-    const benim = tumu.filter((c) => kimde.get(c.id) === r.personel_id && !kalibrasyonGecti(c.bitis, bugun));
+    /* kalibrasyondaki (lab) cihaz kimsenin zimmetinde sayılmaz (Zimmetler: Kalibrasyonda) */
+    const benim = tumu.filter((c) => c.konum !== "lab" && kimde.get(c.id) === r.personel_id && !kalibrasyonGecti(c.bitis, bugun));
     const ozet = (c: (typeof benim)[number]) => ({ id: c.id, kod: c.kod, marka: c.marka, model: c.model, seri: c.seri, bitis: c.bitis });
     secilebilir = Object.fromEntries(satirlar.map((x) => [x.turId, benim.filter((c) => c.turId === x.turId).map(ozet)]));
     /* tür gerekli cihaz türü vermiyorsa formatın cihaz bölümü için zimmetteki her geçerli cihaz seçilebilir ("*") */
@@ -268,6 +270,7 @@ export async function onayaGonder(db: Sorgulayici, kim: Kisi, id: string, surum:
   for (const s of satirlar) {
     if (!s.cihaz) eksikler.push({ bolum: "cihaz", alan: `cihaz.${s.turId}`, ad: `${s.turAd}: ölçüm cihazı eklenmedi` });
     else if (s.cihaz.eksik) eksikler.push({ bolum: "cihaz", alan: `cihaz.${s.turId}`, ad: `${s.turAd}: eklenen cihaz artık kayıtlı değil` });
+    else if (s.cihaz.lab) eksikler.push({ bolum: "cihaz", alan: `cihaz.${s.turId}`, ad: `${s.cihaz.kod}: kalibrasyonda` });
     else if (s.cihaz.gecti) eksikler.push({ bolum: "cihaz", alan: `cihaz.${s.turId}`, ad: `${s.cihaz.kod}: kalibrasyonu geçmiş${s.cihaz.bitis ? ` (${tarihNo(s.cihaz.bitis)})` : ""}` });
   }
   if (eksikler.length) return { durum: "eksik", eksikler };
@@ -303,6 +306,7 @@ export async function cihazEkle(db: Sorgulayici, kim: Kisi, id: string, surum: n
   /* "*": tür gerekli cihaz türü vermiyorsa cihaz kendi türünün satırına yazılır */
   if (turId === "*" && c && !e.tur.cihazTurleri.length) turId = c.turId;
   if (!c || c.turId !== turId || (e.tur.cihazTurleri.length && !e.tur.cihazTurleri.includes(turId))) return { durum: "gecersiz", hatalar: { cihaz: "Cihaz listeden seçilmeli." } };
+  if (c.konum === "lab") return { durum: "gecersiz", hatalar: { cihaz: `${c.kod}: kalibrasyonda; rapora eklenmez.` } };
   if ((await kimdeHaritasi(db)).cihaz.get(c.id) !== e.r.personel_id) return { durum: "gecersiz", hatalar: { cihaz: "Cihaz raporu yazanın zimmetinde değil." } };
   if (kalibrasyonGecti(c.bitis, bugunTr())) return { durum: "gecersiz", hatalar: { cihaz: `${c.kod}: kalibrasyonu geçmiş; rapora eklenmez.` } };
   const cihazlar = [...e.r.cihazlar.filter((x) => x.tur !== turId), { tur: turId, cihaz: c.id }];
