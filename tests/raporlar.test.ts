@@ -469,12 +469,12 @@ test("onaya gönder: kalibrasyon MUAYENE GÜNÜNE göre (318 incelemesi) — mua
     return r.id;
   };
   try {
-    const once = await hazir();
+    /* iki rapor da cihaz geçerliyken açılır (Cihaz ekle bugüne bakar); kalibrasyon sonra değişir */
+    const once = await hazir(), gun0 = await hazir();
     await kal(gun(-2));   // muayene (dün) gününden önce bitti
     const e = eksik(await gonder(FA.den1, once, 2, girdi()));
     assert.deepEqual(e.map((x) => x.alan), [`cihaz.${FA.man}`]);
     assert.match(e[0].ad, /^MN-06: kalibrasyonu geçmiş/);
-    const gun0 = await hazir();
     await kal(dun);       // muayene günü bitti: muayenede geçerli, bugün geçmiş
     assert.equal((await gonder(FA.den1, gun0, 2, girdi())).durum, "tamam", "muayene gününde geçerli kalibrasyon engel değil");
   } finally { await kal(gun(300)); }
