@@ -2341,6 +2341,27 @@ revizyon, alan kopyalama, hafif kusur devri, meslek eşleşme denetimi).
 - Emsal ürünler: https://opwire.app/iso-17020-periyodik-kontrol-yazilimi/ · https://17020muayene.vidco.com.tr/ · https://akuple.com/asansor-kontrol-yazilimi/ · https://ensyazilim.com/
 
 ## 11 · Değişiklik günlüğü
+- 2026-10-05 (315–317 çapraz inceleme düzeltmeleri; dört bakış — güvenlik, veritabanı, mantık, arayüz — + her bulguya çürütme denemesi, 15 bulgu
+  doğrulandı). Göç **0028**: (1) **onaydan çıkan raporun bekleyen imza isteği iptal** (onayı geri al / durumu değiştir) — eskiden yeniden onaydan
+  sonra eski içerikli PDF "hazır" kalıyor, imzalanıp yeni içerikle tamamlanıyordu; imzalı sürüm yalnız BEKLEYEN isteğin PDF'iyle yazılır.
+  (2) İmza isteği **hazırlık anının kopyasını** taşır (yazan, cihazlar ve kalibrasyonları; değişmez) — imzalı sürüm yükleme anındaki canlı
+  kayıttan değil, imzalanan PDF'le aynı kaynaktan. (3) **Uygunsuzluk**: yalnız "Uygun değil" sürüme açılır; muayene TARİHİNE göre kapanır
+  (sonradan imzalanan eski muayene yenisinin kusurunu kapatmaz, kendi kusuru giderilmiş doğar); elle kapatılmaz (yalnız sonraki imzalı
+  sürümün tetiği, kapatan sürümle — CHECK + yabancı anahtar). Kod: (4) **imzalı PDF eki** artık yalnız öneke ve metinde "/Type /Sig"e bakmıyor:
+  imza sözlüğü bir nesnede olmalı (yorumda değil), ek özgün nesneyi akışla yeniden tanımlayamaz, sayfanın /Contents başvurusunu değiştiremez
+  (imza aracının /Annots ve /AcroForm eklemesi serbest; `src/modules/raporlar/imza-pdf.ts`, kriptografik doğrulama sonraki fazda). (5) Belgede
+  **muayene günündeki kalibrasyon** (sonradan girilen kalibrasyon eski raporu değiştirmez). (6) **Tamamlanan raporun önizlemesi** "imzasız"
+  demez (imza zamanı ve yolu imzalı sürümden), "PDF indir" yerine "İmzalı PDF"; imzasız PDF ucu tamamlanan raporda 409. (7) Kesin PDF'te
+  **yazı tipi kapsamı**: ● / ○ seçenek işaretleri CSS ile çizilir; Yunanca (Ω, IΔn) ve sembol (≤ ≥ → …) alt kümeleri eklendi (sembol: Google
+  Fonts Carlito 1.104'ten fontTools alt kümesi, OFL) — sunucusuz Chromium'da sistem yazı tipi yok, kutu basılıyordu; kilit: belgenin her
+  karakteri gömülü aralıklarda. (8) **Vercel'de İmzala**: sunucu eylemi rapor sayfasında koşar → Chromium ikilisi o sayfanın izine de eklendi;
+  ara katman gövde sınırı 26 MB. (9) PDF motoru düşerse neden şeritte (ekran hata sayfasına dönmez); imza eylemleri ağ hatasında şeride;
+  başarıda eski hata şeridi kalkar. (10) **Şerit** (tek üretici): dar bantta tuşlar metnin altına iner (telefonda iki tuşlu imza şeridi
+  metni sıfıra indiriyordu). (11) **Ön izle** kaydedilmemiş değişikliği atmaz: önce kaydeder. Elenen (çürütüldü): PDF ucunda eşzamanlılık
+  sınırı, dosya kayıtlarının çöpe alınması, pasif cihazın kodu, bölüm numarası kayması, kilitli işlemde PDF üretimi. **Açık:** Vercel'in istek
+  gövdesi sınırı 4,5 MB — çok fotoğraflı raporun imzalı PDF'i bunu aşabilir; kalıcı çözüm K7'de depoya doğrudan (kısa ömürlü imzalı adresle)
+  yükleme + belgeye gömülen fotoğrafın küçültülmesi. Kilit: onaylar.test +3 (iptal, kopya, uygunsuzluk tarih sırası ve elle kapatma),
+  tests/imza-pdf.test.ts (3), belge.test +1 (yazı tipi kapsamı), bozan +2 (iptal kuralı, PDF eki akış kuralı).
 - 2026-10-05 (318): **K3 Raporlar listesi + denetçinin Onaylar'ı (C5)** (maket raporlar.html #/, onaylar.html BB4; §11 264; reisim 2026-09-26:
   "sıralama tarihi olsun her zaman en yeni en yukarıda olsun", "raporlar modülünde kusurlu tuşunu kaldır"; 2026-09-28: "ekipman türüne rapor
   numarasına göre ayrı ayrı arayabilmeliyim"). **Raporlar** (/raporlar): görebildiği raporlar — denetçi kendi, branş yöneticisi branşı, planlama

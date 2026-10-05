@@ -201,6 +201,11 @@ export function SahaRaporu({ v }: { v: Gorunum }) {
     if (r.hatalar && !h.kod && ilk) { setKopya(false); yanitHatasi(r); bitti(null); return; }   /* raporun kendi alanı geçersiz: üst şeritte */
     bitti(h.kod ?? r.genel ?? (ilk ? h[ilk] : "Kopya açılamadı."));
   }));
+  const onizle = () => baslat(async () => {
+    const r = await raporKaydetEylemi(v.id, v.surum, girdi());
+    if (r.tamam) { kaydedildi(); router.push(`/raporlar/${v.id}/onizle`); return; }
+    yanitHatasi(r);
+  });
   const formatGuncelle = () => baslat(async () => {
     const r = await raporFormatGuncelleEylemi(v.id, v.surum, girdi());
     if (r.tamam) { kaydedildi(); bildir(r.bildirim ?? "Format güncellendi."); yenile(); return; }
@@ -310,8 +315,10 @@ export function SahaRaporu({ v }: { v: Gorunum }) {
               {kirli ? "Kaydedilmemiş değişiklik var" : sonKayit ? `Son kayıt ${zamanNo(sonKayit)}` : "Kaydedildi"}
             </p>
           )}
-          {/* Ön izle (reisim 2026-09-28): kaydedilmiş hâl; kesin PDF'le aynı çizici */}
-          <TusBaglanti ikon="eye" href={`/raporlar/${v.id}/onizle`}>Ön izle</TusBaglanti>
+          {/* Ön izle (reisim 2026-09-28): kaydedilmiş hâl; kesin PDF'le aynı çizici. Kaydedilmemiş değişiklik varsa önce kaydedilir (atılmaz) */}
+          {v.izin.duzenle && kirli
+            ? <Tus tur="ikincil" ikon="eye" disabled={mesgul} onClick={onizle}>Ön izle</Tus>
+            : <TusBaglanti ikon="eye" href={`/raporlar/${v.id}/onizle`}>Ön izle</TusBaglanti>}
         </>} />
       {seritler.length > 0 && <SeritKap>{seritler}</SeritKap>}
 

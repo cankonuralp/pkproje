@@ -36,8 +36,11 @@ function bilgiTablosu(l: readonly Cift[]): ReactNode {
   return h("table", null, kolonlar(["22%", "28%", "22%", "28%"]), h("tbody", null, ...satirlar));
 }
 const bolum = (no: string, ad: string, ...icerik: ReactNode[]) => h("section", { className: "rb-bolum", key: `${no}-${ad}` }, h("h2", null, `${no}. ${ad}`), ...icerik);
+/* seçenek işareti yazı tipinden bağımsız, CSS ile çizilir: gömülü Carlito alt kümelerinde ● / ○ yok — sunucusuz Chromium'da sistem yazı tipi de
+   yok, kutu basılırdı (315–317 incelemesi; kilit tests/belge.test.ts "yazı tipi kapsamı") */
 const secenekler = (secilen: readonly string[], liste: readonly string[]) =>
-  h(Fragment, null, ...liste.map((x) => h("span", { key: x, className: "rb-sec" }, `${secilen.some((y) => kucuk(y) === kucuk(x)) ? "●" : "○"} ${x}`)));
+  h(Fragment, null, ...liste.map((x) => h("span", { key: x, className: "rb-sec" },
+    h("span", { className: secilen.some((y) => kucuk(y) === kucuk(x)) ? "rb-isaret rb-secili" : "rb-isaret" }), ` ${x}`)));
 const kutu = (...icerik: ReactNode[]) => h("p", { className: "rb-kutu-metin" }, ...icerik);
 const baslikSatiri = (...l: string[]) => h("thead", null, h("tr", null, ...l.map((x, i) => h("th", { key: i, className: "rb-ab" }, x))));
 

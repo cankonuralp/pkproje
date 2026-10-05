@@ -1,12 +1,13 @@
 /* RAPOR ÖN İZLEME (maket rapor.html "Ön izle", reisim 2026-09-28: "en sağ üstte ön izleme tuşu olmalı PDF çıktısını ön izleyebilmeliyim"):
    raporun belgesi — kesin PDF'le aynı çiziciden (src/belge). Görme yetkisi sunucuda (raporBelgesiVerisi: Raporlar düzeyi); göremeyene "bulunamadı".
-   İmzasızdır; muayene uzmanının son imzasıyla geçerli olur. */
+   İmzasızdır; muayene uzmanının son imzasıyla geçerli olur. Tamamlanan raporda "PDF indir" yerine imzalı PDF (315–317 incelemesi). */
 import "../../../../../belge/belge.css";
 import type { Metadata } from "next";
 import { notFound } from "next/navigation";
 import { raporBelgesi } from "../../../../../belge/belge";
 import { Yetkisiz } from "../../../../../components/hata/Hata";
 import { Kirinti, NesneBasi } from "../../../../../components/sayfa/Sayfa";
+import { DosyaAcTusu } from "../../../../../components/gizli-resim/GizliResim";
 import { Ikon } from "../../../../../components/ikon/Ikon";
 import { TusBaglanti, tusSinifi } from "../../../../../components/tus/Tus";
 import { modulBul } from "../../../../../modules/moduller";
@@ -30,7 +31,9 @@ export default async function Sayfa({ params }: { params: Promise<{ id: string }
         tuslar={<>
           <TusBaglanti ikon="arrow-left" href={`/raporlar/${v.id}`}>Rapora dön</TusBaglanti>
           {/* PDF indir (reisim 2026-09-28: "ön izle halinde PDF halini indirebilmeliyim"): imzasız, kesin PDF motoruyla; düz bağlantı (indirme) */}
-          <a className={tusSinifi("birincil")} href={`/raporlar/${v.id}/pdf`} download><Ikon ad="download" kucuk />PDF indir</a>
+          {v.imzaliDosya
+            ? <DosyaAcTusu dosyaId={v.imzaliDosya} ikon="file-check">İmzalı PDF</DosyaAcTusu>
+            : <a className={tusSinifi("birincil")} href={`/raporlar/${v.id}/pdf`} download><Ikon ad="download" kucuk />PDF indir</a>}
         </>} />
       <div className="rb-onizleme">{raporBelgesi(v.belge)}</div>
     </>

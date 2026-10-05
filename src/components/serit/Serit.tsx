@@ -1,5 +1,5 @@
 /* ŞERİT — tek üretici (kalıp 20 d: kural ihlali uyarıdır, engel değil — reisim 39). Tür: bilgi · uyari · onay · hata;
-   isteğe bağlı sağda tek eylem (ör. "Güncelle", "Hepsini imzala"). Hata şeridi ekran okuyucuya hemen okunur (role=alert). */
+   isteğe bağlı sağda eylem (bir ya da birkaç tuş; ör. "Güncelle", "Hepsini imzala"; dar bantta metnin altında). Hata şeridi ekran okuyucuya hemen okunur (role=alert). */
 import type { ReactNode } from "react";
 import { Ikon } from "../ikon/Ikon";
 import stil from "./Serit.module.css";

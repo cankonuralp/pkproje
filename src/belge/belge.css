@@ -6,6 +6,17 @@
   src: url("./carlito-5.3.0/carlito-latin-ext-400-normal.woff2") format("woff2"); unicode-range: U+0100-02BA,U+02BD-02C5,U+02C7-02CC,U+02CE-02D7,U+02DD-02FF,U+0304,U+0308,U+0329,U+1D00-1DBF,U+1E00-1E9F,U+1EF2-1EFF,U+2020,U+20A0-20AB,U+20AD-20C0,U+2113,U+2C60-2C7F,U+A720-A7FF; }
 @font-face { font-family: "Carlito"; font-style: normal; font-display: block; font-weight: 700;
   src: url("./carlito-5.3.0/carlito-latin-ext-700-normal.woff2") format("woff2"); unicode-range: U+0100-02BA,U+02BD-02C5,U+02C7-02CC,U+02CE-02D7,U+02DD-02FF,U+0304,U+0308,U+0329,U+1D00-1DBF,U+1E00-1E9F,U+1EF2-1EFF,U+2020,U+20A0-20AB,U+20AD-20C0,U+2113,U+2C60-2C7F,U+A720-A7FF; }
+/* Sembol alt kümesi: ok, matematik (≤ ≥ ≈ ≠ …) ve geometrik işaretler — Google Fonts Carlito 1.104 TTF'inden fontTools ile alt küme
+   (fontsource'ta bu karakterler yok); aynı OFL. 2026-10-05, yazı tipi kapsamı kilidi tests/belge.test.ts */
+@font-face { font-family: "Carlito"; font-style: normal; font-display: block; font-weight: 400;
+  src: url("./carlito-5.3.0/carlito-sembol-400-normal.woff2") format("woff2"); unicode-range: U+2190-2199,U+21A8,U+2202,U+2206,U+220F,U+2211,U+2212,U+2215,U+221A,U+221E,U+221F,U+2229,U+222B,U+2248,U+2260,U+2261,U+2264,U+2265,U+25A1,U+25AA,U+25AB,U+25CA,U+25CB,U+25CC,U+25CF,U+25E6; }
+@font-face { font-family: "Carlito"; font-style: normal; font-display: block; font-weight: 700;
+  src: url("./carlito-5.3.0/carlito-sembol-700-normal.woff2") format("woff2"); unicode-range: U+2190-2199,U+21A8,U+2202,U+2206,U+220F,U+2211,U+2212,U+2215,U+221A,U+221E,U+221F,U+2229,U+222B,U+2248,U+2260,U+2261,U+2264,U+2265,U+25A1,U+25AA,U+25AB,U+25CA,U+25CB,U+25CC,U+25CF,U+25E6; }
+/* Yunanca alt küme: elektrik birimleri ve adları (Ω, IΔn) — 2026-10-05, yazı tipi kapsamı kilidi tests/belge.test.ts */
+@font-face { font-family: "Carlito"; font-style: normal; font-display: block; font-weight: 400;
+  src: url("./carlito-5.3.0/carlito-greek-400-normal.woff2") format("woff2"); unicode-range: U+0370-0377,U+037A-037F,U+0384-038A,U+038C,U+038E-03A1,U+03A3-03FF; }
+@font-face { font-family: "Carlito"; font-style: normal; font-display: block; font-weight: 700;
+  src: url("./carlito-5.3.0/carlito-greek-700-normal.woff2") format("woff2"); unicode-range: U+0370-0377,U+037A-037F,U+0384-038A,U+038C,U+038E-03A1,U+03A3-03FF; }
 @font-face { font-family: "Carlito"; font-style: normal; font-display: block; font-weight: 400;
   src: url("./carlito-5.3.0/carlito-latin-400-normal.woff2") format("woff2"); unicode-range: U+0000-00FF,U+0131,U+0152-0153,U+02BB-02BC,U+02C6,U+02DA,U+02DC,U+0304,U+0308,U+0329,U+2000-206F,U+20AC,U+2122,U+2191,U+2193,U+2212,U+2215,U+FEFF,U+FFFD; }
 @font-face { font-family: "Carlito"; font-style: normal; font-display: block; font-weight: 700;
@@ -32,6 +43,8 @@
 .rb-sayfa .rb-grup { text-align: center; font-weight: 700; }
 .rb-sayfa .rb-orta { text-align: center; }
 .rb-sec { margin-right: 10px; white-space: nowrap; }
+.rb-isaret { display: inline-block; width: 7px; height: 7px; border: 1px solid #000; border-radius: 50%; vertical-align: 0; box-sizing: border-box; }
+.rb-secili { background: #000; }
 .rb-kutu-metin { margin: 0 0 10px; padding: 3px; border: 1px solid #000; min-height: 22px; white-space: pre-wrap; }
 .rb-notlar { margin: -6px 0 10px; padding-left: 18px; font-size: 11px; }
 .rb-kusurlar { margin: 0; padding: 3px 3px 3px 6px; border: 1px solid #000; list-style: none; }

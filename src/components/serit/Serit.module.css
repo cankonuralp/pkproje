@@ -5,7 +5,13 @@
 }
 .serit > svg { margin-top: 2px; flex: none; }
 .metin { flex: 1 1 auto; min-width: 0; }
-.eylem { flex: none; margin: -3px -4px -3px 0; }
+.eylem { flex: none; display: flex; flex-wrap: wrap; align-items: center; gap: 8px; margin: -3px -4px -3px 0; }
+/* dar bantta eylem (bir ya da birkaç tuş) metnin altına iner: metin sütunu sıfıra inip taşmasın (2026-10-05, 315–317 incelemesi) */
+@media (max-width: 767.98px) {
+  .serit { flex-wrap: wrap; }
+  .metin { flex-basis: calc(100% - 24px); }
+  .eylem { flex: 1 1 100%; margin: 4px 0 0 24px; }
+}
 .bilgi { background: var(--bilgi-zemin); color: var(--bilgi-yazi); }
 .uyari { background: var(--uyari-zemin); color: var(--uyari-yazi); }
 .onay { background: var(--onay-zemin); color: var(--onay-yazi); }

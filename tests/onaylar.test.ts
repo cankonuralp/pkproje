@@ -411,3 +411,78 @@ test("veritabanı: imzalı sürüm değişmez; imzalı sürüm olmadan tamamlanm
   assert.equal((await sql(B, "SELECT 1 FROM uygunsuzluk")).rowCount, 0);
   assert.equal((await sql(B, "SELECT 1 FROM imza_istegi")).rowCount, 0);
 });
+
+/* ── 2026-10-05 · 315–317 ÇAPRAZ İNCELEME DÜZELTMELERİ (göç 0028) ──────────────────────────────────────────────────────────────── */
+test("imza isteği: onay geri alınınca bekleyen istek iptal olur; yeniden onayda İmzala yeni PDF üretir, eski PDF'in imzalısı ve iptal edilen PDF'le sürüm reddedilir", async () => {
+  const [h] = await raporlar([[FA.den, "HT-4"]]);
+  tamam(await a(FA.mek, (db) => onayla(db, FA.mek, h, 1)));
+  tamam(await hazirla(FA.den, h));
+  const eski = await imzasizBayt(h);
+  const eskiDosya = (await sql<{ d: string }>(A, "SELECT pdf_dosya::text AS d FROM imza_istegi WHERE rapor_id = $1 AND durum = 'bekliyor'", [h])).rows[0].d;
+  tamam(await a(FA.mek, (db) => onayGeriAl(db, FA.mek, h, 2)));
+  assert.deepEqual((await sql<{ d: string }>(A, "SELECT durum AS d FROM imza_istegi WHERE rapor_id = $1", [h])).rows.map((x) => x.d), ["iptal"], "bekleyen istek iptal");
+  tamam(await a(FA.mek, (db) => onayla(db, FA.mek, h, 3)));
+  assert.equal((await a(FA.den, (db) => sahaRaporu(db, FA.den, h)))!.imza?.pdf, null, "yeniden onaylanan raporda hazır PDF yok");
+  const once = uretilen;
+  tamam(await hazirla(FA.den, h));
+  assert.equal(uretilen - once, 1, "yeni PDF üretildi");
+  assert.deepEqual(await yukle(FA.den, h, await surum(h), imzala(eski)), { durum: "gecersiz", hatalar: { dosya: IMZA_GECERSIZ } }, "eski PDF'in imzalısı");
+  /* veritabanı: iptal edilen isteğin PDF'iyle imzalı sürüm yazılmaz */
+  const imzali = (await sql<{ id: string; sha: string }>(A, "SELECT id::text, sha256 AS sha FROM dosya WHERE modul = 'rapor_imzali' LIMIT 1")).rows[0];
+  await assert.rejects(sql(A, `INSERT INTO rapor_surumu (rapor_id, no, imzasiz_dosya, imzali_dosya, imzali_sha256, imza_yontem, kunye, personel, icerik)
+    VALUES ($1, 'x', $2, $3, $4, 'dosya', '{}', '{}', '{}')`, [h, eskiDosya, imzali.id, imzali.sha], FA.den.id), /bu raporun değil|bekleyen imza isteğinin/);
+  tamam(await yukle(FA.den, h, await surum(h), imzala(await imzasizBayt(h))));
+});
+
+test("imzalı sürüm: yazan ve cihazlar PDF'in hazırlandığı andan (isteğin kopyası, değişmez) — arada değişen kayıt imzalı sürüme geçmez", async () => {
+  const [h] = await raporlar([[FA.den, "HT-3"]]);
+  tamam(await a(FA.mek, (db) => onayla(db, FA.mek, h, 1)));
+  tamam(await hazirla(FA.den, h));
+  const k = (await sql<{ id: string; kopya: { yazan: { ad: string } } }>(A, "SELECT id::text, kopya FROM imza_istegi WHERE rapor_id = $1 AND durum = 'bekliyor'", [h])).rows[0];
+  assert.equal(k.kopya.yazan.ad, "Deneme Bir");
+  await assert.rejects(sql(A, "UPDATE imza_istegi SET kopya = '{}' WHERE id = $1", [k.id], FA.den.id), /değişmez/);
+  await sql(A, "UPDATE personel SET ad = 'Deneme Yeni Ad', surum = surum + 1 WHERE id = $1", [FA.denP], FA.yon.id);
+  try {
+    tamam(await yukle(FA.den, h, await surum(h), imzala(await imzasizBayt(h))));
+    const p = (await sql<{ ad: string }>(A, "SELECT personel->>'ad' AS ad FROM rapor_surumu WHERE rapor_id = $1", [h])).rows[0];
+    assert.equal(p.ad, "Deneme Bir", "imzalanan PDF'teki ad");
+  } finally {
+    await sql(A, "UPDATE personel SET ad = 'Deneme Bir', surum = surum + 1 WHERE id = $1", [FA.denP], FA.yon.id);
+  }
+});
+
+/** tarihli rapor: taslakken rapor tarihi (ve kusurluysa "Uygun değil" madde + sonuç) yazılır, gönderilir, türün yöneticisi onaylar, imzalanır;
+    imzalı sürümün kimliği döner */
+async function tarihliImzali(kod: string, tarih: string, kusurlu: boolean, onaylayan: Kisi): Promise<string> {
+  const bas = bugunTr();
+  const p = tamam(await a(FA.plan, (db) => planAc(db, depo, FA.plan, A, { tesis: FA.tesis, baslangic: bas, bitis: bas,
+    ekip: [FA.denP, FA.mekP].map((x, i) => ({ personel: x, isgNo: `ISG-T${planSira++}-${i}`, kaydet: false })) }))).id;
+  tamam(await a(FA.den, async (db) => planKabul(db, FA.den, p, (await planIci(db, FA.den, p))!.surum, true)));
+  const h = tamam(await a(FA.den, (db) => raporOlustur(db, FA.den, p, FA.ekp[kod]))).id;
+  await sql(A, kusurlu
+    ? `UPDATE rapor SET rapor_tarihi = $2, cevaplar = jsonb_set(cevaplar, '{madde,k1}', '{"c": "Uygun değil", "not": "Yalıtım hasarlı"}'::jsonb), sonuc = 'uygun_degil',
+       surum = surum + 1 WHERE id = $1`
+    : "UPDATE rapor SET rapor_tarihi = $2, sonuc = 'uygun', surum = surum + 1 WHERE id = $1", [h, tarih], FA.den.id);
+  await sql(A, "UPDATE rapor SET durum = 'onayda', surum = surum + 1 WHERE id = $1", [h], FA.den.id);
+  tamam(await a(onaylayan, async (db) => onayla(db, onaylayan, h, await surum(h))));
+  tamam(await hazirla(FA.den, h));
+  tamam(await yukle(FA.den, h, await surum(h), imzala(await imzasizBayt(h))));
+  return (await sql<{ id: string }>(A, "SELECT id::text FROM rapor_surumu WHERE rapor_id = $1", [h])).rows[0].id;
+}
+
+test("uygunsuzluk: muayene tarihine göre kapanır — sonradan imzalanan eski muayene yenisinin kusurunu kapatmaz, kendi kusuru giderilmiş doğar; daha yeni muayene kapatır; elle kapatılmaz", async () => {
+  const uyg = async (s: string) => (await sql<{ kapanis: string | null; kapatan: string | null }>(A,
+    "SELECT kapanis, kapatan_surum::text AS kapatan FROM uygunsuzluk WHERE surum_id = $1", [s])).rows;
+  const yeni = await tarihliImzali("EP-1", "2026-03-01", true, FA.elk);
+  assert.ok((await uyg(yeni)).length >= 1 && (await uyg(yeni)).every((x) => x.kapanis === null));
+  /* elle kapatma: uygulama rolüyle, kapatan sürümle bile */
+  await assert.rejects(sql(A, "UPDATE uygunsuzluk SET kapanis = 'giderildi', kapatan_surum = surum_id WHERE surum_id = $1", [yeni], FA.elk.id), /yalnız sonraki imzalı sürümle/);
+  const eskiUygun = await tarihliImzali("EP-1", "2026-01-01", false, FA.elk);
+  assert.ok((await uyg(yeni)).every((x) => x.kapanis === null), "eski tarihli Uygun muayene yeni muayenenin kusurunu kapatmaz");
+  assert.equal((await uyg(eskiUygun)).length, 0, "Uygun sürüm uygunsuzluk açmaz");
+  const eskiKusurlu = await tarihliImzali("EP-1", "2026-02-01", true, FA.elk);
+  const ek = await uyg(eskiKusurlu);
+  assert.ok(ek.length >= 1 && ek.every((x) => x.kapanis === "giderildi" && x.kapatan === yeni), `daha yeni muayene varken kusur giderilmiş doğar: ${JSON.stringify(ek)}`);
+  const sonraki = await tarihliImzali("EP-1", "2026-04-01", false, FA.elk);
+  assert.ok((await uyg(yeni)).every((x) => x.kapanis === "giderildi" && x.kapatan === sonraki), "daha yeni muayene kapatır");
+});

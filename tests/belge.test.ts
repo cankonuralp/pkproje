@@ -121,3 +121,25 @@ test("HTML yazıcı: üç şablonda ve kaçış isteyen değerlerle React'in ç�
   assert.throws(() => htmlYaz(createElement("div", { dangerouslySetInnerHTML: { __html: "<b>" } })), /izin verilmeyen/);
   assert.equal(htmlYaz(createElement("td", { colSpan: 3, className: "a" }, "<b>")), '<td colSpan="3" class="a">&lt;b&gt;</td>');
 });
+
+/* 2026-10-05 (315–317 çapraz incelemesi): kesin PDF yalnız gömülü Carlito alt kümeleriyle basılır (sunucusuz Chromium'da sistem yazı tipi
+   yok) — belgede alt kümelerin unicode-range'i dışında kalan bir karakter geçerse PDF'te kutu çıkar (eski ● / ○ seçenek işaretleri). Aralıklar
+   belge.css'in kendisinden okunur. */
+test("yazı tipi kapsamı: üç şablonda belgenin her karakteri gömülü Carlito alt kümelerinin aralığında; seçenek işareti CSS ile", async () => {
+  const { readFileSync } = await import("node:fs");
+  const css = readFileSync(new URL("../src/belge/belge.css", import.meta.url), "utf8");
+  const araliklar = [...css.matchAll(/unicode-range:\s*([^;]+);/g)].flatMap((m) => m[1].split(",").map((x) => {
+    const [a, b] = x.trim().replace(/^U\+/i, "").split("-");
+    return [parseInt(a, 16), parseInt(b ?? a, 16)] as const;
+  }));
+  assert.ok(araliklar.length > 4, "belge.css'te unicode-range yok");
+  const kapsar = (k: number) => araliklar.some(([a, b]) => k >= a && k <= b);
+  for (const k of ["ZPKR01", "ZPKR02", "KOMPRESOR"] as const) {
+    const disari = [...new Set([...metin(ciz({ tanim: SABLONLAR[k].tanim, durum: "imzali", imza: { zaman: "2026-10-05T10:00:00.000Z", yontem: "e-imzalı PDF" } }))]
+      .filter((c) => !kapsar(c.codePointAt(0)!)))];
+    assert.deepEqual(disari, [], `${k}: gömülü yazı tipinde olmayan karakter`);
+  }
+  const sec = (["ZPKR01", "ZPKR02"] as const).map((k) => ciz({ tanim: SABLONLAR[k].tanim })).join("");
+  assert.match(sec, /<span class="rb-isaret( rb-secili)?"><\/span> /, "seçenek işareti CSS ile çizilir");
+  assert.doesNotMatch(sec, /[●○]/);
+});

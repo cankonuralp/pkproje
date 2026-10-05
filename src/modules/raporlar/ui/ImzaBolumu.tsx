@@ -15,7 +15,7 @@ import stil from "./raporlar.module.css";
 const TR = new Intl.DateTimeFormat("tr-TR", { timeZone: "Europe/Istanbul", day: "2-digit", month: "2-digit", year: "numeric", hour: "2-digit", minute: "2-digit" });
 
 export function ImzaBolumu({ v, mesgul, baslat, yenile, hata }: {
-  v: SahaRaporu; mesgul: boolean; baslat: TransitionStartFunction; yenile: () => void; hata: (m: string) => void;
+  v: SahaRaporu; mesgul: boolean; baslat: TransitionStartFunction; yenile: () => void; hata: (m: string | null) => void;
 }) {
   const bildir = useBildir();
   const girdi = useRef<HTMLInputElement>(null);
@@ -27,16 +27,21 @@ export function ImzaBolumu({ v, mesgul, baslat, yenile, hata }: {
     );
   }
   if (!v.imza) return null;
+  /* bağlantı ya da sunucu hatası (ör. gövde sınırı) bütün ekranı düşürmez: şeritte */
+  const AG = "Bağlantı ya da sunucu hatası; yeniden deneyin.";
   const hazirla = () => baslat(async () => {
-    const r = await imzaHazirlaEylemi(v.id);
-    if (r.tamam) { bildir(r.bildirim ?? "İmzasız PDF hazır."); yenile(); } else hata(r.genel ?? "İmzasız PDF hazırlanamadı.");
+    try {
+      const r = await imzaHazirlaEylemi(v.id);
+      if (r.tamam) { hata(null); bildir(r.bildirim ?? "İmzasız PDF hazır."); yenile(); } else hata(r.genel ?? "İmzasız PDF hazırlanamadı.");
+    } catch { hata(AG); }
   });
   const yukle = (dosya: File) => baslat(async () => {
     const f = new FormData();
     f.set("id", v.id); f.set("surum", String(v.surum)); f.set("dosya", dosya);
-    const r = await imzaliYukleEylemi(f);
-    if (girdi.current) girdi.current.value = "";
-    if (r.tamam) { bildir(r.bildirim ?? "Rapor imzalandı."); yenile(); window.scrollTo({ top: 0 }); } else hata(r.hatalar?.dosya ?? r.genel ?? "İmzalı PDF yüklenemedi.");
+    try {
+      const r = await imzaliYukleEylemi(f);
+      if (r.tamam) { hata(null); bildir(r.bildirim ?? "Rapor imzalandı."); yenile(); window.scrollTo({ top: 0 }); } else hata(r.hatalar?.dosya ?? r.genel ?? "İmzalı PDF yüklenemedi.");
+    } catch { hata(AG); } finally { if (girdi.current) girdi.current.value = ""; }
   });
   return (
     <Serit tur="uyari" ikon="file-signature" eylem={v.imza.pdf ? <>

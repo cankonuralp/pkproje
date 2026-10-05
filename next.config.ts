@@ -15,12 +15,13 @@ const ortak: NextConfig = {
   /* sunucu eylemiyle dosya yükleme (rapor formatı PDF'i en çok 25 MB — src/server/dosya/tur.ts SINIR); varsayılan 1 MB */
   /* webpackMemoryOptimizations: yalnız uçtan uca geliştirme sunucusunda (scripts/e2e-sunucu.ts) — uzun koşuda bellek eşiğine dayanıp yeniden
      başlamasın (Next belgesi: düşük riskli, derlemeyi biraz yavaşlatır) */
-  experimental: { serverActions: { bodySizeLimit: "26mb" }, webpackMemoryOptimizations: process.env.PROBATA_WEBPACK_BELLEK === "1" },
+  /* proxyClientMaxBodySize: ara katman (src/proxy.ts) gövdeyi varsayılan 10 MB'ta keser — imzalı PDF yüklemesi sunucu eylemine tam ulaşsın */
+  experimental: { serverActions: { bodySizeLimit: "26mb" }, proxyClientMaxBodySize: "26mb", webpackMemoryOptimizations: process.env.PROBATA_WEBPACK_BELLEK === "1" },
   env: { NEXT_PUBLIC_IKON_ADRESI: `/${IKON_DOSYASI}?v=${ikonOzeti}` },
   /* PDF motoru (src/belge/pdf.ts, 316): Chromium paketleri derlemeye katılmaz (düğüm modülü olarak yüklenir); belge CSS'i, yazı tipi ve sunucusuz
-     Chromium ikilisi yalnız PDF basan uçların izine eklenir */
+     Chromium ikilisi yalnız PDF basan uçların izine eklenir — rapor sayfası da (İmzala sunucu eylemi orada koşar; 315–317 incelemesi) */
   serverExternalPackages: ["playwright-core", "@sparticuz/chromium"],
-  outputFileTracingIncludes: Object.fromEntries([String.raw`/raporlar/\[id\]/pdf`, "/api/olcum/pdf"].map((u) =>
+  outputFileTracingIncludes: Object.fromEntries([String.raw`/raporlar/\[id\]`, String.raw`/raporlar/\[id\]/pdf`, "/api/olcum/pdf"].map((u) =>
     [u, ["./src/belge/belge.css", "./src/belge/carlito-5.3.0/*", "./node_modules/@sparticuz/chromium/bin/**"]])),
 };
 

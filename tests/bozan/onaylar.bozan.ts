@@ -5,7 +5,9 @@
       (0027 akış işlevini yeniden yazdığı için kural iki göçten birlikte sökülür.)
    3. (317) 0027'deki imza kuralı olmasaydı onaylanmış rapor imzalı sürüm olmadan Tamamlandı'ya geçer, müşteriye imzasız açılırdı.
    4. (318, C5) Sunucuda yönetici düzeyi denetimi olmasaydı Onaylar'da yalnız imzasını bekleyenleri gören denetçi kendi raporunun onay ekranını
-      açardı. */
+      açardı.
+   5. (0028, 315–317 incelemesi) Onaydan çıkan raporun bekleyen imza isteği iptal edilmeseydi eski içerikli PDF yeniden onaydan sonra da
+      "hazır" kalır, imzalanırdı. */
 import assert from "node:assert/strict";
 import { copyFileSync, mkdirSync, mkdtempSync, readdirSync, readFileSync, rmSync, writeFileSync } from "node:fs";
 import { tmpdir } from "node:os";
@@ -19,7 +21,7 @@ import { klasorDepo } from "../../src/server/dosya/depo.ts";
 import { planKabul } from "../../src/modules/planlar/server/plan-ici.ts";
 import { bugunTr, planAc, type Kisi } from "../../src/modules/planlar/server/planlar.ts";
 import { taslakBaslat, yayinla } from "../../src/modules/rapor-format/server/formatlar.ts";
-import { raporOlustur } from "../../src/modules/raporlar/server/raporlar.ts";
+import { imzaHazirla, raporOlustur } from "../../src/modules/raporlar/server/raporlar.ts";
 import { testKumesi } from "../yardimci/kume.ts";
 import { supabaseBenzeri, type SupabaseBenzeri } from "../yardimci/supabase.ts";
 
@@ -29,6 +31,11 @@ const GEREKCE = `    IF NEW.durum = 'taslak' AND length(btrim(coalesce(current_s
 `;
 const IMZA = `    IF NEW.durum = 'imzali' AND NOT EXISTS (SELECT 1 FROM rapor_surumu s WHERE s.firma_id = NEW.firma_id AND s.rapor_id = NEW.id AND s.revizyon = NEW.revizyon) THEN
       RAISE EXCEPTION 'imzalı sürüm olmadan rapor tamamlanmaz' USING ERRCODE = '23514';
+    END IF;
+`;
+const IPTAL = `    IF OLD.durum = 'onaylandi' AND NEW.durum IN ('taslak', 'onayda') THEN
+      UPDATE imza_istegi SET durum = 'iptal', surum = surum + 1, degisti = now()
+        WHERE firma_id = NEW.firma_id AND rapor_id = NEW.id AND revizyon = NEW.revizyon AND durum = 'bekliyor';
     END IF;
 `;
 const ONAYLAR = "src/modules/onaylar/server/onaylar.ts";
@@ -93,6 +100,10 @@ before(async () => {
       k = k.replace(GEREKCE, "");
       if (ad.startsWith("0027_")) { assert.ok(k.includes(IMZA), "bozulacak imza satırı kaynakta yok"); k = k.replace(IMZA, ""); }
       writeFileSync(join(klasor, ad), k);
+    } else if (ad.startsWith("0028_")) {
+      const k = readFileSync(join(GOC_KLASORU, ad), "utf8");
+      assert.ok(k.includes(IPTAL), "bozulacak iptal satırı kaynakta yok");
+      writeFileSync(join(klasor, ad), k.replace(IPTAL, ""));
     } else copyFileSync(join(GOC_KLASORU, ad), join(klasor, ad));
   }
   supa = await supabaseBenzeri(kume, "onay_bozuk", klasor);
@@ -145,4 +156,16 @@ test("sunucuda yönetici düzeyi denetimi kalkınca denetçi kendi raporunun ona
     const v = await k.is(k.den, (db) => m.onayEkrani(db, k.den, k.rapor));
     assert.ok(v, "denetçi onay ekranını açtı");
   } finally { await h.end(); }
+});
+
+test("0028'deki iptal kuralı kalkınca onaydan çıkan raporun imza isteği bekler kalır (eski PDF imzalanabilir)", async () => {
+  const A3 = (await supa.sahip.query<{ id: string }>("INSERT INTO firma (kisa_ad, ad, rapor_kodu) VALUES ('deneme-a3', 'Deneme A3', 'DF') RETURNING id")).rows[0].id;
+  const k = await kur(havuz, A3);
+  await k.is(k.yon, (db) => db.sorgu("UPDATE rapor SET durum = 'onaylandi' WHERE id = $1", [k.rapor]));
+  const uret = async () => new TextEncoder().encode("%PDF-1.4\n% deneme\n%%EOF\n");
+  const h = await k.is(k.den, (db) => imzaHazirla(db, depo, k.den, A3, k.rapor, uret));
+  assert.equal(h.durum, "tamam", JSON.stringify(h));
+  await k.is(k.yon, (db) => db.sorgu("UPDATE rapor SET durum = 'onayda' WHERE id = $1", [k.rapor]));
+  const d = (await supa.sahip.query<{ durum: string }>("SELECT durum FROM imza_istegi WHERE rapor_id = $1", [k.rapor])).rows.map((x) => x.durum);
+  assert.deepEqual(d, ["bekliyor"], "onaydan çıkan raporun imza isteği iptal edilmedi");
 });

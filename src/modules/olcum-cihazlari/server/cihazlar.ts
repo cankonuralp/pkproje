@@ -80,12 +80,15 @@ export async function raporCihazlari(db: Sorgulayici): Promise<{ id: string; kod
 }
 
 /** Raporlar (belge) için: cihazların son geçerli kalibrasyonu — tarih, bitiş, sertifika no (yetki ÇAĞIRANDA) */
-export async function cihazKalibrasyonlari(db: Sorgulayici, idler: readonly string[]): Promise<Map<string, { tarih: string; bitis: string; sertifika: string | null }>> {
+export async function cihazKalibrasyonlari(db: Sorgulayici, idler: readonly string[], gun?: string | null): Promise<Map<string, { tarih: string; bitis: string; sertifika: string | null }>> {
   const l = idler.filter((x) => /^[0-9a-f-]{36}$/.test(x));
   if (!l.length) return new Map();
+  /* gün verilirse o gün geçerli olan kalibrasyon önce (muayene günündeki — rapor belgesi); yoksa en geç bitişli */
+  const g = gun && /^\d{4}-\d{2}-\d{2}$/.test(gun) ? gun : null;
   return new Map((await db.sorgu<{ cihaz_id: string; tarih: string; bitis: string; sertifika: string | null }>(
     `SELECT DISTINCT ON (cihaz_id) cihaz_id::text, tarih::text, bitis::text, sertifika FROM kalibrasyon
-     WHERE cihaz_id = ANY ($1::uuid[]) AND sonuc = 'uygun' AND kaldirildi IS NULL ORDER BY cihaz_id, bitis DESC`, [l])).rows
+     WHERE cihaz_id = ANY ($1::uuid[]) AND sonuc = 'uygun' AND kaldirildi IS NULL
+     ORDER BY cihaz_id, ($2::date IS NOT NULL AND tarih <= $2::date AND bitis >= $2::date) DESC, bitis DESC`, [l, g])).rows
     .map((x) => [x.cihaz_id, { tarih: x.tarih, bitis: x.bitis, sertifika: x.sertifika }]));
 }
 
