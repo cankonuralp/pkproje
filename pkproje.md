@@ -2341,6 +2341,9 @@ revizyon, alan kopyalama, hafif kusur devri, meslek eşleşme denetimi).
 - Emsal ürünler: https://opwire.app/iso-17020-periyodik-kontrol-yazilimi/ · https://17020muayene.vidco.com.tr/ · https://akuple.com/asansor-kontrol-yazilimi/ · https://ensyazilim.com/
 
 ## 11 · Değişiklik günlüğü
+- 2026-10-06 (göç düzeni): 0037–0040 Supabase'e uygulandı (goc kaydıyla; main = f179072). Uygulanmış göç değişmez: 328 incelemesinin ve 330'un
+  0040'a "yerinde" yazılan gider kuralları (ödeme günü CHECK'i, ödemede onay damgası, masraf formu kendi adına, gönderenin geri çekmesi, DELETE
+  hakkı) **0043_gider_kurallari.sql**'e taşındı (gider_koru bütünüyle yenilenir); 0040 uygulanan hâline döndü. Bozanlar 0043'ü bozar.
 - 2026-10-06 (332): **K4 Ana sayfa** (maket anasayfa.html M1 2. tur — reisim 41: "role göre ama herkes için bir anasayfa olmalı"). Girişten sonra
   herkes kök adrese gelir; içerik kişinin ROLLERİNE göre, birden çok rolü olan bölümleri sırayla (planlama, denetçi, branş yöneticisi, firma
   yöneticisi, muhasebe) görür. **Denetçi:** kabul bekleyen plan (en yakını), denetimdeki plan, taslak rapor (geri gönderilen sayısı), son imzanı

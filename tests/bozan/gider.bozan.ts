@@ -1,5 +1,5 @@
-/* OLUMSUZ KANIT — tests/muhasebe.test.ts gider testleri neyi koruyor (328; göç 0040). Kaynak diskte DEĞİŞTİRİLMEZ (anayasa 13.11): göçler geçici
-   klasöre kopyalanır, 0040 bellekte bozulur, kopyadan koşulur. Giderler uygulama rolüyle (tetikten geçerek) yazılır.
+/* OLUMSUZ KANIT — tests/muhasebe.test.ts gider testleri neyi koruyor (328; göç 0040, kuralların son hâli 0043). Kaynak diskte DEĞİŞTİRİLMEZ
+   (anayasa 13.11): göçler geçici klasöre kopyalanır, 0043 (gider_koru'nun son tanımı) bellekte bozulur, kopyadan koşulur. Giderler uygulama rolüyle (tetikten geçerek) yazılır.
    1. Red değişmezliği olmasaydı reddedilen giderin tutarı sonradan değiştirilirdi.
    2. Masraf formu onay beklemeseydi denetçinin formu "ödendi" doğardı (muhasebe onayı atlanır).
    3. İleri tarih denetimi olmasaydı yarının tarihiyle gider yazılırdı.
@@ -27,7 +27,7 @@ async function bozuk(ad: string, eski: string, yeni: string) {
   mkdirSync(klasor);
   for (const g of readdirSync(GOC_KLASORU)) {
     if (!g.endsWith(".sql")) continue;
-    if (g.startsWith("0040_")) {
+    if (g.startsWith("0043_")) {
       const k = readFileSync(join(GOC_KLASORU, g), "utf8");
       assert.ok(k.includes(eski), "bozulacak satır kaynakta yok");
       writeFileSync(join(klasor, g), k.replace(eski, () => yeni));   // işlevle: yeni metindeki "$$" (plpgsql) "$" olmasın
@@ -47,7 +47,7 @@ after(async () => {
   rmSync(gecici, { recursive: true, force: true });
 });
 
-test("0040'ta red değişmezliği kalkınca reddedilen giderin tutarı değiştirilir (kilidin koruduğu açık)", async () => {
+test("0043'te red değişmezliği kalkınca reddedilen giderin tutarı değiştirilir (kilidin koruduğu açık)", async () => {
   const { havuz, A } = await bozuk("gider_bozuk1", "  IF OLD.durum = 'red' THEN RAISE EXCEPTION 'reddedilen gider değişmez' USING ERRCODE = '23514'; END IF;\n", "");
   const r = await kiraciIcinde(havuz, A, async (db) => {
     const id = (await db.sorgu<{ id: string }>(`INSERT INTO gider (no, tarih, tur, tutar, oran, kaynak, durum) VALUES ('G-1026-001', ${BUGUN}, 'yol', 100, 20, 'form', 'bekliyor')
@@ -58,21 +58,21 @@ test("0040'ta red değişmezliği kalkınca reddedilen giderin tutarı değişti
   assert.equal(r.rowCount, 1, "reddedilen gider değişti");
 });
 
-test("0040'ta masraf formunun onay beklemesi kalkınca form 'ödendi' doğar", async () => {
+test("0043'te masraf formunun onay beklemesi kalkınca form 'ödendi' doğar", async () => {
   const { havuz, A } = await bozuk("gider_bozuk2", "      IF NEW.durum <> 'bekliyor' THEN RAISE EXCEPTION 'masraf formu onay bekler'", "      IF false THEN RAISE EXCEPTION 'masraf formu onay bekler'");
   const r = await kiraciIcinde(havuz, A, (db) => db.sorgu(
     `INSERT INTO gider (no, tarih, tur, tutar, oran, kaynak, durum, odeme) VALUES ('G-1026-001', ${BUGUN}, 'yol', 100, 20, 'form', 'odendi', ${BUGUN})`));
   assert.equal(r.rowCount, 1, "onaysız ödenmiş masraf formu yazıldı");
 });
 
-test("0040'ta ileri tarih denetimi kalkınca yarının tarihiyle gider yazılır", async () => {
+test("0043'te ileri tarih denetimi kalkınca yarının tarihiyle gider yazılır", async () => {
   const { havuz, A } = await bozuk("gider_bozuk3", "  IF NEW.tarih > bugun THEN RAISE EXCEPTION 'ileri tarihli gider kaydedilmez'", "  IF false THEN RAISE EXCEPTION 'ileri tarihli gider kaydedilmez'");
   const r = await kiraciIcinde(havuz, A, (db) => db.sorgu(
     `INSERT INTO gider (no, tarih, tur, tutar, oran, kaynak, durum, odeme) VALUES ('G-1026-001', ${BUGUN} + 1, 'yol', 100, 20, 'muhasebe', 'onaylandi', NULL)`));
   assert.equal(r.rowCount, 1, "ileri tarihli gider yazıldı");
 });
 
-test("0040'ta kaydeden damgası kalkınca istemcinin yazdığı kimlik kaydeden olur", async () => {
+test("0043'te kaydeden damgası kalkınca istemcinin yazdığı kimlik kaydeden olur", async () => {
   const { havuz, A } = await bozuk("gider_bozuk4", "    NEW.kaydeden := ben; NEW.onaylayan := NULL;", "    NEW.onaylayan := NULL;");
   const sahte = "00000000-0000-4000-8000-000000000001";
   const r = await kiraciIcinde(havuz, A, (db) => db.sorgu<{ k: string }>(
@@ -80,7 +80,7 @@ test("0040'ta kaydeden damgası kalkınca istemcinin yazdığı kimlik kaydeden 
   assert.equal(r.rows[0].k, sahte, "istemcinin kimliği yazıldı");
 });
 
-test("0040'ta ödemede onay damgası korunmayınca ödendi işaretlenirken onaylayan değiştirilir", async () => {
+test("0043'te ödemede onay damgası korunmayınca ödendi işaretlenirken onaylayan değiştirilir", async () => {
   const { havuz, A } = await bozuk("gider_bozuk5", "        RAISE EXCEPTION 'onay damgası ödemede değişmez' USING ERRCODE = '23514';", "        NULL;");
   const sahte = "00000000-0000-4000-8000-000000000001";
   const r = await kiraciIcinde(havuz, A, async (db) => {

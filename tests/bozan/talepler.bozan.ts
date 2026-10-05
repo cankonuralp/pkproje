@@ -1,4 +1,4 @@
-/* OLUMSUZ KANIT — tests/talepler.test.ts neyi koruyor (330; göç 0042, 0040). Kaynak diskte DEĞİŞTİRİLMEZ (anayasa 13.11): göçler geçici klasöre
+/* OLUMSUZ KANIT — tests/talepler.test.ts neyi koruyor (330; göç 0042, 0043). Kaynak diskte DEĞİŞTİRİLMEZ (anayasa 13.11): göçler geçici klasöre
    kopyalanır, bozulacak göç bellekte bozulur, kopyadan koşulur.
    1. "Kendi adına" denetimi olmasaydı bir hesap başkası adına izin talebi yazardı.
    2. Karar verilmiş talebin değişmezliği olmasaydı reddedilen izin sonradan onaylanırdı.
@@ -67,8 +67,8 @@ test("0042'de karar değişmezliği kalkınca reddedilen izin sonradan onaylanı
   assert.equal(r.rowCount, 1, "reddedilen izin onaylandı");
 });
 
-test("0040'ta masraf formunun 'kendi adına' denetimi kalkınca başkası adına masraf yazılır", async () => {
-  const { havuz, A, baska, hesap } = await bozuk("talep_bozuk3", "0040_",
+test("0043'te masraf formunun 'kendi adına' denetimi kalkınca başkası adına masraf yazılır", async () => {
+  const { havuz, A, baska, hesap } = await bozuk("talep_bozuk3", "0043_",
     "      IF NEW.personel_id IS DISTINCT FROM (SELECT h.personel_id FROM hesap h WHERE h.firma_id = NEW.firma_id AND h.id = ben) THEN\n        RAISE EXCEPTION 'masraf formu yalnız kendi adına gönderilir' USING ERRCODE = '23514';\n      END IF;\n", "");
   const r = await kiraciIcinde(havuz, A, (db) => db.sorgu(
     `INSERT INTO gider (no, tarih, tur, tutar, oran, kaynak, durum, personel_id) VALUES ('G-1026-001', ${BUGUN}, 'yol', 100, 20, 'form', 'bekliyor', $1)`, [baska]), { hesapId: hesap });
