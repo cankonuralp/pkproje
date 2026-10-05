@@ -19,6 +19,7 @@ test("muhasebe: imzalı rapor faturalanır, tahsil edilir; denetçi göremez", a
   await expect(page.getByRole("heading", { level: 1, name: planNo })).toBeVisible();
   await expect(page.getByText("1 rapor faturaya hazır")).toBeVisible();
   await expect(page.getByRole("heading", { name: "Kârlılık" })).toBeVisible();
+  expect(await page.evaluate(() => document.documentElement.scrollWidth <= window.innerWidth), "sayfa yana taşmaz (nesne başlığının tuşları sarar)").toBe(true);
 
   await hazir(page);
   await page.getByRole("button", { name: "Fatura kaydet" }).click();

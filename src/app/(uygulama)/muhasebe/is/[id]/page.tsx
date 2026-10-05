@@ -19,7 +19,7 @@ import { IsGiderleri } from "../../../../../modules/muhasebe/ui/Giderler";
 import { FaturaKaydet, IsFaturalari, IsRaporlari, TahsilatEkle } from "../../../../../modules/muhasebe/ui/IsParcalari";
 import { IsKarliligi } from "../../../../../modules/muhasebe/ui/Karlilik";
 import { yuzde } from "../../../../../modules/muhasebe/ui/ortak";
-import { modulOturumu, oturumIslemi } from "../../../../../server/kimlik/istek";
+import { modulGorur, modulOturumu, oturumIslemi } from "../../../../../server/kimlik/istek";
 
 const MODUL = modulBul("muhasebe")!;
 export const metadata: Metadata = { title: "İş" };
@@ -35,16 +35,18 @@ export default async function Sayfa({ params }: { params: Promise<{ id: string }
   if (!v) notFound();
   const { x } = v;
   const acik = x.faturalar.find((f) => f.id === x.acikFatura);
+  /* 324–327 incelemesi: hedef modülü göremeyene bağlantı çizilmez (önerilen düzende muhasebe Planlar'ı ve Raporlar'ı görmez) */
+  const gor = { plan: modulGorur(o, 13), rapor: modulGorur(o, 14), musteri: modulGorur(o, 3) };
   const gec = x.faturalar.filter((f) => f.durum === "gecikti");
   return (
     <>
       <Kirinti ogeler={[["Muhasebe", "/muhasebe"], [x.no]]} />
       <NesneBasi baslik={x.no} rozet={<Rozet tur={IS_DURUM[x.durum][1]}>{IS_DURUM[x.durum][0]}</Rozet>} altIkon="building-2"
-        alt={<>{x.musteri} · {x.tesis}</>}
+        alt={<>{gor.musteri && x.musteriId ? <Link href={`/musteriler/${x.musteriId}`}>{x.musteri}</Link> : x.musteri} · {x.tesis}</>}
         tuslar={<>
-          <TusBaglanti ikon="calendar-check" href={`/planlar/${x.id}`}>Plan</TusBaglanti>
+          {gor.plan && <TusBaglanti ikon="calendar-check" href={`/planlar/${x.id}`}>Plan</TusBaglanti>}
           {x.izin.tahsilat && acik && <TahsilatEkle fatura={{ id: acik.id, no: acik.no, musteri: x.musteri, toplam: acik.toplam, kalan: acik.kalan }} bugun={bugunTr()} birincil={false} />}
-          {x.izin.fatura && <FaturaKaydet planId={x.id} isNo={x.no} tek={x.onizleme.tek} toplu={x.onizleme.toplu} bugun={bugunTr()} />}
+          {x.izin.fatura && <FaturaKaydet planId={x.id} isNo={x.no} musteri={x.musteri} tek={x.onizleme.tek} toplu={x.onizleme.toplu} bugun={bugunTr()} />}
         </>} />
       <SeritKap>
         {gec.length > 0 && <Serit tur="uyari" ikon="clock">{gec.map((f) => `${f.no} vadesi geçti; kalan ${para(f.kalan)}.`).join(" ")}</Serit>}
@@ -70,7 +72,7 @@ export default async function Sayfa({ params }: { params: Promise<{ id: string }
         </BilgiListesi>
       </Bolum>
       <Bolum id="b-is-rapor" baslik="Raporlar">
-        <IsRaporlari raporlar={x.raporlar} />
+        <IsRaporlari raporlar={x.raporlar} raporGor={gor.rapor} />
       </Bolum>
       <Bolum id="b-is-fatura" baslik="Faturalar" sayac={<><b>{x.faturalar.length}</b> fatura</>}>
         {x.faturalar.length ? <IsFaturalari faturalar={x.faturalar} /> : <p>Henüz fatura yok.</p>}

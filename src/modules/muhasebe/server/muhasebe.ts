@@ -17,7 +17,7 @@ import { personelMaliyetleri } from "../../personel/server/muhasebe-baglanti.ts"
 import { personelOzetleri } from "../../personel/server/personel.ts";
 import { muhasebePlanlari, type MuhasebePlani } from "../../planlar/server/muhasebe-baglanti.ts";
 import { muhasebeRaporlari, type MuhasebeRaporu } from "../../raporlar/server/muhasebe-baglanti.ts";
-import { tesisSozlesmesi } from "../../sozlesmeler/server/sozlesmeler.ts";
+import { sozlesmeNumaralari, tesisSozlesmesi } from "../../sozlesmeler/server/sozlesmeler.ts";
 import { raporBaglari, type FiyatKaynagi } from "../../teklifler/server/rapor-bagi.ts";
 import { donemGelirGider, isKarlilik, sonAylar, type DonemGelirGider, type IsKarlilik, type KarVerisi } from "../karlilik.ts";
 import { FaturaGirdisi, gunEkle, kdvTutari, para, TahsilatGirdisi, YONTEM, type FaturaDurumu, type IsDurumu, type Yontem } from "../sema.ts";
@@ -235,7 +235,8 @@ export async function isKarti(db: Sorgulayici, kim: Kisi, planId: string): Promi
   return {
     ...satirOf(o), ekip, raporlar, faturalar: o.faturalar, teklif: raporlar.find((r) => r.teklif)?.teklif ?? null, sozlesme: soz, gecmis,
     onizleme: { tek, toplu: toplu && toplu.isler.length > 1 ? toplu : null },
-    acikFatura: o.faturalar.find((f) => f.kalan > 0)?.id ?? null, karlilik: o.karlilik,
+    /* en eski açık fatura (maket isCiz acik[0]; o.faturalar yeniden eskiye — 324–327 incelemesi) */
+    acikFatura: [...o.faturalar].reverse().find((f) => f.kalan > 0)?.id ?? null, karlilik: o.karlilik,
     izin: { fatura: yaz && o.hazir > 0, tahsilat: yaz && o.faturalar.some((f) => f.kalan > 0), gider: yaz },
   };
 }
@@ -254,7 +255,7 @@ export async function faturaKarti(db: Sorgulayici, kim: Kisi, id: string): Promi
   const o = faturaOzet(v, f), m = v.musteriler.find((x) => x.id === f.musteri_id);
   const t = v.tahsilatlar.filter((x) => x.fatura_id === id);
   const ad = await hesapAdlari(db, [f.kaydeden, ...t.map((x) => x.kaydeden)]);
-  const soz = f.sozlesme_id ? (await db.sorgu<{ no: string }>("SELECT no FROM is_sozlesmesi WHERE id = $1", [f.sozlesme_id])).rows[0] : undefined;
+  const soz = f.sozlesme_id ? { no: (await sozlesmeNumaralari(db, [f.sozlesme_id])).get(f.sozlesme_id) } : undefined;
   return {
     ...o, vd: m?.vd ?? null, vno: m?.vno ?? null, sozlesme: f.sozlesme_id ? { id: f.sozlesme_id, no: soz?.no ?? "—" } : null,
     kaydeden: f.kaydeden ? ad.get(f.kaydeden) ?? "—" : "—",

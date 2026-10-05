@@ -3,8 +3,13 @@
    bağlanır (tarih, sonra numara). Birim fiyat: o teklifte raporun türünün kalemi varsa ve rapor o kalemin adedi içindeyse (teklife bağlanan aynı
    türden raporlar açılış sırasıyla) kalemin fiyatı — "teklif"; adedi aşan ya da kalemi olmayan — "teklif dışı", fiyat listesinden; teklif yoksa
    "fiyat listesi". Fiyat listesinde olmayan türün fiyatı null. Teklifler modülünün içinde (teklif tablolarına yalnız bu modül dokunur); Raporlar'ın
-   teklif-baglanti.ts'inden okur. Yetki ÇAĞIRANDA. */
+   ve Muhasebe'nin teklif-baglanti.ts'inden okur. Yetki ÇAĞIRANDA.
+   324–327 incelemesi: FATURALANMIŞ raporun bağı, fiyatı ve kaynağı faturadakidir (kayıt anında yazıldı, değişmez) — sonradan kabul edilen
+   yenileme teklifi faturalı raporu kendine çekmez. Kalem adedini önce faturada "teklif" fiyatıyla yazılmış raporlar tüketir; kalan adet
+   faturalanmamış raporlara dağıtılır: önce imzalılar, sonra imza bekleyenler (açılış sırasıyla). İmzasız ya da sonradan silinen rapor, imzalı
+   raporun teklif fiyatını elinden almaz. */
 import type { Sorgulayici } from "../../../server/db/kiraci.ts";
+import { faturaliRaporlar } from "../../muhasebe/server/teklif-baglanti.ts";
 import { teklifRaporlari, type TeklifRaporu } from "../../raporlar/server/teklif-baglanti.ts";
 
 export type FiyatKaynagi = "teklif" | "disi" | "liste";
@@ -40,15 +45,35 @@ export async function raporBaglari(db: Sorgulayici, tesisler: readonly string[])
       .sort((a, b) => (a.tarih === b.tarih ? a.no.localeCompare(b.no) : a.tarih.localeCompare(b.tarih))).at(-1) ?? null;
     bagli.set(r.raporId, aday);
   }
-  /* kalem sırası: aynı teklife bağlı aynı türden raporlar açılış sırasıyla */
+  /* faturalı raporlar: faturadaki bağ (teklif no teklif tablosundan) */
+  const fatura = await faturaliRaporlar(db, raporlar.map((r) => r.raporId));
+  const fNo = new Map(t.map((x) => [x.id, x.no]));
+  const eksik = [...new Set([...fatura.values()].map((f) => f.teklifId).filter((x): x is string => !!x && !fNo.has(x)))];
+  if (eksik.length) for (const x of (await db.sorgu<{ id: string; no: string }>("SELECT id::text, no FROM teklif WHERE id = ANY ($1::uuid[])", [eksik])).rows) fNo.set(x.id, x.no);
+  /* kalem sırası: faturada teklif fiyatıyla yazılanlar adedi tüketir; kalan, faturalanmamışlara — imzalılar önce, açılış sırasıyla */
+  const tuketilen = new Map<string, number>();
+  for (const r of raporlar) {
+    const f = fatura.get(r.raporId);
+    if (f?.kaynak === "teklif" && f.teklifId) { const k = `${f.teklifId}|${r.turId}`; tuketilen.set(k, (tuketilen.get(k) ?? 0) + 1); }
+  }
   const sira = new Map<string, number>();
   const grup = new Map<string, TeklifRaporu[]>();
-  for (const r of raporlar) { const x = bagli.get(r.raporId); if (x) { const k = `${x.id}|${r.turId}`; grup.set(k, [...(grup.get(k) ?? []), r]); } }
-  for (const l of grup.values()) {
-    l.sort((a, b) => (a.olustu === b.olustu ? a.raporId.localeCompare(b.raporId) : a.olustu.localeCompare(b.olustu))).forEach((r, i) => sira.set(r.raporId, i));
+  for (const r of raporlar) {
+    const x = bagli.get(r.raporId);
+    if (x && !fatura.has(r.raporId)) { const k = `${x.id}|${r.turId}`; grup.set(k, [...(grup.get(k) ?? []), r]); }
+  }
+  for (const [k, l] of grup) {
+    const bas = tuketilen.get(k) ?? 0;
+    l.sort((a, b) => (a.imzali !== b.imzali ? (a.imzali ? -1 : 1) : a.olustu === b.olustu ? a.raporId.localeCompare(b.raporId) : a.olustu.localeCompare(b.olustu)))
+      .forEach((r, i) => sira.set(r.raporId, bas + i));
   }
   const out = new Map<string, RaporBagi>();
   for (const r of raporlar) {
+    const f = fatura.get(r.raporId);
+    if (f) {
+      out.set(r.raporId, { ...r, teklif: f.teklifId ? { id: f.teklifId, no: fNo.get(f.teklifId) ?? "—" } : null, fiyat: f.fiyat, kaynak: f.kaynak });
+      continue;
+    }
     const x = bagli.get(r.raporId) ?? null, k = x?.kalemler.find((y) => y.tur === r.turId);
     const icinde = !!k && (sira.get(r.raporId) ?? 0) < k.adet;
     out.set(r.raporId, { ...r, teklif: x ? { id: x.id, no: x.no } : null, fiyat: icinde ? k!.fiyat : liste.get(r.turId) ?? null,

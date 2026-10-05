@@ -315,13 +315,20 @@ async function raporlananlar(db: Sorgulayici, x: Satir, tesisler: string[]): Pro
 const UUID_LISTE = (v: unknown): string[] | null =>
   Array.isArray(v) && v.length <= 200 && v.every((x) => typeof x === "string" && UUID.test(x)) ? [...new Set(v as string[])] : null;
 
-/** tesislerin kayıtlı ETKİN ekipmanı (Excel'e aktar — maket excelKaynak "tesisteki kayıtlı ekipman"); göremeyene null */
+/** tesislerin kayıtlı ETKİN ekipmanı (iç; yetki ÇAĞIRANDA) */
+async function ekipmanListesi(db: Sorgulayici, tesisler: readonly string[]): Promise<TeklifEkipmani[]> {
+  const out: TeklifEkipmani[] = [];
+  for (const t of tesisler) for (const e of await tesisEkipmanlari(db, t)) if (!e.pasif) out.push({ kod: e.kod, tur: e.turId, konum: e.konum ?? "", seri: e.seri ?? "" });
+  return out;
+}
+/** formun "Excel'e aktar"ı (maket excelKaynak "tesisteki kayıtlı ekipman"): yalnız teklif yazabilene (form yalnız ona açık) ve yalnız ETKİN müşterilerin
+    ETKİN tesisleri (formun seçenekleri) — istemcinin verdiği tesis kimliği yetki vermez (324–327 incelemesi: "gör" düzeyi ve her tesis kabul
+    ediliyordu, muhasebe matrisin kapattığı ekipman envanterini okuyabiliyordu). Değilse null */
 export async function teklifEkipmanListesi(db: Sorgulayici, kim: Kisi, tesisler: unknown): Promise<TeklifEkipmani[] | null> {
   const l = UUID_LISTE(tesisler);
-  if (!gorur(kim) || !l) return null;
-  const out: TeklifEkipmani[] = [];
-  for (const t of l) for (const e of await tesisEkipmanlari(db, t)) if (!e.pasif) out.push({ kod: e.kod, tur: e.turId, konum: e.konum ?? "", seri: e.seri ?? "" });
-  return out;
+  if (!yazar(kim) || !l) return null;
+  const etkin = new Set((await musteriOzetleri(db)).filter((m) => !m.pasif).flatMap((m) => m.tesisler.filter((t) => !t.pasif).map((t) => t.id)));
+  return ekipmanListesi(db, l.filter((t) => etkin.has(t)));
 }
 
 /** teklif sayfasının "Excel'e aktar"ı: yüklenen liste, yoksa (kayıtlı müşteride) tesislerin kayıtlı ekipmanı; türler ve birim fiyat (teklifin kalemi,
@@ -329,7 +336,7 @@ export async function teklifEkipmanListesi(db: Sorgulayici, kim: Kisi, tesisler:
 export async function teklifExcelVerisi(db: Sorgulayici, kim: Kisi, t: TeklifKarti): Promise<{ liste: TeklifEkipmani[]; ne: string; turler: ExcelTuru[];
   fiyat: Record<string, number | null> } | null> {
   if (!gorur(kim)) return null;
-  const liste = t.ekipmanlar.length ? t.ekipmanlar : t.musteriKart ? (await teklifEkipmanListesi(db, kim, t.tesisler.map((x) => x.id))) ?? [] : [];
+  const liste = t.ekipmanlar.length ? t.ekipmanlar : t.musteriKart ? await ekipmanListesi(db, t.tesisler.map((x) => x.id)) : [];
   const fiyat: Record<string, number | null> = Object.fromEntries((await db.sorgu<{ tur_id: string; fiyat: string }>("SELECT tur_id::text, fiyat::text FROM fiyat_listesi")).rows
     .map((x) => [x.tur_id, Number(x.fiyat)]));
   for (const k of t.kalemler) fiyat[k.turId] = k.fiyat;

@@ -87,6 +87,10 @@ test("kalemlere ekle: var olan kalemin adedi artar, yeni tür fiyat listesinden;
   const s = kalemlereEkle([{ tur: "", adet: "1", fiyat: "" }], dolu, satirlar, () => null);
   assert.deepEqual([s.ekipmanlar.length, s.eklenen, s.atlanan], [EKIPMAN_SINIR, 1, 3], "sınır");
   assert.deepEqual(kalemlereEkle([{ tur: "", adet: "1", fiyat: "" }], [], [], () => null).kalemler, [{ tur: "", adet: "1", fiyat: "" }], "boş kalmaz");
+  /* 2026-10-06 (324–327 incelemesi): türün kalem adedi 999'u aşmaz (şema ve veritabanı 1–999); aşan satır atlanır, listeye de girmez */
+  const cok = excelSatirlari(Array.from({ length: 1000 }, () => ["", "Hava tankı"]), TURLER);
+  const c = kalemlereEkle([{ tur: HT, adet: "5", fiyat: "1.000,00" }], [], cok, () => null);
+  assert.deepEqual([c.kalemler[0].adet, c.eklenen, c.atlanan, c.ekipmanlar.length], ["999", 994, 6, 994]);
 });
 
 test("Excel'e aktar ve şablon: geri okununca aynı satırlar; şablon doğrudan içe alınabilir", async () => {

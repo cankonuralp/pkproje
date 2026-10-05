@@ -99,7 +99,8 @@ function UyariSeridi({ isler, faturalar }: { isler: readonly IsSatiri[]; fatural
   if (!gec.length && !hazir.length) return null;
   return (
     <SeritKap>
-      {gec.length > 0 && <Serit tur="uyari" ikon="clock"><b>Vadesi geçen alacak:</b> {gec.length} fatura · {para(gec.reduce((n, f) => n + f.kalan, 0))}</Serit>}
+      {gec.length > 0 && <Serit tur="uyari" ikon="clock" eylem={<Link className={stil.no} href="/muhasebe/faturalar">Faturalar</Link>}>
+        <b>Vadesi geçen alacak:</b> {gec.length} fatura · {para(gec.reduce((n, f) => n + f.kalan, 0))}</Serit>}
       {hazir.length > 0 && <Serit tur="bilgi" ikon="file-check"><b>Faturaya hazır:</b> {hazir.map((x, i) => (
         <span key={x.id}>{i > 0 && ", "}<Link href={`/muhasebe/is/${x.id}`}>{x.no}</Link> · {x.musteri} ({x.hazir} imzalı rapor)</span>
       ))}</Serit>}

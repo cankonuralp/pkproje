@@ -38,14 +38,22 @@ export function excelSatirlari(ham: readonly (readonly string[])[], turler: read
   return l;
 }
 
+/** kalem adedinin üst sınırı (sema.ts KalemGirdisi, 0037 teklif_kalem CHECK 1–999) */
+export const ADET_UST = 999;
 /** geçerli satırları listeye ve kalemlere ekler: tür başına adet (var olan kalemin adedi artar; yoksa fiyat listesinden yeni kalem); boş ilk kalem
-    kalkar; liste sınırını aşan satır eklenmez (sayısı döner) */
+    kalkar; liste sınırını ya da türün kalem adedi sınırını (999 — 324–327 incelemesi: aşan adetle teklif kaydedilemiyordu) aşan satır eklenmez
+    (sayısı döner) */
 export function kalemlereEkle<K extends { tur: string; adet: string; fiyat: string }>(kalemler: readonly K[], ekipmanlar: readonly TeklifEkipmani[],
   satirlar: readonly ExcelSatiri[], fiyat: (tur: string) => number | null): { kalemler: { tur: string; adet: string; fiyat: string }[]; ekipmanlar: TeklifEkipmani[];
   eklenen: number; turSayisi: number; atlanan: number } {
-  const ok = satirlar.filter((x) => x.ok), yer = Math.max(0, EKIPMAN_SINIR - ekipmanlar.length), alinan = ok.slice(0, yer);
-  const sayac = new Map<string, number>();
-  for (const x of alinan) sayac.set(x.tur, (sayac.get(x.tur) ?? 0) + 1);
+  const ok = satirlar.filter((x) => x.ok), yer = Math.max(0, EKIPMAN_SINIR - ekipmanlar.length);
+  const mevcut = new Map(kalemler.filter((k) => k.tur).map((k) => [k.tur, Number(k.adet) || 0]));
+  const sayac = new Map<string, number>(), alinan: ExcelSatiri[] = [];
+  for (const x of ok) {
+    const n = sayac.get(x.tur) ?? 0;
+    if (alinan.length >= yer || (mevcut.get(x.tur) ?? 0) + n >= ADET_UST) continue;
+    sayac.set(x.tur, n + 1); alinan.push(x);
+  }
   const yeni: { tur: string; adet: string; fiyat: string }[] = kalemler.filter((k) => k.tur).map((k) => ({ tur: k.tur, adet: k.adet, fiyat: k.fiyat }));
   for (const [tur, n] of sayac) {
     const k = yeni.find((y) => y.tur === tur);

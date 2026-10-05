@@ -2341,6 +2341,22 @@ revizyon, alan kopyalama, hafif kusur devri, meslek eşleşme denetimi).
 - Emsal ürünler: https://opwire.app/iso-17020-periyodik-kontrol-yazilimi/ · https://17020muayene.vidco.com.tr/ · https://akuple.com/asansor-kontrol-yazilimi/ · https://ensyazilim.com/
 
 ## 11 · Değişiklik günlüğü
+- 2026-10-06 (324–327 çapraz inceleme düzeltmeleri; dört bakış — güvenlik, veritabanı, mantık, arayüz — ve her bulguya çürütme denemesi: 24
+  bulgudan 20'si doğrulandı, 4'ü elendi; fatura kilidi ve numara uzunluğu 327 düzeltmesinde). **Birim fiyat bağı** (rapor-bagi.ts): faturalanmış
+  raporun bağı, fiyatı ve kaynağı FATURADAKİDİR (Muhasebe'nin teklif-baglanti.ts'inden) — sonradan kabul edilen yenileme teklifi faturalı raporu
+  kendine çekmez, teklif numarası "—" olmaz; kalem adedini önce faturada teklif fiyatıyla yazılanlar tüketir, kalan faturalanmamışlara: önce
+  imzalılar, sonra imza bekleyenler (imzasız ya da sonradan silinen rapor imzalı raporun teklif fiyatını elinden alıp onu "teklif dışı" liste
+  fiyatıyla faturalatamaz). **Güvenlik:** teklif formunun "Excel'e aktar" eylemi yalnız teklif yazabilene ve yalnız etkin müşterilerin etkin
+  tesislerine ("gör" düzeyindeki muhasebe, matrisin kapattığı ekipman envanterini tesis kimliğiyle okuyabiliyordu); xlsx okuyucu XML etiketlerini
+  doğrusal tarar, kapanmayan etiket "bozuk" (tembel düzenli ifade kapanmayan etikette karesel tarıyordu — küçük kötü niyetli dosya sekmeyi
+  kilitliyordu), açılan parçalar TOPLAM 50 MB. **Teklif Excel'i:** türün kalem adedi 999'u aşmaz, aşan satır atlanır (aşan adetle teklif
+  kaydedilemiyordu). **Muhasebe:** iş sayfasının "Tahsilat ekle"si en eski açık faturaya (maket); sözleşme numarası Sözleşmeler'in işlevinden
+  (modül sınırı); "Plan" tuşu, rapor no ve müşteri adı bağlantıları yalnız o modülü görene; toplu fatura başlığında müşteri; vadesi geçen
+  alacak şeridinde "Faturalar"; fiyatsız raporda kapalı "Faturayı kaydet"in nedeni tuşa bağlı; kalan tahsil edilince odak sayfa başlığına.
+  **Sözleşmeler:** "Dayanak teklif" bağlantısı yalnız Teklifler'i görene. **Ortak:** nesne başlığının tuş çubuğu sarar, telefonda tam genişlik
+  (375 px'te teklif ve iş sayfası yana taşıyordu). **e2e:** teklif "Excel'e aktar" penceresinde iki "Kapat" (başlıktaki X) — alt çubuktaki;
+  teklif ve iş sayfasında yana taşma ölçülür. Kilit: muhasebe.test +1 (bağ: imzalı önce, faturalı bağ sabit, yeni teklif adedi, silinen rapor),
+  teklifler.test (Excel'e aktar yalnız yazana), oku.test +1 (kapanmayan etiket, toplam sınır), teklif-belgesi.test (999), bozan oku +1.
 - 2026-10-06 (328): **K4 Muhasebe › Giderler, sabit giderler, kârlılık, gelir-gider** (maket muhasebe.html #/giderler, gider penceresi,
   gider-excel-*, #/gelir-gider, iş sayfası "Giderler" ve "Kârlılık"; maket-veri.js MV.isKarlilik / ayMaliyet / ayGelirGider / donemGelirGider;
   reisim 2026-09-27: "denetçi maaşı yakıt araç kira bedeli ofis giderleri vergiler vb tüm giderler etki edecek şekilde … kar yüzdesi yazacak iş

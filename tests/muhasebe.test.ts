@@ -403,3 +403,39 @@ test("gider sızıntısı: B, A'nın giderini görmez, düzenleyemez, reddedemez
   assert.equal((await sql<{ n: number }>(B, "SELECT count(*)::int AS n FROM gider")).rows[0].n, 0);
   assert.equal((await b((db) => gelirGider(db, YON_B, "toplam")))!.isler.length, 0);
 });
+
+/* ── 324–327 incelemesi: rapor ↔ teklif bağı faturalı raporda sabit; kalem adedini önce faturadakiler, sonra imzalılar tüketir ── */
+test("birim fiyat bağı (324–327 incelemesi): imzalı rapor imzasızdan önce teklif fiyatını alır; faturalı raporun bağı faturadaki — yeni kabul edilen teklif onu çekmez, adedi tüketir", async () => {
+  const q = async (metin: string, p: unknown[] = []) => (await sql<{ id: string }>(A, metin, p)).rows[0].id;
+  const t3 = await q("INSERT INTO tesis (musteri_id, ad) VALUES ($1, 'Atölye') RETURNING id::text", [m1]);
+  for (const kod of ["HT-7A", "HT-7B", "HT-7C"]) ekp[kod] = await q("INSERT INTO ekipman (tesis_id, tur_id, kod, ekleyen) VALUES ($1, $2, $3, 'x') RETURNING id::text", [t3, ht, kod]);
+  const teklifKur = async (no: string) => {
+    const id = await q("INSERT INTO teklif (no, musteri_id, gecerlilik) VALUES ($1, $2, 30) RETURNING id::text", [no, m1]);
+    await q("INSERT INTO teklif_kalem (teklif_id, tur_id, adet, fiyat) VALUES ($1, $2, 1, 100000) RETURNING id::text", [id, ht]);
+    await q("INSERT INTO teklif_tesis (teklif_id, tesis_id) VALUES ($1, $2) RETURNING id::text", [id, t3]);
+    await q("UPDATE teklif SET durum = 'gonderildi' WHERE id = $1 RETURNING id::text", [id]);
+    await q("UPDATE teklif SET durum = 'kabul' WHERE id = $1 RETURNING id::text", [id]);
+    return id;
+  };
+  const T2 = await teklifKur("T-1026-902");
+  const P7 = await planKur(t3);
+  const ilk = await rapor(P7, "HT-7A", false);   // önce açılan, imzasız
+  const imzali = await rapor(P7, "HT-7B");        // sonra açılan, imzalı
+  const bag = async () => new Map((await a(MUH, (db) => isKarti(db, MUH, P7)))!.raporlar.map((r) => [r.id, r]));
+  let b = await bag();
+  assert.deepEqual([b.get(imzali)!.kaynak, b.get(imzali)!.fiyat, b.get(imzali)!.teklif?.id], ["teklif", 100000, T2], "imzalı rapor teklifin tek adedini alır");
+  assert.deepEqual([b.get(ilk)!.kaynak, b.get(ilk)!.fiyat], ["disi", 125000], "imzasız erken rapor adedi elinden almaz");
+  const f = tamam(await a(MUH, (db) => faturaKaydet(db, MUH, P7, { no: "KMF2026000000020", tarih: BUGUN() })));
+  assert.match(f.bildirim!, /1 rapor, 1\.200,00 TL/, "teklif fiyatıyla faturalandı");
+  /* yenileme teklifi (tarihi bugün, raporun açılış gününden sonra değil) kabul edilir: faturalı rapor T2'de kalır, adedi tüketmiş sayılır */
+  const T3 = await teklifKur("T-1026-903");
+  const ucuncu = await rapor(P7, "HT-7C");
+  b = await bag();
+  assert.deepEqual([b.get(imzali)!.kaynak, b.get(imzali)!.fiyat, b.get(imzali)!.teklif], ["teklif", 100000, { id: T2, no: "T-1026-902" }], "faturalı bağ değişmez, numara çözülür");
+  assert.deepEqual([b.get(ucuncu)!.teklif?.id, b.get(ucuncu)!.kaynak, b.get(ucuncu)!.fiyat], [T3, "teklif", 100000], "yeni teklifin adedi yeni rapora");
+  assert.deepEqual([b.get(ilk)!.teklif?.id, b.get(ilk)!.kaynak], [T3, "disi"], "imzasız rapor imzalıdan sonra");
+  /* imzasız rapor silinse de faturalı rapor ve sıradaki imzalı rapor fiyatını korur */
+  await sahip("UPDATE rapor SET silindi = now() WHERE id = $1", [ilk]);
+  b = await bag();
+  assert.deepEqual([b.has(ilk), b.get(imzali)!.kaynak, b.get(ucuncu)!.kaynak], [false, "teklif", "teklif"]);
+});

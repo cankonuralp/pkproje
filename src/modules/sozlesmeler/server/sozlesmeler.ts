@@ -147,6 +147,13 @@ export async function tesisSozlesmesi(db: Sorgulayici, tesisId: string, gun: str
      WHERE k.tesis_id = $1 AND s.baslangic <= $2::date AND s.bitis >= $2::date ORDER BY s.baslangic DESC, s.no DESC LIMIT 1`, [tesisId, gun])).rows[0] ?? null;
 }
 
+/** öteki modüller için (Muhasebe fatura sayfası — 324–327 incelemesi: modül başka modülün tablosuna dokunmaz): sözleşme kimliği → numara. Yetki ÇAĞIRANDA. */
+export async function sozlesmeNumaralari(db: Sorgulayici, idler: readonly string[]): Promise<Map<string, string>> {
+  const l = [...new Set(idler.filter((x) => UUID.test(x)))];
+  if (!l.length) return new Map();
+  return new Map((await db.sorgu<{ id: string; no: string }>("SELECT id::text, no FROM is_sozlesmesi WHERE id = ANY ($1::uuid[])", [l])).rows.map((x) => [x.id, x.no]));
+}
+
 /** sözleşme hazırla: numara (IS-AAYY-SIRA) işlem içinde; tesisler müşterinin, etkin tesisleri olmalı; firma imzası bugün, müşteri imzası bekler */
 export async function sozlesmeHazirla(db: Sorgulayici, kim: Kisi, girdi: unknown): Promise<Yazma> {
   if (!degistirir(kim)) return { durum: "yetkisiz" };

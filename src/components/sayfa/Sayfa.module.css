@@ -14,7 +14,8 @@
 .nesneBaslik { display: flex; align-items: center; flex-wrap: wrap; gap: 6px 10px; }
 .nesneBaslik h1 { margin: 0; font-size: var(--boy-baslik); font-weight: var(--kal-baslik); letter-spacing: -.01em; overflow-wrap: anywhere; }
 .nesneAlt { display: flex; align-items: center; gap: 6px; margin: 4px 0 0; color: var(--yazi2); }
-.eylemCubugu { display: flex; align-items: center; justify-content: flex-end; flex-wrap: wrap; gap: 8px; flex: none; }
+/* 324–327 incelemesi: flex: none çubuğu tuşların tek satırlık genişliğine sabitliyordu, telefonda (375) sayfa yana taşıyordu */
+.eylemCubugu { display: flex; align-items: center; justify-content: flex-end; flex-wrap: wrap; gap: 8px; flex: 0 1 auto; min-width: 0; max-width: 100%; }
 .bolum { margin: 0 0 20px; }
 .altBas { display: flex; align-items: center; flex-wrap: wrap; gap: 6px 12px; margin: 0 0 8px; }
 .altBaslik { margin: 0; font-size: var(--boy-govde); font-weight: 700; }
@@ -41,3 +42,7 @@
 .altSatir { display: block; color: var(--yazi2); font-size: var(--boy-kucuk); font-weight: 400; }
 .yok { color: var(--yazi3); }
 .uyariMetin { display: block; color: var(--uyari-yazi); font-size: var(--boy-etiket); font-weight: 600; }
+@media (max-width: 767.98px) {
+  .nesneBas .eylemCubugu { flex: 1 1 100%; justify-content: stretch; }
+  .nesneBas .eylemCubugu > * { flex: 1 1 auto; }
+}

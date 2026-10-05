@@ -11,7 +11,7 @@ import { modulBul } from "../../../../modules/moduller";
 import { sozlesmeDegistirir, sozlesmeKarti, sozlesmeSecenekleri } from "../../../../modules/sozlesmeler/server/sozlesmeler";
 import { ImzaliTuslari, IsgBolumu } from "../../../../modules/sozlesmeler/ui/KartParcalari";
 import { DurumRozeti, tarihYaz } from "../../../../modules/sozlesmeler/ui/ortak";
-import { modulOturumu, oturumIslemi } from "../../../../server/kimlik/istek";
+import { modulGorur, modulOturumu, oturumIslemi } from "../../../../server/kimlik/istek";
 
 const MODUL = modulBul("sozlesmeler")!;
 export const metadata: Metadata = { title: "Sözleşme" };
@@ -42,7 +42,9 @@ export default async function Sayfa({ params }: { params: Promise<{ id: string }
           <Bilgi etiket="Ödeme vadesi">{x.vade} gün</Bilgi>
           <Bilgi etiket="Yenileme">{x.yenileme === "otomatik" ? "Kendiliğinden (fesih yoksa)" : "Yok · yeni teklif"}</Bilgi>
           <Bilgi etiket="İmzalı belge">{x.imzaliDosya ? `${x.no}.pdf` : <DegerYok>Yüklenmedi</DegerYok>}</Bilgi>
-          <Bilgi etiket="Dayanak teklif">{x.teklif ? <Link href={`/teklifler/${x.teklif.id}`}>{x.teklif.no}</Link> : <DegerYok>Sistem öncesi</DegerYok>}</Bilgi>
+          {/* 324–327 incelemesi: Teklifler'i göremeyene (ör. "kendi" düzeyindeki denetçi) numara düz metin */}
+          <Bilgi etiket="Dayanak teklif">{x.teklif ? (modulGorur(o, 11) ? <Link href={`/teklifler/${x.teklif.id}`}>{x.teklif.no}</Link> : x.teklif.no)
+            : <DegerYok>Sistem öncesi</DegerYok>}</Bilgi>
         </BilgiListesi>
       </Bolum>
       <Bolum id="b-soz-kapsam" baslik="Kapsam" sayac={<><b>{x.kapsam.length}</b> tesis</>}>

@@ -1,8 +1,10 @@
 /* TABLO OKUYUCU (tek üretici; maket maket-ortak.js MK.tabloOku'nun karşılığı — pkproje §3.6: "Excel'den yükle gerçek .xlsx / .csv okur (dış
    kütüphane yok; Excel'in tarih sayısı çevrilir; ilk satır başlıksa atlanır)"). Saf: tarayıcıda ve düğümde aynı (açma DecompressionStream ile).
    Kişinin kendi seçtiği dosya kendi tarayıcısında okunur; sunucuya gitmez. Yine de sınırlar var (bozuk / kötü niyetli dosya sekmeyi kilitlemesin):
-   dosya 10 MB, açılmış parça 50 MB (sıkıştırma bombası), 5 000 satır, 50 sütun. Tarih biçimli hücre "YYYY-AA-GG" olur. İlk sayfa okunur.
-   Başlık satırını atlamak çağıranın işi (hangi sütunların beklendiğini o bilir). */
+   dosya 10 MB, açılmış parçalar TOPLAM 50 MB (sıkıştırma bombası), 5 000 satır, 50 sütun. Tarih biçimli hücre "YYYY-AA-GG" olur. İlk sayfa
+   okunur. Başlık satırını atlamak çağıranın işi (hangi sütunların beklendiğini o bilir).
+   324–327 incelemesi: XML etiketleri DOĞRUSAL taranır (indexOf); kapanmayan etiket "bozuk" sayılır. Tembel düzenli ifade ([\s\S]*?) kapanmayan
+   etikette her başlangıçtan metnin sonuna kadar arıyordu (karesel; birkaç on KB'lık sıkıştırılmış dosya sekmeyi saatlerce kilitliyordu). */
 
 export const OKU_SINIR = { dosya: 10 * 1024 * 1024, parca: 50 * 1024 * 1024, satir: 5000, sutun: 50 } as const;
 
@@ -32,12 +34,12 @@ function zipDizini(z: Uint8Array): Map<string, Giris> {
 }
 
 /** girişin açılmış baytları; açılmış boyut sınırı aşılınca durur (bildirilen boyuta güvenilmez) */
-async function zipParca(z: Uint8Array, g: Giris): Promise<Uint8Array> {
+async function zipParca(z: Uint8Array, g: Giris, sinir: number = OKU_SINIR.parca): Promise<Uint8Array> {
   const v = new DataView(z.buffer, z.byteOffset, z.byteLength);
   if (g.yerel + 30 > z.length || v.getUint32(g.yerel, true) !== 0x04034b50) throw new TabloHatasi("Dosya .xlsx değil ya da bozuk.");
   const bas = g.yerel + 30 + v.getUint16(g.yerel + 26, true) + v.getUint16(g.yerel + 28, true);
   const veri = z.subarray(bas, bas + g.boyut);
-  if (g.yontem === 0) return veri;
+  if (g.yontem === 0) { if (veri.length > sinir) throw new TabloHatasi("Dosya çok büyük."); return veri; }
   if (g.yontem !== 8) throw new TabloHatasi("Dosyanın sıkıştırması desteklenmiyor.");
   const okuyucu = new Blob([veri as BlobPart]).stream().pipeThrough(new DecompressionStream("deflate-raw")).getReader();
   const parcalar: Uint8Array[] = [];
@@ -46,7 +48,7 @@ async function zipParca(z: Uint8Array, g: Giris): Promise<Uint8Array> {
     const { done, value } = await okuyucu.read();
     if (done) break;
     top += value.length;
-    if (top > OKU_SINIR.parca) { await okuyucu.cancel(); throw new TabloHatasi("Dosya çok büyük."); }
+    if (top > sinir) { await okuyucu.cancel(); throw new TabloHatasi("Dosya çok büyük."); }
     parcalar.push(value);
   }
   const out = new Uint8Array(top);
@@ -62,8 +64,42 @@ export const xmlCoz = (s: string) => s
     k[0] === "#" ? String.fromCodePoint(k[1] === "x" ? parseInt(k.slice(2), 16) : Number(k.slice(1))) : VARLIK[k])
   .replace(/_x([0-9a-fA-F]{4})_/g, (_t, h: string) => String.fromCharCode(parseInt(h, 16)));
 const ozellik = (etiket: string, ad: string) => new RegExp(`\\s${ad}="([^"]*)"`).exec(etiket)?.[1] ?? null;
+const BOZUK = "Dosya .xlsx değil ya da bozuk.";
+const adSonu = (c: string) => c === ">" || c === "/" || c === " " || c === "\t" || c === "\n" || c === "\r";
+/** <ad …/> ya da <ad …>iç</ad> etiketleri sırayla (iç içe aynı ad yok — OOXML'de böyle); öz: etiketin özellik kısmı, iç: içerik (kendiliğinden
+    kapanansa null). Doğrusal: her konum bir kez geçilir; kapanmayan etiket bozuk dosya */
+export function* etiketler(x: string, ad: string): Generator<{ oz: string; ic: string | null }> {
+  const ac = `<${ad}`, kap = `</${ad}>`;
+  let i = 0;
+  for (;;) {
+    const b = x.indexOf(ac, i);
+    if (b < 0) return;
+    const o = b + ac.length;
+    if (!adSonu(x.charAt(o))) { i = o; continue; }   // aynı önekli başka ad (<rowBreaks, <sheets …)
+    const son = x.indexOf(">", o);
+    if (son < 0) throw new TabloHatasi(BOZUK);
+    if (x.charAt(son - 1) === "/") { yield { oz: x.slice(o, son - 1), ic: null }; i = son + 1; continue; }
+    const k = x.indexOf(kap, son + 1);
+    if (k < 0) throw new TabloHatasi(BOZUK);
+    yield { oz: x.slice(o, son), ic: x.slice(son + 1, k) };
+    i = k + kap.length;
+  }
+}
+/** ilk etiketin içi (yoksa null) */
+const ilkIc = (x: string, ad: string) => { for (const e of etiketler(x, ad)) return e.ic ?? ""; return null; };
 /** <si> / <is> içindeki metin: bütün <t> parçaları (fonetik <rPh> hariç) */
-const metinler = (x: string) => [...x.replace(/<rPh\b[\s\S]*?<\/rPh>/g, "").matchAll(/<t(?:\s[^>]*)?>([\s\S]*?)<\/t>/g)].map((m) => xmlCoz(m[1])).join("");
+function metinler(x: string): string {
+  let y = "", i = 0;
+  for (;;) {   // <rPh> blokları çıkarılır (doğrusal)
+    const b = x.indexOf("<rPh", i);
+    if (b < 0 || !adSonu(x.charAt(b + 4))) { y += x.slice(i, b < 0 ? undefined : b + 4); if (b < 0) break; i = b + 4; continue; }
+    y += x.slice(i, b);
+    const k = x.indexOf("</rPh>", b);
+    if (k < 0) throw new TabloHatasi(BOZUK);
+    i = k + 6;
+  }
+  return [...etiketler(y, "t")].map((e) => xmlCoz(e.ic ?? "")).join("");
+}
 
 /** sütun harfi → sıra (A → 0) */
 const sutunNo = (r: string) => { let n = 0; for (const c of r.replace(/\d+$/, "")) n = n * 26 + (c.charCodeAt(0) - 64); return n - 1; };
@@ -78,44 +114,50 @@ const tarihBicimi = (kod: string) => /[dmy]/i.test(kod.replace(/"[^"]*"|\[[^\]]*
 
 async function xlsxOku(z: Uint8Array): Promise<string[][]> {
   const d = zipDizini(z), td = new TextDecoder();
-  const oku = async (ad: string) => { const g = d.get(ad); return g ? td.decode(await zipParca(z, g)) : null; };
+  let kalan: number = OKU_SINIR.parca;   // açılan bütün parçalar birlikte
+  const oku = async (ad: string) => {
+    const g = d.get(ad);
+    if (!g) return null;
+    const b = await zipParca(z, g, kalan);
+    kalan -= b.length;
+    return td.decode(b);
+  };
   /* ilk sayfa: çalışma kitabındaki ilk <sheet>'in ilişkisi; yoksa sheet1 */
   let sayfaYolu = "xl/worksheets/sheet1.xml";
   const kitap = await oku("xl/workbook.xml"), iliski = await oku("xl/_rels/workbook.xml.rels");
-  const ilk = kitap && /<sheet\b[^>]*>/.exec(kitap)?.[0];
-  const rid = ilk && /\s[a-zA-Z0-9]+:id="([^"]*)"/.exec(ilk)?.[1];
+  const ilk = kitap ? etiketler(kitap, "sheet").next().value?.oz : undefined;
+  const rid = ilk && /\s[a-zA-Z0-9]+:id="([^"]*)"/.exec(` ${ilk}`)?.[1];
   if (rid && iliski) {
-    const r = [...iliski.matchAll(/<Relationship\b[^>]*>/g)].map((m) => m[0]).find((x) => ozellik(x, "Id") === rid);
+    const r = [...etiketler(iliski, "Relationship")].map((e) => ` ${e.oz}`).find((x) => ozellik(x, "Id") === rid);
     const hedef = r && ozellik(r, "Target");
     if (hedef) sayfaYolu = hedef.startsWith("/") ? hedef.slice(1) : `xl/${hedef.replace(/^\.\//, "")}`;
   }
   const sayfa = await oku(sayfaYolu);
   if (sayfa === null) throw new TabloHatasi("Dosyada sayfa bulunamadı.");
-  const ortak = [...((await oku("xl/sharedStrings.xml")) ?? "").matchAll(/<si\s*\/>|<si\b[^>]*>([\s\S]*?)<\/si>/g)].map((m) => metinler(m[1] ?? ""));
+  const ortak = [...etiketler((await oku("xl/sharedStrings.xml")) ?? "", "si")].map((e) => metinler(e.ic ?? ""));
   /* tarih biçimli stiller (cellXfs sırası) */
   const stil = (await oku("xl/styles.xml")) ?? "";
-  const ozel = new Map([...stil.matchAll(/<numFmt\b[^>]*\/?>/g)].map((m) => [Number(ozellik(m[0], "numFmtId")), xmlCoz(ozellik(m[0], "formatCode") ?? "")]));
-  const xf = /<cellXfs\b[^>]*>([\s\S]*?)<\/cellXfs>/.exec(stil)?.[1] ?? "";
-  const tarihStil = [...xf.matchAll(/<xf\b[^>]*\/?>/g)].map((m) => {
-    const k = Number(ozellik(m[0], "numFmtId") ?? 0);
+  const ozel = new Map([...etiketler(stil, "numFmt")].map((e) => [Number(ozellik(` ${e.oz}`, "numFmtId")), xmlCoz(ozellik(` ${e.oz}`, "formatCode") ?? "")]));
+  const xf = ilkIc(stil, "cellXfs") ?? "";
+  const tarihStil = [...etiketler(xf, "xf")].map((e) => {
+    const k = Number(ozellik(` ${e.oz}`, "numFmtId") ?? 0);
     return TARIH_KODLARI.has(k) || (ozel.has(k) && tarihBicimi(ozel.get(k)!));
   });
   const satirlar: string[][] = [];
-  /* kendiliğinden kapanan satır önce denenir (yoksa sonraki satırın içeriğini yutar) */
-  for (const sm of sayfa.matchAll(/<row\b([^>]*)\/>|<row\b([^>]*)>([\s\S]*?)<\/row>/g)) {
-    const no = Number(ozellik(sm[1] ?? sm[2] ?? "", "r") ?? satirlar.length + 1) - 1;
+  for (const sm of etiketler(sayfa, "row")) {
+    const no = Number(ozellik(` ${sm.oz}`, "r") ?? satirlar.length + 1) - 1;
     if (no >= OKU_SINIR.satir) throw new TabloHatasi(`Dosyada en çok ${OKU_SINIR.satir.toLocaleString("tr-TR")} satır okunur.`);
     const satir: string[] = [];
     let sira = 0;
-    for (const cm of (sm[3] ?? "").matchAll(/<c\b([^>]*?)(?:\/>|>([\s\S]*?)<\/c>)/g)) {
-      const r = ozellik(cm[1], "r"), i = r ? sutunNo(r) : sira;
+    for (const cm of etiketler(sm.ic ?? "", "c")) {
+      const oz = ` ${cm.oz}`, r = ozellik(oz, "r"), i = r ? sutunNo(r) : sira;
       sira = i + 1;
       if (i < 0 || i >= OKU_SINIR.sutun) continue;
-      const t = ozellik(cm[1], "t"), s = Number(ozellik(cm[1], "s") ?? 0), ic = cm[2] ?? "";
-      const v = /<v>([\s\S]*?)<\/v>/.exec(ic)?.[1];
+      const t = ozellik(oz, "t"), s = Number(ozellik(oz, "s") ?? 0), ic = cm.ic ?? "";
+      const v = ilkIc(ic, "v") ?? undefined;
       let deger = "";
       if (t === "s") deger = ortak[Number(v)] ?? "";
-      else if (t === "inlineStr") deger = metinler(/<is>([\s\S]*?)<\/is>/.exec(ic)?.[1] ?? "");
+      else if (t === "inlineStr") deger = metinler(ilkIc(ic, "is") ?? "");
       else if (t === "b") deger = v === "1" ? "DOĞRU" : "YANLIŞ";
       else if (t === "str" || t === "e") deger = xmlCoz(v ?? "");
       else if (v !== undefined) deger = tarihStil[s] && Number.isFinite(Number(v)) ? excelTarihi(Number(v)) : xmlCoz(v);

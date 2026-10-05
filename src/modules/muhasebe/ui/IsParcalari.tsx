@@ -25,8 +25,9 @@ import { FATURA_SUTUN } from "./Listeler";
 import stil from "./muhasebe.module.css";
 
 /* ── RAPORLAR ── */
-const R_SUTUN: Sutun<IsRaporu>[] = [
-  { k: "no", genislik: "22%", baslik: "Rapor no", kart: "ust", sira: 1, hucre: (r) => <Link className={stil.no} href={`/raporlar/${r.id}`}>{r.no}</Link> },
+const rSutun = (raporGor: boolean): Sutun<IsRaporu>[] => [
+  { k: "no", genislik: "22%", baslik: "Rapor no", kart: "ust", sira: 1, hucre: (r) => raporGor ? <Link className={stil.no} href={`/raporlar/${r.id}`}>{r.no}</Link>
+    : <span className={stil.kod}>{r.no}</span> },
   { k: "ekipman", genislik: "20%", baslik: "Ekipman", kart: "govde", sira: 2, hucre: (r) => <span><span className={stil.kod}>{r.ekipmanKod}</span><AltSatir><Kirp>{r.turAd}</Kirp></AltSatir></span> },
   { k: "fiyat", genislik: "20%", baslik: "Birim fiyat", kart: "govde", sira: 3, hucre: (r) => (
     <><KartEtiket>Birim fiyat</KartEtiket><span>{r.fiyat === null ? <span className={stil.uyari}>Fiyat yok</span> : <span className={stil.sayi}>{para(r.fiyat)}</span>}
@@ -38,7 +39,7 @@ const R_SUTUN: Sutun<IsRaporu>[] = [
   ) },
   { k: "durum", genislik: "18%", baslik: "Rapor durumu", kart: "rozet", sira: 1, hucre: (r) => <Rozet tur={RAPOR_DURUM[r.durum][1]}>{RAPOR_DURUM[r.durum][0]}</Rozet> },
 ];
-export function IsRaporlari({ raporlar }: { raporlar: IsRaporu[] }) {
+export function IsRaporlari({ raporlar, raporGor }: { raporlar: IsRaporu[]; raporGor: boolean }) {
   const s = useSuzgec({
     ad: "Raporlarda ara", ipucu: "Rapor no, ekipman", birim: "rapor", sayfa: 20, imkansiz: "Bir rapor aynı anda iki durumda olamaz",
     metin: (r) => [r.no, r.ekipmanKod, r.turAd, r.fatura?.no ?? ""].join(" "),
@@ -52,7 +53,7 @@ export function IsRaporlari({ raporlar }: { raporlar: IsRaporu[] }) {
   return (
     <>
       <p className={stil.ozet}><Sayac s={s} /></p>
-      <SuzgecliListe s={s} on="r" baslik="İşin raporları" sutunlar={R_SUTUN} anahtar={(r) => r.id}
+      <SuzgecliListe s={s} on="r" baslik="İşin raporları" sutunlar={rSutun(raporGor)} anahtar={(r) => r.id}
         bosVeri={{ ikon: "file-text", baslik: "Rapor yok", metin: "Planın ilk raporu yazılınca burada görünür." }} />
     </>
   );
@@ -93,8 +94,9 @@ export function TahsilatListesi({ tahsilatlar }: { tahsilatlar: TahsilatSatiri[]
 }
 
 /* ── FATURA KAYDET (tek iş ya da müşterinin faturaya hazır bütün işleri — 136) ── */
-const FID = { no: "w-fatura-no", tarih: "w-fatura-tarih" } as const;
-export function FaturaKaydet({ planId, isNo, tek, toplu, bugun }: { planId: string; isNo: string; tek: FaturaOnizleme | null; toplu: FaturaOnizleme | null; bugun: string }) {
+const FID = { no: "w-fatura-no", tarih: "w-fatura-tarih", fiyatsiz: "w-fatura-fiyatsiz" } as const;
+export function FaturaKaydet({ planId, isNo, musteri, tek, toplu, bugun }: { planId: string; isNo: string; musteri: string; tek: FaturaOnizleme | null; toplu: FaturaOnizleme | null;
+  bugun: string }) {
   const router = useRouter();
   const bildir = useBildir();
   const [bekliyor, baslat] = useTransition();
@@ -114,18 +116,19 @@ export function FaturaKaydet({ planId, isNo, tek, toplu, bugun }: { planId: stri
     <>
       {toplu && <Tus tur="ikincil" ikon="file-text" onClick={() => ac("toplu")}>Toplu fatura ({toplu.isler.length} iş)</Tus>}
       {tek && <Tus ikon="file-plus" onClick={() => ac("tek")}>Fatura kaydet</Tus>}
-      <Pencere acik={!!acik && !!o} genis baslik={acik === "toplu" ? `Toplu fatura · ${toplu?.isler.length ?? 0} iş` : `Fatura kaydet · ${isNo}`}
+      <Pencere acik={!!acik && !!o} genis baslik={acik === "toplu" ? `Toplu fatura · ${musteri} · ${toplu?.isler.length ?? 0} iş` : `Fatura kaydet · ${isNo}`}
         onKapat={() => { if (!bekliyor) setAcik(null); }} odak={`#${FID.no}`}
         alt={<>
           <Tus tur="ikincil" disabled={bekliyor} onClick={() => setAcik(null)}>Vazgeç</Tus>
-          <Tus ikon="check" disabled={bekliyor || !!o?.fiyatsiz} aria-busy={bekliyor || undefined} onClick={kaydet}>Faturayı kaydet</Tus>
+          <Tus ikon="check" disabled={bekliyor || !!o?.fiyatsiz} aria-busy={bekliyor || undefined} aria-describedby={o?.fiyatsiz ? FID.fiyatsiz : undefined}
+            onClick={kaydet}>Faturayı kaydet</Tus>
         </>}>
         {o && <>
           <p className={pencereMetinSinifi}><b>{o.raporSayisi}</b> imzalı rapor{acik === "toplu" && ` · ${o.isler.map((x) => x.no).join(", ")}`}</p>
           <KalemListesi kalemler={o.kalemler} baslik="Faturaya girecek kalemler" />
           <Toplamlar ara={o.ara} kdv={o.kdv} kdvTutar={o.kdvTutar} toplam={o.toplam} />
           {o.surec > 0 && <Serit tur="uyari" ikon="history">{o.surec} rapor imza sürecinde; bu faturaya girmez, imzalanınca sonraki faturaya kalır.</Serit>}
-          {o.fiyatsiz > 0 && <Serit tur="hata" ikon="circle-alert">{o.fiyatsiz} raporun birim fiyatı yok (teklifte ya da fiyat listesinde değil); fiyat listesine ekleyin.</Serit>}
+          {o.fiyatsiz > 0 && <Serit id={FID.fiyatsiz} tur="hata" ikon="circle-alert">{o.fiyatsiz} raporun birim fiyatı yok (teklifte ya da fiyat listesinde değil); fiyat listesine ekleyin.</Serit>}
           {genel && <Serit tur="hata" ikon="circle-alert">{genel}</Serit>}
           <div className={stil.form}>
             <Alan id={FID.no} etiket="Fatura no" zorunlu hata={h.no} sonuc={h.no ? undefined : "Muhasebe programındaki numara (16 karakter)."}>
@@ -158,6 +161,8 @@ export function TahsilatEkle({ fatura, bugun, birincil = true }: { fatura: { id:
     setH(r.hatalar ?? {}); setGenel(r.genel ?? null);
     if (!r.tamam) { const k = Object.keys(r.hatalar ?? {})[0]; if (k) document.getElementById(TID[k as keyof typeof TID] ?? TID.tutar)?.focus(); return; }
     setAcik(false); bildir(r.bildirim ?? "Tahsilat kaydedildi."); router.refresh();
+    /* kalan bitince "Tahsilat ekle" sayfadan kalkar; odak gövdeye düşmesin — sayfa başlığına (324–327 incelemesi) */
+    if (d.tutar && r.bildirim && !/kalan/.test(r.bildirim)) requestAnimationFrame(() => document.querySelector<HTMLElement>("main h1")?.focus());
   });
   return (
     <>

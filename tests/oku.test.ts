@@ -50,6 +50,22 @@ test("sınırlar: sıkıştırma bombası açılırken durur; eski .xls ve bozuk
   await assert.rejects(tabloOku("cok.xlsx", sayfa), /satır okunur/);
 });
 
+/* 2026-10-06 (324–327 incelemesi): tembel düzenli ifade kapanmayan etikette karesel tarıyordu — 200 KB'lık parça 1,4 sn, 50 MB saatler; doğrusal
+   tarayıcı kapanmayan etiketi hemen "bozuk" sayar. Süre sınırı geniş (CI makinesi yavaş olabilir); karesel tarama bu boyda dakikalar sürerdi. */
+test("kapanmayan etiket (kötü niyetli dosya): satır, ortak dizgi ve stil parçasında doğrusal tarama hemen 'bozuk' der; toplam açılmış boyut sınırı", async () => {
+  const kapanmayan = (ad: string, n: number) => new TextEncoder().encode(`<x>${`<${ad}>`.repeat(n)}</x>`);
+  for (const [parca, ad] of [["xl/worksheets/sheet1.xml", "row"], ["xl/sharedStrings.xml", "si"], ["xl/styles.xml", "cellXfs"]] as const) {
+    const ek: [string, string][] = parca === "xl/worksheets/sheet1.xml" ? [] : [["xl/worksheets/sheet1.xml", `<worksheet ${ANA}><sheetData/></worksheet>`]];
+    const z = deflateZip([[parca, kapanmayan(ad, 400_000)], ...ek]);
+    const bas = performance.now();
+    await assert.rejects(tabloOku("kotu.xlsx", z), (h: Error) => h instanceof TabloHatasi && /bozuk/.test(h.message), ad);
+    assert.ok(performance.now() - bas < 5000, `${ad}: ${Math.round(performance.now() - bas)} ms`);
+  }
+  /* iki parça ayrı ayrı sınırın altında, birlikte üstünde */
+  const yarim = new Uint8Array(Math.ceil(OKU_SINIR.parca / 2) + 1024);
+  await assert.rejects(tabloOku("iki.xlsx", deflateZip([["xl/sharedStrings.xml", yarim], ["xl/worksheets/sheet1.xml", yarim]])), /çok büyük/);
+});
+
 test("CSV: ayraç ilk satırdan (; , sekme), tırnaklı alan, \"\" kaçışı, satır içi satır sonu, CRLF, BOM; UTF-8 değilse Türkçe Windows kodlaması", async () => {
   assert.deepEqual(csvOku('﻿Kod;Ekipman türü;Konum\r\n"HT;1";"Hava ""tankı""";"satır\niçi"\r\n;Forklift;\n'),
     [["Kod", "Ekipman türü", "Konum"], ["HT;1", 'Hava "tankı"', "satır\niçi"], ["", "Forklift", ""]]);

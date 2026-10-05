@@ -40,6 +40,7 @@ test("teklif: hazırla, gönderildi, kabul edildi; muhasebe yalnız görür, den
   await expect(page).toHaveURL(/\/teklifler\/[0-9a-f-]{36}$/, { timeout: 30_000 });
   await expect(page.getByRole("heading", { level: 1, name: /^T-\d{4}-\d{3,}$/ })).toBeVisible();
   const no = (await page.getByRole("heading", { level: 1 }).textContent())!.trim();
+  expect(await page.evaluate(() => document.documentElement.scrollWidth <= window.innerWidth), "sayfa yana taşmaz (nesne başlığının tuşları sarar)").toBe(true);
   await expect(page.getByText("4.500,00 TL", { exact: true })).toBeVisible();
   /* teklif belgesi (PDF) ve ekipman listesi (Excel) iner */
   await hazir(page);
@@ -50,7 +51,7 @@ test("teklif: hazırla, gönderildi, kabul edildi; muhasebe yalnız görür, den
   await expect(aktar.getByText("1 ekipman", { exact: true })).toBeVisible();
   const [xlsx] = await Promise.all([page.waitForEvent("download"), aktar.getByRole("button", { name: "İndir" }).click()]);
   expect(xlsx.suggestedFilename()).toBe(`${no}-ekipmanlar.xlsx`);
-  await aktar.getByRole("button", { name: "Kapat" }).click();
+  await aktar.getByRole("button", { name: "Kapat" }).last().click();   // başlıktaki X tuşunun adı da "Kapat"
 
   await hazir(page);
   await page.getByRole("button", { name: "Gönderildi olarak işaretle" }).click();

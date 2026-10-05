@@ -242,7 +242,10 @@ test("firma sızıntısı: B'nin yöneticisi A'nın tekliflerini görmez / deği
 });
 
 test("Excel ve teklif belgesi (325): tesislerin ETKİN ekipmanı (pasif yok), denetçi göremez, başka firmanın tesisi boş döner; sayfanın Excel'i yüklenen listeyi, yoksa tesis ekipmanını, fiyatı kalemden alır; belge verisi kayıtlı / kayıtlı olmayan müşteriyle; ilgili kişi müşteri kartından", async () => {
-  assert.deepEqual((await a(MUH, (db) => teklifEkipmanListesi(db, MUH, [t1, t2])))!.map((e) => e.kod).sort(), ["EP-1", "HT-1", "HT-2"], "HT-3 pasif");
+  assert.deepEqual((await a(PLAN, (db) => teklifEkipmanListesi(db, PLAN, [t1, t2])))!.map((e) => e.kod).sort(), ["EP-1", "HT-1", "HT-2"], "HT-3 pasif");
+  /* 2026-10-06 (324–327 incelemesi): formun "Excel'e aktar"ı yalnız teklif yazabilene ve yalnız etkin müşterilerin etkin tesislerine — "gör"
+     düzeyindeki muhasebe, matrisin kapattığı ekipman envanterini tesis kimliğiyle okuyabiliyordu (önceden burada MUH ile listeleniyordu) */
+  assert.equal(await a(MUH, (db) => teklifEkipmanListesi(db, MUH, [t1, t2])), null, "gör düzeyi");
   assert.equal(await a(DEN, (db) => teklifEkipmanListesi(db, DEN, [t1])), null, "denetçi");
   for (const kotu of ["x", [t1, "x"], null]) assert.equal(await a(PLAN, (db) => teklifEkipmanListesi(db, PLAN, kotu)), null);
   assert.deepEqual(await kiraciIcinde(havuz, B, (db) => teklifEkipmanListesi(db, YON_B, [t1]), { hesapId: YON_B.id }), [], "başka firmanın tesisi");
