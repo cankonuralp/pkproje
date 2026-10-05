@@ -1,0 +1,9 @@
+/* Uyarılar (maket uyarilar.html: .a-hucre-satir, .a-ad-bag, .a-uyari-metin, .a-hata-metin) — ⛔ çıplak renk yok (2.9) */
+.satir { display: inline-flex; align-items: flex-start; gap: 8px; min-width: 0; }
+.ad {
+  color: var(--onay-yazi); font-weight: 600; text-decoration: underline; text-decoration-color: transparent; text-underline-offset: 3px;
+}
+.ad:hover { text-decoration-color: currentColor; }
+.sayi { font-variant-numeric: tabular-nums; }
+.uyari { color: var(--uyari-yazi); font-weight: 600; }
+.hata { color: var(--hata-yazi); font-weight: 600; }

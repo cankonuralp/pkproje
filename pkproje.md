@@ -2341,6 +2341,17 @@ revizyon, alan kopyalama, hafif kusur devri, meslek eşleşme denetimi).
 - Emsal ürünler: https://opwire.app/iso-17020-periyodik-kontrol-yazilimi/ · https://17020muayene.vidco.com.tr/ · https://akuple.com/asansor-kontrol-yazilimi/ · https://ensyazilim.com/
 
 ## 11 · Değişiklik günlüğü
+- 2026-10-06 (331): **K4 Uyarılar** (maket uyarilar.html M10, maket-veri.js MV.uyarilar; pkproje §3 "kalibrasyon bitişine 30 gün kala uyarı", §3.1
+  modül 10 ve 20; anayasa 1.3 — YALNIZ ekranda, e-posta / SMS / anlık bildirim yok; KOD-GECIS §3 "tablo yok — koşuldan türetilir; okundu yok",
+  §4 Uyarılar). Tablo ve göç yok: uyarı kayıtlardan türetilir, koşul kalkınca (kalibrasyon yenilenince, eğitim tekrarlanınca, belge yenilenince)
+  kendiliğinden düşer. Türler: **kalibrasyon** (geçti ya da eşik içinde biten; kalibrasyondaki ve pasif cihaz sayılmaz; geçerli kalibrasyonu hiç
+  olmayan "geçti"; denetçideyse "raporlarını onaya gönderemez"), **eğitim tekrarı** (güncel kayıt; önceki sayılmaz), **araç belgesi** (muayene,
+  trafik sigortası, kasko). Eşikler firma ayarı (uyari_esikleri). Kimde: zimmetin son hareketi. Okuyucular modüllerin uyari-baglanti.ts'leri
+  (Ölçüm cihazları, Eğitimler, Araçlar). Görünürlük (sema.ts uyariGorunur): planlama, branş yöneticileri, firma yöneticisi hepsini; denetçi
+  yalnız kendisindeki cihaz / araç ve kendi eğitimi; muhasebe göremez. Ekran /uyarilar: en yakın tarih üstte, tür çipleri (adresten
+  ?tur=kalibrasyon|egitim|arac), "Süresi geçmiş", kişi seçicisi (Depoda dahil). Ara kontrol cihaz kaydında henüz yok (sonra); yan menü
+  balonları Ana sayfa kalemiyle. Kilit: uyarilar.test (türetme, sıralama, kimde, eşik; yetki; firma sızıntısı), bozan 1 ("kendi" süzgeci), e2e
+  üç genişlik.
 - 2026-10-06 (330): **K4 Talepler** (maket talepler.html, personel.html #/izinler; 2026-09-28 reisim: "personelin bireysel olarak isteyeceği
   şeyler … denetçi izin talebi masraf formu ekleme"; izin onayı firma yöneticisinde, Personel'de; KOD-GECIS §3 "izin_talebi, masraf (gider'e
   yazar) · izin onayı yönetici, masraf onayı muhasebe", §4 Talepler herkes "kendi", firma yöneticisi "değiştirir"). Göç **0042**: izin_talebi (no
