@@ -15,8 +15,10 @@ export default async function GirisSayfasi({ searchParams }: { searchParams: Pro
   const donus = typeof q.donus === "string" && guvenliDonus(q.donus) ? q.donus : undefined;
   /* oturum varsa dönüş adresine (giriş eylemi çerezi yazınca bu sayfa da yeniden çizilir; yönlendirme ikisinde aynı olmalı — 2026-10-04 e2e yakaladı) */
   const o = await istekOturumu();
-  if (o?.durum === "ilk") redirect(`/giris/parola${donus ? `?donus=${encodeURIComponent(donus)}` : ""}`);
-  if (o) redirect(donus ?? "/");
+  /* firma kullanıcısı müşteri paneline dönmez (panel onu ana sayfaya yollar) */
+  const firmaDonus = donus && !donus.startsWith("/portal") ? donus : undefined;
+  if (o?.durum === "ilk") redirect(`/giris/parola${firmaDonus ? `?donus=${encodeURIComponent(firmaDonus)}` : ""}`);
+  if (o) redirect(firmaDonus ?? "/");
   /* müşteri kullanıcısı (0030): kendi paneline */
   const m = await musteriIstekOturumu();
   if (m?.durum === "ilk") redirect("/giris/parola?donus=%2Fportal");

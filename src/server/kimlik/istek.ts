@@ -83,6 +83,9 @@ export const musteriIstekOturumu = cache(async (): Promise<MusteriIstekOturumu |
 export async function musteriOturumGerekli(): Promise<MusteriIstekOturumu> {
   const o = await musteriIstekOturumu();
   if (o) return o;
+  /* firma kullanıcısı müşteri paneline giremez: kendi ana sayfasına (girişe gönderilseydi giriş onu dönüş adresine, panele geri yollardı —
+     döngü; 319 e2e yakaladı) */
+  if (await istekOturumu()) redirect("/");
   const donus = (await headers()).get("x-probata-yol") ?? undefined;
   const q = new URLSearchParams();
   if ((await cookies()).get(MUSTERI_CEREZ)) q.set("neden", "oturum");

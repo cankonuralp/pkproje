@@ -50,7 +50,7 @@ export default async function hazirla(_ayar: FullConfig) {
   await ac("/onaylar/tum");
   await ac("/onaylar/imza");
   await ac("/onaylar/istekler");
-  /* 319 müşteri paneli: personel oturumuyla girişe döner, rota yine derlenir */
+  /* 319 müşteri paneli: personel oturumuyla ana sayfaya döner, rota yine derlenir */
   await ac("/portal");
   await ac("/raporlar");
   if (kart) { await ac(kart); await ac(`${kart}/duzenle`); }
