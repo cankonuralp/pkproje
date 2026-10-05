@@ -435,6 +435,8 @@ test("MUAYENE PERSONELİ (323): tesislerine giden kişiler (son imzalı raporu y
   const q = async (metin: string, p: unknown[] = []) => (await sql<{ id: string }>(A, metin, p, yon.id)).rows[0].id;
   const p2 = await q("INSERT INTO personel (ad, basla, meslek, ekipnet) VALUES ('Deneme Plan', '2024-01-01', 'mak-muh', '124') RETURNING id::text");
   const p3 = await q("INSERT INTO personel (ad, basla, meslek, ekipnet) VALUES ('Deneme Gitmeyen', '2024-01-01', 'mak-muh', '125') RETURNING id::text");
+  /* plan ekibine yalnız denetçi hesabı olan personel girer (Plan aç) */
+  await q("INSERT INTO hesap (eposta, ad, roller, durum, personel_id) VALUES ('plan2@deneme-a.example', 'Deneme Plan', '{denetci}', 'etkin', $1) RETURNING id::text", [p2]);
   /* p2 yalnız m1'in Merkez'indeki AÇIK planın ekibinde */
   tamam(await a(FA.plan, (db) => planAc(db, depo, FA.plan, A, { tesis: FA.t1, baslangic: "2026-12-10", bitis: "2026-12-10", ekip: [{ personel: p2, isgNo: `ISG-Y${planSira++}`, kaydet: false }] })));
   /* belgeler */
