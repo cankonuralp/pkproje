@@ -19,7 +19,7 @@ import { ekipmanEkle as ekipmanKaydet, ekipmanKilitle, ekipmanlar, ekipmanPasif 
 import { turOzetleri } from "../../ekipman-turleri/server/turler.ts";
 import { musteriOzetleri } from "../../musteriler/server/musteriler.ts";
 import { personelOzetleri } from "../../personel/server/personel.ts";
-import { ekipmanRaporuVar, planRaporlari, raporKunyeleriniYaz, type PlanRaporu } from "../../raporlar/server/plan-baglanti.ts";
+import { ekipmanRaporuVar, mesaiDurumu, planRaporlari, raporKunyeleriniYaz, type PlanRaporu } from "../../raporlar/server/plan-baglanti.ts";
 import { KunyeGirdisi, kodBicimi, kodNormal, NotGirdisi, RedGirdisi, YeniEkipmanGirdisi, type KodTuru, type PlanDurumu } from "../sema.ts";
 import { bugunTr, EKIP, MODUL, PLAN, PLAN_EKIPMAN, planKarti, UUID, type Kisi, type PlanKarti } from "./planlar.ts";
 
@@ -163,6 +163,8 @@ export interface PlanIci {
   raporluEkipman: string[];
   /** plan günü henüz gelmedi (rapor açılmaz; şerit söyler) */
   erken: boolean;
+  /** isteyenin bugünkü süresi doldu (mesai açıkken; ENGEL 3): rapor açılmaz, şerit söyler — dolmadıysa null */
+  mesai: { normal: number; mesai: number } | null;
   /** proje notları; göremeyene null */
   notlar: { id: string; metin: string; yazan: string; zaman: string }[] | null;
   izin: PlanIzni;
@@ -211,6 +213,8 @@ export async function planIci(db: Sorgulayici, kim: Kisi, id: string): Promise<P
     .map((n) => ({ id: n.id, metin: n.metin, yazan: n.yazan, zaman: n.olustu.toISOString() })) : null;
   const iso = (d: Date | null) => d?.toISOString() ?? null;
   const beyan = p.beyan ?? (await ayarOku(db, "beyan")).deger.metin;
+  /* günlük süre (212; ENGEL 3): plandaki denetçinin kendi süresi, rapor açılabilecek planda */
+  const m = e.benim && (p.durum === "kabul" || p.durum === "denetimde" || p.durum === "tamamlandi") ? await mesaiDurumu(db, e.benim.personel_id, bugunTr()) : null;
   return {
     kart, surum: p.surum, durum: p.durum, bugun: bugunTr(),
     kabul: p.kabul && p.kabul_eden && p.beyan ? { zaman: p.kabul.toISOString(), kim: p.kabul_eden, beyan: p.beyan } : null,
@@ -224,7 +228,7 @@ export async function planIci(db: Sorgulayici, kim: Kisi, id: string): Promise<P
     raporlar: duzey(kim, RAPORLAR_MODULU) === "yok" ? [] : tumRaporlar
       .filter((r) => canDo(kim, RAPORLAR_MODULU, "gor", { sahip: r.hesapId, brans: turBul.get(r.turId)?.brans ?? null }))
       .map(({ hesapId, personelId: _p, ...r }) => ({ ...r, benim: !!hesapId && hesapId === kim.id })),
-    raporluEkipman: [...new Set(tumRaporlar.map((r) => r.ekipmanId))], erken: p.baslangic > bugunTr(), notlar, izin,
+    raporluEkipman: [...new Set(tumRaporlar.map((r) => r.ekipmanId))], erken: p.baslangic > bugunTr(), mesai: m?.dolu ? { normal: m.normal, mesai: m.mesai } : null, notlar, izin,
   };
 }
 
@@ -432,6 +436,11 @@ export interface RaporPlani {
   kunye: Kunye; kunyeSurum: number;
   /** güncel künye (isteyenin İSG-KATİP ID'siyle) ve sürümü */
   guncelKunye: Kunye; guncelSurum: number;
+}
+/** Raporlar "Kaydet ve kopyala" için: kişi bu plana yeni ekipman ekleyebilir mi (plan içi "Ekipman ekle" ile aynı izin) */
+export async function ekipmanEklenebilir(db: Sorgulayici, kim: Kisi, planId: string): Promise<boolean> {
+  const e = await erisim(db, kim, planId);
+  return !!e && izinler(kim, e).ekipmanEkle;
 }
 /** planı görebilene planın rapor için gereken bilgisi; göremeyene null */
 export async function raporIcinPlan(db: Sorgulayici, kim: Kisi, planId: string): Promise<RaporPlani | null> {

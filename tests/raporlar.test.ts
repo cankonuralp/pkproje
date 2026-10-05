@@ -6,7 +6,8 @@
    yönetici onayında; bu kalem yalnız gönderimi açar), §9 ENGEL 1 (ileri tarihli plana rapor yok), 2 (gerekli cihaz / kalibrasyon), 5 (zorunlu
    alan), 6 (tamamlanan rapor değişmez) · RAPOR-FORMAT §5, §7 (rapor türün yayındaki sürümüyle açılır ve onunla kalır) · pkproje §3.4 "Plan künyesi"
    (planlamacının değişikliği denetçiye kendiliğinden geçmez; Güncelle yalnız kendi Yeni raporlarına) · reisim 2026-10-04: "rol değiştirme, sızma,
-   veri çalma; yetki her zaman sunucuda". GERÇEK PostgreSQL, iki firma (311). Olumsuz kanıt: tests/bozan/raporlar.bozan.ts. */
+   veri çalma; yetki her zaman sunucuda". GERÇEK PostgreSQL, iki firma (311). Olumsuz kanıt: tests/bozan/raporlar.bozan.ts.
+   313: maket kopyala / pencereKaydet (Kaydet ve kopyala, karar 204–209, N10), format-guncelle (211), MV.gunlukSure (212, AA2; KOD-GECIS ENGEL 3). */
 import assert from "node:assert/strict";
 import { mkdtempSync, rmSync } from "node:fs";
 import { tmpdir } from "node:os";
@@ -21,11 +22,13 @@ import { klasorDepo } from "../src/server/dosya/depo.ts";
 import { ekipmanPasif, kunyeDuzenle, planIci, planKabul, planReddet } from "../src/modules/planlar/server/plan-ici.ts";
 import { bugunTr, planAc, type Kisi } from "../src/modules/planlar/server/planlar.ts";
 import { tarihNo } from "../src/modules/planlar/sema.ts";
-import { taslakBaslat, yayinla } from "../src/modules/rapor-format/server/formatlar.ts";
+import { taslakBaslat, taslakKaydet, yayinla } from "../src/modules/rapor-format/server/formatlar.ts";
 import { ayEkle } from "../src/modules/raporlar/sema.ts";
 import {
-  cihazEkle, cihazKaldir, fotoEkle, fotoSil, onayaGonder, raporKaydet, raporKunyeGuncelle, raporOlustur, raporSil, sahaRaporu, type RaporYazma,
+  cihazEkle, cihazKaldir, fotoEkle, fotoSil, onayaGonder, raporFormatGuncelle, raporKaydet, raporKopyala, raporKunyeGuncelle, raporOlustur, raporSil, sahaRaporu,
+  type RaporYazma,
 } from "../src/modules/raporlar/server/raporlar.ts";
+import { ayarOku, ayarYaz } from "../src/server/ayar/ayar.ts";
 import { dosyaIndirilebilir } from "../src/server/dosya/dosya.ts";
 import { DOSYA_ERISIMI } from "../src/server/dosya/erisim.ts";
 import { MATRIS_ONERI } from "../src/server/yetki/tanim.ts";
@@ -653,4 +656,170 @@ test("fotoğraf: yer, tür, yetki; bölüm ve madde sayıları sunucuda; dosyay�
   tamam(await gonder(FA.den1, r.id, d.surum, { ...g, cevaplar: { ...g.cevaplar, madde: { ...g.cevaplar.madde, [MADDELER[0].id]: { c: "Uygun değil", not: "Korozyon" } } } }));
   d = (await sr(FA.den1, r.id))!;
   assert.deepEqual(await foto(FA.den1, r.id, d.surum), { durum: "red", neden: "Rapor gönderildi; yalnız Yeni rapor düzenlenir." });
+});
+
+/* 2026-10-05 (313; maket kopyala, pencereKaydet; karar 204–209, N10): Kaydet ve kopyala yalnız yazanın; kod Planlar'ın kod denetiminden; engel varken
+   rapor kaydedilmez; kopyalanan / kopyalanmayan alanlar 206–207; gönderilmiş raporda "Kopyala" (kayıt yok). */
+const kopyala = (k: Kisi, id: string, surum: number, g: unknown, kayit: unknown = null) => a(k, (db) => raporKopyala(db, k, id, surum, g, kayit));
+const kodHatasi = (r: RaporYazma) => { assert.equal(r.durum, "gecersiz", JSON.stringify(r)); return (r as Extract<RaporYazma, { durum: "gecersiz" }>).hatalar.kod; };
+
+test("kaydet ve kopyala: yalnız yazan; Yeni rapor önce kaydedilir; yeni ekipman tesise ve plana (sonradan); kopya Yeni, güncel formatla; ekipman bilgileri, bilgi alanları, cihazlar, madde seçimleri kopyalanır — açıklama, test değerleri, fotoğraflar, sonuç, yorum kopyalanmaz; gönderilmiş raporda Kopyala", async () => {
+  const id = await yeniPlan();
+  const r = tamam(await olustur(FA.den1, id, FA.ekp["HT-A3"]));
+  tamam(await a(FA.den1, (db) => cihazEkle(db, FA.den1, r.id, 0, FA.man, FA.cihaz["MN-01"])));
+  tamam(await foto(FA.den1, r.id, 1));
+  const g = girdi();
+  const kayit = {
+    ...g, ekipman: { ...g.ekipman, marka: "Kopya Marka" },
+    cevaplar: { ...g.cevaplar, yorum: "Deneme notu", madde: { ...g.cevaplar.madde, [MADDELER[0].id]: { c: "Uygun değil", not: "Korozyon", derece: "agir" } } },
+  };
+  /* kod (plan içi Ekipman ekle ile aynı denetim); engel varken rapor kaydedilmez */
+  assert.equal(kodHatasi(await kopyala(FA.den1, r.id, 2, { kod: "", konum: null }, kayit)), "Etiketteki kodu yazın: harf (A–Z), rakam ve tire. Kod firmada eşsiz olmalı.");
+  assert.equal(kodHatasi(await kopyala(FA.den1, r.id, 2, { kod: "a b", konum: null }, kayit)), "Kod 3 ile 20 hane arasında olmalı.");
+  assert.match(kodHatasi(await kopyala(FA.den1, r.id, 2, { kod: "ht-a2", konum: null }, kayit)), /^HT-A2 bu planda zaten var/);
+  assert.match(kodHatasi(await kopyala(FA.den1, r.id, 2, { kod: "HT-B1", konum: null }, kayit)), /^HT-B1 başka bir tesiste kayıtlı/);
+  assert.equal((await sr(FA.den1, r.id))!.surum, 2, "engel varken rapor kaydedilmedi");
+  /* yetki sunucuda: başka denetçi görmez, branş yöneticisi ve planlama görür ama kopyalamaz, başka firma yok */
+  assert.equal((await kopyala(FA.den2, r.id, 2, { kod: "HT-K1", konum: null })).durum, "yok");
+  assert.equal((await kopyala(FA.mek, r.id, 2, { kod: "HT-K1", konum: null })).durum, "yetkisiz");
+  assert.equal((await kopyala(FA.plan, r.id, 2, { kod: "HT-K1", konum: null })).durum, "yetkisiz");
+  assert.equal((await b(FB.den1, (db) => raporKopyala(db, FB.den1, r.id, 2, { kod: "HT-K1", konum: null }, null))).durum, "yok");
+  assert.deepEqual([(await sr(FA.den1, r.id))!.izin.kopyala, (await sr(FA.mek, r.id))!.izin.kopyala], [true, false]);
+  /* eski sürümle kayıt çakışır — ekipman da açılmaz */
+  assert.equal((await kopyala(FA.den1, r.id, 1, { kod: "HT-K1", konum: null }, kayit)).durum, "cakisma");
+  assert.equal((await sql(A, "SELECT 1 FROM ekipman WHERE kod = 'HT-K1'")).rowCount, 0);
+  /* kopya */
+  const k = tamam(await kopyala(FA.den1, r.id, 2, { kod: "ht-k1", konum: "Arka bahçe" }, kayit));
+  const no = (await sql<{ no: string }>(A, "SELECT no FROM rapor WHERE id = $1", [k.id])).rows[0].no;
+  assert.equal(k.bildirim, `Rapor kaydedildi; HT-K1 açıldı: ${no}. Bilgiler HT-A3 raporundan kopyalandı.`);
+  const kaynak = (await sr(FA.den1, r.id))!;
+  assert.deepEqual([kaynak.surum, kaynak.ekipmanBilgi.marka, kaynak.cevaplar.yorum, kaynak.kopyaKaynak], [3, "Kopya Marka", "Deneme notu", null], "kaynak önce kaydedildi");
+  const y = (await sr(FA.den1, k.id))!;
+  assert.deepEqual([y.durum, y.ekipman.kod, y.kopyaKaynak, y.surum, y.izin.duzenle, y.formatSira], ["taslak", "HT-K1", kaynak.no, 0, true, kaynak.formatSira]);
+  assert.deepEqual(y.ekipmanBilgi, { ...kayit.ekipman, seri: null, konum: "Arka bahçe" }, "ekipman bilgileri kaynaktan; seri no yeni ekipmanın, kullanım yeri pencereden");
+  assert.deepEqual(y.cevaplar.alan, g.cevaplar.alan, "bilgi alanları (ekipman detayları) kopyalandı");
+  assert.deepEqual(y.cevaplar.madde[MADDELER[0].id], { c: "Uygun değil" }, "madde seçimi kopyalanır; açıklama ve derece kopyalanmaz");
+  assert.deepEqual(y.cevaplar.madde[MADDELER[1].id], { c: "Uygun" });
+  assert.deepEqual([y.cevaplar.deger, y.cevaplar.tablo, y.cevaplar.sonuc, y.cevaplar.yorum, y.cevaplar.foto, y.fotolar], [{}, {}, "", "", {}, []]);
+  assert.deepEqual(y.cihazlar.map((x) => x.cihaz?.kod), ["MN-01"], "ölçüm cihazları kopyalandı");
+  assert.deepEqual(y.kunye, kaynak.kunye, "kopya kaynağın künyesiyle açılır");
+  /* yeni ekipman: tesiste kalıcı kayıt, plana sonradan; tür aynı */
+  const e = (await sql<{ konum: string; tur: string; tesis: string; sonradan: boolean }>(A, `SELECT e.konum, e.tur_id::text AS tur, e.tesis_id::text AS tesis, pe.sonradan
+    FROM ekipman e JOIN plan_ekipman pe ON pe.ekipman_id = e.id AND pe.plan_id = $1 WHERE e.kod = 'HT-K1'`, [id])).rows[0];
+  assert.deepEqual({ ...e }, { konum: "Arka bahçe", tur: FA.tur, tesis: FA.tesis, sonradan: true });
+  assert.deepEqual((await sql<{ k: string }>(A, "SELECT kopya_kaynak::text AS k FROM rapor WHERE id = $1", [k.id])).rows[0].k, r.id);
+  /* aynı kod ikinci kez verilmez */
+  assert.match(kodHatasi(await kopyala(FA.den1, r.id, 3, { kod: "HT-K1", konum: null }, null)), /^HT-K1 bu planda zaten var/);
+  /* gönderilmiş raporda "Kopyala": kayıt yok, bölüm boşsa kaynaktaki */
+  tamam(await gonder(FA.den1, r.id, 3, kayit));
+  const s2 = (await sr(FA.den1, r.id))!;
+  assert.deepEqual([s2.durum, s2.izin.duzenle, s2.izin.kopyala], ["onayda", false, true]);
+  const k2 = tamam(await kopyala(FA.den1, r.id, s2.surum, { kod: "HT-K2", konum: null }, { ...kayit, ekipman: { ...kayit.ekipman, marka: "Yazılmaz" } }));
+  assert.match(k2.bildirim, /^HT-K2 açıldı: DA-\d{4}-\d{3,}-[0-9a-f]{5}\. Bilgiler HT-A3 raporundan kopyalandı\.$/);
+  const y2 = (await sr(FA.den1, k2.id))!;
+  assert.deepEqual([y2.ekipmanBilgi.konum, y2.ekipmanBilgi.marka, (await sr(FA.den1, r.id))!.surum], ["Kazan dairesi", "Kopya Marka", s2.surum], "gönderilmiş rapor değişmez");
+  /* kopyanın kopyası: kaynak kopyanın kendisi */
+  const k3 = tamam(await kopyala(FA.den1, k.id, 0, { kod: "HT-K3", konum: null }, null));
+  assert.equal((await sr(FA.den1, k3.id))!.kopyaKaynak, no);
+});
+
+/* 2026-10-05 (313; maket MV.gunlukSure, plan içi "a-mesai-sebep", rapor ekranı "r-mesai-sebep"; 212, AA2; KOD-GECIS ENGEL 3): günlük süre = denetçinin
+   bugün açtığı, silinmemiş raporlarının tür süreleri; hak = günlük mesai ile yıllık kalan fazla çalışmanın küçüğü. */
+test("ENGEL 3 günlük süre: mesai açıkken bugünkü raporların tür süreleri normal + hakkı doldurunca yeni rapor ve kopya açılmaz; hak yıllık kalan fazla çalışmayla sınırlı; silinen sayılmaz; kapalıyken sınır yok", async () => {
+  /* ayrı denetçi: öteki testlerin bugünkü raporları sayılmasın */
+  const [P3, H3] = await kiraciIcinde(havuz, A, async (db) => {
+    const p = (await db.sorgu<{ id: string }>("INSERT INTO personel (ad, basla, meslek, ekipnet) VALUES ('Deneme Üç', '2024-01-01', 'mak-muh', '123') RETURNING id::text")).rows[0].id;
+    const h = (await db.sorgu<{ id: string }>("INSERT INTO hesap (eposta, ad, roller, durum, personel_id) VALUES ('den3@deneme-a.example', 'Deneme', $1, 'etkin', $2) RETURNING id::text",
+      [["denetci"], p])).rows[0].id;
+    return [p, h];
+  });
+  const den3 = kisi(H3, "denetci");
+  const id = tamam(await a(FA.plan, (db) => planAc(db, depo, FA.plan, A, { tesis: FA.tesis, baslangic: bugun, bitis: bugun, ekip: [{ personel: P3, isgNo: "ISG-3", kaydet: false }] }))).id;
+  tamam(await a(den3, async (db) => planKabul(db, den3, id, (await planIci(db, den3, id))!.surum, true)));
+  const mesai = (d: object) => a(FA.yon, async (db) => { const m = await ayarOku(db, "mesai"); return ayarYaz(db, "mesai", m.surum, { ...m.deger, ...d }, { kim: "Deneme", ne: "ayar.mesai" }); });
+  const ac = (kod: string) => a(den3, (db) => raporOlustur(db, den3, id, FA.ekp[kod]));
+  const DOLU = { durum: "red", neden: "Günlük süre doldu (mesai takibi); bugün yeni rapor oluşturulamaz." };
+  await sql(A, "UPDATE ekipman_turu SET sure = 60 WHERE id = $1", [FA.tur]);
+  try {
+    assert.equal((await mesai({ acik: true, normal_dk: 60, mesai_dk: 60, yillik_fazla_saat: 0 })).durum, "tamam");
+    assert.equal((await ici(den3, id))!.mesai, null, "henüz rapor yok");
+    const r1 = tamam(await ac("HT-A1"));
+    /* 60 dk doldu; yıllık fazla çalışma hakkı 0 → mesai eklenmez */
+    let p = (await ici(den3, id))!;
+    assert.deepEqual(p.mesai, { normal: 60, mesai: 60 });
+    assert.deepEqual(await ac("HT-A2"), DOLU);
+    const v = (await a(den3, (db) => sahaRaporu(db, den3, r1.id)))!;
+    assert.equal(v.mesaiDolu, true);
+    assert.deepEqual(await a(den3, (db) => raporKopyala(db, den3, r1.id, v.surum, { kod: "HT-M1", konum: null }, null)), DOLU);
+    assert.equal((await sql(A, "SELECT 1 FROM ekipman WHERE kod = 'HT-M1'")).rowCount, 0, "engelde ekipman açılmaz");
+    /* yıllık hak açılınca günlük mesai eklenir: 60 + 60 */
+    tamam(await mesai({ yillik_fazla_saat: 270 }));
+    assert.equal((await ici(den3, id))!.mesai, null);
+    const r2 = tamam(await ac("HT-A2"));
+    p = (await ici(den3, id))!;
+    assert.deepEqual(p.mesai, { normal: 60, mesai: 60 }, "120 dk doldu");
+    assert.deepEqual(await ac("HT-A3"), DOLU);
+    /* silinen rapor sayılmaz */
+    tamam(await a(den3, (db) => raporSil(db, den3, r2.id, 0)));
+    assert.equal((await ici(den3, id))!.mesai, null);
+    tamam(await ac("HT-A3"));
+    /* kapalıyken sınır yok */
+    tamam(await mesai({ acik: false }));
+    assert.equal((await ici(den3, id))!.mesai, null);
+    tamam(await ac("HT-A4"));
+  } finally {
+    await mesai({ acik: false });
+    await sql(A, "UPDATE ekipman_turu SET sure = NULL WHERE id = $1", [FA.tur]);
+  }
+});
+
+/* 2026-10-05 (313; maket format-guncelle, şerit "r-format-serit"; 211; RAPOR-FORMAT §5): rapor açıldığı sürümle kalır; yazan Yeni raporunu daha
+   yeni yayınlanmış sürüme geçirebilir — eşleşen cevaplar korunur, yeni madde ilk cevapla. BU TEST SONDA: türün formatını değiştirir. */
+test("formatı güncelle: yalnız yazanın Yeni raporu, daha yeni yayınlanmış sürüm varsa; ekran hâli kaydedilir, eşleşen cevaplar korunur, yeni madde Uygun; fotoğraf yerinde; veritabanı eski sürüme döndürmez; yeni rapor yeni sürümle açılır", async () => {
+  const id = await yeniPlan();
+  const g = girdi();
+  const r = tamam(await olustur(FA.den1, id, FA.ekp["HT-A1"]));
+  const r2 = tamam(await olustur(FA.den1, id, FA.ekp["HT-A2"]));
+  tamam(await a(FA.den1, (db) => cihazEkle(db, FA.den1, r2.id, 0, FA.man, FA.cihaz["MN-01"])));
+  tamam(await foto(FA.den1, r2.id, 1));
+  tamam(await gonder(FA.den1, r2.id, 2, g));
+  tamam(await foto(FA.den1, r.id, 0));
+  assert.equal((await sr(FA.den1, r.id))!.guncelFormat, null, "güncel sürümde");
+  assert.deepEqual(await a(FA.den1, (db) => raporFormatGuncelle(db, FA.den1, r.id, 1, g)), { durum: "red", neden: "Rapor güncel format sürümünde." });
+  /* yönetici yeni sürüm yayınlar: bir madde eklenir */
+  const yeni = structuredClone(KOMP);
+  for (const x of yeni.bolumler) if (x.blok === "liste") x.gruplar[0].maddeler.push({ id: "k_yeni", metin: "Deneme maddesi", kilit: false });
+  const sira = await a(FA.yon, async (db) => {
+    const t = tamam(await taslakBaslat(db, FA.yon, FA.tur, `surum:${FA.format}`, null));
+    const k = tamam(await taslakKaydet(db, FA.yon, t.id, t.surum, yeni));
+    return tamam(await yayinla(db, FA.yon, t.id, k.surum, "")).sira;
+  });
+  let v = (await sr(FA.den1, r.id))!;
+  assert.deepEqual([v.formatSira, v.guncelFormat], [1, sira]);
+  assert.equal((await sr(FA.den1, r2.id))!.guncelFormat, null, "gönderilmiş raporda yok");
+  assert.equal((await sr(FA.mek, r.id))!.guncelFormat, null, "yalnız düzenleyebilene");
+  /* yetki ve durum sunucuda */
+  assert.equal((await a(FA.mek, (db) => raporFormatGuncelle(db, FA.mek, r.id, v.surum, g))).durum, "yetkisiz");
+  assert.equal((await a(FA.den2, (db) => raporFormatGuncelle(db, FA.den2, r.id, v.surum, g))).durum, "yok");
+  assert.equal((await b(FB.den1, (db) => raporFormatGuncelle(db, FB.den1, r.id, v.surum, g))).durum, "yok");
+  assert.deepEqual(await a(FA.den1, (db) => raporFormatGuncelle(db, FA.den1, r2.id, 3, g)), { durum: "red", neden: "Rapor gönderildi; yalnız Yeni rapor düzenlenir." });
+  assert.equal((await a(FA.den1, (db) => raporFormatGuncelle(db, FA.den1, r.id, v.surum - 1, g))).durum, "cakisma");
+  /* güncelle: ekranın hâli kaydedilir, eşleşen cevaplar korunur, yeni madde Uygun */
+  const el = { ...g, ekipman: { ...g.ekipman, marka: "Güncel Marka" }, cevaplar: { ...g.cevaplar, madde: { ...g.cevaplar.madde, [MADDELER[0].id]: { c: "Uygun değil", not: "Korozyon" } } } };
+  assert.deepEqual(await a(FA.den1, (db) => raporFormatGuncelle(db, FA.den1, r.id, v.surum, el)),
+    { durum: "tamam", id: r.id, bildirim: `Format güncellendi (sürüm ${sira}): 1 yeni madde eklendi (Uygun); cevaplar korundu.` });
+  v = (await sr(FA.den1, r.id))!;
+  assert.deepEqual([v.formatSira, v.guncelFormat, v.ekipmanBilgi.marka], [sira, null, "Güncel Marka"]);
+  assert.deepEqual(v.cevaplar.madde[MADDELER[0].id], { c: "Uygun değil", not: "Korozyon", foto: 0 });
+  assert.deepEqual(v.cevaplar.madde.k_yeni, { c: "Uygun", foto: 0 });
+  assert.deepEqual([v.cevaplar.alan, v.cevaplar.deger, v.cevaplar.sonuc], [g.cevaplar.alan, g.cevaplar.deger, "uygun"]);
+  assert.deepEqual(v.fotolar.map((f) => [f.bolum, f.madde]), [["foto", null]], "fotoğraf yerinde");
+  assert.ok(v.tanim.bolumler.some((x) => x.blok === "liste" && x.gruplar.some((gr) => gr.maddeler.some((m) => m.id === "k_yeni"))), "ekran yeni sürümle çizilir");
+  assert.deepEqual(await a(FA.den1, (db) => raporFormatGuncelle(db, FA.den1, r.id, v.surum, el)), { durum: "red", neden: "Rapor güncel format sürümünde." });
+  /* veritabanı: eski sürüme dönülmez */
+  await assert.rejects(sql(A, "UPDATE rapor SET format_id = $2 WHERE id = $1", [r.id, FA.format]), /daha yeni yayınlanmış sürümüne/);
+  /* yeni rapor yeni sürümle açılır */
+  const r3 = tamam(await olustur(FA.den1, id, FA.ekp["HT-A3"]));
+  const v3 = (await sr(FA.den1, r3.id))!;
+  assert.deepEqual([v3.formatSira, v3.guncelFormat, v3.cevaplar.madde.k_yeni], [sira, null, { c: "Uygun" }]);
 });

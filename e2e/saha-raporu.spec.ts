@@ -6,7 +6,9 @@
    değerleri, sonuç → Kaydet → Cihaz ekle (zimmetteki, kalibrasyonu geçerli MN-01) → Onaya gönder → "Teknik yönetici onayında", Onaya
    gönder kalkar → kırıntıdan plana dönülür: plan Denetimde, Raporlar listesinde rapor no ve durum, Rapor oluştur artık yok. Tohum
    scripts/e2e-sunucu.ts (E2E_SAHA): HT'nin yayındaki formatı hazır şablon KOMPRESOR, gerekli cihaz türü Manometre. Her proje kendi planını açar
-   (rapor plan × ekipman başına tek) — öteki testlere dokunmaz. */
+   (rapor plan × ekipman başına tek) — öteki testlere dokunmaz.
+   313: gönderilmiş raporda "Kopyala" → pencere (kod + bölüm) → aynı kodla durur ("bu planda zaten var") → yeni kodla yeni ekipmanın Yeni raporu açılır
+   (başlık "<kod> · Hava tankı", kaynak şeridi). Kod her koşu ve genişlikte ayrı (firmada eşsiz). */
 import { expect, test, type Locator, type Page } from "@playwright/test";
 import { E2E_HESAPLAR, E2E_PLAN, E2E_SAHA } from "./hesaplar";
 import { girisli, hazir } from "./yardimci";
@@ -143,4 +145,25 @@ test("saha raporu: rapor oluştur, eksikle gönderilmez, doldur + cihaz ekle, on
   await expect(raporlar).toContainText("Teknik yönetici onayında");
   await expect(raporlar.getByRole("link", { name: "Raporu aç" })).toHaveAttribute("href", raporAdresi);
   await expect(page.getByRole("button", { name: `${E2E_SAHA.ekipman} için rapor oluştur` })).toHaveCount(0);
+
+  /* 313 Kopyala (gönderilmiş rapor): yeni ekipmanın kodu + bölümü → yeni ekipmanın Yeni raporu; plandaki kod verilmez */
+  await page.goto(raporAdresi);
+  await hazir(page);
+  await page.getByRole("button", { name: "Kopyala", exact: true }).click();
+  const kopya = page.getByRole("dialog", { name: "Kopyala · yeni ekipman" });
+  await expect(kopya).toBeVisible();
+  const kodKutusu = kopya.getByRole("textbox", { name: /^Ekipman kodu/ });
+  await kodKutusu.fill(E2E_SAHA.ekipman);
+  await kopya.getByRole("button", { name: "Kopyala", exact: true }).click();
+  await expect(kopya).toContainText(`${E2E_SAHA.ekipman} bu planda zaten var`, { timeout: 30_000 });
+  const kod = `K${test.info().project.name.slice(0, 3).toUpperCase()}${Date.now() % 100000}`;
+  await kodKutusu.fill(kod);
+  await kopya.getByRole("textbox", { name: "Ekipman bölümü (kullanım yeri)" }).fill("Arka bahçe");
+  await kopya.getByRole("button", { name: "Kopyala", exact: true }).click();
+  await expect(page.getByRole("heading", { level: 1 })).toHaveText(`${kod} · ${E2E_SAHA.tur}`, { timeout: 30_000 });
+  await expect(page).toHaveURL(new RegExp(`/raporlar/${UUID}$`));
+  expect(new URL(page.url()).pathname).not.toBe(raporAdresi);
+  await expect(page.getByText(/raporundan kopyalandı; test değerleri, fotoğraflar ve sonuç bu ekipman için girilir\./)).toBeVisible();
+  await expect(page.getByText("Yeni", { exact: true }).filter({ visible: true }).first()).toBeVisible();
+  await expect(page.getByRole("button", { name: "Onaya gönder" }).first()).toBeVisible();
 });

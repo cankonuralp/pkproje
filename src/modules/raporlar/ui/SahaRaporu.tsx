@@ -13,7 +13,9 @@
    gönderilmez: "Zorunlu alanlar doldurulmadı" penceresi eksikleri sayar, her biri alanına götürür; boş alanlar kırmızı (aria-invalid), doldurdukça işaret
    kalkar (maket UY / zorunluEksik). Göndermeden önce sorulur (maket gonder: "Rapor onaya gönderilsin mi?"). Gönderilen rapor salt okunur (kilit
    şeridi). Formatın kendi ekipman bilgi bölümü (ör. kompresör) 2. bölüme katılır; formatın sorduğu alan sabit satırda tekrar edilmez (marka,
-   model, imal yılı …). Yetki, kural ve ENGEL sunucuda; buradaki tuşlar yalnız izinli olanı gösterir. */
+   model, imal yılı …). Yetki, kural ve ENGEL sunucuda; buradaki tuşlar yalnız izinli olanı gösterir.
+   313: "Kaydet ve kopyala" (Yeni) / "Kopyala" (gönderilmiş) yeni ekipmanın raporunu açar ve oraya gider (karar 204–209); kopyadan açılan Yeni
+   raporda kaynak şeridi (U7); daha yeni format sürümü yayınlandıysa "Formatı güncelle" şeridi (U6, 211); günlük süre dolduysa neden şeridi (212). */
 import { useRouter } from "next/navigation";
 import { useMemo, useState, useTransition, type ReactNode } from "react";
 import { useBildir } from "../../../components/bildirim/Bildirim";
@@ -32,7 +34,10 @@ import type { SahaRaporu as SahaRaporuVerisi } from "../server/raporlar";
 import { alanId, BilgiBlok, FormatBolumu, OkuGirdi, RaporBolumu, Satir, Satirlar, TarihKutusu, type Baglam, type Kaynak } from "./Bloklar";
 import { CihazBolumu } from "./CihazBolumu";
 import { FotoListesi } from "./FotoListesi";
-import { onayaGonderEylemi, raporKaydetEylemi, raporKunyeGuncelleEylemi, raporSilEylemi, type RaporYaniti } from "./eylemler";
+import { KopyaPenceresi } from "./KopyaPenceresi";
+import {
+  onayaGonderEylemi, raporFormatGuncelleEylemi, raporKaydetEylemi, raporKopyalaEylemi, raporKunyeGuncelleEylemi, raporSilEylemi, type RaporYaniti,
+} from "./eylemler";
 import stil from "./raporlar.module.css";
 
 type Gorunum = SahaRaporuVerisi;
@@ -83,6 +88,7 @@ export function SahaRaporu({ v }: { v: Gorunum }) {
   const [genel, setGenel] = useState<string | null>(null);
   const [alanHata, setAlanHata] = useState<Record<string, string>>({});
   const [kapali, setKapali] = useState<ReadonlySet<string>>(() => new Set());
+  const [kopya, setKopya] = useState(false);
   /* yazmadan sonra sayfa yenilenip yeni sürüm gelene kadar yazan tuşlar kapalı: bildirim yenilemeden önce çıkar, hemen basılan ikinci tuş eski
      sürümle gidip "değiştirildi" denmesin (yenilenen veri yeni nesnedir — aynı nesne = henüz gelmedi) */
   const [yenilenen, setYenilenen] = useState<Gorunum | null>(null);
@@ -186,6 +192,19 @@ export function SahaRaporu({ v }: { v: Gorunum }) {
       yanitHatasi(r);
     });
   };
+  /* kopya: Yeni raporda ekranın son hâli önce kaydedilir; başarıda yeni ekipmanın raporuna gidilir (karar 208) */
+  const kopyala = (k: { kod: string; konum: string }) => new Promise<string | null>((bitti) => baslat(async () => {
+    const r = await raporKopyalaEylemi(v.id, v.surum, k, v.izin.duzenle ? girdi() : null);
+    if (r.tamam && r.id) { setKirli(false); setKopya(false); bildir(r.bildirim ?? "Kopya açıldı."); router.push(`/raporlar/${r.id}`); bitti(null); return; }
+    const h = r.hatalar ?? {}, ilk = Object.keys(h)[0];
+    if (r.hatalar && !h.kod && ilk) { setKopya(false); yanitHatasi(r); bitti(null); return; }   /* raporun kendi alanı geçersiz: üst şeritte */
+    bitti(h.kod ?? r.genel ?? (ilk ? h[ilk] : "Kopya açılamadı."));
+  }));
+  const formatGuncelle = () => baslat(async () => {
+    const r = await raporFormatGuncelleEylemi(v.id, v.surum, girdi());
+    if (r.tamam) { kaydedildi(); bildir(r.bildirim ?? "Format güncellendi."); yenile(); return; }
+    yanitHatasi(r);
+  });
   const kunyeGuncelle = () => baslat(async () => {
     const r = await raporKunyeGuncelleEylemi(v.id);
     if (r.tamam) { setGenel(null); bildir(r.bildirim ?? "Plan bilgileri güncellendi."); yenile(); return; }
@@ -242,6 +261,23 @@ export function SahaRaporu({ v }: { v: Gorunum }) {
     seritler.push(
       <Serit key="kunye" tur="bilgi" ikon="refresh-cw" eylem={<Tus tur="ikincil" ikon="refresh-cw" disabled={mesgul} onClick={kunyeGuncelle}>Güncelle</Tus>}>
         Planlamacı plan bilgilerini değiştirdi: <b>{v.kunyeFark.join(", ")}</b>. Raporunuza almak için Güncelle&apos;ye basın.
+      </Serit>,
+    );
+  }
+  if ((v.izin.duzenle || v.izin.kopyala) && v.mesaiDolu) {
+    seritler.push(<Serit key="mesai" tur="uyari" ikon="clock">Günlük süre doldu; yeni rapor ve kopya oluşturulamaz.</Serit>);
+  }
+  if (v.izin.duzenle && v.guncelFormat) {
+    seritler.push(
+      <Serit key="format" tur="bilgi" ikon="refresh-cw" eylem={<Tus tur="ikincil" ikon="refresh-cw" disabled={mesgul} onClick={formatGuncelle}>Formatı güncelle</Tus>}>
+        Bu rapor eski format sürümüyle açıldı (sürüm {v.formatSira}); güncel sürüm {v.guncelFormat}.
+      </Serit>,
+    );
+  }
+  if (v.durum === "taslak" && v.kopyaKaynak) {
+    seritler.push(
+      <Serit key="kopya" tur="bilgi" ikon="copy">
+        Bilgiler <Kod>{v.kopyaKaynak}</Kod> raporundan kopyalandı; test değerleri, fotoğraflar ve sonuç bu ekipman için girilir.
       </Serit>,
     );
   }
@@ -316,15 +352,19 @@ export function SahaRaporu({ v }: { v: Gorunum }) {
         ))}
       </div>
 
-      {(v.izin.duzenle || v.izin.sil) && (
+      {(v.izin.duzenle || v.izin.sil || v.izin.kopyala) && (
         <div className={stil.eylem}>
           {v.izin.sil && <Tus tur="ikincil" ikon="trash-2" className={stil.silTus} disabled={mesgul} onClick={sil}>Sil</Tus>}
+          {v.izin.kopyala && <Tus tur="ikincil" ikon="copy" disabled={mesgul} onClick={() => setKopya(true)}>{v.izin.duzenle ? "Kaydet ve kopyala" : "Kopyala"}</Tus>}
           {v.izin.duzenle && <>
             <Tus tur="ikincil" ikon="check" disabled={mesgul} onClick={kaydet}>Kaydet</Tus>
             <Tus ikon="send" disabled={mesgul} onClick={gonder}>Onaya gönder</Tus>
           </>}
         </div>
       )}
+
+      {kopya && <KopyaPenceresi kaydetVe={v.izin.duzenle} kaynakKod={v.ekipman.kod} turAd={v.tur.ad} konum={ekipman.konum} mesgul={mesgul}
+        onKapat={() => setKopya(false)} kopyala={kopyala} />}
 
       <Pencere acik={!!eksikler} baslik="Zorunlu alanlar doldurulmadı" onKapat={() => setEksikler(null)} alt={<Tus onClick={tamam}>Tamam</Tus>}>
         <p className={pencereMetinSinifi}>Eksik alanlar kırmızıyla işaretlendi. Rapor kaydedildi, gönderilmedi.</p>

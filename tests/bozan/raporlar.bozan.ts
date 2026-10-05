@@ -2,7 +2,9 @@
    kopyalanır, bellekte bozulur, kopyadan koşulur.
    1. 0025'teki akış tetiği olmasaydı rapor doğrudan "onayda" açılır, onaydaki (gönderilmiş) raporun içeriği ve sonucu sessizce değişirdi.
    2. Sunucuda ENGEL 1 (plan günü) denetimi olmasaydı ileri tarihli plana rapor açılırdı (KOD-GECIS §9-1).
-   3. Sunucuda cihaz eklerken kalibrasyon denetimi olmasaydı kalibrasyonu geçmiş cihaz rapora eklenirdi (ENGEL 2'nin ilk kapısı). */
+   3. Sunucuda cihaz eklerken kalibrasyon denetimi olmasaydı kalibrasyonu geçmiş cihaz rapora eklenirdi (ENGEL 2'nin ilk kapısı).
+   4. (312) Fotoğraf / cihaz sayısı istemciden alınsaydı fotoğrafsız, cihazsız rapor onaya giderdi.
+   5. (313) Sunucuda günlük süre (ENGEL 3) denetimi olmasaydı süre dolmuşken kopya ve yeni rapor açılırdı. */
 import assert from "node:assert/strict";
 import { copyFileSync, mkdirSync, mkdtempSync, readdirSync, readFileSync, rmSync, writeFileSync } from "node:fs";
 import { tmpdir } from "node:os";
@@ -16,6 +18,7 @@ import { klasorDepo } from "../../src/server/dosya/depo.ts";
 import { planKabul } from "../../src/modules/planlar/server/plan-ici.ts";
 import { bugunTr, planAc, type Kisi } from "../../src/modules/planlar/server/planlar.ts";
 import { taslakBaslat, yayinla } from "../../src/modules/rapor-format/server/formatlar.ts";
+import { ayarYaz } from "../../src/server/ayar/ayar.ts";
 import { testKumesi } from "../yardimci/kume.ts";
 import { supabaseBenzeri, type SupabaseBenzeri } from "../yardimci/supabase.ts";
 
@@ -157,5 +160,20 @@ test("sunucu fotoğraf / cihaz sayısını kendi listesinden saymayınca istemci
     };
     const g = await is(den, (db) => m.onayaGonder(db, den, r.id, 0, girdi));
     assert.equal(g.durum, "tamam", `fotoğrafsız, cihazsız rapor gönderildi: ${JSON.stringify(g)}`);
+  } finally { await h.end(); }
+});
+
+/* 2026-10-05 (313): sunucuda günlük süre (ENGEL 3; 212, AA2) denetimi olmasaydı mesai takibi açıkken, süre dolmuş denetçi kopya (ve yeni rapor) açardı. */
+test("sunucuda günlük süre denetimi kalkınca süre dolmuşken kopya açılır", async () => {
+  const m = await bozukModul<Raporlar>(RAPORLAR, "if ((await mesaiDurumu(db, personelId, bugun)).dolu)", "if (false)");
+  const { h, den, id, ekipman, tur, is } = await saglam(bugunTr());
+  try {
+    await is(den, (db) => db.sorgu("UPDATE ekipman_turu SET sure = 60 WHERE id = $1", [tur]));
+    const y = await is(den, (db) => ayarYaz(db, "mesai", -1, { acik: true, normal_dk: 60, mesai_dk: 0, yillik_fazla_saat: 0, gunluk_ust_dk: 660 }, { kim: "Deneme", ne: "ayar.mesai" }));
+    assert.equal(y.durum, "tamam", JSON.stringify(y));
+    const r = await is(den, (db) => m.raporOlustur(db, den, id, ekipman));
+    assert.ok(r.durum === "tamam", JSON.stringify(r));
+    const k = await is(den, (db) => m.raporKopyala(db, den, r.id, 0, { kod: "HT-2", konum: null }, null));
+    assert.equal(k.durum, "tamam", `süre dolmuşken kopya açıldı: ${JSON.stringify(k)}`);
   } finally { await h.end(); }
 });

@@ -106,6 +106,8 @@ pkproje/
                             format sürümü, künye kopyası, cevaplar JSON, cihazlar; durum ve içerik değişmezliği tetikte) · server/raporlar.ts (oluştur,
                             saha verisi, kaydet, onaya gönder: ENGEL 1 / 2 / 5, sil, cihaz) · server/plan-baglanti.ts (Planlar'ın rapora baktığı tek yer)
                             · ekran /raporlar/<id> (format tanımından çizilir: ui/Bloklar.tsx) · fotoğraflar (312: ui/FotoListesi.tsx, dosya modülü "rapor")
+                            · Kaydet ve kopyala / Formatı güncelle / günlük süre — mesai (313: raporKopyala, raporFormatGuncelle, plan-baglanti mesaiDurumu;
+                            ui/KopyaPenceresi.tsx)
   src/modules/ekipman/      EKİPMAN (2026-10-04, 309): tesisin kalıcı ekipman kaydı (kod firmada eşsiz; eski kod başkasına verilmez — ekipman_kodu)
   src/tanim/iller.ts        81 il + 973 ilçe (açık veri, MIT; bir kez alındı)
   src/modules/<modül>/      ★ her iş modülü: server/ (veri erişimi + iş kuralları, dışa açılan fonksiyonlar) · ui/ · şema · testler

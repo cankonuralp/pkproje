@@ -34,6 +34,10 @@ export const RaporTarihleri = z.object({
 });
 export type RaporTarihleri = z.output<typeof RaporTarihleri>;
 
+/** Kaydet ve kopyala penceresi (N10: "ekipman kodu ve ekipman bölümü sorsun yeterli"): yeni ekipmanın kodu (biçim ve eşsizlik Planlar'ın kod
+    denetiminde, plan içi "Ekipman ekle" ile tek üretici) ve bölümü (kullanım yeri; boşsa kaynaktaki); tür kaynağınki */
+export const KopyaGirdisi = z.object({ kod: z.string({ error: "Ekipman kodunu yazın." }).max(40), konum: metin(60) });
+
 /** Kaydet (ve Onaya gönder öncesi kayıt): istemcinin gördüğü sürümle */
 export const RaporKaydi = z.object({ ekipman: EkipmanBilgisi, tarih: RaporTarihleri, cevaplar: Cevaplar });
 export type RaporKaydi = z.output<typeof RaporKaydi>;

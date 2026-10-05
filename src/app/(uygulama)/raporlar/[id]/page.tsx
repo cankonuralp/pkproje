@@ -1,6 +1,6 @@
 /* SAHA RAPORU (maket rapor.html M8; 311): plan içinde ekipmanın "Rapor oluştur"uyla açılan rapor. Kapı modül 14 (Raporlar); raporu görme
    yetkisi (gör / branşı / kendi) ve düzenleme (yalnız yazan, Yeni) sunucuda — sahaRaporu göremeyene null döner, var olduğu da söylenmez.
-   Ekran SahaRaporu (istemci; yerel taslak rapor değişince sıfırlansın diye rapor kimliğiyle anahtarlı). */
+   Ekran SahaRaporu (istemci; yerel taslak rapor ya da formatı değişince sıfırlansın diye rapor kimliği + format sürümüyle anahtarlı). */
 import type { Metadata } from "next";
 import { notFound } from "next/navigation";
 import { Yetkisiz } from "../../../../components/hata/Hata";
@@ -18,5 +18,5 @@ export default async function Sayfa({ params }: { params: Promise<{ id: string }
   const { id } = await params;
   const v = await oturumIslemi(o, (db) => sahaRaporu(db, o, id));
   if (!v) notFound();
-  return <SahaRaporu key={v.id} v={v} />;
+  return <SahaRaporu key={`${v.id}-${v.formatSira}`} v={v} />;
 }

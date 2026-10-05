@@ -171,3 +171,8 @@ export async function turRaporBilgisi(db: Sorgulayici, id: string): Promise<{ id
     "SELECT id::text, ad, kod, brans, grup, periyot, kontrol_std, cihaz_turleri::text[] AS cihaz_turleri FROM ekipman_turu WHERE id = $1", [id])).rows[0];
   return x ? { id: x.id, ad: x.ad, kod: x.kod, brans: x.brans, grup: x.grup, periyot: x.periyot, kontrolStd: x.kontrol_std, cihazTurleri: x.cihaz_turleri } : null;
 }
+
+/** Raporlar için (mesai, 212): tür başına bir raporun süresi (dk; tanımsızsa null — mesaiye sayılmaz). Yetki ÇAĞIRANDA. */
+export async function turSureleri(db: Sorgulayici): Promise<Map<string, number | null>> {
+  return new Map((await db.sorgu<{ id: string; sure: number | null }>("SELECT id::text, sure FROM ekipman_turu")).rows.map((x) => [x.id, x.sure]));
+}

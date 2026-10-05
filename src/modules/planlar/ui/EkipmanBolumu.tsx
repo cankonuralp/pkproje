@@ -30,6 +30,8 @@ import stil from "./planlar.module.css";
 const bransAd = (b: "m" | "e") => (b === "m" ? "Mekanik" : "Elektrik");
 /** plan günü gelmedi şeridinin id'si (PlanIciEkrani çizer; kapalı Rapor oluştur sebebini buradan okur) */
 export const ERKEN_ID = "plan-erken-sebep";
+/** günlük süre doldu şeridi (212): Rapor oluştur kapalı, nedeni bu şerit */
+export const MESAI_ID = "plan-mesai-sebep";
 /* sütun genişlikleri: Rapor oluştur varken işlem sütunu Rapor sütunundan pay alır (maket .a-tablo-ekipman, 2026-10-03) */
 const GENISLIK = {
   sade: { kod: "14%", tur: "22%", konum: "18%", brans: "11%", onceki: "14%", rapor: "8%", eylem: "13%" },
@@ -103,8 +105,8 @@ export function EkipmanBolumu({ v }: { v: PlanIci }) {
             : <Tus tur="ikincil" ikon="ban" className={stil.ikonTus} disabled={bekliyor} aria-label={`${e.kod} pasife al`} title="Pasife al"
               onClick={() => pasif(e, true)}><span className="gizli">Pasife al</span></Tus>)}
           {olustur && (
-            <Tus tur="ikincil" ikon="file-plus" disabled={bekliyor || v.erken} aria-label={`${e.kod} için rapor oluştur`}
-              aria-describedby={v.erken ? ERKEN_ID : undefined} onClick={() => raporAc(e)}>Rapor oluştur</Tus>
+            <Tus tur="ikincil" ikon="file-plus" disabled={bekliyor || v.erken || !!v.mesai} aria-label={`${e.kod} için rapor oluştur`}
+              aria-describedby={v.erken ? ERKEN_ID : v.mesai ? MESAI_ID : undefined} onClick={() => raporAc(e)}>Rapor oluştur</Tus>
           )}
         </div>
       );

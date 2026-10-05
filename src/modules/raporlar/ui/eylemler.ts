@@ -4,7 +4,9 @@
 import { ayniKoken } from "../../../server/kimlik/koken";
 import { istekOturumu, oturumIslemi } from "../../../server/kimlik/istek";
 import { depo } from "../../../server/dosya/depo";
-import { cihazEkle, cihazKaldir, fotoEkle, fotoSil, onayaGonder, raporKaydet, raporKunyeGuncelle, raporOlustur, raporSil, type RaporYazma } from "../server/raporlar";
+import {
+  cihazEkle, cihazKaldir, fotoEkle, fotoSil, onayaGonder, raporFormatGuncelle, raporKaydet, raporKopyala, raporKunyeGuncelle, raporOlustur, raporSil, type RaporYazma,
+} from "../server/raporlar";
 
 export interface RaporYaniti {
   tamam?: boolean; id?: string; bildirim?: string; hatalar?: Record<string, string>; eksikler?: { bolum: string; alan: string; ad: string }[]; genel?: string;
@@ -58,4 +60,11 @@ export async function fotoEkleEylemi(form: FormData): Promise<RaporYaniti> {
 }
 export async function fotoSilEylemi(id: string, surum: number, dosyaId: string): Promise<RaporYaniti> {
   return islem((o) => oturumIslemi(o, (db) => fotoSil(db, o, metin(id), Number(surum), metin(dosyaId))));
+}
+/** Kaydet ve kopyala (kayit: ekranın son hâli) / Kopyala (gönderilmiş rapor, kayit null); başarıda id yeni raporun */
+export async function raporKopyalaEylemi(id: string, surum: number, girdi: unknown, kayit: unknown): Promise<RaporYaniti> {
+  return islem((o) => oturumIslemi(o, (db) => raporKopyala(db, o, metin(id), Number(surum), girdi, kayit ?? null)));
+}
+export async function raporFormatGuncelleEylemi(id: string, surum: number, kayit: unknown): Promise<RaporYaniti> {
+  return islem((o) => oturumIslemi(o, (db) => raporFormatGuncelle(db, o, metin(id), Number(surum), kayit)));
 }

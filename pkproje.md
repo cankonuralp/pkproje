@@ -2341,6 +2341,23 @@ revizyon, alan kopyalama, hafif kusur devri, meslek eşleşme denetimi).
 - Emsal ürünler: https://opwire.app/iso-17020-periyodik-kontrol-yazilimi/ · https://17020muayene.vidco.com.tr/ · https://akuple.com/asansor-kontrol-yazilimi/ · https://ensyazilim.com/
 
 ## 11 · Değişiklik günlüğü
+- 2026-10-05 (313): **K3 Saha raporu 3: Kaydet ve kopyala, Formatı güncelle, günlük süre (mesai)** (maket kopyala / pencereKaydet / format-guncelle,
+  MV.gunlukSure; karar 204–209, N10, 211, 212; AA2; KOD-GECIS ENGEL 3). **Kaydet ve kopyala** (Yeni rapor; gönderilmişte adı **Kopyala**, kayıt
+  yok): yalnız raporu yazan; pencere yalnız **ekipman kodu** ve **ekipman bölümü (kullanım yeri)** sorar; kod plan içi "Ekipman ekle" ile aynı
+  denetimden (biçim, bu planda var, bu tesiste kayıtlı, başka tesiste, eski kod); engeller (plan günü, günlük süre, kod) **kayıttan önce** bakılır —
+  engelde rapor yarım kaydedilmez. Yeni ekipman tesise kalıcı kayıt, plana "sonradan"; kopya her zaman Yeni, türün **güncel** formatıyla, kaynağın
+  künyesiyle; kopyalanır: ekipman bilgileri (seri no hariç — yeni ekipmanın), bilgi alanları (detaylar, tespitler), ölçüm cihazları, madde
+  **seçimleri**; kopyalanmaz: madde açıklaması / derecesi / fotoğrafı, test ve ölçüm değerleri, fotoğraflar, sonuç, yorum. Yeni rapora gidilir
+  (bildirim "[Rapor kaydedildi; ]<KOD> açıldı: <no>. Bilgiler <kod> raporundan kopyalandı."), üstte kaynak şeridi (U7). Tamamlanmış plana kopya yok
+  (ekipman eklenmez). **Formatı güncelle** (U6): yalnız yazanın Yeni raporu, türün daha yeni yayınlanmış sürümü varsa şerit + tuş; ekranın hâli
+  kaydedilir, kimliği eşleşen cevaplar (alan, madde, ölçüm tablosu, test değeri) korunur, yeni madde ilk cevapla ("Uygun"); yeri kalkan fotoğraf
+  formatın ilk fotoğraf bölümüne taşınır (kaybolmaz); veritabanı yalnız daha yeni yayınlanmış sürüme geçirir (0025). **Günlük süre** (ENGEL 3,
+  firma ayarı açıksa): denetçinin bugün açtığı, silinmemiş raporlarının tür süreleri toplamı ≥ normal + hak (hak = günlük mesai ile yıllık kalan
+  fazla çalışmanın küçüğü; süresi tanımsız tür sayılmaz) → yeni rapor ve kopya açılmaz; plan içinde şerit "Günlük süre doldu (normal N + mesai M dk);
+  bugün yeni rapor oluşturulamaz." ve Rapor oluştur kapalı; rapor ekranında "Günlük süre doldu; yeni rapor ve kopya oluşturulamaz.". Göç yok.
+  Kilit: tests/raporlar.test.ts +3 (kopya: kod, yetki, çakışma, kopyalanan / kopyalanmayan, Kopyala; günlük süre: hak, yıllık sınır, silinen, kapalı;
+  format: yetki, durum, eşleşme, eski sürüme dönülmez, yeni rapor yeni sürümle), bozan +1 (günlük süre denetimi kalkınca süre dolmuşken kopya
+  açılır), e2e saha raporu gönderilmiş raporu kopyalar.
 - 2026-10-05 (312): **K3 Saha raporu 2: fotoğraflar** (maket fotoMenu / fotolar / fotoSil; §3.8-5 temel zorunlular; O2; AA9; 09-A1, A2, A4;
   araştırmanın C4 ve C18 kararları). Fotoğraf rapor başına **en az 1** (reisim 2026-09-22) → hazır şablonlarda (ZPKR02, kompresör) "Fotoğraflar"
   bölümü en az 1 (termal isteğe bağlı; ZPKR01'de fotoğraf bölümü yok — P1). Motor: fotoğraf sayısı **bölüm başına** (tek sayı termal ile

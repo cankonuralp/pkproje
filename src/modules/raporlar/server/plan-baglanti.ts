@@ -2,6 +2,8 @@
    İÇE AKTARMAZ (raporlar.ts Planlar'ı aktarır; döngü olmasın). Yetki ÇAĞIRANDA (plan içi: planı görebilen). */
 import type { Sorgulayici } from "../../../server/db/kiraci.ts";
 import { guncelle, tablo, type Iz } from "../../../server/db/yazici.ts";
+import { ayarOku } from "../../../server/ayar/ayar.ts";
+import { turSureleri } from "../../ekipman-turleri/server/turler.ts";
 
 const UUID = /^[0-9a-f]{8}-[0-9a-f]{4}-[0-9a-f]{4}-[0-9a-f]{4}-[0-9a-f]{12}$/;
 const KUNYE = tablo({ ad: "rapor", sutunlar: ["kunye", "kunye_surum"] });
@@ -39,4 +41,27 @@ export async function raporKunyeleriniYaz(db: Sorgulayici, iz: Iz, planId: strin
     if (x.durum === "cakisma" || x.durum === "yok") throw new Error(`rapor künyesi yazılamadı: ${x.durum}`);
   }
   return l.length;
+}
+
+/* ── MESAİ (212, AA2; KOD-GECIS ENGEL 3; maket MV.gunlukSure) ─────────────────────────────────────────────────────────
+   Günlük süre = o gün (Türkiye) denetçinin AÇTIĞI, silinmemiş raporların tür süreleri toplamı. Hak = günlük mesai ile yıllık kalan fazla
+   çalışmanın (yasal en çok 270 saat; firma ayarı) küçüğü, günlük üst sınırı (660 dk) aşmadan. Ayar açıkken toplam ≥ normal + hak olunca yeni
+   rapor ve kopya açılmaz (reisim'in açık kararı: engel). Yıllık kullanılan: bu yılın önceki günlerinde normalin üstünde kalan süre (günlük
+   mesai sınırıyla). Süresi tanımsız tür mesaiye sayılmaz. Raporlar ve Planlar buradan sorar (Planlar'ı içe aktarmaz). Yetki ÇAĞIRANDA. */
+export interface MesaiDurumu { acik: boolean; normal: number; mesai: number; hak: number; toplam: number; dolu: boolean }
+export async function mesaiDurumu(db: Sorgulayici, personelId: string, bugun: string): Promise<MesaiDurumu> {
+  const m = (await ayarOku(db, "mesai")).deger;
+  if (!m.acik || !UUID.test(personelId)) return { acik: m.acik, normal: m.normal_dk, mesai: m.mesai_dk, hak: 0, toplam: 0, dolu: false };
+  const yil = bugun.slice(0, 4);
+  const l = (await db.sorgu<{ gun: string; tur_id: string }>(
+    `SELECT (olustu AT TIME ZONE 'Europe/Istanbul')::date::text AS gun, tur_id::text FROM rapor
+     WHERE personel_id = $1 AND silindi IS NULL AND olustu >= ($2 || '-01-01')::date - interval '1 day'`, [personelId, yil])).rows;
+  const sure = await turSureleri(db);
+  const gunler = new Map<string, number>();
+  for (const x of l) if (x.gun.startsWith(yil)) gunler.set(x.gun, (gunler.get(x.gun) ?? 0) + (sure.get(x.tur_id) ?? 0));
+  let kullanilan = 0;
+  for (const [g, t] of gunler) if (g < bugun) kullanilan += Math.min(Math.max(t - m.normal_dk, 0), m.mesai_dk);
+  const hak = Math.max(0, Math.min(m.mesai_dk, m.yillik_fazla_saat * 60 - kullanilan, m.gunluk_ust_dk - m.normal_dk));
+  const toplam = gunler.get(bugun) ?? 0;
+  return { acik: true, normal: m.normal_dk, mesai: m.mesai_dk, hak, toplam, dolu: toplam >= m.normal_dk + hak };
 }

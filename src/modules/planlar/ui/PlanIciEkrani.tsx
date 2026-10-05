@@ -19,7 +19,7 @@ import { Tus } from "../../../components/tus/Tus";
 import { meslek } from "../../personel/sema";
 import { akisAdimlari, gunNo, tarihNo, type AdimDurumu } from "../sema";
 import type { PlanIci } from "../server/plan-ici";
-import { EkipmanBolumu, ERKEN_ID } from "./EkipmanBolumu";
+import { EkipmanBolumu, ERKEN_ID, MESAI_ID } from "./EkipmanBolumu";
 import {
   kontrolListesiEylemi, kunyeDuzenleEylemi, kunyeGuncelleEylemi, planKabulEylemi, planReddetEylemi, planTamamlaEylemi, tamamlamaGeriAlEylemi, type PlanYaniti,
 } from "./eylemler";
@@ -202,6 +202,11 @@ export function PlanIciEkrani({ v }: { v: PlanIci }) {
       {calisir && v.erken && (
         <Serit tur="uyari" ikon="calendar" id={ERKEN_ID}>
           Plan günü {tarihNo(k.baslangic)} henüz gelmedi (bugün {tarihNo(v.bugun)}). Rapor plan gününden itibaren oluşturulur; geçmiş günlere açık, ileri tarihe kapalı.
+        </Serit>
+      )}
+      {calisir && v.mesai && (
+        <Serit tur="uyari" ikon="clock" id={MESAI_ID}>
+          Günlük süre doldu (normal {v.mesai.normal} + mesai {v.mesai.mesai} dk); bugün yeni rapor oluşturulamaz.
         </Serit>
       )}
       {calisir && <EkipmanBolumu v={v} />}

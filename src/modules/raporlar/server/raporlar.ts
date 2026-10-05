@@ -7,7 +7,12 @@
    · Kaydet / Onaya gönder / cihaz: yalnız raporu YAZAN (rapor_yaz) ve rapor Yeni (içerik yalnız Yeni'de değişir — veritabanı da zorlar).
    · Onaya gönder: zorunlu alan eksikse (format + sabit tarihler) ENGEL 5, türün gerekli ölçüm cihazı eksik / kalibrasyonu geçmişse ENGEL 2 —
      rapor yine kaydedilir, eksikler listelenir. Öteki kurallar uyarıdır.
-   · Sil: rapor_sil (yazan Yeni raporunu; teknik yönetici) — silme yok, "silindi" damgası (veritabanı zamanıyla). */
+   · Sil: rapor_sil (yazan Yeni raporunu; teknik yönetici) — silme yok, "silindi" damgası (veritabanı zamanıyla).
+   · Günlük süre (212, ENGEL 3): mesai takibi açıkken denetçinin bugünkü süresi dolduysa yeni rapor ve kopya açılmaz.
+   · Kaydet ve kopyala / Kopyala (204–209): yalnız raporu yazan; yeni ekipman (kod + bölüm) tesise kalıcı kayıt, plana "sonradan" (Planlar'ın kod
+     denetimiyle); kopya güncel formatla, Yeni açılır. Kopyalanır: ekipman bilgileri, bilgi alanları (detaylar, tespitler), cihazlar, madde
+     seçimleri. Kopyalanmaz: madde açıklaması / derecesi / fotoğrafı, test ve ölçüm değerleri, fotoğraflar, sonuç, yorum.
+   · Formatı güncelle (211): yazanın Yeni raporu, daha yeni yayınlanmış sürüm varsa; kimliği eşleşen cevaplar korunur, yeni madde ilk cevapla. */
 import type { Sorgulayici } from "../../../server/db/kiraci.ts";
 import { ekle, guncelle, tablo, type GuncelleSonucu, type Iz } from "../../../server/db/yazici.ts";
 import { raporNoAl } from "../../../server/numara/numara.ts";
@@ -22,11 +27,12 @@ import { turRaporBilgisi } from "../../ekipman-turleri/server/turler.ts";
 import { tesisMusteriIletisim } from "../../musteriler/server/musteriler.ts";
 import { raporCihazlari } from "../../olcum-cihazlari/server/cihazlar.ts";
 import { personelOzetleri } from "../../personel/server/personel.ts";
-import { denetimeBasla, kunyeGuncelle, plandakiEkipman, raporIcinPlan, type Kunye } from "../../planlar/server/plan-ici.ts";
+import { denetimeBasla, ekipmanEklenebilir, kodDurumu, kunyeGuncelle, plandakiEkipman, raporIcinPlan, yeniEkipman, type Kunye, type RaporPlani } from "../../planlar/server/plan-ici.ts";
 import { formatSurumuOku, yayindakiFormat } from "../../rapor-format/server/formatlar.ts";
 import { kimdeHaritasi } from "../../zimmetler/server/zimmet.ts";
 import { roldekiHesapAdlari } from "../../../server/kimlik/hesap.ts";
-import { ayEkle, kalibrasyonGecti, RaporKaydi, SONUC_AD, type EkipmanBilgisi, type RaporCihazi, type RaporDurumu, type RaporTarihleri } from "../sema.ts";
+import { ayEkle, kalibrasyonGecti, KopyaGirdisi, RaporKaydi, SONUC_AD, type EkipmanBilgisi, type RaporCihazi, type RaporDurumu, type RaporTarihleri } from "../sema.ts";
+import { mesaiDurumu } from "./plan-baglanti.ts";
 
 const MODUL = 14;
 /** rapor fotoğrafının dosya modülü (dosya erişim kaydında: raporu gören açar) */
@@ -36,7 +42,7 @@ export interface RaporFoto { dosya: string; ad: string; bolum: string; madde: st
 const FOTO_MADDE_EN_COK = 10;
 const RAPOR = tablo({
   ad: "rapor", sutunlar: ["no", "plan_id", "ekipman_id", "tur_id", "format_id", "personel_id", "durum", "kunye", "kunye_surum", "ekipman_bilgi", "bas", "bit",
-    "sonraki", "takip", "rapor_tarihi", "cevaplar", "cihazlar", "fotolar", "sonuc", "sonuc_oto", "silindi"],
+    "sonraki", "takip", "rapor_tarihi", "cevaplar", "cihazlar", "fotolar", "sonuc", "sonuc_oto", "kopya_kaynak", "silindi"],
   gizli: ["cevaplar"],
 });
 const UUID = /^[0-9a-f]{8}-[0-9a-f]{4}-[0-9a-f]{4}-[0-9a-f]{4}-[0-9a-f]{12}$/;
@@ -70,38 +76,80 @@ function ilkCevaplar(t: FormatTanimi): Cevaplar {
 }
 
 /* ── RAPOR OLUŞTUR ───────────────────────────────────────────────────────────────────────────────────────────── */
-export async function raporOlustur(db: Sorgulayici, kim: Kisi, planId: string, ekipmanId: string): Promise<RaporYazma> {
+const MESAI_DOLU = "Günlük süre doldu (mesai takibi); bugün yeni rapor oluşturulamaz.";
+type Hata = Exclude<RaporYazma, { durum: "tamam" }>;
+type AcilanPlan = RaporPlani & { personelId: string };
+
+/** rapor açılabilecek plan (oluştur ve kopya): kişi plandaki denetçi (rapor_olustur), plan kabul edilmiş / denetimde / tamamlanmış, plan günü
+    gelmiş (ENGEL 1), kişinin bugünkü süresi dolmamış (ENGEL 3) */
+async function acilabilirPlan(db: Sorgulayici, kim: Kisi, planId: string): Promise<{ p: AcilanPlan } | { hata: Hata }> {
   const plan = await raporIcinPlan(db, kim, planId);
-  if (!plan) return { durum: "yok" };
-  if (!plan.personelId || duzey(kim, MODUL) === "yok" || !canDoEylem(kim, "rapor_olustur", { atananlar: plan.atananlar })) return { durum: "yetkisiz" };
-  if (plan.durum !== "kabul" && plan.durum !== "denetimde" && plan.durum !== "tamamlandi") return { durum: "red", neden: "Rapor yalnız kabul edilmiş planda oluşturulur." };
+  if (!plan) return { hata: { durum: "yok" } };
+  const personelId = plan.personelId;
+  if (!personelId || duzey(kim, MODUL) === "yok" || !canDoEylem(kim, "rapor_olustur", { atananlar: plan.atananlar })) return { hata: { durum: "yetkisiz" } };
+  if (plan.durum !== "kabul" && plan.durum !== "denetimde" && plan.durum !== "tamamlandi") return { hata: { durum: "red", neden: "Rapor yalnız kabul edilmiş planda oluşturulur." } };
   const bugun = bugunTr();
   if (plan.baslangic > bugun) {
-    return { durum: "red", neden: `Plan günü ${tarihNo(plan.baslangic)} henüz gelmedi (bugün ${tarihNo(bugun)}). Rapor plan gününden itibaren oluşturulur; geçmiş günlere açık, ileri tarihe kapalı.` };
+    return { hata: { durum: "red", neden: `Plan günü ${tarihNo(plan.baslangic)} henüz gelmedi (bugün ${tarihNo(bugun)}). Rapor plan gününden itibaren oluşturulur; geçmiş günlere açık, ileri tarihe kapalı.` } };
   }
-  if (!(await plandakiEkipman(db, planId, ekipmanId))) return { durum: "yok" };
+  if ((await mesaiDurumu(db, personelId, bugun)).dolu) return { hata: { durum: "red", neden: MESAI_DOLU } };
+  return { p: { ...plan, personelId } };
+}
+
+/** kopyanın cevapları (206–207): güncel formatın maddeleri ilk cevapla, kaynakta aynı kimlikli maddenin YALNIZ seçimi (bu formatın cevap setindeyse);
+    bilgi alanları (ekipman detayları, tespitler); test / ölçüm değerleri, fotoğraf sayıları, sonuç ve yorum kopyalanmaz */
+function kopyaCevaplari(t: FormatTanimi, kaynak: unknown): Cevaplar {
+  const c = ilkCevaplar(t), k = Cevaplar.safeParse(kaynak);
+  if (!k.success) return c;
+  for (const b of t.bolumler) {
+    if (b.blok === "liste") for (const g of b.gruplar) for (const m of g.maddeler) { const x = k.data.madde[m.id]; if (x && b.cevaplar.includes(x.c)) c.madde[m.id] = { c: x.c }; }
+    if (b.blok === "bilgi") for (const a of b.alanlar) if (!a.kaynak && Object.hasOwn(k.data.alan, a.id)) c.alan[a.id] = k.data.alan[a.id];
+  }
+  return c;
+}
+
+/** raporu açar (oluştur ve kopya ortak): ekipman planda ve etkin, bu planda etkin raporu yok (203), türün YAYINDA formatı var; ilk rapor planı
+    Denetimde yapar. Kopyada künye, ekipman bilgileri, cihazlar ve cevaplar kaynaktan (kopya kaynağın künyesiyle açılır — maket kopyala). */
+async function raporAc(db: Sorgulayici, kim: Kisi, plan: AcilanPlan, ekipmanId: string, kopya: { r: RaporSatiri; konum: string | null } | null,
+  bildirim: (no: string, kod: string) => string): Promise<RaporYazma> {
+  if (!(await plandakiEkipman(db, plan.id, ekipmanId))) return { durum: "yok" };
   await ekipmanKilitle(db, ekipmanId);   /* pasife alma ile aynı anda koşmasın: ikisi de ekipmanın satırında sıraya girer */
   const e = await ekipmanEtiketi(db, ekipmanId);
   if (!e) return { durum: "yok" };
   if (e.pasif) return { durum: "red", neden: "Ekipman pasif; rapor açılamaz. Etkinleştir ile geri alınır." };
-  if ((await db.sorgu("SELECT 1 FROM rapor WHERE plan_id = $1 AND ekipman_id = $2 AND silindi IS NULL", [planId, ekipmanId])).rowCount) {
+  if ((await db.sorgu("SELECT 1 FROM rapor WHERE plan_id = $1 AND ekipman_id = $2 AND silindi IS NULL", [plan.id, ekipmanId])).rowCount) {
     return { durum: "red", neden: "Bu ekipmanın bu planda raporu var." };
   }
   const tur = await turRaporBilgisi(db, e.turId);
   if (!tur) return { durum: "yok" };
   const format = await yayindakiFormat(db, tur.id);
   if (!format) return { durum: "red", neden: "Bu türün yayınlanmış rapor formatı yok." };
-  const iletisim = await tesisMusteriIletisim(db, plan.tesisId);
   const no = await raporNoAl(db);
-  const iz: Iz = { kim: kim.ad, ne: "rapor.olustur", gerekce: `${no} · ${plan.no} · ${e.kod}` };
-  const ekipmanBilgi: EkipmanBilgisi = { marka: e.marka, model: e.model, seri: e.seri, imal: e.imal ? String(e.imal) : null, konum: e.konum, amac: null, bolum: null };
-  const r = await ekle(db, RAPOR, {
-    no, plan_id: planId, ekipman_id: ekipmanId, tur_id: tur.id, format_id: format.id, personel_id: plan.personelId, durum: "taslak",
-    kunye: { ...plan.kunye, eposta: iletisim?.eposta ?? null, tel: iletisim?.tel ?? null }, kunye_surum: plan.kunyeSurum, ekipman_bilgi: ekipmanBilgi,
+  const k = kopya?.r;
+  const iz: Iz = { kim: kim.ad, ne: k ? "rapor.kopya" : "rapor.olustur", gerekce: `${no} · ${plan.no} · ${e.kod}${k ? ` · kaynak ${k.no}` : ""}` };
+  const ortak = { no, plan_id: plan.id, ekipman_id: ekipmanId, tur_id: tur.id, format_id: format.id, personel_id: plan.personelId, durum: "taslak" };
+  const r = k ? await ekle(db, RAPOR, {
+    ...ortak, kunye: k.kunye, kunye_surum: k.kunye_surum,
+    /* ekipman bilgileri kaynaktan; seri no yeni ekipmanın (sorulmaz, raporda yazılır), kullanım yeri pencereden (boşsa kaynaktaki) */
+    ekipman_bilgi: { ...k.ekipman_bilgi, seri: null, konum: kopya.konum ?? k.ekipman_bilgi.konum },
+    cevaplar: kopyaCevaplari(format.tanim, k.cevaplar), cihazlar: jsonDizi(k.cihazlar), kopya_kaynak: k.id,
+  }, iz) : await ekle(db, RAPOR, {
+    ...ortak, kunye: { ...plan.kunye, eposta: null, tel: null, ...(await iletisimi(db, plan.tesisId)) }, kunye_surum: plan.kunyeSurum,
+    ekipman_bilgi: { marka: e.marka, model: e.model, seri: e.seri, imal: e.imal ? String(e.imal) : null, konum: e.konum, amac: null, bolum: null } satisfies EkipmanBilgisi,
     cevaplar: ilkCevaplar(format.tanim),
   }, iz);
-  await denetimeBasla(db, kim.ad, planId);
-  return { durum: "tamam", id: r.id, bildirim: `Rapor oluşturuldu: ${no}. Satırındaki “Raporu düzenle” saha rapor ekranını açar.` };
+  await denetimeBasla(db, kim.ad, plan.id);
+  return { durum: "tamam", id: r.id, bildirim: bildirim(no, e.kod) };
+}
+const iletisimi = async (db: Sorgulayici, tesisId: string) => {
+  const x = await tesisMusteriIletisim(db, tesisId);
+  return x ? { eposta: x.eposta, tel: x.tel } : {};
+};
+
+export async function raporOlustur(db: Sorgulayici, kim: Kisi, planId: string, ekipmanId: string): Promise<RaporYazma> {
+  const a = await acilabilirPlan(db, kim, planId);
+  if ("hata" in a) return a.hata;
+  return raporAc(db, kim, a.p, ekipmanId, null, (no) => `Rapor oluşturuldu: ${no}. Satırındaki “Raporu düzenle” saha rapor ekranını açar.`);
 }
 
 /* ── OKUMA ───────────────────────────────────────────────────────────────────────────────────────────────────── */
@@ -109,13 +157,14 @@ interface RaporSatiri {
   id: string; no: string; plan_id: string; ekipman_id: string; tur_id: string; format_id: string; personel_id: string; hesap_id: string | null; durum: RaporDurumu;
   kunye: Kunye & { eposta?: string | null; tel?: string | null }; kunye_surum: number; ekipman_bilgi: EkipmanBilgisi; bas: Date; bit: Date | null;
   sonraki: string | null; takip: string | null; rapor_tarihi: string | null; cevaplar: unknown; cihazlar: RaporCihazi[]; fotolar: RaporFoto[]; sonuc: string | null;
-  sonuc_oto: boolean; gonderildi: Date | null; surum: number; olustu: Date; degisti: Date;
+  sonuc_oto: boolean; gonderildi: Date | null; kopya_kaynak: string | null; surum: number; olustu: Date; degisti: Date;
 }
 async function raporOku(db: Sorgulayici, id: string, kilitle = false): Promise<RaporSatiri | null> {
   if (!UUID.test(id)) return null;
   return (await db.sorgu<RaporSatiri>(
     `SELECT id::text, no, plan_id::text, ekipman_id::text, tur_id::text, format_id::text, personel_id::text, hesap_id::text, durum, kunye, kunye_surum, ekipman_bilgi,
-       bas, bit, sonraki::text, takip::text, rapor_tarihi::text, cevaplar, cihazlar, fotolar, sonuc, sonuc_oto, gonderildi, surum, olustu, degisti
+       bas, bit, sonraki::text, takip::text, rapor_tarihi::text, cevaplar, cihazlar, fotolar, sonuc, sonuc_oto, gonderildi, kopya_kaynak::text, surum,
+       olustu, degisti
      FROM rapor WHERE id = $1 AND silindi IS NULL${kilitle ? " FOR UPDATE" : ""}`, [id])).rows[0] ?? null;
 }
 
@@ -152,7 +201,13 @@ export interface SahaRaporu {
   /** Cihaz ekle penceresi: yazanın zimmetindeki, kalibrasyonu geçerli cihazlar tür başına; tür gerekli cihaz türü vermiyorsa "*" altında hepsi
       (yalnız düzenleyebilene). Seçilen cihaz kendi türünün satırına yazılır. */
   secilebilir: Record<string, { id: string; kod: string; marka: string | null; model: string | null; seri: string | null; bitis: string | null }[]>;
-  izin: { duzenle: boolean; sil: boolean };
+  /** kopyadan açıldıysa kaynak raporun numarası (U7) */
+  kopyaKaynak: string | null;
+  /** daha yeni yayınlanmış format sürümü (U6; yalnız düzenleyebilene) */
+  guncelFormat: number | null;
+  /** yazanın bugünkü süresi doldu (ENGEL 3): yeni rapor ve kopya açılmaz */
+  mesaiDolu: boolean;
+  izin: { duzenle: boolean; sil: boolean; kopyala: boolean };
 }
 
 const kunyeFarki = (a: Kunye, b: Kunye) => [
@@ -208,6 +263,12 @@ export async function sahaRaporu(db: Sorgulayici, kim: Kisi, id: string): Promis
     if (pk) kunyeFark = kunyeFarki(r.kunye, pk);
   }
   const cev = Cevaplar.safeParse(r.cevaplar);
+  const kopyaKaynak = r.kopya_kaynak ? (await db.sorgu<{ no: string }>("SELECT no FROM rapor WHERE id = $1", [r.kopya_kaynak])).rows[0]?.no ?? null : null;
+  const yeni = duzenle ? await yayindakiFormat(db, r.tur_id) : null;
+  /* kopya: yalnız raporu yazan, plandaki kendi personeliyle, rapor açabilen ve plana ekipman ekleyebilen (sunucu kopyada yeniden bakar) */
+  const kopyala = e.sahip && !!plan && plan.personelId === r.personel_id && canDoEylem(kim, "rapor_olustur", { atananlar: plan.atananlar })
+    && await ekipmanEklenebilir(db, kim, r.plan_id);
+  const mesaiDolu = (duzenle || kopyala) && (await mesaiDurumu(db, r.personel_id, bugun)).dolu;
   return {
     id: r.id, no: r.no, durum: r.durum, surum: r.surum, olustu: r.olustu.toISOString(), degisti: r.degisti.toISOString(), gonderildi: r.gonderildi?.toISOString() ?? null, bugun,
     plan: { id: r.plan_id, no: plan?.no ?? "—", tesisAd: iletisim?.tesisAd ?? "—", musteriKisa: iletisim?.kisa ?? "—" },
@@ -220,7 +281,8 @@ export async function sahaRaporu(db: Sorgulayici, kim: Kisi, id: string): Promis
     tarih: { bas: zamanOku(r.bas)!, bit: zamanOku(r.bit), sonraki: r.sonraki, takip: r.takip, rapor: r.rapor_tarihi },
     cevaplar: cev.success ? cev.data : Cevaplar.parse({}), tanim: format.tanim, formatSira: format.sira,
     cihazlar: satirlar, secilebilir, fotolar: r.fotolar,
-    izin: { duzenle, sil: r.durum === "taslak" && canDoEylem(kim, "rapor_sil", { sahip: r.hesap_id, durum: "Yeni", brans: tur.brans }) },
+    kopyaKaynak, guncelFormat: yeni && yeni.sira > format.sira ? yeni.sira : null, mesaiDolu,
+    izin: { duzenle, sil: r.durum === "taslak" && canDoEylem(kim, "rapor_sil", { sahip: r.hesap_id, durum: "Yeni", brans: tur.brans }), kopyala },
   };
 }
 
@@ -389,4 +451,83 @@ export async function fotoSil(db: Sorgulayici, kim: Kisi, id: string, surum: num
 /** dosya erişim kaydı için: bu kişi bu raporu görebilir mi (Raporlar düzeyi; başka firmanınki RLS altında yok) */
 export async function raporDosyasiGorulur(db: Sorgulayici, kisi: YetkiHesabi, raporId: string): Promise<boolean> {
   return !!(await erisim(db, { ...kisi, ad: "" }, raporId));
+}
+
+/* ── KAYDET VE KOPYALA (204–209; maket kopyala, pencereKaydet) ───────────────────────────────────────────────────── */
+/** kayit: Yeni raporda ekranın son hâli (önce kaydedilir — "Kaydet ve kopyala"); gönderilmiş raporda null ("Kopyala"). Engeller kayıttan ÖNCE
+    denetlenir (plan günü, günlük süre, kod), kopya düşerse rapor yarım kaydedilmiş kalmasın. */
+export async function raporKopyala(db: Sorgulayici, kim: Kisi, id: string, surum: number, girdi: unknown, kayit: unknown): Promise<RaporYazma> {
+  const e = await erisim(db, kim, id, true);
+  if (!e) return { durum: "yok" };
+  if (!e.sahip) return { durum: "yetkisiz" };
+  const a = await acilabilirPlan(db, kim, e.r.plan_id);
+  if ("hata" in a) return a.hata;
+  if (a.p.personelId !== e.r.personel_id) return { durum: "yetkisiz" };
+  if (a.p.durum === "tamamlandi") return { durum: "red", neden: "Plan tamamlandı; tamamlanmış plana ekipman eklenmez, kopya açılamaz." };
+  const g = dogrula(KopyaGirdisi, girdi);
+  if (!g.tamam) return { durum: "gecersiz", hatalar: g.hatalar };
+  const kd = await kodDurumu(db, kim, a.p.id, g.veri.kod);
+  if (!kd) return { durum: "yetkisiz" };
+  if (kd.tur !== "tamam") return { durum: "gecersiz", hatalar: { kod: kd.metin } };
+  if (!(await yayindakiFormat(db, e.r.tur_id))) return { durum: "red", neden: "Bu türün yayınlanmış rapor formatı yok." };
+  const kaynakKod = (await ekipmanEtiketi(db, e.r.ekipman_id))?.kod ?? "—";
+  let kaydedildi = false, kaynak = e.r;
+  if (e.r.durum === "taslak" && kayit != null) {
+    if (!canDoEylem(kim, "rapor_yaz", { sahip: e.r.hesap_id })) return { durum: "yetkisiz" };
+    const k = await kaydetIc(db, kim, e, surum, kayit);
+    if (k.durum !== "tamam") return k;
+    kaydedildi = true;
+    kaynak = (await raporOku(db, id)) ?? e.r;
+  }
+  const y = await yeniEkipman(db, kim, a.p.id, { kod: g.veri.kod, tur: e.r.tur_id, seri: null, konum: g.veri.konum ?? kaynak.ekipman_bilgi.konum });
+  if (y.durum !== "tamam" || !y.id) return y.durum === "tamam" ? { durum: "yok" } : y;
+  return raporAc(db, kim, a.p, y.id, { r: kaynak, konum: g.veri.konum },
+    (no, kod) => `${kaydedildi ? "Rapor kaydedildi; " : ""}${kod} açıldı: ${no}. Bilgiler ${kaynakKod} raporundan kopyalandı.`);
+}
+
+/* ── FORMATI GÜNCELLE (211; RAPOR-FORMAT §5: rapor açıldığı sürümle kalır, Yeni raporda yazan güncel sürüme geçirebilir) ───────────── */
+/** cevapları yeni sürüme taşır: kimliği eşleşen alan, madde (seçim yeni setteyse), ölçüm tablosu ve test değeri korunur; yeni madde ilk cevapla */
+function formataUyarla(t: FormatTanimi, c: Cevaplar): { cevaplar: Cevaplar; eklenen: number } {
+  const y = ilkCevaplar(t);
+  let eklenen = 0;
+  for (const b of t.bolumler) {
+    if (b.blok === "liste") for (const g of b.gruplar) for (const m of g.maddeler) {
+      const x = c.madde[m.id];
+      if (!x) eklenen++;
+      else if (b.cevaplar.includes(x.c)) y.madde[m.id] = { ...x };
+    }
+    if (b.blok === "bilgi") for (const a of b.alanlar) if (Object.hasOwn(c.alan, a.id)) y.alan[a.id] = c.alan[a.id];
+    if (b.blok === "olcum" && Object.hasOwn(c.tablo, b.id)) y.tablo[b.id] = c.tablo[b.id];
+    if (b.blok === "test") for (const d of b.degerler) if (Object.hasOwn(c.deger, d.id)) y.deger[d.id] = c.deger[d.id];
+  }
+  return { cevaplar: { ...y, sonuc: c.sonuc, yorum: c.yorum }, eklenen };
+}
+/** fotoğrafların yeri yeni sürümde yoksa (bölüm ya da madde kalktı) formatın ilk fotoğraf bölümüne taşınır — fotoğraf kaybolmaz, silinebilir kalır */
+function fotolariUyarla(t: FormatTanimi, l: RaporFoto[]): RaporFoto[] {
+  const fotoBolum = new Set(t.bolumler.filter((b) => b.blok === "foto").map((b) => b.id)), ilk = [...fotoBolum][0];
+  const maddeBolum = new Map(t.bolumler.flatMap((b) => (b.blok === "liste" ? b.gruplar.flatMap((g) => g.maddeler.map((m) => [m.id, b.id] as const)) : [])));
+  return l.map((f) => {
+    if (f.madde && maddeBolum.has(f.madde)) return { ...f, bolum: maddeBolum.get(f.madde)! };
+    if (!f.madde && fotoBolum.has(f.bolum)) return f;
+    return ilk ? { ...f, bolum: ilk, madde: null } : f;
+  });
+}
+/** kayit: ekranın son hâli (Kaydet gibi doğrulanır; değişiklik kaybolmasın) */
+export async function raporFormatGuncelle(db: Sorgulayici, kim: Kisi, id: string, surum: number, kayit: unknown): Promise<RaporYazma> {
+  const e = await yazilabilir(db, kim, id);
+  if (hataMi(e)) return e;
+  const eski = await formatSurumuOku(db, e.r.format_id), yeni = await yayindakiFormat(db, e.r.tur_id);
+  if (!eski || !yeni || yeni.sira <= eski.sira) return { durum: "red", neden: "Rapor güncel format sürümünde." };
+  const g = dogrula(RaporKaydi, kayit);
+  if (!g.tamam) return { durum: "gecersiz", hatalar: g.hatalar };
+  const v = g.veri;
+  const { cevaplar, eklenen } = formataUyarla(yeni.tanim, v.cevaplar);
+  const fotolar = fotolariUyarla(yeni.tanim, e.r.fotolar);
+  const c = sayiliCevaplar(cevaplar, { cihazlar: e.r.cihazlar, fotolar });
+  const ilk = yeni.tanim.bolumler.find((b) => b.blok === "liste");
+  const r = await guncelle(db, RAPOR, id, surum, {
+    format_id: yeni.id, ekipman_bilgi: v.ekipman, bas: zamanYaz(v.tarih.bas), bit: zamanYaz(v.tarih.bit), sonraki: v.tarih.sonraki, takip: v.tarih.takip,
+    rapor_tarihi: v.tarih.rapor, cevaplar: c, sonuc: c.sonuc || null, fotolar: jsonDizi(fotolar),
+  }, { kim: kim.ad, ne: "rapor.format_guncelle", gerekce: `${e.r.no} · sürüm ${eski.sira} → ${yeni.sira}` });
+  return sonuc(r, id, `Format güncellendi (sürüm ${yeni.sira}): ${eklenen ? `${eklenen} yeni madde eklendi (${ilk?.blok === "liste" ? ilk.cevaplar[0] : "Uygun"})` : "madde değişmedi"}; cevaplar korundu.`);
 }
