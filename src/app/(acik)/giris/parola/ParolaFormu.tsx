@@ -7,7 +7,7 @@ import isaretKoyu from "../../../../components/kabuk/marka/probata-yatay-koyu-ze
 import logoRenkli from "../../../../components/kabuk/marka/probata-yatay-renkli.svg";
 import { Serit } from "../../../../components/serit/Serit";
 import { Tus } from "../../../../components/tus/Tus";
-import { parolaBelirleEylemi, type ParolaDurumu } from "../../../../server/kimlik/eylemler";
+import { musteriParolaEylemi, parolaBelirleEylemi, type ParolaDurumu } from "../../../../server/kimlik/eylemler";
 import stil from "../giris.module.css";
 
 function ParolaAlani({ id, etiket, ipucu, hata, goster, degistir }: { id: string; etiket: string; ipucu: string; hata?: string; goster: boolean; degistir: () => void }) {
@@ -26,8 +26,9 @@ function ParolaAlani({ id, etiket, ipucu, hata, goster, degistir }: { id: string
   );
 }
 
-export function ParolaFormu({ eposta, adres, donus }: { eposta: string; adres: string; donus?: string }) {
-  const [durum, eylem, gonderiyor] = useActionState<ParolaDurumu, FormData>(parolaBelirleEylemi, {});
+export function ParolaFormu({ eposta, adres, donus, musteri = false }: { eposta: string; adres: string; donus?: string; musteri?: boolean }) {
+  /* müşteri girişi (0030) kendi eylemiyle: oturum ve kiracı sunucuda, istemcinin "müşteriyim" demesi bir şey değiştirmez (eylem kendi oturumuna bakar) */
+  const [durum, eylem, gonderiyor] = useActionState<ParolaDurumu, FormData>(musteri ? musteriParolaEylemi : parolaBelirleEylemi, {});
   const [goster, setGoster] = useState(false);
   useEffect(() => {
     if (durum.yonlendir?.startsWith("/") && !durum.yonlendir.startsWith("//")) window.location.replace(durum.yonlendir);

@@ -2341,6 +2341,28 @@ revizyon, alan kopyalama, hafif kusur devri, meslek eşleşme denetimi).
 - Emsal ürünler: https://opwire.app/iso-17020-periyodik-kontrol-yazilimi/ · https://17020muayene.vidco.com.tr/ · https://akuple.com/asansor-kontrol-yazilimi/ · https://ensyazilim.com/
 
 ## 11 · Değişiklik günlüğü
+- 2026-10-05 (319): **K3 Müşteri girişi + müşteri paneli (Raporlarınız, imzalı PDF) — veritabanında ikinci katman** (maket musteri.html M11,
+  musteriler.html "Müşteri girişi"; karar 33, 35, 44, L5, 193; 09-E5; pkproje §1 reisim: "müşteriye bir id parola verilecek ve girdiğinde kendi
+  raporlarına oradan erişebilecek ama sadece kendi raporlarını görüp indirecek"). Göç **0030**: `musteri_hesap` (müşteri başına ANA giriş —
+  kullanıcı adı müşterinin e-postası, bütün tesisler — ve kişiye özel EK girişler: bütün ya da seçili tesisler, tesis müşterinin kendi tesisi
+  olmalı; durum hazır · ilk · etkin · pasif; parola yalnız scrypt özeti), `musteri_oturum` (belirteç özeti; parola / durum / e-posta / kapsam
+  değişince oturumlar düşer); kullanıcı adı firmada TEK (personel hesabıyla da çakışmaz — iki tabloda tetik). **İkinci katman:** müşteri
+  işlemleri veritabanında **probata_musteri** rolünde koşar (SET LOCAL ROLE; uygulama rolü bu role GEÇER ama kısıtlarını DEVRALMAZ —
+  INHERIT FALSE): yalnız panelin okuduğu tablolar (firma, müşteri, tesis, ekipman, tür, imzalı sürüm, uygunsuzluk, dosya), yalnız okuma, her
+  birinde kiracı politikasına ek KISITLAYICI politika — kendi müşterisi, tesis kapsamı, raporun SON imzalı sürümü (193), revizyonla kapanan
+  uygunsuzluk değil, yalnız görebildiği sürümün imzalı PDF'i. Giriş: **aynı ekran** (karar 35) — e-posta bir müşteri girişiyse müşteri girişi
+  denenir (kilit, eşit süre, tek ileti personelle aynı), ayrı çerez, panele (/portal); geçici parolayla ilk girişte aynı parola ekranı; müşteri
+  firma ekranına giremez (paneline döner), pasif müşteri / giriş giremez. Firma tarafı: müşteri kartında **Müşteri girişi** bölümü — ana girişin
+  durumu, **Geçici parola oluştur / Yeni geçici parola** (bir kez gösterilir; e-postayla gönderim bildirim altyapısıyla gelecek — anayasa 1.3,
+  kurulmadı), **Ek giriş ekle** (ad, e-posta, bütün / seçili tesisler), satırda Geçici parola · Pasif yap / Etkinleştir; müşterinin e-postası
+  değişince ana giriş onunla gider (yeni adrese yeni parola). Panel (/portal, kendi rota grubu "(musteri)", menüsüz kabuk: firma adı, tema,
+  Çıkış yap): **Raporlarınız** (no, ekipman, tesis, kontrol, sonraki kontrol — 60 gün içinde uyarı —, sonuç; çipler Uygunsuz, Sonraki kontrol 60
+  gün içinde; seçiciler Tesis, Yıl) ve **rapor sayfası** (PDF'i aç / PDF indir — tek indirme ucu müşteri rolünde; revizyonsa "… yerine geçer";
+  uygunsuzlukları). Kilit: tests/musteri-paneli.test.ts (gerçek PG, iki firma, iki müşteri: giriş, kilit, parola, pasif, kullanıcı adı tekliği,
+  ek giriş kapsamı, İKİNCİ KATMAN — kapsam, son sürüm, PDF, yazma / panel dışı tablo yasağı, personel işlemi etkilenmez), rota kilidi
+  (müşteri sayfaları yalnız müşteri kapısından), bozan +2 (tesis kısıtı, devralma); e2e saha raporu: yönetici geçici parola → müşteri girer,
+  raporu bulur, imzalı PDF'i iner, firma ekranına giremez. Sonraki: Uygunsuzluklar + Excel (320), planlanan kontroller / sözleşmeler / personel
+  belgeleri / toplu indirme (321).
 - 2026-10-05 (318 revizyon): **K3 Revizyon — Revize iste, Reddet, Geri çek, Revizeye gönder** (§11 131 V1, 141 W4 / 192, 142 W5 / 193; KOD-GECIS §4
   rapor_revize_iste · rapor_revizeye_gonder, §5 Rapor; maket onaylar.html "Revize istekleri", raporlar.html "Revize iste"). Göç **0029**:
   `rapor_revize_istegi` (yazan, tamamlanan raporunda gerekçeyle ≥ 10; rapor başına tek bekleyen; kapanış: yazan geri çeker · yönetici reddeder

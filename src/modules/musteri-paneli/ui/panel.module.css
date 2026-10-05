@@ -1,0 +1,10 @@
+/* MÜŞTERİ PANELİ (maket musteri.html) — ⛔ çıplak renk yok (2.9) */
+.alt { margin: -4px 0 12px; color: var(--yazi2); font-size: var(--boy-kucuk); }
+.kod { font-weight: 700; font-variant-numeric: tabular-nums; letter-spacing: .01em; overflow-wrap: anywhere; }
+.hucreSatir { display: inline-flex; align-items: center; flex-wrap: wrap; gap: 6px 8px; min-width: 0; }
+.sonucUygun { color: var(--onay-yazi); font-weight: 600; }
+.sonucHata { color: var(--hata-yazi); font-weight: 600; }
+.sonucYok { color: var(--yazi2); }
+.uygunsuzListe { margin: 0; padding-left: 18px; }
+.uygunsuzListe li { margin: 0 0 6px; }
+.agir { color: var(--hata-yazi); font-weight: 600; }

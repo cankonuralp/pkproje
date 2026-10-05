@@ -40,7 +40,7 @@ for (const f of firmalar) {
       await db.sorgu("INSERT INTO hesap (eposta, ad, parola_ozeti, roller, durum) VALUES ($1, $2, $3, $4, 'ilk')", [h.eposta, h.ad, ozet, h.roller]);
     }
     /* plan aç (309): uydurma müşteri + tesis + bir tür ve iki ekipman (e2e/planlar.spec); plan içi (310) için ayrı tesis + iki ekipman */
-    const m = (await db.sorgu<{ id: string }>("INSERT INTO musteri (unvan, kisa) VALUES ($1, 'Plan Deneme') RETURNING id::text", [E2E_PLAN.musteri])).rows[0].id;
+    const m = (await db.sorgu<{ id: string }>("INSERT INTO musteri (unvan, kisa, eposta) VALUES ($1, 'Plan Deneme', $2) RETURNING id::text", [E2E_PLAN.musteri, E2E_PLAN.musteriEposta])).rows[0].id;
     const t = (await db.sorgu<{ id: string }>("INSERT INTO tesis (musteri_id, ad, adres, il, ilce) VALUES ($1, $2, 'Deneme Cad. No 1', 'Kocaeli', 'Gebze') RETURNING id::text", [m, E2E_PLAN.tesis])).rows[0].id;
     const u = (await db.sorgu<{ id: string }>("INSERT INTO ekipman_turu (kod, ad, grup, brans, periyot) VALUES ('HT', 'Hava tankı', 'basincli', 'm', 12) RETURNING id::text")).rows[0].id;
     for (const kod of ["HT-0001", "HT-0002"]) await db.sorgu("INSERT INTO ekipman (tesis_id, tur_id, kod, ekleyen) VALUES ($1, $2, $3, 'Deneme')", [t, u, kod]);

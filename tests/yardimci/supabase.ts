@@ -28,6 +28,11 @@ export async function supabaseBenzeri(kume: GomuluKume, ad: string, klasor: stri
     await yonetim.query(`ALTER ROLE ${GOCU_ROLU} PASSWORD '${parola}'`);
     // Supabase'te uygulama rolünü "postgres" açar ve yönetir; burada küme süper kullanıcısı açtı → aynı hakkı ver
     await yonetim.query(`GRANT probata_uygulama TO ${GOCU_ROLU} WITH ADMIN OPTION`);
+    /* 2026-10-05 (0030): müşteri rolü kümede ilk göçte (küme süper kullanıcısıyla) açıldı; Supabase'te onu da "postgres" açar ve yönetir →
+       göçü koşan sahip rolüne aynı yönetim hakkı (yalnız yönetim: devralmaz, geçemez) */
+    await yonetim.query(`DO $$ BEGIN IF NOT EXISTS (SELECT 1 FROM pg_roles WHERE rolname = 'probata_musteri') THEN
+      CREATE ROLE probata_musteri NOLOGIN NOSUPERUSER NOCREATEDB NOCREATEROLE NOBYPASSRLS; END IF; END $$`);
+    await yonetim.query(`GRANT probata_musteri TO ${GOCU_ROLU} WITH ADMIN TRUE, INHERIT FALSE, SET FALSE`);
     await yonetim.query(`CREATE DATABASE ${ad} OWNER ${GOCU_ROLU} ENCODING 'UTF8' LOCALE 'C' TEMPLATE template0`);
   } finally {
     await yonetim.end();

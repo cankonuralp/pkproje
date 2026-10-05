@@ -1,5 +1,6 @@
 /* MÜŞTERİ SAYFASI (maket musteriler.html #/m/<id>; anayasa 2.7 nesne sayfası): başlık + işlemler · pasif / eksik bilgi şeridi · yüzler · müşteri
-   bilgileri · tesisler. Müşteri girişi, teklif / sözleşme / alacak yüzleri, bulut klasörü kendi kalemlerinde. Görmeyen / başka firmanın kaydı: bulunamadı. */
+   bilgileri · tesisler · müşteri girişi (319, 0030: ana + ek girişler, geçici parola). Teklif / sözleşme / alacak yüzleri, bulut klasörü kendi
+   kalemlerinde. Görmeyen / başka firmanın kaydı: bulunamadı. */
 import type { Metadata } from "next";
 import { notFound } from "next/navigation";
 import { Bilgi, BilgiListesi, Yuz, Yuzler } from "../../../../components/bilgi/Bilgi";
@@ -8,7 +9,9 @@ import { AltSatir, Bolum, DegerYok, Kirinti, Kod, NesneBasi, SeritKap } from "..
 import { Serit } from "../../../../components/serit/Serit";
 import { modulBul } from "../../../../modules/moduller";
 import { eksikMusteri, eksikTesis } from "../../../../modules/musteriler/sema";
+import { girisBilgisi } from "../../../../modules/musteriler/server/girisler";
 import { musteriDegistirir, musteriKarti } from "../../../../modules/musteriler/server/musteriler";
+import { GirisBolumu } from "../../../../modules/musteriler/ui/GirisBolumu";
 import { MusteriTuslari, TesisEkleTusu } from "../../../../modules/musteriler/ui/KartTuslari";
 import { PasifRozeti, tarihYaz } from "../../../../modules/musteriler/ui/ortak";
 import { TesisTablosu } from "../../../../modules/musteriler/ui/TesisTablosu";
@@ -22,8 +25,12 @@ export default async function Sayfa({ params }: { params: Promise<{ id: string }
   const o = await modulOturumu(MODUL.no);
   if (!o) return <Yetkisiz />;
   const { id } = await params;
-  const m = await oturumIslemi(o, (db) => musteriKarti(db, o, id));
-  if (!m) notFound();
+  const v = await oturumIslemi(o, async (db) => {
+    const k = await musteriKarti(db, o, id);
+    return k ? { m: k, giris: await girisBilgisi(db, o, id) } : null;
+  });
+  if (!v) notFound();
+  const { m, giris } = v;
   const yaz = musteriDegistirir(o);
   const et = m.tesisler.filter((t) => !t.pasif), e = eksikMusteri(m);
   const iller = [...new Set(et.map((t) => t.il).filter(Boolean))].join(" · ");
@@ -58,6 +65,7 @@ export default async function Sayfa({ params }: { params: Promise<{ id: string }
           ? <TesisTablosu tesisler={m.tesisler} />
           : <p className={stil.bosSatir}>Bu müşterinin tesisi yok.</p>}
       </Bolum>
+      {giris && <GirisBolumu musteriId={m.id} kisa={m.kisa} b={giris} />}
     </>
   );
 }

@@ -13,11 +13,13 @@
    "Geri gönderildi" şeridini görür, yeniden gönderir → yönetici onaylar → onay ekranında "Muayene uzmanı imzası".
    317 Son imza: denetçi İmzala → imzasız PDF'i indirir → imzalı PDF'i yükler → Tamamlandı, İmzalı PDF.
    318 (C5): denetçi Onaylar'da "İmzamı bekleyen raporlar"dan raporu açar; Raporlar listesinde rapor durumuyla, imza şeridi.
+   319 müşteri paneli: firma yöneticisi müşteri kartında geçici parola verir → müşteri aynı giriş ekranından girer ("Şimdi değil"), Raporlarınız'da
+   imzalı raporu bulur, rapor sayfasında imzalı PDF'i iner; firmanın ekranına giremez (paneline döner).
    318 revizyon: denetçi tamamlanan raporda Revize iste → mekanik yönetici Onaylar › Revize istekleri'nden Revizeye gönderir (isteğin gerekçesi
    başlangıç) → denetçi raporu "<no>-R1" Yeni olarak, "Revizeye gönderildi (R1)" şeridiyle görür. */
 import { readFileSync } from "node:fs";
 import { expect, test, type Locator, type Page } from "@playwright/test";
-import { E2E_HESAPLAR, E2E_PLAN, E2E_SAHA } from "./hesaplar";
+import { E2E_FIRMA, E2E_HESAPLAR, E2E_PLAN, E2E_SAHA } from "./hesaplar";
 import { girisli, hazir } from "./yardimci";
 
 const UUID = "[0-9a-f]{8}-[0-9a-f]{4}-[0-9a-f]{4}-[0-9a-f]{4}-[0-9a-f]{12}";
@@ -265,6 +267,45 @@ test("saha raporu: rapor oluştur, eksikle gönderilmez, doldur + cihaz ekle, on
   await expect(page.getByText(`${raporNo} imzalandı, tamamlandı ve müşteriye açıldı.`).first()).toBeVisible({ timeout: 60_000 });
   await expect(page.getByRole("link", { name: "İmzalı PDF" })).toBeVisible({ timeout: 30_000 });
   await expect(page.getByText("Tamamlandı", { exact: true }).filter({ visible: true }).first()).toBeVisible();
+
+  /* 319 müşteri paneli */
+  await context.clearCookies();
+  await girisli(page, "yonetici");
+  await page.goto("/musteriler");
+  await hazir(page);
+  await page.getByRole("link", { name: E2E_PLAN.musteri }).first().click();
+  await expect(page.getByRole("heading", { level: 1 })).toHaveText(E2E_PLAN.musteri, { timeout: 30_000 });
+  await hazir(page);
+  await page.getByRole("button", { name: /^(Geçici parola oluştur|Yeni geçici parola)$/ }).click();
+  const parolaPenceresi = page.getByRole("dialog", { name: "Geçici parola" });
+  await expect(parolaPenceresi.locator("#mg-parola")).toBeVisible({ timeout: 30_000 });
+  const gecici = ((await parolaPenceresi.locator("#mg-parola").textContent()) ?? "").trim();
+  expect(gecici).toMatch(/^[A-Za-z0-9]{5}-[A-Za-z0-9]{5}-[A-Za-z0-9]{5}$/);
+  await parolaPenceresi.getByRole("button", { name: "Tamam" }).click();
+  await context.clearCookies();
+  await page.goto("/giris");
+  await expect(page.getByRole("button", { name: "Giriş yap" })).toBeEnabled();
+  await page.getByLabel("E-posta").fill(E2E_PLAN.musteriEposta);
+  await page.getByLabel("Parola", { exact: true }).fill(gecici);
+  await page.getByRole("button", { name: "Giriş yap" }).click();
+  await expect(page).toHaveURL(/\/giris\/parola/, { timeout: 30_000 });
+  await page.getByRole("link", { name: "Şimdi değil" }).click();
+  await expect(page).toHaveURL(/\/portal$/, { timeout: 30_000 });
+  await hazir(page);
+  await expect(page.getByRole("heading", { level: 1, name: "Raporlarınız" })).toBeVisible();
+  await expect(page.locator("header")).toContainText(E2E_FIRMA.ad);
+  await page.getByRole("searchbox", { name: "Raporlarda ara" }).fill(raporNo);
+  await page.getByRole("link", { name: raporNo }).first().click();
+  await expect(page.getByRole("heading", { level: 1 })).toHaveText(raporNo, { timeout: 30_000 });
+  await hazir(page);
+  const [imzaliPdf] = await Promise.all([page.waitForEvent("download", { timeout: 60_000 }), page.getByRole("link", { name: "PDF indir" }).click()]);
+  expect(readFileSync((await imzaliPdf.path())!).subarray(0, 5).toString("latin1")).toBe("%PDF-");
+  await page.goto("/raporlar");
+  await expect(page).toHaveURL(/\/portal$/, { timeout: 30_000 });
+  await context.clearCookies();
+  await girisli(page, "denetci");
+  await page.goto(raporAdresi);
+  await hazir(page);
 
   /* 318 revizyon */
   await page.getByRole("button", { name: "Revize iste" }).click();

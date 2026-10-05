@@ -78,8 +78,9 @@ pkproje/
   ARKA-UC.md                arka uç kurgusu (2026-10-01; K1–K6 kabul, K7–K8 kabul edilmedi — 2026-10-02): veri, dosya, çevrimdışı, uygulama, yapay zekâ, yedek
   ANAYASA.md · TASARIM-KALIBI.md · 00–08-*.md · 09-SUNUCU-VE-VERI.md · EKSIKLER-VE-ONERILER.md
                             kural dosyaları (ANAYASA/KALIP'a madde yalnız reisim onayıyla eklenir)
-  src/app/                  sayfalar (iş mantığı YOK), üç rota grubu (2026-10-04): (uygulama)/ oturum ister — Planlar ana sayfa + modül başına bir
-                            rota klasörü (kayıtla birebir) · (acik)/giris · (gelistirme)/vitrin (yayında 404)
+  src/app/                  sayfalar (iş mantığı YOK), dört rota grubu: (uygulama)/ oturum ister — Planlar ana sayfa + modül başına bir
+                            rota klasörü (kayıtla birebir) · (acik)/giris · (gelistirme)/vitrin (yayında 404) · (musteri)/portal müşteri paneli (319:
+                            müşteri oturumu, veri müşteri işleminde — veritabanında probata_musteri rolü, kısıtlayıcı politikalar; göç 0030)
   src/proxy.ts              ara katman: her istekte nonce'lu CSP + güvenlik başlıkları (Next 16'da middleware'in adı proxy) · /api sürüm başlığı,
                             eski cihaz istemcisi 426 (src/server/api-surum.ts)
   src/modules/moduller.ts   MODÜL KAYDI — yan menünün ve rotaların tek kaynağı (15 modül, 6 grup, onaylı maketle aynı; 2026-09-25 Kullanıcılar Personel'e katıldı; 2026-09-26 Ekipmanlar planın içine; 2026-09-28 Talepler eklendi, Standartlar → Dökümanlar, Eğitimler Dökümanlar'ın içinde)
@@ -118,6 +119,9 @@ pkproje/
                             · İmzamı bekleyen raporlar /onaylar/imza (318, C5: denetçinin Onaylar'ı yalnız bu; kuyruk ve onay ekranı yöneticinin)
                             · Revize istekleri /onaylar/istekler, Revizeye gönder / İsteği reddet (318; ui/RevizePenceresi.tsx; R1 onay-baglanti
                             raporRevizeYaz)
+  src/modules/musteri-paneli/ MÜŞTERİ PANELİ (2026-10-05, 319; modül 17): server/panel.ts (yalnız musteriIslemi içinde; Raporlar'ın musteri-baglanti.ts
+                            ve Müşteriler'den okur) · ui/ (Raporlarınız). Müşteri girişi yönetimi: musteriler/server/girisler.ts + ui/GirisBolumu.tsx;
+                            giriş / oturum çekirdeği src/server/kimlik/musteri.ts; kabuk src/components/kabuk/MusteriKabugu.tsx
   src/modules/ekipman/      EKİPMAN (2026-10-04, 309): tesisin kalıcı ekipman kaydı (kod firmada eşsiz; eski kod başkasına verilmez — ekipman_kodu)
   src/tanim/iller.ts        81 il + 973 ilçe (açık veri, MIT; bir kez alındı)
   src/modules/<modül>/      ★ her iş modülü: server/ (veri erişimi + iş kuralları, dışa açılan fonksiyonlar) · ui/ · şema · testler

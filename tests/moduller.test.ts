@@ -60,7 +60,9 @@ const klasorlerOf = (yol: string) => readdirSync(yol).filter((ad) => statSync(jo
 
 test("her modülün rota klasörü var ve src/app'te modül dışı rota yok", () => {
   const app = join(KOK, "src", "app");
-  assert.deepEqual(klasorlerOf(app), ["(acik)", "(gelistirme)", "(uygulama)", "api"]);
+  /* 2026-10-05 (319, 0030): müşteri paneli kendi rota grubunda — "(musteri)" (yalnız /portal; müşteri oturumu, kapısı aşağıdaki testte) */
+  assert.deepEqual(klasorlerOf(app), ["(acik)", "(gelistirme)", "(musteri)", "(uygulama)", "api"]);
+  assert.deepEqual(klasorlerOf(join(app, "(musteri)")), ["portal"]);
   assert.deepEqual(klasorlerOf(join(app, "api")), API_UCLARI);
   const uygulama = join(app, "(uygulama)");
   const yollar = MODULLER.filter((m) => m.yol !== "").map((m) => m.yol).sort();
@@ -113,4 +115,17 @@ test("api/olcum yalnız önizleme dağıtımında: ilk iş VERCEL_ENV denetimi, 
   const govde = kaynak.slice(kaynak.indexOf("export async function GET"));
   assert.match(govde, /^export async function GET\(\) \{\n {2}if \(process\.env\.VERCEL_ENV !== "preview"\) return new Response\("Bulunamadı", \{ status: 404/);
   assert.deepEqual(klasorlerOf(join(KOK, "src", "app", "api", "olcum")), ["pdf"]);
+});
+
+/* 2026-10-05 (319, 0030; reisim: "rol değiştirme, sızma, veri çalma"): müşteri paneli yalnız müşteri oturumuyla ve veritabanında müşteri
+   rolüyle okur — düzen ve her sayfa müşteri kapısını çağırır; personel işlemi (oturumIslemi) ya da personel oturumu kullanılmaz */
+test("müşteri paneli kapısı: düzen ve her sayfa müşteri oturumu ister, veri müşteri işleminde (veritabanında müşteri rolü)", () => {
+  assert.match(oku("src/app/(musteri)/layout.tsx"), /await musteriOturumGerekli\(\)/);
+  const sayfalar = dosyalar("src/app/(musteri)", [".tsx", ".ts"]);
+  assert.ok(sayfalar.some((d) => d.endsWith("/page.tsx")));
+  for (const ad of sayfalar) {
+    const m = oku(ad);
+    assert.doesNotMatch(m, /oturumIslemi|istekOturumu\(|oturumGerekli\(\)(?<!musteriOturumGerekli\(\))/, `${ad}: personel kapısı`);
+    if (ad.endsWith("/page.tsx")) assert.match(m, /await musteriOturumGerekli\(\)[\s\S]*musteriIslemi\(o,/, ad);
+  }
 });

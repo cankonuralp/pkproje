@@ -65,7 +65,8 @@ export interface KabukKullanicisi { ad: string; rol: string }
 /** baş harfler (en çok iki; Türkçe büyük harf) */
 const basHarfler = (ad: string) => ad.trim().split(/\s+/).filter(Boolean).slice(0, 2).map((p) => p[0].toLocaleUpperCase("tr")).join("");
 
-function KullaniciMenusu({ kullanici }: { kullanici: KabukKullanicisi }) {
+/** kullanıcı menüsü (Çıkış yap): firma kabuğunda ve müşteri paneli kabuğunda (MusteriKabugu) aynı */
+export function KullaniciMenusu({ kullanici }: { kullanici: KabukKullanicisi }) {
   const [acik, setAcik] = useState(false);
   useEffect(() => {
     if (!acik) return;

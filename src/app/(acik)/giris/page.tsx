@@ -2,7 +2,7 @@
    Nedenler (S2 · AA8): oturum süresi doldu · çıkış yapıldı. Dönüş adresi yalnız site içi yol (guvenliDonus). */
 import type { Metadata } from "next";
 import { redirect } from "next/navigation";
-import { guvenliDonus, istekOturumu } from "../../../server/kimlik/istek";
+import { guvenliDonus, istekOturumu, musteriIstekOturumu } from "../../../server/kimlik/istek";
 import { istekKiracisi } from "../../../server/kiraci/istek";
 import { headers } from "next/headers";
 import { GirisFormu } from "./GirisFormu";
@@ -17,6 +17,10 @@ export default async function GirisSayfasi({ searchParams }: { searchParams: Pro
   const o = await istekOturumu();
   if (o?.durum === "ilk") redirect(`/giris/parola${donus ? `?donus=${encodeURIComponent(donus)}` : ""}`);
   if (o) redirect(donus ?? "/");
+  /* müşteri kullanıcısı (0030): kendi paneline */
+  const m = await musteriIstekOturumu();
+  if (m?.durum === "ilk") redirect("/giris/parola?donus=%2Fportal");
+  if (m) redirect(donus?.startsWith("/portal") ? donus : "/portal");
   const kiraci = await istekKiracisi();
   const adres = ((await headers()).get("host") ?? "").replace(/:\d+$/, "");
   return <GirisFormu neden={neden} donus={donus} adres={adres} firmaVar={!!kiraci} />;

@@ -87,6 +87,8 @@ function cakisanEposta(h: unknown): Yazma | null {
   if (e.code === "23505" && (e.constraint === "personel_eposta" || e.constraint === "hesap_firma_id_eposta_key")) {
     return { durum: "gecersiz", hatalar: { eposta: "Bu e-posta başka bir personelde kayıtlı." } };
   }
+  /* 0030: kullanıcı adı firmada tek — müşteri girişinin e-postası personel hesabına verilemez */
+  if (e.code === "23505" && e.constraint === "giris_eposta") return { durum: "gecersiz", hatalar: { eposta: "Bu e-posta bir müşteri girişinin kullanıcı adı." } };
   return null;
 }
 

@@ -45,11 +45,19 @@ export function havuzKur(ayar: UygulamaBaglantisi): pg.Pool {
   return havuz;
 }
 
+/** müşteri paneli işlemi (0030): işlemin müşterisi ve tesis kapsamı (null = bütün tesisler) */
+export interface MusteriBaglami { id: string; tesisler: readonly string[] | null }
+
 /** İşi verilen kiracının içinde, tek işlemde koşar. Hata geri alınır ve YUKARI fırlatılır (yutulmaz).
-    `hesapId` verilirse işlemin bağlamına yazılır (`app.hesap_id`): denetim izinin "kim"i buradan damgalanır (0003), koddan değil. */
-export async function kiraciIcinde<T>(havuz: pg.Pool, firmaId: string, is: (db: Sorgulayici) => Promise<T>, secenek: { hesapId?: string } = {}): Promise<T> {
+    `hesapId` verilirse işlemin bağlamına yazılır (`app.hesap_id`): denetim izinin "kim"i buradan damgalanır (0003), koddan değil.
+    `musteri` verilirse (müşteri paneli, 0030) işlemin müşterisi ve tesis kapsamı yazılır ve işlem MÜŞTERİ ROLÜNE geçer (SET LOCAL ROLE
+    probata_musteri): yalnız panelin okuduğu tablolar, yalnız okuma, kendi müşterisi / tesis kapsamı / müşteriye açık — kısıtlayıcı politikalar
+    veritabanında. Rol işlem bitince düşer (havuzdaki bağlantıya sızmaz). */
+export async function kiraciIcinde<T>(havuz: pg.Pool, firmaId: string, is: (db: Sorgulayici) => Promise<T>, secenek: { hesapId?: string; musteri?: MusteriBaglami } = {}): Promise<T> {
   if (!UUID.test(firmaId)) throw new Error("Geçersiz firma kimliği");
   if (secenek.hesapId !== undefined && !UUID.test(secenek.hesapId)) throw new Error("Geçersiz hesap kimliği");
+  const m = secenek.musteri;
+  if (m && (!UUID.test(m.id) || (m.tesisler !== null && (!m.tesisler.length || !m.tesisler.every((t) => UUID.test(t)))))) throw new Error("Geçersiz müşteri bağlamı");
   const baglanti = await havuz.connect();
   /* ödünçteyken bağlantı koparsa istemci 'error' yayar (havuz o sırada dinlemez) → yakalanmamış istisna olmasın; hata sorgudan zaten döner */
   let kopuk: Error | undefined;
@@ -58,6 +66,10 @@ export async function kiraciIcinde<T>(havuz: pg.Pool, firmaId: string, is: (db: 
   try {
     await baglanti.query("BEGIN");
     await baglanti.query("SELECT set_config('app.firma_id', $1, true), set_config('app.hesap_id', $2, true)", [firmaId, secenek.hesapId ?? ""]);
+    if (m) {
+      await baglanti.query("SELECT set_config('app.musteri_id', $1, true), set_config('app.musteri_tesisler', $2, true)", [m.id, m.tesisler ? m.tesisler.join(",") : ""]);
+      await baglanti.query("SET LOCAL ROLE probata_musteri");
+    }
     const sonuc = await is({ sorgu: (metin, degerler) => baglanti.query(metin, degerler as unknown[]) });
     await baglanti.query("COMMIT");
     return sonuc;

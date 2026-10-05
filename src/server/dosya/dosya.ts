@@ -66,6 +66,15 @@ export async function dosyaIndirilebilir(db: Sorgulayici, kisi: Indiren, dosyaId
   return { anahtar: d.anahtar, ad: d.ad, tur: d.tur, boyut: Number(d.boyut) };
 }
 
+/** müşteri panelinin indirebildiği dosya (0030): YALNIZ müşteri işleminde (src/server/kimlik/istek.ts musteriIslemi → probata_musteri) çağrılır —
+    veritabanının kısıtlayıcı politikası yalnız müşterinin görebildiği (kendi, kapsamındaki tesis, son imzalı sürüm) imzalı PDF'i döndürür */
+export async function musteriDosyasi(db: Sorgulayici, dosyaId: string): Promise<IndirilecekDosya | null> {
+  if (!UUID.test(dosyaId)) return null;
+  const d = (await db.sorgu<{ anahtar: string; ad: string; tur: string; boyut: string }>(
+    "SELECT anahtar, ad, tur, boyut FROM dosya WHERE id = $1 AND modul = 'rapor_imzali' AND cop IS NULL", [dosyaId])).rows[0];
+  return d ? { anahtar: d.anahtar, ad: d.ad, tur: d.tur, boyut: Number(d.boyut) } : null;
+}
+
 /** kaydın kendi dosyası (belge çizimi için: rapor fotoğrafı belgeye gömülür): dosya bu firmada, çöpte değil, VERİLEN modül ve kayda bağlı.
     Kaydı görme yetkisi ÇAĞIRANDA (kaydı görebilen, kaydın dosyasını görür — erişim kaydıyla aynı kural). */
 export async function kayitDosyasi(db: Sorgulayici, modul: string, kayitId: string, dosyaId: string): Promise<IndirilecekDosya | null> {

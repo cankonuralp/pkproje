@@ -1,6 +1,6 @@
 /* MÜŞTERİ VE TESİS GİRDİSİ — pencerenin ve sunucunun TEK şeması (maket musteriler.html denetle(); karar 45–47, 50). İletiler maketle aynı.
    Kaydı DURDURAN yalnız ad ve biçim; aynı vergi / SGK no başka kayıtta olması UYARI (sunucu söyler, "Yine de kaydet" ile kaydedilir). */
-import { z } from "../../sema/ortak.ts";
+import { eposta, z } from "../../sema/ortak.ts";
 import { IL_ILCE } from "../../tanim/iller.ts";
 
 const kirp = (s: unknown) => (typeof s === "string" ? s.trim().replace(/\s+/g, " ") : s);
@@ -37,3 +37,11 @@ export const kisaAd = (g: Pick<MusteriGirdisi, "unvan" | "kisa">) => g.kisa ?? g
 export const eksikMusteri = (m: { vno: string | null; eposta: string | null }) => [!m.vno && "vergi no", !m.eposta && "e-posta"].filter(Boolean) as string[];
 export const eksikTesis = (t: { sgk: string | null; adres: string | null; il: string | null; ilce: string | null }) =>
   [!t.sgk && "SGK DETSİS NO", !t.adres && "adres", !t.il && "il", !t.ilce && "ilçe"].filter(Boolean) as string[];
+
+/** müşteri girişi · ek giriş (0030; karar 44): ad, e-posta (kullanıcı adı), tesis kapsamı — "hepsi" ya da seçili tesis kimlikleri (en az bir) */
+export const EkGirisGirdisi = z.object({
+  ad: z.preprocess((s) => (typeof s === "string" ? s.trim().replace(/\s+/g, " ") : s), z.string({ error: "Ad yazılmalı." }).min(1, "Ad yazılmalı.").max(200, "En çok 200 karakter.")),
+  eposta,
+  tesisler: z.union([z.literal("hepsi").transform(() => null), z.array(z.string().uuid()).min(1, "En az bir tesis seçilmeli.").max(500)
+    .transform((l) => [...new Set(l)])], { error: "Tesis kapsamı seçilmeli." }),
+});

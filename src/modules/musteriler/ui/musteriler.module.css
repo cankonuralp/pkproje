@@ -9,3 +9,18 @@
 .sayi { font-variant-numeric: tabular-nums; font-weight: 600; }
 .kodUzun { overflow-wrap: anywhere; word-break: break-all; }
 .bosSatir { margin: 0; padding: 14px 0; color: var(--yazi2); font-size: var(--boy-kucuk); }
+
+/* müşteri girişi (0030; maket "Müşteri girişi" bölümü) */
+.girisAltBas { display: flex; align-items: center; flex-wrap: wrap; gap: 8px 12px; margin: 16px 0 8px; }
+.girisAltBaslik { margin: 0; font-size: var(--boy-govde); font-weight: 600; }
+.girisSayac { margin-right: auto; color: var(--yazi2); font-size: var(--boy-kucuk); }
+.girisTuslar { display: flex; flex-wrap: wrap; justify-content: flex-end; gap: 8px; }
+.girisKapsam { margin: 12px 0 0; padding: 0; border: 0; }
+.girisKapsam legend { margin: 0 0 6px; padding: 0; font-size: var(--boy-kucuk); font-weight: 600; }
+.girisSecim { display: flex; align-items: center; gap: 8px; min-height: 36px; }
+.girisTesis { padding-left: 24px; }
+.girisHata { margin: 6px 0 0; color: var(--hata-yazi); font-size: var(--boy-etiket); font-weight: 600; }
+.geciciParola {
+  margin: 0 0 12px; padding: 12px 14px; border: 1px dashed var(--kenar-alan); border-radius: var(--r-orta); background: var(--zemin2);
+  font-size: var(--boy-baslik); letter-spacing: .06em; overflow-wrap: anywhere;
+}

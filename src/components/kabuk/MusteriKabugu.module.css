@@ -1,0 +1,17 @@
+/* MÜŞTERİ PANELİ KABUĞU — menüsüz; üst çubuk firma kabuğununkiyle aynı ölçüde (Kabuk.module.css .ust). ⛔ Çıplak renk yok (2.9). */
+.kabuk { min-height: 100vh; display: flex; flex-direction: column; }
+.ust {
+  position: sticky; top: 0; z-index: 20;
+  height: var(--ust-y); flex: none;
+  display: flex; align-items: center; gap: 12px;
+  padding: 0 var(--bosluk-sayfa);
+  background: var(--kart); border-bottom: 1px solid var(--kenar);
+}
+.logo {
+  width: 32px; height: 32px; flex: none; display: inline-flex; align-items: center; justify-content: center;
+  border: 1px solid var(--kenar); border-radius: var(--r-orta); background: var(--zemin2); color: var(--yazi2);
+  font-size: var(--boy-etiket); font-weight: 700;
+}
+.firma { min-width: 0; overflow: hidden; text-overflow: ellipsis; white-space: nowrap; font-weight: 600; }
+.bosluk { flex: 1 1 auto; }
+.icerik { padding: var(--bosluk-sayfa); min-width: 0; }

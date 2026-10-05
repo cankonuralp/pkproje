@@ -8,6 +8,7 @@ import { ekle, guncelle, tablo, type Iz } from "../../../server/db/yazici.ts";
 import { duzey, type YetkiHesabi } from "../../../server/yetki/canDo.ts";
 import { dogrula, type DogrulamaHatalari } from "../../../sema/ortak.ts";
 import { kisaAd, MusteriGirdisi, TesisGirdisi } from "../sema.ts";
+import { anaGirisEpostasi } from "./girisler.ts";
 
 const MODUL = 3;
 const MUSTERI = tablo({ ad: "musteri", sutunlar: ["unvan", "kisa", "vd", "vno", "eposta", "tel", "ilgili", "pasif"] });
@@ -90,6 +91,9 @@ export async function musteriKaydet(db: Sorgulayici, kim: Kisi, id: string | nul
   if (v.eposta) {
     const e = await db.sorgu("SELECT 1 FROM musteri WHERE eposta = $1 AND id <> $2", [v.eposta, digeri]);
     if (e.rowCount) return { durum: "gecersiz", hatalar: { eposta: "Bu e-posta başka bir müşteride kayıtlı." } };
+    /* 0030: e-posta müşteri girişinin kullanıcı adı — firmada personel hesabıyla ya da başka bir girişle çakışmaz */
+    const g2 = await db.sorgu("SELECT 1 FROM hesap WHERE eposta = $1 UNION ALL SELECT 1 FROM musteri_hesap WHERE eposta = $1 AND NOT (ana AND musteri_id = $2::uuid)", [v.eposta, digeri]);
+    if (g2.rowCount) return { durum: "gecersiz", hatalar: { eposta: "Bu e-posta firmada bir girişin kullanıcı adı (personel ya da müşteri girişi)." } };
   }
   if (v.vno && !onay) {
     const a = (await db.sorgu<{ kisa: string }>("SELECT kisa FROM musteri WHERE vno = $1 AND id <> $2 ORDER BY kisa LIMIT 1", [v.vno, digeri])).rows[0];
@@ -102,7 +106,10 @@ export async function musteriKaydet(db: Sorgulayici, kim: Kisi, id: string | nul
   }
   if (!surumGecerli(surum)) return { durum: "cakisma" };
   const r = await guncelle(db, MUSTERI, id, surum, degerler, { kim: kim.ad, ne: "musteri.guncelle", gerekce: onay ? "uyarı görüldü, yine de kaydedildi" : undefined });
-  return cevir(r) ?? { durum: "tamam", id, surum: (r as { surum: number }).surum };
+  const c = cevir(r); if (c) return c;
+  /* ana girişin kullanıcı adı müşterinin e-postasıyla gider (yeni adrese yeni geçici parola; e-posta silinirse giriş pasif) */
+  if ((await anaGirisEpostasi(db, kim, id, v.eposta)) === "cakisma") return { durum: "cakisma" };
+  return { durum: "tamam", id, surum: (r as { surum: number }).surum };
 }
 
 /** tesis ekle (id boş; müşterinin altına) ya da güncelle. Pasif müşteriye tesis eklenmez. Aynı SGK DETSİS NO başka tesiste → uyarı. */
