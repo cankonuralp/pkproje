@@ -20,8 +20,8 @@ export interface Suzgec<K> {
   sonuc: ListeSonucu<K>;
 }
 
-export function useSuzgec<K>(tanim: SuzgecTanimi<K>, kayitlar: readonly K[]): Suzgec<K> {
-  const [durum, degistir] = useState(() => yeniDurum(tanim));
+export function useSuzgec<K>(tanim: SuzgecTanimi<K>, kayitlar: readonly K[], bas?: Partial<SuzgecDurumu>): Suzgec<K> {
+  const [durum, degistir] = useState(() => ({ ...yeniDurum(tanim), ...bas }));
   const sonuc = useMemo(() => listele(tanim, durum, kayitlar), [tanim, durum, kayitlar]);
   return { tanim, durum, degistir, sonuc };
 }

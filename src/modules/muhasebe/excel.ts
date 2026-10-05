@@ -1,10 +1,13 @@
 /* GİDERLER — EXCEL İÇE / DIŞA (328; maket muhasebe.html gider-excel-ice / gider-excel-disa / gider-excel-sablon; reisim 2026-09-27: "otel vb örnek
    excel atarım inport export yine buradada olacak" — sütunlar örnek Excel gelince ona göre, VARSAYIM). Saf: tarayıcıda (önizleme) ve sunucuda
    (kayıttan önce yeniden denetim) aynı. İçe: Tarih · Tür · Tutar (KDV dahil) · KDV oranı · Açıklama · Proje no; ilk satır başlıksa atlanır; boş satır
-   yok sayılır; her satır gerekçesiyle denetlenir, yalnız geçerliler girer (elle girilen, ödendi). Dışa: listenin süzülen satırları. */
+   yok sayılır; her satır gerekçesiyle denetlenir, yalnız geçerliler girer (elle girilen, ödendi). Dışa: listenin süzülen satırları; tutarlar SAYI hücresi.
+   328 incelemesi (maket tutarOku / oranOku): sayı hücresi (nokta ondalıklı, virgülsüz — Excel'in sakladığı) her ondalıkta okunup kuruşa
+   yuvarlanır, Türkçe yazım ("1.250,00") ortak şemayla; oran "20", "%20", "0,2" ya da yüzde biçimli hücre (0.2); tür yalnız kendi anahtarı
+   ("constructor" gibi nesne özellikleri değil); tutar 1 milyar TL'yi aşamaz. */
 import { xlsxBayt } from "../../components/disa/xlsx.ts";
 import { tutar as tutarSema } from "../../sema/ortak.ts";
-import { GIDER_DURUM, GIDER_TUR, giderKdv, KDV_ORAN, type GiderDurumu, type GiderTuru } from "./sema.ts";
+import { GIDER_DURUM, GIDER_TUR, GIDER_TUTAR_UST, giderKdv, KDV_ORAN, type GiderDurumu, type GiderTuru } from "./sema.ts";
 
 export const GIDER_SABLON = ["Tarih", "Tür", "Tutar (KDV dahil)", "KDV oranı", "Açıklama", "Proje no"] as const;
 export const GIDER_EXCEL_SINIR = 500;
@@ -22,6 +25,20 @@ export function tarihOku(s: string): string | null {
   const [y, a, g] = iso.split("-").map(Number), d = new Date(Date.UTC(y, a - 1, g));
   return d.getUTCFullYear() === y && d.getUTCMonth() === a - 1 && d.getUTCDate() === g ? iso : null;
 }
+/** tutar → KURUŞ: sayı hücresi ("1250.5", "999.996") ya da Türkçe yazım ("1.250,50"); geçersizse null */
+export function tutarOku(s: string): number | null {
+  const t = s.trim().replace(/\s|TL$/gi, "");
+  if (/^\d+(\.\d+)?$/.test(t)) { const n = Math.round(Number(t) * 100); return Number.isSafeInteger(n) ? n : null; }
+  const p = tutarSema.safeParse(t);
+  return p.success ? p.data : null;
+}
+/** KDV oranı: "20", "%20", "0,2" ya da yüzde biçimli hücre (0.2) → 20; boşsa null */
+export function oranOku(s: string): number | null {
+  const t = s.replace("%", "").replace(",", ".").trim();
+  if (t === "") return null;
+  const n = Number(t);
+  return !Number.isFinite(n) ? NaN : n > 0 && n < 1 ? Math.round(n * 100) : n;
+}
 /** okunan satırlar → içe alınacak giderler; planlar: proje no → plan kimliği; bugun: ileri tarih denetimi */
 export function giderSatirlari(ham: readonly (readonly string[])[], planlar: ReadonlyMap<string, string>, bugun: string): GiderExcelSatiri[] {
   const baslik = ham.length > 0 && /tarih/i.test(ham[0][0] ?? "") && /t[üu]r/i.test(ham[0][1] ?? "");
@@ -32,13 +49,12 @@ export function giderSatirlari(ham: readonly (readonly string[])[], planlar: Rea
     const c = (n: number) => String(h[n] ?? "").trim();
     const tarihYazi = c(0), turYazi = c(1), tutarYazi = c(2), oranYazi = c(3), aciklama = c(4), projeNo = c(5).toLocaleUpperCase("tr");
     const tarih = tarihOku(tarihYazi);
-    const tur = (turAd.get(kucuk(turYazi)) ?? (turYazi in GIDER_TUR ? turYazi as GiderTuru : null));
-    const tp = tutarSema.safeParse(/^\d+(\.\d{1,2})?$/.test(tutarYazi) ? tutarYazi.replace(".", ",") : tutarYazi);
-    const tutar = tp.success && tp.data > 0 ? tp.data : null;
-    const oranSayi = oranYazi.replace("%", "").trim();
-    const oran = oranSayi === "" ? (tur ? GIDER_TUR[tur][1] : 20) : Number(oranSayi);
+    const tur = turAd.get(kucuk(turYazi)) ?? (Object.hasOwn(GIDER_TUR, turYazi) ? turYazi as GiderTuru : null);
+    const t0 = tutarOku(tutarYazi), tutar = t0 !== null && t0 > 0 ? t0 : null;
+    const o0 = oranOku(oranYazi), oran = o0 === null ? (tur ? GIDER_TUR[tur][1] : 20) : o0;
     const plan = projeNo ? planlar.get(projeNo) ?? null : null;
     const neden = !tarih ? "Tarih geçersiz (GG.AA.YYYY)" : tarih > bugun ? "İleri tarihli, atlanır" : !tur ? "Tür bulunamadı" : !tutar ? "Tutar geçersiz"
+      : tutar > GIDER_TUTAR_UST ? "Tutar çok büyük"
       : !(KDV_ORAN as readonly number[]).includes(oran) ? "KDV oranı %20, %10, %1 ya da %0" : aciklama.length > 120 ? "Açıklama en çok 120 karakter"
       : projeNo && !plan ? "Proje no bulunamadı" : "";
     l.push({ satir: i + 1, tarih, tarihYazi, tur, turYazi, tutar, tutarYazi, oran, aciklama, projeNo, plan, ok: !neden, neden });
@@ -49,7 +65,7 @@ export const giderSablonu = () => xlsxBayt("Giderler", [[...GIDER_SABLON], ["05.
 
 export interface GiderDisSatiri { no: string; tarih: string; tur: GiderTuru; tutar: number; oran: number; aciklama: string | null; isNo: string | null; personel: string | null;
   durum: GiderDurumu; odeme: string | null; belge: boolean }
-const tl = (k: number) => (k / 100).toLocaleString("tr-TR", { minimumFractionDigits: 2, maximumFractionDigits: 2 });
+const tl = (k: number) => k / 100;   // sayı hücresi (toplanır, sıralanır)
 const gun = (s: string | null) => (s ? `${s.slice(8, 10)}.${s.slice(5, 7)}.${s.slice(0, 4)}` : "");
 export function giderExceli(l: readonly GiderDisSatiri[]): Uint8Array {
   return xlsxBayt("Giderler", [["Gider no", "Tarih", "Tür", "Tutar (KDV dahil)", "KDV oranı", "KDV", "KDV hariç", "Açıklama", "Proje no", "Personel", "Durum", "Ödeme tarihi", "Belge"],

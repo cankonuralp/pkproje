@@ -8,6 +8,7 @@ import type { SuzgecTanimi } from "../../../components/liste/suzgec";
 import { AltSatir, DegerYok, Rozet, SayfaBasi, SeritKap } from "../../../components/sayfa/Sayfa";
 import { tarihNo } from "../../../components/secim/tarih";
 import { Serit } from "../../../components/serit/Serit";
+import { TusBaglanti } from "../../../components/tus/Tus";
 import { FATURA_DURUM, IS_DURUM, para } from "../sema";
 import type { FaturaSatiri, IsSatiri } from "../server/muhasebe";
 import { KarHucre } from "./Karlilik";
@@ -80,8 +81,8 @@ function faturaTanim(l: readonly FaturaSatiri[]): SuzgecTanimi<FaturaSatiri> {
     seciciler: [musteriSecici(l)],
   };
 }
-export function FaturaListesi({ isler, faturalar }: { isler: IsSatiri[]; faturalar: FaturaSatiri[] }) {
-  const s = useSuzgec(faturaTanim(faturalar), faturalar);
+export function FaturaListesi({ isler, faturalar, durum }: { isler: IsSatiri[]; faturalar: FaturaSatiri[]; durum?: string }) {
+  const s = useSuzgec(faturaTanim(faturalar), faturalar, durum && durum in FATURA_DURUM ? { secili: [durum] } : undefined);
   return (
     <>
       <SayfaBasi baslik="Muhasebe" sayac={<Sayac s={s} />} />
@@ -99,7 +100,7 @@ function UyariSeridi({ isler, faturalar }: { isler: readonly IsSatiri[]; fatural
   if (!gec.length && !hazir.length) return null;
   return (
     <SeritKap>
-      {gec.length > 0 && <Serit tur="uyari" ikon="clock" eylem={<Link className={stil.no} href="/muhasebe/faturalar">Faturalar</Link>}>
+      {gec.length > 0 && <Serit tur="uyari" ikon="clock" eylem={<TusBaglanti tur="ikincil" href="/muhasebe/faturalar?durum=gecikti">Faturalar</TusBaglanti>}>
         <b>Vadesi geçen alacak:</b> {gec.length} fatura · {para(gec.reduce((n, f) => n + f.kalan, 0))}</Serit>}
       {hazir.length > 0 && <Serit tur="bilgi" ikon="file-check"><b>Faturaya hazır:</b> {hazir.map((x, i) => (
         <span key={x.id}>{i > 0 && ", "}<Link href={`/muhasebe/is/${x.id}`}>{x.no}</Link> · {x.musteri} ({x.hazir} imzalı rapor)</span>

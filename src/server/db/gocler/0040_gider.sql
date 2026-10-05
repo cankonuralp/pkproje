@@ -38,7 +38,8 @@ CREATE TABLE IF NOT EXISTS gider (
   UNIQUE (firma_id, no),
   UNIQUE (firma_id, id),
   CHECK ((durum = 'red') = (red IS NOT NULL)),
-  CHECK ((durum = 'odendi') = (odeme IS NOT NULL))
+  CHECK ((durum = 'odendi') = (odeme IS NOT NULL)),
+  CHECK (odeme IS NULL OR odeme >= tarih)
 );
 CREATE INDEX IF NOT EXISTS gider_tarih ON gider (firma_id, tarih DESC);
 CREATE INDEX IF NOT EXISTS gider_plan ON gider (firma_id, plan_id);
@@ -56,6 +57,7 @@ DECLARE bugun date := (now() AT TIME ZONE 'Europe/Istanbul')::date; ben uuid := 
 BEGIN
   IF TG_OP = 'DELETE' THEN RAISE EXCEPTION 'gider silinmez' USING ERRCODE = '23514'; END IF;
   IF NEW.tarih > bugun THEN RAISE EXCEPTION 'ileri tarihli gider kaydedilmez' USING ERRCODE = '23514'; END IF;
+  IF NEW.odeme > bugun THEN RAISE EXCEPTION 'ileri tarihli ödeme kaydedilmez' USING ERRCODE = '23514'; END IF;
   IF TG_OP = 'INSERT' THEN
     NEW.kaydeden := ben; NEW.onaylayan := NULL; NEW.karar := NULL;
     IF NEW.kaynak = 'form' THEN
@@ -76,6 +78,10 @@ BEGIN
     IF OLD.durum = 'bekliyor' AND NEW.durum IN ('onaylandi', 'red') THEN
       NEW.onaylayan := ben; NEW.karar := now();
     ELSIF OLD.durum = 'onaylandi' AND NEW.durum = 'odendi' THEN
+      -- onay damgası korunur (328 incelemesi: bu geçişte onaylayan / karar değiştirilebiliyordu)
+      IF NEW.onaylayan IS DISTINCT FROM OLD.onaylayan OR NEW.karar IS DISTINCT FROM OLD.karar OR NEW.red IS DISTINCT FROM OLD.red THEN
+        RAISE EXCEPTION 'onay damgası ödemede değişmez' USING ERRCODE = '23514';
+      END IF;
       NEW.odeme := coalesce(NEW.odeme, bugun);
       IF NEW.odeme > bugun THEN RAISE EXCEPTION 'ileri tarihli ödeme kaydedilmez' USING ERRCODE = '23514'; END IF;
     ELSE

@@ -3,7 +3,8 @@
    1. Red değişmezliği olmasaydı reddedilen giderin tutarı sonradan değiştirilirdi.
    2. Masraf formu onay beklemeseydi denetçinin formu "ödendi" doğardı (muhasebe onayı atlanır).
    3. İleri tarih denetimi olmasaydı yarının tarihiyle gider yazılırdı.
-   4. Kaydeden veritabanında damgalanmasaydı istemcinin yazdığı kimlik "kaydeden" olurdu. */
+   4. Kaydeden veritabanında damgalanmasaydı istemcinin yazdığı kimlik "kaydeden" olurdu.
+   5. Ödemede onay damgası korunmasaydı "ödendi" işaretlenirken onaylayan başkası yazılırdı (328 incelemesi). */
 import assert from "node:assert/strict";
 import { copyFileSync, mkdirSync, mkdtempSync, readdirSync, readFileSync, rmSync, writeFileSync } from "node:fs";
 import { tmpdir } from "node:os";
@@ -77,4 +78,15 @@ test("0040'ta kaydeden damgası kalkınca istemcinin yazdığı kimlik kaydeden 
   const r = await kiraciIcinde(havuz, A, (db) => db.sorgu<{ k: string }>(
     `INSERT INTO gider (no, tarih, tur, tutar, oran, kaynak, durum, kaydeden) VALUES ('G-1026-001', ${BUGUN}, 'yol', 100, 20, 'form', 'bekliyor', $1) RETURNING kaydeden::text AS k`, [sahte]));
   assert.equal(r.rows[0].k, sahte, "istemcinin kimliği yazıldı");
+});
+
+test("0040'ta ödemede onay damgası korunmayınca ödendi işaretlenirken onaylayan değiştirilir", async () => {
+  const { havuz, A } = await bozuk("gider_bozuk5", "        RAISE EXCEPTION 'onay damgası ödemede değişmez' USING ERRCODE = '23514';", "        NULL;");
+  const sahte = "00000000-0000-4000-8000-000000000001";
+  const r = await kiraciIcinde(havuz, A, async (db) => {
+    const id = (await db.sorgu<{ id: string }>(`INSERT INTO gider (no, tarih, tur, tutar, oran, kaynak, durum) VALUES ('G-1026-001', ${BUGUN}, 'yol', 100, 20, 'muhasebe', 'onaylandi')
+      RETURNING id::text`)).rows[0].id;
+    return db.sorgu<{ o: string }>("UPDATE gider SET durum = 'odendi', onaylayan = $2 WHERE id = $1 RETURNING onaylayan::text AS o", [id, sahte]);
+  });
+  assert.equal(r.rows[0].o, sahte, "onaylayan ödemede değişti");
 });

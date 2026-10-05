@@ -10,10 +10,11 @@ import { modulOturumu, oturumIslemi } from "../../../../server/kimlik/istek";
 const MODUL = modulBul("muhasebe")!;
 export const metadata: Metadata = { title: "Faturalar" };
 
-export default async function Sayfa() {
+export default async function Sayfa({ searchParams }: { searchParams: Promise<{ durum?: string | string[] }> }) {
   const o = await modulOturumu(MODUL.no);
   if (!o) return <Yetkisiz />;
   const v = await oturumIslemi(o, async (db) => ({ isler: await isListesi(db, o), faturalar: await faturaListesi(db, o) }));
   if (!v.isler || !v.faturalar) return <Yetkisiz />;
-  return <FaturaListesi isler={v.isler} faturalar={v.faturalar} />;
+  const { durum } = await searchParams;
+  return <FaturaListesi isler={v.isler} faturalar={v.faturalar} durum={typeof durum === "string" ? durum : undefined} />;
 }

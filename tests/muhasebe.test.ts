@@ -439,3 +439,19 @@ test("birim fiyat bağı (324–327 incelemesi): imzalı rapor imzasızdan önce
   b = await bag();
   assert.deepEqual([b.has(ilk), b.get(imzali)!.kaynak, b.get(ucuncu)!.kaynak], [false, "teklif", "teklif"]);
 });
+
+/* 2026-10-06 (328 incelemesi): ödeme günü eklemede de ileri olamaz, gider tarihinden önce olamaz; onaylandı → ödendi geçişinde onay damgası
+   değişmez; ödendi giderin tarihi ödeme gününden sonraya taşınamaz */
+test("gider (veritabanı, 328 incelemesi): ödeme günü kuralları ve ödemede onay damgası korunur", async () => {
+  const o = tamam(await gk(MUH, null, 0, G({ odeme: "onaylandi", aciklama: "Damga" })));
+  await assert.rejects(sql(A, "UPDATE gider SET durum = 'odendi', odeme = $2, onaylayan = $3 WHERE id = $1", [o.id, BUGUN(), YON.id], MUH.id), /onay damgası/);
+  tamam(await gk(MUH, o.id, (await gider(o.id)).surum, G({ aciklama: "Damga" }), null, "odendi"));
+  const ins = (odeme: string, tarih = BUGUN()) => sql(A, `INSERT INTO gider (no, tarih, tur, tutar, oran, kaynak, durum, odeme) VALUES ('G-0001-950', $1, 'yol', 1, 20, 'muhasebe', 'odendi', $2)`,
+    [tarih, odeme], MUH.id);
+  await assert.rejects(ins(gunEkle(BUGUN(), 1)), /ileri tarihli ödeme/);
+  await assert.rejects(ins(gunEkle(BUGUN(), -3), gunEkle(BUGUN(), -1)), /check constraint|odeme/);
+  const e = tamam(await gk(MUH, null, 0, G({ tarih: gunEkle(BUGUN(), -3), aciklama: "Eski" })));
+  assert.equal((await gider(e.id)).odeme, gunEkle(BUGUN(), -3));
+  const r = await gk(MUH, e.id, (await gider(e.id)).surum, G({ tarih: gunEkle(BUGUN(), -1), aciklama: "Eski" }));
+  assert.ok(r.durum === "gecersiz" && /Ödeme gününden/.test(r.hatalar.tarih), JSON.stringify(r));
+});

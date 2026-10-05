@@ -18,7 +18,7 @@ import { KartEtiket, Kirp, Liste, type Sutun } from "../../../components/liste/L
 import { Sayac, SuzgecliListe, useSuzgec } from "../../../components/liste/SuzgecliListe";
 import type { SuzgecTanimi } from "../../../components/liste/suzgec";
 import { Pencere, pencereMetinSinifi } from "../../../components/pencere/Pencere";
-import { AltSatir, DegerYok, Rozet, SayfaBasi, SeritKap } from "../../../components/sayfa/Sayfa";
+import { AltSatir, Bolum, DegerYok, Rozet, SayfaBasi, SeritKap } from "../../../components/sayfa/Sayfa";
 import { SecimAlani } from "../../../components/secim/SecimAlani";
 import { TarihAlani } from "../../../components/secim/TarihAlani";
 import { tarihNo } from "../../../components/secim/tarih";
@@ -122,16 +122,16 @@ export function GiderListesi({ giderler, secenekler, bugun }: { giderler: GiderS
   );
 }
 
-/** iş sayfasının "Giderler" bölümü (maket isCiz a-b-gider; GI_SUTUN) */
+/** iş sayfasının "Giderler" bölümü (maket isCiz a-b-gider: başlıkta sayaç ve "Gider ekle"; GI_SUTUN) */
 export function IsGiderleri({ giderler, secenekler, isId, isNo, bugun }: { giderler: GiderSatiri[]; secenekler: GiderSecenekleri | null; isId: string; isNo: string; bugun: string }) {
   const [p, setP] = useState<Pen>(null);
   return (
-    <>
-      <p className={stil.ozet}><b>{giderler.length}</b> gider{secenekler && <> <Tus tur="ikincil" ikon="plus" onClick={() => setP({ g: null, is: isId })}>Gider ekle</Tus></>}</p>
+    <Bolum id="b-is-gider" baslik="Giderler" sayac={<><b>{giderler.length}</b> gider</>}
+      tuslar={secenekler ? <Tus tur="ikincil" ikon="plus" onClick={() => setP({ g: null, is: isId })}>Gider ekle</Tus> : undefined}>
       {giderler.length ? <Liste baslik="İşin giderleri" sutunlar={sutunlar((g) => setP({ g }), true)} kayitlar={giderler} anahtar={(g) => g.id} />
         : <p className={stil.ozet}>Henüz gider yok.</p>}
       {p && <GiderPenceresi g={p.g} sabitIs={p.is} sabitIsNo={isNo} secenekler={secenekler} bugun={bugun} kapat={() => setP(null)} />}
-    </>
+    </Bolum>
   );
 }
 
@@ -183,7 +183,7 @@ function GiderPenceresi({ g, sabitIs, sabitIsNo, secenekler, bugun, kapat }: {
   if (red !== null && g) {
     return (
       <Pencere acik baslik={baslik} onKapat={() => { if (!bekliyor) kapat(); }} odak={`#${GID.gerekce}`}
-        alt={<><Tus tur="ikincil" disabled={bekliyor} onClick={() => { setRed(null); setH({}); }}>Vazgeç</Tus>
+        alt={<><Tus tur="ikincil" disabled={bekliyor} onClick={() => { setRed(null); setH({}); odakla("tutar"); }}>Vazgeç</Tus>
           <Tus ikon="ban" disabled={bekliyor} aria-busy={bekliyor || undefined} onClick={reddet}>Reddet</Tus></>}>
         <p className={pencereMetinSinifi}><b>{g.no}</b> · {GIDER_TUR[g.tur][0]} · {para(g.tutar)}{g.personel && ` · ${g.personel.ad}`}</p>
         {genel && <Serit tur="hata" ikon="circle-alert">{genel}</Serit>}
@@ -199,7 +199,7 @@ function GiderPenceresi({ g, sabitIs, sabitIsNo, secenekler, bugun, kapat }: {
       alt={<>
         <Tus tur="ikincil" disabled={bekliyor} onClick={kapat}>{yaz ? "Vazgeç" : "Kapat"}</Tus>
         {yaz && (g?.durum === "bekliyor" ? <>
-          <Tus tur="ikincil" ikon="ban" disabled={bekliyor} onClick={() => { setRed(""); setH({}); setGenel(null); }}>Reddet</Tus>
+          <Tus tur="ikincil" ikon="ban" disabled={bekliyor} onClick={() => { setRed(""); setH({}); setGenel(null); odakla("gerekce"); }}>Reddet</Tus>
           <Tus ikon="check" disabled={bekliyor} aria-busy={bekliyor || undefined} onClick={() => kaydet("onaylandi")}>Onayla</Tus>
         </> : g?.durum === "onaylandi" ? <>
           <Tus tur="ikincil" ikon="check" disabled={bekliyor} onClick={() => kaydet(null)}>Kaydet</Tus>
@@ -231,7 +231,7 @@ function GiderPenceresi({ g, sabitIs, sabitIsNo, secenekler, bugun, kapat }: {
           <Girdi id={GID.tutar} value={d.tutar} inputMode="decimal" maxLength={18} hata={!!h.tutar} mesajli={!!h.tutar} onChange={(e) => setD({ ...d, tutar: e.target.value })} />
         </Alan>
         <Alan id={GID.oran} etiket="KDV oranı" hata={h.oran} sonuc={kdv && !h.oran ? `KDV ${para(kdv.kdv)} · KDV hariç ${para(kdv.haric)}` : undefined}>
-          <SecimAlani id={GID.oran} ad="KDV oranı" deger={d.oran} secenekler={KDV_ORAN.map((o) => [String(o), `%${o}`] as const)}
+          <SecimAlani id={GID.oran} ad="KDV oranı" deger={d.oran} gecersiz={!!h.oran} secenekler={KDV_ORAN.map((o) => [String(o), `%${o}`] as const)}
             degistir={(x) => setD({ ...d, oran: x })} tanim={kdv || h.oran ? ipucuId(GID.oran) : undefined} />
         </Alan>
         <div className={stil.genis}>
@@ -240,18 +240,19 @@ function GiderPenceresi({ g, sabitIs, sabitIsNo, secenekler, bugun, kapat }: {
           </Alan>
         </div>
         <Alan id={GID.is} etiket="İş" hata={h.is}>
-          <SecimAlani id={GID.is} ad="İş" deger={d.is} tanim={h.is ? ipucuId(GID.is) : undefined}
+          <SecimAlani id={GID.is} ad="İş" deger={d.is} gecersiz={!!h.is} tanim={h.is ? ipucuId(GID.is) : undefined}
             secenekler={[["", "Genel gider"], ...isler.map((x) => [x.id, `${x.no} · ${x.musteri}`, x.tarih ? tarihNo(x.tarih) : ""] as const)]}
             degistir={(x) => setD({ ...d, is: x })} />
         </Alan>
         <Alan id={GID.personel} etiket="Personel" hata={h.personel}>
-          <SecimAlani id={GID.personel} ad="Personel" deger={d.personel} tanim={h.personel ? ipucuId(GID.personel) : undefined}
+          <SecimAlani id={GID.personel} ad="Personel" deger={d.personel} gecersiz={!!h.personel} tanim={h.personel ? ipucuId(GID.personel) : undefined}
             secenekler={[["", "Seçilmedi"], ...kisiler.map((x) => [x.id, x.ad] as const)]} degistir={(x) => setD({ ...d, personel: x })} />
         </Alan>
         <div className={stil.genis}>
           <Alan id={GID.belge} etiket={belge === "var" ? "Belgeyi değiştir (PDF ya da fotoğraf)" : "Belge (PDF ya da fotoğraf)"} hata={h.belge}
             sonuc={h.belge ? undefined : "Fiş ya da fatura; yoksa gider yine kaydedilir, listede “Belge yok” görünür."}>
-            <input ref={dosya} id={GID.belge} className={stil.dosya} type="file" accept="application/pdf,image/jpeg,image/png" aria-describedby={ipucuId(GID.belge)} />
+            <input ref={dosya} id={GID.belge} className={stil.dosya} type="file" accept="application/pdf,image/jpeg,image/png" aria-describedby={ipucuId(GID.belge)}
+              aria-invalid={!!h.belge || undefined} />
           </Alan>
           {g?.belge && <p className={stil.ozet}>
             {belge === "kaldir" ? <>Belge kaydedince kaldırılır. <Tus tur="ikincil" onClick={() => setBelge("var")}>Geri al</Tus></>
@@ -300,7 +301,8 @@ function GiderExcelYukle({ secenekler, bugun }: { secenekler: GiderSecenekleri; 
     if (!f) return;
     setHata(null);
     try {
-      const ham = await tabloOku(f.name, new Uint8Array(await f.arrayBuffer()));
+      /* yalnız kullanılan 6 sütun, hücre en çok 1 000 karakter (sunucu da böyle bekler; uzun açıklama satırda atlanır) */
+      const ham = (await tabloOku(f.name, new Uint8Array(await f.arrayBuffer()))).map((r) => r.slice(0, 6).map((c) => c.slice(0, 1000)));
       if (ham.length > GIDER_EXCEL_SINIR + 1) throw new TabloHatasi(`en çok ${GIDER_EXCEL_SINIR} satır`);
       setDosya({ ad: f.name, ham, satirlar: giderSatirlari(ham, planlar, bugun) });
     } catch (e) {

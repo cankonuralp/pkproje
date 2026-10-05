@@ -5,6 +5,7 @@
 import Link from "next/link";
 import { useRouter } from "next/navigation";
 import { Yuz, Yuzler } from "../../../components/bilgi/Bilgi";
+import { Alan } from "../../../components/form/Form";
 import { KartEtiket, Kirp, Liste, type Sutun } from "../../../components/liste/Liste";
 import { AltSatir, Bolum, SayfaBasi, SeritKap } from "../../../components/sayfa/Sayfa";
 import { SecimAlani } from "../../../components/secim/SecimAlani";
@@ -49,6 +50,7 @@ export function IsKarliligi({ k }: { k: IsKarlilik }) {
 }
 
 type GgIs = GelirGider["isler"][number];
+const DONEM_ID = "w-gg-donem";
 const GG_SUTUN: Sutun<GgIs>[] = [
   { k: "no", genislik: "18%", baslik: "Proje no", kart: "ust", sira: 1, hucre: (x) => <><Link className={stil.no} href={`/muhasebe/is/${x.id}`}>{x.no}</Link><AltSatir>{tarihNo(x.tarih)}</AltSatir></> },
   { k: "musteri", genislik: "28%", baslik: "Müşteri / tesis", kart: "govde", sira: 2, hucre: (x) => <span><Kirp>{x.musteri}</Kirp><AltSatir><Kirp>{x.tesis}</Kirp></AltSatir></span> },
@@ -90,8 +92,10 @@ export function GelirGiderGorunumu({ v }: { v: GelirGider }) {
       <SayfaBasi baslik="Muhasebe" sayac={<span className={stil.ozet}>{bas}</span>} />
       <MuhasebeSekmeleri secili="/muhasebe/gelir-gider" />
       <div className={stil.donem}>
-        <SecimAlani id="w-gg-donem" ad="Dönem" deger={v.secili} secenekler={[["toplam", "Toplam"], ...v.secenekler.map((a) => [a, ayAd(a)] as const)]}
-          degistir={(x) => router.push(x === "toplam" ? "/muhasebe/gelir-gider" : `/muhasebe/gelir-gider?ay=${x}`)} />
+        <Alan id={DONEM_ID} etiket="Dönem">
+          <SecimAlani id={DONEM_ID} ad="Dönem" deger={v.secili} secenekler={[["toplam", "Toplam"], ...v.secenekler.map((a) => [a, ayAd(a)] as const)]}
+            degistir={(x) => router.push(x === "toplam" ? "/muhasebe/gelir-gider" : `/muhasebe/gelir-gider?ay=${x}`)} />
+        </Alan>
       </div>
       {(toplam ? d.tahmini > 0 : !!tek && !tek.am.bordroVar) && <SeritKap><Serit tur="bilgi" ikon="history">
         {toplam ? `${d.tahmini} ayın bordroları yüklenmedi; o ayların maaşları son bordrodan tahmini.` : `${ayAd(v.secili)} bordroları yüklenmedi; maaşlar son bordrodan tahmini.`}

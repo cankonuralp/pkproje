@@ -4,7 +4,7 @@
 import { depo } from "../../../server/dosya/depo";
 import { ayniKoken } from "../../../server/kimlik/koken";
 import { istekOturumu, oturumIslemi } from "../../../server/kimlik/istek";
-import { giderExceliYukle, giderKaydet, giderReddet, type GiderBelgesi, type GiderSonra } from "../server/giderler";
+import { BelgeHatasi, giderExceliYukle, giderKaydet, giderReddet, type GiderBelgesi, type GiderSonra } from "../server/giderler";
 import { faturaKaydet, tahsilatKaydet, type Yazma } from "../server/muhasebe";
 
 export interface MuhasebeYaniti { tamam?: boolean; id?: string; no?: string; bildirim?: string; hatalar?: Record<string, string>; genel?: string }
@@ -44,8 +44,13 @@ export async function giderKaydetEylemi(form: FormData): Promise<MuhasebeYaniti>
   const id = yazi(form.get("id")) || null, sonra = yazi(form.get("sonra")) as GiderSonra;
   const girdi = { tarih: yazi(form.get("tarih")), tur: yazi(form.get("tur")), tutar: yazi(form.get("tutar")), oran: yazi(form.get("oran")), aciklama: yazi(form.get("aciklama")),
     is: yazi(form.get("is")), personel: yazi(form.get("personel")), odeme: yazi(form.get("odeme")) || undefined };
-  return islem((o) => oturumIslemi(o, (db) => giderKaydet(db, depo(), o, o.kiraci.firmaId, id, Number(form.get("surum") ?? 0), girdi, belge,
-    SONRA.includes(sonra) ? sonra : null)));
+  try {
+    return await islem((o) => oturumIslemi(o, (db) => giderKaydet(db, depo(), o, o.kiraci.firmaId, id, Number(form.get("surum") ?? 0), girdi, belge,
+      SONRA.includes(sonra) ? sonra : null)));
+  } catch (h) {
+    if (h instanceof BelgeHatasi) return { hatalar: { belge: h.message } };
+    throw h;
+  }
 }
 export async function giderReddetEylemi(id: string, surum: number, girdi: unknown): Promise<MuhasebeYaniti> {
   return islem((o) => oturumIslemi(o, (db) => giderReddet(db, o, yazi(id), Number(surum), girdi)));

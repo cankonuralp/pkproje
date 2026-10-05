@@ -72,6 +72,8 @@ export async function giderSecenekleri(db: Sorgulayici, kim: Kisi): Promise<Gide
 }
 
 export type GiderBelgesi = { ad: string; bayt: Uint8Array } | null | "kaldir";
+/** belge okunamadı (bozuk görsel): eylem alan hatasına çevirir; işlem geri alınır */
+export class BelgeHatasi extends Error {}
 const BELGE_TUR = ["pdf", "jpeg", "png"] as const;
 /** belge kayıttan ÖNCE denetlenir (tür baytlardan, boyut); geçmezse gider de yazılmaz */
 function belgeHatasi(belge: GiderBelgesi): string | null {
@@ -85,7 +87,7 @@ async function belgeYaz(db: Sorgulayici, depo: Depo, kim: Kisi, firmaId: string,
   let dosya: string | null = null;
   if (belge !== "kaldir") {
     const y = await dosyaYukle(db, depo, { firmaId, modul: GIDER_DOSYA, kayitId: id, ad: belge.ad, bayt: belge.bayt, izinli: BELGE_TUR, kim: kim.ad, yukleyen: kim.id });
-    if (!y.tamam) throw new Error(`gider belgesi yüklenemedi: ${y.neden}`);   // tür ve boyut önceden denetlendi; bozuk görsel işlemi geri alır
+    if (!y.tamam) throw new BelgeHatasi("Belge okunamadı ya da bozuk.");   // tür ve boyut önceden denetlendi; bozuk görsel işlemi geri alır
     dosya = y.id;
   }
   const r = await guncelle(db, GIDER, id, surum, { belge: dosya }, iz(kim, "gider.belge"));
@@ -122,9 +124,10 @@ export async function giderKaydet(db: Sorgulayici, depo: Depo, kim: Kisi, firmaI
     return { durum: "tamam", id: r.id, no, bildirim: `${no} kaydedildi: ${para(v.tutar)} (KDV dahil)${v.is ? "" : ", genel gider"}${belge && belge !== "kaldir" ? "." : "; belge eklenmedi."}` };
   }
   if (!UUID.test(id)) return { durum: "yok" };
-  const x = (await db.sorgu<{ no: string; durum: GiderDurumu }>("SELECT no, durum FROM gider WHERE id = $1 FOR UPDATE", [id])).rows[0];
+  const x = (await db.sorgu<{ no: string; durum: GiderDurumu; odeme: string | null }>("SELECT no, durum, odeme::text FROM gider WHERE id = $1 FOR UPDATE", [id])).rows[0];
   if (!x) return { durum: "yok" };
   if (x.durum === "red") return { durum: "red", neden: "Reddedilen gider değişmez." };
+  if (x.odeme && v.tarih > x.odeme) return { durum: "gecersiz", hatalar: { tarih: `Ödeme gününden (${x.odeme.split("-").reverse().join(".")}) sonra olamaz.` } };
   if (sonra && x.durum !== GECIS[sonra]) return gecisRed(sonra);
   if (!Number.isSafeInteger(surum) || surum < 0) return { durum: "cakisma" };
   const r = await guncelle(db, GIDER, id, surum, icerik, iz(kim, "gider.duzenle", x.no));
@@ -158,11 +161,14 @@ export async function giderReddet(db: Sorgulayici, kim: Kisi, id: string, surum:
 /** Excel'den yükle: satırlar sunucuda yeniden denetlenir (giderSatirlari), yalnız geçerliler girer (elle, ödendi) */
 export async function giderExceliYukle(db: Sorgulayici, kim: Kisi, ham: unknown): Promise<Yazma & { eklenen?: number }> {
   if (!yazar(kim)) return { durum: "yetkisiz" };
-  if (!Array.isArray(ham) || ham.length > GIDER_EXCEL_SINIR + 1 || !ham.every((r) => Array.isArray(r) && r.length <= 50 && r.every((c) => typeof c === "string" && c.length <= 300))) {
+  /* tarayıcı yalnız kullanılan 6 sütunu (hücre en çok 1 000 karakter) gönderir; uzun açıklama satır düzeyinde atlanır */
+  if (!Array.isArray(ham) || ham.length > GIDER_EXCEL_SINIR + 1 || !ham.every((r) => Array.isArray(r) && r.length <= 6 && r.every((c) => typeof c === "string" && c.length <= 1000))) {
     return { durum: "red", neden: `Dosya okunamadı ya da çok büyük (en çok ${GIDER_EXCEL_SINIR} satır).` };
   }
   const planlar = await muhasebePlanlari(db, [...new Set((await muhasebeRaporlari(db, null)).map((r) => r.planId))]);
-  const l = giderSatirlari(ham as string[][], new Map(planlar.map((p) => [p.no, p.id])), bugunTr()).filter((x) => x.ok);
+  /* numaralar tarih sırasıyla alınır: sayaç kilitleri her yüklemede aynı sırada (eşzamanlı iki yükleme kilitlenmesin — 328 incelemesi) */
+  const l = giderSatirlari(ham as string[][], new Map(planlar.map((p) => [p.no, p.id])), bugunTr()).filter((x) => x.ok)
+    .sort((a, b) => a.tarih!.localeCompare(b.tarih!) || a.satir - b.satir);
   if (!l.length) return { durum: "red", neden: "Geçerli satır yok." };
   const onek = (await ayarOku(db, "numara")).deger.gider;
   for (const x of l) {

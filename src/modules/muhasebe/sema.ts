@@ -53,6 +53,8 @@ export const GIDER_TUR = {
 } as const;
 export type GiderTuru = keyof typeof GIDER_TUR;
 export const KDV_ORAN = [20, 10, 1, 0] as const;
+/** gider tutarının üst sınırı (KURUŞ; 1 milyar TL — 0040 CHECK ile aynı) */
+export const GIDER_TUTAR_UST = 100_000_000_000;
 export const GIDER_DURUM = { bekliyor: ["Onay bekliyor", "bekliyor"], onaylandi: ["Onaylandı", "kabul"], odendi: ["Ödendi", "tamam"], red: ["Reddedildi", "red"] } as const;
 export type GiderDurumu = keyof typeof GIDER_DURUM;
 /** fişteki KDV dahil tutardan KDV ve KDV hariç (KURUŞ) */
@@ -62,7 +64,7 @@ const UUID_ = /^[0-9a-f]{8}-[0-9a-f]{4}-[0-9a-f]{4}-[0-9a-f]{4}-[0-9a-f]{12}$/;
 export const GiderGirdisi = z.object({
   tarih,
   tur: z.enum(Object.keys(GIDER_TUR) as [GiderTuru, ...GiderTuru[]], { error: "Tür seçilmeli." }),
-  tutar: tutar.refine((n) => n > 0, { message: "Tutar sıfırdan büyük olmalı (ör. 1.250,00)." }).refine((n) => n <= 100_000_000_000, { message: "Tutar çok büyük." }),
+  tutar: tutar.refine((n) => n > 0, { message: "Tutar sıfırdan büyük olmalı (ör. 1.250,00)." }).refine((n) => n <= GIDER_TUTAR_UST, { message: "Tutar çok büyük." }),
   oran: z.preprocess((s) => (typeof s === "string" ? Number(s) : s), z.number().refine((n) => (KDV_ORAN as readonly number[]).includes(n), "KDV oranı seçilmeli.")),
   aciklama: z.preprocess(bosNull, z.string().max(120, "En çok 120 karakter.").nullable()),
   is: z.preprocess(bosNull, z.string().regex(UUID_, "İş seçilmeli.").nullable()),

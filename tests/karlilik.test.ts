@@ -4,7 +4,8 @@
    hesaplanmış değerlerle (328). Veritabanı tarafı tests/muhasebe.test.ts. */
 import assert from "node:assert/strict";
 import { test } from "node:test";
-import { giderSatirlari, tarihOku } from "../src/modules/muhasebe/excel.ts";
+import { giderExceli, giderSatirlari, oranOku, tarihOku, tutarOku } from "../src/modules/muhasebe/excel.ts";
+import { tabloOku } from "../src/components/disa/oku.ts";
 import { ayGelirGider, ayMaliyet, bordroAy, donemGelirGider, gunlukMaliyet, isKarlilik, oncekiAy, sonAylar, type KarVerisi } from "../src/modules/muhasebe/karlilik.ts";
 import { GiderGirdisi, giderKdv } from "../src/modules/muhasebe/sema.ts";
 
@@ -111,4 +112,20 @@ test("Excel'den yükle: başlık atlanır, boş satır yok sayılır; tarih, tü
   assert.deepEqual([l[0].tur, l[0].tutar, l[0].oran, l[0].plan], ["yakit", 125_000, 20, null], "oran boşsa türün varsayılanı");
   assert.deepEqual([l[3].tur, l[3].tutar, l[3].oran, l[3].plan], ["konaklama", 125_050, 10, "plan-1"]);
   assert.equal(giderSatirlari([["05.10.2026", "Yakıt", "1", "", "", ""]], planlar, "2026-10-05")[0].ok, true, "başlıksız dosya");
+});
+
+/* 2026-10-06 (328 incelemesi; maket tutarOku / oranOku): Excel'in sakladığı sayı hücresi her ondalıkta, Türkçe yazım ortak şemayla; yüzde biçimli
+   oran (0.2); tür yalnız kendi anahtarı; tutar üst sınırı satırda; dışa aktarımda tutarlar sayı hücresi */
+test("Excel okuma: sayı hücresi (nokta ondalık, uzun kesir) ve Türkçe yazım; yüzde biçimli oran; nesne özelliği tür değildir; çok büyük tutar satırda atlanır", async () => {
+  assert.deepEqual(["999.996", "1250.0999999999999", "1250", "1.250,50", "1250,5", " 3.200 TL", "abc", "-5"].map(tutarOku), [100_000, 125_010, 125_000, 125_050, 125_050, 320, null, null]);
+  assert.deepEqual(["20", "%20", "0.2", "0,1", "0.01", "", "x"].map(oranOku), [20, 20, 20, 10, 1, null, NaN]);
+  const l = giderSatirlari([
+    ["05.10.2026", "constructor", "1", "20", "", ""], ["05.10.2026", "__proto__", "1", "20", "", ""], ["05.10.2026", "Yakıt", "2.000.000.000,00", "20", "", ""],
+    ["05.10.2026", "Yakıt", "999.996", "0.2", "", ""], ["05.10.2026", "Konaklama", "1100", "0,1", "", ""],
+  ], new Map(), "2026-10-05");
+  assert.deepEqual(l.map((x) => [x.ok, x.neden, x.tutar, x.oran]), [[false, "Tür bulunamadı", 100, 20], [false, "Tür bulunamadı", 100, 20],
+    [false, "Tutar çok büyük", 200_000_000_000, 20], [true, "", 100_000, 20], [true, "", 110_000, 10]]);
+  const b = await tabloOku("giderler.xlsx", giderExceli([{ no: "G-1026-001", tarih: "2026-10-05", tur: "yakit", tutar: 125_050, oran: 20, aciklama: null, isNo: null, personel: null, durum: "odendi",
+    odeme: "2026-10-05", belge: false }]));
+  assert.deepEqual(b[1].slice(3, 7), ["1250.5", "20", "208.42", "1042.08"], "tutar, oran, KDV ve KDV hariç SAYI hücresi (metin olsaydı \"1.250,50\")");
 });

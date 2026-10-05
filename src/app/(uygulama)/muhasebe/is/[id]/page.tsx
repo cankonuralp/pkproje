@@ -77,9 +77,7 @@ export default async function Sayfa({ params }: { params: Promise<{ id: string }
       <Bolum id="b-is-fatura" baslik="Faturalar" sayac={<><b>{x.faturalar.length}</b> fatura</>}>
         {x.faturalar.length ? <IsFaturalari faturalar={x.faturalar} /> : <p>Henüz fatura yok.</p>}
       </Bolum>
-      <Bolum id="b-is-gider" baslik="Giderler">
-        <IsGiderleri giderler={v.giderler} secenekler={v.secenekler} isId={x.id} isNo={x.no} bugun={bugunTr()} />
-      </Bolum>
+      <IsGiderleri giderler={v.giderler} secenekler={v.secenekler} isId={x.id} isNo={x.no} bugun={bugunTr()} />
       <IsKarliligi k={x.karlilik} />
       <Bolum id="b-is-gecmis" baslik="Geçmiş">
         <BilgiListesi>{x.gecmis.map((g, i) => <Bilgi key={i} etiket={tarihNo(g[0])} genis>{g[1]}{g[2] && <AltSatir>{g[2]}</AltSatir>}</Bilgi>)}</BilgiListesi>

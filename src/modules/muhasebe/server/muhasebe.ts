@@ -280,7 +280,7 @@ export async function gelirGider(db: Sorgulayici, kim: Kisi, secim: string): Pro
   const buAy = v.bugun.slice(0, 7), secenek = sonAylar(buAy, GG_AY);
   const secili = secenek.includes(secim) ? secim : "toplam";
   const ilk = v.planlar.reduce((s, p) => (p.baslangic.slice(0, 7) < s ? p.baslangic.slice(0, 7) : s), buAy);
-  const aylar = secili === "toplam" ? sonAylar(buAy, 36).filter((a) => a >= ilk).reverse() : [secili];
+  const aylar = secili === "toplam" ? secenek.filter((a) => a >= ilk).reverse() : [secili];
   const ozet = v.planlar.map((p) => isOzet(v, p));
   const donem = donemGelirGider(v.kar, aylar, ozet.map((o) => ({ id: o.id, tarih: o.tarih, gelir: o.raporlanan })));
   const icinde = new Set(donem.isler);

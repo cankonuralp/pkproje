@@ -2341,6 +2341,18 @@ revizyon, alan kopyalama, hafif kusur devri, meslek eşleşme denetimi).
 - Emsal ürünler: https://opwire.app/iso-17020-periyodik-kontrol-yazilimi/ · https://17020muayene.vidco.com.tr/ · https://akuple.com/asansor-kontrol-yazilimi/ · https://ensyazilim.com/
 
 ## 11 · Değişiklik günlüğü
+- 2026-10-06 (328 çapraz inceleme düzeltmeleri; dört bakış + çürütme: 23 bulgudan 20'si doğrulandı). **Gider Excel'i** (maket tutarOku / oranOku):
+  Excel'in sakladığı sayı hücresi (nokta ondalık, uzun kesir — "999.996", formül sonucu) her ondalıkta okunup kuruşa yuvarlanır (önceden 1000 kat
+  okunuyor ya da reddediliyordu), Türkçe yazım ortak şemayla; KDV oranı "20", "%20", "0,2" ya da yüzde biçimli hücre (0.2); tür yalnız kendi anahtarı
+  ("constructor" / "__proto__" türü yazılabiliyordu); 1 milyar TL'yi aşan tutar satırda atlanır (bütün yükleme düşüyordu); tarayıcı yalnız 6 sütunu
+  gönderir (uzun bir not hücresi bütün dosyayı yanıltıcı iletiyle reddettiriyordu); numaralar tarih sırasıyla (eşzamanlı iki yükleme sayaçta
+  kilitlenebiliyordu); dışa aktarımda tutar, KDV, KDV hariç SAYI hücresi (toplanır). **0040** (Supabase'e henüz uygulanmadı, yerinde): ödeme günü
+  eklemede de ileri olamaz, gider tarihinden önce olamaz (CHECK); onaylandı → ödendi geçişinde onaylayan ve karar değişmez; ödendi giderin tarihi
+  ödeme gününden sonraya taşınamaz (alan hatası). Bozuk fotoğraf belgesi alan hatası (sunucu hatası değil). **Gelir-gider:** Toplam en çok 13 ay
+  (maket; aylara göre dökümdeki her ay açılabilir — 14+ ay önceki aya tıklayınca yine Toplam açılıyordu); Dönem seçicisi görünür etiketli.
+  **Ekran:** Reddet / Vazgeç'te odak gerekçeye / tutara; iş sayfasının Giderler bölümünde sayaç ve "Gider ekle" başlıkta; vadesi geçen alacak
+  şeridindeki "Faturalar" tuşu Faturalar'ı "Vadesi geçti" süzgeciyle açar (?durum=gecikti); İş, Personel, KDV oranı ve belge alanları sunucu
+  hatasında geçersiz işaretli. Kilit: karlilik.test +1 (Excel okuma / yazma), muhasebe.test +1 (ödeme günü, onay damgası, tarih), bozan gider +1.
 - 2026-10-06 (329): **K4 Performans** (maket performans.html M15; §1.1 "personellerin yaptığı işler, gün başı işler … gün başı rapor elde edilen
   kazanç", §3.1 modül 19; reisim 2026-09-27 "24 saat içinde … 48 saatten uzun"; 2026-09-29 "yeni durumundan itibaren her rapor performansı
   etkiler"; KOD-GECIS §3 "tablo yok — rapor ve durum geçişlerinden özet"). Tablo yok; göç **0041** yalnız dizin (raporun açılışı, hareketler).
