@@ -36,6 +36,11 @@ import { mesaiDurumu } from "./plan-baglanti.ts";
 import { sonGeriGonderme } from "./onay-baglanti.ts";
 import { hesapAdlari } from "../../../server/kimlik/hesap.ts";
 import { TANIMLAR } from "../../../tanim/tanimlar.ts";
+import { ayarOku, firmaKunyesi } from "../../../server/ayar/ayar.ts";
+import { kayitDosyasi } from "../../../server/dosya/dosya.ts";
+import { cihazKalibrasyonlari } from "../../olcum-cihazlari/server/cihazlar.ts";
+import { personelBelgeBilgisi } from "../../personel/server/personel.ts";
+import type { BelgeVerisi } from "../../../belge/veri.ts";
 
 const MODUL = 14;
 /** rapor fotoğrafının dosya modülü (dosya erişim kaydında: raporu gören açar) */
@@ -160,14 +165,15 @@ interface RaporSatiri {
   id: string; no: string; plan_id: string; ekipman_id: string; tur_id: string; format_id: string; personel_id: string; hesap_id: string | null; durum: RaporDurumu;
   kunye: Kunye & { eposta?: string | null; tel?: string | null }; kunye_surum: number; ekipman_bilgi: EkipmanBilgisi; bas: Date; bit: Date | null;
   sonraki: string | null; takip: string | null; rapor_tarihi: string | null; cevaplar: unknown; cihazlar: RaporCihazi[]; fotolar: RaporFoto[]; sonuc: string | null;
-  sonuc_oto: boolean; gonderildi: Date | null; kopya_kaynak: string | null; surum: number; olustu: Date; degisti: Date;
+  sonuc_oto: boolean; gonderildi: Date | null; kopya_kaynak: string | null; revizyon: number; onay: Date | null; onay_hesap: string | null;
+  surum: number; olustu: Date; degisti: Date;
 }
 async function raporOku(db: Sorgulayici, id: string, kilitle = false): Promise<RaporSatiri | null> {
   if (!UUID.test(id)) return null;
   return (await db.sorgu<RaporSatiri>(
     `SELECT id::text, no, plan_id::text, ekipman_id::text, tur_id::text, format_id::text, personel_id::text, hesap_id::text, durum, kunye, kunye_surum, ekipman_bilgi,
-       bas, bit, sonraki::text, takip::text, rapor_tarihi::text, cevaplar, cihazlar, fotolar, sonuc, sonuc_oto, gonderildi, kopya_kaynak::text, surum,
-       olustu, degisti
+       bas, bit, sonraki::text, takip::text, rapor_tarihi::text, cevaplar, cihazlar, fotolar, sonuc, sonuc_oto, gonderildi, kopya_kaynak::text, revizyon, onay,
+       onay_hesap::text, surum, olustu, degisti
      FROM rapor WHERE id = $1 AND silindi IS NULL${kilitle ? " FOR UPDATE" : ""}`, [id])).rows[0] ?? null;
 }
 
@@ -575,4 +581,49 @@ export async function gozdenGecirme(db: Sorgulayici, id: string): Promise<Gozden
   l.push({ tamam: r.sonuc !== "uygun_degil", metin: `Sonuç: ${sonucAd ?? "seçilmedi"}${r.sonuc && r.sonuc_oto ? " (kriterlere göre)" : ""}` });
   if (r.sonuc === "uygun" && d.kusurlar.length) l.push({ tamam: false, metin: "Uygun değil madde ya da sınır dışı test değeri varken sonuç “Uygun”." });
   return l;
+}
+
+/* ── RAPOR BELGESİ (önizleme ve PDF'in verisi; src/belge) ─────────────────────────────────────────────────────────────────────────── */
+export interface RaporBelgesiSayfasi { id: string; no: string; plan: { id: string; no: string }; belge: BelgeVerisi }
+/** raporu görebilene belgenin verisi: raporun kendi kayıtları + açıldığı format sürümü; fotoğraflar raporun kendi dosyalarından okunup veri
+    adresi olarak gömülür (yalnız JPEG / PNG — sunucuda denetlenmiş türler). Göremeyene null. */
+export async function raporBelgesiVerisi(db: Sorgulayici, depo: Depo, kim: Kisi, id: string): Promise<RaporBelgesiSayfasi | null> {
+  const e = await erisim(db, kim, id);
+  if (!e) return null;
+  const { r, tur } = e;
+  const format = await formatSurumuOku(db, r.format_id);
+  if (!format) return null;
+  const plan = await raporIcinPlan(db, kim, r.plan_id);
+  const etiket = await ekipmanEtiketi(db, r.ekipman_id);
+  const yazan = await personelBelgeBilgisi(db, r.personel_id);
+  const tum = await raporCihazlari(db), kal = await cihazKalibrasyonlari(db, r.cihazlar.map((x) => x.cihaz));
+  const cihazlar = r.cihazlar.map((x) => {
+    const c = tum.find((y) => y.id === x.cihaz), k = kal.get(x.cihaz);
+    return { turAd: c?.tur ?? "Ölçüm cihazı", kod: c?.kod ?? "—", marka: c?.marka ?? null, model: c?.model ?? null, seri: c?.seri ?? null,
+      kalTarih: k?.tarih ?? null, kalBitis: k?.bitis ?? null, sertifika: k?.sertifika ?? null };
+  });
+  const fotolar = [];
+  for (const f of r.fotolar) {
+    const d = await kayitDosyasi(db, DOSYA_MODULU, r.id, f.dosya);
+    const src = d && (d.tur === "image/jpeg" || d.tur === "image/png") ? `data:${d.tur};base64,${Buffer.from(await depo.oku(d.anahtar)).toString("base64")}` : null;
+    fotolar.push({ ad: f.ad, bolum: f.bolum, madde: f.madde, src });
+  }
+  const cev = Cevaplar.safeParse(r.cevaplar);
+  const onayAd = r.onay ? (await hesapAdlari(db, [r.onay_hesap])).get(r.onay_hesap ?? "") ?? "—" : null;
+  return {
+    id: r.id, no: r.no, plan: { id: r.plan_id, no: plan?.no ?? "—" },
+    belge: {
+      firma: { ...(await firmaKunyesi(db)), nusha: (await ayarOku(db, "firma_bilgileri")).deger.nusha },
+      no: r.no, revizyon: r.revizyon, formatSira: format.sira, durum: r.durum,
+      tur: { ad: tur.ad, kod: tur.kod, kontrolStd: tur.kontrolStd },
+      kunye: { firmaAdi: r.kunye.firma_adi, adres: r.kunye.adres ?? null, sgk: r.kunye.sgk ?? null, isgNo: r.kunye.isg_no ?? null },
+      tarih: { bas: zamanOku(r.bas), bit: zamanOku(r.bit), sonraki: r.sonraki, takip: r.takip, rapor: r.rapor_tarihi },
+      ekipman: { kod: etiket?.kod ?? "—", ...r.ekipman_bilgi },
+      tanim: format.tanim, cevaplar: cev.success ? cev.data : Cevaplar.parse({}), cihazlar, fotolar,
+      sonuc: r.sonuc === "uygun" || r.sonuc === "uygun_degil" ? r.sonuc : null,
+      yazan: { ad: yazan?.ad ?? "—", meslek: yazan?.meslek ?? "diger", ekipnet: yazan?.ekipnet ?? null, diploma: yazan?.diploma ?? null, oda: yazan?.oda ?? null },
+      onay: r.onay && onayAd ? { ad: onayAd, zaman: r.onay.toISOString() } : null,
+      imza: null,
+    },
+  };
 }

@@ -132,6 +132,18 @@ test("saha raporu: rapor oluştur, eksikle gönderilmez, doldur + cihaz ekle, on
   await expect(page.getByText(`${E2E_SAHA.cihaz} eklendi.`).first()).toBeVisible({ timeout: 30_000 });
   await expect(cihaz).toHaveCount(0);
 
+  /* 315 Ön izle: kaydedilmiş rapor belge olarak (kesin PDF'le aynı çizici) — değerler, cihaz, fotoğraf; Rapora dön */
+  await page.getByRole("link", { name: "Ön izle" }).click();
+  await expect(page).toHaveURL(new RegExp(`${raporAdresi}/onizle$`), { timeout: 30_000 });
+  const belge = page.getByRole("article", { name: `${raporNo} rapor belgesi` });
+  await expect(belge).toBeVisible({ timeout: 30_000 });
+  await expect(belge).toContainText("Hidrostatik deney basıncı");
+  await expect(belge).toContainText(E2E_SAHA.cihaz);
+  await expect(belge.getByRole("img", { name: "on.jpg" })).toBeVisible();
+  await page.getByRole("link", { name: "Rapora dön" }).click();
+  await expect(page).toHaveURL(new RegExp(`${raporAdresi}$`), { timeout: 30_000 });
+  await hazir(page);
+
   /* onaya gönder: durum Teknik yönetici onayında, rapor artık düzenlenmez */
   await onayaGonder(page);
   await expect(page.getByText(/^Onaya gönderildi: /).first()).toBeVisible({ timeout: 30_000 });
@@ -183,6 +195,7 @@ test("saha raporu: rapor oluştur, eksikle gönderilmez, doldur + cihaz ekle, on
   await girisli(page, "mekanik");
   await onayEkrani();
   await expect(page.getByRole("region", { name: "Gözden geçirme" })).toContainText("ölçüm cihazı");
+  await expect(page.getByRole("article", { name: `${raporNo} rapor belgesi` })).toBeVisible();   // 315: onay ekranında önizleme
   await page.getByRole("button", { name: "Geri gönder" }).click();
   const geri = page.getByRole("dialog", { name: `Geri gönder · ${raporNo}` });
   await geri.getByRole("textbox", { name: /^Gerekçe/ }).fill("kısa");

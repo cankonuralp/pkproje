@@ -91,3 +91,8 @@ export async function ayarYaz<B extends AyarBolumu>(db: Sorgulayici, b: B, surum
   if (surum < 0) return { durum: "cakisma", guncelSurum: mevcut.surum };   // ekran "hiç kaydedilmemiş" gördü, bu arada başkası kaydetti
   return guncelle(db, FIRMA_AYAR, mevcut.id, surum, { deger: s.data }, iz);
 }
+
+/** belgenin sahibi muayene firması: adı ve rapor kodu (kiracının kendi satırı; RLS firma_kendi) — rapor belgesinin başlığı ve form kodu */
+export async function firmaKunyesi(db: Sorgulayici): Promise<{ ad: string; kod: string }> {
+  return (await db.sorgu<{ ad: string; kod: string }>("SELECT ad, rapor_kodu AS kod FROM firma")).rows[0] ?? { ad: "-", kod: "XX" };
+}

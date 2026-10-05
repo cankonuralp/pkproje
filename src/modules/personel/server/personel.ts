@@ -146,6 +146,13 @@ export async function denetciAdaylari(db: Sorgulayici): Promise<{ id: string; ad
 }
 
 /** Planlar için (plan kartı): verilen kişilerin adı ve mesleki bilgisi — ayrılan personel dahil (eski planlarda adı görünsün). Yetki ÇAĞIRANDA. */
+/** Raporlar (belge, Yetkili kişi bölümü) için: ad, meslek, EKİPNET, diploma ve oda sicil no; yoksa null. Yetki ÇAĞIRANDA. */
+export async function personelBelgeBilgisi(db: Sorgulayici, id: string): Promise<{ ad: string; meslek: string; ekipnet: string | null; diploma: string | null; oda: string | null } | null> {
+  if (!/^[0-9a-f-]{36}$/.test(id)) return null;
+  return (await db.sorgu<{ ad: string; meslek: string; ekipnet: string | null; diploma: string | null; oda: string | null }>(
+    "SELECT ad, meslek, ekipnet, diploma, oda FROM personel WHERE id = $1", [id])).rows[0] ?? null;
+}
+
 export async function personelOzetleri(db: Sorgulayici, idler: readonly string[]): Promise<{ id: string; ad: string; meslek: string; meslekMetin: string | null; ekipnet: string | null }[]> {
   const l = idler.filter((x) => /^[0-9a-f-]{36}$/.test(x));
   if (!l.length) return [];

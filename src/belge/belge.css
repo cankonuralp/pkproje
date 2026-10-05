@@ -1,0 +1,51 @@
+/* RAPOR BELGESİ — A4, siyah-beyaz Bakanlık görünümü (maket maket.css .rb-*, .a-resmi; pkproje §11 235): Carlito (Calibri ölçülerinde, SIL OFL
+   ./carlito-5.3.0/OFL.txt, kendi kökenimizden), pembe bölüm şeridi, mavi etiket hücresi, köşe ve gölge yok. Uygulama temasından BAĞIMSIZ: renkler
+   belgenin kendi renkleri (tokens.css değil — açık / koyu temada belge aynı kâğıttır). Bütün seçiciler .rb- önekli (uygulamaya sızmaz). Aynı dosya
+   önizlemede ve kesin PDF'te kullanılır. */
+@font-face { font-family: "Carlito"; font-style: normal; font-display: block; font-weight: 400;
+  src: url("./carlito-5.3.0/carlito-latin-ext-400-normal.woff2") format("woff2"); unicode-range: U+0100-02BA,U+02BD-02C5,U+02C7-02CC,U+02CE-02D7,U+02DD-02FF,U+0304,U+0308,U+0329,U+1D00-1DBF,U+1E00-1E9F,U+1EF2-1EFF,U+2020,U+20A0-20AB,U+20AD-20C0,U+2113,U+2C60-2C7F,U+A720-A7FF; }
+@font-face { font-family: "Carlito"; font-style: normal; font-display: block; font-weight: 700;
+  src: url("./carlito-5.3.0/carlito-latin-ext-700-normal.woff2") format("woff2"); unicode-range: U+0100-02BA,U+02BD-02C5,U+02C7-02CC,U+02CE-02D7,U+02DD-02FF,U+0304,U+0308,U+0329,U+1D00-1DBF,U+1E00-1E9F,U+1EF2-1EFF,U+2020,U+20A0-20AB,U+20AD-20C0,U+2113,U+2C60-2C7F,U+A720-A7FF; }
+@font-face { font-family: "Carlito"; font-style: normal; font-display: block; font-weight: 400;
+  src: url("./carlito-5.3.0/carlito-latin-400-normal.woff2") format("woff2"); unicode-range: U+0000-00FF,U+0131,U+0152-0153,U+02BB-02BC,U+02C6,U+02DA,U+02DC,U+0304,U+0308,U+0329,U+2000-206F,U+20AC,U+2122,U+2191,U+2193,U+2212,U+2215,U+FEFF,U+FFFD; }
+@font-face { font-family: "Carlito"; font-style: normal; font-display: block; font-weight: 700;
+  src: url("./carlito-5.3.0/carlito-latin-700-normal.woff2") format("woff2"); unicode-range: U+0000-00FF,U+0131,U+0152-0153,U+02BB-02BC,U+02C6,U+02DA,U+02DC,U+0304,U+0308,U+0329,U+2000-206F,U+20AC,U+2122,U+2191,U+2193,U+2212,U+2215,U+FEFF,U+FFFD; }
+
+/* önizleme: kâğıt ekranda ortalanır; dar ekranda kendi içinde kayar (sayfa kaymaz) */
+.rb-onizleme { overflow-x: auto; padding: 8px 0; -webkit-overflow-scrolling: touch; }
+.rb-sayfa { box-sizing: border-box; width: 794px; min-height: 1123px; margin: 0 auto; padding: 18px 22px 12px; background: #fff; color: #000;
+  font: 12px/1.25 Carlito, Calibri, Arial, sans-serif; border: 1px solid #bfbfbf; }
+.rb-sayfa table { width: 100%; border-collapse: collapse; table-layout: fixed; margin: 0 0 10px; }
+.rb-sayfa td, .rb-sayfa th { border: 1px solid #000; padding: 1px 3px; vertical-align: middle; text-align: left; font-weight: 400; overflow-wrap: anywhere; }
+.rb-sayfa p { margin: 0 0 6px; }
+.rb-bas td { height: 96px; }
+.rb-sayfa .rb-bas-ad { text-align: center; font-weight: 700; font-size: 15px; line-height: 1.35; text-transform: uppercase; }
+.rb-dok { font-size: 11px; line-height: 1.45; }
+.rb-dok span { display: inline-block; width: 84px; }
+.rb-sayfa .rb-logo { text-align: center; color: #7f7f7f; font-size: 10px; }
+.rb-firma { font-size: 10px; line-height: 1.35; }
+.rb-bolum { margin: 0 0 10px; break-inside: auto; }
+.rb-bolum h2 { margin: 0; padding: 1px 3px; border: 1px solid #000; background: #f1dbdb; font-size: 12px; font-weight: 700; text-transform: uppercase; break-after: avoid; }
+.rb-bolum h2 + table, .rb-bolum h2 + .rb-kutu-metin, .rb-bolum h2 + .rb-fotolar { margin-top: -1px; }
+.rb-sayfa .rb-e { background: #dbe4f0; }
+.rb-sayfa .rb-ab { background: #dbe4f0; font-weight: 700; }
+.rb-sayfa .rb-grup { text-align: center; font-weight: 700; }
+.rb-sayfa .rb-orta { text-align: center; }
+.rb-sec { margin-right: 10px; white-space: nowrap; }
+.rb-kutu-metin { margin: 0 0 10px; padding: 3px; border: 1px solid #000; min-height: 22px; white-space: pre-wrap; }
+.rb-notlar { margin: -6px 0 10px; padding-left: 18px; font-size: 11px; }
+.rb-kusurlar { margin: 0; padding: 3px 3px 3px 6px; border: 1px solid #000; list-style: none; }
+.rb-fotolar { display: flex; flex-wrap: wrap; gap: 6px; margin: 0 0 10px; padding: 4px; border: 1px solid #000; }
+.rb-foto { width: 236px; margin: 0; break-inside: avoid; }
+.rb-foto img { display: block; width: 100%; height: 177px; object-fit: contain; border: 1px solid #000; background: #fff; }
+.rb-foto-bos { display: flex; align-items: center; justify-content: center; height: 177px; border: 1px solid #000; font-size: 10px; }
+.rb-foto figcaption { font-size: 10px; overflow-wrap: anywhere; }
+.rb-sayfa .rb-imza { height: 36px; text-align: center; font-size: 10px; }
+.rb-alt { margin-top: 10px; padding-top: 4px; border-top: 1px solid #000; font-size: 9px; }
+.rb-taslak { margin: 0 0 8px; padding: 2px 4px; border: 1px dashed #000; font-size: 11px; text-align: center; }
+
+@media print {
+  .rb-onizleme { overflow: visible; padding: 0; }
+  .rb-sayfa { width: auto; min-height: 0; padding: 0; border: 0; }
+}
+@page { size: A4; margin: 10mm 8mm; }

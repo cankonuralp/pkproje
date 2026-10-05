@@ -79,6 +79,16 @@ export async function raporCihazlari(db: Sorgulayici): Promise<{ id: string; kod
     .map((x) => ({ id: x.id, kod: x.kod, turId: x.tur_id, tur: x.tur, marka: x.marka, model: x.model, seri: x.seri, konum: x.konum, bitis: x.bitis }));
 }
 
+/** Raporlar (belge) için: cihazların son geçerli kalibrasyonu — tarih, bitiş, sertifika no (yetki ÇAĞIRANDA) */
+export async function cihazKalibrasyonlari(db: Sorgulayici, idler: readonly string[]): Promise<Map<string, { tarih: string; bitis: string; sertifika: string | null }>> {
+  const l = idler.filter((x) => /^[0-9a-f-]{36}$/.test(x));
+  if (!l.length) return new Map();
+  return new Map((await db.sorgu<{ cihaz_id: string; tarih: string; bitis: string; sertifika: string | null }>(
+    `SELECT DISTINCT ON (cihaz_id) cihaz_id::text, tarih::text, bitis::text, sertifika FROM kalibrasyon
+     WHERE cihaz_id = ANY ($1::uuid[]) AND sonuc = 'uygun' AND kaldirildi IS NULL ORDER BY cihaz_id, bitis DESC`, [l])).rows
+    .map((x) => [x.cihaz_id, { tarih: x.tarih, bitis: x.bitis, sertifika: x.sertifika }]));
+}
+
 /** öteki modüller için cihaz türleri (yetki ÇAĞIRANDA; Ekipman türleri bağlantısı) */
 export async function cihazTuruOzetleri(db: Sorgulayici): Promise<CihazTuru[]> {
   return (await db.sorgu<CihazTuru>("SELECT id::text, ad FROM cihaz_turu")).rows.sort((a, b) => a.ad.localeCompare(b.ad, "tr"));

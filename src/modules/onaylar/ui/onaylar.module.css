@@ -4,7 +4,6 @@
 .sayi { font-variant-numeric: tabular-nums; }
 .bekleme { display: block; color: var(--yazi2); font-size: var(--boy-kucuk); }
 .eski { display: block; color: var(--uyari-yazi); font-size: var(--boy-kucuk); font-weight: 600; }
-.metin { margin: 0 0 12px; color: var(--yazi2); }
 .gerekce { width: 100%; min-height: 96px; padding: 8px 10px; border: 1px solid var(--kenar-alan); border-radius: var(--r-orta); background: var(--kart); color: var(--yazi); font: inherit; resize: vertical; }
 .hedefler { display: grid; gap: 4px; margin: 0 0 12px; padding: 0; border: 0; }
 .hedefler legend { margin: 0 0 4px; padding: 0; color: var(--yazi2); font-size: var(--boy-kucuk); }

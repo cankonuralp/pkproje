@@ -5,7 +5,7 @@
    değil) ve raporun tamamına bağlantı. Onaylayınca ya da geri gönderince sıradaki rapor açılır (kuyruk boşsa kuyruğa dönülür). Geri gönder ve
    Yeni'ye alma gerekçe ister (≥ 10). Yetki, kural ve geçiş sunucuda ve veritabanında; buradaki tuşlar yalnız izinli olanı gösterir. */
 import { useRouter } from "next/navigation";
-import { useState, useTransition } from "react";
+import { useState, useTransition, type ReactNode } from "react";
 import { Kosullar } from "../../../components/bilgi/Bilgi";
 import { useBildir } from "../../../components/bildirim/Bildirim";
 import { Alan, ipucuId } from "../../../components/form/Form";
@@ -22,7 +22,8 @@ import stil from "./onaylar.module.css";
 const ID = { gerekce: "onay-gerekce", hedef: "onay-hedef" } as const;
 type Pen = { tur: "geri" | "durum"; hedef: string | null; gerekce: string; hatalar: Record<string, string> };
 
-export function OnayEkrani({ v }: { v: Veri }) {
+/** belge: raporun imzasız belgesi (sunucuda çizilir, src/belge — PDF'le aynı çizici) */
+export function OnayEkrani({ v, belge }: { v: Veri; belge: ReactNode }) {
   const router = useRouter();
   const bildir = useBildir();
   const [bekliyor, baslat] = useTransition();
@@ -66,9 +67,8 @@ export function OnayEkrani({ v }: { v: Veri }) {
       <Bolum id="onay-ozet" baslik="Gözden geçirme" sayac={r.bekleme ? <span className={r.eski ? stil.eski : stil.bekleme}>{r.bekleme} bekliyor</span> : undefined}>
         <Kosullar ogeler={v.ozet.map((x) => ({ tur: x.tamam ? "tamam" : "eksik", metin: x.metin }))} />
       </Bolum>
-      <Bolum id="onay-rapor" baslik="Rapor">
-        <p className={stil.metin}>Raporun bütün bölümleri, fotoğrafları ve ölçüm cihazları rapor ekranında.</p>
-        <TusBaglanti ikon="eye" href={`/raporlar/${r.id}`}>Raporu görüntüle</TusBaglanti>
+      <Bolum id="onay-rapor" baslik="Rapor (önizleme)" tuslar={<TusBaglanti ikon="file-text" href={`/raporlar/${r.id}`}>Rapor ekranı</TusBaglanti>}>
+        {belge}
       </Bolum>
 
       <Pencere acik={!!pen} baslik={`${pen?.tur === "durum" ? "Durumu değiştir" : "Geri gönder"} · ${r.no}`} onKapat={() => setPen(null)} odak={pen?.tur === "durum" ? "input[type=radio]" : `#${ID.gerekce}`}

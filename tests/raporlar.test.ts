@@ -25,8 +25,8 @@ import { tarihNo } from "../src/modules/planlar/sema.ts";
 import { taslakBaslat, taslakKaydet, yayinla } from "../src/modules/rapor-format/server/formatlar.ts";
 import { ayEkle } from "../src/modules/raporlar/sema.ts";
 import {
-  cihazEkle, cihazKaldir, fotoEkle, fotoSil, onayaGonder, raporFormatGuncelle, raporKaydet, raporKopyala, raporKunyeGuncelle, raporOlustur, raporSil, sahaRaporu,
-  type RaporYazma,
+  cihazEkle, cihazKaldir, fotoEkle, fotoSil, onayaGonder, raporBelgesiVerisi, raporFormatGuncelle, raporKaydet, raporKopyala, raporKunyeGuncelle, raporOlustur,
+  raporSil, sahaRaporu, type RaporYazma,
 } from "../src/modules/raporlar/server/raporlar.ts";
 import { ayarOku, ayarYaz } from "../src/server/ayar/ayar.ts";
 import { dosyaIndirilebilir } from "../src/server/dosya/dosya.ts";
@@ -826,4 +826,25 @@ test("formatı güncelle: yalnız yazanın Yeni raporu, daha yeni yayınlanmış
   const r3 = tamam(await olustur(FA.den1, id, FA.ekp["HT-A3"]));
   const v3 = (await sr(FA.den1, r3.id))!;
   assert.deepEqual([v3.formatSira, v3.guncelFormat, v3.cevaplar.madde.k_yeni], [sira, null, { c: "Uygun" }]);
+});
+
+/* 2026-10-05 (315; maket rapor.html "Ön izle", onaylar.html onay ekranı önizlemesi): belgenin verisi yalnız raporu görene; fotoğraf raporun kendi
+   dosyasından gömülür (çöptekiler değil); firma künyesi ve nüsha firmanın kendi kaydından. Çizici: tests/belge.test.ts. */
+test("belge verisi: raporu gören alır (yazan, branş yöneticisi, planlama); öteki branş, başka denetçi, muhasebe, başka firma alamaz; fotoğraf gömülü; çöpteki gömülmez", async () => {
+  const id = await yeniPlan();
+  const r = tamam(await olustur(FA.den1, id, FA.ekp["HT-A4"]));
+  tamam(await foto(FA.den1, r.id, 0));
+  const bv = (k: Kisi) => a(k, (db) => raporBelgesiVerisi(db, depo, k, r.id));
+  const v = (await bv(FA.den1))!;
+  assert.deepEqual([v.id, v.plan.id, v.belge.firma, v.belge.durum, v.belge.onay, v.belge.imza, v.belge.ekipman.kod], [r.id, id, { ad: "Deneme A", kod: "DA", nusha: 2 }, "taslak", null, null, "HT-A4"]);
+  assert.equal(v.belge.fotolar.length, 1);
+  assert.match(v.belge.fotolar[0].src!, /^data:image\/jpeg;base64,[A-Za-z0-9+/=]+$/);
+  assert.equal(v.belge.yazan.ad, "Deneme Bir");
+  assert.ok(await bv(FA.mek), "branş yöneticisi");
+  assert.ok(await bv(FA.plan), "planlama");
+  for (const k of [FA.elk, FA.den2, FA.muh]) assert.equal(await bv(k), null);
+  assert.equal(await b(FB.den1, (db) => raporBelgesiVerisi(db, depo, FB.den1, r.id)), null, "başka firma");
+  const d = (await sr(FA.den1, r.id))!;
+  tamam(await a(FA.den1, (db) => fotoSil(db, FA.den1, r.id, d.surum, d.fotolar[0].dosya)));
+  assert.equal((await bv(FA.den1))!.belge.fotolar.length, 0, "silinen fotoğraf belgede yok");
 });

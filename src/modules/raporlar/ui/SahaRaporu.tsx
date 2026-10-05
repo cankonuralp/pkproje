@@ -26,7 +26,7 @@ import { Pencere, pencereMetinSinifi } from "../../../components/pencere/Pencere
 import { DegerYok, Kirinti, Kod, NesneBasi, Rozet, SeritKap } from "../../../components/sayfa/Sayfa";
 import { tarihNo } from "../../../components/secim/tarih";
 import { Serit } from "../../../components/serit/Serit";
-import { Tus } from "../../../components/tus/Tus";
+import { Tus, TusBaglanti } from "../../../components/tus/Tus";
 import { degerlendir } from "../../../format/motor";
 import type { Cevaplar } from "../../../format/tanim";
 import { ayEkle, RAPOR_DURUM, type EkipmanBilgisi, type RaporDurumu, type RaporTarihleri } from "../sema";
@@ -301,11 +301,15 @@ export function SahaRaporu({ v }: { v: Gorunum }) {
       <Kirinti ogeler={[["Planlar", "/planlar"], [v.plan.no, `/planlar/${v.plan.id}`], [v.no]]} />
       <NesneBasi baslik={`${v.ekipman.kod} · ${v.tur.ad}`} rozet={<Rozet tur={rozet}>{durumAd}</Rozet>} altIkon="file-text"
         alt={<><Kod>{v.no}</Kod> · {v.plan.musteriKisa} · {v.plan.tesisAd} · {v.yazan.ad}</>}
-        tuslar={v.izin.duzenle && (
-          <p className={kirli ? `${stil.kayit} ${stil.kirli}` : stil.kayit} aria-live="polite">
-            {kirli ? "Kaydedilmemiş değişiklik var" : sonKayit ? `Son kayıt ${zamanNo(sonKayit)}` : "Kaydedildi"}
-          </p>
-        )} />
+        tuslar={<>
+          {v.izin.duzenle && (
+            <p className={kirli ? `${stil.kayit} ${stil.kirli}` : stil.kayit} aria-live="polite">
+              {kirli ? "Kaydedilmemiş değişiklik var" : sonKayit ? `Son kayıt ${zamanNo(sonKayit)}` : "Kaydedildi"}
+            </p>
+          )}
+          {/* Ön izle (reisim 2026-09-28): kaydedilmiş hâl; kesin PDF'le aynı çizici */}
+          <TusBaglanti ikon="eye" href={`/raporlar/${v.id}/onizle`}>Ön izle</TusBaglanti>
+        </>} />
       {seritler.length > 0 && <SeritKap>{seritler}</SeritKap>}
 
       <div className={stil.bolumler}>

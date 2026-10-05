@@ -2341,6 +2341,19 @@ revizyon, alan kopyalama, hafif kusur devri, meslek eşleşme denetimi).
 - Emsal ürünler: https://opwire.app/iso-17020-periyodik-kontrol-yazilimi/ · https://17020muayene.vidco.com.tr/ · https://akuple.com/asansor-kontrol-yazilimi/ · https://ensyazilim.com/
 
 ## 11 · Değişiklik günlüğü
+- 2026-10-05 (315): **K3 Rapor belgesi: formatın tanımından tek çizici, Ön izle ve onay ekranında önizleme** (maket maket-belge.js MB.belge /
+  resmiBas; pkproje §4.2, §8.3; RAPOR-FORMAT §1 "Görünüm", §9-2; karar 105; reisim 2026-09-28: "en sağ üstte ön izleme tuşu"). `src/belge/`: saf
+  çizici (belge.ts — React createElement, kaçışlı; aynı veri → aynı belge, kesin PDF de bundan üretilecek) + A4 Bakanlık görünümü (belge.css:
+  Carlito kendi kökenimizden, pembe bölüm şeridi, mavi etiket hücresi; uygulama temasından bağımsız). Düzen saha ekranıyla aynı: başlık tablosu
+  (logo yeri · firma · AKR. · belge adı · doküman kodu, format sürümü, rapor no, rapor tarihi), 1 Firma bilgileri (künye, tarihler, metot ve
+  dayanak), 2 Ekipman bilgileri (formatın ekipman bölümü katılır), formatın bölümleri (bilgi ●/○ seçenekli, kontrol listesi, ölçüm tablosu satır
+  sonucu ve Not-N, test değeri sınırıyla, cihaz kalibrasyon ve sertifikasıyla, fotoğraflar gömülü, kusurlar motordan "* / **" ve madde fotoğrafı
+  adıyla, yorum, sonuç cümlesi YALNIZ seçilen sonuçla, imza: yetkili kişi + teknik yer varsa onaylayan), nüsha yazıyla, madde fotoğrafları ekte;
+  imzasız belgede "İmzasız önizleme" şeridi. Veri sunucuda (raporBelgesiVerisi: raporu görene; fotoğraflar raporun kendi dosyalarından veri
+  adresi olarak — dış adres yok, çöptekiler değil). Rapor ekranında "Ön izle" (/raporlar/<id>/onizle), onay ekranında "Rapor (önizleme)". Kesin
+  PDF ve Chromium ölçümü imza kalemiyle (PDF imza anında üretilir). Kilit: tests/belge.test.ts (6, veritabanısız: bölümler ve değerler, kusur ve
+  sonuç cümlesi, karar 105, gömülü fotoğraf, kaçış — betik / olay özniteliği metin olarak, ZPKR01 / ZPKR02 çizilir), raporlar.test +1 (belge
+  verisi yetkisi, gömülü / çöpteki fotoğraf), bozan +2 (sonuç cümlesi, kusur listesi), e2e saha raporu Ön izle + onay ekranında önizleme.
 - 2026-10-05 (314): **K3 Onaylar: kuyruk, onay ekranı, Onayla, Geri gönder, Onayı geri al, Tüm raporlar ve Durumu değiştir** (maket onaylar.html
   M9; karar 102, 190, 191; N7 vekil yok; KOD-GECIS §4). Göç **0026**: raporda onay zamanı ve onaylayan hesap (veritabanı damgası; Yeni ve onaydaki
   raporda yok — CHECK); akış tetiği Yeni · onayda · onaylandı arasındaki geçişleri açar (Tamamlandı'ya yalnız imzayla, imzalı rapor değişmez);
