@@ -40,14 +40,13 @@ async function bozuk(ad: string, eski: string, yeni: string) {
   const havuz = havuzKur({ ...kume.uygulama, database: ad });
   acilan.push({ supa, havuz });
   const A = (await supa.sahip.query<{ id: string }>("INSERT INTO firma (kisa_ad, ad, rapor_kodu) VALUES ('deneme-a', 'Deneme A', 'DA') RETURNING id")).rows[0].id;
-  const [m1, m2] = await kiraciIcinde(havuz, A, async (db) => {
-    const q = async (sql: string, p: unknown[] = []) => (await db.sorgu<{ id: string }>(sql, p)).rows[0].id;
-    const x = await q("INSERT INTO musteri (unvan, kisa) VALUES ('Deneme Bir A.Ş.', 'Deneme Bir') RETURNING id::text");
-    const y = await q("INSERT INTO musteri (unvan, kisa) VALUES ('Deneme İki A.Ş.', 'Deneme İki') RETURNING id::text");
-    await q("INSERT INTO tesis (musteri_id, ad) VALUES ($1, 'Merkez') RETURNING id::text", [x]);
-    await q("INSERT INTO tesis (musteri_id, ad) VALUES ($1, 'Fabrika') RETURNING id::text", [y]);
-    return [x, y];
-  });
+  /* kurulum süper kullanıcıyla (firma açıkça): devralma bozulunca uygulama rolünün kendi yazması (RETURNING) da müşteri kısıtına takılır —
+     ölçülen şey kurulum değil, sonraki okuma */
+  const q = async (sql: string, p: unknown[]) => (await supa.sahip.query<{ id: string }>(sql, p)).rows[0].id;
+  const m1 = await q("INSERT INTO musteri (firma_id, unvan, kisa) VALUES ($1, 'Deneme Bir A.Ş.', 'Deneme Bir') RETURNING id::text", [A]);
+  const m2 = await q("INSERT INTO musteri (firma_id, unvan, kisa) VALUES ($1, 'Deneme İki A.Ş.', 'Deneme İki') RETURNING id::text", [A]);
+  await q("INSERT INTO tesis (firma_id, musteri_id, ad) VALUES ($1, $2, 'Merkez') RETURNING id::text", [A, m1]);
+  await q("INSERT INTO tesis (firma_id, musteri_id, ad) VALUES ($1, $2, 'Fabrika') RETURNING id::text", [A, m2]);
   return { havuz, A, m1, m2 };
 }
 
