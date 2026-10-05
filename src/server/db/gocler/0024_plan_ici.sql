@@ -65,7 +65,7 @@ BEGIN
     ELSIF NEW.durum = 'reddedildi' THEN NEW.red := now(); NEW.red_hesap := hesap;
     ELSIF NEW.durum = 'tamamlandi' THEN NEW.bitti := now();
     ELSIF OLD.durum = 'kabul' THEN NEW.basladi := now();
-    ELSE NEW.kontrol_tamam := NULL;   -- tamamlama geri alındı: plan yeniden denetime, kontrol listesi yeniden açık
+    ELSE NEW.bitti := NULL; NEW.kontrol_tamam := NULL;   -- tamamlama geri alındı: plan yeniden denetime, kontrol listesi yeniden açık
     END IF;
   END IF;
   -- kontrol listesi: işaretlenince zaman veritabanından; işaretliyken zamanı değişmez

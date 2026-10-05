@@ -33,7 +33,11 @@ const seg = (isaret: number, govde: string) => bayt([0xff, isaret, (govde.length
 const JPEG = bayt([0xff, 0xd8], [...seg(0xe0, "JFIF\0\x01\x01")], [...seg(0xdb, "\0" + "\x01".repeat(64))], [0xff, 0xda, 0, 2], "goruntu-verisi", [0xff, 0xd9]);
 const tamam = <R extends { durum: string }>(r: R) => { assert.equal(r.durum, "tamam", JSON.stringify(r)); return r as Extract<R, { durum: "tamam" }>; };
 const ARAC = { plaka: "00 dnm 001", tur: "Hafif ticari araç", marka: "Deneme", model: "Model", yil: "2022", yakit: "dizel", ilkKm: "1.000", bakimKm: "", muayene: "", sigorta: "", kasko: "" };
-const T = (arac: string, alan: string, km: string, saat = "10:00", ek: object = {}) => ({ arac, alan, zaman: `${bugunTr()}T${saat}`, km, yakit: "yarim", kontrol: ["ruhsat"], hasar: "", ...ek });
+/* 2026-10-05 (CI 7725142, Türkiye saatiyle 00:3x'te düştü): tutanak bugünün 08:00'ine yazılınca, testin o anki haftalık kilometre kayıtlarından
+   "sonra" sayılıp son kilometre olarak seçiliyordu (saat 08:00'den önce koşan CI). Tutanaklar DÜNÜN tarihine yazılır: her zaman geçmişte kalır,
+   beklentiler aynı. */
+const dun = () => new Date(Date.parse(`${bugunTr()}T00:00:00Z`) - 864e5).toISOString().slice(0, 10);
+const T = (arac: string, alan: string, km: string, saat = "10:00", ek: object = {}) => ({ arac, alan, zaman: `${dun()}T${saat}`, km, yakit: "yarim", kontrol: ["ruhsat"], hasar: "", ...ek });
 
 async function hesapli(firma: string, eposta: string, roller: string[], personelId: string | null = null) {
   return (await kiraciIcinde(havuz, firma, (db) => db.sorgu<{ id: string }>(
