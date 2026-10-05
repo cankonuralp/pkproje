@@ -74,7 +74,7 @@ before(async () => {
   const rapor = async (o: { plan: string; tur: string; personel: string; hesap: Kisi; durum: string; olustu: string; ilk?: string; gonderildi?: string; onay?: string;
     imza?: string; hareket?: [string, string][]; silindi?: boolean }) => {
     sira++;
-    const e = await sahip("INSERT INTO ekipman (firma_id, tesis_id, tur_id, kod, ekleyen) VALUES ($1, $2, $3, $4, 'x') RETURNING id::text", [A, t, o.tur, `E-${sira}`]);
+    const e = await sahip("INSERT INTO ekipman (firma_id, tesis_id, tur_id, kod, ekleyen) VALUES ($1, $2, $3, $4, 'x') RETURNING id::text", [A, t, o.tur, `EK-${sira}`]);
     const no = `DA-1026-${String(sira).padStart(3, "0")}-0000${sira % 10}`;
     const id = await sahip(`INSERT INTO rapor (firma_id, no, plan_id, ekipman_id, tur_id, format_id, personel_id, hesap_id, durum, kunye, olustu, ilk_gonderim, gonderildi, onay, silindi)
       VALUES ($1, $2, $3, $4, $5, $6, $7, $8, $9, '{}', $10, $11, $12, $13, $14) RETURNING id::text`,
