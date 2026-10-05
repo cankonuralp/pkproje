@@ -23,7 +23,8 @@ const firma = (kilit: boolean) => ({
   ], kilit),
 });
 const sonBolumler = (kilit: boolean, cumle: string, foto: boolean) => [
-  ...(foto ? [{ id: "foto", ad: "Fotoğraflar", blok: "foto" as const, enAz: 0, enCok: 20 }] : []),
+  /* fotoğraf rapor başına en az 1 (reisim 2026-09-22; §3.8-5 temel zorunlu) — 2026-10-05 (C4) */
+  ...(foto ? [{ id: "foto", ad: "Fotoğraflar", blok: "foto" as const, enAz: 1, enCok: 20 }] : []),
   { id: "kusur", ad: "Kusur açıklamaları", blok: "kusur" as const, kilit },
   { id: "yorum", ad: "Muayene uzmanı yorumu", blok: "not" as const },
   { id: "sonuc", ad: "Sonuç ve kanaat", blok: "sonuc" as const, kilit, cumle },

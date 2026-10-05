@@ -43,6 +43,14 @@ export async function dosyaYukle(db: Sorgulayici, depo: Depo, p: {
   return { tamam: true, id, ad, tur, boyut: icerik.length };
 }
 
+/** dosyayı çöpe alır (silinmez; çöpteki dosya indirilmez, depodan silme çöp süresi dolunca — A5). Yetki ÇAĞIRANDA (bağlı kaydın modülü). */
+export async function dosyaCope(db: Sorgulayici, dosyaId: string, iz: { kim: string; ne: string; gerekce?: string }): Promise<void> {
+  if (!UUID_DOSYA.test(dosyaId)) return;
+  const r = await db.sorgu("UPDATE dosya SET cop = now() WHERE id = $1 AND cop IS NULL", [dosyaId]);
+  if (r.rowCount) await izYaz(db, { ...iz, nesne: "dosya", nesneId: dosyaId });
+}
+const UUID_DOSYA = /^[0-9a-f]{8}-[0-9a-f]{4}-[0-9a-f]{4}-[0-9a-f]{4}-[0-9a-f]{12}$/;
+
 export interface IndirilecekDosya { anahtar: string; ad: string; tur: string; boyut: number }
 
 const UUID = /^[0-9a-f]{8}-[0-9a-f]{4}-[0-9a-f]{4}-[0-9a-f]{4}-[0-9a-f]{12}$/;

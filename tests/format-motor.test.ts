@@ -143,7 +143,7 @@ test("kurallar: kusur derecesi açıksa sorulur ve ağır işaretlenir (AA9 baş
   const t = T("KOMPRESOR");
   t.kurallar.derece = true;
   const f = t.bolumler.find((b) => b.blok === "foto"); if (f?.blok === "foto") f.enAz = 2;
-  const r = degerlendir(t, C({ madde: { k1: { c: "Uygun değil" }, k2: { c: "Uygun değil", derece: "agir" } }, foto: 1 }));
+  const r = degerlendir(t, C({ madde: { k1: { c: "Uygun değil" }, k2: { c: "Uygun değil", derece: "agir" } }, foto: { foto: 1 } }));
   assert.ok(r.eksikler.some((e) => e.alan === "k1.derece") && !r.eksikler.some((e) => e.alan === "k2.derece"));
   assert.deepEqual(r.kusurlar.map((k) => k.agir), [false, true]);
   assert.ok(r.eksikler.some((e) => e.ad === "En az 2 fotoğraf") && r.eksikler.some((e) => e.ad === "Ölçüm cihazı eklenmedi"));
@@ -152,10 +152,30 @@ test("kurallar: kusur derecesi açıksa sorulur ve ağır işaretlenir (AA9 baş
 });
 
 test("cevaplar şeması sınırları tutar (istemciden gelen rapor içeriği)", () => {
-  assert.equal(Cevaplar.safeParse({ foto: -1 }).success, false);
+  assert.equal(Cevaplar.safeParse({ foto: { foto: -1 } }).success, false);
+  assert.equal(Cevaplar.safeParse({ foto: 3 }).success, false, "2026-10-05 (C18): fotoğraf sayısı bölüm başına");
   assert.equal(Cevaplar.safeParse({ sonuc: "belki" }).success, false);
   assert.equal(Cevaplar.safeParse({ tablo: { a: Array.from({ length: 301 }, () => ({})) } }).success, false);
   assert.equal(Cevaplar.safeParse({ alan: { a: "x".repeat(2001) } }).success, false);
   const g: FormatGirdisi = { sema: 1, bolumler: [] };
   assert.deepEqual(FormatTanimi.parse(g).kurallar, { foto: false, derece: false, oneri: true });
+});
+
+/* 2026-10-05 (312; pkproje §3.8-5 temel zorunlular, C4, C18, AA9): fotoğraf bölüm başına sayılır (termal ile fotoğraflar ayrı); hazır şablonlarda
+   fotoğraf en az 1; "Uygun değil" maddenin açıklaması zorunlu; maddede fotoğraf yalnız kural açıksa zorunlu (başlangıçta kapalı). */
+test("fotoğraf ve kusur açıklaması: bölüm başına sayı, şablonda en az 1, olumsuz maddede açıklama zorunlu, maddede fotoğraf kural açıksa", () => {
+  const z = T("ZPKR02");
+  const bolum = (id: string) => z.bolumler.find((b) => b.id === id);
+  assert.equal((bolum("foto") as { enAz: number }).enAz, 1, "fotoğraflar en az 1");
+  assert.equal((bolum("termal") as { enAz: number }).enAz, 0, "termal isteğe bağlı");
+  assert.ok(degerlendir(z, C({ foto: { termal: 3 } })).eksikler.some((e) => e.alan === "foto"), "termal fotoğrafı fotoğraflar bölümünü doldurmaz");
+  assert.ok(!degerlendir(z, C({ foto: { foto: 1 } })).eksikler.some((e) => e.alan === "foto"));
+  assert.equal((T("KOMPRESOR").bolumler.find((b) => b.blok === "foto") as { enAz: number }).enAz, 1);
+  const t = T("KOMPRESOR");
+  const r = degerlendir(t, C({ madde: { k1: { c: "Uygun değil" }, k2: { c: "Uygun değil", not: "Korozyon" } } }));
+  assert.ok(r.eksikler.some((e) => e.alan === "k1.not" && e.ad.endsWith("· kusur açıklaması")) && !r.eksikler.some((e) => e.alan === "k2.not"));
+  assert.ok(!r.eksikler.some((e) => e.alan.endsWith(".foto")), "maddede fotoğraf başlangıçta zorunlu değil (AA9)");
+  t.kurallar.foto = true;
+  const f = degerlendir(t, C({ madde: { k1: { c: "Uygun değil", not: "x" }, k2: { c: "Uygun değil", not: "y", foto: 1 } } }));
+  assert.ok(f.eksikler.some((e) => e.alan === "k1.foto") && !f.eksikler.some((e) => e.alan === "k2.foto"));
 });

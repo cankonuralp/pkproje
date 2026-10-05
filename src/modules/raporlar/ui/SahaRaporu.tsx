@@ -31,6 +31,7 @@ import { ayEkle, RAPOR_DURUM, type EkipmanBilgisi, type RaporDurumu, type RaporT
 import type { SahaRaporu as SahaRaporuVerisi } from "../server/raporlar";
 import { alanId, BilgiBlok, FormatBolumu, OkuGirdi, RaporBolumu, Satir, Satirlar, TarihKutusu, type Baglam, type Kaynak } from "./Bloklar";
 import { CihazBolumu } from "./CihazBolumu";
+import { FotoListesi } from "./FotoListesi";
 import { onayaGonderEylemi, raporKaydetEylemi, raporKunyeGuncelleEylemi, raporSilEylemi, type RaporYaniti } from "./eylemler";
 import stil from "./raporlar.module.css";
 
@@ -90,7 +91,13 @@ export function SahaRaporu({ v }: { v: Gorunum }) {
   const oku = !v.izin.duzenle;
 
   /* canlı değerlendirme: cihaz sayısı raporun kendi listesinden (sunucu da öyle sayar), fotoğraf bu sürümde yok */
-  const d = useMemo(() => degerlendir(v.tanim, { ...cevaplar, cihaz: v.cihazlar.filter((x) => x.cihaz).length, foto: 0 }), [v.tanim, v.cihazlar, cevaplar]);
+  const d = useMemo(() => {
+    /* sayılar sunucudaki gibi raporun kendi listesinden: bölüm başına ve madde başına fotoğraf */
+    const foto: Record<string, number> = {}, mf: Record<string, number> = {};
+    for (const f of v.fotolar) { if (f.madde) mf[f.madde] = (mf[f.madde] ?? 0) + 1; else foto[f.bolum] = (foto[f.bolum] ?? 0) + 1; }
+    const madde = Object.fromEntries(Object.entries(cevaplar.madde).map(([k, x]) => [k, { ...x, foto: mf[k] ?? 0 }]));
+    return degerlendir(v.tanim, { ...cevaplar, madde, cihaz: v.cihazlar.filter((x) => x.cihaz).length, foto });
+  }, [v.tanim, v.cihazlar, v.fotolar, cevaplar]);
   /* şu an boş olan zorunlu alanlar (format + sabit tarihler + gerekli cihazlar); işaret yalnız Onaya gönder'in dediği VE hâlâ boş olanda */
   const canli = useMemo(() => {
     const s = new Set(d.eksikler.map((e) => e.alan));
@@ -109,6 +116,8 @@ export function SahaRaporu({ v }: { v: Gorunum }) {
   const bag: Baglam = {
     v, c: cevaplar, yaz, d, oku, gecersiz, kaynak: (k) => kaynaklar[k],
     cihaz: (bolumId) => <CihazBolumu v={v} bolumId={bolumId} oku={oku} gecersiz={gecersiz} mesgul={mesgul} baslat={baslat} yenile={yenile} />,
+    foto: (bolumId, madde) => <FotoListesi key={`${bolumId}-${madde ?? ""}`} v={v} bolumId={bolumId} madde={madde} oku={oku}
+      gecersiz={gecersiz(madde ? `${madde}.foto` : bolumId)} mesgul={mesgul} baslat={baslat} yenile={yenile} />,
   };
 
   /* format bölümleri: yalnız kayıttan gelen alanlı bilgi bölümü 1. bölümün kopyası — çizilmez; adında "ekipman" geçen bilgi bölümü 2. bölüme

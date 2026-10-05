@@ -150,6 +150,15 @@ button.silTus { color: var(--hata-yazi); }
 .secimSatir input { width: 18px; height: 18px; margin: 3px 0 0; flex: none; accent-color: var(--birincil); }
 .altMetin { display: block; color: var(--yazi2); font-size: var(--boy-kucuk); }
 
+/* fotoğraflar (312): küçük resim yok — ad · Görüntüle · İndir · Sil (maket); dosya seçici etiketin içinde gizli */
+.fotolar { display: grid; gap: 8px; min-width: 0; border-radius: var(--r-orta); }
+.fotoListe { display: grid; gap: 6px; margin: 0; padding: 0; list-style: none; }
+.fotoListe li { display: flex; align-items: center; flex-wrap: wrap; gap: 6px 12px; padding: 6px 10px; background: var(--kart); border: 1px solid var(--kenar); border-radius: var(--r-orta); }
+.fotoAd { flex: 1 1 12rem; min-width: 0; overflow-wrap: anywhere; }
+.fotoTuslar { display: flex; flex-wrap: wrap; gap: 6px; }
+.fotoEkle { justify-self: start; cursor: pointer; }
+.fotoEkle[aria-disabled] { opacity: .55; cursor: default; }
+
 @media (max-width: 767.98px) {
   .bolum { padding: 8px 12px 12px; }
   .satirlar { grid-template-columns: minmax(0, 1fr); gap: 14px; }

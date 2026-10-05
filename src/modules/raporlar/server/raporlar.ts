@@ -11,6 +11,8 @@
 import type { Sorgulayici } from "../../../server/db/kiraci.ts";
 import { ekle, guncelle, tablo, type GuncelleSonucu, type Iz } from "../../../server/db/yazici.ts";
 import { raporNoAl } from "../../../server/numara/numara.ts";
+import type { Depo } from "../../../server/dosya/depo.ts";
+import { dosyaCope, dosyaYukle } from "../../../server/dosya/dosya.ts";
 import { canDo, canDoEylem, duzey, type YetkiHesabi } from "../../../server/yetki/canDo.ts";
 import { dogrula, type DogrulamaHatalari } from "../../../sema/ortak.ts";
 import { degerlendir, type Degerlendirme } from "../../../format/motor.ts";
@@ -27,6 +29,11 @@ import { roldekiHesapAdlari } from "../../../server/kimlik/hesap.ts";
 import { ayEkle, kalibrasyonGecti, RaporKaydi, SONUC_AD, type EkipmanBilgisi, type RaporCihazi, type RaporDurumu, type RaporTarihleri } from "../sema.ts";
 
 const MODUL = 14;
+/** rapor fotoğrafının dosya modülü (dosya erişim kaydında: raporu gören açar) */
+export const DOSYA_MODULU = "rapor";
+/** raporda fotoğraf: fotoğraf bölümüne ya da "Uygun değil" maddeye bağlı (madde fotoğrafı Kusur açıklamalarına düşer — O2) */
+export interface RaporFoto { dosya: string; ad: string; bolum: string; madde: string | null }
+const FOTO_MADDE_EN_COK = 10;
 const RAPOR = tablo({
   ad: "rapor", sutunlar: ["no", "plan_id", "ekipman_id", "tur_id", "format_id", "personel_id", "durum", "kunye", "kunye_surum", "ekipman_bilgi", "bas", "bit",
     "sonraki", "takip", "rapor_tarihi", "cevaplar", "cihazlar", "fotolar", "sonuc", "sonuc_oto", "silindi"],
@@ -101,7 +108,7 @@ export async function raporOlustur(db: Sorgulayici, kim: Kisi, planId: string, e
 interface RaporSatiri {
   id: string; no: string; plan_id: string; ekipman_id: string; tur_id: string; format_id: string; personel_id: string; hesap_id: string | null; durum: RaporDurumu;
   kunye: Kunye & { eposta?: string | null; tel?: string | null }; kunye_surum: number; ekipman_bilgi: EkipmanBilgisi; bas: Date; bit: Date | null;
-  sonraki: string | null; takip: string | null; rapor_tarihi: string | null; cevaplar: unknown; cihazlar: RaporCihazi[]; fotolar: unknown[]; sonuc: string | null;
+  sonraki: string | null; takip: string | null; rapor_tarihi: string | null; cevaplar: unknown; cihazlar: RaporCihazi[]; fotolar: RaporFoto[]; sonuc: string | null;
   sonuc_oto: boolean; gonderildi: Date | null; surum: number; olustu: Date; degisti: Date;
 }
 async function raporOku(db: Sorgulayici, id: string, kilitle = false): Promise<RaporSatiri | null> {
@@ -140,6 +147,8 @@ export interface SahaRaporu {
   ekipmanBilgi: EkipmanBilgisi; tarih: RaporTarihleri;
   cevaplar: Cevaplar; tanim: FormatTanimi; formatSira: number;
   cihazlar: CihazSatiri[];
+  /** fotoğraflar (bölüme ya da maddeye bağlı); indirme tek uçtan (/api/dosya/<id>), raporu görene */
+  fotolar: RaporFoto[];
   /** Cihaz ekle penceresi: yazanın zimmetindeki, kalibrasyonu geçerli cihazlar tür başına; tür gerekli cihaz türü vermiyorsa "*" altında hepsi
       (yalnız düzenleyebilene). Seçilen cihaz kendi türünün satırına yazılır. */
   secilebilir: Record<string, { id: string; kod: string; marka: string | null; model: string | null; seri: string | null; bitis: string | null }[]>;
@@ -210,7 +219,7 @@ export async function sahaRaporu(db: Sorgulayici, kim: Kisi, id: string): Promis
     ekipmanBilgi: r.ekipman_bilgi,
     tarih: { bas: zamanOku(r.bas)!, bit: zamanOku(r.bit), sonraki: r.sonraki, takip: r.takip, rapor: r.rapor_tarihi },
     cevaplar: cev.success ? cev.data : Cevaplar.parse({}), tanim: format.tanim, formatSira: format.sira,
-    cihazlar: satirlar, secilebilir,
+    cihazlar: satirlar, secilebilir, fotolar: r.fotolar,
     izin: { duzenle, sil: r.durum === "taslak" && canDoEylem(kim, "rapor_sil", { sahip: r.hesap_id, durum: "Yeni", brans: tur.brans }) },
   };
 }
@@ -226,16 +235,21 @@ async function yazilabilir(db: Sorgulayici, kim: Kisi, id: string): Promise<Eris
 }
 const hataMi = (x: Erisim | RaporYazma): x is RaporYazma => "durum" in x;
 
-/** sunucunun saydığı cihaz / fotoğraf sayısıyla değerlendirme (istemcinin sayısına güvenilmez) */
+/** cihaz ve fotoğraf sayıları raporun KENDİ listesinden (istemcinin sayısına güvenilmez): bölüm başına fotoğraf, madde başına fotoğraf */
+function sayiliCevaplar(c: Cevaplar, r: Pick<RaporSatiri, "cihazlar" | "fotolar">): Cevaplar {
+  const bolum: Record<string, number> = {}, madde: Record<string, number> = {};
+  for (const f of r.fotolar) { if (f.madde) madde[f.madde] = (madde[f.madde] ?? 0) + 1; else bolum[f.bolum] = (bolum[f.bolum] ?? 0) + 1; }
+  return { ...c, cihaz: r.cihazlar.length, foto: bolum, madde: Object.fromEntries(Object.entries(c.madde).map(([k, x]) => [k, { ...x, foto: madde[k] ?? 0 }])) };
+}
 function degerle(tanim: FormatTanimi, c: Cevaplar, r: Pick<RaporSatiri, "cihazlar" | "fotolar">): Degerlendirme {
-  return degerlendir(tanim, { ...c, cihaz: r.cihazlar.length, foto: r.fotolar.length });
+  return degerlendir(tanim, sayiliCevaplar(c, r));
 }
 
 async function kaydetIc(db: Sorgulayici, kim: Kisi, e: Erisim, surum: number, girdi: unknown): Promise<RaporYazma> {
   const g = dogrula(RaporKaydi, girdi);
   if (!g.tamam) return { durum: "gecersiz", hatalar: g.hatalar };
   const v = g.veri;
-  const cevaplar = { ...v.cevaplar, cihaz: e.r.cihazlar.length, foto: e.r.fotolar.length };
+  const cevaplar = sayiliCevaplar(v.cevaplar, e.r);
   const r = await guncelle(db, RAPOR, e.r.id, surum, {
     ekipman_bilgi: v.ekipman, bas: zamanYaz(v.tarih.bas), bit: zamanYaz(v.tarih.bit), sonraki: v.tarih.sonraki, takip: v.tarih.takip, rapor_tarihi: v.tarih.rapor,
     cevaplar, sonuc: cevaplar.sonuc || null,
@@ -330,4 +344,49 @@ export async function raporKunyeGuncelle(db: Sorgulayici, kim: Kisi, id: string)
   if (!e.sahip) return { durum: "yetkisiz" };
   const r = await kunyeGuncelle(db, kim, e.r.plan_id);
   return r.durum === "tamam" ? { durum: "tamam", id, bildirim: r.bildirim } : r.durum === "gecersiz" ? { durum: "gecersiz", hatalar: r.hatalar } : r;
+}
+
+/* ── FOTOĞRAF (312; maket fotoMenu / fotoSil; 09-A1, A4: tür baytlardan, EXIF silinir, yalnız JPEG / PNG) ─────────────────────────────── */
+/** fotoğraf ekle: fotoğraf bölümüne (en çok enCok) ya da kontrol maddesine (en çok 10). Yalnız yazan, Yeni raporda. */
+export async function fotoEkle(db: Sorgulayici, depo: Depo, kim: Kisi, firmaId: string, id: string, surum: number,
+  hedef: { bolum: string; madde: string | null }, dosya: { ad: string; bayt: Uint8Array }): Promise<RaporYazma> {
+  const e = await yazilabilir(db, kim, id);
+  if (hataMi(e)) return e;
+  if (surum !== e.r.surum) return { durum: "cakisma" };
+  const format = await formatSurumuOku(db, e.r.format_id);
+  if (!format) return { durum: "yok" };
+  const b = format.tanim.bolumler.find((x) => x.id === hedef.bolum);
+  const fotolar = e.r.fotolar;
+  if (hedef.madde) {
+    if (b?.blok !== "liste" || !b.gruplar.some((g) => g.maddeler.some((m) => m.id === hedef.madde))) return { durum: "gecersiz", hatalar: { foto: "Fotoğrafın yeri bulunamadı." } };
+    if (fotolar.filter((f) => f.madde === hedef.madde).length >= FOTO_MADDE_EN_COK) return { durum: "gecersiz", hatalar: { foto: `Maddeye en çok ${FOTO_MADDE_EN_COK} fotoğraf.` } };
+  } else {
+    if (b?.blok !== "foto") return { durum: "gecersiz", hatalar: { foto: "Fotoğrafın yeri bulunamadı." } };
+    if (fotolar.filter((f) => f.bolum === b.id && !f.madde).length >= b.enCok) return { durum: "gecersiz", hatalar: { foto: `En çok ${b.enCok} fotoğraf.` } };
+  }
+  const y = await dosyaYukle(db, depo, { firmaId, modul: DOSYA_MODULU, kayitId: id, ad: dosya.ad, bayt: dosya.bayt, izinli: ["jpeg", "png"], kim: kim.ad, yukleyen: kim.id });
+  if (!y.tamam) return { durum: "gecersiz", hatalar: { foto: y.neden === "tur" ? "Yalnız JPEG ya da PNG fotoğraf." : y.neden === "buyuk" ? "Fotoğraf çok büyük (en çok 8 MB)." : "Fotoğraf okunamadı." } };
+  const yeni = [...fotolar, { dosya: y.id, ad: y.ad, bolum: hedef.bolum, madde: hedef.madde }];
+  const cevaplar = sayiliCevaplar(Cevaplar.parse(e.r.cevaplar), { cihazlar: e.r.cihazlar, fotolar: yeni });
+  return sonuc(await guncelle(db, RAPOR, id, surum, { fotolar: jsonDizi(yeni), cevaplar }, { kim: kim.ad, ne: "rapor.foto_ekle", gerekce: `${e.r.no} · ${y.ad}` }), id, `${y.ad} eklendi.`);
+}
+
+/** fotoğraf sil: listeden çıkar, dosya çöpe (indirilemez). Yalnız yazan, Yeni raporda. */
+export async function fotoSil(db: Sorgulayici, kim: Kisi, id: string, surum: number, dosyaId: string): Promise<RaporYazma> {
+  const e = await yazilabilir(db, kim, id);
+  if (hataMi(e)) return e;
+  const f = e.r.fotolar.find((x) => x.dosya === dosyaId);
+  if (!f) return { durum: "tamam", id, bildirim: "Fotoğraf zaten yok." };
+  const yeni = e.r.fotolar.filter((x) => x.dosya !== dosyaId);
+  const cevaplar = sayiliCevaplar(Cevaplar.parse(e.r.cevaplar), { cihazlar: e.r.cihazlar, fotolar: yeni });
+  const iz = { kim: kim.ad, ne: "rapor.foto_sil", gerekce: `${e.r.no} · ${f.ad}` };
+  const r = await guncelle(db, RAPOR, id, surum, { fotolar: jsonDizi(yeni), cevaplar }, iz);
+  if (r.durum !== "tamam" && r.durum !== "degisiklik_yok") return sonuc(r, id, "");
+  await dosyaCope(db, dosyaId, iz);
+  return { durum: "tamam", id, bildirim: `${f.ad} silindi.` };
+}
+
+/** dosya erişim kaydı için: bu kişi bu raporu görebilir mi (Raporlar düzeyi; başka firmanınki RLS altında yok) */
+export async function raporDosyasiGorulur(db: Sorgulayici, kisi: YetkiHesabi, raporId: string): Promise<boolean> {
+  return !!(await erisim(db, { ...kisi, ad: "" }, raporId));
 }

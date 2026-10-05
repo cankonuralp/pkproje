@@ -1,6 +1,8 @@
 /* FORMAT MOTORU — tanımı okuyup raporu DEĞERLENDİRİR (RAPOR-FORMAT.md §1: "doğrulamayı, otomatik sonucu ve kusur listesini hesaplar").
    Saf: veritabanına, ağa, saate dokunmaz; saha ekranı (istemci, çevrimdışı) ve sunucu (Onaya gönder, PDF) aynı sonucu verir.
-   · eksikler: zorunlu boş alanlar — Onaya gönder UYARIR ve alanı işaretler (kural uyarıdır; tek engel resmî formatın kendisi).
+   · eksikler: zorunlu boş alanlar — Onaya gönder ENGELLER ve alanı işaretler (§3.8-5, KOD-GECIS ENGEL 5; sonuç hariç — seçilmediyse öneri yazılır).
+     Temel zorunlular (§3.8-5): fotoğraf bölümünün en azı, "Uygun değil" maddenin açıklaması (derece kuralı açıksa derecesi), kural açıksa
+     maddenin fotoğrafı (AA9, başlangıçta kapalı), türün ölçüm cihazı, test ve ölçüm değerleri.
    · kusurlar: liste maddesinde olumsuz cevap (cevap setinin 2. öğesi) · seçilen uygunluk notu kusursa · hesabı ya da sütun sınırı tutmayan satır ·
      sınır dışı test değeri. Kusur açıklamaları bölümü bundan dolar.
    · öneri: kural açıksa herhangi kusur → "uygun_degil", yoksa "uygun". Denetçi sonucu kendisi seçer.
@@ -64,7 +66,9 @@ export function degerlendir(t: FormatTanimi, c: Cevaplar): Degerlendirme {
           if (!x || !b.cevaplar.includes(x.c)) { eksikler.push({ bolum: b.id, alan: m.id, ad: m.metin }); continue; }
           if (x.c !== b.cevaplar[1]) continue;
           kusurlar.push({ bolum: b.id, ref: m.id, metin: x.not?.trim() ? `${m.metin}: ${x.not.trim()}` : m.metin, agir: t.kurallar.derece && x.derece === "agir" });
+          if (!x.not?.trim()) eksikler.push({ bolum: b.id, alan: `${m.id}.not`, ad: `${m.metin} · kusur açıklaması` });
           if (t.kurallar.derece && !x.derece) eksikler.push({ bolum: b.id, alan: `${m.id}.derece`, ad: `${m.metin} · kusur derecesi` });
+          if (t.kurallar.foto && !(x.foto && x.foto > 0)) eksikler.push({ bolum: b.id, alan: `${m.id}.foto`, ad: `${m.metin} · fotoğraf` });
         }
         break;
       case "olcum": {
@@ -98,7 +102,7 @@ export function degerlendir(t: FormatTanimi, c: Cevaplar): Degerlendirme {
         if (c.cihaz < 1) eksikler.push({ bolum: b.id, alan: b.id, ad: "Ölçüm cihazı eklenmedi" });
         break;
       case "foto":
-        if (c.foto < b.enAz) eksikler.push({ bolum: b.id, alan: b.id, ad: `En az ${b.enAz} fotoğraf` });
+        if ((c.foto[b.id] ?? 0) < b.enAz) eksikler.push({ bolum: b.id, alan: b.id, ad: `En az ${b.enAz} fotoğraf` });
         break;
       case "not":
         if (b.zorunlu && bos(c.yorum)) eksikler.push({ bolum: b.id, alan: b.id, ad: b.ad });

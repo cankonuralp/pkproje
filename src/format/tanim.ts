@@ -98,14 +98,19 @@ export type FormatTanimi = z.output<typeof FormatTanimi>;
 export type FormatGirdisi = z.input<typeof FormatTanimi>;
 
 /* ── CEVAPLAR (raporun içeriği; kimliklerle) ── */
-export const MaddeCevabi = z.object({ c: z.string().max(40), not: z.string().max(1000).optional(), derece: z.enum(["hafif", "agir"]).optional() });
+/** madde cevabı; foto: bu maddeye eklenen fotoğraf sayısı (sunucu raporun kendi listesinden sayar, istemciden alınmaz) */
+export const MaddeCevabi = z.object({
+  c: z.string().max(40), not: z.string().max(1000).optional(), derece: z.enum(["hafif", "agir"]).optional(), foto: z.number().int().min(0).max(50).optional(),
+});
 export const Cevaplar = z.object({
   alan: z.record(z.string(), z.union([z.string().max(2000), z.array(z.string().max(200)).max(40)])).default({}),
   madde: z.record(z.string(), MaddeCevabi).default({}),
   /** ölçüm tablosu → satırlar (sütun kimliği → değer; "not" seçilen uygunluk notunun sırası, 1'den) */
   tablo: z.record(z.string(), z.array(z.record(z.string(), z.string().max(200))).max(300)).default({}),
   deger: z.record(z.string(), z.string().max(200)).default({}),
-  foto: z.number().int().min(0).max(200).default(0),
+  /** fotoğraf bölümü başına fotoğraf sayısı (2026-10-05, C18: tek sayı iki fotoğraf bölümünü — termal ve fotoğraflar — ayırt edemiyordu);
+      sunucu raporun kendi listesinden sayar */
+  foto: z.record(z.string(), z.number().int().min(0).max(200)).default({}),
   cihaz: z.number().int().min(0).max(50).default(0),
   sonuc: z.enum(["", "uygun", "uygun_degil"]).default(""),
   yorum: z.string().max(4000).default(""),

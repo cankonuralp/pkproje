@@ -24,8 +24,10 @@ import { tarihNo } from "../src/modules/planlar/sema.ts";
 import { taslakBaslat, yayinla } from "../src/modules/rapor-format/server/formatlar.ts";
 import { ayEkle } from "../src/modules/raporlar/sema.ts";
 import {
-  cihazEkle, cihazKaldir, onayaGonder, raporKaydet, raporKunyeGuncelle, raporOlustur, raporSil, sahaRaporu, type RaporYazma,
+  cihazEkle, cihazKaldir, fotoEkle, fotoSil, onayaGonder, raporKaydet, raporKunyeGuncelle, raporOlustur, raporSil, sahaRaporu, type RaporYazma,
 } from "../src/modules/raporlar/server/raporlar.ts";
+import { dosyaIndirilebilir } from "../src/server/dosya/dosya.ts";
+import { DOSYA_ERISIMI } from "../src/server/dosya/erisim.ts";
 import { MATRIS_ONERI } from "../src/server/yetki/tanim.ts";
 import { testKumesi } from "./yardimci/kume.ts";
 
@@ -133,6 +135,13 @@ const sr = (k: Kisi, id: string) => a(k, (db) => sahaRaporu(db, k, id));
 const olustur = (k: Kisi, planId: string, ekipmanId: string) => a(k, (db) => raporOlustur(db, k, planId, ekipmanId));
 const kaydet = (k: Kisi, id: string, surum: number, g: unknown) => a(k, (db) => raporKaydet(db, k, id, surum, g));
 const gonder = (k: Kisi, id: string, surum: number, g: unknown) => a(k, (db) => onayaGonder(db, k, id, surum, g));
+/* uydurma JPEG (tests/dosya.test.ts ile aynı yapı) — 312 fotoğraf */
+const bayt = (...p: (number[] | string)[]) => new Uint8Array(p.flatMap((x) => (typeof x === "string" ? [...Buffer.from(x, "latin1")] : x)));
+const seg = (isaret: number, govde: string) => bayt([0xff, isaret, (govde.length + 2) >> 8, (govde.length + 2) & 0xff], govde);
+const JPEG = bayt([0xff, 0xd8], [...seg(0xe0, "JFIF\0\x01\x01")], [...seg(0xdb, "\0" + "\x01".repeat(64))], [0xff, 0xda, 0, 2], "goruntu-verisi", [0xff, 0xd9]);
+const LISTE = KOMP.bolumler.find((b) => b.blok === "liste")!.id;
+const foto = (k: Kisi, id: string, surum: number, hedef: { bolum: string; madde: string | null } = { bolum: "foto", madde: null }, ad = "on.jpg", icerik = JPEG) =>
+  a(k, (db) => fotoEkle(db, depo, k, A, id, surum, hedef, { ad, bayt: icerik }));
 const sil = (k: Kisi, id: string, surum: number) => a(k, (db) => raporSil(db, k, id, surum));
 /** raporun hareket kaydı (yalnız tetik yazar), zaman sırasıyla */
 const hareketler = async (id: string) => (await sql<{ ne: string; eski: string | null; yeni: string | null; h: string | null }>(A,
@@ -306,14 +315,14 @@ test("kaydet: yalnız yazan; alanlar şemadan geçer (imal yılı, başlangıç 
   assert.equal(basYok.durum, "gecersiz", JSON.stringify(basYok));
   assert.deepEqual(Object.keys((basYok as Extract<RaporYazma, { durum: "gecersiz" }>).hatalar), ["tarih.bas"], "başlangıç boşaltılamaz");
   assert.equal((await sr(FA.den1, r.id))!.surum, 0, "geçersiz girdi yazılmaz");
-  assert.deepEqual(await kaydet(FA.den1, r.id, 0, { ...g, ekipman: { ...g.ekipman, konum: "  Kazan   dairesi " }, cevaplar: { ...g.cevaplar, cihaz: 7, foto: 9 } }),
+  assert.deepEqual(await kaydet(FA.den1, r.id, 0, { ...g, ekipman: { ...g.ekipman, konum: "  Kazan   dairesi " }, cevaplar: { ...g.cevaplar, cihaz: 7, foto: { foto: 9 } } }),
     { durum: "tamam", id: r.id, bildirim: "Rapor kaydedildi." });
   assert.equal((await kaydet(FA.den1, r.id, 0, g)).durum, "cakisma", "eski sürümle yazılamaz");
   const d = (await sr(FA.den1, r.id))!;
   assert.equal(d.surum, 1);
   assert.deepEqual(d.ekipmanBilgi, g.ekipman, "boşluklar kırpılır");
   assert.deepEqual(d.tarih, { bas: `${dun}T09:00`, bit: `${dun}T10:30`, sonraki: gun(364), takip: null, rapor: dun }, "Türkiye saatiyle yazılır ve okunur");
-  assert.deepEqual([d.cevaplar.cihaz, d.cevaplar.foto, d.cevaplar.sonuc, d.cevaplar.deger], [0, 0, "uygun", g.cevaplar.deger], "sayılar raporun kendi listesinden");
+  assert.deepEqual([d.cevaplar.cihaz, d.cevaplar.foto, d.cevaplar.sonuc, d.cevaplar.deger], [0, {}, "uygun", g.cevaplar.deger], "sayılar raporun kendi listesinden");
   const s = (await sql<{ sonuc: string; durum: string; g: Date | null }>(A, "SELECT sonuc, durum, gonderildi AS g FROM rapor WHERE id = $1", [r.id])).rows[0];
   assert.deepEqual([s.sonuc, s.durum, s.g], ["uygun", "taslak", null], "kaydet göndermez");
   assert.deepEqual((await sql<{ e: string }>(A, "SELECT marka AS e FROM ekipman WHERE id = $1", [FA.ekp["HT-A1"]])).rows.map((x) => x.e), ["Deneme Marka"],
@@ -372,6 +381,9 @@ test("onaya gönder: eksikler (format zorunluları, gerekli ölçüm cihazı, ka
   assert.deepEqual(e.find((x) => x.alan === `cihaz.${FA.man}`), { bolum: "cihaz", alan: `cihaz.${FA.man}`, ad: "Manometre: ölçüm cihazı eklenmedi" });
   let d = (await sr(FA.den1, r.id))!;
   assert.deepEqual([d.durum, d.surum, d.gonderildi], ["taslak", 1, null], "eksikte rapor kaydedilir, gönderilmez");
+  assert.ok(e.some((x) => x.alan === "foto" && x.ad === "En az 1 fotoğraf"), "312: fotoğraf en az 1 (şablon)");
+  tamam(await foto(FA.den1, r.id, d.surum));
+  d = (await sr(FA.den1, r.id))!;
   /* ENGEL 2: eklenen cihazın kalibrasyonu sonradan düştü */
   tamam(await a(FA.den1, (db) => cihazEkle(db, FA.den1, r.id, d.surum, FA.man, C["MN-05"])));
   await sql(A, "UPDATE kalibrasyon SET kaldirildi = now() WHERE cihaz_id = $1", [C["MN-05"]]);
@@ -420,9 +432,13 @@ test("onaya gönder: sonuç elle seçildiyse o yazılır (öneri değil), elle s
   const id = await yeniPlan();
   const r = tamam(await olustur(FA.den1, id, FA.ekp["HT-A1"]));
   tamam(await a(FA.den1, (db) => cihazEkle(db, FA.den1, r.id, 0, FA.man, FA.cihaz["MN-01"])));
+  tamam(await foto(FA.den1, r.id, 1));
   const g = girdi();
   const el = { ...g, cevaplar: { ...g.cevaplar, sonuc: "uygun", madde: { ...g.cevaplar.madde, [MADDELER[0].id]: { c: "Uygun değil" } } } };
-  assert.deepEqual(await gonder(FA.den1, r.id, 1, el), { durum: "tamam", id: r.id, bildirim: "Onaya gönderildi: Deneme, Mekanik branş yöneticisi." });
+  /* 312 (§3.8-5): "Uygun değil" maddenin açıklaması zorunlu */
+  assert.deepEqual(await gonder(FA.den1, r.id, 2, el), { durum: "eksik", eksikler: [{ bolum: LISTE, alan: `${MADDELER[0].id}.not`, ad: `${MADDELER[0].metin} · kusur açıklaması` }] });
+  el.cevaplar.madde[MADDELER[0].id] = { c: "Uygun değil", not: "Korozyon" } as never;
+  assert.deepEqual(await gonder(FA.den1, r.id, 3, el), { durum: "tamam", id: r.id, bildirim: "Onaya gönderildi: Deneme, Mekanik branş yöneticisi." });
   const s = (await sql<{ sonuc: string; oto: boolean; sonraki: string; rt: string }>(A,
     "SELECT sonuc, sonuc_oto AS oto, sonraki, rapor_tarihi AS rt FROM rapor WHERE id = $1", [r.id])).rows[0];
   assert.deepEqual([s.sonuc, s.oto, s.sonraki, s.rt], ["uygun", false, gun(364), dun], "denetçinin kararı; uyarı engel değil");
@@ -590,4 +606,51 @@ test("KİRACI + ROL: B'nin kişisi A'nın raporunda hiçbir şey yapamaz; Raporl
   const d = (await sr(FA.den1, r.id))!;
   assert.deepEqual([d.surum, d.durum], [0, "taslak"], "hiçbir şey yazılmadı");
   assert.equal((await sql(A, "SELECT 1 FROM rapor WHERE plan_id = $1", [id])).rowCount, 1);
+});
+
+/* 2026-10-05 (312; maket fotoMenu / fotoSil; 09-A1, A2, A4; pkproje §3.8-5, O2): fotoğraf yalnız yazanın Yeni raporuna, formatın fotoğraf bölümüne
+   ya da kontrol maddesine eklenir; tür baytlardan (JPEG / PNG); sayılar raporun listesinden; dosyayı yalnız raporu gören indirir; silinen çöpe. */
+test("fotoğraf: yer, tür, yetki; bölüm ve madde sayıları sunucuda; dosyayı raporu gören indirir; silinen indirilemez; gönderilmiş rapora eklenmez", async () => {
+  const id = await yeniPlan();
+  const r = tamam(await olustur(FA.den1, id, FA.ekp["HT-A1"]));
+  assert.deepEqual(await foto(FA.den1, r.id, 0), { durum: "tamam", id: r.id, bildirim: "on.jpg eklendi." });
+  assert.equal((await foto(FA.den1, r.id, 0)).durum, "cakisma", "eski sürümle eklenmez");
+  let d = (await sr(FA.den1, r.id))!;
+  assert.deepEqual(d.fotolar.map((f) => [f.ad, f.bolum, f.madde]), [["on.jpg", "foto", null]]);
+  assert.deepEqual(d.cevaplar.foto, { foto: 1 });
+  const dosya = d.fotolar[0].dosya;
+  /* yer ve tür */
+  assert.deepEqual(await foto(FA.den1, r.id, d.surum, { bolum: "yok", madde: null }), { durum: "gecersiz", hatalar: { foto: "Fotoğrafın yeri bulunamadı." } });
+  assert.deepEqual(await foto(FA.den1, r.id, d.surum, { bolum: LISTE, madde: "yok_madde" }), { durum: "gecersiz", hatalar: { foto: "Fotoğrafın yeri bulunamadı." } });
+  assert.deepEqual(await foto(FA.den1, r.id, d.surum, undefined, "x.pdf", new TextEncoder().encode("%PDF-1.4 deneme")), { durum: "gecersiz", hatalar: { foto: "Yalnız JPEG ya da PNG fotoğraf." } });
+  /* maddeye fotoğraf (O2) */
+  tamam(await foto(FA.den1, r.id, d.surum, { bolum: LISTE, madde: MADDELER[0].id }, "korozyon.jpg"));
+  d = (await sr(FA.den1, r.id))!;
+  assert.deepEqual(d.fotolar.map((f) => [f.ad, f.madde]), [["on.jpg", null], ["korozyon.jpg", MADDELER[0].id]]);
+  assert.deepEqual(d.cevaplar.foto, { foto: 1 }, "maddenin fotoğrafı bölüm sayısına girmez");
+  /* yetki: başka denetçi görmez; branş yöneticisi görür, ekleyemez; B yok */
+  assert.equal((await foto(FA.den2, r.id, d.surum)).durum, "yok");
+  assert.equal((await foto(FA.mek, r.id, d.surum)).durum, "yetkisiz");
+  assert.equal((await b(FB.den1, (db) => fotoEkle(db, depo, FB.den1, B, r.id, d.surum, { bolum: "foto", madde: null }, { ad: "x.jpg", bayt: JPEG }))).durum, "yok");
+  /* indirme: raporu gören (yazan, branş yöneticisi) evet; öteki branş ve başka denetçi hayır; başka firma hiç */
+  const indir = (k: Kisi) => a(k, (db) => dosyaIndirilebilir(db, k, dosya, DOSYA_ERISIMI));
+  assert.ok(await indir(FA.den1)); assert.ok(await indir(FA.mek));
+  assert.equal(await indir(FA.elk), null); assert.equal(await indir(FA.den2), null);
+  assert.equal(await b(FB.den1, (db) => dosyaIndirilebilir(db, FB.den1, dosya, DOSYA_ERISIMI)), null);
+  /* sil: listeden çıkar, dosya çöpe — indirilemez */
+  assert.equal((await a(FA.mek, (db) => fotoSil(db, FA.mek, r.id, d.surum, dosya))).durum, "yetkisiz");
+  assert.deepEqual(await a(FA.den1, (db) => fotoSil(db, FA.den1, r.id, d.surum, dosya)), { durum: "tamam", id: r.id, bildirim: "on.jpg silindi." });
+  d = (await sr(FA.den1, r.id))!;
+  assert.deepEqual([d.fotolar.length, d.cevaplar.foto], [1, {}]);
+  assert.equal(await indir(FA.den1), null, "çöpteki dosya indirilmez");
+  assert.ok((await sql(A, "SELECT 1 FROM dosya WHERE id = $1 AND cop IS NOT NULL", [dosya])).rowCount, "dosya silinmez, çöpe alınır");
+  /* gönderilmiş rapora fotoğraf eklenmez */
+  tamam(await foto(FA.den1, r.id, d.surum));
+  d = (await sr(FA.den1, r.id))!;
+  tamam(await a(FA.den1, (db) => cihazEkle(db, FA.den1, r.id, d.surum, FA.man, FA.cihaz["MN-01"])));
+  d = (await sr(FA.den1, r.id))!;
+  const g = girdi();
+  tamam(await gonder(FA.den1, r.id, d.surum, { ...g, cevaplar: { ...g.cevaplar, madde: { ...g.cevaplar.madde, [MADDELER[0].id]: { c: "Uygun değil", not: "Korozyon" } } } }));
+  d = (await sr(FA.den1, r.id))!;
+  assert.deepEqual(await foto(FA.den1, r.id, d.surum), { durum: "red", neden: "Rapor gönderildi; yalnız Yeni rapor düzenlenir." });
 });

@@ -3,7 +3,8 @@
    yalnız "hangi rapor, hangi sürümü gördüm" bilgisidir; yetki vermez. Cihaz / fotoğraf sayısı istemciden alınmaz. */
 import { ayniKoken } from "../../../server/kimlik/koken";
 import { istekOturumu, oturumIslemi } from "../../../server/kimlik/istek";
-import { cihazEkle, cihazKaldir, onayaGonder, raporKaydet, raporKunyeGuncelle, raporOlustur, raporSil, type RaporYazma } from "../server/raporlar";
+import { depo } from "../../../server/dosya/depo";
+import { cihazEkle, cihazKaldir, fotoEkle, fotoSil, onayaGonder, raporKaydet, raporKunyeGuncelle, raporOlustur, raporSil, type RaporYazma } from "../server/raporlar";
 
 export interface RaporYaniti {
   tamam?: boolean; id?: string; bildirim?: string; hatalar?: Record<string, string>; eksikler?: { bolum: string; alan: string; ad: string }[]; genel?: string;
@@ -44,4 +45,17 @@ export async function cihazKaldirEylemi(id: string, surum: number, turId: string
 }
 export async function raporKunyeGuncelleEylemi(id: string): Promise<RaporYaniti> {
   return islem((o) => oturumIslemi(o, (db) => raporKunyeGuncelle(db, o, metin(id))));
+}
+/** fotoğraf ekle (form: id, surum, bolum, madde?, dosya); tür, boyut ve yer sunucuda denetlenir */
+export async function fotoEkleEylemi(form: FormData): Promise<RaporYaniti> {
+  const dosya = form.get("dosya");
+  if (!(dosya instanceof File) || dosya.size === 0) return { hatalar: { foto: "Fotoğraf seçilmeli." } };
+  if (dosya.size > 8 << 20) return { hatalar: { foto: "Fotoğraf çok büyük (en çok 8 MB)." } };
+  const bayt = new Uint8Array(await dosya.arrayBuffer());
+  const madde = metin(form.get("madde"));
+  return islem((o) => oturumIslemi(o, (db) => fotoEkle(db, depo(), o, o.kiraci.firmaId, metin(form.get("id")), Number(form.get("surum")),
+    { bolum: metin(form.get("bolum")), madde: madde || null }, { ad: dosya.name, bayt })));
+}
+export async function fotoSilEylemi(id: string, surum: number, dosyaId: string): Promise<RaporYaniti> {
+  return islem((o) => oturumIslemi(o, (db) => fotoSil(db, o, metin(id), Number(surum), metin(dosyaId))));
 }

@@ -2341,6 +2341,18 @@ revizyon, alan kopyalama, hafif kusur devri, meslek eşleşme denetimi).
 - Emsal ürünler: https://opwire.app/iso-17020-periyodik-kontrol-yazilimi/ · https://17020muayene.vidco.com.tr/ · https://akuple.com/asansor-kontrol-yazilimi/ · https://ensyazilim.com/
 
 ## 11 · Değişiklik günlüğü
+- 2026-10-05 (312): **K3 Saha raporu 2: fotoğraflar** (maket fotoMenu / fotolar / fotoSil; §3.8-5 temel zorunlular; O2; AA9; 09-A1, A2, A4;
+  araştırmanın C4 ve C18 kararları). Fotoğraf rapor başına **en az 1** (reisim 2026-09-22) → hazır şablonlarda (ZPKR02, kompresör) "Fotoğraflar"
+  bölümü en az 1 (termal isteğe bağlı; ZPKR01'de fotoğraf bölümü yok — P1). Motor: fotoğraf sayısı **bölüm başına** (tek sayı termal ile
+  fotoğrafları ayıramıyordu) · "Uygun değil" maddenin **açıklaması zorunlu** (§3.8-5) · maddede fotoğraf yalnız format kuralı açıksa zorunlu (AA9,
+  başlangıçta kapalı). Sunucu: fotoğraf ekle (yalnız yazan, Yeni rapor; formatın fotoğraf bölümüne — en çok enCok — ya da kontrol maddesine — en çok
+  10; tür baytlardan JPEG / PNG, EXIF silinir, 8 MB) · sil (listeden çıkar, dosya çöpe: indirilmez, silinmez) · sayılar raporun kendi listesinden
+  (istemcinin sayısına güvenilmez) · dosya erişim kaydına "rapor": dosyayı raporu gören indirir (denetçi kendi, branş yöneticisi branşı; öteki branş,
+  başka denetçi ve başka firma göremez). Ekran: fotoğraf bölümünde ve "Uygun değil" maddede liste (küçük resim yok: ad · Görüntüle · İndir · Sil) +
+  "Fotoğraf ekle" (kamera ya da galeri; cihazda en uzun kenar 1600 px, JPEG %75 — `src/components/foto/kucult.ts`, tarayıcı çözemezse dosya olduğu
+  gibi gider, sunucu denetler); madde fotoğrafı Kusur açıklamalarında adıyla. Kilit: tests/raporlar.test.ts (+1: yer, tür, yetki, sayılar, indirme,
+  çöp, gönderilmişe eklenmez; gönderim akışları fotoğrafla), format-motor (+1), bozan +1 (sunucu sayıları kendi listesinden saymasa fotoğrafsız
+  rapor gider), e2e saha raporu fotoğraf ekler.
 - 2026-10-05 (311): **K3 Saha raporu 1: rapor oluştur, saha ekranı (format tanımından), kaydet, ölçüm cihazı, onaya gönder, sil** (maket rapor.html
   M8, planlarim.html RAP_SUTUN; KOD-GECIS §3–§6, §9 ENGEL 1, 2, 5, 6; RAPOR-FORMAT §5, §7). Kurallar, maket ve kod önce iki araştırma ajanıyla
   tarandı; çelişkiler şöyle kapandı (öneriler uygulandı): **durum kodları sabit tanımlarla aynı** (taslak "Yeni" · onayda · onaylandi · imzada ·

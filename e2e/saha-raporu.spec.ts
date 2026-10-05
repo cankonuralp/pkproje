@@ -12,6 +12,10 @@ import { E2E_HESAPLAR, E2E_PLAN, E2E_SAHA } from "./hesaplar";
 import { girisli, hazir } from "./yardimci";
 
 const UUID = "[0-9a-f]{8}-[0-9a-f]{4}-[0-9a-f]{4}-[0-9a-f]{4}-[0-9a-f]{12}";
+/* uydurma JPEG (tests/dosya.test.ts ile aynı yapı) */
+const bayt = (...p: (number[] | string)[]) => new Uint8Array(p.flatMap((x) => (typeof x === "string" ? [...Buffer.from(x, "latin1")] : x)));
+const seg = (isaret: number, govde: string) => bayt([0xff, isaret, (govde.length + 2) >> 8, (govde.length + 2) & 0xff], govde);
+const JPEG = bayt([0xff, 0xd8], [...seg(0xe0, "JFIF\0\x01\x01")], [...seg(0xdb, "\0" + "\x01".repeat(64))], [0xff, 0xda, 0, 2], "goruntu-verisi", [0xff, 0xd9]);
 const RAPOR_NO = /[A-Z]{2,4}-\d{4}-\d{3,}-[0-9a-f]{5}/;
 const BASLANGIC = "Periyodik kontrol başlangıç tarihi ve saati";
 const BITIS = "Periyodik kontrol bitiş tarihi ve saati";
@@ -107,6 +111,11 @@ test("saha raporu: rapor oluştur, eksikle gönderilmez, doldur + cihaz ekle, on
   await expect(page.getByRole("combobox", { name: "Sonuç ve kanaat" })).toContainText("Uygun");
   await page.getByRole("button", { name: "Kaydet", exact: true }).first().click();
   await expect(page.getByText("Rapor kaydedildi.").first()).toBeVisible({ timeout: 30_000 });
+
+  /* fotoğraf (312): şablonda en az 1; uydurma JPEG (tarayıcı çözemez → küçültülmeden gider, sunucu baytlardan JPEG der) */
+  await page.getByLabel("Fotoğraf ekle", { exact: true }).setInputFiles({ name: "on.jpg", mimeType: "image/jpeg", buffer: Buffer.from(JPEG) });
+  await expect(page.getByText("on.jpg eklendi.").first()).toBeVisible({ timeout: 30_000 });
+  await expect(page.getByRole("link", { name: "Görüntüle" }).first()).toHaveAttribute("href", /^\/api\/dosya\/[0-9a-f-]{36}$/);
 
   /* ölçüm cihazı: zimmetteki, kalibrasyonu geçerli cihaz */
   await page.getByRole("button", { name: "Cihaz ekle" }).first().click();

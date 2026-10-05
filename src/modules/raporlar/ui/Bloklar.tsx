@@ -8,7 +8,8 @@
    · liste: madde başına Uygun · Uygun değil · Uygulanamaz (formatın cevap seti; reisim 2026-09-26); olumsuz cevapta kusur açıklaması, formatta
      derece açıksa (AA9: başlangıçta kapalı) kusur derecesi; bölüm başlığında sayaç ve "Hepsini işaretle" (reisim 2026-09-28/29).
    · olcum: satır ekle / kaldır; satır sonucu formatın hesabından ve sütun sınırlarından; uygunluk notu formatta varsa seçilir (P2, Not-1 …).
-   · foto: bu sürümde yer tutucu (hazır şablonlarda en az 0). Her girdinin etiketi var (görünür ya da aria-label); Onaya gönder'in işaretlediği
+   · foto: bölümün fotoğrafları (FotoListesi; en az formatın enAz'ı — hazır şablonlarda 1); "Uygun değil" maddede de fotoğraf eklenir, Kusur
+     açıklamalarında adıyla görünür (O2). Her girdinin etiketi var (görünür ya da aria-label); Onaya gönder'in işaretlediği
      boş zorunlu alan aria-invalid + kırmızı çerçeve, doldurulunca kalkar (maket zorunluEksik / uyar). */
 import { useCallback, useEffect, useId, useRef, useState, type KeyboardEvent, type ReactNode } from "react";
 import { useBildir } from "../../../components/bildirim/Bildirim";
@@ -55,6 +56,8 @@ export interface Baglam {
   kaynak: (k: Kaynak) => string | null;
   /** formatın cihaz bölümü (CihazBolumu; SahaRaporu verir — döngüsel içe aktarma olmasın) */
   cihaz: (bolumId: string) => ReactNode;
+  /** fotoğraf listesi: bölümün (madde null) ya da "Uygun değil" maddenin (FotoListesi; SahaRaporu verir) */
+  foto: (bolumId: string, madde: string | null) => ReactNode;
 }
 
 /* ── ORTAK PARÇALAR ──────────────────────────────────────────────────────────────────────────────────────────── */
@@ -185,8 +188,7 @@ function BlokIcerik({ b, no, bag }: { b: Bolum; no: number; bag: Baglam }) {
     case "olcum": return <OlcumBlok b={b} bag={bag} />;
     case "test": return <TestBlok b={b} bag={bag} />;
     case "cihaz": return <>{bag.cihaz(b.id)}</>;
-    /* fotoğraf yükleme sonraki kalemde (hazır şablonlarda en az 0 — Onaya gönder'i durdurmaz) */
-    case "foto": return <p className={stil.bosSatir} id={alanId(b.id)} tabIndex={-1}>Fotoğraf ekleme bir sonraki sürümle gelecek.</p>;
+    case "foto": return <>{bag.foto(b.id, null)}</>;
     case "kusur": return <KusurBlok bag={bag} />;
     case "sonuc": return <SonucBlok b={b} bag={bag} />;
     case "not": return <NotBlok b={b} bag={bag} />;
@@ -289,6 +291,12 @@ function Madde({ m, numara, b, bag }: { m: BolumOf<"liste">["gruplar"][number]["
             <label className={stil.etiket} htmlFor={notId}>Kusur açıklaması</label>
             <textarea id={notId} className={stil.metinAlan} maxLength={1000} value={x?.not ?? ""} readOnly={bag.oku} onChange={(e) => yaz({ not: e.target.value })} />
           </div>
+          {(bag.v.tanim.kurallar.foto || bag.v.fotolar.some((f) => f.madde === m.id) || !bag.oku) && (
+            <div>
+              <p className={stil.etiket}>Fotoğraf{bag.v.tanim.kurallar.foto ? "" : " (isteğe bağlı)"}</p>
+              {bag.foto(b.id, m.id)}
+            </div>
+          )}
           {derece && (
             <div>
               <label className={stil.etiket} htmlFor={dereceId}>Kusur derecesi</label>
@@ -423,7 +431,10 @@ function TestBlok({ b, bag }: { b: BolumOf<"test">; bag: Baglam }) {
 function KusurBlok({ bag }: { bag: Baglam }) {
   const l = bag.d.kusurlar;
   if (!l.length) return <p className={stil.bosSatir}>Kusur yok.</p>;
-  return <ol className={stil.kusurListe}>{l.map((k, i) => <li key={`${k.ref}-${i}`}>{k.agir ? "** " : ""}{k.metin}</li>)}</ol>;
+  return <ol className={stil.kusurListe}>{l.map((k, i) => {
+    const f = bag.v.fotolar.filter((x) => x.madde === k.ref).map((x) => x.ad);
+    return <li key={`${k.ref}-${i}`}>{k.agir ? "** " : ""}{k.metin}{f.length > 0 && <span className={stil.altMetin}> (Fotoğraf: {f.join(", ")})</span>}</li>;
+  })}</ol>;
 }
 
 function SonucBlok({ b, bag }: { b: BolumOf<"sonuc">; bag: Baglam }) {

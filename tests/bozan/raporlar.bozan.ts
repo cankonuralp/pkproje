@@ -135,3 +135,27 @@ test("sunucuda kalibrasyon denetimi kalkınca kalibrasyonu geçmiş cihaz rapora
     assert.deepEqual(l.map((x) => x.cihaz), [cihaz]);
   } finally { await h.end(); }
 });
+
+/* 2026-10-05 (312): sunucu fotoğraf ve cihaz sayısını raporun KENDİ listesinden saymasaydı, istemcinin yazdığı sayı (foto: { foto: 1 }, cihaz: 1) ile
+   fotoğrafsız ve cihazsız rapor onaya giderdi (ENGEL 5: fotoğraf en az 1; format cihaz bölümü). */
+test("sunucu fotoğraf / cihaz sayısını kendi listesinden saymayınca istemcinin sayısıyla fotoğrafsız, cihazsız rapor onaya gider", async () => {
+  const m = await bozukModul<Raporlar>(RAPORLAR,
+    "  return { ...c, cihaz: r.cihazlar.length, foto: bolum, madde: Object.fromEntries(Object.entries(c.madde).map(([k, x]) => [k, { ...x, foto: madde[k] ?? 0 }])) };",
+    "  void bolum; void madde; return c;");
+  const { h, den, id, ekipman, is } = await saglam(bugunTr());
+  try {
+    const r = await is(den, (db) => m.raporOlustur(db, den, id, ekipman));
+    assert.ok(r.durum === "tamam", JSON.stringify(r));
+    const s = await is(den, (db) => m.sahaRaporu(db, den, r.id));
+    const maddeler = Object.fromEntries(Object.keys(s!.cevaplar.madde).map((k) => [k, { c: "Uygun" }]));
+    const dun = gun(-1);
+    const girdi = {
+      ekipman: { marka: "Deneme", model: "K-1", seri: "S-1", imal: "2015", konum: "Kazan dairesi", amac: null, bolum: null },
+      tarih: { bas: `${dun}T09:00`, bit: `${dun}T10:00`, sonraki: null, takip: null, rapor: null },
+      cevaplar: { alan: { marka: "Deneme K-1", imal: "2015", calisma: "10" }, madde: maddeler, deger: { hidro: "17", ventil: "10" }, sonuc: "uygun", yorum: "",
+        foto: { foto: 1 }, cihaz: 1 },
+    };
+    const g = await is(den, (db) => m.onayaGonder(db, den, r.id, 0, girdi));
+    assert.equal(g.durum, "tamam", `fotoğrafsız, cihazsız rapor gönderildi: ${JSON.stringify(g)}`);
+  } finally { await h.end(); }
+});
