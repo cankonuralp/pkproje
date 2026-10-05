@@ -1,7 +1,8 @@
 /* OLUMSUZ KANIT — tests/belge.test.ts neyi koruyor (315). Kaynak diskte DEĞİŞTİRİLMEZ (anayasa 13.11): çizici bellekte bozulur, geçici klasörden
    içe aktarılır (göreli içe aktarmalar ve react paketi mutlak adrese çevrilir).
    1. Sonuç cümlesi seçilen sonuca bağlanmasaydı belgede "uygundur / uygun değildir" ikisi birden yazardı (§3.8-2).
-   2. Kusur listesi motordan alınmasaydı "Uygun değil" madde kusur açıklamalarına düşmezdi. */
+   2. Kusur listesi motordan alınmasaydı "Uygun değil" madde kusur açıklamalarına düşmezdi.
+   3. (316) PDF'in HTML yazıcısı metni kaçırmasaydı kullanıcının yazdığı etiket PDF sayfasında çalışırdı. */
 import assert from "node:assert/strict";
 import { mkdtempSync, readFileSync, rmSync, writeFileSync } from "node:fs";
 import { tmpdir } from "node:os";
@@ -18,11 +19,11 @@ const klasor = mkdtempSync(join(tmpdir(), "belge-bozan-"));
 after(() => rmSync(klasor, { recursive: true, force: true }));
 let sira = 0;
 type Modul = typeof import("../../src/belge/belge.ts");
-async function bozuk(eski: string, yeni: string): Promise<Modul> {
-  const metin = readFileSync(KAYNAK, "utf8");
+async function bozuk(eski: string, yeni: string, kaynak = KAYNAK): Promise<Modul> {
+  const metin = readFileSync(kaynak, "utf8");
   assert.ok(metin.includes(eski), `bozulacak satır kaynakta yok: ${eski}`);
   /* göreli içe aktarmalar ve paket (react) mutlak adrese: geçici klasörde de çözülsün */
-  const cevrilmis = metin.replace(eski, yeni).replace(/from "(\.{1,2}\/[^"]+)"/g, (_t, yol: string) => `from "${pathToFileURL(resolve(dirname(KAYNAK), yol)).href}"`)
+  const cevrilmis = metin.replace(eski, yeni).replace(/from "(\.{1,2}\/[^"]+)"/g, (_t, yol: string) => `from "${pathToFileURL(resolve(dirname(kaynak), yol)).href}"`)
     .replace(/from "react"/g, `from "${import.meta.resolve("react")}"`);
   const hedef = join(klasor, `belge-${sira++}.ts`);
   writeFileSync(hedef, cevrilmis);
@@ -49,4 +50,10 @@ test("sonuç cümlesi seçilen sonuca bağlanmayınca belgede iki seçenek birde
 test("kusur listesi motordan alınmayınca Uygun değil madde kusur açıklamalarına düşmez", async () => {
   const m = await bozuk("case \"kusur\": return d.kusurlar.length", "case \"kusur\": return [].length");
   assert.ok(!metin(m).includes("Korozyon var"));
+});
+
+test("HTML yazıcı metni kaçırmayınca kullanıcının yazdığı etiket PDF sayfasına ham girer", async () => {
+  const m = (await bozuk(`return kac(String(n));`, `return String(n);`, "src/belge/html.ts")) as unknown as typeof import("../../src/belge/html.ts");
+  const { createElement } = await import("react");
+  assert.equal(m.htmlYaz(createElement("td", null, "<img src=x onerror=alert(1)>")), "<td><img src=x onerror=alert(1)></td>");
 });

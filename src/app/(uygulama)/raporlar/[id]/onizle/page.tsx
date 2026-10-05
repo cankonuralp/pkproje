@@ -7,7 +7,8 @@ import { notFound } from "next/navigation";
 import { raporBelgesi } from "../../../../../belge/belge";
 import { Yetkisiz } from "../../../../../components/hata/Hata";
 import { Kirinti, NesneBasi } from "../../../../../components/sayfa/Sayfa";
-import { TusBaglanti } from "../../../../../components/tus/Tus";
+import { Ikon } from "../../../../../components/ikon/Ikon";
+import { TusBaglanti, tusSinifi } from "../../../../../components/tus/Tus";
 import { modulBul } from "../../../../../modules/moduller";
 import { raporBelgesiVerisi } from "../../../../../modules/raporlar/server/raporlar";
 import { depo } from "../../../../../server/dosya/depo";
@@ -26,7 +27,11 @@ export default async function Sayfa({ params }: { params: Promise<{ id: string }
     <>
       <Kirinti ogeler={[["Planlar", "/planlar"], [v.plan.no, `/planlar/${v.plan.id}`], [v.no, `/raporlar/${v.id}`], ["Ön izleme"]]} />
       <NesneBasi baslik={`${v.no} · ön izleme`} altIkon="file-text" alt="Kesin PDF bu belgeyle aynı çiziciden üretilir."
-        tuslar={<TusBaglanti ikon="arrow-left" href={`/raporlar/${v.id}`}>Rapora dön</TusBaglanti>} />
+        tuslar={<>
+          <TusBaglanti ikon="arrow-left" href={`/raporlar/${v.id}`}>Rapora dön</TusBaglanti>
+          {/* PDF indir (reisim 2026-09-28: "ön izle halinde PDF halini indirebilmeliyim"): imzasız, kesin PDF motoruyla; düz bağlantı (indirme) */}
+          <a className={tusSinifi("birincil")} href={`/raporlar/${v.id}/pdf`} download><Ikon ad="download" kucuk />PDF indir</a>
+        </>} />
       <div className="rb-onizleme">{raporBelgesi(v.belge)}</div>
     </>
   );

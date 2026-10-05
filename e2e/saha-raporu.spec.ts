@@ -11,6 +11,7 @@
    (başlık "<kod> · Hava tankı", kaynak şeridi). Kod her koşu ve genişlikte ayrı (firmada eşsiz).
    314 Onaylar: mekanik yönetici kuyruktan raporu açar → kısa gerekçeyle geri gönderilmez → gerekçeyle geri gönderir → denetçi rapor ekranında
    "Geri gönderildi" şeridini görür, yeniden gönderir → yönetici onaylar → Tüm raporlar'da "Muayene uzmanı imzası". */
+import { readFileSync } from "node:fs";
 import { expect, test, type Locator, type Page } from "@playwright/test";
 import { E2E_HESAPLAR, E2E_PLAN, E2E_SAHA } from "./hesaplar";
 import { girisli, hazir } from "./yardimci";
@@ -62,7 +63,7 @@ async function zamanYaz(page: Page, ad: string, gun: string, saat: string, dakik
 }
 
 test("saha raporu: rapor oluştur, eksikle gönderilmez, doldur + cihaz ekle, onaya gönder; planda durumuyla listelenir", async ({ page, context }) => {
-  test.setTimeout(240_000);   // ilk koşuda saha rapor ekranı soğuk derlenebilir; akış onaya kadar uzun
+  test.setTimeout(300_000);   // ilk koşuda saha rapor ekranı soğuk derlenebilir; akış onaya kadar uzun
   await girisli(page, "yonetici");
   const adres = await planAc(page);
   const planNo = (await page.getByRole("navigation", { name: "Konum" }).textContent())!.match(/P-\d{4}-\d{3,6}/)![0];
@@ -140,6 +141,10 @@ test("saha raporu: rapor oluştur, eksikle gönderilmez, doldur + cihaz ekle, on
   await expect(belge).toContainText("Hidrostatik deney basıncı");
   await expect(belge).toContainText(E2E_SAHA.cihaz);
   await expect(belge.getByRole("img", { name: "on.jpg" })).toBeVisible();
+  /* 316 PDF indir: imzasız, kesin PDF motoruyla (başsız Chromium) */
+  const [indirme] = await Promise.all([page.waitForEvent("download", { timeout: 60_000 }), page.getByRole("link", { name: "PDF indir" }).click()]);
+  expect(indirme.suggestedFilename()).toBe(`${raporNo}-imzasiz.pdf`);
+  expect(readFileSync((await indirme.path())!).subarray(0, 5).toString("latin1")).toBe("%PDF-");
   await page.getByRole("link", { name: "Rapora dön" }).click();
   await expect(page).toHaveURL(new RegExp(`${raporAdresi}$`), { timeout: 30_000 });
   await hazir(page);

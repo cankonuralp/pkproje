@@ -5,7 +5,9 @@
 import assert from "node:assert/strict";
 import { test } from "node:test";
 import { renderToStaticMarkup } from "react-dom/server";
+import { createElement } from "react";
 import { raporBelgesi } from "../src/belge/belge.ts";
+import { htmlYaz } from "../src/belge/html.ts";
 import type { BelgeVerisi } from "../src/belge/veri.ts";
 import { SABLONLAR } from "../src/format/sablonlar.ts";
 import { Cevaplar } from "../src/format/tanim.ts";
@@ -103,4 +105,19 @@ test("belge: Bakanlık şablonları (ZPKR01, ZPKR02) boş raporla çizilir — f
     for (const b of t.bolumler.filter((x) => x.blok !== "bilgi")) assert.ok(m.includes(b.ad), `${k}: ${b.ad}`);
     if (k === "ZPKR01") assert.ok(m.includes("Not-1: Uygun."), "uygunluk notları");
   }
+});
+
+/* 2026-10-05 (316): kesin PDF için belge ağacı kendi yazıcımızla HTML'e çevrilir (Next'in sunucu katmanında react-dom/server yok) — React'in
+   çıktısıyla BİREBİR aynı olmalı (önizleme = PDF), kaçış dahil */
+test("HTML yazıcı: üç şablonda ve kaçış isteyen değerlerle React'in çıktısıyla birebir aynı; bilinmeyen bileşen, olay özniteliği ve ham HTML reddedilir", () => {
+  const kotu = `A&B <script>x</script> "q" 'y'`;
+  for (const k of ["ZPKR01", "ZPKR02", "KOMPRESOR"] as const) {
+    const v = veri({ tanim: SABLONLAR[k].tanim, kunye: { firmaAdi: kotu, adres: kotu, sgk: null, isgNo: kotu }, firma: { ad: kotu, kod: "DA", nusha: 3 } });
+    assert.equal(htmlYaz(raporBelgesi(v)), renderToStaticMarkup(raporBelgesi(v) as never), k);
+  }
+  const Bilesen = () => null;
+  assert.throws(() => htmlYaz(createElement(Bilesen)), /yalnız düz etiket/);
+  assert.throws(() => htmlYaz(createElement("img", { onError: "x" })), /izin verilmeyen/);
+  assert.throws(() => htmlYaz(createElement("div", { dangerouslySetInnerHTML: { __html: "<b>" } })), /izin verilmeyen/);
+  assert.equal(htmlYaz(createElement("td", { colSpan: 3, className: "a" }, "<b>")), '<td colSpan="3" class="a">&lt;b&gt;</td>');
 });

@@ -79,7 +79,9 @@ export function raporBelgesi(v: BelgeVerisi): ReactNode {
     const s = Array.isArray(x) ? x.join(", ") : x;
     return s && s.trim() ? `${s}${a.birim ? ` ${a.birim}` : ""}` : "-";
   };
-  const bilgi = (b: BolumOf<"bilgi">) => bilgiTablosu(b.alanlar.map((a) => [a.ad, alanDegeri(a), a.tur === "coklu" || (a.secenekler?.length ?? 0) > 3] as const));
+  /* katılan ekipman bölümünde kayıttan gelen alanlar (kod, seri, kullanım yeri …) sabit satırlarda zaten var — tekrar edilmez */
+  const bilgi = (b: BolumOf<"bilgi">, kaynaksiz = false) => bilgiTablosu(b.alanlar.filter((a) => !(kaynaksiz && a.kaynak))
+    .map((a) => [a.ad, alanDegeri(a), a.tur === "coklu" || (a.secenekler?.length ?? 0) > 3] as const));
   const cihazTablosu = () => h("table", null, baslikSatiri("Cihaz", "Kod / seri no", "Kalibrasyon tarihi", "Geçerlilik", "Sertifika no"),
     h("tbody", null, ...(v.cihazlar.length ? v.cihazlar.map((x, i) => h("tr", { key: i },
       h("td", null, `${x.turAd}${x.marka || x.model ? ` · ${[x.marka, x.model].filter(Boolean).join(" ")}` : ""}`), h("td", null, `${x.kod}${x.seri ? ` / ${x.seri}` : ""}`),
@@ -173,7 +175,7 @@ export function raporBelgesi(v: BelgeVerisi): ReactNode {
       ["Bir sonraki periyodik kontrol tarihi", tarihNo(v.tarih.sonraki)], ["Takip kontrol tarihi", tarihNo(v.tarih.takip)],
       ["Periyodik kontrol metodu ve kapsamı", metot.length ? metot.join(" · ") : "-", true],
     ])),
-    bolum(yeniNo(), "Ekipman bilgileri", bilgiTablosu(ekipman), ...katilan.map((b) => h(Fragment, { key: b.id }, bilgi(b)))),
+    bolum(yeniNo(), "Ekipman bilgileri", bilgiTablosu(ekipman), ...katilan.map((b) => h(Fragment, { key: b.id }, bilgi(b, true)))),
     cihazEk ? bolum(yeniNo(), "Ölçüm cihazları", cihazTablosu()) : null,
     ...bolumler.map((b) => bolum(yeniNo(), b.ad, formatBolumu(b))),
     imzaVar ? null : bolum(yeniNo(), "Yetkili kişi", imza()),

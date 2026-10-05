@@ -2341,6 +2341,18 @@ revizyon, alan kopyalama, hafif kusur devri, meslek eşleşme denetimi).
 - Emsal ürünler: https://opwire.app/iso-17020-periyodik-kontrol-yazilimi/ · https://17020muayene.vidco.com.tr/ · https://akuple.com/asansor-kontrol-yazilimi/ · https://ensyazilim.com/
 
 ## 11 · Değişiklik günlüğü
+- 2026-10-05 (316): **K3 Kesin PDF motoru: başsız Chromium, "PDF indir"** (KOD-GECIS: HTML'den PDF'e başsız Chromium; araştırma: "önce
+  Chromium ölçümü"; reisim 2026-09-28: "ön izle halinde PDF halini indirebilmeliyim"). `src/belge/pdf.ts`: önizlemeyle AYNI çizici ve CSS, A4,
+  arka plan renkleriyle; yazı tipi (Carlito) ve fotoğraflar veri adresi olarak gömülü, sayfa dışarıya gitmez (ağ istekleri kesilir); her çağrı
+  kendi tarayıcısını açıp kapatır. Next'in sunucu katmanında react-dom/server olmadığından belge ağacı kendi HTML yazıcımızla (`html.ts`) yazılır —
+  React'in çıktısıyla BİREBİR aynı (üç şablonda, kaçış isteyen değerlerle test kilidi); bilinmeyen bileşen, olay özniteliği ve ham HTML reddedilir.
+  Chromium: CI ve geliştirmede Playwright'ın Chromium'u (CI'da artık testten önce kurulur), Vercel'de @sparticuz/chromium 153 (playwright-core
+  1.63 ile aynı Chromium sürümü; next.config: derlemeye katılmaz, yalnız PDF basan uçların izine eklenir). Ön izleme sayfasında **PDF indir**
+  (/raporlar/<id>/pdf, imzasız; raporu görene, öteki 404). Vercel ölçümü için yalnız önizleme dağıtımında açık uç (/api/olcum/pdf, uydurma
+  belge; yayında 404). Yerel ölçüm (Edge 140, Windows): ZPKR01 70 KB / 3,3 sn (soğuk), ZPKR02 75 KB / 1,5 sn, kompresör 55 KB / 0,9 sn.
+  Ertelenen: her sayfada tekrar eden başlık tablosu (şimdi yalnız ilk sayfada) ve sayfa numarası — imza kalemiyle. Kilit: tests/pdf.test.ts
+  (gerçek Chromium: üç şablonda A4 PDF, Carlito gömülü, betik / dış adres yok), belge.test +1 (HTML yazıcı = React), bozan +1 (yazıcı kaçışı),
+  e2e Ön izle'de PDF indir (dosya adı, %PDF-).
 - 2026-10-05 (315): **K3 Rapor belgesi: formatın tanımından tek çizici, Ön izle ve onay ekranında önizleme** (maket maket-belge.js MB.belge /
   resmiBas; pkproje §4.2, §8.3; RAPOR-FORMAT §1 "Görünüm", §9-2; karar 105; reisim 2026-09-28: "en sağ üstte ön izleme tuşu"). `src/belge/`: saf
   çizici (belge.ts — React createElement, kaçışlı; aynı veri → aynı belge, kesin PDF de bundan üretilecek) + A4 Bakanlık görünümü (belge.css:

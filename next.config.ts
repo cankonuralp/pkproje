@@ -15,6 +15,11 @@ const ortak: NextConfig = {
   /* sunucu eylemiyle dosya yükleme (rapor formatı PDF'i en çok 25 MB — src/server/dosya/tur.ts SINIR); varsayılan 1 MB */
   experimental: { serverActions: { bodySizeLimit: "26mb" } },
   env: { NEXT_PUBLIC_IKON_ADRESI: `/${IKON_DOSYASI}?v=${ikonOzeti}` },
+  /* PDF motoru (src/belge/pdf.ts, 316): Chromium paketleri derlemeye katılmaz (düğüm modülü olarak yüklenir); belge CSS'i, yazı tipi ve sunucusuz
+     Chromium ikilisi yalnız PDF basan uçların izine eklenir */
+  serverExternalPackages: ["playwright-core", "@sparticuz/chromium"],
+  outputFileTracingIncludes: Object.fromEntries([String.raw`/raporlar/\[id\]/pdf`, "/api/olcum/pdf"].map((u) =>
+    [u, ["./src/belge/belge.css", "./src/belge/carlito-5.3.0/*", "./node_modules/@sparticuz/chromium/bin/**"]])),
 };
 
 const ayar: NextConfig = { ...ortak, output: "standalone" };
