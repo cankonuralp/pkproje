@@ -70,7 +70,7 @@ export function PlanIciEkrani({ v }: { v: PlanIci }) {
   const eylem: ReactNode = d === "bekliyor" && v.izin.kabulRed ? <>
     <Tus tur="ikincil" disabled={bekliyor} onClick={() => setRed({ gerekce: "", hata: null })}>Reddet</Tus>
     <Tus ikon="check" disabled={!beyanOk || bekliyor} aria-describedby={beyanOk ? undefined : sebepId}
-      onClick={() => calistir(() => planKabulEylemi(k.id, v.surum, beyanOk))}>Kabul et</Tus>
+      onClick={() => calistir(() => planKabulEylemi(k.id, v.surum, beyanOk, v.beyanOzet))}>Kabul et</Tus>
   </> : d === "denetimde" && v.izin.kontrol ? (kt
     ? <Tus ikon="circle-check" disabled={bekliyor} onClick={() => calistir(() => planTamamlaEylemi(k.id, v.surum))}>Tamamla</Tus>
     : <Tus ikon="list-checks" disabled={bekliyor} onClick={() => calistir(() => kontrolListesiEylemi(k.id, v.surum, true))}>Tamamla</Tus>)
@@ -87,7 +87,8 @@ export function PlanIciEkrani({ v }: { v: PlanIci }) {
     if (r.tamam) { setDuzenle(null); setKunyeHata({}); bildir(r.bildirim ?? "Kaydedildi."); router.refresh(); return; }
     setKunyeHata(r.hatalar ?? {}); if (r.genel) setGenel(r.genel);
   });
-  const kunyeFormu = duzenle && (
+  const g = v.kunyeGuncel;   /* yetki kalkarsa (ör. plan reddedildi) form çizilmez */
+  const kunyeFormu = duzenle && g && (
     <div className={stil.kunyeForm} role="group" aria-label="Plan bilgilerini düzenle">
       <FormIzgara>
         <Alan id={ID.firma} etiket="Firma adı" zorunlu genis hata={kunyeHata.firmaAdi}>
@@ -99,7 +100,7 @@ export function PlanIciEkrani({ v }: { v: PlanIci }) {
         <Alan id={ID.sgk} etiket="SGK DETSİS NO" hata={kunyeHata.sgk}>
           <Girdi id={ID.sgk} value={duzenle.sgk} inputMode="numeric" maxLength={32} hata={!!kunyeHata.sgk} onChange={(e) => setDuzenle({ ...duzenle, sgk: e.target.value })} />
         </Alan>
-        {v.kunyeGuncel!.isg.map((x) => {
+        {g.isg.map((x) => {
           const id = `kunye-isg-${x.personelId}`, h = kunyeHata[`isg.${x.personelId}`];
           return (
             <Alan key={x.personelId} id={id} etiket={`İSG-KATİP SÖZLEŞME ID · ${x.ad}`} hata={h}>
@@ -119,8 +120,8 @@ export function PlanIciEkrani({ v }: { v: PlanIci }) {
       {v.kunyeGuncel && !duzenle && (
         <div className={stil.kunyeBas}>
           <Tus tur="ikincil" ikon="pencil" onClick={() => {
-            const g = v.kunyeGuncel!;
-            setDuzenle({ firmaAdi: g.firmaAdi, adres: g.adres ?? "", sgk: g.sgk ?? "", isg: Object.fromEntries(g.isg.map((x) => [x.personelId, x.no ?? ""])) });
+            const gk = v.kunyeGuncel!;
+            setDuzenle({ firmaAdi: gk.firmaAdi, adres: gk.adres ?? "", sgk: gk.sgk ?? "", isg: Object.fromEntries(gk.isg.map((x) => [x.personelId, x.no ?? ""])) });
           }}>Düzenle</Tus>
         </div>
       )}

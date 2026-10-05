@@ -8,6 +8,7 @@
      Pasife al / etkinleştir: özel eylem ekipman_pasif + plan görülüyor; silme yok.
    · Durum geçişleri ve zaman damgaları veritabanında (göç 0024); burada yalnız izinli geçiş istenir. İstemciden gelen sürüm yalnız "hangi
      sürümü gördüm" bilgisidir (iyimser kilit); yetki vermez. */
+import { createHash } from "node:crypto";
 import type { Sorgulayici } from "../../../server/db/kiraci.ts";
 import { ekle, guncelle, tablo, type GuncelleSonucu, type Iz } from "../../../server/db/yazici.ts";
 import { ayarOku } from "../../../server/ayar/ayar.ts";
@@ -61,6 +62,16 @@ async function erisim(db: Sorgulayici, kim: Kisi, id: string): Promise<Erisim | 
   const benim = ekip.find((e) => hesaplar.get(e.personel_id)?.id === kim.id);
   return { p, ekip, atananlar, uye: !!benim, yazar: duzey(kim, MODUL) === "yaz", benim };
 }
+
+/** künye yazmaları planın satırında sıraya girer (Düzenle ile Güncelle aynı anda koşunca denetçinin gördüğü künye kaybolmasın) */
+async function kilitliErisim(db: Sorgulayici, kim: Kisi, id: string): Promise<Erisim | null> {
+  if (!(await erisim(db, kim, id))) return null;
+  await db.sorgu("SELECT 1 FROM plan WHERE id = $1 FOR UPDATE", [id]);
+  await db.sorgu("SELECT 1 FROM plan_ekip WHERE plan_id = $1 FOR UPDATE", [id]);
+  return erisim(db, kim, id);
+}
+/** beyan metninin özeti: denetçinin okuduğu metinle kabulde yazılan metin aynı olmalı */
+export const beyanOzeti = (metin: string) => createHash("sha256").update(metin, "utf8").digest("hex").slice(0, 16);
 
 const sonuc = (r: GuncelleSonucu, bildirim: string): PlanYazma =>
   r.durum === "tamam" || r.durum === "degisiklik_yok" ? { durum: "tamam", bildirim } : r.durum === "cakisma" ? { durum: "cakisma" } : { durum: "yok" };
@@ -127,8 +138,8 @@ export interface PlanIci {
   kabul: { zaman: string; kim: string; beyan: string } | null;
   red: { zaman: string; kim: string; gerekce: string } | null;
   basladi: string | null; kontrolTamam: string | null; bitti: string | null;
-  /** Kabul bekleyen planda okunacak beyan (firma ayarı) */
-  beyan: string;
+  /** Kabul bekleyen planda okunacak beyan (firma ayarı) ve özeti (Kabul et bunu geri yollar) */
+  beyan: string; beyanOzet: string;
   /** kişinin gördüğü künye; denetçi Güncelle'ye basmadıysa eski künye */
   kunye: { firmaAdi: string; adres: string | null; sgk: string | null; isg: { personelId: string; ad: string; no: string | null }[] };
   /** denetçinin gördüğü künye ile güncel künye arasındaki fark (alan adları) */
@@ -188,12 +199,13 @@ export async function planIci(db: Sorgulayici, kim: Kisi, id: string): Promise<P
     "SELECT id::text, metin, yazan, olustu FROM plan_not WHERE plan_id = $1 ORDER BY olustu DESC, id", [id])).rows
     .map((n) => ({ id: n.id, metin: n.metin, yazan: n.yazan, zaman: n.olustu.toISOString() })) : null;
   const iso = (d: Date | null) => d?.toISOString() ?? null;
+  const beyan = p.beyan ?? (await ayarOku(db, "beyan")).deger.metin;
   return {
     kart, surum: p.surum, durum: p.durum, bugun: bugunTr(),
     kabul: p.kabul && p.kabul_eden && p.beyan ? { zaman: p.kabul.toISOString(), kim: p.kabul_eden, beyan: p.beyan } : null,
     red: p.red && p.red_eden && p.red_gerekce ? { zaman: p.red.toISOString(), kim: p.red_eden, gerekce: p.red_gerekce } : null,
     basladi: iso(p.basladi), kontrolTamam: iso(p.kontrol_tamam), bitti: iso(p.bitti),
-    beyan: p.beyan ?? (await ayarOku(db, "beyan")).deger.metin,
+    beyan, beyanOzet: beyanOzeti(beyan),
     kunye, kunyeFark: e.benim && benimKunye ? kunyeFarki(benimKunye, guncel(e.benim)) : [],
     kunyeGuncel: izin.kunyeDuzenle ? { firmaAdi: p.firma_adi, adres: p.adres, sgk: p.sgk, isg: isgListesi(false) } : null,
     teklif: [...teklif.values()].sort((a, b) => (a.brans === b.brans ? a.ad.localeCompare(b.ad, "tr") : a.brans === "m" ? -1 : 1)),
@@ -203,14 +215,16 @@ export async function planIci(db: Sorgulayici, kim: Kisi, id: string): Promise<P
 }
 
 /* ── AKIŞ ─────────────────────────────────────────────────────────────────────────────────────────────────────── */
-/** Kabul et: beyan okunup onaylanmış olmalı; kabul anındaki firma beyanı plana yazılır */
-export async function planKabul(db: Sorgulayici, kim: Kisi, id: string, surum: number, beyanOnay: boolean): Promise<PlanYazma> {
+/** Kabul et: beyan okunup onaylanmış olmalı; kabul anındaki firma beyanı plana yazılır. beyanOzet verilirse (ekran verir) okunan metin
+    kabulde yazılacak metinle aynı olmalı — arada firma metni değiştiyse kabul edilmez, yeniden okutulur. */
+export async function planKabul(db: Sorgulayici, kim: Kisi, id: string, surum: number, beyanOnay: boolean, beyanOzet?: string): Promise<PlanYazma> {
   const e = await erisim(db, kim, id);
   if (!e) return { durum: "yok" };
   if (!canDoEylem(kim, "plan_kabul_red", { atananlar: e.atananlar })) return { durum: "yetkisiz" };
   if (e.p.durum !== "bekliyor") return { durum: "red", neden: "Plan kabul bekliyor durumunda değil." };
   if (beyanOnay !== true) return { durum: "gecersiz", hatalar: { beyan: "Tarafsızlık beyanı okunup onaylanmadan plan kabul edilemez." } };
   const beyan = (await ayarOku(db, "beyan")).deger.metin;
+  if (beyanOzet !== undefined && beyanOzet !== beyanOzeti(beyan)) return { durum: "red", neden: "Tarafsızlık beyanının metni değişti; sayfayı yenileyip yeni metni okuyun." };
   return sonuc(await guncelle(db, PLAN, id, surum, { durum: "kabul", beyan, kabul_eden: kim.ad }, iz(kim, "plan.kabul", e.p, "tarafsızlık beyanı onaylandı")), "Plan kabul edildi.");
 }
 
@@ -270,7 +284,7 @@ export async function tamamlamaGeriAl(db: Sorgulayici, kim: Kisi, id: string, su
 /* ── KÜNYE ────────────────────────────────────────────────────────────────────────────────────────────────────── */
 /** planlamacı Düzenle: firma adı, adres, SGK, denetçi başına İSG-KATİP ID. Denetçinin gördüğü künye korunur (Güncelle'ye kadar). */
 export async function kunyeDuzenle(db: Sorgulayici, kim: Kisi, id: string, surum: number, girdi: unknown): Promise<PlanYazma> {
-  const e = await erisim(db, kim, id);
+  const e = await kilitliErisim(db, kim, id);
   if (!e) return { durum: "yok" };
   if (!izinler(kim, e).kunyeDuzenle) return { durum: "yetkisiz" };
   const g = dogrula(KunyeGirdisi, girdi);
@@ -296,7 +310,7 @@ export async function kunyeDuzenle(db: Sorgulayici, kim: Kisi, id: string, surum
 
 /** denetçi Güncelle: güncel künye kendi plan ekranına geçer (taslak raporlara geçişi Raporlar kalemi ekler) */
 export async function kunyeGuncelle(db: Sorgulayici, kim: Kisi, id: string): Promise<PlanYazma> {
-  const e = await erisim(db, kim, id);
+  const e = await kilitliErisim(db, kim, id);
   if (!e) return { durum: "yok" };
   if (!e.benim) return { durum: "yetkisiz" };
   if (!izinler(kim, e).kunyeGuncelle) return { durum: "tamam", bildirim: "Plan bilgileri zaten güncel." };

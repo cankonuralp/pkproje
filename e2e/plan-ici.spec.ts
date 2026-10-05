@@ -1,7 +1,7 @@
 /* NEREDEN GELDİ: 310 Planlar listesi + plan içi (maket planlarim.html 4.–5. tur; pkproje §3.4). Gerçek tarayıcıda, üç genişlikte: yönetici plan açar
    → listede görür → denetçi listesinde yalnız kendi planı → plan içinde Kabul et beyan okunmadan kapalı, okununca kabul (telefonda tuş altta yapışkan
    çubukta) → Ekipman ekle: kod yazarken denetlenir (bu planda var / kullanılabilir), yeni ekipman "Yeni" rozetiyle listede → pasife al / etkinleştir →
-   proje notu → yönetici künyeyi düzenler → denetçinin ekranı Güncelle'ye kadar eski künyeyle, Güncelle'yle yenisi. */
+   proje notu → yönetici künyeyi düzenler (ayrı tohum tesisinde: eklenen ekipman planlar.spec'in sayısını bozmaz) → denetçinin ekranı Güncelle'ye kadar eski künyeyle, Güncelle'yle yenisi. */
 import { expect, test, type Page } from "@playwright/test";
 import { E2E_HESAPLAR, E2E_PLAN } from "./hesaplar";
 import { girisli, hazir } from "./yardimci";
@@ -12,7 +12,7 @@ async function planAc(page: Page) {
   await page.getByRole("combobox", { name: "Müşteri" }).click();
   await page.getByRole("option", { name: /Plan Deneme/ }).click();
   await page.getByRole("combobox", { name: "Tesis" }).click();
-  await page.getByRole("option", { name: new RegExp(E2E_PLAN.tesis) }).click();
+  await page.getByRole("option", { name: new RegExp(E2E_PLAN.tesisIci) }).click();
   await page.getByRole("checkbox", { name: E2E_HESAPLAR.denetci.ad }).check();
   await page.getByRole("button", { name: "Planı aç" }).click();
   await expect(page).toHaveURL(/\/planlar\/[0-9a-f-]{36}$/, { timeout: 30_000 });
@@ -53,8 +53,8 @@ test("plan içi: liste, kabul (beyan), ekipman ekle / pasif, proje notu, künye 
   /* Ekipman ekle: kod yazarken denetlenir */
   await page.getByRole("button", { name: "Ekipman ekle" }).click();
   const p = page.getByRole("dialog", { name: "Ekipman ekle" });
-  await p.getByLabel("Ekipman kodu").fill("ht-0001");
-  await expect(p.getByText("HT-0001 bu planda zaten var: Hava tankı. Aynı kod iki ekipmana verilemez.")).toBeVisible();
+  await p.getByLabel("Ekipman kodu").fill("ht-0101");
+  await expect(p.getByText("HT-0101 bu planda zaten var: Hava tankı. Aynı kod iki ekipmana verilemez.")).toBeVisible();
   await expect(p.getByRole("button", { name: "Kaydet ve plana ekle" })).toBeDisabled();
   await p.getByLabel("Ekipman kodu").fill(kod.toLowerCase());
   await expect(p.getByText("Kod kullanılabilir; bu firmada başka ekipmanda yok.")).toBeVisible();

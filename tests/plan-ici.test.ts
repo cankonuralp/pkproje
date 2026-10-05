@@ -92,7 +92,9 @@ test("akış: kabul yalnız ekipteki denetçi ve beyanla → denetim → kontrol
   assert.equal((await a(FA.den2, (db) => planKabul(db, FA.den2, id, v.surum, true))).durum, "yok", "ekipte olmayan denetçi planı görmez");
   assert.deepEqual(await a(FA.den1, (db) => planKabul(db, FA.den1, id, v.surum, false)),
     { durum: "gecersiz", hatalar: { beyan: "Tarafsızlık beyanı okunup onaylanmadan plan kabul edilemez." } });
-  tamam(await a(FA.den1, (db) => planKabul(db, FA.den1, id, v.surum, true)));
+  assert.deepEqual(await a(FA.den1, (db) => planKabul(db, FA.den1, id, v.surum, true, "0000000000000000")),
+    { durum: "red", neden: "Tarafsızlık beyanının metni değişti; sayfayı yenileyip yeni metni okuyun." }, "okunan metin kabulde yazılacak metinle aynı olmalı");
+  tamam(await a(FA.den1, (db) => planKabul(db, FA.den1, id, v.surum, true, v.beyanOzet)));
   const p = (await sql<{ durum: string; beyan: string; kabul_eden: string; kabul_hesap: string; kabul: Date }>(A,
     "SELECT durum, beyan, kabul_eden, kabul_hesap::text, kabul FROM plan WHERE id = $1", [id])).rows[0];
   assert.deepEqual([p.durum, p.beyan, p.kabul_eden, p.kabul_hesap], ["kabul", VARSAYILAN_BEYAN, "Deneme", FA.den1.id], "beyan metni ve kabul eden hesap kayıtta");
@@ -111,6 +113,7 @@ test("akış: kabul yalnız ekipteki denetçi ve beyanla → denetim → kontrol
   assert.equal(await a(FA.den1, (db) => denetimeBasla(db, "Deneme", id)), true);
   v = (await ici(FA.den1, id))!;
   assert.equal(v.durum, "denetimde"); assert.ok(v.basladi);
+  await assert.rejects(sql(A, "UPDATE plan SET durum = 'tamamlandi', kontrol_tamam = now() WHERE id = $1", [id]), /önce kontrol listesi/, "kontrol listesi atlanamaz");
   assert.deepEqual(await a(FA.den1, (db) => planTamamla(db, FA.den1, id, v.surum)), { durum: "red", neden: "Önce kontrol listesi tamamlanmalı." });
   assert.equal((await a(FA.mek, (db) => kontrolListesi(db, FA.mek, id, v.surum, true))).durum, "yetkisiz", "yönetici (görür) tamamlayamaz");
   tamam(await a(FA.den1, (db) => kontrolListesi(db, FA.den1, id, v.surum, true)));
@@ -131,6 +134,8 @@ test("akış: kabul yalnız ekipteki denetçi ve beyanla → denetim → kontrol
 test("reddet: gerekçe zorunlu ve değişmez; reddedilen plan kabul edilemez, denetime geçmez", async () => {
   const id = await yeniPlan(FA, A);
   const v = (await ici(FA.den1, id))!;
+  await assert.rejects(sql(A, "UPDATE plan SET kabul_eden = 'Başka Biri', beyan = repeat('b', 30) WHERE id = $1", [id]), /yalnız kabulde/, "kabulsüz beyan yazılamaz");
+  await assert.rejects(sql(A, "UPDATE plan SET red_eden = 'Başka Biri', red_gerekce = 'uydurma' WHERE id = $1", [id]), /yalnız redde/);
   assert.deepEqual(await a(FA.den1, (db) => planReddet(db, FA.den1, id, v.surum, { gerekce: "  " })), { durum: "gecersiz", hatalar: { gerekce: "Gerekçe yazılmadan plan reddedilemez." } });
   assert.equal((await a(FA.plan, (db) => planReddet(db, FA.plan, id, v.surum, { gerekce: "uygun değil" }))).durum, "yetkisiz");
   tamam(await a(FA.den1, (db) => planReddet(db, FA.den1, id, v.surum, { gerekce: "Aynı gün başka denetim" })));

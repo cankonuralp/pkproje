@@ -56,6 +56,17 @@ BEGIN
   END IF;
   NEW.kabul := OLD.kabul; NEW.red := OLD.red; NEW.basladi := OLD.basladi; NEW.bitti := OLD.bitti;
   NEW.kabul_hesap := OLD.kabul_hesap; NEW.red_hesap := OLD.red_hesap;
+  -- beyan ve kabul eden yalnız kabul geçişinde, red bilgisi yalnız red geçişinde yazılır (geçişsiz uydurulamaz)
+  IF (NEW.beyan IS DISTINCT FROM OLD.beyan OR NEW.kabul_eden IS DISTINCT FROM OLD.kabul_eden) AND NOT (OLD.durum = 'bekliyor' AND NEW.durum = 'kabul') THEN
+    RAISE EXCEPTION 'tarafsızlık beyanı yalnız kabulde yazılır' USING ERRCODE = '23514';
+  END IF;
+  IF (NEW.red_gerekce IS DISTINCT FROM OLD.red_gerekce OR NEW.red_eden IS DISTINCT FROM OLD.red_eden) AND NOT (OLD.durum = 'bekliyor' AND NEW.durum = 'reddedildi') THEN
+    RAISE EXCEPTION 'red gerekçesi yalnız redde yazılır' USING ERRCODE = '23514';
+  END IF;
+  -- plan yalnız kontrol listesi ÖNCEDEN tamamlanmışsa tamamlanır (aynı yazmada ikisi birden olmaz)
+  IF NEW.durum = 'tamamlandi' AND OLD.durum = 'denetimde' AND OLD.kontrol_tamam IS NULL THEN
+    RAISE EXCEPTION 'önce kontrol listesi tamamlanmalı' USING ERRCODE = '23514';
+  END IF;
   IF NEW.durum IS DISTINCT FROM OLD.durum THEN
     IF NOT ((OLD.durum = 'bekliyor' AND NEW.durum IN ('kabul', 'reddedildi')) OR (OLD.durum = 'kabul' AND NEW.durum = 'denetimde')
       OR (OLD.durum = 'denetimde' AND NEW.durum = 'tamamlandi') OR (OLD.durum = 'tamamlandi' AND NEW.durum = 'denetimde')) THEN
@@ -109,8 +120,9 @@ CREATE OR REPLACE FUNCTION plan_ekipman_denetle() RETURNS trigger
   LANGUAGE plpgsql AS $$
 DECLARE d text;
 BEGIN
+  -- plan satırı paylaşımlı kilitle okunur: aynı anda süren tamamlama bitene dek beklenir, sonra güncel durum görülür
   SELECT p.durum INTO d FROM plan p JOIN ekipman e ON e.firma_id = p.firma_id AND e.tesis_id = p.tesis_id
-    WHERE p.firma_id = NEW.firma_id AND p.id = NEW.plan_id AND e.id = NEW.ekipman_id;
+    WHERE p.firma_id = NEW.firma_id AND p.id = NEW.plan_id AND e.id = NEW.ekipman_id FOR SHARE OF p;
   IF d IS NULL THEN RAISE EXCEPTION 'ekipman planın tesisinde değil' USING ERRCODE = '23514'; END IF;
   IF d IN ('tamamlandi', 'reddedildi') THEN RAISE EXCEPTION 'tamamlanmış ya da reddedilmiş plana ekipman eklenmez' USING ERRCODE = '23514'; END IF;
   RETURN NEW;

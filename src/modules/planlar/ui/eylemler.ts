@@ -46,8 +46,8 @@ async function planIslemi(is: (o: Exclude<Awaited<ReturnType<typeof oturum>>, st
 }
 const metin = (v: unknown) => (typeof v === "string" ? v : "");
 
-export async function planKabulEylemi(id: string, surum: number, beyanOnay: boolean): Promise<PlanYaniti> {
-  return planIslemi((o) => oturumIslemi(o, (db) => planKabul(db, o, metin(id), Number(surum), beyanOnay === true)));
+export async function planKabulEylemi(id: string, surum: number, beyanOnay: boolean, beyanOzet: string): Promise<PlanYaniti> {
+  return planIslemi((o) => oturumIslemi(o, (db) => planKabul(db, o, metin(id), Number(surum), beyanOnay === true, metin(beyanOzet))));
 }
 export async function planReddetEylemi(id: string, surum: number, gerekce: string): Promise<PlanYaniti> {
   return planIslemi((o) => oturumIslemi(o, (db) => planReddet(db, o, metin(id), Number(surum), { gerekce: metin(gerekce) })));
