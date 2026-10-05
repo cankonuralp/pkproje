@@ -262,7 +262,9 @@ test("saha raporu: rapor oluştur, eksikle gönderilmez, doldur + cihaz ekle, on
   const ham = readFileSync((await imzasiz.path())!);
   expect(ham.subarray(0, 5).toString("latin1")).toBe("%PDF-");
   /* imza sözlüğü YENİ bir nesnede (gerçek imza aracı gibi; özgün nesneler yeniden tanımlanmaz — src/modules/raporlar/imza-pdf.ts) */
-  const imzali = Buffer.concat([ham, Buffer.from("\n9999 0 obj << /Type /Sig /Filter /Adobe.PPKLite /ByteRange [0 10 20 30] /Contents <00ff> >> endobj\n%%EOF\n", "latin1")]);
+  /* artımlı güncellemenin trailer'ı özgünün kökünü gösterir (imza aracı gibi) */
+  const kok = [...ham.toString("latin1").matchAll(/\/Root\s+(\d+\s+\d+\s+R)/g)].at(-1)?.[1] ?? "1 0 R";
+  const imzali = Buffer.concat([ham, Buffer.from(`\n9999 0 obj << /Type /Sig /Filter /Adobe.PPKLite /ByteRange [0 10 20 30] /Contents <00ff> >> endobj\ntrailer << /Root ${kok} /Prev 0 >>\n%%EOF\n`, "latin1")]);
   await page.getByLabel("İmzalı PDF'i yükle").setInputFiles({ name: "imzali.pdf", mimeType: "application/pdf", buffer: imzali });
   await expect(page.getByText(`${raporNo} imzalandı, tamamlandı ve müşteriye açıldı.`).first()).toBeVisible({ timeout: 60_000 });
   await expect(page.getByRole("link", { name: "İmzalı PDF" })).toBeVisible({ timeout: 30_000 });
@@ -271,6 +273,8 @@ test("saha raporu: rapor oluştur, eksikle gönderilmez, doldur + cihaz ekle, on
   /* 319 müşteri paneli */
   await context.clearCookies();
   await girisli(page, "yonetici");
+  await page.goto("/portal");
+  await expect(page).toHaveURL(/\/$/, { timeout: 30_000 });   // firma kullanıcısı müşteri paneline girmez: kendi ana sayfasına (döngü yok)
   await page.goto("/musteriler");
   await hazir(page);
   await page.getByRole("link", { name: E2E_PLAN.musteri }).first().click();

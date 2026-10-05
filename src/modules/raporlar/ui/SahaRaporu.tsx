@@ -220,7 +220,7 @@ export function SahaRaporu({ v }: { v: Gorunum }) {
     setRevizeAc(false); setGenel(r.genel ?? "İstek gönderilemedi."); bitti(null);
   }));
   const revizeGeriCek = () => v.revize?.bekleyen && baslat(async () => {
-    const r = await revizeIstegiGeriCekEylemi(v.id, v.revize!.bekleyen!.surum);
+    const r = await revizeIstegiGeriCekEylemi(v.id, v.revize!.bekleyen!.id, v.revize!.bekleyen!.surum);
     if (r.tamam) { setGenel(null); bildir(r.bildirim ?? "Revize isteği geri çekildi."); yenile(); return; }
     setGenel(r.genel ?? "İstek geri çekilemedi.");
   });

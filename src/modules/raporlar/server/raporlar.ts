@@ -230,7 +230,7 @@ export interface SahaRaporu {
   /** Yeni'ye geri dönmüş raporda son geri gönderme (U8; 314) ya da revizeye gönderme (318: revize = yeni revizyon, "R1"): kim, ne zaman, gerekçe */
   geri: { kim: string; zaman: string; gerekce: string | null; revize: number | null } | null;
   /** tamamlanan raporda yazanın revize isteği (318; maket raporlar.html 192): bekleyen istek (geri çekilir) · son ret · yeni istek açılabilir mi */
-  revize: { bekleyen: { zaman: string; gerekce: string; surum: number } | null; red: { kim: string; zaman: string; gerekce: string | null } | null; iste: boolean } | null;
+  revize: { bekleyen: { id: string; zaman: string; gerekce: string; surum: number } | null; red: { kim: string; zaman: string; gerekce: string | null } | null; iste: boolean } | null;
   /** son imza (317): yazanın onaylanmış raporunda imzasız kesin PDF (hazırlandıysa) · tamamlanan raporda imzalı PDF */
   imza: { hazir: boolean; pdf: string | null } | null;
   imzali: { dosya: string; zaman: string; no: string } | null;
@@ -290,7 +290,8 @@ export async function sahaRaporu(db: Sorgulayici, kim: Kisi, id: string): Promis
     if (pk) kunyeFark = kunyeFarki(r.kunye, pk);
   }
   const cev = Cevaplar.safeParse(r.cevaplar);
-  const kopyaKaynak = r.kopya_kaynak ? (await db.sorgu<{ no: string }>("SELECT no FROM rapor WHERE id = $1", [r.kopya_kaynak])).rows[0]?.no ?? null : null;
+  const kk = r.kopya_kaynak ? (await db.sorgu<{ no: string; revizyon: number }>("SELECT no, revizyon FROM rapor WHERE id = $1", [r.kopya_kaynak])).rows[0] : undefined;
+  const kopyaKaynak = kk ? gorunenNo(kk.no, kk.revizyon) : null;
   const yeni = duzenle ? await yayindakiFormat(db, r.tur_id) : null;
   /* kopya: yalnız raporu yazan, plandaki kendi personeliyle, rapor açabilen ve plana ekipman ekleyebilen (sunucu kopyada yeniden bakar) */
   const kopyala = e.sahip && !!plan && plan.personelId === r.personel_id && canDoEylem(kim, "rapor_olustur", { atananlar: plan.atananlar })
@@ -303,7 +304,7 @@ export async function sahaRaporu(db: Sorgulayici, kim: Kisi, id: string): Promis
   if (r.durum === "imzali" && e.sahip && canDoEylem(kim, "rapor_revize_iste", { sahip: r.hesap_id })) {
     const d = await revizeDurumu(db, r.id, r.revizyon);
     revize = {
-      bekleyen: d.bekleyen ? { zaman: d.bekleyen.zaman, gerekce: d.bekleyen.gerekce, surum: d.bekleyen.surum } : null,
+      bekleyen: d.bekleyen ? { id: d.bekleyen.id, zaman: d.bekleyen.zaman, gerekce: d.bekleyen.gerekce, surum: d.bekleyen.surum } : null,
       red: d.red ? { kim: (await hesapAdlari(db, [d.red.hesapId])).get(d.red.hesapId ?? "") ?? "—", zaman: d.red.zaman, gerekce: d.red.gerekce } : null,
       iste: !d.bekleyen,
     };
@@ -324,7 +325,7 @@ export async function sahaRaporu(db: Sorgulayici, kim: Kisi, id: string): Promis
     imza: r.durum === "onaylandi" && e.sahip && canDoEylem(kim, "rapor_son_imza", { sahip: r.hesap_id })
       ? { hazir: true, pdf: (await bekleyenIstek(db, r.id, r.revizyon))?.pdf_dosya ?? null } : null,
     imzali: r.durum === "imzali" ? await imzaliSurum(db, r.id, r.revizyon) : null,
-    izin: { duzenle, sil: r.durum === "taslak" && canDoEylem(kim, "rapor_sil", { sahip: r.hesap_id, durum: "Yeni", brans: tur.brans }), kopyala },
+    izin: { duzenle, sil: r.durum === "taslak" && r.revizyon === 0 && canDoEylem(kim, "rapor_sil", { sahip: r.hesap_id, durum: "Yeni", brans: tur.brans }), kopyala },
   };
 }
 
@@ -357,7 +358,7 @@ async function kaydetIc(db: Sorgulayici, kim: Kisi, e: Erisim, surum: number, gi
   const r = await guncelle(db, RAPOR, e.r.id, surum, {
     ekipman_bilgi: v.ekipman, bas: zamanYaz(v.tarih.bas), bit: zamanYaz(v.tarih.bit), sonraki: v.tarih.sonraki, takip: v.tarih.takip, rapor_tarihi: v.tarih.rapor,
     cevaplar, sonuc: cevaplar.sonuc || null,
-  }, { kim: kim.ad, ne: "rapor.kaydet", gerekce: e.r.no });
+  }, { kim: kim.ad, ne: "rapor.kaydet", gerekce: gorunenNo(e.r.no, e.r.revizyon) });
   return sonuc(r, e.r.id, "Rapor kaydedildi.");
 }
 
@@ -382,23 +383,31 @@ export async function onayaGonder(db: Sorgulayici, kim: Kisi, id: string, surum:
   const bugun = bugunTr();
   const sonucBolumleri = new Set(format.tanim.bolumler.filter((b) => b.blok === "sonuc").map((b) => b.id));
   const d = degerle(format.tanim, cev, r);
-  const { satirlar } = await cihazSatirlari(db, r, e.tur, bugun);
+  /* kalibrasyon MUAYENE GÜNÜNE göre (ENGEL 2: cihaz muayenede geçerli olmalı) — aylar sonra revize edilen rapor bugünkü kalibrasyona takılmaz
+     (318 incelemesi); cihazın bugün kalibrasyonda (lab) ya da kayıttan kalkmış olması yalnız ilk sürümde engel */
+  const muayeneGunu = GUN.format(r.bas);
+  const { satirlar } = await cihazSatirlari(db, r, e.tur, muayeneGunu);
   const cihazBolumleri = new Set(satirlar.length ? format.tanim.bolumler.filter((b) => b.blok === "cihaz").map((b) => b.id) : []);
   const eksikler = d.eksikler.filter((x) => !sonucBolumleri.has(x.bolum) && !cihazBolumleri.has(x.bolum));
   for (const s of satirlar) {
     if (!s.cihaz) eksikler.push({ bolum: "cihaz", alan: `cihaz.${s.turId}`, ad: `${s.turAd}: ölçüm cihazı eklenmedi` });
-    else if (s.cihaz.eksik) eksikler.push({ bolum: "cihaz", alan: `cihaz.${s.turId}`, ad: `${s.turAd}: eklenen cihaz artık kayıtlı değil` });
-    else if (s.cihaz.lab) eksikler.push({ bolum: "cihaz", alan: `cihaz.${s.turId}`, ad: `${s.cihaz.kod}: kalibrasyonda` });
+    else if (s.cihaz.eksik) { if (r.revizyon === 0) eksikler.push({ bolum: "cihaz", alan: `cihaz.${s.turId}`, ad: `${s.turAd}: eklenen cihaz artık kayıtlı değil` }); }
+    else if (s.cihaz.lab && r.revizyon === 0) eksikler.push({ bolum: "cihaz", alan: `cihaz.${s.turId}`, ad: `${s.cihaz.kod}: kalibrasyonda` });
     else if (s.cihaz.gecti) eksikler.push({ bolum: "cihaz", alan: `cihaz.${s.turId}`, ad: `${s.cihaz.kod}: kalibrasyonu geçmiş${s.cihaz.bitis ? ` (${tarihNo(s.cihaz.bitis)})` : ""}` });
   }
   if (eksikler.length) return { durum: "eksik", eksikler };
+  /* rapor tarihi muayene gününden önce, bugünden sonra olamaz (ileri tarihli imzalı rapor ekipmanın sonraki uygunsuzluklarını "giderildi"
+     kapatırdı — 318 incelemesi; veritabanı da ister, 0031) */
+  const raporGunu = r.rapor_tarihi ?? muayeneGunu;
+  if (raporGunu > bugun) return { durum: "gecersiz", hatalar: { "tarih.rapor": "Rapor tarihi bugünden sonra olamaz." } };
+  if (raporGunu < muayeneGunu) return { durum: "gecersiz", hatalar: { "tarih.rapor": "Rapor tarihi kontrol başlangıcından önce olamaz." } };
   const oto = !cev.sonuc;
   const sonucu: "uygun" | "uygun_degil" = cev.sonuc || d.oneri;
-  const basGun = GUN.format(r.bas);
+  const basGun = muayeneGunu;
   const g = await guncelle(db, RAPOR, id, r.surum, {
     durum: "onayda", cevaplar: { ...cev, sonuc: sonucu }, sonuc: sonucu, sonuc_oto: oto,
     bit: r.bit ?? new Date(Math.max(Date.now(), r.bas.getTime())), sonraki: r.sonraki ?? ayEkle(basGun, e.tur.periyot), rapor_tarihi: r.rapor_tarihi ?? basGun,
-  }, { kim: kim.ad, ne: "rapor.onaya_gonder", gerekce: r.no });
+  }, { kim: kim.ad, ne: "rapor.onaya_gonder", gerekce: gorunenNo(r.no, r.revizyon) });
   if (g.durum !== "tamam" && g.durum !== "degisiklik_yok") return sonuc(g, id, "");
   const brans = e.tur.brans === "m" ? "Mekanik" : "Elektrik";
   const yon = await roldekiHesapAdlari(db, e.tur.brans === "m" ? "mekanik_yonetici" : "elektrik_yonetici");
@@ -412,8 +421,10 @@ export async function raporSil(db: Sorgulayici, kim: Kisi, id: string, surum: nu
   /* yetki Yeni rapor için sorulur (yazan ya da teknik yönetici); yetkili kişi gönderilmiş raporda açık ileti alır */
   if (!canDoEylem(kim, "rapor_sil", { sahip: e.r.hesap_id, durum: "Yeni", brans: e.tur.brans })) return { durum: "yetkisiz" };
   if (e.r.durum !== "taslak") return { durum: "red", neden: "Yalnız Yeni rapor silinir." };
-  const r = await guncelle(db, RAPOR, id, surum, { silindi: new Date() }, { kim: kim.ad, ne: "rapor.sil", gerekce: e.r.no });
-  return sonuc(r, id, `${e.r.no} silindi.`);
+  if (e.r.revizyon > 0) return { durum: "red", neden: "Revizyondaki rapor silinmez; tamamlanan sürüm saklıdır." };
+  const no = gorunenNo(e.r.no, e.r.revizyon);
+  const r = await guncelle(db, RAPOR, id, surum, { silindi: new Date() }, { kim: kim.ad, ne: "rapor.sil", gerekce: no });
+  return sonuc(r, id, `${no} silindi.`);
 }
 
 /** ölçüm cihazı ekle: yazanın zimmetinde, türün gerekli cihaz türünden (tür liste vermiyorsa her tür), kalibrasyonu geçerli; tür başına bir cihaz */
@@ -429,7 +440,7 @@ export async function cihazEkle(db: Sorgulayici, kim: Kisi, id: string, surum: n
   if (kalibrasyonGecti(c.bitis, bugunTr())) return { durum: "gecersiz", hatalar: { cihaz: `${c.kod}: kalibrasyonu geçmiş; rapora eklenmez.` } };
   const cihazlar = [...e.r.cihazlar.filter((x) => x.tur !== turId), { tur: turId, cihaz: c.id }];
   const cevaplar = { ...(e.r.cevaplar as object), cihaz: cihazlar.length };
-  return sonuc(await guncelle(db, RAPOR, id, surum, { cihazlar: jsonDizi(cihazlar), cevaplar }, { kim: kim.ad, ne: "rapor.cihaz_ekle", gerekce: `${e.r.no} · ${c.kod}` }), id, `${c.kod} eklendi.`);
+  return sonuc(await guncelle(db, RAPOR, id, surum, { cihazlar: jsonDizi(cihazlar), cevaplar }, { kim: kim.ad, ne: "rapor.cihaz_ekle", gerekce: `${gorunenNo(e.r.no, e.r.revizyon)} · ${c.kod}` }), id, `${c.kod} eklendi.`);
 }
 
 export async function cihazKaldir(db: Sorgulayici, kim: Kisi, id: string, surum: number, turId: string): Promise<RaporYazma> {
@@ -438,7 +449,7 @@ export async function cihazKaldir(db: Sorgulayici, kim: Kisi, id: string, surum:
   if (!e.r.cihazlar.some((x) => x.tur === turId)) return { durum: "tamam", id, bildirim: "Cihaz zaten yok." };
   const cihazlar = e.r.cihazlar.filter((x) => x.tur !== turId);
   const cevaplar = { ...(e.r.cevaplar as object), cihaz: cihazlar.length };
-  return sonuc(await guncelle(db, RAPOR, id, surum, { cihazlar: jsonDizi(cihazlar), cevaplar }, { kim: kim.ad, ne: "rapor.cihaz_kaldir", gerekce: e.r.no }), id, "Cihaz kaldırıldı.");
+  return sonuc(await guncelle(db, RAPOR, id, surum, { cihazlar: jsonDizi(cihazlar), cevaplar }, { kim: kim.ad, ne: "rapor.cihaz_kaldir", gerekce: gorunenNo(e.r.no, e.r.revizyon) }), id, "Cihaz kaldırıldı.");
 }
 
 /** raporda "Güncelle": planlamacının yeni künyesi yazanın plan ekranına ve YALNIZ kendi Yeni raporlarına geçer (§3.4; Planlar.kunyeGuncelle) */
@@ -475,7 +486,7 @@ export async function fotoEkle(db: Sorgulayici, depo: Depo, kim: Kisi, firmaId: 
   if (!y.tamam) return { durum: "gecersiz", hatalar: { foto: y.neden === "tur" ? "Yalnız JPEG ya da PNG fotoğraf." : y.neden === "buyuk" ? "Fotoğraf çok büyük (en çok 8 MB)." : "Fotoğraf okunamadı." } };
   const yeni = [...fotolar, { dosya: y.id, ad: y.ad, bolum: hedef.bolum, madde: hedef.madde }];
   const cevaplar = sayiliCevaplar(cev.data, { cihazlar: e.r.cihazlar, fotolar: yeni });
-  return sonuc(await guncelle(db, RAPOR, id, surum, { fotolar: jsonDizi(yeni), cevaplar }, { kim: kim.ad, ne: "rapor.foto_ekle", gerekce: `${e.r.no} · ${y.ad}` }), id, `${y.ad} eklendi.`);
+  return sonuc(await guncelle(db, RAPOR, id, surum, { fotolar: jsonDizi(yeni), cevaplar }, { kim: kim.ad, ne: "rapor.foto_ekle", gerekce: `${gorunenNo(e.r.no, e.r.revizyon)} · ${y.ad}` }), id, `${y.ad} eklendi.`);
 }
 
 /** fotoğraf sil: listeden çıkar, dosya çöpe (indirilemez). Yalnız yazan, Yeni raporda. */
@@ -486,7 +497,7 @@ export async function fotoSil(db: Sorgulayici, kim: Kisi, id: string, surum: num
   if (!f) return { durum: "tamam", id, bildirim: "Fotoğraf zaten yok." };
   const yeni = e.r.fotolar.filter((x) => x.dosya !== dosyaId);
   const cevaplar = sayiliCevaplar(Cevaplar.parse(e.r.cevaplar), { cihazlar: e.r.cihazlar, fotolar: yeni });
-  const iz = { kim: kim.ad, ne: "rapor.foto_sil", gerekce: `${e.r.no} · ${f.ad}` };
+  const iz = { kim: kim.ad, ne: "rapor.foto_sil", gerekce: `${gorunenNo(e.r.no, e.r.revizyon)} · ${f.ad}` };
   const r = await guncelle(db, RAPOR, id, surum, { fotolar: jsonDizi(yeni), cevaplar }, iz);
   if (r.durum !== "tamam" && r.durum !== "degisiklik_yok") return sonuc(r, id, "");
   await dosyaCope(db, dosyaId, iz);
@@ -575,7 +586,7 @@ export async function raporFormatGuncelle(db: Sorgulayici, kim: Kisi, id: string
   const r = await guncelle(db, RAPOR, id, surum, {
     format_id: yeni.id, ekipman_bilgi: v.ekipman, bas: zamanYaz(v.tarih.bas), bit: zamanYaz(v.tarih.bit), sonraki: v.tarih.sonraki, takip: v.tarih.takip,
     rapor_tarihi: v.tarih.rapor, cevaplar: c, sonuc: c.sonuc || null, fotolar: jsonDizi(fotolar),
-  }, { kim: kim.ad, ne: "rapor.format_guncelle", gerekce: `${e.r.no} · sürüm ${eski.sira} → ${yeni.sira}` });
+  }, { kim: kim.ad, ne: "rapor.format_guncelle", gerekce: `${gorunenNo(e.r.no, e.r.revizyon)} · sürüm ${eski.sira} → ${yeni.sira}` });
   const madde = eklenen ? `${eklenen} yeni madde eklendi (${ilk?.blok === "liste" ? ilk.cevaplar[0] : "Uygun"})` : "madde değişmedi";
   return sonuc(r, id, `Format güncellendi (sürüm ${yeni.sira}): ${madde}; ${dusen ? `${dusen} maddenin cevabı yeni cevap setinde yok, yeniden seçin.` : "cevaplar korundu."}`);
 }
@@ -708,7 +719,7 @@ export async function imzaHazirla(db: Sorgulayici, depo: Depo, kim: Kisi, firmaI
   const kopya: IstekKopyasi = { yazan: v.belge.yazan, cihazlar: v.belge.cihazlar };
   await ekle(db, ISTEK, { rapor_id: id, revizyon: e.r.revizyon, yontem: "dosya", durum: "bekliyor", pdf_dosya: y.id, pdf_sha256: createHash("sha256").update(pdf).digest("hex"),
     kopya },
-    { kim: kim.ad, ne: "rapor.imza_hazirla", gerekce: e.r.no });
+    { kim: kim.ad, ne: "rapor.imza_hazirla", gerekce: gorunenNo(e.r.no, e.r.revizyon) });
   return { durum: "tamam", id, bildirim: "İmzasız PDF hazır; indirip imzalayın, imzalı PDF'i yükleyin." };
 }
 
@@ -792,14 +803,14 @@ export async function revizeIste(db: Sorgulayici, kim: Kisi, id: string, girdi: 
   return { durum: "tamam", id, bildirim: `${no} için revize isteği teknik yöneticiye gitti.` };
 }
 
-/** revize isteğini geri çek: yalnız isteyen (veritabanı da ister); istemcinin gördüğü isteğin sürümüyle */
-export async function revizeIstegiGeriCek(db: Sorgulayici, kim: Kisi, id: string, surum: number): Promise<RaporYazma> {
+/** revize isteğini geri çek: yalnız isteyen (veritabanı da ister); istemcinin gördüğü isteğin kimliği ve sürümüyle */
+export async function revizeIstegiGeriCek(db: Sorgulayici, kim: Kisi, id: string, istekId: string, surum: number): Promise<RaporYazma> {
   const e = await erisim(db, kim, id, true);
   if (!e) return { durum: "yok" };
   if (!e.sahip || !canDoEylem(kim, "rapor_revize_iste", { sahip: e.r.hesap_id })) return { durum: "yetkisiz" };
   const b = (await revizeDurumu(db, id, e.r.revizyon)).bekleyen;
   if (!b || b.hesapId !== kim.id) return { durum: "red", neden: "Bekleyen revize isteğiniz yok." };
-  if (!Number.isSafeInteger(surum) || surum < 0) return { durum: "cakisma" };
+  if (b.id !== istekId || !Number.isSafeInteger(surum) || surum < 0) return { durum: "cakisma" };
   const no = gorunenNo(e.r.no, e.r.revizyon);
   const s = await istekKapat(db, { kim: kim.ad, ne: "rapor.revize_istek_geri", gerekce: no }, { ...b, surum }, "geri_cekildi", null);
   if (s.durum !== "tamam") return { durum: s.durum === "yok" ? "yok" : "cakisma" };

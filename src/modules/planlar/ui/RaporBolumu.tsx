@@ -75,7 +75,8 @@ export function RaporBolumu({ v }: { v: PlanIci }) {
       const duzenler = r.benim && r.durum === "taslak";
       return (
         <div className={stil.eylemTuslar}>
-          {duzenler && (
+          {/* revizyondaki rapor silinmez (tamamlanan sürüm saklı — 318 incelemesi); düzenlenir */}
+          {duzenler && r.revizyon === 0 && (
             <Tus tur="ikincil" ikon="trash-2" className={`${stil.ikonTus} ${stil.silTus}`} disabled={bekliyor} aria-label={`${r.no} sil`} title="Sil"
               onClick={() => void sil(r)}><span className="gizli">Sil</span></Tus>
           )}

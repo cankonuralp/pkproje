@@ -37,6 +37,6 @@ export async function durumDegistirEylemi(id: string, surum: number, girdi: unkn
 export async function revizeyeGonderEylemi(id: string, surum: number, girdi: unknown): Promise<OnayYaniti> {
   return islem((o) => oturumIslemi(o, (db) => revizeyeGonder(db, o, metin(id), Number(surum), girdi)));
 }
-export async function revizeIstegiReddetEylemi(id: string, istekSurum: number, girdi: unknown): Promise<OnayYaniti> {
-  return islem((o) => oturumIslemi(o, (db) => revizeIstegiReddet(db, o, metin(id), Number(istekSurum), girdi)));
+export async function revizeIstegiReddetEylemi(id: string, istekId: string, istekSurum: number, girdi: unknown): Promise<OnayYaniti> {
+  return islem((o) => oturumIslemi(o, (db) => revizeIstegiReddet(db, o, metin(id), metin(istekId), Number(istekSurum), girdi)));
 }

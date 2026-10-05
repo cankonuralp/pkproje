@@ -21,9 +21,9 @@ import { planIci, planKabul } from "../src/modules/planlar/server/plan-ici.ts";
 import { bugunTr, planAc, type Kisi } from "../src/modules/planlar/server/planlar.ts";
 import { taslakBaslat, yayinla } from "../src/modules/rapor-format/server/formatlar.ts";
 import {
-  imzaHazirla, imzaliYukle, raporKaydet, raporListesi, raporOlustur, revizeIste, revizeIstegiGeriCek, sahaRaporu,
+  IMZALI_MODULU, imzaHazirla, imzaliYukle, raporKaydet, raporListesi, raporOlustur, raporSil, revizeIste, revizeIstegiGeriCek, sahaRaporu,
 } from "../src/modules/raporlar/server/raporlar.ts";
-import { dosyaIndirilebilir } from "../src/server/dosya/dosya.ts";
+import { dosyaIndirilebilir, dosyaYukle } from "../src/server/dosya/dosya.ts";
 import { DOSYA_ERISIMI } from "../src/server/dosya/erisim.ts";
 import {
   durumDegistir, geriGonder, onayEkrani, onayGeriAl, onayla, onayListeleri, revizeIstegiReddet, revizeyeGonder, type OnayYazma,
@@ -56,7 +56,7 @@ async function firmaKur(firma: string, ek: string): Promise<Firma> {
     const plan = await k("plan", ["planlama"]), muh = await k("muh", ["muhasebe"]);
     const ht = await q("INSERT INTO ekipman_turu (kod, ad, grup, brans, periyot) VALUES ('HT', 'Hava tankı', 'basincli', 'm', 12) RETURNING id::text");
     const ep = await q("INSERT INTO ekipman_turu (kod, ad, grup, brans, periyot) VALUES ('EP', 'Elektrik panosu', 'elektrik', 'e', 12) RETURNING id::text");
-    for (const [t, kod] of [[ht, "HT-1"], [ht, "HT-2"], [ht, "HT-3"], [ht, "HT-4"], [ep, "EP-1"]]) {
+    for (const [t, kod] of [[ht, "HT-1"], [ht, "HT-2"], [ht, "HT-3"], [ht, "HT-4"], [ep, "EP-1"], [ep, "EP-2"], [ep, "EP-3"]]) {
       await q("INSERT INTO ekipman (tesis_id, tur_id, kod, ekleyen) VALUES ($1, $2, $3, 'x') RETURNING id::text", [tesis, t, kod]);
     }
     const ekp = Object.fromEntries((await db.sorgu<{ kod: string; id: string }>("SELECT kod, id::text FROM ekipman")).rows.map((x) => [x.kod, x.id]));
@@ -303,7 +303,7 @@ let uretilen = 0;
 const uret = async () => new TextEncoder().encode(`%PDF-1.4\n% deneme belge ${++uretilen}\n1 0 obj << /Type /Catalog >> endobj\ntrailer << /Root 1 0 R >>\n%%EOF\n`);
 /** imzasız PDF + artımlı imza bölümü (PAdES gibi: özgün baytlar korunur, sonuna imza sözlüğü eklenir) */
 const imzala = (b: Uint8Array) => Buffer.concat([Buffer.from(b),
-  Buffer.from("\n2 0 obj << /Type /Sig /Filter /Adobe.PPKLite /ByteRange [0 10 20 30] /Contents <00ff00ff> >> endobj\n%%EOF\n", "latin1")]);
+  Buffer.from("\n2 0 obj << /Type /Sig /Filter /Adobe.PPKLite /ByteRange [0 10 20 30] /Contents <00ff00ff> >> endobj\ntrailer << /Root 1 0 R /Prev 0 >>\n%%EOF\n", "latin1")]);
 const IMZA_GECERSIZ = "Yüklenen PDF bu raporun imzaya hazırlanan PDF'i değil ya da imza taşımıyor.";
 const imzasizBayt = async (raporId: string) => {
   const x = (await sql<{ anahtar: string }>(A, "SELECT d.anahtar FROM imza_istegi i JOIN dosya d ON d.id = i.pdf_dosya WHERE i.rapor_id = $1 AND i.durum = 'bekliyor'", [raporId])).rows[0];
@@ -434,10 +434,13 @@ test("imza isteği: onay geri alınınca bekleyen istek iptal olur; yeniden onay
   tamam(await hazirla(FA.den, h));
   assert.equal(uretilen - once, 1, "yeni PDF üretildi");
   assert.deepEqual(await yukle(FA.den, h, await surum(h), imzala(eski)), { durum: "gecersiz", hatalar: { dosya: IMZA_GECERSIZ } }, "eski PDF'in imzalısı");
-  /* veritabanı: iptal edilen isteğin PDF'iyle imzalı sürüm yazılmaz */
-  const imzali = (await sql<{ id: string; sha: string }>(A, "SELECT id::text, sha256 AS sha FROM dosya WHERE modul = 'rapor_imzali' LIMIT 1")).rows[0];
+  /* veritabanı: iptal edilen isteğin PDF'iyle imzalı sürüm yazılmaz — imzalı dosya BU raporun (dosya kuralı geçer), yalnız "bekleyen isteğin
+     PDF'i" kuralı reddeder (318 incelemesi; olumsuz kanıt tests/bozan/onaylar.bozan.ts) */
+  const y = await a(FA.den, (db) => dosyaYukle(db, depo, { firmaId: A, modul: IMZALI_MODULU, kayitId: h, ad: "imzali.pdf", bayt: imzala(eski), izinli: ["pdf"], kim: "Deneme", yukleyen: FA.den.id }));
+  assert.ok(y.tamam, JSON.stringify(y));
+  const sha = (await sql<{ sha: string }>(A, "SELECT sha256 AS sha FROM dosya WHERE id = $1", [y.id])).rows[0].sha;
   await assert.rejects(sql(A, `INSERT INTO rapor_surumu (rapor_id, no, imzasiz_dosya, imzali_dosya, imzali_sha256, imza_yontem, kunye, personel, icerik)
-    VALUES ($1, 'x', $2, $3, $4, 'dosya', '{}', '{}', '{}')`, [h, eskiDosya, imzali.id, imzali.sha], FA.den.id), /bu raporun değil|bekleyen imza isteğinin/);
+    VALUES ($1, 'x', $2, $3, $4, 'dosya', '{}', '{}', '{}')`, [h, eskiDosya, y.id, sha], FA.den.id), /yalnız bekleyen imza isteğinin/);
   tamam(await yukle(FA.den, h, await surum(h), imzala(await imzasizBayt(h))));
 });
 
@@ -458,9 +461,9 @@ test("imzalı sürüm: yazan ve cihazlar PDF'in hazırlandığı andan (isteğin
   }
 });
 
-/** tarihli rapor: taslakken rapor tarihi (ve kusurluysa "Uygun değil" madde + sonuç) yazılır, gönderilir, türün yöneticisi onaylar, imzalanır;
-    imzalı sürümün kimliği döner */
-async function tarihliImzali(kod: string, tarih: string, kusurlu: boolean, onaylayan: Kisi): Promise<string> {
+/** tarihli rapor: taslakken rapor tarihi (ve kusurluysa "Uygun değil" madde + sonuç) yazılır, gönderilir, türün yöneticisi onaylar, imzaya
+    hazırlanır; raporun kimliği döner */
+async function tarihliOnayli(kod: string, tarih: string, kusurlu: boolean, onaylayan: Kisi): Promise<string> {
   const bas = bugunTr();
   const p = tamam(await a(FA.plan, (db) => planAc(db, depo, FA.plan, A, { tesis: FA.tesis, baslangic: bas, bitis: bas,
     ekip: [FA.denP, FA.mekP].map((x, i) => ({ personel: x, isgNo: `ISG-T${planSira++}-${i}`, kaydet: false })) }))).id;
@@ -473,9 +476,14 @@ async function tarihliImzali(kod: string, tarih: string, kusurlu: boolean, onayl
   await sql(A, "UPDATE rapor SET durum = 'onayda', surum = surum + 1 WHERE id = $1", [h], FA.den.id);
   tamam(await a(onaylayan, async (db) => onayla(db, onaylayan, h, await surum(h))));
   tamam(await hazirla(FA.den, h));
-  tamam(await yukle(FA.den, h, await surum(h), imzala(await imzasizBayt(h))));
-  return (await sql<{ id: string }>(A, "SELECT id::text FROM rapor_surumu WHERE rapor_id = $1", [h])).rows[0].id;
+  return h;
 }
+/** imzalar; raporun son imzalı sürümünün kimliği döner */
+async function imzalaSon(h: string): Promise<string> {
+  tamam(await yukle(FA.den, h, await surum(h), imzala(await imzasizBayt(h))));
+  return (await sql<{ id: string }>(A, "SELECT id::text FROM rapor_surumu WHERE rapor_id = $1 ORDER BY revizyon DESC LIMIT 1", [h])).rows[0].id;
+}
+const tarihliImzali = async (kod: string, tarih: string, kusurlu: boolean, onaylayan: Kisi) => imzalaSon(await tarihliOnayli(kod, tarih, kusurlu, onaylayan));
 
 test("uygunsuzluk: muayene tarihine göre kapanır — sonradan imzalanan eski muayene yenisinin kusurunu kapatmaz, kendi kusuru giderilmiş doğar; daha yeni muayene kapatır; elle kapatılmaz", async () => {
   const uyg = async (s: string) => (await sql<{ kapanis: string | null; kapatan: string | null }>(A,
@@ -492,6 +500,45 @@ test("uygunsuzluk: muayene tarihine göre kapanır — sonradan imzalanan eski m
   assert.ok(ek.length >= 1 && ek.every((x) => x.kapanis === "giderildi" && x.kapatan === yeni), `daha yeni muayene varken kusur giderilmiş doğar: ${JSON.stringify(ek)}`);
   const sonraki = await tarihliImzali("EP-1", "2026-04-01", false, FA.elk);
   assert.ok((await uyg(yeni)).every((x) => x.kapanis === "giderildi" && x.kapatan === sonraki), "daha yeni muayene kapatır");
+});
+
+/* ── 2026-10-05 · 318 ÇAPRAZ İNCELEME DÜZELTMELERİ (göç 0031) ──────────────────────────────────────────────────────────────── */
+const uygunsuzluklar = async (s: string) => (await sql<{ kapanis: string | null; kapatan: string | null }>(A,
+  "SELECT kapanis, kapatan_surum::text AS kapatan FROM uygunsuzluk WHERE surum_id = $1", [s])).rows;
+
+test("veritabanı: muayene tarihi imza gününden ileri olamaz — ileri tarihli rapor imzalanmaz (ekipmanın sonraki kusurlarını kapatırdı)", async () => {
+  const yarin = new Date(Date.parse(`${bugunTr()}T00:00:00Z`) + 864e5).toISOString().slice(0, 10);
+  const h = await tarihliOnayli("HT-2", yarin, false, FA.mek);
+  await assert.rejects(yukle(FA.den, h, await surum(h), imzala(await imzasizBayt(h))), /imza gününden ileri/);
+  assert.equal((await satir(h)).durum, "onaylandi", "imzalanmadı");
+  assert.equal((await sql(A, "SELECT 1 FROM rapor_surumu WHERE rapor_id = $1", [h])).rowCount, 0);
+});
+
+test("uygunsuzluk: yerini revizyona bırakmış imzalı sürümün tarihi başka raporun kusurunu kapatmaz — yalnız raporların son imzalı sürümü sayılır", async () => {
+  /* X: yanlış (ileri ama imza gününü geçmeyen) tarihle imzalanır, revizyonla tarih düzeltilir (R1) */
+  const x = await tarihliOnayli("EP-2", "2026-06-01", false, FA.elk);
+  const x0 = await imzalaSon(x);
+  tamam(await a(FA.elk, async (db) => revizeyeGonder(db, FA.elk, x, await surum(x), { gerekce: "Muayene tarihi yanlış yazılmış" })));
+  await sql(A, "UPDATE rapor SET rapor_tarihi = '2026-02-15', surum = surum + 1 WHERE id = $1", [x], FA.den.id);
+  await sql(A, "UPDATE rapor SET durum = 'onayda', surum = surum + 1 WHERE id = $1", [x], FA.den.id);
+  tamam(await a(FA.elk, async (db) => onayla(db, FA.elk, x, await surum(x))));
+  tamam(await hazirla(FA.den, x));
+  const x1 = await imzalaSon(x);
+  assert.notEqual(x0, x1);
+  /* Y: X'in geçerli tarihinden (02-15) sonra, R0'ın yanlış tarihinden (06-01) önce, kusurlu → kusuru AÇIK doğar */
+  const y = await tarihliImzali("EP-2", "2026-03-01", true, FA.elk);
+  const u = await uygunsuzluklar(y);
+  assert.ok(u.length >= 1 && u.every((z) => z.kapanis === null), `eskimiş sürümün tarihi kusuru kapatmadı: ${JSON.stringify(u)}`);
+});
+
+test("uygunsuzluk: aynı tarihli iki muayenede son imzalanan geçerli — sonradan imzalanan öncekinin kusurunu kapatır, kendi kusuru açık doğar (iki yön)", async () => {
+  const ilk = await tarihliImzali("EP-3", "2026-05-01", true, FA.elk);
+  assert.ok((await uygunsuzluklar(ilk)).every((z) => z.kapanis === null));
+  const uygun = await tarihliImzali("EP-3", "2026-05-01", false, FA.elk);
+  assert.ok((await uygunsuzluklar(ilk)).every((z) => z.kapanis === "giderildi" && z.kapatan === uygun), "aynı gün sonradan imzalanan Uygun muayene kapatır");
+  const son = await tarihliImzali("EP-3", "2026-05-01", true, FA.elk);
+  const u = await uygunsuzluklar(son);
+  assert.ok(u.length >= 1 && u.every((z) => z.kapanis === null), `aynı gün sonradan imzalanan kusurlu muayenenin kusuru açık: ${JSON.stringify(u)}`);
 });
 
 /* ── 318 REVİZYON ───────────────────────────────────────────────────────────────────────────────────────────────── */
@@ -533,22 +580,25 @@ test("revize iste: yalnız yazan, yalnız tamamlanan raporda, gerekçe ≥ 10, t
   assert.equal((await a(FA.mek, (db) => onayEkrani(db, FA.mek, h)))!.istek?.gerekce, "Ölçüm değerleri yanlış yazılmış");
   /* geri çek: yalnız isteyen, gördüğü sürümle */
   const is = v.revize!.bekleyen!.surum;
-  assert.equal((await a(FA.mek, (db) => revizeIstegiGeriCek(db, FA.mek, h, is))).durum, "yetkisiz");
-  assert.equal((await a(FA.den, (db) => revizeIstegiGeriCek(db, FA.den, h, is + 1))).durum, "cakisma");
-  assert.match(tamam(await a(FA.den, (db) => revizeIstegiGeriCek(db, FA.den, h, is))).bildirim, /revize isteği geri çekildi\.$/);
+  assert.equal((await a(FA.mek, (db) => revizeIstegiGeriCek(db, FA.mek, h, v.revize!.bekleyen!.id, is))).durum, "yetkisiz");
+  assert.equal((await a(FA.den, (db) => revizeIstegiGeriCek(db, FA.den, h, v.revize!.bekleyen!.id, is + 1))).durum, "cakisma");
+  assert.match(tamam(await a(FA.den, (db) => revizeIstegiGeriCek(db, FA.den, h, v.revize!.bekleyen!.id, is))).bildirim, /revize isteği geri çekildi\.$/);
   assert.deepEqual(await istekleri(FA.mek, h), [], "geri çekilen istek listeden düşer");
   assert.deepEqual((await a(FA.den, (db) => sahaRaporu(db, FA.den, h)))!.revize, { bekleyen: null, red: null, iste: true });
   /* yeniden iste → yönetici reddeder (gerekçe isteğe bağlı); yazan reddi görür, yeniden isteyebilir */
   tamam(await revIste(FA.den, h, "Sonuç cümlesi eksik kalmış görünüyor"));
-  const is2 = (await istekleri(FA.mek, h))[0].istek.surum;
-  assert.equal((await a(FA.yon, (db) => revizeIstegiReddet(db, FA.yon, h, is2, {}))).durum, "yetkisiz", "firma yöneticisi reddedemez");
-  assert.equal((await a(FA.elk, (db) => revizeIstegiReddet(db, FA.elk, h, is2, {}))).durum, "yok");
-  assert.equal((await a(FA.den, (db) => revizeIstegiReddet(db, FA.den, h, is2, {}))).durum, "yok", "denetçi Onaylar'da yönetici değil");
-  assert.equal((await b(FB.mek, (db) => revizeIstegiReddet(db, FB.mek, h, is2, {}))).durum, "yok", "başka firma");
-  assert.match(tamam(await a(FA.mek, (db) => revizeIstegiReddet(db, FA.mek, h, is2, { gerekce: "Rapor doğru, revize gerekmez" }))).bildirim, /revize isteği reddedildi\.$/);
+  const ist2 = (await istekleri(FA.mek, h))[0].istek, is2 = ist2.surum;
+  /* 2026-10-05 (318 incelemesi): eski sayfadaki (geri çekilmiş) isteğin kimliğiyle yeni istek reddedilmez */
+  assert.equal((await a(FA.mek, (db) => revizeIstegiReddet(db, FA.mek, h, v.revize!.bekleyen!.id, 0, {}))).durum, "cakisma");
+  assert.equal((await istekleri(FA.mek, h))[0].istek.id, ist2.id, "yeni istek bekliyor");
+  assert.equal((await a(FA.yon, (db) => revizeIstegiReddet(db, FA.yon, h, ist2.id, is2, {}))).durum, "yetkisiz", "firma yöneticisi reddedemez");
+  assert.equal((await a(FA.elk, (db) => revizeIstegiReddet(db, FA.elk, h, ist2.id, is2, {}))).durum, "yok");
+  assert.equal((await a(FA.den, (db) => revizeIstegiReddet(db, FA.den, h, ist2.id, is2, {}))).durum, "yok", "denetçi Onaylar'da yönetici değil");
+  assert.equal((await b(FB.mek, (db) => revizeIstegiReddet(db, FB.mek, h, ist2.id, is2, {}))).durum, "yok", "başka firma");
+  assert.match(tamam(await a(FA.mek, (db) => revizeIstegiReddet(db, FA.mek, h, ist2.id, is2, { gerekce: "Rapor doğru, revize gerekmez" }))).bildirim, /revize isteği reddedildi\.$/);
   const d = (await a(FA.den, (db) => sahaRaporu(db, FA.den, h)))!;
   assert.deepEqual([d.revize?.bekleyen, d.revize?.red?.kim, d.revize?.red?.gerekce, d.revize?.iste], [null, "Deneme mek", "Rapor doğru, revize gerekmez", true]);
-  assert.equal((await a(FA.mek, (db) => revizeIstegiReddet(db, FA.mek, h, is2 + 1, {}))).durum, "red", "reddedilmiş istek yeniden reddedilmez");
+  assert.equal((await a(FA.mek, (db) => revizeIstegiReddet(db, FA.mek, h, ist2.id, is2 + 1, {}))).durum, "red", "reddedilmiş istek yeniden reddedilmez");
   assert.equal((await satir(h)).durum, "imzali", "istek raporu değiştirmez");
 });
 
@@ -584,6 +634,11 @@ test("revizeye gönder: yalnız türün branş yöneticisi, tamamlanan raporda, 
   assert.deepEqual(await istekleri(FA.mek, h), []);
   const l = (await a(FA.den, (db) => raporListesi(db, FA.den)))!.find((y) => y.id === h)!;
   assert.deepEqual([l.no, l.geri], [`${kok}-R1`, true]);
+  /* 318 incelemesi: revizyondaki Yeni rapor silinmez (tamamlanan sürüm saklı) — izin yok, sunucu reddeder; plan içi satır görünen numarayla */
+  assert.equal(v.izin.sil, false);
+  assert.deepEqual(await a(FA.den, (db) => raporSil(db, FA.den, h, v.surum)), { durum: "red", neden: "Revizyondaki rapor silinmez; tamamlanan sürüm saklıdır." });
+  const planId = (await sql<{ p: string }>(A, "SELECT plan_id::text AS p FROM rapor WHERE id = $1", [h])).rows[0].p;
+  assert.equal((await a(FA.den, (db) => planIci(db, FA.den, planId)))!.raporlar.find((y) => y.id === h)?.no, `${kok}-R1`);
   assert.equal((await gonder(FA.mek, await surum(h), "İkinci revize denemesi yapılıyor")).durum, "red", "Yeni rapor revizeye gönderilmez");
   /* yeniden onaya, onay, imza → R1 imzalı sürümü; R0'ın uygunsuzluğu "revizyon" ile kapanır, içerik aynı kaldığından R1'inki açık */
   await sql(A, "UPDATE rapor SET durum = 'onayda', surum = surum + 1 WHERE id = $1", [h], FA.den.id);

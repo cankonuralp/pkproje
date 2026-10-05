@@ -2341,6 +2341,26 @@ revizyon, alan kopyalama, hafif kusur devri, meslek eşleşme denetimi).
 - Emsal ürünler: https://opwire.app/iso-17020-periyodik-kontrol-yazilimi/ · https://17020muayene.vidco.com.tr/ · https://akuple.com/asansor-kontrol-yazilimi/ · https://ensyazilim.com/
 
 ## 11 · Değişiklik günlüğü
+- 2026-10-05 (318 çapraz inceleme düzeltmeleri; dört bakış — güvenlik, veritabanı, mantık, arayüz — + her bulguya çürütme denemesi, 18 bulgu
+  doğrulandı). Göç **0031**: (1) **muayene tarihi imza gününden ileri olamaz** (Europe/Istanbul; ileri tarihli tek imzalı rapor ekipmanın açık ve
+  gelecekteki bütün uygunsuzluklarını "giderildi" yapıyordu — revizyon da düzeltmiyordu); Onaya gönderde de: rapor tarihi kontrol başlangıcı ile
+  bugün arasında. (2) "Giderilmiş doğar" yalnız raporların **son imzalı sürümüne** bakar (revizyonla düzeltilen eski tarih başka raporun kusurunu
+  kapatmaz; revize süren raporun önceki sürümü yenisi imzalanana dek geçerli — 193). **Aynı tarihli iki muayenede son imzalanan geçerli**
+  (sonradan imzalanan öncekinin kusurunu kapatır, kendi kusuru açık doğar — iki yönde aynı kural, testle kilitli). (3) Artakalan bekleyen imza
+  istekleri temizlendi (0028 öncesi onaydan çıkmış raporlar). Kod: (4) **imzalı PDF eki** beyaz listeyle denetlenir: ek ayrıştırılır (sınırlı,
+  doğrusal tarama; ek ≤ 4 MB, ≤ 500 nesne; nesne akışı yok), son trailer kökü özgünle aynı, özgün nesnelerden yalnız katalog (yalnız AcroForm ·
+  DSS · Perms · Extensions değişebilir) ve sayfa (yalnız /Annots) yeniden tanımlanır, yeni açıklama yalnız imza alanı (Widget), 4 öğeli ByteRange
+  + onaltılık Contents'li yeni imza sözlüğü şart. (5) **Revizyondaki Yeni rapor silinmez** (tuş yok, sunucu reddeder; tamamlanan sürüm saklı).
+  (6) **Görünen numara** (-R1) plan içi rapor listesinde, iz gerekçelerinde ve kopya kaynağında da. (7) Revize isteğini Reddet / Geri çek
+  **istemcinin gördüğü isteğin kimliğiyle** (eski sayfadan, sonra açılmış yeni istek reddedilmez). (8) Onaya gönderde **kalibrasyon muayene
+  gününe göre** (aylar sonraki revize bugünkü kalibrasyona takılmaz; cihazın bugün kalibrasyonda ya da kayıttan kalkmış olması yalnız ilk sürümde
+  engel). Arayüz: Revize istekleri'nde tuşlar satır kırar, sütunlar genişledi, işlem izni olmayana boş tuş şeridi çizilmez; İmzamı bekleyen
+  sayfasında liste boşken de kendi sekmesi seçili; **pencere** açıkken DOM'dan kalksa da kapanır ve odak açan tuşa döner (tek üretici); Ön izle
+  kaydedince yönlendirici sunucuda yenilenir (geri tuşu eski sürümü getirmez); Raporlar'daki imza şeridinin tuşu yalnız Onaylar'ı görene. 319
+  düzeltmesi: firma kullanıcısı müşteri paneline girince kendi ana sayfasına (giriş ↔ panel yönlendirme döngüsü). Kilit: onaylar.test +3 (ileri
+  tarih, eskimiş sürüm, aynı gün iki yön) + kemer testi artık yalnız "bekleyen isteğin PDF'i" kuralına takılır + R1 silinmez / plan içi -R1 +
+  eski kimlikle reddet; raporlar.test +1 (kalibrasyon muayene günü) + rapor tarihi sınırları; imza-pdf.test +3; bozan +3 (kemer, ileri tarih,
+  eskimiş sürüm) + imza-pdf bozan (özgün nesne, kök). Elenen: yok; açık: Widget görünümünün (/AP) imza alanını örtmesi — kriptografik doğrulamayla.
 - 2026-10-05 (319): **K3 Müşteri girişi + müşteri paneli (Raporlarınız, imzalı PDF) — veritabanında ikinci katman** (maket musteri.html M11,
   musteriler.html "Müşteri girişi"; karar 33, 35, 44, L5, 193; 09-E5; pkproje §1 reisim: "müşteriye bir id parola verilecek ve girdiğinde kendi
   raporlarına oradan erişebilecek ama sadece kendi raporlarını görüp indirecek"). Göç **0030**: `musteri_hesap` (müşteri başına ANA giriş —

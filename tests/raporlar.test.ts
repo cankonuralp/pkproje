@@ -111,6 +111,7 @@ async function firmaKur(firma: string, ek: string): Promise<Firma> {
       { kod: "MN-01", tur: man, gecerli: true, kimde: den1P }, { kod: "MN-02", tur: man, gecerli: false, kimde: den1P },
       { kod: "MN-03", tur: man, gecerli: true, kimde: den2P }, { kod: "MN-04", tur: man, gecerli: true, kimde: den1P },
       { kod: "MN-05", tur: man, gecerli: true, kimde: den1P }, { kod: "TM-01", tur: ter, gecerli: true, kimde: den1P },
+      { kod: "MN-06", tur: man, gecerli: true, kimde: den1P },
     ];
     const cihaz: Record<string, string> = {};
     for (const c of liste) {
@@ -444,11 +445,39 @@ test("onaya gönder: sonuç elle seçildiyse o yazılır (öneri değil), elle s
   /* 312 (§3.8-5): "Uygun değil" maddenin açıklaması zorunlu */
   assert.deepEqual(await gonder(FA.den1, r.id, 2, el), { durum: "eksik", eksikler: [{ bolum: LISTE, alan: `${MADDELER[0].id}.not`, ad: `${MADDELER[0].metin} · kusur açıklaması` }] });
   el.cevaplar.madde[MADDELER[0].id] = { c: "Uygun değil", not: "Korozyon" } as never;
-  assert.deepEqual(await gonder(FA.den1, r.id, 3, el), { durum: "tamam", id: r.id, bildirim: "Onaya gönderildi: Deneme, Mekanik branş yöneticisi." });
+  /* 318 incelemesi: rapor tarihi bugünden sonra, kontrol başlangıcından önce olamaz (ileri tarihli imzalı rapor uygunsuzlukları kapatırdı;
+     veritabanı da ister — 0031, tests/onaylar.test.ts). Her deneme önce kaydeder (sürüm artar), göndermez. */
+  assert.deepEqual(await gonder(FA.den1, r.id, 3, { ...el, tarih: { ...el.tarih, rapor: gun(1) } }), { durum: "gecersiz", hatalar: { "tarih.rapor": "Rapor tarihi bugünden sonra olamaz." } });
+  assert.deepEqual(await gonder(FA.den1, r.id, 4, { ...el, tarih: { ...el.tarih, rapor: gun(-2) } }), { durum: "gecersiz", hatalar: { "tarih.rapor": "Rapor tarihi kontrol başlangıcından önce olamaz." } });
+  assert.equal((await sql<{ durum: string }>(A, "SELECT durum FROM rapor WHERE id = $1", [r.id])).rows[0].durum, "taslak", "gönderilmedi");
+  assert.deepEqual(await gonder(FA.den1, r.id, 5, el), { durum: "tamam", id: r.id, bildirim: "Onaya gönderildi: Deneme, Mekanik branş yöneticisi." });
   const s = (await sql<{ sonuc: string; oto: boolean; sonraki: string; rt: string }>(A,
     "SELECT sonuc, sonuc_oto AS oto, sonraki, rapor_tarihi AS rt FROM rapor WHERE id = $1", [r.id])).rows[0];
   assert.deepEqual([s.sonuc, s.oto, s.sonraki, s.rt], ["uygun", false, gun(364), dun], "denetçinin kararı; uyarı engel değil");
   assert.deepEqual((await sr(FA.den1, r.id))!.tarih, { bas: `${dun}T09:00`, bit: `${dun}T10:30`, sonraki: gun(364), takip: null, rapor: dun });
+});
+
+test("onaya gönder: kalibrasyon MUAYENE GÜNÜNE göre (318 incelemesi) — muayene gününde geçerli, bugün geçmiş cihaz engel değil (aylar sonraki revize takılmaz); muayeneden önce geçmişse engel", async () => {
+  const C6 = FA.cihaz["MN-06"];
+  /* cihazın tek etkin kalibrasyonu verilen günde biter (öncekiler kaldırılır) */
+  const kal = (bitis: string) => sql(A, `WITH k AS (UPDATE kalibrasyon SET kaldirildi = now() WHERE cihaz_id = $1 AND kaldirildi IS NULL)
+    INSERT INTO kalibrasyon (cihaz_id, tarih, bitis, lab, sertifika, sonuc) VALUES ($1, $2, $3, 'Deneme Lab', $4, 'uygun')`, [C6, gun(-300), bitis, `K-MN-06-${bitis}`]);
+  const hazir = async () => {
+    const r = tamam(await olustur(FA.den1, await yeniPlan(), FA.ekp["HT-A1"]));
+    tamam(await a(FA.den1, (db) => cihazEkle(db, FA.den1, r.id, 0, FA.man, C6)));
+    tamam(await foto(FA.den1, r.id, 1));
+    return r.id;
+  };
+  try {
+    const once = await hazir();
+    await kal(gun(-2));   // muayene (dün) gününden önce bitti
+    const e = eksik(await gonder(FA.den1, once, 2, girdi()));
+    assert.deepEqual(e.map((x) => x.alan), [`cihaz.${FA.man}`]);
+    assert.match(e[0].ad, /^MN-06: kalibrasyonu geçmiş/);
+    const gun0 = await hazir();
+    await kal(dun);       // muayene günü bitti: muayenede geçerli, bugün geçmiş
+    assert.equal((await gonder(FA.den1, gun0, 2, girdi())).durum, "tamam", "muayene gününde geçerli kalibrasyon engel değil");
+  } finally { await kal(gun(300)); }
 });
 
 test("sil: yazan Yeni raporunu, teknik yönetici (türün branşı) Yeni raporu siler; silinen görünmez, değişmez, veri kalır; ekipmana yeni rapor açılır; damga veritabanından", async () => {

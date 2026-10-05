@@ -1,6 +1,7 @@
 "use server";
 /* RAPORLAR SUNUCU EYLEMLERİ — kişi ve kiracı oturumdan; yetki, kurallar ve ENGEL'ler modül işlevinde (raporlar.ts). İstemciden gelen kimlik ve sürüm
    yalnız "hangi rapor, hangi sürümü gördüm" bilgisidir; yetki vermez. Cihaz / fotoğraf sayısı istemciden alınmaz. */
+import { refresh } from "next/cache";
 import { ayniKoken } from "../../../server/kimlik/koken";
 import { istekOturumu, oturumIslemi } from "../../../server/kimlik/istek";
 import { depo } from "../../../server/dosya/depo";
@@ -33,7 +34,11 @@ export async function raporOlusturEylemi(planId: string, ekipmanId: string): Pro
   return islem((o) => oturumIslemi(o, (db) => raporOlustur(db, o, metin(planId), metin(ekipmanId))));
 }
 export async function raporKaydetEylemi(id: string, surum: number, girdi: unknown): Promise<RaporYaniti> {
-  return islem((o) => oturumIslemi(o, (db) => raporKaydet(db, o, metin(id), Number(surum), girdi)));
+  const y = await islem((o) => oturumIslemi(o, (db) => raporKaydet(db, o, metin(id), Number(surum), girdi)));
+  /* istemci yönlendiricisi sunucuda yenilenir: Ön izle kaydedip sayfadan çıkar, tarayıcının geri tuşu önbellekteki eski sürümü getirmesin
+     (318 incelemesi — istemcide refresh + push'ta push bekleyen yenilemeyi atar) */
+  if (y.tamam) refresh();
+  return y;
 }
 export async function onayaGonderEylemi(id: string, surum: number, girdi: unknown): Promise<RaporYaniti> {
   return islem((o) => oturumIslemi(o, (db) => onayaGonder(db, o, metin(id), Number(surum), girdi)));
@@ -86,6 +91,6 @@ export async function imzaliYukleEylemi(form: FormData): Promise<RaporYaniti> {
 export async function revizeIsteEylemi(id: string, girdi: unknown): Promise<RaporYaniti> {
   return islem((o) => oturumIslemi(o, (db) => revizeIste(db, o, metin(id), girdi)));
 }
-export async function revizeIstegiGeriCekEylemi(id: string, surum: number): Promise<RaporYaniti> {
-  return islem((o) => oturumIslemi(o, (db) => revizeIstegiGeriCek(db, o, metin(id), Number(surum))));
+export async function revizeIstegiGeriCekEylemi(id: string, istekId: string, surum: number): Promise<RaporYaniti> {
+  return islem((o) => oturumIslemi(o, (db) => revizeIstegiGeriCek(db, o, metin(id), metin(istekId), Number(surum))));
 }

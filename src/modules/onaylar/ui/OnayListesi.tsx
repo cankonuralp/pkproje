@@ -93,12 +93,13 @@ function tumTanimi(l: readonly OnaySatiri[]): SuzgecTanimi<OnaySatiri> {
   };
 }
 
-export function onaySekmeleri(v: Pick<OnayListeleri, "kuyruk" | "tumu" | "branslar" | "imzaBekleyen" | "istekler">) {
+/** secili: bulunulan sekme — liste boşken de kendi sekmesi görünür (318 incelemesi: İmzamı bekleyen sayfasında hiçbir sekme seçili değildi) */
+export function onaySekmeleri(v: Pick<OnayListeleri, "kuyruk" | "tumu" | "branslar" | "imzaBekleyen" | "istekler">, secili?: string) {
   const brans = v.branslar.length === 1 ? ` · ${v.branslar[0] === "m" ? "mekanik" : "elektrik"}` : "";
   const l: (readonly [string, string])[] = [[`Onay kuyruğu${brans} (${v.kuyruk.length})`, "/onaylar"], [`Tüm raporlar (${v.tumu.length})`, "/onaylar/tum"],
     [`Revize istekleri (${v.istekler.length})`, "/onaylar/istekler"]];
   /* yönetici aynı zamanda rapor yazıyorsa (ör. mekanik yönetici + denetçi) kendi imzası ayrı sekmede */
-  if (v.imzaBekleyen.length) l.push([`İmzamı bekleyen raporlar (${v.imzaBekleyen.length})`, "/onaylar/imza"]);
+  if (v.imzaBekleyen.length || secili === "/onaylar/imza") l.push([`İmzamı bekleyen raporlar (${v.imzaBekleyen.length})`, "/onaylar/imza"]);
   return l;
 }
 
@@ -150,7 +151,7 @@ export function ImzaBekleyen({ v }: { v: OnayListeleri }) {
   return (
     <>
       <SayfaBasi baslik="Onaylar" sayac={<Sayac s={s} />} />
-      {v.yonetici && <Sekmeler ad="Onaylar bölümleri" ogeler={onaySekmeleri(v)} secili="/onaylar/imza" />}
+      {v.yonetici && <Sekmeler ad="Onaylar bölümleri" ogeler={onaySekmeleri(v, "/onaylar/imza")} secili="/onaylar/imza" />}
       {n > 0 && (
         <SeritKap>
           <Serit tur="uyari" ikon="file-signature"><b>{n} rapor imzanızı bekliyor</b> · her rapor ayrı imzalanır: raporu açın, İmzala.</Serit>
@@ -166,18 +167,19 @@ export function ImzaBekleyen({ v }: { v: OnayListeleri }) {
    istekleri, en yeni üstte; satırda Reddet ve Revizeye gönder (aynı pencere onay ekranında da). */
 function istekSutunlari(ac: (r: RevizeIstekSatiri, t: RevizeTuru) => void): Sutun<RevizeIstekSatiri>[] {
   return [
-    { k: "no", genislik: "22%", baslik: "Rapor no", kart: "ust", sira: 1, hucre: noHucre },
-    { k: "ekipman", genislik: "20%", baslik: "Ekipman", kart: "govde", sira: 2, hucre: ekipmanHucre },
-    { k: "kisi", genislik: "14%", baslik: "Denetçi", kart: "govde", sira: 3, hucre: (r) => <><KartEtiket>Denetçi</KartEtiket><Kirp>{r.denetci}</Kirp></> },
-    { k: "istek", genislik: "24%", baslik: "İstek", kart: "govde", sira: 4, hucre: (r) => (
+    { k: "no", genislik: "20%", baslik: "Rapor no", kart: "ust", sira: 1, hucre: noHucre },
+    { k: "ekipman", genislik: "18%", baslik: "Ekipman", kart: "govde", sira: 2, hucre: ekipmanHucre },
+    { k: "kisi", genislik: "13%", baslik: "Denetçi", kart: "govde", sira: 3, hucre: (r) => <><KartEtiket>Denetçi</KartEtiket><Kirp>{r.denetci}</Kirp></> },
+    { k: "istek", genislik: "23%", baslik: "İstek", kart: "govde", sira: 4, hucre: (r) => (
       <><KartEtiket>İstek</KartEtiket><span><span className={stil.sayi}>{zamanYaz(r.istek.zaman)}</span><AltSatir><Kirp>{r.istek.gerekce}</Kirp></AltSatir></span></>
     ) },
-    { k: "eylem", genislik: "20%", baslik: "İşlem", gizliBaslik: true, siralanmaz: true, kart: "eylem", sira: 9, hucre: (r) => (
+    /* işlem izni yoksa hücre boş (kart görünümünde :empty kuralı gizler — boş tuş şeridi çizilmez) */
+    { k: "eylem", genislik: "26%", baslik: "İşlem", gizliBaslik: true, siralanmaz: true, kart: "eylem", sira: 9, hucre: (r) => r.izin.revize ? (
       <div className={stil.eylemTuslar}>
-        {r.izin.revize && <Tus tur="ikincil" onClick={() => ac(r, "red")}>Reddet</Tus>}
-        {r.izin.revize && <Tus tur="ikincil" ikon="file-pen-line" onClick={() => ac(r, "revize")}>Revizeye gönder</Tus>}
+        <Tus tur="ikincil" onClick={() => ac(r, "red")}>Reddet</Tus>
+        <Tus tur="ikincil" ikon="file-pen-line" onClick={() => ac(r, "revize")}>Revizeye gönder</Tus>
       </div>
-    ) },
+    ) : null },
   ];
 }
 function istekTanimi(): SuzgecTanimi<RevizeIstekSatiri> {

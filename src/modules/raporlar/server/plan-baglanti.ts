@@ -1,5 +1,6 @@
 /* RAPORLAR ↔ PLANLAR BAĞLANTISI — Planlar modülünün rapor tablosundan istediği her şey yalnız buradan (modül 14; göç 0025). Bu dosya Planlar'ı
    İÇE AKTARMAZ (raporlar.ts Planlar'ı aktarır; döngü olmasın). Yetki ÇAĞIRANDA (plan içi: planı görebilen). */
+import { gorunenNo } from "../sema.ts";
 import type { Sorgulayici } from "../../../server/db/kiraci.ts";
 import { guncelle, tablo, type Iz } from "../../../server/db/yazici.ts";
 import { ayarOku } from "../../../server/ayar/ayar.ts";
@@ -10,7 +11,8 @@ const KUNYE = tablo({ ad: "rapor", sutunlar: ["kunye", "kunye_surum"] });
 
 export type RaporDurumu = "taslak" | "onayda" | "onaylandi" | "imzada" | "imzali";
 export interface PlanRaporu {
-  id: string; no: string; ekipmanId: string; turId: string; durum: RaporDurumu; sonuc: "uygun" | "uygun_degil" | null; olustu: string; personelId: string; hesapId: string | null;
+  /** no: görünen numara (revizyonda "-R1" ekiyle — 193) */
+  id: string; no: string; revizyon: number; ekipmanId: string; turId: string; durum: RaporDurumu; sonuc: "uygun" | "uygun_degil" | null; olustu: string; personelId: string; hesapId: string | null;
   /** satır sürümü (plan içinden Sil, sürüm kilidiyle) */
   surum: number;
 }
@@ -18,10 +20,10 @@ export interface PlanRaporu {
 /** planın etkin raporları (silinen görünmez), en yeni üstte */
 export async function planRaporlari(db: Sorgulayici, planId: string): Promise<PlanRaporu[]> {
   if (!UUID.test(planId)) return [];
-  return (await db.sorgu<{ id: string; no: string; ekipman_id: string; tur_id: string; durum: RaporDurumu; sonuc: "uygun" | "uygun_degil" | null; olustu: Date; personel_id: string; hesap_id: string | null; surum: number }>(
-    `SELECT id::text, no, ekipman_id::text, tur_id::text, durum, sonuc, olustu, personel_id::text, hesap_id::text, surum FROM rapor
+  return (await db.sorgu<{ id: string; no: string; revizyon: number; ekipman_id: string; tur_id: string; durum: RaporDurumu; sonuc: "uygun" | "uygun_degil" | null; olustu: Date; personel_id: string; hesap_id: string | null; surum: number }>(
+    `SELECT id::text, no, revizyon, ekipman_id::text, tur_id::text, durum, sonuc, olustu, personel_id::text, hesap_id::text, surum FROM rapor
      WHERE plan_id = $1 AND silindi IS NULL ORDER BY olustu DESC, no DESC`, [planId])).rows
-    .map((r) => ({ id: r.id, no: r.no, ekipmanId: r.ekipman_id, turId: r.tur_id, durum: r.durum, sonuc: r.sonuc, olustu: r.olustu.toISOString(), personelId: r.personel_id, hesapId: r.hesap_id, surum: r.surum }));
+    .map((r) => ({ id: r.id, no: gorunenNo(r.no, r.revizyon), revizyon: r.revizyon, ekipmanId: r.ekipman_id, turId: r.tur_id, durum: r.durum, sonuc: r.sonuc, olustu: r.olustu.toISOString(), personelId: r.personel_id, hesapId: r.hesap_id, surum: r.surum }));
 }
 
 /** ekipmanın bu planda etkin raporu var mı (raporu olan ekipman pasife alınmaz — 203) */

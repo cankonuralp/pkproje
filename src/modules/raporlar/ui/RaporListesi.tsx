@@ -65,7 +65,8 @@ function tanim(l: readonly RaporListeSatiri[]): SuzgecTanimi<RaporListeSatiri> {
   };
 }
 
-export function RaporListesi({ kayitlar }: { kayitlar: RaporListeSatiri[] }) {
+/** imzaGor: kişi Onaylar'ı görür (İmzamı bekleyen raporlar orada); görmüyorsa şerit yalnız bilgi verir, raporlar listede "Muayene uzmanı imzası" */
+export function RaporListesi({ kayitlar, imzaGor }: { kayitlar: RaporListeSatiri[]; imzaGor: boolean }) {
   const s = useSuzgec(tanim(kayitlar), kayitlar);
   const imza = kayitlar.filter((r) => r.benim && r.durum === "onaylandi").length;
   return (
@@ -73,7 +74,7 @@ export function RaporListesi({ kayitlar }: { kayitlar: RaporListeSatiri[] }) {
       <SayfaBasi baslik="Raporlar" sayac={<Sayac s={s} />} />
       {imza > 0 && (
         <SeritKap>
-          <Serit tur="uyari" ikon="file-signature" eylem={<TusBaglanti ikon="file-signature" href="/onaylar/imza">İmzamı bekleyen raporlar</TusBaglanti>}>
+          <Serit tur="uyari" ikon="file-signature" eylem={imzaGor ? <TusBaglanti ikon="file-signature" href="/onaylar/imza">İmzamı bekleyen raporlar</TusBaglanti> : undefined}>
             <b>{imza} rapor imzanızı bekliyor</b>
           </Serit>
         </SeritKap>

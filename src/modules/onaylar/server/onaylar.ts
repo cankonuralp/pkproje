@@ -80,7 +80,7 @@ export interface OnayListeleri {
   istekler: RevizeIstekSatiri[];
 }
 /** revize isteği: isteyenin adı, zaman, gerekçe; isteğin sürümü (Reddet onunla yazılır) */
-export interface RevizeIstekBilgisi { surum: number; kim: string; zaman: string; gerekce: string }
+export interface RevizeIstekBilgisi { id: string; surum: number; kim: string; zaman: string; gerekce: string }
 export type RevizeIstekSatiri = OnaySatiri & { istek: RevizeIstekBilgisi };
 /** Onay kuyruğu + Tüm raporlar (branşın bütün raporları; maket 190) + İmzamı bekleyen raporlar (C5); Onaylar'ı göremeyene null */
 export async function onayListeleri(db: Sorgulayici, kim: Kisi): Promise<OnayListeleri | null> {
@@ -94,7 +94,7 @@ export async function onayListeleri(db: Sorgulayici, kim: Kisi): Promise<OnayLis
   const tamam = new Map(tum.filter((r) => r.durum === "imzali").map((r) => [r.id, r]));
   const ham = yonetici ? (await revizeIstekleri(db)).filter((x) => tamam.has(x.raporId)) : [];
   const adlar = await hesapAdlari(db, ham.map((x) => x.hesapId));
-  const istekler = ham.map((x) => ({ ...satir(kim, tamam.get(x.raporId)!, simdi), istek: { surum: x.surum, kim: adlar.get(x.hesapId ?? "") ?? "—", zaman: x.zaman, gerekce: x.gerekce } }));
+  const istekler = ham.map((x) => ({ ...satir(kim, tamam.get(x.raporId)!, simdi), istek: { id: x.id, surum: x.surum, kim: adlar.get(x.hesapId ?? "") ?? "—", zaman: x.zaman, gerekce: x.gerekce } }));
   return {
     yonetici,
     kuyruk: tum.filter((r) => r.durum === "onayda").sort(enYeni).map((r) => satir(kim, r, simdi)),
@@ -118,7 +118,7 @@ export async function onayEkrani(db: Sorgulayici, kim: Kisi, id: string): Promis
   const q = r.durum === "onayda" ? await kuyrukOzetleri(db, kim) : [];
   const i = q.findIndex((x) => x.id === id);
   const b = r.durum === "imzali" ? await bekleyenRevizeIstegi(db, r.id, r.revizyon) : null;
-  const istek = b ? { surum: b.surum, kim: (await hesapAdlari(db, [b.hesapId])).get(b.hesapId ?? "") ?? "—", zaman: b.zaman, gerekce: b.gerekce } : null;
+  const istek = b ? { id: b.id, surum: b.surum, kim: (await hesapAdlari(db, [b.hesapId])).get(b.hesapId ?? "") ?? "—", zaman: b.zaman, gerekce: b.gerekce } : null;
   return { r: satir(kim, r, Date.now()), ozet: (await gozdenGecirme(db, id)) ?? [], sira: i >= 0 ? i + 1 : null, kuyrukBoyu: q.length, istek };
 }
 
@@ -208,8 +208,9 @@ export async function revizeyeGonder(db: Sorgulayici, kim: Kisi, id: string, sur
   return { durum: "tamam", sonraki: null, bildirim: `${gorunenNo(r.kokNo, r.revizyon + 1)} açıldı; ${r.denetci} raporun üstünde gerekçeyi görür. Tamamlanan sürüm saklandı.` };
 }
 
-/** Revize isteğini reddet (141 W4): gerekçe isteğe bağlı; denetçi raporunda "Revize isteği reddedildi" şeridini görür, yeniden isteyebilir */
-export async function revizeIstegiReddet(db: Sorgulayici, kim: Kisi, id: string, istekSurum: number, girdi: unknown): Promise<OnayYazma> {
+/** Revize isteğini reddet (141 W4): gerekçe isteğe bağlı; denetçi raporunda "Revize isteği reddedildi" şeridini görür, yeniden isteyebilir.
+    İstemcinin GÖRDÜĞÜ istek (kimlik + sürüm) reddedilir: o arada geri çekilip yeniden açılan istek eski sayfadan reddedilmez (318 incelemesi). */
+export async function revizeIstegiReddet(db: Sorgulayici, kim: Kisi, id: string, istekId: string, istekSurum: number, girdi: unknown): Promise<OnayYazma> {
   const r = await bul(db, kim, id);
   if (!r) return { durum: "yok" };
   if (r.durum !== "imzali") return { durum: "red", neden: "Bu raporda bekleyen revize isteği yok." };
@@ -218,7 +219,7 @@ export async function revizeIstegiReddet(db: Sorgulayici, kim: Kisi, id: string,
   if (!g.tamam) return { durum: "gecersiz", hatalar: g.hatalar };
   const b = await bekleyenRevizeIstegi(db, r.id, r.revizyon);
   if (!b) return { durum: "red", neden: "Bu raporda bekleyen revize isteği yok." };
-  if (!Number.isSafeInteger(istekSurum) || istekSurum < 0) return { durum: "cakisma" };
+  if (b.id !== istekId || !Number.isSafeInteger(istekSurum) || istekSurum < 0) return { durum: "cakisma" };
   const y = await istekReddet(db, iz(kim, "rapor.revize_istek_red", r), { ...b, surum: istekSurum }, g.veri.gerekce || null);
   if (y.durum !== "tamam") return { durum: y.durum === "yok" ? "yok" : "cakisma" };
   return { durum: "tamam", sonraki: null, bildirim: `${r.no} revize isteği reddedildi.` };

@@ -10,4 +10,5 @@
 .secim { display: flex; align-items: center; gap: 8px; min-height: var(--tus-y); cursor: pointer; }
 .secim input { width: 18px; height: 18px; margin: 0; flex: none; accent-color: var(--birincil); }
 .hata { margin: 4px 0 0; color: var(--uyari-yazi); font-size: var(--boy-kucuk); font-weight: 600; }
-.eylemTuslar { display: flex; justify-content: flex-end; gap: 8px; }
+/* iki tuş dar sütuna sığmazsa alt satıra (318 incelemesi: 768'de tuşlar İstek sütununun üstüne taşıyordu) */
+.eylemTuslar { display: flex; flex-wrap: wrap; justify-content: flex-end; gap: 8px; }

@@ -28,7 +28,7 @@ export function RevizePenceresi({ tur, r, istek, onKapat, bitti }: {
   const [hata, setHata] = useState<string | null>(null);
   const revize = tur === "revize";
   const gonder = () => baslat(async () => {
-    const y = revize ? await revizeyeGonderEylemi(r.id, r.surum, { gerekce }) : await revizeIstegiReddetEylemi(r.id, istek?.surum ?? -1, { gerekce });
+    const y = revize ? await revizeyeGonderEylemi(r.id, r.surum, { gerekce }) : await revizeIstegiReddetEylemi(r.id, istek?.id ?? "", istek?.surum ?? -1, { gerekce });
     if (y.tamam) { bildir(y.bildirim ?? "Kaydedildi."); bitti({ bildirim: y.bildirim }); return; }
     if (y.hatalar?.gerekce) { setHata(y.hatalar.gerekce); document.getElementById(ID)?.focus(); return; }
     bitti({ genel: y.genel ?? "İşlem yapılamadı." });
