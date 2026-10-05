@@ -1,13 +1,14 @@
 /* NEREDEN GELDİ: K4 Teklifler (324) — maket teklifler.html (M12 2. tur). Gerçek tarayıcıda, üç genişlikte: yeni teklif (eksikte reddedilir;
    müşteri, tesis, kalem — tutar ve KDV'li toplam canlı) → teklif sayfası (numara T-AAYY-SIRA sunucuda, Taslak) → Gönderildi olarak işaretle →
    Kabul edildi (onay penceresi) → Plan aç · muhasebe teklifi görür, eylem tuşu yok · denetçi Teklifler'i göremez. Her proje kendi teklifini açar.
-   325: "Excel'den yükle" (CSV: geçerli satır kaleme eklenir, bilinmeyen tür gerekçesiyle atlanır), teklif sayfasında PDF ve "Excel'e aktar" iner. */
+   325: "Excel'den yükle" (CSV: geçerli satır kaleme eklenir, bilinmeyen tür gerekçesiyle atlanır), teklif sayfasında PDF ve "Excel'e aktar" iner.
+   326: kabul edilen tekliften "İş sözleşmesi" — form dolu açılır, sözleşmede Dayanak teklif. */
 import { expect, test } from "@playwright/test";
 import { E2E_PLAN, E2E_SAHA } from "./hesaplar";
 import { girisli, hazir } from "./yardimci";
 
 test("teklif: hazırla, gönderildi, kabul edildi; muhasebe yalnız görür, denetçi göremez", async ({ page, context }) => {
-  test.setTimeout(150_000);   // ilk koşuda form ve teklif sayfası soğuk derlenir; PDF Chromium açar
+  test.setTimeout(180_000);   // ilk koşuda form, teklif ve sözleşme sayfaları soğuk derlenir; PDF Chromium açar
   await girisli(page, "yonetici");
   await page.goto("/teklifler/yeni");
   await hazir(page);
@@ -65,6 +66,21 @@ test("teklif: hazırla, gönderildi, kabul edildi; muhasebe yalnız görür, den
   /* listede: kabul edildi */
   await page.goto("/teklifler");
   await hazir(page);
+  await expect(page.getByRole("link", { name: no })).toBeVisible();
+
+  /* 326: "İş sözleşmesi" — form müşteri, Dayanak teklif ve teklifin tesisiyle dolu açılır; sözleşmede Dayanak teklif */
+  await page.goto(adres);
+  await hazir(page);
+  await page.getByRole("link", { name: "İş sözleşmesi" }).click();
+  await expect(page).toHaveURL(/\/sozlesmeler\/yeni\?teklif=/, { timeout: 30_000 });
+  await hazir(page);
+  await expect(page.getByRole("combobox", { name: "Dayanak teklif" })).toContainText(no);
+  await expect(page.getByRole("checkbox", { name: new RegExp(E2E_PLAN.tesis) })).toBeChecked();
+  await page.getByLabel("Başlangıç").fill("01.11.2026");
+  await page.getByLabel("Süre (ay)").fill("12");
+  await page.getByLabel("Ödeme vadesi (gün)").fill("30");
+  await page.getByRole("button", { name: "Sözleşmeyi hazırla" }).click();
+  await expect(page).toHaveURL(/\/sozlesmeler\/[0-9a-f-]{36}$/, { timeout: 30_000 });
   await expect(page.getByRole("link", { name: no })).toBeVisible();
 
   /* muhasebe: görür, eylem yok */

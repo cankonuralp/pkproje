@@ -2341,6 +2341,15 @@ revizyon, alan kopyalama, hafif kusur devri, meslek eşleşme denetimi).
 - Emsal ürünler: https://opwire.app/iso-17020-periyodik-kontrol-yazilimi/ · https://17020muayene.vidco.com.tr/ · https://akuple.com/asansor-kontrol-yazilimi/ · https://ensyazilim.com/
 
 ## 11 · Değişiklik günlüğü
+- 2026-10-05 (326): **Sözleşmeler › Dayanak teklif** (maket sozlesmeler.html formu "Dayanak teklif — kabul edilen teklif; fiyatlar oradan" ve
+  sözleşme sayfası "Dayanak teklif / Sistem öncesi"; 324 incelemesinin ertelenen bulgusu: teklif sayfasındaki "İş sözleşmesi" bağlamı taşımıyordu).
+  Göç **0038**: is_sozlesmesi.teklif_id (aynı firmanın teklifine yabancı anahtar; tetik: AYNI müşterinin KABUL edilmiş teklifi olmalı, sonradan
+  değişmez; müşteri rolü bu sütunu okumaz). Teklifler'in sozlesme-baglanti.ts'i kabul edilmiş teklifleri (müşterisi, tesisleri) ve numaraları
+  verir (Sözleşmeler teklif tablolarına dokunmaz). Sözleşme formunda "Dayanak teklif" (müşterinin kabul edilmiş teklifleri; "Yok (sistem öncesi)";
+  seçilince teklifin etkin tesisleri kapsama eklenir); teklif sayfasındaki "İş sözleşmesi" `?teklif=` ile müşteri, teklif ve tesisler dolu açar.
+  Sözleşme sayfasında Dayanak teklif (teklif sayfasına bağlantı), listede aramada teklif no. Kilit: sozlesmeler.test +1 (seçenekler yalnız kabul
+  edilmiş; başka müşterinin / gönderilmiş teklif reddedilir; sayfa ve liste; veritabanı denetler, değişmez), bozan +1 (müşteri denetimi), e2e
+  (teklif → İş sözleşmesi → dolu form → sözleşmede Dayanak teklif).
 - 2026-10-05 (324 çapraz inceleme düzeltmeleri; dört bakış + her bakışın bulgularına çürütme denemesi, 28 bulgu doğrulandı, 1 elendi). **Göç 0037**
   (Supabase'e henüz uygulanmamıştı, yerinde): kalem / tesis BAŞKA TEKLİFE TAŞINMAZ (gönderilmiş teklifin kalemi taslağa taşınıp tutarı
   değişebiliyordu); kayıtlı müşterili teklif TESİSSİZ GÖNDERİLMEZ; "ilk tesis" istisnası yalnız kayıtlı olmayan müşteriden gelen teklif; taslağın

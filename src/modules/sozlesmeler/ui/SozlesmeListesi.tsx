@@ -17,7 +17,7 @@ function tanim(l: readonly SozlesmeSatiri[]): SuzgecTanimi<SozlesmeSatiri> {
   const tekil = (x: string[]) => [...new Set(x)].sort((a, b) => a.localeCompare(b, "tr"));
   return {
     ad: "Sözleşmelerde ara", ipucu: "No, müşteri, tesis", birim: "sözleşme", imkansiz: "Bir sözleşme aynı anda iki durumda olamaz",
-    metin: (x) => `${x.no} ${x.musteri} ${x.tesisler.join(" ")}`,
+    metin: (x) => `${x.no} ${x.musteri} ${x.tesisler.join(" ")} ${x.teklif?.no ?? ""}`,
     cipler: [
       { k: "imza", ad: "İmza bekliyor", grup: "durum", test: (x) => x.durum === "imza" },
       { k: "yururlukte", ad: "Yürürlükte", grup: "durum", test: (x) => x.durum === "yururlukte" },

@@ -1,6 +1,7 @@
 "use client";
-/* YENİ İŞ SÖZLEŞMESİ (maket sozlesmeler.html #/yeni): müşteri · kapsamdaki tesisler (en az bir) · başlangıç · süre (ay) · ödeme vadesi · yenileme.
-   Numara sunucuda (IS-AAYY-SIRA); bitiş başlangıç + süre − 1 gün. Dayanak teklif Teklifler kalemiyle gelir. Karar sunucuda. */
+/* YENİ İŞ SÖZLEŞMESİ (maket sozlesmeler.html #/yeni): müşteri · Dayanak teklif (326: müşterinin kabul edilmiş teklifi, isteğe bağlı — seçilince
+   teklifin tesisleri kapsama eklenir; teklif sayfasındaki "İş sözleşmesi" ?teklif= ile müşteri, tesisler ve teklif dolu açar) · kapsamdaki tesisler
+   (en az bir) · başlangıç · süre (ay) · ödeme vadesi · yenileme. Numara sunucuda (IS-AAYY-SIRA); bitiş başlangıç + süre − 1 gün. Karar sunucuda. */
 import { useRouter } from "next/navigation";
 import { useState, useTransition } from "react";
 import { useBildir } from "../../../components/bildirim/Bildirim";
@@ -14,18 +15,23 @@ import { sozlesmeHazirlaEylemi } from "./eylemler";
 import stil from "./sozlesmeler.module.css";
 
 const OZET = "sf-ozet";
-const ID = { musteri: "f-musteri", baslangic: "f-baslangic", sure: "f-sure", vade: "f-vade", yenileme: "f-yenileme" } as const;
+const ID = { musteri: "f-musteri", teklif: "f-teklif", baslangic: "f-baslangic", sure: "f-sure", vade: "f-vade", yenileme: "f-yenileme" } as const;
 type Musteri = { id: string; kisa: string; unvan: string; tesisler: { id: string; ad: string; il: string | null; ilce: string | null }[] };
+type Teklif = { id: string; no: string; musteri: string; tarih: string; tesisler: string[] };
 
-export function SozlesmeFormu({ musteriler }: { musteriler: Musteri[] }) {
+/** baslangicDegeri: teklif sayfasından gelince (?teklif=) müşteri, teklif ve teklifin (etkin) tesisleri */
+export function SozlesmeFormu({ musteriler, teklifler = [], baslangicDegeri }: {
+  musteriler: Musteri[]; teklifler?: Teklif[]; baslangicDegeri?: { musteri: string; teklif: string; tesisler: string[] } | null;
+}) {
   const router = useRouter();
   const bildir = useBildir();
   const [bekliyor, baslat] = useTransition();
-  const [d, setD] = useState({ musteri: "", baslangic: "", sure: "", vade: "", yenileme: "yok" });
-  const [tesisler, setTesisler] = useState<string[]>([]);
+  const [d, setD] = useState({ musteri: baslangicDegeri?.musteri ?? "", teklif: baslangicDegeri?.teklif ?? "", baslangic: "", sure: "", vade: "", yenileme: "yok" });
+  const [tesisler, setTesisler] = useState<string[]>(baslangicDegeri?.tesisler ?? []);
   const [h, setH] = useState<Record<string, string>>({});
   const [genel, setGenel] = useState<string | null>(null);
   const m = musteriler.find((x) => x.id === d.musteri);
+  const mTeklifleri = teklifler.filter((t) => t.musteri === d.musteri);
   const kaydet = () => baslat(async () => {
     const r = await sozlesmeHazirlaEylemi({ ...d, tesisler });
     setH(r.hatalar ?? {}); setGenel(r.genel ?? null);
@@ -48,7 +54,20 @@ export function SozlesmeFormu({ musteriler }: { musteriler: Musteri[] }) {
           <FormIzgara>
             <Alan id={ID.musteri} etiket="Müşteri" zorunlu genis hata={h.musteri} sonuc={m?.unvan}>
               <SecimAlani id={ID.musteri} ad="Müşteri" deger={d.musteri} ipucu="Müşteri seçin" gecersiz={!!h.musteri} tanim={ipucuId(ID.musteri)}
-                secenekler={musteriler.map((x) => [x.id, x.kisa] as const)} degistir={(x) => { if (x !== d.musteri) setTesisler([]); setD({ ...d, musteri: x }); }} />
+                secenekler={musteriler.map((x) => [x.id, x.kisa] as const)}
+                degistir={(x) => { if (x !== d.musteri) { setTesisler([]); setD({ ...d, musteri: x, teklif: "" }); } }} />
+            </Alan>
+            <Alan id={ID.teklif} etiket="Dayanak teklif" genis hata={h.teklif} sonuc={h.teklif ? undefined : "Kabul edilen teklif; fiyatlar oradan. Yoksa boş (sistem öncesi)."}>
+              {m ? <SecimAlani id={ID.teklif} ad="Dayanak teklif" deger={d.teklif} ipucu={mTeklifleri.length ? "Teklif seçin" : "Kabul edilmiş teklif yok"} gecersiz={!!h.teklif}
+                  tanim={ipucuId(ID.teklif)} kapali={!mTeklifleri.length}
+                  secenekler={[["", "Yok (sistem öncesi)"], ...mTeklifleri.map((t) => [t.id, t.no, t.tarih.split("-").reverse().join(".")] as const)]}
+                  degistir={(x) => {
+                    setD({ ...d, teklif: x });
+                    /* teklifin (etkin) tesisleri kapsama eklenir */
+                    const t = mTeklifleri.find((y) => y.id === x);
+                    if (t) setTesisler([...new Set([...tesisler, ...t.tesisler.filter((y) => m.tesisler.some((z) => z.id === y))])]);
+                  }} />
+                : <Girdi id={ID.teklif} readOnly value="Önce müşteri seçin" aria-describedby={ipucuId(ID.teklif)} />}
             </Alan>
           </FormIzgara>
           <fieldset className={stil.kutular}>

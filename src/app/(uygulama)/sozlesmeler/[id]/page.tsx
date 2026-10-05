@@ -1,6 +1,7 @@
 /* SÖZLEŞME SAYFASI (maket sozlesmeler.html #/s/<no>): başlık (no, durum) + imzalı sözleşme tuşları · taraflar ve koşullar · kapsam · İSG-KATİP
-   (tesis başına denetçi → ID) · geçmiş. Hizmet sözleşmesi için uyarı yok; yalnız "Müşteri imzası bekleniyor" bilgisi. Görmeyen: bulunamadı. */
+   (tesis başına denetçi → ID) · geçmiş. Dayanak teklif (326: teklif sayfasına bağlantı; yoksa "Sistem öncesi"). Hizmet sözleşmesi için uyarı yok; yalnız "Müşteri imzası bekleniyor" bilgisi. Görmeyen: bulunamadı. */
 import type { Metadata } from "next";
+import Link from "next/link";
 import { notFound } from "next/navigation";
 import { Bilgi, BilgiListesi } from "../../../../components/bilgi/Bilgi";
 import { Yetkisiz } from "../../../../components/hata/Hata";
@@ -41,6 +42,7 @@ export default async function Sayfa({ params }: { params: Promise<{ id: string }
           <Bilgi etiket="Ödeme vadesi">{x.vade} gün</Bilgi>
           <Bilgi etiket="Yenileme">{x.yenileme === "otomatik" ? "Kendiliğinden (fesih yoksa)" : "Yok · yeni teklif"}</Bilgi>
           <Bilgi etiket="İmzalı belge">{x.imzaliDosya ? `${x.no}.pdf` : <DegerYok>Yüklenmedi</DegerYok>}</Bilgi>
+          <Bilgi etiket="Dayanak teklif">{x.teklif ? <Link href={`/teklifler/${x.teklif.id}`}>{x.teklif.no}</Link> : <DegerYok>Sistem öncesi</DegerYok>}</Bilgi>
         </BilgiListesi>
       </Bolum>
       <Bolum id="b-soz-kapsam" baslik="Kapsam" sayac={<><b>{x.kapsam.length}</b> tesis</>}>

@@ -14,11 +14,12 @@ import { duzey, type YetkiHesabi } from "../../../server/yetki/canDo.ts";
 import { dogrula, type DogrulamaHatalari } from "../../../sema/ortak.ts";
 import { musteriOzetleri } from "../../musteriler/server/musteriler.ts";
 import { personelSecenekleri } from "../../personel/server/personel.ts";
+import { kabulTeklifleri, teklifNumaralari } from "../../teklifler/server/sozlesme-baglanti.ts";
 import { bitisHesapla, IsgGirdisi, SozlesmeGirdisi, sozlesmeDurumu, type SozlesmeDurumu } from "../sema.ts";
 
 const MODUL = 12;
 export const DOSYA = { sozlesme: "is_sozlesmesi", isg: "isg_katip", sablon: "sozlesme_sablon" } as const;
-const SOZ = tablo({ ad: "is_sozlesmesi", sutunlar: ["no", "musteri_id", "baslangic", "bitis", "vade", "yenileme", "musteri_imza", "imzali_dosya"] });
+const SOZ = tablo({ ad: "is_sozlesmesi", sutunlar: ["no", "musteri_id", "baslangic", "bitis", "vade", "yenileme", "musteri_imza", "imzali_dosya", "teklif_id"] });
 const KAPSAM = tablo({ ad: "is_sozlesmesi_tesis", sutunlar: ["sozlesme_id", "tesis_id"] });
 const ISG = tablo({ ad: "isg_katip", sutunlar: ["tesis_id", "personel_id", "no", "onay", "bitis", "dosya_id", "onceki", "kaldirildi", "kullanildi"] });
 const SABLON = tablo({ ad: "sozlesme_sablon", sutunlar: ["surum_no", "dosya_id", "kaldirildi"] });
@@ -28,9 +29,10 @@ export interface Kisi extends YetkiHesabi { ad: string }
 export interface IsgSatiri { id: string; tesisId: string; personelId: string; personel: string; no: string; onay: string | null; bitis: string | null; dosyaId: string | null;
   kullanildi: string | null; surum: number; bitti: boolean }
 export interface KapsamTesisi { id: string; ad: string; il: string | null; ilce: string | null; sgk: string | null; isg: IsgSatiri[] }
+/** teklif: dayanak teklif (326; yoksa sistem öncesi) */
 export interface SozlesmeSatiri {
   id: string; no: string; musteriId: string; musteri: string; tesisler: string[]; baslangic: string; bitis: string; durum: SozlesmeDurumu; kalan: number;
-  yenileme: "yok" | "otomatik"; isgSayisi: number; isgKisileri: string[];
+  yenileme: "yok" | "otomatik"; isgSayisi: number; isgKisileri: string[]; teklif: { id: string; no: string } | null;
 }
 export interface SozlesmeKarti extends SozlesmeSatiri {
   surum: number; unvan: string; vd: string | null; vno: string | null; firma: string; vade: number; firmaImza: string; musteriImza: string | null;
@@ -58,20 +60,21 @@ async function kendiKisi(db: Sorgulayici, kim: YetkiHesabi): Promise<string | nu
 }
 
 type SozDb = { id: string; no: string; musteri_id: string; baslangic: string; bitis: string; vade: number; yenileme: "yok" | "otomatik"; firma_imza: string;
-  musteri_imza: string | null; imzali_dosya: string | null; surum: number; olustu: Date };
+  musteri_imza: string | null; imzali_dosya: string | null; teklif_id: string | null; surum: number; olustu: Date };
 type IsgDb = { id: string; tesis_id: string; personel_id: string; no: string; onay: string | null; bitis: string | null; dosya_id: string | null; kullanildi: string | null; surum: number };
 
 async function durum(db: Sorgulayici) {
   const sozlesmeler = (await db.sorgu<SozDb>(
-    `SELECT id::text, no, musteri_id::text, baslangic::text, bitis::text, vade, yenileme, firma_imza::text, musteri_imza::text, imzali_dosya::text, surum, olustu
-       FROM is_sozlesmesi`)).rows;
+    `SELECT id::text, no, musteri_id::text, baslangic::text, bitis::text, vade, yenileme, firma_imza::text, musteri_imza::text, imzali_dosya::text,
+        teklif_id::text, surum, olustu FROM is_sozlesmesi`)).rows;
   const kapsam = (await db.sorgu<{ sozlesme_id: string; tesis_id: string }>("SELECT sozlesme_id::text, tesis_id::text FROM is_sozlesmesi_tesis")).rows;
   const isg = (await db.sorgu<IsgDb>(
     `SELECT id::text, tesis_id::text, personel_id::text, no, onay::text, bitis::text, dosya_id::text, kullanildi::text, surum FROM isg_katip
       WHERE NOT onceki AND kaldirildi IS NULL ORDER BY olustu`)).rows;
   const musteriler = await musteriOzetleri(db);
   const kisiler = await personelSecenekleri(db);
-  return { sozlesmeler, kapsam, isg, musteriler, kisiler };
+  const teklifNo = await teklifNumaralari(db, sozlesmeler.map((x) => x.teklif_id).filter((x): x is string => !!x));
+  return { sozlesmeler, kapsam, isg, musteriler, kisiler, teklifNo };
 }
 type Durum = Awaited<ReturnType<typeof durum>>;
 
@@ -89,6 +92,7 @@ function satir(s: Durum, x: SozDb, bugun: string, ben: string | null): SozlesmeS
     id: x.id, no: x.no, musteriId: x.musteri_id, musteri: m?.kisa ?? "—", tesisler: tesisler.map((t) => t.ad), baslangic: x.baslangic, bitis: x.bitis,
     durum: sozlesmeDurumu(x.musteri_imza, x.bitis, bugun), kalan: gunFarki(bugun, x.bitis), yenileme: x.yenileme, isgSayisi: isg.length,
     isgKisileri: [...new Set(isg.map((r) => isgSatiri(s, r, bugun).personel))],
+    teklif: x.teklif_id ? { id: x.teklif_id, no: s.teklifNo.get(x.teklif_id) ?? "—" } : null,
   };
 }
 
@@ -122,12 +126,14 @@ export async function sozlesmeKarti(db: Sorgulayici, kim: Kisi, id: string): Pro
   };
 }
 
-/** form için: müşteriler + tesisleri (pasifler hariç) ve denetçi seçimi için çalışan personel; yalnız "yaz" */
+/** form için: müşteriler + tesisleri (pasifler hariç), müşterilerin kabul edilmiş teklifleri (Dayanak teklif — 326) ve denetçi seçimi için
+    çalışan personel; yalnız "yaz" */
 export async function sozlesmeSecenekleri(db: Sorgulayici, kim: Kisi) {
   if (!degistirir(kim)) return null;
   const m = await musteriOzetleri(db);
   return {
     musteriler: m.filter((x) => !x.pasif).map((x) => ({ id: x.id, kisa: x.kisa, unvan: x.unvan, tesisler: x.tesisler.filter((t) => !t.pasif).map((t) => ({ id: t.id, ad: t.ad, il: t.il, ilce: t.ilce })) })),
+    teklifler: (await kabulTeklifleri(db)).map((t) => ({ id: t.id, no: t.no, musteri: t.musteriId, tarih: t.tarih, tesisler: t.tesisler })),
     kisiler: (await personelSecenekleri(db)).map(({ id, ad }) => ({ id, ad })),
   };
 }
@@ -141,9 +147,13 @@ export async function sozlesmeHazirla(db: Sorgulayici, kim: Kisi, girdi: unknown
   const m = (await musteriOzetleri(db)).find((x) => x.id === v.musteri && !x.pasif);
   if (!m) return { durum: "gecersiz", hatalar: { musteri: "Müşteri seçilmeli." } };
   if (v.tesisler.some((t) => !m.tesisler.some((y) => y.id === t && !y.pasif))) return { durum: "gecersiz", hatalar: { tesisler: "Tesisler bu müşterinin olmalı." } };
+  /* dayanak teklif: aynı müşterinin kabul edilmiş teklifi (veritabanı da denetler — 0038) */
+  if (v.teklif && !(await kabulTeklifleri(db, v.teklif)).some((t) => t.musteriId === v.musteri)) {
+    return { durum: "gecersiz", hatalar: { teklif: "Teklif bu müşterinin kabul edilmiş teklifi olmalı." } };
+  }
   const no = await numaraAl(db, "sozlesme", { simdi: new Date(`${v.baslangic}T12:00:00+03:00`) });
-  const r = await ekle(db, SOZ, { no, musteri_id: v.musteri, baslangic: v.baslangic, bitis: bitisHesapla(v.baslangic, v.sure), vade: v.vade, yenileme: v.yenileme },
-    { kim: kim.ad, ne: "sozlesme.hazirla" });
+  const r = await ekle(db, SOZ, { no, musteri_id: v.musteri, baslangic: v.baslangic, bitis: bitisHesapla(v.baslangic, v.sure), vade: v.vade, yenileme: v.yenileme,
+    teklif_id: v.teklif }, { kim: kim.ad, ne: "sozlesme.hazirla" });
   for (const t of v.tesisler) await ekle(db, KAPSAM, { sozlesme_id: r.id, tesis_id: t }, { kim: kim.ad, ne: "sozlesme.kapsam" });
   return { durum: "tamam", id: r.id, no };
 }

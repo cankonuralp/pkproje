@@ -24,7 +24,8 @@ async function pdfOku(f: FormDataEntryValue | null): Promise<{ ad: string; bayt:
 export async function sozlesmeHazirlaEylemi(girdi: unknown): Promise<PencereDurumu> {
   const o = await oturum(); if (typeof o === "string") return { genel: o };
   const g = (girdi && typeof girdi === "object" ? girdi : {}) as Record<string, unknown>;
-  const temiz = { musteri: yazi(g.musteri), tesisler: Array.isArray(g.tesisler) ? g.tesisler.map(yazi) : [], baslangic: yazi(g.baslangic), sure: yazi(g.sure), vade: yazi(g.vade), yenileme: yazi(g.yenileme) };
+  const temiz = { musteri: yazi(g.musteri), tesisler: Array.isArray(g.tesisler) ? g.tesisler.map(yazi) : [], baslangic: yazi(g.baslangic), sure: yazi(g.sure), vade: yazi(g.vade), yenileme: yazi(g.yenileme),
+    teklif: yazi(g.teklif) };
   return cevir(await oturumIslemi(o, (db) => sozlesmeHazirla(db, o, temiz)));
 }
 

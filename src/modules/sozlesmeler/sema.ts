@@ -1,6 +1,7 @@
 /* SÖZLEŞME GİRDİLERİ — formun, pencerelerin ve sunucunun TEK şeması (maket sozlesmeler.html denetle / pencere-kaydet). İş sözleşmesi: müşteri,
    en az bir tesis, başlangıç, süre 1–36 ay, ödeme vadesi 0–120 gün, yenileme. İSG-KATİP: tesis + denetçi + sözleşme ID; onay ve bitiş isteğe
-   bağlı (boşsa uyarı yalnız eksik ID'de). Bitiş = başlangıç + süre − 1 gün. */
+   bağlı (boşsa uyarı yalnız eksik ID'de). Bitiş = başlangıç + süre − 1 gün. Dayanak teklif isteğe bağlı (326: aynı müşterinin kabul edilmiş
+   teklifi — sunucu ve veritabanı denetler; boşsa "sistem öncesi"). */
 import { tarih, z } from "../../sema/ortak.ts";
 
 const bos = (s: unknown) => (typeof s === "string" ? (s.trim() === "" ? null : s.trim().replace(/\s+/g, " ")) : s);
@@ -15,6 +16,7 @@ export const SozlesmeGirdisi = z.object({
   sure: tamSayi(1, 36, "1–36 ay."),
   vade: tamSayi(0, 120, "0–120 gün."),
   yenileme: z.enum(["yok", "otomatik"], { error: "Yenileme seçilmeli." }),
+  teklif: z.preprocess((s) => (s === undefined || s === "" ? null : s), z.string().regex(UUID, "Teklif seçilmeli.").nullable()).default(null),
 });
 export type SozlesmeGirdisi = z.output<typeof SozlesmeGirdisi>;
 

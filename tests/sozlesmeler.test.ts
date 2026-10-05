@@ -15,7 +15,8 @@ import { DOSYA_ERISIMI } from "../src/server/dosya/erisim.ts";
 import { musteriKaydet, tesisKaydet, tesisPasif } from "../src/modules/musteriler/server/musteriler.ts";
 import { personelEkle } from "../src/modules/personel/server/personel.ts";
 import { bitisHesapla } from "../src/modules/sozlesmeler/sema.ts";
-import { imzaliYukle, isgIdBul, isgKaldir, isgKaydet, sablonKaldir, sablonlar, sablonYukle, sozlesmeHazirla, sozlesmeKarti, sozlesmeListesi, type Kisi }
+import { imzaliYukle, isgIdBul, isgKaldir, isgKaydet, sablonKaldir, sablonlar, sablonYukle, sozlesmeHazirla, sozlesmeKarti, sozlesmeListesi, sozlesmeSecenekleri,
+  type Kisi }
   from "../src/modules/sozlesmeler/server/sozlesmeler.ts";
 import { testKumesi } from "./yardimci/kume.ts";
 
@@ -162,6 +163,33 @@ test("şablon: yalnız PDF, sürümlü, kaldırılır; yalnız 'değiştirir' g�
   tamam(await a((db) => sablonKaldir(db, PLAN, l[0].id, l[0].surum)));
   assert.deepEqual((await a((db) => sablonlar(db, PLAN))).map((x) => x.surumNo), [1]);
   assert.deepEqual(await a((db) => sablonYukle(db, depo, MUH, A, { ad: "x.pdf", bayt: PDF })), { durum: "yetkisiz" });
+});
+
+test("DAYANAK TEKLİF (326): seçeneklerde müşterilerin kabul edilmiş teklifleri; yalnız aynı müşterinin kabul edilmiş teklifi dayanak olur; sayfada numarası; veritabanı da denetler, sonradan değişmez", async () => {
+  const q = async (metin: string, p: unknown[] = []) => (await a((db) => db.sorgu<{ id: string }>(metin, p))).rows[0]?.id;
+  const tur = (await q("INSERT INTO ekipman_turu (kod, ad, grup, brans, periyot) VALUES ('DT', 'Deneme türü', 'basincli', 'm', 12) RETURNING id::text"))!;
+  const baska = (await q("SELECT musteri_id::text AS id FROM tesis WHERE id = $1", [tBaska]))!;
+  const teklif = async (no: string, m: string, t: string, kabul: boolean) => {
+    const id = (await q("INSERT INTO teklif (no, musteri_id, gecerlilik) VALUES ($1, $2, 30) RETURNING id::text", [no, m]))!;
+    await q("INSERT INTO teklif_kalem (teklif_id, tur_id, adet, fiyat) VALUES ($1, $2, 1, 100) RETURNING id::text", [id, tur]);
+    await q("INSERT INTO teklif_tesis (teklif_id, tesis_id) VALUES ($1, $2) RETURNING id::text", [id, t]);
+    await q("UPDATE teklif SET durum = 'gonderildi' WHERE id = $1 RETURNING id::text", [id]);
+    if (kabul) await q("UPDATE teklif SET durum = 'kabul' WHERE id = $1 RETURNING id::text", [id]);
+    return id;
+  };
+  const kabul = await teklif("T-1026-901", musteri, t1, true), gonderilen = await teklif("T-1026-902", musteri, t1, false), baskasi = await teklif("T-1026-903", baska, tBaska, true);
+  const sec = (await a((db) => sozlesmeSecenekleri(db, PLAN)))!;
+  assert.deepEqual(sec.teklifler.map((t) => [t.no, t.musteri, t.tesisler]).sort(), [["T-1026-901", musteri, [t1]], ["T-1026-903", baska, [tBaska]]], "yalnız kabul edilmişler");
+  for (const [t, ileti] of [[baskasi, "Teklif bu müşterinin kabul edilmiş teklifi olmalı."], [gonderilen, "Teklif bu müşterinin kabul edilmiş teklifi olmalı."], ["x", "Teklif seçilmeli."]]) {
+    assert.deepEqual(await a((db) => sozlesmeHazirla(db, PLAN, S({ teklif: t }))), { durum: "gecersiz", hatalar: { teklif: ileti } }, t);
+  }
+  const r = tamam(await a((db) => sozlesmeHazirla(db, PLAN, S({ teklif: kabul }))));
+  assert.deepEqual((await a((db) => sozlesmeKarti(db, PLAN, r.id)))!.teklif, { id: kabul, no: "T-1026-901" });
+  assert.equal((await a((db) => sozlesmeKarti(db, PLAN, soz)))!.teklif, null, "sistem öncesi");
+  assert.ok((await a((db) => sozlesmeListesi(db, MUH)))!.some((x) => x.teklif?.no === "T-1026-901"), "listede (muhasebe görür)");
+  await assert.rejects(a((db) => db.sorgu("UPDATE is_sozlesmesi SET teklif_id = NULL, surum = surum + 1 WHERE id = $1", [r.id])), /dayanak teklif değişmez/);
+  await assert.rejects(a((db) => db.sorgu(`INSERT INTO is_sozlesmesi (no, musteri_id, baslangic, bitis, vade, yenileme, teklif_id)
+    VALUES ('IS-1026-950', $1, '2026-10-01', '2027-09-30', 30, 'yok', $2)`, [musteri, baskasi])), /bu müşterinin kabul edilmiş teklifi olmalı/);
 });
 
 test("KİRACI: B, A'nın sözleşmesini göremez, ID ekleyemez; veritabanı başka firmanın müşterisine / tesisine / personeline bağlamaz", async () => {

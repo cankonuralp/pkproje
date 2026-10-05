@@ -4,7 +4,8 @@
    2. Süre denetimi olmasaydı geçerliliği dolmuş teklif kabul edilirdi (124: yenisi kopyalanır).
    3. Tesis denetimi olmasaydı teklife başka müşterinin tesisi girerdi (kabulden sonra o tesisin raporları bu teklife bağlanırdı).
    4. Hazırlayan veritabanında damgalanmasaydı istemciden gelen kimlik "hazırlayan" diye yazılırdı (istemciden gelen kimlik yetki vermez).
-   5. (324 incelemesi) Taşıma yasağı olmasaydı gönderilmiş teklifin kalemi taslak teklife taşınır, müşteriye giden teklifin tutarı değişirdi. */
+   5. (324 incelemesi) Taşıma yasağı olmasaydı gönderilmiş teklifin kalemi taslak teklife taşınır, müşteriye giden teklifin tutarı değişirdi.
+   6. (326, 0038) Dayanak teklif denetimi olmasaydı başka müşterinin teklifi sözleşmeye dayanak olurdu (fiyatlar yanlış müşteriden). */
 import assert from "node:assert/strict";
 import { copyFileSync, mkdirSync, mkdtempSync, readdirSync, readFileSync, rmSync, writeFileSync } from "node:fs";
 import { tmpdir } from "node:os";
@@ -20,13 +21,13 @@ let kume: GomuluKume;
 const gecici = mkdtempSync(join(tmpdir(), "teklif-bozan-"));
 const acilan: { supa: SupabaseBenzeri; havuz: Havuz }[] = [];
 
-/** 0037'yi bozarak Supabase taklidi veritabanı açar; A firması, iki müşteri (birer tesis), bir tür */
-async function bozuk(ad: string, eski: string, yeni: string) {
+/** göçü (varsayılan 0037) bozarak Supabase taklidi veritabanı açar; A firması, iki müşteri (birer tesis), bir tür */
+async function bozuk(ad: string, eski: string, yeni: string, goc = "0037_") {
   const klasor = join(gecici, ad);
   mkdirSync(klasor);
   for (const g of readdirSync(GOC_KLASORU)) {
     if (!g.endsWith(".sql")) continue;
-    if (g.startsWith("0037_")) {
+    if (g.startsWith(goc)) {
       const k = readFileSync(join(GOC_KLASORU, g), "utf8");
       assert.ok(k.includes(eski), "bozulacak satır kaynakta yok");
       writeFileSync(join(klasor, g), k.replace(eski, yeni));
@@ -109,4 +110,15 @@ test("0037'de taşıma yasağı kalkınca gönderilmiş teklifin kalemi taslak t
     return db.sorgu("UPDATE teklif_kalem SET teklif_id = $1 WHERE teklif_id = $2", [taslak, gonderilen]);
   });
   assert.equal(r.rowCount, 1, "gönderilmiş teklifin kalemi taşındı");
+});
+
+test("0038'de dayanak teklif denetimi kalkınca başka müşterinin kabul edilmiş teklifi sözleşmeye dayanak olur", async () => {
+  const { havuz, A, m1, m2, t2, tur } = await bozuk("teklif_bozuk6", " AND t.musteri_id = NEW.musteri_id) THEN", ") THEN", "0038_");
+  const r = await kiraciIcinde(havuz, A, async (db) => {
+    const id = await gonderilmis(havuz, A, m2, t2, tur, "T-1026-007");
+    await db.sorgu("UPDATE teklif SET durum = 'kabul' WHERE id = $1", [id]);
+    return db.sorgu(`INSERT INTO is_sozlesmesi (no, musteri_id, baslangic, bitis, vade, yenileme, teklif_id)
+      VALUES ('IS-1026-001', $1, '2026-10-01', '2027-09-30', 30, 'yok', $2)`, [m1, id]);
+  });
+  assert.equal(r.rowCount, 1, "m2'nin teklifi m1'in sözleşmesine dayanak oldu");
 });

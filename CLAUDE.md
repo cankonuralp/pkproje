@@ -92,7 +92,8 @@ pkproje/
   src/modules/olcum-cihazlari/ ÖLÇÜM CİHAZLARI (2026-10-04): cihaz, cihaz türü, kalibrasyon kaydı + sertifika, kalibrasyon durumu (eşik firma ayarı)
   src/modules/zimmetler/    ZİMMETLER (2026-10-04): kimde (son hareketten), değişmez teslim hareketleri + fotoğraf, demirbaş
   src/modules/araclar/      ARAÇLAR (2026-10-04): araç (zimmet varlığı), değişmez teslim tutanağı + açı fotoğrafları, haftalık kilometre
-  src/modules/sozlesmeler/  SÖZLEŞMELER (2026-10-04): iş sözleşmesi + kapsam + imzalı PDF, İSG-KATİP ID (tesis × denetçi), sözleşme şablonu
+  src/modules/sozlesmeler/  SÖZLEŞMELER (2026-10-04): iş sözleşmesi + kapsam + imzalı PDF, İSG-KATİP ID (tesis × denetçi), sözleşme şablonu ·
+                            Dayanak teklif (326, göç 0038; kabul edilmiş teklifler teklifler/server/sozlesme-baglanti.ts'ten; ?teklif= ön doldurma)
   src/modules/dokumanlar/   DÖKÜMANLAR (2026-10-04): standart kütüphanesi (sürümlü PDF), diğer dökümanlar; kriter belgeleri src/tanim/kriterler.ts
   src/modules/egitimler/    EĞİTİMLER (2026-10-04; Dökümanlar sekmesi, modül 10): eğitim türleri, kayıtlar, tekrar tarihi, sertifika
   src/belge/                RAPOR BELGESİ (2026-10-05, 315): belge.ts tek çizici (format tanımından; React createElement, kaçışlı; önizleme = PDF) ·
