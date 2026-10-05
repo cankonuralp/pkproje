@@ -41,6 +41,14 @@ export const AYAR_BOLUMLERI = {
   yapay_zeka: z.object({ acik: z.boolean().default(false), kisi_aylik_sinir: gun(0, 100000).default(200) }),
   /** Tarafsızlık ve çıkar çatışması beyanı (§3.7 satır 3; karar 26): kalite el kitabındaki metin; boşsa varsayılan. Kabul anındaki metin plana yazılır */
   beyan: z.object({ metin: z.string().trim().min(20).max(4000).default(VARSAYILAN_BEYAN) }),
+  /** Müşteriye açık personel belgeleri (323; maket firma-ayarlari "Müşteriye açık personel belgeleri", P3): müşteri panelinin "Muayene personeli"
+      sekmesinde görünen türler — özlük türleri, eğitim sertifikaları (hepsi ya da seçili türler), ekipman atama belgesi. Başlangıç: EKİPNET +
+      bütün eğitim sertifikaları (veritabanı işlevi musteri_personel_belgeleri ayar yokken aynısını uygular — 0035, kilit testi) */
+  musteri_belge: z.object({
+    ozluk: z.array(z.string().regex(/^[a-z0-9]{2,12}$/)).max(30).default(["ekipnet"]),
+    egitim: z.union([z.literal("hepsi"), z.array(z.string().regex(/^[0-9a-f-]{36}$/)).max(100)]).default("hepsi"),
+    atama: z.boolean().default(false),
+  }),
   /** Rol yetkileri (Personel › Rol yetkileri; reisim 32): modül → rol sırasıyla 6 düzey. Boş = önerilen düzen. Okuma / yazma src/server/yetki/matris.ts */
   rol_yetki: z.object({ matris: z.record(z.string().regex(/^(\d{1,2}|hareket)$/), z.array(z.enum(DUZEYLER)).length(6)).default({}) }),
 } as const;

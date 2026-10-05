@@ -71,7 +71,7 @@ export async function dosyaIndirilebilir(db: Sorgulayici, kisi: Indiren, dosyaId
 export async function musteriDosyasi(db: Sorgulayici, dosyaId: string): Promise<IndirilecekDosya | null> {
   if (!UUID.test(dosyaId)) return null;
   const d = (await db.sorgu<{ anahtar: string; ad: string; tur: string; boyut: string }>(
-    "SELECT anahtar, ad, tur, boyut FROM dosya WHERE id = $1 AND modul IN ('rapor_imzali', 'is_sozlesmesi') AND cop IS NULL", [dosyaId])).rows[0];
+    "SELECT anahtar, ad, tur, boyut FROM dosya WHERE id = $1 AND modul IN ('rapor_imzali', 'is_sozlesmesi', 'ozluk', 'egitim', 'atama') AND cop IS NULL", [dosyaId])).rows[0];
   return d ? { anahtar: d.anahtar, ad: d.ad, tur: d.tur, boyut: Number(d.boyut) } : null;
 }
 

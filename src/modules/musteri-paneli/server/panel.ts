@@ -4,10 +4,12 @@
    karar verir (kendi müşterisi, tesis kapsamı, imzalı son sürüm). Panel öteki modüllerin tablolarına dokunmaz; Raporlar ve Müşteriler'in dışa
    açtığı işlevlerden okur. 319: Raporlar ve rapor sayfası (imzalı PDF); 320: Uygunsuzluklar + Excel (tarayıcıda, panelin aldığı veriden);
    321: Planlanan kontroller (Planlar'ın musteri-baglanti.ts'i, 0032) + toplu indirme (ZIP, tarayıcıda); 322: Sözleşmeler (Sözleşmeler'in
-   musteri-baglanti.ts'i, 0034; panelden imza atılmaz — karar 134); personel belgeleri sonraki kalemde. */
+   musteri-baglanti.ts'i, 0034; panelden imza atılmaz — karar 134); 323: Muayene personeli (Personel'in musteri-baglanti.ts'i — veritabanı
+   işlevleri, firmanın müşteriye açtığı belgeler, 0035). */
 import type { Sorgulayici } from "../../../server/db/kiraci.ts";
 import { firmaKunyesi } from "../../../server/ayar/ayar.ts";
 import { musteriOzetleri } from "../../musteriler/server/musteriler.ts";
+import { musteriPersoneli, type MusteriPersoneli } from "../../personel/server/musteri-baglanti.ts";
 import { musteriPlanlari, type MusteriPlani } from "../../planlar/server/musteri-baglanti.ts";
 import { musteriSozlesmeleri, type MusteriSozlesmesi } from "../../sozlesmeler/server/musteri-baglanti.ts";
 
@@ -73,6 +75,15 @@ export async function panelSozlesmesi(db: Sorgulayici, id: string): Promise<{ b:
   const v = await panelSozlesmeleri(db, { id });
   const s = v.sozlesmeler[0];
   return s ? { b: v, s } : null;
+}
+
+/** Muayene personeli (323; maket personelCiz): müşterinin tesislerine giden kişiler, son gidiş, gittiği tesislerin adları, müşteriye açık belgeler */
+export interface PanelPersonelSatiri extends MusteriPersoneli { tesisAdlari: string[] }
+export interface PanelPersoneli extends PanelBasligi { kisiler: PanelPersonelSatiri[] }
+export async function panelPersoneli(db: Sorgulayici): Promise<PanelPersoneli> {
+  const b = await panelBasligi(db);
+  const ad = new Map(b.tesisler.map((t) => [t.id, t.ad]));
+  return { ...b, kisiler: (await musteriPersoneli(db)).map((p) => ({ ...p, tesisAdlari: p.tesisler.map((t) => ad.get(t) ?? "—") })) };
 }
 
 /** rapor sayfası; göremeyene null (başka müşterinin ya da imzasız rapor: var olduğu bile söylenmez) */

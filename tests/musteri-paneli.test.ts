@@ -8,7 +8,9 @@
    321 PLANLANAN KONTROLLER (maket #/plan; karar 81; göç 0032): müşteri rolü planın yalnız tesis / tarih / durum sütunlarını, kendi tesis
    kapsamındaki AÇIK planlarda okur.
    322 SÖZLEŞMELER (maket #/sozlesme; karar 134 "görünür, panelden imza atılmaz"; göç 0034): sözleşmenin yalnız numara / dönem / imza / PDF
-   sütunları; kendi müşterisi ve görebildiği tesis kapsamı; imzalı PDF'in yalnız şu anki sürümü. */
+   sütunları; kendi müşterisi ve görebildiği tesis kapsamı; imzalı PDF'in yalnız şu anki sürümü.
+   323 MUAYENE PERSONELİ (maket #/personel; P3 "o müşteriye giden muayene personelinin firmanın izin verdiği belgelerini görür"; göç 0035):
+   müşteri rolü personel tablolarına dokunmaz; iki işlev yalnız tesislerine giden kişileri ve firmanın açtığı belgeleri döndürür. */
 import assert from "node:assert/strict";
 import { mkdtempSync, rmSync } from "node:fs";
 import { tmpdir } from "node:os";
@@ -22,7 +24,10 @@ import { musteriCikis, musteriGirisiMi, musteriGirisYap, musteriOturumOku, muste
 import { girisYap } from "../src/server/kimlik/oturum.ts";
 import { anaGeciciParola, ekGeciciParola, ekGirisEkle, girisBilgisi, girisPasif } from "../src/modules/musteriler/server/girisler.ts";
 import { musteriKaydet, musteriPasif } from "../src/modules/musteriler/server/musteriler.ts";
-import { panelPlanlari, panelRaporlari, panelRaporu, panelSozlesmeleri, panelSozlesmesi, panelUygunsuzluklari } from "../src/modules/musteri-paneli/server/panel.ts";
+import { panelPersoneli, panelPlanlari, panelRaporlari, panelRaporu, panelSozlesmeleri, panelSozlesmesi, panelUygunsuzluklari } from "../src/modules/musteri-paneli/server/panel.ts";
+import { atamaEkle, ozlukEkle } from "../src/modules/personel/server/dosyalar.ts";
+import { egitimKaydet, egitimTuruKaydet } from "../src/modules/egitimler/server/egitimler.ts";
+import { baslangic } from "../src/server/ayar/ayar.ts";
 import { imzaliYukle as sozlesmeImzaliYukle, sozlesmeHazirla } from "../src/modules/sozlesmeler/server/sozlesmeler.ts";
 import { onayla, revizeyeGonder } from "../src/modules/onaylar/server/onaylar.ts";
 import { planIci, planKabul, planReddet } from "../src/modules/planlar/server/plan-ici.ts";
@@ -423,4 +428,55 @@ test("SÖZLEŞMELER (322): müşteri rolü sözleşmenin yalnız numara / dönem
   await assert.rejects(m(FA.m1, null, (db) => db.sorgu("UPDATE is_sozlesmesi SET bitis = '2030-01-01' WHERE id = $1", [s1])), /permission denied/);
   /* firma tarafı etkilenmez */
   assert.equal((await sql<{ n: number }>(A, "SELECT count(*)::int AS n FROM is_sozlesmesi WHERE id = ANY ($1::uuid[])", [[s1, s2, s3]])).rows[0].n, 3);
+});
+
+test("MUAYENE PERSONELİ (323): tesislerine giden kişiler (son imzalı raporu yazan ya da açık planın ekibi) ve firmanın müşteriye açtığı belgeler; başlangıç ayarı EKİPNET + eğitim sertifikaları, ayar değişince türler; belge dosyası yalnız listedekiyse iner; personel tablolarına doğrudan erişim yok; başka müşteri / firma görmez", async () => {
+  const yon = FA.yon;
+  const q = async (metin: string, p: unknown[] = []) => (await sql<{ id: string }>(A, metin, p, yon.id)).rows[0].id;
+  const p2 = await q("INSERT INTO personel (ad, basla, meslek, ekipnet) VALUES ('Deneme Plan', '2024-01-01', 'mak-muh', '124') RETURNING id::text");
+  const p3 = await q("INSERT INTO personel (ad, basla, meslek, ekipnet) VALUES ('Deneme Gitmeyen', '2024-01-01', 'mak-muh', '125') RETURNING id::text");
+  /* p2 yalnız m1'in Merkez'indeki AÇIK planın ekibinde */
+  tamam(await a(FA.plan, (db) => planAc(db, depo, FA.plan, A, { tesis: FA.t1, baslangic: "2026-12-10", bitis: "2026-12-10", ekip: [{ personel: p2, isgNo: `ISG-Y${planSira++}`, kaydet: false }] })));
+  /* belgeler */
+  const pdf = (n: string) => ({ ad: `${n}.pdf`, bayt: new TextEncoder().encode(`%PDF-1.4\n% ${n}\n%%EOF\n`) });
+  const ozluk = async (kisi: string, tur: string) => {
+    const id = tamam(await a(yon, (db) => ozlukEkle(db, depo, yon, A, kisi, { tur, aciklama: "" }, pdf(tur)))).id;
+    return (await sql<{ d: string }>(A, "SELECT dosya_id::text AS d FROM ozluk_belgesi WHERE id = $1", [id])).rows[0].d;
+  };
+  const ekipnet = await ozluk(FA.denP, "ekipnet"), kimlik = await ozluk(FA.denP, "kimlik"), gitmeyen = await ozluk(p3, "ekipnet");
+  const egTur = tamam(await a(yon, (db) => egitimTuruKaydet(db, yon, null, 0, { ad: "İSG", tekrar: "12" }))).id;
+  const egId = tamam(await a(yon, (db) => egitimKaydet(db, depo, yon, A, { personel: FA.denP, tur: egTur, tarih: "2026-01-10", kurum: "Firma içi" }, pdf("isg")))).id;
+  const egitim = (await sql<{ d: string }>(A, "SELECT dosya_id::text AS d FROM egitim_kaydi WHERE id = $1", [egId])).rows[0].d;
+  const htTur = (await sql<{ id: string }>(A, "SELECT id::text FROM ekipman_turu WHERE kod = 'HT'")).rows[0].id;
+  const atId = tamam(await a(yon, (db) => atamaEkle(db, depo, yon, A, FA.denP, { tur: htTur, tarih: "2026-01-05" }, pdf("atama")))).id;
+  const atama = (await sql<{ d: string }>(A, "SELECT dosya_id::text AS d FROM ekipman_atamasi WHERE id = $1", [atId])).rows[0].d;
+  const l = async (mid: string, t: string[] | null) => (await m(mid, t, (db) => panelPersoneli(db))).kisiler;
+  /* başlangıç ayarı (kayıt yok): EKİPNET + bütün eğitim sertifikaları; TS başlangıcıyla aynı */
+  assert.deepEqual(baslangic("musteri_belge"), { ozluk: ["ekipnet"], egitim: "hepsi", atama: false });
+  const v = await l(FA.m1, null);
+  const den = v.find((x) => x.id === FA.denP)!, plan = v.find((x) => x.id === p2)!;
+  assert.ok(den && plan && !v.some((x) => x.id === p3), "giden iki kişi; gitmeyen yok");
+  assert.deepEqual(den.belgeler.map((b) => b.ad), ["EKİPNET kayıt belgesi", "İSG sertifikası"]);
+  assert.equal(den.belgeler.find((b) => b.ad === "İSG sertifikası")!.gecerli, "2027-01-10", "eğitimin tekrar tarihi");
+  assert.deepEqual([plan.ad, plan.son, plan.tesisAdlari, plan.belgeler], ["Deneme Plan", "2026-12-10", ["Merkez"], []]);
+  assert.deepEqual((await l(FA.m1, [FA.t2])).map((x) => x.id), [FA.denP], "ek giriş: yalnız kapsamdaki tesise giden");
+  assert.ok((await l(FA.m2, null)).every((x) => x.id !== p2), "öteki müşteri planı görmez");
+  assert.deepEqual(await l(FB.m1, null), [], "başka firma");
+  /* dosya: yalnız listedeki belge iner */
+  assert.ok(await m(FA.m1, null, (db) => musteriDosyasi(db, ekipnet)));
+  assert.ok(await m(FA.m1, null, (db) => musteriDosyasi(db, egitim)));
+  for (const d of [kimlik, atama, gitmeyen]) assert.equal(await m(FA.m1, null, (db) => musteriDosyasi(db, d)), null, "müşteriye açılmamış / gitmeyen kişinin belgesi");
+  assert.equal(await kiraciIcinde(havuz, B, (db) => musteriDosyasi(db, ekipnet), { musteri: { id: FB.m1, tesisler: null } }), null, "başka firma");
+  /* ayar: özlük EKİPNET + kimlik, eğitim yok, atama açık */
+  await sql(A, "INSERT INTO firma_ayar (bolum, deger) VALUES ('musteri_belge', $1)", [{ ozluk: ["ekipnet", "kimlik"], egitim: [], atama: true }], yon.id);
+  const den2 = (await l(FA.m1, null)).find((x) => x.id === FA.denP)!;
+  assert.deepEqual(den2.belgeler.map((b) => b.ad), ["Ekipman atama belgesi · Hava tankı", "EKİPNET kayıt belgesi", "Kimlik belgesi"]);
+  assert.ok(await m(FA.m1, null, (db) => musteriDosyasi(db, kimlik)), "açılan tür iner");
+  assert.equal(await m(FA.m1, null, (db) => musteriDosyasi(db, egitim)), null, "kapatılan tür inmez");
+  /* müşteri rolü personel tablolarına ve ayara doğrudan erişemez; uygulama rolü işlevleri çağıramaz */
+  for (const t of ["ozluk_belgesi", "egitim_kaydi", "egitim_turu", "ekipman_atamasi", "firma_ayar", "plan_ekip"]) {
+    await assert.rejects(m(FA.m1, null, (db) => db.sorgu(`SELECT 1 FROM ${t} LIMIT 1`)), /permission denied/, t);
+  }
+  await assert.rejects(sql(A, "SELECT * FROM musteri_personeli()"), /permission denied/, "personel işlemi işlevi çağıramaz");
+  await assert.rejects(sql(A, "SELECT * FROM musteri_personel_belgeleri()"), /permission denied/);
 });

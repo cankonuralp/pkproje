@@ -123,7 +123,8 @@ pkproje/
   src/modules/musteri-paneli/ MÜŞTERİ PANELİ (2026-10-05, 319; modül 17): server/panel.ts (yalnız musteriIslemi içinde; Raporlar'ın musteri-baglanti.ts
                             ve Müşteriler'den okur; 0033 uygunsuzluk yalnız açık sürümün, pasif müşterinin oturumu hemen düşer) · ui/ (Raporlarınız; 320: Uygunsuzluklar /portal/uygunsuz, Excel tarayıcıda — ui/kusur.ts; 321: Planlanan kontroller /portal/plan — Planlar'ın
                             server/musteri-baglanti.ts, göç 0032 sütun sınırlı —, toplu ZIP ui/topluIndir.ts + ui/ad.ts; 322: Sözleşmeler /portal/sozlesme + /portal/s/<id> — Sözleşmeler'in
-                            server/musteri-baglanti.ts, göç 0034). Müşteri girişi yönetimi: musteriler/server/girisler.ts + ui/GirisBolumu.tsx;
+                            server/musteri-baglanti.ts, göç 0034; 323: Muayene personeli /portal/personel — Personel'in server/musteri-baglanti.ts'i, göç 0035
+                            veritabanı işlevleri musteri_personeli / musteri_personel_belgeleri, firma ayarı musteri_belge). Müşteri girişi yönetimi: musteriler/server/girisler.ts + ui/GirisBolumu.tsx;
                             giriş / oturum çekirdeği src/server/kimlik/musteri.ts; kabuk src/components/kabuk/MusteriKabugu.tsx
   src/modules/ekipman/      EKİPMAN (2026-10-04, 309): tesisin kalıcı ekipman kaydı (kod firmada eşsiz; eski kod başkasına verilmez — ekipman_kodu)
   src/tanim/iller.ts        81 il + 973 ilçe (açık veri, MIT; bir kez alındı)

@@ -12,11 +12,12 @@ export function SonucYazisi({ sonuc }: { sonuc: "uygun" | "uygun_degil" | null }
   return <span className={sonuc === "uygun" ? stil.sonucUygun : stil.sonucHata}>{sonuc === "uygun" ? "Uygun" : "Uygun değil"}</span>;
 }
 
-/** panel sekmeleri (maket musteri.html a-sekmeler): Raporlar · Uygunsuzluklar (açık sayısı) · Planlanan kontroller (321) · Sözleşmeler (322);
-    muayene personeli sonraki kalemde */
-export function PanelSekmeleri({ acikUygunsuz, secili }: { acikUygunsuz: number; secili: "/portal" | "/portal/uygunsuz" | "/portal/plan" | "/portal/sozlesme" }) {
+/** panel sekmeleri (maket musteri.html a-sekmeler): Raporlar · Uygunsuzluklar (açık sayısı) · Planlanan kontroller (321) · Sözleşmeler (322) ·
+    Muayene personeli (323) */
+export function PanelSekmeleri({ acikUygunsuz, secili }: { acikUygunsuz: number; secili: "/portal" | "/portal/uygunsuz" | "/portal/plan" | "/portal/sozlesme" | "/portal/personel" }) {
   return <Sekmeler ad="Panel görünümleri" secili={secili}
-    ogeler={[["Raporlar", "/portal"], [`Uygunsuzluklar (${acikUygunsuz})`, "/portal/uygunsuz"], ["Planlanan kontroller", "/portal/plan"], ["Sözleşmeler", "/portal/sozlesme"]]} />;
+    ogeler={[["Raporlar", "/portal"], [`Uygunsuzluklar (${acikUygunsuz})`, "/portal/uygunsuz"], ["Planlanan kontroller", "/portal/plan"], ["Sözleşmeler", "/portal/sozlesme"],
+      ["Muayene personeli", "/portal/personel"]]} />;
 }
 
 /** sözleşme durumu (maket SOZ_DURUM) */

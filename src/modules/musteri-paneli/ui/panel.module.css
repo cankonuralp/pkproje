@@ -14,3 +14,7 @@
 .onizleme td { padding: 6px 8px; border-bottom: 1px solid var(--kenar); vertical-align: top; overflow-wrap: anywhere; }
 .onizleme td:last-child, .onizleme th:last-child { width: 34%; }
 .sayi { font-variant-numeric: tabular-nums; }
+/* Muayene personeli belgeleri (maket a-personel-belgeler): ad + geçerlilik solda, "Aç" sağda */
+.belgeler { display: grid; gap: 6px; margin: 0; padding: 0; list-style: none; }
+.belgeler li { display: flex; align-items: center; justify-content: space-between; gap: 8px; min-width: 0; }
+.belgeler li > span { min-width: 0; overflow-wrap: anywhere; }

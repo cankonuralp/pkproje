@@ -2341,6 +2341,18 @@ revizyon, alan kopyalama, hafif kusur devri, meslek eşleşme denetimi).
 - Emsal ürünler: https://opwire.app/iso-17020-periyodik-kontrol-yazilimi/ · https://17020muayene.vidco.com.tr/ · https://akuple.com/asansor-kontrol-yazilimi/ · https://ensyazilim.com/
 
 ## 11 · Değişiklik günlüğü
+- 2026-10-05 (323): **K3 Müşteri paneli › Muayene personeli belgeleri** (maket musteri.html #/personel personelCiz; P3 2026-10-01 reisim:
+  "müşteri girişine … muayene personeli belgeleri kısmı olur o müşteriye giden muayene personelinin firmanın izin verdiği belgelerini görür
+  (ekipnet belgesi isg belgeleri vs)"). Göç **0035**: müşteri rolü personel, özlük, eğitim, atama ve ayar tablolarına HİÇ dokunmaz; iki işlev
+  yalnız gerekeni döndürür (sahibin haklarıyla, firma ve müşteri süzgeci açık yazılı): `musteri_personeli()` — görebildiği tesislere GİDEN kişi
+  (son imzalı raporu yazan ya da AÇIK planın ekibinde): ad, meslek, son gidiş, tesisler (başka kişisel alan yok); `musteri_personel_belgeleri()`
+  — bu kişilerin firmanın müşteriye açtığı belgeleri. Firma ayarı **musteri_belge** (özlük türleri · eğitim sertifikaları: hepsi ya da seçili
+  türler · ekipman atama belgesi); başlangıç: **EKİPNET + bütün eğitim sertifikaları** (maketteki varsayılan; veritabanı ayar yokken aynısını
+  uygular — kilitli). Ayarın ekranı Firma ayarları kalemiyle (K4). Dosya politikası yalnız listedeki belgenin dosyasını açar. Panelde beşinci
+  sekme **Muayene personeli** (/portal/personel): kişi ve meslek, son gidiş ve tesisler, belgeler (eğitimde geçerlilik — süresi geçtiyse uyarı;
+  "Aç"). Kilit: musteri-paneli.test +1 (plan ekibi ve rapor yazanı, gitmeyen yok, ek giriş kapsamı, öteki müşteri / firma, başlangıç ayarı TS
+  ile aynı, ayar değişince türler, yalnız listedeki belgenin dosyası, personel tablolarına doğrudan erişim yok, uygulama rolü işlevleri
+  çağıramaz), bozan +2 (tür süzgeci, plan yolunda müşteri süzgeci); e2e sekme. Müşteri paneli (K3) böylece maketteki beş sekmeyle tamam.
 - 2026-10-05 (322): **K3 Müşteri paneli › Sözleşmeler** (maket musteri.html #/sozlesme sozCiz, #/s/<no>; karar 134 "müşteri panelinde
   görünür, panelden imza atılmaz"). Göç **0034**: müşteri rolü iş sözleşmesinin YALNIZ numara, dönem, müşteri imza tarihi ve imzalı PDF
   sütunlarını okur (vade, yenileme, firma imzası yok; İSG-KATİP kayıtları ve sözleşme şablonu hiç yok); yalnız kendi müşterisinin ve kapsamında

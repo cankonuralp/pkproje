@@ -9,7 +9,9 @@
    6. (0033) Pasif müşterinin oturumları düşürülmeseydi yeniden etkinleşince okunmamış eski belirteç geçerli olurdu.
    7. (0033) Müşterinin kayıtlı e-postası kullanıcı adı sayılmasaydı personel hesabı o adresi alır, müşterinin ana girişi açılamazdı.
    8. (0033) Parola değişince kilit sıfırlanmasaydı yeni geçici parolanın sahibi kilitli kalırdı.
-   9. (322, 0034) Sözleşme kapsamı tesis süzgecinden geçmeseydi seçili tesisli ek giriş sözleşmedeki öteki tesisleri görürdü. */
+   9. (322, 0034) Sözleşme kapsamı tesis süzgecinden geçmeseydi seçili tesisli ek giriş sözleşmedeki öteki tesisleri görürdü.
+  10. (323, 0035) Firma ayarındaki tür süzgeci olmasaydı müşteri personelin bütün özlük belgelerini (kimlik, sağlık raporu …) görürdü.
+  11. (323, 0035) Plan yolunda müşteri süzgeci olmasaydı başka müşterinin tesisine giden personel de listelenirdi. */
 import assert from "node:assert/strict";
 import { copyFileSync, mkdirSync, mkdtempSync, readdirSync, readFileSync, rmSync, writeFileSync } from "node:fs";
 import { tmpdir } from "node:os";
@@ -176,4 +178,38 @@ test("0034'teki kapsam süzgeci kalkınca seçili tesisli giriş sözleşmedeki 
   } finally { await supa.sahip.query("SET session_replication_role = origin"); }
   const n = (await kiraciIcinde(havuz, A, (db) => db.sorgu<{ n: number }>("SELECT count(*)::int AS n FROM is_sozlesmesi_tesis"), { musteri: { id: m1, tesisler: [t1] } })).rows[0].n;
   assert.equal(n, 2, "kapsam dışı tesis göründü");
+});
+
+const OZLUK_TUR = `
+      AND o.tur IN (SELECT jsonb_array_elements_text(CASE WHEN jsonb_typeof(a.d->'ozluk') = 'array' THEN a.d->'ozluk' ELSE '["ekipnet"]'::jsonb END))`;
+const PLAN_MUSTERI = "WHERE p.firma_id = gecerli_firma() AND t.musteri_id = gecerli_musteri() AND musteri_tesis_gorur(p.tesis_id)";
+
+/** süper kullanıcıyla, tetiksiz: m1'in tesisinde AÇIK plan, ekibinde bir personel; personelin kimlik belgesi (özlük) */
+async function personelKur(supa: SupabaseBenzeri, A: string, m1: string) {
+  const t = (await supa.sahip.query<{ id: string }>("SELECT id::text FROM tesis WHERE firma_id = $1 AND musteri_id = $2 LIMIT 1", [A, m1])).rows[0].id;
+  await supa.sahip.query("SET session_replication_role = replica");
+  try {
+    const q = async (sql: string, p: unknown[]) => (await supa.sahip.query<{ id: string }>(sql, p)).rows[0].id;
+    const per = await q("INSERT INTO personel (firma_id, ad, basla, meslek) VALUES ($1, 'Deneme Bir', '2024-01-01', 'mak-muh') RETURNING id::text", [A]);
+    const plan = await q(`INSERT INTO plan (firma_id, no, tesis_id, baslangic, bitis, durum, firma_adi, acan) VALUES ($1, 'P-0126-001', $2, '2026-12-01', '2026-12-01', 'bekliyor',
+      'Deneme', 'Deneme') RETURNING id::text`, [A, t]);
+    await q("INSERT INTO plan_ekip (firma_id, plan_id, personel_id) VALUES ($1, $2, $3) RETURNING id::text", [A, plan, per]);
+    await q("INSERT INTO ozluk_belgesi (firma_id, personel_id, tur, dosya_id) VALUES ($1, $2, 'kimlik', gen_random_uuid()) RETURNING id::text", [A, per]);
+  } finally { await supa.sahip.query("SET session_replication_role = origin"); }
+}
+
+test("0035'teki tür süzgeci kalkınca müşteri personelin kimlik belgesini görür (kilidin koruduğu açık)", async () => {
+  const { havuz, A, m1 } = await bozuk("musteri_bozuk10", OZLUK_TUR, "", "0035_");
+  await personelKur(acilan.at(-1)!.supa, A, m1);
+  const n = (await kiraciIcinde(havuz, A, (db) => db.sorgu<{ n: number }>("SELECT count(*)::int AS n FROM musteri_personel_belgeleri() WHERE tur = 'kimlik'"),
+    { musteri: { id: m1, tesisler: null } })).rows[0].n;
+  assert.equal(n, 1, "kimlik belgesi müşteriye açıldı");
+});
+
+test("0035'teki plan yolunda müşteri süzgeci kalkınca başka müşteri, öteki müşterinin tesisine giden personeli görür", async () => {
+  const { havuz, A, m1, m2 } = await bozuk("musteri_bozuk11", PLAN_MUSTERI, "WHERE p.firma_id = gecerli_firma()", "0035_");
+  await personelKur(acilan.at(-1)!.supa, A, m1);
+  const n = (await kiraciIcinde(havuz, A, (db) => db.sorgu<{ n: number }>("SELECT count(*)::int AS n FROM musteri_personeli()"),
+    { musteri: { id: m2, tesisler: null } })).rows[0].n;
+  assert.equal(n, 1, "öteki müşterinin planındaki personel göründü");
 });
