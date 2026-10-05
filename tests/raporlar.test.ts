@@ -545,7 +545,9 @@ test("veritabanı: rapor Yeni açılır, türün yayındaki formatıyla, plandak
   await assert.rejects(deg("plan_id = gen_random_uuid()"), /değişmez/);
   await assert.rejects(deg("personel_id = $2", [FA.den2P]), /değişmez/);
   await assert.rejects(deg("hesap_id = $2", [FA.yon.id]), /değişmez/);
-  await assert.rejects(deg("revizyon = 1"), /değişmez/);
+  /* 2026-10-05 (318, göç 0029): revizyon artık yalnız Tamamlandı → Yeni revizeye gönderirken bir artar — Yeni rapordaki değişiklik bu
+     kuralın iletisiyle reddedilir (önceki "değişmez" iletisi değişti, ret aynı) */
+  await assert.rejects(deg("revizyon = 1"), /revizyon yalnız tamamlanan rapor revizeye gönderilirken/);
   await assert.rejects(deg("format_id = $2", [FA.format2]), /daha yeni yayınlanmış/);
   await assert.rejects(deg("format_id = $2", [taslak]), /daha yeni yayınlanmış/, "taslak sürüme geçilmez");
   /* geçişler: 311'de yalnız Yeni → onayda açıktı; 2026-10-05 (314, göç 0026) Yeni · onayda · onaylandı arası açıldı (onay, geri gönder,
