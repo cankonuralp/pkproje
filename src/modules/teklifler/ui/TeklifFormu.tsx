@@ -15,19 +15,15 @@ import { Tus, TusBaglanti } from "../../../components/tus/Tus";
 import { tutar } from "../../../sema/ortak";
 import { IL_ILCE } from "../../../tanim/iller";
 import { kalemlereEkle, type ExcelSatiri } from "../excel";
+import type { AdayDegeri, KalemDegeri, TeklifFormDegeri } from "../form-degeri";
 import { kdvli, para, paraGirdi } from "../sema";
 import type { TeklifSecenekleri } from "../server/teklifler";
 import { ExcelAktar, ExcelYukle } from "./EkipmanExcel";
 import { teklifEkipmanlariEylemi, teklifKaydetEylemi } from "./eylemler";
 import stil from "./teklifler.module.css";
 
-type Kalem = { tur: string; adet: string; fiyat: string };
-type Aday = { unvan: string; vd: string; vno: string; adres: string; il: string; ilce: string; eposta: string; tel: string; yetkili: string };
-export interface TeklifFormDegeri {
-  tip: "kayitli" | "aday"; musteri: string; tesis: string; ekTesisler: string[]; aday: Aday; gecerlilik: string; kdv: string; notlar: string; kalemler: Kalem[];
-  ekipmanlar: { kod: string; tur: string; konum: string; seri: string }[];
-}
-export const BOS_ADAY: Aday = { unvan: "", vd: "", vno: "", adres: "", il: "", ilce: "", eposta: "", tel: "", yetkili: "" };
+type Kalem = KalemDegeri;
+type Aday = AdayDegeri;
 const OZET = "tf-ozet";
 /* alan kimlikleri tek yerde (Alan ve girdisi aynı kimliği paylaşır — tests/ayni-id.test.ts) */
 const FID = { musteri: "f-musteri", tesis: "f-tesis", il: "f-a-il", ilce: "f-a-ilce", gecerlilik: "f-gecerlilik", kdv: "f-kdv", not: "f-not" } as const;
@@ -41,8 +37,9 @@ const alanId = (k: string) => {
   return ({ musteri: "f-musteri", tesis: "f-tesis", gecerlilik: "f-gecerlilik", kdv: "f-kdv", notlar: "f-not", kalemler: "f-tur-0" } as Record<string, string>)[k] ?? OZET;
 };
 
-export function TeklifFormu({ secenekler, deger, id, surum, no, kopyaKaynak }: {
-  secenekler: TeklifSecenekleri; deger: TeklifFormDegeri; id?: string; surum?: number; no?: string; kopyaKaynak?: { id: string; no: string } | null;
+/** dusen: kopyada / düzenlemede pasife alınmış (forma alınmayan) tesislerin adları — şeritte söylenir */
+export function TeklifFormu({ secenekler, deger, id, surum, no, kopyaKaynak, dusen = [] }: {
+  secenekler: TeklifSecenekleri; deger: TeklifFormDegeri; id?: string; surum?: number; no?: string; kopyaKaynak?: { id: string; no: string } | null; dusen?: readonly string[];
 }) {
   const router = useRouter();
   const bildir = useBildir();
@@ -51,6 +48,8 @@ export function TeklifFormu({ secenekler, deger, id, surum, no, kopyaKaynak }: {
   const [h, setH] = useState<Record<string, string>>({});
   const [genel, setGenel] = useState<string | null>(null);
   const yaz = (p: Partial<TeklifFormDegeri>) => setF((x) => ({ ...x, ...p }));
+  /* satır eklenince / kalkınca odak satırın türüne (maket; kaldırılan tuşla odak sayfa başına düşmesin) */
+  const odakla = (hedef: string) => requestAnimationFrame(() => document.getElementById(hedef)?.focus());
   const adayYaz = (k: keyof Aday, v: string) => setF((x) => ({ ...x, aday: { ...x.aday, [k]: v, ...(k === "il" ? { ilce: "" } : {}) } }));
   const kalemYaz = (i: number, p: Partial<Kalem>) => setF((x) => ({ ...x, kalemler: x.kalemler.map((k, j) => (j === i ? { ...k, ...p } : k)) }));
   const m = secenekler.musteriler.find((x) => x.id === f.musteri);
@@ -73,7 +72,7 @@ export function TeklifFormu({ secenekler, deger, id, surum, no, kopyaKaynak }: {
     const r = kalemlereEkle(f.kalemler, f.ekipmanlar, l, (t) => tur.get(t)?.fiyat ?? null);
     yaz({ kalemler: r.kalemler, ekipmanlar: r.ekipmanlar }); setH({});
     bildir(`${r.eklenen} ekipman ${r.turSayisi} türle kalemlere eklendi${r.atlanan ? `; ${r.atlanan} satır atlandı.` : "."}`);
-    requestAnimationFrame(() => document.getElementById("f-tur-0")?.focus());
+    odakla("f-tur-0");
   };
   const tesisEkipmani = seciliTesisler.reduce((n, tid) => n + Object.values(m?.tesisler.find((x) => x.id === tid)?.ekipman ?? {}).reduce((a, b) => a + b, 0), 0);
   const excelFiyat: Record<string, number | null> = Object.fromEntries(secenekler.turler.map((t) => [t.id, t.fiyat]));
@@ -105,6 +104,7 @@ export function TeklifFormu({ secenekler, deger, id, surum, no, kopyaKaynak }: {
       <Kirinti ogeler={no ? [["Teklifler", "/teklifler"], [no, `/teklifler/${id}`], ["Düzenle"]] : [["Teklifler", "/teklifler"], ["Yeni teklif"]]} />
       <SayfaBasi baslik={baslik} />
       {kopyaKaynak && <Serit tur="bilgi" ikon="copy">{kopyaKaynak.no} teklifinden kopyalanıyor; yeni numarayla taslak açılır.</Serit>}
+      {dusen.length > 0 && <Serit tur="uyari" ikon="circle-alert">{dusen.join(", ")} pasif; teklife alınmadı.</Serit>}
       {(hataSayisi > 0 || genel) && <Serit tur="hata" ikon="circle-alert" id={OZET}>{genel ?? `Kaydedilmedi: ${hataSayisi} eksik düzeltilmeli.`}</Serit>}
       <FormSayfa>
         <FormBolum baslik="Müşteri ve tesis" id="tf-b1">
@@ -125,7 +125,7 @@ export function TeklifFormu({ secenekler, deger, id, surum, no, kopyaKaynak }: {
                   {m ? <SecimAlani id={FID.tesis} ad="Tesis" deger={f.tesis} ipucu="Tesis seçin" gecersiz={!!h.tesis} tanim={ipucuId(FID.tesis)}
                     secenekler={m.tesisler.map((t) => [t.id, t.ad, [t.ilce, t.il].filter(Boolean).join(" / ")] as const)}
                     degistir={(x) => yaz({ tesis: x, ekTesisler: f.ekTesisler.filter((y) => y !== x) })} />
-                    : <Girdi id={FID.tesis} readOnly value="Önce müşteri seçin" />}
+                    : <Girdi id={FID.tesis} readOnly value="Önce müşteri seçin" hata={!!h.tesis} mesajli />}
                 </Alan>
               </FormIzgara>
               {m && f.tesis && m.tesisler.length > 1 && (
@@ -148,12 +148,13 @@ export function TeklifFormu({ secenekler, deger, id, surum, no, kopyaKaynak }: {
               {A("vno", "Vergi no", { tip: { inputMode: "numeric", maxLength: 11 } })}
               {A("adres", "Adres", { zorunlu: true, genis: true, tip: { maxLength: 160 } })}
               <Alan id={FID.il} etiket="İl" zorunlu hata={h["aday.il"]}>
-                <SecimAlani id={FID.il} ad="İl" deger={f.aday.il} secenekler={IL_SECENEK} ipucu="İl seçin" gecersiz={!!h["aday.il"]} degistir={(v) => adayYaz("il", v)} />
+                <SecimAlani id={FID.il} ad="İl" deger={f.aday.il} secenekler={IL_SECENEK} ipucu="İl seçin" gecersiz={!!h["aday.il"]} tanim={ipucuId(FID.il)}
+                  degistir={(v) => adayYaz("il", v)} />
               </Alan>
               <Alan id={FID.ilce} etiket="İlçe" hata={h["aday.ilce"]}>
                 {f.aday.il
                   ? <SecimAlani id={FID.ilce} ad="İlçe" deger={f.aday.ilce} secenekler={(IL_ILCE[f.aday.il] ?? []).map((x) => [x, x] as const)} ipucu="İlçe seçin"
-                      gecersiz={!!h["aday.ilce"]} degistir={(v) => adayYaz("ilce", v)} />
+                      gecersiz={!!h["aday.ilce"]} tanim={ipucuId(FID.ilce)} degistir={(v) => adayYaz("ilce", v)} />
                   : <Girdi id={FID.ilce} readOnly value="Önce il seçin" />}
               </Alan>
               {A("eposta", "E-posta", { tip: { type: "email", inputMode: "email", maxLength: 120 } })}
@@ -171,36 +172,41 @@ export function TeklifFormu({ secenekler, deger, id, surum, no, kopyaKaynak }: {
               <Girdi id={FID.kdv} value={f.kdv} inputMode="numeric" maxLength={2} hata={!!h.kdv} onChange={(e) => yaz({ kdv: e.target.value })} />
             </Alan>
             <Alan id={FID.not} etiket="Not" genis hata={h.notlar}>
-              <Girdi id={FID.not} value={f.notlar} maxLength={300} placeholder="Ödeme, ulaşım, ek koşullar" hata={!!h.notlar} onChange={(e) => yaz({ notlar: e.target.value })} />
+              <textarea id={FID.not} className={stil.not} value={f.notlar} maxLength={300} placeholder="Ödeme, ulaşım, ek koşullar" aria-invalid={!!h.notlar || undefined}
+                aria-describedby={h.notlar ? ipucuId(FID.not) : undefined} onChange={(e) => yaz({ notlar: e.target.value })} />
             </Alan>
           </FormIzgara>
         </FormBolum>
-        <FormBolum baslik="Kalemler" id="tf-b3">
+        <FormBolum baslik="Kalemler" id="tf-b3" genis>
           {f.kalemler.map((k, i) => {
             const a = Number(k.adet), p = kurus(k.fiyat);
             return (
               <div className={stil.kalem} key={i}>
                 <Alan id={`f-tur-${i}`} etiket="Ekipman türü" hata={h[`kalemler.${i}.tur`]}>
-                  <SecimAlani id={`f-tur-${i}`} ad={`Ekipman türü ${i + 1}`} deger={k.tur} ipucu="Tür seçin" gecersiz={!!h[`kalemler.${i}.tur`]}
+                  {/* erişilebilir ad satır numarasıyla (görünür etiket her satırda aynı — 324 incelemesi) */}
+                  <SecimAlani id={`f-tur-${i}`} ad={`Ekipman türü ${i + 1}`} etiketsiz deger={k.tur} ipucu="Tür seçin" gecersiz={!!h[`kalemler.${i}.tur`]}
+                    tanim={h[`kalemler.${i}.tur`] ? ipucuId(`f-tur-${i}`) : undefined}
                     secenekler={secenekler.turler.map((t) => [t.id, t.ad, t.fiyat !== null ? para(t.fiyat) : "fiyat listesinde yok"] as const)}
                     degistir={(v) => kalemYaz(i, { tur: v, ...(!k.fiyat && tur.get(v)?.fiyat ? { fiyat: paraGirdi(tur.get(v)!.fiyat!) } : {}) })} />
                 </Alan>
                 <Alan id={`f-adet-${i}`} etiket="Adet" hata={h[`kalemler.${i}.adet`]}>
-                  <Girdi id={`f-adet-${i}`} value={k.adet} inputMode="numeric" maxLength={3} hata={!!h[`kalemler.${i}.adet`]} onChange={(e) => kalemYaz(i, { adet: e.target.value })} />
+                  <Girdi id={`f-adet-${i}`} aria-label={`Adet ${i + 1}`} value={k.adet} inputMode="numeric" maxLength={3} hata={!!h[`kalemler.${i}.adet`]}
+                    onChange={(e) => kalemYaz(i, { adet: e.target.value })} />
                 </Alan>
                 <Alan id={`f-fiyat-${i}`} etiket="Birim fiyat (TL)" hata={h[`kalemler.${i}.fiyat`]}>
-                  <Girdi id={`f-fiyat-${i}`} value={k.fiyat} inputMode="decimal" maxLength={14} hata={!!h[`kalemler.${i}.fiyat`]} onChange={(e) => kalemYaz(i, { fiyat: e.target.value })} />
+                  <Girdi id={`f-fiyat-${i}`} aria-label={`Birim fiyat (TL) ${i + 1}`} value={k.fiyat} inputMode="decimal" maxLength={14} hata={!!h[`kalemler.${i}.fiyat`]}
+                    onChange={(e) => kalemYaz(i, { fiyat: e.target.value })} />
                 </Alan>
                 <div><p className={stil.kalemEtiket}>Tutar</p><p className={stil.kalemTutar} aria-live="polite">{a > 0 && p ? para(a * p) : "—"}</p></div>
                 <Tus tur="ikincil" ikon="x" disabled={f.kalemler.length === 1} aria-label={`Kalem ${i + 1} kaldır`}
-                  onClick={() => { yaz({ kalemler: f.kalemler.filter((_, j) => j !== i) }); setH({}); }}>Kaldır</Tus>
+                  onClick={() => { yaz({ kalemler: f.kalemler.filter((_, j) => j !== i) }); setH({}); odakla(`f-tur-${Math.max(0, i - 1)}`); }}>Kaldır</Tus>
               </div>
             );
           })}
           {h.kalemler && <p className={stil.hata}>{h.kalemler}</p>}
           <div className={stil.eylemler}>
             {f.tip === "kayitli" && <Tus tur="ikincil" ikon="list-checks" disabled={!f.tesis} onClick={doldur}>Tesisteki ekipmandan doldur</Tus>}
-            <Tus tur="ikincil" ikon="plus" onClick={() => yaz({ kalemler: [...f.kalemler, { tur: "", adet: "1", fiyat: "" }] })}>Kalem ekle</Tus>
+            <Tus tur="ikincil" ikon="plus" onClick={() => { yaz({ kalemler: [...f.kalemler, { tur: "", adet: "1", fiyat: "" }] }); odakla(`f-tur-${f.kalemler.length}`); }}>Kalem ekle</Tus>
             <ExcelYukle turler={secenekler.turler} mevcut={f.ekipmanlar} onEkle={excelEkle} />
             <ExcelAktar turler={secenekler.turler} fiyat={excelFiyat} ad={`${no ?? "yeni-teklif"}-ekipmanlar.xlsx`}
               {...(f.ekipmanlar.length ? { liste: f.ekipmanlar, ne: "Excel'den yüklenen liste" }

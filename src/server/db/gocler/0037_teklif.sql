@@ -8,6 +8,9 @@
 -- bağlanır (bir kez; tesis de o anda eklenir).
 -- Fiyat listesi: tür başına KDV hariç birim fiyat (firma ayarı — 119); kabul edilmiş teklifin fiyatı değişmez (kalem kendi fiyatını taşır).
 -- Tutarlar KURUŞ (tam sayı).
+-- 324 çapraz incelemesi (göç henüz uygulanmamıştı, yerinde): kalem / tesis başka teklife taşınmaz; tesissiz (kayıtlı müşterili) teklif gönderilmez;
+-- "ilk tesis" istisnası yalnız kayıtlı olmayan müşteriden gelen teklif; taslağın müşterisi değişirken teklifte başka müşterinin tesisi kalamaz;
+-- kopya kaynağı aynı firmanın teklifi (yabancı anahtar); Excel ekipman listesinin bayt sınırı şemanın en kötü durumunu karşılar.
 -- ⛔ Her göç IDEMPOTENT.
 
 CREATE TABLE IF NOT EXISTS fiyat_listesi (
@@ -42,7 +45,7 @@ CREATE TABLE IF NOT EXISTS teklif (
   kdv           integer NOT NULL DEFAULT 20 CHECK (kdv BETWEEN 0 AND 99),
   notlar        text CHECK (notlar IS NULL OR length(notlar) <= 300),
   -- müşterinin Excel'den yüklenen ekipman listesi (kod, tür, konum, seri) — teklifle saklanır
-  ekipmanlar    jsonb NOT NULL DEFAULT '[]' CHECK (jsonb_typeof(ekipmanlar) = 'array' AND pg_column_size(ekipmanlar) <= 500000),
+  ekipmanlar    jsonb NOT NULL DEFAULT '[]' CHECK (jsonb_typeof(ekipmanlar) = 'array' AND pg_column_size(ekipmanlar) <= 1500000),
   hazirlayan    uuid,
   kopya_kaynak  uuid,
   surum         integer NOT NULL DEFAULT 0,
@@ -51,6 +54,7 @@ CREATE TABLE IF NOT EXISTS teklif (
   FOREIGN KEY (firma_id, musteri_id) REFERENCES musteri (firma_id, id),
   UNIQUE (firma_id, no),
   UNIQUE (firma_id, id),
+  FOREIGN KEY (firma_id, kopya_kaynak) REFERENCES teklif (firma_id, id),
   CHECK (musteri_id IS NOT NULL OR aday IS NOT NULL),
   CHECK ((durum = 'taslak') = (gonderildi IS NULL)),
   CHECK ((durum IN ('kabul', 'red')) = (sonuc IS NOT NULL)),
@@ -137,11 +141,19 @@ BEGIN
       RAISE EXCEPTION 'yalnız taslak teklif düzenlenir (gönderilen teklif değişmez; yenisi kopyalanır)' USING ERRCODE = '23514';
     END IF;
   END IF;
+  -- müşteri değişirken teklifte başka müşterinin tesisi kalamaz (tesisler önce eşitlenir — teklifKaydet)
+  IF NEW.musteri_id IS DISTINCT FROM OLD.musteri_id AND EXISTS (SELECT 1 FROM teklif_tesis y JOIN tesis s ON s.firma_id = y.firma_id AND s.id = y.tesis_id
+      WHERE y.firma_id = NEW.firma_id AND y.teklif_id = NEW.id AND s.musteri_id IS DISTINCT FROM NEW.musteri_id) THEN
+    RAISE EXCEPTION 'tesis teklifin müşterisinin olmalı' USING ERRCODE = '23514';
+  END IF;
   NEW.gonderildi := OLD.gonderildi; NEW.sonuc := OLD.sonuc;
   IF NEW.durum IS DISTINCT FROM OLD.durum THEN
     IF OLD.durum = 'taslak' AND NEW.durum = 'gonderildi' THEN
       IF NOT EXISTS (SELECT 1 FROM teklif_kalem k WHERE k.firma_id = NEW.firma_id AND k.teklif_id = NEW.id) THEN
         RAISE EXCEPTION 'kalemsiz teklif gönderilmez' USING ERRCODE = '23514';
+      END IF;
+      IF NEW.musteri_id IS NOT NULL AND NOT EXISTS (SELECT 1 FROM teklif_tesis y WHERE y.firma_id = NEW.firma_id AND y.teklif_id = NEW.id) THEN
+        RAISE EXCEPTION 'tesissiz teklif gönderilmez' USING ERRCODE = '23514';
       END IF;
       NEW.gonderildi := bugun;
     ELSIF OLD.durum = 'gonderildi' AND NEW.durum IN ('kabul', 'red') THEN
@@ -161,20 +173,23 @@ ALTER FUNCTION teklif_akis() SET search_path = pg_catalog, public, pg_temp;
 REVOKE EXECUTE ON FUNCTION teklif_akis() FROM PUBLIC;
 CREATE OR REPLACE TRIGGER teklif_akis BEFORE INSERT OR UPDATE ON teklif FOR EACH ROW EXECUTE FUNCTION teklif_akis();
 
--- KALEM ve TESİS: yalnız taslak teklifte yazılır / silinir; tesis teklifin müşterisinin olmalı. İstisna: kayıtlı olmayan müşterinin kabul
--- edilmiş teklifi müşteriye bağlanırken İLK tesis eklenir
+-- KALEM ve TESİS: yalnız taslak teklifte yazılır / silinir; başka teklife taşınmaz; tesis teklifin müşterisinin olmalı. İstisna: kayıtlı olmayan
+-- müşterinin (aday) kabul edilmiş teklifi müşteriye bağlanırken İLK tesis eklenir
 CREATE OR REPLACE FUNCTION teklif_parca_koru() RETURNS trigger
   LANGUAGE plpgsql AS $$
 DECLARE t record; r record;
 BEGIN
+  IF TG_OP = 'UPDATE' AND (NEW.teklif_id IS DISTINCT FROM OLD.teklif_id OR NEW.firma_id IS DISTINCT FROM OLD.firma_id) THEN
+    RAISE EXCEPTION 'kalem / tesis başka teklife taşınmaz' USING ERRCODE = '23514';
+  END IF;
   IF TG_OP = 'DELETE' THEN r := OLD; ELSE r := NEW; END IF;
-  SELECT x.durum, x.musteri_id INTO t FROM teklif x WHERE x.firma_id = r.firma_id AND x.id = r.teklif_id FOR UPDATE;
+  SELECT x.durum, x.musteri_id, x.aday INTO t FROM teklif x WHERE x.firma_id = r.firma_id AND x.id = r.teklif_id FOR UPDATE;
   IF t IS NULL THEN RAISE EXCEPTION 'teklif yok' USING ERRCODE = '23503'; END IF;
   IF TG_TABLE_NAME = 'teklif_tesis' AND TG_OP <> 'DELETE' THEN
     IF NOT EXISTS (SELECT 1 FROM tesis s WHERE s.firma_id = r.firma_id AND s.id = r.tesis_id AND s.musteri_id = t.musteri_id) THEN
       RAISE EXCEPTION 'tesis teklifin müşterisinin olmalı' USING ERRCODE = '23514';
     END IF;
-    IF t.durum = 'kabul' AND TG_OP = 'INSERT'
+    IF t.durum = 'kabul' AND t.aday IS NOT NULL AND TG_OP = 'INSERT'
        AND NOT EXISTS (SELECT 1 FROM teklif_tesis y WHERE y.firma_id = r.firma_id AND y.teklif_id = r.teklif_id) THEN
       RETURN NEW;
     END IF;

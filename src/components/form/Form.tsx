@@ -11,8 +11,13 @@ export function FormSayfa({ children }: { children: ReactNode }) {
   return <div className={stil.sayfa}>{children}</div>;
 }
 
-export function FormBolum({ baslik, children, id }: { baslik: string; children: ReactNode; id?: string }) {
-  return <section className={stil.bolum} aria-labelledby={id ? `${id}-baslik` : undefined} id={id}><h2 id={id ? `${id}-baslik` : undefined}>{baslik}</h2>{children}</section>;
+/** genis: sayfa ızgarasında tam satır (maket a-alan-genis — ör. teklif kalemleri) */
+export function FormBolum({ baslik, children, id, genis = false }: { baslik: string; children: ReactNode; id?: string; genis?: boolean }) {
+  return (
+    <section className={genis ? `${stil.bolum} ${stil.genis}` : stil.bolum} aria-labelledby={id ? `${id}-baslik` : undefined} id={id}>
+      <h2 id={id ? `${id}-baslik` : undefined}>{baslik}</h2>{children}
+    </section>
+  );
 }
 
 export function FormIzgara({ children }: { children: ReactNode }) {

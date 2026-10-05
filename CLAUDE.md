@@ -131,6 +131,8 @@ pkproje/
                             düzenlenir, taslak → gönderildi → kabul / red, süresi dolan kabul / red edilmez, hazırlayan veritabanında) · server/teklifler.ts
                             (liste, kart, seçenekler, kaydet / kopya, gönder, kabul, red, müşteri olarak kaydet — yaz: planlama + firma yön.) · ui/ (liste,
                             form, eylemler) · rapor bağı raporlar/server/teklif-baglanti.ts (kabulden sonra imzalanan, türle) · tutarlar kuruş ·
+                            form-degeri.ts (formun başlangıç değeri sunucuda; pasif tesis düşer) · ui/KalemTablosu.tsx (sütun işlevleri istemcide) ·
+                            her rapor TEK teklife (tesis × tür, imza gününde geçerli en son kabul — raporlananlar) · var olan müşteriye bağla ·
                             325: excel.ts (saf: Excel'den yükle → kalemler, Excel'e aktar, şablon) + ui/EkipmanExcel.tsx · teklif belgesi
                             src/belge/teklif.ts (temel format <kod>-FR-TKL-01) → PDF /teklifler/<id>/pdf (src/belge/pdf.ts teklifPdf)
   src/tanim/iller.ts        81 il + 973 ilçe (açık veri, MIT; bir kez alındı)

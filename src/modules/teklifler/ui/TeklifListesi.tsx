@@ -32,7 +32,7 @@ function tanim(l: readonly TeklifSatiri[]): SuzgecTanimi<TeklifSatiri> {
   const musteriler = [...new Map(l.filter((t) => t.musteriId).map((t) => [t.musteriId!, t.musteri])).entries()].sort((a, b) => a[1].localeCompare(b[1], "tr"));
   return {
     ad: "Tekliflerde ara", ipucu: "Teklif no, müşteri, tesis", birim: "teklif", sayfa: 20, imkansiz: "Bir teklif aynı anda iki durumda olamaz",
-    metin: (t) => [t.no, t.musteri, t.tesis].join(" "),
+    metin: (t) => [t.no, t.musteri, t.unvan, t.tesis, t.yer ?? ""].join(" "),
     cipler: [
       { k: "taslak", ad: "Taslak", grup: "durum", test: (t) => t.durum === "taslak" },
       { k: "gonderildi", ad: "Gönderildi", grup: "durum", test: (t) => t.durum === "gonderildi" },

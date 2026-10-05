@@ -2,7 +2,10 @@
    Yetki her işlevde, sunucuda (canDo, modül 11): "gör" düzeyi bütün teklifleri görür; HAZIRLAMAK, düzenlemek, gönderildi / kabul / red
    işaretlemek, kopyalamak ve kayıtlı olmayan müşteriyi kaydetmek yalnız "yaz" düzeyinde (önerilen düzende planlama + firma yöneticisi).
    Kurallar veritabanı tetiğinde de (yalnız taslak düzenlenir; geçişler; süresi dolan kabul / red edilmez). Yazmalar güvenli yazıcıdan.
-   Tutarlar KURUŞ, KDV hariç. Rapor ↔ kalem bağı Raporlar'ın teklif-baglanti.ts'inden; ekipman sayıları Ekipman'dan; müşteri kaydı Müşteriler'den. */
+   Tutarlar KURUŞ, KDV hariç. Rapor ↔ kalem bağı Raporlar'ın teklif-baglanti.ts'inden; ekipman sayıları Ekipman'dan; müşteri kaydı Müşteriler'den.
+   324 incelemesi: "kendi" / "branş" düzeyi teklif görmez (kayıt kayıt süzgeç yok — Müşteriler gibi); her rapor TEK teklife bağlanır (tesis ×
+   tür için, raporun imza gününde geçerli en son kabul edilmiş teklif; pencere teklif tarihinden — maket); "Müşteri olarak kaydet" Müşteriler'in
+   uyarısını gösterir, var olan müşteriye bağlama yolu var; sonraki adımların tuşları hedef modülün yetkisiyle. */
 import type { Sorgulayici } from "../../../server/db/kiraci.ts";
 import { ekle, guncelle, sil, tablo, type Iz } from "../../../server/db/yazici.ts";
 import { ayarOku, firmaKunyesi } from "../../../server/ayar/ayar.ts";
@@ -12,9 +15,11 @@ import { duzey, type YetkiHesabi } from "../../../server/yetki/canDo.ts";
 import { dogrula, type DogrulamaHatalari } from "../../../sema/ortak.ts";
 import { tesisEkipmanlari, tesisTurSayilari } from "../../ekipman/server/ekipman.ts";
 import { turOzetleri } from "../../ekipman-turleri/server/turler.ts";
-import { musteriIletisim, musteriKaydet, musteriOzetleri, tesisKaydet } from "../../musteriler/server/musteriler.ts";
+import { musteriDegistirir, musteriIletisim, musteriKaydet, musteriOzetleri, tesisKaydet } from "../../musteriler/server/musteriler.ts";
+import { planAcabilir } from "../../planlar/server/planlar.ts";
+import { sozlesmeDegistirir } from "../../sozlesmeler/server/sozlesmeler.ts";
 import { MusteriGirdisi, TesisGirdisi } from "../../musteriler/sema.ts";
-import { turBasinaImzaliRapor } from "../../raporlar/server/teklif-baglanti.ts";
+import { imzaliRaporlar } from "../../raporlar/server/teklif-baglanti.ts";
 import type { TeklifBelgesiVerisi } from "../../../belge/teklif.ts";
 import type { ExcelTuru, TeklifEkipmani } from "../excel.ts";
 import { bitisGunu, RedGirdisi, TeklifGirdisi, type Aday, type TeklifDurumu } from "../sema.ts";
@@ -32,15 +37,18 @@ export type Yazma =
   | { durum: "tamam"; id: string; no?: string; bildirim?: string }
   | { durum: "gecersiz"; hatalar: DogrulamaHatalari }
   | { durum: "red"; neden: string }
+  | { durum: "uyari"; uyarilar: Record<string, string> }
   | { durum: "cakisma" } | { durum: "yok" } | { durum: "yetkisiz" };
 
-const gorur = (kim: YetkiHesabi) => ["gor", "yaz", "kendi", "brans"].includes(duzey(kim, MODUL));
+/* "kendi" / "branş" düzeyinde teklif yok: teklifler kişiye ya da branşa göre süzülmez (Müşteriler gibi — 324 incelemesi) */
+const gorur = (kim: YetkiHesabi) => ["gor", "yaz"].includes(duzey(kim, MODUL));
 const yazar = (kim: YetkiHesabi) => duzey(kim, MODUL) === "yaz";
 export const teklifDegistirir = yazar;
 const iz = (kim: Kisi, ne: string, gerekce?: string): Iz => ({ kim: kim.ad, ne, gerekce });
 
+/** unvan, yer: arama için (maket: kayıtlıda no · tesis · kısa · ünvan, kayıtlı olmayanda no · ünvan · il · ilçe) */
 export interface TeklifSatiri {
-  id: string; no: string; musteriId: string | null; musteri: string; kayitli: boolean; tesis: string; kalemSayisi: number; ekipmanSayisi: number;
+  id: string; no: string; musteriId: string | null; musteri: string; unvan: string; yer: string | null; kayitli: boolean; tesis: string; kalemSayisi: number; ekipmanSayisi: number;
   /** KDV hariç toplam, kuruş */
   tutar: number; tarih: string; gonderildi: string | null; sonuc: string | null; durum: TeklifDurumu; bitis: string | null;
 }
@@ -51,7 +59,9 @@ export interface TeklifKarti extends TeklifSatiri {
   /** ilgili kişi: kayıtlı müşteride müşteri kartındaki, değilse teklifteki yetkili (maket) */
   ilgili: string | null;
   ekipmanlar: { kod: string; tur: string; konum: string; seri: string }[]; raporlananTutar: number | null; kopyaKaynak: string | null;
-  izin: { duzenle: boolean; gonder: boolean; sonuc: boolean; musteriKaydet: boolean; kopyala: boolean };
+  /** sozlesme / planAc: kayıtlı müşterinin kabul edilmiş teklifinde sonraki adımlar — hedef modülün yetkisiyle; bagla: kayıtlı olmayan müşterinin
+      kabul edilmiş teklifini var olan müşteriye bağlama */
+  izin: { duzenle: boolean; gonder: boolean; sonuc: boolean; musteriKaydet: boolean; bagla: boolean; kopyala: boolean; sozlesme: boolean; planAc: boolean };
 }
 
 type Satir = { id: string; no: string; musteri_id: string | null; aday: Aday | null; durum: "taslak" | "gonderildi" | "kabul" | "red"; tarih: string; gonderildi: string | null;
@@ -82,7 +92,8 @@ function satirOf(x: Satir, d: Awaited<ReturnType<typeof okuIc>>, bugun: string):
   const tl = d.tesis.filter((t) => t.teklif_id === x.id).map((t) => m?.tesisler.find((y) => y.id === t.tesis_id)?.ad ?? "—");
   const k = d.kalem.filter((y) => y.teklif_id === x.id);
   return {
-    id: x.id, no: x.no, musteriId: x.musteri_id, musteri: m?.kisa ?? x.aday?.unvan ?? "—", kayitli: !!m,
+    id: x.id, no: x.no, musteriId: x.musteri_id, musteri: m?.kisa ?? x.aday?.unvan ?? "—", unvan: m?.unvan ?? x.aday?.unvan ?? "—",
+    yer: m ? null : [x.aday?.ilce, x.aday?.il].filter(Boolean).join(" / ") || null, kayitli: !!m,
     tesis: m ? tl.join(", ") || "—" : "Kayıtlı olmayan müşteri", kalemSayisi: k.length, ekipmanSayisi: k.reduce((n, y) => n + y.adet, 0),
     tutar: k.reduce((n, y) => n + y.adet * Number(y.fiyat), 0), tarih: x.tarih, gonderildi: x.gonderildi, sonuc: x.sonuc, durum: etkinDurum(x, bugun),
     bitis: x.gonderildi ? bitisGunu(x.gonderildi, x.gecerlilik) : null,
@@ -106,8 +117,8 @@ export async function teklifKarti(db: Sorgulayici, kim: Kisi, id: string): Promi
   const bugun = bugunTr(), s = satirOf(x, d, bugun), m = x.musteri_id ? d.musteri.get(x.musteri_id) ?? null : null;
   const turler = new Map((await turOzetleri(db)).map((t) => [t.id, t]));
   const tesisler = d.tesis.filter((t) => t.teklif_id === x.id).map((t) => m?.tesisler.find((y) => y.id === t.tesis_id)).filter((t): t is NonNullable<typeof t> => !!t);
-  /* kabul edilmiş teklif: kabulden sonra imzalanan raporlar kaleme türüyle bağlanır (adedi aşan "teklif dışı" — muhasebe) */
-  const rapor = x.durum === "kabul" && x.sonuc && tesisler.length ? await turBasinaImzaliRapor(db, tesisler.map((t) => t.id), x.sonuc) : null;
+  /* kabul edilmiş teklif: teklif tarihinden sonra imzalanan raporlar kaleme türüyle bağlanır (adedi aşan "teklif dışı" — muhasebe) */
+  const rapor = x.durum === "kabul" && tesisler.length ? await raporlananlar(db, x, tesisler.map((t) => t.id)) : null;
   const kalemler: TeklifKalemi[] = d.kalem.filter((k) => k.teklif_id === x.id).map((k) => {
     const t = turler.get(k.tur_id);
     return { turId: k.tur_id, turAd: t?.ad ?? "—", brans: t?.brans ?? null, periyot: t?.periyot ?? null, adet: k.adet, fiyat: Number(k.fiyat), raporlanan: rapor ? rapor.get(k.tur_id) ?? 0 : null };
@@ -121,7 +132,8 @@ export async function teklifKarti(db: Sorgulayici, kim: Kisi, id: string): Promi
     kopyaKaynak: x.kopya_kaynak ? (await db.sorgu<{ no: string }>("SELECT no FROM teklif WHERE id = $1", [x.kopya_kaynak])).rows[0]?.no ?? null : null,
     izin: {
       duzenle: yaz && s.durum === "taslak", gonder: yaz && s.durum === "taslak" && kalemler.length > 0, sonuc: yaz && s.durum === "gonderildi",
-      musteriKaydet: yaz && s.durum === "kabul" && !m, kopyala: yaz,
+      musteriKaydet: yaz && s.durum === "kabul" && !m && musteriDegistirir(kim), bagla: yaz && s.durum === "kabul" && !m, kopyala: yaz,
+      sozlesme: s.durum === "kabul" && !!m && sozlesmeDegistirir(kim), planAc: s.durum === "kabul" && !!m && planAcabilir(kim),
     },
   };
 }
@@ -178,16 +190,17 @@ export async function teklifKaydet(db: Sorgulayici, kim: Kisi, id: string | null
     teklifId = (await ekle(db, TEKLIF, { ...degerler, no, durum: "taslak", kopya_kaynak: kaynak }, iz(kim, "teklif.hazirla", no))).id;
   } else {
     if (!UUID.test(id)) return { durum: "yok" };
-    const x = (await db.sorgu<{ no: string; durum: string }>("SELECT no, durum FROM teklif WHERE id = $1 FOR UPDATE", [id])).rows[0];
+    const x = (await db.sorgu<{ no: string; durum: string; surum: number }>("SELECT no, durum, surum FROM teklif WHERE id = $1 FOR UPDATE", [id])).rows[0];
     if (!x) return { durum: "yok" };
     if (x.durum !== "taslak") return { durum: "red", neden: "Yalnız taslak teklif düzenlenir; gönderilen teklif değişmez (yenisi kopyalanır)." };
-    if (!Number.isSafeInteger(surum) || surum < 0) return { durum: "cakisma" };
-    const r = await guncelle(db, TEKLIF, id, surum, degerler, iz(kim, "teklif.duzenle", x.no));
-    if (r.durum === "cakisma" || r.durum === "yok") return { durum: r.durum };
+    if (!Number.isSafeInteger(surum) || surum < 0 || x.surum !== surum) return { durum: "cakisma" };
     teklifId = id; no = x.no;
-    /* kalemler ve tesisler formdakiyle eşitlenir: eskiler silinir (yalnız taslakta — tetik), yeniler yazılır */
+    /* kalemler ve tesisler formdakiyle eşitlenir: önce eskiler silinir (yalnız taslakta — tetik; müşteri değişirken eski müşterinin tesisi kalmasın),
+       sonra teklif güncellenir, yeniler yazılır (sürüm satır kilidiyle yukarıda denetlendi — silmeden sonra çakışma olmaz) */
     for (const k of (await db.sorgu<{ id: string }>("SELECT id::text FROM teklif_kalem WHERE teklif_id = $1", [id])).rows) await sil(db, KALEM, k.id, iz(kim, "teklif.kalem_sil", no));
     for (const t of (await db.sorgu<{ id: string }>("SELECT id::text FROM teklif_tesis WHERE teklif_id = $1", [id])).rows) await sil(db, TESIS, t.id, iz(kim, "teklif.tesis_sil", no));
+    const r = await guncelle(db, TEKLIF, id, surum, degerler, iz(kim, "teklif.duzenle", x.no));
+    if (r.durum !== "tamam") throw new Error(`teklif güncellenemedi: ${r.durum}`);   // kilitli satır: olmaz; olursa silmeler de geri alınır
   }
   for (const [i, k] of v.kalemler.entries()) await ekle(db, KALEM, { teklif_id: teklifId, tur_id: k.tur, adet: k.adet, fiyat: k.fiyat, sira: i }, iz(kim, "teklif.kalem", no));
   for (const [i, t] of tesisler.entries()) await ekle(db, TESIS, { teklif_id: teklifId, tesis_id: t, sira: i }, iz(kim, "teklif.tesis", no));
@@ -234,8 +247,10 @@ export async function teklifReddet(db: Sorgulayici, kim: Kisi, id: string, surum
 }
 
 /** kayıtlı olmayan müşterinin KABUL edilmiş teklifi: müşteri (aday bilgileriyle) ve "Merkez" tesisi açılır, teklif onlara bağlanır (bir kez).
-    Müşteri ve tesis Müşteriler modülünün işlevleriyle (kendi kuralları, uyarıları — yetkiyi de o sorar). */
-export async function teklifMusteriKaydet(db: Sorgulayici, kim: Kisi, id: string, surum: number): Promise<Yazma> {
+    Müşteri ve tesis Müşteriler modülünün işlevleriyle (kendi kuralları, uyarıları — yetkiyi de o sorar): onay=false iken Müşteriler'in uyarısı
+    (ör. aynı vergi no) "uyari" olarak döner, kişi görüp onaylarsa onay=true ile yeniden çağrılır (denetim izinin "uyarı görüldü"sü ancak o zaman).
+    E-posta başka müşterideyse kayıt olmaz: "Var olan müşteriye bağla" önerilir. */
+export async function teklifMusteriKaydet(db: Sorgulayici, kim: Kisi, id: string, surum: number, onay = false): Promise<Yazma> {
   if (!yazar(kim)) return { durum: "yetkisiz" };
   if (!UUID.test(id)) return { durum: "yok" };
   const x = (await db.sorgu<Satir>(`${SEC} WHERE id = $1 FOR UPDATE`, [id])).rows[0];
@@ -248,14 +263,60 @@ export async function teklifMusteriKaydet(db: Sorgulayici, kim: Kisi, id: string
   /* önce iki kayıt da Müşteriler'in şemasından geçer (yazmadan; yarım kayıt kalmasın) */
   const mh = dogrula(MusteriGirdisi, mg), th = dogrula(TesisGirdisi, tg);
   if (!mh.tamam || !th.tamam) return { durum: "red", neden: `Müşteri bilgileri eksik ya da hatalı: ${Object.values({ ...(mh.tamam ? {} : mh.hatalar), ...(th.tamam ? {} : th.hatalar) })[0]}` };
-  const m = await musteriKaydet(db, kim, null, 0, mg, true);
-  if (m.durum !== "tamam") return m.durum === "gecersiz" ? { durum: "gecersiz", hatalar: m.hatalar } : m.durum === "uyari" ? { durum: "red", neden: Object.values(m.uyarilar)[0] ?? "Müşteri kaydedilemedi." } : m;
-  const t = await tesisKaydet(db, kim, m.id, null, 0, tg, true);
+  const m = await musteriKaydet(db, kim, null, 0, mg, onay);
+  if (m.durum === "uyari") return { durum: "uyari", uyarilar: m.uyarilar };
+  if (m.durum === "gecersiz") {
+    return { durum: "red", neden: `${Object.values(m.hatalar)[0] ?? "Müşteri bilgileri hatalı."} Müşteri zaten kayıtlıysa “Var olan müşteriye bağla” ile bağlayın.` };
+  }
+  if (m.durum !== "tamam") return m;
+  const t = await tesisKaydet(db, kim, m.id, null, 0, tg, onay);
+  if (t.durum === "uyari") throw new Error("teklifin tesisi uyarıyla durdu");   // yeni müşterinin ilk tesisi: uyarı beklenmez; olursa müşteri de geri alınır
   if (t.durum !== "tamam") throw new Error(`teklifin tesisi açılamadı: ${t.durum}`);   // müşteri de geri alınır (işlem)
   const r = await guncelle(db, TEKLIF, id, surum, { musteri_id: m.id }, iz(kim, "teklif.musteri_kaydet", x.no));
   if (r.durum !== "tamam") throw new Error("teklif müşteriye bağlanamadı");
   await ekle(db, TESIS, { teklif_id: id, tesis_id: t.id, sira: 0 }, iz(kim, "teklif.tesis", x.no));
   return { durum: "tamam", id, no: x.no, bildirim: `${a.unvan} müşteri olarak kaydedildi (tesis: Merkez). Sıradaki: iş sözleşmesi, sonra plan.` };
+}
+
+/** kayıtlı olmayan müşterinin KABUL edilmiş teklifini VAR OLAN müşteriye bağlar (müşteri zaten kayıtlıysa — ör. e-postası başka müşteride):
+    etkin müşteri ve onun etkin tesisi; bir kez (veritabanı tetiği de yalnız ilk bağa izin verir) */
+export async function teklifMusteriBagla(db: Sorgulayici, kim: Kisi, id: string, surum: number, girdi: unknown): Promise<Yazma> {
+  if (!yazar(kim)) return { durum: "yetkisiz" };
+  if (!UUID.test(id)) return { durum: "yok" };
+  const g = girdi && typeof girdi === "object" ? girdi as { musteri?: unknown; tesis?: unknown } : {};
+  const h: DogrulamaHatalari = {};
+  const musteri = typeof g.musteri === "string" && UUID.test(g.musteri) ? g.musteri : null, tesis = typeof g.tesis === "string" && UUID.test(g.tesis) ? g.tesis : null;
+  const x = (await db.sorgu<Satir>(`${SEC} WHERE id = $1 FOR UPDATE`, [id])).rows[0];
+  if (!x) return { durum: "yok" };
+  if (x.durum !== "kabul" || x.musteri_id || !x.aday) return { durum: "red", neden: "Yalnız kayıtlı olmayan müşterinin kabul edilmiş teklifi bağlanır." };
+  if (x.surum !== surum) return { durum: "cakisma" };
+  const m = (await musteriOzetleri(db)).find((y) => y.id === musteri && !y.pasif);
+  if (!m) h.musteri = "Müşteri seçilmeli.";
+  else if (!m.tesisler.some((t) => t.id === tesis && !t.pasif)) h.tesis = "Tesis seçilmeli.";
+  if (Object.keys(h).length) return { durum: "gecersiz", hatalar: h };
+  const r = await guncelle(db, TEKLIF, id, surum, { musteri_id: m!.id }, iz(kim, "teklif.musteri_bagla", x.no));
+  if (r.durum !== "tamam") return { durum: r.durum === "yok" ? "yok" : "cakisma" };
+  await ekle(db, TESIS, { teklif_id: id, tesis_id: tesis!, sira: 0 }, iz(kim, "teklif.tesis", x.no));
+  return { durum: "tamam", id, no: x.no, bildirim: `${x.no} ${m!.kisa} müşterisine bağlandı. Sıradaki: iş sözleşmesi, sonra plan.` };
+}
+
+/* RAPORLANAN (§3.2 madde 5): her rapor TEK teklife — raporun tesisi ve türü için, imza gününde (teklif tarihi ≤ imza günü) geçerli EN SON kabul
+   edilmiş teklif (yıllık yenilemede eski teklif yeni dönemin raporunu saymaz — 324 incelemesi). Pencere teklif tarihinden (maket
+   MV.kalemRaporlari: teklif sonrası raporlar). */
+async function raporlananlar(db: Sorgulayici, x: Satir, tesisler: string[]): Promise<Map<string, number>> {
+  const raporlar = await imzaliRaporlar(db, tesisler, x.tarih);
+  if (!raporlar.length) return new Map();
+  const rakip = (await db.sorgu<{ id: string; no: string; tarih: string; tesis_id: string; tur_id: string }>(
+    `SELECT t.id::text, t.no, t.tarih::text, s.tesis_id::text, k.tur_id::text FROM teklif t
+       JOIN teklif_tesis s ON s.firma_id = t.firma_id AND s.teklif_id = t.id JOIN teklif_kalem k ON k.firma_id = t.firma_id AND k.teklif_id = t.id
+     WHERE t.durum = 'kabul' AND s.tesis_id = ANY ($1::uuid[])`, [tesisler])).rows;
+  const say = new Map<string, number>();
+  for (const r of raporlar) {
+    const aday = rakip.filter((y) => y.tesis_id === r.tesisId && y.tur_id === r.turId && y.tarih <= r.gun)
+      .sort((a, b) => (a.tarih === b.tarih ? a.no.localeCompare(b.no) : a.tarih.localeCompare(b.tarih))).at(-1);
+    if (aday?.id === x.id) say.set(r.turId, (say.get(r.turId) ?? 0) + 1);
+  }
+  return say;
 }
 
 /* ── EXCEL VE TEKLİF BELGESİ (325) ─────────────────────────────────────────────────────────────────────────────────────────────────────── */

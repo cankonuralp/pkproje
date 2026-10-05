@@ -2341,6 +2341,26 @@ revizyon, alan kopyalama, hafif kusur devri, meslek eşleşme denetimi).
 - Emsal ürünler: https://opwire.app/iso-17020-periyodik-kontrol-yazilimi/ · https://17020muayene.vidco.com.tr/ · https://akuple.com/asansor-kontrol-yazilimi/ · https://ensyazilim.com/
 
 ## 11 · Değişiklik günlüğü
+- 2026-10-05 (324 çapraz inceleme düzeltmeleri; dört bakış + her bakışın bulgularına çürütme denemesi, 28 bulgu doğrulandı, 1 elendi). **Göç 0037**
+  (Supabase'e henüz uygulanmamıştı, yerinde): kalem / tesis BAŞKA TEKLİFE TAŞINMAZ (gönderilmiş teklifin kalemi taslağa taşınıp tutarı
+  değişebiliyordu); kayıtlı müşterili teklif TESİSSİZ GÖNDERİLMEZ; "ilk tesis" istisnası yalnız kayıtlı olmayan müşteriden gelen teklif; taslağın
+  müşterisi değişirken teklifte başka müşterinin tesisi kalamaz (form önce tesisleri eşitler, sonra günceller); kopya kaynağı aynı firmanın
+  teklifi (yabancı anahtar); Excel listesinin bayt sınırı şemanın en kötü durumunu karşılar. **Yetki:** firma matrisinde Teklifler "kendi" ya da
+  "branş" olan kişi teklif GÖRMEZ (kayıt kayıt süzgeç yok — Müşteriler gibi); "İş sözleşmesi" ve "Plan aç" tuşları hedef modülün yetkisiyle,
+  "Müşteri olarak kaydet" Müşteriler'in yazma yetkisiyle. **Raporlanan:** her rapor TEK teklife — raporun tesisi ve türü için imza gününde geçerli
+  EN SON kabul edilmiş teklif; pencere teklif tarihinden (maket MV.kalemRaporlari; yıllık yenilemede eski teklif yeni dönemin raporunu saymıyor,
+  kabulün geç işaretlenmesi raporu kaçırmıyor). **Müşteri olarak kaydet:** Müşteriler'in uyarısı (aynı vergi no) gösterilir, onaylanırsa kaydedilir
+  (denetim izinin "uyarı görüldü"sü ancak o zaman); e-posta başka müşterideyse kayıt yerine **"Var olan müşteriye bağla"** (yeni: müşteri + etkin
+  tesisi, bir kez). Kayıtlı olmayan müşterinin ünvan, vergi, e-posta ve telefonu Müşteriler'in alan kurallarıyla (gevşek telefon kabulden sonra
+  kaydı imkânsız kılıyordu); birim fiyatın üst sınırı şemada (alan iletisi). **Ekran:** teklif sayfası açılırken çöküyordu (sunucu sayfası istemci
+  listesine sütun işlevi geçiriyordu) — kalem tablosu istemci bileşeninde; formun başlangıç değeri "use client" dosyasından değil sunucudaki
+  form-degeri.ts'ten; kopyada / düzenlemede pasif müşteri / tesis forma alınmaz, şeritte söylenir; eylemler başlık satırında (hata bildirimle);
+  "İlgili kişi" kayıtlı müşteride kartından, kayıtlı olmayanın bilgilerinde "Yetkili"; Kalemler bölümü tam satır (1920'de taşıyordu); kalem
+  satırının tür / adet / fiyat alanlarının erişilebilir adı satır numarasıyla; il, ilçe, tür hata iletisi alana bağlı; Not çok satırlı; Kaldır /
+  Kalem ekle sonrası odak satırın türüne; liste araması ünvan ve il / ilçe. Müşteri paneli: "Giderildi" tarihi tespitten önceyse gösterilmez.
+  Ertelenen: "İş sözleşmesi" bağlamı ve "Dayanak teklif" (Sözleşmeler — sonraki kalem 326). Kilit: teklifler.test +4 (yetki düzeyi ve hedef modül
+  tuşları; taşıma / tesissiz / müşteri değişimi / kopya kaynağı / fiyat / telefon; uyarılı kayıt, e-posta çakışması, bağlama; tek teklife
+  bağlama), bozan +1 (taşıma yasağı).
 - 2026-10-05 (325): **K4 Teklifler › Excel ekipman listesi ve teklif belgesi** (maket teklifler.html "Excel'den yükle" / "Excel'e aktar" — L1
   2026-09-30; "PDF" — §3.7 satır 4, 161 "teklif PDF'i firmanın formatıyla; indirilip elle gönderilir"). **Tablo okuyucu** (src/components/disa/oku.ts,
   dış kütüphane yok — §3.6 maket kararı): gerçek .xlsx (Excel'in DEFLATE sıkıştırması tarayıcının açıcısıyla, ortak dizgiler, zengin metin, ilk

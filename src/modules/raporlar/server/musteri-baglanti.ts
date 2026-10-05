@@ -78,6 +78,7 @@ export async function musteriUygunsuzluklari(db: Sorgulayici): Promise<MusteriUy
         k.kontrol_tarihi AS kapatan_tarih
      FROM uygunsuzluk u LEFT JOIN rapor_surumu s ON s.id = u.surum_id
        LEFT JOIN rapor_surumu k ON u.kapanis = 'giderildi' AND k.rapor_id = musteri_surum_raporu(u.kapatan_surum)
+         AND (u.tarih IS NULL OR k.kontrol_tarihi IS NULL OR k.kontrol_tarihi >= u.tarih)
      ORDER BY u.tarih DESC NULLS LAST, u.olustu DESC, u.metin`)).rows;
   if (!l.length) return [];
   /* raporun görünen numarası: uygunsuzluğun kendi sürümü (müşteriye açıksa), yoksa raporun son imzalı sürümü */

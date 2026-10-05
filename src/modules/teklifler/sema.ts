@@ -3,34 +3,38 @@
    aynı: musteri · tesis · aday.<alan> · gecerlilik · kdv · notlar · kalemler.<i>.<alan> · kalem. */
 import { kimlik, metin, tutar, z } from "../../sema/ortak.ts";
 import { IL_ILCE } from "../../tanim/iller.ts";
+import { MusteriGirdisi } from "../musteriler/sema.ts";
 
 const kirp = (s: unknown) => (typeof s === "string" ? s.trim() : s);
 const bosNull = (s: unknown) => (typeof s === "string" ? (s.trim() === "" ? null : s.trim()) : s ?? null);
 const tamSayi = (en: number, cok: number, ileti: string) =>
   z.preprocess(kirp, z.string({ error: ileti }).regex(/^\d{1,3}$/, ileti).transform(Number)).refine((n) => n >= en && n <= cok, { message: ileti });
 
-/** kayıtlı olmayan müşteri (2026-09-27 reisim: "el ile müşteri girişinde ilgili bilgiler istensin, adres vb") */
+/** kayıtlı olmayan müşteri (2026-09-27 reisim: "el ile müşteri girişinde ilgili bilgiler istensin, adres vb"). Ünvan, vergi, e-posta ve telefon
+    Müşteriler'in alan kurallarıyla AYNI (kabul edilen teklif "Müşteri olarak kaydet"te o şemadan geçer; gevşek kalırsa hiç kaydedilemezdi — 324
+    incelemesi) */
 export const AdayGirdisi = z.object({
-  unvan: z.preprocess(kirp, z.string({ error: "Ünvan yazılmalı." }).min(3, "Ünvan yazılmalı.").max(160, "En çok 160 karakter.")),
-  vd: z.preprocess(bosNull, z.string().max(40, "En çok 40 karakter.").nullable()),
-  vno: z.preprocess(bosNull, z.string().regex(/^\d{10,11}$/, "Vergi no 10 ya da 11 hane.").nullable()),
+  unvan: MusteriGirdisi.shape.unvan,
+  vd: MusteriGirdisi.shape.vd,
+  vno: MusteriGirdisi.shape.vno,
   adres: z.preprocess(kirp, z.string({ error: "Adres yazılmalı." }).min(5, "Adres yazılmalı.").max(160, "En çok 160 karakter.")),
   /* il / ilçe listeden (müşteri olarak kaydedilince tesise geçer — Müşteriler'in kuralıyla aynı) */
   il: z.preprocess(kirp, z.string({ error: "İl seçilmeli." }).refine((v) => v in IL_ILCE, "İl listeden seçilmeli.")),
   ilce: z.preprocess(bosNull, z.string().max(40, "En çok 40 karakter.").nullable()),
-  eposta: z.preprocess((s) => (typeof s === "string" ? (s.trim() === "" ? null : s.trim().toLowerCase()) : s ?? null),
-    z.email({ error: "Geçerli bir e-posta adresi yazılmalı." }).max(254).nullable()),
-  tel: z.preprocess(bosNull, z.string().max(20, "En çok 20 karakter.").nullable()),
-  yetkili: z.preprocess(bosNull, z.string().max(80, "En çok 80 karakter.").nullable()),
+  eposta: MusteriGirdisi.shape.eposta,
+  tel: MusteriGirdisi.shape.tel,
+  yetkili: MusteriGirdisi.shape.ilgili,
 }).superRefine((a, bag) => {
   if (a.ilce && !IL_ILCE[a.il]?.includes(a.ilce)) bag.addIssue({ code: "custom", path: ["ilce"], message: "İlçe listeden seçilmeli." });
 });
 export type Aday = z.output<typeof AdayGirdisi>;
 
+export const FIYAT_UST = 100_000_000_000;
 export const KalemGirdisi = z.object({
   tur: z.string({ error: "Tür seçilmeli." }).regex(/^[0-9a-f-]{36}$/, "Tür seçilmeli."),
   adet: tamSayi(1, 999, "1–999."),
-  fiyat: tutar.refine((n) => n > 0, { message: "Tutar, ör. 1.250,00." }),
+  /* üst sınır veritabanıyla aynı (teklif_kalem.fiyat ≤ 1 milyar TL) — aşan değer alan iletisi alsın, işlem hatası değil */
+  fiyat: tutar.refine((n) => n > 0, { message: "Tutar, ör. 1.250,00." }).refine((n) => n <= FIYAT_UST, { message: "Tutar çok büyük." }),
 });
 
 export const TeklifGirdisi = z.discriminatedUnion("tip", [

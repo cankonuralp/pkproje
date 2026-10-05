@@ -1,11 +1,12 @@
-/* TEKLİFİ DÜZENLE (maket teklifler.html #/t/<no>/duzenle) — yalnız TASLAK ve yalnız "yaz" düzeyi; gönderilmiş teklif sayfasına döner. */
+/* TEKLİFİ DÜZENLE (maket teklifler.html #/t/<no>/duzenle) — yalnız TASLAK ve yalnız "yaz" düzeyi; gönderilmiş teklif sayfasına döner. Başlangıç
+   değeri sunucuda (form-degeri.ts; pasife alınan müşteri / tesis düşer, şeritte söylenir). */
 import type { Metadata } from "next";
 import { notFound, redirect } from "next/navigation";
 import { Yetkisiz } from "../../../../../components/hata/Hata";
 import { modulBul } from "../../../../../modules/moduller";
-import { paraGirdi } from "../../../../../modules/teklifler/sema";
+import { formDegeri } from "../../../../../modules/teklifler/form-degeri";
 import { teklifKarti, teklifSecenekleri } from "../../../../../modules/teklifler/server/teklifler";
-import { BOS_ADAY, TeklifFormu } from "../../../../../modules/teklifler/ui/TeklifFormu";
+import { TeklifFormu } from "../../../../../modules/teklifler/ui/TeklifFormu";
 import { modulOturumu, oturumIslemi } from "../../../../../server/kimlik/istek";
 
 const MODUL = modulBul("teklifler")!;
@@ -19,11 +20,6 @@ export default async function Sayfa({ params }: { params: Promise<{ id: string }
   if (!k) notFound();
   if (!s) return <Yetkisiz />;
   if (!k.izin.duzenle) redirect(`/teklifler/${k.id}`);   // yalnız taslak düzenlenir
-  return (
-    <TeklifFormu secenekler={s} id={k.id} surum={k.surum} no={k.no} deger={{
-      tip: k.musteriKart ? "kayitli" : "aday", musteri: k.musteriKart?.id ?? "", tesis: k.tesisler[0]?.id ?? "", ekTesisler: k.tesisler.slice(1).map((t) => t.id),
-      aday: { ...BOS_ADAY, ...Object.fromEntries(Object.entries(k.aday ?? {}).map(([a, b]) => [a, b ?? ""])) }, gecerlilik: String(k.gecerlilik), kdv: String(k.kdv),
-      notlar: k.notlar ?? "", kalemler: k.kalemler.map((x) => ({ tur: x.turId, adet: String(x.adet), fiyat: paraGirdi(x.fiyat) })), ekipmanlar: k.ekipmanlar,
-    }} />
-  );
+  const { deger, dusen } = formDegeri(k, s);
+  return <TeklifFormu secenekler={s} id={k.id} surum={k.surum} no={k.no} deger={deger} dusen={dusen} />;
 }

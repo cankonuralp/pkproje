@@ -3,7 +3,8 @@
    1. Gönderilmiş teklifin içerik koruması olmasaydı müşteriye giden teklifin KDV'si / kalemi sonradan değişirdi (verilen teklif ≠ kayıt).
    2. Süre denetimi olmasaydı geçerliliği dolmuş teklif kabul edilirdi (124: yenisi kopyalanır).
    3. Tesis denetimi olmasaydı teklife başka müşterinin tesisi girerdi (kabulden sonra o tesisin raporları bu teklife bağlanırdı).
-   4. Hazırlayan veritabanında damgalanmasaydı istemciden gelen kimlik "hazırlayan" diye yazılırdı (istemciden gelen kimlik yetki vermez). */
+   4. Hazırlayan veritabanında damgalanmasaydı istemciden gelen kimlik "hazırlayan" diye yazılırdı (istemciden gelen kimlik yetki vermez).
+   5. (324 incelemesi) Taşıma yasağı olmasaydı gönderilmiş teklifin kalemi taslak teklife taşınır, müşteriye giden teklifin tutarı değişirdi. */
 import assert from "node:assert/strict";
 import { copyFileSync, mkdirSync, mkdtempSync, readdirSync, readFileSync, rmSync, writeFileSync } from "node:fs";
 import { tmpdir } from "node:os";
@@ -47,11 +48,12 @@ async function bozuk(ad: string, eski: string, yeni: string) {
   });
   return { havuz, A, ...v };
 }
-/** gönderilmiş teklif (kalemli) */
-async function gonderilmis(havuz: Havuz, A: string, m1: string, tur: string, no: string) {
+/** gönderilmiş teklif (kalemli, tesisli) */
+async function gonderilmis(havuz: Havuz, A: string, m1: string, t1: string, tur: string, no: string) {
   return kiraciIcinde(havuz, A, async (db) => {
     const id = (await db.sorgu<{ id: string }>("INSERT INTO teklif (no, musteri_id, gecerlilik) VALUES ($1, $2, 30) RETURNING id::text", [no, m1])).rows[0].id;
     await db.sorgu("INSERT INTO teklif_kalem (teklif_id, tur_id, adet, fiyat) VALUES ($1, $2, 1, 100000)", [id, tur]);
+    await db.sorgu("INSERT INTO teklif_tesis (teklif_id, tesis_id) VALUES ($1, $2)", [id, t1]);
     await db.sorgu("UPDATE teklif SET durum = 'gonderildi' WHERE id = $1", [id]);
     return id;
   });
@@ -65,15 +67,15 @@ after(async () => {
 });
 
 test("0037'de gönderilmiş teklifin içerik koruması kalkınca KDV sonradan değişir (kilidin koruduğu açık)", async () => {
-  const { havuz, A, m1, tur } = await bozuk("teklif_bozuk1", "  IF OLD.durum <> 'taslak' THEN\n", "  IF false THEN\n");
-  const id = await gonderilmis(havuz, A, m1, tur, "T-1026-001");
+  const { havuz, A, m1, t1, tur } = await bozuk("teklif_bozuk1", "  IF OLD.durum <> 'taslak' THEN\n", "  IF false THEN\n");
+  const id = await gonderilmis(havuz, A, m1, t1, tur, "T-1026-001");
   const r = await kiraciIcinde(havuz, A, (db) => db.sorgu("UPDATE teklif SET kdv = 1 WHERE id = $1", [id]));
   assert.equal(r.rowCount, 1, "gönderilmiş teklifin KDV'si değişti");
 });
 
 test("0037'de süre denetimi kalkınca geçerliliği dolmuş teklif kabul edilir", async () => {
-  const { havuz, A, m1, tur } = await bozuk("teklif_bozuk2", "      IF OLD.gonderildi + OLD.gecerlilik < bugun THEN\n", "      IF false THEN\n");
-  const id = await gonderilmis(havuz, A, m1, tur, "T-1026-002");
+  const { havuz, A, m1, t1, tur } = await bozuk("teklif_bozuk2", "      IF OLD.gonderildi + OLD.gecerlilik < bugun THEN\n", "      IF false THEN\n");
+  const id = await gonderilmis(havuz, A, m1, t1, tur, "T-1026-002");
   const sahip = acilan.at(-1)!.supa.sahip;
   await sahip.query("SET session_replication_role = replica");
   try { await sahip.query("UPDATE teklif SET gonderildi = gonderildi - 40 WHERE id = $1", [id]); } finally { await sahip.query("SET session_replication_role = origin"); }
@@ -96,4 +98,15 @@ test("0037'de hazırlayan damgası kalkınca istemcinin yazdığı kimlik hazır
   const h = await kiraciIcinde(havuz, A, (db) => db.sorgu<{ h: string }>(
     "INSERT INTO teklif (no, musteri_id, gecerlilik, hazirlayan) VALUES ('T-1026-004', $1, 30, $2) RETURNING hazirlayan::text AS h", [m1, sahte]), { hesapId: hesap });
   assert.equal(h.rows[0].h, sahte, "istemcinin kimliği yazıldı");
+});
+
+test("0037'de taşıma yasağı kalkınca gönderilmiş teklifin kalemi taslak teklife taşınır (müşteriye giden teklifin tutarı değişir)", async () => {
+  const { havuz, A, m1, t1, tur } = await bozuk("teklif_bozuk5",
+    "  IF TG_OP = 'UPDATE' AND (NEW.teklif_id IS DISTINCT FROM OLD.teklif_id OR NEW.firma_id IS DISTINCT FROM OLD.firma_id) THEN", "  IF false THEN");
+  const gonderilen = await gonderilmis(havuz, A, m1, t1, tur, "T-1026-005");
+  const r = await kiraciIcinde(havuz, A, async (db) => {
+    const taslak = (await db.sorgu<{ id: string }>("INSERT INTO teklif (no, musteri_id, gecerlilik) VALUES ('T-1026-006', $1, 30) RETURNING id::text", [m1])).rows[0].id;
+    return db.sorgu("UPDATE teklif_kalem SET teklif_id = $1 WHERE teklif_id = $2", [taslak, gonderilen]);
+  });
+  assert.equal(r.rowCount, 1, "gönderilmiş teklifin kalemi taşındı");
 });

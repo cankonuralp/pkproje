@@ -15,7 +15,7 @@
 /* müşteri türü seçimi (maket a-sekmeler role=group, aria-pressed) */
 .tip { display: flex; flex-wrap: wrap; gap: 8px; margin: 0 0 12px; }
 /* kalem satırı: tür · adet · birim fiyat · tutar · kaldır; telefonda alt alta */
-.kalem { display: grid; grid-template-columns: minmax(200px, 2fr) minmax(80px, .6fr) minmax(120px, 1fr) minmax(110px, .9fr) auto; gap: 8px 12px; align-items: end;
+.kalem { display: grid; grid-template-columns: minmax(0, 2fr) minmax(0, .6fr) minmax(0, 1fr) minmax(0, .9fr) auto; gap: 8px 12px; align-items: end;
   padding: 10px 0; border-bottom: 1px solid var(--kenar); }
 .kalemTutar { margin: 0; min-height: var(--tus-y); display: flex; align-items: center; font-variant-numeric: tabular-nums; font-weight: 600; }
 .kalemEtiket { margin: 0 0 6px; color: var(--yazi2); font-size: var(--boy-kucuk); }
@@ -27,7 +27,7 @@
 .toplam { display: grid; grid-template-columns: repeat(auto-fill, minmax(180px, 1fr)); gap: 8px 16px; margin: 12px 0 0; }
 .toplam dt { color: var(--yazi2); font-size: var(--boy-kucuk); }
 .toplam dd { margin: 2px 0 0; font-variant-numeric: tabular-nums; }
-.gerekce { width: 100%; min-height: 96px; padding: 8px 10px; border: 1px solid var(--kenar-alan); border-radius: var(--r-orta); background: var(--kart); color: var(--yazi); font: inherit; resize: vertical; }
+.gerekce, .not { width: 100%; min-height: 96px; padding: 8px 10px; border: 1px solid var(--kenar-alan); border-radius: var(--r-orta); background: var(--kart); color: var(--yazi); font: inherit; resize: vertical; }
 /* Excel pencereleri (maket a-dosya-sec, a-excel-kap, a-belge-tablo — 325): dosya seçimi, satır satır önizleme; uzun liste pencerede kayar */
 .dosyaSec { display: flex; flex-wrap: wrap; align-items: center; gap: 8px; margin: 0 0 12px; }
 .dosyaAd { min-width: 0; overflow-wrap: anywhere; font-weight: 600; }
