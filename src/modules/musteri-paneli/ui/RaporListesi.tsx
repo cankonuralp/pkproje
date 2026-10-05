@@ -46,8 +46,8 @@ function tanim(l: readonly MusteriRaporu[], tesisler: PanelRaporlari["tesisler"]
     ],
     seciciler: [
       { k: "tesis", ad: "Tesis", secenek: () => [["tumu", "Tümü"], ...tesisler.map((t) => [t.id, t.ad] as const)], gecer: (r, v) => v === "tumu" || r.tesisId === v },
-      { k: "yil", ad: "Yıl", secenek: () => [["tumu", "Tümü"], ...benzersiz(l.map((r) => (r.kontrol ?? r.imzalandi).slice(0, 4))).sort().reverse().map((y) => [y, y] as const)],
-        gecer: (r, v) => v === "tumu" || (r.kontrol ?? r.imzalandi).startsWith(v) },
+      { k: "yil", ad: "Yıl", secenek: () => [["tumu", "Tümü"], ...benzersiz(l.map((r) => (r.kontrol ?? r.imzaGunu).slice(0, 4))).sort().reverse().map((y) => [y, y] as const)],
+        gecer: (r, v) => v === "tumu" || (r.kontrol ?? r.imzaGunu).startsWith(v) },
     ],
   };
 }

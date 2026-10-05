@@ -48,7 +48,7 @@ export default async function Sayfa({ params }: { params: Promise<{ id: string }
         <ul className={stil.uygunsuzListe}>
           <li>Kontrol tarihi: {r.kontrol ? tarihNo(r.kontrol) : "—"}</li>
           <li>Sonraki kontrol: {r.sonraki ? tarihNo(r.sonraki) : "—"}</li>
-          <li>İmza: {tarihNo(r.imzalandi.slice(0, 10))} · güvenli elektronik imzalı PDF</li>
+          <li>İmza: {tarihNo(r.imzaGunu)} · güvenli elektronik imzalı PDF</li>
         </ul>
       </Bolum>
       {uygunsuzluklar.length > 0 && (

@@ -60,7 +60,7 @@ export function GirisFormu({ neden, donus, adres, firmaVar }: { neden?: "oturum"
           <div className={stil.tuslar}>
             <Tus type="submit" ikon="log-in" disabled={gonderiyor || !firmaVar || !!durum.yonlendir} aria-busy={gonderiyor || undefined}>Giriş yap</Tus>
           </div>
-          <p className={stil.ayrac}>Müşteriler de aynı adresten girer; parolaları sistemde kayıtlı e-postalarına gönderilir.</p>
+          <p className={stil.ayrac}>Müşteriler de aynı adresten girer; geçici parolalarını muayene firması verir.</p>
         </form>
       </div>
     </main>

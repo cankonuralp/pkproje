@@ -149,6 +149,9 @@ test("ana giriş: müşterinin e-postasıyla, geçici parola bir kez; giriş ayn
   /* pasif müşteri: giriş ve oturum kapanır */
   const ms = (await sql<{ surum: number }>(A, "SELECT surum FROM musteri WHERE id = $1", [FA.m1])).rows[0].surum;
   tamam(await a(yon, (db) => musteriPasif(db, yon, FA.m1, ms, true)));
+  /* 319 incelemesi (0033): oturumlar pasif olunca HEMEN düşer — okunmasını beklemeden (yeniden etkinleşince eski belirteç geçerli olmasın) */
+  assert.equal((await sql<{ n: number }>(A, "SELECT count(*)::int AS n FROM musteri_oturum o JOIN musteri_hesap h ON h.id = o.musteri_hesap_id WHERE h.musteri_id = $1",
+    [FA.m1])).rows[0].n, 0, "pasif müşterinin oturumu okunmadan düştü");
   assert.equal(await musteriOturumOku(havuz, A, p.belirtec), null, "pasif müşterinin oturumu");
   assert.equal((await musteriGirisYap(havuz, A, { eposta, parola: "YeniParola123", ip: "10.0.2.1" })).tamam, false);
   assert.deepEqual(await a(yon, (db) => anaGeciciParola(db, yon, FA.m1)), { durum: "red", neden: "Müşteri pasif; giriş açılmaz." });
@@ -174,9 +177,26 @@ test("kullanıcı adı firmada tek: personel hesabıyla ve öteki girişlerle ç
     "başka firmada aynı adres serbest");
   /* ek giriş: aynı adres reddedilir */
   assert.deepEqual((await a(yon, (db) => ekGirisEkle(db, yon, FA.m2, { ad: "Deneme Kişi", eposta: "bir@deneme-a-musteri.example", tesisler: "hepsi" }))).durum, "gecersiz");
-  /* e-posta değişince ana giriş */
+  /* 319 incelemesi (0033): müşterinin KAYITLI e-postası da kullanıcı adıdır — başka bir giriş (kendi ek girişi dahil) ve personel hesabı alamaz;
+     müşterinin e-postası başka bir girişin adresi olamaz (sunucu ve veritabanı) */
+  const m2Eposta = (await sql<{ e: string }>(A, "SELECT eposta AS e FROM musteri WHERE id = $1", [FA.m2])).rows[0].e;
+  for (const mid of [FA.m1, FA.m2]) {
+    assert.equal((await a(yon, (db) => ekGirisEkle(db, yon, mid, { ad: "Deneme Kişi", eposta: m2Eposta, tesisler: "hepsi" }))).durum, "gecersiz", "müşterinin e-postasıyla ek giriş");
+  }
+  await assert.rejects(sql(A, "INSERT INTO musteri_hesap (musteri_id, eposta, ad) VALUES ($1, $2, 'x')", [FA.m1, m2Eposta]), /başka bir girişte/);
+  await assert.rejects(sql(A, "INSERT INTO hesap (eposta, ad, roller, durum) VALUES ($1, 'x', '{planlama}', 'etkin')", [m2Eposta]), /başka bir girişte/);
+  await assert.rejects(sql(A, "UPDATE musteri SET eposta = 'den@deneme-a.example' WHERE id = $1", [FA.m1]), /başka bir girişte/, "müşterinin e-postası personelinki olamaz");
+  /* e-posta değişmeyen kartın öteki alanı her zaman kaydedilir (e-posta denetimleri yalnız e-posta değişince) */
+  const kk = (await sql<{ surum: number }>(A, "SELECT surum FROM musteri WHERE id = $1", [FA.m2])).rows[0].surum;
+  tamam(await a(yon, (db) => musteriKaydet(db, yon, FA.m2, kk, { unvan: "Deneme İki Sanayi A.Ş.", kisa: "Deneme İki", vd: "", vno: "", eposta: m2Eposta, tel: "02120000000", ilgili: "" }, false)));
+  /* e-posta değişince ana giriş: kullanılıyorsa önce UYARI (sıfırlanır), onayla kaydedilir ve bildirim söyler */
   tamam(await a(yon, (db) => anaGeciciParola(db, yon, FA.m2)));
-  tamam(await kaydet("yeni-iki@deneme-a-musteri.example", k));
+  const k2 = (await sql<{ surum: number }>(A, "SELECT surum FROM musteri WHERE id = $1", [FA.m2])).rows[0].surum;
+  const uy = await a(yon, (db) => musteriKaydet(db, yon, FA.m2, k2, { unvan: "Deneme İki Sanayi A.Ş.", kisa: "Deneme İki", vd: "", vno: "", eposta: "yeni-iki@deneme-a-musteri.example", tel: "", ilgili: "" }, false));
+  assert.equal(uy.durum, "uyari");
+  assert.match((uy as { uyarilar: Record<string, string> }).uyarilar.eposta, /müşteri girişi sıfırlanır/);
+  const kay = tamam(await kaydet("yeni-iki@deneme-a-musteri.example", k2));
+  assert.match(kay.bildirim ?? "", /Müşteri girişi sıfırlandı; yeni geçici parola verin/);
   const h = (await sql<{ eposta: string; durum: string; oz: string | null }>(A, "SELECT eposta, durum, parola_ozeti AS oz FROM musteri_hesap WHERE musteri_id = $1 AND ana", [FA.m2])).rows[0];
   assert.deepEqual([h.eposta, h.durum, h.oz], ["yeni-iki@deneme-a-musteri.example", "hazir", null], "yeni adrese yeni geçici parola");
 });
@@ -201,6 +221,15 @@ test("ek giriş: yalnız müşterinin kendi etkin tesisleri, oturum kapsamı taz
   assert.equal((await musteriGirisYap(havuz, A, { eposta: e.eposta, parola: p.parola!, ip: "10.1.0.2" })).tamam, false);
   tamam(await a(yon, (db) => girisPasif(db, yon, e.id, s + 1, false)));
   assert.equal((await sql<{ durum: string }>(A, "SELECT durum FROM musteri_hesap WHERE id = $1", [e.id])).rows[0].durum, "hazir", "etkinleşince yeni geçici parola");
+  /* 319 incelemesi (0033): yeni geçici parola kilidi ve hata sayacını sıfırlar (personel hesabındaki gibi) */
+  const sur = async () => (await sql<{ s: number }>(A, "SELECT surum AS s FROM musteri_hesap WHERE id = $1", [e.id])).rows[0].s;
+  tamam(await a(yon, async (db) => ekGeciciParola(db, yon, e.id, await sur())));
+  for (let i = 0; i < 5; i++) assert.equal((await musteriGirisYap(havuz, A, { eposta: e.eposta, parola: "yanlis-parola-k", ip: `10.1.2.${i}` })).tamam, false);
+  assert.ok((await sql<{ k: Date | null }>(A, "SELECT kilit_bitis AS k FROM musteri_hesap WHERE id = $1", [e.id])).rows[0].k, "kilitlendi");
+  const p2 = tamam(await a(yon, async (db) => ekGeciciParola(db, yon, e.id, await sur())));
+  const kl = (await sql<{ k: Date | null; n: number }>(A, "SELECT kilit_bitis AS k, hatali_deneme AS n FROM musteri_hesap WHERE id = $1", [e.id])).rows[0];
+  assert.deepEqual([kl.k, kl.n], [null, 0], "kilit ve sayaç sıfırlandı");
+  assert.ok((await musteriGirisYap(havuz, A, { eposta: e.eposta, parola: p2.parola!, ip: "10.1.2.9" })).tamam, "yeni parolayla girer");
 });
 
 test("İKİNCİ KATMAN (09-E5): müşteri rolü yalnız kendi müşterisinin, kendi tesis kapsamının, son imzalı sürümlerini görür; imzalı PDF'i yalnız onun iner; yazamaz, panel dışı tabloya giremez; başka firma görmez", async () => {
@@ -324,4 +353,29 @@ test("PLANLANAN KONTROLLER (321): müşteri rolü planın yalnız tesis / tarih 
   await assert.rejects(m(m3, null, (db) => db.sorgu("SELECT 1 FROM plan_ekip LIMIT 1")), /permission denied/, "ekip görünmez");
   /* firma tarafı etkilenmez */
   assert.equal((await sql<{ n: number }>(A, "SELECT count(*)::int AS n FROM plan WHERE tesis_id = ANY ($1::uuid[])", [[t5, t6]])).rows[0].n, 3);
+});
+
+test("IP kilidi (319 incelemesi): müşterinin doğru girişi ortak IP sayacını SIFIRLAMAZ — personel hesaplarına yönelik denemeler birikir, beşincide IP kilitlenir", async () => {
+  const ip = "10.7.7.7";
+  for (let i = 0; i < 4; i++) assert.equal((await girisYap(havuz, A, { eposta: `yok${i}@deneme-a.example`, parola: "yanlis-parola", ip })).tamam, false);
+  assert.ok((await musteriGirisYap(havuz, A, { eposta: "bir@deneme-a-musteri.example", parola: "YeniParola123", ip })).tamam, "müşteri girer");
+  const besinci = await girisYap(havuz, A, { eposta: "yok4@deneme-a.example", parola: "yanlis-parola", ip });
+  assert.equal(besinci.tamam ? "acik" : besinci.neden, "kilitli", "sayaç silinmedi: beşinci hata IP'yi kilitler");
+  const m1 = await musteriGirisYap(havuz, A, { eposta: "bir@deneme-a-musteri.example", parola: "YeniParola123", ip });
+  assert.equal(m1.tamam ? "acik" : m1.neden, "kilitli");
+});
+
+test("UYGUNSUZLUK + REVİZYON (319 incelemesi, 0033): revizyondan önce başka muayeneyle 'giderildi' kapanmış eski sürüm kusuru müşteriye görünmez — yalnız son imzalı sürümün kusurları (imza sırasından bağımsız)", async () => {
+  const x = await tarihli(FA.t2, "HT-2", "2026-06-01", true);
+  const once = (await sql<{ id: string }>(A, "SELECT id::text FROM uygunsuzluk WHERE rapor_id = $1", [x])).rows.map((u) => u.id);
+  await tarihli(FA.t2, "HT-2", "2026-06-15", false);   // daha yeni muayene: X'in R0 kusurunu "giderildi" kapatır
+  assert.ok((await sql<{ k: string }>(A, "SELECT kapanis AS k FROM uygunsuzluk WHERE rapor_id = $1", [x])).rows.every((u) => u.k === "giderildi"));
+  tamam(await a(FA.mek, async (db) => revizeyeGonder(db, FA.mek, x, await surum(x), { gerekce: "Kusur açıklaması eksik yazılmış" })));
+  await sql(A, "UPDATE rapor SET durum = 'onayda', surum = surum + 1 WHERE id = $1", [x], FA.den.id);
+  await imzalaRapor(x);
+  const gorunen = (await m(FA.m1, null, (db) => panelUygunsuzluklari(db))).uygunsuzluklar.filter((u) => u.raporId === x);
+  assert.ok(gorunen.length >= 1 && gorunen.every((u) => !once.includes(u.id) && u.raporNo.endsWith("-R1")), `yalnız R1'in kusurları: ${JSON.stringify(gorunen)}`);
+  assert.equal((await m(FA.m1, null, (db) => db.sorgu<{ n: number }>("SELECT count(*)::int AS n FROM uygunsuzluk WHERE id = ANY ($1::uuid[])", [once]))).rows[0].n, 0,
+    "ham SQL de görmez");
+  assert.equal((await sql<{ n: number }>(A, "SELECT count(*)::int AS n FROM uygunsuzluk WHERE id = ANY ($1::uuid[])", [once])).rows[0].n, once.length, "firma tarafında duruyor");
 });

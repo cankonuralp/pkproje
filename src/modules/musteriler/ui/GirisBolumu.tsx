@@ -9,6 +9,7 @@ import { Bilgi, BilgiListesi } from "../../../components/bilgi/Bilgi";
 import { useBildir } from "../../../components/bildirim/Bildirim";
 import { Alan, Girdi, ipucuId } from "../../../components/form/Form";
 import { KartEtiket, Kirp, Liste, type Sutun } from "../../../components/liste/Liste";
+import { useKopyala } from "../../../components/pencere/Kopyala";
 import { useOnayla } from "../../../components/pencere/Onay";
 import { Pencere, pencereMetinSinifi } from "../../../components/pencere/Pencere";
 import { AltSatir, Bolum, Kod, Rozet, type RozetTuru } from "../../../components/sayfa/Sayfa";
@@ -35,15 +36,17 @@ export function GirisBolumu({ musteriId, kisa, b }: { musteriId: string; kisa: s
   const [ek, setEk] = useState<{ ad: string; eposta: string; hepsi: boolean; secili: string[]; hatalar: Record<string, string> }>(
     { ad: "", eposta: "", hepsi: true, secili: [], hatalar: {} });
   const [hata, setHata] = useState<string | null>(null);
+  const kopya = useKopyala(parola?.deger ?? null, "mg-parola");
   const tesisAd = new Map(b.tesisler.map((t) => [t.id, t.ad]));
   const kapsam = (g: MusteriGirisi) => (g.tesisler ? g.tesisler.map((t) => tesisAd.get(t) ?? "pasif tesis").join(", ") : "Bütün tesisler");
+  const gorunen = (d: GirisDurumu): GirisDurumu => (b.pasif ? "pasif" : d);
   const acik = b.yaz && !b.pasif;
 
   const sonuc = (r: GirisYaniti, eposta: string, basarili?: () => void) => {
     if (r.genel) { setHata(r.genel); return; }
     if (r.hatalar) { setEk((f) => ({ ...f, hatalar: r.hatalar! })); return; }
     setHata(null);
-    if (r.parola) { setParola({ deger: r.parola, eposta }); setPencere("parola"); } else basarili?.();
+    if (r.parola) { kopya.sifirla(); setParola({ deger: r.parola, eposta }); setPencere("parola"); } else basarili?.();
     router.refresh();
   };
   const anaParola = () => baslat(async () => sonuc(await anaGeciciParolaEylemi(musteriId), b.eposta ?? ""));
@@ -61,7 +64,7 @@ export function GirisBolumu({ musteriId, kisa, b }: { musteriId: string; kisa: s
     { k: "kisi", genislik: "30%", baslik: "Kişi", kart: "ust", sira: 1, hucre: (g) => <span><Kirp>{g.ad}</Kirp><AltSatir><Kirp>{g.eposta}</Kirp></AltSatir></span> },
     { k: "kapsam", genislik: "26%", baslik: "Gördüğü tesisler", kart: "govde", sira: 2, hucre: (g) => <><KartEtiket>Gördüğü tesisler</KartEtiket><Kirp>{kapsam(g)}</Kirp></> },
     { k: "son", genislik: "18%", baslik: "Son giriş", kart: "govde", sira: 3, hucre: (g) => <><KartEtiket>Son giriş</KartEtiket>{g.sonGiris ? zamanYaz(g.sonGiris) : <AltSatir uyari>Girmedi</AltSatir>}</> },
-    { k: "durum", genislik: "12%", baslik: "Durum", kart: "rozet", sira: 1, hucre: (g) => <Rozet tur={DURUM[g.durum][1]}>{DURUM[g.durum][0]}</Rozet> },
+    { k: "durum", genislik: "12%", baslik: "Durum", kart: "rozet", sira: 1, hucre: (g) => <Rozet tur={DURUM[gorunen(g.durum)][1]}>{DURUM[gorunen(g.durum)][0]}</Rozet> },
     ...(acik ? [{ k: "eylem", genislik: "14%", baslik: "İşlem", gizliBaslik: true, siralanmaz: true, kart: "eylem" as const, sira: 9, hucre: (g: MusteriGirisi) => (
       <div className={stil.girisTuslar}>
         {g.durum === "pasif"
@@ -75,14 +78,19 @@ export function GirisBolumu({ musteriId, kisa, b }: { musteriId: string; kisa: s
   ];
 
   const ana = b.ana;
+  /* durum metni: pasif müşteride giriş kapalı (maket girisHtml m.pasif); geçici parolayla girdi ama değiştirmedi ("henüz girmedi" değil) */
+  const anaDurumMetni = !ana ? "Giriş açılmadı" : b.pasif ? "Müşteri pasif; giriş kapalı"
+    : ana.durum === "etkin" ? `Son giriş ${zamanYaz(ana.sonGiris)}`
+    : ana.durum === "ilk" ? (ana.sonGiris ? `Son giriş ${zamanYaz(ana.sonGiris)} · geçici parolasını henüz değiştirmedi` : `Geçici parola ${zamanYaz(ana.parolaVerildi)} verildi; henüz girmedi`)
+    : DURUM[ana.durum][0];
   return (
-    <Bolum id="b-giris" baslik="Müşteri girişi" sayac={ana ? <Rozet tur={DURUM[ana.durum][1]}>{DURUM[ana.durum][0]}</Rozet> : undefined}
+    <Bolum id="b-giris" baslik="Müşteri girişi" sayac={ana ? <Rozet tur={DURUM[gorunen(ana.durum)][1]}>{DURUM[gorunen(ana.durum)][0]}</Rozet> : undefined}
       tuslar={acik && b.eposta ? <Tus tur="ikincil" ikon="key-round" disabled={bekliyor} onClick={anaParola}>{!ana || ana.durum === "hazir" || ana.durum === "pasif" ? "Geçici parola oluştur" : "Yeni geçici parola"}</Tus> : undefined}>
       {hata && !pencere && <Serit tur="hata" ikon="circle-alert">{hata}</Serit>}
       {b.pasif && <Serit tur="bilgi" ikon="ban">Müşteri pasif; girişleri kapalı.</Serit>}
       <BilgiListesi>
         <Bilgi etiket="Kullanıcı adı" genis>{b.eposta ?? <AltSatir uyari>E-posta yazılınca ana giriş açılır</AltSatir>}</Bilgi>
-        <Bilgi etiket="Durum">{ana ? (ana.durum === "etkin" ? `Son giriş ${zamanYaz(ana.sonGiris)}` : ana.durum === "ilk" ? `Geçici parola ${zamanYaz(ana.parolaVerildi)} verildi; henüz girmedi` : DURUM[ana.durum][0]) : "Giriş açılmadı"}</Bilgi>
+        <Bilgi etiket="Durum">{anaDurumMetni}</Bilgi>
         <Bilgi etiket="Gördüğü tesisler">Bütün tesisler</Bilgi>
       </BilgiListesi>
       <div className={stil.girisAltBas}>
@@ -124,12 +132,13 @@ export function GirisBolumu({ musteriId, kisa, b }: { musteriId: string; kisa: s
 
       <Pencere acik={pencere === "parola"} baslik="Geçici parola" onKapat={() => { setPencere(null); setParola(null); }}
         alt={<>
-          <Tus tur="ikincil" onClick={async () => { try { await navigator.clipboard.writeText(parola?.deger ?? ""); bildir("Geçici parola panoya kopyalandı."); } catch { bildir("Kopyalanamadı; parolayı elle seçin."); } }}>Kopyala</Tus>
+          {kopya.tus}
           <Tus ikon="check" data-ilk-odak="" onClick={() => { setPencere(null); setParola(null); }}>Tamam</Tus>
         </>}>
         <p className={pencereMetinSinifi}><b>{kisa}</b> · kullanıcı adı {parola?.eposta}</p>
         {/* parola yalnız pencere açıkken DOM'da (kapanınca silinir) */}
         {parola && <p className={stil.geciciParola} id="mg-parola"><Kod>{parola.deger}</Kod></p>}
+        {kopya.durum}
         <Serit tur="uyari" ikon="triangle-alert">Bu parola yalnız şimdi gösterilir; müşteriye siz iletin. Müşteri bu adresin giriş ekranından girer ve yalnız kendi raporlarını görür; ilk girişte parolasını değiştirebilir.</Serit>
       </Pencere>
     </Bolum>

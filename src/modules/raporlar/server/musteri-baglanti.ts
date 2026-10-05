@@ -18,6 +18,8 @@ export interface MusteriRaporu {
   yerine: string | null;
   ekipmanId: string; ekipmanKod: string; turAd: string; tesisId: string; tesis: string;
   kontrol: string | null; sonraki: string | null; sonuc: "uygun" | "uygun_degil" | null; imzalandi: string;
+  /** imza günü — Türkiye takvimi (gece imzalanan rapor bir gün önce görünmesin — 319 incelemesi) */
+  imzaGunu: string;
   /** imzalı PDF dosyasının kimliği (tek indirme ucundan, müşteri rolünde — kendi raporu) */
   dosya: string;
 }
@@ -30,8 +32,9 @@ export async function musteriRaporlari(db: Sorgulayici, s: { id?: string } = {})
   if (s.id !== undefined && !UUID.test(s.id)) return [];
   const l = (await db.sorgu<{
     rapor_id: string; no: string; revizyon: number; ekipman_id: string; tur_id: string; tesis_id: string; kontrol_tarihi: string | null; sonraki: string | null;
-    sonuc: MusteriRaporu["sonuc"]; imzalandi: Date; imzali_dosya: string;
-  }>(`SELECT rapor_id::text, no, revizyon, ekipman_id::text, tur_id::text, tesis_id::text, kontrol_tarihi, sonraki, sonuc, imzalandi, imzali_dosya::text
+    sonuc: MusteriRaporu["sonuc"]; imzalandi: Date; imza_gunu: string; imzali_dosya: string;
+  }>(`SELECT rapor_id::text, no, revizyon, ekipman_id::text, tur_id::text, tesis_id::text, kontrol_tarihi, sonraki, sonuc, imzalandi,
+        (imzalandi AT TIME ZONE 'Europe/Istanbul')::date::text AS imza_gunu, imzali_dosya::text
       FROM rapor_surumu${s.id ? " WHERE rapor_id = $1" : ""} ORDER BY imzalandi DESC`, s.id ? [s.id] : [])).rows;
   if (!l.length) return [];
   const ek = new Map((await ekipmanlar(db, [...new Set(l.map((x) => x.ekipman_id))])).map((e) => [e.id, e.kod]));
@@ -40,7 +43,7 @@ export async function musteriRaporlari(db: Sorgulayici, s: { id?: string } = {})
   return l.map((x) => ({
     id: x.rapor_id, no: x.no, revizyon: x.revizyon, yerine: yerine(x.no, x.revizyon),
     ekipmanId: x.ekipman_id, ekipmanKod: ek.get(x.ekipman_id) ?? "—", turAd: tur.get(x.tur_id) ?? "—", tesisId: x.tesis_id, tesis: tesis.get(x.tesis_id) ?? "—",
-    kontrol: x.kontrol_tarihi, sonraki: x.sonraki, sonuc: x.sonuc, imzalandi: x.imzalandi.toISOString(), dosya: x.imzali_dosya,
+    kontrol: x.kontrol_tarihi, sonraki: x.sonraki, sonuc: x.sonuc, imzalandi: x.imzalandi.toISOString(), imzaGunu: x.imza_gunu, dosya: x.imzali_dosya,
   }));
 }
 

@@ -8,6 +8,7 @@ import { Bilgi, BilgiListesi } from "../../../components/bilgi/Bilgi";
 import { useBildir } from "../../../components/bildirim/Bildirim";
 import { Alan, Girdi, ipucuId } from "../../../components/form/Form";
 import { useOnayla } from "../../../components/pencere/Onay";
+import { useKopyala } from "../../../components/pencere/Kopyala";
 import { Pencere, pencereMetinSinifi } from "../../../components/pencere/Pencere";
 import { Bolum, Kod, Rozet } from "../../../components/sayfa/Sayfa";
 import { Serit } from "../../../components/serit/Serit";
@@ -69,6 +70,7 @@ export function HesapBolumu({ personelId, ad, meslekAdi, eposta, personelEtkin, 
   const [pencere, setPencere] = useState<null | "ac" | "yeni" | "parola">(null);
   const [acForm, setAcForm] = useState<{ eposta: string; roller: Rol[]; hatalar: Record<string, string> }>({ eposta: eposta ?? "", roller: [], hatalar: {} });
   const [parola, setParola] = useState<{ deger: string; yeni: boolean } | null>(null);
+  const kopya = useKopyala(parola?.deger ?? null, "h-parola");
   const [hata, setHata] = useState<string | null>(null);
 
   const sonuc = (r: HesapDurumu, basarili: () => void) => {
@@ -126,7 +128,7 @@ export function HesapBolumu({ personelId, ad, meslekAdi, eposta, personelEtkin, 
         alt={<>
           <Tus tur="ikincil" onClick={() => setPencere(null)}>Vazgeç</Tus>
           <Tus ikon="key-round" disabled={bekliyor || !acForm.eposta.trim() || !acForm.roller.length}
-            onClick={() => baslat(async () => { const r = await hesapAcEylemi(personelId, acForm.eposta, acForm.roller); sonuc(r, () => { setParola({ deger: r.parola!, yeni: true }); setPencere("parola"); }); })}>Hesabı aç ve parola oluştur</Tus>
+            onClick={() => baslat(async () => { const r = await hesapAcEylemi(personelId, acForm.eposta, acForm.roller); sonuc(r, () => { kopya.sifirla(); setParola({ deger: r.parola!, yeni: true }); setPencere("parola"); }); })}>Hesabı aç ve parola oluştur</Tus>
         </>}>
         <p className={pencereMetinSinifi}><b>{ad}</b> · {meslekAdi}</p>
         {hata && pencere === "ac" && <Serit tur="hata" ikon="circle-alert">{hata}</Serit>}
@@ -143,7 +145,7 @@ export function HesapBolumu({ personelId, ad, meslekAdi, eposta, personelEtkin, 
         alt={<>
           <Tus tur="ikincil" onClick={() => setPencere(null)}>Vazgeç</Tus>
           <Tus ikon="key-round" disabled={bekliyor} data-ilk-odak=""
-            onClick={() => baslat(async () => { const r = await geciciParolaEylemi(personelId); sonuc(r, () => { setParola({ deger: r.parola!, yeni: false }); setPencere("parola"); }); })}>Parola oluştur</Tus>
+            onClick={() => baslat(async () => { const r = await geciciParolaEylemi(personelId); sonuc(r, () => { kopya.sifirla(); setParola({ deger: r.parola!, yeni: false }); setPencere("parola"); }); })}>Parola oluştur</Tus>
         </>}>
         <p className={pencereMetinSinifi}><b>{ad}</b> · {hesap?.eposta}</p>
         {hata && pencere === "yeni" && <Serit tur="hata" ikon="circle-alert">{hata}</Serit>}
@@ -151,13 +153,14 @@ export function HesapBolumu({ personelId, ad, meslekAdi, eposta, personelEtkin, 
 
       <Pencere acik={pencere === "parola"} baslik={parola?.yeni ? "Giriş hesabı açıldı" : "Yeni geçici parola"} onKapat={() => { setPencere(null); setParola(null); }}
         alt={<>
-          <Tus tur="ikincil" onClick={async () => { try { await navigator.clipboard.writeText(parola?.deger ?? ""); bildir("Geçici parola panoya kopyalandı."); } catch { bildir("Kopyalanamadı; parolayı elle seçin."); } }}>Kopyala</Tus>
+          {kopya.tus}
           <Tus ikon="check" data-ilk-odak="" onClick={() => { setPencere(null); setParola(null); }}>Tamam</Tus>
         </>}>
         <p className={pencereMetinSinifi}><b>{ad}</b> · {hesap?.eposta ?? acForm.eposta}</p>
         <p className={stil.etiketUst}>Geçici parola</p>
         {/* parola yalnız pencere açıkken DOM'da (kapanınca silinir) */}
         {parola && <p className={stil.geciciParola} id="h-parola"><Kod>{parola.deger}</Kod></p>}
+        {kopya.durum}
         <Serit tur="uyari" ikon="triangle-alert">Bu parola yalnız şimdi gösterilir; kişiye siz iletin. Kişi ilk girişten sonra parolasını değiştirebilir. Unutulursa yeni geçici parola verilir.</Serit>
       </Pencere>
     </Bolum>

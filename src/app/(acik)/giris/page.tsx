@@ -21,8 +21,10 @@ export default async function GirisSayfasi({ searchParams }: { searchParams: Pro
   if (o) redirect(firmaDonus ?? "/");
   /* müşteri kullanıcısı (0030): kendi paneline */
   const m = await musteriIstekOturumu();
-  if (m?.durum === "ilk") redirect("/giris/parola?donus=%2Fportal");
-  if (m) redirect(donus?.startsWith("/portal") ? donus : "/portal");
+  /* dönüş adresi eylemdeki gibi korunur (geçici parolayla girişte de — 319 incelemesi) */
+  const musteriDonus = donus?.startsWith("/portal") ? donus : "/portal";
+  if (m?.durum === "ilk") redirect(`/giris/parola?donus=${encodeURIComponent(musteriDonus)}`);
+  if (m) redirect(musteriDonus);
   const kiraci = await istekKiracisi();
   const adres = ((await headers()).get("host") ?? "").replace(/:\d+$/, "");
   return <GirisFormu neden={neden} donus={donus} adres={adres} firmaVar={!!kiraci} />;

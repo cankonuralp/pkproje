@@ -14,7 +14,7 @@ import { musteriDegistirir, type Kisi } from "./musteriler.ts";
 
 const HESAP = tablo({ ad: "musteri_hesap", sutunlar: ["musteri_id", "ana", "eposta", "ad", "tesisler", "parola_ozeti", "durum", "parola_verildi"], gizli: ["parola_ozeti"] });
 const UUID = /^[0-9a-f]{8}-[0-9a-f]{4}-[0-9a-f]{4}-[0-9a-f]{4}-[0-9a-f]{12}$/;
-const CAKISMA = "Bu e-posta firmada başka bir girişte (personel ya da müşteri) kayıtlı.";
+const CAKISMA = "Bu e-posta firmada başka bir girişin (personel ya da müşteri) kullanıcı adı ya da başka bir müşterinin e-postası.";
 
 export type GirisDurumu = "hazir" | "ilk" | "etkin" | "pasif";
 export interface MusteriGirisi {
@@ -46,10 +46,11 @@ async function musteriOku(db: Sorgulayici, id: string) {
   return (await db.sorgu<{ id: string; kisa: string; ilgili: string | null; eposta: string | null; pasif: string | null }>(
     "SELECT id::text, kisa, ilgili, eposta, pasif FROM musteri WHERE id = $1 FOR UPDATE", [id])).rows[0] ?? null;
 }
-/** kullanıcı adı başka bir girişte var mı (veritabanı da ister; burada alanın altında söylenir) */
-async function epostaDolu(db: Sorgulayici, eposta: string, haric: string | null): Promise<boolean> {
-  const r = await db.sorgu("SELECT 1 FROM hesap WHERE eposta = $1 UNION ALL SELECT 1 FROM musteri_hesap WHERE eposta = $1 AND id IS DISTINCT FROM $2::uuid",
-    [eposta, haric]);
+/** kullanıcı adı başka bir girişte ya da başka bir müşterinin kayıtlı e-postası olarak var mı (veritabanı da ister — 0033; burada alanın
+    altında söylenir). haric: denetlenen girişin kendisi; anaMusteri: ana girişse müşterisi (kendi e-postası kullanıcı adıdır) */
+async function epostaDolu(db: Sorgulayici, eposta: string, haric: string | null, anaMusteri: string | null): Promise<boolean> {
+  const r = await db.sorgu(`SELECT 1 FROM hesap WHERE eposta = $1 UNION ALL SELECT 1 FROM musteri_hesap WHERE eposta = $1 AND id IS DISTINCT FROM $2::uuid
+    UNION ALL SELECT 1 FROM musteri WHERE eposta = $1 AND id IS DISTINCT FROM $3::uuid`, [eposta, haric, anaMusteri]);
   return (r.rowCount ?? 0) > 0;
 }
 
@@ -74,7 +75,7 @@ export async function anaGeciciParola(db: Sorgulayici, kim: Kisi, musteriId: str
   if (m.pasif) return { durum: "red", neden: "Müşteri pasif; giriş açılmaz." };
   if (!m.eposta) return { durum: "red", neden: "Müşterinin e-postası yok; ana giriş e-postayla açılır. Önce e-postayı yazın." };
   const ana = (await db.sorgu<Satir>(`${SEC} WHERE musteri_id = $1 AND ana`, [musteriId])).rows[0];
-  if (await epostaDolu(db, m.eposta, ana?.id ?? null)) return { durum: "red", neden: CAKISMA };
+  if (await epostaDolu(db, m.eposta, ana?.id ?? null, musteriId)) return { durum: "red", neden: CAKISMA };
   const p = await yeniParola(), verildi = new Date().toISOString();
   if (!ana) {
     const r = await ekle(db, HESAP, { musteri_id: musteriId, ana: true, eposta: m.eposta, ad: m.ilgili ?? m.kisa, parola_ozeti: p.ozet, durum: "ilk", parola_verildi: verildi },
@@ -101,7 +102,7 @@ export async function ekGirisEkle(db: Sorgulayici, kim: Kisi, musteriId: string,
     const t = (await db.sorgu<{ id: string }>("SELECT id::text FROM tesis WHERE musteri_id = $1 AND pasif IS NULL AND id = ANY ($2::uuid[])", [musteriId, v.tesisler])).rows;
     if (t.length !== v.tesisler.length) return { durum: "gecersiz", hatalar: { tesisler: "Yalnız bu müşterinin etkin tesisleri seçilebilir." } };
   }
-  if (await epostaDolu(db, v.eposta, null)) return { durum: "gecersiz", hatalar: { eposta: CAKISMA } };
+  if (await epostaDolu(db, v.eposta, null, null)) return { durum: "gecersiz", hatalar: { eposta: CAKISMA } };
   const r = await ekle(db, HESAP, { musteri_id: musteriId, ana: false, eposta: v.eposta, ad: v.ad, tesisler: v.tesisler, durum: "hazir" }, iz(kim, "musteri_giris.ek_ekle", v.eposta));
   return { durum: "tamam", id: r.id };
 }
@@ -144,10 +145,15 @@ export async function girisPasif(db: Sorgulayici, kim: Kisi, id: string, surum: 
 /** müşterinin e-postası değişince ana girişin kullanıcı adı onunla gider (parola ve oturumlar düşer — yeni adrese yeni parola); e-posta
     silinince ana giriş pasif olur. Müşteri kaydının işleminde çağrılır (musteriKaydet); yetki orada. */
 export async function anaGirisEpostasi(db: Sorgulayici, kim: Kisi, musteriId: string, eposta: string | null): Promise<"tamam" | "cakisma"> {
-  const ana = (await db.sorgu<Satir>(`${SEC} WHERE musteri_id = $1 AND ana`, [musteriId])).rows[0];
+  const ana = (await db.sorgu<Satir>(`${SEC} WHERE musteri_id = $1 AND ana FOR UPDATE`, [musteriId])).rows[0];
   if (!ana || ana.eposta === eposta) return "tamam";
-  if (eposta && (await epostaDolu(db, eposta, ana.id))) return "cakisma";
+  if (eposta && (await epostaDolu(db, eposta, ana.id, musteriId))) return "cakisma";
   const r = await guncelle(db, HESAP, ana.id, ana.surum, eposta ? { eposta, parola_ozeti: null, durum: "hazir", parola_verildi: null } : { durum: "pasif" },
     iz(kim, "musteri_giris.eposta", eposta ?? "e-posta silindi"));
   return r.durum === "tamam" || r.durum === "degisiklik_yok" ? "tamam" : "cakisma";
+}
+
+/** müşteri kaydı e-postayı değiştirmeden önce: ana girişin durumu (satır kilitlenir — aynı işlemde parola / pasif yarışı olmasın); yoksa null */
+export async function anaGirisDurumu(db: Sorgulayici, musteriId: string): Promise<GirisDurumu | null> {
+  return (await db.sorgu<{ durum: GirisDurumu }>("SELECT durum FROM musteri_hesap WHERE musteri_id = $1 AND ana FOR UPDATE", [musteriId])).rows[0]?.durum ?? null;
 }

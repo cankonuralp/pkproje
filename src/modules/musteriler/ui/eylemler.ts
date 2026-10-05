@@ -5,7 +5,7 @@ import { ayniKoken } from "../../../server/kimlik/koken";
 import { istekOturumu, oturumIslemi } from "../../../server/kimlik/istek";
 import { musteriKaydet, musteriPasif, tesisKaydet, tesisPasif, type Yazma } from "../server/musteriler";
 
-export interface PencereDurumu { tamam?: boolean; id?: string; hatalar?: Record<string, string>; uyarilar?: Record<string, string>; genel?: string }
+export interface PencereDurumu { tamam?: boolean; id?: string; bildirim?: string; hatalar?: Record<string, string>; uyarilar?: Record<string, string>; genel?: string }
 
 const SONUC = {
   yetkisiz: "Bu işlem için yetkiniz yok.",
@@ -20,7 +20,7 @@ const metinler = (g: unknown, alanlar: readonly string[]) => {
   return Object.fromEntries(alanlar.map((k) => [k, typeof o[k] === "string" ? o[k] : ""]));
 };
 const cevir = (r: Yazma): PencereDurumu =>
-  r.durum === "tamam" ? { tamam: true, id: r.id } : r.durum === "gecersiz" ? { hatalar: r.hatalar } : r.durum === "uyari" ? { uyarilar: r.uyarilar }
+  r.durum === "tamam" ? { tamam: true, id: r.id, ...(r.bildirim ? { bildirim: r.bildirim } : {}) } : r.durum === "gecersiz" ? { hatalar: r.hatalar } : r.durum === "uyari" ? { uyarilar: r.uyarilar }
     : r.durum === "red" ? { genel: r.neden } : { genel: SONUC[r.durum] };
 
 async function islem(is: (o: NonNullable<Awaited<ReturnType<typeof istekOturumu>>>) => Promise<Yazma>): Promise<PencereDurumu> {

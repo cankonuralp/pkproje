@@ -51,7 +51,8 @@ export async function girisEylemi(_onceki: GirisDurumu, form: FormData): Promise
   }
   (await cookies()).set(CEREZ, sonuc.belirtec, cerezAyari(sonuc.bitis, sonuc.hesap.hatirla));
   /* yönlendirme istemcide TAM sayfa geçişiyle (eylem içinden yönlendirilen sayfa yeni çerezi aynı istekte görmüyor — 2026-10-04 e2e yakaladı) */
-  const donus = guvenliDonus(g.data.donus) ? g.data.donus : "/";
+  /* firma kullanıcısı müşteri paneline dönmez (giriş sayfasındaki firmaDonus ile aynı) */
+  const donus = guvenliDonus(g.data.donus) && !g.data.donus.startsWith("/portal") ? g.data.donus : "/";
   /* geçici parolayla ilk giriş: parola değiştirme önerilir ("Şimdi değil" ile geçilebilir — karar 34) */
   if (sonuc.hesap.durum === "ilk") return { yonlendir: `/giris/parola${donus !== "/" ? `?donus=${encodeURIComponent(donus)}` : ""}` };
   return { yonlendir: donus };
@@ -86,8 +87,9 @@ export async function cikisEylemi(): Promise<void> {
     await cikisYap(havuz(), kiraci.firmaId, c.get(CEREZ)?.value);
     await musteriCikis(havuz(), kiraci.firmaId, c.get(MUSTERI_CEREZ)?.value);
   }
-  c.delete(CEREZ);
-  c.delete(MUSTERI_CEREZ);
+  /* silme yazımdaki niteliklerle (Secure, yol): tarayıcı __Host- önekli çerezin Secure'suz silme isteğini yok sayar — çerez kalır, sonraki
+     girişte yanlış "oturumunuz kapandı" çıkardı (319 incelemesi) */
+  for (const ad of [CEREZ, MUSTERI_CEREZ]) c.set(ad, "", { ...cerezAyari(new Date(0)), maxAge: 0 });
   redirect("/giris?neden=cikis");
 }
 

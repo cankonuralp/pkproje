@@ -8,7 +8,7 @@ import { ekle, guncelle, tablo, type Iz } from "../../../server/db/yazici.ts";
 import { duzey, type YetkiHesabi } from "../../../server/yetki/canDo.ts";
 import { dogrula, type DogrulamaHatalari } from "../../../sema/ortak.ts";
 import { kisaAd, MusteriGirdisi, TesisGirdisi } from "../sema.ts";
-import { anaGirisEpostasi } from "./girisler.ts";
+import { anaGirisDurumu, anaGirisEpostasi } from "./girisler.ts";
 
 const MODUL = 3;
 const MUSTERI = tablo({ ad: "musteri", sutunlar: ["unvan", "kisa", "vd", "vno", "eposta", "tel", "ilgili", "pasif"] });
@@ -25,7 +25,7 @@ export interface MusteriKarti extends MusteriSatiri { vd: string | null; tel: st
 export interface TesisKarti extends TesisSatiri { surum: number; musteri: { id: string; unvan: string; kisa: string; pasif: string | null } }
 
 export type Yazma =
-  | { durum: "tamam"; id: string; surum: number }
+  | { durum: "tamam"; id: string; surum: number; bildirim?: string }
   | { durum: "uyari"; uyarilar: DogrulamaHatalari }
   | { durum: "gecersiz"; hatalar: DogrulamaHatalari }
   | { durum: "red"; neden: string }
@@ -82,22 +82,37 @@ const cevir = (r: { durum: string }): Yazma | null =>
   r.durum === "cakisma" ? { durum: "cakisma" } : r.durum === "yok" ? { durum: "yok" } : null;
 
 /** müşteri ekle (id boş) ya da güncelle. Aynı vergi no başka müşteride → uyarı (onay ile geçer); aynı e-posta başka müşteride → hata
-    (müşteri girişinin kullanıcı adı). */
+    (müşteri girişinin kullanıcı adı). E-posta değişince ana giriş sıfırlanır (yeni adrese yeni geçici parola): önce uyarı, sonra bildirim
+    (319 incelemesi). E-posta denetimleri yalnız e-posta DEĞİŞİNCE (değişmeyen kartın başka alanı her zaman kaydedilir). */
 export async function musteriKaydet(db: Sorgulayici, kim: Kisi, id: string | null, surum: number, girdi: unknown, onay: boolean): Promise<Yazma> {
   if (!degistirir(kim)) return { durum: "yetkisiz" };
   const g = dogrula(MusteriGirdisi, girdi);
   if (!g.tamam) return { durum: "gecersiz", hatalar: g.hatalar };
   const v = g.veri, digeri = id && UUID.test(id) ? id : "00000000-0000-0000-0000-000000000000";
-  if (v.eposta) {
+  /* güncellemede kaydın şimdiki e-postası (satır kilitli: ana giriş işlemleri de müşteriyi önce kilitler — aynı sıra) */
+  const eski = id ? (await db.sorgu<{ eposta: string | null }>("SELECT eposta FROM musteri WHERE id = $1 FOR UPDATE", [digeri])).rows[0] : undefined;
+  if (id && !eski) return { durum: "yok" };
+  const epostaDegisti = v.eposta !== (eski?.eposta ?? null);
+  if (v.eposta && epostaDegisti) {
     const e = await db.sorgu("SELECT 1 FROM musteri WHERE eposta = $1 AND id <> $2", [v.eposta, digeri]);
     if (e.rowCount) return { durum: "gecersiz", hatalar: { eposta: "Bu e-posta başka bir müşteride kayıtlı." } };
     /* 0030: e-posta müşteri girişinin kullanıcı adı — firmada personel hesabıyla ya da başka bir girişle çakışmaz */
     const g2 = await db.sorgu("SELECT 1 FROM hesap WHERE eposta = $1 UNION ALL SELECT 1 FROM musteri_hesap WHERE eposta = $1 AND NOT (ana AND musteri_id = $2::uuid)", [v.eposta, digeri]);
     if (g2.rowCount) return { durum: "gecersiz", hatalar: { eposta: "Bu e-posta firmada bir girişin kullanıcı adı (personel ya da müşteri girişi)." } };
   }
-  if (v.vno && !onay) {
-    const a = (await db.sorgu<{ kisa: string }>("SELECT kisa FROM musteri WHERE vno = $1 AND id <> $2 ORDER BY kisa LIMIT 1", [v.vno, digeri])).rows[0];
-    if (a) return { durum: "uyari", uyarilar: { vno: `Bu vergi no ${a.kisa} müşterisinde de kayıtlı. Aynı müşteri olabilir.` } };
+  /* ana giriş kullanılıyorsa (geçici parola verilmiş ya da müşteri giriyor) e-posta değişince sıfırlanır */
+  const anaDurum = id && epostaDegisti ? await anaGirisDurumu(db, digeri) : null;
+  const anaSifir = anaDurum === "ilk" || anaDurum === "etkin";
+  if (!onay) {
+    const u: Record<string, string> = {};
+    if (v.vno) {
+      const a = (await db.sorgu<{ kisa: string }>("SELECT kisa FROM musteri WHERE vno = $1 AND id <> $2 ORDER BY kisa LIMIT 1", [v.vno, digeri])).rows[0];
+      if (a) u.vno = `Bu vergi no ${a.kisa} müşterisinde de kayıtlı. Aynı müşteri olabilir.`;
+    }
+    if (anaSifir) u.eposta = v.eposta
+      ? "E-posta değişince müşteri girişi sıfırlanır: müşteri yeni adrese vereceğiniz geçici parolayla girer."
+      : "E-posta silinince müşteri girişi kapanır.";
+    if (Object.keys(u).length) return { durum: "uyari", uyarilar: u };
   }
   const degerler = { unvan: v.unvan, kisa: kisaAd(v), vd: v.vd, vno: v.vno, eposta: v.eposta, tel: v.tel, ilgili: v.ilgili };
   if (!id) {
@@ -105,11 +120,20 @@ export async function musteriKaydet(db: Sorgulayici, kim: Kisi, id: string | nul
     return { durum: "tamam", ...r };
   }
   if (!surumGecerli(surum)) return { durum: "cakisma" };
-  const r = await guncelle(db, MUSTERI, id, surum, degerler, { kim: kim.ad, ne: "musteri.guncelle", gerekce: onay ? "uyarı görüldü, yine de kaydedildi" : undefined });
-  const c = cevir(r); if (c) return c;
-  /* ana girişin kullanıcı adı müşterinin e-postasıyla gider (yeni adrese yeni geçici parola; e-posta silinirse giriş pasif) */
-  if ((await anaGirisEpostasi(db, kim, id, v.eposta)) === "cakisma") return { durum: "cakisma" };
-  return { durum: "tamam", id, surum: (r as { surum: number }).surum };
+  try {
+    const r = await guncelle(db, MUSTERI, id, surum, degerler, { kim: kim.ad, ne: "musteri.guncelle", gerekce: onay ? "uyarı görüldü, yine de kaydedildi" : undefined });
+    const c = cevir(r); if (c) return c;
+    /* ana girişin kullanıcı adı müşterinin e-postasıyla gider (yeni adrese yeni geçici parola; e-posta silinirse giriş pasif). Ana giriş yukarıda
+       kilitlendi ve e-posta danışma kilidiyle tutuldu: burada çakışma olmaz; olursa YARIM kayıt kalmasın — işlem geri alınır (319 incelemesi) */
+    if ((await anaGirisEpostasi(db, kim, id, v.eposta)) === "cakisma") throw new Error("müşteri girişi e-postayla birlikte güncellenemedi");
+    const bildirim = anaSifir ? (v.eposta ? "Müşteri güncellendi. Müşteri girişi sıfırlandı; yeni geçici parola verin." : "Müşteri güncellendi. Müşteri girişi kapandı (e-posta silindi).") : undefined;
+    return { durum: "tamam", id, surum: (r as { surum: number }).surum, ...(bildirim ? { bildirim } : {}) };
+  } catch (h) {
+    /* veritabanı (0033): e-posta bu arada bir girişin kullanıcı adı oldu */
+    const e = h as { code?: string; constraint?: string };
+    if (e.code === "23505" && e.constraint === "giris_eposta") return { durum: "gecersiz", hatalar: { eposta: "Bu e-posta firmada bir girişin kullanıcı adı (personel ya da müşteri girişi)." } };
+    throw h;
+  }
 }
 
 /** tesis ekle (id boş; müşterinin altına) ya da güncelle. Pasif müşteriye tesis eklenmez. Aynı SGK DETSİS NO başka tesiste → uyarı. */

@@ -2341,6 +2341,26 @@ revizyon, alan kopyalama, hafif kusur devri, meslek eşleşme denetimi).
 - Emsal ürünler: https://opwire.app/iso-17020-periyodik-kontrol-yazilimi/ · https://17020muayene.vidco.com.tr/ · https://akuple.com/asansor-kontrol-yazilimi/ · https://ensyazilim.com/
 
 ## 11 · Değişiklik günlüğü
+- 2026-10-05 (319 çapraz inceleme düzeltmeleri; dört bakış + her bulguya çürütme denemesi, 16 bulgu doğrulandı, 1 elendi). Göç **0033**:
+  (1) müşteri rolü uygunsuzluğu yalnız **kendi sürümü müşteriye açıksa** görür (raporun son imzalı sürümü — 193): revizyondan önce başka
+  muayeneyle "giderildi" kapanmış eski sürüm kusuru açık kalıyordu, görünürlük imza sırasına bağlıydı. (2) **Pasif müşterinin oturumları hemen
+  düşer** (eskiden yalnız o belirteçle istek gelince; yeniden etkinleşince okunmamış eski belirteç geçerliydi). (3) **Parola değişince** (geçici
+  parola dahil) hata sayacı ve **kilit sıfırlanır** (personeldeki gibi). (4) **Kullanıcı adı tekliği müşterinin kayıtlı e-postasını da
+  kapsar**: personel hesabı ve başka bir giriş (müşterinin kendi ek girişi dahil) o adresi alamaz, müşterinin e-postası başka bir girişin adresi
+  olamaz — eskiden ek giriş müşterinin adresini alınca müşteri kartı hiç kaydedilemiyor, ana girişi açılamıyordu. Kod: (5) **müşteri girişi
+  ortak IP sayacını sıfırlamaz** (firma dışından bir müşteri kendi doğru girişiyle personel hesaplarına yönelik denemelerin IP kilidini
+  silemesin). (6) Müşteri kaydında e-posta denetimleri yalnız **e-posta değişince**; e-posta değişince ana giriş (kullanılıyorsa) sıfırlanır —
+  önce **uyarı** ("Yine de kaydet"), sonra bildirim ("Müşteri girişi sıfırlandı; yeni geçici parola verin"); ana giriş kilitlenerek okunur,
+  yarım kayıt kalmaz (çakışmada işlem geri alınır). (7) Giriş: geçici parolalı müşterinin **dönüş adresi korunur**; firma kullanıcısının dönüşü
+  müşteri paneline olamaz (eylem ve sayfa aynı). (8) **Çıkış** __Host- önekli çerezleri yazımdaki niteliklerle siler (eskiden tarayıcı silmeyi
+  yok sayıyor, sonraki girişte yanlış "oturumunuz kapandı" çıkıyordu). (9) Panelde **imza günü Türkiye takvimiyle** (gece imzalanan rapor bir
+  gün önce görünüyordu; Yıl seçicisi de). Arayüz: (10) müşteri kartında geçici parolayla girip değiştirmeyen için "Son giriş … · geçici
+  parolasını henüz değiştirmedi" ("henüz girmedi" değil); pasif müşterinin girişleri "Pasif" (maketteki gibi). (11) **Kopyala** sonucu
+  pencerenin içinde (tek üretici `components/pencere/Kopyala.tsx`; telefonda levha bildirimi örtüyordu; pano reddedilirse metin seçilir) —
+  personelin geçici parola penceresi de. (12) Gönderilmeyen e-postadan söz eden iki metin düzeltildi (parolayı firma iletir). Kilit:
+  musteri-paneli.test +2 (IP sayacı, eskimiş sürüm kusuru) + pasif oturumu okunmadan düşer + e-posta tekliği (müşteri adresi, sunucu ve
+  veritabanı) + değişmeyen e-postayla kart kaydı + sıfırlama uyarısı ve bildirimi + geçici parola kilidi açar; bozan +4 (son sürüm şartı,
+  pasif oturum, müşteri e-postası, kilit sıfırlama).
 - 2026-10-05 (321): **K3 Müşteri paneli › Planlanan kontroller + toplu indirme (ZIP)** (maket musteri.html #/plan planCiz, "Toplu indir (ZIP)",
   "Uygunsuz raporlar (ZIP)"; karar 81 "müşteri panelinde planlanan kontrol"; Ö3 2026-10-01 reisim: "Müşteri gözünde toplu indirme uygunsuzları
   toplu indirme excel olarak indirme"). Göç **0032**: müşteri rolü planın YALNIZ tesis / tarih / durum sütunlarını okur (proje no, açıklama,

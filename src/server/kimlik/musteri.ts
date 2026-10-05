@@ -75,7 +75,8 @@ export async function musteriGirisYap(havuz: Havuz, firmaId: string, g: { eposta
       return { tamam: false, neden: "hatali" };
     }
     await db.sorgu("UPDATE musteri_hesap SET hatali_deneme = 0, kilit_bitis = NULL, son_giris = $2 WHERE id = $1", [h.id, simdi]);
-    await db.sorgu("DELETE FROM giris_kilidi WHERE ip = $1", [ip]);
+    /* IP sayacı SIFIRLANMAZ (319 incelemesi): sayaç personel ve müşteri girişlerinde ortak — firma dışından bir müşteri kendi doğru girişiyle
+       personel hesaplarına yönelik denemelerin IP kilidini silemesin; sayaç kilit dolunca kendiliğinden düşer */
     const belirtec = randomBytes(32).toString("base64url");
     const bitis = new Date(simdi.getTime() + MUTLAK_GUN * 86_400_000);
     await db.sorgu("INSERT INTO musteri_oturum (ozet, musteri_hesap_id, olustu, son_kullanim, bitis, ip, tarayici, hatirla) VALUES ($1, $2, $3, $3, $4, $5, $6, $7)",

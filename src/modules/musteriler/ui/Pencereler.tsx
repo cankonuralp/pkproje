@@ -54,7 +54,7 @@ export function MusteriPenceresi({ acik, kapat, musteri }: { acik: boolean; kapa
     if (!k.sonuc(r)) { k.odakla(r, MID); return; }
     const yeniGiris = !!k.d.eposta.trim() && !musteri?.eposta;
     kapat();
-    if (musteri) { bildir(`Müşteri güncellendi.${yeniGiris ? " Müşteri girişi bu e-postayla açılacak." : ""}`); router.refresh(); }
+    if (musteri) { bildir(r.bildirim ?? `Müşteri güncellendi.${yeniGiris ? " Müşteri girişi bu e-postayla açılabilir (Geçici parola oluştur)." : ""}`); router.refresh(); }
     else { bildir(`${k.d.kisa.trim() || k.d.unvan.trim().split(/\s+/).slice(0, 2).join(" ")} eklendi.${k.d.eposta.trim() ? "" : " E-posta yok; müşteri girişi e-posta yazılınca açılır."}`); router.push(`/musteriler/${r.id}`); }
     k.sifirla();
   });
@@ -76,7 +76,7 @@ export function MusteriPenceresi({ acik, kapat, musteri }: { acik: boolean; kapa
         {A("kisa", "Kısa ad", { sonuc: "Listelerde görünür; boşsa ünvanın ilk iki sözcüğü.", tip: { maxLength: 40 } })}
         {A("vd", "Vergi dairesi", { tip: { maxLength: 40 } })}
         {A("vno", "Vergi no", { sonuc: "Boşsa kayıt olur, müşteri sayfasında hatırlatılır.", tip: { inputMode: "numeric", maxLength: 11 } })}
-        {A("eposta", "E-posta", { genis: true, sonuc: musteri ? "Müşteri girişinin kullanıcı adı; faturalar da bu adrese." : "Kaydedince müşteri girişi bu adresle açılır; parola siz gönderince gider.",
+        {A("eposta", "E-posta", { genis: true, sonuc: musteri ? "Müşteri girişinin kullanıcı adı (değişirse giriş sıfırlanır); faturalar da bu adrese." : "Müşteri girişinin kullanıcı adı; geçici parolayı müşteri kartından verip müşteriye siz iletirsiniz.",
           tip: { type: "email", inputMode: "email", maxLength: 120 } })}
         {A("tel", "Telefon", { tip: { type: "tel", inputMode: "tel", maxLength: 20 } })}
         {A("ilgili", "İlgili kişi", { genis: true, sonuc: "Ad ve görev.", tip: { maxLength: 80 } })}

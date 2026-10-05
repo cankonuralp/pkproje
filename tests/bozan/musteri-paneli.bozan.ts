@@ -4,7 +4,11 @@
    2. Uygulama rolü müşteri rolünü DEVRALSAYDI (INHERIT FALSE olmasaydı) kısıtlayıcı politikalar personel işlemine de uygulanır, firma ekranları
       boş kalırdı.
    3. (321, 0032) Plan sütun sınırı olmasaydı müşteri planın künyesini (firma adı, adres, SGK), açanı ve açıklamasını okurdu.
-   4. (321, 0032) Açık plan süzgeci olmasaydı müşteri reddedilen planı "planlanan kontrol" diye görürdü. */
+   4. (321, 0032) Açık plan süzgeci olmasaydı müşteri reddedilen planı "planlanan kontrol" diye görürdü.
+   5. (319 incelemesi, 0033) Uygunsuzluk kendi sürümünün açıklığına bağlanmasaydı revizyonla geçersiz kalmış sürümün kusuru müşteriye görünürdü.
+   6. (0033) Pasif müşterinin oturumları düşürülmeseydi yeniden etkinleşince okunmamış eski belirteç geçerli olurdu.
+   7. (0033) Müşterinin kayıtlı e-postası kullanıcı adı sayılmasaydı personel hesabı o adresi alır, müşterinin ana girişi açılamazdı.
+   8. (0033) Parola değişince kilit sıfırlanmasaydı yeni geçici parolanın sahibi kilitli kalırdı. */
 import assert from "node:assert/strict";
 import { copyFileSync, mkdirSync, mkdtempSync, readdirSync, readFileSync, rmSync, writeFileSync } from "node:fs";
 import { tmpdir } from "node:os";
@@ -94,4 +98,63 @@ test("0032'deki açık plan süzgeci kalkınca müşteri reddedilen planı gör�
   const n = (await kiraciIcinde(havuz, A, (db) => db.sorgu<{ n: number }>("SELECT count(*)::int AS n FROM plan WHERE durum = 'reddedildi'"),
     { musteri: { id: m1, tesisler: null } })).rows[0].n;
   assert.equal(n, 1, "reddedilen plan müşteriye göründü");
+});
+
+const SON_SURUM = `
+           AND EXISTS (SELECT 1 FROM rapor_surumu s WHERE s.firma_id = uygunsuzluk.firma_id AND s.id = uygunsuzluk.surum_id)`;
+const PASIF_OTURUM = `    DELETE FROM musteri_oturum o USING musteri_hesap h
+      WHERE o.firma_id = NEW.firma_id AND h.firma_id = NEW.firma_id AND h.id = o.musteri_hesap_id AND h.musteri_id = NEW.id;
+`;
+const MUSTERI_EPOSTA = `
+         OR EXISTS (SELECT 1 FROM musteri c WHERE c.firma_id = NEW.firma_id AND c.eposta = NEW.eposta);`;
+const KILIT_SIFIR = "    IF NEW.parola_ozeti IS DISTINCT FROM OLD.parola_ozeti THEN NEW.hatali_deneme := 0; NEW.kilit_bitis := NULL; END IF;\n";
+const HEX = (n: number) => n.toString(16).padStart(64, "0");
+
+test("0033'teki son sürüm şartı kalkınca revizyonla geçersiz kalmış sürümün kusuru müşteriye görünür (kilidin koruduğu açık)", async () => {
+  const { havuz, A, m1 } = await bozuk("musteri_bozuk5", SON_SURUM, "", "0033_");
+  const supa = acilan.at(-1)!.supa;
+  const t = (await supa.sahip.query<{ id: string }>("SELECT id::text FROM tesis WHERE firma_id = $1 AND musteri_id = $2 LIMIT 1", [A, m1])).rows[0].id;
+  /* kurulum süper kullanıcıyla, tetiksiz: raporun R0 ve R1 imzalı sürümleri; R0'ın kusuru başka muayeneyle "giderildi" kapanmış */
+  await supa.sahip.query("SET session_replication_role = replica");
+  try {
+    const q = (sql: string, p: unknown[]) => supa.sahip.query<{ id: string }>(sql, p);
+    const rapor = "11111111-1111-4111-8111-111111111111", k = "22222222-2222-4222-8222-222222222222";
+    const surum = async (rev: number) => (await q(`INSERT INTO rapor_surumu (firma_id, rapor_id, revizyon, no, plan_id, ekipman_id, tur_id, format_id, tesis_id, musteri_id,
+      imzasiz_dosya, imzali_dosya, imzali_sha256, imza_yontem, kunye, personel, icerik)
+      VALUES ($1, $2, $3, 'DA-0126-0001', $4, $4, $4, $4, $5, $6, $4, $4, $7, 'dosya', '{}', '{}', '{}') RETURNING id::text`, [A, rapor, rev, k, t, m1, HEX(rev)])).rows[0].id;
+    const r0 = await surum(0), r1 = await surum(1);
+    await q(`INSERT INTO uygunsuzluk (firma_id, surum_id, rapor_id, ekipman_id, tesis_id, musteri_id, kaynak, ref, metin, kapanis, kapatan_surum, kapandi)
+      VALUES ($1, $2, $3, $4, $5, $6, 'madde', 'k1', 'Eski sürümün kusuru', 'giderildi', $7, now())`, [A, r0, rapor, k, t, m1, r1]);
+  } finally { await supa.sahip.query("SET session_replication_role = origin"); }
+  const n = (await kiraciIcinde(havuz, A, (db) => db.sorgu<{ n: number }>("SELECT count(*)::int AS n FROM uygunsuzluk"), { musteri: { id: m1, tesisler: null } })).rows[0].n;
+  assert.equal(n, 1, "eski sürümün kusuru müşteriye göründü");
+});
+
+test("0033'teki pasif oturum kuralı kalkınca pasif müşterinin oturumu düşmez", async () => {
+  const { A, m1 } = await bozuk("musteri_bozuk6", PASIF_OTURUM, "", "0033_");
+  const supa = acilan.at(-1)!.supa;
+  const h = (await supa.sahip.query<{ id: string }>(`INSERT INTO musteri_hesap (firma_id, musteri_id, ana, eposta, ad, parola_ozeti, durum)
+    VALUES ($1, $2, true, 'pasif@deneme-musteri.example', 'Deneme', 'scrypt$x', 'etkin') RETURNING id::text`, [A, m1])).rows[0].id;
+  await supa.sahip.query("INSERT INTO musteri_oturum (ozet, firma_id, musteri_hesap_id, bitis) VALUES ($1, $2, $3, now() + interval '1 day')", [HEX(7), A, h]);
+  await supa.sahip.query("UPDATE musteri SET pasif = now() WHERE id = $1", [m1]);
+  const n = (await supa.sahip.query<{ n: number }>("SELECT count(*)::int AS n FROM musteri_oturum WHERE musteri_hesap_id = $1", [h])).rows[0].n;
+  assert.equal(n, 1, "pasif müşterinin oturumu kaldı");
+});
+
+test("0033'teki müşteri e-postası kuralı kalkınca personel hesabı müşterinin kayıtlı e-postasını alır", async () => {
+  const { havuz, A, m1 } = await bozuk("musteri_bozuk7", MUSTERI_EPOSTA, ";", "0033_");
+  const supa = acilan.at(-1)!.supa;
+  await supa.sahip.query("UPDATE musteri SET eposta = 'iletisim@deneme-musteri.example' WHERE id = $1", [m1]);
+  const r = await kiraciIcinde(havuz, A, (db) => db.sorgu("INSERT INTO hesap (eposta, ad, roller, durum) VALUES ('iletisim@deneme-musteri.example', 'x', '{planlama}', 'etkin') RETURNING id"));
+  assert.equal(r.rowCount, 1, "personel hesabı müşterinin e-postasını aldı");
+});
+
+test("0033'teki kilit sıfırlama kalkınca yeni parolada giriş kilitli kalır", async () => {
+  const { A, m1 } = await bozuk("musteri_bozuk8", KILIT_SIFIR, "", "0033_");
+  const supa = acilan.at(-1)!.supa;
+  const h = (await supa.sahip.query<{ id: string }>(`INSERT INTO musteri_hesap (firma_id, musteri_id, ana, eposta, ad, parola_ozeti, durum, hatali_deneme, kilit_bitis)
+    VALUES ($1, $2, true, 'kilit@deneme-musteri.example', 'Deneme', 'scrypt$x', 'etkin', 0, now() + interval '15 minutes') RETURNING id::text`, [A, m1])).rows[0].id;
+  await supa.sahip.query("UPDATE musteri_hesap SET parola_ozeti = 'scrypt$y', durum = 'ilk' WHERE id = $1", [h]);
+  const k = (await supa.sahip.query<{ k: Date | null }>("SELECT kilit_bitis AS k FROM musteri_hesap WHERE id = $1", [h])).rows[0].k;
+  assert.ok(k, "kilit kaldı");
 });
