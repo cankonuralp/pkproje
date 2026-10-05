@@ -42,6 +42,7 @@
 .rb-sayfa .rb-ab { background: #dbe4f0; font-weight: 700; }
 .rb-sayfa .rb-grup { text-align: center; font-weight: 700; }
 .rb-sayfa .rb-orta { text-align: center; }
+.rb-sayfa .rb-sag { text-align: right; font-variant-numeric: tabular-nums; }
 .rb-sec { margin-right: 10px; white-space: nowrap; }
 .rb-isaret { display: inline-block; width: 7px; height: 7px; border: 1px solid #000; border-radius: 50%; vertical-align: 0; box-sizing: border-box; }
 .rb-secili { background: #000; }

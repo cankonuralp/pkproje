@@ -4,8 +4,8 @@
    Süre ölçülüp yazılır (Vercel ölçümü: src/app/api/olcum/pdf, yalnız önizleme dağıtımı). */
 import assert from "node:assert/strict";
 import { test } from "node:test";
-import { ornekBelge } from "../src/belge/ornek.ts";
-import { belgeCss, belgeHtml, belgePdf } from "../src/belge/pdf.ts";
+import { ornekBelge, ornekTeklif } from "../src/belge/ornek.ts";
+import { belgeCss, belgeHtml, belgePdf, teklifPdf } from "../src/belge/pdf.ts";
 
 test("belge HTML'i: betik yok, yazı tipi gömülü (dış adres yok)", () => {
   const html = belgeHtml(ornekBelge("ZPKR02"));
@@ -28,4 +28,12 @@ test("kesin PDF: üç şablonda A4 PDF basılır, Carlito gömülü, süre makul
     assert.ok(/\/MediaBox\s*\[\s*0\s+0\s+59[45](\.\d+)?\s+841(\.\d+)?\s*\]/.test(metin), `${k}: A4 değil`);
     assert.ok(sure < 30_000, `${k}: ${sure} ms`);
   }
+});
+
+test("teklif PDF'i (325): aynı motorla A4, Carlito gömülü, tek sayfa", async () => {
+  const pdf = await teklifPdf(ornekTeklif()), metin = Buffer.from(pdf).toString("latin1");
+  assert.equal(metin.slice(0, 5), "%PDF-");
+  assert.ok(/Carlito/.test(metin), "Carlito gömülü değil");
+  assert.ok(/\/MediaBox\s*\[\s*0\s+0\s+59[45](\.\d+)?\s+841(\.\d+)?\s*\]/.test(metin), "A4 değil");
+  assert.equal((metin.match(/\/Type\s*\/Page\b/g) ?? []).length, 1, "tek sayfa");
 });

@@ -130,7 +130,9 @@ pkproje/
   src/modules/teklifler/    TEKLİFLER (2026-10-05, 324; modül 11): göç 0037 (teklif, teklif_kalem, teklif_tesis, fiyat_listesi; teklif_akis: yalnız taslak
                             düzenlenir, taslak → gönderildi → kabul / red, süresi dolan kabul / red edilmez, hazırlayan veritabanında) · server/teklifler.ts
                             (liste, kart, seçenekler, kaydet / kopya, gönder, kabul, red, müşteri olarak kaydet — yaz: planlama + firma yön.) · ui/ (liste,
-                            form, eylemler) · rapor bağı raporlar/server/teklif-baglanti.ts (kabulden sonra imzalanan, türle) · tutarlar kuruş
+                            form, eylemler) · rapor bağı raporlar/server/teklif-baglanti.ts (kabulden sonra imzalanan, türle) · tutarlar kuruş ·
+                            325: excel.ts (saf: Excel'den yükle → kalemler, Excel'e aktar, şablon) + ui/EkipmanExcel.tsx · teklif belgesi
+                            src/belge/teklif.ts (temel format <kod>-FR-TKL-01) → PDF /teklifler/<id>/pdf (src/belge/pdf.ts teklifPdf)
   src/tanim/iller.ts        81 il + 973 ilçe (açık veri, MIT; bir kez alındı)
   src/modules/<modül>/      ★ her iş modülü: server/ (veri erişimi + iş kuralları, dışa açılan fonksiyonlar) · ui/ · şema · testler
   src/tanim/tanimlar.ts     SABİT TANIMLAR (durum adları, eğri çarpanları, mesai sınırları …): şemalı, karma adlı JSON → /api/tanim (2026-10-04)
@@ -153,6 +155,8 @@ pkproje/
                             anahtar PROBATA_SIR_ANAHTARI; firma + ada bağlı; ekranda son 4)
   src/server/numara/        TEK NUMARA ÜRETİCİ (proje P-AAYY-SIRA · rapor XX-AAYY-SIRA-EK kesintisiz · teklif / sözleşme / gider / izin / araç tutanağı; sayaç işlem içinde)
   src/server/yetki/         TEK YETKİ: tanim.ts (roller, matris, sabitler) · canDo.ts (canDo, canDoEylem) — ayna testi: DB CHECK · maket · KOD-GECIS §4
+  src/components/disa/      DIŞA / İÇE AKTARMA (tarayıcıda, saf): zip.ts (STORE yazıcı) · xlsx.ts (yazıcı) · oku.ts (325: .xlsx / .csv OKUYUCU — DEFLATE
+                            DecompressionStream ile, ortak dizgi, tarih biçimi, Türkçe Windows CSV; 10 MB / 50 MB açılmış / 5 000 satır sınırı) · indir.ts
   src/components/           TEK ÜRETİCİLER: sayfa/ (kırıntı, sayfa / nesne başlığı, bölüm, rozet, sekmeler) · kabuk (yan menü + üst çubuk) · ikon · boş durum · tuş · şerit · bildirim · pencere + onay ·
                             liste (tablo↔kart, süzgeç mantığı liste/suzgec.ts) · fotoğraf küçültme (foto/kucult.ts) · filtre satırı · sayfalayıcı · seçim alanı + tarih/saat (secim/) · bilgi yüzleri / bilgi listesi / koşullar (bilgi/) · form sayfası (form/) · uzun tuş (tus/UzunTus) · kopyala (pencere/Kopyala: sonuç pencerenin içinde) · dışa aktarma (disa/: ZIP + .xlsx yazıcı, saf; tarayıcıda indirme — 320)
                             (geliştirme vitrini /vitrin: yalnız geliştirmede, yayında 404)

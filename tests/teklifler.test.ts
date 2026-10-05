@@ -1,7 +1,8 @@
 /* NEREDEN GELDİ: maket teklifler.html (M12 2. tur; teklif → kabul → sözleşme → plan) · pkproje §3.1 modül 11, §3.2 madde 5 ("her rapor teklif
    kalemine bağlanır") · §9 yirmi birinci tur 119–124 (fiyat listesi, KDV teklifte, PDF elle iletilir, birden çok tesis, süresi dolan) · 2026-09-27
    kayıtlı olmayan müşteri · KOD-GECIS §4 (Teklifler: planlama ve firma yöneticisi yazar, yöneticiler ve muhasebe görür, denetçi görmez) ·
-   reisim 2026-10-04: "rol değiştirme, sızma, veri çalma; yetki her zaman sunucuda". GERÇEK PostgreSQL, iki firma (göç 0037).
+   reisim 2026-10-04: "rol değiştirme, sızma, veri çalma; yetki her zaman sunucuda". GERÇEK PostgreSQL, iki firma (göç 0037). 325: Excel'e aktarılan
+   ekipman listesi ve teklif belgesinin verisi (yetki, pasif ekipman, firma sızıntısı).
    Olumsuz kanıt: tests/bozan/teklifler.bozan.ts. */
 import assert from "node:assert/strict";
 import { mkdtempSync, rmSync } from "node:fs";
@@ -18,7 +19,8 @@ import { taslakBaslat, yayinla } from "../src/modules/rapor-format/server/format
 import { imzaHazirla, imzaliYukle, raporOlustur } from "../src/modules/raporlar/server/raporlar.ts";
 import { bitisGunu, kdvli } from "../src/modules/teklifler/sema.ts";
 import {
-  etkinDurum, teklifGonder, teklifKabul, teklifKarti, teklifKaydet, teklifListesi, teklifMusteriKaydet, teklifReddet, teklifSecenekleri, type Kisi,
+  etkinDurum, teklifBelgesiVerisi, teklifEkipmanListesi, teklifExcelVerisi, teklifGonder, teklifKabul, teklifKarti, teklifKaydet, teklifListesi, teklifMusteriKaydet,
+  teklifReddet, teklifSecenekleri, type Kisi,
 } from "../src/modules/teklifler/server/teklifler.ts";
 import { testKumesi } from "./yardimci/kume.ts";
 
@@ -234,6 +236,36 @@ test("firma sızıntısı: B'nin yöneticisi A'nın tekliflerini görmez / deği
   await assert.rejects(sql(B, "INSERT INTO teklif_tesis (teklif_id, tesis_id) VALUES ($1, $2)", [rb.id, t1]), /foreign key|violates|teklifin müşterisinin/);
   await assert.rejects(sql(B, "INSERT INTO teklif_kalem (teklif_id, tur_id, adet, fiyat) VALUES ($1, $2, 1, 1)", [r.id, turB]), /teklif yok|foreign key|violates/);
   assert.equal((await sql<{ n: number }>(B, "SELECT count(*)::int AS n FROM teklif WHERE id = $1", [r.id])).rows[0].n, 0, "ham SQL de görmez");
+});
+
+test("Excel ve teklif belgesi (325): tesislerin ETKİN ekipmanı (pasif yok), denetçi göremez, başka firmanın tesisi boş döner; sayfanın Excel'i yüklenen listeyi, yoksa tesis ekipmanını, fiyatı kalemden alır; belge verisi kayıtlı / kayıtlı olmayan müşteriyle; ilgili kişi müşteri kartından", async () => {
+  assert.deepEqual((await a(MUH, (db) => teklifEkipmanListesi(db, MUH, [t1, t2])))!.map((e) => e.kod).sort(), ["EP-1", "HT-1", "HT-2"], "HT-3 pasif");
+  assert.equal(await a(DEN, (db) => teklifEkipmanListesi(db, DEN, [t1])), null, "denetçi");
+  for (const kotu of ["x", [t1, "x"], null]) assert.equal(await a(PLAN, (db) => teklifEkipmanListesi(db, PLAN, kotu)), null);
+  assert.deepEqual(await kiraciIcinde(havuz, B, (db) => teklifEkipmanListesi(db, YON_B, [t1]), { hesapId: YON_B.id }), [], "başka firmanın tesisi");
+  await sql(A, "UPDATE musteri SET ilgili = 'Deneme İlgili', eposta = 'bir@deneme-musteri.example', surum = surum + 1 WHERE id = $1", [m1]);
+  const yuklu = tamam(await a(PLAN, (db) => teklifKaydet(db, PLAN, null, 0, K({ ekipmanlar: [{ kod: "X-1", tur: ht, konum: "Kazan", seri: "" }] }))));
+  const bos = tamam(await a(PLAN, (db) => teklifKaydet(db, PLAN, null, 0, K({ kalemler: [{ tur: ep, adet: "1", fiyat: "500" }] }))));
+  const ex = async (id: string) => a(MUH, async (db) => teklifExcelVerisi(db, MUH, (await teklifKarti(db, MUH, id))!));
+  const e1 = (await ex(yuklu.id))!;
+  assert.deepEqual([e1.liste, e1.ne, e1.fiyat[ht], e1.fiyat[ep]], [[{ kod: "X-1", tur: ht, konum: "Kazan", seri: "" }], "Excel'den yüklenen liste", 125000, 90000]);
+  const e2 = (await ex(bos.id))!;
+  assert.deepEqual([e2.liste.map((e) => e.kod).sort(), e2.ne, e2.fiyat[ep], e2.fiyat[ht]], [["EP-1", "HT-1", "HT-2"], "tesisteki kayıtlı ekipman", 50000, 125000],
+    "kalemde olmayan tür fiyat listesinden");
+  assert.ok(e2.turler.some((t) => t.id === ht && t.kod === "HT" && t.brans === "m"));
+  /* belge verisi */
+  const k = (await a(MUH, (db) => teklifKarti(db, MUH, yuklu.id)))!;
+  assert.equal(k.ilgili, "Deneme İlgili", "kayıtlı müşteride ilgili kişi müşteri kartından");
+  const b1 = (await a(MUH, (db) => teklifBelgesiVerisi(db, MUH, yuklu.id)))!;
+  assert.deepEqual([b1.firma, b1.no, b1.durum, b1.musteri.unvan, b1.musteri.ilgili, b1.musteri.eposta, b1.musteri.yerler.map((y) => y.ad), b1.kalemler.length, b1.hazirlayan],
+    [{ ad: "Deneme A", kod: "DA" }, yuklu.no, "taslak", "Deneme Bir Sanayi A.Ş.", "Deneme İlgili", "bir@deneme-musteri.example", ["Merkez"], 2, "Deneme Planlama"]);
+  assert.equal(await a(DEN, (db) => teklifBelgesiVerisi(db, DEN, yuklu.id)), null, "denetçi");
+  assert.equal(await kiraciIcinde(havuz, B, (db) => teklifBelgesiVerisi(db, YON_B, yuklu.id), { hesapId: YON_B.id }), null, "başka firma");
+  const aday = tamam(await a(PLAN, (db) => teklifKaydet(db, PLAN, null, 0, { ...K(), tip: "aday", aday: ADAY })));
+  const b2 = (await a(PLAN, (db) => teklifBelgesiVerisi(db, PLAN, aday.id)))!;
+  assert.deepEqual([b2.musteri.unvan, b2.musteri.vergi, b2.musteri.ilgili, b2.musteri.yerler], [ADAY.unvan, "Merkez · 1234567890", "Deneme Yetkili",
+    [{ ad: null, adres: "Deneme Mah. Örnek Sk. No 1, Gebze / Kocaeli" }]]);
+  assert.deepEqual((await a(PLAN, async (db) => teklifExcelVerisi(db, PLAN, (await teklifKarti(db, PLAN, aday.id))!)))!.liste, [], "kayıtlı olmayan müşteride tesis yok");
 });
 
 /* ── rapor imzalama (tests/musteri-paneli.test.ts ile aynı yapı) ── */

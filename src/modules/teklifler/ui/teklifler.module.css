@@ -28,3 +28,13 @@
 .toplam dt { color: var(--yazi2); font-size: var(--boy-kucuk); }
 .toplam dd { margin: 2px 0 0; font-variant-numeric: tabular-nums; }
 .gerekce { width: 100%; min-height: 96px; padding: 8px 10px; border: 1px solid var(--kenar-alan); border-radius: var(--r-orta); background: var(--kart); color: var(--yazi); font: inherit; resize: vertical; }
+/* Excel pencereleri (maket a-dosya-sec, a-excel-kap, a-belge-tablo — 325): dosya seçimi, satır satır önizleme; uzun liste pencerede kayar */
+.dosyaSec { display: flex; flex-wrap: wrap; align-items: center; gap: 8px; margin: 0 0 12px; }
+.dosyaAd { min-width: 0; overflow-wrap: anywhere; font-weight: 600; }
+.onizlemeKap { max-height: 50vh; overflow: auto; margin: 12px 0 0; border: 1px solid var(--kenar); border-radius: var(--r-orta); }
+.onizleme { width: 100%; border-collapse: collapse; font-size: var(--boy-kucuk); }
+.onizleme th { position: sticky; top: 0; padding: 6px 8px; background: var(--kart); border-bottom: 1px solid var(--kenar); color: var(--yazi2); font-weight: 600; text-align: left; }
+.onizleme td { padding: 6px 8px; border-bottom: 1px solid var(--kenar); vertical-align: top; overflow-wrap: anywhere; }
+.kod { font-weight: 700; font-variant-numeric: tabular-nums; }
+.altSatir { display: block; color: var(--yazi2); }
+.hataMetin { color: var(--hata-yazi); font-weight: 600; }

@@ -2341,6 +2341,20 @@ revizyon, alan kopyalama, hafif kusur devri, meslek eşleşme denetimi).
 - Emsal ürünler: https://opwire.app/iso-17020-periyodik-kontrol-yazilimi/ · https://17020muayene.vidco.com.tr/ · https://akuple.com/asansor-kontrol-yazilimi/ · https://ensyazilim.com/
 
 ## 11 · Değişiklik günlüğü
+- 2026-10-05 (325): **K4 Teklifler › Excel ekipman listesi ve teklif belgesi** (maket teklifler.html "Excel'den yükle" / "Excel'e aktar" — L1
+  2026-09-30; "PDF" — §3.7 satır 4, 161 "teklif PDF'i firmanın formatıyla; indirilip elle gönderilir"). **Tablo okuyucu** (src/components/disa/oku.ts,
+  dış kütüphane yok — §3.6 maket kararı): gerçek .xlsx (Excel'in DEFLATE sıkıştırması tarayıcının açıcısıyla, ortak dizgiler, zengin metin, ilk
+  sayfa, tarih biçimli hücre YYYY-AA-GG) ve .csv (; , sekme, tırnak, satır içi satır sonu, BOM, Türkçe Windows kodlaması); sınırlar: dosya 10 MB,
+  açılmış parça 50 MB (sıkıştırma bombası), 5 000 satır; eski .xls için "Excel'de .xlsx olarak kaydedin". Dosya tarayıcıda okunur, sunucuya gitmez.
+  **Teklif formu:** "Excel'den yükle" — şablon, dosya seç, satır satır önizleme (tür adla ya da kodla; başlık, boş satır; tekrar eden kod, bilinmeyen
+  tür, uzun alan gerekçesiyle atlanır), "Kalemlere ekle (n)" tür başına adetle (var olan kalemin adedi artar, yeni tür fiyat listesinden; en çok
+  2 000 ekipman); "Excel'e aktar" — yüklenen liste, yoksa seçili tesislerin kayıtlı ETKİN ekipmanı (Kod · tür · konum · seri · branş · birim fiyat).
+  **Teklif sayfası:** "PDF" ve "Excel'e aktar". **Teklif belgesi** (temel format `<firma kodu>-FR-TKL-01`; firmaya özel sürüm §3.7 kuralıyla):
+  başlık tablosu, müşteri bilgileri (kayıtlıda tesisler ve müşteri kartının ilgili kişisi), kalemler (periyot, adet, birim fiyat, tutar; ara toplam,
+  KDV, genel toplam), koşullar, hazırlayan; rapor belgesiyle aynı motor ve görünüm (sunucuda başsız Chromium, A4). Teklif sayfasındaki "İlgili
+  kişi" kayıtlı müşteride müşteri kartından (maket). Kilit: oku.test (4), teklif-belgesi.test (6: belge, kaçış, yazı tipi kapsamı, Excel),
+  teklifler.test +1 (ekipman listesi yetki / pasif / firma, Excel ve belge verisi), pdf.test +1 (teklif PDF'i A4 tek sayfa), bozan 2 (bomba sınırı,
+  Türkçe kodlama), e2e (CSV yükle → kalem, PDF ve Excel iner).
 - 2026-10-05 (324): **K4 Teklifler** (maket teklifler.html M12 2. tur; §3.1 modül 11, §3.2 madde 5; §9 yirmi birinci tur 119–124; 2026-09-27
   kayıtlı olmayan müşteri). Göç **0037**: teklif (no T-AAYY-SIRA — numara üreticisi, önek firma ayarı; kayıtlı müşteri + bir ya da birden çok
   tesis, ya da kayıtlı olmayan müşterinin bilgileri; geçerlilik gün, KDV %, not, Excel ekipman listesi yeri), kalem (tür × adet × birim fiyat,

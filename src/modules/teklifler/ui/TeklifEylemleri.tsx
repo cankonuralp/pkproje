@@ -9,14 +9,16 @@ import { Alan, ipucuId } from "../../../components/form/Form";
 import { useOnayla } from "../../../components/pencere/Onay";
 import { Pencere } from "../../../components/pencere/Pencere";
 import { Serit } from "../../../components/serit/Serit";
-import { Tus, TusBaglanti } from "../../../components/tus/Tus";
+import { Ikon } from "../../../components/ikon/Ikon";
+import { Tus, TusBaglanti, tusSinifi } from "../../../components/tus/Tus";
 import type { TeklifKarti } from "../server/teklifler";
 import { teklifGonderEylemi, teklifKabulEylemi, teklifMusteriKaydetEylemi, teklifReddetEylemi, type TeklifYaniti } from "./eylemler";
 import stil from "./teklifler.module.css";
 
 const GEREKCE = "w-gerekce";
 
-export function TeklifEylemleri({ t }: { t: TeklifKarti }) {
+/** pdf: teklif belgesinin adresi (oturumlu uç; dosya iner — maket "PDF") */
+export function TeklifEylemleri({ t, pdf }: { t: TeklifKarti; pdf: string }) {
   const router = useRouter();
   const bildir = useBildir();
   const onayla = useOnayla();
@@ -44,6 +46,7 @@ export function TeklifEylemleri({ t }: { t: TeklifKarti }) {
   return (
     <>
       <div className={stil.eylemler}>
+        <a className={tusSinifi("ikincil")} href={pdf} download><Ikon ad="file-text" kucuk />PDF</a>
         {izin.duzenle && <TusBaglanti ikon="pencil" href={`/teklifler/${t.id}/duzenle`}>Düzenle</TusBaglanti>}
         {izin.duzenle && <Tus ikon="send" disabled={bekliyor || !izin.gonder} onClick={gonder}>Gönderildi olarak işaretle</Tus>}
         {izin.sonuc && <Tus tur="ikincil" ikon="ban" disabled={bekliyor} onClick={() => setRed({ gerekce: "", hata: null })}>Reddedildi</Tus>}

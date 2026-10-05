@@ -204,6 +204,15 @@ export async function musteriOzetleri(db: Sorgulayici): Promise<{ id: string; un
     .sort((a, b) => a.kisa.localeCompare(b.kisa, "tr"));
 }
 
+/** Teklifler için (teklif sayfasının "İlgili kişi"si, teklif belgesinin müşteri bilgileri — 325): müşterinin ünvanı, vergi bilgisi, e-postası,
+    telefonu, ilgili kişisi; yoksa null. Yetki ÇAĞIRANDA. */
+export async function musteriIletisim(db: Sorgulayici, id: string): Promise<{ unvan: string; vd: string | null; vno: string | null; eposta: string | null;
+  tel: string | null; ilgili: string | null } | null> {
+  if (!/^[0-9a-f-]{36}$/.test(id)) return null;
+  return (await db.sorgu<{ unvan: string; vd: string | null; vno: string | null; eposta: string | null; tel: string | null; ilgili: string | null }>(
+    "SELECT unvan, vd, vno, eposta, tel, ilgili FROM musteri WHERE id = $1", [id])).rows[0] ?? null;
+}
+
 /** Raporlar için: tesisin adı, müşterisinin ünvanı / kısa adı, e-postası, telefonu (raporun künyesine kopyalanır); yoksa null. Yetki ÇAĞIRANDA. */
 export async function tesisMusteriIletisim(db: Sorgulayici, tesisId: string): Promise<{ tesisAd: string; unvan: string; kisa: string; eposta: string | null; tel: string | null } | null> {
   if (!/^[0-9a-f-]{36}$/.test(tesisId)) return null;

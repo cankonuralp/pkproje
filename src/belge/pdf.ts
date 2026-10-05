@@ -6,7 +6,9 @@
 import { readFileSync } from "node:fs";
 import { join } from "node:path";
 import { chromium, type Browser } from "playwright-core";
+import type { ReactNode } from "react";
 import { raporBelgesi } from "./belge.ts";
+import { teklifBelgesi, type TeklifBelgesiVerisi } from "./teklif.ts";
 import { htmlYaz } from "./html.ts";
 import type { BelgeVerisi } from "./veri.ts";
 
@@ -21,11 +23,12 @@ export function belgeCss(): string {
 }
 const kac = (s: string) => s.replace(/[&<>"']/g, (c) => ({ "&": "&amp;", "<": "&lt;", ">": "&gt;", '"': "&quot;", "'": "&#x27;" })[c]!);
 
-/** PDF'e basılan tam HTML belgesi (betik yok) */
-export function belgeHtml(v: BelgeVerisi): string {
-  return `<!doctype html><html lang="tr"><head><meta charset="utf-8"><title>${kac(v.no)}</title><style>${belgeCss()}</style></head>`
-    + `<body>${htmlYaz(raporBelgesi(v))}</body></html>`;
+/** PDF'e basılan tam HTML belgesi (betik yok): başlık + belge ağacı (rapor ya da teklif belgesi — aynı CSS) */
+export function sayfaHtml(baslik: string, agac: ReactNode): string {
+  return `<!doctype html><html lang="tr"><head><meta charset="utf-8"><title>${kac(baslik)}</title><style>${belgeCss()}</style></head>`
+    + `<body>${htmlYaz(agac)}</body></html>`;
 }
+export const belgeHtml = (v: BelgeVerisi) => sayfaHtml(v.no, raporBelgesi(v));
 
 async function tarayici(): Promise<Browser> {
   if (process.env.PROBATA_CHROMIUM) return chromium.launch({ executablePath: process.env.PROBATA_CHROMIUM });
@@ -37,12 +40,16 @@ async function tarayici(): Promise<Browser> {
 }
 
 /** belgenin PDF'i (A4, arka plan renkleriyle). Her çağrı kendi tarayıcısını açar ve kapatır (sunucusuz ortamda paylaşılmaz). */
-export async function belgePdf(v: BelgeVerisi): Promise<Uint8Array> {
+export const belgePdf = (v: BelgeVerisi) => htmlPdf(belgeHtml(v));
+/** teklif belgesinin PDF'i (325) — aynı motor, aynı CSS */
+export const teklifPdf = (v: TeklifBelgesiVerisi) => htmlPdf(sayfaHtml(v.no, teklifBelgesi(v)));
+
+async function htmlPdf(html: string): Promise<Uint8Array> {
   const b = await tarayici();
   try {
     const s = await b.newPage();
     await s.route("**/*", (r) => r.abort());   // dış kaynak yok: her şey gömülü
-    await s.setContent(belgeHtml(v), { waitUntil: "load" });
+    await s.setContent(html, { waitUntil: "load" });
     await s.evaluate(() => document.fonts.ready.then(() => undefined));
     return new Uint8Array(await s.pdf({ format: "A4", printBackground: true, preferCSSPageSize: true }));
   } finally {

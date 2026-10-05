@@ -2,7 +2,8 @@
 /* TEKLİF FORMU (maket teklifler.html #/yeni, #/t/<no>/duzenle — formCiz): Müşteri ve tesis (kayıtlı müşteri: müşteri, tesis, "Başka tesisler" —
    123; kayıtlı olmayan müşteri: ünvan, vergi, adres, il / ilçe, e-posta, telefon, yetkili — 2026-09-27) · Koşullar (geçerlilik gün, KDV %,
    not) · Kalemler (ekipman türü × adet × birim fiyat; tür seçilince fiyat listesinden — 119, satırda değişir; "Tesisteki ekipmandan doldur";
-   tutar ve toplam canlı). Numara ve kurallar sunucuda; yalnız taslak düzenlenir. */
+   tutar ve toplam canlı) · Excel: "Excel'den yükle" (müşterinin ekipman listesi tür başına adetle kalemlere) ve "Excel'e aktar" (yüklenen liste,
+   yoksa seçili tesislerin kayıtlı ekipmanı — 325). Numara ve kurallar sunucuda; yalnız taslak düzenlenir. */
 import { useRouter } from "next/navigation";
 import { useState, useTransition } from "react";
 import { useBildir } from "../../../components/bildirim/Bildirim";
@@ -13,9 +14,11 @@ import { Serit } from "../../../components/serit/Serit";
 import { Tus, TusBaglanti } from "../../../components/tus/Tus";
 import { tutar } from "../../../sema/ortak";
 import { IL_ILCE } from "../../../tanim/iller";
+import { kalemlereEkle, type ExcelSatiri } from "../excel";
 import { kdvli, para, paraGirdi } from "../sema";
 import type { TeklifSecenekleri } from "../server/teklifler";
-import { teklifKaydetEylemi } from "./eylemler";
+import { ExcelAktar, ExcelYukle } from "./EkipmanExcel";
+import { teklifEkipmanlariEylemi, teklifKaydetEylemi } from "./eylemler";
 import stil from "./teklifler.module.css";
 
 type Kalem = { tur: string; adet: string; fiyat: string };
@@ -65,6 +68,16 @@ export function TeklifFormu({ secenekler, deger, id, surum, no, kopyaKaynak }: {
     yaz({ kalemler: yeni }); setH({});
     bildir(`${yeni.length} tür, tesisteki kayıtlı ekipmandan eklendi.`);
   };
+  /* Excel'den yüklenen satırlar: listeye ve tür başına adetle kalemlere (fiyat fiyat listesinden) */
+  const excelEkle = (l: ExcelSatiri[]) => {
+    const r = kalemlereEkle(f.kalemler, f.ekipmanlar, l, (t) => tur.get(t)?.fiyat ?? null);
+    yaz({ kalemler: r.kalemler, ekipmanlar: r.ekipmanlar }); setH({});
+    bildir(`${r.eklenen} ekipman ${r.turSayisi} türle kalemlere eklendi${r.atlanan ? `; ${r.atlanan} satır atlandı.` : "."}`);
+    requestAnimationFrame(() => document.getElementById("f-tur-0")?.focus());
+  };
+  const tesisEkipmani = seciliTesisler.reduce((n, tid) => n + Object.values(m?.tesisler.find((x) => x.id === tid)?.ekipman ?? {}).reduce((a, b) => a + b, 0), 0);
+  const excelFiyat: Record<string, number | null> = Object.fromEntries(secenekler.turler.map((t) => [t.id, t.fiyat]));
+  for (const k of f.kalemler) { const p = kurus(k.fiyat); if (k.tur && p) excelFiyat[k.tur] = p; }
   const kaydet = () => baslat(async () => {
     const girdi = f.tip === "kayitli"
       ? { tip: "kayitli", musteri: f.musteri, tesis: f.tesis, ekTesisler: f.ekTesisler.filter((x) => x !== f.tesis) }
@@ -188,6 +201,11 @@ export function TeklifFormu({ secenekler, deger, id, surum, no, kopyaKaynak }: {
           <div className={stil.eylemler}>
             {f.tip === "kayitli" && <Tus tur="ikincil" ikon="list-checks" disabled={!f.tesis} onClick={doldur}>Tesisteki ekipmandan doldur</Tus>}
             <Tus tur="ikincil" ikon="plus" onClick={() => yaz({ kalemler: [...f.kalemler, { tur: "", adet: "1", fiyat: "" }] })}>Kalem ekle</Tus>
+            <ExcelYukle turler={secenekler.turler} mevcut={f.ekipmanlar} onEkle={excelEkle} />
+            <ExcelAktar turler={secenekler.turler} fiyat={excelFiyat} ad={`${no ?? "yeni-teklif"}-ekipmanlar.xlsx`}
+              {...(f.ekipmanlar.length ? { liste: f.ekipmanlar, ne: "Excel'den yüklenen liste" }
+                : f.tip === "kayitli" && tesisEkipmani > 0 ? { getir: () => teklifEkipmanlariEylemi(seciliTesisler), ne: "tesisteki kayıtlı ekipman" }
+                : { ne: "", kapali: true, sebep: "Excel'e aktarılacak ekipman yok: tesis seçin ya da Excel'den yükleyin." })} />
           </div>
           {f.ekipmanlar.length > 0 && <p className={stil.ipucu}>Excel&apos;den yüklenen ekipman listesi: <b>{f.ekipmanlar.length}</b> ekipman; teklifle saklanır.</p>}
           <dl className={stil.toplam} aria-live="polite">

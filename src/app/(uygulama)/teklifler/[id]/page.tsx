@@ -1,7 +1,8 @@
 /* TEKLİF SAYFASI (maket teklifler.html #/t/<no> — teklifCiz): başlık (no, durum), müşteri (kayıtlı değilse işaretli) · yer; duruma göre eylemler;
    red / süresi doldu / kabul şeritleri; Hazırlanan · Gönderildi · Geçerlilik · İlgili kişi; kayıtlı olmayan müşterinin bilgileri; Kalemler (tür ×
    adet × birim fiyat × tutar; kabul edilmişte "Raporlanan" — kabulden sonra imzalanan raporlar türüyle bağlanır, §3.2 madde 5), ara toplam, KDV,
-   genel toplam, raporlanan tutar. Görmeyen: bulunamadı. */
+   genel toplam, raporlanan tutar. PDF (teklif belgesi, sunucuda — 325) ve "Excel'e aktar" (yüklenen liste, yoksa tesislerin kayıtlı ekipmanı).
+   Görmeyen: bulunamadı. */
 import type { Metadata } from "next";
 import Link from "next/link";
 import { notFound } from "next/navigation";
@@ -13,7 +14,8 @@ import { tarihNo } from "../../../../components/secim/tarih";
 import { Serit } from "../../../../components/serit/Serit";
 import { modulBul } from "../../../../modules/moduller";
 import { kdvli, para, TEKLIF_DURUM } from "../../../../modules/teklifler/sema";
-import { teklifKarti, type TeklifKalemi } from "../../../../modules/teklifler/server/teklifler";
+import { teklifExcelVerisi, teklifKarti, type TeklifKalemi } from "../../../../modules/teklifler/server/teklifler";
+import { ExcelAktar } from "../../../../modules/teklifler/ui/EkipmanExcel";
 import { TeklifEylemleri } from "../../../../modules/teklifler/ui/TeklifEylemleri";
 import { modulOturumu, oturumIslemi } from "../../../../server/kimlik/istek";
 
@@ -24,8 +26,12 @@ export default async function Sayfa({ params }: { params: Promise<{ id: string }
   const o = await modulOturumu(MODUL.no);
   if (!o) return <Yetkisiz />;
   const { id } = await params;
-  const t = await oturumIslemi(o, (db) => teklifKarti(db, o, id));
-  if (!t) notFound();
+  const v = await oturumIslemi(o, async (db) => {
+    const t = await teklifKarti(db, o, id);
+    return t ? { t, excel: await teklifExcelVerisi(db, o, t) } : null;
+  });
+  if (!v) notFound();
+  const { t, excel } = v;
   const kabul = t.durum === "kabul";
   const sutunlar: Sutun<TeklifKalemi>[] = [
     { k: "tur", genislik: kabul ? "34%" : "40%", baslik: "Ekipman türü", kart: "ust", sira: 1, hucre: (k) => (
@@ -39,14 +45,14 @@ export default async function Sayfa({ params }: { params: Promise<{ id: string }
       return <Rozet tur={n >= k.adet ? "tamam" : n ? "kabul" : "notr"}>{`${n} / ${k.adet}`}</Rozet>;
     } }] : []),
   ];
-  const ilgili = t.aday?.yetkili ?? null;
+  const ilgili = t.ilgili;
   return (
     <>
       <Kirinti ogeler={[["Teklifler", "/teklifler"], [t.no]]} />
       <NesneBasi baslik={t.no} rozet={<Rozet tur={TEKLIF_DURUM[t.durum][1]}>{TEKLIF_DURUM[t.durum][0]}</Rozet>} altIkon="building-2"
         alt={<>{t.musteriKart ? <Link href={`/musteriler/${t.musteriKart.id}`}>{t.musteriKart.unvan}</Link> : <>{t.aday?.unvan ?? "—"} <Rozet tur="bekliyor">Kayıtlı değil</Rozet></>}
           {" · "}{t.musteriKart ? t.tesis : [t.aday?.ilce, t.aday?.il].filter(Boolean).join(" / ")}</>} />
-      <TeklifEylemleri t={t} />
+      <TeklifEylemleri t={t} pdf={`/teklifler/${t.id}/pdf`} />
       {(t.durum === "red" || t.durum === "suresi" || kabul || t.kopyaKaynak) && (
         <SeritKap>
           {t.durum === "red" && t.sonuc && <Serit tur="hata" ikon="ban">Reddedildi {tarihNo(t.sonuc)}: “{t.gerekce}”</Serit>}
@@ -75,7 +81,8 @@ export default async function Sayfa({ params }: { params: Promise<{ id: string }
           </BilgiListesi>
         </Bolum>
       )}
-      <Bolum id="b-tk-kalem" baslik="Kalemler" sayac={<><b>{t.kalemSayisi}</b> tür{t.ekipmanlar.length ? <> · <b>{t.ekipmanlar.length}</b> ekipman (Excel&apos;den)</> : null}</>}>
+      <Bolum id="b-tk-kalem" baslik="Kalemler" sayac={<><b>{t.kalemSayisi}</b> tür{t.ekipmanlar.length ? <> · <b>{t.ekipmanlar.length}</b> ekipman (Excel&apos;den)</> : null}</>}
+        tuslar={excel && excel.liste.length > 0 ? <ExcelAktar turler={excel.turler} fiyat={excel.fiyat} ad={`${t.no}-ekipmanlar.xlsx`} ne={excel.ne} liste={excel.liste} /> : undefined}>
         <Liste baslik="Teklif kalemleri" sutunlar={sutunlar} kayitlar={t.kalemler} anahtar={(k) => k.turId} />
         <BilgiListesi>
           <Bilgi etiket="Ara toplam">{para(t.tutar)}</Bilgi>

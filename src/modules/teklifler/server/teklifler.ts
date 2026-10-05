@@ -5,16 +5,18 @@
    Tutarlar KURUŞ, KDV hariç. Rapor ↔ kalem bağı Raporlar'ın teklif-baglanti.ts'inden; ekipman sayıları Ekipman'dan; müşteri kaydı Müşteriler'den. */
 import type { Sorgulayici } from "../../../server/db/kiraci.ts";
 import { ekle, guncelle, sil, tablo, type Iz } from "../../../server/db/yazici.ts";
-import { ayarOku } from "../../../server/ayar/ayar.ts";
+import { ayarOku, firmaKunyesi } from "../../../server/ayar/ayar.ts";
 import { hesapAdlari } from "../../../server/kimlik/hesap.ts";
 import { numaraAl } from "../../../server/numara/numara.ts";
 import { duzey, type YetkiHesabi } from "../../../server/yetki/canDo.ts";
 import { dogrula, type DogrulamaHatalari } from "../../../sema/ortak.ts";
-import { tesisTurSayilari } from "../../ekipman/server/ekipman.ts";
+import { tesisEkipmanlari, tesisTurSayilari } from "../../ekipman/server/ekipman.ts";
 import { turOzetleri } from "../../ekipman-turleri/server/turler.ts";
-import { musteriKaydet, musteriOzetleri, tesisKaydet } from "../../musteriler/server/musteriler.ts";
+import { musteriIletisim, musteriKaydet, musteriOzetleri, tesisKaydet } from "../../musteriler/server/musteriler.ts";
 import { MusteriGirdisi, TesisGirdisi } from "../../musteriler/sema.ts";
 import { turBasinaImzaliRapor } from "../../raporlar/server/teklif-baglanti.ts";
+import type { TeklifBelgesiVerisi } from "../../../belge/teklif.ts";
+import type { ExcelTuru, TeklifEkipmani } from "../excel.ts";
 import { bitisGunu, RedGirdisi, TeklifGirdisi, type Aday, type TeklifDurumu } from "../sema.ts";
 
 const MODUL = 11;
@@ -46,6 +48,8 @@ export interface TeklifKalemi { turId: string; turAd: string; brans: "m" | "e" |
 export interface TeklifKarti extends TeklifSatiri {
   surum: number; aday: Aday | null; musteriKart: { id: string; unvan: string; kisa: string } | null; tesisler: { id: string; ad: string; il: string | null; ilce: string | null }[];
   kalemler: TeklifKalemi[]; kdv: number; gecerlilik: number; notlar: string | null; gerekce: string | null; hazirlayan: string;
+  /** ilgili kişi: kayıtlı müşteride müşteri kartındaki, değilse teklifteki yetkili (maket) */
+  ilgili: string | null;
   ekipmanlar: { kod: string; tur: string; konum: string; seri: string }[]; raporlananTutar: number | null; kopyaKaynak: string | null;
   izin: { duzenle: boolean; gonder: boolean; sonuc: boolean; musteriKaydet: boolean; kopyala: boolean };
 }
@@ -112,6 +116,7 @@ export async function teklifKarti(db: Sorgulayici, kim: Kisi, id: string): Promi
   return {
     ...s, surum: x.surum, aday: x.aday, musteriKart: m ? { id: m.id, unvan: m.unvan, kisa: m.kisa } : null, tesisler, kalemler, kdv: x.kdv, gecerlilik: x.gecerlilik,
     notlar: x.notlar, gerekce: x.gerekce, hazirlayan: x.hazirlayan ? (await hesapAdlari(db, [x.hazirlayan])).get(x.hazirlayan) ?? "—" : "—", ekipmanlar: x.ekipmanlar ?? [],
+    ilgili: m ? (await musteriIletisim(db, m.id))?.ilgili ?? null : x.aday?.yetkili ?? null,
     raporlananTutar: rapor ? kalemler.reduce((n, k) => n + Math.min(k.adet, k.raporlanan ?? 0) * k.fiyat, 0) : null,
     kopyaKaynak: x.kopya_kaynak ? (await db.sorgu<{ no: string }>("SELECT no FROM teklif WHERE id = $1", [x.kopya_kaynak])).rows[0]?.no ?? null : null,
     izin: {
@@ -123,7 +128,7 @@ export async function teklifKarti(db: Sorgulayici, kim: Kisi, id: string): Promi
 
 export interface TeklifSecenekleri {
   musteriler: { id: string; kisa: string; unvan: string; tesisler: { id: string; ad: string; il: string | null; ilce: string | null; ekipman: Record<string, number> }[] }[];
-  turler: { id: string; ad: string; brans: "m" | "e"; periyot: number; fiyat: number | null }[];
+  turler: (ExcelTuru & { periyot: number; fiyat: number | null })[];
 }
 /** formun seçenekleri: etkin müşteriler ve etkin tesisleri (tür başına etkin ekipman sayısıyla — "tesisteki ekipmandan doldur"), türler ve
     fiyat listesi. Yalnız "yaz" düzeyine. */
@@ -136,7 +141,7 @@ export async function teklifSecenekleri(db: Sorgulayici, kim: Kisi): Promise<Tek
   return {
     musteriler: m.map((x) => ({ id: x.id, kisa: x.kisa, unvan: x.unvan, tesisler: x.tesisler.filter((t) => !t.pasif).map((t) => ({ id: t.id, ad: t.ad, il: t.il, ilce: t.ilce,
       ekipman: Object.fromEntries(sayi.filter((y) => y.tesisId === t.id).map((y) => [y.turId, y.adet])) })) })),
-    turler: (await turOzetleri(db)).map((t) => ({ id: t.id, ad: t.ad, brans: t.brans, periyot: t.periyot, fiyat: fiyat.get(t.id) ?? null })),
+    turler: (await turOzetleri(db)).map((t) => ({ id: t.id, ad: t.ad, kod: t.kod, brans: t.brans, periyot: t.periyot, fiyat: fiyat.get(t.id) ?? null })),
   };
 }
 
@@ -251,4 +256,50 @@ export async function teklifMusteriKaydet(db: Sorgulayici, kim: Kisi, id: string
   if (r.durum !== "tamam") throw new Error("teklif müşteriye bağlanamadı");
   await ekle(db, TESIS, { teklif_id: id, tesis_id: t.id, sira: 0 }, iz(kim, "teklif.tesis", x.no));
   return { durum: "tamam", id, no: x.no, bildirim: `${a.unvan} müşteri olarak kaydedildi (tesis: Merkez). Sıradaki: iş sözleşmesi, sonra plan.` };
+}
+
+/* ── EXCEL VE TEKLİF BELGESİ (325) ─────────────────────────────────────────────────────────────────────────────────────────────────────── */
+const UUID_LISTE = (v: unknown): string[] | null =>
+  Array.isArray(v) && v.length <= 200 && v.every((x) => typeof x === "string" && UUID.test(x)) ? [...new Set(v as string[])] : null;
+
+/** tesislerin kayıtlı ETKİN ekipmanı (Excel'e aktar — maket excelKaynak "tesisteki kayıtlı ekipman"); göremeyene null */
+export async function teklifEkipmanListesi(db: Sorgulayici, kim: Kisi, tesisler: unknown): Promise<TeklifEkipmani[] | null> {
+  const l = UUID_LISTE(tesisler);
+  if (!gorur(kim) || !l) return null;
+  const out: TeklifEkipmani[] = [];
+  for (const t of l) for (const e of await tesisEkipmanlari(db, t)) if (!e.pasif) out.push({ kod: e.kod, tur: e.turId, konum: e.konum ?? "", seri: e.seri ?? "" });
+  return out;
+}
+
+/** teklif sayfasının "Excel'e aktar"ı: yüklenen liste, yoksa (kayıtlı müşteride) tesislerin kayıtlı ekipmanı; türler ve birim fiyat (teklifin kalemi,
+    yoksa fiyat listesi). Göremeyene ya da yoksa null */
+export async function teklifExcelVerisi(db: Sorgulayici, kim: Kisi, t: TeklifKarti): Promise<{ liste: TeklifEkipmani[]; ne: string; turler: ExcelTuru[];
+  fiyat: Record<string, number | null> } | null> {
+  if (!gorur(kim)) return null;
+  const liste = t.ekipmanlar.length ? t.ekipmanlar : t.musteriKart ? (await teklifEkipmanListesi(db, kim, t.tesisler.map((x) => x.id))) ?? [] : [];
+  const fiyat: Record<string, number | null> = Object.fromEntries((await db.sorgu<{ tur_id: string; fiyat: string }>("SELECT tur_id::text, fiyat::text FROM fiyat_listesi")).rows
+    .map((x) => [x.tur_id, Number(x.fiyat)]));
+  for (const k of t.kalemler) fiyat[k.turId] = k.fiyat;
+  return { liste, ne: t.ekipmanlar.length ? "Excel'den yüklenen liste" : "tesisteki kayıtlı ekipman",
+    turler: (await turOzetleri(db)).map((x) => ({ id: x.id, ad: x.ad, kod: x.kod, brans: x.brans })), fiyat };
+}
+
+/** TEKLİF BELGESİNİN VERİSİ (temel format KM-FR-TKL-01 karşılığı: firma kodu + "-FR-TKL-01"; §3.7 satır 4 — firmaya özel format iskeleti):
+    teklifin kendi kayıtlarından; göremeyene ya da yoksa null */
+export async function teklifBelgesiVerisi(db: Sorgulayici, kim: Kisi, id: string): Promise<TeklifBelgesiVerisi | null> {
+  const t = await teklifKarti(db, kim, id);
+  if (!t) return null;
+  const firma = await firmaKunyesi(db);
+  const m = t.musteriKart ? await musteriIletisim(db, t.musteriKart.id) : null;
+  const tesisAdres = t.musteriKart ? new Map((await musteriOzetleri(db)).find((x) => x.id === t.musteriKart!.id)?.tesisler.map((y) => [y.id, y.adres]) ?? []) : new Map<string, string | null>();
+  return {
+    firma: { ad: firma.ad, kod: firma.kod }, no: t.no, tarih: t.gonderildi ?? t.tarih, gecerlilik: t.gecerlilik, bitis: t.bitis, kdv: t.kdv, notlar: t.notlar,
+    hazirlayan: t.hazirlayan, durum: t.durum,
+    musteri: m
+      ? { unvan: m.unvan, vergi: [m.vd, m.vno].filter(Boolean).join(" · ") || null, eposta: m.eposta, tel: m.tel, ilgili: m.ilgili,
+          yerler: t.tesisler.map((x) => ({ ad: x.ad, adres: [tesisAdres.get(x.id), [x.ilce, x.il].filter(Boolean).join(" / ")].filter(Boolean).join(", ") || null })) }
+      : { unvan: t.aday?.unvan ?? "—", vergi: [t.aday?.vd, t.aday?.vno].filter(Boolean).join(" · ") || null, eposta: t.aday?.eposta ?? null, tel: t.aday?.tel ?? null,
+          ilgili: t.aday?.yetkili ?? null, yerler: t.aday ? [{ ad: null, adres: [t.aday.adres, [t.aday.ilce, t.aday.il].filter(Boolean).join(" / ")].filter(Boolean).join(", ") }] : [] },
+    kalemler: t.kalemler.map((k) => ({ turAd: k.turAd, brans: k.brans, periyot: k.periyot, adet: k.adet, fiyat: k.fiyat })),
+  };
 }

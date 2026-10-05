@@ -1,6 +1,7 @@
 /* UYDURMA ÖRNEK BELGE — PDF motorunun ölçümü (src/app/api/olcum/pdf, yalnız önizleme dağıtımı) ve testleri için. Gerçek firma / kişi yok. */
 import { SABLONLAR } from "../format/sablonlar.ts";
 import { Cevaplar } from "../format/tanim.ts";
+import type { TeklifBelgesiVerisi } from "./teklif.ts";
 import type { BelgeVerisi } from "./veri.ts";
 
 export function ornekBelge(sablon: "ZPKR01" | "ZPKR02" | "KOMPRESOR"): BelgeVerisi {
@@ -16,3 +17,12 @@ export function ornekBelge(sablon: "ZPKR01" | "ZPKR02" | "KOMPRESOR"): BelgeVeri
     yazan: { ad: "Deneme Denetçi", meslek: "elk-muh", ekipnet: "123", diploma: null, oda: null }, onay: null, imza: null,
   };
 }
+
+/** uydurma teklif belgesi (325; testler) */
+export const ornekTeklif = (): TeklifBelgesiVerisi => ({
+  firma: { ad: "Deneme Muayene A.Ş.", kod: "DA" }, no: "T-1026-001", tarih: "2026-10-05", gecerlilik: 30, bitis: "2026-11-04", kdv: 20,
+  notlar: "Ulaşım dahildir.", hazirlayan: "Deneme Planlama", durum: "gonderildi",
+  musteri: { unvan: "Deneme Bir Sanayi A.Ş.", vergi: "Merkez · 1234567890", eposta: "satin@deneme-bir.example", tel: null, ilgili: "Deneme Yetkili",
+    yerler: [{ ad: "Merkez", adres: "Deneme Cad. 1, Gebze / Kocaeli" }, { ad: "Depo", adres: null }] },
+  kalemler: [{ turAd: "Hava tankı", brans: "m", periyot: 12, adet: 2, fiyat: 125000 }, { turAd: "Elektrik iç tesisatı", brans: "e", periyot: 12, adet: 1, fiyat: 90050 }],
+});
