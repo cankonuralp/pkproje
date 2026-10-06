@@ -24,6 +24,10 @@ export default defineConfig({
   /* 2026-10-05: geliştirme sunucusu sunucu eylemini ilk çağrıda derler; CI'da 5 sn'lik varsayılan bekleme bazen yetmiyordu (rapor formatı yükleme
      bildirimi, giriş sonrası kabuk). Beklenen şey aynı, yalnız bekleme süresi geliştirme sunucusunun gecikmesine göre */
   expect: { timeout: 15_000 },
+  /* 2026-10-06 (CI 696fa0e, f7dc15f): genişlik başına ayrı sunucuda masaüstü ve tablet geçti, telefon 6–8 testte 30 sn'lik test süresini aştı —
+     telefonda aynı akış daha çok adım atar (menüyü aç, kaydır; belge onayı telefonda 44 sn, tablette 14 sn) ve geliştirme sunucusu yavaştır.
+     Beklentiler ve her adımın beklemesi aynı; yalnız bir testin toplam süresi (Playwright varsayılanı 30 sn) */
+  timeout: 120_000,
   use: {
     baseURL: `http://${E2E_FIRMA.kisaAd}.localhost:${KAPI}`,
     launchOptions: hazir ? { executablePath: hazir } : {},
