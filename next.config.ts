@@ -16,7 +16,13 @@ const ortak: NextConfig = {
   /* webpackMemoryOptimizations: yalnız uçtan uca geliştirme sunucusunda (scripts/e2e-sunucu.ts) — uzun koşuda bellek eşiğine dayanıp yeniden
      başlamasın (Next belgesi: düşük riskli, derlemeyi biraz yavaşlatır) */
   /* proxyClientMaxBodySize: ara katman (src/proxy.ts) gövdeyi varsayılan 10 MB'ta keser — imzalı PDF yüklemesi sunucu eylemine tam ulaşsın */
-  experimental: { serverActions: { bodySizeLimit: "26mb" }, proxyClientMaxBodySize: "26mb", webpackMemoryOptimizations: process.env.PROBATA_WEBPACK_BELLEK === "1" },
+  /* devMemoryThresholdRestart: uçtan uca sunucusu (yalnız o — PROBATA_WEBPACK_BELLEK) yığının %80'ine varınca kendini yeniden BAŞLATMAZ:
+     2026-10-06 CI kayıtları (3dda074, 661004b) — 200 testlik koşunun sonuna doğru sunucu 12 GB'lık yığında yeniden başladı, o anda koşan telefon
+     testi "chrome-error" / sayfa hazır olmadı ile düştü. Yığın sınırı ayrıca 12 GB (scripts/e2e-sunucu.ts); V8 sınıra yaklaşınca çöpü toplar */
+  experimental: {
+    serverActions: { bodySizeLimit: "26mb" }, proxyClientMaxBodySize: "26mb", webpackMemoryOptimizations: process.env.PROBATA_WEBPACK_BELLEK === "1",
+    devMemoryThresholdRestart: process.env.PROBATA_WEBPACK_BELLEK !== "1",
+  },
   env: { NEXT_PUBLIC_IKON_ADRESI: `/${IKON_DOSYASI}?v=${ikonOzeti}` },
   /* PDF motoru (src/belge/pdf.ts, 316): Chromium paketleri derlemeye katılmaz (düğüm modülü olarak yüklenir); belge CSS'i, yazı tipi ve sunucusuz
      Chromium ikilisi yalnız PDF basan uçların izine eklenir (teklif PDF'i — 325) — rapor sayfası da (İmzala sunucu eylemi orada koşar; 315–317 incelemesi) */
