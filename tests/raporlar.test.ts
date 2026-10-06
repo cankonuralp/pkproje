@@ -869,7 +869,9 @@ test("belge verisi: raporu gören alır (yazan, branş yöneticisi, planlama); �
   tamam(await foto(FA.den1, r.id, 0));
   const bv = (k: Kisi) => a(k, (db) => raporBelgesiVerisi(db, depo, k, r.id));
   const v = (await bv(FA.den1))!;
-  assert.deepEqual([v.id, v.plan.id, v.belge.firma, v.belge.durum, v.belge.onay, v.belge.imza, v.belge.ekipman.kod], [r.id, id, { ad: "Deneme A", kod: "DA", nusha: 2 }, "taslak", null, null, "HT-A4"]);
+  /* 2026-10-06 (334): belge başlığında firma künyesi genişledi (adres, e-posta, akreditasyon no, logo — Firma ayarları; boşsa null) */
+  assert.deepEqual([v.id, v.plan.id, v.belge.firma, v.belge.durum, v.belge.onay, v.belge.imza, v.belge.ekipman.kod],
+    [r.id, id, { ad: "Deneme A", kod: "DA", nusha: 2, adres: null, eposta: null, akr: null, logo: null }, "taslak", null, null, "HT-A4"]);
   assert.equal(v.belge.fotolar.length, 1);
   assert.match(v.belge.fotolar[0].src!, /^data:image\/jpeg;base64,[A-Za-z0-9+/=]+$/);
   assert.equal(v.belge.yazan.ad, "Deneme Bir");

@@ -264,7 +264,8 @@ test("Excel ve teklif belgesi (325): tesislerin ETKİN ekipmanı (pasif yok), de
   assert.equal(k.ilgili, "Deneme İlgili", "kayıtlı müşteride ilgili kişi müşteri kartından");
   const b1 = (await a(MUH, (db) => teklifBelgesiVerisi(db, MUH, yuklu.id)))!;
   assert.deepEqual([b1.firma, b1.no, b1.durum, b1.musteri.unvan, b1.musteri.ilgili, b1.musteri.eposta, b1.musteri.yerler.map((y) => y.ad), b1.kalemler.length, b1.hazirlayan],
-    [{ ad: "Deneme A", kod: "DA" }, yuklu.no, "taslak", "Deneme Bir Sanayi A.Ş.", "Deneme İlgili", "bir@deneme-musteri.example", ["Merkez"], 2, "Deneme Planlama"]);
+    /* 2026-10-06 (334): teklif başlığında firma adresi ve logosu (Firma ayarları; boşsa null) */
+    [{ ad: "Deneme A", kod: "DA", adres: null, logo: null }, yuklu.no, "taslak", "Deneme Bir Sanayi A.Ş.", "Deneme İlgili", "bir@deneme-musteri.example", ["Merkez"], 2, "Deneme Planlama"]);
   assert.equal(await a(DEN, (db) => teklifBelgesiVerisi(db, DEN, yuklu.id)), null, "denetçi");
   assert.equal(await kiraciIcinde(havuz, B, (db) => teklifBelgesiVerisi(db, YON_B, yuklu.id), { hesapId: YON_B.id }), null, "başka firma");
   const aday = tamam(await a(PLAN, (db) => teklifKaydet(db, PLAN, null, 0, { ...K(), tip: "aday", aday: ADAY })));
