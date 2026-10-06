@@ -45,9 +45,11 @@ test("yan menü takip balonları: yaklaşan kalibrasyon Ölçüm cihazları ve U
   await page.goto("/");
   if (bilgi.project.name !== "masaustu") await page.locator('header button[aria-label="Menüyü aç"]').click();
   const menu = page.getByRole("navigation", { name: "Modüller" });
-  /* kırmızı balon (başka testin kalibrasyonsuz cihazı) adın başına gelir: seçici ona dayanıklı (337–339 incelemesi) */
-  await expect(menu.getByRole("link", { name: /^Ölçüm cihazları: .*\d+ süresi yaklaşan cihaz/ })).toBeVisible({ timeout: 30_000 });
-  await expect(menu.getByRole("link", { name: /^Uyarılar: .*yaklaşan uyarı/ })).toBeVisible();
+  /* kırmızı balon (başka testin kalibrasyonsuz cihazı) adın başına gelir: seçici ona dayanıklı (337–339 incelemesi). 2026-10-06 (CI 521bf48: üç
+     genişlikte de bulunamadı): bağlantı esnek kutu, Chromium adı parçalar arasında boşlukla kurar ("Ölçüm cihazları : 1 süresi …") — ad boşluğa
+     dayanıklı denetlenir; düşerse gerçek ad iletide görünür (toHaveAccessibleName). Beklenen aynı: sarı balon ve adı. */
+  await expect(menu.getByRole("link", { name: /^Ölçüm cihazları/ })).toHaveAccessibleName(/^Ölçüm cihazları\s*:.*\d+\s*süresi yaklaşan cihaz/, { timeout: 30_000 });
+  await expect(menu.getByRole("link", { name: /^Uyarılar/ })).toHaveAccessibleName(/^Uyarılar\s*:.*yaklaşan uyarı/);
   await expect(menu.getByRole("link", { name: /^Ana sayfa$/ })).toBeVisible();
 });
 
