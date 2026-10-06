@@ -4,9 +4,10 @@
    tutar; ara toplam, KDV, genel toplam), 3 Koşullar (geçerlilik, KDV hariç fiyat, not), 4 Hazırlayan. Rapor belgesiyle aynı görünüm (belge.css,
    .rb- sınıfları). SAF, React'in kaçışıyla (ham HTML yok); createElement (düğüm test koşucusu doğrudan yükler — tests/teklif-belgesi.test.ts). */
 import { createElement as h, type ReactNode } from "react";
+import { firmaAdresi, firmaLogosu } from "./belge.ts";
 
 export interface TeklifBelgesiVerisi {
-  firma: { ad: string; kod: string };
+  firma: { ad: string; kod: string; adres?: string | null; logo?: string | null };
   no: string; tarih: string; gecerlilik: number; bitis: string | null; kdv: number; notlar: string | null; hazirlayan: string;
   durum: "taslak" | "gonderildi" | "kabul" | "red" | "suresi";
   /** yerler: kayıtlı müşteride teklifin tesisleri (ad, adres); kayıtlı olmayanda tek adres (ad yok) */
@@ -33,7 +34,7 @@ export function teklifBelgesi(v: TeklifBelgesiVerisi): ReactNode {
     : [satir("Adres", "-", "y")];
   return h("article", { className: "rb-sayfa", "aria-label": `${v.no} teklif belgesi` },
     h("table", { className: "rb-bas" }, kolonlar(["11%", "30%", "32%", "27%"]), h("tbody", null, h("tr", null,
-      h("td", { className: "rb-logo" }, "LOGO"), h("td", { className: "rb-firma" }, h("b", null, v.firma.ad)),
+      h("td", { className: "rb-logo" }, firmaLogosu(v.firma)), h("td", { className: "rb-firma" }, h("b", null, v.firma.ad), ...firmaAdresi(v.firma)),
       h("td", { className: "rb-bas-ad" }, "Fiyat teklifi"),
       h("td", { className: "rb-dok" },
         h("div", null, h("span", null, "Doküman Kodu"), `: ${formKod}`), h("div", null, h("span", null, "Teklif No"), `: ${v.no}`),

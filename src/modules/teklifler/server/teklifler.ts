@@ -8,7 +8,8 @@
    uyarısını gösterir, var olan müşteriye bağlama yolu var; sonraki adımların tuşları hedef modülün yetkisiyle. */
 import type { Sorgulayici } from "../../../server/db/kiraci.ts";
 import { ekle, guncelle, sil, tablo, type Iz } from "../../../server/db/yazici.ts";
-import { ayarOku, firmaKunyesi } from "../../../server/ayar/ayar.ts";
+import { ayarOku, firmaBelgeKunyesi } from "../../../server/ayar/ayar.ts";
+import type { Depo } from "../../../server/dosya/depo.ts";
 import { hesapAdlari } from "../../../server/kimlik/hesap.ts";
 import { numaraAl } from "../../../server/numara/numara.ts";
 import { duzey, type YetkiHesabi } from "../../../server/yetki/canDo.ts";
@@ -346,14 +347,15 @@ export async function teklifExcelVerisi(db: Sorgulayici, kim: Kisi, t: TeklifKar
 
 /** TEKLİF BELGESİNİN VERİSİ (temel format KM-FR-TKL-01 karşılığı: firma kodu + "-FR-TKL-01"; §3.7 satır 4 — firmaya özel format iskeleti):
     teklifin kendi kayıtlarından; göremeyene ya da yoksa null */
-export async function teklifBelgesiVerisi(db: Sorgulayici, kim: Kisi, id: string): Promise<TeklifBelgesiVerisi | null> {
+export async function teklifBelgesiVerisi(db: Sorgulayici, kim: Kisi, id: string, depo: Depo | null = null): Promise<TeklifBelgesiVerisi | null> {
   const t = await teklifKarti(db, kim, id);
   if (!t) return null;
-  const firma = await firmaKunyesi(db);
+  /* 334: başlıkta ticari ad, adres ve logo (Firma ayarları › Firma bilgileri) */
+  const firma = await firmaBelgeKunyesi(db, depo);
   const m = t.musteriKart ? await musteriIletisim(db, t.musteriKart.id) : null;
   const tesisAdres = t.musteriKart ? new Map((await musteriOzetleri(db)).find((x) => x.id === t.musteriKart!.id)?.tesisler.map((y) => [y.id, y.adres]) ?? []) : new Map<string, string | null>();
   return {
-    firma: { ad: firma.ad, kod: firma.kod }, no: t.no, tarih: t.gonderildi ?? t.tarih, gecerlilik: t.gecerlilik, bitis: t.bitis, kdv: t.kdv, notlar: t.notlar,
+    firma: { ad: firma.ad, kod: firma.kod, adres: firma.adres, logo: firma.logo }, no: t.no, tarih: t.gonderildi ?? t.tarih, gecerlilik: t.gecerlilik, bitis: t.bitis, kdv: t.kdv, notlar: t.notlar,
     hazirlayan: t.hazirlayan, durum: t.durum,
     musteri: m
       ? { unvan: m.unvan, vergi: [m.vd, m.vno].filter(Boolean).join(" · ") || null, eposta: m.eposta, tel: m.tel, ilgili: m.ilgili,

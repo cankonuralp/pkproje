@@ -1,0 +1,38 @@
+/* Firma ayarları (maket.css .a-ayar-duzen, .a-ayar-nav, .a-ayar-izgara, .a-ayar-genis, .a-ayar-kaydet, .a-kalem-sabit; 334) — renk / ölçü tokens.css'ten.
+   Sütunlu yerleşim: her bölüm kendi sütununda bir öncekinin altına oturur (sütun en az 420px); tam genişlik bölüm bütün sütunları kaplar. */
+.duzen { display: grid; gap: 16px; margin-top: 16px; }
+.nav { display: none; }
+.navListe { list-style: none; margin: 0; padding: 0; display: grid; gap: 2px; }
+.navOge { display: flex; align-items: center; min-height: 36px; padding: 0 12px; border-radius: var(--r-orta); color: var(--yazi2); text-decoration: none; font-weight: 600; }
+.navOge:hover { background: var(--zemin2); color: var(--yazi); }
+.izgara { columns: 420px; column-gap: 16px; min-width: 0; }
+.kart { display: flow-root; break-inside: avoid; margin: 0 0 16px; min-width: 0; padding: 16px; background: var(--kart); border: 1px solid var(--kenar); border-radius: var(--r-buyuk); }
+.genis { column-span: all; }
+.bas { display: flex; flex-wrap: wrap; align-items: center; gap: 8px 12px; margin: 0 0 12px; }
+.baslik { margin: 0; font-size: var(--boy-bolum); font-weight: 700; }
+.baslik:focus { outline: none; }
+.baslik:focus-visible { outline: 2px solid var(--odak); outline-offset: 2px; border-radius: var(--r-kucuk); }
+.sayac { color: var(--yazi2); font-size: var(--boy-kucuk); }
+.kaydet { display: inline-flex; flex-wrap: wrap; align-items: center; gap: 8px; margin-left: auto; }
+.kaydetNot { color: var(--uyari-yazi); font-size: var(--boy-kucuk); font-weight: 600; }
+.ipucu { margin: 12px 0 0; color: var(--yazi2); font-size: var(--boy-kucuk); }
+.etiket { margin: 16px 0 6px; font-size: var(--boy-kucuk); font-weight: 600; }
+.hata { margin: 8px 0 0; color: var(--uyari-yazi); font-size: var(--boy-kucuk); font-weight: 600; }
+.dosya { min-width: 0; }
+.dosyaSatir { display: flex; flex-wrap: wrap; align-items: center; gap: 12px; min-width: 0; }
+.logo { display: block; max-width: 160px; max-height: 64px; object-fit: contain; border: 1px solid var(--kenar); border-radius: var(--r-orta); background: var(--zemin); }
+.tuslar { display: flex; flex-wrap: wrap; gap: 8px; margin-top: 12px; }
+.secenekler { display: grid; gap: 4px; }
+.secenek { display: flex; align-items: center; gap: 8px; min-height: var(--tus-y); cursor: pointer; }
+.secenek input { width: 18px; height: 18px; margin: 0; flex: none; accent-color: var(--birincil); }
+.kod { max-width: 120px; text-transform: uppercase; font-variant-numeric: tabular-nums; letter-spacing: .04em; }
+.kalem { display: grid; grid-template-columns: minmax(0, 2fr) minmax(0, 1fr) minmax(0, 2fr) auto; gap: 8px 12px; align-items: end; padding: 10px 0; border-bottom: 1px solid var(--kenar); }
+.kalemSil { justify-self: start; }
+@media (max-width: 767.98px) {
+  .kalem { grid-template-columns: minmax(0, 1fr) minmax(0, 1fr); }
+  .kalem > :first-child { grid-column: 1 / -1; }
+}
+@media (min-width: 1280px) {
+  .duzen { grid-template-columns: 200px minmax(0, 1fr); align-items: start; }
+  .nav { display: block; position: sticky; top: calc(var(--ust-y) + 16px); }
+}

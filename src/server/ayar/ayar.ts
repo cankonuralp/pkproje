@@ -3,10 +3,12 @@
    denetim izi). Yetki (Firma ayarları modülü, canDo 22) çağıran eylemde. Bölümler modüllerle büyür; sırlar ayrı (sir.ts). */
 import { z } from "../../sema/ortak.ts";
 import type { Sorgulayici } from "../db/kiraci.ts";
-import { ekle, guncelle, tablo, type GuncelleSonucu, type Iz } from "../db/yazici.ts";
+import { ekle, guncelle, izYaz, tablo, type GuncelleSonucu, type Iz } from "../db/yazici.ts";
+import type { Depo } from "../dosya/depo.ts";
 import { DUZEYLER } from "../yetki/tanim.ts";
 
 const onek = z.string().regex(/^[A-Z]{1,4}$/, "Önek: 1–4 büyük harf");
+const kimlik = z.string().regex(/^[0-9a-f]{8}-[0-9a-f]{4}-[0-9a-f]{4}-[0-9a-f]{4}-[0-9a-f]{12}$/).nullable();
 const gun = (en: number, cok: number) => z.number().int().min(en).max(cok);
 /** varsayılan tarafsızlık beyanı (maket planlarim BEYAN; TS EN ISO/IEC 17020) */
 export const VARSAYILAN_BEYAN = "Bu planı TS EN ISO/IEC 17020 kurallarına uygun, bağımsız ve tarafsız yürüteceğimi; muayene edilen kuruluşla tarafsızlığımı " +
@@ -14,8 +16,20 @@ export const VARSAYILAN_BEYAN = "Bu planı TS EN ISO/IEC 17020 kurallarına uygu
   "raporlayacağımı beyan ederim.";
 
 export const AYAR_BOLUMLERI = {
-  /** Firma bilgileri: belge nüshası (2) */
-  firma_bilgileri: z.object({ nusha: gun(1, 5).default(2) }),
+  /** Firma bilgileri (334; maket firmaBilgiCiz): belge nüshası (2) · rapor başlığındaki künye — ticari ad (boşsa firma kaydındaki ad), adres,
+      rapor e-postası, akreditasyon no · logo (dosya; raporların ve belgelerin başlığına) */
+  firma_bilgileri: z.object({
+    nusha: gun(1, 5).default(2),
+    ad: z.string().trim().max(120).default(""),
+    adres: z.string().trim().max(200).default(""),
+    eposta: z.string().trim().max(120).refine((e) => e === "" || /^[^\s@]+@[^\s@]+\.[^\s@]+$/.test(e)).default(""),
+    akr: z.string().trim().max(20).default(""),
+    logo: kimlik.default(null),
+  }),
+  /** Zimmet teslim formu (196): firma adına teslim edenin başlangıç değeri (personel; formda değiştirilebilir) */
+  zimmet: z.object({ teslim_eden: kimlik.default(null) }),
+  /** firmanın belge şablonları (334): ön bilgilendirme formu (N1; yoksa temel format KM-FR-OBF-01) ve bordro formatı (BB5) — dosya kimlikleri */
+  belge_sablon: z.object({ on_bilgi: kimlik.default(null), bordro_format: kimlik.default(null) }),
   /** İmza yöntemi (mobil / e-imza) */
   imza: z.object({ yontem: z.enum(["mobil", "e_imza"]).default("mobil") }),
   /** Mesai takibi (212, AA2): normal 480 dk, mesai 180 dk, yıllık fazla çalışma ≤ 270 saat, günlük ≤ 660 dk */
@@ -110,4 +124,31 @@ export async function ayarYaz<B extends AyarBolumu>(db: Sorgulayici, b: B, surum
 /** belgenin sahibi muayene firması: adı ve rapor kodu (kiracının kendi satırı; RLS firma_kendi) — rapor belgesinin başlığı ve form kodu */
 export async function firmaKunyesi(db: Sorgulayici): Promise<{ ad: string; kod: string }> {
   return (await db.sorgu<{ ad: string; kod: string }>("SELECT ad, rapor_kodu AS kod FROM firma")).rows[0] ?? { ad: "-", kod: "XX" };
+}
+
+/** belge başlığının künyesi (334; maket MB.logo / resmiBas): ticari ad (ayar; boşsa firma kaydı), rapor kodu, adres, e-posta, akreditasyon no,
+    nüsha ve logo — logo veri adresi olarak gömülür (belge dış adrese gitmez) */
+export interface BelgeKunyesi { ad: string; kod: string; nusha: number; adres: string | null; eposta: string | null; akr: string | null; logo: string | null }
+export async function firmaBelgeKunyesi(db: Sorgulayici, depo: Depo | null): Promise<BelgeKunyesi> {
+  const f = await firmaKunyesi(db), b = (await ayarOku(db, "firma_bilgileri")).deger;
+  let logo: string | null = null;
+  if (b.logo && depo) {
+    const d = (await db.sorgu<{ anahtar: string; tur: string }>("SELECT anahtar, tur FROM dosya WHERE id = $1 AND modul = $2 AND cop IS NULL", [b.logo, AYAR_DOSYA])).rows[0];
+    if (d && (d.tur === "image/png" || d.tur === "image/jpeg")) logo = `data:${d.tur};base64,${Buffer.from(await depo.oku(d.anahtar)).toString("base64")}`;
+  }
+  return { ad: b.ad || f.ad, kod: f.kod, nusha: b.nusha, adres: b.adres || null, eposta: b.eposta || null, akr: b.akr || null, logo };
+}
+
+/** firma ayarlarının dosyaları (logo, ön bilgilendirme formu, bordro formatı): kayıt = firma */
+export const AYAR_DOSYA = "firma_ayar";
+
+/** firma kodu (rapor numarasının başı; açılmış raporun numarası değişmez): yalnız kendi firması, 2 büyük harf A–Z (0045 sütun yetkisi).
+    Yetki ÇAĞIRANDA (Firma ayarları "değiştirir"). Değiştiyse true */
+export async function firmaKoduYaz(db: Sorgulayici, kod: string, iz: Iz): Promise<boolean> {
+  if (!/^[A-Z]{2}$/.test(kod)) throw new Error("Geçersiz firma kodu");
+  const eski = (await firmaKunyesi(db)).kod;
+  const r = await db.sorgu<{ id: string }>("UPDATE firma SET rapor_kodu = $1 WHERE id = gecerli_firma() AND rapor_kodu <> $1 RETURNING id::text", [kod]);
+  if (!r.rowCount) return false;
+  await izYaz(db, { ...iz, nesne: "firma", nesneId: r.rows[0].id, eski: { rapor_kodu: eski }, yeni: { rapor_kodu: kod } });
+  return true;
 }

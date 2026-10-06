@@ -39,7 +39,7 @@ import { mesaiDurumu } from "./plan-baglanti.ts";
 import { raporOzetleri, sonGeriGonderme, type RaporOzeti } from "./onay-baglanti.ts";
 import { hesapAdlari } from "../../../server/kimlik/hesap.ts";
 import { TANIMLAR } from "../../../tanim/tanimlar.ts";
-import { ayarOku, firmaKunyesi } from "../../../server/ayar/ayar.ts";
+import { firmaBelgeKunyesi } from "../../../server/ayar/ayar.ts";
 import { kayitDosyasi } from "../../../server/dosya/dosya.ts";
 import { createHash } from "node:crypto";
 import { cihazKalibrasyonlari } from "../../olcum-cihazlari/server/cihazlar.ts";
@@ -667,7 +667,8 @@ export async function raporBelgesiVerisi(db: Sorgulayici, depo: Depo, kim: Kisi,
   return {
     id: r.id, no: gorunenNo(r.no, r.revizyon), plan: { id: r.plan_id, no: plan?.no ?? "—" }, imzaliDosya: imzali?.dosya ?? null,
     belge: {
-      firma: { ...(await firmaKunyesi(db)), nusha: (await ayarOku(db, "firma_bilgileri")).deger.nusha },
+      /* 334: başlıkta ticari ad, adres, akreditasyon no ve logo (Firma ayarları › Firma bilgileri) */
+      firma: await firmaBelgeKunyesi(db, depo),
       no: r.no, revizyon: r.revizyon, formatSira: format.sira, durum: r.durum,
       tur: { ad: tur.ad, kod: tur.kod, kontrolStd: tur.kontrolStd },
       kunye: { firmaAdi: r.kunye.firma_adi, adres: r.kunye.adres ?? null, sgk: r.kunye.sgk ?? null, isgNo: r.kunye.isg_no ?? null },

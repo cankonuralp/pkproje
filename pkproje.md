@@ -2341,6 +2341,22 @@ revizyon, alan kopyalama, hafif kusur devri, meslek eşleşme denetimi).
 - Emsal ürünler: https://opwire.app/iso-17020-periyodik-kontrol-yazilimi/ · https://17020muayene.vidco.com.tr/ · https://akuple.com/asansor-kontrol-yazilimi/ · https://ensyazilim.com/
 
 ## 11 · Değişiklik günlüğü
+- 2026-10-06 (334): **K4 Firma ayarları — ekran ve temel bölümler** (maket firma-ayarlari.html — R1 "ayrı bir modül olsun , ekran daha verimli
+  kullanılsın", Z1 "yapılan değişikliklerin yanına minik bir kaydet butonu koy", 202 dağınık ayarlar tek yerde; reisim 2026-10-03 "Şirket logosuda
+  firma ayarlarından girilsin , raporlara otomatik çekilsin"). Geniş ekranda solda bölüm listesi, bölümler kart, sütunlu yerleşim (sabit giderler
+  tam genişlik), telefonda tek sütun. Değişen bölümün başlığında "Kaydedilmedi · Vazgeç · Kaydet"; geçersiz değer kaydedilmez, nedeni alanın
+  altında (Türkçe); "gör" düzeyinde salt okunur. Bölümler: **Firma bilgileri** (ticari ad — boşsa firma kaydındaki ad, adres, rapor e-postası,
+  akreditasyon no, nüsha 1–4, **logo** PNG / JPEG ≤ 2 MB) — rapor ve teklif belgelerinin başlığına gelir (logo veri adresi olarak gömülür; adres
+  adın altında; "AKR. <no>") · **İmza yöntemi** (mobil / e-imza) · **Zimmet teslim formu** (teslim eden başlangıcı; yalnız çalışan kişi) · **Rapor
+  saklama süresi** (5–20 yıl) · **Ön bilgilendirme formu** ve **Bordro formatı** (dosya; seçilince yüklenir, kaldırma sorulur) · **Mesai takibi**
+  (aç / kapa, normal, mesai, yıllık fazla çalışma ≤ 270; toplam 660 dk'yı aşarsa kanun şeridi) · **Uyarı eşikleri** (maketin seçenekleri) ·
+  **Rapor numarası** (firma kodu 2 harf A–Z; açılmış raporun numarası değişmez — göç **0045**: uygulama rolü firmada yalnız rapor_kodu'nu yazar) ·
+  **Sabit giderler** (ad, aylık TL, not; ekle / kaldır). Ayar bölümleri: firma_bilgileri genişledi, yeni zimmet ve belge_sablon. Dosyalar (kayıt =
+  firma) firmanın her kullanıcısına açık. Kalan bölümler sonraki kalemlerde: fiyat listesi + müşteriye açık personel belgeleri (335), yapay zekâ /
+  bulut kaydı / depolama ve yedek (336), toplu içe aktarma (337). **Açık:** Muhasebe › Maaş bordrosu gönder "Formattan oluştur" — yüklenen bordro
+  formatından kişi kişi bordro üretmenin biçimi belirsiz (PDF / Excel şablonunun alanları); şimdilik format yüklense de bordrolar elle yüklenir.
+  Kilit: firma-ayarlari.test (yetki — gör salt okunur, rol değiştirme; doğrulama, sürüm kilidi, firma kodu ve sütun yetkisi, logo türü ve belge
+  künyesi, dosya erişimi, B sızıntısı), firma-ayarlari.bozan (2), e2e üç genişlik.
 - 2026-10-06 (333 incelemesi): çapraz inceleme (13 bulgudan 9'u doğrulandı) düzeltmeleri. **Yüksek:** imza PDF denetiminde karesel süre
   ("trailer(" yığınıyla 400 KB → 30 sn; 333'ün iki yeni girişi — bordro gönderme ve belge imzası — açıktı): trailer sözlüğü sınırlı pencereyle,
   ekte en çok 32 trailer; özgünün yalnız son kökü okunur (4 MB ek artık ~15 ms; süre kilidi + bozan). **Bordro durumu KAYDA bağlı** (döneme

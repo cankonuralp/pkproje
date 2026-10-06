@@ -207,8 +207,13 @@ test("saha raporu: rapor oluştur, eksikle gönderilmez, doldur + cihaz ekle, on
   await onayEkrani();
   await expect(page.getByRole("region", { name: "Gözden geçirme" })).toContainText("ölçüm cihazı");
   await expect(page.getByRole("article", { name: `${raporNo} rapor belgesi` })).toBeVisible();   // 315: onay ekranında önizleme
-  await page.getByRole("button", { name: "Geri gönder" }).click();
   const geri = page.getByRole("dialog", { name: `Geri gönder · ${raporNo}` });
+  /* 2026-10-06: istemci gezinmesinden hemen sonraki tıklama sayfa etkileşime hazır olmadan kaybolabiliyor (telefon koşusunda pencere açılmadı,
+     test 5 dk bekledi) — pencere açılana kadar yeniden basılır */
+  await expect(async () => {
+    if (!(await geri.isVisible())) await page.getByRole("button", { name: "Geri gönder" }).click();
+    await expect(geri).toBeVisible({ timeout: 3_000 });
+  }).toPass({ timeout: 45_000 });
   await geri.getByRole("textbox", { name: /^Gerekçe/ }).fill("kısa");
   await geri.getByRole("button", { name: "Geri gönder" }).click();
   await expect(geri).toContainText("en az 10 karakter", { timeout: 30_000 });

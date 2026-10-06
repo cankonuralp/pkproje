@@ -26,6 +26,15 @@ const nushaYazi = (n: number) => `Bu rapor ${SAYI_AD[n] ?? String(n)} (${n}) nü
 type Cift = readonly [etiket: string, deger: ReactNode, tam?: boolean];
 const kolonlar = (l: readonly string[]) => h("colgroup", null, ...l.map((w, i) => h("col", { key: i, style: { width: w } })));
 /** etiket – değer çiftleri iki sütunda (mavi etiket hücresi); tam satır olanlar tek başına */
+/** başlığın logo hücresi (334; maket MB.logo): firmanın logosu (veri adresi) yoksa "LOGO" yeri */
+export function firmaLogosu(f: { ad: string; logo?: string | null }): ReactNode {
+  return f.logo ? h("img", { className: "rb-logo-resim", src: f.logo, alt: `${f.ad} logosu` }) : "LOGO";
+}
+/** firma hücresinde adın altına adres (maket resmiBas: <b>ad</b><br>adres) */
+export function firmaAdresi(f: { adres?: string | null }): ReactNode[] {
+  return f.adres ? [h("br", { key: "br" }), f.adres] : [];
+}
+
 function bilgiTablosu(l: readonly Cift[]): ReactNode {
   const satirlar: ReactNode[] = [];
   for (let i = 0; i < l.length; i++) {
@@ -166,7 +175,8 @@ export function raporBelgesi(v: BelgeVerisi): ReactNode {
   ];
   return h("article", { className: "rb-sayfa", "aria-label": `${no} rapor belgesi` },
     h("table", { className: "rb-bas" }, kolonlar(["11%", "27%", "10%", "27%", "25%"]), h("tbody", null, h("tr", null,
-      h("td", { className: "rb-logo" }, "LOGO"), h("td", { className: "rb-firma" }, h("b", null, v.firma.ad)), h("td", { className: "rb-logo" }, "AKR."),
+      h("td", { className: "rb-logo" }, firmaLogosu(v.firma)), h("td", { className: "rb-firma" }, h("b", null, v.firma.ad), ...firmaAdresi(v.firma)),
+      h("td", { className: "rb-logo" }, v.firma.akr ? `AKR. ${v.firma.akr}` : "AKR."),
       h("td", { className: "rb-bas-ad" }, t.gorunum.baslik || `${v.tur.ad} periyodik kontrol raporu`),
       h("td", { className: "rb-dok" },
         h("div", null, h("span", null, "Doküman Kodu"), `: ${formKod}`), h("div", null, h("span", null, "Format sürümü"), `: ${v.formatSira}`),

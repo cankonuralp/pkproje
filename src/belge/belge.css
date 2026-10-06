@@ -34,6 +34,8 @@
 .rb-dok { font-size: 11px; line-height: 1.45; }
 .rb-dok span { display: inline-block; width: 84px; }
 .rb-sayfa .rb-logo { text-align: center; color: #7f7f7f; font-size: 10px; }
+/* 334: firmanın logosu (Firma ayarları) — hücreye sığar, oranı korunur */
+.rb-logo-resim { display: block; max-width: 100%; max-height: 16mm; margin: 0 auto; object-fit: contain; }
 .rb-firma { font-size: 10px; line-height: 1.35; }
 .rb-bolum { margin: 0 0 10px; break-inside: auto; }
 .rb-bolum h2 { margin: 0; padding: 1px 3px; border: 1px solid #000; background: #f1dbdb; font-size: 12px; font-weight: 700; text-transform: uppercase; break-after: avoid; }

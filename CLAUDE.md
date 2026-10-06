@@ -146,6 +146,9 @@ pkproje/
   src/modules/performans/   PERFORMANS (2026-10-06, 329; modül 19): tablo yok (göç 0041 yalnız dizin) · hesap.ts (saf: dönem, özet, tamamlanma süresi,
                             zaman grafiği, süreç adımları, günlük iş, GÖRÜNÜRLÜK — kendi / branş / hepsi, kazanç) · server/performans.ts (pano, kişi) ·
                             ui/Performans.tsx · okuyucular: raporlar/server/performans-baglanti.ts, personel/server/performans-baglanti.ts
+  src/modules/firma-ayarlari/ FİRMA AYARLARI (2026-10-06, 334; modül 22): sema.ts (bölüm şemaları, seçenekler) · server/ayarlar.ts (ekran verisi, bölüm
+                            kaydet, firma kodu — çekirdek firmaKoduYaz, göç 0045; logo / ön bilgilendirme / bordro formatı dosyaları) · ui/FirmaAyarlari.tsx
+                            (bölüm kartı + taslak Kaydet / Vazgeç) · belge başlığı künyesi src/server/ayar/ayar.ts firmaBelgeKunyesi (ticari ad, adres, akr., logo)
   src/components/grafik/    TEK GRAFİK ÜRETİCİSİ (329): dikey sütun (maket T9), etiket ölçülerek, gizli tablo (ekran okuyucu)
   src/modules/ekipman/      EKİPMAN (2026-10-04, 309): tesisin kalıcı ekipman kaydı (kod firmada eşsiz; eski kod başkasına verilmez — ekipman_kodu)
   src/modules/teklifler/    TEKLİFLER (2026-10-05, 324; modül 11): göç 0037 (teklif, teklif_kalem, teklif_tesis, fiyat_listesi; teklif_akis: yalnız taslak

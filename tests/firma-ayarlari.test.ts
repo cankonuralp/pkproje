@@ -1,0 +1,125 @@
+/* NEREDEN GELDİ: maket firma-ayarlari.html (R1 ayrı modül; Z1 bölüm başına Kaydet, geçersiz değer kaydedilmez; firma künyesi + logo raporlara —
+   reisim 2026-10-03 "Şirket logosuda firma ayarlarından girilsin, raporlara otomatik çekilsin"; rapor numarası firma kodu "açılmış raporların
+   numarası değişmez") · KOD-GECIS §7 · reisim 2026-10-04: "rol değiştirme, sızma; yetki her zaman sunucuda". GERÇEK PostgreSQL, iki firma (334;
+   göç 0045). Olumsuz kanıt tests/bozan/firma-ayarlari.bozan.ts. */
+import assert from "node:assert/strict";
+import { mkdtempSync, rmSync } from "node:fs";
+import { tmpdir } from "node:os";
+import { join } from "node:path";
+import { after, before, test } from "node:test";
+import type { GomuluKume } from "../src/server/db/gomulu.ts";
+import { havuzKur, kiraciIcinde, type Havuz, type Sorgulayici } from "../src/server/db/kiraci.ts";
+import { klasorDepo } from "../src/server/dosya/depo.ts";
+import { dosyaIndirilebilir } from "../src/server/dosya/dosya.ts";
+import { DOSYA_ERISIMI } from "../src/server/dosya/erisim.ts";
+import { ayarOku, firmaBelgeKunyesi, firmaKunyesi } from "../src/server/ayar/ayar.ts";
+import { ayarDosyasiYaz, ayarKaydet, firmaAyarlari, firmaKoduKaydet, type Kisi } from "../src/modules/firma-ayarlari/server/ayarlar.ts";
+import { testKumesi } from "./yardimci/kume.ts";
+
+let kume: GomuluKume;
+let havuz: Havuz;
+let A: string, B: string;
+let YON: Kisi, DEN: Kisi, PLAN: Kisi, YON_B: Kisi;
+let kisiA: string, kisiB: string;
+const klasor = mkdtempSync(join(tmpdir(), "firma-ayar-depo-"));
+const depo = klasorDepo(klasor);
+const a = <T,>(k: Kisi, is: (db: Sorgulayici) => Promise<T>, firma = A) => kiraciIcinde(havuz, firma, is, { hesapId: k.id });
+const sql = async (firma: string, metin: string, p: unknown[] = []) => (await kiraciIcinde(havuz, firma, (db) => db.sorgu<{ id: string }>(metin, p))).rows[0]?.id;
+async function hesap(firma: string, eposta: string, roller: string[], personel: string | null = null): Promise<Kisi> {
+  const id = (await sql(firma, "INSERT INTO hesap (eposta, ad, roller, durum, personel_id) VALUES ($1, 'Deneme', $2, 'etkin', $3) RETURNING id::text", [eposta, roller, personel]))!;
+  return { id, ad: "Deneme", roller: roller as Kisi["roller"] };
+}
+const tamam = <R extends { durum: string }>(r: R) => { assert.equal(r.durum, "tamam", JSON.stringify(r)); return r as Extract<R, { durum: "tamam" }>; };
+const bayt = (...p: (number[] | string)[]) => new Uint8Array(p.flatMap((x) => (typeof x === "string" ? [...Buffer.from(x, "latin1")] : x)));
+const parca = (ad: string, govde: string) => bayt([0, 0, govde.length >> 8, govde.length & 0xff], ad, govde, [0, 0, 0, 0]);
+const PNG = bayt([0x89, 0x50, 0x4e, 0x47, 0x0d, 0x0a, 0x1a, 0x0a], [...parca("IHDR", "\0\0\0\x01\0\0\0\x01\x08\x02\0\0\0")], [...parca("IDAT", "veri")], [...parca("IEND", "")]);
+const PDF = new TextEncoder().encode("%PDF-1.4\n1 0 obj << /Type /Catalog >> endobj\ntrailer << /Root 1 0 R >>\n%%EOF\n");
+
+before(async () => {
+  kume = await testKumesi();
+  havuz = havuzKur(kume.uygulama);
+  const s = kume.sahipIstemci(); await s.connect();
+  try {
+    [A, B] = (await s.query<{ id: string }>(
+      "INSERT INTO firma (kisa_ad, ad, rapor_kodu) VALUES ('deneme-a', 'Deneme A', 'DA'), ('deneme-b', 'Deneme B', 'DB') RETURNING id")).rows.map((r) => r.id);
+  } finally { await s.end(); }
+  kisiA = (await sql(A, "INSERT INTO personel (ad, basla, meslek) VALUES ('Deneme Teslim Eden', '2024-01-01', 'mak-muh') RETURNING id::text"))!;
+  kisiB = (await sql(B, "INSERT INTO personel (ad, basla, meslek) VALUES ('Deneme B Kişi', '2024-01-01', 'mak-muh') RETURNING id::text"))!;
+  YON = await hesap(A, "yon@deneme-a.example", ["firma_yoneticisi"]);
+  DEN = await hesap(A, "den@deneme-a.example", ["denetci"], kisiA);
+  PLAN = await hesap(A, "plan@deneme-a.example", ["planlama"]);
+  YON_B = await hesap(B, "yon@deneme-b.example", ["firma_yoneticisi"]);
+});
+after(async () => { await havuz?.end(); await kume?.durdur(); rmSync(klasor, { recursive: true, force: true }); });
+
+test("yetki (modül 22): firma yöneticisi görür ve değiştirir; denetçi ve planlama göremez; firma 'gör' verirse salt okunur (istemciden rol gelmez)", async () => {
+  const v = (await a(YON, (db) => firmaAyarlari(db, YON)))!;
+  assert.deepEqual([v.yaz, v.kod, v.firma.kayitAd, v.firma.deger.nusha, v.esik.deger.kalibrasyon, v.kisiler.map((k) => k.ad)], [true, "DA", "Deneme A", 2, 30, ["Deneme Teslim Eden"]]);
+  for (const k of [DEN, PLAN]) {
+    assert.equal(await a(k, (db) => firmaAyarlari(db, k)), null);
+    assert.equal((await a(k, (db) => ayarKaydet(db, k, "imza", -1, { yontem: "e_imza" }))).durum, "yetkisiz");
+    assert.equal((await a(k, (db) => firmaKoduKaydet(db, k, { kod: "ZZ" }))).durum, "yetkisiz");
+  }
+  const GOR = { ...PLAN, matris: { 22: ["gor", "yok", "yok", "yok", "yaz", "yok"] } } as Kisi;
+  assert.equal((await a(GOR, (db) => firmaAyarlari(db, GOR)))!.yaz, false);
+  assert.equal((await a(GOR, (db) => ayarKaydet(db, GOR, "imza", -1, { yontem: "e_imza" }))).durum, "yetkisiz");
+});
+
+test("bölüm kaydet: geçersiz değer kaydedilmez (alan alan Türkçe); sürüm kilidi; dosya alanı korunur; sabit gider tutarı kuruş", async () => {
+  assert.deepEqual(await a(YON, (db) => ayarKaydet(db, YON, "firma", -1, { ad: "Deneme Muayene", adres: "Deneme Cad. 1", eposta: "yanlis", akr: "AB-123", nusha: "3" })),
+    { durum: "gecersiz", hatalar: { eposta: "Geçerli bir e-posta yazın." } });
+  tamam(await a(YON, (db) => ayarKaydet(db, YON, "firma", -1, { ad: "Deneme Muayene", adres: "Deneme Cad. 1", eposta: "rapor@deneme-a.example", akr: "AB-123", nusha: "3" })));
+  assert.equal((await a(YON, (db) => ayarKaydet(db, YON, "firma", -1, { ad: "x", adres: "", eposta: "", akr: "", nusha: "2" }))).durum, "cakisma", "kaydedilmemiş sanan ikinci yazma");
+  assert.equal((await a(YON, (db) => ayarKaydet(db, YON, "mesai", -1, { acik: true, normal_dk: "480", mesai_dk: "180", yillik_fazla_saat: "300" }))).durum, "gecersiz");
+  tamam(await a(YON, (db) => ayarKaydet(db, YON, "mesai", -1, { acik: true, normal_dk: "450", mesai_dk: "120", yillik_fazla_saat: "200" })));
+  assert.deepEqual((await a(YON, (db) => ayarOku(db, "mesai"))).deger, { acik: true, normal_dk: 450, mesai_dk: 120, yillik_fazla_saat: 200, gunluk_ust_dk: 660 });
+  assert.equal((await a(YON, (db) => ayarKaydet(db, YON, "esik", -1, { kalibrasyon: "45", kontrolu_yaklasan_tesis: "30", plan_kontrolu_geliyor: "30", egitim: "15" }))).durum, "gecersiz");
+  tamam(await a(YON, (db) => ayarKaydet(db, YON, "esik", -1, { kalibrasyon: "45", kontrolu_yaklasan_tesis: "60", plan_kontrolu_geliyor: "15", egitim: "120" })));
+  assert.deepEqual(await a(YON, (db) => ayarKaydet(db, YON, "sabit", -1, { kalemler: [{ ad: "", aylik: "100", not: "" }] })),
+    { durum: "gecersiz", hatalar: { "kalemler.0.ad": "Gider adı en az 2 harf." } });
+  tamam(await a(YON, (db) => ayarKaydet(db, YON, "sabit", -1, { kalemler: [{ ad: "Ofis kirası", aylik: "1.250,50", not: "Deneme" }] })));
+  assert.deepEqual((await a(YON, (db) => ayarOku(db, "sabit_gider"))).deger.kalemler, [{ ad: "Ofis kirası", aylik: 125_050, not: "Deneme" }]);
+  /* zimmet teslim eden: yalnız bu firmanın çalışanı */
+  assert.equal((await a(YON, (db) => ayarKaydet(db, YON, "zimmet", -1, { teslim_eden: kisiB }))).durum, "gecersiz", "başka firmanın kişisi");
+  tamam(await a(YON, (db) => ayarKaydet(db, YON, "zimmet", -1, { teslim_eden: kisiA })));
+  assert.equal((await a(YON, (db) => ayarKaydet(db, YON, "bilinmeyen", -1, {}))).durum, "gecersiz");
+});
+
+test("firma kodu: 2 harf A–Z (Türkçe küçük harf büyür); yalnız kendi firması değişir; açılmış raporun numarası değişmez", async () => {
+  assert.equal((await a(YON, (db) => firmaKoduKaydet(db, YON, { kod: "K1" }))).durum, "gecersiz");
+  assert.equal((await a(YON, (db) => firmaKoduKaydet(db, YON, { kod: "KMA" }))).durum, "gecersiz");
+  tamam(await a(YON, (db) => firmaKoduKaydet(db, YON, { kod: "km" })));
+  assert.equal((await a(YON, (db) => firmaKunyesi(db))).kod, "KM");
+  assert.equal((await a(YON_B, (db) => firmaKunyesi(db), B)).kod, "DB", "B'nin kodu değişmedi");
+  /* veritabanı: uygulama rolü firmada yalnız rapor kodunu yazabilir; başka firmayı göremez */
+  await assert.rejects(a(YON, (db) => db.sorgu("UPDATE firma SET ad = 'Deneme' WHERE id = $1", [A])), /permission denied/);
+  assert.equal((await a(YON, (db) => db.sorgu("UPDATE firma SET rapor_kodu = 'XX' WHERE id = $1", [B]))).rowCount, 0);
+});
+
+test("dosyalar: logo yalnız PNG / JPEG (en çok 2 MB), belgelerin başlığına veri adresi olarak gelir; firmanın her kullanıcısı açar, B açamaz; kaldırılan çöpe", async () => {
+  const s0 = (await a(YON, (db) => firmaAyarlari(db, YON)))!.dosyalar.surum.firma;
+  assert.equal((await a(YON, (db) => ayarDosyasiYaz(db, depo, YON, A, "logo", s0, { ad: "logo.pdf", bayt: PDF }))).durum, "gecersiz", "PDF logo olmaz");
+  assert.equal((await a(DEN, (db) => ayarDosyasiYaz(db, depo, DEN, A, "logo", s0, { ad: "logo.png", bayt: PNG }))).durum, "yetkisiz");
+  tamam(await a(YON, (db) => ayarDosyasiYaz(db, depo, YON, A, "logo", s0, { ad: "logo.png", bayt: PNG })));
+  const v = (await a(YON, (db) => firmaAyarlari(db, YON)))!;
+  assert.equal(v.dosyalar.logo?.ad, "logo.png");
+  assert.equal(v.firma.deger.adres, "Deneme Cad. 1", "logo yazılırken öteki alanlar korunur");
+  const k = await a(YON, (db) => firmaBelgeKunyesi(db, depo));
+  assert.deepEqual([k.ad, k.kod, k.adres, k.akr, k.nusha, k.logo?.startsWith("data:image/png;base64,")], ["Deneme Muayene", "KM", "Deneme Cad. 1", "AB-123", 3, true]);
+  const logo = v.dosyalar.logo!.id;
+  assert.ok(await a(DEN, (db) => dosyaIndirilebilir(db, DEN, logo, DOSYA_ERISIMI)), "firmanın her kullanıcısı");
+  assert.equal(await a(YON_B, (db) => dosyaIndirilebilir(db, YON_B, logo, DOSYA_ERISIMI), B), null, "B göremez");
+  /* şablonlar: bordro formatı PDF ya da Excel; kaldırma */
+  const s1 = v.dosyalar.surum.sablon;
+  tamam(await a(YON, (db) => ayarDosyasiYaz(db, depo, YON, A, "bordro_format", s1, { ad: "bordro.pdf", bayt: PDF })));
+  tamam(await a(YON, (db) => ayarDosyasiYaz(db, depo, YON, A, "logo", v.dosyalar.surum.firma, null)));
+  assert.equal((await a(YON, (db) => firmaAyarlari(db, YON)))!.dosyalar.logo, null);
+  assert.equal((await a(YON, (db) => db.sorgu("SELECT 1 FROM dosya WHERE id = $1 AND cop IS NOT NULL", [logo]))).rowCount, 1, "eski logo çöpte");
+  assert.equal((await a(YON, (db) => firmaBelgeKunyesi(db, depo))).logo, null);
+});
+
+test("firma sızıntısı: B kendi ayarlarını görür (başlangıç değerleri), A'nınkini değil", async () => {
+  const v = (await a(YON_B, (db) => firmaAyarlari(db, YON_B), B))!;
+  assert.deepEqual([v.kod, v.firma.deger.ad, v.firma.deger.nusha, v.esik.deger.kalibrasyon, v.sabit.deger.kalemler, v.kisiler.map((k) => k.ad)],
+    ["DB", "", 2, 30, [], ["Deneme B Kişi"]]);
+});

@@ -13,6 +13,8 @@ import { DOSYA_MODULU as EGITIM_DOSYASI, egitimDosyasiGorulur } from "../../modu
 import { GIDER_DOSYA, giderDosyasiGorulur } from "../../modules/muhasebe/server/giderler.ts";
 import { IZIN_DOSYA, izinDosyasiGorulur } from "../../modules/talepler/server/talepler.ts";
 import { BELGE_DOSYA, BELGE_IMZALI, belgeDosyasiGorulur } from "../../modules/onaylar/server/belgeler.ts";
+import { ayarDosyasiGorulur } from "../../modules/firma-ayarlari/server/ayarlar.ts";
+import { AYAR_DOSYA } from "../ayar/ayar.ts";
 import { DOSYA as PER_DOSYA, gizliDosyaGorulur, kartDosyasiGorulur } from "../../modules/personel/server/dosyalar.ts";
 import { DOSYA_MODULU as TUR_DOSYASI, turDosyasiGorulur } from "../../modules/ekipman-turleri/server/turler.ts";
 import { DOSYA_MODULU as CIHAZ_DOSYASI, cihazDosyasiGorulur } from "../../modules/olcum-cihazlari/server/cihazlar.ts";
@@ -44,4 +46,5 @@ export const DOSYA_ERISIMI: ErisimKaydi = Object.freeze({
   [IZIN_DOSYA]: (db, kisi, kayitId) => izinDosyasiGorulur(db, kisi as YetkiHesabi, kayitId),
   [BELGE_DOSYA]: (db, kisi, kayitId) => belgeDosyasiGorulur(db, kisi as YetkiHesabi, kayitId),
   [BELGE_IMZALI]: (db, kisi, kayitId) => belgeDosyasiGorulur(db, kisi as YetkiHesabi, kayitId),
+  [AYAR_DOSYA]: (db, kisi, kayitId) => ayarDosyasiGorulur(db, kisi as YetkiHesabi, kayitId),
 });

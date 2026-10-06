@@ -3,6 +3,7 @@
    (Teklifler "gör" düzeyi). Önbelleğe alınmaz; kalıcı bağlantı yok (her istekte oturumla üretilir). */
 import { teklifPdf } from "../../../../../belge/pdf";
 import { teklifBelgesiVerisi } from "../../../../../modules/teklifler/server/teklifler";
+import { depo } from "../../../../../server/dosya/depo";
 import { istekOturumu, oturumIslemi } from "../../../../../server/kimlik/istek";
 
 export const runtime = "nodejs";
@@ -13,7 +14,7 @@ export async function GET(_istek: Request, { params }: { params: Promise<{ id: s
   const o = await istekOturumu();
   if (!o) return new Response("Oturum gerekli", { status: 403, headers: DUZ });
   const { id } = await params;
-  const v = await oturumIslemi(o, (db) => teklifBelgesiVerisi(db, o, id));
+  const v = await oturumIslemi(o, (db) => teklifBelgesiVerisi(db, o, id, depo()));
   if (!v) return new Response("Bulunamadı", { status: 404, headers: DUZ });
   const pdf = await teklifPdf(v);
   const ad = `${v.no}.pdf`;
