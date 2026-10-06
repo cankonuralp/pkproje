@@ -2341,6 +2341,19 @@ revizyon, alan kopyalama, hafif kusur devri, meslek eşleşme denetimi).
 - Emsal ürünler: https://opwire.app/iso-17020-periyodik-kontrol-yazilimi/ · https://17020muayene.vidco.com.tr/ · https://akuple.com/asansor-kontrol-yazilimi/ · https://ensyazilim.com/
 
 ## 11 · Değişiklik günlüğü
+- 2026-10-06 (335–336 incelemesi): çapraz inceleme (dört bakış + çürütme; 22 bulgudan 21'i doğrulandı, aynıları birleşti) düzeltmeleri.
+  **Güvenlik:** firmanın eklediği belge türünün anahtarı (ekN) kaldırılınca yeni türe yeniden veriliyordu — eski bir seçim ya da eski bir belge
+  yeni (kişisel olabilecek) türün adıyla müşteriye açılabiliyordu; artık sayaçla, kaldırılan anahtar bir daha verilmez (ek1 → ek2 …), yeni tür
+  müşteriye kapalı doğar. Tür ekle / kaldır, müşteriye açık belgelerin kaydı ve firmanın türünde özlük belgesi ekleme firma başına kilitle
+  birbirini bekler (kaldırma sayımı ile ekleme yarışmaz); tür kaldırılırken müşteriye açık listeden düşürme yazılamazsa işlem geri alınır (yazma
+  hatası yutulmuyordu). **Veri:** fiyat listesi iyimser kilitle — ekran gördüğü fiyatları gönderir, yalnız değişen türler yazılır, o tür bu arada
+  değiştiyse hiçbiri yazılmaz (eski ekran başkasının fiyatını eziyordu); aynı türe aynı anda ilk fiyat girene çakışma. Müşteriye açık özlük türü
+  sınırı 40 (7 sabit + 30 ek). **Mantık:** sır kaldırmak ana şifreleme anahtarı istemez; ekranda "Açık" seçiliyken anahtar girilince yapay zekâ da
+  açılır (maket Z1; bölümün sürümüyle). **Arayüz:** tür kaldırılınca yalnız o tür taslaktan düşer (öteki kaydedilmemiş seçimler korunur), kayıt
+  hatası alanın altında görünür; kullanımdaki tür sorulmadan "kaldırılamaz: n personelde belge var" der; Türü ekle / anahtar kaydet / Vazgeç /
+  Kaldır sonrası odak; anahtar girerken çift etiket kalktı. Uçtan uca: belge onayı testi önce kendi dönemini seçer (öteki projenin dönemi açılışta
+  seçili olabiliyordu — 122773d CI'ında tablet düştü). Kilit: firma-ayarlari.test (anahtar yeniden verilmez, kullanım, fiyat kilidi, anahtarla
+  açma, ana anahtarsız kaldırma), musteri-paneli.test (ek tür müşteri panelinde adıyla, 0046 işlevi uygulama rolüne kapalı); olumsuz kanıt +1.
 - 2026-10-06 (334 incelemesi): çapraz inceleme (dört bakış + çürütme; 28 bulgudan 23'ü doğrulandı, birbirinin aynısı olanlar birleşti)
   düzeltmeleri. **Güvenlik:** Firma ayarlarını "kendi" / "branşı" düzeyi de görüyordu (sabit giderler, personel listesi) — artık yalnız "gör" ve "yaz"
   (Muhasebe ve Müşteriler gibi; firma ayarında kişiye ya da branşa ait kayıt yok). **Veri:** eski ekranla (başka sekme / başka yönetici kaydetmiş)

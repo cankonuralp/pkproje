@@ -42,8 +42,9 @@ const firmaKimligi = async (db: Sorgulayici) => {
   return r;
 };
 
-/** sırrı yazar (ya da duz = null ile kaldırır). İz: yalnız "değişti" ve son 4 — değer asla. */
-export async function sirYaz(db: Sorgulayici, ad: SirAdi, duz: string | null, iz: { kim: string }, anahtar = anaAnahtar()): Promise<void> {
+/** sırrı yazar (ya da duz = null ile kaldırır). İz: yalnız "değişti" ve son 4 — değer asla. Ana anahtar yalnız şifrelerken gerekir (kaldırma
+    ana anahtarsız da olur — 335 incelemesi) */
+export async function sirYaz(db: Sorgulayici, ad: SirAdi, duz: string | null, iz: { kim: string }, anahtar?: Buffer): Promise<void> {
   if (!AD.test(ad) || !(SIR_ADLARI as readonly string[]).includes(ad)) throw new Error("Bilinmeyen sır");
   if (duz !== null && (duz.length === 0 || duz.length > 4000)) throw new Error("Geçersiz sır uzunluğu");
   const firmaId = await firmaKimligi(db);

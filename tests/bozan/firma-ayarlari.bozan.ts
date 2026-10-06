@@ -4,7 +4,8 @@
    2. Teslim eden denetimi kalkınca başka firmanın kişisi zimmet formunun başlangıç teslim edeni olur.
    3. (335) Fiyat denetimi kalkınca sıfır birim fiyat kaydedilir.
    4. (334 incelemesi) Görme "gör / yaz" yerine "yok değil" olunca "kendi" verilen denetçi bütün ayarları (sabit giderler, personel) görür.
-   5. (334 incelemesi) Sürüm ön denetimi ve çakışmada çöpe atma kalkınca eski ekranın yüklediği logo hiçbir ayara bağlı olmadan etkin kalır. */
+   5. (334 incelemesi) Sürüm ön denetimi ve çakışmada çöpe atma kalkınca eski ekranın yüklediği logo hiçbir ayara bağlı olmadan etkin kalır.
+   6. (335 incelemesi) Belge türü anahtarı "en küçük boş numara" olunca kaldırılan türün anahtarı yeni türe yeniden verilir. */
 import assert from "node:assert/strict";
 import { mkdtempSync, readFileSync, rmSync, writeFileSync } from "node:fs";
 import { tmpdir } from "node:os";
@@ -66,7 +67,7 @@ test("fiyat denetimi kalkınca sıfır birim fiyat kaydedilir (teklif dışı ra
   const m = await bozuk("if (!t.success || t.data <= 0 || t.data > 100_000_000_000)", "if (!t.success)");
   const ht = (await kiraciIcinde(havuz, A, (db) => db.sorgu<{ id: string }>("INSERT INTO ekipman_turu (kod, ad, grup, brans, periyot) VALUES ('HT', 'Hava tankı', 'basincli', 'm', 12) RETURNING id::text"))).rows[0].id;
   const YON = { id: yonId, ad: "Deneme", roller: ["firma_yoneticisi" as const] };
-  const r = await kiraciIcinde(havuz, A, (db) => m.ayarKaydet(db, YON, "fiyat", 0, { fiyatlar: { [ht]: "0" } }), { hesapId: yonId });
+  const r = await kiraciIcinde(havuz, A, (db) => m.ayarKaydet(db, YON, "fiyat", 0, { fiyatlar: { [ht]: "0" }, gorulen: { [ht]: "" } }), { hesapId: yonId });
   assert.equal(r.durum, "tamam", "bozuk: sıfır fiyat kaydedildi");
 });
 
@@ -91,4 +92,16 @@ test("sürüm ön denetimi ve çakışmada çöpe atma kalkınca eski ekranın y
   assert.equal(r.durum, "cakisma");
   const n = (await kiraciIcinde(havuz, A, (db) => db.sorgu<{ n: string }>("SELECT count(*) n FROM dosya WHERE modul = 'firma_ayar' AND cop IS NULL"))).rows[0].n;
   assert.equal(Number(n), 1, "bozuk: çakışmada yüklenen dosya etkin kaldı");
+});
+
+/* 335 incelemesi */
+test("belge türü anahtarı 'en küçük boş numara' olunca kaldırılan türün anahtarı yeniden verilir", async () => {
+  const m = await bozuk("  const n = t.son + 1;\n", "  let n = 1; while (t.ek.some((x) => x.k === `ek${n}`)) n++;\n");
+  const YON = { id: yonId, ad: "Deneme", roller: ["firma_yoneticisi" as const] };
+  const is = <T,>(f: (db: Parameters<Parameters<typeof kiraciIcinde>[2]>[0]) => Promise<T>) => kiraciIcinde(havuz, A, f, { hesapId: yonId });
+  await is((db) => m.belgeTuruEkle(db, YON, { ad: "Deneme Bir", kisisel: false }));
+  await is((db) => m.belgeTuruKaldir(db, YON, "ek1"));
+  await is((db) => m.belgeTuruEkle(db, YON, { ad: "Deneme İki", kisisel: true }));
+  const v = await is((db) => m.firmaAyarlari(db, YON));
+  assert.ok(v!.mbelge.turler.some((t) => t.k === "ek1" && t.ad === "Deneme İki"), "bozuk: kaldırılan türün anahtarı yeni türe verildi");
 });

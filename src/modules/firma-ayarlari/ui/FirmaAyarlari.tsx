@@ -48,7 +48,8 @@ function Kart({ kesim, genis = false, kirli, mesgul, kaydet, vazgec, yaz, sayac,
   );
 }
 
-function useKesim<T>(kesim: AyarKesimi, ilk: T, surum: number, gonder?: (d: T) => Promise<AyarYaniti>) {
+/** uzlastir: sunucu değeri değişince taslak kirliyse (kaydedilmemiş değişiklik) tümüyle atılmaz, yeni değerle uzlaştırılır */
+function useKesim<T>(kesim: AyarKesimi, ilk: T, surum: number, gonder?: (d: T) => Promise<AyarYaniti>, uzlastir?: (taslak: T) => T) {
   const router = useRouter();
   const bildir = useBildir();
   const [mesgul, baslat] = useTransition();
@@ -57,7 +58,7 @@ function useKesim<T>(kesim: AyarKesimi, ilk: T, surum: number, gonder?: (d: T) =
   /* sunucudaki değer değişince (kaydettikten sonra yenileme — biçim düzelmiş olabilir) taslak ona eşitlenir */
   const ilkJson = JSON.stringify(ilk);
   const [son, setSon] = useState(ilkJson);
-  if (son !== ilkJson) { setSon(ilkJson); setD(ilk); setH({}); }
+  if (son !== ilkJson) { setSon(ilkJson); setD(uzlastir && JSON.stringify(d) !== son ? uzlastir(d) : ilk); setH({}); }
   const kirli = JSON.stringify(d) !== ilkJson;
   const kaydet = () => baslat(async () => {
     const r = await (gonder ? gonder(d) : ayarKaydetEylemi(kesim, surum, d));
@@ -292,7 +293,7 @@ function SabitGiderler({ v }: { v: Veri }) {
 /* ── FİYAT LİSTESİ (335; maket "Fiyat listesi": tür başına KDV hariç birim fiyat, dört sütuna kadar) ── */
 function FiyatListesi({ v }: { v: Veri }) {
   const ilk = { fiyatlar: Object.fromEntries(v.fiyat.turler.map((t) => [t.id, t.fiyat === null ? "" : para(t.fiyat)])) as Record<string, string> };
-  const s = useKesim("fiyat", ilk, 0);
+  const s = useKesim("fiyat", ilk, 0, (d) => ayarKaydetEylemi("fiyat", 0, { fiyatlar: d.fiyatlar, gorulen: ilk.fiyatlar }));
   return (
     <Kart kesim="fiyat" genis yaz={v.yaz} kirli={s.kirli} mesgul={s.mesgul} kaydet={s.kaydet} vazgec={s.vazgec} sayac={<><b>{v.fiyat.turler.length}</b> tür</>}>
       <p className={stil.ipucuUst}>KDV hariç birim fiyat. Yeni teklif bu listeden dolar; teklif dışı rapor bu fiyatla faturalanır. Kabul edilmiş tekliflerin fiyatı değişmez.</p>
@@ -318,7 +319,8 @@ function MusteriBelgeleri({ v }: { v: Veri }) {
   const bildir = useBildir();
   const onayla = useOnayla();
   const [mesgulTur, baslatTur] = useTransition();
-  const s = useKesim("mbelge", { secili: [...v.mbelge.deger.secili].sort() }, v.mbelge.surum);
+  const s = useKesim("mbelge", { secili: [...v.mbelge.deger.secili].sort() }, v.mbelge.surum, undefined,
+    (d) => ({ secili: d.secili.filter((k) => v.mbelge.turler.some((t) => t.k === k)) }));
   const [ekle, setEkle] = useState<null | { ad: string; kisisel: boolean; hata: string | null }>(null);
   const sec = new Set(s.d.secili);
   const hassas = v.mbelge.turler.filter((t) => t.kisisel && sec.has(t.k));
@@ -327,13 +329,19 @@ function MusteriBelgeleri({ v }: { v: Veri }) {
     const r = await belgeTuruEkleEylemi({ ad: ekle.ad, kisisel: ekle.kisisel });
     if (!r.tamam) { setEkle({ ...ekle, hata: r.hatalar?.ad ?? r.genel ?? "Eklenemedi." }); requestAnimationFrame(() => document.getElementById(BT.ad)?.focus()); return; }
     setEkle(null); bildir(r.bildirim ?? "Eklendi."); router.refresh();
+    requestAnimationFrame(() => document.querySelector<HTMLElement>("[data-tur-ekle]")?.focus());
   });
-  const turKaldir = async (k: string, ad: string) => {
+  const turKaldir = async (k: string, ad: string, kullanim: number) => {
+    /* kullanımdaki tür: sorulmadan söylenir (maket bt-kaldir) */
+    if (kullanim > 0) { bildir(`${ad} kaldırılamaz: ${kullanim} personelde bu türde yüklü belge var.`); return; }
     if (!(await onayla({ baslik: "Belge türünü kaldır", metin: `${ad} listeden ve müşteriye açık belgelerden kalkar.`, tus: "Kaldır", tehlike: true }))) return;
     baslatTur(async () => {
       const r = await belgeTuruKaldirEylemi(k);
       bildir(r.tamam ? r.bildirim ?? "Kaldırıldı." : r.genel ?? "Kaldırılamadı.");
-      if (r.tamam) { router.refresh(); requestAnimationFrame(() => document.getElementById(bolumId("mbelge"))?.focus()); }
+      if (r.tamam) {
+        s.setD({ secili: s.d.secili.filter((x) => x !== k) });   // taslağın geri kalanı korunur
+        router.refresh(); requestAnimationFrame(() => document.getElementById(bolumId("mbelge"))?.focus());
+      }
     });
   };
   return (
@@ -350,10 +358,11 @@ function MusteriBelgeleri({ v }: { v: Veri }) {
             </label>
           );
           return t.ek && v.yaz ? <div key={t.k} className={stil.ekSatir}>{kutu}
-            <Tus tur="ikincil" ikon="x" disabled={mesgulTur} aria-label={`${t.ad} türünü kaldır`} onClick={() => turKaldir(t.k, t.ad)}>Kaldır</Tus></div>
+            <Tus tur="ikincil" ikon="x" disabled={mesgulTur} aria-label={`${t.ad} türünü kaldır`} onClick={() => turKaldir(t.k, t.ad, t.kullanim)}>Kaldır</Tus></div>
             : <div key={t.k}>{kutu}</div>;
         })}
       </fieldset>
+      {s.h.secili && <p className={stil.hata} role="alert">{s.h.secili}</p>}
       {hassas.length > 0 && <Serit tur="uyari" ikon="triangle-alert">Kişisel veri içeren belge müşteriye açık: {hassas.map((t) => t.ad).join(", ")}. Personelin açık rızası gerekebilir (KVKK); karar firmanın.</Serit>}
       {v.yaz && (ekle ? <div className={stil.ekForm}>
         <FormIzgara>
@@ -459,13 +468,18 @@ function YapayZeka({ v }: { v: Veri }) {
   const [yeni, setYeni] = useState<null | { deger: string; hata: string | null }>(v.yz.anahtar.tanimli ? null : { deger: "", hata: null });
   const anahtarKaydet = () => baslatA(async () => {
     if (!yeni) return;
-    const r = await yzAnahtarEylemi({ anahtar: yeni.deger });
+    /* ekranda "Açık" seçili ama kayıtlı değilse anahtarla birlikte açılır (maket Z1: anahtarı giren yapay zekâyı açmak istiyor) */
+    const r = await yzAnahtarEylemi({ anahtar: yeni.deger }, s.d.acik && !v.yz.deger.acik ? v.yz.surum : null);
     if (!r.tamam) { setYeni({ deger: "", hata: r.hatalar?.anahtar ?? r.genel ?? "Kaydedilemedi." }); requestAnimationFrame(() => document.getElementById(ZID.anahtar)?.focus()); return; }
     setYeni(null); bildir(r.bildirim ?? "API anahtarı kaydedildi."); router.refresh();
+    requestAnimationFrame(() => document.querySelector<HTMLElement>("[data-yz-degistir]")?.focus());
   });
   const anahtarKaldir = async () => {
     if (!(await onayla({ baslik: "API anahtarını kaldır", metin: "Fotoğraftan okuma ve S.A.Y, yeni anahtar girilene kadar çalışmaz.", tus: "Kaldır", tehlike: true }))) return;
-    baslatA(async () => { const r = await yzAnahtarEylemi(null); bildir(r.tamam ? r.bildirim ?? "Kaldırıldı." : r.genel ?? "Kaldırılamadı."); if (r.tamam) { setYeni({ deger: "", hata: null }); router.refresh(); } });
+    baslatA(async () => {
+      const r = await yzAnahtarEylemi(null); bildir(r.tamam ? r.bildirim ?? "Kaldırıldı." : r.genel ?? "Kaldırılamadı.");
+      if (r.tamam) { setYeni({ deger: "", hata: null }); router.refresh(); requestAnimationFrame(() => document.getElementById(ZID.anahtar)?.focus()); }
+    });
   };
   return (
     <Kart kesim="yz" genis yaz={v.yaz} kirli={s.kirli} mesgul={s.mesgul} kaydet={s.kaydet} vazgec={s.vazgec} sayac={v.yz.deger.acik ? "açık" : "kapalı"}>
@@ -477,18 +491,18 @@ function YapayZeka({ v }: { v: Veri }) {
       </div>
       {s.d.acik && <>
         <Serit tur="uyari" ikon="triangle-alert">Fotoğraf ve maskelenmiş rapor bilgisi (müşteri adı, adres, kişi adı, numaralar gönderilmez) yurt dışına, Anthropic&apos;e (ABD) gider. KVKK yurt dışı aktarım koşulları firmanın sorumluluğunda.</Serit>
-        <p className={stil.etiket}>API anahtarı</p>
-        {yeni === null ? <div className={stil.dosyaSatir}>
+        {yeni === null ? <><p className={stil.etiket}>API anahtarı</p><div className={stil.dosyaSatir}>
           <span className={stil.anahtar}>…{v.yz.anahtar.son4} kayıtlı</span>
-          {v.yaz && <><Tus tur="ikincil" ikon="pencil" disabled={mesgulA} onClick={() => { setYeni({ deger: "", hata: null }); requestAnimationFrame(() => document.getElementById(ZID.anahtar)?.focus()); }}>Değiştir</Tus>
+          {v.yaz && <><Tus tur="ikincil" ikon="pencil" disabled={mesgulA} data-yz-degistir="" onClick={() => { setYeni({ deger: "", hata: null }); requestAnimationFrame(() => document.getElementById(ZID.anahtar)?.focus()); }}>Değiştir</Tus>
             <Tus tur="ikincil" ikon="trash-2" disabled={mesgulA} onClick={anahtarKaldir} aria-label="API anahtarını kaldır">Kaldır</Tus></>}
-        </div> : v.yaz && <>
+        </div></> : v.yaz && <>
           <Alan id={ZID.anahtar} etiket="API anahtarı" genis hata={yeni.hata ?? undefined} sonuc={yeni.hata ? undefined : "Anthropic Console'dan alınır (sk-ant- ile başlar). Şifreli saklanır, bir daha gösterilmez."}>
             <Girdi id={ZID.anahtar} type="password" value={yeni.deger} maxLength={210} spellCheck={false} hata={!!yeni.hata} mesajli onChange={(e) => setYeni({ deger: e.target.value, hata: null })} />
           </Alan>
           <div className={stil.tuslar}>
             <Tus ikon="check" disabled={mesgulA} aria-busy={mesgulA || undefined} onClick={anahtarKaydet}>Anahtarı kaydet</Tus>
-            {v.yz.anahtar.tanimli && <Tus tur="ikincil" disabled={mesgulA} onClick={() => setYeni(null)}>Vazgeç</Tus>}
+            {v.yz.anahtar.tanimli && <Tus tur="ikincil" disabled={mesgulA}
+              onClick={() => { setYeni(null); requestAnimationFrame(() => document.querySelector<HTMLElement>("[data-yz-degistir]")?.focus()); }}>Vazgeç</Tus>}
           </div>
         </>}
         <FormIzgara>

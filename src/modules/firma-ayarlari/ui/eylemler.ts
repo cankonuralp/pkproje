@@ -30,9 +30,9 @@ export async function belgeTuruEkleEylemi(girdi: unknown): Promise<AyarYaniti> {
 export async function belgeTuruKaldirEylemi(k: string): Promise<AyarYaniti> {
   return islem((o) => oturumIslemi(o, (db) => belgeTuruKaldir(db, o, typeof k === "string" ? k : "")));
 }
-/** API anahtarı: girdi { anahtar } ya da null (kaldır); anahtar yanıta konmaz */
-export async function yzAnahtarEylemi(girdi: unknown | null): Promise<AyarYaniti> {
-  return islem((o) => oturumIslemi(o, (db) => yzAnahtarYaz(db, o, girdi === null ? null : girdi)));
+/** API anahtarı: girdi { anahtar } ya da null (kaldır); anahtar yanıta konmaz. ac: ekranda "Açık" seçiliyse bölümün gördüğü sürüm */
+export async function yzAnahtarEylemi(girdi: unknown | null, ac: number | null = null): Promise<AyarYaniti> {
+  return islem((o) => oturumIslemi(o, (db) => yzAnahtarYaz(db, o, girdi === null ? null : girdi, typeof ac === "number" ? ac : null)));
 }
 /** form: ne (logo | on_bilgi | bordro_format), surum, dosya (yoksa kaldır) */
 export async function ayarDosyasiEylemi(form: FormData): Promise<AyarYaniti> {

@@ -29,6 +29,7 @@ import { musteriKaydet, musteriPasif } from "../src/modules/musteriler/server/mu
 import { panelPersoneli, panelPlanlari, panelRaporlari, panelRaporu, panelSozlesmeleri, panelSozlesmesi, panelUygunsuzluklari } from "../src/modules/musteri-paneli/server/panel.ts";
 import { kusurParcala } from "../src/modules/musteri-paneli/ui/kusur.ts";
 import { atamaEkle, ozlukEkle } from "../src/modules/personel/server/dosyalar.ts";
+import { belgeTuruEkle } from "../src/modules/firma-ayarlari/server/ayarlar.ts";
 import { egitimKaydet, egitimTuruKaydet } from "../src/modules/egitimler/server/egitimler.ts";
 import { baslangic } from "../src/server/ayar/ayar.ts";
 import { imzaliYukle as sozlesmeImzaliYukle, sozlesmeHazirla } from "../src/modules/sozlesmeler/server/sozlesmeler.ts";
@@ -506,6 +507,13 @@ test("MUAYENE PERSONELİ (323): tesislerine giden kişiler (son imzalı raporu y
   }
   await assert.rejects(sql(A, "SELECT * FROM musteri_personeli()"), /permission denied/, "personel işlemi işlevi çağıramaz");
   await assert.rejects(sql(A, "SELECT * FROM musteri_personel_belgeleri()"), /permission denied/);
+  /* 335 (335 incelemesi): firmanın eklediği tür müşteri panelinde adıyla (0046 musteri_belge_turleri); uygulama rolü işlevi çağıramaz */
+  tamam(await a(yon, (db) => belgeTuruEkle(db, yon, { ad: "Deneme Yetki Kartı", kisisel: false })));
+  const ekBelge = await ozluk(FA.denP, "ek1");
+  await sql(A, "UPDATE firma_ayar SET deger = $1, surum = surum + 1 WHERE bolum = 'musteri_belge'", [{ ozluk: ["ekipnet", "kimlik", "ek1"], egitim: [], atama: true }], yon.id);
+  const den3 = (await l(FA.m1, null)).find((x) => x.id === FA.denP)!;
+  assert.ok(den3.belgeler.some((b) => b.ad === "Deneme Yetki Kartı" && b.dosya === ekBelge), "ek tür adıyla görünür");
+  await assert.rejects(sql(A, "SELECT * FROM musteri_belge_turleri()"), /permission denied/, "personel işlemi işlevi çağıramaz");
 });
 
 test("PLANLANAN KONTROLLER + PASİF (320–323 incelemesi): pasife alınan ekipmanın eski raporu tesisin sonraki kontrol tarihini belirlemez (firma tarafındaki kapsam hesabı gibi); raporu listede durur; tesissiz müşteride satır yok", async () => {

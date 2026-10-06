@@ -25,10 +25,12 @@ test("belge onayı: muhasebe bordroyu imzaya gönderir, denetçi Diğer belgeler
   await hazir(page);
   await page.getByRole("button", { name: "Maaş bordrosu gönder" }).click();
   const p = page.getByRole("dialog", { name: "Maaş bordrosu gönder" });
-  await expect(p.getByRole("button", { name: "Deneme Denetçi bordro dosyası seç" })).toBeVisible({ timeout: 30_000 });
+  /* önce dönem: pencerenin başlangıç dönemi öteki projenin dönemi olabilir (orada bordro gönderilmiş, dosya seç tuşu yok — 2026-10-06) */
+  await expect(p.getByRole("combobox", { name: "Dönem" })).toBeVisible({ timeout: 30_000 });
   await p.getByRole("combobox", { name: "Dönem" }).click();
   await p.getByRole("option", { name: donem, exact: true }).click();
   await expect(p.getByRole("combobox", { name: "Dönem" })).toContainText(donem);
+  await expect(p.getByRole("button", { name: "Deneme Denetçi bordro dosyası seç" })).toBeVisible({ timeout: 30_000 });
   /* Formattan oluştur: format yokken şerit */
   await p.getByRole("button", { name: "Formattan oluştur" }).click();
   await expect(p.getByText("Firma ayarlarında bordro formatı yok").first()).toBeVisible();

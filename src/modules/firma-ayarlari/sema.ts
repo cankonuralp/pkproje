@@ -60,7 +60,11 @@ export const SabitGiderGirdisi = z.object({
 });
 
 /** fiyat listesi (335): tür → TL (boş: fiyatsız; doluysa sıfırdan büyük) */
-export const FiyatGirdisi = z.object({ fiyatlar: z.record(z.string().regex(/^[0-9a-f-]{36}$/), z.string().max(20)) });
+export const FiyatGirdisi = z.object({
+  fiyatlar: z.record(z.string().regex(/^[0-9a-f-]{36}$/), z.string().max(20)),
+  /** ekranın gördüğü fiyatlar (iyimser kilit; yetki vermez) */
+  gorulen: z.record(z.string().regex(/^[0-9a-f-]{36}$/), z.string().max(20)),
+});
 /** müşteriye açık belge türleri: seçili anahtarlar (özlük türü, "atama", "eg:<eğitim türü>") */
 export const MusteriBelgeGirdisi = z.object({ secili: z.array(z.string().max(40)).max(200) });
 export const BelgeTuruGirdisi = z.object({

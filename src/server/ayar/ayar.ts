@@ -79,14 +79,16 @@ export const AYAR_BOLUMLERI = {
       sertifikası yok (maketteki gibi tür başına açılır, "hepsi" yok; sonradan eklenen tür kapalı başlar — 320–323 incelemesi). Veritabanı işlevi
       musteri_personel_belgeleri ayar yokken aynısını uygular (0035, kilit testi) */
   musteri_belge: z.object({
-    ozluk: z.array(z.string().regex(/^[a-z0-9]{2,12}$/)).max(30).default(["ekipnet"]),
+    ozluk: z.array(z.string().regex(/^[a-z0-9]{2,12}$/)).max(40).default(["ekipnet"]),
     egitim: z.array(z.string().regex(/^[0-9a-f-]{36}$/)).max(100).default([]),
     atama: z.boolean().default(false),
   }),
-  /** Firmanın eklediği özlük belge türleri (335; maket Z5 "Belge türü ekle"): anahtar ek1–ek30, ad, kişisel veri mi. Personel'de özlük belgesi
-      yüklerken seçilir, müşteriye açılabilir (başlangıçta kapalı); kaldırma yalnız o türde belge yokken */
+  /** Firmanın eklediği özlük belge türleri (335; maket Z5 "Belge türü ekle"): anahtar ekN, ad, kişisel veri mi; en çok 30 tür. Personel'de özlük
+      belgesi yüklerken seçilir, müşteriye açılabilir (başlangıçta kapalı); kaldırma yalnız o türde belge yokken. son: verilmiş en büyük N — kaldırılan
+      türün anahtarı bir daha VERİLMEZ (335 incelemesi: yeniden verilince eski seçim / eski belge yeni türün adıyla müşteriye açılabiliyordu) */
   belge_tur_ek: z.object({
-    turler: z.array(z.object({ k: z.string().regex(/^ek([1-9]|[12][0-9]|30)$/), ad: z.string().trim().min(2).max(60), kisisel: z.boolean().default(false) })).max(30).default([]),
+    turler: z.array(z.object({ k: z.string().regex(/^ek[1-9][0-9]{0,2}$/), ad: z.string().trim().min(2).max(60), kisisel: z.boolean().default(false) })).max(30).default([]),
+    son: z.number().int().min(0).max(999).default(0),
   }),
   /** Sabit giderler (328; maket MV.SABIT_GIDER — araç kira, ofis kirası, ofis giderleri, vergi ve harçlar …): ad, aylık tutar (KURUŞ), not.
       Gelir-gider ve kârlılığın genel gider payı buradan; başlangıçta boş (firma girer — Firma ayarları) */
@@ -168,6 +170,12 @@ export async function firmaBelgeKunyesi(db: Sorgulayici, depo: Depo | null): Pro
 
 /** firma ayarlarının dosyaları (logo, ön bilgilendirme formu, bordro formatı): kayıt = firma */
 export const AYAR_DOSYA = "firma_ayar";
+
+/** firmanın belge türleri kilidi (335 incelemesi): tür ekle / kaldır, müşteriye açık belgelerin kaydı ve firmanın eklediği türde özlük belgesi
+    ekleme birbirini bekler — kaldırma sayımı ile ekleme yarışmaz, kaldırılan tür seçimde kalmaz. İşlem bitince bırakılır. */
+export async function belgeTurKilidi(db: Sorgulayici): Promise<void> {
+  await db.sorgu("SELECT pg_advisory_xact_lock(hashtextextended('belge_tur:' || gecerli_firma()::text, 0))");
+}
 
 /** firma kodu (rapor numarasının başı; açılmış raporun numarası değişmez): yalnız kendi firması, 2 büyük harf A–Z (0045 sütun yetkisi).
     Yetki ÇAĞIRANDA (Firma ayarları "değiştirir"). İyimser kilit: istemcinin gördüğü kod hâlâ kayıtlıysa yazılır (sessiz ezme yok — 334

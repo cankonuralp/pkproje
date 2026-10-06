@@ -18,7 +18,7 @@ import { kisininVarliklari, type VarlikSatiri } from "../../zimmetler/server/zim
 import { belgeGonder, bordroBelgeleri, bordroKilidi, guncelBordroBelgesi, kaynakBelgesiniIptal } from "../../onaylar/server/belge-baglanti.ts";
 import { bordroBelgeAdi, type BelgeDurumu } from "../../onaylar/sema.ts";
 import { AtamaGirdisi, BordroGirdisi, OzlukGirdisi, ozlukTurleri, type EkTur } from "../sema.ts";
-import { ayarOku } from "../../../server/ayar/ayar.ts";
+import { ayarOku, belgeTurKilidi } from "../../../server/ayar/ayar.ts";
 
 /** firmanın eklediği özlük türleri (Firma ayarları; 335) */
 export const ekTurler = async (db: Sorgulayici): Promise<EkTur[]> => (await ayarOku(db, "belge_tur_ek")).deger.turler.map(({ k, ad }) => ({ k, ad }));
@@ -140,6 +140,8 @@ export async function ozlukEkle(db: Sorgulayici, depo: Depo, kim: Kisi, firmaId:
   if (!UUID.test(personelId) || !(await db.sorgu("SELECT 1 FROM personel WHERE id = $1", [personelId])).rowCount) return { durum: "yok" };
   const g = dogrula(OzlukGirdisi, girdi);
   const h: DogrulamaHatalari = g.tamam ? {} : { ...g.hatalar };
+  /* firmanın eklediği türde: tür kaldırma ile yarışmaz (kilit işlem sonuna kadar — 335 incelemesi) */
+  if (g.tamam && g.veri.tur.startsWith("ek")) await belgeTurKilidi(db);
   if (g.tamam && !ozlukTurleri(await ekTurler(db)).some(([k]) => k === g.veri.tur)) h.tur = "Belge türü seçilmeli.";
   if (!belge) h.dosya = "Belge (PDF) seçilmeli.";
   if (!g.tamam || !belge || Object.keys(h).length) return { durum: "gecersiz", hatalar: h };

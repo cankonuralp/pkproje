@@ -170,12 +170,17 @@ test("fiyat listesi: KDV hariç TL → kuruş; kayıtlı fiyat boşaltılamaz, s
   const ht = (await sql(A, "INSERT INTO ekipman_turu (kod, ad, grup, brans, periyot) VALUES ('HT', 'Hava tankı', 'basincli', 'm', 12) RETURNING id::text"))!;
   const turB = (await sql(B, "INSERT INTO ekipman_turu (kod, ad, grup, brans, periyot) VALUES ('HT', 'Hava tankı', 'basincli', 'm', 12) RETURNING id::text"))!;
   assert.deepEqual((await a(YON, (db) => firmaAyarlari(db, YON)))!.fiyat.turler.map((t) => [t.ad, t.fiyat]), [["Hava tankı", null]]);
-  tamam(await a(YON, (db) => ayarKaydet(db, YON, "fiyat", 0, { fiyatlar: { [ht]: "1.250,50" } })));
+  tamam(await a(YON, (db) => ayarKaydet(db, YON, "fiyat", 0, { fiyatlar: { [ht]: "1.250,50" }, gorulen: { [ht]: "" } })));
   assert.deepEqual((await a(YON, (db) => firmaAyarlari(db, YON)))!.fiyat.turler.map((t) => t.fiyat), [125_050]);
-  assert.deepEqual(await a(YON, (db) => ayarKaydet(db, YON, "fiyat", 0, { fiyatlar: { [ht]: "" } })), { durum: "gecersiz", hatalar: { [ht]: "Fiyat boş bırakılamaz (kayıtlı fiyat silinmez)." } });
-  assert.equal((await a(YON, (db) => ayarKaydet(db, YON, "fiyat", 0, { fiyatlar: { [ht]: "0" } }))).durum, "gecersiz");
-  assert.equal((await a(YON, (db) => ayarKaydet(db, YON, "fiyat", 0, { fiyatlar: { [turB]: "100" } }))).durum, "gecersiz", "başka firmanın türü");
-  assert.equal((await a(DEN, (db) => ayarKaydet(db, DEN, "fiyat", 0, { fiyatlar: { [ht]: "999" } }))).durum, "yetkisiz");
+  assert.deepEqual(await a(YON, (db) => ayarKaydet(db, YON, "fiyat", 0, { fiyatlar: { [ht]: "" }, gorulen: { [ht]: "1.250,50" } })), { durum: "gecersiz", hatalar: { [ht]: "Fiyat boş bırakılamaz (kayıtlı fiyat silinmez)." } });
+  assert.equal((await a(YON, (db) => ayarKaydet(db, YON, "fiyat", 0, { fiyatlar: { [ht]: "0" }, gorulen: { [ht]: "1.250,50" } }))).durum, "gecersiz");
+  assert.equal((await a(YON, (db) => ayarKaydet(db, YON, "fiyat", 0, { fiyatlar: { [turB]: "100" }, gorulen: {} }))).durum, "gecersiz", "başka firmanın türü");
+  assert.equal((await a(DEN, (db) => ayarKaydet(db, DEN, "fiyat", 0, { fiyatlar: { [ht]: "999" }, gorulen: { [ht]: "1.250,50" } }))).durum, "yetkisiz");
+  /* 335 incelemesi: iyimser kilit — eski ekran (gördüğü 1.000) başkasının kaydettiği fiyatı ezmez; değişmeyen tür yazılmaz */
+  assert.equal((await a(YON, (db) => ayarKaydet(db, YON, "fiyat", 0, { fiyatlar: { [ht]: "1.300" }, gorulen: { [ht]: "1.000" } }))).durum, "cakisma");
+  assert.deepEqual(await a(YON, (db) => ayarKaydet(db, YON, "fiyat", 0, { fiyatlar: { [ht]: "1.250,50" }, gorulen: { [ht]: "999" } })),
+    { durum: "tamam", bildirim: "Fiyat listesinde değişiklik yok.", degismedi: true }, "değişmeyen tür eski görülene bakılmadan atlanır");
+  assert.deepEqual((await a(YON, (db) => firmaAyarlari(db, YON)))!.fiyat.turler.map((t) => t.fiyat), [125_050]);
 });
 
 test("müşteriye açık belgeler ve belge türü ekle: seçim ayara yazılır; yeni tür Personel'de seçilir, adı var olanla aynı olamaz; belgesi varken kaldırılamaz", async () => {
@@ -188,7 +193,7 @@ test("müşteriye açık belgeler ve belge türü ekle: seçim ayara yazılır; 
   assert.equal((await a(DEN, (db) => belgeTuruEkle(db, DEN, { ad: "Deneme Kart", kisisel: true }))).durum, "yetkisiz");
   tamam(await a(YON, (db) => belgeTuruEkle(db, YON, { ad: "Deneme Kart", kisisel: true })));
   const v = (await a(YON, (db) => firmaAyarlari(db, YON)))!;
-  assert.deepEqual(v.mbelge.turler.find((t) => t.k === "ek1"), { k: "ek1", ad: "Deneme Kart", kisisel: true, ek: true });
+  assert.deepEqual(v.mbelge.turler.find((t) => t.k === "ek1"), { k: "ek1", ad: "Deneme Kart", kisisel: true, ek: true, kullanim: 0 });
   tamam(await a(YON, (db) => ayarKaydet(db, YON, "mbelge", v.mbelge.surum, { secili: ["ekipnet", "ek1"] })));
   /* Personel: yeni tür seçilir ve adıyla görünür; ayarda olmayan tür kaydedilmez */
   const kart = (await a(YON, (db) => personelDosyasi(db, YON, kisiA)))!;
@@ -197,11 +202,17 @@ test("müşteriye açık belgeler ve belge türü ekle: seçim ayara yazılır; 
   assert.equal((await a(YON, (db) => ozlukEkle(db, depo, YON, A, kisiA, { tur: "ek9", aciklama: "" }, { ad: "k.pdf", bayt: PDF }))).durum, "gecersiz");
   const o = tamam(await a(YON, (db) => ozlukEkle(db, depo, YON, A, kisiA, { tur: "ek1", aciklama: "" }, { ad: "k.pdf", bayt: PDF })));
   assert.deepEqual(await a(YON, (db) => belgeTuruKaldir(db, YON, "ek1")), { durum: "red", neden: "Deneme Kart kaldırılamaz: 1 personelde bu türde yüklü belge var." });
+  assert.equal((await a(YON, (db) => firmaAyarlari(db, YON)))!.mbelge.turler.find((t) => t.k === "ek1")!.kullanim, 1, "kullanım ekranda (sorulmadan söylenir)");
   const s = (await a(YON, (db) => personelDosyasi(db, YON, kisiA)))!.ozluk!.find((x) => x.id === o.id)!;
   tamam(await a(YON, (db) => ozlukKaldir(db, YON, o.id, s.surum)));
   tamam(await a(YON, (db) => belgeTuruKaldir(db, YON, "ek1")));
   assert.deepEqual((await a(YON, (db) => ayarOku(db, "musteri_belge"))).deger.ozluk, ["ekipnet"], "kaldırılan tür müşteriye açık listeden de düştü");
   assert.ok(!(await a(YON, (db) => firmaAyarlari(db, YON)))!.mbelge.turler.some((t) => t.k === "ek1"));
+  /* 335 incelemesi: kaldırılan türün anahtarı yeniden verilmez (eski seçim / eski belge yeni türün adıyla müşteriye açılmasın) */
+  tamam(await a(YON, (db) => belgeTuruEkle(db, YON, { ad: "Deneme Sicil", kisisel: true })));
+  const yeniTur = (await a(YON, (db) => ayarOku(db, "belge_tur_ek"))).deger;
+  assert.deepEqual([yeniTur.turler.map((t) => t.k), yeniTur.son], [["ek2"], 2]);
+  assert.ok(!(await a(YON, (db) => ayarOku(db, "musteri_belge"))).deger.ozluk.includes("ek2"), "yeni tür müşteriye kapalı doğar");
 });
 
 /* 336: yapay zekâ (anahtar şifreli sırda — değer ekrana ve yanıta dönmez, yalnız son 4), bulut kaydı, yedek */
@@ -222,6 +233,20 @@ test("yapay zekâ, bulut, yedek: anahtar biçimi denetlenir, şifreli saklanır,
   assert.deepEqual([y.acik, y.model, y.sinir], [true, "sonnet", 12.5]);
   tamam(await a(YON, (db) => yzAnahtarYaz(db, YON, null)));
   assert.deepEqual((await a(YON, (db) => firmaAyarlari(db, YON)))!.yz.anahtar, { tanimli: false, son4: null });
+  /* 335 incelemesi: ekranda "Açık" seçiliyken anahtar girilince yapay zekâ da açılır (eski sürümle değil); ana şifreleme anahtarı olmadan
+     anahtar kaldırılabilir */
+  const ys = (await a(YON, (db) => ayarOku(db, "yapay_zeka"))).surum;
+  tamam(await a(YON, (db) => ayarKaydet(db, YON, "yz", ys, { acik: false, model: "sonnet", sinir: "12,5" })));
+  assert.equal((await a(YON, (db) => yzAnahtarYaz(db, YON, { anahtar: ANAHTAR }, ys))).durum, "cakisma", "eski sürüm");
+  assert.deepEqual(await a(YON, (db) => yzAnahtarYaz(db, YON, { anahtar: ANAHTAR }, ys + 1)), { durum: "tamam", bildirim: "API anahtarı kaydedildi; yapay zekâ açık." });
+  assert.equal((await a(YON, (db) => ayarOku(db, "yapay_zeka"))).deger.acik, true);
+  const ana = process.env.PROBATA_SIR_ANAHTARI;
+  delete process.env.PROBATA_SIR_ANAHTARI;
+  try {
+    assert.equal((await a(YON, (db) => yzAnahtarYaz(db, YON, { anahtar: ANAHTAR }))).durum, "red", "ana anahtarsız yazılmaz");
+    tamam(await a(YON, (db) => yzAnahtarYaz(db, YON, null)));
+  } finally { process.env.PROBATA_SIR_ANAHTARI = ana; }
+  assert.deepEqual((await a(YON, (db) => firmaAyarlari(db, YON)))!.yz.anahtar, { tanimli: false, son4: null }, "ana anahtarsız kaldırıldı");
   /* bulut ve yedek */
   assert.equal((await a(YON, (db) => ayarKaydet(db, YON, "bulut", -1, { saglayici: "gdrive", kok: "Rapor/2026", duzen: "mt" }))).durum, "gecersiz", "klasör adında /");
   assert.equal((await a(YON, (db) => ayarKaydet(db, YON, "bulut", -1, { saglayici: "baska", kok: "Raporlar", duzen: "mt" }))).durum, "gecersiz");

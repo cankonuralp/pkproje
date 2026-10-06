@@ -7,7 +7,7 @@
 import type { Sorgulayici } from "../../../server/db/kiraci.ts";
 import type { Depo } from "../../../server/dosya/depo.ts";
 import { dosyaCope, dosyaYukle } from "../../../server/dosya/dosya.ts";
-import { AYAR_DOSYA, ayarOku, ayarYaz, firmaKoduYaz, firmaKunyesi, type AyarBolumu } from "../../../server/ayar/ayar.ts";
+import { AYAR_DOSYA, ayarOku, ayarYaz, belgeTurKilidi, firmaKoduYaz, firmaKunyesi, type AyarBolumu } from "../../../server/ayar/ayar.ts";
 import { duzey, type YetkiHesabi } from "../../../server/yetki/canDo.ts";
 import { dogrula, type DogrulamaHatalari } from "../../../sema/ortak.ts";
 import { personelSecenekleri } from "../../personel/server/personel.ts";
@@ -51,18 +51,22 @@ export interface FirmaAyarlari {
   bulut: Surumlu<{ saglayici: "" | "gdrive" | "onedrive" | "dropbox" | "yandex" | "sftp"; kok: string; duzen: "mt" | "mty" | "my" }>;
   yedek: Surumlu<{ sik: "saatlik" | "gunluk" | "haftalik"; saat: string; gun: 30 | 90 | 365 }>;
 }
-/** k: özlük türü, "atama" ya da "eg:<eğitim türü>"; ek: firmanın eklediği (kaldırılabilir) */
-export interface MusteriBelgeTuru { k: string; ad: string; kisisel: boolean; ek: boolean }
+/** k: özlük türü, "atama" ya da "eg:<eğitim türü>"; ek: firmanın eklediği (kaldırılabilir); kullanim: o türde belgesi olan personel (ek türde) */
+export interface MusteriBelgeTuru { k: string; ad: string; kisisel: boolean; ek: boolean; kullanim: number }
 
-async function musteriBelgeTurleri(db: Sorgulayici): Promise<{ turler: MusteriBelgeTuru[]; ekSurum: number; ek: { k: string; ad: string; kisisel: boolean }[] }> {
+async function musteriBelgeTurleri(db: Sorgulayici): Promise<{ turler: MusteriBelgeTuru[]; ekSurum: number; son: number; ek: { k: string; ad: string; kisisel: boolean }[] }> {
   const ek = await ayarOku(db, "belge_tur_ek");
+  const ekler: MusteriBelgeTuru[] = [];
+  for (const t of ek.deger.turler) ekler.push({ k: t.k, ad: t.ad, kisisel: t.kisisel, ek: true, kullanim: await ozlukTurKullanimi(db, t.k) });
   return {
     ekSurum: ek.surum, ek: ek.deger.turler,
+    /* verilmiş en büyük numara (eski kayıtta sayaç yoksa var olan anahtarlardan) */
+    son: Math.max(ek.deger.son, ...ek.deger.turler.map((t) => Number(t.k.slice(2)))),
     turler: [
-      ...MUSTERI_BELGE_BAS.map(([k, ad, kisisel]) => ({ k, ad, kisisel, ek: false })),
-      ...(await egitimTurAdlari(db)).map((t) => ({ k: `eg:${t.id}`, ad: `${t.ad} sertifikası`, kisisel: false, ek: false })),
-      ...ek.deger.turler.map((t) => ({ k: t.k, ad: t.ad, kisisel: t.kisisel, ek: true })),
-      ...MUSTERI_BELGE_SON.map(([k, ad, kisisel]) => ({ k, ad, kisisel, ek: false })),
+      ...MUSTERI_BELGE_BAS.map(([k, ad, kisisel]) => ({ k, ad, kisisel, ek: false, kullanim: 0 })),
+      ...(await egitimTurAdlari(db)).map((t) => ({ k: `eg:${t.id}`, ad: `${t.ad} sertifikası`, kisisel: false, ek: false, kullanim: 0 })),
+      ...ekler,
+      ...MUSTERI_BELGE_SON.map(([k, ad, kisisel]) => ({ k, ad, kisisel, ek: false, kullanim: 0 })),
     ],
   };
 }
@@ -161,20 +165,28 @@ export async function ayarKaydet(db: Sorgulayici, kim: Kisi, kesim: string, suru
       return yaz("sabit_gider", g.veri, "Sabit giderler kaydedildi; gelir-gider özetinde her ay gider olarak düşer.");
     }
     case "fiyat": {
-      /* KDV hariç birim fiyat; boş: fiyatsız (kayıtlı fiyat silinmez); doluysa sıfırdan büyük (maket tlOku) */
+      /* KDV hariç birim fiyat; boş: fiyatsız (kayıtlı fiyat silinmez); doluysa sıfırdan büyük (maket tlOku). İyimser kilit (335 incelemesi): yalnız
+         ekranın gördüğünden değişen türler yazılır; o türün fiyatı bu arada değiştiyse hiçbiri yazılmaz (sessiz ezme yok) */
       const g = dogrula(FiyatGirdisi, girdi);
       if (!g.tamam) return { durum: "gecersiz", hatalar: g.hatalar };
       const turler = new Set((await turOzetleri(db)).map((t) => t.id)), eski = await fiyatListesi(db);
-      const h: DogrulamaHatalari = {}, yeni = new Map<string, number>();
+      const gordu = (m: string | undefined): number | null | "bozuk" => {
+        const s = (m ?? "").trim(); if (!s) return null;
+        const t = tutar.safeParse(s); return t.success ? t.data : "bozuk";
+      };
+      const h: DogrulamaHatalari = {}, yeni = new Map<string, { fiyat: number; gorulen: number | null }>();
       for (const [tur, metin] of Object.entries(g.veri.fiyatlar)) {
         if (!turler.has(tur)) { h[tur] = "Ekipman türü bulunamadı."; continue; }
         if (!metin.trim()) { if (eski.has(tur)) h[tur] = "Fiyat boş bırakılamaz (kayıtlı fiyat silinmez)."; continue; }
         const t = tutar.safeParse(metin);
         if (!t.success || t.data <= 0 || t.data > 100_000_000_000) { h[tur] = "Tutar okunamadı (ör. 1.250 ya da 1250,50). Kaydedilmedi."; continue; }
-        yeni.set(tur, t.data);
+        const gorulen = gordu(g.veri.gorulen[tur]);
+        if (gorulen === "bozuk") return { durum: "cakisma" };
+        if (t.data !== gorulen) yeni.set(tur, { fiyat: t.data, gorulen });
       }
       if (Object.keys(h).length) return { durum: "gecersiz", hatalar: h };
       const n = await fiyatlariYaz(db, kim, yeni);
+      if (n === "cakisma") return { durum: "cakisma" };
       return n ? { durum: "tamam", bildirim: `Fiyat listesi kaydedildi (${n} tür); yeni teklifler bu fiyatlarla dolar.` } : { durum: "tamam", bildirim: "Fiyat listesinde değişiklik yok.", degismedi: true };
     }
     case "yz": {
@@ -194,6 +206,7 @@ export async function ayarKaydet(db: Sorgulayici, kim: Kisi, kesim: string, suru
     case "mbelge": {
       const g = dogrula(MusteriBelgeGirdisi, girdi);
       if (!g.tamam) return { durum: "gecersiz", hatalar: g.hatalar };
+      await belgeTurKilidi(db);
       const t = await musteriBelgeTurleri(db), gecerli = new Set(t.turler.map((x) => x.k));
       if (g.veri.secili.some((k) => !gecerli.has(k))) return { durum: "gecersiz", hatalar: { secili: "Bilinmeyen belge türü." } };
       const sec = [...new Set(g.veri.secili)];
@@ -205,8 +218,10 @@ export async function ayarKaydet(db: Sorgulayici, kim: Kisi, kesim: string, suru
   return { durum: "gecersiz", hatalar: { genel: "Bilinmeyen ayar bölümü." } };
 }
 
-/** yapay zekâ API anahtarı (maket Y1): bir kez yazılır, şifreli saklanır (sir.ts), bir daha gösterilmez — yalnız son 4. null: kaldır */
-export async function yzAnahtarYaz(db: Sorgulayici, kim: Kisi, girdi: unknown | null): Promise<AyarYazma> {
+/** yapay zekâ API anahtarı (maket Y1): bir kez yazılır, şifreli saklanır (sir.ts), bir daha gösterilmez — yalnız son 4. null: kaldır.
+    ac: ekranda "Açık" seçiliyken anahtar girildi (maket Z1: "anahtarı giren yapay zekâyı açmak istiyor") — bölümün gördüğü sürüm; yapay zekâ da
+    açılır (sürüm tutmazsa hiçbir şey yazılmaz) */
+export async function yzAnahtarYaz(db: Sorgulayici, kim: Kisi, girdi: unknown | null, ac: number | null = null): Promise<AyarYazma> {
   if (!ayarlarYazar(kim)) return { durum: "yetkisiz" };
   let anahtar: string | null = null;
   if (girdi !== null) {
@@ -214,12 +229,20 @@ export async function yzAnahtarYaz(db: Sorgulayici, kim: Kisi, girdi: unknown | 
     if (!g.tamam) return { durum: "gecersiz", hatalar: g.hatalar };
     anahtar = g.veri.anahtar;
   }
+  const y = await ayarOku(db, "yapay_zeka");
+  const acilacak = anahtar !== null && ac !== null && !y.deger.acik;
+  if (acilacak && (!Number.isSafeInteger(ac) || (y.id === null ? -1 : y.surum) !== ac)) return { durum: "cakisma" };
   try {
     await sirYaz(db, "yapay_zeka_anahtari", anahtar, { kim: kim.ad });
   } catch (h) {
-    /* ana şifreleme anahtarı ortamda yoksa sır düz metne düşmez: yazılmaz, söylenir */
+    /* ana şifreleme anahtarı ortamda yoksa sır düz metne düşmez: yazılmaz, söylenir (kaldırma ana anahtarsız olur) */
     if (h instanceof Error && /Sır anahtarı tanımlı değil/.test(h.message)) return { durum: "red", neden: "Sunucuda sır şifreleme anahtarı tanımlı değil; anahtar kaydedilemedi (yönetim ayarı)." };
     throw h;
+  }
+  if (acilacak) {
+    const r = await ayarYaz(db, "yapay_zeka", ac!, { ...y.deger, acik: true }, { kim: kim.ad, ne: "firma_ayar.yz", gerekce: "anahtarla birlikte açıldı" });
+    if (r.durum !== "tamam" && r.durum !== "degisiklik_yok") throw new Error("yapay zekâ açılamadı");
+    return { durum: "tamam", bildirim: "API anahtarı kaydedildi; yapay zekâ açık." };
   }
   return { durum: "tamam", bildirim: anahtar ? "API anahtarı kaydedildi." : "API anahtarı kaldırıldı." };
 }
@@ -230,25 +253,32 @@ export async function belgeTuruEkle(db: Sorgulayici, kim: Kisi, girdi: unknown):
   if (!ayarlarYazar(kim)) return { durum: "yetkisiz" };
   const g = dogrula(BelgeTuruGirdisi, girdi);
   if (!g.tamam) return { durum: "gecersiz", hatalar: g.hatalar };
+  await belgeTurKilidi(db);
   const t = await musteriBelgeTurleri(db), ad = g.veri.ad;
   if (t.turler.some((x) => kucuk(x.ad) === kucuk(ad) || kucuk(x.ad) === kucuk(`${ad} sertifikası`))) return { durum: "gecersiz", hatalar: { ad: "Bu adla bir belge türü zaten var." } };
-  let n = 1;
-  while (t.ek.some((x) => x.k === `ek${n}`)) n++;
-  if (n > 30) return { durum: "gecersiz", hatalar: { ad: "En çok 30 tür eklenir." } };
-  const r = await ayarYaz(db, "belge_tur_ek", t.ekSurum, { turler: [...t.ek, { k: `ek${n}`, ad, kisisel: g.veri.kisisel }] }, { kim: kim.ad, ne: "belge_tur_ek.ekle", gerekce: ad });
+  if (t.ek.length >= 30) return { durum: "gecersiz", hatalar: { ad: "En çok 30 tür eklenir." } };
+  /* kaldırılmış türün anahtarı yeniden verilmez: her zaman verilmiş en büyük numaranın bir fazlası */
+  const n = t.son + 1;
+  if (n > 999) return { durum: "gecersiz", hatalar: { ad: "Eklenebilecek tür sınırı doldu." } };
+  const r = await ayarYaz(db, "belge_tur_ek", t.ekSurum, { turler: [...t.ek, { k: `ek${n}`, ad, kisisel: g.veri.kisisel }], son: n }, { kim: kim.ad, ne: "belge_tur_ek.ekle", gerekce: ad });
   return SONUC(r, `${ad} eklendi; Personel'de belge yüklerken seçilebilir. Müşteriye açmak için işaretleyip kaydedin.`);
 }
 /** firmanın eklediği türü kaldır: yalnız o türde yüklü belge yokken; müşteriye açık listeden de düşer */
 export async function belgeTuruKaldir(db: Sorgulayici, kim: Kisi, k: string): Promise<AyarYazma> {
   if (!ayarlarYazar(kim)) return { durum: "yetkisiz" };
+  await belgeTurKilidi(db);   // sayım ile özlük belgesi ekleme yarışmaz
   const t = await musteriBelgeTurleri(db), x = t.ek.find((y) => y.k === k);
   if (!x) return { durum: "red", neden: "Belge türü bulunamadı." };
   const n = await ozlukTurKullanimi(db, k);
   if (n) return { durum: "red", neden: `${x.ad} kaldırılamaz: ${n} personelde bu türde yüklü belge var.` };
-  const r = await ayarYaz(db, "belge_tur_ek", t.ekSurum, { turler: t.ek.filter((y) => y.k !== k) }, { kim: kim.ad, ne: "belge_tur_ek.kaldir", gerekce: x.ad });
+  const r = await ayarYaz(db, "belge_tur_ek", t.ekSurum, { turler: t.ek.filter((y) => y.k !== k), son: t.son }, { kim: kim.ad, ne: "belge_tur_ek.kaldir", gerekce: x.ad });
   if (r.durum !== "tamam") return SONUC(r, "");
   const mb = await ayarOku(db, "musteri_belge");
-  if (mb.deger.ozluk.includes(k)) await ayarYaz(db, "musteri_belge", mb.surum, { ...mb.deger, ozluk: mb.deger.ozluk.filter((y) => y !== k) }, { kim: kim.ad, ne: "musteri_belge.tur_kaldir" });
+  if (mb.deger.ozluk.includes(k)) {
+    /* müşteriye açık listeden düşmezse tür kaldırılmış sayılmaz: işlem geri alınır (yazma hatası yutulmaz — 335 incelemesi) */
+    const m = await ayarYaz(db, "musteri_belge", mb.surum, { ...mb.deger, ozluk: mb.deger.ozluk.filter((y) => y !== k) }, { kim: kim.ad, ne: "musteri_belge.tur_kaldir" });
+    if (m.durum !== "tamam" && m.durum !== "degisiklik_yok") throw new Error("müşteriye açık belgelerden düşürülemedi");
+  }
   return { durum: "tamam", bildirim: `${x.ad} kaldırıldı.` };
 }
 
