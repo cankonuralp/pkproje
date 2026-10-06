@@ -61,8 +61,12 @@ const klasorlerOf = (yol: string) => readdirSync(yol).filter((ad) => statSync(jo
 test("her modülün rota klasörü var ve src/app'te modül dışı rota yok", () => {
   const app = join(KOK, "src", "app");
   /* 2026-10-05 (319, 0030): müşteri paneli kendi rota grubunda — "(musteri)" (yalnız /portal; müşteri oturumu, kapısı aşağıdaki testte) */
-  assert.deepEqual(klasorlerOf(app), ["(acik)", "(gelistirme)", "(musteri)", "(uygulama)", "api"]);
+  /* 2026-10-06 (348, KOD-GECIS Y1): probata yönetim sayfası kendi rota grubunda — "(yonetim)" (yalnız /yonetim: giriş adımları + oturumlu
+     panel; yalnız yönetim adresinde, kapısı aşağıdaki testte) */
+  assert.deepEqual(klasorlerOf(app), ["(acik)", "(gelistirme)", "(musteri)", "(uygulama)", "(yonetim)", "api"]);
   assert.deepEqual(klasorlerOf(join(app, "(musteri)")), ["portal"]);
+  assert.deepEqual(klasorlerOf(join(app, "(yonetim)")), ["yonetim"]);
+  assert.deepEqual(klasorlerOf(join(app, "(yonetim)", "yonetim")), ["(panel)", "giris"]);
   assert.deepEqual(klasorlerOf(join(app, "api")), API_UCLARI);
   const uygulama = join(app, "(uygulama)");
   const yollar = MODULLER.filter((m) => m.yol !== "").map((m) => m.yol).sort();
@@ -124,6 +128,27 @@ test("api/olcum yalnız önizleme dağıtımında: ilk iş VERCEL_ENV denetimi, 
   const govde = kaynak.slice(kaynak.indexOf("export async function GET"));
   assert.match(govde, /^export async function GET\(\) \{\n {2}if \(process\.env\.VERCEL_ENV !== "preview"\) return new Response\("Bulunamadı", \{ status: 404/);
   assert.deepEqual(klasorlerOf(join(KOK, "src", "app", "api", "olcum")), ["pdf"]);
+});
+
+/* 2026-10-06 (348; reisim: "rol değiştirme, sızma, veri çalma"): yönetim sayfası yalnız yönetim adresinde ve yönetim oturumuyla, veri yönetim
+   işleminde (veritabanında yönetim rolü) — düzen ve her panel sayfası yönetim kapısını çağırır; firma / müşteri kapısı ve işlemi kullanılmaz. Giriş
+   adımları başka adreste 404. Ara katman yönetim adresinde yalnız /yonetim'i, öteki adreslerde /yonetim'i hiç açmaz. */
+test("yönetim kapısı: yalnız yönetim adresinde, panel yönetim oturumu ister, veri yönetim işleminde (veritabanında yönetim rolü)", () => {
+  assert.match(oku("src/app/(yonetim)/yonetim/(panel)/layout.tsx"), /await yonetimOturumGerekli\(\)/);
+  const sayfalar = dosyalar("src/app/(yonetim)", [".tsx", ".ts"]);
+  assert.ok(sayfalar.filter((d) => d.endsWith("/page.tsx")).length >= 6);
+  for (const ad of sayfalar) {
+    const m = oku(ad);
+    assert.doesNotMatch(m, /oturumIslemi|musteriIslemi|istekOturumu\(|musteriIstekOturumu|oturumGerekli\(\)(?<!yonetimOturumGerekli\(\))/, `${ad}: firma / müşteri kapısı`);
+    if (ad.endsWith("/page.tsx") && ad.includes("/(panel)/")) assert.match(m, /await yonetimOturumGerekli\(\)/, ad);
+    if (ad.endsWith("/page.tsx") && ad.includes("/giris/")) assert.match(m, /if \(!\(await yonetimAdresinde\(\)\)\) notFound\(\);/, ad);
+  }
+  for (const ad of sayfalar.filter((d) => /\/\(panel\)\/.*page\.tsx$/.test(d) && /firma(lar)?\(db/.test(oku(d)))) assert.match(oku(ad), /yonetimIslemi\(o,/, ad);
+  const ara = oku("src/proxy.ts");
+  assert.match(ara, /const yasak = yonetimde \? !YONETIM_YOLU\.test\(yol\) && !yol\.startsWith\("\/_next\/"\) : YONETIM_YOLU\.test\(yol\);/);
+  assert.match(ara, /yasak \? NextResponse\.rewrite\(new URL\(YOK_YOLU/);
+  assert.match(oku("src/server/kiraci/istek.ts"), /if \(yonetimAdresiMi\(host\)\) return null;/);
+  assert.match(oku("src/server/yonetim/istek.ts"), /if \(!\(await yonetimAdresinde\(\)\)\) notFound\(\);/);
 });
 
 /* 2026-10-05 (319, 0030; reisim: "rol değiştirme, sızma, veri çalma"): müşteri paneli yalnız müşteri oturumuyla ve veritabanında müşteri

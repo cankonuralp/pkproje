@@ -1,0 +1,18 @@
+/* probata YÖNETİM ekranları (348; maket yonetim.html: .a-ad-bag, .a-hucre-satir, .a-adres, .a-gecici-parola, .a-yonetim-adim). ⛔ Çıplak renk yok. */
+.ad {
+  display: inline-flex; align-items: center; min-height: var(--tus-y);
+  color: var(--onay-yazi); font-weight: 600; text-decoration: underline; text-decoration-color: transparent; text-underline-offset: 3px;
+  overflow-wrap: anywhere;
+}
+.ad:hover { text-decoration-color: currentColor; }
+.hucreSatir { display: flex; align-items: flex-start; gap: 6px; min-width: 0; }
+.adres { display: flex; flex-direction: column; min-width: 0; }
+.sayi { font-variant-numeric: tabular-nums; font-weight: 600; }
+.sayacEk { color: var(--yazi2); font-size: var(--boy-kucuk); }
+.etiketUst { margin: 16px 0 6px; font-size: var(--boy-kucuk); font-weight: 600; }
+.geciciParola {
+  margin: 0 0 12px; padding: 12px 14px; border: 1px dashed var(--kenar-alan); border-radius: var(--r-orta); background: var(--zemin2);
+  font-size: var(--boy-baslik); letter-spacing: .06em; overflow-wrap: anywhere;
+}
+.eylemSol { display: flex; flex-wrap: wrap; gap: 8px; margin-top: 8px; }
+.adimlar { margin: 0; padding-left: 22px; display: flex; flex-direction: column; gap: 6px; color: var(--yazi2); }

@@ -2341,6 +2341,26 @@ revizyon, alan kopyalama, hafif kusur devri, meslek eşleşme denetimi).
 - Emsal ürünler: https://opwire.app/iso-17020-periyodik-kontrol-yazilimi/ · https://17020muayene.vidco.com.tr/ · https://akuple.com/asansor-kontrol-yazilimi/ · https://ensyazilim.com/
 
 ## 11 · Değişiklik günlüğü
+- 2026-10-06 (348): **probata yönetim sayfası — firma aç / dondur / geçici parola** (KOD-GECIS Y1, karar 2026-10-03; maket yonetim.html,
+  §11 247). Firmaların görmediği, yalnız probata ekibinin sayfası; **yalnız ayrı adreste** (`PROBATA_YONETIM_ALAN`; tanımsızsa hiçbir adreste yok):
+  ara katman yönetim adresinde yalnız /yonetim'i, öteki adreslerde /yonetim'i hiç açmaz (404); yönetim adresi firma sayılmaz. **İki adımlı giriş:**
+  parola → 10 dk'lık bekleyen oturum → doğrulama kodu (RFC 6238, telefondaki doğrulama uygulaması; ±30 sn, aynı kod ikinci kez geçmez) → yönetim
+  oturumu (hareketsizlik 2 saat, mutlak 12 saat; çerez ayrı, SameSite=Strict, tarayıcı kapanınca silinir). İlk giriş (geçici parola): anahtar
+  sunucuda üretilir, yalnız o bekleyen oturumda gösterilir; kod + yeni parola ile kurulur. 5 hatalı deneme (parola ya da kod) → 15 dk kilit, IP
+  kilidi; yanıt hesabın varlığını söylemez. Anahtar ana anahtarla şifreli, yöneticiye bağlı. Yönetici hesabını biz açarız (uygulamada yönetici
+  ekleme yok). Göç 0050: firma.durum (etkin / dondu) + ilk_hesap; dondurulmuş firma **firma_bul'dan bulunmaz** (kullanıcı ve müşteri giremez) ve
+  oturumları silinir, veri silinmez; yonetici, yonetim_oturum, yonetim_kilit, yonetim_izi (değişmez; yönetici veritabanından damgalanır).
+  **İkinci katman:** yönetim işlemleri `probata_yonetim` rolünde (SET LOCAL ROLE, 0030 deseni) — firmaların tablolarına hakkı yok; liste, açma,
+  dondurma ve geçici parola yalnız işlevlerle (yöneticisiz ya da kapalı yöneticiyle reddedilir; firmanın denetim izine ve yönetim izine yazar);
+  uygulama rolü bu işlevleri çağıramaz. **Ekranlar:** Firmalar (sayaç, durum süzgeci; firma + adres · durum · kısa kod · depo · açılış · kullanıcı)
+  · Firma aç (ünvandan alt alan adı ve kısa kod önerisi, elle değişeni ezmez; canlı adres; ayrılmış adlar www, yonetim, api … ve yönetim adresinin
+  adı; kayıtlı adres / kod sunucuda; önce sorulur; açılınca geçici parola yalnız bir kez + Kopyala; ilk firma yöneticisi personel kaydı + "ilk"
+  hesap) · Firma sayfası (Dondur önce sorulur / Etkinleştir; yöneticiye yeni geçici parola önce sorulur, dondurulmuşta kapalı). **Depo:** maketteki
+  "firmanın kendi deposu bağlanmadan açılmaz" engeli (ENGEL 10, Y2b) S3 bağdaştırıcısıyla K7'de; bugün bölüm bilgi verir (deneme yayınında
+  veritabanı deposu). Deneme yayınında (vercel.app) yeni firmanın adresi Vercel'e ayrıca eklenmeden açılmaz — alan adı ve joker SSL gelince kendiliğinden.
+  Kilit: yonetim (gerçek PostgreSQL, iki firma: iki adım, yeniden oynatma, kilit, kurulum, firma aç → geçici parolayla firma girişi, dondur, SIZMA),
+  yonetim-saf (RFC 6238 vektörleri, adres, şema, ayrılmış ad listesi göçle aynı), moduller (yönetim kapısı); olumsuz kanıt yonetim.bozan (yeniden
+  oynatma, dondurma bayrağı, hesap kilidi); e2e yonetim.spec üç genişlikte.
 - 2026-10-06 (347): **Deneme yayınında kalıcı dosya deposu — veritabanı** (KOD-GECIS Y2b'nin ara çözümü). Yayında dosyalar Vercel'in geçici
   klasöründeydi (/tmp): işlev örnekleri arasında kayboluyordu (fotoğraf, logo, imzasız PDF hazırlanıp imzalısı yüklenince bulunamıyordu).
   Göç 0049 **depo_nesne** (firma, anahtar, içerik ≤ 30 MB): anahtar üreticisinin biçimi denetlenir, **anahtardaki firma satırın firmasıdır**

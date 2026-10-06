@@ -59,5 +59,6 @@ const u = kume.uygulama;
 const kod = await nextCalistir("dev", {
   PROBATA_VT_SUNUCU: u.host, PROBATA_VT_KAPI: String(u.port), PROBATA_VT_AD: u.database,
   PROBATA_VT_KULLANICI: u.user, PROBATA_VT_PAROLA: u.password, PROBATA_SIR_ANAHTARI: sirAnahtari,
+  PROBATA_YONETIM_ALAN: "yonetim.localhost",   // 348: yönetim sayfası http://yonetim.localhost:3000/yonetim (yöneticiyi biz ekleriz)
 }, ["--hostname", "127.0.0.1"]);
 await kapat(kod);

@@ -6,6 +6,7 @@ import { headers } from "next/headers";
 import { cache } from "react";
 import { havuz } from "../db/havuz.ts";
 import { firmaKimligi } from "../db/kiraci.ts";
+import { yonetimAdresiMi } from "../yonetim/adres.ts";
 import { kiraciAdiCoz } from "./coz.ts";
 
 export const anaAlan = () => process.env.PROBATA_ANA_ALAN || "localhost";
@@ -13,6 +14,8 @@ export interface IstekKiracisi { firmaId: string; kisaAd: string }
 
 export const istekKiracisi = cache(async (): Promise<IstekKiracisi | null> => {
   const host = (await headers()).get("host") ?? "";
+  /* yönetim adresi firma değildir (348) */
+  if (yonetimAdresiMi(host)) return null;
   const kisaAd = kiraciAdiCoz(host, anaAlan());
   if (!kisaAd) return null;
   const firmaId = await firmaKimligi(havuz(), kisaAd);

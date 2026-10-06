@@ -6,7 +6,8 @@
 import { chromium, request, type FullConfig } from "@playwright/test";
 import { existsSync } from "node:fs";
 import { MODULLER } from "../src/modules/moduller";
-import { E2E_FIRMA, E2E_HESAPLAR, E2E_KAPI, E2E_PAROLA } from "./hesaplar";
+import { totpKodu, zamanAdimi } from "../src/server/yonetim/totp";
+import { E2E_FIRMA, E2E_HESAPLAR, E2E_KAPI, E2E_PAROLA, E2E_YONETIM } from "./hesaplar";
 
 const SAYFALAR = ["/giris", "/", "/planlar", "/muhasebe", "/vitrin"];
 
@@ -74,5 +75,19 @@ export default async function hazirla(_ayar: FullConfig) {
   for (const y of [`/musteriler/${YOK}`, `/musteriler/tesis/${YOK}`, `/ekipman-turleri/${YOK}`, `/ekipman-turleri/${YOK}/sablon/${YOK}`, `/olcum-cihazlari/${YOK}`, `/araclar/${YOK}`,
     `/sozlesmeler/${YOK}`, `/teklifler/${YOK}`, `/teklifler/${YOK}/duzenle`, `/muhasebe/is/${YOK}`, `/muhasebe/f/${YOK}`, `/performans/${YOK}`, `/planlar/${YOK}`, `/raporlar/${YOK}`, `/raporlar/${YOK}/onizle`, `/onaylar/${YOK}`, `/dokumanlar/standart/${YOK}`, "/dokumanlar/kriterler/ZPKK01", `/zimmetler/varlik/d/${YOK}`]) await ac(y);
   await ac("/giris/parola");
+  /* 348 yönetim: yönetim adresinde giriş adımları ve panel sayfaları (hazırlık yöneticisiyle — testteki yöneticinin kodu yeniden oynatma sayılmasın) */
+  const ys = await tarayici.newPage({ baseURL: `http://${E2E_YONETIM.alan}:${E2E_KAPI}` });
+  ys.setDefaultTimeout(180_000);
+  const yac = async (y: string) => { await ys.goto(y); await ys.locator("html[data-hazir]").waitFor({ state: "attached" }); };
+  await yac("/yonetim/giris");
+  await ys.getByLabel("E-posta").fill(E2E_YONETIM.hazirla);
+  await ys.getByLabel("Parola", { exact: true }).fill(E2E_PAROLA);
+  await ys.getByRole("button", { name: "Devam" }).click();
+  await ys.waitForURL((u) => u.pathname === "/yonetim/giris/kod");
+  await ys.locator("html[data-hazir]").waitFor({ state: "attached" });
+  await ys.getByLabel("Doğrulama kodu").fill(totpKodu(E2E_YONETIM.anahtar, zamanAdimi(new Date())));
+  await ys.getByRole("button", { name: "Doğrula" }).click();
+  await ys.waitForURL((u) => u.pathname === "/yonetim");
+  for (const y of ["/yonetim", "/yonetim/yeni", `/yonetim/f/${YOK}`]) await yac(y);
   await tarayici.close();
 }

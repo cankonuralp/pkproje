@@ -8,8 +8,9 @@ import { randomBytes } from "node:crypto";
 import { mkdtempSync } from "node:fs";
 import { tmpdir } from "node:os";
 import { join } from "node:path";
-import { E2E_FIRMA, E2E_HESAPLAR, E2E_ILK, E2E_KAPI, E2E_MUHASEBE, E2E_PAROLA, E2E_PLAN, E2E_SAHA } from "../e2e/hesaplar.ts";
+import { E2E_FIRMA, E2E_HESAPLAR, E2E_ILK, E2E_KAPI, E2E_MUHASEBE, E2E_PAROLA, E2E_PLAN, E2E_SAHA, E2E_YONETIM } from "../e2e/hesaplar.ts";
 import { taslakBaslat, yayinla, type Kisi } from "../src/modules/rapor-format/server/formatlar.ts";
+import { sifrele } from "../src/server/ayar/sir.ts";
 import { gomuluBaslat } from "../src/server/db/gomulu.ts";
 import { havuzKur, kiraciIcinde } from "../src/server/db/kiraci.ts";
 import { parolaOzeti } from "../src/server/kimlik/parola.ts";
@@ -102,6 +103,22 @@ for (const f of firmalar) {
 }
 await havuz.end();
 
+/* yönetim (348): ana anahtar bu sunucuya özgü (doğrulama anahtarı onunla şifrelenir); bir "ilk" yönetici (geçici parola — ilk kurulum adımı),
+   bir kurulmuş yönetici (doğrulama kodu adımı) ve hazırlık için ayrı bir kurulmuş yönetici (e2e/hazirla.ts sayfaları derlerken onun kodunu kullanır:
+   testteki yöneticinin aynı zaman adımındaki kodu "yeniden oynatma" sayılmasın). Hepsi uydurma, süper kullanıcıyla, geçici veritabanı. */
+const sirAnahtari = randomBytes(32).toString("base64");
+const sy = kume.sahipIstemci();
+await sy.connect();
+try {
+  await sy.query("INSERT INTO yonetici (eposta, ad, parola_ozeti, durum) VALUES ($1, 'Deneme İlk Yönetici', $2, 'ilk')",
+    [E2E_YONETIM.ilk.eposta, await parolaOzeti(E2E_YONETIM.ilk.parola)]);
+  for (const eposta of [E2E_YONETIM.etkin.eposta, E2E_YONETIM.hazirla]) {
+    const id = (await sy.query<{ id: string }>("INSERT INTO yonetici (eposta, ad, parola_ozeti) VALUES ($1, 'Deneme Yönetici', $2) RETURNING id::text", [eposta, ozet])).rows[0].id;
+    await sy.query("UPDATE yonetici SET totp_sir = $2, durum = 'etkin' WHERE id = $1",
+      [id, sifrele(E2E_YONETIM.anahtar, "yonetim", `totp:${id}`, Buffer.from(sirAnahtari, "base64"))]);
+  }
+} finally { await sy.end(); }
+
 let kapaniyor = false;
 const kapat = async (kod: number) => { if (kapaniyor) return; kapaniyor = true; await kume.durdur(); process.exit(kod); };
 process.on("SIGINT", () => { void kapat(0); });
@@ -117,6 +134,7 @@ const kod = await nextCalistir("dev", {
   PROBATA_VT_SUNUCU: u.host, PROBATA_VT_KAPI: String(u.port), PROBATA_VT_AD: u.database, PROBATA_VT_KULLANICI: u.user, PROBATA_VT_PAROLA: u.password,
   PROBATA_ANA_ALAN: "localhost", NEXT_TELEMETRY_DISABLED: "1", PROBATA_DEPO_KLASOR: mkdtempSync(join(tmpdir(), "probata-e2e-depo-")),
   PROBATA_DEPO: "vt",   // 347: uçtan uca deneme yayınındaki gibi veritabanı deposuyla
-  PROBATA_SIR_ANAHTARI: randomBytes(32).toString("base64"),
+  PROBATA_SIR_ANAHTARI: sirAnahtari,
+  PROBATA_YONETIM_ALAN: E2E_YONETIM.alan,   // 348: yönetim sayfası yalnız bu adreste
 }, ["--hostname", "127.0.0.1", "--port", String(E2E_KAPI)]);
 await kapat(kod);

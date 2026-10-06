@@ -83,6 +83,33 @@ export async function kiraciIcinde<T>(havuz: pg.Pool, firmaId: string, is: (db: 
   }
 }
 
+/** probata YÖNETİM işlemi (0050; yalnız yönetim adresinde): tek işlemde, veritabanında YÖNETİM ROLÜNE geçerek (SET LOCAL ROLE probata_yonetim) —
+    yalnız yönetim tabloları ve yönetim işlevleri; firmaların tablolarına doğrudan hakkı yok. Kiracı bağlamı YOK. `yoneticiId` verilirse işlemin
+    bağlamına yazılır (`app.yonetici_id`): firma açma / dondurma / geçici parola işlevleri yöneticiyi oradan okur (yoksa reddeder), yönetim izi
+    oradan damgalanır. Hata geri alınır ve yukarı fırlatılır; rol işlem bitince düşer. */
+export async function yonetimIcinde<T>(havuz: pg.Pool, is: (db: Sorgulayici) => Promise<T>, secenek: { yoneticiId?: string } = {}): Promise<T> {
+  if (secenek.yoneticiId !== undefined && !UUID.test(secenek.yoneticiId)) throw new Error("Geçersiz yönetici kimliği");
+  const baglanti = await havuz.connect();
+  let kopuk: Error | undefined;
+  const dinle = (e: Error) => { kopuk = e; };
+  baglanti.on("error", dinle);
+  try {
+    await baglanti.query("BEGIN");
+    await baglanti.query("SELECT set_config('app.firma_id', '', true), set_config('app.hesap_id', '', true), set_config('app.yonetici_id', $1, true)",
+      [secenek.yoneticiId ?? ""]);
+    await baglanti.query("SET LOCAL ROLE probata_yonetim");
+    const sonuc = await is({ sorgu: (metin, degerler) => baglanti.query(metin, degerler as unknown[]) });
+    await baglanti.query("COMMIT");
+    return sonuc;
+  } catch (hata) {
+    try { await baglanti.query("ROLLBACK"); } catch (e) { kopuk ??= e as Error; }
+    throw hata;
+  } finally {
+    baglanti.off("error", dinle);
+    baglanti.release(kopuk);
+  }
+}
+
 /** Alt alan adındaki kısa addan firma kimliği; yoksa null. Kiracı bilinmeden çağrılır (0001: firma_bul). */
 export async function firmaKimligi(havuz: pg.Pool, kisaAd: string): Promise<string | null> {
   const sonuc = await havuz.query<{ firma_bul: string | null }>("SELECT firma_bul($1)", [kisaAd]);

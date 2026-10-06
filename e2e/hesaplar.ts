@@ -27,3 +27,14 @@ export const E2E_MUHASEBE = {
   plan: { masaustu: "P-0125-901", tablet: "P-0125-902", telefon: "P-0125-903" },
   fatura: { masaustu: "DMF2026000000901", tablet: "DMF2026000000902", telefon: "DMF2026000000903" },
 } as const;
+/* yönetim (348): yönetim adresi ve uydurma yöneticiler (yalnız geçici test veritabanı). Doğrulama anahtarı uydurma Base32; test kodu onunla üretir.
+   firma: yönetim sayfasından açılacak uydurma firma (her genişliğin sunucusu ayrı veritabanında — ad çakışmaz) */
+export const E2E_YONETIM = {
+  alan: "yonetim.localhost",
+  ilk: { eposta: "ilk@probata-yonetim.example", parola: "Gecici-yonetim-2026" },
+  etkin: { eposta: "yonetim@probata-yonetim.example" },
+  hazirla: "hazirla@probata-yonetim.example",
+  anahtar: "JBSWY3DPEHPK3PXPJBSWY3DPEHPK3PXP",
+  yeniParola: "yonetim-yeni-parola-2026",
+  firma: { unvan: "Yeni Muayene Deneme Ltd. Şti.", alt: "yenideneme", kod: "YD", yon: "Yeni Deneme Yöneticisi", eposta: "yonetici@yenideneme.example" },
+} as const;

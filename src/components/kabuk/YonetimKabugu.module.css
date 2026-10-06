@@ -1,0 +1,18 @@
+/* YÖNETİM KABUĞU (348; maket maket-ortak.js o.yonetim) — menüsüz; üst çubuk müşteri kabuğununkiyle aynı ölçüde. ⛔ Çıplak renk yok (2.9). */
+.kabuk { min-height: 100vh; display: flex; flex-direction: column; }
+.ust {
+  position: sticky; top: 0; z-index: 20;
+  height: var(--ust-y); flex: none;
+  display: flex; align-items: center; gap: 12px;
+  padding: 0 var(--bosluk-sayfa);
+  background: var(--kart); border-bottom: 1px solid var(--kenar);
+}
+.logo { height: 28px; width: auto; flex: none; display: block; }
+.koyu, :root[data-tema="koyu"] .acik { display: none; }
+:root[data-tema="koyu"] .koyu { display: block; }
+.panel { color: var(--yazi2); font-size: var(--boy-kucuk); font-weight: 600; white-space: nowrap; }
+.bosluk { flex: 1 1 auto; }
+.icerik { padding: var(--bosluk-sayfa); min-width: 0; }
+@media (max-width: 767.98px) {
+  .panel { min-width: 0; white-space: normal; line-height: 1.2; }
+}

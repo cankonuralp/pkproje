@@ -33,6 +33,10 @@ export async function supabaseBenzeri(kume: GomuluKume, ad: string, klasor: stri
     await yonetim.query(`DO $$ BEGIN IF NOT EXISTS (SELECT 1 FROM pg_roles WHERE rolname = 'probata_musteri') THEN
       CREATE ROLE probata_musteri NOLOGIN NOSUPERUSER NOCREATEDB NOCREATEROLE NOBYPASSRLS; END IF; END $$`);
     await yonetim.query(`GRANT probata_musteri TO ${GOCU_ROLU} WITH ADMIN TRUE, INHERIT FALSE, SET FALSE`);
+    /* 2026-10-06 (348, 0050): yönetim rolü de öyle — Supabase'te "postgres" açar ve yönetir */
+    await yonetim.query(`DO $$ BEGIN IF NOT EXISTS (SELECT 1 FROM pg_roles WHERE rolname = 'probata_yonetim') THEN
+      CREATE ROLE probata_yonetim NOLOGIN NOSUPERUSER NOCREATEDB NOCREATEROLE NOBYPASSRLS; END IF; END $$`);
+    await yonetim.query(`GRANT probata_yonetim TO ${GOCU_ROLU} WITH ADMIN TRUE, INHERIT FALSE, SET FALSE`);
     await yonetim.query(`CREATE DATABASE ${ad} OWNER ${GOCU_ROLU} ENCODING 'UTF8' LOCALE 'C' TEMPLATE template0`);
   } finally {
     await yonetim.end();

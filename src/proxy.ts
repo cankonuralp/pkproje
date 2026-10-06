@@ -6,11 +6,22 @@
    Kiracı ve oturum burada DEĞİL, sayfada / eylemde veritabanıyla denetlenir (ara katman veritabanına gitmez). */
 import { NextResponse, type NextRequest } from "next/server";
 import { API_SURUMU, istemciEskiMi } from "./server/api-surum";
+import { yonetimAdresiMi } from "./server/yonetim/adres";
+
+/* 348 (KOD-GECIS Y1 "ayrı adres"): yönetim sayfası YALNIZ yönetim adresinde; yönetim adresinde de YALNIZ yönetim sayfası (firma ekranı, müşteri
+   paneli, API orada yok). Öteki her adreste /yonetim yoktur. Bulunamadı sayfasına çevrilir (404); sayfa da adresi ayrıca denetler. */
+const YONETIM_YOLU = /^\/yonetim(\/|$)/;
+const YOK_YOLU = "/_bulunamadi";
 
 export function proxy(istek: NextRequest) {
+  const yol = istek.nextUrl.pathname;
+  const yonetimde = yonetimAdresiMi(istek.headers.get("host"));
+  if (yonetimde && yol === "/") return NextResponse.redirect(new URL("/yonetim", istek.url));
+  /* Next'in kendi uçları (/_next/…: geliştirmede sıcak yenileme) yönetim adresinde de açık */
+  const yasak = yonetimde ? !YONETIM_YOLU.test(yol) && !yol.startsWith("/_next/") : YONETIM_YOLU.test(yol);
   const api = istek.nextUrl.pathname.startsWith("/api/");
   /* eski cihaz uygulaması: veri yazmadan önce durdurulur (src/server/api-surum.ts) */
-  if (api && istek.nextUrl.pathname !== "/api/surum" && istemciEskiMi(istek.headers.get("x-probata-istemci"))) {
+  if (api && !yasak && istek.nextUrl.pathname !== "/api/surum" && istemciEskiMi(istek.headers.get("x-probata-istemci"))) {
     return NextResponse.json({ hata: "Uygulamanın yeni sürümünü yükleyin.", api: API_SURUMU }, { status: 426, headers: { "X-Probata-Api": String(API_SURUMU), "Cache-Control": "no-store" } });
   }
   const nonce = Buffer.from(crypto.randomUUID()).toString("base64");
@@ -36,7 +47,7 @@ export function proxy(istek: NextRequest) {
   /* isteğin yolu (oturum dolunca girişten sonra kaldığı sayfaya dönmek için, S2). İstemcinin aynı adlı başlığı EZİLİR; değer yine de yalnız
      güvenli site içi yol olarak kullanılır (guvenliDonus). */
   baslik.set("x-probata-yol", istek.nextUrl.pathname + istek.nextUrl.search);
-  const yanit = NextResponse.next({ request: { headers: baslik } });
+  const yanit = yasak ? NextResponse.rewrite(new URL(YOK_YOLU, istek.url), { request: { headers: baslik } }) : NextResponse.next({ request: { headers: baslik } });
   /* dosya ucu kendi sıkı CSP'sini ve gömme sınırını yazar (src/server/dosya/dosya.ts indirmeBasliklari); sayfa CSP'si onu ezmesin */
   const dosyaUcu = istek.nextUrl.pathname.startsWith("/api/dosya/");
   if (!dosyaUcu) yanit.headers.set("Content-Security-Policy", csp);

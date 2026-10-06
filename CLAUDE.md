@@ -78,7 +78,7 @@ pkproje/
   ARKA-UC.md                arka uç kurgusu (2026-10-01; K1–K6 kabul, K7–K8 kabul edilmedi — 2026-10-02): veri, dosya, çevrimdışı, uygulama, yapay zekâ, yedek
   ANAYASA.md · TASARIM-KALIBI.md · 00–08-*.md · 09-SUNUCU-VE-VERI.md · EKSIKLER-VE-ONERILER.md
                             kural dosyaları (ANAYASA/KALIP'a madde yalnız reisim onayıyla eklenir)
-  src/app/                  sayfalar (iş mantığı YOK), dört rota grubu: (uygulama)/ oturum ister — Planlar ana sayfa + modül başına bir
+  src/app/                  sayfalar (iş mantığı YOK), beş rota grubu (348: (yonetim)/yonetim — yalnız yönetim adresinde, kendi oturumu): (uygulama)/ oturum ister — Planlar ana sayfa + modül başına bir
                             rota klasörü (kayıtla birebir) · (acik)/giris · (gelistirme)/vitrin (yayında 404) · (musteri)/portal müşteri paneli (319:
                             müşteri oturumu, veri müşteri işleminde — veritabanında probata_musteri rolü, kısıtlayıcı politikalar; göç 0030)
   src/proxy.ts              ara katman: her istekte nonce'lu CSP + güvenlik başlıkları (Next 16'da middleware'in adı proxy) · /api sürüm başlığı,
@@ -166,6 +166,11 @@ pkproje/
                             server/ice-aktar.ts (denetle, içe aktar — tek işlem, geri al) · ui/IceAktarma.tsx · bağlantılar <modül>/server/ice-aktar-baglanti.ts
                             (musteriler, ekipman, olcum-cihazlari — ilk_bitis, personel, araclar)
   src/components/grafik/    TEK GRAFİK ÜRETİCİSİ (329): dikey sütun (maket T9), etiket ölçülerek, gizli tablo (ekran okuyucu)
+  src/modules/yonetim/      probata YÖNETİM (2026-10-06, 348; KOD-GECIS Y1): firmalar, firma aç (ilk yönetici + geçici parola), dondur / etkinleştir,
+                            yeni geçici parola — server/yonetim.ts yalnız 0050 işlevleriyle (yönetim rolü); sema.ts (ayrılmış adlar göçle aynı) · ui/ ·
+                            sayfalar src/app/(yonetim)/yonetim: giris (parola → kod → ilk kurulum) + (panel) — yalnız PROBATA_YONETIM_ALAN adresinde
+  src/server/yonetim/       YÖNETİM ÇEKİRDEĞİ (348): adres.ts (saf; ara katman da okur) · totp.ts (RFC 6238, saf) · giris.ts (iki adımlı giriş, kilit,
+                            kurulum, oturum) · istek.ts (yonetimOturumGerekli, yonetimIslemi → db/kiraci.ts yonetimIcinde: SET LOCAL ROLE probata_yonetim)
   src/modules/ekipman/      EKİPMAN (2026-10-04, 309): tesisin kalıcı ekipman kaydı (kod firmada eşsiz; eski kod başkasına verilmez — ekipman_kodu)
   src/modules/teklifler/    TEKLİFLER (2026-10-05, 324; modül 11): göç 0037 (teklif, teklif_kalem, teklif_tesis, fiyat_listesi; teklif_akis: yalnız taslak
                             düzenlenir, taslak → gönderildi → kabul / red, süresi dolan kabul / red edilmez, hazırlayan veritabanında) · server/teklifler.ts
