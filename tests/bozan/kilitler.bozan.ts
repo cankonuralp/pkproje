@@ -137,5 +137,6 @@ test("test kapısı: derleme betiği testsiz kalınca ya da yayın denetimden ko
   const ci = oku(".github/workflows/ci.yml");
   assert.deepEqual(testKapisiEksikleri(paket, ci), []);
   assert.equal(testKapisiEksikleri(paket.replace('"npm test && node scripts/next.ts build"', '"node scripts/next.ts build"'), ci).length, 1);
-  assert.equal(testKapisiEksikleri(paket, ci.replace("needs: denetim", "needs: []")).length, 1);
+  /* 2026-10-06: yayın işinin denetim şartı aynı commit'in yeşil ci koşusu — "success" yerine her biten koşu sayılırsa yakalanır */
+  assert.equal(testKapisiEksikleri(paket, ci.replace("status=success", "status=completed")).length, 1);
 });

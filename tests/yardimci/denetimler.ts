@@ -272,6 +272,12 @@ export function testKapisiEksikleri(paketJson: string, ciYml: string): string[] 
   const derleSatiri = ciYml.indexOf("run: node scripts/next.ts build");
   if (testSatiri < 0) eksik.push("CI'da npm test yok");
   if (derleSatiri >= 0 && testSatiri > derleSatiri) eksik.push("CI'da derleme testten önce");
-  if (!/yayin:[\s\S]*?needs:\s*denetim/.test(ciYml)) eksik.push("CI yayın işi denetim işine bağlı değil (needs: denetim)");
+  /* 2026-10-06 (reisim: "githubdan hala bir sürü gereksiz yayınlar da gidiyor onlarıda durdur"): main'de denetim yeniden koşmaz (main'e yalnız kalem
+     dalında yeşil geçmiş commit ileri sarılır); yayın işi "needs: denetim" yerine aynı SHA'nın BAŞARILI ci koşusunu GitHub'dan sorar, yoksa düşer.
+     Şart aynı sıkılıkta: yeşil denetimi olmayan commit Pages'e çıkmaz. */
+  if (!/yayin:[\s\S]*?needs:\s*denetim/.test(ciYml)
+    && !/yayin:[\s\S]*?head_sha=\$\{\{ github\.sha \}\}&status=success[\s\S]*?select\(\.name == "ci"[\s\S]*?exit 1; fi[\s\S]*?node scripts\/onizleme\.ts/.test(ciYml)) {
+    eksik.push("CI yayın işi denetime bağlı değil (needs: denetim ya da aynı commit'in yeşil denetimi şartı)");
+  }
   return eksik;
 }

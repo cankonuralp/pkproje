@@ -1,7 +1,7 @@
 # CI + GitHub Pages önizlemesi (EKSIKLER 1; reisim 2026-09-23: "ilk yayını yap" → Pages önizlemesi).
 # · Her push'ta: tip denetimi · lint · test (fail 0) · olumsuz kanıt · üretim derlemesi. Biri düşerse iş durur.
-# · main'e push'ta ve denetim geçtiyse: önizleme kurulur (npm run build:onizleme — o da önce testi koşar) ve Pages'e
-#   yayınlanır. Site: maket ve sunum (docs/). Uygulamanın statik önizlemesi 2026-10-04'te kalktı (giriş / oturum sunucu ister).
+# · main'e push'ta: denetim kalem dalında aynı commit'te geçmiştir (yalnız yeşil commit ileri sarılır); maket / sunum değiştiyse önizleme
+#   kurulur ve Pages'e yayınlanır (2026-10-06). Site: maket ve sunum (docs/). Uygulamanın statik önizlemesi 2026-10-04'te kalktı (giriş / oturum sunucu ister).
 # · Next.js anonim kullanım bildirimi kapalı (anayasa 5.2: üçüncü tarafa veri gitmez).
 name: ci
 
@@ -13,12 +13,20 @@ on:
 permissions:
   contents: read
 
+# 2026-10-06 (reisim: "githubdan hala bir sürü gereksiz yayınlar da gidiyor onlarıda durdur"): aynı dala yeni push gelince eski koşu durur
+# (yalnız son commit denetlenir); main'e yalnız kalem dalında denetimi YEŞİL geçmiş commit ileri sarılır → main'de denetim yeniden koşmaz,
+# Pages yalnız maket / sunum değiştiyse ve o commit'in yeşil denetimi varsa yayınlanır.
+concurrency:
+  group: ci-${{ github.ref }}
+  cancel-in-progress: true
+
 env:
   NEXT_TELEMETRY_DISABLED: "1"
 
 jobs:
   denetim:
     name: Denetim
+    if: github.ref != 'refs/heads/main'
     runs-on: ubuntu-latest
     steps:
       - uses: actions/checkout@v7
@@ -45,13 +53,36 @@ jobs:
       - if: ${{ !cancelled() && steps.derleme.outcome == 'success' }}
         run: npm run test:e2e -- --project=telefon
 
+  # main: maket / sunum (Pages sitesinin kaynakları) değişti mi — değişmediyse yayın işi hiç açılmaz (boş Pages yayını yok)
+  degisiklik:
+    name: Pages kaynağı değişti mi
+    if: github.ref == 'refs/heads/main'
+    runs-on: ubuntu-latest
+    outputs:
+      var: ${{ steps.bak.outputs.var }}
+    steps:
+      - uses: actions/checkout@v7
+        with:
+          fetch-depth: 0
+      - id: bak
+        env:
+          ONCE: ${{ github.event.before }}
+        run: |
+          if [ -z "$ONCE" ] || ! git cat-file -e "$ONCE^{commit}" 2>/dev/null; then echo "var=true" >> "$GITHUB_OUTPUT"; exit 0; fi
+          if git diff --quiet "$ONCE" "$GITHUB_SHA" -- docs tools/sunum-uret.mjs src/styles/tokens.css scripts/onizleme.ts scripts/onizleme-sun.ts; then
+            echo "var=false" >> "$GITHUB_OUTPUT"
+          else
+            echo "var=true" >> "$GITHUB_OUTPUT"
+          fi
+
   yayin:
     name: Pages önizlemesi
-    needs: denetim
-    if: github.ref == 'refs/heads/main'
+    needs: degisiklik
+    if: github.ref == 'refs/heads/main' && needs.degisiklik.outputs.var == 'true'
     runs-on: ubuntu-latest
     permissions:
       contents: read
+      actions: read
       pages: write
       id-token: write
     environment:
@@ -61,13 +92,20 @@ jobs:
       group: pages
       cancel-in-progress: false
     steps:
+      # denetim geçmeden yayın yok: bu commit kalem dalında "Denetim"i yeşil geçmiş olmalı (aynı SHA'nın başarılı ci koşusu)
+      - name: Commit'in yeşil denetimi var mı
+        env:
+          GH_TOKEN: ${{ github.token }}
+        run: |
+          n=$(gh api "repos/${{ github.repository }}/actions/runs?head_sha=${{ github.sha }}&status=success&per_page=20" --jq '[.workflow_runs[] | select(.name == "ci" and .head_branch != "main")] | length')
+          if [ "$n" = "0" ]; then echo "Bu commit'in yeşil denetimi yok; Pages yayınlanmaz."; exit 1; fi
       - uses: actions/checkout@v7
       - uses: actions/setup-node@v7
         with:
           node-version: 24
           cache: npm
       - run: npm ci
-      - run: npm run build:onizleme
+      - run: node scripts/onizleme.ts
       - uses: actions/configure-pages@v6
       - uses: actions/upload-pages-artifact@v5
         with:
