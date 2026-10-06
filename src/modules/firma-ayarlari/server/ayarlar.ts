@@ -1,5 +1,6 @@
 /* FİRMA AYARLARI (334; modül 22; maket firma-ayarlari.html — R1 "ayrı bir modül olsun", Z1 bölüm başına Kaydet, 202 dağınık ayarlar tek yerde).
-   Görür: Firma ayarları "gör"; değiştirir: "yaz" (başlangıçta firma yöneticisi — SABIT, kendini kilitleyemez). Değerler çekirdeğin ayar
+   Görür: Firma ayarları "gör" ya da "yaz" ("kendi" / "branşı": firma ayarında kişiye ya da branşa ait kayıt yok — görmez; 334 incelemesi);
+   değiştirir: "yaz" (başlangıçta firma yöneticisi — SABIT, kendini kilitleyemez). Değerler çekirdeğin ayar
    bölümlerinde (src/server/ayar/ayar.ts: sürüm kilidi, denetim izi); firma kodu firma kaydında (0045 sütun yetkisi); logo / ön bilgilendirme
    formu / bordro formatı tek dosya yolundan (kayıt = firma). Geçersiz değer kaydedilmez, alanın altında söylenir. Öteki modüllerin tablolarına
    dokunmaz: kişi seçenekleri Personel'den. */
@@ -24,7 +25,7 @@ import {
 
 const MODUL = 22;
 export interface Kisi extends YetkiHesabi { ad: string }
-export const ayarlarGorur = (kim: YetkiHesabi) => duzey(kim, MODUL) !== "yok";
+export const ayarlarGorur = (kim: YetkiHesabi) => ["gor", "yaz"].includes(duzey(kim, MODUL));
 export const ayarlarYazar = (kim: YetkiHesabi) => duzey(kim, MODUL) === "yaz";
 
 type Surumlu<T> = { deger: T; surum: number };
@@ -105,9 +106,10 @@ export async function firmaAyarlari(db: Sorgulayici, kim: Kisi): Promise<FirmaAy
   };
 }
 
-export type AyarYazma = { durum: "tamam"; bildirim: string } | { durum: "gecersiz"; hatalar: DogrulamaHatalari } | { durum: "red"; neden: string } | { durum: "cakisma" } | { durum: "yetkisiz" };
+/** degismedi: kayıtlı değer zaten aynıydı (sunucu biçimi düzeltti) — ekran taslağı kayıtlı değere döner */
+export type AyarYazma = { durum: "tamam"; bildirim: string; degismedi?: true } | { durum: "gecersiz"; hatalar: DogrulamaHatalari } | { durum: "red"; neden: string } | { durum: "cakisma" } | { durum: "yetkisiz" };
 const SONUC = (r: { durum: string; hatalar?: DogrulamaHatalari }, bildirim: string): AyarYazma =>
-  r.durum === "tamam" || r.durum === "degisiklik_yok" ? { durum: "tamam", bildirim } : r.durum === "gecersiz" ? { durum: "gecersiz", hatalar: r.hatalar ?? {} }
+  r.durum === "tamam" ? { durum: "tamam", bildirim } : r.durum === "degisiklik_yok" ? { durum: "tamam", bildirim, degismedi: true } : r.durum === "gecersiz" ? { durum: "gecersiz", hatalar: r.hatalar ?? {} }
     : { durum: "cakisma" };
 
 /** bölüm kaydet (maket Z1 "Kaydet"): girdi şemadan geçer; kaydedilmemiş alan bölümün öteki alanlarıyla birlikte kalır (dosya alanları korunur) */
@@ -138,6 +140,9 @@ export async function ayarKaydet(db: Sorgulayici, kim: Kisi, kesim: string, suru
       return g.tamam ? yaz("saklama", g.veri, `Saklama süresi ${g.veri.yil} yıl.`) : { durum: "gecersiz", hatalar: g.hatalar };
     }
     case "mesai": {
+      /* kapatırken gizli sayı alanları doğrulanmaz, kayıtlı değerleri kalır (ekranda görünmeyen alanın hatası olmaz — 334 incelemesi) */
+      if (girdi && typeof girdi === "object" && (girdi as { acik?: unknown }).acik === false)
+        return yaz("mesai", { ...(await ayarOku(db, "mesai")).deger, acik: false }, "Mesai takibi kapalı; günlük süre sınırı yok.");
       const g = dogrula(MesaiGirdisi, girdi);
       if (!g.tamam) return { durum: "gecersiz", hatalar: g.hatalar };
       const eski = (await ayarOku(db, "mesai")).deger;
@@ -170,7 +175,7 @@ export async function ayarKaydet(db: Sorgulayici, kim: Kisi, kesim: string, suru
       }
       if (Object.keys(h).length) return { durum: "gecersiz", hatalar: h };
       const n = await fiyatlariYaz(db, kim, yeni);
-      return { durum: "tamam", bildirim: n ? `Fiyat listesi kaydedildi (${n} tür); yeni teklifler bu fiyatlarla dolar.` : "Fiyat listesinde değişiklik yok." };
+      return n ? { durum: "tamam", bildirim: `Fiyat listesi kaydedildi (${n} tür); yeni teklifler bu fiyatlarla dolar.` } : { durum: "tamam", bildirim: "Fiyat listesinde değişiklik yok.", degismedi: true };
     }
     case "yz": {
       const g = dogrula(YzGirdisi, girdi);
@@ -247,13 +252,14 @@ export async function belgeTuruKaldir(db: Sorgulayici, kim: Kisi, k: string): Pr
   return { durum: "tamam", bildirim: `${x.ad} kaldırıldı.` };
 }
 
-/** firma kodu (rapor numarasının başı); açılmış raporların numarası değişmez */
+/** firma kodu (rapor numarasının başı); açılmış raporların numarası değişmez. gorulen: ekranın gördüğü kod (iyimser kilit; yetki vermez) */
 export async function firmaKoduKaydet(db: Sorgulayici, kim: Kisi, girdi: unknown): Promise<AyarYazma> {
   if (!ayarlarYazar(kim)) return { durum: "yetkisiz" };
   const g = dogrula(KodGirdisi, girdi);
   if (!g.tamam) return { durum: "gecersiz", hatalar: g.hatalar };
-  await firmaKoduYaz(db, g.veri.kod, { kim: kim.ad, ne: "firma.rapor_kodu" });
-  return { durum: "tamam", bildirim: `Firma kodu ${g.veri.kod}; yeni raporlar bu kodla numaralanır.` };
+  const r = await firmaKoduYaz(db, g.veri.kod, g.veri.gorulen, { kim: kim.ad, ne: "firma.rapor_kodu" });
+  if (r === "cakisma") return { durum: "cakisma" };
+  return { durum: "tamam", bildirim: `Firma kodu ${g.veri.kod}; yeni raporlar bu kodla numaralanır.`, ...(r === "degisiklik_yok" ? { degismedi: true as const } : {}) };
 }
 
 const DOSYA_TURU = { png: "PNG", jpeg: "JPEG", pdf: "PDF", xlsx: "Excel (.xlsx)" } as const;
@@ -267,6 +273,8 @@ export async function ayarDosyasiYaz(db: Sorgulayici, depo: Depo, kim: Kisi, fir
   if (belge && belge.bayt.length > t.mb << 20) return { durum: "gecersiz", hatalar: { dosya: `En çok ${t.mb} MB.` } };
   const bolum = t.bolum as "firma_bilgileri" | "belge_sablon";
   const o = await ayarOku(db, bolum);
+  /* sürüm yüklemeden ÖNCE: eski ekranın yüklediği dosya hiçbir ayara bağlı olmadan kalmaz (334 incelemesi) */
+  if ((o.id === null ? -1 : o.surum) !== surum) return { durum: "cakisma" };
   const eski = (o.deger as Record<string, unknown>)[t.alan] as string | null;
   let yeni: string | null = null;
   if (belge) {
@@ -275,7 +283,11 @@ export async function ayarDosyasiYaz(db: Sorgulayici, depo: Depo, kim: Kisi, fir
     yeni = y.id;
   }
   const r = await ayarYaz(db, bolum, surum, { ...o.deger, [t.alan]: yeni }, { kim: kim.ad, ne: `firma_ayar.${ne}` });
-  if (r.durum !== "tamam" && r.durum !== "degisiklik_yok") return SONUC(r, "");
+  if (r.durum !== "tamam" && r.durum !== "degisiklik_yok") {
+    /* arada başkası kaydetti: yeni yüklenen dosya çöpe (öksüz etkin kayıt kalmaz) */
+    if (yeni) await dosyaCope(db, yeni, { kim: kim.ad, ne: `firma_ayar.${ne}.cakisma` });
+    return SONUC(r, "");
+  }
   if (eski && eski !== yeni) await dosyaCope(db, eski, { kim: kim.ad, ne: `firma_ayar.${ne}.cope` });
   return { durum: "tamam", bildirim: belge ? `${t.ad} kaydedildi.` : `${t.ad} kaldırıldı.` };
 }

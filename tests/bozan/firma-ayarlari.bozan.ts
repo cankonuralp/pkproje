@@ -2,7 +2,9 @@
    klasörden içe aktarılır (göreli içe aktarmalar mutlak yola çevrilir).
    1. "Yalnız değiştir düzeyi yazar" kalkınca Firma ayarlarını yalnız GÖREN rol ayarları değiştirir.
    2. Teslim eden denetimi kalkınca başka firmanın kişisi zimmet formunun başlangıç teslim edeni olur.
-   3. (335) Fiyat denetimi kalkınca sıfır birim fiyat kaydedilir. */
+   3. (335) Fiyat denetimi kalkınca sıfır birim fiyat kaydedilir.
+   4. (334 incelemesi) Görme "gör / yaz" yerine "yok değil" olunca "kendi" verilen denetçi bütün ayarları (sabit giderler, personel) görür.
+   5. (334 incelemesi) Sürüm ön denetimi ve çakışmada çöpe atma kalkınca eski ekranın yüklediği logo hiçbir ayara bağlı olmadan etkin kalır. */
 import assert from "node:assert/strict";
 import { mkdtempSync, readFileSync, rmSync, writeFileSync } from "node:fs";
 import { tmpdir } from "node:os";
@@ -11,6 +13,7 @@ import { pathToFileURL } from "node:url";
 import { after, before, test } from "node:test";
 import type { GomuluKume } from "../../src/server/db/gomulu.ts";
 import { havuzKur, kiraciIcinde, type Havuz } from "../../src/server/db/kiraci.ts";
+import { klasorDepo } from "../../src/server/dosya/depo.ts";
 import { testKumesi } from "../yardimci/kume.ts";
 
 type Modul = typeof import("../../src/modules/firma-ayarlari/server/ayarlar.ts");
@@ -18,10 +21,14 @@ const KOK = resolve("src/modules/firma-ayarlari/server");
 const KAYNAK = readFileSync(join(KOK, "ayarlar.ts"), "utf8").replace(/from "(\.\.?\/[^"]+)"/g, (_, y) => `from "${pathToFileURL(resolve(KOK, y)).href}"`);
 const klasor = mkdtempSync(join(tmpdir(), "firma-ayar-bozan-"));
 let sira = 0;
-async function bozuk(eski: string, yeni: string): Promise<Modul> {
-  assert.ok(KAYNAK.includes(eski), `bozulacak satır kaynakta yok: ${eski}`);
+async function bozuk(eski: string, yeni: string, ...ek: [string, string][]): Promise<Modul> {
+  let k = KAYNAK;
+  for (const [e, y] of [[eski, yeni], ...ek]) {
+    assert.ok(k.includes(e), `bozulacak satır kaynakta yok: ${e}`);
+    k = k.replace(e, () => y);
+  }
   const yol = join(klasor, `a-${sira++}.ts`);
-  writeFileSync(yol, KAYNAK.replace(eski, () => yeni));
+  writeFileSync(yol, k);
   return import(pathToFileURL(yol).href);
 }
 
@@ -61,4 +68,27 @@ test("fiyat denetimi kalkınca sıfır birim fiyat kaydedilir (teklif dışı ra
   const YON = { id: yonId, ad: "Deneme", roller: ["firma_yoneticisi" as const] };
   const r = await kiraciIcinde(havuz, A, (db) => m.ayarKaydet(db, YON, "fiyat", 0, { fiyatlar: { [ht]: "0" } }), { hesapId: yonId });
   assert.equal(r.durum, "tamam", "bozuk: sıfır fiyat kaydedildi");
+});
+
+/* 334 incelemesi */
+test("görme 'gör / yaz' yerine 'yok değil' olunca 'kendi' verilen denetçi bütün ayarları görür", async () => {
+  const m = await bozuk('export const ayarlarGorur = (kim: YetkiHesabi) => ["gor", "yaz"].includes(duzey(kim, MODUL));',
+    'export const ayarlarGorur = (kim: YetkiHesabi) => duzey(kim, MODUL) !== "yok";');
+  const K = { id: planId, ad: "Deneme", roller: ["planlama" as const], matris: { 22: ["kendi", "kendi", "kendi", "kendi", "yaz", "yok"] } };
+  const v = await kiraciIcinde(havuz, A, (db) => m.firmaAyarlari(db, K as never), { hesapId: planId });
+  assert.notEqual(v, null, "bozuk: 'kendi' düzeyi firma ayarlarını gördü");
+});
+
+test("sürüm ön denetimi ve çakışmada çöpe atma kalkınca eski ekranın yüklediği logo öksüz ve etkin kalır", async () => {
+  const m = await bozuk("  if ((o.id === null ? -1 : o.surum) !== surum) return { durum: \"cakisma\" };\n", "",
+    ["    if (yeni) await dosyaCope(db, yeni, { kim: kim.ad, ne: `firma_ayar.${ne}.cakisma` });\n", ""]);
+  const YON = { id: yonId, ad: "Deneme", roller: ["firma_yoneticisi" as const] };
+  const depo = klasorDepo(join(klasor, "depo"));
+  const parca = (ad: string, govde: string) => Buffer.concat([Buffer.from([0, 0, govde.length >> 8, govde.length & 0xff]), Buffer.from(ad + govde, "latin1"), Buffer.from([0, 0, 0, 0])]);
+  const PNG = new Uint8Array(Buffer.concat([Buffer.from([0x89, 0x50, 0x4e, 0x47, 0x0d, 0x0a, 0x1a, 0x0a]), parca("IHDR", "\0\0\0\x01\0\0\0\x01\x08\x02\0\0\0"), parca("IDAT", "veri"), parca("IEND", "")]));
+  await kiraciIcinde(havuz, A, (db) => m.ayarKaydet(db, YON, "firma", -1, { ad: "", adres: "Deneme", eposta: "", akr: "", nusha: "2" }), { hesapId: yonId });
+  const r = await kiraciIcinde(havuz, A, (db) => m.ayarDosyasiYaz(db, depo, YON, A, "logo", -1, { ad: "eski.png", bayt: PNG }), { hesapId: yonId });
+  assert.equal(r.durum, "cakisma");
+  const n = (await kiraciIcinde(havuz, A, (db) => db.sorgu<{ n: string }>("SELECT count(*) n FROM dosya WHERE modul = 'firma_ayar' AND cop IS NULL"))).rows[0].n;
+  assert.equal(Number(n), 1, "bozuk: çakışmada yüklenen dosya etkin kaldı");
 });

@@ -2341,6 +2341,21 @@ revizyon, alan kopyalama, hafif kusur devri, meslek eşleşme denetimi).
 - Emsal ürünler: https://opwire.app/iso-17020-periyodik-kontrol-yazilimi/ · https://17020muayene.vidco.com.tr/ · https://akuple.com/asansor-kontrol-yazilimi/ · https://ensyazilim.com/
 
 ## 11 · Değişiklik günlüğü
+- 2026-10-06 (334 incelemesi): çapraz inceleme (dört bakış + çürütme; 28 bulgudan 23'ü doğrulandı, birbirinin aynısı olanlar birleşti)
+  düzeltmeleri. **Güvenlik:** Firma ayarlarını "kendi" / "branşı" düzeyi de görüyordu (sabit giderler, personel listesi) — artık yalnız "gör" ve "yaz"
+  (Muhasebe ve Müşteriler gibi; firma ayarında kişiye ya da branşa ait kayıt yok). **Veri:** eski ekranla (başka sekme / başka yönetici kaydetmiş)
+  yüklenen logo ya da şablon hiçbir ayara bağlı olmadan etkin kalıyordu — sürüm yüklemeden önce denetlenir, arada kaydedilirse yeni dosya çöpe;
+  firma kodu iyimser kilitle yazılır (ekranın gördüğü kod hâlâ kayıtlıysa; izdeki eski değer gerçek geçiş); depoda okunamayan logo rapor /
+  teklif belgesini, onay ekranını ve son imzayı düşürmez (logo yeri boş çıkar). **Mantık:** mesai form ve kayıt aralıkları ayrışıyordu (form
+  1–1440, kayıt 60–660) — kayıt onaylı maketin aralığına genişledi (660'ı aşan toplam uyarı, engel değil; günlük üst sınır hakkı keser); mesai
+  kapatılırken gizli alanlar doğrulanmaz, kayıtlı değerleri kalır; sunucu girileni aynı değere düzeltince (kırpma, büyük harf, tutar biçimi) bölüm
+  "Kaydedilmedi" kalıyordu — taslak kayıtlı değere döner; firma kodunda "i" Türkçe yerelle "İ" olup reddediliyordu (yerelden bağımsız büyütme,
+  önizleme kayıt kuralıyla aynı); temel ön bilgilendirme formunun kodu firma kodundan (<kod>-FR-OBF-01; "KM" sabiti kalktı). **Arayüz:** logo
+  önizlemesinin sınırı resimde (kutudan taşmıyor), zemini beyaz (koyu temada görünür); seçim alanları hatada geçersiz işaretli (odak bulur);
+  dosya kaldırma onayı dosyanın adını ve sonucunu söyler ("yüklenmedi" değil); kaldırınca odak yükleme tuşuna; sabit gider satırı silinince
+  hatalar başka satıra kaymaz; 2 MB üstü logo "En çok 2 MB" der; rapor e-postası ve akreditasyon no boşken "raporda boş çıkar" uyarısı. Kilit:
+  firma-ayarlari.test (kendi / branşı görmez, mesai aralığı ve kapatma, değişmedi, firma kodu kilidi + iz + kesintisiz rapor sırası, logo
+  firma kaydında korunur, 2 MB, çakışmada öksüz yok, okunamayan logo); olumsuz kanıt +2.
 - 2026-10-06 (336): **K4 Firma ayarları — yapay zekâ, bulut kaydı, depolama ve yedek** (maket yzCiz Y1 — reisim: "Müşterinin token ekleyeceği
   yeri ekledin mi makete"; bulutCiz Ö2; depoCiz G2/G3 — "elle yedekleme olmasın"). **Yapay zekâ** (tam genişlik): kapalı / açık; açıkken yurt dışı
   (Anthropic, ABD) KVKK uyarısı; **API anahtarı** bir kez yazılır, AES-256-GCM ile şifreli sırda (sir.ts), ekranda ve yanıtta yalnız son 4 hane;

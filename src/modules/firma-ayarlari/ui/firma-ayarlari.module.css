@@ -20,12 +20,15 @@
 .hata { margin: 8px 0 0; color: var(--uyari-yazi); font-size: var(--boy-kucuk); font-weight: 600; }
 .dosya { min-width: 0; }
 .dosyaSatir { display: flex; flex-wrap: wrap; align-items: center; gap: 12px; min-width: 0; }
-.logo { display: block; max-width: 160px; max-height: 64px; object-fit: contain; border: 1px solid var(--kenar); border-radius: var(--r-orta); background: var(--zemin); }
+/* logo önizlemesi: sınır resmin kendisinde (GizliResim sınıfı dış kaba verir); zemin kâğıt gibi beyaz — logolar kâğıda göre, koyu temada da görünür
+   (maket .a-logo-onizle) */
+.logo { display: inline-block; padding: 4px; border: 1px solid var(--kenar); border-radius: var(--r-orta); background: #fff; }
+.logo img { display: block; width: auto; height: auto; max-width: 160px; max-height: 64px; object-fit: contain; }
 .tuslar { display: flex; flex-wrap: wrap; gap: 8px; margin-top: 12px; }
 .secenekler { display: grid; gap: 4px; }
 .secenek { display: flex; align-items: center; gap: 8px; min-height: var(--tus-y); cursor: pointer; }
 .secenek input { width: 18px; height: 18px; margin: 0; flex: none; accent-color: var(--birincil); }
-.kod { max-width: 120px; text-transform: uppercase; font-variant-numeric: tabular-nums; letter-spacing: .04em; }
+.kod { max-width: 120px; font-variant-numeric: tabular-nums; letter-spacing: .04em; }
 .kalem { display: grid; grid-template-columns: minmax(0, 2fr) minmax(0, 1fr) minmax(0, 2fr) auto; gap: 8px 12px; align-items: end; padding: 10px 0; border-bottom: 1px solid var(--kenar); }
 .kalemSil { justify-self: start; }
 /* 335: fiyatlar dört sütuna kadar; müşteriye açık belge türleri üç sütun; firmanın eklediği tür satırında Kaldır */

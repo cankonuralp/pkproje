@@ -14,7 +14,8 @@ import { SecimAlani } from "../../../components/secim/SecimAlani";
 import { Serit } from "../../../components/serit/Serit";
 import { Tus } from "../../../components/tus/Tus";
 import {
-  AYAR_BASLIK, AYAR_DOSYASI, BULUT_DUZEN, BULUT_SAGLAYICI, ESIK, IMZA_YONTEM, NUSHA, SAKLAMA_YIL, YASAL, YEDEK_GUN, YEDEK_SIK, YZ_MODEL, type AyarDosyasi, type AyarKesimi, type EsikAdi,
+  AYAR_BASLIK, AYAR_DOSYASI, BULUT_DUZEN, BULUT_SAGLAYICI, ESIK, IMZA_YONTEM, NUSHA, SAKLAMA_YIL, YASAL, YEDEK_GUN, YEDEK_SIK, YZ_MODEL, kodBuyut, onBilgiFormKodu,
+  type AyarDosyasi, type AyarKesimi, type EsikAdi,
 } from "../sema";
 import type { FirmaAyarlari as Veri } from "../server/ayarlar";
 import { ayarDosyasiEylemi, ayarKaydetEylemi, belgeTuruEkleEylemi, belgeTuruKaldirEylemi, firmaKoduKaydetEylemi, yzAnahtarEylemi, type AyarYaniti } from "./eylemler";
@@ -67,15 +68,19 @@ function useKesim<T>(kesim: AyarKesimi, ilk: T, surum: number, gonder?: (d: T) =
       requestAnimationFrame(() => document.querySelector<HTMLElement>(`section[aria-labelledby="${bolumId(kesim)}"] [aria-invalid="true"]`)?.focus());
       return;
     }
-    setH({}); bildir(r.bildirim ?? `${AYAR_BASLIK[kesim]} kaydedildi.`); router.refresh();
+    /* kayıtlı değer zaten aynıydı (sunucu kırptı / büyüttü / biçimledi): sunucu değeri değişmeyeceği için taslak burada kayıtlıya döner */
+    setH({}); if (r.degismedi) setD(ilk);
+    bildir(r.bildirim ?? `${AYAR_BASLIK[kesim]} kaydedildi.`); router.refresh();
     requestAnimationFrame(() => document.getElementById(bolumId(kesim))?.focus());
   });
   const vazgec = () => { setD(ilk); setH({}); bildir(`${AYAR_BASLIK[kesim]}: değişiklikler geri alındı.`); document.getElementById(bolumId(kesim))?.focus(); };
-  return { d, setD, h, kirli, mesgul, kaydet, vazgec };
+  return { d, setD, h, setH, kirli, mesgul, kaydet, vazgec };
 }
 
 /* ── dosya ayarı (logo, ön bilgilendirme formu, bordro formatı): seçilince yüklenir ── */
-function DosyaAyari({ ne, dosya, surum, yaz, bos, resim = false }: { ne: AyarDosyasi; dosya: { id: string; ad: string } | null; surum: number; yaz: boolean; bos: string; resim?: boolean }) {
+function DosyaAyari({ ne, dosya, surum, yaz, bos, kaldirSonu, resim = false }: {
+  ne: AyarDosyasi; dosya: { id: string; ad: string } | null; surum: number; yaz: boolean; bos: string; kaldirSonu: string; resim?: boolean;
+}) {
   const router = useRouter();
   const bildir = useBildir();
   const onayla = useOnayla();
@@ -88,9 +93,11 @@ function DosyaAyari({ ne, dosya, surum, yaz, bos, resim = false }: { ne: AyarDos
     const r = await ayarDosyasiEylemi(v);
     if (!r.tamam) { setHata(r.hatalar?.dosya ?? r.genel ?? "Kaydedilemedi."); return; }
     setHata(null); bildir(r.bildirim ?? "Kaydedildi."); router.refresh();
+    /* kaldırınca Kaldır tuşu gider: odak yükleme tuşuna (maket — odak gövdeye düşmez) */
+    if (!f) requestAnimationFrame(() => document.querySelector<HTMLElement>(`[data-dosya-yukle="${ne}"]`)?.focus());
   });
   const kaldir = async () => {
-    if (await onayla({ baslik: `${t.ad} kaldırılsın mı?`, metin: ne === "logo" ? "Raporların ve belgelerin başlığında logo yerinde boş kutu çıkar." : bos, tus: "Kaldır", tehlike: true })) gonder(null);
+    if (await onayla({ baslik: `${t.ad} kaldırılsın mı?`, metin: dosya ? `${dosya.ad} kaldırılır; ${kaldirSonu}` : kaldirSonu, tus: "Kaldır", tehlike: true })) gonder(null);
   };
   const kabul = t.turler.map((x) => (x === "pdf" ? "application/pdf" : x === "xlsx" ? ".xlsx" : `image/${x}`)).join(",");
   return (
@@ -102,7 +109,7 @@ function DosyaAyari({ ne, dosya, surum, yaz, bos, resim = false }: { ne: AyarDos
       {yaz && <div className={stil.tuslar}>
         <input ref={secici} type="file" accept={kabul} hidden aria-hidden="true" tabIndex={-1}
           onChange={(e) => { const f = e.target.files?.[0]; e.target.value = ""; if (f) gonder(f); }} />
-        <Tus tur="ikincil" ikon="upload" disabled={mesgul} aria-busy={mesgul || undefined} onClick={() => secici.current?.click()}>{dosya ? "Değiştir" : `${t.ad === "Firma logosu" ? "Logo" : t.ad} yükle`}</Tus>
+        <Tus tur="ikincil" ikon="upload" disabled={mesgul} aria-busy={mesgul || undefined} data-dosya-yukle={ne} onClick={() => secici.current?.click()}>{dosya ? "Değiştir" : `${t.ad === "Firma logosu" ? "Logo" : t.ad} yükle`}</Tus>
         {dosya && <Tus tur="ikincil" ikon="x" disabled={mesgul} onClick={kaldir} aria-label={`${t.ad} kaldır`}>Kaldır</Tus>}
       </div>}
       {hata && <p className={stil.hata} role="alert">{hata}</p>}
@@ -124,16 +131,17 @@ function FirmaBilgileri({ v }: { v: Veri }) {
       <FormIzgara>
         {g("ad", ID.ad, "Ticari ad", 120, { genis: true, uyari: `Boş: raporda firma kaydındaki ad çıkar (${v.firma.kayitAd}).` })}
         {g("adres", ID.adres, "Adres", 200, { genis: true, uyari: "Boş: raporda bu alan boş çıkar." })}
-        {g("eposta", ID.eposta, "Rapor e-postası", 120, { sonuc: "Müşteriye giden rapor ve bildirimler bu adresten", tur: "email" })}
-        {g("akr", ID.akr, "Akreditasyon no", 20, { sonuc: "TÜRKAK markasının yanında" })}
+        {g("eposta", ID.eposta, "Rapor e-postası", 120, { sonuc: "Müşteriye giden rapor ve bildirimler bu adresten", tur: "email", uyari: "Boş: raporda bu alan boş çıkar." })}
+        {g("akr", ID.akr, "Akreditasyon no", 20, { sonuc: "TÜRKAK markasının yanında", uyari: "Boş: raporda bu alan boş çıkar." })}
         <Alan id={ID.nusha} etiket="Rapor nüsha sayısı" hata={s.h.nusha}>
-          <SecimAlani id={ID.nusha} ad="Rapor nüsha sayısı" deger={s.d.nusha} kapali={!v.yaz} secenekler={NUSHA.map((n) => [String(n), `${n} nüsha`] as const)}
+          <SecimAlani id={ID.nusha} ad="Rapor nüsha sayısı" deger={s.d.nusha} kapali={!v.yaz} gecersiz={!!s.h.nusha} tanim={s.h.nusha ? ipucuId(ID.nusha) : undefined} secenekler={NUSHA.map((n) => [String(n), `${n} nüsha`] as const)}
             degistir={(x) => s.setD({ ...s.d, nusha: x })} />
         </Alan>
       </FormIzgara>
       <p className={stil.etiket}>Firma logosu</p>
       <DosyaAyari ne="logo" dosya={v.dosyalar.logo} surum={v.dosyalar.surum.firma} yaz={v.yaz} resim
-        bos="Logo yüklenmedi; raporların başlığında logo yeri boş çıkar. PNG ya da JPEG, en çok 2 MB." />
+        bos="Logo yüklenmedi; raporların başlığında logo yeri boş çıkar. PNG ya da JPEG, en çok 2 MB."
+        kaldirSonu="raporların ve belgelerin başlığında logo yerinde boş kutu çıkar." />
     </Kart>
   );
 }
@@ -160,7 +168,7 @@ function ZimmetFormu({ v }: { v: Veri }) {
   return (
     <Kart kesim="zimmet" yaz={v.yaz} kirli={s.kirli} mesgul={s.mesgul} kaydet={s.kaydet} vazgec={s.vazgec}>
       <Alan id={ID.zeden} etiket="Teslim eden (başlangıç)" hata={s.h.teslim_eden} sonuc={s.h.teslim_eden ? undefined : "Zimmet teslim formunda firma adına teslim eden; formda değiştirilebilir."}>
-        <SecimAlani id={ID.zeden} ad="Teslim eden (başlangıç)" deger={s.d.teslim_eden} kapali={!v.yaz} tanim={ipucuId(ID.zeden)}
+        <SecimAlani id={ID.zeden} ad="Teslim eden (başlangıç)" deger={s.d.teslim_eden} kapali={!v.yaz} tanim={ipucuId(ID.zeden)} gecersiz={!!s.h.teslim_eden}
           secenekler={[["", "Seçilmedi"], ...v.kisiler.map((k) => [k.id, k.ad] as const)]} degistir={(x) => s.setD({ teslim_eden: x })} />
       </Alan>
     </Kart>
@@ -172,7 +180,7 @@ function Saklama({ v }: { v: Veri }) {
   return (
     <Kart kesim="saklama" yaz={v.yaz} kirli={s.kirli} mesgul={s.mesgul} kaydet={s.kaydet} vazgec={s.vazgec}>
       <Alan id={ID.yil} etiket="Saklama süresi" hata={s.h.yil}>
-        <SecimAlani id={ID.yil} ad="Saklama süresi" deger={s.d.yil} kapali={!v.yaz}
+        <SecimAlani id={ID.yil} ad="Saklama süresi" deger={s.d.yil} kapali={!v.yaz} gecersiz={!!s.h.yil} tanim={s.h.yil ? ipucuId(ID.yil) : undefined}
           secenekler={SAKLAMA_YIL.map((y) => [String(y), `${y} yıl${y === 5 ? " (yasal en az)" : ""}`] as const)} degistir={(x) => s.setD({ yil: x })} />
       </Alan>
       <p className={stil.ipucu}>Süre dolunca imzalı rapor PDF&apos;leri ve aylık arşiv yedekleri deponuzdan silinir; silinecekler 30 gün önce size listelenir.</p>
@@ -180,10 +188,10 @@ function Saklama({ v }: { v: Veri }) {
   );
 }
 
-function SablonDosyasi({ v, ne, kesim, bos }: { v: Veri; ne: "on_bilgi" | "bordro_format"; kesim: AyarKesimi; bos: string }) {
+function SablonDosyasi({ v, ne, kesim, bos, kaldirSonu }: { v: Veri; ne: "on_bilgi" | "bordro_format"; kesim: AyarKesimi; bos: string; kaldirSonu: string }) {
   return (
     <Kart kesim={kesim} yaz={false} kirli={false} mesgul={false} kaydet={() => undefined} vazgec={() => undefined}>
-      <DosyaAyari ne={ne} dosya={v.dosyalar[ne]} surum={v.dosyalar.surum.sablon} yaz={v.yaz} bos={bos} />
+      <DosyaAyari ne={ne} dosya={v.dosyalar[ne]} surum={v.dosyalar.surum.sablon} yaz={v.yaz} bos={bos} kaldirSonu={kaldirSonu} />
     </Kart>
   );
 }
@@ -227,7 +235,7 @@ function Esikler({ v }: { v: Veri }) {
           const [ad, etiket, bas, sec] = ESIK[k], id = `w-ay-esik-${k}`;
           return (
             <Alan key={k} id={id} etiket={ad} hata={s.h[k]} sonuc={s.h[k] ? undefined : `${etiket}${Number(s.d[k]) === bas ? "" : ` · başlangıç ${bas} gün`}`}>
-              <SecimAlani id={id} ad={ad} deger={s.d[k]} kapali={!v.yaz} tanim={ipucuId(id)} secenekler={sec.map((g) => [String(g), `${g} gün`] as const)}
+              <SecimAlani id={id} ad={ad} deger={s.d[k]} kapali={!v.yaz} tanim={ipucuId(id)} gecersiz={!!s.h[k]} secenekler={sec.map((g) => [String(g), `${g} gün`] as const)}
                 degistir={(x) => s.setD({ ...s.d, [k]: x })} />
             </Alan>
           );
@@ -238,12 +246,12 @@ function Esikler({ v }: { v: Veri }) {
 }
 
 function RaporNumarasi({ v }: { v: Veri }) {
-  const s = useKesim("kod", { kod: v.kod }, 0, (d) => firmaKoduKaydetEylemi(d));
+  const s = useKesim("kod", { kod: v.kod }, 0, (d) => firmaKoduKaydetEylemi({ kod: d.kod, gorulen: v.kod }));
   return (
     <Kart kesim="kod" yaz={v.yaz} kirli={s.kirli} mesgul={s.mesgul} kaydet={s.kaydet} vazgec={s.vazgec}>
-      <Alan id={ID.kod} etiket="Firma kodu" hata={s.h.kod} sonuc={s.h.kod ? undefined : `Yeni rapor: ${/^[A-Za-z]{2}$/.test(s.d.kod) ? s.d.kod.toLocaleUpperCase("tr") : v.kod}-AAYY-SIRA-…; açılmış raporların numarası değişmez.`}>
-        <Girdi id={ID.kod} value={s.d.kod} maxLength={2} autoCapitalize="characters" disabled={!v.yaz} hata={!!s.h.kod} mesajli className={stil.kod}
-          onChange={(e) => s.setD({ kod: e.target.value })} />
+      <Alan id={ID.kod} etiket="Firma kodu" hata={s.h.kod ?? s.h.gorulen} sonuc={s.h.kod ? undefined : `Yeni rapor: ${/^[A-Z]{2}$/.test(kodBuyut(s.d.kod)) ? kodBuyut(s.d.kod) : v.kod}-AAYY-SIRA-…; açılmış raporların numarası değişmez.`}>
+        <Girdi id={ID.kod} value={s.d.kod} maxLength={2} autoCapitalize="characters" disabled={!v.yaz} hata={!!(s.h.kod ?? s.h.gorulen)} mesajli className={stil.kod}
+          onChange={(e) => s.setD({ kod: e.target.value.toUpperCase() })} />
       </Alan>
     </Kart>
   );
@@ -270,7 +278,7 @@ function SabitGiderler({ v }: { v: Veri }) {
             <Girdi id={`w-ay-sg-not-${i}`} value={x.not} maxLength={80} disabled={!v.yaz} onChange={(e) => yaz(i, "not", e.target.value)} />
           </Alan>
           {v.yaz && <Tus tur="ikincil" ikon="x" className={stil.kalemSil} aria-label={`${x.ad || "Adsız gider"} kaldır`}
-            onClick={() => { s.setD({ kalemler: l.filter((_, j) => j !== i) }); requestAnimationFrame(() => document.getElementById(bolumId("sabit"))?.focus()); }}>Kaldır</Tus>}
+            onClick={() => { s.setD({ kalemler: l.filter((_, j) => j !== i) }); s.setH({}); requestAnimationFrame(() => document.getElementById(bolumId("sabit"))?.focus()); }}>Kaldır</Tus>}
         </div>
       ))}
       {v.yaz && l.length < 30 && <div className={stil.tuslar}>
@@ -519,8 +527,10 @@ export function FirmaAyarlari({ v }: { v: Veri }) {
           <ImzaYontemi v={v} />
           <ZimmetFormu v={v} />
           <Saklama v={v} />
-          <SablonDosyasi v={v} ne="on_bilgi" kesim="onbilgi" bos="Firma formatı yüklenmedi; müşteriye temel format (KM-FR-OBF-01) gider." />
-          <SablonDosyasi v={v} ne="bordro_format" kesim="bordro" bos="Bordro formatı yüklenmedi; Muhasebe bordroları kişi kişi elle yükler." />
+          <SablonDosyasi v={v} ne="on_bilgi" kesim="onbilgi" bos={`Firma formatı yüklenmedi; müşteriye temel format (${onBilgiFormKodu(v.kod)}) gider.`}
+            kaldirSonu={`müşterilere temel format (${onBilgiFormKodu(v.kod)}) gider.`} />
+          <SablonDosyasi v={v} ne="bordro_format" kesim="bordro" bos="Bordro formatı yüklenmedi; Muhasebe bordroları kişi kişi elle yükler."
+            kaldirSonu="bordrolar kişi kişi elle yüklenir." />
           <Mesai v={v} />
           <Esikler v={v} />
           <RaporNumarasi v={v} />

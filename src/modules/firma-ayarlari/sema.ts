@@ -48,9 +48,13 @@ const esik = (k: EsikAdi) => secim(ESIK[k][3], "Eşik seçin.");
 export const EsikGirdisi = z.object({
   kalibrasyon: esik("kalibrasyon"), kontrolu_yaklasan_tesis: esik("kontrolu_yaklasan_tesis"), plan_kontrolu_geliyor: esik("plan_kontrolu_geliyor"), egitim: esik("egitim"),
 });
-/** firma kodu: 2 harf A–Z (rapor numarasının başı ve DB biçimi; Türkçe harf numaraya girmez) */
-export const KodGirdisi = z.object({ kod: z.preprocess((v) => (typeof v === "string" ? v.trim().toLocaleUpperCase("tr") : v),
-  z.string().regex(/^[A-Z]{2}$/, "2 harf olmalı (A–Z; ör. KM). Kaydedilmedi.")) });
+/** firma kodu: 2 harf A–Z (rapor numarasının başı ve DB biçimi; Türkçe harf numaraya girmez). Büyütme yerelden bağımsız (i → I; Türkçe yerelde
+    "İ" olur ve reddedilirdi — 334 incelemesi, ortak.ts ekipmanKodu ile aynı). gorulen: ekranın gördüğü kod (iyimser kilit) */
+export const kodBuyut = (s: string) => s.trim().toUpperCase();
+const kodAlani = (ileti: string) => z.preprocess((v) => (typeof v === "string" ? kodBuyut(v) : v), z.string().regex(/^[A-Z]{2}$/, ileti));
+export const KodGirdisi = z.object({ kod: kodAlani("2 harf olmalı (A–Z; ör. KM). Kaydedilmedi."), gorulen: kodAlani("Sayfayı yenileyin.") });
+/** temel ön bilgilendirme formunun kodu (teklif belgesi teklifFormKodu gibi: firma kodu + form) */
+export const onBilgiFormKodu = (kod: string) => `${kod}-FR-OBF-01`;
 export const SabitGiderGirdisi = z.object({
   kalemler: z.array(z.object({ ad: metin(60, "En çok 60 karakter."), aylik: tutar, not: metin(80, "En çok 80 karakter.") })).max(30, "En çok 30 kalem."),
 });

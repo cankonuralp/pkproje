@@ -4,16 +4,17 @@
 import { depo } from "../../../server/dosya/depo";
 import { ayniKoken } from "../../../server/kimlik/koken";
 import { istekOturumu, oturumIslemi } from "../../../server/kimlik/istek";
+import { AYAR_DOSYASI } from "../sema";
 import { ayarDosyasiYaz, ayarKaydet, belgeTuruEkle, belgeTuruKaldir, firmaKoduKaydet, yzAnahtarYaz, type AyarYazma } from "../server/ayarlar";
 
-export interface AyarYaniti { tamam?: boolean; bildirim?: string; hatalar?: Record<string, string>; genel?: string }
+export interface AyarYaniti { tamam?: boolean; bildirim?: string; hatalar?: Record<string, string>; genel?: string; degismedi?: boolean }
 const SONUC = { yetkisiz: "Bu işlem için yetkiniz yok.", cakisma: "Bu bölüm siz açtıktan sonra değiştirildi. Sayfayı yenileyip yeniden deneyin." } as const;
 async function islem(is: (o: NonNullable<Awaited<ReturnType<typeof istekOturumu>>>) => Promise<AyarYazma>): Promise<AyarYaniti> {
   if (!(await ayniKoken())) return { genel: "İstek reddedildi. Sayfayı yenileyip yeniden deneyin." };
   const o = await istekOturumu();
   if (!o) return { genel: "Oturumunuz kapandı. Yeniden giriş yapın." };
   const r = await is(o);
-  return r.durum === "tamam" ? { tamam: true, bildirim: r.bildirim } : r.durum === "gecersiz" ? { hatalar: r.hatalar, genel: r.hatalar.genel }
+  return r.durum === "tamam" ? { tamam: true, bildirim: r.bildirim, degismedi: r.degismedi } : r.durum === "gecersiz" ? { hatalar: r.hatalar, genel: r.hatalar.genel }
     : r.durum === "red" ? { genel: r.neden } : { genel: SONUC[r.durum] };
 }
 
@@ -35,12 +36,12 @@ export async function yzAnahtarEylemi(girdi: unknown | null): Promise<AyarYaniti
 }
 /** form: ne (logo | on_bilgi | bordro_format), surum, dosya (yoksa kaldır) */
 export async function ayarDosyasiEylemi(form: FormData): Promise<AyarYaniti> {
-  const f = form.get("dosya");
+  const f = form.get("dosya"), ne = form.get("ne");
   let belge: { ad: string; bayt: Uint8Array } | null = null;
   if (f instanceof File && f.size > 0) {
-    if (f.size > 10 << 20) return { hatalar: { dosya: "En çok 10 MB." } };
+    const mb = typeof ne === "string" && Object.hasOwn(AYAR_DOSYASI, ne) ? AYAR_DOSYASI[ne as keyof typeof AYAR_DOSYASI].mb : 10;
+    if (f.size > mb << 20) return { hatalar: { dosya: `En çok ${mb} MB.` } };
     belge = { ad: f.name, bayt: new Uint8Array(await f.arrayBuffer()) };
   }
-  const ne = form.get("ne");
   return islem((o) => oturumIslemi(o, (db) => ayarDosyasiYaz(db, depo(), o, o.kiraci.firmaId, typeof ne === "string" ? ne : "", Number(form.get("surum")), belge)));
 }

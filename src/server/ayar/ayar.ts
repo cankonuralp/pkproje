@@ -28,15 +28,16 @@ export const AYAR_BOLUMLERI = {
   }),
   /** Zimmet teslim formu (196): firma adına teslim edenin başlangıç değeri (personel; formda değiştirilebilir) */
   zimmet: z.object({ teslim_eden: kimlik.default(null) }),
-  /** firmanın belge şablonları (334): ön bilgilendirme formu (N1; yoksa temel format KM-FR-OBF-01) ve bordro formatı (BB5) — dosya kimlikleri */
+  /** firmanın belge şablonları (334): ön bilgilendirme formu (N1; yoksa temel format <firma kodu>-FR-OBF-01) ve bordro formatı (BB5) — dosya kimlikleri */
   belge_sablon: z.object({ on_bilgi: kimlik.default(null), bordro_format: kimlik.default(null) }),
   /** İmza yöntemi (mobil / e-imza) */
   imza: z.object({ yontem: z.enum(["mobil", "e_imza"]).default("mobil") }),
-  /** Mesai takibi (212, AA2): normal 480 dk, mesai 180 dk, yıllık fazla çalışma ≤ 270 saat, günlük ≤ 660 dk */
+  /** Mesai takibi (212, AA2): normal 480 dk, mesai 180 dk, yıllık fazla çalışma ≤ 270 saat, günlük ≤ 660 dk. Normal 1–1440, mesai 0–1440
+      (onaylı maket: 660'ı aşan toplam uyarıdır, engel değil — 334 incelemesi; günlük üst sınır gunluk_ust_dk hakkı keser) */
   mesai: z.object({
     acik: z.boolean().default(false),
-    normal_dk: gun(60, 660).default(480),
-    mesai_dk: gun(0, 600).default(180),
+    normal_dk: gun(1, 1440).default(480),
+    mesai_dk: gun(0, 1440).default(180),
     yillik_fazla_saat: gun(0, 270).default(270),
     gunluk_ust_dk: gun(60, 660).default(660),
   }),
@@ -157,7 +158,10 @@ export async function firmaBelgeKunyesi(db: Sorgulayici, depo: Depo | null): Pro
   let logo: string | null = null;
   if (b.logo && depo) {
     const d = (await db.sorgu<{ anahtar: string; tur: string }>("SELECT anahtar, tur FROM dosya WHERE id = $1 AND modul = $2 AND cop IS NULL", [b.logo, AYAR_DOSYA])).rows[0];
-    if (d && (d.tur === "image/png" || d.tur === "image/jpeg")) logo = `data:${d.tur};base64,${Buffer.from(await depo.oku(d.anahtar)).toString("base64")}`;
+    /* depoda okunamayan logo (silinmiş / taşınmış nesne) belgeyi düşürmez: logo yeri boş çıkar (334 incelemesi) */
+    if (d && (d.tur === "image/png" || d.tur === "image/jpeg")) {
+      try { logo = `data:${d.tur};base64,${Buffer.from(await depo.oku(d.anahtar)).toString("base64")}`; } catch { logo = null; }
+    }
   }
   return { ad: b.ad || f.ad, kod: f.kod, nusha: b.nusha, adres: b.adres || null, eposta: b.eposta || null, akr: b.akr || null, logo };
 }
@@ -166,12 +170,13 @@ export async function firmaBelgeKunyesi(db: Sorgulayici, depo: Depo | null): Pro
 export const AYAR_DOSYA = "firma_ayar";
 
 /** firma kodu (rapor numarasının başı; açılmış raporun numarası değişmez): yalnız kendi firması, 2 büyük harf A–Z (0045 sütun yetkisi).
-    Yetki ÇAĞIRANDA (Firma ayarları "değiştirir"). Değiştiyse true */
-export async function firmaKoduYaz(db: Sorgulayici, kod: string, iz: Iz): Promise<boolean> {
-  if (!/^[A-Z]{2}$/.test(kod)) throw new Error("Geçersiz firma kodu");
-  const eski = (await firmaKunyesi(db)).kod;
-  const r = await db.sorgu<{ id: string }>("UPDATE firma SET rapor_kodu = $1 WHERE id = gecerli_firma() AND rapor_kodu <> $1 RETURNING id::text", [kod]);
-  if (!r.rowCount) return false;
-  await izYaz(db, { ...iz, nesne: "firma", nesneId: r.rows[0].id, eski: { rapor_kodu: eski }, yeni: { rapor_kodu: kod } });
-  return true;
+    Yetki ÇAĞIRANDA (Firma ayarları "değiştirir"). İyimser kilit: istemcinin gördüğü kod hâlâ kayıtlıysa yazılır (sessiz ezme yok — 334
+    incelemesi); koşul satır kilidi altında yeniden denetlenir, izdeki eski değer gerçek geçiştir */
+export async function firmaKoduYaz(db: Sorgulayici, kod: string, gorulen: string, iz: Iz): Promise<"tamam" | "degisiklik_yok" | "cakisma"> {
+  if (!/^[A-Z]{2}$/.test(kod) || !/^[A-Z]{2}$/.test(gorulen)) throw new Error("Geçersiz firma kodu");
+  if (kod === gorulen) return (await firmaKunyesi(db)).kod === kod ? "degisiklik_yok" : "cakisma";
+  const r = await db.sorgu<{ id: string }>("UPDATE firma SET rapor_kodu = $1 WHERE id = gecerli_firma() AND rapor_kodu = $2 RETURNING id::text", [kod, gorulen]);
+  if (!r.rowCount) return (await firmaKunyesi(db)).kod === kod ? "degisiklik_yok" : "cakisma";
+  await izYaz(db, { ...iz, nesne: "firma", nesneId: r.rows[0].id, eski: { rapor_kodu: gorulen }, yeni: { rapor_kodu: kod } });
+  return "tamam";
 }
