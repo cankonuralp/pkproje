@@ -2341,6 +2341,10 @@ revizyon, alan kopyalama, hafif kusur devri, meslek eşleşme denetimi).
 - Emsal ürünler: https://opwire.app/iso-17020-periyodik-kontrol-yazilimi/ · https://17020muayene.vidco.com.tr/ · https://akuple.com/asansor-kontrol-yazilimi/ · https://ensyazilim.com/
 
 ## 11 · Değişiklik günlüğü
+- 2026-10-06: **Vercel yalnız main'i yayınlar** (reisim: *"Vercel'in Function Storage kotası %75'e geldi: her push'ta kalem dalının da önizleme
+  yayını kuruluyor (son 100 yayının 72'si o daldan). vercel.json'a git.deploymentEnabled ekle: yalnız main yayınlansın (kalem/* kapalı)"*).
+  vercel.json git.deploymentEnabled: main açık, kalem/* ve öteki dallar kapalı (Vercel kuralı: dal birden çok kalıba uyarsa bir "açık" yeter —
+  main yayınlanır). Test kapısı değişmedi (CI her push'ta; yayın main'den). Eski yayınların silinmesi kalıcı silme: panelden reisim yapar.
 - 2026-10-06 (339): **K4 Yan menü takip balonları** (maket takipHtml + MV.TAKIP — T6, reisim 2026-09-28: "cihazlarda süresi geçen cihaz sayısı
   kırmızı balon, yaklaşan sarı balon … diğer modüllerde de benzer takip"; 35. tur 163; N9 raporlar "kişiye göre"). Modül adının sağında kırmızı
   (süresi geçen) / sarı (bekleyen, yaklaşan) sayı; 0 olan çizilmez; ekran okuyucu anlamıyla okur ("Ölçüm cihazları: 1 süresi yaklaşan cihaz").
