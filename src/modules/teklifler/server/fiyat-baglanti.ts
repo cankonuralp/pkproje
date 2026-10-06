@@ -20,8 +20,9 @@ export async function fiyatlariYaz(db: Sorgulayici, kim: { ad: string }, fiyatla
     "SELECT id::text, tur_id::text, fiyat::text, surum FROM fiyat_listesi FOR UPDATE")).rows.map((x) => [x.tur_id, x]));
   for (const [tur, { fiyat, gorulen }] of fiyatlar) {
     if (!UUID.test(tur) || !Number.isSafeInteger(fiyat) || fiyat < 0) throw new Error("geçersiz fiyat");
-    const e = eski.get(tur);
-    if ((e ? Number(e.fiyat) : null) !== gorulen) return "cakisma";
+    const simdi = eski.has(tur) ? Number(eski.get(tur)!.fiyat) : null;
+    /* başkası bu arada değiştirdiyse (yazılacak değere değil) */
+    if (simdi !== gorulen && simdi !== fiyat) return "cakisma";
   }
   let n = 0;
   for (const [tur, { fiyat }] of fiyatlar) {

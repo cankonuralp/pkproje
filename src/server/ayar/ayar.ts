@@ -126,6 +126,11 @@ export async function ayarOku<B extends AyarBolumu>(db: Sorgulayici, b: B): Prom
 
 export type AyarYazSonucu = GuncelleSonucu | { durum: "gecersiz"; hatalar: Record<string, string> };
 
+/** anahtar sırasından bağımsız JSON (veritabanının jsonb'si anahtarları kendi sırasıyla döndürür; şemanın çıktısı şema sırasıyla) */
+const kanonik = (v: unknown): unknown => Array.isArray(v) ? v.map(kanonik)
+  : v && typeof v === "object" ? Object.fromEntries(Object.keys(v).sort().filter((k) => (v as Record<string, unknown>)[k] !== undefined)
+    .map((k) => [k, kanonik((v as Record<string, unknown>)[k])])) : v ?? null;
+
 /** bölümü yazar: istemcinin gördüğü sürümle (kaydedilmemişse -1); şemadan geçmeyen değer yazılmaz */
 export async function ayarYaz<B extends AyarBolumu>(db: Sorgulayici, b: B, surum: number, yeni: unknown, iz: Iz): Promise<AyarYazSonucu> {
   if (!Object.hasOwn(AYAR_BOLUMLERI, b)) throw new Error("Bilinmeyen ayar bölümü");
@@ -144,6 +149,8 @@ export async function ayarYaz<B extends AyarBolumu>(db: Sorgulayici, b: B, surum
     }
   }
   if (surum < 0) return { durum: "cakisma", guncelSurum: mevcut.surum };   // ekran "hiç kaydedilmemiş" gördü, bu arada başkası kaydetti
+  /* değer aynıysa yazılmaz, sürüm artmaz (anahtar sırası farkı değişiklik sayılmaz — 334 incelemesi: aynı değer kaydı "değişmedi" demeli) */
+  if (surum === mevcut.surum && JSON.stringify(kanonik(mevcut.deger)) === JSON.stringify(kanonik(s.data))) return { durum: "degisiklik_yok", surum };
   return guncelle(db, FIRMA_AYAR, mevcut.id, surum, { deger: s.data }, iz);
 }
 
