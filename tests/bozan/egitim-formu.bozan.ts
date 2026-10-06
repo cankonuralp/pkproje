@@ -39,6 +39,8 @@ before(async () => {
     const q = async (sql: string, p: unknown[]) => (await s.query<{ id: string }>(sql, p)).rows[0].id;
     A = await q("INSERT INTO firma (kisa_ad, ad, rapor_kodu) VALUES ('deneme-a', 'Deneme A', 'DA') RETURNING id::text", []);
     const pKisi = await q("INSERT INTO personel (firma_id, ad, basla, meslek) VALUES ($1, 'Deneme Kişi', '2024-01-01', 'mak-muh') RETURNING id::text", [A]);
+    /* katılanın giriş hesabı (imzacı — 340–345 incelemesi: hesapsız kişiye form gönderilmez) */
+    await q("INSERT INTO hesap (firma_id, eposta, ad, roller, durum, personel_id) VALUES ($1, 'kisi@deneme-a.example', 'Deneme', '{denetci}', 'etkin', $2) RETURNING id::text", [A, pKisi]);
     const pDen = await q("INSERT INTO personel (firma_id, ad, basla, meslek) VALUES ($1, 'Deneme Denetçi', '2024-01-01', 'mak-muh') RETURNING id::text", [A]);
     yon = await q("INSERT INTO hesap (firma_id, eposta, ad, roller, durum) VALUES ($1, 'yon@deneme-a.example', 'Deneme', '{firma_yoneticisi}', 'etkin') RETURNING id::text", [A]);
     den = await q("INSERT INTO hesap (firma_id, eposta, ad, roller, durum, personel_id) VALUES ($1, 'den@deneme-a.example', 'Deneme', '{denetci}', 'etkin', $2) RETURNING id::text", [A, pDen]);

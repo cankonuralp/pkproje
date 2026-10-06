@@ -50,6 +50,8 @@ before(async () => {
   try {
     DEN = { id: (await s2.query<{ id: string }>("INSERT INTO hesap (firma_id, eposta, ad, roller, durum, personel_id) VALUES ($1, 'den@deneme-a.example', 'Deneme', '{denetci}', 'etkin', $2) RETURNING id::text", [A, pDen])).rows[0].id,
       ad: "Deneme", roller: ["denetci"] };
+    /* teslim alanın giriş hesabı (imzacı — 340–345 incelemesi: hesapsız kişiye form gönderilmez) */
+    await s2.query("INSERT INTO hesap (firma_id, eposta, ad, roller, durum, personel_id) VALUES ($1, 'kisi@deneme-a.example', 'Deneme', '{denetci}', 'etkin', $2)", [A, pKisi]);
   } finally { await s2.end(); }
   const d = ((await a((db) => demirbasEkle(db, YON, { kod: "dm-1", ad: "Deneme merdiven" }))) as { id: string }).id;
   await a((db) => teslimEt(db, depo, YON, A, { varlik: `d:${d}`, alan: pKisi, zaman: "2026-09-01T09:00", notu: "" }));
