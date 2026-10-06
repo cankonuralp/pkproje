@@ -1,9 +1,10 @@
 "use server";
 /* EĞİTİMLER SUNUCU EYLEMLERİ — kişi ve kiracı oturumdan; yetki, doğrulama, tarih ve dosya denetimi modül işlevinde (egitimler.ts). */
+import { egitimPdf } from "../../../belge/pdf";
 import { depo } from "../../../server/dosya/depo";
 import { ayniKoken } from "../../../server/kimlik/koken";
 import { istekOturumu, oturumIslemi } from "../../../server/kimlik/istek";
-import { DosyaHatasi, egitimKaydet, egitimTuruKaydet, sertifikaYukle, type Yazma } from "../server/egitimler";
+import { DosyaHatasi, egitimKaydet, egitimTuruKaydet, katilimFormuGonder, sertifikaYukle, type Yazma } from "../server/egitimler";
 
 export interface PencereDurumu { tamam?: boolean; id?: string; hatalar?: Record<string, string>; genel?: string }
 
@@ -12,7 +13,8 @@ async function oturum() {
   if (!(await ayniKoken())) return "İstek reddedildi. Sayfayı yenileyip yeniden deneyin.";
   return (await istekOturumu()) ?? "Oturumunuz kapandı. Yeniden giriş yapın.";
 }
-const cevir = (r: Yazma): PencereDurumu => (r.durum === "tamam" ? { tamam: true, id: r.id } : r.durum === "gecersiz" ? { hatalar: r.hatalar } : { genel: SONUC[r.durum] });
+const cevir = (r: Yazma): PencereDurumu => (r.durum === "tamam" ? { tamam: true, id: r.id } : r.durum === "gecersiz" ? { hatalar: r.hatalar }
+  : r.durum === "red" ? { genel: r.neden } : { genel: SONUC[r.durum] });
 const yazi = (x: unknown) => (typeof x === "string" ? x : "");
 async function pdfOku(f: FormDataEntryValue | null): Promise<{ ad: string; bayt: Uint8Array } | "buyuk" | null> {
   if (!(f instanceof File) || f.size === 0) return null;
@@ -45,4 +47,15 @@ export async function sertifikaYukleEylemi(form: FormData): Promise<PencereDurum
   if (d === "buyuk") return { hatalar: { dosya: "PDF en çok 25 MB." } };
   if (!d && form.get("kaldir") !== "1") return { hatalar: { dosya: "PDF seçilmeli." } };
   return cevir(await oturumIslemi(o, (db) => sertifikaYukle(db, depo(), o, o.kiraci.firmaId, yazi(form.get("id")), Number(form.get("surum")), d)));
+}
+
+/** katılım formunu katılanın imzasına gönder (345 — Onaylar › Diğer belgeler); yetki, kayıt ve PDF sunucuda */
+export async function katilimFormuGonderEylemi(kayitId: string): Promise<PencereDurumu> {
+  const o = await oturum(); if (typeof o === "string") return { genel: o };
+  try {
+    return cevir(await oturumIslemi(o, (db) => katilimFormuGonder(db, depo(), o, o.kiraci.firmaId, yazi(kayitId), egitimPdf)));
+  } catch (h) {
+    if (h instanceof DosyaHatasi) return { genel: h.message };
+    throw h;
+  }
 }

@@ -9,3 +9,5 @@
 .dosya { width: 100%; min-height: var(--tus-y); font: inherit; color: var(--yazi); }
 .tuslar { display: flex; flex-wrap: wrap; justify-content: flex-end; gap: 8px; }
 .seritler { display: grid; gap: 8px; margin: 0 0 12px; }
+/* 345: kayıt penceresinde katılım formu (durum şeridi + tuşlar) */
+.form { display: grid; gap: 8px; margin: 12px 0; }

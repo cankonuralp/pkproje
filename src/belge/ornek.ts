@@ -4,6 +4,7 @@ import { Cevaplar } from "../format/tanim.ts";
 import type { TeklifBelgesiVerisi } from "./teklif.ts";
 import type { FaturaBelgesiVerisi } from "./fatura.ts";
 import type { AracTutanagiVerisi } from "./arac.ts";
+import type { EgitimFormuVerisi } from "./egitim.ts";
 import type { TalepFormuVerisi } from "./talep.ts";
 import type { ZimmetFormuVerisi } from "./zimmet.ts";
 import type { BelgeVerisi } from "./veri.ts";
@@ -60,4 +61,8 @@ export const ornekZimmetFormu = (): ZimmetFormuVerisi => ({
   alan: { ad: "Deneme Denetçi", meslek: "Makine mühendisi" }, eden: { ad: "Deneme Yönetici", meslek: "İşletme" },
   varliklar: [{ kod: "OC-201", ad: "Topraklama <ölçer> & prob", tur: "Ölçüm cihazı", teslim: "2026-09-01", not: "kalibrasyon 15.03.2027" },
     { kod: "34 DNM 001", ad: "Kamyonet · Deneme", tur: "Araç", teslim: null, not: null }],
+});
+export const ornekEgitimFormu = (): EgitimFormuVerisi => ({
+  firma: { ad: "Deneme Muayene A.Ş.", kod: "DA" }, no: "EF-1026-001", katilan: { ad: "Deneme Denetçi", meslek: "Makine mühendisi" },
+  egitim: "Yüksekte <çalışma> & kurtarma", kurum: "Deneme Eğitim Kurumu", tarih: "2026-09-15", tekrar: "2027-09-15",
 });

@@ -8,6 +8,7 @@ import { join } from "node:path";
 import { chromium, type Browser } from "playwright-core";
 import type { ReactNode } from "react";
 import { aracTutanagi, type AracTutanagiVerisi } from "./arac.ts";
+import { egitimFormu, type EgitimFormuVerisi } from "./egitim.ts";
 import { raporBelgesi } from "./belge.ts";
 import { faturaBelgesi, type FaturaBelgesiVerisi } from "./fatura.ts";
 import { talepFormu, type TalepFormuVerisi } from "./talep.ts";
@@ -55,6 +56,8 @@ export const talepPdf = (v: TalepFormuVerisi) => htmlPdf(sayfaHtml(v.no, talepFo
 export const aracTutanagiPdf = (v: AracTutanagiVerisi) => htmlPdf(sayfaHtml(v.no, aracTutanagi(v)));
 /** zimmet teslim formu (344): temel format; imzaya gönderilince kişinin Onaylar › Diğer'ine */
 export const zimmetPdf = (v: ZimmetFormuVerisi) => htmlPdf(sayfaHtml(v.no ?? "Zimmet teslim formu", zimmetFormu(v)));
+/** eğitim katılım formu (345): temel format; katılanın imzasına (Onaylar › Diğer) */
+export const egitimPdf = (v: EgitimFormuVerisi) => htmlPdf(sayfaHtml(v.no, egitimFormu(v)));
 
 async function htmlPdf(html: string): Promise<Uint8Array> {
   const b = await tarayici();

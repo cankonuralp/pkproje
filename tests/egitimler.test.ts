@@ -12,7 +12,10 @@ import { klasorDepo } from "../src/server/dosya/depo.ts";
 import { dosyaIndirilebilir } from "../src/server/dosya/dosya.ts";
 import { DOSYA_ERISIMI } from "../src/server/dosya/erisim.ts";
 import { ayEkle } from "../src/modules/egitimler/sema.ts";
-import { bugunTr, DosyaHatasi, egitimKaydet, egitimListesi, egitimTuruKaydet, kisininEgitimleri, sertifikaYukle, type Kisi } from "../src/modules/egitimler/server/egitimler.ts";
+import { bugunTr, DosyaHatasi, egitimKaydet, egitimListesi, egitimTuruKaydet, katilimFormuGonder, kisininEgitimleri, sertifikaYukle, type EgitimPdfUretici,
+  type Kisi } from "../src/modules/egitimler/server/egitimler.ts";
+import type { EgitimFormuVerisi } from "../src/belge/egitim.ts";
+import { belgeImzaliYukle, digerBelgeler } from "../src/modules/onaylar/server/belgeler.ts";
 import { personelEkle } from "../src/modules/personel/server/personel.ts";
 import { testKumesi } from "./yardimci/kume.ts";
 
@@ -117,4 +120,47 @@ test("KİRACI: B, A'nın kaydını ve sertifikasını göremez; veritabanı baş
   assert.deepEqual(await b((db) => egitimKaydet(db, depo, YON_B, B, K(pDenetci, "2025-01-01"))), { durum: "gecersiz", hatalar: { personel: "Personel seçilmeli." } });
   const pB = tamam(await b((db) => personelEkle(db, YON_B, { ...P, ad: "Deneme B" }))).id;
   await assert.rejects(b((db) => db.sorgu("INSERT INTO egitim_kaydi (personel_id, tur_id, tarih, tekrar, kurum) VALUES ($1, $2, '2025-01-01', '2026-01-01', 'Firma içi')", [pB, tur])), /foreign key|yabancı anahtar/i);
+});
+
+/* 345: katılım formu (Onaylar › Diğer belgeler) — güncel kaydın katılanının imzasına; kayıt başına tek etkin form; imzalanınca kayıtta görünür.
+   Sahte üretici imzalanabilir biçimde en küçük PDF'i döner (gerçek Chromium çıktısı pdf.test). */
+const OZGUN = "%PDF-1.4\n1 0 obj << /Type /Catalog /Pages 2 0 R >> endobj\n2 0 obj << /Type /Pages /Kids [3 0 R] /Count 1 >> endobj\n"
+  + "3 0 obj << /Type /Page /Parent 2 0 R /Contents 4 0 R /Resources << >> >> endobj\n4 0 obj << /Length 18 >> stream\nBT (Egitim) Tj ET\nendstream\nendobj\n"
+  + "trailer << /Root 1 0 R >>\n%%EOF\n";
+const IMZA = "9 0 obj << /Type /Sig /Filter /Adobe.PPKLite /ByteRange [0 10 20 30] /Contents <00ff00ff> >> endobj\ntrailer << /Root 1 0 R /Prev 0 >>\n%%EOF\n";
+const bayt = (s: string) => new TextEncoder().encode(s);
+let sonVeri: EgitimFormuVerisi | null = null;
+const SAHTE: EgitimPdfUretici = async (v) => { sonVeri = v; return bayt(OZGUN); };
+const ha = <T,>(k: Kisi, is: Parameters<typeof kiraciIcinde<T>>[2], firma = A) => kiraciIcinde(havuz, firma, is, { hesapId: k.id });
+
+test("345 katılım formu: güncel kaydın katılanına gider (numara EF, tür / kurum / tarihler); tek etkin form; imzalanınca kayıtta; önceki kayıttan gönderilmez", async () => {
+  const l = (await a((db) => egitimListesi(db, YON)))!.kayitlar;
+  const x = l.find((y) => y.personelId === pDenetci && !y.onceki)!, eski = l.find((y) => y.personelId === pDenetci && y.onceki)!;
+  assert.equal(x.form, null);
+  tamam(await ha(YON, (db) => katilimFormuGonder(db, depo, YON, A, x.id, SAHTE)));
+  assert.match(sonVeri!.no, /^EF-\d{4}-001$/);
+  assert.deepEqual([sonVeri!.katilan.ad, sonVeri!.egitim, sonVeri!.kurum, sonVeri!.tarih, sonVeri!.tekrar], ["Deneme Denetçi", "Yüksekte çalışma eğitimi", "Firma içi", x.tarih, x.tekrar]);
+  assert.deepEqual(await ha(YON, (db) => katilimFormuGonder(db, depo, YON, A, x.id, SAHTE)), { durum: "red", neden: "Bu kaydın katılım formu zaten imzaya gönderildi." });
+  assert.deepEqual(await ha(YON, (db) => katilimFormuGonder(db, depo, YON, A, eski.id, SAHTE)), { durum: "red", neden: "Önceki kaydın formu gönderilmez; güncel kayıttan gönderin." });
+  let y = (await a((db) => egitimListesi(db, YON)))!.kayitlar.find((z) => z.id === x.id)!;
+  assert.deepEqual([y.form?.durum, y.form?.ad], ["bekliyor", `Yüksekte çalışma eğitimi katılım formu · ${sonVeri!.no}`]);
+  /* katılan Onaylar › Diğer'de imzalar → kayıtta imzalı form; Eğitimler'i gören açar, görmeyen açamaz */
+  const d = (await ha(DENETCI, (db) => digerBelgeler(db, DENETCI))).belgeler.find((z) => z.tur === "egitim" && z.durum === "bekliyor")!;
+  tamam(await ha(DENETCI, (db) => belgeImzaliYukle(db, depo, DENETCI, A, d.id, d.surum, { ad: "imzali.pdf", bayt: bayt(OZGUN + IMZA) })));
+  y = (await a((db) => egitimListesi(db, YON)))!.kayitlar.find((z) => z.id === x.id)!;
+  assert.equal(y.form?.durum, "imzali");
+  assert.ok(await a((db) => dosyaIndirilebilir(db, PLAN, y.form!.imzaliDosya!, DOSYA_ERISIMI)), "Eğitimler'i gören (planlama) açar");
+  assert.ok(await a((db) => dosyaIndirilebilir(db, DENETCI, y.form!.imzaliDosya!, DOSYA_ERISIMI)), "katılan açar");
+  assert.equal(await a((db) => dosyaIndirilebilir(db, MUH, y.form!.imzaliDosya!, DOSYA_ERISIMI)), null, "muhasebe açamaz");
+  assert.deepEqual(await ha(YON, (db) => katilimFormuGonder(db, depo, YON, A, x.id, SAHTE)), { durum: "red", neden: "Bu kaydın katılım formu zaten imzaya gönderildi." }, "imzalı form yeniden gönderilmez");
+});
+
+test("345 katılım formu: yalnız 'değiştirir'; başka firma ulaşamaz; PDF düşerse numara ve belge yazılmaz", async () => {
+  const x = (await a((db) => egitimListesi(db, YON)))!.kayitlar.find((y) => y.personelId === pIkinci && !y.onceki)!;
+  for (const k of [DENETCI, PLAN, MUH]) assert.deepEqual(await ha(k, (db) => katilimFormuGonder(db, depo, k, A, x.id, SAHTE)), { durum: "yetkisiz" });
+  assert.deepEqual(await ha(YON_B, (db) => katilimFormuGonder(db, depo, YON_B, B, x.id, SAHTE), B), { durum: "yok" });
+  await assert.rejects(ha(YON, (db) => katilimFormuGonder(db, depo, YON, A, x.id, async () => { throw new Error("motor"); })), DosyaHatasi);
+  assert.equal((await a((db) => egitimListesi(db, YON)))!.kayitlar.find((y) => y.id === x.id)!.form, null);
+  tamam(await ha(YON, (db) => katilimFormuGonder(db, depo, YON, A, x.id, SAHTE)));
+  assert.match(sonVeri!.no, /^EF-\d{4}-002$/, "düşen gönderim numara tüketmedi");
 });

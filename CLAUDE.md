@@ -99,6 +99,7 @@ pkproje/
                             Dayanak teklif (326, göç 0038; kabul edilmiş teklifler teklifler/server/sozlesme-baglanti.ts'ten; ?teklif= ön doldurma)
   src/modules/dokumanlar/   DÖKÜMANLAR (2026-10-04): standart kütüphanesi (sürümlü PDF), diğer dökümanlar; kriter belgeleri src/tanim/kriterler.ts
   src/modules/egitimler/    EĞİTİMLER (2026-10-04; Dökümanlar sekmesi, modül 10): eğitim türleri, kayıtlar, tekrar tarihi, sertifika
+                            · katılım formu (345): src/belge/egitim.ts (temel <kod>-FR-EGT-01), katilimFormuGonder → Onaylar › Diğer (kaynak eğitim kaydı)
   src/belge/                RAPOR BELGESİ (2026-10-05, 315): belge.ts tek çizici (format tanımından; React createElement, kaçışlı; önizleme = PDF) ·
                             belge.css A4 Bakanlık görünümü (Carlito ./carlito-5.3.0, OFL) · veri.ts (BelgeVerisi; Raporlar raporBelgesiVerisi doldurur)
                             · html.ts (ağaç → HTML, React'le birebir) · pdf.ts kesin PDF (316: başsız Chromium — Vercel'de @sparticuz/chromium) · ornek.ts (uydurma)

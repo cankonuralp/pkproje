@@ -100,12 +100,15 @@ export async function belgeImzaliYukle(db: Sorgulayici, depo: Depo, kim: Kisi, f
   return { durum: "tamam", id, bildirim: `${b.ad} onaylandı ve imzalandı.` };
 }
 
-/** dosya erişimi (src/server/dosya/erisim.ts): belgenin imzacısı, gönderen, Personel'de "yaz" düzeyi; bordroda Muhasebe'yi gören */
+/** dosya erişimi (src/server/dosya/erisim.ts): belgenin imzacısı, gönderen, Personel'de "yaz" düzeyi; bordroda Muhasebe'yi gören; eğitim
+    formunda Eğitimler'i ("gör" ve üstü), araç tutanağında Araçlar'ı ("gör" ve üstü) bütün kayıtlarıyla gören (342, 345) */
 export async function belgeDosyasiGorulur(db: Sorgulayici, kisi: YetkiHesabi, kayitId: string): Promise<boolean> {
   if (!UUID.test(kayitId)) return false;
   const b = (await db.sorgu<{ personel_id: string; gonderen: string | null; tur: BelgeTuru }>(
     "SELECT personel_id::text, gonderen::text, tur FROM belge_onay WHERE id = $1", [kayitId])).rows[0];
   if (!b) return false;
-  if (b.gonderen === kisi.id || duzey(kisi, 2) === "yaz" || (b.tur === "bordro" && canDo(kisi, 18, "gor"))) return true;
+  const hepsi = (m: Parameters<typeof duzey>[1]) => ["gor", "yaz"].includes(duzey(kisi, m));
+  if (b.gonderen === kisi.id || duzey(kisi, 2) === "yaz" || (b.tur === "bordro" && canDo(kisi, 18, "gor"))
+    || (b.tur === "egitim" && hepsi(10)) || (b.tur === "arac" && hepsi(23))) return true;
   return (await hesabinPersoneli(db, kisi.id)) === b.personel_id;
 }

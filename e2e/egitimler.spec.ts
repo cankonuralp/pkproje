@@ -1,11 +1,11 @@
 /* NEREDEN GELDİ: K2 Eğitimler (2026-10-04) — maket egitimler.html (M16; Dökümanlar sekmesi). Gerçek tarayıcıda, üç genişlikte: eğitim türü ekle
    (tekrar süresi) → eğitim kaydı ekle (kişi, eğitim, tarih, veren) → listede, tekrarı geçmiş şeridi · denetçi yalnız kendi kaydını görür,
-   ekleyemez. Her proje kendi uydurma eğitim türünü açar. */
+   ekleyemez. Her proje kendi uydurma eğitim türünü açar. 345: kaydın katılım formu denetçinin imzasına gönderilir, Onaylar › Diğer'ine düşer. */
 import { expect, test } from "@playwright/test";
 import { girisli, hazir } from "./yardimci";
 
 test("eğitimler: tür ekle, kayıt ekle; denetçi yalnız kendi kaydını görür", async ({ page, context }, bilgi) => {
-  test.setTimeout(90_000);   // ilk koşuda sayfalar soğuk derlenir
+  test.setTimeout(150_000);   // ilk koşuda sayfalar soğuk derlenir; katılım formunun PDF'i sunucuda basılır
   const ad = `Deneme eğitimi ${bilgi.project.name} ${bilgi.retry}`;
   await girisli(page, "yonetici");
   await page.goto("/dokumanlar/egitimler/turler");
@@ -33,6 +33,12 @@ test("eğitimler: tür ekle, kayıt ekle; denetçi yalnız kendi kaydını gör�
   await k.getByRole("button", { name: "Kaydet" }).click();
   await expect(page.getByText("Eğitim kaydı eklendi.")).toBeVisible({ timeout: 30_000 });
   await expect(page.getByText(/eğitimin tekrarı geçti/)).toBeVisible();
+  /* 345: katılım formu denetçinin imzasına (önce sorulur) */
+  await page.getByRole("button", { name: "Deneme Denetçi" }).first().click();
+  const g = page.getByRole("dialog", { name: ad });
+  await g.getByRole("button", { name: "Katılım formunu imzaya gönder" }).click();
+  await page.getByRole("dialog", { name: "Katılım formunu imzaya gönder" }).getByRole("button", { name: "İmzaya gönder" }).click();
+  await expect(page.getByText(`${ad} katılım formu Deneme Denetçi imzasına gönderildi.`)).toBeVisible({ timeout: 90_000 });
 
   /* denetçi: kendi kaydını görür, ekleyemez */
   await context.clearCookies();
@@ -41,4 +47,7 @@ test("eğitimler: tür ekle, kayıt ekle; denetçi yalnız kendi kaydını gör�
   await hazir(page);
   await expect(page.getByText(ad).first()).toBeAttached();
   await expect(page.getByRole("button", { name: "Eğitim kaydı ekle" })).toHaveCount(0);
+  await page.goto("/onaylar/diger");
+  await hazir(page);
+  await expect(page.getByText(`${ad} katılım formu`, { exact: false }).first()).toBeVisible();
 });

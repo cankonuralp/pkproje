@@ -2341,6 +2341,15 @@ revizyon, alan kopyalama, hafif kusur devri, meslek eşleşme denetimi).
 - Emsal ürünler: https://opwire.app/iso-17020-periyodik-kontrol-yazilimi/ · https://17020muayene.vidco.com.tr/ · https://akuple.com/asansor-kontrol-yazilimi/ · https://ensyazilim.com/
 
 ## 11 · Değişiklik günlüğü
+- 2026-10-06 (345): **K4 Eğitim katılım formu → Onaylar › Diğer** (maket MV.BELGE_ONAY "… eğitimi katılım formu", onaylar.html #/diger; AA3:
+  *"eğitim zimmet formu gönderilirse oradan onaylanabilsin"*). Eğitim kaydının penceresinde ("değiştirir", yalnız güncel kayıt) **Katılım formunu imzaya
+  gönder** (önce sorulur): temel format <firma kodu>-FR-EGT-01 — katılan (ad · meslek), eğitim, eğitimi veren, eğitim ve tekrar tarihi, beyan,
+  imzalar; numara EF-AAYY-SIRA; numara + PDF + belge aynı işlemde (PDF düşerse hiçbiri yazılmaz); kayıt başına tek etkin form (bekleyen ya da imzalı;
+  geri gönderilen yeniden gönderilir). Katılan Onaylar › Diğer'de imzalar; kayıt penceresinde durum (imza bekliyor / imzalandı / geri gönderildi) ve
+  **İmzalı katılım formu**. İmzalı PDF'i Eğitimler'i "gör" ve üstünde gören açar (araç tutanağında da Araçlar'ı gören — Onaylar dosya erişimi).
+  K4'ün Onaylar › Diğer gönderenleri tamam: bordro (333), araç tutanağı (342), zimmet formu (344), eğitim formu (345). Kilit: egitim-belgesi.test (saf),
+  pdf.test (imzalanabilir), egitimler.test (katılan, tek etkin form, önceki kayıt, imza → kayıtta, dosya erişimi, yetki, kiracı, PDF düşerse);
+  olumsuz kanıt 2; egitimler e2e (gönder, denetçinin Onaylar › Diğer'inde).
 - 2026-10-06 (344): **K4 Zimmet teslim formu → Onaylar › Diğer** (maket personel.html zimmet formu "PDF indir" / "İmzala", MB.zimmetFormu; AA3:
   *"eğitim zimmet formu gönderilirse oradan onaylanabilsin"*). Personel kartı › Zimmetindekiler ("değiştirir"): **Formu indir** (temel format
   <firma kodu>-FR-ZMT-01, şimdiki zimmetle, numarasız — ıslak imza için) · **İmzaya gönder** (önce sorulur): numara ZF-AAYY-SIRA, kapsam gönderme

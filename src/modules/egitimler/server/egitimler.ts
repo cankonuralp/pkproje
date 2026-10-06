@@ -2,16 +2,23 @@
    Yetki her işlevde, sunucuda (canDo, modül 10): "gör" ve üstü bütün kayıtları görür; "kendi" düzeyi (denetçi) yalnız kendi kayıtlarını;
    kayıt eklemek, tekrar kaydetmek, sertifika yüklemek ve eğitim türü eklemek / düzenlemek yalnız "yaz" düzeyinde. Tarih ileri olamaz (ENGEL);
    tekrar tarihi kayıt anında türün süresinden yazılır. Aynı kişi × eğitimde güncel kayıt tektir; tekrarı kaydedilince eskisi "önceki" olur.
-   Sertifika tek dosya yolundan (yalnız PDF), isteğe bağlı. Silme yok. Personel bilgisi Personel modülünün dışa açtığı işlevden. */
-import { ayarOku } from "../../../server/ayar/ayar.ts";
+   Sertifika tek dosya yolundan (yalnız PDF), isteğe bağlı. Silme yok. Personel bilgisi Personel modülünün dışa açtığı işlevden.
+   345: katılım formu (temel format, src/belge/egitim.ts) güncel kaydın katılanının imzasına gönderilir (Onaylar › Diğer belgeler; numara EF-AAYY-SIRA,
+   kaynak eğitim kaydı); kayıt başına tek etkin form (bekleyen ya da imzalı — geri gönderilen yeniden gönderilir); imzalı form kayıtta görünür. */
+import type { EgitimFormuVerisi } from "../../../belge/egitim.ts";
+import { ayarOku, firmaBelgeKunyesi } from "../../../server/ayar/ayar.ts";
 import type { Sorgulayici } from "../../../server/db/kiraci.ts";
 import { ekle, guncelle, tablo } from "../../../server/db/yazici.ts";
 import type { Depo } from "../../../server/dosya/depo.ts";
 import { dosyaYukle } from "../../../server/dosya/dosya.ts";
 import { hesabinPersoneli } from "../../../server/kimlik/hesap.ts";
+import { numaraAl } from "../../../server/numara/numara.ts";
 import { duzey, type YetkiHesabi } from "../../../server/yetki/canDo.ts";
 import { dogrula, type DogrulamaHatalari } from "../../../sema/ortak.ts";
-import { personelSecenekleri } from "../../personel/server/personel.ts";
+import { belgeGonder, kaynakBelgeleri } from "../../onaylar/server/belge-baglanti.ts";
+import { belgeEtkin, type BelgeDurumu } from "../../onaylar/sema.ts";
+import { meslek } from "../../personel/sema.ts";
+import { personelOzetleri, personelSecenekleri } from "../../personel/server/personel.ts";
 import { ayEkle, EgitimKaydiGirdisi, egitimDurumu, EgitimTuruGirdisi, type EgitimDurumu } from "../sema.ts";
 
 const MODUL = 10;
@@ -25,10 +32,13 @@ export interface EgitimTuru { id: string; ad: string; tekrarAy: number; surum: n
 export interface EgitimKaydi {
   id: string; personelId: string; personel: string; turId: string; tur: string; tarih: string; tekrar: string; kurum: string; dosyaId: string | null; onceki: boolean;
   durum: EgitimDurumu; surum: number;
+  /** katılım formu (345): son gönderilen belgenin durumu, imzalıysa imzalı PDF; gönderilmediyse null */
+  form: { durum: BelgeDurumu; ad: string; imzaliDosya: string | null } | null;
 }
 
 export type Yazma =
   | { durum: "tamam"; id: string }
+  | { durum: "red"; neden: string }
   | { durum: "gecersiz"; hatalar: DogrulamaHatalari }
   | { durum: "cakisma" } | { durum: "yok" } | { durum: "yetkisiz" };
 
@@ -53,10 +63,13 @@ async function kayitlar(db: Sorgulayici, ben: string | null): Promise<EgitimKayd
   const [esik, turler, kisiler, l] = [await egitimEsigi(db), (await db.sorgu<{ id: string; ad: string }>("SELECT id::text, ad FROM egitim_turu")).rows, await personelSecenekleri(db),
     (await db.sorgu<KayitDb>("SELECT id::text, personel_id::text, tur_id::text, tarih::text, tekrar::text, kurum, dosya_id::text, onceki, surum FROM egitim_kaydi")).rows];
   const bugun = bugunTr();
-  return l.filter((x) => ben === null || x.personel_id === ben).map((x) => ({
+  const gorulen = l.filter((x) => ben === null || x.personel_id === ben);
+  const formlar = await kaynakBelgeleri(db, gorulen.map((x) => x.id));
+  return gorulen.map((x) => ({
     id: x.id, personelId: x.personel_id, personel: kisiler.find((k) => k.id === x.personel_id)?.ad ?? "Ayrılan personel", turId: x.tur_id,
     tur: turler.find((t) => t.id === x.tur_id)?.ad ?? "—", tarih: x.tarih, tekrar: x.tekrar, kurum: x.kurum, dosyaId: x.dosya_id, onceki: x.onceki,
     durum: egitimDurumu(x.tekrar, bugun, esik), surum: x.surum,
+    form: formlar.has(x.id) ? { durum: formlar.get(x.id)!.durum, ad: formlar.get(x.id)!.ad, imzaliDosya: formlar.get(x.id)!.imzaliDosya } : null,
   })).sort((a, b) => (a.tarih < b.tarih ? 1 : a.tarih > b.tarih ? -1 : a.personel.localeCompare(b.personel, "tr")));
 }
 
@@ -135,6 +148,36 @@ export async function sertifikaYukle(db: Sorgulayici, depo: Depo, kim: Kisi, fir
   const r = await guncelle(db, KAYIT, id, surum, { dosya_id: dosyaId }, { kim: kim.ad, ne: belge ? "egitim.sertifika" : "egitim.sertifika_kaldir" });
   if (r.durum === "cakisma" || r.durum === "yok") return { durum: r.durum };
   return { durum: "tamam", id };
+}
+
+export type EgitimPdfUretici = (v: EgitimFormuVerisi) => Promise<Uint8Array>;
+/** katılım formunu katılanın imzasına gönder (345): yalnız "yaz"; güncel kayıt (önceki değil), katılan etkin; kayıt başına tek etkin form. Numara,
+    PDF (uret: belge → PDF, sunucuda) ve belge AYNI işlemde (PDF düşerse hiçbiri yazılmaz — DosyaHatasi). Kayıt başına sıraya girer. */
+export async function katilimFormuGonder(db: Sorgulayici, depo: Depo, kim: Kisi, firmaId: string, kayitId: string, uret: EgitimPdfUretici): Promise<Yazma> {
+  if (!degistirir(kim)) return { durum: "yetkisiz" };
+  if (!UUID.test(kayitId)) return { durum: "yok" };
+  await db.sorgu("SELECT pg_advisory_xact_lock(hashtextextended($1, 0))", [`egitim_formu:${kayitId}`]);
+  const x = (await db.sorgu<KayitDb & { tur: string }>(
+    `SELECT k.id::text, k.personel_id::text, k.tur_id::text, k.tarih::text, k.tekrar::text, k.kurum, k.dosya_id::text, k.onceki, k.surum, t.ad AS tur
+       FROM egitim_kaydi k JOIN egitim_turu t ON t.id = k.tur_id AND t.firma_id = k.firma_id WHERE k.id = $1`, [kayitId])).rows[0];
+  if (!x) return { durum: "yok" };
+  if (x.onceki) return { durum: "red", neden: "Önceki kaydın formu gönderilmez; güncel kayıttan gönderin." };
+  const [p] = await personelOzetleri(db, [x.personel_id]);
+  if (!p?.etkin) return { durum: "red", neden: "Katılan personel etkin değil." };
+  if (belgeEtkin((await kaynakBelgeleri(db, [x.id])).get(x.id)?.durum)) return { durum: "red", neden: "Bu kaydın katılım formu zaten imzaya gönderildi." };
+  const no = await numaraAl(db, "egitim");
+  const firma = await firmaBelgeKunyesi(db, depo);
+  const v: EgitimFormuVerisi = {
+    firma: { ad: firma.ad, kod: firma.kod, adres: firma.adres, logo: firma.logo }, no,
+    katilan: { ad: p.ad, meslek: p.meslek === "diger" ? p.meslekMetin ?? "Diğer meslek" : meslek(p.meslek)?.ad ?? p.meslek },
+    egitim: x.tur, kurum: x.kurum, tarih: x.tarih, tekrar: x.tekrar,
+  };
+  let pdf: Uint8Array;
+  try { pdf = await uret(v); } catch { throw new DosyaHatasi("Formun PDF'i üretilemedi; biraz sonra yeniden deneyin."); }
+  const ad = `${x.tur} katılım formu · ${no}`.slice(-120);
+  const g = await belgeGonder(db, depo, kim, firmaId, { tur: "egitim", ad, personelId: x.personel_id, kaynakId: x.id, ay: null, pdf: { ad: `${no}.pdf`, bayt: pdf } });
+  if (g.durum !== "tamam") throw new DosyaHatasi(g.durum === "uygunsuz" ? g.neden : "Form imzaya gönderilemedi.");
+  return { durum: "tamam", id: x.id };
 }
 
 /** dosya erişimi: kaydı gören (denetçi yalnız kendi sertifikasını) açar */

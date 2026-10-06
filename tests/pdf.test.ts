@@ -4,8 +4,8 @@
    Süre ölçülüp yazılır (Vercel ölçümü: src/app/api/olcum/pdf, yalnız önizleme dağıtımı). */
 import assert from "node:assert/strict";
 import { test } from "node:test";
-import { ornekAracTutanagi, ornekBelge, ornekTeklif, ornekFatura, ornekTalep, ornekZimmetFormu } from "../src/belge/ornek.ts";
-import { aracTutanagiPdf, belgeCss, belgeHtml, belgePdf, faturaPdf, talepPdf, teklifPdf, zimmetPdf } from "../src/belge/pdf.ts";
+import { ornekAracTutanagi, ornekBelge, ornekEgitimFormu, ornekTeklif, ornekFatura, ornekTalep, ornekZimmetFormu } from "../src/belge/ornek.ts";
+import { aracTutanagiPdf, belgeCss, belgeHtml, belgePdf, egitimPdf, faturaPdf, talepPdf, teklifPdf, zimmetPdf } from "../src/belge/pdf.ts";
 import { imzayaUygun } from "../src/modules/raporlar/imza-pdf.ts";
 
 test("belge HTML'i: betik yok, yazı tipi gömülü (dış adres yok)", () => {
@@ -67,5 +67,8 @@ test("araç teslim tutanağı PDF'i (342): A4, Carlito gömülü, tek sayfa; mot
   /* 344: zimmet teslim formu da kişinin imzasına gider */
   const z = await zimmetPdf(ornekZimmetFormu());
   assert.ok(imzayaUygun(z) && /Carlito/.test(Buffer.from(z).toString("latin1")), "zimmet formu imzalanabilir biçimde değil");
+  /* 345: eğitim katılım formu da */
+  const e = await egitimPdf(ornekEgitimFormu());
+  assert.ok(imzayaUygun(e) && /Carlito/.test(Buffer.from(e).toString("latin1")), "eğitim formu imzalanabilir biçimde değil");
   assert.ok(imzayaUygun(await belgePdf(ornekBelge("ZPKR02"))), "rapor imzalanabilir biçimde değil");
 });

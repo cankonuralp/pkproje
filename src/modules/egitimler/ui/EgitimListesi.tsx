@@ -1,7 +1,7 @@
 "use client";
 /* EĞİTİMLER (maket egitimler.html #/ kayıtlar · #/turler): süzgeç (durum çipleri aynı grupta, kişi / eğitim seçicisi, Görünüm güncel / önceki),
    en yeni üstte, sayfalı. Tekrarı geçen / yaklaşan için şerit (eşik firma ayarı). "Eğitim kaydı ekle", "Tekrarı kaydet", sertifika ve eğitim türü
-   yalnız "değiştirir" düzeyine; karar sunucuda. */
+   yalnız "değiştirir" düzeyine; karar sunucuda. 345: kayıt penceresinde katılım formu — imzaya gönder (güncel kayıt), bekleyen / imzalı durumu. */
 import { useRouter } from "next/navigation";
 import { useRef, useState, useTransition } from "react";
 import { useBildir } from "../../../components/bildirim/Bildirim";
@@ -10,15 +10,17 @@ import { DosyaAcTusu } from "../../../components/gizli-resim/GizliResim";
 import { KartEtiket, Kirp, Liste, type Sutun } from "../../../components/liste/Liste";
 import { Sayac, SuzgecliListe, useSuzgec } from "../../../components/liste/SuzgecliListe";
 import { yeniDurum, type SuzgecTanimi } from "../../../components/liste/suzgec";
+import { useOnayla } from "../../../components/pencere/Onay";
 import { Pencere } from "../../../components/pencere/Pencere";
 import { AltSatir, DegerYok, Rozet, SayfaBasi, Sekmeler } from "../../../components/sayfa/Sayfa";
 import { SecimAlani } from "../../../components/secim/SecimAlani";
 import { TarihAlani } from "../../../components/secim/TarihAlani";
 import { Serit } from "../../../components/serit/Serit";
 import { Tus } from "../../../components/tus/Tus";
+import { belgeEtkin } from "../../onaylar/sema";
 import { ayEkle, kalanGun, KURUMLAR } from "../sema";
 import type { EgitimKaydi, EgitimTuru } from "../server/egitimler";
-import { egitimKaydetEylemi, egitimTuruKaydetEylemi, sertifikaYukleEylemi } from "./eylemler";
+import { egitimKaydetEylemi, egitimTuruKaydetEylemi, katilimFormuGonderEylemi, sertifikaYukleEylemi } from "./eylemler";
 import { EGITIM_SEKMELERI, tarihYaz } from "./ortak";
 import stil from "./egitimler.module.css";
 
@@ -132,6 +134,34 @@ function KayitPenceresi({ kapat, turler, kisiler, kayitlar, bugun, personel = ""
   );
 }
 
+/* katılım formu (345; Onaylar › Diğer belgeler): imzalıysa imzalı PDF, bekliyorsa durum, geri gönderildiyse uyarı; "değiştirir" güncel kayıtta gönderir */
+function KatilimFormu({ x, yaz, kapat }: { x: EgitimKaydi; yaz: boolean; kapat: () => void }) {
+  const router = useRouter();
+  const bildir = useBildir();
+  const onayla = useOnayla();
+  const [bekliyor, baslat] = useTransition();
+  const f = x.form;
+  const gonder = async () => {
+    if (!(await onayla({ baslik: "Katılım formunu imzaya gönder", metin: <>{x.tur} katılım formu {x.personel} kişisinin imzasına gider (Onaylar › Diğer belgeler).</>, tus: "İmzaya gönder" }))) return;
+    baslat(async () => {
+      const r = await katilimFormuGonderEylemi(x.id);
+      if (!r.tamam) { bildir(r.genel ?? "Gönderilemedi."); return; }
+      kapat(); bildir(`${x.tur} katılım formu ${x.personel} imzasına gönderildi.`); router.refresh();
+    });
+  };
+  return (
+    <div className={stil.form}>
+      {f?.durum === "imzali" ? <Serit tur="onay" ikon="file-check">Katılım formu imzalandı ({f.ad}).</Serit>
+        : f?.durum === "bekliyor" ? <Serit tur="bilgi" ikon="send">{f.ad}: katılanın imzasını bekliyor (Onaylar › Diğer belgeler).</Serit>
+          : f?.durum === "geri" ? <Serit tur="uyari" ikon="triangle-alert">{f.ad}: katılan geri gönderdi; düzeltip yeniden gönderin.</Serit> : null}
+      <div className={stil.tuslar}>
+        {f?.durum === "imzali" && f.imzaliDosya && <DosyaAcTusu dosyaId={f.imzaliDosya}>İmzalı katılım formu</DosyaAcTusu>}
+        {yaz && !x.onceki && !belgeEtkin(f?.durum) && <Tus tur="ikincil" ikon="send" disabled={bekliyor} aria-busy={bekliyor || undefined} onClick={gonder}>Katılım formunu imzaya gönder</Tus>}
+      </div>
+    </div>
+  );
+}
+
 function KayitGorunumu({ x, kayitlar, bugun, yaz, kapat, tekrar }: { x: EgitimKaydi; kayitlar: EgitimKaydi[]; bugun: string; yaz: boolean; kapat: () => void; tekrar: () => void }) {
   const router = useRouter();
   const bildir = useBildir();
@@ -158,6 +188,7 @@ function KayitGorunumu({ x, kayitlar, bugun, yaz, kapat, tekrar }: { x: EgitimKa
         { k: "durum", genislik: "20%", baslik: "Durum", kart: "rozet", sira: 1, hucre: (y) => y.onceki ? <Rozet tur="notr">Önceki</Rozet> : <Rozet tur={DURUM[y.durum][0]}>{DURUM[y.durum][1]}</Rozet> },
         { k: "belge", genislik: "25%", baslik: "Sertifika", kart: "eylem", sira: 9, hucre: (y) => y.dosyaId ? <DosyaAcTusu dosyaId={y.dosyaId}>Sertifika</DosyaAcTusu> : <DegerYok>Yüklenmedi</DegerYok> },
       ]} />
+      <KatilimFormu x={x} yaz={yaz} kapat={kapat} />
       {yaz && <form ref={form} onSubmit={(e) => { e.preventDefault(); yukle(); }}>
         <Alan id={SERTIFIKA_ID} etiket={x.dosyaId ? "Sertifikayı değiştir (PDF)" : "Sertifika yükle (PDF)"} hata={h ?? undefined}>
           <input id={SERTIFIKA_ID} className={stil.dosya} name="dosya" type="file" accept="application/pdf" aria-describedby={h ? ipucuId(SERTIFIKA_ID) : undefined} />
