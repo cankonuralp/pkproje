@@ -33,9 +33,17 @@ jobs:
       - run: npm run lint
       - run: npm test
       - run: npm run test:negatif
-      - run: node scripts/next.ts build
-      # uçtan uca (K0, 2026-10-03): masaüstü · tablet · telefon (Chromium yukarıda kuruldu)
-      - run: npm run test:e2e
+      - id: derleme
+        run: node scripts/next.ts build
+      # uçtan uca (K0, 2026-10-03): masaüstü · tablet · telefon (Chromium yukarıda kuruldu). 2026-10-06: her genişlik KENDİ sunucusu ve
+      # geçici veritabanıyla — tek geliştirme sunucusu ~200 testin sonunda bellek eşiğine dayanıp kendini yeniden başlatıyor, o an koşan
+      # telefon testi düşüyordu (3dda074, 661004b, c17ba55, ba4c79e); eşiği kapatınca sunucu çöktü (0059a80). Testler genişlik başına kendi
+      # verisini kurar (proje adıyla), birbirinin verisine dayanmaz. Biri düşse de öteki genişlikler koşar (iş yine kırmızı biter).
+      - run: npm run test:e2e -- --project=masaustu
+      - if: ${{ !cancelled() && steps.derleme.outcome == 'success' }}
+        run: npm run test:e2e -- --project=tablet
+      - if: ${{ !cancelled() && steps.derleme.outcome == 'success' }}
+        run: npm run test:e2e -- --project=telefon
 
   yayin:
     name: Pages önizlemesi

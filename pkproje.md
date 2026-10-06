@@ -2341,6 +2341,11 @@ revizyon, alan kopyalama, hafif kusur devri, meslek eşleşme denetimi).
 - Emsal ürünler: https://opwire.app/iso-17020-periyodik-kontrol-yazilimi/ · https://17020muayene.vidco.com.tr/ · https://akuple.com/asansor-kontrol-yazilimi/ · https://ensyazilim.com/
 
 ## 11 · Değişiklik günlüğü
+- 2026-10-06: **Uçtan uca testler genişlik başına ayrı sunucuyla** (CI). Tek geliştirme sunucusu ~200 testin sonunda bellek eşiğine dayanıp
+  kendini yeniden başlatıyor, o an koşan telefon testi düşüyordu (3dda074, 661004b, c17ba55, ba4c79e — her koşuda başka bir test); eşiği kapatınca
+  sunucu çöktü (0059a80, geri alındı). CI artık masaüstü · tablet · telefon'u ayrı koşturur: her biri kendi sunucusu ve geçici veritabanıyla
+  (testler genişlik başına kendi verisini kurar); biri düşse de ötekiler koşar. Kalıcı ikinci adım (açık): uçtan ucu derlenmiş sunucuyla koşmak
+  (geliştirme vitrini testleri ayrılmalı).
 - 2026-10-06: **Vercel yalnız main'i yayınlar** (reisim: *"Vercel'in Function Storage kotası %75'e geldi: her push'ta kalem dalının da önizleme
   yayını kuruluyor (son 100 yayının 72'si o daldan). vercel.json'a git.deploymentEnabled ekle: yalnız main yayınlansın (kalem/* kapalı)"*).
   vercel.json git.deploymentEnabled: main açık, kalem/* ve öteki dallar kapalı (Vercel kuralı: dal birden çok kalıba uyarsa bir "açık" yeter —
