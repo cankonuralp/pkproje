@@ -117,7 +117,9 @@ test("Excel'den yükle: başlık atlanır, boş satır yok sayılır; tarih, tü
 /* 2026-10-06 (328 incelemesi; maket tutarOku / oranOku): Excel'in sakladığı sayı hücresi her ondalıkta, Türkçe yazım ortak şemayla; yüzde biçimli
    oran (0.2); tür yalnız kendi anahtarı; tutar üst sınırı satırda; dışa aktarımda tutarlar sayı hücresi */
 test("Excel okuma: sayı hücresi (nokta ondalık, uzun kesir) ve Türkçe yazım; yüzde biçimli oran; nesne özelliği tür değildir; çok büyük tutar satırda atlanır", async () => {
-  assert.deepEqual(["999.996", "1250.0999999999999", "1250", "1.250,50", "1250,5", " 3.200 TL", "abc", "-5"].map(tutarOku), [100_000, 125_010, 125_000, 125_050, 125_050, 320, null, null]);
+  /* 2026-10-06 (329–332 incelemesi): " 3.200 TL" eskiden 3,20 TL okunuyordu (test bu yanlışı kilitliyordu) — metin hücresi ve binlik öbek Türkçe */
+  assert.deepEqual(["999.996", "1250.0999999999999", "1250", "1.250,50", "1250,5", " 3.200 TL", "12.500", "1.250.000", "3.200", "abc", "-5"].map(tutarOku),
+    [100_000, 125_010, 125_000, 125_050, 125_050, 320_000, 1_250_000, 125_000_000, 320_000, null, null]);
   assert.deepEqual(["20", "%20", "0.2", "0,1", "0.01", "", "x"].map(oranOku), [20, 20, 20, 10, 1, null, NaN]);
   const l = giderSatirlari([
     ["05.10.2026", "constructor", "1", "20", "", ""], ["05.10.2026", "__proto__", "1", "20", "", ""], ["05.10.2026", "Yakıt", "2.000.000.000,00", "20", "", ""],

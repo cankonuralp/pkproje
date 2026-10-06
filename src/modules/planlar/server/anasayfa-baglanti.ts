@@ -5,16 +5,20 @@ import type { Sorgulayici } from "../../../server/db/kiraci.ts";
 import { tesisIsgKayitlari } from "../../sozlesmeler/server/sozlesmeler.ts";
 import { isgDurumu, type PlanDurumu } from "../sema.ts";
 
-export interface AnaPlan { id: string; no: string; durum: PlanDurumu; tesisId: string; baslangic: string; ekip: string[] }
+/** yenisi: tesiste bu plandan sonra açılmış plan var (reddedilen plan ancak tesisin güncel planıysa iş bekler — 329–332 incelemesi) */
+export interface AnaPlan { id: string; no: string; durum: PlanDurumu; tesisId: string; baslangic: string; ekip: string[]; yenisi: boolean }
 const ACIK: PlanDurumu[] = ["bekliyor", "kabul", "denetimde"];
 
 /** planlar: açık olanlar (bekliyor, kabul, denetimde) ve reddedilenler; ekip personel kimlikleri */
 export async function anaPlanlar(db: Sorgulayici): Promise<AnaPlan[]> {
-  const p = (await db.sorgu<{ id: string; no: string; durum: PlanDurumu; tesis_id: string; baslangic: string }>(
-    "SELECT id::text, no, durum, tesis_id::text, baslangic::text FROM plan WHERE durum = ANY ($1) ORDER BY baslangic, no", [[...ACIK, "reddedildi"]])).rows;
+  const p = (await db.sorgu<{ id: string; no: string; durum: PlanDurumu; tesis_id: string; baslangic: string; yenisi: boolean }>(
+    `SELECT p.id::text, p.no, p.durum, p.tesis_id::text, p.baslangic::text,
+        EXISTS (SELECT 1 FROM plan q WHERE q.firma_id = p.firma_id AND q.tesis_id = p.tesis_id AND q.olustu > p.olustu) AS yenisi
+     FROM plan p WHERE p.durum = ANY ($1) ORDER BY p.baslangic, p.no`, [[...ACIK, "reddedildi"]])).rows;
   const e = (await db.sorgu<{ plan_id: string; personel_id: string }>(
     "SELECT e.plan_id::text, e.personel_id::text FROM plan_ekip e JOIN plan p ON p.id = e.plan_id AND p.firma_id = e.firma_id WHERE p.durum = ANY ($1)", [ACIK])).rows;
-  return p.map((x) => ({ id: x.id, no: x.no, durum: x.durum, tesisId: x.tesis_id, baslangic: x.baslangic, ekip: e.filter((y) => y.plan_id === x.id).map((y) => y.personel_id) }));
+  return p.map((x) => ({ id: x.id, no: x.no, durum: x.durum, tesisId: x.tesis_id, baslangic: x.baslangic, ekip: e.filter((y) => y.plan_id === x.id).map((y) => y.personel_id),
+    yenisi: x.yenisi }));
 }
 export const acikMi = (p: { durum: PlanDurumu }) => ACIK.includes(p.durum);
 

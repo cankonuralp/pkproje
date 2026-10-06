@@ -9,7 +9,7 @@ import { Alan, FormIzgara, Girdi, ipucuId } from "../../../components/form/Form"
 import { DosyaAcTusu } from "../../../components/gizli-resim/GizliResim";
 import { KartEtiket, Kirp, Liste, type Sutun } from "../../../components/liste/Liste";
 import { Sayac, SuzgecliListe, useSuzgec } from "../../../components/liste/SuzgecliListe";
-import type { SuzgecTanimi } from "../../../components/liste/suzgec";
+import { yeniDurum, type SuzgecTanimi } from "../../../components/liste/suzgec";
 import { Pencere } from "../../../components/pencere/Pencere";
 import { AltSatir, DegerYok, Rozet, SayfaBasi, Sekmeler } from "../../../components/sayfa/Sayfa";
 import { SecimAlani } from "../../../components/secim/SecimAlani";
@@ -47,9 +47,11 @@ function tanim(l: readonly EgitimKaydi[], esik: number): SuzgecTanimi<EgitimKayd
   };
 }
 
-export function EgitimListesi({ kayitlar, turler, kisiler, esik, bugun, yaz }:
-  { kayitlar: EgitimKaydi[]; turler: EgitimTuru[]; kisiler: { id: string; ad: string }[]; esik: number; bugun: string; yaz: boolean }) {
-  const s = useSuzgec(tanim(kayitlar, esik), kayitlar);
+export function EgitimListesi({ kayitlar, turler, kisiler, esik, bugun, yaz, kisi }:
+  { kayitlar: EgitimKaydi[]; turler: EgitimTuru[]; kisiler: { id: string; ad: string }[]; esik: number; bugun: string; yaz: boolean; kisi?: string }) {
+  /* Uyarılar'dan gelen ?kisi= listeyi o kişiyle süzülü açar (maket egitimler.html "?kisi= … Uyarılar'dan"; 329–332 incelemesi) */
+  const t = tanim(kayitlar, esik);
+  const s = useSuzgec(t, kayitlar, kisi && kayitlar.some((x) => x.personelId === kisi) ? { sec: { ...yeniDurum(t).sec, kisi } } : undefined);
   const [p, setP] = useState<null | { tip: "ekle"; personel?: string; tur?: string } | { tip: "kayit"; x: EgitimKaydi }>(null);
   const guncel = kayitlar.filter((x) => !x.onceki), gec = guncel.filter((x) => x.durum === "gecti"), yak = guncel.filter((x) => x.durum === "yakin");
   const sutunlar: Sutun<EgitimKaydi>[] = [

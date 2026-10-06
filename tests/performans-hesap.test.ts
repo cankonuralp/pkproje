@@ -68,11 +68,15 @@ test("zaman grafiği: kısa dönemde rapor yazılan günler (m / e, kazanç); uz
 test("süreç adımları (ortalama saat, yalnız tamamlanmış adım) ve günlük iş (gün × tesis, en yeni üstte)", () => {
   const z = (h: number) => new Date(Date.parse("2026-09-10T05:00:00.000Z") + h * 36e5).toISOString();
   const l = [
-    R({ id: "a", ilkGonderim: z(2), gonderildi: z(2), onay: z(4), imza: z(12), imzali: true, kazanc: 7 }),
-    R({ id: "b", ilkGonderim: z(3), gonderildi: z(24), onay: z(25), imza: z(47), imzali: true, geriler: [{ geri: z(5), gonderim: z(24) }, { geri: z(30), gonderim: null }], kazanc: 3 }),
+    R({ id: "a", ilkGonderim: z(2), gonderildi: z(2), onay: z(4), imza: z(12), sonImza: z(12), imzali: true, kazanc: 7 }),
+    R({ id: "b", ilkGonderim: z(3), gonderildi: z(24), onay: z(25), imza: z(47), sonImza: z(47), imzali: true, geriler: [{ geri: z(5), gonderim: z(24) }, { geri: z(30), gonderim: null }], kazanc: 3 }),
     R({ id: "c", gun: "2026-09-11", tesisId: "t2", planId: "p2" }),
   ];
   assert.deepEqual(surecAdimlari(l), [{ ad: "Yazım", ort: 2.5, n: 2 }, { ad: "Düzeltme", ort: 19, n: 1 }, { ad: "Onay", ort: 1.5, n: 2 }, { ad: "Son imza", ort: 15, n: 2 }]);
+  /* 2026-10-06 (329–332 incelemesi): son imza adımı şimdiki revizyonun imzasıyla — revizyonda onay yenilenir, ilk imza ondan önce kalır (eksi süre);
+     revize edilip henüz imzalanmamış ya da tutarsız çift ortalamaya girmez */
+  const rev = [...l, R({ id: "d", onay: z(100), imza: z(12), sonImza: null, imzali: true }), R({ id: "e", onay: z(100), imza: z(12), sonImza: z(90), imzali: true })];
+  assert.deepEqual(surecAdimlari(rev).at(-1), { ad: "Son imza", ort: 15, n: 2 });
   assert.deepEqual(gunlukIsler(l), [{ gun: "2026-09-11", tesisId: "t2", planIdleri: ["p2"], rapor: 1, imzali: 0, kazanc: 0 },
     { gun: "2026-09-10", tesisId: "t1", planIdleri: ["p1"], rapor: 2, imzali: 2, kazanc: 10 }]);
 });

@@ -11,6 +11,7 @@ import { DosyaAcTusu } from "../../../components/gizli-resim/GizliResim";
 import { KartEtiket, Kirp, type Sutun } from "../../../components/liste/Liste";
 import { Sayac, SuzgecliListe, useSuzgec } from "../../../components/liste/SuzgecliListe";
 import type { SuzgecTanimi } from "../../../components/liste/suzgec";
+import { useOnayla } from "../../../components/pencere/Onay";
 import { Pencere } from "../../../components/pencere/Pencere";
 import { AltSatir, DegerYok, Rozet, SayfaBasi } from "../../../components/sayfa/Sayfa";
 import { SecimAlani } from "../../../components/secim/SecimAlani";
@@ -32,6 +33,9 @@ const zamanYaz = (iso: string) => {
   return p.format(d).replace(/\s/, " ");
 };
 const turAd = (t: Talep) => (t.tip === "izin" ? "İzin talebi" : "Masraf formu");
+/* gönderim yılı Türkiye takvimiyle (UTC değil — 1 Ocak 00:30'da gönderilen önceki yıla düşmesin; 329–332 incelemesi) */
+const YIL = new Intl.DateTimeFormat("en-CA", { timeZone: "Europe/Istanbul", year: "numeric" });
+const yilTr = (iso: string) => YIL.format(new Date(iso));
 const aralik = (x: { bas: string; bit: string }) => `${tarihNo(x.bas)}${x.bit !== x.bas ? ` – ${tarihNo(x.bit)}` : ""}`;
 const ayrinti = (t: Talep) => (t.tip === "izin" ? `${IZIN_TUR[t.x.tur]} · ${aralik(t.x)} · ${t.x.gun} gün`
   : `${GIDER_TUR[t.x.tur][0]} · ${para(t.x.tutar)} · ${t.x.is ? t.x.is.no : "Genel"}`);
@@ -40,7 +44,7 @@ const durumRozet = (t: Talep) => (t.tip === "izin" ? <Rozet tur={IZIN_DURUM[t.x.
 const bekliyor = (t: Talep) => t.x.durum === "bekliyor";
 
 function tanim(l: readonly Talep[]): SuzgecTanimi<Talep> {
-  const yillar = [...new Set(l.map((t) => t.x.gonderildi.slice(0, 4)))].sort().reverse();
+  const yillar = [...new Set(l.map((t) => yilTr(t.x.gonderildi)))].sort().reverse();
   return {
     ad: "Taleplerde ara", ipucu: "Talep no, tür, açıklama", birim: "talep", sayfa: 20, imkansiz: "Bir talep aynı anda iki türde ya da iki durumda olamaz",
     metin: (t) => [t.x.no, turAd(t), ayrinti(t), t.x.aciklama ?? ""].join(" "),
@@ -50,7 +54,7 @@ function tanim(l: readonly Talep[]): SuzgecTanimi<Talep> {
       { k: "bekliyor", ad: "Onay bekliyor", grup: "durum", test: bekliyor },
       { k: "sonuc", ad: "Sonuçlanan", grup: "durum", test: (t) => !bekliyor(t) },
     ],
-    seciciler: [{ k: "yil", ad: "Yıl", secenek: () => [["tumu", "Tümü"], ...yillar.map((y) => [y, y] as [string, string])], gecer: (t, v) => v === "tumu" || t.x.gonderildi.slice(0, 4) === v }],
+    seciciler: [{ k: "yil", ad: "Yıl", secenek: () => [["tumu", "Tümü"], ...yillar.map((y) => [y, y] as [string, string])], gecer: (t, v) => v === "tumu" || yilTr(t.x.gonderildi) === v }],
     varsayilanSira: (a, b) => b.x.gonderildi.localeCompare(a.x.gonderildi),
   };
 }
@@ -83,7 +87,7 @@ export function TaleplerSayfasi({ v, bugun }: { v: Taleplerim; bugun: string }) 
       </Yuzler>
       <SuzgecliListe s={s} on="t" baslik="Taleplerim" sutunlar={sutunlar} anahtar={(t) => `${t.tip}|${t.x.id}`}
         bosVeri={{ ikon: "inbox", baslik: "Talep yok", metin: "İzin talebi ya da masraf formu “İzin talebi” ve “Masraf formu” ile gönderilir." }} />
-      {p?.tip === "izin" && <IzinPenceresi ozet={o} kapat={() => setP(null)} />}
+      {p?.tip === "izin" && <IzinPenceresi ozet={o} gelecek={v.gelecekOzet} kapat={() => setP(null)} />}
       {p?.tip === "masraf" && <MasrafPenceresi v={v} bugun={bugun} kapat={() => setP(null)} />}
       {p?.tip === "talep" && <TalepPenceresi t={p.t} kapat={() => setP(null)} />}
     </>
@@ -92,7 +96,7 @@ export function TaleplerSayfasi({ v, bugun }: { v: Taleplerim; bugun: string }) 
 
 /* ── İZİN TALEBİ ── */
 const IID = { tur: "w-izin-tur", bas: "w-izin-bas", bit: "w-izin-bit", aciklama: "w-izin-aciklama", belge: "w-izin-belge" } as const;
-function IzinPenceresi({ ozet, kapat }: { ozet: Taleplerim["ozet"]; kapat: () => void }) {
+function IzinPenceresi({ ozet: buYil, gelecek, kapat }: { ozet: Taleplerim["ozet"]; gelecek: Taleplerim["ozet"]; kapat: () => void }) {
   const router = useRouter();
   const bildir = useBildir();
   const [bekliyorMu, baslat] = useTransition();
@@ -100,6 +104,8 @@ function IzinPenceresi({ ozet, kapat }: { ozet: Taleplerim["ozet"]; kapat: () =>
   const [h, setH] = useState<Record<string, string>>({});
   const [genel, setGenel] = useState<string | null>(null);
   const dosya = useRef<HTMLInputElement>(null);
+  /* izin başlangıç yılına sayılır: aşım o yılın kalanıyla */
+  const ozet = d.bas && d.bas.slice(0, 4) === gelecek.yil ? gelecek : buYil;
   const g = d.bas && d.bit && d.bit >= d.bas ? isGunu(d.bas, d.bit) : 0, asim = d.tur === "yillik" && g > ozet.kalan;
   const gonder = () => baslat(async () => {
     const f = new FormData();
@@ -198,7 +204,8 @@ function MasrafPenceresi({ v, bugun, kapat }: { v: Taleplerim; bugun: string; ka
         </div>
         <div className={stil.genis}>
           <Alan id={MID.belge} etiket="Fiş (PDF ya da fotoğraf)" hata={h.belge} sonuc={h.belge ? undefined : "İsteğe bağlı; yoksa muhasebe “Belge yok” görür."}>
-            <input ref={dosya} id={MID.belge} className={stil.dosya} type="file" accept="application/pdf,image/jpeg,image/png" capture="environment"
+            {/* capture yok: telefonda PDF fiş de seçilebilsin (seçici "kamera / dosya" sunar — 329–332 incelemesi) */}
+            <input ref={dosya} id={MID.belge} className={stil.dosya} type="file" accept="application/pdf,image/jpeg,image/png"
               aria-describedby={ipucuId(MID.belge)} aria-invalid={!!h.belge || undefined} />
           </Alan>
         </div>
@@ -215,7 +222,8 @@ function TalepPenceresi({ t, kapat }: { t: Talep; kapat: () => void }) {
   const [bekliyorMu, baslat] = useTransition();
   const [hata, setHata] = useState<string | null>(null);
   const dosya = useRef<HTMLInputElement>(null);
-  const x = t.x, bek = bekliyor(t), belgeAd = t.tip === "izin" ? "Belge" : "Fiş";
+  const x = t.x, bek = bekliyor(t), belgeAd = t.tip === "izin" ? "Belge" : "Fiş", belgeyi = t.tip === "izin" ? "Belgeyi" : "Fişi";
+  const onayla = useOnayla();
   const sonuc = (r: TalepYaniti, varsayilan: string) => {
     if (!r.tamam) { setHata(r.hatalar?.belge ?? r.genel ?? "Kaydedilemedi."); return; }
     kapat(); bildir(r.bildirim ?? varsayilan); router.refresh();
@@ -252,12 +260,15 @@ function TalepPenceresi({ t, kapat }: { t: Talep; kapat: () => void }) {
         <Bilgi etiket={belgeAd}>{x.belge ? <DosyaAcTusu dosyaId={x.belge} ikon="file-text">{belgeAd}</DosyaAcTusu> : <DegerYok>Yok</DegerYok>}</Bilgi>
       </BilgiListesi>
       {bek && <div className={stil.belge}>
-        <Alan id={BELGE_ID} etiket={x.belge ? `${belgeAd}i değiştir (PDF ya da fotoğraf)` : `${belgeAd} ekle (PDF ya da fotoğraf)`} hata={hata ?? undefined}>
+        <Alan id={BELGE_ID} etiket={x.belge ? `${belgeyi} değiştir (PDF ya da fotoğraf)` : `${belgeAd} ekle (PDF ya da fotoğraf)`} hata={hata ?? undefined}>
           <input ref={dosya} id={BELGE_ID} className={stil.dosya} type="file" accept="application/pdf,image/jpeg,image/png" aria-describedby={hata ? ipucuId(BELGE_ID) : undefined}
             aria-invalid={!!hata || undefined} />
         </Alan>
         <div className={stil.tuslar}>
-          {x.belge && <Tus tur="ikincil" ikon="x" disabled={bekliyorMu} onClick={() => belge(true)}>{belgeAd}i kaldır</Tus>}
+          {/* önce sorulur (maket talep-belge-sil "Eki sil") */}
+          {x.belge && <Tus tur="ikincil" ikon="x" disabled={bekliyorMu} onClick={async () => {
+            if (await onayla({ baslik: "Eki sil", metin: `${belgeAd} talepten silinir.`, tus: "Sil", tehlike: true })) belge(true);
+          }}>{belgeyi} kaldır</Tus>}
           <Tus tur="ikincil" ikon="upload" disabled={bekliyorMu} onClick={() => belge(false)}>Yükle</Tus>
         </div>
       </div>}

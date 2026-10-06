@@ -76,13 +76,15 @@ BEGIN
     OR NEW.aciklama IS DISTINCT FROM OLD.aciklama THEN
     RAISE EXCEPTION 'gönderilen izin talebinin içeriği değişmez (geri çekip yenisi gönderilir)' USING ERRCODE = '23514';
   END IF;
+  -- belge: yalnız talep eden, karar anında hiç değişmez (329–332 incelemesi: ELSIF kolundayken durumla aynı UPDATE'te başkası değiştirebiliyordu)
+  IF NEW.belge IS DISTINCT FROM OLD.belge AND (ben IS NULL OR OLD.kaydeden IS DISTINCT FROM ben OR NEW.durum IS DISTINCT FROM OLD.durum) THEN
+    RAISE EXCEPTION 'talebin belgesini yalnız talep eden değiştirir' USING ERRCODE = '23514';
+  END IF;
   IF NEW.durum IS DISTINCT FROM OLD.durum THEN
     IF NEW.durum NOT IN ('onaylandi', 'red') THEN RAISE EXCEPTION 'izin talebi % durumuna geçemez', NEW.durum USING ERRCODE = '23514'; END IF;
     NEW.onaylayan := ben; NEW.karar := now();
   ELSIF NEW.onaylayan IS DISTINCT FROM OLD.onaylayan OR NEW.karar IS DISTINCT FROM OLD.karar OR NEW.red IS DISTINCT FROM OLD.red THEN
     RAISE EXCEPTION 'karar yalnız durum değişirken yazılır' USING ERRCODE = '23514';
-  ELSIF NEW.belge IS DISTINCT FROM OLD.belge AND (ben IS NULL OR OLD.kaydeden IS DISTINCT FROM ben) THEN
-    RAISE EXCEPTION 'talebin belgesini yalnız talep eden değiştirir' USING ERRCODE = '23514';
   END IF;
   RETURN NEW;
 END $$;

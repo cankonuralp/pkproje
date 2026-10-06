@@ -17,29 +17,40 @@ const MODUL = 20;
 const GUN = new Intl.DateTimeFormat("en-CA", { timeZone: "Europe/Istanbul", year: "numeric", month: "2-digit", day: "2-digit" });
 export const bugunTr = () => GUN.format(new Date());
 export interface Uyari {
-  id: string; tur: UyariTuru; konu: string; alt: string; kisi: { id: string; ad: string } | null; tarih: string; durum: "gecti" | "yakin"; href: string; sonuc: string;
+  id: string; tur: UyariTuru; konu: string; alt: string; kisi: { id: string; ad: string } | null;
+  /** bitiş / tekrar günü; kalibrasyonu hiç olmayan cihazda null (329–332 incelemesi: uydurma "bugün" gösterilmez) */
+  tarih: string | null; durum: "gecti" | "yakin"; href: string; sonuc: string;
+  /** kalibrasyon uyarısında cihazın türü (branş yöneticisinin ana sayfası branşa göre süzer) */
+  cihazTur?: string;
 }
 
 /** uyarılar (en yakın tarih üstte); denetçi yalnız kendisininkileri (kimde / kişi kendisi); göremeyene null */
 export async function uyariListesi(db: Sorgulayici, kim: YetkiHesabi): Promise<Uyari[] | null> {
   const d = duzey(kim, MODUL);
   if (d === "yok") return null;
-  const ben = d === "kendi" ? (await hesabinPersoneli(db, kim.id)) ?? "" : null;
+  /* yalnız "gör" ve "değiştir" hepsini görür; "kendi" ve kapsamı tanımsız düzey ("branşı" — uyarının branşı yok) kısıtlı yönde: yalnız
+     kendisininkiler (329–332 incelemesi: "branşı" bütün firmayı açıyordu) */
+  const ben = d === "gor" || d === "yaz" ? null : (await hesabinPersoneli(db, kim.id)) ?? "";
   const bugun = bugunTr();
   const [c, e, a, kimde] = [await cihazUyarilari(db, bugun), await egitimUyarilari(db, bugun), await aracUyarilari(db, bugun), await kimdeHaritasi(db)];
   const kisiIdleri = [...new Set([...c.l.map((x) => kimde.cihaz.get(x.id)), ...a.l.map((x) => kimde.arac.get(x.id)), ...e.l.map((x) => x.personelId)].filter((x): x is string => !!x))];
-  const ad = new Map((await personelOzetleri(db, kisiIdleri)).map((p) => [p.id, p.ad]));
+  const ozet = await personelOzetleri(db, kisiIdleri);
+  const ad = new Map(ozet.map((p) => [p.id, p.ad]));
+  /* ayrılan personelin eğitim tekrarı uyarı değildir (ona yeni kayıt girilemez, uyarı hiç düşmezdi — 329–332 incelemesi) */
+  const ayrilan = new Set(ozet.filter((p) => !p.etkin).map((p) => p.id));
   const kisi = (id: string | null | undefined) => (id ? { id, ad: ad.get(id) ?? "—" } : null);
   const l: Uyari[] = [
     ...c.l.map((x): Uyari => {
       const k = kisi(kimde.cihaz.get(x.id));
-      return { id: `k-${x.id}`, tur: "kal", konu: `${x.kod} · ${x.tur}`, alt: "Kalibrasyon", kisi: k, tarih: x.bitis ?? bugun, durum: x.durum, href: `/olcum-cihazlari/${x.id}`,
-        sonuc: x.durum === "gecti" ? (k ? `${k.ad} raporlarını onaya gönderemez` : x.bitis ? "depoda" : "geçerli kalibrasyon yok") : `${c.esik} gün içinde bitiyor` };
+      const gonderemez = k ? `${k.ad} raporlarını onaya gönderemez` : "depoda";
+      return { id: `k-${x.id}`, tur: "kal", konu: `${x.kod} · ${x.tur}`, alt: "Kalibrasyon", kisi: k, tarih: x.bitis, durum: x.durum, href: `/olcum-cihazlari/${x.id}`, cihazTur: x.turId,
+        sonuc: !x.bitis ? `geçerli kalibrasyon yok${k ? ` · ${gonderemez}` : ""}` : x.durum === "gecti" ? gonderemez : `${c.esik} gün içinde bitiyor` };
     }),
-    ...e.l.map((x): Uyari => ({ id: `e-${x.id}`, tur: "egt", konu: x.tur, alt: "Eğitim tekrarı", kisi: kisi(x.personelId), tarih: x.tekrar, durum: x.durum,
-      href: "/dokumanlar/egitimler", sonuc: x.durum === "gecti" ? "tekrar gerekli" : `${e.esik} gün içinde` })),
+    ...e.l.filter((x) => !ayrilan.has(x.personelId)).map((x): Uyari => ({ id: `e-${x.id}`, tur: "egt", konu: x.tur, alt: "Eğitim tekrarı", kisi: kisi(x.personelId),
+      tarih: x.tekrar, durum: x.durum, href: `/dokumanlar/egitimler?kisi=${x.personelId}`, sonuc: x.durum === "gecti" ? "tekrar gerekli" : `${e.esik} gün içinde` })),
     ...a.l.map((x): Uyari => ({ id: `v-${x.id}-${x.belge}`, tur: "arac", konu: `${x.plaka} · ${x.ad}`, alt: x.belge, kisi: kisi(kimde.arac.get(x.id)), tarih: x.tarih,
       durum: x.durum, href: `/araclar/${x.id}`, sonuc: x.durum === "gecti" ? "süresi geçti" : `${a.esik} gün içinde bitiyor` })),
   ];
-  return l.filter((u) => uyariGorunur(ben, u.kisi?.id)).sort((x, y) => x.tarih.localeCompare(y.tarih) || x.konu.localeCompare(y.konu, "tr"));
+  /* tarihsiz (kalibrasyonu hiç olmayan) en üstte */
+  return l.filter((u) => uyariGorunur(ben, u.kisi?.id)).sort((x, y) => (x.tarih ?? "").localeCompare(y.tarih ?? "") || x.konu.localeCompare(y.konu, "tr"));
 }

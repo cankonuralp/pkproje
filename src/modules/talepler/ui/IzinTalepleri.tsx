@@ -22,6 +22,11 @@ import { izinOnaylaEylemi, izinReddetEylemi } from "./eylemler";
 import stil from "./talepler.module.css";
 
 const aralik = (x: { bas: string; bit: string }) => `${tarihNo(x.bas)}${x.bit !== x.bas ? ` – ${tarihNo(x.bit)}` : ""}`;
+/* gönderim günü Türkiye takvimiyle (UTC'de gece yarısından önceki güne düşmesin — 329–332 incelemesi) */
+const GUN = new Intl.DateTimeFormat("en-CA", { timeZone: "Europe/Istanbul", year: "numeric", month: "2-digit", day: "2-digit" });
+const gunTr = (iso: string) => GUN.format(new Date(iso));
+/* karar sonrası tuşlar kalkar: odak sayfa başlığına (maket personel.html izin kararı; 329–332 incelemesi) */
+const baslikOdak = () => requestAnimationFrame(() => { const h = document.querySelector<HTMLElement>("main h1"); if (h) { h.tabIndex = -1; h.focus(); } });
 const GID = "w-izin-gerekce";
 
 export function IzinTalepleri({ l }: { l: IzinSatiri[] }) {
@@ -33,16 +38,16 @@ export function IzinTalepleri({ l }: { l: IzinSatiri[] }) {
   const onayla = (x: IzinSatiri) => baslat(async () => {
     const r = await izinOnaylaEylemi(x.id, x.surum);
     if (!r.tamam) { bildir(r.genel ?? "Onaylanamadı."); return; }
-    bildir(r.bildirim ?? "Onaylandı."); router.refresh();
+    bildir(r.bildirim ?? "Onaylandı."); router.refresh(); baslikOdak();
   });
   const reddet = () => baslat(async () => {
     if (!red) return;
     const r = await izinReddetEylemi(red.x.id, red.x.surum, { gerekce: red.gerekce });
     if (!r.tamam) { setRed({ ...red, hata: r.hatalar?.gerekce ?? r.genel ?? "Reddedilemedi." }); requestAnimationFrame(() => document.getElementById(GID)?.focus()); return; }
-    setRed(null); bildir(r.bildirim ?? "Reddedildi."); router.refresh();
+    setRed(null); bildir(r.bildirim ?? "Reddedildi."); router.refresh(); baslikOdak();
   });
   const sutunlar: Sutun<IzinSatiri>[] = [
-    { k: "no", genislik: "16%", baslik: "Talep no", kart: "ust", sira: 1, hucre: (x) => <><span className={stil.sayi}>{x.no}</span><AltSatir>{tarihNo(x.gonderildi.slice(0, 10))}</AltSatir></> },
+    { k: "no", genislik: "16%", baslik: "Talep no", kart: "ust", sira: 1, hucre: (x) => <><span className={stil.sayi}>{x.no}</span><AltSatir>{tarihNo(gunTr(x.gonderildi))}</AltSatir></> },
     { k: "kisi", genislik: "26%", baslik: "Personel / izin", kart: "govde", sira: 2, hucre: (x) => (
       <span><Link href={`/personel/${x.personelId}`}>{x.personel}</Link><AltSatir><Kirp>{`${IZIN_TUR[x.tur]}${x.aciklama ? ` · ${x.aciklama}` : ""}`}</Kirp></AltSatir></span>
     ) },

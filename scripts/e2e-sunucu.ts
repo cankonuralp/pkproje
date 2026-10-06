@@ -56,6 +56,10 @@ for (const f of firmalar) {
     await db.sorgu("INSERT INTO kalibrasyon (cihaz_id, tarih, bitis, lab, sertifika, sonuc) VALUES ($1, CURRENT_DATE, CURRENT_DATE + 365, 'Deneme Kalibrasyon Lab.', 'KL-0001', 'uygun')", [c]);
     await db.sorgu("INSERT INTO zimmet_hareket (cihaz_id, alan_personel, zaman) VALUES ($1, $2, now())", [c, kisiler.denetci!.personel]);
     await db.sorgu("UPDATE ekipman_turu SET cihaz_turleri = ARRAY[$1::uuid] WHERE id = $2", [ct, u]);
+    /* uyarılar (331, 329–332 incelemesi): depoda, kalibrasyonu 10 gün sonra biten cihaz — Uyarılar'da "Yaklaşıyor" satırı (başka türde: saha raporunu etkilemez) */
+    const uct = (await db.sorgu<{ id: string }>("INSERT INTO cihaz_turu (ad) VALUES ('Deneme Ölçer') RETURNING id::text")).rows[0].id;
+    const uc = (await db.sorgu<{ id: string }>("INSERT INTO olcum_cihazi (kod, tur_id, marka, model, seri) VALUES ('UY-01', $1, 'Deneme', 'U1', 'S-UY1') RETURNING id::text", [uct])).rows[0].id;
+    await db.sorgu("INSERT INTO kalibrasyon (cihaz_id, tarih, bitis, lab, sertifika, sonuc) VALUES ($1, CURRENT_DATE - 355, CURRENT_DATE + 10, 'Deneme Kalibrasyon Lab.', 'KL-0002', 'uygun')", [uc]);
     /* muhasebe (327): fiyat listesinde HT; ayrı tesis (her projenin imzalı raporu aşağıda, süper kullanıcıyla) */
     await db.sorgu("INSERT INTO fiyat_listesi (tur_id, fiyat) VALUES ($1, 90000)", [u]);
     const tm = (await db.sorgu<{ id: string }>("INSERT INTO tesis (musteri_id, ad, adres, il, ilce) VALUES ($1, $2, 'Deneme Cad. No 4', 'Kocaeli', 'Gebze') RETURNING id::text",

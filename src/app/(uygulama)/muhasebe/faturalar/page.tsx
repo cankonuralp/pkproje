@@ -17,5 +17,6 @@ export default async function Sayfa({ searchParams }: { searchParams: Promise<{ 
   const v = await oturumIslemi(o, async (db) => ({ isler: await isListesi(db, o), faturalar: await faturaListesi(db, o) }));
   if (!v.isler || !v.faturalar) return <Yetkisiz />;
   const { durum } = await searchParams;
-  return <FaturaListesi isler={v.isler} faturalar={v.faturalar} durum={typeof durum === "string" ? durum : undefined} bordro={bordroGonderebilir(o)} />;
+  /* adres süzgeci değişince (şeritteki "Faturalar" → ?durum=gecikti) liste yeniden kurulur — useSuzgec başlangıcı yalnız ilk çizimde okunur (329–332 incelemesi) */
+  return <FaturaListesi key={typeof durum === "string" ? durum : ""} isler={v.isler} faturalar={v.faturalar} durum={typeof durum === "string" ? durum : undefined} bordro={bordroGonderebilir(o)} />;
 }

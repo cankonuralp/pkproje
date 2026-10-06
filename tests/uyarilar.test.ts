@@ -65,18 +65,21 @@ after(async () => { await havuz?.end(); await kume?.durdur(); });
 
 test("uyarılar kayıtlardan türetilir: kalibrasyon (geçti / eşik içinde; kalibrasyondaki, pasif ve geçerli cihaz yok), eğitim tekrarı (önceki kayıt yok), araç belgesi; en yakın tarih üstte; kimde", async () => {
   const l = (await a(YON, (db) => uyariListesi(db, YON)))!;
+  /* 2026-10-06 (329–332 incelemesi): kalibrasyonu hiç olmayan cihazın uydurma "bugün" tarihi kalktı — tarihsiz, en üstte */
   assert.deepEqual(l.map((u) => [u.tur, u.konu, u.alt, u.durum, u.kisi?.ad ?? null]), [
+    ["kal", "MN-05 · Manometre", "Kalibrasyon", "gecti", null],
     ["kal", "MN-01 · Manometre", "Kalibrasyon", "gecti", "Deneme Denetçi"],
     ["arac", "34 ABC 123 · Deneme Model", "Muayene", "gecti", null],
     ["egt", "Yüksekte çalışma", "Eğitim tekrarı", "gecti", "Deneme Denetçi"],
-    ["kal", "MN-05 · Manometre", "Kalibrasyon", "gecti", null],
     ["kal", "MN-02 · Manometre", "Kalibrasyon", "yakin", null],
     ["arac", "34 ABC 123 · Deneme Model", "Kasko", "yakin", null],
     ["egt", "Yüksekte çalışma", "Eğitim tekrarı", "yakin", "Deneme Öteki"],
   ]);
   const k1 = l.find((u) => u.konu.startsWith("MN-01"))!, k5 = l.find((u) => u.konu.startsWith("MN-05"))!, k2 = l.find((u) => u.konu.startsWith("MN-02"))!;
-  assert.deepEqual([k1.sonuc, k5.sonuc, k5.tarih, k2.sonuc], ["Deneme Denetçi raporlarını onaya gönderemez", "geçerli kalibrasyon yok", BUGUN(), "30 gün içinde bitiyor"]);
+  assert.deepEqual([k1.sonuc, k5.sonuc, k5.tarih, k2.sonuc], ["Deneme Denetçi raporlarını onaya gönderemez", "geçerli kalibrasyon yok", null, "30 gün içinde bitiyor"]);
   assert.match(k1.href, /^\/olcum-cihazlari\/[0-9a-f-]{36}$/);
+  /* eğitim uyarısı Eğitimler'i o kişiyle süzülü açar (maket ?kisi=) */
+  assert.equal(l.find((u) => u.tur === "egt" && u.durum === "gecti")!.href, `/dokumanlar/egitimler?kisi=${denP}`);
 });
 
 test("yetki (modül 20): planlama, branş yöneticisi ve firma yöneticisi hepsini; denetçi yalnız kendisininkileri; muhasebe göremez; firma eşiği uygulanır", async () => {
@@ -87,6 +90,19 @@ test("yetki (modül 20): planlama, branş yöneticisi ve firma yöneticisi hepsi
     RETURNING id::text`, [A]);
   const l = (await a(YON, (db) => uyariListesi(db, YON)))!;
   assert.deepEqual(l.filter((u) => u.durum === "yakin").map((u) => u.konu), [], "eşik daralınca yaklaşan yok");
+});
+
+test("329–332 incelemesi: 'branşı' düzeyi (uyarının branşı yok) kısıtlı yönde — yalnız kendisininkiler; ayrılan personelin eğitim tekrarı uyarı değil", async () => {
+  const BRANS = { ...MUH, matris: { 20: ["gor", "kendi", "gor", "gor", "gor", "brans"] } } as YetkiHesabi;
+  assert.deepEqual((await a(BRANS, (db) => uyariListesi(db, BRANS)))!, [], "muhasebenin personeli yok — hiçbir uyarı");
+  const DEN_B = { ...DEN, matris: { 20: ["gor", "brans", "gor", "gor", "gor", "yok"] } } as YetkiHesabi;
+  assert.deepEqual((await a(DEN_B, (db) => uyariListesi(db, DEN_B)))!.map((u) => u.konu), ["MN-01 · Manometre", "Yüksekte çalışma"]);
+  /* ötekinin güncel eğitiminin tekrarı geçti → uyarı; kişi ayrılınca düşer */
+  await sahip("UPDATE egitim_kaydi SET tekrar = current_date - 3 WHERE personel_id = $1 AND NOT onceki RETURNING id::text", [digerP]);
+  const egt = async () => (await a(YON, (db) => uyariListesi(db, YON)))!.filter((u) => u.tur === "egt").map((u) => u.kisi?.ad);
+  assert.deepEqual(await egt(), ["Deneme Öteki", "Deneme Denetçi"]);
+  await sahip("UPDATE personel SET durum = 'ayrildi', ayrildi = current_date WHERE id = $1 RETURNING id::text", [digerP]);
+  assert.deepEqual(await egt(), ["Deneme Denetçi"]);
 });
 
 test("firma sızıntısı: B, A'nın uyarılarını görmez", async () => {

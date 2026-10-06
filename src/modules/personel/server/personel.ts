@@ -155,10 +155,10 @@ export async function personelBelgeBilgisi(db: Sorgulayici, id: string): Promise
     "SELECT ad, meslek, ekipnet, diploma, oda FROM personel WHERE id = $1", [id])).rows[0] ?? null;
 }
 
-export async function personelOzetleri(db: Sorgulayici, idler: readonly string[]): Promise<{ id: string; ad: string; meslek: string; meslekMetin: string | null; ekipnet: string | null }[]> {
+export async function personelOzetleri(db: Sorgulayici, idler: readonly string[]): Promise<{ id: string; ad: string; meslek: string; meslekMetin: string | null; ekipnet: string | null; etkin: boolean }[]> {
   const l = idler.filter((x) => /^[0-9a-f-]{36}$/.test(x));
   if (!l.length) return [];
-  return (await db.sorgu<{ id: string; ad: string; meslek: string; meslek_metin: string | null; ekipnet: string | null }>(
-    "SELECT id::text, ad, meslek, meslek_metin, ekipnet FROM personel WHERE id = ANY ($1::uuid[])", [l])).rows
-    .map((x) => ({ id: x.id, ad: x.ad, meslek: x.meslek, meslekMetin: x.meslek_metin, ekipnet: x.ekipnet }));
+  return (await db.sorgu<{ id: string; ad: string; meslek: string; meslek_metin: string | null; ekipnet: string | null; durum: string }>(
+    "SELECT id::text, ad, meslek, meslek_metin, ekipnet, durum FROM personel WHERE id = ANY ($1::uuid[])", [l])).rows
+    .map((x) => ({ id: x.id, ad: x.ad, meslek: x.meslek, meslekMetin: x.meslek_metin, ekipnet: x.ekipnet, etkin: x.durum === "etkin" }));
 }

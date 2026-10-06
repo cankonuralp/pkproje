@@ -15,7 +15,8 @@ import stil from "./uyarilar.module.css";
 const GUN = new Intl.DateTimeFormat("en-CA", { timeZone: "Europe/Istanbul", year: "numeric", month: "2-digit", day: "2-digit" });
 const kalan = (iso: string) => Math.round((Date.parse(`${iso}T00:00:00Z`) - Date.parse(`${GUN.format(new Date())}T00:00:00Z`)) / 864e5);
 const DURUM = { gecti: ["red", "Süresi geçti"], yakin: ["bekliyor", "Yaklaşıyor"] } as const;
-const TARIH_AD: Record<UyariTuru, string> = { kal: "Kalibrasyon bitişi", egt: "Tekrar tarihi", arac: "Belge bitişi" };
+/* araçta belgenin kendi adıyla (maket u.alt + " bitişi": "Muayene bitişi", "Kasko bitişi") */
+const TARIH_AD: Record<Exclude<UyariTuru, "arac">, string> = { kal: "Kalibrasyon bitişi", egt: "Tekrar tarihi" };
 
 function tanim(l: readonly Uyari[]): SuzgecTanimi<Uyari> {
   const kisiler = [...new Map(l.filter((u) => u.kisi).map((u) => [u.kisi!.id, u.kisi!.ad])).entries()].sort((a, b) => a[1].localeCompare(b[1], "tr"));
@@ -35,10 +36,15 @@ const SUTUN: Sutun<Uyari>[] = [
     <span className={stil.satir}><Ikon ad={UYARI_TUR[u.tur].ikon} kucuk /><span><Link className={stil.ad} href={u.href}><Kirp>{u.konu}</Kirp></Link><AltSatir>{u.alt}</AltSatir></span></span>
   ) },
   { k: "kisi", genislik: "20%", baslik: "Kimde / kim", kart: "govde", sira: 2, hucre: (u) => <><KartEtiket>{u.tur === "egt" ? "Kişi" : "Kimde"}</KartEtiket>{u.kisi ? <Kirp>{u.kisi.ad}</Kirp> : <DegerYok>Depoda</DegerYok>}</> },
-  { k: "tarih", genislik: "16%", baslik: "Bitiş / tekrar", kart: "govde", sira: 3, hucre: (u) => <><KartEtiket>{TARIH_AD[u.tur]}</KartEtiket><span className={stil.sayi}>{tarihNo(u.tarih)}</span></> },
-  { k: "kalan", genislik: "18%", baslik: "Kalan", kart: "govde", sira: 4, hucre: (u) => { const k = kalan(u.tarih); return (
-    <><KartEtiket>Kalan</KartEtiket><span><span className={k < 0 ? stil.hata : stil.uyari}>{k < 0 ? `${-k} gün geçti` : k === 0 ? "bugün" : `${k} gün`}</span><AltSatir>{u.sonuc}</AltSatir></span></>
-  ); } },
+  { k: "tarih", genislik: "16%", baslik: "Bitiş / tekrar", kart: "govde", sira: 3, hucre: (u) => (
+    <><KartEtiket>{u.tur === "arac" ? `${u.alt} bitişi` : TARIH_AD[u.tur]}</KartEtiket>{u.tarih ? <span className={stil.sayi}>{tarihNo(u.tarih)}</span> : <DegerYok />}</>
+  ) },
+  { k: "kalan", genislik: "18%", baslik: "Kalan", kart: "govde", sira: 4, hucre: (u) => {
+    /* kalibrasyonu hiç olmayan cihaz: uydurma tarih yok (329–332 incelemesi) */
+    if (!u.tarih) return <><KartEtiket>Kalan</KartEtiket><span><span className={stil.hata}>kalibrasyon yok</span><AltSatir>{u.sonuc}</AltSatir></span></>;
+    const k = kalan(u.tarih);
+    return <><KartEtiket>Kalan</KartEtiket><span><span className={k < 0 ? stil.hata : stil.uyari}>{k < 0 ? `${-k} gün geçti` : k === 0 ? "bugün" : `${k} gün`}</span><AltSatir>{u.sonuc}</AltSatir></span></>;
+  } },
   { k: "durum", genislik: "12%", baslik: "Durum", kart: "rozet", sira: 1, hucre: (u) => <Rozet tur={DURUM[u.durum][0]}>{DURUM[u.durum][1]}</Rozet> },
 ];
 export function UyariListesi({ l, tur }: { l: Uyari[]; tur?: UyariTuru }) {

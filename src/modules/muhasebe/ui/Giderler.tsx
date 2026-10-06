@@ -247,7 +247,7 @@ function GiderPenceresi({ g, sabitIs, sabitIsNo, secenekler, bugun, kapat }: {
             degistir={(x) => setD({ ...d, is: x })} />
         </Alan>
         <Alan id={GID.personel} etiket="Personel" hata={h.personel}>
-          <SecimAlani id={GID.personel} ad="Personel" deger={d.personel} gecersiz={!!h.personel} tanim={h.personel ? ipucuId(GID.personel) : undefined}
+          <SecimAlani id={GID.personel} ad="Personel" deger={d.personel} gecersiz={!!h.personel} tanim={h.personel ? ipucuId(GID.personel) : undefined} kapali={g?.kaynak === "form"}
             secenekler={[["", "Seçilmedi"], ...kisiler.map((x) => [x.id, x.ad] as const)]} degistir={(x) => setD({ ...d, personel: x })} />
         </Alan>
         <div className={stil.genis}>

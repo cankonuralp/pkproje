@@ -25,10 +25,14 @@ export function tarihOku(s: string): string | null {
   const [y, a, g] = iso.split("-").map(Number), d = new Date(Date.UTC(y, a - 1, g));
   return d.getUTCFullYear() === y && d.getUTCMonth() === a - 1 && d.getUTCDate() === g ? iso : null;
 }
-/** tutar → KURUŞ: sayı hücresi ("1250.5", "999.996") ya da Türkçe yazım ("1.250,50"); geçersizse null */
+/** tutar → KURUŞ: sayı hücresi ("1250.5", "999.996") ya da Türkçe yazım ("1.250,50", "3.200 TL", "12.500"); geçersizse null.
+    329–332 incelemesi: metin hücresi ("TL" eki, boşluk) ve binlik öbekli yazım Türkçe okunur — Excel'in ham sayısında ondalık hiçbir zaman sıfırla
+    bitmez ve iki nokta olmaz, bu yüzden "12.500" / "1.250.000" binliktir; tek öbekli, sıfırla bitmeyen "999.996" ham sayıdır (hesaplanmış hücre) */
 export function tutarOku(s: string): number | null {
-  const t = s.trim().replace(/\s|TL$/gi, "");
-  if (/^\d+(\.\d+)?$/.test(t)) { const n = Math.round(Number(t) * 100); return Number.isSafeInteger(n) ? n : null; }
+  const ham = s.trim(), metin = /TL$/i.test(ham) || /\s/.test(ham);
+  const t = ham.replace(/\s|TL$/gi, "");
+  const binlik = /^\d{1,3}(\.\d{3})+$/.test(t) && (/\..*\./.test(t) || /0$/.test(t));
+  if (!metin && !binlik && /^\d+(\.\d+)?$/.test(t)) { const n = Math.round(Number(t) * 100); return Number.isSafeInteger(n) ? n : null; }
   const p = tutarSema.safeParse(t);
   return p.success ? p.data : null;
 }

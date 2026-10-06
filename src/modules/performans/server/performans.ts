@@ -45,12 +45,12 @@ function donemAl(s: DonemSecimi): { d: Donem; hata: string | null } {
 
 /** görünür raporlar (dönemin sonuna kadar açılanlar; geri gönderme sayısı için önceki aylar da) ve kişiler */
 async function veri(db: Sorgulayici, g: Gorunurluk, d: Donem) {
-  const ham = await performansRaporlari(db, d.bit);
+  const ham = await performansRaporlari(db, d.bas, d.bit);
   const planlar = new Map((await muhasebePlanlari(db, [...new Set(ham.map((r) => r.planId))])).map((p) => [p.id, p]));
   const tur = new Map((await turOzetleri(db)).map((t) => [t.id, t.brans]));
   const bag = kazancGorunur(g) ? await raporBaglari(db, [...new Set([...planlar.values()].map((p) => p.tesisId))]) : new Map<string, { fiyat: number | null }>();
   const rl: PRapor[] = ham.map((r) => ({ id: r.id, personelId: r.personelId, planId: r.planId, tesisId: planlar.get(r.planId)?.tesisId ?? "", brans: tur.get(r.turId) ?? null,
-    gun: r.gun, olustu: r.olustu, ilkGonderim: r.ilkGonderim, gonderildi: r.gonderildi, onay: r.onay, imza: r.imza, imzali: r.imzali,
+    gun: r.gun, olustu: r.olustu, ilkGonderim: r.ilkGonderim, gonderildi: r.gonderildi, onay: r.onay, imza: r.imza, sonImza: r.sonImza, imzali: r.imzali,
     kazanc: kazancGorunur(g) ? bag.get(r.id)?.fiyat ?? 0 : 0, geriler: r.geriler })).filter((r) => raporGorunur(g, r));
   const kisiler = (await performansKisileri(db)).filter((k) => kisiGorunur(g, k));
   return { rl, kisiler, planlar };

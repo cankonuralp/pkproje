@@ -67,7 +67,8 @@ export interface IzinTalebi {
   karar: string | null; kararVeren: string | null; gonderildi: string; surum: number;
 }
 export interface Taleplerim {
-  izinler: IzinTalebi[]; masraflar: MasrafFormu[]; ozet: IzinOzeti;
+  /** bu yılın ve gelecek yılın özeti — talep başlangıç yılına sayılır, aşım o yılın kalanıyla (329–332 incelemesi) */
+  izinler: IzinTalebi[]; masraflar: MasrafFormu[]; ozet: IzinOzeti; gelecekOzet: IzinOzeti;
   /** masraf formunun iş seçenekleri: ekibinde olduğu başlamış planlar */
   isler: { id: string; no: string; tesis: string; tarih: string }[];
 }
@@ -84,6 +85,7 @@ export async function taleplerim(db: Sorgulayici, kim: Kisi): Promise<Taleplerim
   const tesis = new Map((await musteriOzetleri(db)).flatMap((m) => m.tesisler.map((t) => [t.id, t.ad] as const)));
   return {
     izinler: l.map((x) => izinSatiri(x, ad)), masraflar: await masrafFormlari(db, p), ozet: ozet(l, hak, bugunTr().slice(0, 4)),
+    gelecekOzet: ozet(l, hak, String(Number(bugunTr().slice(0, 4)) + 1)),
     isler: (await personelinPlanlari(db, p, bugunTr())).map((x) => ({ id: x.id, no: x.no, tesis: tesis.get(x.tesisId) ?? "—", tarih: x.baslangic })),
   };
 }
@@ -175,9 +177,9 @@ export async function izinTalepleri(db: Sorgulayici, kim: Kisi): Promise<IzinSat
   const l = (await db.sorgu<IzinDb>(`${IZIN_SEC} ORDER BY (durum = 'bekliyor') DESC, olustu DESC`)).rows;
   const ad = await hesapAdlari(db, l.map((x) => x.onaylayan));
   const kisi = await izinHaklari(db, l.map((x) => x.personel_id));
-  const yil = bugunTr().slice(0, 4);
+  /* özet talebin başlangıç yılının (gelecek yıl başlayan izin bu yılın kalanıyla karşılaştırılmaz — 329–332 incelemesi) */
   return l.map((x) => ({ ...izinSatiri(x, ad), personelId: x.personel_id, personel: kisi.get(x.personel_id)?.ad ?? "—",
-    ozet: ozet(l.filter((y) => y.personel_id === x.personel_id), kisi.get(x.personel_id)?.hak ?? 14, yil) }));
+    ozet: ozet(l.filter((y) => y.personel_id === x.personel_id), kisi.get(x.personel_id)?.hak ?? 14, x.bas.slice(0, 4)) }));
 }
 async function karar(db: Sorgulayici, kim: Kisi, id: string, surum: number, durum: "onaylandi" | "red", red: string | null): Promise<Yazma> {
   if (!izinYonetir(kim)) return { durum: "yetkisiz" };

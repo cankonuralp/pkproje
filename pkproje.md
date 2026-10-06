@@ -2341,6 +2341,23 @@ revizyon, alan kopyalama, hafif kusur devri, meslek eşleşme denetimi).
 - Emsal ürünler: https://opwire.app/iso-17020-periyodik-kontrol-yazilimi/ · https://17020muayene.vidco.com.tr/ · https://akuple.com/asansor-kontrol-yazilimi/ · https://ensyazilim.com/
 
 ## 11 · Değişiklik günlüğü
+- 2026-10-06 (329–332 incelemesi): çapraz inceleme (dört bakış + çürütme; 33 bulgudan 28'i doğrulandı) düzeltmeleri. **Güvenlik:** Uyarılar'da
+  "branşı" düzeyi (uyarının branşı yok) artık "kendi" gibi kısıtlı; Ana sayfa bölümleri rolle açılır ama veri modül düzeyiyle süzülür (Planlar
+  "kendi" → yalnız ekibinde olduğu planlar; kontrolü yaklaşan tesisler Müşteriler ve Ekipman'ı hepsini görene). **Veritabanı:** 0042'de izin
+  belgesi karar anında değişmez (denetim ELSIF kolundaydı); 0043'te ödeme ≥ tarih kısıtı NOT VALID (eski satır göçü düşürmez), masraf formunun
+  kişisi değişmez (uygulama da yok sayar, pencerede seçici kapalı). **Performans:** okuma dönemle sınırlı (açılış aralığı dizinle + dönemde geri
+  gönderilen); "Son imza" adımı şimdiki revizyonun imzasıyla (revizyonda eksi süre çıkıyordu); her sütun başlığı gerçekten sıralar; aralık tuşu
+  uygulanan dönemi gösterir (aria-expanded), aralık hatasında odak Başlangıç'a; kendi sayfada "Personel kartı" yok. **Muhasebe:** gider Excel'inde
+  "3.200 TL" / "12.500" / "1.250.000" Türkçe binlik okunur (1000 kat küçük okunuyordu; test yanlışı kilitliyordu — düzeltildi); Faturalar
+  şeridindeki "Faturalar" tuşu süzgeci uygular (liste adres süzgeciyle yeniden kurulur; Object.hasOwn). **Uyarılar:** ayrılan personelin eğitim
+  tekrarı düşer; kalibrasyonu hiç olmayan cihaz uydurma "bugün" yerine tarihsiz ve en üstte ("kalibrasyon yok"); araç kartında "<belge> bitişi";
+  eğitim uyarısı Eğitimler'i kişiyle süzülü açar (?kisi=); e2e satırı gerçekten sınar (tohumda depoda UY-01). **Ana sayfa:** "Reddedilen plan"
+  yalnız tesisin güncel planıysa; denetçide mesai açıkken "Günlük süre" yüzü (N6); branş yöneticisinde "Geri gönderdiğin" (kendi geri
+  gönderdikleri) ve kalibrasyon uyarısı branşın cihazları (cihaz türünü kullanan ekipman türlerinden). **Talepler:** fiş alanında capture yok
+  (telefonda PDF); "Belgeyi / Fişi değiştir · kaldır"; ek silmeden önce sorulur; gönderim günü ve yılı Türkiye takvimiyle; izin özeti talebin
+  başlangıç yılıyla (gelecek yıl başlayan izin o yılın kalanıyla — taleplerim gelecekOzet); karar sonrası odak başlığa. Yıl aşan iznin iş
+  günlerinin yıllara bölünmesi maketteki gibi yapılmadı (başlangıç yılına sayılır). Kilit: uyarilar, anasayfa, talepler, karlilik,
+  performans-hesap testleri genişledi (tarih + gerekçe); talepler.bozan 3 → 5.
 - 2026-10-06 (333): **K4 Onaylar › Diğer belgeler** (maket onaylar.html #/diger, muhasebe.html BB5 "Maaş bordrosu gönder", personel.html bordro
   "Onaya gönder"; §11 230, 264, 265 — reisim: "Onaylar kısmında diğer kısmı olsun muhasebeciden onaya maaş bordrosu gönderilirse veya eğitim
   zimmet formu gönderilirse oradan onaylanabilsin"). Göç **0044 belge_onay**: tür (bordro, eğitim formu, zimmet formu, araç teslim tutanağı), ad,

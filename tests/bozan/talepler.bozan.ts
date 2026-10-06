@@ -2,7 +2,9 @@
    kopyalanır, bozulacak göç bellekte bozulur, kopyadan koşulur.
    1. "Kendi adına" denetimi olmasaydı bir hesap başkası adına izin talebi yazardı.
    2. Karar verilmiş talebin değişmezliği olmasaydı reddedilen izin sonradan onaylanırdı.
-   3. Masraf formunda "kendi adına" denetimi olmasaydı başkası adına masraf yazılırdı. */
+   3. Masraf formunda "kendi adına" denetimi olmasaydı başkası adına masraf yazılırdı.
+   4. (329–332 incelemesi) Belge denetimi karar anına bakmasaydı talebin belgesi onayla aynı anda değiştirilirdi.
+   5. (329–332 incelemesi) Masraf formunun kişi kilidi olmasaydı form başkasının üstüne geçerdi. */
 import assert from "node:assert/strict";
 import { copyFileSync, mkdirSync, mkdtempSync, readdirSync, readFileSync, rmSync, writeFileSync } from "node:fs";
 import { tmpdir } from "node:os";
@@ -73,4 +75,27 @@ test("0043'te masraf formunun 'kendi adına' denetimi kalkınca başkası adına
   const r = await kiraciIcinde(havuz, A, (db) => db.sorgu(
     `INSERT INTO gider (no, tarih, tur, tutar, oran, kaynak, durum, personel_id) VALUES ('G-1026-001', ${BUGUN}, 'yol', 100, 20, 'form', 'bekliyor', $1)`, [baska]), { hesapId: hesap });
   assert.equal(r.rowCount, 1, "başkası adına masraf yazıldı");
+});
+
+/* 2026-10-06 (329–332 incelemesi) */
+test("0042'de belge denetimi karar anına bakmazsa talebin belgesi onayla aynı anda değiştirilir", async () => {
+  const { havuz, A, ben, hesap } = await bozuk("talep_bozuk4", "0042_", " OR NEW.durum IS DISTINCT FROM OLD.durum) THEN\n    RAISE EXCEPTION 'talebin belgesini", ") THEN\n    RAISE EXCEPTION 'talebin belgesini");
+  const r = await kiraciIcinde(havuz, A, async (db) => {
+    const id = (await db.sorgu<{ id: string }>(`INSERT INTO izin_talebi (no, personel_id, tur, bas, bit, gun) VALUES ('I-1026-001', $1, 'rapor', ${BUGUN}, ${BUGUN}, 1) RETURNING id::text`, [ben])).rows[0].id;
+    const d = (await db.sorgu<{ id: string }>("SELECT gen_random_uuid()::text AS id")).rows[0].id;
+    await db.sorgu("INSERT INTO dosya (id, modul, kayit_id, anahtar, ad, tur, boyut, sha256) VALUES ($1, 'izin', $2, $3, 'rapor.pdf', 'application/pdf', 10, $4)",
+      [d, id, `firma/${A}/izin/${id}/${d}`, "0".repeat(64)]);
+    return db.sorgu("UPDATE izin_talebi SET durum = 'onaylandi', belge = $2 WHERE id = $1", [id, d]);
+  }, { hesapId: hesap });
+  assert.equal(r.rowCount, 1, "karar anında belge değişti");
+});
+
+test("0043'te masraf formunun kişi kilidi kalkınca form başkasının üstüne geçer", async () => {
+  const { havuz, A, ben, baska, hesap } = await bozuk("talep_bozuk5", "0043_", "    RAISE EXCEPTION 'masraf formunun personeli değişmez' USING ERRCODE = '23514';\n", "");
+  const r = await kiraciIcinde(havuz, A, async (db) => {
+    const id = (await db.sorgu<{ id: string }>(`INSERT INTO gider (no, tarih, tur, tutar, oran, kaynak, durum, personel_id) VALUES ('G-1026-001', ${BUGUN}, 'yol', 100, 20, 'form', 'bekliyor', $1)
+      RETURNING id::text`, [ben])).rows[0].id;
+    return db.sorgu("UPDATE gider SET personel_id = $2 WHERE id = $1", [id, baska]);
+  }, { hesapId: hesap });
+  assert.equal(r.rowCount, 1, "formun kişisi değişti");
 });

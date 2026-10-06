@@ -124,13 +124,14 @@ export async function giderKaydet(db: Sorgulayici, depo: Depo, kim: Kisi, firmaI
     return { durum: "tamam", id: r.id, no, bildirim: `${no} kaydedildi: ${para(v.tutar)} (KDV dahil)${v.is ? "" : ", genel gider"}${belge && belge !== "kaldir" ? "." : "; belge eklenmedi."}` };
   }
   if (!UUID.test(id)) return { durum: "yok" };
-  const x = (await db.sorgu<{ no: string; durum: GiderDurumu; odeme: string | null }>("SELECT no, durum, odeme::text FROM gider WHERE id = $1 FOR UPDATE", [id])).rows[0];
+  const x = (await db.sorgu<{ no: string; durum: GiderDurumu; odeme: string | null; kaynak: string }>("SELECT no, durum, odeme::text, kaynak FROM gider WHERE id = $1 FOR UPDATE", [id])).rows[0];
   if (!x) return { durum: "yok" };
   if (x.durum === "red") return { durum: "red", neden: "Reddedilen gider değişmez." };
   if (x.odeme && v.tarih > x.odeme) return { durum: "gecersiz", hatalar: { tarih: `Ödeme gününden (${x.odeme.split("-").reverse().join(".")}) sonra olamaz.` } };
   if (sonra && x.durum !== GECIS[sonra]) return gecisRed(sonra);
   if (!Number.isSafeInteger(surum) || surum < 0) return { durum: "cakisma" };
-  const r = await guncelle(db, GIDER, id, surum, icerik, iz(kim, "gider.duzenle", x.no));
+  /* masraf formunun kişisi değişmez (gönderenin Talepler'inden düşmesin — 329–332 incelemesi; veritabanı da 0043) */
+  const r = await guncelle(db, GIDER, id, surum, x.kaynak === "form" ? { ...icerik, personel_id: undefined } : icerik, iz(kim, "gider.duzenle", x.no));
   if (r.durum !== "tamam") return { durum: r.durum === "yok" ? "yok" : "cakisma" };
   const b = await belgeYaz(db, depo, kim, firmaId, id, r.surum, belge);
   if (typeof b !== "number") return b;

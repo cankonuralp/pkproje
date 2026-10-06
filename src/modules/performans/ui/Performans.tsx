@@ -4,7 +4,7 @@
    Grafikler tek üreticiden (components/grafik). Kazanç yalnız sunucu "kazanç görünür" dediyse (denetçi kendi sayfasında görmez). */
 import Link from "next/link";
 import { usePathname, useRouter } from "next/navigation";
-import { useState } from "react";
+import { useEffect, useState } from "react";
 import { Bilgi, BilgiListesi, Yuz, Yuzler } from "../../../components/bilgi/Bilgi";
 import { baytIndir, dosyaGunu } from "../../../components/disa/indir";
 import { XLSX_TURU, xlsxBayt } from "../../../components/disa/xlsx";
@@ -35,6 +35,8 @@ function Anahtarlar({ donem, aralikHata, brans, bransSecilir }: { donem: Donem; 
   const router = useRouter(), yol = usePathname();
   const [a, setA] = useState({ bas: donem.kod === "aralik" ? donem.bas : "", bit: donem.kod === "aralik" ? donem.bit : "" });
   const [acik, setAcik] = useState(donem.kod === "aralik" || !!aralikHata);
+  /* aralık hatası: odak Başlangıç'a, hata iki alana bağlı (maket aralik-uygula; 329–332 incelemesi) */
+  useEffect(() => { if (aralikHata) document.getElementById(AID.bas)?.focus(); }, [aralikHata]);
   const git = (p: Record<string, string | undefined>) => {
     const q = new URLSearchParams();
     for (const [k, v] of Object.entries(p)) if (v && !(k === "donem" && v === "ay") && !(k === "brans" && v === "tumu")) q.set(k, v);
@@ -45,7 +47,8 @@ function Anahtarlar({ donem, aralikHata, brans, bransSecilir }: { donem: Donem; 
     <div className={stil.anahtar}>
       <div className={stil.grup} role="group" aria-label="Dönem">
         {(Object.keys(DONEM_AD) as DonemKodu[]).map((k) => (
-          <button key={k} type="button" className={stil.sekme} aria-pressed={(k === "aralik" ? acik : !acik && donem.kod === k)}
+          /* basılı = UYGULANAN dönem; aralık tuşu yalnız aralık alanlarını açar (aria-expanded) — veri değişmeden basılı görünmez (329–332 incelemesi) */
+          <button key={k} type="button" className={stil.sekme} aria-pressed={donem.kod === k} aria-expanded={k === "aralik" ? acik : undefined}
             onClick={() => (k === "aralik" ? setAcik(true) : (setAcik(false), git({ donem: k, brans: bransP })))}>{DONEM_AD[k]}</button>
         ))}
       </div>
@@ -54,7 +57,7 @@ function Anahtarlar({ donem, aralikHata, brans, bransSecilir }: { donem: Donem; 
           <TarihAlani id={AID.bas} ad="Başlangıç" deger={a.bas} degistir={(x) => setA({ ...a, bas: x })} tanim={aralikHata ? ipucuId(AID.bas) : undefined} />
         </Alan>
         <Alan id={AID.bit} etiket="Bitiş">
-          <TarihAlani id={AID.bit} ad="Bitiş" deger={a.bit} degistir={(x) => setA({ ...a, bit: x })} />
+          <TarihAlani id={AID.bit} ad="Bitiş" deger={a.bit} degistir={(x) => setA({ ...a, bit: x })} tanim={aralikHata ? ipucuId(AID.bas) : undefined} />
         </Alan>
         <Tus tur="ikincil" onClick={() => git({ donem: "aralik", bas: a.bas, bit: a.bit, brans: bransP })}>Uygula</Tus>
       </div>}
@@ -108,7 +111,10 @@ function kisiTanim(kazanc: boolean) {
       { k: "sira", ad: "Sıralama", siralama: true, secenek: () => [["varsayilan", kazanc ? "Kazanç (çoktan aza)" : "Rapor (çoktan aza)"], ["rapor-azalan", "Rapor (çoktan aza)"],
         ["ort-azalan", "Gün başı (çoktan aza)"], ["ad-artan", "Ad (A–Z)"]] as [string, string][], gecer: () => true },
     ],
-    siraAnahtari: { rapor: (p: PanoKisisi) => p.o.rapor, ort: (p: PanoKisisi) => p.o.ort, ad: (p: PanoKisisi) => p.ad, kazanc: (p: PanoKisisi) => p.o.kazanc },
+    /* her başlık sıralar (329–332 incelemesi: anahtarı olmayan başlık "sıralı" görünüp sıralamıyordu) */
+    siraAnahtari: { rapor: (p: PanoKisisi) => p.o.rapor, ort: (p: PanoKisisi) => p.o.ort, ad: (p: PanoKisisi) => p.ad, kazanc: (p: PanoKisisi) => p.o.kazanc,
+      gun: (p: PanoKisisi) => p.o.gun, geri: (p: PanoKisisi) => p.o.geri, h24: (p: PanoKisisi) => p.o.sure.pay, h48p: (p: PanoKisisi) => p.o.sure.h48p,
+      son: (p: PanoKisisi) => p.o.son ?? "" },
     varsayilanSira: (a: PanoKisisi, b: PanoKisisi) => (kazanc ? b.o.kazanc - a.o.kazanc : b.o.rapor - a.o.rapor) || a.ad.localeCompare(b.ad, "tr"),
   };
 }
@@ -186,7 +192,7 @@ export function KisiGorunumu({ v, personelGor, isGor }: { v: KisiPerformansi; pe
     <>
       {!v.kendi && <Kirinti ogeler={[["Performans", "/performans"], [v.kisi.ad]]} />}
       <NesneBasi baslik={v.kisi.ad} altIkon="id-card" alt={`${v.kisi.meslek} · ${bransAd(v.kisi.brans)}`}
-        tuslar={personelGor ? <TusBaglanti ikon="user" href={`/personel/${v.kisi.id}`}>Personel kartı</TusBaglanti> : undefined} />
+        tuslar={personelGor && !v.kendi ? <TusBaglanti ikon="user" href={`/personel/${v.kisi.id}`}>Personel kartı</TusBaglanti> : undefined} />
       <Anahtarlar donem={v.donem} aralikHata={v.aralikHata} />
       <OzetYuzleri o={v.ozet} kazanc={v.kazanc} />
       <SureYuzleri s={s} />

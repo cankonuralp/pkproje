@@ -176,3 +176,12 @@ export async function turRaporBilgisi(db: Sorgulayici, id: string): Promise<{ id
 export async function turSureleri(db: Sorgulayici): Promise<Map<string, number | null>> {
   return new Map((await db.sorgu<{ id: string; sure: number | null }>("SELECT id::text, sure FROM ekipman_turu")).rows.map((x) => [x.id, x.sure]));
 }
+
+/** Ana sayfa için (329–332 incelemesi — maket MV.cihazBranslari): ölçüm cihazı türü → onu kullanan ekipman türlerinin branşları. Hiçbir türde
+    kullanılmayan cihaz türü haritada yok (çağıran iki branşta da sayar). Yetki ÇAĞIRANDA. */
+export async function cihazTurBranslari(db: Sorgulayici): Promise<Map<string, ("m" | "e")[]>> {
+  const m = new Map<string, ("m" | "e")[]>();
+  for (const x of (await db.sorgu<{ c: string; brans: "m" | "e" }>(
+    "SELECT DISTINCT unnest(cihaz_turleri)::text AS c, brans FROM ekipman_turu")).rows) (m.get(x.c) ?? m.set(x.c, []).get(x.c)!).push(x.brans);
+  return m;
+}

@@ -60,6 +60,8 @@ before(async () => {
   await plan("P-1026-002", t1, BUGUN(), "denetimde", [[denP, "ISG-1"]]);
   await plan("P-1026-003", t1, g(1), "reddedildi", [[digerP, null]]);
   await plan("P-1026-004", t1, BUGUN(), "kabul", [[digerP, null]]);
+  /* 329–332 incelemesi: reddedilen plan ancak tesisin güncel planıysa sayılır — P-003'ün tesisinde sonra P-004 açıldı; P-005 Uzak'ın güncel planı */
+  await plan("P-1026-005", t3, g(2), "reddedildi", [[digerP, null]]);
 });
 after(async () => { await havuz?.end(); await kume?.durdur(); });
 
@@ -75,7 +77,7 @@ test("denetçi: kabul bekleyen ve denetimdeki planları, taslak / imza bekleyen 
     [["P-1026-002", "Merkez", "Deneme Bir", "Deneme Denetçi", "denetimde"], ["P-1026-001", "Merkez", "Deneme Bir", "Deneme Denetçi", "bekliyor"]]);
 });
 
-test("planlama: kabul bekleyen, reddedilen, bugün başlayan, İSG-KATİP eksiği (el ile yazılan ID eksik değil); kontrolü yaklaşan ve açık planı olmayan tesisler; Plan aç", async () => {
+test("planlama: kabul bekleyen, reddedilen (yalnız tesisin güncel planı), bugün başlayan, İSG-KATİP eksiği (el ile yazılan ID eksik değil); kontrolü yaklaşan ve açık planı olmayan tesisler; Plan aç", async () => {
   const v = await a(PLAN, (db) => anaSayfa(db, PLAN));
   assert.deepEqual([v.bolumler.map((b) => b.rol), v.planAc], [["planlama"], true]);
   assert.deepEqual(["Kabul bekleyen plan", "Reddedilen plan", "Bugün başlayan plan", "İSG-KATİP eksiği"].map((x) => sayi(v, "planlama", x)), [1, 1, 2, 2]);
@@ -100,6 +102,19 @@ test("branş yöneticisi ve muhasebe bölümleri; çok rollü kişi rol bölüml
   assert.deepEqual(u.bolumler.map((b) => [b.rol, b.yuzler.map((y) => y.sayi)]), [["muhasebe", [0, 0, 0]]]);
   const i = await a(IKI, (db) => anaSayfa(db, IKI));
   assert.deepEqual(i.bolumler.map((b) => b.rol), ["planlama", "denetci"]);
+});
+
+test("329–332 incelemesi: bölüm rolle açılır, veri modül düzeyiyle — Planlar 'kendi' yalnız ekibinde olduğu planlar, Müşteriler kapalıysa tesis listesi yok", async () => {
+  const KISITLI = { ...PLAN, matris: { 13: ["kendi", "kendi", "gor", "gor", "yaz", "yok"], 3: ["yok", "gor", "gor", "gor", "yaz", "gor"] } } as Kisi;
+  const v = await a(KISITLI, (db) => anaSayfa(db, KISITLI));
+  assert.deepEqual(["Kabul bekleyen plan", "Reddedilen plan", "Bugün başlayan plan"].map((x) => sayi(v, "planlama", x)), [0, 0, 0], "planlama hesabının personeli ekipte değil");
+  assert.equal(v.bolumler[0].liste, null);
+});
+
+test("329–332 incelemesi: mesai takibi açıksa denetçide 'Günlük süre' yüzü (kendi süresi)", async () => {
+  await sahip(`INSERT INTO firma_ayar (firma_id, bolum, deger) VALUES ($1, 'mesai', '{"acik": true}') RETURNING id::text`, [A]);
+  const y = (await a(DEN, (db) => anaSayfa(db, DEN))).bolumler[0].yuzler.find((x) => x.ad === "Günlük süre")!;
+  assert.deepEqual([y.sayi, y.not, y.uyari], ["0 dk", "normal 0 / 480 · mesai 0 / 180", false]);
 });
 
 test("firma sızıntısı: B'nin yöneticisi A'nın planlarını ve tesislerini görmez", async () => {

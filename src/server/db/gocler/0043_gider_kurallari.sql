@@ -1,10 +1,11 @@
 -- ══ 0043 · GİDER KURALLARI (328 incelemesi + 330 Talepler; 0040 Supabase'e uygulandı — uygulanmış göç değişmez, kurallar burada) ══
 -- 328 incelemesi: ödeme günü eklemede de ileri olamaz ve gider tarihinden önce olamaz; onaylandı → ödendi geçişinde onaylayan / karar değişmez.
 -- 330 Talepler: masraf formu yalnız gönderenin kendi adına (personeli hesabının personeli); onay bekleyen masraf formunu GÖNDEREN geri çekebilir
--- (tek silme istisnası). gider_koru işlevi bütünüyle yenilenir. ⛔ Her göç IDEMPOTENT.
+-- (tek silme istisnası); masraf formunun kişisi değişmez. gider_koru işlevi bütünüyle yenilenir. ⛔ Her göç IDEMPOTENT.
+-- ödeme ≥ tarih: NOT VALID — eski kuralla yazılmış satır göçü düşürmez, yeni ve değişen her satır denetlenir (329–332 incelemesi)
 DO $$ BEGIN
   IF NOT EXISTS (SELECT 1 FROM pg_constraint WHERE conname = 'gider_odeme_tarih') THEN
-    ALTER TABLE gider ADD CONSTRAINT gider_odeme_tarih CHECK (odeme IS NULL OR odeme >= tarih);
+    ALTER TABLE gider ADD CONSTRAINT gider_odeme_tarih CHECK (odeme IS NULL OR odeme >= tarih) NOT VALID;
   END IF;
 END $$;
 
@@ -35,6 +36,10 @@ BEGIN
   IF NEW.no IS DISTINCT FROM OLD.no OR NEW.kaynak IS DISTINCT FROM OLD.kaynak OR NEW.kaydeden IS DISTINCT FROM OLD.kaydeden OR NEW.olustu IS DISTINCT FROM OLD.olustu
     OR NEW.firma_id IS DISTINCT FROM OLD.firma_id THEN
     RAISE EXCEPTION 'giderin numarası, kaynağı ve kaydedeni değişmez' USING ERRCODE = '23514';
+  END IF;
+  -- masraf formunun kişisi değişmez (329–332 incelemesi: muhasebe düzenlemesinde değişince form gönderenin Talepler'inden düşüyordu)
+  IF OLD.kaynak = 'form' AND NEW.personel_id IS DISTINCT FROM OLD.personel_id THEN
+    RAISE EXCEPTION 'masraf formunun personeli değişmez' USING ERRCODE = '23514';
   END IF;
   IF OLD.durum = 'red' THEN RAISE EXCEPTION 'reddedilen gider değişmez' USING ERRCODE = '23514'; END IF;
   IF NEW.durum IS DISTINCT FROM OLD.durum THEN

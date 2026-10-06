@@ -83,7 +83,7 @@ function faturaTanim(l: readonly FaturaSatiri[]): SuzgecTanimi<FaturaSatiri> {
   };
 }
 export function FaturaListesi({ isler, faturalar, durum, bordro = false }: { isler: IsSatiri[]; faturalar: FaturaSatiri[]; durum?: string; bordro?: boolean }) {
-  const s = useSuzgec(faturaTanim(faturalar), faturalar, durum && durum in FATURA_DURUM ? { secili: [durum] } : undefined);
+  const s = useSuzgec(faturaTanim(faturalar), faturalar, durum && Object.hasOwn(FATURA_DURUM, durum) ? { secili: [durum] } : undefined);
   return (
     <>
       <SayfaBasi baslik="Muhasebe" sayac={<Sayac s={s} />} tuslar={bordro ? <BordroGonderTusu /> : undefined} />

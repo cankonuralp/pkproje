@@ -12,6 +12,8 @@ export interface PRapor {
   ilkGonderim: string | null; gonderildi: string | null; onay: string | null;
   /** ilk imzalı sürümün zamanı ("Tamamlandı") */
   imza: string | null;
+  /** şimdiki revizyonun imzası — son imza adımı onayla bununla ölçülür (revizyonda onay yenilenir; 329–332 incelemesi). Yoksa null */
+  sonImza?: string | null;
   imzali: boolean;
   /** birim fiyat (Teklifler'in bağı; fiyat yoksa 0) */
   kazanc: number;
@@ -116,7 +118,8 @@ export function surecAdimlari(rl: readonly PRapor[]): SurecAdimi[] {
   const yazim = rl.filter((r) => r.ilkGonderim).map((r) => saat(r.olustu, r.ilkGonderim!));
   const duzelt = rl.flatMap((r) => r.geriler.filter((x) => x.gonderim).map((x) => saat(x.geri, x.gonderim!)));
   const onay = rl.filter((r) => r.gonderildi && r.onay).map((r) => saat(r.gonderildi!, r.onay!));
-  const imza = rl.filter((r) => r.onay && r.imza).map((r) => saat(r.onay!, r.imza!));
+  /* şimdiki revizyonun onayı → imzası; eksi süre (veri tutarsız) ortalamaya girmez */
+  const imza = rl.filter((r) => r.onay && r.sonImza && r.sonImza >= r.onay).map((r) => saat(r.onay!, r.sonImza!));
   return [["Yazım", yazim], ["Düzeltme", duzelt], ["Onay", onay], ["Son imza", imza]].map(([ad, l]) => ({ ad: ad as string, ort: ort(l as number[]), n: (l as number[]).length }));
 }
 

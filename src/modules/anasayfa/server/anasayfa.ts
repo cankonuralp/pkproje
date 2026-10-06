@@ -9,7 +9,7 @@ import { hesabinPersoneli } from "../../../server/kimlik/hesap.ts";
 import { duzey, type YetkiHesabi } from "../../../server/yetki/canDo.ts";
 import { ROL_BRANS, type Rol } from "../../../server/yetki/tanim.ts";
 import { etkinEkipmanlar } from "../../ekipman/server/anasayfa-baglanti.ts";
-import { turOzetleri } from "../../ekipman-turleri/server/turler.ts";
+import { cihazTurBranslari, turOzetleri } from "../../ekipman-turleri/server/turler.ts";
 import { musteriOzetleri } from "../../musteriler/server/musteriler.ts";
 import { giderListesi } from "../../muhasebe/server/giderler.ts";
 import { faturaListesi, isListesi } from "../../muhasebe/server/muhasebe.ts";
@@ -18,7 +18,8 @@ import { onayListeleri } from "../../onaylar/server/onaylar.ts";
 import { eksikBilgi, personelListesi, personelOzetleri } from "../../personel/server/personel.ts";
 import { acikMi, anaPlanlar, isgEksikSayisi, type AnaPlan } from "../../planlar/server/anasayfa-baglanti.ts";
 import { planAcabilir } from "../../planlar/server/planlar.ts";
-import { sonrakiKontroller } from "../../raporlar/server/anasayfa-baglanti.ts";
+import { geriGonderdiklerim, sonrakiKontroller } from "../../raporlar/server/anasayfa-baglanti.ts";
+import { mesaiDurumu } from "../../raporlar/server/plan-baglanti.ts";
 import { raporListesi } from "../../raporlar/server/raporlar.ts";
 import { uyariListesi } from "../../uyarilar/server/uyarilar.ts";
 import { kisininVarliklari } from "../../zimmetler/server/zimmet.ts";
@@ -47,18 +48,23 @@ export interface AnaSayfa { bugun: string; ad: string; planAc: boolean; bolumler
 export async function anaSayfa(db: Sorgulayici, kim: Kisi): Promise<AnaSayfa> {
   const bugun = bugunTr(), roller = new Set(kim.roller);
   const gor = (m: Parameters<typeof duzey>[1]) => duzey(kim, m) !== "yok";
-  /* ortak veri bir kez */
-  const planlar = gor(13) ? await anaPlanlar(db) : [];
+  /* modülün HEPSİNİ gören düzey ("gör" / "değiştir"); "kendi" ve "branşı" kısıtlı (329–332 incelemesi: bölümler rolle açılıyor, veri düzeyle süzülür) */
+  const hepsi = (m: Parameters<typeof duzey>[1]) => { const d = duzey(kim, m); return d === "gor" || d === "yaz"; };
+  const benP = await hesabinPersoneli(db, kim.id);
+  /* ortak veri bir kez: planlar Planlar düzeyiyle — "kendi" ve "branşı" yalnız ekibinde olduğu planlar */
+  const planlar = !gor(13) ? [] : (await anaPlanlar(db)).filter((p) => hepsi(13) || (!!benP && p.ekip.includes(benP)));
   const musteriler = await musteriOzetleri(db);
   const tesis = new Map(musteriler.flatMap((m) => m.tesisler.map((t) => [t.id, { ad: t.ad, il: t.il, musteri: m.kisa }] as const)));
   const ekipAd = new Map((await personelOzetleri(db, [...new Set(planlar.flatMap((p) => p.ekip))])).map((p) => [p.id, p.ad]));
   const planSatiri = (p: AnaPlan): AnaPlanSatiri => ({ id: p.id, no: p.no, musteri: tesis.get(p.tesisId)?.musteri ?? "—", tesis: tesis.get(p.tesisId)?.ad ?? "—",
     baslangic: p.baslangic, ekip: p.ekip.map((k) => ekipAd.get(k) ?? "—").join(", "), durum: p.durum });
   const uyarilar = gor(20) ? (await uyariListesi(db, kim)) ?? [] : [];
+  const cihazBrans = kim.roller.some((r) => r === "mekanik_yonetici" || r === "elektrik_yonetici") ? await cihazTurBranslari(db) : new Map<string, ("m" | "e")[]>();
   const bolumler: AnaBolum[] = [];
 
   if (roller.has("planlama")) {
-    const acik = planlar.filter(acikMi), bek = planlar.filter((p) => p.durum === "bekliyor"), red = planlar.filter((p) => p.durum === "reddedildi");
+    /* reddedilen: tesisin güncel planıysa (sonra yeni plan açılınca düşer — maket t.pdurum; 329–332 incelemesi) */
+    const acik = planlar.filter(acikMi), bek = planlar.filter((p) => p.durum === "bekliyor"), red = planlar.filter((p) => p.durum === "reddedildi" && !p.yenisi);
     const bugunku = acik.filter((p) => p.baslangic === bugun), isg = await isgEksikSayisi(db, planlar);
     /* kontrolü yaklaşan tesisler: etkin ekipmanın sonraki kontrolü (son imzalı muayeneden; yoksa sistem öncesi kontrol + periyot) en yakını,
        açık planı olmayan tesislerde, eşik içinde (firma ayarı) */
@@ -66,7 +72,9 @@ export async function anaSayfa(db: Sorgulayici, kim: Kisi): Promise<AnaSayfa> {
     const periyot = new Map((await turOzetleri(db)).map((t) => [t.id, t.periyot]));
     const sonraki = await sonrakiKontroller(db), planli = new Set(acik.map((p) => p.tesisId));
     const t = new Map<string, { sonraki: string; ekipman: number }>();
-    for (const e of await etkinEkipmanlar(db)) {
+    /* tesis listesi müşteri ve ekipman bilgisi taşır: Müşteriler ve Ekipman'ı hepsini gören düzeyde (329–332 incelemesi) */
+    const tesisGor = hepsi(3) && hepsi(7);
+    for (const e of tesisGor ? await etkinEkipmanlar(db) : []) {
       const s = sonraki.get(e.id) ?? (e.disKontrol && periyot.has(e.turId) ? ayEkle(e.disKontrol, periyot.get(e.turId)!) : null);
       const x = t.get(e.tesisId) ?? { sonraki: "9999-12-31", ekipman: 0 };
       x.ekipman++; if (s && s < x.sonraki) x.sonraki = s;
@@ -80,23 +88,28 @@ export async function anaSayfa(db: Sorgulayici, kim: Kisi): Promise<AnaSayfa> {
       { ikon: "circle-x", ad: "Reddedilen plan", sayi: red.length, href: "/planlar", uyari: red.length > 0 },
       { ikon: "clock", ad: "Bugün başlayan plan", sayi: bugunku.length, href: "/planlar" },
       { ikon: "scroll-text", ad: "İSG-KATİP eksiği", sayi: isg, href: "/sozlesmeler", not: isg ? "açık planlarda" : "yok", uyari: isg > 0 },
-    ], liste: { tur: "tesis", baslik: `Kontrolü ${esik} gün içinde gelen tesisler`, kayitlar: yaklasan, bos: "Kontrolü yaklaşan tesis yok.", tumu: ["Müşteriler", "/musteriler"],
-      planAc: planAcabilir(kim) } });
+    ], liste: !tesisGor ? null : { tur: "tesis", baslik: `Kontrolü ${esik} gün içinde gelen tesisler`, kayitlar: yaklasan, bos: "Kontrolü yaklaşan tesis yok.",
+      tumu: ["Müşteriler", "/musteriler"], planAc: planAcabilir(kim) } });
   }
 
   if (roller.has("denetci")) {
-    const ben = await hesabinPersoneli(db, kim.id);
+    const ben = benP;
     const benim = planlar.filter((p) => !!ben && p.ekip.includes(ben) && acikMi(p));
     const bek = benim.filter((p) => p.durum === "bekliyor"), den = benim.filter((p) => p.durum === "denetimde");
     const rap = ((await raporListesi(db, kim)) ?? []).filter((r) => r.benim);
     const taslak = rap.filter((r) => r.durum === "taslak"), geri = taslak.filter((r) => r.geri), imza = rap.filter((r) => r.durum === "onaylandi");
     const zimmet = ben ? await kisininVarliklari(db, ben) : [];
     const kal = uyarilar.filter((u) => u.tur === "kal" && u.kisi?.id === ben).length;
+    /* N6 (maket: mesai takibi açıksa; karar 182 "her denetçininki kendisi için"): bugünkü süre — normal ve mesai (329–332 incelemesi) */
+    const m = ben ? await mesaiDurumu(db, ben, bugun) : null;
+    const sure: AnaYuz[] = m?.acik ? [{ ikon: "clock", ad: "Günlük süre", sayi: `${m.toplam} dk`, href: "/planlar",
+      not: `normal ${Math.min(m.toplam, m.normal)} / ${m.normal} · mesai ${Math.max(0, m.toplam - m.normal)} / ${m.hak}${m.dolu ? " · doldu" : ""}`, uyari: m.dolu }] : [];
     bolumler.push({ rol: "denetci", yuzler: [
       { ikon: "calendar-check", ad: "Kabul bekleyen plan", sayi: bek.length, href: "/planlar", not: bek.length ? `en yakını ${gunKisa(bek[0].baslangic)}` : "yok", uyari: bek.length > 0 },
       { ikon: "play", ad: "Denetimdeki plan", sayi: den.length, href: "/planlar", not: den.length ? den[0].no : "yok" },
       { ikon: "file-pen-line", ad: "Taslak rapor", sayi: taslak.length, href: "/raporlar", not: geri.length ? `${geri.length} geri gönderildi` : "onaya gönderilmedi", uyari: geri.length > 0 },
       { ikon: "file-signature", ad: "Son imzanı bekleyen", sayi: imza.length, href: "/onaylar/imza", not: "onaylandı, imza bekliyor", uyari: imza.length > 0 },
+      ...sure,
       { ikon: "package", ad: "Zimmetinde", sayi: zimmet.length, href: "/zimmetler", not: kal ? `${kal} cihazın kalibrasyonu uyarıda` : "uyarı yok", uyari: kal > 0 },
     ], liste: { tur: "plan", baslik: "Açık planların", kayitlar: benim.map(planSatiri), bos: "Açık planın yok.", tumu: ["Planlar", "/planlar"] } });
   }
@@ -107,15 +120,17 @@ export async function anaSayfa(db: Sorgulayici, kim: Kisi): Promise<AnaSayfa> {
     const kuyruk = (o?.kuyruk ?? []).filter((x) => x.brans === b).sort((x, y) => (x.gonderildi ?? "").localeCompare(y.gonderildi ?? ""));
     const tumu = (o?.tumu ?? []).filter((x) => x.brans === b);
     const imza = tumu.filter((x) => x.durum === "onaylandi");
-    const geri = ((await raporListesi(db, kim)) ?? []).filter((x) => x.brans === b && x.geri);
-    const kal = uyarilar.filter((u) => u.tur === "kal").length;
+    /* maket: "Geri gönderdiğin" — yöneticinin kendi geri gönderdiği, düzeltme bekleyen raporlar; kalibrasyon uyarısı branşın cihazları (cihaz türünü
+       kullanan ekipman türlerinin branşı; hiçbir türde kullanılmayan iki branşta da) — 329–332 incelemesi */
+    const geri = await geriGonderdiklerim(db, kim.id);
+    const kal = uyarilar.filter((u) => u.tur === "kal" && (cihazBrans.get(u.cihazTur ?? "") ?? ["m", "e"]).includes(b)).length;
     const ad = b === "m" ? "Mekanik" : "Elektrik";
     bolumler.push({ rol: r, yuzler: [
       { ikon: "badge-check", ad: "Onayını bekleyen", sayi: kuyruk.length, href: "/onaylar", not: kuyruk.length && kuyruk[0].gonderildi ? `en eskisi ${saatlerdir(kuyruk[0].gonderildi)}` : "yok",
         uyari: kuyruk.length > 0 },
-      { ikon: "undo-2", ad: "Geri gönderilen", sayi: geri.length, href: "/raporlar", not: "düzeltme bekliyor" },
+      { ikon: "undo-2", ad: "Geri gönderdiğin", sayi: geri, href: "/raporlar", not: "düzeltme bekliyor" },
       { ikon: "file-signature", ad: "Muayene uzmanı imzası", sayi: imza.length, href: "/onaylar", not: `${ad} raporları` },
-      { ikon: "gauge", ad: "Kalibrasyon uyarısı", sayi: kal, href: "/uyarilar?tur=kalibrasyon", not: "ölçüm cihazları", uyari: kal > 0 },
+      { ikon: "gauge", ad: "Kalibrasyon uyarısı", sayi: kal, href: "/uyarilar?tur=kalibrasyon", not: `${ad} cihazları`, uyari: kal > 0 },
     ], liste: { tur: "kuyruk", baslik: "Onay kuyruğu", kayitlar: kuyruk.slice(0, 5).map((x) => ({ id: x.id, no: x.no, ekipman: `${x.ekipmanKod} · ${x.turAd}`, gonderildi: x.gonderildi,
       bekleme: x.gonderildi ? `${saatlerdir(x.gonderildi)} bekliyor` : "", denetci: x.denetci })), bos: "Onay bekleyen rapor yok.", tumu: ["Onaylar", "/onaylar"] } });
   }
