@@ -92,7 +92,7 @@ export async function belgeImzaliYukle(db: Sorgulayici, depo: Depo, kim: Kisi, f
   if (!dosya) return { durum: "gecersiz", hatalar: { dosya: "İmzalı PDF seçilmeli." } };
   const ham = await kayitDosyasi(db, BELGE_DOSYA, id, b.dosya);
   if (!ham) return { durum: "red", neden: "Gönderilen PDF bulunamadı." };
-  if (!imzaliPdfGecerli(await depo.oku(ham.anahtar), dosya.bayt)) return { durum: "gecersiz", hatalar: { dosya: IMZA_GECERSIZ } };
+  if (!imzaliPdfGecerli(await depo.oku(ham.anahtar, db), dosya.bayt)) return { durum: "gecersiz", hatalar: { dosya: IMZA_GECERSIZ } };
   const y = await dosyaYukle(db, depo, { firmaId, modul: BELGE_IMZALI, kayitId: id, ad: `${b.ad}-imzali.pdf`, bayt: dosya.bayt, izinli: ["pdf"], kim: kim.ad, yukleyen: kim.id });
   if (!y.tamam) return { durum: "gecersiz", hatalar: { dosya: y.neden === "buyuk" ? "PDF çok büyük (en çok 25 MB)." : IMZA_GECERSIZ } };
   const iz: Iz = { kim: kim.ad, ne: "belge_onay.imza", gerekce: b.ad };

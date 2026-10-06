@@ -657,7 +657,7 @@ export async function raporBelgesiVerisi(db: Sorgulayici, depo: Depo, kim: Kisi,
   const fotolar = [];
   for (const f of r.fotolar) {
     const d = await kayitDosyasi(db, DOSYA_MODULU, r.id, f.dosya);
-    const src = d && (d.tur === "image/jpeg" || d.tur === "image/png") ? `data:${d.tur};base64,${Buffer.from(await depo.oku(d.anahtar)).toString("base64")}` : null;
+    const src = d && (d.tur === "image/jpeg" || d.tur === "image/png") ? `data:${d.tur};base64,${Buffer.from(await depo.oku(d.anahtar, db)).toString("base64")}` : null;
     fotolar.push({ ad: f.ad, bolum: f.bolum, madde: f.madde, src });
   }
   const cev = Cevaplar.safeParse(r.cevaplar);
@@ -739,7 +739,7 @@ export async function imzaliYukle(db: Sorgulayici, depo: Depo, kim: Kisi, firmaI
   if (!istek) return { durum: "red", neden: "Önce imzasız PDF'i hazırlayıp indirin; imzalı PDF onun imzalanmış hâli olmalı." };
   const ham = await kayitDosyasi(db, PDF_MODULU, id, istek.pdf_dosya);
   if (!ham) return { durum: "red", neden: "İmzaya hazırlanan PDF bulunamadı; yeniden hazırlayın." };
-  const imzasiz = await depo.oku(ham.anahtar), b = dosya.bayt;
+  const imzasiz = await depo.oku(ham.anahtar, db), b = dosya.bayt;
   /* önek + bir nesnedeki imza sözlüğü + ek özgün içeriği değiştirmez (imza-pdf.ts) */
   if (!imzaliPdfGecerli(imzasiz, b)) return { durum: "gecersiz", hatalar: { dosya: IMZA_GECERSIZ } };
   const gno = gorunenNo(e.r.no, e.r.revizyon);

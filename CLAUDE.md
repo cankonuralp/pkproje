@@ -192,7 +192,8 @@ pkproje/
   src/server/kimlik/        parola özeti (scrypt) · giriş · oturum (belirteç özeti, kilit) — 2026-10-04 · istek.ts (oturumGerekli, modulGorur,
                             güvenli dönüş adresi) · eylemler.ts (giriş / çıkış sunucu eylemleri)
   src/server/dosya/         TEK DOSYA YOLU: anahtar üreticisi (yalnız kimlik) · tür baytlardan + EXIF silme (tur.ts) · kapalı depo bağdaştırıcısı
-                            (klasör; yayında S3) · yükle / indirilebilir + modül erişim kaydı (kaydı olmayan modülün dosyası kimseye açılmaz) ·
+                            (klasör; deneme yayınında veritabanı — 347, göç 0049 depo_nesne, PROBATA_DEPO=vt, çağıranın işleminde; firma S3'ü K7) ·
+                            yükle / indirilebilir + modül erişim kaydı (kaydı olmayan modülün dosyası kimseye açılmaz) ·
                             tek uç src/app/api/dosya/[id] · görsel yalnız <GizliResim> (components/gizli-resim)
   src/server/ayar/          FİRMA AYARLARI (bölüm biçimi + başlangıç değeri tek yerde, sürüm kilidiyle yazılır) · ŞİFRELİ SIRLAR (AES-256-GCM, ana
                             anahtar PROBATA_SIR_ANAHTARI; firma + ada bağlı; ekranda son 4)

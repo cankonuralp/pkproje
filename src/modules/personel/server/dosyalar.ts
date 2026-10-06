@@ -232,7 +232,7 @@ export async function bordroOnayaGonder(db: Sorgulayici, depo: Depo, kim: Kisi, 
   const d = b.dosya_id ? await kayitDosyasi(db, DOSYA.bordro, id, b.dosya_id) : null;
   if (!d) return { durum: "red", neden: "Bordronun PDF'i yok; önce bordroyu yükleyin." };
   const r = await belgeGonder(db, depo, kim, firmaId, {
-    tur: "bordro", ad: bordroBelgeAdi(b.ay), personelId: b.personel_id, kaynakId: id, ay: b.ay, pdf: { ad: `bordro-${b.ay}.pdf`, bayt: await depo.oku(d.anahtar) },
+    tur: "bordro", ad: bordroBelgeAdi(b.ay), personelId: b.personel_id, kaynakId: id, ay: b.ay, pdf: { ad: `bordro-${b.ay}.pdf`, bayt: await depo.oku(d.anahtar, db) },
   });
   if (r.durum === "zaten") return { durum: "red", neden: "Bu dönemin bordrosu zaten imzaya gönderildi." };
   if (r.durum === "uygunsuz") return { durum: "red", neden: r.neden };

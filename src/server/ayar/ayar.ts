@@ -169,7 +169,7 @@ export async function firmaBelgeKunyesi(db: Sorgulayici, depo: Depo | null): Pro
     const d = (await db.sorgu<{ anahtar: string; tur: string }>("SELECT anahtar, tur FROM dosya WHERE id = $1 AND modul = $2 AND cop IS NULL", [b.logo, AYAR_DOSYA])).rows[0];
     /* depoda okunamayan logo (silinmiş / taşınmış nesne) belgeyi düşürmez: logo yeri boş çıkar (334 incelemesi) */
     if (d && (d.tur === "image/png" || d.tur === "image/jpeg")) {
-      try { logo = `data:${d.tur};base64,${Buffer.from(await depo.oku(d.anahtar)).toString("base64")}`; } catch { logo = null; }
+      try { logo = `data:${d.tur};base64,${Buffer.from(await depo.oku(d.anahtar, db)).toString("base64")}`; } catch { logo = null; }
     }
   }
   return { ad: b.ad || f.ad, kod: f.kod, nusha: b.nusha, adres: b.adres || null, eposta: b.eposta || null, akr: b.akr || null, logo };

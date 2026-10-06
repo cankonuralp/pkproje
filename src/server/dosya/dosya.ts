@@ -34,8 +34,9 @@ export async function dosyaYukle(db: Sorgulayici, depo: Depo, p: {
   const id = randomUUID();
   const anahtar = dosyaAnahtari({ firmaId: p.firmaId, modul: p.modul, kayitId: p.kayitId, dosyaId: id });
   const ad = AD_TEMIZ(p.ad);
-  /* önce depo, sonra kayıt: kayıt düşerse depoda öksüz nesne kalır — gece işi raporlar, silmez (A5) */
-  await depo.yaz(anahtar, icerik);
+  /* önce depo, sonra kayıt: kayıt düşerse depoda öksüz nesne kalır — gece işi raporlar, silmez (A5); veritabanı deposu aynı işlemde yazar (geri
+     alınırsa nesne de kalmaz — 347) */
+  await depo.yaz(anahtar, icerik, db);
   await db.sorgu(
     "INSERT INTO dosya (id, modul, kayit_id, anahtar, ad, tur, boyut, sha256, yukleyen) VALUES ($1, $2, $3, $4, $5, $6, $7, $8, $9)",
     [id, p.modul, p.kayitId, anahtar, ad, TURLER[tur], icerik.length, createHash("sha256").update(icerik).digest("hex"), p.yukleyen ?? null]);

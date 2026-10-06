@@ -2341,6 +2341,14 @@ revizyon, alan kopyalama, hafif kusur devri, meslek eşleşme denetimi).
 - Emsal ürünler: https://opwire.app/iso-17020-periyodik-kontrol-yazilimi/ · https://17020muayene.vidco.com.tr/ · https://akuple.com/asansor-kontrol-yazilimi/ · https://ensyazilim.com/
 
 ## 11 · Değişiklik günlüğü
+- 2026-10-06 (347): **Deneme yayınında kalıcı dosya deposu — veritabanı** (KOD-GECIS Y2b'nin ara çözümü). Yayında dosyalar Vercel'in geçici
+  klasöründeydi (/tmp): işlev örnekleri arasında kayboluyordu (fotoğraf, logo, imzasız PDF hazırlanıp imzalısı yüklenince bulunamıyordu).
+  Göç 0049 **depo_nesne** (firma, anahtar, içerik ≤ 30 MB): anahtar üreticisinin biçimi denetlenir, **anahtardaki firma satırın firmasıdır**
+  (başka firmanın anahtar alanına yazılamaz), RLS ENABLE + FORCE, uygulama rolünde yalnız okuma + ekleme (yazılan değişmez; silme çöp süresi
+  dolunca ayrı işte). Depo arayüzü çağıranın işlemini alır: içerik kayıtla **aynı işlemde** yazılır — kayıt geri alınırsa içerik de yok, havuzdan
+  ikinci bağlantı alınmaz. Seçim ortamdan: `PROBATA_DEPO=vt` (deneme yayını ve uçtan uca test), yoksa klasör. Firmanın kendi S3 deposu K7'de
+  aynı arayüze bağlanır. Kilit: depo-vt (iki firma, gerçek PostgreSQL: yaz / oku, ikinci yazma yok, yol aşma, kiracı, geri alma, dosya yüklemesi);
+  olumsuz kanıt: anahtar ↔ firma denetimi kalkınca B, A'nın anahtar alanına yazar.
 - 2026-10-06 (346): **340–345 çapraz incelemesi düzeltmeleri** (dört bakış, 12 bulgu; 10 doğrulandı, 2 çürütüldü — PDF ucunda eşzamanlılık
   sınırı önceden elenmişti; numara sayacı kilidinin basım boyunca tutulması gösterilmiş bir hata değil). **Ölçüm cihazı:** rapor belgesinde muayene
   günü verilince ilk_bitis o gün sistemde kalibrasyon kaydı yokken adaydır; muayeneden sonra girilen kalibrasyon imzalı rapora yazılmaz. **Format
