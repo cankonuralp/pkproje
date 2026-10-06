@@ -39,8 +39,8 @@ test("talepler: masraf formu ve izin talebi; yönetici izni onaylar; muhasebe ma
   const z = page.getByRole("dialog", { name: "İzin talebi" });
   await z.getByRole("combobox", { name: "İzin türü" }).click();
   await z.getByRole("option", { name: "Mazeret izni" }).click();
-  await z.getByLabel("İzin başlangıcı").fill(gun);
-  await z.getByLabel("İzin bitişi").fill(gun);
+  await z.getByLabel("Başlangıç").fill(gun);
+  await z.getByLabel("Bitiş").fill(gun);
   await z.getByLabel("Açıklama").fill(izin);
   await expect(z.getByText("1 iş günü")).toBeVisible();
   await z.getByRole("button", { name: "Gönder" }).click();
