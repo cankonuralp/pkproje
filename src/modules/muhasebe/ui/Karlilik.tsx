@@ -14,6 +14,7 @@ import { Serit } from "../../../components/serit/Serit";
 import { ayAd, type AyGelirGider, type IsKarlilik } from "../karlilik";
 import { para } from "../sema";
 import type { GelirGider } from "../server/muhasebe";
+import { BordroGonderTusu } from "./BordroGonder";
 import { MuhasebeSekmeleri, yuzde } from "./ortak";
 import stil from "./muhasebe.module.css";
 
@@ -61,7 +62,7 @@ const GG_SUTUN: Sutun<GgIs>[] = [
 type AySatiri = (AyGelirGider & { ay: string; toplam?: false }) | { ay: "toplam"; toplam: true; isler: string[]; gelir: number; gider: number; kar: number };
 const tutarHucre = (ad: string, t: number, kar = false) => <><KartEtiket>{ad}</KartEtiket><span className={kar && t < 0 ? `${stil.sayi} ${stil.uyari}` : stil.sayi}>{para(t)}</span></>;
 
-export function GelirGiderGorunumu({ v }: { v: GelirGider }) {
+export function GelirGiderGorunumu({ v, bordro = false }: { v: GelirGider; bordro?: boolean }) {
   const router = useRouter();
   const d = v.donem, toplam = v.secili === "toplam", n = d.ay;
   const tek = !toplam ? d.aylar[0] : null;
@@ -89,7 +90,7 @@ export function GelirGiderGorunumu({ v }: { v: GelirGider }) {
   const bas = toplam ? <><b>Toplam</b> · {n ? `${ayAd(v.aylar[0])} – ${ayAd(v.aylar[n - 1])}` : ""}</> : <b>{ayAd(v.secili)}</b>;
   return (
     <>
-      <SayfaBasi baslik="Muhasebe" sayac={<span className={stil.ozet}>{bas}</span>} />
+      <SayfaBasi baslik="Muhasebe" sayac={<span className={stil.ozet}>{bas}</span>} tuslar={bordro ? <BordroGonderTusu /> : undefined} />
       <MuhasebeSekmeleri secili="/muhasebe/gelir-gider" />
       <div className={stil.donem}>
         <Alan id={DONEM_ID} etiket="Dönem">

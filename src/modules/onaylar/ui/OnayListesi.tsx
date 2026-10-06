@@ -94,12 +94,16 @@ function tumTanimi(l: readonly OnaySatiri[]): SuzgecTanimi<OnaySatiri> {
 }
 
 /** secili: bulunulan sekme — liste boşken de kendi sekmesi görünür (318 incelemesi: İmzamı bekleyen sayfasında hiçbir sekme seçili değildi) */
-export function onaySekmeleri(v: Pick<OnayListeleri, "kuyruk" | "tumu" | "branslar" | "imzaBekleyen" | "istekler">, secili?: string) {
+export function onaySekmeleri(v: Pick<OnayListeleri, "yonetici" | "kuyruk" | "tumu" | "branslar" | "imzaBekleyen" | "istekler" | "belgeBekleyen">, secili?: string) {
+  /* 333: Diğer belgeler (bordro, eğitim / zimmet formu, araç tutanağı) — herkesin kendi; denetçinin iki sekmesi (maket onaylar.html BB4) */
+  const diger = [`Diğer belgeler (${v.belgeBekleyen})`, "/onaylar/diger"] as const;
+  if (!v.yonetici) return [[`İmzamı bekleyen raporlar (${v.imzaBekleyen.length})`, "/onaylar/imza"] as const, diger];
   const brans = v.branslar.length === 1 ? ` · ${v.branslar[0] === "m" ? "mekanik" : "elektrik"}` : "";
   const l: (readonly [string, string])[] = [[`Onay kuyruğu${brans} (${v.kuyruk.length})`, "/onaylar"], [`Tüm raporlar (${v.tumu.length})`, "/onaylar/tum"],
     [`Revize istekleri (${v.istekler.length})`, "/onaylar/istekler"]];
   /* yönetici aynı zamanda rapor yazıyorsa (ör. mekanik yönetici + denetçi) kendi imzası ayrı sekmede */
   if (v.imzaBekleyen.length || secili === "/onaylar/imza") l.push([`İmzamı bekleyen raporlar (${v.imzaBekleyen.length})`, "/onaylar/imza"]);
+  l.push(diger);
   return l;
 }
 
@@ -151,7 +155,7 @@ export function ImzaBekleyen({ v }: { v: OnayListeleri }) {
   return (
     <>
       <SayfaBasi baslik="Onaylar" sayac={<Sayac s={s} />} />
-      {v.yonetici && <Sekmeler ad="Onaylar bölümleri" ogeler={onaySekmeleri(v, "/onaylar/imza")} secili="/onaylar/imza" />}
+      <Sekmeler ad="Onaylar bölümleri" ogeler={onaySekmeleri(v, "/onaylar/imza")} secili="/onaylar/imza" />
       {n > 0 && (
         <SeritKap>
           <Serit tur="uyari" ikon="file-signature"><b>{n} rapor imzanızı bekliyor</b> · her rapor ayrı imzalanır: raporu açın, İmzala.</Serit>

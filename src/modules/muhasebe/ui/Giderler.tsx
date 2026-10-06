@@ -30,6 +30,7 @@ import { ayAd } from "../karlilik";
 import { GIDER_DURUM, GIDER_TUR, giderKdv, KDV_ORAN, para, type GiderTuru } from "../sema";
 import type { GiderSatiri, GiderSecenekleri } from "../server/giderler";
 import { giderExceliYukleEylemi, giderKaydetEylemi, giderReddetEylemi } from "./eylemler";
+import { BordroGonderTusu } from "./BordroGonder";
 import { MuhasebeSekmeleri } from "./ortak";
 import stil from "./muhasebe.module.css";
 
@@ -95,7 +96,7 @@ function Toplam({ l }: { l: readonly GiderSatiri[] }) {
 const toplamTL = (l: readonly GiderSatiri[]) => para(l.reduce((n, g) => n + g.tutar, 0));
 
 /** Giderler sekmesi */
-export function GiderListesi({ giderler, secenekler, bugun }: { giderler: GiderSatiri[]; secenekler: GiderSecenekleri | null; bugun: string }) {
+export function GiderListesi({ giderler, secenekler, bugun, bordro = false }: { giderler: GiderSatiri[]; secenekler: GiderSecenekleri | null; bugun: string; bordro?: boolean }) {
   const s = useSuzgec(tanim(giderler), giderler);
   const [p, setP] = useState<Pen>(null);
   const bek = giderler.filter((g) => g.durum === "bekliyor"), bel = giderler.filter((g) => !g.belge);
@@ -105,6 +106,7 @@ export function GiderListesi({ giderler, secenekler, bugun }: { giderler: GiderS
       <SayfaBasi baslik="Muhasebe" sayac={<Sayac s={s} />} tuslar={<>
         <GiderExcelAktar l={s.sonuc.liste} />
         {secenekler && <GiderExcelYukle secenekler={secenekler} bugun={bugun} />}
+        {bordro && <BordroGonderTusu />}
         {secenekler && <Tus ikon="plus" onClick={() => setP({ g: null })}>Gider ekle</Tus>}
       </>} />
       <MuhasebeSekmeleri secili="/muhasebe/giderler" />

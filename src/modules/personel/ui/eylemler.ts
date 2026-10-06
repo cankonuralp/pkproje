@@ -8,7 +8,7 @@ import { matrisKaydet } from "../../../server/yetki/matris";
 import { depo } from "../../../server/dosya/depo";
 import type { Sorgulayici } from "../../../server/db/kiraci";
 import {
-  atamaBelgeDegistir, atamaEkle, atamaKaldir, bordroKaldir, bordroYukle, DosyaHatasi, ozlukBelgeDegistir, ozlukEkle, ozlukKaldir, zimmetFormuYukle,
+  atamaBelgeDegistir, atamaEkle, atamaKaldir, bordroKaldir, bordroOnayaGonder, bordroYukle, DosyaHatasi, ozlukBelgeDegistir, ozlukEkle, ozlukKaldir, zimmetFormuYukle,
   type Yazma as DosyaYazma,
 } from "../server/dosyalar";
 import { hesapAc, hesapKapat, hesapYenidenAc, rolleriKaydet, yeniGeciciParola, type HesapSonucu } from "../../../server/kimlik/hesapYonetimi";
@@ -136,4 +136,14 @@ export async function personelBelgeKaldirEylemi(ne: string, id: string, surum: n
   if (!(ne in KALDIR) || typeof id !== "string") return { genel: SONUC.yok };
   const r = await oturumIslemi(o, (db) => KALDIR[ne as keyof typeof KALDIR](db, o, id, Number(surum)));
   return r.durum === "tamam" ? { tamam: true } : r.durum === "gecersiz" ? { hatalar: r.hatalar } : { genel: SONUC[r.durum] };
+}
+
+/** bordroyu kişinin imzasına gönder (333 — Onaylar › Diğer belgeler); yetki ve PDF denetimi sunucuda */
+export async function bordroOnayaGonderEylemi(id: string): Promise<DosyaDurumu> {
+  if (!(await ayniKoken())) return { genel: "İstek reddedildi. Sayfayı yenileyip yeniden deneyin." };
+  const o = await istekOturumu();
+  if (!o) return { genel: "Oturumunuz kapandı. Yeniden giriş yapın." };
+  if (typeof id !== "string") return { genel: SONUC.yok };
+  const r = await oturumIslemi(o, (db) => bordroOnayaGonder(db, depo(), o, o.kiraci.firmaId, id));
+  return r.durum === "tamam" ? { tamam: true } : r.durum === "red" ? { genel: r.neden } : r.durum === "gecersiz" ? { hatalar: r.hatalar } : { genel: SONUC[r.durum] };
 }

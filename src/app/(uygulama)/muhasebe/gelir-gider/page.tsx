@@ -4,6 +4,7 @@
 import type { Metadata } from "next";
 import { Yetkisiz } from "../../../../components/hata/Hata";
 import { modulBul } from "../../../../modules/moduller";
+import { bordroGonderebilir } from "../../../../modules/muhasebe/server/bordro-gonder";
 import { gelirGider } from "../../../../modules/muhasebe/server/muhasebe";
 import { GelirGiderGorunumu } from "../../../../modules/muhasebe/ui/Karlilik";
 import { modulOturumu, oturumIslemi } from "../../../../server/kimlik/istek";
@@ -17,5 +18,5 @@ export default async function Sayfa({ searchParams }: { searchParams: Promise<{ 
   const { ay } = await searchParams;
   const v = await oturumIslemi(o, (db) => gelirGider(db, o, typeof ay === "string" ? ay : "toplam"));
   if (!v) return <Yetkisiz />;
-  return <GelirGiderGorunumu v={v} />;
+  return <GelirGiderGorunumu v={v} bordro={bordroGonderebilir(o)} />;
 }

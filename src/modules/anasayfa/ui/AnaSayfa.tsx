@@ -4,7 +4,8 @@
 import Link from "next/link";
 import { Yuz, Yuzler } from "../../../components/bilgi/Bilgi";
 import { KartEtiket, Kirp, Liste, type Sutun } from "../../../components/liste/Liste";
-import { AltSatir, Bolum, Rozet, SayfaBasi } from "../../../components/sayfa/Sayfa";
+import { AltSatir, Bolum, Rozet, SayfaBasi, SeritKap } from "../../../components/sayfa/Sayfa";
+import { Serit } from "../../../components/serit/Serit";
 import { tarihNo } from "../../../components/secim/tarih";
 import { TusBaglanti } from "../../../components/tus/Tus";
 import { ROL_ADI } from "../../../server/yetki/tanim";
@@ -67,6 +68,11 @@ export function AnaSayfaGorunumu({ v }: { v: Veri }) {
     <>
       <SayfaBasi baslik="Ana sayfa" sayac={<span className={stil.alt}>{gunYaz(v.bugun)} · {v.ad}</span>}
         tuslar={v.planAc ? <TusBaglanti tur="birincil" ikon="calendar-check" href="/planlar/ac">Plan aç</TusBaglanti> : undefined} />
+      {v.belgeBekleyen > 0 && <SeritKap>
+        <Serit tur="uyari" ikon="file-signature" eylem={<TusBaglanti ikon="arrow-right" href="/onaylar/diger">Diğer belgeler</TusBaglanti>}>
+          <b>{v.belgeBekleyen} belge imzanızı bekliyor</b> · bordro, eğitim ve zimmet formları Onaylar › Diğer belgeler&apos;de imzalanır.
+        </Serit>
+      </SeritKap>}
       {v.bolumler.map((b) => <RolBolumu key={b.rol} b={b} cok={v.bolumler.length > 1} />)}
       <Bolum id="b-ana-duyuru" baslik="Duyurular">
         <p className={stil.bos}>İş sağlığı ve güvenliği ile iş ekipmanları duyuruları kaynaklarında:</p>

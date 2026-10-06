@@ -12,3 +12,9 @@
 .hata { margin: 4px 0 0; color: var(--uyari-yazi); font-size: var(--boy-kucuk); font-weight: 600; }
 /* iki tuş dar sütuna sığmazsa alt satıra (318 incelemesi: 768'de tuşlar İstek sütununun üstüne taşıyordu) */
 .eylemTuslar { display: flex; flex-wrap: wrap; justify-content: flex-end; gap: 8px; }
+/* 333 Diğer belgeler: imza penceresi adımları, indirme satırı, yükleme tuşu (gizli dosya girdisi etiketin içinde) */
+.adimlar { margin: 0 0 12px; padding-left: 20px; color: var(--yazi2); font-size: var(--boy-kucuk); }
+.adimlar li + li { margin-top: 4px; }
+.indir { display: flex; flex-wrap: wrap; gap: 8px; }
+.dosyaSec { position: relative; cursor: pointer; }
+.dosyaSec[aria-disabled="true"] { opacity: .6; cursor: default; }

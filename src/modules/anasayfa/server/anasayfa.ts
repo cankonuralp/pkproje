@@ -13,6 +13,7 @@ import { turOzetleri } from "../../ekipman-turleri/server/turler.ts";
 import { musteriOzetleri } from "../../musteriler/server/musteriler.ts";
 import { giderListesi } from "../../muhasebe/server/giderler.ts";
 import { faturaListesi, isListesi } from "../../muhasebe/server/muhasebe.ts";
+import { bekleyenBelgeSayisi } from "../../onaylar/server/belge-baglanti.ts";
 import { onayListeleri } from "../../onaylar/server/onaylar.ts";
 import { eksikBilgi, personelListesi, personelOzetleri } from "../../personel/server/personel.ts";
 import { acikMi, anaPlanlar, isgEksikSayisi, type AnaPlan } from "../../planlar/server/anasayfa-baglanti.ts";
@@ -40,7 +41,8 @@ export type AnaListe =
   | { tur: "kuyruk"; baslik: string; kayitlar: AnaKuyrukSatiri[]; bos: string; tumu: [ad: string, href: string] }
   | { tur: "tesis"; baslik: string; kayitlar: AnaTesisSatiri[]; bos: string; tumu: [ad: string, href: string]; planAc: boolean };
 export interface AnaBolum { rol: Rol; yuzler: AnaYuz[]; liste: AnaListe | null }
-export interface AnaSayfa { bugun: string; ad: string; planAc: boolean; bolumler: AnaBolum[] }
+/** belgeBekleyen (333): kişinin imzasını bekleyen diğer belgeler (bordro …) — Onaylar'ı görmeyen de buradan ulaşır */
+export interface AnaSayfa { bugun: string; ad: string; planAc: boolean; bolumler: AnaBolum[]; belgeBekleyen: number }
 
 export async function anaSayfa(db: Sorgulayici, kim: Kisi): Promise<AnaSayfa> {
   const bugun = bugunTr(), roller = new Set(kim.roller);
@@ -142,5 +144,5 @@ export async function anaSayfa(db: Sorgulayici, kim: Kisi): Promise<AnaSayfa> {
       { ikon: "receipt", ad: "Onay bekleyen masraf", sayi: bek.length, href: "/muhasebe/giderler", not: bek.length ? tl(bek.reduce((n, g) => n + g.tutar, 0)) : "yok", uyari: bek.length > 0 },
     ], liste: null });
   }
-  return { bugun, ad: kim.ad, planAc: planAcabilir(kim), bolumler };
+  return { bugun, ad: kim.ad, planAc: planAcabilir(kim), bolumler, belgeBekleyen: await bekleyenBelgeSayisi(db, kim) };
 }

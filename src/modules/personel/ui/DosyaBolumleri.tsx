@@ -21,7 +21,8 @@ import { Tus } from "../../../components/tus/Tus";
 import type { EgitimKaydi } from "../../egitimler/server/egitimler";
 import { OZLUK_TURLERI, ozlukTurAd } from "../sema";
 import type { AtamaSatiri, BordroSatiri, OzlukSatiri, PersonelDosyasi } from "../server/dosyalar";
-import { personelBelgeDegistirEylemi, personelBelgeEkleEylemi, personelBelgeKaldirEylemi } from "./eylemler";
+import { BELGE_DURUM } from "../../onaylar/sema";
+import { bordroOnayaGonderEylemi, personelBelgeDegistirEylemi, personelBelgeEkleEylemi, personelBelgeKaldirEylemi } from "./eylemler";
 import { bransAd, tarihYaz } from "./ortak";
 import stil from "./personel.module.css";
 
@@ -208,8 +209,25 @@ export function EgitimBolumu({ egitimler }: { egitimler: EgitimKaydi[] }) {
   );
 }
 
+/* bordroyu kişinin imzasına gönder (333; maket personel.html bordro-onaya — önce sorulur; Onaylar › Diğer belgeler'e düşer) */
+function OnayaGonderTusu({ b, kisi }: { b: BordroSatiri; kisi: string }) {
+  const router = useRouter();
+  const bildir = useBildir();
+  const onayla = useOnayla();
+  const [bekliyor, baslat] = useTransition();
+  const gonder = async () => {
+    if (!(await onayla({ baslik: "Bordroyu onaya gönder", metin: <><b>{ayAd(b.ay)}</b> bordrosu {kisi} kişisinin onayına gider; e-imzayla onaylar (Onaylar › Diğer belgeler).</>, tus: "Onaya gönder" }))) return;
+    baslat(async () => {
+      const r = await bordroOnayaGonderEylemi(b.id);
+      if (!r.tamam) { bildir(r.genel ?? "Gönderilemedi."); return; }
+      bildir(`${ayAd(b.ay)} bordrosu ${kisi} onayına gönderildi.`); router.refresh();
+    });
+  };
+  return <Tus tur="ikincil" ikon="send" disabled={bekliyor} onClick={gonder} aria-label={`${ayAd(b.ay)} bordrosunu onaya gönder`}>Onaya gönder</Tus>;
+}
+
 /* ── MAAŞ VE BORDROLAR (yalnız "yaz"; maaş satırları son bordrodan; günlük maliyet iş kârlılığına girer) ── */
-export function BordroBolumu({ personelId, dosya, bugun, gunluk, isGunu }: { personelId: string; dosya: PersonelDosyasi; bugun: string; gunluk: number; isGunu: number }) {
+export function BordroBolumu({ personelId, kisi, dosya, bugun, gunluk, isGunu }: { personelId: string; kisi: string; dosya: PersonelDosyasi; bugun: string; gunluk: number; isGunu: number }) {
   const p = useBelgePenceresi();
   const l = dosya.bordrolar ?? [], s = l[0];
   return (
@@ -223,11 +241,17 @@ export function BordroBolumu({ personelId, dosya, bugun, gunluk, isGunu }: { per
           <Bilgi etiket="Günlük maliyet">{para(gunluk)}<AltSatir>{isGunu} iş günü · iş kârlılığına girer</AltSatir></Bilgi>
         </BilgiListesi>
         <Liste<BordroSatiri> baslik="Bordrolar" kayitlar={l} anahtar={(b) => b.id} sutunlar={[
-          { k: "ay", genislik: "20%", baslik: "Dönem", kart: "ust", sira: 1, hucre: (b) => <span>{ayAd(b.ay)}<AltSatir>yüklendi {tarihYaz(b.yuklendi)}</AltSatir></span> },
-          { k: "brut", genislik: "14%", baslik: "Brüt", kart: "govde", sira: 2, hucre: (b) => <><KartEtiket>Brüt</KartEtiket><span className={stil.sayi}>{para(b.brut)}</span></> },
-          { k: "net", genislik: "14%", baslik: "Net", kart: "govde", sira: 3, hucre: (b) => <><KartEtiket>Net</KartEtiket><span className={stil.sayi}>{para(b.net)}</span></> },
-          { k: "maliyet", genislik: "16%", baslik: "İşverene maliyet", kart: "govde", sira: 4, hucre: (b) => <><KartEtiket>İşverene maliyet</KartEtiket><span className={stil.sayi}>{para(b.maliyet)}</span></> },
-          { k: "eylem", genislik: "36%", baslik: "Bordro", kart: "eylem", sira: 9, hucre: (b) => <SatirTuslari ne="bordro" id={b.id} surum={b.surum} dosyaId={b.dosyaId} ad={`${ayAd(b.ay)} bordrosu`} degistir={false} /> },
+          { k: "ay", genislik: "16%", baslik: "Dönem", kart: "ust", sira: 1, hucre: (b) => <span>{ayAd(b.ay)}<AltSatir>yüklendi {tarihYaz(b.yuklendi)}</AltSatir></span> },
+          { k: "brut", genislik: "12%", baslik: "Brüt", kart: "govde", sira: 2, hucre: (b) => <><KartEtiket>Brüt</KartEtiket><span className={stil.sayi}>{para(b.brut)}</span></> },
+          { k: "net", genislik: "12%", baslik: "Net", kart: "govde", sira: 3, hucre: (b) => <><KartEtiket>Net</KartEtiket><span className={stil.sayi}>{para(b.net)}</span></> },
+          { k: "maliyet", genislik: "14%", baslik: "İşverene maliyet", kart: "govde", sira: 4, hucre: (b) => <><KartEtiket>İşverene maliyet</KartEtiket><span className={stil.sayi}>{para(b.maliyet)}</span></> },
+          /* 333 (maket AA3): bordro çalışanın imzasına gönderilir; durum burada */
+          { k: "onay", genislik: "14%", baslik: "Onay", kart: "rozet", sira: 1, hucre: (b) => b.onay
+            ? <Rozet tur={BELGE_DURUM[b.onay.durum][1]}>{BELGE_DURUM[b.onay.durum][0]}</Rozet> : <Rozet tur="notr">Gönderilmedi</Rozet> },
+          { k: "eylem", genislik: "32%", baslik: "Bordro", kart: "eylem", sira: 9, hucre: (b) => <span className={stil.satirTus}>
+            <SatirTuslari ne="bordro" id={b.id} surum={b.surum} dosyaId={b.dosyaId} ad={`${ayAd(b.ay)} bordrosu`} degistir={false} />
+            {b.dosyaId && (!b.onay || b.onay.durum === "geri") && <OnayaGonderTusu b={b} kisi={kisi} />}
+          </span> },
         ]} />
       </> : <p className={stil.bos}>Bordro yüklenmedi.</p>}
       {p.ne && <BelgePenceresi ne={p.ne} personelId={personelId} turler={dosya.turler} bugun={bugun} kapat={p.kapat} />}

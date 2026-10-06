@@ -3,6 +3,7 @@
 import type { Metadata } from "next";
 import { Yetkisiz } from "../../../../components/hata/Hata";
 import { modulBul } from "../../../../modules/moduller";
+import { bordroGonderebilir } from "../../../../modules/muhasebe/server/bordro-gonder";
 import { faturaListesi, isListesi } from "../../../../modules/muhasebe/server/muhasebe";
 import { FaturaListesi } from "../../../../modules/muhasebe/ui/Listeler";
 import { modulOturumu, oturumIslemi } from "../../../../server/kimlik/istek";
@@ -16,5 +17,5 @@ export default async function Sayfa({ searchParams }: { searchParams: Promise<{ 
   const v = await oturumIslemi(o, async (db) => ({ isler: await isListesi(db, o), faturalar: await faturaListesi(db, o) }));
   if (!v.isler || !v.faturalar) return <Yetkisiz />;
   const { durum } = await searchParams;
-  return <FaturaListesi isler={v.isler} faturalar={v.faturalar} durum={typeof durum === "string" ? durum : undefined} />;
+  return <FaturaListesi isler={v.isler} faturalar={v.faturalar} durum={typeof durum === "string" ? durum : undefined} bordro={bordroGonderebilir(o)} />;
 }

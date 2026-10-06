@@ -12,6 +12,7 @@ import { TusBaglanti } from "../../../components/tus/Tus";
 import { FATURA_DURUM, IS_DURUM, para } from "../sema";
 import type { FaturaSatiri, IsSatiri } from "../server/muhasebe";
 import { KarHucre } from "./Karlilik";
+import { BordroGonderTusu } from "./BordroGonder";
 import { MuhasebeSekmeleri, gunFarki } from "./ortak";
 import stil from "./muhasebe.module.css";
 
@@ -44,11 +45,11 @@ function isTanim(l: readonly IsSatiri[]): SuzgecTanimi<IsSatiri> {
     seciciler: [musteriSecici(l)],
   };
 }
-export function IsListesi({ isler, faturalar }: { isler: IsSatiri[]; faturalar: FaturaSatiri[] }) {
+export function IsListesi({ isler, faturalar, bordro = false }: { isler: IsSatiri[]; faturalar: FaturaSatiri[]; bordro?: boolean }) {
   const s = useSuzgec(isTanim(isler), isler);
   return (
     <>
-      <SayfaBasi baslik="Muhasebe" sayac={<Sayac s={s} />} />
+      <SayfaBasi baslik="Muhasebe" sayac={<Sayac s={s} />} tuslar={bordro ? <BordroGonderTusu /> : undefined} />
       <MuhasebeSekmeleri secili="/muhasebe" />
       <UyariSeridi isler={isler} faturalar={faturalar} />
       <SuzgecliListe s={s} on="i" baslik="İşler" sutunlar={IS_SUTUN} anahtar={(x) => x.id} href={(x) => `/muhasebe/is/${x.id}`}
@@ -81,11 +82,11 @@ function faturaTanim(l: readonly FaturaSatiri[]): SuzgecTanimi<FaturaSatiri> {
     seciciler: [musteriSecici(l)],
   };
 }
-export function FaturaListesi({ isler, faturalar, durum }: { isler: IsSatiri[]; faturalar: FaturaSatiri[]; durum?: string }) {
+export function FaturaListesi({ isler, faturalar, durum, bordro = false }: { isler: IsSatiri[]; faturalar: FaturaSatiri[]; durum?: string; bordro?: boolean }) {
   const s = useSuzgec(faturaTanim(faturalar), faturalar, durum && durum in FATURA_DURUM ? { secili: [durum] } : undefined);
   return (
     <>
-      <SayfaBasi baslik="Muhasebe" sayac={<Sayac s={s} />} />
+      <SayfaBasi baslik="Muhasebe" sayac={<Sayac s={s} />} tuslar={bordro ? <BordroGonderTusu /> : undefined} />
       <MuhasebeSekmeleri secili="/muhasebe/faturalar" />
       <UyariSeridi isler={isler} faturalar={faturalar} />
       <SuzgecliListe s={s} on="f" baslik="Faturalar" sutunlar={FATURA_SUTUN} anahtar={(f) => f.id} href={(f) => `/muhasebe/f/${f.id}`}

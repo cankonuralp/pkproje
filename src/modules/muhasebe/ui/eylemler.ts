@@ -6,6 +6,7 @@ import { ayniKoken } from "../../../server/kimlik/koken";
 import { istekOturumu, oturumIslemi } from "../../../server/kimlik/istek";
 import { BelgeHatasi, giderExceliYukle, giderKaydet, giderReddet, type GiderBelgesi, type GiderSonra } from "../server/giderler";
 import { faturaKaydet, tahsilatKaydet, type Yazma } from "../server/muhasebe";
+import { bordroGonder, bordroGonderimi, type BordroGonderimi } from "../server/bordro-gonder";
 
 export interface MuhasebeYaniti { tamam?: boolean; id?: string; no?: string; bildirim?: string; hatalar?: Record<string, string>; genel?: string }
 
@@ -58,4 +59,30 @@ export async function giderReddetEylemi(id: string, surum: number, girdi: unknow
 /** Excel'den yükle: tarayıcıda okunan satırlar; sunucuda yeniden denetlenir */
 export async function giderExceliYukleEylemi(ham: unknown): Promise<MuhasebeYaniti> {
   return islem((o) => oturumIslemi(o, (db) => giderExceliYukle(db, o, ham)));
+}
+
+/* ── MAAŞ BORDROSU GÖNDER (333): pencere verisi ve gönderim; yetki (Muhasebe "yaz") ve PDF denetimi sunucuda ── */
+export async function bordroGonderimiEylemi(ay: string): Promise<{ veri?: BordroGonderimi; genel?: string }> {
+  const o = await istekOturumu();
+  if (!o) return { genel: "Oturumunuz kapandı. Yeniden giriş yapın." };
+  const veri = await oturumIslemi(o, (db) => bordroGonderimi(db, o, yazi(ay)));
+  return veri ? { veri } : { genel: SONUC.yetkisiz };
+}
+/** form: ay, secili (kişi kimlikleri, çok), dosya-<kişi> (PDF) */
+export async function bordroGonderEylemi(form: FormData): Promise<MuhasebeYaniti> {
+  if (!(await ayniKoken())) return { genel: "İstek reddedildi. Sayfayı yenileyip yeniden deneyin." };
+  const o = await istekOturumu();
+  if (!o) return { genel: "Oturumunuz kapandı. Yeniden giriş yapın." };
+  const secili = form.getAll("secili").map(yazi).slice(0, 1000);
+  const dosyalar = new Map<string, { ad: string; bayt: Uint8Array }>();
+  let toplam = 0;
+  for (const id of secili) {
+    const f = form.get(`dosya-${id}`);
+    if (!(f instanceof File) || f.size === 0) continue;
+    if (f.size > 25 << 20) return { hatalar: { [id]: "PDF en çok 25 MB." } };
+    if ((toplam += f.size) > 25 << 20) return { genel: "Bir seferde en çok 25 MB gönderilir; daha az kişi seçin." };
+    dosyalar.set(id, { ad: f.name, bayt: new Uint8Array(await f.arrayBuffer()) });
+  }
+  const r = await oturumIslemi(o, (db) => bordroGonder(db, depo(), o, o.kiraci.firmaId, yazi(form.get("ay")), secili, dosyalar));
+  return r.durum === "tamam" ? { tamam: true, bildirim: r.bildirim } : r.durum === "gecersiz" ? { hatalar: r.hatalar, genel: r.genel } : { genel: SONUC.yetkisiz };
 }

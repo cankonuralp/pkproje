@@ -3,6 +3,8 @@
    İstemciden gelen kimlik ve sürüm yalnız "hangi rapor, hangi sürümü gördüm" bilgisidir; yetki vermez. */
 import { ayniKoken } from "../../../server/kimlik/koken";
 import { istekOturumu, oturumIslemi } from "../../../server/kimlik/istek";
+import { depo } from "../../../server/dosya/depo";
+import { belgeGeriGonder, belgeImzaliYukle, type BelgeYazma } from "../server/belgeler";
 import { durumDegistir, geriGonder, onayGeriAl, onayla, revizeIstegiReddet, revizeyeGonder, type OnayYazma } from "../server/onaylar";
 
 export interface OnayYaniti { tamam?: boolean; bildirim?: string; sonraki?: string | null; hatalar?: Record<string, string>; genel?: string }
@@ -39,4 +41,30 @@ export async function revizeyeGonderEylemi(id: string, surum: number, girdi: unk
 }
 export async function revizeIstegiReddetEylemi(id: string, istekId: string, istekSurum: number, girdi: unknown): Promise<OnayYaniti> {
   return islem((o) => oturumIslemi(o, (db) => revizeIstegiReddet(db, o, metin(id), metin(istekId), Number(istekSurum), girdi)));
+}
+
+/* ── DİĞER BELGELER (333): yalnız imzalayacak kişi; karar ve kural sunucuda ve veritabanında (0044) ── */
+const BELGE_SONUC = {
+  yetkisiz: "Bu işlem için yetkiniz yok.",
+  cakisma: "Belge siz açtıktan sonra değiştirildi. Sayfayı yenileyip yeniden deneyin.",
+  yok: "Belge bulunamadı.",
+} as const;
+async function belgeIslem(is: (o: NonNullable<Awaited<ReturnType<typeof istekOturumu>>>) => Promise<BelgeYazma>): Promise<OnayYaniti> {
+  if (!(await ayniKoken())) return { genel: "İstek reddedildi. Sayfayı yenileyip yeniden deneyin." };
+  const o = await istekOturumu();
+  if (!o) return { genel: "Oturumunuz kapandı. Yeniden giriş yapın." };
+  const r = await is(o);
+  return r.durum === "tamam" ? { tamam: true, bildirim: r.bildirim } : r.durum === "gecersiz" ? { hatalar: r.hatalar }
+    : r.durum === "red" ? { genel: r.neden } : { genel: BELGE_SONUC[r.durum] };
+}
+export async function belgeGeriGonderEylemi(id: string, surum: number): Promise<OnayYaniti> {
+  return belgeIslem((o) => oturumIslemi(o, (db) => belgeGeriGonder(db, o, metin(id), Number(surum))));
+}
+/** imzalı PDF yükle (form: id, surum, dosya); önek ve imza denetimi sunucuda */
+export async function belgeImzaliYukleEylemi(form: FormData): Promise<OnayYaniti> {
+  const dosya = form.get("dosya");
+  if (!(dosya instanceof File) || dosya.size === 0) return { hatalar: { dosya: "İmzalı PDF seçilmeli." } };
+  if (dosya.size > 25 << 20) return { hatalar: { dosya: "PDF çok büyük (en çok 25 MB)." } };
+  const bayt = new Uint8Array(await dosya.arrayBuffer());
+  return belgeIslem((o) => oturumIslemi(o, (db) => belgeImzaliYukle(db, depo(), o, o.kiraci.firmaId, metin(form.get("id")), Number(form.get("surum")), { ad: dosya.name, bayt })));
 }

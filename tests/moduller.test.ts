@@ -83,7 +83,16 @@ test("oturum kapısı: uygulama düzeni oturum ister, modül sayfası modül num
   }
   assert.match(oku("src/components/modul/ModulSayfasi.tsx"), /modulGorur\(o, modul\.no/);
   /* modülün alt sayfaları (kart, form …) da aynı kapıdan: her page.tsx modül kapısını çağırır */
+  /* 2026-10-06 (333, maket onaylar.html #/diger + muhasebe.html "Maaş bordrosu gönder": bordro BÜTÜN personelin imzasına gider — Onaylar'ı
+     görmeyen planlama ve muhasebe de kendi belgesini imzalar): Diğer belgeler modülden bağımsız, oturum kapısından geçer; kayıt süzgeci sunucuda
+     (yalnız hesabın kendi personelinin belgeleri — onaylar/server/belgeler.ts). İstisna YALNIZ bu sayfa. */
+  const KISISEL = new Set(["src/app/(uygulama)/onaylar/diger/page.tsx"]);
   for (const ad of dosyalar("src/app/(uygulama)", [".tsx"]).filter((d) => d.endsWith("/page.tsx") && d.split("/").length > 5)) {
+    if (KISISEL.has(ad)) {
+      assert.match(oku(ad), /await oturumGerekli\(\)/, ad);
+      assert.match(oku("src/modules/onaylar/server/belgeler.ts"), /const p = await hesabinPersoneli\(db, kim\.id\);[\s\S]*WHERE personel_id = \$1 AND dosya IS NOT NULL/, "Diğer belgeler yalnız kendi personelinin");
+      continue;
+    }
     assert.match(oku(ad), /await modulOturumu\(MODUL\.no\)[\s\S]*if \(!o\) return <Yetkisiz \/>/, ad);
   }
   /* 2026-10-04: geliştirme sayfaları yayında kapalı — koruma düzende (altına eklenen her sayfa kapsanır) */

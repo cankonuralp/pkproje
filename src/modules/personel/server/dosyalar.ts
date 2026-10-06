@@ -9,12 +9,14 @@
 import type { Sorgulayici } from "../../../server/db/kiraci.ts";
 import { ekle, guncelle, tablo, type TabloTanimi } from "../../../server/db/yazici.ts";
 import type { Depo } from "../../../server/dosya/depo.ts";
-import { dosyaYukle } from "../../../server/dosya/dosya.ts";
+import { dosyaYukle, kayitDosyasi } from "../../../server/dosya/dosya.ts";
 import { hesabinPersoneli } from "../../../server/kimlik/hesap.ts";
 import { canDo, duzey, type YetkiHesabi } from "../../../server/yetki/canDo.ts";
 import { dogrula, type DogrulamaHatalari } from "../../../sema/ortak.ts";
 import { turOzetleri } from "../../ekipman-turleri/server/turler.ts";
 import { kisininVarliklari, type VarlikSatiri } from "../../zimmetler/server/zimmet.ts";
+import { belgeGonder, bordroBelgeleri } from "../../onaylar/server/belge-baglanti.ts";
+import { bordroBelgeAdi, type BelgeDurumu } from "../../onaylar/sema.ts";
 import { AtamaGirdisi, BordroGirdisi, OzlukGirdisi } from "../sema.ts";
 
 const MODUL = 2;
@@ -31,7 +33,11 @@ export interface Kisi extends YetkiHesabi { ad: string }
 export interface OzlukSatiri { id: string; tur: string; aciklama: string | null; dosyaId: string | null; tarih: string; surum: number }
 export interface AtamaSatiri { id: string; turId: string; tur: string; brans: "m" | "e" | null; tarih: string; dosyaId: string | null; surum: number }
 /** tutarlar kuruş (tam sayı) */
-export interface BordroSatiri { id: string; ay: string; brut: number; net: number; maliyet: number; dosyaId: string | null; yuklendi: string; surum: number }
+export interface BordroSatiri {
+  id: string; ay: string; brut: number; net: number; maliyet: number; dosyaId: string | null; yuklendi: string; surum: number;
+  /** 333: dönemin bordrosu kişinin imzasına gönderildi mi (Onaylar › Diğer belgeler) — gönderilmediyse null */
+  onay: { durum: BelgeDurumu; karar: string | null } | null;
+}
 export interface ZimmetFormu { id: string; tarih: string; kapsam: number; dosyaId: string | null; guncel: boolean }
 export interface PersonelDosyasi {
   yaz: boolean;
@@ -88,7 +94,9 @@ export async function personelDosyasi(db: Sorgulayici, kim: Kisi, personelId: st
       .map((x) => ({ id: x.id, tur: x.tur, aciklama: x.aciklama, dosyaId: x.dosya_id, tarih: gun(x.olustu), surum: x.surum }));
     bordrolar = (await db.sorgu<{ id: string; ay: string; brut: string; net: string; maliyet: string; dosya_id: string | null; olustu: Date; surum: number }>(
       "SELECT id::text, ay, brut::text, net::text, maliyet::text, dosya_id::text, olustu, surum FROM bordro WHERE personel_id = $1 AND kaldirildi IS NULL ORDER BY ay DESC", [personelId])).rows
-      .map((x) => ({ id: x.id, ay: x.ay, brut: kurus(x.brut), net: kurus(x.net), maliyet: kurus(x.maliyet), dosyaId: x.dosya_id, yuklendi: gun(x.olustu), surum: x.surum }));
+      .map((x) => ({ id: x.id, ay: x.ay, brut: kurus(x.brut), net: kurus(x.net), maliyet: kurus(x.maliyet), dosyaId: x.dosya_id, yuklendi: gun(x.olustu), surum: x.surum, onay: null }));
+    const onay = await bordroBelgeleri(db, [personelId]);
+    for (const b of bordrolar) { const o = onay.get(`${personelId}|${b.ay}`); if (o) b.onay = { durum: o.durum, karar: o.karar }; }
   }
   return { yaz, ozluk, bordrolar, atamalar, zimmet, zimmetFormu, turler: yaz ? turler : [] };
 }
@@ -181,6 +189,24 @@ export async function bordroYukle(db: Sorgulayici, depo: Depo, kim: Kisi, firmaI
   return { durum: "tamam", id: r.id };
 }
 export const bordroKaldir = (db: Sorgulayici, kim: Kisi, id: string, surum: number) => satirIslemi(db, null, kim, null, BORDRO, DOSYA.bordro, id, surum, null);
+
+/** bordroyu kişinin imzasına gönder (333; maket personel.html "Onaya gönder" → Onaylar › Diğer belgeler): yalnız "yaz"; bordronun PDF'i
+    belgenin kendi dosyası olur. Aynı dönemin bordrosu ikinci kez gönderilmez (geri gönderilen yeniden gönderilir). */
+export async function bordroOnayaGonder(db: Sorgulayici, depo: Depo, kim: Kisi, firmaId: string, id: string): Promise<Yazma | { durum: "red"; neden: string }> {
+  if (!yazar(kim)) return { durum: "yetkisiz" };
+  if (!UUID.test(id)) return { durum: "yok" };
+  const b = (await db.sorgu<{ personel_id: string; ay: string; dosya_id: string | null }>(
+    "SELECT personel_id::text, ay, dosya_id::text FROM bordro WHERE id = $1 AND kaldirildi IS NULL", [id])).rows[0];
+  if (!b) return { durum: "yok" };
+  const d = b.dosya_id ? await kayitDosyasi(db, DOSYA.bordro, id, b.dosya_id) : null;
+  if (!d) return { durum: "red", neden: "Bordronun PDF'i yok; önce bordroyu yükleyin." };
+  const r = await belgeGonder(db, depo, kim, firmaId, {
+    tur: "bordro", ad: bordroBelgeAdi(b.ay), personelId: b.personel_id, kaynakId: id, ay: b.ay, pdf: { ad: `bordro-${b.ay}.pdf`, bayt: await depo.oku(d.anahtar) },
+  });
+  if (r.durum === "zaten") return { durum: "red", neden: "Bu dönemin bordrosu zaten imzaya gönderildi." };
+  if (r.durum === "uygunsuz") return { durum: "red", neden: r.neden };
+  return { durum: "tamam", id };
+}
 
 /* ── İMZALI ZİMMET FORMU: kapsam yükleme anındaki zimmetten (sunucuda) ── */
 export async function zimmetFormuYukle(db: Sorgulayici, depo: Depo, kim: Kisi, firmaId: string, personelId: string, belge: Belge | null): Promise<Yazma> {

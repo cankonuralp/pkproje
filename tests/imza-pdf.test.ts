@@ -3,7 +3,7 @@
    görünen içeriğini değiştirebiliyor, imza belirteçleri yorumda bile geçerli sayılıyordu. Veritabanısız. Olumsuz kanıt: tests/bozan/imza-pdf.bozan.ts. */
 import assert from "node:assert/strict";
 import { test } from "node:test";
-import { imzaliPdfGecerli } from "../src/modules/raporlar/imza-pdf.ts";
+import { imzaliPdfGecerli, imzayaUygun } from "../src/modules/raporlar/imza-pdf.ts";
 
 const b = (s: string) => new Uint8Array(Buffer.from(s, "latin1"));
 /** uydurma imzasız PDF: Catalog, Pages, Page (/Contents 4 0 R), içerik akışı */
@@ -68,4 +68,15 @@ test("imzalı PDF: ek doğrusal sürede taranır (karesel arama yok); büyük ek
   assert.ok(Date.now() - bas < 3000, `tarama ${Date.now() - bas} ms sürdü`);
   assert.equal(imzaliPdfGecerli(b(OZGUN), b(OZGUN + "x".repeat(4 * 1024 * 1024 + 1))), false, "4 MB'tan büyük ek");
   assert.equal(imzaliPdfGecerli(b(OZGUN), imzali(Array.from({ length: 501 }, (_, i) => `${100 + i} 0 obj << >> endobj\n`).join("") + IMZA)), false, "500'den çok nesne");
+});
+
+/* 333 (Onaylar › Diğer belgeler): dışarıda üretilmiş PDF (bordro) imzaya gönderilmeden önce — imzalı hâli denetlenemeyecek biçim reddedilir */
+test("imzaya uygunluk: klasik trailer kökü olan PDF uygun; sıkıştırılmış nesne akışı ya da kök yoksa / bozuksa uygun değil", () => {
+  assert.equal(imzayaUygun(b(OZGUN)), true);
+  assert.equal(imzayaUygun(b(OZGUN.replace("4 0 obj << /Length 18 >>", "4 0 obj << /Type /ObjStm /N 1 /First 4 /Length 18 >>"))), false, "nesne akışı");
+  assert.equal(imzayaUygun(b(OZGUN.replace("trailer << /Root 1 0 R >>", ""))), false, "trailer yok (yalnız xref akışı)");
+  assert.equal(imzayaUygun(b(OZGUN.replace("trailer << /Root 1 0 R >>", "trailer << /Size 5 >>"))), false, "kök yok");
+  assert.equal(imzayaUygun(b("%PDF-1.4\nbozuk")), false);
+  /* uygun PDF'in imzalanmış hâli kabul edilir (gönderilen belge gerçekten imzalanabilir) */
+  assert.equal(imzaliPdfGecerli(b(OZGUN), imzali(IMZA)), true);
 });

@@ -50,6 +50,7 @@ export default async function hazirla(_ayar: FullConfig) {
   await ac("/talepler");
   await ac("/personel/izinler");
   await ac("/uyarilar");
+  await ac("/onaylar/diger");
   await ac("/planlar/ac");
   await ac("/dokumanlar/kriterler");
   await ac("/dokumanlar/diger");

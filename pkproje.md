@@ -2341,6 +2341,27 @@ revizyon, alan kopyalama, hafif kusur devri, meslek eşleşme denetimi).
 - Emsal ürünler: https://opwire.app/iso-17020-periyodik-kontrol-yazilimi/ · https://17020muayene.vidco.com.tr/ · https://akuple.com/asansor-kontrol-yazilimi/ · https://ensyazilim.com/
 
 ## 11 · Değişiklik günlüğü
+- 2026-10-06 (333): **K4 Onaylar › Diğer belgeler** (maket onaylar.html #/diger, muhasebe.html BB5 "Maaş bordrosu gönder", personel.html bordro
+  "Onaya gönder"; §11 230, 264, 265 — reisim: "Onaylar kısmında diğer kısmı olsun muhasebeciden onaya maaş bordrosu gönderilirse veya eğitim
+  zimmet formu gönderilirse oradan onaylanabilsin"). Göç **0044 belge_onay**: tür (bordro, eğitim formu, zimmet formu, araç teslim tutanağı), ad,
+  imzalayacak kişi, kaynak, bordroda dönem, belgenin KENDİ imzasız PDF'i (kayıt → dosya → bağ aynı işlemde; dosyasız belge işlem sonunda
+  reddedilir), durum bekliyor → imzalı / geri gönderildi; gönderen ve karar veren veritabanında damgalanır, kararı YALNIZ imzalayacak kişi verir
+  (hesabının personeli), karar verilmiş ve gönderilmiş belge değişmez, silinmez; aynı kişinin aynı dönem bordrosu ikinci kez gönderilmez (geri
+  gönderilen sayılmaz). **Onaylar › Diğer belgeler** (/onaylar/diger): Görüntüle · Geri gönder (önce sorulur) · Onayla ve imzala (pencere:
+  PDF'i indir → e-imza aracıyla imzala → imzalı PDF'i yükle; raporun son imzasıyla aynı denetim — ilk baytlar gönderilen PDF, ek yalnız imza).
+  Mobil imza ve imza aracı sonraki fazda. Sayfa **modülden bağımsız**: herkes yalnız kendi belgesini görür (Onaylar'ı görmeyen planlama ve muhasebe
+  de kendi bordrosunu imzalar; ana sayfada "n belge imzanızı bekliyor" şeridi ve bağlantısı); Onaylar'ı görene sekme (denetçide iki sekme: İmzamı
+  bekleyen raporlar, Diğer belgeler). **Personel › Maaş ve bordrolar:** Onay sütunu (Gönderilmedi / Onay bekliyor / İmzalandı / Geri gönderildi)
+  ve "Onaya gönder" (Personel "yaz"). **Muhasebe › Maaş bordrosu gönder** (her sekmede tuş; Muhasebe "yaz"): dönem (son 12 ay, varsayılan geçen
+  ay), Formattan oluştur / Elle yükle (format Firma ayarları › Bordro formatı kalemiyle; yokken şerit), personel (seç, dosya, durum: Hazır / Bordro
+  yok / Bu dönem gönderildi / İmzalandı), İmzaya gönder (n): dosyası olan seçililer; önce HEPSİ denetlenir (biri uygunsuzsa hiçbiri yazılmaz);
+  bordro Personel kartına da yazılır (dönemin bordrosu varsa yenisi aynı tutarlarla, yoksa son bordronun tutarlarıyla; hiç bordrosu yoksa
+  yalnız belge). Gönderilen PDF **e-imzaya uygun** olmalı (klasik trailer kökü, sıkıştırılmış nesne akışı yok — imzalı hâli ancak böyle
+  denetlenir; imza-pdf.ts imzayaUygun); değilse "programından yeniden PDF olarak kaydedip yükleyin". Dosyalar: imzacı, gönderen, Personel "yaz",
+  bordroda Muhasebe'yi gören açar. Eğitim / zimmet formu ve araç tutanağının gönderilmesi o modüllerin kalemiyle (tür şimdiden tabloda). Kilit:
+  belge-onay.test (gönderme yetkisi, sızıntı — öteki kişi, gönderen, B firması, dosya erişimi, imza denetimi, Muhasebe gönderimi, veritabanı
+  korumaları), imza-pdf.test (imzaya uygunluk), olumsuz kanıt belge-onay.bozan (3), moduller.test (kişisel sayfa istisnası — tarih + gerekçe),
+  e2e belge-onay + personel-dosya üç genişlik.
 - 2026-10-06 (göç düzeni): 0037–0040 Supabase'e uygulandı (goc kaydıyla; main = f179072). Uygulanmış göç değişmez: 328 incelemesinin ve 330'un
   0040'a "yerinde" yazılan gider kuralları (ödeme günü CHECK'i, ödemede onay damgası, masraf formu kendi adına, gönderenin geri çekmesi, DELETE
   hakkı) **0043_gider_kurallari.sql**'e taşındı (gider_koru bütünüyle yenilenir); 0040 uygulanan hâline döndü. Bozanlar 0043'ü bozar.

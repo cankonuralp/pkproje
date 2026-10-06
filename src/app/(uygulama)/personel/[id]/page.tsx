@@ -63,7 +63,7 @@ export default async function Sayfa({ params }: { params: Promise<{ id: string }
       {denetci && <AtamaBolumu personelId={p.id} etkin={p.durum === "etkin"} dosya={dosya} bugun={bugun} />}
       <ZimmetBolumu personelId={p.id} dosya={dosya} bugun={bugun} />
       {egitimler && <EgitimBolumu egitimler={egitimler} />}
-      {dosya.bordrolar && <BordroBolumu personelId={p.id} dosya={dosya} bugun={bugun} gunluk={gunlukMaliyet(dosya.bordrolar[0])} isGunu={IS_GUNU} />}
+      {dosya.bordrolar && <BordroBolumu personelId={p.id} kisi={p.ad} dosya={dosya} bugun={bugun} gunluk={gunlukMaliyet(dosya.bordrolar[0])} isGunu={IS_GUNU} />}
       {dosya.ozluk && <OzlukBolumu personelId={p.id} dosya={dosya} bugun={bugun} />}
     </>
   );

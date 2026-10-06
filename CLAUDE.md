@@ -120,7 +120,9 @@ pkproje/
                             Durumu değiştir (göç 0026: geçişler, onay damgası, Yeni'ye gerekçe ≥ 10 veritabanında); rapora raporlar/server/onay-baglanti.ts'ten
                             · İmzamı bekleyen raporlar /onaylar/imza (318, C5: denetçinin Onaylar'ı yalnız bu; kuyruk ve onay ekranı yöneticinin)
                             · Revize istekleri /onaylar/istekler, Revizeye gönder / İsteği reddet (318; ui/RevizePenceresi.tsx; R1 onay-baglanti
-                            raporRevizeYaz)
+                            raporRevizeYaz) · Diğer belgeler /onaylar/diger (333, göç 0044 belge_onay: server/belgeler.ts — kişinin kendi belgeleri,
+                            geri gönder, imzalı PDF yükle; server/belge-baglanti.ts — gönderen modüller: Personel bordro "Onaya gönder", Muhasebe
+                            muhasebe/server/bordro-gonder.ts + ui/BordroGonder.tsx; ui/DigerBelgeler.tsx; sayfa modülden bağımsız, oturum kapısı)
   src/modules/musteri-paneli/ MÜŞTERİ PANELİ (2026-10-05, 319; modül 17): server/panel.ts (yalnız musteriIslemi içinde; Raporlar'ın musteri-baglanti.ts
                             ve Müşteriler'den okur; 0033 uygunsuzluk yalnız açık sürümün, pasif müşterinin oturumu hemen düşer) · ui/ (Raporlarınız; 320: Uygunsuzluklar /portal/uygunsuz, Excel tarayıcıda — ui/kusur.ts; 321: Planlanan kontroller /portal/plan — Planlar'ın
                             server/musteri-baglanti.ts, göç 0032 sütun sınırlı —, toplu ZIP ui/topluIndir.ts + ui/zipla.ts (saf; 300 rapor / 500 MB) + ui/ad.ts; 322: Sözleşmeler /portal/sozlesme + /portal/s/<id> — Sözleşmeler'in

@@ -26,3 +26,17 @@
 .onizleme td { padding: 6px 8px; border-bottom: 1px solid var(--kenar); vertical-align: top; overflow-wrap: anywhere; }
 .altSatir { display: block; color: var(--yazi2); }
 .donem { max-width: 320px; margin: 0 0 12px; }
+/* 333 Maaş bordrosu gönder (maket .a-tablo-bordro-gonder, .a-onay-kutusu, .a-sekmeler[role=group] aria-pressed, .a-uyari-metin) */
+.bgYontem { display: inline-flex; flex-wrap: wrap; max-width: 100%; gap: 2px; margin: 4px 0 12px; padding: 3px; border: 1px solid var(--kenar-alan);
+  border-radius: calc(var(--tus-y) / 2 + 4px); background: var(--kart); }
+.bgSekme {
+  min-height: var(--tus-y); padding: 0 14px; display: inline-flex; align-items: center; border: 0; border-radius: var(--r-tam);
+  background: transparent; color: var(--yazi2); font: inherit; font-weight: 600; white-space: nowrap; cursor: pointer;
+}
+.bgSekme[aria-pressed="true"] { background: var(--zemin2); color: var(--yazi); }
+.bgListe { margin-top: 12px; }
+.bgSec { display: flex; align-items: flex-start; gap: 10px; min-width: 0; cursor: pointer; }
+.bgSec input { width: 18px; height: 18px; margin: 3px 0 0; flex: none; accent-color: var(--birincil); }
+.bgDosya { display: flex; flex-wrap: wrap; align-items: center; gap: 8px; min-width: 0; }
+.uyariMetin { color: var(--uyari-yazi); font-size: var(--boy-kucuk); font-weight: 600; }
+.bgHata { margin: 12px 0 0; color: var(--uyari-yazi); font-size: var(--boy-kucuk); font-weight: 600; }

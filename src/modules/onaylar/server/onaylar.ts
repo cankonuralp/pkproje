@@ -22,6 +22,7 @@ import { gozdenGecirme, type GozdenGecirmeMaddesi } from "../../raporlar/server/
 import { gorunenNo, RAPOR_DURUM, RevizeGirdisi, RevizeRedGirdisi } from "../../raporlar/sema.ts";
 import { hesapAdlari } from "../../../server/kimlik/hesap.ts";
 import { DurumGirdisi, GeriGirdisi } from "../sema.ts";
+import { bekleyenBelgeSayisi } from "./belgeler.ts";
 
 const MODUL = 15;
 export interface Kisi extends YetkiHesabi { ad: string }
@@ -78,6 +79,8 @@ export interface OnayListeleri {
   imzaBekleyen: OnaySatiri[];
   /** görebildiği tamamlanan raporlardaki bekleyen revize istekleri (318; yalnız yönetici), en yeni üstte */
   istekler: RevizeIstekSatiri[];
+  /** imzasını bekleyen diğer belgeler (333; bordro, eğitim / zimmet formu, araç tutanağı — kişinin kendi) */
+  belgeBekleyen: number;
 }
 /** revize isteği: isteyenin adı, zaman, gerekçe; isteğin sürümü (Reddet onunla yazılır) */
 export interface RevizeIstekBilgisi { id: string; surum: number; kim: string; zaman: string; gerekce: string }
@@ -102,6 +105,7 @@ export async function onayListeleri(db: Sorgulayici, kim: Kisi): Promise<OnayLis
     branslar: [...new Set(tum.map((r) => r.brans))].sort(),
     imzaBekleyen,
     istekler,
+    belgeBekleyen: await bekleyenBelgeSayisi(db, kim),
   };
 }
 

@@ -119,6 +119,20 @@ function kokler(s: string): string[] {
 
 const latin1 = (b: Uint8Array) => Buffer.from(b.buffer, b.byteOffset, b.byteLength).toString("latin1");
 
+/** imzaya gönderilebilir mi (333 — dışarıda üretilmiş PDF, ör. bordro): imzalanmış hâli imzaliPdfGecerli ile denetlenebilsin diye klasik
+    xref ve trailer kökü olmalı, sıkıştırılmış nesne akışı (ObjStm) olmamalı — öyle değilse imzalı hâli hiçbir zaman kabul edilmez */
+export function imzayaUygun(pdf: Uint8Array): boolean {
+  try {
+    const s = latin1(pdf);
+    for (const x of nesneler(s, false).values()) if (adi(x.deger, "Type") === "/ObjStm") return false;
+    const k = kokler(s).at(-1);
+    return !!k && k !== "yok" && k !== "bozuk";
+  } catch (e) {
+    if (e instanceof Bozuk) return false;
+    throw e;
+  }
+}
+
 /** imzalı PDF, imzasız PDF'in beyaz listeye uyan artımlı imzalanmış hâli mi */
 export function imzaliPdfGecerli(imzasiz: Uint8Array, imzali: Uint8Array): boolean {
   if (imzali.length <= imzasiz.length || imzali.length - imzasiz.length > EK_SINIR) return false;

@@ -52,6 +52,11 @@ test("personel dosyası: özlük belgesi, bordro, kaldır; denetçi özlük ve m
   await b.getByRole("button", { name: "Yükle" }).click();
   await expect(page.getByText("Bordro yüklendi.")).toBeVisible({ timeout: 30_000 });
   await expect(page.getByText("3.000,00 TL")).toBeVisible();   // günlük maliyet = 66.000 / 22
+  /* 333: bordro onaya gönderilir (önce sorulur); e-imzaya uygun olmayan PDF (kökü olmayan trailer) gönderilmez — neden bildirimde */
+  await expect(page.getByText("Gönderilmedi", { exact: true }).filter({ visible: true }).first()).toBeVisible();
+  await page.getByRole("button", { name: /bordrosunu onaya gönder$/ }).click();
+  await page.getByRole("dialog", { name: "Bordroyu onaya gönder" }).getByRole("button", { name: "Onaya gönder" }).click();
+  await expect(page.getByText("Bu PDF e-imzaya uygun biçimde değil; belgeyi programından yeniden PDF olarak kaydedip yükleyin.").first()).toBeVisible({ timeout: 30_000 });
 
   /* kaldır: önce sorulur */
   await page.getByRole("button", { name: "Diploma kaldır" }).first().click();
