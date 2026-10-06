@@ -2341,6 +2341,18 @@ revizyon, alan kopyalama, hafif kusur devri, meslek eşleşme denetimi).
 - Emsal ürünler: https://opwire.app/iso-17020-periyodik-kontrol-yazilimi/ · https://17020muayene.vidco.com.tr/ · https://akuple.com/asansor-kontrol-yazilimi/ · https://ensyazilim.com/
 
 ## 11 · Değişiklik günlüğü
+- 2026-10-06 (346): **340–345 çapraz incelemesi düzeltmeleri** (dört bakış, 12 bulgu; 10 doğrulandı, 2 çürütüldü — PDF ucunda eşzamanlılık
+  sınırı önceden elenmişti; numara sayacı kilidinin basım boyunca tutulması gösterilmiş bir hata değil). **Ölçüm cihazı:** rapor belgesinde muayene
+  günü verilince ilk_bitis o gün sistemde kalibrasyon kaydı yokken adaydır; muayeneden sonra girilen kalibrasyon imzalı rapora yazılmaz. **Format
+  kurucu:** kilitli tabloya kurucuda eklenen sütun (k_) yayınlansa da Bakanlık öğesi sayılmaz — sonraki taslakta çıkarılır (motor kilitDenetimi;
+  `kurucudan` tek yer tanim.ts). **Onaylar dosya erişimi:** Onaylar'da imzalanan zimmet formunu kişinin kartını gören açar (Personel'in kart kuralı tek
+  yer: personel/server/kart-baglanti.ts); iptal iletisi türden bağımsız. **Fatura kalemleri:** aynı fiyatlı teklif ve teklif dışı raporlar ayrı satır
+  (fatura sayfası ve fatura özeti PDF'i; saf kalemleriGrupla). **İmzacının giriş hesabı:** zimmet / eğitim formu hesabı olmayana gönderilmez (ileti);
+  araç tutanağı kaydedilir ama imzaya gitmez (bildirimde söylenir); eğitimde bekleyen form "Formu yeniden gönder"le iptal edilip yenisi gider.
+  **Personel kartı:** ayrılmış kişide "İmzaya gönder" yok (sunucu da anlaşılır ret); bekleyen gönderim varken "imzaya gönderin" uyarısı çıkmaz.
+  **e2e:** eğitim adımı listeyi kendi eğitimine süzerek açar. Kilit: muhasebe (saf gruplama), format-kurucu, ice-aktarma (muayene günü), personel-dosya
+  (planlama açar, muhasebe açamaz; hesapsız), egitimler (yeniden gönder, hesapsız), araclar (hesapsız teslim alan); araç tutanağı olumsuz kanıtı yeni
+  satıra.
 - 2026-10-06 (345): **K4 Eğitim katılım formu → Onaylar › Diğer** (maket MV.BELGE_ONAY "… eğitimi katılım formu", onaylar.html #/diger; AA3:
   *"eğitim zimmet formu gönderilirse oradan onaylanabilsin"*). Eğitim kaydının penceresinde ("değiştirir", yalnız güncel kayıt) **Katılım formunu imzaya
   gönder** (önce sorulur): temel format <firma kodu>-FR-EGT-01 — katılan (ad · meslek), eğitim, eğitimi veren, eğitim ve tekrar tarihi, beyan,

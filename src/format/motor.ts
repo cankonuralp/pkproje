@@ -10,7 +10,7 @@
    Kilitli öğe denetimi (§3, 2026-10-04): kilitli (Bakanlık) öğe silinmiş / değiştirilmiş / kilidi kaldırılmış — ENGEL (yayınlanmaz).
    ⛔ Bu dosya yalnız ./hesap.ts ve ./tanim.ts'i içe aktarır (olumsuz kanıt kopyası bu iki yolu çevirir). */
 import { linyeHesap, noktaHesap, pdHesap, rcdTestYeter, sayiOku, sinirSonucu, ziHesap } from "./hesap.ts";
-import type { Bolum, BolumOf, Cevaplar, FormatTanimi } from "./tanim.ts";
+import { kurucudan, type Bolum, type BolumOf, type Cevaplar, type FormatTanimi } from "./tanim.ts";
 
 export interface Eksik { bolum: string; alan: string; ad: string }
 /** kriter: kusurun ölçütü (madde metni, ölçüm satırının etiketi, test değerinin adı); metin "kriter: açıklama" ya da yalnız kriter — kriter ayrı
@@ -198,7 +198,8 @@ export function kilitDenetimi(t: FormatTanimi, kaynak: FormatTanimi): string[] {
       else if (!n.kilit) sorun("kilidi kaldırılmış", b.id, b.ad);
       else if (b.blok === "olcum" && n.blok === "olcum") {
         if (n.enAz < b.enAz) sorun("değiştirilmiş", b.id, `${b.ad} · en az satır`);
-        for (const s of b.sutunlar) {
+        /* kurucuda eklenen sütun (k_) Bakanlık öğesi değil: kaynak yayındaki sürüm olsa da zorunlu sayılmaz, çıkarılabilir (340–345 incelemesi) */
+        for (const s of b.sutunlar.filter((x) => !kurucudan(x.id))) {
           const ns = n.sutunlar.find((x) => x.id === s.id);
           if (!ns) sorun("silinmiş", `${b.id}.${s.id}`, `${b.ad} · ${s.ad}`);
           else if (sutunOzu(ns) !== sutunOzu(s)) sorun("değiştirilmiş", `${b.id}.${s.id}`, `${b.ad} · ${s.ad}`);

@@ -13,7 +13,7 @@ import type { Sorgulayici } from "../../../server/db/kiraci.ts";
 import { ekle, guncelle, tablo } from "../../../server/db/yazici.ts";
 import type { Depo } from "../../../server/dosya/depo.ts";
 import { dosyaYukle } from "../../../server/dosya/dosya.ts";
-import { hesabinPersoneli } from "../../../server/kimlik/hesap.ts";
+import { hesabinPersoneli, personelHesaplari } from "../../../server/kimlik/hesap.ts";
 import { numaraAl } from "../../../server/numara/numara.ts";
 import { duzey, type YetkiHesabi } from "../../../server/yetki/canDo.ts";
 import { dogrula, type DogrulamaHatalari } from "../../../sema/ortak.ts";
@@ -270,9 +270,10 @@ export class TutanakPdfHatasi extends Error {}
 export type TutanakPdfUretici = (v: AracTutanagiVerisi) => Promise<Uint8Array>;
 
 /** teslim tutanağı: zimmet hareketi (Zimmetler) + tutanak eki + açı açı fotoğraflar. "yaz" her araç; sürücü yalnız kendi zimmetindeki araç.
-    Teslim alan kişiyse tutanağın PDF'i (uret: belge → PDF, sunucuda başsız Chromium) aynı işlemde onun imzasına gider (342). */
+    Teslim alan kişiyse tutanağın PDF'i (uret: belge → PDF, sunucuda başsız Chromium) aynı işlemde onun imzasına gider (342). Kişinin açık giriş
+    hesabı yoksa (imzalayamaz) tutanak kaydedilir, imzaya gönderilmez — imzaya: false (340–345 incelemesi). */
 export async function tutanakKaydet(db: Sorgulayici, depo: Depo, kim: Kisi, firmaId: string, girdi: unknown,
-  fotolar: { aci: string; ad: string; bayt: Uint8Array }[] = [], uret?: TutanakPdfUretici): Promise<Yazma<{ no: string; aracId: string }>> {
+  fotolar: { aci: string; ad: string; bayt: Uint8Array }[] = [], uret?: TutanakPdfUretici): Promise<Yazma<{ no: string; aracId: string; imzaya: boolean }>> {
   if (duzey(kim, MODUL) === "yok") return { durum: "yetkisiz" };
   const g = dogrula(TutanakGirdisi, girdi);
   if (!g.tamam) return { durum: "gecersiz", hatalar: g.hatalar };
@@ -294,7 +295,9 @@ export async function tutanakKaydet(db: Sorgulayici, depo: Depo, kim: Kisi, firm
     const y = await dosyaYukle(db, depo, { firmaId, modul: ZIMMET_DOSYA, kayitId: h.id, ad: `${f.aci}.${uzanti}`, bayt: f.bayt, izinli: ["jpeg", "png"], kim: kim.ad, yukleyen: kim.id });
     if (!y.tamam) throw new FotoHatasi(y.neden === "buyuk" ? "Fotoğraf en çok 8 MB." : "Fotoğraf JPEG ya da PNG olmalı.", f.aci);
   }
-  if (v.alan !== "depo") {
+  const hesap = v.alan !== "depo" ? (await personelHesaplari(db, [v.alan])).get(v.alan)?.durum : undefined;
+  const imzaya = hesap === "etkin" || hesap === "ilk";
+  if (imzaya) {
     if (!uret) throw new Error("tutanak PDF üreticisi verilmedi");
     const b = await tutanakBelgesiVerisi(db, kim, h.id, depo);
     if (!b) throw new Error("tutanak belgesi okunamadı");
@@ -304,7 +307,7 @@ export async function tutanakKaydet(db: Sorgulayici, depo: Depo, kim: Kisi, firm
       pdf: { ad: `${no}.pdf`, bayt: pdf } });
     if (r.durum !== "tamam") throw new TutanakPdfHatasi(r.durum === "uygunsuz" ? r.neden : "Tutanak imzaya gönderilemedi.");
   }
-  return { durum: "tamam", id: h.id, no, aracId: v.arac };
+  return { durum: "tamam", id: h.id, no, aracId: v.arac, imzaya };
 }
 /** fotoğraf reddedilirse bütün tutanak geri alınır (işlem düşer); eylem bunu ilgili açının iletisine çevirir */
 export class FotoHatasi extends Error { aci: string; constructor(m: string, aci: string) { super(m); this.aci = aci; } }

@@ -208,7 +208,9 @@ test("344 zimmet formu imzaya: numara ZF, kişinin Onaylar › Diğer'ine; yenis
   assert.deepEqual([z.zimmetFormu?.id, z.zimmetFormu?.guncel, z.zimmetGonderimi], [r2.id, true, null], "imzalanan form imzalı zimmet formu");
   assert.ok(await a((db) => dosyaIndirilebilir(db, YON, z.zimmetFormu!.dosyaId!, DOSYA_ERISIMI)), "yönetici imzalı formu açar");
   assert.ok(await a((db) => dosyaIndirilebilir(db, DENETCI, z.zimmetFormu!.dosyaId!, DOSYA_ERISIMI)), "kişi kendi imzalı formunu açar");
-  assert.equal(await a((db) => dosyaIndirilebilir(db, PLAN, z.zimmetFormu!.dosyaId!, DOSYA_ERISIMI)), null);
+  /* 340–345 incelemesi: kartı gören (planlama "gör") Onaylar'da imzalanan formu da açar; kartı görmeyen (muhasebe) açamaz */
+  assert.ok(await a((db) => dosyaIndirilebilir(db, PLAN, z.zimmetFormu!.dosyaId!, DOSYA_ERISIMI)), "planlama açar");
+  assert.equal(await a((db) => dosyaIndirilebilir(db, MUH, z.zimmetFormu!.dosyaId!, DOSYA_ERISIMI)), null, "muhasebe açamaz");
   /* PDF düşerse numara, form ve belge yazılmaz */
   const sayi = async () => (await a((db) => db.sorgu<{ n: number }>("SELECT count(*)::int AS n FROM zimmet_formu WHERE personel_id = $1", [pDenetci]))).rows[0].n;
   const once = await sayi();
@@ -217,5 +219,7 @@ test("344 zimmet formu imzaya: numara ZF, kişinin Onaylar › Diğer'ine; yenis
   /* yetki ve kiracı */
   for (const k of [DENETCI, PLAN, MUH]) assert.deepEqual(await ha(k, (db) => zimmetFormuGonder(db, depo, k, A, pDenetci, SAHTE)), { durum: "yetkisiz" });
   assert.deepEqual(await ha(YON_B, (db) => zimmetFormuGonder(db, depo, YON_B, B, pDenetci, SAHTE), B), { durum: "yok" });
-  assert.deepEqual(await ha(YON, (db) => zimmetFormuGonder(db, depo, YON, A, pIkinci, SAHTE)), { durum: "gecersiz", hatalar: { dosya: "Zimmetinde varlık yok; form gönderilmez." } });
+  /* 340–345 incelemesi: giriş hesabı olmayan kişi imzalayamaz — form gönderilmez (indirip ıslak imza yolu açık) */
+  assert.deepEqual(await ha(YON, (db) => zimmetFormuGonder(db, depo, YON, A, pIkinci, SAHTE)),
+    { durum: "gecersiz", hatalar: { dosya: "Kişinin giriş hesabı yok; form imzaya gönderilemez. Formu indirip ıslak imzalı taramasını yükleyin." } });
 });

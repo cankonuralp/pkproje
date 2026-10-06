@@ -169,15 +169,19 @@ export interface IsKarti extends IsSatiri {
 }
 
 async function kalemler(db: Sorgulayici, l: { turId: string; fiyat: number | null; kaynak: FiyatKaynagi }[]): Promise<FaturaKalemi[]> {
-  const tur = new Map((await turOzetleri(db)).map((t) => [t.id, t.ad]));
+  return kalemleriGrupla(l, new Map((await turOzetleri(db)).map((t) => [t.id, t.ad])));
+}
+/** fatura kalemleri (saf): tür × birim fiyat × teklif / teklif dışı başına bir satır */
+export function kalemleriGrupla(l: readonly { turId: string; fiyat: number | null; kaynak: FiyatKaynagi }[], tur: ReadonlyMap<string, string>): FaturaKalemi[] {
   const g = new Map<string, FaturaKalemi>();
   for (const x of l) {
-    const k = `${x.turId}|${x.fiyat}`;
-    const o = g.get(k) ?? { turId: x.turId, turAd: tur.get(x.turId) ?? "—", fiyat: x.fiyat, adet: 0, disi: false };
-    o.adet++; o.disi ||= x.kaynak === "disi";
+    /* teklif ve teklif dışı aynı fiyatta olsa da ayrı satır (340–345 incelemesi: teklifle gelen rapor "teklif dışı" görünüyordu) */
+    const disi = x.kaynak === "disi", k = `${x.turId}|${x.fiyat}|${disi}`;
+    const o = g.get(k) ?? { turId: x.turId, turAd: tur.get(x.turId) ?? "—", fiyat: x.fiyat, adet: 0, disi };
+    o.adet++;
     g.set(k, o);
   }
-  return [...g.values()].sort((a, b) => a.turAd.localeCompare(b.turAd, "tr") || (a.fiyat ?? 0) - (b.fiyat ?? 0));
+  return [...g.values()].sort((a, b) => a.turAd.localeCompare(b.turAd, "tr") || (a.fiyat ?? 0) - (b.fiyat ?? 0) || Number(a.disi) - Number(b.disi));
 }
 
 /** faturaya girecekler: işin (toplu ise müşterinin faturaya hazır bütün işlerinin) imzalı, faturasız raporları */

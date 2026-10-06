@@ -5,6 +5,8 @@
 import { z } from "zod";
 
 export const SEMA_SURUMU = 1;
+/** Format kurucusunda eklenen öğe mi (kimliği "k_" ile başlar; hazır şablonların kimliklerinde bu önek yok — 343, 340–345 incelemesi) */
+export const kurucudan = (id: string) => id.startsWith("k_");
 const kimlik = z.string().regex(/^[a-z][a-z0-9_]{0,23}$/, "Kimlik küçük harf, rakam, alt çizgi (en çok 24).");
 const ad = z.string().trim().min(1, "Ad yazılmalı.").max(200, "En çok 200 karakter.");
 const kisa = z.string().max(40);

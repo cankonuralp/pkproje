@@ -14,9 +14,8 @@ import type { Sorgulayici } from "../../../server/db/kiraci.ts";
 import { ekle, guncelle, tablo, type TabloTanimi } from "../../../server/db/yazici.ts";
 import type { Depo } from "../../../server/dosya/depo.ts";
 import { dosyaYukle, kayitDosyasi } from "../../../server/dosya/dosya.ts";
-import { hesabinPersoneli } from "../../../server/kimlik/hesap.ts";
 import { numaraAl } from "../../../server/numara/numara.ts";
-import { canDo, duzey, type YetkiHesabi } from "../../../server/yetki/canDo.ts";
+import { duzey, type YetkiHesabi } from "../../../server/yetki/canDo.ts";
 import { dogrula, type DogrulamaHatalari } from "../../../sema/ortak.ts";
 import { turOzetleri } from "../../ekipman-turleri/server/turler.ts";
 import { kisininVarliklari, type VarlikSatiri } from "../../zimmetler/server/zimmet.ts";
@@ -25,6 +24,8 @@ import { bordroBelgeAdi, type BelgeDurumu } from "../../onaylar/sema.ts";
 import { AtamaGirdisi, BordroGirdisi, meslek, OzlukGirdisi, ozlukTurleri, type EkTur } from "../sema.ts";
 import { ayarOku, belgeTurKilidi, firmaBelgeKunyesi } from "../../../server/ayar/ayar.ts";
 import { personelOzetleri } from "./personel.ts";
+import { personelKartiGorur } from "./kart-baglanti.ts";
+import { personelHesaplari } from "../../../server/kimlik/hesap.ts";
 
 /** firmanın eklediği özlük türleri (Firma ayarları; 335) */
 export const ekTurler = async (db: Sorgulayici): Promise<EkTur[]> => (await ayarOku(db, "belge_tur_ek")).deger.turler.map(({ k, ad }) => ({ k, ad }));
@@ -76,13 +77,8 @@ const kurus = (s: string) => Math.round(Number(s) * 100);
 const lira = (k: number) => (k / 100).toFixed(2);
 export const bugunTr = () => new Intl.DateTimeFormat("en-CA", { timeZone: "Europe/Istanbul", year: "numeric", month: "2-digit", day: "2-digit" }).format(new Date());
 
-/** kişinin kartını görebilir mi (personelKarti ile aynı kural): "gör"/"yaz" herkes; "kendi" / "branş" yalnız kendisi. Kişi bu firmada olmalı. */
-async function kartGorur(db: Sorgulayici, kim: YetkiHesabi, personelId: string): Promise<boolean> {
-  if (!UUID.test(personelId) || !canDo(kim, MODUL, "gor")) return false;
-  const d = duzey(kim, MODUL);
-  if ((d === "kendi" || d === "brans") && (await hesabinPersoneli(db, kim.id)) !== personelId) return false;
-  return !!(await db.sorgu("SELECT 1 FROM personel WHERE id = $1", [personelId])).rowCount;
-}
+/** kişinin kartını görebilir mi (personelKarti ile aynı kural, tek yer: kart-baglanti.ts) */
+const kartGorur = personelKartiGorur;
 async function etkinKisi(db: Sorgulayici, personelId: string): Promise<boolean> {
   return UUID.test(personelId) && !!(await db.sorgu("SELECT 1 FROM personel WHERE id = $1 AND durum = 'etkin'", [personelId])).rowCount;
 }
@@ -285,11 +281,18 @@ export async function zimmetFormuVerisi(db: Sorgulayici, kim: Kisi, personelId: 
 }
 
 export type ZimmetPdfUretici = (v: ZimmetFormuVerisi) => Promise<Uint8Array>;
+/** imzalayacak kişinin açık giriş hesabı (ilk girişini bekleyen de sayılır; kapalı sayılmaz) — Onaylar'da yalnız hesabın kişisi imzalar (0044) */
+export const imzaHesabiVar = (durum: string | undefined) => durum === "etkin" || durum === "ilk";
 /** formu kişinin imzasına gönder: yalnız "yaz"; kişi etkin ve zimmeti var. Kapsam sunucuda okunan zimmet; numara, form kaydı, PDF (uret: belge →
     PDF, sunucuda) ve belge AYNI işlemde (PDF düşerse hiçbiri yazılmaz — DosyaHatasi). Kişi başına sıraya girer; önceki bekleyen form iptal olur. */
 export async function zimmetFormuGonder(db: Sorgulayici, depo: Depo, kim: Kisi, firmaId: string, personelId: string, uret: ZimmetPdfUretici): Promise<Yazma> {
   if (!yazar(kim)) return { durum: "yetkisiz" };
-  if (!(await etkinKisi(db, personelId))) return { durum: "yok" };
+  if (!UUID.test(personelId) || !(await db.sorgu("SELECT 1 FROM personel WHERE id = $1", [personelId])).rowCount) return { durum: "yok" };
+  /* 340–345 incelemesi: ayrılan personele ve giriş hesabı olmayana gönderilen form kimsenin imzalayamayacağı belge olurdu */
+  if (!(await etkinKisi(db, personelId))) return { durum: "gecersiz", hatalar: { dosya: "Personel ayrılmış; form imzaya gönderilmez." } };
+  if (!imzaHesabiVar((await personelHesaplari(db, [personelId])).get(personelId)?.durum)) {
+    return { durum: "gecersiz", hatalar: { dosya: "Kişinin giriş hesabı yok; form imzaya gönderilemez. Formu indirip ıslak imzalı taramasını yükleyin." } };
+  }
   await db.sorgu("SELECT pg_advisory_xact_lock(hashtextextended($1, 0))", [`zimmet_formu:${personelId}`]);
   const z = await kisininVarliklari(db, personelId);
   if (!z.length) return { durum: "gecersiz", hatalar: { dosya: "Zimmetinde varlık yok; form gönderilmez." } };

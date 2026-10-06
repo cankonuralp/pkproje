@@ -184,21 +184,23 @@ function ZimmetGonderTusu({ personelId, kisi, adet }: { personelId: string; kisi
 }
 
 /* ── ZİMMETİNDEKİLER + İMZALI ZİMMET FORMU (hareketler ve teslim Zimmetler modülünde; 344: form PDF'i ve imzaya gönderme) ── */
-export function ZimmetBolumu({ personelId, kisi, dosya, bugun }: { personelId: string; kisi: string; dosya: PersonelDosyasi; bugun: string }) {
+export function ZimmetBolumu({ personelId, kisi, etkin, dosya, bugun }: { personelId: string; kisi: string; etkin: boolean; dosya: PersonelDosyasi; bugun: string }) {
   const p = useBelgePenceresi();
   const z = dosya.zimmet, f = dosya.zimmetFormu, g = dosya.zimmetGonderimi;
+  /* imzaya gönderilmiş, bekleyen form varken "imzaya gönderin" denmez (340–345 incelemesi: yeniden göndermek bekleyeni iptal eder) */
+  const bekliyor = g?.durum === "bekliyor";
   const ac = f?.dosyaId && <DosyaAcTusu dosyaId={f.dosyaId}>İmzalı formu aç</DosyaAcTusu>;
   return (
     <Bolum id="b-per-zimmet" baslik="Zimmetindekiler" sayac={<><b>{z.length}</b> varlık</>}
       tuslar={dosya.yaz && z.length > 0 && <>
         <a className={tusSinifi("ikincil")} href={`/personel/${personelId}/zimmet-formu/pdf`} download><Ikon ad="file-text" kucuk />Formu indir</a>
-        <ZimmetGonderTusu personelId={personelId} kisi={kisi} adet={z.length} />
+        {etkin && <ZimmetGonderTusu personelId={personelId} kisi={kisi} adet={z.length} />}
         <Tus tur="ikincil" ikon="file-signature" onClick={() => p.ac("zimmet")}>İmzalı formu yükle</Tus>
       </>}>
       {(z.length > 0 || f) && <div className={stil.formDurum}>
         {f && f.guncel ? <Serit tur="onay" ikon="file-check">İmzalı zimmet formu: {tarihYaz(f.tarih)} · {f.kapsam} varlık.</Serit>
-          : f ? <Serit tur="uyari" ikon="triangle-alert">İmzalı form ({tarihYaz(f.tarih)}) eskidi: zimmet o tarihten sonra değişti. Yeni formu imzaya gönderin ya da imzalı taramasını yükleyin.</Serit>
-            : <Serit tur="uyari" ikon="triangle-alert">İmzalı zimmet formu yok. Formu imzaya gönderin ya da ıslak imzalı taramasını yükleyin.</Serit>}
+          : f ? <Serit tur="uyari" ikon="triangle-alert">İmzalı form ({tarihYaz(f.tarih)}) eskidi: zimmet o tarihten sonra değişti.{bekliyor ? "" : " Yeni formu imzaya gönderin ya da imzalı taramasını yükleyin."}</Serit>
+            : bekliyor ? null : <Serit tur="uyari" ikon="triangle-alert">İmzalı zimmet formu yok. Formu imzaya gönderin ya da ıslak imzalı taramasını yükleyin.</Serit>}
         {ac}
       </div>}
       {g && <Serit tur={g.durum === "geri" ? "uyari" : "bilgi"} ikon={g.durum === "geri" ? "triangle-alert" : "send"}>

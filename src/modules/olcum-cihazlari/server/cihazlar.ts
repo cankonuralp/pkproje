@@ -85,7 +85,8 @@ export async function raporCihazlari(db: Sorgulayici): Promise<{ id: string; kod
 
 /** Raporlar (belge) için: cihazların son geçerli kalibrasyonu — tarih, bitiş, sertifika no (yetki ÇAĞIRANDA). Hiç kalibrasyon kaydı olmayan, toplu
     içe aktarılmış cihazda sistem öncesi bitiş (ilk_bitis; tarih ve sertifika yok — uydurulmaz): rapora eklemeyi ve ENGEL 2'yi geçen bitişle belge
-    aynı kaynaktan (337–339 incelemesi). */
+    aynı kaynaktan (337–339 incelemesi). 340–345 incelemesi: gün verilince (muayene günü) ilk_bitis, o gün sistemde kalibrasyon kaydı yokken
+    adaydır ve kayıtlardan seçilen o gün geçerli değilse onun yerine geçer — muayeneden SONRA girilen kalibrasyon imzalı rapora yazılmaz. */
 export async function cihazKalibrasyonlari(db: Sorgulayici, idler: readonly string[], gun?: string | null): Promise<Map<string, { tarih: string | null; bitis: string; sertifika: string | null }>> {
   const l = idler.filter((x) => /^[0-9a-f-]{36}$/.test(x));
   if (!l.length) return new Map();
@@ -98,8 +99,10 @@ export async function cihazKalibrasyonlari(db: Sorgulayici, idler: readonly stri
     .map((x) => [x.cihaz_id, { tarih: x.tarih, bitis: x.bitis, sertifika: x.sertifika }]));
   for (const x of (await db.sorgu<{ id: string; bitis: string }>(
     `SELECT c.id::text, c.ilk_bitis::text AS bitis FROM olcum_cihazi c WHERE c.id = ANY ($1::uuid[]) AND c.ilk_bitis IS NOT NULL
-       AND NOT EXISTS (SELECT 1 FROM kalibrasyon k WHERE k.cihaz_id = c.id AND k.firma_id = c.firma_id AND k.kaldirildi IS NULL)`, [l])).rows) {
-    m.set(x.id, { tarih: null, bitis: x.bitis, sertifika: null });
+       AND NOT EXISTS (SELECT 1 FROM kalibrasyon k WHERE k.cihaz_id = c.id AND k.firma_id = c.firma_id AND k.kaldirildi IS NULL
+         AND ($2::date IS NULL OR k.tarih <= $2::date))`, [l, g])).rows) {
+    const k = m.get(x.id);
+    if (!k || (g && !(k.tarih !== null && k.tarih <= g && k.bitis >= g))) m.set(x.id, { tarih: null, bitis: x.bitis, sertifika: null });
   }
   return m;
 }

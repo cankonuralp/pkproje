@@ -10,6 +10,7 @@ import type { Depo } from "../../../server/dosya/depo.ts";
 import { dosyaYukle, kayitDosyasi } from "../../../server/dosya/dosya.ts";
 import { hesabinPersoneli, hesapAdlari } from "../../../server/kimlik/hesap.ts";
 import { canDo, duzey, type YetkiHesabi } from "../../../server/yetki/canDo.ts";
+import { personelKartiGorur } from "../../personel/server/kart-baglanti.ts";
 import { imzaliPdfGecerli } from "../../raporlar/imza-pdf.ts";
 import type { BelgeDurumu, BelgeTuru } from "../sema.ts";
 
@@ -68,7 +69,7 @@ async function kendiBelgesi(db: Sorgulayici, kim: Kisi, id: string) {
     "SELECT id::text, surum, ad, durum, dosya::text FROM belge_onay WHERE id = $1 AND personel_id = $2", [id, p])).rows[0] ?? null;
 }
 const KARAR_VAR: Record<BelgeDurumu, string> = { bekliyor: "", imzali: "Belge zaten imzalandı.", geri: "Belge geri gönderildi; artık imzalanmaz.",
-  iptal: "Belge iptal edildi (bordro yeniden yüklendi ya da kaldırıldı); artık imzalanmaz." };
+  iptal: "Belge iptal edildi (yenisi gönderildi ya da kaynağı değişti); artık imzalanmaz." };
 
 /** Geri gönder: yalnız imzalayacak kişi, belge beklerken (maket belge-geri) */
 export async function belgeGeriGonder(db: Sorgulayici, kim: Kisi, id: string, surum: number): Promise<BelgeYazma> {
@@ -101,7 +102,8 @@ export async function belgeImzaliYukle(db: Sorgulayici, depo: Depo, kim: Kisi, f
 }
 
 /** dosya erişimi (src/server/dosya/erisim.ts): belgenin imzacısı, gönderen, Personel'de "yaz" düzeyi; bordroda Muhasebe'yi gören; eğitim
-    formunda Eğitimler'i ("gör" ve üstü), araç tutanağında Araçlar'ı ("gör" ve üstü) bütün kayıtlarıyla gören (342, 345) */
+    formunda Eğitimler'i ("gör" ve üstü), araç tutanağında Araçlar'ı ("gör" ve üstü) bütün kayıtlarıyla gören (342, 345); zimmet formunda kişinin
+    kartını gören (Personel'in kart kuralı — kart "İmzalı formu aç" ile aynı; 340–345 incelemesi) */
 export async function belgeDosyasiGorulur(db: Sorgulayici, kisi: YetkiHesabi, kayitId: string): Promise<boolean> {
   if (!UUID.test(kayitId)) return false;
   const b = (await db.sorgu<{ personel_id: string; gonderen: string | null; tur: BelgeTuru }>(
@@ -110,5 +112,6 @@ export async function belgeDosyasiGorulur(db: Sorgulayici, kisi: YetkiHesabi, ka
   const hepsi = (m: Parameters<typeof duzey>[1]) => ["gor", "yaz"].includes(duzey(kisi, m));
   if (b.gonderen === kisi.id || duzey(kisi, 2) === "yaz" || (b.tur === "bordro" && canDo(kisi, 18, "gor"))
     || (b.tur === "egitim" && hepsi(10)) || (b.tur === "arac" && hepsi(23))) return true;
+  if (b.tur === "zimmet" && (await personelKartiGorur(db, kisi, b.personel_id))) return true;
   return (await hesabinPersoneli(db, kisi.id)) === b.personel_id;
 }

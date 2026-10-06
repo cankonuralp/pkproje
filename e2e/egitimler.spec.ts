@@ -34,7 +34,10 @@ test("eğitimler: tür ekle, kayıt ekle; denetçi yalnız kendi kaydını gör�
   await expect(page.getByText("Eğitim kaydı eklendi.")).toBeVisible({ timeout: 30_000 });
   await expect(page.getByText(/eğitimin tekrarı geçti/)).toBeVisible();
   /* 345: katılım formu denetçinin imzasına (önce sorulur) */
-  await page.getByRole("button", { name: "Deneme Denetçi" }).first().click();
+  /* liste bu testin eğitimine süzülür (aynı kişi ve tarihte başka genişliğin kaydı olabilir — 340–345 incelemesi) */
+  await page.getByRole("searchbox", { name: "Eğitimlerde ara" }).fill(ad);
+  await expect(page.getByRole("button", { name: "Deneme Denetçi" })).toHaveCount(1);
+  await page.getByRole("button", { name: "Deneme Denetçi" }).click();
   const g = page.getByRole("dialog", { name: ad });
   await g.getByRole("button", { name: "Katılım formunu imzaya gönder" }).click();
   await page.getByRole("dialog", { name: "Katılım formunu imzaya gönder" }).getByRole("button", { name: "İmzaya gönder" }).click();

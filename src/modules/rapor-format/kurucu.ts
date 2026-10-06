@@ -3,7 +3,9 @@
    tekildir (cevaplar kimlikle saklanır). Kilitli (Bakanlık) bölüm silinmez, adı değişmez; kilitli öğe silinmez; kilitli ölçüm tablosunun ŞABLON
    sütunu silinmez — kurucuda eklenen (kimliği "k_" ile başlayan) sütun çıkarılır (337–339 incelemesi) — sunucu yayında aynı kuralı kaynak
    şablondan yeniden denetler (ENGEL), burası yalnız ekranın kolaylığı. */
-import { Bolum, type Blok, type FormatTanimi } from "../../format/tanim.ts";
+import { Bolum, kurucudan, type Blok, type FormatTanimi } from "../../format/tanim.ts";
+
+export { kurucudan };
 
 /** tanımdaki bütün kimlikler (bölüm, alan, grup, madde, sütun, değer) */
 export function kimlikler(t: FormatTanimi): Set<string> {
@@ -18,8 +20,6 @@ export function kimlikler(t: FormatTanimi): Set<string> {
   return s;
 }
 
-/** kurucuda eklenen öğe mi (kimlik "k_" ile başlar; hazır şablonların kimliklerinde bu önek yok) */
-export const kurucudan = (id: string) => id.startsWith("k_");
 /** önek + en küçük kullanılmayan sayı (ör. "k_a3"): şablonların kimlikleriyle çakışmaz, tanımda tekil */
 export function yeniKimlik(t: FormatTanimi, onek: "b" | "a" | "g" | "m" | "s" | "d", ek: ReadonlySet<string> = new Set()): string {
   const var_ = kimlikler(t);

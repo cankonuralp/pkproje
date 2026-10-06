@@ -84,3 +84,16 @@ test("337–339 incelemesi: 'kilit' yalnız kaynakta kilitli öğede kalır — 
   assert.deepEqual(kilitDenetimi(n, kaynak), []);
   assert.ok(kilitNormallestir(t, []).bolumler.every((b) => !b.kilit), "kaynak yoksa hiçbir şey kilitli değil");
 });
+
+test("340–345 incelemesi: kilitli tabloya kurucuda eklenen sütun yayınlansa da Bakanlık öğesi değil — sonraki taslakta çıkarılınca engel yok", () => {
+  let yayinda = zpkr02();
+  const nokta = yayinda.bolumler.findIndex((b) => b.blok === "olcum" && b.kilit);
+  yayinda = ogeEkle(yayinda, nokta, "Ek sütun");
+  const ek = bolumOgeleri(yayinda.bolumler[nokta]).at(-1)!;
+  const taslak = ogeSil(yayinda, nokta, ek.id);
+  assert.equal(bolumOgeleri(taslak.bolumler[nokta]).length, bolumOgeleri(yayinda.bolumler[nokta]).length - 1);
+  assert.deepEqual(kilitDenetimi(taslak, yayinda), [], "kurucu sütunu silinebilir");
+  const sablonSutunu = bolumOgeleri(yayinda.bolumler[nokta])[0].id;
+  const bozuk = { ...yayinda, bolumler: yayinda.bolumler.map((b, i) => (i === nokta && b.blok === "olcum" ? { ...b, sutunlar: b.sutunlar.filter((c) => c.id !== sablonSutunu) } : b)) };
+  assert.ok(kilitDenetimi(bozuk, yayinda).some((x) => x.includes(`silinmiş: ${yayinda.bolumler[nokta].id}.${sablonSutunu}`)), "şablon sütunu yine zorunlu");
+});

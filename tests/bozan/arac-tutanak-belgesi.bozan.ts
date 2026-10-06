@@ -54,7 +54,7 @@ test("1. taraf denetimi kalkınca taraf olmayan sürücü başkasının teslim t
 });
 
 test("2. imzaya gönderme kalkınca kişiye teslim edilen aracın tutanağı teslim alanın imzasına gitmez (kilidin koruduğu açık)", async () => {
-  const m = await bozuk("  if (v.alan !== \"depo\") {\n    if (!uret)", "  if (v.alan === \"__hic__\") {\n    if (!uret)");
+  const m = await bozuk("  if (imzaya) {\n    if (!uret)", "  if (!imzaya) {\n    if (!uret)");
   const YON = { id: yon, ad: "Deneme", roller: ["firma_yoneticisi" as const] };
   const dun = new Date(Date.now() - 864e5).toISOString().slice(0, 10);
   const r = await kiraciIcinde(havuz, A, (db) => m.tutanakKaydet(db, klasorDepo(klasor), YON, A,

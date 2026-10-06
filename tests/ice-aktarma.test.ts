@@ -143,6 +143,9 @@ test("ilk_bitis: belgede geçerlilik; 'uygun değil' kalibrasyon kaydı açılı
   } finally { rmSync(klasor, { recursive: true, force: true }); }
   assert.equal((await a(YON, (db) => cihazOzetleri(db))).find((c) => c.id === id)?.bitis, null, "ilk_bitis devreden çıktı");
   assert.equal((await a(YON, (db) => cihazKalibrasyonlari(db, [id]))).get(id), undefined);
+  /* 340–345 incelemesi: muayene günü kayıttan önceyse o gün geçerli olan ilk_bitis belgeye yazılır (sonradan girilen kayıt eski raporu değiştirmez) */
+  assert.deepEqual((await a(YON, (db) => cihazKalibrasyonlari(db, [id], "2026-08-15"))).get(id), { tarih: null, bitis: "2027-03-15", sertifika: null });
+  assert.equal((await a(YON, (db) => cihazKalibrasyonlari(db, [id], "2026-09-05"))).get(id), undefined, "kayıttan sonraki gün: uygun kayıt yok");
   assert.ok((await a(YON, (db) => cihazUyarilari(db, "2026-10-06"))).l.some((x) => x.id === id && x.durum === "gecti"));
 });
 

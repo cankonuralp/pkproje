@@ -7,7 +7,7 @@ import { ayniKoken } from "../../../server/kimlik/koken";
 import { istekOturumu, oturumIslemi } from "../../../server/kimlik/istek";
 import { aracKaydet, FotoHatasi, kmKaydet, tutanakKaydet, TutanakPdfHatasi } from "../server/araclar";
 
-export interface PencereDurumu { tamam?: boolean; id?: string; hatalar?: Record<string, string>; genel?: string; ileti?: string }
+export interface PencereDurumu { tamam?: boolean; id?: string; hatalar?: Record<string, string>; genel?: string; ileti?: string; imzaya?: boolean }
 
 const SONUC = { yetkisiz: "Bu işlem için yetkiniz yok.", yok: "Kayıt bulunamadı.", cakisma: "Kayıt bu arada değişti. Sayfayı yenileyip yeniden deneyin." } as const;
 async function oturum() {
@@ -47,7 +47,7 @@ export async function tutanakKaydetEylemi(form: FormData): Promise<PencereDurumu
   };
   try {
     const r = await oturumIslemi(o, (db) => tutanakKaydet(db, depo(), o, o.kiraci.firmaId, girdi, fotolar, aracTutanagiPdf));
-    return cevir(r, r.durum === "tamam" ? r.no : undefined);
+    return r.durum === "tamam" ? { ...cevir(r, r.no), imzaya: r.imzaya } : cevir(r);
   } catch (h) {
     if (h instanceof FotoHatasi) return { hatalar: { [`foto-${h.aci}`]: h.message } };
     if (h instanceof TutanakPdfHatasi) return { genel: h.message };

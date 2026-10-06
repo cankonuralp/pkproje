@@ -17,7 +17,6 @@ import { SecimAlani } from "../../../components/secim/SecimAlani";
 import { TarihAlani } from "../../../components/secim/TarihAlani";
 import { Serit } from "../../../components/serit/Serit";
 import { Tus } from "../../../components/tus/Tus";
-import { belgeEtkin } from "../../onaylar/sema";
 import { ayEkle, kalanGun, KURUMLAR } from "../sema";
 import type { EgitimKaydi, EgitimTuru } from "../server/egitimler";
 import { egitimKaydetEylemi, egitimTuruKaydetEylemi, katilimFormuGonderEylemi, sertifikaYukleEylemi } from "./eylemler";
@@ -142,7 +141,7 @@ function KatilimFormu({ x, yaz, kapat }: { x: EgitimKaydi; yaz: boolean; kapat: 
   const [bekliyor, baslat] = useTransition();
   const f = x.form;
   const gonder = async () => {
-    if (!(await onayla({ baslik: "Katılım formunu imzaya gönder", metin: <>{x.tur} katılım formu {x.personel} kişisinin imzasına gider (Onaylar › Diğer belgeler).</>, tus: "İmzaya gönder" }))) return;
+    if (!(await onayla({ baslik: "Katılım formunu imzaya gönder", metin: <>{x.tur} katılım formu {x.personel} kişisinin imzasına gider (Onaylar › Diğer belgeler).{f?.durum === "bekliyor" ? " Bekleyen form iptal olur." : ""}</>, tus: "İmzaya gönder" }))) return;
     baslat(async () => {
       const r = await katilimFormuGonderEylemi(x.id);
       if (!r.tamam) { bildir(r.genel ?? "Gönderilemedi."); return; }
@@ -156,7 +155,7 @@ function KatilimFormu({ x, yaz, kapat }: { x: EgitimKaydi; yaz: boolean; kapat: 
           : f?.durum === "geri" ? <Serit tur="uyari" ikon="triangle-alert">{f.ad}: katılan geri gönderdi; düzeltip yeniden gönderin.</Serit> : null}
       <div className={stil.tuslar}>
         {f?.durum === "imzali" && f.imzaliDosya && <DosyaAcTusu dosyaId={f.imzaliDosya}>İmzalı katılım formu</DosyaAcTusu>}
-        {yaz && !x.onceki && !belgeEtkin(f?.durum) && <Tus tur="ikincil" ikon="send" disabled={bekliyor} aria-busy={bekliyor || undefined} onClick={gonder}>Katılım formunu imzaya gönder</Tus>}
+        {yaz && !x.onceki && f?.durum !== "imzali" && <Tus tur="ikincil" ikon="send" disabled={bekliyor} aria-busy={bekliyor || undefined} onClick={gonder}>{f?.durum === "bekliyor" ? "Formu yeniden gönder" : "Katılım formunu imzaya gönder"}</Tus>}
       </div>
     </div>
   );

@@ -233,3 +233,12 @@ test("KİRACI: B, A'nın aracını göremez, tutanak / kilometre yazamaz; verita
   await assert.rejects(b((db) => db.sorgu("INSERT INTO arac_km (arac_id, hafta, km) VALUES ($1, $2, 1)", [arac, haftaBasi(bugunTr())])), /foreign key|yabancı anahtar/i);
   await assert.rejects(a((db) => db.sorgu("INSERT INTO zimmet_hareket (arac_id, demirbas_id, zaman) VALUES ($1, NULL, now())", [null])), /check/i);
 });
+
+test("340–345 incelemesi: teslim alanın giriş hesabı yoksa tutanak kaydedilir, imzaya gönderilmez (imzaya: false)", async () => {
+  const pHesapsiz = tamam(await a((db) => personelEkle(db, YON, { ...P, ad: "Deneme Hesapsız" }))).id;
+  const besinci = tamam(await a((db) => aracKaydet(db, YON, null, 0, { ...ARAC, plaka: "00 DNM 005", ilkKm: "" }))).id;
+  const r = tamam(await tk(YON, A, T(besinci, pHesapsiz, "10", "06:00"), [], null));
+  assert.equal(r.imzaya, false);
+  assert.equal((await a((db) => db.sorgu("SELECT 1 FROM belge_onay WHERE kaynak_id = $1", [r.id]))).rowCount, 0);
+  assert.equal((await a((db) => aracKarti(db, YON, besinci)))!.tutanaklar[0].imza, null);
+});

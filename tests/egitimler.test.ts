@@ -140,8 +140,13 @@ test("345 katılım formu: güncel kaydın katılanına gider (numara EF, tür /
   tamam(await ha(YON, (db) => katilimFormuGonder(db, depo, YON, A, x.id, SAHTE)));
   assert.match(sonVeri!.no, /^EF-\d{4}-001$/);
   assert.deepEqual([sonVeri!.katilan.ad, sonVeri!.egitim, sonVeri!.kurum, sonVeri!.tarih, sonVeri!.tekrar], ["Deneme Denetçi", "Yüksekte çalışma eğitimi", "Firma içi", x.tarih, x.tekrar]);
-  assert.deepEqual(await ha(YON, (db) => katilimFormuGonder(db, depo, YON, A, x.id, SAHTE)), { durum: "red", neden: "Bu kaydın katılım formu zaten imzaya gönderildi." });
   assert.deepEqual(await ha(YON, (db) => katilimFormuGonder(db, depo, YON, A, eski.id, SAHTE)), { durum: "red", neden: "Önceki kaydın formu gönderilmez; güncel kayıttan gönderin." });
+  /* 340–345 incelemesi: bekleyen form yeniden gönderilir — öncekini iptal eder (takılı kalmaz) */
+  const ilkNo = sonVeri!.no;
+  tamam(await ha(YON, (db) => katilimFormuGonder(db, depo, YON, A, x.id, SAHTE)));
+  assert.match(sonVeri!.no, /^EF-\d{4}-002$/);
+  const durumlar = (await a((db) => db.sorgu<{ ad: string; durum: string }>("SELECT ad, durum FROM belge_onay WHERE kaynak_id = $1 ORDER BY gonderildi", [x.id]))).rows;
+  assert.deepEqual(durumlar.map((z) => [z.ad.endsWith(ilkNo), z.durum]), [[true, "iptal"], [false, "bekliyor"]]);
   let y = (await a((db) => egitimListesi(db, YON)))!.kayitlar.find((z) => z.id === x.id)!;
   assert.deepEqual([y.form?.durum, y.form?.ad], ["bekliyor", `Yüksekte çalışma eğitimi katılım formu · ${sonVeri!.no}`]);
   /* katılan Onaylar › Diğer'de imzalar → kayıtta imzalı form; Eğitimler'i gören açar, görmeyen açamaz */
@@ -152,15 +157,18 @@ test("345 katılım formu: güncel kaydın katılanına gider (numara EF, tür /
   assert.ok(await a((db) => dosyaIndirilebilir(db, PLAN, y.form!.imzaliDosya!, DOSYA_ERISIMI)), "Eğitimler'i gören (planlama) açar");
   assert.ok(await a((db) => dosyaIndirilebilir(db, DENETCI, y.form!.imzaliDosya!, DOSYA_ERISIMI)), "katılan açar");
   assert.equal(await a((db) => dosyaIndirilebilir(db, MUH, y.form!.imzaliDosya!, DOSYA_ERISIMI)), null, "muhasebe açamaz");
-  assert.deepEqual(await ha(YON, (db) => katilimFormuGonder(db, depo, YON, A, x.id, SAHTE)), { durum: "red", neden: "Bu kaydın katılım formu zaten imzaya gönderildi." }, "imzalı form yeniden gönderilmez");
+  assert.deepEqual(await ha(YON, (db) => katilimFormuGonder(db, depo, YON, A, x.id, SAHTE)), { durum: "red", neden: "Bu kaydın katılım formu imzalandı." }, "imzalı form yeniden gönderilmez");
 });
 
-test("345 katılım formu: yalnız 'değiştirir'; başka firma ulaşamaz; PDF düşerse numara ve belge yazılmaz", async () => {
+test("345 katılım formu: yalnız 'değiştirir'; başka firma ulaşamaz; PDF düşerse numara ve belge yazılmaz; giriş hesabı olmayana gitmez", async () => {
   const x = (await a((db) => egitimListesi(db, YON)))!.kayitlar.find((y) => y.personelId === pIkinci && !y.onceki)!;
+  /* 340–345 incelemesi: hesabı olmayan katılan imzalayamaz — form gönderilmez */
+  assert.deepEqual(await ha(YON, (db) => katilimFormuGonder(db, depo, YON, A, x.id, SAHTE)), { durum: "red", neden: "Katılanın giriş hesabı yok; form imzaya gönderilemez." });
+  await hesapli(A, "ikinci@deneme.example", ["denetci"], pIkinci);
   for (const k of [DENETCI, PLAN, MUH]) assert.deepEqual(await ha(k, (db) => katilimFormuGonder(db, depo, k, A, x.id, SAHTE)), { durum: "yetkisiz" });
   assert.deepEqual(await ha(YON_B, (db) => katilimFormuGonder(db, depo, YON_B, B, x.id, SAHTE), B), { durum: "yok" });
   await assert.rejects(ha(YON, (db) => katilimFormuGonder(db, depo, YON, A, x.id, async () => { throw new Error("motor"); })), DosyaHatasi);
   assert.equal((await a((db) => egitimListesi(db, YON)))!.kayitlar.find((y) => y.id === x.id)!.form, null);
   tamam(await ha(YON, (db) => katilimFormuGonder(db, depo, YON, A, x.id, SAHTE)));
-  assert.match(sonVeri!.no, /^EF-\d{4}-002$/, "düşen gönderim numara tüketmedi");
+  assert.match(sonVeri!.no, /^EF-\d{4}-003$/, "düşen gönderim numara tüketmedi");
 });

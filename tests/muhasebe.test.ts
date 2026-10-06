@@ -460,3 +460,14 @@ test("gider (veritabanı, 328 incelemesi): ödeme günü kuralları ve ödemede 
   const r = await gk(MUH, e.id, (await gider(e.id)).surum, G({ tarih: gunEkle(BUGUN(), -1), aciklama: "Eski" }));
   assert.ok(r.durum === "gecersiz" && /Ödeme gününden/.test(r.hatalar.tarih), JSON.stringify(r));
 });
+
+/* 340–345 incelemesi: aynı fiyatlı teklif ve teklif dışı raporlar ayrı satır (fatura sayfası ve fatura özeti PDF'i aynı kalemlerden) */
+test("fatura kalemleri: tür × fiyat × teklif / teklif dışı başına satır; aynı fiyatta teklif dışı ayrı", async () => {
+  const { kalemleriGrupla } = await import("../src/modules/muhasebe/server/muhasebe.ts");
+  const tur = new Map([["t1", "Hava tankı"], ["t2", "Forklift"]]);
+  const k = kalemleriGrupla([
+    { turId: "t1", fiyat: 125000, kaynak: "teklif" }, { turId: "t1", fiyat: 125000, kaynak: "teklif" }, { turId: "t1", fiyat: 125000, kaynak: "disi" },
+    { turId: "t2", fiyat: 90000, kaynak: "disi" },
+  ] as never, tur);
+  assert.deepEqual(k.map((x) => [x.turAd, x.fiyat, x.adet, x.disi]), [["Forklift", 90000, 1, true], ["Hava tankı", 125000, 2, false], ["Hava tankı", 125000, 1, true]]);
+});

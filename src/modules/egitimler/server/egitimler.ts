@@ -4,7 +4,8 @@
    tekrar tarihi kayıt anında türün süresinden yazılır. Aynı kişi × eğitimde güncel kayıt tektir; tekrarı kaydedilince eskisi "önceki" olur.
    Sertifika tek dosya yolundan (yalnız PDF), isteğe bağlı. Silme yok. Personel bilgisi Personel modülünün dışa açtığı işlevden.
    345: katılım formu (temel format, src/belge/egitim.ts) güncel kaydın katılanının imzasına gönderilir (Onaylar › Diğer belgeler; numara EF-AAYY-SIRA,
-   kaynak eğitim kaydı); kayıt başına tek etkin form (bekleyen ya da imzalı — geri gönderilen yeniden gönderilir); imzalı form kayıtta görünür. */
+   kaynak eğitim kaydı); kayıt başına tek etkin form (bekleyen ya da imzalı — geri gönderilen yeniden gönderilir); imzalı form kayıtta görünür.
+   340–345 incelemesi: katılanın açık giriş hesabı yoksa gönderilmez; bekleyen form "Yeniden gönder"le iptal edilip yenisi gider (takılı kalmaz). */
 import type { EgitimFormuVerisi } from "../../../belge/egitim.ts";
 import { ayarOku, firmaBelgeKunyesi } from "../../../server/ayar/ayar.ts";
 import type { Sorgulayici } from "../../../server/db/kiraci.ts";
@@ -15,8 +16,9 @@ import { hesabinPersoneli } from "../../../server/kimlik/hesap.ts";
 import { numaraAl } from "../../../server/numara/numara.ts";
 import { duzey, type YetkiHesabi } from "../../../server/yetki/canDo.ts";
 import { dogrula, type DogrulamaHatalari } from "../../../sema/ortak.ts";
-import { belgeGonder, kaynakBelgeleri } from "../../onaylar/server/belge-baglanti.ts";
-import { belgeEtkin, type BelgeDurumu } from "../../onaylar/sema.ts";
+import { belgeGonder, kaynakBelgeleri, kaynakBelgesiniIptal } from "../../onaylar/server/belge-baglanti.ts";
+import { personelHesaplari } from "../../../server/kimlik/hesap.ts";
+import type { BelgeDurumu } from "../../onaylar/sema.ts";
 import { meslek } from "../../personel/sema.ts";
 import { personelOzetleri, personelSecenekleri } from "../../personel/server/personel.ts";
 import { ayEkle, EgitimKaydiGirdisi, egitimDurumu, EgitimTuruGirdisi, type EgitimDurumu } from "../sema.ts";
@@ -164,7 +166,12 @@ export async function katilimFormuGonder(db: Sorgulayici, depo: Depo, kim: Kisi,
   if (x.onceki) return { durum: "red", neden: "Önceki kaydın formu gönderilmez; güncel kayıttan gönderin." };
   const [p] = await personelOzetleri(db, [x.personel_id]);
   if (!p?.etkin) return { durum: "red", neden: "Katılan personel etkin değil." };
-  if (belgeEtkin((await kaynakBelgeleri(db, [x.id])).get(x.id)?.durum)) return { durum: "red", neden: "Bu kaydın katılım formu zaten imzaya gönderildi." };
+  const h = (await personelHesaplari(db, [x.personel_id])).get(x.personel_id)?.durum;
+  if (h !== "etkin" && h !== "ilk") return { durum: "red", neden: "Katılanın giriş hesabı yok; form imzaya gönderilemez." };
+  const once = (await kaynakBelgeleri(db, [x.id])).get(x.id)?.durum;
+  if (once === "imzali") return { durum: "red", neden: "Bu kaydın katılım formu imzalandı." };
+  /* bekleyen form: yeniden gönderilir — öncekini iptal eder (kişi eski formu imzalamaz) */
+  if (once === "bekliyor") await kaynakBelgesiniIptal(db, kim, x.id);
   const no = await numaraAl(db, "egitim");
   const firma = await firmaBelgeKunyesi(db, depo);
   const v: EgitimFormuVerisi = {
