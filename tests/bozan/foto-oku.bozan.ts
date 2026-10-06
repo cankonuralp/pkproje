@@ -36,7 +36,8 @@ async function bozuk(eski: string, yeni: string): Promise<Modul> {
 }
 const kisi = (id: string, ...roller: string[]): Kisi => ({ id, ad: "Deneme", roller: roller as Kisi["roller"] });
 const tamam = <R extends { durum: string }>(r: R) => { assert.equal(r.durum, "tamam", JSON.stringify(r)); return r as Extract<R, { durum: "tamam" }>; };
-const JPEG = new Uint8Array([0xff, 0xd8, 0xff, 0xdb, 0, 3, 1, 0xff, 0xd9]);
+/* en küçük yapısı doğru JPEG: SOI · DQT · SOS (kalanı görüntü) · EOI */
+const JPEG = new Uint8Array([0xff, 0xd8, 0xff, 0xdb, 0, 3, 1, 0xff, 0xda, 0, 2, 1, 2, 3, 0xff, 0xd9]);
 
 let kume: GomuluKume, havuz: Havuz, A: string, den1: Kisi, yon: Kisi, rapor: string;
 before(async () => {

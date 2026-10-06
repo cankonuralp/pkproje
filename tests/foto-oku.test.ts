@@ -98,6 +98,9 @@ test("açık değilken ve anahtarsızken okunmaz; açık + anahtar: istek yalnı
   const resim = Buffer.from((h.istek.govde as { messages: { content: { source?: { data: string } }[] }[] }).messages[0].content[0].source!.data, "base64").toString("latin1");
   assert.ok(resim.includes("goruntu-verisi") && !resim.includes("GPS-KONUM") && !resim.includes("Exif"), "konum bilgisi silindi, görüntü aynı");
   assert.deepEqual(await hazirla(FA.den1, FA.rapor, "linye", PDF), { durum: "gecersiz", hatalar: { foto: "Yalnız JPEG ya da PNG fotoğraf." } });
+  /* imzası JPEG, parçaları bozuk (tarama ve bitiş yok): konum bilgisi silinemeyen dosya gönderilmez, eylem çökmez */
+  assert.deepEqual(await hazirla(FA.den1, FA.rapor, "linye", new Uint8Array([0xff, 0xd8, 0xff, 0xdb, 0, 3, 1, 0xff, 0xd9])),
+    { durum: "gecersiz", hatalar: { foto: "Fotoğraf bozuk; başka bir fotoğraf deneyin." } });
   const buyuk = new Uint8Array((5 << 20) + 10); buyuk.set(JPEG);
   assert.deepEqual(await hazirla(FA.den1, FA.rapor, "linye", buyuk), { durum: "gecersiz", hatalar: { foto: "Fotoğraf çok büyük (en çok 5 MB)." } });
 });

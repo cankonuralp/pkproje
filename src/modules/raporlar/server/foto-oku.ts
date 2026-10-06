@@ -35,7 +35,9 @@ export async function fotoOkuHazirla(db: Sorgulayici, kim: Kisi, raporId: string
   const tur = turBul(foto.bayt, ["jpeg", "png"]);
   if (!tur || (tur !== "jpeg" && tur !== "png")) return { durum: "gecersiz", hatalar: { foto: "Yalnız JPEG ya da PNG fotoğraf." } };
   if (foto.bayt.length > FOTO_OKU_EN_BUYUK) return { durum: "gecersiz", hatalar: { foto: "Fotoğraf çok büyük (en çok 5 MB)." } };
-  const temiz = tur === "jpeg" ? jpegTemizle(foto.bayt) : pngTemizle(foto.bayt);
+  /* yapısı bozuk dosya (baştaki imza doğru, parçalar değil): konum bilgisi silinemez → gönderilmez; sunucu eylemi çökmez, kişiye söylenir */
+  let temiz: Uint8Array;
+  try { temiz = tur === "jpeg" ? jpegTemizle(foto.bayt) : pngTemizle(foto.bayt); } catch { return { durum: "gecersiz", hatalar: { foto: "Fotoğraf bozuk; başka bir fotoğraf deneyin." } }; }
   return { durum: "hazir", istek: okumaIstegi({ model: yz.model, bolum: o.bolum, resim: temiz, tur }), anahtar, model: yz.model, bolum: o.bolum, ay };
 }
 

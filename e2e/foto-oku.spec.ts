@@ -7,8 +7,9 @@ import { E2E_KAPI, E2E_PAROLA, E2E_YZ } from "./hesaplar";
 import { hazir } from "./yardimci";
 
 const Y = `http://${E2E_YZ.firma.kisaAd}.localhost:${E2E_KAPI}`;
-/* uydurma, en küçük JPEG (içerik önemsiz: okuma yerel taklitte) */
-const JPEG = Buffer.from([0xff, 0xd8, 0xff, 0xdb, 0x00, 0x03, 0x01, 0xff, 0xd9]);
+/* uydurma, en küçük yapısı doğru JPEG — SOI · DQT · SOS (kalanı görüntü) · EOI (içerik önemsiz: okuma yerel taklitte; tarayıcı çözemez,
+   küçültme dosyayı olduğu gibi gönderir, sunucu konum bilgisini silerken parçaları okur) */
+const JPEG = Buffer.from([0xff, 0xd8, 0xff, 0xdb, 0x00, 0x03, 0x01, 0xff, 0xda, 0x00, 0x02, 0x01, 0x02, 0x03, 0xff, 0xd9]);
 
 test("fotoğraftan okuma: öneri kartı; emin olunanlar toplu, emin olunmayan tek tek; tabloya eklenir ve kaydedilir", async ({ page }, bilgi) => {
   const kod = E2E_YZ.ekipman[bilgi.project.name];
