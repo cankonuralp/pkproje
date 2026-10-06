@@ -161,7 +161,7 @@ test("333 incelemesi: durum bordro KAYDINA bağlı — aynı dönem yeniden yük
   assert.equal((await satir()).onay, null);
   tamam(await a(YON, (db) => bordroOnayaGonder(db, depo, YON, A, ucuncu.id)));
   assert.deepEqual((await a(DEN, (db) => digerBelgeler(db, DEN))).belgeler.filter((x) => x.ad === "Haziran 2026 maaş bordrosu").map((x) => x.durum).sort(),
-    ["bekliyor", "iptal", "imzali"]);
+    ["bekliyor", "imzali", "iptal"]);
   /* kaldırılan bordronun bekleyen imzası iptal */
   const s = await satir();
   const k = await a(YON, (db) => bordroKaldir(db, YON, s.id, s.surum));
@@ -175,7 +175,8 @@ test("veritabanı: belge silinmez; içerik değişmez; kararı yalnız imzacı v
   await assert.rejects(a(YON, (db) => db.sorgu("UPDATE belge_onay SET ad = 'Deneme değişik' WHERE id = $1", [x.id])), /gönderilen belge değişmez/);
   await assert.rejects(a(YON, (db) => db.sorgu("UPDATE belge_onay SET durum = 'geri' WHERE id = $1", [x.id])), /yalnız imzalayacak kişi/);
   await assert.rejects(a(DEN, (db) => db.sorgu("UPDATE belge_onay SET durum = 'imzali', imzali_dosya = dosya WHERE id = $1", [x.id])), /imzalı PDF bu belgeye/);
-  await assert.rejects(a(DEN, (db) => db.sorgu("UPDATE belge_onay SET gonderen = $2 WHERE id = $1", [x.id, YON.id])), /gönderilen belge değişmez/);
+  /* gönderen hiçbir zaman imzacı değil (DEN): değer gerçekten değişir */
+  await assert.rejects(a(DEN, (db) => db.sorgu("UPDATE belge_onay SET gonderen = $2 WHERE id = $1", [x.id, DEN.id])), /gönderilen belge değişmez/);
   await assert.rejects(a(YON, (db) => db.sorgu("INSERT INTO belge_onay (tur, ad, personel_id) VALUES ('egitim', 'Deneme formu', $1)", [denP])), /dosyasız/);
   await assert.rejects(a(YON, (db) => db.sorgu("INSERT INTO belge_onay (tur, ad, personel_id, durum) VALUES ('egitim', 'Deneme formu', $1, 'imzali')", [denP])), /imza bekler/);
   await assert.rejects(kiraciIcinde(havuz, A, (db) => db.sorgu("INSERT INTO belge_onay (tur, ad, personel_id) VALUES ('egitim', 'Deneme formu', $1)", [denP])), /oturumdaki kişi/);
