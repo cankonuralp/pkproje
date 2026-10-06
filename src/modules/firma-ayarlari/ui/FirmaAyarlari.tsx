@@ -13,9 +13,11 @@ import { SayfaBasi } from "../../../components/sayfa/Sayfa";
 import { SecimAlani } from "../../../components/secim/SecimAlani";
 import { Serit } from "../../../components/serit/Serit";
 import { Tus } from "../../../components/tus/Tus";
-import { AYAR_BASLIK, AYAR_DOSYASI, ESIK, IMZA_YONTEM, NUSHA, SAKLAMA_YIL, YASAL, type AyarDosyasi, type AyarKesimi, type EsikAdi } from "../sema";
+import {
+  AYAR_BASLIK, AYAR_DOSYASI, BULUT_DUZEN, BULUT_SAGLAYICI, ESIK, IMZA_YONTEM, NUSHA, SAKLAMA_YIL, YASAL, YEDEK_GUN, YEDEK_SIK, YZ_MODEL, type AyarDosyasi, type AyarKesimi, type EsikAdi,
+} from "../sema";
 import type { FirmaAyarlari as Veri } from "../server/ayarlar";
-import { ayarDosyasiEylemi, ayarKaydetEylemi, belgeTuruEkleEylemi, belgeTuruKaldirEylemi, firmaKoduKaydetEylemi, type AyarYaniti } from "./eylemler";
+import { ayarDosyasiEylemi, ayarKaydetEylemi, belgeTuruEkleEylemi, belgeTuruKaldirEylemi, firmaKoduKaydetEylemi, yzAnahtarEylemi, type AyarYaniti } from "./eylemler";
 import stil from "./firma-ayarlari.module.css";
 
 const ID = {
@@ -363,8 +365,142 @@ function MusteriBelgeleri({ v }: { v: Veri }) {
   );
 }
 
+/* ── BULUT KAYDI (336; maket bulutCiz Ö2): sağlayıcı, klasör düzeni, ana klasör; hesap bağlantısı ve kendiliğinden kayıt K5 ── */
+const BID = { s: "w-ay-bulut-s", d: "w-ay-bulut-d", kok: "w-ay-bulut-kok" } as const;
+function BulutKaydi({ v }: { v: Veri }) {
+  const s = useKesim("bulut", v.bulut.deger, v.bulut.surum);
+  const sg = s.d.saglayici ? BULUT_SAGLAYICI[s.d.saglayici] : null;
+  const ornek = `${s.d.kok || "…"} / ${s.d.duzen === "my" ? "Müşteri / 2026" : s.d.duzen === "mty" ? "Müşteri / Tesis / 2026" : "Müşteri / Tesis"} / RAPOR-NO.pdf`;
+  return (
+    <Kart kesim="bulut" yaz={v.yaz} kirli={s.kirli} mesgul={s.mesgul} kaydet={s.kaydet} vazgec={s.vazgec} sayac="bağlı değil">
+      <p className={stil.ipucuUst}>Rapor imzalanınca imzalı PDF müşterinin bulut klasörüne kendiliğinden kaydedilir. Müşteri başına aç / kapa ve klasör adı müşteri kartında.</p>
+      <FormIzgara>
+        <Alan id={BID.s} etiket="Bulut" hata={s.h.saglayici}>
+          <SecimAlani id={BID.s} ad="Bulut" deger={s.d.saglayici} kapali={!v.yaz} secenekler={[["", "Seçilmedi"], ...(Object.keys(BULUT_SAGLAYICI) as (keyof typeof BULUT_SAGLAYICI)[]).map((k) => [k, BULUT_SAGLAYICI[k][0]] as const)]}
+            degistir={(x) => s.setD({ ...s.d, saglayici: x as typeof s.d.saglayici })} />
+        </Alan>
+        <Alan id={BID.d} etiket="Klasör düzeni" hata={s.h.duzen}>
+          <SecimAlani id={BID.d} ad="Klasör düzeni" deger={s.d.duzen} kapali={!v.yaz} secenekler={(Object.keys(BULUT_DUZEN) as (keyof typeof BULUT_DUZEN)[]).map((k) => [k, BULUT_DUZEN[k]] as const)}
+            degistir={(x) => s.setD({ ...s.d, duzen: x as typeof s.d.duzen })} />
+        </Alan>
+        <Alan id={BID.kok} etiket="Ana klasör" hata={s.h.kok} genis sonuc={s.h.kok ? undefined : `Örnek yol: ${ornek}`}>
+          <Girdi id={BID.kok} value={s.d.kok} maxLength={80} disabled={!v.yaz} hata={!!s.h.kok} mesajli onChange={(e) => s.setD({ ...s.d, kok: e.target.value })} />
+        </Alan>
+      </FormIzgara>
+      {sg?.[1] && <Serit tur="uyari" ikon="triangle-alert">{sg[0]} verileri Türkiye dışında saklayabilir: raporlar yurt dışına çıkar (KVKK sorumluluğu firmanın). Kendi sunucunuz seçeneği veriyi Türkiye&apos;de tutar.</Serit>}
+      <Serit tur="bilgi" ikon="info">Hesap bağlantısı ve imzalanan raporların kendiliğinden kaydı yayına çıkışla açılır; ayarlar şimdiden kaydedilir.</Serit>
+    </Kart>
+  );
+}
+
+/* ── DEPOLAMA VE YEDEK (336; maket depoCiz — G2/G3 "elle yedekleme olmasın", "kendi depolarında da yedekleri ve raporlar düzenli arşivlensin") ── */
+const YID = { sik: "w-ay-yedek-sik", saat: "w-ay-yedek-saat", gun: "w-ay-yedek-gun" } as const;
+const SAAT = new Intl.DateTimeFormat("en-CA", { timeZone: "Europe/Istanbul", year: "numeric", month: "2-digit", day: "2-digit", hour: "2-digit", hourCycle: "h23" });
+/** sonraki yedek (Türkiye saati) — maket sonrakiYedek */
+function sonrakiYedek(sik: string, saat: string): string {
+  const p = Object.fromEntries(SAAT.formatToParts(new Date()).map((x) => [x.type, x.value]));
+  const gun = `${p.year}-${p.month}-${p.day}`, simdi = Number(p.hour);
+  const ekle = (g: string, n: number) => { const d = new Date(`${g}T12:00:00Z`); d.setUTCDate(d.getUTCDate() + n); return d.toISOString().slice(0, 10); };
+  const yaz = (g: string, s: number) => `${g.slice(8, 10)}.${g.slice(5, 7)}.${g.slice(0, 4)} ${String(s).padStart(2, "0")}:00`;
+  if (sik === "saatlik") return simdi + 1 > 23 ? yaz(ekle(gun, 1), 0) : yaz(gun, simdi + 1);
+  const s = Number(saat);
+  if (sik === "gunluk") return s > simdi ? yaz(gun, s) : yaz(ekle(gun, 1), s);
+  const hafta = (8 - new Date(`${gun}T12:00:00Z`).getUTCDay()) % 7;   // Pazartesi
+  return hafta === 0 && s > simdi ? yaz(gun, s) : yaz(ekle(gun, hafta || 7), s);
+}
+function DepoYedek({ v }: { v: Veri }) {
+  const s = useKesim("depo", { sik: v.yedek.deger.sik, saat: v.yedek.deger.saat, gun: String(v.yedek.deger.gun) }, v.yedek.surum, (d) => ayarKaydetEylemi("yedek", v.yedek.surum, d));
+  return (
+    <Kart kesim="depo" genis yaz={v.yaz} kirli={s.kirli} mesgul={s.mesgul} kaydet={s.kaydet} vazgec={s.vazgec}>
+      <p className={stil.etiketUst}>Firmanın deposu</p>
+      <Serit tur="bilgi" ikon="info">Deneme yayınında dosyalar uygulamanın deposunda. Firmanın kendi S3 uyumlu deposu yayına çıkışta bağlanır; depo olmadan firma açılmaz.</Serit>
+      <p className={stil.etiket}>Düzenli arşiv (kendiliğinden)</p>
+      <ul className={stil.bilgiListe}>
+        <li><b>Rapor arşivi</b> · arsiv/raporlar/YIL/Müşteri/ — imzalanan her rapor PDF&apos;i hemen yazılır</li>
+        <li><b>Otomatik silme</b> · saklama süresi dolunca ({v.saklama.deger.yil} yıl); raporlar ve aylık yedekler, silinecekler 30 gün önce listelenir</li>
+      </ul>
+      <Serit tur="bilgi" ikon="info">probata saklama süresi dolmadan hiçbir dosyayı silmez. Deponuzda dosyaları kendiniz silerseniz geri getirilemez; bu sorumluluk firmanızındır.</Serit>
+      <p className={stil.etiket}>Yedek (kendiliğinden)</p>
+      <FormIzgara>
+        <Alan id={YID.sik} etiket="Sıklık" hata={s.h.sik}>
+          <SecimAlani id={YID.sik} ad="Yedek sıklığı" deger={s.d.sik} kapali={!v.yaz} secenekler={(Object.keys(YEDEK_SIK) as (keyof typeof YEDEK_SIK)[]).map((k) => [k, YEDEK_SIK[k]] as const)}
+            degistir={(x) => s.setD({ ...s.d, sik: x as typeof s.d.sik })} />
+        </Alan>
+        <Alan id={YID.saat} etiket="Saat (günlük, haftalık)" hata={s.h.saat}>
+          <SecimAlani id={YID.saat} ad="Yedek saati" deger={s.d.saat} kapali={!v.yaz || s.d.sik === "saatlik"}
+            secenekler={Array.from({ length: 24 }, (_, i) => { const x = String(i).padStart(2, "0"); return [x, `${x}:00`] as const; })} degistir={(x) => s.setD({ ...s.d, saat: x })} />
+        </Alan>
+        <Alan id={YID.gun} etiket="Yedeklerin saklanması" hata={s.h.gun} sonuc={`Her ayın ilk yedeği ${v.saklama.deger.yil} yıl saklanır. Sonraki yedek: ${sonrakiYedek(s.d.sik, s.d.saat)}.`}>
+          <SecimAlani id={YID.gun} ad="Yedeklerin saklanması" deger={s.d.gun} kapali={!v.yaz} tanim={ipucuId(YID.gun)}
+            secenekler={YEDEK_GUN.map((g) => [String(g), `${g} gün`] as const)} degistir={(x) => s.setD({ ...s.d, gun: x })} />
+        </Alan>
+      </FormIzgara>
+      <p className={stil.ipucu}>Son yedekler: henüz yedek alınmadı — yedek işi yayına çıkışla kendiliğinden çalışır (elle yedek yok).</p>
+    </Kart>
+  );
+}
+
+/* ── YAPAY ZEKÂ (336; maket yzCiz Y1): aç / kapa, yurt dışı uyarısı, API anahtarı (bir kez yazılır, son 4), model, kişi başı aylık sınır ── */
+const ZID = { anahtar: "w-ay-yz-anahtar", model: "w-ay-yz-model", sinir: "w-ay-yz-sinir" } as const;
+function YapayZeka({ v }: { v: Veri }) {
+  const router = useRouter();
+  const bildir = useBildir();
+  const onayla = useOnayla();
+  const [mesgulA, baslatA] = useTransition();
+  const s = useKesim("yz", { acik: v.yz.deger.acik, model: v.yz.deger.model, sinir: v.yz.deger.sinir === null ? "" : String(v.yz.deger.sinir).replace(".", ",") }, v.yz.surum);
+  const [yeni, setYeni] = useState<null | { deger: string; hata: string | null }>(v.yz.anahtar.tanimli ? null : { deger: "", hata: null });
+  const anahtarKaydet = () => baslatA(async () => {
+    if (!yeni) return;
+    const r = await yzAnahtarEylemi({ anahtar: yeni.deger });
+    if (!r.tamam) { setYeni({ deger: "", hata: r.hatalar?.anahtar ?? r.genel ?? "Kaydedilemedi." }); requestAnimationFrame(() => document.getElementById(ZID.anahtar)?.focus()); return; }
+    setYeni(null); bildir(r.bildirim ?? "API anahtarı kaydedildi."); router.refresh();
+  });
+  const anahtarKaldir = async () => {
+    if (!(await onayla({ baslik: "API anahtarını kaldır", metin: "Fotoğraftan okuma ve S.A.Y, yeni anahtar girilene kadar çalışmaz.", tus: "Kaldır", tehlike: true }))) return;
+    baslatA(async () => { const r = await yzAnahtarEylemi(null); bildir(r.tamam ? r.bildirim ?? "Kaldırıldı." : r.genel ?? "Kaldırılamadı."); if (r.tamam) { setYeni({ deger: "", hata: null }); router.refresh(); } });
+  };
+  return (
+    <Kart kesim="yz" genis yaz={v.yaz} kirli={s.kirli} mesgul={s.mesgul} kaydet={s.kaydet} vazgec={s.vazgec} sayac={v.yz.deger.acik ? "açık" : "kapalı"}>
+      <p className={stil.ipucuUst}>Fotoğraftan okuma (sigorta, topraklama noktası, etiket) ve rapor sayfasındaki S.A.Y sohbeti. Firmanın Anthropic hesabıyla çalışır; harcama o hesaptan.</p>
+      <div role="radiogroup" aria-labelledby={bolumId("yz")} className={stil.secenekler}>
+        {([[false, "Kapalı"], [true, "Açık"]] as const).map(([d, ad]) => (
+          <label key={ad} className={stil.secenek}><input type="radio" name="w-ay-yz-acik" checked={s.d.acik === d} disabled={!v.yaz} onChange={() => s.setD({ ...s.d, acik: d })} /><span>{ad}</span></label>
+        ))}
+      </div>
+      {s.d.acik && <>
+        <Serit tur="uyari" ikon="triangle-alert">Fotoğraf ve maskelenmiş rapor bilgisi (müşteri adı, adres, kişi adı, numaralar gönderilmez) yurt dışına, Anthropic&apos;e (ABD) gider. KVKK yurt dışı aktarım koşulları firmanın sorumluluğunda.</Serit>
+        <p className={stil.etiket}>API anahtarı</p>
+        {yeni === null ? <div className={stil.dosyaSatir}>
+          <span className={stil.anahtar}>…{v.yz.anahtar.son4} kayıtlı</span>
+          {v.yaz && <><Tus tur="ikincil" ikon="pencil" disabled={mesgulA} onClick={() => { setYeni({ deger: "", hata: null }); requestAnimationFrame(() => document.getElementById(ZID.anahtar)?.focus()); }}>Değiştir</Tus>
+            <Tus tur="ikincil" ikon="trash-2" disabled={mesgulA} onClick={anahtarKaldir} aria-label="API anahtarını kaldır">Kaldır</Tus></>}
+        </div> : v.yaz && <>
+          <Alan id={ZID.anahtar} etiket="API anahtarı" genis hata={yeni.hata ?? undefined} sonuc={yeni.hata ? undefined : "Anthropic Console'dan alınır (sk-ant- ile başlar). Şifreli saklanır, bir daha gösterilmez."}>
+            <Girdi id={ZID.anahtar} type="password" value={yeni.deger} maxLength={210} spellCheck={false} hata={!!yeni.hata} mesajli onChange={(e) => setYeni({ deger: e.target.value, hata: null })} />
+          </Alan>
+          <div className={stil.tuslar}>
+            <Tus ikon="check" disabled={mesgulA} aria-busy={mesgulA || undefined} onClick={anahtarKaydet}>Anahtarı kaydet</Tus>
+            {v.yz.anahtar.tanimli && <Tus tur="ikincil" disabled={mesgulA} onClick={() => setYeni(null)}>Vazgeç</Tus>}
+          </div>
+        </>}
+        <FormIzgara>
+          <Alan id={ZID.model} etiket="Model" hata={s.h.model} sonuc={YZ_MODEL[s.d.model][1]}>
+            <SecimAlani id={ZID.model} ad="Model" deger={s.d.model} kapali={!v.yaz} tanim={ipucuId(ZID.model)} secenekler={(Object.keys(YZ_MODEL) as (keyof typeof YZ_MODEL)[]).map((k) => [k, YZ_MODEL[k][0]] as const)}
+              degistir={(x) => s.setD({ ...s.d, model: x as typeof s.d.model })} />
+          </Alan>
+          <Alan id={ZID.sinir} etiket="Kişi başı aylık sınır ($)" hata={s.h.sinir} sonuc={s.h.sinir ? undefined : "Boş: sınırsız. Dolunca o ay yalnız yönetici artırır."}>
+            <Girdi id={ZID.sinir} value={s.d.sinir} inputMode="decimal" maxLength={8} disabled={!v.yaz} hata={!!s.h.sinir} mesajli onChange={(e) => s.setD({ ...s.d, sinir: e.target.value })} />
+          </Alan>
+        </FormIzgara>
+        {!v.yz.anahtar.tanimli && <Serit tur="uyari" ikon="key-round">Anahtar girilmedi: fotoğraftan okuma ve S.A.Y çalışmaz.</Serit>}
+        <p className={stil.ipucu}>Bu ay kullanım: henüz yok. Kullanım kişi başına burada listelenir.</p>
+      </>}
+    </Kart>
+  );
+}
+
 /* ── SAYFA ── */
-const SIRA: AyarKesimi[] = ["firma", "imza", "zimmet", "saklama", "onbilgi", "bordro", "mesai", "esik", "kod", "fiyat", "sabit", "mbelge"];
+const SIRA: AyarKesimi[] = ["firma", "imza", "zimmet", "saklama", "onbilgi", "bordro", "mesai", "esik", "kod", "bulut", "fiyat", "sabit", "depo", "yz", "mbelge"];
 export function FirmaAyarlari({ v }: { v: Veri }) {
   return (
     <>
@@ -388,8 +524,11 @@ export function FirmaAyarlari({ v }: { v: Veri }) {
           <Mesai v={v} />
           <Esikler v={v} />
           <RaporNumarasi v={v} />
+          <BulutKaydi v={v} />
           <FiyatListesi v={v} />
           <SabitGiderler v={v} />
+          <DepoYedek v={v} />
+          <YapayZeka v={v} />
           <MusteriBelgeleri v={v} />
         </div>
       </div>

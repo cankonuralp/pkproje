@@ -4,7 +4,7 @@
 import { depo } from "../../../server/dosya/depo";
 import { ayniKoken } from "../../../server/kimlik/koken";
 import { istekOturumu, oturumIslemi } from "../../../server/kimlik/istek";
-import { ayarDosyasiYaz, ayarKaydet, belgeTuruEkle, belgeTuruKaldir, firmaKoduKaydet, type AyarYazma } from "../server/ayarlar";
+import { ayarDosyasiYaz, ayarKaydet, belgeTuruEkle, belgeTuruKaldir, firmaKoduKaydet, yzAnahtarYaz, type AyarYazma } from "../server/ayarlar";
 
 export interface AyarYaniti { tamam?: boolean; bildirim?: string; hatalar?: Record<string, string>; genel?: string }
 const SONUC = { yetkisiz: "Bu işlem için yetkiniz yok.", cakisma: "Bu bölüm siz açtıktan sonra değiştirildi. Sayfayı yenileyip yeniden deneyin." } as const;
@@ -28,6 +28,10 @@ export async function belgeTuruEkleEylemi(girdi: unknown): Promise<AyarYaniti> {
 }
 export async function belgeTuruKaldirEylemi(k: string): Promise<AyarYaniti> {
   return islem((o) => oturumIslemi(o, (db) => belgeTuruKaldir(db, o, typeof k === "string" ? k : "")));
+}
+/** API anahtarı: girdi { anahtar } ya da null (kaldır); anahtar yanıta konmaz */
+export async function yzAnahtarEylemi(girdi: unknown | null): Promise<AyarYaniti> {
+  return islem((o) => oturumIslemi(o, (db) => yzAnahtarYaz(db, o, girdi === null ? null : girdi)));
 }
 /** form: ne (logo | on_bilgi | bordro_format), surum, dosya (yoksa kaldır) */
 export async function ayarDosyasiEylemi(form: FormData): Promise<AyarYaniti> {

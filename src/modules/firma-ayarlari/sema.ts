@@ -7,6 +7,7 @@ export const AYAR_BASLIK = {
   firma: "Firma bilgileri", imza: "İmza yöntemi", zimmet: "Zimmet teslim formu", saklama: "Rapor saklama süresi", onbilgi: "Ön bilgilendirme formu",
   bordro: "Bordro formatı", mesai: "Mesai takibi", esik: "Uyarı eşikleri", kod: "Rapor numarası", sabit: "Sabit giderler",
   fiyat: "Fiyat listesi", mbelge: "Müşteriye açık personel belgeleri",
+  bulut: "Bulut kaydı", depo: "Depolama ve yedek", yz: "Yapay zekâ",
 } as const;
 export type AyarKesimi = keyof typeof AYAR_BASLIK;
 
@@ -65,6 +66,37 @@ export const BelgeTuruGirdisi = z.object({
 /** müşteriye açılabilecek sabit türler (maket MV.musteriBelgeTur): [anahtar, ad, kişisel veri] — eğitim sertifikaları ve firmanın türleri arada */
 export const MUSTERI_BELGE_BAS = [["ekipnet", "EKİPNET kayıt belgesi", false], ["diploma", "Diploma", false], ["oda", "Oda kaydı", false], ["atama", "Ekipman atama belgesi", false]] as const;
 export const MUSTERI_BELGE_SON = [["kimlik", "Kimlik belgesi", true], ["saglik", "Sağlık raporu", true], ["is", "İş sözleşmesi", true], ["diger", "Diğer", true]] as const;
+
+/* ── 336: yapay zekâ, bulut kaydı, yedek (maket MV.YZ_MODEL, MV.BULUT_SAGLAYICI, MV.BULUT_DUZEN, YEDEK_SIK, YEDEK_GUN) ── */
+export const YZ_MODEL = { opus: ["Claude Opus 5.5", "daha doğru · 1 milyon token: giriş $4, çıkış $20"], sonnet: ["Claude Sonnet 5.5", "yarı fiyat · 1 milyon token: giriş $2, çıkış $10"] } as const;
+/** [ad, verileri Türkiye dışında saklayabilir] */
+export const BULUT_SAGLAYICI = {
+  gdrive: ["Google Drive", true], onedrive: ["Microsoft OneDrive / SharePoint", true], dropbox: ["Dropbox", true], yandex: ["Yandex Disk", true],
+  sftp: ["Kendi sunucunuz (SFTP / WebDAV)", false],
+} as const;
+export const BULUT_DUZEN = { mt: "Müşteri / Tesis", mty: "Müşteri / Tesis / Yıl", my: "Müşteri / Yıl" } as const;
+export const YEDEK_SIK = { saatlik: "Saatlik", gunluk: "Günlük", haftalik: "Haftalık (Pazartesi)" } as const;
+export const YEDEK_GUN = [30, 90, 365] as const;
+export const YzGirdisi = z.object({
+  acik: z.boolean(), model: z.enum(["opus", "sonnet"], { error: "Model seçin." }),
+  sinir: z.preprocess((v) => (typeof v === "string" ? v.trim().replace(",", ".") : v),
+    z.string().regex(/^(\d{1,5}(\.\d{1,2})?)?$/, "Sayı yazılmalı (ör. 20). Kaydedilmedi.")).transform((s) => (s === "" ? null : Number(s)))
+    .refine((n) => n === null || n <= 10000, "En çok 10.000 $."),
+});
+/** Anthropic API anahtarı (sk-ant- ile başlar); şifreli saklanır, ekranda son 4 hane */
+export const AnahtarGirdisi = z.object({ anahtar: z.preprocess((v) => (typeof v === "string" ? v.trim() : v),
+  z.string({ error: "Anahtarı yapıştırın." }).min(1, "Anahtarı yapıştırın.").regex(/^sk-ant-[A-Za-z0-9_-]{16,200}$/, "Geçerli bir Anthropic API anahtarı değil (sk-ant- ile başlar).")) });
+export const BulutGirdisi = z.object({
+  saglayici: z.enum(["", "gdrive", "onedrive", "dropbox", "yandex", "sftp"], { error: "Bulut seçin." }),
+  kok: z.preprocess((v) => (typeof v === "string" ? v.trim() : v), z.string().min(1, "Ana klasör adı yazın.").max(80, "En çok 80 karakter.")
+    .refine((s) => !/[\\/:*?"<>|]/.test(s), "Klasör adında \\ / : * ? \" < > | kullanılamaz.")),
+  duzen: z.enum(["mt", "mty", "my"], { error: "Klasör düzeni seçin." }),
+});
+export const YedekGirdisi = z.object({
+  sik: z.enum(["saatlik", "gunluk", "haftalik"], { error: "Sıklık seçin." }),
+  saat: z.string().regex(/^([01][0-9]|2[0-3])$/, "Saat seçin."),
+  gun: z.coerce.number().refine((n) => (YEDEK_GUN as readonly number[]).includes(n), "Saklama seçin."),
+});
 
 /** dosya ayarları (logo, ön bilgilendirme formu, bordro formatı): ayar alanı, izinli türler, en çok boyut */
 export const AYAR_DOSYASI = {

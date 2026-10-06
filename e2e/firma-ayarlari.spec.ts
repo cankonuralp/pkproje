@@ -49,6 +49,19 @@ test("firma ayarları: bölüm kaydet, geçersiz değer kaydedilmez, mesai şeri
   await firma.getByRole("button", { name: "Firma logosu kaldır" }).click();
   await page.getByRole("dialog", { name: "Firma logosu kaldırılsın mı?" }).getByRole("button", { name: "Kaldır" }).click();
   await expect(page.getByText("Firma logosu kaldırıldı.").first()).toBeVisible({ timeout: 30_000 });
+  /* 336: yapay zekâ açılınca yurt dışı uyarısı ve anahtar alanı; bulut sağlayıcısı yurt dışındaysa uyarı — Vazgeç ile geri */
+  const yz = page.getByRole("region", { name: "Yapay zekâ" });
+  await yz.getByRole("radio", { name: "Açık" }).check();
+  await expect(yz.getByText(/Anthropic'e \(ABD\) gider/)).toBeVisible();
+  await expect(yz.getByLabel("API anahtarı")).toBeVisible();
+  await yz.getByRole("button", { name: "Vazgeç" }).click();
+  await expect(yz.getByRole("radio", { name: "Kapalı" })).toBeChecked();
+  const bulut = page.getByRole("region", { name: "Bulut kaydı" });
+  await bulut.getByRole("combobox", { name: "Bulut" }).click();
+  await page.getByRole("option", { name: "Google Drive" }).click();
+  await expect(bulut.getByText(/Türkiye dışında saklayabilir/)).toBeVisible();
+  await bulut.getByRole("button", { name: "Vazgeç" }).click();
+
   /* 335: fiyat listesi (tohumdaki Hava tankı 900,00 — değiştirilmez: muhasebe testi bu fiyatla); firmaya belge türü ekle → listede → kaldır */
   await expect(page.getByRole("region", { name: "Fiyat listesi" }).getByLabel("Hava tankı (TL)")).toHaveValue("900,00");
   const mb = page.getByRole("region", { name: "Müşteriye açık personel belgeleri" });

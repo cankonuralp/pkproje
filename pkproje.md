@@ -2341,6 +2341,19 @@ revizyon, alan kopyalama, hafif kusur devri, meslek eşleşme denetimi).
 - Emsal ürünler: https://opwire.app/iso-17020-periyodik-kontrol-yazilimi/ · https://17020muayene.vidco.com.tr/ · https://akuple.com/asansor-kontrol-yazilimi/ · https://ensyazilim.com/
 
 ## 11 · Değişiklik günlüğü
+- 2026-10-06 (336): **K4 Firma ayarları — yapay zekâ, bulut kaydı, depolama ve yedek** (maket yzCiz Y1 — reisim: "Müşterinin token ekleyeceği
+  yeri ekledin mi makete"; bulutCiz Ö2; depoCiz G2/G3 — "elle yedekleme olmasın"). **Yapay zekâ** (tam genişlik): kapalı / açık; açıkken yurt dışı
+  (Anthropic, ABD) KVKK uyarısı; **API anahtarı** bir kez yazılır, AES-256-GCM ile şifreli sırda (sir.ts), ekranda ve yanıtta yalnız son 4 hane;
+  biçim sk-ant-…; Değiştir / Kaldır (sorulur); ortamda ana şifreleme anahtarı yoksa düz metne düşmez — "kaydedilemedi" denir. Model (Opus 5.5 /
+  Sonnet 5.5) ve kişi başı aylık sınır ($; boş = sınırsız). Bu ayın kullanımı yapay zekâ işleriyle (K5) dolacak. **Bulut kaydı**: sağlayıcı
+  (Google Drive, OneDrive / SharePoint, Dropbox, Yandex Disk, kendi sunucunuz), klasör düzeni, ana klasör (örnek yol; geçersiz karakter
+  kaydedilmez); yurt dışı uyarısı. Hesap bağlantısı ve imzalanan raporun kendiliğinden kaydı yayına çıkışla (K5) — şeritte söylenir.
+  **Depolama ve yedek**: firmanın deposu yayına çıkışta bağlanır (K7) — deneme yayınında uygulamanın deposu; düzenli arşiv ve otomatik silme
+  kuralı (saklama süresi) bilgisi; yedek sıklığı (saatlik / günlük / haftalık), saati, yedeklerin saklanması (30 / 90 / 365 gün), sonraki yedek
+  zamanı; elle yedek yok. Ayar bölümleri: yapay_zeka genişledi (model, sinir), yeni bulut ve yedek. Ayrıca Personel'de özlük belgesi eklerken
+  tür denetimi düzeltildi (335: hata yazılıyor ama dönüş koşulu bakmıyordu — ayarda olmayan tür kaydediliyordu; kilit testi yakaladı). Kilit:
+  firma-ayarlari.test (anahtar biçimi, şifreli saklama, yalnız son 4, yetki; bulut ve yedek doğrulaması; B sızıntısı), e2e (yapay zekâ ve bulut
+  uyarıları).
 - 2026-10-06 (335): **K4 Firma ayarları — fiyat listesi, müşteriye açık personel belgeleri, belge türü ekle** (maket ayarDigerCiz "Fiyat listesi";
   P3 "müşteriye giden muayene personelinin firmanın izin verdiği belgelerini görür"; Z5 reisim: "bu kısımda eğer ben bir belge türü eklersem
   listeye ekleniyor mu" · "eklenmiyorsa eklensin"). **Fiyat listesi** (tam genişlik, dört sütuna kadar): ekipman türü başına KDV hariç birim fiyat

@@ -35,6 +35,10 @@
 .alt { display: block; color: var(--yazi2); font-size: var(--boy-kucuk); }
 .ekSatir { display: flex; align-items: center; justify-content: space-between; gap: 8px; }
 .ekForm { margin-top: 12px; }
+/* 336: depolama bilgileri, API anahtarının son 4 hanesi */
+.etiketUst { margin: 0 0 6px; font-size: var(--boy-kucuk); font-weight: 600; }
+.bilgiListe { margin: 0 0 12px; padding-left: 18px; color: var(--yazi2); font-size: var(--boy-kucuk); display: grid; gap: 4px; }
+.anahtar { font-variant-numeric: tabular-nums; font-weight: 600; }
 @media (max-width: 767.98px) {
   .kalem { grid-template-columns: minmax(0, 1fr) minmax(0, 1fr); }
   .kalem > :first-child { grid-column: 1 / -1; }

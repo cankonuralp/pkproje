@@ -142,7 +142,7 @@ export async function ozlukEkle(db: Sorgulayici, depo: Depo, kim: Kisi, firmaId:
   const h: DogrulamaHatalari = g.tamam ? {} : { ...g.hatalar };
   if (g.tamam && !ozlukTurleri(await ekTurler(db)).some(([k]) => k === g.veri.tur)) h.tur = "Belge türü seçilmeli.";
   if (!belge) h.dosya = "Belge (PDF) seçilmeli.";
-  if (!g.tamam || !belge) return { durum: "gecersiz", hatalar: h };
+  if (!g.tamam || !belge || Object.keys(h).length) return { durum: "gecersiz", hatalar: h };
   const r = await ekle(db, OZLUK, { personel_id: personelId, tur: g.veri.tur, aciklama: g.veri.aciklama }, { kim: kim.ad, ne: "ozluk.ekle" });
   await belgeBagla(db, depo, kim, firmaId, OZLUK, DOSYA.ozluk, r, belge, "ozluk.belge");
   return { durum: "tamam", id: r.id };

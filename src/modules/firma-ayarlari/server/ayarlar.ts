@@ -15,7 +15,9 @@ import { turOzetleri } from "../../ekipman-turleri/server/turler.ts";
 import { egitimTurAdlari } from "../../egitimler/server/ayar-baglanti.ts";
 import { ozlukTurKullanimi } from "../../personel/server/dosyalar.ts";
 import { tutar } from "../../../sema/ortak.ts";
+import { sirDurumu, sirYaz } from "../../../server/ayar/sir.ts";
 import {
+  AnahtarGirdisi, BulutGirdisi, YedekGirdisi, YzGirdisi,
   BelgeTuruGirdisi, FiyatGirdisi, MUSTERI_BELGE_BAS, MUSTERI_BELGE_SON, MusteriBelgeGirdisi,
   AYAR_DOSYASI, EsikGirdisi, FirmaBilgiGirdisi, ImzaGirdisi, KodGirdisi, MesaiGirdisi, SabitGiderGirdisi, SaklamaGirdisi, ZimmetGirdisi, type AyarDosyasi,
 } from "../sema.ts";
@@ -43,6 +45,10 @@ export interface FirmaAyarlari {
   fiyat: { turler: { id: string; ad: string; kod: string; brans: "m" | "e"; fiyat: number | null }[] };
   /** müşteriye açık personel belgeleri (335): türler ve seçililer */
   mbelge: Surumlu<{ secili: string[] }> & { turler: MusteriBelgeTuru[]; ekSurum: number };
+  /** 336: yapay zekâ (anahtar yalnız "tanımlı + son 4"; değer asla), bulut kaydı, yedek; saklama süresi (aylık arşiv) */
+  yz: Surumlu<{ acik: boolean; model: "opus" | "sonnet"; sinir: number | null }> & { anahtar: { tanimli: boolean; son4: string | null } };
+  bulut: Surumlu<{ saglayici: "" | "gdrive" | "onedrive" | "dropbox" | "yandex" | "sftp"; kok: string; duzen: "mt" | "mty" | "my" }>;
+  yedek: Surumlu<{ sik: "saatlik" | "gunluk" | "haftalik"; saat: string; gun: 30 | 90 | 365 }>;
 }
 /** k: özlük türü, "atama" ya da "eg:<eğitim türü>"; ek: firmanın eklediği (kaldırılabilir) */
 export interface MusteriBelgeTuru { k: string; ad: string; kisisel: boolean; ek: boolean }
@@ -85,6 +91,12 @@ export async function firmaAyarlari(db: Sorgulayici, kim: Kisi): Promise<FirmaAy
       const f = await fiyatListesi(db);
       return { turler: (await turOzetleri(db)).map((t) => ({ id: t.id, ad: t.ad, kod: t.kod, brans: t.brans, fiyat: f.get(t.id) ?? null })) };
     })(),
+    yz: await (async () => {
+      const y = await ayarOku(db, "yapay_zeka");
+      return { deger: { acik: y.deger.acik, model: y.deger.model, sinir: y.deger.sinir }, surum: y.surum, anahtar: await sirDurumu(db, "yapay_zeka_anahtari") };
+    })(),
+    bulut: await (async () => { const b = await ayarOku(db, "bulut"); return { deger: b.deger, surum: b.surum }; })(),
+    yedek: await (async () => { const b = await ayarOku(db, "yedek"); return { deger: b.deger, surum: b.surum }; })(),
     mbelge: await (async () => {
       const mb = await ayarOku(db, "musteri_belge"), t = await musteriBelgeTurleri(db);
       const secili = [...mb.deger.ozluk, ...mb.deger.egitim.map((x) => `eg:${x}`), ...(mb.deger.atama ? ["atama"] : [])].filter((k) => t.turler.some((x) => x.k === k));
@@ -160,6 +172,20 @@ export async function ayarKaydet(db: Sorgulayici, kim: Kisi, kesim: string, suru
       const n = await fiyatlariYaz(db, kim, yeni);
       return { durum: "tamam", bildirim: n ? `Fiyat listesi kaydedildi (${n} tür); yeni teklifler bu fiyatlarla dolar.` : "Fiyat listesinde değişiklik yok." };
     }
+    case "yz": {
+      const g = dogrula(YzGirdisi, girdi);
+      if (!g.tamam) return { durum: "gecersiz", hatalar: g.hatalar };
+      const eski = (await ayarOku(db, "yapay_zeka")).deger;
+      return yaz("yapay_zeka", { ...eski, ...g.veri }, g.veri.acik ? "Yapay zekâ ayarları kaydedildi (açık)." : "Yapay zekâ kapatıldı; fotoğraftan okuma ve S.A.Y görünmez.");
+    }
+    case "bulut": {
+      const g = dogrula(BulutGirdisi, girdi);
+      return g.tamam ? yaz("bulut", g.veri, "Bulut kaydı ayarları kaydedildi.") : { durum: "gecersiz", hatalar: g.hatalar };
+    }
+    case "yedek": {
+      const g = dogrula(YedekGirdisi, girdi);
+      return g.tamam ? yaz("yedek", g.veri, "Yedek ayarları kaydedildi.") : { durum: "gecersiz", hatalar: g.hatalar };
+    }
     case "mbelge": {
       const g = dogrula(MusteriBelgeGirdisi, girdi);
       if (!g.tamam) return { durum: "gecersiz", hatalar: g.hatalar };
@@ -172,6 +198,25 @@ export async function ayarKaydet(db: Sorgulayici, kim: Kisi, kesim: string, suru
     }
   }
   return { durum: "gecersiz", hatalar: { genel: "Bilinmeyen ayar bölümü." } };
+}
+
+/** yapay zekâ API anahtarı (maket Y1): bir kez yazılır, şifreli saklanır (sir.ts), bir daha gösterilmez — yalnız son 4. null: kaldır */
+export async function yzAnahtarYaz(db: Sorgulayici, kim: Kisi, girdi: unknown | null): Promise<AyarYazma> {
+  if (!ayarlarYazar(kim)) return { durum: "yetkisiz" };
+  let anahtar: string | null = null;
+  if (girdi !== null) {
+    const g = dogrula(AnahtarGirdisi, girdi);
+    if (!g.tamam) return { durum: "gecersiz", hatalar: g.hatalar };
+    anahtar = g.veri.anahtar;
+  }
+  try {
+    await sirYaz(db, "yapay_zeka_anahtari", anahtar, { kim: kim.ad });
+  } catch (h) {
+    /* ana şifreleme anahtarı ortamda yoksa sır düz metne düşmez: yazılmaz, söylenir */
+    if (h instanceof Error && /Sır anahtarı tanımlı değil/.test(h.message)) return { durum: "red", neden: "Sunucuda sır şifreleme anahtarı tanımlı değil; anahtar kaydedilemedi (yönetim ayarı)." };
+    throw h;
+  }
+  return { durum: "tamam", bildirim: anahtar ? "API anahtarı kaydedildi." : "API anahtarı kaldırıldı." };
 }
 
 const kucuk = (s: string) => s.trim().toLocaleLowerCase("tr");

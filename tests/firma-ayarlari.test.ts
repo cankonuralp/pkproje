@@ -3,6 +3,7 @@
    numarası değişmez") · KOD-GECIS §7 · reisim 2026-10-04: "rol değiştirme, sızma; yetki her zaman sunucuda". GERÇEK PostgreSQL, iki firma (334;
    göç 0045). Olumsuz kanıt tests/bozan/firma-ayarlari.bozan.ts. */
 import assert from "node:assert/strict";
+import { randomBytes } from "node:crypto";
 import { mkdtempSync, rmSync } from "node:fs";
 import { tmpdir } from "node:os";
 import { join } from "node:path";
@@ -13,7 +14,7 @@ import { klasorDepo } from "../src/server/dosya/depo.ts";
 import { dosyaIndirilebilir } from "../src/server/dosya/dosya.ts";
 import { DOSYA_ERISIMI } from "../src/server/dosya/erisim.ts";
 import { ayarOku, firmaBelgeKunyesi, firmaKunyesi } from "../src/server/ayar/ayar.ts";
-import { ayarDosyasiYaz, ayarKaydet, belgeTuruEkle, belgeTuruKaldir, firmaAyarlari, firmaKoduKaydet, type Kisi } from "../src/modules/firma-ayarlari/server/ayarlar.ts";
+import { ayarDosyasiYaz, ayarKaydet, belgeTuruEkle, belgeTuruKaldir, firmaAyarlari, firmaKoduKaydet, yzAnahtarYaz, type Kisi } from "../src/modules/firma-ayarlari/server/ayarlar.ts";
 import { ozlukEkle, ozlukKaldir, personelDosyasi } from "../src/modules/personel/server/dosyalar.ts";
 import { testKumesi } from "./yardimci/kume.ts";
 
@@ -158,9 +159,38 @@ test("müşteriye açık belgeler ve belge türü ekle: seçim ayara yazılır; 
   assert.ok(!(await a(YON, (db) => firmaAyarlari(db, YON)))!.mbelge.turler.some((t) => t.k === "ek1"));
 });
 
+/* 336: yapay zekâ (anahtar şifreli sırda — değer ekrana ve yanıta dönmez, yalnız son 4), bulut kaydı, yedek */
+test("yapay zekâ, bulut, yedek: anahtar biçimi denetlenir, şifreli saklanır, yalnız son 4 görünür; sınır $, bulut klasör adı, yedek seçenekleri", async () => {
+  process.env.PROBATA_SIR_ANAHTARI ??= randomBytes(32).toString("base64");
+  const ANAHTAR = "sk-ant-deneme-0123456789abcdefWXYZ";
+  assert.deepEqual(await a(YON, (db) => yzAnahtarYaz(db, YON, { anahtar: "sk-deneme" })), { durum: "gecersiz", hatalar: { anahtar: "Geçerli bir Anthropic API anahtarı değil (sk-ant- ile başlar)." } });
+  assert.equal((await a(DEN, (db) => yzAnahtarYaz(db, DEN, { anahtar: ANAHTAR }))).durum, "yetkisiz");
+  tamam(await a(YON, (db) => yzAnahtarYaz(db, YON, { anahtar: ANAHTAR })));
+  const v = (await a(YON, (db) => firmaAyarlari(db, YON)))!;
+  assert.deepEqual(v.yz.anahtar, { tanimli: true, son4: "WXYZ" });
+  assert.ok(!JSON.stringify(v).includes(ANAHTAR), "anahtar ekran verisinde yok");
+  const satir = (await a(YON, (db) => db.sorgu<{ sifreli: string }>("SELECT sifreli FROM firma_sir WHERE ad = 'yapay_zeka_anahtari'"))).rows[0];
+  assert.ok(!satir.sifreli.includes(ANAHTAR), "veritabanında düz metin yok");
+  assert.equal((await a(YON, (db) => ayarKaydet(db, YON, "yz", v.yz.surum, { acik: true, model: "sonnet", sinir: "abc" }))).durum, "gecersiz");
+  tamam(await a(YON, (db) => ayarKaydet(db, YON, "yz", v.yz.surum, { acik: true, model: "sonnet", sinir: "12,5" })));
+  const y = (await a(YON, (db) => ayarOku(db, "yapay_zeka"))).deger;
+  assert.deepEqual([y.acik, y.model, y.sinir], [true, "sonnet", 12.5]);
+  tamam(await a(YON, (db) => yzAnahtarYaz(db, YON, null)));
+  assert.deepEqual((await a(YON, (db) => firmaAyarlari(db, YON)))!.yz.anahtar, { tanimli: false, son4: null });
+  /* bulut ve yedek */
+  assert.equal((await a(YON, (db) => ayarKaydet(db, YON, "bulut", -1, { saglayici: "gdrive", kok: "Rapor/2026", duzen: "mt" }))).durum, "gecersiz", "klasör adında /");
+  assert.equal((await a(YON, (db) => ayarKaydet(db, YON, "bulut", -1, { saglayici: "baska", kok: "Raporlar", duzen: "mt" }))).durum, "gecersiz");
+  tamam(await a(YON, (db) => ayarKaydet(db, YON, "bulut", -1, { saglayici: "sftp", kok: "Deneme Raporlar", duzen: "mty" })));
+  assert.equal((await a(YON, (db) => ayarKaydet(db, YON, "yedek", -1, { sik: "gunluk", saat: "25", gun: "30" }))).durum, "gecersiz");
+  assert.equal((await a(YON, (db) => ayarKaydet(db, YON, "yedek", -1, { sik: "gunluk", saat: "02", gun: "45" }))).durum, "gecersiz");
+  tamam(await a(YON, (db) => ayarKaydet(db, YON, "yedek", -1, { sik: "haftalik", saat: "02", gun: "90" })));
+  assert.deepEqual((await a(YON, (db) => ayarOku(db, "yedek"))).deger, { sik: "haftalik", saat: "02", gun: 90 });
+});
+
 test("firma sızıntısı: B kendi ayarlarını görür (başlangıç değerleri), A'nınkini değil", async () => {
   const v = (await a(YON_B, (db) => firmaAyarlari(db, YON_B), B))!;
   assert.deepEqual([v.kod, v.firma.deger.ad, v.firma.deger.nusha, v.esik.deger.kalibrasyon, v.sabit.deger.kalemler, v.kisiler.map((k) => k.ad)],
     ["DB", "", 2, 30, [], ["Deneme B Kişi"]]);
   assert.deepEqual([v.mbelge.deger.secili, v.mbelge.turler.filter((t) => t.ek || t.k.startsWith("eg:")).length, v.fiyat.turler.map((t) => t.fiyat)], [["ekipnet"], 0, [null]]);
+  assert.deepEqual([v.yz.anahtar, v.yz.deger.acik, v.bulut.deger.saglayici, v.yedek.deger.sik], [{ tanimli: false, son4: null }, false, "", "gunluk"]);
 });
