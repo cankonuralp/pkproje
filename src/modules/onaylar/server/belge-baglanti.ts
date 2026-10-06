@@ -1,4 +1,5 @@
-/* ONAYLAR ↔ GÖNDEREN MODÜLLER (333): Personel (bordro "Onaya gönder"), Muhasebe ("Maaş bordrosu gönder"), ana sayfa — belge_onay tablosuna
+/* ONAYLAR ↔ GÖNDEREN MODÜLLER (333): Personel (bordro "Onaya gönder"), Muhasebe ("Maaş bordrosu gönder"), Araçlar (342: teslim tutanağı,
+   teslim alan kişinin imzasına — kaynak zimmet hareketi), ana sayfa — belge_onay tablosuna
    yalnız buradan yazılır / okunur. YETKİ ÇAĞIRANDA (gönderme hakkı belgenin kaynağına göre değişir: bordroda Personel "yaz" ya da Muhasebe "yaz").
    Gönderen ve zaman veritabanında damgalanır (0044). Gönderilen PDF imzalanabilir biçimde olmalı (imzalı hâli denetlenebilsin — imza-pdf.ts
    imzayaUygun); belge kendi dosyasını taşır (kaynağın dosyası değişse de imzalanan bayt değişmez).
@@ -69,6 +70,18 @@ export async function bordroBelgeleri(db: Sorgulayici, personelIdleri: readonly 
 export function guncelBordroBelgesi(l: readonly BordroBelgesi[], personelId: string, ay: string, kaynakId: string | null): BordroBelgesi | null {
   const k = l.filter((x) => x.personelId === personelId && x.ay === ay && x.kaynakId === kaynakId);
   return k.find((x) => belgeEtkin(x.durum)) ?? k.at(-1) ?? null;
+}
+
+/** kaynakların belge durumu (342: araç tutanağının imzası): kaynak başına etkin belge (bekliyor / imzalı), yoksa en son gönderilenin durumu.
+    Yetki ÇAĞIRANDA (kaynağı göremeyen kaynak kimliğini veremez). */
+export async function kaynakBelgeDurumlari(db: Sorgulayici, kaynakIdleri: readonly string[]): Promise<Map<string, BelgeDurumu>> {
+  const m = new Map<string, BelgeDurumu>();
+  if (!kaynakIdleri.length) return m;
+  for (const x of (await db.sorgu<{ kaynak_id: string; durum: BelgeDurumu }>(
+    "SELECT kaynak_id::text, durum FROM belge_onay WHERE dosya IS NOT NULL AND kaynak_id = ANY ($1::uuid[]) ORDER BY gonderildi", [kaynakIdleri])).rows) {
+    if (!belgeEtkin(m.get(x.kaynak_id))) m.set(x.kaynak_id, x.durum);
+  }
+  return m;
 }
 
 /** kaynağı (bordro) değişen ya da kaldırılan kaydın BEKLEYEN belgesi iptal olur — kişi eski PDF'i imzalamasın. Dönen: iptal edilen sayı. Yetki ÇAĞIRANDA. */

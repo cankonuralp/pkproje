@@ -13,7 +13,11 @@ import { klasorDepo } from "../src/server/dosya/depo.ts";
 import { dosyaIndirilebilir } from "../src/server/dosya/dosya.ts";
 import { DOSYA_ERISIMI } from "../src/server/dosya/erisim.ts";
 import { haftaBasi } from "../src/modules/araclar/sema.ts";
-import { aracKaydet, aracKarti, aracListesi, bugunTr, FotoHatasi, kmKaydet, tutanakKaydet, tutanakListesi, type Kisi } from "../src/modules/araclar/server/araclar.ts";
+import { aracKaydet, aracKarti, aracListesi, bugunTr, FotoHatasi, kmKaydet, tutanakBelgesiVerisi, tutanakKaydet, tutanakListesi, TutanakPdfHatasi, type Kisi,
+  type TutanakPdfUretici } from "../src/modules/araclar/server/araclar.ts";
+import type { AracTutanagiVerisi } from "../src/belge/arac.ts";
+import { PDF_UYGUNSUZ } from "../src/modules/onaylar/server/belge-baglanti.ts";
+import { digerBelgeler } from "../src/modules/onaylar/server/belgeler.ts";
 import { personelEkle } from "../src/modules/personel/server/personel.ts";
 import { teslimEt, varlikKarti, zimmetListeleri } from "../src/modules/zimmetler/server/zimmet.ts";
 import { testKumesi } from "./yardimci/kume.ts";
@@ -44,6 +48,16 @@ async function hesapli(firma: string, eposta: string, roller: string[], personel
     "INSERT INTO hesap (eposta, ad, roller, durum, personel_id) VALUES ($1, 'Deneme', $2, 'etkin', $3) RETURNING id::text", [eposta, roller, personelId]))).rows[0].id;
 }
 const a = <T,>(is: Parameters<typeof kiraciIcinde<T>>[2]) => kiraciIcinde(havuz, A, is);
+/* 342: kişiye teslimde tutanağın PDF'i teslim alanın imzasına gider — belgeyi oturumdaki kişi gönderir (hesap kimliği işlemde), PDF üretici verilir.
+   Sahte üretici imzalanabilir biçimde en küçük PDF'i döner (gerçek Chromium çıktısı tests/pdf.test.ts'te) ve belge verisini saklar. */
+const PDF = new TextEncoder().encode("%PDF-1.4\n1 0 obj << /Type /Catalog /Pages 2 0 R >> endobj\n2 0 obj << /Type /Pages /Kids [3 0 R] /Count 1 >> endobj\n"
+  + "3 0 obj << /Type /Page /Parent 2 0 R /Contents 4 0 R /Resources << >> >> endobj\n4 0 obj << /Length 19 >> stream\nBT (Tutanak) Tj ET\nendstream\nendobj\n"
+  + "trailer << /Root 1 0 R >>\n%%EOF\n");
+let sonBelge: AracTutanagiVerisi | null = null;
+const SAHTE: TutanakPdfUretici = async (v) => { sonBelge = v; return PDF; };
+/* uret null: üretici verilmeden (depoya iade bunu ister; kişiye teslim istemez) */
+const tk = (kim: Kisi, firma: string, girdi: object, fotolar: { aci: string; ad: string; bayt: Uint8Array }[] = [], uret: TutanakPdfUretici | null = SAHTE) =>
+  kiraciIcinde(havuz, firma, (db) => tutanakKaydet(db, depo, kim, firma, girdi, fotolar, uret ?? undefined), { hesapId: kim.id });
 const b = <T,>(is: Parameters<typeof kiraciIcinde<T>>[2]) => kiraciIcinde(havuz, B, is);
 let arac: string;
 
@@ -84,9 +98,9 @@ test("araç ekle: plaka biçimi ve eşsizliği (boşluk / harf büyüklüğü fa
 });
 
 test("teslim tutanağı: zimmet hareketi oluşur (Zimmetler'de aynı kayıt), numara AT-AAYY-SIRA, km son bilinenden küçük olamaz; Zimmetler araç teslim etmez", async () => {
-  assert.deepEqual(await a((db) => tutanakKaydet(db, depo, YON, A, T(arac, pDenetci, "900", "08:00"))),
+  assert.deepEqual(await tk(YON, A, T(arac, pDenetci, "900", "08:00")),
     { durum: "gecersiz", hatalar: { km: "Son bilinen kilometreden (1.000) küçük olamaz." } });
-  const r = tamam(await a((db) => tutanakKaydet(db, depo, YON, A, T(arac, pDenetci, "1.200", "08:00"))));
+  const r = tamam(await tk(YON, A, T(arac, pDenetci, "1.200", "08:00")));
   assert.match(r.no, /^AT-\d{4}-001$/);
   const k = (await a((db) => aracKarti(db, YON, arac)))!;
   assert.deepEqual([k.kimde, k.km, k.tutanaklar[0].eden, k.tutanaklar[0].kontrol, k.tutanaklar[0].yakit], [{ tip: "kisi", id: pDenetci, ad: "Deneme Denetçi" }, 1200, "Depo", ["ruhsat"], "yarim"]);
@@ -94,8 +108,8 @@ test("teslim tutanağı: zimmet hareketi oluşur (Zimmetler'de aynı kayıt), nu
   assert.deepEqual([z.tur, z.kod, z.kimde.tip, z.hareketler[0].km], ["a", "00 DNM 001", "kisi", 1200]);
   assert.deepEqual(await a((db) => teslimEt(db, depo, YON, A, { varlik: `a:${arac}`, alan: "depo", zaman: `${bugunTr()}T09:00`, notu: "" })),
     { durum: "gecersiz", hatalar: { varlik: "Varlık seçilmeli." } }, "araç Zimmetler'den teslim edilmez (kilometre ve tutanak gerekir)");
-  assert.deepEqual(await a((db) => tutanakKaydet(db, depo, YON, A, T(arac, pDenetci, "1.300", "08:30"))), { durum: "gecersiz", hatalar: { alan: "Araç zaten bu kişinin zimmetinde." } });
-  const g = await a((db) => tutanakKaydet(db, depo, YON, A, { arac, alan: "", zaman: "x", km: "", yakit: "", kontrol: ["sahte"], hasar: "" }));
+  assert.deepEqual(await tk(YON, A, T(arac, pDenetci, "1.300", "08:30")), { durum: "gecersiz", hatalar: { alan: "Araç zaten bu kişinin zimmetinde." } });
+  const g = await tk(YON, A, { arac, alan: "", zaman: "x", km: "", yakit: "", kontrol: ["sahte"], hasar: "" });
   assert.deepEqual(g.durum === "gecersiz" && Object.keys(g.hatalar).sort(), ["alan", "kontrol.0", "km", "yakit", "zaman"].sort());
 });
 
@@ -122,19 +136,19 @@ test("haftalık kilometre: aracı kullanan girer, aynı hafta düzeltilir, küç
 
 test("YETKİ: sürücü yalnız kendi aracını ve tutanaklarını görür, yalnız kendi aracını teslim eder; planlama görür; muhasebe görmez", async () => {
   const ikinciArac = tamam(await a((db) => aracKaydet(db, YON, null, 0, { ...ARAC, plaka: "00 DNM 002", ilkKm: "" }))).id;
-  tamam(await a((db) => tutanakKaydet(db, depo, YON, A, T(ikinciArac, pIkinci, "50", "09:00"))));
+  tamam(await tk(YON, A, T(ikinciArac, pIkinci, "50", "09:00")));
   const l = (await a((db) => aracListesi(db, DENETCI)))!;
   assert.deepEqual([l.kendi, l.araclar.map((x) => x.plaka)], [true, ["00 DNM 001"]]);
   assert.equal(await a((db) => aracKarti(db, DENETCI, ikinciArac)), null, "başkasının aracı: bulunamadı");
   assert.ok((await a((db) => tutanakListesi(db, DENETCI)))!.every((t) => t.plaka === "00 DNM 001"));
-  assert.deepEqual(await a((db) => tutanakKaydet(db, depo, DENETCI, A, T(ikinciArac, "depo", "60", "10:00"))), { durum: "yetkisiz" });
+  assert.deepEqual(await tk(DENETCI, A, T(ikinciArac, "depo", "60", "10:00")), { durum: "yetkisiz" });
   assert.deepEqual(await a((db) => aracKaydet(db, PLAN, ikinciArac, 0, ARAC)), { durum: "yetkisiz" });
   assert.equal((await a((db) => aracListesi(db, PLAN)))!.araclar.length, 2);
-  assert.deepEqual(await a((db) => tutanakKaydet(db, depo, PLAN, A, T(ikinciArac, "depo", "60", "10:00"))), { durum: "yetkisiz" });
+  assert.deepEqual(await tk(PLAN, A, T(ikinciArac, "depo", "60", "10:00")), { durum: "yetkisiz" });
   assert.equal(await a((db) => aracListesi(db, MUH)), null);
   assert.equal(await a((db) => aracKarti(db, MUH, arac)), null);
   /* sürücü kendi aracını teslim eder (depoya); sonra göremez */
-  tamam(await a((db) => tutanakKaydet(db, depo, DENETCI, A, T(arac, "depo", "1.500", "11:00"))));
+  tamam(await tk(DENETCI, A, T(arac, "depo", "1.500", "11:00")));
   assert.deepEqual((await a((db) => aracListesi(db, DENETCI)))!.araclar, []);
   assert.deepEqual(await a((db) => kmKaydet(db, YON, arac, { km: "1.600" })), { durum: "gecersiz", hatalar: { km: "Araç depoda; haftalık kilometre istenmez." } });
   /* Zimmetler'de sürücü yalnız kendi zimmetini görür: araç artık orada değil */
@@ -143,10 +157,10 @@ test("YETKİ: sürücü yalnız kendi aracını ve tutanaklarını görür, yaln
 
 test("FOTOĞRAF: açı başına bir JPEG / PNG; biri reddedilirse tutanak hiç kaydedilmez; fotoğrafı tutanağı gören açar", async () => {
   const once = (await a((db) => aracKarti(db, YON, arac)))!.tutanaklar.length;
-  await assert.rejects(a((db) => tutanakKaydet(db, depo, YON, A, T(arac, pDenetci, "1.600", "12:00"), [{ aci: "on", ad: "on.jpg", bayt: JPEG }, { aci: "arka", ad: "x.jpg", bayt: new TextEncoder().encode("%PDF-1.4") }])), FotoHatasi);
+  await assert.rejects(tk(YON, A, T(arac, pDenetci, "1.600", "12:00"), [{ aci: "on", ad: "on.jpg", bayt: JPEG }, { aci: "arka", ad: "x.jpg", bayt: new TextEncoder().encode("%PDF-1.4") }]), FotoHatasi);
   assert.equal((await a((db) => aracKarti(db, YON, arac)))!.tutanaklar.length, once, "tutanak geri alındı");
-  assert.deepEqual(await a((db) => tutanakKaydet(db, depo, YON, A, T(arac, pDenetci, "1.600", "12:00"), [{ aci: "tavan", ad: "x.jpg", bayt: JPEG }])), { durum: "gecersiz", hatalar: { foto: "Her açıya bir fotoğraf." } });
-  tamam(await a((db) => tutanakKaydet(db, depo, YON, A, T(arac, pDenetci, "1.600", "12:00"), [{ aci: "on", ad: "IMG_1.JPG", bayt: JPEG }])));
+  assert.deepEqual(await tk(YON, A, T(arac, pDenetci, "1.600", "12:00"), [{ aci: "tavan", ad: "x.jpg", bayt: JPEG }]), { durum: "gecersiz", hatalar: { foto: "Her açıya bir fotoğraf." } });
+  tamam(await tk(YON, A, T(arac, pDenetci, "1.600", "12:00"), [{ aci: "on", ad: "IMG_1.JPG", bayt: JPEG }]));
   const f = (await a((db) => aracKarti(db, YON, arac)))!.tutanaklar[0].fotolar;
   assert.deepEqual(f.map((x) => x.aci), ["on"]);
   assert.ok(await a((db) => dosyaIndirilebilir(db, DENETCI, f[0].id, DOSYA_ERISIMI)), "teslim alan sürücü açar");
@@ -156,10 +170,63 @@ test("FOTOĞRAF: açı başına bir JPEG / PNG; biri reddedilirse tutanak hiç k
   assert.equal(await b((db) => dosyaIndirilebilir(db, YON_B, f[0].id, DOSYA_ERISIMI)), null, "başka firma açamaz");
 });
 
+test("342 İMZA: kişiye teslimde tutanağın PDF'i teslim alanın imzasına gider (Onaylar › Diğer, kaynak zimmet hareketi); depoya iadede gitmez", async () => {
+  const ucuncu = tamam(await a((db) => aracKaydet(db, YON, null, 0, { ...ARAC, plaka: "00 DNM 003", ilkKm: "" }))).id;
+  const r = tamam(await tk(YON, A, T(ucuncu, pDenetci, "10", "06:00", { kontrol: ["ruhsat", "yangin"], hasar: "Sol arka çizik" }), [{ aci: "on", ad: "on.jpg", bayt: JPEG }]));
+  const belge = async (kaynak: string) => (await a((db) => db.sorgu<{ tur: string; personel_id: string; durum: string; ad: string; dosya: boolean; gonderen: string }>(
+    "SELECT tur, personel_id::text, durum, ad, dosya IS NOT NULL AS dosya, gonderen::text FROM belge_onay WHERE kaynak_id = $1", [kaynak]))).rows;
+  assert.deepEqual(await belge(r.id), [{ tur: "arac", personel_id: pDenetci, durum: "bekliyor", ad: `Araç teslim tutanağı · ${r.no} · 00 DNM 003`, dosya: true, gonderen: YON.id }]);
+  /* belgenin verisi: tutanağın kendisinden (kişiler, kalemler, açılar) */
+  const v = sonBelge!;
+  assert.deepEqual([v.no, v.plaka, v.eden, v.alan?.ad, v.km, v.yakit, v.hasar], [r.no, "00 DNM 003", null, "Deneme Denetçi", "10 km", "1/2", "Sol arka çizik"]);
+  assert.deepEqual(v.kontrol?.filter(([, x]) => x).map(([k]) => k), ["Ruhsat", "Yangın söndürücü"]);
+  assert.deepEqual(v.fotolar.filter(([, x]) => x).map(([k]) => k), ["Ön"]);
+  /* teslim alan Onaylar › Diğer'de görür; tutanakta imzanın durumu */
+  const d = await kiraciIcinde(havuz, A, (db) => digerBelgeler(db, DENETCI), { hesapId: DENETCI.id });
+  assert.ok(d.belgeler.some((x) => x.tur === "arac" && x.durum === "bekliyor"), JSON.stringify(d.belgeler));
+  assert.equal((await a((db) => aracKarti(db, YON, ucuncu)))!.tutanaklar[0].imza, "bekliyor");
+  /* sürücü kendi aracını başkasına teslim eder: belge yeni teslim alana, gönderen sürücü */
+  const r2 = tamam(await tk(DENETCI, A, T(ucuncu, pIkinci, "20", "06:30")));
+  assert.deepEqual((await belge(r2.id)).map((x) => [x.personel_id, x.gonderen]), [[pIkinci, DENETCI.id]]);
+  assert.deepEqual([sonBelge!.eden?.ad, sonBelge!.alan?.ad], ["Deneme Denetçi", "Deneme İkinci"]);
+  /* depoya iade: belge yok */
+  const r3 = tamam(await tk(IKINCI, A, T(ucuncu, "depo", "30", "07:00")));
+  assert.deepEqual(await belge(r3.id), []);
+  assert.equal((await a((db) => aracKarti(db, YON, ucuncu)))!.tutanaklar[0].imza, null);
+});
+
+test("342 PDF üretilemezse ya da imzalanabilir değilse tutanak HİÇ kaydedilmez (imzasız teslim kalmaz); üretici verilmeden kişiye teslim olmaz", async () => {
+  const dorduncu = tamam(await a((db) => aracKaydet(db, YON, null, 0, { ...ARAC, plaka: "00 DNM 004", ilkKm: "" }))).id;
+  const sayi = async () => (await a((db) => db.sorgu<{ n: number }>("SELECT count(*)::int AS n FROM zimmet_hareket WHERE arac_id = $1", [dorduncu]))).rows[0].n;
+  await assert.rejects(tk(YON, A, T(dorduncu, pDenetci, "10", "06:00"), [], async () => { throw new Error("motor düştü"); }),
+    (h) => h instanceof TutanakPdfHatasi && /üretilemedi/.test(h.message));
+  const NESNE_AKISLI = new TextEncoder().encode(new TextDecoder("latin1").decode(PDF).replace("4 0 obj << /Length 19 >>", "4 0 obj << /Type /ObjStm /N 1 /First 4 /Length 19 >>"));
+  await assert.rejects(tk(YON, A, T(dorduncu, pDenetci, "10", "06:00"), [], async () => NESNE_AKISLI), (h) => h instanceof TutanakPdfHatasi && h.message === PDF_UYGUNSUZ);
+  await assert.rejects(tk(YON, A, T(dorduncu, pDenetci, "10", "06:00"), [], null), /üreticisi verilmedi/);
+  assert.equal(await sayi(), 0, "hareket de tutanak da geri alındı");
+  assert.deepEqual((await a((db) => aracKarti(db, YON, dorduncu)))!.kimde, { tip: "depo" });
+  /* depoya iade üretici istemez */
+  tamam(await tk(YON, A, T(dorduncu, pDenetci, "10", "06:00")));
+  tamam(await tk(YON, A, T(dorduncu, "depo", "20", "07:00"), [], null));
+});
+
+test("342 tutanak belgesini görme: 'gör' her tutanak, sürücü yalnız taraf olduğu; muhasebe ve başka firma göremez; tutanaksız / bozuk kimlik yok", async () => {
+  const t = (await a((db) => tutanakListesi(db, YON)))!.find((x) => x.plaka === "00 DNM 003" && x.alan === "Deneme Denetçi")!;
+  const gor = (kim: Kisi, firma = A) => kiraciIcinde(havuz, firma, (db) => tutanakBelgesiVerisi(db, kim, t.hareketId));
+  assert.equal((await gor(YON))?.no, t.no);
+  assert.equal((await gor(PLAN))?.no, t.no, "planlama görür");
+  assert.equal((await gor(DENETCI))?.no, t.no, "teslim alan sürücü");
+  assert.equal(await gor(IKINCI), null, "taraf olmayan sürücü");
+  assert.equal(await gor(MUH), null, "muhasebe Araçlar'ı görmez");
+  assert.equal(await gor(YON_B, B), null, "başka firma");
+  assert.equal(await a((db) => tutanakBelgesiVerisi(db, YON, "x")), null);
+  assert.equal((await a((db) => tutanakBelgesiVerisi(db, YON, t.hareketId)))?.firma.kod, "DA");
+});
+
 test("KİRACI: B, A'nın aracını göremez, tutanak / kilometre yazamaz; veritabanı başka firmanın aracına hareket bağlamaz", async () => {
   assert.equal(await b((db) => aracKarti(db, YON_B, arac)), null);
   assert.deepEqual((await b((db) => aracListesi(db, YON_B)))!.araclar, []);
-  assert.deepEqual(await b((db) => tutanakKaydet(db, depo, YON_B, B, T(arac, "depo", "9.000"))), { durum: "gecersiz", hatalar: { arac: "Araç seçilmeli." } });
+  assert.deepEqual(await tk(YON_B, B, T(arac, "depo", "9.000")), { durum: "gecersiz", hatalar: { arac: "Araç seçilmeli." } });
   assert.deepEqual(await b((db) => kmKaydet(db, YON_B, arac, { km: "9.000" })), { durum: "yok" });
   const pB = tamam(await b((db) => personelEkle(db, YON_B, { ...P, ad: "Deneme B Kişi" }))).id;
   await assert.rejects(b((db) => db.sorgu("INSERT INTO zimmet_hareket (arac_id, alan_personel, zaman) VALUES ($1, $2, now())", [arac, pB])), /foreign key|yabancı anahtar/i);

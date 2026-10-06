@@ -3,6 +3,7 @@ import { SABLONLAR } from "../format/sablonlar.ts";
 import { Cevaplar } from "../format/tanim.ts";
 import type { TeklifBelgesiVerisi } from "./teklif.ts";
 import type { FaturaBelgesiVerisi } from "./fatura.ts";
+import type { AracTutanagiVerisi } from "./arac.ts";
 import type { TalepFormuVerisi } from "./talep.ts";
 import type { BelgeVerisi } from "./veri.ts";
 
@@ -47,4 +48,9 @@ export const ornekTalep = (): TalepFormuVerisi => ({
     ["Açıklama", "Deneme <yakıt> & fiş"], ["Fiş", "fis.pdf"]],
   red: null, karar: { ad: "Deneme Muhasebe", zaman: "2026-10-05T12:00:00.000Z", sonuc: "onaylandi" },
 });
-
+export const ornekAracTutanagi = (): AracTutanagiVerisi => ({
+  firma: { ad: "Deneme Muayene A.Ş.", kod: "DA" }, no: "AT-1026-001", zaman: "2026-10-06T06:30:00.000Z", plaka: "34 DNM 001", arac: "Binek · Deneme Model · 2022",
+  eden: null, alan: { ad: "Deneme Denetçi", meslek: "Makine mühendisi" }, km: "12.400 km", yakit: "1/2",
+  kontrol: [["Ruhsat", true], ["Trafik sigortası poliçesi", true], ["Anahtar (2 adet)", false]], hasar: "Sol arka <çizik> & göçük",
+  fotolar: [["Ön", true], ["Arka", false]],
+});

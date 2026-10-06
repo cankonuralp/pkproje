@@ -4,8 +4,9 @@
    Süre ölçülüp yazılır (Vercel ölçümü: src/app/api/olcum/pdf, yalnız önizleme dağıtımı). */
 import assert from "node:assert/strict";
 import { test } from "node:test";
-import { ornekBelge, ornekTeklif, ornekFatura, ornekTalep } from "../src/belge/ornek.ts";
-import { belgeCss, belgeHtml, belgePdf, faturaPdf, talepPdf, teklifPdf } from "../src/belge/pdf.ts";
+import { ornekAracTutanagi, ornekBelge, ornekTeklif, ornekFatura, ornekTalep } from "../src/belge/ornek.ts";
+import { aracTutanagiPdf, belgeCss, belgeHtml, belgePdf, faturaPdf, talepPdf, teklifPdf } from "../src/belge/pdf.ts";
+import { imzayaUygun } from "../src/modules/raporlar/imza-pdf.ts";
 
 test("belge HTML'i: betik yok, yazı tipi gömülü (dış adres yok)", () => {
   const html = belgeHtml(ornekBelge("ZPKR02"));
@@ -53,3 +54,15 @@ test("talep formu PDF'i (341): aynı motorla A4, Carlito gömülü, tek sayfa", 
   assert.equal((metin.match(/\/Type\s*\/Page\b/g) ?? []).length, 1, "tek sayfa");
 });
 
+/* 342: araç tutanağının PDF'i teslim alanın imzasına gider (Onaylar › Diğer) — belge_onay yalnız imzalanabilir biçimdeki PDF'i kabul eder
+   (imza-pdf.ts imzayaUygun: nesne akışı yok, katalog ve sayfalar ayrıştırılır). Motorun çıktısı bu biçimde olmalı; öteki belgeler de aynı motor. */
+test("araç teslim tutanağı PDF'i (342): A4, Carlito gömülü, tek sayfa; motorun bütün çıktıları imzalanabilir biçimde", async () => {
+  const pdf = await aracTutanagiPdf(ornekAracTutanagi()), metin = Buffer.from(pdf).toString("latin1");
+  assert.equal(metin.slice(0, 5), "%PDF-");
+  assert.ok(/Carlito/.test(metin), "Carlito gömülü değil");
+  assert.ok(/\/MediaBox\s*\[\s*0\s+0\s+59[45](\.\d+)?\s+841(\.\d+)?\s*\]/.test(metin), "A4 değil");
+  assert.equal((metin.match(/\/Type\s*\/Page\b/g) ?? []).length, 1, "tek sayfa");
+  assert.ok(imzayaUygun(pdf), "araç tutanağı imzalanabilir biçimde değil");
+  assert.ok(imzayaUygun(await talepPdf(ornekTalep())), "talep formu imzalanabilir biçimde değil");
+  assert.ok(imzayaUygun(await belgePdf(ornekBelge("ZPKR02"))), "rapor imzalanabilir biçimde değil");
+});

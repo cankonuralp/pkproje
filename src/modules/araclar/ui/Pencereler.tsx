@@ -2,7 +2,8 @@
 /* ARAÇ PENCERELERİ (maket araclar.html kayitCiz / pencereCiz / tutanak-goster): araç ekle / düzenle (plaka eşsiz; belge bitişleri isteğe
    bağlı; kayıttaki kilometre yalnız eklerken) · teslim tutanağı (araç · teslim alan: kişi ya da depo · tarih-saat · kilometre · yakıt · araçta
    olanlar · hasar · açı açı fotoğraf; işaretlenmeyen kalem tutanağa "yok", fotoğrafsız açı uyarı — kayıt yine yapılır) · tutanak görünümü.
-   Teslim eden sunucuda o anki "kimde"den. Karar sunucuda. İmzaya gönderme (Onaylar › Diğer) Onaylar kaleminde. */
+   Teslim eden sunucuda o anki "kimde"den. Karar sunucuda. Teslim alan kişiyse tutanağın PDF'i onun imzasına gider (Onaylar › Diğer belgeler,
+   342); tutanak görünümünde imzanın durumu ve PDF. */
 import { useRouter } from "next/navigation";
 import { useRef, useState, useTransition } from "react";
 import { useBildir } from "../../../components/bildirim/Bildirim";
@@ -14,7 +15,9 @@ import { SecimAlani } from "../../../components/secim/SecimAlani";
 import { simdiIso } from "../../../components/secim/tarih";
 import { TarihAlani } from "../../../components/secim/TarihAlani";
 import { Serit } from "../../../components/serit/Serit";
-import { Tus } from "../../../components/tus/Tus";
+import { Ikon } from "../../../components/ikon/Ikon";
+import { Tus, tusSinifi } from "../../../components/tus/Tus";
+import { BELGE_DURUM } from "../../onaylar/sema";
 import { ARAC_FOTO, ARAC_KONTROL, ARAC_TURLERI, kmYaz, seviyeAd, YAKIT_SEVIYE, YAKITLAR } from "../sema";
 import type { AracSatiri, TutanakSatiri } from "../server/araclar";
 import { aracKaydetEylemi, tutanakKaydetEylemi } from "./eylemler";
@@ -113,7 +116,7 @@ export function TutanakPenceresi({ kapat, araclar, kisiler, arac = "", surucu = 
     }
     const alanAd = d.alan === "depo" ? "Depo" : kisiler.find((k) => k.id === d.alan)?.ad ?? "";
     kapat();
-    bildir(`${v?.plaka ?? ""}: ${v ? kimdeAd(v.kimde) : ""} → ${alanAd}. Tutanak ${r.ileti ?? ""} kaydedildi, zimmet kaydı oluştu.`);
+    bildir(`${v?.plaka ?? ""}: ${v ? kimdeAd(v.kimde) : ""} → ${alanAd}. Tutanak ${r.ileti ?? ""} kaydedildi, zimmet kaydı oluştu${d.alan === "depo" ? "." : `; ${alanAd} Onaylar'dan imzalar.`}`);
     router.push(surucu && d.alan !== "depo" ? "/araclar" : `/araclar/${d.arac}`);
     router.refresh();
   });
@@ -171,7 +174,7 @@ export function TutanakPenceresi({ kapat, araclar, kisiler, arac = "", surucu = 
         </ul>
         {fotosuz > 0 && <p className={stil.ipucu}>{fotosuz} açı fotoğrafsız; tutanak yine kaydedilir.</p>}
       </form>
-      {d.alan && d.alan !== "depo" && <Serit tur="bilgi" ikon="info">Kaydedince zimmet kaydı oluşur; tutanağın imzalanması Onaylar kaleminde gelir.</Serit>}
+      {d.alan && d.alan !== "depo" && <Serit tur="bilgi" ikon="info">Kaydedince zimmet kaydı oluşur; tutanak imzaya gider: {kisiler.find((k) => k.id === d.alan)?.ad ?? ""} › Onaylar › Diğer belgeler.</Serit>}
     </Pencere>
   );
 }
@@ -179,12 +182,14 @@ export function TutanakPenceresi({ kapat, araclar, kisiler, arac = "", surucu = 
 export function TutanakGorunumu({ t, kapat }: { t: TutanakSatiri; kapat: () => void }) {
   const kontrol = t.kontrol ? new Set(t.kontrol) : null;
   return (
-    <Pencere acik baslik={`Araç teslim tutanağı · ${t.plaka}${t.no ? ` · ${t.no}` : ""}`} onKapat={kapat} genis alt={<Tus tur="ikincil" onClick={kapat}>Kapat</Tus>}>
+    <Pencere acik baslik={`Araç teslim tutanağı · ${t.plaka}${t.no ? ` · ${t.no}` : ""}`} onKapat={kapat} genis
+      alt={<>{t.no && <a className={tusSinifi("ikincil")} href={`/araclar/tutanak/${t.hareketId}/pdf`} download><Ikon ad="file-text" kucuk />PDF</a>}<Tus tur="ikincil" onClick={kapat}>Kapat</Tus></>}>
       <BilgiListesi>
         <Bilgi etiket="Tarih">{zamanYaz(t.zaman)}</Bilgi>
         <Bilgi etiket="Teslim eden → alan" genis>{t.eden} → {t.alan}</Bilgi>
         <Bilgi etiket="Kilometre">{t.km != null ? kmYaz(t.km) : "—"}</Bilgi>
         <Bilgi etiket="Yakıt">{t.yakit ? seviyeAd(t.yakit) : "Kayıtta yok"}</Bilgi>
+        <Bilgi etiket="Teslim alanın imzası">{t.imza ? BELGE_DURUM[t.imza][0] : t.alan === "Depo" ? "Depoya iade (imza yok)" : "Gönderilmedi"}</Bilgi>
         <Bilgi etiket="Hasar ve notlar" genis="tam">{t.hasar ?? "Yok"}</Bilgi>
         <Bilgi etiket="Araçta olanlar" genis="tam">
           {kontrol ? <ul className={stil.liste}>{ARAC_KONTROL.map(([k, ad]) => <li key={k}>{ad}: {kontrol.has(k) ? "var" : "yok"}</li>)}</ul> : "Kayıtta yok"}

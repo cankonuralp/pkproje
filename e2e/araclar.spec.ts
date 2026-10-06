@@ -1,6 +1,8 @@
 /* NEREDEN GELDİ: K2 Araçlar (2026-10-04) — maket araclar.html (AA4 + haftalık kilometre). Gerçek tarayıcıda, üç genişlikte: araç ekle (depoda)
    → teslim tutanağı (kişiye; kilometre, yakıt) → araç sayfası "Zimmette", tutanak listede · sürücü (denetçi, kendi) yalnız kendi aracını görür,
-   bu haftanın kilometresini yazar, araç ekleyemez. Her proje kendi uydurma plakasını açar. */
+   bu haftanın kilometresini yazar, araç ekleyemez. Her proje kendi uydurma plakasını açar. 342: tutanağın PDF'i iner; tutanak teslim alanın
+   (denetçi) Onaylar › Diğer belgeler'ine imzaya düşer. */
+import { readFileSync } from "node:fs";
 import { expect, test } from "@playwright/test";
 import { girisli, hazir } from "./yardimci";
 
@@ -38,6 +40,10 @@ test("araç: ekle, teslim tutanağı, sürücü haftalık kilometre", async ({ p
   await expect(page.getByText(/Tutanak AT-\d{4}-\d{3} kaydedildi/)).toBeVisible({ timeout: 30_000 });
   await expect(page.getByText("Zimmette").first()).toBeVisible();
   await expect(page.getByRole("button", { name: "Tutanak" }).first()).toBeAttached();
+  /* 342: tutanağın PDF'i iner (temel format) */
+  const [indirilen] = await Promise.all([page.waitForEvent("download", { timeout: 90_000 }), page.getByRole("link", { name: /^AT-\d{4}-\d{3} PDF$/ }).first().click()]);
+  expect(indirilen.suggestedFilename()).toMatch(/^AT-\d{4}-\d{3}\.pdf$/);
+  expect(readFileSync((await indirilen.path())!).subarray(0, 5).toString("latin1")).toBe("%PDF-");
   await page.goto("/araclar/tutanaklar");
   await hazir(page);
   await expect(page.getByRole("link", { name: plaka }).first()).toBeAttached();
@@ -55,4 +61,8 @@ test("araç: ekle, teslim tutanağı, sürücü haftalık kilometre", async ({ p
   await page.getByLabel(`${plaka} · bu hafta kilometre`).fill("1.500");
   await page.getByLabel(`${plaka} · bu hafta kilometre`).press("Enter");
   await expect(page.getByText(`${plaka}: bu haftanın kilometresi kaydedildi.`)).toBeVisible({ timeout: 30_000 });
+  /* 342: teslim tutanağı sürücünün imzasını bekliyor (Onaylar › Diğer belgeler) */
+  await page.goto("/onaylar/diger");
+  await hazir(page);
+  await expect(page.getByText(new RegExp(`^Araç teslim tutanağı · AT-\\d{4}-\\d{3} · ${plaka}$`)).first()).toBeVisible();
 });

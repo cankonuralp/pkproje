@@ -12,7 +12,8 @@ import { KartEtiket, Kirp, Liste, type Sutun } from "../../../components/liste/L
 import { Sayac, SuzgecliListe, useSuzgec } from "../../../components/liste/SuzgecliListe";
 import type { SuzgecTanimi } from "../../../components/liste/suzgec";
 import { AltSatir, Bolum, DegerYok, SayfaBasi, Sekmeler } from "../../../components/sayfa/Sayfa";
-import { Tus } from "../../../components/tus/Tus";
+import { Tus, tusSinifi } from "../../../components/tus/Tus";
+import { BELGE_DURUM } from "../../onaylar/sema";
 import { kmYaz } from "../sema";
 import type { AracSatiri, KmSatiri, TutanakSatiri } from "../server/araclar";
 import { kmKaydetEylemi } from "./eylemler";
@@ -115,11 +116,16 @@ export function TutanakTablosu({ tutanaklar, aracli = true }: { tutanaklar: Tuta
   const sutunlar: Sutun<TutanakSatiri>[] = [
     { k: "tarih", genislik: "18%", baslik: "Tarih", kart: "ust", sira: 1, hucre: (t) => <span>{zamanYaz(t.zaman)}<AltSatir>{t.no ?? "Tutanaksız teslim"}</AltSatir></span> },
     ...(aracli ? [{ k: "arac", genislik: "14%", baslik: "Araç", kart: "govde" as const, sira: 2, hucre: (t: TutanakSatiri) => <><KartEtiket>Araç</KartEtiket><Link className={stil.ad} href={`/araclar/${t.aracId}`}>{t.plaka}</Link></> }] : []),
-    { k: "kim", genislik: aracli ? "28%" : "36%", baslik: "Teslim eden → alan", kart: "govde", sira: 3, hucre: (t) => <><KartEtiket>Teslim eden → alan</KartEtiket><Kirp>{t.eden} → <b>{t.alan}</b></Kirp></> },
+    { k: "kim", genislik: aracli ? "28%" : "36%", baslik: "Teslim eden → alan", kart: "govde", sira: 3, hucre: (t) => (
+      <><KartEtiket>Teslim eden → alan</KartEtiket><span><Kirp>{t.eden} → <b>{t.alan}</b></Kirp>{t.imza && <AltSatir>İmza: {BELGE_DURUM[t.imza][0]}</AltSatir>}</span></>
+    ) },
     { k: "km", genislik: "12%", baslik: "Kilometre", kart: "govde", sira: 4, hucre: (t) => <><KartEtiket>Kilometre</KartEtiket>{t.km != null ? <span className={stil.sayi}>{kmYaz(t.km)}</span> : <DegerYok />}</> },
     { k: "foto", genislik: "10%", baslik: "Fotoğraf", kart: "govde", sira: 5, hucre: (t) => <><KartEtiket>Fotoğraf</KartEtiket><span className={stil.hucreSatir}><Ikon ad="camera" kucuk />{t.fotolar.length}</span></> },
     { k: "eylem", genislik: aracli ? "18%" : "24%", baslik: "İşlem", gizliBaslik: true, kart: "eylem", sira: 9, hucre: (t) => (
-      <span className={stil.tuslar}><Tus tur="ikincil" ikon="file-text" onClick={() => setGoster(t)}>Tutanak</Tus></span>
+      <span className={stil.tuslar}>
+        <Tus tur="ikincil" ikon="file-text" onClick={() => setGoster(t)}>Tutanak</Tus>
+        {t.no && <a className={tusSinifi("ikincil")} href={`/araclar/tutanak/${t.hareketId}/pdf`} download aria-label={`${t.no} PDF`}><Ikon ad="file-text" kucuk />PDF</a>}
+      </span>
     ) },
   ];
   return (

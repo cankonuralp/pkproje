@@ -1,10 +1,11 @@
 "use server";
 /* ARAÇLAR SUNUCU EYLEMLERİ — kişi ve kiracı oturumdan; yetki, doğrulama, kilometre ve fotoğraf denetimi modül işlevinde (araclar.ts).
-   Teslim eden istemciden alınmaz (Zimmetler o anki "kimde"yi yazar). */
+   Teslim eden istemciden alınmaz (Zimmetler o anki "kimde"yi yazar). Tutanağın PDF'i sunucuda üretilir (342; teslim alanın imzasına). */
+import { aracTutanagiPdf } from "../../../belge/pdf";
 import { depo } from "../../../server/dosya/depo";
 import { ayniKoken } from "../../../server/kimlik/koken";
 import { istekOturumu, oturumIslemi } from "../../../server/kimlik/istek";
-import { aracKaydet, FotoHatasi, kmKaydet, tutanakKaydet } from "../server/araclar";
+import { aracKaydet, FotoHatasi, kmKaydet, tutanakKaydet, TutanakPdfHatasi } from "../server/araclar";
 
 export interface PencereDurumu { tamam?: boolean; id?: string; hatalar?: Record<string, string>; genel?: string; ileti?: string }
 
@@ -45,10 +46,11 @@ export async function tutanakKaydetEylemi(form: FormData): Promise<PencereDurumu
     kontrol: form.getAll("kontrol").map(yazi), hasar: yazi(form.get("hasar")),
   };
   try {
-    const r = await oturumIslemi(o, (db) => tutanakKaydet(db, depo(), o, o.kiraci.firmaId, girdi, fotolar));
+    const r = await oturumIslemi(o, (db) => tutanakKaydet(db, depo(), o, o.kiraci.firmaId, girdi, fotolar, aracTutanagiPdf));
     return cevir(r, r.durum === "tamam" ? r.no : undefined);
   } catch (h) {
     if (h instanceof FotoHatasi) return { hatalar: { [`foto-${h.aci}`]: h.message } };
+    if (h instanceof TutanakPdfHatasi) return { genel: h.message };
     throw h;
   }
 }

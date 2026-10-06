@@ -7,6 +7,7 @@ import { readFileSync } from "node:fs";
 import { join } from "node:path";
 import { chromium, type Browser } from "playwright-core";
 import type { ReactNode } from "react";
+import { aracTutanagi, type AracTutanagiVerisi } from "./arac.ts";
 import { raporBelgesi } from "./belge.ts";
 import { faturaBelgesi, type FaturaBelgesiVerisi } from "./fatura.ts";
 import { talepFormu, type TalepFormuVerisi } from "./talep.ts";
@@ -49,6 +50,8 @@ export const teklifPdf = (v: TeklifBelgesiVerisi) => htmlPdf(sayfaHtml(v.no, tek
 export const faturaPdf = (v: FaturaBelgesiVerisi) => htmlPdf(sayfaHtml(`${v.no} fatura özeti`, faturaBelgesi(v)));
 /** talep formu (341): izin talep formu ya da masraf formu, temel format */
 export const talepPdf = (v: TalepFormuVerisi) => htmlPdf(sayfaHtml(v.no, talepFormu(v)));
+/** araç teslim tutanağı (342): temel format; teslim alan kişiyse imzasına gider (Onaylar › Diğer) */
+export const aracTutanagiPdf = (v: AracTutanagiVerisi) => htmlPdf(sayfaHtml(v.no, aracTutanagi(v)));
 
 async function htmlPdf(html: string): Promise<Uint8Array> {
   const b = await tarayici();

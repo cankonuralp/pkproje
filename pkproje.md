@@ -2341,6 +2341,16 @@ revizyon, alan kopyalama, hafif kusur devri, meslek eşleşme denetimi).
 - Emsal ürünler: https://opwire.app/iso-17020-periyodik-kontrol-yazilimi/ · https://17020muayene.vidco.com.tr/ · https://akuple.com/asansor-kontrol-yazilimi/ · https://ensyazilim.com/
 
 ## 11 · Değişiklik günlüğü
+- 2026-10-06 (342): **K4 Araç teslim tutanağı → Onaylar › Diğer** (maket araclar.html tutanak-kaydet / tutanak-goster, MB.aracTutanak; AA3, AA4:
+  "teslim alan kişiyse tutanak onun Onaylar › Diğer'ine imzaya düşer"). Tutanağın belgesi temel formatla (<firma kodu>-FR-ARC-01): tutanak no, tarih,
+  plaka, araç, teslim eden / alan (depo: "firma adına"), 1 Aracın durumu (km, yakıt), 2 Araçta olanlar (Var / Yok), 3 Hasar ve notlar, 4 Fotoğraflar
+  (açı başına çekildi / çekilmedi), 5 Taahhüt, imzalar ("Tarih · imza"; imza imzalı PDF'in kendisinde). Kişiye teslimde tutanakla AYNI işlemde PDF
+  üretilir ve teslim alanın imzasına gider (belge_onay tür "arac", kaynak zimmet hareketi, gönderen oturumdaki kişi — sürücü kendi aracını başkasına
+  verince sürücü); PDF üretilemezse ya da imzalanabilir biçimde değilse tutanak HİÇ kaydedilmez (imzasız teslim kalmaz). Depoya iadede belge yok.
+  Tutanak listesinde "PDF" ve "İmza: …" (Onay bekliyor / İmzalandı / Geri gönderildi), tutanak penceresinde imzanın durumu. Uç
+  /araclar/tutanak/<hareket>/pdf; görme tutanak listesiyle aynı ("gör" her tutanak, sürücü yalnız taraf olduğu). Geri gönderilen tutanağın yeniden
+  gönderilmesi makette yok (açık). Kilit: arac-belgesi.test (saf), pdf.test (motorun bütün çıktıları imzalanabilir biçimde — imzayaUygun), araclar.test
+  (gönderim, gönderen, depoda yok, PDF düşerse geri alınır, görme); olumsuz kanıt 2; araclar e2e (PDF iner, denetçinin Onaylar › Diğer'inde).
 - 2026-10-06 (341): **K4 Talep formu (PDF)** (maket MB.TALEP_FORMAT / talepFormu / talepPdfAc — 35. tur 161–162, T8). İzin talep formu ve masraf
   formu temel formatla (<firma kodu>-FR-IZN-01 / MSR-01): başlık (logo, künye, form adı, form no, gönderildi, durum), personel (ad · meslek), 1 Talep
   (izin: tür, başlangıç, bitiş, iş günü, açıklama, ek belge · masraf: iş, tarih, tür, tutar, KDV ve KDV hariç, açıklama, fiş, ödendi), 2 Beyan (+ red

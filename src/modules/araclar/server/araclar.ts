@@ -4,8 +4,11 @@
    tutanağı: "yaz" düzeyi her araç için, sürücü yalnız kendi zimmetindeki araç için. Haftalık kilometreyi aracı kullanan kişi (ya da "yaz")
    girer. Kilometre son bilinenden küçük olamaz (ENGEL); haftada 3.000 km'den fazla artış kaydedilir, uyarılır.
    "Kimde" Zimmetler'in hareketlerinden (ikinci liste yok); teslim tutanağı zimmet hareketini Zimmetler'in işleviyle yazar, tutanak eki burada.
-   Fotoğraflar tek dosya yolundan (yalnız JPEG / PNG, EXIF silinir), zimmet hareketine bağlı (Zimmetler'in geçmişinde de görünür). */
-import { ayarOku } from "../../../server/ayar/ayar.ts";
+   Fotoğraflar tek dosya yolundan (yalnız JPEG / PNG, EXIF silinir), zimmet hareketine bağlı (Zimmetler'in geçmişinde de görünür).
+   342: tutanağın belgesi (temel format, src/belge/arac.ts) — teslim alan kişiyse tutanakla AYNI işlemde PDF'i onun imzasına gider (Onaylar › Diğer,
+   kaynak zimmet hareketi); PDF üretilemezse tutanak da kaydedilmez (imzasız teslim kalmaz). Depoya iadede belge gönderilmez. */
+import type { AracTutanagiVerisi } from "../../../belge/arac.ts";
+import { ayarOku, firmaBelgeKunyesi } from "../../../server/ayar/ayar.ts";
 import type { Sorgulayici } from "../../../server/db/kiraci.ts";
 import { ekle, guncelle, tablo } from "../../../server/db/yazici.ts";
 import type { Depo } from "../../../server/dosya/depo.ts";
@@ -14,9 +17,12 @@ import { hesabinPersoneli } from "../../../server/kimlik/hesap.ts";
 import { numaraAl } from "../../../server/numara/numara.ts";
 import { duzey, type YetkiHesabi } from "../../../server/yetki/canDo.ts";
 import { dogrula, type DogrulamaHatalari } from "../../../sema/ortak.ts";
-import { personelSecenekleri } from "../../personel/server/personel.ts";
+import { belgeGonder, kaynakBelgeDurumlari } from "../../onaylar/server/belge-baglanti.ts";
+import type { BelgeDurumu as ImzaDurumu } from "../../onaylar/sema.ts";
+import { meslek } from "../../personel/sema.ts";
+import { personelOzetleri, personelSecenekleri } from "../../personel/server/personel.ts";
 import { aracHareketiYaz, DOSYA_MODULU as ZIMMET_DOSYA, kimdeHaritasi } from "../../zimmetler/server/zimmet.ts";
-import { AracGirdisi, ARAC_FOTO, belgeDurumu, haftaBasi, haftaEkle, KmGirdisi, kmYaz, TutanakGirdisi, type BelgeDurumu, type FotoAcisi } from "../sema.ts";
+import { AracGirdisi, ARAC_FOTO, ARAC_KONTROL, belgeDurumu, haftaBasi, haftaEkle, KmGirdisi, kmYaz, seviyeAd, TutanakGirdisi, type BelgeDurumu, type FotoAcisi } from "../sema.ts";
 
 const MODUL = 23;
 const ARAC = tablo({ ad: "arac", sutunlar: ["plaka", "tur", "marka", "model", "yil", "yakit", "ilk_km", "bakim_km", "muayene", "sigorta", "kasko", "pasif"] });
@@ -37,6 +43,8 @@ export interface AracSatiri {
 export interface TutanakSatiri {
   id: string; hareketId: string; no: string | null; aracId: string; plaka: string; zaman: string; eden: string; alan: string; km: number | null;
   yakit: string | null; kontrol: string[] | null; hasar: string | null; fotolar: { aci: FotoAcisi | null; id: string }[];
+  /** teslim alanın imzası (342): gönderilen belgenin durumu; depoya iade ve tutanaksız teslimde null */
+  imza: ImzaDurumu | null;
 }
 export interface KmSatiri { hafta: string; km: number | null; yol: number | null; giren: string | null; zaman: string | null }
 export interface AracKarti extends AracSatiri {
@@ -87,7 +95,8 @@ async function durum(db: Sorgulayici) {
   const kisiAd = new Map(kisiler.map((k) => [k.id, k.ad]));
   const yer = (p: string | null) => (p ? kisiAd.get(p) ?? "Ayrılan personel" : "Depo");
   const esik = (await ayarOku(db, "uyari_esikleri")).deger.kalibrasyon;
-  return { araclar, hareketler, km, fotolar, kisiler, yer, esik };
+  const imzalar = await kaynakBelgeDurumlari(db, hareketler.filter((h) => h.tutanak).map((h) => h.id));
+  return { araclar, hareketler, km, fotolar, kisiler, yer, esik, imzalar };
 }
 type Durum = Awaited<ReturnType<typeof durum>>;
 
@@ -122,6 +131,7 @@ function tutanakSatiri(s: Durum, h: HareketDb, plaka: string): TutanakSatiri {
   return {
     id: h.tutanak ?? h.id, hareketId: h.id, no: h.no, aracId: h.arac_id, plaka, zaman: h.zaman.toISOString(), eden: s.yer(h.eden), alan: s.yer(h.alan), km: h.km,
     yakit: h.yakit, kontrol: h.kontrol, hasar: h.hasar, fotolar: s.fotolar.filter((f) => f.kayit_id === h.id).map((f) => ({ aci: aciOku(f.ad), id: f.id })),
+    imza: s.imzalar.get(h.id) ?? null,
   };
 }
 
@@ -215,9 +225,42 @@ export async function kmKaydet(db: Sorgulayici, kim: Kisi, aracId: string, girdi
   return { durum: "tamam", id: var_.id, duzeltildi: true, uyari };
 }
 
-/** teslim tutanağı: zimmet hareketi (Zimmetler) + tutanak eki + açı açı fotoğraflar. "yaz" her araç; sürücü yalnız kendi zimmetindeki araç. */
+/** tutanağın belgesi (342): görme tutanak listesiyle aynı — "gör" ve üstü her tutanak, "kendi" yalnız taraf olduğu (teslim eden ya da alan);
+    tutanaksız teslim hareketinin belgesi yok. hareketId: tutanağın zimmet hareketi. */
+export async function tutanakBelgesiVerisi(db: Sorgulayici, kim: Kisi, hareketId: string, depo: Depo | null = null): Promise<AracTutanagiVerisi | null> {
+  if (!UUID.test(hareketId)) return null;
+  const k = await kendiKisi(db, kim);
+  if (k === false) return null;
+  const x = (await db.sorgu<HareketDb & { plaka: string; tur: string; marka: string; model: string; yil: number }>(
+    `SELECT h.id::text, h.arac_id::text, h.eden_personel::text AS eden, h.alan_personel::text AS alan, h.zaman, h.km, t.id::text AS tutanak, t.no, t.yakit, t.kontrol, t.hasar,
+            a.plaka, a.tur, a.marka, a.model, a.yil
+       FROM zimmet_hareket h JOIN arac_tutanagi t ON t.hareket_id = h.id AND t.firma_id = h.firma_id JOIN arac a ON a.id = h.arac_id AND a.firma_id = h.firma_id
+      WHERE h.id = $1`, [hareketId])).rows[0];
+  if (!x || !x.no || (k !== null && x.eden !== k && x.alan !== k)) return null;
+  const fotolar = new Set((await db.sorgu<{ ad: string }>("SELECT ad FROM dosya WHERE modul = $1 AND kayit_id = $2 AND cop IS NULL", [ZIMMET_DOSYA, x.id])).rows
+    .map((f) => aciOku(f.ad)));
+  const kisiler = new Map((await personelOzetleri(db, [x.eden, x.alan].filter((p): p is string => !!p)))
+    .map((p) => [p.id, { ad: p.ad, meslek: p.meslek === "diger" ? p.meslekMetin ?? "Diğer meslek" : meslek(p.meslek)?.ad ?? p.meslek }]));
+  const taraf = (p: string | null) => (p ? kisiler.get(p) ?? { ad: "Ayrılan personel", meslek: "—" } : null);
+  const kontrol = x.kontrol ? new Set(x.kontrol) : null;
+  const firma = await firmaBelgeKunyesi(db, depo);
+  return {
+    firma: { ad: firma.ad, kod: firma.kod, adres: firma.adres, logo: firma.logo }, no: x.no, zaman: x.zaman.toISOString(),
+    plaka: x.plaka, arac: `${x.tur} · ${x.marka} ${x.model} · ${x.yil}`, eden: taraf(x.eden), alan: taraf(x.alan),
+    km: x.km != null ? `${kmYaz(x.km)} km` : null, yakit: x.yakit ? seviyeAd(x.yakit) : null,
+    kontrol: kontrol ? ARAC_KONTROL.map(([kk, ad]) => [ad, kontrol.has(kk)] as const) : null, hasar: x.hasar,
+    fotolar: ARAC_FOTO.map(([a, ad]) => [ad, fotolar.has(a)] as const),
+  };
+}
+
+/** tutanağın PDF'i üretilemedi: bütün tutanak geri alınır (teslim alanın imzasına gitmeyen teslim kalmaz); eylem iletiye çevirir */
+export class TutanakPdfHatasi extends Error {}
+export type TutanakPdfUretici = (v: AracTutanagiVerisi) => Promise<Uint8Array>;
+
+/** teslim tutanağı: zimmet hareketi (Zimmetler) + tutanak eki + açı açı fotoğraflar. "yaz" her araç; sürücü yalnız kendi zimmetindeki araç.
+    Teslim alan kişiyse tutanağın PDF'i (uret: belge → PDF, sunucuda başsız Chromium) aynı işlemde onun imzasına gider (342). */
 export async function tutanakKaydet(db: Sorgulayici, depo: Depo, kim: Kisi, firmaId: string, girdi: unknown,
-  fotolar: { aci: string; ad: string; bayt: Uint8Array }[] = []): Promise<Yazma<{ no: string; aracId: string }>> {
+  fotolar: { aci: string; ad: string; bayt: Uint8Array }[] = [], uret?: TutanakPdfUretici): Promise<Yazma<{ no: string; aracId: string }>> {
   if (duzey(kim, MODUL) === "yok") return { durum: "yetkisiz" };
   const g = dogrula(TutanakGirdisi, girdi);
   if (!g.tamam) return { durum: "gecersiz", hatalar: g.hatalar };
@@ -238,6 +281,16 @@ export async function tutanakKaydet(db: Sorgulayici, depo: Depo, kim: Kisi, firm
     const uzanti = /\.png$/i.test(f.ad) ? "png" : "jpg";
     const y = await dosyaYukle(db, depo, { firmaId, modul: ZIMMET_DOSYA, kayitId: h.id, ad: `${f.aci}.${uzanti}`, bayt: f.bayt, izinli: ["jpeg", "png"], kim: kim.ad, yukleyen: kim.id });
     if (!y.tamam) throw new FotoHatasi(y.neden === "buyuk" ? "Fotoğraf en çok 8 MB." : "Fotoğraf JPEG ya da PNG olmalı.", f.aci);
+  }
+  if (v.alan !== "depo") {
+    if (!uret) throw new Error("tutanak PDF üreticisi verilmedi");
+    const b = await tutanakBelgesiVerisi(db, kim, h.id, depo);
+    if (!b) throw new Error("tutanak belgesi okunamadı");
+    let pdf: Uint8Array;
+    try { pdf = await uret(b); } catch { throw new TutanakPdfHatasi("Tutanağın PDF'i üretilemedi; biraz sonra yeniden deneyin."); }
+    const r = await belgeGonder(db, depo, kim, firmaId, { tur: "arac", ad: `Araç teslim tutanağı · ${no} · ${a.plaka}`, personelId: v.alan, kaynakId: h.id, ay: null,
+      pdf: { ad: `${no}.pdf`, bayt: pdf } });
+    if (r.durum !== "tamam") throw new TutanakPdfHatasi(r.durum === "uygunsuz" ? r.neden : "Tutanak imzaya gönderilemedi.");
   }
   return { durum: "tamam", id: h.id, no, aracId: v.arac };
 }
