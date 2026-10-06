@@ -155,18 +155,31 @@ process.env.PROBATA_SIR_ANAHTARI = sirAnahtari;
 }
 await havuz.end();
 
-/* yerel Anthropic taklidi (351): yalnız bu sunucunun uydurma anahtarını kabul eder; "tablo" aracıyla üç satır döner (biri emin değil) */
+/* yerel Anthropic taklidi (351; 354): yalnız bu sunucunun uydurma anahtarını kabul eder. Gerçek hizmet gibi (Opus 5.5 / Sonnet 5.5) zorunlu araç
+   seçimini (tool_choice "tool" / "any") 400 ile reddeder — 350–351 incelemesi: eski istek canlıda her okumada düşüyordu, taklit bunu görmüyordu.
+   Yapılandırılmış çıktı istenmeliyse (output_config.format json_schema) metin bloğunda JSON ile üç satır döner (biri emin değil). */
 const yzTaklit = createServer((istek, yanit) => {
   let govde = ""; istek.on("data", (p) => { govde += p; }).on("end", () => {
     if (istek.url !== "/v1/messages" || istek.headers["x-api-key"] !== E2E_YZ.anahtar) { yanit.writeHead(401).end("{}"); return; }
-    let tip = "C";
-    try { const g = JSON.parse(govde); tip = g.tools[0].input_schema.properties.satirlar.items.properties.tip.enum[0] ?? "C"; } catch { /* şema yoksa varsayılan */ }
+    let g: { tool_choice?: { type?: string }; output_config?: { format?: { type?: string; schema?: { properties?: { satirlar?: { items?: { properties?: { tip?: { anyOf?: { enum?: string[] }[] } } } } } } } } };
+    try { g = JSON.parse(govde); } catch { yanit.writeHead(400).end(JSON.stringify({ type: "error", error: { type: "invalid_request_error", message: "invalid json" } })); return; }
+    if (g.tool_choice?.type === "tool" || g.tool_choice?.type === "any") {
+      yanit.writeHead(400, { "content-type": "application/json" }).end(JSON.stringify({ type: "error", error: { type: "invalid_request_error", message: 'tool_choice: type "tool" and "any" are not supported for this model.' } }));
+      return;
+    }
+    if (g.output_config?.format?.type !== "json_schema") {
+      yanit.writeHead(400, { "content-type": "application/json" }).end(JSON.stringify({ type: "error", error: { type: "invalid_request_error", message: "taklit: yapılandırılmış çıktı bekleniyor" } }));
+      return;
+    }
+    const tip = g.output_config.format.schema?.properties?.satirlar?.items?.properties?.tip?.anyOf?.[0]?.enum?.[0] ?? "C";
+    const satirlar = [
+      { no: "F1", devre: "Aydınlatma", tip, akim: 16, kutup: 1, guven: "yuksek" },
+      { no: "F2", devre: "Priz", tip, akim: 20, kutup: 3, guven: "yuksek" },
+      { no: "F3", devre: "Klima", akim: 25, guven: "dusuk" },
+    ];
     yanit.writeHead(200, { "content-type": "application/json" }).end(JSON.stringify({
-      content: [{ type: "tool_use", name: "tablo", input: { satirlar: [
-        { no: "F1", devre: "Aydınlatma", tip, akim: 16, kutup: 1, guven: "yuksek" },
-        { no: "F2", devre: "Priz", tip, akim: 20, kutup: 3, guven: "yuksek" },
-        { no: "F3", devre: "Klima", akim: 25, guven: "dusuk" },
-      ] } }],
+      content: [{ type: "thinking", thinking: "" }, { type: "text", text: JSON.stringify({ satirlar, not: null }) }],
+      stop_reason: "end_turn",
       usage: { input_tokens: 1500, output_tokens: 200 },
     }));
   });

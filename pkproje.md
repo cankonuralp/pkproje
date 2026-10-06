@@ -2341,6 +2341,22 @@ revizyon, alan kopyalama, hafif kusur devri, meslek eşleşme denetimi).
 - Emsal ürünler: https://opwire.app/iso-17020-periyodik-kontrol-yazilimi/ · https://17020muayene.vidco.com.tr/ · https://akuple.com/asansor-kontrol-yazilimi/ · https://ensyazilim.com/
 
 ## 11 · Değişiklik günlüğü
+- 2026-10-06 (354): **350–351 çapraz incelemesinin düzeltmeleri** (dört bakış + çürütme; doğrulanan bulgular). **Fotoğraftan okuma canlıda hiç
+  çalışmazdı:** Opus 5.5 / Sonnet 5.5 zorunlu araç seçimini (tool_choice "tool") 400 ile reddeder, kod bunu "fotoğraf okunamadı" diye gösterirdi —
+  istek artık **yapılandırılmış çıktıyla** (output_config.format json_schema; effort low; yanıt sınırı 16 000 — düşünme de sayılır); kesilen (max_tokens)
+  ve reddedilen (refusal) okuma ayrı söylenir; hizmetin reddetme nedeni sunucu günlüğüne. Yedek model (fallbacks) KULLANILMADI: maliyet hesabı
+  modele bağlı, pano fotoğrafında ret beklenmiyor — ret iletisi yeter. Sayı **sütunun birimiyle** istenir. **Sınır yarışı:** göç 0053
+  yz_kullanim.ayrilan — çağrıdan önce kişinin ay satırı kilitlenip en kötü maliyet ayrılır (eşzamanlı okumalar sınırı aşamaz); kayıtta gerçek
+  maliyetle kapanır, ücretsiz biten çağrıda bırakılır, zaman aşımında harcamaya yazılır; ödenen okuma rapor okuma sürerken silinse de kullanıma
+  yazılır. **Sınır 0 = sınırsız** (maket Y1). **Firma ayarları › Yapay zekâ:** bu ayın kişi başı kullanım tablosu (maket Y1; S.A.Y ve "kendi
+  anahtarı" sütunları o işler gelince). **Saha raporu (maket Z3):** okunan değer, değeri boş var olan satıra yazılır (ölçü aletinden Zx → Zx'i boş
+  nokta; kartta "n. satır"), yoksa yeni satır (src/modules/raporlar/foto-eslestir.ts); **pano okumasında fotoğraf rapora eklenir** (§11 92; Fotoğraflar
+  bölümü, termal değil); okuma üst ekranın işleminde (Kaydet / Onaya gönder kapalı); bağlantı yoksa istek gitmez; eylem düşerse sayfa hata ekranına
+  düşmez, kaydedilmemiş girişler kalır; uzun iş göstergesi (dönen simge + süre), odak korunur; görünmez dosya girdisinin odak çerçevesi etikette
+  (temel.css, bütün "Fotoğraf ekle" türü tuşlar). **Sağlık (0053 saglik_denetimi):** bağlanan rol ölçülür (session_user — uygulama yanlışlıkla
+  postgres ile bağlansa "kısıtlı" denirdi), service_role da sayılır, **göç sayısı** da beklenir (arada atlanmış göç). Kilitler tests/foto-oku.test.ts
+  (ayırma yarışı, sınırsız, zaman aşımı, silinen rapor, pano fotoğrafı), tests/yz-okuma.test.ts, tests/foto-eslestir.test.ts, tests/saglik*.test.ts;
+  olumsuz kanıt foto-oku.bozan 3 (satır kilidi), saglik.bozan 2 (bağlanan rol); uçtan uca taklit zorunlu araç seçimini gerçek hizmet gibi reddeder.
 - 2026-10-06 (353): **Fotoğraftan okumada bozuk dosya** (CI olumsuz kanıtı düştü). Baştaki imzası JPEG / PNG olup parçaları bozuk dosyada
   konum bilgisi silinirken hata fırlıyordu → sunucu eylemi çöküyordu. Artık "Fotoğraf bozuk; başka bir fotoğraf deneyin." döner, dosya gönderilmez
   (kilit tests/foto-oku.test.ts). Deneme JPEG'leri (olumsuz kanıt, uçtan uca) yapısı doğru en küçük JPEG'e çevrildi (SOI · DQT · SOS · EOI).

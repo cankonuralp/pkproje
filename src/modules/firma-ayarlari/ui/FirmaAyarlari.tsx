@@ -9,7 +9,8 @@ import { useBildir } from "../../../components/bildirim/Bildirim";
 import { Alan, FormIzgara, Girdi, ipucuId } from "../../../components/form/Form";
 import { DosyaAcTusu, GizliResim } from "../../../components/gizli-resim/GizliResim";
 import { useOnayla } from "../../../components/pencere/Onay";
-import { SayfaBasi } from "../../../components/sayfa/Sayfa";
+import { KartEtiket, Liste, type Sutun } from "../../../components/liste/Liste";
+import { DegerYok, Rozet, SayfaBasi } from "../../../components/sayfa/Sayfa";
 import { SecimAlani } from "../../../components/secim/SecimAlani";
 import { Serit } from "../../../components/serit/Serit";
 import { Tus } from "../../../components/tus/Tus";
@@ -459,6 +460,20 @@ function DepoYedek({ v }: { v: Veri }) {
 }
 
 /* ── YAPAY ZEKÂ (336; maket yzCiz Y1): aç / kapa, yurt dışı uyarısı, API anahtarı (bir kez yazılır, son 4), model, kişi başı aylık sınır ── */
+/* bu ayın kişi başı kullanımı (354; maket yzCiz SUT — S.A.Y mesajı ve "kendi anahtarı" sütunları o işler gelince): sınır kayıtlı değere göre (boş ya da
+   0 = sınırsız, maket "sinirli = sinir > 0"); %80'de sarı, dolunca kırmızı */
+type YzKullanim = Veri["yz"]["kullanim"][number];
+const dolarYaz = (m: number) => `$${(m / 1e6).toFixed(2).replace(".", ",")}`;
+const yzSutunlari = (sinir: number | null): Sutun<YzKullanim>[] => [
+  { k: "kisi", genislik: "40%", baslik: "Kişi", kart: "ust", sira: 1, siralanmaz: true, hucre: (x) => x.ad },
+  { k: "okuma", genislik: "20%", baslik: "Fotoğraftan okuma", kart: "govde", sira: 2, siralanmaz: true, hucre: (x) => <><KartEtiket>Fotoğraftan okuma</KartEtiket>{x.okuma}</> },
+  { k: "usd", genislik: "20%", baslik: "Harcama", kart: "govde", sira: 3, siralanmaz: true, hucre: (x) => <><KartEtiket>Harcama</KartEtiket>{dolarYaz(x.maliyet)}</> },
+  { k: "durum", genislik: "20%", baslik: "Sınır", kart: "rozet", sira: 1, siralanmaz: true, hucre: (x) => {
+    if (sinir === null || sinir <= 0) return <DegerYok>sınırsız</DegerYok>;
+    const o = x.maliyet / (sinir * 1e6);
+    return o >= 1 ? <Rozet tur="red">Doldu</Rozet> : <Rozet tur={o >= 0.8 ? "bekliyor" : "tamam"}>%{Math.round(o * 100)}</Rozet>;
+  } },
+];
 const ZID = { anahtar: "w-ay-yz-anahtar", model: "w-ay-yz-model", sinir: "w-ay-yz-sinir" } as const;
 function YapayZeka({ v }: { v: Veri }) {
   const router = useRouter();
@@ -516,7 +531,10 @@ function YapayZeka({ v }: { v: Veri }) {
           </Alan>
         </FormIzgara>
         {!v.yz.anahtar.tanimli && <Serit tur="uyari" ikon="key-round">Anahtar girilmedi: fotoğraftan okuma ve S.A.Y çalışmaz.</Serit>}
-        <p className={stil.ipucu}>Bu ay kullanım: henüz yok. Kullanım kişi başına burada listelenir.</p>
+        <p className={stil.etiket}>Bu ay kullanım (kişi başına)</p>
+        {v.yz.kullanim.length
+          ? <Liste baslik="Yapay zekâ kullanımı" sutunlar={yzSutunlari(v.yz.deger.sinir)} kayitlar={v.yz.kullanim} anahtar={(x) => x.id} />
+          : <p className={stil.ipucu}>Bu ay henüz okuma yapılmadı.</p>}
       </>}
     </Kart>
   );

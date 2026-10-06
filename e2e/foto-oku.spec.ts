@@ -1,7 +1,8 @@
 /* NEREDEN GELDİ: 351 — saha raporunda fotoğraftan okuma (maket rapor.html Z3 okuyabilir / oneriKart; §8.10 "değer öneri olarak düşer, inspector
    onaylamadan kaydedilmez"). Gerçek sunucuda, üç genişlikte, ayrı uydurma firmada (test sunucusunun yerel Anthropic taklidi — gerçek hizmete istek
    gitmez): ölçüm tablosunun altında "Fotoğraftan oku" → öneri kartı (emin olunmayan satır işaretli) → "Önerileri uygula (2)" emin olunanları, satırın
-   "Uygula"sı emin olunmayanı tabloya ekler → Kaydet → sayfa yenilenince satırlar raporda. */
+   "Uygula"sı emin olunmayanı tabloya ekler → Kaydet → sayfa yenilenince satırlar raporda. 354: taklit zorunlu araç seçimini gerçek hizmet gibi
+   reddeder (istek yapılandırılmış çıktıyla); pano okumasında fotoğraf rapora eklenir (§11 92 — Fotoğraflar bölümü); uygulamadan sonra odak kartta. */
 import { expect, test } from "@playwright/test";
 import { E2E_KAPI, E2E_PAROLA, E2E_YZ } from "./hesaplar";
 import { hazir } from "./yardimci";
@@ -31,6 +32,8 @@ test("fotoğraftan okuma: öneri kartı; emin olunanlar toplu, emin olunmayan te
   const kart = page.getByRole("region", { name: "Pano sigortaları (linye): fotoğraftan okunan" });
   await expect(kart).toBeVisible({ timeout: 30_000 });
   await expect(page.getByText("3 satır okundu", { exact: false }).first()).toBeVisible();
+  /* pano fotoğrafı rapora (Fotoğraflar bölümü); ekran yenilenir */
+  await expect(page.locator("#b-foto")).toContainText("fotoğrafı.jpg", { timeout: 30_000 });
   await expect(kart.getByText("Emin değil")).toBeVisible();
   await expect(kart.getByText(/No: F1 · Devre: Aydınlatma/)).toBeVisible();
   /* emin olunanlar toplu */
@@ -38,7 +41,9 @@ test("fotoğraftan okuma: öneri kartı; emin olunanlar toplu, emin olunmayan te
   await expect(linye.getByLabel("1. satır · No")).toHaveValue("F1");
   await expect(linye.getByLabel("2. satır · No")).toHaveValue("F2");
   await expect(linye.getByLabel("2. satır · In (A)")).toHaveValue("20");
-  await expect(page.getByText("2 satır tabloya eklendi", { exact: false }).first()).toBeVisible();
+  await expect(page.getByText("2 satır tabloya yazıldı", { exact: false }).first()).toBeVisible();
+  /* kart açık kaldı: odak kalan satırın Uygula'sında (klavyeyle sürdürülebilir) */
+  await expect(kart.getByRole("button", { name: "Uygula", exact: true })).toBeFocused();
   /* emin olunmayan tek tek */
   await kart.getByRole("button", { name: "Uygula", exact: true }).click();
   await expect(linye.getByLabel("3. satır · No")).toHaveValue("F3");

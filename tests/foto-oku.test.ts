@@ -2,7 +2,9 @@
    ayarıyla açılır, başlangıçta kapalı; çağrı yalnız sunucudan, firmanın anahtarıyla"; firma ayarı "kişi başı aylık sınır"). GERÇEK PostgreSQL, iki
    firma: kapalıyken / anahtarsızken okunmaz; yalnız yazan, Yeni raporunda, ölçüm tablosunda; fotoğrafın konum bilgisi gönderilmez; maliyet kişinin
    aylık kullanımına yazılır, sınır dolunca okunmaz; kullanım yalnız artar, başkasının hanesine yazılamaz, okuma kaydı değişmez; başka firma görmez.
-   Olumsuz kanıt: tests/bozan/foto-oku.bozan.ts. */
+   354 (350–351 incelemesi): sınır AYIRMAYLA — eşzamanlı ikinci okuma birincinin ayırmasını görür (satır kilidi); sınır 0 = sınırsız (maket Y1);
+   çağrı cevapsız biterse ücretsizse ayırma bırakılır, sonucu bilinmiyorsa harcamaya yazılır; ödenen okuma rapor okuma sürerken silinse de kullanıma
+   yazılır; pano okumasında fotoğraf rapora eklenir (§11 92); firma ayarlarında kişi başı kullanım. Olumsuz kanıt: tests/bozan/foto-oku.bozan.ts. */
 import assert from "node:assert/strict";
 import { mkdtempSync, rmSync } from "node:fs";
 import { randomBytes } from "node:crypto";
@@ -13,14 +15,15 @@ import { SABLONLAR } from "../src/format/sablonlar.ts";
 import { planKabul, planIci } from "../src/modules/planlar/server/plan-ici.ts";
 import { bugunTr, planAc, type Kisi } from "../src/modules/planlar/server/planlar.ts";
 import { taslakBaslat, yayinla } from "../src/modules/rapor-format/server/formatlar.ts";
-import { fotoOkuHazirla, fotoOkuKaydet } from "../src/modules/raporlar/server/foto-oku.ts";
-import { raporOlustur, sahaRaporu } from "../src/modules/raporlar/server/raporlar.ts";
+import { fotoOkuBirak, fotoOkuHazirla, fotoOkuKaydet, fotoOkuKullanimYaz, type FotoOkuHazir } from "../src/modules/raporlar/server/foto-oku.ts";
+import { raporOlustur, raporSil, sahaRaporu } from "../src/modules/raporlar/server/raporlar.ts";
 import { ayarOku, ayarYaz } from "../src/server/ayar/ayar.ts";
 import { sirYaz } from "../src/server/ayar/sir.ts";
 import type { GomuluKume } from "../src/server/db/gomulu.ts";
 import { havuzKur, kiraciIcinde, type Havuz, type Sorgulayici } from "../src/server/db/kiraci.ts";
 import { klasorDepo } from "../src/server/dosya/depo.ts";
-import { yzAyi } from "../src/server/yz/kullanim.ts";
+import { yzAyi, yzAyir, yzAyKullanimi } from "../src/server/yz/kullanim.ts";
+import { enCokMaliyet } from "../src/server/yz/okuma.ts";
 import { testKumesi } from "./yardimci/kume.ts";
 
 let kume: GomuluKume, havuz: Havuz, A: string, B: string;
@@ -34,7 +37,8 @@ const seg = (isaret: number, govde: string) => bayt([0xff, isaret, (govde.length
 const JPEG = bayt([0xff, 0xd8], [...seg(0xe1, "Exif\0\0GPS-KONUM-41.0082N")], [...seg(0xdb, "\0" + "\x01".repeat(64))], [0xff, 0xda, 0, 2], "goruntu-verisi", [0xff, 0xd9]);
 const PDF = bayt("%PDF-1.4\n%%EOF\n");
 const TIP = SABLONLAR.ZPKR02.tanim.bolumler.flatMap((b) => (b.blok === "olcum" && b.id === "linye" ? b.sutunlar : [])).find((s) => s.id === "tip")!.secenekler![0];
-const cevap = (satirlar: unknown[], giris = 100_000, cikis = 10_000) => ({ content: [{ type: "tool_use", name: "tablo", input: { satirlar } }], usage: { input_tokens: giris, output_tokens: cikis } });
+/* yapılandırılmış çıktı cevabı (354): metin bloğunda şemaya uyan JSON */
+const cevap = (satirlar: unknown[], giris = 100_000, cikis = 10_000) => ({ content: [{ type: "text", text: JSON.stringify({ satirlar, not: null }) }], stop_reason: "end_turn", usage: { input_tokens: giris, output_tokens: cikis } });
 
 interface Firma { yon: Kisi; plan: Kisi; den1: Kisi; den2: Kisi; rapor: string }
 let FA: Firma, FB: Firma;
@@ -92,6 +96,8 @@ test("açık değilken ve anahtarsızken okunmaz; açık + anahtar: istek yalnı
   const h = await hazirla(FA.den1);
   assert.equal(h.durum, "hazir");
   if (h.durum !== "hazir") return;
+  /* bu deneme çağrı yapmaz: ayırma ücretsiz bırakılır (354) */
+  await a(FA.den1, (db) => fotoOkuBirak(db, h, "yok"));
   assert.equal(h.anahtar, "sk-ant-deneme-anahtar-0123456789");
   const govde = JSON.stringify(h.istek.govde);
   assert.doesNotMatch(govde, /sk-ant|Deneme Sanayi|Deneme Cad|iletisim@|DA-\d{4}/, "anahtar, müşteri, adres, e-posta, rapor no gönderilmez");
@@ -115,24 +121,74 @@ test("yalnız yazan, Yeni raporunda, ölçüm tablosunda; başka firma raporu bu
   assert.equal((await hazirla(FA.den1, "kotu-kimlik")).durum, "yok");
 });
 
-test("kayıt: öneri şemaya göre süzülür, maliyet kişinin aylık kullanımına; sınır dolunca okunmaz; rapora yazılmaz", async () => {
-  tamam(await yzAyari({ acik: true, sinir: 1 }));
-  const h = { model: "opus" as const, bolum: SABLONLAR.ZPKR02.tanim.bolumler.find((b) => b.id === "linye") as never, ay: yzAyi() };
-  const once = (await a(FA.den1, (db) => sahaRaporu(db, FA.den1, FA.rapor)))!.cevaplar;
-  const r = await a(FA.den1, (db) => fotoOkuKaydet(db, FA.den1, FA.rapor, h, cevap([{ no: "F1", devre: "Aydınlatma", tip: TIP, akim: 16, guven: "yuksek" }, { no: "F2", tip: "yok", guven: "dusuk" }])));
-  assert.ok("satirlar" in r);
-  if (!("satirlar" in r)) return;
+const UST = enCokMaliyet("opus");
+const kullanim = async (k: Kisi) => (await a(k, (db) => db.sorgu<{ okuma: number; maliyet: string; ayrilan: string }>(
+  "SELECT okuma, maliyet::text, ayrilan::text FROM yz_kullanim WHERE hesap_id = $1 AND ay = $2", [k.id, yzAyi()]))).rows[0];
+const hazir = (h: Awaited<ReturnType<typeof hazirla>>): FotoOkuHazir => { assert.equal(h.durum, "hazir", JSON.stringify(h)); return h as FotoOkuHazir; };
+/** tam okuma: hazırla (ayırma) → yapay zekâ cevabı → kullanım (kendi işleminde) → öneri (ayrı işlemde) */
+async function oku(k: Kisi, govde: unknown, rapor = FA.rapor) {
+  const h = hazir(await hazirla(k, rapor));
+  const ku = await a(k, (db) => fotoOkuKullanimYaz(db, rapor, h, govde));
+  return a(k, (db) => fotoOkuKaydet(db, depo, k, A, rapor, h, ku));
+}
+
+test("kayıt: öneri şemaya göre süzülür, maliyet kişinin aylık kullanımına (ayırma gerçek maliyetle kapanır); sınır dolunca okunmaz; rapora yazılmaz", async () => {
+  tamam(await yzAyari({ acik: true, sinir: 1, model: "opus" }));
+  const once = (await a(FA.den1, (db) => sahaRaporu(db, FA.den1, FA.rapor)))!.cevaplar.tablo;
+  const h = hazir(await hazirla(FA.den1));
+  assert.deepEqual(await kullanim(FA.den1), { okuma: 0, maliyet: "0", ayrilan: String(UST) }, "çağrıdan önce en kötü maliyet ayrıldı");
+  const ku = await a(FA.den1, (db) => fotoOkuKullanimYaz(db, FA.rapor, h, cevap([{ no: "F1", devre: "Aydınlatma", tip: TIP, akim: 16, guven: "yuksek" }, { no: "F2", tip: "yok", guven: "dusuk" }])));
+  assert.deepEqual(await kullanim(FA.den1), { okuma: 1, maliyet: "600000", ayrilan: "0" }, "ayırma gerçek maliyetle kapandı");
+  const r = tamam(await a(FA.den1, (db) => fotoOkuKaydet(db, depo, FA.den1, A, FA.rapor, h, ku)));
   assert.deepEqual(r.satirlar, [{ degerler: { no: "F1", devre: "Aydınlatma", tip: TIP, akim: "16" }, guven: "yuksek" }, { degerler: { no: "F2" }, guven: "dusuk" }]);
-  assert.deepEqual((await a(FA.den1, (db) => sahaRaporu(db, FA.den1, FA.rapor)))!.cevaplar, once, "öneri rapora yazılmaz");
-  assert.equal((await hazirla(FA.den1)).durum, "hazir", "0,6 $ < 1 $");
-  await a(FA.den1, (db) => fotoOkuKaydet(db, FA.den1, FA.rapor, h, cevap([])));
-  const k = (await a(FA.den1, (db) => db.sorgu<{ okuma: number; maliyet: string; h: string }>("SELECT okuma, maliyet::text, hesap_id::text AS h FROM yz_kullanim"))).rows;
-  assert.deepEqual(k, [{ okuma: 2, maliyet: "1200000", h: FA.den1.id }]);
+  const sonra = (await a(FA.den1, (db) => sahaRaporu(db, FA.den1, FA.rapor)))!;
+  assert.deepEqual(sonra.cevaplar.tablo, once, "öneri rapora yazılmaz");
+  /* pano okuması (format hesabı linye): fotoğraf rapora — termal değil, Fotoğraflar bölümüne (§11 92) */
+  assert.ok(r.fotoEklendi && /Pano fotoğrafı rapora eklendi/.test(r.bildirim), r.bildirim);
+  assert.deepEqual(sonra.fotolar.map((f) => [f.bolum, f.madde, f.ad]), [["foto", null, "Pano sigortaları (linye) fotoğrafı.jpg"]]);
+  assert.equal((await oku(FA.den1, cevap([]))).durum, "tamam", "0,6 $ < 1 $");
+  assert.deepEqual(await kullanim(FA.den1), { okuma: 2, maliyet: "1200000", ayrilan: "0" });
+  assert.equal((await a(FA.den1, (db) => sahaRaporu(db, FA.den1, FA.rapor)))!.fotolar.length, 1, "satır okunamadıysa fotoğraf eklenmez");
   assert.match(JSON.stringify(await hazirla(FA.den1)), /sınırınız \(1 \$\) doldu/);
+  assert.equal((await kullanim(FA.den1)).ayrilan, "0", "dolu sınırda ayırma yapılmaz");
   tamam(await yzAyari({ sinir: null }));
-  assert.equal((await hazirla(FA.den1)).durum, "hazir", "sınırsız");
+  const s0 = hazir(await hazirla(FA.den1));
+  await a(FA.den1, (db) => fotoOkuBirak(db, s0, "yok"));
+  tamam(await yzAyari({ sinir: 0 }));
+  const s1 = hazir(await hazirla(FA.den1));
+  await a(FA.den1, (db) => fotoOkuBirak(db, s1, "yok"));
+  assert.deepEqual(await kullanim(FA.den1), { okuma: 2, maliyet: "1200000", ayrilan: "0" }, "sınırsız (boş ya da 0, maket Y1); ücretsiz biten çağrıda ayırma bırakıldı");
   const o = (await a(FA.den1, (db) => db.sorgu<{ n: number }>("SELECT count(*)::int AS n FROM yz_okuma WHERE rapor_id = $1 AND hesap_id = $2 AND model = 'opus'", [FA.rapor, FA.den1.id]))).rows[0].n;
   assert.equal(o, 2);
+  assert.deepEqual((await a(FA.yon, (db) => yzAyKullanimi(db, yzAyi()))).map((x) => [x.id, x.okuma, x.maliyet]), [[FA.den1.id, 2, 1_200_000]], "firma ayarlarında kişi başı");
+});
+
+test("sınır yarışı: eşzamanlı ikinci okuma birincinin ayırmasını görür (satır kilidi); zaman aşımında ayrılan harcamaya yazılır", async () => {
+  /* sınır: şu anki kullanımın üstüne bir ayırma sığar, ikincisi sığmaz */
+  const k0 = await kullanim(FA.den1);
+  const sinir = Math.ceil((Number(k0.maliyet) + Number(k0.ayrilan)) / 1e4) / 100 + 0.3;
+  tamam(await yzAyari({ sinir }));
+  const ay = yzAyi();
+  let ayrildi!: () => void, birak!: () => void;
+  const ayrildiSoz = new Promise<void>((c) => { ayrildi = c; }), kapi = new Promise<void>((c) => { birak = c; });
+  const t1 = a(FA.den1, async (db) => { const r = await yzAyir(db, ay, sinir, UST); ayrildi(); await kapi; return r; });
+  await ayrildiSoz;
+  const t2 = a(FA.den1, (db) => yzAyir(db, ay, sinir, UST));
+  /* ikinci işlem birincinin satır kilidinde beklesin, sonra birinci bitsin */
+  const s = kume.sahipIstemci(); await s.connect();
+  try {
+    for (let i = 0; i < 200; i++) {
+      if ((await s.query<{ n: number }>("SELECT count(*)::int AS n FROM pg_stat_activity WHERE wait_event_type = 'Lock'")).rows[0].n > 0) break;
+      await new Promise((c) => setTimeout(c, 25));
+    }
+  } finally { await s.end(); }
+  birak();
+  assert.deepEqual(await Promise.all([t1, t2]), [true, false], "ikinci okuma sınırı aşamaz");
+  const k1 = await kullanim(FA.den1);
+  assert.equal(Number(k1.ayrilan), Number(k0.ayrilan) + UST);
+  /* zaman aşımı (sonucu bilinmiyor): ayrılan harcamaya, bir okuma sayılır */
+  await a(FA.den1, (db) => fotoOkuBirak(db, { ay, ust: UST }, "bilinmiyor"));
+  assert.deepEqual(await kullanim(FA.den1), { okuma: k0.okuma + 1, maliyet: String(Number(k0.maliyet) + UST), ayrilan: k0.ayrilan });
 });
 
 test("kullanım yalnız artar ve kişinin kendi hanesine; okuma kaydı değişmez, silinmez; başka firma görmez", async () => {
@@ -140,6 +196,7 @@ test("kullanım yalnız artar ve kişinin kendi hanesine; okuma kaydı değişme
   await a(FA.den1, (db) => db.sorgu("INSERT INTO yz_kullanim (hesap_id, ay, okuma, maliyet) VALUES ($1, '2026-01', 1, 5)", [FA.den2.id]));
   assert.equal((await a(FA.den1, (db) => db.sorgu<{ h: string }>("SELECT hesap_id::text AS h FROM yz_kullanim WHERE ay = '2026-01'"))).rows[0].h, FA.den1.id);
   await assert.rejects(a(FA.den1, (db) => db.sorgu("UPDATE yz_kullanim SET maliyet = 0")), /yalnız artar/);
+  await assert.rejects(a(FA.den2, (db) => db.sorgu("UPDATE yz_kullanim SET ayrilan = 0 WHERE hesap_id = $1", [FA.den1.id])), /kendi okuması/, "ayırmayı başkası bırakamaz");
   await assert.rejects(a(FA.den2, (db) => db.sorgu("UPDATE yz_kullanim SET okuma = okuma + 1 WHERE hesap_id = $1", [FA.den1.id])), /kendi okuması/);
   await assert.rejects(a(FA.den1, (db) => db.sorgu("DELETE FROM yz_kullanim")), /permission denied/);
   await assert.rejects(a(FA.den1, (db) => db.sorgu("UPDATE yz_okuma SET maliyet = 0")), /permission denied/);
@@ -147,4 +204,16 @@ test("kullanım yalnız artar ve kişinin kendi hanesine; okuma kaydı değişme
   await assert.rejects(kiraciIcinde(havuz, A, (db) => db.sorgu("INSERT INTO yz_kullanim (ay) VALUES ('2026-02')")), /oturumdaki kişi/, "hesapsız işlem yazamaz");
   const b = await kiraciIcinde(havuz, B, (db) => db.sorgu("SELECT (SELECT count(*) FROM yz_kullanim)::int AS k, (SELECT count(*) FROM yz_okuma)::int AS o"), { hesapId: FB.den1.id });
   assert.deepEqual(b.rows[0], { k: 0, o: 0 });
+});
+
+test("ödenen okuma rapor okuma sürerken silinse de kişinin kullanımına yazılır; öneri dönmez (en sonda — rapor silinir)", async () => {
+  tamam(await yzAyari({ sinir: null }));
+  const h = hazir(await hazirla(FA.den1));
+  const k0 = await kullanim(FA.den1);
+  const v = (await a(FA.den1, (db) => sahaRaporu(db, FA.den1, FA.rapor)))!;
+  tamam(await a(FA.den1, (db) => raporSil(db, FA.den1, FA.rapor, v.surum)));
+  const ku = await a(FA.den1, (db) => fotoOkuKullanimYaz(db, FA.rapor, h, cevap([{ no: "F9", guven: "yuksek" }])));
+  const k1 = await kullanim(FA.den1);
+  assert.deepEqual([k1.okuma, Number(k1.maliyet), Number(k1.ayrilan)], [k0.okuma + 1, Number(k0.maliyet) + 600_000, Number(k0.ayrilan) - UST]);
+  assert.equal((await a(FA.den1, (db) => fotoOkuKaydet(db, depo, FA.den1, A, FA.rapor, h, ku))).durum, "yok", "silinen rapora öneri dönmez");
 });

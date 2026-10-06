@@ -1,56 +1,88 @@
 /* SAHA RAPORU · FOTOĞRAFTAN OKUMA (351; maket rapor.html Z3 "Fotoğraftan oku" — sigorta panosu, ölçü aletinin ekranı; ARKA-UC §5.2; §8.10 "değer
    öneri olarak düşer, inspector onaylamadan kaydedilmez"). İki adım — yapay zekâ çağrısı veritabanı işleminin DIŞINDA (çağrı sürerken bağlantı ve
    satır kilidi tutulmaz):
-     1. fotoOkuHazirla (işlem içinde): yazanın Yeni raporu ve ölçüm tablosu · firmada yapay zekâ açık · API anahtarı · kişinin bu ayki maliyeti sınırın
-        altında · fotoğraf JPEG / PNG, en çok 5 MB, konum bilgisi (EXIF) silinmiş → istek gövdesi + anahtar (yalnız sunucuda kalır).
-     2. çağrı (src/server/yz/okuma.ts anthropicCagir) → fotoOkuKaydet (işlem içinde): cevap şemaya göre süzülür, maliyet kişinin aylık kullanımına,
-        okuma kaydı yz_okuma'ya yazılır; satırlar ÖNERİ olarak döner (rapora yazılmaz — denetçi uygulayıp Kaydet'le yazar).
+     1. fotoOkuHazirla (işlem içinde): yazanın Yeni raporu ve ölçüm tablosu · firmada yapay zekâ açık · API anahtarı · fotoğraf JPEG / PNG, en çok
+        5 MB, konum bilgisi (EXIF) silinmiş (yapısı bozuksa söylenir, gönderilmez) · kişinin bu ayki kullanımı sınırın altında → en kötü maliyet
+        AYRILIR (354: satır kilidiyle — eşzamanlı okumalar sınırı aşamaz; sınır 0 ya da boş = sınırsız, maket Y1) → istek gövdesi + anahtar
+        (yalnız sunucuda kalır).
+     2. çağrı (src/server/yz/okuma.ts anthropicCagir) → fotoOkuKaydet: önce (kendi işleminde) ayırma gerçek maliyetle kapanır ve okuma kaydı yazılır —
+        rapor okuma sürerken silinmiş / gönderilmiş olsa da ödenen çağrı kişinin kullanımına yazılır (354); sonra (ayrı işlemde) rapor hâlâ yazanın Yeni
+        raporuysa satırlar ÖNERİ olarak döner (rapora yazılmaz — denetçi uygulayıp Kaydet'le yazar) ve okunan PANO tablosuysa (format hesabı
+        "linye") fotoğraf rapora eklenir (pkproje §11 92). Çağrı cevapsız biterse fotoOkuBirak: ücretsizse ayırma bırakılır, sonucu bilinmiyorsa
+        harcamaya yazılır.
    Elle giriş her zaman açık: okuma yapılamazsa nedeni söylenir. */
 import { ayarOku } from "../../../server/ayar/ayar.ts";
 import { sirKullan } from "../../../server/ayar/sir.ts";
 import type { Sorgulayici } from "../../../server/db/kiraci.ts";
+import type { Depo } from "../../../server/dosya/depo.ts";
 import { jpegTemizle, pngTemizle, turBul } from "../../../server/dosya/tur.ts";
-import { yzAyi, yzAyMaliyeti, yzOkumaYaz } from "../../../server/yz/kullanim.ts";
-import { maliyetHesapla, okumaIstegi, okumaYanitiCoz, type OkumaIstegi, type OkunanSatir, type YzModel } from "../../../server/yz/okuma.ts";
+import { yzAyi, yzAyir, yzAyirmaBirak, yzOkumaYaz } from "../../../server/yz/kullanim.ts";
+import { enCokMaliyet, maliyetHesapla, okumaIstegi, okumaYanitiCoz, type OkumaIstegi, type OkunanSatir, type YzModel } from "../../../server/yz/okuma.ts";
 import type { BolumOf } from "../../../format/tanim.ts";
-import { okunabilirOlcum, type Kisi, type RaporYazma } from "./raporlar.ts";
+import { okunabilirOlcum, okunanFotografiEkle, type Kisi, type RaporYazma } from "./raporlar.ts";
 
 export const FOTO_OKU_EN_BUYUK = 5 << 20;
 const ELLE = "Değerleri elle girebilirsiniz.";
 const dolar = (n: number) => String(n).replace(".", ",");
 
-export type FotoOkuHazirlik = { durum: "hazir"; istek: OkumaIstegi; anahtar: string; model: YzModel; bolum: BolumOf<"olcum">; ay: string } | RaporYazma;
+/** hazırlık: çağrının ihtiyacı + kayıt adımının ihtiyacı (ayrılan tutar, temizlenmiş fotoğraf) */
+export interface FotoOkuHazir { durum: "hazir"; istek: OkumaIstegi; anahtar: string; model: YzModel; bolum: BolumOf<"olcum">; ay: string; ust: number; foto: { ad: string; bayt: Uint8Array } }
+export type FotoOkuHazirlik = FotoOkuHazir | RaporYazma;
 
-export async function fotoOkuHazirla(db: Sorgulayici, kim: Kisi, raporId: string, bolumId: string, foto: { bayt: Uint8Array }, simdi = new Date()): Promise<FotoOkuHazirlik> {
+export async function fotoOkuHazirla(db: Sorgulayici, kim: Kisi, raporId: string, bolumId: string, foto: { bayt: Uint8Array; ad?: string }, simdi = new Date()): Promise<FotoOkuHazirlik> {
   const o = await okunabilirOlcum(db, kim, raporId, bolumId);
   if ("durum" in o) return o;
   const yz = (await ayarOku(db, "yapay_zeka")).deger;
   if (!yz.acik) return { durum: "red", neden: `Fotoğraftan okuma firmada kapalı (Firma ayarları › Yapay zekâ). ${ELLE}` };
   const anahtar = await sirKullan(db, "yapay_zeka_anahtari");
   if (!anahtar) return { durum: "red", neden: `Yapay zekâ API anahtarı girilmedi (Firma ayarları › Yapay zekâ). ${ELLE}` };
-  const ay = yzAyi(simdi);
-  if (yz.sinir !== null && (await yzAyMaliyeti(db, kim.id, ay)) >= yz.sinir * 1e6) {
-    return { durum: "red", neden: `Bu ay yapay zekâ sınırınız (${dolar(yz.sinir)} $) doldu; firma yöneticisi Firma ayarları › Yapay zekâ'dan artırabilir. ${ELLE}` };
-  }
   const tur = turBul(foto.bayt, ["jpeg", "png"]);
   if (!tur || (tur !== "jpeg" && tur !== "png")) return { durum: "gecersiz", hatalar: { foto: "Yalnız JPEG ya da PNG fotoğraf." } };
   if (foto.bayt.length > FOTO_OKU_EN_BUYUK) return { durum: "gecersiz", hatalar: { foto: "Fotoğraf çok büyük (en çok 5 MB)." } };
   /* yapısı bozuk dosya (baştaki imza doğru, parçalar değil): konum bilgisi silinemez → gönderilmez; sunucu eylemi çökmez, kişiye söylenir */
   let temiz: Uint8Array;
   try { temiz = tur === "jpeg" ? jpegTemizle(foto.bayt) : pngTemizle(foto.bayt); } catch { return { durum: "gecersiz", hatalar: { foto: "Fotoğraf bozuk; başka bir fotoğraf deneyin." } }; }
-  return { durum: "hazir", istek: okumaIstegi({ model: yz.model, bolum: o.bolum, resim: temiz, tur }), anahtar, model: yz.model, bolum: o.bolum, ay };
+  /* ayırma en sonda: geçersiz fotoğraf ayırma yapmaz */
+  const ay = yzAyi(simdi), ust = enCokMaliyet(yz.model);
+  if (!(await yzAyir(db, ay, yz.sinir, ust))) {
+    return { durum: "red", neden: `Bu ay yapay zekâ sınırınız (${dolar(yz.sinir ?? 0)} $) doldu; firma yöneticisi Firma ayarları › Yapay zekâ'dan artırabilir. ${ELLE}` };
+  }
+  const ad = `${o.bolum.ad.replace(/[^\p{L}\p{N} ()-]/gu, "").trim().slice(0, 60) || "Pano"} fotoğrafı.${tur === "png" ? "png" : "jpg"}`;
+  return { durum: "hazir", istek: okumaIstegi({ model: yz.model, bolum: o.bolum, resim: temiz, tur }), anahtar, model: yz.model, bolum: o.bolum, ay, ust, foto: { ad, bayt: temiz } };
 }
 
-export type FotoOkuSonucu = { durum: "tamam"; satirlar: OkunanSatir[]; bildirim: string } | RaporYazma;
+/** çağrı cevapsız bitti: ücretsizse ayırma bırakılır; sonucu bilinmiyorsa (zaman aşımı) ayrılan tutar harcamaya yazılır */
+export async function fotoOkuBirak(db: Sorgulayici, h: Pick<FotoOkuHazir, "ay" | "ust">, ucret: "yok" | "bilinmiyor"): Promise<void> {
+  await yzAyirmaBirak(db, h.ay, h.ust, ucret === "bilinmiyor");
+}
 
-/** cevabı süzer, kullanımı ve okuma kaydını yazar. Rapor hâlâ yazanın Yeni raporu olmalı (okuma sürerken gönderildiyse öneri dönmez). */
-export async function fotoOkuKaydet(db: Sorgulayici, kim: Kisi, raporId: string, h: { model: YzModel; bolum: BolumOf<"olcum">; ay: string }, govde: unknown): Promise<FotoOkuSonucu> {
+export interface FotoOkuKullanim { satirlar: OkunanSatir[]; durum: "tamam" | "kesik" | "ret" }
+/** kayıt adımı 1 (kendi işleminde): cevap ÇAĞRI ANINDAKİ tablo tanımıyla süzülür; ayırma gerçek maliyetle kapanır, okuma kaydı yazılır — raporun şimdiki
+    hâlinden bağımsız (ödenen çağrı kişinin kullanımına her durumda yazılır) */
+export async function fotoOkuKullanimYaz(db: Sorgulayici, raporId: string, h: Pick<FotoOkuHazir, "model" | "bolum" | "ay" | "ust">, govde: unknown): Promise<FotoOkuKullanim> {
+  const { satirlar, giris, cikis, durum } = okumaYanitiCoz(govde, h.bolum);
+  await yzOkumaYaz(db, { ay: h.ay, ust: h.ust, raporId, bolum: h.bolum.id, model: h.model, oneri: satirlar, giris, cikis, maliyet: maliyetHesapla(h.model, giris, cikis) });
+  return { satirlar, durum };
+}
+
+/** öneri ya da raporun yazma hatası (okunabilirOlcum "tamam" döndürmez) */
+export type FotoOkuSonucu = { durum: "tamam"; satirlar: OkunanSatir[]; bildirim: string; fotoEklendi: boolean } | Exclude<RaporYazma, { durum: "tamam" }>;
+
+/** kayıt adımı 2 (ayrı işlemde): rapor hâlâ yazanın Yeni raporu ve tablo formatta mı (okuma sürerken gönderildiyse öneri dönmez); pano tablosunda
+    fotoğraf rapora eklenir (yer yoksa söylenir, öneri yine döner) */
+export async function fotoOkuKaydet(db: Sorgulayici, depo: Depo, kim: Kisi, firmaId: string, raporId: string, h: Pick<FotoOkuHazir, "bolum" | "foto">, k: FotoOkuKullanim): Promise<FotoOkuSonucu> {
   const o = await okunabilirOlcum(db, kim, raporId, h.bolum.id);
-  if ("durum" in o) return o;
-  const { satirlar, giris, cikis } = okumaYanitiCoz(govde, o.bolum);
-  await yzOkumaYaz(db, { ay: h.ay, raporId, bolum: o.bolum.id, model: h.model, oneri: satirlar, giris, cikis, maliyet: maliyetHesapla(h.model, giris, cikis) });
-  return {
-    durum: "tamam", satirlar,
-    bildirim: satirlar.length ? `${satirlar.length} satır okundu; önerileri gözden geçirip uygulayın.` : `Fotoğrafta bu tablonun satırı okunamadı. ${ELLE}`,
-  };
+  if ("durum" in o) return o.durum === "tamam" ? { durum: "yok" } : o;
+  const parcalar: string[] = [];
+  if (k.durum === "ret") parcalar.push(`Yapay zekâ bu fotoğrafı okumadı. ${ELLE}`);
+  else if (!k.satirlar.length) parcalar.push(k.durum === "kesik" ? `Okuma yarım kaldı ve satır çıkmadı; tabloyu parça parça fotoğraflayın ya da ${ELLE.toLocaleLowerCase("tr")}` : `Fotoğrafta bu tablonun satırı okunamadı. ${ELLE}`);
+  else parcalar.push(`${k.satirlar.length} satır okundu; önerileri gözden geçirip uygulayın.${k.durum === "kesik" ? " Okuma yarım kaldı: kalan satırları ayrı fotoğrafla okutun." : ""}`);
+  let fotoEklendi = false;
+  if (o.bolum.hesap === "linye" && k.satirlar.length) {
+    const f = await okunanFotografiEkle(db, depo, kim, firmaId, raporId, h.foto);
+    fotoEklendi = f.durum === "tamam";
+    const neden = f.durum === "gecersiz" ? Object.values(f.hatalar)[0] : f.durum === "red" ? f.neden : "rapor şu an yazılamıyor";
+    parcalar.push(fotoEklendi ? "Pano fotoğrafı rapora eklendi." : `Pano fotoğrafı eklenemedi: ${neden?.replace(/\.$/, "")}.`);
+  }
+  return { durum: "tamam", satirlar: k.satirlar, bildirim: parcalar.join(" "), fotoEklendi };
 }

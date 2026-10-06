@@ -1,9 +1,12 @@
 /* NEREDEN GELDİ: 350 — 09-G5 duman testi ("veritabanı bağlantısı, RLS açık mı …"). GERÇEK PostgreSQL: göçleri uygulanmış veritabanında bütün denetimler
    doğru; firma_id taşıyan RLS'siz, zorlanmamış ya da politikasız bir tablo eklenince yakalanır; Supabase taklidinde API rolleri şemaya giremez,
-   girebilir olunca yakalanır; uygulama rolü şema bilgisini (goc) doğrudan okuyamaz, yalnız işlevle sayıları alır. Olumsuz kanıt: tests/bozan/saglik.bozan.ts. */
+   girebilir olunca yakalanır; uygulama rolü şema bilgisini (goc) doğrudan okuyamaz, yalnız işlevle sayıları alır. 354 (350–351 incelemesi): göç sayısı
+   dosyalarla aynı; BAĞLANAN rol ölçülür (sahip / ayrıcalıklı rolle bağlanılınca "ayrıcalıklı"); service_role da sayılır. Olumsuz kanıt:
+   tests/bozan/saglik.bozan.ts. */
 import assert from "node:assert/strict";
 import { after, before, test } from "node:test";
 import type { GomuluKume } from "../src/server/db/gomulu.ts";
+import { gocDosyalari } from "../src/server/db/goc.ts";
 import { havuzKur, type Havuz } from "../src/server/db/kiraci.ts";
 import { saglikOku } from "../src/server/db/saglik.ts";
 import { SON_GOC } from "../src/server/db/son-goc.ts";
@@ -18,6 +21,7 @@ after(async () => { await havuz?.end(); await kume?.durdur(); });
 test("göçleri uygulanmış veritabanı: bütün denetimler doğru; uygulama rolü şemayı doğrudan okuyamaz", async () => {
   const v = await saglikOku(havuz);
   assert.equal(v.son_goc, SON_GOC);
+  assert.equal(Number(v.goc_sayisi), gocDosyalari().length);
   assert.ok(v.kiraci_tablo >= 30, `kiracı tablosu: ${v.kiraci_tablo}`);
   assert.deepEqual({ rls_eksik: v.rls_eksik, politikasiz: v.politikasiz, uygulama_ayricalikli: v.uygulama_ayricalikli }, { rls_eksik: 0, politikasiz: 0, uygulama_ayricalikli: false });
   assert.equal(saglikDegerlendir(v).durum, "tamam");
@@ -49,5 +53,25 @@ test("Supabase taklidi: API rolleri şemaya giremez; girebilir olunca yakalanır
     await supa.sahip.query("GRANT USAGE ON SCHEMA public TO anon");
     assert.equal((await saglikOku(h)).api_sema, true);
     assert.equal(saglikDegerlendir(await saglikOku(h)).denetimler.api_kapali, false);
+  } finally { await h.end(); await supa?.kapat(); }
+});
+
+test("bağlanan rol ölçülür: uygulama rolü kısıtlı; ayrıcalıklı rolle (sahip) bağlanılınca ayrıcalıklı", async () => {
+  assert.equal((await saglikOku(havuz)).uygulama_ayricalikli, false);
+  const s = kume.sahipIstemci(); await s.connect();
+  try {
+    const v = (await s.query<{ s: { uygulama_ayricalikli: boolean } }>("SELECT saglik_denetimi() AS s")).rows[0].s;
+    assert.equal(v.uygulama_ayricalikli, true, "uygulama postgres / sahip ile bağlansa 'kısıtlı' denmez");
+  } finally { await s.end(); }
+});
+
+test("Supabase taklidi: service_role şemaya girebilirse de yakalanır", async () => {
+  let supa: SupabaseBenzeri | undefined;
+  const h = havuzKur({ ...kume.uygulama, database: "saglik_supa_sr" });
+  try {
+    supa = await supabaseBenzeri(kume, "saglik_supa_sr");
+    assert.equal((await saglikOku(h)).api_sema, false);
+    await supa.sahip.query("GRANT USAGE ON SCHEMA public TO service_role");
+    assert.equal((await saglikOku(h)).api_sema, true);
   } finally { await h.end(); await supa?.kapat(); }
 });

@@ -17,6 +17,7 @@ import { egitimTurAdlari } from "../../egitimler/server/ayar-baglanti.ts";
 import { ozlukTurKullanimi } from "../../personel/server/dosyalar.ts";
 import { tutar } from "../../../sema/ortak.ts";
 import { sirDurumu, sirYaz } from "../../../server/ayar/sir.ts";
+import { yzAyi, yzAyKullanimi, type YzKisiKullanimi } from "../../../server/yz/kullanim.ts";
 import {
   AnahtarGirdisi, BulutGirdisi, YedekGirdisi, YzGirdisi,
   BelgeTuruGirdisi, FiyatGirdisi, MUSTERI_BELGE_BAS, MUSTERI_BELGE_SON, MusteriBelgeGirdisi,
@@ -48,7 +49,8 @@ export interface FirmaAyarlari {
   /** müşteriye açık personel belgeleri (335): türler ve seçililer */
   mbelge: Surumlu<{ secili: string[] }> & { turler: MusteriBelgeTuru[]; ekSurum: number };
   /** 336: yapay zekâ (anahtar yalnız "tanımlı + son 4"; değer asla), bulut kaydı, yedek; saklama süresi (aylık arşiv) */
-  yz: Surumlu<{ acik: boolean; model: "opus" | "sonnet"; sinir: number | null }> & { anahtar: { tanimli: boolean; son4: string | null } };
+  /** kullanim: bu ayın kişi başı kullanımı (354; maket Y1 "Bu ay kullanım (kişi başına)") — maliyet milyonda bir dolar */
+  yz: Surumlu<{ acik: boolean; model: "opus" | "sonnet"; sinir: number | null }> & { anahtar: { tanimli: boolean; son4: string | null }; kullanim: YzKisiKullanimi[] };
   bulut: Surumlu<{ saglayici: "" | "gdrive" | "onedrive" | "dropbox" | "yandex" | "sftp"; kok: string; duzen: "mt" | "mty" | "my" }>;
   yedek: Surumlu<{ sik: "saatlik" | "gunluk" | "haftalik"; saat: string; gun: 30 | 90 | 365 }>;
   /** 337: son içe aktarımlar */
@@ -101,7 +103,8 @@ export async function firmaAyarlari(db: Sorgulayici, kim: Kisi): Promise<FirmaAy
     })(),
     yz: await (async () => {
       const y = await ayarOku(db, "yapay_zeka");
-      return { deger: { acik: y.deger.acik, model: y.deger.model, sinir: y.deger.sinir }, surum: y.surum, anahtar: await sirDurumu(db, "yapay_zeka_anahtari") };
+      return { deger: { acik: y.deger.acik, model: y.deger.model, sinir: y.deger.sinir }, surum: y.surum, anahtar: await sirDurumu(db, "yapay_zeka_anahtari"),
+        kullanim: await yzAyKullanimi(db, yzAyi()) };
     })(),
     bulut: await (async () => { const b = await ayarOku(db, "bulut"); return { deger: b.deger, surum: b.surum }; })(),
     ice: await iceAktarimlar(db),

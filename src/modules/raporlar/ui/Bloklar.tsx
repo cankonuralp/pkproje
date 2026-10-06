@@ -11,7 +11,7 @@
    · foto: bölümün fotoğrafları (FotoListesi; en az formatın enAz'ı — hazır şablonlarda 1); "Uygun değil" maddede de fotoğraf eklenir, Kusur
      açıklamalarında adıyla görünür (O2). Her girdinin etiketi var (görünür ya da aria-label); Onaya gönder'in işaretlediği
      boş zorunlu alan aria-invalid + kırmızı çerçeve, doldurulunca kalkar (maket zorunluEksik / uyar). */
-import { useCallback, useEffect, useId, useRef, useState, type KeyboardEvent, type ReactNode } from "react";
+import { useCallback, useEffect, useId, useRef, useState, type KeyboardEvent, type ReactNode, type TransitionStartFunction } from "react";
 import { useBildir } from "../../../components/bildirim/Bildirim";
 import { Alan, FormIzgara, Girdi } from "../../../components/form/Form";
 import { Ikon } from "../../../components/ikon/Ikon";
@@ -61,6 +61,8 @@ export interface Baglam {
   foto: (bolumId: string, madde: string | null) => ReactNode;
   /** ölçüm tablolarında "Fotoğraftan oku" (351): düzenleyebilene, firmada yapay zekâ açık ve anahtar girilmişse */
   yz: boolean;
+  /** üst ekranın işlemi (354): okuma sürerken Kaydet / Onaya gönder / öteki okumalar kapalı (FotoListesi gibi); okuma rapora fotoğraf ekleyince yenile */
+  islem: { mesgul: boolean; baslat: TransitionStartFunction; yenile: () => void };
 }
 
 /* ── ORTAK PARÇALAR ──────────────────────────────────────────────────────────────────────────────────────────── */
@@ -404,10 +406,9 @@ function OlcumBlok({ b, bag }: { b: BolumOf<"olcum">; bag: Baglam }) {
           <Tus tur="ikincil" ikon="plus" id={alanId(b.id)} onClick={() => tablo((l) => [...l, {}])}>Satır ekle</Tus>
           {b.enAz > 0 && <span className={azEksik ? stil.hataMetin : stil.ipucuMetin}>En az {b.enAz} satır.</span>}
         </>;
-        /* fotoğraftan okunan satırlar tablonun sonuna eklenir; hiç değeri olmayan (boş açılmış) satır yer kaplamasın diye düşer */
-        const dolu = (s: Record<string, string>) => Object.values(s).some((x) => x !== "");
+        /* fotoğraftan okunanlar: değeri boş var olan satıra ya da tablonun sonuna (foto-eslestir.ts) */
         return bag.yz
-          ? <FotoOkuma raporId={bag.v.id} b={b} cubuk={stil.tabloAlt} tuslar={tuslar} ekle={(l) => tablo((x) => [...x.filter(dolu), ...l])} />
+          ? <FotoOkuma raporId={bag.v.id} b={b} satirlar={satirlar} tablo={tablo} islem={bag.islem} cubuk={stil.tabloAlt} tuslar={tuslar} />
           : <div className={stil.tabloAlt}>{tuslar}</div>;
       })()}
     </>

@@ -1,7 +1,8 @@
 /* OLUMSUZ KANIT — tests/foto-oku.test.ts (351) neyi koruyor. Kaynak diskte DEĞİŞTİRİLMEZ (anayasa 13.11): foto-oku.ts bellekte bozulup geçici klasörden
    içe aktarılır (göreli içe aktarmalar mutlak yola çevrilir); 0052 göçü geçici kopyada bozulur.
    1. Aylık sınır denetimi kalkınca sınırı dolmuş kişi okumaya devam eder (firmanın Anthropic hesabından sınırsız harcama).
-   2. Tetikteki hesap damgası kalkınca kişi kullanımı başkasının hanesine yazar (sınırı başkasına yükler). */
+   2. Tetikteki hesap damgası kalkınca kişi kullanımı başkasının hanesine yazar (sınırı başkasına yükler). (Tetiğin geçerli tanımı 0053.)
+   3. (354) Ayırmadaki satır kilidi (FOR UPDATE) kalkınca eşzamanlı ikinci okuma birincinin ayırmasını görmez, sınır aşılır. kullanim.ts bellekte bozulur. */
 import assert from "node:assert/strict";
 import { copyFileSync, mkdirSync, mkdtempSync, readdirSync, readFileSync, rmSync, writeFileSync } from "node:fs";
 import { randomBytes } from "node:crypto";
@@ -20,20 +21,26 @@ import type { GomuluKume } from "../../src/server/db/gomulu.ts";
 import { havuzKur, kiraciIcinde, type Havuz } from "../../src/server/db/kiraci.ts";
 import { klasorDepo } from "../../src/server/dosya/depo.ts";
 import { yzAyi } from "../../src/server/yz/kullanim.ts";
+import { enCokMaliyet } from "../../src/server/yz/okuma.ts";
 import { testKumesi } from "../yardimci/kume.ts";
 import { supabaseBenzeri } from "../yardimci/supabase.ts";
 
 type Modul = typeof import("../../src/modules/raporlar/server/foto-oku.ts");
-const KOK = resolve("src/modules/raporlar/server");
-const KAYNAK = readFileSync(join(KOK, "foto-oku.ts"), "utf8").replace(/from "(\.\.?\/[^"]+)"/g, (_, y) => `from "${pathToFileURL(resolve(KOK, y)).href}"`);
+type KullanimModulu = typeof import("../../src/server/yz/kullanim.ts");
+/** kaynak dosya, göreli içe aktarmaları mutlak yola çevrilmiş */
+const kaynak = (kok: string, ad: string) => readFileSync(join(kok, ad), "utf8").replace(/from "(\.\.?\/[^"]+)"/g, (_, y) => `from "${pathToFileURL(resolve(kok, y)).href}"`);
+const KAYNAK = kaynak(resolve("src/modules/raporlar/server"), "foto-oku.ts");
+const KULLANIM = kaynak(resolve("src/server/yz"), "kullanim.ts");
 const gecici = mkdtempSync(join(tmpdir(), "foto-oku-bozan-"));
 const depo = klasorDepo(join(gecici, "depo"));
-async function bozuk(eski: string, yeni: string): Promise<Modul> {
-  assert.ok(KAYNAK.includes(eski), `bozulacak satır kaynakta yok: ${eski}`);
-  const yol = join(gecici, "f1.ts");
-  writeFileSync(yol, KAYNAK.replace(eski, () => yeni));
+let sira = 0;
+async function bozukYaz<T>(metin: string, eski: string, yeni: string): Promise<T> {
+  assert.ok(metin.includes(eski), `bozulacak satır kaynakta yok: ${eski}`);
+  const yol = join(gecici, `b${++sira}.ts`);
+  writeFileSync(yol, metin.replace(eski, () => yeni));
   return import(pathToFileURL(yol).href);
 }
+const bozuk = (eski: string, yeni: string) => bozukYaz<Modul>(KAYNAK, eski, yeni);
 const kisi = (id: string, ...roller: string[]): Kisi => ({ id, ad: "Deneme", roller: roller as Kisi["roller"] });
 const tamam = <R extends { durum: string }>(r: R) => { assert.equal(r.durum, "tamam", JSON.stringify(r)); return r as Extract<R, { durum: "tamam" }>; };
 /* en küçük yapısı doğru JPEG: SOI · DQT · SOS (kalanı görüntü) · EOI */
@@ -74,7 +81,7 @@ before(async () => {
 after(async () => { await havuz?.end(); await kume?.durdur(); rmSync(gecici, { recursive: true, force: true }); });
 
 test("1. aylık sınır denetimi kalkınca sınırı dolmuş kişi okumaya devam eder (kilidin koruduğu açık)", async () => {
-  const m = await bozuk("  if (yz.sinir !== null && (await yzAyMaliyeti(db, kim.id, ay)) >= yz.sinir * 1e6) {", "  if (false) {");
+  const m = await bozuk("  if (!(await yzAyir(db, ay, yz.sinir, ust))) {", "  if (false) {");
   await kiraciIcinde(havuz, A, (db) => db.sorgu("INSERT INTO yz_kullanim (ay, okuma, maliyet) VALUES ($1, 9, 5000000)", [yzAyi()]), { hesapId: den1.id });
   const h = await kiraciIcinde(havuz, A, (db) => m.fotoOkuHazirla(db, den1, rapor, "linye", { bayt: JPEG }), { hesapId: den1.id });
   assert.equal(h.durum, "hazir", "bozuk: 5 $ harcamış kişi (sınır 1 $) yine okuyor");
@@ -86,7 +93,7 @@ test("2. tetikteki hesap damgası kalkınca kullanım başkasının hanesine yaz
   const ESKI = "    NEW.hesap_id := ben;\n";
   for (const ad of readdirSync(GOC_KLASORU)) {
     if (!ad.endsWith(".sql")) continue;
-    if (ad.startsWith("0052_")) {
+    if (ad.startsWith("0053_")) {
       const k = readFileSync(join(GOC_KLASORU, ad), "utf8");
       assert.ok(k.includes(ESKI), "bozulacak satır göçte yok");
       writeFileSync(join(klasor, ad), k.replace(ESKI, () => ""));
@@ -103,4 +110,25 @@ test("2. tetikteki hesap damgası kalkınca kullanım başkasının hanesine yaz
     const r = (await supa.sahip.query<{ h: string }>("SELECT hesap_id::text AS h FROM yz_kullanim WHERE firma_id = $1", [f])).rows[0].h;
     assert.equal(r, baska, "bozuk: kullanım başkasının hanesine yazıldı");
   } finally { await h.end(); await supa.kapat(); }
+});
+
+test("3. ayırmadaki satır kilidi kalkınca eşzamanlı ikinci okuma sınırı aşar (kilidin koruduğu açık)", async () => {
+  const m = await bozukYaz<KullanimModulu>(KULLANIM, " AND ay = $1 FOR UPDATE`", " AND ay = $1`");
+  /* satır önceden var (ayın ilk okuması değil); sınır 0,3 $: ilk ayırma (0,36 $) sığar, ardından sınır dolu — doğru kodda ikinci okuma reddedilir */
+  const ay = "2026-03", ust = enCokMaliyet("opus"), sinir = 0.3;
+  await kiraciIcinde(havuz, A, (db) => db.sorgu("INSERT INTO yz_kullanim (ay) VALUES ($1)", [ay]), { hesapId: den1.id });
+  let ayrildi!: () => void, birak!: () => void;
+  const ayrildiSoz = new Promise<void>((c) => { ayrildi = c; }), kapi = new Promise<void>((c) => { birak = c; });
+  const t1 = kiraciIcinde(havuz, A, async (db) => { const r = await m.yzAyir(db, ay, sinir, ust); ayrildi(); await kapi; return r; }, { hesapId: den1.id });
+  await ayrildiSoz;
+  const t2 = kiraciIcinde(havuz, A, (db) => m.yzAyir(db, ay, sinir, ust), { hesapId: den1.id });
+  const s = kume.sahipIstemci(); await s.connect();
+  try {
+    for (let i = 0; i < 200; i++) {
+      if ((await s.query<{ n: number }>("SELECT count(*)::int AS n FROM pg_stat_activity WHERE wait_event_type = 'Lock'")).rows[0].n > 0) break;
+      await new Promise((c) => setTimeout(c, 25));
+    }
+  } finally { await s.end(); }
+  birak();
+  assert.deepEqual(await Promise.all([t1, t2]), [true, true], "bozuk: ikinci okuma da ayrıldı, sınır aşıldı");
 });

@@ -127,7 +127,7 @@ export function SahaRaporu({ v }: { v: Gorunum }) {
   };
   const yaz = (f: (c: Cevaplar) => Cevaplar) => { setCevaplar(f); setKirli(true); };
   const bag: Baglam = {
-    v, c: cevaplar, yaz, d, oku, gecersiz, kaynak: (k) => kaynaklar[k], yz: !oku && v.yz,
+    v, c: cevaplar, yaz, d, oku, gecersiz, kaynak: (k) => kaynaklar[k], yz: !oku && v.yz, islem: { mesgul, baslat, yenile },
     cihaz: (bolumId) => <CihazBolumu v={v} bolumId={bolumId} oku={oku} gecersiz={gecersiz} mesgul={mesgul} baslat={baslat} yenile={yenile} />,
     foto: (bolumId, madde) => <FotoListesi key={`${bolumId}-${madde ?? ""}`} v={v} bolumId={bolumId} madde={madde} oku={oku}
       gecersiz={gecersiz(madde ? `${madde}.foto` : bolumId)} mesgul={mesgul} baslat={baslat} yenile={yenile} />,

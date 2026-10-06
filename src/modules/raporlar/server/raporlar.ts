@@ -505,6 +505,18 @@ export async function fotoEkle(db: Sorgulayici, depo: Depo, kim: Kisi, firmaId: 
   return sonuc(await guncelle(db, RAPOR, id, surum, { fotolar: jsonDizi(yeni), cevaplar }, { kim: kim.ad, ne: "rapor.foto_ekle", gerekce: `${gorunenNo(e.r.no, e.r.revizyon)} · ${y.ad}` }), id, `${y.ad} eklendi.`);
 }
 
+/** fotoğraftan okunan PANO fotoğrafı rapora (354; pkproje §11 92 "sigorta okununca pano fotoğrafı rapora eklenir", maket sigorta-oku r.pano): formatın
+    son fotoğraf bölümüne (termal görüntü bölümü değil, yer varsa), raporun o anki sürümüyle — yazanın kendi okuması, ekran sonra yenilenir. Yer yoksa
+    eklenmez, nedeni döner (okunan değerler yine öneri olarak gelir). */
+export async function okunanFotografiEkle(db: Sorgulayici, depo: Depo, kim: Kisi, firmaId: string, id: string, dosya: { ad: string; bayt: Uint8Array }): Promise<RaporYazma> {
+  const e = await yazilabilir(db, kim, id);
+  if (hataMi(e)) return e;
+  const bolumler = (await formatSurumuOku(db, e.r.format_id))?.tanim.bolumler ?? [];
+  const yer = bolumler.filter((b) => b.blok === "foto" && !/termal/i.test(b.ad) && e.r.fotolar.filter((f) => f.bolum === b.id && !f.madde).length < b.enCok).at(-1);
+  if (!yer) return { durum: "gecersiz", hatalar: { foto: "Raporda fotoğrafın ekleneceği yer yok (fotoğraf bölümü yok ya da dolu)." } };
+  return fotoEkle(db, depo, kim, firmaId, id, e.r.surum, { bolum: yer.id, madde: null }, dosya);
+}
+
 /** fotoğraf sil: listeden çıkar, dosya çöpe (indirilemez). Yalnız yazan, Yeni raporda. */
 export async function fotoSil(db: Sorgulayici, kim: Kisi, id: string, surum: number, dosyaId: string): Promise<RaporYazma> {
   const e = await yazilabilir(db, kim, id);

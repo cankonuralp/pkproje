@@ -1,9 +1,11 @@
-/* SAĞLIK DENETİMİ OKUYUCUSU (350; 09-G5) — 0051 saglik_denetimi(): yalnız sayılar ve son göçün adı (firma verisi yok). Uygulama rolüyle, kiracı
+/* SAĞLIK DENETİMİ OKUYUCUSU (350; 09-G5) — saglik_denetimi() (0051, ikinci hâli 0053): yalnız sayılar ve son göçün adı (firma verisi yok). Uygulama rolüyle, kiracı
    bağlamı gerekmez (işlev tanımlayıcının haklarıyla şema bilgisini okur). pg yalnız src/server/db'de. */
 import type { Havuz } from "./kiraci.ts";
 
 export interface SaglikVerisi {
   son_goc: string | null;
+  /** uygulanmış göç sayısı (0053) */
+  goc_sayisi: number;
   kiraci_tablo: number;
   rls_eksik: number;
   politikasiz: number;

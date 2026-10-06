@@ -190,11 +190,12 @@ pkproje/
                             yazma SQL'i taşımaz, 2026-10-04)
   src/server/db/gocler/0000, 0008–0010  YAYIN SERTLEŞTİRME (2026-10-04): Supabase API rolleri şemaya giremez (0000 önce, 0008 temizlik + doğrulama),
                             rol süre sınırları (0009), işlev arama yolu (0010) — kilit tests/yayin.test.ts (Supabase taklidi, süper kullanıcı olmayan sahip)
-  src/server/yz/            YAPAY ZEKÂ (351): okuma.ts (fotoğraftan okuma isteği / cevap süzme / maliyet, saf; anthropicCagir — uç PROBATA_YZ_UC) ·
-                            kullanim.ts (0052 yz_kullanim / yz_okuma, firmada açık mı) · modülde raporlar/server/foto-oku.ts (hazırla → çağrı → kaydet) +
-                            ui/FotoOkuma.tsx (öneri kartı)
-  src/server/saglik.ts      SAĞLIK (350; 09-G5): /api/saglik denetimleri (db/saglik.ts → 0051 saglik_denetimi; db/son-goc.ts SON_GOC — her yeni göçte
-                            güncellenir, testle kilitli) · canlı duman testi: node tools/duman.mjs (salt okunur, çıkış kodu)
+  src/server/yz/            YAPAY ZEKÂ (351): okuma.ts (fotoğraftan okuma isteği — 354: yapılandırılmış çıktı, zorunlu araç YOK (Opus / Sonnet 5.5 400) —
+                            cevap süzme / maliyet, saf; anthropicCagir — uç PROBATA_YZ_UC, hata ücretli mi) · kullanim.ts (0052 yz_kullanim / yz_okuma; 0053
+                            ayırma: yzAyir satır kilidiyle, yzOkumaYaz, yzAyirmaBirak; yzAyKullanimi firma ayarlarına) · modülde raporlar/server/foto-oku.ts
+                            (hazırla + ayır → çağrı → kullanım → öneri; pano fotoğrafı rapora) + foto-eslestir.ts (saf: okunan → boş satır) + ui/FotoOkuma.tsx
+  src/server/saglik.ts      SAĞLIK (350; 09-G5): /api/saglik denetimleri (db/saglik.ts → saglik_denetimi, geçerli tanım 0053 — bağlanan rol, göç sayısı;
+                            db/son-goc.ts SON_GOC + GOC_SAYISI — her yeni göçte ikisi güncellenir, testle kilitli) · canlı duman testi: node tools/duman.mjs (salt okunur, çıkış kodu)
   src/server/db/havuz.ts    ortamdan bağlantı: ağda şifresiz bağlantı YOK (PROBATA_VT_SSL=dogrula → kok-sertifika.ts Supabase kökü); Vercel'de boşta bekleme
   vercel.json               deneme yayını (Vercel fra1, https://probata-deneme.vercel.app; veritabanı Supabase eu-central-1 — pkproje.md §11 293)
                             · yalnız main yayınlanır (git.deploymentEnabled; kalem/* önizleme kurmaz — 2026-10-06, Function Storage kotası)
