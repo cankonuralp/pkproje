@@ -1,0 +1,53 @@
+/* NEREDEN GELDİ: 350 — 09-G5 duman testi ("veritabanı bağlantısı, RLS açık mı …"). GERÇEK PostgreSQL: göçleri uygulanmış veritabanında bütün denetimler
+   doğru; firma_id taşıyan RLS'siz, zorlanmamış ya da politikasız bir tablo eklenince yakalanır; Supabase taklidinde API rolleri şemaya giremez,
+   girebilir olunca yakalanır; uygulama rolü şema bilgisini (goc) doğrudan okuyamaz, yalnız işlevle sayıları alır. Olumsuz kanıt: tests/bozan/saglik.bozan.ts. */
+import assert from "node:assert/strict";
+import { after, before, test } from "node:test";
+import type { GomuluKume } from "../src/server/db/gomulu.ts";
+import { havuzKur, type Havuz } from "../src/server/db/kiraci.ts";
+import { saglikOku } from "../src/server/db/saglik.ts";
+import { SON_GOC } from "../src/server/db/son-goc.ts";
+import { saglikDegerlendir } from "../src/server/saglik.ts";
+import { testKumesi } from "./yardimci/kume.ts";
+import { supabaseBenzeri, type SupabaseBenzeri } from "./yardimci/supabase.ts";
+
+let kume: GomuluKume, havuz: Havuz;
+before(async () => { kume = await testKumesi(); havuz = havuzKur(kume.uygulama); });
+after(async () => { await havuz?.end(); await kume?.durdur(); });
+
+test("göçleri uygulanmış veritabanı: bütün denetimler doğru; uygulama rolü şemayı doğrudan okuyamaz", async () => {
+  const v = await saglikOku(havuz);
+  assert.equal(v.son_goc, SON_GOC);
+  assert.ok(v.kiraci_tablo >= 30, `kiracı tablosu: ${v.kiraci_tablo}`);
+  assert.deepEqual({ rls_eksik: v.rls_eksik, politikasiz: v.politikasiz, uygulama_ayricalikli: v.uygulama_ayricalikli }, { rls_eksik: 0, politikasiz: 0, uygulama_ayricalikli: false });
+  assert.equal(saglikDegerlendir(v).durum, "tamam");
+  await assert.rejects(havuz.query("SELECT * FROM goc"), /permission denied/);
+});
+
+test("RLS'siz, zorlanmamış ya da politikasız kiracı tablosu yakalanır", async () => {
+  const s = kume.sahipIstemci(); await s.connect();
+  try {
+    await s.query("CREATE TABLE sizinti_deneme (id int, firma_id uuid)");
+    let v = await saglikOku(havuz);
+    assert.deepEqual([v.rls_eksik, v.politikasiz], [1, 1]);
+    await s.query("ALTER TABLE sizinti_deneme ENABLE ROW LEVEL SECURITY");
+    v = await saglikOku(havuz);
+    assert.equal(v.rls_eksik, 1, "açık ama zorlanmamış");
+    await s.query("ALTER TABLE sizinti_deneme FORCE ROW LEVEL SECURITY");
+    v = await saglikOku(havuz);
+    assert.deepEqual([v.rls_eksik, v.politikasiz], [0, 1], "politikasız");
+    assert.equal(saglikDegerlendir(v).denetimler.rls, false);
+  } finally { await s.query("DROP TABLE IF EXISTS sizinti_deneme"); await s.end(); }
+});
+
+test("Supabase taklidi: API rolleri şemaya giremez; girebilir olunca yakalanır", async () => {
+  let supa: SupabaseBenzeri | undefined;
+  const h = havuzKur({ ...kume.uygulama, database: "saglik_supa" });
+  try {
+    supa = await supabaseBenzeri(kume, "saglik_supa");
+    assert.equal((await saglikOku(h)).api_sema, false);
+    await supa.sahip.query("GRANT USAGE ON SCHEMA public TO anon");
+    assert.equal((await saglikOku(h)).api_sema, true);
+    assert.equal(saglikDegerlendir(await saglikOku(h)).denetimler.api_kapali, false);
+  } finally { await h.end(); await supa?.kapat(); }
+});

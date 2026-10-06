@@ -2341,6 +2341,14 @@ revizyon, alan kopyalama, hafif kusur devri, meslek eşleşme denetimi).
 - Emsal ürünler: https://opwire.app/iso-17020-periyodik-kontrol-yazilimi/ · https://17020muayene.vidco.com.tr/ · https://akuple.com/asansor-kontrol-yazilimi/ · https://ensyazilim.com/
 
 ## 11 · Değişiklik günlüğü
+- 2026-10-06 (350): **Sağlık ucu ve canlı duman testi** (09-G5; 06 "her teslimden sonra canlıya karşı duman testi koşulur"). `/api/saglik`
+  (oturumsuz; yalnız evet / hayır ve sürüm, firma / kişi bilgisi yok; biri düşerse 503): veritabanı bağlantısı · göç güncel (veritabanındaki son göç =
+  kodun beklediği `SON_GOC` — kod göçten önce yayınlanırsa yakalanır) · firma_id taşıyan her tabloda RLS açık + zorlanmış + politikalı · Supabase
+  API rolleri şemaya giremiyor · uygulama rolü süper kullanıcı / RLS'yi aşan değil. Göç 0051 saglik_denetimi() (tanımlayıcının haklarıyla yalnız
+  sayılar). `node tools/duman.mjs [firma adresi] [yönetim adresi]`: canlıyı dışarıdan, salt okunur yoklar — sağlık ucu, giriş + güvenlik başlıkları
+  (CSP nonce, HSTS, frame-ancestors, nosniff), oturumsuz sayfa girişe, anonim dosya 403, tanım dizini 403, firma adresinde /yonetim yok, yönetim
+  adresinde yalnız /yonetim (önceden yükleme başlığıyla da); çıkış kodu. Kilit: saglik (gerçek PG: RLS'siz / zorlanmamış / politikasız tablo ve
+  açık API rolü yakalanır), saglik-saf (SON_GOC = son göç dosyası); olumsuz kanıt saglik.bozan; e2e api.spec.
 - 2026-10-06 (349): **347–348 çapraz incelemesi düzeltmeleri** (dört bakış, 17 bulgu; 11 doğrulandı, 6 çürütüldü). **Güvenlik:** yönetim
   girişinde doğru parola hatalı deneme sayacını (yönetici + IP) SIFIRLAMAZ — yalnız tam giriş sıfırlar; "doğru parola → 4 yanlış kod" döngüsüyle
   doğrulama kodu kaba kuvvetle denenemez. Ara katman eşleştiricisinden önceden yükleme istisnası kalktı: o başlıkla gelen istek de adres ayrımından

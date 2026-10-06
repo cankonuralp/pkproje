@@ -54,8 +54,9 @@ test("17 modül, numaralar tekil; menüde olmayanlar 1 (Personel'in içinde), 6,
 const ACIK_ROTALAR = ["giris"];
 const GELISTIRME_ROTALARI = ["vitrin"];
 /* 2026-10-04 (K1, dosya ucu): api/ yalnız tanımlı uçları taşır — her uç oturumu ve yetkiyi kendisi denetler (09-A2).
-   2026-10-05 (316): olcum — PDF motorunun Vercel ölçümü, oturumsuz ama YALNIZ önizleme dağıtımında (aşağıdaki test kilitler; yayında 404) */
-const API_UCLARI = ["dosya", "olcum", "surum", "tanim"];
+   2026-10-05 (316): olcum — PDF motorunun Vercel ölçümü, oturumsuz ama YALNIZ önizleme dağıtımında (aşağıdaki test kilitler; yayında 404)
+   2026-10-06 (350, 09-G5): saglik — oturumsuz sağlık ucu; yalnız evet / hayır denetimleri ve sürüm (firma / kişi bilgisi yok — e2e/api.spec) */
+const API_UCLARI = ["dosya", "olcum", "saglik", "surum", "tanim"];
 const klasorlerOf = (yol: string) => readdirSync(yol).filter((ad) => statSync(join(yol, ad)).isDirectory()).sort();
 
 test("her modülün rota klasörü var ve src/app'te modül dışı rota yok", () => {
