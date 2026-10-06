@@ -7,6 +7,7 @@ import type { GomuluKume } from "../src/server/db/gomulu.ts";
 import { havuzKur, kiraciIcinde, type Havuz, type Sorgulayici } from "../src/server/db/kiraci.ts";
 import { gunEkle } from "../src/modules/muhasebe/sema.ts";
 import { anaSayfa, bugunTr, type AnaSayfa, type Kisi } from "../src/modules/anasayfa/server/anasayfa.ts";
+import { menuTakip } from "../src/modules/anasayfa/server/takip.ts";
 import { testKumesi } from "./yardimci/kume.ts";
 
 let kume: GomuluKume;
@@ -121,3 +122,20 @@ test("firma sızıntısı: B'nin yöneticisi A'nın planlarını ve tesislerini 
   const v = await a(YON_B, (db) => anaSayfa(db, YON_B), B);
   assert.deepEqual([sayi(v, "firma_yoneticisi", "Açık plan"), v.bolumler[0].liste!.kayitlar.length], [0, 0]);
 });
+
+/* 339: yan menü takip balonları (maket MV.TAKIP) — kişiye ve modül düzeyine göre; 0 olan balon yok; başka firmanın verisi sayılmaz */
+test("yan menü balonları: planlar (kabul bekleyen sarı, plan günü gelmiş kırmızı) kişiye göre, İSG-KATİP eksiği; kısıtlı düzey ve başka firma görmez", async () => {
+  const denP = (await a(DEN, (db) => db.sorgu<{ id: string }>("SELECT personel_id::text AS id FROM hesap WHERE id = $1", [DEN.id]))).rows[0].id;
+  const t1 = (await a(PLAN, (db) => db.sorgu<{ id: string }>("SELECT id::text FROM tesis WHERE ad = 'Merkez'"))).rows[0].id;
+  const pid = await sahip(`INSERT INTO plan (firma_id, no, tesis_id, baslangic, bitis, durum, firma_adi, acan) VALUES ($1, 'P-1026-006', $2, $3, $3, 'bekliyor', 'Deneme Bir A.Ş.', 'Deneme') RETURNING id::text`, [A, t1, g(-1)]);
+  await sahip("INSERT INTO plan_ekip (firma_id, plan_id, personel_id, isg_no) VALUES ($1, $2, $3, 'ISG-9') RETURNING id::text", [A, pid, denP]);
+  const d = await a(DEN, (db) => menuTakip(db, DEN));
+  assert.deepEqual([d[13]?.kirmizi, d[13]?.sari], [1, 1], "denetçinin kendi planları: P-006 günü geçti, P-001 bekliyor");
+  assert.equal(d[14], undefined, "Yeni raporu yok");
+  const p = await a(PLAN, (db) => menuTakip(db, PLAN));
+  assert.deepEqual([p[13]?.kirmizi, p[13]?.sari, p[13]?.ad.sari], [1, 1, "kabul bekleyen plan"]);
+  const KISITLI = { ...PLAN, matris: { 13: ["kendi", "kendi", "gor", "gor", "yaz", "yok"] } } as Kisi;
+  assert.equal((await a(KISITLI, (db) => menuTakip(db, KISITLI)))[13], undefined, "'kendi' düzeyi, ekipte değil: balon yok");
+  assert.deepEqual(await a(YON_B, (db) => menuTakip(db, YON_B), B), {}, "B'de A'nın verisi yok");
+});
+

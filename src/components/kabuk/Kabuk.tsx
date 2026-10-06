@@ -8,7 +8,9 @@
      şeridine indirir / açar; ad görünmez (ekran okuyucu okur), üstüne gelince ipucu. Tercih bu cihazda ("probata-menu").
      Orta ve dar bantta etkisiz: orada ☰ çekmeceyi açar (anayasa 2.11).
    · K1 (2026-10-04): menüde yalnız kişinin görebildiği modüller (gorunur: sunucuda canDo ile hesaplanır — yapamayacağı yer çizilmez, anayasa 7.4;
-     KAPI değildir, her sayfa sunucuda ayrıca denetler). Sağ üstte kullanıcı (baş harfler, ad, rol) ve menüsünde Çıkış yap (maket). */
+     KAPI değildir, her sayfa sunucuda ayrıca denetler). Sağ üstte kullanıcı (baş harfler, ad, rol) ve menüsünde Çıkış yap (maket).
+   · Takip balonları (339; maket takipHtml, T6): modül başına kırmızı (süresi geçen) / sarı (bekleyen, yaklaşan) sayı; 0 olan çizilmez; sayfa
+     açılınca sunucudan istenir (çizimi bekletmez; sayılar yetkiye duyarlı — anasayfa/server/takip.ts). Daraltılmış şeritte yalnız en önemlisi. */
 import Image from "next/image";
 import Link from "next/link";
 import { usePathname } from "next/navigation";
@@ -44,6 +46,19 @@ function bantAboneOl(bildir: () => void) {
   return () => sorgu.removeEventListener("change", bildir);
 }
 const genisBantMi = () => matchMedia(GENIS_BANT).matches;
+
+/** modül (§3.1 no) → balon; ad: ekran okuyucunun ve ipucunun okuduğu anlam */
+export type KabukTakip = Record<number, { kirmizi: number; sari: number; ad: { kirmizi: string; sari: string } }>;
+function Balonlar({ b }: { b: KabukTakip[number] | undefined }) {
+  if (!b || (b.kirmizi <= 0 && b.sari <= 0)) return null;
+  return (
+    <span className={stil.takip}>
+      <span className="gizli">: </span>
+      {b.kirmizi > 0 && <span className={`${stil.balon} ${stil.balonKirmizi}`} title={`${b.kirmizi} ${b.ad.kirmizi}`}>{b.kirmizi}<span className="gizli"> {b.ad.kirmizi}</span></span>}
+      {b.sari > 0 && <span className={`${stil.balon} ${stil.balonSari}`} title={`${b.sari} ${b.ad.sari}`}>{b.sari}<span className="gizli"> {b.ad.sari}</span></span>}
+    </span>
+  );
+}
 
 /** açık / koyu tema tuşu (kabukta ve giriş ekranında; 2026-10-04 reisim: "giriş ekranında gece modu ayarı tuşu yok") */
 export function TemaTusu({ sinif }: { sinif?: string }) {
@@ -94,17 +109,27 @@ export function KullaniciMenusu({ kullanici }: { kullanici: KabukKullanicisi }) 
   );
 }
 
-export function Kabuk({ children, kullanici, gorunur }: {
+export function Kabuk({ children, kullanici, gorunur, takip }: {
   children: ReactNode;
   /** oturumdaki kişi (yoksa — geliştirme vitrini — kullanıcı alanı çizilmez) */
   kullanici?: KabukKullanicisi;
   /** görebildiği modüllerin §3.1 numaraları (verilmezse hepsi — yalnız vitrin / önizleme) */
   gorunur?: readonly number[];
+  /** takip balonlarını getiren sunucu eylemi (verilmezse balon yok — vitrin) */
+  takip?: () => Promise<KabukTakip>;
 }) {
   const [acik, setAcik] = useState(false);
   const dar = useSyncExternalStore(menuAboneOl, menuDarMi, () => false);
   const serit = useSyncExternalStore(bantAboneOl, genisBantMi, () => false) && dar;
   const yol = temizYol(usePathname() ?? "/");
+  const [balon, setBalon] = useState<KabukTakip>({});
+  /* sayfa değişince (iş yapılmış olabilir) balonlar yeniden istenir; hata olursa eski sayılar kalır */
+  useEffect(() => {
+    if (!takip) return;
+    let canli = true;
+    takip().then((t) => { if (canli) setBalon(t); }, () => undefined);
+    return () => { canli = false; };
+  }, [takip, yol]);
   const daralt = () => {
     if (dar) document.documentElement.removeAttribute("data-menu");
     else document.documentElement.setAttribute("data-menu", "dar");
@@ -158,6 +183,7 @@ export function Kabuk({ children, kullanici, gorunur }: {
                         title={serit ? m.ad : undefined} onClick={() => setAcik(false)}>
                         <Ikon ad={m.ikon} />
                         <span className={stil.menuAd}>{m.ad}</span>
+                        <Balonlar b={balon[m.no]} />
                       </Link>
                     </li>
                   );

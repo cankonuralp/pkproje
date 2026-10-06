@@ -38,3 +38,15 @@ test("☰ yeri: geniş bantta sol barda (daraltır, 64 px), dar bantta üst çub
     await expect(daralt).toBeHidden();
   }
 });
+
+/* 339: yan menü takip balonları (maket T6) — tohumdaki UY-01'in kalibrasyonu 10 gün sonra bitiyor: Ölçüm cihazları ve Uyarılar'da sarı balon,
+   adı ekran okuyucuya söylenir; sayfa çizildikten sonra sunucudan gelir */
+test("yan menü takip balonları: yaklaşan kalibrasyon Ölçüm cihazları ve Uyarılar'da", async ({ page }, bilgi) => {
+  await page.goto("/");
+  if (bilgi.project.name !== "masaustu") await page.locator('header button[aria-label="Menüyü aç"]').click();
+  const menu = page.getByRole("navigation", { name: "Modüller" });
+  await expect(menu.getByRole("link", { name: /^Ölçüm cihazları: \d+ süresi yaklaşan cihaz/ })).toBeVisible({ timeout: 30_000 });
+  await expect(menu.getByRole("link", { name: /^Uyarılar: .*yaklaşan uyarı/ })).toBeVisible();
+  await expect(menu.getByRole("link", { name: /^Ana sayfa$/ })).toBeVisible();
+});
+

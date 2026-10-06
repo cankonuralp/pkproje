@@ -2341,6 +2341,16 @@ revizyon, alan kopyalama, hafif kusur devri, meslek eşleşme denetimi).
 - Emsal ürünler: https://opwire.app/iso-17020-periyodik-kontrol-yazilimi/ · https://17020muayene.vidco.com.tr/ · https://akuple.com/asansor-kontrol-yazilimi/ · https://ensyazilim.com/
 
 ## 11 · Değişiklik günlüğü
+- 2026-10-06 (339): **K4 Yan menü takip balonları** (maket takipHtml + MV.TAKIP — T6, reisim 2026-09-28: "cihazlarda süresi geçen cihaz sayısı
+  kırmızı balon, yaklaşan sarı balon … diğer modüllerde de benzer takip"; 35. tur 163; N9 raporlar "kişiye göre"). Modül adının sağında kırmızı
+  (süresi geçen) / sarı (bekleyen, yaklaşan) sayı; 0 olan çizilmez; ekran okuyucu anlamıyla okur ("Ölçüm cihazları: 1 süresi yaklaşan cihaz").
+  Ölçüm cihazları (kalibrasyon), Dökümanlar (eğitim tekrarı), Araçlar (belge), Uyarılar (hepsi) — Uyarılar düzeyiyle; Planlar (kabul bekleyen;
+  plan günü gelmiş kırmızı — denetçi kendi ekibinde); Sözleşmeler (açık planda İSG-KATİP eksik); Raporlar (kendi Yeni raporları: geri gönderilen
+  kırmızı, onaya gönderilmemiş sarı); Onaylar (imzanızı / onayınızı bekleyen rapor ve diğer belgeler; 24 saati geçen kırmızı); Talepler (size
+  iletilen bekleyen izin / masraf formu); Muhasebe (vadesi geçen fatura). Sayılar modüllerin yetkiye duyarlı işlevlerinden; sayfa çizimini
+  bekletmez — kabuk sayfa açılınca sunucu eyleminden ister. Daraltılmış şeritte simgenin sağ üstünde yalnız en önemlisi. Maketteki yeşil
+  ("sorunsuz") balon kullanılmadı (maketin kendi tanımlarında da yok). Kilit: anasayfa.test (kişiye göre, kısıtlı düzey, başka firma), olumsuz
+  kanıt 1, kabuk e2e.
 - 2026-10-06 (338): **K4 Format kurucu** (RAPOR-FORMAT.md §6; maket maket-kurucu.js). Türün TASLAK rapor şablonu düzenlenir:
   /ekipman-turleri/<tür>/sablon/<taslak>/kurucu (önizlemede "Format kurucu", sürüm tablosunda "Düzenle"; Şablondan başlat artık kurucuyu açar).
   Solda bölüm listesi (seç, yukarı / aşağı sırala, **Bölüm ekle** — 10 blok), ortada seçili bölüm (ad; bilgi alanları / kontrol maddeleri (son

@@ -138,6 +138,8 @@ pkproje/
                             excel.ts (gider içe / dışa) · ui/Giderler.tsx, ui/Karlilik.tsx · personel/server/muhasebe-baglanti.ts (bordro maliyeti)
   src/modules/anasayfa/     ANA SAYFA (2026-10-06, 332): rol başına bölümler (server/anasayfa.ts — modüllerin yetkiye duyarlı işlevleri ve
                             planlar / ekipman / raporlar server/anasayfa-baglanti.ts okuyucuları) · ui/AnaSayfa.tsx; kök sayfa src/app/(uygulama)/page.tsx
+                            · YAN MENÜ BALONLARI (339): server/takip.ts menuTakip (modül başına kırmızı / sarı, yetkiye duyarlı) · ui/eylemler.ts
+                            menuTakipEylemi — kabuk (src/components/kabuk) sayfa açılınca ister
   src/modules/uyarilar/     UYARILAR (2026-10-06, 331; modül 20): tablo yok — kalibrasyon, eğitim tekrarı, araç belgesi kayıtlardan (okuyucular
                             olcum-cihazlari / egitimler / araclar server/uyari-baglanti.ts); sema.ts (türler, görünürlük) · server/uyarilar.ts · ui/
   src/modules/talepler/     TALEPLER (2026-10-06, 330; modül 21): göç 0042 izin_talebi (yalnız kendi adına; karar firma yöneticisinde) · sema.ts

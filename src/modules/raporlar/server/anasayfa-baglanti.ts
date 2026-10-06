@@ -16,3 +16,15 @@ export async function geriGonderdiklerim(db: Sorgulayici, hesapId: string): Prom
        SELECT h.hesap_id FROM rapor_hareket h WHERE h.firma_id = r.firma_id AND h.rapor_id = r.id AND h.revizyon = r.revizyon AND h.ne = 'geri'
        ORDER BY h.zaman DESC LIMIT 1) = $1::uuid`, [hesapId])).rows[0].n);
 }
+
+/** yan menü balonu (maket MV.TAKIP 14, N9 "kişiye göre"): hesabın kendi Yeni raporları — şimdiki revizyonunda son hareketi geri gönderme olanlar
+    (kırmızı) ve onaya gönderilmemiş öteki Yeni'ler (sarı); silinen sayılmaz */
+export async function kendiYeniRaporlarim(db: Sorgulayici, hesapId: string): Promise<{ geri: number; yeni: number }> {
+  const r = (await db.sorgu<{ geri: string; yeni: string }>(
+    `SELECT count(*) FILTER (WHERE g)::text AS geri, count(*) FILTER (WHERE NOT g)::text AS yeni FROM (
+       SELECT coalesce((SELECT h.ne FROM rapor_hareket h WHERE h.firma_id = r.firma_id AND h.rapor_id = r.id AND h.revizyon = r.revizyon
+         ORDER BY h.zaman DESC LIMIT 1) = 'geri', false) AS g
+       FROM rapor r WHERE r.durum = 'taslak' AND r.silindi IS NULL AND r.hesap_id = $1::uuid) x`, [hesapId])).rows[0];
+  return { geri: Number(r.geri), yeni: Number(r.yeni) };
+}
+

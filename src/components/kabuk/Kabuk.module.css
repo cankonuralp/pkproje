@@ -27,6 +27,13 @@
 .menuBaglanti:hover { color: var(--cubuk-yazi); background: var(--cubuk-secili); }
 .menuBaglanti[aria-current="page"] { color: var(--cubuk-yazi); background: var(--cubuk-secili); box-shadow: inset 3px 0 0 var(--marka-onay); }
 .menuAd { min-width: 0; overflow: hidden; text-overflow: ellipsis; white-space: nowrap; }
+/* takip balonları (339; maket .a-menu-takip, .a-balon-*): adın sağında, sağa yaslı; renkler koyu menü zemininde (cubuk değişkenleri) */
+.takip { display: inline-flex; flex: none; gap: 2px; margin-left: auto; }
+.menuBaglanti:has(.takip) .menuAd { flex: 1 1 auto; }
+.balon { min-width: 16px; height: 16px; padding: 0 2.5px; display: inline-flex; align-items: center; justify-content: center; border-radius: var(--r-tam);
+  font-size: var(--boy-etiket); font-weight: 700; line-height: 1; color: var(--cubuk-durum-yazi); }
+.balonKirmizi { background: var(--cubuk-hata); }
+.balonSari { background: var(--cubuk-uyari); }
 .perde { display: none; }
 
 .govde { min-width: 0; display: flex; flex-direction: column; }
@@ -95,6 +102,10 @@
   :global([data-menu="dar"]) .menuGrup { height: 1px; margin: 8px 4px; padding: 0; overflow: hidden; font-size: 0; background: var(--cubuk-secili); }
   :global([data-menu="dar"]) .menuBaglanti { justify-content: center; gap: 0; padding: 0; }
   :global([data-menu="dar"]) .menuAd { position: absolute; width: 1px; height: 1px; overflow: hidden; clip: rect(0 0 0 0); white-space: nowrap; }
+  /* daraltılmış şeritte balon simgenin sağ üstünde, yalnız en önemlisi (maket .a-kabuk-dar .a-menu-takip) */
+  :global([data-menu="dar"]) .takip { position: absolute; top: 1px; right: 1px; margin: 0; }
+  :global([data-menu="dar"]) .balon { min-width: 18px; height: 18px; padding: 0 4px; }
+  :global([data-menu="dar"]) .balon + .balon { display: none; }
 }
 
 /* KULLANICI (maket .a-kullanici / .a-avatar; telefonda yalnız baş harfler) — K1 2026-10-04 */
