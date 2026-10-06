@@ -63,7 +63,7 @@ after(async () => {
 
 test("0044'te imzacı denetimi kalkınca belgeyi gönderen, kişinin yerine geri gönderir (kilidin koruduğu açık)", async () => {
   const { havuz, A, yonH, id } = await bozuk("belge_bozuk1",
-    "    IF ben IS NULL OR NEW.personel_id IS DISTINCT FROM (SELECT h.personel_id FROM hesap h WHERE h.firma_id = NEW.firma_id AND h.id = ben) THEN\n      RAISE EXCEPTION 'belgeyi yalnız imzalayacak kişi imzalar ya da geri gönderir' USING ERRCODE = '23514';\n    END IF;\n", "");
+    "    ELSIF ben IS NULL OR NEW.personel_id IS DISTINCT FROM (SELECT h.personel_id FROM hesap h WHERE h.firma_id = NEW.firma_id AND h.id = ben) THEN\n      RAISE EXCEPTION 'belgeyi yalnız imzalayacak kişi imzalar ya da geri gönderir' USING ERRCODE = '23514';\n", "");
   const r = await kiraciIcinde(havuz, A, (db) => db.sorgu("UPDATE belge_onay SET durum = 'geri' WHERE id = $1", [id]), { hesapId: yonH });
   assert.equal(r.rowCount, 1, "gönderen, kişinin yerine karar verdi");
 });

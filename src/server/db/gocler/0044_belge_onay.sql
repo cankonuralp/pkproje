@@ -2,8 +2,10 @@
 -- tutanağı)"; maket onaylar.html #/diger, muhasebe.html "Maaş bordrosu gönder", personel.html bordro "Onaya gönder"; pkproje §11 230, 264, 265) ══
 -- Kişinin imzasına gönderilen belge: tür, ad, imzalayacak kişi (personel), kaynağı (ör. bordro kaydı), bordroda dönem, imzasız PDF (belgenin
 -- kendi dosyası — başka kaydın dosyası gösterilemez), durum: bekliyor → imzalı (imzalı PDF belgenin kendi dosyası) / geri gönderildi.
--- Gönderen ve zaman, karar veren ve zaman veritabanında damgalanır. Kararı YALNIZ imzalayacak kişi verir (hesabının personeli); karar verilmiş
--- belge değişmez; belge silinmez. Aynı kişinin aynı dönem bordrosu ikinci kez gönderilmez (geri gönderilen sayılmaz). ⛔ Her göç IDEMPOTENT.
+-- Gönderen ve zaman, karar veren ve zaman veritabanında damgalanır. Kararı (imzalı / geri) YALNIZ imzalayacak kişi verir (hesabının personeli);
+-- karar verilmiş belge değişmez; belge silinmez. Bekleyen belge kaynağı değişince (bordro yeniden yüklendi / kaldırıldı) İPTAL olur — kişi eski
+-- PDF'i imzalamasın (333 incelemesi). Bir kaynağın (bordro kaydı) tek etkin belgesi olur (bekliyor ya da imzalı); kaynaksız bordro belgesinde
+-- (Muhasebe'nin bordrosu olmayan kişiye gönderdiği) kişi × dönem başına tek etkin belge. Geri gönderilen ve iptal edilen sayılmaz. ⛔ IDEMPOTENT.
 
 CREATE TABLE IF NOT EXISTS belge_onay (
   id            uuid PRIMARY KEY DEFAULT gen_random_uuid(),
@@ -15,7 +17,7 @@ CREATE TABLE IF NOT EXISTS belge_onay (
   ay            text CHECK (ay IS NULL OR ay ~ '^[0-9]{4}-(0[1-9]|1[0-2])$'),
   -- imzasız PDF: eklemeyle aynı işlemde bir kez yazılır (kayıt → dosya → bağ), sonra değişmez; işlem sonunda boş kalamaz (ertelenen denetim)
   dosya         uuid,
-  durum         text NOT NULL DEFAULT 'bekliyor' CHECK (durum IN ('bekliyor', 'imzali', 'geri')),
+  durum         text NOT NULL DEFAULT 'bekliyor' CHECK (durum IN ('bekliyor', 'imzali', 'geri', 'iptal')),
   imzali_dosya  uuid,
   gonderen      uuid,
   gonderildi    timestamptz NOT NULL DEFAULT now(),
@@ -32,7 +34,9 @@ CREATE TABLE IF NOT EXISTS belge_onay (
   CHECK ((durum = 'imzali') = (imzali_dosya IS NOT NULL)),
   CHECK (tur <> 'bordro' OR ay IS NOT NULL)
 );
-CREATE UNIQUE INDEX IF NOT EXISTS belge_onay_bordro_donem ON belge_onay (firma_id, personel_id, ay) WHERE tur = 'bordro' AND durum <> 'geri';
+CREATE UNIQUE INDEX IF NOT EXISTS belge_onay_kaynak_etkin ON belge_onay (firma_id, kaynak_id) WHERE kaynak_id IS NOT NULL AND durum IN ('bekliyor', 'imzali');
+CREATE UNIQUE INDEX IF NOT EXISTS belge_onay_kaynaksiz_donem ON belge_onay (firma_id, personel_id, ay)
+  WHERE tur = 'bordro' AND kaynak_id IS NULL AND durum IN ('bekliyor', 'imzali');
 CREATE INDEX IF NOT EXISTS belge_onay_personel ON belge_onay (firma_id, personel_id, gonderildi DESC);
 CREATE INDEX IF NOT EXISTS belge_onay_kaynak ON belge_onay (firma_id, kaynak_id) WHERE kaynak_id IS NOT NULL;
 ALTER TABLE belge_onay ENABLE ROW LEVEL SECURITY;
@@ -70,8 +74,11 @@ BEGIN
   END IF;
   IF OLD.durum <> 'bekliyor' THEN RAISE EXCEPTION 'karar verilmiş belge değişmez' USING ERRCODE = '23514'; END IF;
   IF NEW.durum IS DISTINCT FROM OLD.durum THEN
-    IF NEW.durum NOT IN ('imzali', 'geri') THEN RAISE EXCEPTION 'belge % durumuna geçemez', NEW.durum USING ERRCODE = '23514'; END IF;
-    IF ben IS NULL OR NEW.personel_id IS DISTINCT FROM (SELECT h.personel_id FROM hesap h WHERE h.firma_id = NEW.firma_id AND h.id = ben) THEN
+    IF NEW.durum NOT IN ('imzali', 'geri', 'iptal') THEN RAISE EXCEPTION 'belge % durumuna geçemez', NEW.durum USING ERRCODE = '23514'; END IF;
+    -- iptal: kaynağı değişen bekleyen belge (yetki uygulamada — kaynağın sahibi modül); imzalı / geri: yalnız imzacı
+    IF NEW.durum = 'iptal' THEN
+      IF ben IS NULL OR NEW.imzali_dosya IS NOT NULL THEN RAISE EXCEPTION 'belgeyi oturumdaki kişi iptal eder' USING ERRCODE = '23514'; END IF;
+    ELSIF ben IS NULL OR NEW.personel_id IS DISTINCT FROM (SELECT h.personel_id FROM hesap h WHERE h.firma_id = NEW.firma_id AND h.id = ben) THEN
       RAISE EXCEPTION 'belgeyi yalnız imzalayacak kişi imzalar ya da geri gönderir' USING ERRCODE = '23514';
     END IF;
     IF OLD.dosya IS NULL THEN RAISE EXCEPTION 'dosyası olmayan belge imzalanmaz' USING ERRCODE = '23514'; END IF;

@@ -23,6 +23,11 @@ import stil from "./onaylar.module.css";
 const TR = new Intl.DateTimeFormat("tr-TR", { timeZone: "Europe/Istanbul", day: "2-digit", month: "2-digit", year: "numeric", hour: "2-digit", minute: "2-digit" });
 const zamanYaz = (iso: string) => TR.format(new Date(iso)).replace(",", "");
 const IMZA_HATA = "w-belge-imza-hata";
+/* karar sonrası satırın tuşları kalkar: odak "Diğer belgeler" sekmesine, yoksa başlığa (maket digerCiz odak; 333 incelemesi) */
+const odakla = () => setTimeout(() => {
+  const h = document.querySelector<HTMLElement>('nav[aria-label="Onaylar bölümleri"] [aria-current="page"]') ?? document.querySelector<HTMLElement>("main h1");
+  if (h) { if (h.tagName === "H1") h.tabIndex = -1; h.focus(); }
+}, 50);
 
 export function DigerBelgeler({ v, sekmeler }: { v: Veri; sekmeler: OnayListeleri | null }) {
   const router = useRouter();
@@ -36,7 +41,7 @@ export function DigerBelgeler({ v, sekmeler }: { v: Veri; sekmeler: OnayListeler
     baslat(async () => {
       const r = await belgeGeriGonderEylemi(x.id, x.surum);
       if (!r.tamam) { bildir(r.genel ?? "Geri gönderilemedi."); return; }
-      bildir(r.bildirim ?? "Geri gönderildi."); router.refresh();
+      bildir(r.bildirim ?? "Geri gönderildi."); router.refresh(); odakla();
     });
   };
   const yukle = (dosya: File) => baslat(async () => {
@@ -45,7 +50,7 @@ export function DigerBelgeler({ v, sekmeler }: { v: Veri; sekmeler: OnayListeler
     f.set("id", imza.x.id); f.set("surum", String(imza.x.surum)); f.set("dosya", dosya);
     try {
       const r = await belgeImzaliYukleEylemi(f);
-      if (r.tamam) { setImza(null); bildir(r.bildirim ?? "Belge imzalandı."); router.refresh(); return; }
+      if (r.tamam) { setImza(null); bildir(r.bildirim ?? "Belge imzalandı."); router.refresh(); odakla(); return; }
       setImza({ ...imza, hata: r.hatalar?.dosya ?? r.genel ?? "İmzalı PDF yüklenemedi." });
     } catch { setImza({ ...imza, hata: "Bağlantı ya da sunucu hatası; yeniden deneyin." }); } finally { if (girdi.current) girdi.current.value = ""; }
   });
@@ -56,7 +61,7 @@ export function DigerBelgeler({ v, sekmeler }: { v: Veri; sekmeler: OnayListeler
     { k: "durum", genislik: "14%", baslik: "Durum", kart: "rozet", sira: 1, hucre: (x) => (
       <span><Rozet tur={BELGE_DURUM[x.durum][1]}>{BELGE_DURUM[x.durum][0]}</Rozet>{x.karar && <AltSatir>{zamanYaz(x.karar)}</AltSatir>}</span>
     ) },
-    { k: "eylem", genislik: "24%", baslik: "İşlem", kart: "eylem", sira: 9, hucre: (x) => (
+    { k: "eylem", genislik: "24%", baslik: "İşlem", gizliBaslik: true, siralanmaz: true, kart: "eylem", sira: 9, hucre: (x) => (
       <div className={stil.eylemTuslar}>
         <DosyaAcTusu dosyaId={x.imzaliDosya ?? x.dosya} etiket={`${x.ad} görüntüle`}>Görüntüle</DosyaAcTusu>
         {x.durum === "bekliyor" && <>

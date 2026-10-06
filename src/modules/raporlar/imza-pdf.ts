@@ -7,7 +7,9 @@
    · ekteki her trailer / xref akışının /Root'u özgün /Root'la AYNI;
    · özgün bir nesne yeniden tanımlanıyorsa yalnız: Sayfa (/Type /Page; yalnız /Annots değişebilir, öteki her anahtar — /Contents, /Resources,
      /MediaBox … — anlamca aynı) ya da Katalog (yalnız /AcroForm, /DSS, /Perms, /Extensions değişebilir). Sayfa ağacı (Pages), içerik akışları,
-     kaynaklar, yazı tipleri ve öteki her özgün nesne yeniden tanımlanamaz; akışla hiç;
+     kaynaklar, yazı tipleri ve öteki her özgün nesne yeniden tanımlanamaz; akışla hiç. 333: katalogdan DOLAYLI başvurulan AcroForm sözlüğü
+     (yalnız /Fields — eskiler kalarak — ve /SigFlags değişir) ve sayfadan dolaylı başvurulan Annots dizisi (yalnız öğe eklenir) de yeniden yazılabilir;
+   · trailer sözlükleri sınırlı pencereyle okunur, ekte en çok 32 trailer (333 incelemesi: "trailer(" yığınıyla karesel süre);
    · yeni açıklama yalnız imza alanı (/Subtype /Widget) — metin, damga, serbest yazı vb. açıklama eklenemez;
    · bir yeni nesne imza sözlüğüdür: /Type /Sig, /ByteRange dizisi, /Contents onaltılık dize.
    Kalan risk (kayıtta): imza alanının görünümü (/AP) sayfaya çizilir; kriptografik zincir ve görsel karşılaştırma sonraki fazda (K7). */
@@ -108,14 +110,31 @@ function nesneler(s: string, kati: boolean): Map<number, Nesne> {
   if (acik && kati) throw new Bozuk();
   return m;
 }
-/** metindeki trailer sözlüklerinin /Root başvuruları */
+/* 333 incelemesi: her "trailer" geçişinde metnin SONUNA kadar ayrıştırmak karesel süre çıkarıyordu ("trailer(" × n — 400 KB'de 30 sn). Trailer
+   sözlüğü küçüktür: yalnız sınırlı bir pencere ayrıştırılır ve ekte en çok TRAILER_SINIR trailer kabul edilir (fazlası "bozuk"). */
+const TRAILER_PENCERE = 8192, TRAILER_SINIR = 32;
+function kokOku(s: string, i: number): string {
+  try { const r = ad(ayristir(s.slice(i + 7, i + 7 + TRAILER_PENCERE)).deger, "Root"); return r ? kanonik(r) : "yok"; } catch (e) { if (!(e instanceof Bozuk)) throw e; return "bozuk"; }
+}
+/** metindeki trailer sözlüklerinin /Root başvuruları (en çok TRAILER_SINIR; fazlası "bozuk" ile biter) */
 function kokler(s: string): string[] {
   const l: string[] = [];
   for (let i = s.indexOf("trailer"); i >= 0; i = s.indexOf("trailer", i + 7)) {
-    try { const r = ad(ayristir(s, i + 7).deger, "Root"); if (r) l.push(kanonik(r)); else l.push("yok"); } catch (e) { if (!(e instanceof Bozuk)) throw e; l.push("bozuk"); }
+    if (l.length >= TRAILER_SINIR) { l.push("bozuk"); break; }
+    l.push(kokOku(s, i));
   }
   return l;
 }
+/** son trailer'ın kökü (özgün PDF'in güncel kökü); yoksa undefined */
+const sonKok = (s: string) => { const i = s.lastIndexOf("trailer"); return i < 0 ? undefined : kokOku(s, i); };
+const refNo = (d: Deger | undefined) => (d?.t === "ref" ? d.n : null);
+/** yeni dizi eskinin bütün öğelerini taşıyor mu (imza aracı yalnız ekler) */
+function kapsar(yeni: Deger | undefined, eski: Deger | undefined): boolean {
+  if (yeni && yeni.t !== "dizi") return false;
+  const y = new Set((yeni?.l ?? []).map((x) => kanonik(x)));
+  return (eski?.t === "dizi" ? eski.l : []).every((x) => y.has(kanonik(x)));
+}
+const ACROFORM_SERBEST = new Set(["Fields", "SigFlags"]);
 
 const latin1 = (b: Uint8Array) => Buffer.from(b.buffer, b.byteOffset, b.byteLength).toString("latin1");
 
@@ -124,9 +143,15 @@ const latin1 = (b: Uint8Array) => Buffer.from(b.buffer, b.byteOffset, b.byteLeng
 export function imzayaUygun(pdf: Uint8Array): boolean {
   try {
     const s = latin1(pdf);
-    for (const x of nesneler(s, false).values()) if (adi(x.deger, "Type") === "/ObjStm") return false;
-    const k = kokler(s).at(-1);
-    return !!k && k !== "yok" && k !== "bozuk";
+    const o = nesneler(s, false);
+    for (const x of o.values()) if (adi(x.deger, "Type") === "/ObjStm") return false;
+    const k = sonKok(s);
+    if (!k || k === "yok" || k === "bozuk") return false;
+    /* katalog ve sayfalar ayrıştırılabilmeli (imza aracının yeniden tanımlayacağı nesneler denetlenebilsin) */
+    const kat = o.get(Number(k.split(" ")[0]));
+    if (!kat?.deger || kat.deger.t !== "sozluk") return false;
+    for (const x of o.values()) if (/\/Type[\x00\t\n\f\r ]*\/Page\b/.test(x.govde) && !x.deger) return false;
+    return true;
   } catch (e) {
     if (e instanceof Bozuk) return false;
     throw e;
@@ -144,13 +169,28 @@ export function imzaliPdfGecerli(imzasiz: Uint8Array, imzali: Uint8Array): boole
     /* özgün nesneleri sıkıştırılmış akıştaysa yeniden tanımlama denetlenemez (kendi ürettiğimiz PDF'te olmaz) */
     for (const x of ozgun.values()) if (adi(x.deger, "Type") === "/ObjStm") return false;
     /* kök: özgünün son trailer'ı; ekteki her trailer ve xref akışı aynı kökü göstermeli */
-    const ozgunKok = kokler(ozgunMetin).at(-1);
+    const ozgunKok = sonKok(ozgunMetin);
     if (!ozgunKok || ozgunKok === "yok" || ozgunKok === "bozuk") return false;
     const ekKokler = kokler(ekMetin);
     for (const x of ek.values()) if (adi(x.deger, "Type") === "/XRef") { const r = ad(x.deger, "Root"); ekKokler.push(r ? kanonik(r) : "yok"); }
     if (!ekKokler.length || ekKokler.some((k) => k !== ozgunKok)) return false;
+    /* 333 incelemesi: katalogdaki /AcroForm ve sayfadaki /Annots DOLAYLI olabilir (form içeren, daha önce imzalanmış PDF); imza aracı bunları
+       yeniden yazar — yalnız ekleyerek: AcroForm'da /Fields (eskilerin hepsi kalır) ve /SigFlags, Annots dizisinde yeni öğe */
+    const acroNo = refNo(ad(ozgun.get(Number(ozgunKok.split(" ")[0]))?.deger ?? null, "AcroForm"));
+    const annotsNo = new Set([...ozgun.values()].filter((x) => adi(x.deger, "Type") === "/Page").map((x) => refNo(ad(x.deger, "Annots"))).filter((n): n is number => n !== null));
     let imza = false;
     for (const x of ek.values()) {
+      if (x.deger?.t === "dizi" && annotsNo.has(x.n)) {
+        const eskiDizi = ozgun.get(x.n)?.deger;
+        if (x.akis || eskiDizi?.t !== "dizi" || !kapsar(x.deger, eskiDizi)) return false;
+        continue;
+      }
+      if (x.deger?.t === "sozluk" && x.n === acroNo && ozgun.has(x.n)) {
+        const eskiForm = ozgun.get(x.n)!.deger;
+        if (x.akis || eskiForm?.t !== "sozluk" || kanonik(x.deger, ACROFORM_SERBEST) !== kanonik(eskiForm, ACROFORM_SERBEST)
+          || !kapsar(ad(x.deger, "Fields"), ad(eskiForm, "Fields"))) return false;
+        continue;
+      }
       if (!x.deger || x.deger.t !== "sozluk") { if (ozgun.has(x.n)) return false; continue; }
       const tur = adi(x.deger, "Type"), alt = adi(x.deger, "Subtype");
       if (tur === "/ObjStm") return false;

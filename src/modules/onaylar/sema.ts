@@ -25,7 +25,11 @@ export const BELGE_TUR = { bordro: "Maaş bordrosu", egitim: "Eğitim formu", zi
 export type BelgeTuru = keyof typeof BELGE_TUR;
 export const BELGE_DURUM = {
   bekliyor: ["Onay bekliyor", "bekliyor"], imzali: ["İmzalandı", "tamam"], geri: ["Geri gönderildi", "red"],
-} as const satisfies Record<string, readonly [string, "bekliyor" | "tamam" | "red"]>;
+  /* 333 incelemesi: kaynağı (bordro) değişen bekleyen belge — kişi eski PDF'i imzalamaz */
+  iptal: ["İptal edildi", "notr"],
+} as const satisfies Record<string, readonly [string, "bekliyor" | "tamam" | "red" | "notr"]>;
+/** etkin belge: bekliyor ya da imzalı (geri gönderilen ve iptal edilen yeniden gönderilebilir) */
+export const belgeEtkin = (d: BelgeDurumu | null | undefined) => d === "bekliyor" || d === "imzali";
 export type BelgeDurumu = keyof typeof BELGE_DURUM;
 const AYLAR = ["Ocak", "Şubat", "Mart", "Nisan", "Mayıs", "Haziran", "Temmuz", "Ağustos", "Eylül", "Ekim", "Kasım", "Aralık"];
 /** "2026-09" → "Eylül 2026" */

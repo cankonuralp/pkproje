@@ -13,12 +13,12 @@ import { AltSatir, Rozet } from "../../../components/sayfa/Sayfa";
 import { SecimAlani } from "../../../components/secim/SecimAlani";
 import { Serit } from "../../../components/serit/Serit";
 import { Tus } from "../../../components/tus/Tus";
-import { donemAd } from "../../onaylar/sema";
+import { belgeEtkin, donemAd } from "../../onaylar/sema";
 import type { BordroGonderimi, BordroGonderimSatiri } from "../server/bordro-gonder";
 import { bordroGonderEylemi, bordroGonderimiEylemi } from "./eylemler";
 import stil from "./muhasebe.module.css";
 
-const ID = { ay: "w-bg-ay", hata: "w-bg-hata" } as const;
+const ID = { ay: "w-bg-ay", hata: "w-bg-hata", yontem: "w-bg-yontem" } as const;
 type Yontem = "format" | "elle";
 interface Durum { veri: BordroGonderimi; yontem: Yontem; sec: Set<string>; dosya: Map<string, File>; hatalar: Record<string, string>; genel: string | null }
 
@@ -36,7 +36,8 @@ export function BordroGonderTusu() {
     /* varsayılan: bütün çalışanlar seçili (maket); dönem değişince seçim ve dosyalar kalır */
     setD({ veri: v, yontem: onceki?.yontem ?? "elle", sec: onceki?.sec ?? new Set(v.kisiler.map((k) => k.id)), dosya: onceki?.dosya ?? new Map(), hatalar: {}, genel: null });
   });
-  const gitti = (k: BordroGonderimSatiri) => !!k.belge && k.belge !== "geri";
+  /* gitti: dönemin şimdiki bordrosunun etkin belgesi (bekliyor / imzalı); geri gönderilen ve iptal edilen yeniden gönderilir */
+  const gitti = (k: BordroGonderimSatiri) => belgeEtkin(k.belge);
   const hazir = (k: BordroGonderimSatiri) => !!d && d.yontem === "elle" && d.dosya.has(k.id);
   const gidecek = d ? d.veri.kisiler.filter((k) => d.sec.has(k.id) && !gitti(k) && hazir(k)) : [];
   const gonder = () => baslat(async () => {
@@ -52,12 +53,15 @@ export function BordroGonderTusu() {
     try {
       const r = await bordroGonderEylemi(f);
       if (r.tamam) { setD(null); bildir(r.bildirim ?? "Gönderildi."); router.refresh(); return; }
-      setD({ ...d, hatalar: r.hatalar ?? {}, genel: r.genel ?? (r.hatalar && Object.keys(r.hatalar).length ? "Bazı dosyalar gönderilemedi; satırlardaki uyarıya bakın." : "Gönderilemedi.") });
+      /* biri reddedilince HİÇBİRİ gönderilmez (sunucu önce hepsini denetler) — ileti bunu söyler, odak ilk hatalı satıra (333 incelemesi) */
+      const h = r.hatalar ?? {}, ilk = d.veri.kisiler.find((k) => h[k.id]);
+      setD({ ...d, hatalar: h, genel: r.genel ?? (ilk ? "Hiçbir bordro gönderilmedi: işaretli satırlardaki dosyaları değiştirip yeniden gönderin." : "Gönderilemedi.") });
+      if (ilk) requestAnimationFrame(() => document.querySelector<HTMLElement>(`[aria-label="${ilk.ad} bordro dosyasını kaldır"]`)?.focus());
     } catch { setD({ ...d, genel: "Bağlantı ya da sunucu hatası; yeniden deneyin (bir seferde en çok 25 MB)." }); }
   });
   const dosyaSec = (id: string) => { hedef.current = id; secici.current?.click(); };
   const sutunlar: Sutun<BordroGonderimSatiri>[] = d ? [
-    { k: "sec", genislik: "38%", baslik: "Personel", kart: "ust", sira: 1, hucre: (k) => (
+    { k: "sec", genislik: "38%", baslik: "Seç", kart: "ust", sira: 1, hucre: (k) => (
       <label className={stil.bgSec}>
         <input type="checkbox" checked={d.sec.has(k.id) && !gitti(k)} disabled={gitti(k) || bekliyor}
           onChange={(e) => { const s = new Set(d.sec); if (e.target.checked) s.add(k.id); else s.delete(k.id); setD({ ...d, sec: s, genel: null }); }} />
@@ -79,11 +83,11 @@ export function BordroGonderTusu() {
     } },
     { k: "durum", genislik: "22%", baslik: "Durum", kart: "rozet", sira: 1, hucre: (k) => gitti(k)
       ? <Rozet tur={k.belge === "imzali" ? "tamam" : "bekliyor"}>{k.belge === "imzali" ? "İmzalandı" : "Bu dönem gönderildi"}</Rozet>
-      : hazir(k) ? <Rozet tur="tamam">Hazır</Rozet> : <Rozet tur="red">Bordro yok</Rozet> },
+      : d.hatalar[k.id] ? <Rozet tur="red">Uygun değil</Rozet> : hazir(k) ? <Rozet tur="tamam">Hazır</Rozet> : <Rozet tur="red">Bordro yok</Rozet> },
   ] : [];
   return (
     <>
-      <Tus tur="ikincil" ikon="wallet" disabled={bekliyor && !d} onClick={() => yukle("", null)}>Maaş bordrosu gönder</Tus>
+      <Tus tur="ikincil" ikon="send" disabled={bekliyor && !d} onClick={() => yukle("", null)}>Maaş bordrosu gönder</Tus>
       {d && <Pencere acik baslik="Maaş bordrosu gönder" genis onKapat={() => { if (!bekliyor) setD(null); }} odak={`#${ID.ay}`}
         alt={<><Tus tur="ikincil" disabled={bekliyor} onClick={() => setD(null)}>Vazgeç</Tus>
           <Tus ikon="send" disabled={bekliyor} aria-busy={bekliyor || undefined} onClick={gonder}>{gidecek.length ? `İmzaya gönder (${gidecek.length})` : "İmzaya gönder"}</Tus></>}>
@@ -92,7 +96,8 @@ export function BordroGonderTusu() {
           <SecimAlani id={ID.ay} ad="Dönem" deger={d.veri.ay} secenekler={d.veri.aylar.map((a) => [a, donemAd(a)] as const)}
             degistir={(a) => { if (a !== d.veri.ay) yukle(a, d); }} />
         </Alan>
-        <div className={stil.bgYontem} role="group" aria-label="Bordro nasıl hazırlanır">
+        <p className={stil.bgEtiket} id={ID.yontem}>Bordro</p>
+        <div className={stil.bgYontem} role="group" aria-labelledby={ID.yontem}>
           {([["format", "Formattan oluştur"], ["elle", "Elle yükle"]] as const).map(([y, ad]) => (
             <button key={y} type="button" className={stil.bgSekme} aria-pressed={d.yontem === y} onClick={() => setD({ ...d, yontem: y, genel: null })}>{ad}</button>
           ))}

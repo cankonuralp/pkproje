@@ -39,3 +39,11 @@ test("kök denetimi kalkınca ek yeni bir belge gösterir ve kabul edilir", asyn
     + "trailer << /Root 50 0 R /Prev 0 >>\n%%EOF\n";
   assert.equal(m.imzaliPdfGecerli(b(OZGUN), b(OZGUN + ek)), true, "yeni köklü ek kabul edildi");
 });
+
+/* 333 incelemesi: trailer sözlüğü sınırsız ayrıştırılırsa "trailer(" yığını karesel süre çıkarır — tests/imza-pdf.test.ts süre kilidi bunu yakalar */
+test("trailer penceresi ve sınırı kalkınca 'trailer(' yığınlı ek karesel sürede taranır", async () => {
+  const m = await bozuk("const TRAILER_PENCERE = 8192, TRAILER_SINIR = 32;", "const TRAILER_PENCERE = Infinity, TRAILER_SINIR = Infinity;");
+  const t = performance.now();
+  assert.equal(m.imzaliPdfGecerli(b(OZGUN), b(OZGUN + "3 0 obj<</Type/Sig>>endobj\n" + "trailer(".repeat(25 * 1024))), false);
+  assert.ok(performance.now() - t > 1000, `karesel süre görünmedi: ${Math.round(performance.now() - t)} ms`);
+});

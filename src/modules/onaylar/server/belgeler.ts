@@ -67,7 +67,8 @@ async function kendiBelgesi(db: Sorgulayici, kim: Kisi, id: string) {
   return (await db.sorgu<{ id: string; surum: number; ad: string; durum: BelgeDurumu; dosya: string | null }>(
     "SELECT id::text, surum, ad, durum, dosya::text FROM belge_onay WHERE id = $1 AND personel_id = $2", [id, p])).rows[0] ?? null;
 }
-const KARAR_VAR: Record<BelgeDurumu, string> = { bekliyor: "", imzali: "Belge zaten imzalandı.", geri: "Belge geri gönderildi; artık imzalanmaz." };
+const KARAR_VAR: Record<BelgeDurumu, string> = { bekliyor: "", imzali: "Belge zaten imzalandı.", geri: "Belge geri gönderildi; artık imzalanmaz.",
+  iptal: "Belge iptal edildi (bordro yeniden yüklendi ya da kaldırıldı); artık imzalanmaz." };
 
 /** Geri gönder: yalnız imzalayacak kişi, belge beklerken (maket belge-geri) */
 export async function belgeGeriGonder(db: Sorgulayici, kim: Kisi, id: string, surum: number): Promise<BelgeYazma> {

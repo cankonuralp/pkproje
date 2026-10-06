@@ -35,6 +35,7 @@
 }
 .bgSekme[aria-pressed="true"] { background: var(--zemin2); color: var(--yazi); }
 .bgListe { margin-top: 12px; }
+.bgEtiket { margin: 12px 0 0; color: var(--yazi2); font-size: var(--boy-kucuk); font-weight: 600; }
 .bgSec { display: flex; align-items: flex-start; gap: 10px; min-width: 0; cursor: pointer; }
 .bgSec input { width: 18px; height: 18px; margin: 3px 0 0; flex: none; accent-color: var(--birincil); }
 .bgDosya { display: flex; flex-wrap: wrap; align-items: center; gap: 8px; min-width: 0; }

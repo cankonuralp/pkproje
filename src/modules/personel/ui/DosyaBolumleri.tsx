@@ -21,7 +21,7 @@ import { Tus } from "../../../components/tus/Tus";
 import type { EgitimKaydi } from "../../egitimler/server/egitimler";
 import { OZLUK_TURLERI, ozlukTurAd } from "../sema";
 import type { AtamaSatiri, BordroSatiri, OzlukSatiri, PersonelDosyasi } from "../server/dosyalar";
-import { BELGE_DURUM } from "../../onaylar/sema";
+import { BELGE_DURUM, belgeEtkin } from "../../onaylar/sema";
 import { bordroOnayaGonderEylemi, personelBelgeDegistirEylemi, personelBelgeEkleEylemi, personelBelgeKaldirEylemi } from "./eylemler";
 import { bransAd, tarihYaz } from "./ortak";
 import stil from "./personel.module.css";
@@ -60,7 +60,7 @@ function BelgePenceresi({ ne, personelId, turler, bugun, kapat }: { ne: Ne; pers
     const r = await personelBelgeEkleEylemi(f);
     setH(r.hatalar ?? {}); setGenel(r.genel ?? null);
     if (!r.tamam) { const k = Object.keys(r.hatalar ?? {})[0] as keyof typeof ID | undefined; if (k && ID[k]) requestAnimationFrame(() => document.getElementById(ID[k])?.focus()); return; }
-    kapat(); bildir(ne === "bordro" ? "Bordro yüklendi." : ne === "atama" ? "Atama eklendi." : ne === "zimmet" ? "İmzalı zimmet formu yüklendi." : "Belge eklendi."); router.refresh();
+    kapat(); bildir(r.bildirim ?? (ne === "bordro" ? "Bordro yüklendi." : ne === "atama" ? "Atama eklendi." : ne === "zimmet" ? "İmzalı zimmet formu yüklendi." : "Belge eklendi.")); router.refresh();
   });
   const metin = (k: "aciklama" | "brut" | "net" | "maliyet", etiket: string, zorunlu = true) => (
     <Alan id={ID[k]} etiket={etiket} zorunlu={zorunlu} hata={h[k]} sonuc={k === "aciklama" ? "İsteğe bağlı." : undefined}>
@@ -126,7 +126,7 @@ function SatirTuslari({ ne, id, surum, dosyaId, ad, degistir = true }: { ne: "oz
     baslat(async () => {
       const r = await personelBelgeKaldirEylemi(ne, id, surum);
       if (!r.tamam) { bildir(r.genel ?? "Kaldırılamadı."); return; }
-      bildir("Kaldırıldı."); router.refresh();
+      bildir(r.bildirim ?? "Kaldırıldı."); router.refresh();
     });
   };
   return (
@@ -250,7 +250,7 @@ export function BordroBolumu({ personelId, kisi, dosya, bugun, gunluk, isGunu }:
             ? <Rozet tur={BELGE_DURUM[b.onay.durum][1]}>{BELGE_DURUM[b.onay.durum][0]}</Rozet> : <Rozet tur="notr">Gönderilmedi</Rozet> },
           { k: "eylem", genislik: "32%", baslik: "Bordro", kart: "eylem", sira: 9, hucre: (b) => <span className={stil.satirTus}>
             <SatirTuslari ne="bordro" id={b.id} surum={b.surum} dosyaId={b.dosyaId} ad={`${ayAd(b.ay)} bordrosu`} degistir={false} />
-            {b.dosyaId && (!b.onay || b.onay.durum === "geri") && <OnayaGonderTusu b={b} kisi={kisi} />}
+            {b.dosyaId && !belgeEtkin(b.onay?.durum) && <OnayaGonderTusu b={b} kisi={kisi} />}
           </span> },
         ]} />
       </> : <p className={stil.bos}>Bordro yüklenmedi.</p>}

@@ -2341,6 +2341,18 @@ revizyon, alan kopyalama, hafif kusur devri, meslek eşleşme denetimi).
 - Emsal ürünler: https://opwire.app/iso-17020-periyodik-kontrol-yazilimi/ · https://17020muayene.vidco.com.tr/ · https://akuple.com/asansor-kontrol-yazilimi/ · https://ensyazilim.com/
 
 ## 11 · Değişiklik günlüğü
+- 2026-10-06 (333 incelemesi): çapraz inceleme (13 bulgudan 9'u doğrulandı) düzeltmeleri. **Yüksek:** imza PDF denetiminde karesel süre
+  ("trailer(" yığınıyla 400 KB → 30 sn; 333'ün iki yeni girişi — bordro gönderme ve belge imzası — açıktı): trailer sözlüğü sınırlı pencereyle,
+  ekte en çok 32 trailer; özgünün yalnız son kökü okunur (4 MB ek artık ~15 ms; süre kilidi + bozan). **Bordro durumu KAYDA bağlı** (döneme
+  değil): aynı dönem yeniden yüklenince ya da bordro kaldırılınca bekleyen imza **iptal** (yeni durum; kişi eski PDF'i imzalayamaz), imzalı
+  belge imzalı kalır, yenisi yeniden gönderilir; göç 0044'te benzersizlik kaynak başına (kaynaksız bordro belgesinde kişi × dönem), iptal
+  yalnız bekleyende ve oturumla. **Yarış / yarım kayıt:** kişi × dönem danışma kilidi (Personel yükleme, Onaya gönder, Muhasebe gönderimi);
+  Muhasebe "zaten" denetimini Personel kartına yazmadan ÖNCE kilit altında yapar, gönderilemeyen olursa bütün gönderim geri alınır. **İmzaya
+  uygunluk:** katalogdan dolaylı AcroForm ve sayfadan dolaylı Annots taşıyan PDF artık imzalanabilir — imza aracı yalnız ekleyerek yeniden
+  yazabilir (/Fields eskileri kalarak + /SigFlags; Annots dizisine öğe); katalog / sayfa ayrıştırılamıyorsa ön denetim reddeder. **Arayüz:**
+  biri reddedilince "Hiçbir bordro gönderilmedi" (satırda "Uygun değil", odak ilk hatalı satıra); imza / geri gönderme sonrası odak sekmeye;
+  maket farkları (tuş ikonu gönder, "Seç" sütunu, "Bordro" etiketi, gizli işlem başlığı). Kilit: belge-onay.test (kayıt bağı ve iptal, iptal
+  kuralları), imza-pdf.test (süre, dolaylı AcroForm / Annots), imza-pdf.bozan 2 → 3, belge-onay.bozan hedefi güncellendi.
 - 2026-10-06 (329–332 incelemesi): çapraz inceleme (dört bakış + çürütme; 33 bulgudan 28'i doğrulandı) düzeltmeleri. **Güvenlik:** Uyarılar'da
   "branşı" düzeyi (uyarının branşı yok) artık "kendi" gibi kısıtlı; Ana sayfa bölümleri rolle açılır ama veri modül düzeyiyle süzülür (Planlar
   "kendi" → yalnız ekibinde olduğu planlar; kontrolü yaklaşan tesisler Müşteriler ve Ekipman'ı hepsini görene). **Veritabanı:** 0042'de izin

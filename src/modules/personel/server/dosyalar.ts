@@ -15,7 +15,7 @@ import { canDo, duzey, type YetkiHesabi } from "../../../server/yetki/canDo.ts";
 import { dogrula, type DogrulamaHatalari } from "../../../sema/ortak.ts";
 import { turOzetleri } from "../../ekipman-turleri/server/turler.ts";
 import { kisininVarliklari, type VarlikSatiri } from "../../zimmetler/server/zimmet.ts";
-import { belgeGonder, bordroBelgeleri } from "../../onaylar/server/belge-baglanti.ts";
+import { belgeGonder, bordroBelgeleri, bordroKilidi, guncelBordroBelgesi, kaynakBelgesiniIptal } from "../../onaylar/server/belge-baglanti.ts";
 import { bordroBelgeAdi, type BelgeDurumu } from "../../onaylar/sema.ts";
 import { AtamaGirdisi, BordroGirdisi, OzlukGirdisi } from "../sema.ts";
 
@@ -48,7 +48,7 @@ export interface PersonelDosyasi {
 }
 
 export type Yazma =
-  | { durum: "tamam"; id: string }
+  | { durum: "tamam"; id: string; bildirim?: string }
   | { durum: "gecersiz"; hatalar: DogrulamaHatalari }
   | { durum: "cakisma" } | { durum: "yok" } | { durum: "yetkisiz" };
 /** belge reddedilirse kayıt da yazılmaz (işlem düşer) */
@@ -95,8 +95,9 @@ export async function personelDosyasi(db: Sorgulayici, kim: Kisi, personelId: st
     bordrolar = (await db.sorgu<{ id: string; ay: string; brut: string; net: string; maliyet: string; dosya_id: string | null; olustu: Date; surum: number }>(
       "SELECT id::text, ay, brut::text, net::text, maliyet::text, dosya_id::text, olustu, surum FROM bordro WHERE personel_id = $1 AND kaldirildi IS NULL ORDER BY ay DESC", [personelId])).rows
       .map((x) => ({ id: x.id, ay: x.ay, brut: kurus(x.brut), net: kurus(x.net), maliyet: kurus(x.maliyet), dosyaId: x.dosya_id, yuklendi: gun(x.olustu), surum: x.surum, onay: null }));
+    /* durum bordro KAYDININ belgesinden (333 incelemesi: dönemle eşlenince yeniden yüklenen, imzalanmamış bordro "İmzalandı" görünüyordu) */
     const onay = await bordroBelgeleri(db, [personelId]);
-    for (const b of bordrolar) { const o = onay.get(`${personelId}|${b.ay}`); if (o) b.onay = { durum: o.durum, karar: o.karar }; }
+    for (const b of bordrolar) { const o = guncelBordroBelgesi(onay, personelId, b.ay, b.id); if (o) b.onay = { durum: o.durum, karar: o.karar }; }
   }
   return { yaz, ozluk, bordrolar, atamalar, zimmet, zimmetFormu, turler: yaz ? turler : [] };
 }
@@ -181,14 +182,25 @@ export async function bordroYukle(db: Sorgulayici, depo: Depo, kim: Kisi, firmaI
   if (g.tamam && g.veri.ay > bugunTr().slice(0, 7)) h.ay = "Gelecek ayın bordrosu yüklenemez.";
   if (!g.tamam || Object.keys(h).length || !belge) return { durum: "gecersiz", hatalar: h };
   const v = g.veri;
+  await bordroKilidi(db, personelId, v.ay);
   const eski = (await db.sorgu<{ id: string; surum: number }>(
     "SELECT id::text, surum FROM bordro WHERE personel_id = $1 AND ay = $2 AND kaldirildi IS NULL FOR UPDATE", [personelId, v.ay])).rows[0];
-  if (eski) await guncelle(db, BORDRO, eski.id, eski.surum, { kaldirildi: new Date().toISOString() }, { kim: kim.ad, ne: "bordro.kaldir", gerekce: "aynı dönemin yenisi yüklendi" });
+  let iptal = 0;
+  if (eski) {
+    await guncelle(db, BORDRO, eski.id, eski.surum, { kaldirildi: new Date().toISOString() }, { kim: kim.ad, ne: "bordro.kaldir", gerekce: "aynı dönemin yenisi yüklendi" });
+    /* eski bordronun bekleyen imzası iptal: kişi eski PDF'i imzalamasın; yenisi yeniden onaya gönderilir (333 incelemesi) */
+    iptal = await kaynakBelgesiniIptal(db, kim, eski.id);
+  }
   const r = await ekle(db, BORDRO, { personel_id: personelId, ay: v.ay, brut: lira(v.brut), net: lira(v.net), maliyet: lira(v.maliyet) }, { kim: kim.ad, ne: "bordro.yukle" });
   await belgeBagla(db, depo, kim, firmaId, BORDRO, DOSYA.bordro, r, belge, "bordro.belge");
-  return { durum: "tamam", id: r.id };
+  return { durum: "tamam", id: r.id, bildirim: iptal ? "Bordro yüklendi; önceki bordronun bekleyen onayı iptal edildi — yenisini onaya gönderin." : undefined };
 }
-export const bordroKaldir = (db: Sorgulayici, kim: Kisi, id: string, surum: number) => satirIslemi(db, null, kim, null, BORDRO, DOSYA.bordro, id, surum, null);
+/** bordroyu kaldır; bekleyen imzası iptal olur (333 incelemesi) */
+export async function bordroKaldir(db: Sorgulayici, kim: Kisi, id: string, surum: number): Promise<Yazma> {
+  const r = await satirIslemi(db, null, kim, null, BORDRO, DOSYA.bordro, id, surum, null);
+  if (r.durum === "tamam" && await kaynakBelgesiniIptal(db, kim, id)) return { ...r, bildirim: "Kaldırıldı; bordronun bekleyen onayı iptal edildi." };
+  return r;
+}
 
 /** bordroyu kişinin imzasına gönder (333; maket personel.html "Onaya gönder" → Onaylar › Diğer belgeler): yalnız "yaz"; bordronun PDF'i
     belgenin kendi dosyası olur. Aynı dönemin bordrosu ikinci kez gönderilmez (geri gönderilen yeniden gönderilir). */

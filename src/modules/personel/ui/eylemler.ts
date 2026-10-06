@@ -82,7 +82,7 @@ export async function rolYetkiKaydetEylemi(surum: number, matris: unknown): Prom
 
 /* ── PERSONEL DOSYASI (özlük, ekipman ataması, bordro, imzalı zimmet formu): yetki, doğrulama ve dosya denetimi personel/server/dosyalar.ts içinde.
    Kişi ve kiracı oturumdan; istemciden gelen kimlik / sürüm yalnız "hangi kayıt, hangi sürümü gördüm". ── */
-export interface DosyaDurumu { tamam?: boolean; hatalar?: Record<string, string>; genel?: string }
+export interface DosyaDurumu { tamam?: boolean; bildirim?: string; hatalar?: Record<string, string>; genel?: string }
 const yazi = (x: FormDataEntryValue | null) => (typeof x === "string" ? x : "");
 async function pdfOku(f: FormDataEntryValue | null): Promise<{ ad: string; bayt: Uint8Array } | "buyuk" | null> {
   if (!(f instanceof File) || f.size === 0) return null;
@@ -97,7 +97,7 @@ async function dosyaIslemi(form: FormData, is: (o: NonNullable<Awaited<ReturnTyp
   if (b === "buyuk") return { hatalar: { dosya: "PDF en çok 25 MB." } };
   try {
     const r = await is(o, b);
-    return r.durum === "tamam" ? { tamam: true } : r.durum === "gecersiz" ? { hatalar: r.hatalar } : { genel: SONUC[r.durum] };
+    return r.durum === "tamam" ? { tamam: true, bildirim: r.bildirim } : r.durum === "gecersiz" ? { hatalar: r.hatalar } : { genel: SONUC[r.durum] };
   } catch (h) {
     if (h instanceof DosyaHatasi) return { hatalar: { dosya: h.message } };
     throw h;
@@ -135,7 +135,7 @@ export async function personelBelgeKaldirEylemi(ne: string, id: string, surum: n
   if (!o) return { genel: "Oturumunuz kapandı. Yeniden giriş yapın." };
   if (!(ne in KALDIR) || typeof id !== "string") return { genel: SONUC.yok };
   const r = await oturumIslemi(o, (db) => KALDIR[ne as keyof typeof KALDIR](db, o, id, Number(surum)));
-  return r.durum === "tamam" ? { tamam: true } : r.durum === "gecersiz" ? { hatalar: r.hatalar } : { genel: SONUC[r.durum] };
+  return r.durum === "tamam" ? { tamam: true, bildirim: r.bildirim } : r.durum === "gecersiz" ? { hatalar: r.hatalar } : { genel: SONUC[r.durum] };
 }
 
 /** bordroyu kişinin imzasına gönder (333 — Onaylar › Diğer belgeler); yetki ve PDF denetimi sunucuda */

@@ -80,3 +80,30 @@ test("imzaya uygunluk: klasik trailer kökü olan PDF uygun; sıkıştırılmı�
   /* uygun PDF'in imzalanmış hâli kabul edilir (gönderilen belge gerçekten imzalanabilir) */
   assert.equal(imzaliPdfGecerli(b(OZGUN), imzali(IMZA)), true);
 });
+
+/* 333 incelemesi: (1) kötü niyetli "trailer(" yığını karesel süre çıkarıyordu (400 KB → 30 sn) — süre sınırlı; (2) dolaylı AcroForm / Annots taşıyan
+   PDF ön denetimi geçip imzalı hâli hep reddediliyordu — imza aracı onları yalnız ekleyerek yeniden yazabilir */
+test("süre: 'trailer(' yığınıyla 1 MB'lık özgün ve 4 MB'lık ek bir saniyenin altında reddedilir", () => {
+  const yigin = "trailer(".repeat(128 * 1024);
+  let t = performance.now();
+  assert.equal(imzayaUygun(b(`%PDF-1.4\n${yigin}`)), false);
+  assert.ok(performance.now() - t < 1000, `imzayaUygun ${Math.round(performance.now() - t)} ms`);
+  t = performance.now();
+  assert.equal(imzaliPdfGecerli(b(OZGUN), b(OZGUN + "3 0 obj<</Type/Sig>>endobj\n" + "trailer(".repeat(500 * 1024))), false);
+  assert.ok(performance.now() - t < 1000, `imzaliPdfGecerli ${Math.round(performance.now() - t)} ms`);
+});
+
+test("dolaylı AcroForm ve Annots: imza aracı /Fields'e ve Annots dizisine ekler — kabul; eski alanı / açıklamayı düşürür ya da başka anahtarı değiştirirse ret", () => {
+  const FORM = "%PDF-1.4\n1 0 obj << /Type /Catalog /Pages 2 0 R /AcroForm 5 0 R >> endobj\n2 0 obj << /Type /Pages /Kids [3 0 R] /Count 1 >> endobj\n"
+    + "3 0 obj << /Type /Page /Parent 2 0 R /Contents 4 0 R /Resources << >> /Annots 6 0 R >> endobj\n4 0 obj << /Length 18 >> stream\nBT (Bordro) Tj ET\nendstream\nendobj\n"
+    + "5 0 obj << /Fields [7 0 R] /DA (/Helv 0 Tf 0 g) >> endobj\n6 0 obj [7 0 R] endobj\n7 0 obj << /Type /Annot /Subtype /Widget /FT /Sig /T (Muhur) >> endobj\n"
+    + "trailer << /Root 1 0 R >>\n%%EOF\n";
+  assert.equal(imzayaUygun(b(FORM)), true);
+  const imzalaEk = (form: string, annots: string) => b(FORM + form + annots + "10 0 obj << /Type /Annot /Subtype /Widget /FT /Sig /V 9 0 R >> endobj\n" + IMZA
+    + "trailer << /Root 1 0 R /Prev 0 >>\n%%EOF\n");
+  assert.equal(imzaliPdfGecerli(b(FORM), imzalaEk("5 0 obj << /Fields [7 0 R 10 0 R] /DA (/Helv 0 Tf 0 g) /SigFlags 3 >> endobj\n", "6 0 obj [7 0 R 10 0 R] endobj\n")), true);
+  assert.equal(imzaliPdfGecerli(b(FORM), imzalaEk("5 0 obj << /Fields [10 0 R] /DA (/Helv 0 Tf 0 g) /SigFlags 3 >> endobj\n", "")), false, "eski alan düştü");
+  assert.equal(imzaliPdfGecerli(b(FORM), imzalaEk("5 0 obj << /Fields [7 0 R 10 0 R] /DA (/Helv 12 Tf 0 g) >> endobj\n", "")), false, "başka anahtar değişti");
+  assert.equal(imzaliPdfGecerli(b(FORM), imzalaEk("", "6 0 obj [10 0 R] endobj\n")), false, "eski açıklama düştü");
+  assert.equal(imzaliPdfGecerli(b(FORM), imzalaEk("", "4 0 obj [10 0 R] endobj\n")), false, "dizi olarak yeniden tanımlanan başka nesne");
+});
