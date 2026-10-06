@@ -17,7 +17,11 @@ import { turOzetleri } from "../../ekipman-turleri/server/turler.ts";
 import { kisininVarliklari, type VarlikSatiri } from "../../zimmetler/server/zimmet.ts";
 import { belgeGonder, bordroBelgeleri, bordroKilidi, guncelBordroBelgesi, kaynakBelgesiniIptal } from "../../onaylar/server/belge-baglanti.ts";
 import { bordroBelgeAdi, type BelgeDurumu } from "../../onaylar/sema.ts";
-import { AtamaGirdisi, BordroGirdisi, OzlukGirdisi } from "../sema.ts";
+import { AtamaGirdisi, BordroGirdisi, OzlukGirdisi, ozlukTurleri, type EkTur } from "../sema.ts";
+import { ayarOku } from "../../../server/ayar/ayar.ts";
+
+/** firmanın eklediği özlük türleri (Firma ayarları; 335) */
+export const ekTurler = async (db: Sorgulayici): Promise<EkTur[]> => (await ayarOku(db, "belge_tur_ek")).deger.turler.map(({ k, ad }) => ({ k, ad }));
 
 const MODUL = 2;
 export const DOSYA = { ozluk: "ozluk", atama: "atama", bordro: "bordro", zimmetFormu: "zimmet_formu" } as const;
@@ -45,6 +49,8 @@ export interface PersonelDosyasi {
   ozluk: OzlukSatiri[] | null; bordrolar: BordroSatiri[] | null;
   atamalar: AtamaSatiri[]; zimmet: VarlikSatiri[]; zimmetFormu: ZimmetFormu | null;
   turler: { id: string; ad: string; brans: "m" | "e" }[];
+  /** özlük belge türleri (sabitler + firmanın ekledikleri; 335) */
+  ozlukTurleri: (readonly [string, string])[];
 }
 
 export type Yazma =
@@ -99,7 +105,7 @@ export async function personelDosyasi(db: Sorgulayici, kim: Kisi, personelId: st
     const onay = await bordroBelgeleri(db, [personelId]);
     for (const b of bordrolar) { const o = guncelBordroBelgesi(onay, personelId, b.ay, b.id); if (o) b.onay = { durum: o.durum, karar: o.karar }; }
   }
-  return { yaz, ozluk, bordrolar, atamalar, zimmet, zimmetFormu, turler: yaz ? turler : [] };
+  return { yaz, ozluk, bordrolar, atamalar, zimmet, zimmetFormu, turler: yaz ? turler : [], ozlukTurleri: ozlukTurleri(await ekTurler(db)) };
 }
 
 /** günlük maliyet (kuruş): son bordronun işverene maliyeti / iş günü — iş kârlılığına girer */
@@ -134,6 +140,7 @@ export async function ozlukEkle(db: Sorgulayici, depo: Depo, kim: Kisi, firmaId:
   if (!UUID.test(personelId) || !(await db.sorgu("SELECT 1 FROM personel WHERE id = $1", [personelId])).rowCount) return { durum: "yok" };
   const g = dogrula(OzlukGirdisi, girdi);
   const h: DogrulamaHatalari = g.tamam ? {} : { ...g.hatalar };
+  if (g.tamam && !ozlukTurleri(await ekTurler(db)).some(([k]) => k === g.veri.tur)) h.tur = "Belge türü seçilmeli.";
   if (!belge) h.dosya = "Belge (PDF) seçilmeli.";
   if (!g.tamam || !belge) return { durum: "gecersiz", hatalar: h };
   const r = await ekle(db, OZLUK, { personel_id: personelId, tur: g.veri.tur, aciklama: g.veri.aciklama }, { kim: kim.ad, ne: "ozluk.ekle" });
@@ -251,4 +258,9 @@ export async function atamaHaritasi(db: Sorgulayici): Promise<Record<string, str
   const h: Record<string, string[]> = {};
   for (const x of r.rows) (h[x.personel_id] ??= []).push(x.tur_id);
   return h;
+}
+
+/** Firma ayarları için (335 — firmanın eklediği belge türü ancak o türde belge yokken kaldırılır): türdeki geçerli özlük belgesi sayısı. Yetki ÇAĞIRANDA. */
+export async function ozlukTurKullanimi(db: Sorgulayici, tur: string): Promise<number> {
+  return Number((await db.sorgu<{ n: string }>("SELECT count(DISTINCT personel_id)::text AS n FROM ozluk_belgesi WHERE tur = $1 AND kaldirildi IS NULL", [tur])).rows[0].n);
 }

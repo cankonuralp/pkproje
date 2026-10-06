@@ -19,7 +19,7 @@ import { TarihAlani } from "../../../components/secim/TarihAlani";
 import { Serit } from "../../../components/serit/Serit";
 import { Tus } from "../../../components/tus/Tus";
 import type { EgitimKaydi } from "../../egitimler/server/egitimler";
-import { OZLUK_TURLERI, ozlukTurAd } from "../sema";
+
 import type { AtamaSatiri, BordroSatiri, OzlukSatiri, PersonelDosyasi } from "../server/dosyalar";
 import { BELGE_DURUM, belgeEtkin } from "../../onaylar/sema";
 import { bordroOnayaGonderEylemi, personelBelgeDegistirEylemi, personelBelgeEkleEylemi, personelBelgeKaldirEylemi } from "./eylemler";
@@ -45,7 +45,7 @@ function aylar(bugun: string): string[] {
 }
 
 /* ── ortak: yeni kayıt + belge penceresi ── */
-function BelgePenceresi({ ne, personelId, turler, bugun, kapat }: { ne: Ne; personelId: string; turler: PersonelDosyasi["turler"]; bugun: string; kapat: () => void }) {
+function BelgePenceresi({ ne, personelId, turler, ozlukTurleri, bugun, kapat }: { ne: Ne; personelId: string; turler: PersonelDosyasi["turler"]; ozlukTurleri: PersonelDosyasi["ozlukTurleri"]; bugun: string; kapat: () => void }) {
   const router = useRouter();
   const bildir = useBildir();
   const [bekliyor, baslat] = useTransition();
@@ -77,7 +77,7 @@ function BelgePenceresi({ ne, personelId, turler, bugun, kapat }: { ne: Ne; pers
           {ne === "ozluk" && <>
             <Alan id={ID.tur} etiket="Belge türü" zorunlu hata={h.tur}>
               <SecimAlani id={ID.tur} ad="Belge türü" deger={d.tur} ipucu="Seçin" gecersiz={!!h.tur} tanim={h.tur ? ipucuId(ID.tur) : undefined}
-                secenekler={OZLUK_TURLERI.map(([k, a]) => [k, a] as const)} degistir={(x) => setD({ ...d, tur: x })} />
+                secenekler={ozlukTurleri} degistir={(x) => setD({ ...d, tur: x })} />
             </Alan>
             {metin("aciklama", "Açıklama", false)}
           </>}
@@ -161,7 +161,7 @@ export function AtamaBolumu({ personelId, etkin, dosya, bugun }: { personelId: s
           : a.dosyaId ? <DosyaAcTusu dosyaId={a.dosyaId}>Atama belgesi</DosyaAcTusu> : <DegerYok /> },
       ]} />
         : <Serit tur="uyari" ikon="triangle-alert">Hiçbir ekipman türüne atanmamış. Plan ve rapor açılabilir; uyarı görünür.</Serit>}
-      {p.ne && <BelgePenceresi ne={p.ne} personelId={personelId} turler={dosya.turler} bugun={bugun} kapat={p.kapat} />}
+      {p.ne && <BelgePenceresi ne={p.ne} personelId={personelId} turler={dosya.turler} ozlukTurleri={dosya.ozlukTurleri} bugun={bugun} kapat={p.kapat} />}
     </Bolum>
   );
 }
@@ -186,7 +186,7 @@ export function ZimmetBolumu({ personelId, dosya, bugun }: { personelId: string;
         { k: "teslim", genislik: "25%", baslik: "Teslim alındı", kart: "govde", sira: 2, hucre: (v) => <><KartEtiket>Teslim alındı</KartEtiket>{v.son ? tarihYaz(v.son.zaman) : "—"}</> },
         { k: "durum", genislik: "20%", baslik: "Durum", kart: "rozet", sira: 1, hucre: (v) => v.bitis && v.bitis < bugun ? <Rozet tur="red">Kalibrasyonu geçti</Rozet> : <Rozet tur="tamam">Kullanımda</Rozet> },
       ]} /> : <p className={stil.bos}>Zimmetinde varlık yok.</p>}
-      {p.ne && <BelgePenceresi ne={p.ne} personelId={personelId} turler={dosya.turler} bugun={bugun} kapat={p.kapat} />}
+      {p.ne && <BelgePenceresi ne={p.ne} personelId={personelId} turler={dosya.turler} ozlukTurleri={dosya.ozlukTurleri} bugun={bugun} kapat={p.kapat} />}
     </Bolum>
   );
 }
@@ -254,7 +254,7 @@ export function BordroBolumu({ personelId, kisi, dosya, bugun, gunluk, isGunu }:
           </span> },
         ]} />
       </> : <p className={stil.bos}>Bordro yüklenmedi.</p>}
-      {p.ne && <BelgePenceresi ne={p.ne} personelId={personelId} turler={dosya.turler} bugun={bugun} kapat={p.kapat} />}
+      {p.ne && <BelgePenceresi ne={p.ne} personelId={personelId} turler={dosya.turler} ozlukTurleri={dosya.ozlukTurleri} bugun={bugun} kapat={p.kapat} />}
     </Bolum>
   );
 }
@@ -263,15 +263,17 @@ export function BordroBolumu({ personelId, kisi, dosya, bugun, gunluk, isGunu }:
 export function OzlukBolumu({ personelId, dosya, bugun }: { personelId: string; dosya: PersonelDosyasi; bugun: string }) {
   const p = useBelgePenceresi();
   const l = dosya.ozluk ?? [];
+  /* tür adı: sabitler + firmanın eklediği türler (335) */
+  const turAd = (k: string) => dosya.ozlukTurleri.find((x) => x[0] === k)?.[1] ?? "Diğer";
   return (
     <Bolum id="b-per-ozluk" baslik="Özlük dosyası" sayac={<><b>{l.length}</b> belge</>}
       tuslar={<Tus tur="ikincil" ikon="plus" onClick={() => p.ac("ozluk")}>Belge ekle</Tus>}>
       {l.length ? <Liste<OzlukSatiri> baslik="Özlük dosyası" kayitlar={l} anahtar={(b) => b.id} sutunlar={[
-        { k: "belge", genislik: "44%", baslik: "Belge", kart: "ust", sira: 1, hucre: (b) => <span><Kirp>{ozlukTurAd(b.tur)}</Kirp>{b.aciklama && <AltSatir><Kirp>{b.aciklama}</Kirp></AltSatir>}</span> },
+        { k: "belge", genislik: "44%", baslik: "Belge", kart: "ust", sira: 1, hucre: (b) => <span><Kirp>{turAd(b.tur)}</Kirp>{b.aciklama && <AltSatir><Kirp>{b.aciklama}</Kirp></AltSatir>}</span> },
         { k: "tarih", genislik: "16%", baslik: "Eklendi", kart: "govde", sira: 2, hucre: (b) => <><KartEtiket>Eklendi</KartEtiket>{tarihYaz(b.tarih)}</> },
-        { k: "eylem", genislik: "40%", baslik: "Belge", kart: "eylem", sira: 9, hucre: (b) => <SatirTuslari ne="ozluk" id={b.id} surum={b.surum} dosyaId={b.dosyaId} ad={ozlukTurAd(b.tur)} /> },
+        { k: "eylem", genislik: "40%", baslik: "Belge", kart: "eylem", sira: 9, hucre: (b) => <SatirTuslari ne="ozluk" id={b.id} surum={b.surum} dosyaId={b.dosyaId} ad={turAd(b.tur)} /> },
       ]} /> : <p className={stil.bos}>Özlük dosyasında belge yok.</p>}
-      {p.ne && <BelgePenceresi ne={p.ne} personelId={personelId} turler={dosya.turler} bugun={bugun} kapat={p.kapat} />}
+      {p.ne && <BelgePenceresi ne={p.ne} personelId={personelId} turler={dosya.turler} ozlukTurleri={dosya.ozlukTurleri} bugun={bugun} kapat={p.kapat} />}
     </Bolum>
   );
 }

@@ -10,7 +10,13 @@ import { AYAR_DOSYA, ayarOku, ayarYaz, firmaKoduYaz, firmaKunyesi, type AyarBolu
 import { duzey, type YetkiHesabi } from "../../../server/yetki/canDo.ts";
 import { dogrula, type DogrulamaHatalari } from "../../../sema/ortak.ts";
 import { personelSecenekleri } from "../../personel/server/personel.ts";
+import { fiyatlariYaz, fiyatListesi } from "../../teklifler/server/fiyat-baglanti.ts";
+import { turOzetleri } from "../../ekipman-turleri/server/turler.ts";
+import { egitimTurAdlari } from "../../egitimler/server/ayar-baglanti.ts";
+import { ozlukTurKullanimi } from "../../personel/server/dosyalar.ts";
+import { tutar } from "../../../sema/ortak.ts";
 import {
+  BelgeTuruGirdisi, FiyatGirdisi, MUSTERI_BELGE_BAS, MUSTERI_BELGE_SON, MusteriBelgeGirdisi,
   AYAR_DOSYASI, EsikGirdisi, FirmaBilgiGirdisi, ImzaGirdisi, KodGirdisi, MesaiGirdisi, SabitGiderGirdisi, SaklamaGirdisi, ZimmetGirdisi, type AyarDosyasi,
 } from "../sema.ts";
 
@@ -33,6 +39,25 @@ export interface FirmaAyarlari {
   /** dosya ayarları: kimlik ve görünen ad (yoksa null) ve bölümün sürümü */
   dosyalar: Record<AyarDosyasi, { id: string; ad: string } | null> & { surum: { firma: number; sablon: number } };
   kisiler: { id: string; ad: string }[];
+  /** fiyat listesi (335): ekipman türleri (branş, ad sırası) ve birim fiyatı (kuruş; yoksa null) */
+  fiyat: { turler: { id: string; ad: string; kod: string; brans: "m" | "e"; fiyat: number | null }[] };
+  /** müşteriye açık personel belgeleri (335): türler ve seçililer */
+  mbelge: Surumlu<{ secili: string[] }> & { turler: MusteriBelgeTuru[]; ekSurum: number };
+}
+/** k: özlük türü, "atama" ya da "eg:<eğitim türü>"; ek: firmanın eklediği (kaldırılabilir) */
+export interface MusteriBelgeTuru { k: string; ad: string; kisisel: boolean; ek: boolean }
+
+async function musteriBelgeTurleri(db: Sorgulayici): Promise<{ turler: MusteriBelgeTuru[]; ekSurum: number; ek: { k: string; ad: string; kisisel: boolean }[] }> {
+  const ek = await ayarOku(db, "belge_tur_ek");
+  return {
+    ekSurum: ek.surum, ek: ek.deger.turler,
+    turler: [
+      ...MUSTERI_BELGE_BAS.map(([k, ad, kisisel]) => ({ k, ad, kisisel, ek: false })),
+      ...(await egitimTurAdlari(db)).map((t) => ({ k: `eg:${t.id}`, ad: `${t.ad} sertifikası`, kisisel: false, ek: false })),
+      ...ek.deger.turler.map((t) => ({ k: t.k, ad: t.ad, kisisel: t.kisisel, ek: true })),
+      ...MUSTERI_BELGE_SON.map(([k, ad, kisisel]) => ({ k, ad, kisisel, ek: false })),
+    ],
+  };
 }
 
 async function dosyaAdi(db: Sorgulayici, id: string | null): Promise<{ id: string; ad: string } | null> {
@@ -56,10 +81,19 @@ export async function firmaAyarlari(db: Sorgulayici, kim: Kisi): Promise<FirmaAy
     dosyalar: { logo: await dosyaAdi(db, f.deger.logo), on_bilgi: await dosyaAdi(db, bs.deger.on_bilgi), bordro_format: await dosyaAdi(db, bs.deger.bordro_format),
       surum: { firma: f.surum, sablon: bs.surum } },
     kisiler: (await personelSecenekleri(db)).map(({ id, ad }) => ({ id, ad })),
+    fiyat: await (async () => {
+      const f = await fiyatListesi(db);
+      return { turler: (await turOzetleri(db)).map((t) => ({ id: t.id, ad: t.ad, kod: t.kod, brans: t.brans, fiyat: f.get(t.id) ?? null })) };
+    })(),
+    mbelge: await (async () => {
+      const mb = await ayarOku(db, "musteri_belge"), t = await musteriBelgeTurleri(db);
+      const secili = [...mb.deger.ozluk, ...mb.deger.egitim.map((x) => `eg:${x}`), ...(mb.deger.atama ? ["atama"] : [])].filter((k) => t.turler.some((x) => x.k === k));
+      return { deger: { secili }, surum: mb.surum, turler: t.turler, ekSurum: t.ekSurum };
+    })(),
   };
 }
 
-export type AyarYazma = { durum: "tamam"; bildirim: string } | { durum: "gecersiz"; hatalar: DogrulamaHatalari } | { durum: "cakisma" } | { durum: "yetkisiz" };
+export type AyarYazma = { durum: "tamam"; bildirim: string } | { durum: "gecersiz"; hatalar: DogrulamaHatalari } | { durum: "red"; neden: string } | { durum: "cakisma" } | { durum: "yetkisiz" };
 const SONUC = (r: { durum: string; hatalar?: DogrulamaHatalari }, bildirim: string): AyarYazma =>
   r.durum === "tamam" || r.durum === "degisiklik_yok" ? { durum: "tamam", bildirim } : r.durum === "gecersiz" ? { durum: "gecersiz", hatalar: r.hatalar ?? {} }
     : { durum: "cakisma" };
@@ -109,8 +143,63 @@ export async function ayarKaydet(db: Sorgulayici, kim: Kisi, kesim: string, suru
       if (Object.keys(h).length) return { durum: "gecersiz", hatalar: h };
       return yaz("sabit_gider", g.veri, "Sabit giderler kaydedildi; gelir-gider özetinde her ay gider olarak düşer.");
     }
+    case "fiyat": {
+      /* KDV hariç birim fiyat; boş: fiyatsız (kayıtlı fiyat silinmez); doluysa sıfırdan büyük (maket tlOku) */
+      const g = dogrula(FiyatGirdisi, girdi);
+      if (!g.tamam) return { durum: "gecersiz", hatalar: g.hatalar };
+      const turler = new Set((await turOzetleri(db)).map((t) => t.id)), eski = await fiyatListesi(db);
+      const h: DogrulamaHatalari = {}, yeni = new Map<string, number>();
+      for (const [tur, metin] of Object.entries(g.veri.fiyatlar)) {
+        if (!turler.has(tur)) { h[tur] = "Ekipman türü bulunamadı."; continue; }
+        if (!metin.trim()) { if (eski.has(tur)) h[tur] = "Fiyat boş bırakılamaz (kayıtlı fiyat silinmez)."; continue; }
+        const t = tutar.safeParse(metin);
+        if (!t.success || t.data <= 0 || t.data > 100_000_000_000) { h[tur] = "Tutar okunamadı (ör. 1.250 ya da 1250,50). Kaydedilmedi."; continue; }
+        yeni.set(tur, t.data);
+      }
+      if (Object.keys(h).length) return { durum: "gecersiz", hatalar: h };
+      const n = await fiyatlariYaz(db, kim, yeni);
+      return { durum: "tamam", bildirim: n ? `Fiyat listesi kaydedildi (${n} tür); yeni teklifler bu fiyatlarla dolar.` : "Fiyat listesinde değişiklik yok." };
+    }
+    case "mbelge": {
+      const g = dogrula(MusteriBelgeGirdisi, girdi);
+      if (!g.tamam) return { durum: "gecersiz", hatalar: g.hatalar };
+      const t = await musteriBelgeTurleri(db), gecerli = new Set(t.turler.map((x) => x.k));
+      if (g.veri.secili.some((k) => !gecerli.has(k))) return { durum: "gecersiz", hatalar: { secili: "Bilinmeyen belge türü." } };
+      const sec = [...new Set(g.veri.secili)];
+      return yaz("musteri_belge", {
+        ozluk: sec.filter((k) => k !== "atama" && !k.startsWith("eg:")), egitim: sec.filter((k) => k.startsWith("eg:")).map((k) => k.slice(3)), atama: sec.includes("atama"),
+      }, `Müşteriye açık personel belgeleri kaydedildi (${sec.length} tür).`);
+    }
   }
   return { durum: "gecersiz", hatalar: { genel: "Bilinmeyen ayar bölümü." } };
+}
+
+const kucuk = (s: string) => s.trim().toLocaleLowerCase("tr");
+/** firmaya yeni özlük belge türü (maket Z5): adı var olan bir türle (ya da "… sertifikası" ile) aynı olamaz; ek1–ek30. Hemen kaydedilir. */
+export async function belgeTuruEkle(db: Sorgulayici, kim: Kisi, girdi: unknown): Promise<AyarYazma> {
+  if (!ayarlarYazar(kim)) return { durum: "yetkisiz" };
+  const g = dogrula(BelgeTuruGirdisi, girdi);
+  if (!g.tamam) return { durum: "gecersiz", hatalar: g.hatalar };
+  const t = await musteriBelgeTurleri(db), ad = g.veri.ad;
+  if (t.turler.some((x) => kucuk(x.ad) === kucuk(ad) || kucuk(x.ad) === kucuk(`${ad} sertifikası`))) return { durum: "gecersiz", hatalar: { ad: "Bu adla bir belge türü zaten var." } };
+  let n = 1;
+  while (t.ek.some((x) => x.k === `ek${n}`)) n++;
+  if (n > 30) return { durum: "gecersiz", hatalar: { ad: "En çok 30 tür eklenir." } };
+  const r = await ayarYaz(db, "belge_tur_ek", t.ekSurum, { turler: [...t.ek, { k: `ek${n}`, ad, kisisel: g.veri.kisisel }] }, { kim: kim.ad, ne: "belge_tur_ek.ekle", gerekce: ad });
+  return SONUC(r, `${ad} eklendi; Personel'de belge yüklerken seçilebilir. Müşteriye açmak için işaretleyip kaydedin.`);
+}
+/** firmanın eklediği türü kaldır: yalnız o türde yüklü belge yokken; müşteriye açık listeden de düşer */
+export async function belgeTuruKaldir(db: Sorgulayici, kim: Kisi, k: string): Promise<AyarYazma> {
+  if (!ayarlarYazar(kim)) return { durum: "yetkisiz" };
+  const t = await musteriBelgeTurleri(db), x = t.ek.find((y) => y.k === k);
+  if (!x) return { durum: "red", neden: "Belge türü bulunamadı." };
+  const n = await ozlukTurKullanimi(db, k);
+  if (n) return { durum: "red", neden: `${x.ad} kaldırılamaz: ${n} personelde bu türde yüklü belge var.` };
+  const r = await ayarYaz(db, "belge_tur_ek", t.ekSurum, { turler: t.ek.filter((y) => y.k !== k) }, { kim: kim.ad, ne: "belge_tur_ek.kaldir", gerekce: x.ad });
+  if (r.durum !== "tamam") return SONUC(r, "");
+  const mb = await ayarOku(db, "musteri_belge");
+  if (mb.deger.ozluk.includes(k)) await ayarYaz(db, "musteri_belge", mb.surum, { ...mb.deger, ozluk: mb.deger.ozluk.filter((y) => y !== k) }, { kim: kim.ad, ne: "musteri_belge.tur_kaldir" });
+  return { durum: "tamam", bildirim: `${x.ad} kaldırıldı.` };
 }
 
 /** firma kodu (rapor numarasının başı); açılmış raporların numarası değişmez */

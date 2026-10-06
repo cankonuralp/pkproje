@@ -2341,6 +2341,18 @@ revizyon, alan kopyalama, hafif kusur devri, meslek eşleşme denetimi).
 - Emsal ürünler: https://opwire.app/iso-17020-periyodik-kontrol-yazilimi/ · https://17020muayene.vidco.com.tr/ · https://akuple.com/asansor-kontrol-yazilimi/ · https://ensyazilim.com/
 
 ## 11 · Değişiklik günlüğü
+- 2026-10-06 (335): **K4 Firma ayarları — fiyat listesi, müşteriye açık personel belgeleri, belge türü ekle** (maket ayarDigerCiz "Fiyat listesi";
+  P3 "müşteriye giden muayene personelinin firmanın izin verdiği belgelerini görür"; Z5 reisim: "bu kısımda eğer ben bir belge türü eklersem
+  listeye ekleniyor mu" · "eklenmiyorsa eklensin"). **Fiyat listesi** (tam genişlik, dört sütuna kadar): ekipman türü başına KDV hariç birim fiyat
+  (TL → kuruş); boş = fiyatsız, kayıtlı fiyat boşaltılamaz, doluysa sıfırdan büyük; Teklifler'in tablosuna bağlantı işleviyle
+  (teklifler/server/fiyat-baglanti.ts). **Müşteriye açık personel belgeleri**: EKİPNET, diploma, oda kaydı, ekipman atama belgesi, eğitim
+  türlerinin sertifikaları (Eğitimler'in ayar-baglanti.ts), firmanın eklediği türler, kişisel veriler (kimlik, sağlık raporu, iş sözleşmesi,
+  diğer) — işaretli olanlar müşteri panelinde (musteri_belge ayarı; kişisel veri seçiliyse KVKK şeridi). **Belge türü ekle** (hemen kaydedilir):
+  ad (var olan türle ya da "… sertifikası" ile aynı olamaz), kişisel veri işareti; anahtar ek1–ek30 (yeni ayar bölümü belge_tur_ek). Personel'de
+  özlük belgesi yüklerken seçilir ("Diğer" hep sonda; ayarda olmayan tür sunucuda reddedilir), müşteri panelinde adıyla görünür (göç **0046**:
+  müşteri rolü için yalnız tür anahtarı ve adını döndüren işlev musteri_belge_turleri). Kaldır: yalnız o türde yüklü belge yokken; müşteriye açık
+  listeden de düşer. Kilit: firma-ayarlari.test (fiyat, müşteriye açık belgeler, tür ekle / kaldır, Personel'de seçim, B sızıntısı),
+  firma-ayarlari.bozan 2 → 3, e2e (fiyat görünümü, tür ekle — aynı ad reddedilir — kaldır).
 - 2026-10-06 (334): **K4 Firma ayarları — ekran ve temel bölümler** (maket firma-ayarlari.html — R1 "ayrı bir modül olsun , ekran daha verimli
   kullanılsın", Z1 "yapılan değişikliklerin yanına minik bir kaydet butonu koy", 202 dağınık ayarlar tek yerde; reisim 2026-10-03 "Şirket logosuda
   firma ayarlarından girilsin , raporlara otomatik çekilsin"). Geniş ekranda solda bölüm listesi, bölümler kart, sütunlu yerleşim (sabit giderler

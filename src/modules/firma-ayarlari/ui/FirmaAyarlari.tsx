@@ -15,7 +15,7 @@ import { Serit } from "../../../components/serit/Serit";
 import { Tus } from "../../../components/tus/Tus";
 import { AYAR_BASLIK, AYAR_DOSYASI, ESIK, IMZA_YONTEM, NUSHA, SAKLAMA_YIL, YASAL, type AyarDosyasi, type AyarKesimi, type EsikAdi } from "../sema";
 import type { FirmaAyarlari as Veri } from "../server/ayarlar";
-import { ayarDosyasiEylemi, ayarKaydetEylemi, firmaKoduKaydetEylemi, type AyarYaniti } from "./eylemler";
+import { ayarDosyasiEylemi, ayarKaydetEylemi, belgeTuruEkleEylemi, belgeTuruKaldirEylemi, firmaKoduKaydetEylemi, type AyarYaniti } from "./eylemler";
 import stil from "./firma-ayarlari.module.css";
 
 const ID = {
@@ -279,8 +279,92 @@ function SabitGiderler({ v }: { v: Veri }) {
   );
 }
 
+/* ── FİYAT LİSTESİ (335; maket "Fiyat listesi": tür başına KDV hariç birim fiyat, dört sütuna kadar) ── */
+function FiyatListesi({ v }: { v: Veri }) {
+  const ilk = { fiyatlar: Object.fromEntries(v.fiyat.turler.map((t) => [t.id, t.fiyat === null ? "" : para(t.fiyat)])) as Record<string, string> };
+  const s = useKesim("fiyat", ilk, 0);
+  return (
+    <Kart kesim="fiyat" genis yaz={v.yaz} kirli={s.kirli} mesgul={s.mesgul} kaydet={s.kaydet} vazgec={s.vazgec} sayac={<><b>{v.fiyat.turler.length}</b> tür</>}>
+      <p className={stil.ipucuUst}>KDV hariç birim fiyat. Yeni teklif bu listeden dolar; teklif dışı rapor bu fiyatla faturalanır. Kabul edilmiş tekliflerin fiyatı değişmez.</p>
+      {v.fiyat.turler.length ? <div className={stil.fiyatlar}>
+        {v.fiyat.turler.map((t) => {
+          const id = `w-ay-fiyat-${t.id}`;
+          return (
+            <Alan key={t.id} id={id} etiket={`${t.ad} (TL)`} hata={s.h[t.id]}>
+              <Girdi id={id} value={s.d.fiyatlar[t.id] ?? ""} inputMode="decimal" maxLength={16} disabled={!v.yaz} hata={!!s.h[t.id]} mesajli={!!s.h[t.id]} placeholder="Fiyat yok"
+                onChange={(e) => s.setD({ fiyatlar: { ...s.d.fiyatlar, [t.id]: e.target.value } })} />
+            </Alan>
+          );
+        })}
+      </div> : <p className={stil.ipucu}>Ekipman türü yok; türler Ekipman türleri&apos;nden eklenir.</p>}
+    </Kart>
+  );
+}
+
+/* ── MÜŞTERİYE AÇIK PERSONEL BELGELERİ (335; maket personelBelgeCiz, Z5 "Belge türü ekle") ── */
+const BT = { ad: "w-ay-bt-ad", kisisel: "w-ay-bt-kisisel" } as const;
+function MusteriBelgeleri({ v }: { v: Veri }) {
+  const router = useRouter();
+  const bildir = useBildir();
+  const onayla = useOnayla();
+  const [mesgulTur, baslatTur] = useTransition();
+  const s = useKesim("mbelge", { secili: [...v.mbelge.deger.secili].sort() }, v.mbelge.surum);
+  const [ekle, setEkle] = useState<null | { ad: string; kisisel: boolean; hata: string | null }>(null);
+  const sec = new Set(s.d.secili);
+  const hassas = v.mbelge.turler.filter((t) => t.kisisel && sec.has(t.k));
+  const turEkle = () => baslatTur(async () => {
+    if (!ekle) return;
+    const r = await belgeTuruEkleEylemi({ ad: ekle.ad, kisisel: ekle.kisisel });
+    if (!r.tamam) { setEkle({ ...ekle, hata: r.hatalar?.ad ?? r.genel ?? "Eklenemedi." }); requestAnimationFrame(() => document.getElementById(BT.ad)?.focus()); return; }
+    setEkle(null); bildir(r.bildirim ?? "Eklendi."); router.refresh();
+  });
+  const turKaldir = async (k: string, ad: string) => {
+    if (!(await onayla({ baslik: "Belge türünü kaldır", metin: `${ad} listeden ve müşteriye açık belgelerden kalkar.`, tus: "Kaldır", tehlike: true }))) return;
+    baslatTur(async () => {
+      const r = await belgeTuruKaldirEylemi(k);
+      bildir(r.tamam ? r.bildirim ?? "Kaldırıldı." : r.genel ?? "Kaldırılamadı.");
+      if (r.tamam) { router.refresh(); requestAnimationFrame(() => document.getElementById(bolumId("mbelge"))?.focus()); }
+    });
+  };
+  return (
+    <Kart kesim="mbelge" genis yaz={v.yaz} kirli={s.kirli} mesgul={s.mesgul} kaydet={s.kaydet} vazgec={s.vazgec} sayac={<><b>{s.d.secili.length}</b> tür</>}>
+      <p className={stil.ipucuUst}>Müşteri panelinde &quot;Muayene personeli&quot; sekmesinde, o müşteriye giden muayene personelinin yalnız işaretli belgeleri görünür.</p>
+      <fieldset className={stil.turler}>
+        <legend className="gizli">Müşteriye açık belge türleri</legend>
+        {v.mbelge.turler.map((t) => {
+          const kutu = (
+            <label className={stil.secenek}>
+              <input type="checkbox" checked={sec.has(t.k)} disabled={!v.yaz}
+                onChange={(e) => s.setD({ secili: (e.target.checked ? [...s.d.secili, t.k] : s.d.secili.filter((x) => x !== t.k)).sort() })} />
+              <span>{t.ad}{(t.ek || t.kisisel) && <span className={stil.alt}>{[t.ek ? "firmanın eklediği" : "", t.kisisel ? "kişisel veri" : ""].filter(Boolean).join(" · ")}</span>}</span>
+            </label>
+          );
+          return t.ek && v.yaz ? <div key={t.k} className={stil.ekSatir}>{kutu}
+            <Tus tur="ikincil" ikon="x" disabled={mesgulTur} aria-label={`${t.ad} türünü kaldır`} onClick={() => turKaldir(t.k, t.ad)}>Kaldır</Tus></div>
+            : <div key={t.k}>{kutu}</div>;
+        })}
+      </fieldset>
+      {hassas.length > 0 && <Serit tur="uyari" ikon="triangle-alert">Kişisel veri içeren belge müşteriye açık: {hassas.map((t) => t.ad).join(", ")}. Personelin açık rızası gerekebilir (KVKK); karar firmanın.</Serit>}
+      {v.yaz && (ekle ? <div className={stil.ekForm}>
+        <FormIzgara>
+          <Alan id={BT.ad} etiket="Yeni belge türü" genis hata={ekle.hata ?? undefined} sonuc={ekle.hata ? undefined : "Personel'de özlük belgesi yüklerken seçilir; müşteriye açmak için listede işaretleyin."}>
+            <Girdi id={BT.ad} value={ekle.ad} maxLength={60} hata={!!ekle.hata} mesajli onChange={(e) => setEkle({ ...ekle, ad: e.target.value, hata: null })} />
+          </Alan>
+        </FormIzgara>
+        <label className={stil.secenek}><input id={BT.kisisel} type="checkbox" checked={ekle.kisisel} onChange={(e) => setEkle({ ...ekle, kisisel: e.target.checked })} /><span>Kişisel veri içerir (KVKK)</span></label>
+        <div className={stil.tuslar}>
+          <Tus tur="ikincil" disabled={mesgulTur} onClick={() => { setEkle(null); requestAnimationFrame(() => document.querySelector<HTMLElement>("[data-tur-ekle]")?.focus()); }}>Vazgeç</Tus>
+          <Tus ikon="check" disabled={mesgulTur} aria-busy={mesgulTur || undefined} onClick={turEkle}>Türü ekle</Tus>
+        </div>
+      </div> : <div className={stil.tuslar}>
+        <Tus tur="ikincil" ikon="plus" data-tur-ekle="" onClick={() => { setEkle({ ad: "", kisisel: false, hata: null }); requestAnimationFrame(() => document.getElementById(BT.ad)?.focus()); }}>Belge türü ekle</Tus>
+      </div>)}
+    </Kart>
+  );
+}
+
 /* ── SAYFA ── */
-const SIRA: AyarKesimi[] = ["firma", "imza", "zimmet", "saklama", "onbilgi", "bordro", "mesai", "esik", "kod", "sabit"];
+const SIRA: AyarKesimi[] = ["firma", "imza", "zimmet", "saklama", "onbilgi", "bordro", "mesai", "esik", "kod", "fiyat", "sabit", "mbelge"];
 export function FirmaAyarlari({ v }: { v: Veri }) {
   return (
     <>
@@ -304,7 +388,9 @@ export function FirmaAyarlari({ v }: { v: Veri }) {
           <Mesai v={v} />
           <Esikler v={v} />
           <RaporNumarasi v={v} />
+          <FiyatListesi v={v} />
           <SabitGiderler v={v} />
+          <MusteriBelgeleri v={v} />
         </div>
       </div>
     </>

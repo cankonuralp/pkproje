@@ -6,6 +6,7 @@ import { tutar, z } from "../../sema/ortak.ts";
 export const AYAR_BASLIK = {
   firma: "Firma bilgileri", imza: "İmza yöntemi", zimmet: "Zimmet teslim formu", saklama: "Rapor saklama süresi", onbilgi: "Ön bilgilendirme formu",
   bordro: "Bordro formatı", mesai: "Mesai takibi", esik: "Uyarı eşikleri", kod: "Rapor numarası", sabit: "Sabit giderler",
+  fiyat: "Fiyat listesi", mbelge: "Müşteriye açık personel belgeleri",
 } as const;
 export type AyarKesimi = keyof typeof AYAR_BASLIK;
 
@@ -52,6 +53,18 @@ export const KodGirdisi = z.object({ kod: z.preprocess((v) => (typeof v === "str
 export const SabitGiderGirdisi = z.object({
   kalemler: z.array(z.object({ ad: metin(60, "En çok 60 karakter."), aylik: tutar, not: metin(80, "En çok 80 karakter.") })).max(30, "En çok 30 kalem."),
 });
+
+/** fiyat listesi (335): tür → TL (boş: fiyatsız; doluysa sıfırdan büyük) */
+export const FiyatGirdisi = z.object({ fiyatlar: z.record(z.string().regex(/^[0-9a-f-]{36}$/), z.string().max(20)) });
+/** müşteriye açık belge türleri: seçili anahtarlar (özlük türü, "atama", "eg:<eğitim türü>") */
+export const MusteriBelgeGirdisi = z.object({ secili: z.array(z.string().max(40)).max(200) });
+export const BelgeTuruGirdisi = z.object({
+  ad: z.preprocess((v) => (typeof v === "string" ? v.trim() : v), z.string({ error: "Türün adını yazın." }).min(2, "Türün adını yazın.").max(60, "En çok 60 karakter.")),
+  kisisel: z.boolean(),
+});
+/** müşteriye açılabilecek sabit türler (maket MV.musteriBelgeTur): [anahtar, ad, kişisel veri] — eğitim sertifikaları ve firmanın türleri arada */
+export const MUSTERI_BELGE_BAS = [["ekipnet", "EKİPNET kayıt belgesi", false], ["diploma", "Diploma", false], ["oda", "Oda kaydı", false], ["atama", "Ekipman atama belgesi", false]] as const;
+export const MUSTERI_BELGE_SON = [["kimlik", "Kimlik belgesi", true], ["saglik", "Sağlık raporu", true], ["is", "İş sözleşmesi", true], ["diger", "Diğer", true]] as const;
 
 /** dosya ayarları (logo, ön bilgilendirme formu, bordro formatı): ayar alanı, izinli türler, en çok boyut */
 export const AYAR_DOSYASI = {

@@ -13,7 +13,8 @@ import { klasorDepo } from "../src/server/dosya/depo.ts";
 import { dosyaIndirilebilir } from "../src/server/dosya/dosya.ts";
 import { DOSYA_ERISIMI } from "../src/server/dosya/erisim.ts";
 import { ayarOku, firmaBelgeKunyesi, firmaKunyesi } from "../src/server/ayar/ayar.ts";
-import { ayarDosyasiYaz, ayarKaydet, firmaAyarlari, firmaKoduKaydet, type Kisi } from "../src/modules/firma-ayarlari/server/ayarlar.ts";
+import { ayarDosyasiYaz, ayarKaydet, belgeTuruEkle, belgeTuruKaldir, firmaAyarlari, firmaKoduKaydet, type Kisi } from "../src/modules/firma-ayarlari/server/ayarlar.ts";
+import { ozlukEkle, ozlukKaldir, personelDosyasi } from "../src/modules/personel/server/dosyalar.ts";
 import { testKumesi } from "./yardimci/kume.ts";
 
 let kume: GomuluKume;
@@ -118,8 +119,48 @@ test("dosyalar: logo yalnız PNG / JPEG (en çok 2 MB), belgelerin başlığına
   assert.equal((await a(YON, (db) => firmaBelgeKunyesi(db, depo))).logo, null);
 });
 
+/* 335: fiyat listesi (Teklifler'in tablosu, bağlantı işlevinden) · müşteriye açık personel belgeleri · firmanın eklediği belge türü */
+test("fiyat listesi: KDV hariç TL → kuruş; kayıtlı fiyat boşaltılamaz, sıfır ve başka firmanın türü kaydedilmez", async () => {
+  const ht = (await sql(A, "INSERT INTO ekipman_turu (kod, ad, grup, brans, periyot) VALUES ('HT', 'Hava tankı', 'basincli', 'm', 12) RETURNING id::text"))!;
+  const turB = (await sql(B, "INSERT INTO ekipman_turu (kod, ad, grup, brans, periyot) VALUES ('HT', 'Hava tankı', 'basincli', 'm', 12) RETURNING id::text"))!;
+  assert.deepEqual((await a(YON, (db) => firmaAyarlari(db, YON)))!.fiyat.turler.map((t) => [t.ad, t.fiyat]), [["Hava tankı", null]]);
+  tamam(await a(YON, (db) => ayarKaydet(db, YON, "fiyat", 0, { fiyatlar: { [ht]: "1.250,50" } })));
+  assert.deepEqual((await a(YON, (db) => firmaAyarlari(db, YON)))!.fiyat.turler.map((t) => t.fiyat), [125_050]);
+  assert.deepEqual(await a(YON, (db) => ayarKaydet(db, YON, "fiyat", 0, { fiyatlar: { [ht]: "" } })), { durum: "gecersiz", hatalar: { [ht]: "Fiyat boş bırakılamaz (kayıtlı fiyat silinmez)." } });
+  assert.equal((await a(YON, (db) => ayarKaydet(db, YON, "fiyat", 0, { fiyatlar: { [ht]: "0" } }))).durum, "gecersiz");
+  assert.equal((await a(YON, (db) => ayarKaydet(db, YON, "fiyat", 0, { fiyatlar: { [turB]: "100" } }))).durum, "gecersiz", "başka firmanın türü");
+  assert.equal((await a(DEN, (db) => ayarKaydet(db, DEN, "fiyat", 0, { fiyatlar: { [ht]: "999" } }))).durum, "yetkisiz");
+});
+
+test("müşteriye açık belgeler ve belge türü ekle: seçim ayara yazılır; yeni tür Personel'de seçilir, adı var olanla aynı olamaz; belgesi varken kaldırılamaz", async () => {
+  const eg = (await sql(A, "INSERT INTO egitim_turu (ad, tekrar_ay) VALUES ('Deneme Eğitim', 12) RETURNING id::text"))!;
+  assert.equal((await a(YON, (db) => ayarKaydet(db, YON, "mbelge", -1, { secili: ["ekipnet", "yok-boyle"] }))).durum, "gecersiz");
+  tamam(await a(YON, (db) => ayarKaydet(db, YON, "mbelge", -1, { secili: ["ekipnet", "atama", `eg:${eg}`] })));
+  assert.deepEqual((await a(YON, (db) => ayarOku(db, "musteri_belge"))).deger, { ozluk: ["ekipnet"], egitim: [eg], atama: true });
+  for (const ad of ["Diploma", "deneme eğitim", "Deneme Eğitim sertifikası"])
+    assert.deepEqual(await a(YON, (db) => belgeTuruEkle(db, YON, { ad, kisisel: false })), { durum: "gecersiz", hatalar: { ad: "Bu adla bir belge türü zaten var." } }, ad);
+  assert.equal((await a(DEN, (db) => belgeTuruEkle(db, DEN, { ad: "Deneme Kart", kisisel: true }))).durum, "yetkisiz");
+  tamam(await a(YON, (db) => belgeTuruEkle(db, YON, { ad: "Deneme Kart", kisisel: true })));
+  const v = (await a(YON, (db) => firmaAyarlari(db, YON)))!;
+  assert.deepEqual(v.mbelge.turler.find((t) => t.k === "ek1"), { k: "ek1", ad: "Deneme Kart", kisisel: true, ek: true });
+  tamam(await a(YON, (db) => ayarKaydet(db, YON, "mbelge", v.mbelge.surum, { secili: ["ekipnet", "ek1"] })));
+  /* Personel: yeni tür seçilir ve adıyla görünür; ayarda olmayan tür kaydedilmez */
+  const kart = (await a(YON, (db) => personelDosyasi(db, YON, kisiA)))!;
+  assert.ok(kart.ozlukTurleri.some(([k, ad]) => k === "ek1" && ad === "Deneme Kart"));
+  assert.deepEqual(kart.ozlukTurleri.at(-1), ["diger", "Diğer"], "Diğer hep sonda");
+  assert.equal((await a(YON, (db) => ozlukEkle(db, depo, YON, A, kisiA, { tur: "ek9", aciklama: "" }, { ad: "k.pdf", bayt: PDF }))).durum, "gecersiz");
+  const o = tamam(await a(YON, (db) => ozlukEkle(db, depo, YON, A, kisiA, { tur: "ek1", aciklama: "" }, { ad: "k.pdf", bayt: PDF })));
+  assert.deepEqual(await a(YON, (db) => belgeTuruKaldir(db, YON, "ek1")), { durum: "red", neden: "Deneme Kart kaldırılamaz: 1 personelde bu türde yüklü belge var." });
+  const s = (await a(YON, (db) => personelDosyasi(db, YON, kisiA)))!.ozluk!.find((x) => x.id === o.id)!;
+  tamam(await a(YON, (db) => ozlukKaldir(db, YON, o.id, s.surum)));
+  tamam(await a(YON, (db) => belgeTuruKaldir(db, YON, "ek1")));
+  assert.deepEqual((await a(YON, (db) => ayarOku(db, "musteri_belge"))).deger.ozluk, ["ekipnet"], "kaldırılan tür müşteriye açık listeden de düştü");
+  assert.ok(!(await a(YON, (db) => firmaAyarlari(db, YON)))!.mbelge.turler.some((t) => t.k === "ek1"));
+});
+
 test("firma sızıntısı: B kendi ayarlarını görür (başlangıç değerleri), A'nınkini değil", async () => {
   const v = (await a(YON_B, (db) => firmaAyarlari(db, YON_B), B))!;
   assert.deepEqual([v.kod, v.firma.deger.ad, v.firma.deger.nusha, v.esik.deger.kalibrasyon, v.sabit.deger.kalemler, v.kisiler.map((k) => k.ad)],
     ["DB", "", 2, 30, [], ["Deneme B Kişi"]]);
+  assert.deepEqual([v.mbelge.deger.secili, v.mbelge.turler.filter((t) => t.ek || t.k.startsWith("eg:")).length, v.fiyat.turler.map((t) => t.fiyat)], [["ekipnet"], 0, [null]]);
 });

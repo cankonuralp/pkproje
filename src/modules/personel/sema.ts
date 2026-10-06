@@ -32,9 +32,15 @@ export const bransAd = (b: string | null | undefined) => (b === "m" ? "Mekanik" 
 /* ── PERSONEL DOSYASI (maket personel.html: özlük, ekipman atamaları, maaş ve bordrolar) ── */
 export const OZLUK_TURLERI = [["is", "İş sözleşmesi"], ["diploma", "Diploma"], ["oda", "Oda kaydı"], ["ekipnet", "EKİPNET kayıt belgesi"], ["kimlik", "Kimlik belgesi"],
   ["saglik", "Sağlık raporu"], ["diger", "Diğer"]] as const;
-export const ozlukTurAd = (k: string) => OZLUK_TURLERI.find((x) => x[0] === k)?.[1] ?? "Diğer";
+/** firmanın eklediği türler (335; Firma ayarları › Belge türü ekle): anahtar ek1–ek30 */
+export type EkTur = { k: string; ad: string };
+/** seçilebilir özlük türleri: sabitler, firmanın ekledikleri, "Diğer" hep sonda (maket MV.ozlukTur) */
+export const ozlukTurleri = (ek: readonly EkTur[] = []): (readonly [string, string])[] =>
+  [...OZLUK_TURLERI.slice(0, -1), ...ek.map((x) => [x.k, x.ad] as const), OZLUK_TURLERI[OZLUK_TURLERI.length - 1]];
+export const ozlukTurAd = (k: string, ek: readonly EkTur[] = []) => ozlukTurleri(ek).find((x) => x[0] === k)?.[1] ?? "Diğer";
+/** tür seçilenler arasında mı sunucuda (firmanın eklediği türler ayardan) denetlenir */
 export const OzlukGirdisi = z.object({
-  tur: z.enum(OZLUK_TURLERI.map((x) => x[0]) as [string, ...string[]], { error: "Belge türü seçilmeli." }),
+  tur: z.string({ error: "Belge türü seçilmeli." }).regex(/^[a-z0-9]{2,12}$/, "Belge türü seçilmeli."),
   aciklama: z.preprocess((s) => (typeof s === "string" ? (s.trim() === "" ? null : s.trim()) : s), z.string().max(120, "En çok 120 karakter.").nullable()),
 });
 export const AtamaGirdisi = z.object({

@@ -17,7 +17,9 @@ export async function musteriPersoneli(db: Sorgulayici): Promise<MusteriPersonel
   const b = (await db.sorgu<{ personel_id: string; kaynak: "ozluk" | "egitim" | "atama"; tur: string; ad: string | null; dosya_id: string; tarih: string | null; gecerli: string | null }>(
     "SELECT personel_id::text, kaynak, tur, ad, dosya_id::text, tarih::text, gecerli::text FROM musteri_personel_belgeleri()")).rows;
   /* özlük: tür · açıklama (maket musteriyeAcikBelgeler) — aynı türden iki belge ayırt edilir; açıklamasız olanın alt satırında yükleme tarihi */
-  const adi = (x: (typeof b)[number]) => x.kaynak === "ozluk" ? [ozlukTurAd(x.tur), x.ad?.trim()].filter(Boolean).join(" · ")
+  /* firmanın eklediği türlerin adı (335; müşteri rolü ayarları okuyamaz — yalnız anahtar ve ad dönen işlev, 0046) */
+  const ek = (await db.sorgu<{ k: string; ad: string }>("SELECT k, ad FROM musteri_belge_turleri()")).rows;
+  const adi = (x: (typeof b)[number]) => x.kaynak === "ozluk" ? [ozlukTurAd(x.tur, ek), x.ad?.trim()].filter(Boolean).join(" · ")
     : x.kaynak === "egitim" ? `${x.ad ?? "Eğitim"} sertifikası` : `Ekipman atama belgesi · ${x.ad ?? "—"}`;
   return k.map((p) => ({
     id: p.personel_id, ad: p.ad, meslek: meslek(p.meslek)?.ad ?? "—", son: p.son, tesisler: p.tesisler,

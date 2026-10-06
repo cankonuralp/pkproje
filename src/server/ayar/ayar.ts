@@ -64,6 +64,11 @@ export const AYAR_BOLUMLERI = {
     egitim: z.array(z.string().regex(/^[0-9a-f-]{36}$/)).max(100).default([]),
     atama: z.boolean().default(false),
   }),
+  /** Firmanın eklediği özlük belge türleri (335; maket Z5 "Belge türü ekle"): anahtar ek1–ek30, ad, kişisel veri mi. Personel'de özlük belgesi
+      yüklerken seçilir, müşteriye açılabilir (başlangıçta kapalı); kaldırma yalnız o türde belge yokken */
+  belge_tur_ek: z.object({
+    turler: z.array(z.object({ k: z.string().regex(/^ek([1-9]|[12][0-9]|30)$/), ad: z.string().trim().min(2).max(60), kisisel: z.boolean().default(false) })).max(30).default([]),
+  }),
   /** Sabit giderler (328; maket MV.SABIT_GIDER — araç kira, ofis kirası, ofis giderleri, vergi ve harçlar …): ad, aylık tutar (KURUŞ), not.
       Gelir-gider ve kârlılığın genel gider payı buradan; başlangıçta boş (firma girer — Firma ayarları) */
   sabit_gider: z.object({

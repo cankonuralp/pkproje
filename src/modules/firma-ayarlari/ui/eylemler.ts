@@ -4,7 +4,7 @@
 import { depo } from "../../../server/dosya/depo";
 import { ayniKoken } from "../../../server/kimlik/koken";
 import { istekOturumu, oturumIslemi } from "../../../server/kimlik/istek";
-import { ayarDosyasiYaz, ayarKaydet, firmaKoduKaydet, type AyarYazma } from "../server/ayarlar";
+import { ayarDosyasiYaz, ayarKaydet, belgeTuruEkle, belgeTuruKaldir, firmaKoduKaydet, type AyarYazma } from "../server/ayarlar";
 
 export interface AyarYaniti { tamam?: boolean; bildirim?: string; hatalar?: Record<string, string>; genel?: string }
 const SONUC = { yetkisiz: "Bu işlem için yetkiniz yok.", cakisma: "Bu bölüm siz açtıktan sonra değiştirildi. Sayfayı yenileyip yeniden deneyin." } as const;
@@ -13,7 +13,8 @@ async function islem(is: (o: NonNullable<Awaited<ReturnType<typeof istekOturumu>
   const o = await istekOturumu();
   if (!o) return { genel: "Oturumunuz kapandı. Yeniden giriş yapın." };
   const r = await is(o);
-  return r.durum === "tamam" ? { tamam: true, bildirim: r.bildirim } : r.durum === "gecersiz" ? { hatalar: r.hatalar, genel: r.hatalar.genel } : { genel: SONUC[r.durum] };
+  return r.durum === "tamam" ? { tamam: true, bildirim: r.bildirim } : r.durum === "gecersiz" ? { hatalar: r.hatalar, genel: r.hatalar.genel }
+    : r.durum === "red" ? { genel: r.neden } : { genel: SONUC[r.durum] };
 }
 
 export async function ayarKaydetEylemi(kesim: string, surum: number, girdi: unknown): Promise<AyarYaniti> {
@@ -21,6 +22,12 @@ export async function ayarKaydetEylemi(kesim: string, surum: number, girdi: unkn
 }
 export async function firmaKoduKaydetEylemi(girdi: unknown): Promise<AyarYaniti> {
   return islem((o) => oturumIslemi(o, (db) => firmaKoduKaydet(db, o, girdi)));
+}
+export async function belgeTuruEkleEylemi(girdi: unknown): Promise<AyarYaniti> {
+  return islem((o) => oturumIslemi(o, (db) => belgeTuruEkle(db, o, girdi)));
+}
+export async function belgeTuruKaldirEylemi(k: string): Promise<AyarYaniti> {
+  return islem((o) => oturumIslemi(o, (db) => belgeTuruKaldir(db, o, typeof k === "string" ? k : "")));
 }
 /** form: ne (logo | on_bilgi | bordro_format), surum, dosya (yoksa kaldır) */
 export async function ayarDosyasiEylemi(form: FormData): Promise<AyarYaniti> {

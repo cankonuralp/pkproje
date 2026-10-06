@@ -28,6 +28,13 @@
 .kod { max-width: 120px; text-transform: uppercase; font-variant-numeric: tabular-nums; letter-spacing: .04em; }
 .kalem { display: grid; grid-template-columns: minmax(0, 2fr) minmax(0, 1fr) minmax(0, 2fr) auto; gap: 8px 12px; align-items: end; padding: 10px 0; border-bottom: 1px solid var(--kenar); }
 .kalemSil { justify-self: start; }
+/* 335: fiyatlar dört sütuna kadar; müşteriye açık belge türleri üç sütun; firmanın eklediği tür satırında Kaldır */
+.ipucuUst { margin: 0 0 12px; color: var(--yazi2); font-size: var(--boy-kucuk); }
+.fiyatlar { display: grid; grid-template-columns: repeat(auto-fill, minmax(min(100%, 200px), 1fr)); gap: 12px 16px; }
+.turler { display: grid; grid-template-columns: repeat(auto-fill, minmax(min(100%, 260px), 1fr)); gap: 2px 16px; margin: 0; padding: 0; border: 0; }
+.alt { display: block; color: var(--yazi2); font-size: var(--boy-kucuk); }
+.ekSatir { display: flex; align-items: center; justify-content: space-between; gap: 8px; }
+.ekForm { margin-top: 12px; }
 @media (max-width: 767.98px) {
   .kalem { grid-template-columns: minmax(0, 1fr) minmax(0, 1fr); }
   .kalem > :first-child { grid-column: 1 / -1; }

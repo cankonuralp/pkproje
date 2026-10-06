@@ -49,6 +49,21 @@ test("firma ayarları: bölüm kaydet, geçersiz değer kaydedilmez, mesai şeri
   await firma.getByRole("button", { name: "Firma logosu kaldır" }).click();
   await page.getByRole("dialog", { name: "Firma logosu kaldırılsın mı?" }).getByRole("button", { name: "Kaldır" }).click();
   await expect(page.getByText("Firma logosu kaldırıldı.").first()).toBeVisible({ timeout: 30_000 });
+  /* 335: fiyat listesi (tohumdaki Hava tankı 900,00 — değiştirilmez: muhasebe testi bu fiyatla); firmaya belge türü ekle → listede → kaldır */
+  await expect(page.getByRole("region", { name: "Fiyat listesi" }).getByLabel("Hava tankı (TL)")).toHaveValue("900,00");
+  const mb = page.getByRole("region", { name: "Müşteriye açık personel belgeleri" });
+  const tur = `Deneme Tür ${bilgi.project.name}`;
+  await mb.getByRole("button", { name: "Belge türü ekle" }).click();
+  await mb.getByLabel("Yeni belge türü").fill("Diploma");
+  await mb.getByRole("button", { name: "Türü ekle" }).click();
+  await expect(mb.getByText("Bu adla bir belge türü zaten var.")).toBeVisible({ timeout: 30_000 });
+  await mb.getByLabel("Yeni belge türü").fill(tur);
+  await mb.getByRole("button", { name: "Türü ekle" }).click();
+  await expect(page.getByText(new RegExp(`^${tur} eklendi`)).first()).toBeVisible({ timeout: 30_000 });
+  await expect(mb.getByRole("checkbox", { name: new RegExp(tur) })).toBeVisible();
+  await mb.getByRole("button", { name: `${tur} türünü kaldır` }).click();
+  await page.getByRole("dialog", { name: "Belge türünü kaldır" }).getByRole("button", { name: "Kaldır" }).click();
+  await expect(page.getByText(`${tur} kaldırıldı.`).first()).toBeVisible({ timeout: 30_000 });
   expect(await page.evaluate(() => document.documentElement.scrollWidth <= window.innerWidth), "yana taşma yok").toBe(true);
 
   await context.clearCookies();

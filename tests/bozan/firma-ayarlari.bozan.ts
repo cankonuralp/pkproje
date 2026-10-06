@@ -1,7 +1,8 @@
 /* OLUMSUZ KANIT — tests/firma-ayarlari.test.ts neyi koruyor (334). Kaynak diskte DEĞİŞTİRİLMEZ (anayasa 13.11): ayarlar.ts bellekte bozulup geçici
    klasörden içe aktarılır (göreli içe aktarmalar mutlak yola çevrilir).
    1. "Yalnız değiştir düzeyi yazar" kalkınca Firma ayarlarını yalnız GÖREN rol ayarları değiştirir.
-   2. Teslim eden denetimi kalkınca başka firmanın kişisi zimmet formunun başlangıç teslim edeni olur. */
+   2. Teslim eden denetimi kalkınca başka firmanın kişisi zimmet formunun başlangıç teslim edeni olur.
+   3. (335) Fiyat denetimi kalkınca sıfır birim fiyat kaydedilir. */
 import assert from "node:assert/strict";
 import { mkdtempSync, readFileSync, rmSync, writeFileSync } from "node:fs";
 import { tmpdir } from "node:os";
@@ -51,4 +52,13 @@ test("teslim eden denetimi kalkınca başka firmanın kişisi başlangıç tesli
   const YON = { id: yonId, ad: "Deneme", roller: ["firma_yoneticisi" as const] };
   const r = await kiraciIcinde(havuz, A, (db) => m.ayarKaydet(db, YON, "zimmet", -1, { teslim_eden: kisiB }), { hesapId: yonId });
   assert.equal(r.durum, "tamam", "bozuk: başka firmanın kişisi yazıldı");
+});
+
+/* 335 */
+test("fiyat denetimi kalkınca sıfır birim fiyat kaydedilir (teklif dışı rapor bedava faturalanır)", async () => {
+  const m = await bozuk("if (!t.success || t.data <= 0 || t.data > 100_000_000_000)", "if (!t.success)");
+  const ht = (await kiraciIcinde(havuz, A, (db) => db.sorgu<{ id: string }>("INSERT INTO ekipman_turu (kod, ad, grup, brans, periyot) VALUES ('HT', 'Hava tankı', 'basincli', 'm', 12) RETURNING id::text"))).rows[0].id;
+  const YON = { id: yonId, ad: "Deneme", roller: ["firma_yoneticisi" as const] };
+  const r = await kiraciIcinde(havuz, A, (db) => m.ayarKaydet(db, YON, "fiyat", 0, { fiyatlar: { [ht]: "0" } }), { hesapId: yonId });
+  assert.equal(r.durum, "tamam", "bozuk: sıfır fiyat kaydedildi");
 });
