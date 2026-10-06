@@ -21,6 +21,9 @@ import type { ModulAnahtari } from "../../../../server/yetki/tanim";
 
 const MODUL = modulBul("personel")!;
 export const metadata: Metadata = { title: "Personel kartı" };
+/* 352: PDF basan sunucu eylemi bu sayfada koşar (başsız Chromium) — süre ayarı PDF uçlarıyla aynı: Vercel aynı ayarlı uçları tek işlevde toplar,
+   Chromium yalnız o işlevde kalır (öteki sayfaların ortak işlevi 74 MB → küçük; her yayın Functions Storage kotasına daha az ekler) */
+export const maxDuration = 60;
 
 const zamanYaz = (d: Date | null) => (d ? new Intl.DateTimeFormat("tr-TR", { timeZone: "Europe/Istanbul", day: "2-digit", month: "2-digit", year: "numeric", hour: "2-digit", minute: "2-digit" }).format(d) : "—");
 

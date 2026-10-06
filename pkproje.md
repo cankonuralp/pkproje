@@ -2341,6 +2341,11 @@ revizyon, alan kopyalama, hafif kusur devri, meslek eşleşme denetimi).
 - Emsal ürünler: https://opwire.app/iso-17020-periyodik-kontrol-yazilimi/ · https://17020muayene.vidco.com.tr/ · https://akuple.com/asansor-kontrol-yazilimi/ · https://ensyazilim.com/
 
 ## 11 · Değişiklik günlüğü
+- 2026-10-06 (352): **Yayın paketi küçüldü — Chromium yalnız PDF işlevinde** (reisim: *"Vercel Functions Storage 9/10 GB"*). Canlı yayının
+  Resources görünümü: bütün sayfalar tek 74.1 MB işlevde (PDF basan sunucu eylemleri yüzünden başsız Chromium her sayfaya paketlenmiş), PDF uçları
+  ayrı 72.6 MB. Chromium eklenen 5 sayfa (rapor, araçlar, araç, personel kartı, eğitimler) PDF uçlarıyla aynı süre ayarını (maxDuration 60) taşır →
+  Vercel bunları PDF işlevinde toplar, öteki sayfalar küçük kalır; her üretim yayını kotaya daha az ekler. Kilit tests/pdf-paket.test.ts (listedeki her
+  uç ayarı taşır; PDF basan modül eylemi listedeki sayfada); olumsuz kanıt kilitler.bozan. Vercel saklama süresi 1 gün (en kısa seçenek).
 - 2026-10-06 (351): **K5 Fotoğraftan okuma** (maket rapor.html Z3; ARKA-UC §5.1–5.2, K1; §8.10; 09-G3 istisnası). Saha raporunda her **ölçüm
   tablosunun** altında "Fotoğraftan oku" (formattan genel: sigorta panosu — linye, ölçü aletinin ekranı — nokta …; firmada yapay zekâ açık ve
   anahtar girilmişse, yalnız yazana, Yeni raporda). Fotoğraf cihazda küçültülür; sunucuda JPEG / PNG, en çok 5 MB, konum bilgisi (EXIF) silinir;

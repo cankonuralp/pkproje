@@ -198,6 +198,7 @@ pkproje/
   src/server/db/havuz.ts    ortamdan bağlantı: ağda şifresiz bağlantı YOK (PROBATA_VT_SSL=dogrula → kok-sertifika.ts Supabase kökü); Vercel'de boşta bekleme
   vercel.json               deneme yayını (Vercel fra1, https://probata-deneme.vercel.app; veritabanı Supabase eu-central-1 — pkproje.md §11 293)
                             · yalnız main yayınlanır (git.deploymentEnabled; kalem/* önizleme kurmaz — 2026-10-06, Function Storage kotası)
+                            · 352: Chromium yalnız PDF işlevinde (PDF basan sayfalar maxDuration 60 — tests/pdf-paket.test.ts); saklama 1 gün
   src/server/kiraci/        kiracı çözümleme (alt alan adı → firma kısa adı; istek.ts: istekKiracisi) · ★ güvenli yazıcılar
   src/server/kimlik/        parola özeti (scrypt) · giriş · oturum (belirteç özeti, kilit) — 2026-10-04 · istek.ts (oturumGerekli, modulGorur,
                             güvenli dönüş adresi) · eylemler.ts (giriş / çıkış sunucu eylemleri)

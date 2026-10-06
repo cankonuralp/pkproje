@@ -7,7 +7,7 @@ import { KALIP } from "../../src/styles/kalip.ts";
 import { MODUL_GRUPLARI } from "../../src/modules/moduller.ts";
 import {
   bantDisiDaraltma, ciftIdler, ciftSeciciler, ciftTanimliDegiskenler, daralmisSerit, degiskenDegeri, dosyalar, eksikIkonlar, girdiYaziHatalari, kalipDisiEsikler,
-  hamYazma, kiraciDisiErisim, kullanilanIkonlar, maketIkonlari, maketMenusu, oku, parantezHatasi, rlsEksikTablolar, tanimsizDegiskenler, testKapisiEksikleri, tokenGovdesi,
+  hamYazma, kiraciDisiErisim, kullanilanIkonlar, maketIkonlari, maketMenusu, oku, parantezHatasi, rlsEksikTablolar, tanimsizDegiskenler, testKapisiEksikleri, tokenGovdesi, pdfPaketEksikleri,
 } from "../yardimci/denetimler.ts";
 
 const kabuk = oku("src/components/kabuk/Kabuk.module.css");
@@ -139,4 +139,12 @@ test("test kapısı: derleme betiği testsiz kalınca ya da yayın denetimden ko
   assert.equal(testKapisiEksikleri(paket.replace('"npm test && node scripts/next.ts build"', '"node scripts/next.ts build"'), ci).length, 1);
   /* 2026-10-06: yayın işinin denetim şartı aynı commit'in yeşil ci koşusu — "success" yerine her biten koşu sayılırsa yakalanır */
   assert.equal(testKapisiEksikleri(paket, ci.replace("status=success", "status=completed")).length, 1);
+});
+
+test("pdf paketi: Chromium eklenen bir sayfadan maxDuration kalkınca yakalanır (Chromium bütün sayfalara düşerdi)", () => {
+  const sayfalar = dosyalar("src/app", [".ts", ".tsx"]).filter((d) => /\/(page|route)\.tsx?$/.test(d)).map((ad) => ({ ad, metin: oku(ad) }));
+  const cfg = oku("next.config.ts");
+  assert.deepEqual(pdfPaketEksikleri(cfg, sayfalar), []);
+  const bozuk = sayfalar.map((d) => (d.ad === "src/app/(uygulama)/araclar/page.tsx" ? { ...d, metin: d.metin.replace("export const maxDuration = 60;", "") } : d));
+  assert.deepEqual(pdfPaketEksikleri(cfg, bozuk), ["/araclar: maxDuration = 60 yok"]);
 });

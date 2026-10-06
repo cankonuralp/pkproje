@@ -281,3 +281,24 @@ export function testKapisiEksikleri(paketJson: string, ciYml: string): string[] 
   }
   return eksik;
 }
+
+/* ── PDF PAKETİ (352; Vercel Functions Storage kotası) ── next.config.ts outputFileTracingIncludes'taki (Chromium ikilisi eklenen) her uç
+   `export const maxDuration = 60;` taşımalı: Vercel aynı ayarlı uçları tek işlevde toplar — biri eksikse Chromium varsayılan sayfa işlevine düşer
+   (bütün sayfalar 74 MB). Ayrıca PDF basan modül eylemi (belge/pdf içe aktaran "use server" dosyası) kullanan sayfa da listede olmalı. */
+export function pdfPaketEksikleri(nextConfig: string, sayfalar: readonly { ad: string; metin: string }[]): string[] {
+  const liste = [...nextConfig.matchAll(/(?:String\.raw`([^`]+)`|"(\/[^"]*)")/g)].map((m) => (m[1] ?? m[2]).replace(/\\/g, ""))
+    .filter((u) => u.startsWith("/") && !u.startsWith("/./") && !u.includes("*"));
+  const eksik: string[] = [];
+  /* liste okunamazsa (biçim değişti) denetim boşa dönmesin */
+  if (liste.length < 10) eksik.push(`next.config.ts PDF listesi okunamadı (${liste.length} uç)`);
+  for (const u of liste) {
+    /* rota → dosya: rota grupları "(…)" yok sayılır */
+    const dosya = sayfalar.find((d) => {
+      const m = /^src\/app\/(.*)\/(page|route)\.tsx?$/.exec(d.ad);
+      return m && "/" + m[1].split("/").filter((p) => !/^\(.*\)$/.test(p)).join("/") === u;
+    });
+    if (!dosya) { eksik.push(`${u}: sayfa / uç dosyası yok`); continue; }
+    if (!/^export const maxDuration = 60;$/m.test(dosya.metin)) eksik.push(`${u}: maxDuration = 60 yok`);
+  }
+  return eksik;
+}

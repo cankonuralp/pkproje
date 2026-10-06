@@ -21,6 +21,8 @@ const ortak: NextConfig = {
   /* PDF motoru (src/belge/pdf.ts, 316): Chromium paketleri derlemeye katılmaz (düğüm modülü olarak yüklenir); belge CSS'i, yazı tipi ve sunucusuz
      Chromium ikilisi yalnız PDF basan uçların izine eklenir (teklif PDF'i — 325; fatura özeti — 340; talep formu — 341; araç tutanağı — 342) — rapor sayfası da (İmzala sunucu eylemi orada koşar; 315–317
      incelemesi), araç listesi ve araç sayfası da (Tutanağı kaydet eylemi tutanağın PDF'ini orada basar, 342), personel kartı da (zimmet formu İmzaya gönder, 344), eğitim kayıtları da (katılım formu, 345) */
+  /* 352 (Vercel Functions Storage kotası): bu sayfalar ve PDF uçları `maxDuration = 60` taşır — Vercel aynı ayarlı uçları tek işlevde toplar, Chromium
+     ikilisi yalnız o işlevde kalır; öteki sayfaların ortak işlevi küçülür (kilit: tests/pdf-paket.test.ts) */
   serverExternalPackages: ["playwright-core", "@sparticuz/chromium"],
   outputFileTracingIncludes: Object.fromEntries([String.raw`/raporlar/\[id\]`, String.raw`/raporlar/\[id\]/pdf`, String.raw`/teklifler/\[id\]/pdf`, String.raw`/muhasebe/f/\[id\]/pdf`, String.raw`/talepler/pdf/\[tip\]/\[id\]`, "/araclar", String.raw`/araclar/\[id\]`, String.raw`/araclar/tutanak/\[id\]/pdf`,
     String.raw`/personel/\[id\]`, String.raw`/personel/\[id\]/zimmet-formu/pdf`, "/dokumanlar/egitimler", "/api/olcum/pdf"].map((u) =>
