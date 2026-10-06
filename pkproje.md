@@ -2341,6 +2341,18 @@ revizyon, alan kopyalama, hafif kusur devri, meslek eşleşme denetimi).
 - Emsal ürünler: https://opwire.app/iso-17020-periyodik-kontrol-yazilimi/ · https://17020muayene.vidco.com.tr/ · https://akuple.com/asansor-kontrol-yazilimi/ · https://ensyazilim.com/
 
 ## 11 · Değişiklik günlüğü
+- 2026-10-06 (351): **K5 Fotoğraftan okuma** (maket rapor.html Z3; ARKA-UC §5.1–5.2, K1; §8.10; 09-G3 istisnası). Saha raporunda her **ölçüm
+  tablosunun** altında "Fotoğraftan oku" (formattan genel: sigorta panosu — linye, ölçü aletinin ekranı — nokta …; firmada yapay zekâ açık ve
+  anahtar girilmişse, yalnız yazana, Yeni raporda). Fotoğraf cihazda küçültülür; sunucuda JPEG / PNG, en çok 5 MB, konum bilgisi (EXIF) silinir;
+  yapay zekâya YALNIZ fotoğraf + tablonun sütun adları / birimleri / seçenekleri gider (müşteri, adres, kişi, rapor no gitmez — kilit). Cevap katı
+  şemayla (tek araç zorunlu), şemaya uymayan değer atılır, en çok 60 satır; fotoğraftaki yazı talimat sayılmaz. Okunanlar **öneri kartında**: emin
+  olunanlar "Önerileri uygula (n)" ile toplu, "Emin değil" satırlar tek tek "Uygula"; "Vazgeç"; rapora ancak Kaydet ile yazılır. Çağrı veritabanı
+  işleminin DIŞINDA (bağlantı ve kilit tutulmaz); firmanın anahtarı yalnız sunucuda. Maliyet (token × fiyat; Opus $4 / $20, Sonnet $2 / $10 —
+  1 milyon token) kişinin aylık kullanımına; firma ayarındaki kişi başı aylık $ sınırı dolunca okunmaz (elle giriş açık). Göç 0052 yz_kullanim
+  (yalnız artar, hesap bağlamdan damgalanır) + yz_okuma (öneri, token, maliyet; değişmez — kalite takibi; fotoğraf saklanmaz). Uç ortamdan
+  (PROBATA_YZ_UC; yoksa Anthropic). Etiket plakası (bilgi alanları) ve S.A.Y sohbeti sonraki kalem. Kilit: yz-okuma (saf: istek gövdesi, cevap
+  süzme, maliyet, yerel taklitle çağrı ve hata iletileri), foto-oku (gerçek PG: kapalı / anahtarsız / yetki / sınır / kayıt / tetik); olumsuz kanıt
+  foto-oku.bozan (sınır, hesap damgası); e2e foto-oku.spec (ayrı uydurma firma, yerel taklit).
 - 2026-10-06 (350): **Sağlık ucu ve canlı duman testi** (09-G5; 06 "her teslimden sonra canlıya karşı duman testi koşulur"). `/api/saglik`
   (oturumsuz; yalnız evet / hayır ve sürüm, firma / kişi bilgisi yok; biri düşerse 503): veritabanı bağlantısı · göç güncel (veritabanındaki son göç =
   kodun beklediği `SON_GOC` — kod göçten önce yayınlanırsa yakalanır) · firma_id taşıyan her tabloda RLS açık + zorlanmış + politikalı · Supabase

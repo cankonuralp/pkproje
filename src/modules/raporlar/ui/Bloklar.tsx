@@ -26,6 +26,7 @@ import type { Bolum, BolumOf, Cevaplar } from "../../../format/tanim";
 import { meslek } from "../../personel/sema";
 import { SONUC_AD } from "../sema";
 import type { SahaRaporu } from "../server/raporlar";
+import { FotoOkuma } from "./FotoOkuma";
 import stil from "./raporlar.module.css";
 
 /** alan anahtarı → ekrandaki girdinin id'si. Anahtarlar motorun ve sunucunun eksik listesiyle aynı: madde / alan / değer kimliği, "tarih.bas",
@@ -58,6 +59,8 @@ export interface Baglam {
   cihaz: (bolumId: string) => ReactNode;
   /** fotoğraf listesi: bölümün (madde null) ya da "Uygun değil" maddenin (FotoListesi; SahaRaporu verir) */
   foto: (bolumId: string, madde: string | null) => ReactNode;
+  /** ölçüm tablolarında "Fotoğraftan oku" (351): düzenleyebilene, firmada yapay zekâ açık ve anahtar girilmişse */
+  yz: boolean;
 }
 
 /* ── ORTAK PARÇALAR ──────────────────────────────────────────────────────────────────────────────────────────── */
@@ -396,12 +399,17 @@ function OlcumBlok({ b, bag }: { b: BolumOf<"olcum">; bag: Baglam }) {
           <ol>{notlar.map((n, j) => <li key={j}>{n.metin}</li>)}</ol>
         </details>
       )}
-      {!bag.oku && (
-        <div className={stil.tabloAlt}>
+      {!bag.oku && (() => {
+        const tuslar = <>
           <Tus tur="ikincil" ikon="plus" id={alanId(b.id)} onClick={() => tablo((l) => [...l, {}])}>Satır ekle</Tus>
           {b.enAz > 0 && <span className={azEksik ? stil.hataMetin : stil.ipucuMetin}>En az {b.enAz} satır.</span>}
-        </div>
-      )}
+        </>;
+        /* fotoğraftan okunan satırlar tablonun sonuna eklenir; hiç değeri olmayan (boş açılmış) satır yer kaplamasın diye düşer */
+        const dolu = (s: Record<string, string>) => Object.values(s).some((x) => x !== "");
+        return bag.yz
+          ? <FotoOkuma raporId={bag.v.id} b={b} cubuk={stil.tabloAlt} tuslar={tuslar} ekle={(l) => tablo((x) => [...x.filter(dolu), ...l])} />
+          : <div className={stil.tabloAlt}>{tuslar}</div>;
+      })()}
     </>
   );
 }

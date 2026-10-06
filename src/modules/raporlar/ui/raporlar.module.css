@@ -170,3 +170,12 @@ button.silTus { color: var(--hata-yazi); }
 /* Raporlar listesi (318) */
 .kod { font-weight: 700; font-variant-numeric: tabular-nums; letter-spacing: .01em; overflow-wrap: anywhere; }
 .sonucHata { color: var(--hata-yazi); font-weight: 600; }
+
+/* fotoğraftan okuma (351; maket .a-oneri-kart ailesi — öneri kartı, emin olunmayan satırda tek tek Uygula) */
+.oneriKart { margin-top: 10px; padding: 12px 14px; border: 1px solid var(--kenar-alan); border-radius: var(--r-orta); background: var(--zemin2); }
+.oneriBas { display: flex; align-items: center; gap: 6px; margin: 0 0 8px; font-weight: 600; }
+.oneriListe { list-style: none; margin: 0; padding: 0; display: grid; gap: 6px; }
+.oneriListe li { display: flex; align-items: center; flex-wrap: wrap; gap: 6px 10px; }
+.oneriAd { flex: 1 1 auto; min-width: 0; overflow-wrap: anywhere; }
+.oneriSag { display: flex; align-items: center; gap: 8px; margin-left: auto; white-space: nowrap; }
+.oneriTuslar { display: flex; justify-content: flex-end; flex-wrap: wrap; gap: 8px; margin-top: 10px; }

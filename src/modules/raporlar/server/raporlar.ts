@@ -21,7 +21,8 @@ import { dosyaCope, dosyaYukle } from "../../../server/dosya/dosya.ts";
 import { canDo, canDoEylem, duzey, type YetkiHesabi } from "../../../server/yetki/canDo.ts";
 import { dogrula, type DogrulamaHatalari } from "../../../sema/ortak.ts";
 import { degerlendir, type Degerlendirme } from "../../../format/motor.ts";
-import { Cevaplar, type FormatTanimi } from "../../../format/tanim.ts";
+import { Cevaplar, type BolumOf, type FormatTanimi } from "../../../format/tanim.ts";
+import { yzHazirMi } from "../../../server/yz/kullanim.ts";
 import { ekipmanEtiketi, ekipmanKilitle } from "../../ekipman/server/ekipman.ts";
 import { turRaporBilgisi } from "../../ekipman-turleri/server/turler.ts";
 import { tesisMusteriIletisim } from "../../musteriler/server/musteriler.ts";
@@ -235,6 +236,8 @@ export interface SahaRaporu {
   imza: { hazir: boolean; pdf: string | null } | null;
   imzali: { dosya: string; zaman: string; no: string } | null;
   izin: { duzenle: boolean; sil: boolean; kopyala: boolean };
+  /** fotoğraftan okuma (351): düzenleyebilene, firmada yapay zekâ açık ve anahtar girilmişse */
+  yz: boolean;
 }
 
 const kunyeFarki = (a: Kunye, b: Kunye) => [
@@ -326,6 +329,7 @@ export async function sahaRaporu(db: Sorgulayici, kim: Kisi, id: string): Promis
       ? { hazir: true, pdf: (await bekleyenIstek(db, r.id, r.revizyon))?.pdf_dosya ?? null } : null,
     imzali: r.durum === "imzali" ? await imzaliSurum(db, r.id, r.revizyon) : null,
     izin: { duzenle, sil: r.durum === "taslak" && r.revizyon === 0 && canDoEylem(kim, "rapor_sil", { sahip: r.hesap_id, durum: "Yeni", brans: tur.brans }), kopyala },
+    yz: duzenle ? await yzHazirMi(db) : false,
   };
 }
 
@@ -339,6 +343,18 @@ async function yazilabilir(db: Sorgulayici, kim: Kisi, id: string): Promise<Eris
   return e;
 }
 const hataMi = (x: Erisim | RaporYazma): x is RaporYazma => "durum" in x;
+
+/** fotoğraftan okuma (351): yazanın Yeni raporundaki ölçüm tablosu. KİLİTLEMEZ — yapay zekâ çağrısı sürerken satır kilidi tutulmaz (okunan değerler
+    raporun kendisine yazılmaz; denetçi uygulayınca normal Kaydet'le yazılır). */
+export async function okunabilirOlcum(db: Sorgulayici, kim: Kisi, id: string, bolumId: string): Promise<{ raporId: string; bolum: BolumOf<"olcum"> } | RaporYazma> {
+  const e = await erisim(db, kim, id);
+  if (!e) return { durum: "yok" };
+  if (!e.sahip || !canDoEylem(kim, "rapor_yaz", { sahip: e.r.hesap_id })) return { durum: "yetkisiz" };
+  if (e.r.durum !== "taslak") return { durum: "red", neden: "Rapor gönderildi; yalnız Yeni rapor düzenlenir." };
+  const b = (await formatSurumuOku(db, e.r.format_id))?.tanim.bolumler.find((x) => x.id === bolumId);
+  if (!b || b.blok !== "olcum") return { durum: "gecersiz", hatalar: { foto: "Okunacak tablo bulunamadı." } };
+  return { raporId: e.r.id, bolum: b };
+}
 
 /** cihaz ve fotoğraf sayıları raporun KENDİ listesinden (istemcinin sayısına güvenilmez): bölüm başına fotoğraf, madde başına fotoğraf */
 function sayiliCevaplar(c: Cevaplar, r: Pick<RaporSatiri, "cihazlar" | "fotolar">): Cevaplar {

@@ -27,6 +27,17 @@ export const E2E_MUHASEBE = {
   plan: { masaustu: "P-0125-901", tablet: "P-0125-902", telefon: "P-0125-903" },
   fatura: { masaustu: "DMF2026000000901", tablet: "DMF2026000000902", telefon: "DMF2026000000903" },
 } as const;
+/* fotoğraftan okuma (351): AYRI uydurma firma (öteki testlerin plan / rapor sayılarına dokunmasın) — yapay zekâ açık, anahtarı uydurma; test sunucusu
+   yerel bir Anthropic taklidi açar (PROBATA_YZ_UC), gerçek hizmete istek gitmez. Her proje kendi ekipmanının raporunda okur. */
+export const E2E_YZ = {
+  firma: { kisaAd: "yzdeneme", ad: "YZ Deneme Muayene", raporKodu: "YZ" },
+  yonetici: { eposta: "yonetici@yzdeneme.example", ad: "YZ Yönetici" },
+  planlama: { eposta: "planlama@yzdeneme.example", ad: "YZ Planlama" },
+  denetci: { eposta: "denetci@yzdeneme.example", ad: "YZ Denetçi" },
+  anahtar: "sk-ant-e2e-deneme-anahtar-0001",
+  tesis: "YZ Tesisi",
+  ekipman: { masaustu: "EP-0301", tablet: "EP-0302", telefon: "EP-0303" } as Record<string, string>,
+} as const;
 /* yönetim (348): yönetim adresi ve uydurma yöneticiler (yalnız geçici test veritabanı). Doğrulama anahtarı uydurma Base32; test kodu onunla üretir.
    347–348 incelemesi: üç genişlik tek sunucuda da koşabilsin (yerelde `npm run test:e2e`) — her proje KENDİ "ilk" ve kurulmuş yöneticisini ve kendi
    açacağı firmayı kullanır (E2E_ILK gibi); kurulmuş yönetici de proje başına (aynı zaman adımındaki kod yeniden oynatma sayılmasın). */

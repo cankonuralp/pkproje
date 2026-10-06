@@ -8,7 +8,14 @@ import { randomBytes } from "node:crypto";
 import { mkdtempSync } from "node:fs";
 import { tmpdir } from "node:os";
 import { join } from "node:path";
-import { E2E_FIRMA, E2E_HESAPLAR, E2E_ILK, E2E_KAPI, E2E_MUHASEBE, E2E_PAROLA, E2E_PLAN, E2E_SAHA, E2E_YONETIM, E2E_YONETIM_PROJELER } from "../e2e/hesaplar.ts";
+import { createServer } from "node:http";
+import { E2E_FIRMA, E2E_HESAPLAR, E2E_ILK, E2E_KAPI, E2E_MUHASEBE, E2E_PAROLA, E2E_PLAN, E2E_SAHA, E2E_YONETIM, E2E_YONETIM_PROJELER, E2E_YZ } from "../e2e/hesaplar.ts";
+import { planKabul, planIci } from "../src/modules/planlar/server/plan-ici.ts";
+import { planAc } from "../src/modules/planlar/server/planlar.ts";
+import { raporOlustur } from "../src/modules/raporlar/server/raporlar.ts";
+import { ayarOku, ayarYaz } from "../src/server/ayar/ayar.ts";
+import { sirYaz } from "../src/server/ayar/sir.ts";
+import { klasorDepo } from "../src/server/dosya/depo.ts";
 import { taslakBaslat, yayinla, type Kisi } from "../src/modules/rapor-format/server/formatlar.ts";
 import { sifrele } from "../src/server/ayar/sir.ts";
 import { gomuluBaslat } from "../src/server/db/gomulu.ts";
@@ -101,12 +108,75 @@ for (const f of firmalar) {
     }
   } finally { await s2.end(); }
 }
+/* fotoğraftan okuma (351): ayrı uydurma firma — yönetici, planlama, denetçi; Elektrik panosu türü ZPKR02 formatıyla yayında; tesiste proje başına bir
+   ekipman, bir plan (denetçi kabul etti) ve denetçinin Yeni raporu; yapay zekâ açık, anahtar uydurma (ana anahtar bu sunucunun). Hepsi modülün
+   kendi işlevleriyle (yetki, numara, denetim izi) — ham SQL yalnız kayıt tohumu. */
+const sirAnahtari = randomBytes(32).toString("base64");
+process.env.PROBATA_SIR_ANAHTARI = sirAnahtari;
+{
+  const sz = kume.sahipIstemci();
+  await sz.connect();
+  let yzFirma = "";
+  try {
+    yzFirma = (await sz.query<{ id: string }>("INSERT INTO firma (kisa_ad, ad, rapor_kodu) VALUES ($1, $2, $3) RETURNING id::text",
+      [E2E_YZ.firma.kisaAd, E2E_YZ.firma.ad, E2E_YZ.firma.raporKodu])).rows[0].id;
+  } finally { await sz.end(); }
+  const t = await kiraciIcinde(havuz, yzFirma, async (db) => {
+    const q = async (sql: string, p: unknown[] = []) => (await db.sorgu<{ id: string }>(sql, p)).rows[0].id;
+    const k = async (h: { eposta: string; ad: string }, rol: string) => {
+      const p = await q("INSERT INTO personel (ad, eposta, basla, meslek, ekipnet) VALUES ($1, $2, '2024-01-15', 'elk-muh', '123') RETURNING id::text", [h.ad, h.eposta]);
+      return { p, h: await q("INSERT INTO hesap (eposta, ad, parola_ozeti, roller, durum, personel_id) VALUES ($1, $2, $3, $4, 'etkin', $5) RETURNING id::text", [h.eposta, h.ad, ozet, [rol], p]) };
+    };
+    const yon = await k(E2E_YZ.yonetici, "firma_yoneticisi"), pl = await k(E2E_YZ.planlama, "planlama"), den = await k(E2E_YZ.denetci, "denetci");
+    const m = await q("INSERT INTO musteri (unvan, kisa, eposta) VALUES ('YZ Deneme Sanayi A.Ş.', 'YZ Deneme', 'yz@deneme-musteri.example') RETURNING id::text");
+    const tesis = await q("INSERT INTO tesis (musteri_id, ad, adres, il, ilce, sgk) VALUES ($1, $2, 'Deneme Cad. No 9', 'Kocaeli', 'Gebze', $3) RETURNING id::text", [m, E2E_YZ.tesis, "3".repeat(26)]);
+    const tur = await q("INSERT INTO ekipman_turu (kod, ad, grup, brans, periyot) VALUES ('EP', 'Elektrik panosu', 'elektrik', 'e', 12) RETURNING id::text");
+    const ekp: Record<string, string> = {};
+    for (const kod of Object.values(E2E_YZ.ekipman)) ekp[kod] = await q("INSERT INTO ekipman (tesis_id, tur_id, kod, ekleyen) VALUES ($1, $2, $3, 'Deneme') RETURNING id::text", [tesis, tur, kod]);
+    return { yon, pl, den, tesis, tur, ekp };
+  });
+  const kim = (h: string, rol: string, ad: string): Kisi => ({ id: h, ad, roller: [rol] as Kisi["roller"] });
+  const yon = kim(t.yon.h, "firma_yoneticisi", E2E_YZ.yonetici.ad), pl = kim(t.pl.h, "planlama", E2E_YZ.planlama.ad), den = kim(t.den.h, "denetci", E2E_YZ.denetci.ad);
+  const kesin = <R extends { durum: string }>(r: R, ne: string) => { if (r.durum !== "tamam") throw new Error(`${ne}: ${JSON.stringify(r)}`); return r as Extract<R, { durum: "tamam" }>; };
+  await kiraciIcinde(havuz, yzFirma, async (db) => {
+    const f = kesin(await taslakBaslat(db, yon, t.tur, "sablon:ZPKR02", null), "ZPKR02 taslak");
+    kesin(await yayinla(db, yon, f.id, f.surum, ""), "ZPKR02 yayın");
+    const y = await ayarOku(db, "yapay_zeka");
+    kesin(await ayarYaz(db, "yapay_zeka", y.surum, { ...y.deger, acik: true, sinir: null }, { kim: yon.ad, ne: "ayar.yapay_zeka" }), "yapay zekâ ayarı");
+    await sirYaz(db, "yapay_zeka_anahtari", E2E_YZ.anahtar, { kim: yon.ad });
+  }, { hesapId: yon.id });
+  const bugun = new Intl.DateTimeFormat("en-CA", { timeZone: "Europe/Istanbul", year: "numeric", month: "2-digit", day: "2-digit" }).format(new Date());
+  const depoYz = klasorDepo(mkdtempSync(join(tmpdir(), "probata-e2e-yz-depo-")));
+  const plan = kesin(await kiraciIcinde(havuz, yzFirma, (db) => planAc(db, depoYz, pl, yzFirma,
+    { tesis: t.tesis, baslangic: bugun, bitis: bugun, ekip: [{ personel: t.den.p, isgNo: "ISG-YZ-1", kaydet: false }] }), { hesapId: pl.id }), "plan").id;
+  const v = (await kiraciIcinde(havuz, yzFirma, (db) => planIci(db, den, plan), { hesapId: den.id }))!;
+  kesin(await kiraciIcinde(havuz, yzFirma, (db) => planKabul(db, den, plan, v.surum, true), { hesapId: den.id }), "plan kabul");
+  for (const id of Object.values(t.ekp)) kesin(await kiraciIcinde(havuz, yzFirma, (db) => raporOlustur(db, den, plan, id), { hesapId: den.id }), "rapor");
+}
 await havuz.end();
 
-/* yönetim (348): ana anahtar bu sunucuya özgü (doğrulama anahtarı onunla şifrelenir); proje (genişlik) başına bir "ilk" yönetici (geçici parola —
+/* yerel Anthropic taklidi (351): yalnız bu sunucunun uydurma anahtarını kabul eder; "tablo" aracıyla üç satır döner (biri emin değil) */
+const yzTaklit = createServer((istek, yanit) => {
+  let govde = ""; istek.on("data", (p) => { govde += p; }).on("end", () => {
+    if (istek.url !== "/v1/messages" || istek.headers["x-api-key"] !== E2E_YZ.anahtar) { yanit.writeHead(401).end("{}"); return; }
+    let tip = "C";
+    try { const g = JSON.parse(govde); tip = g.tools[0].input_schema.properties.satirlar.items.properties.tip.enum[0] ?? "C"; } catch { /* şema yoksa varsayılan */ }
+    yanit.writeHead(200, { "content-type": "application/json" }).end(JSON.stringify({
+      content: [{ type: "tool_use", name: "tablo", input: { satirlar: [
+        { no: "F1", devre: "Aydınlatma", tip, akim: 16, kutup: 1, guven: "yuksek" },
+        { no: "F2", devre: "Priz", tip, akim: 20, kutup: 3, guven: "yuksek" },
+        { no: "F3", devre: "Klima", akim: 25, guven: "dusuk" },
+      ] } }],
+      usage: { input_tokens: 1500, output_tokens: 200 },
+    }));
+  });
+});
+const yzKapi = await bosKapi();
+await new Promise<void>((coz) => yzTaklit.listen(yzKapi, "127.0.0.1", coz));
+
+/* yönetim (348): ana anahtar bu sunucuya özgü (yukarıda — doğrulama anahtarı onunla şifrelenir); proje (genişlik) başına bir "ilk" yönetici (geçici parola —
    ilk kurulum adımı) ve bir kurulmuş yönetici (doğrulama kodu adımı), hazırlık için ayrı bir kurulmuş yönetici (e2e/hazirla.ts sayfaları derlerken onun kodunu kullanır:
    testteki yöneticinin aynı zaman adımındaki kodu "yeniden oynatma" sayılmasın). Hepsi uydurma, süper kullanıcıyla, geçici veritabanı. */
-const sirAnahtari = randomBytes(32).toString("base64");
 const sy = kume.sahipIstemci();
 await sy.connect();
 try {
@@ -138,5 +208,6 @@ const kod = await nextCalistir("dev", {
   PROBATA_DEPO: "vt",   // 347: uçtan uca deneme yayınındaki gibi veritabanı deposuyla
   PROBATA_SIR_ANAHTARI: sirAnahtari,
   PROBATA_YONETIM_ALAN: E2E_YONETIM.alan,   // 348: yönetim sayfası yalnız bu adreste
+  PROBATA_YZ_UC: `http://127.0.0.1:${yzKapi}`,   // 351: yerel Anthropic taklidi
 }, ["--hostname", "127.0.0.1", "--port", String(E2E_KAPI)]);
 await kapat(kod);

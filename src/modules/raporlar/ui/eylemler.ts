@@ -10,6 +10,8 @@ import {
   cihazEkle, cihazKaldir, fotoEkle, fotoSil, imzaHazirla, imzaliYukle, onayaGonder, raporFormatGuncelle, raporKaydet, raporKopyala, raporKunyeGuncelle, raporOlustur,
   raporSil, revizeIste, revizeIstegiGeriCek, type RaporYazma,
 } from "../server/raporlar";
+import { anthropicCagir, type OkunanSatir } from "../../../server/yz/okuma";
+import { FOTO_OKU_EN_BUYUK, fotoOkuHazirla, fotoOkuKaydet } from "../server/foto-oku";
 
 export interface RaporYaniti {
   tamam?: boolean; id?: string; bildirim?: string; hatalar?: Record<string, string>; eksikler?: { bolum: string; alan: string; ad: string }[]; genel?: string;
@@ -64,6 +66,23 @@ export async function fotoEkleEylemi(form: FormData): Promise<RaporYaniti> {
   const madde = metin(form.get("madde"));
   return islem((o) => oturumIslemi(o, (db) => fotoEkle(db, depo(), o, o.kiraci.firmaId, metin(form.get("id")), Number(form.get("surum")),
     { bolum: metin(form.get("bolum")), madde: madde || null }, { ad: dosya.name, bayt })));
+}
+/** fotoğraftan okuma (351; form: id, bolum, dosya): hazırlık ve kayıt oturumun işleminde, yapay zekâ çağrısı işlemin DIŞINDA; satırlar öneri */
+export interface FotoOkuYaniti { satirlar?: OkunanSatir[]; bildirim?: string; genel?: string }
+export async function fotoOkuEylemi(form: FormData): Promise<FotoOkuYaniti> {
+  if (!(await ayniKoken())) return { genel: "İstek reddedildi. Sayfayı yenileyip yeniden deneyin." };
+  const o = await istekOturumu();
+  if (!o) return { genel: "Oturumunuz kapandı. Yeniden giriş yapın." };
+  const dosya = form.get("dosya");
+  if (!(dosya instanceof File) || dosya.size === 0) return { genel: "Fotoğraf seçilmeli." };
+  if (dosya.size > FOTO_OKU_EN_BUYUK) return { genel: "Fotoğraf çok büyük (en çok 5 MB)." };
+  const id = metin(form.get("id")), bolum = metin(form.get("bolum"));
+  const h = await oturumIslemi(o, async (db) => fotoOkuHazirla(db, o, id, bolum, { bayt: new Uint8Array(await dosya.arrayBuffer()) }));
+  if (h.durum !== "hazir") return { genel: yanit(h).genel ?? Object.values(yanit(h).hatalar ?? {})[0] ?? "Fotoğraftan okunamadı." };
+  const y = await anthropicCagir(h.istek, h.anahtar);
+  if (y.durum === "hata") return { genel: `Fotoğraftan okunamadı: ${y.neden} Değerleri elle girebilirsiniz.` };
+  const k = await oturumIslemi(o, (db) => fotoOkuKaydet(db, o, id, h, y.govde));
+  return "satirlar" in k ? { satirlar: k.satirlar, bildirim: k.bildirim } : { genel: yanit(k).genel ?? "Fotoğraftan okunamadı." };
 }
 export async function fotoSilEylemi(id: string, surum: number, dosyaId: string): Promise<RaporYaniti> {
   return islem((o) => oturumIslemi(o, (db) => fotoSil(db, o, metin(id), Number(surum), metin(dosyaId))));

@@ -11,6 +11,8 @@ import { modulOturumu, oturumIslemi } from "../../../../server/kimlik/istek";
 
 const MODUL = modulBul("raporlar")!;
 export const metadata: Metadata = { title: "Rapor" };
+/* sayfanın sunucu eylemleri: fotoğraftan okuma (351 — yapay zekâ çağrısı 55 sn'de kesilir) ve imzasız kesin PDF (başsız Chromium) uzun sürebilir */
+export const maxDuration = 60;
 
 export default async function Sayfa({ params }: { params: Promise<{ id: string }> }) {
   const o = await modulOturumu(MODUL.no);
