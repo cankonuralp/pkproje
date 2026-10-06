@@ -8,7 +8,7 @@
      sürümü (veritabanından); istemcinin yolladığı tanımdaki "kilit" bayrağına güvenilmez. Yayın denetiminin öteki maddeleri UYARI (kural
      uyarıdır; boş bölüm, sınırsız tablo …). Yayındaki eskiye düşer, sıra en büyük + 1; aynı türün işlemleri tür satırı kilitlenerek sıraya girer.
    · Yayınlanan sürüm DEĞİŞMEZ ve silinmez (0022 tetiği); yayın zamanı ve yayınlayan hesap veritabanında damgalanır. */
-import { kilitDenetimi, yayinDenetimi } from "../../../format/motor.ts";
+import { kilitDenetimi, kilitNormallestir, yayinDenetimi } from "../../../format/motor.ts";
 import { FormatTanimi } from "../../../format/tanim.ts";
 import type { Sorgulayici } from "../../../server/db/kiraci.ts";
 import { ekle, guncelle, tablo } from "../../../server/db/yazici.ts";
@@ -20,6 +20,7 @@ import { BaslatGirdisi, sablonBul, YayinNotu } from "../sema.ts";
 const MODUL = 5;
 /* tanım büyük (bir sürüm onlarca KB) ve yayınlanan sürüm zaten değişmez saklanır → değeri denetim izine yazılmaz, yalnız "değişti" */
 const FORMAT = tablo({ ad: "rapor_format", sutunlar: ["tur_id", "durum", "sira", "sema", "tanim", "kaynak", "notu", "olusturan", "yayinlayan"], gizli: ["tanim"] });
+const oz = (x: unknown) => JSON.stringify(x);
 const UUID = /^[0-9a-f]{8}-[0-9a-f]{4}-[0-9a-f]{4}-[0-9a-f]{4}-[0-9a-f]{12}$/;
 /** tanımın JSON boyu, bayt (veritabanı CHECK'i 1.000.000 bayt jsonb metni — jsonb ", " ve ": " ile yazar, pay bırakılır) */
 export const TANIM_EN_COK = 600_000;
@@ -138,14 +139,17 @@ export async function taslakKaydet(db: Sorgulayici, kim: Kisi, id: string, surum
   const boy = (v: unknown) => { try { return Buffer.byteLength(JSON.stringify(v) ?? ""); } catch { return Infinity; } };
   const buyuk = { durum: "gecersiz", hatalar: { tanim: "Tanım okunamadı ya da çok büyük." } } as const;
   if (!boy(tanimGirdisi) || boy(tanimGirdisi) > TANIM_EN_COK) return buyuk;
-  const r = (await db.sorgu<{ durum: FormatDurumu }>("SELECT durum FROM rapor_format WHERE id = $1 FOR UPDATE", [id])).rows[0];
+  const r = (await db.sorgu<{ durum: FormatDurumu; tur_id: string; kaynak: string | null }>(
+    "SELECT durum, tur_id::text, kaynak FROM rapor_format WHERE id = $1 FOR UPDATE", [id])).rows[0];
   if (!r) return { durum: "yok" };
   if (r.durum !== "taslak") return { durum: "kilitli" };
   const t = FormatTanimi.safeParse(tanimGirdisi);
   if (!t.success) return { durum: "gecersiz", hatalar: hatalar(t.error) };
   if (boy(t.data) > TANIM_EN_COK) return buyuk;
   if (!Number.isSafeInteger(surum) || surum < 0) return { durum: "cakisma" };
-  const g = await guncelle(db, FORMAT, id, surum, { sema: t.data.sema, tanim: t.data }, { kim: kim.ad, ne: "rapor_format.taslak_kaydet" });
+  /* "kilit" yalnız kaynakta kilitli öğede (istemcinin bayrağına güvenilmez — 337–339 incelemesi) */
+  const tanim = kilitNormallestir(t.data, await kilitKaynaklari(db, r.tur_id, r.kaynak, id));
+  const g = await guncelle(db, FORMAT, id, surum, { sema: tanim.sema, tanim }, { kim: kim.ad, ne: "rapor_format.taslak_kaydet" });
   if (g.durum === "cakisma" || g.durum === "yok") return { durum: g.durum };
   return { durum: "tamam", id, surum: g.surum };
 }
@@ -172,8 +176,10 @@ export async function yayinla(db: Sorgulayici, kim: Kisi, id: string, surum: num
     "SELECT durum, surum, kaynak, tanim FROM rapor_format WHERE id = $1 FOR UPDATE", [id])).rows[0];
   if (!r) return { durum: "yok" };
   if (r.durum !== "taslak" || !Number.isSafeInteger(surum) || r.surum !== surum) return { durum: "cakisma" };
-  const t = tanimOku(r.tanim);
-  if (!t) return { durum: "gecersiz", hatalar: { tanim: "Tanım okunamadı." } };
+  const okunan = tanimOku(r.tanim);
+  if (!okunan) return { durum: "gecersiz", hatalar: { tanim: "Tanım okunamadı." } };
+  /* savunma derinliği: yayınlanan sürüm de kilidi yalnız kaynakta kilitli öğede taşır (sonraki taslakların kilit kaynağı bu sürüm) */
+  const t = kilitNormallestir(okunan, await kilitKaynaklari(db, tur.tur_id, r.kaynak, id));
   const d = await denetle(db, tur.tur_id, r.kaynak, id, t);
   if (d.engeller.length) return { durum: "engel", engeller: d.engeller };
   const onceki = (await db.sorgu<{ id: string; surum: number }>(
@@ -183,7 +189,8 @@ export async function yayinla(db: Sorgulayici, kim: Kisi, id: string, surum: num
     if (e.durum !== "tamam") return { durum: "cakisma" };
   }
   const sira = ((await db.sorgu<{ s: number | null }>("SELECT max(sira) AS s FROM rapor_format WHERE tur_id = $1", [tur.tur_id])).rows[0]?.s ?? 0) + 1;
-  const g = await guncelle(db, FORMAT, id, surum, { durum: "yayinda", sira, notu: n.veri, yayinlayan: kim.ad }, { kim: kim.ad, ne: "rapor_format.yayinla", gerekce: n.veri ?? undefined });
+  const g = await guncelle(db, FORMAT, id, surum, { durum: "yayinda", sira, notu: n.veri, yayinlayan: kim.ad, ...(oz(t) === oz(okunan) ? {} : { tanim: t }) },
+    { kim: kim.ad, ne: "rapor_format.yayinla", gerekce: n.veri ?? undefined });
   if (g.durum !== "tamam") return { durum: "cakisma" };
   return { durum: "tamam", sira, uyarilar: d.uyarilar };
 }

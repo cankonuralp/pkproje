@@ -8,8 +8,9 @@ import { TANIMLAR } from "../../tanim/veri.ts";
 
 export const IA_TURLER = ["musteri", "ekipman", "cihaz", "personel", "arac"] as const;
 export type IaTur = (typeof IA_TURLER)[number];
-/** bir dosyada en çok satır (fazlası için dosya bölünür) · hücre en çok karakter */
-export const IA_SINIR = { satir: 2000, hucre: 300 } as const;
+/** bir dosyada en çok VERİ satırı (fazlası için dosya bölünür) · hücre en çok karakter · okunan ham satır (okuyucunun sınırı, src/components/disa/oku.ts —
+    biçimlendirilmiş boş satırlar da okunur; boşlar atıldıktan sonra veri satırı sayılır, 337–339 incelemesi) */
+export const IA_SINIR = { satir: 2000, hucre: 300, ham: 5000 } as const;
 
 /** tür: ad · şablon dosya adı · sütunlar (* zorunlu) · örnek satırlar (uydurma) */
 export const IA_TUR: Record<IaTur, { ad: string; dosya: string; sutun: readonly string[]; ornek: readonly (readonly string[])[] }> = {
@@ -73,6 +74,13 @@ const ILLER = Object.keys(IL_ILCE);
 const ARAC_TURU = ["Binek araç", "Hafif ticari araç", "Kamyonet", "Minibüs", "Kamyon"] as const;
 const YAKIT = [["benzin", "Benzin"], ["dizel", "Dizel"], ["lpg", "LPG"], ["elektrik", "Elektrik"], ["hibrit", "Hibrit"]] as const;
 const sinir = (deger: string, en: number, ad: string) => (deger.length > en ? `${ad} en çok ${en} karakter` : "");
+/** müşteri eşleşmesi (337–339 incelemesi): önce TAM ünvan, yoksa kısa ad; birden çok müşteri eşleşirse belirsiz — satır atlanır (yanlış müşteriye
+    bağlanan tesis / ekipman o müşterinin panelinde görünürdü) */
+function musteriBul<M extends { unvan: string; kisa: string }>(l: readonly M[], ad: string): { m: M | null; belirsiz: boolean } {
+  const u = l.filter((x) => tr(x.unvan) === tr(ad)), k = u.length ? u : l.filter((x) => tr(x.kisa) === tr(ad));
+  return k.length > 1 ? { m: null, belirsiz: true } : { m: k[0] ?? null, belirsiz: false };
+}
+const BELIRSIZ = "Birden çok müşteri eşleşti; tam ünvanı yazın";
 
 /* ── kayıtlı veri (sunucu bağlantılardan doldurur) ── */
 export interface IaBilgi {
@@ -122,11 +130,11 @@ function musteriDenetle(h: string[], b: IaBilgi, onceki: IaSatir[]): Omit<IaSati
   const il = ILLER.find((x) => tr(x) === tr(temiz(h[6])));
   const ilceHam = temiz(h[7]), ilce = il && ilceHam ? IL_ILCE[il].find((x) => tr(x) === tr(ilceHam)) ?? null : null;
   const sgkHam = temiz(h[8]).replace(/\s+/g, "");
-  const kayitli = b.musteriler.find((m) => tr(m.unvan) === tr(u) || tr(m.kisa) === tr(u));
+  const mb = musteriBul(b.musteriler, u), kayitli = mb.m;
   const dosyada = onceki.find((o) => o.ok && o.deger?.t === "musteri" && "yeni" in o.deger.musteri && o.deger.musteri.anahtar === tr(u));
   const neden = !u ? "Müşteri ünvanı boş" : u.length < 3 ? "Ünvan en az 3 karakter" : sinir(u, 160, "Ünvan") || (!t ? "Tesis adı boş" : t.length < 2 ? "Tesis adı en az 2 karakter" : "")
     || sinir(t, 80, "Tesis adı") || (!adres ? "Adres boş" : "") || sinir(adres, 160, "Adres") || (!il ? "İl bulunamadı" : "")
-    || (kayitli?.pasif ? "Müşteri pasif" : "")
+    || (mb.belirsiz ? BELIRSIZ : "") || (kayitli?.pasif ? "Müşteri pasif" : "")
     || (kayitli && b.tesisler.some((x) => x.musteriId === kayitli.id && tr(x.ad) === tr(t)) ? "Bu tesis zaten kayıtlı" : "")
     || (onceki.some((o) => o.ok && o.deger?.t === "musteri" && tr(o.ana) === tr(u) && tr(o.deger.tesis.ad) === tr(t)) ? "Dosyada aynı tesis iki kez" : "");
   const uy: string[] = [];
@@ -144,7 +152,7 @@ function musteriDenetle(h: string[], b: IaBilgi, onceki: IaSatir[]): Omit<IaSati
       else eposta = ep;
     }
     if (vd.length > 40) uy.push("vergi dairesi 40 karakteri aşıyor, boş girer");
-  } else uy.push(kayitli ? "müşteri kayıtlı, tesis ona eklenir" : "müşteri bu dosyada, tesis ona eklenir");
+  } else uy.push(kayitli ? `müşteri kayıtlı (${kayitli.unvan}), tesis ona eklenir` : "müşteri bu dosyada, tesis ona eklenir");
   if (!sgkHam) uy.push("SGK DETSİS NO boş");
   else if (!/^\d{26}$/.test(sgkHam)) uy.push("SGK DETSİS NO okunmadı, boş girer");
   else sgk = sgkHam;
@@ -162,16 +170,16 @@ function musteriDenetle(h: string[], b: IaBilgi, onceki: IaSatir[]): Omit<IaSati
 function ekipmanDenetle(h: string[], b: IaBilgi, onceki: IaSatir[]): Omit<IaSatir, "no"> {
   const kod = kodYaz(String(h[0] ?? "")), turHam = temiz(h[1]), mu = temiz(h[2]), te = temiz(h[3]);
   const tur = b.ekipmanTurleri.find((x) => tr(x.ad) === tr(turHam) || tr(x.kod) === tr(turHam));
-  const m = b.musteriler.find((x) => !x.pasif && (tr(x.unvan) === tr(mu) || tr(x.kisa) === tr(mu)));
+  const mb = musteriBul(b.musteriler.filter((x) => !x.pasif), mu), m = mb.m;
   const tesis = m ? b.tesisler.find((x) => !x.pasif && x.musteriId === m.id && tr(x.ad) === tr(te)) : undefined;
   const konum = temiz(h[4]), marka = temiz(h[5]), model = temiz(h[6]), seri = temiz(h[7]), yil = temiz(h[8]);
   const neden = !kod ? "Ekipman kodu boş" : !/^[A-Z0-9](?:[A-Z0-9]|-(?=[A-Z0-9])){2,19}$/.test(kod) ? "Kod: A–Z, 0–9, tire; 3–20 hane"
     : b.ekipmanKodlari.includes(kod) ? "Bu kod kayıtlı" : onceki.some((o) => o.ok && o.kod === kod) ? "Dosyada aynı kod iki kez"
-    : !tur ? "Ekipman türü bulunamadı" : !tesis ? "Müşteri / tesis bulunamadı (önce müşterileri yükleyin)"
+    : !tur ? "Ekipman türü bulunamadı" : mb.belirsiz ? BELIRSIZ : !tesis ? "Müşteri / tesis bulunamadı (önce müşterileri yükleyin)"
     : sinir(konum, 60, "Kullanım yeri") || sinir(marka, 60, "Marka") || sinir(model, 60, "Model") || sinir(seri, 30, "Seri no");
   const imalOk = /^\d{4}$/.test(yil) && +yil >= 1900 && +yil <= Number(b.bugun.slice(0, 4)) + 1;
   return {
-    ok: !neden, neden, uyari: yil && !imalOk ? "imal yılı okunmadı, boş girer" : "", kod: kod || temiz(h[0]), ana: tur?.ad ?? turHam, alt: `${mu} · ${te}`,
+    ok: !neden, neden, uyari: yil && !imalOk ? "imal yılı okunmadı, boş girer" : "", kod: kod || temiz(h[0]), ana: tur?.ad ?? turHam, alt: `${m?.unvan ?? mu} · ${te}`,
     deger: neden || !tur || !tesis ? null : { t: "ekipman", kod, turId: tur.id, tesisId: tesis.id, konum: bos(konum), marka: bos(marka), model: bos(model), seri: bos(seri), imal: imalOk ? +yil : null },
   };
 }
@@ -182,6 +190,8 @@ function cihazDenetle(h: string[], b: IaBilgi, onceki: IaSatir[]): Omit<IaSatir,
   const neden = !kod ? "Cihaz kodu boş" : !/^[A-Z0-9-]{3,12}$/.test(kod) ? "Cihaz kodu 3–12 hane (A–Z, 0–9, tire)"
     : b.cihazKodlari.includes(kod) ? "Bu cihaz kodu kayıtlı" : onceki.some((o) => o.ok && o.kod === kod) ? "Dosyada aynı kod iki kez"
     : !tur ? "Cihaz türü bulunamadı" : !bit ? "Kalibrasyon bitişi GG.AA.YYYY olmalı"
+    /* yazım hatası (2072) cihazı yıllarca "geçerli" gösterirdi — kalibrasyon kaydı açılana kadar bu bitiş geçerli (337–339 incelemesi) */
+    : bit > `${Number(b.bugun.slice(0, 4)) + 5}${b.bugun.slice(4)}` ? "Kalibrasyon bitişi 5 yıldan ileri olamaz"
     : sinir(marka, 40, "Marka") || sinir(seri, 40, "Seri no") || sinir(aralik, 60, "Ölçüm aralığı");
   return {
     ok: !neden, neden, uyari: bit && bit < b.bugun ? "kalibrasyonu geçmiş" : "", kod: kod || temiz(h[0]), ana: tur?.ad ?? turHam,

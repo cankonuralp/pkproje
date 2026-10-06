@@ -1,12 +1,15 @@
 /* YAN MENÜ TAKİP BALONLARI (339; maket maket-ortak.js takipHtml + maket-veri.js MV.TAKIP — T6, reisim 2026-09-28: "cihazlarda süresi geçen cihaz
    sayısı kırmızı balon, yaklaşan sarı balon … diğer modüllerde de benzer takip"; 35. tur 163: bekleyen sarı, süresi geçen kırmızı; N9: raporlar
    "kişiye göre"). Modül başına kırmızı / sarı sayı; 0 olan balon çizilmez. Sayılar modüllerin kendi, YETKİYE DUYARLI işlevlerinden (görmediği
-   modülün balonu yok; "kendi" düzeyi yalnız kendisininki). Ana sayfa gibi başka modülün tablosuna dokunmaz. Bildirim değildir (anayasa 1.3). */
+   modülün balonu yok; "kendi" düzeyi yalnız kendisininki). Ana sayfa gibi başka modülün tablosuna dokunmaz. Bildirim değildir (anayasa 1.3).
+   337–339 incelemesi (U4 / N5 / 236): balon kişinin KENDİ işi — Planlar yalnız ekibinde olduğu planlar (planı atanan kabul eder), Onaylar yalnız
+   onaylayabildiği raporlar (firma yöneticisi onaylamaz), Araçlar Araçlar modülünden (kilometre + belge; yönetici hepsi, sürücü kendi aracı). */
 import type { Sorgulayici } from "../../../server/db/kiraci.ts";
 import { hesabinPersoneli } from "../../../server/kimlik/hesap.ts";
 import { duzey, type YetkiHesabi } from "../../../server/yetki/canDo.ts";
 import { giderListesi } from "../../muhasebe/server/giderler.ts";
 import { faturaListesi } from "../../muhasebe/server/muhasebe.ts";
+import { aracTakip } from "../../araclar/server/araclar.ts";
 import { onayListeleri } from "../../onaylar/server/onaylar.ts";
 import { anaPlanlar, isgEksikSayisi } from "../../planlar/server/anasayfa-baglanti.ts";
 import { kendiYeniRaporlarim } from "../../raporlar/server/anasayfa-baglanti.ts";
@@ -26,19 +29,22 @@ export async function menuTakip(db: Sorgulayici, kim: Kisi & YetkiHesabi): Promi
   const hepsi = (m: Parameters<typeof duzey>[1]) => { const d = duzey(kim, m); return d === "gor" || d === "yaz"; };
   const koy = (no: number, kirmizi: number, sari: number, ad: TakipBalonu["ad"]) => { if (kirmizi > 0 || sari > 0) t[no] = { kirmizi, sari, ad }; };
 
-  /* uyarılar ve kaynak modülleri: ölçüm cihazı kalibrasyonu (8), eğitim tekrarı (Dökümanlar 4), araç belgesi (23) — Uyarılar düzeyiyle süzülü */
+  /* uyarılar ve kaynak modülleri: ölçüm cihazı kalibrasyonu (8), eğitim tekrarı (Dökümanlar 4) — Uyarılar düzeyiyle süzülü */
   const u = gor(20) ? (await uyariListesi(db, kim)) ?? [] : [];
   const say = (tur: string | null, d: "gecti" | "yakin") => u.filter((x) => (tur === null || x.tur === tur) && x.durum === d).length;
   koy(20, say(null, "gecti"), say(null, "yakin"), { kirmizi: "süresi geçen uyarı", sari: "yaklaşan uyarı" });
   if (gor(8)) koy(8, say("kal", "gecti"), say("kal", "yakin"), { kirmizi: "süresi geçen cihaz", sari: "süresi yaklaşan cihaz" });
   if (gor(4)) koy(4, say("egt", "gecti"), say("egt", "yakin"), { kirmizi: "eğitim tekrarı geçen", sari: "eğitim tekrarı yaklaşan" });
-  if (gor(23)) koy(23, say("arac", "gecti"), say("arac", "yakin"), { kirmizi: "süresi geçen araç belgesi", sari: "süresi yaklaşan araç belgesi" });
+  /* araçlar (23): Araçlar modülünden — kilometre durumu + belgeler (karar 236) */
+  const ar = gor(23) ? await aracTakip(db, kim) : null;
+  if (ar) koy(23, ar.kirmizi, ar.sari, { kirmizi: "süresi geçen araç belgesi (muayene, sigorta, kasko) ya da geçen hafta girilmeyen kilometre",
+    sari: "süresi yaklaşan araç belgesi ya da bu hafta bekleyen kilometre" });
 
-  /* planlar (13): kabul bekleyen — planlamacı / yönetici bütün firmada, denetçi kendi ekibinde; plan günü gelmiş olan kırmızı */
+  /* planlar (13): kabul bekleyen — yalnız kişinin ekibinde olduğu planlar (planı atanan kabul eder; U4); plan günü gelmiş olan kırmızı */
   if (gor(13)) {
-    const hep = hepsi(13), ben = hep ? null : await hesabinPersoneli(db, kim.id);
+    const hep = hepsi(13), ben = await hesabinPersoneli(db, kim.id);
     const planlar = (await anaPlanlar(db)).filter((p) => hep || (!!ben && p.ekip.includes(ben)));
-    const bek = planlar.filter((p) => p.durum === "bekliyor"), gec = bek.filter((p) => p.baslangic <= bugun).length;
+    const bek = planlar.filter((p) => p.durum === "bekliyor" && !!ben && p.ekip.includes(ben)), gec = bek.filter((p) => p.baslangic <= bugun).length;
     koy(13, gec, bek.length - gec, { kirmizi: "plan günü gelmiş, kabul bekleyen plan", sari: "kabul bekleyen plan" });
     /* sözleşmeler (12): açık planda İSG-KATİP ID'si eksik ya da bitmiş (görebildiği planlar) */
     if (gor(12)) koy(12, await isgEksikSayisi(db, planlar), 0, { kirmizi: "İSG-KATİP eksik ya da bitmiş", sari: "" });
@@ -50,11 +56,12 @@ export async function menuTakip(db: Sorgulayici, kim: Kisi & YetkiHesabi): Promi
     koy(14, r.geri, r.yeni, { kirmizi: "size geri gönderilen rapor", sari: "onaya gönderilmemiş raporunuz" });
   }
 
-  /* onaylar (15): imzasını bekleyen raporları + (yöneticiye) onay kuyruğu + diğer belgeler; 24 saati geçen kırmızı */
+  /* onaylar (15): imzasını bekleyen raporları + onay kuyruğundan ONAYLAYABİLDİKLERİ (branş yöneticisi; N5) + diğer belgeler; 24 saati geçen kırmızı */
   const o = gor(15) ? await onayListeleri(db, kim) : null;
   if (o) {
-    const gec = o.imzaBekleyen.filter((x) => saatGecti(x.onay, 24)).length + o.kuyruk.filter((x) => saatGecti(x.gonderildi, 24)).length;
-    koy(15, gec, o.imzaBekleyen.length + o.kuyruk.length - gec + o.belgeBekleyen,
+    const kuyruk = o.kuyruk.filter((x) => x.izin.onayla);
+    const gec = o.imzaBekleyen.filter((x) => saatGecti(x.onay, 24)).length + kuyruk.filter((x) => saatGecti(x.gonderildi, 24)).length;
+    koy(15, gec, o.imzaBekleyen.length + kuyruk.length - gec + o.belgeBekleyen,
       { kirmizi: "24 saati geçen imza / onay bekleyen rapor", sari: "imzanızı ya da onayınızı bekleyen rapor / belge" });
   }
 

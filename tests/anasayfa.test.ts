@@ -8,6 +8,7 @@ import { havuzKur, kiraciIcinde, type Havuz, type Sorgulayici } from "../src/ser
 import { gunEkle } from "../src/modules/muhasebe/sema.ts";
 import { anaSayfa, bugunTr, type AnaSayfa, type Kisi } from "../src/modules/anasayfa/server/anasayfa.ts";
 import { menuTakip } from "../src/modules/anasayfa/server/takip.ts";
+import { taslakBaslat, yayinla } from "../src/modules/rapor-format/server/formatlar.ts";
 import { testKumesi } from "./yardimci/kume.ts";
 
 let kume: GomuluKume;
@@ -132,10 +133,50 @@ test("yan menü balonları: planlar (kabul bekleyen sarı, plan günü gelmiş k
   const d = await a(DEN, (db) => menuTakip(db, DEN));
   assert.deepEqual([d[13]?.kirmizi, d[13]?.sari], [1, 1], "denetçinin kendi planları: P-006 günü geçti, P-001 bekliyor");
   assert.equal(d[14], undefined, "Yeni raporu yok");
-  const p = await a(PLAN, (db) => menuTakip(db, PLAN));
-  assert.deepEqual([p[13]?.kirmizi, p[13]?.sari, p[13]?.ad.sari], [1, 1, "kabul bekleyen plan"]);
+  /* 337–339 incelemesi (U4): planı atanan kabul eder — planlamacı firma genelini görür ama ekibinde olmadığı planın balonu yok */
+  assert.equal((await a(PLAN, (db) => menuTakip(db, PLAN)))[13], undefined, "planlamacının kendi kabul edeceği plan yok");
+  assert.equal((await a(YON, (db) => menuTakip(db, YON)))[13], undefined, "firma yöneticisi ekipte değil");
   const KISITLI = { ...PLAN, matris: { 13: ["kendi", "kendi", "gor", "gor", "yaz", "yok"] } } as Kisi;
   assert.equal((await a(KISITLI, (db) => menuTakip(db, KISITLI)))[13], undefined, "'kendi' düzeyi, ekipte değil: balon yok");
   assert.deepEqual(await a(YON_B, (db) => menuTakip(db, YON_B), B), {}, "B'de A'nın verisi yok");
 });
 
+/* 337–339 incelemesi (N5): Onaylar balonu yalnız kişinin ONAYLAYABİLDİĞİ raporları sayar — firma yöneticisi kuyruğu görür, onaylamaz: balon yok */
+test("Onaylar balonu: onaydaki rapor branş yöneticisinde sayılır, firma yöneticisinde sayılmaz", async () => {
+  const [tur, plan, ek, denP] = await a(YON, async (db) => [
+    (await db.sorgu<{ id: string }>("SELECT id::text FROM ekipman_turu WHERE kod = 'HT'")).rows[0].id,
+    (await db.sorgu<{ id: string }>("SELECT id::text FROM plan WHERE no = 'P-1026-002'")).rows[0].id,
+    (await db.sorgu<{ id: string }>("SELECT id::text FROM ekipman WHERE kod = 'HT-1'")).rows[0].id,
+    (await db.sorgu<{ id: string }>("SELECT personel_id::text AS id FROM hesap WHERE id = $1", [DEN.id])).rows[0].id]);
+  const format = await a(YON, async (db) => {
+    const x = await taslakBaslat(db, YON, tur, "sablon:KOMPRESOR", null);
+    assert.equal(x.durum, "tamam");
+    const y = await yayinla(db, YON, (x as { id: string }).id, (x as { surum: number }).surum, "");
+    assert.equal(y.durum, "tamam");
+    return (x as { id: string }).id;
+  });
+  await sahip(`INSERT INTO rapor (firma_id, no, plan_id, ekipman_id, tur_id, format_id, personel_id, hesap_id, durum, kunye, ilk_gonderim, gonderildi)
+    VALUES ($1, 'DA-1026-901-00001', $2, $3, $4, $5, $6, $7, 'onayda', '{}', now() - interval '2 hours', now() - interval '2 hours') RETURNING id::text`,
+    [A, plan, ek, tur, format, denP, DEN.id]);
+  const m = await a(MEK, (db) => menuTakip(db, MEK));
+  assert.deepEqual([m[15]?.kirmizi, m[15]?.sari], [0, 1], "mekanik yönetici onaylar");
+  assert.equal((await a(YON, (db) => menuTakip(db, YON)))[15], undefined, "firma yöneticisi onaylamaz");
+});
+
+/* 337–339 incelemesi (karar 236, maket MV.TAKIP[23]): Araçlar balonu kilometre + belge; yönetici bütün araçları, sürücü yalnız kendi aracını */
+test("Araçlar balonu: geçen hafta girilmeyen kilometre ve süresi geçen muayene kırmızı; sürücü kendi aracı, yönetici hepsi, öteki kimse", async () => {
+  const denP = (await a(DEN, (db) => db.sorgu<{ id: string }>("SELECT personel_id::text AS id FROM hesap WHERE id = $1", [DEN.id]))).rows[0].id;
+  const arac = await sahip("INSERT INTO arac (firma_id, plaka, tur, marka, model, yil, yakit, muayene) VALUES ($1, '00 DNM 001', 'Kamyon', 'D', 'M', 2020, 'dizel', $2) RETURNING id::text",
+    [A, g(-3)]);
+  await sahip("INSERT INTO zimmet_hareket (firma_id, arac_id, alan_personel, zaman, km) VALUES ($1, $2, $3, now() - interval '30 days', 1000) RETURNING id::text", [A, arac, denP]);
+  await sahip("INSERT INTO arac (firma_id, plaka, tur, marka, model, yil, yakit, sigorta) VALUES ($1, '00 DNM 002', 'Kamyon', 'D', 'M', 2020, 'dizel', $2) RETURNING id::text",
+    [A, g(10)]);
+  const d = await a(DEN, (db) => menuTakip(db, DEN));
+  assert.deepEqual([d[23]?.kirmizi, d[23]?.sari], [2, 0], "sürücü: kendi aracı — km eksik + muayene geçti");
+  assert.match(d[23]!.ad.kirmizi, /geçen hafta girilmeyen kilometre/);
+  const y = await a(YON, (db) => menuTakip(db, YON));
+  assert.deepEqual([y[23]?.kirmizi, y[23]?.sari], [2, 1], "yönetici: bütün araçlar — depodaki aracın yaklaşan sigortası sarı");
+  assert.equal((await a(PLAN, (db) => menuTakip(db, PLAN)))[23], undefined, "planlama: kendi aracı yok");
+  assert.equal((await a(MUH, (db) => menuTakip(db, MUH)))[23], undefined, "muhasebe Araçlar'ı görmez");
+  assert.equal((await a(YON_B, (db) => menuTakip(db, YON_B), B))[23], undefined, "B'de A'nın aracı yok");
+});

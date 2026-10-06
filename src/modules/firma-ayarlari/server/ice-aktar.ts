@@ -23,7 +23,8 @@ const bugun = () => new Intl.DateTimeFormat("en-CA", { timeZone: "Europe/Istanbu
 const Girdi = z.object({
   tur: z.enum(IA_TURLER, { error: "Ne yükleneceğini seçin." }),
   dosya: z.string().trim().min(1).max(200),
-  satirlar: z.array(z.array(z.string().max(IA_SINIR.hucre * 4)).max(50)).max(IA_SINIR.satir + 1),
+  /* ham satırlar okuyucunun sınırına kadar (boş satırlar da gelir); veri satırı sınırı boşlar atıldıktan sonra (denetle) */
+  satirlar: z.array(z.array(z.string().max(IA_SINIR.hucre * 4)).max(50)).max(IA_SINIR.ham),
 });
 /** ekranda satır: değerler (kimlikler) istemciye gitmez */
 export type IaSatirOzeti = Omit<IaSatir, "deger">;
@@ -49,7 +50,7 @@ async function bilgi(db: Sorgulayici, tur: IaTur): Promise<IaBilgi> {
 async function denetle(db: Sorgulayici, kim: Kisi, girdi: unknown): Promise<{ hata: IaSonuc } | { tur: IaTur; dosya: string; l: IaSatir[] }> {
   if (!ayarlarYazar(kim)) return { hata: { durum: "yetkisiz" } };
   const g = Girdi.safeParse(girdi);
-  if (!g.success) return { hata: { durum: "gecersiz", neden: `Dosya okunamadı ya da çok büyük (en çok ${IA_SINIR.satir.toLocaleString("tr")} satır, 50 sütun).` } };
+  if (!g.success) return { hata: { durum: "gecersiz", neden: `Dosya okunamadı ya da çok büyük (en çok ${IA_SINIR.satir.toLocaleString("tr")} veri satırı, 50 sütun).` } };
   const satirlar = iaVeriSatirlari(g.data.tur, g.data.satirlar);
   if (!satirlar.length) return { hata: { durum: "gecersiz", neden: "Dosyada veri satırı yok." } };
   if (satirlar.length > IA_SINIR.satir) return { hata: { durum: "gecersiz", neden: `En çok ${IA_SINIR.satir.toLocaleString("tr")} satır; dosyayı bölün.` } };

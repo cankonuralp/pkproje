@@ -8,7 +8,12 @@ import { havuzKur, kiraciIcinde, type Havuz, type Sorgulayici } from "../src/ser
 import { IA_TUR } from "../src/modules/firma-ayarlari/ice-aktar.ts";
 import { firmaAyarlari, type Kisi } from "../src/modules/firma-ayarlari/server/ayarlar.ts";
 import { iceAktar, iceAktarDenetle, iceAktarimGeriAl } from "../src/modules/firma-ayarlari/server/ice-aktar.ts";
-import { cihazOzetleri } from "../src/modules/olcum-cihazlari/server/cihazlar.ts";
+import { mkdtempSync, rmSync } from "node:fs";
+import { tmpdir } from "node:os";
+import { join } from "node:path";
+import { cihazKalibrasyonlari, cihazOzetleri, kalibrasyonEkle } from "../src/modules/olcum-cihazlari/server/cihazlar.ts";
+import { cihazUyarilari } from "../src/modules/olcum-cihazlari/server/uyari-baglanti.ts";
+import { klasorDepo } from "../src/server/dosya/depo.ts";
 import { testKumesi } from "./yardimci/kume.ts";
 
 let kume: GomuluKume;
@@ -124,4 +129,38 @@ test("kayıt sahtesi ve firma sızıntısı: içe aktarma kaydına bu işlemde o
   /* B'nin denetimi A'nın kayıtlarını görmez: aynı plaka B'de eklenebilir */
   const d = await a(YON_B, (db) => iceAktarDenetle(db, YON_B, dosya("arac", ...IA_TUR.arac.ornek.map((x) => [...x]))), B);
   assert.ok(d.durum === "tamam" && d.satirlar.every((x) => x.ok));
+});
+
+/* 337–339 incelemesi: sistem öncesi bitiş (ilk_bitis) YALNIZ kalibrasyon kaydı yokken geçerli — kayıt açılınca (sonucu "uygun değil" olsa da)
+   devreden çıkar; belge de aynı kaynaktan (rapora eklenen cihazın geçerliliği PDF'te boş kalmaz) */
+test("ilk_bitis: belgede geçerlilik; 'uygun değil' kalibrasyon kaydı açılınca cihaz geçmiş sayılır (Uyarılar da)", async () => {
+  const id = (await sql(A, "SELECT id::text FROM olcum_cihazi WHERE kod = 'OC-201'"))[0].id;
+  assert.deepEqual((await a(YON, (db) => cihazKalibrasyonlari(db, [id]))).get(id), { tarih: null, bitis: "2027-03-15", sertifika: null });
+  const klasor = mkdtempSync(join(tmpdir(), "ia-kal-"));
+  try {
+    const r = await a(YON, (db) => kalibrasyonEkle(db, klasorDepo(klasor), YON, A, id, { tarih: "2026-09-01", bitis: "2026-09-02", lab: "Deneme Lab", sertifika: "S-1", sonuc: "uygun_degil" }));
+    assert.equal(r.durum, "tamam", JSON.stringify(r));
+  } finally { rmSync(klasor, { recursive: true, force: true }); }
+  assert.equal((await a(YON, (db) => cihazOzetleri(db))).find((c) => c.id === id)?.bitis, null, "ilk_bitis devreden çıktı");
+  assert.equal((await a(YON, (db) => cihazKalibrasyonlari(db, [id]))).get(id), undefined);
+  assert.ok((await a(YON, (db) => cihazUyarilari(db, "2026-10-06"))).l.some((x) => x.id === id && x.durum === "gecti"));
+});
+
+/* 337–339 incelemesi: içe aktarma listesi "bu işlemde oluşturulmuş kayıt"ı oluşturulma zamanıyla anlar — eski kayıt yeni gösterilemez (0048) */
+test("oluşturulma zamanı değişmez: eski kayıt olustu güncellenip sahte içe aktarma listesine yazılamaz (silinemez); 3 haneli tireli ekipman kodu", async () => {
+  const eski = (await sql(A, "SELECT id::text FROM personel LIMIT 1"))[0].id;
+  for (const t of ["musteri", "tesis", "personel", "olcum_cihazi", "arac", "ekipman"]) {
+    await assert.rejects(a(YON, (db) => db.sorgu(`UPDATE ${t} SET olustu = now()`)), /oluşturulma zamanı değişmez/, t);
+  }
+  await assert.rejects(a(YON, async (db) => {
+    await db.sorgu("UPDATE personel SET olustu = now() WHERE id = $1", [eski]);
+    await db.sorgu("INSERT INTO ice_aktarim (tur, dosya, adet, kayitlar, kim) VALUES ('personel', 'x.xlsx', 1, $1, 'Deneme')", [JSON.stringify([{ t: "personel", id: eski }])]);
+  }), /oluşturulma zamanı değişmez/);
+  assert.equal((await sql(A, "SELECT count(*)::int AS n FROM personel WHERE id = $1", [eski]))[0].n, 1, "kayıt yerinde");
+  /* ekipman kodu: uygulamanın kuralı (3–20, tire iki hane arasında) veritabanında da */
+  const yer = (await sql(A, "SELECT t.id::text AS tesis, tu.id::text AS tur FROM tesis t, ekipman_turu tu LIMIT 1"))[0] as unknown as { tesis: string; tur: string };
+  await a(YON, (db) => db.sorgu("INSERT INTO ekipman (tesis_id, tur_id, kod, ekleyen) VALUES ($1, $2, 'A-1', 'Deneme')", [yer.tesis, yer.tur]));
+  for (const k of ["A--1", "-AB", "AB-", "A-", "A".repeat(21)]) {
+    await assert.rejects(a(YON, (db) => db.sorgu("INSERT INTO ekipman (tesis_id, tur_id, kod, ekleyen) VALUES ($1, $2, $3, 'Deneme')", [yer.tesis, yer.tur, k])), /check/i, k);
+  }
 });

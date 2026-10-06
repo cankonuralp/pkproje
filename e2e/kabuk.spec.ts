@@ -45,7 +45,8 @@ test("yan menü takip balonları: yaklaşan kalibrasyon Ölçüm cihazları ve U
   await page.goto("/");
   if (bilgi.project.name !== "masaustu") await page.locator('header button[aria-label="Menüyü aç"]').click();
   const menu = page.getByRole("navigation", { name: "Modüller" });
-  await expect(menu.getByRole("link", { name: /^Ölçüm cihazları: \d+ süresi yaklaşan cihaz/ })).toBeVisible({ timeout: 30_000 });
+  /* kırmızı balon (başka testin kalibrasyonsuz cihazı) adın başına gelir: seçici ona dayanıklı (337–339 incelemesi) */
+  await expect(menu.getByRole("link", { name: /^Ölçüm cihazları: .*\d+ süresi yaklaşan cihaz/ })).toBeVisible({ timeout: 30_000 });
   await expect(menu.getByRole("link", { name: /^Uyarılar: .*yaklaşan uyarı/ })).toBeVisible();
   await expect(menu.getByRole("link", { name: /^Ana sayfa$/ })).toBeVisible();
 });

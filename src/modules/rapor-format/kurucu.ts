@@ -1,7 +1,8 @@
 /* FORMAT KURUCU — saf düzenleme işlemleri (RAPOR-FORMAT.md §6; maket maket-kurucu.js kb-ekle / kb-yukari / kb-asagi / kb-sil / kb-alan-ekle /
    kb-madde-ekle / kb-sutun-ekle / kb-oge-sil / kurallar). Tanım her adımda şemadan geçer (src/format/tanim.ts); yeni öğenin kimliği BÜTÜN tanımda
-   tekildir (cevaplar kimlikle saklanır). Kilitli (Bakanlık) bölüm silinmez, adı değişmez; kilitli öğe silinmez; kilitli ölçüm tablosunun sütunu
-   silinmez — sunucu yayında aynı kuralı kaynak şablondan yeniden denetler (ENGEL), burası yalnız ekranın kolaylığı. */
+   tekildir (cevaplar kimlikle saklanır). Kilitli (Bakanlık) bölüm silinmez, adı değişmez; kilitli öğe silinmez; kilitli ölçüm tablosunun ŞABLON
+   sütunu silinmez — kurucuda eklenen (kimliği "k_" ile başlayan) sütun çıkarılır (337–339 incelemesi) — sunucu yayında aynı kuralı kaynak
+   şablondan yeniden denetler (ENGEL), burası yalnız ekranın kolaylığı. */
 import { Bolum, type Blok, type FormatTanimi } from "../../format/tanim.ts";
 
 /** tanımdaki bütün kimlikler (bölüm, alan, grup, madde, sütun, değer) */
@@ -17,6 +18,8 @@ export function kimlikler(t: FormatTanimi): Set<string> {
   return s;
 }
 
+/** kurucuda eklenen öğe mi (kimlik "k_" ile başlar; hazır şablonların kimliklerinde bu önek yok) */
+export const kurucudan = (id: string) => id.startsWith("k_");
 /** önek + en küçük kullanılmayan sayı (ör. "k_a3"): şablonların kimlikleriyle çakışmaz, tanımda tekil */
 export function yeniKimlik(t: FormatTanimi, onek: "b" | "a" | "g" | "m" | "s" | "d", ek: ReadonlySet<string> = new Set()): string {
   const var_ = kimlikler(t);
@@ -50,7 +53,7 @@ export type Oge = { id: string; ad: string; alt: string; kilit: boolean };
 export function bolumOgeleri(b: Bolum): Oge[] {
   if (b.blok === "bilgi") return b.alanlar.map((a) => ({ id: a.id, ad: a.ad, alt: a.kaynak ? `${a.tur} · kayıttan` : a.tur, kilit: a.kilit }));
   if (b.blok === "liste") return b.gruplar.flatMap((g) => g.maddeler.map((m) => ({ id: m.id, ad: m.metin, alt: [g.ad, m.std].filter(Boolean).join(" · "), kilit: m.kilit })));
-  if (b.blok === "olcum") return b.sutunlar.map((c) => ({ id: c.id, ad: c.ad, alt: c.op && c.sinir !== undefined ? `sınır ${c.op === "<=" ? "≤" : "≥"} ${c.sinir}` : "sınır yok", kilit: b.kilit }));
+  if (b.blok === "olcum") return b.sutunlar.map((c) => ({ id: c.id, ad: c.ad, alt: c.op && c.sinir !== undefined ? `sınır ${c.op === "<=" ? "≤" : "≥"} ${c.sinir}` : "sınır yok", kilit: b.kilit && !kurucudan(c.id) }));
   if (b.blok === "test") return b.degerler.map((d) => ({ id: d.id, ad: d.ad, alt: d.op && d.sinir !== undefined ? `sınır ${d.op === "<=" ? "≤" : "≥"} ${d.sinir}` : "sınır yok", kilit: d.kilit }));
   return [];
 }
@@ -72,14 +75,14 @@ export function ogeEkle(t: FormatTanimi, i: number, ad: string): FormatTanimi {
   return { ...t, bolumler: t.bolumler.map((x, j) => (j === i ? y : x)) };
 }
 
-/** bölümden öğe çıkarır (kilitli öğe ve kilitli ölçüm tablosunun sütunu çıkmaz) */
+/** bölümden öğe çıkarır (kilitli öğe ve kilitli ölçüm tablosunun şablon sütunu çıkmaz; kurucuda eklenen sütun çıkar) */
 export function ogeSil(t: FormatTanimi, i: number, id: string): FormatTanimi {
   const b = t.bolumler[i];
   if (!b) return t;
   let y: Bolum = b;
   if (b.blok === "bilgi") y = { ...b, alanlar: b.alanlar.filter((a) => a.id !== id || a.kilit) };
   else if (b.blok === "liste") y = { ...b, gruplar: b.gruplar.map((g) => ({ ...g, maddeler: g.maddeler.filter((m) => m.id !== id || m.kilit) })) };
-  else if (b.blok === "olcum" && !b.kilit) y = { ...b, sutunlar: b.sutunlar.filter((c) => c.id !== id) };
+  else if (b.blok === "olcum") y = { ...b, sutunlar: b.sutunlar.filter((c) => c.id !== id || (b.kilit && !kurucudan(c.id))) };
   else if (b.blok === "test") y = { ...b, degerler: b.degerler.filter((d) => d.id !== id || d.kilit) };
   return { ...t, bolumler: t.bolumler.map((x, j) => (j === i ? y : x)) };
 }

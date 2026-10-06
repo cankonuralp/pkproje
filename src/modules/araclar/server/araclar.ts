@@ -143,6 +143,18 @@ export async function aracListesi(db: Sorgulayici, kim: Kisi): Promise<{ araclar
   return { araclar: l.sort((a, b) => a.plaka.localeCompare(b.plaka, "tr")), kisiler: s.kisiler.map(({ id, ad }) => ({ id, ad })), kendi: k !== null };
 }
 
+/** yan menü Araçlar balonu (karar 236, maket MV.TAKIP[23]; 337–339 incelemesi): "değiştirir" düzeyi (yönetici) bütün araçları, öteki kişi yalnız
+    kendi zimmetindeki aracı sayar. Kırmızı = süresi geçen belge (muayene, trafik sigortası, kasko) + geçen hafta girilmeyen kilometre; sarı = eşik
+    içinde biten belge + bu hafta bekleyen kilometre. Araçlar'ı görmeyene null. */
+export async function aracTakip(db: Sorgulayici, kim: YetkiHesabi): Promise<{ kirmizi: number; sari: number } | null> {
+  if (await kendiKisi(db, kim) === false) return null;
+  const ben = degistirir(kim) ? null : (await hesabinPersoneli(db, kim.id)) ?? "";
+  const s = await durum(db), bugun = bugunTr();
+  const l = s.araclar.map((a) => satir(s, a, bugun, ben)).filter((a) => ben === null || a.benim);
+  const belge = (d: BelgeDurumu) => l.reduce((n, a) => n + a.belgeler.filter((b) => b.durum === d).length, 0);
+  return { kirmizi: l.filter((a) => a.kmDurum === "eksik").length + belge("gecti"), sari: l.filter((a) => a.kmDurum === "bekliyor").length + belge("yakin") };
+}
+
 export async function tutanakListesi(db: Sorgulayici, kim: Kisi): Promise<TutanakSatiri[] | null> {
   const k = await kendiKisi(db, kim);
   if (k === false) return duzey(kim, MODUL) === "yok" ? null : [];

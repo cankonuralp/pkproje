@@ -2341,6 +2341,21 @@ revizyon, alan kopyalama, hafif kusur devri, meslek eşleşme denetimi).
 - Emsal ürünler: https://opwire.app/iso-17020-periyodik-kontrol-yazilimi/ · https://17020muayene.vidco.com.tr/ · https://akuple.com/asansor-kontrol-yazilimi/ · https://ensyazilim.com/
 
 ## 11 · Değişiklik günlüğü
+- 2026-10-06 (343): **337–339 çapraz incelemesi düzeltmeleri** (dört bakış, 24 doğrulanmış bulgu). **Ölçüm cihazı:** sistem öncesi bitiş (ilk_bitis)
+  YALNIZ hiç kalibrasyon kaydı yokken geçerli — kayıt açılınca (sonucu "uygun değil" olsa da) devreden çıkar (GREATEST "uygun değil"i ve daha erken
+  biteni eziyordu; karar 337'nin sözü); kural tek SQL ifadesinde (cihazlar.ts GECERLI_BITIS — Uyarılar da); rapor belgesi kalibrasyon kaydı olmayan
+  cihazda geçerliliği ilk_bitis'ten basar (tarih / sertifika uydurulmaz); içe aktarmada bitiş 5 yıldan ileri olamaz. **İçe aktarma:** müşteri önce tam
+  ünvanla, yoksa kısa adla; birden çok eşleşme atlanır ("tam ünvanı yazın"), eşlenen ünvan ön izlemede; ham satır sınırı okuyucununki (5.000), 2.000
+  veri satırı boşlar atıldıktan sonra; veritabanı kuralı / bağ hatası (23514, 23503) "hiçbir satır eklenmedi" iletisi; içe aktarmadan sonra odak yeni
+  kaydın Geri al tuşunda. **Göç 0048:** müşteri, tesis, personel, ölçüm cihazı, araç, ekipmanda olustu değişmez (sahte "bu işlemde oluşturuldu"
+  ile eski kaydı geri alma işlevine sildirme kapandı); ekipman kodu kuralı uygulamayla aynı ("A-1" artık veritabanında da geçerli). **Format
+  kurucu:** "kilit" yalnız kaynakta (şablon / yayındaki sürüm) kilitli öğede — istemcinin işareti kaydette ve yayında düzeltilir (motor
+  kilitNormallestir); kilitli ölçüm tablosuna kurucuda eklenen sütun çıkarılır; kaydedilmemiş taslakta uygulama içi bağlantı sorar; bölüm aşağı
+  taşınınca odak aşağı tuşunda; üstte "Yayından önce bakılacak" şeridi (maket denetim). **Yan menü balonları (U4 / N5 / 236):** Planlar yalnız
+  kişinin ekibinde olduğu planlar; Onaylar yalnız onaylayabildiği raporlar (firma yöneticisinde onay balonu yok); Araçlar Araçlar modülünden —
+  kilometre (geçen hafta girilmedi kırmızı, bu hafta bekliyor sarı) + belgeler; yönetici ("değiştirir") bütün araçlar, öteki kişi kendi aracı.
+  Kilit: anasayfa, ice-aktarma, ice-aktar-sema, format-kurucu, rapor-format testleri; olumsuz kanıt 2 yeni (olustu-degismez, format-kilit) + menu-takip
+  güncellendi; kabuk e2e seçicisi kırmızı balona dayanıklı.
 - 2026-10-06 (342): **K4 Araç teslim tutanağı → Onaylar › Diğer** (maket araclar.html tutanak-kaydet / tutanak-goster, MB.aracTutanak; AA3, AA4:
   "teslim alan kişiyse tutanak onun Onaylar › Diğer'ine imzaya düşer"). Tutanağın belgesi temel formatla (<firma kodu>-FR-ARC-01): tutanak no, tarih,
   plaka, araç, teslim eden / alan (depo: "firma adına"), 1 Aracın durumu (km, yakıt), 2 Araçta olanlar (Var / Yok), 3 Hasar ve notlar, 4 Fotoğraflar

@@ -40,7 +40,7 @@ test("müşteri ve tesis: zorunlular, il listeden, aynı müşteri dosyada tek a
     [4, true, "vergi no boş · SGK DETSİS NO boş"],
     [5, false, "Müşteri ünvanı boş"],
     [6, false, "Bu tesis zaten kayıtlı"],
-    [7, true, "müşteri kayıtlı, tesis ona eklenir"],
+    [7, true, "müşteri kayıtlı (Kayıtlı Ltd.), tesis ona eklenir"],
     [8, false, "Müşteri pasif"],
     [9, false, "İl bulunamadı"],
     [10, true, "vergi no okunmadı, boş girer · e-posta okunmadı, boş girer · SGK DETSİS NO okunmadı, boş girer · ilçe bulunamadı, boş girer"],
@@ -109,4 +109,23 @@ test("şablonlar: her türde sütun başlığı ve örnek satırlar kendi deneti
   }
   /* uydurma veri: e-postalar .example */
   assert.ok(Object.values(IA_TUR).every((T) => T.ornek.flat().every((h) => !h.includes("@") || h.endsWith(".example"))));
+});
+
+/* 337–339 incelemesi: müşteri eşleşmesi önce TAM ünvan, yoksa kısa ad; birden çok eşleşme atlanır (yanlış müşterinin paneline düşmesin); eşlenen
+   ünvan görünür · kalibrasyon bitişi 5 yıldan ileri olamaz (yazım hatası yıllarca "geçerli") · 3 haneli tireli ekipman kodu (veritabanıyla aynı kural) */
+test("müşteri eşleşmesi tam ünvan önce, belirsiz atlanır; kalibrasyon bitişi üst sınırı; 'A-1' kodu", () => {
+  const m = (id: string, unvan: string, kisa: string) => ({ id, unvan, kisa, vno: null, pasif: false });
+  const b: IaBilgi = { ...BOS, musteriler: [m("m1", "Deneme Metal", "Deneme"), m("m2", "Deneme Metal Sanayi A.Ş.", "Deneme Metal"),
+    m("m3", "ABC Otomotiv Sanayi A.Ş.", "ABC Otomotiv"), m("m4", "ABC Otomotiv Pazarlama A.Ş.", "ABC Otomotiv")],
+    tesisler: ["m1", "m2", "m3", "m4"].map((x, i) => ({ id: `t${i + 1}`, musteriId: x, ad: "Merkez", pasif: false })), ekipmanTurleri: [{ id: "tur1", ad: "Hava tankı", kod: "HT" }] };
+  const mu = iaDenetle("musteri", iaVeriSatirlari("musteri", [["Deneme Metal", "", "", "", "Şube", "Adres", "Kocaeli", "", ""], ["ABC Otomotiv", "", "", "", "Şube", "Adres", "Kocaeli", "", ""]]), b);
+  assert.deepEqual(ozet(mu), [[1, true, "müşteri kayıtlı (Deneme Metal), tesis ona eklenir · SGK DETSİS NO boş"], [2, false, "Birden çok müşteri eşleşti; tam ünvanı yazın"]]);
+  assert.ok(mu[0].deger?.t === "musteri" && "id" in mu[0].deger.musteri && mu[0].deger.musteri.id === "m1", "tam ünvan, öteki müşterinin kısa adından önce");
+  const ek = iaDenetle("ekipman", iaVeriSatirlari("ekipman", [["HT-1", "HT", "Deneme Metal", "Merkez", "", "", "", "", ""], ["HT-2", "HT", "ABC Otomotiv", "Merkez", "", "", "", "", ""],
+    ["A-1", "HT", "Deneme Metal Sanayi A.Ş.", "Merkez", "", "", "", "", ""]]), b);
+  assert.deepEqual(ozet(ek), [[1, true, ""], [2, false, "Birden çok müşteri eşleşti; tam ünvanı yazın"], [3, true, ""]]);
+  assert.deepEqual([ek[0].deger?.t === "ekipman" && ek[0].deger.tesisId, ek[0].alt, ek[2].deger?.t === "ekipman" && ek[2].deger.tesisId], ["t1", "Deneme Metal · Merkez", "t2"]);
+  const c = iaDenetle("cihaz", iaVeriSatirlari("cihaz", [["OC-301", "Topraklama ölçer", "", "", "", "07.10.2031"], ["OC-302", "Topraklama ölçer", "", "", "", "06.10.2031"]]),
+    { ...BOS, cihazTurleri: [{ id: "ct", ad: "Topraklama ölçer" }] });
+  assert.deepEqual(ozet(c), [[1, false, "Kalibrasyon bitişi 5 yıldan ileri olamaz"], [2, true, ""]]);
 });

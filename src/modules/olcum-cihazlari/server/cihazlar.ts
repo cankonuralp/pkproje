@@ -58,9 +58,13 @@ export async function kalibrasyonEsigi(db: Sorgulayici): Promise<number> {
 }
 
 type CihazDb = { id: string; kod: string; tur_id: string; tur: string; marka: string | null; model: string | null; seri: string | null; aralik: string | null; konum: "depo" | "lab"; bitis: string | null; surum: number };
-/* geçerli bitiş: kaldırılmamış "uygun" kalibrasyonların en geç bitişi; toplu içe aktarılan cihazda sistem öncesi bitiş de (0047 ilk_bitis) */
-const CIHAZ_SEC = `SELECT c.id::text, c.kod, c.tur_id::text, t.ad AS tur, c.marka, c.model, c.seri, c.aralik, c.konum, c.surum,
-    GREATEST((SELECT max(k.bitis) FROM kalibrasyon k WHERE k.cihaz_id = c.id AND k.firma_id = c.firma_id AND k.sonuc = 'uygun' AND k.kaldirildi IS NULL), c.ilk_bitis)::text AS bitis
+/** geçerli bitiş (SQL; c = olcum_cihazi): kaldırılmamış "uygun" kalibrasyonların en geç bitişi. Toplu içe aktarılan cihazın sistem öncesi bitişi
+    (0047 ilk_bitis) YALNIZ cihazın hiç kalibrasyon kaydı yokken — kayıt açılınca (sonucu "uygun değil" olsa da) devreden çıkar (karar 337; 337–339
+    incelemesi: GREATEST "uygun değil" kaydı ve daha erken biten kaydı eziyordu). Uyarılar ve rapor belgesi de aynı kuralla (uyari-baglanti.ts). */
+export const GECERLI_BITIS = `CASE WHEN EXISTS (SELECT 1 FROM kalibrasyon k WHERE k.cihaz_id = c.id AND k.firma_id = c.firma_id AND k.kaldirildi IS NULL)
+    THEN (SELECT max(k.bitis) FROM kalibrasyon k WHERE k.cihaz_id = c.id AND k.firma_id = c.firma_id AND k.sonuc = 'uygun' AND k.kaldirildi IS NULL)
+    ELSE c.ilk_bitis END`;
+const CIHAZ_SEC = `SELECT c.id::text, c.kod, c.tur_id::text, t.ad AS tur, c.marka, c.model, c.seri, c.aralik, c.konum, c.surum, (${GECERLI_BITIS})::text AS bitis
   FROM olcum_cihazi c JOIN cihaz_turu t ON t.id = c.tur_id AND t.firma_id = c.firma_id`;
 const satir = (x: CihazDb, bugun: string, esik: number): CihazSatiri => ({
   id: x.id, kod: x.kod, turId: x.tur_id, tur: x.tur, marka: x.marka, model: x.model, seri: x.seri, aralik: x.aralik, konum: x.konum, bitis: x.bitis,
@@ -79,17 +83,25 @@ export async function raporCihazlari(db: Sorgulayici): Promise<{ id: string; kod
     .map((x) => ({ id: x.id, kod: x.kod, turId: x.tur_id, tur: x.tur, marka: x.marka, model: x.model, seri: x.seri, konum: x.konum, bitis: x.bitis }));
 }
 
-/** Raporlar (belge) için: cihazların son geçerli kalibrasyonu — tarih, bitiş, sertifika no (yetki ÇAĞIRANDA) */
-export async function cihazKalibrasyonlari(db: Sorgulayici, idler: readonly string[], gun?: string | null): Promise<Map<string, { tarih: string; bitis: string; sertifika: string | null }>> {
+/** Raporlar (belge) için: cihazların son geçerli kalibrasyonu — tarih, bitiş, sertifika no (yetki ÇAĞIRANDA). Hiç kalibrasyon kaydı olmayan, toplu
+    içe aktarılmış cihazda sistem öncesi bitiş (ilk_bitis; tarih ve sertifika yok — uydurulmaz): rapora eklemeyi ve ENGEL 2'yi geçen bitişle belge
+    aynı kaynaktan (337–339 incelemesi). */
+export async function cihazKalibrasyonlari(db: Sorgulayici, idler: readonly string[], gun?: string | null): Promise<Map<string, { tarih: string | null; bitis: string; sertifika: string | null }>> {
   const l = idler.filter((x) => /^[0-9a-f-]{36}$/.test(x));
   if (!l.length) return new Map();
   /* gün verilirse o gün geçerli olan kalibrasyon önce (muayene günündeki — rapor belgesi); yoksa en geç bitişli */
   const g = gun && /^\d{4}-\d{2}-\d{2}$/.test(gun) ? gun : null;
-  return new Map((await db.sorgu<{ cihaz_id: string; tarih: string; bitis: string; sertifika: string | null }>(
+  const m = new Map<string, { tarih: string | null; bitis: string; sertifika: string | null }>((await db.sorgu<{ cihaz_id: string; tarih: string; bitis: string; sertifika: string | null }>(
     `SELECT DISTINCT ON (cihaz_id) cihaz_id::text, tarih::text, bitis::text, sertifika FROM kalibrasyon
      WHERE cihaz_id = ANY ($1::uuid[]) AND sonuc = 'uygun' AND kaldirildi IS NULL
      ORDER BY cihaz_id, ($2::date IS NOT NULL AND tarih <= $2::date AND bitis >= $2::date) DESC, bitis DESC`, [l, g])).rows
     .map((x) => [x.cihaz_id, { tarih: x.tarih, bitis: x.bitis, sertifika: x.sertifika }]));
+  for (const x of (await db.sorgu<{ id: string; bitis: string }>(
+    `SELECT c.id::text, c.ilk_bitis::text AS bitis FROM olcum_cihazi c WHERE c.id = ANY ($1::uuid[]) AND c.ilk_bitis IS NOT NULL
+       AND NOT EXISTS (SELECT 1 FROM kalibrasyon k WHERE k.cihaz_id = c.id AND k.firma_id = c.firma_id AND k.kaldirildi IS NULL)`, [l])).rows) {
+    m.set(x.id, { tarih: null, bitis: x.bitis, sertifika: null });
+  }
+  return m;
 }
 
 /** öteki modüller için cihaz türleri (yetki ÇAĞIRANDA; Ekipman türleri bağlantısı) */

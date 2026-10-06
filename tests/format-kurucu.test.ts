@@ -6,6 +6,7 @@ import assert from "node:assert/strict";
 import { test } from "node:test";
 import { BLOKLAR, FormatTanimi } from "../src/format/tanim.ts";
 import { SABLONLAR } from "../src/format/sablonlar.ts";
+import { kilitDenetimi, kilitNormallestir } from "../src/format/motor.ts";
 import { bolumAdi, bolumOgeleri, bolumSil, kimlikler, ogeEkle, ogeSil, tasi, yeniBolum, yeniKimlik } from "../src/modules/rapor-format/kurucu.ts";
 
 const zpkr02 = () => structuredClone(SABLONLAR.ZPKR02.tanim);
@@ -42,6 +43,10 @@ test("öğe ekle / sil: alan, madde (son gruba), sütun, değer; kilitli öğe v
   assert.equal(bolumOgeleri(ogeSil(t, gozle, madde.id).bolumler[gozle]).length, bolumOgeleri(t.bolumler[gozle]).length, "kilitli madde silinmez");
   const sutun = bolumOgeleri(t.bolumler[nokta])[0];
   assert.equal(bolumOgeleri(ogeSil(t, nokta, sutun.id).bolumler[nokta]).length, bolumOgeleri(t.bolumler[nokta]).length, "kilitli tablonun sütunu silinmez");
+  /* 337–339 incelemesi: kilitli tabloya kurucuda eklenen sütun çıkarılır (şablonunki çıkmaz) */
+  const t3 = ogeEkle(t, nokta, "Ek sütun"), ek = bolumOgeleri(t3.bolumler[nokta]).at(-1)!;
+  assert.deepEqual([ek.ad, ek.kilit], ["Ek sütun", false]);
+  assert.equal(bolumOgeleri(ogeSil(t3, nokta, ek.id).bolumler[nokta]).length, bolumOgeleri(t.bolumler[nokta]).length, "eklenen sütun çıktı");
   /* kilitli bölüme yeni madde eklenebilir (RAPOR-FORMAT §3: yalnız sırası / görünümü değişir; yeni kilitsiz öğe serbest) */
   const t2 = ogeEkle(t, gozle, "Firmanın ek maddesi");
   gecerli(t2);
@@ -61,4 +66,21 @@ test("bölüm sırala, sil, adlandır: kilitli bölüm silinmez, adı değişmez
   assert.equal(bolumSil(y, n).bolumler.length, t.bolumler.length);
   /* boş ad şemadan geçmez (sunucu yazmaz, ekran nedenini söyler) */
   assert.equal(FormatTanimi.safeParse(bolumAdi(y, n, "  ")).success, false);
+});
+
+test("337–339 incelemesi: 'kilit' yalnız kaynakta kilitli öğede kalır — elle işaretlenen bölüm / madde açılır; kaynağın kilitlisi kalır, denetim temiz", () => {
+  const kaynak = zpkr02();
+  let t = zpkr02();
+  const gozle = t.bolumler.findIndex((b) => b.id === "gozle");
+  t = ogeEkle(t, gozle, "Firmanın maddesi");
+  t = { ...t, bolumler: [...t.bolumler, { ...yeniBolum(t, "not", "Yorum"), kilit: true }] };
+  const g = t.bolumler[gozle];
+  if (g.blok === "liste") { const s = g.gruplar.at(-1)!; s.maddeler[s.maddeler.length - 1] = { ...s.maddeler.at(-1)!, kilit: true }; }
+  const n = kilitNormallestir(t, [kaynak]);
+  gecerli(n);
+  assert.equal(n.bolumler.at(-1)!.kilit, false, "elle kilitlenen bölüm açıldı");
+  assert.equal(bolumOgeleri(n.bolumler[gozle]).at(-1)!.kilit, false, "elle kilitlenen madde açıldı");
+  assert.ok(n.bolumler[gozle].kilit && bolumOgeleri(n.bolumler[gozle])[0].kilit, "kaynağın kilitli bölümü ve maddesi kilitli kalır");
+  assert.deepEqual(kilitDenetimi(n, kaynak), []);
+  assert.ok(kilitNormallestir(t, []).bolumler.every((b) => !b.kilit), "kaynak yoksa hiçbir şey kilitli değil");
 });

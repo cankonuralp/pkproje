@@ -131,6 +131,24 @@ export function kilitliKimlikler(t: FormatTanimi): Set<string> {
   return s;
 }
 
+/** kilit bayrağını kaynağa göre düzelt (337–339 incelemesi): istemcinin yolladığı tanımda bir öğe (bölüm, alan, madde, değer) ancak kaynaklardan
+    birinde AYNI kimlikle kilitliyse kilitli kalır; öteki "kilit" işaretleri kalkar — elle hazırlanmış istekle firmanın kendi öğesi Bakanlık öğesi
+    gibi kalıcı kilitlenemez. Kaynağın kilitli öğesinin kilidini kaldırmak burada düzeltilmez: kilitDenetimi onu ENGEL sayar. */
+export function kilitNormallestir(t: FormatTanimi, kaynaklar: readonly FormatTanimi[]): FormatTanimi {
+  const k = new Set(kaynaklar.flatMap((x) => [...kilitliKimlikler(x)]));
+  const ac = <T extends { id: string; kilit: boolean }>(o: T): T => (o.kilit && !k.has(o.id) ? { ...o, kilit: false } : o);
+  return {
+    ...t,
+    bolumler: t.bolumler.map((b0) => {
+      const b = ac(b0);
+      if (b.blok === "bilgi") return { ...b, alanlar: b.alanlar.map(ac) };
+      if (b.blok === "liste") return { ...b, gruplar: b.gruplar.map((g) => ({ ...g, maddeler: g.maddeler.map(ac) })) };
+      if (b.blok === "test") return { ...b, degerler: b.degerler.map(ac) };
+      return b;
+    }),
+  };
+}
+
 /* ── KİLİTLİ ÖĞE DENETİMİ (RAPOR-FORMAT §1 "Bakanlık formatlı türde zorunlu alanlar kilitli", §3 "silinemez, yalnız sırası / görünümü değişir;
    eksikse yayınlanmaz (bu tek engel: resmî formatın kendisi)"). 2026-10-04 (308): yalnız "silinmiş mi" değil — kilitli öğe yerinde, kilidi
    duruyor ve ÖZÜ aynı (ad, alan türü, seçenekler, kayıttan gelen kaynak, sınır, madde metni, cevap seti, hesap, uygunluk notları, sonuç cümlesi);

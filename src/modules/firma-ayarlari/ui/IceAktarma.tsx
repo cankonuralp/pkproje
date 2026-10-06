@@ -4,7 +4,7 @@
    tarayıcıda okunur, src/components/disa/oku.ts) → sunucu satır satır denetler: "Eklenecek" (uyarı notu) ya da atlanma nedeni → İçe aktar (N).
    Son içe aktarımlar listelenir; sonuncusu, kayıtları kullanılmadıysa onayla Geri al (kullanılmışsa sorulmadan söylenir — maket). Karar sunucuda. */
 import { useRouter } from "next/navigation";
-import { useRef, useState, useTransition } from "react";
+import { useEffect, useRef, useState, useTransition } from "react";
 import { useBildir } from "../../../components/bildirim/Bildirim";
 import { baytIndir } from "../../../components/disa/indir";
 import { tabloOku, TabloHatasi } from "../../../components/disa/oku";
@@ -35,6 +35,13 @@ export function IceAktarma({ gecmis, yaz }: { gecmis: IaGecmis[]; yaz: boolean }
   const T = IA_TUR[tur];
   const gecerli = dosya?.satirlar.filter((x) => x.ok).length ?? 0;
   const odak = (secici: string) => requestAnimationFrame(() => document.querySelector<HTMLElement>(secici)?.focus());
+  /* içe aktarmadan sonra odak YENİ kaydın Geri al tuşuna: liste yenilenince (son kayıt değişince) — o zamana kadar bölüm başlığında (337–339 incelemesi) */
+  const geriOdak = useRef<string | null>(null);
+  useEffect(() => {
+    if (geriOdak.current === null || (gecmis[0]?.id ?? "") === geriOdak.current) return;
+    geriOdak.current = null;
+    odak("[data-ia-geri]");
+  }, [gecmis]);
 
   const sec = (f: File | undefined) => {
     if (!f) return;
@@ -54,8 +61,9 @@ export function IceAktarma({ gecmis, yaz }: { gecmis: IaGecmis[]; yaz: boolean }
     baslat(async () => {
       const r = await iceAktarEylemi({ tur, dosya: dosya.ad, satirlar: dosya.ham });
       if (!r.tamam) { setHata(r.genel ?? "İçe aktarılamadı."); return; }
+      geriOdak.current = gecmis[0]?.id ?? "";
       setDosya(null); setHata(null); bildir(r.bildirim ?? "İçe aktarıldı."); router.refresh();
-      odak("[data-ia-geri]");
+      odak("#ay-b-ice");
     });
   };
   const geriAl = (g: IaGecmis) => baslat(async () => {

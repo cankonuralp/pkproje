@@ -124,7 +124,12 @@ test("YAYIN: kilitli (Bakanlık) öğe silinmiş / değiştirilmiş / kilidi kal
   const iyi = structuredClone(SABLONLAR.ZPKR02.tanim);
   iyi.bolumler.reverse();
   iyi.bolumler.push({ id: "ek", ad: "Firma notu", blok: "bilgi", kilit: false, alanlar: [] });
+  /* 337–339 incelemesi: istemci firmanın kendi bölümünü "kilit" işaretleyip yollar — kaynakta kilitli olmadığı için kaydedilen tanımda açık */
+  iyi.bolumler.push({ id: "sahte", ad: "Sahte kilit", blok: "not", kilit: true, zorunlu: false });
   const k2 = tamam(await a(MEK, (db) => taslakKaydet(db, MEK, t.id, k.surum, iyi)));
+  const kayitli = (await a(MEK, (db) => formatAyrintisi(db, MEK, t.id)))!.tanim!;
+  assert.equal(kayitli.bolumler.find((x) => x.id === "sahte")?.kilit, false, "istemcinin kilit işareti yazılmadı");
+  assert.ok(kayitli.bolumler.find((x) => x.id === "gozle")?.kilit, "kaynağın kilitli bölümü kilitli");
   const y = tamam(await a(MEK, (db) => yayinla(db, MEK, t.id, k2.surum, "  ilk   sürüm ")));
   assert.equal(y.sira, 1);
   assert.deepEqual(y.uyarilar, ["“Firma notu” bölümü boş."]);

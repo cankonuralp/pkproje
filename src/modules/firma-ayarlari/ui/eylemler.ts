@@ -59,7 +59,10 @@ async function iaIslem(is: (o: NonNullable<Awaited<ReturnType<typeof istekOturum
       : r.durum === "yetkisiz" ? { genel: SONUC.yetkisiz } : { genel: r.neden };
   } catch (h) {
     /* aynı anda başka biri aynı kodu / plakayı / e-postayı kaydetti: hiçbir satır girmedi (tek işlem) */
-    if ((h as { code?: string }).code === "23505") return { genel: "İçe aktarılamadı: bazı kayıtlar bu arada eklendi. Dosyayı yeniden seçip denetleyin; hiçbir satır eklenmedi." };
+    const kod = (h as { code?: string }).code;
+    if (kod === "23505") return { genel: "İçe aktarılamadı: bazı kayıtlar bu arada eklendi. Dosyayı yeniden seçip denetleyin; hiçbir satır eklenmedi." };
+    /* veritabanı kuralı ya da bağı (denetimin kaçırdığı biçim, bu arada silinen tesis / tür): yine hiçbir satır girmedi (337–339 incelemesi) */
+    if (kod === "23514" || kod === "23503") return { genel: "İçe aktarılamadı: bir satır veritabanı kuralına uymadı ya da bağlı kayıt bu arada değişti. Dosyayı yeniden seçip denetleyin; hiçbir satır eklenmedi." };
     throw h;
   }
 }

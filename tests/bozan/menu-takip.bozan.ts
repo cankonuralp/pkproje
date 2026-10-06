@@ -1,6 +1,7 @@
 /* OLUMSUZ KANIT — tests/anasayfa.test.ts "yan menü balonları" neyi koruyor (339). Kaynak diskte DEĞİŞTİRİLMEZ (anayasa 13.11): takip.ts bellekte
    bozulup geçici klasörden içe aktarılır (göreli içe aktarmalar mutlak yola çevrilir).
-   1. Planlar düzeyi süzgeci kalkınca "kendi" düzeyindeki (ekipte olmayan) kişi firmanın bütün kabul bekleyen planlarını balonda sayar. */
+   1. "Kişinin kendi işi" süzgeci kalkınca (337–339 incelemesi, U4: planı atanan kabul eder) planlamacı ekibinde olmadığı, kabul edemeyeceği planı
+      balonda sayar. (339'daki ilk hâli: Planlar düzeyi süzgeci — artık balon her düzeyde ekiple sınırlı.) */
 import assert from "node:assert/strict";
 import { mkdtempSync, readFileSync, rmSync, writeFileSync } from "node:fs";
 import { tmpdir } from "node:os";
@@ -26,8 +27,8 @@ let kume: GomuluKume, havuz: Havuz;
 before(async () => { kume = await testKumesi(); havuz = havuzKur(kume.uygulama); });
 after(async () => { await havuz?.end(); await kume?.durdur(); rmSync(klasor, { recursive: true, force: true }); });
 
-test("Planlar düzeyi süzgeci kalkınca 'kendi' düzeyindeki kişi firmanın bütün bekleyen planlarını sayar (kilidin koruduğu açık)", async () => {
-  const m = await bozuk("const planlar = (await anaPlanlar(db)).filter((p) => hep || (!!ben && p.ekip.includes(ben)));", "const planlar = await anaPlanlar(db);");
+test("kendi işi süzgeci kalkınca planlamacı ekibinde olmadığı planı sayar (kilidin koruduğu açık)", async () => {
+  const m = await bozuk("const bek = planlar.filter((p) => p.durum === \"bekliyor\" && !!ben && p.ekip.includes(ben))", "const bek = planlar.filter((p) => p.durum === \"bekliyor\")");
   const s = kume.sahipIstemci(); await s.connect();
   let A: string, plan: string;
   try {
@@ -38,7 +39,7 @@ test("Planlar düzeyi süzgeci kalkınca 'kendi' düzeyindeki kişi firmanın b�
     const t = (await s.query<{ id: string }>("INSERT INTO tesis (firma_id, musteri_id, ad) VALUES ($1, $2, 'Merkez') RETURNING id::text", [A, mu])).rows[0].id;
     await s.query("INSERT INTO plan (firma_id, no, tesis_id, baslangic, bitis, durum, firma_adi, acan) VALUES ($1, 'P-1026-001', $2, '2099-01-01', '2099-01-01', 'bekliyor', 'Deneme', 'Deneme')", [A, t]);
   } finally { await s.end(); }
-  const K = { id: plan, ad: "Deneme", roller: ["planlama" as const], matris: { 13: ["kendi", "kendi", "gor", "gor", "yaz", "yok"] } };
+  const K = { id: plan, ad: "Deneme", roller: ["planlama" as const] };
   const r = await kiraciIcinde(havuz, A, (db) => m.menuTakip(db, K as never), { hesapId: plan });
-  assert.equal(r[13]?.sari, 1, "bozuk: ekipte olmayan 'kendi' düzeyi firmanın planını saydı");
+  assert.equal(r[13]?.sari, 1, "bozuk: ekipte olmayan planlamacı firmanın planını saydı");
 });

@@ -3,9 +3,11 @@
    bölüm ekle), ortada seçili bölümün düzenleyicisi (ad, bloğa göre alanlar / maddeler / sütunlar / değerler, fotoğraf sayıları, sonuç cümlesi,
    yorum zorunlu mu, imza alanları), sağda kurallar ve canlı saha ekranı önizlemesi. Değişiklik "Taslağı kaydet" ile yazılır (Kaydedilmedi ·
    Vazgeç · Kaydet — kalıp Z1); kaydedilmemiş taslak yayınlanmaz. Kilitli (Bakanlık) bölüm silinmez, adı değişmez; kilitli öğe silinmez — sunucu
-   yayında kaynak şablondan yeniden denetler (ENGEL). Telefonda kurucu açılmaz (masaüstü işi), önizleme görünür. Karar ve şema sunucuda. */
+   yayında kaynak şablondan yeniden denetler (ENGEL). Telefonda kurucu açılmaz (masaüstü işi), önizleme görünür. Karar ve şema sunucuda.
+   337–339 incelemesi: kaydedilmemiş taslakla uygulama içi bağlantıya basınca sorulur (tarayıcının sekme kapatma sorusuna ek); taslakta sorun varsa
+   üstte "Yayından önce bakılacak" (maket kurucuCiz → denetim; motorun saf yayın denetimi). */
 import { useRouter } from "next/navigation";
-import { useEffect, useState, useTransition } from "react";
+import { useEffect, useMemo, useState, useTransition } from "react";
 import { useBildir } from "../../../components/bildirim/Bildirim";
 import { Alan, FormIzgara, Girdi } from "../../../components/form/Form";
 import { Ikon } from "../../../components/ikon/Ikon";
@@ -14,6 +16,7 @@ import { NesneBasi, Rozet } from "../../../components/sayfa/Sayfa";
 import { SecimAlani } from "../../../components/secim/SecimAlani";
 import { Serit } from "../../../components/serit/Serit";
 import { Tus, TusBaglanti } from "../../../components/tus/Tus";
+import { yayinDenetimi } from "../../../format/motor";
 import { BLOKLAR, type Blok, type FormatTanimi } from "../../../format/tanim";
 import { bolumAdi, bolumOgeleri, bolumSil, ogeEkle, ogeliBlok, ogeSil, tasi, yeniBolum } from "../kurucu";
 import { taslakKaydetEylemi } from "./eylemler";
@@ -65,6 +68,23 @@ export function FormatKurucu({ turId, turAd, format, tanim, kaynakAd }: {
     window.addEventListener("beforeunload", dur);
     return () => window.removeEventListener("beforeunload", dur);
   }, [kirli]);
+  /* uygulama içi gezinti (Önizle, kırıntı, yan menü — istemci bağlantıları beforeunload'u tetiklemez): kaydedilmemiş taslakta sorulur */
+  useEffect(() => {
+    if (!kirli) return;
+    const tikla = (e: MouseEvent) => {
+      const a = (e.target as Element | null)?.closest?.("a[href]") as HTMLAnchorElement | null;
+      if (!a || e.defaultPrevented || e.button !== 0 || e.metaKey || e.ctrlKey || e.shiftKey || e.altKey || a.target === "_blank" || a.hasAttribute("download")) return;
+      const u = new URL(a.href, location.href);
+      if (u.origin !== location.origin || (u.pathname === location.pathname && u.search === location.search)) return;
+      e.preventDefault(); e.stopPropagation();
+      void onayla({ baslik: "Kaydedilmemiş değişiklikler", metin: "Taslağa kaydedilmemiş değişiklikler silinir. Sayfadan çıkılsın mı?", tus: "Çık", tehlike: true })
+        .then((tamam) => { if (tamam) router.push(`${u.pathname}${u.search}${u.hash}`); });
+    };
+    document.addEventListener("click", tikla, true);
+    return () => document.removeEventListener("click", tikla, true);
+  }, [kirli, onayla, router]);
+  /* yayından önce bakılacaklar (boş bölüm, sınırsız tablo, sonuç / imza bölümü yok …): uyarıdır, yayını engellemez */
+  const bakilacak = useMemo(() => yayinDenetimi(t), [t]);
 
   const kaydet = () => baslat(async () => {
     const r = await taslakKaydetEylemi(format.id, format.surum, t);
@@ -78,7 +98,9 @@ export function FormatKurucu({ turId, turAd, format, tanim, kaynakAd }: {
   const sec_ = (j: number) => { setSec(j); setYeni(""); odak(`#${ID.baslik}`); };
   const sira = (j: number, k: number, yon: "yukari" | "asagi") => {
     degis({ ...t, bolumler: tasi(t.bolumler, j, k) }); setSec(k);
-    odak(`[data-kb-${yon}="${k}"]:not([disabled]), [data-kb-${yon === "yukari" ? "asagi" : "yukari"}="${k}"]`);
+    /* önce aynı yönün tuşu (art arda taşınabilsin), o kapalıysa karşı yönün — iki ayrı sorgu (virgüllü seçici belge sırasını alırdı) */
+    requestAnimationFrame(() => (document.querySelector<HTMLElement>(`[data-kb-${yon}="${k}"]:not([disabled])`)
+      ?? document.querySelector<HTMLElement>(`[data-kb-${yon === "yukari" ? "asagi" : "yukari"}="${k}"]`))?.focus());
   };
   const bolumEkle = (blok: Blok) => {
     const y = { ...t, bolumler: [...t.bolumler, yeniBolum(t, blok, BLOK_ADI[blok])] };
@@ -119,6 +141,7 @@ export function FormatKurucu({ turId, turAd, format, tanim, kaynakAd }: {
       <div className={stil.seritKap}>
         <Serit tur="bilgi" ikon="info">Firma formatını kendisi kurar; saha ekranı ve PDF bu tanımdan çizilir. Açık raporlar başladıkları sürümle kalır, yeni raporlar yayındaki sürümle açılır.</Serit>
         {hatalar.length > 0 && <div id="kb-hatalar" tabIndex={-1}><Serit tur="hata" ikon="circle-alert">Taslak kaydedilmedi: {hatalar.join(" · ")}</Serit></div>}
+        {bakilacak.length > 0 && <Serit tur="uyari" ikon="triangle-alert">Yayından önce bakılacak: {bakilacak.join(" · ")}</Serit>}
         <p className={stil.yalnizDar}>Format kurucu masaüstünde kullanılır; burada önizleme görünür.</p>
       </div>
       <div className={stil.kurucu}>
