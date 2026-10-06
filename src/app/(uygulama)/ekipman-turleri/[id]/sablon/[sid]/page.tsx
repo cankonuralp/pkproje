@@ -1,4 +1,5 @@
-/* RAPOR ŞABLONU SÜRÜMÜ (RAPOR-FORMAT.md §5–6; maket ekipman-turleri.html #/tur/<kod>/kurucu — salt okunur önizleme, düzenleyici K4'te): başlık +
+/* RAPOR ŞABLONU SÜRÜMÜ (RAPOR-FORMAT.md §5–6; maket ekipman-turleri.html #/tur/<kod>/kurucu — salt okunur önizleme; taslağın düzenleyicisi
+   Format kurucu …/kurucu, K4): başlık +
    durum (Taslak / Yayında / Eski) · yüzler · taslakta yayın denetimi (kilitli öğe engeli, uyarılar) · kurallar · görünüm · saha ekranı önizlemesi.
    Görmeyen, başka firmanın ya da başka türün sürümü: bulunamadı. Yayınla yalnız "değiştirir" düzeyine çizilir; karar sunucuda. */
 import type { Metadata } from "next";
@@ -6,6 +7,7 @@ import { notFound } from "next/navigation";
 import { Bilgi, BilgiListesi, Kosullar, Yuz, Yuzler } from "../../../../../../components/bilgi/Bilgi";
 import { Yetkisiz } from "../../../../../../components/hata/Hata";
 import { Bolum, DegerYok, Kirinti, NesneBasi, Rozet, SeritKap } from "../../../../../../components/sayfa/Sayfa";
+import { TusBaglanti } from "../../../../../../components/tus/Tus";
 import { Serit } from "../../../../../../components/serit/Serit";
 import { kilitliKimlikler } from "../../../../../../format/motor";
 import { bransAd } from "../../../../../../modules/ekipman-turleri/sema";
@@ -40,7 +42,10 @@ export default async function Sayfa({ params }: { params: Promise<{ id: string; 
       <Kirinti ogeler={[[`Ekipman türleri · ${bransAd(tur.brans)}`, tur.brans === "e" ? "/ekipman-turleri?brans=e" : "/ekipman-turleri"],
         [tur.ad, `/ekipman-turleri/${tur.id}`], [`Rapor şablonu · ${surumAdi(f)}`]]} />
       <NesneBasi baslik={`Rapor şablonu · ${surumAdi(f)}`} rozet={<Rozet tur={rozetTur}>{rozetAd}</Rozet>} altIkon="layout-list"
-        alt={`${tur.ad} · ${f.kaynakAd ?? "Firma formatı"}`} tuslar={yaz && <YayinlaTusu format={{ id: f.id, surum: f.surum }} />} />
+        alt={`${tur.ad} · ${f.kaynakAd ?? "Firma formatı"}`} tuslar={yaz && <>
+          <TusBaglanti ikon="pencil" href={`/ekipman-turleri/${tur.id}/sablon/${f.id}/kurucu`}>Format kurucu</TusBaglanti>
+          <YayinlaTusu format={{ id: f.id, surum: f.surum }} />
+        </>} />
       <Yuzler>
         <Yuz ikon="list" ad="Bölüm" sayi={f.bolum} />
         <Yuz ikon="list-checks" ad="Kontrol maddesi" sayi={madde} />

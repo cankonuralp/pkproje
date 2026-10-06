@@ -2341,6 +2341,17 @@ revizyon, alan kopyalama, hafif kusur devri, meslek eşleşme denetimi).
 - Emsal ürünler: https://opwire.app/iso-17020-periyodik-kontrol-yazilimi/ · https://17020muayene.vidco.com.tr/ · https://akuple.com/asansor-kontrol-yazilimi/ · https://ensyazilim.com/
 
 ## 11 · Değişiklik günlüğü
+- 2026-10-06 (338): **K4 Format kurucu** (RAPOR-FORMAT.md §6; maket maket-kurucu.js). Türün TASLAK rapor şablonu düzenlenir:
+  /ekipman-turleri/<tür>/sablon/<taslak>/kurucu (önizlemede "Format kurucu", sürüm tablosunda "Düzenle"; Şablondan başlat artık kurucuyu açar).
+  Solda bölüm listesi (seç, yukarı / aşağı sırala, **Bölüm ekle** — 10 blok), ortada seçili bölüm (ad; bilgi alanları / kontrol maddeleri (son
+  gruba) / ölçüm sütunları / test değerleri ekle-çıkar; fotoğraf en az–en çok; sonuç cümlesi; yorum zorunlu; imza alanları; cevap seti), sağda
+  **Kurallar** (Uygun değilde fotoğraf zorunlu · kusur derecesi · sonuç önerisi) ve canlı **saha ekranı önizlemesi**. Değişiklik "Taslağı
+  kaydet" ile yazılır (Kaydedilmedi · Vazgeç; sayfadan çıkarken tarayıcı sorar); kaydedilmemiş taslak yayınlanmaz (Yayınla yalnız kayıtlıyken).
+  Kilitli (Bakanlık) bölüm silinmez ve adı değişmez, kilitli öğe ve kilitli ölçüm tablosunun sütunu silinmez — sunucu yayında kaynak
+  şablondan yeniden denetler (ENGEL, 308). Yeni öğenin kimliği bütün tanımda tekil (cevaplar kimlikle). Kayıt hatası hangi bölümde olduğuyla
+  üstte söylenir. Telefonda kurucu açılmaz (masaüstü işi): yalnız önizleme. Yetki Ekipman türleri "değiştirir"; taslak dışı sürüm önizlemeye
+  döner. Açık: "PDF önizle" (format PDF'i) ve "Kendi formatını yükle" (yapay zekâ taslağı, K5). Kilit: format-kurucu.test (saf), rapor-format
+  e2e (bölüm ekle → kaydet, Bakanlık bölümü silinemez, telefonda önizleme); olumsuz kanıt 2.
 - 2026-10-06 (337): **K4 Firma ayarları — Toplu içe aktarma (ilk kurulum)** (maket iceCiz; §11 245). Tam genişlik bölüm: **Ne yüklenecek**
   (müşteriler ve tesisler · ekipmanlar · ölçüm cihazları · personel · araçlar) → sütunlar (* zorunlu) → **Şablonu indir** (.xlsx, örnek satırlar) →
   **Excel seç** (.xlsx / .csv; dosya tarayıcıda okunur, başlık satırı atlanır) → sunucu satır satır denetler: "Eklenecek" (uyarı notu: vergi no / SGK

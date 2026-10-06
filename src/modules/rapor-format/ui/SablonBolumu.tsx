@@ -2,7 +2,7 @@
 /* TÜR SAYFASI › RAPOR ŞABLONU (RAPOR-FORMAT.md §4–5; maket ekipman-turleri.html Format kurucu: "Taslak · vN" / "Yayında · vN", Yayınla onaylı,
    yayın öncesi denetim). Sürüm tablosu (taslak üstte, sonra yeniden eskiye) · Şablondan başlat penceresi (hazır şablon ya da yayınlanmış sürüm;
    varsa taslağın yerine geçer) · Yayınla penceresi (engeller + uyarılar sunucudan, sürüm notu). Tuşlar yalnız "değiştirir" düzeyine çizilir;
-   karar ve denetim yine sunucuda. Düzenleyici (Format kurucu) K4'te. */
+   karar ve denetim yine sunucuda. Taslak Format kurucuda düzenlenir (…/sablon/<sürüm>/kurucu, K4). */
 import { useRouter } from "next/navigation";
 import { useEffect, useState, useTransition } from "react";
 import { Kosullar } from "../../../components/bilgi/Bilgi";
@@ -31,6 +31,7 @@ export function SablonTablosu({ turId, surumler, yaz }: { turId: string; surumle
     { k: "eylem", genislik: "18%", baslik: "İşlem", gizliBaslik: true, kart: "eylem", sira: 9, hucre: (x) => (
       <span className={stil.tuslar}>
         <TusBaglanti ikon="eye" href={`/ekipman-turleri/${turId}/sablon/${x.id}`}>Önizle</TusBaglanti>
+        {yaz && x.durum === "taslak" && <TusBaglanti ikon="pencil" href={`/ekipman-turleri/${turId}/sablon/${x.id}/kurucu`}>Düzenle</TusBaglanti>}
         {yaz && x.durum === "taslak" && <YayinlaTusu format={x} />}
       </span>
     ) },
@@ -56,7 +57,7 @@ export function SablonBaslatTusu({ turId, turAd, taslak, surumler, sablonlar }:
     const r = await taslakBaslatEylemi(turId, taslak?.surum ?? null, secim);
     setH(r.hatalar ?? {}); setGenel(r.genel ?? null);
     if (!r.tamam) return;
-    setAcik(false); bildir("Taslak hazırlandı."); router.push(`/ekipman-turleri/${turId}/sablon/${r.id}`);
+    setAcik(false); bildir("Taslak hazırlandı; Format kurucuda düzenleyin."); router.push(`/ekipman-turleri/${turId}/sablon/${r.id}/kurucu`);
   });
   return (
     <>

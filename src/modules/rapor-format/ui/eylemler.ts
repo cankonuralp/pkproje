@@ -3,7 +3,7 @@
    gelen kimlik / sürüm yalnız "hangi kayıt, hangi sürümü gördüm" bilgisidir; yayının engeli ve uyarıları sunucuda yeniden hesaplanır. */
 import { ayniKoken } from "../../../server/kimlik/koken";
 import { istekOturumu, oturumIslemi } from "../../../server/kimlik/istek";
-import { taslakBaslat, yayinDenetle, yayinla } from "../server/formatlar";
+import { taslakBaslat, taslakKaydet, yayinDenetle, yayinla } from "../server/formatlar";
 
 export interface FormatDurumuYaniti { tamam?: boolean; id?: string; sira?: number; uyarilar?: string[]; engeller?: string[]; hatalar?: Record<string, string>; genel?: string }
 
@@ -41,6 +41,15 @@ export async function yayinlaEylemi(formatId: string, surum: number, notu: strin
   const r = await oturumIslemi(o, (db) => yayinla(db, o, metin(formatId), Number(surum), metin(notu)));
   if (r.durum === "tamam") return { tamam: true, sira: r.sira, uyarilar: r.uyarilar };
   if (r.durum === "engel") return { engeller: r.engeller };
+  if (r.durum === "gecersiz") return { hatalar: r.hatalar };
+  return { genel: SONUC[r.durum] };
+}
+
+/** Format kurucu (K4): taslağın tanımını kaydet — şemadan geçmeyen ya da çok büyük tanım yazılmaz; yayınlanmış sürüm değişmez */
+export async function taslakKaydetEylemi(formatId: string, surum: number, tanim: unknown): Promise<FormatDurumuYaniti & { surum?: number }> {
+  const o = await oturum(); if (typeof o === "string") return { genel: o };
+  const r = await oturumIslemi(o, (db) => taslakKaydet(db, o, metin(formatId), Number(surum), tanim));
+  if (r.durum === "tamam") return { tamam: true, id: r.id, surum: r.surum };
   if (r.durum === "gecersiz") return { hatalar: r.hatalar };
   return { genel: SONUC[r.durum] };
 }
