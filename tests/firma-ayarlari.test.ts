@@ -139,7 +139,8 @@ test("dosyalar: logo yalnız PNG / JPEG (en çok 2 MB), belgelerin başlığına
   assert.equal(v.dosyalar.logo?.ad, "logo.png");
   assert.equal(v.firma.deger.adres, "Deneme Cad. 1", "logo yazılırken öteki alanlar korunur");
   /* 334 incelemesi: logo yüklendikten sonra Firma bilgileri kaydı logoyu korur; 2 MB üstü logo; eski sürümle yükleme öksüz dosya bırakmaz */
-  tamam(await a(YON, (db) => ayarKaydet(db, YON, "firma", v.firma.surum, { ad: "Deneme Muayene", adres: "Deneme Cad. 1", eposta: "rapor@deneme-a.example", akr: "AB-123", nusha: "3" })));
+  /* (değer değişmeli: aynı değer yazılmaz, sürüm artmaz — 249c666) */
+  tamam(await a(YON, (db) => ayarKaydet(db, YON, "firma", v.firma.surum, { ad: "Deneme Muayene", adres: "Deneme Cad. 1", eposta: "rapor2@deneme-a.example", akr: "AB-123", nusha: "3" })));
   const v2 = (await a(YON, (db) => firmaAyarlari(db, YON)))!;
   assert.equal(v2.dosyalar.logo?.ad, "logo.png", "firma kaydı logoyu silmez");
   const buyuk = new Uint8Array((2 << 20) + 1); buyuk.set(PNG);
