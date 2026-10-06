@@ -2341,6 +2341,14 @@ revizyon, alan kopyalama, hafif kusur devri, meslek eşleşme denetimi).
 - Emsal ürünler: https://opwire.app/iso-17020-periyodik-kontrol-yazilimi/ · https://17020muayene.vidco.com.tr/ · https://akuple.com/asansor-kontrol-yazilimi/ · https://ensyazilim.com/
 
 ## 11 · Değişiklik günlüğü
+- 2026-10-06 (341): **K4 Talep formu (PDF)** (maket MB.TALEP_FORMAT / talepFormu / talepPdfAc — 35. tur 161–162, T8). İzin talep formu ve masraf
+  formu temel formatla (<firma kodu>-FR-IZN-01 / MSR-01): başlık (logo, künye, form adı, form no, gönderildi, durum), personel (ad · meslek), 1 Talep
+  (izin: tür, başlangıç, bitiş, iş günü, açıklama, ek belge · masraf: iş, tarih, tür, tutar, KDV ve KDV hariç, açıklama, fiş, ödendi), 2 Beyan (+ red
+  gerekçesi), imzalar (Talep eden: gönderildi · zaman; Onaylayan: onaylandı / reddedildi · zaman, karar yoksa "Tarih · imza"). Aynı form üç yerden
+  iner (tek açılış — 162): Talepler'de talebin penceresinde "PDF", Personel › İzin talepleri satırında, Muhasebe › Giderler'de masraf formunun
+  penceresinde. Uç /talepler/pdf/<izin|masraf>/<id>; erişim: talep eden; izinde firma yöneticisi (Talepler "değiştirir"); masrafta Muhasebe'yi
+  gören — başkasına 404. E-postayla iletme (maket "PDF · e-posta") K5'te (iş kuyruğu); mobil / e-imza dış hizmet (Y5). Kilit: talep-belgesi.test (saf),
+  pdf.test, talepler.test (erişim, karar, B sızıntısı); olumsuz kanıt 1; talepler e2e (PDF iner).
 - 2026-10-06 (340): **K4 Muhasebe › Fatura özeti (PDF)** (maket faturaCiz "Fatura özeti (PDF)": "fatura e-Fatura programında kesilir; burada
   fatura özeti (kalemler, KDV, tahsilat) yazdırılır / PDF olur"; §11 1659). Fatura sayfasında tuş; oturumlu uç /muhasebe/f/<id>/pdf indirir
   (<fatura no>-fatura-ozeti.pdf). Belge (src/belge/fatura.ts, rapor ve teklif belgesiyle aynı görünüm ve motor): başlık (logo, firma künyesi, "Fatura

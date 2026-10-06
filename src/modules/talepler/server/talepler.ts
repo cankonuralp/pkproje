@@ -4,20 +4,24 @@
    istemciden personel kimliği alınmaz — veritabanı da denetler). Onay bekleyen talebi yalnız talep eden geri çeker; belgesini o değiştirir.
    İzin onayı / reddi firma yöneticisinde (Personel › İzin talepleri; Talepler "değiştirir"). Masrafın onayı Muhasebe'de. */
 import type { Depo } from "../../../server/dosya/depo.ts";
-import { dosyaCope, dosyaYukle } from "../../../server/dosya/dosya.ts";
+import { dosyaCope, dosyaYukle, kayitDosyasi } from "../../../server/dosya/dosya.ts";
 import { SINIR, turBul } from "../../../server/dosya/tur.ts";
 import type { Sorgulayici } from "../../../server/db/kiraci.ts";
 import { ekle, guncelle, sil, tablo, type Iz } from "../../../server/db/yazici.ts";
-import { ayarOku } from "../../../server/ayar/ayar.ts";
+import { ayarOku, firmaBelgeKunyesi } from "../../../server/ayar/ayar.ts";
 import { hesabinPersoneli, hesapAdlari } from "../../../server/kimlik/hesap.ts";
 import { numaraAl } from "../../../server/numara/numara.ts";
 import { duzey, type YetkiHesabi } from "../../../server/yetki/canDo.ts";
 import { dogrula, type DogrulamaHatalari } from "../../../sema/ortak.ts";
 import { musteriOzetleri } from "../../musteriler/server/musteriler.ts";
-import { masrafBelgesi, masrafFormlari, masrafGeriCek, masrafGonder, type MasrafFormu } from "../../muhasebe/server/talep-baglanti.ts";
+import { masrafBelgesi, masrafFormlari, masrafFormuKaydi, masrafGeriCek, masrafGonder, type MasrafFormu } from "../../muhasebe/server/talep-baglanti.ts";
+import { GIDER_DURUM, GIDER_TUR, giderKdv, para } from "../../muhasebe/sema.ts";
+import { personelOzetleri } from "../../personel/server/personel.ts";
+import { meslek } from "../../personel/sema.ts";
+import type { TalepFormuVerisi, TalepTipi } from "../../../belge/talep.ts";
 import { izinHaklari } from "../../personel/server/talep-baglanti.ts";
 import { personelinPlanlari } from "../../planlar/server/talep-baglanti.ts";
-import { isGunu, IzinGirdisi, RedGirdisi, IZIN_TUR, type IzinDurumu, type IzinTuru } from "../sema.ts";
+import { isGunu, IzinGirdisi, RedGirdisi, IZIN_DURUM, IZIN_TUR, type IzinDurumu, type IzinTuru } from "../sema.ts";
 
 const MODUL = 21;
 export const IZIN_DOSYA = "izin";
@@ -209,3 +213,43 @@ export async function izinDosyasiGorulur(db: Sorgulayici, kim: YetkiHesabi, kayi
   const x = (await db.sorgu<{ kaydeden: string | null }>("SELECT kaydeden::text FROM izin_talebi WHERE id = $1", [kayitId])).rows[0];
   return !!x && (izinYonetir(kim) || (girer(kim) && x.kaydeden === kim.id));
 }
+
+/* ── TALEP FORMU (PDF; 341 — maket MB.talepPdfAc, 35. tur 162: "talep eden (Talepler), firma yöneticisi (Personel › İzin talepleri) ve muhasebe
+   (Muhasebe › Giderler) aynı formu açar") ── */
+const tarihNo = (s: string | null) => (s ? s.split("-").reverse().join(".") : "-");
+/** talebin formu (izin ya da masraf) — talep eden; izinde firma yöneticisi (Talepler "değiştirir"); masrafta Muhasebe'yi gören. Başkasına null */
+export async function talepFormuVerisi(db: Sorgulayici, kim: Kisi, tip: string, id: string, depo: Depo | null = null): Promise<TalepFormuVerisi | null> {
+  if ((tip !== "izin" && tip !== "masraf") || !UUID.test(id)) return null;
+  const ben = girer(kim) ? await hesabinPersoneli(db, kim.id) : null;
+  let personelId: string, no: string, gonderildi: string, durum: string, red: string | null, alanlar: [string, string][];
+  let karar: { hesap: string | null; zaman: string | null; sonuc: "onaylandi" | "reddedildi" } | null = null;
+  if (tip === "izin") {
+    const x = (await db.sorgu<IzinDb>(`${IZIN_SEC} WHERE id = $1`, [id])).rows[0];
+    if (!x || !(x.personel_id === ben || izinYonetir(kim))) return null;
+    const belge = x.belge ? await kayitDosyasi(db, IZIN_DOSYA, x.id, x.belge) : null;
+    personelId = x.personel_id; no = x.no; gonderildi = x.olustu.toISOString(); durum = IZIN_DURUM[x.durum][0]; red = x.red;
+    alanlar = [["İzin türü", IZIN_TUR[x.tur]], ["Başlangıç", tarihNo(x.bas)], ["Bitiş", tarihNo(x.bit)], ["Süre", `${x.gun} iş günü`], ["Açıklama", x.aciklama ?? ""],
+      ["Ek belge", belge?.ad ?? "-"]];
+    if (x.durum !== "bekliyor") karar = { hesap: x.onaylayan, zaman: x.karar?.toISOString() ?? null, sonuc: x.durum === "red" ? "reddedildi" : "onaylandi" };
+  } else {
+    const g = await masrafFormuKaydi(db, id);
+    const muhasebe = ["gor", "yaz"].includes(duzey(kim, 18));
+    if (!g || !(g.personelId === ben || muhasebe)) return null;
+    const belge = g.belge ? await kayitDosyasi(db, "gider", g.id, g.belge) : null, k = giderKdv(g.tutar, g.oran);
+    personelId = g.personelId; no = g.no; gonderildi = g.gonderildi; durum = GIDER_DURUM[g.durum][0]; red = g.red;
+    alanlar = [["İş", g.isNo ?? "Genel (işe bağlı değil)"], ["Masraf tarihi", tarihNo(g.tarih)], ["Tür", GIDER_TUR[g.tur]?.[0] ?? g.tur],
+      ["Tutar (KDV dahil)", para(g.tutar)], ["KDV", `%${g.oran} · ${para(k.kdv)} (KDV hariç ${para(k.haric)})`], ["Açıklama", g.aciklama ?? ""], ["Fiş", belge?.ad ?? "-"],
+      ...(g.odeme ? [["Ödendi", tarihNo(g.odeme)] as [string, string]] : [])];
+    if (g.durum !== "bekliyor") karar = { hesap: g.onaylayan, zaman: g.karar, sonuc: g.durum === "red" ? "reddedildi" : "onaylandi" };
+  }
+  const [p] = await personelOzetleri(db, [personelId]);
+  const ad = karar?.hesap ? (await hesapAdlari(db, [karar.hesap])).get(karar.hesap) ?? "—" : null;
+  const firma = await firmaBelgeKunyesi(db, depo);
+  return {
+    firma: { ad: firma.ad, kod: firma.kod, adres: firma.adres, logo: firma.logo }, tip: tip as TalepTipi, no, gonderildi,
+    personel: { ad: p?.ad ?? "—", meslek: p ? (p.meslek === "diger" ? p.meslekMetin ?? "Diğer meslek" : meslek(p.meslek)?.ad ?? p.meslek) : "—" },
+    durum, alanlar, red,
+    karar: karar && karar.zaman ? { ad: ad ?? "—", zaman: karar.zaman, sonuc: karar.sonuc } : null,
+  };
+}
+

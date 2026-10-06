@@ -18,7 +18,8 @@ import { SecimAlani } from "../../../components/secim/SecimAlani";
 import { TarihAlani } from "../../../components/secim/TarihAlani";
 import { tarihNo } from "../../../components/secim/tarih";
 import { Serit } from "../../../components/serit/Serit";
-import { Tus } from "../../../components/tus/Tus";
+import { Ikon } from "../../../components/ikon/Ikon";
+import { Tus, tusSinifi } from "../../../components/tus/Tus";
 import { tutar as tutarSema } from "../../../sema/ortak";
 import { GIDER_DURUM, GIDER_TUR, giderKdv, KDV_ORAN, para, type GiderTuru } from "../../muhasebe/sema";
 import type { MasrafFormu } from "../../muhasebe/server/talep-baglanti";
@@ -238,6 +239,8 @@ function TalepPenceresi({ t, kapat }: { t: Talep; kapat: () => void }) {
     <Pencere acik baslik={`${turAd(t)} · ${x.no}`} onKapat={() => { if (!bekliyorMu) kapat(); }} genis
       alt={<>
         {bek && <Tus tur="ikincil" ikon="undo-2" disabled={bekliyorMu} onClick={geriCek}>Talebi geri çek</Tus>}
+        {/* 341: talebin formu (temel format) PDF iner — maket "PDF · e-posta" (e-posta K5) */}
+        <a className={tusSinifi("ikincil")} href={`/talepler/pdf/${t.tip}/${x.id}`} download><Ikon ad="file-text" kucuk />PDF</a>
         <Tus disabled={bekliyorMu} onClick={kapat}>Kapat</Tus>
       </>}>
       <BilgiListesi>

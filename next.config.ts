@@ -19,9 +19,9 @@ const ortak: NextConfig = {
   experimental: { serverActions: { bodySizeLimit: "26mb" }, proxyClientMaxBodySize: "26mb", webpackMemoryOptimizations: process.env.PROBATA_WEBPACK_BELLEK === "1" },
   env: { NEXT_PUBLIC_IKON_ADRESI: `/${IKON_DOSYASI}?v=${ikonOzeti}` },
   /* PDF motoru (src/belge/pdf.ts, 316): Chromium paketleri derlemeye katılmaz (düğüm modülü olarak yüklenir); belge CSS'i, yazı tipi ve sunucusuz
-     Chromium ikilisi yalnız PDF basan uçların izine eklenir (teklif PDF'i — 325; fatura özeti — 340) — rapor sayfası da (İmzala sunucu eylemi orada koşar; 315–317 incelemesi) */
+     Chromium ikilisi yalnız PDF basan uçların izine eklenir (teklif PDF'i — 325; fatura özeti — 340; talep formu — 341) — rapor sayfası da (İmzala sunucu eylemi orada koşar; 315–317 incelemesi) */
   serverExternalPackages: ["playwright-core", "@sparticuz/chromium"],
-  outputFileTracingIncludes: Object.fromEntries([String.raw`/raporlar/\[id\]`, String.raw`/raporlar/\[id\]/pdf`, String.raw`/teklifler/\[id\]/pdf`, String.raw`/muhasebe/f/\[id\]/pdf`, "/api/olcum/pdf"].map((u) =>
+  outputFileTracingIncludes: Object.fromEntries([String.raw`/raporlar/\[id\]`, String.raw`/raporlar/\[id\]/pdf`, String.raw`/teklifler/\[id\]/pdf`, String.raw`/muhasebe/f/\[id\]/pdf`, String.raw`/talepler/pdf/\[tip\]/\[id\]`, "/api/olcum/pdf"].map((u) =>
     [u, ["./src/belge/belge.css", "./src/belge/carlito-5.3.0/*", "./node_modules/@sparticuz/chromium/bin/**"]])),
 };
 

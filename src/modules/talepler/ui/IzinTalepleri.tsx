@@ -13,7 +13,8 @@ import { Pencere, pencereMetinSinifi } from "../../../components/pencere/Pencere
 import { AltSatir, Rozet, SayfaBasi, SeritKap } from "../../../components/sayfa/Sayfa";
 import { tarihNo } from "../../../components/secim/tarih";
 import { Serit } from "../../../components/serit/Serit";
-import { Tus } from "../../../components/tus/Tus";
+import { Ikon } from "../../../components/ikon/Ikon";
+import { Tus, tusSinifi } from "../../../components/tus/Tus";
 import { BosDurum } from "../../../components/bos/BosDurum";
 import { PersonelSekmeleri } from "../../personel/ui/ortak";
 import { IZIN_DURUM, IZIN_TUR } from "../sema";
@@ -61,6 +62,7 @@ export function IzinTalepleri({ l }: { l: IzinSatiri[] }) {
     { k: "eylem", genislik: "20%", baslik: "İşlem", kart: "eylem", sira: 9, hucre: (x) => (
       <div className={stil.tuslar}>
         {x.belge && <DosyaAcTusu dosyaId={x.belge} ikon="file-text" etiket={`${x.no} belgesi`}>Belge</DosyaAcTusu>}
+        <a className={tusSinifi("ikincil")} href={`/talepler/pdf/izin/${x.id}`} download aria-label={`${x.no} formu PDF`}><Ikon ad="file-text" kucuk />PDF</a>
         {x.durum === "bekliyor" && <>
           <Tus tur="ikincil" ikon="x" disabled={bekliyorMu} aria-label={`${x.no} reddet`} onClick={() => { setRed({ x, gerekce: "", hata: null }); }}>Reddet</Tus>
           <Tus ikon="check" disabled={bekliyorMu} aria-label={`${x.no} onayla`} onClick={() => onayla(x)}>Onayla</Tus>

@@ -148,6 +148,8 @@ pkproje/
                             (izin şeması, iş günü) · server/talepler.ts (taleplerim, izin gönder / geri çek / belge, masraf formu — Muhasebe'nin
                             muhasebe/server/talep-baglanti.ts'i, izin onay / red) · ui/Talepler.tsx, ui/IzinTalepleri.tsx (/personel/izinler) ·
                             okuyucular: planlar/server/talep-baglanti.ts, personel/server/talep-baglanti.ts
+                            · talep formu PDF (341): src/belge/talep.ts (temel <kod>-FR-IZN-01 / MSR-01) → /talepler/pdf/<izin|masraf>/<id>
+                            (talepFormuVerisi: talep eden; izinde firma yöneticisi; masrafta Muhasebe'yi gören)
   src/modules/performans/   PERFORMANS (2026-10-06, 329; modül 19): tablo yok (göç 0041 yalnız dizin) · hesap.ts (saf: dönem, özet, tamamlanma süresi,
                             zaman grafiği, süreç adımları, günlük iş, GÖRÜNÜRLÜK — kendi / branş / hepsi, kazanç) · server/performans.ts (pano, kişi) ·
                             ui/Performans.tsx · okuyucular: raporlar/server/performans-baglanti.ts, personel/server/performans-baglanti.ts

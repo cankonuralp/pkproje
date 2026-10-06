@@ -33,6 +33,23 @@ export async function masrafFormlari(db: Sorgulayici, personelId: string): Promi
     gonderildi: g.olustu.toISOString(), surum: g.surum }));
 }
 
+/** masraf formu belgesinin kaydı (341; talep formu PDF'i): kaynak "form" giderin alanları, personeli, kararı (onaylayan hesap, zaman), işin
+    numarası; yoksa null. Yetki ÇAĞIRANDA (Talepler: talep eden ya da Muhasebe'yi gören) */
+export async function masrafFormuKaydi(db: Sorgulayici, id: string): Promise<{
+  id: string; no: string; tarih: string; tur: GiderTuru; tutar: number; oran: number; aciklama: string | null; isNo: string | null; belge: string | null;
+  durum: GiderDurumu; red: string | null; odeme: string | null; personelId: string; onaylayan: string | null; karar: string | null; gonderildi: string;
+} | null> {
+  if (!UUID.test(id)) return null;
+  const g = (await db.sorgu<{ id: string; no: string; tarih: string; tur: GiderTuru; tutar: string; oran: number; aciklama: string | null; plan_id: string | null;
+    belge: string | null; durum: GiderDurumu; red: string | null; odeme: string | null; personel_id: string; onaylayan: string | null; karar: Date | null; olustu: Date }>(
+    `SELECT id::text, no, tarih::text, tur, tutar::text, oran, aciklama, plan_id::text, belge::text, durum, red, odeme::text, personel_id::text, onaylayan::text, karar, olustu
+     FROM gider WHERE id = $1 AND kaynak = 'form' AND personel_id IS NOT NULL`, [id])).rows[0];
+  if (!g) return null;
+  const isNo = g.plan_id ? (await muhasebePlanlari(db, [g.plan_id]))[0]?.no ?? "—" : null;
+  return { id: g.id, no: g.no, tarih: g.tarih, tur: g.tur, tutar: Number(g.tutar), oran: g.oran, aciklama: g.aciklama, isNo, belge: g.belge, durum: g.durum, red: g.red,
+    odeme: g.odeme, personelId: g.personel_id, onaylayan: g.onaylayan, karar: g.karar?.toISOString() ?? null, gonderildi: g.olustu.toISOString() };
+}
+
 /** masraf formu gönder: kişinin adına, onay bekler; iş verilirse kişinin ekibinde olduğu plan olmalı (izinliIsler — Talepler verir) */
 export async function masrafGonder(db: Sorgulayici, depo: Depo, kim: Kisi, firmaId: string, personelId: string, izinliIsler: ReadonlySet<string>, girdi: unknown,
   belge: GiderBelgesi): Promise<Yazma> {

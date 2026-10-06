@@ -9,6 +9,7 @@ import { chromium, type Browser } from "playwright-core";
 import type { ReactNode } from "react";
 import { raporBelgesi } from "./belge.ts";
 import { faturaBelgesi, type FaturaBelgesiVerisi } from "./fatura.ts";
+import { talepFormu, type TalepFormuVerisi } from "./talep.ts";
 import { teklifBelgesi, type TeklifBelgesiVerisi } from "./teklif.ts";
 import { htmlYaz } from "./html.ts";
 import type { BelgeVerisi } from "./veri.ts";
@@ -46,6 +47,8 @@ export const belgePdf = (v: BelgeVerisi) => htmlPdf(belgeHtml(v));
 export const teklifPdf = (v: TeklifBelgesiVerisi) => htmlPdf(sayfaHtml(v.no, teklifBelgesi(v)));
 /** fatura özeti (340): fatura e-Fatura programında kesilir; bu belge kalemleri, KDV'yi ve tahsilatı özetler */
 export const faturaPdf = (v: FaturaBelgesiVerisi) => htmlPdf(sayfaHtml(`${v.no} fatura özeti`, faturaBelgesi(v)));
+/** talep formu (341): izin talep formu ya da masraf formu, temel format */
+export const talepPdf = (v: TalepFormuVerisi) => htmlPdf(sayfaHtml(v.no, talepFormu(v)));
 
 async function htmlPdf(html: string): Promise<Uint8Array> {
   const b = await tarayici();

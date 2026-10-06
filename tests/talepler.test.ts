@@ -14,7 +14,7 @@ import { gunEkle } from "../src/modules/muhasebe/sema.ts";
 import { giderDosyasiGorulur, giderKaydet, giderListesi } from "../src/modules/muhasebe/server/giderler.ts";
 import {
   bugunTr, izinBelgesi, izinDosyasiGorulur, izinGeriCek, izinGonder, izinOnayla, izinReddet, izinTalepleri, masrafFormuGeriCek, masrafFormuGonder,
-  taleplerim, type Kisi,
+  talepFormuVerisi, taleplerim, type Kisi,
 } from "../src/modules/talepler/server/talepler.ts";
 import { testKumesi } from "./yardimci/kume.ts";
 
@@ -127,6 +127,15 @@ test("yönetici kararı: onay (iş günü kalan haktan düşer), gerekçeli red;
   assert.equal((await a(YON, (db) => izinReddet(db, YON, I2, x2.surum, { gerekce: "kısa" }))).durum, "gecersiz");
   const s2 = (await a(YON, (db) => izinTalepleri(db, YON)))!.find((x) => x.id === I2)!.surum;
   tamam(await a(YON, (db) => izinReddet(db, YON, I2, s2, { gerekce: "Yoğun dönem" })));
+  /* 341: talep formu (PDF) — talep eden ve firma yöneticisi açar, başkası açamaz; karar ve gerekçe formda */
+  const f1 = (await a(DEN, (db) => talepFormuVerisi(db, DEN, "izin", I1)))!;
+  assert.deepEqual([f1.tip, f1.durum, f1.personel.ad, f1.personel.meslek, f1.karar?.ad, f1.karar?.sonuc, f1.alanlar.map((x) => x[0])],
+    ["izin", "Onaylandı", "Deneme Denetçi", "Makine mühendisi", "Deneme Yönetici", "onaylandi", ["İzin türü", "Başlangıç", "Bitiş", "Süre", "Açıklama", "Ek belge"]]);
+  const f2 = (await a(YON, (db) => talepFormuVerisi(db, YON, "izin", I2)))!;
+  assert.deepEqual([f2.durum, f2.red, f2.karar?.sonuc], ["Reddedildi", "Yoğun dönem", "reddedildi"]);
+  for (const k of [PLAN, MUH]) assert.equal(await a(k, (db) => talepFormuVerisi(db, k, "izin", I1)), null, "başkasının izin formu");
+  assert.equal(await a(DEN, (db) => talepFormuVerisi(db, DEN, "baska", I1)), null);
+  assert.equal(await a(DEN, (db) => talepFormuVerisi(db, DEN, "masraf", I1)), null, "izin kimliği masraf olarak okunmaz");
   const v = (await a(DEN, (db) => taleplerim(db, DEN)))!;
   const i1 = v.izinler.find((x) => x.id === I1)!, i2 = v.izinler.find((x) => x.id === I2)!;
   assert.deepEqual([i1.durum, i1.kararVeren, i2.durum, i2.red, v.ozet.kullanilan, v.ozet.bekleyen, v.ozet.kalan], ["onaylandi", "Deneme Yönetici", "red", "Yoğun dönem", 5, 0, 9]);
@@ -161,6 +170,12 @@ test("masraf formu: muhasebenin gider kaydına onay bekleyen olarak yazılır (k
     null, "onaylandi")));
   const v = (await a(DEN, (db) => taleplerim(db, DEN)))!;
   assert.equal(v.masraflar.find((x) => x.id === r.id)!.durum, "onaylandi");
+  /* 341: masraf formu (PDF) — talep eden ve Muhasebe açar; planlamacı açamaz; karar (onaylayan) ve tutar formda */
+  const mf = (await a(MUH, (db) => talepFormuVerisi(db, MUH, "masraf", r.id)))!;
+  assert.deepEqual([mf.tip, mf.durum, mf.personel.ad, mf.karar?.ad, mf.alanlar.find((x) => x[0] === "Tutar (KDV dahil)")?.[1], mf.alanlar.find((x) => x[0] === "İş")?.[1],
+    mf.alanlar.find((x) => x[0] === "Fiş")?.[1]], ["masraf", "Onaylandı", "Deneme Denetçi", "Deneme Muhasebe", "250,00 TL", "P-1026-001", "fis.pdf"]);
+  assert.ok(await a(DEN, (db) => talepFormuVerisi(db, DEN, "masraf", r.id)));
+  assert.equal(await a(PLAN, (db) => talepFormuVerisi(db, PLAN, "masraf", r.id)), null);
   assert.deepEqual(await a(DEN, (db) => masrafFormuGeriCek(db, DEN, r.id)), { durum: "red", neden: "Karar verilmiş masraf formu geri çekilmez." });
   const r2 = tamam(await a(DEN, (db) => masrafFormuGonder(db, depo, DEN, A, M({ is: "", aciklama: "Genel" }))));
   tamam(await a(DEN, (db) => masrafFormuGeriCek(db, DEN, r2.id)));
@@ -193,5 +208,6 @@ test("firma sızıntısı: B, A'nın izin taleplerini görmez, karar veremez, be
   assert.equal((await a(YON_B, (db) => izinOnayla(db, YON_B, I1, 0), B)).durum, "yok");
   assert.equal(await a(YON_B, (db) => izinDosyasiGorulur(db, YON_B, I2), B), false);
   assert.deepEqual((await a(YON_B, (db) => taleplerim(db, YON_B), B))!.izinler, []);
+  assert.equal(await a(YON_B, (db) => talepFormuVerisi(db, YON_B, "izin", I1), B), null, "talep formu (341)");
   assert.equal(await sql(B, "SELECT count(*)::text AS id FROM izin_talebi"), "0");
 });

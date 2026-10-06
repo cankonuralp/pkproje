@@ -1,6 +1,7 @@
 /* NEREDEN GELDİ: K4 Talepler (330) — maket talepler.html, personel.html #/izinler. Gerçek tarayıcıda, üç genişlikte: denetçi masraf formu
    gönderir (tür seçilmeden reddedilir; genel masraf) → listede · izin talebi gönderir (iş günü canlı) → yönetici Personel › İzin talepleri'nde
-   onaylar → denetçinin talep penceresinde "Onaylandı" · muhasebe masraf formunu Giderler'de görür. */
+   onaylar → denetçinin talep penceresinde "Onaylandı" ve formun PDF'i iner (341) · muhasebe masraf formunu Giderler'de görür. */
+import { readFileSync } from "node:fs";
 import { expect, test } from "@playwright/test";
 import { girisli, hazir } from "./yardimci";
 
@@ -70,4 +71,8 @@ test("talepler: masraf formu ve izin talebi; yönetici izni onaylar; muhasebe ma
   const p = page.getByRole("dialog", { name: `İzin talebi · ${no}` });
   await expect(p.getByText("Onaylandı")).toBeVisible();
   await expect(p.getByText("Deneme Yönetici")).toBeVisible();
+  /* 341: talebin formu PDF iner (temel format) */
+  const [indirilen] = await Promise.all([page.waitForEvent("download", { timeout: 90_000 }), p.getByRole("link", { name: "PDF" }).click()]);
+  expect(indirilen.suggestedFilename()).toBe(`${no}.pdf`);
+  expect(readFileSync((await indirilen.path())!).subarray(0, 5).toString("latin1")).toBe("%PDF-");
 });

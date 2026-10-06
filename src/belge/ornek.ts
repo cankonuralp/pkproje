@@ -3,6 +3,7 @@ import { SABLONLAR } from "../format/sablonlar.ts";
 import { Cevaplar } from "../format/tanim.ts";
 import type { TeklifBelgesiVerisi } from "./teklif.ts";
 import type { FaturaBelgesiVerisi } from "./fatura.ts";
+import type { TalepFormuVerisi } from "./talep.ts";
 import type { BelgeVerisi } from "./veri.ts";
 
 export function ornekBelge(sablon: "ZPKR01" | "ZPKR02" | "KOMPRESOR"): BelgeVerisi {
@@ -36,5 +37,14 @@ export const ornekFatura = (): FaturaBelgesiVerisi => ({
   ara: 340000, kdv: 20, kdvTutar: 68000, toplam: 408000,
   tahsilatlar: [{ tarih: "2026-10-10", yontem: "Havale / EFT", tutar: 200000, aciklama: "Deneme <ödeme> & açıklama" }, { tarih: "2026-10-20", yontem: "Nakit", tutar: 8000, aciklama: null }],
   tahsil: 208000, kalan: 200000,
+});
+
+/** talep formu (341): uydurma masraf formu — onaylanmış; izin için tip ve alanlar değişir */
+export const ornekTalep = (): TalepFormuVerisi => ({
+  firma: { ad: "Deneme Muayene A.Ş.", kod: "DA" }, tip: "masraf", no: "G-1026-001", gonderildi: "2026-10-05T09:30:00.000Z",
+  personel: { ad: "Deneme Denetçi", meslek: "Makine mühendisi" }, durum: "Onaylandı",
+  alanlar: [["İş", "P-1026-001"], ["Masraf tarihi", "05.10.2026"], ["Tür", "Yakıt"], ["Tutar (KDV dahil)", "250,00 TL"], ["KDV", "%20 · 41,67 TL (KDV hariç 208,33 TL)"],
+    ["Açıklama", "Deneme <yakıt> & fiş"], ["Fiş", "fis.pdf"]],
+  red: null, karar: { ad: "Deneme Muhasebe", zaman: "2026-10-05T12:00:00.000Z", sonuc: "onaylandi" },
 });
 

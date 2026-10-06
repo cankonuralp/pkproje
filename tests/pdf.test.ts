@@ -4,8 +4,8 @@
    Süre ölçülüp yazılır (Vercel ölçümü: src/app/api/olcum/pdf, yalnız önizleme dağıtımı). */
 import assert from "node:assert/strict";
 import { test } from "node:test";
-import { ornekBelge, ornekTeklif, ornekFatura } from "../src/belge/ornek.ts";
-import { belgeCss, belgeHtml, belgePdf, faturaPdf, teklifPdf } from "../src/belge/pdf.ts";
+import { ornekBelge, ornekTeklif, ornekFatura, ornekTalep } from "../src/belge/ornek.ts";
+import { belgeCss, belgeHtml, belgePdf, faturaPdf, talepPdf, teklifPdf } from "../src/belge/pdf.ts";
 
 test("belge HTML'i: betik yok, yazı tipi gömülü (dış adres yok)", () => {
   const html = belgeHtml(ornekBelge("ZPKR02"));
@@ -43,6 +43,13 @@ test("fatura özeti PDF'i (340): aynı motorla A4, Carlito gömülü, tek sayfa"
   assert.equal(metin.slice(0, 5), "%PDF-");
   assert.ok(/Carlito/.test(metin), "Carlito gömülü değil");
   assert.ok(/\/MediaBox\s*\[\s*0\s+0\s+59[45](\.\d+)?\s+841(\.\d+)?\s*\]/.test(metin), "A4 değil");
+  assert.equal((metin.match(/\/Type\s*\/Page\b/g) ?? []).length, 1, "tek sayfa");
+});
+
+test("talep formu PDF'i (341): aynı motorla A4, Carlito gömülü, tek sayfa", async () => {
+  const pdf = await talepPdf(ornekTalep()), metin = Buffer.from(pdf).toString("latin1");
+  assert.equal(metin.slice(0, 5), "%PDF-");
+  assert.ok(/Carlito/.test(metin), "Carlito gömülü değil");
   assert.equal((metin.match(/\/Type\s*\/Page\b/g) ?? []).length, 1, "tek sayfa");
 });
 

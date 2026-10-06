@@ -23,7 +23,8 @@ import { SecimAlani } from "../../../components/secim/SecimAlani";
 import { TarihAlani } from "../../../components/secim/TarihAlani";
 import { tarihNo } from "../../../components/secim/tarih";
 import { Serit } from "../../../components/serit/Serit";
-import { Tus } from "../../../components/tus/Tus";
+import { Ikon } from "../../../components/ikon/Ikon";
+import { Tus, tusSinifi } from "../../../components/tus/Tus";
 import { tutar as tutarSema } from "../../../sema/ortak";
 import { GIDER_EXCEL_SINIR, GIDER_SABLON, giderExceli, giderSablonu, giderSatirlari, type GiderExcelSatiri } from "../excel";
 import { ayAd } from "../karlilik";
@@ -200,6 +201,8 @@ function GiderPenceresi({ g, sabitIs, sabitIsNo, secenekler, bugun, kapat }: {
     <Pencere acik genis baslik={baslik} onKapat={() => { if (!bekliyor) kapat(); }} odak={`#${g ? GID.tutar : GID.tur}`}
       alt={<>
         <Tus tur="ikincil" disabled={bekliyor} onClick={kapat}>{yaz ? "Vazgeç" : "Kapat"}</Tus>
+        {/* 341: masraf formunun PDF'i (talep edenle aynı form) */}
+        {g?.kaynak === "form" && <a className={tusSinifi("ikincil")} href={`/talepler/pdf/masraf/${g.id}`} download><Ikon ad="file-text" kucuk />PDF</a>}
         {yaz && (g?.durum === "bekliyor" ? <>
           <Tus tur="ikincil" ikon="ban" disabled={bekliyor} onClick={() => { setRed(""); setH({}); setGenel(null); odakla("gerekce"); }}>Reddet</Tus>
           <Tus ikon="check" disabled={bekliyor} aria-busy={bekliyor || undefined} onClick={() => kaydet("onaylandi")}>Onayla</Tus>
