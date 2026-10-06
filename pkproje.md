@@ -2341,6 +2341,13 @@ revizyon, alan kopyalama, hafif kusur devri, meslek eşleşme denetimi).
 - Emsal ürünler: https://opwire.app/iso-17020-periyodik-kontrol-yazilimi/ · https://17020muayene.vidco.com.tr/ · https://akuple.com/asansor-kontrol-yazilimi/ · https://ensyazilim.com/
 
 ## 11 · Değişiklik günlüğü
+- 2026-10-06 (340): **K4 Muhasebe › Fatura özeti (PDF)** (maket faturaCiz "Fatura özeti (PDF)": "fatura e-Fatura programında kesilir; burada
+  fatura özeti (kalemler, KDV, tahsilat) yazdırılır / PDF olur"; §11 1659). Fatura sayfasında tuş; oturumlu uç /muhasebe/f/<id>/pdf indirir
+  (<fatura no>-fatura-ozeti.pdf). Belge (src/belge/fatura.ts, rapor ve teklif belgesiyle aynı görünüm ve motor): başlık (logo, firma künyesi, "Fatura
+  özeti", doküman kodu <firma kodu>-FR-FOZ-01, fatura no, tarih, vade), "bu belge fatura değildir" notu, 1 Alıcı (ünvan, vergi dairesi / no), 2 İş(ler)
+  ve rapor sayısı, 3 Kalemler (tür × adet × birim fiyat; teklif dışı işaretli; fiyatsız "fiyatsız"; ara toplam, KDV, genel toplam), 4 Tahsilatlar
+  (tarih, yöntem, açıklama, tutar; tahsil edilen, kalan). Yetki Muhasebe "gör" (fatura kartı); görmeyen 404. Kilit: fatura-belgesi.test (saf),
+  pdf.test (A4, Carlito, tek sayfa), muhasebe.test (veri, yetki, B sızıntısı); olumsuz kanıt 1; muhasebe e2e (PDF iner).
 - 2026-10-06: **Uçtan uca testler genişlik başına ayrı sunucuyla** (CI). Tek geliştirme sunucusu ~200 testin sonunda bellek eşiğine dayanıp
   kendini yeniden başlatıyor, o an koşan telefon testi düşüyordu (3dda074, 661004b, c17ba55, ba4c79e — her koşuda başka bir test); eşiği kapatınca
   sunucu çöktü (0059a80, geri alındı). CI artık masaüstü · tablet · telefon'u ayrı koşturur: her biri kendi sunucusu ve geçici veritabanıyla

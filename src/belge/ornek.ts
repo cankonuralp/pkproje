@@ -2,6 +2,7 @@
 import { SABLONLAR } from "../format/sablonlar.ts";
 import { Cevaplar } from "../format/tanim.ts";
 import type { TeklifBelgesiVerisi } from "./teklif.ts";
+import type { FaturaBelgesiVerisi } from "./fatura.ts";
 import type { BelgeVerisi } from "./veri.ts";
 
 export function ornekBelge(sablon: "ZPKR01" | "ZPKR02" | "KOMPRESOR"): BelgeVerisi {
@@ -26,3 +27,14 @@ export const ornekTeklif = (): TeklifBelgesiVerisi => ({
     yerler: [{ ad: "Merkez", adres: "Deneme Cad. 1, Gebze / Kocaeli" }, { ad: "Depo", adres: null }] },
   kalemler: [{ turAd: "Hava tankı", brans: "m", periyot: 12, adet: 2, fiyat: 125000 }, { turAd: "Elektrik iç tesisatı", brans: "e", periyot: 12, adet: 1, fiyat: 90050 }],
 });
+
+/** fatura özeti (340): uydurma — iki kalem (biri teklif dışı), bir fiyatsız, iki tahsilat */
+export const ornekFatura = (): FaturaBelgesiVerisi => ({
+  firma: { ad: "Deneme Muayene A.Ş.", kod: "DA" }, no: "DEN2026000000001", tarih: "2026-10-05", vade: "2026-11-04", vadeGun: 30, kaydeden: "Deneme Muhasebe",
+  alici: { unvan: "Deneme Bir Sanayi A.Ş.", vd: "Merkez", vno: "1234567890" }, isler: [{ no: "P-1026-001", tesis: "Merkez" }], raporSayisi: 4,
+  kalemler: [{ turAd: "Hava tankı", adet: 2, fiyat: 125000, disi: false }, { turAd: "Hava tankı", adet: 1, fiyat: 90000, disi: true }, { turAd: "Kompresör", adet: 1, fiyat: null, disi: false }],
+  ara: 340000, kdv: 20, kdvTutar: 68000, toplam: 408000,
+  tahsilatlar: [{ tarih: "2026-10-10", yontem: "Havale / EFT", tutar: 200000, aciklama: "Deneme <ödeme> & açıklama" }, { tarih: "2026-10-20", yontem: "Nakit", tutar: 8000, aciklama: null }],
+  tahsil: 208000, kalan: 200000,
+});
+

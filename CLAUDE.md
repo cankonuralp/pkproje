@@ -136,6 +136,8 @@ pkproje/
                             teklifler/server/rapor-bagi.ts (birim fiyat), sozlesmeler tesisSozlesmesi (vade) · 328: göç 0040 gider (elle ödendi /
                             ödenecek; masraf formu onay → ödendi / red) · server/giderler.ts · karlilik.ts (saf: iş kârı, ay / dönem gelir-gider) ·
                             excel.ts (gider içe / dışa) · ui/Giderler.tsx, ui/Karlilik.tsx · personel/server/muhasebe-baglanti.ts (bordro maliyeti)
+                            · fatura özeti PDF (340): src/belge/fatura.ts (temel format <kod>-FR-FOZ-01) → /muhasebe/f/<id>/pdf (pdf.ts faturaPdf;
+                            veri muhasebe.ts faturaBelgesiVerisi)
   src/modules/anasayfa/     ANA SAYFA (2026-10-06, 332): rol başına bölümler (server/anasayfa.ts — modüllerin yetkiye duyarlı işlevleri ve
                             planlar / ekipman / raporlar server/anasayfa-baglanti.ts okuyucuları) · ui/AnaSayfa.tsx; kök sayfa src/app/(uygulama)/page.tsx
                             · YAN MENÜ BALONLARI (339): server/takip.ts menuTakip (modül başına kırmızı / sarı, yetkiye duyarlı) · ui/eylemler.ts

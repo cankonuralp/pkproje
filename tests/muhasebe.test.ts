@@ -19,7 +19,7 @@ import { bugunTr, planAc } from "../src/modules/planlar/server/planlar.ts";
 import { taslakBaslat, yayinla } from "../src/modules/rapor-format/server/formatlar.ts";
 import { imzaHazirla, imzaliYukle, raporOlustur } from "../src/modules/raporlar/server/raporlar.ts";
 import { giderKdv, gunEkle } from "../src/modules/muhasebe/sema.ts";
-import { faturaKarti, faturaKaydet, faturaListesi, gelirGider, isKarti, isListesi, tahsilatKaydet, type Kisi } from "../src/modules/muhasebe/server/muhasebe.ts";
+import { faturaBelgesiVerisi, faturaKarti, faturaKaydet, faturaListesi, gelirGider, isKarti, isListesi, tahsilatKaydet, type Kisi } from "../src/modules/muhasebe/server/muhasebe.ts";
 import { giderDosyasiGorulur, giderExceliYukle, giderKaydet, giderListesi, giderReddet, giderSecenekleri, isGiderleri, type GiderBelgesi, type GiderSonra }
   from "../src/modules/muhasebe/server/giderler.ts";
 import { ayarOku, ayarYaz } from "../src/server/ayar/ayar.ts";
@@ -179,6 +179,10 @@ test("tahsilat: kısmi olabilir, kalanı aşamaz, fatura tarihinden önce ve ile
   await sahip("UPDATE plan SET durum = 'tamamlandi', kontrol_tamam = now(), bitti = now() WHERE id = $1", [P1]);
   const x = (await a(MUH, (db) => isKarti(db, MUH, P1)))!;
   assert.deepEqual([x.durum, x.kapandi, x.gecmis.some((g) => g[1] === "İş kapandı")], ["kapandi", BUGUN(), true]);
+  /* 340: fatura özeti PDF'inin verisi — fatura kartı + firma künyesi; tahsilatlar eskiden yeniye; görmeyen null */
+  const v = (await a(MUH, (db) => faturaBelgesiVerisi(db, MUH, F1)))!;
+  assert.deepEqual([v.firma.ad, v.firma.kod, v.no, v.toplam, v.tahsil, v.kalan, v.tahsilatlar.map((t) => t.tutar).sort((x, y) => x - y)], ["Deneme A", "DA", f.no, f.toplam, f.toplam, 0, [100000, 170000]]);
+  for (const k of [PLAN, DEN, MEK]) assert.equal(await a(k, (db) => faturaBelgesiVerisi(db, k, F1)), null, "Muhasebe'yi görmeyen fatura özeti alamaz");
 });
 
 test("vadesi geçen fatura: durum 'Vadesi geçti', iş de vadesi geçti", async () => {
@@ -238,6 +242,7 @@ test("firma sızıntısı: B, A'nın işini / faturasını görmez, tahsilat ekl
   const b = <T,>(is: (db: Sorgulayici) => Promise<T>) => kiraciIcinde(havuz, B, is, { hesapId: YON_B.id });
   assert.equal(await b((db) => isKarti(db, YON_B, P1)), null);
   assert.equal(await b((db) => faturaKarti(db, YON_B, F1)), null);
+  assert.equal(await b((db) => faturaBelgesiVerisi(db, YON_B, F1)), null, "fatura özeti (340)");
   assert.deepEqual(await b((db) => isListesi(db, YON_B)), []);
   assert.deepEqual(await b((db) => faturaListesi(db, YON_B)), []);
   assert.equal((await b((db) => tahsilatKaydet(db, YON_B, F1, { tarih: BUGUN(), tutar: "1", yontem: "nakit", aciklama: "" }))).durum, "yok");

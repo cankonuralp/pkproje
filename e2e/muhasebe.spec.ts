@@ -1,7 +1,9 @@
 /* NEREDEN GELDİ: K4 Muhasebe (327) — maket muhasebe.html (M14). Gerçek tarayıcıda, üç genişlikte: her projenin tamamlanmış planı ve imzalı raporu
    (scripts/e2e-sunucu.ts tohumu; fiyat listesinden 900,00 TL) → İşler listesi → iş sayfası "1 rapor faturaya hazır" → Fatura kaydet (no yazılmadan
-   reddedilir; KDV'li toplam) → fatura sayfası → Tahsilat ekle (kalan kadar) → "Ödendi" · Faturalar listesinde · denetçi Muhasebe'yi göremez.
+   reddedilir; KDV'li toplam) → fatura sayfası → Tahsilat ekle (kalan kadar) → "Ödendi" · Fatura özeti (PDF) iner (340) · Faturalar listesinde ·
+   denetçi Muhasebe'yi göremez.
    328: iş sayfasında Kârlılık · Giderler sekmesi → Gider ekle (tür seçilmeden reddedilir; türün KDV oranı, canlı KDV) → listede · Gelir-gider. */
+import { readFileSync } from "node:fs";
 import { expect, test } from "@playwright/test";
 import { E2E_MUHASEBE } from "./hesaplar";
 import { girisli, hazir } from "./yardimci";
@@ -37,6 +39,10 @@ test("muhasebe: imzalı rapor faturalanır, tahsil edilir; denetçi göremez", a
   const t = page.getByRole("dialog", { name: `Tahsilat ekle · ${faturaNo}` });
   await t.getByRole("button", { name: "Tahsilatı kaydet" }).click();
   await expect(page.getByText(/^Ödendi \d{2}\.\d{2}\.\d{4}\.$/)).toBeVisible({ timeout: 30_000 });
+  /* 340: Fatura özeti (PDF) iner — oturumlu uç, A4 PDF */
+  const [indirilen] = await Promise.all([page.waitForEvent("download", { timeout: 90_000 }), page.getByRole("link", { name: "Fatura özeti (PDF)" }).click()]);
+  expect(indirilen.suggestedFilename()).toBe(`${faturaNo}-fatura-ozeti.pdf`);
+  expect(readFileSync((await indirilen.path())!).subarray(0, 5).toString("latin1")).toBe("%PDF-");
 
   await page.goto("/muhasebe/faturalar");
   await hazir(page);

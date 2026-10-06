@@ -1,11 +1,14 @@
 /* MUHASEBE › FATURA SAYFASI (maket muhasebe.html #/f/<no> — faturaCiz; 327): başlık (fatura no, durum; Tahsilat ekle), şeritler (vadesi geçti,
    ödendi), fatura (alıcı, tarih, vade, iş(ler), kaydeden), kalemler (tür × adet × birim fiyat; teklif dışı işaretli), toplamlar, tahsilatlar.
+   Fatura özeti (PDF) (340; fatura e-Fatura programında kesilir — bu belge özettir): oturumlu uç …/pdf, dosya iner.
    Görmeyen: bulunamadı. */
 import type { Metadata } from "next";
 import Link from "next/link";
 import { notFound } from "next/navigation";
 import { Bilgi, BilgiListesi } from "../../../../../components/bilgi/Bilgi";
 import { Yetkisiz } from "../../../../../components/hata/Hata";
+import { Ikon } from "../../../../../components/ikon/Ikon";
+import { tusSinifi } from "../../../../../components/tus/Tus";
 import { AltSatir, Bolum, Kirinti, NesneBasi, Rozet, SeritKap } from "../../../../../components/sayfa/Sayfa";
 import { tarihNo } from "../../../../../components/secim/tarih";
 import { Serit } from "../../../../../components/serit/Serit";
@@ -30,7 +33,10 @@ export default async function Sayfa({ params }: { params: Promise<{ id: string }
       <Kirinti ogeler={[["Muhasebe", "/muhasebe"], ["Faturalar", "/muhasebe/faturalar"], [f.no]]} />
       <NesneBasi baslik={f.no} rozet={<Rozet tur={FATURA_DURUM[f.durum][1]}>{FATURA_DURUM[f.durum][0]}</Rozet>} altIkon="building-2"
         alt={<>{f.unvan} · {f.isler.map((x, i) => <span key={x.id}>{i > 0 && ", "}<Link href={`/muhasebe/is/${x.id}`}>{x.no}</Link></span>)}</>}
-        tuslar={f.izin.tahsilat ? <TahsilatEkle fatura={{ id: f.id, no: f.no, musteri: f.musteri, toplam: f.toplam, kalan: f.kalan }} bugun={bugunTr()} /> : undefined} />
+        tuslar={<>
+          <a className={tusSinifi("ikincil")} href={`/muhasebe/f/${f.id}/pdf`} download><Ikon ad="file-text" kucuk />Fatura özeti (PDF)</a>
+          {f.izin.tahsilat && <TahsilatEkle fatura={{ id: f.id, no: f.no, musteri: f.musteri, toplam: f.toplam, kalan: f.kalan }} bugun={bugunTr()} />}
+        </>} />
       {(f.durum === "gecikti" || f.durum === "odendi") && (
         <SeritKap>
           {f.durum === "gecikti" && <Serit tur="uyari" ikon="clock">Vade {tarihNo(f.vade)} tarihinde geçti ({-gunFarki(f.vade)} gün); kalan {para(f.kalan)}.</Serit>}

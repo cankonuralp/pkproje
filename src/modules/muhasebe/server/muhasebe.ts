@@ -6,7 +6,9 @@
    dokunmaz: Planlar, Raporlar, Teklifler, Sözleşmeler ve Müşteriler'in dışa açtığı işlevlerden okur. Tutarlar KURUŞ. */
 import type { Sorgulayici } from "../../../server/db/kiraci.ts";
 import { ekle, tablo, type Iz } from "../../../server/db/yazici.ts";
-import { ayarOku } from "../../../server/ayar/ayar.ts";
+import { ayarOku, firmaBelgeKunyesi } from "../../../server/ayar/ayar.ts";
+import type { Depo } from "../../../server/dosya/depo.ts";
+import type { FaturaBelgesiVerisi } from "../../../belge/fatura.ts";
 import { hesapAdlari } from "../../../server/kimlik/hesap.ts";
 import { duzey, type YetkiHesabi } from "../../../server/yetki/canDo.ts";
 import { dogrula, type DogrulamaHatalari } from "../../../sema/ortak.ts";
@@ -263,6 +265,22 @@ export async function faturaKarti(db: Sorgulayici, kim: Kisi, id: string): Promi
     tahsilatlar: t.map((x) => ({ id: x.id, tarih: x.tarih, tutar: Number(x.tutar), yontem: YONTEM[x.yontem], aciklama: x.aciklama, kaydeden: x.kaydeden ? ad.get(x.kaydeden) ?? "—" : "—" }))
       .sort((a, b) => b.tarih.localeCompare(a.tarih)),
     izin: { tahsilat: yazar(kim) && o.kalan > 0 },
+  };
+}
+
+/** fatura özeti PDF'inin verisi (340; maket "Fatura özeti (PDF)"): fatura kartından + firmanın belge künyesi (ticari ad, adres, logo). Faturayı
+    göremeyene null (Muhasebe "gör" — faturaKarti). */
+export async function faturaBelgesiVerisi(db: Sorgulayici, kim: Kisi, id: string, depo: Depo | null = null): Promise<FaturaBelgesiVerisi | null> {
+  const f = await faturaKarti(db, kim, id);
+  if (!f) return null;
+  const firma = await firmaBelgeKunyesi(db, depo);
+  return {
+    firma: { ad: firma.ad, kod: firma.kod, adres: firma.adres, logo: firma.logo }, no: f.no, tarih: f.tarih, vade: f.vade, vadeGun: f.vadeGun, kaydeden: f.kaydeden,
+    alici: { unvan: f.unvan, vd: f.vd, vno: f.vno }, isler: f.isler.map((x) => ({ no: x.no, tesis: x.tesis })), raporSayisi: f.raporSayisi,
+    kalemler: f.kalemler.map((k) => ({ turAd: k.turAd, adet: k.adet, fiyat: k.fiyat, disi: k.disi })),
+    ara: f.ara, kdv: f.kdv, kdvTutar: f.kdvTutar, toplam: f.toplam,
+    tahsilatlar: [...f.tahsilatlar].sort((a, b) => a.tarih.localeCompare(b.tarih)).map((t) => ({ tarih: t.tarih, yontem: t.yontem, tutar: t.tutar, aciklama: t.aciklama })),
+    tahsil: f.tahsil, kalan: f.kalan,
   };
 }
 
