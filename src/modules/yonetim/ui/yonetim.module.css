@@ -14,5 +14,7 @@
   margin: 0 0 12px; padding: 12px 14px; border: 1px dashed var(--kenar-alan); border-radius: var(--r-orta); background: var(--zemin2);
   font-size: var(--boy-baslik); letter-spacing: .06em; overflow-wrap: anywhere;
 }
+/* adres: tek parça uzun ad telefonda (375 px) sayfayı taşırmasın — her yerden kırılır (Kod nowrap'tır) */
+.adresKod { font-weight: 700; font-variant-numeric: tabular-nums; letter-spacing: .01em; white-space: normal; overflow-wrap: anywhere; word-break: break-all; }
 .eylemSol { display: flex; flex-wrap: wrap; gap: 8px; margin-top: 8px; }
 .adimlar { margin: 0; padding-left: 22px; display: flex; flex-direction: column; gap: 6px; color: var(--yazi2); }

@@ -24,7 +24,7 @@ const yazi = (v: unknown) => (typeof v === "string" ? v : "");
 
 export async function firmaAcEylemi(form: FormData): Promise<YonetimYaniti> {
   const girdi = { unvan: yazi(form.get("unvan")), alt: yazi(form.get("alt")), kod: yazi(form.get("kod")), yon: yazi(form.get("yon")), eposta: yazi(form.get("eposta")) };
-  return islem((o) => yonetimIslemi(o, (db) => firmaAc(db, girdi, yonetimEtiketi(yonetimAlani(), anaAlan()))));
+  return islem((o) => yonetimIslemi(o, (db) => firmaAc(db, girdi, yonetimEtiketi(yonetimAlani(), anaAlan()), anaAlan())));
 }
 
 export async function firmaDondurEylemi(id: string): Promise<YonetimYaniti> {

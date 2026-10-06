@@ -19,6 +19,10 @@ export function proxy(istek: NextRequest) {
   if (yonetimde && yol === "/") return NextResponse.redirect(new URL("/yonetim", istek.url));
   /* Next'in kendi uçları (/_next/…: geliştirmede sıcak yenileme) yönetim adresinde de açık */
   const yasak = yonetimde ? !YONETIM_YOLU.test(yol) && !yol.startsWith("/_next/") : YONETIM_YOLU.test(yol);
+  /* önceden yükleme (Link prefetch) isteği: adres ayrımı onda da geçerli (347–348 incelemesi: eşleştiricideki "missing" istisnası ara katmanı
+     tümden atlatıyordu — yönetim adresinde /api açılıyordu); nonce / CSP yalnız tam sayfa isteğinde üretilir (Next'in önerisi) */
+  const onYukleme = istek.headers.has("next-router-prefetch") || istek.headers.get("purpose") === "prefetch";
+  if (onYukleme) return yasak ? NextResponse.rewrite(new URL(YOK_YOLU, istek.url)) : NextResponse.next();
   const api = istek.nextUrl.pathname.startsWith("/api/");
   /* eski cihaz uygulaması: veri yazmadan önce durdurulur (src/server/api-surum.ts) */
   if (api && !yasak && istek.nextUrl.pathname !== "/api/surum" && istemciEskiMi(istek.headers.get("x-probata-istemci"))) {
@@ -62,8 +66,5 @@ export function proxy(istek: NextRequest) {
 }
 
 export const config = {
-  matcher: [{
-    source: "/((?!_next/static|_next/image|vendor/|icon.svg|favicon.ico).*)",
-    missing: [{ type: "header", key: "next-router-prefetch" }, { type: "header", key: "purpose", value: "prefetch" }],
-  }],
+  matcher: [{ source: "/((?!_next/static|_next/image|vendor/|icon.svg|favicon.ico).*)" }],
 };

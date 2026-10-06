@@ -2341,6 +2341,21 @@ revizyon, alan kopyalama, hafif kusur devri, meslek eşleşme denetimi).
 - Emsal ürünler: https://opwire.app/iso-17020-periyodik-kontrol-yazilimi/ · https://17020muayene.vidco.com.tr/ · https://akuple.com/asansor-kontrol-yazilimi/ · https://ensyazilim.com/
 
 ## 11 · Değişiklik günlüğü
+- 2026-10-06 (349): **347–348 çapraz incelemesi düzeltmeleri** (dört bakış, 17 bulgu; 11 doğrulandı, 6 çürütüldü). **Güvenlik:** yönetim
+  girişinde doğru parola hatalı deneme sayacını (yönetici + IP) SIFIRLAMAZ — yalnız tam giriş sıfırlar; "doğru parola → 4 yanlış kod" döngüsüyle
+  doğrulama kodu kaba kuvvetle denenemez. Ara katman eşleştiricisinden önceden yükleme istisnası kalktı: o başlıkla gelen istek de adres ayrımından
+  geçer (yönetim adresinde /api açılmıyor), nonce / CSP yalnız tam sayfada. **Veritabanı (0050 yerinde, henüz uygulanmamıştı):** geçici parola
+  ve listedeki "Firma yöneticisi" = firma_yoneticisi rolünü taşıyan, kapalı olmayan hesap (ilk yönetici önce; rolü alınmış / ayrılmış ilk
+  yöneticiye gitmez); firma satırı FOR NO KEY UPDATE (girişle kilitlenme yok); ilk yöneticinin işe başlama günü Türkiye saatiyle. **Mantık /
+  arayüz:** kayıtlı adres iletisi maketteki gibi tam adresle; açılış günü Türkiye saatiyle; aramada tam adres; uzun adres telefonda kırılır;
+  kurulum ve kod formunda sunucu hatasında alana odak; e2e proje başına kendi yöneticisi ve firması (üç genişlik tek sunucuda da koşar).
+  Kilit: yonetim (döngü kilidi, kurulumda eski oturum düşer, dondurmada müşteri oturumu silinir, yönetici seçimi), moduller (eşleştiricide
+  istisna yok); olumsuz kanıt yonetim.bozan 4–6.
+- 2026-10-06 (işletim, reisim: *"izin veriyorum yap"* · *"githubdan hala bir sürü gereksiz yayınlar da gidiyor onlarıda durdur"*): Vercel'de
+  31 eski üretim yayınından 30'u silindi (canlı kaldı), yayın saklama süresi dört türde 30 gün → 1 gün (son 3 üretim + canlı her zaman kalır).
+  Functions Storage panosu günün EN YÜKSEK değerini gösterir (Vercel belgesi) — düşüş ertesi günün değerinde görünür. GitHub'da 454 eski yayın
+  kaydı ve "Preview" ortamı silindi. CI: aynı dalda yeni push eski koşuyu iptal eder, main'de denetim tekrar koşmaz, Pages yalnız maket
+  değişince (c22560d).
 - 2026-10-06 (348): **probata yönetim sayfası — firma aç / dondur / geçici parola** (KOD-GECIS Y1, karar 2026-10-03; maket yonetim.html,
   §11 247). Firmaların görmediği, yalnız probata ekibinin sayfası; **yalnız ayrı adreste** (`PROBATA_YONETIM_ALAN`; tanımsızsa hiçbir adreste yok):
   ara katman yönetim adresinde yalnız /yonetim'i, öteki adreslerde /yonetim'i hiç açmaz (404); yönetim adresi firma sayılmaz. **İki adımlı giriş:**

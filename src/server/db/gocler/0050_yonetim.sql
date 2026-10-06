@@ -16,7 +16,9 @@ DO $$ BEGIN
     ALTER TABLE firma ADD CONSTRAINT firma_durum_check CHECK (durum IN ('etkin', 'dondu'));
   END IF;
 END $$;
--- açılışta kurulan ilk firma yöneticisinin hesabı ("Yöneticiye yeni geçici parola" ona); eski firmalarda boş → en eski firma yöneticisi
+-- açılışta kurulan ilk firma yöneticisinin hesabı. "Firma yöneticisi" (liste, geçici parola) = firma_yoneticisi rolünü taşıyan, kapalı olmayan hesap;
+-- ilk_hesap bu koşulu sağlıyorsa o, sağlamıyorsa (rolü alındı / ayrıldı) en eski etkin firma yöneticisi (347–348 incelemesi: rolü alınmış ya da
+-- pasif ilk yöneticiye parola gidiyor, firmanın asıl yöneticisine ulaşılamıyordu)
 ALTER TABLE firma ADD COLUMN IF NOT EXISTS ilk_hesap uuid REFERENCES hesap(id);
 
 -- dondurulmuş firma alt alan adından bulunmaz (tek giriş noktası: src/server/kiraci/istek.ts → firma_bul)
@@ -149,8 +151,8 @@ BEGIN
     FROM firma f
     LEFT JOIN LATERAL (
       SELECT h.ad, h.eposta, h.durum FROM hesap h
-      WHERE h.firma_id = f.id AND (h.id = f.ilk_hesap OR (f.ilk_hesap IS NULL AND 'firma_yoneticisi' = ANY (h.roller)))
-      ORDER BY (h.id = f.ilk_hesap) DESC, h.olustu LIMIT 1) y ON true
+      WHERE h.firma_id = f.id AND h.durum <> 'pasif' AND 'firma_yoneticisi' = ANY (h.roller)
+      ORDER BY (h.id = f.ilk_hesap) DESC NULLS LAST, h.olustu LIMIT 1) y ON true
     ORDER BY f.olusturuldu DESC, f.kisa_ad;
 END $$;
 
@@ -183,7 +185,7 @@ BEGIN
   PERFORM set_config('app.firma_id', v_id::text, true);
   INSERT INTO firma (id, kisa_ad, ad, rapor_kodu) VALUES (v_id, p_kisa_ad, btrim(p_ad), p_rapor_kodu);
   INSERT INTO personel (firma_id, ad, eposta, basla, meslek, meslek_metin)
-    VALUES (v_id, p_yon_ad, p_yon_eposta, current_date, 'diger', 'Firma yöneticisi') RETURNING personel.id INTO v_personel;
+    VALUES (v_id, p_yon_ad, p_yon_eposta, (now() AT TIME ZONE 'Europe/Istanbul')::date, 'diger', 'Firma yöneticisi') RETURNING personel.id INTO v_personel;
   INSERT INTO hesap (firma_id, eposta, ad, parola_ozeti, roller, durum, personel_id)
     VALUES (v_id, p_yon_eposta, p_yon_ad, p_parola_ozeti, ARRAY['firma_yoneticisi'], 'ilk', v_personel) RETURNING hesap.id INTO v_hesap;
   UPDATE firma SET ilk_hesap = v_hesap WHERE firma.id = v_id;
@@ -203,7 +205,8 @@ DECLARE
   v_eski text;
 BEGIN
   IF p_durum NOT IN ('etkin', 'dondu') THEN RETURN jsonb_build_object('hata', 'gecersiz'); END IF;
-  SELECT durum INTO v_eski FROM firma WHERE id = p_firma FOR UPDATE;
+  -- FOR NO KEY UPDATE: eşzamanlı iki yönetim işlemi sıraya girer; firma satırına bağlı eklemelerin (oturum, iz) FOR KEY SHARE'iyle çakışmaz
+  SELECT durum INTO v_eski FROM firma WHERE id = p_firma FOR NO KEY UPDATE;
   IF v_eski IS NULL THEN RETURN jsonb_build_object('hata', 'yok'); END IF;
   IF v_eski = p_durum THEN RETURN jsonb_build_object('hata', 'ayni'); END IF;
   UPDATE firma SET durum = p_durum WHERE id = p_firma;
@@ -220,7 +223,7 @@ BEGIN
   RETURN jsonb_build_object('durum', p_durum);
 END $$;
 
--- ── ilk firma yöneticisine yeni geçici parola (durum "ilk"; açık oturumları 0002 tetiğiyle düşer). Dondurulmuş firmada ve ayrılmış kişide yok.
+-- ── firma yöneticisine yeni geçici parola (yukarıdaki seçim; durum "ilk"; açık oturumları 0002 tetiğiyle düşer). Dondurulmuş firmada yok.
 CREATE OR REPLACE FUNCTION yonetim_gecici_parola(p_firma uuid, p_parola_ozeti text) RETURNS jsonb
   LANGUAGE plpgsql SECURITY DEFINER AS $$
 DECLARE
@@ -232,14 +235,13 @@ DECLARE
   v_ad text;
 BEGIN
   IF p_parola_ozeti IS NULL OR p_parola_ozeti NOT LIKE 'scrypt$%' THEN RETURN jsonb_build_object('hata', 'gecersiz'); END IF;
-  SELECT durum, ilk_hesap INTO v_durum, v_ilk FROM firma WHERE id = p_firma FOR UPDATE;
+  SELECT durum, ilk_hesap INTO v_durum, v_ilk FROM firma WHERE id = p_firma FOR NO KEY UPDATE;
   IF v_durum IS NULL THEN RETURN jsonb_build_object('hata', 'yok'); END IF;
   IF v_durum <> 'etkin' THEN RETURN jsonb_build_object('hata', 'dondu'); END IF;
   SELECT h.id, h.eposta, h.ad INTO v_hesap, v_eposta, v_ad FROM hesap h
-    WHERE h.firma_id = p_firma AND (h.id = v_ilk OR (v_ilk IS NULL AND 'firma_yoneticisi' = ANY (h.roller)))
-    ORDER BY (h.id = v_ilk) DESC, h.olustu LIMIT 1 FOR UPDATE;
+    WHERE h.firma_id = p_firma AND h.durum <> 'pasif' AND 'firma_yoneticisi' = ANY (h.roller)
+    ORDER BY (h.id = v_ilk) DESC NULLS LAST, h.olustu LIMIT 1 FOR UPDATE;
   IF v_hesap IS NULL THEN RETURN jsonb_build_object('hata', 'hesap_yok'); END IF;
-  IF EXISTS (SELECT 1 FROM hesap WHERE id = v_hesap AND durum = 'pasif') THEN RETURN jsonb_build_object('hata', 'pasif'); END IF;
   PERFORM set_config('app.firma_id', p_firma::text, true);
   UPDATE hesap SET parola_ozeti = p_parola_ozeti, durum = 'ilk', hatali_deneme = 0, kilit_bitis = NULL WHERE id = v_hesap;
   INSERT INTO denetim_izi (firma_id, kim, ne, nesne, nesne_id)

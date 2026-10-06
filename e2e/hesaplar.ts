@@ -28,13 +28,22 @@ export const E2E_MUHASEBE = {
   fatura: { masaustu: "DMF2026000000901", tablet: "DMF2026000000902", telefon: "DMF2026000000903" },
 } as const;
 /* yönetim (348): yönetim adresi ve uydurma yöneticiler (yalnız geçici test veritabanı). Doğrulama anahtarı uydurma Base32; test kodu onunla üretir.
-   firma: yönetim sayfasından açılacak uydurma firma (her genişliğin sunucusu ayrı veritabanında — ad çakışmaz) */
+   347–348 incelemesi: üç genişlik tek sunucuda da koşabilsin (yerelde `npm run test:e2e`) — her proje KENDİ "ilk" ve kurulmuş yöneticisini ve kendi
+   açacağı firmayı kullanır (E2E_ILK gibi); kurulmuş yönetici de proje başına (aynı zaman adımındaki kod yeniden oynatma sayılmasın). */
+const YONETIM_EK = { masaustu: "a", tablet: "b", telefon: "c" } as const;
+export const E2E_YONETIM_PROJELER = Object.keys(YONETIM_EK) as (keyof typeof YONETIM_EK)[];
 export const E2E_YONETIM = {
   alan: "yonetim.localhost",
-  ilk: { eposta: "ilk@probata-yonetim.example", parola: "Gecici-yonetim-2026" },
-  etkin: { eposta: "yonetim@probata-yonetim.example" },
   hazirla: "hazirla@probata-yonetim.example",
   anahtar: "JBSWY3DPEHPK3PXPJBSWY3DPEHPK3PXP",
+  geciciParola: "Gecici-yonetim-2026",
   yeniParola: "yonetim-yeni-parola-2026",
-  firma: { unvan: "Yeni Muayene Deneme Ltd. Şti.", alt: "yenideneme", kod: "YD", yon: "Yeni Deneme Yöneticisi", eposta: "yonetici@yenideneme.example" },
-} as const;
+  proje: (p: string) => {
+    const ek = YONETIM_EK[p as keyof typeof YONETIM_EK] ?? "x";
+    return {
+      ilk: `ilk-${p}@probata-yonetim.example`,
+      etkin: `etkin-${p}@probata-yonetim.example`,
+      firma: { unvan: "Yeni Muayene Deneme Ltd. Şti.", alt: `yenideneme${ek}`, kod: `Y${ek.toUpperCase()}`, yon: "Yeni Deneme Yöneticisi", eposta: `yonetici@yenideneme${ek}.example` },
+    };
+  },
+};

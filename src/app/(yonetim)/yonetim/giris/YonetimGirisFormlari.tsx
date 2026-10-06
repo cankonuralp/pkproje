@@ -55,6 +55,7 @@ function ParolaAlani({ id, ad, etiket, otomatik, hata, ipucu }: { id: string; ad
 }
 
 function KodAlani({ hata }: { hata?: string }) {
+  /* hata yoksa ipucu, varsa ileti (role="alert" değil — odak alana gelir, aria-describedby okunur) */
   return (
     <div className={stil.alan}>
       <label className={stil.etiket} htmlFor="y-kod">Doğrulama kodu</label>
@@ -92,6 +93,8 @@ export function YonetimGirisFormu({ neden, adres }: { neden?: "oturum" | "cikis"
 export function YonetimKodFormu({ eposta }: { eposta: string }) {
   const [durum, eylem, gonderiyor] = useActionState<YKodDurumu, FormData>(yonetimKodEylemi, {});
   useEffect(() => yonlendir(durum.yonlendir), [durum.yonlendir]);
+  /* hata dönünce kod alanına odak (form eylem bitince alanları boşaltır; hatalı alan aranmasın) */
+  useEffect(() => { if (durum.hata) document.getElementById("y-kod")?.focus(); }, [durum]);
   return (
     <Kart baslik="Doğrulama kodu" alt={eposta} action={eylem}>
       {durum.hata && <Serit tur="hata" ikon="circle-alert">{durum.hata}</Serit>}
@@ -107,6 +110,12 @@ export function YonetimKodFormu({ eposta }: { eposta: string }) {
 export function YonetimKurulumFormu({ eposta, anahtar, adres }: { eposta: string; anahtar: string; adres: string }) {
   const [durum, eylem, gonderiyor] = useActionState<YKurulumDurumu, FormData>(yonetimKurulumEylemi, {});
   useEffect(() => yonlendir(durum.yonlendir), [durum.yonlendir]);
+  /* sunucudan dönen ilk hatalı alana odak; ileti alana aria-describedby ile bağlı, odakla okunur (347–348 incelemesi) */
+  useEffect(() => {
+    const h = durum.hata;
+    const k = h?.kod ? "y-kod" : h?.p1 ? "y-p1" : h?.p2 ? "y-p2" : null;
+    if (k) document.getElementById(k)?.focus();
+  }, [durum]);
   const kopya = useKopyala(anahtar, "y-anahtar");
   const h = durum.hata ?? {};
   return (

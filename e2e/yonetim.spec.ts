@@ -9,8 +9,6 @@ import { E2E_FIRMA, E2E_KAPI, E2E_PAROLA, E2E_YONETIM } from "./hesaplar";
 import { hazir } from "./yardimci";
 
 const Y = `http://${E2E_YONETIM.alan}:${E2E_KAPI}`;
-const F = E2E_YONETIM.firma;
-const firmaAdresi = `http://${F.alt}.localhost:${E2E_KAPI}`;
 
 async function parolaAdimi(page: Page, eposta: string, parola: string) {
   await page.goto(`${Y}/yonetim/giris`);
@@ -20,18 +18,24 @@ async function parolaAdimi(page: Page, eposta: string, parola: string) {
   await page.getByRole("button", { name: "Devam" }).click();
 }
 
-test("yönetim: ayrı adres; ilk kurulum; firma aç → geçici parolayla yeni firmaya giriş; dondur / etkinleştir / yeni parola; çıkış", async ({ page, browser }) => {
-  /* firma adresinde yönetim yok; yönetim adresinde firma ekranı ve API yok */
+test("yönetim: ayrı adres; ilk kurulum; firma aç → geçici parolayla yeni firmaya giriş; dondur / etkinleştir / yeni parola; çıkış", async ({ page, browser }, bilgi) => {
+  /* proje (genişlik) başına kendi yöneticisi ve firması — üç genişlik tek sunucuda da koşabilir */
+  const P = E2E_YONETIM.proje(bilgi.project.name), F = P.firma;
+  const firmaAdresi = `http://${F.alt}.localhost:${E2E_KAPI}`;
+  /* firma adresinde yönetim yok; yönetim adresinde firma ekranı ve API yok — önceden yükleme başlığıyla da (347–348 incelemesi) */
   expect((await page.goto("/yonetim"))?.status()).toBe(404);
   expect((await page.goto(`${Y}/planlar`))?.status()).toBe(404);
   expect((await page.goto(`${Y}/api/surum`))?.status()).toBe(404);
+  await page.setExtraHTTPHeaders({ "next-router-prefetch": "1" });
+  expect((await page.goto(`${Y}/api/surum`))?.status()).toBe(404);
+  await page.setExtraHTTPHeaders({});
   await page.goto(`${Y}/`);
   await expect(page).toHaveURL(/\/yonetim\/giris$/);
 
   /* ilk yönetici: geçici parola → kurulum (anahtar + kod + yeni parola) */
-  await parolaAdimi(page, E2E_YONETIM.ilk.eposta, "yanlis-parola-2026");
+  await parolaAdimi(page, P.ilk, "yanlis-parola-2026");
   await expect(page.getByText("E-posta ya da parola yanlış.", { exact: false })).toBeVisible();
-  await parolaAdimi(page, E2E_YONETIM.ilk.eposta, E2E_YONETIM.ilk.parola);
+  await parolaAdimi(page, P.ilk, E2E_YONETIM.geciciParola);
   await expect(page).toHaveURL(/\/yonetim\/giris\/kurulum$/);
   await hazir(page);
   await expect(page.getByRole("heading", { level: 1, name: "İki adımlı giriş kurulumu" })).toBeVisible();
@@ -68,6 +72,7 @@ test("yönetim: ayrı adres; ilk kurulum; firma aç → geçici parolayla yeni f
   await page.getByRole("button", { name: "Firmayı aç" }).click();
   await page.locator("dialog[open]").getByRole("button", { name: "Firmayı aç" }).click();
   await expect(page.getByText(`${E2E_FIRMA.raporKodu} başka bir firmada.`)).toBeVisible();
+  await expect(page.getByLabel("Kısa kod (rapor no öneki)")).toBeFocused();
   await page.getByLabel("Kısa kod (rapor no öneki)").fill(F.kod);
   await page.getByRole("button", { name: "Firmayı aç" }).click();
   await expect(page.locator("dialog[open]")).toContainText(`${F.alt}.localhost hemen çalışır`);
@@ -122,8 +127,8 @@ test("yönetim: ayrı adres; ilk kurulum; firma aç → geçici parolayla yeni f
   await expect(page).toHaveURL(/\/yonetim\/giris/);
 });
 
-test("yönetim: kurulmuş yönetici — parola, yanlış kod reddedilir, doğru kodla girer", async ({ page }) => {
-  await parolaAdimi(page, E2E_YONETIM.etkin.eposta, E2E_PAROLA);
+test("yönetim: kurulmuş yönetici — parola, yanlış kod reddedilir, doğru kodla girer", async ({ page }, bilgi) => {
+  await parolaAdimi(page, E2E_YONETIM.proje(bilgi.project.name).etkin, E2E_PAROLA);
   await expect(page).toHaveURL(/\/yonetim\/giris\/kod$/);
   await hazir(page);
   const dogru = totpKodu(E2E_YONETIM.anahtar, zamanAdimi(new Date()));

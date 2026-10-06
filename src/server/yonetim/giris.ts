@@ -3,7 +3,8 @@
    · İkinci adım doğrulama kodu (RFC 6238, src/server/yonetim/totp.ts): doğruysa yönetim oturumu (hareketsizlik 2 saat, mutlak 12 saat).
    · İlk giriş (durum "ilk", geçici parola): anahtar sunucuda üretilir, yalnız o parola oturumunda gösterilir (şifreli saklanır); kişi uygulamasına
      ekler, kodu ve YENİ parolasını yazar → anahtar yöneticiye taşınır, durum "etkin", bütün eski oturumları düşer.
-   · Kilit (firma girişiyle aynı eşik): yönetici başına 5 hata (parola ya da kod) → 15 dk; aynı IP'den 5 hata → 15 dk. Kilitliyken denetlenmez bile.
+   · Kilit: yönetici başına 5 hata (parola ya da kod, ortak sayaç) → 15 dk; aynı IP'den 5 hata → 15 dk. Kilitliyken denetlenmez bile. Sayaçlar
+     yalnız TAM girişte sıfırlanır (parola adımı sıfırlamaz — kod kaba kuvvetle denenemez).
      Yanıt hesabın var olup olmadığını söylemez (tek ileti, eşit süre).
    · Belirteç 32 bayt rasgele; veritabanında yalnız SHA-256 özeti. Anahtar ana anahtarla şifreli, yöneticiye bağlı (başka satıra kopyalansa çözülmez).
    · Her adım yönetim izine (kim veritabanından damgalanır). */
@@ -87,8 +88,8 @@ export async function yoneticiGiris(havuz: Havuz, g: { eposta: string; parola: s
       if (y) await iz(db, y.eposta, "giris.parola_hatali", { ip });
       return { tamam: false, neden: k ? "kilitli" : "hatali" };
     }
-    await db.sorgu("UPDATE yonetici SET hatali_deneme = 0, kilit_bitis = NULL WHERE id = $1 AND (hatali_deneme <> 0 OR kilit_bitis IS NOT NULL)", [y.id]);
-    await db.sorgu("DELETE FROM yonetim_kilit WHERE ip = $1", [ip]);
+    /* hatalı deneme sayaçları (yönetici + IP) parola adımında SIFIRLANMAZ — yalnız tam girişte (kod / kurulum) sıfırlanır: parolayı bilen biri
+       "doğru parola → 4 yanlış kod → doğru parola …" döngüsüyle kod denemesini sınırsız sürdüremez (347–348 incelemesi) */
     /* önceki yarım kalmış parola oturumları düşer (aynı anda tek bekleyen adım) */
     await db.sorgu("DELETE FROM yonetim_oturum WHERE yonetici_id = $1 AND adim = 'parola'", [y.id]);
     const belirtec = randomBytes(32).toString("base64url");

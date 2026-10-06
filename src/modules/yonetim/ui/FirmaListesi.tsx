@@ -2,6 +2,7 @@
 /* YÖNETİM › FİRMALAR listesi (348; maket yonetim.html listeCiz): sayaç "N firma · M etkin", "Firma aç", yalnız probata ekibine açık şeridi;
    tablo ↔ kart (firma + adres · durum · kısa kod · depo · açılış · kullanıcı). */
 import Link from "next/link";
+import { useMemo } from "react";
 import { Ikon } from "../../../components/ikon/Ikon";
 import { KartEtiket, Kirp, type Sutun } from "../../../components/liste/Liste";
 import { Sayac, SuzgecliListe, useSuzgec } from "../../../components/liste/SuzgecliListe";
@@ -13,16 +14,18 @@ import type { FirmaSatiri } from "../server/yonetim";
 import { DEPO_AD, DurumRozeti, firmaAdresi, tarihYaz, type DepoTuru } from "./ortak";
 import stil from "./yonetim.module.css";
 
-const tanim: SuzgecTanimi<FirmaSatiri> = {
+/* aranan metin listede görünen tam adresi de taşır (ana alan sunucudan — 347–348 incelemesi: yapıştırılan adres bulunmuyordu) */
+const tanimKur = (anaAlan: string): SuzgecTanimi<FirmaSatiri> => ({
   ad: "Firmalarda ara", ipucu: "Ünvan, adres, kısa kod", birim: "firma", imkansiz: "",
-  metin: (f) => `${f.ad} ${f.kisaAd} ${f.kod} ${f.yonetici?.eposta ?? ""}`,
+  metin: (f) => `${f.ad} ${firmaAdresi(f.kisaAd, anaAlan)} ${f.kod} ${f.yonetici?.eposta ?? ""}`,
   cipler: [],
   seciciler: [
     { k: "durum", ad: "Durum", secenek: () => [["tumu", "Tümü"], ["etkin", "Etkin"], ["dondu", "Dondurulmuş"]], gecer: (f, v) => v === "tumu" || f.durum === v },
   ],
-};
+});
 
 export function FirmaListesi({ kayitlar, anaAlan, depo }: { kayitlar: FirmaSatiri[]; anaAlan: string; depo: DepoTuru }) {
+  const tanim = useMemo(() => tanimKur(anaAlan), [anaAlan]);
   const s = useSuzgec(tanim, kayitlar);
   const etkin = kayitlar.filter((f) => f.durum === "etkin").length;
   const sutunlar: Sutun<FirmaSatiri>[] = [

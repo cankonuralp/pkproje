@@ -2,10 +2,13 @@
    içe aktarılır (göreli içe aktarmalar mutlak yola çevrilir); göçler geçici klasöre kopyalanıp bellekte bozulur.
    1. Yeniden oynatma denetimi kalkınca (son kabul edilen adım yok sayılır) ele geçirilen bir kod aynı adımda ikinci kez geçer.
    2. Dondurma bayrağı firma_bul'dan kalkınca dondurulmuş firmanın alt alan adı yine açılır (kullanıcı ve müşteri girer).
-   3. Hesap kilidi kalkınca kilitli yöneticiye doğru parolayla girilir (parola tahmini sınırsız). */
+   3. Hesap kilidi kalkınca kilitli yöneticiye doğru parolayla girilir (parola tahmini sınırsız).
+   4. Parola adımı hatalı deneme sayacını sıfırlarsa "doğru parola → 4 yanlış kod" döngüsü kilide hiç takılmaz (kod kaba kuvvetle denenir).
+   5. Kurulum eski oturumları düşürmezse kurulumdan önce açık kalmış bir oturum kurulumdan sonra geçerli olur.
+   6. Dondurma müşteri oturumlarını silmezse dondurulmuş firmanın müşteri oturumu kalır. */
 import assert from "node:assert/strict";
 import { copyFileSync, mkdirSync, mkdtempSync, readdirSync, readFileSync, rmSync, writeFileSync } from "node:fs";
-import { randomBytes } from "node:crypto";
+import { createHash, randomBytes } from "node:crypto";
 import { tmpdir } from "node:os";
 import { join, resolve } from "node:path";
 import { pathToFileURL } from "node:url";
@@ -13,7 +16,7 @@ import { after, before, test } from "node:test";
 import { sifrele } from "../../src/server/ayar/sir.ts";
 import { GOC_KLASORU } from "../../src/server/db/goc.ts";
 import type { GomuluKume } from "../../src/server/db/gomulu.ts";
-import { firmaKimligi, havuzKur, type Havuz } from "../../src/server/db/kiraci.ts";
+import { firmaKimligi, havuzKur, yonetimIcinde, type Havuz } from "../../src/server/db/kiraci.ts";
 import { parolaOzeti } from "../../src/server/kimlik/parola.ts";
 import { totpKodu, yeniAnahtar, zamanAdimi } from "../../src/server/yonetim/totp.ts";
 import { testKumesi } from "../yardimci/kume.ts";
@@ -88,4 +91,57 @@ test("3. hesap kilidi kalkınca 5 hatalı denemeden sonra da doğru parola geçe
   for (let i = 0; i < 5; i++) await g.yoneticiGiris(havuz, { eposta: "y@probata.example", parola: `yanlis-${i}-parola`, ip: `10.1.0.${i}`, simdi: T0 });
   const r = await g.yoneticiGiris(havuz, { eposta: "y@probata.example", parola: PAROLA, ip: "10.1.1.1", simdi: new Date(T0.getTime() + 60_000) });
   assert.equal(r.tamam, true, "bozuk: kilitli hesaba doğru parolayla girildi");
+});
+
+test("4. parola adımı sayacı sıfırlarsa doğrulama kodu döngüyle sınırsız denenir (kilidin koruduğu açık)", async () => {
+  const g = await bozukGiris("    /* önceki yarım kalmış parola oturumları düşer (aynı anda tek bekleyen adım) */\n",
+    "    await db.sorgu(\"UPDATE yonetici SET hatali_deneme = 0, kilit_bitis = NULL WHERE id = $1\", [y.id]);\n    await db.sorgu(\"DELETE FROM yonetim_kilit WHERE ip = $1\", [ip]);\n");
+  const t = new Date(T0.getTime() + 3600_000);
+  const gecerli = [-1, 0, 1].map((d) => totpKodu(ANAHTAR, zamanAdimi(t) + d));
+  const yanlis = ["123456", "654321", "111111"].find((x) => !gecerli.includes(x))!;
+  for (let tur = 0; tur < 3; tur++) {
+    const p = await g.yoneticiGiris(havuz, { eposta: "y@probata.example", parola: PAROLA, ip: "10.4.0.1", simdi: t });
+    assert.ok(p.tamam, "bozuk: döngü sürüyor");
+    if (!p.tamam) return;
+    for (let i = 0; i < 4; i++) assert.equal((await g.kodDogrula(havuz, { belirtec: p.belirtec, kod: yanlis, ip: "10.4.0.1", simdi: t })).tamam, false);
+  }
+});
+
+test("5. kurulum eski oturumları düşürmezse önceki oturum kurulumdan sonra geçerli (kilidin koruduğu açık)", async () => {
+  const g = await bozukGiris("    await db.sorgu(\"DELETE FROM yonetim_oturum WHERE yonetici_id = $1\", [y.id]);\n", "");
+  const s = kume.sahipIstemci(); await s.connect();
+  const eski = randomBytes(32).toString("base64url");
+  let id = "";
+  try {
+    id = (await s.query<{ id: string }>("INSERT INTO yonetici (eposta, ad, parola_ozeti) VALUES ('ilk@probata.example', 'Deneme', $1) RETURNING id::text", [await parolaOzeti("gecici-parola-1")])).rows[0].id;
+    await s.query("INSERT INTO yonetim_oturum (ozet, yonetici_id, adim, olustu, son_kullanim, bitis) VALUES ($1, $2, 'tamam', $3, $3, $4)",
+      [createHash("sha256").update(eski, "utf8").digest("hex"), id, T0, new Date(T0.getTime() + 12 * 3600_000)]);
+  } finally { await s.end(); }
+  const p = await g.yoneticiGiris(havuz, { eposta: "ilk@probata.example", parola: "gecici-parola-1", ip: "10.5.0.1", simdi: T0 });
+  assert.ok(p.tamam);
+  if (!p.tamam) return;
+  const k = await g.kurulumBilgisi(havuz, p.belirtec, T0);
+  assert.ok(k);
+  if (!k) return;
+  assert.ok((await g.kurulumTamamla(havuz, { belirtec: p.belirtec, kod: totpKodu(k.anahtar, zamanAdimi(T0)), yeni: "yeni-parola-2026", ip: "10.5.0.1", simdi: T0 })).tamam);
+  assert.equal((await g.yonetimOturumOku(havuz, eski, new Date(T0.getTime() + 60_000)))?.id, id, "bozuk: eski oturum kurulumdan sonra geçerli");
+});
+
+test("6. dondurma müşteri oturumlarını silmezse dondurulmuş firmanın müşteri oturumu kalır (kilidin koruduğu açık)", async () => {
+  const klasor = bozukGocler("g6", "    DELETE FROM musteri_oturum WHERE firma_id = p_firma;\n", "");
+  const supa = await supabaseBenzeri(kume, "yonetim_bozuk_6", klasor);
+  const h = havuzKur({ ...kume.uygulama, database: "yonetim_bozuk_6" });
+  try {
+    const q = async (sql: string, p: unknown[] = []) => (await supa.sahip.query<{ id: string }>(sql, p)).rows[0]?.id;
+    const f = await q("INSERT INTO firma (kisa_ad, ad, rapor_kodu) VALUES ('hedef', 'Hedef', 'HD') RETURNING id::text");
+    const m = await q("INSERT INTO musteri (firma_id, unvan, kisa) VALUES ($1, 'Deneme Müşteri A.Ş.', 'Deneme') RETURNING id::text", [f]);
+    const mh = await q("INSERT INTO musteri_hesap (firma_id, musteri_id, ana, eposta, ad, parola_ozeti, durum) VALUES ($1, $2, true, 'm@hedef.example', 'Deneme', $3, 'etkin') RETURNING id::text",
+      [f, m, await parolaOzeti("musteri-parola-1")]);
+    await supa.sahip.query("INSERT INTO musteri_oturum (ozet, firma_id, musteri_hesap_id, bitis) VALUES ($1, $2, $3, now() + interval '1 day')", ["b".repeat(64), f, mh]);
+    const y = await q("INSERT INTO yonetici (eposta, ad, parola_ozeti) VALUES ('y6@probata.example', 'Deneme', $1) RETURNING id::text", [await parolaOzeti(PAROLA)]);
+    await supa.sahip.query("UPDATE yonetici SET totp_sir = 'v1.x.y.z', durum = 'etkin' WHERE id = $1", [y]);
+    const r = (await yonetimIcinde(h, (db) => db.sorgu<{ s: { durum?: string } }>("SELECT yonetim_firma_durum($1, 'dondu') AS s", [f]), { yoneticiId: y })).rows[0].s;
+    assert.equal(r.durum, "dondu");
+    assert.equal((await supa.sahip.query("SELECT 1 FROM musteri_oturum WHERE firma_id = $1", [f])).rowCount, 1, "bozuk: müşteri oturumu kaldı");
+  } finally { await h.end(); await supa.kapat(); }
 });

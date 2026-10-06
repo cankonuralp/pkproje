@@ -83,7 +83,7 @@ export function FirmaAcFormu({ anaAlan, depo }: { anaAlan: string; depo: DepoTur
         <Bolum id="ya-b-giris" baslik="İlk giriş bilgileri">
           <SeritKap><Serit tur="uyari" ikon="triangle-alert">Geçici parola yalnız şimdi görünür; sayfadan çıkınca bir daha gösterilmez. Firma yöneticisine iletin; ilk girişte kendi parolasını belirler.</Serit></SeritKap>
           <BilgiListesi>
-            <Bilgi etiket="Adres" genis="cift"><Kod>{`https://${adres}`}</Kod></Bilgi>
+            <Bilgi etiket="Adres" genis="cift"><span className={stil.adresKod}>{`https://${adres}`}</span></Bilgi>
             <Bilgi etiket="Giriş adı" genis="cift">{acilan.eposta}</Bilgi>
           </BilgiListesi>
           <p className={stil.etiketUst}>Geçici parola</p>

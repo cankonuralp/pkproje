@@ -15,8 +15,10 @@ export type YonetimSonucu<T = Record<never, never>> = ({ durum: "tamam" } & T) |
 
 const UUID = /^[0-9a-f]{8}-[0-9a-f]{4}-[0-9a-f]{4}-[0-9a-f]{4}-[0-9a-f]{12}$/;
 interface Ham { id: string; ad: string; kisa_ad: string; rapor_kodu: string; durum: FirmaDurumu; olusturuldu: Date; kullanici: number; yon_ad: string | null; yon_eposta: string | null; yon_durum: "ilk" | "etkin" | "pasif" | null }
+/* açılış günü Türkiye saatiyle (gece yarısından sonra açılan firma bir önceki günde görünmesin — 347–348 incelemesi) */
+const GUN = new Intl.DateTimeFormat("en-CA", { timeZone: "Europe/Istanbul", year: "numeric", month: "2-digit", day: "2-digit" });
 const satir = (r: Ham): FirmaSatiri => ({
-  id: r.id, ad: r.ad, kisaAd: r.kisa_ad, kod: r.rapor_kodu, durum: r.durum, acilis: r.olusturuldu.toISOString().slice(0, 10), kullanici: r.kullanici,
+  id: r.id, ad: r.ad, kisaAd: r.kisa_ad, kod: r.rapor_kodu, durum: r.durum, acilis: GUN.format(r.olusturuldu), kullanici: r.kullanici,
   yonetici: r.yon_ad && r.yon_eposta && r.yon_durum ? { ad: r.yon_ad, eposta: r.yon_eposta, durum: r.yon_durum } : null,
 });
 
@@ -29,8 +31,8 @@ export async function firma(db: Sorgulayici, id: string): Promise<FirmaSatiri | 
   return (await firmalar(db)).find((f) => f.id === id) ?? null;
 }
 
-/** firma aç: firma + ilk firma yöneticisi (geçici parola). `ekAyrilmis`: yönetim adresinin etiketi (ortamdan) */
-export async function firmaAc(db: Sorgulayici, girdi: unknown, ekAyrilmis: readonly string[] = []): Promise<YonetimSonucu<{ id: string; parola: string; eposta: string; alt: string }>> {
+/** firma aç: firma + ilk firma yöneticisi (geçici parola). `ekAyrilmis`: yönetim adresinin etiketi (ortamdan); `anaAlan`: iletilerdeki tam adres */
+export async function firmaAc(db: Sorgulayici, girdi: unknown, ekAyrilmis: readonly string[], anaAlan: string): Promise<YonetimSonucu<{ id: string; parola: string; eposta: string; alt: string }>> {
   const g = firmaAcSemasi(ekAyrilmis).safeParse(girdi);
   if (!g.success) {
     const hatalar: Record<string, string> = {};
@@ -41,7 +43,7 @@ export async function firmaAc(db: Sorgulayici, girdi: unknown, ekAyrilmis: reado
   const parola = geciciParolaUret();
   const r = (await db.sorgu<{ s: { id?: string; hata?: string } }>("SELECT yonetim_firma_ac($1, $2, $3, $4, $5, $6) AS s",
     [d.unvan, d.alt, d.kod, d.yon, d.eposta, await parolaOzeti(parola)])).rows[0].s;
-  if (r.hata === "kisa_ad") return { durum: "gecersiz", hatalar: { alt: `${d.alt} kullanılıyor.` } };
+  if (r.hata === "kisa_ad") return { durum: "gecersiz", hatalar: { alt: `${d.alt}.${anaAlan} kullanılıyor.` } };
   if (r.hata === "rapor_kodu") return { durum: "gecersiz", hatalar: { kod: `${d.kod} başka bir firmada.` } };
   if (r.hata === "ayrilmis") return { durum: "gecersiz", hatalar: { alt: `“${d.alt}” bize ayrılmış; başka bir ad seçin.` } };
   if (!r.id) return { durum: "red", neden: "Firma açılamadı: bilgiler geçersiz." };
@@ -58,15 +60,15 @@ export async function firmaDurumu(db: Sorgulayici, id: string, durum: FirmaDurum
   return { durum: "tamam" };
 }
 
-/** ilk firma yöneticisine yeni geçici parola (durum "ilk"; açık oturumları düşer). Düz parola yalnız bu yanıtta. */
+/** firma yöneticisine yeni geçici parola (0050: firma_yoneticisi rolünü taşıyan, kapalı olmayan hesap — ilk yönetici önce; durum "ilk"; açık
+    oturumları düşer). Düz parola yalnız bu yanıtta. */
 export async function yoneticiyeGeciciParola(db: Sorgulayici, id: string): Promise<YonetimSonucu<{ parola: string; eposta: string; ad: string }>> {
   if (!UUID.test(id)) return { durum: "yok" };
   const parola = geciciParolaUret();
   const r = (await db.sorgu<{ s: { eposta?: string; ad?: string; hata?: string } }>("SELECT yonetim_gecici_parola($1, $2) AS s", [id, await parolaOzeti(parola)])).rows[0].s;
   if (r.hata === "yok") return { durum: "yok" };
   if (r.hata === "dondu") return { durum: "red", neden: "Dondurulmuş firmada parola verilmez; önce etkinleştirin." };
-  if (r.hata === "hesap_yok") return { durum: "red", neden: "Firmanın yönetici hesabı yok." };
-  if (r.hata === "pasif") return { durum: "red", neden: "Firma yöneticisinin hesabı kapalı; firma kendi Personel ekranından açar." };
+  if (r.hata === "hesap_yok") return { durum: "red", neden: "Firmanın açık bir yönetici hesabı yok." };
   if (r.hata || !r.eposta || !r.ad) return { durum: "red", neden: "İşlem yapılamadı." };
   return { durum: "tamam", parola, eposta: r.eposta, ad: r.ad };
 }

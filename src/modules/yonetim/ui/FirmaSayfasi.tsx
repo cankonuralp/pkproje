@@ -68,7 +68,7 @@ export function FirmaSayfasi({ firma: f, anaAlan, depo }: { firma: FirmaSatiri |
   return (
     <>
       <Kirinti ogeler={[["Firmalar", "/yonetim"], [f.ad]]} />
-      <NesneBasi baslik={f.ad} rozet={<DurumRozeti durum={f.durum} />} alt={adres} altIkon="building-2" tuslar={<>
+      <NesneBasi baslik={f.ad} rozet={<DurumRozeti durum={f.durum} />} alt={<span className={stil.adresKod}>{adres}</span>} altIkon="building-2" tuslar={<>
         <Tus tur="ikincil" ikon="key-round" disabled={dondu || bekliyor || !f.yonetici} onClick={() => void yeniParola()}>Yöneticiye yeni geçici parola</Tus>
         {dondu
           ? <Tus ikon="circle-check" disabled={bekliyor} onClick={etkinlestir}>Etkinleştir</Tus>
@@ -80,7 +80,7 @@ export function FirmaSayfasi({ firma: f, anaAlan, depo }: { firma: FirmaSatiri |
         <Bolum id="yf-b-giris" baslik="İlk giriş bilgileri">
           <SeritKap><Serit tur="uyari" ikon="triangle-alert">Geçici parola yalnız şimdi görünür; sayfadan çıkınca bir daha gösterilmez. Firma yöneticisine iletin; ilk girişte kendi parolasını belirler.</Serit></SeritKap>
           <BilgiListesi>
-            <Bilgi etiket="Adres" genis="cift"><Kod>{`https://${adres}`}</Kod></Bilgi>
+            <Bilgi etiket="Adres" genis="cift"><span className={stil.adresKod}>{`https://${adres}`}</span></Bilgi>
             <Bilgi etiket="Giriş adı" genis="cift">{parola.eposta}</Bilgi>
           </BilgiListesi>
           <p className={stil.etiketUst}>Geçici parola</p>
@@ -92,10 +92,10 @@ export function FirmaSayfasi({ firma: f, anaAlan, depo }: { firma: FirmaSatiri |
       <Bolum id="y-b-bilgi" baslik="Firma bilgileri">
         <BilgiListesi>
           <Bilgi etiket="Ticari ünvan" genis="cift">{f.ad}</Bilgi>
-          <Bilgi etiket="Adres" genis="cift"><Kod>{adres}</Kod></Bilgi>
+          <Bilgi etiket="Adres" genis="cift"><span className={stil.adresKod}>{adres}</span></Bilgi>
           <Bilgi etiket="Kısa kod"><Kod>{f.kod}</Kod></Bilgi>
           <Bilgi etiket="Açılış">{tarihYaz(f.acilis)}</Bilgi>
-          <Bilgi etiket="İlk firma yöneticisi">
+          <Bilgi etiket="Firma yöneticisi">
             {f.yonetici ? <>{f.yonetici.ad}<AltSatir>{f.yonetici.eposta} · {YON_DURUM[f.yonetici.durum]}</AltSatir></> : "—"}
           </Bilgi>
           <Bilgi etiket="Kullanıcı">{String(f.kullanici)}</Bilgi>

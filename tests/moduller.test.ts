@@ -147,6 +147,10 @@ test("yönetim kapısı: yalnız yönetim adresinde, panel yönetim oturumu iste
   const ara = oku("src/proxy.ts");
   assert.match(ara, /const yasak = yonetimde \? !YONETIM_YOLU\.test\(yol\) && !yol\.startsWith\("\/_next\/"\) : YONETIM_YOLU\.test\(yol\);/);
   assert.match(ara, /yasak \? NextResponse\.rewrite\(new URL\(YOK_YOLU/);
+  /* 2026-10-06 (347–348 incelemesi): eşleştiricide istisna yok — önceden yükleme başlığıyla gelen istek de adres ayrımından geçer */
+  assert.doesNotMatch(ara, /missing:/, "ara katman eşleştiricisinde istisna (missing) yok");
+  assert.match(ara, /if \(onYukleme\) return yasak \? NextResponse\.rewrite\(new URL\(YOK_YOLU, istek\.url\)\) : NextResponse\.next\(\);/);
+  assert.ok(ara.indexOf("const yasak =") < ara.indexOf("if (onYukleme)"), "adres ayrımı önceden yükleme dönüşünden önce");
   assert.match(oku("src/server/kiraci/istek.ts"), /if \(yonetimAdresiMi\(host\)\) return null;/);
   assert.match(oku("src/server/yonetim/istek.ts"), /if \(!\(await yonetimAdresinde\(\)\)\) notFound\(\);/);
 });
