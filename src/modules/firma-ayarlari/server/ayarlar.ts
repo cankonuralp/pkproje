@@ -22,6 +22,7 @@ import {
   BelgeTuruGirdisi, FiyatGirdisi, MUSTERI_BELGE_BAS, MUSTERI_BELGE_SON, MusteriBelgeGirdisi,
   AYAR_DOSYASI, EsikGirdisi, FirmaBilgiGirdisi, ImzaGirdisi, KodGirdisi, MesaiGirdisi, SabitGiderGirdisi, SaklamaGirdisi, ZimmetGirdisi, type AyarDosyasi,
 } from "../sema.ts";
+import { IA_TUR, type IaGecmis, type IaTur } from "../ice-aktar.ts";
 
 const MODUL = 22;
 export interface Kisi extends YetkiHesabi { ad: string }
@@ -50,6 +51,8 @@ export interface FirmaAyarlari {
   yz: Surumlu<{ acik: boolean; model: "opus" | "sonnet"; sinir: number | null }> & { anahtar: { tanimli: boolean; son4: string | null } };
   bulut: Surumlu<{ saglayici: "" | "gdrive" | "onedrive" | "dropbox" | "yandex" | "sftp"; kok: string; duzen: "mt" | "mty" | "my" }>;
   yedek: Surumlu<{ sik: "saatlik" | "gunluk" | "haftalik"; saat: string; gun: 30 | 90 | 365 }>;
+  /** 337: son içe aktarımlar */
+  ice: IaGecmis[];
 }
 /** k: özlük türü, "atama" ya da "eg:<eğitim türü>"; ek: firmanın eklediği (kaldırılabilir); kullanim: o türde belgesi olan personel (ek türde) */
 export interface MusteriBelgeTuru { k: string; ad: string; kisisel: boolean; ek: boolean; kullanim: number }
@@ -101,6 +104,7 @@ export async function firmaAyarlari(db: Sorgulayici, kim: Kisi): Promise<FirmaAy
       return { deger: { acik: y.deger.acik, model: y.deger.model, sinir: y.deger.sinir }, surum: y.surum, anahtar: await sirDurumu(db, "yapay_zeka_anahtari") };
     })(),
     bulut: await (async () => { const b = await ayarOku(db, "bulut"); return { deger: b.deger, surum: b.surum }; })(),
+    ice: await iceAktarimlar(db),
     yedek: await (async () => { const b = await ayarOku(db, "yedek"); return { deger: b.deger, surum: b.surum }; })(),
     mbelge: await (async () => {
       const mb = await ayarOku(db, "musteri_belge"), t = await musteriBelgeTurleri(db);
@@ -111,6 +115,14 @@ export async function firmaAyarlari(db: Sorgulayici, kim: Kisi): Promise<FirmaAy
 }
 
 /** degismedi: kayıtlı değer zaten aynıydı (sunucu biçimi düzeltti) — ekran taslağı kayıtlı değere döner */
+/** son içe aktarımlar (firmanın kendi tablosu, 0047) */
+async function iceAktarimlar(db: Sorgulayici): Promise<IaGecmis[]> {
+  const l = (await db.sorgu<{ id: string; zaman: Date; tur: IaTur; adet: number; atlanan: number; kim: string; dosya: string; geri: boolean }>(
+    "SELECT id::text, zaman, tur, adet, atlanan, kim, dosya, geri IS NOT NULL AS geri FROM ice_aktarim ORDER BY zaman DESC, olustu DESC, id DESC LIMIT 5")).rows;
+  return l.map((x, i) => ({ id: x.id, zaman: x.zaman.toISOString(), tur: x.tur, turAd: IA_TUR[x.tur]?.ad ?? x.tur, adet: x.adet, atlanan: x.atlanan, kim: x.kim,
+    dosya: x.dosya, geri: x.geri, son: i === 0 }));
+}
+
 export type AyarYazma = { durum: "tamam"; bildirim: string; degismedi?: true } | { durum: "gecersiz"; hatalar: DogrulamaHatalari } | { durum: "red"; neden: string } | { durum: "cakisma" } | { durum: "yetkisiz" };
 const SONUC = (r: { durum: string; hatalar?: DogrulamaHatalari }, bildirim: string): AyarYazma =>
   r.durum === "tamam" ? { durum: "tamam", bildirim } : r.durum === "degisiklik_yok" ? { durum: "tamam", bildirim, degismedi: true } : r.durum === "gecersiz" ? { durum: "gecersiz", hatalar: r.hatalar ?? {} }

@@ -2341,6 +2341,20 @@ revizyon, alan kopyalama, hafif kusur devri, meslek eşleşme denetimi).
 - Emsal ürünler: https://opwire.app/iso-17020-periyodik-kontrol-yazilimi/ · https://17020muayene.vidco.com.tr/ · https://akuple.com/asansor-kontrol-yazilimi/ · https://ensyazilim.com/
 
 ## 11 · Değişiklik günlüğü
+- 2026-10-06 (337): **K4 Firma ayarları — Toplu içe aktarma (ilk kurulum)** (maket iceCiz; §11 245). Tam genişlik bölüm: **Ne yüklenecek**
+  (müşteriler ve tesisler · ekipmanlar · ölçüm cihazları · personel · araçlar) → sütunlar (* zorunlu) → **Şablonu indir** (.xlsx, örnek satırlar) →
+  **Excel seç** (.xlsx / .csv; dosya tarayıcıda okunur, başlık satırı atlanır) → sunucu satır satır denetler: "Eklenecek" (uyarı notu: vergi no / SGK
+  / EKİPNET boş, müşteri kayıtlı → tesis ona eklenir, müşteri dosyada üstte, okunmayan alan boş girer, kalibrasyonu geçmiş …) ya da atlanma nedeni
+  (zorunlu alan boş, kayıtlı kod / eski kod / plaka / cihaz kodu / e-posta, dosyada iki kez, tür / meslek / il / müşteri-tesis bulunamadı, geçersiz
+  tarih, uzunluk) → **İçe aktar (N)**: geçerli satırlar TEK işlemde (biri düşerse hiçbiri), satırlar sunucuda yeniden denetlenir. Aynı müşterinin
+  satırları tek müşteri açar; ekipman tesise müşteri ünvanı (ya da kısa adı) + tesis adıyla bağlanır (önce müşteriler). Ölçüm cihazının dosyadaki
+  kalibrasyon bitişi **sistem öncesi bitiş** (göç 0047 ilk_bitis; laboratuvar ve sertifika no uydurulmaz) — geçerli bitiş ondan, kalibrasyon kaydı
+  açılınca kayıtlardan. Personelin giriş hesabı açılmaz. En çok 2.000 satır. **Son içe aktarımlar** (5): sonuncusu **Geri al** — önce denenir;
+  kayıtlar kullanıldıysa (plan, rapor, teklif, sözleşme, zimmet, hesap, kilometre, dosya) sorulmadan "geri alınamaz" denir, kullanılmadıysa onay
+  penceresi → kayıtlar silinir (ekipman kodu da serbest kalır, yeniden yüklenebilir). Güvenlik: uygulama rolünün bu tablolarda silme hakkı yok;
+  geri alma veritabanı işleviyle (yalnız kendi firması, oturumdaki hesap, yalnız son ve bir kez); içe aktarma kaydı yalnız AYNI işlemde oluşturulmuş
+  kayıtları taşıyabilir (tetik) — sahte bir kayıtla başka veri silinemez. Yetki Firma ayarları "değiştirir". Kilit: ice-aktar-sema.test (saf
+  denetim), ice-aktarma.test (gerçek PG, iki firma: yetki, tek işlem, geri al, kullanılmış, sahte kayıt, sızıntı); olumsuz kanıt 2; uçtan uca.
 - 2026-10-06 (335–336 incelemesi): çapraz inceleme (dört bakış + çürütme; 22 bulgudan 21'i doğrulandı, aynıları birleşti) düzeltmeleri.
   **Güvenlik:** firmanın eklediği belge türünün anahtarı (ekN) kaldırılınca yeni türe yeniden veriliyordu — eski bir seçim ya da eski bir belge
   yeni (kişisel olabilecek) türün adıyla müşteriye açılabiliyordu; artık sayaçla, kaldırılan anahtar bir daha verilmez (ek1 → ek2 …), yeni tür

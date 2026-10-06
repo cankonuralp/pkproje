@@ -42,6 +42,19 @@
 .etiketUst { margin: 0 0 6px; font-size: var(--boy-kucuk); font-weight: 600; }
 .bilgiListe { margin: 0 0 12px; padding-left: 18px; color: var(--yazi2); font-size: var(--boy-kucuk); display: grid; gap: 4px; }
 .anahtar { font-variant-numeric: tabular-nums; font-weight: 600; }
+/* 337: toplu içe aktarma — sütun listesi, satır denetimi tablosu (maket .a-ia-sutun, .a-tablo-ia; teklifler önizlemesiyle aynı görünüm) */
+.iaSutun { margin: 8px 0; font-size: var(--boy-kucuk); font-weight: 600; overflow-wrap: anywhere; }
+.iaOzet { margin: 12px 0 0; }
+.iaOzet:focus { outline: none; }
+.dosyaAd { min-width: 0; overflow-wrap: anywhere; font-weight: 600; align-self: center; }
+.ipucuSatir { color: var(--yazi2); font-size: var(--boy-kucuk); align-self: center; }
+.onizlemeKap { max-height: 50vh; overflow: auto; margin: 12px 0 0; border: 1px solid var(--kenar); border-radius: var(--r-orta); }
+.onizleme { width: 100%; border-collapse: collapse; font-size: var(--boy-kucuk); }
+.onizleme th { position: sticky; top: 0; padding: 6px 8px; background: var(--kart); border-bottom: 1px solid var(--kenar); color: var(--yazi2); font-weight: 600; text-align: left; }
+.onizleme td { padding: 6px 8px; border-bottom: 1px solid var(--kenar); vertical-align: top; overflow-wrap: anywhere; }
+.sayi { font-variant-numeric: tabular-nums; }
+.kodYazi { font-weight: 700; font-variant-numeric: tabular-nums; }
+.altUyari { display: block; color: var(--uyari-yazi); }
 @media (max-width: 767.98px) {
   .kalem { grid-template-columns: minmax(0, 1fr) minmax(0, 1fr); }
   .kalem > :first-child { grid-column: 1 / -1; }

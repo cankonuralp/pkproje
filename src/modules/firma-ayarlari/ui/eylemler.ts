@@ -5,6 +5,7 @@ import { depo } from "../../../server/dosya/depo";
 import { ayniKoken } from "../../../server/kimlik/koken";
 import { istekOturumu, oturumIslemi } from "../../../server/kimlik/istek";
 import { AYAR_DOSYASI } from "../sema";
+import { iceAktar, iceAktarDenetle, iceAktarimGeriAl, type IaSatirOzeti, type IaSonuc } from "../server/ice-aktar";
 import { ayarDosyasiYaz, ayarKaydet, belgeTuruEkle, belgeTuruKaldir, firmaKoduKaydet, yzAnahtarYaz, type AyarYazma } from "../server/ayarlar";
 
 export interface AyarYaniti { tamam?: boolean; bildirim?: string; hatalar?: Record<string, string>; genel?: string; degismedi?: boolean }
@@ -44,4 +45,31 @@ export async function ayarDosyasiEylemi(form: FormData): Promise<AyarYaniti> {
     belge = { ad: f.name, bayt: new Uint8Array(await f.arrayBuffer()) };
   }
   return islem((o) => oturumIslemi(o, (db) => ayarDosyasiYaz(db, depo(), o, o.kiraci.firmaId, typeof ne === "string" ? ne : "", Number(form.get("surum")), belge)));
+}
+
+/* ── TOPLU İÇE AKTARMA (337): girdi { tur, dosya, satirlar } — satırlar sunucuda yeniden denetlenir ── */
+export interface IaYaniti { tamam?: boolean; satirlar?: IaSatirOzeti[]; bildirim?: string; genel?: string }
+async function iaIslem(is: (o: NonNullable<Awaited<ReturnType<typeof istekOturumu>>>) => Promise<IaSonuc>): Promise<IaYaniti> {
+  if (!(await ayniKoken())) return { genel: "İstek reddedildi. Sayfayı yenileyip yeniden deneyin." };
+  const o = await istekOturumu();
+  if (!o) return { genel: "Oturumunuz kapandı. Yeniden giriş yapın." };
+  try {
+    const r = await is(o);
+    return r.durum === "tamam" ? { tamam: true, satirlar: r.satirlar } : r.durum === "aktarildi" ? { tamam: true, bildirim: r.bildirim }
+      : r.durum === "yetkisiz" ? { genel: SONUC.yetkisiz } : { genel: r.neden };
+  } catch (h) {
+    /* aynı anda başka biri aynı kodu / plakayı / e-postayı kaydetti: hiçbir satır girmedi (tek işlem) */
+    if ((h as { code?: string }).code === "23505") return { genel: "İçe aktarılamadı: bazı kayıtlar bu arada eklendi. Dosyayı yeniden seçip denetleyin; hiçbir satır eklenmedi." };
+    throw h;
+  }
+}
+export async function iceAktarDenetleEylemi(girdi: unknown): Promise<IaYaniti> {
+  return iaIslem((o) => oturumIslemi(o, (db) => iceAktarDenetle(db, o, girdi)));
+}
+export async function iceAktarEylemi(girdi: unknown): Promise<IaYaniti> {
+  return iaIslem((o) => oturumIslemi(o, (db) => iceAktar(db, o, girdi)));
+}
+/** dene: yalnız "geri alınabilir mi" (silmez) */
+export async function iceAktarimGeriAlEylemi(id: string, dene: boolean): Promise<IaYaniti> {
+  return iaIslem((o) => oturumIslemi(o, (db) => iceAktarimGeriAl(db, o, typeof id === "string" ? id : "", dene === true)));
 }

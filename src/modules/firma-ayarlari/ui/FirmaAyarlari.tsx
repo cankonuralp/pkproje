@@ -18,6 +18,7 @@ import {
   type AyarDosyasi, type AyarKesimi, type EsikAdi,
 } from "../sema";
 import type { FirmaAyarlari as Veri } from "../server/ayarlar";
+import { IceAktarma } from "./IceAktarma";
 import { ayarDosyasiEylemi, ayarKaydetEylemi, belgeTuruEkleEylemi, belgeTuruKaldirEylemi, firmaKoduKaydetEylemi, yzAnahtarEylemi, type AyarYaniti } from "./eylemler";
 import stil from "./firma-ayarlari.module.css";
 
@@ -522,7 +523,7 @@ function YapayZeka({ v }: { v: Veri }) {
 }
 
 /* ── SAYFA ── */
-const SIRA: AyarKesimi[] = ["firma", "imza", "zimmet", "saklama", "onbilgi", "bordro", "mesai", "esik", "kod", "bulut", "fiyat", "sabit", "depo", "yz", "mbelge"];
+const SIRA: AyarKesimi[] = ["firma", "imza", "zimmet", "saklama", "onbilgi", "bordro", "mesai", "esik", "kod", "bulut", "fiyat", "sabit", "depo", "yz", "mbelge", "ice"];
 export function FirmaAyarlari({ v }: { v: Veri }) {
   return (
     <>
@@ -554,6 +555,9 @@ export function FirmaAyarlari({ v }: { v: Veri }) {
           <DepoYedek v={v} />
           <YapayZeka v={v} />
           <MusteriBelgeleri v={v} />
+          <Kart kesim="ice" genis yaz={false} kirli={false} mesgul={false} kaydet={() => undefined} vazgec={() => undefined}>
+            <IceAktarma gecmis={v.ice} yaz={v.yaz} />
+          </Kart>
         </div>
       </div>
     </>

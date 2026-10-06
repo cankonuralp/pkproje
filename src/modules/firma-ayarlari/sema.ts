@@ -7,7 +7,7 @@ export const AYAR_BASLIK = {
   firma: "Firma bilgileri", imza: "İmza yöntemi", zimmet: "Zimmet teslim formu", saklama: "Rapor saklama süresi", onbilgi: "Ön bilgilendirme formu",
   bordro: "Bordro formatı", mesai: "Mesai takibi", esik: "Uyarı eşikleri", kod: "Rapor numarası", sabit: "Sabit giderler",
   fiyat: "Fiyat listesi", mbelge: "Müşteriye açık personel belgeleri",
-  bulut: "Bulut kaydı", depo: "Depolama ve yedek", yz: "Yapay zekâ",
+  bulut: "Bulut kaydı", depo: "Depolama ve yedek", yz: "Yapay zekâ", ice: "Toplu içe aktarma (ilk kurulum)",
 } as const;
 export type AyarKesimi = keyof typeof AYAR_BASLIK;
 

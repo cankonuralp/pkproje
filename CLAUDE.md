@@ -149,6 +149,9 @@ pkproje/
   src/modules/firma-ayarlari/ FİRMA AYARLARI (2026-10-06, 334; modül 22): sema.ts (bölüm şemaları, seçenekler) · server/ayarlar.ts (ekran verisi, bölüm
                             kaydet, firma kodu — çekirdek firmaKoduYaz, göç 0045; logo / ön bilgilendirme / bordro formatı dosyaları) · ui/FirmaAyarlari.tsx
                             (bölüm kartı + taslak Kaydet / Vazgeç) · belge başlığı künyesi src/server/ayar/ayar.ts firmaBelgeKunyesi (ticari ad, adres, akr., logo)
+                            · TOPLU İÇE AKTARMA (337, göç 0047 ice_aktarim + ice_aktarim_geri_al): ice-aktar.ts (saf: türler, şablon, satır denetimi) ·
+                            server/ice-aktar.ts (denetle, içe aktar — tek işlem, geri al) · ui/IceAktarma.tsx · bağlantılar <modül>/server/ice-aktar-baglanti.ts
+                            (musteriler, ekipman, olcum-cihazlari — ilk_bitis, personel, araclar)
   src/components/grafik/    TEK GRAFİK ÜRETİCİSİ (329): dikey sütun (maket T9), etiket ölçülerek, gizli tablo (ekran okuyucu)
   src/modules/ekipman/      EKİPMAN (2026-10-04, 309): tesisin kalıcı ekipman kaydı (kod firmada eşsiz; eski kod başkasına verilmez — ekipman_kodu)
   src/modules/teklifler/    TEKLİFLER (2026-10-05, 324; modül 11): göç 0037 (teklif, teklif_kalem, teklif_tesis, fiyat_listesi; teklif_akis: yalnız taslak

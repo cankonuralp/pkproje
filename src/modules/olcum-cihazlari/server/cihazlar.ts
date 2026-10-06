@@ -58,9 +58,9 @@ export async function kalibrasyonEsigi(db: Sorgulayici): Promise<number> {
 }
 
 type CihazDb = { id: string; kod: string; tur_id: string; tur: string; marka: string | null; model: string | null; seri: string | null; aralik: string | null; konum: "depo" | "lab"; bitis: string | null; surum: number };
-/* geçerli bitiş: kaldırılmamış "uygun" kalibrasyonların en geç bitişi */
+/* geçerli bitiş: kaldırılmamış "uygun" kalibrasyonların en geç bitişi; toplu içe aktarılan cihazda sistem öncesi bitiş de (0047 ilk_bitis) */
 const CIHAZ_SEC = `SELECT c.id::text, c.kod, c.tur_id::text, t.ad AS tur, c.marka, c.model, c.seri, c.aralik, c.konum, c.surum,
-    (SELECT max(k.bitis) FROM kalibrasyon k WHERE k.cihaz_id = c.id AND k.firma_id = c.firma_id AND k.sonuc = 'uygun' AND k.kaldirildi IS NULL)::text AS bitis
+    GREATEST((SELECT max(k.bitis) FROM kalibrasyon k WHERE k.cihaz_id = c.id AND k.firma_id = c.firma_id AND k.sonuc = 'uygun' AND k.kaldirildi IS NULL), c.ilk_bitis)::text AS bitis
   FROM olcum_cihazi c JOIN cihaz_turu t ON t.id = c.tur_id AND t.firma_id = c.firma_id`;
 const satir = (x: CihazDb, bugun: string, esik: number): CihazSatiri => ({
   id: x.id, kod: x.kod, turId: x.tur_id, tur: x.tur, marka: x.marka, model: x.model, seri: x.seri, aralik: x.aralik, konum: x.konum, bitis: x.bitis,
