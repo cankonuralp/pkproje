@@ -15,8 +15,10 @@ import { DOSYA_ERISIMI } from "../src/server/dosya/erisim.ts";
 import { turKaydet } from "../src/modules/ekipman-turleri/server/turler.ts";
 import {
   atamaBelgeDegistir, atamaEkle, atamaKaldir, atananTurler, bordroKaldir, bordroYukle, DosyaHatasi, gunlukMaliyet, ozlukEkle, ozlukKaldir, personelDosyasi,
-  zimmetFormuYukle, type Kisi,
+  zimmetFormuGonder, zimmetFormuVerisi, zimmetFormuYukle, type Kisi, type ZimmetPdfUretici,
 } from "../src/modules/personel/server/dosyalar.ts";
+import type { ZimmetFormuVerisi } from "../src/belge/zimmet.ts";
+import { belgeImzaliYukle, digerBelgeler } from "../src/modules/onaylar/server/belgeler.ts";
 import { personelEkle } from "../src/modules/personel/server/personel.ts";
 import { demirbasEkle, teslimEt } from "../src/modules/zimmetler/server/zimmet.ts";
 import { testKumesi } from "./yardimci/kume.ts";
@@ -160,4 +162,60 @@ test("YETKİ: denetçi kendi kartında atama + zimmet görür, özlük / bordro 
   assert.deepEqual(await b((db) => bordroKaldir(db, YON_B, bordro.id, bordro.surum)), { durum: "yok" });
   assert.deepEqual(await b((db) => atamaEkle(db, depo, YON_B, B, pDenetci, { tur, tarih: "2026-09-01" }, PDF)), { durum: "yok" });
   await assert.rejects(b((db) => db.sorgu("INSERT INTO bordro (personel_id, ay, brut, net, maliyet) VALUES ($1, '2026-07', 100, 90, 120)", [pIkinci])), /foreign key|yabancı anahtar/i);
+});
+
+/* 344: zimmet teslim formu (maket personel.html zimmet formu "PDF indir" / "İmzala"; AA3) — imzaya gönderilen form kişinin Onaylar › Diğer'ine
+   düşer, imzalanınca imzalı zimmet formu olur. Sahte üretici imzalanabilir biçimde en küçük PDF'i döner (gerçek Chromium çıktısı pdf.test). */
+const OZGUN = "%PDF-1.4\n1 0 obj << /Type /Catalog /Pages 2 0 R >> endobj\n2 0 obj << /Type /Pages /Kids [3 0 R] /Count 1 >> endobj\n"
+  + "3 0 obj << /Type /Page /Parent 2 0 R /Contents 4 0 R /Resources << >> >> endobj\n4 0 obj << /Length 18 >> stream\nBT (Zimmet) Tj ET\nendstream\nendobj\n"
+  + "trailer << /Root 1 0 R >>\n%%EOF\n";
+const IMZA = "9 0 obj << /Type /Sig /Filter /Adobe.PPKLite /ByteRange [0 10 20 30] /Contents <00ff00ff> >> endobj\ntrailer << /Root 1 0 R /Prev 0 >>\n%%EOF\n";
+const bayt = (s: string) => new TextEncoder().encode(s);
+let sonVeri: ZimmetFormuVerisi | null = null;
+const SAHTE: ZimmetPdfUretici = async (v) => { sonVeri = v; return bayt(OZGUN); };
+const ha = <T,>(k: Kisi, is: Parameters<typeof kiraciIcinde<T>>[2], firma = A) => kiraciIcinde(havuz, firma, is, { hesapId: k.id });
+
+test("344 zimmet formu: indirilen form numarasız, kapsam o anki zimmet; yalnız 'yaz'; zimmeti olmayana yok", async () => {
+  const v = (await a((db) => zimmetFormuVerisi(db, YON, pDenetci)))!;
+  assert.deepEqual([v.no, v.alan.ad, v.eden, v.varliklar.map((x) => [x.kod, x.tur])], [null, "Deneme Denetçi", null, [["DM-1", "Demirbaş"], ["DM-2", "Demirbaş"]]]);
+  assert.equal(v.firma.kod, "DA");
+  for (const k of [DENETCI, PLAN, MUH]) assert.equal(await a((db) => zimmetFormuVerisi(db, k, pDenetci)), null, k.roller[0]);
+  assert.equal(await a((db) => zimmetFormuVerisi(db, YON, pIkinci)), null, "zimmeti yok");
+  assert.equal(await b((db) => zimmetFormuVerisi(db, YON_B, pDenetci)), null, "başka firma");
+});
+
+test("344 zimmet formu imzaya: numara ZF, kişinin Onaylar › Diğer'ine; yenisi bekleyeni iptal eder; imzalanınca imzalı form olur; PDF düşerse hiçbiri yazılmaz", async () => {
+  const belge = async (kaynak: string) => (await a((db) => db.sorgu<{ id: string; tur: string; durum: string; ad: string; surum: number }>(
+    "SELECT id::text, tur, durum, ad, surum FROM belge_onay WHERE kaynak_id = $1", [kaynak]))).rows;
+  const r1 = tamam(await ha(YON, (db) => zimmetFormuGonder(db, depo, YON, A, pDenetci, SAHTE)));
+  const no1 = sonVeri!.no!;
+  assert.match(no1, /^ZF-\d{4}-001$/);
+  assert.deepEqual(sonVeri!.varliklar.map((x) => x.kod), ["DM-1", "DM-2"]);
+  assert.deepEqual((await belge(r1.id)).map((x) => [x.tur, x.durum, x.ad]), [["zimmet", "bekliyor", `Zimmet teslim formu · ${no1}`]]);
+  let z = (await a((db) => personelDosyasi(db, YON, pDenetci)))!;
+  assert.deepEqual([z.zimmetGonderimi?.ad, z.zimmetGonderimi?.durum, z.zimmetFormu?.kapsam], [`Zimmet teslim formu · ${no1}`, "bekliyor", 2], "taranmış form yerinde, gönderim bekliyor");
+  /* yenisi: önceki bekleyen iptal (kişi eski kapsamı imzalamaz) */
+  const r2 = tamam(await ha(YON, (db) => zimmetFormuGonder(db, depo, YON, A, pDenetci, SAHTE)));
+  const no2 = sonVeri!.no!;
+  assert.match(no2, /^ZF-\d{4}-002$/);
+  assert.equal((await belge(r1.id))[0].durum, "iptal");
+  /* kişi Onaylar › Diğer'de görür ve imzalar */
+  const d = await ha(DENETCI, (db) => digerBelgeler(db, DENETCI));
+  const x = d.belgeler.find((y) => y.tur === "zimmet" && y.durum === "bekliyor")!;
+  assert.equal(x.ad, `Zimmet teslim formu · ${no2}`);
+  tamam(await ha(DENETCI, (db) => belgeImzaliYukle(db, depo, DENETCI, A, x.id, x.surum, { ad: "imzali.pdf", bayt: bayt(OZGUN + IMZA) })));
+  z = (await a((db) => personelDosyasi(db, YON, pDenetci)))!;
+  assert.deepEqual([z.zimmetFormu?.id, z.zimmetFormu?.guncel, z.zimmetGonderimi], [r2.id, true, null], "imzalanan form imzalı zimmet formu");
+  assert.ok(await a((db) => dosyaIndirilebilir(db, YON, z.zimmetFormu!.dosyaId!, DOSYA_ERISIMI)), "yönetici imzalı formu açar");
+  assert.ok(await a((db) => dosyaIndirilebilir(db, DENETCI, z.zimmetFormu!.dosyaId!, DOSYA_ERISIMI)), "kişi kendi imzalı formunu açar");
+  assert.equal(await a((db) => dosyaIndirilebilir(db, PLAN, z.zimmetFormu!.dosyaId!, DOSYA_ERISIMI)), null);
+  /* PDF düşerse numara, form ve belge yazılmaz */
+  const sayi = async () => (await a((db) => db.sorgu<{ n: number }>("SELECT count(*)::int AS n FROM zimmet_formu WHERE personel_id = $1", [pDenetci]))).rows[0].n;
+  const once = await sayi();
+  await assert.rejects(ha(YON, (db) => zimmetFormuGonder(db, depo, YON, A, pDenetci, async () => { throw new Error("motor"); })), DosyaHatasi);
+  assert.equal(await sayi(), once);
+  /* yetki ve kiracı */
+  for (const k of [DENETCI, PLAN, MUH]) assert.deepEqual(await ha(k, (db) => zimmetFormuGonder(db, depo, k, A, pDenetci, SAHTE)), { durum: "yetkisiz" });
+  assert.deepEqual(await ha(YON_B, (db) => zimmetFormuGonder(db, depo, YON_B, B, pDenetci, SAHTE), B), { durum: "yok" });
+  assert.deepEqual(await ha(YON, (db) => zimmetFormuGonder(db, depo, YON, A, pIkinci, SAHTE)), { durum: "gecersiz", hatalar: { dosya: "Zimmetinde varlık yok; form gönderilmez." } });
 });

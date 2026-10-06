@@ -61,7 +61,7 @@ export default async function Sayfa({ params }: { params: Promise<{ id: string }
         yonetebilir={canDoEylem(o, "hesap_ac_kapat")} yetkiliOlabilir={yetkiliOlabilir(p.meslek)}
         hesap={h && { durum: h.durum, roller: h.roller, eposta: h.eposta, zaman: zamanYaz(h.durum === "ilk" ? h.olustu : h.sonGiris), gorulen: `${gorulen} / ${MODULLER.length}` }} />
       {denetci && <AtamaBolumu personelId={p.id} etkin={p.durum === "etkin"} dosya={dosya} bugun={bugun} />}
-      <ZimmetBolumu personelId={p.id} dosya={dosya} bugun={bugun} />
+      <ZimmetBolumu personelId={p.id} kisi={p.ad} dosya={dosya} bugun={bugun} />
       {egitimler && <EgitimBolumu egitimler={egitimler} />}
       {dosya.bordrolar && <BordroBolumu personelId={p.id} kisi={p.ad} dosya={dosya} bugun={bugun} gunluk={gunlukMaliyet(dosya.bordrolar[0])} isGunu={IS_GUNU} />}
       {dosya.ozluk && <OzlukBolumu personelId={p.id} dosya={dosya} bugun={bugun} />}

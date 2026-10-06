@@ -2341,6 +2341,16 @@ revizyon, alan kopyalama, hafif kusur devri, meslek eşleşme denetimi).
 - Emsal ürünler: https://opwire.app/iso-17020-periyodik-kontrol-yazilimi/ · https://17020muayene.vidco.com.tr/ · https://akuple.com/asansor-kontrol-yazilimi/ · https://ensyazilim.com/
 
 ## 11 · Değişiklik günlüğü
+- 2026-10-06 (344): **K4 Zimmet teslim formu → Onaylar › Diğer** (maket personel.html zimmet formu "PDF indir" / "İmzala", MB.zimmetFormu; AA3:
+  *"eğitim zimmet formu gönderilirse oradan onaylanabilsin"*). Personel kartı › Zimmetindekiler ("değiştirir"): **Formu indir** (temel format
+  <firma kodu>-FR-ZMT-01, şimdiki zimmetle, numarasız — ıslak imza için) · **İmzaya gönder** (önce sorulur): numara ZF-AAYY-SIRA, kapsam gönderme
+  anındaki zimmet (sunucuda), form kaydı + PDF + belge aynı işlemde (PDF düşerse hiçbiri yazılmaz); kişinin Onaylar › Diğer belgeler'ine düşer;
+  önceki bekleyen form iptal olur; ıslak imzalı tarama yüklenince de bekleyen iptal (aynı zimmet iki yoldan imzalanmaz). Kişi imzalayınca imzalı PDF
+  **imzalı zimmet formu** olur (zimmet değişince eskir — öncekiyle aynı kural); bekleyen / geri gönderilen form kartta şeritte. Formda: teslim alan
+  (ad · meslek), teslim eden (Firma ayarları › Zimmet teslim eden; yoksa "Firma adına"), varlıklar (kod · ad · tür · teslim günü, ölçüm cihazında
+  kalibrasyon bitişi), taahhüt, imzalar. Mobil imza ve iki taraflı imza (teslim eden önce) sonraki faz. Eğitim formunun gönderimi ayrı kalem.
+  Kilit: zimmet-belgesi.test (saf), pdf.test (imzalanabilir), personel-dosya.test (numara, kapsam, iptal, imza → imzalı form, dosya erişimi, PDF düşerse,
+  yetki, kiracı); olumsuz kanıt 2; personel-dosya e2e (indir, gönder, denetçinin Onaylar › Diğer'inde).
 - 2026-10-06 (343): **337–339 çapraz incelemesi düzeltmeleri** (dört bakış, 24 doğrulanmış bulgu). **Ölçüm cihazı:** sistem öncesi bitiş (ilk_bitis)
   YALNIZ hiç kalibrasyon kaydı yokken geçerli — kayıt açılınca (sonucu "uygun değil" olsa da) devreden çıkar (GREATEST "uygun değil"i ve daha erken
   biteni eziyordu; karar 337'nin sözü); kural tek SQL ifadesinde (cihazlar.ts GECERLI_BITIS — Uyarılar da); rapor belgesi kalibrasyon kaydı olmayan

@@ -17,12 +17,12 @@ import { AltSatir, Bolum, DegerYok, Rozet } from "../../../components/sayfa/Sayf
 import { SecimAlani } from "../../../components/secim/SecimAlani";
 import { TarihAlani } from "../../../components/secim/TarihAlani";
 import { Serit } from "../../../components/serit/Serit";
-import { Tus } from "../../../components/tus/Tus";
+import { Tus, tusSinifi } from "../../../components/tus/Tus";
 import type { EgitimKaydi } from "../../egitimler/server/egitimler";
 
 import type { AtamaSatiri, BordroSatiri, OzlukSatiri, PersonelDosyasi } from "../server/dosyalar";
 import { BELGE_DURUM, belgeEtkin } from "../../onaylar/sema";
-import { bordroOnayaGonderEylemi, personelBelgeDegistirEylemi, personelBelgeEkleEylemi, personelBelgeKaldirEylemi } from "./eylemler";
+import { bordroOnayaGonderEylemi, personelBelgeDegistirEylemi, personelBelgeEkleEylemi, personelBelgeKaldirEylemi, zimmetFormuGonderEylemi } from "./eylemler";
 import { bransAd, tarihYaz } from "./ortak";
 import stil from "./personel.module.css";
 
@@ -166,20 +166,44 @@ export function AtamaBolumu({ personelId, etkin, dosya, bugun }: { personelId: s
   );
 }
 
-/* ── ZİMMETİNDEKİLER + İMZALI ZİMMET FORMU (hareketler ve teslim Zimmetler modülünde) ── */
-export function ZimmetBolumu({ personelId, dosya, bugun }: { personelId: string; dosya: PersonelDosyasi; bugun: string }) {
+/* zimmet teslim formunu kişinin imzasına gönder (344; maket personel.html zform-imzala — firmanın yöntemiyle; önce sorulur; Onaylar › Diğer belgeler'e düşer) */
+function ZimmetGonderTusu({ personelId, kisi, adet }: { personelId: string; kisi: string; adet: number }) {
+  const router = useRouter();
+  const bildir = useBildir();
+  const onayla = useOnayla();
+  const [bekliyor, baslat] = useTransition();
+  const gonder = async () => {
+    if (!(await onayla({ baslik: "Zimmet formunu imzaya gönder", metin: <>Zimmet teslim formu ({adet} varlık) {kisi} kişisinin imzasına gider (Onaylar › Diğer belgeler). Bekleyen önceki form iptal olur.</>, tus: "İmzaya gönder" }))) return;
+    baslat(async () => {
+      const r = await zimmetFormuGonderEylemi(personelId);
+      if (!r.tamam) { bildir(r.genel ?? "Gönderilemedi."); return; }
+      bildir(r.bildirim ?? "Zimmet formu imzaya gönderildi."); router.refresh();
+    });
+  };
+  return <Tus tur="ikincil" ikon="send" disabled={bekliyor} aria-busy={bekliyor || undefined} onClick={gonder}>İmzaya gönder</Tus>;
+}
+
+/* ── ZİMMETİNDEKİLER + İMZALI ZİMMET FORMU (hareketler ve teslim Zimmetler modülünde; 344: form PDF'i ve imzaya gönderme) ── */
+export function ZimmetBolumu({ personelId, kisi, dosya, bugun }: { personelId: string; kisi: string; dosya: PersonelDosyasi; bugun: string }) {
   const p = useBelgePenceresi();
-  const z = dosya.zimmet, f = dosya.zimmetFormu;
+  const z = dosya.zimmet, f = dosya.zimmetFormu, g = dosya.zimmetGonderimi;
   const ac = f?.dosyaId && <DosyaAcTusu dosyaId={f.dosyaId}>İmzalı formu aç</DosyaAcTusu>;
   return (
     <Bolum id="b-per-zimmet" baslik="Zimmetindekiler" sayac={<><b>{z.length}</b> varlık</>}
-      tuslar={dosya.yaz && z.length > 0 && <Tus tur="ikincil" ikon="file-signature" onClick={() => p.ac("zimmet")}>İmzalı formu yükle</Tus>}>
+      tuslar={dosya.yaz && z.length > 0 && <>
+        <a className={tusSinifi("ikincil")} href={`/personel/${personelId}/zimmet-formu/pdf`} download><Ikon ad="file-text" kucuk />Formu indir</a>
+        <ZimmetGonderTusu personelId={personelId} kisi={kisi} adet={z.length} />
+        <Tus tur="ikincil" ikon="file-signature" onClick={() => p.ac("zimmet")}>İmzalı formu yükle</Tus>
+      </>}>
       {(z.length > 0 || f) && <div className={stil.formDurum}>
         {f && f.guncel ? <Serit tur="onay" ikon="file-check">İmzalı zimmet formu: {tarihYaz(f.tarih)} · {f.kapsam} varlık.</Serit>
-          : f ? <Serit tur="uyari" ikon="triangle-alert">İmzalı form ({tarihYaz(f.tarih)}) eskidi: zimmet o tarihten sonra değişti. Yeni formun imzalı taramasını yükleyin.</Serit>
-            : <Serit tur="uyari" ikon="triangle-alert">İmzalı zimmet formu yok. Formun ıslak imzalı taramasını yükleyin.</Serit>}
+          : f ? <Serit tur="uyari" ikon="triangle-alert">İmzalı form ({tarihYaz(f.tarih)}) eskidi: zimmet o tarihten sonra değişti. Yeni formu imzaya gönderin ya da imzalı taramasını yükleyin.</Serit>
+            : <Serit tur="uyari" ikon="triangle-alert">İmzalı zimmet formu yok. Formu imzaya gönderin ya da ıslak imzalı taramasını yükleyin.</Serit>}
         {ac}
       </div>}
+      {g && <Serit tur={g.durum === "geri" ? "uyari" : "bilgi"} ikon={g.durum === "geri" ? "triangle-alert" : "send"}>
+        {g.ad} · {tarihYaz(g.tarih)}: {g.durum === "geri" ? "kişi geri gönderdi; düzeltip yeniden gönderin." : `${BELGE_DURUM[g.durum][0].toLocaleLowerCase("tr")} (Onaylar › Diğer belgeler).`}
+      </Serit>}
       {z.length ? <Liste baslik="Zimmetindekiler" kayitlar={z} anahtar={(v) => v.anahtar} sutunlar={[
         { k: "varlik", genislik: "55%", baslik: "Varlık", kart: "ust", sira: 1, hucre: (v) => <span className={stil.hucreSatir}>
           <Ikon ad={v.tur === "c" ? "gauge" : v.tur === "a" ? "truck" : "package"} kucuk /><span><Link className={stil.ad} href={zimmetAdres(v.anahtar)}>{v.kod}</Link><AltSatir><Kirp>{v.ad}</Kirp></AltSatir></span></span> },

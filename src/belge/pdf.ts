@@ -12,6 +12,7 @@ import { raporBelgesi } from "./belge.ts";
 import { faturaBelgesi, type FaturaBelgesiVerisi } from "./fatura.ts";
 import { talepFormu, type TalepFormuVerisi } from "./talep.ts";
 import { teklifBelgesi, type TeklifBelgesiVerisi } from "./teklif.ts";
+import { zimmetFormu, type ZimmetFormuVerisi } from "./zimmet.ts";
 import { htmlYaz } from "./html.ts";
 import type { BelgeVerisi } from "./veri.ts";
 
@@ -52,6 +53,8 @@ export const faturaPdf = (v: FaturaBelgesiVerisi) => htmlPdf(sayfaHtml(`${v.no} 
 export const talepPdf = (v: TalepFormuVerisi) => htmlPdf(sayfaHtml(v.no, talepFormu(v)));
 /** araç teslim tutanağı (342): temel format; teslim alan kişiyse imzasına gider (Onaylar › Diğer) */
 export const aracTutanagiPdf = (v: AracTutanagiVerisi) => htmlPdf(sayfaHtml(v.no, aracTutanagi(v)));
+/** zimmet teslim formu (344): temel format; imzaya gönderilince kişinin Onaylar › Diğer'ine */
+export const zimmetPdf = (v: ZimmetFormuVerisi) => htmlPdf(sayfaHtml(v.no ?? "Zimmet teslim formu", zimmetFormu(v)));
 
 async function htmlPdf(html: string): Promise<Uint8Array> {
   const b = await tarayici();

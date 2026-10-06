@@ -1,6 +1,7 @@
 "use server";
 /* PERSONEL SUNUCU EYLEMLERİ — kişi ve kiracı oturumdan; yetki ve doğrulama modül işlevinde (personel.ts). İstemciden gelen kimlik / sürüm
    yalnız "hangi kayıt, hangi sürümü gördüm" bilgisidir; yetkiyi değiştirmez. */
+import { zimmetPdf } from "../../../belge/pdf";
 import { ayniKoken } from "../../../server/kimlik/koken";
 import { istekOturumu, oturumIslemi } from "../../../server/kimlik/istek";
 import { personelEkle, personelGuncelle } from "../server/personel";
@@ -8,7 +9,7 @@ import { matrisKaydet } from "../../../server/yetki/matris";
 import { depo } from "../../../server/dosya/depo";
 import type { Sorgulayici } from "../../../server/db/kiraci";
 import {
-  atamaBelgeDegistir, atamaEkle, atamaKaldir, bordroKaldir, bordroOnayaGonder, bordroYukle, DosyaHatasi, ozlukBelgeDegistir, ozlukEkle, ozlukKaldir, zimmetFormuYukle,
+  atamaBelgeDegistir, atamaEkle, atamaKaldir, bordroKaldir, bordroOnayaGonder, bordroYukle, DosyaHatasi, ozlukBelgeDegistir, ozlukEkle, ozlukKaldir, zimmetFormuGonder, zimmetFormuYukle,
   type Yazma as DosyaYazma,
 } from "../server/dosyalar";
 import { hesapAc, hesapKapat, hesapYenidenAc, rolleriKaydet, yeniGeciciParola, type HesapSonucu } from "../../../server/kimlik/hesapYonetimi";
@@ -146,4 +147,19 @@ export async function bordroOnayaGonderEylemi(id: string): Promise<DosyaDurumu> 
   if (typeof id !== "string") return { genel: SONUC.yok };
   const r = await oturumIslemi(o, (db) => bordroOnayaGonder(db, depo(), o, o.kiraci.firmaId, id));
   return r.durum === "tamam" ? { tamam: true } : r.durum === "red" ? { genel: r.neden } : r.durum === "gecersiz" ? { hatalar: r.hatalar } : { genel: SONUC[r.durum] };
+}
+
+/** zimmet teslim formunu kişinin imzasına gönder (344 — Onaylar › Diğer belgeler); yetki, kapsam ve PDF sunucuda */
+export async function zimmetFormuGonderEylemi(personelId: string): Promise<DosyaDurumu & { bildirim?: string }> {
+  if (!(await ayniKoken())) return { genel: "İstek reddedildi. Sayfayı yenileyip yeniden deneyin." };
+  const o = await istekOturumu();
+  if (!o) return { genel: "Oturumunuz kapandı. Yeniden giriş yapın." };
+  if (typeof personelId !== "string") return { genel: SONUC.yok };
+  try {
+    const r = await oturumIslemi(o, (db) => zimmetFormuGonder(db, depo(), o, o.kiraci.firmaId, personelId, zimmetPdf));
+    return r.durum === "tamam" ? { tamam: true, bildirim: r.bildirim } : r.durum === "gecersiz" ? { genel: Object.values(r.hatalar)[0] ?? "Gönderilemedi." } : { genel: SONUC[r.durum] };
+  } catch (h) {
+    if (h instanceof DosyaHatasi) return { genel: h.message };
+    throw h;
+  }
 }

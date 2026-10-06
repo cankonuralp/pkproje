@@ -1,5 +1,5 @@
-/* ONAYLAR ↔ GÖNDEREN MODÜLLER (333): Personel (bordro "Onaya gönder"), Muhasebe ("Maaş bordrosu gönder"), Araçlar (342: teslim tutanağı,
-   teslim alan kişinin imzasına — kaynak zimmet hareketi), ana sayfa — belge_onay tablosuna
+/* ONAYLAR ↔ GÖNDEREN MODÜLLER (333): Personel (bordro "Onaya gönder"; 344: zimmet teslim formu "İmzaya gönder" — kaynak zimmet_formu kaydı),
+   Muhasebe ("Maaş bordrosu gönder"), Araçlar (342: teslim tutanağı, teslim alan kişinin imzasına — kaynak zimmet hareketi), ana sayfa — belge_onay tablosuna
    yalnız buradan yazılır / okunur. YETKİ ÇAĞIRANDA (gönderme hakkı belgenin kaynağına göre değişir: bordroda Personel "yaz" ya da Muhasebe "yaz").
    Gönderen ve zaman veritabanında damgalanır (0044). Gönderilen PDF imzalanabilir biçimde olmalı (imzalı hâli denetlenebilsin — imza-pdf.ts
    imzayaUygun); belge kendi dosyasını taşır (kaynağın dosyası değişse de imzalanan bayt değişmez).
@@ -72,16 +72,22 @@ export function guncelBordroBelgesi(l: readonly BordroBelgesi[], personelId: str
   return k.find((x) => belgeEtkin(x.durum)) ?? k.at(-1) ?? null;
 }
 
-/** kaynakların belge durumu (342: araç tutanağının imzası): kaynak başına etkin belge (bekliyor / imzalı), yoksa en son gönderilenin durumu.
-    Yetki ÇAĞIRANDA (kaynağı göremeyen kaynak kimliğini veremez). */
-export async function kaynakBelgeDurumlari(db: Sorgulayici, kaynakIdleri: readonly string[]): Promise<Map<string, BelgeDurumu>> {
-  const m = new Map<string, BelgeDurumu>();
+export interface KaynakBelgesi { ad: string; durum: BelgeDurumu; imzaliDosya: string | null; karar: string | null }
+/** kaynakların belgesi (342 araç tutanağı, 344 zimmet formu): kaynak başına etkin belge (bekliyor / imzalı), yoksa en son gönderilen. İmzalıysa
+    imzalı PDF'in kimliği (dosya erişimi belgeDosyasiGorulur: imzacı, gönderen, Personel "yaz"). Yetki ÇAĞIRANDA (kaynağı göremeyen kimliğini veremez). */
+export async function kaynakBelgeleri(db: Sorgulayici, kaynakIdleri: readonly string[]): Promise<Map<string, KaynakBelgesi>> {
+  const m = new Map<string, KaynakBelgesi>();
   if (!kaynakIdleri.length) return m;
-  for (const x of (await db.sorgu<{ kaynak_id: string; durum: BelgeDurumu }>(
-    "SELECT kaynak_id::text, durum FROM belge_onay WHERE dosya IS NOT NULL AND kaynak_id = ANY ($1::uuid[]) ORDER BY gonderildi", [kaynakIdleri])).rows) {
-    if (!belgeEtkin(m.get(x.kaynak_id))) m.set(x.kaynak_id, x.durum);
+  for (const x of (await db.sorgu<{ kaynak_id: string; ad: string; durum: BelgeDurumu; imzali_dosya: string | null; karar: Date | null }>(
+    "SELECT kaynak_id::text, ad, durum, imzali_dosya::text, karar FROM belge_onay WHERE dosya IS NOT NULL AND kaynak_id = ANY ($1::uuid[]) ORDER BY gonderildi",
+    [kaynakIdleri])).rows) {
+    if (!belgeEtkin(m.get(x.kaynak_id)?.durum)) m.set(x.kaynak_id, { ad: x.ad, durum: x.durum, imzaliDosya: x.imzali_dosya, karar: x.karar?.toISOString() ?? null });
   }
   return m;
+}
+/** kaynakların yalnız belge durumu (araç tutanağı listesi) */
+export async function kaynakBelgeDurumlari(db: Sorgulayici, kaynakIdleri: readonly string[]): Promise<Map<string, BelgeDurumu>> {
+  return new Map([...(await kaynakBelgeleri(db, kaynakIdleri))].map(([k, v]) => [k, v.durum]));
 }
 
 /** kaynağı (bordro) değişen ya da kaldırılan kaydın BEKLEYEN belgesi iptal olur — kişi eski PDF'i imzalamasın. Dönen: iptal edilen sayı. Yetki ÇAĞIRANDA. */

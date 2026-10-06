@@ -1,6 +1,8 @@
 /* NEREDEN GELDİ: K2 Personel dosyası (2026-10-04) — maket personel.html (özlük dosyası, maaş ve bordrolar, zimmetindekiler, ekipman atamaları).
    Gerçek tarayıcıda, üç genişlikte: yönetici yeni kişide özlük belgesi ekler (PDF), bordro yükler (tutar doğrulaması, maaş satırları son bordrodan),
-   belgeyi kaldırır (onay penceresi) · denetçi kendi kartında atama ve zimmet bölümlerini görür, özlük ve maaşı görmez. Her proje kendi kişisini açar. */
+   belgeyi kaldırır (onay penceresi) · denetçi kendi kartında atama ve zimmet bölümlerini görür, özlük ve maaşı görmez. Her proje kendi kişisini açar.
+   344: yönetici denetçinin kartında zimmet teslim formunu indirir ve imzaya gönderir; form denetçinin Onaylar › Diğer belgeler'ine düşer. */
+import { readFileSync } from "node:fs";
 import { expect, test } from "@playwright/test";
 import { girisli, hazir } from "./yardimci";
 
@@ -63,6 +65,18 @@ test("personel dosyası: özlük belgesi, bordro, kaldır; denetçi özlük ve m
   await page.getByRole("dialog", { name: "Diploma kaldırılsın mı?" }).getByRole("button", { name: "Kaldır" }).click();
   await expect(page.getByText("Özlük dosyasında belge yok.")).toBeVisible({ timeout: 30_000 });
 
+  /* 344: denetçinin kartında zimmet teslim formu — indir (PDF) ve imzaya gönder (önce sorulur) */
+  await page.goto("/personel");
+  await page.getByRole("link", { name: "Deneme Denetçi" }).first().click();
+  await expect(page.locator("h1")).toHaveText("Deneme Denetçi", { timeout: 30_000 });
+  await hazir(page);
+  const [indirilen] = await Promise.all([page.waitForEvent("download", { timeout: 90_000 }), page.getByRole("link", { name: "Formu indir" }).click()]);
+  expect(indirilen.suggestedFilename()).toMatch(/^zimmet-teslim-formu-\d{4}-\d{2}-\d{2}\.pdf$/);
+  expect(readFileSync((await indirilen.path())!).subarray(0, 5).toString("latin1")).toBe("%PDF-");
+  await page.getByRole("button", { name: "İmzaya gönder" }).click();
+  await page.getByRole("dialog", { name: "Zimmet formunu imzaya gönder" }).getByRole("button", { name: "İmzaya gönder" }).click();
+  await expect(page.getByText(/ZF-\d{4}-\d{3} zimmet teslim formu imzaya gönderildi/).first()).toBeVisible({ timeout: 90_000 });
+
   /* denetçi: kendi kartı — atama ve zimmet var, özlük ve maaş yok */
   await context.clearCookies();
   await girisli(page, "denetci");
@@ -74,4 +88,9 @@ test("personel dosyası: özlük belgesi, bordro, kaldır; denetçi özlük ve m
   await expect(page.getByRole("heading", { name: "Özlük dosyası" })).toHaveCount(0);
   await expect(page.getByRole("heading", { name: "Maaş ve bordrolar" })).toHaveCount(0);
   await expect(page.getByRole("button", { name: "Atama ekle" })).toHaveCount(0);
+  await expect(page.getByRole("button", { name: "İmzaya gönder" })).toHaveCount(0);
+  /* 344: gönderilen zimmet formu denetçinin imzasını bekliyor */
+  await page.goto("/onaylar/diger");
+  await hazir(page);
+  await expect(page.getByText(/^Zimmet teslim formu · ZF-\d{4}-\d{3}$/).first()).toBeVisible();
 });

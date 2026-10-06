@@ -5,6 +5,7 @@ import type { TeklifBelgesiVerisi } from "./teklif.ts";
 import type { FaturaBelgesiVerisi } from "./fatura.ts";
 import type { AracTutanagiVerisi } from "./arac.ts";
 import type { TalepFormuVerisi } from "./talep.ts";
+import type { ZimmetFormuVerisi } from "./zimmet.ts";
 import type { BelgeVerisi } from "./veri.ts";
 
 export function ornekBelge(sablon: "ZPKR01" | "ZPKR02" | "KOMPRESOR"): BelgeVerisi {
@@ -53,4 +54,10 @@ export const ornekAracTutanagi = (): AracTutanagiVerisi => ({
   eden: null, alan: { ad: "Deneme Denetçi", meslek: "Makine mühendisi" }, km: "12.400 km", yakit: "1/2",
   kontrol: [["Ruhsat", true], ["Trafik sigortası poliçesi", true], ["Anahtar (2 adet)", false]], hasar: "Sol arka <çizik> & göçük",
   fotolar: [["Ön", true], ["Arka", false]],
+});
+export const ornekZimmetFormu = (): ZimmetFormuVerisi => ({
+  firma: { ad: "Deneme Muayene A.Ş.", kod: "DA" }, no: "ZF-1026-001", tarih: "2026-10-06",
+  alan: { ad: "Deneme Denetçi", meslek: "Makine mühendisi" }, eden: { ad: "Deneme Yönetici", meslek: "İşletme" },
+  varliklar: [{ kod: "OC-201", ad: "Topraklama <ölçer> & prob", tur: "Ölçüm cihazı", teslim: "2026-09-01", not: "kalibrasyon 15.03.2027" },
+    { kod: "34 DNM 001", ad: "Kamyonet · Deneme", tur: "Araç", teslim: null, not: null }],
 });

@@ -5,20 +5,26 @@
    Belgeler tek dosya yolundan (yalnız PDF), ZORUNLU; kayıt eklenir → dosya yüklenir → kayda bağlanır; dosya reddedilirse işlem düşer (DosyaHatasi).
    Silme yok: kaldırılan satır "kaldirildi" ile kalır. Aynı dönemin yeni bordrosu eskisini kaldırır; kişi × tür başına tek geçerli atama.
    İmzalı zimmet formunun kapsamı istemciden alınmaz: yükleme anındaki zimmet sunucuda okunur; zimmet sonradan değişirse form "eskidi".
+   344: zimmet teslim formu temel formatla (src/belge/zimmet.ts) indirilir ya da kişinin imzasına gönderilir (Onaylar › Diğer belgeler; numara
+   ZF-AAYY-SIRA, kapsam gönderme anındaki zimmet, form kaydı belgenin kaynağı). Kişi imzalayınca imzalı PDF imzalı zimmet formu olur; yeni form
+   gönderilince önceki bekleyen iptal olur (kişi eski kapsamı imzalamaz).
    Öteki modüllerin tablolarına dokunmaz: tür ve zimmet bilgisi o modüllerin dışa açtığı işlevlerden. */
+import type { ZimmetFormuVerisi } from "../../../belge/zimmet.ts";
 import type { Sorgulayici } from "../../../server/db/kiraci.ts";
 import { ekle, guncelle, tablo, type TabloTanimi } from "../../../server/db/yazici.ts";
 import type { Depo } from "../../../server/dosya/depo.ts";
 import { dosyaYukle, kayitDosyasi } from "../../../server/dosya/dosya.ts";
 import { hesabinPersoneli } from "../../../server/kimlik/hesap.ts";
+import { numaraAl } from "../../../server/numara/numara.ts";
 import { canDo, duzey, type YetkiHesabi } from "../../../server/yetki/canDo.ts";
 import { dogrula, type DogrulamaHatalari } from "../../../sema/ortak.ts";
 import { turOzetleri } from "../../ekipman-turleri/server/turler.ts";
 import { kisininVarliklari, type VarlikSatiri } from "../../zimmetler/server/zimmet.ts";
-import { belgeGonder, bordroBelgeleri, bordroKilidi, guncelBordroBelgesi, kaynakBelgesiniIptal } from "../../onaylar/server/belge-baglanti.ts";
+import { belgeGonder, bordroBelgeleri, bordroKilidi, guncelBordroBelgesi, kaynakBelgeleri, kaynakBelgesiniIptal } from "../../onaylar/server/belge-baglanti.ts";
 import { bordroBelgeAdi, type BelgeDurumu } from "../../onaylar/sema.ts";
-import { AtamaGirdisi, BordroGirdisi, OzlukGirdisi, ozlukTurleri, type EkTur } from "../sema.ts";
-import { ayarOku, belgeTurKilidi } from "../../../server/ayar/ayar.ts";
+import { AtamaGirdisi, BordroGirdisi, meslek, OzlukGirdisi, ozlukTurleri, type EkTur } from "../sema.ts";
+import { ayarOku, belgeTurKilidi, firmaBelgeKunyesi } from "../../../server/ayar/ayar.ts";
+import { personelOzetleri } from "./personel.ts";
 
 /** firmanın eklediği özlük türleri (Firma ayarları; 335) */
 export const ekTurler = async (db: Sorgulayici): Promise<EkTur[]> => (await ayarOku(db, "belge_tur_ek")).deger.turler.map(({ k, ad }) => ({ k, ad }));
@@ -43,11 +49,13 @@ export interface BordroSatiri {
   onay: { durum: BelgeDurumu; karar: string | null } | null;
 }
 export interface ZimmetFormu { id: string; tarih: string; kapsam: number; dosyaId: string | null; guncel: boolean }
+/** imzaya gönderilmiş ve henüz imzalanmamış son form (344): belgenin adı (numarasıyla) ve durumu */
+export interface ZimmetGonderimi { ad: string; durum: BelgeDurumu; tarih: string }
 export interface PersonelDosyasi {
   yaz: boolean;
   /** null: görme yetkisi yok (bölüm çizilmez) */
   ozluk: OzlukSatiri[] | null; bordrolar: BordroSatiri[] | null;
-  atamalar: AtamaSatiri[]; zimmet: VarlikSatiri[]; zimmetFormu: ZimmetFormu | null;
+  atamalar: AtamaSatiri[]; zimmet: VarlikSatiri[]; zimmetFormu: ZimmetFormu | null; zimmetGonderimi: ZimmetGonderimi | null;
   turler: { id: string; ad: string; brans: "m" | "e" }[];
   /** özlük belge türleri (sabitler + firmanın ekledikleri; 335) */
   ozlukTurleri: (readonly [string, string])[];
@@ -90,9 +98,15 @@ export async function personelDosyasi(db: Sorgulayici, kim: Kisi, personelId: st
     .map((a) => { const t = turler.find((x) => x.id === a.tur_id); return { id: a.id, turId: a.tur_id, tur: t?.ad ?? "—", brans: t?.brans ?? null, tarih: a.tarih, dosyaId: a.dosya_id, surum: a.surum }; })
     .sort((a, b) => (a.brans === b.brans ? a.tur.localeCompare(b.tur, "tr") : a.brans === "m" ? -1 : 1));
   const zimmet = await kisininVarliklari(db, personelId);
-  const f = (await db.sorgu<{ id: string; olustu: Date; kapsam: string[]; dosya_id: string | null }>(
-    "SELECT id::text, olustu, kapsam, dosya_id::text FROM zimmet_formu WHERE personel_id = $1 AND dosya_id IS NOT NULL ORDER BY olustu DESC LIMIT 1", [personelId])).rows[0];
-  const zimmetFormu = f ? { id: f.id, tarih: gun(f.olustu), kapsam: f.kapsam.length, dosyaId: f.dosya_id, guncel: [...f.kapsam].sort().join() === anahtarlar(zimmet).join() } : null;
+  /* imzalı form: yüklenen tarama (dosya_id) ya da Onaylar'da imzalanan gönderim (belgenin imzalı PDF'i) — hangisi yeniyse (344) */
+  const formlar = (await db.sorgu<{ id: string; olustu: Date; kapsam: string[]; dosya_id: string | null }>(
+    "SELECT id::text, olustu, kapsam, dosya_id::text FROM zimmet_formu WHERE personel_id = $1 ORDER BY olustu DESC", [personelId])).rows;
+  const belgeler = await kaynakBelgeleri(db, formlar.filter((x) => !x.dosya_id).map((x) => x.id));
+  const fi = formlar.findIndex((x) => x.dosya_id || belgeler.get(x.id)?.durum === "imzali"), f = formlar[fi];
+  const zimmetFormu = f ? { id: f.id, tarih: gun(f.olustu), kapsam: f.kapsam.length, dosyaId: f.dosya_id ?? belgeler.get(f.id)!.imzaliDosya,
+    guncel: [...f.kapsam].sort().join() === anahtarlar(zimmet).join() } : null;
+  const gb = formlar.slice(0, fi < 0 ? formlar.length : fi).map((x) => ({ x, b: belgeler.get(x.id) })).find((y) => y.b);
+  const zimmetGonderimi = gb?.b ? { ad: gb.b.ad, durum: gb.b.durum, tarih: gun(gb.x.olustu) } : null;
   let ozluk: OzlukSatiri[] | null = null, bordrolar: BordroSatiri[] | null = null;
   if (yaz) {
     ozluk = (await db.sorgu<{ id: string; tur: string; aciklama: string | null; dosya_id: string | null; olustu: Date; surum: number }>(
@@ -105,7 +119,7 @@ export async function personelDosyasi(db: Sorgulayici, kim: Kisi, personelId: st
     const onay = await bordroBelgeleri(db, [personelId]);
     for (const b of bordrolar) { const o = guncelBordroBelgesi(onay, personelId, b.ay, b.id); if (o) b.onay = { durum: o.durum, karar: o.karar }; }
   }
-  return { yaz, ozluk, bordrolar, atamalar, zimmet, zimmetFormu, turler: yaz ? turler : [], ozlukTurleri: ozlukTurleri(await ekTurler(db)) };
+  return { yaz, ozluk, bordrolar, atamalar, zimmet, zimmetFormu, zimmetGonderimi, turler: yaz ? turler : [], ozlukTurleri: ozlukTurleri(await ekTurler(db)) };
 }
 
 /** günlük maliyet (kuruş): son bordronun işverene maliyeti / iş günü — iş kârlılığına girer */
@@ -234,11 +248,61 @@ export async function zimmetFormuYukle(db: Sorgulayici, depo: Depo, kim: Kisi, f
   if (!yazar(kim)) return { durum: "yetkisiz" };
   if (!UUID.test(personelId) || !(await db.sorgu("SELECT 1 FROM personel WHERE id = $1", [personelId])).rowCount) return { durum: "yok" };
   if (!belge) return { durum: "gecersiz", hatalar: { dosya: "İmzalı form (PDF) seçilmeli." } };
+  await db.sorgu("SELECT pg_advisory_xact_lock(hashtextextended($1, 0))", [`zimmet_formu:${personelId}`]);
   const z = await kisininVarliklari(db, personelId);
   if (!z.length) return { durum: "gecersiz", hatalar: { dosya: "Zimmetinde varlık yok; form yüklenmez." } };
+  /* ıslak imzalı tarama gelince imzaya gönderilmiş bekleyen form iptal olur (aynı zimmet iki yoldan imzalanmaz; 344) */
+  for (const x of (await db.sorgu<{ id: string }>("SELECT id::text FROM zimmet_formu WHERE personel_id = $1 AND dosya_id IS NULL", [personelId])).rows) {
+    await kaynakBelgesiniIptal(db, kim, x.id);
+  }
   const r = await ekle(db, FORM, { personel_id: personelId, kapsam: anahtarlar(z) }, { kim: kim.ad, ne: "zimmet_formu.yukle" });
   await belgeBagla(db, depo, kim, firmaId, FORM, DOSYA.zimmetFormu, r, belge, "zimmet_formu.belge");
   return { durum: "tamam", id: r.id };
+}
+
+/* ── ZİMMET TESLİM FORMU (344; maket personel.html zimmet formu "PDF indir" / "İmzala", MB.zimmetFormu; AA3) ── */
+const VARLIK_TUR = { c: "Ölçüm cihazı", a: "Araç", d: "Demirbaş" } as const;
+const GUN_TR = new Intl.DateTimeFormat("en-CA", { timeZone: "Europe/Istanbul", year: "numeric", month: "2-digit", day: "2-digit" });
+const tarihNo = (g: string) => `${g.slice(8, 10)}.${g.slice(5, 7)}.${g.slice(0, 4)}`;
+async function zimmetVerisi(db: Sorgulayici, personelId: string, z: VarlikSatiri[], no: string | null, depo: Depo | null): Promise<ZimmetFormuVerisi> {
+  const eden = (await ayarOku(db, "zimmet")).deger.teslim_eden;
+  const kisiler = new Map((await personelOzetleri(db, eden ? [personelId, eden] : [personelId]))
+    .map((p) => [p.id, { ad: p.ad, meslek: p.meslek === "diger" ? p.meslekMetin ?? "Diğer meslek" : meslek(p.meslek)?.ad ?? p.meslek }]));
+  const firma = await firmaBelgeKunyesi(db, depo);
+  return {
+    firma: { ad: firma.ad, kod: firma.kod, adres: firma.adres, logo: firma.logo }, no, tarih: bugunTr(),
+    alan: kisiler.get(personelId) ?? { ad: "—", meslek: "—" }, eden: eden ? kisiler.get(eden) ?? null : null,
+    varliklar: z.map((v) => ({ kod: v.kod, ad: v.ad, tur: VARLIK_TUR[v.tur], teslim: v.son ? GUN_TR.format(new Date(v.son.zaman)) : null,
+      not: v.tur === "c" && v.bitis ? `kalibrasyon ${tarihNo(v.bitis)}` : null })),
+  };
+}
+
+/** indirilen (imzaya gönderilmemiş, numarasız) form — ıslak imza için: yalnız Personel "yaz"; kişinin zimmeti yoksa null */
+export async function zimmetFormuVerisi(db: Sorgulayici, kim: Kisi, personelId: string, depo: Depo | null = null): Promise<ZimmetFormuVerisi | null> {
+  if (!yazar(kim) || !(await kartGorur(db, kim, personelId))) return null;
+  const z = await kisininVarliklari(db, personelId);
+  return z.length ? zimmetVerisi(db, personelId, z, null, depo) : null;
+}
+
+export type ZimmetPdfUretici = (v: ZimmetFormuVerisi) => Promise<Uint8Array>;
+/** formu kişinin imzasına gönder: yalnız "yaz"; kişi etkin ve zimmeti var. Kapsam sunucuda okunan zimmet; numara, form kaydı, PDF (uret: belge →
+    PDF, sunucuda) ve belge AYNI işlemde (PDF düşerse hiçbiri yazılmaz — DosyaHatasi). Kişi başına sıraya girer; önceki bekleyen form iptal olur. */
+export async function zimmetFormuGonder(db: Sorgulayici, depo: Depo, kim: Kisi, firmaId: string, personelId: string, uret: ZimmetPdfUretici): Promise<Yazma> {
+  if (!yazar(kim)) return { durum: "yetkisiz" };
+  if (!(await etkinKisi(db, personelId))) return { durum: "yok" };
+  await db.sorgu("SELECT pg_advisory_xact_lock(hashtextextended($1, 0))", [`zimmet_formu:${personelId}`]);
+  const z = await kisininVarliklari(db, personelId);
+  if (!z.length) return { durum: "gecersiz", hatalar: { dosya: "Zimmetinde varlık yok; form gönderilmez." } };
+  for (const x of (await db.sorgu<{ id: string }>("SELECT id::text FROM zimmet_formu WHERE personel_id = $1 AND dosya_id IS NULL", [personelId])).rows) {
+    await kaynakBelgesiniIptal(db, kim, x.id);
+  }
+  const no = await numaraAl(db, "zimmet");
+  const r = await ekle(db, FORM, { personel_id: personelId, kapsam: anahtarlar(z) }, { kim: kim.ad, ne: "zimmet_formu.gonder", gerekce: no });
+  let pdf: Uint8Array;
+  try { pdf = await uret(await zimmetVerisi(db, personelId, z, no, depo)); } catch { throw new DosyaHatasi("Formun PDF'i üretilemedi; biraz sonra yeniden deneyin."); }
+  const g = await belgeGonder(db, depo, kim, firmaId, { tur: "zimmet", ad: `Zimmet teslim formu · ${no}`, personelId, kaynakId: r.id, ay: null, pdf: { ad: `${no}.pdf`, bayt: pdf } });
+  if (g.durum !== "tamam") throw new DosyaHatasi(g.durum === "uygunsuz" ? g.neden : "Form imzaya gönderilemedi.");
+  return { durum: "tamam", id: r.id, bildirim: `${no} zimmet teslim formu imzaya gönderildi (Onaylar › Diğer belgeler).` };
 }
 
 /* ── DOSYA ERİŞİMİ (src/server/dosya/erisim.ts) ── */

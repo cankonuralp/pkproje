@@ -20,9 +20,10 @@ const ortak: NextConfig = {
   env: { NEXT_PUBLIC_IKON_ADRESI: `/${IKON_DOSYASI}?v=${ikonOzeti}` },
   /* PDF motoru (src/belge/pdf.ts, 316): Chromium paketleri derlemeye katılmaz (düğüm modülü olarak yüklenir); belge CSS'i, yazı tipi ve sunucusuz
      Chromium ikilisi yalnız PDF basan uçların izine eklenir (teklif PDF'i — 325; fatura özeti — 340; talep formu — 341; araç tutanağı — 342) — rapor sayfası da (İmzala sunucu eylemi orada koşar; 315–317
-     incelemesi), araç listesi ve araç sayfası da (Tutanağı kaydet eylemi tutanağın PDF'ini orada basar, 342) */
+     incelemesi), araç listesi ve araç sayfası da (Tutanağı kaydet eylemi tutanağın PDF'ini orada basar, 342), personel kartı da (zimmet formu İmzaya gönder, 344) */
   serverExternalPackages: ["playwright-core", "@sparticuz/chromium"],
-  outputFileTracingIncludes: Object.fromEntries([String.raw`/raporlar/\[id\]`, String.raw`/raporlar/\[id\]/pdf`, String.raw`/teklifler/\[id\]/pdf`, String.raw`/muhasebe/f/\[id\]/pdf`, String.raw`/talepler/pdf/\[tip\]/\[id\]`, "/araclar", String.raw`/araclar/\[id\]`, String.raw`/araclar/tutanak/\[id\]/pdf`, "/api/olcum/pdf"].map((u) =>
+  outputFileTracingIncludes: Object.fromEntries([String.raw`/raporlar/\[id\]`, String.raw`/raporlar/\[id\]/pdf`, String.raw`/teklifler/\[id\]/pdf`, String.raw`/muhasebe/f/\[id\]/pdf`, String.raw`/talepler/pdf/\[tip\]/\[id\]`, "/araclar", String.raw`/araclar/\[id\]`, String.raw`/araclar/tutanak/\[id\]/pdf`,
+    String.raw`/personel/\[id\]`, String.raw`/personel/\[id\]/zimmet-formu/pdf`, "/api/olcum/pdf"].map((u) =>
     [u, ["./src/belge/belge.css", "./src/belge/carlito-5.3.0/*", "./node_modules/@sparticuz/chromium/bin/**"]])),
 };
 

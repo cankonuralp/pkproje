@@ -17,6 +17,8 @@ export const NUMARA_TURLERI = {
   izin: { onek: "I", donem: "ay" },
   /* araç teslim tutanağı (maket araclar.html MV.tutanakNo: AT-AAYY-SIRA) */
   tutanak: { onek: "AT", donem: "ay" },
+  /* zimmet teslim formu (344; maket personel.html formNo: ZF-AAYY-SIRA) — imzaya gönderilince */
+  zimmet: { onek: "ZF", donem: "ay" },
 } as const;
 export type NumaraTuru = keyof typeof NUMARA_TURLERI;
 
