@@ -2353,6 +2353,11 @@ revizyon, alan kopyalama, hafif kusur devri, meslek eşleşme denetimi).
 - Emsal ürünler: https://opwire.app/iso-17020-periyodik-kontrol-yazilimi/ · https://17020muayene.vidco.com.tr/ · https://akuple.com/asansor-kontrol-yazilimi/ · https://ensyazilim.com/
 
 ## 11 · Değişiklik günlüğü
+- 2026-10-07 (371): **Eğitim türü / kaydı Sil** (§9 elli üçüncü tur). Eğitim türleri tablosunda kaydı hiç olmayan türde, eğitim kaydı penceresinde
+  sertifikası yüklü olmayan ve katılım formu imzaya hiç gönderilmemiş kayıtta yalnız yöneticiye (Eğitimler'de "yaz" + yönetici) "Sil". Güncel kayıt
+  silinince aynı kişi × eğitimin en son önceki kaydı yeniden güncel olur (tekrar tarihi ondan). Göç 0066 egitim_turu_kullanim / _sil (kayıt) +
+  egitim_kaydi_kullanim (sertifika · katılım formu) / _sil (önceki geri gelir; kaldırılmış sertifikalar çöpe). Kilit kesin-silme.test "eğitim";
+  olumsuz kanıt kesin-silme.bozan 16; e2e egitimler (kayıt sil, tür sil).
 - 2026-10-07 (370): **Rapor formatı taslağı Sil** (§9 elli üçüncü tur; 0022 "yayınlanan sürüm silinmez" aynen). Tür sayfasının "Rapor şablonu"
   sürüm tablosunda taslak satırında yalnız yöneticiye (Ekipman türleri'nde "yaz" + yönetici) çöp kutusu simgesi ("Taslağı sil"; onay "Taslak kalıcı
   olarak silinir; yayınlanmış sürümler etkilenmez."). Göç 0065 rapor_format_kullanim (yayınlandı · rapor) + rapor_format_sil (tür kilitlenir; tanım

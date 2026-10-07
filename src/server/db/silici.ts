@@ -83,6 +83,15 @@ export const SILINEBILIR = {
     kullanim: "rapor_format_kullanim", sil: "rapor_format_sil",
     fk: { kullanim: ["rapor.format_id"], birlikte: [] },
   },
+  /* 371: hiç eğitim kaydı olmayan eğitim türü; sertifikası ve katılım formu olmayan eğitim kaydı (güncelse önceki geri gelir; 0066) */
+  egitim_turu: {
+    kullanim: "egitim_turu_kullanim", sil: "egitim_turu_sil",
+    fk: { kullanim: ["egitim_kaydi.tur_id"], birlikte: [] },
+  },
+  egitim_kaydi: {
+    kullanim: "egitim_kaydi_kullanim", sil: "egitim_kaydi_sil",
+    fk: { kullanim: [], birlikte: [] },
+  },
 } as const satisfies Record<string, { kullanim: string; sil: string; fk: { kullanim: readonly string[]; birlikte: readonly string[] } }>;
 export type SilinebilirTur = keyof typeof SILINEBILIR;
 

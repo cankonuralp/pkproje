@@ -16,10 +16,11 @@ import { AltSatir, DegerYok, Rozet, SayfaBasi, Sekmeler } from "../../../compone
 import { SecimAlani } from "../../../components/secim/SecimAlani";
 import { TarihAlani } from "../../../components/secim/TarihAlani";
 import { Serit } from "../../../components/serit/Serit";
+import { SilTusu } from "../../../components/sil/SilTusu";
 import { Tus } from "../../../components/tus/Tus";
 import { ayEkle, kalanGun, KURUMLAR } from "../sema";
 import type { EgitimKaydi, EgitimTuru } from "../server/egitimler";
-import { egitimKaydetEylemi, egitimTuruKaydetEylemi, katilimFormuGonderEylemi, sertifikaYukleEylemi } from "./eylemler";
+import { egitimKaydetEylemi, egitimTuruKaydetEylemi, katilimFormuGonderEylemi, sertifikaYukleEylemi, egitimKaydiSilEylemi, egitimTuruSilEylemi } from "./eylemler";
 import { EGITIM_SEKMELERI, tarihYaz } from "./ortak";
 import stil from "./egitimler.module.css";
 
@@ -177,7 +178,10 @@ function KayitGorunumu({ x, kayitlar, bugun, yaz, kapat, tekrar }: { x: EgitimKa
   });
   return (
     <Pencere acik baslik={x.tur} onKapat={kapat} genis
-      alt={<><Tus tur="ikincil" onClick={kapat}>Kapat</Tus>{yaz && !x.onceki && <Tus ikon="refresh-cw" onClick={tekrar}>Tekrarı kaydet</Tus>}</>}>
+      alt={<><Tus tur="ikincil" onClick={kapat}>Kapat</Tus>
+        {x.sil && <SilTusu ad={`${x.personel} · ${x.tur}`} baslik="Eğitim kaydını sil" yanEtki={x.onceki ? undefined : "varsa bir önceki kaydı güncel olur"}
+          sil={async () => { const r = await egitimKaydiSilEylemi(x.id); if (r.tamam) kapat(); return r; }} />}
+        {yaz && !x.onceki && <Tus ikon="refresh-cw" onClick={tekrar}>Tekrarı kaydet</Tus>}</>}>
       {x.onceki ? <Serit tur="bilgi" ikon="history">Önceki kayıt: aynı eğitim sonradan yenilendi.</Serit>
         : x.durum === "gecerli" ? <Serit tur="onay" ikon="circle-check">Geçerli; tekrar {k} gün sonra.</Serit>
           : <Serit tur={x.durum === "gecti" ? "hata" : "uyari"} ikon="clock">{k < 0 ? `Tekrarı ${-k} gün önce geçti.` : `Tekrarı ${k} gün sonra.`}</Serit>}
@@ -209,7 +213,10 @@ export function TurListesi({ turler, yaz }: { turler: EgitimTuru[]; yaz: boolean
     { k: "kisi", genislik: "12%", baslik: "Kişi", kart: "govde", sira: 3, hucre: (t) => <><KartEtiket>Kişi</KartEtiket>{t.kisi}</> },
     { k: "durum", genislik: "16%", baslik: "Tekrarı yaklaşan", kart: "rozet", sira: 1, hucre: (t) => t.gecti || t.yakin
       ? <Rozet tur={t.gecti ? "red" : "bekliyor"}>{t.gecti ? `${t.gecti} geçti${t.yakin ? ` · ${t.yakin} yakın` : ""}` : `${t.yakin} yakın`}</Rozet> : <DegerYok /> },
-    { k: "eylem", genislik: "14%", baslik: "İşlem", gizliBaslik: true, kart: "eylem", sira: 9, hucre: (t) => yaz ? <Tus tur="ikincil" ikon="pencil" onClick={() => setP({ t })}>Düzenle</Tus> : null },
+    { k: "eylem", genislik: "14%", baslik: "İşlem", gizliBaslik: true, kart: "eylem", sira: 9, hucre: (t) => yaz ? <span className={stil.tuslar}>
+      <Tus tur="ikincil" ikon="pencil" onClick={() => setP({ t })}>Düzenle</Tus>
+      {t.sil && <SilTusu kucuk ikon="trash-2" ad={t.ad} erisimAdi={`${t.ad} türünü sil`} baslik="Eğitim türünü sil" sil={() => egitimTuruSilEylemi(t.id)} />}
+    </span> : null },
   ];
   return (
     <>

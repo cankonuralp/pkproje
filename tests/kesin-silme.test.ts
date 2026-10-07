@@ -23,7 +23,8 @@
      giriş silinmez;
    · 368 teklif: taslak kalemleri ve tesisleriyle silinir (yalnız yönetici; hazırlayan planlama silemez); kopyası olan ve gönderilmiş teklif silinmez;
    · 369 sözleşme: imza bekleyen sözleşme kapsam tesisleriyle silinir; imzalı tarama bir kez yüklenmişse (kaldırılmış olsa da) silinmez;
-   · 370 rapor formatı: taslak yalnız yöneticiye silinir (tanımı izde); yayınlanmış sürüm silinmez.
+   · 370 rapor formatı: taslak yalnız yöneticiye silinir (tanımı izde); yayınlanmış sürüm silinmez;
+   · 371 eğitim: kaydı olan tür silinmez; sertifikası yüklü kayıt silinmez; güncel kayıt silinince öncekisi güncel olur; boşalan tür silinir.
    Olumsuz kanıt: tests/bozan/kesin-silme.bozan.ts. */
 import assert from "node:assert/strict";
 import { mkdtempSync, rmSync } from "node:fs";
@@ -42,6 +43,7 @@ import { teklifKarti, teklifSil } from "../src/modules/teklifler/server/teklifle
 import { imzaliYukle, sozlesmeSil, sozlesmeSilinir } from "../src/modules/sozlesmeler/server/sozlesmeler.ts";
 import { demirbasDurumu, demirbasEkle, demirbasPasif, demirbasSil, teslimEt, zimmetListeleri } from "../src/modules/zimmetler/server/zimmet.ts";
 import { taslakBaslat, taslakSil } from "../src/modules/rapor-format/server/formatlar.ts";
+import { egitimKaydiSil, egitimListesi, egitimTuruSil } from "../src/modules/egitimler/server/egitimler.ts";
 import { raporSil, sahaRaporu } from "../src/modules/raporlar/server/raporlar.ts";
 import type { GomuluKume } from "../src/server/db/gomulu.ts";
 import { havuzKur, kiraciIcinde, type Havuz } from "../src/server/db/kiraci.ts";
@@ -518,4 +520,27 @@ test("rapor formatı: taslak silinir (tanımı izde); yayınlanmış sürüm sil
   const yayinda = (await a(FA.yon, (db) => db.sorgu<{ id: string }>("SELECT id::text FROM rapor_format WHERE tur_id = $1 AND durum = 'yayinda'", [FA.tur]))).rows[0].id;
   assert.deepEqual(await a(FA.yon, (db) => taslakSil(db, FA.yon, yayinda)), { durum: "kilitli" });
   await assert.rejects(a(FA.yon, (db) => db.sorgu("DELETE FROM rapor_format WHERE id = $1", [yayinda])), /permission denied|izin/i);
+});
+
+/* 371 — eğitim türü ve kaydı: yalnız yönetici; kayıt sertifikasız ve katılım formsuzsa silinir, güncelse öncekisi geri gelir */
+test("eğitim: güncel kayıt silinince öncekisi güncel olur; sertifikalı kayıt ve kaydı olan tür silinmez; boşalan tür silinir", async () => {
+  const tur = (await a(FA.yon, (db) => db.sorgu<{ id: string }>("INSERT INTO egitim_turu (ad, tekrar_ay) VALUES ('Silinecek eğitim', 12) RETURNING id::text"))).rows[0].id;
+  const kayit = async (tarih: string, tekrar: string, onceki: boolean) => (await a(FA.yon, (db) => db.sorgu<{ id: string }>(
+    "INSERT INTO egitim_kaydi (personel_id, tur_id, tarih, tekrar, kurum, onceki) VALUES ($1, $2, $3, $4, 'Firma içi', $5) RETURNING id::text",
+    [FA.den1Personel, tur, tarih, tekrar, onceki]))).rows[0].id;
+  const k1 = await kayit("2024-03-01", "2025-03-01", true), k2 = await kayit("2025-03-01", "2026-03-01", false);
+  const l = (await a(FA.yon, (db) => egitimListesi(db, FA.yon)))!;
+  assert.deepEqual([l.kayitlar.find((x) => x.id === k2)?.sil, l.turler.find((t) => t.id === tur)?.sil], [true, false]);
+  assert.equal((await a(FA.plan, (db) => egitimListesi(db, FA.plan)))!.kayitlar.find((x) => x.id === k2)?.sil, undefined, "planlama görür, silemez");
+  assert.deepEqual(await a(FA.yon, (db) => egitimTuruSil(db, FA.yon, tur)), { durum: "red", neden: "Eğitim türü silinemez: 2 eğitim kaydında kullanıldı." });
+  for (const k of [FA.plan, FA.den1]) assert.deepEqual(await a(k, (db) => egitimKaydiSil(db, k, k2)), { durum: "yetkisiz" }, k.roller.join());
+  assert.deepEqual(await kiraciIcinde(havuz, B, (db) => egitimKaydiSil(db, FB.yon, k2), { hesapId: FB.yon.id }), { durum: "yok" }, "başka firma");
+  assert.deepEqual(await a(FA.elk, (db) => egitimKaydiSil(db, FA.elk, k2)), { durum: "tamam", id: k2 });
+  assert.equal((await a(FA.yon, (db) => db.sorgu<{ o: boolean }>("SELECT onceki AS o FROM egitim_kaydi WHERE id = $1", [k1]))).rows[0].o, false, "önceki kayıt güncel oldu");
+  await a(FA.yon, (db) => db.sorgu("UPDATE egitim_kaydi SET dosya_id = gen_random_uuid() WHERE id = $1", [k1]));
+  assert.deepEqual(await a(FA.yon, (db) => egitimKaydiSil(db, FA.yon, k1)), { durum: "red", neden: "Sertifikası yüklü eğitim kaydı silinmez; önce sertifikayı kaldırın." });
+  await a(FA.yon, (db) => db.sorgu("UPDATE egitim_kaydi SET dosya_id = NULL WHERE id = $1", [k1]));
+  tamam(await a(FA.yon, (db) => egitimKaydiSil(db, FA.yon, k1)));
+  assert.deepEqual(await a(FA.yon, (db) => egitimTuruSil(db, FA.yon, tur)), { durum: "tamam", id: tur });
+  await assert.rejects(a(FA.yon, (db) => db.sorgu("DELETE FROM egitim_turu WHERE id = $1", [FA.tur])), /permission denied|izin/i);
 });

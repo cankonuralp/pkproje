@@ -9,12 +9,13 @@
 import type { EgitimFormuVerisi } from "../../../belge/egitim.ts";
 import { ayarOku, firmaBelgeKunyesi } from "../../../server/ayar/ayar.ts";
 import type { Sorgulayici } from "../../../server/db/kiraci.ts";
+import { kesinSil, kullanimlar } from "../../../server/db/silici.ts";
 import { ekle, guncelle, tablo } from "../../../server/db/yazici.ts";
 import type { Depo } from "../../../server/dosya/depo.ts";
 import { dosyaYukle } from "../../../server/dosya/dosya.ts";
 import { hesabinPersoneli } from "../../../server/kimlik/hesap.ts";
 import { numaraAl } from "../../../server/numara/numara.ts";
-import { duzey, type YetkiHesabi } from "../../../server/yetki/canDo.ts";
+import { canDoEylem, duzey, type YetkiHesabi } from "../../../server/yetki/canDo.ts";
 import { dogrula, type DogrulamaHatalari } from "../../../sema/ortak.ts";
 import { belgeGonder, kaynakBelgeleri, kaynakBelgesiniIptal } from "../../onaylar/server/belge-baglanti.ts";
 import { personelHesaplari } from "../../../server/kimlik/hesap.ts";
@@ -30,12 +31,16 @@ const KAYIT = tablo({ ad: "egitim_kaydi", sutunlar: ["personel_id", "tur_id", "t
 const UUID = /^[0-9a-f]{8}-[0-9a-f]{4}-[0-9a-f]{4}-[0-9a-f]{4}-[0-9a-f]{12}$/;
 
 export interface Kisi extends YetkiHesabi { ad: string }
-export interface EgitimTuru { id: string; ad: string; tekrarAy: number; surum: number; kisi: number; gecti: number; yakin: number }
+export interface EgitimTuru { id: string; ad: string; tekrarAy: number; surum: number; kisi: number; gecti: number; yakin: number;
+  /** 371: hiç kaydı yok, silebilen (yönetici) görüyor */
+  sil?: boolean }
 export interface EgitimKaydi {
   id: string; personelId: string; personel: string; turId: string; tur: string; tarih: string; tekrar: string; kurum: string; dosyaId: string | null; onceki: boolean;
   durum: EgitimDurumu; surum: number;
   /** katılım formu (345): son gönderilen belgenin durumu, imzalıysa imzalı PDF; gönderilmediyse null */
   form: { durum: BelgeDurumu; ad: string; imzaliDosya: string | null } | null;
+  /** 371: sertifikası ve katılım formu yok, silebilen (yönetici) görüyor */
+  sil?: boolean;
 }
 
 export type Yazma =
@@ -84,6 +89,12 @@ export async function egitimListesi(db: Sorgulayici, kim: Kisi): Promise<{ kayit
       const g = l.filter((x) => x.turId === t.id && !x.onceki);
       return { id: t.id, ad: t.ad, tekrarAy: t.tekrar_ay, surum: t.surum, kisi: g.length, gecti: g.filter((x) => x.durum === "gecti").length, yakin: g.filter((x) => x.durum === "yakin").length };
     }).sort((a, b) => a.ad.localeCompare(b.ad, "tr"));
+  /* 371: kesin silinebilenler (yönetici; kullanım veritabanında) */
+  if (silebilir(kim)) {
+    const kk = await kullanimlar(db, "egitim_kaydi", l.map((x) => x.id)), tk = await kullanimlar(db, "egitim_turu", turler.map((t) => t.id));
+    for (const x of l) x.sil = !kk.has(x.id);
+    for (const t of turler) (t as EgitimTuru).sil = !tk.has(t.id);
+  }
   return { kayitlar: l, turler, kisiler: k === null ? (await personelSecenekleri(db)).map(({ id, ad }) => ({ id, ad })) : [], esik: await egitimEsigi(db) };
 }
 
@@ -194,4 +205,23 @@ export async function egitimDosyasiGorulur(db: Sorgulayici, kisi: YetkiHesabi, k
   if (k === false) return false;
   const r = (await db.sorgu<{ p: string }>("SELECT personel_id::text AS p FROM egitim_kaydi WHERE id = $1", [kayitId])).rows[0];
   return !!r && (k === null || r.p === k);
+}
+
+/* ── KESİN SİLME (371; reisim 2026-10-07 "eklenebilen şeyler silinemiyor"; §9 elli üçüncü tur) — yalnız yönetici (kayit_sil, modül 10). Eğitim türü:
+   hiç kaydı yoksa; eğitim kaydı: sertifikası yüklü değilse ve katılım formu imzaya hiç gönderilmediyse (yanlış kişi / tarih). Güncel kayıt silinince
+   bir öncekisi güncel olur (veritabanında, göç 0066). */
+const silebilir = (kim: YetkiHesabi) => canDoEylem(kim, "kayit_sil", { modul: MODUL });
+export async function egitimTuruSil(db: Sorgulayici, kim: Kisi, id: string): Promise<Yazma> {
+  if (!silebilir(kim)) return { durum: "yetkisiz" };
+  const r = await kesinSil(db, "egitim_turu", id, kim.ad);
+  if (r.durum === "kullanildi") return { durum: "red", neden: `Eğitim türü silinemez: ${r.kullanim.egitim ?? 0} eğitim kaydında kullanıldı.` };
+  return r.durum === "tamam" ? { durum: "tamam", id } : { durum: "yok" };
+}
+export async function egitimKaydiSil(db: Sorgulayici, kim: Kisi, id: string): Promise<Yazma> {
+  if (!silebilir(kim)) return { durum: "yetkisiz" };
+  const r = await kesinSil(db, "egitim_kaydi", id, kim.ad);
+  if (r.durum === "kullanildi") {
+    return { durum: "red", neden: r.kullanim.sertifika ? "Sertifikası yüklü eğitim kaydı silinmez; önce sertifikayı kaldırın." : "Katılım formu imzaya gönderilmiş eğitim kaydı silinmez." };
+  }
+  return r.durum === "tamam" ? { durum: "tamam", id } : { durum: "yok" };
 }

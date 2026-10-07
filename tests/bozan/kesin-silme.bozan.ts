@@ -17,7 +17,8 @@
   13. (368) teklif kullanımından "gönderildi" denetimi kalkınca gönderilmiş teklifi silmek kalem tetiğinde hatayla düşer (kişi "silinmez" iletisi
       yerine hata ekranı görür; tetik olmasa müşteriye verilmiş belge silinirdi).
   14. (369) sözleşme kullanımından yüklenmiş imzalı tarama denetimi kalkınca taraması kaldırılmış (bir kez imzalanmış) sözleşme silinir.
-  15. (370) rapor formatı kullanımından "yayınlandı" denetimi kalkınca (henüz raporu olmayan) yayındaki sürüm silinir. */
+  15. (370) rapor formatı kullanımından "yayınlandı" denetimi kalkınca (henüz raporu olmayan) yayındaki sürüm silinir.
+  16. (371) eğitim kaydı kullanımından sertifika denetimi kalkınca sertifikası yüklü kayıt silinir. */
 import assert from "node:assert/strict";
 import { copyFileSync, mkdirSync, mkdtempSync, readdirSync, readFileSync, rmSync, writeFileSync } from "node:fs";
 import { tmpdir } from "node:os";
@@ -31,6 +32,7 @@ import { girisSil } from "../../src/modules/musteriler/server/girisler.ts";
 import { teklifSil } from "../../src/modules/teklifler/server/teklifler.ts";
 import { imzaliYukle, sozlesmeSil } from "../../src/modules/sozlesmeler/server/sozlesmeler.ts";
 import { taslakBaslat, taslakSil, yayinla } from "../../src/modules/rapor-format/server/formatlar.ts";
+import { egitimKaydiSil } from "../../src/modules/egitimler/server/egitimler.ts";
 import { musteriSil } from "../../src/modules/musteriler/server/musteriler.ts";
 import { personelSil } from "../../src/modules/personel/server/personel.ts";
 import { demirbasEkle, demirbasSil } from "../../src/modules/zimmetler/server/zimmet.ts";
@@ -294,5 +296,21 @@ test("15. yayınlandı denetimi kalkınca yayındaki rapor formatı silinir (kil
       return t.id;
     }, { hesapId: F.yon.id });
     assert.equal((await kiraciIcinde(h, A, (db) => taslakSil(db, F.yon, id), { hesapId: F.yon.id })).durum, "tamam", "bozuk: yayındaki sürüm silindi");
+  } finally { await h.end(); await supa.kapat(); }
+});
+
+test("16. sertifika denetimi kalkınca sertifikalı eğitim kaydı silinir (kilidin koruduğu açık)", async () => {
+  const SERTIFIKA = "    'sertifika', CASE WHEN e.dosya_id IS NOT NULL THEN 1 END,";
+  const supa = await supabaseBenzeri(kume, "silme_bozuk_16", gocler(degistir(SERTIFIKA, "    'sertifika', NULL,"), undefined, "0066_"));
+  const h = havuzKur({ ...kume.uygulama, database: "silme_bozuk_16" });
+  try {
+    const A = (await supa.sahip.query<{ id: string }>("INSERT INTO firma (kisa_ad, ad, rapor_kodu) VALUES ('deneme-a', 'Deneme A', 'DA') RETURNING id::text")).rows[0].id;
+    const F = await sahaFirmasi(h, depo, A, "deneme-a");
+    const k = await kiraciIcinde(h, A, async (db) => {
+      const t = (await db.sorgu<{ id: string }>("INSERT INTO egitim_turu (ad, tekrar_ay) VALUES ('Deneme eğitimi', 12) RETURNING id::text")).rows[0].id;
+      return (await db.sorgu<{ id: string }>("INSERT INTO egitim_kaydi (personel_id, tur_id, tarih, tekrar, kurum, dosya_id) VALUES ($1, $2, '2025-01-01', '2026-01-01', 'Firma içi', gen_random_uuid()) RETURNING id::text",
+        [F.den1Personel, t])).rows[0].id;
+    });
+    assert.equal((await kiraciIcinde(h, A, (db) => egitimKaydiSil(db, F.yon, k), { hesapId: F.yon.id })).durum, "tamam", "bozuk: sertifikalı kayıt silindi");
   } finally { await h.end(); await supa.kapat(); }
 });

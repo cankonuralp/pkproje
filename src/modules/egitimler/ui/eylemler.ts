@@ -4,7 +4,7 @@ import { egitimPdf } from "../../../belge/pdf";
 import { depo } from "../../../server/dosya/depo";
 import { ayniKoken } from "../../../server/kimlik/koken";
 import { istekOturumu, oturumIslemi } from "../../../server/kimlik/istek";
-import { DosyaHatasi, egitimKaydet, egitimTuruKaydet, katilimFormuGonder, sertifikaYukle, type Yazma } from "../server/egitimler";
+import { DosyaHatasi, egitimKaydet, egitimKaydiSil, egitimTuruKaydet, egitimTuruSil, katilimFormuGonder, sertifikaYukle, type Yazma } from "../server/egitimler";
 
 export interface PencereDurumu { tamam?: boolean; id?: string; hatalar?: Record<string, string>; genel?: string }
 
@@ -58,4 +58,14 @@ export async function katilimFormuGonderEylemi(kayitId: string): Promise<Pencere
     if (h instanceof DosyaHatasi) return { genel: h.message };
     throw h;
   }
+}
+
+/** 371: kullanılmamış eğitim türü / kaydı kesin silinir (yalnız yönetici; karar egitimler.ts / veritabanında) */
+export async function egitimTuruSilEylemi(id: string): Promise<PencereDurumu> {
+  const o = await oturum(); if (typeof o === "string") return { genel: o };
+  return cevir(await oturumIslemi(o, (db) => egitimTuruSil(db, o, yazi(id))));
+}
+export async function egitimKaydiSilEylemi(id: string): Promise<PencereDurumu> {
+  const o = await oturum(); if (typeof o === "string") return { genel: o };
+  return cevir(await oturumIslemi(o, (db) => egitimKaydiSil(db, o, yazi(id))));
 }
