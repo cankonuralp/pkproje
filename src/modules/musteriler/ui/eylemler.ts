@@ -3,7 +3,7 @@
    sürüm / onay yalnız "hangi kayıt, hangi sürümü gördüm, uyarıyı gördüm" bilgisidir; yetkiyi değiştirmez. */
 import { ayniKoken } from "../../../server/kimlik/koken";
 import { istekOturumu, oturumIslemi } from "../../../server/kimlik/istek";
-import { musteriKaydet, musteriPasif, tesisKaydet, tesisPasif, type Yazma } from "../server/musteriler";
+import { musteriKaydet, musteriPasif, musteriSil, tesisKaydet, tesisPasif, tesisSil, type SilYaniti, type Yazma } from "../server/musteriler";
 
 export interface PencereDurumu { tamam?: boolean; id?: string; bildirim?: string; hatalar?: Record<string, string>; uyarilar?: Record<string, string>; genel?: string }
 
@@ -42,4 +42,19 @@ export async function musteriPasifEylemi(musteriId: string, surum: number, pasif
 }
 export async function tesisPasifEylemi(tesisId: string, surum: number, pasif: boolean): Promise<PencereDurumu> {
   return islem((o) => oturumIslemi(o, (db) => tesisPasif(db, o, String(tesisId), Number(surum), pasif === true)));
+}
+
+/** kesin sil (364): yalnız yönetici, yalnız hiç kullanılmamış müşteri / tesis — karar musteriler.ts / veritabanında */
+async function silIslemi(is: (o: NonNullable<Awaited<ReturnType<typeof istekOturumu>>>) => Promise<SilYaniti>): Promise<PencereDurumu> {
+  if (!(await ayniKoken())) return { genel: "İstek reddedildi. Sayfayı yenileyip yeniden deneyin." };
+  const o = await istekOturumu();
+  if (!o) return { genel: "Oturumunuz kapandı. Yeniden giriş yapın." };
+  const r = await is(o);
+  return r.durum === "tamam" ? { tamam: true } : r.durum === "red" ? { genel: r.neden } : { genel: SONUC[r.durum] };
+}
+export async function musteriSilEylemi(musteriId: string): Promise<PencereDurumu> {
+  return silIslemi((o) => oturumIslemi(o, (db) => musteriSil(db, o, String(musteriId))));
+}
+export async function tesisSilEylemi(tesisId: string): Promise<PencereDurumu> {
+  return silIslemi((o) => oturumIslemi(o, (db) => tesisSil(db, o, String(tesisId))));
 }

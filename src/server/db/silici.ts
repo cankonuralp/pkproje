@@ -41,6 +41,17 @@ export const SILINEBILIR = {
     kullanim: "arac_kullanim", sil: "arac_sil",
     fk: { kullanim: ["arac_km.arac_id", "zimmet_hareket.arac_id"], birlikte: [] },
   },
+  /* 364: planı, ekipmanı, sözleşmesi, etkin İSG ID'si, teklifi, giriş kapsamı olmayan tesis; kaldırılmış İSG kayıtları birlikte (0060) */
+  tesis: {
+    kullanim: "tesis_kullanim", sil: "tesis_sil",
+    fk: { kullanim: ["ekipman.tesis_id", "is_sozlesmesi_tesis.tesis_id", "plan.tesis_id", "teklif_tesis.tesis_id"], birlikte: ["isg_katip.tesis_id"] },
+  },
+  /* 364: sözleşmesi, teklifi, faturası, girilmiş müşteri girişi, tesislerinde plan / ekipman / etkin İSG ID'si olmayan müşteri; tesisleri ve hiç
+     girilmemiş girişleri birlikte (karar 48 kullanılmış müşteri için geçerli; 0060) */
+  musteri: {
+    kullanim: "musteri_kullanim", sil: "musteri_sil",
+    fk: { kullanim: ["fatura.musteri_id", "is_sozlesmesi.musteri_id", "teklif.musteri_id"], birlikte: ["musteri_hesap.musteri_id", "tesis.musteri_id"] },
+  },
 } as const satisfies Record<string, { kullanim: string; sil: string; fk: { kullanim: readonly string[]; birlikte: readonly string[] } }>;
 export type SilinebilirTur = keyof typeof SILINEBILIR;
 

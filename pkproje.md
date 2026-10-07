@@ -2353,6 +2353,14 @@ revizyon, alan kopyalama, hafif kusur devri, meslek eşleşme denetimi).
 - Emsal ürünler: https://opwire.app/iso-17020-periyodik-kontrol-yazilimi/ · https://17020muayene.vidco.com.tr/ · https://akuple.com/asansor-kontrol-yazilimi/ · https://ensyazilim.com/
 
 ## 11 · Değişiklik günlüğü
+- 2026-10-07 (364): **Müşteri / tesis Sil** (§9 elli üçüncü tur: karar 48 "müşteri silinmez" KULLANILMIŞ müşteri için geçerli, deneme müşterisi
+  silinir). Müşteri ve tesis sayfasında yalnız firma yöneticisine (Müşteriler'de "yaz" + yönetici; planlama değiştirir ama silemez) ve hiç
+  kullanılmamış kayıtta "Sil"; kullanılmışta "Pasife al" — ortak pencere nedeni söyler ("1 planda, 2 ekipmanda kullanıldı; silinemez"). Ekran dili
+  birleşti: müşteri, tesis ve müşteri girişindeki "Pasif yap" → "Pasife al", "Yeniden etkinleştir" tuşu → "Etkinleştir" (müşteriye özel pasif penceresi
+  kalktı, components/sil/PasifPenceresi). Göç 0060: tesis_kullanim (ekipman · plan · sözleşme kapsamı · etkin İSG ID · teklif kapsamı · müşteri girişi
+  kapsamı) + musteri_kullanim (sözleşme · teklif · fatura · panele GİRMİŞ giriş · tesislerinin plan / ekipman / etkin İSG ID'si) + tesis_sil / musteri_sil
+  (tesisler, hiç girilmemiş girişler — parola özeti ize yazılmaz —, kaldırılmış İSG kayıtları birlikte; İSG belgeleri çöpe). Kilit kesin-silme.test
+  "müşteri / tesis"; olumsuz kanıt kesin-silme.bozan 10; e2e musteriler (kullanılmamışı sil; planlı müşteride Sil yok, Pasife al nedeni).
 - 2026-10-07 (363): **Araç Sil / Pasife al** (§9 elli üçüncü tur; ölçüm cihazı 357–358 deseni). Araç sayfasında yalnız yöneticiye (Araçlar'da "yaz")
   ve hiç kullanılmamış araçta "Sil" (onay "<plaka> kalıcı olarak silinir; plakası yeniden kullanılabilir. Geri alınamaz."); kullanılmışta "Pasife al"
   (neden: "2 zimmet hareketinde, 1 kilometre kaydında kullanıldı; silinemez"), pasifte yalnız "Etkinleştir". ENGEL: kişinin zimmetindeki araç pasife

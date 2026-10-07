@@ -89,6 +89,7 @@ pkproje/
                             /personel/<id>/zimmet-formu/pdf, İmzaya gönder → Onaylar › Diğer, imzalanınca imzalı form) ·
                             ui/ (liste, form, sunucu eylemleri — "use server" dosyası yalnız …Eylemi dışa açar)
   src/modules/musteriler/   MÜŞTERİLER (2026-10-04): sema.ts · server/musteriler.ts (liste, kart, kaydet + uyarı onayı, pasif zinciri) · ui/ (liste, pencereler)
+                            · 364 müşteri / tesis Sil (silmeDurumu, musteriSil, tesisSil — silici.ts, 0060; yalnız firma yöneticisi, kullanılmamış kayıt)
   src/modules/ekipman-turleri/ EKİPMAN TÜRLERİ (2026-10-04): katalog (Mekanik / Elektrik), tür sayfası, rapor formatı PDF sürümleri
                             · 361 turSil / turSilmeDurumu (kullanılmamış tür, yönetici; 0057) · cihazTurKullanimi (Ölçüm cihazları T7 penceresi için)
   src/modules/olcum-cihazlari/ ÖLÇÜM CİHAZLARI (2026-10-04): cihaz, cihaz türü, kalibrasyon kaydı + sertifika, kalibrasyon durumu (eşik firma ayarı)

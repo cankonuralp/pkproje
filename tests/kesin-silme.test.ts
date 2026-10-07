@@ -11,7 +11,9 @@
    · 362 demirbaş: kullanılmamış demirbaş silinir (kod serbest); zimmet hareketi / imzalı zimmet formu olan silinmez; zimmetteyken pasife alınmaz;
      pasif demirbaş Zimmetler'de "pasif" işaretli, teslim edilmez, hareketleri adıyla görünür; etkinleştir geri getirir;
    · 363 araç: kullanılmamış araç silinir (plaka serbest); zimmet hareketi / haftalık kilometresi olan silinmez; zimmetteyken pasife alınmaz; pasif
-     araç listede işaretli, sayfası açılır, kilometre girilmez, Zimmetler'de de pasif; etkinleştir geri getirir.
+     araç listede işaretli, sayfası açılır, kilometre girilmez, Zimmetler'de de pasif; etkinleştir geri getirir;
+   · 364 müşteri / tesis: yalnız firma yöneticisi; kullanılmamış müşteri tesisleri, hiç girilmemiş girişi ve kaldırılmış İSG kaydıyla silinir (giriş
+     parolası ize yazılmaz); planlı müşteri ve girilmiş girişi olan müşteri silinmez; giriş kapsamındaki tesis silinmez.
    Olumsuz kanıt: tests/bozan/kesin-silme.bozan.ts. */
 import assert from "node:assert/strict";
 import { mkdtempSync, rmSync } from "node:fs";
@@ -22,6 +24,8 @@ import { cihazKaydet, cihazKarti, cihazKonum, cihazListesi, cihazOzetleri, cihaz
 import { formatYukle, turSil, turSilmeDurumu } from "../src/modules/ekipman-turleri/server/turler.ts";
 import { ekipmanSil, planIci } from "../src/modules/planlar/server/plan-ici.ts";
 import { aracKaydet, aracKarti, aracListesi, aracPasif, aracSil, aracSilmeDurumu, kmKaydet } from "../src/modules/araclar/server/araclar.ts";
+import { ekGirisEkle } from "../src/modules/musteriler/server/girisler.ts";
+import { musteriKaydet, musteriSil, silmeDurumu, tesisKaydet, tesisSil } from "../src/modules/musteriler/server/musteriler.ts";
 import { demirbasDurumu, demirbasEkle, demirbasPasif, demirbasSil, teslimEt, zimmetListeleri } from "../src/modules/zimmetler/server/zimmet.ts";
 import { taslakBaslat } from "../src/modules/rapor-format/server/formatlar.ts";
 import { raporSil, sahaRaporu } from "../src/modules/raporlar/server/raporlar.ts";
@@ -302,4 +306,49 @@ test("araç: kullanılmamış silinir, plaka serbest; zimmet hareketi / kilometr
   tamam(await a(FA.yon, (db) => aracPasif(db, FA.yon, z, p.surum, false)));
   assert.equal((await a(FA.yon, (db) => aracKarti(db, FA.yon, z)))!.pasif, null, "etkinleştirildi");
   await assert.rejects(a(FA.yon, (db) => db.sorgu("DELETE FROM arac WHERE id = $1", [z])), /permission denied|izin/i);
+});
+
+/* 364 — müşteri ve tesis (karar 48 kullanılmış müşteri için geçerli; deneme müşterisi silinir) */
+test("müşteri / tesis: kullanılmamış silinir (tesisleri, hiç girilmemiş girişi, kaldırılmış İSG ID'siyle); planlı ya da girişi kullanılmış silinmez", async () => {
+  const M = { kisa: "", vd: "", vno: "", eposta: "", tel: "", ilgili: "" };
+  const T = { adres: "Deneme Cad. 2", il: "Ankara", ilce: "Çankaya", sgk: "" };
+  const musteri = async (unvan: string) => tamam(await a(FA.yon, (db) => musteriKaydet(db, FA.yon, null, 0, { ...M, unvan }, true))).id;
+  const tesis = async (m: string, ad: string) => tamam(await a(FA.yon, (db) => tesisKaydet(db, FA.yon, m, null, 0, { ...T, ad }, true))).id;
+  const m = await musteri("Silinecek Deneme A.Ş.");
+  const t1 = await tesis(m, "Depo"), t2 = await tesis(m, "Şube");
+  tamam(await a(FA.yon, (db) => ekGirisEkle(db, FA.yon, m, { ad: "Deneme", eposta: "giris@silinecek.example", tesisler: [t1] })));
+  await a(FA.yon, (db) => db.sorgu("INSERT INTO isg_katip (tesis_id, personel_id, no, kaldirildi) VALUES ($1, $2, 'ISG-SIL', now())", [t2, FA.den1Personel]));
+
+  /* tesis: giriş kapsamındaki silinmez; kaldırılmış İSG ID'si kullanım değil, birlikte gider */
+  assert.deepEqual(await a(FA.yon, (db) => silmeDurumu(db, FA.yon, "tesis", t1)), { sil: false, kullanim: { giris: 1 } });
+  assert.deepEqual(await a(FA.yon, (db) => tesisSil(db, FA.yon, t1)), { durum: "red", neden: "Tesis silinemez: 1 müşteri girişinde kullanıldı. Pasife alın." });
+  assert.deepEqual(await a(FA.yon, (db) => silmeDurumu(db, FA.yon, "tesis", t2)), { sil: true, kullanim: null });
+  for (const k of [FA.plan, FA.elk, FA.den1]) assert.deepEqual(await a(k, (db) => tesisSil(db, k, t2)), { durum: "yetkisiz" }, k.roller.join());
+  assert.deepEqual(await a(FA.plan, (db) => silmeDurumu(db, FA.plan, "tesis", t2)), { sil: false, kullanim: null }, "planlama değiştirir ama silemez");
+  assert.deepEqual(await a(FA.yon, (db) => tesisSil(db, FA.yon, t2)), { durum: "tamam", ad: "Şube" });
+  assert.equal((await a(FA.yon, (db) => db.sorgu("SELECT 1 FROM isg_katip WHERE tesis_id = $1", [t2]))).rowCount, 0, "kaldırılmış İSG kaydı gitti");
+
+  /* müşteri: hiç girilmemiş giriş ve kalan tesisiyle silinir; iz parolayı taşımaz */
+  assert.deepEqual(await a(FA.yon, (db) => silmeDurumu(db, FA.yon, "musteri", m)), { sil: true, kullanim: null });
+  assert.deepEqual(await kiraciIcinde(havuz, B, (db) => musteriSil(db, FB.yon, m), { hesapId: FB.yon.id }), { durum: "yok" }, "başka firma");
+  assert.equal((await a(FA.yon, (db) => musteriSil(db, FA.yon, m))).durum, "tamam");
+  const kalan = (await a(FA.yon, (db) => db.sorgu<{ t: number; g: number; m: number }>(
+    `SELECT (SELECT count(*)::int FROM tesis WHERE musteri_id = $1) AS t, (SELECT count(*)::int FROM musteri_hesap WHERE musteri_id = $1) AS g,
+            (SELECT count(*)::int FROM musteri WHERE id = $1) AS m`, [m]))).rows[0];
+  assert.deepEqual(kalan, { t: 0, g: 0, m: 0 });
+  const iz = (await a(FA.yon, (db) => db.sorgu<{ ayrinti: { tesisler: unknown[]; girisler: Record<string, unknown>[] } }>(
+    "SELECT ayrinti FROM denetim_izi WHERE ne = 'musteri.sil' AND nesne_id = $1", [m]))).rows[0];
+  assert.deepEqual([iz.ayrinti.tesisler.length, iz.ayrinti.girisler.length, "parola_ozeti" in iz.ayrinti.girisler[0]], [1, 1, false]);
+  assert.equal(typeof await musteri("Silinecek Deneme A.Ş."), "string", "aynı ünvanla yeniden açılır");
+
+  /* kullanılmış: planlı müşteri; girilmiş giriş */
+  const sahaMusteri = (await a(FA.yon, (db) => db.sorgu<{ m: string }>("SELECT musteri_id::text AS m FROM tesis WHERE id = $1", [FA.tesis]))).rows[0].m;
+  const d = await a(FA.yon, (db) => silmeDurumu(db, FA.yon, "musteri", sahaMusteri));
+  assert.ok(!d.sil && d.kullanim?.plan && d.kullanim?.ekipman, JSON.stringify(d));
+  assert.match((await a(FA.yon, (db) => musteriSil(db, FA.yon, sahaMusteri)) as { neden: string }).neden, /^Müşteri silinemez: .*planda.* Pasife alın\.$/);
+  const g = await musteri("Girişli Deneme A.Ş.");
+  tamam(await a(FA.yon, (db) => ekGirisEkle(db, FA.yon, g, { ad: "Deneme", eposta: "giris@girisli.example", tesisler: "hepsi" })));
+  await a(FA.yon, (db) => db.sorgu("UPDATE musteri_hesap SET son_giris = now() WHERE musteri_id = $1", [g]));
+  assert.deepEqual(await a(FA.yon, (db) => musteriSil(db, FA.yon, g)), { durum: "red", neden: "Müşteri silinemez: 1 müşteri girişinde kullanıldı. Pasife alın." });
+  await assert.rejects(a(FA.yon, (db) => db.sorgu("DELETE FROM musteri WHERE id = $1", [g])), /permission denied|izin/i);
 });

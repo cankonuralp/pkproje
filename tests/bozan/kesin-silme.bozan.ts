@@ -10,7 +10,8 @@
    7. (361) ekipman türünü silerken fiyat satırı birlikte silinmezse kullanılmamış tür silinemez ("kullanıldı" sanılır) — kilit "silinir" der.
    8. (362) demirbaş kullanımından zimmet formu denetimi kalkınca imzalı zimmet formundaki demirbaş silinir (formun kapsamı yetim kalır).
    9. (363) araç kullanımından haftalık kilometre denetimi kalkınca kilometresi girilmiş araca "Sil" çizilir (silme yabancı anahtara takılır,
-      kişi "kullanılmadı" denip silemediği tuşla karşılaşır). */
+      kişi "kullanılmadı" denip silemediği tuşla karşılaşır).
+  10. (364) müşteri kullanımından girilmiş müşteri girişi denetimi kalkınca panele girmiş müşteri girişleriyle birlikte silinir. */
 import assert from "node:assert/strict";
 import { copyFileSync, mkdirSync, mkdtempSync, readdirSync, readFileSync, rmSync, writeFileSync } from "node:fs";
 import { tmpdir } from "node:os";
@@ -20,6 +21,7 @@ import { cihazKaydet, cihazSil, cihazTuruKaydet, cihazTuruSil, type Kisi } from 
 import { turSil } from "../../src/modules/ekipman-turleri/server/turler.ts";
 import { ekipmanSil } from "../../src/modules/planlar/server/plan-ici.ts";
 import { aracKaydet, aracSilmeDurumu } from "../../src/modules/araclar/server/araclar.ts";
+import { musteriSil } from "../../src/modules/musteriler/server/musteriler.ts";
 import { demirbasEkle, demirbasSil } from "../../src/modules/zimmetler/server/zimmet.ts";
 import { GOC_KLASORU } from "../../src/server/db/goc.ts";
 import type { GomuluKume } from "../../src/server/db/gomulu.ts";
@@ -176,5 +178,21 @@ test("9. kilometre denetimi kalkınca kilometresi olan araca Sil çizilir (kilid
     const id = (await kiraciIcinde(h, A, (db) => aracKaydet(db, F.yon, null, 0, ARAC), { hesapId: F.yon.id }) as { id: string }).id;
     await kiraciIcinde(h, A, (db) => db.sorgu("INSERT INTO arac_km (arac_id, hafta, km, personel_id) VALUES ($1, date_trunc('week', now())::date, 50, $2)", [id, F.den1Personel]), { hesapId: F.yon.id });
     assert.equal((await kiraciIcinde(h, A, (db) => aracSilmeDurumu(db, F.yon, id), { hesapId: F.yon.id })).sil, true, "bozuk: kilometresi olan araca Sil çizildi");
+  } finally { await h.end(); await supa.kapat(); }
+});
+
+test("10. girilmiş giriş denetimi kalkınca panele girmiş müşteri silinir (kilidin koruduğu açık)", async () => {
+  const GIRIS = "    'giris', NULLIF((SELECT count(*) FROM musteri_hesap x WHERE x.firma_id = m.firma_id AND x.musteri_id = m.id AND x.son_giris IS NOT NULL), 0),\n";
+  const supa = await supabaseBenzeri(kume, "silme_bozuk_10", gocler(degistir(GIRIS, ""), undefined, "0060_"));
+  const h = havuzKur({ ...kume.uygulama, database: "silme_bozuk_10" });
+  try {
+    const A = (await supa.sahip.query<{ id: string }>("INSERT INTO firma (kisa_ad, ad, rapor_kodu) VALUES ('deneme-a', 'Deneme A', 'DA') RETURNING id::text")).rows[0].id;
+    const F = await sahaFirmasi(h, depo, A, "deneme-a");
+    const m = await kiraciIcinde(h, A, async (db) => {
+      const id = (await db.sorgu<{ id: string }>("INSERT INTO musteri (unvan, kisa) VALUES ('Girişli Deneme A.Ş.', 'Girişli') RETURNING id::text")).rows[0].id;
+      await db.sorgu("INSERT INTO musteri_hesap (musteri_id, eposta, ad, son_giris) VALUES ($1, 'giris@girisli.example', 'Deneme', now())", [id]);
+      return id;
+    }, { hesapId: F.yon.id });
+    assert.equal((await kiraciIcinde(h, A, (db) => musteriSil(db, F.yon, m), { hesapId: F.yon.id })).durum, "tamam", "bozuk: girişi kullanılmış müşteri silindi");
   } finally { await h.end(); await supa.kapat(); }
 });

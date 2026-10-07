@@ -2,10 +2,13 @@
    Yetki her işlevde, sunucuda (canDo, modül 3): "gör" ve üstü listeyi ve kartları görür; DEĞİŞTİRMEK yalnız "yaz" düzeyinde (önerilen düzende
    planlama + firma yöneticisi). "Kendi" / "branş" düzeyi müşteride plan modülü gelene kadar hiçbir kayıt göstermez (varsayılan kapalı).
    Yazmalar güvenli yazıcıdan (sürüm kilidi + denetim izi). Tekrar eden vergi / SGK no UYARIDIR: onaysız ilk kayıt "uyari" döner, "Yine de kaydet"
-   (onay) ile kaydedilir (karar 45, 46). Silme yok, PASİF (karar 48). */
+   (onay) ile kaydedilir (karar 45, 46). Kullanılmış müşteri / tesis silinmez, PASİF (karar 48); 364 (§9 elli üçüncü tur): hiç kullanılmamış (deneme)
+   müşteri ve tesis yalnız yöneticiye kesin silinir (kayit_sil, modül 3; tanım veritabanında, göç 0060). */
 import type { Sorgulayici } from "../../../server/db/kiraci.ts";
+import { kesinSil, kullanimlar, type Kullanim } from "../../../server/db/silici.ts";
 import { ekle, guncelle, tablo, type Iz } from "../../../server/db/yazici.ts";
-import { duzey, type YetkiHesabi } from "../../../server/yetki/canDo.ts";
+import { canDoEylem, duzey, type YetkiHesabi } from "../../../server/yetki/canDo.ts";
+import { kullanimMetni } from "../../../components/sil/metin.ts";
 import { dogrula, type DogrulamaHatalari } from "../../../sema/ortak.ts";
 import { kisaAd, MusteriGirdisi, TesisGirdisi } from "../sema.ts";
 import { anaGirisDurumu, anaGirisEpostasi } from "./girisler.ts";
@@ -218,4 +221,30 @@ export async function tesisMusteriIletisim(db: Sorgulayici, tesisId: string): Pr
   if (!/^[0-9a-f-]{36}$/.test(tesisId)) return null;
   return (await db.sorgu<{ tesisAd: string; unvan: string; kisa: string; eposta: string | null; tel: string | null }>(
     `SELECT t.ad AS "tesisAd", m.unvan, m.kisa, m.eposta, m.tel FROM tesis t JOIN musteri m ON m.id = t.musteri_id AND m.firma_id = t.firma_id WHERE t.id = $1`, [tesisId])).rows[0] ?? null;
+}
+
+/* ── KESİN SİLME (364; reisim 2026-10-07 "eklenebilen şeyler silinemiyor"; §9 elli üçüncü tur) — yalnız yönetici (kayit_sil, modül 3) ve yalnız hiç
+   kullanılmamış kayıt. Müşteri: tesisleri ve hiç girilmemiş girişleriyle birlikte. Kullanılmış kayıt pasife alınır (karar 48). */
+export type SilYaniti = { durum: "tamam"; ad: string } | { durum: "red"; neden: string } | { durum: "yok" } | { durum: "yetkisiz" };
+const silebilir = (kim: YetkiHesabi) => canDoEylem(kim, "kayit_sil", { modul: MODUL });
+
+/** müşteri / tesis sayfası: "Sil" çizilir mi (silebilen + kullanılmamış); değiştirene kullanım sayımları (Pasife al penceresi nedeni söyler) */
+export async function silmeDurumu(db: Sorgulayici, kim: YetkiHesabi, tur: "musteri" | "tesis", id: string): Promise<{ sil: boolean; kullanim: Kullanim | null }> {
+  if (!degistirir(kim) || !UUID.test(id)) return { sil: false, kullanim: null };
+  const k = (await kullanimlar(db, tur, [id])).get(id) ?? null;
+  return { sil: silebilir(kim) && !k, kullanim: k };
+}
+
+export async function musteriSil(db: Sorgulayici, kim: Kisi, id: string): Promise<SilYaniti> {
+  if (!silebilir(kim)) return { durum: "yetkisiz" };
+  const r = await kesinSil(db, "musteri", id, kim.ad);
+  if (r.durum === "kullanildi") return { durum: "red", neden: `Müşteri silinemez: ${kullanimMetni(r.kullanim) || "başka kayıtlarda"} kullanıldı. Pasife alın.` };
+  return r;
+}
+
+export async function tesisSil(db: Sorgulayici, kim: Kisi, id: string): Promise<SilYaniti> {
+  if (!silebilir(kim)) return { durum: "yetkisiz" };
+  const r = await kesinSil(db, "tesis", id, kim.ad);
+  if (r.durum === "kullanildi") return { durum: "red", neden: `Tesis silinemez: ${kullanimMetni(r.kullanim) || "başka kayıtlarda"} kullanıldı. Pasife alın.` };
+  return r;
 }

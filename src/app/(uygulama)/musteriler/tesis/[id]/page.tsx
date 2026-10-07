@@ -8,7 +8,8 @@ import { AltSatir, Bolum, DegerYok, Kirinti, Kod, NesneBasi, SeritKap } from "..
 import { Serit } from "../../../../../components/serit/Serit";
 import { modulBul } from "../../../../../modules/moduller";
 import { eksikTesis } from "../../../../../modules/musteriler/sema";
-import { musteriDegistirir, tesisKarti } from "../../../../../modules/musteriler/server/musteriler";
+import { kullanimMetni } from "../../../../../components/sil/metin";
+import { musteriDegistirir, silmeDurumu, tesisKarti } from "../../../../../modules/musteriler/server/musteriler";
 import { TesisTuslari } from "../../../../../modules/musteriler/ui/KartTuslari";
 import { PasifRozeti, tarihYaz } from "../../../../../modules/musteriler/ui/ortak";
 import stil from "../../../../../modules/musteriler/ui/musteriler.module.css";
@@ -21,16 +22,21 @@ export default async function Sayfa({ params }: { params: Promise<{ id: string }
   const o = await modulOturumu(MODUL.no);
   if (!o) return <Yetkisiz />;
   const { id } = await params;
-  const t = await oturumIslemi(o, (db) => tesisKarti(db, o, id));
-  if (!t) notFound();
+  const v = await oturumIslemi(o, async (db) => {
+    const k = await tesisKarti(db, o, id);
+    return k ? { t: k, silme: await silmeDurumu(db, o, "tesis", id) } : null;
+  });
+  if (!v) notFound();
+  const { t, silme } = v;
   const e = eksikTesis(t);
   return (
     <>
       <Kirinti ogeler={[["Müşteriler", "/musteriler"], [t.musteri.kisa, `/musteriler/${t.musteri.id}`], [t.ad]]} />
       <NesneBasi baslik={t.musteri.unvan} rozet={t.pasif ? <PasifRozeti /> : undefined} altIkon="map-pin" alt={<>Tesis: <b>{t.ad}</b></>}
         tuslar={musteriDegistirir(o) && <TesisTuslari tesis={{ id: t.id, surum: t.surum, ad: t.ad, adres: t.adres, il: t.il, ilce: t.ilce, sgk: t.sgk }}
-          musteriId={t.musteri.id} unvan={t.musteri.unvan} ad={`${t.musteri.kisa} / ${t.ad}`} pasif={!!t.pasif} />} />
-      {t.pasif && <SeritKap><Serit tur="bilgi" ikon="ban"><b>Pasif</b> · {tarihYaz(t.pasif)} · Tesis listelerden kalktı; raporları ve arşivi duruyor.{t.musteri.pasif ? " Müşteri pasif; önce müşteri yeniden etkinleştirilir." : " “Yeniden etkinleştir” ile geri gelir."}</Serit></SeritKap>}
+          musteriId={t.musteri.id} unvan={t.musteri.unvan} ad={`${t.musteri.kisa} / ${t.ad}`} pasif={!!t.pasif}
+          sil={silme.sil} kullanim={silme.kullanim ? kullanimMetni(silme.kullanim) : null} />} />
+      {t.pasif && <SeritKap><Serit tur="bilgi" ikon="ban"><b>Pasif</b> · {tarihYaz(t.pasif)} · Tesis listelerden kalktı; raporları ve arşivi duruyor.{t.musteri.pasif ? " Müşteri pasif; önce müşteri etkinleştirilir." : " “Etkinleştir” ile geri gelir."}</Serit></SeritKap>}
       {e.length > 0 && <SeritKap><Serit tur="uyari" ikon="triangle-alert">Eksik bilgi: {e.join(" · ")}. Kayıt engellenmez; raporun işyeri bölümünde gerekir, rapor imzalanırken yeniden hatırlatılır.</Serit></SeritKap>}
       <Bolum id="b-tbilgi" baslik="Tesis bilgileri">
         <BilgiListesi>

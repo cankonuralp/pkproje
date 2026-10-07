@@ -1,11 +1,11 @@
 /* NEREDEN GELDİ: K2 Müşteriler (2026-10-04) — maket musteriler.html (M2, onaylı 2026-09-26); karar 45 / 46 (tekrar eden vergi no UYARI, "Yine de
    kaydet"), 48 (pasif), 50 (il ve ilçe aramalı listeden). Gerçek tarayıcıda, üç genişlikte: müşteri ekle → sayfası açılır, eksik bilgi uyarısı ·
-   tesis ekle (il aranır, ilçe il seçilince açılır) · aynı vergi no ikinci müşteride uyarı → "Yine de kaydet" · pasif yap → listeden kalkar,
-   Görünüm "Pasif müşteriler"de görünür · denetçi görür ama ekleyemez / düzenleyemez. Her proje kendi uydurma kayıtlarını açar (çakışmasın). */
+   tesis ekle (il aranır, ilçe il seçilince açılır) · aynı vergi no ikinci müşteride uyarı → "Yine de kaydet" · 364: kullanılmamış ikinci müşteri
+   Sil → listeden kalkar; planlı müşteride Sil yok, Pasife al nedeni söyler · denetçi görür ama ekleyemez / düzenleyemez. Her proje kendi uydurma kayıtlarını açar (çakışmasın). */
 import { expect, test } from "@playwright/test";
 import { girisli, hazir } from "./yardimci";
 
-test("müşteri ve tesis: ekle, uyarıyla kaydet, pasif yap; denetçi yalnız görür", async ({ page, context }, bilgi) => {
+test("müşteri ve tesis: ekle, uyarıyla kaydet, kullanılmamışı sil; denetçi yalnız görür", async ({ page, context }, bilgi) => {
   const ek = `${bilgi.project.name} ${bilgi.retry}`;
   const vno = String(1_000_000_000 + Math.floor(Math.random() * 8_999_999_999)).slice(0, 10);
   await girisli(page, "yonetici");
@@ -54,15 +54,29 @@ test("müşteri ve tesis: ekle, uyarıyla kaydet, pasif yap; denetçi yalnız g�
   await p2.getByRole("button", { name: "Yine de kaydet" }).click();
   await expect(page.getByRole("heading", { level: 1, name: `İkinci Deneme ${ek} Ltd.` })).toBeVisible();
 
-  /* pasif yap → listede yok, Görünüm "Pasif müşteriler"de var */
+  /* 364: hiç kullanılmamış müşteri Sil ile kesin silinir (karar 48 kullanılmış müşteri için) → listede yok */
   await hazir(page);
-  await page.getByRole("button", { name: "Pasif yap" }).click();
-  await page.getByRole("dialog", { name: "Pasif yap" }).getByRole("button", { name: "Pasif yap" }).click();
-  await expect(page.getByText(/Müşteri listelerden kalktı/)).toBeVisible();
-  await page.goto("/musteriler");
+  await expect(page.getByRole("button", { name: "Pasife al" })).toHaveCount(0);
+  await page.getByRole("button", { name: "Sil", exact: true }).click();
+  const onay = page.locator("dialog[open]");
+  await expect(onay).toContainText(`İkinci Deneme ${ek} Ltd. kalıcı olarak silinir; tesisleri ve hiç girilmemiş müşteri girişleri de silinir. Geri alınamaz.`);
+  await onay.getByRole("button", { name: "Sil" }).click();
+  await expect(page).toHaveURL(/\/musteriler$/, { timeout: 30_000 });
+  await expect(page.getByText(`İkinci Deneme ${ek} Ltd. silindi.`).first()).toBeVisible();
   await hazir(page);
   await expect(page.getByRole("link", { name: `İkinci Deneme ${ek} Ltd.` })).toHaveCount(0);
   await expect(page.getByRole("link", { name: `Deneme Ünvan ${ek} A.Ş.` }).first()).toBeAttached();
+
+  /* kullanılmış müşteri (planı var): Sil yok, Pasife al nedeni söyler (müşteri değişmez — öteki testler kullanır) */
+  await page.getByRole("searchbox", { name: "Müşterilerde ara" }).fill("Deneme Plan Sanayi");
+  await page.getByRole("link", { name: "Deneme Plan Sanayi A.Ş." }).first().click();
+  await expect(page.getByRole("heading", { level: 1, name: "Deneme Plan Sanayi A.Ş." })).toBeVisible({ timeout: 30_000 });
+  await hazir(page);
+  await expect(page.getByRole("button", { name: "Sil", exact: true })).toHaveCount(0);
+  await page.getByRole("button", { name: "Pasife al" }).click();
+  const pp = page.locator("dialog[open]");
+  await expect(pp).toContainText(/planda.*kullanıldı; silinemez\./);
+  await pp.getByRole("button", { name: "Vazgeç" }).click();
 
   /* denetçi: görür, ekleyemez, düzenleyemez */
   await context.clearCookies();

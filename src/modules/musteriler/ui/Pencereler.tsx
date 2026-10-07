@@ -1,17 +1,16 @@
 "use client";
-/* MÜŞTERİ / TESİS PENCERELERİ (maket musteriler.html pencereCiz: müşteri ekle / düzenle · tesis ekle / düzenle · pasif yap / yeniden etkinleştir).
+/* MÜŞTERİ / TESİS PENCERELERİ (maket musteriler.html pencereCiz: müşteri ekle / düzenle · tesis ekle / düzenle; 364: Pasife al / Etkinleştir ortak pencerede — components/sil/PasifPenceresi).
    Kaydı durduran yalnız ad ve biçim (alanın altında hata); aynı vergi / SGK no başka kayıtta varsa sunucu UYARI döner: alanın altında uyarı +
    üstte şerit, tuş "Yine de kaydet" olur; ikinci tık onayla kaydeder (karar 45, 46). Uyarılı alan değişince uyarı düşer. Karar sunucuda. */
 import { useRouter } from "next/navigation";
 import { useState, useTransition } from "react";
 import { useBildir } from "../../../components/bildirim/Bildirim";
-import { Kosullar } from "../../../components/bilgi/Bilgi";
 import { Alan, FormIzgara, Girdi, ipucuId } from "../../../components/form/Form";
 import { Pencere, pencereMetinSinifi } from "../../../components/pencere/Pencere";
 import { SecimAlani } from "../../../components/secim/SecimAlani";
 import { Serit } from "../../../components/serit/Serit";
 import { Tus } from "../../../components/tus/Tus";
-import { musteriKaydetEylemi, musteriPasifEylemi, tesisKaydetEylemi, tesisPasifEylemi, type PencereDurumu } from "./eylemler";
+import { musteriKaydetEylemi, tesisKaydetEylemi, type PencereDurumu } from "./eylemler";
 import { IL_SECENEK, ilceSecenek } from "./ortak";
 
 type Harita = Record<string, string>;
@@ -133,31 +132,3 @@ export function TesisPenceresi({ acik, kapat, musteriId, unvan, tesis }: { acik:
 }
 
 /** pasif yap / yeniden etkinleştir (karar 48): silinmez, listelerden kalkar; müşteri pasifse tesisleri de */
-export function PasifPenceresi({ acik, kapat, tur, id, surum, ad, pasif }:
-  { acik: boolean; kapat: () => void; tur: "musteri" | "tesis"; id: string; surum: number; ad: string; pasif: boolean }) {
-  const router = useRouter();
-  const bildir = useBildir();
-  const [bekliyor, baslat] = useTransition();
-  const [hata, setHata] = useState<string | null>(null);
-  const kapa = () => { setHata(null); kapat(); };
-  const uygula = () => baslat(async () => {
-    const r = await (tur === "musteri" ? musteriPasifEylemi(id, surum, !pasif) : tesisPasifEylemi(id, surum, !pasif));
-    if (!r.tamam) { setHata(r.genel ?? "Kaydedilemedi."); return; }
-    kapa(); bildir(pasif ? "Yeniden etkinleştirildi." : "Pasif yapıldı; kayıtları duruyor."); router.refresh();
-  });
-  const kosullar = ["Silinmez: raporları, planları ve arşivi olduğu gibi kalır.", "Listelerden kalkar; yeni plan ve teklif açılmaz.",
-    ...(tur === "musteri" ? ["Müşteri girişi kapanır; bütün tesisleri de pasif olur."] : []), "İstenince yeniden etkinleştirilir."];
-  return (
-    <Pencere acik={acik} baslik={pasif ? "Yeniden etkinleştir" : "Pasif yap"} onKapat={kapa}
-      alt={<>
-        <Tus tur="ikincil" onClick={kapa}>Vazgeç</Tus>
-        <Tus ikon={pasif ? "undo-2" : "ban"} disabled={bekliyor} aria-busy={bekliyor || undefined} data-ilk-odak="" onClick={uygula}>{pasif ? "Etkinleştir" : "Pasif yap"}</Tus>
-      </>}>
-      <p className={pencereMetinSinifi}><b>{ad}</b></p>
-      {hata && <Serit tur="hata" ikon="circle-alert">{hata}</Serit>}
-      {pasif
-        ? <p className={pencereMetinSinifi}>Kayıt listelere geri döner; yeniden plan ve teklif açılabilir.{tur === "musteri" ? " Müşteriyle birlikte pasif olan tesisler de döner." : ""}</p>
-        : <Kosullar ogeler={kosullar.map((metin) => ({ tur: "tamam" as const, metin }))} />}
-    </Pencere>
-  );
-}

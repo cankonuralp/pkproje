@@ -52,7 +52,7 @@ export function GirisBolumu({ musteriId, kisa, b }: { musteriId: string; kisa: s
   const anaParola = () => baslat(async () => sonuc(await anaGeciciParolaEylemi(musteriId), b.eposta ?? ""));
   const ekParola = (g: MusteriGirisi) => baslat(async () => sonuc(await ekGeciciParolaEylemi(g.id, g.surum), g.eposta));
   const pasif = async (g: MusteriGirisi, p: boolean) => {
-    if (p && !(await onayla({ baslik: "Giriş pasif yapılsın mı?", metin: `${g.ad} (${g.eposta}) artık giremez, açık oturumu sonlanır. Yeniden etkinleştirilince yeni geçici parola verilir.`, tus: "Pasif yap" }))) return;
+    if (p && !(await onayla({ baslik: "Giriş pasife alınsın mı?", metin: `${g.ad} (${g.eposta}) artık giremez, açık oturumu sonlanır. Yeniden etkinleştirilince yeni geçici parola verilir.`, tus: "Pasife al" }))) return;
     baslat(async () => sonuc(await girisPasifEylemi(g.id, g.surum, p), g.eposta, () => bildir(p ? `${g.ad}: giriş pasif.` : `${g.ad}: giriş etkin; geçici parola verin.`)));
   };
   const ekKaydet = () => baslat(async () => {
@@ -71,7 +71,7 @@ export function GirisBolumu({ musteriId, kisa, b }: { musteriId: string; kisa: s
           ? <Tus tur="ikincil" disabled={bekliyor} onClick={() => void pasif(g, false)}>Etkinleştir</Tus>
           : <>
               <Tus tur="ikincil" ikon="key-round" disabled={bekliyor} onClick={() => ekParola(g)}>Geçici parola</Tus>
-              <Tus tur="ikincil" disabled={bekliyor} onClick={() => void pasif(g, true)}>Pasif yap</Tus>
+              <Tus tur="ikincil" disabled={bekliyor} onClick={() => void pasif(g, true)}>Pasife al</Tus>
             </>}
       </div>
     ) }] : []),
