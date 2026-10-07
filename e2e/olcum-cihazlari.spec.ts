@@ -2,6 +2,7 @@
    genişlikte: cihaz ekle (yeni tür adıyla) → cihaz sayfası "Kalibrasyonu geçti" (kayıt yok) · kalibrasyon kaydı ekle (sertifika PDF'i) →
    "Geçerli", sertifika açılır · kalibrasyona gönder → "Depoya al" · denetçi (kendi) cihaz görmez, ekleyemez. */
 import { expect, test } from "@playwright/test";
+import { E2E_SAHA } from "./hesaplar";
 import { girisli, hazir } from "./yardimci";
 
 const PDF = Buffer.from("%PDF-1.4\n1 0 obj<<>>endobj\ntrailer<<>>\n%%EOF\n");
@@ -84,4 +85,24 @@ test("ölçüm cihazı: kullanılmamış cihaz silinir, kod serbest kalır", asy
   await expect(page.getByRole("link", { name: kod })).toHaveCount(0);
   await ekle();
   await expect(page.getByRole("heading", { level: 1, name: `${kod} · Deneme silme ölçer` })).toBeVisible();
+});
+
+/* 358 (§9 elli üçüncü tur: kullanılmış kayıt silinmez, pasife alınır): denetçinin zimmetindeki, raporda kullanılan MN-01'de "Sil" yok, "Pasife al"
+   var; pencere nedeni söyler (kullanıldı; silinemez) ve zimmetteki cihazı pasife almaz (önce depoya teslim). Cihaz değişmez (öteki testler kullanır). */
+test("ölçüm cihazı: kullanılmış cihazda Sil yok, Pasife al zimmetteyken reddedilir", async ({ page }) => {
+  await girisli(page, "yonetici");
+  await page.goto("/olcum-cihazlari");
+  await hazir(page);
+  await page.getByRole("link", { name: E2E_SAHA.cihaz, exact: true }).click();
+  await expect(page.getByRole("heading", { level: 1, name: new RegExp(`^${E2E_SAHA.cihaz} · `) })).toBeVisible({ timeout: 30_000 });
+  await hazir(page);
+  await expect(page.getByRole("button", { name: "Sil", exact: true })).toHaveCount(0);
+  await page.getByRole("button", { name: "Pasife al" }).click();
+  const p = page.locator("dialog[open]");
+  await expect(p).toContainText(/kullanıldı; silinemez\./);
+  await expect(p).toContainText("Etkinleştir ile geri gelir.");
+  await p.getByRole("button", { name: "Pasife al" }).click();
+  await expect(p).toContainText(`${E2E_SAHA.cihaz} bir kişinin zimmetinde; önce Zimmetler'den depoya teslim alın.`);
+  await p.getByRole("button", { name: "Vazgeç" }).click();
+  await expect(page.getByText("Pasif", { exact: true })).toHaveCount(0);
 });

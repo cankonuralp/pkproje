@@ -3,15 +3,16 @@
    Ortak kesin silme sözleşmesi (src/server/db/silici.ts, göç 0054) ölçüm cihazıyla:
    · hiç kullanılmamış cihaz silinir: kalibrasyon kayıtları gider, sertifikası çöpe (indirilemez), denetim izinde eski değer ve silen hesap, kod serbest;
    · kullanılmış cihaz silinmez, sayım doğru döner: zimmet hareketi, raporun cihaz listesi (rapor silinmiş taslak olsa da);
-   · yalnız yöneticiler (planlama / denetçi / muhasebe yetkisiz); başka firmanın cihazı "yok"; oturumsuz çağrı reddedilir; uygulama rolünün DELETE'i yok.
+   · yalnız yöneticiler (planlama / denetçi / muhasebe yetkisiz); başka firmanın cihazı "yok"; oturumsuz çağrı reddedilir; uygulama rolünün DELETE'i yok;
+   · 358 pasif: zimmetteki / kalibrasyondaki cihaz pasife alınmaz; pasif cihaz seçimden ve Zimmetler'den kalkar, açık rapor kodunu gösterir; etkinleştir.
    Olumsuz kanıt: tests/bozan/kesin-silme.bozan.ts. */
 import assert from "node:assert/strict";
 import { mkdtempSync, rmSync } from "node:fs";
 import { tmpdir } from "node:os";
 import { join } from "node:path";
 import { after, before, test } from "node:test";
-import { cihazKaydet, cihazKarti, cihazSil, cihazSilmeDurumu, kalibrasyonEkle, type Kisi } from "../src/modules/olcum-cihazlari/server/cihazlar.ts";
-import { raporSil } from "../src/modules/raporlar/server/raporlar.ts";
+import { cihazKaydet, cihazKarti, cihazKonum, cihazListesi, cihazOzetleri, cihazPasif, cihazSil, cihazSilmeDurumu, kalibrasyonEkle, raporCihazlari, type Kisi } from "../src/modules/olcum-cihazlari/server/cihazlar.ts";
+import { raporSil, sahaRaporu } from "../src/modules/raporlar/server/raporlar.ts";
 import type { GomuluKume } from "../src/server/db/gomulu.ts";
 import { havuzKur, kiraciIcinde, type Havuz } from "../src/server/db/kiraci.ts";
 import { kesinSil, kullanimlar } from "../src/server/db/silici.ts";
@@ -89,4 +90,33 @@ test("yalnız yöneticiler; başka firmanın cihazı yok; oturumsuz çağrı red
   await assert.rejects(a(FA.yon, (db) => db.sorgu("DELETE FROM olcum_cihazi WHERE id = $1", [id])), /permission denied|izin/i);
   assert.ok((await a(FA.yon, (db) => cihazKarti(db, FA.yon, id))) !== null);
   assert.equal((await a(FA.yon, (db) => cihazSil(db, FA.yon, id))).durum, "tamam", "firma yöneticisi siler");
+});
+
+/* 358 — kullanılmış cihaz silinmez, PASİFE alınır (§9 elli üçüncü tur). B firmasının raporuyla (A'nınki yukarıda silindi). */
+test("pasif: zimmetteki ya da kalibrasyondaki cihaz pasife alınmaz; depodaki alınır — seçimden kalkar, açık rapor kodunu gösterir; etkinleştir geri getirir", async () => {
+  const b = <T,>(k: Kisi, is: Parameters<typeof kiraciIcinde<T>>[2]) => kiraciIcinde(havuz, B, is, { hesapId: k.id });
+  const id = tamam(await b(FB.yon, (db) => cihazKaydet(db, FB.yon, null, 0, { ...C, kod: "PAS-1" }))).id;
+  const surum = async () => (await b(FB.yon, (db) => cihazKarti(db, FB.yon, id)))!.surum;
+  await b(FB.yon, (db) => db.sorgu("INSERT INTO zimmet_hareket (cihaz_id, alan_personel, zaman) VALUES ($1, $2, now() - interval '1 hour')", [id, FB.den1Personel]));
+  assert.deepEqual(await b(FB.yon, async (db) => cihazPasif(db, FB.yon, id, await surum(), true)),
+    { durum: "red", neden: "PAS-1 bir kişinin zimmetinde; önce Zimmetler'den depoya teslim alın." });
+  await b(FB.yon, (db) => db.sorgu("INSERT INTO zimmet_hareket (cihaz_id, eden_personel, zaman) VALUES ($1, $2, now())", [id, FB.den1Personel]));
+  tamam(await b(FB.yon, async (db) => cihazKonum(db, FB.yon, id, await surum(), "lab")));
+  assert.deepEqual(await b(FB.yon, async (db) => cihazPasif(db, FB.yon, id, await surum(), true)), { durum: "red", neden: "PAS-1 kalibrasyonda; önce depoya alın." });
+  tamam(await b(FB.yon, async (db) => cihazKonum(db, FB.yon, id, await surum(), "depo")));
+  const turId = (await b(FB.yon, (db) => cihazKarti(db, FB.yon, id)))!.turId;
+  await b(FB.den1, (db) => db.sorgu("UPDATE rapor SET cihazlar = $1::jsonb WHERE id = $2", [JSON.stringify([{ tur: turId, cihaz: id }]), FB.rapor]));
+  assert.equal((await b(FB.yon, (db) => cihazSilmeDurumu(db, FB.yon, id))).sil, false, "kullanılmış: Sil yok");
+  assert.deepEqual(await b(FB.plan, (db) => cihazPasif(db, FB.plan as Kisi, id, 0, true)), { durum: "yetkisiz" });
+  tamam(await b(FB.yon, async (db) => cihazPasif(db, FB.yon, id, await surum(), true)));
+  assert.ok((await b(FB.yon, (db) => cihazKarti(db, FB.yon, id)))!.pasif, "kart açılır, pasif günü");
+  assert.ok((await b(FB.yon, (db) => cihazListesi(db, FB.yon)))!.cihazlar.find((x) => x.id === id)?.pasif, "liste Görünüm: Pasif");
+  assert.equal((await b(FB.yon, (db) => raporCihazlari(db))).some((x) => x.id === id), false, "rapor seçiminde yok");
+  assert.equal((await b(FB.yon, (db) => raporCihazlari(db, { pasifDahil: true }))).find((x) => x.id === id)?.pasif, true, "çözümde var");
+  assert.equal((await b(FB.yon, (db) => cihazOzetleri(db))).some((x) => x.id === id), false, "Zimmetler'de yok");
+  const satir = (await b(FB.den1, (db) => sahaRaporu(db, FB.den1, FB.rapor)))!.cihazlar.find((x) => x.turId === turId);
+  assert.deepEqual([satir?.cihaz?.kod, satir?.cihaz?.eksik], ["PAS-1", false], "açık rapor pasif cihazın kodunu gösterir (eksik değil)");
+  tamam(await b(FB.yon, async (db) => cihazPasif(db, FB.yon, id, await surum(), false)));
+  assert.equal((await b(FB.yon, (db) => cihazKarti(db, FB.yon, id)))!.pasif, null);
+  assert.ok((await b(FB.yon, (db) => raporCihazlari(db))).some((x) => x.id === id), "etkinleştirince seçime döner");
 });

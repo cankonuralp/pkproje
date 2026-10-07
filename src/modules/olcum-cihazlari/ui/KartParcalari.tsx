@@ -1,7 +1,7 @@
 "use client";
 /* Cihaz sayfasının istemci parçaları (maket olcum-cihazlari.html cihazCiz): işlem tuşları (Düzenle · Kalibrasyona gönder / Depoya al ·
-   Kalibrasyon kaydı ekle · Sil — 357: yalnız yöneticiye ve hiç kullanılmamış cihaza) ve kalibrasyon kayıtları tablosu (sertifikayı aç, kaldır). Tuşlar
-   yalnız "değiştirir" düzeyine; karar sunucuda. */
+   Kalibrasyon kaydı ekle · Sil — 357: yalnız yöneticiye ve hiç kullanılmamış cihaza; kullanılmış cihazda Pasife al, pasif cihazda Etkinleştir — 358)
+   ve kalibrasyon kayıtları tablosu (sertifikayı aç, kaldır). Tuşlar yalnız "değiştirir" düzeyine; karar sunucuda. */
 import { useRouter } from "next/navigation";
 import { useState, useTransition } from "react";
 import { useBildir } from "../../../components/bildirim/Bildirim";
@@ -9,19 +9,24 @@ import { DosyaAcTusu } from "../../../components/gizli-resim/GizliResim";
 import { KartEtiket, Kirp, Liste, type Sutun } from "../../../components/liste/Liste";
 import { useOnayla } from "../../../components/pencere/Onay";
 import { DegerYok, Kod, Rozet } from "../../../components/sayfa/Sayfa";
+import { PasifPenceresi } from "../../../components/sil/PasifPenceresi";
 import { SilTusu } from "../../../components/sil/SilTusu";
 import { Tus } from "../../../components/tus/Tus";
 import type { CihazTuru, KalibrasyonKaydi } from "../server/cihazlar";
-import { cihazKonumEylemi, cihazSilEylemi, kalibrasyonKaldirEylemi } from "./eylemler";
+import { cihazKonumEylemi, cihazPasifEylemi, cihazSilEylemi, kalibrasyonKaldirEylemi } from "./eylemler";
 import { CihazPenceresi, KalibrasyonPenceresi, type CihazDegeri } from "./Pencereler";
 import { tarihYaz } from "./ortak";
 import stil from "./cihazlar.module.css";
 
-export function CihazTuslari({ cihaz, turler, konum, baslik, sil = false }: { cihaz: CihazDegeri; turler: CihazTuru[]; konum: "depo" | "lab"; baslik: string; sil?: boolean }) {
+export function CihazTuslari({ cihaz, turler, konum, baslik, sil = false, pasif = false, kullanim = null }: {
+  cihaz: CihazDegeri; turler: CihazTuru[]; konum: "depo" | "lab"; baslik: string; sil?: boolean; pasif?: boolean;
+  /** kullanıldığı yerler ("3 raporda, 1 zimmet hareketinde") — Pasife al penceresi nedeni söyler */
+  kullanim?: string | null;
+}) {
   const router = useRouter();
   const bildir = useBildir();
   const [bekliyor, baslat] = useTransition();
-  const [p, setP] = useState<null | "duzenle" | "kal">(null);
+  const [p, setP] = useState<null | "duzenle" | "kal" | "pasif">(null);
   const konumla = (k: "depo" | "lab") => baslat(async () => {
     const r = await cihazKonumEylemi(cihaz.id, cihaz.surum, k);
     bildir(r.tamam ? (k === "lab" ? "Cihaz kalibrasyona gönderildi." : "Cihaz depoya alındı.") : r.genel ?? "Kaydedilemedi.");
@@ -30,12 +35,23 @@ export function CihazTuslari({ cihaz, turler, konum, baslik, sil = false }: { ci
   return (
     <>
       <Tus tur="ikincil" ikon="pencil" onClick={() => setP("duzenle")}>Düzenle</Tus>
-      {konum === "lab"
-        ? <Tus tur="ikincil" ikon="warehouse" disabled={bekliyor} onClick={() => konumla("depo")}>Depoya al</Tus>
-        : <Tus tur="ikincil" ikon="flask-conical" disabled={bekliyor} onClick={() => konumla("lab")}>Kalibrasyona gönder</Tus>}
-      <Tus ikon="plus" onClick={() => setP("kal")}>Kalibrasyon kaydı ekle</Tus>
-      {sil && <SilTusu ad={cihaz.kod} baslik="Ölçüm cihazını sil" yanEtki="kalibrasyon kayıtları ve sertifikaları da silinir, kodu yeniden kullanılabilir"
-        sil={() => cihazSilEylemi(cihaz.id)} donus="/olcum-cihazlari" />}
+      {pasif
+        ? <Tus ikon="undo-2" onClick={() => setP("pasif")}>Etkinleştir</Tus>
+        : <>
+          {konum === "lab"
+            ? <Tus tur="ikincil" ikon="warehouse" disabled={bekliyor} onClick={() => konumla("depo")}>Depoya al</Tus>
+            : <Tus tur="ikincil" ikon="flask-conical" disabled={bekliyor} onClick={() => konumla("lab")}>Kalibrasyona gönder</Tus>}
+          <Tus ikon="plus" onClick={() => setP("kal")}>Kalibrasyon kaydı ekle</Tus>
+          {sil
+            ? <SilTusu ad={cihaz.kod} baslik="Ölçüm cihazını sil" yanEtki="kalibrasyon kayıtları ve sertifikaları da silinir, kodu yeniden kullanılabilir"
+              sil={() => cihazSilEylemi(cihaz.id)} donus="/olcum-cihazlari" />
+            : <Tus tur="ikincil" ikon="ban" onClick={() => setP("pasif")}>Pasife al</Tus>}
+        </>}
+      <PasifPenceresi acik={p === "pasif"} kapat={() => setP(null)} ad={cihaz.kod} pasif={pasif}
+        neden={kullanim ? `${kullanim} kullanıldı; silinemez.` : null}
+        kosullar={["Silinmez: kalibrasyon geçmişi, raporları ve belgeleri kalır.", "Listeden, rapor seçiminden, Zimmetler'den ve uyarılardan kalkar.",
+          "Önce depoda olmalı (kişide ya da kalibrasyonda değil).", "Etkinleştir ile geri gelir."]}
+        geriMetni="Cihaz listeye, rapor seçimine ve Zimmetler'e geri döner." uygula={() => cihazPasifEylemi(cihaz.id, cihaz.surum, !pasif)} />
       {p === "duzenle" && <CihazPenceresi kapat={() => setP(null)} turler={turler} cihaz={cihaz} />}
       {p === "kal" && <KalibrasyonPenceresi kapat={() => setP(null)} cihazId={cihaz.id} baslik={baslik} />}
     </>

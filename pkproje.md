@@ -2353,6 +2353,13 @@ revizyon, alan kopyalama, hafif kusur devri, meslek eşleşme denetimi).
 - Emsal ürünler: https://opwire.app/iso-17020-periyodik-kontrol-yazilimi/ · https://17020muayene.vidco.com.tr/ · https://akuple.com/asansor-kontrol-yazilimi/ · https://ensyazilim.com/
 
 ## 11 · Değişiklik günlüğü
+- 2026-10-07 (358): **Ölçüm cihazı Pasife al / Etkinleştir** (§9 elli üçüncü tur: kullanılmış kayıt silinmez, pasife alınır). Göç yok (pasif sütunu
+  0014'ten). Kullanılmış cihazda "Sil" yerine "Pasife al" (pencere nedeni söyler: "<n> raporda, <n> zimmet hareketinde kullanıldı; silinemez");
+  ENGEL: kişinin zimmetindeki cihaz (önce Zimmetler'den depoya teslim) ve kalibrasyondaki cihaz (önce depoya al) pasife alınmaz — pasif cihaz
+  Zimmetler'den düşer, kişiden geri alınamazdı. Pasif cihaz liste Görünüm'ünde (Etkin varsayılan · Pasif · Hepsi), rapor seçiminden, Zimmetler'den ve
+  uyarılardan kalkar; açık rapor ve rapor belgesi kodunu ve kalibrasyonunu göstermeye devam eder (raporCihazlari pasifDahil). Kart: Pasif rozeti +
+  şerit + Etkinleştir. components/sil/PasifPenceresi tek üretici (müşteri kalemi gelince oraya da). Kilit tests/kesin-silme.test.ts "pasif"; olumsuz
+  kanıt cihaz-pasif.bozan; e2e: zimmetteki MN-01'de Sil yok, Pasife al reddedilir.
 - 2026-10-07 (357): **Kesin silme — ortak mekanizma + ölçüm cihazı "Sil"** (reisim: *"denemek için bir kaç cihaz ekledim ama silemedim"*; §9 elli
   üçüncü tur). Göç 0054: olcum_cihazi_kullanim (zimmet hareketi · raporun cihaz listesi, silinmiş taslak dahil · zimmet formu) ve olcum_cihazi_sil
   (tanımlayıcı-yetkili, 0047 deseni: oturumdaki firma + hesap, satır kilidi, kullanılmışsa sayım, kalibrasyon kayıtları birlikte, sertifikalar çöpe,

@@ -18,7 +18,7 @@ import { CihazGirdisi, kalDurum, KalibrasyonGirdisi, YENI_TUR, type KalDurum } f
 const MODUL = 8;
 export const DOSYA_MODULU = "olcum_cihazi";
 const TUR = tablo({ ad: "cihaz_turu", sutunlar: ["ad"] });
-const CIHAZ = tablo({ ad: "olcum_cihazi", sutunlar: ["kod", "tur_id", "marka", "model", "seri", "aralik", "konum"] });
+const CIHAZ = tablo({ ad: "olcum_cihazi", sutunlar: ["kod", "tur_id", "marka", "model", "seri", "aralik", "konum", "pasif"] });
 const KAL = tablo({ ad: "kalibrasyon", sutunlar: ["cihaz_id", "tarih", "bitis", "lab", "sertifika", "sonuc", "dosya_id", "kaldirildi"] });
 const UUID = /^[0-9a-f]{8}-[0-9a-f]{4}-[0-9a-f]{4}-[0-9a-f]{4}-[0-9a-f]{12}$/;
 
@@ -27,6 +27,8 @@ export interface CihazTuru { id: string; ad: string }
 export interface CihazSatiri {
   id: string; kod: string; turId: string; tur: string; marka: string | null; model: string | null; seri: string | null; aralik: string | null;
   konum: "depo" | "lab"; bitis: string | null; durum: KalDurum;
+  /** 358: kullanımdan çekildiği gün (pasif cihaz listede "Pasif" görünümünde; rapor seçiminden, Zimmetler'den, uyarılardan kalkar) */
+  pasif: string | null;
 }
 export interface KalibrasyonKaydi { id: string; tarih: string; bitis: string; lab: string; sertifika: string; sonuc: "uygun" | "uygun_degil"; dosyaId: string | null; surum: number }
 export interface CihazKarti extends CihazSatiri { surum: number; kalibrasyonlar: KalibrasyonKaydi[] }
@@ -59,18 +61,18 @@ export async function kalibrasyonEsigi(db: Sorgulayici): Promise<number> {
   return (await ayarOku(db, "uyari_esikleri")).deger.kalibrasyon;
 }
 
-type CihazDb = { id: string; kod: string; tur_id: string; tur: string; marka: string | null; model: string | null; seri: string | null; aralik: string | null; konum: "depo" | "lab"; bitis: string | null; surum: number };
+type CihazDb = { id: string; kod: string; tur_id: string; tur: string; marka: string | null; model: string | null; seri: string | null; aralik: string | null; konum: "depo" | "lab"; bitis: string | null; surum: number; pasif: string | null };
 /** geçerli bitiş (SQL; c = olcum_cihazi): kaldırılmamış "uygun" kalibrasyonların en geç bitişi. Toplu içe aktarılan cihazın sistem öncesi bitişi
     (0047 ilk_bitis) YALNIZ cihazın hiç kalibrasyon kaydı yokken — kayıt açılınca (sonucu "uygun değil" olsa da) devreden çıkar (karar 337; 337–339
     incelemesi: GREATEST "uygun değil" kaydı ve daha erken biten kaydı eziyordu). Uyarılar ve rapor belgesi de aynı kuralla (uyari-baglanti.ts). */
 export const GECERLI_BITIS = `CASE WHEN EXISTS (SELECT 1 FROM kalibrasyon k WHERE k.cihaz_id = c.id AND k.firma_id = c.firma_id AND k.kaldirildi IS NULL)
     THEN (SELECT max(k.bitis) FROM kalibrasyon k WHERE k.cihaz_id = c.id AND k.firma_id = c.firma_id AND k.sonuc = 'uygun' AND k.kaldirildi IS NULL)
     ELSE c.ilk_bitis END`;
-const CIHAZ_SEC = `SELECT c.id::text, c.kod, c.tur_id::text, t.ad AS tur, c.marka, c.model, c.seri, c.aralik, c.konum, c.surum, (${GECERLI_BITIS})::text AS bitis
+const CIHAZ_SEC = `SELECT c.id::text, c.kod, c.tur_id::text, t.ad AS tur, c.marka, c.model, c.seri, c.aralik, c.konum, c.surum, c.pasif::text AS pasif, (${GECERLI_BITIS})::text AS bitis
   FROM olcum_cihazi c JOIN cihaz_turu t ON t.id = c.tur_id AND t.firma_id = c.firma_id`;
 const satir = (x: CihazDb, bugun: string, esik: number): CihazSatiri => ({
   id: x.id, kod: x.kod, turId: x.tur_id, tur: x.tur, marka: x.marka, model: x.model, seri: x.seri, aralik: x.aralik, konum: x.konum, bitis: x.bitis,
-  durum: kalDurum(x.bitis, x.konum, bugun, esik),
+  durum: kalDurum(x.bitis, x.konum, bugun, esik), pasif: x.pasif,
 });
 
 /** öteki modüller için cihaz özeti (yetki ÇAĞIRANDA; Zimmetler kendi düzeyine göre süzer) */
@@ -78,11 +80,13 @@ export async function cihazOzetleri(db: Sorgulayici): Promise<Pick<CihazSatiri, 
   return (await db.sorgu<CihazDb>(`${CIHAZ_SEC} WHERE c.pasif IS NULL`)).rows.map((x) => ({ id: x.id, kod: x.kod, tur: x.tur, konum: x.konum, bitis: x.bitis }));
 }
 
-/** Raporlar için: etkin cihazlar türü, marka / model / seri ve geçerli kalibrasyon bitişiyle (yetki ÇAĞIRANDA; kimde olduğu Zimmetler'den) */
-export async function raporCihazlari(db: Sorgulayici): Promise<{ id: string; kod: string; turId: string; tur: string; marka: string | null; model: string | null;
-  seri: string | null; konum: "depo" | "lab"; bitis: string | null }[]> {
-  return (await db.sorgu<CihazDb>(`${CIHAZ_SEC} WHERE c.pasif IS NULL`)).rows
-    .map((x) => ({ id: x.id, kod: x.kod, turId: x.tur_id, tur: x.tur, marka: x.marka, model: x.model, seri: x.seri, konum: x.konum, bitis: x.bitis }));
+/** Raporlar için: cihazlar türü, marka / model / seri ve geçerli kalibrasyon bitişiyle (yetki ÇAĞIRANDA; kimde olduğu Zimmetler'den). Varsayılan yalnız
+    ETKİN cihazlar (seçim: rapora eklenecek cihaz); 358: `pasifDahil` raporda zaten olan cihazı ÇÖZMEK için (açık rapor ve rapor belgesi pasife alınmış
+    cihazın kodunu ve kalibrasyonunu göstermeye devam eder — "eksik" / "—" olmaz). */
+export async function raporCihazlari(db: Sorgulayici, ayar: { pasifDahil?: boolean } = {}): Promise<{ id: string; kod: string; turId: string; tur: string; marka: string | null; model: string | null;
+  seri: string | null; konum: "depo" | "lab"; bitis: string | null; pasif: boolean }[]> {
+  return (await db.sorgu<CihazDb>(ayar.pasifDahil ? CIHAZ_SEC : `${CIHAZ_SEC} WHERE c.pasif IS NULL`)).rows
+    .map((x) => ({ id: x.id, kod: x.kod, turId: x.tur_id, tur: x.tur, marka: x.marka, model: x.model, seri: x.seri, konum: x.konum, bitis: x.bitis, pasif: x.pasif !== null }));
 }
 
 /** Raporlar (belge) için: cihazların son geçerli kalibrasyonu — tarih, bitiş, sertifika no (yetki ÇAĞIRANDA). Hiç kalibrasyon kaydı olmayan, toplu
@@ -125,7 +129,8 @@ export async function cihazListesi(db: Sorgulayici, kim: Kisi): Promise<{ cihazl
   const kendi = await kendiCihazlari(db, kim);
   if (!gorur(kim) && !kendi) return { cihazlar: [], esik };
   const bugun = bugunTr();
-  const r = await db.sorgu<CihazDb>(`${CIHAZ_SEC} WHERE c.pasif IS NULL`);
+  /* 358: pasif cihazlar da gelir — liste "Görünüm" seçicisiyle ayırır (varsayılan etkin; karar 48 deseni) */
+  const r = await db.sorgu<CihazDb>(CIHAZ_SEC);
   return { cihazlar: r.rows.filter((x) => !kendi || kendi.has(x.id)).map((x) => satir(x, bugun, esik)).sort((a, b) => (a.bitis ?? "") < (b.bitis ?? "") ? -1 : (a.bitis ?? "") > (b.bitis ?? "") ? 1 : a.kod.localeCompare(b.kod)), esik };
 }
 
@@ -216,11 +221,11 @@ export async function kalibrasyonKaldir(db: Sorgulayici, kim: Kisi, id: string, 
 export type SilYaniti = { durum: "tamam"; ad: string } | { durum: "red"; neden: string } | { durum: "yok" } | { durum: "yetkisiz" };
 const silebilir = (kim: Kisi) => canDoEylem(kim, "kayit_sil", { modul: MODUL });
 
-/** cihaz sayfası: "Sil" çizilir mi (silebilen kişi + kullanılmamış cihaz); kullanılmışsa sayımlar (nedeni söylemek için) */
+/** cihaz sayfası: "Sil" çizilir mi (silebilen kişi + kullanılmamış cihaz); cihazı değiştirene kullanım sayımları ("Pasife al" penceresi nedeni söyler) */
 export async function cihazSilmeDurumu(db: Sorgulayici, kim: Kisi, id: string): Promise<{ sil: boolean; kullanim: Kullanim | null }> {
-  if (!silebilir(kim) || !UUID.test(id)) return { sil: false, kullanim: null };
+  if (!degistirir(kim) || !UUID.test(id)) return { sil: false, kullanim: null };
   const k = (await kullanimlar(db, "olcum_cihazi", [id])).get(id) ?? null;
-  return { sil: !k, kullanim: k };
+  return { sil: silebilir(kim) && !k, kullanim: k };
 }
 
 export async function cihazSil(db: Sorgulayici, kim: Kisi, id: string): Promise<SilYaniti> {
@@ -228,4 +233,24 @@ export async function cihazSil(db: Sorgulayici, kim: Kisi, id: string): Promise<
   const r = await kesinSil(db, "olcum_cihazi", id, kim.ad);
   if (r.durum === "kullanildi") return { durum: "red", neden: `Cihaz silinemez: ${kullanimMetni(r.kullanim) || "başka kayıtlarda"} kullanıldı.` };
   return r;
+}
+
+/* ── PASİF / ETKİNLEŞTİR (358; §9 elli üçüncü tur: kullanılmış kayıt silinmez, pasife alınır) — "yaz" düzeyi (cihazı değiştiren). Pasif cihaz listeden
+   (Görünüm: Pasif), rapor seçiminden, Zimmetler'den ve kalibrasyon uyarılarından kalkar; kalibrasyon geçmişi, raporları ve belgeleri durur.
+   ENGEL (veri bütünlüğü): cihaz depoda olmalı — kişinin zimmetindeyse pasif cihaz Zimmetler'den düşer, geri teslim alınamaz (çıkmaz kayıt); kalibrasyondaysa
+   önce depoya alınır. Etkinleştir geri getirir. */
+export type PasifYaniti = { durum: "tamam"; id: string; surum: number } | { durum: "red"; neden: string } | { durum: "cakisma" } | { durum: "yok" } | { durum: "yetkisiz" };
+export async function cihazPasif(db: Sorgulayici, kim: Kisi, id: string, surum: number, pasif: boolean): Promise<PasifYaniti> {
+  if (!degistirir(kim)) return { durum: "yetkisiz" };
+  if (!UUID.test(id)) return { durum: "yok" };
+  if (!surumGecerli(surum)) return { durum: "cakisma" };
+  const c = (await db.sorgu<{ kod: string; konum: string; pasif: string | null }>("SELECT kod, konum, pasif::text FROM olcum_cihazi WHERE id = $1 FOR UPDATE", [id])).rows[0];
+  if (!c) return { durum: "yok" };
+  if (pasif && !c.pasif) {
+    if ((await kimdeHaritasi(db)).cihaz.get(id)) return { durum: "red", neden: `${c.kod} bir kişinin zimmetinde; önce Zimmetler'den depoya teslim alın.` };
+    if (c.konum === "lab") return { durum: "red", neden: `${c.kod} kalibrasyonda; önce depoya alın.` };
+  }
+  const r = await guncelle(db, CIHAZ, id, surum, { pasif: pasif ? (c.pasif ?? bugunTr()) : null }, { kim: kim.ad, ne: pasif ? "cihaz.pasif" : "cihaz.etkinlestir" });
+  if (r.durum === "cakisma" || r.durum === "yok") return { durum: r.durum };
+  return { durum: "tamam", id, surum: r.surum };
 }

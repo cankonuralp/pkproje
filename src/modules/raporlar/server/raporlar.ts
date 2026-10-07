@@ -246,7 +246,8 @@ const kunyeFarki = (a: Kunye, b: Kunye) => [
 ].filter((x): x is string => !!x);
 
 async function cihazSatirlari(db: Sorgulayici, r: RaporSatiri, tur: Erisim["tur"], bugun: string): Promise<{ satirlar: CihazSatiri[]; tumu: Awaited<ReturnType<typeof raporCihazlari>> }> {
-  const tumu = await raporCihazlari(db);
+  /* 358: pasif cihaz da çözülür (raporda zaten olan cihaz "eksik" görünmez); seçime pasif cihaz girmez (aşağıda `benim`) */
+  const tumu = await raporCihazlari(db, { pasifDahil: true });
   const turAdi = new Map(tumu.map((c) => [c.turId, c.tur]));
   const gerekli = [...tur.cihazTurleri];
   for (const x of r.cihazlar) if (!gerekli.includes(x.tur)) gerekli.push(x.tur);
@@ -278,7 +279,7 @@ export async function sahaRaporu(db: Sorgulayici, kim: Kisi, id: string): Promis
   if (duzenle) {
     const kimde = (await kimdeHaritasi(db)).cihaz;
     /* kalibrasyondaki (lab) cihaz kimsenin zimmetinde sayılmaz (Zimmetler: Kalibrasyonda) */
-    const benim = tumu.filter((c) => c.konum !== "lab" && kimde.get(c.id) === r.personel_id && !kalibrasyonGecti(c.bitis, bugun));
+    const benim = tumu.filter((c) => !c.pasif && c.konum !== "lab" && kimde.get(c.id) === r.personel_id && !kalibrasyonGecti(c.bitis, bugun));
     const ozet = (c: (typeof benim)[number]) => ({ id: c.id, kod: c.kod, marka: c.marka, model: c.model, seri: c.seri, bitis: c.bitis });
     secilebilir = Object.fromEntries(satirlar.map((x) => [x.turId, benim.filter((c) => c.turId === x.turId).map(ozet)]));
     /* tür gerekli cihaz türü vermiyorsa formatın cihaz bölümü için zimmetteki her geçerli cihaz seçilebilir ("*") */
@@ -676,7 +677,7 @@ export async function raporBelgesiVerisi(db: Sorgulayici, depo: Depo, kim: Kisi,
   const yazan = await personelBelgeBilgisi(db, r.personel_id);
   /* kalibrasyon: muayene GÜNÜNDE geçerli olan (sonradan girilen yeni kalibrasyon eski raporu değiştirmez — 315–317 incelemesi) */
   const muayeneGunu = zamanOku(r.bas)?.slice(0, 10);
-  const tum = await raporCihazlari(db), kal = await cihazKalibrasyonlari(db, r.cihazlar.map((x) => x.cihaz), muayeneGunu);
+  const tum = await raporCihazlari(db, { pasifDahil: true }), kal = await cihazKalibrasyonlari(db, r.cihazlar.map((x) => x.cihaz), muayeneGunu);
   const cihazlar = r.cihazlar.map((x) => {
     const c = tum.find((y) => y.id === x.cihaz), k = kal.get(x.cihaz);
     return { turAd: c?.tur ?? "Ölçüm cihazı", kod: c?.kod ?? "—", marka: c?.marka ?? null, model: c?.model ?? null, seri: c?.seri ?? null,

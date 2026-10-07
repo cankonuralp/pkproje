@@ -91,6 +91,7 @@ pkproje/
   src/modules/musteriler/   MÜŞTERİLER (2026-10-04): sema.ts · server/musteriler.ts (liste, kart, kaydet + uyarı onayı, pasif zinciri) · ui/ (liste, pencereler)
   src/modules/ekipman-turleri/ EKİPMAN TÜRLERİ (2026-10-04): katalog (Mekanik / Elektrik), tür sayfası, rapor formatı PDF sürümleri
   src/modules/olcum-cihazlari/ ÖLÇÜM CİHAZLARI (2026-10-04): cihaz, cihaz türü, kalibrasyon kaydı + sertifika, kalibrasyon durumu (eşik firma ayarı)
+                            · 357 Sil (kullanılmamış, yönetici; silici.ts) · 358 Pasife al / Etkinleştir (depoda olmalı; liste Görünüm; raporCihazlari pasifDahil)
   src/modules/zimmetler/    ZİMMETLER (2026-10-04): kimde (son hareketten), değişmez teslim hareketleri + fotoğraf, demirbaş
   src/modules/araclar/      ARAÇLAR (2026-10-04): araç (zimmet varlığı), değişmez teslim tutanağı + açı fotoğrafları, haftalık kilometre
                             · tutanak belgesi (342): src/belge/arac.ts (temel <kod>-FR-ARC-01) → /araclar/tutanak/<hareket>/pdf; kişiye teslimde

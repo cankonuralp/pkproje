@@ -1,13 +1,14 @@
 "use client";
 /* Ölçüm cihazları listesi (maket olcum-cihazlari.html #/): üstte kalibrasyon uyarı şeritleri (geçti · eşik içinde bitiyor; "Göster" çipi açar),
-   süzgeç (kalıp 15; kalibrasyon çipleri aynı grupta — iki durum birden olamaz), Cihaz türü ve Konum seçicileri, tablo ↔ kart. Kişi zimmeti ve
-   ara kontrol sütunu kendi kalemlerinde. */
+   süzgeç (kalıp 15; kalibrasyon çipleri aynı grupta — iki durum birden olamaz), Cihaz türü ve Konum seçicileri, Görünüm (358: Etkin cihazlar
+   varsayılan · Pasif · Hepsi — müşteri listesi deseni), tablo ↔ kart. Kişi zimmeti ve ara kontrol sütunu kendi kalemlerinde. Uyarı şeritleri yalnız etkin
+   cihazları sayar. */
 import Link from "next/link";
 import { useState } from "react";
 import { KartEtiket, Kirp, type Sutun } from "../../../components/liste/Liste";
 import { Sayac, SuzgecliListe, useSuzgec } from "../../../components/liste/SuzgecliListe";
 import type { SuzgecTanimi } from "../../../components/liste/suzgec";
-import { AltSatir, SayfaBasi } from "../../../components/sayfa/Sayfa";
+import { AltSatir, Rozet, SayfaBasi } from "../../../components/sayfa/Sayfa";
 import { Serit } from "../../../components/serit/Serit";
 import { Tus } from "../../../components/tus/Tus";
 import { kalanGun } from "../sema";
@@ -28,6 +29,9 @@ function tanim(esik: number, turler: readonly CihazTuru[]): SuzgecTanimi<CihazSa
     ],
     seciciler: [
       { k: "tur", ad: "Cihaz türü", secenek: () => [["tumu", "Tümü"], ...turler.map((t) => [t.id, t.ad] as const)], gecer: (c, v) => v === "tumu" || c.turId === v },
+      /* görünüm anahtarı (kalıp 8; 358): pasif cihaz listeden kalkar, burada görünür */
+      { k: "gorunum", ad: "Görünüm", bas: "etkin", secenek: () => [["etkin", "Etkin cihazlar"], ["pasif", "Pasif cihazlar"], ["hepsi", "Hepsi"]],
+        gecer: (c, v) => v === "hepsi" || (v === "pasif") === !!c.pasif },
     ],
   };
 }
@@ -41,14 +45,14 @@ const kalanMetni = (bitis: string | null, bugun: string, esik: number) => {
 export function CihazListesi({ kayitlar, turler, esik, bugun, ekleyebilir }: { kayitlar: CihazSatiri[]; turler: CihazTuru[]; esik: number; bugun: string; ekleyebilir: boolean }) {
   const s = useSuzgec(tanim(esik, turler), kayitlar);
   const [pencere, setPencere] = useState(false);
-  const gecti = kayitlar.filter((c) => c.durum === "gecti"), yakin = kayitlar.filter((c) => c.durum === "yakin");
+  const gecti = kayitlar.filter((c) => !c.pasif && c.durum === "gecti"), yakin = kayitlar.filter((c) => !c.pasif && c.durum === "yakin");
   const goster = (k: string) => s.degistir({ ...s.durum, secili: [k], kip: "veya", sayfa: 1 });
   const sutunlar: Sutun<CihazSatiri>[] = [
     { k: "kod", genislik: "14%", baslik: "Cihaz kodu", kart: "ust", sira: 1, hucre: (c) => <Link className={stil.no} href={`/olcum-cihazlari/${c.id}`}>{c.kod}</Link> },
     { k: "ad", genislik: "34%", baslik: "Cihaz", kart: "govde", sira: 2, hucre: (c) => <><Kirp>{c.tur}</Kirp><AltSatir><Kirp>{[c.marka, c.model].filter(Boolean).join(" ") || "—"}{c.seri ? ` · seri ${c.seri}` : ""}</Kirp></AltSatir></> },
     { k: "konum", genislik: "16%", baslik: "Konum", kart: "govde", sira: 3, hucre: (c) => <><KartEtiket>Konum</KartEtiket>{KONUM_AD[c.konum]}</> },
     { k: "bitis", genislik: "16%", baslik: "Kalibrasyon bitişi", kart: "govde", sira: 4, hucre: (c) => <><KartEtiket>Kalibrasyon bitişi</KartEtiket>{kalanMetni(c.bitis, bugun, esik)}</> },
-    { k: "durum", genislik: "20%", baslik: "Kalibrasyon", kart: "rozet", sira: 1, hucre: (c) => <KalRozeti d={c.durum} esik={esik} /> },
+    { k: "durum", genislik: "20%", baslik: "Kalibrasyon", kart: "rozet", sira: 1, hucre: (c) => c.pasif ? <Rozet tur="notr">Pasif</Rozet> : <KalRozeti d={c.durum} esik={esik} /> },
   ];
   return (
     <>

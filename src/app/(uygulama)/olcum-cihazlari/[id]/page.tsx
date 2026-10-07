@@ -4,7 +4,8 @@ import type { Metadata } from "next";
 import { notFound } from "next/navigation";
 import { Bilgi, BilgiListesi, Yuz, Yuzler } from "../../../../components/bilgi/Bilgi";
 import { Yetkisiz } from "../../../../components/hata/Hata";
-import { Bolum, DegerYok, Kirinti, NesneBasi, SeritKap } from "../../../../components/sayfa/Sayfa";
+import { Bolum, DegerYok, Kirinti, NesneBasi, Rozet, SeritKap } from "../../../../components/sayfa/Sayfa";
+import { kullanimMetni } from "../../../../components/sil/metin";
 import { Serit } from "../../../../components/serit/Serit";
 import { modulBul } from "../../../../modules/moduller";
 import { kalanGun } from "../../../../modules/olcum-cihazlari/sema";
@@ -28,12 +29,14 @@ export default async function Sayfa({ params }: { params: Promise<{ id: string }
   return (
     <>
       <Kirinti ogeler={[["Ölçüm cihazları", "/olcum-cihazlari"], [c.kod]]} />
-      <NesneBasi baslik={baslik} rozet={<KalRozeti d={c.durum} esik={c.esik} />} altIkon="gauge"
+      <NesneBasi baslik={baslik} rozet={c.pasif ? <Rozet tur="notr">Pasif</Rozet> : <KalRozeti d={c.durum} esik={c.esik} />} altIkon="gauge"
         alt={[[c.marka, c.model].filter(Boolean).join(" "), c.seri && `seri ${c.seri}`].filter(Boolean).join(" · ") || "Marka / model girilmedi"}
-        tuslar={yaz && <CihazTuslari cihaz={{ id: c.id, surum: c.surum, kod: c.kod, turId: c.turId, marka: c.marka, model: c.model, seri: c.seri, aralik: c.aralik }} turler={turler} konum={c.konum} baslik={baslik} sil={silme.sil} />} />
-      {c.durum === "gecti" && <SeritKap><Serit tur="hata" ikon="circle-x">{c.bitis ? `Kalibrasyonu ${tarihYaz(c.bitis)} tarihinde bitti.` : "Geçerli kalibrasyon kaydı yok."} Bu cihazla hazırlanan raporlar yönetici onayına gönderilemez.</Serit></SeritKap>}
-      {c.durum === "yakin" && <SeritKap><Serit tur="uyari" ikon="triangle-alert">Kalibrasyon {tarihYaz(c.bitis)} tarihinde bitiyor ({k} gün). Bitince bu cihazla hazırlanan raporlar onaya gönderilemez.</Serit></SeritKap>}
-      {c.durum === "lab" && <SeritKap><Serit tur="bilgi" ikon="flask-conical">Kalibrasyonda. Yeni sertifika gelince kalibrasyon kaydı eklenir, cihaz depoya döner.</Serit></SeritKap>}
+        tuslar={yaz && <CihazTuslari cihaz={{ id: c.id, surum: c.surum, kod: c.kod, turId: c.turId, marka: c.marka, model: c.model, seri: c.seri, aralik: c.aralik }} turler={turler} konum={c.konum} baslik={baslik} sil={silme.sil}
+          pasif={!!c.pasif} kullanim={silme.kullanim ? kullanimMetni(silme.kullanim) : null} />} />
+      {c.pasif && <SeritKap><Serit tur="bilgi" ikon="ban">Pasif ({tarihYaz(c.pasif)}): listeden, rapor seçiminden, Zimmetler&apos;den ve uyarılardan kalktı; kalibrasyon geçmişi ve raporları duruyor.</Serit></SeritKap>}
+      {!c.pasif && c.durum === "gecti" && <SeritKap><Serit tur="hata" ikon="circle-x">{c.bitis ? `Kalibrasyonu ${tarihYaz(c.bitis)} tarihinde bitti.` : "Geçerli kalibrasyon kaydı yok."} Bu cihazla hazırlanan raporlar yönetici onayına gönderilemez.</Serit></SeritKap>}
+      {!c.pasif && c.durum === "yakin" && <SeritKap><Serit tur="uyari" ikon="triangle-alert">Kalibrasyon {tarihYaz(c.bitis)} tarihinde bitiyor ({k} gün). Bitince bu cihazla hazırlanan raporlar onaya gönderilemez.</Serit></SeritKap>}
+      {!c.pasif && c.durum === "lab" && <SeritKap><Serit tur="bilgi" ikon="flask-conical">Kalibrasyonda. Yeni sertifika gelince kalibrasyon kaydı eklenir, cihaz depoya döner.</Serit></SeritKap>}
       <Yuzler>
         <Yuz ikon={c.konum === "lab" ? "flask-conical" : "warehouse"} ad="Konum" sayi={KONUM_AD[c.konum]} not="kişi zimmeti Zimmetler'de" />
         <Yuz ikon="alarm-clock" ad="Kalibrasyon bitişi" sayi={tarihYaz(c.bitis)} uyari={c.durum === "gecti" || c.durum === "yakin"}
