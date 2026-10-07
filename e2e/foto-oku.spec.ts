@@ -49,8 +49,9 @@ test("fotoğraftan okuma: öneri kartı; emin olunanlar toplu, emin olunmayan te
   await expect(linye.getByLabel("3. satır · No")).toHaveValue("F3");
   await expect(kart).toHaveCount(0);
   /* rapora ancak Kaydet ile yazılır */
-  await page.getByRole("button", { name: "Kaydet", exact: true }).click();
-  await expect(page.getByText(/kaydedildi/i).first()).toBeVisible({ timeout: 30_000 });
+  /* 355: "kaydedildi" geçen gizli pencere metni (eksik alanlar penceresi) değil, kaydın kendi bildirimi (saha-raporu.spec gibi) */
+  await page.getByRole("button", { name: "Kaydet", exact: true }).first().click();
+  await expect(page.getByText("Rapor kaydedildi.").first()).toBeVisible({ timeout: 30_000 });
   await page.reload();
   await hazir(page);
   await expect(page.locator("#b-linye").getByLabel("3. satır · No")).toHaveValue("F3");

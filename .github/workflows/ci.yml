@@ -47,11 +47,25 @@ jobs:
       # geçici veritabanıyla — tek geliştirme sunucusu ~200 testin sonunda bellek eşiğine dayanıp kendini yeniden başlatıyor, o an koşan
       # telefon testi düşüyordu (3dda074, 661004b, c17ba55, ba4c79e); eşiği kapatınca sunucu çöktü (0059a80). Testler genişlik başına kendi
       # verisini kurar (proje adıyla), birbirinin verisine dayanmaz. Biri düşse de öteki genişlikler koşar (iş yine kırmızı biter).
-      - run: npm run test:e2e -- --project=masaustu
-      - if: ${{ !cancelled() && steps.derleme.outcome == 'success' }}
+      # 355: düşen testin sayfa anlık görüntüsü (error-context.md) ve izi saklanır — her genişlik koşusu test-results/'ı baştan siler, bu yüzden
+      # her koşudan hemen sonra; 3 gün (uydurma veri). Günlükteki "Error Context" yolu buradaki dosyadır.
+      - id: e2e_masaustu
+        run: npm run test:e2e -- --project=masaustu
+      - if: ${{ !cancelled() && steps.e2e_masaustu.outcome == 'failure' }}
+        uses: actions/upload-artifact@v7
+        with: { name: e2e-masaustu, path: test-results/, retention-days: 3, if-no-files-found: ignore }
+      - id: e2e_tablet
+        if: ${{ !cancelled() && steps.derleme.outcome == 'success' }}
         run: npm run test:e2e -- --project=tablet
-      - if: ${{ !cancelled() && steps.derleme.outcome == 'success' }}
+      - if: ${{ !cancelled() && steps.e2e_tablet.outcome == 'failure' }}
+        uses: actions/upload-artifact@v7
+        with: { name: e2e-tablet, path: test-results/, retention-days: 3, if-no-files-found: ignore }
+      - id: e2e_telefon
+        if: ${{ !cancelled() && steps.derleme.outcome == 'success' }}
         run: npm run test:e2e -- --project=telefon
+      - if: ${{ !cancelled() && steps.e2e_telefon.outcome == 'failure' }}
+        uses: actions/upload-artifact@v7
+        with: { name: e2e-telefon, path: test-results/, retention-days: 3, if-no-files-found: ignore }
 
   # main: maket / sunum (Pages sitesinin kaynakları) değişti mi — değişmediyse yayın işi hiç açılmaz (boş Pages yayını yok)
   degisiklik:

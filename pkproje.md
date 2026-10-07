@@ -2341,6 +2341,11 @@ revizyon, alan kopyalama, hafif kusur devri, meslek eşleşme denetimi).
 - Emsal ürünler: https://opwire.app/iso-17020-periyodik-kontrol-yazilimi/ · https://17020muayene.vidco.com.tr/ · https://akuple.com/asansor-kontrol-yazilimi/ · https://ensyazilim.com/
 
 ## 11 · Değişiklik günlüğü
+- 2026-10-06 (355): **Uçtan uca: yönetim ısınması dayanıklı, düşen testin sayfa görüntüsü saklanır** (95b7eb7 CI: 348'in uçtan uca testleri ilk kez
+  tam koştu). Tablet / telefon ısınmada düştü: geliştirme sunucusu yeni derlenen rotadan sonra açık sayfayı yeniden yüklüyor (ERR_ABORTED, gönderilmeyen
+  giriş formu) — ısınma yeniden dener, panel sayfalarını önce oturumsuz ister, olmazsa uyarıyla geçer (ısınma derleme içindir). Fotoğraftan okuma
+  testinin "kaydedildi" denetimi gizli pencere metnine takılıyordu → kaydın kendi bildirimi. CI düşen her genişliğin test-results/ klasörünü (sayfa
+  anlık görüntüsü error-context.md) 3 gün saklar — yönetim çıkış iletisinin görünmemesi (adres doğru) buradan çözülecek.
 - 2026-10-06 (354): **350–351 çapraz incelemesinin düzeltmeleri** (dört bakış + çürütme; doğrulanan bulgular). **Fotoğraftan okuma canlıda hiç
   çalışmazdı:** Opus 5.5 / Sonnet 5.5 zorunlu araç seçimini (tool_choice "tool") 400 ile reddeder, kod bunu "fotoğraf okunamadı" diye gösterirdi —
   istek artık **yapılandırılmış çıktıyla** (output_config.format json_schema; effort low; yanıt sınırı 16 000 — düşünme de sayılır); kesilen (max_tokens)

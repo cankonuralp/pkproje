@@ -75,19 +75,38 @@ export default async function hazirla(_ayar: FullConfig) {
   for (const y of [`/musteriler/${YOK}`, `/musteriler/tesis/${YOK}`, `/ekipman-turleri/${YOK}`, `/ekipman-turleri/${YOK}/sablon/${YOK}`, `/olcum-cihazlari/${YOK}`, `/araclar/${YOK}`,
     `/sozlesmeler/${YOK}`, `/teklifler/${YOK}`, `/teklifler/${YOK}/duzenle`, `/muhasebe/is/${YOK}`, `/muhasebe/f/${YOK}`, `/performans/${YOK}`, `/planlar/${YOK}`, `/raporlar/${YOK}`, `/raporlar/${YOK}/onizle`, `/onaylar/${YOK}`, `/dokumanlar/standart/${YOK}`, "/dokumanlar/kriterler/ZPKK01", `/zimmetler/varlik/d/${YOK}`]) await ac(y);
   await ac("/giris/parola");
-  /* 348 yönetim: yönetim adresinde giriş adımları ve panel sayfaları (hazırlık yöneticisiyle — testteki yöneticinin kodu yeniden oynatma sayılmasın) */
+  /* 348 yönetim: yönetim adresinde giriş adımları ve panel sayfaları (hazırlık yöneticisiyle — testteki yöneticinin kodu yeniden oynatma sayılmasın).
+     355 (95b7eb7 CI: tablet ERR_ABORTED, telefon giriş formu gönderilmeden yeniden yüklendi): geliştirme sunucusu yeni derlenen rotadan sonra açık
+     sayfayı yeniden yükleyebiliyor — ısınma testten önce derleme içindir, sonucu değil: sayfa açma yeniden denenir, panel sayfaları önce oturumsuz
+     da istenir (rota yine derlenir), giriş üç kez denenir; yine olmazsa uyarı yazılır, testler koşar (geç derlenen rota testte beklenir). */
   const ys = await tarayici.newPage({ baseURL: `http://${E2E_YONETIM.alan}:${E2E_KAPI}` });
-  ys.setDefaultTimeout(180_000);
-  const yac = async (y: string) => { await ys.goto(y); await ys.locator("html[data-hazir]").waitFor({ state: "attached" }); };
-  await yac("/yonetim/giris");
-  await ys.getByLabel("E-posta").fill(E2E_YONETIM.hazirla);
-  await ys.getByLabel("Parola", { exact: true }).fill(E2E_PAROLA);
-  await ys.getByRole("button", { name: "Devam" }).click();
-  await ys.waitForURL((u) => u.pathname === "/yonetim/giris/kod");
-  await ys.locator("html[data-hazir]").waitFor({ state: "attached" });
-  await ys.getByLabel("Doğrulama kodu").fill(totpKodu(E2E_YONETIM.anahtar, zamanAdimi(new Date())));
-  await ys.getByRole("button", { name: "Doğrula" }).click();
-  await ys.waitForURL((u) => u.pathname === "/yonetim");
-  for (const y of ["/yonetim", "/yonetim/yeni", `/yonetim/f/${YOK}`]) await yac(y);
+  ys.setDefaultTimeout(60_000);
+  const yac = async (y: string) => {
+    for (let i = 1; ; i++) {
+      try { await ys.goto(y, { timeout: 180_000 }); await ys.locator("html[data-hazir]").waitFor({ state: "attached" }); return; }
+      catch (e) { if (i >= 3) throw e; await ys.waitForTimeout(2_000); }
+    }
+  };
+  try {
+    for (const y of ["/yonetim/giris", "/yonetim/giris/kod", "/yonetim/giris/kurulum", "/yonetim", "/yonetim/yeni", `/yonetim/f/${YOK}`]) await yac(y);
+    let girdi = false;
+    for (let i = 0; i < 3 && !girdi; i++) {
+      try {
+        await yac("/yonetim/giris");
+        await ys.getByLabel("E-posta").fill(E2E_YONETIM.hazirla);
+        await ys.getByLabel("Parola", { exact: true }).fill(E2E_PAROLA);
+        await ys.getByRole("button", { name: "Devam" }).click();
+        await ys.waitForURL((u) => u.pathname === "/yonetim/giris/kod");
+        await ys.locator("html[data-hazir]").waitFor({ state: "attached" });
+        await ys.getByLabel("Doğrulama kodu").fill(totpKodu(E2E_YONETIM.anahtar, zamanAdimi(new Date())));
+        await ys.getByRole("button", { name: "Doğrula" }).click();
+        await ys.waitForURL((u) => u.pathname === "/yonetim");
+        girdi = true;
+      } catch (e) { console.warn(`[hazırlık] yönetim girişi ${i + 1}. deneme: ${(e as Error).message.split("\n")[0]}`); }
+    }
+    if (girdi) for (const y of ["/yonetim", "/yonetim/yeni", `/yonetim/f/${YOK}`]) await yac(y);
+  } catch (e) {
+    console.warn(`[hazırlık] yönetim ısınması tamamlanamadı (testler yine koşar): ${(e as Error).message.split("\n")[0]}`);
+  }
   await tarayici.close();
 }
