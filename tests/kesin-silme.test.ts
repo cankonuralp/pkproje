@@ -24,7 +24,8 @@
    · 368 teklif: taslak kalemleri ve tesisleriyle silinir (yalnız yönetici; hazırlayan planlama silemez); kopyası olan ve gönderilmiş teklif silinmez;
    · 369 sözleşme: imza bekleyen sözleşme kapsam tesisleriyle silinir; imzalı tarama bir kez yüklenmişse (kaldırılmış olsa da) silinmez;
    · 370 rapor formatı: taslak yalnız yöneticiye silinir (tanımı izde); yayınlanmış sürüm silinmez;
-   · 371 eğitim: kaydı olan tür silinmez; sertifikası yüklü kayıt silinmez; güncel kayıt silinince öncekisi güncel olur; boşalan tür silinir.
+   · 371 eğitim: kaydı olan tür silinmez; sertifikası yüklü kayıt silinmez; güncel kayıt silinince öncekisi güncel olur; boşalan tür silinir;
+   · 372 plan: raporsuz plan ekibi, ekipman satırları ve notlarıyla silinir, kullandığı İSG ID yeniden kullanılmamış olur; raporlu plan silinmez.
    Olumsuz kanıt: tests/bozan/kesin-silme.bozan.ts. */
 import assert from "node:assert/strict";
 import { mkdtempSync, rmSync } from "node:fs";
@@ -33,7 +34,8 @@ import { join } from "node:path";
 import { after, before, test } from "node:test";
 import { cihazKaydet, cihazKarti, cihazKonum, cihazListesi, cihazOzetleri, cihazPasif, cihazSil, cihazSilmeDurumu, cihazTuruKaydet, cihazTuruListesi, cihazTuruSil, kalibrasyonEkle, raporCihazlari, type Kisi } from "../src/modules/olcum-cihazlari/server/cihazlar.ts";
 import { formatYukle, turSil, turSilmeDurumu } from "../src/modules/ekipman-turleri/server/turler.ts";
-import { ekipmanSil, planIci } from "../src/modules/planlar/server/plan-ici.ts";
+import { ekipmanSil, planIci, planSil } from "../src/modules/planlar/server/plan-ici.ts";
+import { bugunTr as planGunu, planAc } from "../src/modules/planlar/server/planlar.ts";
 import { aracKaydet, aracKarti, aracListesi, aracPasif, aracSil, aracSilmeDurumu, kmKaydet } from "../src/modules/araclar/server/araclar.ts";
 import { anaGeciciParola, ekGirisEkle, girisBilgisi, girisSil } from "../src/modules/musteriler/server/girisler.ts";
 import { musteriKaydet, musteriSil, silmeDurumu, tesisKaydet, tesisSil } from "../src/modules/musteriler/server/musteriler.ts";
@@ -543,4 +545,26 @@ test("eğitim: güncel kayıt silinince öncekisi güncel olur; sertifikalı kay
   tamam(await a(FA.yon, (db) => egitimKaydiSil(db, FA.yon, k1)));
   assert.deepEqual(await a(FA.yon, (db) => egitimTuruSil(db, FA.yon, tur)), { durum: "tamam", id: tur });
   await assert.rejects(a(FA.yon, (db) => db.sorgu("DELETE FROM egitim_turu WHERE id = $1", [FA.tur])), /permission denied|izin/i);
+});
+
+/* 372 — raporsuz plan: yalnız yönetici; ekip / ekipman satırı / notlarıyla silinir, İSG ID serbest kalır; raporlu plan silinmez */
+test("plan: raporsuz plan ekip, ekipman ve notlarıyla silinir, İSG ID yeniden kullanılmamış olur; raporlu plan silinmez; yalnız yönetici", async () => {
+  const isg = (await a(FA.yon, (db) => db.sorgu<{ id: string }>("INSERT INTO isg_katip (tesis_id, personel_id, no) VALUES ($1, $2, 'ISG-PLN') RETURNING id::text",
+    [FA.tesis, FA.den1Personel]))).rows[0].id;
+  const gun = planGunu();
+  const p = tamam(await a(FA.plan, (db) => planAc(db, depo, FA.plan, A, { tesis: FA.tesis, baslangic: gun, bitis: gun, ekip: [{ personel: FA.den1Personel, isgNo: "", kaydet: false }] })));
+  await a(FA.yon, (db) => db.sorgu("INSERT INTO plan_not (plan_id, metin, yazan) VALUES ($1, 'Deneme notu', 'Deneme')", [p.id]));
+  assert.ok((await a(FA.yon, (db) => db.sorgu<{ k: string | null }>("SELECT kullanildi::text AS k FROM isg_katip WHERE id = $1", [isg]))).rows[0].k, "İSG ID kullanıldı");
+  assert.equal((await a(FA.yon, (db) => planIci(db, FA.yon, p.id)))!.planSil, true);
+  assert.equal((await a(FA.plan, (db) => planIci(db, FA.plan, p.id)))!.planSil, false, "planlama açar ama silemez");
+  for (const k of [FA.plan, FA.elk]) assert.deepEqual(await a(k, (db) => planSil(db, k, p.id)), { durum: "yetkisiz" }, k.roller.join());
+  assert.deepEqual(await kiraciIcinde(havuz, B, (db) => planSil(db, FB.yon, p.id), { hesapId: FB.yon.id }), { durum: "yok" }, "başka firma");
+  assert.deepEqual(await a(FA.yon, (db) => planSil(db, FA.yon, p.id)), { durum: "tamam", bildirim: `${p.no} silindi.` });
+  const kalan = (await a(FA.yon, (db) => db.sorgu<{ e: number; k: number; n: number; i: string | null }>(
+    `SELECT (SELECT count(*)::int FROM plan_ekip WHERE plan_id = $1) AS e, (SELECT count(*)::int FROM plan_ekipman WHERE plan_id = $1) AS k,
+            (SELECT count(*)::int FROM plan_not WHERE plan_id = $1) AS n, (SELECT kullanildi::text FROM isg_katip WHERE id = $2) AS i`, [p.id, isg]))).rows[0];
+  assert.deepEqual(kalan, { e: 0, k: 0, n: 0, i: null }, "ekip, ekipman satırları, notlar gitti; İSG ID yeniden kullanılmamış");
+  assert.equal((await a(FA.yon, (db) => db.sorgu("SELECT 1 FROM ekipman WHERE id = $1", [FA.ekipman]))).rowCount, 1, "ekipman tesiste kaldı");
+  assert.match((await a(FA.yon, (db) => planSil(db, FA.yon, FA.planId)) as { neden: string }).neden, /^Raporu olan plan silinmez \(\d+ rapor; silinmiş taslak dahil\)\.$/);
+  await assert.rejects(a(FA.yon, (db) => db.sorgu("DELETE FROM plan WHERE id = $1", [FA.planId])), /permission denied|izin/i);
 });

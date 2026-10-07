@@ -66,3 +66,27 @@ test("plan aç: engel, canlı uyarılar, proje no ve künye; denetçi yalnız ke
   await page.goto(planAdresi);
   await expect(page.getByText("Bu sayfayı görme yetkiniz yok")).toBeVisible();
 });
+
+/* 372 (§9 elli üçüncü tur): yanlış açılan, raporsuz plan yönetici tarafından silinir → Planlar'a dönülür */
+test("plan: raporsuz plan silinir", async ({ page }) => {
+  test.setTimeout(120_000);
+  await girisli(page, "yonetici");
+  await page.goto("/planlar/ac");
+  await expect(page.getByRole("heading", { level: 1, name: "Plan aç" })).toBeVisible({ timeout: 30_000 });
+  await hazir(page);
+  await page.getByRole("combobox", { name: "Müşteri" }).click();
+  await page.getByRole("option", { name: /Plan Deneme/ }).click();
+  await page.getByRole("combobox", { name: "Tesis" }).click();
+  await page.getByRole("option", { name: new RegExp(E2E_PLAN.tesis) }).click();
+  await page.getByRole("checkbox", { name: E2E_HESAPLAR.denetci.ad }).check();
+  await page.getByRole("button", { name: "Planı aç" }).click();
+  await expect(page).toHaveURL(/\/planlar\/[0-9a-f-]{36}$/, { timeout: 30_000 });
+  const no = (await page.getByRole("navigation", { name: "Konum" }).textContent())!.match(/P-\d{4}-\d{3,6}/)![0];
+  await hazir(page);
+  await page.getByRole("button", { name: "Sil", exact: true }).click();
+  const onay = page.locator("dialog[open]");
+  await expect(onay).toContainText(`${no} kalıcı olarak silinir; ekip, ekipman satırları ve proje notları da silinir; ekipmanlar tesiste kalır. Geri alınamaz.`);
+  await onay.getByRole("button", { name: "Sil" }).click();
+  await expect(page).toHaveURL(/\/planlar$/, { timeout: 30_000 });
+  await expect(page.getByText(`${no} silindi.`).first()).toBeVisible();
+});

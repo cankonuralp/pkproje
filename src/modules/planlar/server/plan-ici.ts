@@ -10,6 +10,7 @@
      sürümü gördüm" bilgisidir (iyimser kilit); yetki vermez. */
 import { createHash } from "node:crypto";
 import type { Sorgulayici } from "../../../server/db/kiraci.ts";
+import { kesinSil, kullanimlar } from "../../../server/db/silici.ts";
 import { ekle, guncelle, tablo, type GuncelleSonucu, type Iz } from "../../../server/db/yazici.ts";
 import { ayarOku } from "../../../server/ayar/ayar.ts";
 import { personelHesaplari } from "../../../server/kimlik/hesap.ts";
@@ -146,6 +147,8 @@ export interface PlanEkipmani {
 }
 export interface PlanIci {
   kart: PlanKarti;
+  /** 372: planı kesin silebilir (yönetici; raporu, faturası, gideri yok, tamamlanmamış) */
+  planSil: boolean;
   surum: number; durum: PlanDurumu; bugun: string;
   kabul: { zaman: string; kim: string; beyan: string } | null;
   red: { zaman: string; kim: string; gerekce: string } | null;
@@ -225,8 +228,9 @@ export async function planIci(db: Sorgulayici, kim: Kisi, id: string): Promise<P
   const beyan = p.beyan ?? (await ayarOku(db, "beyan")).deger.metin;
   /* günlük süre (212; ENGEL 3): plandaki denetçinin kendi süresi, rapor açılabilecek planda */
   const m = e.benim && (p.durum === "kabul" || p.durum === "denetimde" || p.durum === "tamamlandi") ? await mesaiDurumu(db, e.benim.personel_id, bugunTr()) : null;
+  const planSil = canDoEylem(kim, "kayit_sil", { modul: MODUL }) && !(await kullanimlar(db, "plan", [id])).has(id);
   return {
-    kart, surum: p.surum, durum: p.durum, bugun: bugunTr(),
+    kart, planSil, surum: p.surum, durum: p.durum, bugun: bugunTr(),
     kabul: p.kabul && p.kabul_eden && p.beyan ? { zaman: p.kabul.toISOString(), kim: p.kabul_eden, beyan: p.beyan } : null,
     red: p.red && p.red_eden && p.red_gerekce ? { zaman: p.red.toISOString(), kim: p.red_eden, gerekce: p.red_gerekce } : null,
     basladi: iso(p.basladi), kontrolTamam: iso(p.kontrol_tamam), bitti: iso(p.bitti),
@@ -483,4 +487,18 @@ export async function raporIcinPlan(db: Sorgulayici, kim: Kisi, planId: string):
 export async function plandakiEkipman(db: Sorgulayici, planId: string, ekipmanId: string): Promise<boolean> {
   if (!UUID.test(planId) || !UUID.test(ekipmanId)) return false;
   return !!(await db.sorgu("SELECT 1 FROM plan_ekipman WHERE plan_id = $1 AND ekipman_id = $2", [planId, ekipmanId])).rowCount;
+}
+
+/* ── PLANI SİL (372; reisim 2026-10-07 "eklenebilen şeyler silinemiyor"; §9 elli üçüncü tur) — yalnız yönetici (kayit_sil, modül 13) ve yalnız hiç
+   raporu, faturası, gideri olmayan, tamamlanmamış plan (yanlış tesis / tarih / ekip; veritabanında, göç 0067). Ekip, ekipman satırları ve notlar
+   birlikte gider; ekipmanlar tesiste kalır; başka planda kullanılmayan İSG ID yeniden kullanılmamış olur. */
+export async function planSil(db: Sorgulayici, kim: Kisi, id: string): Promise<PlanYazma> {
+  if (!canDoEylem(kim, "kayit_sil", { modul: MODUL })) return { durum: "yetkisiz" };
+  const r = await kesinSil(db, "plan", id, kim.ad);
+  if (r.durum === "kullanildi") {
+    const { tamamlandi, rapor, ...diger } = r.kullanim;
+    return { durum: "red", neden: tamamlandi ? "Tamamlanmış plan silinmez." : rapor ? `Raporu olan plan silinmez (${rapor} rapor; silinmiş taslak dahil).`
+      : `Plan silinemez: ${kullanimMetni(diger) || "başka kayıtlarda"} kullanıldı.` };
+  }
+  return r.durum === "tamam" ? { durum: "tamam", bildirim: `${r.ad} silindi.` } : { durum: "yok" };
 }

@@ -11,6 +11,7 @@ import { PLAN_DURUM, tarihNo } from "../../../../modules/planlar/sema";
 import { planIci } from "../../../../modules/planlar/server/plan-ici";
 import { planAcabilir } from "../../../../modules/planlar/server/planlar";
 import { PlanIciEkrani } from "../../../../modules/planlar/ui/PlanIciEkrani";
+import { PlanSilTusu } from "../../../../modules/planlar/ui/PlanSilTusu";
 import { modulOturumu, oturumIslemi } from "../../../../server/kimlik/istek";
 
 const MODUL = modulBul("planlar")!;
@@ -30,7 +31,10 @@ export default async function Sayfa({ params }: { params: Promise<{ id: string }
     <>
       <Kirinti ogeler={[["Planlar", "/planlar"], [p.no]]} />
       <NesneBasi baslik={v.kunye.firmaAdi} rozet={<Rozet tur={rozet}>{durumAd}</Rozet>} altIkon="map-pin" alt={p.tesis.ad}
-        tuslar={planAcabilir(o) && <TusBaglanti ikon="plus" href="/planlar/ac">Yeni plan aç</TusBaglanti>} />
+        tuslar={<>
+          {v.planSil && <PlanSilTusu id={v.kart.id} no={v.kart.no} />}
+          {planAcabilir(o) && <TusBaglanti ikon="plus" href="/planlar/ac">Yeni plan aç</TusBaglanti>}
+        </>} />
       {acik && (uyarili.length > 0 || p.gecmis || p.sozlesmeUyarisi) && <SeritKap>
         {p.gecmis && v.durum === "bekliyor" && <Serit tur="uyari" ikon="triangle-alert">Plan günü geçmiş bir tarih: {tarihNo(p.baslangic)}.</Serit>}
         {p.sozlesmeUyarisi && <Serit tur="uyari" ikon="triangle-alert">{p.sozlesmeUyarisi}</Serit>}

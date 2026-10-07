@@ -2353,6 +2353,11 @@ revizyon, alan kopyalama, hafif kusur devri, meslek eşleşme denetimi).
 - Emsal ürünler: https://opwire.app/iso-17020-periyodik-kontrol-yazilimi/ · https://17020muayene.vidco.com.tr/ · https://akuple.com/asansor-kontrol-yazilimi/ · https://ensyazilim.com/
 
 ## 11 · Değişiklik günlüğü
+- 2026-10-07 (372): **Raporsuz plan Sil** (§9 elli üçüncü tur; 0023 "silme hakkı yok" kullanılmış plan için geçerli). Plan sayfasının başlığında,
+  hiç raporu (silinmiş taslak dahil), faturası, gideri olmayan ve tamamlanmamış planda yalnız yöneticiye (Planlar'da "yaz" + yönetici; planlama açar
+  ama silemez) "Sil" (onay "… ekip, ekipman satırları ve proje notları da silinir; ekipmanlar tesiste kalır."). Planın kullandığı İSG-KATİP ID'si
+  başka planda kullanılmıyorsa yeniden "kullanılmamış" olur. Göç 0067 plan_kullanim (rapor · tamamlandı · fatura · gider) + plan_sil. Kilit
+  kesin-silme.test "plan"; olumsuz kanıt kesin-silme.bozan 17; e2e planlar (raporsuz plan sil).
 - 2026-10-07 (371): **Eğitim türü / kaydı Sil** (§9 elli üçüncü tur). Eğitim türleri tablosunda kaydı hiç olmayan türde, eğitim kaydı penceresinde
   sertifikası yüklü olmayan ve katılım formu imzaya hiç gönderilmemiş kayıtta yalnız yöneticiye (Eğitimler'de "yaz" + yönetici) "Sil". Güncel kayıt
   silinince aynı kişi × eğitimin en son önceki kaydı yeniden güncel olur (tekrar tarihi ondan). Göç 0066 egitim_turu_kullanim / _sil (kayıt) +
