@@ -84,7 +84,8 @@ pkproje/
   src/proxy.ts              ara katman: her istekte nonce'lu CSP + güvenlik başlıkları (Next 16'da middleware'in adı proxy) · /api sürüm başlığı,
                             eski cihaz istemcisi 426 (src/server/api-surum.ts)
   src/modules/moduller.ts   MODÜL KAYDI — yan menünün ve rotaların tek kaynağı (15 modül, 6 grup, onaylı maketle aynı; 2026-09-25 Kullanıcılar Personel'e katıldı; 2026-09-26 Ekipmanlar planın içine; 2026-09-28 Talepler eklendi, Standartlar → Dökümanlar, Eğitimler Dökümanlar'ın içinde)
-  src/modules/personel/     PERSONEL (2026-10-04): sema.ts (form + sunucu tek şema) · server/personel.ts (liste, kart, ekle, güncelle, ayrıldı; yetki içeride) ·
+  src/modules/personel/     PERSONEL (2026-10-04): sema.ts (form + sunucu tek şema) · server/personel.ts (liste, kart, ekle, güncelle, ayrıldı, geri al, 366 kesin
+                            sil — silici.ts, 0061; yetki içeride) · ui/KartTuslari.tsx (Düzenle · Ayrıldı · Ayrılışı geri al · Sil) ·
                             server/dosyalar.ts (özlük, ekipman ataması, bordro, imzalı zimmet formu; 2026-10-04; 344: zimmet teslim formu src/belge/zimmet.ts →
                             /personel/<id>/zimmet-formu/pdf, İmzaya gönder → Onaylar › Diğer, imzalanınca imzalı form) ·
                             ui/ (liste, form, sunucu eylemleri — "use server" dosyası yalnız …Eylemi dışa açar)

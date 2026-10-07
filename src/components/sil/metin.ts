@@ -17,6 +17,13 @@ const YER: Record<string, string> = {
   teklif_belgesi: "teklifte",
   fatura_kaydi: "faturada",
   giris: "müşteri girişinde",
+  egitim: "eğitim kaydında",
+  ozluk: "özlük belgesinde",
+  bordro: "bordroda",
+  gider: "giderde",
+  izin: "izin talebinde",
+  belge: "imza belgesinde",
+  hesap: "giriş yapılmış hesapta",
 };
 
 export function kullanimMetni(k: Readonly<Record<string, number>>): string {

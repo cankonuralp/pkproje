@@ -16,7 +16,9 @@
      parolası ize yazılmaz); planlı müşteri ve girilmiş girişi olan müşteri silinmez; giriş kapsamındaki tesis silinmez;
    · 365 (352–361 incelemesi): pasif cihazın zimmet hareketleri kodla görünür; plan içi ekipman silme Ekipman'da "yaz" ister (elektrik yöneticisi
      varsayılan matriste silemez), ekipman yoksa "Plan bulunamadı" demez; teklifin ekipman listesindeki tür silinmez, silinen formatın tanımı izde;
-     "IR" / "ir" gibi veritabanının aynı saydığı tür adı uyarıyla döner (23505 ile düşmez).
+     "IR" / "ir" gibi veritabanının aynı saydığı tür adı uyarıyla döner (23505 ile düşmez);
+   · 366 personel: yalnız firma yöneticisi; kullanılmamış kişi hiç girilmemiş hesabı ve kaldırılmış İSG kaydıyla silinir (parola ize yazılmaz);
+     giriş yapılmış hesabı ya da zimmeti olan silinmez; kişi kendini silmez; Ayrıldı → hesap kapanır, geri al çalışıyor yapar.
    Olumsuz kanıt: tests/bozan/kesin-silme.bozan.ts. */
 import assert from "node:assert/strict";
 import { mkdtempSync, rmSync } from "node:fs";
@@ -29,6 +31,8 @@ import { ekipmanSil, planIci } from "../src/modules/planlar/server/plan-ici.ts";
 import { aracKaydet, aracKarti, aracListesi, aracPasif, aracSil, aracSilmeDurumu, kmKaydet } from "../src/modules/araclar/server/araclar.ts";
 import { ekGirisEkle } from "../src/modules/musteriler/server/girisler.ts";
 import { musteriKaydet, musteriSil, silmeDurumu, tesisKaydet, tesisSil } from "../src/modules/musteriler/server/musteriler.ts";
+import { personelAyrildi, personelEkle, personelGeriAl, personelKarti, personelSil, personelSilmeDurumu } from "../src/modules/personel/server/personel.ts";
+import { hesapAc } from "../src/server/kimlik/hesapYonetimi.ts";
 import { demirbasDurumu, demirbasEkle, demirbasPasif, demirbasSil, teslimEt, zimmetListeleri } from "../src/modules/zimmetler/server/zimmet.ts";
 import { taslakBaslat } from "../src/modules/rapor-format/server/formatlar.ts";
 import { raporSil, sahaRaporu } from "../src/modules/raporlar/server/raporlar.ts";
@@ -371,4 +375,52 @@ test("müşteri / tesis: kullanılmamış silinir (tesisleri, hiç girilmemiş g
   await a(FA.yon, (db) => db.sorgu("UPDATE musteri_hesap SET son_giris = now() WHERE musteri_id = $1", [g]));
   assert.deepEqual(await a(FA.yon, (db) => musteriSil(db, FA.yon, g)), { durum: "red", neden: "Müşteri silinemez: 1 müşteri girişinde kullanıldı. Pasife alın." });
   await assert.rejects(a(FA.yon, (db) => db.sorgu("DELETE FROM musteri WHERE id = $1", [g])), /permission denied|izin/i);
+});
+
+/* 366 — personel (karar 43: kullanılmış personel silinmez, "Ayrıldı" olur; deneme / yanlış girilmiş kişi silinir) */
+test("personel: kullanılmamış silinir (hiç girilmemiş hesabı, kaldırılmış İSG ID'siyle); girişli / zimmetli silinmez; kendini silmez; ayrıldı / geri al", async () => {
+  const P = { eposta: "", imzaTel: "", basla: "2024-02-01", meslek: "elk-muh", meslekMetin: "", diploma: "", oda: "", ekipnet: "" };
+  const ekle = async (ad: string) => tamam(await a(FA.yon, (db) => personelEkle(db, FA.yon, { ...P, ad }))).id;
+  const id = await ekle("Silinecek Kişi");
+  tamam(await a(FA.yon, (db) => hesapAc(db, FA.yon, id, { eposta: "silinecek@deneme-a.example", roller: ["denetci"] })));
+  await a(FA.yon, (db) => db.sorgu("INSERT INTO isg_katip (tesis_id, personel_id, no, kaldirildi) VALUES ($1, $2, 'ISG-PS', now())", [FA.tesis, id]));
+  assert.deepEqual(await a(FA.yon, (db) => personelSilmeDurumu(db, FA.yon, id)), { sil: true, kullanim: null }, "girilmemiş hesap ve kaldırılmış İSG ID kullanım değil");
+  for (const k of [FA.plan, FA.elk, FA.den1]) assert.deepEqual(await a(k, (db) => personelSil(db, k, id)), { durum: "yetkisiz" }, k.roller.join());
+  assert.deepEqual(await kiraciIcinde(havuz, B, (db) => personelSil(db, FB.yon, id), { hesapId: FB.yon.id }), { durum: "yok" }, "başka firma");
+
+  /* Ayrıldı → hesap kapanır; geri al → çalışıyor (hesap kapalı kalır); hâlâ kullanılmamış */
+  const s0 = (await a(FA.yon, (db) => personelKarti(db, FA.yon, id)))!.surum;
+  tamam(await a(FA.yon, (db) => personelAyrildi(db, FA.yon, id, s0, "2026-10-01")));
+  const k1 = (await a(FA.yon, (db) => personelKarti(db, FA.yon, id)))!;
+  assert.deepEqual([k1.durum, k1.hesapAyrinti?.durum], ["ayrildi", "pasif"]);
+  assert.deepEqual(await a(FA.plan, (db) => personelGeriAl(db, FA.plan, id, k1.surum)), { durum: "yetkisiz" });
+  tamam(await a(FA.yon, (db) => personelGeriAl(db, FA.yon, id, k1.surum)));
+  assert.equal((await a(FA.yon, (db) => personelKarti(db, FA.yon, id)))!.durum, "etkin");
+
+  assert.deepEqual(await a(FA.yon, (db) => personelSil(db, FA.yon, id)), { durum: "tamam", ad: "Silinecek Kişi" });
+  const kalan = (await a(FA.yon, (db) => db.sorgu<{ h: number; i: number; p: number }>(
+    `SELECT (SELECT count(*)::int FROM hesap WHERE personel_id = $1) AS h, (SELECT count(*)::int FROM isg_katip WHERE personel_id = $1) AS i,
+            (SELECT count(*)::int FROM personel WHERE id = $1) AS p`, [id]))).rows[0];
+  assert.deepEqual(kalan, { h: 0, i: 0, p: 0 });
+  const iz = (await a(FA.yon, (db) => db.sorgu<{ ayrinti: { hesaplar: Record<string, unknown>[] } }>(
+    "SELECT ayrinti FROM denetim_izi WHERE ne = 'personel.sil' AND nesne_id = $1", [id]))).rows[0];
+  assert.deepEqual([iz.ayrinti.hesaplar.length, "parola_ozeti" in iz.ayrinti.hesaplar[0]], [1, false], "hesap ize parolasız");
+  const yeniden = await ekle("Yeniden Kişi");
+  tamam(await a(FA.yon, (db) => hesapAc(db, FA.yon, yeniden, { eposta: "silinecek@deneme-a.example", roller: ["denetci"] })));
+
+  /* kullanılmış: giriş yapılmış hesap (öteki testlerde girişi yapılmış uydurma denetçi) · zimmet · kendisi */
+  const girisli = await ekle("Girişli Kişi");
+  tamam(await a(FA.yon, (db) => hesapAc(db, FA.yon, girisli, { eposta: "girisli@deneme-a.example", roller: ["denetci"] })));
+  const hesapId = (await a(FA.yon, (db) => db.sorgu<{ id: string }>("SELECT id::text FROM hesap WHERE personel_id = $1", [girisli]))).rows[0].id;
+  await a(FA.yon, (db) => db.sorgu("INSERT INTO denetim_izi (kim, ne, nesne, nesne_id) VALUES ('girisli@deneme-a.example', 'giris.yapildi', 'hesap', $1)", [hesapId]));
+  assert.deepEqual(await a(FA.yon, (db) => personelSil(db, FA.yon, girisli)),
+    { durum: "red", neden: 'Personel silinemez: 1 giriş yapılmış hesapta kullanıldı. Ayrıldıysa "Ayrıldı" deyin.' });
+  const z = (await a(FA.yon, (db) => personelSilmeDurumu(db, FA.yon, FA.den1Personel)));
+  assert.ok(!z.sil && z.kullanim?.zimmet && z.kullanim?.plan, JSON.stringify(z));
+  const yonPersonel = await ekle("Yönetici Kişi");
+  await a(FA.yon, (db) => db.sorgu("UPDATE hesap SET personel_id = $1 WHERE id = $2", [yonPersonel, FA.yon.id]));
+  assert.equal((await a(FA.yon, (db) => personelSilmeDurumu(db, FA.yon, yonPersonel))).sil, false, "kişi kendini silmez (tuş yok)");
+  assert.equal((await a(FA.yon, (db) => kesinSil(db, "personel", yonPersonel, "Deneme"))).durum, "kullanildi", "veritabanı da reddeder");
+  await a(FA.yon, (db) => db.sorgu("UPDATE hesap SET personel_id = NULL WHERE id = $1", [FA.yon.id]));
+  await assert.rejects(a(FA.yon, (db) => db.sorgu("DELETE FROM personel WHERE id = $1", [girisli])), /permission denied|izin/i);
 });

@@ -52,6 +52,17 @@ export const SILINEBILIR = {
     kullanim: "musteri_kullanim", sil: "musteri_sil",
     fk: { kullanim: ["fatura.musteri_id", "is_sozlesmesi.musteri_id", "teklif.musteri_id"], birlikte: ["musteri_hesap.musteri_id", "tesis.musteri_id"] },
   },
+  /* 366: zimmeti, planı, raporu, özlüğü, bordrosu, eğitimi, talebi, imza belgesi, giriş yapılmış hesabı … olmayan personel; hiç girilmemiş hesap ve
+     kaldırılmış İSG kayıtları birlikte (karar 43 kullanılmış personel için geçerli — o "Ayrıldı" olur; 0061) */
+  personel: {
+    kullanim: "personel_kullanim", sil: "personel_sil",
+    fk: {
+      kullanim: ["arac_km.personel_id", "belge_onay.personel_id", "bordro.personel_id", "egitim_kaydi.personel_id", "ekipman_atamasi.personel_id",
+        "gider.personel_id", "izin_talebi.personel_id", "ozluk_belgesi.personel_id", "plan_ekip.personel_id", "rapor.personel_id",
+        "zimmet_formu.personel_id", "zimmet_hareket.alan_personel", "zimmet_hareket.eden_personel"],
+      birlikte: ["hesap.personel_id", "isg_katip.personel_id"],
+    },
+  },
 } as const satisfies Record<string, { kullanim: string; sil: string; fk: { kullanim: readonly string[]; birlikte: readonly string[] } }>;
 export type SilinebilirTur = keyof typeof SILINEBILIR;
 

@@ -55,3 +55,35 @@ test("denetçi yalnız kendi kartı; başkasının kartı bulunamadı; form yetk
   await page.goto("/personel");
   await expect(page.getByText("Bu sayfayı görme yetkiniz yok")).toBeVisible();
 });
+
+/* 366 (karar 43 + §9 elli üçüncü tur): çalışan kişide Ayrıldı (tarihle) → Ayrılışı geri al → Çalışıyor; hiç kullanılmamış (deneme) kişi Sil ile kesin
+   silinir. Her proje kendi uydurma kişisini açar. */
+test("yönetici: Ayrıldı, ayrılışı geri al, kullanılmamış kişiyi sil", async ({ page }, bilgi) => {
+  const ad = `Silinecek Kişi ${bilgi.project.name} ${bilgi.retry}`;
+  await girisli(page, "yonetici");
+  await page.goto("/personel/yeni");
+  await expect(page.locator("h1")).toHaveText("Yeni personel");
+  await hazir(page);
+  await page.getByLabel("Ad soyad").fill(ad);
+  await page.getByLabel("İşe başlama").fill("01.02.2024");
+  await page.getByRole("combobox", { name: "Meslek" }).click();
+  await page.getByRole("option", { name: /Teknisyen/ }).click();
+  await page.getByRole("button", { name: "Kaydet" }).click();
+  await expect(page.locator("h1")).toHaveText(ad);
+  await hazir(page);
+  await page.getByRole("button", { name: "Ayrıldı", exact: true }).click();
+  const p = page.getByRole("dialog", { name: "Ayrıldı" });
+  await expect(p).toContainText("silinmez");
+  await p.getByRole("button", { name: "Ayrıldı olarak kaydet" }).click();
+  await expect(page.getByText(`${ad} ayrıldı; giriş hesabı kapandı, geçmişi duruyor.`).first()).toBeVisible({ timeout: 30_000 });
+  await page.getByRole("button", { name: "Ayrılışı geri al" }).click();
+  await page.locator("dialog[open]").getByRole("button", { name: "Geri al" }).click();
+  await expect(page.getByText(`${ad} yeniden çalışıyor.`).first()).toBeVisible({ timeout: 30_000 });
+  await hazir(page);
+  await page.getByRole("button", { name: "Sil", exact: true }).click();
+  const onay = page.locator("dialog[open]");
+  await expect(onay).toContainText(`${ad} kalıcı olarak silinir; giriş hesabı da silinir. Geri alınamaz.`);
+  await onay.getByRole("button", { name: "Sil" }).click();
+  await expect(page).toHaveURL(/\/personel$/, { timeout: 30_000 });
+  await expect(page.getByText(`${ad} silindi.`).first()).toBeVisible();
+});

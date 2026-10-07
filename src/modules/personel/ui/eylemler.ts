@@ -4,7 +4,7 @@
 import { zimmetPdf } from "../../../belge/pdf";
 import { ayniKoken } from "../../../server/kimlik/koken";
 import { istekOturumu, oturumIslemi } from "../../../server/kimlik/istek";
-import { personelEkle, personelGuncelle } from "../server/personel";
+import { personelAyrildi, personelEkle, personelGeriAl, personelGuncelle, personelSil } from "../server/personel";
 import { matrisKaydet } from "../../../server/yetki/matris";
 import { depo } from "../../../server/dosya/depo";
 import type { Sorgulayici } from "../../../server/db/kiraci";
@@ -162,4 +162,26 @@ export async function zimmetFormuGonderEylemi(personelId: string): Promise<Dosya
     if (h instanceof DosyaHatasi) return { genel: h.message };
     throw h;
   }
+}
+
+/* ── 366: Ayrıldı · ayrılışı geri al · kesin sil (karar personel.ts'te) ── */
+export interface KartDurumu { tamam?: boolean; hatalar?: Record<string, string>; genel?: string }
+async function kartIslemi(is: (o: Oturum) => Promise<{ durum: string; hatalar?: Record<string, string>; neden?: string }>): Promise<KartDurumu> {
+  if (!(await ayniKoken())) return { genel: "İstek reddedildi. Sayfayı yenileyip yeniden deneyin." };
+  const o = await istekOturumu();
+  if (!o) return { genel: "Oturumunuz kapandı. Yeniden giriş yapın." };
+  const r = await is(o);
+  if (r.durum === "tamam") return { tamam: true };
+  if (r.durum === "gecersiz") return { hatalar: r.hatalar };
+  if (r.durum === "red") return { genel: r.neden };
+  return { genel: SONUC[r.durum as keyof typeof SONUC] ?? SONUC.yok };
+}
+export async function personelAyrildiEylemi(id: string, surum: number, tarih: string): Promise<KartDurumu> {
+  return kartIslemi((o) => oturumIslemi(o, (db) => personelAyrildi(db, o, String(id), Number(surum), String(tarih))));
+}
+export async function personelGeriAlEylemi(id: string, surum: number): Promise<KartDurumu> {
+  return kartIslemi((o) => oturumIslemi(o, (db) => personelGeriAl(db, o, String(id), Number(surum))));
+}
+export async function personelSilEylemi(id: string): Promise<KartDurumu> {
+  return kartIslemi((o) => oturumIslemi(o, (db) => personelSil(db, o, String(id))));
 }

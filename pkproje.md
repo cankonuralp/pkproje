@@ -2353,6 +2353,13 @@ revizyon, alan kopyalama, hafif kusur devri, meslek eşleşme denetimi).
 - Emsal ürünler: https://opwire.app/iso-17020-periyodik-kontrol-yazilimi/ · https://17020muayene.vidco.com.tr/ · https://akuple.com/asansor-kontrol-yazilimi/ · https://ensyazilim.com/
 
 ## 11 · Değişiklik günlüğü
+- 2026-10-07 (366): **Personel Ayrıldı / Ayrılışı geri al / Sil** (karar 43 "ayrılan personel silinmez" kullanılmış personel için geçerli; §9 elli
+  üçüncü tur). Sunucuda ayrıldı işlevi vardı ama ekranı yoktu: personel kartında (yalnız "yaz" — önerilen düzende firma yöneticisi) çalışan kişide
+  "Ayrıldı" (pencere: ayrılış tarihi, "silinmez: zimmetleri, raporları, özlük dosyası ve geçmişi durur"; giriş hesabı 0007 tetiğiyle kapanır), ayrılan
+  kişide "Ayrılışı geri al" (onaylı; hesap kapalı kalır), hiç kullanılmamış (deneme) kişide "Sil". Kişi kendini silmez. Göç 0061 personel_kullanim
+  (zimmet hareketi · kilometre · etkin İSG ID · eğitim · özlük · ekipman ataması · bordro · zimmet formu · plan ekibi · rapor · gider · izin · imza
+  belgesi · GİRİŞ YAPILMIŞ hesap ya da firmanın ilk hesabı) + personel_sil (hiç girilmemiş hesap — parola özeti ize yazılmaz —, kaldırılmış İSG
+  kayıtları birlikte). Kilit kesin-silme.test "personel"; olumsuz kanıt kesin-silme.bozan 11; e2e personel (Ayrıldı, geri al, sil).
 - 2026-10-07 (365): **352–361 incelemesi düzeltmeleri** (dört bakışlı inceleme, 25 doğrulanmış bulgu). (1) Plan içi ekipman Sil, kesin silme ilkesinin
   kuralına bağlandı: canDo kayit_sil (Ekipman'da "yaz" + yönetici) — eski ekipman_sil yalnız role bakıyordu; varsayılan matriste branş yöneticisi
   ekipmanı pasife alamazken silebiliyordu (artık firma yöneticisi; firma matrisle verebilir). Ekipman bu planda yoksa "Plan bulunamadı" yerine

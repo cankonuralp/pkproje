@@ -11,7 +11,8 @@
    8. (362) demirbaş kullanımından zimmet formu denetimi kalkınca imzalı zimmet formundaki demirbaş silinir (formun kapsamı yetim kalır).
    9. (363) araç kullanımından haftalık kilometre denetimi kalkınca kilometresi girilmiş araca "Sil" çizilir (silme yabancı anahtara takılır,
       kişi "kullanılmadı" denip silemediği tuşla karşılaşır).
-  10. (364) müşteri kullanımından girilmiş müşteri girişi denetimi kalkınca panele girmiş müşteri girişleriyle birlikte silinir. */
+  10. (364) müşteri kullanımından girilmiş müşteri girişi denetimi kalkınca panele girmiş müşteri girişleriyle birlikte silinir.
+  11. (366) personel kullanımından giriş yapılmış hesap denetimi kalkınca sisteme girmiş kişi hesabıyla birlikte silinir (izdeki hesap kimliği yetim). */
 import assert from "node:assert/strict";
 import { copyFileSync, mkdirSync, mkdtempSync, readdirSync, readFileSync, rmSync, writeFileSync } from "node:fs";
 import { tmpdir } from "node:os";
@@ -22,6 +23,7 @@ import { turSil } from "../../src/modules/ekipman-turleri/server/turler.ts";
 import { ekipmanSil } from "../../src/modules/planlar/server/plan-ici.ts";
 import { aracKaydet, aracSilmeDurumu } from "../../src/modules/araclar/server/araclar.ts";
 import { musteriSil } from "../../src/modules/musteriler/server/musteriler.ts";
+import { personelSil } from "../../src/modules/personel/server/personel.ts";
 import { demirbasEkle, demirbasSil } from "../../src/modules/zimmetler/server/zimmet.ts";
 import { GOC_KLASORU } from "../../src/server/db/goc.ts";
 import type { GomuluKume } from "../../src/server/db/gomulu.ts";
@@ -194,5 +196,22 @@ test("10. girilmiş giriş denetimi kalkınca panele girmiş müşteri silinir (
       return id;
     }, { hesapId: F.yon.id });
     assert.equal((await kiraciIcinde(h, A, (db) => musteriSil(db, F.yon, m), { hesapId: F.yon.id })).durum, "tamam", "bozuk: girişi kullanılmış müşteri silindi");
+  } finally { await h.end(); await supa.kapat(); }
+});
+
+test("11. giriş yapılmış hesap denetimi kalkınca sisteme girmiş kişi silinir (kilidin koruduğu açık)", async () => {
+  const HESAP = "      EXISTS (SELECT 1 FROM denetim_izi d WHERE d.firma_id = h.firma_id AND d.nesne = 'hesap' AND d.nesne_id = h.id::text AND d.ne = 'giris.yapildi')\n      OR ";
+  const supa = await supabaseBenzeri(kume, "silme_bozuk_11", gocler(degistir(HESAP, "      "), undefined, "0061_"));
+  const h = havuzKur({ ...kume.uygulama, database: "silme_bozuk_11" });
+  try {
+    const A = (await supa.sahip.query<{ id: string }>("INSERT INTO firma (kisa_ad, ad, rapor_kodu) VALUES ('deneme-a', 'Deneme A', 'DA') RETURNING id::text")).rows[0].id;
+    const F = await sahaFirmasi(h, depo, A, "deneme-a");
+    const p = await kiraciIcinde(h, A, async (db) => {
+      const id = (await db.sorgu<{ id: string }>("INSERT INTO personel (ad, basla, meslek) VALUES ('Girişli Kişi', '2024-01-01', 'elk-muh') RETURNING id::text")).rows[0].id;
+      const hs = (await db.sorgu<{ id: string }>("INSERT INTO hesap (eposta, ad, roller, durum, personel_id) VALUES ('girisli@deneme-a.example', 'Girişli', '{denetci}', 'etkin', $1) RETURNING id::text", [id])).rows[0].id;
+      await db.sorgu("INSERT INTO denetim_izi (kim, ne, nesne, nesne_id) VALUES ('girisli@deneme-a.example', 'giris.yapildi', 'hesap', $1)", [hs]);
+      return id;
+    }, { hesapId: F.yon.id });
+    assert.equal((await kiraciIcinde(h, A, (db) => personelSil(db, F.yon, p), { hesapId: F.yon.id })).durum, "tamam", "bozuk: sisteme girmiş kişi silindi");
   } finally { await h.end(); await supa.kapat(); }
 });

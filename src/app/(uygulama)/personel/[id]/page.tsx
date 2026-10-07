@@ -6,14 +6,14 @@ import { Bilgi, BilgiListesi } from "../../../../components/bilgi/Bilgi";
 import { Yetkisiz } from "../../../../components/hata/Hata";
 import { AltSatir, Bolum, DegerYok, Kirinti, Kod, NesneBasi, SeritKap } from "../../../../components/sayfa/Sayfa";
 import { Serit } from "../../../../components/serit/Serit";
-import { TusBaglanti } from "../../../../components/tus/Tus";
 import { MODULLER, modulBul } from "../../../../modules/moduller";
 import { kisininEgitimleri } from "../../../../modules/egitimler/server/egitimler";
 import { bugunTr, gunlukMaliyet, IS_GUNU, personelDosyasi } from "../../../../modules/personel/server/dosyalar";
-import { eksikBilgi, personelKarti } from "../../../../modules/personel/server/personel";
+import { eksikBilgi, personelKarti, personelSilmeDurumu } from "../../../../modules/personel/server/personel";
 import { yetkiliOlabilir } from "../../../../modules/personel/sema";
 import { AtamaBolumu, BordroBolumu, EgitimBolumu, OzlukBolumu, ZimmetBolumu } from "../../../../modules/personel/ui/DosyaBolumleri";
 import { HesapBolumu } from "../../../../modules/personel/ui/HesapBolumu";
+import { PersonelTuslari } from "../../../../modules/personel/ui/KartTuslari";
 import { bransAd, bransi, DurumRozeti, meslekAdi, tarihYaz } from "../../../../modules/personel/ui/ortak";
 import { modulOturumu, oturumIslemi } from "../../../../server/kimlik/istek";
 import { canDo, canDoEylem, duzey } from "../../../../server/yetki/canDo";
@@ -33,7 +33,8 @@ export default async function Sayfa({ params }: { params: Promise<{ id: string }
   const { id } = await params;
   const p = await oturumIslemi(o, (db) => personelKarti(db, o, id));
   if (!p) notFound();
-  const [dosya, egitimler] = await oturumIslemi(o, async (db) => [await personelDosyasi(db, o, p.id), await kisininEgitimleri(db, o, p.id)] as const);
+  const [dosya, egitimler, silme] = await oturumIslemi(o, async (db) => [await personelDosyasi(db, o, p.id), await kisininEgitimleri(db, o, p.id),
+    await personelSilmeDurumu(db, o, p.id)] as const);
   if (!dosya) notFound();
   const bugun = bugunTr();
   const yaz = duzey(o, MODUL.no as ModulAnahtari) === "yaz";
@@ -45,7 +46,7 @@ export default async function Sayfa({ params }: { params: Promise<{ id: string }
     <>
       <Kirinti ogeler={[["Personel", "/personel"], [p.ad]]} />
       <NesneBasi baslik={p.ad} rozet={<DurumRozeti d={p.durum} />} altIkon="id-card" alt={`${meslekAdi(p)}${b ? ` · ${bransAd(b)}` : ""}`}
-        tuslar={yaz && <TusBaglanti tur="birincil" href={`/personel/${p.id}/duzenle`} ikon="pencil">Düzenle</TusBaglanti>} />
+        tuslar={yaz && <PersonelTuslari id={p.id} ad={p.ad} surum={p.surum} ayrildi={p.durum === "ayrildi"} sil={silme.sil} />} />
       {e.length > 0 && <SeritKap><Serit tur="uyari" ikon="triangle-alert">Eksik bilgi: {e.join(" · ")}.</Serit></SeritKap>}
       <Bolum id="b-kimlik" baslik="Kimlik ve sicil">
         <BilgiListesi>

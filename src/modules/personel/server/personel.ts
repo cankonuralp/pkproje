@@ -3,9 +3,11 @@
    DEĞİŞTİRMEK yalnız "yaz" düzeyinde (firma yöneticisi; kendi kaydını düzenlemek "kendi" düzeyine verilmez — meslek, sicil numaraları yönetici işi).
    Yazmalar güvenli yazıcıdan (sürüm kilidi + denetim izi). Liste yalnız listenin sütunlarını döndürür (09-B3). */
 import type { Sorgulayici } from "../../../server/db/kiraci.ts";
+import { kesinSil, kullanimlar, type Kullanim } from "../../../server/db/silici.ts";
 import { ekle, guncelle, tablo, type Iz } from "../../../server/db/yazici.ts";
 import { hesabinPersoneli, hesapEpostaEsitle, personelHesaplari, roldekiHesaplar, type HesapOzeti } from "../../../server/kimlik/hesap.ts";
-import { canDo, duzey, type YetkiHesabi } from "../../../server/yetki/canDo.ts";
+import { canDo, canDoEylem, duzey, type YetkiHesabi } from "../../../server/yetki/canDo.ts";
+import { kullanimMetni } from "../../../components/sil/metin.ts";
 import type { Matris } from "../../../server/yetki/tanim.ts";
 import { dogrula, type DogrulamaHatalari } from "../../../sema/ortak.ts";
 import { PersonelGirdisi, yetkiliOlabilir } from "../sema.ts";
@@ -127,6 +129,35 @@ export async function personelAyrildi(db: Sorgulayici, kim: Kisi, id: string, su
     if ((h as { code?: string }).code === "23514") return { durum: "gecersiz", hatalar: { ayrildi: "Ayrılış işe başlamadan önce olamaz." } };
     throw h;
   }
+}
+
+/** ayrılışı geri al (366; yanlışlıkla "Ayrıldı" denen kişi): çalışıyor olur; giriş hesabı kapalı kalır — Giriş hesabı bölümünden yeniden açılır */
+export async function personelGeriAl(db: Sorgulayici, kim: Kisi, id: string, surum: number, matris?: Partial<Matris> | null): Promise<Yazma> {
+  if (!degistirebilir(kim, matris)) return { durum: "yetkisiz" };
+  if (!Number.isSafeInteger(surum) || surum < 0) return { durum: "cakisma" };
+  const r = await guncelle(db, PERSONEL, id, surum, { durum: "etkin", ayrildi: null }, { kim: kim.ad, ne: "personel.geri_al" });
+  if (r.durum === "cakisma" || r.durum === "yok") return { durum: r.durum };
+  return { durum: "tamam", id, surum: r.surum };
+}
+
+/* ── KESİN SİLME (366; reisim 2026-10-07 "eklenebilen şeyler silinemiyor"; §9 elli üçüncü tur) — yalnız yönetici (kayit_sil, modül 2: önerilen
+   düzende firma yöneticisi) ve yalnız hiç kullanılmamış (deneme / yanlış girilmiş) personel; tanım veritabanında (göç 0061). Kullanılmış personel
+   silinmez, "Ayrıldı" olur (karar 43). Kişi kendini silmez. */
+export type SilYaniti = { durum: "tamam"; ad: string } | { durum: "red"; neden: string } | { durum: "yok" } | { durum: "yetkisiz" };
+const silebilir = (kim: YetkiHesabi, matris?: Partial<Matris> | null) => canDoEylem(kim, "kayit_sil", { modul: MODUL }, matris);
+
+/** personel kartı: "Sil" çizilir mi (silebilen + kullanılmamış); değiştirene kullanım sayımları */
+export async function personelSilmeDurumu(db: Sorgulayici, kim: Kisi, id: string, matris?: Partial<Matris> | null): Promise<{ sil: boolean; kullanim: Kullanim | null }> {
+  if (!degistirebilir(kim, matris) || !/^[0-9a-f-]{36}$/.test(id)) return { sil: false, kullanim: null };
+  const k = (await kullanimlar(db, "personel", [id])).get(id) ?? null;
+  return { sil: silebilir(kim, matris) && !k && (await hesabinPersoneli(db, kim.id)) !== id, kullanim: k };
+}
+
+export async function personelSil(db: Sorgulayici, kim: Kisi, id: string, matris?: Partial<Matris> | null): Promise<SilYaniti> {
+  if (!silebilir(kim, matris)) return { durum: "yetkisiz" };
+  const r = await kesinSil(db, "personel", id, kim.ad);
+  if (r.durum === "kullanildi") return { durum: "red", neden: `Personel silinemez: ${kullanimMetni(r.kullanim) || "başka kayıtlarda"} kullanıldı. Ayrıldıysa "Ayrıldı" deyin.` };
+  return r;
 }
 
 /** öteki modüller için etkin personel seçenekleri (zimmet teslim alanı, plan denetçisi …): yetki ÇAĞIRANDA, yalnız ad ve meslek */
