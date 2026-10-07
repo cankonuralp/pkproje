@@ -2353,6 +2353,12 @@ revizyon, alan kopyalama, hafif kusur devri, meslek eşleşme denetimi).
 - Emsal ürünler: https://opwire.app/iso-17020-periyodik-kontrol-yazilimi/ · https://17020muayene.vidco.com.tr/ · https://akuple.com/asansor-kontrol-yazilimi/ · https://ensyazilim.com/
 
 ## 11 · Değişiklik günlüğü
+- 2026-10-08 (377): **Yönetim › Firma: Dondur / Etkinleştir / yeni geçici parola sonrası sayfa sunucuda yenilenir.** CI (8dc6d06, tablet):
+  "Etkinleştir"e basıldı, hata çıkmadı, tuş açıldı ama sayfa 15 sn "Dondurulmuş"ta kaldı — eylemden sonra istemcinin ayrı yenileme isteği
+  başka bir yönlendirici işiyle çakışınca düşebiliyor (Raporlar'da 318'de görülen yarış). Artık bu üç eylem başarılı olunca yeni sayfa eylemin
+  yanıtıyla gelir (`refresh()` sunucuda; istemcideki `router.refresh()` kalktı). e2e yonetim: Etkinleştir bildirimi + Dondur tuşu. Uygulamada
+  83 yerde aynı istemci deseni var; düşen bir test çıkarsa o ekran da sunucu yenilemesine alınır (topluca değiştirilmedi — davranışı ölçülmeden
+  dokunulmaz).
 - 2026-10-08 (376): **Giriş hatasında odak alana** (375'in canlı denetiminde bulundu). Firma ve yönetim girişinde hatalı / boş gönderimde ileti
   çıkıyordu ama odak sayfaya düşüyordu (gönderirken tuş kilitlenir): klavyeyle kullanan başa dönüyordu. Artık e-posta boşsa e-postaya, doluysa
   parolaya gelir (parola belirleme ve kod adımında zaten böyleydi). Yönetim girişinde parola alanı da hatalı işaretlenir (firma girişindeki gibi).

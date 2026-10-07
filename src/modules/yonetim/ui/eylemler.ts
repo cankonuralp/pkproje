@@ -1,6 +1,7 @@
 "use server";
 /* YÖNETİM SUNUCU EYLEMLERİ (348) — yalnız yönetim adresinde ve yönetim oturumuyla (yönetici istemciden alınmaz); işlem veritabanında yönetim
    rolünde (yonetimIslemi). Köken iki katman. Geçici parola yalnız bu yanıtta döner (kaydedilmez, sayfa yenilenince yoktur). */
+import { refresh } from "next/cache";
 import { ayniKoken } from "../../../server/kimlik/koken";
 import { anaAlan } from "../../../server/kiraci/istek";
 import { yonetimAlani } from "../../../server/yonetim/adres";
@@ -27,14 +28,18 @@ export async function firmaAcEylemi(form: FormData): Promise<YonetimYaniti> {
   return islem((o) => yonetimIslemi(o, (db) => firmaAc(db, girdi, yonetimEtiketi(yonetimAlani(), anaAlan()), anaAlan())));
 }
 
+/* durum ve parola eylemleri istemci yönlendiricisini SUNUCUDA yeniler (yeni sayfa eylem yanıtıyla gelir): istemcideki ayrı router.refresh()
+   başka bir yönlendirici işiyle çakışınca düşebiliyordu — CI 8dc6d06 tablet: Etkinleştir sonrası sayfa "Dondurulmuş"ta kaldı (raporlar 318 ile aynı) */
+const yenileyerek = (y: YonetimYaniti) => { if (y.tamam) refresh(); return y; };
+
 export async function firmaDondurEylemi(id: string): Promise<YonetimYaniti> {
-  return islem((o) => yonetimIslemi(o, (db) => firmaDurumu(db, yazi(id), "dondu")));
+  return yenileyerek(await islem((o) => yonetimIslemi(o, (db) => firmaDurumu(db, yazi(id), "dondu"))));
 }
 
 export async function firmaEtkinlestirEylemi(id: string): Promise<YonetimYaniti> {
-  return islem((o) => yonetimIslemi(o, (db) => firmaDurumu(db, yazi(id), "etkin")));
+  return yenileyerek(await islem((o) => yonetimIslemi(o, (db) => firmaDurumu(db, yazi(id), "etkin"))));
 }
 
 export async function geciciParolaVerEylemi(id: string): Promise<YonetimYaniti> {
-  return islem((o) => yonetimIslemi(o, (db) => yoneticiyeGeciciParola(db, yazi(id))));
+  return yenileyerek(await islem((o) => yonetimIslemi(o, (db) => yoneticiyeGeciciParola(db, yazi(id)))));
 }

@@ -1,7 +1,6 @@
 "use client";
 /* YÖNETİM › FİRMA (348; maket yonetim.html firmaCiz): kimlik + durum rozeti + adres; "Yöneticiye yeni geçici parola" (önce sorulur; dondurulmuşta
    kapalı) ve Dondur (önce sorulur; veri silinmez) / Etkinleştir. Yeni geçici parola YALNIZ bu ekranda bir kez gösterilir. Karar sunucuda. */
-import { useRouter } from "next/navigation";
 import { useState, useTransition } from "react";
 import { Bilgi, BilgiListesi } from "../../../components/bilgi/Bilgi";
 import { useBildir } from "../../../components/bildirim/Bildirim";
@@ -20,7 +19,6 @@ import stil from "./yonetim.module.css";
 const YON_DURUM = { ilk: "geçici parolayla ilk giriş bekleniyor", etkin: "etkin", pasif: "hesap kapalı" } as const;
 
 export function FirmaSayfasi({ firma: f, anaAlan, depo }: { firma: FirmaSatiri | null; anaAlan: string; depo: DepoTuru }) {
-  const router = useRouter();
   const onayla = useOnayla();
   const bildir = useBildir();
   const [bekliyor, baslat] = useTransition();
@@ -48,7 +46,6 @@ export function FirmaSayfasi({ firma: f, anaAlan, depo }: { firma: FirmaSatiri |
       setHata(null); kopya.sifirla(); setParola({ deger: r.parola, eposta: r.eposta ?? "" });
       bildir("Yeni geçici parola oluşturuldu.");
       requestAnimationFrame(() => document.getElementById("yf-parola")?.scrollIntoView({ block: "center" }));
-      router.refresh();
     });
   };
   const dondur = async () => {
@@ -56,13 +53,13 @@ export function FirmaSayfasi({ firma: f, anaAlan, depo }: { firma: FirmaSatiri |
     baslat(async () => {
       const r = await firmaDondurEylemi(f.id);
       if (!r.tamam) { setHata(r.genel ?? "Firma dondurulamadı."); return; }
-      setHata(null); setParola(null); bildir(`Firma donduruldu: ${adres}`); router.refresh();
+      setHata(null); setParola(null); bildir(`Firma donduruldu: ${adres}`);
     });
   };
   const etkinlestir = () => baslat(async () => {
     const r = await firmaEtkinlestirEylemi(f.id);
     if (!r.tamam) { setHata(r.genel ?? "Firma etkinleştirilemedi."); return; }
-    setHata(null); bildir(`Firma etkinleştirildi: ${adres}`); router.refresh();
+    setHata(null); bildir(`Firma etkinleştirildi: ${adres}`);
   });
 
   return (

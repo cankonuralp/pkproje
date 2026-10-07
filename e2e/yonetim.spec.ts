@@ -104,7 +104,8 @@ test("yönetim: ayrı adres; ilk kurulum; firma aç → geçici parolayla yeni f
   await kisi.goto(`${firmaAdresi}/giris`);
   await expect(kisi.getByText("Bu adreste kayıtlı bir firma yok.", { exact: false })).toBeVisible();
   await page.getByRole("button", { name: "Etkinleştir" }).click();
-  await expect(page.getByRole("button", { name: "Dondur" })).toBeVisible();
+  await expect(page.getByText(`Firma etkinleştirildi: ${F.alt}.localhost`)).toBeVisible();
+  await expect(page.getByRole("button", { name: "Dondur" })).toBeVisible();   // 377: yeni sayfa eylem yanıtıyla gelir (CI 8dc6d06 tablette kalmıştı)
   await page.getByRole("button", { name: "Yöneticiye yeni geçici parola" }).click();
   await page.locator("dialog[open]").getByRole("button", { name: "Oluştur" }).click();
   await expect(page.locator("#yf-parola")).toBeVisible();
