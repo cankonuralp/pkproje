@@ -1,13 +1,15 @@
 "use client";
 /* ANA SAYFA (maket anasayfa.html M1 2. tur — BOLUM, PLAN_SUTUN, KUYRUK_SUTUN, TESIS_SUTUN, duyurularHtml; 332): rol başına bölüm (bilgi yüzleri +
-   iş listesi), birden çok rolü olan alt alta; "Plan aç" yalnız plan açabilene; duyuru kaynakları. Yalnız ekranda; hitap yok. */
+   iş listesi), birden çok rolü olan alt alta; "Plan aç" yalnız plan açabilene; duyurular (379: okunan Bakanlık duyuruları, en yeni üstte, yeni
+   sekmede; okunamadıysa uyarı şeridi, son liste durur) ve kaynak bağlantıları. Yalnız ekranda; hitap yok. */
 import Link from "next/link";
-import { Yuz, Yuzler } from "../../../components/bilgi/Bilgi";
+import { Kosullar, Yuz, Yuzler } from "../../../components/bilgi/Bilgi";
+import { Ikon } from "../../../components/ikon/Ikon";
 import { KartEtiket, Kirp, Liste, type Sutun } from "../../../components/liste/Liste";
 import { AltSatir, Bolum, Rozet, SayfaBasi, SeritKap } from "../../../components/sayfa/Sayfa";
 import { Serit } from "../../../components/serit/Serit";
 import { tarihNo } from "../../../components/secim/tarih";
-import { TusBaglanti } from "../../../components/tus/Tus";
+import { TusBaglanti, tusSinifi } from "../../../components/tus/Tus";
 import { ROL_ADI } from "../../../server/yetki/tanim";
 import { PLAN_DURUM } from "../../planlar/sema";
 import type { AnaBolum, AnaKuyrukSatiri, AnaListe, AnaPlanSatiri, AnaSayfa as Veri, AnaTesisSatiri } from "../server/anasayfa";
@@ -60,8 +62,26 @@ function RolBolumu({ b, cok }: { b: AnaBolum; cok: boolean }) {
   );
 }
 
-const KAYNAKLAR: [string, string][] = [["İSGGM", "https://www.csgb.gov.tr/isggm/tr/duyurular/"], ["İSGÜM", "https://www.csgb.gov.tr/isgum/duyurular/"],
+/* kaynaklar (src/server/duyuru/okuma.ts DUYURU_KAYNAKLARI ile aynı adresler — istemci sunucu dosyasını içe aktarmaz; tests/duyuru-ayristir kilitler) */
+const KAYNAKLAR: [string, string][] = [["İSGGM", "https://www.csgb.gov.tr/isggm/duyurular/"], ["İSGÜM", "https://www.csgb.gov.tr/isgum/duyurular/"],
   ["İş ekipmanları", "https://isekipmanlari.csgb.gov.tr/sayfa.aspx?d=3"]];
+const KAYNAK_AD: Record<Veri["duyuru"]["liste"][number]["kaynak"], string> = { isggm: "İSGGM", isgum: "İSGÜM", isekipman: "İş ekipmanları" };
+
+function Duyurular({ d }: { d: Veri["duyuru"] }) {
+  return (
+    <Bolum id="b-ana-duyuru" baslik="Duyurular"
+      sayac={<span className={stil.alt}><b>{d.liste.length}</b> duyuru{d.guncellendi ? ` · güncellendi ${zamanYaz(d.guncellendi)}` : ""}</span>}
+      tuslar={<>{KAYNAKLAR.map(([ad, url]) => (
+        <a key={ad} className={tusSinifi("ikincil")} href={url} target="_blank" rel="noopener noreferrer"><Ikon ad="arrow-right" kucuk />{ad}</a>))}</>}>
+      {d.hata && <SeritKap><Serit tur="uyari" ikon="triangle-alert">Duyurular alınamadı; son alınan liste gösteriliyor.</Serit></SeritKap>}
+      {d.liste.length
+        ? <Kosullar ogeler={d.liste.map((x) => ({ tur: "bilgi" as const, ikon: "scroll-text", metin: <>
+            <a className={stil.baglanti} href={x.url} target="_blank" rel="noopener noreferrer">{x.baslik}</a>
+            <AltSatir>{tarihNo(x.tarih)} · {KAYNAK_AD[x.kaynak]}</AltSatir></> }))} />
+        : <p className={stil.bos}>{d.guncellendi ? "Kaynaklarda duyuru yok." : "Duyurular henüz alınmadı; kaynaklara yukarıdaki bağlantılardan ulaşılır."}</p>}
+    </Bolum>
+  );
+}
 
 export function AnaSayfaGorunumu({ v }: { v: Veri }) {
   return (
@@ -74,12 +94,7 @@ export function AnaSayfaGorunumu({ v }: { v: Veri }) {
         </Serit>
       </SeritKap>}
       {v.bolumler.map((b) => <RolBolumu key={b.rol} b={b} cok={v.bolumler.length > 1} />)}
-      <Bolum id="b-ana-duyuru" baslik="Duyurular">
-        <p className={stil.bos}>İş sağlığı ve güvenliği ile iş ekipmanları duyuruları kaynaklarında:</p>
-        <div className={stil.kaynaklar}>
-          {KAYNAKLAR.map(([ad, url]) => <a key={ad} className={stil.kaynak} href={url} target="_blank" rel="noopener noreferrer">{ad}</a>)}
-        </div>
-      </Bolum>
+      <Duyurular d={v.duyuru} />
     </>
   );
 }

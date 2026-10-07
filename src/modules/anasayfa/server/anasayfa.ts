@@ -2,9 +2,10 @@
    içerik kişinin ROLLERİNE göre: her rolün bölümü (o günün işleri — tıklanır bilgi yüzleri — ve bir iş listesi), birden çok rolü olan alt alta.
    Sayılar modüllerin kendi, yetkiye duyarlı işlevlerinden ve okuyucularından (ana sayfa başka modülün tablosuna dokunmaz). Bildirim yok, hitap yok
    (anayasa 1.3, 0.11). Muhasebe rolüne maketteki dört rolün dışında kısa bir bölüm (faturaya hazır iş, vadesi geçen fatura, onay bekleyen masraf).
-   Duyurular (İSGGM, İSGÜM, iş ekipmanları portalı) kaynak bağlantılarıyla; kaynaklardan otomatik okuma iş kuyruğu kalemiyle (§8.9). */
+   Duyurular (İSGGM, İSGÜM, iş ekipmanları portalı; 379): okunan duyurular (src/server/duyuru — firma verisi değil) + kaynak bağlantıları. */
 import type { Sorgulayici } from "../../../server/db/kiraci.ts";
 import { ayarOku } from "../../../server/ayar/ayar.ts";
+import { duyuruBolumu, type DuyuruBolumu } from "../../../server/duyuru/okuma.ts";
 import { hesabinPersoneli } from "../../../server/kimlik/hesap.ts";
 import { duzey, type YetkiHesabi } from "../../../server/yetki/canDo.ts";
 import { ROL_BRANS, type Rol } from "../../../server/yetki/tanim.ts";
@@ -43,7 +44,8 @@ export type AnaListe =
   | { tur: "tesis"; baslik: string; kayitlar: AnaTesisSatiri[]; bos: string; tumu: [ad: string, href: string]; planAc: boolean };
 export interface AnaBolum { rol: Rol; yuzler: AnaYuz[]; liste: AnaListe | null }
 /** belgeBekleyen (333): kişinin imzasını bekleyen diğer belgeler (bordro …) — Onaylar'ı görmeyen de buradan ulaşır */
-export interface AnaSayfa { bugun: string; ad: string; planAc: boolean; bolumler: AnaBolum[]; belgeBekleyen: number }
+/** duyuru (379): okunan Bakanlık duyuruları, son okuma, "alınamadı", tazele (sayfa okumayı arka planda başlatır) */
+export interface AnaSayfa { bugun: string; ad: string; planAc: boolean; bolumler: AnaBolum[]; belgeBekleyen: number; duyuru: DuyuruBolumu }
 
 export async function anaSayfa(db: Sorgulayici, kim: Kisi): Promise<AnaSayfa> {
   const bugun = bugunTr(), roller = new Set(kim.roller);
@@ -159,5 +161,5 @@ export async function anaSayfa(db: Sorgulayici, kim: Kisi): Promise<AnaSayfa> {
       { ikon: "receipt", ad: "Onay bekleyen masraf", sayi: bek.length, href: "/muhasebe/giderler", not: bek.length ? tl(bek.reduce((n, g) => n + g.tutar, 0)) : "yok", uyari: bek.length > 0 },
     ], liste: null });
   }
-  return { bugun, ad: kim.ad, planAc: planAcabilir(kim), bolumler, belgeBekleyen: await bekleyenBelgeSayisi(db, kim) };
+  return { bugun, ad: kim.ad, planAc: planAcabilir(kim), bolumler, belgeBekleyen: await bekleyenBelgeSayisi(db, kim), duyuru: await duyuruBolumu(db) };
 }

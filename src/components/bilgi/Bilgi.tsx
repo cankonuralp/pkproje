@@ -36,12 +36,13 @@ export type KosulTuru = "tamam" | "eksik" | "bilgi";
 const KOSUL_IKON: Record<KosulTuru, string> = { tamam: "circle-check", eksik: "triangle-alert", bilgi: "info" };
 const KOSUL_SINIF: Record<KosulTuru, string> = { tamam: stil.kosulTamam, eksik: stil.kosulEksik, bilgi: stil.kosulBilgi };
 
-export function Kosullar({ ogeler }: { ogeler: readonly { tur: KosulTuru; metin: ReactNode; eylem?: ReactNode }[] }) {
+/** ikon: türün ikonunun yerine (379: duyuru satırı "scroll-text", maket a-duyurular) */
+export function Kosullar({ ogeler }: { ogeler: readonly { tur: KosulTuru; metin: ReactNode; eylem?: ReactNode; ikon?: string }[] }) {
   return (
     <ul className={stil.kosullar}>
       {ogeler.map((o, i) => (
         <li key={i} className={KOSUL_SINIF[o.tur]} data-kosul={o.tur}>
-          <Ikon ad={KOSUL_IKON[o.tur]} kucuk />
+          <Ikon ad={o.ikon ?? KOSUL_IKON[o.tur]} kucuk />
           <span className={stil.kosulMetin}>{o.metin}</span>
           {o.eylem && <span className={stil.kosulEylem}>{o.eylem}</span>}
         </li>

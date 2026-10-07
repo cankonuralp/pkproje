@@ -208,6 +208,10 @@ pkproje/
   src/server/is/            ARKA PLAN İŞLERİ (378; K5): gece.ts (geceIsleri — firma başına kiracı işlemi, is_calisma kaydı, süre sınırı) ·
                             yetki.ts (zamanliYetkili: "Bearer <CRON_SECRET>", sır ≥ 32) · uç src/app/api/is/gece (Vercel Cron, vercel.json crons) ·
                             db/is.ts (isBasla / isBitir / geceFirmalari; göç 0069) · çöp temizliği src/server/dosya/cop.ts (30 gün, A5)
+  src/server/duyuru/        DUYURULAR (379; K5): ayristir.ts (saf: İSGGM / İSGÜM / iş ekipmanları portalı HTML → başlık, tarih, Bakanlık
+                            bağlantısı) · okuma.ts (duyurulariOku — üç kaynak, 10 sn / 3 MB, yönlendirme yok, is_calisma "duyuru_okuma";
+                            duyuruBolumu — Ana sayfa) · sonra.ts (after: Ana sayfa yanıtından sonra, son deneme 6 saatten eskiyse) · db/duyuru.ts
+                            (göç 0070) · uydurma sayfalar e2e/duyuru-ornek.ts (PROBATA_DUYURU_UC yalnız uçtan uca taklit)
   src/server/saglik.ts      SAĞLIK (350; 09-G5): /api/saglik denetimleri (db/saglik.ts → saglik_denetimi, geçerli tanım 0053 — bağlanan rol, göç sayısı;
                             db/son-goc.ts SON_GOC + GOC_SAYISI — her yeni göçte ikisi güncellenir, testle kilitli) · canlı duman testi: node tools/duman.mjs (salt okunur, çıkış kodu)
   src/server/db/havuz.ts    ortamdan bağlantı: ağda şifresiz bağlantı YOK (PROBATA_VT_SSL=dogrula → kok-sertifika.ts Supabase kökü); Vercel'de boşta bekleme

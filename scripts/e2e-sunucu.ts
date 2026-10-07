@@ -9,6 +9,7 @@ import { mkdtempSync } from "node:fs";
 import { tmpdir } from "node:os";
 import { join } from "node:path";
 import { createServer } from "node:http";
+import { ornekSayfa } from "../e2e/duyuru-ornek.ts";
 import { E2E_FIRMA, E2E_HESAPLAR, E2E_ILK, E2E_KAPI, E2E_MUHASEBE, E2E_PAROLA, E2E_PLAN, E2E_SAHA, E2E_YONETIM, E2E_YONETIM_PROJELER, E2E_YZ, E2E_ZAMANLI_SIR } from "../e2e/hesaplar.ts";
 import { planKabul, planIci } from "../src/modules/planlar/server/plan-ici.ts";
 import { planAc } from "../src/modules/planlar/server/planlar.ts";
@@ -159,6 +160,9 @@ await havuz.end();
    seçimini (tool_choice "tool" / "any") 400 ile reddeder — 350–351 incelemesi: eski istek canlıda her okumada düşüyordu, taklit bunu görmüyordu.
    Yapılandırılmış çıktı istenmeliyse (output_config.format json_schema) metin bloğunda JSON ile üç satır döner (biri emin değil). */
 const yzTaklit = createServer((istek, yanit) => {
+  /* 379: Bakanlık duyuru sayfalarının UYDURMA taklidi (PROBATA_DUYURU_UC; e2e/duyuru-ornek.ts) — gerçek siteye istek gitmez */
+  const duyuruSayfasi = istek.method === "GET" ? ornekSayfa(istek.url ?? "") : null;
+  if (duyuruSayfasi) { yanit.writeHead(200, { "content-type": "text/html; charset=utf-8" }).end(duyuruSayfasi); return; }
   let govde = ""; istek.on("data", (p) => { govde += p; }).on("end", () => {
     if (istek.url !== "/v1/messages" || istek.headers["x-api-key"] !== E2E_YZ.anahtar) { yanit.writeHead(401).end("{}"); return; }
     let g: { tool_choice?: { type?: string }; output_config?: { format?: { type?: string; schema?: { properties?: { satirlar?: { items?: { properties?: { tip?: { anyOf?: { enum?: string[] }[] } } } } } } } } };
@@ -223,5 +227,6 @@ const kod = await nextCalistir("dev", {
   PROBATA_YONETIM_ALAN: E2E_YONETIM.alan,   // 348: yönetim sayfası yalnız bu adreste
   PROBATA_YZ_UC: `http://127.0.0.1:${yzKapi}`,   // 351: yerel Anthropic taklidi
   CRON_SECRET: E2E_ZAMANLI_SIR,   // 378: gece işi ucu (uydurma sır)
+  PROBATA_DUYURU_UC: `http://127.0.0.1:${yzKapi}`,   // 379: duyuru sayfalarının yerel taklidi
 }, ["--hostname", "127.0.0.1", "--port", String(E2E_KAPI)]);
 await kapat(kod);

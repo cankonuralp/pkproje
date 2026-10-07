@@ -2355,6 +2355,16 @@ revizyon, alan kopyalama, hafif kusur devri, meslek eşleşme denetimi).
 - Emsal ürünler: https://opwire.app/iso-17020-periyodik-kontrol-yazilimi/ · https://17020muayene.vidco.com.tr/ · https://akuple.com/asansor-kontrol-yazilimi/ · https://ensyazilim.com/
 
 ## 11 · Değişiklik günlüğü
+- 2026-10-08 (379): **Ana sayfa Duyurular canlı** (K5 "İSGGM duyuru okuma"; reisim 2026-09-26 *"Ana sayfada isgüm duyurularını gösterebilir
+  miyiz"*, yirmi sekizinci tur kararları). Sunucu Bakanlığın üç sayfasını okur — İSGGM ve İSGÜM duyuruları, iş ekipmanları portalı — ve Ana
+  sayfada kaynak başına en yeni 2'yi gösterir: hepsi en yeni üstte, başlık yeni sekmede Bakanlığın sayfasına, altında yayım tarihi ve kaynak;
+  sayaçta "N duyuru · güncellendi …"; kaynak tuşları ("Tümü" yerine kaynak adları, maket gibi). Tarihi doğrulanamayan duyuru girmez; bağlantı
+  yalnız Bakanlığın iki adresi (veritabanı da denetler). Okuma Ana sayfa açılınca son deneme 6 saatten eskiyse YANITTAN SONRA arka planda başlar
+  (kimse bakmazsa istek gitmez; aynı anda iki okuma yok). Bir kaynak okunamazsa (ağ, zaman aşımı, sayfa yapısı değişti) ötekiler yazılır ve
+  "Duyurular alınamadı; son alınan liste gösteriliyor." şeridi çıkar. Firma verisi değil (bütün firmalar aynı listeyi görür). Göç 0070 (duyuru;
+  duyuru_yaz / duyuru_listesi / duyuru_durumu). Kilit duyuru-ayristir.test (uydurma sayfalar), duyuru.test (gerçek PostgreSQL, iki firma, yerel
+  taklit); olumsuz kanıt duyuru.bozan (5); e2e anasayfa (üç genişlik: okuma → 6 duyuru, bağlantı, sayaç). Gerçek sayfalar PC'den denendi
+  (İSGGM 33, İSGÜM 50, portal 9 duyuru ayrıştı; sayfa içeriği depoya girmedi).
 - 2026-10-08 (378): **K5 başladı — gece işi: çöp temizliği** (09-A5, ARKA-UC §7; reisim: *"devam et … bitir"*). Silinen kaydın dosyası çöpe
   gidiyordu ama hiç silinmiyordu (veritabanı deposunda yer tutuyordu). Artık her gece çöpte **30 günü dolan** dosya kalıcı silinir: kaydı ve
   depodaki içeriği. Çöpteki dosya zaten indirilemiyordu; ekranda bir şey değişmez, yer açılır. Bir kayda hâlâ bağlı dosya silinmez ("bağlı"
