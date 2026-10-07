@@ -3,7 +3,7 @@
    sürüm yalnız "hangi giriş, hangi sürümü gördüm" bilgisidir; yetki vermez. Geçici parola yalnız bu yanıtta bir kez döner. */
 import { ayniKoken } from "../../../server/kimlik/koken";
 import { istekOturumu, oturumIslemi } from "../../../server/kimlik/istek";
-import { anaGeciciParola, ekGeciciParola, ekGirisEkle, girisPasif, type GirisYazma } from "../server/girisler";
+import { anaGeciciParola, ekGeciciParola, ekGirisEkle, girisPasif, girisSil, type GirisYazma } from "../server/girisler";
 
 export interface GirisYaniti { tamam?: boolean; parola?: string; hatalar?: Record<string, string>; genel?: string }
 const SONUC = {
@@ -34,4 +34,8 @@ export async function ekGeciciParolaEylemi(id: string, surum: number): Promise<G
 }
 export async function girisPasifEylemi(id: string, surum: number, pasif: boolean): Promise<GirisYaniti> {
   return islem((o) => oturumIslemi(o, (db) => girisPasif(db, o, metin(id), Number(surum), pasif === true)));
+}
+/** 367: hiç girilmemiş ek giriş kesin silinir (yalnız yönetici; karar girisler.ts / veritabanında) */
+export async function girisSilEylemi(id: string): Promise<GirisYaniti> {
+  return islem((o) => oturumIslemi(o, (db) => girisSil(db, o, metin(id))));
 }

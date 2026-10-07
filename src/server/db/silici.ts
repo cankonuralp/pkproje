@@ -63,6 +63,11 @@ export const SILINEBILIR = {
       birlikte: ["hesap.personel_id", "isg_katip.personel_id"],
     },
   },
+  /* 367: müşterinin panele hiç girmediği EK giriş (ana giriş silinmez); oturumları zincirle (0062) */
+  musteri_hesap: {
+    kullanim: "musteri_hesap_kullanim", sil: "musteri_hesap_sil",
+    fk: { kullanim: [], birlikte: ["musteri_oturum.musteri_hesap_id"] },
+  },
 } as const satisfies Record<string, { kullanim: string; sil: string; fk: { kullanim: readonly string[]; birlikte: readonly string[] } }>;
 export type SilinebilirTur = keyof typeof SILINEBILIR;
 

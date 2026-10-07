@@ -140,7 +140,7 @@ pkproje/
                             server/musteri-baglanti.ts, göç 0032 sütun sınırlı —, toplu ZIP ui/topluIndir.ts + ui/zipla.ts (saf; 300 rapor / 500 MB) + ui/ad.ts; 322: Sözleşmeler /portal/sozlesme + /portal/s/<id> — Sözleşmeler'in
                             server/musteri-baglanti.ts, göç 0034; 323: Muayene personeli /portal/personel — Personel'in server/musteri-baglanti.ts'i, göç 0035
                             veritabanı işlevleri musteri_personeli / musteri_personel_belgeleri, firma ayarı musteri_belge). Müşteri girişi yönetimi: musteriler/server/girisler.ts + ui/GirisBolumu.tsx;
-                            giriş / oturum çekirdeği src/server/kimlik/musteri.ts; kabuk src/components/kabuk/MusteriKabugu.tsx
+                            367 girisSil (hiç girilmemiş ek giriş; 0062); giriş / oturum çekirdeği src/server/kimlik/musteri.ts; kabuk src/components/kabuk/MusteriKabugu.tsx
   src/modules/muhasebe/     MUHASEBE (2026-10-05, 327; modül 18): göç 0039 (fatura, fatura_rapor, tahsilat; değişmez, kalanı aşmaz, son imzadan önce
                             olamaz) · server/muhasebe.ts (işler = planlar, iş / fatura kartı, fatura kaydet / toplu, tahsilat) · ui/ (listeler, iş ve fatura
                             parçaları, pencereler) · okuyucular: planlar/server/muhasebe-baglanti.ts, raporlar/server/muhasebe-baglanti.ts,

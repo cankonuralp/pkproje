@@ -4,12 +4,12 @@
    Kullanıcı bu arada odağı kendisi bir yere koyduysa dokunmaz. */
 const SURE_MS = 2000;
 
+const ODAKLANIR = /^(A|BUTTON|INPUT|SELECT|TEXTAREA|SUMMARY)$/;
 function hedefOgesi(hedef?: string): HTMLElement | null {
-  const h = hedef ? document.querySelector<HTMLElement>(hedef) : null;
-  if (h) return h;
-  const b = document.querySelector<HTMLElement>("main h1") ?? document.querySelector<HTMLElement>("h1");
-  if (b && !b.hasAttribute("tabindex")) b.setAttribute("tabindex", "-1");
-  return b;
+  const o = (hedef ? document.querySelector<HTMLElement>(hedef) : null) ?? document.querySelector<HTMLElement>("main h1") ?? document.querySelector<HTMLElement>("h1");
+  /* başlık gibi kendiliğinden odak almayan öğe programla odaklanabilir olur (sekme sırasına girmez) */
+  if (o && !ODAKLANIR.test(o.tagName) && !o.hasAttribute("tabindex")) o.setAttribute("tabindex", "-1");
+  return o;
 }
 
 export function odakKoru(hedef?: string): void {

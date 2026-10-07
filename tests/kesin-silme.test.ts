@@ -18,7 +18,9 @@
      varsayılan matriste silemez), ekipman yoksa "Plan bulunamadı" demez; teklifin ekipman listesindeki tür silinmez, silinen formatın tanımı izde;
      "IR" / "ir" gibi veritabanının aynı saydığı tür adı uyarıyla döner (23505 ile düşmez);
    · 366 personel: yalnız firma yöneticisi; kullanılmamış kişi hiç girilmemiş hesabı ve kaldırılmış İSG kaydıyla silinir (parola ize yazılmaz);
-     giriş yapılmış hesabı ya da zimmeti olan silinmez; kişi kendini silmez; Ayrıldı → hesap kapanır, geri al çalışıyor yapar.
+     giriş yapılmış hesabı ya da zimmeti olan silinmez; kişi kendini silmez; Ayrıldı → hesap kapanır, geri al çalışıyor yapar;
+   · 367 müşteri girişi: hiç girilmemiş ek giriş yalnız yöneticiye silinir (kullanıcı adı serbest, parola ize yazılmaz); ana giriş ve panele girilmiş
+     giriş silinmez.
    Olumsuz kanıt: tests/bozan/kesin-silme.bozan.ts. */
 import assert from "node:assert/strict";
 import { mkdtempSync, rmSync } from "node:fs";
@@ -29,7 +31,7 @@ import { cihazKaydet, cihazKarti, cihazKonum, cihazListesi, cihazOzetleri, cihaz
 import { formatYukle, turSil, turSilmeDurumu } from "../src/modules/ekipman-turleri/server/turler.ts";
 import { ekipmanSil, planIci } from "../src/modules/planlar/server/plan-ici.ts";
 import { aracKaydet, aracKarti, aracListesi, aracPasif, aracSil, aracSilmeDurumu, kmKaydet } from "../src/modules/araclar/server/araclar.ts";
-import { ekGirisEkle } from "../src/modules/musteriler/server/girisler.ts";
+import { anaGeciciParola, ekGirisEkle, girisBilgisi, girisSil } from "../src/modules/musteriler/server/girisler.ts";
 import { musteriKaydet, musteriSil, silmeDurumu, tesisKaydet, tesisSil } from "../src/modules/musteriler/server/musteriler.ts";
 import { personelAyrildi, personelEkle, personelGeriAl, personelKarti, personelSil, personelSilmeDurumu } from "../src/modules/personel/server/personel.ts";
 import { hesapAc } from "../src/server/kimlik/hesapYonetimi.ts";
@@ -423,4 +425,25 @@ test("personel: kullanılmamış silinir (hiç girilmemiş hesabı, kaldırılm�
   assert.equal((await a(FA.yon, (db) => kesinSil(db, "personel", yonPersonel, "Deneme"))).durum, "kullanildi", "veritabanı da reddeder");
   await a(FA.yon, (db) => db.sorgu("UPDATE hesap SET personel_id = NULL WHERE id = $1", [FA.yon.id]));
   await assert.rejects(a(FA.yon, (db) => db.sorgu("DELETE FROM personel WHERE id = $1", [girisli])), /permission denied|izin/i);
+});
+
+/* 367 — müşteri girişi: hiç girilmemiş ek giriş silinir; ana ve girilmiş giriş silinmez */
+test("müşteri girişi: hiç girilmemiş ek giriş silinir (kullanıcı adı serbest); ana giriş ve panele girilmiş giriş silinmez; yalnız yönetici", async () => {
+  const M = { unvan: "Girişli Müşteri A.Ş.", kisa: "", vd: "", vno: "", tel: "", ilgili: "" };
+  const m = tamam(await a(FA.yon, (db) => musteriKaydet(db, FA.yon, null, 0, { ...M, eposta: "ana@girisli-musteri.example" }, true))).id;
+  const ek = tamam(await a(FA.yon, (db) => ekGirisEkle(db, FA.yon, m, { ad: "Ek Kişi", eposta: "ek@girisli-musteri.example", tesisler: "hepsi" }))).id;
+  const ana = tamam(await a(FA.yon, (db) => anaGeciciParola(db, FA.yon, m))).id;
+  assert.equal((await a(FA.yon, (db) => girisBilgisi(db, FA.yon, m)))!.sil, true);
+  assert.equal((await a(FA.plan, (db) => girisBilgisi(db, FA.plan, m)))!.sil, false, "planlama girişi yönetir ama silemez");
+  for (const k of [FA.plan, FA.elk]) assert.deepEqual(await a(k, (db) => girisSil(db, k, ek)), { durum: "yetkisiz" }, k.roller.join());
+  assert.deepEqual(await kiraciIcinde(havuz, B, (db) => girisSil(db, FB.yon, ek), { hesapId: FB.yon.id }), { durum: "yok" }, "başka firma");
+  assert.deepEqual(await a(FA.yon, (db) => girisSil(db, FA.yon, ana)), { durum: "red", neden: "Ana giriş silinmez; müşterinin e-postasına bağlı. Pasife alın." });
+  assert.deepEqual(await a(FA.yon, (db) => girisSil(db, FA.yon, ek)), { durum: "tamam", id: ek });
+  assert.equal((await a(FA.yon, (db) => db.sorgu("SELECT 1 FROM musteri_hesap WHERE id = $1", [ek]))).rowCount, 0);
+  const iz = (await a(FA.yon, (db) => db.sorgu<{ eski: Record<string, unknown> }>("SELECT eski FROM denetim_izi WHERE ne = 'musteri_giris.sil' AND nesne_id = $1", [ek]))).rows[0];
+  assert.deepEqual([iz.eski.eposta, "parola_ozeti" in iz.eski], ["ek@girisli-musteri.example", false]);
+  const ek2 = tamam(await a(FA.yon, (db) => ekGirisEkle(db, FA.yon, m, { ad: "Ek Kişi", eposta: "ek@girisli-musteri.example", tesisler: "hepsi" }))).id;
+  await a(FA.yon, (db) => db.sorgu("UPDATE musteri_hesap SET son_giris = now() WHERE id = $1", [ek2]));
+  assert.deepEqual(await a(FA.yon, (db) => girisSil(db, FA.yon, ek2)), { durum: "red", neden: "Müşteri bu girişle panele girdi; silinmez. Pasife alın." });
+  await assert.rejects(a(FA.yon, (db) => db.sorgu("DELETE FROM musteri_hesap WHERE id = $1", [ek2])), /permission denied|izin/i);
 });

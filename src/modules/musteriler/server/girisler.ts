@@ -3,9 +3,13 @@
    e-postası, bütün tesisler) ve kişiye özel EK girişler. Geçici parola YALNIZ BİR KEZ döner (veritabanında özeti; ize yazılmaz); müşteri ilk
    girişte değiştirebilir. E-postayla gönderim bildirim altyapısıyla gelir (anayasa 1.3 — kurulmadı); şimdilik personel kişiye iletir.
    Yetki her işlevde sunucuda: Müşteriler "yaz" düzeyi (müşteriyi değiştirebilen). Pasif müşterinin girişi açılmaz, parola verilmez. Kullanıcı
-   adı firmada tek (personel hesabıyla da çakışmaz — veritabanı tetiği). Parola / durum / e-posta / kapsam değişince açık oturumlar düşer (tetik). */
+   adı firmada tek (personel hesabıyla da çakışmaz — veritabanı tetiği). Parola / durum / e-posta / kapsam değişince açık oturumlar düşer (tetik).
+   367 (§9 elli üçüncü tur): müşterinin panele HİÇ girmediği ek giriş yalnız yöneticiye (kayit_sil, modül 3) kesin silinir (göç 0062); ana giriş ve
+   girilmiş giriş silinmez — pasife alınır. */
 import type { Sorgulayici } from "../../../server/db/kiraci.ts";
+import { kesinSil } from "../../../server/db/silici.ts";
 import { ekle, guncelle, tablo, type Iz } from "../../../server/db/yazici.ts";
+import { canDoEylem, type YetkiHesabi } from "../../../server/yetki/canDo.ts";
 import { geciciParolaUret } from "../../../server/kimlik/hesapYonetimi.ts";
 import { parolaOzeti } from "../../../server/kimlik/parola.ts";
 import { dogrula, type DogrulamaHatalari } from "../../../sema/ortak.ts";
@@ -28,6 +32,8 @@ export interface GirisBilgisi {
   /** ek giriş kapsamı için müşterinin etkin tesisleri */
   tesisler: { id: string; ad: string }[];
   yaz: boolean;
+  /** 367: hiç girilmemiş ek girişi silebilir (yönetici) */
+  sil: boolean;
 }
 export type GirisYazma =
   | { durum: "tamam"; id: string; parola?: string }
@@ -61,10 +67,11 @@ export async function girisBilgisi(db: Sorgulayici, kim: Kisi, musteriId: string
   if (!m) return null;
   const l = (await db.sorgu<Satir>(`${SEC} WHERE musteri_id = $1 ORDER BY ana DESC, ad`, [musteriId])).rows.map(girisOf);
   const t = (await db.sorgu<{ id: string; ad: string }>("SELECT id::text, ad FROM tesis WHERE musteri_id = $1 AND pasif IS NULL ORDER BY ad", [musteriId])).rows;
-  return { eposta: m.eposta, pasif: !!m.pasif, ana: l.find((x) => x.ana) ?? null, ekler: l.filter((x) => !x.ana), tesisler: t, yaz: musteriDegistirir(kim) };
+  return { eposta: m.eposta, pasif: !!m.pasif, ana: l.find((x) => x.ana) ?? null, ekler: l.filter((x) => !x.ana), tesisler: t, yaz: musteriDegistirir(kim), sil: silebilir(kim) };
 }
 
 const iz = (kim: Kisi, ne: string, gerekce?: string): Iz => ({ kim: kim.ad, ne, gerekce });
+const silebilir = (kim: YetkiHesabi) => canDoEylem(kim, "kayit_sil", { modul: 3 });
 async function yeniParola(): Promise<{ parola: string; ozet: string }> { const parola = geciciParolaUret(); return { parola, ozet: await parolaOzeti(parola) }; }
 
 /** ANA giriş için geçici parola: giriş yoksa müşterinin e-postasıyla açılır, varsa yeni parola verilir (eski parola ve oturumlar düşer) */
@@ -156,4 +163,14 @@ export async function anaGirisEpostasi(db: Sorgulayici, kim: Kisi, musteriId: st
 /** müşteri kaydı e-postayı değiştirmeden önce: ana girişin durumu (satır kilitlenir — aynı işlemde parola / pasif yarışı olmasın); yoksa null */
 export async function anaGirisDurumu(db: Sorgulayici, musteriId: string): Promise<GirisDurumu | null> {
   return (await db.sorgu<{ durum: GirisDurumu }>("SELECT durum FROM musteri_hesap WHERE musteri_id = $1 AND ana FOR UPDATE", [musteriId])).rows[0]?.durum ?? null;
+}
+
+/** 367 — kesin sil: yalnız yönetici; yalnız müşterinin panele hiç girmediği ek giriş (karar veritabanında, 0062) */
+export async function girisSil(db: Sorgulayici, kim: Kisi, id: string): Promise<GirisYazma> {
+  if (!silebilir(kim)) return { durum: "yetkisiz" };
+  const r = await kesinSil(db, "musteri_hesap", id, kim.ad);
+  if (r.durum === "kullanildi") {
+    return { durum: "red", neden: r.kullanim.ana ? "Ana giriş silinmez; müşterinin e-postasına bağlı. Pasife alın." : "Müşteri bu girişle panele girdi; silinmez. Pasife alın." };
+  }
+  return r.durum === "tamam" ? { durum: "tamam", id } : { durum: "yok" };
 }

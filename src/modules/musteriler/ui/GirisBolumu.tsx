@@ -2,7 +2,8 @@
 /* MÜŞTERİ GİRİŞİ (maket musteriler.html "Müşteri girişi" bölümü; karar 33, 44, L5; 0030): ANA giriş — kullanıcı adı müşterinin e-postası, bütün
    tesisler · EK girişler — kişiye özel, bütün ya da seçili tesisler. Geçici parola YALNIZ BİR KEZ pencerede gösterilir (sayfa yenilenince yoktur);
    personel müşteriye iletir, müşteri ilk girişte değiştirebilir (e-postayla gönderim bildirim altyapısıyla gelir). Müşteri aynı giriş ekranından
-   girer ve yalnız kendi paneline düşer. İşlem tuşları yalnız müşteriyi değiştirebilene çizilir; kural ve yetki sunucuda. */
+   girer ve yalnız kendi paneline düşer. İşlem tuşları yalnız müşteriyi değiştirebilene çizilir; kural ve yetki sunucuda. 367: müşterinin hiç girmediği
+   ek girişte yöneticiye "Sil" (satırda simge). */
 import { useRouter } from "next/navigation";
 import { useState, useTransition } from "react";
 import { Bilgi, BilgiListesi } from "../../../components/bilgi/Bilgi";
@@ -14,9 +15,10 @@ import { useOnayla } from "../../../components/pencere/Onay";
 import { Pencere, pencereMetinSinifi } from "../../../components/pencere/Pencere";
 import { AltSatir, Bolum, Kod, Rozet, type RozetTuru } from "../../../components/sayfa/Sayfa";
 import { Serit } from "../../../components/serit/Serit";
+import { SilTusu } from "../../../components/sil/SilTusu";
 import { Tus } from "../../../components/tus/Tus";
 import type { GirisBilgisi, GirisDurumu, MusteriGirisi } from "../server/girisler";
-import { anaGeciciParolaEylemi, ekGeciciParolaEylemi, ekGirisEkleEylemi, girisPasifEylemi, type GirisYaniti } from "./giris-eylemleri";
+import { anaGeciciParolaEylemi, ekGeciciParolaEylemi, ekGirisEkleEylemi, girisPasifEylemi, girisSilEylemi, type GirisYaniti } from "./giris-eylemleri";
 import stil from "./musteriler.module.css";
 
 const DURUM: Record<GirisDurumu, readonly [string, RozetTuru]> = {
@@ -73,6 +75,8 @@ export function GirisBolumu({ musteriId, kisa, b }: { musteriId: string; kisa: s
               <Tus tur="ikincil" ikon="key-round" disabled={bekliyor} onClick={() => ekParola(g)}>Geçici parola</Tus>
               <Tus tur="ikincil" disabled={bekliyor} onClick={() => void pasif(g, true)}>Pasife al</Tus>
             </>}
+        {b.sil && !g.sonGiris && <SilTusu kucuk ikon="trash-2" ad={g.ad} erisimAdi={`${g.ad} girişini sil`} baslik="Ek girişi sil"
+          yanEtki="kullanıcı adı yeniden kullanılabilir" sil={() => girisSilEylemi(g.id)} odak="#b-giris" />}
       </div>
     ) }] : []),
   ];

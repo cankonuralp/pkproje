@@ -78,6 +78,24 @@ test("müşteri ve tesis: ekle, uyarıyla kaydet, kullanılmamışı sil; denet�
   await expect(pp).toContainText(/planda.*kullanıldı; silinemez\./);
   await pp.getByRole("button", { name: "Vazgeç" }).click();
 
+  /* 367: hiç girilmemiş ek giriş Sil ile kesin silinir */
+  const ekAd = `Ek Kişi ${ek}`;
+  await page.goto(musteriAdres);
+  await hazir(page);
+  await page.getByRole("button", { name: "Ek giriş ekle" }).click();
+  const g = page.locator("dialog[open]");
+  await g.getByLabel("Ad soyad").fill(ekAd);
+  await g.getByLabel("E-posta (kullanıcı adı)").fill(`ek-${bilgi.project.name}-${bilgi.retry}@deneme-musteri.example`);
+  await g.getByRole("button", { name: "Girişi aç" }).click();
+  await expect(page.getByText(`${ekAd} için ek giriş açıldı.`, { exact: false }).first()).toBeVisible({ timeout: 30_000 });
+  await hazir(page);
+  await page.getByRole("button", { name: `${ekAd} girişini sil` }).click();
+  const og = page.locator("dialog[open]");
+  await expect(og).toContainText(`${ekAd} kalıcı olarak silinir; kullanıcı adı yeniden kullanılabilir. Geri alınamaz.`);
+  await og.getByRole("button", { name: "Sil" }).click();
+  await expect(page.getByText(`${ekAd} silindi.`).first()).toBeVisible({ timeout: 30_000 });
+  await expect(page.getByText("Ek giriş yok.")).toBeVisible();
+
   /* denetçi: görür, ekleyemez, düzenleyemez */
   await context.clearCookies();
   await girisli(page, "denetci");

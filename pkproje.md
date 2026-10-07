@@ -2353,6 +2353,11 @@ revizyon, alan kopyalama, hafif kusur devri, meslek eşleşme denetimi).
 - Emsal ürünler: https://opwire.app/iso-17020-periyodik-kontrol-yazilimi/ · https://17020muayene.vidco.com.tr/ · https://akuple.com/asansor-kontrol-yazilimi/ · https://ensyazilim.com/
 
 ## 11 · Değişiklik günlüğü
+- 2026-10-07 (367): **Müşteri girişi Sil** (§9 elli üçüncü tur). Müşteri kartının Ek girişler tablosunda, müşterinin panele HİÇ girmediği ek
+  girişte yalnız yöneticiye çöp kutusu simgesi ("<ad> girişini sil"; onay "… kalıcı olarak silinir; kullanıcı adı yeniden kullanılabilir. Geri
+  alınamaz."). Ana giriş (müşterinin e-postasına bağlı) ve panele girilmiş giriş silinmez — pasife alınır. Göç 0062 musteri_hesap_kullanim (ana ·
+  panele girdi) + musteri_hesap_sil (parola özeti ize yazılmaz; oturumlar zincirle). Kilit kesin-silme.test "müşteri girişi"; olumsuz kanıt
+  kesin-silme.bozan 12; e2e musteriler (ek giriş aç → sil).
 - 2026-10-07 (366): **Personel Ayrıldı / Ayrılışı geri al / Sil** (karar 43 "ayrılan personel silinmez" kullanılmış personel için geçerli; §9 elli
   üçüncü tur). Sunucuda ayrıldı işlevi vardı ama ekranı yoktu: personel kartında (yalnız "yaz" — önerilen düzende firma yöneticisi) çalışan kişide
   "Ayrıldı" (pencere: ayrılış tarihi, "silinmez: zimmetleri, raporları, özlük dosyası ve geçmişi durur"; giriş hesabı 0007 tetiğiyle kapanır), ayrılan

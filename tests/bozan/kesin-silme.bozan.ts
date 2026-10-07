@@ -12,7 +12,8 @@
    9. (363) araç kullanımından haftalık kilometre denetimi kalkınca kilometresi girilmiş araca "Sil" çizilir (silme yabancı anahtara takılır,
       kişi "kullanılmadı" denip silemediği tuşla karşılaşır).
   10. (364) müşteri kullanımından girilmiş müşteri girişi denetimi kalkınca panele girmiş müşteri girişleriyle birlikte silinir.
-  11. (366) personel kullanımından giriş yapılmış hesap denetimi kalkınca sisteme girmiş kişi hesabıyla birlikte silinir (izdeki hesap kimliği yetim). */
+  11. (366) personel kullanımından giriş yapılmış hesap denetimi kalkınca sisteme girmiş kişi hesabıyla birlikte silinir (izdeki hesap kimliği yetim).
+  12. (367) müşteri girişi kullanımından panele girme denetimi kalkınca müşterinin kullandığı giriş silinir. */
 import assert from "node:assert/strict";
 import { copyFileSync, mkdirSync, mkdtempSync, readdirSync, readFileSync, rmSync, writeFileSync } from "node:fs";
 import { tmpdir } from "node:os";
@@ -22,6 +23,7 @@ import { cihazKaydet, cihazSil, cihazTuruKaydet, cihazTuruSil, type Kisi } from 
 import { turSil } from "../../src/modules/ekipman-turleri/server/turler.ts";
 import { ekipmanSil } from "../../src/modules/planlar/server/plan-ici.ts";
 import { aracKaydet, aracSilmeDurumu } from "../../src/modules/araclar/server/araclar.ts";
+import { girisSil } from "../../src/modules/musteriler/server/girisler.ts";
 import { musteriSil } from "../../src/modules/musteriler/server/musteriler.ts";
 import { personelSil } from "../../src/modules/personel/server/personel.ts";
 import { demirbasEkle, demirbasSil } from "../../src/modules/zimmetler/server/zimmet.ts";
@@ -213,5 +215,20 @@ test("11. giriş yapılmış hesap denetimi kalkınca sisteme girmiş kişi sili
       return id;
     }, { hesapId: F.yon.id });
     assert.equal((await kiraciIcinde(h, A, (db) => personelSil(db, F.yon, p), { hesapId: F.yon.id })).durum, "tamam", "bozuk: sisteme girmiş kişi silindi");
+  } finally { await h.end(); await supa.kapat(); }
+});
+
+test("12. panele girme denetimi kalkınca müşterinin kullandığı giriş silinir (kilidin koruduğu açık)", async () => {
+  const PANEL = "    'panel', CASE WHEN h.son_giris IS NOT NULL THEN 1 END))";
+  const supa = await supabaseBenzeri(kume, "silme_bozuk_12", gocler(degistir(PANEL, "    'panel', NULL))"), undefined, "0062_"));
+  const h = havuzKur({ ...kume.uygulama, database: "silme_bozuk_12" });
+  try {
+    const A = (await supa.sahip.query<{ id: string }>("INSERT INTO firma (kisa_ad, ad, rapor_kodu) VALUES ('deneme-a', 'Deneme A', 'DA') RETURNING id::text")).rows[0].id;
+    const F = await sahaFirmasi(h, depo, A, "deneme-a");
+    const g = await kiraciIcinde(h, A, async (db) => {
+      const m = (await db.sorgu<{ id: string }>("INSERT INTO musteri (unvan, kisa) VALUES ('Girişli Deneme A.Ş.', 'Girişli') RETURNING id::text")).rows[0].id;
+      return (await db.sorgu<{ id: string }>("INSERT INTO musteri_hesap (musteri_id, eposta, ad, son_giris) VALUES ($1, 'ek@girisli.example', 'Ek', now()) RETURNING id::text", [m])).rows[0].id;
+    }, { hesapId: F.yon.id });
+    assert.equal((await kiraciIcinde(h, A, (db) => girisSil(db, F.yon, g), { hesapId: F.yon.id })).durum, "tamam", "bozuk: panele girilmiş giriş silindi");
   } finally { await h.end(); await supa.kapat(); }
 });
