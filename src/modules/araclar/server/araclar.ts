@@ -6,16 +6,21 @@
    "Kimde" Zimmetler'in hareketlerinden (ikinci liste yok); teslim tutanağı zimmet hareketini Zimmetler'in işleviyle yazar, tutanak eki burada.
    Fotoğraflar tek dosya yolundan (yalnız JPEG / PNG, EXIF silinir), zimmet hareketine bağlı (Zimmetler'in geçmişinde de görünür).
    342: tutanağın belgesi (temel format, src/belge/arac.ts) — teslim alan kişiyse tutanakla AYNI işlemde PDF'i onun imzasına gider (Onaylar › Diğer,
-   kaynak zimmet hareketi); PDF üretilemezse tutanak da kaydedilmez (imzasız teslim kalmaz). Depoya iadede belge gönderilmez. */
+   kaynak zimmet hareketi); PDF üretilemezse tutanak da kaydedilmez (imzasız teslim kalmaz). Depoya iadede belge gönderilmez.
+   363 (§9 elli üçüncü tur): hiç kullanılmamış aracı (teslim tutanağı / zimmet hareketi, haftalık kilometre yok) yönetici kesin siler (kayit_sil, modül
+   23; göç 0059); kullanılmış araç depodayken pasife alınır — listeden (Görünüm: Pasif), teslimden, kilometreden, balondan ve uyarılardan kalkar;
+   sayfası, tutanakları ve kilometre geçmişi durur; Etkinleştir geri getirir. */
 import type { AracTutanagiVerisi } from "../../../belge/arac.ts";
 import { ayarOku, firmaBelgeKunyesi } from "../../../server/ayar/ayar.ts";
 import type { Sorgulayici } from "../../../server/db/kiraci.ts";
+import { kesinSil, kullanimlar, type Kullanim } from "../../../server/db/silici.ts";
 import { ekle, guncelle, tablo } from "../../../server/db/yazici.ts";
 import type { Depo } from "../../../server/dosya/depo.ts";
 import { dosyaYukle } from "../../../server/dosya/dosya.ts";
 import { hesabinPersoneli, personelHesaplari } from "../../../server/kimlik/hesap.ts";
 import { numaraAl } from "../../../server/numara/numara.ts";
-import { duzey, type YetkiHesabi } from "../../../server/yetki/canDo.ts";
+import { canDoEylem, duzey, type YetkiHesabi } from "../../../server/yetki/canDo.ts";
+import { kullanimMetni } from "../../../components/sil/metin.ts";
 import { dogrula, type DogrulamaHatalari } from "../../../sema/ortak.ts";
 import { belgeGonder, kaynakBelgeDurumlari } from "../../onaylar/server/belge-baglanti.ts";
 import type { BelgeDurumu as ImzaDurumu } from "../../onaylar/sema.ts";
@@ -39,6 +44,8 @@ export interface Belge { ad: string; tarih: string | null; durum: BelgeDurumu }
 export interface AracSatiri {
   id: string; plaka: string; tur: string; marka: string; model: string; yil: number; yakit: string;
   kimde: Kimde; km: number | null; bakimKm: number | null; belgeler: Belge[]; kmDurum: KmDurumu; benim: boolean;
+  /** pasife alındığı gün (363); etkin araçta null */
+  pasif: string | null;
 }
 export interface TutanakSatiri {
   id: string; hareketId: string; no: string | null; aracId: string; plaka: string; zaman: string; eden: string; alan: string; km: number | null;
@@ -76,7 +83,7 @@ export async function aracOzetleri(db: Sorgulayici, ayar: { pasifDahil?: boolean
 }
 
 type AracDb = { id: string; plaka: string; tur: string; marka: string; model: string; yil: number; yakit: string; ilk_km: number | null; bakim_km: number | null;
-  muayene: string | null; sigorta: string | null; kasko: string | null; surum: number };
+  muayene: string | null; sigorta: string | null; kasko: string | null; surum: number; pasif: string | null };
 type HareketDb = { id: string; arac_id: string; eden: string | null; alan: string | null; zaman: Date; km: number | null; tutanak: string | null; no: string | null;
   yakit: string | null; kontrol: string[] | null; hasar: string | null };
 type KmDb = { id: string; arac_id: string; hafta: string; km: number; personel_id: string | null; zaman: Date; surum: number };
@@ -84,7 +91,7 @@ type KmDb = { id: string; arac_id: string; hafta: string; km: number; personel_i
 /** bütün araçlar + hareketler + haftalık kilometre (listeler bundan süzülür) */
 async function durum(db: Sorgulayici) {
   const araclar = (await db.sorgu<AracDb>(
-    "SELECT id::text, plaka, tur, marka, model, yil, yakit, ilk_km, bakim_km, muayene::text, sigorta::text, kasko::text, surum FROM arac WHERE pasif IS NULL")).rows;
+    "SELECT id::text, plaka, tur, marka, model, yil, yakit, ilk_km, bakim_km, muayene::text, sigorta::text, kasko::text, surum, pasif::text FROM arac")).rows;
   const hareketler = (await db.sorgu<HareketDb>(
     `SELECT h.id::text, h.arac_id::text, h.eden_personel::text AS eden, h.alan_personel::text AS alan, h.zaman, h.km, t.id::text AS tutanak, t.no, t.yakit, t.kontrol, t.hasar
        FROM zimmet_hareket h LEFT JOIN arac_tutanagi t ON t.hareket_id = h.id AND t.firma_id = h.firma_id
@@ -124,7 +131,7 @@ function satir(s: Durum, a: AracDb, bugun: string, ben: string | null): AracSati
   return {
     id: a.id, plaka: a.plaka, tur: a.tur, marka: a.marka, model: a.model, yil: a.yil, yakit: a.yakit, kimde, km: sonKm(s, a), bakimKm: a.bakim_km, kmDurum,
     belgeler: ([["Muayene", a.muayene], ["Trafik sigortası", a.sigorta], ["Kasko", a.kasko]] as const).map(([ad, t]) => ({ ad, tarih: t, durum: belgeDurumu(t, bugun, s.esik) })),
-    benim: !!ben && kimde.tip === "kisi" && kimde.id === ben,
+    benim: !!ben && kimde.tip === "kisi" && kimde.id === ben, pasif: a.pasif,
   };
 }
 
@@ -151,7 +158,7 @@ export async function aracTakip(db: Sorgulayici, kim: YetkiHesabi): Promise<{ ki
   if (await kendiKisi(db, kim) === false) return null;
   const ben = degistirir(kim) ? null : (await hesabinPersoneli(db, kim.id)) ?? "";
   const s = await durum(db), bugun = bugunTr();
-  const l = s.araclar.map((a) => satir(s, a, bugun, ben)).filter((a) => ben === null || a.benim);
+  const l = s.araclar.filter((a) => !a.pasif).map((a) => satir(s, a, bugun, ben)).filter((a) => ben === null || a.benim);
   const belge = (d: BelgeDurumu) => l.reduce((n, a) => n + a.belgeler.filter((b) => b.durum === d).length, 0);
   return { kirmizi: l.filter((a) => a.kmDurum === "eksik").length + belge("gecti"), sari: l.filter((a) => a.kmDurum === "bekliyor").length + belge("yakin") };
 }
@@ -312,3 +319,36 @@ export async function tutanakKaydet(db: Sorgulayici, depo: Depo, kim: Kisi, firm
 }
 /** fotoğraf reddedilirse bütün tutanak geri alınır (işlem düşer); eylem bunu ilgili açının iletisine çevirir */
 export class FotoHatasi extends Error { aci: string; constructor(m: string, aci: string) { super(m); this.aci = aci; } }
+
+/* ── KESİN SİLME / PASİF (363; reisim 2026-10-07 "eklenebilen şeyler silinemiyor"; §9 elli üçüncü tur; ölçüm cihazı 357–358 deseni) ── */
+export type SilYaniti = { durum: "tamam"; ad: string } | { durum: "red"; neden: string } | { durum: "yok" } | { durum: "yetkisiz" };
+export type PasifYaniti = { durum: "tamam"; id: string; surum: number } | { durum: "red"; neden: string } | { durum: "cakisma" } | { durum: "yok" } | { durum: "yetkisiz" };
+const silebilir = (kim: YetkiHesabi) => canDoEylem(kim, "kayit_sil", { modul: MODUL });
+
+/** araç sayfası: "Sil" çizilir mi (silebilen + kullanılmamış); aracı değiştirene kullanım sayımları (Pasife al penceresi nedeni söyler) */
+export async function aracSilmeDurumu(db: Sorgulayici, kim: YetkiHesabi, id: string): Promise<{ sil: boolean; kullanim: Kullanim | null }> {
+  if (!degistirir(kim) || !UUID.test(id)) return { sil: false, kullanim: null };
+  const k = (await kullanimlar(db, "arac", [id])).get(id) ?? null;
+  return { sil: silebilir(kim) && !k, kullanim: k };
+}
+
+export async function aracSil(db: Sorgulayici, kim: Kisi, id: string): Promise<SilYaniti> {
+  if (!silebilir(kim)) return { durum: "yetkisiz" };
+  const r = await kesinSil(db, "arac", id, kim.ad);
+  if (r.durum === "kullanildi") return { durum: "red", neden: `Araç silinemez: ${kullanimMetni(r.kullanim) || "başka kayıtlarda"} kullanıldı.` };
+  return r;
+}
+
+/** pasife al / etkinleştir: "yaz" düzeyi. ENGEL (veri bütünlüğü): araç depoda olmalı — kişinin zimmetindeyken pasife alınırsa teslim tutanağıyla
+    geri alınamaz (kilit pasif aracı reddeder). */
+export async function aracPasif(db: Sorgulayici, kim: Kisi, id: string, surum: number, pasif: boolean): Promise<PasifYaniti> {
+  if (!degistirir(kim)) return { durum: "yetkisiz" };
+  if (!UUID.test(id)) return { durum: "yok" };
+  if (!Number.isSafeInteger(surum) || surum < 0) return { durum: "cakisma" };
+  const a = (await db.sorgu<{ plaka: string; pasif: string | null }>("SELECT plaka, pasif::text FROM arac WHERE id = $1 FOR UPDATE", [id])).rows[0];
+  if (!a) return { durum: "yok" };
+  if (pasif && !a.pasif && (await kimdeHaritasi(db)).arac.get(id)) return { durum: "red", neden: `${a.plaka} bir kişinin zimmetinde; önce teslim tutanağıyla depoya alın.` };
+  const r = await guncelle(db, ARAC, id, surum, { pasif: pasif ? (a.pasif ?? bugunTr()) : null }, { kim: kim.ad, ne: pasif ? "arac.pasif" : "arac.etkinlestir" });
+  if (r.durum === "cakisma" || r.durum === "yok") return { durum: r.durum };
+  return { durum: "tamam", id, surum: r.surum };
+}

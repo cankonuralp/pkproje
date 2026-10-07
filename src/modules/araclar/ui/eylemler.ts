@@ -5,7 +5,7 @@ import { aracTutanagiPdf } from "../../../belge/pdf";
 import { depo } from "../../../server/dosya/depo";
 import { ayniKoken } from "../../../server/kimlik/koken";
 import { istekOturumu, oturumIslemi } from "../../../server/kimlik/istek";
-import { aracKaydet, FotoHatasi, kmKaydet, tutanakKaydet, TutanakPdfHatasi } from "../server/araclar";
+import { aracKaydet, aracPasif, aracSil, FotoHatasi, kmKaydet, tutanakKaydet, TutanakPdfHatasi } from "../server/araclar";
 
 export interface PencereDurumu { tamam?: boolean; id?: string; hatalar?: Record<string, string>; genel?: string; ileti?: string; imzaya?: boolean }
 
@@ -53,4 +53,18 @@ export async function tutanakKaydetEylemi(form: FormData): Promise<PencereDurumu
     if (h instanceof TutanakPdfHatasi) return { genel: h.message };
     throw h;
   }
+}
+
+/** kesin sil (363): yalnız yönetici, yalnız hiç kullanılmamış araç — karar araclar.ts / veritabanında */
+export async function aracSilEylemi(id: string): Promise<PencereDurumu> {
+  const o = await oturum(); if (typeof o === "string") return { genel: o };
+  const r = await oturumIslemi(o, (db) => aracSil(db, o, yazi(id)));
+  return r.durum === "tamam" ? { tamam: true } : r.durum === "red" ? { genel: r.neden } : { genel: SONUC[r.durum] };
+}
+
+/** pasife al / etkinleştir (363): "yaz" düzeyi; zimmetteki araç pasife alınmaz (sunucuda) */
+export async function aracPasifEylemi(id: string, surum: number, pasif: boolean): Promise<PencereDurumu> {
+  const o = await oturum(); if (typeof o === "string") return { genel: o };
+  const r = await oturumIslemi(o, (db) => aracPasif(db, o, yazi(id), Number(surum), pasif === true));
+  return r.durum === "tamam" ? { tamam: true } : r.durum === "red" ? { genel: r.neden } : { genel: SONUC[r.durum] };
 }

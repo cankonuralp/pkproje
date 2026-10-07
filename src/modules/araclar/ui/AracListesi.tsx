@@ -1,7 +1,8 @@
 "use client";
 /* ARAÇLAR LİSTELERİ (maket araclar.html #/ Araçlar · #/tutanaklar · #/benim sürücü görünümü): süzgeç (kalıp 15), tablo ↔ kart. "Araç ekle"
    yalnız "değiştirir" düzeyine; "Teslim tutanağı" değiştirene ve aracı olan sürücüye. Sürücü (kendi düzeyi) yalnız kendi aracını görür ve
-   listenin üstünde bu haftanın kilometresini yazar. Karar sunucuda. */
+   listenin üstünde bu haftanın kilometresini yazar. Karar sunucuda. 363: Görünüm (kalıp 8) — pasif araç listeden kalkar, "Pasif araçlar"da görünür;
+   teslim penceresinde yok. */
 import Link from "next/link";
 import { useRouter } from "next/navigation";
 import { useState, useTransition } from "react";
@@ -31,7 +32,8 @@ function aracTanim(): SuzgecTanimi<AracSatiri> {
       { k: "belge", ad: "Belge yaklaşan / geçen", test: (v) => v.belgeler.some((b) => b.durum === "gecti" || b.durum === "yakin") },
       { k: "km", ad: "Kilometre girilmedi", test: (v) => v.kmDurum === "eksik" || v.kmDurum === "bekliyor" },
     ],
-    seciciler: [],
+    seciciler: [{ k: "gorunum", ad: "Görünüm", bas: "etkin", secenek: () => [["etkin", "Etkin araçlar"], ["pasif", "Pasif araçlar"], ["hepsi", "Hepsi"]],
+      gecer: (v, s) => s === "hepsi" || (s === "pasif") === !!v.pasif }],
   };
 }
 
@@ -66,7 +68,7 @@ export function AracListesi({ araclar, kisiler, yaz, kendi }: { araclar: AracSat
           ? { ikon: "car", baslik: "Üzerinizde araç yok", metin: "Size bir araç teslim edilince burada görünür." }
           : { ikon: "car", baslik: "Araç yok", metin: "Araç ekleyince depoda başlar; teslim tutanağıyla kişiye verilir." }} />
       {p === "ekle" && <AracPenceresi kapat={() => setP(null)} />}
-      {p === "tutanak" && <TutanakPenceresi kapat={() => setP(null)} araclar={araclar} kisiler={kisiler} surucu={kendi} />}
+      {p === "tutanak" && <TutanakPenceresi kapat={() => setP(null)} araclar={araclar.filter((v) => !v.pasif)} kisiler={kisiler} surucu={kendi} />}
     </>
   );
 }

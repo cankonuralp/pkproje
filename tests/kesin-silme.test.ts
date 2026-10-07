@@ -9,7 +9,9 @@
    · 360 ekipman: yalnız yönetici; kullanılmamış ekipman plan satırı ve kod geçmişiyle silinir (kod serbest); raporlu / tamamlanmış plandaki silinmez;
    · 361 ekipman türü: kullanılmış tür silinmez; kullanılmamış tür fiyat, format sürümleri ve PDF'leriyle silinir (PDF çöpe), kod serbest;
    · 362 demirbaş: kullanılmamış demirbaş silinir (kod serbest); zimmet hareketi / imzalı zimmet formu olan silinmez; zimmetteyken pasife alınmaz;
-     pasif demirbaş Zimmetler'de "pasif" işaretli, teslim edilmez, hareketleri adıyla görünür; etkinleştir geri getirir.
+     pasif demirbaş Zimmetler'de "pasif" işaretli, teslim edilmez, hareketleri adıyla görünür; etkinleştir geri getirir;
+   · 363 araç: kullanılmamış araç silinir (plaka serbest); zimmet hareketi / haftalık kilometresi olan silinmez; zimmetteyken pasife alınmaz; pasif
+     araç listede işaretli, sayfası açılır, kilometre girilmez, Zimmetler'de de pasif; etkinleştir geri getirir.
    Olumsuz kanıt: tests/bozan/kesin-silme.bozan.ts. */
 import assert from "node:assert/strict";
 import { mkdtempSync, rmSync } from "node:fs";
@@ -19,6 +21,7 @@ import { after, before, test } from "node:test";
 import { cihazKaydet, cihazKarti, cihazKonum, cihazListesi, cihazOzetleri, cihazPasif, cihazSil, cihazSilmeDurumu, cihazTuruKaydet, cihazTuruListesi, cihazTuruSil, kalibrasyonEkle, raporCihazlari, type Kisi } from "../src/modules/olcum-cihazlari/server/cihazlar.ts";
 import { formatYukle, turSil, turSilmeDurumu } from "../src/modules/ekipman-turleri/server/turler.ts";
 import { ekipmanSil, planIci } from "../src/modules/planlar/server/plan-ici.ts";
+import { aracKaydet, aracKarti, aracListesi, aracPasif, aracSil, aracSilmeDurumu, kmKaydet } from "../src/modules/araclar/server/araclar.ts";
 import { demirbasDurumu, demirbasEkle, demirbasPasif, demirbasSil, teslimEt, zimmetListeleri } from "../src/modules/zimmetler/server/zimmet.ts";
 import { taslakBaslat } from "../src/modules/rapor-format/server/formatlar.ts";
 import { raporSil, sahaRaporu } from "../src/modules/raporlar/server/raporlar.ts";
@@ -265,4 +268,38 @@ test("demirbaş: kullanılmamış silinir, kod serbest; zimmet hareketi / zimmet
   await a(FA.yon, (db) => db.sorgu("INSERT INTO zimmet_formu (personel_id, kapsam) VALUES ($1, $2)", [FA.den1Personel, [`d:${f}`]]));
   assert.deepEqual(await a(FA.yon, (db) => demirbasSil(db, FA.yon, f)), { durum: "red", neden: "Demirbaş silinemez: 1 zimmet formunda kullanıldı." });
   await assert.rejects(a(FA.yon, (db) => db.sorgu("DELETE FROM demirbas WHERE id = $1", [f])), /permission denied|izin/i);
+});
+
+/* 363 — araç (Araçlar): yalnız yönetici siler, yalnız hiç kullanılmamışı; kullanılmışı depodayken pasife alınır */
+test("araç: kullanılmamış silinir, plaka serbest; zimmet hareketi / kilometresi olan silinmez; zimmetteyken pasif olmaz; pasif kilometre almaz", async () => {
+  const ARAC = { tur: "Hafif ticari araç", marka: "Deneme", model: "Model", yil: "2022", yakit: "dizel", ilkKm: "1.000", bakimKm: "", muayene: "", sigorta: "", kasko: "" };
+  const ekle = async (plaka: string) => tamam(await a(FA.yon, (db) => aracKaydet(db, FA.yon, null, 0, { ...ARAC, plaka }))).id;
+  const id = await ekle("00 SIL 001");
+  assert.deepEqual(await a(FA.yon, (db) => aracSilmeDurumu(db, FA.yon, id)), { sil: true, kullanim: null });
+  for (const k of [FA.plan, FA.den1, FA.elk]) assert.deepEqual(await a(k, (db) => aracSil(db, k, id)), { durum: "yetkisiz" }, k.roller.join());
+  assert.deepEqual(await a(FA.elk, (db) => aracSilmeDurumu(db, FA.elk, id)), { sil: false, kullanim: null }, "araçları yalnız gören yönetici silemez");
+  assert.deepEqual(await kiraciIcinde(havuz, B, (db) => aracSil(db, FB.yon, id), { hesapId: FB.yon.id }), { durum: "yok" }, "başka firma");
+  assert.deepEqual(await a(FA.yon, (db) => aracSil(db, FA.yon, id)), { durum: "tamam", ad: "00 SIL 001" });
+  assert.equal((await a(FA.yon, (db) => db.sorgu("SELECT 1 FROM denetim_izi WHERE ne = 'arac.sil' AND nesne_id = $1", [id]))).rowCount, 1);
+  assert.equal(typeof await ekle("00 SIL 001"), "string", "plaka serbest kaldı");
+
+  /* zimmet hareketi + haftalık kilometre: silinmez; zimmetteyken pasife alınmaz */
+  const z = await ekle("00 SIL 002");
+  await a(FA.yon, (db) => db.sorgu("INSERT INTO zimmet_hareket (arac_id, alan_personel, zaman, km) VALUES ($1, $2, now() - interval '2 hour', 1100)", [z, FA.den1Personel]));
+  await a(FA.yon, (db) => db.sorgu("INSERT INTO arac_km (arac_id, hafta, km, personel_id) VALUES ($1, date_trunc('week', now())::date, 1150, $2)", [z, FA.den1Personel]));
+  const k = (await a(FA.yon, (db) => aracKarti(db, FA.yon, z)))!;
+  assert.deepEqual(await a(FA.yon, (db) => aracSilmeDurumu(db, FA.yon, z)), { sil: false, kullanim: { km: 1, zimmet: 1 } });
+  assert.deepEqual(await a(FA.yon, (db) => aracSil(db, FA.yon, z)), { durum: "red", neden: "Araç silinemez: 1 kilometre kaydında, 1 zimmet hareketinde kullanıldı." });
+  assert.deepEqual(await a(FA.yon, (db) => aracPasif(db, FA.yon, z, k.surum, true)), { durum: "red", neden: "00 SIL 002 bir kişinin zimmetinde; önce teslim tutanağıyla depoya alın." });
+  await a(FA.yon, (db) => db.sorgu("INSERT INTO zimmet_hareket (arac_id, eden_personel, zaman, km) VALUES ($1, $2, now() - interval '1 hour', 1200)", [z, FA.den1Personel]));
+  assert.deepEqual(await a(FA.elk, (db) => aracPasif(db, FA.elk, z, k.surum, true)), { durum: "yetkisiz" });
+  tamam(await a(FA.yon, (db) => aracPasif(db, FA.yon, z, k.surum, true)));
+  assert.ok((await a(FA.yon, (db) => aracListesi(db, FA.yon)))!.araclar.find((x) => x.id === z)?.pasif, "liste Görünüm: Pasif");
+  const p = (await a(FA.yon, (db) => aracKarti(db, FA.yon, z)))!;
+  assert.deepEqual([!!p.pasif, p.tutanaklar.length, p.kmGecmisi.some((x) => x.km === 1150)], [true, 2, true], "sayfa açılır; tutanaklar ve kilometre geçmişi durur");
+  assert.deepEqual(await a(FA.yon, (db) => kmKaydet(db, FA.yon, z, { km: "1.300" })), { durum: "yok" }, "pasif araca kilometre girilmez");
+  assert.equal((await a(FA.yon, (db) => zimmetListeleri(db, FA.yon)))!.varliklar.find((v) => v.anahtar === `a:${z}`)?.pasif, true, "Zimmetler'de pasif");
+  tamam(await a(FA.yon, (db) => aracPasif(db, FA.yon, z, p.surum, false)));
+  assert.equal((await a(FA.yon, (db) => aracKarti(db, FA.yon, z)))!.pasif, null, "etkinleştirildi");
+  await assert.rejects(a(FA.yon, (db) => db.sorgu("DELETE FROM arac WHERE id = $1", [z])), /permission denied|izin/i);
 });

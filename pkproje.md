@@ -2353,6 +2353,13 @@ revizyon, alan kopyalama, hafif kusur devri, meslek eşleşme denetimi).
 - Emsal ürünler: https://opwire.app/iso-17020-periyodik-kontrol-yazilimi/ · https://17020muayene.vidco.com.tr/ · https://akuple.com/asansor-kontrol-yazilimi/ · https://ensyazilim.com/
 
 ## 11 · Değişiklik günlüğü
+- 2026-10-07 (363): **Araç Sil / Pasife al** (§9 elli üçüncü tur; ölçüm cihazı 357–358 deseni). Araç sayfasında yalnız yöneticiye (Araçlar'da "yaz")
+  ve hiç kullanılmamış araçta "Sil" (onay "<plaka> kalıcı olarak silinir; plakası yeniden kullanılabilir. Geri alınamaz."); kullanılmışta "Pasife al"
+  (neden: "2 zimmet hareketinde, 1 kilometre kaydında kullanıldı; silinemez"), pasifte yalnız "Etkinleştir". ENGEL: kişinin zimmetindeki araç pasife
+  alınmaz (teslim tutanağıyla geri alınamazdı). Eskiden pasif sütunu vardı ama ekranı yoktu ve pasif araç Araçlar'dan tümden kayboluyordu: artık liste
+  Görünüm: Etkin / Pasif / Hepsi; pasif araç sayfası açılır (Pasif rozeti + şerit; teslim, kilometre, belge şeridi yok), tutanakları listede kalır,
+  yan menü balonundan ve uyarılardan düşer. Göç 0059 arac_kullanim (zimmet hareketi · haftalık kilometre) + arac_sil. Kilit kesin-silme.test "araç";
+  olumsuz kanıt kesin-silme.bozan 9; e2e araclar (sil, plaka yeniden; kullanılmışta Sil yok, zimmetteyken Pasife al reddi).
 - 2026-10-07 (362): **Demirbaş Sil / Pasife al** (§9 elli üçüncü tur; maket yok — ölçüm cihazı 357–358 deseni). Varlık sayfasında (Zimmetler › demirbaş)
   yalnız yöneticiye ve hiç kullanılmamış demirbaşta "Sil" (onay "<kod> kalıcı olarak silinir; kodu yeniden kullanılabilir. Geri alınamaz.");
   kullanılmışta "Pasife al" (pencere nedeni söyler: "1 zimmet hareketinde kullanıldı; silinemez"), pasifte "Etkinleştir". ENGEL: kişinin zimmetindeki

@@ -36,6 +36,11 @@ export const SILINEBILIR = {
     kullanim: "demirbas_kullanim", sil: "demirbas_sil",
     fk: { kullanim: ["zimmet_hareket.demirbas_id"], birlikte: [] },
   },
+  /* 363: zimmet hareketi (teslim tutanağı) ve haftalık kilometresi olmayan araç (plaka serbest; 0059) */
+  arac: {
+    kullanim: "arac_kullanim", sil: "arac_sil",
+    fk: { kullanim: ["arac_km.arac_id", "zimmet_hareket.arac_id"], birlikte: [] },
+  },
 } as const satisfies Record<string, { kullanim: string; sil: string; fk: { kullanim: readonly string[]; birlikte: readonly string[] } }>;
 export type SilinebilirTur = keyof typeof SILINEBILIR;
 

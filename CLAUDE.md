@@ -99,6 +99,7 @@ pkproje/
   src/modules/araclar/      ARAÇLAR (2026-10-04): araç (zimmet varlığı), değişmez teslim tutanağı + açı fotoğrafları, haftalık kilometre
                             · tutanak belgesi (342): src/belge/arac.ts (temel <kod>-FR-ARC-01) → /araclar/tutanak/<hareket>/pdf; kişiye teslimde
                             PDF aynı işlemde teslim alanın imzasına (Onaylar › Diğer, onaylar/server/belge-baglanti.ts belgeGonder, kaynak = hareket)
+                            · 363 araç Sil (silici.ts, 0059) / Pasife al / Etkinleştir; pasif araç listede Görünüm: Pasif, sayfası açılır
   src/modules/sozlesmeler/  SÖZLEŞMELER (2026-10-04): iş sözleşmesi + kapsam + imzalı PDF, İSG-KATİP ID (tesis × denetçi), sözleşme şablonu ·
                             Dayanak teklif (326, göç 0038; kabul edilmiş teklifler teklifler/server/sozlesme-baglanti.ts'ten; ?teklif= ön doldurma)
   src/modules/dokumanlar/   DÖKÜMANLAR (2026-10-04): standart kütüphanesi (sürümlü PDF), diğer dökümanlar; kriter belgeleri src/tanim/kriterler.ts

@@ -1,5 +1,6 @@
 /* ARAÇ SAYFASI (maket araclar.html #/a/<id>): başlık (plaka · tür, durum) + işlemler · belge şeritleri · yüzler (kimde, kilometre, belgeler) ·
-   araç bilgileri · haftalık kilometre (giriş + geçmiş) · teslim tutanakları. Sürücü yalnız kendi zimmetindeki aracı görür; başkasınınki: bulunamadı. */
+   araç bilgileri · haftalık kilometre (giriş + geçmiş) · teslim tutanakları. Sürücü yalnız kendi zimmetindeki aracı görür; başkasınınki: bulunamadı.
+   363: pasif araç açılır (Pasif rozeti + şerit; teslim, kilometre ve belge uyarısı yok); Sil (yönetici, kullanılmamış) ya da Pasife al / Etkinleştir. */
 import type { Metadata } from "next";
 import { notFound } from "next/navigation";
 import { Bilgi, BilgiListesi, Yuz, Yuzler } from "../../../../components/bilgi/Bilgi";
@@ -9,7 +10,8 @@ import { Serit } from "../../../../components/serit/Serit";
 import { TusBaglanti } from "../../../../components/tus/Tus";
 import { modulBul } from "../../../../modules/moduller";
 import { kmYaz, yakitAd } from "../../../../modules/araclar/sema";
-import { aracDegistirir, aracKarti, aracListesi } from "../../../../modules/araclar/server/araclar";
+import { kullanimMetni } from "../../../../components/sil/metin";
+import { aracDegistirir, aracKarti, aracListesi, aracSilmeDurumu } from "../../../../modules/araclar/server/araclar";
 import { KmFormu, KmGecmisi, TutanakTablosu } from "../../../../modules/araclar/ui/AracListesi";
 import { AracTuslari } from "../../../../modules/araclar/ui/KartParcalari";
 import { AracDurumu, kimdeAd, KmRozeti, tarihYaz } from "../../../../modules/araclar/ui/ortak";
@@ -26,7 +28,7 @@ export default async function Sayfa({ params }: { params: Promise<{ id: string }
   const o = await modulOturumu(MODUL.no);
   if (!o) return <Yetkisiz />;
   const { id } = await params;
-  const [v, l] = await oturumIslemi(o, async (db) => [await aracKarti(db, o, id), await aracListesi(db, o)] as const);
+  const [v, l, silme] = await oturumIslemi(o, async (db) => [await aracKarti(db, o, id), await aracListesi(db, o), await aracSilmeDurumu(db, o, id)] as const);
   if (!v || !l) notFound();
   const yaz = aracDegistirir(o);
   const sonTeslim = v.tutanaklar[0]?.zaman;
@@ -37,10 +39,11 @@ export default async function Sayfa({ params }: { params: Promise<{ id: string }
       <NesneBasi baslik={`${v.plaka} · ${v.tur}`} rozet={<AracDurumu v={v} />} altIkon="car" alt={`${v.marka} ${v.model} · ${v.yil} · ${yakitAd(v.yakit)}`}
         tuslar={<>
           {!l.kendi && <TusBaglanti href={`/zimmetler/varlik/a/${v.id}`} ikon="package">Zimmet kaydı</TusBaglanti>}
-          {(yaz || v.benim) && <AracTuslari arac={v} yaz={yaz} araclar={l.araclar} kisiler={l.kisiler}
+          {(yaz || v.benim) && <AracTuslari arac={v} yaz={yaz} araclar={l.araclar} kisiler={l.kisiler} sil={silme.sil} kullanim={silme.kullanim ? kullanimMetni(silme.kullanim) : null}
             deger={{ id: v.id, surum: v.surum, plaka: v.plaka, tur: v.tur, marka: v.marka, model: v.model, yil: v.yil, yakit: v.yakit, bakimKm: v.bakimKm, muayene: v.muayene, sigorta: v.sigorta, kasko: v.kasko }} />}
         </>} />
-      {v.belgeler.some((b) => b.durum === "gecti" || b.durum === "yakin") && <SeritKap>{v.belgeler.filter((b) => b.durum === "gecti" || b.durum === "yakin").map((b) =>
+      {v.pasif && <SeritKap><Serit tur="bilgi" ikon="ban">Pasif ({tarihYaz(v.pasif)}): listeden, teslimden, kilometreden ve uyarılardan kalktı; tutanakları ve kilometre geçmişi duruyor.</Serit></SeritKap>}
+      {!v.pasif && v.belgeler.some((b) => b.durum === "gecti" || b.durum === "yakin") && <SeritKap>{v.belgeler.filter((b) => b.durum === "gecti" || b.durum === "yakin").map((b) =>
         b.durum === "gecti"
           ? <Serit key={b.ad} tur="hata" ikon="circle-x">{b.ad} süresi geçti ({tarihYaz(b.tarih)}); araç bu hâliyle trafiğe çıkmamalı.</Serit>
           : <Serit key={b.ad} tur="uyari" ikon="triangle-alert">{b.ad} bitiyor ({tarihYaz(b.tarih)}).</Serit>)}</SeritKap>}

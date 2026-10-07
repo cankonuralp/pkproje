@@ -25,7 +25,8 @@ export function KmRozeti({ d }: { d: KmDurumu }) {
   return <Rozet tur={tur}>{ad}</Rozet>;
 }
 
-export function AracDurumu({ v }: { v: Pick<AracSatiri, "belgeler" | "kimde"> }) {
+export function AracDurumu({ v }: { v: Pick<AracSatiri, "belgeler" | "kimde" | "pasif"> }) {
+  if (v.pasif) return <Rozet tur="notr">Pasif</Rozet>;
   if (v.belgeler.some((b) => b.durum === "gecti")) return <Rozet tur="red">Belge süresi geçti</Rozet>;
   if (v.belgeler.some((b) => b.durum === "yakin")) return <Rozet tur="bekliyor">Belge yaklaşıyor</Rozet>;
   return v.kimde.tip === "depo" ? <Rozet tur="notr">Depoda</Rozet> : <Rozet tur="tamam">Zimmette</Rozet>;

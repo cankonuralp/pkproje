@@ -40,6 +40,15 @@ test("araç: ekle, teslim tutanağı, sürücü haftalık kilometre", async ({ p
   await expect(page.getByText(/Tutanak AT-\d{4}-\d{3} kaydedildi/)).toBeVisible({ timeout: 30_000 });
   await expect(page.getByText("Zimmette").first()).toBeVisible();
   await expect(page.getByRole("button", { name: "Tutanak" }).first()).toBeAttached();
+  /* 363: kullanılmış araçta Sil yok; zimmetteyken Pasife al reddedilir */
+  await hazir(page);
+  await expect(page.getByRole("button", { name: "Sil", exact: true })).toHaveCount(0);
+  await page.getByRole("button", { name: "Pasife al" }).click();
+  const pp = page.locator("dialog[open]");
+  await expect(pp).toContainText("1 zimmet hareketinde kullanıldı; silinemez.");
+  await pp.getByRole("button", { name: "Pasife al" }).click();
+  await expect(pp).toContainText(`${plaka} bir kişinin zimmetinde; önce teslim tutanağıyla depoya alın.`);
+  await pp.getByRole("button", { name: "Vazgeç" }).click();
   /* 342: tutanağın PDF'i iner (temel format) */
   const [indirilen] = await Promise.all([page.waitForEvent("download", { timeout: 90_000 }), page.getByRole("link", { name: /^AT-\d{4}-\d{3} PDF$/ }).first().click()]);
   expect(indirilen.suggestedFilename()).toMatch(/^AT-\d{4}-\d{3}\.pdf$/);
@@ -65,4 +74,38 @@ test("araç: ekle, teslim tutanağı, sürücü haftalık kilometre", async ({ p
   await page.goto("/onaylar/diger");
   await hazir(page);
   await expect(page.getByText(new RegExp(`^Araç teslim tutanağı · AT-\\d{4}-\\d{3} · ${plaka}$`)).first()).toBeVisible();
+});
+
+/* 363 (§9 elli üçüncü tur): hiç kullanılmamış aracı yönetici siler; plaka yeniden kullanılabilir */
+test("araç: kullanılmamış araç silinir, plaka serbest kalır", async ({ page }, bilgi) => {
+  const plaka = `00 ${bilgi.project.name.slice(0, 3).toLocaleUpperCase("tr")} ${30 + bilgi.retry}`;
+  const ekle = async () => {
+    await page.goto("/araclar");
+    await hazir(page);
+    await page.getByRole("button", { name: "Araç ekle" }).click();
+    const d = page.getByRole("dialog", { name: "Araç ekle" });
+    await d.getByLabel("Plaka").fill(plaka);
+    await d.getByRole("combobox", { name: "Araç türü" }).click();
+    await d.getByRole("option", { name: "Binek araç" }).click();
+    await d.getByLabel("Marka").fill("Deneme");
+    await d.locator("#aw-model").fill("Model");
+    await d.getByLabel("Model yılı").fill("2021");
+    await d.getByRole("combobox", { name: "Yakıt" }).click();
+    await d.getByRole("option", { name: "Benzin" }).click();
+    await d.getByRole("button", { name: "Aracı ekle" }).click();
+    await expect(page).toHaveURL(/\/araclar\/[0-9a-f-]{36}$/, { timeout: 30_000 });
+    await expect(page.getByRole("heading", { level: 1, name: `${plaka} · Binek araç` })).toBeVisible();
+    await hazir(page);
+  };
+  await girisli(page, "yonetici");
+  await ekle();
+  await expect(page.getByRole("button", { name: "Pasife al" })).toHaveCount(0);
+  await page.getByRole("button", { name: "Sil", exact: true }).click();
+  const onay = page.locator("dialog[open]");
+  await expect(onay).toContainText(`${plaka} kalıcı olarak silinir; plakası yeniden kullanılabilir. Geri alınamaz.`);
+  await onay.getByRole("button", { name: "Sil" }).click();
+  await expect(page).toHaveURL(/\/araclar$/, { timeout: 30_000 });
+  await expect(page.getByText(`${plaka} silindi.`).first()).toBeVisible();
+  await expect(page.getByRole("link", { name: plaka })).toHaveCount(0);
+  await ekle();
 });
