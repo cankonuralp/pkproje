@@ -13,7 +13,8 @@ import { kullanimMetni } from "../../../components/sil/metin.ts";
 import { hesabinPersoneli } from "../../../server/kimlik/hesap.ts";
 import { dogrula, type DogrulamaHatalari } from "../../../sema/ortak.ts";
 import { kimdeHaritasi } from "../../zimmetler/server/zimmet.ts";
-import { CihazGirdisi, kalDurum, KalibrasyonGirdisi, YENI_TUR, type KalDurum } from "../sema.ts";
+import { CihazGirdisi, CihazTuruGirdisi, kalDurum, KalibrasyonGirdisi, YENI_TUR, type KalDurum } from "../sema.ts";
+import { cihazTurKullanimi } from "../../ekipman-turleri/server/turler.ts";
 
 const MODUL = 8;
 export const DOSYA_MODULU = "olcum_cihazi";
@@ -253,4 +254,43 @@ export async function cihazPasif(db: Sorgulayici, kim: Kisi, id: string, surum: 
   const r = await guncelle(db, CIHAZ, id, surum, { pasif: pasif ? (c.pasif ?? bugunTr()) : null }, { kim: kim.ad, ne: pasif ? "cihaz.pasif" : "cihaz.etkinlestir" });
   if (r.durum === "cakisma" || r.durum === "yok") return { durum: r.durum };
   return { durum: "tamam", id, surum: r.surum };
+}
+
+/* ── CİHAZ TÜRLERİ (359; maket olcum-cihazlari.html T7 "Cihaz türleri" — firma kendi türlerini ekler, düzenler; cihazı olmayan tür silinir ve ekipman
+   türlerinin kullanacağı cihazlardan da çıkar). Görmek "gör", eklemek / ad değiştirmek "yaz", silmek yönetici (kayit_sil, modül 8) + kullanılmamış tür
+   (cihazı yok — pasif dahil —, raporda tür olarak geçmiyor; tanım veritabanında, göç 0055). Kullanılmış tür için pasif yok: yalnız ad düzenlenir. */
+export interface CihazTuruSatiri { id: string; ad: string; surum: number; cihaz: number; ekipmanTuru: number; sil: boolean }
+export async function cihazTuruListesi(db: Sorgulayici, kim: Kisi): Promise<CihazTuruSatiri[]> {
+  if (!gorur(kim)) return [];
+  const turler = (await db.sorgu<{ id: string; ad: string; surum: number; cihaz: number }>(
+    "SELECT t.id::text, t.ad, t.surum, (SELECT count(*)::int FROM olcum_cihazi c WHERE c.tur_id = t.id) AS cihaz FROM cihaz_turu t")).rows;
+  const ekipman = await cihazTurKullanimi(db);
+  const kullanim = silebilir(kim) ? await kullanimlar(db, "cihaz_turu", turler.map((t) => t.id)) : null;
+  return turler.map((t) => ({ ...t, ekipmanTuru: ekipman.get(t.id) ?? 0, sil: !!kullanim && !kullanim.has(t.id) }))
+    .sort((a, b) => a.ad.localeCompare(b.ad, "tr"));
+}
+
+/** tür ekle (id boş) ya da adını değiştir; ad firmada eşsiz (Türkçe büyük / küçük harf farkı yok sayılır — cihazKaydet ile aynı) */
+export async function cihazTuruKaydet(db: Sorgulayici, kim: Kisi, id: string | null, surum: number, girdi: unknown): Promise<Yazma> {
+  if (!degistirir(kim)) return { durum: "yetkisiz" };
+  if (id && (!UUID.test(id) || !(await db.sorgu("SELECT 1 FROM cihaz_turu WHERE id = $1", [id])).rowCount)) return { durum: "yok" };
+  const g = dogrula(CihazTuruGirdisi, girdi);
+  if (!g.tamam) return { durum: "gecersiz", hatalar: g.hatalar };
+  const tr = (x: string) => x.toLocaleLowerCase("tr");
+  if ((await db.sorgu<{ id: string; ad: string }>("SELECT id::text, ad FROM cihaz_turu")).rows.some((t) => t.id !== id && tr(t.ad) === tr(g.veri.ad))) {
+    return { durum: "gecersiz", hatalar: { ad: `${g.veri.ad} adında bir tür zaten var.` } };
+  }
+  if (!id) return { durum: "tamam", ...(await ekle(db, TUR, { ad: g.veri.ad }, { kim: kim.ad, ne: "cihaz_turu.ekle" })) };
+  if (!surumGecerli(surum)) return { durum: "cakisma" };
+  const r = await guncelle(db, TUR, id, surum, { ad: g.veri.ad }, { kim: kim.ad, ne: "cihaz_turu.guncelle" });
+  if (r.durum === "cakisma" || r.durum === "yok") return { durum: r.durum };
+  return { durum: "tamam", id, surum: r.surum };
+}
+
+/** kesin sil (359): yönetici + kullanılmamış tür; ekipman türlerinin cihaz listesinden de çıkar */
+export async function cihazTuruSil(db: Sorgulayici, kim: Kisi, id: string): Promise<SilYaniti> {
+  if (!silebilir(kim)) return { durum: "yetkisiz" };
+  const r = await kesinSil(db, "cihaz_turu", id, kim.ad);
+  if (r.durum === "kullanildi") return { durum: "red", neden: `Tür silinemez: ${kullanimMetni(r.kullanim) || "başka kayıtlarda"} kullanıldı.` };
+  return r;
 }

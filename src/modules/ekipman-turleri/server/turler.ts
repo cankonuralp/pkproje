@@ -185,3 +185,10 @@ export async function cihazTurBranslari(db: Sorgulayici): Promise<Map<string, ("
     "SELECT DISTINCT unnest(cihaz_turleri)::text AS c, brans FROM ekipman_turu")).rows) (m.get(x.c) ?? m.set(x.c, []).get(x.c)!).push(x.brans);
   return m;
 }
+
+/** Ölçüm cihazları için (359, maket T7 "Cihaz türleri": "N ekipman türünde · M cihaz"): ölçüm cihazı türü → onu kullanacak ekipman türü sayısı. Yetki
+    ÇAĞIRANDA. */
+export async function cihazTurKullanimi(db: Sorgulayici): Promise<Map<string, number>> {
+  return new Map((await db.sorgu<{ c: string; n: number }>(
+    "SELECT c::text AS c, count(*)::int AS n FROM ekipman_turu, unnest(cihaz_turleri) AS c GROUP BY c")).rows.map((x) => [x.c, x.n]));
+}

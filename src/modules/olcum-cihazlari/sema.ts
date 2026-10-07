@@ -35,3 +35,8 @@ export function kalDurum(bitis: string | null, konum: string, bugun: string, esi
   return gunFarki(bugun, bitis) <= esik ? "yakin" : "gecerli";
 }
 export const kalanGun = (bitis: string, bugun: string) => gunFarki(bugun, bitis);
+
+/** cihaz türü ekle / adını düzenle (359; maket T7 "Cihaz türleri" — yalnız ad, N3: hangi ekipman türünde kullanılacağı Ekipman türleri'nde seçilir) */
+export const CihazTuruGirdisi = z.object({
+  ad: z.preprocess((s) => (typeof s === "string" ? s.trim() : s), z.string({ error: "Tür adı yazılmalı." }).min(2, "Tür adı yazılmalı.").max(60, "En çok 60 karakter.")),
+});

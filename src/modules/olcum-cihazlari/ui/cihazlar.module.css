@@ -10,3 +10,10 @@
 .tuslar { display: flex; flex-wrap: wrap; justify-content: flex-end; gap: 8px; }
 .bosSatir { margin: 0; padding: 14px 0; color: var(--yazi2); font-size: var(--boy-kucuk); }
 .seritler { display: grid; gap: 8px; margin: 0 0 12px; }
+/* cihaz türleri penceresi (359; maket T7 a-secim-listesi / a-tur-satir) */
+.turListe { list-style: none; margin: 0; padding: 0; display: grid; }
+.turListe li { display: flex; align-items: center; justify-content: space-between; flex-wrap: wrap; gap: 8px 12px; padding: 10px 0; border-bottom: 1px solid var(--kenar); }
+.turListe li:last-child { border-bottom: 0; }
+.turAd { display: grid; gap: 2px; min-width: 0; overflow-wrap: anywhere; }
+.turAlt { color: var(--yazi2); font-size: var(--boy-kucuk); }
+.turTuslar { display: flex; gap: 8px; }

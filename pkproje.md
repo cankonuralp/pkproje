@@ -2353,6 +2353,13 @@ revizyon, alan kopyalama, hafif kusur devri, meslek eşleşme denetimi).
 - Emsal ürünler: https://opwire.app/iso-17020-periyodik-kontrol-yazilimi/ · https://17020muayene.vidco.com.tr/ · https://akuple.com/asansor-kontrol-yazilimi/ · https://ensyazilim.com/
 
 ## 11 · Değişiklik günlüğü
+- 2026-10-07 (359): **Cihaz türleri penceresi + cihaz türü Sil** (maket olcum-cihazlari.html T7 — kodda hiç yapılmamıştı; §9 elli üçüncü tur). Liste
+  başlığında "Cihaz türleri" (yalnız değiştirebilene): her tür "N ekipman türünde · M cihaz", Düzenle (yalnız ad, firmada eşsiz — Türkçe harf farkı yok
+  sayılır), cihazı olmayan ve raporda tür olarak geçmeyen türde Sil (yönetici; onay maketten: "… ekipman türlerinin kullanacağı cihazlardan da
+  çıkar"), altta Tür ekle. Göç 0055 cihaz_turu_kullanim + cihaz_turu_sil: silinen tür aynı işlemde bütün ekipman türlerinin cihaz_turleri
+  dizisinden çıkar (sürüm artar, her tür için iz) — çıkmasaydı rapor doldurulamayan cihaz satırı ister, onaya gönderi takılırdı. Kullanılmış tür
+  için pasif yok. Ekipman türleri'nin cihazTurKullanimi okuyucusu (modül sınırı). Kilit kesin-silme.test "cihaz türü"; olumsuz kanıt kesin-silme.bozan
+  5; e2e tür ekle / sil.
 - 2026-10-07 (358): **Ölçüm cihazı Pasife al / Etkinleştir** (§9 elli üçüncü tur: kullanılmış kayıt silinmez, pasife alınır). Göç yok (pasif sütunu
   0014'ten). Kullanılmış cihazda "Sil" yerine "Pasife al" (pencere nedeni söyler: "<n> raporda, <n> zimmet hareketinde kullanıldı; silinemez");
   ENGEL: kişinin zimmetindeki cihaz (önce Zimmetler'den depoya teslim) ve kalibrasyondaki cihaz (önce depoya al) pasife alınmaz — pasif cihaz

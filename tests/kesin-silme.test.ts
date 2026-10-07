@@ -4,14 +4,15 @@
    · hiç kullanılmamış cihaz silinir: kalibrasyon kayıtları gider, sertifikası çöpe (indirilemez), denetim izinde eski değer ve silen hesap, kod serbest;
    · kullanılmış cihaz silinmez, sayım doğru döner: zimmet hareketi, raporun cihaz listesi (rapor silinmiş taslak olsa da);
    · yalnız yöneticiler (planlama / denetçi / muhasebe yetkisiz); başka firmanın cihazı "yok"; oturumsuz çağrı reddedilir; uygulama rolünün DELETE'i yok;
-   · 358 pasif: zimmetteki / kalibrasyondaki cihaz pasife alınmaz; pasif cihaz seçimden ve Zimmetler'den kalkar, açık rapor kodunu gösterir; etkinleştir.
+   · 358 pasif: zimmetteki / kalibrasyondaki cihaz pasife alınmaz; pasif cihaz seçimden ve Zimmetler'den kalkar, açık rapor kodunu gösterir; etkinleştir;
+   · 359 cihaz türü: ad eşsiz; cihazı olan / raporda geçen tür silinmez; cihazsız tür silinir, ekipman türlerinin cihaz listesinden çıkar.
    Olumsuz kanıt: tests/bozan/kesin-silme.bozan.ts. */
 import assert from "node:assert/strict";
 import { mkdtempSync, rmSync } from "node:fs";
 import { tmpdir } from "node:os";
 import { join } from "node:path";
 import { after, before, test } from "node:test";
-import { cihazKaydet, cihazKarti, cihazKonum, cihazListesi, cihazOzetleri, cihazPasif, cihazSil, cihazSilmeDurumu, kalibrasyonEkle, raporCihazlari, type Kisi } from "../src/modules/olcum-cihazlari/server/cihazlar.ts";
+import { cihazKaydet, cihazKarti, cihazKonum, cihazListesi, cihazOzetleri, cihazPasif, cihazSil, cihazSilmeDurumu, cihazTuruKaydet, cihazTuruListesi, cihazTuruSil, kalibrasyonEkle, raporCihazlari, type Kisi } from "../src/modules/olcum-cihazlari/server/cihazlar.ts";
 import { raporSil, sahaRaporu } from "../src/modules/raporlar/server/raporlar.ts";
 import type { GomuluKume } from "../src/server/db/gomulu.ts";
 import { havuzKur, kiraciIcinde, type Havuz } from "../src/server/db/kiraci.ts";
@@ -119,4 +120,40 @@ test("pasif: zimmetteki ya da kalibrasyondaki cihaz pasife alınmaz; depodaki al
   tamam(await b(FB.yon, async (db) => cihazPasif(db, FB.yon, id, await surum(), false)));
   assert.equal((await b(FB.yon, (db) => cihazKarti(db, FB.yon, id)))!.pasif, null);
   assert.ok((await b(FB.yon, (db) => raporCihazlari(db))).some((x) => x.id === id), "etkinleştirince seçime döner");
+});
+
+/* 359 — cihaz türü (maket T7 "Cihaz türleri"): ad firmada eşsiz; cihazı olan / raporda tür olarak geçen tür silinmez; cihazsız tür silinir ve ekipman
+   türlerinin cihaz listesinden çıkar (sürüm artar, iz yazılır). */
+test("cihaz türü: ekle / adını değiştir; cihazı olan ve raporda geçen tür silinmez; cihazsız tür silinir, ekipman türlerinden çıkar", async () => {
+  const yeni = tamam(await a(FA.elk, (db) => cihazTuruKaydet(db, FA.elk, null, 0, { ad: "İzolasyon ölçer" })));
+  assert.deepEqual(await a(FA.elk, (db) => cihazTuruKaydet(db, FA.elk, null, 0, { ad: "izolasyon ÖLÇER" })),
+    { durum: "gecersiz", hatalar: { ad: "izolasyon ÖLÇER adında bir tür zaten var." } }, "Türkçe büyük / küçük harf");
+  assert.deepEqual(await a(FA.plan, (db) => cihazTuruKaydet(db, FA.plan as Kisi, null, 0, { ad: "Başka" })), { durum: "yetkisiz" });
+  tamam(await a(FA.elk, (db) => cihazTuruKaydet(db, FA.elk, yeni.id, yeni.surum, { ad: "İzolasyon test cihazı" })));
+  /* iki ekipman türü bu türü kullanacak */
+  const tur2 = (await a(FA.yon, (db) => db.sorgu<{ id: string }>("INSERT INTO ekipman_turu (kod, ad, grup, brans, periyot) VALUES ('ET2', 'Deneme türü', 'elektrik', 'e', 12) RETURNING id::text"))).rows[0].id;
+  await a(FA.yon, (db) => db.sorgu("UPDATE ekipman_turu SET cihaz_turleri = ARRAY[$1::uuid] WHERE id = ANY ($2::uuid[])", [yeni.id, [FA.tur, tur2]]));
+  let satir = (await a(FA.elk, (db) => cihazTuruListesi(db, FA.elk))).find((t) => t.id === yeni.id)!;
+  assert.deepEqual([satir.ad, satir.ekipmanTuru, satir.cihaz, satir.sil], ["İzolasyon test cihazı", 2, 0, true]);
+  assert.equal((await a(FA.plan, (db) => cihazTuruListesi(db, FA.plan as Kisi))).find((t) => t.id === yeni.id)?.sil, false, "planlama silemez");
+  /* cihazı olan tür (cihazı pasif olsa da) */
+  const c = tamam(await a(FA.elk, (db) => cihazKaydet(db, FA.elk, null, 0, { ...C, kod: "TUR-1", tur: yeni.id })));
+  satir = (await a(FA.elk, (db) => cihazTuruListesi(db, FA.elk))).find((t) => t.id === yeni.id)!;
+  assert.deepEqual([satir.cihaz, satir.sil], [1, false]);
+  assert.deepEqual(await a(FA.elk, (db) => cihazTuruSil(db, FA.elk, yeni.id)), { durum: "red", neden: "Tür silinemez: 1 cihazda kullanıldı." });
+  tamam(await a(FA.elk, (db) => cihazSil(db, FA.elk, c.id)));
+  /* cihazsız: silinir; iki ekipman türünden çıkar */
+  const once = (await a(FA.yon, (db) => db.sorgu<{ id: string; surum: number }>("SELECT id::text, surum FROM ekipman_turu WHERE id = ANY ($1::uuid[]) ORDER BY id", [[FA.tur, tur2]]))).rows;
+  assert.deepEqual(await a(FA.elk, (db) => cihazTuruSil(db, FA.elk, yeni.id)), { durum: "tamam", ad: "İzolasyon test cihazı" });
+  const sonra = (await a(FA.yon, (db) => db.sorgu<{ id: string; surum: number; c: string[] }>("SELECT id::text, surum, cihaz_turleri::text[] AS c FROM ekipman_turu WHERE id = ANY ($1::uuid[]) ORDER BY id", [[FA.tur, tur2]]))).rows;
+  assert.deepEqual(sonra.map((x) => x.c), [[], []], "ekipman türlerinin cihaz listesinden çıktı");
+  assert.deepEqual(sonra.map((x) => x.surum), once.map((x) => x.surum + 1), "sürüm arttı");
+  assert.equal((await a(FA.yon, (db) => db.sorgu("SELECT 1 FROM denetim_izi WHERE ne = 'ekipman_turu.baglanti' AND nesne_id = ANY ($1::text[])", [[FA.tur, tur2]]))).rowCount, 2);
+  assert.equal((await a(FA.elk, (db) => cihazTuruListesi(db, FA.elk))).some((t) => t.id === yeni.id), false);
+  /* raporda tür olarak geçen tür (cihazı başka türe alınmış olabilir) — B firmasının raporu */
+  const b = <T,>(k: Kisi, is: Parameters<typeof kiraciIcinde<T>>[2]) => kiraciIcinde(havuz, B, is, { hesapId: k.id });
+  const rt = tamam(await b(FB.yon, (db) => cihazTuruKaydet(db, FB.yon, null, 0, { ad: "Raporlu tür" })));
+  await b(FB.den1, (db) => db.sorgu("UPDATE rapor SET cihazlar = cihazlar || $1::jsonb WHERE id = $2", [JSON.stringify([{ tur: rt.id, cihaz: "00000000-0000-4000-8000-000000000000" }]), FB.rapor]));
+  assert.deepEqual(await b(FB.yon, (db) => cihazTuruSil(db, FB.yon, rt.id)), { durum: "red", neden: "Tür silinemez: 1 raporda kullanıldı." });
+  assert.deepEqual(await a(FA.yon, (db) => cihazTuruSil(db, FA.yon, rt.id)), { durum: "yok" }, "başka firmanın türü");
 });

@@ -12,8 +12,9 @@ import { AltSatir, Rozet, SayfaBasi } from "../../../components/sayfa/Sayfa";
 import { Serit } from "../../../components/serit/Serit";
 import { Tus } from "../../../components/tus/Tus";
 import { kalanGun } from "../sema";
-import type { CihazSatiri, CihazTuru } from "../server/cihazlar";
+import type { CihazSatiri, CihazTuru, CihazTuruSatiri } from "../server/cihazlar";
 import { CihazPenceresi } from "./Pencereler";
+import { CihazTurleriPenceresi } from "./TurPencereleri";
 import { KalRozeti, KONUM_AD, tarihYaz } from "./ortak";
 import stil from "./cihazlar.module.css";
 
@@ -42,9 +43,14 @@ const kalanMetni = (bitis: string | null, bugun: string, esik: number) => {
   return <><span className={stil.tarih}>{tarihYaz(bitis)}</span>{k < 0 ? <span className={stil.hata}>{-k} gün geçti</span> : <AltSatir uyari={k <= esik}>{k === 0 ? "Bugün bitiyor" : `${k} gün`}</AltSatir>}</>;
 };
 
-export function CihazListesi({ kayitlar, turler, esik, bugun, ekleyebilir }: { kayitlar: CihazSatiri[]; turler: CihazTuru[]; esik: number; bugun: string; ekleyebilir: boolean }) {
+export function CihazListesi({ kayitlar, turler, esik, bugun, ekleyebilir, turSatirlari = [] }: {
+  kayitlar: CihazSatiri[]; turler: CihazTuru[]; esik: number; bugun: string; ekleyebilir: boolean;
+  /** 359: "Cihaz türleri" penceresinin satırları (yalnız değiştirebilene) */
+  turSatirlari?: CihazTuruSatiri[];
+}) {
   const s = useSuzgec(tanim(esik, turler), kayitlar);
   const [pencere, setPencere] = useState(false);
+  const [turPenceresi, setTurPenceresi] = useState(false);
   const gecti = kayitlar.filter((c) => !c.pasif && c.durum === "gecti"), yakin = kayitlar.filter((c) => !c.pasif && c.durum === "yakin");
   const goster = (k: string) => s.degistir({ ...s.durum, secili: [k], kip: "veya", sayfa: 1 });
   const sutunlar: Sutun<CihazSatiri>[] = [
@@ -56,7 +62,11 @@ export function CihazListesi({ kayitlar, turler, esik, bugun, ekleyebilir }: { k
   ];
   return (
     <>
-      <SayfaBasi baslik="Ölçüm cihazları" sayac={<Sayac s={s} />} tuslar={ekleyebilir && <Tus ikon="plus" onClick={() => setPencere(true)}>Cihaz ekle</Tus>} />
+      <SayfaBasi baslik="Ölçüm cihazları" sayac={<Sayac s={s} />} tuslar={ekleyebilir && <>
+        <Tus tur="ikincil" ikon="layers" onClick={() => setTurPenceresi(true)}>Cihaz türleri</Tus>
+        <Tus ikon="plus" onClick={() => setPencere(true)}>Cihaz ekle</Tus>
+      </>} />
+      {ekleyebilir && <CihazTurleriPenceresi acik={turPenceresi} kapat={() => setTurPenceresi(false)} turler={turSatirlari} />}
       {(gecti.length > 0 || yakin.length > 0) && (
         <div className={stil.seritler}>
           {gecti.length > 0 && <Serit tur="hata" ikon="circle-x" eylem={<Tus tur="ikincil" onClick={() => goster("gecti")}>Göster</Tus>}>

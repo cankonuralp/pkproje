@@ -106,3 +106,27 @@ test("ölçüm cihazı: kullanılmış cihazda Sil yok, Pasife al zimmetteyken r
   await p.getByRole("button", { name: "Vazgeç" }).click();
   await expect(page.getByText("Pasif", { exact: true })).toHaveCount(0);
 });
+
+/* 359 (maket T7 "Cihaz türleri"): pencerede tür ekle → "0 ekipman türünde · 0 cihaz" → Sil (x, onay maketteki metinle) → listeden kalkar */
+test("cihaz türleri: tür ekle, kullanılmamış türü sil", async ({ page }, bilgi) => {
+  const ad = `Deneme tür ${bilgi.project.name}`;
+  await girisli(page, "yonetici");
+  await page.goto("/olcum-cihazlari");
+  await hazir(page);
+  await page.getByRole("button", { name: "Cihaz türleri" }).click();
+  const liste = page.getByRole("dialog", { name: "Cihaz türleri" });
+  await liste.getByRole("button", { name: "Tür ekle" }).click();
+  const p = page.getByRole("dialog", { name: "Cihaz türü ekle" });
+  await p.getByLabel("Tür adı").fill(ad);
+  await p.getByRole("button", { name: "Kaydet" }).click();
+  await expect(page.getByText(`${ad} eklendi.`).first()).toBeVisible({ timeout: 30_000 });
+  /* kaydedince tür listesine dönülür (pencere açık) */
+  const satir = page.getByRole("dialog", { name: "Cihaz türleri" }).getByRole("listitem").filter({ hasText: ad });
+  await expect(satir).toContainText("0 ekipman türünde · 0 cihaz");
+  await satir.getByRole("button", { name: `${ad} sil` }).click();
+  const onay = page.locator("dialog[open]").filter({ hasText: "Geri alınamaz" });
+  await expect(onay).toContainText(`${ad} kalıcı olarak silinir; ekipman türlerinin kullanacağı cihazlardan da çıkar. Geri alınamaz.`);
+  await onay.getByRole("button", { name: "Sil" }).click();
+  await expect(page.getByText(`${ad} silindi.`).first()).toBeVisible({ timeout: 30_000 });
+  await expect(page.getByRole("dialog", { name: "Cihaz türleri" }).getByRole("listitem").filter({ hasText: ad })).toHaveCount(0);
+});

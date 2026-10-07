@@ -13,6 +13,11 @@ export const SILINEBILIR = {
     kullanim: "olcum_cihazi_kullanim", sil: "olcum_cihazi_sil",
     fk: { kullanim: ["zimmet_hareket.cihaz_id"], birlikte: ["kalibrasyon.cihaz_id"] },
   },
+  /* 359: cihazı olmayan, raporda tür olarak geçmeyen tür; silinince ekipman türlerinin cihaz_turleri dizisinden de çıkar (0055) */
+  cihaz_turu: {
+    kullanim: "cihaz_turu_kullanim", sil: "cihaz_turu_sil",
+    fk: { kullanim: ["olcum_cihazi.tur_id"], birlikte: [] },
+  },
 } as const satisfies Record<string, { kullanim: string; sil: string; fk: { kullanim: readonly string[]; birlikte: readonly string[] } }>;
 export type SilinebilirTur = keyof typeof SILINEBILIR;
 

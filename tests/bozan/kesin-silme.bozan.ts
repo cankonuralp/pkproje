@@ -3,13 +3,15 @@
    1. kullanım işlevinden raporun cihaz listesi denetimi kalkınca rapora girmiş cihaz kesin silinir (raporun kanıtı yetim kalır).
    2. silme işlevinde firma süzgeci kalkınca B firması A'nın cihazını "silindi" sayar (izi B'ye yazılır; tanımlayıcı-yetkili işlev RLS'yi aşar).
    3. uygulama rolüne DELETE hakkı verilince işlevsiz silme açılır — kapsam kilidinin denetimi yakalar.
-   4. yeni bir tablo cihaza yabancı anahtarla bağlanıp silici.ts güncellenmezse kapsam kilidinin katalog sorgusu yeni bağı görür. */
+   4. yeni bir tablo cihaza yabancı anahtarla bağlanıp silici.ts güncellenmezse kapsam kilidinin katalog sorgusu yeni bağı görür.
+   5. (359) cihaz türü silinirken ekipman türlerinin cihaz listesinden çıkarma kalkınca silinen tür ekipman türünde kalır (rapor doldurulamayan cihaz
+      satırı ister, onaya gönderi kalıcı takılır). */
 import assert from "node:assert/strict";
 import { copyFileSync, mkdirSync, mkdtempSync, readdirSync, readFileSync, rmSync, writeFileSync } from "node:fs";
 import { tmpdir } from "node:os";
 import { join } from "node:path";
 import { after, before, test } from "node:test";
-import { cihazKaydet, cihazSil, type Kisi } from "../../src/modules/olcum-cihazlari/server/cihazlar.ts";
+import { cihazKaydet, cihazSil, cihazTuruKaydet, cihazTuruSil, type Kisi } from "../../src/modules/olcum-cihazlari/server/cihazlar.ts";
 import { GOC_KLASORU } from "../../src/server/db/goc.ts";
 import type { GomuluKume } from "../../src/server/db/gomulu.ts";
 import { havuzKur, kiraciIcinde } from "../../src/server/db/kiraci.ts";
@@ -26,13 +28,13 @@ const depo = klasorDepo(join(gecici, "depo"));
 let kume: GomuluKume;
 let sira = 0;
 
-/** göçlerin kopyası; 0054 `bozan` ile değişir; `ek` verilirse sona ek göç */
-function gocler(bozan: (k: string) => string, ek?: string): string {
+/** göçlerin kopyası; `dosya` (varsayılan 0054) `bozan` ile değişir; `ek` verilirse sona ek göç */
+function gocler(bozan: (k: string) => string, ek?: string, dosya = "0054_"): string {
   const klasor = join(gecici, `gocler-${++sira}`);
   mkdirSync(klasor);
   for (const ad of readdirSync(GOC_KLASORU)) {
     if (!ad.endsWith(".sql")) continue;
-    if (ad.startsWith("0054_")) writeFileSync(join(klasor, ad), bozan(readFileSync(join(GOC_KLASORU, ad), "utf8")));
+    if (ad.startsWith(dosya)) writeFileSync(join(klasor, ad), bozan(readFileSync(join(GOC_KLASORU, ad), "utf8")));
     else copyFileSync(join(GOC_KLASORU, ad), join(klasor, ad));
   }
   if (ek) writeFileSync(join(klasor, "9999_bozan.sql"), ek);
@@ -84,4 +86,23 @@ CREATE TABLE deneme_bag (id uuid PRIMARY KEY, firma_id uuid NOT NULL, cihaz_id u
     assert.notDeepEqual(bag, [...t.fk.kullanim, ...t.fk.birlikte].sort(), "bozuk: yeni bağ listede yok");
     assert.ok(bag.includes("deneme_bag.cihaz_id"));
   } finally { await supa.kapat(); }
+});
+
+test("5. tür silinirken ekipman türlerinden çıkarma kalkınca silinen tür ekipman türünde kalır (kilidin koruduğu açık)", async () => {
+  const CIKAR = "      UPDATE ekipman_turu SET cihaz_turleri = array_remove(cihaz_turleri, p_id), surum = surum + 1, degisti = now() WHERE firma_id = f AND id = e.id;\n";
+  const supa = await supabaseBenzeri(kume, "silme_bozuk_5", gocler(degistir(CIKAR, ""), undefined, "0055_"));
+  const h = havuzKur({ ...kume.uygulama, database: "silme_bozuk_5" });
+  try {
+    const A = (await supa.sahip.query<{ id: string }>("INSERT INTO firma (kisa_ad, ad, rapor_kodu) VALUES ('deneme-a', 'Deneme A', 'DA') RETURNING id::text")).rows[0].id;
+    const t = await kiraciIcinde(h, A, async (db) => ({
+      yon: (await db.sorgu<{ id: string }>("INSERT INTO hesap (eposta, ad, roller, durum) VALUES ('yon@deneme-a.example', 'Deneme', '{firma_yoneticisi}', 'etkin') RETURNING id::text")).rows[0].id,
+      et: (await db.sorgu<{ id: string }>("INSERT INTO ekipman_turu (kod, ad, grup, brans, periyot) VALUES ('EP', 'Elektrik panosu', 'elektrik', 'e', 12) RETURNING id::text")).rows[0].id,
+    }));
+    const yon: Kisi = { id: t.yon, ad: "Deneme", roller: ["firma_yoneticisi"] };
+    const ct = await kiraciIcinde(h, A, (db) => cihazTuruKaydet(db, yon, null, 0, { ad: "Bozan türü" }), { hesapId: t.yon }) as { id: string };
+    await kiraciIcinde(h, A, (db) => db.sorgu("UPDATE ekipman_turu SET cihaz_turleri = ARRAY[$1::uuid] WHERE id = $2", [ct.id, t.et]), { hesapId: t.yon });
+    assert.equal((await kiraciIcinde(h, A, (db) => cihazTuruSil(db, yon, ct.id), { hesapId: t.yon })).durum, "tamam");
+    const kalan = (await supa.sahip.query<{ c: string[] }>("SELECT cihaz_turleri::text[] AS c FROM ekipman_turu WHERE id = $1", [t.et])).rows[0].c;
+    assert.deepEqual(kalan, [ct.id], "bozuk: silinen tür ekipman türünde kaldı");
+  } finally { await h.end(); await supa.kapat(); }
 });

@@ -4,6 +4,7 @@ const YER: Record<string, string> = {
   rapor: "raporda",
   zimmet: "zimmet hareketinde",
   zimmet_formu: "zimmet formunda",
+  cihaz: "cihazda",
 };
 
 export function kullanimMetni(k: Readonly<Record<string, number>>): string {

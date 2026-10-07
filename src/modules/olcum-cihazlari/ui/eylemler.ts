@@ -4,7 +4,7 @@
 import { depo } from "../../../server/dosya/depo";
 import { ayniKoken } from "../../../server/kimlik/koken";
 import { istekOturumu, oturumIslemi } from "../../../server/kimlik/istek";
-import { cihazKaydet, cihazKonum, cihazPasif, cihazSil, kalibrasyonEkle, kalibrasyonKaldir, type Yazma } from "../server/cihazlar";
+import { cihazKaydet, cihazKonum, cihazPasif, cihazSil, cihazTuruKaydet, cihazTuruSil, kalibrasyonEkle, kalibrasyonKaldir, type Yazma } from "../server/cihazlar";
 
 export interface PencereDurumu { tamam?: boolean; id?: string; hatalar?: Record<string, string>; genel?: string }
 
@@ -67,4 +67,17 @@ export async function cihazPasifEylemi(cihazId: string, surum: number, pasif: bo
   const o = await oturum(); if (typeof o === "string") return { genel: o };
   const r = await oturumIslemi(o, (db) => cihazPasif(db, o, String(cihazId), Number(surum), pasif === true));
   return r.durum === "tamam" ? { tamam: true, id: r.id } : r.durum === "red" ? { genel: r.neden } : { genel: SONUC[r.durum] };
+}
+
+/** cihaz türü ekle / adını değiştir (359) */
+export async function cihazTuruKaydetEylemi(turId: string | null, surum: number, girdi: unknown): Promise<PencereDurumu> {
+  const o = await oturum(); if (typeof o === "string") return { genel: o };
+  return cevir(await oturumIslemi(o, (db) => cihazTuruKaydet(db, o, typeof turId === "string" && turId ? turId : null, Number(surum), metinler(girdi, ["ad"]))));
+}
+
+/** cihaz türünü kesin sil (359): yönetici + kullanılmamış tür */
+export async function cihazTuruSilEylemi(turId: string): Promise<PencereDurumu> {
+  const o = await oturum(); if (typeof o === "string") return { genel: o };
+  const r = await oturumIslemi(o, (db) => cihazTuruSil(db, o, String(turId)));
+  return r.durum === "tamam" ? { tamam: true } : r.durum === "red" ? { genel: r.neden } : { genel: SONUC[r.durum] };
 }
