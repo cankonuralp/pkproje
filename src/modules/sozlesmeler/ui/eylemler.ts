@@ -3,7 +3,7 @@
 import { depo } from "../../../server/dosya/depo";
 import { ayniKoken } from "../../../server/kimlik/koken";
 import { istekOturumu, oturumIslemi } from "../../../server/kimlik/istek";
-import { DosyaHatasi, imzaliYukle, isgKaldir, isgKaydet, sablonKaldir, sablonYukle, sozlesmeHazirla, type Yazma } from "../server/sozlesmeler";
+import { DosyaHatasi, imzaliYukle, isgKaldir, isgKaydet, sablonKaldir, sablonYukle, sozlesmeHazirla, sozlesmeSil, type Yazma } from "../server/sozlesmeler";
 
 export interface PencereDurumu { tamam?: boolean; id?: string; no?: string; hatalar?: Record<string, string>; genel?: string }
 
@@ -68,4 +68,10 @@ export async function sablonYukleEylemi(form: FormData): Promise<PencereDurumu> 
 export async function sablonKaldirEylemi(id: string, surum: number): Promise<PencereDurumu> {
   const o = await oturum(); if (typeof o === "string") return { genel: o };
   return cevir(await oturumIslemi(o, (db) => sablonKaldir(db, o, yazi(id), Number(surum))));
+}
+
+/** 369: imza bekleyen (hiç imzalanmamış) sözleşme kesin silinir — yalnız yönetici; karar sozlesmeler.ts / veritabanında */
+export async function sozlesmeSilEylemi(id: string): Promise<PencereDurumu> {
+  const o = await oturum(); if (typeof o === "string") return { genel: o };
+  return cevir(await oturumIslemi(o, (db) => sozlesmeSil(db, o, yazi(id))));
 }

@@ -21,7 +21,8 @@
      giriş yapılmış hesabı ya da zimmeti olan silinmez; kişi kendini silmez; Ayrıldı → hesap kapanır, geri al çalışıyor yapar;
    · 367 müşteri girişi: hiç girilmemiş ek giriş yalnız yöneticiye silinir (kullanıcı adı serbest, parola ize yazılmaz); ana giriş ve panele girilmiş
      giriş silinmez;
-   · 368 teklif: taslak kalemleri ve tesisleriyle silinir (yalnız yönetici; hazırlayan planlama silemez); kopyası olan ve gönderilmiş teklif silinmez.
+   · 368 teklif: taslak kalemleri ve tesisleriyle silinir (yalnız yönetici; hazırlayan planlama silemez); kopyası olan ve gönderilmiş teklif silinmez;
+   · 369 sözleşme: imza bekleyen sözleşme kapsam tesisleriyle silinir; imzalı tarama bir kez yüklenmişse (kaldırılmış olsa da) silinmez.
    Olumsuz kanıt: tests/bozan/kesin-silme.bozan.ts. */
 import assert from "node:assert/strict";
 import { mkdtempSync, rmSync } from "node:fs";
@@ -37,6 +38,7 @@ import { musteriKaydet, musteriSil, silmeDurumu, tesisKaydet, tesisSil } from ".
 import { personelAyrildi, personelEkle, personelGeriAl, personelKarti, personelSil, personelSilmeDurumu } from "../src/modules/personel/server/personel.ts";
 import { hesapAc } from "../src/server/kimlik/hesapYonetimi.ts";
 import { teklifKarti, teklifSil } from "../src/modules/teklifler/server/teklifler.ts";
+import { imzaliYukle, sozlesmeSil, sozlesmeSilinir } from "../src/modules/sozlesmeler/server/sozlesmeler.ts";
 import { demirbasDurumu, demirbasEkle, demirbasPasif, demirbasSil, teslimEt, zimmetListeleri } from "../src/modules/zimmetler/server/zimmet.ts";
 import { taslakBaslat } from "../src/modules/rapor-format/server/formatlar.ts";
 import { raporSil, sahaRaporu } from "../src/modules/raporlar/server/raporlar.ts";
@@ -475,4 +477,30 @@ test("teklif: taslak kalemleriyle silinir; kopyası olan ve gönderilmiş teklif
   assert.deepEqual(await a(FA.yon, (db) => teklifSil(db, FA.yon, t3)),
     { durum: "red", neden: "Gönderilmiş teklif silinmez; müşteriye verilmiş belgedir. Yenisi kopyalanır." });
   await assert.rejects(a(FA.yon, (db) => db.sorgu("DELETE FROM teklif WHERE id = $1", [t2])), /permission denied|izin/i);
+});
+
+/* 369 — iş sözleşmesi: yalnız yönetici, yalnız imza bekleyen (imzalı tarama hiç yüklenmemiş) ve faturası olmayan */
+test("sözleşme: imza bekleyen kapsam tesisleriyle silinir; imzalı (kaldırılmış olsa da) silinmez; yalnız yönetici", async () => {
+  const musteri = (await a(FA.yon, (db) => db.sorgu<{ m: string }>("SELECT musteri_id::text AS m FROM tesis WHERE id = $1", [FA.tesis]))).rows[0].m;
+  const hazirla = (no: string) => a(FA.yon, async (db) => {
+    const id = (await db.sorgu<{ id: string }>("INSERT INTO is_sozlesmesi (no, musteri_id, baslangic, bitis, vade, yenileme) VALUES ($1, $2, '2026-10-01', '2027-09-30', 30, 'yok') RETURNING id::text",
+      [no, musteri])).rows[0].id;
+    await db.sorgu("INSERT INTO is_sozlesmesi_tesis (sozlesme_id, tesis_id) VALUES ($1, $2)", [id, FA.tesis]);
+    return id;
+  });
+  const s1 = await hazirla("IS-2026-801");
+  assert.equal(await a(FA.yon, (db) => sozlesmeSilinir(db, FA.yon, s1)), true);
+  assert.equal(await a(FA.plan, (db) => sozlesmeSilinir(db, FA.plan, s1)), false, "planlama hazırlar ama silemez");
+  for (const k of [FA.plan, FA.elk]) assert.deepEqual(await a(k, (db) => sozlesmeSil(db, k, s1)), { durum: "yetkisiz" }, k.roller.join());
+  assert.deepEqual(await kiraciIcinde(havuz, B, (db) => sozlesmeSil(db, FB.yon, s1), { hesapId: FB.yon.id }), { durum: "yok" }, "başka firma");
+  assert.deepEqual(await a(FA.yon, (db) => sozlesmeSil(db, FA.yon, s1)), { durum: "tamam", id: s1, no: "IS-2026-801" });
+  assert.equal((await a(FA.yon, (db) => db.sorgu("SELECT 1 FROM is_sozlesmesi_tesis WHERE sozlesme_id = $1", [s1]))).rowCount, 0, "kapsam gitti");
+
+  const s2 = await hazirla("IS-2026-802");
+  const surum = async () => (await a(FA.yon, (db) => db.sorgu<{ surum: number }>("SELECT surum FROM is_sozlesmesi WHERE id = $1", [s2]))).rows[0].surum;
+  tamam(await a(FA.yon, async (db) => imzaliYukle(db, depo, FA.yon, A, s2, await surum(), { ad: "imzali.pdf", bayt: PDF })));
+  assert.deepEqual(await a(FA.yon, (db) => sozlesmeSil(db, FA.yon, s2)), { durum: "red", neden: "İmzalanmış sözleşme silinmez." });
+  tamam(await a(FA.yon, async (db) => imzaliYukle(db, depo, FA.yon, A, s2, await surum(), null)));
+  assert.equal(await a(FA.yon, (db) => sozlesmeSilinir(db, FA.yon, s2)), false, "imzalı tarama kaldırılmış olsa da silinmez");
+  await assert.rejects(a(FA.yon, (db) => db.sorgu("DELETE FROM is_sozlesmesi WHERE id = $1", [s2])), /permission denied|izin/i);
 });

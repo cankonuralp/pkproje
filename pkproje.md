@@ -2353,6 +2353,11 @@ revizyon, alan kopyalama, hafif kusur devri, meslek eşleşme denetimi).
 - Emsal ürünler: https://opwire.app/iso-17020-periyodik-kontrol-yazilimi/ · https://17020muayene.vidco.com.tr/ · https://akuple.com/asansor-kontrol-yazilimi/ · https://ensyazilim.com/
 
 ## 11 · Değişiklik günlüğü
+- 2026-10-07 (369): **İmza bekleyen sözleşme Sil** (§9 elli üçüncü tur; 0017'nin "silme yok"u imzalanmış sözleşme için geçerli). Sözleşme sayfasında,
+  müşteri imzası hiç yüklenmemiş (imzalı tarama bir kez bile yüklenmemiş — kaldırılmışı dahil) ve faturası olmayan sözleşmede yalnız yöneticiye
+  "Sil" (onay "… imza beklerken silinir, kapsam tesisleri de çıkar."). İSG-KATİP ID'leri tesis × denetçiye bağlı, sözleşmeyle gitmez. Göç 0064
+  is_sozlesmesi_kullanim (imzalı · fatura) + is_sozlesmesi_sil (kapsam tesisleri birlikte; numara yeniden verilmez). Kilit kesin-silme.test
+  "sözleşme"; olumsuz kanıt kesin-silme.bozan 14; e2e sozlesmeler (imza bekleyende Sil; ikinci sözleşme silinir).
 - 2026-10-07 (368): **Teklif taslağı Sil** (§9 elli üçüncü tur). Teklif sayfasında, hiç gönderilmemiş taslakta yalnız yöneticiye (Teklifler'de "yaz"
   + yönetici; hazırlayan planlama düzenler ama silemez) "Sil" (onay "<no> kalıcı olarak silinir; kalemleri ve tesisleri de silinir. Geri alınamaz.").
   Gönderilmiş teklif müşteriye verilmiş belgedir: silinmez (red / süresi doldu kalır, yenisi kopyalanır). Göç 0063 teklif_kullanim (gönderildi · kopyası

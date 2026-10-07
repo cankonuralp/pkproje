@@ -103,7 +103,7 @@ pkproje/
                             PDF aynı işlemde teslim alanın imzasına (Onaylar › Diğer, onaylar/server/belge-baglanti.ts belgeGonder, kaynak = hareket)
                             · 363 araç Sil (silici.ts, 0059) / Pasife al / Etkinleştir; pasif araç listede Görünüm: Pasif, sayfası açılır
   src/modules/sozlesmeler/  SÖZLEŞMELER (2026-10-04): iş sözleşmesi + kapsam + imzalı PDF, İSG-KATİP ID (tesis × denetçi), sözleşme şablonu ·
-                            Dayanak teklif (326, göç 0038; kabul edilmiş teklifler teklifler/server/sozlesme-baglanti.ts'ten; ?teklif= ön doldurma)
+                            Dayanak teklif (326, göç 0038; kabul edilmiş teklifler teklifler/server/sozlesme-baglanti.ts'ten; ?teklif= ön doldurma) · 369 sozlesmeSil (imza bekleyen; 0064)
   src/modules/dokumanlar/   DÖKÜMANLAR (2026-10-04): standart kütüphanesi (sürümlü PDF), diğer dökümanlar; kriter belgeleri src/tanim/kriterler.ts
   src/modules/egitimler/    EĞİTİMLER (2026-10-04; Dökümanlar sekmesi, modül 10): eğitim türleri, kayıtlar, tekrar tarihi, sertifika
                             · katılım formu (345): src/belge/egitim.ts (temel <kod>-FR-EGT-01), katilimFormuGonder → Onaylar › Diğer (kaynak eğitim kaydı)

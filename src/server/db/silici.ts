@@ -73,6 +73,11 @@ export const SILINEBILIR = {
     kullanim: "teklif_kullanim", sil: "teklif_sil",
     fk: { kullanim: ["fatura_rapor.teklif_id", "is_sozlesmesi.teklif_id", "teklif.kopya_kaynak"], birlikte: ["teklif_kalem.teklif_id", "teklif_tesis.teklif_id"] },
   },
+  /* 369: müşteri imzası hiç yüklenmemiş, faturası olmayan iş sözleşmesi; kapsam tesisleri birlikte (0064) */
+  is_sozlesmesi: {
+    kullanim: "is_sozlesmesi_kullanim", sil: "is_sozlesmesi_sil",
+    fk: { kullanim: ["fatura.sozlesme_id"], birlikte: ["is_sozlesmesi_tesis.sozlesme_id"] },
+  },
 } as const satisfies Record<string, { kullanim: string; sil: string; fk: { kullanim: readonly string[]; birlikte: readonly string[] } }>;
 export type SilinebilirTur = keyof typeof SILINEBILIR;
 

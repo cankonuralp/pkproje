@@ -8,14 +8,16 @@ import { DosyaAcTusu } from "../../../components/gizli-resim/GizliResim";
 import { KartEtiket, Kirp, Liste, type Sutun } from "../../../components/liste/Liste";
 import { useOnayla } from "../../../components/pencere/Onay";
 import { AltSatir, DegerYok, Kod, Rozet, Rozetler } from "../../../components/sayfa/Sayfa";
+import { SilTusu } from "../../../components/sil/SilTusu";
 import { Tus } from "../../../components/tus/Tus";
 import type { IsgSatiri, KapsamTesisi } from "../server/sozlesmeler";
-import { imzaliYukleEylemi, isgKaldirEylemi } from "./eylemler";
+import { imzaliYukleEylemi, isgKaldirEylemi, sozlesmeSilEylemi } from "./eylemler";
 import { tarihYaz } from "./ortak";
 import { ImzaliPenceresi, IsgPenceresi } from "./Pencereler";
 import stil from "./sozlesmeler.module.css";
 
-export function ImzaliTuslari({ id, surum, no, dosya, yaz }: { id: string; surum: number; no: string; dosya: string | null; yaz: boolean }) {
+/** 369: `sil` — imza bekleyen, hiç kullanılmamış sözleşmede yöneticiye "Sil" (sunucu söyler) */
+export function ImzaliTuslari({ id, surum, no, dosya, yaz, sil = false }: { id: string; surum: number; no: string; dosya: string | null; yaz: boolean; sil?: boolean }) {
   const router = useRouter();
   const bildir = useBildir();
   const onayla = useOnayla();
@@ -34,6 +36,7 @@ export function ImzaliTuslari({ id, surum, no, dosya, yaz }: { id: string; surum
       {yaz && dosya && <Tus tur="ikincil" ikon="upload" onClick={() => setAcik(true)}>Değiştir</Tus>}
       {yaz && dosya && <Tus tur="ikincil" ikon="x" disabled={bekliyor} onClick={kaldir}>Kaldır</Tus>}
       {yaz && !dosya && <Tus ikon="file-check" onClick={() => setAcik(true)}>İmzalı sözleşmeyi yükle</Tus>}
+      {sil && !dosya && <SilTusu ad={no} baslik="Sözleşmeyi sil" yanEtki="imza beklerken silinir, kapsam tesisleri de çıkar" sil={() => sozlesmeSilEylemi(id)} donus="/sozlesmeler" />}
       {acik && <ImzaliPenceresi kapat={() => setAcik(false)} id={id} surum={surum} no={no} var={!!dosya} />}
     </>
   );

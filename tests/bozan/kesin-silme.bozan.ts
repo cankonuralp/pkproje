@@ -15,7 +15,8 @@
   11. (366) personel kullanımından giriş yapılmış hesap denetimi kalkınca sisteme girmiş kişi hesabıyla birlikte silinir (izdeki hesap kimliği yetim).
   12. (367) müşteri girişi kullanımından panele girme denetimi kalkınca müşterinin kullandığı giriş silinir.
   13. (368) teklif kullanımından "gönderildi" denetimi kalkınca gönderilmiş teklifi silmek kalem tetiğinde hatayla düşer (kişi "silinmez" iletisi
-      yerine hata ekranı görür; tetik olmasa müşteriye verilmiş belge silinirdi). */
+      yerine hata ekranı görür; tetik olmasa müşteriye verilmiş belge silinirdi).
+  14. (369) sözleşme kullanımından yüklenmiş imzalı tarama denetimi kalkınca taraması kaldırılmış (bir kez imzalanmış) sözleşme silinir. */
 import assert from "node:assert/strict";
 import { copyFileSync, mkdirSync, mkdtempSync, readdirSync, readFileSync, rmSync, writeFileSync } from "node:fs";
 import { tmpdir } from "node:os";
@@ -27,6 +28,7 @@ import { ekipmanSil } from "../../src/modules/planlar/server/plan-ici.ts";
 import { aracKaydet, aracSilmeDurumu } from "../../src/modules/araclar/server/araclar.ts";
 import { girisSil } from "../../src/modules/musteriler/server/girisler.ts";
 import { teklifSil } from "../../src/modules/teklifler/server/teklifler.ts";
+import { imzaliYukle, sozlesmeSil } from "../../src/modules/sozlesmeler/server/sozlesmeler.ts";
 import { musteriSil } from "../../src/modules/musteriler/server/musteriler.ts";
 import { personelSil } from "../../src/modules/personel/server/personel.ts";
 import { demirbasEkle, demirbasSil } from "../../src/modules/zimmetler/server/zimmet.ts";
@@ -250,5 +252,27 @@ test("13. gönderildi denetimi kalkınca gönderilmiş teklifin silinmesi hatayl
       return id;
     }, { hesapId: F.yon.id });
     await assert.rejects(kiraciIcinde(h, A, (db) => teklifSil(db, F.yon, t), { hesapId: F.yon.id }), /yalnız taslak/, "bozuk: 'silinmez' iletisi yerine hata");
+  } finally { await h.end(); await supa.kapat(); }
+});
+
+test("14. yüklenmiş tarama denetimi kalkınca bir kez imzalanmış sözleşme silinir (kilidin koruduğu açık)", async () => {
+  const DOSYA = "'imzali', CASE WHEN s.musteri_imza IS NOT NULL OR EXISTS (SELECT 1 FROM dosya d WHERE d.firma_id = s.firma_id AND d.modul = 'is_sozlesmesi' AND d.kayit_id = s.id)";
+  const supa = await supabaseBenzeri(kume, "silme_bozuk_14", gocler(degistir(DOSYA, "'imzali', CASE WHEN s.musteri_imza IS NOT NULL"), undefined, "0064_"));
+  const h = havuzKur({ ...kume.uygulama, database: "silme_bozuk_14" });
+  const PDF = new TextEncoder().encode("%PDF-1.4\n1 0 obj<<>>endobj\ntrailer<<>>\n%%EOF\n");
+  try {
+    const A = (await supa.sahip.query<{ id: string }>("INSERT INTO firma (kisa_ad, ad, rapor_kodu) VALUES ('deneme-a', 'Deneme A', 'DA') RETURNING id::text")).rows[0].id;
+    const F = await sahaFirmasi(h, depo, A, "deneme-a");
+    const s = await kiraciIcinde(h, A, async (db) => {
+      const m = (await db.sorgu<{ m: string }>("SELECT musteri_id::text AS m FROM tesis WHERE id = $1", [F.tesis])).rows[0].m;
+      const id = (await db.sorgu<{ id: string }>("INSERT INTO is_sozlesmesi (no, musteri_id, baslangic, bitis, vade, yenileme) VALUES ('IS-2026-901', $1, '2026-10-01', '2027-09-30', 30, 'yok') RETURNING id::text", [m])).rows[0].id;
+      await imzaliYukle(db, depo, F.yon, A, id, 0, { ad: "imzali.pdf", bayt: PDF });
+      return id;
+    }, { hesapId: F.yon.id });
+    await kiraciIcinde(h, A, async (db) => {
+      const su = (await db.sorgu<{ surum: number }>("SELECT surum FROM is_sozlesmesi WHERE id = $1", [s])).rows[0].surum;
+      await imzaliYukle(db, depo, F.yon, A, s, su, null);
+    }, { hesapId: F.yon.id });
+    assert.equal((await kiraciIcinde(h, A, (db) => sozlesmeSil(db, F.yon, s), { hesapId: F.yon.id })).durum, "tamam", "bozuk: bir kez imzalanmış sözleşme silindi");
   } finally { await h.end(); await supa.kapat(); }
 });

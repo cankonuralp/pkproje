@@ -5,12 +5,13 @@
    (ID eksik, geç onay, plan günü bitişten sonra) Planlar kaleminde. Yazmalar güvenli yazıcıdan; dosyalar tek dosya yolundan (yalnız PDF).
    Silme yok: kullanılmamış İSG-KATİP ID'si KALDIRILIR (kayıt kalır), kullanılmış yalnız düzeltilir. */
 import type { Sorgulayici } from "../../../server/db/kiraci.ts";
+import { kesinSil, kullanimlar } from "../../../server/db/silici.ts";
 import { ekle, guncelle, tablo } from "../../../server/db/yazici.ts";
 import type { Depo } from "../../../server/dosya/depo.ts";
 import { dosyaYukle } from "../../../server/dosya/dosya.ts";
 import { hesabinPersoneli } from "../../../server/kimlik/hesap.ts";
 import { numaraAl } from "../../../server/numara/numara.ts";
-import { duzey, type YetkiHesabi } from "../../../server/yetki/canDo.ts";
+import { canDoEylem, duzey, type YetkiHesabi } from "../../../server/yetki/canDo.ts";
 import { dogrula, type DogrulamaHatalari } from "../../../sema/ortak.ts";
 import { musteriOzetleri } from "../../musteriler/server/musteriler.ts";
 import { personelSecenekleri } from "../../personel/server/personel.ts";
@@ -325,4 +326,20 @@ export async function isgDosyasiGorulur(db: Sorgulayici, kisi: YetkiHesabi, kayi
 }
 export async function sablonDosyasiGorulur(_db: Sorgulayici, kisi: YetkiHesabi): Promise<boolean> {
   return degistirir(kisi);
+}
+
+/* ── KESİN SİLME (369; reisim 2026-10-07 "eklenebilen şeyler silinemiyor"; §9 elli üçüncü tur) — yalnız yönetici (kayit_sil, modül 12) ve yalnız
+   müşteri imzası hiç yüklenmemiş, faturası olmayan sözleşme (veritabanında, göç 0064); kapsam tesisleri birlikte. İmzalanmış sözleşme silinmez. */
+const silebilir = (kim: YetkiHesabi) => canDoEylem(kim, "kayit_sil", { modul: MODUL });
+/** sözleşme sayfası: "Sil" çizilir mi */
+export async function sozlesmeSilinir(db: Sorgulayici, kim: YetkiHesabi, id: string): Promise<boolean> {
+  return silebilir(kim) && /^[0-9a-f-]{36}$/.test(id) && !(await kullanimlar(db, "is_sozlesmesi", [id])).has(id);
+}
+export async function sozlesmeSil(db: Sorgulayici, kim: Kisi, id: string): Promise<Yazma> {
+  if (!silebilir(kim)) return { durum: "yetkisiz" };
+  const r = await kesinSil(db, "is_sozlesmesi", id, kim.ad);
+  if (r.durum === "kullanildi") {
+    return { durum: "red", neden: r.kullanim.imzali ? "İmzalanmış sözleşme silinmez." : `Sözleşme silinemez: ${r.kullanim.fatura_kaydi ?? 0} faturada kullanıldı.` };
+  }
+  return r.durum === "tamam" ? { durum: "tamam", id, no: r.ad } : { durum: "yok" };
 }

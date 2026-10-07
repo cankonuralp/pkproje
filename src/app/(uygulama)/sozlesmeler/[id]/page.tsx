@@ -8,7 +8,7 @@ import { Yetkisiz } from "../../../../components/hata/Hata";
 import { AltSatir, Bolum, DegerYok, Kirinti, NesneBasi, SeritKap } from "../../../../components/sayfa/Sayfa";
 import { Serit } from "../../../../components/serit/Serit";
 import { modulBul } from "../../../../modules/moduller";
-import { sozlesmeDegistirir, sozlesmeKarti, sozlesmeSecenekleri } from "../../../../modules/sozlesmeler/server/sozlesmeler";
+import { sozlesmeDegistirir, sozlesmeKarti, sozlesmeSecenekleri, sozlesmeSilinir } from "../../../../modules/sozlesmeler/server/sozlesmeler";
 import { ImzaliTuslari, IsgBolumu } from "../../../../modules/sozlesmeler/ui/KartParcalari";
 import { DurumRozeti, tarihYaz } from "../../../../modules/sozlesmeler/ui/ortak";
 import { modulGorur, modulOturumu, oturumIslemi } from "../../../../server/kimlik/istek";
@@ -20,7 +20,7 @@ export default async function Sayfa({ params }: { params: Promise<{ id: string }
   const o = await modulOturumu(MODUL.no);
   if (!o) return <Yetkisiz />;
   const { id } = await params;
-  const [x, sec] = await oturumIslemi(o, async (db) => [await sozlesmeKarti(db, o, id), await sozlesmeSecenekleri(db, o)] as const);
+  const [x, sec, silinir] = await oturumIslemi(o, async (db) => [await sozlesmeKarti(db, o, id), await sozlesmeSecenekleri(db, o), await sozlesmeSilinir(db, o, id)] as const);
   if (!x) notFound();
   const yaz = sozlesmeDegistirir(o);
   const gecmis: [string, string, string][] = [[x.firmaImza, "Firma imzaladı", x.firma]];
@@ -31,7 +31,7 @@ export default async function Sayfa({ params }: { params: Promise<{ id: string }
     <>
       <Kirinti ogeler={[["Sözleşmeler", "/sozlesmeler"], [x.no]]} />
       <NesneBasi baslik={x.no} rozet={<DurumRozeti d={x.durum} />} altIkon="building-2" alt={x.unvan}
-        tuslar={<ImzaliTuslari id={x.id} surum={x.surum} no={x.no} dosya={x.imzaliDosya} yaz={yaz} />} />
+        tuslar={<ImzaliTuslari id={x.id} surum={x.surum} no={x.no} dosya={x.imzaliDosya} yaz={yaz} sil={silinir} />} />
       {x.durum === "imza" && <SeritKap><Serit tur="bilgi" ikon="file-signature">Müşteri imzası bekleniyor.</Serit></SeritKap>}
       <Bolum id="b-soz-taraf" baslik="Taraflar ve koşullar">
         <BilgiListesi>
