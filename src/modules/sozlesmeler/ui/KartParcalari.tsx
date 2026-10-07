@@ -42,6 +42,7 @@ export function ImzaliTuslari({ id, surum, no, dosya, yaz, sil = false }: { id: 
   );
 }
 
+/* İSG ID kaldır (satır saklanır — 373 dil birliği: tuş "Sil" değil "Kaldır", onayıyla aynı) */
 function KaldirTusu({ r }: { r: IsgSatiri }) {
   const router = useRouter();
   const bildir = useBildir();
@@ -51,7 +52,7 @@ function KaldirTusu({ r }: { r: IsgSatiri }) {
     <Tus tur="ikincil" ikon="x" disabled={bekliyor} onClick={async () => {
       if (!(await onayla({ baslik: "İSG-KATİP ID kaldırılsın mı?", metin: `${r.no} (${r.personel}) hiçbir planda kullanılmadı; listeden kalkar.`, tus: "Kaldır" }))) return;
       baslat(async () => { const x = await isgKaldirEylemi(r.id, r.surum); bildir(x.tamam ? `${r.no} kaldırıldı.` : x.genel ?? "Kaldırılamadı."); router.refresh(); });
-    }}>Sil</Tus>
+    }} aria-label={`${r.no} kaldır`}>Kaldır</Tus>
   );
 }
 

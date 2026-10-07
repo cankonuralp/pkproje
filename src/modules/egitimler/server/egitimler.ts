@@ -172,7 +172,8 @@ export async function katilimFormuGonder(db: Sorgulayici, depo: Depo, kim: Kisi,
   await db.sorgu("SELECT pg_advisory_xact_lock(hashtextextended($1, 0))", [`egitim_formu:${kayitId}`]);
   const x = (await db.sorgu<KayitDb & { tur: string }>(
     `SELECT k.id::text, k.personel_id::text, k.tur_id::text, k.tarih::text, k.tekrar::text, k.kurum, k.dosya_id::text, k.onceki, k.surum, t.ad AS tur
-       FROM egitim_kaydi k JOIN egitim_turu t ON t.id = k.tur_id AND t.firma_id = k.firma_id WHERE k.id = $1`, [kayitId])).rows[0];
+       FROM egitim_kaydi k JOIN egitim_turu t ON t.id = k.tur_id AND t.firma_id = k.firma_id WHERE k.id = $1 FOR SHARE OF k`, [kayitId])).rows[0];
+  /* 362–373 incelemesi: kayıt paylaşımlı kilitli — aynı anda koşan kaydı silme (0066, FOR UPDATE) ile sıraya girer (silinmiş kayda form gitmez) */
   if (!x) return { durum: "yok" };
   if (x.onceki) return { durum: "red", neden: "Önceki kaydın formu gönderilmez; güncel kayıttan gönderin." };
   const [p] = await personelOzetleri(db, [x.personel_id]);

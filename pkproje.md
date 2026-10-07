@@ -2353,6 +2353,12 @@ revizyon, alan kopyalama, hafif kusur devri, meslek eşleşme denetimi).
 - Emsal ürünler: https://opwire.app/iso-17020-periyodik-kontrol-yazilimi/ · https://17020muayene.vidco.com.tr/ · https://akuple.com/asansor-kontrol-yazilimi/ · https://ensyazilim.com/
 
 ## 11 · Değişiklik günlüğü
+- 2026-10-07 (374): **362–373 öz incelemesi** (reisim: ajan çok kredi yiyor → inceleme ajansız, elle; güvenlik · veritabanı · mantık · arayüz).
+  Silme işlevlerinin her deyiminde firma süzgeci, parola özetinin ize yazılmaması, kilit sırası ve yabancı anahtar aynası (silici.ts ↔ göçler, 15
+  personel / 6 plan / 5 teklif …) yeniden sayıldı — tutarlı. Düzeltilen: (1) teklif kaydı kullandığı ekipman türlerini paylaşımlı kilitler (Excel
+  ekipman listesi yabancı anahtarsız; tür silme ile yarışta silinen tür listede kalmasın), (2) katılım formu gönderimi eğitim kaydını paylaşımlı
+  kilitler (silinen kayda form gitmesin), (3) sözleşme sayfasında İSG ID tuşu "Sil" değil "Kaldır" (işlem kaldırma; onayıyla ve ekran diliyle
+  aynı; e2e'de iki "Sil" çakışmasın).
 - 2026-10-07 (373): **İmzalı zimmet formu Kaldır** (§9 elli üçüncü tur ekran dili: kayıt saklanıyorsa "Kaldır"). Personel kartının Zimmetindekiler
   bölümünde, yüklenen ıslak imzalı taramada "Kaldır" (onaylı; "Kayıt listeden kalkar; belge silinmez, saklanır."): yanlış dosya yüklendiyse. Satır
   kaldirildi ile kalır, kişinin imzalı formu sayılmaz; varsa bir önceki imzalı form yeniden geçerli görünür. Onaylar'da kişinin imzaladığı form

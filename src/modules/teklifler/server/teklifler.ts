@@ -184,6 +184,12 @@ export async function teklifKaydet(db: Sorgulayici, kim: Kisi, id: string | null
   v.kalemler.forEach((k, i) => { if (!turler.has(k.tur)) h[`kalemler.${i}.tur`] = "Tür seçilmeli."; });
   if (v.ekipmanlar.some((e) => !turler.has(e.tur))) h.ekipmanlar = "Ekipman listesinde bilinmeyen tür var.";
   if (Object.keys(h).length) return { durum: "gecersiz", hatalar: h };
+  /* 362–373 incelemesi: kullanılan türler paylaşımlı kilitlenir — aynı anda koşan ekipman türü silme (FOR UPDATE; ekipman listesi JSON, yabancı
+     anahtarsız) ile sıraya girer; silme önce bittiyse tür bulunmaz */
+  const kullanilan = [...new Set([...v.kalemler.map((k) => k.tur), ...v.ekipmanlar.map((e) => e.tur)])];
+  if (kullanilan.length && (await db.sorgu("SELECT 1 FROM ekipman_turu WHERE id = ANY ($1::uuid[]) FOR SHARE", [kullanilan])).rowCount !== kullanilan.length) {
+    return { durum: "gecersiz", hatalar: { ekipmanlar: "Ekipman listesinde bilinmeyen tür var." } };
+  }
   const degerler = { musteri_id: musteriId, aday: v.tip === "aday" ? v.aday : null, gecerlilik: v.gecerlilik, kdv: v.kdv, notlar: v.notlar, ekipmanlar: JSON.stringify(v.ekipmanlar) };
   let teklifId: string, no: string;
   if (!id) {
