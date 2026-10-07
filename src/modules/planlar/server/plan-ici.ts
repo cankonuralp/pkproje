@@ -15,7 +15,8 @@ import { ayarOku } from "../../../server/ayar/ayar.ts";
 import { personelHesaplari } from "../../../server/kimlik/hesap.ts";
 import { canDo, canDoEylem, duzey } from "../../../server/yetki/canDo.ts";
 import { dogrula, type DogrulamaHatalari } from "../../../sema/ortak.ts";
-import { ekipmanEkle as ekipmanKaydet, ekipmanKilitle, ekipmanlar, ekipmanPasif as ekipmanPasifYaz, koduKullanan, tesisEkipmanlari, type EkipmanOzeti } from "../../ekipman/server/ekipman.ts";
+import { ekipmanEkle as ekipmanKaydet, ekipmanKilitle, ekipmanKullanimi, ekipmanlar, ekipmanPasif as ekipmanPasifYaz, ekipmanSil as ekipmanSilYaz, koduKullanan, tesisEkipmanlari, type EkipmanOzeti } from "../../ekipman/server/ekipman.ts";
+import { kullanimMetni } from "../../../components/sil/metin.ts";
 import { turOzetleri } from "../../ekipman-turleri/server/turler.ts";
 import { musteriOzetleri } from "../../musteriler/server/musteriler.ts";
 import { personelOzetleri } from "../../personel/server/personel.ts";
@@ -82,6 +83,8 @@ const iz = (kim: Kisi, ne: string, p: { no: string }, gerekce?: string): Iz => (
 /* ── İZİNLER (ekranın tuşları da buradan; yazma işlevleri aynı kuralla yeniden denetler) ──────────────────────────────── */
 export interface PlanIzni {
   kabulRed: boolean; kontrol: boolean; kunyeDuzenle: boolean; kunyeGuncelle: boolean; not: boolean; ekipmanEkle: boolean; ekipmanPasif: boolean;
+  /** 360: kullanılmamış ekipmanı kesin silmek — yalnız yönetici (canDo ekipman_sil; pkproje §9 "silme yalnız yönetici"), planın durumundan bağımsız */
+  ekipmanSil: boolean;
   /** plandaki denetçi, plan kabul edilmiş / denetimde / tamamlanmış, plan günü gelmiş (ENGEL 1: ileri tarihli plana rapor açılmaz) */
   raporOlustur: boolean;
 }
@@ -95,6 +98,7 @@ function izinler(kim: Kisi, e: Erisim): PlanIzni {
     not: isci,
     ekipmanEkle: isci && duzey(kim, EKIPMAN_MODULU) === "yaz" && (d === "kabul" || d === "denetimde"),
     ekipmanPasif: isci && canDoEylem(kim, "ekipman_pasif") && (d === "kabul" || d === "denetimde" || d === "tamamlandi"),
+    ekipmanSil: canDoEylem(kim, "ekipman_sil"),
     raporOlustur: e.uye && duzey(kim, RAPORLAR_MODULU) !== "yok" && canDoEylem(kim, "rapor_olustur", { atananlar: e.atananlar }) && (d === "kabul" || d === "denetimde" || d === "tamamlandi") && e.p.baslangic <= bugunTr(),
   };
 }
@@ -134,6 +138,8 @@ export async function planListesi(db: Sorgulayici, kim: Kisi): Promise<PlanSatir
 /* ── PLAN İÇİ ─────────────────────────────────────────────────────────────────────────────────────────────────── */
 export interface PlanEkipmani {
   id: string; kod: string; turId: string; tur: string; brans: "m" | "e"; konum: string | null; seri: string | null; sonradan: boolean; pasif: boolean; surum: number;
+  /** 360: silebilen (yönetici) için kullanılmamış — "Sil" çizilir */
+  sil: boolean;
   /** önceki kontrol: sistem öncesi (Excel) — sistemdeki raporlar Raporlar kalemiyle */
   onceki: { tarih: string; sonuc: string | null } | null;
 }
@@ -195,9 +201,12 @@ export async function planIci(db: Sorgulayici, kim: Kisi, id: string): Promise<P
   const turler = await turOzetleri(db), turBul = new Map(turler.map((t) => [t.id, t]));
   const tumRaporlar = await planRaporlari(db, id);
   const ekp = await ekipmanlar(db, pe.map((x) => x.ekipman_id));
+  /* 360: silebilene (yönetici) hiç kullanılmamış ekipman — "Sil" (tanım veritabanında, göç 0056) */
+  const kullanim = izin.ekipmanSil ? await ekipmanKullanimi(db, ekp.map((x) => x.id)) : null;
+  const silinebilir = new Set(kullanim ? ekp.filter((x) => !kullanim.has(x.id)).map((x) => x.id) : []);
   const ekipman: PlanEkipmani[] = ekp.map((x) => {
     const t = turBul.get(x.turId);
-    return { id: x.id, kod: x.kod, turId: x.turId, tur: t?.ad ?? "—", brans: t?.brans ?? "m", konum: x.konum, seri: x.seri, pasif: x.pasif, surum: x.surum,
+    return { id: x.id, kod: x.kod, turId: x.turId, tur: t?.ad ?? "—", brans: t?.brans ?? "m", konum: x.konum, seri: x.seri, pasif: x.pasif, surum: x.surum, sil: silinebilir.has(x.id),
       sonradan: !!pe.find((y) => y.ekipman_id === x.id)?.sonradan, onceki: x.disKontrol ? { tarih: x.disKontrol, sonuc: x.disSonuc } : null };
   });
   const teklif = new Map<string, PlanIci["teklif"][number]>();
@@ -425,6 +434,20 @@ export async function ekipmanPasif(db: Sorgulayici, kim: Kisi, id: string, ekipm
   if (x.pasif === (pasif === true)) return { durum: "tamam", bildirim: pasif ? `${x.kod} zaten pasif.` : `${x.kod} zaten etkin.` };
   const r = await ekipmanPasifYaz(db, iz(kim, pasif ? "plan.ekipman_pasif" : "plan.ekipman_etkin", e.p, x.kod), ekipmanId, surum, pasif === true);
   return sonuc(r, pasif ? `${x.kod} pasife alındı; rapor açılamaz. Etkinleştir ile geri alınır.` : `${x.kod} yeniden etkin.`);
+}
+
+/** 360 — kesin sil (yalnız yönetici; ekipman hiç kullanılmamışsa: raporu yok, tamamlanmış planda yok — bütün planlardan çıkar, kodu serbest kalır).
+    Rapor oluşturmayla aynı anda koşmasın diye ekipman kilitlenir (raporOlustur da kilitler). */
+export async function ekipmanSil(db: Sorgulayici, kim: Kisi, id: string, ekipmanId: string): Promise<PlanYazma> {
+  const e = await erisim(db, kim, id);
+  if (!e) return { durum: "yok" };
+  if (!izinler(kim, e).ekipmanSil) return { durum: "yetkisiz" };
+  if (!UUID.test(ekipmanId) || !(await db.sorgu("SELECT 1 FROM plan_ekipman WHERE plan_id = $1 AND ekipman_id = $2", [id, ekipmanId])).rowCount) return { durum: "yok" };
+  await ekipmanKilitle(db, ekipmanId);
+  const r = await ekipmanSilYaz(db, kim.ad, ekipmanId);
+  if (r.durum === "kullanildi") return { durum: "red", neden: `Ekipman silinemez: ${kullanimMetni(r.kullanim) || "başka kayıtlarda"} kullanıldı. Yanlış girildiyse pasife alın.` };
+  if (r.durum === "yok") return { durum: "yok" };
+  return { durum: "tamam", bildirim: `${r.ad} silindi.` };
 }
 
 /* ── RAPORLAR İÇİN (modül 14 bu işlevlerle plana bakar; yetki burada: planı görebilen) ─────────────────────────────── */

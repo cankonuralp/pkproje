@@ -18,6 +18,11 @@ export const SILINEBILIR = {
     kullanim: "cihaz_turu_kullanim", sil: "cihaz_turu_sil",
     fk: { kullanim: ["olcum_cihazi.tur_id"], birlikte: [] },
   },
+  /* 360: raporu olmayan, tamamlanmış planda yer almayan ekipman; plan satırları ve kod geçmişi birlikte (kod serbest; 0056) */
+  ekipman: {
+    kullanim: "ekipman_kullanim", sil: "ekipman_sil",
+    fk: { kullanim: ["rapor.ekipman_id"], birlikte: ["ekipman_kodu.ekipman_id", "plan_ekipman.ekipman_id"] },
+  },
 } as const satisfies Record<string, { kullanim: string; sil: string; fk: { kullanim: readonly string[]; birlikte: readonly string[] } }>;
 export type SilinebilirTur = keyof typeof SILINEBILIR;
 

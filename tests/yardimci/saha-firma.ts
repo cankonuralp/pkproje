@@ -9,7 +9,7 @@ import { raporOlustur } from "../../src/modules/raporlar/server/raporlar.ts";
 import { kiraciIcinde, type Havuz } from "../../src/server/db/kiraci.ts";
 import type { Depo } from "../../src/server/dosya/depo.ts";
 
-export interface SahaFirmasi { yon: Kisi; elk: Kisi; plan: Kisi; den1: Kisi; den2: Kisi; den1Personel: string; tur: string; rapor: string }
+export interface SahaFirmasi { yon: Kisi; elk: Kisi; plan: Kisi; den1: Kisi; den2: Kisi; den1Personel: string; tur: string; tesis: string; planId: string; ekipman: string; rapor: string }
 const kisi = (id: string, ...roller: string[]): Kisi => ({ id, ad: "Deneme", roller: roller as Kisi["roller"] });
 const tamam = <R extends { durum: string }>(r: R) => { assert.equal(r.durum, "tamam", JSON.stringify(r)); return r as Extract<R, { durum: "tamam" }>; };
 
@@ -38,5 +38,5 @@ export async function sahaFirmasi(havuz: Havuz, depo: Depo, firma: string, ek: s
   const v = (await kiraciIcinde(havuz, firma, (db) => planIci(db, f.den1, plan), { hesapId: f.den1.id }))!;
   tamam(await kiraciIcinde(havuz, firma, (db) => planKabul(db, f.den1, plan, v.surum, true), { hesapId: f.den1.id }));
   const rapor = tamam(await kiraciIcinde(havuz, firma, (db) => raporOlustur(db, f.den1, plan, f.ekp), { hesapId: f.den1.id })).id;
-  return { yon: f.yon, elk: f.elk, plan: f.plan, den1: f.den1, den2: f.den2, den1Personel: f.p1, tur: f.tur, rapor };
+  return { yon: f.yon, elk: f.elk, plan: f.plan, den1: f.den1, den2: f.den2, den1Personel: f.p1, tur: f.tur, tesis: f.tesis, planId: plan, ekipman: f.ekp, rapor };
 }

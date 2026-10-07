@@ -90,6 +90,14 @@ test("plan içi: liste, kabul (beyan), ekipman ekle / pasif, proje notu, künye 
   await expect(page.getByText("Plan bilgileri kaydedildi.", { exact: false })).toBeVisible();
   await expect(page.getByRole("heading", { level: 1 })).toHaveText(unvan);
 
+  /* 360: yönetici, hiç kullanılmamış (raporsuz) ekipmanı siler — onay "bütün planlardan çıkar, kodu yeniden kullanılabilir. Geri alınamaz." */
+  await page.getByRole("button", { name: `${kod} sil` }).click();
+  const onay = page.locator("dialog[open]");
+  await expect(onay).toContainText(`${kod} kalıcı olarak silinir; bütün planlardan çıkar, kodu yeniden kullanılabilir. Geri alınamaz.`);
+  await onay.getByRole("button", { name: "Sil" }).click();
+  await expect(page.getByText(`${kod} silindi.`).first()).toBeVisible({ timeout: 30_000 });
+  await expect(page.getByText(kod, { exact: true })).toHaveCount(0);
+
   /* denetçi: eski künye + şerit → Güncelle */
   await context.clearCookies();
   await girisli(page, "denetci");

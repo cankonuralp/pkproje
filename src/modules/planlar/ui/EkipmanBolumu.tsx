@@ -5,7 +5,8 @@
    Etkinleştir + Rapor oluştur — 311; 2026-09-30 203: raporu olan ekipmanda ikisi de yok, rapor silinince geri gelir; 2026-10-03 "tablette pasife al
    tuşu rapor oluştur tuşunu aşağıya taşırıyor" → Pasife al simge, işlem sütunu Rapor sütunundan pay alır). Rapor oluştur yalnız plandaki denetçiye
    (izin sunucuda; plan günü gelmeden kapalı — ENGEL 1, neden plan içinde şeritte); başarıda plan içinde kalınır, bildirim ve Raporlar satırındaki
-   "Raporu düzenle" saha rapor ekranını açar (maket rapor-olustur).
+   "Raporu düzenle" saha rapor ekranını açar (maket rapor-olustur). 360: yöneticiye, hiç kullanılmamış ekipmanda Sil (çöp kutusu simgesi; onay "bütün
+   planlardan çıkar, kodu yeniden kullanılabilir. Geri alınamaz.").
    Ekipman ekle iki yol: YENİ (kodu personel etiketten yazar; yazarken denetlenir: bu planda var · bu tesiste kayıtlı → "Kayıtlı ekipmanı seç" ·
    başka tesiste · eski kod · kullanılabilir) ya da TESİSTE KAYITLI ekipmanı plana al. Eşsizlik sunucuda ve veritabanında da. */
 import { useRouter } from "next/navigation";
@@ -18,13 +19,14 @@ import { Sayac, SuzgecliListe, useSuzgec } from "../../../components/liste/Suzge
 import type { SuzgecTanimi } from "../../../components/liste/suzgec";
 import { Pencere } from "../../../components/pencere/Pencere";
 import { Rozet } from "../../../components/sayfa/Sayfa";
+import { SilTusu } from "../../../components/sil/SilTusu";
 import { SecimAlani } from "../../../components/secim/SecimAlani";
 import { Tus } from "../../../components/tus/Tus";
 import { KALIP } from "../../../styles/kalip";
 import { kodBicimi, kodNormal, tarihNo, type KodTuru } from "../sema";
 import type { PlanEkipmani, PlanIci } from "../server/plan-ici";
 import { raporOlusturEylemi } from "../../raporlar/ui/eylemler";
-import { ekipmanPasifEylemi, kayitliEkleEylemi, kodDurumuEylemi, yeniEkipmanEylemi } from "./eylemler";
+import { ekipmanPasifEylemi, ekipmanSilEylemi, kayitliEkleEylemi, kodDurumuEylemi, yeniEkipmanEylemi } from "./eylemler";
 import stil from "./planlar.module.css";
 
 const bransAd = (b: "m" | "e") => (b === "m" ? "Mekanik" : "Elektrik");
@@ -94,16 +96,20 @@ export function EkipmanBolumu({ v }: { v: PlanIci }) {
     ) },
     { k: "rapor", genislik: g.rapor, baslik: "Rapor", kart: "rozet", sira: 1, hucre: (e) => e.pasif ? <Rozet tur="notr">Pasif</Rozet>
       : raporlu.has(e.id) ? <span className={stil.raporTik} title="Raporu var"><Ikon ad="circle-check" /><span className="gizli">Raporu var</span></span> : null },
-    ...(v.izin.ekipmanPasif || v.izin.raporOlustur ? [{ k: "eylem", genislik: g.eylem, baslik: "İşlem", gizliBaslik: true, siralanmaz: true, kart: "eylem", sira: 9, hucre: (e: PlanEkipmani) => {
+    ...(v.izin.ekipmanPasif || v.izin.raporOlustur || v.izin.ekipmanSil ? [{ k: "eylem", genislik: g.eylem, baslik: "İşlem", gizliBaslik: true, siralanmaz: true, kart: "eylem", sira: 9, hucre: (e: PlanEkipmani) => {
       if (raporlu.has(e.id)) return null;
       const olustur = v.izin.raporOlustur && !e.pasif;
-      if (!v.izin.ekipmanPasif && !olustur) return null;
+      /* 360: yönetici, hiç kullanılmamış ekipman (raporu yok, tamamlanmış planda yok) */
+      const sil = v.izin.ekipmanSil && e.sil;
+      if (!v.izin.ekipmanPasif && !olustur && !sil) return null;
       return (
         <div className={stil.eylemTuslar}>
           {v.izin.ekipmanPasif && (e.pasif
             ? <Tus tur="ikincil" ikon="undo-2" disabled={bekliyor} onClick={() => pasif(e, false)}>Etkinleştir</Tus>
             : <Tus tur="ikincil" ikon="ban" className={stil.ikonTus} disabled={bekliyor} aria-label={`${e.kod} pasife al`} title="Pasife al"
               onClick={() => pasif(e, true)}><span className="gizli">Pasife al</span></Tus>)}
+          {sil && <SilTusu kucuk ikon="trash-2" className={stil.ikonTus} ad={e.kod} baslik="Ekipmanı sil" yanEtki="bütün planlardan çıkar, kodu yeniden kullanılabilir"
+            sil={() => ekipmanSilEylemi(planId, e.id)} />}
           {olustur && (
             <Tus tur="ikincil" ikon="file-plus" disabled={bekliyor || v.erken || !!v.mesai} aria-label={`${e.kod} için rapor oluştur`}
               aria-describedby={v.erken ? ERKEN_ID : v.mesai ? MESAI_ID : undefined} onClick={() => raporAc(e)}>Rapor oluştur</Tus>

@@ -5,7 +5,8 @@
    · kullanılmış cihaz silinmez, sayım doğru döner: zimmet hareketi, raporun cihaz listesi (rapor silinmiş taslak olsa da);
    · yalnız yöneticiler (planlama / denetçi / muhasebe yetkisiz); başka firmanın cihazı "yok"; oturumsuz çağrı reddedilir; uygulama rolünün DELETE'i yok;
    · 358 pasif: zimmetteki / kalibrasyondaki cihaz pasife alınmaz; pasif cihaz seçimden ve Zimmetler'den kalkar, açık rapor kodunu gösterir; etkinleştir;
-   · 359 cihaz türü: ad eşsiz; cihazı olan / raporda geçen tür silinmez; cihazsız tür silinir, ekipman türlerinin cihaz listesinden çıkar.
+   · 359 cihaz türü: ad eşsiz; cihazı olan / raporda geçen tür silinmez; cihazsız tür silinir, ekipman türlerinin cihaz listesinden çıkar;
+   · 360 ekipman: yalnız yönetici; kullanılmamış ekipman plan satırı ve kod geçmişiyle silinir (kod serbest); raporlu / tamamlanmış plandaki silinmez.
    Olumsuz kanıt: tests/bozan/kesin-silme.bozan.ts. */
 import assert from "node:assert/strict";
 import { mkdtempSync, rmSync } from "node:fs";
@@ -13,6 +14,7 @@ import { tmpdir } from "node:os";
 import { join } from "node:path";
 import { after, before, test } from "node:test";
 import { cihazKaydet, cihazKarti, cihazKonum, cihazListesi, cihazOzetleri, cihazPasif, cihazSil, cihazSilmeDurumu, cihazTuruKaydet, cihazTuruListesi, cihazTuruSil, kalibrasyonEkle, raporCihazlari, type Kisi } from "../src/modules/olcum-cihazlari/server/cihazlar.ts";
+import { ekipmanSil, planIci } from "../src/modules/planlar/server/plan-ici.ts";
 import { raporSil, sahaRaporu } from "../src/modules/raporlar/server/raporlar.ts";
 import type { GomuluKume } from "../src/server/db/gomulu.ts";
 import { havuzKur, kiraciIcinde, type Havuz } from "../src/server/db/kiraci.ts";
@@ -156,4 +158,40 @@ test("cihaz türü: ekle / adını değiştir; cihazı olan ve raporda geçen t�
   await b(FB.den1, (db) => db.sorgu("UPDATE rapor SET cihazlar = cihazlar || $1::jsonb WHERE id = $2", [JSON.stringify([{ tur: rt.id, cihaz: "00000000-0000-4000-8000-000000000000" }]), FB.rapor]));
   assert.deepEqual(await b(FB.yon, (db) => cihazTuruSil(db, FB.yon, rt.id)), { durum: "red", neden: "Tür silinemez: 1 raporda kullanıldı." });
   assert.deepEqual(await a(FA.yon, (db) => cihazTuruSil(db, FA.yon, rt.id)), { durum: "yok" }, "başka firmanın türü");
+});
+
+/* 360 — ekipman (pkproje §9 yirmi üçüncü tur "silme yalnız yönetici"; canDo ekipman_sil): plan içinde, yalnız yöneticiye, hiç kullanılmamış ekipmanda Sil;
+   plan satırları ve kod geçmişi birlikte gider, kod serbest; raporu olan ve tamamlanmış planda yer alan silinmez. B firmasında. */
+test("ekipman: yönetici kullanılmamış ekipmanı siler (plan satırı ve kod geçmişi gider, kod serbest); raporlu / tamamlanmış plandaki silinmez", async () => {
+  const b = <T,>(k: Kisi, is: Parameters<typeof kiraciIcinde<T>>[2]) => kiraciIcinde(havuz, B, is, { hesapId: k.id });
+  const ekipmanAc = async (kod: string) => {
+    const id = (await b(FB.yon, (db) => db.sorgu<{ id: string }>("INSERT INTO ekipman (tesis_id, tur_id, kod, ekleyen) VALUES ($1, $2, $3, 'Deneme') RETURNING id::text", [FB.tesis, FB.tur, kod]))).rows[0].id;
+    await b(FB.yon, (db) => db.sorgu("INSERT INTO plan_ekipman (plan_id, ekipman_id, ekleyen) VALUES ($1, $2, 'Deneme')", [FB.planId, id]));
+    return id;
+  };
+  const yeni = await ekipmanAc("EP-SIL");
+  const v = (await b(FB.yon, (db) => planIci(db, FB.yon, FB.planId)))!;
+  assert.equal(v.izin.ekipmanSil, true);
+  assert.deepEqual(v.ekipman.map((x) => [x.kod, x.sil]).sort(), [["EP-A1", false], ["EP-SIL", true]], "raporlu ekipmanda Sil yok");
+  assert.equal((await b(FB.den1, (db) => planIci(db, FB.den1, FB.planId)))!.izin.ekipmanSil, false, "denetçi silmez (pasife alır)");
+  assert.deepEqual(await b(FB.den1, (db) => ekipmanSil(db, FB.den1, FB.planId, yeni)), { durum: "yetkisiz" });
+  assert.deepEqual(await b(FB.plan, (db) => ekipmanSil(db, FB.plan, FB.planId, yeni)), { durum: "yetkisiz" });
+  assert.deepEqual(await b(FB.yon, (db) => ekipmanSil(db, FB.yon, FB.planId, FB.ekipman)),
+    { durum: "red", neden: "Ekipman silinemez: 1 raporda kullanıldı. Yanlış girildiyse pasife alın." });
+  assert.deepEqual(await kiraciIcinde(havuz, A, (db) => ekipmanSil(db, FA.yon, FB.planId, yeni), { hesapId: FA.yon.id }), { durum: "yok" }, "başka firma");
+  assert.deepEqual(await b(FB.yon, (db) => ekipmanSil(db, FB.yon, FB.planId, yeni)), { durum: "tamam", bildirim: "EP-SIL silindi." });
+  const kalan = (await b(FB.yon, (db) => db.sorgu<{ p: number; k: number }>(
+    "SELECT (SELECT count(*)::int FROM plan_ekipman WHERE ekipman_id = $1) AS p, (SELECT count(*)::int FROM ekipman_kodu WHERE ekipman_id = $1) AS k", [yeni]))).rows[0];
+  assert.deepEqual(kalan, { p: 0, k: 0 }, "plan satırı ve kod geçmişi gitti");
+  assert.equal(typeof await ekipmanAc("EP-SIL"), "string", "kod serbest kaldı");
+  /* tamamlanmış plan (durum geçişi testin kapsamı dışında — süper kullanıcı tetikleri atlayarak kapatır) */
+  const z = await ekipmanAc("EP-TAM");
+  const s = kume.sahipIstemci(); await s.connect();
+  try {
+    await s.query("SET session_replication_role = replica");
+    await s.query("UPDATE plan SET durum = 'tamamlandi', kontrol_tamam = now(), bitti = now() WHERE id = $1", [FB.planId]);
+  } finally { await s.end(); }
+  assert.deepEqual(await b(FB.yon, (db) => ekipmanSil(db, FB.yon, FB.planId, z)),
+    { durum: "red", neden: "Ekipman silinemez: 1 tamamlanmış planda kullanıldı. Yanlış girildiyse pasife alın." });
+  await assert.rejects(b(FB.yon, (db) => db.sorgu("DELETE FROM ekipman WHERE id = $1", [z])), /permission denied|izin/i, "uygulama rolünün DELETE'i yok");
 });

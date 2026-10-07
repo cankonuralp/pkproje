@@ -10,7 +10,7 @@ import { useBildir } from "../bildirim/Bildirim";
 import { useOnayla } from "../pencere/Onay";
 import { Tus } from "../tus/Tus";
 
-export function SilTusu({ ad, baslik, yanEtki, sil, donus, kucuk = false }: {
+export function SilTusu({ ad, baslik, yanEtki, sil, donus, kucuk = false, ikon, className }: {
   /** kaydın ekrandaki adı ya da kodu */
   ad: string;
   /** onay penceresinin başlığı ("Ölçüm cihazını sil") */
@@ -22,13 +22,16 @@ export function SilTusu({ ad, baslik, yanEtki, sil, donus, kucuk = false }: {
   donus?: string;
   /** yalnız simge (liste satırı) */
   kucuk?: boolean;
+  /** simge (varsayılan: küçükte "x", büyükte "trash-2") ve satırın tuş sınıfı */
+  ikon?: string;
+  className?: string;
 }) {
   const router = useRouter();
   const bildir = useBildir();
   const onayla = useOnayla();
   const [bekliyor, baslat] = useTransition();
   return (
-    <Tus tur="ikincil" ikon={kucuk ? "x" : "trash-2"} title={kucuk ? "Sil" : undefined} aria-label={kucuk ? `${ad} sil` : undefined} disabled={bekliyor} aria-busy={bekliyor || undefined} onClick={async () => {
+    <Tus tur="ikincil" ikon={ikon ?? (kucuk ? "x" : "trash-2")} className={className} title={kucuk ? "Sil" : undefined} aria-label={kucuk ? `${ad} sil` : undefined} disabled={bekliyor} aria-busy={bekliyor || undefined} onClick={async () => {
       if (!(await onayla({ baslik, metin: `${ad} kalıcı olarak silinir${yanEtki ? `; ${yanEtki}` : ""}. Geri alınamaz.`, tus: "Sil", tehlike: true }))) return;
       baslat(async () => {
         const r = await sil();

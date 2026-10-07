@@ -2,6 +2,7 @@
    başkasına verilmez (veritabanı). Bu modül öteki modüllere OKUMA ve YAZMA işlevi açar; yetki ÇAĞIRANDA (Planlar: plan içinde ekle / pasife al).
    Yazmalar güvenli yazıcıdan, denetim izine. */
 import type { Sorgulayici } from "../../../server/db/kiraci.ts";
+import { kesinSil, kullanimlar, type Kullanim, type SilmeSonucu } from "../../../server/db/silici.ts";
 import { ekle, guncelle, tablo, type GuncelleSonucu, type Iz } from "../../../server/db/yazici.ts";
 
 const UUID = /^[0-9a-f]{8}-[0-9a-f]{4}-[0-9a-f]{4}-[0-9a-f]{4}-[0-9a-f]{12}$/;
@@ -71,4 +72,14 @@ export async function tesisTurSayilari(db: Sorgulayici, tesisler: readonly strin
   return (await db.sorgu<{ tesis_id: string; tur_id: string; adet: number }>(
     "SELECT tesis_id::text, tur_id::text, count(*)::int AS adet FROM ekipman WHERE pasif IS NULL AND tesis_id = ANY ($1::uuid[]) GROUP BY 1, 2", [l])).rows
     .map((x) => ({ tesisId: x.tesis_id, turId: x.tur_id, adet: x.adet }));
+}
+
+/** 360 — kesin silme (yalnız hiç kullanılmamış: raporu yok, tamamlanmış planda yok; plan satırları ve kod geçmişi birlikte, kod serbest — göç 0056).
+    Yetki ÇAĞIRANDA (Planlar: yalnız yönetici, canDo ekipman_sil). */
+export function ekipmanSil(db: Sorgulayici, kim: string, id: string): Promise<SilmeSonucu> {
+  return kesinSil(db, "ekipman", id, kim);
+}
+/** kullanılmış ekipmanların sayımları (kullanılmamış haritada yok). Yetki ÇAĞIRANDA. */
+export function ekipmanKullanimi(db: Sorgulayici, idler: readonly string[]): Promise<Map<string, Kullanim>> {
+  return kullanimlar(db, "ekipman", idler);
 }

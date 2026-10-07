@@ -5,7 +5,7 @@ import { depo } from "../../../server/dosya/depo";
 import { ayniKoken } from "../../../server/kimlik/koken";
 import { istekOturumu, oturumIslemi } from "../../../server/kimlik/istek";
 import {
-  ekipmanPasif, kayitliEkle, kodDurumu, kontrolListesi, kunyeDuzenle, kunyeGuncelle, notEkle, planKabul, planReddet, planTamamla, tamamlamaGeriAl, yeniEkipman,
+  ekipmanPasif, ekipmanSil, kayitliEkle, kodDurumu, kontrolListesi, kunyeDuzenle, kunyeGuncelle, notEkle, planKabul, planReddet, planTamamla, tamamlamaGeriAl, yeniEkipman,
   type KodDurumu, type PlanYazma,
 } from "../server/plan-ici";
 import { planAc, tesisPlanBilgisi, type TesisPlanBilgisi } from "../server/planlar";
@@ -82,4 +82,8 @@ export async function kayitliEkleEylemi(id: string, idler: string[]): Promise<Pl
 }
 export async function ekipmanPasifEylemi(id: string, ekipmanId: string, surum: number, pasif: boolean): Promise<PlanYaniti> {
   return planIslemi((o) => oturumIslemi(o, (db) => ekipmanPasif(db, o, metin(id), metin(ekipmanId), Number(surum), pasif === true)));
+}
+/** kesin sil (360): yalnız yönetici, yalnız hiç kullanılmamış ekipman — karar plan-ici.ts / veritabanında */
+export async function ekipmanSilEylemi(id: string, ekipmanId: string): Promise<PlanYaniti> {
+  return planIslemi((o) => oturumIslemi(o, (db) => ekipmanSil(db, o, metin(id), metin(ekipmanId))));
 }
