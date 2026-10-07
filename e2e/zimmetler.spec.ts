@@ -66,7 +66,8 @@ test("demirbaş: kullanılmamış silinir; kullanılmış pasife alınır, etkin
     await page.getByRole("button", { name: "Teslim et" }).click();
     const t = page.getByRole("dialog", { name: "Teslim et" });
     await t.getByRole("combobox", { name: "Teslim alan" }).click();
-    await t.getByRole("option", { name: alan, exact: true }).click();
+    /* "Depo" seçeneğinin adında açıklaması da var ("iade") — kişi adı gibi başından eşleşir */
+    await t.getByRole("option", { name: new RegExp(`^${alan}`) }).click();
     await t.getByRole("button", { name: "Teslimi kaydet" }).click();
     await expect(t).toHaveCount(0, { timeout: 30_000 });
     await hazir(page);
