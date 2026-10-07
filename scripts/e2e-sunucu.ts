@@ -9,7 +9,7 @@ import { mkdtempSync } from "node:fs";
 import { tmpdir } from "node:os";
 import { join } from "node:path";
 import { createServer } from "node:http";
-import { E2E_FIRMA, E2E_HESAPLAR, E2E_ILK, E2E_KAPI, E2E_MUHASEBE, E2E_PAROLA, E2E_PLAN, E2E_SAHA, E2E_YONETIM, E2E_YONETIM_PROJELER, E2E_YZ } from "../e2e/hesaplar.ts";
+import { E2E_FIRMA, E2E_HESAPLAR, E2E_ILK, E2E_KAPI, E2E_MUHASEBE, E2E_PAROLA, E2E_PLAN, E2E_SAHA, E2E_YONETIM, E2E_YONETIM_PROJELER, E2E_YZ, E2E_ZAMANLI_SIR } from "../e2e/hesaplar.ts";
 import { planKabul, planIci } from "../src/modules/planlar/server/plan-ici.ts";
 import { planAc } from "../src/modules/planlar/server/planlar.ts";
 import { raporOlustur } from "../src/modules/raporlar/server/raporlar.ts";
@@ -222,5 +222,6 @@ const kod = await nextCalistir("dev", {
   PROBATA_SIR_ANAHTARI: sirAnahtari,
   PROBATA_YONETIM_ALAN: E2E_YONETIM.alan,   // 348: yönetim sayfası yalnız bu adreste
   PROBATA_YZ_UC: `http://127.0.0.1:${yzKapi}`,   // 351: yerel Anthropic taklidi
+  CRON_SECRET: E2E_ZAMANLI_SIR,   // 378: gece işi ucu (uydurma sır)
 }, ["--hostname", "127.0.0.1", "--port", String(E2E_KAPI)]);
 await kapat(kod);

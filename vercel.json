@@ -4,6 +4,7 @@
   "installCommand": "npm ci",
   "buildCommand": "node scripts/next.ts build",
   "regions": ["fra1"],
+  "crons": [{ "path": "/api/is/gece", "schedule": "15 1 * * *" }],
   "git": {
     "deploymentEnabled": {
       "main": true,

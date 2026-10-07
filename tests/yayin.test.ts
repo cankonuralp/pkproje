@@ -215,4 +215,6 @@ test("yayın ayarı: Vercel'de AB (Frankfurt), derleme projenin kendi yolundan",
   assert.equal(v.buildCommand, "node scripts/next.ts build");
   assert.equal(v.installCommand, "npm ci");
   assert.equal(v.framework, "nextjs");
+  /* 378: gece işi günde bir (Vercel Cron); uç yalnız CRON_SECRET'le açılır (src/server/is/yetki.ts) */
+  assert.deepEqual(v.crons, [{ path: "/api/is/gece", schedule: "15 1 * * *" }]);
 });

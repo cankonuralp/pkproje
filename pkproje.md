@@ -1232,7 +1232,9 @@ tarih-saat, fotoğraflar, form) · **Eğitim kaydı** (personel, eğitim, belge,
    yayımlandı; önceki ürünün alan adı ve gerçek müşteri adı metinden çıkarıldı.
 9. **8.9 Arka plan işleri — KARAR (2026-09-22):** kalibrasyon ve eğitim uyarıları, yedek, 5 yıl sonrası (firmanın seçimiyle arşive taşıma ya da silme, 2026-09-29), toplu PDF
    için **PostgreSQL üstünde iş kuyruğu** (pg-boss). **Ayrı servis yok** — kurulum yükü doğurmaz. İhtiyaç doğan
-   modülde kurulur.
+   modülde kurulur. **2026-10-08 (378, uygulama):** barındırma Vercel (G3) — sürekli çalışan işçi yok; ZAMANLI işler Vercel Cron → `/api/is/gece`
+   (günde bir, CRON_SECRET'le), iş kaydı ve "aynı anda iki koşu yok" veritabanında (0069 is_calisma). İstekle çalışan kuyruk işleri (toplu PDF,
+   e-posta) gelince pg-boss o modülde kurulur; ayrı servis yine yok.
 10. **8.10 Sigorta okuma — KARAR (2026-09-22):** elektrik panosu fotoğrafından sigorta bilgilerini okumak için
    **görsel okuyabilen yapay zekâ servisi** (ör. Claude). Okunan değerler tabloya **öneri** olarak düşer;
    **inspector kontrol edip onaylamadan kaydedilmez**. Fotoğraf dış servise gider; pano fotoğrafı kişisel veri
@@ -2353,6 +2355,15 @@ revizyon, alan kopyalama, hafif kusur devri, meslek eşleşme denetimi).
 - Emsal ürünler: https://opwire.app/iso-17020-periyodik-kontrol-yazilimi/ · https://17020muayene.vidco.com.tr/ · https://akuple.com/asansor-kontrol-yazilimi/ · https://ensyazilim.com/
 
 ## 11 · Değişiklik günlüğü
+- 2026-10-08 (378): **K5 başladı — gece işi: çöp temizliği** (09-A5, ARKA-UC §7; reisim: *"devam et … bitir"*). Silinen kaydın dosyası çöpe
+  gidiyordu ama hiç silinmiyordu (veritabanı deposunda yer tutuyordu). Artık her gece çöpte **30 günü dolan** dosya kalıcı silinir: kaydı ve
+  depodaki içeriği. Çöpteki dosya zaten indirilemiyordu; ekranda bir şey değişmez, yer açılır. Bir kayda hâlâ bağlı dosya silinmez ("bağlı"
+  sayılır); depoda kaydı olmayan nesne yalnız sayılır, silinmez; dondurulmuş firmaya dokunulmaz. İş her firmayı kendi işleminde dolaşır (G1); bir
+  firmada düşen iş ötekileri durdurmaz, iş "hata" ile kaydedilir. İş kaydı (is_calisma): aynı iş aynı anda iki kez koşmaz, 1 saattir takılı iş
+  "takıldı" olur, özet yalnız sayılar. Uç `/api/is/gece` yalnız CRON_SECRET'le (yoksa / kısaysa hiçbir istek geçmez), Vercel Cron günde bir
+  (01:15 UTC). Göç 0069 (is_calisma, is_basla / is_bitir, gece_firmalari, dosya_cop_sil, depo_nesne_sil — uygulama rolüne DELETE verilmedi).
+  Kilit gece-cop.test (üç firma, biri dondurulmuş), zamanli-yetki.test, moduller (uç yalnız sırla, yalnız GET), yayin (cron); olumsuz kanıt
+  gece-cop.bozan (6); e2e api (sırsız 401, sırla iki koşu). Sonraki: sağlık ucuna "takılı iş" (09-G5) ilk koşudan sonra.
 - 2026-10-08 (377): **Yönetim › Firma: Dondur / Etkinleştir / yeni geçici parola sonrası sayfa sunucuda yenilenir.** CI (8dc6d06, tablet):
   "Etkinleştir"e basıldı, hata çıkmadı, tuş açıldı ama sayfa 15 sn "Dondurulmuş"ta kaldı — eylemden sonra istemcinin ayrı yenileme isteği
   başka bir yönlendirici işiyle çakışınca düşebiliyor (Raporlar'da 318'de görülen yarış). Artık bu üç eylem başarılı olunca yeni sayfa eylemin

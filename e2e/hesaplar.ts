@@ -38,6 +38,8 @@ export const E2E_YZ = {
   tesis: "YZ Tesisi",
   ekipman: { masaustu: "EP-0301", tablet: "EP-0302", telefon: "EP-0303" } as Record<string, string>,
 } as const;
+/* gece işi (378): uçtan uca sunucunun zamanlayıcı sırrı — UYDURMA, yalnız geçici test sunucusunda (yayında Vercel ortam değişkeni CRON_SECRET) */
+export const E2E_ZAMANLI_SIR = "e2e-zamanli-is-sirri-uydurma-0000000001";
 /* yönetim (348): yönetim adresi ve uydurma yöneticiler (yalnız geçici test veritabanı). Doğrulama anahtarı uydurma Base32; test kodu onunla üretir.
    347–348 incelemesi: üç genişlik tek sunucuda da koşabilsin (yerelde `npm run test:e2e`) — her proje KENDİ "ilk" ve kurulmuş yöneticisini ve kendi
    açacağı firmayı kullanır (E2E_ILK gibi); kurulmuş yönetici de proje başına (aynı zaman adımındaki kod yeniden oynatma sayılmasın). */

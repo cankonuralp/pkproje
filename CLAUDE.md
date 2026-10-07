@@ -205,18 +205,23 @@ pkproje/
                             cevap süzme / maliyet, saf; anthropicCagir — uç PROBATA_YZ_UC, hata ücretli mi) · kullanim.ts (0052 yz_kullanim / yz_okuma; 0053
                             ayırma: yzAyir satır kilidiyle, yzOkumaYaz, yzAyirmaBirak; yzAyKullanimi firma ayarlarına) · modülde raporlar/server/foto-oku.ts
                             (hazırla + ayır → çağrı → kullanım → öneri; pano fotoğrafı rapora) + foto-eslestir.ts (saf: okunan → boş satır) + ui/FotoOkuma.tsx
+  src/server/is/            ARKA PLAN İŞLERİ (378; K5): gece.ts (geceIsleri — firma başına kiracı işlemi, is_calisma kaydı, süre sınırı) ·
+                            yetki.ts (zamanliYetkili: "Bearer <CRON_SECRET>", sır ≥ 32) · uç src/app/api/is/gece (Vercel Cron, vercel.json crons) ·
+                            db/is.ts (isBasla / isBitir / geceFirmalari; göç 0069) · çöp temizliği src/server/dosya/cop.ts (30 gün, A5)
   src/server/saglik.ts      SAĞLIK (350; 09-G5): /api/saglik denetimleri (db/saglik.ts → saglik_denetimi, geçerli tanım 0053 — bağlanan rol, göç sayısı;
                             db/son-goc.ts SON_GOC + GOC_SAYISI — her yeni göçte ikisi güncellenir, testle kilitli) · canlı duman testi: node tools/duman.mjs (salt okunur, çıkış kodu)
   src/server/db/havuz.ts    ortamdan bağlantı: ağda şifresiz bağlantı YOK (PROBATA_VT_SSL=dogrula → kok-sertifika.ts Supabase kökü); Vercel'de boşta bekleme
   vercel.json               deneme yayını (Vercel fra1, https://probata-deneme.vercel.app; veritabanı Supabase eu-central-1 — pkproje.md §11 293)
                             · yalnız main yayınlanır (git.deploymentEnabled; kalem/* önizleme kurmaz — 2026-10-06, Function Storage kotası)
                             · 352: Chromium yalnız PDF işlevinde (PDF basan sayfalar maxDuration 60 — tests/pdf-paket.test.ts); saklama 1 gün
+                            · 378: crons /api/is/gece günde bir (01:15 UTC; Vercel ortamında CRON_SECRET)
   src/server/kiraci/        kiracı çözümleme (alt alan adı → firma kısa adı; istek.ts: istekKiracisi) · ★ güvenli yazıcılar
   src/server/kimlik/        parola özeti (scrypt) · giriş · oturum (belirteç özeti, kilit) — 2026-10-04 · istek.ts (oturumGerekli, modulGorur,
                             güvenli dönüş adresi) · eylemler.ts (giriş / çıkış sunucu eylemleri)
   src/server/dosya/         TEK DOSYA YOLU: anahtar üreticisi (yalnız kimlik) · tür baytlardan + EXIF silme (tur.ts) · kapalı depo bağdaştırıcısı
                             (klasör; deneme yayınında veritabanı — 347, göç 0049 depo_nesne, PROBATA_DEPO=vt, çağıranın işleminde; firma S3'ü K7) ·
-                            yükle / indirilebilir + modül erişim kaydı (kaydı olmayan modülün dosyası kimseye açılmaz) ·
+                            yükle / indirilebilir + modül erişim kaydı (kaydı olmayan modülün dosyası kimseye açılmaz) · çöp temizliği cop.ts
+                            (378: 30 günü dolan çöp — satır dosya_cop_sil, içerik depo.copSil; bağlı dosya kalır; öksüz yalnız sayılır) ·
                             tek uç src/app/api/dosya/[id] · görsel yalnız <GizliResim> (components/gizli-resim)
   src/server/db/silici.ts   KESİN SİLME — tek mekanizma (357; reisim 2026-10-07 "eklenebilen şeyler silinemiyor"): SILINEBILIR (tür → <tablo>_kullanim /
                             <tablo>_sil veritabanı işlevleri + her yabancı anahtar "kullanım" ya da "birlikte"), kullanimlar, kesinSil — yalnız hiç

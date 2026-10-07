@@ -1,6 +1,7 @@
 /* NEREDEN GELDİ: K1 "tanım JSON'ları · API sürümü" (2026-10-04), ARKA-UC §2.1, 09-B6. Gerçek sunucuda: API sürüm başlığı, eski istemci 426, tanım dizini
    oturumsuz 403, karma adlı dosya sonsuz önbellekte, bilinmeyen karma 404. */
 import { expect, test } from "@playwright/test";
+import { E2E_ZAMANLI_SIR } from "./hesaplar";
 import { girisli } from "./yardimci";
 
 test("API sürümü ve sabit tanımlar", async ({ page }) => {
@@ -29,4 +30,22 @@ test("sağlık ucu: bütün denetimler doğru, firma / kişi bilgisi yok", async
   expect(r!.headers()["cache-control"]).toBe("no-store");
   const j = await r!.json();
   expect(j).toEqual({ durum: "tamam", surum: "yerel", denetimler: { veritabani: true, goc_guncel: true, rls: true, api_kapali: true, uygulama_kisitli: true } });
+});
+
+/* 378 (K5, 09-A5): gece işi ucu yalnız zamanlayıcının sırrıyla; sırsız / yanlış sırla 401 ve iş koşmaz; doğru sırla çöp temizliği koşar, yanıt
+   yalnız sayılar (firma / kişi bilgisi yok); ikinci koşu da "tamam" (iş bitince kilit kalkar). Uçtan uca: yol, ara katman, göç 0069, veritabanı deposu */
+test("gece işi ucu: yalnız sırla; sayılar döner", async ({ request }) => {
+  expect((await request.get("/api/is/gece")).status()).toBe(401);
+  expect((await request.get("/api/is/gece", { headers: { Authorization: "Bearer yanlis-sir-yanlis-sir-yanlis-sir-00" } })).status()).toBe(401);
+  expect((await request.get("/api/is/gece", { headers: { Authorization: E2E_ZAMANLI_SIR } })).status()).toBe(401);   // "Bearer " olmadan
+  for (let i = 0; i < 2; i++) {
+    const r = await request.get("/api/is/gece", { headers: { Authorization: `Bearer ${E2E_ZAMANLI_SIR}` } });
+    expect(r.status()).toBe(200);
+    expect(r.headers()["cache-control"]).toBe("no-store");
+    const j = await r.json() as Record<string, unknown>;
+    expect(Object.keys(j).sort()).toEqual(["bagli", "bayt", "durum", "firma", "hatali_firma", "kalan", "oksuz", "silinen"]);
+    expect(j.durum).toBe("tamam");
+    expect(j.hatali_firma).toBe(0);
+    expect(j.firma).toBeGreaterThanOrEqual(2);
+  }
 });

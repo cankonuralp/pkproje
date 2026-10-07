@@ -55,8 +55,9 @@ const ACIK_ROTALAR = ["giris"];
 const GELISTIRME_ROTALARI = ["vitrin"];
 /* 2026-10-04 (K1, dosya ucu): api/ yalnız tanımlı uçları taşır — her uç oturumu ve yetkiyi kendisi denetler (09-A2).
    2026-10-05 (316): olcum — PDF motorunun Vercel ölçümü, oturumsuz ama YALNIZ önizleme dağıtımında (aşağıdaki test kilitler; yayında 404)
-   2026-10-06 (350, 09-G5): saglik — oturumsuz sağlık ucu; yalnız evet / hayır denetimleri ve sürüm (firma / kişi bilgisi yok — e2e/api.spec) */
-const API_UCLARI = ["dosya", "olcum", "saglik", "surum", "tanim"];
+   2026-10-06 (350, 09-G5): saglik — oturumsuz sağlık ucu; yalnız evet / hayır denetimleri ve sürüm (firma / kişi bilgisi yok — e2e/api.spec)
+   2026-10-08 (378, K5): is — zamanlayıcı uçları (gece işi); oturumsuz ama YALNIZ CRON_SECRET'le (aşağıdaki test: ilk iş zamanliYetkili) */
+const API_UCLARI = ["dosya", "is", "olcum", "saglik", "surum", "tanim"];
 const klasorlerOf = (yol: string) => readdirSync(yol).filter((ad) => statSync(join(yol, ad)).isDirectory()).sort();
 
 test("her modülün rota klasörü var ve src/app'te modül dışı rota yok", () => {
@@ -130,6 +131,15 @@ test("api/olcum yalnız önizleme dağıtımında: ilk iş VERCEL_ENV denetimi, 
   const govde = kaynak.slice(kaynak.indexOf("export async function GET"));
   assert.match(govde, /^export async function GET\(\) \{\n {2}if \(process\.env\.VERCEL_ENV !== "preview"\) return new Response\("Bulunamadı", \{ status: 404/);
   assert.deepEqual(klasorlerOf(join(KOK, "src", "app", "api", "olcum")), ["pdf"]);
+});
+
+/* 2026-10-08 (378): zamanlayıcı ucu oturumsuz — yalnız CRON_SECRET'li istek; denetim her şeyden önce (iş koşmadan 401), yalnız GET */
+test("api/is yalnız zamanlayıcının sırrıyla: ilk iş zamanliYetkili, değilse 401; yalnız GET", () => {
+  assert.deepEqual(klasorlerOf(join(KOK, "src", "app", "api", "is")), ["gece"]);
+  const kaynak = readFileSync(join(KOK, "src", "app", "api", "is", "gece", "route.ts"), "utf8");
+  const govde = kaynak.slice(kaynak.indexOf("export async function GET"));
+  assert.match(govde, /^export async function GET\(istek: Request\) \{\n {2}if \(!zamanliYetkili\(istek\.headers\.get\("authorization"\), process\.env\.CRON_SECRET\)\) \{\n {4}return Response\.json\(\{ hata: "Yetkisiz\." \}, \{ status: 401/);
+  assert.doesNotMatch(kaynak, /export (async )?function (POST|PUT|PATCH|DELETE)/);
 });
 
 /* 2026-10-06 (348; reisim: "rol değiştirme, sızma, veri çalma"): yönetim sayfası yalnız yönetim adresinde ve yönetim oturumuyla, veri yönetim
