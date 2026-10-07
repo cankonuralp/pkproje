@@ -1,7 +1,7 @@
 "use client";
 /* Zimmetler listeleri (maket zimmetler.html #/ Kimde · #/hareketler Hareketler): süzgeç (kalıp 15), tür çipleri aynı grupta, Kimde / Kişi seçicisi,
    tablo ↔ kart. "Teslim et" ve "Demirbaş ekle" yalnız "değiştirir" düzeyine çizilir (karar sunucuda). Zimmet formu durumu (imzalı formda mı)
-   personel özlük kaleminde. */
+   personel özlük kaleminde. 362: Görünüm (kalıp 8) — pasif varlık listeden kalkar, "Pasif varlıklar"da görünür; teslim penceresinde yok. */
 import Link from "next/link";
 import { useState } from "react";
 import { Ikon } from "../../../components/ikon/Ikon";
@@ -31,7 +31,9 @@ function kimdeTanim(varliklar: readonly VarlikSatiri[], bugun: string): SuzgecTa
     ],
     seciciler: [{ k: "kisi", ad: "Kimde", secenek: () => [["tumu", "Tümü"], ...[...new Map(varliklar.map((v) => [v.kimde.tip === "kisi" ? v.kimde.id : v.kimde.tip, kimdeAd(v.kimde)]))]
       .sort((a, b) => a[1].localeCompare(b[1], "tr")).map(([k, a]) => [k, a] as const)],
-      gecer: (v, s) => s === "tumu" || (v.kimde.tip === "kisi" ? v.kimde.id : v.kimde.tip) === s }],
+      gecer: (v, s) => s === "tumu" || (v.kimde.tip === "kisi" ? v.kimde.id : v.kimde.tip) === s },
+      { k: "gorunum", ad: "Görünüm", bas: "etkin", secenek: () => [["etkin", "Etkin varlıklar"], ["pasif", "Pasif varlıklar"], ["hepsi", "Hepsi"]],
+        gecer: (v, s) => s === "hepsi" || (s === "pasif") === v.pasif }],
   };
 }
 

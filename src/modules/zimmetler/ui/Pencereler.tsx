@@ -52,7 +52,7 @@ export function TeslimPenceresi({ kapat, varliklar, kisiler, bugun, varlik = "" 
         <FormIzgara>
           <Alan id={TID.varlik} etiket="Varlık" zorunlu genis hata={h.varlik} sonuc={v ? `Şu an: ${kimdeAd(v.kimde)}` : undefined}>
             <SecimAlani id={TID.varlik} ad="Varlık" deger={d.varlik} ipucu="Varlık seçin" gecersiz={!!h.varlik} tanim={ipucuId(TID.varlik)}
-              secenekler={varliklar.filter((x) => x.tur !== "a").map((x) => [x.anahtar, `${x.kod} · ${x.ad}`, kimdeAd(x.kimde)] as const)} degistir={(x) => setD({ ...d, varlik: x })} />
+              secenekler={varliklar.filter((x) => x.tur !== "a" && !x.pasif).map((x) => [x.anahtar, `${x.kod} · ${x.ad}`, kimdeAd(x.kimde)] as const)} degistir={(x) => setD({ ...d, varlik: x })} />
           </Alan>
           <Alan id={TID.alan} etiket="Teslim alan" zorunlu hata={h.alan} sonuc={`Teslim eden: ${v ? kimdeAd(v.kimde) : "—"}`}>
             <SecimAlani id={TID.alan} ad="Teslim alan" deger={d.alan} ipucu="Kişi ya da depo" gecersiz={!!h.alan} tanim={ipucuId(TID.alan)}

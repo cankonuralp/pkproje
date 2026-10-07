@@ -95,6 +95,7 @@ pkproje/
                             · 357 Sil (kullanılmamış, yönetici; silici.ts) · 358 Pasife al / Etkinleştir (depoda olmalı; liste Görünüm; raporCihazlari pasifDahil)
                             · 359 Cihaz türleri penceresi (ui/TurPencereleri.tsx; ad düzenle, kullanılmamış tür Sil — ekipman türlerinden de çıkar, 0055)
   src/modules/zimmetler/    ZİMMETLER (2026-10-04): kimde (son hareketten), değişmez teslim hareketleri + fotoğraf, demirbaş
+                            · 362 demirbaş Sil (silici.ts, 0058) / Pasife al / Etkinleştir; pasif varlıklar yüklenir (Görünüm: Pasif), teslim edilmez
   src/modules/araclar/      ARAÇLAR (2026-10-04): araç (zimmet varlığı), değişmez teslim tutanağı + açı fotoğrafları, haftalık kilometre
                             · tutanak belgesi (342): src/belge/arac.ts (temel <kod>-FR-ARC-01) → /araclar/tutanak/<hareket>/pdf; kişiye teslimde
                             PDF aynı işlemde teslim alanın imzasına (Onaylar › Diğer, onaylar/server/belge-baglanti.ts belgeGonder, kaynak = hareket)

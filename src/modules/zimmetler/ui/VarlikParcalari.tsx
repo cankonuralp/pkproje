@@ -1,11 +1,15 @@
 "use client";
 /* Varlık sayfasının istemci parçaları (maket zimmetler.html varlikCiz): "Teslim et" tuşu (varlık önceden seçili) ve teslim geçmişi (fotoğraflar
-   GizliResim ile — adres <img src>'ye yazılmaz). */
+   GizliResim ile — adres <img src>'ye yazılmaz). 362: demirbaş tuşları — Sil (yalnız yöneticiye ve hiç kullanılmamış demirbaşa) ya da Pasife al;
+   pasif demirbaşta Etkinleştir (ölçüm cihazı 357–358 deseni; karar sunucuda). */
 import { useState } from "react";
 import { GizliResim } from "../../../components/gizli-resim/GizliResim";
 import { AltSatir } from "../../../components/sayfa/Sayfa";
+import { PasifPenceresi } from "../../../components/sil/PasifPenceresi";
+import { SilTusu } from "../../../components/sil/SilTusu";
 import { Tus } from "../../../components/tus/Tus";
 import type { HareketSatiri, VarlikSatiri } from "../server/zimmet";
+import { demirbasPasifEylemi, demirbasSilEylemi } from "./eylemler";
 import { TeslimPenceresi } from "./Pencereler";
 import { zamanYaz } from "./ortak";
 import stil from "./zimmet.module.css";
@@ -35,5 +39,22 @@ export function TeslimGecmisi({ hareketler, ad }: { hareketler: HareketSatiri[];
         </li>
       ))}
     </ol>
+  );
+}
+
+export function DemirbasTuslari({ id, kod, surum, pasif, sil, kullanim }: { id: string; kod: string; surum: number; pasif: boolean; sil: boolean; kullanim: string | null }) {
+  const [acik, setAcik] = useState(false);
+  return (
+    <>
+      {pasif
+        ? <Tus tur="ikincil" ikon="undo-2" onClick={() => setAcik(true)}>Etkinleştir</Tus>
+        : sil
+          ? <SilTusu ad={kod} baslik="Demirbaşı sil" yanEtki="kodu yeniden kullanılabilir" sil={() => demirbasSilEylemi(id)} donus="/zimmetler" />
+          : <Tus tur="ikincil" ikon="ban" onClick={() => setAcik(true)}>Pasife al</Tus>}
+      <PasifPenceresi acik={acik} kapat={() => setAcik(false)} ad={kod} pasif={pasif}
+        neden={kullanim ? `${kullanim} kullanıldı; silinemez.` : null}
+        kosullar={["Silinmez: teslim geçmişi ve zimmet formları durur.", "Zimmetler listesinden ve teslimden kalkar (Görünüm: Pasif varlıklar).", "Etkinleştir ile geri gelir."]}
+        geriMetni="Demirbaş listeye ve teslim seçimine geri döner." uygula={() => demirbasPasifEylemi(id, surum, !pasif)} />
+    </>
   );
 }

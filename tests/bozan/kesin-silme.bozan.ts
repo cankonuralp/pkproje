@@ -7,7 +7,8 @@
    5. (359) cihaz türü silinirken ekipman türlerinin cihaz listesinden çıkarma kalkınca silinen tür ekipman türünde kalır (rapor doldurulamayan cihaz
       satırı ister, onaya gönderi kalıcı takılır).
    6. (360) ekipman kullanımından tamamlanmış plan denetimi kalkınca kapanmış bir işin ekipmanı silinir (plan kaydı eksik kalır).
-   7. (361) ekipman türünü silerken fiyat satırı birlikte silinmezse kullanılmamış tür silinemez ("kullanıldı" sanılır) — kilit "silinir" der. */
+   7. (361) ekipman türünü silerken fiyat satırı birlikte silinmezse kullanılmamış tür silinemez ("kullanıldı" sanılır) — kilit "silinir" der.
+   8. (362) demirbaş kullanımından zimmet formu denetimi kalkınca imzalı zimmet formundaki demirbaş silinir (formun kapsamı yetim kalır). */
 import assert from "node:assert/strict";
 import { copyFileSync, mkdirSync, mkdtempSync, readdirSync, readFileSync, rmSync, writeFileSync } from "node:fs";
 import { tmpdir } from "node:os";
@@ -16,6 +17,7 @@ import { after, before, test } from "node:test";
 import { cihazKaydet, cihazSil, cihazTuruKaydet, cihazTuruSil, type Kisi } from "../../src/modules/olcum-cihazlari/server/cihazlar.ts";
 import { turSil } from "../../src/modules/ekipman-turleri/server/turler.ts";
 import { ekipmanSil } from "../../src/modules/planlar/server/plan-ici.ts";
+import { demirbasEkle, demirbasSil } from "../../src/modules/zimmetler/server/zimmet.ts";
 import { GOC_KLASORU } from "../../src/server/db/goc.ts";
 import type { GomuluKume } from "../../src/server/db/gomulu.ts";
 import { havuzKur, kiraciIcinde } from "../../src/server/db/kiraci.ts";
@@ -144,5 +146,18 @@ test("7. fiyat satırı birlikte silinmezse kullanılmamış tür silinemez (kil
     await kiraciIcinde(h, A, (db) => db.sorgu("INSERT INTO fiyat_listesi (tur_id, fiyat) VALUES ($1, 90000)", [t.tur]));
     const yon: Kisi = { id: t.yon, ad: "Deneme", roller: ["firma_yoneticisi"] };
     assert.equal((await kiraciIcinde(h, A, (db) => turSil(db, yon, t.tur), { hesapId: t.yon })).durum, "red", "bozuk: kullanılmamış tür silinemedi");
+  } finally { await h.end(); await supa.kapat(); }
+});
+
+test("8. zimmet formu denetimi kalkınca imzalı formdaki demirbaş silinir (kilidin koruduğu açık)", async () => {
+  const FORM = "    'zimmet_formu', NULLIF((SELECT count(*) FROM zimmet_formu zf WHERE zf.firma_id = d.firma_id AND ('d:' || d.id::text) = ANY (zf.kapsam)), 0)))";
+  const supa = await supabaseBenzeri(kume, "silme_bozuk_8", gocler(degistir(FORM, "    'zimmet_formu', NULL))"), undefined, "0058_"));
+  const h = havuzKur({ ...kume.uygulama, database: "silme_bozuk_8" });
+  try {
+    const A = (await supa.sahip.query<{ id: string }>("INSERT INTO firma (kisa_ad, ad, rapor_kodu) VALUES ('deneme-a', 'Deneme A', 'DA') RETURNING id::text")).rows[0].id;
+    const F = await sahaFirmasi(h, depo, A, "deneme-a");
+    const d = (await kiraciIcinde(h, A, (db) => demirbasEkle(db, F.yon, { kod: "DM-BZ", ad: "Deneme merdiveni" }), { hesapId: F.yon.id }) as { id: string }).id;
+    await kiraciIcinde(h, A, (db) => db.sorgu("INSERT INTO zimmet_formu (personel_id, kapsam) VALUES ($1, $2)", [F.den1Personel, [`d:${d}`]]), { hesapId: F.yon.id });
+    assert.equal((await kiraciIcinde(h, A, (db) => demirbasSil(db, F.yon, d), { hesapId: F.yon.id })).durum, "tamam", "bozuk: zimmet formundaki demirbaş silindi");
   } finally { await h.end(); await supa.kapat(); }
 });

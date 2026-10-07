@@ -4,11 +4,11 @@
 import { depo } from "../../../server/dosya/depo";
 import { ayniKoken } from "../../../server/kimlik/koken";
 import { istekOturumu, oturumIslemi } from "../../../server/kimlik/istek";
-import { demirbasEkle, FotoHatasi, teslimEt, type Yazma } from "../server/zimmet";
+import { demirbasEkle, demirbasPasif, demirbasSil, FotoHatasi, teslimEt, type Yazma } from "../server/zimmet";
 
 export interface PencereDurumu { tamam?: boolean; id?: string; hatalar?: Record<string, string>; genel?: string }
 
-const SONUC = { yetkisiz: "Bu işlem için yetkiniz yok.", yok: "Kayıt bulunamadı." } as const;
+const SONUC = { yetkisiz: "Bu işlem için yetkiniz yok.", yok: "Kayıt bulunamadı.", cakisma: "Kayıt bu arada değişti. Sayfayı yenileyip yeniden deneyin." } as const;
 async function oturum() {
   if (!(await ayniKoken())) return "İstek reddedildi. Sayfayı yenileyip yeniden deneyin.";
   return (await istekOturumu()) ?? "Oturumunuz kapandı. Yeniden giriş yapın.";
@@ -37,4 +37,18 @@ export async function demirbasEkleEylemi(girdi: unknown): Promise<PencereDurumu>
   const o = await oturum(); if (typeof o === "string") return { genel: o };
   const g = (girdi && typeof girdi === "object" ? girdi : {}) as Record<string, unknown>;
   return cevir(await oturumIslemi(o, (db) => demirbasEkle(db, o, { kod: String(g.kod ?? ""), ad: String(g.ad ?? "") })));
+}
+
+/** kesin sil (362): yalnız yönetici, yalnız hiç kullanılmamış demirbaş — karar zimmet.ts / veritabanında */
+export async function demirbasSilEylemi(id: string): Promise<PencereDurumu> {
+  const o = await oturum(); if (typeof o === "string") return { genel: o };
+  const r = await oturumIslemi(o, (db) => demirbasSil(db, o, String(id)));
+  return r.durum === "tamam" ? { tamam: true } : r.durum === "red" ? { genel: r.neden } : { genel: SONUC[r.durum] };
+}
+
+/** pasife al / etkinleştir (362): "yaz" düzeyi; zimmetteki demirbaş pasife alınmaz (sunucuda) */
+export async function demirbasPasifEylemi(id: string, surum: number, pasif: boolean): Promise<PencereDurumu> {
+  const o = await oturum(); if (typeof o === "string") return { genel: o };
+  const r = await oturumIslemi(o, (db) => demirbasPasif(db, o, String(id), Number(surum), pasif === true));
+  return r.durum === "tamam" ? { tamam: true } : r.durum === "red" ? { genel: r.neden } : { genel: SONUC[r.durum] };
 }

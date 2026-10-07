@@ -2353,6 +2353,13 @@ revizyon, alan kopyalama, hafif kusur devri, meslek eşleşme denetimi).
 - Emsal ürünler: https://opwire.app/iso-17020-periyodik-kontrol-yazilimi/ · https://17020muayene.vidco.com.tr/ · https://akuple.com/asansor-kontrol-yazilimi/ · https://ensyazilim.com/
 
 ## 11 · Değişiklik günlüğü
+- 2026-10-07 (362): **Demirbaş Sil / Pasife al** (§9 elli üçüncü tur; maket yok — ölçüm cihazı 357–358 deseni). Varlık sayfasında (Zimmetler › demirbaş)
+  yalnız yöneticiye ve hiç kullanılmamış demirbaşta "Sil" (onay "<kod> kalıcı olarak silinir; kodu yeniden kullanılabilir. Geri alınamaz.");
+  kullanılmışta "Pasife al" (pencere nedeni söyler: "1 zimmet hareketinde kullanıldı; silinemez"), pasifte "Etkinleştir". ENGEL: kişinin zimmetindeki
+  demirbaş pasife alınmaz (geri teslim alınamazdı). Göç 0058 demirbas_kullanim (zimmet hareketi · imzalı zimmet formunun kapsamı) + demirbas_sil.
+  Zimmetler artık pasif varlıkları da yükler (cihaz, araç, demirbaş): geçmiş hareketler "— · Kaldırılan varlık" yerine kodu ve adıyla görünür
+  (358'de pasife alınan cihazın hareketleri adsız kalıyordu); liste Görünüm: Etkin (varsayılan) / Pasif / Hepsi; pasif varlık açılır (Pasif rozeti +
+  şerit), teslim edilmez (sunucuda da). Kilit kesin-silme.test "demirbaş"; olumsuz kanıt kesin-silme.bozan 8; e2e zimmetler (sil, pasif, etkinleştir).
 - 2026-10-07 (361): **Ekipman türü Sil** (reisim: *"ekipman türü … silinemiyor"*; §9 elli üçüncü tur; maket yok — cihaz türü T7 ve İSG ID deseni).
   Tür sayfasında, yalnız yöneticiye ve hiç kullanılmamış türde "Sil"; onay "<kod> · <ad> kalıcı olarak silinir; rapor formatı, yüklenen PDF'ler ve
   fiyatı da silinir, kodu yeniden kullanılabilir. Geri alınamaz." Göç 0057 ekipman_turu_kullanim (ekipman — pasif dahil —, rapor, personel ataması,

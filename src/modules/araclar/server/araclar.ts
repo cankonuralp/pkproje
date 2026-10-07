@@ -69,9 +69,10 @@ async function kendiKisi(db: Sorgulayici, kim: YetkiHesabi): Promise<string | nu
 }
 
 /** öteki modüller için araç özeti (yetki ÇAĞIRANDA; Zimmetler kendi düzeyine göre süzer) */
-export async function aracOzetleri(db: Sorgulayici): Promise<{ id: string; plaka: string; ad: string }[]> {
-  return (await db.sorgu<{ id: string; plaka: string; tur: string; marka: string; model: string }>("SELECT id::text, plaka, tur, marka, model FROM arac WHERE pasif IS NULL"))
-    .rows.map((a) => ({ id: a.id, plaka: a.plaka, ad: `${a.tur} · ${a.marka} ${a.model}` }));
+export async function aracOzetleri(db: Sorgulayici, ayar: { pasifDahil?: boolean } = {}): Promise<{ id: string; plaka: string; ad: string; pasif: boolean }[]> {
+  return (await db.sorgu<{ id: string; plaka: string; tur: string; marka: string; model: string; pasif: boolean }>(
+    `SELECT id::text, plaka, tur, marka, model, pasif IS NOT NULL AS pasif FROM arac${ayar.pasifDahil ? "" : " WHERE pasif IS NULL"}`))
+    .rows.map((a) => ({ id: a.id, plaka: a.plaka, ad: `${a.tur} · ${a.marka} ${a.model}`, pasif: a.pasif }));
 }
 
 type AracDb = { id: string; plaka: string; tur: string; marka: string; model: string; yil: number; yakit: string; ilk_km: number | null; bakim_km: number | null;

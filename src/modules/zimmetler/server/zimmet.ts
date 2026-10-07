@@ -3,16 +3,20 @@
    zimmetindeki varlıkları ve kendisinin taraf olduğu hareketleri görür; TESLİM ve demirbaş eklemek yalnız "yaz" düzeyinde (karar 63: ayrı depo
    rolü yok). Her teslim ayrı, DEĞİŞMEZ kayıt (veritabanında güncelleme / silme hakkı yok); "kimde" son hareketten okunur. Teslim eden sunucuda
    o anki "kimde"den yazılır (istemciden alınmaz). Fotoğraflar tek dosya yolundan (yalnız JPEG / PNG, EXIF silinir), isteğe bağlı (karar 62).
-   Öteki modüllerin tablolarına dokunmaz: cihaz ve personel bilgisi o modüllerin dışa açtığı işlevlerden. */
+   Öteki modüllerin tablolarına dokunmaz: cihaz ve personel bilgisi o modüllerin dışa açtığı işlevlerden.
+   362 (§9 elli üçüncü tur): PASİF varlıklar da yüklenir (geçmiş hareket adıyla görünür; liste Görünüm: Pasif) ama teslim edilmez. Demirbaş: hiç
+   kullanılmamışı yönetici kesin siler (kayit_sil, modül 9; göç 0058), kullanılmışı pasife alınır (depodayken), Etkinleştir geri getirir. */
 import type { Sorgulayici } from "../../../server/db/kiraci.ts";
-import { ekle, tablo } from "../../../server/db/yazici.ts";
+import { kesinSil, kullanimlar, type Kullanim } from "../../../server/db/silici.ts";
+import { ekle, guncelle, tablo } from "../../../server/db/yazici.ts";
 import type { Depo } from "../../../server/dosya/depo.ts";
 import { dosyaYukle } from "../../../server/dosya/dosya.ts";
 import { hesabinPersoneli } from "../../../server/kimlik/hesap.ts";
-import { duzey, type YetkiHesabi } from "../../../server/yetki/canDo.ts";
+import { canDoEylem, duzey, type YetkiHesabi } from "../../../server/yetki/canDo.ts";
+import { kullanimMetni } from "../../../components/sil/metin.ts";
 import { dogrula, type DogrulamaHatalari } from "../../../sema/ortak.ts";
 import { aracOzetleri } from "../../araclar/server/araclar.ts";
-import { cihazOzetleri } from "../../olcum-cihazlari/server/cihazlar.ts";
+import { bugunTr, cihazOzetleri } from "../../olcum-cihazlari/server/cihazlar.ts";
 import { personelSecenekleri } from "../../personel/server/personel.ts";
 import { DemirbasGirdisi, TeslimGirdisi } from "../sema.ts";
 
@@ -27,7 +31,7 @@ export interface Kisi extends YetkiHesabi { ad: string }
 export type VarlikTuru = "c" | "d" | "a";
 /** kimde: depo · kalibrasyonda · bir personel */
 export type Kimde = { tip: "depo" } | { tip: "lab" } | { tip: "kisi"; id: string; ad: string };
-export interface VarlikSatiri { anahtar: string; tur: VarlikTuru; id: string; kod: string; ad: string; kimde: Kimde; bitis: string | null; son: { zaman: string; eden: string; alan: string } | null }
+export interface VarlikSatiri { anahtar: string; tur: VarlikTuru; id: string; kod: string; ad: string; kimde: Kimde; bitis: string | null; son: { zaman: string; eden: string; alan: string } | null; pasif: boolean }
 export interface HareketSatiri { id: string; varlik: string; varlikKod: string; varlikAd: string; zaman: string; eden: string; alan: string; alanKisi: boolean; km: number | null; notu: string | null; fotolar: string[] }
 export interface VarlikKarti extends VarlikSatiri { hareketler: HareketSatiri[] }
 
@@ -56,9 +60,9 @@ type HareketDb = { id: string; cihaz_id: string | null; demirbas_id: string | nu
 /** bütün varlıklar + hareketler (tek seferde; listeler bundan süzülür) */
 async function durum(db: Sorgulayici) {
   const [cihazlar, araclar, demirbaslar, kisiler, hareketler, fotolar] = [
-    await cihazOzetleri(db),
-    await aracOzetleri(db),
-    (await db.sorgu<{ id: string; kod: string; ad: string }>("SELECT id::text, kod, ad FROM demirbas WHERE pasif IS NULL")).rows,
+    await cihazOzetleri(db, { pasifDahil: true }),
+    await aracOzetleri(db, { pasifDahil: true }),
+    (await db.sorgu<{ id: string; kod: string; ad: string; pasif: boolean }>("SELECT id::text, kod, ad, pasif IS NOT NULL AS pasif FROM demirbas")).rows,
     await personelSecenekleri(db),
     (await db.sorgu<HareketDb>("SELECT id::text, cihaz_id::text, demirbas_id::text, arac_id::text, eden_personel::text, alan_personel::text, zaman, km, notu FROM zimmet_hareket ORDER BY zaman DESC, olustu DESC")).rows,
     (await db.sorgu<{ id: string; kayit_id: string }>("SELECT id::text, kayit_id::text FROM dosya WHERE modul = $1 AND cop IS NULL ORDER BY olustu", [DOSYA_MODULU])).rows,
@@ -89,9 +93,9 @@ async function durum(db: Sorgulayici) {
     return h?.alanId ? { tip: "kisi", id: h.alanId, ad: yer(h.alanId) } : { tip: "depo" };
   };
   const varliklar: VarlikSatiri[] = [
-    ...cihazlar.map((c) => ({ anahtar: `c:${c.id}`, tur: "c" as const, id: c.id, kod: c.kod, ad: c.tur, bitis: c.bitis, kimde: kimde(`c:${c.id}`, c.konum === "lab") })),
-    ...demirbaslar.map((d) => ({ anahtar: `d:${d.id}`, tur: "d" as const, id: d.id, kod: d.kod, ad: d.ad, bitis: null, kimde: kimde(`d:${d.id}`, false) })),
-    ...araclar.map((a) => ({ anahtar: `a:${a.id}`, tur: "a" as const, id: a.id, kod: a.plaka, ad: a.ad, bitis: null, kimde: kimde(`a:${a.id}`, false) })),
+    ...cihazlar.map((c) => ({ anahtar: `c:${c.id}`, tur: "c" as const, id: c.id, kod: c.kod, ad: c.tur, bitis: c.bitis, kimde: kimde(`c:${c.id}`, c.konum === "lab"), pasif: c.pasif })),
+    ...demirbaslar.map((d) => ({ anahtar: `d:${d.id}`, tur: "d" as const, id: d.id, kod: d.kod, ad: d.ad, bitis: null, kimde: kimde(`d:${d.id}`, false), pasif: d.pasif })),
+    ...araclar.map((a) => ({ anahtar: `a:${a.id}`, tur: "a" as const, id: a.id, kod: a.plaka, ad: a.ad, bitis: null, kimde: kimde(`a:${a.id}`, false), pasif: a.pasif })),
   ].map((v) => { const h = son.get(v.anahtar); return { ...v, son: h ? { zaman: h.zaman, eden: h.eden, alan: h.alan } : null }; });
   return { varliklar, hareketler: hareketSatirlari, kisiler };
 }
@@ -139,6 +143,7 @@ export async function teslimEt(db: Sorgulayici, depo: Depo, kim: Kisi, firmaId: 
   const s = await durum(db);
   const varlik = s.varliklar.find((x) => x.anahtar === v.varlik);
   if (!varlik) return { durum: "gecersiz", hatalar: { varlik: "Varlık seçilmeli." } };
+  if (varlik.pasif) return { durum: "gecersiz", hatalar: { varlik: `${varlik.kod} pasif; önce etkinleştirin.` } };
   if (varlik.kimde.tip === "lab") return { durum: "gecersiz", hatalar: { varlik: "Varlık kalibrasyonda; dönünce depodan teslim edilir." } };
   const alan = v.alan === "depo" ? null : v.alan;
   if (alan && !s.kisiler.some((k) => k.id === alan)) return { durum: "gecersiz", hatalar: { alan: "Teslim alan seçilmeli." } };
@@ -186,4 +191,39 @@ export async function aracHareketiYaz(db: Sorgulayici, kim: Kisi, p: { aracId: s
 export async function kisininVarliklari(db: Sorgulayici, personelId: string): Promise<VarlikSatiri[]> {
   const s = await durum(db);
   return s.varliklar.filter((v) => v.kimde.tip === "kisi" && v.kimde.id === personelId).sort((a, b) => a.kod.localeCompare(b.kod));
+}
+
+/* ── DEMİRBAŞ: KESİN SİLME / PASİF (362; reisim 2026-10-07 "eklenebilen şeyler silinemiyor"; §9 elli üçüncü tur) — Sil yalnız yöneticiye (kayit_sil,
+   modül 9) ve hiç kullanılmamış demirbaşa (zimmet hareketi, imzalı zimmet formu yok; tanım veritabanında, göç 0058). Pasife al / Etkinleştir "yaz"
+   düzeyi; ENGEL (veri bütünlüğü): demirbaş depoda olmalı — kişinin zimmetindeyken pasife alınırsa geri teslim alınamaz. */
+export type SilYaniti = { durum: "tamam"; ad: string } | { durum: "red"; neden: string } | { durum: "yok" } | { durum: "yetkisiz" };
+export type PasifYaniti = { durum: "tamam"; id: string; surum: number } | { durum: "red"; neden: string } | { durum: "cakisma" } | { durum: "yok" } | { durum: "yetkisiz" };
+const silebilir = (kim: YetkiHesabi) => canDoEylem(kim, "kayit_sil", { modul: MODUL });
+
+/** varlık sayfası (demirbaş, "yaz" düzeyi): sürüm, pasif, "Sil" çizilir mi (silebilen + kullanılmamış), kullanım sayımları (Pasife al nedeni) */
+export async function demirbasDurumu(db: Sorgulayici, kim: YetkiHesabi, id: string): Promise<{ surum: number; pasif: boolean; sil: boolean; kullanim: Kullanim | null } | null> {
+  if (!degistirir(kim) || !UUID.test(id)) return null;
+  const d = (await db.sorgu<{ surum: number; pasif: boolean }>("SELECT surum, pasif IS NOT NULL AS pasif FROM demirbas WHERE id = $1", [id])).rows[0];
+  if (!d) return null;
+  const k = (await kullanimlar(db, "demirbas", [id])).get(id) ?? null;
+  return { surum: d.surum, pasif: d.pasif, sil: silebilir(kim) && !k, kullanim: k };
+}
+
+export async function demirbasSil(db: Sorgulayici, kim: Kisi, id: string): Promise<SilYaniti> {
+  if (!silebilir(kim)) return { durum: "yetkisiz" };
+  const r = await kesinSil(db, "demirbas", id, kim.ad);
+  if (r.durum === "kullanildi") return { durum: "red", neden: `Demirbaş silinemez: ${kullanimMetni(r.kullanim) || "başka kayıtlarda"} kullanıldı.` };
+  return r;
+}
+
+export async function demirbasPasif(db: Sorgulayici, kim: Kisi, id: string, surum: number, pasif: boolean): Promise<PasifYaniti> {
+  if (!degistirir(kim)) return { durum: "yetkisiz" };
+  if (!UUID.test(id)) return { durum: "yok" };
+  if (!Number.isSafeInteger(surum) || surum < 0) return { durum: "cakisma" };
+  const d = (await db.sorgu<{ kod: string; pasif: string | null }>("SELECT kod, pasif::text FROM demirbas WHERE id = $1 FOR UPDATE", [id])).rows[0];
+  if (!d) return { durum: "yok" };
+  if (pasif && !d.pasif && (await kimdeHaritasi(db)).demirbas.get(id)) return { durum: "red", neden: `${d.kod} bir kişinin zimmetinde; önce depoya teslim alın.` };
+  const r = await guncelle(db, DEMIRBAS, id, surum, { pasif: pasif ? (d.pasif ?? bugunTr()) : null }, { kim: kim.ad, ne: pasif ? "demirbas.pasif" : "demirbas.etkinlestir" });
+  if (r.durum === "cakisma" || r.durum === "yok") return { durum: r.durum };
+  return { durum: "tamam", id, surum: r.surum };
 }

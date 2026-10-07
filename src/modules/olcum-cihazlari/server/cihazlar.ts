@@ -76,9 +76,11 @@ const satir = (x: CihazDb, bugun: string, esik: number): CihazSatiri => ({
   durum: kalDurum(x.bitis, x.konum, bugun, esik), pasif: x.pasif,
 });
 
-/** öteki modüller için cihaz özeti (yetki ÇAĞIRANDA; Zimmetler kendi düzeyine göre süzer) */
-export async function cihazOzetleri(db: Sorgulayici): Promise<Pick<CihazSatiri, "id" | "kod" | "tur" | "konum" | "bitis">[]> {
-  return (await db.sorgu<CihazDb>(`${CIHAZ_SEC} WHERE c.pasif IS NULL`)).rows.map((x) => ({ id: x.id, kod: x.kod, tur: x.tur, konum: x.konum, bitis: x.bitis }));
+/** öteki modüller için cihaz özeti (yetki ÇAĞIRANDA; Zimmetler kendi düzeyine göre süzer). Varsayılan yalnız etkinler; 362: `pasifDahil` — Zimmetler
+    pasif cihazın geçmiş hareketlerini adıyla gösterir ve Görünüm: Pasif'te listeler (teslim edilmez). */
+export async function cihazOzetleri(db: Sorgulayici, ayar: { pasifDahil?: boolean } = {}): Promise<(Pick<CihazSatiri, "id" | "kod" | "tur" | "konum" | "bitis"> & { pasif: boolean })[]> {
+  return (await db.sorgu<CihazDb>(ayar.pasifDahil ? CIHAZ_SEC : `${CIHAZ_SEC} WHERE c.pasif IS NULL`)).rows
+    .map((x) => ({ id: x.id, kod: x.kod, tur: x.tur, konum: x.konum, bitis: x.bitis, pasif: x.pasif !== null }));
 }
 
 /** Raporlar için: cihazlar türü, marka / model / seri ve geçerli kalibrasyon bitişiyle (yetki ÇAĞIRANDA; kimde olduğu Zimmetler'den). Varsayılan yalnız

@@ -7,7 +7,9 @@
    · 358 pasif: zimmetteki / kalibrasyondaki cihaz pasife alınmaz; pasif cihaz seçimden ve Zimmetler'den kalkar, açık rapor kodunu gösterir; etkinleştir;
    · 359 cihaz türü: ad eşsiz; cihazı olan / raporda geçen tür silinmez; cihazsız tür silinir, ekipman türlerinin cihaz listesinden çıkar;
    · 360 ekipman: yalnız yönetici; kullanılmamış ekipman plan satırı ve kod geçmişiyle silinir (kod serbest); raporlu / tamamlanmış plandaki silinmez;
-   · 361 ekipman türü: kullanılmış tür silinmez; kullanılmamış tür fiyat, format sürümleri ve PDF'leriyle silinir (PDF çöpe), kod serbest.
+   · 361 ekipman türü: kullanılmış tür silinmez; kullanılmamış tür fiyat, format sürümleri ve PDF'leriyle silinir (PDF çöpe), kod serbest;
+   · 362 demirbaş: kullanılmamış demirbaş silinir (kod serbest); zimmet hareketi / imzalı zimmet formu olan silinmez; zimmetteyken pasife alınmaz;
+     pasif demirbaş Zimmetler'de "pasif" işaretli, teslim edilmez, hareketleri adıyla görünür; etkinleştir geri getirir.
    Olumsuz kanıt: tests/bozan/kesin-silme.bozan.ts. */
 import assert from "node:assert/strict";
 import { mkdtempSync, rmSync } from "node:fs";
@@ -17,6 +19,7 @@ import { after, before, test } from "node:test";
 import { cihazKaydet, cihazKarti, cihazKonum, cihazListesi, cihazOzetleri, cihazPasif, cihazSil, cihazSilmeDurumu, cihazTuruKaydet, cihazTuruListesi, cihazTuruSil, kalibrasyonEkle, raporCihazlari, type Kisi } from "../src/modules/olcum-cihazlari/server/cihazlar.ts";
 import { formatYukle, turSil, turSilmeDurumu } from "../src/modules/ekipman-turleri/server/turler.ts";
 import { ekipmanSil, planIci } from "../src/modules/planlar/server/plan-ici.ts";
+import { demirbasDurumu, demirbasEkle, demirbasPasif, demirbasSil, teslimEt, zimmetListeleri } from "../src/modules/zimmetler/server/zimmet.ts";
 import { taslakBaslat } from "../src/modules/rapor-format/server/formatlar.ts";
 import { raporSil, sahaRaporu } from "../src/modules/raporlar/server/raporlar.ts";
 import type { GomuluKume } from "../src/server/db/gomulu.ts";
@@ -220,4 +223,46 @@ test("ekipman türü: kullanılmış tür silinmez; kullanılmamış tür fiyat,
   assert.deepEqual(kalan, { f: 0, r: 0, t: 0, c: true }, "fiyat, format sürümü, PDF kaydı gitti; PDF çöpte");
   assert.equal(typeof await turAc("SLT"), "string", "kod serbest kaldı");
   await assert.rejects(a(FA.yon, (db) => db.sorgu("DELETE FROM ekipman_turu WHERE id = $1", [FA.tur])), /permission denied|izin/i);
+});
+
+/* 362 — demirbaş (Zimmetler): yalnız yönetici siler, yalnız hiç kullanılmamışı; kullanılmışı depodayken pasife alınır */
+test("demirbaş: kullanılmamış silinir, kod serbest; zimmet hareketi / zimmet formu olan silinmez; zimmetteyken pasif olmaz; pasif teslim edilmez", async () => {
+  const ekle = async (kod: string) => tamam(await a(FA.yon, (db) => demirbasEkle(db, FA.yon, { kod, ad: "Deneme merdiveni" }))).id;
+  const id = await ekle("DM-SIL");
+  assert.deepEqual(await a(FA.yon, (db) => demirbasDurumu(db, FA.yon, id)), { surum: 0, pasif: false, sil: true, kullanim: null });
+  for (const k of [FA.plan, FA.den1]) assert.deepEqual(await a(k, (db) => demirbasSil(db, k, id)), { durum: "yetkisiz" });
+  assert.equal(await a(FA.plan, (db) => demirbasDurumu(db, FA.plan, id)), null, "değiştiremeyene durum yok");
+  assert.deepEqual(await kiraciIcinde(havuz, B, (db) => demirbasSil(db, FB.yon, id), { hesapId: FB.yon.id }), { durum: "yok" }, "başka firma");
+  assert.deepEqual(await a(FA.yon, (db) => demirbasSil(db, FA.yon, id)), { durum: "tamam", ad: "DM-SIL" });
+  const iz = (await a(FA.yon, (db) => db.sorgu<{ eski: { kod: string }; hesap_id: string }>(
+    "SELECT eski, hesap_id::text FROM denetim_izi WHERE ne = 'demirbas.sil' AND nesne_id = $1", [id]))).rows;
+  assert.deepEqual(iz.map((x) => [x.eski.kod, x.hesap_id]), [["DM-SIL", FA.yon.id]]);
+  assert.equal(typeof await ekle("DM-SIL"), "string", "kod serbest kaldı");
+
+  /* zimmet hareketi: silinmez; zimmetteyken pasife alınmaz */
+  const z = await ekle("DM-ZIM");
+  const teslim = (alan: string, saat: string) => a(FA.yon, (db) => teslimEt(db, depo, FA.yon, A, { varlik: `d:${z}`, alan, zaman: `2026-10-01T${saat}`, notu: "" }));
+  tamam(await teslim(FA.den1Personel, "10:00"));
+  const d1 = (await a(FA.yon, (db) => demirbasDurumu(db, FA.yon, z)))!;
+  assert.deepEqual([d1.sil, d1.kullanim], [false, { zimmet: 1 }]);
+  assert.deepEqual(await a(FA.yon, (db) => demirbasSil(db, FA.yon, z)), { durum: "red", neden: "Demirbaş silinemez: 1 zimmet hareketinde kullanıldı." });
+  assert.deepEqual(await a(FA.yon, (db) => demirbasPasif(db, FA.yon, z, d1.surum, true)), { durum: "red", neden: "DM-ZIM bir kişinin zimmetinde; önce depoya teslim alın." });
+  tamam(await teslim("depo", "11:00"));
+  assert.deepEqual(await a(FA.plan, (db) => demirbasPasif(db, FA.plan, z, d1.surum, true)), { durum: "yetkisiz" });
+  assert.deepEqual(await a(FA.yon, (db) => demirbasPasif(db, FA.yon, z, d1.surum + 5, true)), { durum: "cakisma" });
+  tamam(await a(FA.yon, (db) => demirbasPasif(db, FA.yon, z, d1.surum, true)));
+  const l = (await a(FA.yon, (db) => zimmetListeleri(db, FA.yon)))!;
+  assert.equal(l.varliklar.find((v) => v.anahtar === `d:${z}`)?.pasif, true, "listede pasif işaretli (Görünüm: Pasif)");
+  assert.deepEqual(l.hareketler.filter((h) => h.varlik === `d:${z}`).map((h) => h.varlikKod), ["DM-ZIM", "DM-ZIM"], "hareketler adıyla");
+  assert.deepEqual(await teslim(FA.den1Personel, "12:00"), { durum: "gecersiz", hatalar: { varlik: "DM-ZIM pasif; önce etkinleştirin." } });
+  const d2 = (await a(FA.yon, (db) => demirbasDurumu(db, FA.yon, z)))!;
+  assert.equal(d2.pasif, true);
+  tamam(await a(FA.yon, (db) => demirbasPasif(db, FA.yon, z, d2.surum, false)));
+  assert.equal((await a(FA.yon, (db) => demirbasDurumu(db, FA.yon, z)))!.pasif, false, "etkinleştirildi");
+
+  /* imzalı zimmet formunun kapsamı (yabancı anahtarsız) */
+  const f = await ekle("DM-FRM");
+  await a(FA.yon, (db) => db.sorgu("INSERT INTO zimmet_formu (personel_id, kapsam) VALUES ($1, $2)", [FA.den1Personel, [`d:${f}`]]));
+  assert.deepEqual(await a(FA.yon, (db) => demirbasSil(db, FA.yon, f)), { durum: "red", neden: "Demirbaş silinemez: 1 zimmet formunda kullanıldı." });
+  await assert.rejects(a(FA.yon, (db) => db.sorgu("DELETE FROM demirbas WHERE id = $1", [f])), /permission denied|izin/i);
 });

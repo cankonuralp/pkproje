@@ -9,6 +9,7 @@ export const TUR_IKON = { c: "gauge", a: "car", d: "hard-hat" } as const;
 /** kalibrasyonu geçmiş cihaz (bugün Türkiye günüyle) */
 export const kalGecti = (v: Pick<VarlikSatiri, "tur" | "bitis">, bugun: string) => v.tur === "c" && (!v.bitis || v.bitis < bugun);
 export function DurumRozeti({ v, bugun }: { v: VarlikSatiri; bugun: string }) {
+  if (v.pasif) return <Rozet tur="notr">Pasif</Rozet>;
   if (v.kimde.tip === "lab") return <Rozet tur="kabul">Kalibrasyonda</Rozet>;
   if (kalGecti(v, bugun)) return <Rozet tur="red">Kalibrasyonu geçti</Rozet>;
   return v.kimde.tip === "depo" ? <Rozet tur="notr">Depoda</Rozet> : <Rozet tur="tamam">Zimmette</Rozet>;
