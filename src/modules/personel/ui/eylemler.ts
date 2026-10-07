@@ -9,7 +9,8 @@ import { matrisKaydet } from "../../../server/yetki/matris";
 import { depo } from "../../../server/dosya/depo";
 import type { Sorgulayici } from "../../../server/db/kiraci";
 import {
-  atamaBelgeDegistir, atamaEkle, atamaKaldir, bordroKaldir, bordroOnayaGonder, bordroYukle, DosyaHatasi, ozlukBelgeDegistir, ozlukEkle, ozlukKaldir, zimmetFormuGonder, zimmetFormuYukle,
+  atamaBelgeDegistir, atamaEkle, atamaKaldir, bordroKaldir, bordroOnayaGonder, bordroYukle, DosyaHatasi, ozlukBelgeDegistir, ozlukEkle, ozlukKaldir, zimmetFormuGonder,
+  zimmetFormuKaldir, zimmetFormuYukle,
   type Yazma as DosyaYazma,
 } from "../server/dosyalar";
 import { hesapAc, hesapKapat, hesapYenidenAc, rolleriKaydet, yeniGeciciParola, type HesapSonucu } from "../../../server/kimlik/hesapYonetimi";
@@ -114,7 +115,7 @@ const ISLER = {
   zimmet: (db: Sorgulayici, o: Oturum, f: FormData, b: Belge | null) => zimmetFormuYukle(db, depo(), o, o.kiraci.firmaId, yazi(f.get("personel")), b),
 } as const;
 const DEGISTIR = { ozluk: ozlukBelgeDegistir, atama: atamaBelgeDegistir } as const;
-const KALDIR = { ozluk: ozlukKaldir, atama: atamaKaldir, bordro: bordroKaldir } as const;
+const KALDIR = { ozluk: ozlukKaldir, atama: atamaKaldir, bordro: bordroKaldir, zimmet: zimmetFormuKaldir } as const;
 
 /** yeni kayıt + belge: tür formdan ("ozluk" | "atama" | "bordro" | "zimmet") */
 export async function personelBelgeEkleEylemi(form: FormData): Promise<DosyaDurumu> {

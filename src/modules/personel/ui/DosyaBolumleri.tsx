@@ -109,7 +109,7 @@ function BelgePenceresi({ ne, personelId, turler, ozlukTurleri, bugun, kapat }: 
 }
 
 /* ── satır işlemleri: belgeyi değiştir (gizli dosya seçici) + kaldır (onaylı) ── */
-function SatirTuslari({ ne, id, surum, dosyaId, ad, degistir = true }: { ne: "ozluk" | "atama" | "bordro"; id: string; surum: number; dosyaId: string | null; ad: string; degistir?: boolean }) {
+function SatirTuslari({ ne, id, surum, dosyaId, ad, degistir = true }: { ne: "ozluk" | "atama" | "bordro" | "zimmet"; id: string; surum: number; dosyaId: string | null; ad: string; degistir?: boolean }) {
   const router = useRouter();
   const bildir = useBildir();
   const onayla = useOnayla();
@@ -125,7 +125,7 @@ function SatirTuslari({ ne, id, surum, dosyaId, ad, degistir = true }: { ne: "oz
     if (!(await onayla({ baslik: `${ad} kaldırılsın mı?`, metin: "Kayıt listeden kalkar; belge silinmez, saklanır.", tus: "Kaldır", tehlike: true }))) return;
     baslat(async () => {
       const r = await personelBelgeKaldirEylemi(ne, id, surum);
-      if (!r.tamam) { bildir(r.genel ?? "Kaldırılamadı."); return; }
+      if (!r.tamam) { bildir(r.genel ?? Object.values(r.hatalar ?? {})[0] ?? "Kaldırılamadı."); return; }
       bildir(r.bildirim ?? "Kaldırıldı."); router.refresh();
     });
   };
@@ -202,6 +202,8 @@ export function ZimmetBolumu({ personelId, kisi, etkin, dosya, bugun }: { person
           : f ? <Serit tur="uyari" ikon="triangle-alert">İmzalı form ({tarihYaz(f.tarih)}) eskidi: zimmet o tarihten sonra değişti.{bekliyor ? "" : " Yeni formu imzaya gönderin ya da imzalı taramasını yükleyin."}</Serit>
             : bekliyor ? null : <Serit tur="uyari" ikon="triangle-alert">İmzalı zimmet formu yok. Formu imzaya gönderin ya da ıslak imzalı taramasını yükleyin.</Serit>}
         {ac}
+        {/* 373: yanlış yüklenen tarama kaldırılır (saklanır); Onaylar'da imzalanan form kaldırılmaz */}
+        {dosya.yaz && f?.yuklenen && <SatirTuslari ne="zimmet" id={f.id} surum={f.surum} dosyaId={null} ad="İmzalı zimmet formu" degistir={false} />}
       </div>}
       {g && <Serit tur={g.durum === "geri" ? "uyari" : "bilgi"} ikon={g.durum === "geri" ? "triangle-alert" : "send"}>
         {g.ad} · {tarihYaz(g.tarih)}: {g.durum === "geri" ? "kişi geri gönderdi; düzeltip yeniden gönderin." : `${BELGE_DURUM[g.durum][0].toLocaleLowerCase("tr")} (Onaylar › Diğer belgeler).`}

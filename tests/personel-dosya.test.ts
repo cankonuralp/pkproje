@@ -1,7 +1,8 @@
 /* NEREDEN GELDİ: maket personel.html (reisim 40: "personel özlük dosyaları ve zimmetleri personelde olacak"; 2026-09-25: imzalı zimmet formu,
    zimmet değişince eskir; 2026-09-27: "personel ekranında maaşlar ve bordrolarda olacak"; 2026-09-30 L4: "ekipman ataması yapılsın ve atama belgesi
    yüklensin") · KOD-GECIS §4 (Personel: özlük ve maaş yalnız yönetici; denetçi kendi kartını görür) · reisim 2026-10-04: "rol değiştirme sızma
-   veri çalma". GERÇEK PostgreSQL, iki firma. */
+   veri çalma". GERÇEK PostgreSQL, iki firma. 373: yanlış yüklenen imzalı zimmet formu taraması kaldırılır (satır saklanır); Onaylar'da imzalanan
+   form kaldırılmaz (veritabanı da). */
 import assert from "node:assert/strict";
 import { mkdtempSync, rmSync } from "node:fs";
 import { tmpdir } from "node:os";
@@ -15,7 +16,7 @@ import { DOSYA_ERISIMI } from "../src/server/dosya/erisim.ts";
 import { turKaydet } from "../src/modules/ekipman-turleri/server/turler.ts";
 import {
   atamaBelgeDegistir, atamaEkle, atamaKaldir, atananTurler, bordroKaldir, bordroYukle, DosyaHatasi, gunlukMaliyet, ozlukEkle, ozlukKaldir, personelDosyasi,
-  zimmetFormuGonder, zimmetFormuVerisi, zimmetFormuYukle, type Kisi, type ZimmetPdfUretici,
+  zimmetFormuGonder, zimmetFormuKaldir, zimmetFormuVerisi, zimmetFormuYukle, type Kisi, type ZimmetPdfUretici,
 } from "../src/modules/personel/server/dosyalar.ts";
 import type { ZimmetFormuVerisi } from "../src/belge/zimmet.ts";
 import { belgeImzaliYukle, digerBelgeler } from "../src/modules/onaylar/server/belgeler.ts";
@@ -222,4 +223,21 @@ test("344 zimmet formu imzaya: numara ZF, kişinin Onaylar › Diğer'ine; yenis
   /* 340–345 incelemesi: giriş hesabı olmayan kişi imzalayamaz — form gönderilmez (indirip ıslak imza yolu açık) */
   assert.deepEqual(await ha(YON, (db) => zimmetFormuGonder(db, depo, YON, A, pIkinci, SAHTE)),
     { durum: "gecersiz", hatalar: { dosya: "Kişinin giriş hesabı yok; form imzaya gönderilemez. Formu indirip ıslak imzalı taramasını yükleyin." } });
+});
+
+/* 373 (reisim 2026-10-07 "eklenebilen şeyler silinemiyor"; ekran dili "Kaldır" — kayıt saklanır) */
+test("imzalı zimmet formu Kaldır: yüklenen tarama kaldırılır (satır kalır, önceki imzalı form geçerli olur); Onaylar'da imzalanan kaldırılmaz", async () => {
+  const onay = (await a((db) => personelDosyasi(db, YON, pDenetci)))!.zimmetFormu!;
+  assert.equal(onay.yuklenen, false, "Onaylar'da imzalanan form");
+  assert.deepEqual(await a((db) => zimmetFormuKaldir(db, YON, onay.id, onay.surum)), { durum: "gecersiz", hatalar: { dosya: "Kişinin Onaylar'dan imzaladığı form kaldırılmaz." } });
+  const y = tamam(await a((db) => zimmetFormuYukle(db, depo, YON, A, pDenetci, PDF)));
+  const f = (await a((db) => personelDosyasi(db, YON, pDenetci)))!.zimmetFormu!;
+  assert.deepEqual([f.id, f.yuklenen], [y.id, true]);
+  for (const k of [DENETCI, PLAN, MUH]) assert.deepEqual(await a((db) => zimmetFormuKaldir(db, k, f.id, f.surum)), { durum: "yetkisiz" }, k.roller[0]);
+  assert.deepEqual(await kiraciIcinde(havuz, B, (db) => zimmetFormuKaldir(db, YON_B, f.id, f.surum)), { durum: "yok" }, "başka firma");
+  tamam(await a((db) => zimmetFormuKaldir(db, YON, f.id, f.surum)));
+  assert.equal((await a((db) => personelDosyasi(db, YON, pDenetci)))!.zimmetFormu?.id, onay.id, "önceki imzalı form yeniden geçerli");
+  assert.equal((await a((db) => db.sorgu("SELECT 1 FROM zimmet_formu WHERE id = $1 AND kaldirildi IS NOT NULL AND dosya_id IS NOT NULL", [f.id]))).rowCount, 1, "satır ve tarama saklanır");
+  assert.deepEqual(await a((db) => zimmetFormuKaldir(db, YON, f.id, f.surum + 1)), { durum: "yok" }, "ikinci kez");
+  await assert.rejects(a((db) => db.sorgu("UPDATE zimmet_formu SET kaldirildi = now() WHERE id = $1", [onay.id])), /zimmet_formu_kaldir_yuklenen/);
 });

@@ -87,7 +87,7 @@ pkproje/
   src/modules/personel/     PERSONEL (2026-10-04): sema.ts (form + sunucu tek şema) · server/personel.ts (liste, kart, ekle, güncelle, ayrıldı, geri al, 366 kesin
                             sil — silici.ts, 0061; yetki içeride) · ui/KartTuslari.tsx (Düzenle · Ayrıldı · Ayrılışı geri al · Sil) ·
                             server/dosyalar.ts (özlük, ekipman ataması, bordro, imzalı zimmet formu; 2026-10-04; 344: zimmet teslim formu src/belge/zimmet.ts →
-                            /personel/<id>/zimmet-formu/pdf, İmzaya gönder → Onaylar › Diğer, imzalanınca imzalı form) ·
+                            /personel/<id>/zimmet-formu/pdf, İmzaya gönder → Onaylar › Diğer, imzalanınca imzalı form; 373 yüklenen taramada Kaldır, 0068) ·
                             ui/ (liste, form, sunucu eylemleri — "use server" dosyası yalnız …Eylemi dışa açar)
   src/modules/musteriler/   MÜŞTERİLER (2026-10-04): sema.ts · server/musteriler.ts (liste, kart, kaydet + uyarı onayı, pasif zinciri) · ui/ (liste, pencereler)
                             · 364 müşteri / tesis Sil (silmeDurumu, musteriSil, tesisSil — silici.ts, 0060; yalnız firma yöneticisi, kullanılmamış kayıt)

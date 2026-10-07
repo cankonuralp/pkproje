@@ -2353,6 +2353,11 @@ revizyon, alan kopyalama, hafif kusur devri, meslek eşleşme denetimi).
 - Emsal ürünler: https://opwire.app/iso-17020-periyodik-kontrol-yazilimi/ · https://17020muayene.vidco.com.tr/ · https://akuple.com/asansor-kontrol-yazilimi/ · https://ensyazilim.com/
 
 ## 11 · Değişiklik günlüğü
+- 2026-10-07 (373): **İmzalı zimmet formu Kaldır** (§9 elli üçüncü tur ekran dili: kayıt saklanıyorsa "Kaldır"). Personel kartının Zimmetindekiler
+  bölümünde, yüklenen ıslak imzalı taramada "Kaldır" (onaylı; "Kayıt listeden kalkar; belge silinmez, saklanır."): yanlış dosya yüklendiyse. Satır
+  kaldirildi ile kalır, kişinin imzalı formu sayılmaz; varsa bir önceki imzalı form yeniden geçerli görünür. Onaylar'da kişinin imzaladığı form
+  kaldırılmaz (veritabanı da ister). Göç 0068 zimmet_formu.kaldirildi + zimmet_formu_kaldir_yuklenen. Kilit personel-dosya.test (373); olumsuz kanıt
+  personel-dosya.bozan (373); e2e personel-dosya (yükle → kaldır).
 - 2026-10-07 (372): **Raporsuz plan Sil** (§9 elli üçüncü tur; 0023 "silme hakkı yok" kullanılmış plan için geçerli). Plan sayfasının başlığında,
   hiç raporu (silinmiş taslak dahil), faturası, gideri olmayan ve tamamlanmamış planda yalnız yöneticiye (Planlar'da "yaz" + yönetici; planlama açar
   ama silemez) "Sil" (onay "… ekip, ekipman satırları ve proje notları da silinir; ekipmanlar tesiste kalır."). Planın kullandığı İSG-KATİP ID'si

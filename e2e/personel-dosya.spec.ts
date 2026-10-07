@@ -77,6 +77,20 @@ test("personel dosyası: özlük belgesi, bordro, kaldır; denetçi özlük ve m
   await page.getByRole("dialog", { name: "Zimmet formunu imzaya gönder" }).getByRole("button", { name: "İmzaya gönder" }).click();
   await expect(page.getByText(/ZF-\d{4}-\d{3} zimmet teslim formu imzaya gönderildi/).first()).toBeVisible({ timeout: 90_000 });
 
+  /* 373: yanlış yüklenen ıslak imzalı tarama kaldırılır (önce sorulur; tarama saklanır) */
+  await hazir(page);
+  await page.getByRole("button", { name: "İmzalı formu yükle" }).click();
+  const zy = page.getByRole("dialog", { name: "İmzalı zimmet formu yükle" });
+  await zy.getByLabel("İmzalı form taraması (PDF)").setInputFiles({ name: "yanlis.pdf", mimeType: "application/pdf",
+    buffer: Buffer.from("%PDF-1.4\n1 0 obj<<>>endobj\ntrailer<<>>\n%%EOF\n", "latin1") });
+  await zy.getByRole("button", { name: "Yükle", exact: true }).click();
+  await expect(page.getByText("İmzalı zimmet formu yüklendi.").first()).toBeVisible({ timeout: 30_000 });
+  await hazir(page);
+  await page.getByRole("button", { name: "İmzalı zimmet formu kaldır" }).click();
+  await page.getByRole("dialog", { name: "İmzalı zimmet formu kaldırılsın mı?" }).getByRole("button", { name: "Kaldır" }).click();
+  await expect(page.getByText("Kaldırıldı.").first()).toBeVisible({ timeout: 30_000 });
+  await expect(page.getByRole("button", { name: "İmzalı zimmet formu kaldır" })).toHaveCount(0);
+
   /* denetçi: kendi kartı — atama ve zimmet var, özlük ve maaş yok */
   await context.clearCookies();
   await girisli(page, "denetci");

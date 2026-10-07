@@ -35,7 +35,7 @@ export const DOSYA = { ozluk: "ozluk", atama: "atama", bordro: "bordro", zimmetF
 const OZLUK = tablo({ ad: "ozluk_belgesi", sutunlar: ["personel_id", "tur", "aciklama", "dosya_id", "kaldirildi"] });
 const ATAMA = tablo({ ad: "ekipman_atamasi", sutunlar: ["personel_id", "tur_id", "tarih", "dosya_id", "kaldirildi"] });
 const BORDRO = tablo({ ad: "bordro", sutunlar: ["personel_id", "ay", "brut", "net", "maliyet", "dosya_id", "kaldirildi"] });
-const FORM = tablo({ ad: "zimmet_formu", sutunlar: ["personel_id", "kapsam", "dosya_id"] });
+const FORM = tablo({ ad: "zimmet_formu", sutunlar: ["personel_id", "kapsam", "dosya_id", "kaldirildi"] });
 const UUID = /^[0-9a-f]{8}-[0-9a-f]{4}-[0-9a-f]{4}-[0-9a-f]{4}-[0-9a-f]{12}$/;
 /** iş günü (aylık maliyet → günlük; maket MV.IS_GUNU) */
 export const IS_GUNU = 22;
@@ -49,7 +49,9 @@ export interface BordroSatiri {
   /** 333: dönemin bordrosu kişinin imzasına gönderildi mi (Onaylar › Diğer belgeler) — gönderilmediyse null */
   onay: { durum: BelgeDurumu; karar: string | null } | null;
 }
-export interface ZimmetFormu { id: string; tarih: string; kapsam: number; dosyaId: string | null; guncel: boolean }
+export interface ZimmetFormu { id: string; tarih: string; kapsam: number; dosyaId: string | null; guncel: boolean;
+  /** 373: yüklenen ıslak imzalı tarama (kaldırılabilir); Onaylar'da imzalanan form değil */
+  yuklenen: boolean; surum: number }
 /** imzaya gönderilmiş ve henüz imzalanmamış son form (344): belgenin adı (numarasıyla) ve durumu */
 export interface ZimmetGonderimi { ad: string; durum: BelgeDurumu; tarih: string }
 export interface PersonelDosyasi {
@@ -95,12 +97,12 @@ export async function personelDosyasi(db: Sorgulayici, kim: Kisi, personelId: st
     .sort((a, b) => (a.brans === b.brans ? a.tur.localeCompare(b.tur, "tr") : a.brans === "m" ? -1 : 1));
   const zimmet = await kisininVarliklari(db, personelId);
   /* imzalı form: yüklenen tarama (dosya_id) ya da Onaylar'da imzalanan gönderim (belgenin imzalı PDF'i) — hangisi yeniyse (344) */
-  const formlar = (await db.sorgu<{ id: string; olustu: Date; kapsam: string[]; dosya_id: string | null }>(
-    "SELECT id::text, olustu, kapsam, dosya_id::text FROM zimmet_formu WHERE personel_id = $1 ORDER BY olustu DESC", [personelId])).rows;
+  const formlar = (await db.sorgu<{ id: string; olustu: Date; kapsam: string[]; dosya_id: string | null; surum: number }>(
+    "SELECT id::text, olustu, kapsam, dosya_id::text, surum FROM zimmet_formu WHERE personel_id = $1 AND kaldirildi IS NULL ORDER BY olustu DESC", [personelId])).rows;
   const belgeler = await kaynakBelgeleri(db, formlar.filter((x) => !x.dosya_id).map((x) => x.id));
   const fi = formlar.findIndex((x) => x.dosya_id || belgeler.get(x.id)?.durum === "imzali"), f = formlar[fi];
   const zimmetFormu = f ? { id: f.id, tarih: gun(f.olustu), kapsam: f.kapsam.length, dosyaId: f.dosya_id ?? belgeler.get(f.id)!.imzaliDosya,
-    guncel: [...f.kapsam].sort().join() === anahtarlar(zimmet).join() } : null;
+    guncel: [...f.kapsam].sort().join() === anahtarlar(zimmet).join(), yuklenen: !!f.dosya_id, surum: f.surum } : null;
   const gb = formlar.slice(0, fi < 0 ? formlar.length : fi).map((x) => ({ x, b: belgeler.get(x.id) })).find((y) => y.b);
   const zimmetGonderimi = gb?.b ? { ad: gb.b.ad, durum: gb.b.durum, tarih: gun(gb.x.olustu) } : null;
   let ozluk: OzlukSatiri[] | null = null, bordrolar: BordroSatiri[] | null = null;
@@ -332,4 +334,15 @@ export async function atamaHaritasi(db: Sorgulayici): Promise<Record<string, str
 /** Firma ayarları için (335 — firmanın eklediği belge türü ancak o türde belge yokken kaldırılır): türdeki geçerli özlük belgesi sayısı. Yetki ÇAĞIRANDA. */
 export async function ozlukTurKullanimi(db: Sorgulayici, tur: string): Promise<number> {
   return Number((await db.sorgu<{ n: string }>("SELECT count(DISTINCT personel_id)::text AS n FROM ozluk_belgesi WHERE tur = $1 AND kaldirildi IS NULL", [tur])).rows[0].n);
+}
+
+/** 373 — yanlış yüklenen imzalı zimmet formu taramasını kaldır (satır saklanır, tarama silinmez; kişinin imzalı formu sayılmaz). Onaylar'da imzalanan
+    form kaldırılmaz (veritabanı da ister, 0068). Yetki: Personel "yaz". */
+export async function zimmetFormuKaldir(db: Sorgulayici, kim: Kisi, id: string, surum: number): Promise<Yazma> {
+  if (!yazar(kim)) return { durum: "yetkisiz" };
+  if (!UUID.test(id)) return { durum: "yok" };
+  const f = (await db.sorgu<{ dosya_id: string | null }>("SELECT dosya_id::text FROM zimmet_formu WHERE id = $1 AND kaldirildi IS NULL", [id])).rows[0];
+  if (!f) return { durum: "yok" };
+  if (!f.dosya_id) return { durum: "gecersiz", hatalar: { dosya: "Kişinin Onaylar'dan imzaladığı form kaldırılmaz." } };
+  return satirIslemi(db, null, kim, null, FORM, DOSYA.zimmetFormu, id, surum, null);
 }
