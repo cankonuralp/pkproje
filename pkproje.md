@@ -2353,6 +2353,10 @@ revizyon, alan kopyalama, hafif kusur devri, meslek eşleşme denetimi).
 - Emsal ürünler: https://opwire.app/iso-17020-periyodik-kontrol-yazilimi/ · https://17020muayene.vidco.com.tr/ · https://akuple.com/asansor-kontrol-yazilimi/ · https://ensyazilim.com/
 
 ## 11 · Değişiklik günlüğü
+- 2026-10-08 (375): **Deneme yayını güncellendi (347–374).** Supabase'e göç 0049–0068 sırayla uygulandı (her biri `goc` kaydıyla, özet o
+  commit'teki dosyadan; 69 göç); probata yönetim hesabı ilk kurulum durumunda açıldı (geçici parola yalnız reisim'e). main = fbd2597, Vercel
+  yayında. Doğrulama: `node tools/duman.mjs` 9/9 · çalışma zamanı hatası yok · firma ve yönetim giriş sayfaları açılıyor, konsol temiz · ortamda
+  PROBATA_SIR_ANAHTARI ve PROBATA_YONETIM_ALAN tanımlı (değerlere bakılmadı). Oturum isteyen ekranlar: ölçemedim (parolayı ben yazmam).
 - 2026-10-07 (374): **362–373 öz incelemesi** (reisim: ajan çok kredi yiyor → inceleme ajansız, elle; güvenlik · veritabanı · mantık · arayüz).
   Silme işlevlerinin her deyiminde firma süzgeci, parola özetinin ize yazılmaması, kilit sırası ve yabancı anahtar aynası (silici.ts ↔ göçler, 15
   personel / 6 plan / 5 teklif …) yeniden sayıldı — tutarlı. Düzeltilen: (1) teklif kaydı kullandığı ekipman türlerini paylaşımlı kilitler (Excel
