@@ -4,10 +4,12 @@
    Zimmetler kalemi gelene kadar kayıt göstermez (varsayılan kapalı). Yazmalar güvenli yazıcıdan; sertifika tek dosya yolundan (yalnız PDF). */
 import { ayarOku } from "../../../server/ayar/ayar.ts";
 import type { Sorgulayici } from "../../../server/db/kiraci.ts";
+import { kesinSil, kullanimlar, type Kullanim } from "../../../server/db/silici.ts";
 import { ekle, guncelle, tablo, type Iz } from "../../../server/db/yazici.ts";
 import type { Depo } from "../../../server/dosya/depo.ts";
 import { dosyaYukle } from "../../../server/dosya/dosya.ts";
-import { duzey, type YetkiHesabi } from "../../../server/yetki/canDo.ts";
+import { canDoEylem, duzey, type YetkiHesabi } from "../../../server/yetki/canDo.ts";
+import { kullanimMetni } from "../../../components/sil/metin.ts";
 import { hesabinPersoneli } from "../../../server/kimlik/hesap.ts";
 import { dogrula, type DogrulamaHatalari } from "../../../sema/ortak.ts";
 import { kimdeHaritasi } from "../../zimmetler/server/zimmet.ts";
@@ -206,4 +208,24 @@ export async function kalibrasyonKaldir(db: Sorgulayici, kim: Kisi, id: string, 
   const r = await guncelle(db, KAL, id, surum, { kaldirildi: new Date().toISOString() }, { kim: kim.ad, ne: "cihaz.kalibrasyon_kaldir" });
   if (r.durum === "cakisma" || r.durum === "yok") return { durum: r.durum };
   return { durum: "tamam", id, surum: r.surum };
+}
+
+/* ── KESİN SİLME (357; reisim 2026-10-07: "denemek için bir kaç cihaz ekledim ama silemedim") — yalnız yöneticiler (canDo kayit_sil, modül 8) ve
+   yalnız hiç KULLANILMAMIŞ cihaz (zimmet hareketi, raporun cihaz listesi — silinmiş taslak dahil —, zimmet formu yok; tanım veritabanında, göç 0054).
+   Kalibrasyon kayıtları cihazla birlikte silinir, sertifikalar çöpe; denetim izine eski değerle. Kullanılmış cihaz silinmez (pasif: ayrı kalem). */
+export type SilYaniti = { durum: "tamam"; ad: string } | { durum: "red"; neden: string } | { durum: "yok" } | { durum: "yetkisiz" };
+const silebilir = (kim: Kisi) => canDoEylem(kim, "kayit_sil", { modul: MODUL });
+
+/** cihaz sayfası: "Sil" çizilir mi (silebilen kişi + kullanılmamış cihaz); kullanılmışsa sayımlar (nedeni söylemek için) */
+export async function cihazSilmeDurumu(db: Sorgulayici, kim: Kisi, id: string): Promise<{ sil: boolean; kullanim: Kullanim | null }> {
+  if (!silebilir(kim) || !UUID.test(id)) return { sil: false, kullanim: null };
+  const k = (await kullanimlar(db, "olcum_cihazi", [id])).get(id) ?? null;
+  return { sil: !k, kullanim: k };
+}
+
+export async function cihazSil(db: Sorgulayici, kim: Kisi, id: string): Promise<SilYaniti> {
+  if (!silebilir(kim)) return { durum: "yetkisiz" };
+  const r = await kesinSil(db, "olcum_cihazi", id, kim.ad);
+  if (r.durum === "kullanildi") return { durum: "red", neden: `Cihaz silinemez: ${kullanimMetni(r.kullanim) || "başka kayıtlarda"} kullanıldı.` };
+  return r;
 }

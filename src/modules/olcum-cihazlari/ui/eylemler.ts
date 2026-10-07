@@ -4,7 +4,7 @@
 import { depo } from "../../../server/dosya/depo";
 import { ayniKoken } from "../../../server/kimlik/koken";
 import { istekOturumu, oturumIslemi } from "../../../server/kimlik/istek";
-import { cihazKaydet, cihazKonum, kalibrasyonEkle, kalibrasyonKaldir, type Yazma } from "../server/cihazlar";
+import { cihazKaydet, cihazKonum, cihazSil, kalibrasyonEkle, kalibrasyonKaldir, type Yazma } from "../server/cihazlar";
 
 export interface PencereDurumu { tamam?: boolean; id?: string; hatalar?: Record<string, string>; genel?: string }
 
@@ -53,4 +53,11 @@ export async function kalibrasyonEkleEylemi(form: FormData): Promise<PencereDuru
 export async function kalibrasyonKaldirEylemi(kayitId: string, surum: number): Promise<PencereDurumu> {
   const o = await oturum(); if (typeof o === "string") return { genel: o };
   return cevir(await oturumIslemi(o, (db) => kalibrasyonKaldir(db, o, String(kayitId), Number(surum))));
+}
+
+/** kesin sil (357): yalnız yönetici, yalnız kullanılmamış cihaz — karar modül işlevinde */
+export async function cihazSilEylemi(cihazId: string): Promise<PencereDurumu> {
+  const o = await oturum(); if (typeof o === "string") return { genel: o };
+  const r = await oturumIslemi(o, (db) => cihazSil(db, o, String(cihazId)));
+  return r.durum === "tamam" ? { tamam: true } : r.durum === "red" ? { genel: r.neden } : { genel: SONUC[r.durum] };
 }

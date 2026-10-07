@@ -121,3 +121,19 @@ test("özel eylemler: onay türün branşında (kendi raporu dahil), vekil, duru
   assert.equal(canDoEylem(MUHASEBE, "rol_yetki_degistir"), false);
   assert.equal(canDoEylem(YONETICI, "rol_yetki_degistir"), true);
 });
+
+/* 357 (reisim 2026-10-07 + pkproje §9 "silme işlemi sadece yöneticiler tarafından yapılabilmeli"): kesin silme — kaydın modülünde "yaz" VE yönetici
+   rolü; firma matrisi planlamaya / muhasebeye "yaz" verse de silemez; modülsüz kayıt hiç silinmez */
+test("kayit_sil: yalnız yönetici rolü ve modülde yaz", () => {
+  assert.equal(canDoEylem(YONETICI, "kayit_sil", { modul: 8 }), true);
+  assert.equal(canDoEylem(ELKYON, "kayit_sil", { modul: 8 }), true);
+  assert.equal(canDoEylem(MEKYON, "kayit_sil", { modul: 8 }), true);
+  for (const k of [PLANLAMA, DENETCI, MUHASEBE]) assert.equal(canDoEylem(k, "kayit_sil", { modul: 8 }), false, k.roller[0]);
+  const firma: Partial<Matris> = { 8: ["yaz", "yaz", "yaz", "yaz", "yaz", "yaz"] };
+  assert.equal(canDoEylem(PLANLAMA, "kayit_sil", { modul: 8 }, firma), false, "matris yaz verse de planlama silemez");
+  assert.equal(canDoEylem(MUHASEBE, "kayit_sil", { modul: 8 }, firma), false);
+  const kapali: Partial<Matris> = { 8: ["gor", "kendi", "gor", "gor", "gor", "yok"] };
+  assert.equal(canDoEylem(YONETICI, "kayit_sil", { modul: 8 }, kapali), false, "modülde yaz değilse yönetici de silemez");
+  assert.equal(canDoEylem(YONETICI, "kayit_sil"), false, "modülsüz kayıt");
+  assert.equal(canDoEylem(YONETICI, "kayit_sil", {}), false);
+});

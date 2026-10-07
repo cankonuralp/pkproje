@@ -1,6 +1,7 @@
 "use client";
 /* Cihaz sayfasının istemci parçaları (maket olcum-cihazlari.html cihazCiz): işlem tuşları (Düzenle · Kalibrasyona gönder / Depoya al ·
-   Kalibrasyon kaydı ekle) ve kalibrasyon kayıtları tablosu (sertifikayı aç, kaldır). Tuşlar yalnız "değiştirir" düzeyine; karar sunucuda. */
+   Kalibrasyon kaydı ekle · Sil — 357: yalnız yöneticiye ve hiç kullanılmamış cihaza) ve kalibrasyon kayıtları tablosu (sertifikayı aç, kaldır). Tuşlar
+   yalnız "değiştirir" düzeyine; karar sunucuda. */
 import { useRouter } from "next/navigation";
 import { useState, useTransition } from "react";
 import { useBildir } from "../../../components/bildirim/Bildirim";
@@ -8,14 +9,15 @@ import { DosyaAcTusu } from "../../../components/gizli-resim/GizliResim";
 import { KartEtiket, Kirp, Liste, type Sutun } from "../../../components/liste/Liste";
 import { useOnayla } from "../../../components/pencere/Onay";
 import { DegerYok, Kod, Rozet } from "../../../components/sayfa/Sayfa";
+import { SilTusu } from "../../../components/sil/SilTusu";
 import { Tus } from "../../../components/tus/Tus";
 import type { CihazTuru, KalibrasyonKaydi } from "../server/cihazlar";
-import { cihazKonumEylemi, kalibrasyonKaldirEylemi } from "./eylemler";
+import { cihazKonumEylemi, cihazSilEylemi, kalibrasyonKaldirEylemi } from "./eylemler";
 import { CihazPenceresi, KalibrasyonPenceresi, type CihazDegeri } from "./Pencereler";
 import { tarihYaz } from "./ortak";
 import stil from "./cihazlar.module.css";
 
-export function CihazTuslari({ cihaz, turler, konum, baslik }: { cihaz: CihazDegeri; turler: CihazTuru[]; konum: "depo" | "lab"; baslik: string }) {
+export function CihazTuslari({ cihaz, turler, konum, baslik, sil = false }: { cihaz: CihazDegeri; turler: CihazTuru[]; konum: "depo" | "lab"; baslik: string; sil?: boolean }) {
   const router = useRouter();
   const bildir = useBildir();
   const [bekliyor, baslat] = useTransition();
@@ -32,6 +34,8 @@ export function CihazTuslari({ cihaz, turler, konum, baslik }: { cihaz: CihazDeg
         ? <Tus tur="ikincil" ikon="warehouse" disabled={bekliyor} onClick={() => konumla("depo")}>Depoya al</Tus>
         : <Tus tur="ikincil" ikon="flask-conical" disabled={bekliyor} onClick={() => konumla("lab")}>Kalibrasyona gönder</Tus>}
       <Tus ikon="plus" onClick={() => setP("kal")}>Kalibrasyon kaydı ekle</Tus>
+      {sil && <SilTusu ad={cihaz.kod} baslik="Ölçüm cihazını sil" yanEtki="kalibrasyon kayıtları ve sertifikaları da silinir, kodu yeniden kullanılabilir"
+        sil={() => cihazSilEylemi(cihaz.id)} donus="/olcum-cihazlari" />}
       {p === "duzenle" && <CihazPenceresi kapat={() => setP(null)} turler={turler} cihaz={cihaz} />}
       {p === "kal" && <KalibrasyonPenceresi kapat={() => setP(null)} cihazId={cihaz.id} baslik={baslik} />}
     </>

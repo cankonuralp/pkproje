@@ -55,3 +55,33 @@ test("ölçüm cihazı: ekle, kalibrasyon kaydı, kalibrasyona gönder; denetçi
   await expect(page.getByRole("link", { name: kod })).toHaveCount(0);
   await expect(page.getByRole("button", { name: "Cihaz ekle" })).toHaveCount(0);
 });
+
+/* 357 (reisim 2026-10-07: "denemek için bir kaç cihaz ekledim ama silemedim"): hiç kullanılmamış cihaz yöneticide "Sil" → onay (tehlike, "Geri
+   alınamaz") → listeye döner, cihaz yok; aynı kod yeniden eklenebilir. Denetçi (kendi) cihaz sayfasına giremez. */
+test("ölçüm cihazı: kullanılmamış cihaz silinir, kod serbest kalır", async ({ page }, bilgi) => {
+  const kod = `SIL-${bilgi.project.name.slice(0, 3).toUpperCase()}${bilgi.retry}`;
+  const ekle = async () => {
+    await page.goto("/olcum-cihazlari");
+    await hazir(page);
+    await page.getByRole("button", { name: "Cihaz ekle" }).click();
+    const p = page.getByRole("dialog", { name: "Cihaz ekle" });
+    await p.getByLabel("Cihaz kodu").fill(kod);
+    const tur = p.getByRole("combobox", { name: "Cihaz türü" });
+    if (await tur.count()) { await tur.click(); await p.getByRole("option", { name: "Yeni tür…" }).click(); }
+    await p.getByLabel("Yeni tür adı").fill("Deneme silme ölçer");
+    await p.getByRole("button", { name: "Kaydet" }).click();
+    await expect(page).toHaveURL(/\/olcum-cihazlari\/[0-9a-f-]{36}$/, { timeout: 30_000 });
+    await hazir(page);
+  };
+  await girisli(page, "yonetici");
+  await ekle();
+  await page.getByRole("button", { name: "Sil", exact: true }).click();
+  const onay = page.locator("dialog[open]");
+  await expect(onay).toContainText(`${kod} kalıcı olarak silinir; kalibrasyon kayıtları ve sertifikaları da silinir, kodu yeniden kullanılabilir. Geri alınamaz.`);
+  await onay.getByRole("button", { name: "Sil" }).click();
+  await expect(page).toHaveURL(/\/olcum-cihazlari$/, { timeout: 30_000 });
+  await expect(page.getByText(`${kod} silindi.`).first()).toBeVisible();
+  await expect(page.getByRole("link", { name: kod })).toHaveCount(0);
+  await ekle();
+  await expect(page.getByRole("heading", { level: 1, name: `${kod} · Deneme silme ölçer` })).toBeVisible();
+});

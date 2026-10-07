@@ -37,3 +37,8 @@ test("branş denetimi kalkınca elektrik yöneticisi mekanik raporu onaylar", as
   const m = await bozuk("!!k?.brans && (branslari(h).includes(k.brans) || (!!k.vekil && branslari(h).length > 0))", "!!k?.brans && branslari(h).length > 0");
   assert.equal(m.canDoEylem(kisi("e1", "elektrik_yonetici"), "rapor_onayla", { sahip: "d1", brans: "m" }), true);
 });
+
+test("357: kayit_sil'de yönetici rolü denetimi kalkınca matris 'yaz' verdiği planlama kesin siler", async () => {
+  const m = await bozuk('duzey(h, k.modul, m) === "yaz" && rolu(h, "firma_yoneticisi", "mekanik_yonetici", "elektrik_yonetici")', 'duzey(h, k.modul, m) === "yaz"');
+  assert.equal(m.canDoEylem(kisi("p", "planlama"), "kayit_sil", { modul: 8 }, { 8: ["yaz", "kendi", "yaz", "yaz", "yaz", "yok"] } as never), true);
+});

@@ -2304,6 +2304,18 @@ Aynı gün (reisim birebir): *"Mobilde aorun var mı ? Güncel maket linki atar 
 **koda geçiş:** *"Makette eksik kalmadıysa koda geç , pc de yapman gereken iş olduğunda pc ye geçeriz"* → **G0 uygulandı, kod başladı** (KOD-GECIS);
 paket izni sorulunca *"İzin isteme ne gerekiyorsa yap pc de yapmamız daha iyi olacak şeyler için pc ye geçmemiz gerekince söyle"* → paket izni kalıcı (§11 272).
 
+**Elli üçüncü tur (2026-10-07, reisim birebir):** *"ekipman,cihaz,ekipmantürü vb eklenebilen şeylerin silinemediğini tespit ettim denemek için bir kaç
+cihaz ekledim ama silemedim bunuda düzeltmeliyiz."* → **KESİN SİLME İLKESİ** (§11 357; KOD-GECIS §3, §4 `kayit_sil`): hiç **kullanılmamış** kayıt
+(deneme, yanlış giriş) **kesin silinir** — yalnız **yöneticiler** (kaydın modülünde "yaz" + firma / mekanik / elektrik yöneticisi; reisim'in eski sözü
+*"silme işlemi sadece yöneticiler tarafından yapılabilmeli"*); **kullanılmış** kayıt **pasife alınır** (geçmişi ve belgeleri durur, listelerden ve
+seçimlerden kalkar, Etkinleştir ile geri gelir); **yasal kayıt silinmez** (imzalı rapor ve sürümü, fatura, tahsilat, zimmet hareketi, araç tutanağı,
+belge onayı, yayınlanmış format, denetim izi — kendi yoluyla düzeltilir). "Kullanılmış" tanımı tek yerde, veritabanında (kayıt başına sayım); "Sil"
+tuşu yalnız silebilene ve kullanılmamış kayda çizilir; onay "Geri alınamaz" der; silinen kayıt denetim izinde eski değeriyle kalır, dosyaları çöpe
+gider. Ekran dili: **Sil** yalnız kesin silme; kayıt saklanıyorsa **Kaldır**, geri alınabiliyorsa **Pasife al**. Kayıt düzeyinde 30 günlük çöp kutusu
+(ANAYASA 4.10) bu işte yok — silinen satır izde tam durur (bilinçli sapma, açık). Sıra: ölçüm cihazı (357) → cihaz pasif → cihaz türü → ekipman →
+ekipman türü → demirbaş, araç, müşteri / tesis, personel, teklif taslağı, imza bekleyen sözleşme, format taslağı, eğitim, plan. Karar 48 ("müşteri
+silinmez") kullanılmış müşteri için geçerli kalır; kullanılmamış (deneme) müşteri bu kararla silinir.
+
 **Açık kalanlar:** ~~Ana sayfada İSGGM duyuruları~~ (2026-09-27: makette eklendi; okuma işi uygulamada) (reisim 2026-09-26: *"Ana sayfada isgüm duyurularını gösterebilir miyiz ? Bunu
 yapılacaklar listesine ekle"*; öneri: ÇSGB İSGGM duyurular sayfası — https://www.csgb.gov.tr/isggm/duyurular/ — sunucuda günde birkaç kez
 okunur (pg-boss işi, §8.9), Ana sayfada son 5 duyuru başlık + tarih + kaynağa bağlantı; yalnız ekranda, bildirim yok; sayfa RSS vermiyorsa
@@ -2341,6 +2353,14 @@ revizyon, alan kopyalama, hafif kusur devri, meslek eşleşme denetimi).
 - Emsal ürünler: https://opwire.app/iso-17020-periyodik-kontrol-yazilimi/ · https://17020muayene.vidco.com.tr/ · https://akuple.com/asansor-kontrol-yazilimi/ · https://ensyazilim.com/
 
 ## 11 · Değişiklik günlüğü
+- 2026-10-07 (357): **Kesin silme — ortak mekanizma + ölçüm cihazı "Sil"** (reisim: *"denemek için bir kaç cihaz ekledim ama silemedim"*; §9 elli
+  üçüncü tur). Göç 0054: olcum_cihazi_kullanim (zimmet hareketi · raporun cihaz listesi, silinmiş taslak dahil · zimmet formu) ve olcum_cihazi_sil
+  (tanımlayıcı-yetkili, 0047 deseni: oturumdaki firma + hesap, satır kilidi, kullanılmışsa sayım, kalibrasyon kayıtları birlikte, sertifikalar çöpe,
+  denetim izine eski değer; uygulama rolüne DELETE yok). src/server/db/silici.ts (SILINEBILIR: işlevler + her yabancı anahtar "kullanım" ya da
+  "birlikte"), canDo kayit_sil (modülde yaz + yönetici rolü), components/sil (SilTusu tek üretici, kullanimMetni). Cihaz sayfasında "Sil" yalnız
+  yöneticiye ve kullanılmamış cihaza; onay "<kod> kalıcı olarak silinir; kalibrasyon kayıtları ve sertifikaları da silinir, kodu yeniden
+  kullanılabilir. Geri alınamaz." Kilitler tests/kesin-silme.test.ts (iki firma), tests/silme-kapsami.test.ts (yabancı anahtar aynası, DELETE yok,
+  kayıtsız silme işlevi yok), yetki.test kayit_sil, kullanim-metni; olumsuz kanıt kesin-silme.bozan (4), yetki.bozan; e2e üç genişlik.
 - 2026-10-07 (356): **Yönetim çıkışı düz form isteği** (14b1bf8 CI'ın saklanan sayfa görüntüsü: çıkıştan sonra "Sayfa bulunamadı"). Next sunucu
   eyleminin redirect()'ini kendi kökeninden (sunucunun adresi) yeniden çiziyor; o istekte yönetim adresi yok → ara katman /yonetim'i kapatıyordu.
   Menüdeki "Çıkış yap" ve giriş adımlarındaki "Girişe dön" artık POST /yonetim/cikis (route; kapı istek.ts yonetimOturumunuKapat: başka adreste 404,

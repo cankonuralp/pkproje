@@ -208,6 +208,10 @@ pkproje/
                             (klasör; deneme yayınında veritabanı — 347, göç 0049 depo_nesne, PROBATA_DEPO=vt, çağıranın işleminde; firma S3'ü K7) ·
                             yükle / indirilebilir + modül erişim kaydı (kaydı olmayan modülün dosyası kimseye açılmaz) ·
                             tek uç src/app/api/dosya/[id] · görsel yalnız <GizliResim> (components/gizli-resim)
+  src/server/db/silici.ts   KESİN SİLME — tek mekanizma (357; reisim 2026-10-07 "eklenebilen şeyler silinemiyor"): SILINEBILIR (tür → <tablo>_kullanim /
+                            <tablo>_sil veritabanı işlevleri + her yabancı anahtar "kullanım" ya da "birlikte"), kullanimlar, kesinSil — yalnız hiç
+                            kullanılmamış kayıt; yetki modülde canDo kayit_sil (yönetici); ekranda components/sil (SilTusu, kullanimMetni) · kilit
+                            tests/silme-kapsami.test.ts (yabancı anahtar aynası) + tests/kesin-silme.test.ts
   src/server/ayar/          FİRMA AYARLARI (bölüm biçimi + başlangıç değeri tek yerde, sürüm kilidiyle yazılır) · ŞİFRELİ SIRLAR (AES-256-GCM, ana
                             anahtar PROBATA_SIR_ANAHTARI; firma + ada bağlı; ekranda son 4)
   src/server/numara/        TEK NUMARA ÜRETİCİ (proje P-AAYY-SIRA · rapor XX-AAYY-SIRA-EK kesintisiz · teklif / sözleşme / gider / izin / araç tutanağı; sayaç işlem içinde)

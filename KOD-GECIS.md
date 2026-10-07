@@ -90,8 +90,9 @@ kuralı aynen, Windows'ta denenmesi gereken paket ya da iş çıkınca reisim'e 
 
 ## 3 · Veri modeli (maketten çıkan tablolar)
 
-Her tabloda: `firma_id` + RLS (ENABLE + FORCE + politika) · `id` · `surum` · `olustu / degisti / kim` · silme yerine **pasif** ya da **çöp kutusu**
-(30 gün) · liste uçları yalnız kendi sütunları (09-B3). **Benzersizlik veritabanında** (aşağıda ⚑). Makette karşılığı parantezde.
+Her tabloda: `firma_id` + RLS (ENABLE + FORCE + politika) · `id` · `surum` · `olustu / degisti / kim` · silme (357, 2026-10-07): **hiç kullanılmamış
+kayıt kesin silinir** (src/server/db/silici.ts — `<tablo>_kullanim` + `<tablo>_sil` tanımlayıcı-yetkili, iz eski değerle, dosyalar çöpe), kullanılmış kayıt
+**pasif**, yasal kayıt silinmez (çöp kutusu kayıt düzeyinde henüz yok) · liste uçları yalnız kendi sütunları (09-B3). **Benzersizlik veritabanında** (aşağıda ⚑). Makette karşılığı parantezde.
 
 | Modül | Tablolar | ⚑ benzersiz · not |
 |---|---|---|
@@ -151,6 +152,7 @@ muhasebe. **Müşteri kullanıcısı** ayrı tür (yalnız müşteri paneli). Bi
 
 **Özel eylemler** (düzeyin üstünde, tek tek `canDo` eylemi; sunucuda zorlanır; yapamayacağı tuş **çizilmez** — anayasa 7.4):
 plan aç (planlama yetkisi) · plan kabul / red (plandaki denetçi; beyan okunmadan kabul yok) · ekipman pasife al (denetçi), ekipman sil (yönetici) ·
+**kayit_sil** (357: hiç kullanılmamış kaydın kesin silinmesi — kaydın modülünde "yaz" VE firma / mekanik / elektrik yöneticisi; matris başka role "yaz" verse de) ·
 rapor oluştur / kaydet / onaya gönder / Kaydet ve kopyala (raporu yazan) · rapor sil (denetçi kendi oluşturduğu Yeni raporu; yönetici) · rapor pasife
 al (denetçi), aktife al ve sil (teknik yönetici) · onayla / geri gönder (türün branş yöneticisi; vekil: öteki branş "Tüm raporlar") · **durum değiştir**
 (teknik yönetici, Tamamlandı hariç) · **revizeye gönder** (teknik yönetici, Tamamlandı'dan) · revize iste (denetçi) · onayı geri al · son imza (raporu

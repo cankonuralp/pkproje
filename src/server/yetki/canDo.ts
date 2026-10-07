@@ -65,6 +65,8 @@ export interface EylemKaydi extends YetkiKaydi {
   durum?: string;
   /** rapor türünün branşı; vekil: öteki branşın yöneticisi "Tüm raporlar" yetkisiyle */
   vekil?: boolean;
+  /** kesin silmede kaydın modülü (kayit_sil) */
+  modul?: ModulAnahtari;
 }
 const rolu = (h: YetkiHesabi, ...r: Rol[]) => h.roller.some((x) => r.includes(x));
 const teknikYonetici = (h: YetkiHesabi, k?: EylemKaydi) => !!k?.brans && (branslari(h).includes(k.brans) || (!!k.vekil && branslari(h).length > 0));
@@ -74,6 +76,11 @@ export const OZEL_EYLEMLER = {
   plan_kabul_red: (h: YetkiHesabi, k?: EylemKaydi) => !!k?.atananlar?.includes(h.id),
   ekipman_pasif: (h: YetkiHesabi, _k?: EylemKaydi, m?: Partial<Matris> | null) => duzey(h, 7, m) === "yaz",
   ekipman_sil: (h: YetkiHesabi) => rolu(h, "firma_yoneticisi", "mekanik_yonetici", "elektrik_yonetici"),
+  /* 357 (reisim 2026-10-07 + pkproje §9: "silme işlemi sadece yöneticiler tarafından yapılabilmeli"): hiç kullanılmamış kaydın KESİN silinmesi —
+     kaydın modülünde "yaz" VE yönetici rolü; firma matrisi başka bir role "yaz" verse de silme yönetici rolünde kalır. Kullanılmış mı veritabanında
+     (src/server/db/silici.ts). */
+  kayit_sil: (h: YetkiHesabi, k?: EylemKaydi, m?: Partial<Matris> | null) =>
+    k?.modul !== undefined && duzey(h, k.modul, m) === "yaz" && rolu(h, "firma_yoneticisi", "mekanik_yonetici", "elektrik_yonetici"),
   rapor_olustur: (h: YetkiHesabi, k?: EylemKaydi) => !!k?.atananlar?.includes(h.id),
   rapor_yaz: (h: YetkiHesabi, k?: EylemKaydi) => !!k && k.sahip === h.id,
   rapor_sil: (h: YetkiHesabi, k?: EylemKaydi) => (!!k && k.sahip === h.id && k.durum === "Yeni") || teknikYonetici(h, k),
