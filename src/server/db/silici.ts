@@ -68,6 +68,11 @@ export const SILINEBILIR = {
     kullanim: "musteri_hesap_kullanim", sil: "musteri_hesap_sil",
     fk: { kullanim: [], birlikte: ["musteri_oturum.musteri_hesap_id"] },
   },
+  /* 368: hiç gönderilmemiş (taslak), kopyası / dayanak sözleşmesi / fatura satırı olmayan teklif; kalemleri ve tesisleri birlikte (0063) */
+  teklif: {
+    kullanim: "teklif_kullanim", sil: "teklif_sil",
+    fk: { kullanim: ["fatura_rapor.teklif_id", "is_sozlesmesi.teklif_id", "teklif.kopya_kaynak"], birlikte: ["teklif_kalem.teklif_id", "teklif_tesis.teklif_id"] },
+  },
 } as const satisfies Record<string, { kullanim: string; sil: string; fk: { kullanim: readonly string[]; birlikte: readonly string[] } }>;
 export type SilinebilirTur = keyof typeof SILINEBILIR;
 

@@ -4,7 +4,7 @@
 import { ayniKoken } from "../../../server/kimlik/koken";
 import { istekOturumu, oturumIslemi } from "../../../server/kimlik/istek";
 import type { TeklifEkipmani } from "../excel";
-import { teklifEkipmanListesi, teklifGonder, teklifKabul, teklifKaydet, teklifMusteriBagla, teklifMusteriKaydet, teklifReddet, type Yazma } from "../server/teklifler";
+import { teklifEkipmanListesi, teklifGonder, teklifKabul, teklifKaydet, teklifMusteriBagla, teklifMusteriKaydet, teklifReddet, type Yazma, teklifSil } from "../server/teklifler";
 
 /** uyarilar: Müşteriler'in uyarısı (Müşteri olarak kaydet — kişi görür, onaylarsa onay=true ile yeniden) */
 export interface TeklifYaniti { tamam?: boolean; id?: string; no?: string; bildirim?: string; hatalar?: Record<string, string>; uyarilar?: Record<string, string>; genel?: string }
@@ -48,4 +48,9 @@ export async function teklifEkipmanlariEylemi(tesisler: unknown): Promise<{ list
   if (!o) return { genel: "Oturumunuz kapandı. Yeniden giriş yapın." };
   const l = await oturumIslemi(o, (db) => teklifEkipmanListesi(db, o, tesisler));
   return l ? { liste: l } : { genel: SONUC.yetkisiz };
+}
+
+/** 368: kullanılmamış taslak kesin silinir (yalnız yönetici; karar teklifler.ts / veritabanında) */
+export async function teklifSilEylemi(id: string): Promise<TeklifYaniti> {
+  return islem((o) => oturumIslemi(o, (db) => teklifSil(db, o, String(id))));
 }

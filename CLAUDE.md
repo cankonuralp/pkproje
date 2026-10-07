@@ -188,7 +188,7 @@ pkproje/
                             form-degeri.ts (formun başlangıç değeri sunucuda; pasif tesis düşer) · ui/KalemTablosu.tsx (sütun işlevleri istemcide) ·
                             her rapor TEK teklife (tesis × tür, imza gününde geçerli en son kabul — raporlananlar) · var olan müşteriye bağla ·
                             325: excel.ts (saf: Excel'den yükle → kalemler, Excel'e aktar, şablon) + ui/EkipmanExcel.tsx · teklif belgesi
-                            src/belge/teklif.ts (temel format <kod>-FR-TKL-01) → PDF /teklifler/<id>/pdf (src/belge/pdf.ts teklifPdf)
+                            src/belge/teklif.ts (temel format <kod>-FR-TKL-01) → PDF /teklifler/<id>/pdf (src/belge/pdf.ts teklifPdf) · 368 teklifSil (taslak; 0063)
   src/tanim/iller.ts        81 il + 973 ilçe (açık veri, MIT; bir kez alındı)
   src/modules/<modül>/      ★ her iş modülü: server/ (veri erişimi + iş kuralları, dışa açılan fonksiyonlar) · ui/ · şema · testler
   src/tanim/tanimlar.ts     SABİT TANIMLAR (durum adları, eğri çarpanları, mesai sınırları …): şemalı, karma adlı JSON → /api/tanim (2026-10-04)

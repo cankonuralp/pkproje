@@ -13,7 +13,9 @@
       kişi "kullanılmadı" denip silemediği tuşla karşılaşır).
   10. (364) müşteri kullanımından girilmiş müşteri girişi denetimi kalkınca panele girmiş müşteri girişleriyle birlikte silinir.
   11. (366) personel kullanımından giriş yapılmış hesap denetimi kalkınca sisteme girmiş kişi hesabıyla birlikte silinir (izdeki hesap kimliği yetim).
-  12. (367) müşteri girişi kullanımından panele girme denetimi kalkınca müşterinin kullandığı giriş silinir. */
+  12. (367) müşteri girişi kullanımından panele girme denetimi kalkınca müşterinin kullandığı giriş silinir.
+  13. (368) teklif kullanımından "gönderildi" denetimi kalkınca gönderilmiş teklifi silmek kalem tetiğinde hatayla düşer (kişi "silinmez" iletisi
+      yerine hata ekranı görür; tetik olmasa müşteriye verilmiş belge silinirdi). */
 import assert from "node:assert/strict";
 import { copyFileSync, mkdirSync, mkdtempSync, readdirSync, readFileSync, rmSync, writeFileSync } from "node:fs";
 import { tmpdir } from "node:os";
@@ -24,6 +26,7 @@ import { turSil } from "../../src/modules/ekipman-turleri/server/turler.ts";
 import { ekipmanSil } from "../../src/modules/planlar/server/plan-ici.ts";
 import { aracKaydet, aracSilmeDurumu } from "../../src/modules/araclar/server/araclar.ts";
 import { girisSil } from "../../src/modules/musteriler/server/girisler.ts";
+import { teklifSil } from "../../src/modules/teklifler/server/teklifler.ts";
 import { musteriSil } from "../../src/modules/musteriler/server/musteriler.ts";
 import { personelSil } from "../../src/modules/personel/server/personel.ts";
 import { demirbasEkle, demirbasSil } from "../../src/modules/zimmetler/server/zimmet.ts";
@@ -230,5 +233,22 @@ test("12. panele girme denetimi kalkınca müşterinin kullandığı giriş sili
       return (await db.sorgu<{ id: string }>("INSERT INTO musteri_hesap (musteri_id, eposta, ad, son_giris) VALUES ($1, 'ek@girisli.example', 'Ek', now()) RETURNING id::text", [m])).rows[0].id;
     }, { hesapId: F.yon.id });
     assert.equal((await kiraciIcinde(h, A, (db) => girisSil(db, F.yon, g), { hesapId: F.yon.id })).durum, "tamam", "bozuk: panele girilmiş giriş silindi");
+  } finally { await h.end(); await supa.kapat(); }
+});
+
+test("13. gönderildi denetimi kalkınca gönderilmiş teklifin silinmesi hatayla düşer (kilidin koruduğu açık)", async () => {
+  const GONDERILDI = "    'gonderildi', CASE WHEN t.durum <> 'taslak' THEN 1 END,";
+  const supa = await supabaseBenzeri(kume, "silme_bozuk_13", gocler(degistir(GONDERILDI, "    'gonderildi', NULL,"), undefined, "0063_"));
+  const h = havuzKur({ ...kume.uygulama, database: "silme_bozuk_13" });
+  try {
+    const A = (await supa.sahip.query<{ id: string }>("INSERT INTO firma (kisa_ad, ad, rapor_kodu) VALUES ('deneme-a', 'Deneme A', 'DA') RETURNING id::text")).rows[0].id;
+    const F = await sahaFirmasi(h, depo, A, "deneme-a");
+    const t = await kiraciIcinde(h, A, async (db) => {
+      const id = (await db.sorgu<{ id: string }>(`INSERT INTO teklif (no, aday, gecerlilik) VALUES ('TK-2026-901', '{"unvan": "Aday"}', 30) RETURNING id::text`)).rows[0].id;
+      await db.sorgu("INSERT INTO teklif_kalem (teklif_id, tur_id, adet, fiyat) VALUES ($1, $2, 1, 100000)", [id, F.tur]);
+      await db.sorgu("UPDATE teklif SET durum = 'gonderildi' WHERE id = $1", [id]);
+      return id;
+    }, { hesapId: F.yon.id });
+    await assert.rejects(kiraciIcinde(h, A, (db) => teklifSil(db, F.yon, t), { hesapId: F.yon.id }), /yalnız taslak/, "bozuk: 'silinmez' iletisi yerine hata");
   } finally { await h.end(); await supa.kapat(); }
 });

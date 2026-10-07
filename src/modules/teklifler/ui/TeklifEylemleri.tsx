@@ -3,7 +3,7 @@
    Gönderildi olarak işaretle; gönderildi: Reddedildi (müşterinin gerekçesi, pencere) · Kabul edildi (onay); kabul edildi: kayıtlı olmayan
    müşteride "Müşteri olarak kaydet" (Müşteriler'in uyarısı gösterilir, onaylanırsa kaydedilir) ve "Var olan müşteriye bağla" (pencere), kayıtlı
    müşteride İş sözleşmesi · Plan aç (hedef modülün yetkisiyle); red ya da süresi doldu: Yeni teklif (kopyala). Teklif müşteriye elle iletilir
-   (121). Karar sunucuda; sonuç bildirimle. */
+   (121). Karar sunucuda; sonuç bildirimle. 368: kullanılmamış taslakta yöneticiye Sil. */
 import { useRouter } from "next/navigation";
 import { useState, useTransition } from "react";
 import { useBildir } from "../../../components/bildirim/Bildirim";
@@ -12,9 +12,10 @@ import { Ikon } from "../../../components/ikon/Ikon";
 import { useOnayla } from "../../../components/pencere/Onay";
 import { Pencere, pencereMetinSinifi } from "../../../components/pencere/Pencere";
 import { SecimAlani } from "../../../components/secim/SecimAlani";
+import { SilTusu } from "../../../components/sil/SilTusu";
 import { Tus, TusBaglanti, tusSinifi } from "../../../components/tus/Tus";
 import type { TeklifKarti } from "../server/teklifler";
-import { teklifGonderEylemi, teklifKabulEylemi, teklifMusteriBaglaEylemi, teklifMusteriKaydetEylemi, teklifReddetEylemi, type TeklifYaniti } from "./eylemler";
+import { teklifGonderEylemi, teklifKabulEylemi, teklifSilEylemi, teklifMusteriBaglaEylemi, teklifMusteriKaydetEylemi, teklifReddetEylemi, type TeklifYaniti } from "./eylemler";
 import stil from "./teklifler.module.css";
 
 const GEREKCE = "w-gerekce";
@@ -65,6 +66,7 @@ export function TeklifEylemleri({ t, pdf, musteriler = [] }: { t: TeklifKarti; p
       <a className={tusSinifi("ikincil")} href={pdf} download><Ikon ad="file-text" kucuk />PDF</a>
       {izin.duzenle && <TusBaglanti ikon="pencil" href={`/teklifler/${t.id}/duzenle`}>Düzenle</TusBaglanti>}
       {izin.duzenle && <Tus ikon="send" disabled={bekliyor || !izin.gonder} onClick={gonder}>Gönderildi olarak işaretle</Tus>}
+      {izin.sil && <SilTusu ad={t.no} baslik="Teklif taslağını sil" yanEtki="kalemleri ve tesisleri de silinir" sil={() => teklifSilEylemi(t.id)} donus="/teklifler" />}
       {izin.sonuc && <Tus tur="ikincil" ikon="ban" disabled={bekliyor} onClick={() => setRed({ gerekce: "", hata: null })}>Reddedildi</Tus>}
       {izin.sonuc && <Tus ikon="check" disabled={bekliyor} onClick={() => void kabul()}>Kabul edildi</Tus>}
       {izin.bagla && <Tus tur="ikincil" ikon="building-2" disabled={bekliyor} onClick={() => setBag({ musteri: "", tesis: "", hatalar: {} })}>Var olan müşteriye bağla</Tus>}

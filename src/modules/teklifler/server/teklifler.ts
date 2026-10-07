@@ -5,14 +5,17 @@
    Tutarlar KURUŞ, KDV hariç. Rapor ↔ kalem bağı Raporlar'ın teklif-baglanti.ts'inden; ekipman sayıları Ekipman'dan; müşteri kaydı Müşteriler'den.
    324 incelemesi: "kendi" / "branş" düzeyi teklif görmez (kayıt kayıt süzgeç yok — Müşteriler gibi); her rapor TEK teklife bağlanır (tesis ×
    tür için, raporun imza gününde geçerli en son kabul edilmiş teklif; pencere teklif tarihinden — maket); "Müşteri olarak kaydet" Müşteriler'in
-   uyarısını gösterir, var olan müşteriye bağlama yolu var; sonraki adımların tuşları hedef modülün yetkisiyle. */
+   uyarısını gösterir, var olan müşteriye bağlama yolu var; sonraki adımların tuşları hedef modülün yetkisiyle.
+   368 (§9 elli üçüncü tur): hiç gönderilmemiş taslak yalnız yöneticiye kesin silinir (kayit_sil, modül 11; göç 0063) — gönderilmiş teklif silinmez. */
 import type { Sorgulayici } from "../../../server/db/kiraci.ts";
+import { kesinSil, kullanimlar } from "../../../server/db/silici.ts";
 import { ekle, guncelle, sil, tablo, type Iz } from "../../../server/db/yazici.ts";
 import { ayarOku, firmaBelgeKunyesi } from "../../../server/ayar/ayar.ts";
 import type { Depo } from "../../../server/dosya/depo.ts";
 import { hesapAdlari } from "../../../server/kimlik/hesap.ts";
 import { numaraAl } from "../../../server/numara/numara.ts";
-import { duzey, type YetkiHesabi } from "../../../server/yetki/canDo.ts";
+import { canDoEylem, duzey, type YetkiHesabi } from "../../../server/yetki/canDo.ts";
+import { kullanimMetni } from "../../../components/sil/metin.ts";
 import { dogrula, type DogrulamaHatalari } from "../../../sema/ortak.ts";
 import { tesisEkipmanlari, tesisTurSayilari } from "../../ekipman/server/ekipman.ts";
 import { turOzetleri } from "../../ekipman-turleri/server/turler.ts";
@@ -62,7 +65,9 @@ export interface TeklifKarti extends TeklifSatiri {
   ekipmanlar: { kod: string; tur: string; konum: string; seri: string }[]; raporlananTutar: number | null; kopyaKaynak: string | null;
   /** sozlesme / planAc: kayıtlı müşterinin kabul edilmiş teklifinde sonraki adımlar — hedef modülün yetkisiyle; bagla: kayıtlı olmayan müşterinin
       kabul edilmiş teklifini var olan müşteriye bağlama */
-  izin: { duzenle: boolean; gonder: boolean; sonuc: boolean; musteriKaydet: boolean; bagla: boolean; kopyala: boolean; sozlesme: boolean; planAc: boolean };
+  izin: { duzenle: boolean; gonder: boolean; sonuc: boolean; musteriKaydet: boolean; bagla: boolean; kopyala: boolean; sozlesme: boolean; planAc: boolean;
+    /** 368: kullanılmamış taslağı kesin silmek (yönetici) */
+    sil: boolean };
 }
 
 type Satir = { id: string; no: string; musteri_id: string | null; aday: Aday | null; durum: "taslak" | "gonderildi" | "kabul" | "red"; tarih: string; gonderildi: string | null;
@@ -135,6 +140,7 @@ export async function teklifKarti(db: Sorgulayici, kim: Kisi, id: string): Promi
       duzenle: yaz && s.durum === "taslak", gonder: yaz && s.durum === "taslak" && kalemler.length > 0, sonuc: yaz && s.durum === "gonderildi",
       musteriKaydet: yaz && s.durum === "kabul" && !m && musteriDegistirir(kim), bagla: yaz && s.durum === "kabul" && !m, kopyala: yaz,
       sozlesme: s.durum === "kabul" && !!m && sozlesmeDegistirir(kim), planAc: s.durum === "kabul" && !!m && planAcabilir(kim),
+      sil: x.durum === "taslak" && silebilir(kim) && !(await kullanimlar(db, "teklif", [x.id])).has(x.id),
     },
   };
 }
@@ -364,4 +370,18 @@ export async function teklifBelgesiVerisi(db: Sorgulayici, kim: Kisi, id: string
           ilgili: t.aday?.yetkili ?? null, yerler: t.aday ? [{ ad: null, adres: [t.aday.adres, [t.aday.ilce, t.aday.il].filter(Boolean).join(" / ")].filter(Boolean).join(", ") }] : [] },
     kalemler: t.kalemler.map((k) => ({ turAd: k.turAd, brans: k.brans, periyot: k.periyot, adet: k.adet, fiyat: k.fiyat })),
   };
+}
+
+/* ── KESİN SİLME (368; reisim 2026-10-07 "eklenebilen şeyler silinemiyor"; §9 elli üçüncü tur) — yalnız yönetici (kayit_sil, modül 11) ve yalnız hiç
+   gönderilmemiş, kopyası / dayanak sözleşmesi olmayan taslak (veritabanında, göç 0063); kalemleri ve tesisleri birlikte. */
+const silebilir = (kim: YetkiHesabi) => canDoEylem(kim, "kayit_sil", { modul: MODUL });
+export async function teklifSil(db: Sorgulayici, kim: Kisi, id: string): Promise<Yazma> {
+  if (!silebilir(kim)) return { durum: "yetkisiz" };
+  const r = await kesinSil(db, "teklif", id, kim.ad);
+  if (r.durum === "kullanildi") {
+    const { gonderildi, ...diger } = r.kullanim;
+    return { durum: "red", neden: gonderildi ? "Gönderilmiş teklif silinmez; müşteriye verilmiş belgedir. Yenisi kopyalanır."
+      : `Teklif silinemez: ${kullanimMetni(diger) || "başka kayıtlarda"} kullanıldı.` };
+  }
+  return r.durum === "tamam" ? { durum: "tamam", id, bildirim: `${r.ad} silindi.` } : { durum: "yok" };
 }

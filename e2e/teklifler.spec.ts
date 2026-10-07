@@ -56,6 +56,7 @@ test("teklif: hazırla, gönderildi, kabul edildi; muhasebe yalnız görür, den
   await hazir(page);
   await page.getByRole("button", { name: "Gönderildi olarak işaretle" }).click();
   await expect(page.getByRole("button", { name: "Kabul edildi" })).toBeVisible({ timeout: 30_000 });
+  await expect(page.getByRole("button", { name: "Sil", exact: true })).toHaveCount(0);   // 368: gönderilmiş teklif silinmez
   await expect(page.getByRole("link", { name: "Düzenle" })).toHaveCount(0);
   await page.getByRole("button", { name: "Kabul edildi" }).click();
   const onay = page.getByRole("dialog", { name: "Teklif kabul edildi mi?" });
@@ -100,4 +101,34 @@ test("teklif: hazırla, gönderildi, kabul edildi; muhasebe yalnız görür, den
   await expect(page.getByText("Bu sayfayı görme yetkiniz yok")).toBeVisible();
   await page.goto(adres);
   await expect(page.getByText("Bu sayfayı görme yetkiniz yok")).toBeVisible();
+});
+
+/* 368 (§9 elli üçüncü tur): hiç gönderilmemiş taslağı yönetici siler → Teklifler listesine dönülür */
+test("teklif: taslak silinir", async ({ page }) => {
+  test.setTimeout(120_000);
+  await girisli(page, "yonetici");
+  await page.goto("/teklifler/yeni");
+  await hazir(page);
+  await page.getByRole("combobox", { name: "Müşteri" }).click();
+  const ara = page.getByRole("searchbox", { name: "Müşteri içinde ara" });
+  if (await ara.count()) await ara.fill("Plan Deneme");
+  await page.getByRole("option", { name: "Plan Deneme" }).click();
+  await page.getByRole("combobox", { name: "Tesis" }).click();
+  await page.getByRole("option", { name: E2E_PLAN.tesis }).click();
+  await page.getByLabel("Geçerlilik (gün)").fill("30");
+  await page.getByRole("combobox", { name: "Ekipman türü 1" }).click();
+  await page.getByRole("option", { name: E2E_SAHA.tur }).first().click();
+  await page.getByLabel("Adet").fill("1");
+  await page.getByLabel("Birim fiyat (TL)").fill("100,00");
+  await page.getByRole("button", { name: "Kaydet" }).click();
+  await expect(page).toHaveURL(/\/teklifler\/[0-9a-f-]{36}$/, { timeout: 30_000 });
+  const no = (await page.getByRole("heading", { level: 1 }).textContent())!.trim();
+  await hazir(page);
+  await page.getByRole("button", { name: "Sil", exact: true }).click();
+  const onay = page.locator("dialog[open]");
+  await expect(onay).toContainText(`${no} kalıcı olarak silinir; kalemleri ve tesisleri de silinir. Geri alınamaz.`);
+  await onay.getByRole("button", { name: "Sil" }).click();
+  await expect(page).toHaveURL(/\/teklifler$/, { timeout: 30_000 });
+  await expect(page.getByText(`${no} silindi.`).first()).toBeVisible();
+  await expect(page.getByRole("link", { name: no })).toHaveCount(0);
 });

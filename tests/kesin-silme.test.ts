@@ -20,7 +20,8 @@
    · 366 personel: yalnız firma yöneticisi; kullanılmamış kişi hiç girilmemiş hesabı ve kaldırılmış İSG kaydıyla silinir (parola ize yazılmaz);
      giriş yapılmış hesabı ya da zimmeti olan silinmez; kişi kendini silmez; Ayrıldı → hesap kapanır, geri al çalışıyor yapar;
    · 367 müşteri girişi: hiç girilmemiş ek giriş yalnız yöneticiye silinir (kullanıcı adı serbest, parola ize yazılmaz); ana giriş ve panele girilmiş
-     giriş silinmez.
+     giriş silinmez;
+   · 368 teklif: taslak kalemleri ve tesisleriyle silinir (yalnız yönetici; hazırlayan planlama silemez); kopyası olan ve gönderilmiş teklif silinmez.
    Olumsuz kanıt: tests/bozan/kesin-silme.bozan.ts. */
 import assert from "node:assert/strict";
 import { mkdtempSync, rmSync } from "node:fs";
@@ -35,6 +36,7 @@ import { anaGeciciParola, ekGirisEkle, girisBilgisi, girisSil } from "../src/mod
 import { musteriKaydet, musteriSil, silmeDurumu, tesisKaydet, tesisSil } from "../src/modules/musteriler/server/musteriler.ts";
 import { personelAyrildi, personelEkle, personelGeriAl, personelKarti, personelSil, personelSilmeDurumu } from "../src/modules/personel/server/personel.ts";
 import { hesapAc } from "../src/server/kimlik/hesapYonetimi.ts";
+import { teklifKarti, teklifSil } from "../src/modules/teklifler/server/teklifler.ts";
 import { demirbasDurumu, demirbasEkle, demirbasPasif, demirbasSil, teslimEt, zimmetListeleri } from "../src/modules/zimmetler/server/zimmet.ts";
 import { taslakBaslat } from "../src/modules/rapor-format/server/formatlar.ts";
 import { raporSil, sahaRaporu } from "../src/modules/raporlar/server/raporlar.ts";
@@ -446,4 +448,31 @@ test("müşteri girişi: hiç girilmemiş ek giriş silinir (kullanıcı adı se
   await a(FA.yon, (db) => db.sorgu("UPDATE musteri_hesap SET son_giris = now() WHERE id = $1", [ek2]));
   assert.deepEqual(await a(FA.yon, (db) => girisSil(db, FA.yon, ek2)), { durum: "red", neden: "Müşteri bu girişle panele girdi; silinmez. Pasife alın." });
   await assert.rejects(a(FA.yon, (db) => db.sorgu("DELETE FROM musteri_hesap WHERE id = $1", [ek2])), /permission denied|izin/i);
+});
+
+/* 368 — teklif taslağı: yalnız yönetici, yalnız hiç gönderilmemiş ve kopyası / sözleşmesi olmayan taslak */
+test("teklif: taslak kalemleriyle silinir; kopyası olan ve gönderilmiş teklif silinmez; hazırlayan planlama silemez", async () => {
+  const taslak = async (no: string, kopya: string | null = null) => a(FA.yon, async (db) => {
+    const id = (await db.sorgu<{ id: string }>(`INSERT INTO teklif (no, aday, gecerlilik, kopya_kaynak) VALUES ($1, '{"unvan": "Aday Deneme"}', 30, $2) RETURNING id::text`, [no, kopya])).rows[0].id;
+    await db.sorgu("INSERT INTO teklif_kalem (teklif_id, tur_id, adet, fiyat) VALUES ($1, $2, 1, 100000)", [id, FA.tur]);
+    return id;
+  });
+  const t1 = await taslak("TK-2026-801");
+  assert.equal((await a(FA.yon, (db) => teklifKarti(db, FA.yon, t1)))!.izin.sil, true);
+  assert.equal((await a(FA.plan, (db) => teklifKarti(db, FA.plan, t1)))!.izin.sil, false, "hazırlayan planlama düzenler ama silemez");
+  for (const k of [FA.plan, FA.elk]) assert.deepEqual(await a(k, (db) => teklifSil(db, k, t1)), { durum: "yetkisiz" }, k.roller.join());
+  assert.deepEqual(await kiraciIcinde(havuz, B, (db) => teklifSil(db, FB.yon, t1), { hesapId: FB.yon.id }), { durum: "yok" }, "başka firma");
+  assert.deepEqual(await a(FA.yon, (db) => teklifSil(db, FA.yon, t1)), { durum: "tamam", id: t1, bildirim: "TK-2026-801 silindi." });
+  assert.equal((await a(FA.yon, (db) => db.sorgu("SELECT 1 FROM teklif_kalem WHERE teklif_id = $1", [t1]))).rowCount, 0, "kalem gitti");
+  const iz = (await a(FA.yon, (db) => db.sorgu<{ k: unknown[] }>("SELECT ayrinti->'kalemler' AS k FROM denetim_izi WHERE ne = 'teklif.sil' AND nesne_id = $1", [t1]))).rows[0];
+  assert.equal(iz.k.length, 1, "kalemler izde");
+
+  const t2 = await taslak("TK-2026-802");
+  const t3 = await taslak("TK-2026-803", t2);
+  assert.deepEqual(await a(FA.yon, (db) => teklifSil(db, FA.yon, t2)), { durum: "red", neden: "Teklif silinemez: 1 teklif kopyasında kullanıldı." });
+  await a(FA.yon, (db) => db.sorgu("UPDATE teklif SET durum = 'gonderildi' WHERE id = $1", [t3]));
+  assert.equal((await a(FA.yon, (db) => teklifKarti(db, FA.yon, t3)))!.izin.sil, false);
+  assert.deepEqual(await a(FA.yon, (db) => teklifSil(db, FA.yon, t3)),
+    { durum: "red", neden: "Gönderilmiş teklif silinmez; müşteriye verilmiş belgedir. Yenisi kopyalanır." });
+  await assert.rejects(a(FA.yon, (db) => db.sorgu("DELETE FROM teklif WHERE id = $1", [t2])), /permission denied|izin/i);
 });

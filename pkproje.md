@@ -2353,6 +2353,11 @@ revizyon, alan kopyalama, hafif kusur devri, meslek eşleşme denetimi).
 - Emsal ürünler: https://opwire.app/iso-17020-periyodik-kontrol-yazilimi/ · https://17020muayene.vidco.com.tr/ · https://akuple.com/asansor-kontrol-yazilimi/ · https://ensyazilim.com/
 
 ## 11 · Değişiklik günlüğü
+- 2026-10-07 (368): **Teklif taslağı Sil** (§9 elli üçüncü tur). Teklif sayfasında, hiç gönderilmemiş taslakta yalnız yöneticiye (Teklifler'de "yaz"
+  + yönetici; hazırlayan planlama düzenler ama silemez) "Sil" (onay "<no> kalıcı olarak silinir; kalemleri ve tesisleri de silinir. Geri alınamaz.").
+  Gönderilmiş teklif müşteriye verilmiş belgedir: silinmez (red / süresi doldu kalır, yenisi kopyalanır). Göç 0063 teklif_kullanim (gönderildi · kopyası
+  · dayanak sözleşme · fatura satırı) + teklif_sil (kalemler, tesisler birlikte; numara yeniden verilmez). Kilit kesin-silme.test "teklif"; olumsuz
+  kanıt kesin-silme.bozan 13; e2e teklifler (taslak sil; gönderilmişte Sil yok).
 - 2026-10-07 (367): **Müşteri girişi Sil** (§9 elli üçüncü tur). Müşteri kartının Ek girişler tablosunda, müşterinin panele HİÇ girmediği ek
   girişte yalnız yöneticiye çöp kutusu simgesi ("<ad> girişini sil"; onay "… kalıcı olarak silinir; kullanıcı adı yeniden kullanılabilir. Geri
   alınamaz."). Ana giriş (müşterinin e-postasına bağlı) ve panele girilmiş giriş silinmez — pasife alınır. Göç 0062 musteri_hesap_kullanim (ana ·
