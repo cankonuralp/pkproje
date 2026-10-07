@@ -164,7 +164,7 @@ test("cihaz türü: ekle / adını değiştir; cihazı olan ve raporda geçen t�
   assert.deepEqual(await a(FA.plan, (db) => cihazTuruKaydet(db, FA.plan as Kisi, null, 0, { ad: "Başka" })), { durum: "yetkisiz" });
   tamam(await a(FA.elk, (db) => cihazTuruKaydet(db, FA.elk, yeni.id, yeni.surum, { ad: "İzolasyon test cihazı" })));
   /* iki ekipman türü bu türü kullanacak */
-  const tur2 = (await a(FA.yon, (db) => db.sorgu<{ id: string }>("INSERT INTO ekipman_turu (kod, ad, grup, brans, periyot) VALUES ('ET2', 'Deneme türü', 'elektrik', 'e', 12) RETURNING id::text"))).rows[0].id;
+  const tur2 = (await a(FA.yon, (db) => db.sorgu<{ id: string }>("INSERT INTO ekipman_turu (kod, ad, grup, brans, periyot) VALUES ('ETK', 'Deneme türü', 'elektrik', 'e', 12) RETURNING id::text"))).rows[0].id;
   await a(FA.yon, (db) => db.sorgu("UPDATE ekipman_turu SET cihaz_turleri = ARRAY[$1::uuid] WHERE id = ANY ($2::uuid[])", [yeni.id, [FA.tur, tur2]]));
   let satir = (await a(FA.elk, (db) => cihazTuruListesi(db, FA.elk))).find((t) => t.id === yeni.id)!;
   assert.deepEqual([satir.ad, satir.ekipmanTuru, satir.cihaz, satir.sil], ["İzolasyon test cihazı", 2, 0, true]);
