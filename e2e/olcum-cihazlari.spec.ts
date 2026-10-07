@@ -88,7 +88,8 @@ test("ölçüm cihazı: kullanılmamış cihaz silinir, kod serbest kalır", asy
 });
 
 /* 358 (§9 elli üçüncü tur: kullanılmış kayıt silinmez, pasife alınır): denetçinin zimmetindeki, raporda kullanılan MN-01'de "Sil" yok, "Pasife al"
-   var; pencere nedeni söyler (kullanıldı; silinemez) ve zimmetteki cihazı pasife almaz (önce depoya teslim). Cihaz değişmez (öteki testler kullanır). */
+   var; pencere nedeni söyler (kullanıldı; silinemez) ve zimmetteki cihazı pasife almaz (önce depoya teslim). Cihaz değişmez (öteki testler kullanır).
+   365: engel pencerede baştan yazılır, Pasife al tuşu kapalı (karşılanmamış koşul yeşil tikle gösterilmez). */
 test("ölçüm cihazı: kullanılmış cihazda Sil yok, Pasife al zimmetteyken reddedilir", async ({ page }) => {
   await girisli(page, "yonetici");
   await page.goto("/olcum-cihazlari");
@@ -101,13 +102,15 @@ test("ölçüm cihazı: kullanılmış cihazda Sil yok, Pasife al zimmetteyken r
   const p = page.locator("dialog[open]");
   await expect(p).toContainText(/kullanıldı; silinemez\./);
   await expect(p).toContainText("Etkinleştir ile geri gelir.");
-  await p.getByRole("button", { name: "Pasife al" }).click();
   await expect(p).toContainText(`${E2E_SAHA.cihaz} bir kişinin zimmetinde; önce Zimmetler'den depoya teslim alın.`);
+  await expect(p.getByRole("button", { name: "Pasife al" })).toBeDisabled();
   await p.getByRole("button", { name: "Vazgeç" }).click();
   await expect(page.getByText("Pasif", { exact: true })).toHaveCount(0);
 });
 
-/* 359 (maket T7 "Cihaz türleri"): pencerede tür ekle → "0 ekipman türünde · 0 cihaz" → Sil (x, onay maketteki metinle) → listeden kalkar */
+/* 359 (maket T7 "Cihaz türleri"): pencerede tür ekle → "0 ekipman türünde · 0 cihaz" → Sil (x, onay maketteki metinle) → listeden kalkar.
+   365: tuş ve bildirim metinleri maketteki gibi ("Cihaz türü ekle", "<ad> eklendi; cihaz eklerken seçilir.", "<ad> türünü sil"); silince odak
+   "Cihaz türü ekle"de (pencere açık kalır). */
 test("cihaz türleri: tür ekle, kullanılmamış türü sil", async ({ page }, bilgi) => {
   const ad = `Deneme tür ${bilgi.project.name}`;
   await girisli(page, "yonetici");
@@ -115,18 +118,19 @@ test("cihaz türleri: tür ekle, kullanılmamış türü sil", async ({ page }, 
   await hazir(page);
   await page.getByRole("button", { name: "Cihaz türleri" }).click();
   const liste = page.getByRole("dialog", { name: "Cihaz türleri" });
-  await liste.getByRole("button", { name: "Tür ekle" }).click();
+  await liste.getByRole("button", { name: "Cihaz türü ekle" }).click();
   const p = page.getByRole("dialog", { name: "Cihaz türü ekle" });
   await p.getByLabel("Tür adı").fill(ad);
   await p.getByRole("button", { name: "Kaydet" }).click();
-  await expect(page.getByText(`${ad} eklendi.`).first()).toBeVisible({ timeout: 30_000 });
+  await expect(page.getByText(`${ad} eklendi; cihaz eklerken seçilir.`).first()).toBeVisible({ timeout: 30_000 });
   /* kaydedince tür listesine dönülür (pencere açık) */
   const satir = page.getByRole("dialog", { name: "Cihaz türleri" }).getByRole("listitem").filter({ hasText: ad });
   await expect(satir).toContainText("0 ekipman türünde · 0 cihaz");
-  await satir.getByRole("button", { name: `${ad} sil` }).click();
+  await satir.getByRole("button", { name: `${ad} türünü sil` }).click();
   const onay = page.locator("dialog[open]").filter({ hasText: "Geri alınamaz" });
   await expect(onay).toContainText(`${ad} kalıcı olarak silinir; ekipman türlerinin kullanacağı cihazlardan da çıkar. Geri alınamaz.`);
   await onay.getByRole("button", { name: "Sil" }).click();
   await expect(page.getByText(`${ad} silindi.`).first()).toBeVisible({ timeout: 30_000 });
   await expect(page.getByRole("dialog", { name: "Cihaz türleri" }).getByRole("listitem").filter({ hasText: ad })).toHaveCount(0);
+  await expect(page.getByRole("dialog", { name: "Cihaz türleri" }).getByRole("button", { name: "Cihaz türü ekle" })).toBeFocused();
 });

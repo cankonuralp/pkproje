@@ -136,4 +136,8 @@ test("kayit_sil: yalnız yönetici rolü ve modülde yaz", () => {
   assert.equal(canDoEylem(YONETICI, "kayit_sil", { modul: 8 }, kapali), false, "modülde yaz değilse yönetici de silemez");
   assert.equal(canDoEylem(YONETICI, "kayit_sil"), false, "modülsüz kayıt");
   assert.equal(canDoEylem(YONETICI, "kayit_sil", {}), false);
+  /* 365: plan içi ekipman silme de bu kural (modül 7 Ekipman): varsayılan matriste branş yöneticisi "gör" — silemez */
+  assert.equal(canDoEylem(YONETICI, "kayit_sil", { modul: 7 }), true);
+  for (const k of [MEKYON, ELKYON]) assert.equal(canDoEylem(k, "kayit_sil", { modul: 7 }), false, k.roller[0]);
+  assert.equal(canDoEylem(MEKYON, "kayit_sil", { modul: 7 }, { 7: ["yaz", "yaz", "yaz", "gor", "yaz", "yok"] }), true, "firma matrisle verir");
 });

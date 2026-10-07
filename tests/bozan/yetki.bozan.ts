@@ -42,3 +42,8 @@ test("357: kayit_sil'de yönetici rolü denetimi kalkınca matris 'yaz' verdiği
   const m = await bozuk('duzey(h, k.modul, m) === "yaz" && rolu(h, "firma_yoneticisi", "mekanik_yonetici", "elektrik_yonetici")', 'duzey(h, k.modul, m) === "yaz"');
   assert.equal(m.canDoEylem(kisi("p", "planlama"), "kayit_sil", { modul: 8 }, { 8: ["yaz", "kendi", "yaz", "yaz", "yaz", "yok"] } as never), true);
 });
+
+test("365: kayit_sil'de modül 'yaz' denetimi kalkınca (eski ekipman_sil gibi yalnız rol) Ekipman'da yalnız gören mekanik yönetici ekipman siler", async () => {
+  const m = await bozuk('k?.modul !== undefined && duzey(h, k.modul, m) === "yaz" && rolu(', "k?.modul !== undefined && rolu(");
+  assert.equal(m.canDoEylem(kisi("m", "mekanik_yonetici"), "kayit_sil", { modul: 7 }), true);
+});

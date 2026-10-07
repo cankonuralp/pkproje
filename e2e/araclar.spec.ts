@@ -46,8 +46,8 @@ test("araç: ekle, teslim tutanağı, sürücü haftalık kilometre", async ({ p
   await page.getByRole("button", { name: "Pasife al" }).click();
   const pp = page.locator("dialog[open]");
   await expect(pp).toContainText("1 zimmet hareketinde kullanıldı; silinemez.");
-  await pp.getByRole("button", { name: "Pasife al" }).click();
   await expect(pp).toContainText(`${plaka} bir kişinin zimmetinde; önce teslim tutanağıyla depoya alın.`);
+  await expect(pp.getByRole("button", { name: "Pasife al" })).toBeDisabled();
   await pp.getByRole("button", { name: "Vazgeç" }).click();
   /* 342: tutanağın PDF'i iner (temel format) */
   const [indirilen] = await Promise.all([page.waitForEvent("download", { timeout: 90_000 }), page.getByRole("link", { name: /^AT-\d{4}-\d{3} PDF$/ }).first().click()]);

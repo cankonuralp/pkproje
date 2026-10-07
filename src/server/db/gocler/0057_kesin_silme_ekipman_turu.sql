@@ -4,6 +4,9 @@
 -- özlük kaydı) · teklif kalemi · fatura satırı. Birlikte silinen: fiyat listesi satırı, rapor formatı sürümleri (taslak ve yayınlanmış — tür hiç rapor
 -- üretmediği için bu sürümlerle çizilmiş belge yok; 0022 "yayınlanan sürüm silinmez" kuralının tek istisnası), yüklenen format PDF kayıtları (tur_format)
 -- ve türün dosyaları çöpe. Kod serbest kalır. Kullanılmış tür için pasif yok: yalnız düzenlenir. ⛔ Her göç IDEMPOTENT.
+-- 365 (352–361 incelemesi; göç hiçbir yayına uygulanmadan yerinde düzeltildi): teklifin Excel'den yüklenen ekipman listesi (teklif.ekipmanlar JSON,
+-- yabancı anahtarsız — kalem kaldırılsa da liste kalır) de kullanım sayılır ("teklif_belgesi"): silinen tür taslak teklifi kaydedilemez bırakmasın.
+-- Silinen format sürümleri ize TAM satırla (tanım dahil) yazılır — "silinen kayıt izde eski değeriyle kalır".
 
 CREATE OR REPLACE FUNCTION ekipman_turu_kullanim(p_idler uuid[]) RETURNS TABLE (id uuid, kullanim jsonb)
   LANGUAGE sql STABLE SECURITY DEFINER AS $$
@@ -12,7 +15,9 @@ CREATE OR REPLACE FUNCTION ekipman_turu_kullanim(p_idler uuid[]) RETURNS TABLE (
     'rapor', NULLIF((SELECT count(*) FROM rapor x WHERE x.firma_id = t.firma_id AND x.tur_id = t.id), 0),
     'atama', NULLIF((SELECT count(*) FROM ekipman_atamasi x WHERE x.firma_id = t.firma_id AND x.tur_id = t.id), 0),
     'teklif', NULLIF((SELECT count(*) FROM teklif_kalem x WHERE x.firma_id = t.firma_id AND x.tur_id = t.id), 0),
-    'fatura', NULLIF((SELECT count(*) FROM fatura_rapor x WHERE x.firma_id = t.firma_id AND x.tur_id = t.id), 0)))
+    'fatura', NULLIF((SELECT count(*) FROM fatura_rapor x WHERE x.firma_id = t.firma_id AND x.tur_id = t.id), 0),
+    'teklif_belgesi', NULLIF((SELECT count(*) FROM teklif x WHERE x.firma_id = t.firma_id
+      AND x.ekipmanlar @> jsonb_build_array(jsonb_build_object('tur', t.id::text))), 0)))
   FROM ekipman_turu t
   WHERE t.firma_id = gecerli_firma() AND t.id = ANY (p_idler)
 $$;
@@ -34,7 +39,7 @@ BEGIN
   IF NOT FOUND THEN RETURN jsonb_build_object('durum', 'yok'); END IF;
   SELECT u.kullanim INTO k FROM ekipman_turu_kullanim(ARRAY[p_id]) u;
   IF k IS NOT NULL AND k <> '{}'::jsonb THEN RETURN jsonb_build_object('durum', 'kullanildi', 'kullanim', k); END IF;
-  SELECT coalesce(jsonb_agg(jsonb_build_object('id', x.id, 'sira', x.sira, 'durum', x.durum) ORDER BY x.sira), '[]'::jsonb) INTO formatlar
+  SELECT coalesce(jsonb_agg(to_jsonb(x) - 'firma_id' ORDER BY x.sira), '[]'::jsonb) INTO formatlar
     FROM rapor_format x WHERE x.firma_id = f AND x.tur_id = p_id;
   SELECT coalesce(jsonb_agg(to_jsonb(x) - 'firma_id'), '[]'::jsonb) INTO pdfler FROM tur_format x WHERE x.firma_id = f AND x.tur_id = p_id;
   SELECT to_jsonb(x) - 'firma_id' INTO fiyat FROM fiyat_listesi x WHERE x.firma_id = f AND x.tur_id = p_id;

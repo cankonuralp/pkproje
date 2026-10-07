@@ -75,7 +75,7 @@ export async function tesisTurSayilari(db: Sorgulayici, tesisler: readonly strin
 }
 
 /** 360 — kesin silme (yalnız hiç kullanılmamış: raporu yok, tamamlanmış planda yok; plan satırları ve kod geçmişi birlikte, kod serbest — göç 0056).
-    Yetki ÇAĞIRANDA (Planlar: yalnız yönetici, canDo ekipman_sil). */
+    Yetki ÇAĞIRANDA (Planlar: canDo kayit_sil, Ekipman modülünde "yaz" + yönetici — 365). */
 export function ekipmanSil(db: Sorgulayici, kim: string, id: string): Promise<SilmeSonucu> {
   return kesinSil(db, "ekipman", id, kim);
 }

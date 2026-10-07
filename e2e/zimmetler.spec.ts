@@ -93,8 +93,8 @@ test("demirbaş: kullanılmamış silinir; kullanılmış pasife alınır, etkin
   await page.getByRole("button", { name: "Pasife al" }).click();
   const p = page.locator("dialog[open]");
   await expect(p).toContainText("1 zimmet hareketinde kullanıldı; silinemez.");
-  await p.getByRole("button", { name: "Pasife al" }).click();
   await expect(p).toContainText(`${kod} bir kişinin zimmetinde; önce depoya teslim alın.`);
+  await expect(p.getByRole("button", { name: "Pasife al" })).toBeDisabled();
   await p.getByRole("button", { name: "Vazgeç" }).click();
   await teslim("Depo");
   await page.getByRole("button", { name: "Pasife al" }).click();

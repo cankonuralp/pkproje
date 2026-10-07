@@ -32,6 +32,7 @@ export function AracTuslari({ arac, deger, yaz, araclar, kisiler, sil = false, k
       {p === "tutanak" && <TutanakPenceresi kapat={() => setP(null)} araclar={araclar.filter((v) => !v.pasif)} kisiler={kisiler} arac={arac.id} surucu={!yaz} />}
       {yaz && <PasifPenceresi acik={p === "pasif"} kapat={() => setP(null)} ad={arac.plaka} pasif={pasif}
         neden={kullanim ? `${kullanim} kullanıldı; silinemez.` : null}
+        engel={arac.kimde.tip === "kisi" ? `${arac.plaka} bir kişinin zimmetinde; önce teslim tutanağıyla depoya alın.` : null}
         kosullar={["Silinmez: teslim tutanakları ve kilometre geçmişi durur.", "Araç listesinden, teslimden, kilometreden ve uyarılardan kalkar (Görünüm: Pasif araçlar).", "Etkinleştir ile geri gelir."]}
         geriMetni="Araç listeye, teslime ve uyarılara geri döner." uygula={() => aracPasifEylemi(arac.id, deger.surum, !pasif)} />}
     </>

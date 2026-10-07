@@ -2353,6 +2353,18 @@ revizyon, alan kopyalama, hafif kusur devri, meslek eşleşme denetimi).
 - Emsal ürünler: https://opwire.app/iso-17020-periyodik-kontrol-yazilimi/ · https://17020muayene.vidco.com.tr/ · https://akuple.com/asansor-kontrol-yazilimi/ · https://ensyazilim.com/
 
 ## 11 · Değişiklik günlüğü
+- 2026-10-07 (365): **352–361 incelemesi düzeltmeleri** (dört bakışlı inceleme, 25 doğrulanmış bulgu). (1) Plan içi ekipman Sil, kesin silme ilkesinin
+  kuralına bağlandı: canDo kayit_sil (Ekipman'da "yaz" + yönetici) — eski ekipman_sil yalnız role bakıyordu; varsayılan matriste branş yöneticisi
+  ekipmanı pasife alamazken silebiliyordu (artık firma yöneticisi; firma matrisle verebilir). Ekipman bu planda yoksa "Plan bulunamadı" yerine
+  "Ekipman bu planda yok ya da silinmiş.". (2) Ekipman türü kullanımı teklifin Excel'den yüklenen ekipman listesini (JSON, yabancı anahtarsız) da
+  sayar ("1 teklifte"); silinen format sürümleri ize tanımıyla yazılır (0057 yayına çıkmadan yerinde düzeltildi). (3) Yarışlar: teslimEt varlık
+  satırını kilitler (pasife alma ile aynı anda koşunca pasif varlık kişinin zimmetinde kalmaz); ekipman türü bağlantısı seçilen cihaz türlerini
+  paylaşımlı kilitler (silinen tür dizide kalmaz). (4) Cihaz türü adı veritabanı dizininin lower(ad) kuralıyla da denetlenir ("IR" / "ir" 23505 ile
+  düşmez). (5) Pasife al penceresi engeli baştan söyler ("… zimmetinde; önce depoya teslim alın.") ve tuşu kapatır; kalibrasyondaki cihazda Pasife al
+  çizilmez; karşılanmamış koşul yeşil tikle gösterilmez. (6) Sil / Pasife al sonrası odak korunur (components/sil/odak.ts: hedef ya da sayfa başlığı).
+  (7) Cihaz türleri penceresi maket T7 metinleriyle ("Cihaz türü ekle", "Geri", "<ad> eklendi; cihaz eklerken seçilir.", "<ad> türünü sil").
+  (8) Kalibrasyon şeridi "Göster" görünümü etkine döndürür; fotoğraftan oku girdisi kapalıyken aria-disabled; Elektrik türü silinince Elektrik
+  sekmesine dönülür. Reddedilen 4 bulgu (yarışta geçerli sıralı yürütme, kapsam kilidi, e2e yeniden deneme, öneri kartı satırı) değişiklik istemedi.
 - 2026-10-07 (364): **Müşteri / tesis Sil** (§9 elli üçüncü tur: karar 48 "müşteri silinmez" KULLANILMIŞ müşteri için geçerli, deneme müşterisi
   silinir). Müşteri ve tesis sayfasında yalnız firma yöneticisine (Müşteriler'de "yaz" + yönetici; planlama değiştirir ama silemez) ve hiç
   kullanılmamış kayıtta "Sil"; kullanılmışta "Pasife al" — ortak pencere nedeni söyler ("1 planda, 2 ekipmanda kullanıldı; silinemez"). Ekran dili

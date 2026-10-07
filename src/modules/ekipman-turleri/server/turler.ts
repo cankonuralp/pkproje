@@ -139,6 +139,11 @@ export async function baglantiKaydet(db: Sorgulayici, kim: Kisi, id: string, sur
   const nolar = new Set((await guncelStandartlar(db)).map((x) => x.no)), turler = new Set((await cihazTuruOzetleri(db)).map((x) => x.id));
   if (g.veri.standartlar.some((n) => !nolar.has(n))) return { durum: "gecersiz", hatalar: { standartlar: "Standart kütüphanede yok." } };
   if (g.veri.cihazTurleri.some((c) => !turler.has(c))) return { durum: "gecersiz", hatalar: { cihazTurleri: "Cihaz türü bulunamadı." } };
+  /* 365 (352–361 incelemesi): seçilen türler paylaşımlı kilitlenir — aynı anda koşan cihaz türü silme (FOR UPDATE) ile sıraya girer; silme önce
+     bittiyse tür bulunmaz (silinmiş tür dizide kalmaz) */
+  if (g.veri.cihazTurleri.length && (await db.sorgu("SELECT 1 FROM cihaz_turu WHERE id = ANY ($1::uuid[]) FOR SHARE", [g.veri.cihazTurleri])).rowCount !== g.veri.cihazTurleri.length) {
+    return { durum: "gecersiz", hatalar: { cihazTurleri: "Cihaz türü bulunamadı." } };
+  }
   if (!Number.isSafeInteger(surum) || surum < 0) return { durum: "cakisma" };
   const r = await guncelle(db, TUR, id, surum, { kontrol_std: g.veri.standartlar, cihaz_turleri: g.veri.cihazTurleri }, { kim: kim.ad, ne: "ekipman_turu.baglanti" });
   if (r.durum === "cakisma" || r.durum === "yok") return { durum: r.durum };

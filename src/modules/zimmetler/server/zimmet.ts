@@ -140,6 +140,12 @@ export async function teslimEt(db: Sorgulayici, depo: Depo, kim: Kisi, firmaId: 
   const g = dogrula(TeslimGirdisi, girdi);
   if (!g.tamam) return { durum: "gecersiz", hatalar: g.hatalar };
   const v = g.veri;
+  /* 365 (352–361 incelemesi): varlığın satırı kilitlenir — pasife alma (cihazPasif / demirbasPasif FOR UPDATE) ve ikinci bir teslim bununla sıraya
+     girer; "kimde", pasif ve kalibrasyon kilitten SONRA okunur (yarışta pasif varlık kişinin zimmetinde kalmaz, iki teslim aynı "eden"i yazmaz) */
+  const [vt, vid] = v.varlik.split(":");
+  if (!(await db.sorgu(`SELECT 1 FROM ${vt === "c" ? "olcum_cihazi" : "demirbas"} WHERE id = $1 FOR UPDATE`, [vid])).rowCount) {
+    return { durum: "gecersiz", hatalar: { varlik: "Varlık seçilmeli." } };
+  }
   const s = await durum(db);
   const varlik = s.varliklar.find((x) => x.anahtar === v.varlik);
   if (!varlik) return { durum: "gecersiz", hatalar: { varlik: "Varlık seçilmeli." } };

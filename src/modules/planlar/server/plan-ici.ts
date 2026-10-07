@@ -83,7 +83,8 @@ const iz = (kim: Kisi, ne: string, p: { no: string }, gerekce?: string): Iz => (
 /* ── İZİNLER (ekranın tuşları da buradan; yazma işlevleri aynı kuralla yeniden denetler) ──────────────────────────────── */
 export interface PlanIzni {
   kabulRed: boolean; kontrol: boolean; kunyeDuzenle: boolean; kunyeGuncelle: boolean; not: boolean; ekipmanEkle: boolean; ekipmanPasif: boolean;
-  /** 360: kullanılmamış ekipmanı kesin silmek — yalnız yönetici (canDo ekipman_sil; pkproje §9 "silme yalnız yönetici"), planın durumundan bağımsız */
+  /** 360: kullanılmamış ekipmanı kesin silmek — planın durumundan bağımsız. 365 (352–361 incelemesi): kesin silme ilkesiyle aynı kural, canDo kayit_sil
+      (Ekipman modülünde "yaz" + yönetici; firma matrisi Ekipman'ı kısıtlarsa silme de kapanır). Eski ekipman_sil yalnız role bakıyordu. */
   ekipmanSil: boolean;
   /** plandaki denetçi, plan kabul edilmiş / denetimde / tamamlanmış, plan günü gelmiş (ENGEL 1: ileri tarihli plana rapor açılmaz) */
   raporOlustur: boolean;
@@ -98,7 +99,7 @@ function izinler(kim: Kisi, e: Erisim): PlanIzni {
     not: isci,
     ekipmanEkle: isci && duzey(kim, EKIPMAN_MODULU) === "yaz" && (d === "kabul" || d === "denetimde"),
     ekipmanPasif: isci && canDoEylem(kim, "ekipman_pasif") && (d === "kabul" || d === "denetimde" || d === "tamamlandi"),
-    ekipmanSil: canDoEylem(kim, "ekipman_sil"),
+    ekipmanSil: canDoEylem(kim, "kayit_sil", { modul: EKIPMAN_MODULU }),
     raporOlustur: e.uye && duzey(kim, RAPORLAR_MODULU) !== "yok" && canDoEylem(kim, "rapor_olustur", { atananlar: e.atananlar }) && (d === "kabul" || d === "denetimde" || d === "tamamlandi") && e.p.baslangic <= bugunTr(),
   };
 }
@@ -442,11 +443,13 @@ export async function ekipmanSil(db: Sorgulayici, kim: Kisi, id: string, ekipman
   const e = await erisim(db, kim, id);
   if (!e) return { durum: "yok" };
   if (!izinler(kim, e).ekipmanSil) return { durum: "yetkisiz" };
-  if (!UUID.test(ekipmanId) || !(await db.sorgu("SELECT 1 FROM plan_ekipman WHERE plan_id = $1 AND ekipman_id = $2", [id, ekipmanId])).rowCount) return { durum: "yok" };
+  /* 365: ekipman yoksa "Plan bulunamadı" değil (plan duruyor) */
+  const yok = { durum: "red", neden: "Ekipman bu planda yok ya da silinmiş." } as const;
+  if (!UUID.test(ekipmanId) || !(await db.sorgu("SELECT 1 FROM plan_ekipman WHERE plan_id = $1 AND ekipman_id = $2", [id, ekipmanId])).rowCount) return yok;
   await ekipmanKilitle(db, ekipmanId);
   const r = await ekipmanSilYaz(db, kim.ad, ekipmanId);
   if (r.durum === "kullanildi") return { durum: "red", neden: `Ekipman silinemez: ${kullanimMetni(r.kullanim) || "başka kayıtlarda"} kullanıldı. Yanlış girildiyse pasife alın.` };
-  if (r.durum === "yok") return { durum: "yok" };
+  if (r.durum === "yok") return yok;
   return { durum: "tamam", bildirim: `${r.ad} silindi.` };
 }
 

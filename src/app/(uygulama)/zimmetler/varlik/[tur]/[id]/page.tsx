@@ -36,7 +36,8 @@ export default async function Sayfa({ params }: { params: Promise<{ tur: string;
         tuslar={<>
           {v.tur === "c" && <TusBaglanti href={`/olcum-cihazlari/${v.id}`} ikon="gauge">Cihaz ve kalibrasyon</TusBaglanti>}
           {v.tur === "a" && <TusBaglanti href={`/araclar/${v.id}`} ikon="car">Araç ve tutanaklar</TusBaglanti>}
-          {dem && <DemirbasTuslari id={v.id} kod={v.kod} surum={dem.surum} pasif={dem.pasif} sil={dem.sil} kullanim={dem.kullanim ? kullanimMetni(dem.kullanim) : null} />}
+          {dem && <DemirbasTuslari id={v.id} kod={v.kod} surum={dem.surum} pasif={dem.pasif} sil={dem.sil} kullanim={dem.kullanim ? kullanimMetni(dem.kullanim) : null}
+            zimmette={v.kimde.tip === "kisi"} />}
           {yaz && v.tur !== "a" && v.kimde.tip !== "lab" && !v.pasif && l && <TeslimTusu varlik={v.anahtar} varliklar={l.varliklar} kisiler={l.kisiler} bugun={bugun} />}
         </>} />
       {v.pasif && <SeritKap><Serit tur="bilgi" ikon="ban">Pasif: Zimmetler listesinden ve teslimden kalktı; teslim geçmişi duruyor.</Serit></SeritKap>}

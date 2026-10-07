@@ -17,7 +17,7 @@ export function TurTuslari({ tur, kullanimda, sil = false }: { tur: TurDegeri; k
       <Tus tur="ikincil" ikon="pencil" onClick={() => setP("duzenle")}>Düzenle</Tus>
       <Tus ikon="file-plus" onClick={() => setP("format")}>{kullanimda ? "Yeni format yükle" : "Rapor formatı yükle"}</Tus>
       {sil && <SilTusu ad={`${tur.kod} · ${tur.ad}`} baslik="Ekipman türünü sil" yanEtki="rapor formatı, yüklenen PDF'ler ve fiyatı da silinir, kodu yeniden kullanılabilir"
-        sil={() => turSilEylemi(tur.id)} donus="/ekipman-turleri" />}
+        sil={() => turSilEylemi(tur.id)} donus={tur.brans === "e" ? "/ekipman-turleri?brans=e" : "/ekipman-turleri"} />}
       {p === "duzenle" && <TurPenceresi kapat={() => setP(null)} tur={tur} />}
       {p === "format" && <FormatPenceresi kapat={() => setP(null)} turId={tur.id} turAd={tur.ad} kod={tur.kod} kullanimda={kullanimda} />}
     </>

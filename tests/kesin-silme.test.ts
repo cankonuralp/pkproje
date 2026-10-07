@@ -13,7 +13,10 @@
    · 363 araç: kullanılmamış araç silinir (plaka serbest); zimmet hareketi / haftalık kilometresi olan silinmez; zimmetteyken pasife alınmaz; pasif
      araç listede işaretli, sayfası açılır, kilometre girilmez, Zimmetler'de de pasif; etkinleştir geri getirir;
    · 364 müşteri / tesis: yalnız firma yöneticisi; kullanılmamış müşteri tesisleri, hiç girilmemiş girişi ve kaldırılmış İSG kaydıyla silinir (giriş
-     parolası ize yazılmaz); planlı müşteri ve girilmiş girişi olan müşteri silinmez; giriş kapsamındaki tesis silinmez.
+     parolası ize yazılmaz); planlı müşteri ve girilmiş girişi olan müşteri silinmez; giriş kapsamındaki tesis silinmez;
+   · 365 (352–361 incelemesi): pasif cihazın zimmet hareketleri kodla görünür; plan içi ekipman silme Ekipman'da "yaz" ister (elektrik yöneticisi
+     varsayılan matriste silemez), ekipman yoksa "Plan bulunamadı" demez; teklifin ekipman listesindeki tür silinmez, silinen formatın tanımı izde;
+     "IR" / "ir" gibi veritabanının aynı saydığı tür adı uyarıyla döner (23505 ile düşmez).
    Olumsuz kanıt: tests/bozan/kesin-silme.bozan.ts. */
 import assert from "node:assert/strict";
 import { mkdtempSync, rmSync } from "node:fs";
@@ -130,6 +133,8 @@ test("pasif: zimmetteki ya da kalibrasyondaki cihaz pasife alınmaz; depodaki al
   assert.equal((await b(FB.yon, (db) => raporCihazlari(db))).some((x) => x.id === id), false, "rapor seçiminde yok");
   assert.equal((await b(FB.yon, (db) => raporCihazlari(db, { pasifDahil: true }))).find((x) => x.id === id)?.pasif, true, "çözümde var");
   assert.equal((await b(FB.yon, (db) => cihazOzetleri(db))).some((x) => x.id === id), false, "Zimmetler'de yok");
+  assert.deepEqual((await b(FB.yon, (db) => zimmetListeleri(db, FB.yon)))!.hareketler.filter((h) => h.varlik === `c:${id}`).map((h) => h.varlikKod),
+    ["PAS-1", "PAS-1"], "365: pasif cihazın zimmet hareketleri kodla (Kaldırılan varlık değil)");
   const satir = (await b(FB.den1, (db) => sahaRaporu(db, FB.den1, FB.rapor)))!.cihazlar.find((x) => x.turId === turId);
   assert.deepEqual([satir?.cihaz?.kod, satir?.cihaz?.eksik], ["PAS-1", false], "açık rapor pasif cihazın kodunu gösterir (eksik değil)");
   tamam(await b(FB.yon, async (db) => cihazPasif(db, FB.yon, id, await surum(), false)));
@@ -143,6 +148,9 @@ test("cihaz türü: ekle / adını değiştir; cihazı olan ve raporda geçen t�
   const yeni = tamam(await a(FA.elk, (db) => cihazTuruKaydet(db, FA.elk, null, 0, { ad: "İzolasyon ölçer" })));
   assert.deepEqual(await a(FA.elk, (db) => cihazTuruKaydet(db, FA.elk, null, 0, { ad: "izolasyon ÖLÇER" })),
     { durum: "gecersiz", hatalar: { ad: "izolasyon ÖLÇER adında bir tür zaten var." } }, "Türkçe büyük / küçük harf");
+  tamam(await a(FA.elk, (db) => cihazTuruKaydet(db, FA.elk, null, 0, { ad: "IR termometre" })));
+  assert.deepEqual(await a(FA.elk, (db) => cihazTuruKaydet(db, FA.elk, null, 0, { ad: "ir termometre" })),
+    { durum: "gecersiz", hatalar: { ad: "ir termometre adında bir tür zaten var." } }, "365: veritabanı dizininin (lower) aynı saydığı ad 23505 ile düşmez");
   assert.deepEqual(await a(FA.plan, (db) => cihazTuruKaydet(db, FA.plan as Kisi, null, 0, { ad: "Başka" })), { durum: "yetkisiz" });
   tamam(await a(FA.elk, (db) => cihazTuruKaydet(db, FA.elk, yeni.id, yeni.surum, { ad: "İzolasyon test cihazı" })));
   /* iki ekipman türü bu türü kullanacak */
@@ -173,7 +181,7 @@ test("cihaz türü: ekle / adını değiştir; cihazı olan ve raporda geçen t�
   assert.deepEqual(await a(FA.yon, (db) => cihazTuruSil(db, FA.yon, rt.id)), { durum: "yok" }, "başka firmanın türü");
 });
 
-/* 360 — ekipman (pkproje §9 yirmi üçüncü tur "silme yalnız yönetici"; canDo ekipman_sil): plan içinde, yalnız yöneticiye, hiç kullanılmamış ekipmanda Sil;
+/* 360 — ekipman (pkproje §9 yirmi üçüncü tur "silme yalnız yönetici"; 365: canDo kayit_sil, Ekipman'da "yaz"): plan içinde, yalnız yöneticiye, hiç kullanılmamış ekipmanda Sil;
    plan satırları ve kod geçmişi birlikte gider, kod serbest; raporu olan ve tamamlanmış planda yer alan silinmez. B firmasında. */
 test("ekipman: yönetici kullanılmamış ekipmanı siler (plan satırı ve kod geçmişi gider, kod serbest); raporlu / tamamlanmış plandaki silinmez", async () => {
   const b = <T,>(k: Kisi, is: Parameters<typeof kiraciIcinde<T>>[2]) => kiraciIcinde(havuz, B, is, { hesapId: k.id });
@@ -187,6 +195,9 @@ test("ekipman: yönetici kullanılmamış ekipmanı siler (plan satırı ve kod 
   assert.equal(v.izin.ekipmanSil, true);
   assert.deepEqual(v.ekipman.map((x) => [x.kod, x.sil]).sort(), [["EP-A1", false], ["EP-SIL", true]], "raporlu ekipmanda Sil yok");
   assert.equal((await b(FB.den1, (db) => planIci(db, FB.den1, FB.planId)))!.izin.ekipmanSil, false, "denetçi silmez (pasife alır)");
+  /* 365: kayit_sil — elektrik yöneticisi varsayılan matriste Ekipman'da "gör": tuş yok, sunucu reddeder */
+  assert.equal((await b(FB.elk, (db) => planIci(db, FB.elk, FB.planId)))?.izin.ekipmanSil ?? false, false, "Ekipman'da yaz değil: silmez");
+  assert.deepEqual(await b(FB.elk, (db) => ekipmanSil(db, FB.elk, FB.planId, yeni)), { durum: "yetkisiz" });
   assert.deepEqual(await b(FB.den1, (db) => ekipmanSil(db, FB.den1, FB.planId, yeni)), { durum: "yetkisiz" });
   assert.deepEqual(await b(FB.plan, (db) => ekipmanSil(db, FB.plan, FB.planId, yeni)), { durum: "yetkisiz" });
   assert.deepEqual(await b(FB.yon, (db) => ekipmanSil(db, FB.yon, FB.planId, FB.ekipman)),
@@ -196,6 +207,7 @@ test("ekipman: yönetici kullanılmamış ekipmanı siler (plan satırı ve kod 
   const kalan = (await b(FB.yon, (db) => db.sorgu<{ p: number; k: number }>(
     "SELECT (SELECT count(*)::int FROM plan_ekipman WHERE ekipman_id = $1) AS p, (SELECT count(*)::int FROM ekipman_kodu WHERE ekipman_id = $1) AS k", [yeni]))).rows[0];
   assert.deepEqual(kalan, { p: 0, k: 0 }, "plan satırı ve kod geçmişi gitti");
+  assert.deepEqual(await b(FB.yon, (db) => ekipmanSil(db, FB.yon, FB.planId, yeni)), { durum: "red", neden: "Ekipman bu planda yok ya da silinmiş." }, "365: ikinci kez");
   assert.equal(typeof await ekipmanAc("EP-SIL"), "string", "kod serbest kaldı");
   /* tamamlanmış plan (durum geçişi testin kapsamı dışında — süper kullanıcı tetikleri atlayarak kapatır) */
   const z = await ekipmanAc("EP-TAM");
@@ -228,7 +240,15 @@ test("ekipman türü: kullanılmış tür silinmez; kullanılmamış tür fiyat,
     `SELECT (SELECT count(*)::int FROM fiyat_listesi WHERE tur_id = $1) AS f, (SELECT count(*)::int FROM rapor_format WHERE tur_id = $1) AS r,
             (SELECT count(*)::int FROM tur_format WHERE tur_id = $1) AS t, (SELECT cop IS NOT NULL FROM dosya WHERE id = $2) AS c`, [id, dosyaId]))).rows[0];
   assert.deepEqual(kalan, { f: 0, r: 0, t: 0, c: true }, "fiyat, format sürümü, PDF kaydı gitti; PDF çöpte");
+  const iz = (await a(FA.yon, (db) => db.sorgu<{ f: Record<string, unknown>[] }>("SELECT ayrinti->'formatlar' AS f FROM denetim_izi WHERE ne = 'ekipman_turu.sil' AND nesne_id = $1", [id]))).rows[0];
+  assert.ok(iz.f.length === 1 && "tanim" in iz.f[0], "365: silinen format sürümü izde tanımıyla");
   assert.equal(typeof await turAc("SLT"), "string", "kod serbest kaldı");
+  /* 365: yalnız teklifin Excel'den yüklenen ekipman listesinde geçen tür (kalemi kaldırılmış) silinmez */
+  const tk = await turAc("TKL");
+  await a(FA.yon, (db) => db.sorgu(`INSERT INTO teklif (no, aday, gecerlilik, ekipmanlar) VALUES ('TK-2026-901', '{"unvan": "Aday Deneme"}', 30, $1::jsonb)`,
+    [JSON.stringify([{ kod: "X-1", tur: tk, konum: "", seri: "" }])]));
+  assert.deepEqual(await a(FA.yon, (db) => turSilmeDurumu(db, FA.yon, tk)), { sil: false, kullanim: { teklif_belgesi: 1 } });
+  assert.deepEqual(await a(FA.yon, (db) => turSil(db, FA.yon, tk)), { durum: "red", neden: "Ekipman türü silinemez: 1 teklifte kullanıldı." });
   await assert.rejects(a(FA.yon, (db) => db.sorgu("DELETE FROM ekipman_turu WHERE id = $1", [FA.tur])), /permission denied|izin/i);
 });
 

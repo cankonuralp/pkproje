@@ -42,7 +42,8 @@ export function TeslimGecmisi({ hareketler, ad }: { hareketler: HareketSatiri[];
   );
 }
 
-export function DemirbasTuslari({ id, kod, surum, pasif, sil, kullanim }: { id: string; kod: string; surum: number; pasif: boolean; sil: boolean; kullanim: string | null }) {
+export function DemirbasTuslari({ id, kod, surum, pasif, sil, kullanim, zimmette = false }:
+  { id: string; kod: string; surum: number; pasif: boolean; sil: boolean; kullanim: string | null; zimmette?: boolean }) {
   const [acik, setAcik] = useState(false);
   return (
     <>
@@ -53,6 +54,7 @@ export function DemirbasTuslari({ id, kod, surum, pasif, sil, kullanim }: { id: 
           : <Tus tur="ikincil" ikon="ban" onClick={() => setAcik(true)}>Pasife al</Tus>}
       <PasifPenceresi acik={acik} kapat={() => setAcik(false)} ad={kod} pasif={pasif}
         neden={kullanim ? `${kullanim} kullanıldı; silinemez.` : null}
+        engel={zimmette ? `${kod} bir kişinin zimmetinde; önce depoya teslim alın.` : null}
         kosullar={["Silinmez: teslim geçmişi ve zimmet formları durur.", "Zimmetler listesinden ve teslimden kalkar (Görünüm: Pasif varlıklar).", "Etkinleştir ile geri gelir."]}
         geriMetni="Demirbaş listeye ve teslim seçimine geri döner." uygula={() => demirbasPasifEylemi(id, surum, !pasif)} />
     </>

@@ -9,7 +9,7 @@ import { kullanimMetni } from "../../../../components/sil/metin";
 import { Serit } from "../../../../components/serit/Serit";
 import { modulBul } from "../../../../modules/moduller";
 import { kalanGun } from "../../../../modules/olcum-cihazlari/sema";
-import { bugunTr, cihazDegistirir, cihazKarti, cihazSilmeDurumu, cihazTurleri } from "../../../../modules/olcum-cihazlari/server/cihazlar";
+import { bugunTr, cihazDegistirir, cihazKarti, cihazSilmeDurumu, cihazTurleri, cihazZimmette } from "../../../../modules/olcum-cihazlari/server/cihazlar";
 import { CihazTuslari, KalibrasyonTablosu } from "../../../../modules/olcum-cihazlari/ui/KartParcalari";
 import { KalRozeti, KONUM_AD, tarihYaz } from "../../../../modules/olcum-cihazlari/ui/ortak";
 import stil from "../../../../modules/olcum-cihazlari/ui/cihazlar.module.css";
@@ -22,7 +22,8 @@ export default async function Sayfa({ params }: { params: Promise<{ id: string }
   const o = await modulOturumu(MODUL.no);
   if (!o) return <Yetkisiz />;
   const { id } = await params;
-  const [c, turler, silme] = await oturumIslemi(o, async (db) => [await cihazKarti(db, o, id), await cihazTurleri(db, o), await cihazSilmeDurumu(db, o, id)] as const);
+  const [c, turler, silme, zimmette] = await oturumIslemi(o, async (db) => [await cihazKarti(db, o, id), await cihazTurleri(db, o), await cihazSilmeDurumu(db, o, id),
+    await cihazZimmette(db, o, id)] as const);
   if (!c) notFound();
   const yaz = cihazDegistirir(o), bugun = bugunTr(), k = c.bitis ? kalanGun(c.bitis, bugun) : null;
   const baslik = `${c.kod} · ${c.tur}`;
@@ -31,7 +32,7 @@ export default async function Sayfa({ params }: { params: Promise<{ id: string }
       <Kirinti ogeler={[["Ölçüm cihazları", "/olcum-cihazlari"], [c.kod]]} />
       <NesneBasi baslik={baslik} rozet={c.pasif ? <Rozet tur="notr">Pasif</Rozet> : <KalRozeti d={c.durum} esik={c.esik} />} altIkon="gauge"
         alt={[[c.marka, c.model].filter(Boolean).join(" "), c.seri && `seri ${c.seri}`].filter(Boolean).join(" · ") || "Marka / model girilmedi"}
-        tuslar={yaz && <CihazTuslari cihaz={{ id: c.id, surum: c.surum, kod: c.kod, turId: c.turId, marka: c.marka, model: c.model, seri: c.seri, aralik: c.aralik }} turler={turler} konum={c.konum} baslik={baslik} sil={silme.sil}
+        tuslar={yaz && <CihazTuslari cihaz={{ id: c.id, surum: c.surum, kod: c.kod, turId: c.turId, marka: c.marka, model: c.model, seri: c.seri, aralik: c.aralik }} turler={turler} konum={c.konum} baslik={baslik} sil={silme.sil} zimmette={zimmette}
           pasif={!!c.pasif} kullanim={silme.kullanim ? kullanimMetni(silme.kullanim) : null} />} />
       {c.pasif && <SeritKap><Serit tur="bilgi" ikon="ban">Pasif ({tarihYaz(c.pasif)}): listeden, rapor seçiminden, Zimmetler&apos;den ve uyarılardan kalktı; kalibrasyon geçmişi ve raporları duruyor.</Serit></SeritKap>}
       {!c.pasif && c.durum === "gecti" && <SeritKap><Serit tur="hata" ikon="circle-x">{c.bitis ? `Kalibrasyonu ${tarihYaz(c.bitis)} tarihinde bitti.` : "Geçerli kalibrasyon kaydı yok."} Bu cihazla hazırlanan raporlar yönetici onayına gönderilemez.</Serit></SeritKap>}

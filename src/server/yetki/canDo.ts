@@ -75,7 +75,6 @@ export const OZEL_EYLEMLER = {
   plan_ac: (h: YetkiHesabi, _k?: EylemKaydi, m?: Partial<Matris> | null) => duzey(h, 13, m) === "yaz",
   plan_kabul_red: (h: YetkiHesabi, k?: EylemKaydi) => !!k?.atananlar?.includes(h.id),
   ekipman_pasif: (h: YetkiHesabi, _k?: EylemKaydi, m?: Partial<Matris> | null) => duzey(h, 7, m) === "yaz",
-  ekipman_sil: (h: YetkiHesabi) => rolu(h, "firma_yoneticisi", "mekanik_yonetici", "elektrik_yonetici"),
   /* 357 (reisim 2026-10-07 + pkproje §9: "silme işlemi sadece yöneticiler tarafından yapılabilmeli"): hiç kullanılmamış kaydın KESİN silinmesi —
      kaydın modülünde "yaz" VE yönetici rolü; firma matrisi başka bir role "yaz" verse de silme yönetici rolünde kalır. Kullanılmış mı veritabanında
      (src/server/db/silici.ts). */

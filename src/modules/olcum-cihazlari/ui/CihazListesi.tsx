@@ -52,7 +52,8 @@ export function CihazListesi({ kayitlar, turler, esik, bugun, ekleyebilir, turSa
   const [pencere, setPencere] = useState(false);
   const [turPenceresi, setTurPenceresi] = useState(false);
   const gecti = kayitlar.filter((c) => !c.pasif && c.durum === "gecti"), yakin = kayitlar.filter((c) => !c.pasif && c.durum === "yakin");
-  const goster = (k: string) => s.degistir({ ...s.durum, secili: [k], kip: "veya", sayfa: 1 });
+  /* 365: şerit etkin cihazları sayar — Göster görünümü de etkine döndürür (Pasif görünümde pasifleri listelemesin) */
+  const goster = (k: string) => s.degistir({ ...s.durum, sec: { ...s.durum.sec, gorunum: "etkin" }, secili: [k], kip: "veya", sayfa: 1 });
   const sutunlar: Sutun<CihazSatiri>[] = [
     { k: "kod", genislik: "14%", baslik: "Cihaz kodu", kart: "ust", sira: 1, hucre: (c) => <Link className={stil.no} href={`/olcum-cihazlari/${c.id}`}>{c.kod}</Link> },
     { k: "ad", genislik: "34%", baslik: "Cihaz", kart: "govde", sira: 2, hucre: (c) => <><Kirp>{c.tur}</Kirp><AltSatir><Kirp>{[c.marka, c.model].filter(Boolean).join(" ") || "—"}{c.seri ? ` · seri ${c.seri}` : ""}</Kirp></AltSatir></> },

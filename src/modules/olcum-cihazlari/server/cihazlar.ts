@@ -76,6 +76,14 @@ const satir = (x: CihazDb, bugun: string, esik: number): CihazSatiri => ({
   durum: kalDurum(x.bitis, x.konum, bugun, esik), pasif: x.pasif,
 });
 
+/** aynı adlı cihaz türü (Türkçe büyük / küçük harf farkı yok sayılır; 365: veritabanının eşsiz dizini lower(ad) ile — yerel ayarda "I"/"i" — de
+    aynı sayılan ad bulunur, kayıt 23505 ile düşmez). `haric`: düzenlenen türün kendisi */
+async function ayniAdliTur(db: Sorgulayici, ad: string, haric: string | null = null): Promise<{ id: string } | null> {
+  const tr = (x: string) => x.toLocaleLowerCase("tr");
+  return (await db.sorgu<{ id: string; ad: string; ayni: boolean }>("SELECT id::text, ad, lower(ad) = lower($1) AS ayni FROM cihaz_turu", [ad])).rows
+    .find((t) => t.id !== haric && (t.ayni || tr(t.ad) === tr(ad))) ?? null;
+}
+
 /** öteki modüller için cihaz özeti (yetki ÇAĞIRANDA; Zimmetler kendi düzeyine göre süzer). Varsayılan yalnız etkinler; 362: `pasifDahil` — Zimmetler
     pasif cihazın geçmiş hareketlerini adıyla gösterir ve Görünüm: Pasif'te listeler (teslim edilmez). */
 export async function cihazOzetleri(db: Sorgulayici, ayar: { pasifDahil?: boolean } = {}): Promise<(Pick<CihazSatiri, "id" | "kod" | "tur" | "konum" | "bitis"> & { pasif: boolean })[]> {
@@ -162,8 +170,7 @@ export async function cihazKaydet(db: Sorgulayici, kim: Kisi, id: string | null,
   let turId = v.tur;
   if (v.tur === YENI_TUR) {
     /* aynı ad (Türkçe büyük / küçük harf farkıyla) varsa o kullanılır — veritabanının lower()'ı yerele bağlı, karşılaştırma burada */
-    const tr = (x: string) => x.toLocaleLowerCase("tr");
-    const var_ = (await db.sorgu<{ id: string; ad: string }>("SELECT id::text, ad FROM cihaz_turu")).rows.find((t) => tr(t.ad) === tr(v.yeniTur!));
+    const var_ = await ayniAdliTur(db, v.yeniTur!);
     turId = var_?.id ?? (await ekle(db, TUR, { ad: v.yeniTur }, { kim: kim.ad, ne: "cihaz_turu.ekle" })).id;
   } else if (!(await db.sorgu("SELECT 1 FROM cihaz_turu WHERE id = $1", [v.tur])).rowCount) {
     return { durum: "gecersiz", hatalar: { tur: "Cihaz türü seçilmeli." } };
@@ -231,6 +238,12 @@ export async function cihazSilmeDurumu(db: Sorgulayici, kim: Kisi, id: string): 
   return { sil: silebilir(kim) && !k, kullanim: k };
 }
 
+/** cihaz sayfası (365): cihaz bir kişinin zimmetinde mi — "Pasife al" penceresi engeli söyler, tuşu kapatır (sunucu yine denetler); değiştirene */
+export async function cihazZimmette(db: Sorgulayici, kim: Kisi, id: string): Promise<boolean> {
+  if (!degistirir(kim) || !UUID.test(id)) return false;
+  return !!(await kimdeHaritasi(db)).cihaz.get(id);
+}
+
 export async function cihazSil(db: Sorgulayici, kim: Kisi, id: string): Promise<SilYaniti> {
   if (!silebilir(kim)) return { durum: "yetkisiz" };
   const r = await kesinSil(db, "olcum_cihazi", id, kim.ad);
@@ -278,8 +291,7 @@ export async function cihazTuruKaydet(db: Sorgulayici, kim: Kisi, id: string | n
   if (id && (!UUID.test(id) || !(await db.sorgu("SELECT 1 FROM cihaz_turu WHERE id = $1", [id])).rowCount)) return { durum: "yok" };
   const g = dogrula(CihazTuruGirdisi, girdi);
   if (!g.tamam) return { durum: "gecersiz", hatalar: g.hatalar };
-  const tr = (x: string) => x.toLocaleLowerCase("tr");
-  if ((await db.sorgu<{ id: string; ad: string }>("SELECT id::text, ad FROM cihaz_turu")).rows.some((t) => t.id !== id && tr(t.ad) === tr(g.veri.ad))) {
+  if (await ayniAdliTur(db, g.veri.ad, id)) {
     return { durum: "gecersiz", hatalar: { ad: `${g.veri.ad} adında bir tür zaten var.` } };
   }
   if (!id) return { durum: "tamam", ...(await ekle(db, TUR, { ad: g.veri.ad }, { kim: kim.ad, ne: "cihaz_turu.ekle" })) };

@@ -151,7 +151,7 @@ muhasebe. **Müşteri kullanıcısı** ayrı tür (yalnız müşteri paneli). Bi
 | Hareket kaydı | — | — | — | — | görür | — |
 
 **Özel eylemler** (düzeyin üstünde, tek tek `canDo` eylemi; sunucuda zorlanır; yapamayacağı tuş **çizilmez** — anayasa 7.4):
-plan aç (planlama yetkisi) · plan kabul / red (plandaki denetçi; beyan okunmadan kabul yok) · ekipman pasife al (denetçi), ekipman sil (yönetici) ·
+plan aç (planlama yetkisi) · plan kabul / red (plandaki denetçi; beyan okunmadan kabul yok) · ekipman pasife al (denetçi), ekipman sil (kayit_sil: Ekipman'da "yaz" + yönetici — 365) ·
 **kayit_sil** (357: hiç kullanılmamış kaydın kesin silinmesi — kaydın modülünde "yaz" VE firma / mekanik / elektrik yöneticisi; matris başka role "yaz" verse de) ·
 rapor oluştur / kaydet / onaya gönder / Kaydet ve kopyala (raporu yazan) · rapor sil (denetçi kendi oluşturduğu Yeni raporu; yönetici) · rapor pasife
 al (denetçi), aktife al ve sil (teknik yönetici) · onayla / geri gönder (türün branş yöneticisi; vekil: öteki branş "Tüm raporlar") · **durum değiştir**

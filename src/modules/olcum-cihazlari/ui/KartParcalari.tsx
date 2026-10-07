@@ -1,7 +1,8 @@
 "use client";
 /* Cihaz sayfasının istemci parçaları (maket olcum-cihazlari.html cihazCiz): işlem tuşları (Düzenle · Kalibrasyona gönder / Depoya al ·
    Kalibrasyon kaydı ekle · Sil — 357: yalnız yöneticiye ve hiç kullanılmamış cihaza; kullanılmış cihazda Pasife al, pasif cihazda Etkinleştir — 358)
-   ve kalibrasyon kayıtları tablosu (sertifikayı aç, kaldır). Tuşlar yalnız "değiştirir" düzeyine; karar sunucuda. */
+   ve kalibrasyon kayıtları tablosu (sertifikayı aç, kaldır). Tuşlar yalnız "değiştirir" düzeyine; karar sunucuda. 365: kalibrasyondaki cihazda
+   Pasife al çizilmez (önce Depoya al); kişinin zimmetindeyse pencere engeli söyler, tuş kapalı. */
 import { useRouter } from "next/navigation";
 import { useState, useTransition } from "react";
 import { useBildir } from "../../../components/bildirim/Bildirim";
@@ -18,8 +19,10 @@ import { CihazPenceresi, KalibrasyonPenceresi, type CihazDegeri } from "./Pencer
 import { tarihYaz } from "./ortak";
 import stil from "./cihazlar.module.css";
 
-export function CihazTuslari({ cihaz, turler, konum, baslik, sil = false, pasif = false, kullanim = null }: {
+export function CihazTuslari({ cihaz, turler, konum, baslik, sil = false, pasif = false, kullanim = null, zimmette = false }: {
   cihaz: CihazDegeri; turler: CihazTuru[]; konum: "depo" | "lab"; baslik: string; sil?: boolean; pasif?: boolean;
+  /** cihaz bir kişinin zimmetinde (pasife alınamaz) */
+  zimmette?: boolean;
   /** kullanıldığı yerler ("3 raporda, 1 zimmet hareketinde") — Pasife al penceresi nedeni söyler */
   kullanim?: string | null;
 }) {
@@ -45,12 +48,13 @@ export function CihazTuslari({ cihaz, turler, konum, baslik, sil = false, pasif 
           {sil
             ? <SilTusu ad={cihaz.kod} baslik="Ölçüm cihazını sil" yanEtki="kalibrasyon kayıtları ve sertifikaları da silinir, kodu yeniden kullanılabilir"
               sil={() => cihazSilEylemi(cihaz.id)} donus="/olcum-cihazlari" />
-            : <Tus tur="ikincil" ikon="ban" onClick={() => setP("pasif")}>Pasife al</Tus>}
+            : konum !== "lab" && <Tus tur="ikincil" ikon="ban" onClick={() => setP("pasif")}>Pasife al</Tus>}
         </>}
       <PasifPenceresi acik={p === "pasif"} kapat={() => setP(null)} ad={cihaz.kod} pasif={pasif}
         neden={kullanim ? `${kullanim} kullanıldı; silinemez.` : null}
+        engel={zimmette ? `${cihaz.kod} bir kişinin zimmetinde; önce Zimmetler'den depoya teslim alın.` : null}
         kosullar={["Silinmez: kalibrasyon geçmişi, raporları ve belgeleri kalır.", "Listeden, rapor seçiminden, Zimmetler'den ve uyarılardan kalkar.",
-          "Önce depoda olmalı (kişide ya da kalibrasyonda değil).", "Etkinleştir ile geri gelir."]}
+          "Etkinleştir ile geri gelir."]}
         geriMetni="Cihaz listeye, rapor seçimine ve Zimmetler'e geri döner." uygula={() => cihazPasifEylemi(cihaz.id, cihaz.surum, !pasif)} />
       {p === "duzenle" && <CihazPenceresi kapat={() => setP(null)} turler={turler} cihaz={cihaz} />}
       {p === "kal" && <KalibrasyonPenceresi kapat={() => setP(null)} cihazId={cihaz.id} baslik={baslik} />}

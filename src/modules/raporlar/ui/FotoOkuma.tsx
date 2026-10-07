@@ -119,7 +119,7 @@ export function FotoOkuma({ raporId, b, satirlar, tablo, islem, tuslar, cubuk }:
       <div className={cubuk}>
         {!oneri && (
           <label className={`${tusSinifi("ikincil", okunuyor ? tusStil.mesgul : undefined)} ${stil.fotoEkle}`} aria-disabled={(islem.mesgul && !okunuyor) || undefined}>
-            <input ref={girdi} type="file" accept="image/jpeg,image/png" className="gizli" aria-busy={okunuyor || undefined}
+            <input ref={girdi} type="file" accept="image/jpeg,image/png" className="gizli" aria-busy={okunuyor || undefined} aria-disabled={(islem.mesgul && !okunuyor) || undefined}
               aria-label={`${b.ad}: fotoğraftan oku`} onClick={(e) => { if (okunuyor || islem.mesgul) e.preventDefault(); }}
               onChange={(e) => { const d = e.target.files?.[0]; if (d) oku(d); }} />
             {okunuyor ? <span className={tusStil.donen} aria-hidden="true" /> : <Ikon ad="camera" kucuk />}

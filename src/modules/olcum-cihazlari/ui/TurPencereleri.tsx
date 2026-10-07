@@ -2,7 +2,8 @@
 /* CİHAZ TÜRLERİ PENCERESİ (359; maket olcum-cihazlari.html T7 — maket-cihazlar.js "turler" / "tur", reisim: "ölçüm cihazlarına cihaz türü ekleme"):
    firmanın türleri — ad, "N ekipman türünde · M cihaz", Düzenle (yalnız ad; N3: hangi ekipman türünde kullanılacağı Ekipman türleri'nde seçilir) ve
    cihazı olmayan, raporda geçmeyen türde Sil (yalnız yönetici; onay maketten: "<ad> … ekipman türlerinin kullanacağı cihazlardan da çıkar"). Altta
-   "Tür ekle". Ekle / düzenle ayrı pencerede; kaydedince listeye dönülür. Karar sunucuda. */
+   "Cihaz türü ekle". Ekle / düzenle ayrı pencerede ("Geri" listeye döner); kaydedince listeye dönülür. Karar sunucuda. 365: metinler maket T7 ile
+   aynı (maket-cihazlar.js); silince odak "Cihaz türü ekle"de. */
 import { useRouter } from "next/navigation";
 import { useState, useTransition } from "react";
 import { useBildir } from "../../../components/bildirim/Bildirim";
@@ -16,6 +17,7 @@ import { cihazTuruKaydetEylemi, cihazTuruSilEylemi } from "./eylemler";
 import stil from "./cihazlar.module.css";
 
 const AD_ID = "tw-ad";
+const EKLE_ID = "tw-ekle";
 
 export function CihazTurleriPenceresi({ acik, kapat, turler }: { acik: boolean; kapat: () => void; turler: CihazTuruSatiri[] }) {
   const [duzen, setDuzen] = useState<null | { id: string | null; surum: number; ad: string }>(null);
@@ -24,7 +26,7 @@ export function CihazTurleriPenceresi({ acik, kapat, turler }: { acik: boolean; 
       <Pencere acik={acik && !duzen} baslik="Cihaz türleri" onKapat={kapat}
         alt={<>
           <Tus tur="ikincil" onClick={kapat}>Kapat</Tus>
-          <Tus ikon="plus" data-ilk-odak="" onClick={() => setDuzen({ id: null, surum: 0, ad: "" })}>Tür ekle</Tus>
+          <Tus ikon="plus" id={EKLE_ID} data-ilk-odak="" onClick={() => setDuzen({ id: null, surum: 0, ad: "" })}>Cihaz türü ekle</Tus>
         </>}>
         {turler.length ? (
           <ul className={stil.turListe}>
@@ -33,8 +35,8 @@ export function CihazTurleriPenceresi({ acik, kapat, turler }: { acik: boolean; 
                 <span className={stil.turAd}><b>{t.ad}</b><span className={stil.turAlt}>{t.ekipmanTuru} ekipman türünde · {t.cihaz} cihaz</span></span>
                 <span className={stil.turTuslar}>
                   <Tus tur="ikincil" ikon="pencil" aria-label={`${t.ad} türünü düzenle`} onClick={() => setDuzen({ id: t.id, surum: t.surum, ad: t.ad })}>Düzenle</Tus>
-                  {t.sil && <SilTusu kucuk ad={t.ad} baslik="Cihaz türünü sil" yanEtki="ekipman türlerinin kullanacağı cihazlardan da çıkar"
-                    sil={() => cihazTuruSilEylemi(t.id)} />}
+                  {t.sil && <SilTusu kucuk ad={t.ad} erisimAdi={`${t.ad} türünü sil`} baslik="Cihaz türünü sil" yanEtki="ekipman türlerinin kullanacağı cihazlardan da çıkar"
+                    sil={() => cihazTuruSilEylemi(t.id)} odak={`#${EKLE_ID}`} />}
                 </span>
               </li>
             ))}
@@ -57,12 +59,12 @@ function TurPenceresi({ tur, kapat }: { tur: { id: string | null; surum: number;
     const r = await cihazTuruKaydetEylemi(tur.id, tur.surum, { ad });
     setHata(r.hatalar?.ad ?? null); setGenel(r.genel ?? null);
     if (!r.tamam) { if (r.hatalar?.ad) requestAnimationFrame(() => document.getElementById(AD_ID)?.focus()); return; }
-    kapat(); bildir(tur.id ? "Tür güncellendi." : `${ad.trim()} eklendi.`); router.refresh();
+    kapat(); bildir(tur.id ? `${ad.trim()} güncellendi.` : `${ad.trim()} eklendi; cihaz eklerken seçilir.`); router.refresh();
   });
   return (
     <Pencere acik baslik={tur.id ? `${tur.ad} · düzenle` : "Cihaz türü ekle"} onKapat={kapat}
       alt={<>
-        <Tus tur="ikincil" onClick={kapat}>Vazgeç</Tus>
+        <Tus tur="ikincil" ikon="arrow-left" onClick={kapat}>Geri</Tus>
         <Tus ikon="check" disabled={bekliyor} aria-busy={bekliyor || undefined} onClick={kaydet}>Kaydet</Tus>
       </>}>
       {genel && <Serit tur="hata" ikon="circle-alert">{genel}</Serit>}
