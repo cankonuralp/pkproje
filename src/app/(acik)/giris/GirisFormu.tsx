@@ -21,6 +21,13 @@ export function GirisFormu({ neden, donus, adres, firmaVar }: { neden?: "oturum"
   useEffect(() => {
     if (durum.yonlendir?.startsWith("/") && !durum.yonlendir.startsWith("//")) window.location.replace(durum.yonlendir);
   }, [durum.yonlendir]);
+  /* hata dönünce odak alana (gönderirken tuş kilitlenir, odak sayfaya düşüyordu — 2026-10-08 canlı denetim): e-posta boşsa oraya, yoksa parolaya
+     (eylem bitince form sıfırlanır; e-posta sunucunun geri verdiği değerle gelir, parola boşalır) */
+  useEffect(() => {
+    if (!durum.hata) return;
+    const e = document.getElementById("g-eposta") as HTMLInputElement | null;
+    (e && !e.value ? e : document.getElementById("g-parola"))?.focus();
+  }, [durum]);
   return (
     <main className={stil.giris}>
       <TemaTusu sinif={stil.tema} />

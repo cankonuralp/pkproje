@@ -35,6 +35,8 @@ test("yönetim: ayrı adres; ilk kurulum; firma aç → geçici parolayla yeni f
   /* ilk yönetici: geçici parola → kurulum (anahtar + kod + yeni parola) */
   await parolaAdimi(page, P.ilk, "yanlis-parola-2026");
   await expect(page.getByText("E-posta ya da parola yanlış.", { exact: false })).toBeVisible();
+  await expect(page.getByLabel("Parola", { exact: true })).toBeFocused();   // 2026-10-08: hata dönünce odak alana (e-posta dolu → parola)
+  await expect(page.getByLabel("Parola", { exact: true })).toHaveAttribute("aria-invalid", "true");
   await parolaAdimi(page, P.ilk, E2E_YONETIM.geciciParola);
   await expect(page).toHaveURL(/\/yonetim\/giris\/kurulum$/);
   await hazir(page);

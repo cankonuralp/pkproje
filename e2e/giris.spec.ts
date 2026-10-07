@@ -15,11 +15,17 @@ test("oturumsuz uygulama sayfası girişe gider; yanlış parola tek ileti; doğ
   await expect(page).toHaveURL(/\/giris\?donus=%2Fplanlar$/);
   await expect(page.locator("h1")).toHaveText("Giriş");
   await expect(page.getByText(`${E2E_FIRMA.kisaAd}.localhost`)).toBeVisible();
+  /* boş gönderim: ileti + odak e-postada (2026-10-08 canlı denetim: hata dönünce odak sayfaya düşüyordu) */
+  await page.getByRole("button", { name: "Giriş yap" }).click();
+  await expect(page.locator("form").getByRole("alert")).toContainText("E-posta ve parola yazılmalı.");
+  await expect(page.getByLabel("E-posta")).toBeFocused();
+  await expect(page.getByRole("button", { name: "Giriş yap" })).toBeEnabled();
   /* denemeler aynı sayfada (dönüş adresi korunur) */
   await page.getByLabel("E-posta").fill(E2E_HESAPLAR.yonetici.eposta);
   await page.getByLabel("Parola", { exact: true }).fill("yanlis-parola-1");
   await page.getByRole("button", { name: "Giriş yap" }).click();
   await expect(page.locator("form").getByRole("alert")).toContainText("E-posta ya da parola yanlış.");
+  await expect(page.getByLabel("Parola", { exact: true })).toBeFocused();   // e-posta dolu → parolaya
   await page.getByLabel("E-posta").fill("olmayan@deneme.example");
   await page.getByLabel("Parola", { exact: true }).fill("yanlis-parola-1");
   await page.getByRole("button", { name: "Giriş yap" }).click();

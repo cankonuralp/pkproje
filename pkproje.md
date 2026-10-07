@@ -2353,6 +2353,10 @@ revizyon, alan kopyalama, hafif kusur devri, meslek eşleşme denetimi).
 - Emsal ürünler: https://opwire.app/iso-17020-periyodik-kontrol-yazilimi/ · https://17020muayene.vidco.com.tr/ · https://akuple.com/asansor-kontrol-yazilimi/ · https://ensyazilim.com/
 
 ## 11 · Değişiklik günlüğü
+- 2026-10-08 (376): **Giriş hatasında odak alana** (375'in canlı denetiminde bulundu). Firma ve yönetim girişinde hatalı / boş gönderimde ileti
+  çıkıyordu ama odak sayfaya düşüyordu (gönderirken tuş kilitlenir): klavyeyle kullanan başa dönüyordu. Artık e-posta boşsa e-postaya, doluysa
+  parolaya gelir (parola belirleme ve kod adımında zaten böyleydi). Yönetim girişinde parola alanı da hatalı işaretlenir (firma girişindeki gibi).
+  Kilit e2e giris (boş gönderim → e-posta, yanlış parola → parola) ve yonetim (parola, aria-invalid).
 - 2026-10-08 (375): **Deneme yayını güncellendi (347–374).** Supabase'e göç 0049–0068 sırayla uygulandı (her biri `goc` kaydıyla, özet o
   commit'teki dosyadan; 69 göç); probata yönetim hesabı ilk kurulum durumunda açıldı (geçici parola yalnız reisim'e). main = fbd2597, Vercel
   yayında. Doğrulama: `node tools/duman.mjs` 9/9 · çalışma zamanı hatası yok · firma ve yönetim giriş sayfaları açılıyor, konsol temiz · ortamda

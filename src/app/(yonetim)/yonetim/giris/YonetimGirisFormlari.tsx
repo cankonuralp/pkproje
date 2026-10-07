@@ -39,14 +39,17 @@ function Kart({ baslik, alt, children, action, cikis = false }: { baslik: string
   );
 }
 
-function ParolaAlani({ id, ad, etiket, otomatik, hata, ipucu }: { id: string; ad: string; etiket: string; otomatik: string; hata?: string; ipucu?: string }) {
+/** `gecersiz`: ileti alanın altında değil kartın başında (giriş adımı) — alan yalnız işaretlenir */
+function ParolaAlani({ id, ad, etiket, otomatik, hata, ipucu, gecersiz = false }: {
+  id: string; ad: string; etiket: string; otomatik: string; hata?: string; ipucu?: string; gecersiz?: boolean;
+}) {
   const [goster, setGoster] = useState(false);
   return (
     <div className={stil.alan}>
       <label className={stil.etiket} htmlFor={id}>{etiket}</label>
       <div className={stil.parola}>
         <input className={stil.girdi} id={id} name={ad} type={goster ? "text" : "password"} autoComplete={otomatik} maxLength={200} required
-          aria-invalid={hata ? true : undefined} aria-describedby={hata || ipucu ? `${id}-ipucu` : undefined} />
+          aria-invalid={hata || gecersiz ? true : undefined} aria-describedby={hata || ipucu ? `${id}-ipucu` : undefined} />
         <button className={stil.goster} type="button" onClick={() => setGoster(!goster)} aria-pressed={goster} aria-label={goster ? "Parolayı gizle" : "Parolayı göster"}>
           <Ikon ad={goster ? "eye-off" : "eye"} />
         </button>
@@ -73,6 +76,12 @@ function KodAlani({ hata }: { hata?: string }) {
 export function YonetimGirisFormu({ neden, adres }: { neden?: "oturum" | "cikis"; adres: string }) {
   const [durum, eylem, gonderiyor] = useActionState<YGirisDurumu, FormData>(yonetimGirisEylemi, {});
   useEffect(() => yonlendir(durum.yonlendir), [durum.yonlendir]);
+  /* hata dönünce odak alana (firma girişiyle aynı — 2026-10-08 canlı denetim): e-posta boşsa oraya, yoksa parolaya */
+  useEffect(() => {
+    if (!durum.hata) return;
+    const e = document.getElementById("y-eposta") as HTMLInputElement | null;
+    (e && !e.value ? e : document.getElementById("yg-parola"))?.focus();
+  }, [durum]);
   return (
     <Kart baslik="Yönetim girişi" alt={adres} action={eylem}>
       {neden === "oturum" && !durum.hata && <Serit tur="bilgi" ikon="clock">Oturumunuz kapandı. Devam etmek için yeniden giriş yapın.</Serit>}
@@ -83,7 +92,7 @@ export function YonetimGirisFormu({ neden, adres }: { neden?: "oturum" | "cikis"
         <input className={stil.girdi} id="y-eposta" name="eposta" type="email" inputMode="email" autoComplete="username" maxLength={254}
           defaultValue={durum.eposta ?? ""} required aria-invalid={durum.hata ? true : undefined} />
       </div>
-      <ParolaAlani id="yg-parola" ad="parola" etiket="Parola" otomatik="current-password" />
+      <ParolaAlani id="yg-parola" ad="parola" etiket="Parola" otomatik="current-password" gecersiz={!!durum.hata} />
       <div className={stil.tuslar}>
         <Tus type="submit" ikon="log-in" disabled={gonderiyor || !!durum.yonlendir} aria-busy={gonderiyor || undefined}>Devam</Tus>
       </div>
