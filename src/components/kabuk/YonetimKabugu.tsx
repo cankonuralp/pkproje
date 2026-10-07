@@ -2,7 +2,6 @@
    solda probata logosu + "Yönetim", sağda tema ve kullanıcı (yalnız Çıkış yap — yönetim çıkışı). */
 import Image from "next/image";
 import type { ReactNode } from "react";
-import { yonetimCikisEylemi } from "../../server/yonetim/eylemler";
 import { KullaniciMenusu, TemaTusu, type KabukKullanicisi } from "./Kabuk";
 import logoKoyu from "./marka/probata-yatay-koyu-zemin.svg";
 import logoRenkli from "./marka/probata-yatay-renkli.svg";
@@ -17,7 +16,7 @@ export function YonetimKabugu({ children, kullanici }: { children: ReactNode; ku
         <span className={stil.panel}>Yönetim</span>
         <div className={stil.bosluk} />
         <TemaTusu />
-        <KullaniciMenusu kullanici={kullanici} cikis={yonetimCikisEylemi} />
+        <KullaniciMenusu kullanici={kullanici} cikis="/yonetim/cikis" />
       </header>
       <main className={stil.icerik}>{children}</main>
     </div>

@@ -12,7 +12,8 @@ async function kisiEkle(page: Page, ad: string) {
   await page.getByRole("combobox", { name: "Meslek" }).click();
   await page.getByRole("option", { name: /^Elektrik mühendisi/ }).click();
   await page.getByRole("button", { name: "Kaydet" }).click();
-  await expect(page.locator("h1")).toHaveText(ad);
+  /* 355: kayıt sonrası kart sayfasına geçiş telefon sunucusunda 15 sn'yi aştı (14b1bf8) — öteki kayıt beklemeleri gibi 30 sn */
+  await expect(page.locator("h1")).toHaveText(ad, { timeout: 30_000 });
   await hazir(page);
 }
 

@@ -81,8 +81,9 @@ export interface KabukKullanicisi { ad: string; rol: string }
 const basHarfler = (ad: string) => ad.trim().split(/\s+/).filter(Boolean).slice(0, 2).map((p) => p[0].toLocaleUpperCase("tr")).join("");
 
 /** kullanıcı menüsü (Çıkış yap): firma kabuğunda ve müşteri paneli kabuğunda (MusteriKabugu) aynı */
-/** `cikis`: çıkış eylemi (verilmezse firma / müşteri çıkışı; yönetim sayfası kendi çıkışını verir — 348) */
-export function KullaniciMenusu({ kullanici, cikis = cikisEylemi }: { kullanici: KabukKullanicisi; cikis?: () => Promise<void> }) {
+/** `cikis`: çıkış eylemi (verilmezse firma / müşteri çıkışı) ya da düz form isteğinin adresi (yönetim sayfası — 355: /yonetim/cikis, POST; sunucu
+    eyleminin yönlendirmesi yönetim adresini kaybediyordu) */
+export function KullaniciMenusu({ kullanici, cikis = cikisEylemi }: { kullanici: KabukKullanicisi; cikis?: (() => Promise<void>) | string }) {
   const [acik, setAcik] = useState(false);
   useEffect(() => {
     if (!acik) return;
@@ -101,7 +102,7 @@ export function KullaniciMenusu({ kullanici, cikis = cikisEylemi }: { kullanici:
       </button>
       {acik && (
         <div className={stil.kullaniciListe} role="menu" aria-label="Kendi işlemlerim">
-          <form action={cikis}>
+          <form action={cikis} method={typeof cikis === "string" ? "post" : undefined}>
             <button className={stil.secenek} type="submit" role="menuitem"><Ikon ad="log-out" kucuk />Çıkış yap</button>
           </form>
         </div>

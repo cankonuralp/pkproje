@@ -12,13 +12,14 @@ import { useKopyala } from "../../../../components/pencere/Kopyala";
 import { Serit } from "../../../../components/serit/Serit";
 import { Tus } from "../../../../components/tus/Tus";
 import {
-  yonetimCikisEylemi, yonetimGirisEylemi, yonetimKodEylemi, yonetimKurulumEylemi, type YGirisDurumu, type YKodDurumu, type YKurulumDurumu,
+  yonetimGirisEylemi, yonetimKodEylemi, yonetimKurulumEylemi, type YGirisDurumu, type YKodDurumu, type YKurulumDurumu,
 } from "../../../../server/yonetim/eylemler";
 import stil from "../../../(acik)/giris/giris.module.css";
 
 const yonlendir = (y?: string) => { if (y?.startsWith("/yonetim") && !y.startsWith("//")) window.location.replace(y); };
 
-function Kart({ baslik, alt, children, action }: { baslik: string; alt: string; children: ReactNode; action: (f: FormData) => void }) {
+/** `cikis`: kartın altında "Girişe dön"ün gönderdiği ayrı çıkış formu (355: düz form isteği /yonetim/cikis; tuş `form="yg-cikis"` ile bağlanır) */
+function Kart({ baslik, alt, children, action, cikis = false }: { baslik: string; alt: string; children: ReactNode; action: (f: FormData) => void; cikis?: boolean }) {
   return (
     <main className={stil.giris}>
       <TemaTusu sinif={stil.tema} />
@@ -32,6 +33,7 @@ function Kart({ baslik, alt, children, action }: { baslik: string; alt: string; 
           </div>
           {children}
         </form>
+        {cikis && <form id="yg-cikis" action="/yonetim/cikis" method="post" hidden />}
       </div>
     </main>
   );
@@ -96,12 +98,12 @@ export function YonetimKodFormu({ eposta }: { eposta: string }) {
   /* hata dönünce kod alanına odak (form eylem bitince alanları boşaltır; hatalı alan aranmasın) */
   useEffect(() => { if (durum.hata) document.getElementById("y-kod")?.focus(); }, [durum]);
   return (
-    <Kart baslik="Doğrulama kodu" alt={eposta} action={eylem}>
+    <Kart baslik="Doğrulama kodu" alt={eposta} action={eylem} cikis>
       {durum.hata && <Serit tur="hata" ikon="circle-alert">{durum.hata}</Serit>}
       <KodAlani />
       <div className={stil.tuslar}>
         <Tus type="submit" ikon="shield-check" disabled={gonderiyor || !!durum.yonlendir} aria-busy={gonderiyor || undefined}>Doğrula</Tus>
-        <button className={stil.baglanti} type="submit" formAction={yonetimCikisEylemi} formNoValidate>Girişe dön</button>
+        <button className={stil.baglanti} type="submit" form="yg-cikis">Girişe dön</button>
       </div>
     </Kart>
   );

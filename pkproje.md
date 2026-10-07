@@ -2341,6 +2341,11 @@ revizyon, alan kopyalama, hafif kusur devri, meslek eşleşme denetimi).
 - Emsal ürünler: https://opwire.app/iso-17020-periyodik-kontrol-yazilimi/ · https://17020muayene.vidco.com.tr/ · https://akuple.com/asansor-kontrol-yazilimi/ · https://ensyazilim.com/
 
 ## 11 · Değişiklik günlüğü
+- 2026-10-07 (356): **Yönetim çıkışı düz form isteği** (14b1bf8 CI'ın saklanan sayfa görüntüsü: çıkıştan sonra "Sayfa bulunamadı"). Next sunucu
+  eyleminin redirect()'ini kendi kökeninden (sunucunun adresi) yeniden çiziyor; o istekte yönetim adresi yok → ara katman /yonetim'i kapatıyordu.
+  Menüdeki "Çıkış yap" ve giriş adımlarındaki "Girişe dön" artık POST /yonetim/cikis (route; kapı istek.ts yonetimOturumunuKapat: başka adreste 404,
+  başka kökenden gelen form oturumu kapatmaz) → 303 göreli adres, tarayıcı yönetim adresini korur. yonetimCikisEylemi kalktı. Kilit
+  tests/moduller.test.ts (yalnız POST, kapı). Telefon: personel kaydı sonrası kart sayfası beklemesi 30 sn (öteki kayıt beklemeleri gibi).
 - 2026-10-06 (355): **Uçtan uca: yönetim ısınması dayanıklı, düşen testin sayfa görüntüsü saklanır** (95b7eb7 CI: 348'in uçtan uca testleri ilk kez
   tam koştu). Tablet / telefon ısınmada düştü: geliştirme sunucusu yeni derlenen rotadan sonra açık sayfayı yeniden yüklüyor (ERR_ABORTED, gönderilmeyen
   giriş formu) — ısınma yeniden dener, panel sayfalarını önce oturumsuz ister, olmazsa uyarıyla geçer (ısınma derleme içindir). Fotoğraftan okuma

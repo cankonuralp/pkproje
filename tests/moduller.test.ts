@@ -67,7 +67,8 @@ test("her modülün rota klasörü var ve src/app'te modül dışı rota yok", (
   assert.deepEqual(klasorlerOf(app), ["(acik)", "(gelistirme)", "(musteri)", "(uygulama)", "(yonetim)", "api"]);
   assert.deepEqual(klasorlerOf(join(app, "(musteri)")), ["portal"]);
   assert.deepEqual(klasorlerOf(join(app, "(yonetim)")), ["yonetim"]);
-  assert.deepEqual(klasorlerOf(join(app, "(yonetim)", "yonetim")), ["(panel)", "giris"]);
+  /* 355: çıkış düz form isteği (route.ts, yalnız POST) — sunucu eyleminin yönlendirmesi yönetim adresini kaybediyordu */
+  assert.deepEqual(klasorlerOf(join(app, "(yonetim)", "yonetim")), ["(panel)", "cikis", "giris"]);
   assert.deepEqual(klasorlerOf(join(app, "api")), API_UCLARI);
   const uygulama = join(app, "(uygulama)");
   const yollar = MODULLER.filter((m) => m.yol !== "").map((m) => m.yol).sort();
@@ -154,6 +155,11 @@ test("yönetim kapısı: yalnız yönetim adresinde, panel yönetim oturumu iste
   assert.ok(ara.indexOf("const yasak =") < ara.indexOf("if (onYukleme)"), "adres ayrımı önceden yükleme dönüşünden önce");
   assert.match(oku("src/server/kiraci/istek.ts"), /if \(yonetimAdresiMi\(host\)\) return null;/);
   assert.match(oku("src/server/yonetim/istek.ts"), /if \(!\(await yonetimAdresinde\(\)\)\) notFound\(\);/);
+  /* çıkış: yalnız POST, kapı istek.ts'te (adres + aynı köken) */
+  const cikis = oku("src/app/(yonetim)/yonetim/cikis/route.ts");
+  assert.match(cikis, /export async function POST\(/);
+  assert.doesNotMatch(cikis, /export (async )?function (GET|PUT|PATCH|DELETE)\(/);
+  assert.match(oku("src/server/yonetim/istek.ts"), /if \(!\(await yonetimAdresinde\(\)\)\) return "adres";\s+if \(!\(await ayniKoken\(\)\)\) return "koken";/);
 });
 
 /* 2026-10-05 (319, 0030; reisim: "rol değiştirme, sızma, veri çalma"): müşteri paneli yalnız müşteri oturumuyla ve veritabanında müşteri

@@ -3,11 +3,10 @@
    SameSite=Strict); yönetici kimliği istemciden alınmaz. Yanıt hesabın var olup olmadığını söylemez. Başarılı adımdan sonra yalnız sabit site içi
    adrese gidilir (açık yönlendirme yok). */
 import { cookies } from "next/headers";
-import { redirect } from "next/navigation";
 import { parola as parolaSemasi, z } from "../../sema/ortak.ts";
 import { havuz } from "../db/havuz.ts";
 import { ayniKoken, istemciIp } from "../kimlik/koken.ts";
-import { bekleyenOturum, kodDogrula, kurulumTamamla, yoneticiGiris, yonetimCikis } from "./giris.ts";
+import { bekleyenOturum, kodDogrula, kurulumTamamla, yoneticiGiris } from "./giris.ts";
 import { yonetimAdresinde, yonetimCerezAyari, YONETIM_CEREZ } from "./istek.ts";
 
 export interface YGirisDurumu { hata?: string; eposta?: string; yonlendir?: string }
@@ -72,10 +71,4 @@ export async function yonetimKurulumEylemi(_onceki: YKurulumDurumu, form: FormDa
   return { yonlendir: "/yonetim" };
 }
 
-export async function yonetimCikisEylemi(): Promise<void> {
-  if (!(await yonetimAdresinde()) || !(await ayniKoken())) redirect("/yonetim/giris");
-  const c = await cookies();
-  await yonetimCikis(havuz(), c.get(YONETIM_CEREZ)?.value);
-  c.set(YONETIM_CEREZ, "", { ...yonetimCerezAyari(), maxAge: 0 });
-  redirect("/yonetim/giris?neden=cikis");
-}
+/* çıkış sunucu eylemi DEĞİL (355): düz form isteği — src/app/(yonetim)/yonetim/cikis/route.ts (istek.ts yonetimOturumunuKapat) */
