@@ -6,7 +6,8 @@
    · yalnız yöneticiler (planlama / denetçi / muhasebe yetkisiz); başka firmanın cihazı "yok"; oturumsuz çağrı reddedilir; uygulama rolünün DELETE'i yok;
    · 358 pasif: zimmetteki / kalibrasyondaki cihaz pasife alınmaz; pasif cihaz seçimden ve Zimmetler'den kalkar, açık rapor kodunu gösterir; etkinleştir;
    · 359 cihaz türü: ad eşsiz; cihazı olan / raporda geçen tür silinmez; cihazsız tür silinir, ekipman türlerinin cihaz listesinden çıkar;
-   · 360 ekipman: yalnız yönetici; kullanılmamış ekipman plan satırı ve kod geçmişiyle silinir (kod serbest); raporlu / tamamlanmış plandaki silinmez.
+   · 360 ekipman: yalnız yönetici; kullanılmamış ekipman plan satırı ve kod geçmişiyle silinir (kod serbest); raporlu / tamamlanmış plandaki silinmez;
+   · 361 ekipman türü: kullanılmış tür silinmez; kullanılmamış tür fiyat, format sürümleri ve PDF'leriyle silinir (PDF çöpe), kod serbest.
    Olumsuz kanıt: tests/bozan/kesin-silme.bozan.ts. */
 import assert from "node:assert/strict";
 import { mkdtempSync, rmSync } from "node:fs";
@@ -14,7 +15,9 @@ import { tmpdir } from "node:os";
 import { join } from "node:path";
 import { after, before, test } from "node:test";
 import { cihazKaydet, cihazKarti, cihazKonum, cihazListesi, cihazOzetleri, cihazPasif, cihazSil, cihazSilmeDurumu, cihazTuruKaydet, cihazTuruListesi, cihazTuruSil, kalibrasyonEkle, raporCihazlari, type Kisi } from "../src/modules/olcum-cihazlari/server/cihazlar.ts";
+import { formatYukle, turSil, turSilmeDurumu } from "../src/modules/ekipman-turleri/server/turler.ts";
 import { ekipmanSil, planIci } from "../src/modules/planlar/server/plan-ici.ts";
+import { taslakBaslat } from "../src/modules/rapor-format/server/formatlar.ts";
 import { raporSil, sahaRaporu } from "../src/modules/raporlar/server/raporlar.ts";
 import type { GomuluKume } from "../src/server/db/gomulu.ts";
 import { havuzKur, kiraciIcinde, type Havuz } from "../src/server/db/kiraci.ts";
@@ -194,4 +197,27 @@ test("ekipman: yönetici kullanılmamış ekipmanı siler (plan satırı ve kod 
   assert.deepEqual(await b(FB.yon, (db) => ekipmanSil(db, FB.yon, FB.planId, z)),
     { durum: "red", neden: "Ekipman silinemez: 1 tamamlanmış planda kullanıldı. Yanlış girildiyse pasife alın." });
   await assert.rejects(b(FB.yon, (db) => db.sorgu("DELETE FROM ekipman WHERE id = $1", [z])), /permission denied|izin/i, "uygulama rolünün DELETE'i yok");
+});
+
+/* 361 — ekipman türü: yalnız yönetici; ekipmanı / raporu olan tür silinmez; kullanılmamış tür fiyatı, format sürümleri ve PDF'leriyle silinir, kod serbest */
+test("ekipman türü: kullanılmış tür silinmez; kullanılmamış tür fiyat, format taslağı ve PDF'iyle silinir, kod serbest; yalnız yönetici", async () => {
+  assert.deepEqual(await a(FA.yon, (db) => turSilmeDurumu(db, FA.yon, FA.tur)), { sil: false, kullanim: { rapor: 1, ekipman: 1 } });
+  assert.deepEqual(await a(FA.yon, (db) => turSil(db, FA.yon, FA.tur)), { durum: "red", neden: "Ekipman türü silinemez: 1 raporda, 1 ekipmanda kullanıldı." });
+  const turAc = async (kod: string) => (await a(FA.yon, (db) => db.sorgu<{ id: string }>(
+    "INSERT INTO ekipman_turu (kod, ad, grup, brans, periyot) VALUES ($1, 'Silinecek tür', 'elektrik', 'e', 12) RETURNING id::text", [kod]))).rows[0].id;
+  const id = await turAc("SLT");
+  await a(FA.yon, (db) => db.sorgu("INSERT INTO fiyat_listesi (tur_id, fiyat) VALUES ($1, 90000)", [id]));
+  tamam(await a(FA.yon, (db) => taslakBaslat(db, FA.yon, id, "sablon:ZPKR02", null)));
+  assert.equal((await a(FA.yon, (db) => formatYukle(db, depo, FA.yon, A, id, { ad: "slt-format.pdf", bayt: PDF }, ""))).durum, "tamam");
+  const dosyaId = (await a(FA.yon, (db) => db.sorgu<{ d: string }>("SELECT dosya_id::text AS d FROM tur_format WHERE tur_id = $1", [id]))).rows[0].d;
+  assert.deepEqual(await a(FA.yon, (db) => turSilmeDurumu(db, FA.yon, id)), { sil: true, kullanim: null });
+  for (const k of [FA.plan, FA.den1]) assert.deepEqual(await a(k, (db) => turSil(db, k, id)), { durum: "yetkisiz" });
+  assert.deepEqual(await kiraciIcinde(havuz, B, (db) => turSil(db, FB.yon, id), { hesapId: FB.yon.id }), { durum: "yok" }, "başka firma");
+  assert.deepEqual(await a(FA.yon, (db) => turSil(db, FA.yon, id)), { durum: "tamam", ad: "SLT · Silinecek tür" });
+  const kalan = (await a(FA.yon, (db) => db.sorgu<{ f: number; r: number; t: number; c: boolean }>(
+    `SELECT (SELECT count(*)::int FROM fiyat_listesi WHERE tur_id = $1) AS f, (SELECT count(*)::int FROM rapor_format WHERE tur_id = $1) AS r,
+            (SELECT count(*)::int FROM tur_format WHERE tur_id = $1) AS t, (SELECT cop IS NOT NULL FROM dosya WHERE id = $2) AS c`, [id, dosyaId]))).rows[0];
+  assert.deepEqual(kalan, { f: 0, r: 0, t: 0, c: true }, "fiyat, format sürümü, PDF kaydı gitti; PDF çöpte");
+  assert.equal(typeof await turAc("SLT"), "string", "kod serbest kaldı");
+  await assert.rejects(a(FA.yon, (db) => db.sorgu("DELETE FROM ekipman_turu WHERE id = $1", [FA.tur])), /permission denied|izin/i);
 });

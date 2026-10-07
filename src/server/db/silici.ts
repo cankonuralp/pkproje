@@ -23,6 +23,14 @@ export const SILINEBILIR = {
     kullanim: "ekipman_kullanim", sil: "ekipman_sil",
     fk: { kullanim: ["rapor.ekipman_id"], birlikte: ["ekipman_kodu.ekipman_id", "plan_ekipman.ekipman_id"] },
   },
+  /* 361: ekipmanı, raporu, personel ataması, teklif kalemi, fatura satırı olmayan tür; fiyat, format sürümleri ve PDF'ler birlikte (kod serbest; 0057) */
+  ekipman_turu: {
+    kullanim: "ekipman_turu_kullanim", sil: "ekipman_turu_sil",
+    fk: {
+      kullanim: ["ekipman.tur_id", "ekipman_atamasi.tur_id", "fatura_rapor.tur_id", "rapor.tur_id", "teklif_kalem.tur_id"],
+      birlikte: ["fiyat_listesi.tur_id", "rapor_format.tur_id", "tur_format.tur_id"],
+    },
+  },
 } as const satisfies Record<string, { kullanim: string; sil: string; fk: { kullanim: readonly string[]; birlikte: readonly string[] } }>;
 export type SilinebilirTur = keyof typeof SILINEBILIR;
 

@@ -6,13 +6,15 @@
    4. yeni bir tablo cihaza yabancı anahtarla bağlanıp silici.ts güncellenmezse kapsam kilidinin katalog sorgusu yeni bağı görür.
    5. (359) cihaz türü silinirken ekipman türlerinin cihaz listesinden çıkarma kalkınca silinen tür ekipman türünde kalır (rapor doldurulamayan cihaz
       satırı ister, onaya gönderi kalıcı takılır).
-   6. (360) ekipman kullanımından tamamlanmış plan denetimi kalkınca kapanmış bir işin ekipmanı silinir (plan kaydı eksik kalır). */
+   6. (360) ekipman kullanımından tamamlanmış plan denetimi kalkınca kapanmış bir işin ekipmanı silinir (plan kaydı eksik kalır).
+   7. (361) ekipman türünü silerken fiyat satırı birlikte silinmezse kullanılmamış tür silinemez ("kullanıldı" sanılır) — kilit "silinir" der. */
 import assert from "node:assert/strict";
 import { copyFileSync, mkdirSync, mkdtempSync, readdirSync, readFileSync, rmSync, writeFileSync } from "node:fs";
 import { tmpdir } from "node:os";
 import { join } from "node:path";
 import { after, before, test } from "node:test";
 import { cihazKaydet, cihazSil, cihazTuruKaydet, cihazTuruSil, type Kisi } from "../../src/modules/olcum-cihazlari/server/cihazlar.ts";
+import { turSil } from "../../src/modules/ekipman-turleri/server/turler.ts";
 import { ekipmanSil } from "../../src/modules/planlar/server/plan-ici.ts";
 import { GOC_KLASORU } from "../../src/server/db/goc.ts";
 import type { GomuluKume } from "../../src/server/db/gomulu.ts";
@@ -127,5 +129,20 @@ test("6. tamamlanmış plan denetimi kalkınca kapanmış işin ekipmanı silini
     await supa.sahip.query("SET session_replication_role = replica");
     await supa.sahip.query("UPDATE plan SET durum = 'tamamlandi', kontrol_tamam = now(), bitti = now() WHERE id = $1", [F.planId]);
     assert.equal((await kiraciIcinde(h, A, (db) => ekipmanSil(db, F.yon, F.planId, z), { hesapId: F.yon.id })).durum, "tamam", "bozuk: tamamlanmış plandaki ekipman silindi");
+  } finally { await h.end(); await supa.kapat(); }
+});
+
+test("7. fiyat satırı birlikte silinmezse kullanılmamış tür silinemez (kilidin koruduğu açık)", async () => {
+  const supa = await supabaseBenzeri(kume, "silme_bozuk_7", gocler(degistir("    DELETE FROM fiyat_listesi WHERE firma_id = f AND tur_id = p_id;\n", ""), undefined, "0057_"));
+  const h = havuzKur({ ...kume.uygulama, database: "silme_bozuk_7" });
+  try {
+    const A = (await supa.sahip.query<{ id: string }>("INSERT INTO firma (kisa_ad, ad, rapor_kodu) VALUES ('deneme-a', 'Deneme A', 'DA') RETURNING id::text")).rows[0].id;
+    const t = await kiraciIcinde(h, A, async (db) => ({
+      yon: (await db.sorgu<{ id: string }>("INSERT INTO hesap (eposta, ad, roller, durum) VALUES ('yon@deneme-a.example', 'Deneme', '{firma_yoneticisi}', 'etkin') RETURNING id::text")).rows[0].id,
+      tur: (await db.sorgu<{ id: string }>("INSERT INTO ekipman_turu (kod, ad, grup, brans, periyot) VALUES ('SLT', 'Silinecek tür', 'elektrik', 'e', 12) RETURNING id::text")).rows[0].id,
+    }));
+    await kiraciIcinde(h, A, (db) => db.sorgu("INSERT INTO fiyat_listesi (tur_id, fiyat) VALUES ($1, 90000)", [t.tur]));
+    const yon: Kisi = { id: t.yon, ad: "Deneme", roller: ["firma_yoneticisi"] };
+    assert.equal((await kiraciIcinde(h, A, (db) => turSil(db, yon, t.tur), { hesapId: t.yon })).durum, "red", "bozuk: kullanılmamış tür silinemedi");
   } finally { await h.end(); await supa.kapat(); }
 });

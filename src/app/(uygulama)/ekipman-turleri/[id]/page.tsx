@@ -8,7 +8,7 @@ import { Yetkisiz } from "../../../../components/hata/Hata";
 import { Bolum, DegerYok, Kirinti, NesneBasi, SeritKap } from "../../../../components/sayfa/Sayfa";
 import { Serit } from "../../../../components/serit/Serit";
 import { bransAd, grupBul } from "../../../../modules/ekipman-turleri/sema";
-import { baglantiSecenekleri, turDegistirir, turKarti } from "../../../../modules/ekipman-turleri/server/turler";
+import { baglantiSecenekleri, turDegistirir, turKarti, turSilmeDurumu } from "../../../../modules/ekipman-turleri/server/turler";
 import { BaglantiTusu } from "../../../../modules/ekipman-turleri/ui/Baglantilar";
 import stil from "../../../../modules/ekipman-turleri/ui/turler.module.css";
 import { FormatTablosu } from "../../../../modules/ekipman-turleri/ui/FormatTablosu";
@@ -29,7 +29,8 @@ export default async function Sayfa({ params }: { params: Promise<{ id: string }
   const o = await modulOturumu(MODUL.no);
   if (!o) return <Yetkisiz />;
   const { id } = await params;
-  const [t, sec, sablonlar] = await oturumIslemi(o, async (db) => [await turKarti(db, o, id), await baglantiSecenekleri(db, o), await formatSurumleri(db, o, id)] as const);
+  const [t, sec, sablonlar, silme] = await oturumIslemi(o, async (db) => [await turKarti(db, o, id), await baglantiSecenekleri(db, o), await formatSurumleri(db, o, id),
+    await turSilmeDurumu(db, o, id)] as const);
   if (!t) notFound();
   const yaz = turDegistirir(o), sablonYaz = formatDegistirir(o);
   const surumler = sablonlar ?? [], yayinda = surumler.find((x) => x.durum === "yayinda"), taslak = surumler.find((x) => x.durum === "taslak");
@@ -38,7 +39,7 @@ export default async function Sayfa({ params }: { params: Promise<{ id: string }
     <>
       <Kirinti ogeler={[[`Ekipman türleri · ${bransAd(t.brans)}`, t.brans === "e" ? "/ekipman-turleri?brans=e" : "/ekipman-turleri"], [t.ad]]} />
       <NesneBasi baslik={t.ad} altIkon="layers" alt={`Kod ${t.kod} · ${g?.ad ?? t.grup}`}
-        tuslar={yaz && <TurTuslari tur={{ id: t.id, surum: t.surum, kod: t.kod, ad: t.ad, grup: t.grup, brans: t.brans, periyot: t.periyot, sure: t.sure }} kullanimda={p?.sira ?? null} />} />
+        tuslar={yaz && <TurTuslari tur={{ id: t.id, surum: t.surum, kod: t.kod, ad: t.ad, grup: t.grup, brans: t.brans, periyot: t.periyot, sure: t.sure }} kullanimda={p?.sira ?? null} sil={silme.sil} />} />
       <Yuzler>
         <Yuz ikon="file-text" ad="Rapor formatı" sayi={p ? `Sürüm ${p.sira}` : "Yok"} not={p ? `yüklendi ${tarihYaz(p.olustu)}` : "PDF yüklenmedi"} uyari={!p} />
         <Yuz ikon="badge-check" ad="Onay" sayi={bransAd(t.brans)} not={`${onay} onaylar`} />

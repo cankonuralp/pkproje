@@ -4,7 +4,7 @@
 import { depo } from "../../../server/dosya/depo";
 import { ayniKoken } from "../../../server/kimlik/koken";
 import { istekOturumu, oturumIslemi } from "../../../server/kimlik/istek";
-import { baglantiKaydet, formatKaldir, formatYukle, turKaydet } from "../server/turler";
+import { baglantiKaydet, formatKaldir, formatYukle, turKaydet, turSil } from "../server/turler";
 
 export interface PencereDurumu { tamam?: boolean; id?: string; sira?: number; hatalar?: Record<string, string>; genel?: string }
 
@@ -58,4 +58,11 @@ export async function baglantiKaydetEylemi(turId: string, surum: number, standar
   if (r.durum === "tamam") return { tamam: true, id: r.id };
   if (r.durum === "gecersiz") return { hatalar: r.hatalar };
   return { genel: SONUC[r.durum] };
+}
+
+/** kesin sil (361): yalnız yönetici, yalnız hiç kullanılmamış tür — karar turler.ts / veritabanında */
+export async function turSilEylemi(turId: string): Promise<PencereDurumu> {
+  const o = await oturum(); if (typeof o === "string") return { genel: o };
+  const r = await oturumIslemi(o, (db) => turSil(db, o, String(turId)));
+  return r.durum === "tamam" ? { tamam: true } : r.durum === "red" ? { genel: r.neden } : { genel: SONUC[r.durum] };
 }

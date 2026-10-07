@@ -3,10 +3,12 @@
    yükle / kaldır) yalnız "yaz" düzeyinde (önerilen düzende branş yöneticileri + firma yöneticisi). Yazmalar güvenli yazıcıdan; dosya tek dosya
    yolundan (tür baytlardan, yalnız PDF, kapalı depo). Format sürümü silinmez, kaldırılır; kullanımdaki = kaldırılmamış en yeni sürüm. */
 import type { Sorgulayici } from "../../../server/db/kiraci.ts";
+import { kesinSil, kullanimlar, type Kullanim } from "../../../server/db/silici.ts";
 import { ekle, guncelle, tablo } from "../../../server/db/yazici.ts";
 import type { Depo } from "../../../server/dosya/depo.ts";
 import { dosyaYukle } from "../../../server/dosya/dosya.ts";
-import { canDo, duzey, type YetkiHesabi } from "../../../server/yetki/canDo.ts";
+import { canDo, canDoEylem, duzey, type YetkiHesabi } from "../../../server/yetki/canDo.ts";
+import { kullanimMetni } from "../../../components/sil/metin.ts";
 import { dogrula, type DogrulamaHatalari } from "../../../sema/ortak.ts";
 import { guncelStandartlar } from "../../dokumanlar/server/dokumanlar.ts";
 import { cihazTuruOzetleri } from "../../olcum-cihazlari/server/cihazlar.ts";
@@ -191,4 +193,24 @@ export async function cihazTurBranslari(db: Sorgulayici): Promise<Map<string, ("
 export async function cihazTurKullanimi(db: Sorgulayici): Promise<Map<string, number>> {
   return new Map((await db.sorgu<{ c: string; n: number }>(
     "SELECT c::text AS c, count(*)::int AS n FROM ekipman_turu, unnest(cihaz_turleri) AS c GROUP BY c")).rows.map((x) => [x.c, x.n]));
+}
+
+/* ── KESİN SİLME (361; reisim 2026-10-07 "ekipman türü … silinemiyor"; §9 elli üçüncü tur) — yalnız yönetici (canDo kayit_sil, modül 5) ve yalnız hiç
+   KULLANILMAMIŞ tür (ekipman, rapor, personel ataması, teklif kalemi, fatura satırı yok; tanım veritabanında, göç 0057). Fiyat, format sürümleri ve
+   PDF'ler birlikte; kod serbest. Kullanılmış tür silinmez (pasif yok; düzenlenir). */
+export type TurSilYaniti = { durum: "tamam"; ad: string } | { durum: "red"; neden: string } | { durum: "yok" } | { durum: "yetkisiz" };
+const silebilir = (kim: YetkiHesabi) => canDoEylem(kim, "kayit_sil", { modul: MODUL });
+
+/** tür sayfası: "Sil" çizilir mi (silebilen + kullanılmamış); kullanılmışsa sayımlar */
+export async function turSilmeDurumu(db: Sorgulayici, kim: YetkiHesabi, id: string): Promise<{ sil: boolean; kullanim: Kullanim | null }> {
+  if (!silebilir(kim)) return { sil: false, kullanim: null };
+  const k = (await kullanimlar(db, "ekipman_turu", [id])).get(id) ?? null;
+  return { sil: !k, kullanim: k };
+}
+
+export async function turSil(db: Sorgulayici, kim: YetkiHesabi & { ad: string }, id: string): Promise<TurSilYaniti> {
+  if (!silebilir(kim)) return { durum: "yetkisiz" };
+  const r = await kesinSil(db, "ekipman_turu", id, kim.ad);
+  if (r.durum === "kullanildi") return { durum: "red", neden: `Ekipman türü silinemez: ${kullanimMetni(r.kullanim) || "başka kayıtlarda"} kullanıldı.` };
+  return r;
 }

@@ -90,6 +90,7 @@ pkproje/
                             ui/ (liste, form, sunucu eylemleri — "use server" dosyası yalnız …Eylemi dışa açar)
   src/modules/musteriler/   MÜŞTERİLER (2026-10-04): sema.ts · server/musteriler.ts (liste, kart, kaydet + uyarı onayı, pasif zinciri) · ui/ (liste, pencereler)
   src/modules/ekipman-turleri/ EKİPMAN TÜRLERİ (2026-10-04): katalog (Mekanik / Elektrik), tür sayfası, rapor formatı PDF sürümleri
+                            · 361 turSil / turSilmeDurumu (kullanılmamış tür, yönetici; 0057) · cihazTurKullanimi (Ölçüm cihazları T7 penceresi için)
   src/modules/olcum-cihazlari/ ÖLÇÜM CİHAZLARI (2026-10-04): cihaz, cihaz türü, kalibrasyon kaydı + sertifika, kalibrasyon durumu (eşik firma ayarı)
                             · 357 Sil (kullanılmamış, yönetici; silici.ts) · 358 Pasife al / Etkinleştir (depoda olmalı; liste Görünüm; raporCihazlari pasifDahil)
                             · 359 Cihaz türleri penceresi (ui/TurPencereleri.tsx; ad düzenle, kullanılmamış tür Sil — ekipman türlerinden de çıkar, 0055)

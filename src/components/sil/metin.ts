@@ -6,6 +6,10 @@ const YER: Record<string, string> = {
   zimmet_formu: "zimmet formunda",
   cihaz: "cihazda",
   tamamlanmis_plan: "tamamlanmış planda",
+  ekipman: "ekipmanda",
+  atama: "personel atamasında",
+  teklif: "teklif kaleminde",
+  fatura: "fatura satırında",
 };
 
 export function kullanimMetni(k: Readonly<Record<string, number>>): string {

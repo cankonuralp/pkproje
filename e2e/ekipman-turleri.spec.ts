@@ -69,3 +69,35 @@ test("ekipman türü: ekle, rapor formatı yükle, elektrik sekmesi; denetçi ya
   await expect(page.getByRole("heading", { level: 1, name: "Ekipman türleri" })).toBeVisible();
   await expect(page.getByRole("button", { name: "Tür ekle" })).toHaveCount(0);
 });
+
+/* 361 (reisim 2026-10-07 "ekipman türü … silinemiyor"): hiç kullanılmamış tür yöneticide Sil → onay (rapor formatı, PDF'ler, fiyat da) → katalog,
+   tür yok; kod yeniden kullanılabilir */
+test("ekipman türü: kullanılmamış tür silinir, kod serbest kalır", async ({ page }, bilgi) => {
+  const on = { masaustu: "MS", tablet: "TB", telefon: "TL" }[bilgi.project.name] ?? "XX";
+  const kod = `${on}${"MNOP"[bilgi.retry]}`, ad = `Deneme Silme ${kod}`;
+  const ekle = async () => {
+    await page.goto("/ekipman-turleri");
+    await hazir(page);
+    await page.getByRole("button", { name: "Tür ekle" }).click();
+    const p = page.getByRole("dialog", { name: "Tür ekle" });
+    await p.getByLabel("Tür adı").fill(ad);
+    await p.getByLabel("Kod").fill(kod.toLowerCase());
+    await p.getByRole("combobox", { name: "Ek-III grubu" }).click();
+    await p.getByRole("option", { name: /Kaldırma ve iletme/ }).click();
+    await p.getByLabel("Periyot (ay)").fill("12");
+    await p.getByRole("button", { name: "Kaydet" }).click();
+    await expect(page).toHaveURL(/\/ekipman-turleri\/[0-9a-f-]{36}$/, { timeout: 30_000 });
+    await expect(page.getByRole("heading", { level: 1, name: ad })).toBeVisible();
+    await hazir(page);
+  };
+  await girisli(page, "yonetici");
+  await ekle();
+  await page.getByRole("button", { name: "Sil", exact: true }).click();
+  const onay = page.locator("dialog[open]");
+  await expect(onay).toContainText(`${kod} · ${ad} kalıcı olarak silinir; rapor formatı, yüklenen PDF'ler ve fiyatı da silinir, kodu yeniden kullanılabilir. Geri alınamaz.`);
+  await onay.getByRole("button", { name: "Sil" }).click();
+  await expect(page).toHaveURL(/\/ekipman-turleri$/, { timeout: 30_000 });
+  await expect(page.getByText(`${kod} · ${ad} silindi.`).first()).toBeVisible();
+  await expect(page.getByRole("link", { name: ad })).toHaveCount(0);
+  await ekle();
+});

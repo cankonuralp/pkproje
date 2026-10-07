@@ -2353,6 +2353,12 @@ revizyon, alan kopyalama, hafif kusur devri, meslek eşleşme denetimi).
 - Emsal ürünler: https://opwire.app/iso-17020-periyodik-kontrol-yazilimi/ · https://17020muayene.vidco.com.tr/ · https://akuple.com/asansor-kontrol-yazilimi/ · https://ensyazilim.com/
 
 ## 11 · Değişiklik günlüğü
+- 2026-10-07 (361): **Ekipman türü Sil** (reisim: *"ekipman türü … silinemiyor"*; §9 elli üçüncü tur; maket yok — cihaz türü T7 ve İSG ID deseni).
+  Tür sayfasında, yalnız yöneticiye ve hiç kullanılmamış türde "Sil"; onay "<kod> · <ad> kalıcı olarak silinir; rapor formatı, yüklenen PDF'ler ve
+  fiyatı da silinir, kodu yeniden kullanılabilir. Geri alınamaz." Göç 0057 ekipman_turu_kullanim (ekipman — pasif dahil —, rapor, personel ataması,
+  teklif kalemi, fatura satırı) + ekipman_turu_sil (fiyat_listesi, rapor_format — 0022 "yayınlanan sürüm silinmez"in tek istisnası: raporu hiç olmayan
+  türün sürümü yasal kayıt değil —, tur_format birlikte; PDF'ler çöpe; kod serbest). Kullanılmış tür için pasif yok (düzenlenir). Kilit
+  kesin-silme.test "ekipman türü"; olumsuz kanıt kesin-silme.bozan 7; e2e ekipman-turleri (sil, kod yeniden).
 - 2026-10-07 (360): **Ekipman Sil** (§9 yirmi üçüncü tur "silme yalnız yönetici" — canDo ekipman_sil tanımlıydı, hiç kullanılmıyordu; §9 elli
   üçüncü tur). Plan içi ekipman satırında, yalnız yöneticiye ve hiç kullanılmamış ekipmanda çöp kutusu simgesi; onay "<kod> kalıcı olarak silinir;
   bütün planlardan çıkar, kodu yeniden kullanılabilir. Geri alınamaz." Göç 0056 ekipman_kullanim (rapor — silinmiş taslak dahil — · tamamlanmış
