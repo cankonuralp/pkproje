@@ -85,6 +85,19 @@ test("rapor şablonu: şablondan başlat, önizle, yayınla; yeni sürümle eski
   await expect(page.getByText("Eski", { exact: true })).toBeVisible();
   await expect(page.getByText("Yayında", { exact: true })).toBeVisible();
 
+  /* 370: vazgeçilen taslak yönetici tarafından silinir; yayınlanmış sürümlerde Sil yok */
+  await basla(page, /Sürüm 2 · yayında/);
+  await page.goto(turAdresi);
+  await hazir(page);
+  await expect(page.getByRole("button", { name: "Taslağı sil" })).toHaveCount(1);
+  await page.getByRole("button", { name: "Taslağı sil" }).click();
+  const onay = page.locator("dialog[open]");
+  await expect(onay).toContainText("Taslak kalıcı olarak silinir; yayınlanmış sürümler etkilenmez. Geri alınamaz.");
+  await onay.getByRole("button", { name: "Sil" }).click();
+  await expect(page.getByText("Taslak silindi.").first()).toBeVisible({ timeout: 30_000 });
+  await expect(page.getByRole("button", { name: "Taslağı sil" })).toHaveCount(0);
+  await expect(page.getByText("Yayında", { exact: true })).toBeVisible();
+
   /* denetçi: görür, başlatamaz / yayınlayamaz */
   await context.clearCookies();
   await girisli(page, "denetci");

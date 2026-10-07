@@ -16,7 +16,8 @@
   12. (367) müşteri girişi kullanımından panele girme denetimi kalkınca müşterinin kullandığı giriş silinir.
   13. (368) teklif kullanımından "gönderildi" denetimi kalkınca gönderilmiş teklifi silmek kalem tetiğinde hatayla düşer (kişi "silinmez" iletisi
       yerine hata ekranı görür; tetik olmasa müşteriye verilmiş belge silinirdi).
-  14. (369) sözleşme kullanımından yüklenmiş imzalı tarama denetimi kalkınca taraması kaldırılmış (bir kez imzalanmış) sözleşme silinir. */
+  14. (369) sözleşme kullanımından yüklenmiş imzalı tarama denetimi kalkınca taraması kaldırılmış (bir kez imzalanmış) sözleşme silinir.
+  15. (370) rapor formatı kullanımından "yayınlandı" denetimi kalkınca (henüz raporu olmayan) yayındaki sürüm silinir. */
 import assert from "node:assert/strict";
 import { copyFileSync, mkdirSync, mkdtempSync, readdirSync, readFileSync, rmSync, writeFileSync } from "node:fs";
 import { tmpdir } from "node:os";
@@ -29,6 +30,7 @@ import { aracKaydet, aracSilmeDurumu } from "../../src/modules/araclar/server/ar
 import { girisSil } from "../../src/modules/musteriler/server/girisler.ts";
 import { teklifSil } from "../../src/modules/teklifler/server/teklifler.ts";
 import { imzaliYukle, sozlesmeSil } from "../../src/modules/sozlesmeler/server/sozlesmeler.ts";
+import { taslakBaslat, taslakSil, yayinla } from "../../src/modules/rapor-format/server/formatlar.ts";
 import { musteriSil } from "../../src/modules/musteriler/server/musteriler.ts";
 import { personelSil } from "../../src/modules/personel/server/personel.ts";
 import { demirbasEkle, demirbasSil } from "../../src/modules/zimmetler/server/zimmet.ts";
@@ -274,5 +276,23 @@ test("14. yüklenmiş tarama denetimi kalkınca bir kez imzalanmış sözleşme 
       await imzaliYukle(db, depo, F.yon, A, s, su, null);
     }, { hesapId: F.yon.id });
     assert.equal((await kiraciIcinde(h, A, (db) => sozlesmeSil(db, F.yon, s), { hesapId: F.yon.id })).durum, "tamam", "bozuk: bir kez imzalanmış sözleşme silindi");
+  } finally { await h.end(); await supa.kapat(); }
+});
+
+test("15. yayınlandı denetimi kalkınca yayındaki rapor formatı silinir (kilidin koruduğu açık)", async () => {
+  const YAYIN = "    'yayinlandi', CASE WHEN r.durum <> 'taslak' THEN 1 END,";
+  const supa = await supabaseBenzeri(kume, "silme_bozuk_15", gocler(degistir(YAYIN, "    'yayinlandi', NULL,"), undefined, "0065_"));
+  const h = havuzKur({ ...kume.uygulama, database: "silme_bozuk_15" });
+  try {
+    const A = (await supa.sahip.query<{ id: string }>("INSERT INTO firma (kisa_ad, ad, rapor_kodu) VALUES ('deneme-a', 'Deneme A', 'DA') RETURNING id::text")).rows[0].id;
+    const F = await sahaFirmasi(h, depo, A, "deneme-a");
+    const tur = await kiraciIcinde(h, A, async (db) => (await db.sorgu<{ id: string }>(
+      "INSERT INTO ekipman_turu (kod, ad, grup, brans, periyot) VALUES ('YNT', 'Raporsuz tür', 'elektrik', 'e', 12) RETURNING id::text")).rows[0].id);
+    const id = await kiraciIcinde(h, A, async (db) => {
+      const t = await taslakBaslat(db, F.yon, tur, "sablon:ZPKR02", null) as { id: string; surum: number };
+      await yayinla(db, F.yon, t.id, t.surum, "");
+      return t.id;
+    }, { hesapId: F.yon.id });
+    assert.equal((await kiraciIcinde(h, A, (db) => taslakSil(db, F.yon, id), { hesapId: F.yon.id })).durum, "tamam", "bozuk: yayındaki sürüm silindi");
   } finally { await h.end(); await supa.kapat(); }
 });

@@ -11,8 +11,9 @@
 import { kilitDenetimi, kilitNormallestir, yayinDenetimi } from "../../../format/motor.ts";
 import { FormatTanimi } from "../../../format/tanim.ts";
 import type { Sorgulayici } from "../../../server/db/kiraci.ts";
+import { kesinSil } from "../../../server/db/silici.ts";
 import { ekle, guncelle, tablo } from "../../../server/db/yazici.ts";
-import { duzey, type YetkiHesabi } from "../../../server/yetki/canDo.ts";
+import { canDoEylem, duzey, type YetkiHesabi } from "../../../server/yetki/canDo.ts";
 import { dogrula, hatalar, type DogrulamaHatalari } from "../../../sema/ortak.ts";
 import { turOzeti } from "../../ekipman-turleri/server/turler.ts";
 import { BaslatGirdisi, sablonBul, YayinNotu } from "../sema.ts";
@@ -211,4 +212,14 @@ export async function formatSurumuOku(db: Sorgulayici, id: string): Promise<{ id
     "SELECT id::text, tur_id::text, sira, durum, tanim FROM rapor_format WHERE id = $1 AND durum <> 'taslak'", [id])).rows[0];
   const t = r ? tanimOku(r.tanim) : null;
   return r && t ? { id: r.id, turId: r.tur_id, sira: r.sira, durum: r.durum, tanim: t } : null;
+}
+
+/* ── TASLAĞI SİL (370; reisim 2026-10-07 "eklenebilen şeyler silinemiyor"; §9 elli üçüncü tur) — yalnız yönetici (kayit_sil, modül 5) ve yalnız hiç
+   yayınlanmamış taslak (veritabanında, göç 0065); yayınlanmış / eski sürüm silinmez (0022). Tanım izde kalır. */
+export const formatSilebilir = (kim: YetkiHesabi) => canDoEylem(kim, "kayit_sil", { modul: MODUL });
+export async function taslakSil(db: Sorgulayici, kim: Kisi, id: string): Promise<Yazma> {
+  if (!formatSilebilir(kim)) return { durum: "yetkisiz" };
+  const r = await kesinSil(db, "rapor_format", id, kim.ad);
+  if (r.durum === "kullanildi") return { durum: "kilitli" };
+  return r.durum === "tamam" ? { durum: "tamam", id, surum: 0 } : { durum: "yok" };
 }

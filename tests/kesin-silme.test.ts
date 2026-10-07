@@ -22,7 +22,8 @@
    · 367 müşteri girişi: hiç girilmemiş ek giriş yalnız yöneticiye silinir (kullanıcı adı serbest, parola ize yazılmaz); ana giriş ve panele girilmiş
      giriş silinmez;
    · 368 teklif: taslak kalemleri ve tesisleriyle silinir (yalnız yönetici; hazırlayan planlama silemez); kopyası olan ve gönderilmiş teklif silinmez;
-   · 369 sözleşme: imza bekleyen sözleşme kapsam tesisleriyle silinir; imzalı tarama bir kez yüklenmişse (kaldırılmış olsa da) silinmez.
+   · 369 sözleşme: imza bekleyen sözleşme kapsam tesisleriyle silinir; imzalı tarama bir kez yüklenmişse (kaldırılmış olsa da) silinmez;
+   · 370 rapor formatı: taslak yalnız yöneticiye silinir (tanımı izde); yayınlanmış sürüm silinmez.
    Olumsuz kanıt: tests/bozan/kesin-silme.bozan.ts. */
 import assert from "node:assert/strict";
 import { mkdtempSync, rmSync } from "node:fs";
@@ -40,7 +41,7 @@ import { hesapAc } from "../src/server/kimlik/hesapYonetimi.ts";
 import { teklifKarti, teklifSil } from "../src/modules/teklifler/server/teklifler.ts";
 import { imzaliYukle, sozlesmeSil, sozlesmeSilinir } from "../src/modules/sozlesmeler/server/sozlesmeler.ts";
 import { demirbasDurumu, demirbasEkle, demirbasPasif, demirbasSil, teslimEt, zimmetListeleri } from "../src/modules/zimmetler/server/zimmet.ts";
-import { taslakBaslat } from "../src/modules/rapor-format/server/formatlar.ts";
+import { taslakBaslat, taslakSil } from "../src/modules/rapor-format/server/formatlar.ts";
 import { raporSil, sahaRaporu } from "../src/modules/raporlar/server/raporlar.ts";
 import type { GomuluKume } from "../src/server/db/gomulu.ts";
 import { havuzKur, kiraciIcinde, type Havuz } from "../src/server/db/kiraci.ts";
@@ -503,4 +504,18 @@ test("sözleşme: imza bekleyen kapsam tesisleriyle silinir; imzalı (kaldırıl
   tamam(await a(FA.yon, async (db) => imzaliYukle(db, depo, FA.yon, A, s2, await surum(), null)));
   assert.equal(await a(FA.yon, (db) => sozlesmeSilinir(db, FA.yon, s2)), false, "imzalı tarama kaldırılmış olsa da silinmez");
   await assert.rejects(a(FA.yon, (db) => db.sorgu("DELETE FROM is_sozlesmesi WHERE id = $1", [s2])), /permission denied|izin/i);
+});
+
+/* 370 — rapor formatı taslağı: yalnız yönetici; yayınlanmış sürüm silinmez */
+test("rapor formatı: taslak silinir (tanımı izde); yayınlanmış sürüm silinmez; yalnız yönetici", async () => {
+  const t = tamam(await a(FA.yon, (db) => taslakBaslat(db, FA.yon, FA.tur, "sablon:ZPKR02", null))).id;
+  for (const k of [FA.plan, FA.den1]) assert.deepEqual(await a(k, (db) => taslakSil(db, k, t)), { durum: "yetkisiz" }, k.roller.join());
+  assert.deepEqual(await kiraciIcinde(havuz, B, (db) => taslakSil(db, FB.yon, t), { hesapId: FB.yon.id }), { durum: "yok" }, "başka firma");
+  assert.deepEqual(await a(FA.elk, (db) => taslakSil(db, FA.elk, t)), { durum: "tamam", id: t, surum: 0 }, "elektrik yöneticisi (Ekipman türleri'nde yaz)");
+  assert.equal((await a(FA.yon, (db) => db.sorgu("SELECT 1 FROM rapor_format WHERE id = $1", [t]))).rowCount, 0);
+  const iz = (await a(FA.yon, (db) => db.sorgu<{ eski: Record<string, unknown> }>("SELECT eski FROM denetim_izi WHERE ne = 'rapor_format.sil' AND nesne_id = $1", [t]))).rows[0];
+  assert.ok("tanim" in iz.eski, "taslağın tanımı izde");
+  const yayinda = (await a(FA.yon, (db) => db.sorgu<{ id: string }>("SELECT id::text FROM rapor_format WHERE tur_id = $1 AND durum = 'yayinda'", [FA.tur]))).rows[0].id;
+  assert.deepEqual(await a(FA.yon, (db) => taslakSil(db, FA.yon, yayinda)), { durum: "kilitli" });
+  await assert.rejects(a(FA.yon, (db) => db.sorgu("DELETE FROM rapor_format WHERE id = $1", [yayinda])), /permission denied|izin/i);
 });

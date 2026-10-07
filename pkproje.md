@@ -2353,6 +2353,10 @@ revizyon, alan kopyalama, hafif kusur devri, meslek eşleşme denetimi).
 - Emsal ürünler: https://opwire.app/iso-17020-periyodik-kontrol-yazilimi/ · https://17020muayene.vidco.com.tr/ · https://akuple.com/asansor-kontrol-yazilimi/ · https://ensyazilim.com/
 
 ## 11 · Değişiklik günlüğü
+- 2026-10-07 (370): **Rapor formatı taslağı Sil** (§9 elli üçüncü tur; 0022 "yayınlanan sürüm silinmez" aynen). Tür sayfasının "Rapor şablonu"
+  sürüm tablosunda taslak satırında yalnız yöneticiye (Ekipman türleri'nde "yaz" + yönetici) çöp kutusu simgesi ("Taslağı sil"; onay "Taslak kalıcı
+  olarak silinir; yayınlanmış sürümler etkilenmez."). Göç 0065 rapor_format_kullanim (yayınlandı · rapor) + rapor_format_sil (tür kilitlenir; tanım
+  izde). Kilit kesin-silme.test "rapor formatı"; olumsuz kanıt kesin-silme.bozan 15; e2e rapor-format (taslak sil, yayındakine dokunmaz).
 - 2026-10-07 (369): **İmza bekleyen sözleşme Sil** (§9 elli üçüncü tur; 0017'nin "silme yok"u imzalanmış sözleşme için geçerli). Sözleşme sayfasında,
   müşteri imzası hiç yüklenmemiş (imzalı tarama bir kez bile yüklenmemiş — kaldırılmışı dahil) ve faturası olmayan sözleşmede yalnız yöneticiye
   "Sil" (onay "… imza beklerken silinir, kapsam tesisleri de çıkar."). İSG-KATİP ID'leri tesis × denetçiye bağlı, sözleşmeyle gitmez. Göç 0064

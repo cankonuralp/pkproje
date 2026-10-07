@@ -13,15 +13,17 @@ import { Pencere, pencereMetinSinifi } from "../../../components/pencere/Pencere
 import { AltSatir, Rozet } from "../../../components/sayfa/Sayfa";
 import { SecimAlani } from "../../../components/secim/SecimAlani";
 import { Serit } from "../../../components/serit/Serit";
+import { SilTusu } from "../../../components/sil/SilTusu";
 import { Tus, TusBaglanti } from "../../../components/tus/Tus";
 import type { FormatOzeti } from "../server/formatlar";
-import { taslakBaslatEylemi, yayinDenetleEylemi, yayinlaEylemi } from "./eylemler";
+import { taslakBaslatEylemi, taslakSilEylemi, yayinDenetleEylemi, yayinlaEylemi } from "./eylemler";
 import { DURUM_ROZET, surumAdi, tarihYaz } from "./ortak";
 import stil from "./format.module.css";
 
 const BASLA_ID = "sb-baslangic", NOT_ID = "sb-not";
 
-export function SablonTablosu({ turId, surumler, yaz }: { turId: string; surumler: FormatOzeti[]; yaz: boolean }) {
+/** 370: `sil` — taslağı kesin silebilir (yönetici; yayınlanmış sürüm silinmez) */
+export function SablonTablosu({ turId, surumler, yaz, sil = false }: { turId: string; surumler: FormatOzeti[]; yaz: boolean; sil?: boolean }) {
   const sutunlar: Sutun<FormatOzeti>[] = [
     { k: "surum", genislik: "26%", baslik: "Sürüm", kart: "ust", sira: 1, hucre: (x) => <><b>{surumAdi(x)}</b><AltSatir>{x.kaynakAd ?? "Firma formatı"} · {x.bolum} bölüm</AltSatir></> },
     { k: "tarih", genislik: "24%", baslik: "Tarih", kart: "govde", sira: 2, hucre: (x) => <>
@@ -33,6 +35,8 @@ export function SablonTablosu({ turId, surumler, yaz }: { turId: string; surumle
         <TusBaglanti ikon="eye" href={`/ekipman-turleri/${turId}/sablon/${x.id}`}>Önizle</TusBaglanti>
         {yaz && x.durum === "taslak" && <TusBaglanti ikon="pencil" href={`/ekipman-turleri/${turId}/sablon/${x.id}/kurucu`}>Düzenle</TusBaglanti>}
         {yaz && x.durum === "taslak" && <YayinlaTusu format={x} />}
+        {sil && x.durum === "taslak" && <SilTusu kucuk ikon="trash-2" ad="Taslak" erisimAdi="Taslağı sil" baslik="Rapor formatı taslağını sil" yanEtki="yayınlanmış sürümler etkilenmez"
+          sil={() => taslakSilEylemi(x.id)} odak="#b-sablon" />}
       </span>
     ) },
   ];

@@ -78,6 +78,11 @@ export const SILINEBILIR = {
     kullanim: "is_sozlesmesi_kullanim", sil: "is_sozlesmesi_sil",
     fk: { kullanim: ["fatura.sozlesme_id"], birlikte: ["is_sozlesmesi_tesis.sozlesme_id"] },
   },
+  /* 370: hiç yayınlanmamış (taslak) rapor formatı; yayınlanmış / eski sürüm silinmez (0065) */
+  rapor_format: {
+    kullanim: "rapor_format_kullanim", sil: "rapor_format_sil",
+    fk: { kullanim: ["rapor.format_id"], birlikte: [] },
+  },
 } as const satisfies Record<string, { kullanim: string; sil: string; fk: { kullanim: readonly string[]; birlikte: readonly string[] } }>;
 export type SilinebilirTur = keyof typeof SILINEBILIR;
 
