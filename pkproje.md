@@ -2355,6 +2355,12 @@ revizyon, alan kopyalama, hafif kusur devri, meslek eşleşme denetimi).
 - Emsal ürünler: https://opwire.app/iso-17020-periyodik-kontrol-yazilimi/ · https://17020muayene.vidco.com.tr/ · https://akuple.com/asansor-kontrol-yazilimi/ · https://ensyazilim.com/
 
 ## 11 · Değişiklik günlüğü
+- 2026-10-08 (414): **Planlar listesi tablette taşıyordu** — 411'in tablet (1080) görüntüsünde: müşteri adı adres sütununun üstüne taşıyor,
+  "Görüntüle" tuşu durum rozetinin üstüne biniyordu, proje no ikiye bölünüyordu. Sebep: sütun oranları donmuş maketten alınmamıştı (işlem %8 —
+  makette %17,75) ve ikon + metin satırı içerik kadar genişliyordu (metin kısaltılamıyordu). Artık maketin oranları (no 11,25 · ad 12,5 · müşteri
+  12,5 · adres 12,75 · denetçi 10,25 · başlangıç 12 · durum 11 · işlem 17,75) ve satır hücre kadar (uzun ad "…" ile kısalır). Maketin sıkışık
+  tablosu (kap 600–960, tablet dikey) da kodda eksikti: liste bileşenine bu aralık için ayrı sütun genişliği (Planlar: durum 13,5 · işlem 15,25),
+  tuş ve rozet gerekince iki satır, ikon satırı sarılır.
 - 2026-10-08 (413): **Deneme makinesine süre sınırı** (reisim: *"1 saat 12 dakika olmuş normal mi ?"*). 0f1ee47'nin turunda denetim işi tarayıcı
   kurulumunda 71 dk asılı kaldı (GitHub makinesinin paket indirmesi; olağanı 20 sn) — sınır yoktu, 6 saat bekleyecekti. Artık: kurulum her
   denemede en çok 4 dk, üç deneme; denetim işi en çok 20 dk (olağan 5–8), her genişlik en çok 40 dk (olağan 19–26). Ölçü son üç yeşil turdan.

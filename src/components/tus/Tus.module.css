@@ -22,3 +22,7 @@
 .sure { font-weight: 500; opacity: .8; font-variant-numeric: tabular-nums; }
 @keyframes don { to { transform: rotate(360deg); } }
 @media (prefers-reduced-motion: reduce) { .donen { animation-duration: 2.4s; } }
+/* sıkışık tablo (414; maket .a-tablo .a-tus, kap 600–960): listedeki tuş gerekince ikinci satıra iner, sütundan taşmaz — yalnız liste kabının içinde */
+@container liste (min-width: 600px) and (max-width: 959.98px) {
+  .tus { height: auto; min-height: var(--tus-y); padding: 4px 8px; white-space: normal; line-height: 1.2; }
+}

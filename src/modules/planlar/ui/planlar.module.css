@@ -89,7 +89,13 @@
 .ilk { color: var(--yazi2); font-size: var(--boy-kucuk); }
 .sonucUyari { color: var(--uyari-yazi); font-weight: 600; }
 .sonucHata { color: var(--hata-yazi); font-weight: 600; }
-.hucreSatir { display: inline-flex; align-items: center; gap: 6px; min-width: 0; }
+/* ikon + metin satırı (maket .a-hucre-satir): hücre kadar geniş — metin (Kirp ya da .esnek) daralır, kısaltılır; 414: inline-flex içerik kadar
+   genişliyordu, uzun müşteri adı yandaki sütuna taşıyordu (tablet 1080, 411 görüntüsü) */
+.hucreSatir { display: flex; align-items: center; gap: 6px; min-width: 0; }
+.esnek { flex: 1 1 auto; min-width: 0; }
+@container liste (min-width: 600px) and (max-width: 959.98px) {
+  .hucreSatir { flex-wrap: wrap; gap: 2px 4px; }
+}
 .eylemTuslar { display: flex; flex-wrap: wrap; justify-content: flex-end; gap: 8px; }
 .notlar { margin-top: 24px; }
 .notForm { display: flex; align-items: flex-start; gap: 8px; margin: 0 0 10px; }

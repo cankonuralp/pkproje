@@ -46,3 +46,7 @@
   .nesneBas .eylemCubugu { flex: 1 1 100%; justify-content: stretch; }
   .nesneBas .eylemCubugu > * { flex: 1 1 auto; }
 }
+/* sıkışık tablo (414; maket .a-tablo .a-rozet, kap 600–960): rozet daralır, iki satıra inerse ortalı */
+@container liste (min-width: 600px) and (max-width: 959.98px) {
+  .rozet { padding: 2px 6px; text-align: center; }
+}

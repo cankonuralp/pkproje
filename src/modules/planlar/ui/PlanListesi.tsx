@@ -59,24 +59,24 @@ function tanim(kayitlar: readonly PlanSatir[], bugun: string): SuzgecTanimi<Plan
 
 /* kartta (telefon) müşteri adı en üstte ve kalın, proje adı altında normal (reisim 2026-09-28, 2026-09-29) */
 const SUTUNLAR: Sutun<PlanSatir>[] = [
-  { k: "no", genislik: "11%", baslik: "Proje no", kart: "ust", sira: 1, hucre: (p) => <Link className={stil.no} href={`/planlar/${p.id}`}>{p.no}</Link> },
-  { k: "ad", genislik: "14%", baslik: "Proje adı", kart: "govde", sira: 3, hucre: (p) => <Kirp>{p.ad}</Kirp> },
-  { k: "musteri", genislik: "17%", baslik: "Müşteri", kart: "govde", sira: 2, hucre: (p) => (
-    <span className={stil.hucreSatir}><Ikon ad="building-2" kucuk /><b><Kirp>{p.musteri}</Kirp></b></span>
+  { k: "no", genislik: "11.25%", baslik: "Proje no", kart: "ust", sira: 1, hucre: (p) => <Link className={stil.no} href={`/planlar/${p.id}`}>{p.no}</Link> },
+  { k: "ad", genislik: "12.5%", baslik: "Proje adı", kart: "govde", sira: 3, hucre: (p) => <Kirp>{p.ad}</Kirp> },
+  { k: "musteri", genislik: "12.5%", baslik: "Müşteri", kart: "govde", sira: 2, hucre: (p) => (
+    <span className={stil.hucreSatir}><Ikon ad="building-2" kucuk /><Kirp baslik={p.musteri}><b>{p.musteri}</b></Kirp></span>
   ) },
-  { k: "adres", genislik: "17%", baslik: "Adres", kart: "govde", sira: 5, hucre: (p) => (
-    <span className={stil.hucreSatir}><Ikon ad="map-pin" kucuk /><span><Kirp baslik={adres(p)}>{p.adres ?? "—"}</Kirp>
+  { k: "adres", genislik: "12.75%", baslik: "Adres", kart: "govde", sira: 5, hucre: (p) => (
+    <span className={stil.hucreSatir}><Ikon ad="map-pin" kucuk /><span className={stil.esnek}><Kirp baslik={adres(p)}>{p.adres ?? "—"}</Kirp>
       {(p.il || p.ilce) && <AltSatir>{[p.ilce, p.il].filter(Boolean).join(" / ")}</AltSatir>}</span></span>
   ) },
-  { k: "ekip", genislik: "14%", baslik: "Denetçi", kart: "govde", sira: 6, hucre: (p) => (
+  { k: "ekip", genislik: "10.25%", baslik: "Denetçi", kart: "govde", sira: 6, hucre: (p) => (
     <span className={stil.hucreSatir} title={p.ekip.join(" · ")}><Ikon ad="users" kucuk />
-      <span>{p.ekip.slice(0, 2).join(", ")}{p.ekip.length > 2 && <span className={stil.altInline}> +{p.ekip.length - 2}</span>}</span></span>
+      <span className={stil.esnek}>{p.ekip.slice(0, 2).join(", ")}{p.ekip.length > 2 && <span className={stil.altInline}> +{p.ekip.length - 2}</span>}</span></span>
   ) },
-  { k: "baslangic", genislik: "10%", baslik: "Başlangıç", kart: "govde", sira: 4, hucre: (p) => (
+  { k: "baslangic", genislik: "12%", baslik: "Başlangıç", kart: "govde", sira: 4, hucre: (p) => (
     <><KartEtiket>Başlangıç</KartEtiket><span className={stil.sayi}>{tarihNo(p.baslangic)}</span>{p.bitis !== p.baslangic && <AltSatir>– {tarihNo(p.bitis)}</AltSatir>}</>
   ) },
-  { k: "durum", genislik: "9%", baslik: "Durum", kart: "rozet", sira: 1, hucre: (p) => <Rozet tur={PLAN_DURUM[p.durum][1]}>{PLAN_DURUM[p.durum][0]}</Rozet> },
-  { k: "eylem", genislik: "8%", baslik: "İşlem", gizliBaslik: true, siralanmaz: true, kart: "eylem", sira: 9, hucre: (p) => (
+  { k: "durum", genislik: "11%", sikisik: "13.5%", baslik: "Durum", kart: "rozet", sira: 1, hucre: (p) => <Rozet tur={PLAN_DURUM[p.durum][1]}>{PLAN_DURUM[p.durum][0]}</Rozet> },
+  { k: "eylem", genislik: "17.75%", sikisik: "15.25%", baslik: "İşlem", gizliBaslik: true, siralanmaz: true, kart: "eylem", sira: 9, hucre: (p) => (
     <div className={stil.eylemTuslar}><TusBaglanti ikon="eye" href={`/planlar/${p.id}`}>Görüntüle</TusBaglanti></div>
   ) },
 ];

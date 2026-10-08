@@ -5,7 +5,7 @@
    Sıralama tabloda sütun başlığından; kartta başlık yok, süzgeç satırındaki "Sıralama" seçicisi yapar (kip bildirilir).
    Tıklanır satır / kart: tuşa, bağlantıya, alana basılmadıysa kayda girer. */
 import { useRouter } from "next/navigation";
-import { useEffect, useRef, type ReactNode } from "react";
+import { useEffect, useRef, type CSSProperties, type ReactNode } from "react";
 import { KALIP } from "../../styles/kalip";
 import { Ikon } from "../ikon/Ikon";
 import stil from "./Liste.module.css";
@@ -21,6 +21,8 @@ export interface Sutun<K> {
   sira?: number;
   /** tablo kipinde sütun genişliği (ör. "12.5%") */
   genislik: string;
+  /** 600–960 kapta (sıkışık tablo, tablet dikey) farklı genişlik — maketin sıkışık tablo oranı (414); verilmezse genislik */
+  sikisik?: string;
   hucre: (kayit: K) => ReactNode;
   siralanmaz?: boolean;
   gizliBaslik?: boolean;
@@ -71,7 +73,7 @@ export function Liste<K>({ baslik, sutunlar, kayitlar, anahtar, href, siralama, 
     <div className={stil.kap} ref={kap}>
       <table className={stil.tablo}>
         <caption className="gizli">{baslik}</caption>
-        <colgroup>{sutunlar.map((s) => <col key={s.k} style={{ width: s.genislik }} />)}</colgroup>
+        <colgroup>{sutunlar.map((s) => <col key={s.k} style={{ "--g": s.genislik, "--gs": s.sikisik ?? s.genislik } as CSSProperties} />)}</colgroup>
         <thead>
           <tr>
             {sutunlar.map((s) => {
