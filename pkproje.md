@@ -2355,6 +2355,10 @@ revizyon, alan kopyalama, hafif kusur devri, meslek eşleşme denetimi).
 - Emsal ürünler: https://opwire.app/iso-17020-periyodik-kontrol-yazilimi/ · https://17020muayene.vidco.com.tr/ · https://akuple.com/asansor-kontrol-yazilimi/ · https://ensyazilim.com/
 
 ## 11 · Değişiklik günlüğü
+- 2026-10-08 (383): **Sağlıkta takılı arka plan işi** (09-G5). 1 saatten uzun "çalışıyor"da kalan iş (gece çöp temizliği, duyuru okuma …)
+  sağlık ucunda "isler: hayır" ve durum "sorun" olur — duman testi düşer, iş sessizce durmaz. Yeni başlamış iş sorun değil; bir sonraki koşu
+  takılı işi "takıldı" yapınca düzelir. Ayrı işlev (0072 is_denetimi; saglik_denetimi'ne dokunulmadı), yalnız sayı. Kilit saglik.test,
+  saglik-saf.test, e2e api (sağlık ucunda isler); olumsuz kanıt is-saglik.bozan.
 - 2026-10-08 (382): **S.A.Y rapor ekranında** (maket say.js HIZLI; ARKA-UC §5.3). Düzenlenen rapor açıkken S.A.Y raporu okur (kaydedilmemiş
   değişiklikler dahil): hızlı sorular **"Eksik alanlar neler?"** (bölüm başına "Bölüm · N alan" ve **Git** — alana götürür; telefonda panel kapanır)
   ve **"Sonuç ne olmalı?"** (kusur ve sınır dışı değerlere göre; seçilen sonuç kriterlerden ayrıysa **öneri kartı**: "Uygula" denetçinin

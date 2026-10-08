@@ -29,7 +29,7 @@ test("sağlık ucu: bütün denetimler doğru, firma / kişi bilgisi yok", async
   expect(r!.status()).toBe(200);
   expect(r!.headers()["cache-control"]).toBe("no-store");
   const j = await r!.json();
-  expect(j).toEqual({ durum: "tamam", surum: "yerel", denetimler: { veritabani: true, goc_guncel: true, rls: true, api_kapali: true, uygulama_kisitli: true } });
+  expect(j).toEqual({ durum: "tamam", surum: "yerel", denetimler: { veritabani: true, goc_guncel: true, rls: true, api_kapali: true, uygulama_kisitli: true, isler: true } });
 });
 
 /* 378 (K5, 09-A5): gece işi ucu yalnız zamanlayıcının sırrıyla; sırsız / yanlış sırla 401 ve iş koşmaz; doğru sırla çöp temizliği koşar, yanıt

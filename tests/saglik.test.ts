@@ -1,8 +1,8 @@
 /* NEREDEN GELDİ: 350 — 09-G5 duman testi ("veritabanı bağlantısı, RLS açık mı …"). GERÇEK PostgreSQL: göçleri uygulanmış veritabanında bütün denetimler
    doğru; firma_id taşıyan RLS'siz, zorlanmamış ya da politikasız bir tablo eklenince yakalanır; Supabase taklidinde API rolleri şemaya giremez,
    girebilir olunca yakalanır; uygulama rolü şema bilgisini (goc) doğrudan okuyamaz, yalnız işlevle sayıları alır. 354 (350–351 incelemesi): göç sayısı
-   dosyalarla aynı; BAĞLANAN rol ölçülür (sahip / ayrıcalıklı rolle bağlanılınca "ayrıcalıklı"); service_role da sayılır. Olumsuz kanıt:
-   tests/bozan/saglik.bozan.ts. */
+   dosyalarla aynı; BAĞLANAN rol ölçülür (sahip / ayrıcalıklı rolle bağlanılınca "ayrıcalıklı"); service_role da sayılır. 383: 1 saatten uzun
+   "çalışıyor"da kalan arka plan işi sorun (0072 is_denetimi). Olumsuz kanıt: tests/bozan/saglik.bozan.ts, tests/bozan/is-saglik.bozan.ts. */
 import assert from "node:assert/strict";
 import { after, before, test } from "node:test";
 import type { GomuluKume } from "../src/server/db/gomulu.ts";
@@ -26,6 +26,23 @@ test("göçleri uygulanmış veritabanı: bütün denetimler doğru; uygulama ro
   assert.deepEqual({ rls_eksik: v.rls_eksik, politikasiz: v.politikasiz, uygulama_ayricalikli: v.uygulama_ayricalikli }, { rls_eksik: 0, politikasiz: 0, uygulama_ayricalikli: false });
   assert.equal(saglikDegerlendir(v).durum, "tamam");
   await assert.rejects(havuz.query("SELECT * FROM goc"), /permission denied/);
+});
+
+/* 383 (09-G5 "takılı arka plan işi"): 1 saatten uzun "çalışıyor"da kalan iş sağlıkta sorun; yeni başlamış iş sorun değil; bitince düzelir */
+test("takılı arka plan işi sağlıkta görünür; yeni başlayan iş görünmez", async () => {
+  const s = kume.sahipIstemci(); await s.connect();
+  try {
+    assert.equal(Number((await saglikOku(havuz)).takili_is), 0);
+    await s.query("INSERT INTO is_calisma (ad) VALUES ('yeni_is')");
+    assert.equal(Number((await saglikOku(havuz)).takili_is), 0, "yeni başlayan iş takılı değil");
+    const id = (await s.query<{ id: string }>("INSERT INTO is_calisma (ad, basladi) VALUES ('asili_is', now() - interval '2 hours') RETURNING id::text")).rows[0].id;
+    const v = await saglikOku(havuz);
+    assert.equal(Number(v.takili_is), 1);
+    assert.deepEqual([saglikDegerlendir(v).denetimler.isler, saglikDegerlendir(v).durum], [false, "sorun"]);
+    await s.query("UPDATE is_calisma SET durum = 'takildi', bitti = now() WHERE id = $1", [id]);
+    assert.equal(Number((await saglikOku(havuz)).takili_is), 0, "takıldı sayılan iş artık çalışmıyor");
+    await s.query("DELETE FROM is_calisma WHERE ad IN ('yeni_is', 'asili_is')");
+  } finally { await s.end(); }
 });
 
 test("RLS'siz, zorlanmamış ya da politikasız kiracı tablosu yakalanır", async () => {

@@ -11,8 +11,10 @@ export interface SaglikVerisi {
   politikasiz: number;
   api_sema: boolean;
   uygulama_ayricalikli: boolean;
+  /** 1 saatten uzun "çalışıyor"da kalan arka plan işi (383; 0072 is_denetimi) */
+  takili_is: number;
 }
 
 export async function saglikOku(havuz: Havuz): Promise<SaglikVerisi> {
-  return (await havuz.query<{ s: SaglikVerisi }>("SELECT saglik_denetimi() AS s")).rows[0].s;
+  return (await havuz.query<{ s: SaglikVerisi }>("SELECT saglik_denetimi() || is_denetimi() AS s")).rows[0].s;
 }
