@@ -279,6 +279,10 @@ export function testKapisiEksikleri(paketJson: string, ciYml: string): string[] 
     && !/yayin:[\s\S]*?head_sha=\$\{\{ github\.sha \}\}&status=success[\s\S]*?select\(\.name == "ci"[\s\S]*?exit 1; fi[\s\S]*?node scripts\/onizleme\.ts/.test(ciYml)) {
     eksik.push("CI yayın işi denetime bağlı değil (needs: denetim ya da aynı commit'in yeşil denetimi şartı)");
   }
+  /* 2026-10-08: uçtan uca üç genişlik ayrı işlerde, aynı anda (matris) — genişlik listeden düşerse o genişlik hiç denenmez, koşu yine yeşil görünür */
+  const matris = /\bproje:\s*\[([^\]]*)\]/.exec(ciYml)?.[1].split(",").map((x) => x.trim()) ?? [];
+  for (const g of ["masaustu", "tablet", "telefon"]) if (!matris.includes(g)) eksik.push(`CI'da uçtan uca ${g} yok`);
+  if (!ciYml.includes("run: npm run test:e2e -- --project=${{ matrix.proje }}")) eksik.push("CI'da uçtan uca koşusu yok");
   return eksik;
 }
 

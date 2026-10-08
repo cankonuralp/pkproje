@@ -2355,6 +2355,11 @@ revizyon, alan kopyalama, hafif kusur devri, meslek eşleşme denetimi).
 - Emsal ürünler: https://opwire.app/iso-17020-periyodik-kontrol-yazilimi/ · https://17020muayene.vidco.com.tr/ · https://akuple.com/asansor-kontrol-yazilimi/ · https://ensyazilim.com/
 
 ## 11 · Değişiklik günlüğü
+- 2026-10-08 (389): **CI'da uçtan uca üç genişlik aynı anda** (reisim: *"1 saattir koşuyor bu deneme daha ne kadar sürecek ?"*). Masaüstü, tablet
+  ve telefon art arda koşuyordu (her biri ~22 dk, koşu ~80 dk); artık her genişlik ayrı işte, ayrı makinede, aynı anda (her biri zaten kendi
+  sunucusu ve geçici veritabanıyla koşuyordu — yalıtım aynı). Uçtan uca geliştirme sunucusuyla koştuğu için derlemeyi beklemez; biri düşse de
+  ötekiler biter, koşu yine kırmızı olur (Pages yayın şartı bütün koşunun yeşili — değişmedi). Kilit test-kapisi: üç genişlik matriste ve
+  koşu satırı var (olumsuz kanıt kilitler.bozan: telefon matristen düşünce yakalanır).
 - 2026-10-08 (388): **Deneme yayını güncellendi (387 saklama süresi).** CI 7c8ad00 yeşil (üç genişlik; ilk koşuda yeni e2e'nin seçicisi aynı
   satırdaki "PDF indir" bağlantısını da buluyordu — tam adla düzeltildi); Supabase'e göç 0073 (`goc` kaydıyla, özet 7c8ad00'daki dosyadan; 74
   göç) — beş işlevin gövdesi dosyayla bayt bayt aynı (md5), tetikler dosya ve firma_ayar'da, saklama_silme RLS + FORCE, uygulama yalnız okur,

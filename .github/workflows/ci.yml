@@ -1,5 +1,6 @@
 # CI + GitHub Pages önizlemesi (EKSIKLER 1; reisim 2026-09-23: "ilk yayını yap" → Pages önizlemesi).
-# · Her push'ta: tip denetimi · lint · test (fail 0) · olumsuz kanıt · üretim derlemesi. Biri düşerse iş durur.
+# · Her push'ta: tip denetimi · lint · test (fail 0) · olumsuz kanıt · üretim derlemesi (biri düşerse iş durur) + uçtan uca üç genişlik, ayrı
+#   işlerde aynı anda (2026-10-08).
 # · main'e push'ta: denetim kalem dalında aynı commit'te geçmiştir (yalnız yeşil commit ileri sarılır); maket / sunum değiştiyse önizleme
 #   kurulur ve Pages'e yayınlanır (2026-10-06). Site: maket ve sunum (docs/). Uygulamanın statik önizlemesi 2026-10-04'te kalktı (giriş / oturum sunucu ister).
 # · Next.js anonim kullanım bildirimi kapalı (anayasa 5.2: üçüncü tarafa veri gitmez).
@@ -41,31 +42,36 @@ jobs:
       - run: npm run lint
       - run: npm test
       - run: npm run test:negatif
-      - id: derleme
-        run: node scripts/next.ts build
-      # uçtan uca (K0, 2026-10-03): masaüstü · tablet · telefon (Chromium yukarıda kuruldu). 2026-10-06: her genişlik KENDİ sunucusu ve
-      # geçici veritabanıyla — tek geliştirme sunucusu ~200 testin sonunda bellek eşiğine dayanıp kendini yeniden başlatıyor, o an koşan
-      # telefon testi düşüyordu (3dda074, 661004b, c17ba55, ba4c79e); eşiği kapatınca sunucu çöktü (0059a80). Testler genişlik başına kendi
-      # verisini kurar (proje adıyla), birbirinin verisine dayanmaz. Biri düşse de öteki genişlikler koşar (iş yine kırmızı biter).
-      # 355: düşen testin sayfa anlık görüntüsü (error-context.md) ve izi saklanır — her genişlik koşusu test-results/'ı baştan siler, bu yüzden
-      # her koşudan hemen sonra; 3 gün (uydurma veri). Günlükteki "Error Context" yolu buradaki dosyadır.
-      - id: e2e_masaustu
-        run: npm run test:e2e -- --project=masaustu
-      - if: ${{ !cancelled() && steps.e2e_masaustu.outcome == 'failure' }}
+      - run: node scripts/next.ts build
+
+  # uçtan uca (K0, 2026-10-03): masaüstü · tablet · telefon. 2026-10-06: her genişlik KENDİ sunucusu ve geçici veritabanıyla — tek geliştirme
+  # sunucusu ~200 testin sonunda bellek eşiğine dayanıp kendini yeniden başlatıyor, o an koşan telefon testi düşüyordu (3dda074, 661004b,
+  # c17ba55, ba4c79e); eşiği kapatınca sunucu çöktü (0059a80). Testler genişlik başına kendi verisini kurar (proje adıyla), birbirinin
+  # verisine dayanmaz. 2026-10-08 (reisim: "1 saattir koşuyor bu deneme daha ne kadar sürecek ?"): art arda üç genişlik ~70 dk sürüyordu →
+  # her genişlik AYRI işte, aynı anda (ayrı makine, kendi sunucusu — önceki yalıtımın aynısı). Geliştirme sunucusuyla koşar, derleme çıktısına
+  # bağlı değil: denetimi beklemez. Biri düşse de ötekiler koşar (fail-fast kapalı); koşu yine kırmızı biter (yayın şartı bütün koşunun yeşili).
+  # 355: düşen testin sayfa anlık görüntüsü (error-context.md) ve izi saklanır, 3 gün (uydurma veri). Günlükteki "Error Context" yolu buradaki dosyadır.
+  uctan_uca:
+    name: Uçtan uca (${{ matrix.proje }})
+    if: github.ref != 'refs/heads/main'
+    runs-on: ubuntu-latest
+    strategy:
+      fail-fast: false
+      matrix:
+        proje: [masaustu, tablet, telefon]
+    steps:
+      - uses: actions/checkout@v7
+      - uses: actions/setup-node@v7
+        with:
+          node-version: 24
+          cache: npm
+      - run: npm ci
+      - run: npx playwright install --with-deps chromium
+      - id: e2e
+        run: npm run test:e2e -- --project=${{ matrix.proje }}
+      - if: ${{ !cancelled() && steps.e2e.outcome == 'failure' }}
         uses: actions/upload-artifact@v7
-        with: { name: e2e-masaustu, path: test-results/, retention-days: 3, if-no-files-found: ignore }
-      - id: e2e_tablet
-        if: ${{ !cancelled() && steps.derleme.outcome == 'success' }}
-        run: npm run test:e2e -- --project=tablet
-      - if: ${{ !cancelled() && steps.e2e_tablet.outcome == 'failure' }}
-        uses: actions/upload-artifact@v7
-        with: { name: e2e-tablet, path: test-results/, retention-days: 3, if-no-files-found: ignore }
-      - id: e2e_telefon
-        if: ${{ !cancelled() && steps.derleme.outcome == 'success' }}
-        run: npm run test:e2e -- --project=telefon
-      - if: ${{ !cancelled() && steps.e2e_telefon.outcome == 'failure' }}
-        uses: actions/upload-artifact@v7
-        with: { name: e2e-telefon, path: test-results/, retention-days: 3, if-no-files-found: ignore }
+        with: { name: "e2e-${{ matrix.proje }}", path: test-results/, retention-days: 3, if-no-files-found: ignore }
 
   # main: maket / sunum (Pages sitesinin kaynakları) değişti mi — değişmediyse yayın işi hiç açılmaz (boş Pages yayını yok)
   degisiklik:

@@ -132,13 +132,15 @@ test("RLS: göçte FORCE ya da politika eksik tablo yakalanır", () => {
   assert.equal(rlsEksikTablolar([...sql, yeniTablo]).length, 1);
 });
 
-test("test kapısı: derleme betiği testsiz kalınca ya da yayın denetimden kopunca yakalanır", () => {
+test("test kapısı: derleme betiği testsiz kalınca, yayın denetimden kopunca ya da bir genişlik uçtan ucadan düşünce yakalanır", () => {
   const paket = oku("package.json");
   const ci = oku(".github/workflows/ci.yml");
   assert.deepEqual(testKapisiEksikleri(paket, ci), []);
   assert.equal(testKapisiEksikleri(paket.replace('"npm test && node scripts/next.ts build"', '"node scripts/next.ts build"'), ci).length, 1);
   /* 2026-10-06: yayın işinin denetim şartı aynı commit'in yeşil ci koşusu — "success" yerine her biten koşu sayılırsa yakalanır */
   assert.equal(testKapisiEksikleri(paket, ci.replace("status=success", "status=completed")).length, 1);
+  /* 2026-10-08: uçtan uca genişlikleri ayrı işlerde — telefon matristen düşerse yakalanır */
+  assert.deepEqual(testKapisiEksikleri(paket, ci.replace("proje: [masaustu, tablet, telefon]", "proje: [masaustu, tablet]")), ["CI'da uçtan uca telefon yok"]);
 });
 
 test("pdf paketi: Chromium eklenen bir sayfadan maxDuration kalkınca yakalanır (Chromium bütün sayfalara düşerdi)", () => {
