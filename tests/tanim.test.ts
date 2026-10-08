@@ -56,3 +56,24 @@ test("API sürümü: başlıksız istek (tarayıcı) geçer; eski, bozuk ya da n
   assert.equal(istemciEskiMi(String(EN_AZ_ISTEMCI)), false);
   for (const b of [String(EN_AZ_ISTEMCI - 1), "abc", "-1", "1.5", "", "1e3", "9999999"]) assert.equal(istemciEskiMi(b), true, b);
 });
+
+/* 417: resmî tatiller — sabit günler 2429 sayılı Kanun'daki yedi gün; dini bayramlar yıl başına Ramazan 3, Kurban 4 ardışık gün, yıl alanı tarihle
+   aynı, yıllar boşluksuz (2026'dan) ve iki bayram her yılda var. Tarihler Diyanet dini günler takviminden (2026–2028; her yıl eklenir) */
+test("resmî tatiller: Kanun'daki yedi sabit gün; her yılın Ramazan (3) ve Kurban (4) bayramı ardışık, yılıyla tutarlı", () => {
+  const t = TANIMLAR.resmi_tatiller;
+  assert.deepEqual(t.sabit.map((x) => x.gun), ["01-01", "04-23", "05-01", "05-19", "07-15", "08-30", "10-29"]);
+  const yillar = [...new Set(t.dini.map((x) => x.yil))];
+  assert.deepEqual(yillar, yillar.map((_, i) => 2026 + i), "yıllar 2026'dan boşluksuz");
+  assert.ok(yillar.length >= 3, "en az üç yıl (2026–2028)");
+  for (const y of yillar) {
+    for (const [ad, n] of [["Ramazan Bayramı", 3], ["Kurban Bayramı", 4]] as const) {
+      const b = t.dini.find((x) => x.yil === y && x.ad === ad);
+      assert.ok(b, `${y} ${ad} yok`);
+      assert.equal(b.gunler.length, n, `${y} ${ad}: ${n} gün`);
+      b.gunler.forEach((g, i) => {
+        assert.ok(g.startsWith(`${y}-`), `${g}: yılı ${y} değil`);
+        if (i) assert.equal(Date.parse(`${g}T00:00:00Z`) - Date.parse(`${b.gunler[i - 1]}T00:00:00Z`), 864e5, `${y} ${ad}: günler ardışık değil`);
+      });
+    }
+  }
+});

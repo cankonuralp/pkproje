@@ -274,7 +274,7 @@ denetimleri geçer → 1920 · 1080 · 375 × açık / koyu gözle → commit + 
 | Y6 | ~~KVKK: veri işleyen sözleşmesi, saklama / imha politikası, yapay zekâ yurt dışı aktarım (hukukçu)~~ — yapılmaz (reisim 2026-10-03: *"kvkk falan yapma yok gerek yok öyle bir şeye zaten herkes kendi raporunu kendi tutacak"*); **mağazalar gizlilik politikası ve uygulama içi hesap silme ister** | giriş sayfasındaki metin "gerek yok" dendi (R3-5) | Metin giriş sayfasına konmaz; mağaza ve sözleşme için ayrı belge (K6 öncesi) |
 | Y7 | Apple / Google geliştirici hesapları | yok | K6 |
 | Y8 | Öteki türlerin Bakanlık formatları (PDF) · araç tutanağı kalemleri / açıları / taahhüt metni · giderler Excel'inin sütunları · toplu bordro · sabit gider düzenleme ayrıntısı | açık | geldikçe tanım / şablon olarak; kodu bekletmez |
-| Y9 | Resmî tatil takvimi (izin iş günü hesabı) | makette yok | tanım JSON'u, yıllık güncelleme |
+| Y9 | Resmî tatil takvimi (izin iş günü hesabı) | ✅ **yapıldı 2026-10-08 (pkproje §11 417):** tanım `resmi_tatiller` (src/tanim/veri.ts) — 2429 sayılı Kanun'un 7 sabit günü + Diyanet takviminden dini bayramlar 2026–2028 | tanım JSON'u, **yıllık güncelleme**: her yıl bir sonraki yılın bayramları Diyanet dini günler takviminden eklenir (listede olmayan yılın bayramı tatil sayılmaz) |
 
 ## 13 · Maketten koda geçmeyecek olanlar (makette geçici — §9 otuz üçüncü tur)
 

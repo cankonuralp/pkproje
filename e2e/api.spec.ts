@@ -16,7 +16,7 @@ test("API sürümü ve sabit tanımlar", async ({ page }) => {
   await girisli(page, "denetci");
   const d = await page.goto("/api/tanim/dizin");
   const dizin = await d!.json() as Record<string, string>;
-  expect(Object.keys(dizin).sort()).toEqual(["durumlar", "egri_carpanlari", "ek3_gruplari", "mesai_sinirlari", "meslekler"]);
+  expect(Object.keys(dizin).sort()).toEqual(["durumlar", "egri_carpanlari", "ek3_gruplari", "mesai_sinirlari", "meslekler", "resmi_tatiller"]);
   const t = await page.goto(dizin.durumlar!);
   expect(t!.headers()["cache-control"]).toBe("private, max-age=31536000, immutable");
   expect((await t!.json()).plan.bekliyor.ad).toBe("Kabul bekliyor");

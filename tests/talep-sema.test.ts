@@ -2,7 +2,7 @@
    330. Şema saf (veritabanısız); veritabanı tarafı tests/talepler.test.ts. */
 import assert from "node:assert/strict";
 import { test } from "node:test";
-import { isGunu, IzinGirdisi, RedGirdisi } from "../src/modules/talepler/sema.ts";
+import { isGunu, IzinGirdisi, RedGirdisi, tatilMi } from "../src/modules/talepler/sema.ts";
 
 test("iş günü: başlangıç ve bitiş dahil, cumartesi ve pazar sayılmaz; ters aralık 0", () => {
   assert.equal(isGunu("2026-11-02", "2026-11-06"), 5, "pazartesi – cuma");
@@ -24,4 +24,15 @@ test("izin şeması: tür, bitiş başlangıçtan önce olamaz, iş günü olmal
   assert.ok(hata({ aciklama: "a".repeat(161) })![0].startsWith("aciklama:"));
   assert.equal(RedGirdisi.safeParse({ gerekce: " kısa " }).success, false);
   assert.equal(RedGirdisi.safeParse({ gerekce: "Yoğun dönem" }).success, true);
+});
+
+/* 417 (KOD-GECIS Y9): resmî tatiller iş günü sayılmaz — 2429 sayılı Kanun'un sabit günleri + Diyanet takviminden dini bayramlar; yarım gün iş günü */
+test("iş günü: resmî tatiller ve dini bayramlar sayılmaz, arife (yarım gün) sayılır", () => {
+  assert.equal(isGunu("2026-10-26", "2026-10-30"), 4, "29 Ekim perşembe tatil; 28 Ekim (yarım gün) sayılır");
+  assert.equal(isGunu("2027-03-08", "2027-03-12"), 2, "Ramazan Bayramı 9–11 Mart 2027; 8 Mart arife sayılır");
+  assert.equal(isGunu("2026-05-25", "2026-05-29"), 2, "Kurban Bayramı 27–30 Mayıs 2026; 26 Mayıs arife sayılır");
+  assert.equal(isGunu("2027-01-01", "2027-01-01"), 0, "Yılbaşı");
+  assert.equal(isGunu("2028-05-01", "2028-05-08"), 3, "1 Mayıs pazartesi + Kurban Bayramı 5–8 Mayıs 2028; 2–4 Mayıs (4 arife) sayılır");
+  assert.equal(tatilMi("2026-07-15"), true);
+  assert.equal(tatilMi("2026-10-28"), false, "28 Ekim yarım gün");
 });

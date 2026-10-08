@@ -162,7 +162,7 @@ pkproje/
   src/modules/uyarilar/     UYARILAR (2026-10-06, 331; modül 20): tablo yok — kalibrasyon, eğitim tekrarı, araç belgesi kayıtlardan (okuyucular
                             olcum-cihazlari / egitimler / araclar server/uyari-baglanti.ts); sema.ts (türler, görünürlük) · server/uyarilar.ts · ui/
   src/modules/talepler/     TALEPLER (2026-10-06, 330; modül 21): göç 0042 izin_talebi (yalnız kendi adına; karar firma yöneticisinde) · sema.ts
-                            (izin şeması, iş günü) · server/talepler.ts (taleplerim, izin gönder / geri çek / belge, masraf formu — Muhasebe'nin
+                            (izin şeması, iş günü — hafta sonu ve resmî tatil sayılmaz, 417) · server/talepler.ts (taleplerim, izin gönder / geri çek / belge, masraf formu — Muhasebe'nin
                             muhasebe/server/talep-baglanti.ts'i, izin onay / red) · ui/Talepler.tsx, ui/IzinTalepleri.tsx (/personel/izinler) ·
                             okuyucular: planlar/server/talep-baglanti.ts, personel/server/talep-baglanti.ts
                             · talep formu PDF (341): src/belge/talep.ts (temel <kod>-FR-IZN-01 / MSR-01) → /talepler/pdf/<izin|masraf>/<id>
@@ -212,7 +212,7 @@ pkproje/
                             src/belge/teklif.ts (temel format <kod>-FR-TKL-01) → PDF /teklifler/<id>/pdf (src/belge/pdf.ts teklifPdf) · 368 teklifSil (taslak; 0063)
   src/tanim/iller.ts        81 il + 973 ilçe (açık veri, MIT; bir kez alındı)
   src/modules/<modül>/      ★ her iş modülü: server/ (veri erişimi + iş kuralları, dışa açılan fonksiyonlar) · ui/ · şema · testler
-  src/tanim/tanimlar.ts     SABİT TANIMLAR (durum adları, eğri çarpanları, mesai sınırları …): şemalı, karma adlı JSON → /api/tanim (2026-10-04)
+  src/tanim/tanimlar.ts     SABİT TANIMLAR (durum adları, eğri çarpanları, mesai sınırları, resmî tatiller — 417, yıllık güncelleme …): şemalı, karma adlı JSON → /api/tanim (2026-10-04)
   src/sema/ortak.ts         ORTAK ŞEMA (zod): girdi doğrulamanın tek kaynağı, sunucu ve istemci aynı şemayı kullanır (2026-10-03)
   src/server/db/            gömülü PostgreSQL (gomulu.ts) · göç koşucusu (goc.ts, gocler/NNNN_ad.sql, her göç idempotent) ·
                             kiracı süzgeçli TEK erişim katmanı (kiraci.ts: kiraciIcinde) — pg YALNIZ burada içe aktarılır ·

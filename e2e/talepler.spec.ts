@@ -3,12 +3,13 @@
    onaylar → denetçinin talep penceresinde "Onaylandı" ve formun PDF'i iner (341) · muhasebe masraf formunu Giderler'de görür. */
 import { readFileSync } from "node:fs";
 import { expect, test } from "@playwright/test";
+import { tatilMi } from "../src/modules/talepler/sema";
 import { girisli, hazir } from "./yardimci";
 
-/** bugünden en az n gün sonraki ilk hafta içi günü, GG.AA.YYYY */
+/** bugünden en az n gün sonraki ilk iş günü (hafta sonu ve resmî tatil değil — 417), GG.AA.YYYY */
 function haftaIci(n: number): string {
   const d = new Date(Date.now() + n * 864e5);
-  while ([0, 6].includes(d.getUTCDay())) d.setUTCDate(d.getUTCDate() + 1);
+  while ([0, 6].includes(d.getUTCDay()) || tatilMi(d.toISOString().slice(0, 10))) d.setUTCDate(d.getUTCDate() + 1);
   return `${String(d.getUTCDate()).padStart(2, "0")}.${String(d.getUTCMonth() + 1).padStart(2, "0")}.${d.getUTCFullYear()}`;
 }
 

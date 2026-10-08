@@ -2355,6 +2355,12 @@ revizyon, alan kopyalama, hafif kusur devri, meslek eşleşme denetimi).
 - Emsal ürünler: https://opwire.app/iso-17020-periyodik-kontrol-yazilimi/ · https://17020muayene.vidco.com.tr/ · https://akuple.com/asansor-kontrol-yazilimi/ · https://ensyazilim.com/
 
 ## 11 · Değişiklik günlüğü
+- 2026-10-08 (417): **Resmî tatiller izin hesabında** (KOD-GECIS Y9; maket "resmî tatil takvimi uygulamada"). İzin talebinde iş günü artık hafta
+  sonunu VE resmî tatilleri saymaz: 2429 sayılı Kanun'un sabit günleri (1 Ocak, 23 Nisan, 1 Mayıs, 19 Mayıs, 15 Temmuz, 30 Ağustos, 29 Ekim) +
+  dini bayramlar Diyanet dini günler takviminden (Ramazan 2026: 20–22 Mart, 2027: 9–11 Mart, 2028: 26–28 Şubat; Kurban 2026: 27–30 Mayıs, 2027:
+  16–19 Mayıs, 2028: 5–8 Mayıs). Yarım günler (arife, 28 Ekim öğleden sonra) iş günü sayılır. Tanım `resmi_tatiller` (src/tanim/veri.ts) —
+  **her yıl bir sonraki yılın bayramları eklenir** (listede olmayan yılın bayramı tatil sayılmaz). Kayıtlı taleplerin gün sayısı değişmez
+  (gönderilirken yazılır). Tarihe bağlı denemeler (talepler.test pazartesi, uçtan uca izin günü) tatile denk gelmeyecek güne kaydırıldı.
 - 2026-10-08 (416): **YAYIN — 409–415 canlıda** (simge, erişilebilirlik taraması, görsel karşılaştırma, bağlantı rengi, deneme makinesi süre
   sınırı, Planlar tablet taşması, üç listede taşma). Veritabanı değişikliği yok (Supabase 0076 / 77 göç, aynı). main 7ed6e25 (Vercel;
   /api/saglik sürüm 7ed6e25, bütün denetimler tamam) · duman 10/10 (yeni: /favicon.ico → 308 /icon.svg) · son 2 saatte çalışma hatası yok ·

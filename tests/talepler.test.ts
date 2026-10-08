@@ -16,6 +16,7 @@ import {
   bugunTr, izinBelgesi, izinDosyasiGorulur, izinGeriCek, izinGonder, izinOnayla, izinReddet, izinTalepleri, masrafFormuGeriCek, masrafFormuGonder,
   talepFormuVerisi, taleplerim, type Kisi,
 } from "../src/modules/talepler/server/talepler.ts";
+import { tatilMi } from "../src/modules/talepler/sema.ts";
 import { testKumesi } from "./yardimci/kume.ts";
 
 let kume: GomuluKume;
@@ -39,10 +40,14 @@ async function hesap(firma: string, eposta: string, roller: string[], ad: string
 }
 const BUGUN = () => bugunTr();
 /* bu yılın, bugünden sonraki ilk pazartesisi (yıl sonuna yakınsa bu yılın ilk pazartesisi — özet bu yılın yıllık iznini sayar) */
+/* bu yılda, bugünden sonraki ilk TATİLSİZ haftanın pazartesisi (417: resmî tatil iş günü sayılmaz — ör. 29 Ekim haftasında "5 iş günü" beklentisi
+   tutmazdı; deneme tarihe bağlı düşmesin) */
 function pazartesi(): string {
+  const uygun = (d: string) => new Date(`${d}T12:00:00Z`).getUTCDay() === 1 && [0, 1, 2, 3, 4].every((i) => !tatilMi(gunEkle(d, i)));
+  const yil = BUGUN().slice(0, 4);
   let d = gunEkle(BUGUN(), 1);
-  while (new Date(`${d}T12:00:00Z`).getUTCDay() !== 1) d = gunEkle(d, 1);
-  if (d.slice(0, 4) !== BUGUN().slice(0, 4)) { d = `${BUGUN().slice(0, 4)}-01-01`; while (new Date(`${d}T12:00:00Z`).getUTCDay() !== 1) d = gunEkle(d, 1); }
+  while (!uygun(d) && d.slice(0, 4) === yil) d = gunEkle(d, 1);
+  if (d.slice(0, 4) !== yil) { d = `${yil}-01-01`; while (!uygun(d)) d = gunEkle(d, 1); }
   return d;
 }
 const PDF = new TextEncoder().encode("%PDF-1.4\n% deneme\n1 0 obj << /Type /Catalog >> endobj\ntrailer << /Root 1 0 R >>\n%%EOF\n");

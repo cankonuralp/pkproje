@@ -1,18 +1,26 @@
 /* TALEPLER — pencerelerin ve sunucunun TEK şeması (maket talepler.html izinCiz / masrafCiz, personel.html izin reddet; 330). İletiler maketle aynı.
-   İzin: tür, başlangıç–bitiş (bitiş başlangıçtan önce olamaz; en çok 1 yıl), açıklama (160). İş günü hafta sonunu saymaz (resmî tatil takvimi
-   sonra — maket "uygulamada"). Masraf formu Muhasebe'nin gider şemasıyla (muhasebe/sema.ts GiderGirdisi). */
+   İzin: tür, başlangıç–bitiş (bitiş başlangıçtan önce olamaz; en çok 1 yıl), açıklama (160). İş günü hafta sonunu ve resmî tatilleri saymaz
+   (417: src/tanim/veri.ts resmi_tatiller — maket "uygulamada"; yarım günler iş günü). Masraf formu Muhasebe'nin gider şemasıyla (muhasebe/sema.ts GiderGirdisi). */
 import { tarih, z } from "../../sema/ortak.ts";
+import { TANIMLAR } from "../../tanim/veri.ts";
 
 export const IZIN_TUR = { yillik: "Yıllık izin", mazeret: "Mazeret izni", rapor: "Hastalık (sağlık raporu)", ucretsiz: "Ücretsiz izin" } as const;
 export type IzinTuru = keyof typeof IZIN_TUR;
 export const IZIN_DURUM = { bekliyor: ["Onay bekliyor", "bekliyor"], onaylandi: ["Onaylandı", "tamam"], red: ["Reddedildi", "red"] } as const;
 export type IzinDurumu = keyof typeof IZIN_DURUM;
 
-/** iş günü: başlangıç ve bitiş dahil, cumartesi ve pazar sayılmaz */
+const SABIT_TATIL = new Set(TANIMLAR.resmi_tatiller.sabit.map((t) => t.gun));
+const DINI_TATIL = new Set(TANIMLAR.resmi_tatiller.dini.flatMap((t) => t.gunler));
+/** resmî tatil mi (tam gün; 2429 sayılı Kanun + Diyanet takvimindeki dini bayramlar) */
+export const tatilMi = (gun: string) => SABIT_TATIL.has(gun.slice(5)) || DINI_TATIL.has(gun);
+
+/** iş günü: başlangıç ve bitiş dahil, cumartesi, pazar ve resmî tatiller sayılmaz */
 export function isGunu(bas: string, bit: string): number {
   if (!/^\d{4}-\d{2}-\d{2}$/.test(bas) || !/^\d{4}-\d{2}-\d{2}$/.test(bit) || bit < bas) return 0;
   let n = 0;
-  for (let d = new Date(`${bas}T12:00:00Z`), s = Date.parse(`${bit}T12:00:00Z`); d.getTime() <= s; d.setUTCDate(d.getUTCDate() + 1)) if (d.getUTCDay() % 6) n++;
+  for (let d = new Date(`${bas}T12:00:00Z`), s = Date.parse(`${bit}T12:00:00Z`); d.getTime() <= s; d.setUTCDate(d.getUTCDate() + 1)) {
+    if (d.getUTCDay() % 6 && !tatilMi(d.toISOString().slice(0, 10))) n++;
+  }
   return n;
 }
 

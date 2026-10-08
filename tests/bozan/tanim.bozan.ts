@@ -28,3 +28,16 @@ test("sürüm denetimi gevşeyince bozuk istemci başlığı geçer", async () =
   const m = await bozuk<typeof import("../../src/server/api-surum.ts")>("src/server/api-surum.ts", "const n = /^\\d{1,6}$/.test(baslik) ? Number(baslik) : NaN;", "const n = Number(baslik);");
   assert.equal(m.istemciEskiMi("1e3"), false, "bozuk: sayı olmayan başlık geçti");
 });
+
+/* 417: izin iş günü hesabından resmî tatil denetimi kalkınca 29 Ekim haftası 5 iş günü sayılır (tests/talep-sema.test.ts "resmî tatiller") */
+test("resmî tatil denetimi kalkınca tatil iş günü sayılır", async () => {
+  const dosya = "src/modules/talepler/sema.ts", kok = resolve("src/modules/talepler");
+  let k = readFileSync(dosya, "utf8");
+  const eski = "if (d.getUTCDay() % 6 && !tatilMi(d.toISOString().slice(0, 10))) n++;";
+  assert.ok(k.includes(eski), "bozulacak satır kaynakta yok");
+  k = k.replace(eski, "if (d.getUTCDay() % 6) n++;").replace(/from "(\.\.?\/[^"]+)"/g, (_, y: string) => `from "${pathToFileURL(resolve(kok, y)).href}"`);
+  const yol = join(klasor, `${sira++}.ts`);
+  writeFileSync(yol, k);
+  const m = (await import(pathToFileURL(yol).href)) as typeof import("../../src/modules/talepler/sema.ts");
+  assert.equal(m.isGunu("2026-10-26", "2026-10-30"), 5, "bozuk: 29 Ekim iş günü sayıldı");
+});
