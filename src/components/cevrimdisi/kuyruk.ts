@@ -11,12 +11,13 @@
      fotoğraf ayrı iştir — eklenir, hiçbir işin yerine geçmez; fotoğraflar formdan ÖNCE gider; raporun gidemeyen fotoğrafı varsa Onaya gönder
      bekler (fotoğraf gidince ya da kullanıcı onu listeden kaldırınca gider). Fotoğraf raporun sürümünü bir artırır: aynı raporun bekleyen işleri,
      sürüm yalnız bu fotoğrafla değiştiyse yeni sürüme taşınır (arada başka yerde değiştiyse taşınmaz — çakışma yine görünür).
+   · 400 PLAN KABUL / RED (ARKA-UC §4.1 "plan kabul / red (kuyruğa)"): aynı plan için tek bekleyen iş (yeni seçim eskisinin yerine).
    Depo yoksa (gizli pencere) iş yalnız bu sayfada bellekte tutulur ve söylenir. */
 import { coz, depoAc, isleriOku, isSil, isYaz, sifrele, type DepoIsi } from "./depo.ts";
 
-export type KuyrukTuru = "rapor.kaydet" | "rapor.gonder" | "rapor.foto";
-/** formun o anki hâlini taşıyan işler: aynı rapor için tek bekleyen (fotoğraf bunlardan değil) */
-const FORM: ReadonlySet<string> = new Set(["rapor.kaydet", "rapor.gonder"]);
+export type KuyrukTuru = "rapor.kaydet" | "rapor.gonder" | "rapor.foto" | "plan.kabul" | "plan.red";
+/** kaydın o anki hâlini taşıyan işler: aynı kayıt için tek bekleyen (fotoğraf bunlardan değil) */
+const FORM: ReadonlySet<string> = new Set(["rapor.kaydet", "rapor.gonder", "plan.kabul", "plan.red"]);
 /** gönderilen işin sonucu — window "probata-islem" olayı (ekran tazelenir; eksikse alanlar işaretlenir) */
 export interface KuyrukSonucOlayi { kayit: string; tur: KuyrukTuru; durum: string; ileti: string | null; eksikler: { bolum: string; alan: string; ad: string }[] | null }
 export type IsDurumu = DepoIsi["durum"];
@@ -118,11 +119,16 @@ const ILETI: Record<string, string> = {
   yetkisiz: "Bu işlem için yetkiniz yok.",
   yok: "Rapor bulunamadı (silinmiş ya da size açık değil).",
   cakisma: "Rapor bu cihazda yazılırken başka yerde değiştirildi.",
+  plan_yok: "Plan bulunamadı (silinmiş ya da size açık değil).",
+  plan_cakisma: "Plan bu cihazda işlenirken başka yerde değiştirildi.",
   baska_hesap: "Bu iş başka bir hesapla yazıldı; o hesapla girilince gönderilir.",
   kimlik: "İşin kimliği çakıştı; yeniden gönderin.",
   foto_cakisma: "Rapor fotoğraf eklenirken aynı anda değişti; yeniden deneyin.",
   foto_bekliyor: "Raporun fotoğrafları gidince gönderilecek.",
 };
+
+/** işin türüne göre ileti (plan işinde "Plan …") */
+const iletisi = (tur: string, durum: string): string | undefined => (tur.startsWith("plan.") ? ILETI[`plan_${durum}`] : undefined) ?? ILETI[durum];
 
 type Sonuc = { durum: string; hatalar?: Record<string, string>; eksikler?: { bolum: string; alan: string; ad: string }[]; neden?: string;
   /** fotoğrafta: raporun hangi sürümden hangisine geçtiği */
@@ -182,10 +188,10 @@ export async function kuyrukGonder(): Promise<number> {
       } else if (s.durum === "eksik") {
         await guncelle(x, { durum: "eksik", ileti: `Rapor kaydedildi, onaya gönderilmedi: ${s.eksikler?.length ?? 0} zorunlu alan boş.` });
       } else if (s.durum === "cakisma") {
-        await guncelle(x, { durum: "cakisma", ileti: ILETI.cakisma, guncel: typeof j.guncel === "number" ? j.guncel : null });
+        await guncelle(x, { durum: "cakisma", ileti: iletisi(x.tur, "cakisma") ?? null, guncel: typeof j.guncel === "number" ? j.guncel : null });
       } else {
         const ilk = s.hatalar ? Object.values(s.hatalar)[0] : undefined;
-        await guncelle(x, { durum: "hata", ileti: s.neden ?? ilk ?? ILETI[s.durum] ?? "İş yapılamadı." });
+        await guncelle(x, { durum: "hata", ileti: s.neden ?? ilk ?? iletisi(x.tur, s.durum) ?? "İş yapılamadı." });
       }
       const olay: KuyrukSonucOlayi = { kayit: x.kayit, tur: x.tur as KuyrukTuru, durum: s.durum, ileti: s.durum === "tamam" ? null : x.ileti, eksikler: s.eksikler ?? null };
       window.dispatchEvent(new CustomEvent("probata-islem", { detail: olay }));

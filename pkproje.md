@@ -2355,6 +2355,16 @@ revizyon, alan kopyalama, hafif kusur devri, meslek eşleşme denetimi).
 - Emsal ürünler: https://opwire.app/iso-17020-periyodik-kontrol-yazilimi/ · https://17020muayene.vidco.com.tr/ · https://akuple.com/asansor-kontrol-yazilimi/ · https://ensyazilim.com/
 
 ## 11 · Değişiklik günlüğü
+- 2026-10-08 (400): **Çevrimdışı çalışma — plan kabul / red** (ARKA-UC §4.1 "plan kabul / red (kuyruğa)"). Plan içinde bağlantı yokken (ya da istek
+  ağda düşerse) Kabul et / Reddet cihaz kuyruğuna şifreli yazılır: kabulde tarafsızlık beyanının onayı ve OKUNAN metnin özeti, redde gerekçe; kabul
+  adımında "Kabulünüz / Reddiniz bu cihazda bekliyor" (tuşlar kalkar; gönderilemezse nedeni ve "üst çubuktan yeniden deneyin ya da kaldırın"); bağlantı
+  gelince gider, sayfa tazelenir. Aynı plan için tek bekleyen iş. Sunucuda planlar/server/islem-baglanti.ts (plan.kabul, plan.red → planKabul /
+  planReddet aynen: yetki, durum, sürüm kilidi, denetim izi; onay "evet" değilse ya da okunan metnin özeti yoksa kabul yok, metin değiştiyse red);
+  /api/islem iki modülün işini ayırır. Önceden indirme kabul BEKLEYEN planları da indirir (bağlantısız kabul edilecek sayfa cihazda olsun;
+  cevrimdisi-paket.test beklentisi tarih ve gerekçeyle güncellendi, yerine reddedilmiş plan "girmez"). Göç yok. Kilitler: islem.test (gerçek
+  PostgreSQL: onaysız / uydurma onay / özetsiz kabul yok, metin değişti red, ekip dışı ve başka firma yok, tekrarı yeniden yapmaz, red gerekçesiz
+  olmaz, eski sürüm çakışma) · kuyruk.test (aynı planın işi yer değiştirir, rapor işine dokunmaz, plan iletileri) · bozan plan-islem (özet zorunluluğu
+  kalkınca eski beyanla kabul geçer) · e2e cevrimdisi (genişlik başına kabul bekleyen plan: bağlantı kesik kabul → bekliyor → bağlantı gelince kabul).
 - 2026-10-08 (399): **Servis çalışanı sayfayı bekletmez** (395 düzeltmesi; deneme makinesi 2177156, tablet: ısınmada bir sayfa 3 dakika açılmadı).
   Çalışan, saha sayfasının ve uygulama dosyalarının kopyasını saklamadan önce yanıtın TAMAMINI bekliyordu — tarayıcı sayfa bitene kadar hiçbir şey
   almıyordu (akış yok; yavaş sunucuda takılma). Artık yanıt tarayıcıya ağdan geldiği gibi akar, kopya arka planda saklanır (waitUntil). Önceden

@@ -39,6 +39,9 @@ export const E2E_YZ = {
   ekipman: { masaustu: "EP-0301", tablet: "EP-0302", telefon: "EP-0303" } as Record<string, string>,
   /* çevrimdışı (394): genişlik başına AYRI rapor — bağlantı kes / kaydet / gönder / çakışma öteki testlerin raporuna dokunmasın */
   cevrimdisi: { masaustu: "EP-0401", tablet: "EP-0402", telefon: "EP-0403" } as Record<string, string>,
+  /* bağlantısız plan kabulü (400): genişlik başına kabul bekleyen plan, kendi müşterisinde (Planlar aramasıyla bulunur); 30 gün sonra başlar —
+     önceden indirme sayısına ("1 plan") girmez */
+  kabulPlan: { masaustu: "Kabul Deneme Masaüstü A.Ş.", tablet: "Kabul Deneme Tablet A.Ş.", telefon: "Kabul Deneme Telefon A.Ş." } as Record<string, string>,
   /* saklama süresi (387): ayrı tesiste, süresi 10 gün sonra dolacak imzalı rapor (Uyarılar + Firma ayarları › Saklama süresi dolacak raporlar) */
   saklama: { tesis: "YZ Arşiv Tesisi", ekipman: "EP-0950", plan: "P-0121-950", rapor: "YZ-0121-950-00001" },
 } as const;

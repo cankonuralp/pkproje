@@ -186,6 +186,8 @@ pkproje/
                             cevrimdisiPaketiEylemi → kabuk → Cevrimdisi.tsx onceIndir (30 dk'da bir; "Çevrimdışı hazır: n plan")
                             · FOTOĞRAF KUYRUĞU (398): rapor.foto (raporlar/ui/FotoListesi.tsx → kuyruk; en çok 2 MB, raporlar/sema.ts FotoIslemGirdisi);
                             formdan önce gider, fotoğrafı gidemeyen raporun Onaya gönder'i bekler; sürüm kendi fotoğrafıyla değiştiyse bekleyenler taşınır
+                            · PLAN KABUL / RED (400): plan.kabul, plan.red → planlar/server/islem-baglanti.ts (beyan onayı + okunan metnin özeti şart);
+                            ekranda planlar/ui/PlanIciEkrani.tsx; önceden indirme kabul bekleyen planları da indirir
   src/components/grafik/    TEK GRAFİK ÜRETİCİSİ (329): dikey sütun (maket T9), etiket ölçülerek, gizli tablo (ekran okuyucu)
   src/modules/yonetim/      probata YÖNETİM (2026-10-06, 348; KOD-GECIS Y1): firmalar, firma aç (ilk yönetici + geçici parola), dondur / etkinleştir,
                             yeni geçici parola — server/yonetim.ts yalnız 0050 işlevleriyle (yönetim rolü); sema.ts (ayrılmış adlar göçle aynı) · ui/ ·

@@ -1,8 +1,10 @@
 /* NEREDEN GELDİ: 396 — çevrimdışı paket (ARKA-UC §4.2 "kullanıcı çevrimiçiyken kabul ettiği / denetimdeki planların önümüzdeki 7 günü cihaza iner";
-   src/modules/planlar/server/cevrimdisi.ts). GERÇEK PostgreSQL, iki firma: paket YALNIZ kişinin ekibinde olduğu, kabul edilmiş ya da denetimdeki,
-   başlangıcı önümüzdeki 7 gün içinde (ya da başlamış) planları ve bu planlarda KENDİ yazdığı Yeni raporları verir — kabul bekleyen, 7 günden
-   sonraki, ekibinde olmadığı plan; başkasının ya da gönderilmiş raporu; başka firmanın planı GİRMEZ; personeli olmayan hesaba boş. Yalnız adres
-   bilgisi (kimlik + numara) döner. Uçtan uca (bağlantı kesilip hiç açılmamış plan sayfası açılarak): e2e/cevrimdisi.spec.ts. */
+   src/modules/planlar/server/cevrimdisi.ts). GERÇEK PostgreSQL, iki firma: paket YALNIZ kişinin ekibinde olduğu, kabul bekleyen, kabul edilmiş ya
+   da denetimdeki, başlangıcı önümüzdeki 7 gün içinde (ya da başlamış) planları ve bu planlarda KENDİ yazdığı Yeni raporları verir — reddedilmiş,
+   7 günden sonraki, ekibinde olmadığı plan; başkasının ya da gönderilmiş raporu; başka firmanın planı GİRMEZ; personeli olmayan hesaba boş. Yalnız
+   adres bilgisi (kimlik + numara) döner. Uçtan uca (bağlantı kesilip hiç açılmamış plan sayfası açılarak): e2e/cevrimdisi.spec.ts.
+   2026-10-08 (400): kabul BEKLEYEN plan artık GİRER (önceki beklenti "girmez" idi) — ARKA-UC §4.1 plan kabul / red bağlantısız çalışır, kabul
+   edilecek sayfa cihazda olmalı; yerine reddedilmiş plan "girmez" olarak sınanır. */
 import assert from "node:assert/strict";
 import { mkdtempSync, rmSync } from "node:fs";
 import { tmpdir } from "node:os";
@@ -12,7 +14,7 @@ import type { GomuluKume } from "../src/server/db/gomulu.ts";
 import { havuzKur, kiraciIcinde, type Havuz, type Sorgulayici } from "../src/server/db/kiraci.ts";
 import { klasorDepo } from "../src/server/dosya/depo.ts";
 import { cevrimdisiPaketi } from "../src/modules/planlar/server/cevrimdisi.ts";
-import { planIci, planKabul } from "../src/modules/planlar/server/plan-ici.ts";
+import { planIci, planKabul, planReddet } from "../src/modules/planlar/server/plan-ici.ts";
 import { bugunTr, planAc } from "../src/modules/planlar/server/planlar.ts";
 import { taslakBaslat, yayinla } from "../src/modules/rapor-format/server/formatlar.ts";
 import { raporOlustur, type Kisi } from "../src/modules/raporlar/server/raporlar.ts";
@@ -70,19 +72,21 @@ before(async () => {
 });
 after(async () => { await havuz?.end(); await kume?.durdur(); rmSync(klasor, { recursive: true, force: true }); });
 
-test("paket: yalnız kişinin ekibindeki kabul edilmiş / 7 gün içindeki planlar ve kendi Yeni raporları; başka firma ve personelsiz hesap boş", async () => {
+test("paket: yalnız kişinin ekibindeki kabul bekleyen / kabul edilmiş / denetimdeki, 7 gün içindeki planlar ve kendi Yeni raporları; başka firma ve personelsiz hesap boş", async () => {
   const icinde = await plan(bugunTr(), [denP, den2P], DEN);           // ekibinde, kabul, bugün
   const sonra = await plan(gun(5), [denP], DEN);                       // ekibinde, kabul, 5 gün sonra
   const uzak = await plan(gun(10), [denP], DEN);                       // 10 gün sonra: girmez
-  const bekleyen = await plan(bugunTr(), [denP], null);                // kabul bekliyor: girmez
+  const bekleyen = await plan(bugunTr(), [denP], null);                // kabul bekliyor: GİRER (400 — bağlantısız kabul / red)
+  const reddedilen = await plan(bugunTr(), [denP], null);              // reddedildi: girmez
+  tamam(await a(DEN, async (db) => planReddet(db, DEN, reddedilen, (await planIci(db, DEN, reddedilen))!.surum, { gerekce: "Deneme gerekçesi" })));
   const baskasinin = await plan(bugunTr(), [den2P], DEN2);             // ekibinde değil: girmez
   const benim = tamam(await a(DEN, (db) => raporOlustur(db, DEN, icinde, ekp["HT-1"]))).id;
   const gonderilmis = tamam(await a(DEN, (db) => raporOlustur(db, DEN, icinde, ekp["HT-2"]))).id;
   await sql(A, "UPDATE rapor SET durum = 'onayda', surum = surum + 1 WHERE id = $1", [gonderilmis], DEN.id);
   const ikincininki = tamam(await a(DEN2, (db) => raporOlustur(db, DEN2, icinde, ekp["HT-3"]))).id;
   const p = await a(DEN, (db) => cevrimdisiPaketi(db, DEN, bugunTr()));
-  assert.deepEqual(p.planlar.map((x) => x.id).sort(), [icinde, sonra].sort());
-  for (const x of [uzak, bekleyen, baskasinin]) assert.ok(!p.planlar.some((y) => y.id === x));
+  assert.deepEqual(p.planlar.map((x) => x.id).sort(), [icinde, sonra, bekleyen].sort());
+  for (const x of [uzak, reddedilen, baskasinin]) assert.ok(!p.planlar.some((y) => y.id === x));
   assert.deepEqual(p.raporlar.map((x) => x.id), [benim], "yalnız kendi Yeni raporu");
   assert.ok(p.planlar.every((x) => /^P-/.test(x.no)) && p.raporlar.every((x) => x.no.startsWith("PA-")));
   assert.deepEqual(Object.keys(p.planlar[0]).sort(), ["id", "no"], "yalnız adres bilgisi");

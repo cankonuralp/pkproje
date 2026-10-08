@@ -10,6 +10,8 @@
    · yetki ve kiracı modülde: başka denetçinin raporu ona görünmez ("yok"), B firmasının işleminde A'nın raporu "yok" (rapor değişmez);
    · 398 fotoğraf (rapor.foto): raporun o anki sürümüne eklenir, kaydı ezmez, önceki / sonraki sürüm döner; tekrarı ikinci fotoğraf eklemez;
      fotoğraf olmayan içerik, bozuk metin, olmayan yer, başka denetçi, başka firma eklenmez;
+   · 400 plan kabul / red (plan.kabul, plan.red): beyan onayı ("evet" — uydurma değer değil) ve okunan metnin özeti şart; tekrarı yeniden yapmaz;
+     eski sürüm çakışma; red gerekçesiz olmaz; ekip dışı denetçi ve başka firma yapamaz;
    · GÜVENLİK: işlem kaydı değişmez / silinmez; kişi yalnız kendi işlemlerini görür (aynı firmada da); hesap ve alınma anı veritabanından;
      kimlik sorgusu yalnız evet / hayır, tanımlayıcı-yetkili, PUBLIC'e kapalı.
    Olumsuz kanıt: tests/bozan/islem.bozan.ts. */
@@ -24,7 +26,8 @@ import { havuzKur, kiraciIcinde, type Havuz, type Sorgulayici } from "../src/ser
 import { klasorDepo } from "../src/server/dosya/depo.ts";
 import { tekSeferlik } from "../src/server/islem/islem.ts";
 import { YAZAN_BICIMI, yazanEtiketi } from "../src/server/islem/yazan.ts";
-import { planIci, planKabul } from "../src/modules/planlar/server/plan-ici.ts";
+import { planIslemi, type PlanIslemTuru } from "../src/modules/planlar/server/islem-baglanti.ts";
+import { planIci, planKabul, type PlanYazma } from "../src/modules/planlar/server/plan-ici.ts";
 import { bugunTr, planAc } from "../src/modules/planlar/server/planlar.ts";
 import { taslakBaslat, yayinla } from "../src/modules/rapor-format/server/formatlar.ts";
 import { raporIslemi, type RaporIslemSonucu, type RaporIslemTuru } from "../src/modules/raporlar/server/islem-baglanti.ts";
@@ -272,4 +275,56 @@ test("fotoğraf kuyruktan: raporun O ANKİ sürümüne eklenir (kaydı ezmez), �
   assert.deepEqual(await dene(fotoGirdi(), DEN_B, B), { durum: "yok" });
   assert.equal((await fotolari(r.id)).length, 1, "reddedilenler eklenmedi");
   assert.equal((await raporSatiri(r.id)).surum, r.surum + 2);
+});
+
+/* 400: plan kabul / red kuyruktan. GÜVENLİK sayımından SONRA koşar. */
+const isleP = (kim: Kisi, id: string, tur: PlanIslemTuru, kayit: string, surum: number, girdi: unknown, firma = A) =>
+  kiraciIcinde(havuz, firma, (db) => tekSeferlik<PlanYazma>(db, { id, tur, kayit, zaman: new Date().toISOString() },
+    () => planIslemi(db, kim, tur, kayit, surum, girdi)), { hesapId: kim.id });
+const yeniPlan = async () => tamam(await a(PLAN, (db) => planAc(db, depo, PLAN, A, { tesis: t1, baslangic: bugunTr(), bitis: bugunTr(),
+  ekip: [{ personel: denP, isgNo: "ISG-1", kaydet: false }] }))).id;
+const planSatiri = async (id: string) =>
+  (await sql<{ surum: number; durum: string; red_gerekce: string | null }>(A, "SELECT surum, durum, red_gerekce FROM plan WHERE id = $1", [id])).rows[0];
+
+test("plan kabul kuyruktan: beyan onayı ve okunan metnin özeti şart; tekrarı yeniden yapmaz; eski sürüm çakışma; ekip dışı / başka firma yapamaz", async () => {
+  const p1 = await yeniPlan();
+  const v = (await a(DEN, (db) => planIci(db, DEN, p1)))!;
+  const sonucu = async (girdi: unknown, kim = DEN, firma = A, surum = v.surum) => {
+    const x = await isleP(kim, randomUUID(), "plan.kabul", p1, surum, girdi, firma);
+    return x.durum === "yeni" ? x.sonuc : x;
+  };
+  const BEYANSIZ = { durum: "gecersiz", hatalar: { beyan: "Tarafsızlık beyanı okunup onaylanmadan plan kabul edilemez." } };
+  /* beyan onaylanmadan ya da onay uydurma değerle: kabul yok; okunan metin değiştiyse red */
+  assert.deepEqual(await sonucu({ beyanOnay: false, beyanOzet: v.beyanOzet }), BEYANSIZ);
+  assert.deepEqual(await sonucu({ beyanOnay: "true", beyanOzet: v.beyanOzet }), BEYANSIZ);
+  assert.deepEqual(await sonucu({ beyanOzet: v.beyanOzet }), BEYANSIZ);
+  assert.deepEqual(await sonucu({ beyanOnay: true, beyanOzet: "0000000000000000" }),
+    { durum: "red", neden: "Tarafsızlık beyanının metni değişti; sayfayı yenileyip yeni metni okuyun." });
+  /* ekip dışı denetçi, başka firma: yok */
+  assert.deepEqual(await sonucu({ beyanOnay: true, beyanOzet: v.beyanOzet }, DEN2), { durum: "yok" });
+  assert.deepEqual(await sonucu({ beyanOnay: true, beyanOzet: v.beyanOzet }, DEN_B, B), { durum: "yok" });
+  assert.deepEqual([(await planSatiri(p1)).durum, (await planSatiri(p1)).surum], ["bekliyor", v.surum], "hiçbiri planı değiştirmedi");
+  /* kabul: bir kez; aynı kimlik yeniden gelince saklanan sonuç */
+  const id = randomUUID();
+  const k = await isleP(DEN, id, "plan.kabul", p1, v.surum, { beyanOnay: true, beyanOzet: v.beyanOzet });
+  assert.deepEqual(k, { durum: "yeni", sonuc: { durum: "tamam", bildirim: "Plan kabul edildi." } });
+  assert.deepEqual(await isleP(DEN, id, "plan.kabul", p1, v.surum, { beyanOnay: true, beyanOzet: v.beyanOzet }), { durum: "tekrar", sonuc: k.durum === "yeni" ? k.sonuc : null });
+  assert.deepEqual([(await planSatiri(p1)).durum, (await planSatiri(p1)).surum], ["kabul", v.surum + 1]);
+  assert.equal((await sql<{ n: number }>(A, "SELECT count(*)::int AS n FROM denetim_izi WHERE nesne_id = $1 AND ne = 'plan.kabul'", [p1])).rows[0].n, 1);
+});
+
+test("plan reddi kuyruktan: gerekçe şart; eski sürüm çakışma (sessiz ezme yok); güncel sürümle reddedilir, gerekçe yazılır", async () => {
+  const p2 = await yeniPlan();
+  const v = (await a(DEN, (db) => planIci(db, DEN, p2)))!;
+  const g = await isleP(DEN, randomUUID(), "plan.red", p2, v.surum, { gerekce: "" });
+  assert.ok(g.durum === "yeni" && g.sonuc.durum === "gecersiz", JSON.stringify(g));
+  /* bu arada planlamacı künyeyi değiştirdi (sürüm ilerledi): cihazın reddi çakışır, plan değişmez */
+  await sql(A, "UPDATE plan SET aciklama = 'Deneme değişiklik', surum = surum + 1 WHERE id = $1", [p2], PLAN.id);
+  const c = await isleP(DEN, randomUUID(), "plan.red", p2, v.surum, { gerekce: "Tesis bu hafta kapalı." });
+  assert.deepEqual(c, { durum: "yeni", sonuc: { durum: "cakisma" } });
+  assert.equal((await planSatiri(p2)).durum, "bekliyor");
+  /* kullanıcı "benimkini yaz" der: güncel sürümle yeni kimlik */
+  const y = await isleP(DEN, randomUUID(), "plan.red", p2, v.surum + 1, { gerekce: "Tesis bu hafta kapalı." });
+  assert.deepEqual(y, { durum: "yeni", sonuc: { durum: "tamam", bildirim: "Plan reddedildi." } });
+  assert.deepEqual([(await planSatiri(p2)).durum, (await planSatiri(p2)).red_gerekce], ["reddedildi", "Tesis bu hafta kapalı."]);
 });

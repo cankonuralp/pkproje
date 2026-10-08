@@ -188,3 +188,20 @@ test("Onaya gönder fotoğrafsız gitmez: raporun gidemeyen fotoğrafı varsa be
   assert.notEqual(istekler[0].id, eski);
   assert.equal(K.kuyrukAnlik().isler.length, 0);
 });
+
+test("400 plan kabul / red: aynı planın bekleyen işinin yerine geçer, rapor işlerine dokunmaz; çakışma ve 'yok' iletisi plan için", async () => {
+  await ekle("R7", "rapor.kaydet", 1);
+  await K.kuyrugaEkle({ tur: "plan.kabul", kayit: "P1", surum: 4, girdi: { beyanOnay: true, beyanOzet: "x" }, ad: "Plan kabulü · P1" }); await sakin();
+  await K.kuyrugaEkle({ tur: "plan.red", kayit: "P1", surum: 4, girdi: { gerekce: "Deneme gerekçe" }, ad: "Plan reddi · P1" }); await sakin();
+  await K.kuyrugaEkle({ tur: "plan.kabul", kayit: "P2", surum: 2, girdi: { beyanOnay: true, beyanOzet: "x" }, ad: "Plan kabulü · P2" }); await sakin();
+  assert.deepEqual(K.kuyrukAnlik().isler.map((x) => [x.kayit, x.tur]), [["R7", "rapor.kaydet"], ["P1", "plan.red"], ["P2", "plan.kabul"]]);
+  istekler = [];
+  cevap = (g) => json(g.kayit === "R7" ? { tekrar: false, sonuc: { durum: "tamam", id: "R7", bildirim: "x" } }
+    : g.kayit === "P1" ? { tekrar: false, sonuc: { durum: "cakisma" }, guncel: 5 } : { tekrar: false, sonuc: { durum: "yok" } });
+  assert.equal(await K.kuyrukGonder(), 1);
+  assert.deepEqual(istekler.map((g) => [g.kayit, g.tur, g.surum]), [["R7", "rapor.kaydet", 1], ["P1", "plan.red", 4], ["P2", "plan.kabul", 2]]);
+  assert.deepEqual(K.kuyrukAnlik().isler.map((x) => [x.kayit, x.durum, x.ileti]), [
+    ["P1", "cakisma", "Plan bu cihazda işlenirken başka yerde değiştirildi."],
+    ["P2", "hata", "Plan bulunamadı (silinmiş ya da size açık değil)."],
+  ]);
+});

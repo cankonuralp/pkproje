@@ -171,6 +171,8 @@ function KuyrukPenceresi({ acik, kapat, cevrimdisi }: { acik: boolean; kapat: ()
                     {(x.durum === "baska_hesap" || (x.durum === "hata" && x.tur === "rapor.foto")) && <Tus tur="ikincil" onClick={() => void yenidenDene(x.id)}>Yeniden dene</Tus>}
                     {(x.durum === "eksik" || x.durum === "hata" || x.durum === "cakisma") && x.tur.startsWith("rapor.") &&
                       <Link className={stil.baglanti} href={`/raporlar/${x.kayit}`} onClick={kapat}>Raporu aç</Link>}
+                    {(x.durum === "hata" || x.durum === "cakisma") && x.tur.startsWith("plan.") &&
+                      <Link className={stil.baglanti} href={`/planlar/${x.kayit}`} onClick={kapat}>Planı aç</Link>}
                     {x.durum !== "cakisma" && <Tus tur="ikincil" onClick={() => void kaldir(x, x.durum !== "eksik")}>Listeden kaldır</Tus>}
                   </span>
                 )}

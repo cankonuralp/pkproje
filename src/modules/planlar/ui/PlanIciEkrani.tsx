@@ -5,11 +5,15 @@
    Denetim: kontrol listesi = Ekipmanlar + Raporlar (311: Rapor oluştur ekipman satırında, raporlar kendi süzgeçli listesinde); plan günü gelmediyse
    nedeni şeritte (P1 2026-10-01 + 2026-10-03: "geleceğe rapor yazmayı engelle" — geçmiş açık); Tamamla iki adım (kontrol listesi → plan).
    Künye: planlamacı Düzenle; denetçi Güncelle.
-   Altta Proje notları (hareket listesi gösterilmez — 5. tur). Yetki ve geçiş kuralı sunucuda; buradaki tuşlar yalnız izinli olanı gösterir. */
+   Altta Proje notları (hareket listesi gösterilmez — 5. tur). Yetki ve geçiş kuralı sunucuda; buradaki tuşlar yalnız izinli olanı gösterir.
+   400 (ARKA-UC §4.1 "plan kabul / red (kuyruğa)"): bağlantı yokken (ya da istek ağda düşerse) Kabul et / Reddet cihaz kuyruğuna yazılır (beyan
+   onayı ve okunan metnin özeti, gerekçe); bekleyen iş varken kabul adımında "bu cihazda bekliyor" yazar, tuşlar kalkar; bağlantı gelince gider
+   ve sayfa tazelenir (sonuç olmadıysa nedeni şeritte). */
 import { useRouter } from "next/navigation";
-import { useState, useTransition, type ReactNode } from "react";
+import { useEffect, useState, useSyncExternalStore, useTransition, type ReactNode } from "react";
 import { Kosullar } from "../../../components/bilgi/Bilgi";
 import { useBildir } from "../../../components/bildirim/Bildirim";
+import { kuyrugaEkle, kuyrukAbone, kuyrukAnlik, kuyrukSunucuAnlik, type KuyrukSonucOlayi } from "../../../components/cevrimdisi/kuyruk";
 import { Alan, FormIzgara, Girdi, ipucuId } from "../../../components/form/Form";
 import { Ikon } from "../../../components/ikon/Ikon";
 import { Pencere } from "../../../components/pencere/Pencere";
@@ -30,6 +34,9 @@ import stil from "./planlar.module.css";
 const ETIKET: Record<AdimDurumu, string> = { tamam: "Tamamlandı", aktif: "Şu an", bekliyor: "Sırada", red: "Reddedildi" };
 const ADIM_SINIF: Record<AdimDurumu, string> = { tamam: stil.adimTamam, aktif: stil.adimAktif, bekliyor: stil.adimBekliyor, red: stil.adimRed };
 const ID = { firma: "kunye-firma", adres: "kunye-adres", sgk: "kunye-sgk", red: "red-gerekce" } as const;
+/* 400: bağlantı yok mu · istek ağda mı düştü (sunucu eylemi bağlantısızken TypeError atar) */
+const cevrimdisiMi = () => typeof navigator !== "undefined" && navigator.onLine === false;
+const agHatasi = (e: unknown) => e instanceof TypeError || cevrimdisiMi();
 
 function Adim({ no, durum, baslik, ozet, children }: { no: number; durum: AdimDurumu; baslik: string; ozet?: ReactNode; children?: ReactNode }) {
   return (
@@ -62,6 +69,48 @@ export function PlanIciEkrani({ v }: { v: PlanIci }) {
   const [genel, setGenel] = useState<string | null>(null);
   const k = v.kart, d = v.durum, adim = akisAdimlari(d, !!v.kontrolTamam), kt = d === "denetimde" && !!v.kontrolTamam;
   const sebepId = `plan-sebep-${k.id}`;
+  /* 400: bu planın cihazda bekleyen kabul / reddi */
+  const kuyruk = useSyncExternalStore(kuyrukAbone, kuyrukAnlik, kuyrukSunucuAnlik);
+  const bekleyen = kuyruk.isler.find((x) => x.kayit === k.id && x.tur.startsWith("plan."));
+  useEffect(() => {
+    const f = (e: Event) => {
+      const o = (e as CustomEvent<KuyrukSonucOlayi>).detail;
+      if (o.kayit !== k.id) return;
+      if (o.durum === "tamam") { setGenel(null); bildir(`${k.no}: cihazda bekleyen ${o.tur === "plan.red" ? "ret" : "kabul"} gitti.`); router.refresh(); return; }
+      setGenel(`${k.no}: cihazda bekleyen iş gönderilemedi — ${o.ileti ?? "üst çubuktaki bekleyen işlemlere bakın"}.`);
+    };
+    window.addEventListener("probata-islem", f);
+    return () => window.removeEventListener("probata-islem", f);
+  }, [k.id, k.no, bildir, router]);
+  const kuyruga = async (tur: "plan.kabul" | "plan.red", girdi: unknown) => {
+    await kuyrugaEkle({ tur, kayit: k.id, surum: v.surum, girdi, ad: `${tur === "plan.red" ? "Plan reddi" : "Plan kabulü"} · ${k.no}` });
+    bildir(`Cihaza kaydedildi; bağlantı gelince plan ${tur === "plan.red" ? "reddedilir" : "kabul edilir"}.`);
+  };
+  /* Kabul et / Reddet: bağlantı yoksa ya da istek ağda düşerse cihaz kuyruğuna */
+  const kabulEt = () => baslat(async () => {
+    const girdi = { beyanOnay: beyanOk, beyanOzet: v.beyanOzet };
+    if (cevrimdisiMi()) { await kuyruga("plan.kabul", girdi); return; }
+    let r: PlanYaniti;
+    try { r = await planKabulEylemi(k.id, v.surum, beyanOk, v.beyanOzet); } catch (e) {
+      if (!agHatasi(e)) throw e;
+      await kuyruga("plan.kabul", girdi);
+      return;
+    }
+    if (r.tamam) { setGenel(null); bildir(r.bildirim ?? "Plan kabul edildi."); router.refresh(); return; }
+    setGenel(r.genel ?? Object.values(r.hatalar ?? {})[0] ?? "İşlem yapılamadı.");
+  });
+  const reddet = (gerekce: string) => baslat(async () => {
+    if (cevrimdisiMi()) { await kuyruga("plan.red", { gerekce }); setRed(null); return; }
+    let r: PlanYaniti;
+    try { r = await planReddetEylemi(k.id, v.surum, gerekce); } catch (e) {
+      if (!agHatasi(e)) throw e;
+      await kuyruga("plan.red", { gerekce });
+      setRed(null);
+      return;
+    }
+    if (r.tamam) { setRed(null); bildir(r.bildirim ?? "Plan reddedildi."); router.refresh(); return; }
+    setRed({ gerekce, hata: r.hatalar?.gerekce ?? r.genel ?? "Reddedilemedi." });
+  });
 
   const calistir = (is: () => Promise<PlanYaniti>, sonra?: () => void) => baslat(async () => {
     const r = await is();
@@ -70,11 +119,10 @@ export function PlanIciEkrani({ v }: { v: PlanIci }) {
   });
 
   /* şu anki adımın tuşları — adımda ve telefonun alt çubuğunda aynı üretici */
-  const eylem: ReactNode = d === "bekliyor" && v.izin.kabulRed ? <>
+  const eylem: ReactNode = d === "bekliyor" && v.izin.kabulRed ? (bekleyen ? null : <>
     <Tus tur="ikincil" disabled={bekliyor} onClick={() => setRed({ gerekce: "", hata: null })}>Reddet</Tus>
-    <Tus ikon="check" disabled={!beyanOk || bekliyor} aria-describedby={beyanOk ? undefined : sebepId}
-      onClick={() => calistir(() => planKabulEylemi(k.id, v.surum, beyanOk, v.beyanOzet))}>Kabul et</Tus>
-  </> : d === "denetimde" && v.izin.kontrol ? (kt
+    <Tus ikon="check" disabled={!beyanOk || bekliyor} aria-describedby={beyanOk ? undefined : sebepId} onClick={kabulEt}>Kabul et</Tus>
+  </>) : d === "denetimde" && v.izin.kontrol ? (kt
     ? <Tus ikon="circle-check" disabled={bekliyor} onClick={() => calistir(() => planTamamlaEylemi(k.id, v.surum))}>Tamamla</Tus>
     : <Tus ikon="list-checks" disabled={bekliyor} onClick={() => calistir(() => kontrolListesiEylemi(k.id, v.surum, true))}>Tamamla</Tus>)
     : d === "tamamlandi" && v.izin.kontrol ? <Tus tur="ikincil" ikon="undo-2" disabled={bekliyor} onClick={() => calistir(() => tamamlamaGeriAlEylemi(k.id, v.surum))}>Tamamlamayı geri al</Tus>
@@ -168,7 +216,11 @@ export function PlanIciEkrani({ v }: { v: PlanIci }) {
   const a2 = d === "bekliyor" ? (
     <Adim no={2} durum={adim[1]} baslik="Kabul">
       <blockquote className={stil.beyan}><p className={stil.beyanBaslik}>Tarafsızlık ve çıkar çatışması beyanı</p><p>{v.beyan}</p></blockquote>
-      {v.izin.kabulRed ? <>
+      {v.izin.kabulRed && bekleyen ? (
+        bekleyen.durum === "bekliyor"
+          ? <Serit tur="uyari" ikon="wifi-off">{bekleyen.tur === "plan.red" ? "Reddiniz" : "Kabulünüz"} bu cihazda bekliyor: bağlantı gelince gider.</Serit>
+          : <Serit tur="hata" ikon="circle-alert">{bekleyen.tur === "plan.red" ? "Reddiniz" : "Kabulünüz"} gönderilemedi{bekleyen.ileti ? `: ${bekleyen.ileti}` : "."} Üst çubuktaki bekleyen işlemlerden yeniden deneyin ya da kaldırın.</Serit>
+      ) : v.izin.kabulRed ? <>
         <label className={stil.secim}>
           <input type="checkbox" checked={beyanOk} onChange={(e) => setBeyanOk(e.target.checked)} />
           <span id={sebepId}>Tarafsızlık beyanını okudum, kabul ediyorum</span>
@@ -239,11 +291,7 @@ export function PlanIciEkrani({ v }: { v: PlanIci }) {
       <Pencere acik={!!red} baslik="Planı reddet" onKapat={() => setRed(null)}
         alt={<>
           <Tus tur="ikincil" onClick={() => setRed(null)}>Vazgeç</Tus>
-          <Tus tur="tehlike" disabled={!red?.gerekce.trim() || bekliyor} onClick={() => red && baslat(async () => {
-            const r = await planReddetEylemi(k.id, v.surum, red.gerekce);
-            if (r.tamam) { setRed(null); bildir(r.bildirim ?? "Plan reddedildi."); router.refresh(); return; }
-            setRed({ ...red, hata: r.hatalar?.gerekce ?? r.genel ?? "Reddedilemedi." });
-          })}>Reddet</Tus>
+          <Tus tur="tehlike" disabled={!red?.gerekce.trim() || bekliyor} onClick={() => red && reddet(red.gerekce)}>Reddet</Tus>
         </>}>
         <p className={stil.adimNot}><b>{k.no}</b> · {k.musteri.unvan}</p>
         <Alan id={ID.red} etiket="Gerekçe" zorunlu hata={red?.hata}>

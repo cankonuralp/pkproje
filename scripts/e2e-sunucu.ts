@@ -153,6 +153,16 @@ process.env.PROBATA_SIR_ANAHTARI = sirAnahtari;
   const v = (await kiraciIcinde(havuz, yzFirma, (db) => planIci(db, den, plan), { hesapId: den.id }))!;
   kesin(await kiraciIcinde(havuz, yzFirma, (db) => planKabul(db, den, plan, v.surum, true), { hesapId: den.id }), "plan kabul");
   for (const id of Object.values(t.ekp)) kesin(await kiraciIcinde(havuz, yzFirma, (db) => raporOlustur(db, den, plan, id), { hesapId: den.id }), "rapor");
+  /* bağlantısız plan kabulü (400): genişlik başına kabul bekleyen plan, kendi müşterisinde; 30 gün sonra başlar (önceden indirme sayısına girmez) */
+  const otuz = new Intl.DateTimeFormat("en-CA", { timeZone: "Europe/Istanbul", year: "numeric", month: "2-digit", day: "2-digit" }).format(new Date(Date.now() + 30 * 86_400_000));
+  for (const unvan of Object.values(E2E_YZ.kabulPlan)) {
+    const tesis = await kiraciIcinde(havuz, yzFirma, async (db) => {
+      const m = (await db.sorgu<{ id: string }>("INSERT INTO musteri (unvan, kisa) VALUES ($1, $1) RETURNING id::text", [unvan])).rows[0].id;
+      return (await db.sorgu<{ id: string }>("INSERT INTO tesis (musteri_id, ad) VALUES ($1, 'Merkez') RETURNING id::text", [m])).rows[0].id;
+    });
+    kesin(await kiraciIcinde(havuz, yzFirma, (db) => planAc(db, depoYz, pl, yzFirma,
+      { tesis, baslangic: otuz, bitis: otuz, ekip: [{ personel: t.den.p, isgNo: "ISG-YZ-2", kaydet: false }] }), { hesapId: pl.id }), "kabul planı");
+  }
   /* saklama süresi (387): süresi 10 gün sonra dolacak imzalı rapor — AYRI tesiste (öteki YZ testlerinin planına dokunmaz); Uyarılar'da ve Firma
      ayarları › Saklama süresi dolacak raporlar'da görünür, gece işi silmez. Süper kullanıcıyla, tetiksiz (imza anı geçmişte), geçici veritabanı */
   const ss = kume.sahipIstemci();

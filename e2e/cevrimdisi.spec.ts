@@ -8,7 +8,8 @@
    · 396: kişinin planı önceden iner — hiç açılmamış plan sayfası bağlantı kesikken açılır, pencere "Çevrimdışı hazır: 1 plan";
    · 398: fotoğraf bağlantısızken cihaza (şifreli) — listede kendi yerinde "Gönderilmedi", üst çubukta "1 fotoğraf"; bağlantı gelince gider, raporun
      listesine düşer (Görüntüle);
-   · Onaya gönder bağlantısızken: rapor salt okunur, "Gönderilmedi · bağlantı bekleniyor"; bağlantı gelince gider (eksikse alanlar işaretlenir). */
+   · Onaya gönder bağlantısızken: rapor salt okunur, "Gönderilmedi · bağlantı bekleniyor"; bağlantı gelince gider (eksikse alanlar işaretlenir);
+   · 400: plan kabulü bağlantısızken cihaza — plan içinde "Kabulünüz bu cihazda bekliyor", tuşlar kalkar; bağlantı gelince gider, plan kabul edilir. */
 import { expect, test, type Page } from "@playwright/test";
 import { E2E_KAPI, E2E_PAROLA, E2E_YZ } from "./hesaplar";
 import { hazir } from "./yardimci";
@@ -168,4 +169,21 @@ test("çevrimdışı: bağlantı kes → Kaydet cihaza → bağlantı gelince gi
   await expect(page.getByText("onaya gönderim gitti", { exact: false }).first().or(page.getByRole("dialog", { name: "Zorunlu alanlar doldurulmadı" })))
     .toBeVisible({ timeout: 30_000 });
   await expect(page.getByText("Gönderilmedi · bağlantı bekleniyor")).toHaveCount(0);
+
+  /* 8) plan kabulü bağlantısızken (400): kabul cihaza; bağlantı gelince gider, plan "kabul edildi" */
+  await page.goto(`${Y}/planlar`);
+  await hazir(page);
+  await page.getByRole("searchbox", { name: "Planlarda ara" }).fill(E2E_YZ.kabulPlan[bilgi.project.name]);
+  await page.getByRole("link", { name: /^P-/ }).first().click();
+  await expect(page).toHaveURL(/\/planlar\/[0-9a-f-]{36}$/, { timeout: 30_000 });
+  await hazir(page);
+  await page.context().setOffline(true);
+  await page.getByRole("checkbox", { name: "Tarafsızlık beyanını okudum, kabul ediyorum" }).check();
+  await page.getByRole("button", { name: "Kabul et" }).click();
+  await expect(page.getByText("Cihaza kaydedildi; bağlantı gelince plan kabul edilir.").first()).toBeVisible();
+  await expect(page.getByText("Kabulünüz bu cihazda bekliyor", { exact: false })).toBeVisible();
+  await expect(page.getByRole("button", { name: "Kabul et" })).toHaveCount(0);
+  await page.context().setOffline(false);
+  await expect(page.getByText("cihazda bekleyen kabul gitti", { exact: false }).first()).toBeVisible({ timeout: 30_000 });
+  await expect(page.getByText("Tarafsızlık beyanı onaylandı · beyanı gör")).toBeVisible({ timeout: 30_000 });
 });
