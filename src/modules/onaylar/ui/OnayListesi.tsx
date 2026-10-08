@@ -29,7 +29,7 @@ function siraEtiketi(v: string) {
   return `${SIRA_AD[s] ?? s}: ${s === "durum" ? (artan ? "akış sırası" : "ters akış") : artan ? "A → Z" : "Z → A"}`;
 }
 
-const noHucre = (r: OnaySatiri) => <><Link className={stil.kod} href={`/onaylar/${r.id}`}>{r.no}</Link><AltSatir><Kirp>{`${r.musteri} / ${r.tesis}`}</Kirp></AltSatir></>;
+const noHucre = (r: OnaySatiri) => <><Link className={stil.no} href={`/onaylar/${r.id}`}>{r.no}</Link><AltSatir><Kirp>{`${r.musteri} / ${r.tesis}`}</Kirp></AltSatir></>;
 const ekipmanHucre = (r: OnaySatiri) => <span className={stil.hucreSatir}><span className={stil.kod}>{r.ekipmanKod}</span><Kirp>{r.turAd}</Kirp></span>;
 const denetciHucre = (r: OnaySatiri) => <><KartEtiket>Denetçi</KartEtiket><Kirp>{r.denetci}</Kirp></>;
 
@@ -135,7 +135,7 @@ export function TumRaporlar({ v }: { v: OnayListeleri }) {
    rapor ekranında (İmzala → imzasız PDF'i indir → imzalı PDF'i yükle; her rapor ayrı). Denetçinin Onaylar'ı yalnız bu listedir. */
 const IMZA_SUTUN: Sutun<OnaySatiri>[] = [
   { k: "no", genislik: "26%", baslik: "Rapor no", kart: "ust", sira: 1, hucre: (r) => (
-    <><Link className={stil.kod} href={`/raporlar/${r.id}`}>{r.no}</Link><AltSatir><Kirp>{`${r.musteri} / ${r.tesis}`}</Kirp></AltSatir></>
+    <><Link className={stil.no} href={`/raporlar/${r.id}`}>{r.no}</Link><AltSatir><Kirp>{`${r.musteri} / ${r.tesis}`}</Kirp></AltSatir></>
   ) },
   { k: "ekipman", genislik: "28%", baslik: "Ekipman", kart: "govde", sira: 2, hucre: ekipmanHucre },
   { k: "onay", genislik: "24%", baslik: "Onaylandı", kart: "govde", sira: 3, hucre: (r) => (

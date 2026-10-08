@@ -8,7 +8,7 @@ import { MODUL_GRUPLARI } from "../../src/modules/moduller.ts";
 import {
   bantDisiDaraltma, ciftIdler, ciftSeciciler, ciftTanimliDegiskenler, daralmisSerit, degiskenDegeri, dosyalar, eksikIkonlar, girdiYaziHatalari, kalipDisiEsikler,
   hamYazma, kiraciDisiErisim, kullanilanIkonlar, maketIkonlari, maketMenusu, oku, parantezHatasi, rlsEksikTablolar, tanimsizDegiskenler, testKapisiEksikleri, tokenGovdesi, pdfPaketEksikleri,
-  swEksikleri,
+  swEksikleri, baglantiRengiEksikleri,
 } from "../yardimci/denetimler.ts";
 
 const kabuk = oku("src/components/kabuk/Kabuk.module.css");
@@ -170,4 +170,16 @@ test("servis çalışanı: depo şeması ayrışınca, API saklanınca, GET dene
   assert.deepEqual(swEksikleri(sw.replace("caches.match(anahtarAdresi(r.url))", "caches.match(r)"), depo, proxy), ["dosya önbelleği sorgu dizgisine bağlı"]);
   /* 401: sayfa sayısı sınırı kalkarsa yakalanır */
   assert.deepEqual(swEksikleri(sw.replace("  await sayfalariKirp(db);\n", ""), depo, proxy), ["saklanan sayfa sayısı sınırsız"]);
+});
+
+/* 412: bağlantı rengi — Planlar'ın proje no'su renksiz sınıfa (.kod) dönünce ve temel.css bağlantı tabanı silinince yakalanır */
+test("bağlantı rengi: renksiz sınıflı bağlantı ve silinen bağlantı tabanı yakalanır", () => {
+  const tsx = dosyalar("src", [".tsx"]).map((ad) => ({ ad, metin: oku(ad) }));
+  const temel = oku("src/styles/temel.css");
+  assert.deepEqual(baglantiRengiEksikleri(tsx, oku, temel), []);
+  const liste = "src/modules/planlar/ui/PlanListesi.tsx";
+  const bozuk = tsx.map((d) => (d.ad === liste ? { ...d, metin: d.metin.replace("<Link className={stil.no}", "<Link className={stil.kod}") } : d));
+  assert.deepEqual(baglantiRengiEksikleri(bozuk, oku, temel), [`${liste}: .kod bağlantısında renk yok (src/modules/planlar/ui/planlar.module.css)`]);
+  assert.deepEqual(baglantiRengiEksikleri(tsx, oku, temel.replace("color: var(--onay-yazi); text-underline-offset", "text-underline-offset")),
+    ["temel.css: :where(a) bağlantı tabanında renk yok"]);
 });

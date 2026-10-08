@@ -59,7 +59,7 @@ function tanim(kayitlar: readonly PlanSatir[], bugun: string): SuzgecTanimi<Plan
 
 /* kartta (telefon) müşteri adı en üstte ve kalın, proje adı altında normal (reisim 2026-09-28, 2026-09-29) */
 const SUTUNLAR: Sutun<PlanSatir>[] = [
-  { k: "no", genislik: "11%", baslik: "Proje no", kart: "ust", sira: 1, hucre: (p) => <Link className={stil.kod} href={`/planlar/${p.id}`}>{p.no}</Link> },
+  { k: "no", genislik: "11%", baslik: "Proje no", kart: "ust", sira: 1, hucre: (p) => <Link className={stil.no} href={`/planlar/${p.id}`}>{p.no}</Link> },
   { k: "ad", genislik: "14%", baslik: "Proje adı", kart: "govde", sira: 3, hucre: (p) => <Kirp>{p.ad}</Kirp> },
   { k: "musteri", genislik: "17%", baslik: "Müşteri", kart: "govde", sira: 2, hucre: (p) => (
     <span className={stil.hucreSatir}><Ikon ad="building-2" kucuk /><b><Kirp>{p.musteri}</Kirp></b></span>

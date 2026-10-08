@@ -12,7 +12,7 @@ import { PanelSekmeleri, SOZ_DURUM } from "./ortak";
 import stil from "./panel.module.css";
 
 const SUTUNLAR: Sutun<PanelSozlesmesi>[] = [
-  { k: "no", genislik: "22%", baslik: "Sözleşme", kart: "ust", sira: 1, hucre: (x) => <Link className={stil.kod} href={`/portal/s/${x.id}`}>{x.no}</Link> },
+  { k: "no", genislik: "22%", baslik: "Sözleşme", kart: "ust", sira: 1, hucre: (x) => <Link className={stil.no} href={`/portal/s/${x.id}`}>{x.no}</Link> },
   { k: "tesis", genislik: "36%", baslik: "Tesisler", kart: "govde", sira: 2, hucre: (x) => <><KartEtiket>Tesisler</KartEtiket><Kirp>{x.tesisAdlari.join(", ")}</Kirp></> },
   { k: "donem", genislik: "26%", baslik: "Dönem", kart: "govde", sira: 3, hucre: (x) => (
     <><KartEtiket>Dönem</KartEtiket><span className={stil.sayi}>{tarihNo(x.baslangic)} – {tarihNo(x.bitis)}</span></>

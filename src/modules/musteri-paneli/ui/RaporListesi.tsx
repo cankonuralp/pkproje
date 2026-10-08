@@ -25,7 +25,7 @@ const benzersiz = <T,>(l: readonly T[]) => [...new Set(l)];
 const YAKIN = 60;
 
 const SUTUNLAR: Sutun<MusteriRaporu>[] = [
-  { k: "no", genislik: "22%", baslik: "Rapor no", kart: "ust", sira: 1, hucre: (r) => <Link className={stil.kod} href={`/portal/r/${r.id}`}>{r.no}</Link> },
+  { k: "no", genislik: "22%", baslik: "Rapor no", kart: "ust", sira: 1, hucre: (r) => <Link className={stil.no} href={`/portal/r/${r.id}`}>{r.no}</Link> },
   { k: "ekipman", genislik: "24%", baslik: "Ekipman", kart: "govde", sira: 2, hucre: (r) => <span className={stil.hucreSatir}><span className={stil.kod}>{r.ekipmanKod}</span><Kirp>{r.turAd}</Kirp></span> },
   { k: "tesis", genislik: "18%", baslik: "Tesis", kart: "govde", sira: 3, hucre: (r) => <><KartEtiket>Tesis</KartEtiket><Kirp>{r.tesis}</Kirp></> },
   { k: "kontrol", genislik: "12%", baslik: "Kontrol", kart: "govde", sira: 4, hucre: (r) => <><KartEtiket>Kontrol</KartEtiket>{r.kontrol ? tarihNo(r.kontrol) : "—"}</> },

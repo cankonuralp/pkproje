@@ -310,6 +310,30 @@ export function pdfPaketEksikleri(nextConfig: string, sayfalar: readonly { ad: s
   return eksik;
 }
 
+/* ── BAĞLANTI RENGİ (412) ── `<Link className={stil.x} href…>` / `<a className={stil.x} href…>`: x sınıfının CSS modülünde renk (color) olmalı —
+   yoksa bağlantı tarayıcının mavisine düşer (411 görsel karşılaştırmasında Planlar'ın proje no'sunda görüldü; Raporlar, Onaylar, müşteri paneli
+   aynıydı). Sınıfsız bağlantı temel.css'teki `:where(a)` tabanından renk alır: taban da denetlenir. */
+export function baglantiRengiEksikleri(tsx: readonly { ad: string; metin: string }[], css: (yol: string) => string, temel: string): string[] {
+  const eksik: string[] = [];
+  if (!/:where\(a\)\s*\{[^}]*\bcolor\s*:/.test(temel)) eksik.push("temel.css: :where(a) bağlantı tabanında renk yok");
+  for (const d of tsx) {
+    const ice = new Map<string, string>();
+    for (const m of d.metin.matchAll(/import (\w+) from "(\.{1,2}\/[^"]+\.module\.css)"/g)) {
+      const yol = [...d.ad.split("/").slice(0, -1)];
+      for (const p of m[2].split("/")) if (p === "..") yol.pop(); else if (p !== ".") yol.push(p);
+      ice.set(m[1], yol.join("/"));
+    }
+    for (const m of d.metin.matchAll(/<(?:Link|a)\b[^>]*?className=\{(\w+)\.(\w+)\}[^>]*?href=|<(?:Link|a)\b[^>]*?href=[^>]*?className=\{(\w+)\.(\w+)\}/g)) {
+      const [ad, sinif] = m[1] ? [m[1], m[2]] : [m[3], m[4]];
+      const yol = ice.get(ad);
+      if (!yol) continue;
+      const govdeler = [...css(yol).matchAll(new RegExp(`\\.${sinif}(?![\\w-])[^{}]*\\{([^}]*)\\}`, "g"))].map((x) => x[1]);
+      if (!govdeler.some((g) => /(^|[;\s])color\s*:/.test(g))) eksik.push(`${d.ad}: .${sinif} bağlantısında renk yok (${yol})`);
+    }
+  }
+  return [...new Set(eksik)];
+}
+
 /* ── ÇEVRİMDIŞI SERVİS ÇALIŞANI (395) ── public/sw.js düz betik: cihaz deposunun şeması src/components/cevrimdisi/depo.ts ile ORTAK (ad, sürüm,
    bölmeler aynı olmalı — biri artarsa öteki eski şemayla açar); yalnız saha sayfaları saklanır (API, giriş, müşteri paneli, yönetim ASLA); yalnız
    aynı kökenden GET; sayfa CSP'si çalışana izin verir. */

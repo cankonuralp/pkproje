@@ -22,6 +22,10 @@ input, textarea, select { font-size: var(--boy-girdi); }
    kutuda kesiliyordu (2026-09-25 ölçümü, 375: ekipman araması, rapor notu) */
 ::placeholder { font-size: var(--boy-govde); }
 button { cursor: pointer; }
+/* bağlantı tabanı (412, görsel karşılaştırmada görüldü): sınıfsız bağlantı (metin içi "süreyi uzatın", ayrıntı sayfasındaki teklif / iş no)
+   tarayıcının mavisine düşüyordu → marka yeşili (maket .a-no / .a-baglanti rengi). Alt çizgi kalır: metin içindeki bağlantı yalnız renkle
+   ayrılmaz (WCAG 1.4.1). :where → özgüllük 0, sınıflı her bağlantı kendi biçiminde kalır */
+:where(a) { color: var(--onay-yazi); text-underline-offset: 3px; }
 :focus-visible { outline: 3px solid var(--odak); outline-offset: 2px; }
 /* ⛔ HATA SINIFI (maket, 2026-09-23): `hidden` özniteliği sınıfın `display` kuralıyla eziliyordu → tek genel kural */
 [hidden] { display: none !important; }

@@ -2355,6 +2355,13 @@ revizyon, alan kopyalama, hafif kusur devri, meslek eşleşme denetimi).
 - Emsal ürünler: https://opwire.app/iso-17020-periyodik-kontrol-yazilimi/ · https://17020muayene.vidco.com.tr/ · https://akuple.com/asansor-kontrol-yazilimi/ · https://ensyazilim.com/
 
 ## 11 · Değişiklik günlüğü
+- 2026-10-08 (412): **Bağlantılar maketteki gibi** — 411'in ilk görüntülerinde görüldü: Planlar listesinde proje no tarayıcının mavisiyle,
+  altı çizili çıkıyordu (makette yeşil, kalın, çizgi yalnız üstüne gelince). Aynı hata Raporlar, Onaylar (kuyruk + imzamı bekleyenler) ve müşteri
+  panelinin (raporlar, uygunsuzluklar, sözleşmeler) numara bağlantılarındaydı: bağlantı renksiz "kod" biçimini kullanıyordu → her modülde
+  maketin numara bağlantısı biçimi (.no). Sınıfsız metin içi bağlantılar (ayrıntı sayfalarında teklif / iş / sözleşme no, "süreyi uzatın") için
+  genel taban: marka yeşili, alt çizgi kalır (metinde bağlantı yalnız renkle ayrılmaz). Yeşilin şerit zeminlerinde karşıtlığı ölçüldü: açık
+  temada en düşük 4,79 (hata şeridi), koyu temada 5,99 — hepsi ≥ 4,5. Kilit: css-butunlugu "her bağlantının rengi tanımlı" (eski kodda tam bu
+  yedi hatayı buluyor) + bozan.
 - 2026-10-08 (411): **Görsel karşılaştırma — donmuş referans ekran** (CLAUDE.md §6 "Sonra: görsel regresyon"; EKSIKLER-VE-ONERILER §6).
   Planlar ve plan içi, üç genişlikte, açık ve koyu temada çekilir, kayıtlı görüntüyle karşılaştırılır (piksellerin %0,5'inden fazlası farklıysa
   düşer; hareket kapalı). Veri bugünden bağımsız olsun diye ayrı, sabit verili "gorsel" firması (uçtan uca sunucusu kurar: P-0126-501, Ocak

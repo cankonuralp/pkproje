@@ -23,7 +23,7 @@ const sonucAd = (r: RaporListeSatiri) => (r.sonuc ? SONUC_AD[r.sonuc] : null);
 
 const SUTUNLAR: Sutun<RaporListeSatiri>[] = [
   { k: "no", genislik: "22%", baslik: "Rapor no", kart: "ust", sira: 1, hucre: (r) => (
-    <><Link className={stil.kod} href={`/raporlar/${r.id}`}>{r.no}</Link><AltSatir>{tarihNo(gun(r.olustu))}</AltSatir></>
+    <><Link className={stil.no} href={`/raporlar/${r.id}`}>{r.no}</Link><AltSatir>{tarihNo(gun(r.olustu))}</AltSatir></>
   ) },
   { k: "ekipman", genislik: "24%", baslik: "Ekipman", kart: "govde", sira: 2, hucre: (r) => (
     <span className={stil.hucreSatir}><span className={stil.kod}>{r.ekipmanKod}</span><Kirp>{r.turAd}</Kirp></span>

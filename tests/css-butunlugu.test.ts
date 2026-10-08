@@ -3,7 +3,7 @@
    "aynı seçici" taraması). Uygulamanın BÜTÜN CSS'i ve TSX'i taranır. Olumsuz kanıt: tests/bozan/kilitler.bozan.ts. */
 import assert from "node:assert/strict";
 import { test } from "node:test";
-import { ciftSeciciler, ciftTanimliDegiskenler, dosyalar, oku, parantezHatasi, tanimsizDegiskenler } from "./yardimci/denetimler.ts";
+import { baglantiRengiEksikleri, ciftSeciciler, ciftTanimliDegiskenler, dosyalar, oku, parantezHatasi, tanimsizDegiskenler } from "./yardimci/denetimler.ts";
 
 const CSS = dosyalar("src", [".css"]);
 const TSX = dosyalar("src", [".tsx", ".ts"]);
@@ -52,4 +52,12 @@ test("maket CSS: parantez dengeli, tanımsız değişken yok, çift seçici ve d
   assert.deepEqual(eksik, []);
   assert.deepEqual(ciftSeciciler(css), []);
   assert.deepEqual(ciftTanimliDegiskenler(css), []);
+});
+
+/* 412 (411 görsel karşılaştırmasında görüldü): sınıflı her bağlantının sınıfında renk var, sınıfsız bağlantıların temel.css tabanı var —
+   yoksa bağlantı tarayıcının mavisine düşer. Olumsuz kanıt: tests/bozan/kilitler.bozan.ts "bağlantı rengi". */
+test("her bağlantının rengi tanımlı (sınıfında ya da temel.css :where(a) tabanında)", () => {
+  const tsx = dosyalar("src", [".tsx"]).map((ad) => ({ ad, metin: oku(ad) }));
+  assert.ok(tsx.filter((d) => /<Link className=\{stil\.\w+\}/.test(d.metin)).length >= 10, "sınıflı bağlantı bulunamadı (boş tarama yalancı geçer)");
+  assert.deepEqual(baglantiRengiEksikleri(tsx, oku, oku("src/styles/temel.css")), []);
 });

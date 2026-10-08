@@ -37,7 +37,7 @@ const SUTUNLAR: Sutun<MusteriUygunsuzlukSatiri>[] = [
     return <><KartEtiket>Kusur</KartEtiket><span><span className={u.agir ? stil.agir : undefined}>{u.agir ? "Ağır · " : ""}</span>{k.kriter}{k.aciklama && <AltSatir>{k.aciklama}</AltSatir>}</span></>;
   } },
   { k: "rapor", genislik: "16%", baslik: "Rapor", kart: "govde", sira: 3, hucre: (u) => (
-    <><KartEtiket>Rapor</KartEtiket><Link className={stil.kod} href={`/portal/r/${u.raporId}`}>{u.raporNo}</Link></>
+    <><KartEtiket>Rapor</KartEtiket><Link className={stil.no} href={`/portal/r/${u.raporId}`}>{u.raporNo}</Link></>
   ) },
   { k: "tarih", genislik: "12%", baslik: "Tespit", kart: "govde", sira: 4, hucre: (u) => <><KartEtiket>Tespit</KartEtiket>{u.tarih ? tarihNo(u.tarih) : "—"}</> },
   { k: "durum", genislik: "16%", baslik: "Durum", kart: "rozet", sira: 1, hucre: (u) => (
@@ -110,7 +110,7 @@ export function PanelUygunsuzlukListesi({ v }: { v: PanelUygunsuzluklari }) {
             {acik.map((u) => (
               <tr key={u.id}>
                 <td><span className={stil.kod}>{u.ekipmanKod}</span> {u.turAd}<AltSatir>{`${u.tesis} · ${sinif(u)} · ${u.metin}`}</AltSatir></td>
-                <td><Link className={stil.kod} href={`/portal/r/${u.raporId}`}>{u.raporNo}</Link></td>
+                <td><Link className={stil.no} href={`/portal/r/${u.raporId}`}>{u.raporNo}</Link></td>
               </tr>
             ))}
           </tbody>
