@@ -2355,6 +2355,11 @@ revizyon, alan kopyalama, hafif kusur devri, meslek eşleşme denetimi).
 - Emsal ürünler: https://opwire.app/iso-17020-periyodik-kontrol-yazilimi/ · https://17020muayene.vidco.com.tr/ · https://akuple.com/asansor-kontrol-yazilimi/ · https://ensyazilim.com/
 
 ## 11 · Değişiklik günlüğü
+- 2026-10-08 (424): **YAYIN — 417–423 canlıda** (resmî tatiller, rapor belgesi görsel karşılaştırması, telefonda yan menü 100dvh, site
+  taraması, vh → dvh genel kilit + S.A.Y düğmesi, taramanın iki erişilebilirlik bulgusu). 417–418 önce (main 9b88013), sonra main 55a40b2
+  (deneme turu 37834166631 tamamen yeşil: denetim, üç genişlik, site taraması firma 58 sayfa × 3 + müşteri paneli, S.A.Y) · /api/saglik
+  sürüm 55a40b2, denetimler tamam · duman 10/10 · son 3 saatte çalışma hatası yok · göç yok (Supabase 77). Telefonda gerçek Chrome'da yan
+  menü: ölçemedim (uçtan uca tarayıcıda adres çubuğu yok) — reisim'in saha testinde. Reisim saha testlerine geçiyor.
 - 2026-10-08 (423): **Deneme sunucusunda sayfalar bellekte kalır** — 422'nin turunda tarama üç genişlikte TEMİZ geçti; S.A.Y denemesi bu kez
   telefonda 30 sn beklemeye rağmen düştü: giriş sayfası sunucudan geliyor, tarayıcıda canlanmıyordu (sayfa görüntüsü sonuç dosyasında). Sebep:
   geliştirme kipi varsayılanda yalnız son 2 sayfayı tutup 25 sn açılmayanı atıyor; taramadan sonra giriş sayfası sürekli yeniden derleniyordu.
