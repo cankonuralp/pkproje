@@ -1,6 +1,7 @@
 "use server";
 /* PERSONEL SUNUCU EYLEMLERİ — kişi ve kiracı oturumdan; yetki ve doğrulama modül işlevinde (personel.ts). İstemciden gelen kimlik / sürüm
    yalnız "hangi kayıt, hangi sürümü gördüm" bilgisidir; yetkiyi değiştirmez. */
+import { refresh } from "next/cache";
 import { zimmetPdf } from "../../../belge/pdf";
 import { ayniKoken } from "../../../server/kimlik/koken";
 import { istekOturumu, oturumIslemi } from "../../../server/kimlik/istek";
@@ -47,7 +48,9 @@ async function hesapIslemi(is: (o: NonNullable<Awaited<ReturnType<typeof istekOt
   const o = await istekOturumu();
   if (!o) return { genel: "Oturumunuz kapandı. Yeniden giriş yapın." };
   const r = await is(o);
-  if (r.durum === "tamam") return { tamam: true, parola: r.parola };
+  /* 381: başarılı hesap işleminde sayfa SUNUCUDA yenilenir (yeni hâl eylem yanıtıyla gelir) — istemcinin ayrı router.refresh() isteği sürerken
+     gelen sonraki tıklama ("Rolleri kaydet" → "Hesabı kapat") onay penceresini kaybediyordu (CI e2e hesap.spec, defalarca; 377 ile aynı yarış) */
+  if (r.durum === "tamam") { refresh(); return { tamam: true, parola: r.parola }; }
   if (r.durum === "gecersiz") return { hatalar: r.hatalar };
   if (r.durum === "red") return { genel: r.neden };
   return { genel: r.durum === "yetkisiz" ? SONUC.yetkisiz : SONUC.yok };

@@ -2,7 +2,6 @@
 /* GİRİŞ HESABI VE ROLLER (maket personel.html; karar 33–34, 32): hesap aç (e-posta + roller) · yeni geçici parola · hesabı kapat (onay) / yeniden aç ·
    roller (kaydedilmemiş değişiklik söylenir). Geçici parola YALNIZ BİR KEZ, pencerede gösterilir; sayfa yenilenince yoktur. İşlem tuşları yalnız firma
    yöneticisine çizilir; karar yine sunucuda (canDoEylem). Rol listesi rollerin açıklamasıyla; meslek yetkili değilse Denetçi satırında uyarı (engel değil). */
-import { useRouter } from "next/navigation";
 import { useState, useTransition } from "react";
 import { Bilgi, BilgiListesi } from "../../../components/bilgi/Bilgi";
 import { useBildir } from "../../../components/bildirim/Bildirim";
@@ -62,7 +61,6 @@ function RolListesi({ secili, degistir, kapali, meslekAdi, yetkiliOlabilir, onEk
 export function HesapBolumu({ personelId, ad, meslekAdi, eposta, personelEtkin, hesap, yonetebilir, yetkiliOlabilir }: {
   personelId: string; ad: string; meslekAdi: string; eposta: string | null; personelEtkin: boolean; hesap: HesapBilgisi | null; yonetebilir: boolean; yetkiliOlabilir: boolean;
 }) {
-  const router = useRouter();
   const bildir = useBildir();
   const onayla = useOnayla();
   const [bekliyor, baslat] = useTransition();
@@ -76,7 +74,7 @@ export function HesapBolumu({ personelId, ad, meslekAdi, eposta, personelEtkin, 
   const sonuc = (r: HesapDurumu, basarili: () => void) => {
     if (r.genel) { setHata(r.genel); return; }
     if (r.hatalar) { setAcForm((f) => ({ ...f, hatalar: r.hatalar! })); return; }
-    setHata(null); basarili(); router.refresh();
+    setHata(null); basarili();   /* sayfa eylemin yanıtıyla sunucuda yenilendi (381) */
   };
   const sec = secili ?? hesap?.roller ?? [];
   const degisti = !!hesap && [...sec].sort().join() !== [...hesap.roller].sort().join();

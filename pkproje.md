@@ -2355,6 +2355,11 @@ revizyon, alan kopyalama, hafif kusur devri, meslek eşleşme denetimi).
 - Emsal ürünler: https://opwire.app/iso-17020-periyodik-kontrol-yazilimi/ · https://17020muayene.vidco.com.tr/ · https://akuple.com/asansor-kontrol-yazilimi/ · https://ensyazilim.com/
 
 ## 11 · Değişiklik günlüğü
+- 2026-10-08 (381): **Personel › Giriş hesabı: hesap işlemleri sayfayı sunucuda yeniler** (377'nin aynısı). CI'da uçtan uca hesap testi defalarca
+  aynı yerde düşüyordu: "Rolleri kaydet"ten hemen sonra "Hesabı kapat"a basılınca onay penceresi açılmıyor / kayboluyordu — eylemden sonra
+  istemcinin ayrı yenileme isteği sürerken gelen tıklama. Artık hesap aç / geçici parola / kapat / yeniden aç / rolleri kaydet başarılı olunca yeni
+  sayfa eylemin yanıtıyla gelir (`refresh()` sunucuda; HesapBolumu'ndaki `router.refresh()` kalktı). Uygulamada aynı istemci deseni başka yerlerde
+  de var; düşen test çıkan ekran aynı yolla düzeltilir.
 - 2026-10-08 (380): **S.A.Y saha asistanı — çekirdek** (K5 "yapay zekâ — sonra S.A.Y"; maket say.js BB6; reisim 2026-10-03 *"bu say botu plan
   içinde değil her yer de gözükecek … daha yuvarlak daha ilgi çekici"*, *"sayfa değişince vs geçmiş silinmez geçmiş olayı önemli"*). Firma yapay
   zekâyı açtıysa her firma sayfasında sağ altta yuvarlak düğme (müşteri paneli ve Yönetim'de yok); panel masaüstü / tablette sağda yan pencere,
