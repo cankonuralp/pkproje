@@ -2355,6 +2355,10 @@ revizyon, alan kopyalama, hafif kusur devri, meslek eşleşme denetimi).
 - Emsal ürünler: https://opwire.app/iso-17020-periyodik-kontrol-yazilimi/ · https://17020muayene.vidco.com.tr/ · https://akuple.com/asansor-kontrol-yazilimi/ · https://ensyazilim.com/
 
 ## 11 · Değişiklik günlüğü
+- 2026-10-08 (397): **Hata ekranı bağlantıyı bilir** — bağlantı yokken (ya da hata ağdan geldiyse: sunucuya ulaşamayan istek) "Bu sayfa
+  açılamadı · beklenmeyen sorun" yerine "Bağlantı yok": işlem bağlantı gerektirir; raporda Kaydet ve Onaya gönder bağlantısız da çalışır (cihaza
+  kaydedilir), daha önce açılan saha sayfaları bağlantısız açılır; tuşlar Yeniden dene · Planlar. Bağlantı durumu canlı izlenir (bağlantı gelince
+  eski ekran). src/components/hata/BeklenmeyenHata.tsx (ag, agHatasiMi); iki error.tsx. e2e hata (bağlantı kesilir → "Bağlantı yok", gelir → eski).
 - 2026-10-08 (396): **Çevrimdışı çalışma — önceden indirme** (ARKA-UC §4.2 "kullanıcı çevrimiçiyken kabul ettiği / denetimdeki planların
   önümüzdeki 7 günü cihaza iner … 'Çevrimdışı hazır: 3 plan · son eşitleme 08:42'"). Bağlantı varken (açılıştan 3 sn sonra, bağlantı gelince, 30
   dakikada bir; son indirmeden 30 dk geçmediyse yapılmaz) kişinin EKİBİNDE olduğu, kabul edilmiş ya da denetimdeki, başlangıcı önümüzdeki 7 gün

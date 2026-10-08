@@ -10,4 +10,11 @@ test("beklenmeyen hata: yol gösteren ekran, iç ayrıntı sızmaz", async ({ pa
   await expect(ana.getByRole("link", { name: "Ana sayfaya dön" })).toHaveAttribute("href", "/");
   await expect(ana).not.toContainText("ic-ayrinti-sizmamali");
   await expect(ana).not.toContainText("SELECT");
+  /* 397: bağlantı kesilince "Bağlantı yok" (yol gösterir: Planlar; çevrimdışı çalışanlar söylenir); gelince eski ekran */
+  await page.context().setOffline(true);
+  await expect(ana.getByText("Bağlantı yok")).toBeVisible();
+  await expect(ana.getByText("Kaydet ve Onaya gönder bağlantısız da çalışır", { exact: false })).toBeVisible();
+  await expect(ana.getByRole("link", { name: "Planlar" })).toHaveAttribute("href", "/planlar");
+  await page.context().setOffline(false);
+  await expect(ana.getByText("Bu sayfa açılamadı")).toBeVisible();
 });
