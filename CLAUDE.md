@@ -354,7 +354,7 @@ giriş reisim'in (parolayı ben yazmam) — bakılamayan "ölçemedim" diye yaz�
   (2026-10-04).
 - Kuruldu (2026-10-08): erişilebilirlik taraması (410, `e2e/erisilebilirlik.spec.ts`, axe, ciddi / kritik 0) · görsel karşılaştırma
   (411, `e2e/gorsel.spec.ts`: referans ekran üç genişlik × açık / koyu, sabit verili "gorsel" firması; kayıtlı görüntüler
-  `e2e/__goruntu__/<genişlik>/` — kasıtlı görsel değişiklikte deneme makinesinin yazdığı yeni görüntüler gözden geçirilip commit'e girer).
+  `e2e/goruntu/<genişlik>/` — kasıtlı görsel değişiklikte deneme makinesinin yazdığı yeni görüntüler gözden geçirilip commit'e girer).
   Sonra: hata alarmı (yayında; kayıt yapısı ilk günden).
 
 ## 7 · ASLA (bu projeye özgü; anayasadaki yasaklar ayrıca geçerli)

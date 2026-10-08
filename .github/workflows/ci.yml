@@ -94,7 +94,7 @@ jobs:
           name: "e2e-${{ matrix.proje }}"
           path: |
             test-results/
-            e2e/__goruntu__/
+            e2e/goruntu/
           retention-days: 3
           if-no-files-found: ignore
 

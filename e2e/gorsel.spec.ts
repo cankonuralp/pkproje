@@ -1,7 +1,7 @@
 /* NEREDEN GELDİ: 411 — CLAUDE.md §6 "Sonra: … görsel regresyon (referans ekran)", EKSIKLER-VE-ONERILER §6 ("kritik ekranlar için görsel anlık
    görüntü testi; elle ölçüm iyi ama tekrarlanabilir değil"). Donmuş referans ekran (Planlar + plan içi; src/styles/kalip.ts) üç genişlikte, açık ve
    koyu temada, sabit verili ayrı firmada (scripts/e2e-sunucu.ts E2E_GORSEL — numara, tarih, içerik bugünden bağımsız) çekilir ve kayıtlı görüntüyle
-   karşılaştırılır (e2e/__goruntu__/<genişlik>/). Kasıtlı bir görsel değişiklikte görüntüler yeniden kaydedilir ve commit'e girer (gözden geçirilerek). */
+   karşılaştırılır (e2e/goruntu/<genişlik>/). Kasıtlı bir görsel değişiklikte görüntüler yeniden kaydedilir ve commit'e girer (gözden geçirilerek). */
 import { expect, test, type Page } from "@playwright/test";
 import { E2E_GORSEL, E2E_KAPI, E2E_PAROLA } from "./hesaplar";
 import { hazir } from "./yardimci";

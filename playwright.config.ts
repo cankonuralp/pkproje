@@ -23,10 +23,10 @@ export default defineConfig({
   globalSetup: "./e2e/hazirla.ts",
   /* 2026-10-05: geliştirme sunucusu sunucu eylemini ilk çağrıda derler; CI'da 5 sn'lik varsayılan bekleme bazen yetmiyordu (rapor formatı yükleme
      bildirimi, giriş sonrası kabuk). Beklenen şey aynı, yalnız bekleme süresi geliştirme sunucusunun gecikmesine göre */
-  /* 411 görsel karşılaştırma (e2e/gorsel.spec.ts): kayıtlı görüntüler e2e/__goruntu__/<genişlik>/; hareket kapalı, kenar yumuşatma farkına
+  /* 411 görsel karşılaştırma (e2e/gorsel.spec.ts): kayıtlı görüntüler e2e/goruntu/<genişlik>/; hareket kapalı, kenar yumuşatma farkına
      küçük pay (piksellerin %0,5'i) — düzen kayması bundan çok büyüktür */
   expect: { timeout: 15_000, toHaveScreenshot: { animations: "disabled", caret: "hide", maxDiffPixelRatio: 0.005 } },
-  snapshotPathTemplate: "{testDir}/__goruntu__/{projectName}/{arg}{ext}",
+  snapshotPathTemplate: "{testDir}/goruntu/{projectName}/{arg}{ext}",
   /* 2026-10-06 (CI 696fa0e, f7dc15f): genişlik başına ayrı sunucuda masaüstü ve tablet geçti, telefon 6–8 testte 30 sn'lik test süresini aştı —
      telefonda aynı akış daha çok adım atar (menüyü aç, kaydır; belge onayı telefonda 44 sn, tablette 14 sn) ve geliştirme sunucusu yavaştır.
      Beklentiler ve her adımın beklemesi aynı; yalnız bir testin toplam süresi (Playwright varsayılanı 30 sn) */

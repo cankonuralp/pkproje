@@ -2377,8 +2377,10 @@ revizyon, alan kopyalama, hafif kusur devri, meslek eşleşme denetimi).
 - 2026-10-08 (411): **Görsel karşılaştırma — donmuş referans ekran** (CLAUDE.md §6 "Sonra: görsel regresyon"; EKSIKLER-VE-ONERILER §6).
   Planlar ve plan içi, üç genişlikte, açık ve koyu temada çekilir, kayıtlı görüntüyle karşılaştırılır (piksellerin %0,5'inden fazlası farklıysa
   düşer; hareket kapalı). Veri bugünden bağımsız olsun diye ayrı, sabit verili "gorsel" firması (uçtan uca sunucusu kurar: P-0126-501, Ocak
-  2026, kabul edilmiş, üç ekipman). Kayıtlı görüntüler e2e/__goruntu__/<genişlik>/; kasıtlı bir görsel değişiklikte deneme makinesinin yazdığı
-  yeni görüntüler (sonuç dosyası) gözden geçirilip commit'e girer.
+  2026, kabul edilmiş, üç ekipman). Kayıtlı görüntüler e2e/goruntu/<genişlik>/; kasıtlı bir görsel değişiklikte deneme makinesinin yazdığı
+  yeni görüntüler (sonuç dosyası) gözden geçirilip commit'e girer. İlk görüntülerde iki hata görüldü → 412 (bağlantı rengi), 414 (tablette
+  taşma); kayıtlı 12 görüntü bu düzeltmelerden sonraki hâlden (f52677a), tek tek bakıldı. Klasör adı alt çizgisiz: depo "_" ile başlayan
+  klasörleri geçici sayıp almıyor (.gitignore).
 - 2026-10-08 (410): **Erişilebilirlik taraması** (EKSIKLER-VE-ONERILER §7; CLAUDE.md §6 "Sonra: Playwright + erişilebilirlik"). Uçtan uca, üç
   genişlikte, axe (@axe-core/playwright 4.13.0, MPL-2.0, yalnız geliştirme paketi; WCAG 2.1 A + AA): giriş, Ana sayfa, Planlar, plan içi,
   personel formu, saha raporu — ciddi ve kritik ihlal 0 (e2e/erisilebilirlik.spec.ts; düşerse hangi kuralın hangi öğede bozulduğunu söyler).
