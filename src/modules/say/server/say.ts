@@ -14,7 +14,8 @@ import { ROL_ADI } from "../../../server/yetki/tanim.ts";
 import { sinirli, yzAyi, yzAyir, yzAyirmaBirak, yzKendiAyi, yzMesajSay, yzSohbetKapat } from "../../../server/yz/kullanim.ts";
 import { maliyetHesapla, type OkumaIstegi, type YzModel } from "../../../server/yz/okuma.ts";
 import { SAY_GECMIS, sayEnCokMaliyet, sayIstegi, sayYanitiCoz, SORU_SINIRI } from "../../../server/yz/say.ts";
-import { sohbetGecmisi, sohbetTemizle, sohbetYaz, type SohbetBekleyen, type SohbetIletisi } from "../../../server/yz/sohbet.ts";
+import { sohbetGecmisi, sohbetOneriDurumu, sohbetTemizle, sohbetYaz, type SohbetBekleyen, type SohbetEksik, type SohbetIletisi } from "../../../server/yz/sohbet.ts";
+import { SONUC_AD } from "../../raporlar/sema.ts";
 import type { Kisi } from "../../anasayfa/server/anasayfa.ts";
 import { menuTakip } from "../../anasayfa/server/takip.ts";
 import { MODULLER } from "../../moduller.ts";
@@ -76,10 +77,82 @@ export async function sayHizli(db: Sorgulayici, kim: Kisi, hizli: SayHizli, yol:
   return { durum: "tamam", iletiler: await sohbetGecmisi(db, 2) };
 }
 
+/* ── rapor ekranı (382; maket say.js HIZLI "Eksik alanlar neler?", "Sonuç ne olmalı?") ──
+   Cevap açık raporun CANLI hâlinden (kaydedilmemiş değişiklikler dahil) — ekran yapıyı gönderir, METNİ sunucu kurar (istemci S.A.Y adına metin
+   yazamaz); geçmiş kişinin kendisinin. Öneri yalnız o rapor açıkken uygulanır (denetçinin seçimiyle aynı yoldan; Kaydet'le yazılır). */
+export type SayRaporHizli = "eksik" | "sonuc";
+export const RAPOR_HIZLI_SORU: Readonly<Record<SayRaporHizli, string>> = { eksik: "Eksik alanlar neler?", sonuc: "Sonuç ne olmalı?" };
+export interface SayRaporGirdisi {
+  hizli: SayRaporHizli;
+  rapor: { id: string; no: string };
+  eksik?: SohbetEksik[];
+  sonuc?: { var: boolean; oneri: "uygun" | "uygun_degil"; secili: "" | "uygun" | "uygun_degil"; kusur: number };
+}
+const UUID = /^[0-9a-f]{8}-[0-9a-f]{4}-[0-9a-f]{4}-[0-9a-f]{4}-[0-9a-f]{12}$/;
+const RAPOR_NO = /^[\p{L}\p{N}-]{3,40}$/u;
+const metinMi = (x: unknown, en: number): x is string => typeof x === "string" && x.length >= 1 && x.length <= en;
+const sonucMu = (x: unknown): x is "uygun" | "uygun_degil" => x === "uygun" || x === "uygun_degil";
+
+/** ekrandan gelen yapının denetimi (alan sayıları ve uzunlukları sınırlı; serbest metin yok) */
+export function raporGirdisi(g: unknown): SayRaporGirdisi | null {
+  const x = (g ?? {}) as Record<string, unknown>;
+  const r = (x.rapor ?? {}) as Record<string, unknown>;
+  if ((x.hizli !== "eksik" && x.hizli !== "sonuc") || typeof r.id !== "string" || !UUID.test(r.id) || typeof r.no !== "string" || !RAPOR_NO.test(r.no)) return null;
+  const rapor = { id: r.id, no: r.no };
+  if (x.hizli === "eksik") {
+    if (!Array.isArray(x.eksik) || x.eksik.length > 60) return null;
+    const eksik: SohbetEksik[] = [];
+    for (const e of x.eksik as Record<string, unknown>[]) {
+      if (!e || !metinMi(e.ad, 300) || !metinMi(e.bolumAd, 120) || !metinMi(e.bolum, 60) || !metinMi(e.alan, 120) || !/^[A-Za-z0-9._#-]+$/.test(e.alan) || !/^[A-Za-z0-9_-]+$/.test(e.bolum)) return null;
+      eksik.push({ ad: e.ad, bolumAd: e.bolumAd, bolum: e.bolum, alan: e.alan });
+    }
+    return { hizli: "eksik", rapor, eksik };
+  }
+  const s = (x.sonuc ?? {}) as Record<string, unknown>;
+  if (typeof s.var !== "boolean" || !sonucMu(s.oneri) || (s.secili !== "" && !sonucMu(s.secili)) || !Number.isInteger(s.kusur) || (s.kusur as number) < 0 || (s.kusur as number) > 999) return null;
+  return { hizli: "sonuc", rapor, sonuc: { var: s.var, oneri: s.oneri, secili: s.secili as "" | "uygun" | "uygun_degil", kusur: s.kusur as number } };
+}
+
+/** rapor ekranının hızlı sorusu — kuralla (ücretsiz), metni sunucu kurar; soru ve cevap geçmişe ("Rapor <no>"), mesaj sayılır */
+export async function sayRaporCevabi(db: Sorgulayici, girdi: unknown, simdi = new Date()): Promise<SayYaniti> {
+  const g = raporGirdisi(girdi);
+  if (!g) return { durum: "red", neden: "Rapor bilgisi okunamadı; sayfayı yenileyip yeniden deneyin." };
+  const k = await kapi(db);
+  if ("durum" in k) return k;
+  const yer = `Rapor ${g.rapor.no}`;
+  let metin: string, ek: Record<string, unknown> = { rapor: g.rapor.id };
+  if (g.hizli === "eksik") {
+    const l = g.eksik ?? [];
+    metin = l.length ? `${l.length} zorunlu alan boş:` : "Zorunlu alanların hepsi dolu; raporu onaya gönderebilirsiniz.";
+    if (l.length) ek = { ...ek, eksik: l };
+  } else {
+    const s = g.sonuc!;
+    if (!s.var) metin = "Bu raporun formatında sonuç alanı yok.";
+    else {
+      const neden = s.kusur ? `${s.kusur} kusur var (“Uygun değil” madde ya da sınır dışı değer).`
+        : s.oneri === "uygun_degil" ? "Ölçüm ya da test sonuçlarında sınır dışı değer var." : "“Uygun değil” madde ve sınır dışı değer yok.";
+      if (s.secili === s.oneri) metin = `${neden} Seçtiğiniz sonuç (${SONUC_AD[s.oneri]}) kriterlerle uyumlu.`;
+      else {
+        metin = `${neden} Önerim:`;
+        ek = { ...ek, oneri: { alan: "sonuc", deger: s.oneri, ad: `Sonuç ve kanaat → ${SONUC_AD[s.oneri]}`, durum: "" } };
+      }
+    }
+  }
+  await sohbetYaz(db, { kim: "ben", metin: RAPOR_HIZLI_SORU[g.hizli], yer, ek: { rapor: g.rapor.id } });
+  await sohbetYaz(db, { kim: "say", metin, yer, ek });
+  await yzMesajSay(db, yzAyi(simdi));
+  return { durum: "tamam", iletiler: await sohbetGecmisi(db, 2) };
+}
+
+/** öneri kartı: "Uygula" (rapora ekranda uygulandı) ya da "Vazgeç" — kişinin kendi iletisinde, bir kez */
+export async function sayOneri(db: Sorgulayici, id: string, durum: "uygulandi" | "vazgecildi"): Promise<boolean> {
+  return UUID.test(id) && sohbetOneriDurumu(db, id, durum);
+}
+
 export interface SaySorHazir { durum: "hazir"; istek: OkumaIstegi; anahtar: string; model: YzModel; ay: string; ust: number; yer: string }
 
 /** serbest soru, adım 1 (işlem içinde): kapı, soru, ayırma (sınır doluysa soru yazılmaz), soru geçmişe, istek gövdesi */
-export async function saySorHazirla(db: Sorgulayici, kim: Kisi, soru: string, yol: string, simdi = new Date()): Promise<SaySorHazir | { durum: "red"; neden: string }> {
+export async function saySorHazirla(db: Sorgulayici, kim: Kisi, soru: string, yol: string, simdi = new Date(), raporNo: string | null = null): Promise<SaySorHazir | { durum: "red"; neden: string }> {
   const metin = soru.replace(/[\u0000-\u0008\u000b\u000c\u000e-\u001f\u007f]/g, "").trim();
   if (!metin) return { durum: "red", neden: "Sorunuzu yazın." };
   if (metin.length > SORU_SINIRI) return { durum: "red", neden: `Soru en çok ${SORU_SINIRI} karakter.` };
@@ -87,7 +160,9 @@ export async function saySorHazirla(db: Sorgulayici, kim: Kisi, soru: string, yo
   if ("durum" in k) return k;
   const anahtar = await sirKullan(db, "yapay_zeka_anahtari");
   if (!anahtar) return { durum: "red", neden: ANAHTARSIZ };
-  const s = sayfaBilgisi(yol);
+  const sayfa = sayfaBilgisi(yol);
+  /* rapor ekranında yer "Rapor <no>" (382; numara biçimi denetli — yalnız kişinin kendi geçmişinde etiket) */
+  const s = raporNo && RAPOR_NO.test(raporNo) && sayfa.modul === 14 ? { ...sayfa, yer: `Rapor ${raporNo}` } : sayfa;
   const gecmis = (await sohbetGecmisi(db, SAY_GECMIS)).map((m) => ({ kim: m.kim, metin: m.metin }));
   const bekleyen = (await bekleyenler(db, kim)).map((b) => `${b.ad}: ${[b.kirmizi ? `${b.kirmizi} ${b.kirmiziAd}` : "", b.sari ? `${b.sari} ${b.sariAd}` : ""].filter(Boolean).join(", ")}`);
   const ay = yzAyi(simdi), ust = sayEnCokMaliyet(k.model);

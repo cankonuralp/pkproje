@@ -77,6 +77,23 @@ ALTER FUNCTION yz_sohbet_yaz(text, text, text, jsonb) SET search_path = pg_catal
 REVOKE EXECUTE ON FUNCTION yz_sohbet_yaz(text, text, text, jsonb) FROM PUBLIC;
 GRANT EXECUTE ON FUNCTION yz_sohbet_yaz(text, text, text, jsonb) TO probata_uygulama;
 
+/* öneri kartının sonucu (382: rapor ekranında "Uygula" / "Vazgeç"): yalnız kişinin kendi iletisinde, yalnız bir kez (boş → uygulandı / vazgeçildi) */
+CREATE OR REPLACE FUNCTION yz_sohbet_oneri(p_id uuid, p_durum text) RETURNS boolean
+  LANGUAGE plpgsql SECURITY DEFINER AS $$
+DECLARE
+  f uuid := gecerli_firma();
+  ben uuid := NULLIF(current_setting('app.hesap_id', true), '')::uuid;
+BEGIN
+  IF f IS NULL OR ben IS NULL THEN RAISE EXCEPTION 'öneriyi oturumdaki kişi işaretler' USING ERRCODE = '42501'; END IF;
+  IF p_durum IS NULL OR p_durum NOT IN ('uygulandi', 'vazgecildi') THEN RAISE EXCEPTION 'öneri sonucu geçersiz' USING ERRCODE = '23514'; END IF;
+  UPDATE yz_sohbet SET ek = jsonb_set(ek, '{oneri,durum}', to_jsonb(p_durum))
+    WHERE id = p_id AND firma_id = f AND hesap_id = ben AND kim = 'say' AND ek -> 'oneri' ->> 'durum' = '';
+  RETURN FOUND;
+END $$;
+ALTER FUNCTION yz_sohbet_oneri(uuid, text) SET search_path = pg_catalog, public, pg_temp;
+REVOKE EXECUTE ON FUNCTION yz_sohbet_oneri(uuid, text) FROM PUBLIC;
+GRANT EXECUTE ON FUNCTION yz_sohbet_oneri(uuid, text) TO probata_uygulama;
+
 /* "Sohbeti temizle": yalnız oturumdaki kişinin, bu firmadaki geçmişi. Dönen: silinen ileti sayısı */
 CREATE OR REPLACE FUNCTION yz_sohbet_temizle() RETURNS integer
   LANGUAGE plpgsql SECURITY DEFINER AS $$

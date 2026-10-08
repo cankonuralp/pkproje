@@ -214,7 +214,8 @@ pkproje/
                             (göç 0070) · uydurma sayfalar e2e/duyuru-ornek.ts (PROBATA_DUYURU_UC yalnız uçtan uca taklit)
   src/modules/say/          S.A.Y SAHA ASİSTANI (380; maket say.js BB6): yardim.ts (sayfa yardımı + yapay zekâ kılavuzu, adresten yer adı) ·
                             server/say.ts (sayDurumu, sayHizli — kuralla, saySorHazirla / saySorKaydet / sayBirak — ayırma, işlem dışı çağrı,
-                            sayTemizle) · ui/SayAsistan.tsx (uygulama düzeninde tek bileşen; düğme + panel) · ui/eylemler.ts · çekirdek
+                            sayTemizle; 382 sayRaporCevabi / sayOneri — rapor ekranı, metni sunucu kurar) · ui/SayAsistan.tsx (uygulama düzeninde tek
+                            bileşen; düğme + panel) · ui/baglam.ts (382: saha raporu ekranı kendini bağlar — canlı eksikler, sonuç, Uygula, Git) · ui/eylemler.ts · çekirdek
                             src/server/yz/say.ts (istek: önbellekli talimat + bağlam, cevap çözme; saf) + sohbet.ts (geçmiş; göç 0071 yz_sohbet)
   src/server/saglik.ts      SAĞLIK (350; 09-G5): /api/saglik denetimleri (db/saglik.ts → saglik_denetimi, geçerli tanım 0053 — bağlanan rol, göç sayısı;
                             db/son-goc.ts SON_GOC + GOC_SAYISI — her yeni göçte ikisi güncellenir, testle kilitli) · canlı duman testi: node tools/duman.mjs (salt okunur, çıkış kodu)

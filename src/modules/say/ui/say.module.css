@@ -42,6 +42,22 @@
 .bekleyen { margin: 6px 0 0; padding-left: 18px; display: grid; gap: 4px; }
 .bekleyen a { display: inline-flex; align-items: center; min-height: var(--tus-y); color: var(--onay-yazi); font-weight: 600; }
 .yaziyor { margin: 0; color: var(--yazi2); font-size: var(--boy-kucuk); }
+/* rapor ekranı (382; maket .a-say-eksik / .a-say-oneri): bölüm başına eksik + Git; öneri kartı Uygula / Vazgeç */
+.eksik { list-style: none; margin: 8px 0 0; padding: 0; display: grid; gap: 6px; }
+.eksik li { display: flex; align-items: center; justify-content: space-between; gap: 8px; }
+.kucukTus {
+  display: inline-flex; align-items: center; gap: 6px; flex: none; min-height: var(--tus-y); padding: 0 12px;
+  border: 1px solid var(--kenar-alan); border-radius: var(--r-orta); background: var(--kart); color: var(--yazi); font: inherit; font-weight: 600; cursor: pointer;
+}
+.kucukTus:hover { background: var(--zemin2); }
+.kucukTus.birincil { background: var(--vurgu); border-color: var(--vurgu); color: var(--vurgu-uzeri); }
+.oneri { margin-top: 8px; padding: 10px 12px; background: var(--kart); border: 1px solid var(--kenar-alan); border-radius: var(--r-orta); }
+.oneri p { margin: 0; }
+.oneriBas { display: flex; align-items: center; gap: 6px; color: var(--yazi2); font-size: var(--boy-kucuk); font-weight: 600; }
+.mesaj .oneriMetin { margin-top: 4px; }
+.oneriTuslar { display: flex; justify-content: flex-end; flex-wrap: wrap; gap: 8px; margin-top: 10px; }
+.mesaj .oneriDurum { display: flex; align-items: center; gap: 6px; margin-top: 8px; color: var(--onay-yazi); font-weight: 600; }
+.mesaj .oneriRed { color: var(--yazi2); }
 .alt { padding: 12px 16px; border-top: 1px solid var(--kenar); display: grid; gap: 8px; }
 .hizli { display: flex; flex-wrap: wrap; gap: 6px; }
 .cip {

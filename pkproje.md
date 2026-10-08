@@ -2355,6 +2355,13 @@ revizyon, alan kopyalama, hafif kusur devri, meslek eşleşme denetimi).
 - Emsal ürünler: https://opwire.app/iso-17020-periyodik-kontrol-yazilimi/ · https://17020muayene.vidco.com.tr/ · https://akuple.com/asansor-kontrol-yazilimi/ · https://ensyazilim.com/
 
 ## 11 · Değişiklik günlüğü
+- 2026-10-08 (382): **S.A.Y rapor ekranında** (maket say.js HIZLI; ARKA-UC §5.3). Düzenlenen rapor açıkken S.A.Y raporu okur (kaydedilmemiş
+  değişiklikler dahil): hızlı sorular **"Eksik alanlar neler?"** (bölüm başına "Bölüm · N alan" ve **Git** — alana götürür; telefonda panel kapanır)
+  ve **"Sonuç ne olmalı?"** (kusur ve sınır dışı değerlere göre; seçilen sonuç kriterlerden ayrıysa **öneri kartı**: "Uygula" denetçinin
+  seçimiyle aynı yoldan forma yazar — Kaydet'le kaydedilir, "Vazgeç"). Git ve Uygula yalnız o rapor açıkken; kartın sonucu geçmişte kalır, bir
+  kez işaretlenir. Cevabın metnini sunucu kurar (ekran yalnız yapıyı gönderir, denetlenir — istemci S.A.Y adına metin yazamaz); yer "Rapor <no>";
+  serbest soruda da. Göç 0071'e yz_sohbet_oneri eklendi (henüz uygulanmamış göç, yerinde). Kilit say.test (382), say-saf (rapor girdisi);
+  e2e say (rapor ekranı: eksik + Git, sonuç önerisi + Uygula).
 - 2026-10-08 (381): **Personel › Giriş hesabı: hesap işlemleri sayfayı sunucuda yeniler** (377'nin aynısı). CI'da uçtan uca hesap testi defalarca
   aynı yerde düşüyordu: "Rolleri kaydet"ten hemen sonra "Hesabı kapat"a basılınca onay penceresi açılmıyor / kayboluyordu — eylemden sonra
   istemcinin ayrı yenileme isteği sürerken gelen tıklama. Artık hesap aç / geçici parola / kapat / yeniden aç / rolleri kaydet başarılı olunca yeni

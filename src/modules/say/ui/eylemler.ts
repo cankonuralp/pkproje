@@ -6,7 +6,7 @@ import { ayniKoken } from "../../../server/kimlik/koken";
 import { istekOturumu, oturumIslemi } from "../../../server/kimlik/istek";
 import { anthropicCagir } from "../../../server/yz/okuma";
 import type { SohbetIletisi } from "../../../server/yz/sohbet";
-import { sayBirak, sayDurumu, sayGecmisi, sayHizli, saySorHazirla, saySorKaydet, sayTemizle, type SayDurum, type SayYaniti } from "../server/say";
+import { sayBirak, sayDurumu, sayGecmisi, sayHizli, sayOneri, sayRaporCevabi, saySorHazirla, saySorKaydet, sayTemizle, type SayDurum, type SayYaniti } from "../server/say";
 
 const RED: SayYaniti = { durum: "red", neden: "Oturumunuz kapandı. Sayfayı yenileyip yeniden giriş yapın." };
 const yolAl = (v: unknown) => (typeof v === "string" && v.startsWith("/") && v.length <= 300 ? v : "/");
@@ -33,11 +33,25 @@ export async function sayHizliEylemi(hizli: unknown, yol: unknown): Promise<SayY
   return oturumIslemi(o, (db) => sayHizli(db, o, hizli, yolAl(yol)));
 }
 
-export async function saySorEylemi(soru: unknown, yol: unknown): Promise<SayYaniti> {
+/** rapor ekranının hızlı soruları (382): ekran açık raporun yapısını gönderir, metni sunucu kurar */
+export async function sayRaporEylemi(girdi: unknown): Promise<SayYaniti> {
+  const o = await oturum();
+  if (!o) return RED;
+  return oturumIslemi(o, (db) => sayRaporCevabi(db, girdi));
+}
+
+/** öneri kartı: Uygula / Vazgeç (yalnız kişinin kendi iletisinde, bir kez) */
+export async function sayOneriEylemi(id: unknown, durum: unknown): Promise<boolean> {
+  const o = await oturum();
+  if (!o || typeof id !== "string" || (durum !== "uygulandi" && durum !== "vazgecildi")) return false;
+  return oturumIslemi(o, (db) => sayOneri(db, id, durum));
+}
+
+export async function saySorEylemi(soru: unknown, yol: unknown, raporNo?: unknown): Promise<SayYaniti> {
   const o = await oturum();
   if (!o) return RED;
   if (typeof soru !== "string") return { durum: "red", neden: "Sorunuzu yazın." };
-  const h = await oturumIslemi(o, (db) => saySorHazirla(db, o, soru, yolAl(yol)));
+  const h = await oturumIslemi(o, (db) => saySorHazirla(db, o, soru, yolAl(yol), new Date(), typeof raporNo === "string" ? raporNo : null));
   if (h.durum !== "hazir") return h;
   const y = await anthropicCagir(h.istek, h.anahtar);
   if (y.durum === "hata") {

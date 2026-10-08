@@ -6,7 +6,9 @@
      kişi adı, e-posta, anahtar GİTMEZ; cevap geçmişe, ayırma gerçek maliyetle kapanır; sınır doluysa soru yazılmaz; cevapsız çağrı bırakılır /
      bilinmiyorsa harcamaya yazılır;
    · geçmiş kişinin kendisinin: aynı firmadaki başka kişi ve başka firma görmez, temizleyemez; uygulama rolü tabloya yazamaz / silemez; kişi başı
-     en yeni 200; mesaj sayısı yalnız artar.
+     en yeni 200; mesaj sayısı yalnız artar;
+   · 382 rapor ekranı: "Eksik alanlar" / "Sonuç" cevabının METNİNİ sunucu kurar (ekranın yapısından), yer "Rapor <no>"; öneri yalnız seçilen sonuç
+     kriterlerden ayrıysa; öneri kartı bir kez işaretlenir, başkası işaretleyemez; serbest soruda yer rapor numarası.
    Olumsuz kanıt: tests/bozan/say.bozan.ts. */
 import assert from "node:assert/strict";
 import { randomBytes } from "node:crypto";
@@ -15,7 +17,7 @@ import { tmpdir } from "node:os";
 import { join } from "node:path";
 import { after, before, test } from "node:test";
 import { bugunTr, planAc, type Kisi } from "../src/modules/planlar/server/planlar.ts";
-import { sayBirak, sayDurumu, sayGecmisi, sayHizli, saySorHazirla, saySorKaydet, sayTemizle } from "../src/modules/say/server/say.ts";
+import { sayBirak, sayDurumu, sayGecmisi, sayHizli, sayOneri, sayRaporCevabi, saySorHazirla, saySorKaydet, sayTemizle } from "../src/modules/say/server/say.ts";
 import { ayarOku, ayarYaz } from "../src/server/ayar/ayar.ts";
 import { sirYaz } from "../src/server/ayar/sir.ts";
 import type { GomuluKume } from "../src/server/db/gomulu.ts";
@@ -172,4 +174,43 @@ test("GÜVENLİK: geçmiş kişinin kendisinin — aynı firmadaki başkası ve 
   assert.equal(son.at(-1)?.metin, "İleti 204");
   const toplam = await ile(A, FA.plan, (db) => db.sorgu<{ n: number }>("SELECT count(*)::int AS n FROM yz_sohbet"));
   assert.equal(toplam.rows[0].n, 200);
+});
+
+test("382 rapor ekranı: metni sunucu kurar, yer 'Rapor <no>'; öneri yalnız sonuç ayrıysa; öneri bir kez, yalnız sahibi işaretler", async () => {
+  const R = { id: "6f0c1d2e-3a4b-4c5d-8e9f-0a1b2c3d4e5f", no: "SA-1026-001" };
+  assert.deepEqual(await ile(A, FA.yon, (db) => sayRaporCevabi(db, { hizli: "eksik", rapor: { id: "kotu", no: R.no }, eksik: [] })),
+    { durum: "red", neden: "Rapor bilgisi okunamadı; sayfayı yenileyip yeniden deneyin." });
+  const e = await ile(A, FA.yon, (db) => sayRaporCevabi(db, { hizli: "eksik", rapor: R, metin: "sahte", eksik: [
+    { ad: "Kontrol başlangıcı", bolum: "sabit-firma", bolumAd: "Firma bilgileri", alan: "tarih.bas" },
+    { ad: "Etiket", bolum: "gozle", bolumAd: "Gözle kontrol", alan: "m1" }, { ad: "Kapak", bolum: "gozle", bolumAd: "Gözle kontrol", alan: "m2" }] }));
+  assert.ok(e.durum === "tamam");
+  if (e.durum !== "tamam") return;
+  assert.deepEqual(e.iletiler.map((m) => [m.kim, m.metin, m.yer]), [["ben", "Eksik alanlar neler?", `Rapor ${R.no}`], ["say", "3 zorunlu alan boş:", `Rapor ${R.no}`]]);
+  assert.equal(e.iletiler[1].ek?.rapor, R.id);
+  assert.equal(e.iletiler[1].ek?.eksik?.length, 3);
+  assert.equal((await ile(A, FA.yon, (db) => sayRaporCevabi(db, { hizli: "eksik", rapor: R, eksik: [] }))).durum === "tamam", true);
+  assert.equal((await ile(A, FA.yon, (db) => sayGecmisi(db))).at(-1)?.metin, "Zorunlu alanların hepsi dolu; raporu onaya gönderebilirsiniz.");
+  /* sonuç: seçilen kriterlerle aynıysa öneri yok; ayrıysa öneri kartı */
+  const ayni = await ile(A, FA.yon, (db) => sayRaporCevabi(db, { hizli: "sonuc", rapor: R, sonuc: { var: true, oneri: "uygun", secili: "uygun", kusur: 0 } }));
+  assert.ok(ayni.durum === "tamam" && ayni.iletiler[1].metin === "“Uygun değil” madde ve sınır dışı değer yok. Seçtiğiniz sonuç (Uygun) kriterlerle uyumlu." && !ayni.iletiler[1].ek?.oneri);
+  const ayri = await ile(A, FA.yon, (db) => sayRaporCevabi(db, { hizli: "sonuc", rapor: R, sonuc: { var: true, oneri: "uygun_degil", secili: "", kusur: 2 } }));
+  assert.ok(ayri.durum === "tamam");
+  if (ayri.durum !== "tamam") return;
+  const m = ayri.iletiler[1];
+  assert.equal(m.metin, "2 kusur var (“Uygun değil” madde ya da sınır dışı değer). Önerim:");
+  assert.deepEqual(m.ek?.oneri, { alan: "sonuc", deger: "uygun_degil", ad: "Sonuç ve kanaat → Uygun değil", durum: "" });
+  assert.equal(await ile(A, FA.plan, (db) => sayOneri(db, m.id, "uygulandi")), false, "başkasının iletisini işaretleyemez");
+  assert.equal(await ile(A, FA.yon, (db) => sayOneri(db, m.id, "uygulandi")), true);
+  assert.equal(await ile(A, FA.yon, (db) => sayOneri(db, m.id, "vazgecildi")), false, "bir kez");
+  assert.equal((await ile(A, FA.yon, (db) => sayGecmisi(db))).find((x) => x.id === m.id)?.ek?.oneri?.durum, "uygulandi");
+  await assert.rejects(ile(A, FA.yon, (db) => db.sorgu("SELECT yz_sohbet_oneri($1, 'kotu')", [m.id])), /öneri sonucu geçersiz/);
+  const yok = await ile(A, FA.yon, (db) => sayRaporCevabi(db, { hizli: "sonuc", rapor: R, sonuc: { var: false, oneri: "uygun", secili: "", kusur: 0 } }));
+  assert.ok(yok.durum === "tamam" && yok.iletiler[1].metin === "Bu raporun formatında sonuç alanı yok.");
+  /* serbest soru rapor ekranında: yer "Rapor <no>" (yalnız Raporlar sayfasında, biçim denetli) */
+  const h = await ile(A, FA.yon, (db) => saySorHazirla(db, FA.yon, "Bu raporda neye dikkat edeyim?", `/raporlar/${R.id}`, new Date(), R.no));
+  assert.ok(h.durum === "hazir" && h.yer === `Rapor ${R.no}`);
+  if (h.durum === "hazir") await ile(A, FA.yon, (db) => sayBirak(db, h, "yok"));
+  const h2 = await ile(A, FA.yon, (db) => saySorHazirla(db, FA.yon, "Başka soru", "/planlar", new Date(), "<b>x</b>"));
+  assert.ok(h2.durum === "hazir" && h2.yer === "Planlar");
+  if (h2.durum === "hazir") await ile(A, FA.yon, (db) => sayBirak(db, h2, "yok"));
 });

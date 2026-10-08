@@ -20,7 +20,7 @@
    + "Revize isteğini geri çek"; reddedilirse "Revize isteği reddedildi" şeridi; revizeye gönderilen rapor Yeni açılır, üstünde "Revizeye
    gönderildi (R1)" + gerekçe; rapor no revizyon ekiyle. */
 import { useRouter } from "next/navigation";
-import { useMemo, useState, useTransition, type ReactNode } from "react";
+import { useEffect, useMemo, useRef, useState, useTransition, type ReactNode } from "react";
 import { useBildir } from "../../../components/bildirim/Bildirim";
 import { Girdi, ipucuId } from "../../../components/form/Form";
 import { Ikon } from "../../../components/ikon/Ikon";
@@ -44,6 +44,7 @@ import {
   onayaGonderEylemi, raporFormatGuncelleEylemi, raporKaydetEylemi, raporKopyalaEylemi, raporKunyeGuncelleEylemi, raporSilEylemi, revizeIstegiGeriCekEylemi,
   revizeIsteEylemi, type RaporYaniti,
 } from "./eylemler";
+import { sayRaporBagla } from "../../say/ui/baglam";
 import stil from "./raporlar.module.css";
 
 type Gorunum = SahaRaporuVerisi;
@@ -248,6 +249,35 @@ export function SahaRaporu({ v }: { v: Gorunum }) {
     }, 60);
   };
   const tamam = () => (eksikler?.length ? git(eksikler[0]) : setEksikler(null));
+
+  /* S.A.Y (382): düzenlenebilir rapor açıkken S.A.Y bu raporu okur — CANLI hâl (kaydedilmemiş değişiklikler dahil): boş zorunlu alanlar, sonuç
+     önerisi; öneri denetçinin seçimiyle aynı yoldan uygulanır (Kaydet'le yazılır); eksiğe aynı "git" götürür. Rapor ekranı kapanınca bağ kalkar. */
+  const sayGuncel = useRef({ d, cevaplar, tarih, yaz, git });
+  useEffect(() => { sayGuncel.current = { d, cevaplar, tarih, yaz, git }; });
+  useEffect(() => {
+    if (oku) return;
+    const bolumAdi = (id: string) => v.tanim.bolumler.find((b) => b.id === id)?.ad ?? id;
+    return sayRaporBagla({
+      id: v.id, no: v.no,
+      eksikler: () => {
+        const { d, tarih } = sayGuncel.current, l: { bolum: string; alan: string; ad: string; bolumAd: string }[] = [];
+        if (!tarih.bas) l.push({ bolum: SABIT.firma, alan: "tarih.bas", ad: "Kontrol başlangıcı", bolumAd: "Firma bilgileri" });
+        for (const e of d.eksikler) l.push({ bolum: e.bolum, alan: e.alan, ad: e.ad.slice(0, 300), bolumAd: bolumAdi(e.bolum).slice(0, 120) });
+        for (const x of v.cihazlar) {
+          if (x.cihaz && !x.cihaz.eksik && !x.cihaz.gecti) continue;
+          l.push({ bolum: SABIT.cihaz, alan: `cihaz.${x.turId}`, bolumAd: "Ölçüm cihazları",
+            ad: `${x.turAd}: ${!x.cihaz ? "ölçüm cihazı eklenmedi" : x.cihaz.eksik ? "eklenen cihaz artık kayıtlı değil" : "kalibrasyonu geçmiş"}`.slice(0, 300) });
+        }
+        return l;
+      },
+      sonuc: () => {
+        const { d, cevaplar } = sayGuncel.current;
+        return { var: v.tanim.bolumler.some((b) => b.blok === "sonuc"), oneri: d.oneri, secili: cevaplar.sonuc === "uygun" || cevaplar.sonuc === "uygun_degil" ? cevaplar.sonuc : "", kusur: d.kusurlar.length };
+      },
+      sonucUygula: (x) => sayGuncel.current.yaz((c) => ({ ...c, sonuc: x })),
+      git: (e) => sayGuncel.current.git({ bolum: e.bolum, alan: e.alan, ad: e.ad }),
+    });
+  }, [oku, v.id, v.no, v.tanim, v.cihazlar]);
 
   /* ── alan çizicileri ── */
   const metinSatiri = (k: EkipmanAnahtari, etiket: string, en: number, sayisal = false) => {

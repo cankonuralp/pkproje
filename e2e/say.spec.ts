@@ -99,3 +99,48 @@ test("S.A.Y: yapay zekâsı kapalı firmada düğme yok", async ({ page }) => {
   await page.waitForLoadState("networkidle");
   await expect(page.getByRole("button", { name: "S.A.Y — saha asistanı" })).toHaveCount(0);
 });
+
+/* 382: rapor ekranında S.A.Y raporu okur — "Eksik alanlar neler?" bölüm başına sayar, "Git" alana götürür; "Sonuç ne olmalı?" öneri kartı, "Uygula"
+   sonucu forma yazar (kaydedilmemiş değişiklik — Kaydet'le yazılır); kart "Rapora uygulandı" der */
+test("S.A.Y rapor ekranında: eksik alanlar + Git, sonuç önerisi + Uygula", async ({ page }, bilgi) => {
+  test.setTimeout(120_000);
+  const kod = E2E_YZ.ekipman[bilgi.project.name];
+  await page.goto(`${Y}/giris`);
+  await hazir(page);
+  await page.getByLabel("E-posta").fill(E2E_YZ.denetci.eposta);
+  await page.getByLabel("Parola", { exact: true }).fill(E2E_PAROLA);
+  await page.getByRole("button", { name: "Giriş yap" }).click();
+  await expect(page.locator("header")).toContainText(E2E_YZ.denetci.ad);
+  await page.goto(`${Y}/raporlar`);
+  await hazir(page);
+  await page.getByRole("searchbox", { name: "Ekipman kodu" }).fill(kod);
+  await page.getByRole("link", { name: /^YZ-/ }).first().click();
+  await expect(page).toHaveURL(/\/raporlar\/[0-9a-f-]{36}$/, { timeout: 30_000 });
+  await hazir(page);
+  const no = (await page.getByRole("heading", { level: 1 }).textContent())!.trim();
+
+  const fab = page.getByRole("button", { name: "S.A.Y — saha asistanı" });
+  const panel = page.getByRole("dialog", { name: "S.A.Y" });
+  await expect(panel.or(fab)).toBeVisible({ timeout: 30_000 });
+  if (!(await panel.isVisible())) await fab.click();
+  await expect(panel.getByText("Bu raporu okudum · öneri verir, rapora siz uygularsınız")).toBeVisible();
+  await expect(panel.getByRole("button", { name: "Beni ne bekliyor?" })).toHaveCount(0);
+
+  await panel.getByRole("button", { name: "Eksik alanlar neler?" }).click();
+  const liste = panel.getByRole("list").first();
+  await expect(liste).toContainText(/\d+ zorunlu alan boş:/);
+  await expect(liste.getByRole("listitem").filter({ hasText: `Rapor ${no}` }).first()).toBeVisible();
+  const git = liste.getByRole("button", { name: "Git" }).first();
+  await git.click();
+  if (bilgi.project.name === "telefon") await expect(panel).toHaveCount(0);   // telefonda panel kapanır, alan görünsün
+  await expect.poll(() => page.evaluate(() => !!document.activeElement && document.activeElement !== document.body && !document.activeElement.closest("#say-panel"))).toBe(true);
+  if (!(await panel.isVisible())) await fab.click();
+
+  await panel.getByRole("button", { name: "Sonuç ne olmalı?" }).click();
+  const uygula = panel.getByRole("button", { name: "Uygula" }).last();
+  await expect(uygula).toBeVisible();
+  await uygula.click();
+  await expect(panel.getByText("Rapora uygulandı").last()).toBeVisible();
+  await expect(page.getByText("Öneri rapora uygulandı:", { exact: false }).first()).toBeVisible();
+  await expect(page.getByLabel("Sonuç ve kanaat")).toHaveText(/Uygun/);
+});
