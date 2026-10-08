@@ -80,10 +80,7 @@
 .not { margin: 0; color: var(--yazi2); font-size: var(--boy-etiket); }
 .gizli { position: absolute; width: 1px; height: 1px; overflow: hidden; clip-path: inset(50%); white-space: nowrap; }
 
-/* sayfanın sonu düğmenin altında kalmasın (geniş ve orta bant) */
-@media (min-width: 768px) {
-  :global([data-say="var"]) :global(main) { padding-bottom: 96px; }
-}
+/* sayfanın sonu düğmenin altında kalmasın (geniş ve orta bant): genel kural src/styles/temel.css'te (CSS modülünde yerel sınıfsız seçici derlenmez) */
 /* telefon: yalnız daire; altta yapışkan çubuk (form, rapor) varsa onun üstünde; panel tam ekran */
 @media (max-width: 767.98px) {
   .fab { right: 16px; bottom: 16px; padding: 8px; }
