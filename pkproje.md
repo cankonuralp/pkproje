@@ -2355,6 +2355,12 @@ revizyon, alan kopyalama, hafif kusur devri, meslek eşleşme denetimi).
 - Emsal ürünler: https://opwire.app/iso-17020-periyodik-kontrol-yazilimi/ · https://17020muayene.vidco.com.tr/ · https://akuple.com/asansor-kontrol-yazilimi/ · https://ensyazilim.com/
 
 ## 11 · Değişiklik günlüğü
+- 2026-10-08 (402): **Sayfa saklama ve önceden indirme yalnız sahada çalışana** — servis çalışanı ve önceden indirme her oturumda kuruluyordu;
+  ofisteki yönetici / planlama / muhasebe için hem cihazı hem sunucuyu boşuna yoruyordu (deneme makinesinde 0a9c2e1: yönetici oturumlu testlerde
+  arka planda onlarca plan / rapor sayfası çizilip son testler zaman aşımına düştü). Artık yalnız denetçi ve branş yöneticisi rolünde (denetime
+  çıkan, rapor yazan) kurulur; bağlantısız kuyruk herkeste çalışır. Uygulama düzeni karar verir (src/app/(uygulama)/layout.tsx SAHA_ROLLERI).
+  Ayrıca /api/islem'in sıra kilidi (moduller.test) türlü çağrıyla bozulmuştu — düzeltildi; e2e cevrimdisi bağlantısız açılışta konsol / sayfa
+  hatalarını ve düşen istekleri iletiye yazar (nedeni deneme kaydında görünsün).
 - 2026-10-08 (401): **Cihazda saklanan sayfalar sınırlı** — servis çalışanı açılan her saha sayfasını (rapor, plan) cihazda şifreli saklıyordu,
   sınırsızdı (aylarca açılan her rapor birikirdi). Artık en çok 300 sayfa; aşınca en eski açılanlar 250'ye inene kadar silinir (aradaki pay her
   yeni sayfada bütün depoyu taramasın). Önceden indirilen paket (en çok 20 plan + 100 rapor) sınırın içinde kalır. Kilit sw.test (çalışanın kendi

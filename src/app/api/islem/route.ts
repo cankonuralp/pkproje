@@ -43,7 +43,7 @@ export async function POST(istek: Request) {
   if (b.yazan !== yazanEtiketi(o.id)) return yanit({ hata: "baska_hesap" }, 409);
   const { s, guncel } = await oturumIslemi(o, async (db) => {
     const tur = b.tur;
-    const s = await tekSeferlik<PlanYazma | RaporIslemSonucu>(db, { id: b.id, tur, kayit: b.kayit, zaman: b.zaman }, () => (planIslemTuruMu(tur)
+    const s = await tekSeferlik(db, { id: b.id, tur, kayit: b.kayit, zaman: b.zaman }, (): Promise<PlanYazma | RaporIslemSonucu> => (planIslemTuruMu(tur)
       ? planIslemi(db, o, tur, b.kayit, b.surum, b.girdi)
       : raporIslemi(db, { depo: depo(), firmaId: o.kiraci.firmaId }, o, tur, b.kayit, b.surum, b.girdi)));
     /* çakışmada güncel sürüm ("benimkini yaz" seçilirse cihaz bununla yeni kimlik gönderir) */

@@ -71,18 +71,21 @@ async function onceIndir(paket: PaketEylemi): Promise<void> {
   } catch { /* bağlantı koptu: sonra */ } finally { indiriliyor = false; }
 }
 
-/** `yazan`: oturumdaki kişinin etiketi (sunucudan; kimlik değil) · `paket`: önceden indirilecek sayfaları veren sunucu eylemi (396) */
+/** `yazan`: oturumdaki kişinin etiketi (sunucudan; kimlik değil) · `paket`: önceden indirilecek sayfaları veren sunucu eylemi (396) — yalnız
+    SAHADA çalışana verilir (düzen karar verir); verilmezse servis çalışanı kurulmaz, önceden indirme olmaz (402: ofiste cihaz ve sunucu boşuna
+    yorulmaz; kuyruk yine çalışır) */
 export function CevrimdisiGosterge({ yazan, paket }: { yazan: string; paket?: PaketEylemi }) {
   const cevrimdisi = useSyncExternalStore(baglantiAbone, cevrimdisiMi, () => false);
   const k = useSyncExternalStore(kuyrukAbone, kuyrukAnlik, kuyrukSunucuAnlik);
   const [acik, setAcik] = useState(false);
+  const saha = !!paket;
   useEffect(() => {
     kuyrukYazani(yazan);
-    /* 395: saklanan sayfalar bu kişinin değilse silinir; servis çalışanı (bağlantısız açılan saha sayfaları) */
+    /* 395: saklanan sayfalar bu kişinin değilse silinir; servis çalışanı (bağlantısız açılan saha sayfaları) yalnız sahada çalışanda */
     void sayfaSahibi(yazan).catch(() => undefined);
-    if ("serviceWorker" in navigator) navigator.serviceWorker.register("/sw.js", { scope: "/" }).catch(() => undefined);
+    if (saha && "serviceWorker" in navigator) navigator.serviceWorker.register("/sw.js", { scope: "/" }).catch(() => undefined);
     return kuyrukBaslat();
-  }, [yazan]);
+  }, [yazan, saha]);
   /* son önceden indirmenin sonucu sayfanın kökünde (yenilenen sayfada da) — uçtan uca test ve ölçüm bekler */
   const hazir = useSyncExternalStore(hazirAbone, hazirAnlik, () => null);
   useEffect(() => { if (hazir) document.documentElement.setAttribute("data-cevrimdisi-hazir", String(hazir.plan)); }, [hazir]);

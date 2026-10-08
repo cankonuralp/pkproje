@@ -10,7 +10,7 @@
      listesine düşer (Görüntüle);
    · Onaya gönder bağlantısızken: rapor salt okunur, "Gönderilmedi · bağlantı bekleniyor"; bağlantı gelince gider (eksikse alanlar işaretlenir);
    · 400: plan kabulü bağlantısızken cihaza — plan içinde "Kabulünüz bu cihazda bekliyor", tuşlar kalkar; bağlantı gelince gider, plan kabul edilir. */
-import { expect, test, type Page } from "@playwright/test";
+import { expect, test, type ConsoleMessage, type Page, type Request } from "@playwright/test";
 import { E2E_KAPI, E2E_PAROLA, E2E_YZ } from "./hesaplar";
 import { hazir } from "./yardimci";
 
@@ -33,6 +33,19 @@ async function saklandi(page: Page, yol: string) {
       } catch { db.close(); coz(false); }
     };
   }), yol), { timeout: 30_000 }).toBe(true);
+}
+
+/** bağlantısız açılışta ne oldu: konsol hataları, sayfa hataları, düşen istekler (servis çalışanının sunamadığı dosya) — iş düşerse iletide */
+async function gozle(page: Page, is: () => Promise<void>): Promise<string[]> {
+  const olaylar: string[] = [];
+  const konsol = (m: ConsoleMessage) => { if (m.type() === "error") olaylar.push(`konsol: ${m.text().slice(0, 300)}`); };
+  const hata = (e: Error) => { olaylar.push(`sayfa hatası: ${e.message.slice(0, 300)}`); };
+  const dusen = (q: Request) => { olaylar.push(`istek düştü: ${q.url().slice(0, 160)} · ${q.failure()?.errorText ?? ""}`); };
+  page.on("console", konsol); page.on("pageerror", hata); page.on("requestfailed", dusen);
+  try { await is(); } catch (h) {
+    throw new Error(`${h instanceof Error ? h.message : String(h)}\n--- bağlantısız açılışta görülenler ---\n${olaylar.join("\n") || "(yok)"}`);
+  } finally { page.off("console", konsol); page.off("pageerror", hata); page.off("requestfailed", dusen); }
+  return olaylar;
 }
 
 async function raporuAc(page: Page, kod: string): Promise<string> {
@@ -113,8 +126,8 @@ test("çevrimdışı: bağlantı kes → Kaydet cihaza → bağlantı gelince gi
   await hazir(page);
   await saklandi(page, new URL(adres).pathname);
   await page.context().setOffline(true);
-  await page.reload();
-  await hazir(page);
+  const olaylar = await gozle(page, async () => { await page.reload(); await hazir(page); });
+  expect(olaylar.filter((x) => x.startsWith("sayfa hatası")), olaylar.join("\n")).toEqual([]);
   await expect(marka).toHaveValue("Cihazdaki Marka");
   await expect(cip).toBeVisible();
   await page.goto(`${Y}/raporlar/00000000-0000-4000-8000-000000000000`);

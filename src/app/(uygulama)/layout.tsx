@@ -9,13 +9,18 @@ import { SayAsistan } from "../../modules/say/ui/SayAsistan";
 import { MODULLER } from "../../modules/moduller";
 import { yazanEtiketi } from "../../server/islem/yazan";
 import { modulGorur, oturumGerekli } from "../../server/kimlik/istek";
-import { ROL_ADI } from "../../server/yetki/tanim";
+import { ROL_ADI, type Rol } from "../../server/yetki/tanim";
 import type { ModulAnahtari } from "../../server/yetki/tanim";
+
+/** sahada çalışan roller (denetime çıkar, rapor yazar) */
+const SAHA_ROLLERI: readonly Rol[] = ["denetci", "mekanik_yonetici", "elektrik_yonetici"];
 
 export default async function UygulamaDuzeni({ children }: { children: ReactNode }) {
   const o = await oturumGerekli();
   const gorunur = MODULLER.filter((m) => modulGorur(o, m.no as ModulAnahtari)).map((m) => m.no);
   const rol = o.roller.map((r) => ROL_ADI[r]).join(" · ") || "Rolsüz";
-  /* 394: çevrimdışı kuyruğun yazan etiketi (kimlik değil, ondan türetilen özet) */
-  return <><Kabuk kullanici={{ ad: o.ad, rol, yazan: yazanEtiketi(o.id) }} gorunur={gorunur} takip={menuTakipEylemi} paket={cevrimdisiPaketiEylemi}>{children}</Kabuk><SayAsistan /></>;
+  /* 394: çevrimdışı kuyruğun yazan etiketi (kimlik değil, ondan türetilen özet) · 402: sayfa saklama ve önceden indirme yalnız sahada çalışana
+     (rapor yazan / denetime çıkan roller) — ofiste cihaz ve sunucu boşuna yorulmaz */
+  const saha = o.roller.some((r) => SAHA_ROLLERI.includes(r));
+  return <><Kabuk kullanici={{ ad: o.ad, rol, yazan: yazanEtiketi(o.id) }} gorunur={gorunur} takip={menuTakipEylemi} paket={saha ? cevrimdisiPaketiEylemi : undefined}>{children}</Kabuk><SayAsistan /></>;
 }
