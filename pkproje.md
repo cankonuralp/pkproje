@@ -2355,6 +2355,9 @@ revizyon, alan kopyalama, hafif kusur devri, meslek eşleşme denetimi).
 - Emsal ürünler: https://opwire.app/iso-17020-periyodik-kontrol-yazilimi/ · https://17020muayene.vidco.com.tr/ · https://akuple.com/asansor-kontrol-yazilimi/ · https://ensyazilim.com/
 
 ## 11 · Değişiklik günlüğü
+- 2026-10-08 (413): **Deneme makinesine süre sınırı** (reisim: *"1 saat 12 dakika olmuş normal mi ?"*). 0f1ee47'nin turunda denetim işi tarayıcı
+  kurulumunda 71 dk asılı kaldı (GitHub makinesinin paket indirmesi; olağanı 20 sn) — sınır yoktu, 6 saat bekleyecekti. Artık: kurulum her
+  denemede en çok 4 dk, üç deneme; denetim işi en çok 20 dk (olağan 5–8), her genişlik en çok 40 dk (olağan 19–26). Ölçü son üç yeşil turdan.
 - 2026-10-08 (412): **Bağlantılar maketteki gibi** — 411'in ilk görüntülerinde görüldü: Planlar listesinde proje no tarayıcının mavisiyle,
   altı çizili çıkıyordu (makette yeşil, kalın, çizgi yalnız üstüne gelince). Aynı hata Raporlar, Onaylar (kuyruk + imzamı bekleyenler) ve müşteri
   panelinin (raporlar, uygunsuzluklar, sözleşmeler) numara bağlantılarındaydı: bağlantı renksiz "kod" biçimini kullanıyordu → her modülde
