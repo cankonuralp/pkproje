@@ -2359,6 +2359,7 @@ revizyon, alan kopyalama, hafif kusur devri, meslek eşleşme denetimi).
   411'de). Üç şablon (ZPKR01, ZPKR02, kompresör): PDF'e basılan HTML'in aynısı (aynı çizici, aynı CSS, gömülü Carlito) baskı görünümünde, A4
   genişliğinde çekilir, kayıtlı görüntüyle karşılaştırılır (e2e/belge-gorsel.spec.ts → e2e/goruntu/masaustu/belge-*.png). Veri uydurma.
   Bakanlık'ın kendi PDF'iyle piksel karşılaştırması DEĞİL (o belge depoda yok); amaç onaylı görünümün istemeden bozulmasını yakalamak.
+  Kayıtlı üç görüntü d07b252'nin turundan (794 × 1656 / 2589 / 1173), tek tek bakıldı (Bakanlık düzeni, Carlito, uydurma veri).
 - 2026-10-08 (417): **Resmî tatiller izin hesabında** (KOD-GECIS Y9; maket "resmî tatil takvimi uygulamada"). İzin talebinde iş günü artık hafta
   sonunu VE resmî tatilleri saymaz: 2429 sayılı Kanun'un sabit günleri (1 Ocak, 23 Nisan, 1 Mayıs, 19 Mayıs, 15 Temmuz, 30 Ağustos, 29 Ekim) +
   dini bayramlar Diyanet dini günler takviminden (Ramazan 2026: 20–22 Mart, 2027: 9–11 Mart, 2028: 26–28 Şubat; Kurban 2026: 27–30 Mayıs, 2027:
