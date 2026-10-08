@@ -16,6 +16,9 @@ import { expect, test, type ConsoleMessage, type Page, type Request } from "@pla
 import { E2E_KAPI, E2E_PAROLA, E2E_YZ } from "./hesaplar";
 import { hazir } from "./yardimci";
 
+/* bu dosyada servis çalışanı AÇIK (öteki testlerde kapalı — playwright.config.ts) */
+test.use({ serviceWorkers: "allow" });
+
 const Y = `http://${E2E_YZ.firma.kisaAd}.localhost:${E2E_KAPI}`;
 const TASMA = () => document.documentElement.scrollWidth <= window.innerWidth;
 /* uydurma, en küçük yapısı doğru JPEG (e2e/foto-oku.spec.ts ile aynı; tarayıcı çözemez → küçültülmeden gider, sunucu türü baytlardan tanır) */
@@ -232,7 +235,16 @@ test("çevrimdışı: bağlantı kes → Kaydet cihaza → bağlantı gelince gi
   await expect(page).toHaveURL(/\/raporlar\/[0-9a-f-]{36}$/, { timeout: 30_000 });
   await expect(page.getByRole("navigation", { name: "Konum" })).toContainText(/YZ-\d{4}-/, { timeout: 30_000 });
   await expect(marka).toHaveValue("Yeni Bağlantısız Marka", { timeout: 30_000 });
-  await expect(page.getByRole("button", { name: /Çevrimdışı|bekleyen işlem/ })).toHaveCount(0, { timeout: 30_000 });
+  /* yeni raporun hiçbir işi cihazda kalmadı (7. adımın "eksik" bilgisi — o raporun — kalabilir) */
+  const kalan = page.getByRole("button", { name: /bekleyen işlem/ });
+  if (await kalan.count()) {
+    await kalan.click();
+    const pk = page.getByRole("dialog", { name: "Bekleyen işlemler" });
+    await expect(pk).toBeVisible();
+    await expect(pk).not.toContainText(yeniKod);
+    await expect(pk).not.toContainText("Gönderilmeyi bekliyor");
+    await pk.getByRole("button", { name: "Kapat" }).last().click();
+  }
 });
 
 /* 403 (402'nin kilidi): ofis rolünde (firma yöneticisi) servis çalışanı KURULMAZ, önceden indirme olmaz — cihaz ve sunucu boşuna yorulmaz;

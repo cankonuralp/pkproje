@@ -102,7 +102,14 @@ export function SahaRaporu({ v, yeni }: { v: Gorunum; yeni?: { plan: string; eki
   const bekleyenFotolar = useMemo(() => kuyruk.isler.filter((x) => x.kayit === v.id && x.durum === "bekliyor" && x.tur === "rapor.foto"), [kuyruk.isler, v.id]);
   const sorunluIs = kuyruk.isler.find((x) => x.kayit === v.id && (x.durum === "cakisma" || x.durum === "hata"));
   const formBekliyor = kuyruk.isler.some((x) => x.kayit === v.id && x.durum === "bekliyor" && x.tur !== "rapor.foto");
-  const duzenle = v.izin.duzenle && !gonderimBekliyor;
+  /* 405: yeni rapor sunucuda açıldı (gerçek kimlik) — ekran salt okunur; raporun cihazda bekleyen işleri gidince raporun sayfasına geçilir (önce
+     geçilseydi sayfa, kayıt yazılmadan çizilip boş görünebilirdi) */
+  const [acildi, setAcildi] = useState<string | null>(null);
+  useEffect(() => {
+    if (!acildi || kuyruk.isler.some((x) => x.kayit === acildi && x.durum === "bekliyor")) return;
+    router.replace(`/raporlar/${acildi}`);
+  }, [acildi, kuyruk, router]);
+  const duzenle = v.izin.duzenle && !gonderimBekliyor && !acildi;
   const [ekipman, setEkipman] = useState(() => bosla(v.ekipmanBilgi));
   const [tarih, setTarih] = useState(() => bosla(v.tarih));
   const [cevaplar, setCevaplar] = useState<Cevaplar>(v.cevaplar);
@@ -247,7 +254,7 @@ export function SahaRaporu({ v, yeni }: { v: Gorunum; yeni?: { plan: string; eki
       if (d.kayit !== v.id) return;
       /* 405: yeni rapor sunucuda açıldı → raporun kendi ekranına (bekleyen kayıt / fotoğraflar oradan, gerçek kimlikle gider) */
       if (d.tur === "rapor.olustur") {
-        if (d.durum === "tamam" && d.yeni) { bildir(`${yeni?.kod ?? v.ekipman.kod}: rapor açıldı, numarası verildi.`); router.replace(`/raporlar/${d.yeni}`); return; }
+        if (d.durum === "tamam" && d.yeni) { bildir(`${yeni?.kod ?? v.ekipman.kod}: rapor açıldı, numarası verildi.`); setAcildi(d.yeni); return; }
         setGenel(`Rapor açılamadı — ${d.ileti ?? "üst çubuktaki bekleyen işlemlere bakın"}. Yazdıklarınız cihazda duruyor.`);
         return;
       }
@@ -408,6 +415,7 @@ export function SahaRaporu({ v, yeni }: { v: Gorunum; yeni?: { plan: string; eki
   const seritler: ReactNode[] = [];
   if (genel) seritler.push(<Serit key="hata" tur="hata" ikon="circle-alert">{genel}</Serit>);
   /* 405: yeni rapor cihazda — numara ve kimlik sunucuda, bağlantı gelince */
+  else if (acildi) seritler.push(<Serit key="acildi" tur="onay" ikon="circle-check" eylem={<TusBaglanti tur="ikincil" href={`/raporlar/${acildi}`}>Raporu aç</TusBaglanti>}>Rapor sunucuda açıldı; cihazda bekleyen kaydı gidince raporun sayfasına geçilir.</Serit>);
   else if (yeni) seritler.push(<Serit key="yeni" tur="bilgi" ikon="wifi-off">Bu rapor bu cihazda açıldı; bağlantı gelince sunucuda açılır ve numarası verilir. Ölçüm cihazı ve fotoğraftan okuma o zaman eklenir.</Serit>);
   /* 402: cihazda gönderilemeyen iş (çakışma, yapılamadı) sayfa yenilense de söylenir — anlık bildirim kaybolsa da kullanıcı bilir */
   else if (cihazdaki && formBekliyor) seritler.push(<Serit key="cihazdaki" tur="bilgi" ikon="wifi-off">Bu ekranda cihazda bekleyen kaydınız gösteriliyor; bağlantı gelince gönderilecek.</Serit>);

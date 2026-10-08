@@ -2376,7 +2376,10 @@ revizyon, alan kopyalama, hafif kusur devri, meslek eşleşme denetimi).
   / başka firma yok; rapor.olustur — kimlik ve numara sunucunun, tekrarı ikinci rapor açmaz, ikinci cihazdan red, bozuk girdi / ekip dışı /
   başka firma açamaz, açılan rapora kuyruk kaydı) · kuyruk.test (tek açılış işi, bağımlılık, kabul önce, gerçek kimliğe bağlama, sürüm) ·
   bozan kuyruk 6 · sw.test (yeni rapor sayfası saklanır) · e2e cevrimdisi 9. adım (bağlantı kesik: plandan yeni rapor → kaydet → bağlantı gelince
-  numaralı rapor, yazılan yerinde).
+  numaralı rapor, yazılan yerinde). Deneme makinesinde (382990d) bulunan: ekran rapor açılınca HEMEN raporun sayfasına geçiyordu; kayıt o sırada
+  henüz yazılmamışsa sayfa boş çiziliyordu — artık rapor açılınca ekran salt okunur olur ("Rapor sunucuda açıldı…", Raporu aç), raporun cihazda
+  bekleyen işleri gidince geçilir. Deneme ortamı: tarayıcının servis çalışanı yalnız e2e/cevrimdisi.spec.ts'te açık (playwright.config.ts
+  serviceWorkers: "block") — geliştirme sunucusu yine bellek sınırında yeniden başlıyordu.
 - 2026-10-08 (404): **Rapor ekranı cihazda bekleyen kaydı gösterir — sessiz veri kaybı önlendi.** Bağlantısız kaydedilen rapor, cihazda yeniden
   açılınca saklanan sayfadaki ESKİ hâliyle görünüyordu; kullanıcı onu düzenleyip kaydedince yeni iş bekleyen kaydın yerine geçer, bağlantısız
   yazılanlar sessizce kaybolurdu. Artık ekran açılınca (ve sayfa tazelenince) raporun sunucuya henüz yazılmamış son içeriği (bekliyor / çakışma /

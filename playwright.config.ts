@@ -30,6 +30,10 @@ export default defineConfig({
   timeout: 120_000,
   use: {
     baseURL: `http://${E2E_FIRMA.kisaAd}.localhost:${KAPI}`,
+    /* 2026-10-08 (405): tarayıcının servis çalışanı (cihazda sayfa saklama, public/sw.js) yalnız e2e/cevrimdisi.spec.ts'te açık — öteki testlerde
+       saha rolündeki her oturum sayfaların geliştirme kipindeki büyük dosyalarını yeniden indiriyordu; geliştirme sunucusu bellek sınırında
+       yeniden başlayıp son testleri düşürüyordu. Uygulama davranışı değişmez (kayıt denemesi reddedilir, uygulama yakalar). */
+    serviceWorkers: "block",
     launchOptions: hazir ? { executablePath: hazir } : {},
   },
   projects: [
