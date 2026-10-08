@@ -142,7 +142,7 @@ test("S.A.Y rapor ekranında: eksik alanlar + Git, sonuç önerisi + Uygula", as
   await uygula.click();
   await expect(panel.getByText("Rapora uygulandı").last()).toBeVisible();
   await expect(page.getByText("Öneri rapora uygulandı:", { exact: false }).first()).toBeVisible();
-  await expect(page.getByLabel("Sonuç ve kanaat")).toHaveText(/Uygun/);
+  await expect(page.getByRole("combobox", { name: "Sonuç ve kanaat" })).toHaveText(/Uygun/);
 
   /* 384: serbest soru açık raporun özetini taşır (taklit "Raporu okudum." der); yer "Rapor <no>" */
   await panel.getByLabel("S.A.Y'a sor").fill("Bu raporda neye dikkat edeyim?");
