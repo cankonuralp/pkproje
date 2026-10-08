@@ -180,6 +180,8 @@ pkproje/
   src/components/cevrimdisi/ ÇEVRİMDIŞI (394; maket Z4): depo.ts (IndexedDB, AES-GCM şifreli, anahtar dışarı alınamaz) · kuyruk.ts (tek bekleyen iş / rapor,
                             sırayla /api/islem, sonuçlar, durma; "probata-islem" olayı) · Cevrimdisi.tsx (üst çubukta "Çevrimdışı · n bekliyor" + pencere;
                             kabukta, yazan etiketiyle) · saha raporu Kaydet / Onaya gönder bağlantısızken kuyruğa (raporlar/ui/SahaRaporu.tsx)
+                            · SERVİS ÇALIŞANI public/sw.js (395): saha sayfaları önce ağ, cihazda şifreli; bağlantısız açılır; şema depo.ts ile ortak
+                            (tests/sw.test.ts); çıkışta / kişi değişince silinir (kabuk); CSP worker-src 'self' (src/proxy.ts)
   src/components/grafik/    TEK GRAFİK ÜRETİCİSİ (329): dikey sütun (maket T9), etiket ölçülerek, gizli tablo (ekran okuyucu)
   src/modules/yonetim/      probata YÖNETİM (2026-10-06, 348; KOD-GECIS Y1): firmalar, firma aç (ilk yönetici + geçici parola), dondur / etkinleştir,
                             yeni geçici parola — server/yonetim.ts yalnız 0050 işlevleriyle (yönetim rolü); sema.ts (ayrılmış adlar göçle aynı) · ui/ ·

@@ -14,6 +14,7 @@ import { Pencere } from "../pencere/Pencere";
 import { Rozet, type RozetTuru } from "../sayfa/Sayfa";
 import { Serit } from "../serit/Serit";
 import { Tus } from "../tus/Tus";
+import { sayfaSahibi, sayfaSayisi } from "./depo";
 import {
   benimkiniYaz, kuyrukAbone, kuyrukAnlik, kuyrukBaslat, kuyrukGonder, kuyrukSunucuAnlik, kuyruktanCikar, kuyrukYazani, yenidenDene, type IsDurumu, type KuyrukIsi,
 } from "./kuyruk";
@@ -36,7 +37,13 @@ export function CevrimdisiGosterge({ yazan }: { yazan: string }) {
   const cevrimdisi = useSyncExternalStore(baglantiAbone, cevrimdisiMi, () => false);
   const k = useSyncExternalStore(kuyrukAbone, kuyrukAnlik, kuyrukSunucuAnlik);
   const [acik, setAcik] = useState(false);
-  useEffect(() => { kuyrukYazani(yazan); return kuyrukBaslat(); }, [yazan]);
+  useEffect(() => {
+    kuyrukYazani(yazan);
+    /* 395: saklanan sayfalar bu kişinin değilse silinir; servis çalışanı (bağlantısız açılan saha sayfaları) */
+    void sayfaSahibi(yazan).catch(() => undefined);
+    if ("serviceWorker" in navigator) navigator.serviceWorker.register("/sw.js", { scope: "/" }).catch(() => undefined);
+    return kuyrukBaslat();
+  }, [yazan]);
   const goster = cevrimdisi || k.isler.length > 0;
   /* telefonda şerit içeriğin üstüne binmesin (temel.css) */
   useEffect(() => {
@@ -64,6 +71,9 @@ function KuyrukPenceresi({ acik, kapat, cevrimdisi }: { acik: boolean; kapat: ()
   const k = useSyncExternalStore(kuyrukAbone, kuyrukAnlik, kuyrukSunucuAnlik);
   const bildir = useBildir();
   const onayla = useOnayla();
+  /* bu cihazda bağlantısız açılabilen sayfa sayısı (395; maket "Çevrimdışı hazır") — pencere açılınca */
+  const [sayfa, setSayfa] = useState<number | null>(null);
+  useEffect(() => { if (acik) void sayfaSayisi().then(setSayfa).catch(() => setSayfa(null)); }, [acik]);
   const bekleyen = k.isler.filter((x) => x.durum === "bekliyor").length;
   const gonder = async () => {
     const n = await kuyrukGonder();
@@ -84,6 +94,7 @@ function KuyrukPenceresi({ acik, kapat, cevrimdisi }: { acik: boolean; kapat: ()
       {k.depoYok && <Serit tur="uyari" ikon="triangle-alert">Bu tarayıcı cihaz deposuna izin vermiyor (gizli pencere ya da kapalı site verisi): bekleyenler yalnız bu sayfa açıkken durur.</Serit>}
       {k.oturum && <Serit tur="uyari" ikon="log-in">Oturumunuz kapandı; yeniden giriş yapınca bekleyenler gönderilir.</Serit>}
       {k.saatFarkiDk !== null && <Serit tur="uyari" ikon="clock">Cihazınızın saati sunucudan {Math.abs(k.saatFarkiDk)} dakika {k.saatFarkiDk > 0 ? "ileri" : "geri"}. Rapordaki resmî tarihler sunucu saatinden yazılır; cihaz saatini düzeltin.</Serit>}
+      {sayfa !== null && <p className={stil.ipucu}>Bu cihazda bağlantısız açılabilen sayfa: <b>{sayfa}</b> (açtığınız Planlar, plan içi ve raporlar).</p>}
       {cevrimdisi && <p className={stil.ipucu}>Bağlantı gerektirenler: son imza, onay, fotoğraftan okuma, S.A.Y.</p>}
       {k.isler.length ? (
         <>

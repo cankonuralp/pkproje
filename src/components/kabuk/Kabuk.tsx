@@ -19,6 +19,7 @@ import { ANA_SAYFA, MODUL_GRUPLARI } from "../../modules/moduller";
 import { KALIP } from "../../styles/kalip";
 import { cikisEylemi } from "../../server/kimlik/eylemler";
 import { CevrimdisiGosterge } from "../cevrimdisi/Cevrimdisi";
+import { sayfalariSil } from "../cevrimdisi/depo";
 import { Ikon } from "../ikon/Ikon";
 import stil from "./Kabuk.module.css";
 import isaretKoyu from "./marka/probata-isaret-koyu-zemin.svg";
@@ -26,6 +27,8 @@ import isaretRenkli from "./marka/probata-isaret-renkli.svg";
 import logoKoyu from "./marka/probata-yatay-koyu-zemin.svg";
 
 const temizYol = (yol: string) => (yol.length > 1 ? yol.replace(/\/+$/, "") : yol);
+/* 395: çıkışta bu cihazda saklanan (bağlantısız açılan) sayfalar silinir; bekleyen işler kalır (o kişi girince gider) */
+const cikisVeTemizle = async () => { await sayfalariSil().catch(() => undefined); await cikisEylemi(); };
 
 /* tema <html data-tema>, daraltma <html data-menu="dar"> özniteliğidir (ilk boyamadan önce layout'taki betik kurar);
    tuşlar özniteliğe abone olur */
@@ -209,7 +212,7 @@ export function Kabuk({ children, kullanici, gorunur, takip }: {
           <div className={stil.ustBosluk} />
           {kullanici?.yazan && <CevrimdisiGosterge yazan={kullanici.yazan} />}
           <TemaTusu />
-          {kullanici && <KullaniciMenusu kullanici={kullanici} />}
+          {kullanici && <KullaniciMenusu kullanici={kullanici} cikis={cikisVeTemizle} />}
         </header>
         <main className={stil.icerik}>{children}</main>
       </div>

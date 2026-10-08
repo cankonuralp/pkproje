@@ -4,6 +4,7 @@
    · bağlantı kesik: üst çubukta "Çevrimdışı"; Kaydet cihaza → "1 bekliyor", başlıkta "Cihazda kayıt · gönderilmedi"; pencere işi listeler;
    · bağlantı gelince kendiliğinden gider, gösterge kalkar; sayfa yenilenince değer sunucuda;
    · ÇAKIŞMA: bağlantısızken yazılan kayıt, bu arada başka sekmede değişen raporu ezmez — "Çakışma" çıkar; "Benimkini yaz" açık seçimle gönderir;
+   · 395: açılmış rapor bağlantı kesikken yenilenince açılır (servis çalışanı, cihazda şifreli); açılmamış sayfa "bu cihazda yok";
    · Onaya gönder bağlantısızken: rapor salt okunur, "Gönderilmedi · bağlantı bekleniyor"; bağlantı gelince gider (eksikse alanlar işaretlenir). */
 import { expect, test, type Page } from "@playwright/test";
 import { E2E_KAPI, E2E_PAROLA, E2E_YZ } from "./hesaplar";
@@ -83,7 +84,23 @@ test("çevrimdışı: bağlantı kes → Kaydet cihaza → bağlantı gelince gi
   await hazir(page);
   await expect(marka).toHaveValue("Cihazdaki Marka");
 
-  /* 4) Onaya gönder bağlantısızken: rapor salt okunur, bağlantı gelince gider (eksikse alanlar işaretlenir) */
+  /* 4) sayfa bağlantısız açılır (395): servis çalışanı devredeyken açılan rapor bu cihazda (şifreli) saklanır → bağlantı kesikken yenilenince
+     açılır, değerler yerinde; hiç açılmamış sayfa "bu cihazda yok" der */
+  await page.evaluate(async () => { await navigator.serviceWorker.ready; });
+  await page.goto(adres);
+  await hazir(page);
+  await page.context().setOffline(true);
+  await page.reload();
+  await hazir(page);
+  await expect(marka).toHaveValue("Cihazdaki Marka");
+  await expect(cip).toBeVisible();
+  await page.goto(`${Y}/raporlar/00000000-0000-4000-8000-000000000000`);
+  await expect(page.getByRole("heading", { name: "Bu sayfa bu cihazda yok" })).toBeVisible();
+  await page.goto(adres);
+  await hazir(page);
+  await page.context().setOffline(false);
+
+  /* 5) Onaya gönder bağlantısızken: rapor salt okunur, bağlantı gelince gider (eksikse alanlar işaretlenir) */
   await page.context().setOffline(true);
   await page.getByRole("button", { name: "Onaya gönder" }).click();
   await page.getByRole("dialog").getByRole("button", { name: "Onaya gönder" }).click();

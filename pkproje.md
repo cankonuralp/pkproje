@@ -2355,6 +2355,16 @@ revizyon, alan kopyalama, hafif kusur devri, meslek eşleşme denetimi).
 - Emsal ürünler: https://opwire.app/iso-17020-periyodik-kontrol-yazilimi/ · https://17020muayene.vidco.com.tr/ · https://akuple.com/asansor-kontrol-yazilimi/ · https://ensyazilim.com/
 
 ## 11 · Değişiklik günlüğü
+- 2026-10-08 (395): **Çevrimdışı çalışma — sayfalar bağlantısız açılır** (ARKA-UC §4.1 "Planlar listesi ve plan içi (indirilmiş planlar),
+  raporu doldurma … çevrimdışı çalışır", K4). Firma adresinde tarayıcının arka plan yardımcısı (servis çalışanı, public/sw.js): saha sayfaları
+  (Ana sayfa, Planlar, plan içi, rapor) önce ağdan gelir ve cihaz deposuna ŞİFRELİ yazılır (kuyrukla aynı, dışarı alınamaz anahtar); bağlantı
+  yokken son saklanan açılır, raporda Kaydet / Onaya gönder kuyruğa gider. Hiç açılmamış sayfa "Bu sayfa bu cihazda yok" der. Uygulamanın kendi
+  dosyaları (betik, stil, yazı tipi) da saklanır (veri taşımaz). API, giriş, müşteri paneli, yönetim, PDF ve sunucu eylemleri HİÇ saklanmaz.
+  Çıkışta ve cihazda başka kişi girince saklanan sayfalar silinir (bekleyen işler kalır — o kişi girince gider). Çevrimdışı penceresinde "Bu
+  cihazda bağlantısız açılabilen sayfa: n". Sayfa CSP'sine `worker-src 'self'`. Kilit sw.test (depo şeması uygulamayla ortak, yalnız saha
+  sayfaları, yalnız aynı kökenden GET, CSP); olumsuz kanıt kilitler.bozan (4 bozma); e2e cevrimdisi (bağlantı kesikken rapor yenilenince
+  açılır, değerler yerinde; açılmamış sayfa "bu cihazda yok"). Sıradaki (açık): önceden indirme (kabul edilen planların 7 günü — "Çevrimdışı
+  hazır: n plan"), fotoğrafın kuyruğa girmesi, bağlantısız rapor açma (numara sunucuda — bağlantı ister).
 - 2026-10-08 (394): **Çevrimdışı çalışma — cihazdaki kuyruk ve gösterge** (392'nin devamı; maket Z4, ARKA-UC K4 / §4.3–4.5). Saha raporunda
   bağlantı yokken (ya da istek ağda düşerse) **Kaydet** ve **Onaya gönder** kaybolmaz: iş tarayıcının kalıcı deposuna (IndexedDB) ŞİFRELİ yazılır
   (AES-GCM; anahtar cihazda üretilir, dışarı alınamaz), "Cihaza kaydedildi; bağlantı gelince gönderilecek." Üst çubukta **"Çevrimdışı · n

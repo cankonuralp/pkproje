@@ -38,6 +38,8 @@ export function proxy(istek: NextRequest) {
     "img-src 'self' blob: data:",
     "font-src 'self'",
     "connect-src 'self'",
+    /* 395: çevrimdışı servis çalışanı (public/sw.js) yalnız kendi kökenimizden — strict-dynamic betik kuralı çalışanı kapsamaz */
+    "worker-src 'self'",
     "object-src 'none'",
     "base-uri 'self'",
     "form-action 'self'",

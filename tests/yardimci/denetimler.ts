@@ -306,3 +306,29 @@ export function pdfPaketEksikleri(nextConfig: string, sayfalar: readonly { ad: s
   }
   return eksik;
 }
+
+/* ── ÇEVRİMDIŞI SERVİS ÇALIŞANI (395) ── public/sw.js düz betik: cihaz deposunun şeması src/components/cevrimdisi/depo.ts ile ORTAK (ad, sürüm,
+   bölmeler aynı olmalı — biri artarsa öteki eski şemayla açar); yalnız saha sayfaları saklanır (API, giriş, müşteri paneli, yönetim ASLA); yalnız
+   aynı kökenden GET; sayfa CSP'si çalışana izin verir. */
+export function swEksikleri(sw: string, depo: string, proxy: string): string[] {
+  const eksik: string[] = [];
+  const sabit = (m: string, ad: string) => new RegExp(`const ${ad} = ("[^"]+"|[0-9]+);`).exec(m)?.[1] ?? null;
+  for (const ad of ["VT", "SURUM", "ISLER", "ANAHTAR", "SAYFALAR", "DURUM"]) {
+    const a = sabit(sw, ad), b = sabit(depo, ad);
+    if (!a || a !== b) eksik.push(`depo şeması farklı: ${ad} (sw ${a} · depo ${b})`);
+  }
+  const yollar = /const SAYFA_YOLLARI = (\[[^\n]*\]);/.exec(sw)?.[1];
+  let ifadeler: RegExp[] = [];
+  try { ifadeler = yollar ? (new Function(`return ${yollar};`)() as RegExp[]) : []; } catch { /* aşağıda eksik */ }
+  if (!ifadeler.length) eksik.push("SAYFA_YOLLARI okunamadı");
+  const kimlik = "0f8c2b9e-1d2a-4c3b-9e8f-7a6b5c4d3e2f";
+  const eslesir = (y: string) => ifadeler.some((x) => x.test(y));
+  for (const y of ["/", "/planlar", `/planlar/${kimlik}`, `/raporlar/${kimlik}`]) if (!eslesir(y)) eksik.push(`saha sayfası saklanmıyor: ${y}`);
+  for (const y of ["/api/islem", `/api/dosya/${kimlik}`, "/giris", "/portal", `/portal/r/${kimlik}`, "/yonetim", "/yonetim/giris", `/raporlar/${kimlik}/pdf`, "/muhasebe"]) {
+    if (eslesir(y)) eksik.push(`saklanmaması gereken yol saklanıyor: ${y}`);
+  }
+  if (!sw.includes('if (r.method !== "GET") return;')) eksik.push("yalnız GET denetimi yok");
+  if (!sw.includes("if (u.origin !== self.location.origin) return;")) eksik.push("yalnız aynı köken denetimi yok");
+  if (!proxy.includes(`"worker-src 'self'"`)) eksik.push("CSP worker-src 'self' yok");
+  return eksik;
+}

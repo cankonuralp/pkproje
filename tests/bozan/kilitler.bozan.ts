@@ -8,6 +8,7 @@ import { MODUL_GRUPLARI } from "../../src/modules/moduller.ts";
 import {
   bantDisiDaraltma, ciftIdler, ciftSeciciler, ciftTanimliDegiskenler, daralmisSerit, degiskenDegeri, dosyalar, eksikIkonlar, girdiYaziHatalari, kalipDisiEsikler,
   hamYazma, kiraciDisiErisim, kullanilanIkonlar, maketIkonlari, maketMenusu, oku, parantezHatasi, rlsEksikTablolar, tanimsizDegiskenler, testKapisiEksikleri, tokenGovdesi, pdfPaketEksikleri,
+  swEksikleri,
 } from "../yardimci/denetimler.ts";
 
 const kabuk = oku("src/components/kabuk/Kabuk.module.css");
@@ -149,4 +150,14 @@ test("pdf paketi: Chromium eklenen bir sayfadan maxDuration kalkınca yakalanır
   assert.deepEqual(pdfPaketEksikleri(cfg, sayfalar), []);
   const bozuk = sayfalar.map((d) => (d.ad === "src/app/(uygulama)/araclar/page.tsx" ? { ...d, metin: d.metin.replace("export const maxDuration = 60;", "") } : d));
   assert.deepEqual(pdfPaketEksikleri(cfg, bozuk), ["/araclar: maxDuration = 60 yok"]);
+});
+
+/* 395: çevrimdışı servis çalışanı — depo sürümü ayrışınca, API yolu saklanınca, GET / köken denetimi kalkınca, CSP izni kalkınca yakalanır */
+test("servis çalışanı: depo şeması ayrışınca, API saklanınca, GET denetimi ya da CSP izni kalkınca yakalanır", () => {
+  const sw = oku("public/sw.js"), depo = oku("src/components/cevrimdisi/depo.ts"), proxy = oku("src/proxy.ts");
+  assert.deepEqual(swEksikleri(sw, depo, proxy), []);
+  assert.deepEqual(swEksikleri(sw.replace("const SURUM = 2;", "const SURUM = 3;"), depo, proxy), ["depo şeması farklı: SURUM (sw 3 · depo 2)"]);
+  assert.ok(swEksikleri(sw.replace("const SAYFA_YOLLARI = [", "const SAYFA_YOLLARI = [/^\\/api\\//, "), depo, proxy).includes("saklanmaması gereken yol saklanıyor: /api/islem"));
+  assert.deepEqual(swEksikleri(sw.replace('if (r.method !== "GET") return;', ""), depo, proxy), ["yalnız GET denetimi yok"]);
+  assert.deepEqual(swEksikleri(sw, depo, proxy.replace(`"worker-src 'self'",`, "")), ["CSP worker-src 'self' yok"]);
 });

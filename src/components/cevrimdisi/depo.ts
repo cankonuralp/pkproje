@@ -4,10 +4,14 @@
    depoda saklanır. Depo kökene bağlıdır: her firmanın alt alan adı ayrı depo. Tarayıcı depoya izin vermiyorsa (gizli pencere, kapalı site verisi)
    null döner — kuyruk o zaman yalnız bu sayfada bellekte tutar ve kullanıcıya söyler (sessiz kayıp yok). */
 
+/* ⛔ şema public/sw.js ile ORTAK (servis çalışanı aynı depoyu açar — 395): ad, sürüm ve bölmeler iki yerde aynı (tests/sw.test.ts kilitler) */
 const VT = "probata-cevrimdisi";
-const SURUM = 1;
+const SURUM = 2;
 const ISLER = "isler";
 const ANAHTAR = "anahtar";
+/** bağlantısız açılacak sayfalar (395; servis çalışanı yazar, şifreli) · kimin sayfaları olduğu (kişi değişince silinir) */
+const SAYFALAR = "sayfalar";
+const DURUM = "durum";
 
 /** depodaki iş: görünen alanlar açık, içerik şifreli */
 export interface DepoIsi {
@@ -47,6 +51,8 @@ export function depoAc(): Promise<IDBDatabase | null> {
         const db = r.result;
         if (!db.objectStoreNames.contains(ISLER)) db.createObjectStore(ISLER, { keyPath: "id" });
         if (!db.objectStoreNames.contains(ANAHTAR)) db.createObjectStore(ANAHTAR);
+        if (!db.objectStoreNames.contains(SAYFALAR)) db.createObjectStore(SAYFALAR);
+        if (!db.objectStoreNames.contains(DURUM)) db.createObjectStore(DURUM);
       };
       r.onsuccess = () => coz(r.result);
       r.onerror = () => coz(null);
@@ -93,4 +99,29 @@ export async function isYaz(db: IDBDatabase, i: DepoIsi): Promise<void> {
 export async function isSil(db: IDBDatabase, id: string): Promise<void> {
   const t = db.transaction(ISLER, "readwrite");
   await istek(t.objectStore(ISLER).delete(id));
+}
+
+/** saklanan sayfaları siler (çıkışta; cihazda başka kişi girince) — 395 */
+export async function sayfalariSil(): Promise<void> {
+  const db = await depoAc();
+  if (!db) return;
+  const t = db.transaction(SAYFALAR, "readwrite");
+  await istek(t.objectStore(SAYFALAR).clear());
+}
+
+/** saklanan sayfalar bu kişinin mi: değilse (cihazda başka kişi girdi) silinir, kişi yazılır — 395 */
+export async function sayfaSahibi(yazan: string): Promise<void> {
+  const db = await depoAc();
+  if (!db) return;
+  const once = await istek(db.transaction(DURUM, "readonly").objectStore(DURUM).get("yazan")) as string | undefined;
+  if (once === yazan) return;
+  await sayfalariSil();
+  await istek(db.transaction(DURUM, "readwrite").objectStore(DURUM).put(yazan, "yazan"));
+}
+
+/** kaç sayfa saklı (pencerede "bağlantısız açılabilir: n sayfa") */
+export async function sayfaSayisi(): Promise<number> {
+  const db = await depoAc();
+  if (!db) return 0;
+  return istek(db.transaction(SAYFALAR, "readonly").objectStore(SAYFALAR).count());
 }
