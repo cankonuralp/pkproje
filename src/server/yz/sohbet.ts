@@ -15,11 +15,12 @@ export interface SohbetIletisi { id: string; kim: "ben" | "say"; metin: string; 
 
 export const GECMIS_ADET = 100;
 
-/** son `adet` ileti, eskiden yeniye */
+/** son `adet` ileti, eskiden yeniye. Sıra TABLONUN zamanıyla (x.zaman — mikro saniye); çıktıdaki "zaman" milisaniyelik METİN, ona göre sıralanırsa
+    aynı milisaniyede yazılan soru ve cevap yer değiştirebiliyordu (CI 715bd6f say.test) */
 export async function sohbetGecmisi(db: Sorgulayici, adet = GECMIS_ADET): Promise<SohbetIletisi[]> {
   return (await db.sorgu<SohbetIletisi>(
-    `SELECT id::text, kim, metin, yer, ek, to_char(zaman AT TIME ZONE 'UTC', 'YYYY-MM-DD"T"HH24:MI:SS.MS"Z"') AS zaman FROM (
-       SELECT * FROM yz_sohbet ORDER BY zaman DESC, id DESC LIMIT $1) x ORDER BY zaman, id`, [adet])).rows;
+    `SELECT x.id::text, x.kim, x.metin, x.yer, x.ek, to_char(x.zaman AT TIME ZONE 'UTC', 'YYYY-MM-DD"T"HH24:MI:SS.MS"Z"') AS zaman FROM (
+       SELECT * FROM yz_sohbet ORDER BY zaman DESC, id DESC LIMIT $1) x ORDER BY x.zaman, x.id`, [adet])).rows;
 }
 
 export async function sohbetYaz(db: Sorgulayici, m: { kim: "ben" | "say"; metin: string; yer: string; ek?: SohbetEki | null }): Promise<string> {
