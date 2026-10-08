@@ -2355,6 +2355,18 @@ revizyon, alan kopyalama, hafif kusur devri, meslek eşleşme denetimi).
 - Emsal ürünler: https://opwire.app/iso-17020-periyodik-kontrol-yazilimi/ · https://17020muayene.vidco.com.tr/ · https://akuple.com/asansor-kontrol-yazilimi/ · https://ensyazilim.com/
 
 ## 11 · Değişiklik günlüğü
+- 2026-10-08 (380): **S.A.Y saha asistanı — çekirdek** (K5 "yapay zekâ — sonra S.A.Y"; maket say.js BB6; reisim 2026-10-03 *"bu say botu plan
+  içinde değil her yer de gözükecek … daha yuvarlak daha ilgi çekici"*, *"sayfa değişince vs geçmiş silinmez geçmiş olayı önemli"*). Firma yapay
+  zekâyı açtıysa her firma sayfasında sağ altta yuvarlak düğme (müşteri paneli ve Yönetim'de yok); panel masaüstü / tablette sağda yan pencere,
+  telefonda tam ekran, açık / kapalı hâli bu cihazda kalır; formda ve raporda alttaki tuş çubuğunun üstünde durur. **"Beni ne bekliyor?"** (yan
+  menü balonlarından — kişinin kendi işi) ve **"Bu sayfada ne yapılır?"** kuralla, ücretsiz; **serbest soru** yapay zekâya (firmanın anahtarı ve
+  modeli): fotoğraftan okumayla aynı sınır ayırması, sabit talimat önbellekte; giden bağlam yalnız rol adları, sayfa ve bekleyen iş sayıları
+  (müşteri, adres, kişi adı, e-posta gitmez). Öneri verir, kendisi yazmaz; imza / gönderme / onay / silme yok. **Geçmiş kişinin hesabında**, yalnız
+  kendisi görür, sayfa değişince ve yenilenince kalır, yer ayracıyla; "Sohbeti temizle" önce sorar, yalnız kendi geçmişini siler; kişi başı en
+  yeni 200. Firma ayarları › Yapay zekâ tablosuna "S.A.Y mesajı" sütunu (maket Y1). Anahtar yoksa, bağlantı yoksa, sınır dolduysa şerit söyler.
+  Göç 0071 (yz_sohbet — RLS firma + kişi, yazma / temizleme tanımlayıcı-yetkili; yz_kullanim.mesaj yalnız artar). Kilit say.test (gerçek
+  PostgreSQL, iki firma, iki kişi), say-saf.test; olumsuz kanıt say.bozan (4); e2e say (üç genişlik, yerel taklit — istekte kişisel bilgi varsa
+  taklit reddeder). Sonraki (381): rapor ekranında "Eksik alanlar neler?", "Sonuç ne olmalı?" öneri kartı ve "Uygula".
 - 2026-10-08 (379): **Ana sayfa Duyurular canlı** (K5 "İSGGM duyuru okuma"; reisim 2026-09-26 *"Ana sayfada isgüm duyurularını gösterebilir
   miyiz"*, yirmi sekizinci tur kararları). Sunucu Bakanlığın üç sayfasını okur — İSGGM ve İSGÜM duyuruları, iş ekipmanları portalı — ve Ana
   sayfada kaynak başına en yeni 2'yi gösterir: hepsi en yeni üstte, başlık yeni sekmede Bakanlığın sayfasına, altında yayım tarihi ve kaynak;

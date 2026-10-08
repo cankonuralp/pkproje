@@ -212,6 +212,10 @@ pkproje/
                             bağlantısı) · okuma.ts (duyurulariOku — üç kaynak, 10 sn / 3 MB, yönlendirme yok, is_calisma "duyuru_okuma";
                             duyuruBolumu — Ana sayfa) · sonra.ts (after: Ana sayfa yanıtından sonra, son deneme 6 saatten eskiyse) · db/duyuru.ts
                             (göç 0070) · uydurma sayfalar e2e/duyuru-ornek.ts (PROBATA_DUYURU_UC yalnız uçtan uca taklit)
+  src/modules/say/          S.A.Y SAHA ASİSTANI (380; maket say.js BB6): yardim.ts (sayfa yardımı + yapay zekâ kılavuzu, adresten yer adı) ·
+                            server/say.ts (sayDurumu, sayHizli — kuralla, saySorHazirla / saySorKaydet / sayBirak — ayırma, işlem dışı çağrı,
+                            sayTemizle) · ui/SayAsistan.tsx (uygulama düzeninde tek bileşen; düğme + panel) · ui/eylemler.ts · çekirdek
+                            src/server/yz/say.ts (istek: önbellekli talimat + bağlam, cevap çözme; saf) + sohbet.ts (geçmiş; göç 0071 yz_sohbet)
   src/server/saglik.ts      SAĞLIK (350; 09-G5): /api/saglik denetimleri (db/saglik.ts → saglik_denetimi, geçerli tanım 0053 — bağlanan rol, göç sayısı;
                             db/son-goc.ts SON_GOC + GOC_SAYISI — her yeni göçte ikisi güncellenir, testle kilitli) · canlı duman testi: node tools/duman.mjs (salt okunur, çıkış kodu)
   src/server/db/havuz.ts    ortamdan bağlantı: ağda şifresiz bağlantı YOK (PROBATA_VT_SSL=dogrula → kok-sertifika.ts Supabase kökü); Vercel'de boşta bekleme

@@ -165,10 +165,24 @@ const yzTaklit = createServer((istek, yanit) => {
   if (duyuruSayfasi) { yanit.writeHead(200, { "content-type": "text/html; charset=utf-8" }).end(duyuruSayfasi); return; }
   let govde = ""; istek.on("data", (p) => { govde += p; }).on("end", () => {
     if (istek.url !== "/v1/messages" || istek.headers["x-api-key"] !== E2E_YZ.anahtar) { yanit.writeHead(401).end("{}"); return; }
-    let g: { tool_choice?: { type?: string }; output_config?: { format?: { type?: string; schema?: { properties?: { satirlar?: { items?: { properties?: { tip?: { anyOf?: { enum?: string[] }[] } } } } } } } } };
+    let g: { system?: unknown; messages?: { content?: unknown }[]; tool_choice?: { type?: string }; output_config?: { format?: { type?: string; schema?: { properties?: { satirlar?: { items?: { properties?: { tip?: { anyOf?: { enum?: string[] }[] } } } } } } } } };
     try { g = JSON.parse(govde); } catch { yanit.writeHead(400).end(JSON.stringify({ type: "error", error: { type: "invalid_request_error", message: "invalid json" } })); return; }
     if (g.tool_choice?.type === "tool" || g.tool_choice?.type === "any") {
       yanit.writeHead(400, { "content-type": "application/json" }).end(JSON.stringify({ type: "error", error: { type: "invalid_request_error", message: 'tool_choice: type "tool" and "any" are not supported for this model.' } }));
+      return;
+    }
+    /* 380: S.A.Y sohbeti — düz metin cevap. İstekte kişi / müşteri bilgisi ya da anahtar varsa taklit reddeder (uçtan uca test düşer) */
+    const sistem = Array.isArray(g.system) ? String((g.system[0] as { text?: unknown } | undefined)?.text ?? "") : "";
+    if (sistem.startsWith("Sen S.A.Y'sın")) {
+      if (/sk-ant|@yzdeneme\.example|YZ Tesisi|YZ Denetçi|YZ Yönetici|YZ Planlama/.test(govde)) {
+        yanit.writeHead(400, { "content-type": "application/json" }).end(JSON.stringify({ type: "error", error: { type: "invalid_request_error", message: "taklit: S.A.Y isteğinde kişisel / müşteri bilgisi" } }));
+        return;
+      }
+      const son = String(g.messages?.at(-1)?.content ?? "").slice(0, 80);
+      yanit.writeHead(200, { "content-type": "application/json" }).end(JSON.stringify({
+        content: [{ type: "text", text: `Deneme cevabı: “${son}” için menüden Planlar'ı açın.\n- Bu bir taklit cevaptır.` }],
+        stop_reason: "end_turn", usage: { input_tokens: 2500, output_tokens: 80 },
+      }));
       return;
     }
     if (g.output_config?.format?.type !== "json_schema") {

@@ -460,15 +460,16 @@ function DepoYedek({ v }: { v: Veri }) {
 }
 
 /* ── YAPAY ZEKÂ (336; maket yzCiz Y1): aç / kapa, yurt dışı uyarısı, API anahtarı (bir kez yazılır, son 4), model, kişi başı aylık sınır ── */
-/* bu ayın kişi başı kullanımı (354; maket yzCiz SUT — S.A.Y mesajı ve "kendi anahtarı" sütunları o işler gelince): sınır kayıtlı değere göre (boş ya da
+/* bu ayın kişi başı kullanımı (354; maket yzCiz SUT — 380: S.A.Y mesajı; "kendi anahtarı" sütunu o iş gelince): sınır kayıtlı değere göre (boş ya da
    0 = sınırsız, maket "sinirli = sinir > 0"); %80'de sarı, dolunca kırmızı */
 type YzKullanim = Veri["yz"]["kullanim"][number];
 const dolarYaz = (m: number) => `$${(m / 1e6).toFixed(2).replace(".", ",")}`;
 const yzSutunlari = (sinir: number | null): Sutun<YzKullanim>[] => [
-  { k: "kisi", genislik: "40%", baslik: "Kişi", kart: "ust", sira: 1, siralanmaz: true, hucre: (x) => x.ad },
-  { k: "okuma", genislik: "20%", baslik: "Fotoğraftan okuma", kart: "govde", sira: 2, siralanmaz: true, hucre: (x) => <><KartEtiket>Fotoğraftan okuma</KartEtiket>{x.okuma}</> },
-  { k: "usd", genislik: "20%", baslik: "Harcama", kart: "govde", sira: 3, siralanmaz: true, hucre: (x) => <><KartEtiket>Harcama</KartEtiket>{dolarYaz(x.maliyet)}</> },
-  { k: "durum", genislik: "20%", baslik: "Sınır", kart: "rozet", sira: 1, siralanmaz: true, hucre: (x) => {
+  { k: "kisi", genislik: "32%", baslik: "Kişi", kart: "ust", sira: 1, siralanmaz: true, hucre: (x) => x.ad },
+  { k: "okuma", genislik: "18%", baslik: "Fotoğraftan okuma", kart: "govde", sira: 2, siralanmaz: true, hucre: (x) => <><KartEtiket>Fotoğraftan okuma</KartEtiket>{x.okuma}</> },
+  { k: "mesaj", genislik: "16%", baslik: "S.A.Y mesajı", kart: "govde", sira: 3, siralanmaz: true, hucre: (x) => <><KartEtiket>S.A.Y mesajı</KartEtiket>{x.mesaj}</> },
+  { k: "usd", genislik: "16%", baslik: "Harcama", kart: "govde", sira: 4, siralanmaz: true, hucre: (x) => <><KartEtiket>Harcama</KartEtiket>{dolarYaz(x.maliyet)}</> },
+  { k: "durum", genislik: "18%", baslik: "Sınır", kart: "rozet", sira: 1, siralanmaz: true, hucre: (x) => {
     if (sinir === null || sinir <= 0) return <DegerYok>sınırsız</DegerYok>;
     const o = x.maliyet / (sinir * 1e6);
     return o >= 1 ? <Rozet tur="red">Doldu</Rozet> : <Rozet tur={o >= 0.8 ? "bekliyor" : "tamam"}>%{Math.round(o * 100)}</Rozet>;
@@ -534,7 +535,7 @@ function YapayZeka({ v }: { v: Veri }) {
         <p className={stil.etiket}>Bu ay kullanım (kişi başına)</p>
         {v.yz.kullanim.length
           ? <Liste baslik="Yapay zekâ kullanımı" sutunlar={yzSutunlari(v.yz.deger.sinir)} kayitlar={v.yz.kullanim} anahtar={(x) => x.id} />
-          : <p className={stil.ipucu}>Bu ay henüz okuma yapılmadı.</p>}
+          : <p className={stil.ipucu}>Bu ay henüz yapay zekâ kullanılmadı.</p>}
       </>}
     </Kart>
   );

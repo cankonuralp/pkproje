@@ -408,7 +408,7 @@ export function SahaRaporu({ v }: { v: Gorunum }) {
       </div>
 
       {(v.izin.duzenle || v.izin.sil || v.izin.kopyala) && (
-        <div className={stil.eylem}>
+        <div className={stil.eylem} data-alt-cubuk="her">
           {v.izin.sil && <Tus tur="ikincil" ikon="trash-2" className={stil.silTus} disabled={mesgul} onClick={sil}>Sil</Tus>}
           {v.izin.kopyala && <Tus tur="ikincil" ikon="copy" disabled={mesgul} onClick={() => setKopya(true)}>{v.izin.duzenle ? "Kaydet ve kopyala" : "Kopyala"}</Tus>}
           {v.izin.duzenle && <>

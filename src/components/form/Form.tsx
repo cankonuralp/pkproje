@@ -60,5 +60,6 @@ export function Girdi({ id, hata = false, mesajli = false, className, ...ozellik
 }
 
 export function FormEylem({ children, not }: { children: ReactNode; not?: ReactNode }) {
-  return <div className={stil.eylem}>{not && <span className={stil.eylemNot}>{not}</span>}{children}</div>;
+  /* data-alt-cubuk (380): telefonda altta yapışkan — S.A.Y düğmesi onun üstünde durur */
+  return <div className={stil.eylem} data-alt-cubuk="telefon">{not && <span className={stil.eylemNot}>{not}</span>}{children}</div>;
 }

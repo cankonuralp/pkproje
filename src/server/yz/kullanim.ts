@@ -38,10 +38,18 @@ export async function yzAyir(db: Sorgulayici, ay: string, sinir: number | null, 
   return true;
 }
 
-/** ayırmayı kapat (çağrı cevapsız bitti): `ucretli` — sonucu bilinmiyor (zaman aşımı), ayrılan tutar harcamaya ve bir okuma sayılır; değilse bırakılır */
-export async function yzAyirmaBirak(db: Sorgulayici, ay: string, ust: number, ucretli: boolean): Promise<void> {
-  await db.sorgu(`UPDATE yz_kullanim SET ayrilan = greatest(ayrilan - $2, 0), maliyet = maliyet + $3, okuma = okuma + $4 WHERE ${BEN} AND ay = $1`,
+/** ayırmayı kapat (çağrı cevapsız bitti): `ucretli` — sonucu bilinmiyor (zaman aşımı), ayrılan tutar harcamaya ve bir okuma (S.A.Y'da bir mesaj —
+    380) sayılır; değilse bırakılır */
+export async function yzAyirmaBirak(db: Sorgulayici, ay: string, ust: number, ucretli: boolean, sayac: "okuma" | "mesaj" = "okuma"): Promise<void> {
+  const alan = sayac === "mesaj" ? "mesaj" : "okuma";
+  await db.sorgu(`UPDATE yz_kullanim SET ayrilan = greatest(ayrilan - $2, 0), maliyet = maliyet + $3, ${alan} = ${alan} + $4 WHERE ${BEN} AND ay = $1`,
     [ay, ust, ucretli ? ust : 0, ucretli ? 1 : 0]);
+}
+
+/** oturumdaki kişinin bu ayki harcaması + bekleyen ayırması (milyonda bir dolar; satır yoksa 0) — S.A.Y "sınırınız doldu" şeridi (380) */
+export async function yzKendiAyi(db: Sorgulayici, ay: string): Promise<number> {
+  const r = (await db.sorgu<{ t: string }>(`SELECT (maliyet + ayrilan)::text AS t FROM yz_kullanim WHERE ${BEN} AND ay = $1`, [ay])).rows[0];
+  return r ? Number(r.t) : 0;
 }
 
 /** bir okuma: ayırma gerçek maliyetle kapanır (kişinin aylık kullanımı artar), okuma kaydedilir (aynı işlemde) */
@@ -54,10 +62,24 @@ export async function yzOkumaYaz(db: Sorgulayici, o: { ay: string; ust: number; 
     [o.raporId, o.bolum, o.model, JSON.stringify(o.oneri), o.giris, o.cikis, o.maliyet]);
 }
 
-export interface YzKisiKullanimi { id: string; ad: string; okuma: number; maliyet: number }
+/** S.A.Y (380): kuralla cevaplanan mesaj (yapay zekâ çağrısı yok, ücretsiz) — kişinin bu ayki mesaj sayısı artar */
+export async function yzMesajSay(db: Sorgulayici, ay: string): Promise<void> {
+  await db.sorgu("INSERT INTO yz_kullanim (ay, mesaj) VALUES ($1, 1) ON CONFLICT (firma_id, hesap_id, ay) DO UPDATE SET mesaj = yz_kullanim.mesaj + 1", [ay]);
+}
+
+/** S.A.Y (380): yapay zekâ cevabı — ayırma gerçek maliyetle kapanır, mesaj sayısı artar (aynı işlemde cevap geçmişe yazılır) */
+export async function yzSohbetKapat(db: Sorgulayici, o: { ay: string; ust: number; maliyet: number }): Promise<void> {
+  await db.sorgu(
+    `INSERT INTO yz_kullanim (ay, mesaj, maliyet) VALUES ($1, 1, $2)
+     ON CONFLICT (firma_id, hesap_id, ay) DO UPDATE SET mesaj = yz_kullanim.mesaj + 1, maliyet = yz_kullanim.maliyet + EXCLUDED.maliyet,
+       ayrilan = greatest(yz_kullanim.ayrilan - $3, 0)`, [o.ay, o.maliyet, o.ust]);
+}
+
+export interface YzKisiKullanimi { id: string; ad: string; okuma: number; mesaj: number; maliyet: number }
 /** firmanın bu ayki kişi başı kullanımı (maket Y1 "Bu ay kullanım (kişi başına)"): harcaması çoktan aza; maliyet milyonda bir dolar */
 export async function yzAyKullanimi(db: Sorgulayici, ay: string): Promise<YzKisiKullanimi[]> {
-  return (await db.sorgu<{ id: string; ad: string; okuma: number; m: string }>(
-    `SELECT h.id::text AS id, h.ad, k.okuma, k.maliyet::text AS m FROM yz_kullanim k JOIN hesap h ON h.id = k.hesap_id
-     WHERE k.ay = $1 AND (k.okuma > 0 OR k.maliyet > 0) ORDER BY k.maliyet DESC, h.ad`, [ay])).rows.map((r) => ({ id: r.id, ad: r.ad, okuma: r.okuma, maliyet: Number(r.m) }));
+  return (await db.sorgu<{ id: string; ad: string; okuma: number; mesaj: number; m: string }>(
+    `SELECT h.id::text AS id, h.ad, k.okuma, k.mesaj, k.maliyet::text AS m FROM yz_kullanim k JOIN hesap h ON h.id = k.hesap_id
+     WHERE k.ay = $1 AND (k.okuma > 0 OR k.mesaj > 0 OR k.maliyet > 0) ORDER BY k.maliyet DESC, h.ad`, [ay])).rows
+    .map((r) => ({ id: r.id, ad: r.ad, okuma: r.okuma, mesaj: r.mesaj, maliyet: Number(r.m) }));
 }
