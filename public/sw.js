@@ -4,6 +4,8 @@
      dışarı alınamaz anahtarı); ağ yoksa son saklanan açılır, o da yoksa "bu sayfa bu cihazda yok" sayfası;
    · uygulamanın kendi dosyaları (/_next/static, /vendor): önce ağ, ağ yoksa son saklanan (veri taşımaz, şifresiz önbellek);
    · /api, giriş, müşteri paneli, yönetim, POST (sunucu eylemleri, kuyruk) DOKUNULMAZ — hep ağ.
+   Saklama yanıtı BEKLETMEZ (398 öncesi düzeltme): tarayıcı sayfayı / dosyayı ağdan geldiği gibi akarak alır, kopyası arka planda (waitUntil)
+   saklanır — sayfa bitmeden hiçbir şey göstermeyen çalışan yavaş sunucuda sayfayı takılı bırakıyordu (CI 2177156, tablet ısınması).
    Saklanan sayfalar çıkışta ve cihazda başka kişi girince silinir (src/components/cevrimdisi/depo.ts). Depo şeması depo.ts ile ORTAK (aynı ad,
    sürüm, bölmeler — tests/sw.test.ts kilitler). */
 /* global self, caches, indexedDB, crypto */
@@ -34,14 +36,14 @@ self.addEventListener("fetch", (e) => {
   if (u.origin !== self.location.origin) return;
   /* sayfanın kendisi: gezinme ya da önceden indirme (396 — uygulama bağlantı varken kişinin planlarını açar) */
   const sayfaIstegi = r.mode === "navigate" || r.headers.get("x-probata-onindirme") === "1";
-  if (sayfaIstegi && !u.search && SAYFA_YOLLARI.some((x) => x.test(u.pathname))) { e.respondWith(sayfa(r, u.pathname)); return; }
-  if (u.pathname.startsWith("/_next/static/") || u.pathname.startsWith("/vendor/")) e.respondWith(statik(r));
+  if (sayfaIstegi && !u.search && SAYFA_YOLLARI.some((x) => x.test(u.pathname))) { e.respondWith(sayfa(e, r, u.pathname)); return; }
+  if (u.pathname.startsWith("/_next/static/") || u.pathname.startsWith("/vendor/")) e.respondWith(statik(e, r));
 });
 
-async function statik(r) {
+async function statik(e, r) {
   try {
     const y = await fetch(r);
-    if (y.ok) { const c = await caches.open(STATIK); await c.put(r, y.clone()); }
+    if (y.ok) { const kopya = y.clone(); e.waitUntil(caches.open(STATIK).then((c) => c.put(r, kopya)).catch(() => undefined)); }
     return y;
   } catch (h) {
     const c = await caches.match(r);
@@ -50,7 +52,7 @@ async function statik(r) {
   }
 }
 
-async function sayfa(r, yol) {
+async function sayfa(e, r, yol) {
   let y;
   try { y = await fetch(r); } catch {
     const s = await sayfaOku(yol).catch(() => null);
@@ -58,7 +60,7 @@ async function sayfa(r, yol) {
   }
   /* yalnız sayfanın kendisi: girişe yönlenen (oturum düştü), hata, başka türde yanıt saklanmaz */
   if (y.ok && !y.redirected && y.type === "basic" && (y.headers.get("content-type") ?? "").startsWith("text/html")) {
-    await sayfaSakla(yol, y.clone()).catch(() => undefined);
+    e.waitUntil(sayfaSakla(yol, y.clone()).catch(() => undefined));
   }
   return y;
 }

@@ -18,6 +18,22 @@ const TASMA = () => document.documentElement.scrollWidth <= window.innerWidth;
 /* uydurma, en küçük yapısı doğru JPEG (e2e/foto-oku.spec.ts ile aynı; tarayıcı çözemez → küçültülmeden gider, sunucu türü baytlardan tanır) */
 const JPEG = Buffer.from([0xff, 0xd8, 0xff, 0xdb, 0x00, 0x03, 0x01, 0xff, 0xda, 0x00, 0x02, 0x01, 0x02, 0x03, 0xff, 0xd9]);
 
+/** servis çalışanı sayfanın kopyasını arka planda saklar (395): bağlantı kesilmeden önce saklandığı beklenir (anahtar: sayfanın yolu) */
+async function saklandi(page: Page, yol: string) {
+  await expect.poll(() => page.evaluate((y) => new Promise<boolean>((coz) => {
+    const r = indexedDB.open("probata-cevrimdisi");
+    r.onerror = () => coz(false);
+    r.onsuccess = () => {
+      const db = r.result;
+      try {
+        const q = db.transaction("sayfalar", "readonly").objectStore("sayfalar").getKey(y);
+        q.onsuccess = () => { db.close(); coz(q.result !== undefined); };
+        q.onerror = () => { db.close(); coz(false); };
+      } catch { db.close(); coz(false); }
+    };
+  }), yol), { timeout: 30_000 }).toBe(true);
+}
+
 async function raporuAc(page: Page, kod: string): Promise<string> {
   await page.goto(`${Y}/giris`);
   await hazir(page);
@@ -94,6 +110,7 @@ test("çevrimdışı: bağlantı kes → Kaydet cihaza → bağlantı gelince gi
   await page.evaluate(async () => { await navigator.serviceWorker.ready; });
   await page.goto(adres);
   await hazir(page);
+  await saklandi(page, new URL(adres).pathname);
   await page.context().setOffline(true);
   await page.reload();
   await hazir(page);
@@ -110,6 +127,7 @@ test("çevrimdışı: bağlantı kes → Kaydet cihaza → bağlantı gelince gi
   const planAdresi = await page.getByRole("navigation", { name: "Konum" }).getByRole("link").nth(1).getAttribute("href");
   expect(planAdresi).toMatch(/^\/planlar\/[0-9a-f-]{36}$/);
   await expect(page.locator("html[data-cevrimdisi-hazir]")).toHaveCount(1, { timeout: 60_000 });
+  await saklandi(page, planAdresi!);
   await page.context().setOffline(true);
   await page.goto(`${Y}${planAdresi}`);
   await hazir(page);

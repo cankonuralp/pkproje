@@ -330,5 +330,8 @@ export function swEksikleri(sw: string, depo: string, proxy: string): string[] {
   if (!sw.includes('if (r.method !== "GET") return;')) eksik.push("yalnız GET denetimi yok");
   if (!sw.includes("if (u.origin !== self.location.origin) return;")) eksik.push("yalnız aynı köken denetimi yok");
   if (!proxy.includes(`"worker-src 'self'"`)) eksik.push("CSP worker-src 'self' yok");
+  /* saklama yanıtı bekletmez: sayfa / dosya tarayıcıya akarak gider, kopyası arka planda (CI 2177156 — bütün sayfayı bekleyen çalışan, yavaş
+     sunucuda sayfayı takılı bıraktı) */
+  if (/await\s+(sayfaSakla|c\.put|caches\.open)\(/.test(sw) || !sw.includes("e.waitUntil(sayfaSakla(")) eksik.push("saklama yanıtı bekletiyor (waitUntil değil)");
   return eksik;
 }

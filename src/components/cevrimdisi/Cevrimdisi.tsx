@@ -60,7 +60,9 @@ async function onceIndir(paket: PaketEylemi): Promise<void> {
     if (!p) return;
     for (const a of ["/planlar", ...p.planlar.map((x) => `/planlar/${x.id}`), ...p.raporlar.map((x) => `/raporlar/${x.id}`)]) {
       if (!bagliMi()) return;
-      await fetch(a, { headers: { "x-probata-onindirme": "1", accept: "text/html" }, credentials: "same-origin", cache: "no-store" }).catch(() => undefined);
+      /* gövde sonuna kadar okunur: servis çalışanı kopyasını sayfa tam gelince saklar */
+      await fetch(a, { headers: { "x-probata-onindirme": "1", accept: "text/html" }, credentials: "same-origin", cache: "no-store" })
+        .then((y) => y.arrayBuffer()).catch(() => undefined);
     }
     hazirSon = { plan: p.planlar.length, zaman: new Date().toISOString() };
     hazirYaz(hazirSon);

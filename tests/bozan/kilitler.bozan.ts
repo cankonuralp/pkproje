@@ -160,4 +160,7 @@ test("servis çalışanı: depo şeması ayrışınca, API saklanınca, GET dene
   assert.ok(swEksikleri(sw.replace("const SAYFA_YOLLARI = [", "const SAYFA_YOLLARI = [/^\\/api\\//, "), depo, proxy).includes("saklanmaması gereken yol saklanıyor: /api/islem"));
   assert.deepEqual(swEksikleri(sw.replace('if (r.method !== "GET") return;', ""), depo, proxy), ["yalnız GET denetimi yok"]);
   assert.deepEqual(swEksikleri(sw, depo, proxy.replace(`"worker-src 'self'",`, "")), ["CSP worker-src 'self' yok"]);
+  /* saklama yanıtı bekletirse (sayfa bitmeden tarayıcıya hiçbir şey gitmez) yakalanır */
+  assert.deepEqual(swEksikleri(sw.replace("e.waitUntil(sayfaSakla(yol, y.clone()).catch(() => undefined));", "await sayfaSakla(yol, y.clone()).catch(() => undefined);"), depo, proxy),
+    ["saklama yanıtı bekletiyor (waitUntil değil)"]);
 });
