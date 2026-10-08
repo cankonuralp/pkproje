@@ -12,6 +12,8 @@
      fotoğraf olmayan içerik, bozuk metin, olmayan yer, başka denetçi, başka firma eklenmez;
    · 400 plan kabul / red (plan.kabul, plan.red): beyan onayı ("evet" — uydurma değer değil) ve okunan metnin özeti şart; tekrarı yeniden yapmaz;
      eski sürüm çakışma; red gerekçesiz olmaz; ekip dışı denetçi ve başka firma yapamaz;
+   · 405 bağlantısız yeni rapor: paket yalnız raporu olmayan etkin ekipmanlar + formatları (kabul edilmemiş planda neden; ekip dışı / başka
+     firma null); rapor.olustur raporu sunucuda açar (kimlik ve numara sunucunun), tekrarı ikinci rapor açmaz, kurallar ve yetki aynen;
    · GÜVENLİK: işlem kaydı değişmez / silinmez; kişi yalnız kendi işlemlerini görür (aynı firmada da); hesap ve alınma anı veritabanından;
      kimlik sorgusu yalnız evet / hayır, tanımlayıcı-yetkili, PUBLIC'e kapalı.
    Olumsuz kanıt: tests/bozan/islem.bozan.ts. */
@@ -31,7 +33,7 @@ import { planIci, planKabul, type PlanYazma } from "../src/modules/planlar/serve
 import { bugunTr, planAc } from "../src/modules/planlar/server/planlar.ts";
 import { taslakBaslat, yayinla } from "../src/modules/rapor-format/server/formatlar.ts";
 import { raporIslemi, type RaporIslemSonucu, type RaporIslemTuru } from "../src/modules/raporlar/server/islem-baglanti.ts";
-import { raporOlustur, sahaRaporu, type Kisi } from "../src/modules/raporlar/server/raporlar.ts";
+import { raporOlustur, sahaRaporu, yeniRaporPaketi, type Kisi } from "../src/modules/raporlar/server/raporlar.ts";
 import { SABLONLAR } from "../src/format/sablonlar.ts";
 import { testKumesi } from "./yardimci/kume.ts";
 
@@ -327,4 +329,55 @@ test("plan reddi kuyruktan: gerekçe şart; eski sürüm çakışma (sessiz ezme
   const y = await isleP(DEN, randomUUID(), "plan.red", p2, v.surum + 1, { gerekce: "Tesis bu hafta kapalı." });
   assert.deepEqual(y, { durum: "yeni", sonuc: { durum: "tamam", bildirim: "Plan reddedildi." } });
   assert.deepEqual([(await planSatiri(p2)).durum, (await planSatiri(p2)).red_gerekce], ["reddedildi", "Tesis bu hafta kapalı."]);
+});
+
+/* 405: bağlantısız yeni rapor — paket (yeniRaporPaketi) ve kuyruktan açılış (rapor.olustur). GÜVENLİK sayımından SONRA koşar. */
+test("yeni rapor paketi: planın raporu olmayan etkin ekipmanları, türün yayındaki formatı ve ilk cevaplar; kabul edilmemiş planda neden; ekip dışı / başka firma yok", async () => {
+  const p = await yeniPlan();
+  const bekleyen = await a(DEN, (db) => yeniRaporPaketi(db, DEN, p));
+  assert.equal(bekleyen?.neden, "Rapor yalnız kabul edilmiş planda oluşturulur.");
+  tamam(await a(DEN, async (db) => planKabul(db, DEN, p, (await planIci(db, DEN, p))!.surum, true)));
+  tamam(await a(DEN, (db) => raporOlustur(db, DEN, p, ekp["HT-1"])));
+  const k = (await a(DEN, (db) => yeniRaporPaketi(db, DEN, p)))!;
+  assert.equal(k.neden, null);
+  assert.deepEqual(k.ekipmanlar.map((x) => x.kod).sort(), ["HT-2", "HT-3", "HT-4", "HT-5", "HT-6"], "raporu olan ekipman yok");
+  assert.deepEqual(Object.keys(k.turler), [ht]);
+  assert.equal(k.turler[ht].tanim.bolumler.length, KOMP.bolumler.length);
+  assert.ok(Object.keys(k.turler[ht].ilk.madde).length > 0, "ilk cevaplar dolu");
+  assert.equal(await a(DEN2, (db) => yeniRaporPaketi(db, DEN2, p)), null, "ekip dışı denetçi");
+  assert.equal(await kiraciIcinde(havuz, B, (db) => yeniRaporPaketi(db, DEN_B, p), { hesapId: DEN_B.id }), null, "başka firma");
+});
+
+test("yeni rapor kuyruktan: geçici kimlikle gelen açılış raporu SUNUCUDA açar (kimlik ve numara sunucunun), sürüm döner; tekrarı ikinci rapor açmaz; kurallar ve yetki aynen", async () => {
+  const p = await yeniPlan();
+  const ac = (kim: Kisi, girdi: unknown, kayit = randomUUID(), id = randomUUID(), firma = A) => isle(kim, id, "rapor.olustur", kayit, 0, girdi, firma);
+  const sonucu = async (x: Promise<Awaited<ReturnType<typeof isle>>>) => { const y = await x; return y.durum === "yeni" ? y.sonuc : y; };
+  /* kabul edilmemiş planda açılmaz */
+  assert.deepEqual(await sonucu(ac(DEN, { plan: p, ekipman: ekp["HT-2"] })), { durum: "red", neden: "Rapor yalnız kabul edilmiş planda oluşturulur." });
+  tamam(await a(DEN, async (db) => planKabul(db, DEN, p, (await planIci(db, DEN, p))!.surum, true)));
+  const GECICI = randomUUID(), id = randomUUID();
+  const s = await ac(DEN, { plan: p, ekipman: ekp["HT-2"] }, GECICI, id);
+  assert.ok(s.durum === "yeni" && s.sonuc.durum === "tamam" && "surum" in s.sonuc, JSON.stringify(s));
+  const yeniId = s.durum === "yeni" && s.sonuc.durum === "tamam" ? s.sonuc.id : "";
+  assert.notEqual(yeniId, GECICI, "kimliği sunucu verir");
+  const satir = (await sql<{ no: string; plan_id: string; ekipman_id: string; durum: string; surum: number }>(A,
+    "SELECT no, plan_id::text, ekipman_id::text, durum, surum FROM rapor WHERE id = $1", [yeniId])).rows[0];
+  assert.deepEqual([satir.plan_id, satir.ekipman_id, satir.durum], [p, ekp["HT-2"], "taslak"]);
+  assert.match(satir.no, /^IA-/);
+  assert.deepEqual(s.durum === "yeni" && "surum" in s.sonuc && s.sonuc.surum, { once: 0, sonra: satir.surum });
+  /* yanıt yolda kayboldu, aynı kimlik yeniden: ikinci rapor açılmaz, aynı sonuç */
+  assert.deepEqual(await ac(DEN, { plan: p, ekipman: ekp["HT-2"] }, GECICI, id), { durum: "tekrar", sonuc: s.durum === "yeni" ? s.sonuc : null });
+  const sayi = async () => (await sql<{ n: number }>(A, "SELECT count(*)::int AS n FROM rapor WHERE plan_id = $1 AND ekipman_id = $2", [p, ekp["HT-2"]])).rows[0].n;
+  assert.equal(await sayi(), 1);
+  /* başka cihazdan aynı ekipmana ikinci açılış: red (rapor zaten var) */
+  assert.deepEqual(await sonucu(ac(DEN, { plan: p, ekipman: ekp["HT-2"] })), { durum: "red", neden: "Bu ekipmanın bu planda raporu var." });
+  /* bozuk girdi, ekip dışı denetçi, başka firma: açılmaz */
+  assert.equal((await sonucu(ac(DEN, { plan: "x", ekipman: ekp["HT-3"] }))).durum, "gecersiz");
+  assert.deepEqual(await sonucu(ac(DEN2, { plan: p, ekipman: ekp["HT-3"] })), { durum: "yok" });
+  assert.deepEqual(await sonucu(ac(DEN_B, { plan: p, ekipman: ekp["HT-3"] }, randomUUID(), randomUUID(), B)), { durum: "yok" });
+  assert.equal((await sql<{ n: number }>(A, "SELECT count(*)::int AS n FROM rapor WHERE plan_id = $1 AND ekipman_id = $2", [p, ekp["HT-3"]])).rows[0].n, 0);
+  /* açılan raporun kaydı kuyruktan, sunucunun verdiği kimlik ve sürümle */
+  const bas = (await a(DEN, (db) => sahaRaporu(db, DEN, yeniId)))!.tarih.bas!;
+  const k = await isle(DEN, randomUUID(), "rapor.kaydet", yeniId, satir.surum, tamGirdi(bas));
+  assert.equal(k.durum === "yeni" && k.sonuc.durum, "tamam");
 });

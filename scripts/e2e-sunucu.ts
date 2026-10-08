@@ -133,7 +133,7 @@ process.env.PROBATA_SIR_ANAHTARI = sirAnahtari;
     const tesis = await q("INSERT INTO tesis (musteri_id, ad, adres, il, ilce, sgk) VALUES ($1, $2, 'Deneme Cad. No 9', 'Kocaeli', 'Gebze', $3) RETURNING id::text", [m, E2E_YZ.tesis, "3".repeat(26)]);
     const tur = await q("INSERT INTO ekipman_turu (kod, ad, grup, brans, periyot) VALUES ('EP', 'Elektrik panosu', 'elektrik', 'e', 12) RETURNING id::text");
     const ekp: Record<string, string> = {};
-    for (const kod of [...Object.values(E2E_YZ.ekipman), ...Object.values(E2E_YZ.cevrimdisi)]) ekp[kod] = await q("INSERT INTO ekipman (tesis_id, tur_id, kod, ekleyen) VALUES ($1, $2, $3, 'Deneme') RETURNING id::text", [tesis, tur, kod]);
+    for (const kod of [...Object.values(E2E_YZ.ekipman), ...Object.values(E2E_YZ.cevrimdisi), ...Object.values(E2E_YZ.yeniRapor)]) ekp[kod] = await q("INSERT INTO ekipman (tesis_id, tur_id, kod, ekleyen) VALUES ($1, $2, $3, 'Deneme') RETURNING id::text", [tesis, tur, kod]);
     return { yon, pl, den, tesis, tur, ekp };
   });
   const kim = (h: string, rol: string, ad: string): Kisi => ({ id: h, ad, roller: [rol] as Kisi["roller"] });
@@ -152,7 +152,9 @@ process.env.PROBATA_SIR_ANAHTARI = sirAnahtari;
     { tesis: t.tesis, baslangic: bugun, bitis: bugun, ekip: [{ personel: t.den.p, isgNo: "ISG-YZ-1", kaydet: false }] }), { hesapId: pl.id }), "plan").id;
   const v = (await kiraciIcinde(havuz, yzFirma, (db) => planIci(db, den, plan), { hesapId: den.id }))!;
   kesin(await kiraciIcinde(havuz, yzFirma, (db) => planKabul(db, den, plan, v.surum, true), { hesapId: den.id }), "plan kabul");
-  for (const id of Object.values(t.ekp)) kesin(await kiraciIcinde(havuz, yzFirma, (db) => raporOlustur(db, den, plan, id), { hesapId: den.id }), "rapor");
+  /* 405: yeni rapor ekipmanlarının raporu AÇILMAZ (bağlantı kesikken plandan açılır) */
+  const yeniRaporKodlari = new Set(Object.values(E2E_YZ.yeniRapor));
+  for (const [kod, id] of Object.entries(t.ekp)) if (!yeniRaporKodlari.has(kod)) kesin(await kiraciIcinde(havuz, yzFirma, (db) => raporOlustur(db, den, plan, id), { hesapId: den.id }), "rapor");
   /* bağlantısız plan kabulü (400): genişlik başına kabul bekleyen plan, kendi müşterisinde; 30 gün sonra başlar (önceden indirme sayısına girmez) */
   const otuz = new Intl.DateTimeFormat("en-CA", { timeZone: "Europe/Istanbul", year: "numeric", month: "2-digit", day: "2-digit" }).format(new Date(Date.now() + 30 * 86_400_000));
   for (const unvan of Object.values(E2E_YZ.kabulPlan)) {

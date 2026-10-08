@@ -12,14 +12,20 @@
      bekler (fotoğraf gidince ya da kullanıcı onu listeden kaldırınca gider). Fotoğraf raporun sürümünü bir artırır: aynı raporun bekleyen işleri,
      sürüm yalnız bu fotoğrafla değiştiyse yeni sürüme taşınır (arada başka yerde değiştiyse taşınmaz — çakışma yine görünür).
    · 400 PLAN KABUL / RED (ARKA-UC §4.1 "plan kabul / red (kuyruğa)"): aynı plan için tek bekleyen iş (yeni seçim eskisinin yerine).
+   · 405 YENİ RAPOR (rapor.olustur): bağlantısız açılan rapor cihazın geçici kimliğiyle; işleri rapor açılmadan gitmez, açılınca sunucunun verdiği
+     kimliğe bağlanır; aynı planın kabulü cihazda bekliyorsa rapor ondan sonra açılır. İşler GİRDİĞİ SIRAYLA gider (yalnız bağımlılık beklenir).
    Depo yoksa (gizli pencere) iş yalnız bu sayfada bellekte tutulur ve söylenir. */
 import { coz, depoAc, isleriOku, isSil, isYaz, sifrele, type DepoIsi } from "./depo.ts";
 
-export type KuyrukTuru = "rapor.kaydet" | "rapor.gonder" | "rapor.foto" | "plan.kabul" | "plan.red";
+export type KuyrukTuru = "rapor.kaydet" | "rapor.gonder" | "rapor.foto" | "rapor.olustur" | "plan.kabul" | "plan.red";
 /** kaydın o anki hâlini taşıyan işler: aynı kayıt için tek bekleyen (fotoğraf bunlardan değil) */
 const FORM: ReadonlySet<string> = new Set(["rapor.kaydet", "rapor.gonder", "plan.kabul", "plan.red"]);
 /** gönderilen işin sonucu — window "probata-islem" olayı (ekran tazelenir; eksikse alanlar işaretlenir) */
-export interface KuyrukSonucOlayi { kayit: string; tur: KuyrukTuru; durum: string; ileti: string | null; eksikler: { bolum: string; alan: string; ad: string }[] | null }
+export interface KuyrukSonucOlayi {
+  kayit: string; tur: KuyrukTuru; durum: string; ileti: string | null; eksikler: { bolum: string; alan: string; ad: string }[] | null;
+  /** 405: yeni rapor açıldıysa sunucunun verdiği kimlik (kayit cihazın geçici kimliği) */
+  yeni: string | null;
+}
 export type IsDurumu = DepoIsi["durum"];
 /** ekranda gösterilen (içeriksiz) */
 export interface KuyrukIsi { id: string; tur: KuyrukTuru; kayit: string; ad: string; zaman: string; durum: IsDurumu; ileti: string | null; yer: string | null }
@@ -67,6 +73,8 @@ function yukle(): Promise<void> {
     `yer`: fotoğrafın raporda yeri ("bölüm|madde") */
 export async function kuyrugaEkle(g: { tur: KuyrukTuru; kayit: string; surum: number; girdi: unknown; ad: string; yer?: string | null }): Promise<void> {
   await yukle();
+  /* yeni rapor bir kez açılır (aynı geçici kimlikle ikinci iş yazılmaz) */
+  if (g.tur === "rapor.olustur" && bellek.some((x) => x.tur === "rapor.olustur" && x.kayit === g.kayit)) return;
   const db = await depoAc();
   const eski = FORM.has(g.tur) ? bellek.filter((x) => x.kayit === g.kayit && FORM.has(x.tur) && x.durum !== "baska_hesap") : [];
   const i: Bellek = {
@@ -142,8 +150,10 @@ const ILETI: Record<string, string> = {
 const iletisi = (tur: string, durum: string): string | undefined => (tur.startsWith("plan.") ? ILETI[`plan_${durum}`] : undefined) ?? ILETI[durum];
 
 type Sonuc = { durum: string; hatalar?: Record<string, string>; eksikler?: { bolum: string; alan: string; ad: string }[]; neden?: string;
-  /** fotoğrafta: raporun hangi sürümden hangisine geçtiği */
-  surum?: { once: number; sonra: number } };
+  /** fotoğrafta / yeni raporda: raporun hangi sürümden hangisine geçtiği */
+  surum?: { once: number; sonra: number };
+  /** yeni raporda (405): sunucunun verdiği kimlik */
+  id?: string };
 async function guncelle(x: Bellek, d: Partial<Bellek>) {
   Object.assign(x, d);
   const db = await depoAc();
@@ -160,52 +170,65 @@ export async function kuyrukGonder(): Promise<number> {
   let n = 0;
   try {
     const db = await depoAc();
-    /* fotoğraflar önce (eklerler, ezmezler); sonra form işleri — her grup kendi sırasında */
-    const sira = [...bellek].sort((a, b) => Number(FORM.has(a.tur)) - Number(FORM.has(b.tur)) || a.sira - b.sira);
-    for (const x of sira) {
-      if (x.durum !== "bekliyor" || !bellek.includes(x)) continue;
-      /* fotoğrafsız gönderim olmaz: raporun gidemeyen fotoğrafı varsa Onaya gönder bekler */
-      if (x.tur === "rapor.gonder" && bellek.some((y) => y.kayit === x.kayit && y.tur === "rapor.foto")) {
-        if (x.ileti !== ILETI.foto_bekliyor) await guncelle(x, { ileti: ILETI.foto_bekliyor });
-        continue;
+    /* işler GİRDİĞİ SIRAYLA gider (405 — kayıtlar arası sıra korunur: önce planın kabulü, sonra o plana açılan rapor); kaydın kendi bağımlılıkları
+       beklenir, bir iş gidince bekleyen bağımlısı aynı gönderimde yeniden denenir (en çok 5 tur) */
+    let ilerledi = true;
+    dis: for (let tur = 0; ilerledi && tur < 5; tur++) {
+      ilerledi = false;
+      for (const x of [...bellek].sort((a, b) => a.sira - b.sira)) {
+        if (x.durum !== "bekliyor" || !bellek.includes(x)) continue;
+        /* yeni raporun işleri rapor açılmadan gitmez (kayıt cihazın geçici kimliği) */
+        if (x.tur !== "rapor.olustur" && bellek.some((y) => y.tur === "rapor.olustur" && y.kayit === x.kayit)) continue;
+        /* yeni rapor, aynı planın kabulü / reddi cihazda beklerken gitmez */
+        if (x.tur === "rapor.olustur" && bellek.some((y) => y.tur.startsWith("plan.") && y.kayit === (x.yer ?? "").split("|")[0])) continue;
+        /* fotoğrafsız gönderim olmaz: raporun gidemeyen fotoğrafı varsa Onaya gönder bekler */
+        if (x.tur === "rapor.gonder" && bellek.some((y) => y.kayit === x.kayit && y.tur === "rapor.foto")) {
+          if (x.ileti !== ILETI.foto_bekliyor) await guncelle(x, { ileti: ILETI.foto_bekliyor });
+          continue;
+        }
+        const girdi = db ? await coz(db, x) : x.girdi;
+        let y: Response;
+        try {
+          y = await fetch("/api/islem", {
+            method: "POST", credentials: "same-origin", cache: "no-store",
+            headers: { "content-type": "application/json", "x-probata-saat": String(Date.now()) },
+            body: JSON.stringify({ id: x.id, tur: x.tur, kayit: x.kayit, yazan: x.yazan, surum: x.surum, girdi, zaman: x.zaman }),
+          });
+        } catch { break dis; }   // ağ yok: sonra
+        if (y.status === 401) { yayinla({ oturum: true }); break dis; }
+        if (y.status === 403 || y.status === 426 || y.status >= 500) break dis;   // köken / eski sürüm / sunucu: sonra (sayfa yenilenince)
+        yayinla({ oturum: false });
+        ilerledi = true;
+        const j = await y.json().catch(() => ({})) as { tekrar?: boolean; sonuc?: Sonuc; guncel?: number | null; saatFarkiDk?: number; hata?: string };
+        if (y.status === 409) {
+          await guncelle(x, { durum: j.hata === "baska_hesap" ? "baska_hesap" : "hata", ileti: ILETI[j.hata ?? ""] ?? "İş gönderilemedi." });
+          continue;
+        }
+        if (!y.ok || !j.sonuc) { await guncelle(x, { durum: "hata", ileti: "İş gönderilemedi (biçim); raporu açıp yeniden kaydedin." }); continue; }
+        if (typeof j.saatFarkiDk === "number") yayinla({ saatFarkiDk: j.saatFarkiDk });
+        const s = j.sonuc;
+        /* 405: yeni rapor açıldı — geçici kimlikle bekleyen işler sunucunun verdiği kimliğe */
+        const yeni = x.tur === "rapor.olustur" && s.durum === "tamam" && typeof s.id === "string" ? s.id : null;
+        if (s.durum === "tamam") {
+          await kuyruktanCikar(x.id);
+          n++;
+          if (yeni) for (const z of bellek) if (z.kayit === x.kayit) await guncelle(z, { kayit: yeni });
+          /* sürüm arttı (fotoğraf, yeni rapor): aynı raporun, önceki sürümden yazılmış bekleyen işleri yeni sürüme */
+          const kayit = yeni ?? x.kayit;
+          if (s.surum) for (const z of bellek) if (z.kayit === kayit && z.durum === "bekliyor" && z.surum === s.surum.once) await guncelle(z, { surum: s.surum.sonra });
+        } else if (s.durum === "cakisma" && x.tur === "rapor.foto") {
+          await guncelle(x, { durum: "hata", ileti: ILETI.foto_cakisma });
+        } else if (s.durum === "eksik") {
+          await guncelle(x, { durum: "eksik", ileti: `Rapor kaydedildi, onaya gönderilmedi: ${s.eksikler?.length ?? 0} zorunlu alan boş.` });
+        } else if (s.durum === "cakisma") {
+          await guncelle(x, { durum: "cakisma", ileti: iletisi(x.tur, "cakisma") ?? null, guncel: typeof j.guncel === "number" ? j.guncel : null });
+        } else {
+          const ilk = s.hatalar ? Object.values(s.hatalar)[0] : undefined;
+          await guncelle(x, { durum: "hata", ileti: s.neden ?? ilk ?? iletisi(x.tur, s.durum) ?? "İş yapılamadı." });
+        }
+        const olay: KuyrukSonucOlayi = { kayit: x.kayit, tur: x.tur as KuyrukTuru, durum: s.durum, ileti: s.durum === "tamam" ? null : x.ileti, eksikler: s.eksikler ?? null, yeni };
+        window.dispatchEvent(new CustomEvent("probata-islem", { detail: olay }));
       }
-      const girdi = db ? await coz(db, x) : x.girdi;
-      let y: Response;
-      try {
-        y = await fetch("/api/islem", {
-          method: "POST", credentials: "same-origin", cache: "no-store",
-          headers: { "content-type": "application/json", "x-probata-saat": String(Date.now()) },
-          body: JSON.stringify({ id: x.id, tur: x.tur, kayit: x.kayit, yazan: x.yazan, surum: x.surum, girdi, zaman: x.zaman }),
-        });
-      } catch { break; }   // ağ yok: sonra
-      if (y.status === 401) { yayinla({ oturum: true }); break; }
-      if (y.status === 403 || y.status === 426 || y.status >= 500) break;   // köken / eski sürüm / sunucu: sonra (sayfa yenilenince)
-      yayinla({ oturum: false });
-      const j = await y.json().catch(() => ({})) as { tekrar?: boolean; sonuc?: Sonuc; guncel?: number | null; saatFarkiDk?: number; hata?: string };
-      if (y.status === 409) {
-        await guncelle(x, { durum: j.hata === "baska_hesap" ? "baska_hesap" : "hata", ileti: ILETI[j.hata ?? ""] ?? "İş gönderilemedi." });
-        continue;
-      }
-      if (!y.ok || !j.sonuc) { await guncelle(x, { durum: "hata", ileti: "İş gönderilemedi (biçim); raporu açıp yeniden kaydedin." }); continue; }
-      if (typeof j.saatFarkiDk === "number") yayinla({ saatFarkiDk: j.saatFarkiDk });
-      const s = j.sonuc;
-      if (s.durum === "tamam") {
-        await kuyruktanCikar(x.id);
-        n++;
-        /* fotoğraf sürümü bir artırdı: aynı raporun, fotoğraftan önceki sürümden yazılmış bekleyen işleri yeni sürüme */
-        if (s.surum) for (const y of bellek) if (y.kayit === x.kayit && y.durum === "bekliyor" && y.surum === s.surum.once) await guncelle(y, { surum: s.surum.sonra });
-      } else if (s.durum === "cakisma" && x.tur === "rapor.foto") {
-        await guncelle(x, { durum: "hata", ileti: ILETI.foto_cakisma });
-      } else if (s.durum === "eksik") {
-        await guncelle(x, { durum: "eksik", ileti: `Rapor kaydedildi, onaya gönderilmedi: ${s.eksikler?.length ?? 0} zorunlu alan boş.` });
-      } else if (s.durum === "cakisma") {
-        await guncelle(x, { durum: "cakisma", ileti: iletisi(x.tur, "cakisma") ?? null, guncel: typeof j.guncel === "number" ? j.guncel : null });
-      } else {
-        const ilk = s.hatalar ? Object.values(s.hatalar)[0] : undefined;
-        await guncelle(x, { durum: "hata", ileti: s.neden ?? ilk ?? iletisi(x.tur, s.durum) ?? "İş yapılamadı." });
-      }
-      const olay: KuyrukSonucOlayi = { kayit: x.kayit, tur: x.tur as KuyrukTuru, durum: s.durum, ileti: s.durum === "tamam" ? null : x.ileti, eksikler: s.eksikler ?? null };
-      window.dispatchEvent(new CustomEvent("probata-islem", { detail: olay }));
     }
   } finally {
     calisiyor = false;

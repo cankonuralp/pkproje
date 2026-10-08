@@ -7,11 +7,14 @@
    (izin sunucuda; plan günü gelmeden kapalı — ENGEL 1, neden plan içinde şeritte); başarıda plan içinde kalınır, bildirim ve Raporlar satırındaki
    "Raporu düzenle" saha rapor ekranını açar (maket rapor-olustur). 360: yöneticiye, hiç kullanılmamış ekipmanda Sil (çöp kutusu simgesi; onay "bütün
    planlardan çıkar, kodu yeniden kullanılabilir. Geri alınamaz.").
+   405 (ARKA-UC §4.1): bağlantı yokken (ya da istek ağda düşerse) Rapor oluştur, cihaza önceden inen yeni rapor sayfasını açar
+   (/raporlar/yeni/<plan>#<ekipman>); bu ekipmana cihazda açılmış, henüz gitmemiş rapor varsa tuş "Cihazdaki rapor".
    Ekipman ekle iki yol: YENİ (kodu personel etiketten yazar; yazarken denetlenir: bu planda var · bu tesiste kayıtlı → "Kayıtlı ekipmanı seç" ·
    başka tesiste · eski kod · kullanılabilir) ya da TESİSTE KAYITLI ekipmanı plana al. Eşsizlik sunucuda ve veritabanında da. */
 import { useRouter } from "next/navigation";
-import { useEffect, useState, useTransition } from "react";
+import { useEffect, useState, useSyncExternalStore, useTransition } from "react";
 import { useBildir } from "../../../components/bildirim/Bildirim";
+import { kuyrukAbone, kuyrukAnlik, kuyrukSunucuAnlik } from "../../../components/cevrimdisi/kuyruk";
 import { Alan, FormIzgara, Girdi, ipucuId } from "../../../components/form/Form";
 import { Ikon } from "../../../components/ikon/Ikon";
 import { KartEtiket, Kirp, type Sutun } from "../../../components/liste/Liste";
@@ -30,6 +33,8 @@ import { ekipmanPasifEylemi, ekipmanSilEylemi, kayitliEkleEylemi, kodDurumuEylem
 import stil from "./planlar.module.css";
 
 const bransAd = (b: "m" | "e") => (b === "m" ? "Mekanik" : "Elektrik");
+/* 405: bağlantı yok mu · istek ağda mı düştü */
+const cevrimdisiMi = () => typeof navigator !== "undefined" && navigator.onLine === false;
 /** plan günü gelmedi şeridinin id'si (PlanIciEkrani çizer; kapalı Rapor oluştur sebebini buradan okur) */
 export const ERKEN_ID = "plan-erken-sebep";
 /** günlük süre doldu şeridi (212): Rapor oluştur kapalı, nedeni bu şerit */
@@ -73,6 +78,11 @@ export function EkipmanBolumu({ v }: { v: PlanIci }) {
   const [ekle, setEkle] = useState<Ekle | null>(null);
   const [kd, setKd] = useState<{ kod: string; tur: KodTuru; metin: string; ekipmanId?: string } | null>(null);
   const planId = v.kart.id;
+  /* 405: bu planda cihazda açılmış (sunucuya gitmemiş) yeni raporların ekipmanları */
+  const kuyruk = useSyncExternalStore(kuyrukAbone, kuyrukAnlik, kuyrukSunucuAnlik);
+  const cihazda = new Set(kuyruk.isler.filter((x) => x.tur === "rapor.olustur" && x.yer?.startsWith(`${planId}|`)).map((x) => x.yer!.split("|")[1]));
+  /* tam sayfa geçişi: bağlantı yokken sayfayı servis çalışanı cihazdan verir */
+  const yeniRapor = (e: PlanEkipmani) => window.location.assign(new URL(`/raporlar/yeni/${planId}#${e.id}`, window.location.origin).href);
 
   /* yazarken kod denetimi: biçim tarayıcıda, eşsizlik sunucuda (300 ms sonra) */
   const kod = ekle?.sekme === "yeni" ? kodNormal(ekle.kod) : "";
@@ -110,8 +120,9 @@ export function EkipmanBolumu({ v }: { v: PlanIci }) {
               onClick={() => pasif(e, true)}><span className="gizli">Pasife al</span></Tus>)}
           {sil && <SilTusu kucuk ikon="trash-2" className={stil.ikonTus} ad={e.kod} baslik="Ekipmanı sil" yanEtki="bütün planlardan çıkar, kodu yeniden kullanılabilir"
             sil={() => ekipmanSilEylemi(planId, e.id)} />}
-          {olustur && (
-            <Tus tur="ikincil" ikon="file-plus" disabled={bekliyor || v.erken || !!v.mesai} aria-label={`${e.kod} için rapor oluştur`}
+          {olustur && (cihazda.has(e.id)
+            ? <Tus tur="ikincil" ikon="file-pen-line" aria-label={`${e.kod} için cihazdaki rapor`} onClick={() => yeniRapor(e)}>Cihazdaki rapor</Tus>
+            : <Tus tur="ikincil" ikon="file-plus" disabled={bekliyor || v.erken || !!v.mesai} aria-label={`${e.kod} için rapor oluştur`}
               aria-describedby={v.erken ? ERKEN_ID : v.mesai ? MESAI_ID : undefined} onClick={() => raporAc(e)}>Rapor oluştur</Tus>
           )}
         </div>
@@ -129,8 +140,14 @@ export function EkipmanBolumu({ v }: { v: PlanIci }) {
 
   /* Rapor oluştur (311): sunucu numarayı verir, ilk rapor planı Denetimde yapar; başarıda saha rapor ekranına geçilir */
   function raporAc(e: PlanEkipmani) {
+    if (cevrimdisiMi()) { yeniRapor(e); return; }
     baslat(async () => {
-      const r = await raporOlusturEylemi(planId, e.id);
+      let r: Awaited<ReturnType<typeof raporOlusturEylemi>>;
+      try { r = await raporOlusturEylemi(planId, e.id); } catch (h) {
+        if (!(h instanceof TypeError) && !cevrimdisiMi()) throw h;
+        yeniRapor(e);
+        return;
+      }
       if (r.tamam) { bildir(r.bildirim ?? "Rapor oluşturuldu."); router.refresh(); return; }
       bildir(r.genel ?? Object.values(r.hatalar ?? {})[0] ?? "Rapor oluşturulamadı.");
       router.refresh();

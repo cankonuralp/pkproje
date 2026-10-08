@@ -5,7 +5,7 @@
    · sonuçlar görünür: tamam → çıkar (ekrana olay) · çakışma (güncel sürümle; "benimkini yaz" YENİ kimlikle güncel sürümden gider) · eksik ·
      başka hesap (sıradaki iş yine denenir);
    · ağ yok / oturum kapalı (401) / sunucu düştü (5xx): durur, iş bekler (sessiz kayıp yok); bilgi amaçlı işler bağlantılı kayıtla kalkar.
-   · 398 fotoğraf: form işinin yerine geçmez; formdan önce gider; sürümü artırınca aynı raporun bekleyen işleri (yalnız kendi fotoğrafıyla
+   · 398 fotoğraf: form işinin yerine geçmez; (405'ten beri işler girdiği sırayla gider); sürümü artırınca aynı raporun bekleyen işleri (yalnız kendi fotoğrafıyla
      değiştiyse) yeni sürüme taşınır; fotoğrafı gidemeyen raporun Onaya gönder'i bekler; fotoğraf çakışması "yeniden dene".
    Uçtan uca (gerçek tarayıcı, bağlantı gerçekten kesilerek): e2e/cevrimdisi.spec.ts. Olumsuz kanıt: tests/bozan/kuyruk.bozan.ts. */
 import assert from "node:assert/strict";
@@ -132,13 +132,15 @@ function sunucu(surumler: Record<string, number>, foto: (g: Istek) => object | n
   };
 }
 
-test("fotoğraf: form işinin yerine geçmez; fotoğraflar formdan ÖNCE gider; fotoğraf sürümü artırınca bekleyen Kaydet yeni sürüme taşınır — arada başkası değiştirdiyse taşınmaz", async () => {
-  await ekle("R1", "rapor.kaydet", 3, { marka: "A" });
+/* 2026-10-08 (405): işler GİRDİĞİ SIRAYLA gider (önce "fotoğraflar formdan önce" idi — kayıtlar arası sıra için değişti: planın kabulü, o plana
+   açılan rapordan önce gitmeli); bu yüzden fotoğraflar kayıttan ÖNCE girilir, sürüm taşıma aynı şekilde sınanır, sonra kayıt-önce sırası */
+test("fotoğraf: form işinin yerine geçmez; işler girdiği sırayla; fotoğraf sürümü artırınca bekleyen Kaydet yeni sürüme taşınır — arada başkası değiştirdiyse taşınmaz", async () => {
   await ekleFoto("R1", 3, "bir.jpg");
   await ekleFoto("R1", 3, "iki.jpg");
+  await ekle("R1", "rapor.kaydet", 3, { marka: "A" });
   const l = K.kuyrukAnlik().isler;
-  assert.deepEqual(l.map((x) => [x.tur, x.yer]), [["rapor.kaydet", null], ["rapor.foto", "foto|"], ["rapor.foto", "foto|"]], "fotoğraf eklenir, kaydın yerine geçmez");
-  /* bağlantı geldi: önce iki fotoğraf, sonra kayıt — bekleyenler, sürüm yalnız kendi fotoğraflarıyla değiştiği için taşınır: kayıt 5'ten gider ve geçer */
+  assert.deepEqual(l.map((x) => [x.tur, x.yer]), [["rapor.foto", "foto|"], ["rapor.foto", "foto|"], ["rapor.kaydet", null]], "fotoğraf eklenir, kaydın yerine geçmez");
+  /* bağlantı geldi: iki fotoğraf, sonra kayıt — bekleyenler, sürüm yalnız kendi fotoğraflarıyla değiştiği için taşınır: kayıt 5'ten gider ve geçer */
   istekler = [];
   const s = { R1: 3 };
   cevap = sunucu(s);
@@ -148,12 +150,22 @@ test("fotoğraf: form işinin yerine geçmez; fotoğraflar formdan ÖNCE gider; 
   assert.equal(K.kuyrukAnlik().isler.length, 0);
   /* rapor bu arada başka yerde değişti (sunucuda 4): fotoğraf yine eklenir; kayıt taşınmaz, çakışma görünür (sessiz ezme yok) */
   agYok();
-  await ekle("R2", "rapor.kaydet", 3, { marka: "B" });
   await ekleFoto("R2", 3);
+  await ekle("R2", "rapor.kaydet", 3, { marka: "B" });
   istekler = [];
   cevap = sunucu({ R2: 4 });
   await K.kuyrukGonder();
   assert.deepEqual(istekler.map((g) => [g.tur, g.surum]), [["rapor.foto", 3], ["rapor.kaydet", 3]]);
+  /* kayıt fotoğraftan ÖNCE girildiyse önce o gider (sürümü tutar), fotoğraf ardından raporun o anki sürümüne eklenir */
+  agYok();
+  await ekle("R3", "rapor.kaydet", 7, { marka: "C" });
+  await ekleFoto("R3", 7);
+  istekler = [];
+  const s3 = { R3: 7 };
+  cevap = sunucu(s3);
+  assert.equal(await K.kuyrukGonder(), 2);
+  assert.deepEqual(istekler.map((g) => [g.tur, g.surum]), [["rapor.kaydet", 7], ["rapor.foto", 7]]);
+  assert.equal(s3.R3, 9);
   assert.deepEqual(K.kuyrukAnlik().isler.map((x) => [x.tur, x.durum]), [["rapor.kaydet", "cakisma"]]);
 });
 
@@ -224,4 +236,44 @@ test("404 bekleyen içerik: kaydın sunucuya yazılmamış son form içeriği (b
   cevap = () => json({ tekrar: false, sonuc: { durum: "cakisma" }, guncel: 5 });
   await K.kuyrukGonder();
   assert.deepEqual(await K.bekleyenIcerik("R9"), { girdi: { ekipman: { marka: "Cihazda" } }, durum: "cakisma", tur: "rapor.gonder" });
+});
+
+test("405 yeni rapor: tek açılış işi; işleri rapor açılmadan gitmez; aynı planın kabulü bekliyorsa rapor ondan sonra; açılınca gerçek kimliğe bağlanır, sürüm taşınır", async () => {
+  const GECICI = "11111111-1111-4111-8111-111111111111", PLAN = "22222222-2222-4222-8222-222222222222", EKP = "33333333-3333-4333-8333-333333333333";
+  const GERCEK = "44444444-4444-4444-8444-444444444444", yer = `${PLAN}|${EKP}`;
+  const yeniler: (string | null)[] = [];
+  const dinle = (e: Event) => { yeniler.push((e as CustomEvent<{ yeni: string | null }>).detail.yeni); };
+  (globalThis as unknown as { window: EventTarget }).window.addEventListener("probata-islem", dinle);
+  await K.kuyrugaEkle({ tur: "plan.kabul", kayit: PLAN, surum: 2, girdi: { beyanOnay: true, beyanOzet: "x" }, ad: "Plan kabulü" }); await sakin();
+  for (let i = 0; i < 2; i++) { await K.kuyrugaEkle({ tur: "rapor.olustur", kayit: GECICI, surum: 0, girdi: { plan: PLAN, ekipman: EKP }, ad: "Yeni rapor", yer }); await sakin(); }
+  await ekleFoto(GECICI, 0);
+  await ekle(GECICI, "rapor.kaydet", 0, { ekipman: { marka: "Yeni" } });
+  assert.deepEqual(K.kuyrukAnlik().isler.map((x) => x.tur), ["plan.kabul", "rapor.olustur", "rapor.foto", "rapor.kaydet"], "açılış işi bir kez");
+  /* planın kabulü gidemedi (çakışma): rapor açılmaz, işleri de gitmez */
+  istekler = [];
+  cevap = (g) => json(g.tur === "plan.kabul" ? { tekrar: false, sonuc: { durum: "cakisma" }, guncel: 3 } : { tekrar: false, sonuc: { durum: "tamam", id: GERCEK, bildirim: "x" } });
+  await K.kuyrukGonder();
+  assert.deepEqual(istekler.map((g) => g.tur), ["plan.kabul"]);
+  /* rapor açılamadı (plan günü): işleri bekler, gitmez */
+  await K.kuyruktanCikar(K.kuyrukAnlik().isler[0].id);
+  istekler = [];
+  cevap = () => json({ tekrar: false, sonuc: { durum: "red", neden: "Plan günü henüz gelmedi." } });
+  await K.kuyrukGonder();
+  assert.deepEqual(istekler.map((g) => g.tur), ["rapor.olustur"]);
+  assert.deepEqual(K.kuyrukAnlik().isler.map((x) => [x.tur, x.durum]), [["rapor.olustur", "hata"], ["rapor.foto", "bekliyor"], ["rapor.kaydet", "bekliyor"]]);
+  /* yeniden denendi, açıldı: fotoğraf ve kayıt sunucunun verdiği kimlikle, kayıt fotoğrafın artırdığı sürümden */
+  let surum = 0;
+  cevap = (g) => {
+    if (g.tur === "rapor.olustur") return json({ tekrar: false, sonuc: { durum: "tamam", id: GERCEK, bildirim: "x", surum: { once: 0, sonra: 0 } } });
+    if (g.tur === "rapor.foto") { const once = surum++; return json({ tekrar: false, sonuc: { durum: "tamam", id: GERCEK, bildirim: "x", surum: { once, sonra: surum } } }); }
+    return g.surum === surum ? (surum++, json({ tekrar: false, sonuc: { durum: "tamam", id: GERCEK, bildirim: "x" } })) : json({ tekrar: false, sonuc: { durum: "cakisma" }, guncel: surum });
+  };
+  istekler = [];
+  yeniler.length = 0;
+  await K.yenidenDene(K.kuyrukAnlik().isler[0].id);
+  await sakin();
+  assert.deepEqual(istekler.map((g) => [g.tur, g.kayit, g.surum]), [["rapor.olustur", GECICI, 0], ["rapor.foto", GERCEK, 0], ["rapor.kaydet", GERCEK, 1]]);
+  assert.equal(K.kuyrukAnlik().isler.length, 0);
+  assert.equal(yeniler[0], GERCEK, "olay yeni kimliği taşır");
+  (globalThis as unknown as { window: EventTarget }).window.removeEventListener("probata-islem", dinle);
 });

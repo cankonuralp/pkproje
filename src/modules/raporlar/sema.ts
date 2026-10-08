@@ -3,7 +3,7 @@
    ekipman bilgileri (elle; ekipman kaydından başlar), (2) türün format tanımından gelen bölümler — cevaplar kimliklerle (format/tanim.ts Cevaplar).
    Cihaz ve fotoğraf sayısı istemciden alınmaz, sunucu raporun kendi listesinden sayar. */
 import { Cevaplar } from "../../format/tanim.ts";
-import { tarih, zaman, z } from "../../sema/ortak.ts";
+import { kimlik, tarih, zaman, z } from "../../sema/ortak.ts";
 
 /** durum kodları sabit tanımlarla aynı (src/tanim/veri.ts durumlar.rapor; göç 0025): ad ve rozet */
 export const RAPOR_DURUM = {
@@ -77,3 +77,7 @@ export const FotoIslemGirdisi = z.object({
   bolum: z.string().min(1).max(64), madde: z.string().min(1).max(64).nullable(), ad: z.string().min(1).max(200),
   veri: z.string().min(4).max(Math.ceil(FOTO_KUYRUK_EN_BUYUK / 3) * 4).regex(/^[A-Za-z0-9+/]+={0,2}$/),
 });
+
+/* ── BAĞLANTISIZ YENİ RAPOR (405) ── kuyruktaki "rapor.olustur": hangi planda hangi ekipmana (kayıt = cihazın geçici kimliği; gerçek kimliği ve
+   numarayı sunucu verir) */
+export const OlusturIslemGirdisi = z.object({ plan: kimlik, ekipman: kimlik });

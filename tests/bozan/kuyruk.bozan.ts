@@ -5,7 +5,8 @@
    2) oturum kapandığında (401) durmazsa iş "yapılamadı"ya düşer — giriş yapınca gitmesi gereken iş takılı kalır;
    3) 398: "fotoğrafsız gönderim olmaz" kalkınca raporun fotoğrafı gidemediği hâlde Onaya gönder gider;
    4) 398: fotoğraftan sonra bekleyen işin sürümü taşınmazsa Kaydet kendi fotoğrafıyla sahte çakışmaya düşer;
-   5) 404: bekleyen içerik "eksik" işi de sayarsa sunucunun kaydettiği hâlin yerine cihazdaki kopya gösterilir. */
+   5) 404: bekleyen içerik "eksik" işi de sayarsa sunucunun kaydettiği hâlin yerine cihazdaki kopya gösterilir;
+   6) 405: "yeni raporun işleri rapor açılmadan gitmez" kalkınca kayıt cihazın geçici kimliğiyle gider (sunucuda böyle rapor yok — iş düşer). */
 import assert from "node:assert/strict";
 import { mkdtempSync, readFileSync, rmSync, writeFileSync } from "node:fs";
 import { tmpdir } from "node:os";
@@ -47,7 +48,7 @@ test("1) tek bekleyen iş kuralı kalkınca aynı raporun ikinci işi kendi kend
 });
 
 test("2) oturum kapandığında durmazsa iş 'yapılamadı'ya düşer (giriş yapınca gitmez)", async () => {
-  const K = await bozuk("  if (y.status === 401) { yayinla({ oturum: true }); break; }\n", "  if (y.status === 401) { yayinla({ oturum: true }); }\n");
+  const K = await bozuk("        if (y.status === 401) { yayinla({ oturum: true }); break dis; }\n", "        if (y.status === 401) { yayinla({ oturum: true }); }\n");
   K.kuyrukYazani("etiketDeneme00000000000");
   cevap = () => { throw new TypeError("Failed to fetch"); };
   await K.kuyrugaEkle({ tur: "rapor.kaydet", kayit: "R9", surum: 1, girdi: {}, ad: "R9" });
@@ -60,7 +61,7 @@ test("2) oturum kapandığında durmazsa iş 'yapılamadı'ya düşer (giriş ya
 const agYok = () => { cevap = () => { throw new TypeError("Failed to fetch"); }; };
 
 test("3) 'fotoğrafsız gönderim olmaz' kalkınca fotoğrafı gidemeyen raporun Onaya gönder'i gider", async () => {
-  const K = await bozuk("      if (x.tur === \"rapor.gonder\" && bellek.some((y) => y.kayit === x.kayit && y.tur === \"rapor.foto\")) {\n", "      if (x.tur === \"yok\") {\n");
+  const K = await bozuk("        if (x.tur === \"rapor.gonder\" && bellek.some((y) => y.kayit === x.kayit && y.tur === \"rapor.foto\")) {\n", "        if (x.tur === \"yok\") {\n");
   K.kuyrukYazani("etiketDeneme00000000000");
   agYok();
   await K.kuyrugaEkle({ tur: "rapor.gonder", kayit: "R5", surum: 2, girdi: {}, ad: "R5" }); await sakin(K);
@@ -68,15 +69,16 @@ test("3) 'fotoğrafsız gönderim olmaz' kalkınca fotoğrafı gidemeyen raporun
   const giden: string[] = [];
   cevap = (g) => { giden.push(g.tur); return g.tur === "rapor.foto" ? json({ sonuc: { durum: "gecersiz", hatalar: { foto: "En çok 3 fotoğraf." } } }) : json({ sonuc: { durum: "tamam", id: "R5", bildirim: "x" } }); };
   await K.kuyrukGonder();
-  assert.deepEqual(giden, ["rapor.foto", "rapor.gonder"], "bozuk: fotoğrafı gitmeyen rapor onaya gitti");
+  assert.ok(giden.includes("rapor.gonder"), "bozuk: fotoğrafı gitmeyen rapor onaya gitti");
 });
 
 test("4) fotoğraftan sonra bekleyen işin sürümü taşınmazsa Kaydet kendi fotoğrafıyla sahte çakışmaya düşer", async () => {
-  const K = await bozuk("        if (s.surum) for (const y of bellek) if (y.kayit === x.kayit && y.durum === \"bekliyor\" && y.surum === s.surum.once) await guncelle(y, { surum: s.surum.sonra });\n", "");
+  const K = await bozuk("          if (s.surum) for (const z of bellek) if (z.kayit === kayit && z.durum === \"bekliyor\" && z.surum === s.surum.once) await guncelle(z, { surum: s.surum.sonra });\n", "");
   K.kuyrukYazani("etiketDeneme00000000000");
   agYok();
-  await K.kuyrugaEkle({ tur: "rapor.kaydet", kayit: "R6", surum: 3, girdi: {}, ad: "R6" }); await sakin(K);
+  /* fotoğraf kayıttan önce girildi (işler girdiği sırayla gider — 405) */
   await K.kuyrugaEkle({ tur: "rapor.foto", kayit: "R6", surum: 3, girdi: {}, ad: "F", yer: "foto|" }); await sakin(K);
+  await K.kuyrugaEkle({ tur: "rapor.kaydet", kayit: "R6", surum: 3, girdi: {}, ad: "R6" }); await sakin(K);
   let surum = 3;
   cevap = (g) => (g.tur === "rapor.foto" ? (surum++, json({ sonuc: { durum: "tamam", id: "R6", bildirim: "x", surum: { once: surum - 1, sonra: surum } } }))
     : g.surum === surum ? json({ sonuc: { durum: "tamam", id: "R6", bildirim: "x" } }) : json({ sonuc: { durum: "cakisma" }, guncel: surum }));
@@ -92,4 +94,18 @@ test("5) 404: bekleyen içerik 'eksik' işi de sayarsa sunucunun zaten kaydetti�
   cevap = () => json({ sonuc: { durum: "eksik", eksikler: [{ bolum: "b", alan: "a", ad: "A" }] } });
   await K.kuyrukGonder();
   assert.notEqual(await K.bekleyenIcerik("R10"), null, "bozuk: sunucuya yazılmış kayıt cihazdan yeniden gösterildi");
+});
+
+test("6) 405: yeni raporun işleri açılış beklemeden giderse geçici kimlikle gider (sunucuda böyle rapor yok)", async () => {
+  const K = await bozuk('        if (x.tur !== "rapor.olustur" && bellek.some((y) => y.tur === "rapor.olustur" && y.kayit === x.kayit)) continue;\n', "");
+  K.kuyrukYazani("etiketDeneme00000000000");
+  agYok();
+  const GECICI = "11111111-1111-4111-8111-111111111111";
+  await K.kuyrugaEkle({ tur: "rapor.olustur", kayit: GECICI, surum: 0, girdi: {}, ad: "Yeni", yer: "p|e" }); await sakin(K);
+  await K.kuyrugaEkle({ tur: "rapor.kaydet", kayit: GECICI, surum: 0, girdi: {}, ad: "Kayıt" }); await sakin(K);
+  const giden: { tur: string; kayit: string }[] = [];
+  /* sunucu raporu açmakta geç kalır (önce açılış düşer): bozukta kayıt yine gider */
+  cevap = (g) => { giden.push({ tur: (g as unknown as { tur: string }).tur, kayit: g.kayit }); return json({ sonuc: { durum: "red", neden: "Plan günü gelmedi." } }); };
+  await K.kuyrukGonder();
+  assert.ok(giden.some((x) => x.tur === "rapor.kaydet" && x.kayit === GECICI), "bozuk: kayıt rapor açılmadan geçici kimlikle gitti");
 });

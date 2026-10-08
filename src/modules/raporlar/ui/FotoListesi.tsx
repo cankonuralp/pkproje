@@ -5,7 +5,8 @@
    tür, boyut, EXIF silme ve yetki sunucuda. Yazma üst ekranın işleminde (SahaRaporu: o sürerken Kaydet / Onaya gönder kapalı).
    398 (ARKA-UC §4.1 "fotoğraf çekme" çevrimdışı çalışır): bağlantı yoksa, istek ağda düşerse ya da bu raporun cihazda bekleyen işi varsa (sıra
    korunur) fotoğraf cihaz kuyruğuna şifreli yazılır, bağlantı gelince rapordan önce gider; listede kendi yerinde "Gönderilmedi" olarak görünür,
-   kullanıcı kaldırabilir. Kuyruğa en çok 2 MB (küçültülmüş hâli). */
+   kullanıcı kaldırabilir. Kuyruğa en çok 2 MB (küçültülmüş hâli). 405: bağlantısız açılan YENİ raporda (yeniAc) fotoğraf hep kuyruğa; önce raporun
+   açılış işi yazılır. */
 import { useRef, useSyncExternalStore, type TransitionStartFunction } from "react";
 import { useBildir } from "../../../components/bildirim/Bildirim";
 import { kuyrugaEkle, kuyrukAbone, kuyrukAnlik, kuyrukGonder, kuyrukSunucuAnlik, kuyruktanCikar } from "../../../components/cevrimdisi/kuyruk";
@@ -31,9 +32,11 @@ const metneCevir = (d: Blob) => new Promise<string>((coz, red) => {
 /** kuyruktaki işin adından fotoğrafın adı ("Fotoğraf · <rapor no> · <ad>") */
 const fotoAdi = (ad: string) => ad.split(" · ").slice(2).join(" · ") || ad;
 
-export function FotoListesi({ v, bolumId, madde, oku, gecersiz, mesgul, baslat, yenile }: {
+export function FotoListesi({ v, bolumId, madde, oku, gecersiz, mesgul, baslat, yenile, yeniAc }: {
   v: SahaRaporu; bolumId: string; madde: string | null; oku: boolean; gecersiz: boolean; mesgul: boolean;
   baslat: TransitionStartFunction; yenile: () => void;
+  /** 405: yeni rapor — açılış işini kuyruğa yazar (fotoğraf hep kuyruğa) */
+  yeniAc?: () => Promise<void>;
 }) {
   const bildir = useBildir();
   const onayla = useOnayla();
@@ -47,6 +50,7 @@ export function FotoListesi({ v, bolumId, madde, oku, gecersiz, mesgul, baslat, 
 
   const kuyruga = async (d: File) => {
     if (d.size > FOTO_KUYRUK_EN_BUYUK) { bildir("Fotoğraf bağlantısız eklenemeyecek kadar büyük (en çok 2 MB); bağlantı gelince ekleyin."); return; }
+    await yeniAc?.();
     await kuyrugaEkle({ tur: "rapor.foto", kayit: v.id, surum: v.surum, girdi: { bolum: bolumId, madde, ad: d.name, veri: await metneCevir(d) },
       ad: `Fotoğraf · ${v.no} · ${d.name}`, yer });
     bildir(cevrimdisiMi() ? "Fotoğraf cihaza kaydedildi; bağlantı gelince gönderilecek." : "Fotoğraf gönderiliyor…");
@@ -54,7 +58,7 @@ export function FotoListesi({ v, bolumId, madde, oku, gecersiz, mesgul, baslat, 
   const yukle = (dosya: File) => baslat(async () => {
     const kucuk = await fotografiKucult(dosya);
     if (girdi.current) girdi.current.value = "";
-    if (cevrimdisiMi() || raporBekliyor) { await kuyruga(kucuk); return; }
+    if (yeniAc || cevrimdisiMi() || raporBekliyor) { await kuyruga(kucuk); return; }
     const f = new FormData();
     f.set("id", v.id); f.set("surum", String(v.surum)); f.set("bolum", bolumId); if (madde) f.set("madde", madde);
     f.set("dosya", kucuk);

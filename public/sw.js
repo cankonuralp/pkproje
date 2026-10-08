@@ -18,7 +18,7 @@ const SAYFALAR = "sayfalar";
 const DURUM = "durum";
 const STATIK = "probata-statik-1";
 /** bağlantısız açılabilen sayfalar (sorgu dizgisi olmadan) */
-const SAYFA_YOLLARI = [/^\/$/, /^\/planlar$/, /^\/planlar\/[0-9a-f-]{36}$/, /^\/raporlar\/[0-9a-f-]{36}$/];
+const SAYFA_YOLLARI = [/^\/$/, /^\/planlar$/, /^\/planlar\/[0-9a-f-]{36}$/, /^\/raporlar\/[0-9a-f-]{36}$/, /^\/raporlar\/yeni\/[0-9a-f-]{36}$/];
 const SAKLANAN_BASLIKLAR = ["content-type", "content-security-policy", "x-content-type-options", "referrer-policy", "x-frame-options"];
 
 self.addEventListener("install", () => { self.skipWaiting(); });

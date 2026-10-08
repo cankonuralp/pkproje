@@ -58,7 +58,8 @@ async function onceIndir(paket: PaketEylemi): Promise<void> {
     if (!hazirCalisan) return;
     const p = await paket();
     if (!p) return;
-    for (const a of ["/planlar", ...p.planlar.map((x) => `/planlar/${x.id}`), ...p.raporlar.map((x) => `/raporlar/${x.id}`)]) {
+    /* 405: plan başına yeni rapor sayfası da (bağlantısız rapor açılabilsin) */
+    for (const a of ["/planlar", ...p.planlar.flatMap((x) => [`/planlar/${x.id}`, `/raporlar/yeni/${x.id}`]), ...p.raporlar.map((x) => `/raporlar/${x.id}`)]) {
       if (!bagliMi()) return;
       /* gövde sonuna kadar okunur: servis çalışanı kopyasını sayfa tam gelince saklar */
       await fetch(a, { headers: { "x-probata-onindirme": "1", accept: "text/html" }, credentials: "same-origin", cache: "no-store" })
@@ -171,9 +172,11 @@ function KuyrukPenceresi({ acik, kapat, cevrimdisi }: { acik: boolean; kapat: ()
                       <Tus tur="ikincil" onClick={() => void kaldir(x, true, { baslik: "Sunucudaki kullanılsın mı?",
                         metin: `${x.ad}: bu cihazda yazdıklarınız silinir, raporun sunucudaki hâli kalır; geri alınamaz.`, tus: "Sunucudakini kullan" })}>Sunucudakini kullan</Tus>
                     </>}
-                    {(x.durum === "baska_hesap" || (x.durum === "hata" && x.tur === "rapor.foto")) && <Tus tur="ikincil" onClick={() => void yenidenDene(x.id)}>Yeniden dene</Tus>}
-                    {(x.durum === "eksik" || x.durum === "hata" || x.durum === "cakisma") && x.tur.startsWith("rapor.") &&
+                    {(x.durum === "baska_hesap" || (x.durum === "hata" && (x.tur === "rapor.foto" || x.tur === "rapor.olustur"))) && <Tus tur="ikincil" onClick={() => void yenidenDene(x.id)}>Yeniden dene</Tus>}
+                    {(x.durum === "eksik" || x.durum === "hata" || x.durum === "cakisma") && x.tur.startsWith("rapor.") && x.tur !== "rapor.olustur" &&
                       <Link className={stil.baglanti} href={`/raporlar/${x.kayit}`} onClick={kapat}>Raporu aç</Link>}
+                    {x.durum === "hata" && x.tur === "rapor.olustur" && x.yer &&
+                      <Link className={stil.baglanti} href={`/planlar/${x.yer.split("|")[0]}`} onClick={kapat}>Planı aç</Link>}
                     {(x.durum === "hata" || x.durum === "cakisma") && x.tur.startsWith("plan.") &&
                       <Link className={stil.baglanti} href={`/planlar/${x.kayit}`} onClick={kapat}>Planı aç</Link>}
                     {x.durum !== "cakisma" && <Tus tur="ikincil" onClick={() => void kaldir(x, x.durum !== "eksik")}>Listeden kaldır</Tus>}

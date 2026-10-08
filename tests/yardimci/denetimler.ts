@@ -323,7 +323,7 @@ export function swEksikleri(sw: string, depo: string, proxy: string): string[] {
   if (!ifadeler.length) eksik.push("SAYFA_YOLLARI okunamadı");
   const kimlik = "0f8c2b9e-1d2a-4c3b-9e8f-7a6b5c4d3e2f";
   const eslesir = (y: string) => ifadeler.some((x) => x.test(y));
-  for (const y of ["/", "/planlar", `/planlar/${kimlik}`, `/raporlar/${kimlik}`]) if (!eslesir(y)) eksik.push(`saha sayfası saklanmıyor: ${y}`);
+  for (const y of ["/", "/planlar", `/planlar/${kimlik}`, `/raporlar/${kimlik}`, `/raporlar/yeni/${kimlik}`]) if (!eslesir(y)) eksik.push(`saha sayfası saklanmıyor: ${y}`);
   for (const y of ["/api/islem", `/api/dosya/${kimlik}`, "/giris", "/portal", `/portal/r/${kimlik}`, "/yonetim", "/yonetim/giris", `/raporlar/${kimlik}/pdf`, "/muhasebe"]) {
     if (eslesir(y)) eksik.push(`saklanmaması gereken yol saklanıyor: ${y}`);
   }

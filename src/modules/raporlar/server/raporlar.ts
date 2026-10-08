@@ -28,7 +28,7 @@ import { turRaporBilgisi } from "../../ekipman-turleri/server/turler.ts";
 import { tesisMusteriIletisim } from "../../musteriler/server/musteriler.ts";
 import { raporCihazlari } from "../../olcum-cihazlari/server/cihazlar.ts";
 import { personelOzetleri } from "../../personel/server/personel.ts";
-import { denetimeBasla, ekipmanEklenebilir, kodDurumu, kunyeGuncelle, plandakiEkipman, raporIcinPlan, yeniEkipman, type Kunye, type RaporPlani } from "../../planlar/server/plan-ici.ts";
+import { denetimeBasla, ekipmanEklenebilir, kodDurumu, kunyeGuncelle, plandakiEkipman, plandakiEkipmanlar, raporIcinPlan, yeniEkipman, type Kunye, type RaporPlani } from "../../planlar/server/plan-ici.ts";
 import { formatSurumuOku, yayindakiFormat } from "../../rapor-format/server/formatlar.ts";
 import { kimdeHaritasi } from "../../zimmetler/server/zimmet.ts";
 import { roldekiHesapAdlari } from "../../../server/kimlik/hesap.ts";
@@ -341,6 +341,62 @@ export async function sahaRaporu(db: Sorgulayici, kim: Kisi, id: string): Promis
     imzali: r.durum === "imzali" ? await imzaliSurum(db, r.id, r.revizyon) : null,
     izin: { duzenle, sil: r.durum === "taslak" && r.revizyon === 0 && canDoEylem(kim, "rapor_sil", { sahip: r.hesap_id, durum: "Yeni", brans: tur.brans }), kopyala },
     yz: duzenle ? await yzHazirMi(db) : false,
+  };
+}
+
+/* ── BAĞLANTISIZ YENİ RAPOR (405; ARKA-UC §4.1 "rapor oluşturma (plan günü geldiyse — P1)" çevrimdışı çalışır) ─────────────────────────────
+   Bağlantı varken plan başına bir sayfa önceden iner (/raporlar/yeni/<plan>): planın raporu olmayan etkin ekipmanları, türlerinin yayındaki
+   formatı ve ilk cevapları, künye ve yazan. Bağlantı yokken "Rapor oluştur" bu sayfayı açar; rapor CİHAZDA geçici kimlikle doldurulur, ilk
+   kayıtta "rapor.olustur" işi kuyruğa girer. Bağlantı gelince sunucu raporu raporOlustur ile AÇAR (numara ve kimlik sunucuda; plan günü, süre,
+   yetki aynen denetlenir), cihaz bekleyen işleri gerçek kimliğe bağlar. Burada hiçbir şey yazılmaz. */
+const YENI_EKIPMAN_EN_COK = 200;
+export interface YeniRaporPaketi {
+  plan: SahaRaporu["plan"]; yazan: SahaRaporu["yazan"]; kunye: SahaRaporu["kunye"]; bugun: string;
+  /** rapor açılamıyorsa nedeni (plan kabul edilmemiş, plan günü gelmemiş, günlük süre dolmuş) — ekran söyler, kuyruğa iş yazılmaz */
+  neden: string | null;
+  ekipmanlar: { id: string; kod: string; turId: string; ekipmanBilgi: EkipmanBilgisi; onceki: SahaRaporu["ekipman"]["onceki"] }[];
+  turler: Record<string, { tur: SahaRaporu["tur"]; tanim: FormatTanimi; formatSira: number; ilk: Cevaplar; cihazlar: CihazSatiri[] }>;
+}
+/** planın bağlantısız yeni rapor paketi; rapor açamayan (ekipte değil, yetkisiz) ya da planı göremeyene null */
+export async function yeniRaporPaketi(db: Sorgulayici, kim: Kisi, planId: string): Promise<YeniRaporPaketi | null> {
+  if (duzey(kim, MODUL) === "yok") return null;
+  const plan = await raporIcinPlan(db, kim, planId);
+  if (!plan || !plan.personelId || !canDoEylem(kim, "rapor_olustur", { atananlar: plan.atananlar })) return null;
+  const bugun = bugunTr();
+  const neden = plan.durum !== "kabul" && plan.durum !== "denetimde" && plan.durum !== "tamamlandi" ? "Rapor yalnız kabul edilmiş planda oluşturulur."
+    : plan.baslangic > bugun ? `Plan günü ${tarihNo(plan.baslangic)} henüz gelmedi (bugün ${tarihNo(bugun)}). Rapor plan gününden itibaren oluşturulur.`
+    : (await mesaiDurumu(db, plan.personelId, bugun)).dolu ? MESAI_DOLU : null;
+  const raporlu = new Set((await db.sorgu<{ ekipman_id: string }>("SELECT ekipman_id::text FROM rapor WHERE plan_id = $1 AND silindi IS NULL", [plan.id])).rows.map((x) => x.ekipman_id));
+  const ekipmanlar: YeniRaporPaketi["ekipmanlar"] = [];
+  const turler: YeniRaporPaketi["turler"] = {};
+  const tumu = await raporCihazlari(db, { pasifDahil: true });
+  const turAdi = new Map(tumu.map((c) => [c.turId, c.tur]));
+  for (const id of (await plandakiEkipmanlar(db, plan.id)).filter((x) => !raporlu.has(x))) {
+    if (ekipmanlar.length >= YENI_EKIPMAN_EN_COK) break;
+    const e = await ekipmanEtiketi(db, id);
+    if (!e || e.pasif) continue;
+    if (!turler[e.turId]) {
+      const tur = await turRaporBilgisi(db, e.turId), format = tur ? await yayindakiFormat(db, tur.id) : null;
+      if (!tur || !format) continue;
+      turler[e.turId] = {
+        tur: { id: tur.id, ad: tur.ad, kod: tur.kod, brans: tur.brans, kontrolStd: tur.kontrolStd, periyot: tur.periyot },
+        tanim: format.tanim, formatSira: format.sira, ilk: ilkCevaplar(format.tanim),
+        cihazlar: tur.cihazTurleri.map((turId) => ({ turId, turAd: turAdi.get(turId) ?? "Ölçüm cihazı", cihaz: null })),
+      };
+    }
+    ekipmanlar.push({
+      id: e.id, kod: e.kod, turId: e.turId,
+      ekipmanBilgi: { marka: e.marka, model: e.model, seri: e.seri, imal: e.imal ? String(e.imal) : null, konum: e.konum, amac: null, bolum: null },
+      onceki: e.disKontrol ? { tarih: e.disKontrol, sonuc: e.disSonuc } : null,
+    });
+  }
+  const yazan = (await personelOzetleri(db, [plan.personelId]))[0];
+  const iletisim = await tesisMusteriIletisim(db, plan.tesisId);
+  return {
+    plan: { id: plan.id, no: plan.no, tesisAd: iletisim?.tesisAd ?? "—", musteriKisa: iletisim?.kisa ?? "—" },
+    yazan: { ad: yazan?.ad ?? "—", meslek: yazan?.meslek ?? "diger", meslekMetin: yazan?.meslekMetin ?? null, ekipnet: yazan?.ekipnet ?? null },
+    kunye: { firmaAdi: plan.kunye.firma_adi, adres: plan.kunye.adres, sgk: plan.kunye.sgk, isgNo: plan.kunye.isg_no, eposta: iletisim?.eposta ?? null, tel: iletisim?.tel ?? null },
+    bugun, neden, ekipmanlar, turler,
   };
 }
 

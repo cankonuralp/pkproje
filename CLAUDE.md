@@ -188,6 +188,10 @@ pkproje/
                             formdan önce gider, fotoğrafı gidemeyen raporun Onaya gönder'i bekler; sürüm kendi fotoğrafıyla değiştiyse bekleyenler taşınır
                             · PLAN KABUL / RED (400): plan.kabul, plan.red → planlar/server/islem-baglanti.ts (beyan onayı + okunan metnin özeti şart);
                             ekranda planlar/ui/PlanIciEkrani.tsx; önceden indirme kabul bekleyen planları da indirir
+                            · 402–404: servis çalışanı + önceden indirme yalnız sahada çalışana (düzen SAHA_ROLLERI); rapor ekranı cihazda bekleyen kaydı
+                            gösterir (kuyruk.ts bekleyenIcerik — sessiz veri kaybı önlemi)
+                            · YENİ RAPOR (405): /raporlar/yeni/<plan>#<ekipman> (raporlar/ui/YeniRaporEkrani.tsx; sunucu yeniRaporPaketi, yazmaz) ·
+                            SahaRaporu "yeni" kipi · rapor.olustur (islem-baglanti) — kimlik ve numara sunucuda; kuyruk işleri girdiği sırayla, bağımlılıklar beklenir
   src/components/grafik/    TEK GRAFİK ÜRETİCİSİ (329): dikey sütun (maket T9), etiket ölçülerek, gizli tablo (ekran okuyucu)
   src/modules/yonetim/      probata YÖNETİM (2026-10-06, 348; KOD-GECIS Y1): firmalar, firma aç (ilk yönetici + geçici parola), dondur / etkinleştir,
                             yeni geçici parola — server/yonetim.ts yalnız 0050 işlevleriyle (yönetim rolü); sema.ts (ayrılmış adlar göçle aynı) · ui/ ·

@@ -9,7 +9,9 @@
    · 398: fotoğraf bağlantısızken cihaza (şifreli) — listede kendi yerinde "Gönderilmedi", üst çubukta "1 fotoğraf"; bağlantı gelince gider, raporun
      listesine düşer (Görüntüle);
    · Onaya gönder bağlantısızken: rapor salt okunur, "Gönderilmedi · bağlantı bekleniyor"; bağlantı gelince gider (eksikse alanlar işaretlenir);
-   · 400: plan kabulü bağlantısızken cihaza — plan içinde "Kabulünüz bu cihazda bekliyor", tuşlar kalkar; bağlantı gelince gider, plan kabul edilir. */
+   · 400: plan kabulü bağlantısızken cihaza — plan içinde "Kabulünüz bu cihazda bekliyor", tuşlar kalkar; bağlantı gelince gider, plan kabul edilir;
+   · 405: yeni rapor bağlantısızken — plandaki "Rapor oluştur" cihaza önceden inen sayfayı açar, rapor doldurulup kaydedilir; bağlantı gelince
+     sunucuda açılır (numara sunucudan), ekran raporun kendi sayfasına geçer, yazılan gelir. */
 import { expect, test, type ConsoleMessage, type Page, type Request } from "@playwright/test";
 import { E2E_KAPI, E2E_PAROLA, E2E_YZ } from "./hesaplar";
 import { hazir } from "./yardimci";
@@ -65,7 +67,7 @@ async function raporuAc(page: Page, kod: string): Promise<string> {
 }
 
 test("çevrimdışı: bağlantı kes → Kaydet cihaza → bağlantı gelince gider; çakışma ezmez, 'Benimkini yaz'; Onaya gönder bekler", async ({ page, browser }, bilgi) => {
-  test.setTimeout(180_000);
+  test.setTimeout(300_000);
   /* tarayıcının hata iletileri deneme kaydına (düşerse nedeni görünsün; bağlantısızken beklenen ağ hataları da yazılır) */
   page.on("console", (m) => { if (m.type() === "error") console.log(`[tarayıcı hatası · ${bilgi.project.name}] ${m.text().slice(0, 300)}`); });
   page.on("pageerror", (e) => { console.log(`[sayfa hatası · ${bilgi.project.name}] ${e.message.slice(0, 300)}`); });
@@ -211,6 +213,26 @@ test("çevrimdışı: bağlantı kes → Kaydet cihaza → bağlantı gelince gi
   await page.context().setOffline(false);
   await expect(page.getByText("cihazda bekleyen kabul gitti", { exact: false }).first()).toBeVisible({ timeout: 30_000 });
   await expect(page.getByText("Tarafsızlık beyanı onaylandı · beyanı gör")).toBeVisible({ timeout: 30_000 });
+
+  /* 9) yeni rapor bağlantısızken (405): plan içi bağlantı varken açık; yeni rapor sayfası önceden indi (adım 5) — bağlantı kesik "Rapor oluştur"
+     onu açar, rapor cihazda doldurulup kaydedilir; bağlantı gelince sunucuda açılır, numarası verilir, ekran raporun sayfasına geçer */
+  const yeniKod = E2E_YZ.yeniRapor[bilgi.project.name];
+  await page.goto(`${Y}${planAdresi}`);
+  await hazir(page);
+  await saklandi(page, `/raporlar/yeni/${planAdresi!.split("/")[2]}`);
+  await page.context().setOffline(true);
+  await page.getByRole("button", { name: `${yeniKod} için rapor oluştur` }).click();
+  await expect(page).toHaveURL(/\/raporlar\/yeni\/[0-9a-f-]{36}#/, { timeout: 30_000 });
+  await hazir(page);
+  await expect(page.getByText("Bu rapor bu cihazda açıldı", { exact: false })).toBeVisible();
+  await marka.fill("Yeni Bağlantısız Marka");
+  await page.getByRole("button", { name: "Kaydet", exact: true }).click();
+  await expect(page.getByText("Cihaza kaydedildi; bağlantı gelince gönderilecek.").first()).toBeVisible();
+  await page.context().setOffline(false);
+  await expect(page).toHaveURL(/\/raporlar\/[0-9a-f-]{36}$/, { timeout: 30_000 });
+  await expect(page.getByRole("navigation", { name: "Konum" })).toContainText(/YZ-\d{4}-/, { timeout: 30_000 });
+  await expect(marka).toHaveValue("Yeni Bağlantısız Marka", { timeout: 30_000 });
+  await expect(page.getByRole("button", { name: /Çevrimdışı|bekleyen işlem/ })).toHaveCount(0, { timeout: 30_000 });
 });
 
 /* 403 (402'nin kilidi): ofis rolünde (firma yöneticisi) servis çalışanı KURULMAZ, önceden indirme olmaz — cihaz ve sunucu boşuna yorulmaz;

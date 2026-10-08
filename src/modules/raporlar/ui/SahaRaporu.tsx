@@ -80,7 +80,8 @@ const zamanNo = (z: string) => { const s = TR_ZAMAN.format(new Date(z)); return 
 const saatliNo = (s: string) => `${tarihNo(s)} ${s.slice(11, 16)}`;
 const bosla = <T extends Record<string, string | null>>(o: T) => Object.fromEntries(Object.entries(o).map(([k, x]) => [k, x ?? ""])) as { [K in keyof T]: string };
 
-export function SahaRaporu({ v }: { v: Gorunum }) {
+/** `yeni` (405): bağlantısız açılan YENİ rapor (v cihazda kuruldu, kimlik geçici) — planı, ekipmanı ve kodu; bütün işler kuyruktan gider */
+export function SahaRaporu({ v, yeni }: { v: Gorunum; yeni?: { plan: string; ekipman: string; kod: string } }) {
   const router = useRouter();
   const bildir = useBildir();
   const onayla = useOnayla();
@@ -170,8 +171,8 @@ export function SahaRaporu({ v }: { v: Gorunum }) {
   const yaz = (f: (c: Cevaplar) => Cevaplar) => { setCevaplar(f); setKirli(true); };
   const bag: Baglam = {
     v, c: cevaplar, yaz, d, oku, gecersiz, kaynak: (k) => kaynaklar[k], yz: !oku && v.yz, islem: { mesgul, baslat, yenile },
-    cihaz: (bolumId) => <CihazBolumu v={v} bolumId={bolumId} oku={oku} gecersiz={gecersiz} mesgul={mesgul} baslat={baslat} yenile={yenile} />,
-    foto: (bolumId, madde) => <FotoListesi key={`${bolumId}-${madde ?? ""}`} v={v} bolumId={bolumId} madde={madde} oku={oku}
+    cihaz: (bolumId) => <CihazBolumu v={v} bolumId={bolumId} oku={oku || !!yeni} gecersiz={gecersiz} mesgul={mesgul} baslat={baslat} yenile={yenile} />,
+    foto: (bolumId, madde) => <FotoListesi key={`${bolumId}-${madde ?? ""}`} v={v} bolumId={bolumId} madde={madde} oku={oku} yeniAc={yeni ? yeniAc : undefined}
       gecersiz={gecersiz(madde ? `${madde}.foto` : bolumId)} mesgul={mesgul} baslat={baslat} yenile={yenile} />,
   };
 
@@ -218,13 +219,18 @@ export function SahaRaporu({ v }: { v: Gorunum }) {
 
   /* bağlantı yoksa (ya da istek ağda düştüyse) iş cihaz kuyruğuna; bu raporun kuyrukta bekleyen işi varsa yenisi onun yerine ve kuyruktan gider
      (ikisi ayrı yollardan gitse eskisi yenisini "değiştirildi" diye düşürürdü) */
+  /* 405: yeni raporda ilk işten önce "rapor.olustur" kuyruğa (bir kez; açılınca işler sunucunun verdiği kimliğe bağlanır) */
+  const yeniAc = async () => {
+    if (yeni) await kuyrugaEkle({ tur: "rapor.olustur", kayit: v.id, surum: 0, girdi: { plan: yeni.plan, ekipman: yeni.ekipman }, ad: `Yeni rapor · ${yeni.kod}`, yer: `${yeni.plan}|${yeni.ekipman}` });
+  };
   const kuyruga = async (tur: KuyrukTuru, bildirim: string) => {
+    await yeniAc();
     await kuyrugaEkle({ tur, kayit: v.id, surum: v.surum, girdi: girdi(), ad: `${tur === "rapor.gonder" ? "Onaya gönder" : "Rapor kaydı"} · ${v.no}` });
     kaydedildi();
     bildir(bildirim);
   };
   const kaydet = () => baslat(async () => {
-    if (cevrimdisiMi() || bekleyenIs) { await kuyruga("rapor.kaydet", cevrimdisiMi() ? "Cihaza kaydedildi; bağlantı gelince gönderilecek." : "Kaydediliyor…"); return; }
+    if (yeni || cevrimdisiMi() || bekleyenIs) { await kuyruga("rapor.kaydet", cevrimdisiMi() ? "Cihaza kaydedildi; bağlantı gelince gönderilecek." : "Kaydediliyor…"); return; }
     let r: RaporYaniti;
     try { r = await raporKaydetEylemi(v.id, v.surum, girdi()); } catch (e) {
       if (!agHatasi(e)) throw e;
@@ -239,6 +245,12 @@ export function SahaRaporu({ v }: { v: Gorunum }) {
   useEffect(() => {
     kuyrukSonucu.current = (d) => {
       if (d.kayit !== v.id) return;
+      /* 405: yeni rapor sunucuda açıldı → raporun kendi ekranına (bekleyen kayıt / fotoğraflar oradan, gerçek kimlikle gider) */
+      if (d.tur === "rapor.olustur") {
+        if (d.durum === "tamam" && d.yeni) { bildir(`${yeni?.kod ?? v.ekipman.kod}: rapor açıldı, numarası verildi.`); router.replace(`/raporlar/${d.yeni}`); return; }
+        setGenel(`Rapor açılamadı — ${d.ileti ?? "üst çubuktaki bekleyen işlemlere bakın"}. Yazdıklarınız cihazda duruyor.`);
+        return;
+      }
       if (d.durum === "tamam") {
         setGenel(null);
         bildir(d.tur === "rapor.gonder" ? `${v.no}: cihazda bekleyen onaya gönderim gitti.` : d.tur === "rapor.foto" ? `${v.no}: cihazda bekleyen fotoğraf gönderildi.` : `${v.no}: cihazda bekleyen kayıt gönderildi.`);
@@ -261,7 +273,7 @@ export function SahaRaporu({ v }: { v: Gorunum }) {
   };
   const gonderIc = () => baslat(async () => {
     const yon = "bağlantı gelince onaya gider";
-    if (cevrimdisiMi() || bekleyenIs) { await kuyruga("rapor.gonder", cevrimdisiMi() ? `Cihaza kaydedildi: ${yon}.` : "Onaya gönderiliyor…"); return; }
+    if (yeni || cevrimdisiMi() || bekleyenIs) { await kuyruga("rapor.gonder", cevrimdisiMi() ? `Cihaza kaydedildi: ${yon}.` : "Onaya gönderiliyor…"); return; }
     let r: RaporYaniti;
     try { r = await onayaGonderEylemi(v.id, v.surum, girdi()); } catch (e) {
       if (!agHatasi(e)) throw e;
@@ -338,7 +350,7 @@ export function SahaRaporu({ v }: { v: Gorunum }) {
   const sayGuncel = useRef({ d, cevaplar, tarih, yaz, git });
   useEffect(() => { sayGuncel.current = { d, cevaplar, tarih, yaz, git }; });
   useEffect(() => {
-    if (oku) return;
+    if (oku || yeni) return;
     const bolumAdi = (id: string) => v.tanim.bolumler.find((b) => b.id === id)?.ad ?? id;
     return sayRaporBagla({
       id: v.id, no: v.no,
@@ -361,7 +373,7 @@ export function SahaRaporu({ v }: { v: Gorunum }) {
       git: (e) => sayGuncel.current.git({ bolum: e.bolum, alan: e.alan, ad: e.ad }),
       cevaplar: () => sayGuncel.current.cevaplar,
     });
-  }, [oku, v.id, v.no, v.tanim, v.cihazlar]);
+  }, [oku, yeni, v.id, v.no, v.tanim, v.cihazlar]);
 
   /* ── alan çizicileri ── */
   const metinSatiri = (k: EkipmanAnahtari, etiket: string, en: number, sayisal = false) => {
@@ -395,6 +407,8 @@ export function SahaRaporu({ v }: { v: Gorunum }) {
   /* ── şeritler ── */
   const seritler: ReactNode[] = [];
   if (genel) seritler.push(<Serit key="hata" tur="hata" ikon="circle-alert">{genel}</Serit>);
+  /* 405: yeni rapor cihazda — numara ve kimlik sunucuda, bağlantı gelince */
+  else if (yeni) seritler.push(<Serit key="yeni" tur="bilgi" ikon="wifi-off">Bu rapor bu cihazda açıldı; bağlantı gelince sunucuda açılır ve numarası verilir. Ölçüm cihazı ve fotoğraftan okuma o zaman eklenir.</Serit>);
   /* 402: cihazda gönderilemeyen iş (çakışma, yapılamadı) sayfa yenilense de söylenir — anlık bildirim kaybolsa da kullanıcı bilir */
   else if (cihazdaki && formBekliyor) seritler.push(<Serit key="cihazdaki" tur="bilgi" ikon="wifi-off">Bu ekranda cihazda bekleyen kaydınız gösteriliyor; bağlantı gelince gönderilecek.</Serit>);
   else if (sorunluIs) seritler.push(<Serit key="kuyruk" tur="hata" ikon="circle-alert">{v.no}: cihazda bekleyen iş gönderilemedi{sorunluIs.ileti ? ` — ${sorunluIs.ileti}` : ""}. Üst çubuktaki bekleyen işlemlerden seçin.</Serit>);
@@ -469,7 +483,7 @@ export function SahaRaporu({ v }: { v: Gorunum }) {
             </p>
           )}
           {/* Ön izle (reisim 2026-09-28): kaydedilmiş hâl; kesin PDF'le aynı çizici. Kaydedilmemiş değişiklik varsa önce kaydedilir (atılmaz) */}
-          {duzenle && kirli
+          {yeni ? null : duzenle && kirli
             ? <Tus tur="ikincil" ikon="eye" disabled={mesgul} onClick={onizle}>Ön izle</Tus>
             : <TusBaglanti ikon="eye" href={`/raporlar/${v.id}/onizle`}>Ön izle</TusBaglanti>}
           {v.revize?.iste && <Tus tur="ikincil" ikon="file-pen-line" disabled={mesgul} onClick={() => setRevizeAc(true)}>Revize iste</Tus>}

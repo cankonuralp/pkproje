@@ -2355,6 +2355,22 @@ revizyon, alan kopyalama, hafif kusur devri, meslek eşleşme denetimi).
 - Emsal ürünler: https://opwire.app/iso-17020-periyodik-kontrol-yazilimi/ · https://17020muayene.vidco.com.tr/ · https://akuple.com/asansor-kontrol-yazilimi/ · https://ensyazilim.com/
 
 ## 11 · Değişiklik günlüğü
+- 2026-10-08 (405): **Çevrimdışı çalışma — bağlantısız rapor oluşturma** (ARKA-UC §4.1 "rapor oluşturma (plan günü geldiyse — P1)"; K3'ün son
+  eksiği). Bağlantı varken plan başına bir sayfa önceden iner (/raporlar/yeni/<plan>: planın raporu olmayan etkin ekipmanları, türlerinin
+  yayındaki formatı ve ilk cevapları, künye, yazan — raporlar/server/raporlar.ts yeniRaporPaketi; hiçbir şey yazılmaz). Bağlantı yokken (ya da
+  istek ağda düşerse) plan içindeki "Rapor oluştur" bu sayfayı açar (#ekipman); rapor CİHAZDA geçici kimlikle, saha rapor ekranının kendisiyle
+  doldurulur (SahaRaporu "yeni" kipi; şerit "Bu rapor bu cihazda açıldı…"; ölçüm cihazı ve fotoğraftan okuma rapor açılınca). İlk Kaydet /
+  fotoğraf / Onaya gönder'de "rapor.olustur" işi kuyruğa girer (bir kez). Bağlantı gelince sunucu raporu raporOlustur ile AÇAR — kimlik ve numara
+  sunucunun, plan günü / günlük süre / yetki / "bu ekipmanın raporu var" aynen; cihaz bekleyen işleri gerçek kimliğe bağlar ve sürümü taşır,
+  ekran raporun kendi sayfasına geçer (yazılanlar cihazdan gelir — 404). Açılamazsa işler bekler, nedeni pencerede ("Yeniden dene", "Planı
+  aç"). Aynı ekipmana cihazda açılmış rapor varsa plan içindeki tuş "Cihazdaki rapor" olur ve aynı geçici kimlikle devam edilir. Kuyruk artık
+  işleri GİRDİĞİ SIRAYLA gönderir (önce "fotoğraflar formdan önce" idi): kaydın bağımlılıkları beklenir — yeni raporun işleri rapor açılmadan,
+  Onaya gönder fotoğraflar gitmeden, yeni rapor aynı planın bekleyen kabulünden önce gitmez; bir iş gidince bekleyen bağımlısı aynı gönderimde
+  denenir. Göç yok. Kilitler: islem.test (gerçek PostgreSQL, iki firma: paket — raporu olan ekipman yok, kabul edilmemiş planda neden, ekip dışı
+  / başka firma yok; rapor.olustur — kimlik ve numara sunucunun, tekrarı ikinci rapor açmaz, ikinci cihazdan red, bozuk girdi / ekip dışı /
+  başka firma açamaz, açılan rapora kuyruk kaydı) · kuyruk.test (tek açılış işi, bağımlılık, kabul önce, gerçek kimliğe bağlama, sürüm) ·
+  bozan kuyruk 6 · sw.test (yeni rapor sayfası saklanır) · e2e cevrimdisi 9. adım (bağlantı kesik: plandan yeni rapor → kaydet → bağlantı gelince
+  numaralı rapor, yazılan yerinde).
 - 2026-10-08 (404): **Rapor ekranı cihazda bekleyen kaydı gösterir — sessiz veri kaybı önlendi.** Bağlantısız kaydedilen rapor, cihazda yeniden
   açılınca saklanan sayfadaki ESKİ hâliyle görünüyordu; kullanıcı onu düzenleyip kaydedince yeni iş bekleyen kaydın yerine geçer, bağlantısız
   yazılanlar sessizce kaybolurdu. Artık ekran açılınca (ve sayfa tazelenince) raporun sunucuya henüz yazılmamış son içeriği (bekliyor / çakışma /

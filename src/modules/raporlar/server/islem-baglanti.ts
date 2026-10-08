@@ -3,13 +3,15 @@
    gördüğü sürüm başka yerde değiştiyse "cakisma" döner, sessiz ezme yok (09-D1). Girdi: cihazın gördüğü sürüm + formun o anki hâli.
    398: bağlantısız çekilen FOTOĞRAF (rapor.foto) — fotoğraf eklemek EKLER, hiçbir şeyi ezmez: raporun o anki sürümüyle eklenir (cihazın gördüğü
    sürüm aranmaz; sınır, yer, tür, EXIF, yetki fotoEkle'de aynen). Sonuçta önceki / sonraki sürüm döner: cihaz aynı raporun bekleyen Kaydet'ini
-   yalnız sürüm KENDİ fotoğrafıyla değiştiyse yeni sürüme taşır — arada başkası değiştirdiyse çakışma yine görünür. */
+   yalnız sürüm KENDİ fotoğrafıyla değiştiyse yeni sürüme taşır — arada başkası değiştirdiyse çakışma yine görünür.
+   405: bağlantısız açılan YENİ rapor (rapor.olustur) — kayıt cihazın geçici kimliği; rapor raporOlustur ile açılır (plan günü, günlük süre, yetki,
+   ekipmanın bu planda raporu var mı aynen); sonuçta gerçek kimlik ve sürüm döner, cihaz bekleyen işleri o kimliğe bağlar. */
 import type { Sorgulayici } from "../../../server/db/kiraci.ts";
 import type { Depo } from "../../../server/dosya/depo.ts";
-import { FotoIslemGirdisi } from "../sema.ts";
-import { fotoEkle, onayaGonder, raporKaydet, type Kisi, type RaporYazma } from "./raporlar.ts";
+import { FotoIslemGirdisi, OlusturIslemGirdisi } from "../sema.ts";
+import { fotoEkle, onayaGonder, raporKaydet, raporOlustur, type Kisi, type RaporYazma } from "./raporlar.ts";
 
-export const RAPOR_ISLEM_TURLERI = ["rapor.kaydet", "rapor.gonder", "rapor.foto"] as const;
+export const RAPOR_ISLEM_TURLERI = ["rapor.kaydet", "rapor.gonder", "rapor.foto", "rapor.olustur"] as const;
 export type RaporIslemTuru = (typeof RAPOR_ISLEM_TURLERI)[number];
 /** fotoğrafta: rapor hangi sürümden hangisine geçti (cihaz bekleyen işlerini buna göre taşır) */
 export type RaporIslemSonucu = RaporYazma | (Extract<RaporYazma, { durum: "tamam" }> & { surum: { once: number; sonra: number } });
@@ -25,6 +27,14 @@ export async function raporIslemi(db: Sorgulayici, dosya: { depo: Depo; firmaId:
   girdi: unknown): Promise<RaporIslemSonucu> {
   if (tur === "rapor.kaydet") return raporKaydet(db, kim, rapor, surum, girdi);
   if (tur === "rapor.gonder") return onayaGonder(db, kim, rapor, surum, girdi);
+  if (tur === "rapor.olustur") {
+    const o = OlusturIslemGirdisi.safeParse(girdi);
+    if (!o.success) return { durum: "gecersiz", hatalar: { rapor: "Raporun planı ya da ekipmanı okunamadı." } };
+    const y = await raporOlustur(db, kim, o.data.plan, o.data.ekipman);
+    if (y.durum !== "tamam") return y;
+    /* cihazdaki yeni raporun işleri sürüm 0'dan yazıldı: açılan raporun sürümüne taşınır */
+    return { ...y, surum: { once: 0, sonra: (await raporGuncelSurum(db, y.id)) ?? 0 } };
+  }
   const g = FotoIslemGirdisi.safeParse(girdi);
   if (!g.success) return { durum: "gecersiz", hatalar: { foto: "Fotoğraf okunamadı." } };
   const once = await raporGuncelSurum(db, rapor);

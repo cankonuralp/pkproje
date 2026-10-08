@@ -483,6 +483,11 @@ export async function raporIcinPlan(db: Sorgulayici, kim: Kisi, planId: string):
     kunye: benim?.gorulen ?? guncelKunye, kunyeSurum: benim && benim.gorulen ? benim.kunye_surum : p.kunye_surum, guncelKunye, guncelSurum: p.kunye_surum,
   };
 }
+/** planın ekipmanları (kimlikler; 405 bağlantısız yeni rapor paketi). Yetki ÇAĞIRANDA. */
+export async function plandakiEkipmanlar(db: Sorgulayici, planId: string): Promise<string[]> {
+  if (!UUID.test(planId)) return [];
+  return (await db.sorgu<{ ekipman_id: string }>("SELECT ekipman_id::text FROM plan_ekipman WHERE plan_id = $1", [planId])).rows.map((x) => x.ekipman_id);
+}
 /** ekipman bu planda mı (rapor yalnız plandaki ekipmana açılır). Yetki ÇAĞIRANDA. */
 export async function plandakiEkipman(db: Sorgulayici, planId: string, ekipmanId: string): Promise<boolean> {
   if (!UUID.test(planId) || !UUID.test(ekipmanId)) return false;
