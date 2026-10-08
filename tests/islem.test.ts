@@ -4,10 +4,10 @@
    raporlar/server/islem-baglanti.ts):
    · aynı kimlik ikinci kez gelince iş tekrar yapılmaz (sürüm bir kez artar, denetim izinde tek kayıt), saklanan sonuç döner;
    · cihazın gördüğü sürüm eskiyse "çakışma": rapor değişmez, sonuç saklanır (aynı kimlik yine çakışma) — yeniden göndermek yeni kimlik ister;
-   · Onaya gönder kuyruktan: eksikte "eksik" (kaydedildi, gönderilmedi), tamsa onayda; tekrarı yeniden göndermez;
+   · Onaya gönder kuyruktan: eksikte "eksik" (kaydedildi, gönderilmedi); tekrarı yeniden kaydetmez, aynı sonucu döner;
    · aynı kimlik aynı anda iki istekte: iş bir kez (ikincisi saklanan sonucu alır);
    · kimlik başka kişinin işleminde ya da aynı kimlikle başka iş / başka kayıt: iş YAPILMAZ;
-   · yetki ve kiracı modülde: başka denetçinin raporu "yetkisiz", B firmasının işleminde A'nın raporu "yok" (rapor değişmez);
+   · yetki ve kiracı modülde: başka denetçinin raporu ona görünmez ("yok"), B firmasının işleminde A'nın raporu "yok" (rapor değişmez);
    · GÜVENLİK: işlem kaydı değişmez / silinmez; kişi yalnız kendi işlemlerini görür (aynı firmada da); hesap ve alınma anı veritabanından;
      kimlik sorgusu yalnız evet / hayır, tanımlayıcı-yetkili, PUBLIC'e kapalı.
    Olumsuz kanıt: tests/bozan/islem.bozan.ts. */
@@ -148,7 +148,9 @@ test("cihazın gördüğü sürüm eskiyse çakışma: rapor değişmez, sonuç 
   assert.equal((await raporSatiri(r.id)).ekipman_bilgi.marka, "Cihazdaki");
 });
 
-test("Onaya gönder kuyruktan: eksikte 'eksik' (kaydedildi, gönderilmedi); tamsa onayda; tekrarı yeniden göndermez", async () => {
+/* 2026-10-08: KOMPRESÖR formatı ölçüm cihazı ve fotoğraf ister (ENGEL 2 / 5) — bu testte ikisi yok, bu yüzden form tam olsa da "eksik": rapor
+   KAYDEDİLİR, gönderilmez. Tam gönderimin durum geçişi raporlar / onaylar testlerinde; burada kuyruk işinin sonucu ve tekrarı sınanır. */
+test("Onaya gönder kuyruktan: eksikte 'eksik' (kaydedildi, gönderilmedi); tekrarı yeniden kaydetmez, aynı sonucu döner", async () => {
   const r = await rapor(DEN, "HT-3");
   const e = await isle(DEN, randomUUID(), "rapor.gonder", r.id, r.surum, bosGirdi(r.bas));
   assert.equal(e.durum === "yeni" && e.sonuc.durum, "eksik");
@@ -156,12 +158,12 @@ test("Onaya gönder kuyruktan: eksikte 'eksik' (kaydedildi, gönderilmedi); tams
   const g = await raporSatiri(r.id);
   const id = randomUUID();
   const s = await isle(DEN, id, "rapor.gonder", r.id, g.surum, tamGirdi(r.bas));
-  assert.equal(s.durum === "yeni" && s.sonuc.durum, "tamam", JSON.stringify(s));
+  assert.ok(s.durum === "yeni" && s.sonuc.durum === "eksik", JSON.stringify(s));
+  assert.deepEqual(s.durum === "yeni" && s.sonuc.durum === "eksik" && s.sonuc.eksikler.map((x) => x.bolum).sort(), ["cihaz", "foto"], "yalnız cihaz ve fotoğraf eksik");
   const once = await raporSatiri(r.id);
-  assert.equal(once.durum, "onayda");
-  assert.equal((await isle(DEN, id, "rapor.gonder", r.id, g.surum, tamGirdi(r.bas))).durum, "tekrar");
-  assert.equal((await raporSatiri(r.id)).surum, once.surum, "tekrar yeniden göndermedi");
-  assert.equal(await izSayisi(r.id, "rapor.onaya_gonder"), 1);
+  assert.deepEqual([once.durum, once.surum, once.ekipman_bilgi.marka], ["taslak", g.surum + 1, "Deneme Marka"], "kaydedildi, gönderilmedi");
+  assert.deepEqual(await isle(DEN, id, "rapor.gonder", r.id, g.surum, tamGirdi(r.bas)), { durum: "tekrar", sonuc: s.sonuc });
+  assert.equal((await raporSatiri(r.id)).surum, once.surum, "tekrar yeniden kaydetmedi");
 });
 
 test("aynı kimlik aynı anda iki istekte: iş bir kez, ikincisi saklanan sonucu alır", async () => {
@@ -185,9 +187,10 @@ test("kimlik başka kişinin işleminde ya da aynı kimlikle başka iş / kayıt
   /* aynı firmada başka kişi aynı kimliği kullanırsa: iş yapılmaz, öteki kişinin işlemi görünmez */
   assert.deepEqual(await isle(DEN2, id, "rapor.kaydet", r.id, s.surum, tamGirdi(r.bas, "Başkası")), { durum: "kimlik_kullanildi" });
   assert.equal((await raporSatiri(r.id)).ekipman_bilgi.marka, "Deneme Marka");
-  /* başka denetçinin raporu: modül "yetkisiz" der (saklanır), rapor değişmez */
+  /* başka denetçinin raporu ona görünmez: modül "yok" der (saklanır), rapor değişmez (2026-10-08: "yetkisiz" beklentisi yanlıştı — denetçi
+     yalnız kendi raporlarını görür) */
   const y = await isle(DEN2, randomUUID(), "rapor.kaydet", r.id, s.surum, tamGirdi(r.bas, "Başkası"));
-  assert.deepEqual(y, { durum: "yeni", sonuc: { durum: "yetkisiz" } });
+  assert.deepEqual(y, { durum: "yeni", sonuc: { durum: "yok" } });
   /* B firmasının işleminde A'nın raporu yok */
   const b = await isle(DEN_B, randomUUID(), "rapor.kaydet", r.id, s.surum, tamGirdi(r.bas, "B"), B);
   assert.deepEqual(b, { durum: "yeni", sonuc: { durum: "yok" } });
