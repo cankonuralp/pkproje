@@ -48,7 +48,7 @@
 .iaOzet:focus { outline: none; }
 .dosyaAd { min-width: 0; overflow-wrap: anywhere; font-weight: 600; align-self: center; }
 .ipucuSatir { color: var(--yazi2); font-size: var(--boy-kucuk); align-self: center; }
-.onizlemeKap { max-height: 50vh; overflow: auto; margin: 12px 0 0; border: 1px solid var(--kenar); border-radius: var(--r-orta); }
+.onizlemeKap { max-height: 50vh; max-height: 50dvh; overflow: auto; margin: 12px 0 0; border: 1px solid var(--kenar); border-radius: var(--r-orta); }
 .onizleme { width: 100%; border-collapse: collapse; font-size: var(--boy-kucuk); }
 .onizleme th { position: sticky; top: 0; padding: 6px 8px; background: var(--kart); border-bottom: 1px solid var(--kenar); color: var(--yazi2); font-weight: 600; text-align: left; }
 .onizleme td { padding: 6px 8px; border-bottom: 1px solid var(--kenar); vertical-align: top; overflow-wrap: anywhere; }

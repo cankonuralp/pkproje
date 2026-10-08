@@ -20,7 +20,7 @@
 .dosya { width: 100%; min-height: var(--tus-y); font: inherit; color: var(--yazi); }
 .dosyaSec { display: flex; flex-wrap: wrap; align-items: center; gap: 8px; margin: 0 0 12px; }
 .dosyaAd { min-width: 0; overflow-wrap: anywhere; font-weight: 600; }
-.onizlemeKap { max-height: 50vh; overflow: auto; margin: 12px 0 0; border: 1px solid var(--kenar); border-radius: var(--r-orta); }
+.onizlemeKap { max-height: 50vh; max-height: 50dvh; overflow: auto; margin: 12px 0 0; border: 1px solid var(--kenar); border-radius: var(--r-orta); }
 .onizleme { width: 100%; border-collapse: collapse; font-size: var(--boy-kucuk); }
 .onizleme th { position: sticky; top: 0; padding: 6px 8px; background: var(--kart); border-bottom: 1px solid var(--kenar); color: var(--yazi2); font-weight: 600; text-align: left; }
 .onizleme td { padding: 6px 8px; border-bottom: 1px solid var(--kenar); vertical-align: top; overflow-wrap: anywhere; }

@@ -3,7 +3,7 @@
    "aynı seçici" taraması). Uygulamanın BÜTÜN CSS'i ve TSX'i taranır. Olumsuz kanıt: tests/bozan/kilitler.bozan.ts. */
 import assert from "node:assert/strict";
 import { test } from "node:test";
-import { baglantiRengiEksikleri, ciftSeciciler, ciftTanimliDegiskenler, dosyalar, oku, parantezHatasi, tanimsizDegiskenler } from "./yardimci/denetimler.ts";
+import { baglantiRengiEksikleri, vhYukseklikHatalari, ciftSeciciler, ciftTanimliDegiskenler, dosyalar, oku, parantezHatasi, tanimsizDegiskenler } from "./yardimci/denetimler.ts";
 
 const CSS = dosyalar("src", [".css"]);
 const TSX = dosyalar("src", [".tsx", ".ts"]);
@@ -60,4 +60,12 @@ test("her bağlantının rengi tanımlı (sınıfında ya da temel.css :where(a)
   const tsx = dosyalar("src", [".tsx"]).map((ad) => ({ ad, metin: oku(ad) }));
   assert.ok(tsx.filter((d) => /<Link className=\{stil\.\w+\}/.test(d.metin)).length >= 10, "sınıflı bağlantı bulunamadı (boş tarama yalancı geçer)");
   assert.deepEqual(baglantiRengiEksikleri(tsx, oku, oku("src/styles/temel.css")), []);
+});
+
+/* 421 (419'un hata sınıfı — reisim telefonda en alttaki menü maddesine basamadı): yükseklik / en büyük yükseklik vh ise ardından dvh. Olumsuz kanıt:
+   kilitler.bozan "vh yükseklik". */
+test("vh ile verilen her yükseklik görünen boya (dvh) da sahip (telefonda adres çubuğu açıkken kutunun altı ekranda)", () => {
+  const css = CSS.map((ad) => ({ ad, metin: oku(ad) }));
+  assert.ok(css.some((d) => /height: 100dvh/.test(d.metin)), "dvh kullanan kural bulunamadı (boş tarama yalancı geçer)");
+  assert.deepEqual(vhYukseklikHatalari(css), []);
 });

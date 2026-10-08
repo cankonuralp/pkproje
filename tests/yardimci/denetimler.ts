@@ -383,3 +383,21 @@ export function swEksikleri(sw: string, depo: string, proxy: string): string[] {
   if (!sw.includes("caches.match(anahtarAdresi(r.url))") || !sw.includes("c.put(anahtarAdresi(r.url), kopya)")) eksik.push("dosya önbelleği sorgu dizgisine bağlı");
   return eksik;
 }
+
+/* ── VH YÜKSEKLİK (421; 419'un hata sınıfı) ── `height` / `max-height` vh ile verilmişse aynı blokta ARDINDAN aynı özellik dvh ile gelmeli: telefonda
+   vh adres çubuğu gizliyken boydur, çubuk görünürken kutunun altı (son menü maddesi, levhanın tuşları) ekran dışında kalır. min-height serbest
+   (taşan içerik kaydırılır). Dönen: "dosya: seçici özellik: değer" listesi. */
+export function vhYukseklikHatalari(dosyalarCss: readonly { ad: string; metin: string }[]): string[] {
+  const hatalar: string[] = [];
+  for (const d of dosyalarCss) {
+    for (const blok of d.metin.replace(/\/\*[\s\S]*?\*\//g, "").matchAll(/([^{}]+)\{([^{}]*)\}/g)) {
+      const bildirimler = [...blok[2].matchAll(/(?:^|[;{\s])((?:max-)?height)\s*:\s*([^;]+)/g)].map((m) => ({ ozellik: m[1], deger: m[2].trim() }));
+      bildirimler.forEach((b, i) => {
+        if (!/\d(?:\.\d+)?vh\b/.test(b.deger)) return;
+        if (bildirimler.slice(i + 1).some((s) => s.ozellik === b.ozellik && /dvh\b/.test(s.deger))) return;
+        hatalar.push(`${d.ad}: ${blok[1].trim()} ${b.ozellik}: ${b.deger}`);
+      });
+    }
+  }
+  return hatalar;
+}

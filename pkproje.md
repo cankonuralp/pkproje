@@ -2355,6 +2355,10 @@ revizyon, alan kopyalama, hafif kusur devri, meslek eşleşme denetimi).
 - Emsal ürünler: https://opwire.app/iso-17020-periyodik-kontrol-yazilimi/ · https://17020muayene.vidco.com.tr/ · https://akuple.com/asansor-kontrol-yazilimi/ · https://ensyazilim.com/
 
 ## 11 · Değişiklik günlüğü
+- 2026-10-08 (421): **419'un hata sınıfı sitenin geri kalanında** — telefonda alttan açılan pencerenin (levha) en büyük yüksekliği 88vh, Excel
+  önizleme kutuları 50vh idi: görünen boya (dvh) çevrildi. Genel kilit: vh ile verilen her yükseklik / en büyük yükseklik ardından dvh taşır
+  (css-butunlugu; kilit ilk koşusunda bu dört yeri buldu). S.A.Y düğmesi: telefonda açık menünün ve perdenin üstünde kalıyordu (z 65 > 60) —
+  artık altında (45); sayfa sonundaki düğme payı telefonda da (son satırın sağ ucu düğmenin altında kalabiliyordu).
 - 2026-10-08 (420): **Site taraması** (reisim: *"bu ve benzeri her türlü front back hatalarını toplu kontrol et reisim tüm siteyi kusursuz
   bitir"*). Uçtan uca, üç genişlikte: firma yöneticisi siteyi Ana sayfadan ve her modülden bağlantı izleyerek gezer (aynı kalıptaki adres bir
   kez), müşteri paneli saha raporu denemesinde müşteri girişiyle. Her sayfada: sunucu 5xx, sayfa / konsol hatası, yatay taşma, başka öğenin

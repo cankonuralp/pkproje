@@ -33,10 +33,9 @@ button { cursor: pointer; }
 .gizli { position: absolute !important; width: 1px; height: 1px; margin: -1px; padding: 0; overflow: hidden; clip: rect(0 0 0 0); white-space: nowrap; border: 0; }
 /* tuş görünümlü etiketin içindeki görünmez dosya girdisi odaklanınca çerçeve etikette (354, WCAG 2.4.7: girdinin kendi çerçevesi kırpılıyordu) */
 label:has(> .gizli:focus-visible) { outline: 3px solid var(--odak); outline-offset: 2px; }
-/* S.A.Y (380): düğme sağ altta sabit — sayfanın sonu düğmenin altında kalmasın (geniş ve orta bant; telefonda düğme küçük daire) */
-@media (min-width: 768px) {
-  html[data-say="var"] main { padding-bottom: 96px; }
-}
+/* S.A.Y (380): düğme sağ altta sabit — sayfanın sonu düğmenin altında kalmasın. 421: telefonda da (düğme orada daire ama yine 56 px, alttan 16 px:
+   sayfanın son satırının sağ ucu altında kalabiliyordu) */
+html[data-say="var"] main { padding-bottom: 96px; }
 /* çevrimdışı göstergesi (394): telefonda üst çubuğun altında tam genişlik şerit — içerik şerit kadar aşağı iner */
 @media (max-width: 599.98px) {
   html[data-cevrimdisi="var"] main { margin-top: var(--tus-y); }

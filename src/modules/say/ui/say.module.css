@@ -1,7 +1,9 @@
 /* S.A.Y (380; maket .a-say-* — BB6 2026-10-03: sağ altta yuvarlak düğme, vurgu → vurgu-2 geçişi, içte açık daire; panel masaüstü / tablette sağda yan
    pencere üst çubuğun altında, telefonda tam ekran; telefonda düğme yalnız daire; altta yapışkan çubuk olan sayfada çubuğun üstünde). ⛔ çıplak renk yok */
 .fab {
-  position: fixed; right: 20px; bottom: 20px; z-index: 65; display: inline-flex; align-items: center; gap: 10px; height: 56px; padding: 0 22px 0 8px;
+  /* z 45 (421): sayfanın ve üst çubuğun (20) üstünde, çekmece perdesinin (50) ve çekmecenin (60) ALTINDA — 65 iken telefonda açık menünün ve perdenin
+     üstünde kalıyordu (360 px telefonda menünün sağ alt köşesini örtüyordu) */
+  position: fixed; right: 20px; bottom: 20px; z-index: 45; display: inline-flex; align-items: center; gap: 10px; height: 56px; padding: 0 22px 0 8px;
   border: 0; border-radius: var(--r-tam); background: linear-gradient(135deg, var(--vurgu-2), var(--vurgu)); color: var(--vurgu-uzeri);
   box-shadow: var(--golge-2); font: inherit; font-weight: 700; cursor: pointer; transition: transform .15s ease;
 }

@@ -8,7 +8,7 @@ import { MODUL_GRUPLARI } from "../../src/modules/moduller.ts";
 import {
   bantDisiDaraltma, ciftIdler, ciftSeciciler, ciftTanimliDegiskenler, daralmisSerit, degiskenDegeri, dosyalar, eksikIkonlar, girdiYaziHatalari, kalipDisiEsikler,
   hamYazma, kiraciDisiErisim, kullanilanIkonlar, maketIkonlari, maketMenusu, oku, parantezHatasi, rlsEksikTablolar, tanimsizDegiskenler, testKapisiEksikleri, tokenGovdesi, pdfPaketEksikleri,
-  swEksikleri, baglantiRengiEksikleri, cekmeceBoyuHatasi,
+  swEksikleri, baglantiRengiEksikleri, cekmeceBoyuHatasi, vhYukseklikHatalari,
 } from "../yardimci/denetimler.ts";
 
 const kabuk = oku("src/components/kabuk/Kabuk.module.css");
@@ -188,4 +188,13 @@ test("bağlantı rengi: renksiz sınıflı bağlantı ve silinen bağlantı taba
 test("çekmece boyu: yan menü yüksekliği 100vh'ye dönünce yakalanır", () => {
   assert.equal(cekmeceBoyuHatasi(kabuk), null);
   assert.equal(cekmeceBoyuHatasi(kabuk.replace("height: 100vh; height: 100dvh;", "height: 100vh;")), ".cubuk yüksekliği 100vh — görünen boy (100dvh) olmalı");
+});
+
+/* 421: vh yükseklik — levhanın en büyük yüksekliğinden dvh kalkınca yakalanır */
+test("vh yükseklik: telefondaki levhanın dvh'si kalkınca yakalanır", () => {
+  const ad = "src/components/pencere/Pencere.module.css", metin = oku(ad);
+  assert.deepEqual(vhYukseklikHatalari([{ ad, metin }]), []);
+  const bozuk = vhYukseklikHatalari([{ ad, metin: metin.replace("max-height: 88vh; max-height: 88dvh;", "max-height: 88vh;") }]);
+  assert.equal(bozuk.length, 1);
+  assert.match(bozuk[0], /Pencere\.module\.css: \.pencere max-height: 88vh$/);
 });
