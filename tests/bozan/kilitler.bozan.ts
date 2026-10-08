@@ -166,4 +166,6 @@ test("servis çalışanı: depo şeması ayrışınca, API saklanınca, GET dene
   /* sayfanın uygulama dosyaları saklanmazsa (önceden indirilen sayfa bağlantısız görünür ama çalışmaz) yakalanır */
   assert.deepEqual(swEksikleri(sw.replace("  await dosyalariSakla(new TextDecoder().decode(govde)).catch(() => undefined);\n", ""), depo, proxy),
     ["saklanan sayfanın uygulama dosyaları önce saklanmıyor"]);
+  /* dosya önbelleği tam adresle (sorgu dizgisiyle) aranırsa yakalanır */
+  assert.deepEqual(swEksikleri(sw.replace("caches.match(anahtarAdresi(r.url))", "caches.match(r)"), depo, proxy), ["dosya önbelleği sorgu dizgisine bağlı"]);
 });

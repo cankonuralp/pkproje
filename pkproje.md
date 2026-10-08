@@ -2371,7 +2371,8 @@ revizyon, alan kopyalama, hafif kusur devri, meslek eşleşme denetimi).
   indirme gövdeyi sonuna kadar okur (kopya tam saklansın). Aynı turda üç genişlikte de bağlantısız yenilenen rapor GÖRÜNDÜ ama ÇALIŞMADI: sayfa
   saklanıyordu, kullandığı uygulama dosyaları (betik, stil, yazı tipi) cihazda değildi — önceden indirilen sayfada ve canlıda her yeni yayından
   sonra da olurdu. Artık sayfa saklanırken içinde adı geçen /_next/static dosyaları önbellekte yoksa indirilir, sayfa kaydı dosyalardan SONRA
-  yazılır (önbellek en çok 600 dosya, en eskisi silinir). Kilit sw.test (swEksikleri: saklama yanıtı bekletirse; sayfanın dosyaları önce
+  yazılır (önbellek en çok 600 dosya, en eskisi silinir; anahtar dosyanın yolu — geliştirme sunucusunun her istekte eklediği "?v=" damgası
+  aynı dosyayı yeniden indirtmesin). Kilit sw.test (swEksikleri: saklama yanıtı bekletirse; sayfanın dosyaları önce
   saklanmazsa yakalanır) + bozan kilitler; e2e cevrimdisi bağlantıyı kesmeden önce sayfanın cihazda saklandığını bekler.
 - 2026-10-08 (398): **Çevrimdışı çalışma — fotoğraf kuyruğu** (ARKA-UC §4.1 "fotoğraf çekme" çevrimdışı çalışır; §4.3 "Onaya gönder, o raporun
   bütün kayıtları ve fotoğrafları gittikten sonra gider. Fotoğrafsız gönderim oluşmaz" · "2 rapor, 14 fotoğraf gönderilmeyi bekliyor"). Bağlantı

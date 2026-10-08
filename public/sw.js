@@ -40,13 +40,17 @@ self.addEventListener("fetch", (e) => {
   if (u.pathname.startsWith("/_next/static/") || u.pathname.startsWith("/vendor/")) e.respondWith(statik(e, r));
 });
 
+/** önbellek anahtarı: dosyanın yolu, sorgu dizgisi OLMADAN — geliştirme sunucusu her istekte "?v=<zaman>" ekler (aynı dosya her sayfada başka
+    adla gelir), yayında dosya adı içeriğin özetini taşır (aynı yol = aynı içerik). Böylece dosya başına tek kayıt, en sonuncusu. */
+const anahtarAdresi = (adres) => { const x = new URL(adres, self.location.origin); x.search = ""; return x.href; };
+
 async function statik(e, r) {
   try {
     const y = await fetch(r);
-    if (y.ok) { const kopya = y.clone(); e.waitUntil(caches.open(STATIK).then((c) => c.put(r, kopya)).catch(() => undefined)); }
+    if (y.ok) { const kopya = y.clone(); e.waitUntil(caches.open(STATIK).then((c) => c.put(anahtarAdresi(r.url), kopya)).catch(() => undefined)); }
     return y;
   } catch (h) {
-    const c = await caches.match(r);
+    const c = await caches.match(anahtarAdresi(r.url));
     if (c) return c;
     throw h;
   }
@@ -113,11 +117,11 @@ async function dosyalariSakla(html) {
   for (const m of html.matchAll(/(?:\/_next\/)?(static\/(?:chunks|css|media)\/[^"'\s\\<>]+)/g)) yollar.add(`/_next/${m[1]}`);
   const c = await caches.open(STATIK);
   for (const yol of yollar) {
-    const r = new Request(new URL(yol, self.location.origin).href);
-    if (await c.match(r)) continue;
+    const kayit = anahtarAdresi(yol);
+    if (await c.match(kayit)) continue;
     let y;
-    try { y = await fetch(r); } catch { return; }
-    if (y.ok) await c.put(r, y);
+    try { y = await fetch(new URL(yol, self.location.origin).href); } catch { return; }
+    if (y.ok) await c.put(kayit, y);
   }
   const anahtarlar = await c.keys();
   for (const eski of anahtarlar.slice(0, Math.max(0, anahtarlar.length - STATIK_EN_COK))) await c.delete(eski);
