@@ -8,7 +8,8 @@
    · geçmiş kişinin kendisinin: aynı firmadaki başka kişi ve başka firma görmez, temizleyemez; uygulama rolü tabloya yazamaz / silemez; kişi başı
      en yeni 200; mesaj sayısı yalnız artar;
    · 382 rapor ekranı: "Eksik alanlar" / "Sonuç" cevabının METNİNİ sunucu kurar (ekranın yapısından), yer "Rapor <no>"; öneri yalnız seçilen sonuç
-     kriterlerden ayrıysa; öneri kartı bir kez işaretlenir, başkası işaretleyemez; serbest soruda yer rapor numarası.
+     kriterlerden ayrıysa; öneri kartı bir kez işaretlenir, başkası işaretleyemez; serbest soruda yer rapor numarası;
+   · 384 açık rapor: özet yalnız raporu yazanın Yeni raporunda ve adres o raporsa; başkası / başka firma alamaz; giden özette serbest metin yok.
    Olumsuz kanıt: tests/bozan/say.bozan.ts. */
 import assert from "node:assert/strict";
 import { randomBytes } from "node:crypto";
@@ -16,7 +17,11 @@ import { mkdtempSync, rmSync } from "node:fs";
 import { tmpdir } from "node:os";
 import { join } from "node:path";
 import { after, before, test } from "node:test";
+import { planIci, planKabul } from "../src/modules/planlar/server/plan-ici.ts";
 import { bugunTr, planAc, type Kisi } from "../src/modules/planlar/server/planlar.ts";
+import { taslakBaslat, yayinla } from "../src/modules/rapor-format/server/formatlar.ts";
+import { raporOlustur } from "../src/modules/raporlar/server/raporlar.ts";
+import { raporSayBilgisi } from "../src/modules/raporlar/server/say-baglanti.ts";
 import { sayBirak, sayDurumu, sayGecmisi, sayHizli, sayOneri, sayRaporCevabi, saySorHazirla, saySorKaydet, sayTemizle } from "../src/modules/say/server/say.ts";
 import { ayarOku, ayarYaz } from "../src/server/ayar/ayar.ts";
 import { sirYaz } from "../src/server/ayar/sir.ts";
@@ -57,8 +62,9 @@ const yzAyari = (firma: string, k: Kisi, d: object) => ile(firma, k, async (db) 
   const m = await ayarOku(db, "yapay_zeka");
   return ayarYaz(db, "yapay_zeka", m.surum, { ...m.deger, ...d }, { kim: "Deneme", ne: "ayar.yapay_zeka" });
 });
+/* kişinin KENDİ satırı (RLS yalnız firmayı süzer — firmadaki herkesin satırı görünür; 2026-10-08 CI 715bd6f: süzgeçsiz ilk satır planlamacınındı) */
 const kullanim = async (firma: string, k: Kisi) => (await ile(firma, k, (db) => db.sorgu<{ mesaj: number; maliyet: string; ayrilan: string }>(
-  "SELECT mesaj, maliyet::text, ayrilan::text FROM yz_kullanim WHERE ay = $1", [yzAyi()]))).rows[0] ?? null;
+  "SELECT mesaj, maliyet::text, ayrilan::text FROM yz_kullanim WHERE ay = $1 AND hesap_id = $2", [yzAyi(), k.id]))).rows[0] ?? null;
 
 before(async () => {
   process.env.PROBATA_SIR_ANAHTARI ??= randomBytes(32).toString("base64");
@@ -213,4 +219,44 @@ test("382 rapor ekranı: metni sunucu kurar, yer 'Rapor <no>'; öneri yalnız so
   const h2 = await ile(A, FA.yon, (db) => saySorHazirla(db, FA.yon, "Başka soru", "/planlar", new Date(), "<b>x</b>"));
   assert.ok(h2.durum === "hazir" && h2.yer === "Planlar");
   if (h2.durum === "hazir") await ile(A, FA.yon, (db) => sayBirak(db, h2, "yok"));
+});
+
+test("384 açık rapor özeti: yalnız raporu yazanın Yeni raporunda, adres o raporsa; başkası ve başka firma alamaz; özette serbest metin yok", async () => {
+  const tamam = <R extends { durum: string }>(r: R) => { assert.equal(r.durum, "tamam", JSON.stringify(r)); return r as Extract<R, { durum: "tamam" }>; };
+  const f = await ile(A, FA.yon, async (db) => {
+    const tur = (await db.sorgu<{ id: string }>("INSERT INTO ekipman_turu (kod, ad, grup, brans, periyot) VALUES ('EP', 'Elektrik panosu', 'elektrik', 'e', 12) RETURNING id::text")).rows[0].id;
+    const tesis = (await db.sorgu<{ id: string }>("SELECT id::text FROM tesis LIMIT 1")).rows[0].id;
+    const ekp = (await db.sorgu<{ id: string }>("INSERT INTO ekipman (tesis_id, tur_id, kod, ekleyen) VALUES ($1, $2, 'EP-S1', 'x') RETURNING id::text", [tesis, tur])).rows[0].id;
+    const t = tamam(await taslakBaslat(db, FA.yon, tur, "sablon:ZPKR02", null));
+    tamam(await yayinla(db, FA.yon, t.id, t.surum, ""));
+    return { ekp };
+  });
+  const plan = (await ile(A, FA.den, (db) => db.sorgu<{ id: string }>("SELECT id::text FROM plan LIMIT 1"))).rows[0].id;
+  const v = (await ile(A, FA.den, (db) => planIci(db, FA.den, plan)))!;
+  tamam(await ile(A, FA.den, (db) => planKabul(db, FA.den, plan, v.surum, true)));
+  const rapor = tamam(await ile(A, FA.den, (db) => raporOlustur(db, FA.den, plan, f.ekp))).id;
+  const bilgi = await ile(A, FA.den, (db) => raporSayBilgisi(db, FA.den, rapor));
+  assert.equal(bilgi?.turAd, "Elektrik panosu");
+  assert.equal(await ile(A, FA.plan, (db) => raporSayBilgisi(db, FA.plan, rapor)), null, "raporu yazmayan alamaz");
+  assert.equal(await ile(B, FB.den, (db) => raporSayBilgisi(db, FB.den, rapor)), null, "başka firma alamaz");
+  /* denetçinin sınırı önceki testte doldu: sınırsız yap */
+  await yzAyari(A, FA.yon, { sinir: null });
+  const madde = bilgi!.tanim.bolumler.flatMap((b) => (b.blok === "liste" ? b.gruplar.flatMap((g) => g.maddeler) : []))[0];
+  const canli = { id: rapor, cevaplar: { alan: { kurulus: "Gizli Sanayi Kuruluşu" }, madde: { [madde.id]: { c: "Uygun değil", not: "Saklı kişinin odası" } }, yorum: "Gizli yorum" } };
+  const h = await ile(A, FA.den, (db) => saySorHazirla(db, FA.den, "Bu kusur ağır mı?", `/raporlar/${rapor}`, new Date(), "SA-1026-001", canli));
+  assert.ok(h.durum === "hazir", JSON.stringify(h));
+  if (h.durum !== "hazir") return;
+  const baglam = (h.istek.govde as { system: { text: string }[] }).system[1].text;
+  assert.match(baglam, /Açık rapor \(kullanıcının şu an yazdığı, kaydedilmemiş değişiklikler dahil\):\nEkipman türü: Elektrik panosu\./);
+  assert.ok(baglam.includes(`Gözle kontrol › ${madde.metin}`), baglam);
+  assert.doesNotMatch(JSON.stringify(h.istek.govde), /Gizli Sanayi|Saklı kişinin|Gizli yorum|Gizli Tesis|Saklı Cad/, "serbest metin ve künye gitmez");
+  await ile(A, FA.den, (db) => sayBirak(db, h, "yok"));
+  /* adres başka sayfaysa ya da raporu yazmayan sorarsa özet yok */
+  for (const [k, yol] of [[FA.den, "/planlar"], [FA.plan, `/raporlar/${rapor}`]] as const) {
+    const x = await ile(A, k, (db) => saySorHazirla(db, k, "Soru", yol, new Date(), null, canli));
+    assert.ok(x.durum === "hazir");
+    if (x.durum !== "hazir") continue;
+    assert.doesNotMatch((x.istek.govde as { system: { text: string }[] }).system[1].text, /Açık rapor/);
+    await ile(A, k, (db) => sayBirak(db, x, "yok"));
+  }
 });

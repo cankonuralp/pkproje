@@ -2,6 +2,7 @@
    açık raporun CANLI hâlini (kaydedilmemiş değişiklikler dahil) buradan okur, öneriyi buradan uygular, eksik alana buradan götürür. Rapor ekranı
    kapanınca bağ kalkar (S.A.Y genel sorulara döner). Tarayıcı içi; sunucuya yalnız S.A.Y'ın gönderdiği yapı gider. */
 import { useSyncExternalStore } from "react";
+import type { Cevaplar } from "../../../format/tanim";
 import type { SohbetEksik } from "../../../server/yz/sohbet";
 
 export interface SayRaporBagi {
@@ -15,6 +16,8 @@ export interface SayRaporBagi {
   sonucUygula: (deger: "uygun" | "uygun_degil") => void;
   /** eksik alana götürür (bölümler açılır, alan odaklanır) */
   git: (e: SohbetEksik) => void;
+  /** 384: ekranın canlı cevapları (serbest soruda sunucu özetler — yalnız formatın adları, seçenekler, sayılar yapay zekâya gider) */
+  cevaplar: () => Cevaplar;
 }
 
 let bag: SayRaporBagi | null = null;

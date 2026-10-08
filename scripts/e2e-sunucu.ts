@@ -179,8 +179,10 @@ const yzTaklit = createServer((istek, yanit) => {
         return;
       }
       const son = String(g.messages?.at(-1)?.content ?? "").slice(0, 80);
+      /* 384: bağlamda açık raporun özeti varsa söyler (uçtan uca: rapor ekranındaki serbest soru özeti taşıyor mu) */
+      const raporlu = Array.isArray(g.system) && String((g.system[1] as { text?: unknown } | undefined)?.text ?? "").includes("Açık rapor");
       yanit.writeHead(200, { "content-type": "application/json" }).end(JSON.stringify({
-        content: [{ type: "text", text: `Deneme cevabı: “${son}” için menüden Planlar'ı açın.\n- Bu bir taklit cevaptır.` }],
+        content: [{ type: "text", text: `Deneme cevabı: “${son}” için menüden Planlar'ı açın.\n- Bu bir taklit cevaptır.${raporlu ? "\n- Raporu okudum." : ""}` }],
         stop_reason: "end_turn", usage: { input_tokens: 2500, output_tokens: 80 },
       }));
       return;

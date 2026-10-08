@@ -180,7 +180,7 @@ export function SayAsistan() {
     if (bekliyor) return;
     setBekliyor(true);
     try {
-      const y = await saySorEylemi(v, yol, rb?.no);
+      const y = await saySorEylemi(v, yol, rb?.no, rb ? { id: rb.id, cevaplar: rb.cevaplar() } : undefined);
       if (y.durum === "tamam") setSoru("");
       /* soru geçmişe yazıldıysa (çağrı düştü) yeniden çekilir — geçmiş sunucudakiyle aynı kalsın */
       if (!sonuc(y)) setIletiler(await sayGecmisEylemi());

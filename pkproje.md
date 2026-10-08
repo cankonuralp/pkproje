@@ -2355,6 +2355,14 @@ revizyon, alan kopyalama, hafif kusur devri, meslek eşleşme denetimi).
 - Emsal ürünler: https://opwire.app/iso-17020-periyodik-kontrol-yazilimi/ · https://17020muayene.vidco.com.tr/ · https://akuple.com/asansor-kontrol-yazilimi/ · https://ensyazilim.com/
 
 ## 11 · Değişiklik günlüğü
+- 2026-10-08 (384): **S.A.Y raporu bilir** (ARKA-UC §5.3 "Ne bilir: o raporun alanları, türün kriterleri ve formatı"). Rapor ekranında serbest
+  soruya açık raporun özeti eklenir (kaydedilmemiş değişiklikler dahil): ekipman türü, bölümler, kaç madde cevaplandı, "Uygun değil" maddeler
+  (ağır / hafif), sınır dışı ölçüm ve test değerleri, boş zorunlu alanlar, sonuç ve kriterlere göre öneri. Özetin metnini sunucu formatın kendi
+  adlarından kurar; **giden yalnız formatın adları, seçenekler ve sayılar** — kusur açıklaması, notlar, bilgi alanlarının değerleri (seri no,
+  kullanım yeri …), ölçüm satırının elle yazılan etiketi, yorum ve künye (firma, müşteri, tesis, adres, SGK, İSG-KATİP) gitmez (§5.4). Yalnız
+  raporu yazan kişinin Yeni raporunda ve adres o raporsa (raporlar/server/say-baglanti.ts — S.A.Y'ın rapora baktığı tek yer). Kilit
+  say-rapor-ozeti.test (saf), say.test (384: erişim, giden istek); e2e say (rapor ekranında serbest soru özeti taşır). Ayrıca: geçmişin sırası
+  tablonun zamanıyla (aynı milisaniyede soru / cevap yer değiştirebiliyordu); say.test kullanım yardımcısı kişinin kendi satırını okur.
 - 2026-10-08 (383): **Sağlıkta takılı arka plan işi** (09-G5). 1 saatten uzun "çalışıyor"da kalan iş (gece çöp temizliği, duyuru okuma …)
   sağlık ucunda "isler: hayır" ve durum "sorun" olur — duman testi düşer, iş sessizce durmaz. Yeni başlamış iş sorun değil; bir sonraki koşu
   takılı işi "takıldı" yapınca düzelir. Ayrı işlev (0072 is_denetimi; saglik_denetimi'ne dokunulmadı), yalnız sayı. Kilit saglik.test,

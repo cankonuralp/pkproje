@@ -201,6 +201,15 @@ async function erisim(db: Sorgulayici, kim: Kisi, id: string, kilitle = false): 
   return { r, tur, sahip: !!r.hesap_id && r.hesap_id === kim.id };
 }
 
+/** S.A.Y (384; raporlar/server/say-baglanti.ts'ten): düzenlenen raporun format tanımı ve tür adı — YALNIZ raporu yazan kişinin Yeni raporunda (S.A.Y'ın
+    rapor kipiyle aynı; başkasının ya da onaydaki raporun içeriği S.A.Y'a gitmez). Yoksa null. */
+export async function raporSayBilgisi(db: Sorgulayici, kim: Kisi, id: string): Promise<{ tanim: FormatTanimi; turAd: string } | null> {
+  const e = await erisim(db, kim, id);
+  if (!e || !e.sahip || e.r.durum !== "taslak") return null;
+  const f = await formatSurumuOku(db, e.r.format_id);
+  return f ? { tanim: f.tanim, turAd: e.tur.ad } : null;
+}
+
 export interface CihazSatiri {
   turId: string; turAd: string;
   cihaz: { id: string; kod: string; marka: string | null; model: string | null; seri: string | null; bitis: string | null; gecti: boolean; eksik: boolean; lab: boolean } | null;

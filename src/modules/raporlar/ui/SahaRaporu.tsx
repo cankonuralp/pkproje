@@ -276,6 +276,7 @@ export function SahaRaporu({ v }: { v: Gorunum }) {
       },
       sonucUygula: (x) => sayGuncel.current.yaz((c) => ({ ...c, sonuc: x })),
       git: (e) => sayGuncel.current.git({ bolum: e.bolum, alan: e.alan, ad: e.ad }),
+      cevaplar: () => sayGuncel.current.cevaplar,
     });
   }, [oku, v.id, v.no, v.tanim, v.cihazlar]);
 

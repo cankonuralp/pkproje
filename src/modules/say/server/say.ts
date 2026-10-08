@@ -16,6 +16,8 @@ import { maliyetHesapla, type OkumaIstegi, type YzModel } from "../../../server/
 import { SAY_GECMIS, sayEnCokMaliyet, sayIstegi, sayYanitiCoz, SORU_SINIRI } from "../../../server/yz/say.ts";
 import { sohbetGecmisi, sohbetOneriDurumu, sohbetTemizle, sohbetYaz, type SohbetBekleyen, type SohbetEksik, type SohbetIletisi } from "../../../server/yz/sohbet.ts";
 import { SONUC_AD } from "../../raporlar/sema.ts";
+import { raporSayBilgisi } from "../../raporlar/server/say-baglanti.ts";
+import { raporOzeti } from "../rapor-ozeti.ts";
 import type { Kisi } from "../../anasayfa/server/anasayfa.ts";
 import { menuTakip } from "../../anasayfa/server/takip.ts";
 import { MODULLER } from "../../moduller.ts";
@@ -152,7 +154,8 @@ export async function sayOneri(db: Sorgulayici, id: string, durum: "uygulandi" |
 export interface SaySorHazir { durum: "hazir"; istek: OkumaIstegi; anahtar: string; model: YzModel; ay: string; ust: number; yer: string }
 
 /** serbest soru, adım 1 (işlem içinde): kapı, soru, ayırma (sınır doluysa soru yazılmaz), soru geçmişe, istek gövdesi */
-export async function saySorHazirla(db: Sorgulayici, kim: Kisi, soru: string, yol: string, simdi = new Date(), raporNo: string | null = null): Promise<SaySorHazir | { durum: "red"; neden: string }> {
+export async function saySorHazirla(db: Sorgulayici, kim: Kisi, soru: string, yol: string, simdi = new Date(), raporNo: string | null = null,
+  canli: { id: string; cevaplar: unknown } | null = null): Promise<SaySorHazir | { durum: "red"; neden: string }> {
   const metin = soru.replace(/[\u0000-\u0008\u000b\u000c\u000e-\u001f\u007f]/g, "").trim();
   if (!metin) return { durum: "red", neden: "Sorunuzu yazın." };
   if (metin.length > SORU_SINIRI) return { durum: "red", neden: `Soru en çok ${SORU_SINIRI} karakter.` };
@@ -170,7 +173,14 @@ export async function saySorHazirla(db: Sorgulayici, kim: Kisi, soru: string, yo
     return { durum: "red", neden: "Bu ay yapay zekâ sınırınız doldu; firma yöneticisi Firma ayarları › Yapay zekâ'dan artırabilir. Hızlı sorular çalışır." };
   }
   await sohbetYaz(db, { kim: "ben", metin, yer: s.yer });
-  const istek = sayIstegi({ model: k.model, kilavuz: SAY_KILAVUZU, baglam: { roller: kim.roller.map((r) => ROL_ADI[r]), yer: s.yer, yardim: s.yardim, bekleyen }, gecmis, soru: metin });
+  /* 384: rapor sayfasında açık raporun özeti — yalnız adres o raporsa ve kişi raporu yazan, rapor Yeni (raporlar/server/say-baglanti.ts);
+     özet yalnız formatın adları, seçenekler ve sayılar (rapor-ozeti.ts) */
+  let rapor: string | null = null;
+  if (canli && UUID.test(canli.id) && sayfa.modul === 14 && yol.split(/[?#]/)[0] === `/raporlar/${canli.id}`) {
+    const b = await raporSayBilgisi(db, kim, canli.id);
+    rapor = b ? raporOzeti(b.tanim, b.turAd, canli.cevaplar) : null;
+  }
+  const istek = sayIstegi({ model: k.model, kilavuz: SAY_KILAVUZU, baglam: { roller: kim.roller.map((r) => ROL_ADI[r]), yer: s.yer, yardim: s.yardim, bekleyen, rapor }, gecmis, soru: metin });
   return { durum: "hazir", istek, anahtar, model: k.model, ay, ust, yer: s.yer };
 }
 

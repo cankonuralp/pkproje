@@ -47,11 +47,13 @@ export async function sayOneriEylemi(id: unknown, durum: unknown): Promise<boole
   return oturumIslemi(o, (db) => sayOneri(db, id, durum));
 }
 
-export async function saySorEylemi(soru: unknown, yol: unknown, raporNo?: unknown): Promise<SayYaniti> {
+export async function saySorEylemi(soru: unknown, yol: unknown, raporNo?: unknown, canli?: unknown): Promise<SayYaniti> {
   const o = await oturum();
   if (!o) return RED;
   if (typeof soru !== "string") return { durum: "red", neden: "Sorunuzu yazın." };
-  const h = await oturumIslemi(o, (db) => saySorHazirla(db, o, soru, yolAl(yol), new Date(), typeof raporNo === "string" ? raporNo : null));
+  const c = (canli ?? null) as { id?: unknown; cevaplar?: unknown } | null;
+  const rapor = c && typeof c.id === "string" ? { id: c.id, cevaplar: c.cevaplar } : null;
+  const h = await oturumIslemi(o, (db) => saySorHazirla(db, o, soru, yolAl(yol), new Date(), typeof raporNo === "string" ? raporNo : null, rapor));
   if (h.durum !== "hazir") return h;
   const y = await anthropicCagir(h.istek, h.anahtar);
   if (y.durum === "hata") {

@@ -22,6 +22,8 @@ export interface SayBaglami {
   yardim: string | null;
   /** bekleyen işler: modül adı + sayı + ne olduğu (kişi / müşteri bilgisi yok) */
   bekleyen: string[];
+  /** açık rapor (384): yalnız formatın adları, seçenekler, sayılar (src/modules/say/rapor-ozeti.ts) */
+  rapor?: string | null;
 }
 export interface SayGecmisIletisi { kim: "ben" | "say"; metin: string }
 
@@ -35,8 +37,9 @@ export function saySistemi(kilavuz: readonly (readonly [string, string])[]): str
     "1. Türkçe, kısa ve net cevap ver: en çok 6 cümle ya da kısa madde listesi. Selamlama ve hitap kullanma.",
     "2. Yalnız öneri ve yol gösterirsin. Kayıt yazamazsın, imzalayamazsın, gönderemezsin, onaylayamazsın, silemezsin; başka ekrana götüremezsin.",
     "   Bir işin nereden yapıldığını sorarlarsa menüdeki yerini söyle (ör. \"Planlar › planı açın › Kabul et\").",
-    "3. Firmanın kayıtlarını (müşteri, rapor, plan ayrıntısı) GÖRMÜYORSUN; yalnız sana verilen bağlamı (rol, sayfa, bekleyen iş sayıları) bilirsin.",
-    "   Görmediğin bir kaydı uydurma; kullanıcıyı ilgili sayfaya yönlendir.",
+    "3. Firmanın kayıtlarını (müşteri, plan ayrıntısı, başka raporlar) GÖRMÜYORSUN; yalnız sana verilen bağlamı (rol, sayfa, bekleyen iş sayıları ve",
+    "   kullanıcı rapor yazıyorsa o raporun özeti: madde adları, cevaplar, sınır dışı değerler, boş alanlar, sonuç) bilirsin. Görmediğin bir kaydı",
+    "   uydurma; kullanıcıyı ilgili sayfaya yönlendir. Rapor için öneri verebilirsin (hangi madde, kusur derecesi, eksik ne); rapora kullanıcı yazar.",
     "4. Mevzuat ve standart sorularında genel bilgi ver, madde numarası uydurma; kesin hüküm için Bakanlığın yayımladığı metne ve firmanın",
     "   Dökümanlar'ına bakmasını söyle. Emin olmadığın yerde \"emin değilim\" de.",
     "5. Kişisel veri (ad, telefon, T.C. kimlik no, adres) isteme ve tekrar etme.",
@@ -68,6 +71,7 @@ export function sayIstegi(p: { model: YzModel; kilavuz: readonly (readonly [stri
     `Kullanıcının rolleri: ${b.roller.join(", ") || "—"}.`,
     `Şu an bulunduğu sayfa: ${b.yer}.${b.yardim ? ` (${b.yardim})` : ""}`,
     b.bekleyen.length ? `Bekleyen işleri: ${b.bekleyen.join("; ")}.` : "Şu an bekleyen işi yok.",
+    ...(b.rapor ? [`Açık rapor (kullanıcının şu an yazdığı, kaydedilmemiş değişiklikler dahil):\n${b.rapor}`] : []),
   ].join("\n");
   return {
     govde: {
