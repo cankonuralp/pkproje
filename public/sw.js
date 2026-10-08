@@ -96,10 +96,31 @@ async function sayfaSakla(yol, y) {
     if (once) k = once; else await istek(t.objectStore(ANAHTAR).put(k, "ana"));
   }
   const govde = new Uint8Array(await y.arrayBuffer());
+  /* önce sayfanın uygulama dosyaları, sonra sayfa: sayfa saklandıysa dosyaları da cihazdadır */
+  await dosyalariSakla(new TextDecoder().decode(govde)).catch(() => undefined);
   const iv = crypto.getRandomValues(new Uint8Array(12));
   const sifreli = await crypto.subtle.encrypt({ name: "AES-GCM", iv }, k, govde);
   const basliklar = SAKLANAN_BASLIKLAR.flatMap((ad) => { const d = y.headers.get(ad); return d ? [[ad, d]] : []; });
   await istek(db.transaction(SAYFALAR, "readwrite").objectStore(SAYFALAR).put({ iv, sifreli, basliklar, zaman: Date.now() }, yol));
+}
+
+/** sayfanın kullandığı uygulama dosyaları (betik, stil, yazı tipi — sayfanın içinde ve sunucu bileşeni verisinde adı geçen /_next/static yolları)
+    önbellekte yoksa indirilir: önceden indirilen (hiç açılmamış) sayfa da bağlantısız ÇALIŞSIN — yalnız sayfayı saklamak yetmez, yeni yayından
+    sonra dosya adları değişir ve sayfanın dosyası cihazda olmaz (CI 2177156, telefon: sayfa göründü, bağlanmadı). Önbellek sınırlı (en eski silinir). */
+const STATIK_EN_COK = 600;
+async function dosyalariSakla(html) {
+  const yollar = new Set();
+  for (const m of html.matchAll(/(?:\/_next\/)?(static\/(?:chunks|css|media)\/[^"'\s\\<>]+)/g)) yollar.add(`/_next/${m[1]}`);
+  const c = await caches.open(STATIK);
+  for (const yol of yollar) {
+    const r = new Request(new URL(yol, self.location.origin).href);
+    if (await c.match(r)) continue;
+    let y;
+    try { y = await fetch(r); } catch { return; }
+    if (y.ok) await c.put(r, y);
+  }
+  const anahtarlar = await c.keys();
+  for (const eski of anahtarlar.slice(0, Math.max(0, anahtarlar.length - STATIK_EN_COK))) await c.delete(eski);
 }
 
 async function sayfaOku(yol) {

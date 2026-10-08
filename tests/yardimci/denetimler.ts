@@ -332,6 +332,13 @@ export function swEksikleri(sw: string, depo: string, proxy: string): string[] {
   if (!proxy.includes(`"worker-src 'self'"`)) eksik.push("CSP worker-src 'self' yok");
   /* saklama yanıtı bekletmez: sayfa / dosya tarayıcıya akarak gider, kopyası arka planda (CI 2177156 — bütün sayfayı bekleyen çalışan, yavaş
      sunucuda sayfayı takılı bıraktı) */
-  if (/await\s+(sayfaSakla|c\.put|caches\.open)\(/.test(sw) || !sw.includes("e.waitUntil(sayfaSakla(")) eksik.push("saklama yanıtı bekletiyor (waitUntil değil)");
+  if (/await\s+(sayfaSakla|c\.put|caches\.open)\(/.test(sw.replace(/async function dosyalariSakla[\s\S]*?\n}\n/, "")) || !sw.includes("e.waitUntil(sayfaSakla(")) {
+    eksik.push("saklama yanıtı bekletiyor (waitUntil değil)");
+  }
+  /* saklanan sayfanın uygulama dosyaları da saklanır (CI 2177156: önceden indirilen sayfa bağlantısız göründü ama dosyası cihazda olmadığı için
+     çalışmadı); sayfa kaydı dosyalardan SONRA yazılır */
+  const sakla = /async function sayfaSakla[\s\S]*?\n}\n/.exec(sw)?.[0] ?? "";
+  const dosyaYeri = sakla.indexOf("await dosyalariSakla("), kayitYeri = sakla.indexOf("objectStore(SAYFALAR).put(");
+  if (dosyaYeri < 0 || kayitYeri < 0 || dosyaYeri > kayitYeri) eksik.push("saklanan sayfanın uygulama dosyaları önce saklanmıyor");
   return eksik;
 }

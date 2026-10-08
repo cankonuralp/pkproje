@@ -163,4 +163,7 @@ test("servis çalışanı: depo şeması ayrışınca, API saklanınca, GET dene
   /* saklama yanıtı bekletirse (sayfa bitmeden tarayıcıya hiçbir şey gitmez) yakalanır */
   assert.deepEqual(swEksikleri(sw.replace("e.waitUntil(sayfaSakla(yol, y.clone()).catch(() => undefined));", "await sayfaSakla(yol, y.clone()).catch(() => undefined);"), depo, proxy),
     ["saklama yanıtı bekletiyor (waitUntil değil)"]);
+  /* sayfanın uygulama dosyaları saklanmazsa (önceden indirilen sayfa bağlantısız görünür ama çalışmaz) yakalanır */
+  assert.deepEqual(swEksikleri(sw.replace("  await dosyalariSakla(new TextDecoder().decode(govde)).catch(() => undefined);\n", ""), depo, proxy),
+    ["saklanan sayfanın uygulama dosyaları önce saklanmıyor"]);
 });
