@@ -211,7 +211,10 @@ test("kullanım yalnız artar ve kişinin kendi hanesine; okuma kaydı değişme
 
 /* 385: etiket plakasından okuma (rapor silinmeden önce) */
 test("385 etiket plakası: yalnız yazan, Yeni raporunda; istekte kişi / firma yok; öneri döner, rapora yazılmaz; kullanım ve okuma kaydı", async () => {
-  tamam(await yzAyari({ sinir: null }));
+  /* sınır önceki testten kalanla aynı bırakılır (sonraki test kendi sınırını kurar) */
+  const ayarla = async (d: object) => assert.match((await yzAyari(d)).durum, /^(tamam|degisiklik_yok)$/);
+  const onceki = (await a(FA.yon, (db) => ayarOku(db, "yapay_zeka"))).deger.sinir;
+  await ayarla({ sinir: null });
   const et = (k: Kisi, rapor = FA.rapor, foto = JPEG) => a(k, (db) => etiketOkuHazirla(db, k, rapor, { bayt: foto }));
   assert.equal((await et(FA.den2)).durum, "yok", "başka denetçi");
   assert.equal((await et(FA.plan)).durum, "yetkisiz", "raporu gören planlamacı okutamaz");
@@ -238,6 +241,7 @@ test("385 etiket plakası: yalnız yazan, Yeni raporunda; istekte kişi / firma 
   tamam(await yzAyari({ acik: false }));
   assert.match(JSON.stringify(await et(FA.den1)), /firmada kapalı/);
   tamam(await yzAyari({ acik: true }));
+  await ayarla({ sinir: onceki });
 });
 
 test("ödenen okuma rapor okuma sürerken silinse de kişinin kullanımına yazılır; öneri dönmez (en sonda — rapor silinir)", async () => {
