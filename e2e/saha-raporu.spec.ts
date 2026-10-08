@@ -20,6 +20,7 @@
 import { readFileSync } from "node:fs";
 import { expect, test, type Locator, type Page } from "@playwright/test";
 import { E2E_FIRMA, E2E_HESAPLAR, E2E_PLAN, E2E_SAHA } from "./hesaplar";
+import { bulguMetni, siteyiTara } from "./tarama";
 import { girisli, hazir } from "./yardimci";
 
 const UUID = "[0-9a-f]{8}-[0-9a-f]{4}-[0-9a-f]{4}-[0-9a-f]{4}-[0-9a-f]{12}";
@@ -69,7 +70,7 @@ async function zamanYaz(page: Page, ad: string, gun: string, saat: string, dakik
 }
 
 test("saha raporu: rapor oluştur, eksikle gönderilmez, doldur + cihaz ekle, onaya gönder; planda durumuyla listelenir", async ({ page, context }) => {
-  test.setTimeout(300_000);   // ilk koşuda saha rapor ekranı soğuk derlenebilir; akış onaya kadar uzun
+  test.setTimeout(600_000);   // ilk koşuda saha rapor ekranı soğuk derlenebilir; akış onaya kadar uzun; 420: müşteri paneli taraması (~1–3 dk)
   await girisli(page, "yonetici");
   const adres = await planAc(page);
   const planNo = (await page.getByRole("navigation", { name: "Konum" }).textContent())!.match(/P-\d{4}-\d{3,6}/)![0];
@@ -334,6 +335,11 @@ test("saha raporu: rapor oluştur, eksikle gönderilmez, doldur + cihaz ekle, on
   expect(readFileSync((await imzaliPdf.path())!).subarray(0, 5).toString("latin1")).toBe("%PDF-");
   await page.goto("/raporlar");
   await expect(page).toHaveURL(/\/portal$/, { timeout: 30_000 });
+  /* 420: müşteri panelinin taraması (e2e/tarama.ts — firma tarafı e2e/tarama.spec.ts): her sekme ve rapor sayfası açılır, hata / taşma / basılamayan
+     öğe / erişilebilirlik ihlali yok */
+  const tarama = await siteyiTara(page, ["/portal"], { enCok: 20, sure: 5 * 60_000 });
+  expect(tarama.gezilen.length, "müşteri paneli taraması boş geçti").toBeGreaterThan(4);
+  expect(tarama.bulgular, `müşteri paneli taraması ${tarama.bulgular.length} bulgu:\n${bulguMetni(tarama.bulgular)}`).toEqual([]);
   await context.clearCookies();
   await girisli(page, "denetci");
   await page.goto(raporAdresi);

@@ -2355,6 +2355,11 @@ revizyon, alan kopyalama, hafif kusur devri, meslek eşleşme denetimi).
 - Emsal ürünler: https://opwire.app/iso-17020-periyodik-kontrol-yazilimi/ · https://17020muayene.vidco.com.tr/ · https://akuple.com/asansor-kontrol-yazilimi/ · https://ensyazilim.com/
 
 ## 11 · Değişiklik günlüğü
+- 2026-10-08 (420): **Site taraması** (reisim: *"bu ve benzeri her türlü front back hatalarını toplu kontrol et reisim tüm siteyi kusursuz
+  bitir"*). Uçtan uca, üç genişlikte: firma yöneticisi siteyi Ana sayfadan ve her modülden bağlantı izleyerek gezer (aynı kalıptaki adres bir
+  kez), müşteri paneli saha raporu denemesinde müşteri girişiyle. Her sayfada: sunucu 5xx, sayfa / konsol hatası, yatay taşma, başka öğenin
+  altında kalan ya da ekran dışında kalan tuş / bağlantı / alan, erişilebilirlik (axe, açık ve koyu tema), çekmecede her menü maddesi ekranda ve
+  basılabilir. Bulgular tek listede (e2e/tarama.ts). Gezilmez: /api, PDF, giriş / çıkış.
 - 2026-10-08 (419): **Telefonda yan menünün son maddesine basılamıyordu** (reisim: *"mobilde … chrome da iken yan bar da en aşağıya kaydırıpta
   firma ayarları kısmına tıklayamadım"*). Sebep: çekmecenin yüksekliği 100vh — telefon tarayıcısında vh adres çubuğu GİZLİYKENki boy; çubuk
   görünürken çekmecenin alt ~56 px'i ekran dışında kalıyor, menü en alta kaysa da son modül (Firma ayarları) o şeride düşüyordu. Artık

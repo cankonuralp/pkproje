@@ -60,8 +60,9 @@ jobs:
     name: Uçtan uca (${{ matrix.proje }})
     if: github.ref != 'refs/heads/main'
     runs-on: ubuntu-latest
-    # 413: olağan süre 19–26 dk (+ yavaş paket sunucusunda kurulum ~10 dk — 7ed6e25 telefon 34 dk); asılı kalan iş 50 dk'da kesilir
-    timeout-minutes: 50
+    # 413: olağan süre 19–26 dk (+ yavaş paket sunucusunda kurulum ~10 dk — 7ed6e25 telefon 34 dk); asılı kalan iş kesilir. 420: site taraması
+    # (e2e/tarama.spec.ts) her sayfayı iki temada tarar — ilk ölçüme kadar 70 dk
+    timeout-minutes: 70
     strategy:
       fail-fast: false
       matrix:
