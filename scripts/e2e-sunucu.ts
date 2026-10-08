@@ -10,7 +10,7 @@ import { tmpdir } from "node:os";
 import { join } from "node:path";
 import { createServer } from "node:http";
 import { ornekSayfa } from "../e2e/duyuru-ornek.ts";
-import { E2E_FIRMA, E2E_HESAPLAR, E2E_ILK, E2E_KAPI, E2E_MUHASEBE, E2E_PAROLA, E2E_PLAN, E2E_SAHA, E2E_YONETIM, E2E_YONETIM_PROJELER, E2E_YZ, E2E_ZAMANLI_SIR } from "../e2e/hesaplar.ts";
+import { E2E_FIRMA, E2E_GORSEL, E2E_HESAPLAR, E2E_ILK, E2E_KAPI, E2E_MUHASEBE, E2E_PAROLA, E2E_PLAN, E2E_SAHA, E2E_YONETIM, E2E_YONETIM_PROJELER, E2E_YZ, E2E_ZAMANLI_SIR } from "../e2e/hesaplar.ts";
 import { planKabul, planIci } from "../src/modules/planlar/server/plan-ici.ts";
 import { planAc } from "../src/modules/planlar/server/planlar.ts";
 import { raporOlustur } from "../src/modules/raporlar/server/raporlar.ts";
@@ -267,6 +267,36 @@ try {
       [id, sifrele(E2E_YONETIM.anahtar, "yonetim", `totp:${id}`, Buffer.from(sirAnahtari, "base64"))]);
   }
 } finally { await sy.end(); }
+
+/* görsel karşılaştırma (411; e2e/gorsel.spec.ts): ayrı uydurma firma, SABİT numara / tarih / içerik — referans ekranın görüntüsü bugüne bağlı
+   değişmesin. Kabul edilmiş tek plan (geçmiş tarihli: "plan günü gelmedi" şeridi çıkmaz), iki denetçili ekip değil tek denetçi, üç ekipman,
+   rapor yok. Süper kullanıcıyla, tetiksiz (sabit numara ve damgalar için), geçici veritabanı */
+const sg = kume.sahipIstemci();
+await sg.connect();
+try {
+  const g = E2E_GORSEL;
+  const firma = (await sg.query<{ id: string }>("INSERT INTO firma (kisa_ad, ad, rapor_kodu) VALUES ($1, $2, $3) RETURNING id::text",
+    [g.firma.kisaAd, g.firma.ad, g.firma.raporKodu])).rows[0].id;
+  await sg.query("SET session_replication_role = replica");
+  const q = async (sql: string, p: unknown[]) => (await sg.query<{ id: string }>(sql, [firma, ...p])).rows[0].id;
+  const yp = await q("INSERT INTO personel (firma_id, ad, eposta, basla, meslek) VALUES ($1, $2, $3, '2024-01-15', 'mak-muh') RETURNING id::text", [g.yonetici.ad, g.yonetici.eposta]);
+  await q("INSERT INTO hesap (firma_id, eposta, ad, parola_ozeti, roller, durum, personel_id) VALUES ($1, $2, $3, $4, $5, 'etkin', $6) RETURNING id::text",
+    [g.yonetici.eposta, g.yonetici.ad, ozet, ["firma_yoneticisi"], yp]);
+  const dp = await q("INSERT INTO personel (firma_id, ad, eposta, basla, meslek, ekipnet) VALUES ($1, $2, 'denetci@gorsel.example', '2024-01-15', 'mak-muh', '501') RETURNING id::text", [g.denetci]);
+  const m = await q("INSERT INTO musteri (firma_id, unvan, kisa) VALUES ($1, $2, 'Görsel Deneme') RETURNING id::text", [g.musteri]);
+  const t = await q("INSERT INTO tesis (firma_id, musteri_id, ad, adres, il, ilce) VALUES ($1, $2, $3, 'Görsel Cad. No 5', 'Kocaeli', 'Gebze') RETURNING id::text", [m, g.tesis]);
+  const tur = await q("INSERT INTO ekipman_turu (firma_id, kod, ad, grup, brans, periyot) VALUES ($1, 'HT', 'Hava tankı', 'basincli', 'm', 12) RETURNING id::text", []);
+  const pl = await q(`INSERT INTO plan (firma_id, no, tesis_id, baslangic, bitis, durum, firma_adi, adres, acan, kabul, kabul_eden, beyan, olustu, degisti)
+    VALUES ($1, $2, $3, '2026-01-15', '2026-01-16', 'kabul', $4, 'Görsel Cad. No 5, Gebze / Kocaeli', 'Görsel Planlama', '2026-01-14 10:00+03', $5,
+      'Görsel deneme tarafsızlık beyanı metni (uydurma).', '2026-01-12 09:00+03', '2026-01-14 10:00+03') RETURNING id::text`, [g.plan, t, g.musteri, g.denetci]);
+  await q("INSERT INTO plan_ekip (firma_id, plan_id, personel_id, isg_no) VALUES ($1, $2, $3, 'ISG-GR-501') RETURNING id::text", [pl, dp]);
+  for (const kod of ["HT-0501", "HT-0502", "HT-0503"]) {
+    const e = await q("INSERT INTO ekipman (firma_id, tesis_id, tur_id, kod, ekleyen, olustu, degisti) VALUES ($1, $2, $3, $4, 'Görsel Planlama', '2026-01-10 09:00+03', '2026-01-10 09:00+03') RETURNING id::text",
+      [t, tur, kod]);
+    await q("INSERT INTO plan_ekipman (firma_id, plan_id, ekipman_id, ekleyen, olustu, degisti) VALUES ($1, $2, $3, 'Görsel Planlama', '2026-01-12 09:00+03', '2026-01-12 09:00+03') RETURNING id::text",
+      [pl, e]);
+  }
+} finally { await sg.end(); }
 
 let kapaniyor = false;
 const kapat = async (kod: number) => { if (kapaniyor) return; kapaniyor = true; await kume.durdur(); process.exit(kod); };

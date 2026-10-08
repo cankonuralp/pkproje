@@ -352,8 +352,10 @@ giriş reisim'in (parolayı ben yazmam) — bakılamayan "ölçemedim" diye yaz�
   GERÇEK PostgreSQL'de (iki firma, WITH CHECK, uygulama rolü süper kullanıcı değil, göç idempotent) · giriş / oturum / kilit · yetki
   aynaları · güvenli yazıcı (sürüm kilidi, sütun listesi, gizli alan) · denetim izi değişmez + kim / zaman veritabanı damgası · ham yazma yasağı
   (2026-10-04).
-- Sonra: Playwright + erişilebilirlik (ilk ekranlar) · görsel regresyon (referans ekran) · hata alarmı (yayında;
-  kayıt yapısı ilk günden).
+- Kuruldu (2026-10-08): erişilebilirlik taraması (410, `e2e/erisilebilirlik.spec.ts`, axe, ciddi / kritik 0) · görsel karşılaştırma
+  (411, `e2e/gorsel.spec.ts`: referans ekran üç genişlik × açık / koyu, sabit verili "gorsel" firması; kayıtlı görüntüler
+  `e2e/__goruntu__/<genişlik>/` — kasıtlı görsel değişiklikte deneme makinesinin yazdığı yeni görüntüler gözden geçirilip commit'e girer).
+  Sonra: hata alarmı (yayında; kayıt yapısı ilk günden).
 
 ## 7 · ASLA (bu projeye özgü; anayasadaki yasaklar ayrıca geçerli)
 - Kurgu bitmeden ve reisim "başla" demeden **kod yazma**; kapsam dışı işi yapma, `pkproje.md`'ye not et.

@@ -69,3 +69,12 @@ export const E2E_YONETIM = {
     };
   },
 };
+/* görsel karşılaştırma (411): AYRI uydurma firma — referans ekranın (Planlar + plan içi; CLAUDE.md §6, src/styles/kalip.ts) görüntüsü her koşuda
+   aynı çıksın diye SABİT numara, tarih ve içerikle (bugünden bağımsız); başka test bu firmaya dokunmaz */
+export const E2E_GORSEL = {
+  firma: { kisaAd: "gorsel", ad: "Görsel Deneme Muayene", raporKodu: "GR" },
+  yonetici: { eposta: "yonetici@gorsel.example", ad: "Görsel Yönetici" },
+  denetci: "Görsel Denetçi",
+  musteri: "Görsel Deneme Sanayi A.Ş.", tesis: "Görsel Tesisi",
+  plan: "P-0126-501",
+} as const;
