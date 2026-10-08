@@ -37,6 +37,8 @@ export default defineConfig({
        saha rolündeki her oturum sayfaların geliştirme kipindeki büyük dosyalarını yeniden indiriyordu; geliştirme sunucusu bellek sınırında
        yeniden başlayıp son testleri düşürüyordu. Uygulama davranışı değişmez (kayıt denemesi reddedilir, uygulama yakalar). */
     serviceWorkers: "block",
+    /* 423: düşen testin izi (ağ, konsol, ekran adımları) sonuç dosyasında — anlık hatanın sebebi görülsün */
+    trace: "retain-on-failure",
     launchOptions: hazir ? { executablePath: hazir } : {},
   },
   projects: [

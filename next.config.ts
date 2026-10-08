@@ -27,6 +27,10 @@ const ortak: NextConfig = {
   /* geliştirme göstergesi (sol altta yüzen rozet): uçtan uca sunucusunda kapalı — telefonda altta yapışkan tuş çubuğunun üstüne binip tıklamayı
      engelliyordu (402); hata olursa geliştirme hata penceresi yine açılır. Yayında zaten yok. */
   ...(process.env.PROBATA_HATA_KANALI === "0" ? { devIndicators: false as const } : {}),
+  /* 423: uçtan uca sunucusunda derlenen sayfalar bellekte KALIR — varsayılan (son 2 sayfa, 25 sn) site taramasından (420) sonra giriş sayfasını
+     sürekli atıp yeniden derletiyordu; o anda açılan sayfa sunucudan geliyor ama tarayıcıda canlanmıyordu (S.A.Y denemesi 9cf7f54 masaüstü,
+     62ebb57 telefon: html[data-hazir] 30 sn'de yok). Yalnız geliştirme kipinde anlamlı; yayında derleme yok. */
+  ...(process.env.PROBATA_HATA_KANALI === "0" ? { onDemandEntries: { maxInactiveAge: 4 * 60 * 60_000, pagesBufferLength: 500 } } : {}),
   /* PDF motoru (src/belge/pdf.ts, 316): Chromium paketleri derlemeye katılmaz (düğüm modülü olarak yüklenir); belge CSS'i, yazı tipi ve sunucusuz
      Chromium ikilisi yalnız PDF basan uçların izine eklenir (teklif PDF'i — 325; fatura özeti — 340; talep formu — 341; araç tutanağı — 342) — rapor sayfası da (İmzala sunucu eylemi orada koşar; 315–317
      incelemesi), araç listesi ve araç sayfası da (Tutanağı kaydet eylemi tutanağın PDF'ini orada basar, 342), personel kartı da (zimmet formu İmzaya gönder, 344), eğitim kayıtları da (katılım formu, 345) */

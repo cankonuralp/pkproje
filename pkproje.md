@@ -2355,6 +2355,10 @@ revizyon, alan kopyalama, hafif kusur devri, meslek eşleşme denetimi).
 - Emsal ürünler: https://opwire.app/iso-17020-periyodik-kontrol-yazilimi/ · https://17020muayene.vidco.com.tr/ · https://akuple.com/asansor-kontrol-yazilimi/ · https://ensyazilim.com/
 
 ## 11 · Değişiklik günlüğü
+- 2026-10-08 (423): **Deneme sunucusunda sayfalar bellekte kalır** — 422'nin turunda tarama üç genişlikte TEMİZ geçti; S.A.Y denemesi bu kez
+  telefonda 30 sn beklemeye rağmen düştü: giriş sayfası sunucudan geliyor, tarayıcıda canlanmıyordu (sayfa görüntüsü sonuç dosyasında). Sebep:
+  geliştirme kipi varsayılanda yalnız son 2 sayfayı tutup 25 sn açılmayanı atıyor; taramadan sonra giriş sayfası sürekli yeniden derleniyordu.
+  Uçtan uca sunucusunda derlenen sayfalar bellekte kalır (onDemandEntries; yayında derleme yok, etkisiz). Düşen testin izi artık sonuç dosyasında.
 - 2026-10-08 (422): **Site taramasının ilk koşusu** (9cf7f54): üç genişlikte 58'er sayfa gezildi (firma yöneticisi), taramanın kendisi 5–7 dk.
   Sunucu hatası, konsol hatası, yatay taşma, basılamayan öğe YOK; çekmecenin her maddesi ekranda ve basılabilir. Bulunan iki erişilebilirlik
   konusu düzeltildi: rapor belgesinde logo / AKR yer tutucusunun grisi #7f7f7f beyazda 4,0:1 → #595959 (7:1; PDF'te de); rapor önizlemesinin
