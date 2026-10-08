@@ -2355,6 +2355,12 @@ revizyon, alan kopyalama, hafif kusur devri, meslek eşleşme denetimi).
 - Emsal ürünler: https://opwire.app/iso-17020-periyodik-kontrol-yazilimi/ · https://17020muayene.vidco.com.tr/ · https://akuple.com/asansor-kontrol-yazilimi/ · https://ensyazilim.com/
 
 ## 11 · Değişiklik günlüğü
+- 2026-10-08 (407): **Yönetim iki adımlı girişine karekod** (reisim: Google Authenticator'a anahtar elle yazılınca "süre geçti" hatası — 393'te
+  iki adım kapatıldı). Kurulum ekranında anahtarın karekodu (doğrulama uygulamasıyla "karekod tara"; okutulamazsa anahtar yine yazılı). Sunucuda
+  üretilir (qrcode 1.5.4, MIT — yalnız modül dizisi), ekran SVG yolu olarak çizer (HTML enjekte edilmez), her temada koyu modül açık zemin (marka
+  renkleri). İki adım hâlâ KAPALI (yonetim_ayar.iki_adim); açılınca ilk kurulumda karekod görünür. Kilit karekod.test: ekranın çizdiği yol bir
+  karekod okuyucuyla (jsQR 1.4.0, geliştirme paketi) okunur ve doğrulama bağlantısının (otpauth://, 6 hane, 30 sn) AYNISI çıkar; bozan
+  karekod (modül eksik / satır kayık → okunmaz). Gözle bakılamadı (iki adım kapalıyken kurulum ekranı açılmaz) — ölçemedim.
 - 2026-10-08 (405): **Çevrimdışı çalışma — bağlantısız rapor oluşturma** (ARKA-UC §4.1 "rapor oluşturma (plan günü geldiyse — P1)"; K3'ün son
   eksiği). Bağlantı varken plan başına bir sayfa önceden iner (/raporlar/yeni/<plan>: planın raporu olmayan etkin ekipmanları, türlerinin
   yayındaki formatı ve ilk cevapları, künye, yazan — raporlar/server/raporlar.ts yeniRaporPaketi; hiçbir şey yazılmaz). Bağlantı yokken (ya da

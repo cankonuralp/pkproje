@@ -119,7 +119,8 @@ export function YonetimKodFormu({ eposta }: { eposta: string }) {
   );
 }
 
-export function YonetimKurulumFormu({ eposta, anahtar, adres }: { eposta: string; anahtar: string; adres: string }) {
+/** `karekod` (407): anahtarın karekodu (sunucuda üretilir, yalnız çizim yolu) — uygulamayla okutulur */
+export function YonetimKurulumFormu({ eposta, anahtar, adres, karekod }: { eposta: string; anahtar: string; adres: string; karekod: { boyut: number; yol: string } }) {
   const [durum, eylem, gonderiyor] = useActionState<YKurulumDurumu, FormData>(yonetimKurulumEylemi, {});
   useEffect(() => yonlendir(durum.yonlendir), [durum.yonlendir]);
   /* sunucudan dönen ilk hatalı alana odak; ileti alana aria-describedby ile bağlı, odakla okunur (347–348 incelemesi) */
@@ -136,7 +137,12 @@ export function YonetimKurulumFormu({ eposta, anahtar, adres }: { eposta: string
       {h.genel && <Serit tur="hata" ikon="circle-alert">{h.genel}</Serit>}
       <div className={stil.alan}>
         <p className={stil.etiket}>1. Anahtarı uygulamaya ekleyin</p>
-        <p className={stil.ipucu}>Google Authenticator, Microsoft Authenticator ya da benzeri bir uygulamada “anahtar gir” ile ekleyin (hesap adı: probata yönetim).</p>
+        <p className={stil.ipucu}>Google Authenticator, Microsoft Authenticator ya da benzeri bir uygulamada “karekod tara” ile bu karekodu okutun; okutamazsanız aşağıdaki anahtarı “anahtar gir” ile ekleyin (hesap adı: probata yönetim, türü: zamana dayalı).</p>
+        {/* karekod her temada koyu modül açık zemin (marka renkleri, sabit) — okuyucular ters renkli kodu okumayabilir */}
+        <svg className={stil.karekod} viewBox={`-4 -4 ${karekod.boyut + 8} ${karekod.boyut + 8}`} role="img" aria-label="Doğrulama uygulaması için karekod" shapeRendering="crispEdges">
+          <rect x={-4} y={-4} width={karekod.boyut + 8} height={karekod.boyut + 8} className={stil.karekodZemin} />
+          <path d={karekod.yol} className={stil.karekodModul} />
+        </svg>
         <p className={stil.adres} id="y-anahtar" translate="no">{anahtar.match(/.{1,4}/g)?.join(" ")}</p>
         <div className={stil.tuslar}>
           {kopya.tus}

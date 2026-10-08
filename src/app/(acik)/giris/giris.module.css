@@ -45,3 +45,7 @@
   .kart { padding: 20px; }
   .tuslar > * { flex: 1 1 100%; }
 }
+/* 407 yönetim kurulumu karekodu: her temada koyu modül açık zemin (marka renkleri sabit — okuyucular ters renkli kodu okumayabilir) */
+.karekod { display: block; width: 100%; max-width: 220px; height: auto; margin: 8px 0 12px; border-radius: var(--r-orta); }
+.karekodZemin { fill: var(--marka-kagit); }
+.karekodModul { fill: var(--marka-petrol); }

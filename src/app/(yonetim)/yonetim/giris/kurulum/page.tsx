@@ -1,8 +1,9 @@
 /* YÖNETİM GİRİŞİ › İLK KURULUM (348) — geçici parolayla ilk girişte: doğrulama uygulamasının anahtarı (yalnız bu bekleyen oturumda gösterilir),
-   kod ve yeni parola. Kurulmuş yönetici kod adımına gider. */
+   kod ve yeni parola. Kurulmuş yönetici kod adımına gider. 407: anahtar karekodla da (uygulamayla okutulur; elle yazma hatası olmaz). */
 import type { Metadata } from "next";
 import { notFound, redirect } from "next/navigation";
 import { yonetimAdresinde, yonetimBekleyen, yonetimIkiAdim, yonetimIstekOturumu, yonetimKurulumu } from "../../../../../server/yonetim/istek";
+import { karekod } from "../../../../../server/yonetim/karekod";
 import { YonetimKurulumFormu } from "../YonetimGirisFormlari";
 
 export const metadata: Metadata = { title: { absolute: "İki adımlı giriş kurulumu · probata yönetim" } };
@@ -13,5 +14,5 @@ export default async function YonetimKurulumSayfasi() {
   if (!(await yonetimIkiAdim())) redirect("/yonetim/giris");   // 393: iki adım kapalı
   const k = await yonetimKurulumu();
   if (!k) redirect((await yonetimBekleyen())?.durum === "etkin" ? "/yonetim/giris/kod" : "/yonetim/giris?neden=oturum");
-  return <YonetimKurulumFormu eposta={k.eposta} anahtar={k.anahtar} adres={k.adres} />;
+  return <YonetimKurulumFormu eposta={k.eposta} anahtar={k.anahtar} adres={k.adres} karekod={karekod(k.adres)} />;
 }
