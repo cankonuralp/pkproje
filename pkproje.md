@@ -2355,6 +2355,12 @@ revizyon, alan kopyalama, hafif kusur devri, meslek eşleşme denetimi).
 - Emsal ürünler: https://opwire.app/iso-17020-periyodik-kontrol-yazilimi/ · https://17020muayene.vidco.com.tr/ · https://akuple.com/asansor-kontrol-yazilimi/ · https://ensyazilim.com/
 
 ## 11 · Değişiklik günlüğü
+- 2026-10-08 (416): **YAYIN — 409–415 canlıda** (simge, erişilebilirlik taraması, görsel karşılaştırma, bağlantı rengi, deneme makinesi süre
+  sınırı, Planlar tablet taşması, üç listede taşma). Veritabanı değişikliği yok (Supabase 0076 / 77 göç, aynı). main 7ed6e25 (Vercel;
+  /api/saglik sürüm 7ed6e25, bütün denetimler tamam) · duman 10/10 (yeni: /favicon.ico → 308 /icon.svg) · son 2 saatte çalışma hatası yok ·
+  canlı giriş sayfası tarayıcıda konsolu temiz (408'deki simge 404'ü kalktı). Deneme makinesi 7ed6e25: denetim 4 dk, üç genişlik yeşil
+  (görsel karşılaştırma dahil). Oturum isteyen ekranlar (Planlar, Raporlar, Onaylar, müşteri paneli, Uyarılar) canlıda ölçemedim — giriş
+  reisim'in; Planlar + plan içi deneme makinesinde üç genişlik × iki temada görüntüyle doğrulandı.
 - 2026-10-08 (415): **Aynı taşma üç listede daha** (414'ün taraması): Raporlar listesi ve müşteri panelinin rapor listesi (ekipman kodu + tür
   adı), Uyarılar listesi (konu bağlantısı) — ikon / kod + metin satırı içerik kadar genişliyordu, uzun ad kısaltılamayıp yandaki sütuna
   taşardı. Satır artık hücre kadar (maket .a-hucre-satir / .a-adres); sığmayan ad alt satıra iner ve "…" ile kısalır.
