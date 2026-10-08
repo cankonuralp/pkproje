@@ -34,7 +34,8 @@ test("saklama süresi: firma yöneticisi Uyarılar'da görür, listeyi açar; ra
   await hazir(page);
   await expect(page.getByRole("heading", { level: 1, name: "Saklama süresi dolacak raporlar" })).toBeVisible();
   await expect(page.getByText("Saklama süresi 5 yıl.", { exact: false })).toBeVisible();
-  const rapor = page.getByRole("link", { name: E2E_YZ.saklama.rapor });
+  /* tam ad: aynı satırdaki "PDF indir" bağlantısının adı da rapor no ile başlar */
+  const rapor = page.getByRole("link", { name: E2E_YZ.saklama.rapor, exact: true });
   await expect(rapor).toBeVisible();
   await expect(page.getByText(E2E_YZ.saklama.tesis).first()).toBeVisible();
   await expect(page.getByText(/\d+ gün kaldı/).first()).toBeVisible();
