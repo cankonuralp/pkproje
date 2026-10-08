@@ -7,8 +7,8 @@ export async function isBasla(havuz: Havuz, ad: string): Promise<string | null> 
   return (await havuz.query<{ i: string | null }>("SELECT is_basla($1)::text AS i", [ad])).rows[0].i;
 }
 
-/** işi bitirir; özet yalnız sayılar (kişi / firma verisi yazılmaz) */
-export async function isBitir(havuz: Havuz, id: string, durum: "tamam" | "hata", ozet: Record<string, number | string>): Promise<void> {
+/** işi bitirir; özet sayılar ve kodlar (390: okunamayan duyuru kaynaklarının kodu) — kişi / firma verisi yazılmaz */
+export async function isBitir(havuz: Havuz, id: string, durum: "tamam" | "hata", ozet: Record<string, number | string | readonly string[]>): Promise<void> {
   await havuz.query("SELECT is_bitir($1, $2, $3::jsonb)", [id, durum, JSON.stringify(ozet)]);
 }
 

@@ -4,8 +4,9 @@ import type { Havuz, Sorgulayici } from "./kiraci.ts";
 
 export type DuyuruKaynagi = "isggm" | "isgum" | "isekipman";
 export interface DuyuruSatiri { url: string; kaynak: DuyuruKaynagi; baslik: string; tarih: string }
-/** guncellendi: en az bir kaynağı okunan son koşunun bitişi · hata: son okuma düştü / takıldı · son: son denemenin başlangıcı (ISO) */
-export interface DuyuruDurumu { guncellendi: string | null; hata: boolean; son: string | null }
+/** guncellendi: en az bir kaynağı okunan son koşunun bitişi · hata: son okuma düştü / takıldı · hatali: son okumada alınamayan kaynaklar
+    (0074; takılan okumada boş) · son: son denemenin başlangıcı (ISO) */
+export interface DuyuruDurumu { guncellendi: string | null; hata: boolean; hatali: DuyuruKaynagi[]; son: string | null }
 
 /** bir kaynağın okunan listesi; dönen: yeni eklenen sayısı */
 export async function duyuruYaz(havuz: Havuz, kaynak: DuyuruKaynagi, liste: readonly { url: string; baslik: string; tarih: string }[]): Promise<number> {

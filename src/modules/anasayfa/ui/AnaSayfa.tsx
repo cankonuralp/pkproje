@@ -73,7 +73,10 @@ function Duyurular({ d }: { d: Veri["duyuru"] }) {
       sayac={<span className={stil.alt}><b>{d.liste.length}</b> duyuru{d.guncellendi ? ` · güncellendi ${zamanYaz(d.guncellendi)}` : ""}</span>}
       tuslar={<>{KAYNAKLAR.map(([ad, url]) => (
         <a key={ad} className={tusSinifi("ikincil")} href={url} target="_blank" rel="noopener noreferrer"><Ikon ad="arrow-right" kucuk />{ad}</a>))}</>}>
-      {d.hata && <SeritKap><Serit tur="uyari" ikon="triangle-alert">Duyurular alınamadı; son alınan liste gösteriliyor.</Serit></SeritKap>}
+      {/* 390: hangi kaynak alınamadı (ötekiler okunduysa "Duyurular alınamadı" hepsi gibi okunuyordu); takılan okumada ad yok */}
+      {d.hata && <SeritKap><Serit tur="uyari" ikon="triangle-alert">{d.hatali.length && d.hatali.length < KAYNAKLAR.length
+        ? `${d.hatali.map((k) => KAYNAK_AD[k]).join(", ")} duyuruları alınamadı; son alınan liste gösteriliyor.`
+        : "Duyurular alınamadı; son alınan liste gösteriliyor."}</Serit></SeritKap>}
       {d.liste.length
         ? <Kosullar ogeler={d.liste.map((x) => ({ tur: "bilgi" as const, ikon: "scroll-text", metin: <>
             <a className={stil.baglanti} href={x.url} target="_blank" rel="noopener noreferrer">{x.baslik}</a>

@@ -2355,6 +2355,13 @@ revizyon, alan kopyalama, hafif kusur devri, meslek eşleşme denetimi).
 - Emsal ürünler: https://opwire.app/iso-17020-periyodik-kontrol-yazilimi/ · https://17020muayene.vidco.com.tr/ · https://akuple.com/asansor-kontrol-yazilimi/ · https://ensyazilim.com/
 
 ## 11 · Değişiklik günlüğü
+- 2026-10-08 (390): **Duyurular: hangi kaynak alınamadı** (388'deki canlı bulgu). İSGGM ve İSGÜM okunup yalnız iş ekipmanları portalı
+  okunamayınca Ana sayfa "Duyurular alınamadı" diyordu — hepsi alınamamış gibi. Artık "İş ekipmanları duyuruları alınamadı; son alınan liste
+  gösteriliyor." (hepsi düştüyse ya da okuma takıldıysa eskisi gibi genel cümle). Okuma işi okunamayan kaynakların kodunu iş kaydına yazar;
+  durum işlevi (göç 0074 duyuru_durumu) son koşununkini döner, yalnız bilinen kaynak kodları (özete başka değer yazılsa ekrana gitmez). Günlüğe
+  ağ hatasının asıl nedeni de yazılır ("fetch failed (UND_ERR_CONNECT_TIMEOUT)" gibi) — portalın neden okunamadığı sonraki denemede görünür. Kilit
+  duyuru.test (gerçek PostgreSQL: kaynak kodu, iş kaydı, süzgeç, takılan okumada boş; hataNedeni); olumsuz kanıt duyuru.bozan 6 (süzgeç kalkınca
+  başka değer duruma geçer). Uçtan uca değişmedi (taklitte üç kaynak da okunur; düşen kaynak gerçek PostgreSQL kilidinde).
 - 2026-10-08 (389): **CI'da uçtan uca üç genişlik aynı anda** (reisim: *"1 saattir koşuyor bu deneme daha ne kadar sürecek ?"*). Masaüstü, tablet
   ve telefon art arda koşuyordu (her biri ~22 dk, koşu ~80 dk); artık her genişlik ayrı işte, ayrı makinede, aynı anda (her biri zaten kendi
   sunucusu ve geçici veritabanıyla koşuyordu — yalıtım aynı). Uçtan uca geliştirme sunucusuyla koştuğu için derlemeyi beklemez; biri düşse de

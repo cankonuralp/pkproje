@@ -216,7 +216,8 @@ pkproje/
   src/server/duyuru/        DUYURULAR (379; K5): ayristir.ts (saf: İSGGM / İSGÜM / iş ekipmanları portalı HTML → başlık, tarih, Bakanlık
                             bağlantısı) · okuma.ts (duyurulariOku — üç kaynak, 10 sn / 3 MB, yönlendirme yok, is_calisma "duyuru_okuma";
                             duyuruBolumu — Ana sayfa) · sonra.ts (after: Ana sayfa yanıtından sonra, son deneme 6 saatten eskiyse) · db/duyuru.ts
-                            (göç 0070) · uydurma sayfalar e2e/duyuru-ornek.ts (PROBATA_DUYURU_UC yalnız uçtan uca taklit)
+                            (göç 0070; 390 / 0074: okunamayan kaynağın adı — iş kaydı ozet.hatali, duyuru_durumu.hatali) · uydurma sayfalar
+                            e2e/duyuru-ornek.ts (PROBATA_DUYURU_UC yalnız uçtan uca taklit)
   src/modules/say/          S.A.Y SAHA ASİSTANI (380; maket say.js BB6): yardim.ts (sayfa yardımı + yapay zekâ kılavuzu, adresten yer adı) ·
                             server/say.ts (sayDurumu, sayHizli — kuralla, saySorHazirla / saySorKaydet / sayBirak — ayırma, işlem dışı çağrı,
                             sayTemizle; 382 sayRaporCevabi / sayOneri — rapor ekranı, metni sunucu kurar) · ui/SayAsistan.tsx (uygulama düzeninde tek

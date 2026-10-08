@@ -5,7 +5,8 @@
    2) bağlantı denetimi kalkınca Bakanlık dışı / betik bağlantısı yazılır ve Ana sayfaya gider;
    3) kaynak başına sınır kalkınca sık duyuru yapan kaynak ötekileri listeden atar;
    4) ayrıştırıcının tarih sınırı kalkınca gelecek tarihli öğe listeye girer;
-   5) "duyuru bulunamadı" denetimi kalkınca yapısı değişmiş sayfa sessizce "tamam" sayılır (Ana sayfa "alınamadı" demez). */
+   5) "duyuru bulunamadı" denetimi kalkınca yapısı değişmiş sayfa sessizce "tamam" sayılır (Ana sayfa "alınamadı" demez);
+   6) (390, göç 0074) bilinen kaynak kodu süzgeci kalkınca iş kaydının özetindeki başka bir değer Ana sayfaya gider. */
 import assert from "node:assert/strict";
 import { copyFileSync, mkdirSync, mkdtempSync, readdirSync, readFileSync, rmSync, writeFileSync } from "node:fs";
 import { createServer, type Server } from "node:http";
@@ -14,7 +15,7 @@ import { join, resolve } from "node:path";
 import { pathToFileURL } from "node:url";
 import { after, before, test } from "node:test";
 import { ornekSayfa } from "../../e2e/duyuru-ornek.ts";
-import { duyuruListesi, duyuruYaz } from "../../src/server/db/duyuru.ts";
+import { duyuruDurumu, duyuruListesi, duyuruYaz } from "../../src/server/db/duyuru.ts";
 import { GOC_KLASORU } from "../../src/server/db/goc.ts";
 import type { GomuluKume } from "../../src/server/db/gomulu.ts";
 import { havuzKur, kiraciIcinde, type Havuz } from "../../src/server/db/kiraci.ts";
@@ -26,6 +27,8 @@ const BOZMALAR: [string, string][] = [
   /* 2 bağlantı */ ["url     text PRIMARY KEY CHECK (length(url) <= 300 AND url ~ '^https://(www\\.csgb\\.gov\\.tr|isekipmanlari\\.csgb\\.gov\\.tr)/[A-Za-z0-9/._?=&%-]*$'),", "url     text PRIMARY KEY,"],
   /* 3 kaynak başına */ ["row_number() OVER (PARTITION BY d.kaynak ORDER BY d.tarih DESC, d.url)", "row_number() OVER (ORDER BY d.tarih DESC, d.url)"],
 ];
+/* 0074: okunamayan kaynaklar yalnız bilinen kodlar */
+const BOZMALAR_74: [string, string][] = [["\n                        WHERE x.k IN ('isggm', 'isgum', 'isekipman')", ""]];
 const VT = "duyuru_bozuk";
 const BUGUN = new Date("2026-10-08T09:00:00Z");
 const gecici = mkdtempSync(join(tmpdir(), "duyuru-bozan-"));
@@ -47,9 +50,10 @@ before(async () => {
   mkdirSync(klasor);
   for (const ad of readdirSync(GOC_KLASORU)) {
     if (!ad.endsWith(".sql")) continue;
-    if (ad.startsWith("0070_")) {
+    const bozma = ad.startsWith("0070_") ? BOZMALAR : ad.startsWith("0074_") ? BOZMALAR_74 : null;
+    if (bozma) {
       let k = readFileSync(join(GOC_KLASORU, ad), "utf8");
-      for (const [eski, yeni] of BOZMALAR) { assert.ok(k.includes(eski), `bozulacak satır kaynakta yok: ${eski.slice(0, 60)}`); k = k.replace(eski, yeni); }
+      for (const [eski, yeni] of bozma) { assert.ok(k.includes(eski), `bozulacak satır kaynakta yok: ${eski.slice(0, 60)}`); k = k.replace(eski, yeni); }
       writeFileSync(join(klasor, ad), k);
     } else copyFileSync(join(GOC_KLASORU, ad), join(klasor, ad));
   }
@@ -96,4 +100,10 @@ test("5) 'duyuru bulunamadı' denetimi kalkınca yapısı değişmiş sayfa sess
     "      if (!liste.length) throw new Error(\"duyuru bulunamadı (sayfa yapısı değişmiş olabilir)\");\n", "");
   const o = await m.duyurulariOku(havuz, uc, BUGUN);
   assert.deepEqual([o.durum, o.hatali_kaynak], ["tamam", 0], "bozuk: yapısı değişen İSGGM sayfası okundu sayıldı, 'alınamadı' çıkmaz");
+});
+
+test("6) bilinen kod süzgeci kalkınca iş kaydının özetindeki başka değer Ana sayfaya gider", async () => {
+  await supa.sahip.query(`INSERT INTO is_calisma (ad, durum, bitti, ozet) VALUES ('duyuru_okuma', 'hata', now(), '{"hatali": ["isggm", "<b>x</b>"]}')`);
+  const d = await kiraciIcinde(havuz, A, (db) => duyuruDurumu(db));
+  assert.ok(d.hatali.includes("<b>x</b>" as never), "bozuk: bilinmeyen değer duruma geçti");
 });

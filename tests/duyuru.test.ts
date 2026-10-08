@@ -7,7 +7,8 @@
    · yazma: kaynak / liste / tarih (gelecek) / bağlantı (Bakanlık dışı, javascript:) / başlık denetimleri veritabanında; başlık güncellenir; aynı
      bağlantı tek satır; kaynak başına en yeni 50 kalır;
    · uygulama rolü tabloya doğrudan erişemez; işlevler tanımlayıcı-yetkili, PUBLIC'e kapalı;
-   · tazelik: son deneme yoksa / 6 saatten eskiyse Ana sayfa okumayı başlatır, yeniyse başlatmaz.
+   · tazelik: son deneme yoksa / 6 saatten eskiyse Ana sayfa okumayı başlatır, yeniyse başlatmaz;
+   · 390 (göç 0074): okunamayan kaynakların kodu iş kaydına yazılır, durum onları döner (yalnız bilinen kodlar); günlükte ağ hatasının nedeni.
    Olumsuz kanıt: tests/bozan/duyuru.bozan.ts. */
 import assert from "node:assert/strict";
 import { createServer, type Server } from "node:http";
@@ -18,7 +19,7 @@ import { duyuruDurumu, duyuruListesi, duyuruYaz } from "../src/server/db/duyuru.
 import type { GomuluKume } from "../src/server/db/gomulu.ts";
 import { isBasla, isBitir } from "../src/server/db/is.ts";
 import { havuzKur, kiraciIcinde, type Havuz } from "../src/server/db/kiraci.ts";
-import { duyuruBolumu, duyurulariOku, TAZELIK } from "../src/server/duyuru/okuma.ts";
+import { duyuruBolumu, duyurulariOku, hataNedeni, TAZELIK } from "../src/server/duyuru/okuma.ts";
 import { bosKapi, testKumesi } from "./yardimci/kume.ts";
 
 let kume: GomuluKume, havuz: Havuz, sahip: pg.Client, sunucu: Server, uc = "", A = "", B = "";
@@ -49,7 +50,8 @@ const liste = (f: string) => kiraciIcinde(havuz, f, (db) => duyuruListesi(db, 2)
 const durum = () => kiraciIcinde(havuz, A, (db) => duyuruDurumu(db));
 
 test("okuma: üç kaynak yazılır; liste kaynak başına en yeni 2, en yeni üstte; iki firma aynı listeyi görür; ikinci okuma yeni eklemez", async () => {
-  assert.deepEqual(await durum(), { guncellendi: null, hata: false, son: null });
+  /* 2026-10-08 (390): durumda "hatali" (okunamayan kaynaklar) da var */
+  assert.deepEqual(await durum(), { guncellendi: null, hata: false, hatali: [], son: null });
   assert.deepEqual(await liste(A), []);
   const o = await duyurulariOku(havuz, uc, BUGUN);
   assert.deepEqual(o, { durum: "tamam", okunan_kaynak: 3, hatali_kaynak: 0, yeni: 7 });
@@ -76,18 +78,28 @@ test("bir kaynak düşerse ötekiler yine yazılır, iş 'hata', durum 'alınama
   const o = await duyurulariOku(havuz, uc, BUGUN);
   assert.deepEqual([o.durum, o.okunan_kaynak, o.hatali_kaynak], ["hata", 2, 1]);
   assert.equal((await durum()).hata, true);
+  assert.deepEqual((await durum()).hatali, ["isgum"], "hangi kaynağın alınamadığı (390)");
+  assert.deepEqual((await sahip.query<{ h: unknown }>("SELECT ozet -> 'hatali' AS h FROM is_calisma WHERE ad = 'duyuru_okuma' ORDER BY basladi DESC LIMIT 1")).rows[0].h,
+    ["isgum"], "iş kaydında");
   assert.deepEqual(await liste(A), once, "son alınan liste gösterilir");
   /* yapı değişti (sayfa geldi ama duyuru yok) de "okunamadı" sayılır — sessiz kalmaz */
   dusen.clear();
   degisen.add("/isggm/duyurular/");
   const y = await duyurulariOku(havuz, uc, BUGUN);
   assert.deepEqual([y.durum, y.okunan_kaynak, y.hatali_kaynak], ["hata", 2, 1]);
+  assert.deepEqual((await durum()).hatali, ["isggm"]);
   degisen.clear();
   const s = await duyurulariOku(havuz, "http://127.0.0.1:1", BUGUN);   // hiçbir kaynağa ulaşılamaz
   assert.deepEqual([s.durum, s.okunan_kaynak, s.hatali_kaynak], ["hata", 0, 3]);
   assert.equal((await durum()).hata, true);
+  assert.deepEqual((await durum()).hatali, ["isekipman", "isggm", "isgum"]);
   assert.equal((await duyurulariOku(havuz, uc, BUGUN)).durum, "tamam");
   assert.equal((await durum()).hata, false);
+  assert.deepEqual((await durum()).hatali, []);
+  /* özete başka bir şey yazılmışsa ekrana yalnız bilinen kaynak kodu gider */
+  await sahip.query(`INSERT INTO is_calisma (ad, durum, bitti, ozet) VALUES ('duyuru_okuma', 'hata', now(), '{"hatali": ["isggm", "<b>x</b>", "isggm", 5]}')`);
+  assert.deepEqual((await durum()).hatali, ["isggm"]);
+  assert.equal((await duyurulariOku(havuz, uc, BUGUN)).durum, "tamam");
   /* aynı anda iki okuma yok */
   const calisan = await isBasla(havuz, "duyuru_okuma");
   assert.ok(calisan);
@@ -147,6 +159,15 @@ test("tazelik: son deneme 6 saatten yeniyse okutmaz, eskiyse / hiç yoksa okutur
   const id = await isBasla(havuz, "duyuru_okuma");
   assert.ok(id);
   assert.equal((await durum()).hata, true, "takılan okuma alınamadı sayılır");
+  assert.deepEqual((await durum()).hatali, [], "takılan okumada kaynak adı yok");
   await isBitir(havuz, id, "tamam", { okunan_kaynak: 3 });
   assert.equal((await durum()).hata, false);
+});
+
+test("günlük: ağ hatasının nedeni iletiyle birlikte (fetch yalnız 'fetch failed' der)", () => {
+  assert.equal(hataNedeni(new TypeError("fetch failed", { cause: Object.assign(new Error("Connect Timeout Error"), { code: "UND_ERR_CONNECT_TIMEOUT" }) })),
+    "fetch failed (UND_ERR_CONNECT_TIMEOUT)");
+  assert.equal(hataNedeni(new TypeError("fetch failed", { cause: new Error("getaddrinfo ENOTFOUND") })), "fetch failed (getaddrinfo ENOTFOUND)");
+  assert.equal(hataNedeni(new Error("HTTP 404")), "HTTP 404");
+  assert.equal(hataNedeni("düz metin"), "düz metin");
 });
