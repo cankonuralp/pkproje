@@ -29,6 +29,13 @@ export function EtiketOkuma({ raporId, alanlar, yaz, islem }: {
   const [okunuyor, setOkunuyor] = useState(false);
   const [sn, setSn] = useState(0);
   const [oneri, setOneri] = useState<EtiketOkunan[] | null>(null);
+  /* yeni öneri gelince odak kartta — kart ÇİZİLDİKTEN sonra (etki): requestAnimationFrame bazen çizimden önce koşuyordu (CI 7bf40e5, tablet) */
+  const kartaOdak = useRef(false);
+  useEffect(() => {
+    if (!kartaOdak.current || !oneri) return;
+    kartaOdak.current = false;
+    kart.current?.focus();
+  }, [oneri]);
   useEffect(() => {
     if (!okunuyor) return;
     const bas = Date.now();
@@ -55,7 +62,7 @@ export function EtiketOkuma({ raporId, alanlar, yaz, islem }: {
         bildir(r.bildirim ?? "");
         /* ekranda satırı olmayan alan (formatın sorduğu) öneriye girmez */
         const l = r.okunan.filter((x) => alanlar.includes(x.alan));
-        if (l.length) { setOneri(l); requestAnimationFrame(() => kart.current?.focus()); } else girdiyeDon();
+        if (l.length) { kartaOdak.current = true; setOneri(l); } else girdiyeDon();
       } catch {
         bildir("Etiketten okunamadı: bağlantı koptu ya da sunucu yanıt vermedi. Bilgileri elle girebilirsiniz.");
         girdiyeDon();

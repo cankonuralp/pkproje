@@ -117,7 +117,6 @@ test("S.A.Y rapor ekranında: eksik alanlar + Git, sonuç önerisi + Uygula", as
   await page.getByRole("link", { name: /^YZ-/ }).first().click();
   await expect(page).toHaveURL(/\/raporlar\/[0-9a-f-]{36}$/, { timeout: 30_000 });
   await hazir(page);
-  const no = (await page.getByRole("heading", { level: 1 }).textContent())!.trim();
 
   const fab = page.getByRole("button", { name: "S.A.Y — saha asistanı" });
   const panel = page.getByRole("dialog", { name: "S.A.Y" });
@@ -129,7 +128,8 @@ test("S.A.Y rapor ekranında: eksik alanlar + Git, sonuç önerisi + Uygula", as
   await panel.getByRole("button", { name: "Eksik alanlar neler?" }).click();
   const liste = panel.getByRole("list").first();
   await expect(liste).toContainText(/\d+ zorunlu alan boş:/);
-  await expect(liste.getByRole("listitem").filter({ hasText: `Rapor ${no}` }).first()).toBeVisible();
+  /* yer ayracı "Rapor <rapor no>" (başlıkta ekipman kodu var, rapor no değil — numara biçimi firma kodu + yıl ay + sıra) */
+  await expect(liste.getByRole("listitem").filter({ hasText: /^Rapor YZ-[0-9]{4}-[0-9]{3}/ }).first()).toBeVisible();
   const git = liste.getByRole("button", { name: "Git" }).first();
   await git.click();
   if (bilgi.project.name === "telefon") await expect(panel).toHaveCount(0);   // telefonda panel kapanır, alan görünsün
