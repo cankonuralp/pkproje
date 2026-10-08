@@ -25,5 +25,6 @@ export async function girisli(page: Page, kim: keyof typeof E2E_HESAPLAR = "yone
 
 /** tam sayfa yüklemesinden sonra React bağlanana kadar bekle (bağlanmadan önceki tıklama kaybolur — src/components/hazir/Hazir.tsx) */
 export async function hazir(page: Page) {
-  await expect(page.locator("html[data-hazir]")).toHaveCount(1);
+  /* 422: 30 sn — deneme sunucusu yükteyken başka alt alan adındaki giriş sayfası 15 sn'de bağlanmadı (408 ve 9cf7f54'te S.A.Y; beklenen aynı) */
+  await expect(page.locator("html[data-hazir]")).toHaveCount(1, { timeout: 30_000 });
 }

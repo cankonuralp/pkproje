@@ -2355,6 +2355,11 @@ revizyon, alan kopyalama, hafif kusur devri, meslek eşleşme denetimi).
 - Emsal ürünler: https://opwire.app/iso-17020-periyodik-kontrol-yazilimi/ · https://17020muayene.vidco.com.tr/ · https://akuple.com/asansor-kontrol-yazilimi/ · https://ensyazilim.com/
 
 ## 11 · Değişiklik günlüğü
+- 2026-10-08 (422): **Site taramasının ilk koşusu** (9cf7f54): üç genişlikte 58'er sayfa gezildi (firma yöneticisi), taramanın kendisi 5–7 dk.
+  Sunucu hatası, konsol hatası, yatay taşma, basılamayan öğe YOK; çekmecenin her maddesi ekranda ve basılabilir. Bulunan iki erişilebilirlik
+  konusu düzeltildi: rapor belgesinde logo / AKR yer tutucusunun grisi #7f7f7f beyazda 4,0:1 → #595959 (7:1; PDF'te de); rapor önizlemesinin
+  kaydırılan kutusu klavyeyle odaklanabilir, adı "Rapor belgesi önizlemesi" (telefonda). Aynı koşuda S.A.Y denemesi giriş sayfası 15 sn'de
+  bağlanmadığı için düştü (408'deki anlık yavaşlığın aynısı) — sayfa hazır beklemesi 30 sn. Uçtan uca iş sınırı 50 dk.
 - 2026-10-08 (421): **419'un hata sınıfı sitenin geri kalanında** — telefonda alttan açılan pencerenin (levha) en büyük yüksekliği 88vh, Excel
   önizleme kutuları 50vh idi: görünen boya (dvh) çevrildi. Genel kilit: vh ile verilen her yükseklik / en büyük yükseklik ardından dvh taşır
   (css-butunlugu; kilit ilk koşusunda bu dört yeri buldu). S.A.Y düğmesi: telefonda açık menünün ve perdenin üstünde kalıyordu (z 65 > 60) —

@@ -27,5 +27,5 @@ export default async function Sayfa({ params }: { params: Promise<{ id: string }
   if (!sonuc) notFound();
   const { v, b } = sonuc;
   return <OnayEkrani key={`${v.r.id}-${v.r.surum}`} v={v}
-    belge={b ? <div className="rb-onizleme">{raporBelgesi(b.belge)}</div> : <p>Raporun belgesi görüntülenemiyor.</p>} />;
+    belge={b ? <div className="rb-onizleme" tabIndex={0} role="region" aria-label="Rapor belgesi önizlemesi">{raporBelgesi(b.belge)}</div> : <p>Raporun belgesi görüntülenemiyor.</p>} />;
 }

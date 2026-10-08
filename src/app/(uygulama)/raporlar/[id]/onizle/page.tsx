@@ -38,7 +38,7 @@ export default async function Sayfa({ params }: { params: Promise<{ id: string }
             : v.imzaliSilindi ? null
             : <a className={tusSinifi("birincil")} href={`/raporlar/${v.id}/pdf`} download><Ikon ad="download" kucuk />PDF indir</a>}
         </>} />
-      <div className="rb-onizleme">{raporBelgesi(v.belge)}</div>
+      <div className="rb-onizleme" tabIndex={0} role="region" aria-label="Rapor belgesi önizlemesi">{raporBelgesi(v.belge)}</div>
     </>
   );
 }
