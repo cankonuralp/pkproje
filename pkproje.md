@@ -2355,6 +2355,13 @@ revizyon, alan kopyalama, hafif kusur devri, meslek eşleşme denetimi).
 - Emsal ürünler: https://opwire.app/iso-17020-periyodik-kontrol-yazilimi/ · https://17020muayene.vidco.com.tr/ · https://akuple.com/asansor-kontrol-yazilimi/ · https://ensyazilim.com/
 
 ## 11 · Değişiklik günlüğü
+- 2026-10-08 (385): **Etiket plakasından okuma** (K5 yapay zekâ; ARKA-UC §5.2 "aynı çatı: ekipman etiket plakası"; maket rapor "Etiketten oku" ·
+  "Etiket plakasından okunan"). Saha raporunda Ekipman bilgileri bölümünün başında **Etiketten oku** (kamera / galeri): plakadan marka, model, seri
+  no ve imal yılı okunur, **öneri kartına** düşer — emin olunanlar "Önerileri uygula (n)" ile toplu, "Emin değil" olan tek tek "Uygula" ile alana
+  yazılır, "Vazgeç" hiçbirini yazmaz; rapora ancak Kaydet ile geçer. Fotoğraftan okumayla aynı kapı ve kullanım: yalnız yazanın Yeni raporu, firmada
+  açık + anahtar, fotoğrafın konum bilgisi silinir, sınır ayrılır, okuma kaydı "etiket"; istekte firma / müşteri / kişi bilgisi yok. Formatın kendi
+  sorduğu alan (ör. kompresörde "Marka / model") sabit satırda olmadığı için öneriye girmez. Geçersiz ya da gelecek imal yılı, sınırı aşan değer
+  atılır. Kilit etiket-okuma.test (saf), foto-oku.test (385, gerçek PostgreSQL); olumsuz kanıt etiket-okuma.bozan; e2e foto-oku (etiket kartı).
 - 2026-10-08 (384): **S.A.Y raporu bilir** (ARKA-UC §5.3 "Ne bilir: o raporun alanları, türün kriterleri ve formatı"). Rapor ekranında serbest
   soruya açık raporun özeti eklenir (kaydedilmemiş değişiklikler dahil): ekipman türü, bölümler, kaç madde cevaplandı, "Uygun değil" maddeler
   (ağır / hafif), sınır dışı ölçüm ve test değerleri, boş zorunlu alanlar, sonuç ve kriterlere göre öneri. Özetin metnini sunucu formatın kendi

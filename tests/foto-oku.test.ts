@@ -4,7 +4,9 @@
    aylık kullanımına yazılır, sınır dolunca okunmaz; kullanım yalnız artar, başkasının hanesine yazılamaz, okuma kaydı değişmez; başka firma görmez.
    354 (350–351 incelemesi): sınır AYIRMAYLA — eşzamanlı ikinci okuma birincinin ayırmasını görür (satır kilidi); sınır 0 = sınırsız (maket Y1);
    çağrı cevapsız biterse ücretsizse ayırma bırakılır, sonucu bilinmiyorsa harcamaya yazılır; ödenen okuma rapor okuma sürerken silinse de kullanıma
-   yazılır; pano okumasında fotoğraf rapora eklenir (§11 92); firma ayarlarında kişi başı kullanım. Olumsuz kanıt: tests/bozan/foto-oku.bozan.ts. */
+   yazılır; pano okumasında fotoğraf rapora eklenir (§11 92); firma ayarlarında kişi başı kullanım. 385: etiket plakasından okuma aynı kapı ve
+   kullanımla (yalnız yazan, Yeni raporunda; istekte kişi / firma yok; öneri döner, rapora yazılmaz; okuma kaydı "etiket"; kapalıyken okunmaz).
+   Olumsuz kanıt: tests/bozan/foto-oku.bozan.ts, tests/bozan/etiket-okuma.bozan.ts. */
 import assert from "node:assert/strict";
 import { mkdtempSync, rmSync } from "node:fs";
 import { randomBytes } from "node:crypto";
@@ -16,6 +18,7 @@ import { planKabul, planIci } from "../src/modules/planlar/server/plan-ici.ts";
 import { bugunTr, planAc, type Kisi } from "../src/modules/planlar/server/planlar.ts";
 import { taslakBaslat, yayinla } from "../src/modules/rapor-format/server/formatlar.ts";
 import { fotoOkuBirak, fotoOkuHazirla, fotoOkuKaydet, fotoOkuKullanimYaz, type FotoOkuHazir } from "../src/modules/raporlar/server/foto-oku.ts";
+import { etiketOkuHazirla, etiketOkuKullanimYaz, etiketOkuSonuc } from "../src/modules/raporlar/server/etiket-oku.ts";
 import { raporOlustur, raporSil, sahaRaporu } from "../src/modules/raporlar/server/raporlar.ts";
 import { ayarOku, ayarYaz } from "../src/server/ayar/ayar.ts";
 import { sirYaz } from "../src/server/ayar/sir.ts";
@@ -204,6 +207,37 @@ test("kullanım yalnız artar ve kişinin kendi hanesine; okuma kaydı değişme
   await assert.rejects(kiraciIcinde(havuz, A, (db) => db.sorgu("INSERT INTO yz_kullanim (ay) VALUES ('2026-02')")), /oturumdaki kişi/, "hesapsız işlem yazamaz");
   const b = await kiraciIcinde(havuz, B, (db) => db.sorgu("SELECT (SELECT count(*) FROM yz_kullanim)::int AS k, (SELECT count(*) FROM yz_okuma)::int AS o"), { hesapId: FB.den1.id });
   assert.deepEqual(b.rows[0], { k: 0, o: 0 });
+});
+
+/* 385: etiket plakasından okuma (rapor silinmeden önce) */
+test("385 etiket plakası: yalnız yazan, Yeni raporunda; istekte kişi / firma yok; öneri döner, rapora yazılmaz; kullanım ve okuma kaydı", async () => {
+  tamam(await yzAyari({ sinir: null }));
+  const et = (k: Kisi, rapor = FA.rapor, foto = JPEG) => a(k, (db) => etiketOkuHazirla(db, k, rapor, { bayt: foto }));
+  assert.equal((await et(FA.den2)).durum, "yok", "başka denetçi");
+  assert.equal((await et(FA.plan)).durum, "yetkisiz", "raporu gören planlamacı okutamaz");
+  assert.equal((await kiraciIcinde(havuz, B, (db) => etiketOkuHazirla(db, FB.den1, FA.rapor, { bayt: JPEG }), { hesapId: FB.den1.id })).durum, "yok");
+  assert.deepEqual(await et(FA.den1, FA.rapor, PDF), { durum: "gecersiz", hatalar: { foto: "Yalnız JPEG ya da PNG fotoğraf." } });
+  const k0 = await kullanim(FA.den1);
+  const h = await et(FA.den1);
+  assert.equal(h.durum, "hazir", JSON.stringify(h));
+  if (h.durum !== "hazir") return;
+  assert.doesNotMatch(JSON.stringify(h.istek.govde), /sk-ant|Deneme Sanayi|Deneme Cad|iletisim@|DA-[0-9]{4}/, "anahtar, müşteri, adres, e-posta, rapor no gönderilmez");
+  const resim = Buffer.from((h.istek.govde as { messages: { content: { source?: { data: string } }[] }[] }).messages[0].content[0].source!.data, "base64").toString("latin1");
+  assert.ok(resim.includes("goruntu-verisi") && !resim.includes("GPS-KONUM"), "konum bilgisi silindi");
+  const once = (await a(FA.den1, (db) => sahaRaporu(db, FA.den1, FA.rapor)))!.ekipmanBilgi;
+  const govde = { content: [{ type: "text", text: JSON.stringify({ alanlar: [{ alan: "marka", deger: "Deneme Marka", guven: "yuksek" }, { alan: "imal", deger: "2019", guven: "dusuk" }], not: null }) }],
+    stop_reason: "end_turn", usage: { input_tokens: 100_000, output_tokens: 10_000 } };
+  const ku = await a(FA.den1, (db) => etiketOkuKullanimYaz(db, FA.rapor, h, govde));
+  const k1 = await kullanim(FA.den1);
+  assert.deepEqual([k1.okuma, Number(k1.maliyet), k1.ayrilan], [k0.okuma + 1, Number(k0.maliyet) + 600_000, k0.ayrilan], "ayırma gerçek maliyetle kapandı");
+  assert.deepEqual(await a(FA.den1, (db) => etiketOkuSonuc(db, FA.den1, FA.rapor, ku)), { durum: "tamam",
+    okunan: [{ alan: "marka", deger: "Deneme Marka", guven: "yuksek" }, { alan: "imal", deger: "2019", guven: "dusuk" }], bildirim: "Etiketten 2 bilgi okundu; uygulamadan rapora yazılmaz." });
+  assert.deepEqual((await a(FA.den1, (db) => sahaRaporu(db, FA.den1, FA.rapor)))!.ekipmanBilgi, once, "öneri rapora yazılmaz");
+  const kayit = (await a(FA.den1, (db) => db.sorgu<{ bolum: string; oneri: unknown }>("SELECT bolum, oneri FROM yz_okuma WHERE rapor_id = $1 ORDER BY zaman DESC LIMIT 1", [FA.rapor]))).rows[0];
+  assert.deepEqual(kayit, { bolum: "etiket", oneri: [{ degerler: { marka: "Deneme Marka" }, guven: "yuksek" }, { degerler: { imal: "2019" }, guven: "dusuk" }] });
+  tamam(await yzAyari({ acik: false }));
+  assert.match(JSON.stringify(await et(FA.den1)), /firmada kapalı/);
+  tamam(await yzAyari({ acik: true }));
 });
 
 test("ödenen okuma rapor okuma sürerken silinse de kişinin kullanımına yazılır; öneri dönmez (en sonda — rapor silinir)", async () => {

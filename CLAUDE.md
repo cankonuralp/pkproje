@@ -205,6 +205,7 @@ pkproje/
                             cevap süzme / maliyet, saf; anthropicCagir — uç PROBATA_YZ_UC, hata ücretli mi) · kullanim.ts (0052 yz_kullanim / yz_okuma; 0053
                             ayırma: yzAyir satır kilidiyle, yzOkumaYaz, yzAyirmaBirak; yzAyKullanimi firma ayarlarına) · modülde raporlar/server/foto-oku.ts
                             (hazırla + ayır → çağrı → kullanım → öneri; pano fotoğrafı rapora) + foto-eslestir.ts (saf: okunan → boş satır) + ui/FotoOkuma.tsx
+                            · etiket.ts (385: etiket plakası — marka / model / seri / imal; istek + cevap süzme, saf) → raporlar/server/etiket-oku.ts + ui/EtiketOkuma.tsx
   src/server/is/            ARKA PLAN İŞLERİ (378; K5): gece.ts (geceIsleri — firma başına kiracı işlemi, is_calisma kaydı, süre sınırı) ·
                             yetki.ts (zamanliYetkili: "Bearer <CRON_SECRET>", sır ≥ 32) · uç src/app/api/is/gece (Vercel Cron, vercel.json crons) ·
                             db/is.ts (isBasla / isBitir / geceFirmalari; göç 0069) · çöp temizliği src/server/dosya/cop.ts (30 gün, A5)

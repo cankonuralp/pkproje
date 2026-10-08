@@ -56,3 +56,36 @@ test("fotoğraftan okuma: öneri kartı; emin olunanlar toplu, emin olunmayan te
   await hazir(page);
   await expect(page.locator("#b-linye").getByLabel("3. satır · No")).toHaveValue("F3");
 });
+
+/* 385: etiket plakasından okuma — Ekipman bilgileri'nde "Etiketten oku" → "Etiket plakasından okunan" kartı; emin olunanlar toplu, "Emin değil"
+   olan (imal yılı) tek tek alana yazılır; yazılanlar Kaydet'e kadar kaydedilmemiş değişiklik */
+test("etiket plakası: öneri kartı; emin olunanlar toplu, emin olunmayan tek tek alana yazılır", async ({ page }, bilgi) => {
+  const kod = E2E_YZ.ekipman[bilgi.project.name];
+  await page.goto(`${Y}/giris`);
+  await hazir(page);
+  await page.getByLabel("E-posta").fill(E2E_YZ.denetci.eposta);
+  await page.getByLabel("Parola", { exact: true }).fill(E2E_PAROLA);
+  await page.getByRole("button", { name: "Giriş yap" }).click();
+  await expect(page.locator("header")).toContainText(E2E_YZ.denetci.ad);
+  await page.goto(`${Y}/raporlar`);
+  await hazir(page);
+  await page.getByRole("searchbox", { name: "Ekipman kodu" }).fill(kod);
+  await page.getByRole("link", { name: /^YZ-/ }).first().click();
+  await expect(page).toHaveURL(/\/raporlar\/[0-9a-f-]{36}$/, { timeout: 30_000 });
+  await hazir(page);
+
+  await page.getByLabel("Etiketten oku").setInputFiles({ name: "etiket.jpg", mimeType: "image/jpeg", buffer: JPEG });
+  const kart = page.getByRole("region", { name: "Etiket plakasından okunan" });
+  await expect(kart).toBeVisible({ timeout: 30_000 });
+  await expect(kart).toBeFocused();
+  await expect(kart.getByText("Emin değil")).toBeVisible();
+  await kart.getByRole("button", { name: "Önerileri uygula (3)" }).click();
+  await expect(page.getByLabel("Marka", { exact: true })).toHaveValue("Deneme Marka");
+  await expect(page.getByLabel("Model", { exact: true })).toHaveValue("DM-100");
+  await expect(page.getByLabel("Seri no", { exact: true })).toHaveValue("SN-0001");
+  await expect(page.getByLabel("İmal yılı", { exact: true })).toHaveValue("");
+  await kart.getByRole("button", { name: "Uygula" }).click();
+  await expect(page.getByLabel("İmal yılı", { exact: true })).toHaveValue("2019");
+  await expect(kart).toHaveCount(0);
+  await expect(page.getByLabel("Etiketten oku")).toBeFocused();
+});

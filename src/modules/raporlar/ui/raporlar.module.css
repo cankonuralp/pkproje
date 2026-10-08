@@ -157,6 +157,8 @@ button.silTus { color: var(--hata-yazi); }
 .fotoAd { flex: 1 1 12rem; min-width: 0; overflow-wrap: anywhere; }
 .fotoTuslar { display: flex; flex-wrap: wrap; gap: 6px; }
 .fotoEkle { justify-self: start; cursor: pointer; }
+/* etiketten okuma (385): Ekipman bilgileri bölümünün başında, solda */
+.etiketCubuk { display: flex; flex-wrap: wrap; gap: 8px; margin: 0 0 10px; }
 .fotoEkle[aria-disabled] { opacity: .55; cursor: default; }
 
 @media (max-width: 767.98px) {

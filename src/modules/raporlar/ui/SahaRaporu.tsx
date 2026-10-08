@@ -36,6 +36,7 @@ import { ayEkle, RAPOR_DURUM, type EkipmanBilgisi, type RaporDurumu, type RaporT
 import type { SahaRaporu as SahaRaporuVerisi } from "../server/raporlar";
 import { alanId, BilgiBlok, FormatBolumu, OkuGirdi, RaporBolumu, Satir, Satirlar, TarihKutusu, type Baglam, type Kaynak } from "./Bloklar";
 import { CihazBolumu } from "./CihazBolumu";
+import { EtiketOkuma } from "./EtiketOkuma";
 import { FotoListesi } from "./FotoListesi";
 import { ImzaBolumu } from "./ImzaBolumu";
 import { KopyaPenceresi } from "./KopyaPenceresi";
@@ -143,6 +144,8 @@ export function SahaRaporu({ v }: { v: Gorunum }) {
   /* formatın elle sorduğu alan sabit satırda tekrar edilmez (kayıttan gelen alan sabit satırdan okunur, gizlenmez) */
   const formatAdlari = v.tanim.bolumler.flatMap((b) => (b.blok === "bilgi" ? b.alanlar.filter((a) => !a.kaynak).map((a) => tr(a.ad)) : []));
   const formatta = (...l: string[]) => formatAdlari.some((ad) => l.some((x) => ad.includes(x)));
+  /* etiketten okunabilen ve ekranda sabit satırı olan alanlar (385) */
+  const etiketAlanlari = ([["marka", "marka"], ["model", "model"], ["seri", "seri no"], ["imal", "imal"]] as const).filter(([, ad]) => !formatta(ad)).map(([k]) => k);
   const cihazEk = !v.tanim.bolumler.some((b) => b.blok === "cihaz") && v.cihazlar.length > 0;
   const sabitSay = cihazEk ? 3 : 2;
   const cihazEksik = v.cihazlar.some((x) => gecersiz(`cihaz.${x.turId}`));
@@ -409,6 +412,10 @@ export function SahaRaporu({ v }: { v: Gorunum }) {
 
         <RaporBolumu id={SABIT.ekipman} no={2} baslik="Ekipman bilgileri" acik={acik(SABIT.ekipman)} degistir={degistir(SABIT.ekipman)}
           eksik={katilan.some((b) => bolumEksik(b.id))}>
+          {/* 385: etiket plakasından okuma — yazılabilir raporda, firmada yapay zekâ açıksa, ekranda satırı olan etiket alanları için */}
+          {bag.yz && etiketAlanlari.length > 0 && (
+            <EtiketOkuma raporId={v.id} alanlar={etiketAlanlari} yaz={(k, x) => ekipmanYaz(k, x)} islem={bag.islem} />
+          )}
           <Satirlar>
             <Satir etiket="Kod"><Kod>{v.ekipman.kod}</Kod></Satir>
             <Satir etiket="Ekipman türü">{v.tur.ad}</Satir>

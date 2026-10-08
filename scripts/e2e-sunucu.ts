@@ -191,6 +191,16 @@ const yzTaklit = createServer((istek, yanit) => {
       yanit.writeHead(400, { "content-type": "application/json" }).end(JSON.stringify({ type: "error", error: { type: "invalid_request_error", message: "taklit: yapılandırılmış çıktı bekleniyor" } }));
       return;
     }
+    /* 385: etiket plakası okuması (şemada "alanlar") — uydurma künye; imal yılı emin değil (tek tek uygulanır) */
+    const sema = g.output_config.format.schema?.properties;
+    if (sema && "alanlar" in sema) {
+      yanit.writeHead(200, { "content-type": "application/json" }).end(JSON.stringify({
+        content: [{ type: "text", text: JSON.stringify({ alanlar: [{ alan: "marka", deger: "Deneme Marka", guven: "yuksek" }, { alan: "model", deger: "DM-100", guven: "yuksek" },
+          { alan: "seri", deger: "SN-0001", guven: "orta" }, { alan: "imal", deger: "2019", guven: "dusuk" }], not: null }) }],
+        stop_reason: "end_turn", usage: { input_tokens: 1200, output_tokens: 90 },
+      }));
+      return;
+    }
     const tip = g.output_config.format.schema?.properties?.satirlar?.items?.properties?.tip?.anyOf?.[0]?.enum?.[0] ?? "C";
     const satirlar = [
       { no: "F1", devre: "Aydınlatma", tip, akim: 16, kutup: 1, guven: "yuksek" },

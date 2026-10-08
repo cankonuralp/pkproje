@@ -366,6 +366,15 @@ export async function okunabilirOlcum(db: Sorgulayici, kim: Kisi, id: string, bo
   return { raporId: e.r.id, bolum: b };
 }
 
+/** etiket plakasından okuma (385): yazanın Yeni raporu (fotoğraftan okumayla aynı kapı, tablo yerine ekipman bilgileri) */
+export async function etiketOkunabilir(db: Sorgulayici, kim: Kisi, id: string): Promise<{ raporId: string } | RaporYazma> {
+  const e = await erisim(db, kim, id);
+  if (!e) return { durum: "yok" };
+  if (!e.sahip || !canDoEylem(kim, "rapor_yaz", { sahip: e.r.hesap_id })) return { durum: "yetkisiz" };
+  if (e.r.durum !== "taslak") return { durum: "red", neden: "Rapor gönderildi; yalnız Yeni rapor düzenlenir." };
+  return { raporId: e.r.id };
+}
+
 /** cihaz ve fotoğraf sayıları raporun KENDİ listesinden (istemcinin sayısına güvenilmez): bölüm başına fotoğraf, madde başına fotoğraf */
 function sayiliCevaplar(c: Cevaplar, r: Pick<RaporSatiri, "cihazlar" | "fotolar">): Cevaplar {
   const bolum: Record<string, number> = {}, madde: Record<string, number> = {};
