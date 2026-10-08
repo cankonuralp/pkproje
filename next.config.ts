@@ -18,8 +18,11 @@ const ortak: NextConfig = {
   /* proxyClientMaxBodySize: ara katman (src/proxy.ts) gövdeyi varsayılan 10 MB'ta keser — imzalı PDF yüklemesi sunucu eylemine tam ulaşsın */
   /* reactDebugChannel: yalnız geliştirme kipinde var (sayfa açılınca sunucuya ayrı canlı bağlantı); uçtan uca sunucusunda kapalı — açıkken
      bağlantısız sunulan sayfa bağlanamıyor (402, scripts/e2e-sunucu.ts PROBATA_HATA_KANALI=0) */
+  /* devMemoryThresholdRestart: uçtan uca sunucusunda KAPALI (2026-10-08) — yığın sınırın %80'ini geçince geliştirme sunucusu kendini yeniden
+     başlatıyor, o anki test düşüyordu (deneme makinesi 92a79de: masaüstü ve telefonda 95. testte). 2026-10-06'da tek sunucuda ~200 testte kapatmak
+     sunucuyu çökertmişti; şimdi genişlik başına ayrı sunucu (~95 test) ve 12 GB yığın — %80 ancak son testte aşılıyor. Yayında geçersiz. */
   experimental: { serverActions: { bodySizeLimit: "26mb" }, proxyClientMaxBodySize: "26mb", webpackMemoryOptimizations: process.env.PROBATA_WEBPACK_BELLEK === "1",
-    reactDebugChannel: process.env.PROBATA_HATA_KANALI !== "0" },
+    reactDebugChannel: process.env.PROBATA_HATA_KANALI !== "0", devMemoryThresholdRestart: process.env.PROBATA_WEBPACK_BELLEK !== "1" },
   env: { NEXT_PUBLIC_IKON_ADRESI: `/${IKON_DOSYASI}?v=${ikonOzeti}` },
   /* geliştirme göstergesi (sol altta yüzen rozet): uçtan uca sunucusunda kapalı — telefonda altta yapışkan tuş çubuğunun üstüne binip tıklamayı
      engelliyordu (402); hata olursa geliştirme hata penceresi yine açılır. Yayında zaten yok. */

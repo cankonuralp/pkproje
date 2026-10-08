@@ -2382,6 +2382,9 @@ revizyon, alan kopyalama, hafif kusur devri, meslek eşleşme denetimi).
   serviceWorkers: "block") — geliştirme sunucusu yine bellek sınırında yeniden başlıyordu. Sonraki turda (1f53ad6) masaüstü ve telefon yeşil;
   tablette yine erken geçildi: işlerin gerçek kimliğe bağlanması ekrana duyurulmuyordu (yayın sonradan) — artık hemen duyurulur (kuyruk.test
   "olay anında bekleyenler gerçek kimlikte" + bozan kuyruk 7).
+  Sonraki turda (92a79de) bağlantısız çalışma denemeleri üç genişlikte geçti; yalnız en son koşan zimmetler testi, geliştirme sunucusu yığın
+  sınırının %80'ini geçip kendini yeniden başlattığı anda düştü — uçtan uca sunucusunda bu yeniden başlama kapatıldı (next.config.ts
+  devMemoryThresholdRestart, yalnız PROBATA_WEBPACK_BELLEK=1 olan e2e sunucusunda; 12 GB yığın kalır).
 - 2026-10-08 (404): **Rapor ekranı cihazda bekleyen kaydı gösterir — sessiz veri kaybı önlendi.** Bağlantısız kaydedilen rapor, cihazda yeniden
   açılınca saklanan sayfadaki ESKİ hâliyle görünüyordu; kullanıcı onu düzenleyip kaydedince yeni iş bekleyen kaydın yerine geçer, bağlantısız
   yazılanlar sessizce kaybolurdu. Artık ekran açılınca (ve sayfa tazelenince) raporun sunucuya henüz yazılmamış son içeriği (bekliyor / çakışma /
