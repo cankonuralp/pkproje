@@ -212,7 +212,11 @@ export async function kuyrukGonder(): Promise<number> {
         if (s.durum === "tamam") {
           await kuyruktanCikar(x.id);
           n++;
-          if (yeni) for (const z of bellek) if (z.kayit === x.kayit) await guncelle(z, { kayit: yeni });
+          if (yeni) {
+            for (const z of bellek) if (z.kayit === x.kayit) await guncelle(z, { kayit: yeni });
+            /* ekran hemen görsün: yeni rapor ekranı, raporun bekleyen işleri gidene kadar raporun sayfasına geçmez */
+            yayinla();
+          }
           /* sürüm arttı (fotoğraf, yeni rapor): aynı raporun, önceki sürümden yazılmış bekleyen işleri yeni sürüme */
           const kayit = yeni ?? x.kayit;
           if (s.surum) for (const z of bellek) if (z.kayit === kayit && z.durum === "bekliyor" && z.surum === s.surum.once) await guncelle(z, { surum: s.surum.sonra });

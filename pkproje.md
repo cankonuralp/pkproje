@@ -2379,7 +2379,9 @@ revizyon, alan kopyalama, hafif kusur devri, meslek eşleşme denetimi).
   numaralı rapor, yazılan yerinde). Deneme makinesinde (382990d) bulunan: ekran rapor açılınca HEMEN raporun sayfasına geçiyordu; kayıt o sırada
   henüz yazılmamışsa sayfa boş çiziliyordu — artık rapor açılınca ekran salt okunur olur ("Rapor sunucuda açıldı…", Raporu aç), raporun cihazda
   bekleyen işleri gidince geçilir. Deneme ortamı: tarayıcının servis çalışanı yalnız e2e/cevrimdisi.spec.ts'te açık (playwright.config.ts
-  serviceWorkers: "block") — geliştirme sunucusu yine bellek sınırında yeniden başlıyordu.
+  serviceWorkers: "block") — geliştirme sunucusu yine bellek sınırında yeniden başlıyordu. Sonraki turda (1f53ad6) masaüstü ve telefon yeşil;
+  tablette yine erken geçildi: işlerin gerçek kimliğe bağlanması ekrana duyurulmuyordu (yayın sonradan) — artık hemen duyurulur (kuyruk.test
+  "olay anında bekleyenler gerçek kimlikte" + bozan kuyruk 7).
 - 2026-10-08 (404): **Rapor ekranı cihazda bekleyen kaydı gösterir — sessiz veri kaybı önlendi.** Bağlantısız kaydedilen rapor, cihazda yeniden
   açılınca saklanan sayfadaki ESKİ hâliyle görünüyordu; kullanıcı onu düzenleyip kaydedince yeni iş bekleyen kaydın yerine geçer, bağlantısız
   yazılanlar sessizce kaybolurdu. Artık ekran açılınca (ve sayfa tazelenince) raporun sunucuya henüz yazılmamış son içeriği (bekliyor / çakışma /

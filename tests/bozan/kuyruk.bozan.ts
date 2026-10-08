@@ -6,7 +6,8 @@
    3) 398: "fotoğrafsız gönderim olmaz" kalkınca raporun fotoğrafı gidemediği hâlde Onaya gönder gider;
    4) 398: fotoğraftan sonra bekleyen işin sürümü taşınmazsa Kaydet kendi fotoğrafıyla sahte çakışmaya düşer;
    5) 404: bekleyen içerik "eksik" işi de sayarsa sunucunun kaydettiği hâlin yerine cihazdaki kopya gösterilir;
-   6) 405: "yeni raporun işleri rapor açılmadan gitmez" kalkınca kayıt cihazın geçici kimliğiyle gider (sunucuda böyle rapor yok — iş düşer). */
+   6) 405: "yeni raporun işleri rapor açılmadan gitmez" kalkınca kayıt cihazın geçici kimliğiyle gider (sunucuda böyle rapor yok — iş düşer);
+   7) 405: gerçek kimliğe bağlama ekrana duyurulmazsa yeni rapor ekranı bekleyen kaydı görmez, erken geçer (deneme makinesi 1f53ad6, tablet). */
 import assert from "node:assert/strict";
 import { mkdtempSync, readFileSync, rmSync, writeFileSync } from "node:fs";
 import { tmpdir } from "node:os";
@@ -108,4 +109,19 @@ test("6) 405: yeni raporun işleri açılış beklemeden giderse geçici kimlikl
   cevap = (g) => { giden.push({ tur: (g as unknown as { tur: string }).tur, kayit: g.kayit }); return json({ sonuc: { durum: "red", neden: "Plan günü gelmedi." } }); };
   await K.kuyrukGonder();
   assert.ok(giden.some((x) => x.tur === "rapor.kaydet" && x.kayit === GECICI), "bozuk: kayıt rapor açılmadan geçici kimlikle gitti");
+});
+
+test("7) 405: gerçek kimliğe bağlama ekrana duyurulmazsa yeni rapor ekranı bekleyen kaydı görmez (erken geçer, sayfa boş çizilir)", async () => {
+  const K = await bozuk("            yayinla();\n          }\n", "          }\n");
+  K.kuyrukYazani("etiketDeneme00000000000");
+  agYok();
+  const GECICI = "11111111-1111-4111-8111-111111111111", GERCEK = "44444444-4444-4444-8444-444444444444";
+  await K.kuyrugaEkle({ tur: "rapor.olustur", kayit: GECICI, surum: 0, girdi: {}, ad: "Yeni", yer: "p|e" }); await sakin(K);
+  await K.kuyrugaEkle({ tur: "rapor.kaydet", kayit: GECICI, surum: 0, girdi: {}, ad: "Kayıt" }); await sakin(K);
+  let gorunen: string[] = [];
+  const dinle = () => { gorunen = K.kuyrukAnlik().isler.map((x) => x.kayit); };
+  (globalThis as unknown as { window: EventTarget }).window.addEventListener("probata-islem", dinle, { once: true });
+  cevap = () => json({ sonuc: { durum: "tamam", id: GERCEK, bildirim: "x", surum: { once: 0, sonra: 0 } } });
+  await K.kuyrukGonder();
+  assert.deepEqual(gorunen, [GECICI], "bozuk: olay anında ekran bekleyen kaydı eski (geçici) kimlikle gördü");
 });
