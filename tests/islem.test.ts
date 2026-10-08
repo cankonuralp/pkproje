@@ -8,6 +8,8 @@
    · aynı kimlik aynı anda iki istekte: iş bir kez (ikincisi saklanan sonucu alır);
    · kimlik başka kişinin işleminde ya da aynı kimlikle başka iş / başka kayıt: iş YAPILMAZ;
    · yetki ve kiracı modülde: başka denetçinin raporu ona görünmez ("yok"), B firmasının işleminde A'nın raporu "yok" (rapor değişmez);
+   · 398 fotoğraf (rapor.foto): raporun o anki sürümüne eklenir, kaydı ezmez, önceki / sonraki sürüm döner; tekrarı ikinci fotoğraf eklemez;
+     fotoğraf olmayan içerik, bozuk metin, olmayan yer, başka denetçi, başka firma eklenmez;
    · GÜVENLİK: işlem kaydı değişmez / silinmez; kişi yalnız kendi işlemlerini görür (aynı firmada da); hesap ve alınma anı veritabanından;
      kimlik sorgusu yalnız evet / hayır, tanımlayıcı-yetkili, PUBLIC'e kapalı.
    Olumsuz kanıt: tests/bozan/islem.bozan.ts. */
@@ -25,8 +27,8 @@ import { YAZAN_BICIMI, yazanEtiketi } from "../src/server/islem/yazan.ts";
 import { planIci, planKabul } from "../src/modules/planlar/server/plan-ici.ts";
 import { bugunTr, planAc } from "../src/modules/planlar/server/planlar.ts";
 import { taslakBaslat, yayinla } from "../src/modules/rapor-format/server/formatlar.ts";
-import { raporIslemi, type RaporIslemTuru } from "../src/modules/raporlar/server/islem-baglanti.ts";
-import { raporOlustur, sahaRaporu, type Kisi, type RaporYazma } from "../src/modules/raporlar/server/raporlar.ts";
+import { raporIslemi, type RaporIslemSonucu, type RaporIslemTuru } from "../src/modules/raporlar/server/islem-baglanti.ts";
+import { raporOlustur, sahaRaporu, type Kisi } from "../src/modules/raporlar/server/raporlar.ts";
 import { SABLONLAR } from "../src/format/sablonlar.ts";
 import { testKumesi } from "./yardimci/kume.ts";
 
@@ -81,7 +83,7 @@ before(async () => {
   const m1 = await q(A, "INSERT INTO musteri (unvan, kisa) VALUES ('Deneme Bir Sanayi A.Ş.', 'Deneme Bir') RETURNING id::text");
   t1 = await q(A, "INSERT INTO tesis (musteri_id, ad) VALUES ($1, 'Merkez') RETURNING id::text", [m1]);
   ht = await q(A, "INSERT INTO ekipman_turu (kod, ad, grup, brans, periyot) VALUES ('HT', 'Hava tankı', 'basincli', 'm', 12) RETURNING id::text");
-  for (const kod of ["HT-1", "HT-2", "HT-3", "HT-4", "HT-5"]) await q(A, "INSERT INTO ekipman (tesis_id, tur_id, kod, ekleyen) VALUES ($1, $2, $3, 'x') RETURNING id::text", [t1, ht, kod]);
+  for (const kod of ["HT-1", "HT-2", "HT-3", "HT-4", "HT-5", "HT-6"]) await q(A, "INSERT INTO ekipman (tesis_id, tur_id, kod, ekleyen) VALUES ($1, $2, $3, 'x') RETURNING id::text", [t1, ht, kod]);
   ekp = Object.fromEntries((await sql<{ kod: string; id: string }>(A, "SELECT kod, id::text FROM ekipman")).rows.map((x) => [x.kod, x.id]));
   await a(YON, async (db) => {
     const t = tamam(await taslakBaslat(db, YON, ht, "sablon:KOMPRESOR", null));
@@ -102,8 +104,8 @@ async function rapor(kim: Kisi, kod: string) {
 }
 /** kuyruktan gelen işi /api/islem'in yaptığı gibi uygular */
 const isle = (kim: Kisi, id: string, tur: RaporIslemTuru, kayit: string, surum: number, girdi: unknown, firma = A) =>
-  kiraciIcinde(havuz, firma, (db) => tekSeferlik<RaporYazma>(db, { id, tur, kayit, zaman: new Date().toISOString() },
-    () => raporIslemi(db, kim, tur, kayit, surum, girdi)), { hesapId: kim.id });
+  kiraciIcinde(havuz, firma, (db) => tekSeferlik<RaporIslemSonucu>(db, { id, tur, kayit, zaman: new Date().toISOString() },
+    () => raporIslemi(db, { depo, firmaId: firma }, kim, tur, kayit, surum, girdi)), { hesapId: kim.id });
 const raporSatiri = async (id: string) => (await sql<{ surum: number; durum: string; ekipman_bilgi: { marka?: string } }>(A,
   "SELECT surum, durum, ekipman_bilgi FROM rapor WHERE id = $1", [id])).rows[0];
 const izSayisi = async (id: string, ne: string) => (await sql<{ n: number }>(A,
@@ -233,4 +235,41 @@ test("yazan etiketi: kişiye sabit, 22 karakter, kişiler arasında farklı, kim
   assert.match(a1, YAZAN_BICIMI);
   assert.notEqual(a1, b);
   assert.ok(!a1.includes(DEN.id.slice(0, 8)));
+});
+
+/* 398: bağlantısız çekilen fotoğraf (rapor.foto). Uydurma JPEG (tests/raporlar.test.ts ile aynı yapı). Bu test GÜVENLİK sayımından SONRA koşar
+   (öteki denetçinin işlem sayısını değiştirir). */
+const bayt = (...p: (number[] | string)[]) => new Uint8Array(p.flatMap((x) => (typeof x === "string" ? [...Buffer.from(x, "latin1")] : x)));
+const seg = (isaret: number, govde: string) => bayt([0xff, isaret, (govde.length + 2) >> 8, (govde.length + 2) & 0xff], govde);
+const JPEG = bayt([0xff, 0xd8], [...seg(0xe0, "JFIF\0\x01\x01")], [...seg(0xdb, "\0" + "\x01".repeat(64))], [0xff, 0xda, 0, 2], "goruntu-verisi", [0xff, 0xd9]);
+const fotoGirdi = (ad = "on.jpg", icerik: Uint8Array = JPEG, yer: { bolum: string; madde: string | null } = { bolum: "foto", madde: null }) =>
+  ({ ...yer, ad, veri: Buffer.from(icerik).toString("base64") });
+const fotolari = async (id: string) =>
+  (await sql<{ fotolar: { ad: string; bolum: string; madde: string | null }[] }>(A, "SELECT fotolar FROM rapor WHERE id = $1", [id])).rows[0].fotolar;
+
+test("fotoğraf kuyruktan: raporun O ANKİ sürümüne eklenir (kaydı ezmez), önceki / sonraki sürüm döner; tekrarı ikinci fotoğraf eklemez; tür / yer / yetki / kiracı aynen", async () => {
+  const r = await rapor(DEN, "HT-6");
+  /* fotoğraf cihazda beklerken rapor başka yerde kaydedildi (sürüm ilerledi): fotoğraf yine eklenir, kayıt ezilmez */
+  const k = await isle(DEN, randomUUID(), "rapor.kaydet", r.id, r.surum, tamGirdi(r.bas, "Sunucudaki"));
+  assert.equal(k.durum === "yeni" && k.sonuc.durum, "tamam");
+  const id = randomUUID();
+  const s = await isle(DEN, id, "rapor.foto", r.id, r.surum, fotoGirdi());
+  assert.ok(s.durum === "yeni" && s.sonuc.durum === "tamam", JSON.stringify(s));
+  assert.deepEqual(s.durum === "yeni" && "surum" in s.sonuc && s.sonuc.surum, { once: r.surum + 1, sonra: r.surum + 2 });
+  const satir = await raporSatiri(r.id);
+  assert.deepEqual([satir.surum, satir.ekipman_bilgi.marka], [r.surum + 2, "Sunucudaki"], "kayıt ezilmedi");
+  assert.deepEqual((await fotolari(r.id)).map((f) => [f.ad, f.bolum, f.madde]), [["on.jpg", "foto", null]]);
+  /* yanıt yolda kayboldu, cihaz aynı kimlikle yeniden gönderdi: ikinci fotoğraf yok, saklanan sonuç (sürümlerle) */
+  assert.deepEqual(await isle(DEN, id, "rapor.foto", r.id, r.surum, fotoGirdi()), { durum: "tekrar", sonuc: s.durum === "yeni" ? s.sonuc : null });
+  assert.equal((await fotolari(r.id)).length, 1);
+  assert.equal(await izSayisi(r.id, "rapor.foto_ekle"), 1);
+  /* reddedilenler: fotoğraf olmayan içerik, bozuk metin, olmayan yer, başka denetçi, başka firma — hiçbiri eklenmez */
+  const dene = async (girdi: unknown, kim = DEN, firma = A) => { const x = await isle(kim, randomUUID(), "rapor.foto", r.id, 0, girdi, firma); return x.durum === "yeni" ? x.sonuc : x; };
+  assert.deepEqual(await dene(fotoGirdi("x.pdf", bayt("%PDF-1.4 deneme"))), { durum: "gecersiz", hatalar: { foto: "Yalnız JPEG ya da PNG fotoğraf." } });
+  assert.deepEqual(await dene({ ...fotoGirdi(), veri: "<script>" }), { durum: "gecersiz", hatalar: { foto: "Fotoğraf okunamadı." } });
+  assert.deepEqual(await dene(fotoGirdi("on.jpg", JPEG, { bolum: "yok-boyle", madde: null })), { durum: "gecersiz", hatalar: { foto: "Fotoğrafın yeri bulunamadı." } });
+  assert.deepEqual(await dene(fotoGirdi(), DEN2), { durum: "yok" });
+  assert.deepEqual(await dene(fotoGirdi(), DEN_B, B), { durum: "yok" });
+  assert.equal((await fotolari(r.id)).length, 1, "reddedilenler eklenmedi");
+  assert.equal((await raporSatiri(r.id)).surum, r.surum + 2);
 });

@@ -6,6 +6,8 @@
    · ÇAKIŞMA: bağlantısızken yazılan kayıt, bu arada başka sekmede değişen raporu ezmez — "Çakışma" çıkar; "Benimkini yaz" açık seçimle gönderir;
    · 395: açılmış rapor bağlantı kesikken yenilenince açılır (servis çalışanı, cihazda şifreli); açılmamış sayfa "bu cihazda yok";
    · 396: kişinin planı önceden iner — hiç açılmamış plan sayfası bağlantı kesikken açılır, pencere "Çevrimdışı hazır: 1 plan";
+   · 398: fotoğraf bağlantısızken cihaza (şifreli) — listede kendi yerinde "Gönderilmedi", üst çubukta "1 fotoğraf"; bağlantı gelince gider, raporun
+     listesine düşer (Görüntüle);
    · Onaya gönder bağlantısızken: rapor salt okunur, "Gönderilmedi · bağlantı bekleniyor"; bağlantı gelince gider (eksikse alanlar işaretlenir). */
 import { expect, test, type Page } from "@playwright/test";
 import { E2E_KAPI, E2E_PAROLA, E2E_YZ } from "./hesaplar";
@@ -13,6 +15,8 @@ import { hazir } from "./yardimci";
 
 const Y = `http://${E2E_YZ.firma.kisaAd}.localhost:${E2E_KAPI}`;
 const TASMA = () => document.documentElement.scrollWidth <= window.innerWidth;
+/* uydurma, en küçük yapısı doğru JPEG (e2e/foto-oku.spec.ts ile aynı; tarayıcı çözemez → küçültülmeden gider, sunucu türü baytlardan tanır) */
+const JPEG = Buffer.from([0xff, 0xd8, 0xff, 0xdb, 0x00, 0x03, 0x01, 0xff, 0xda, 0x00, 0x02, 0x01, 0x02, 0x03, 0xff, 0xd9]);
 
 async function raporuAc(page: Page, kod: string): Promise<string> {
   await page.goto(`${Y}/giris`);
@@ -118,7 +122,23 @@ test("çevrimdışı: bağlantı kes → Kaydet cihaza → bağlantı gelince gi
   await hazir(page);
   await page.context().setOffline(false);
 
-  /* 6) Onaya gönder bağlantısızken: rapor salt okunur, bağlantı gelince gider (eksikse alanlar işaretlenir) */
+  /* 6) fotoğraf bağlantısızken (398): cihaza kaydedilir, kendi yerinde "Gönderilmedi"; bağlantı gelince gider ve raporun listesine düşer */
+  await page.context().setOffline(true);
+  await page.getByLabel("Fotoğraf ekle", { exact: true }).first().setInputFiles({ name: "saha.jpg", mimeType: "image/jpeg", buffer: JPEG });
+  await expect(page.getByText("Fotoğraf cihaza kaydedildi; bağlantı gelince gönderilecek.").first()).toBeVisible();
+  await expect(page.getByRole("button", { name: "Çevrimdışı, 1 fotoğraf gönderilmeyi bekliyor; ayrıntı" })).toBeVisible();
+  await expect(page.getByText("Cihazda 1 fotoğraf · gönderilmedi")).toBeVisible();
+  const fotoSatiri = page.getByRole("listitem").filter({ hasText: "saha.jpg" });
+  await expect(fotoSatiri.getByText("Gönderilmedi", { exact: true })).toBeVisible();
+  await expect(fotoSatiri.getByRole("button", { name: "saha.jpg kaldır" })).toBeVisible();
+  expect(await page.evaluate(TASMA), "bekleyen fotoğraf satırıyla yana taşma yok").toBe(true);
+  await page.context().setOffline(false);
+  await expect(page.getByText("cihazda bekleyen fotoğraf gönderildi", { exact: false }).first()).toBeVisible({ timeout: 30_000 });
+  await expect(fotoSatiri.getByRole("link", { name: "Görüntüle" })).toBeVisible({ timeout: 30_000 });
+  await expect(fotoSatiri.getByText("Gönderilmedi", { exact: true })).toHaveCount(0);
+  await expect(page.getByRole("button", { name: /Çevrimdışı|bekleyen işlem/ })).toHaveCount(0);
+
+  /* 7) Onaya gönder bağlantısızken: rapor salt okunur, bağlantı gelince gider (eksikse alanlar işaretlenir) */
   await page.context().setOffline(true);
   await page.getByRole("button", { name: "Onaya gönder" }).click();
   await page.getByRole("dialog").getByRole("button", { name: "Onaya gönder" }).click();

@@ -2355,6 +2355,18 @@ revizyon, alan kopyalama, hafif kusur devri, meslek eşleşme denetimi).
 - Emsal ürünler: https://opwire.app/iso-17020-periyodik-kontrol-yazilimi/ · https://17020muayene.vidco.com.tr/ · https://akuple.com/asansor-kontrol-yazilimi/ · https://ensyazilim.com/
 
 ## 11 · Değişiklik günlüğü
+- 2026-10-08 (398): **Çevrimdışı çalışma — fotoğraf kuyruğu** (ARKA-UC §4.1 "fotoğraf çekme" çevrimdışı çalışır; §4.3 "Onaya gönder, o raporun
+  bütün kayıtları ve fotoğrafları gittikten sonra gider. Fotoğrafsız gönderim oluşmaz" · "2 rapor, 14 fotoğraf gönderilmeyi bekliyor"). Bağlantı
+  yokken (ya da istek ağda düşerse, ya da raporun cihazda bekleyen işi varsa — sıra korunur) saha raporunda eklenen fotoğraf, cihazda küçültülmüş
+  hâliyle (en çok 2 MB) kuyruğa şifreli yazılır; listede kendi yerinde "Gönderilmedi" (Kaldır), başlıkta "Cihazda n fotoğraf · gönderilmedi", üst
+  çubukta "n fotoğraf gönderilmeyi bekliyor"; canlı zorunlu alan denetimi bekleyen fotoğrafı sayar. Bağlantı gelince fotoğraflar formdan ÖNCE gider;
+  gidemeyen fotoğrafı olan raporun Onaya gönder'i bekler ("Raporun fotoğrafları gidince gönderilecek"), fotoğraf gidince ya da listeden kaldırılınca
+  gider. Sunucuda iş rapor.foto (/api/islem, raporlar/server/islem-baglanti.ts): fotoğraf eklemek ekler, ezmez — raporun o anki sürümüne eklenir
+  (tür, EXIF, sınır, yer, yetki fotoEkle'de aynen), önceki / sonraki sürüm döner; cihaz aynı raporun bekleyen işlerini yalnız sürüm kendi
+  fotoğrafıyla değiştiyse taşır (arada başkası değiştirdiyse çakışma yine görünür). Göç yok (islem.tur deseni uyuyor). Kilitler: islem.test
+  (gerçek PostgreSQL, iki firma: eski sürümle gelen fotoğraf kaydı ezmeden eklenir, tekrarı ikinci fotoğraf eklemez, PDF / bozuk metin / olmayan
+  yer / başka denetçi / başka firma eklenmez) · kuyruk.test (form işinin yerine geçmez, önce gider, sürüm taşıma, Onaya gönder bekler, foto
+  çakışması yeniden dene) · bozan kuyruk 3–4 · e2e cevrimdisi (bağlantı kesik → "Gönderilmedi" → bağlantı gelince Görüntüle).
 - 2026-10-08 (397): **Hata ekranı bağlantıyı bilir** — bağlantı yokken (ya da hata ağdan geldiyse: sunucuya ulaşamayan istek) "Bu sayfa
   açılamadı · beklenmeyen sorun" yerine "Bağlantı yok": işlem bağlantı gerektirir; raporda Kaydet ve Onaya gönder bağlantısız da çalışır (cihaza
   kaydedilir), daha önce açılan saha sayfaları bağlantısız açılır; tuşlar Yeniden dene · Planlar. Bağlantı durumu canlı izlenir (bağlantı gelince

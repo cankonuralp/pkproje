@@ -7,15 +7,21 @@
      "benimkini yaz" ya da "sunucudakini kullan" der; benimkini yaz sunucunun güncel sürümüyle YENİ kimlikle gider) · yetki / kayıt yok · başka
      hesapla yazılmış (o hesapla girilince gider).
    · Ağ yoksa, oturum kapandıysa ya da sunucu düştüyse durur, sonra yeniden dener (bağlantı gelince, sayfa açılınca, dakikada bir).
+   · 398 FOTOĞRAF (ARKA-UC §4.3 "Onaya gönder, o raporun bütün kayıtları ve fotoğrafları gittikten sonra gider. Fotoğrafsız gönderim oluşmaz"):
+     fotoğraf ayrı iştir — eklenir, hiçbir işin yerine geçmez; fotoğraflar formdan ÖNCE gider; raporun gidemeyen fotoğrafı varsa Onaya gönder
+     bekler (fotoğraf gidince ya da kullanıcı onu listeden kaldırınca gider). Fotoğraf raporun sürümünü bir artırır: aynı raporun bekleyen işleri,
+     sürüm yalnız bu fotoğrafla değiştiyse yeni sürüme taşınır (arada başka yerde değiştiyse taşınmaz — çakışma yine görünür).
    Depo yoksa (gizli pencere) iş yalnız bu sayfada bellekte tutulur ve söylenir. */
 import { coz, depoAc, isleriOku, isSil, isYaz, sifrele, type DepoIsi } from "./depo.ts";
 
-export type KuyrukTuru = "rapor.kaydet" | "rapor.gonder";
+export type KuyrukTuru = "rapor.kaydet" | "rapor.gonder" | "rapor.foto";
+/** formun o anki hâlini taşıyan işler: aynı rapor için tek bekleyen (fotoğraf bunlardan değil) */
+const FORM: ReadonlySet<string> = new Set(["rapor.kaydet", "rapor.gonder"]);
 /** gönderilen işin sonucu — window "probata-islem" olayı (ekran tazelenir; eksikse alanlar işaretlenir) */
 export interface KuyrukSonucOlayi { kayit: string; tur: KuyrukTuru; durum: string; ileti: string | null; eksikler: { bolum: string; alan: string; ad: string }[] | null }
 export type IsDurumu = DepoIsi["durum"];
 /** ekranda gösterilen (içeriksiz) */
-export interface KuyrukIsi { id: string; tur: KuyrukTuru; kayit: string; ad: string; zaman: string; durum: IsDurumu; ileti: string | null }
+export interface KuyrukIsi { id: string; tur: KuyrukTuru; kayit: string; ad: string; zaman: string; durum: IsDurumu; ileti: string | null; yer: string | null }
 export interface KuyrukDurumu {
   isler: readonly KuyrukIsi[];
   /** cihaz deposu yok: bekleyenler yalnız bu sayfada */
@@ -35,7 +41,7 @@ let yuklendi: Promise<void> | null = null;
 const dinleyenler = new Set<() => void>();
 
 const yayinla = (d: Partial<KuyrukDurumu> = {}) => {
-  durum = { ...durum, ...d, isler: bellek.map(({ id, tur, kayit, ad, zaman, durum: x, ileti }) => ({ id, tur: tur as KuyrukTuru, kayit, ad, zaman, durum: x, ileti })) };
+  durum = { ...durum, ...d, isler: bellek.map(({ id, tur, kayit, ad, zaman, durum: x, ileti, yer }) => ({ id, tur: tur as KuyrukTuru, kayit, ad, zaman, durum: x, ileti, yer: yer ?? null })) };
   for (const f of dinleyenler) f();
 };
 export const kuyrukAbone = (f: () => void) => { dinleyenler.add(f); return () => { dinleyenler.delete(f); }; };
@@ -56,13 +62,14 @@ function yukle(): Promise<void> {
   return yuklendi;
 }
 
-/** işi kuyruğa yazar (aynı raporun bekleyen işinin yerine) ve bağlantı varsa göndermeyi dener */
-export async function kuyrugaEkle(g: { tur: KuyrukTuru; kayit: string; surum: number; girdi: unknown; ad: string }): Promise<void> {
+/** işi kuyruğa yazar (form işiyse aynı raporun bekleyen form işinin yerine; fotoğraf eklenir) ve bağlantı varsa göndermeyi dener.
+    `yer`: fotoğrafın raporda yeri ("bölüm|madde") */
+export async function kuyrugaEkle(g: { tur: KuyrukTuru; kayit: string; surum: number; girdi: unknown; ad: string; yer?: string | null }): Promise<void> {
   await yukle();
   const db = await depoAc();
-  const eski = bellek.filter((x) => x.kayit === g.kayit && x.durum !== "baska_hesap");
+  const eski = FORM.has(g.tur) ? bellek.filter((x) => x.kayit === g.kayit && FORM.has(x.tur) && x.durum !== "baska_hesap") : [];
   const i: Bellek = {
-    id: crypto.randomUUID(), tur: g.tur, kayit: g.kayit, yazan, surum: g.surum, zaman: new Date().toISOString(), ad: g.ad, durum: "bekliyor",
+    id: crypto.randomUUID(), tur: g.tur, kayit: g.kayit, yazan, surum: g.surum, zaman: new Date().toISOString(), ad: g.ad, yer: g.yer ?? null, durum: "bekliyor",
     ileti: null, guncel: null, sira: Date.now(), iv: new Uint8Array(0), sifreli: new ArrayBuffer(0),
   };
   if (db) Object.assign(i, await sifrele(db, g.girdi));
@@ -94,7 +101,7 @@ export async function benimkiniYaz(id: string): Promise<void> {
   const db = await depoAc();
   const girdi = db ? await coz(db, x) : x.girdi;
   await kuyruktanCikar(id);
-  await kuyrugaEkle({ tur: x.tur as KuyrukTuru, kayit: x.kayit, surum: x.guncel, girdi, ad: x.ad });
+  await kuyrugaEkle({ tur: x.tur as KuyrukTuru, kayit: x.kayit, surum: x.guncel, girdi, ad: x.ad, yer: x.yer });
 }
 
 /** başka hesapla yazılmış ya da kimliği çakışmış işi yeniden dener (yeni kimlik, aynı sürüm) */
@@ -104,7 +111,7 @@ export async function yenidenDene(id: string): Promise<void> {
   const db = await depoAc();
   const girdi = db ? await coz(db, x) : x.girdi;
   await kuyruktanCikar(id);
-  await kuyrugaEkle({ tur: x.tur as KuyrukTuru, kayit: x.kayit, surum: x.surum, girdi, ad: x.ad });
+  await kuyrugaEkle({ tur: x.tur as KuyrukTuru, kayit: x.kayit, surum: x.surum, girdi, ad: x.ad, yer: x.yer });
 }
 
 const ILETI: Record<string, string> = {
@@ -113,9 +120,13 @@ const ILETI: Record<string, string> = {
   cakisma: "Rapor bu cihazda yazılırken başka yerde değiştirildi.",
   baska_hesap: "Bu iş başka bir hesapla yazıldı; o hesapla girilince gönderilir.",
   kimlik: "İşin kimliği çakıştı; yeniden gönderin.",
+  foto_cakisma: "Rapor fotoğraf eklenirken aynı anda değişti; yeniden deneyin.",
+  foto_bekliyor: "Raporun fotoğrafları gidince gönderilecek.",
 };
 
-type Sonuc = { durum: string; hatalar?: Record<string, string>; eksikler?: { bolum: string; alan: string; ad: string }[]; neden?: string };
+type Sonuc = { durum: string; hatalar?: Record<string, string>; eksikler?: { bolum: string; alan: string; ad: string }[]; neden?: string;
+  /** fotoğrafta: raporun hangi sürümden hangisine geçtiği */
+  surum?: { once: number; sonra: number } };
 async function guncelle(x: Bellek, d: Partial<Bellek>) {
   Object.assign(x, d);
   const db = await depoAc();
@@ -132,8 +143,15 @@ export async function kuyrukGonder(): Promise<number> {
   let n = 0;
   try {
     const db = await depoAc();
-    for (const x of [...bellek]) {
-      if (x.durum !== "bekliyor") continue;
+    /* fotoğraflar önce (eklerler, ezmezler); sonra form işleri — her grup kendi sırasında */
+    const sira = [...bellek].sort((a, b) => Number(FORM.has(a.tur)) - Number(FORM.has(b.tur)) || a.sira - b.sira);
+    for (const x of sira) {
+      if (x.durum !== "bekliyor" || !bellek.includes(x)) continue;
+      /* fotoğrafsız gönderim olmaz: raporun gidemeyen fotoğrafı varsa Onaya gönder bekler */
+      if (x.tur === "rapor.gonder" && bellek.some((y) => y.kayit === x.kayit && y.tur === "rapor.foto")) {
+        if (x.ileti !== ILETI.foto_bekliyor) await guncelle(x, { ileti: ILETI.foto_bekliyor });
+        continue;
+      }
       const girdi = db ? await coz(db, x) : x.girdi;
       let y: Response;
       try {
@@ -157,6 +175,10 @@ export async function kuyrukGonder(): Promise<number> {
       if (s.durum === "tamam") {
         await kuyruktanCikar(x.id);
         n++;
+        /* fotoğraf sürümü bir artırdı: aynı raporun, fotoğraftan önceki sürümden yazılmış bekleyen işleri yeni sürüme */
+        if (s.surum) for (const y of bellek) if (y.kayit === x.kayit && y.durum === "bekliyor" && y.surum === s.surum.once) await guncelle(y, { surum: s.surum.sonra });
+      } else if (s.durum === "cakisma" && x.tur === "rapor.foto") {
+        await guncelle(x, { durum: "hata", ileti: ILETI.foto_cakisma });
       } else if (s.durum === "eksik") {
         await guncelle(x, { durum: "eksik", ileti: `Rapor kaydedildi, onaya gönderilmedi: ${s.eksikler?.length ?? 0} zorunlu alan boş.` });
       } else if (s.durum === "cakisma") {

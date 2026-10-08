@@ -24,6 +24,8 @@ export interface DepoIsi {
   zaman: string;
   /** ekranda: "Rapor kaydı · DA-1026-001" */
   ad: string;
+  /** fotoğrafın raporda yeri "bölüm|madde" (398; ekranda bekleyen fotoğraf kendi yerinde görünür — açık, içerik değil); öteki işlerde yok */
+  yer?: string | null;
   durum: "bekliyor" | "cakisma" | "eksik" | "hata" | "baska_hesap";
   ileti: string | null;
   /** çakışmada sunucudaki güncel sürüm ("benimkini yaz" bununla yeni kimlikle gider) */

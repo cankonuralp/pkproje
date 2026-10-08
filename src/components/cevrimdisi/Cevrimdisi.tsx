@@ -100,8 +100,11 @@ export function CevrimdisiGosterge({ yazan, paket }: { yazan: string; paket?: Pa
   }, [goster]);
   if (!goster) return null;
   const bekleyen = k.isler.filter((x) => x.durum === "bekliyor").length, sorunlu = k.isler.length - bekleyen;
+  /* ARKA-UC §4.3 "2 rapor, 14 fotoğraf gönderilmeyi bekliyor" (398) */
+  const foto = k.isler.filter((x) => x.durum === "bekliyor" && x.tur === "rapor.foto").length;
+  const neler = [bekleyen - foto ? `${bekleyen - foto} işlem` : "", foto ? `${foto} fotoğraf` : ""].filter(Boolean).join(" ve ");
   const etiket = cevrimdisi
-    ? `Çevrimdışı${bekleyen ? `, ${bekleyen} işlem gönderilmeyi bekliyor` : ""}; ayrıntı`
+    ? `Çevrimdışı${bekleyen ? `, ${neler} gönderilmeyi bekliyor` : ""}; ayrıntı`
     : `${k.isler.length} bekleyen işlem${sorunlu ? `, ${sorunlu} tanesi sizi bekliyor` : ""}; ayrıntı`;
   return (
     <>
@@ -132,6 +135,8 @@ function KuyrukPenceresi({ acik, kapat, cevrimdisi }: { acik: boolean; kapat: ()
     if (veriGider && !(await onayla({ ...(soru ?? { baslik: "Listeden kaldırılsın mı?", metin: `${x.ad}: bu cihazda yazılan ve gönderilemeyen içerik silinir; geri alınamaz.`, tus: "Kaldır" }), tehlike: true }))) return;
     await kuyruktanCikar(x.id);
     bildir(`${x.ad} listeden kaldırıldı.`);
+    /* kaldırılan fotoğrafı bekleyen Onaya gönder varsa artık gidebilir (398) */
+    void kuyrukGonder();
   };
   return (
     <Pencere acik={acik} baslik={cevrimdisi ? "Çevrimdışı" : "Bekleyen işlemler"} onKapat={kapat}
@@ -145,7 +150,7 @@ function KuyrukPenceresi({ acik, kapat, cevrimdisi }: { acik: boolean; kapat: ()
       {k.saatFarkiDk !== null && <Serit tur="uyari" ikon="clock">Cihazınızın saati sunucudan {Math.abs(k.saatFarkiDk)} dakika {k.saatFarkiDk > 0 ? "ileri" : "geri"}. Rapordaki resmî tarihler sunucu saatinden yazılır; cihaz saatini düzeltin.</Serit>}
       {hazir && <p className={stil.ipucu}>Çevrimdışı hazır: <b>{hazir.plan} plan</b> · son eşitleme {ZAMAN.format(new Date(hazir.zaman)).replace(",", "")}</p>}
       {sayfa !== null && <p className={stil.ipucu}>Bu cihazda bağlantısız açılabilen sayfa: <b>{sayfa}</b> (Planlar, plan içi ve raporlar).</p>}
-      {cevrimdisi && <p className={stil.ipucu}>Bağlantı gerektirenler: son imza, onay, fotoğraftan okuma, S.A.Y.</p>}
+      {cevrimdisi && <p className={stil.ipucu}>Bağlantı gerektirenler: son imza, onay, fotoğraftan okuma, S.A.Y. Fotoğraflar cihaza kaydedilir, rapordan önce gider.</p>}
       {k.isler.length ? (
         <>
           <p className={stil.baslik}>Bekleyen işler ({k.isler.length})</p>
@@ -161,7 +166,7 @@ function KuyrukPenceresi({ acik, kapat, cevrimdisi }: { acik: boolean; kapat: ()
                       <Tus tur="ikincil" onClick={() => void kaldir(x, true, { baslik: "Sunucudaki kullanılsın mı?",
                         metin: `${x.ad}: bu cihazda yazdıklarınız silinir, raporun sunucudaki hâli kalır; geri alınamaz.`, tus: "Sunucudakini kullan" })}>Sunucudakini kullan</Tus>
                     </>}
-                    {x.durum === "baska_hesap" && <Tus tur="ikincil" onClick={() => void yenidenDene(x.id)}>Yeniden dene</Tus>}
+                    {(x.durum === "baska_hesap" || (x.durum === "hata" && x.tur === "rapor.foto")) && <Tus tur="ikincil" onClick={() => void yenidenDene(x.id)}>Yeniden dene</Tus>}
                     {(x.durum === "eksik" || x.durum === "hata" || x.durum === "cakisma") && x.tur.startsWith("rapor.") &&
                       <Link className={stil.baglanti} href={`/raporlar/${x.kayit}`} onClick={kapat}>Raporu aç</Link>}
                     {x.durum !== "cakisma" && <Tus tur="ikincil" onClick={() => void kaldir(x, x.durum !== "eksik")}>Listeden kaldır</Tus>}

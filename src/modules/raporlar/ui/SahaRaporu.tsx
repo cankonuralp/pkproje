@@ -96,7 +96,10 @@ export function SahaRaporu({ v }: { v: Gorunum }) {
   /* çevrimdışı kuyruk (394; maket Z4): bu raporun cihazda bekleyen işi — Onaya gönder bekliyorsa rapor salt okunur */
   const kuyruk = useSyncExternalStore(kuyrukAbone, kuyrukAnlik, kuyrukSunucuAnlik);
   const bekleyenIs = kuyruk.isler.find((x) => x.kayit === v.id && x.durum === "bekliyor");
-  const gonderimBekliyor = bekleyenIs?.tur === "rapor.gonder";
+  const gonderimBekliyor = kuyruk.isler.some((x) => x.kayit === v.id && x.durum === "bekliyor" && x.tur === "rapor.gonder");
+  /* 398: cihazda bekleyen fotoğraflar (yerleri "bölüm|madde") — canlı değerlendirmede sayılır, başlıkta söylenir */
+  const bekleyenFotolar = useMemo(() => kuyruk.isler.filter((x) => x.kayit === v.id && x.durum === "bekliyor" && x.tur === "rapor.foto"), [kuyruk.isler, v.id]);
+  const formBekliyor = kuyruk.isler.some((x) => x.kayit === v.id && x.durum === "bekliyor" && x.tur !== "rapor.foto");
   const duzenle = v.izin.duzenle && !gonderimBekliyor;
   const [ekipman, setEkipman] = useState(() => bosla(v.ekipmanBilgi));
   const [tarih, setTarih] = useState(() => bosla(v.tarih));
@@ -127,10 +130,11 @@ export function SahaRaporu({ v }: { v: Gorunum }) {
   const d = useMemo(() => {
     /* sayılar sunucudaki gibi raporun kendi listesinden: bölüm başına ve madde başına fotoğraf */
     const foto: Record<string, number> = {}, mf: Record<string, number> = {};
-    for (const f of v.fotolar) { if (f.madde) mf[f.madde] = (mf[f.madde] ?? 0) + 1; else foto[f.bolum] = (foto[f.bolum] ?? 0) + 1; }
+    const yerler = [...v.fotolar, ...bekleyenFotolar.map((x) => { const [bolum, m] = (x.yer ?? "|").split("|"); return { bolum, madde: m || null }; })];
+    for (const f of yerler) { if (f.madde) mf[f.madde] = (mf[f.madde] ?? 0) + 1; else foto[f.bolum] = (foto[f.bolum] ?? 0) + 1; }
     const madde = Object.fromEntries(Object.entries(cevaplar.madde).map(([k, x]) => [k, { ...x, foto: mf[k] ?? 0 }]));
     return degerlendir(v.tanim, { ...cevaplar, madde, cihaz: v.cihazlar.filter((x) => x.cihaz).length, foto });
-  }, [v.tanim, v.cihazlar, v.fotolar, cevaplar]);
+  }, [v.tanim, v.cihazlar, v.fotolar, bekleyenFotolar, cevaplar]);
   /* şu an boş olan zorunlu alanlar (format + sabit tarihler + gerekli cihazlar); işaret yalnız Onaya gönder'in dediği VE hâlâ boş olanda */
   const canli = useMemo(() => {
     const s = new Set(d.eksikler.map((e) => e.alan));
@@ -217,7 +221,12 @@ export function SahaRaporu({ v }: { v: Gorunum }) {
   useEffect(() => {
     kuyrukSonucu.current = (d) => {
       if (d.kayit !== v.id) return;
-      if (d.durum === "tamam") { setGenel(null); bildir(d.tur === "rapor.gonder" ? `${v.no}: cihazda bekleyen onaya gönderim gitti.` : `${v.no}: cihazda bekleyen kayıt gönderildi.`); yenile(); return; }
+      if (d.durum === "tamam") {
+        setGenel(null);
+        bildir(d.tur === "rapor.gonder" ? `${v.no}: cihazda bekleyen onaya gönderim gitti.` : d.tur === "rapor.foto" ? `${v.no}: cihazda bekleyen fotoğraf gönderildi.` : `${v.no}: cihazda bekleyen kayıt gönderildi.`);
+        yenile();
+        return;
+      }
       if (d.durum === "eksik" && d.eksikler) { setIsaretli(new Set(d.eksikler.map((e) => e.alan))); setKapali(new Set()); setEksikler(d.eksikler); yenile(); return; }
       setGenel(`${v.no}: cihazda bekleyen iş gönderilemedi — ${d.ileti ?? "üst çubuktaki bekleyen işlemlere bakın"}.`);
     };
@@ -430,7 +439,7 @@ export function SahaRaporu({ v }: { v: Gorunum }) {
     <>
       <Kirinti ogeler={[["Planlar", "/planlar"], [v.plan.no, `/planlar/${v.plan.id}`], [v.no]]} />
       <NesneBasi baslik={`${v.ekipman.kod} · ${v.tur.ad}`} altIkon="file-text"
-        rozet={<><Rozet tur={rozet}>{durumAd}</Rozet>{bekleyenIs && <Rozet tur="bekliyor">{gonderimBekliyor ? "Gönderilmedi · bağlantı bekleniyor" : "Cihazda kayıt · gönderilmedi"}</Rozet>}</>}
+        rozet={<><Rozet tur={rozet}>{durumAd}</Rozet>{bekleyenIs && <Rozet tur="bekliyor">{gonderimBekliyor ? "Gönderilmedi · bağlantı bekleniyor" : formBekliyor ? "Cihazda kayıt · gönderilmedi" : `Cihazda ${bekleyenFotolar.length} fotoğraf · gönderilmedi`}</Rozet>}</>}
         alt={<><Kod>{v.no}</Kod> · {v.plan.musteriKisa} · {v.plan.tesisAd} · {v.yazan.ad}</>}
         tuslar={<>
           {duzenle && (

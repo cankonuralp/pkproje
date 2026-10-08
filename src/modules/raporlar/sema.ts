@@ -68,3 +68,12 @@ export const RevizeGirdisi = z.object({
 export const RevizeRedGirdisi = z.object({ gerekce: gerekceMetni });
 /** raporun görünen numarası (193): revizyonda "-R1", "-R2" … eki (imzalı sürümün numarasıyla aynı — göç 0027 rapor_surumu.no) */
 export const gorunenNo = (no: string, revizyon: number) => (revizyon > 0 ? `${no}-R${revizyon}` : no);
+
+/* ── ÇEVRİMDIŞI FOTOĞRAF (398; ARKA-UC §4.1 "fotoğraf çekme" çevrimdışı çalışır, §4.3 foto.ekle kuyrukta) ─────────────────────────────────────── */
+/** cihaz kuyruğundaki fotoğraf en çok 2 MB (cihazda 1600 px'e küçültülmüş hâli; metne çevrilince işlem ucunun 3 MB gövde sınırına sığar) */
+export const FOTO_KUYRUK_EN_BUYUK = 2 * 1024 * 1024;
+/** kuyruktan gelen fotoğraf: yeri (bölüm, madde), adı, içeriği (base64 — tür ve EXIF sunucuda baytlardan, dosya yolunda) */
+export const FotoIslemGirdisi = z.object({
+  bolum: z.string().min(1).max(64), madde: z.string().min(1).max(64).nullable(), ad: z.string().min(1).max(200),
+  veri: z.string().min(4).max(Math.ceil(FOTO_KUYRUK_EN_BUYUK / 3) * 4).regex(/^[A-Za-z0-9+/]+={0,2}$/),
+});
