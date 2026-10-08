@@ -2355,6 +2355,12 @@ revizyon, alan kopyalama, hafif kusur devri, meslek eşleşme denetimi).
 - Emsal ürünler: https://opwire.app/iso-17020-periyodik-kontrol-yazilimi/ · https://17020muayene.vidco.com.tr/ · https://akuple.com/asansor-kontrol-yazilimi/ · https://ensyazilim.com/
 
 ## 11 · Değişiklik günlüğü
+- 2026-10-08 (391): **Deneme yayını güncellendi (389–390).** CI d1c13af yeşil — ilk paralel koşu: denetim 5 dk, uçtan uca masaüstü / tablet / telefon
+  aynı anda 22'şer dk, koşu toplam ~23 dk (önceki ~80 dk). Supabase'e göç 0074 (`goc` kaydıyla, özet d1c13af'teki dosyadan; 75 göç), işlev
+  gövdesi dosyayla md5 aynı, yalnız uygulama rolüne açık. main = d1c13af, Vercel yayında. Doğrulama: duman 9/9 · gece ucu 200 (çöp + saklama,
+  silinen 0) · çalışma zamanı hatası yok (son 1 saat) · giriş sayfası telefonda (375) yana taşmasız, temiz sekmede konsol hatasız. Duyuru
+  şeridinin kaynak adı bir sonraki okumada dolar (Ana sayfa 6 saatte bir okutur; eski kayıtta ad yok → genel cümle). Oturum isteyen ekranlar:
+  ölçemedim.
 - 2026-10-08 (390): **Duyurular: hangi kaynak alınamadı** (388'deki canlı bulgu). İSGGM ve İSGÜM okunup yalnız iş ekipmanları portalı
   okunamayınca Ana sayfa "Duyurular alınamadı" diyordu — hepsi alınamamış gibi. Artık "İş ekipmanları duyuruları alınamadı; son alınan liste
   gösteriliyor." (hepsi düştüyse ya da okuma takıldıysa eskisi gibi genel cümle). Okuma işi okunamayan kaynakların kodunu iş kaydına yazar;
