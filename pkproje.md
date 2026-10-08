@@ -2359,6 +2359,8 @@ revizyon, alan kopyalama, hafif kusur devri, meslek eşleşme denetimi).
   telefonda 30 sn beklemeye rağmen düştü: giriş sayfası sunucudan geliyor, tarayıcıda canlanmıyordu (sayfa görüntüsü sonuç dosyasında). Sebep:
   geliştirme kipi varsayılanda yalnız son 2 sayfayı tutup 25 sn açılmayanı atıyor; taramadan sonra giriş sayfası sürekli yeniden derleniyordu.
   Uçtan uca sunucusunda derlenen sayfalar bellekte kalır (onDemandEntries; yayında derleme yok, etkisiz). Düşen testin izi artık sonuç dosyasında.
+  **Geri alındı (ac9f7c2'nin turu):** sayfaları bellekte tutmak işleri kötüleştirdi — çevrimdışı denemesinden hemen sonraki deneme tablette ve
+  telefonda düştü (iz: giriş isteği sunucuya gitti, 15 sn cevap yok). Kalan: düşen testin izi; S.A.Y'nin ara sıra düşmesi izle incelenecek.
 - 2026-10-08 (422): **Site taramasının ilk koşusu** (9cf7f54): üç genişlikte 58'er sayfa gezildi (firma yöneticisi), taramanın kendisi 5–7 dk.
   Sunucu hatası, konsol hatası, yatay taşma, basılamayan öğe YOK; çekmecenin her maddesi ekranda ve basılabilir. Bulunan iki erişilebilirlik
   konusu düzeltildi: rapor belgesinde logo / AKR yer tutucusunun grisi #7f7f7f beyazda 4,0:1 → #595959 (7:1; PDF'te de); rapor önizlemesinin
