@@ -33,3 +33,7 @@ label:has(> .gizli:focus-visible) { outline: 3px solid var(--odak); outline-offs
 @media (min-width: 768px) {
   html[data-say="var"] main { padding-bottom: 96px; }
 }
+/* çevrimdışı göstergesi (394): telefonda üst çubuğun altında tam genişlik şerit — içerik şerit kadar aşağı iner */
+@media (max-width: 599.98px) {
+  html[data-cevrimdisi="var"] main { margin-top: var(--tus-y); }
+}

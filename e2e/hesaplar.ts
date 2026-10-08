@@ -37,6 +37,8 @@ export const E2E_YZ = {
   anahtar: "sk-ant-e2e-deneme-anahtar-0001",
   tesis: "YZ Tesisi",
   ekipman: { masaustu: "EP-0301", tablet: "EP-0302", telefon: "EP-0303" } as Record<string, string>,
+  /* çevrimdışı (394): genişlik başına AYRI rapor — bağlantı kes / kaydet / gönder / çakışma öteki testlerin raporuna dokunmasın */
+  cevrimdisi: { masaustu: "EP-0401", tablet: "EP-0402", telefon: "EP-0403" } as Record<string, string>,
   /* saklama süresi (387): ayrı tesiste, süresi 10 gün sonra dolacak imzalı rapor (Uyarılar + Firma ayarları › Saklama süresi dolacak raporlar) */
   saklama: { tesis: "YZ Arşiv Tesisi", ekipman: "EP-0950", plan: "P-0121-950", rapor: "YZ-0121-950-00001" },
 } as const;

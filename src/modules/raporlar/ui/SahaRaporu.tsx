@@ -20,8 +20,9 @@
    + "Revize isteğini geri çek"; reddedilirse "Revize isteği reddedildi" şeridi; revizeye gönderilen rapor Yeni açılır, üstünde "Revizeye
    gönderildi (R1)" + gerekçe; rapor no revizyon ekiyle. */
 import { useRouter } from "next/navigation";
-import { useEffect, useMemo, useRef, useState, useTransition, type ReactNode } from "react";
+import { useEffect, useMemo, useRef, useState, useSyncExternalStore, useTransition, type ReactNode, type TransitionStartFunction } from "react";
 import { useBildir } from "../../../components/bildirim/Bildirim";
+import { kayitBilgileriniKapat, kuyrugaEkle, kuyrukAbone, kuyrukAnlik, kuyrukSunucuAnlik, type KuyrukSonucOlayi, type KuyrukTuru } from "../../../components/cevrimdisi/kuyruk";
 import { Girdi, ipucuId } from "../../../components/form/Form";
 import { Ikon } from "../../../components/ikon/Ikon";
 import { useOnayla } from "../../../components/pencere/Onay";
@@ -61,6 +62,10 @@ const KILIT: Record<Exclude<RaporDurumu, "taslak">, string> = {
   onayda: "Teknik yönetici onayında", onaylandi: "Muayene uzmanı imzası bekleniyor", imzada: "İmzaya gönderildi",
   imzali: "Tamamlandı · son imza atıldı, müşteriye açıldı",
 };
+/* 394: bağlantı yok mu · istek ağda mı düştü (sunucu eylemi bağlantısızken TypeError atar) */
+const cevrimdisiMi = () => typeof navigator !== "undefined" && navigator.onLine === false;
+const agHatasi = (e: unknown) => e instanceof TypeError || cevrimdisiMi();
+
 /** sunucunun alan hatası anahtarı → ekrandaki ad (üst şeritte "ad: ileti") */
 const ALAN_ADI: Record<string, string> = {
   "ekipman.marka": "Marka", "ekipman.model": "Model", "ekipman.seri": "Seri no", "ekipman.imal": "İmal yılı", "ekipman.konum": "Kullanım yeri",
@@ -79,7 +84,20 @@ export function SahaRaporu({ v }: { v: Gorunum }) {
   const router = useRouter();
   const bildir = useBildir();
   const onayla = useOnayla();
-  const [bekliyor, baslat] = useTransition();
+  const [bekliyor, baslatHam] = useTransition();
+  /* bağlantı yokken sunucuya giden her tuş (fotoğraf, cihaz, kopya …) sayfayı hata ekranına düşürmez: şeritte söyler, yazılanlar ekranda kalır
+     (394; Kaydet ve Onaya gönder aşağıda cihaz kuyruğuna gider) */
+  const baslat: TransitionStartFunction = (f) => baslatHam(async () => {
+    try { await f(); } catch (e) {
+      if (agHatasi(e)) { setGenel("Bağlantı yok: bu işlem bağlantı gerektirir. Kaydet ve Onaya gönder cihaza kaydedilir, bağlantı gelince gider."); return; }
+      throw e;
+    }
+  });
+  /* çevrimdışı kuyruk (394; maket Z4): bu raporun cihazda bekleyen işi — Onaya gönder bekliyorsa rapor salt okunur */
+  const kuyruk = useSyncExternalStore(kuyrukAbone, kuyrukAnlik, kuyrukSunucuAnlik);
+  const bekleyenIs = kuyruk.isler.find((x) => x.kayit === v.id && x.durum === "bekliyor");
+  const gonderimBekliyor = bekleyenIs?.tur === "rapor.gonder";
+  const duzenle = v.izin.duzenle && !gonderimBekliyor;
   const [ekipman, setEkipman] = useState(() => bosla(v.ekipmanBilgi));
   const [tarih, setTarih] = useState(() => bosla(v.tarih));
   const [cevaplar, setCevaplar] = useState<Cevaplar>(v.cevaplar);
@@ -103,7 +121,7 @@ export function SahaRaporu({ v }: { v: Gorunum }) {
   const [yenilenen, setYenilenen] = useState<Gorunum | null>(null);
   const mesgul = bekliyor || yenilenen === v;
   const yenile = () => { setYenilenen(v); router.refresh(); window.setTimeout(() => setYenilenen((y) => (y === v ? null : y)), 20_000); };   /* yenileme düşerse tuşlar açılır */
-  const oku = !v.izin.duzenle;
+  const oku = !duzenle;
 
   /* canlı değerlendirme: cihaz sayısı raporun kendi listesinden (sunucu da öyle sayar), fotoğraf bu sürümde yok */
   const d = useMemo(() => {
@@ -176,23 +194,58 @@ export function SahaRaporu({ v }: { v: Gorunum }) {
     setGenel(r.genel ?? (ilk ? `${ALAN_ADI[ilk] ? `${ALAN_ADI[ilk]}: ` : ""}${h[ilk]}` : "İşlem yapılamadı."));
   };
 
+  /* bağlantı yoksa (ya da istek ağda düştüyse) iş cihaz kuyruğuna; bu raporun kuyrukta bekleyen işi varsa yenisi onun yerine ve kuyruktan gider
+     (ikisi ayrı yollardan gitse eskisi yenisini "değiştirildi" diye düşürürdü) */
+  const kuyruga = async (tur: KuyrukTuru, bildirim: string) => {
+    await kuyrugaEkle({ tur, kayit: v.id, surum: v.surum, girdi: girdi(), ad: `${tur === "rapor.gonder" ? "Onaya gönder" : "Rapor kaydı"} · ${v.no}` });
+    kaydedildi();
+    bildir(bildirim);
+  };
   const kaydet = () => baslat(async () => {
-    const r = await raporKaydetEylemi(v.id, v.surum, girdi());
-    if (r.tamam) { kaydedildi(); bildir(r.bildirim ?? "Rapor kaydedildi."); yenile(); return; }
+    if (cevrimdisiMi() || bekleyenIs) { await kuyruga("rapor.kaydet", cevrimdisiMi() ? "Cihaza kaydedildi; bağlantı gelince gönderilecek." : "Kaydediliyor…"); return; }
+    let r: RaporYaniti;
+    try { r = await raporKaydetEylemi(v.id, v.surum, girdi()); } catch (e) {
+      if (!agHatasi(e)) throw e;
+      await kuyruga("rapor.kaydet", "Bağlantı koptu: cihaza kaydedildi; bağlantı gelince gönderilecek.");
+      return;
+    }
+    if (r.tamam) { kaydedildi(); void kayitBilgileriniKapat(v.id); bildir(r.bildirim ?? "Rapor kaydedildi."); yenile(); return; }
     yanitHatasi(r);
   });
+  /* kuyruktan giden işin sonucu (394): bu raporunsa ekran tazelenir; eksikse alanlar işaretlenir (bağlantılı Onaya gönder gibi) */
+  const kuyrukSonucu = useRef<(d: KuyrukSonucOlayi) => void>(() => undefined);
+  useEffect(() => {
+    kuyrukSonucu.current = (d) => {
+      if (d.kayit !== v.id) return;
+      if (d.durum === "tamam") { setGenel(null); bildir(d.tur === "rapor.gonder" ? `${v.no}: cihazda bekleyen onaya gönderim gitti.` : `${v.no}: cihazda bekleyen kayıt gönderildi.`); yenile(); return; }
+      if (d.durum === "eksik" && d.eksikler) { setIsaretli(new Set(d.eksikler.map((e) => e.alan))); setKapali(new Set()); setEksikler(d.eksikler); yenile(); return; }
+      setGenel(`${v.no}: cihazda bekleyen iş gönderilemedi — ${d.ileti ?? "üst çubuktaki bekleyen işlemlere bakın"}.`);
+    };
+  });
+  useEffect(() => {
+    const f = (e: Event) => kuyrukSonucu.current((e as CustomEvent<KuyrukSonucOlayi>).detail);
+    window.addEventListener("probata-islem", f);
+    return () => window.removeEventListener("probata-islem", f);
+  }, []);
   const gonder = async () => {
     if (!(await onayla({ baslik: "Rapor onaya gönderilsin mi?", tus: "Onaya gönder",
       metin: `${v.no} teknik yöneticinin onayına gider. Onaylanana ya da geri gönderilene kadar raporda değişiklik yapılamaz.` }))) return;
     gonderIc();
   };
   const gonderIc = () => baslat(async () => {
-    const r = await onayaGonderEylemi(v.id, v.surum, girdi());
+    const yon = "bağlantı gelince onaya gider";
+    if (cevrimdisiMi() || bekleyenIs) { await kuyruga("rapor.gonder", cevrimdisiMi() ? `Cihaza kaydedildi: ${yon}.` : "Onaya gönderiliyor…"); return; }
+    let r: RaporYaniti;
+    try { r = await onayaGonderEylemi(v.id, v.surum, girdi()); } catch (e) {
+      if (!agHatasi(e)) throw e;
+      await kuyruga("rapor.gonder", `Bağlantı koptu: cihaza kaydedildi; ${yon}.`);
+      return;
+    }
     if (r.eksikler) {   /* rapor kaydedildi, gönderilmedi */
       kaydedildi(); setIsaretli(new Set(r.eksikler.map((e) => e.alan))); setKapali(new Set()); setEksikler(r.eksikler); yenile();
       return;
     }
-    if (r.tamam) { kaydedildi(); setIsaretli(new Set()); bildir(r.bildirim ?? "Rapor onaya gönderildi."); yenile(); window.scrollTo({ top: 0 }); return; }
+    if (r.tamam) { kaydedildi(); void kayitBilgileriniKapat(v.id); setIsaretli(new Set()); bildir(r.bildirim ?? "Rapor onaya gönderildi."); yenile(); window.scrollTo({ top: 0 }); return; }
     yanitHatasi(r);
   });
   const sil = async () => {
@@ -205,7 +258,7 @@ export function SahaRaporu({ v }: { v: Gorunum }) {
   };
   /* kopya: Yeni raporda ekranın son hâli önce kaydedilir; başarıda yeni ekipmanın raporuna gidilir (karar 208) */
   const kopyala = (k: { kod: string; konum: string }) => new Promise<string | null>((bitti) => baslat(async () => {
-    const r = await raporKopyalaEylemi(v.id, v.surum, k, v.izin.duzenle ? girdi() : null);
+    const r = await raporKopyalaEylemi(v.id, v.surum, k, duzenle ? girdi() : null);
     if (r.tamam && r.id) { setKirli(false); setKopya(false); bildir(r.bildirim ?? "Kopya açıldı."); router.push(`/raporlar/${r.id}`); bitti(null); return; }
     const h = r.hatalar ?? {}, ilk = Object.keys(h)[0];
     if (r.hatalar && !h.kod && ilk) { setKopya(false); yanitHatasi(r); bitti(null); return; }   /* raporun kendi alanı geçersiz: üst şeritte */
@@ -315,17 +368,17 @@ export function SahaRaporu({ v }: { v: Gorunum }) {
   /* ── şeritler ── */
   const seritler: ReactNode[] = [];
   if (genel) seritler.push(<Serit key="hata" tur="hata" ikon="circle-alert">{genel}</Serit>);
-  if (v.izin.duzenle && v.kunyeFark.length) {
+  if (duzenle && v.kunyeFark.length) {
     seritler.push(
       <Serit key="kunye" tur="bilgi" ikon="refresh-cw" eylem={<Tus tur="ikincil" ikon="refresh-cw" disabled={mesgul} onClick={kunyeGuncelle}>Güncelle</Tus>}>
         Planlamacı plan bilgilerini değiştirdi: <b>{v.kunyeFark.join(", ")}</b>. Raporunuza almak için Güncelle&apos;ye basın.
       </Serit>,
     );
   }
-  if ((v.izin.duzenle || v.izin.kopyala) && v.mesaiDolu) {
+  if ((duzenle || v.izin.kopyala) && v.mesaiDolu) {
     seritler.push(<Serit key="mesai" tur="uyari" ikon="clock">Günlük süre doldu; yeni rapor ve kopya oluşturulamaz.</Serit>);
   }
-  if (v.izin.duzenle && v.guncelFormat) {
+  if (duzenle && v.guncelFormat) {
     seritler.push(
       <Serit key="format" tur="bilgi" ikon="refresh-cw" eylem={<Tus tur="ikincil" ikon="refresh-cw" disabled={mesgul} onClick={formatGuncelle}>Formatı güncelle</Tus>}>
         Bu rapor eski format sürümüyle açıldı (sürüm {v.formatSira}); güncel sürüm {v.guncelFormat}.
@@ -365,7 +418,10 @@ export function SahaRaporu({ v }: { v: Gorunum }) {
   if (v.imza || v.imzali) seritler.push(<ImzaBolumu key="imza" v={v} mesgul={mesgul} baslat={baslat} yenile={yenile} hata={setGenel} />);
   else if (v.durum !== "taslak") {
     seritler.push(<Serit key="kilit" tur="bilgi" ikon="lock">{KILIT[v.durum]}{v.durum === "onayda" && v.gonderildi ? ` · ${zamanNo(v.gonderildi)}` : null}</Serit>);
-  } else if (!v.izin.duzenle) {
+  } else if (gonderimBekliyor) {
+    /* 394 (maket Z4): Onaya gönder cihazda bekliyor — gidene kadar rapor değişmez */
+    seritler.push(<Serit key="kilit" tur="uyari" ikon="wifi-off">Onaya gönderim bu cihazda bekliyor: bağlantı gelince gider. O zamana kadar rapor değiştirilemez.</Serit>);
+  } else if (!duzenle) {
     seritler.push(<Serit key="kilit" tur="bilgi" ikon="lock">Rapor yazılıyor; yalnız raporu yazan muayene uzmanı düzenler.</Serit>);
   }
 
@@ -373,16 +429,17 @@ export function SahaRaporu({ v }: { v: Gorunum }) {
   return (
     <>
       <Kirinti ogeler={[["Planlar", "/planlar"], [v.plan.no, `/planlar/${v.plan.id}`], [v.no]]} />
-      <NesneBasi baslik={`${v.ekipman.kod} · ${v.tur.ad}`} rozet={<Rozet tur={rozet}>{durumAd}</Rozet>} altIkon="file-text"
+      <NesneBasi baslik={`${v.ekipman.kod} · ${v.tur.ad}`} altIkon="file-text"
+        rozet={<><Rozet tur={rozet}>{durumAd}</Rozet>{bekleyenIs && <Rozet tur="bekliyor">{gonderimBekliyor ? "Gönderilmedi · bağlantı bekleniyor" : "Cihazda kayıt · gönderilmedi"}</Rozet>}</>}
         alt={<><Kod>{v.no}</Kod> · {v.plan.musteriKisa} · {v.plan.tesisAd} · {v.yazan.ad}</>}
         tuslar={<>
-          {v.izin.duzenle && (
+          {duzenle && (
             <p className={kirli ? `${stil.kayit} ${stil.kirli}` : stil.kayit} aria-live="polite">
               {kirli ? "Kaydedilmemiş değişiklik var" : sonKayit ? `Son kayıt ${zamanNo(sonKayit)}` : "Kaydedildi"}
             </p>
           )}
           {/* Ön izle (reisim 2026-09-28): kaydedilmiş hâl; kesin PDF'le aynı çizici. Kaydedilmemiş değişiklik varsa önce kaydedilir (atılmaz) */}
-          {v.izin.duzenle && kirli
+          {duzenle && kirli
             ? <Tus tur="ikincil" ikon="eye" disabled={mesgul} onClick={onizle}>Ön izle</Tus>
             : <TusBaglanti ikon="eye" href={`/raporlar/${v.id}/onizle`}>Ön izle</TusBaglanti>}
           {v.revize?.iste && <Tus tur="ikincil" ikon="file-pen-line" disabled={mesgul} onClick={() => setRevizeAc(true)}>Revize iste</Tus>}
@@ -445,11 +502,11 @@ export function SahaRaporu({ v }: { v: Gorunum }) {
         ))}
       </div>
 
-      {(v.izin.duzenle || v.izin.sil || v.izin.kopyala) && (
+      {(duzenle || v.izin.sil || v.izin.kopyala) && (
         <div className={stil.eylem} data-alt-cubuk="her">
           {v.izin.sil && <Tus tur="ikincil" ikon="trash-2" className={stil.silTus} disabled={mesgul} onClick={sil}>Sil</Tus>}
-          {v.izin.kopyala && <Tus tur="ikincil" ikon="copy" disabled={mesgul} onClick={() => setKopya(true)}>{v.izin.duzenle ? "Kaydet ve kopyala" : "Kopyala"}</Tus>}
-          {v.izin.duzenle && <>
+          {v.izin.kopyala && <Tus tur="ikincil" ikon="copy" disabled={mesgul} onClick={() => setKopya(true)}>{duzenle ? "Kaydet ve kopyala" : "Kopyala"}</Tus>}
+          {duzenle && <>
             <Tus tur="ikincil" ikon="check" disabled={mesgul} onClick={kaydet}>Kaydet</Tus>
             <Tus ikon="send" disabled={mesgul} onClick={gonder}>Onaya gönder</Tus>
           </>}
@@ -458,7 +515,7 @@ export function SahaRaporu({ v }: { v: Gorunum }) {
 
       {revizeAc && <RevizeIstePenceresi no={v.no} mesgul={mesgul} onKapat={() => setRevizeAc(false)} gonder={revizeIste} />}
 
-      {kopya && <KopyaPenceresi kaydetVe={v.izin.duzenle} kaynakKod={v.ekipman.kod} turAd={v.tur.ad} konum={ekipman.konum} mesgul={mesgul}
+      {kopya && <KopyaPenceresi kaydetVe={duzenle} kaynakKod={v.ekipman.kod} turAd={v.tur.ad} konum={ekipman.konum} mesgul={mesgul}
         onKapat={() => setKopya(false)} kopyala={kopyala} />}
 
       <Pencere acik={!!eksikler} baslik="Zorunlu alanlar doldurulmadı" onKapat={() => setEksikler(null)} alt={<Tus onClick={tamam}>Tamam</Tus>}>

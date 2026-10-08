@@ -18,6 +18,7 @@ import { useEffect, useState, useSyncExternalStore, type ReactNode } from "react
 import { ANA_SAYFA, MODUL_GRUPLARI } from "../../modules/moduller";
 import { KALIP } from "../../styles/kalip";
 import { cikisEylemi } from "../../server/kimlik/eylemler";
+import { CevrimdisiGosterge } from "../cevrimdisi/Cevrimdisi";
 import { Ikon } from "../ikon/Ikon";
 import stil from "./Kabuk.module.css";
 import isaretKoyu from "./marka/probata-isaret-koyu-zemin.svg";
@@ -75,7 +76,8 @@ export function TemaTusu({ sinif }: { sinif?: string }) {
   );
 }
 
-export interface KabukKullanicisi { ad: string; rol: string }
+/** yazan (394): çevrimdışı kuyruğun "işi kim yazdı" etiketi — sunucudan, kimlik değil (server/islem/yazan.ts); yoksa gösterge çizilmez */
+export interface KabukKullanicisi { ad: string; rol: string; yazan?: string }
 
 /** baş harfler (en çok iki; Türkçe büyük harf) */
 const basHarfler = (ad: string) => ad.trim().split(/\s+/).filter(Boolean).slice(0, 2).map((p) => p[0].toLocaleUpperCase("tr")).join("");
@@ -205,6 +207,7 @@ export function Kabuk({ children, kullanici, gorunur, takip }: {
           <Image className={`${stil.ustIsaret} ${stil.isaretAcik}`} src={isaretRenkli} alt="probata" unoptimized />
           <Image className={`${stil.ustIsaret} ${stil.isaretKoyu}`} src={isaretKoyu} alt="probata" unoptimized />
           <div className={stil.ustBosluk} />
+          {kullanici?.yazan && <CevrimdisiGosterge yazan={kullanici.yazan} />}
           <TemaTusu />
           {kullanici && <KullaniciMenusu kullanici={kullanici} />}
         </header>

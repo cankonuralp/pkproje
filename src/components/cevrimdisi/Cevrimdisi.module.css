@@ -1,0 +1,28 @@
+/* ÇEVRİMDIŞI GÖSTERGESİ (394; maket .a-mesai-ust / .a-baglanti-ust — Z4) — ⛔ çıplak renk yok (2.9) */
+.cip {
+  display: inline-flex; align-items: center; gap: 6px; min-height: var(--tus-y); padding: 0 12px; flex: none;
+  border: 1px solid var(--kenar); border-radius: var(--r-tam); background: var(--kart); color: var(--yazi);
+  font: inherit; font-size: var(--boy-kucuk); font-weight: 600; white-space: nowrap; cursor: pointer;
+}
+.cip:hover { background: var(--zemin2); }
+.cip:focus-visible { outline: 3px solid var(--odak); outline-offset: 2px; }
+/* çevrimdışı ya da sizi bekleyen iş: şeridin uyarı çifti (maket .a-baglanti-ust) */
+.cip.uyari { border-color: var(--uyari-yazi); background: var(--uyari-zemin); color: var(--uyari-yazi); }
+.sayi { font-variant-numeric: tabular-nums; }
+.ipucu { margin: 8px 0 0; color: var(--yazi2); font-size: var(--boy-kucuk); }
+.baslik { margin: 16px 0 4px; font-weight: 600; }
+.liste { list-style: none; margin: 0; padding: 0; display: grid; gap: 8px; font-size: var(--boy-kucuk); }
+.is { display: grid; gap: 4px; padding: 8px 0; border-top: 1px solid var(--kenar); }
+.isBas { display: flex; flex-wrap: wrap; align-items: center; gap: 6px; }
+.alt { color: var(--yazi2); }
+.tuslar { display: flex; flex-wrap: wrap; align-items: center; gap: 8px; margin-top: 4px; }
+.baglanti { color: var(--onay-yazi); font-weight: 600; }
+.bos { margin: 12px 0 0; color: var(--yazi2); }
+
+/* telefon: üst çubuk dolu → çip üst çubuğun hemen altında tam genişlik şerit (maket); içerik şerit kadar aşağı iner (temel.css data-cevrimdisi) */
+@media (max-width: 599.98px) {
+  .cip { position: absolute; left: 0; right: 0; top: 100%; justify-content: center; border-width: 0 0 1px; border-radius: 0; }
+}
+@media (max-width: 399.98px) {
+  .en { display: none; }
+}

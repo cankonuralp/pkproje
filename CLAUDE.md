@@ -177,6 +177,9 @@ pkproje/
                             · TOPLU İÇE AKTARMA (337, göç 0047 ice_aktarim + ice_aktarim_geri_al): ice-aktar.ts (saf: türler, şablon, satır denetimi) ·
                             server/ice-aktar.ts (denetle, içe aktar — tek işlem, geri al) · ui/IceAktarma.tsx · bağlantılar <modül>/server/ice-aktar-baglanti.ts
                             (musteriler, ekipman, olcum-cihazlari — ilk_bitis, personel, araclar)
+  src/components/cevrimdisi/ ÇEVRİMDIŞI (394; maket Z4): depo.ts (IndexedDB, AES-GCM şifreli, anahtar dışarı alınamaz) · kuyruk.ts (tek bekleyen iş / rapor,
+                            sırayla /api/islem, sonuçlar, durma; "probata-islem" olayı) · Cevrimdisi.tsx (üst çubukta "Çevrimdışı · n bekliyor" + pencere;
+                            kabukta, yazan etiketiyle) · saha raporu Kaydet / Onaya gönder bağlantısızken kuyruğa (raporlar/ui/SahaRaporu.tsx)
   src/components/grafik/    TEK GRAFİK ÜRETİCİSİ (329): dikey sütun (maket T9), etiket ölçülerek, gizli tablo (ekran okuyucu)
   src/modules/yonetim/      probata YÖNETİM (2026-10-06, 348; KOD-GECIS Y1): firmalar, firma aç (ilk yönetici + geçici parola), dondur / etkinleştir,
                             yeni geçici parola — server/yonetim.ts yalnız 0050 işlevleriyle (yönetim rolü); sema.ts (ayrılmış adlar göçle aynı) · ui/ ·

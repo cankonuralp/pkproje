@@ -1,0 +1,98 @@
+/* NEREDEN GELDİ: 394 — KOD-GECIS K3 "çevrimdışı kuyruk ölçüldü (bağlantı kes / gönder / çakışma)", ARKA-UC §4.3–4.4, 09-D1 / D2, maket Z4
+   (üst çubukta "Çevrimdışı · n bekliyor"; Kaydet ve Onaya gönder bağlantısızken cihaza, bağlantı gelince sırayla gider). Gerçek sunucuda, üç
+   genişlikte, tarayıcının bağlantısı GERÇEKTEN kesilerek (genişlik başına ayrı rapor — öteki testlerin raporuna dokunmaz):
+   · bağlantı kesik: üst çubukta "Çevrimdışı"; Kaydet cihaza → "1 bekliyor", başlıkta "Cihazda kayıt · gönderilmedi"; pencere işi listeler;
+   · bağlantı gelince kendiliğinden gider, gösterge kalkar; sayfa yenilenince değer sunucuda;
+   · ÇAKIŞMA: bağlantısızken yazılan kayıt, bu arada başka sekmede değişen raporu ezmez — "Çakışma" çıkar; "Benimkini yaz" açık seçimle gönderir;
+   · Onaya gönder bağlantısızken: rapor salt okunur, "Gönderilmedi · bağlantı bekleniyor"; bağlantı gelince gider (eksikse alanlar işaretlenir). */
+import { expect, test, type Page } from "@playwright/test";
+import { E2E_KAPI, E2E_PAROLA, E2E_YZ } from "./hesaplar";
+import { hazir } from "./yardimci";
+
+const Y = `http://${E2E_YZ.firma.kisaAd}.localhost:${E2E_KAPI}`;
+const TASMA = () => document.documentElement.scrollWidth <= window.innerWidth;
+
+async function raporuAc(page: Page, kod: string): Promise<string> {
+  await page.goto(`${Y}/giris`);
+  await hazir(page);
+  await page.getByLabel("E-posta").fill(E2E_YZ.denetci.eposta);
+  await page.getByLabel("Parola", { exact: true }).fill(E2E_PAROLA);
+  await page.getByRole("button", { name: "Giriş yap" }).click();
+  await expect(page.locator("header")).toContainText(E2E_YZ.denetci.ad);
+  await page.goto(`${Y}/raporlar`);
+  await hazir(page);
+  await page.getByRole("searchbox", { name: "Ekipman kodu" }).fill(kod);
+  await page.getByRole("link", { name: /^YZ-/ }).first().click();
+  await expect(page).toHaveURL(/\/raporlar\/[0-9a-f-]{36}$/, { timeout: 30_000 });
+  await hazir(page);
+  return page.url();
+}
+
+test("çevrimdışı: bağlantı kes → Kaydet cihaza → bağlantı gelince gider; çakışma ezmez, 'Benimkini yaz'; Onaya gönder bekler", async ({ page, browser }, bilgi) => {
+  test.setTimeout(180_000);
+  const adres = await raporuAc(page, E2E_YZ.cevrimdisi[bilgi.project.name]);
+  const marka = page.getByLabel("Marka", { exact: true });
+  const cip = page.getByRole("button", { name: /^Çevrimdışı/ });
+
+  /* 1) bağlantı kesik: Kaydet cihaza */
+  await page.context().setOffline(true);
+  await expect(cip).toBeVisible();
+  await marka.fill("Çevrimdışı Marka");
+  await page.getByRole("button", { name: "Kaydet", exact: true }).click();
+  await expect(page.getByText("Cihaza kaydedildi; bağlantı gelince gönderilecek.").first()).toBeVisible();
+  await expect(page.getByRole("button", { name: "Çevrimdışı, 1 işlem gönderilmeyi bekliyor; ayrıntı" })).toBeVisible();
+  await expect(page.getByText("Cihazda kayıt · gönderilmedi")).toBeVisible();
+  expect(await page.evaluate(TASMA), "çevrimdışı şeridiyle yana taşma yok").toBe(true);
+  await cip.click();
+  const pencere = page.getByRole("dialog", { name: "Çevrimdışı" });
+  await expect(pencere.getByText("İnternet yok.", { exact: false })).toBeVisible();
+  await expect(pencere.getByText(/^Rapor kaydı · YZ-/)).toBeVisible();
+  await expect(pencere.getByText("Gönderilmeyi bekliyor")).toBeVisible();
+  await pencere.getByRole("button", { name: "Kapat" }).last().click();
+
+  /* 2) bağlantı gelince kendiliğinden gider */
+  await page.context().setOffline(false);
+  await expect(page.getByText("cihazda bekleyen kayıt gönderildi", { exact: false }).first()).toBeVisible({ timeout: 30_000 });
+  await expect(page.getByRole("button", { name: /Çevrimdışı|bekleyen işlem/ })).toHaveCount(0);
+  await page.goto(adres);
+  await hazir(page);
+  await expect(marka).toHaveValue("Çevrimdışı Marka");
+
+  /* 3) çakışma: bağlantısızken yazılan, bu arada başka sekmede değişen raporu ezmez */
+  await page.context().setOffline(true);
+  await marka.fill("Cihazdaki Marka");
+  await page.getByRole("button", { name: "Kaydet", exact: true }).click();
+  await expect(page.getByText("Cihaza kaydedildi; bağlantı gelince gönderilecek.").first()).toBeVisible();
+  const ikinci = await (await browser.newContext({ viewport: page.viewportSize() })).newPage();
+  await raporuAc(ikinci, E2E_YZ.cevrimdisi[bilgi.project.name]);
+  await ikinci.getByLabel("Marka", { exact: true }).fill("Sunucudaki Marka");
+  await ikinci.getByRole("button", { name: "Kaydet", exact: true }).click();
+  await expect(ikinci.getByText("Rapor kaydedildi.").first()).toBeVisible({ timeout: 30_000 });
+  await ikinci.context().close();
+  await page.context().setOffline(false);
+  const bekleyen = page.getByRole("button", { name: /bekleyen işlem/ });
+  await expect(bekleyen).toBeVisible({ timeout: 30_000 });
+  await expect(page.getByText("cihazda bekleyen iş gönderilemedi", { exact: false })).toBeVisible();
+  await bekleyen.click();
+  const p2 = page.getByRole("dialog", { name: "Bekleyen işlemler" });
+  await expect(p2.getByText("Çakışma")).toBeVisible();
+  await expect(p2.getByText("başka yerde değiştirildi", { exact: false })).toBeVisible();
+  await p2.getByRole("button", { name: "Benimkini yaz" }).click();
+  await expect(page.getByText("cihazda bekleyen kayıt gönderildi", { exact: false }).first()).toBeVisible({ timeout: 30_000 });
+  await page.goto(adres);
+  await hazir(page);
+  await expect(marka).toHaveValue("Cihazdaki Marka");
+
+  /* 4) Onaya gönder bağlantısızken: rapor salt okunur, bağlantı gelince gider (eksikse alanlar işaretlenir) */
+  await page.context().setOffline(true);
+  await page.getByRole("button", { name: "Onaya gönder" }).click();
+  await page.getByRole("dialog").getByRole("button", { name: "Onaya gönder" }).click();
+  await expect(page.getByText("Cihaza kaydedildi: bağlantı gelince onaya gider.").first()).toBeVisible();
+  await expect(page.getByText("Gönderilmedi · bağlantı bekleniyor")).toBeVisible();
+  await expect(page.getByText("Onaya gönderim bu cihazda bekliyor", { exact: false })).toBeVisible();
+  await expect(page.getByRole("button", { name: "Kaydet", exact: true })).toHaveCount(0);
+  await page.context().setOffline(false);
+  await expect(page.getByText("onaya gönderim gitti", { exact: false }).first().or(page.getByRole("dialog", { name: "Zorunlu alanlar doldurulmadı" })))
+    .toBeVisible({ timeout: 30_000 });
+  await expect(page.getByText("Gönderilmedi · bağlantı bekleniyor")).toHaveCount(0);
+});

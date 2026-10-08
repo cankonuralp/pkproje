@@ -2355,6 +2355,19 @@ revizyon, alan kopyalama, hafif kusur devri, meslek eşleşme denetimi).
 - Emsal ürünler: https://opwire.app/iso-17020-periyodik-kontrol-yazilimi/ · https://17020muayene.vidco.com.tr/ · https://akuple.com/asansor-kontrol-yazilimi/ · https://ensyazilim.com/
 
 ## 11 · Değişiklik günlüğü
+- 2026-10-08 (394): **Çevrimdışı çalışma — cihazdaki kuyruk ve gösterge** (392'nin devamı; maket Z4, ARKA-UC K4 / §4.3–4.5). Saha raporunda
+  bağlantı yokken (ya da istek ağda düşerse) **Kaydet** ve **Onaya gönder** kaybolmaz: iş tarayıcının kalıcı deposuna (IndexedDB) ŞİFRELİ yazılır
+  (AES-GCM; anahtar cihazda üretilir, dışarı alınamaz), "Cihaza kaydedildi; bağlantı gelince gönderilecek." Üst çubukta **"Çevrimdışı · n
+  bekliyor"** (telefonda üst çubuğun altında şerit); tıklayınca bekleyen işler. Bağlantı gelince (ve sayfa açılınca, dakikada bir) SIRAYLA
+  gider; ekran kendiliğinden tazelenir. Aynı rapor için tek bekleyen iş (yenisi eskisinin yerine). Onaya gönder beklerken rapor salt okunur,
+  başlıkta "Gönderilmedi · bağlantı bekleniyor". Sonuçlar görünür, sessiz kayıp yok: eksikse alanlar işaretlenir; rapor bu arada başka yerde
+  değiştiyse **"Çakışma"** — kullanıcı "Benimkini yaz" (güncel sürümden yeni kimlikle) ya da "Sunucudakini kullan" seçer (veri kaybettiren seçim
+  önce sorar); başka hesapla yazılmışsa o hesap girince gider; oturum kapandıysa girince gider; cihaz saati 10 dk'dan fazla saparsa söylenir.
+  Bağlantısızken öteki tuşlar (fotoğraf, cihaz, kopya …) sayfayı hata ekranına düşürmez, şeritte söyler. Tarayıcı depoya izin vermezse (gizli
+  pencere) bekleyenler yalnız bu sayfada durur ve söylenir. Tarayıcıya hesap kimliği gitmez: işi yazanın etiketi (kimlikten türetilen özet).
+  Kilit kuyruk.test (saf: birleştirme, sıra, gövde, sonuçlar, durma); olumsuz kanıt kuyruk.bozan (2 bozma); e2e cevrimdisi (üç genişlik,
+  tarayıcının bağlantısı gerçekten kesilerek: Kaydet cihaza → bağlantı gelince gider → sayfada değer; başka sekmede değişen rapor ezilmez,
+  çakışma → "Benimkini yaz"; Onaya gönder bekler → bağlantı gelince gider). Sıradaki: sayfaların bağlantısız açılması (servis çalışanı).
 - 2026-10-08 (392): **Çevrimdışı çalışma — sunucu tarafı: tek seferlik işlem ucu** (KOD-GECIS K3 "çevrimdışı kuyruk ölçüldü" eksik kalmıştı;
   09-D2, ARKA-UC §4.3–4.5, maket Z4; reisim: *"devam et sıradaki işlere geç"*). Cihaz bağlantısızken yaptığı işi (şimdilik rapor Kaydet ve Onaya
   gönder) kendi ürettiği kimlikle kuyruğa yazacak, bağlantı gelince `/api/islem`'e gönderecek. Sunucu işi ve sonucunu aynı veritabanı

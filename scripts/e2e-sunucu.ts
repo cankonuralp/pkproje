@@ -133,7 +133,7 @@ process.env.PROBATA_SIR_ANAHTARI = sirAnahtari;
     const tesis = await q("INSERT INTO tesis (musteri_id, ad, adres, il, ilce, sgk) VALUES ($1, $2, 'Deneme Cad. No 9', 'Kocaeli', 'Gebze', $3) RETURNING id::text", [m, E2E_YZ.tesis, "3".repeat(26)]);
     const tur = await q("INSERT INTO ekipman_turu (kod, ad, grup, brans, periyot) VALUES ('EP', 'Elektrik panosu', 'elektrik', 'e', 12) RETURNING id::text");
     const ekp: Record<string, string> = {};
-    for (const kod of Object.values(E2E_YZ.ekipman)) ekp[kod] = await q("INSERT INTO ekipman (tesis_id, tur_id, kod, ekleyen) VALUES ($1, $2, $3, 'Deneme') RETURNING id::text", [tesis, tur, kod]);
+    for (const kod of [...Object.values(E2E_YZ.ekipman), ...Object.values(E2E_YZ.cevrimdisi)]) ekp[kod] = await q("INSERT INTO ekipman (tesis_id, tur_id, kod, ekleyen) VALUES ($1, $2, $3, 'Deneme') RETURNING id::text", [tesis, tur, kod]);
     return { yon, pl, den, tesis, tur, ekp };
   });
   const kim = (h: string, rol: string, ad: string): Kisi => ({ id: h, ad, roller: [rol] as Kisi["roller"] });
