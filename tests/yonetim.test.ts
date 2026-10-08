@@ -10,6 +10,10 @@
      etkinde eski parola geçmez;
    · SIZMA: uygulama rolü (firma işlemi) yönetim işlevlerini ve tablolarını göremez; yönetim rolü firmaların tablolarına dokunamaz, yönetici
      ekleyemez; yöneticisiz (ya da kapalı yöneticili) yönetim işlemi işlevleri çağıramaz; yönetim izi değişmez.
+   2026-10-08 (393, göç 0075; reisim: "ikii aşamalı doğrulamayı şimdilik kaldır, belirlediğin mail şifre ile direk girebileyim"): iki adım bir
+   ayardır (yonetim_ayar.iki_adim, başlangıçta KAPALI). Yukarıdaki iki adımlı testler ayarı AÇAR (akış korunur, ayar açılınca aynen çalışır);
+   son test KAPALI hâli: parola doğruysa yönetim oturumu (geçici parolalı "ilk" de), kilit ve sayaç aynen, yönetim işlemi "ilk"le de; açılınca
+   "ilk"in oturumu ve işlemi düşer, kuruluma gider. Ayarı uygulama ve yönetim rolü değiştiremez.
    Olumsuz kanıt: tests/bozan/yonetim.bozan.ts. */
 import assert from "node:assert/strict";
 import { createHash, randomBytes } from "node:crypto";
@@ -20,7 +24,7 @@ import type { GomuluKume } from "../src/server/db/gomulu.ts";
 import { firmaKimligi, havuzKur, kiraciIcinde, yonetimIcinde, type Havuz } from "../src/server/db/kiraci.ts";
 import { parolaOzeti } from "../src/server/kimlik/parola.ts";
 import { girisYap } from "../src/server/kimlik/oturum.ts";
-import { kodDogrula, kurulumBilgisi, kurulumTamamla, yoneticiGiris, yonetimOturumOku } from "../src/server/yonetim/giris.ts";
+import { ikiAdimAcik, kodDogrula, kurulumBilgisi, kurulumTamamla, yoneticiGiris, yonetimOturumOku } from "../src/server/yonetim/giris.ts";
 import { totpKodu, yeniAnahtar, zamanAdimi } from "../src/server/yonetim/totp.ts";
 import { testKumesi } from "./yardimci/kume.ts";
 
@@ -52,6 +56,8 @@ before(async () => {
       if (kurulu) await s.query("UPDATE yonetici SET totp_sir = $2, durum = $3 WHERE id = $1", [id, sifrele(ANAHTAR, "yonetim", `totp:${id}`), durum]);
       return id;
     };
+    /* iki adımlı akışın testleri: ayar açık (393 — başlangıç kapalı; son test kapalı hâli sınar) */
+    await s.query("UPDATE yonetim_ayar SET iki_adim = true");
     Y1 = await ekle("y1@probata.example", "etkin", true);
     Y2 = await ekle("y2@probata.example", "ilk", false, await parolaOzeti(GECICI));
     Y3 = await ekle("y3@probata.example", "etkin", true);
@@ -270,4 +276,43 @@ test("SIZMA: firma işlemi yönetime, yönetim işlemi firmalara dokunamaz; yön
   } finally { await s.end(); }
   /* geçersiz kimlik istemciden gelmez: biçim denetimi */
   await assert.rejects(yonetimIcinde(havuz, async () => 1, { yoneticiId: "x' OR 1=1" }), /Geçersiz yönetici kimliği/);
+});
+
+test("iki adım KAPALI (393): parola doğruysa yönetim oturumu — geçici parolalı 'ilk' de; kilit aynen; açılınca 'ilk'in oturumu ve işlemi düşer", async () => {
+  const s = kume.sahipIstemci(); await s.connect();
+  let Y4 = "", Y5 = "";
+  try {
+    Y4 = (await s.query<{ id: string }>("INSERT INTO yonetici (eposta, ad, parola_ozeti) VALUES ('y4@probata.example', 'Deneme Dört', $1) RETURNING id::text",
+      [await parolaOzeti(GECICI)])).rows[0].id;
+    Y5 = (await s.query<{ id: string }>("INSERT INTO yonetici (eposta, ad, parola_ozeti) VALUES ('y5@probata.example', 'Deneme Beş', $1) RETURNING id::text",
+      [await parolaOzeti(PAROLA)])).rows[0].id;
+    await s.query("UPDATE yonetici SET totp_sir = $2, durum = 'etkin' WHERE id = $1", [Y5, sifrele(ANAHTAR, "yonetim", `totp:${Y5}`)]);
+    await s.query("UPDATE yonetim_ayar SET iki_adim = false");
+  } finally { await s.end(); }
+  assert.equal(await ikiAdimAcik(havuz), false);
+  const t = sn(5000);
+  /* geçici parolalı "ilk" yönetici: kurulum yok, doğrudan yönetim oturumu; yönetim işlemi yapar */
+  const g4 = await yoneticiGiris(havuz, { eposta: "y4@probata.example", parola: GECICI, ip: "10.9.0.1", simdi: t });
+  assert.ok(g4.tamam && g4.sonraki === "tamam");
+  assert.equal((await yonetimOturumOku(havuz, g4.tamam ? g4.belirtec : "", t))?.id, Y4);
+  assert.ok((await yonetimIcinde(havuz, (db) => firmalar(db), { yoneticiId: Y4 })).length >= 2);
+  /* kurulmuş yönetici de kodsuz */
+  const g5 = await yoneticiGiris(havuz, { eposta: "y5@probata.example", parola: PAROLA, ip: "10.9.0.2", simdi: t });
+  assert.ok(g5.tamam && g5.sonraki === "tamam");
+  assert.equal((await yonetimOturumOku(havuz, g5.tamam ? g5.belirtec : "", t))?.id, Y5);
+  /* kapalı yönetici giremez; kilit aynen: 5 hatalı deneme → doğru parola da geçmez */
+  assert.deepEqual(await yoneticiGiris(havuz, { eposta: "kapali@probata.example", parola: PAROLA, ip: "10.9.0.3", simdi: t }), { tamam: false, neden: "hatali" });
+  for (let i = 0; i < 5; i++) await yoneticiGiris(havuz, { eposta: "y5@probata.example", parola: `yanlis-${i}-parola`, ip: `10.9.1.${i}`, simdi: t });
+  assert.deepEqual(await yoneticiGiris(havuz, { eposta: "y5@probata.example", parola: PAROLA, ip: "10.9.2.1", simdi: sn(5060) }), { tamam: false, neden: "kilitli" });
+  /* ayar açılınca: "ilk"in oturumu düşer, işlemi reddedilir, girişi kuruluma gider */
+  const s2 = kume.sahipIstemci(); await s2.connect();
+  try { await s2.query("UPDATE yonetim_ayar SET iki_adim = true"); } finally { await s2.end(); }
+  assert.equal(await ikiAdimAcik(havuz), true);
+  assert.equal(await yonetimOturumOku(havuz, g4.tamam ? g4.belirtec : "", sn(5100)), null);
+  await assert.rejects(yonetimIcinde(havuz, (db) => firmalar(db), { yoneticiId: Y4 }), /yönetim işlemi değil/);
+  const g4b = await yoneticiGiris(havuz, { eposta: "y4@probata.example", parola: GECICI, ip: "10.9.3.1", simdi: sn(5200) });
+  assert.ok(g4b.tamam && g4b.sonraki === "kurulum");
+  /* ayarı uygulama ve yönetim rolü değiştiremez */
+  await assert.rejects(yonetimIcinde(havuz, (db) => db.sorgu("UPDATE yonetim_ayar SET iki_adim = false"), { yoneticiId: Y1 }), /permission denied|izin/i);
+  await assert.rejects(kiraciIcinde(havuz, A, (db) => db.sorgu("SELECT * FROM yonetim_ayar")), /permission denied|izin/i);
 });

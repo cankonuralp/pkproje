@@ -6,7 +6,6 @@
 import { chromium, request, type FullConfig } from "@playwright/test";
 import { existsSync } from "node:fs";
 import { MODULLER } from "../src/modules/moduller";
-import { totpKodu, zamanAdimi } from "../src/server/yonetim/totp";
 import { E2E_FIRMA, E2E_HESAPLAR, E2E_KAPI, E2E_PAROLA, E2E_YONETIM } from "./hesaplar";
 
 const SAYFALAR = ["/giris", "/", "/planlar", "/muhasebe", "/vitrin"];
@@ -95,11 +94,8 @@ export default async function hazirla(_ayar: FullConfig) {
         await yac("/yonetim/giris");
         await ys.getByLabel("E-posta").fill(E2E_YONETIM.hazirla);
         await ys.getByLabel("Parola", { exact: true }).fill(E2E_PAROLA);
-        await ys.getByRole("button", { name: "Devam" }).click();
-        await ys.waitForURL((u) => u.pathname === "/yonetim/giris/kod");
-        await ys.locator("html[data-hazir]").waitFor({ state: "attached" });
-        await ys.getByLabel("Doğrulama kodu").fill(totpKodu(E2E_YONETIM.anahtar, zamanAdimi(new Date())));
-        await ys.getByRole("button", { name: "Doğrula" }).click();
+        /* 393: iki adım kapalı (göç 0075 başlangıcı) — parolayla doğrudan panel */
+        await ys.getByRole("button", { name: "Giriş yap" }).click();
         await ys.waitForURL((u) => u.pathname === "/yonetim");
         girdi = true;
       } catch (e) { console.warn(`[hazırlık] yönetim girişi ${i + 1}. deneme: ${(e as Error).message.split("\n")[0]}`); }

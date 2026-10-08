@@ -183,7 +183,7 @@ pkproje/
                             sayfalar src/app/(yonetim)/yonetim: giris (parola → kod → ilk kurulum) + (panel) + cikis (356: POST route — eylem redirect'i
                             yönetim adresini kaybediyordu) — yalnız PROBATA_YONETIM_ALAN adresinde
   src/server/yonetim/       YÖNETİM ÇEKİRDEĞİ (348): adres.ts (saf; ara katman da okur) · totp.ts (RFC 6238, saf) · giris.ts (iki adımlı giriş, kilit,
-                            kurulum, oturum) · istek.ts (yonetimOturumGerekli, yonetimIslemi → db/kiraci.ts yonetimIcinde: SET LOCAL ROLE probata_yonetim)
+                            kurulum, oturum; 393: iki adım ayarı yonetim_ayar.iki_adim — göç 0075, şimdilik KAPALI: parolayla doğrudan giriş) · istek.ts (yonetimOturumGerekli, yonetimIslemi → db/kiraci.ts yonetimIcinde: SET LOCAL ROLE probata_yonetim)
   src/modules/ekipman/      EKİPMAN (2026-10-04, 309): tesisin kalıcı ekipman kaydı (kod firmada eşsiz; eski kod başkasına verilmez — ekipman_kodu)
                             · 360 ekipmanSil / ekipmanKullanimi (silici.ts; yetki Planlar'da: plan-ici ekipmanSil — yalnız yönetici)
   src/modules/teklifler/    TEKLİFLER (2026-10-05, 324; modül 11): göç 0037 (teklif, teklif_kalem, teklif_tesis, fiyat_listesi; teklif_akis: yalnız taslak

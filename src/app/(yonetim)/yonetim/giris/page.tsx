@@ -2,7 +2,7 @@
 import type { Metadata } from "next";
 import { headers } from "next/headers";
 import { notFound, redirect } from "next/navigation";
-import { yonetimAdresinde, yonetimIstekOturumu } from "../../../../server/yonetim/istek";
+import { yonetimAdresinde, yonetimIkiAdim, yonetimIstekOturumu } from "../../../../server/yonetim/istek";
 import { YonetimGirisFormu } from "./YonetimGirisFormlari";
 
 export const metadata: Metadata = { title: { absolute: "Yönetim girişi · probata" } };
@@ -13,5 +13,5 @@ export default async function YonetimGirisSayfasi({ searchParams }: { searchPara
   const q = await searchParams;
   const neden = q.neden === "oturum" || q.neden === "cikis" ? q.neden : undefined;
   const adres = ((await headers()).get("host") ?? "").replace(/:\d+$/, "");
-  return <YonetimGirisFormu neden={neden} adres={adres} />;
+  return <YonetimGirisFormu neden={neden} adres={adres} ikiAdim={await yonetimIkiAdim()} />;
 }

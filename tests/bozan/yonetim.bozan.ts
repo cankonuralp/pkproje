@@ -5,7 +5,10 @@
    3. Hesap kilidi kalkınca kilitli yöneticiye doğru parolayla girilir (parola tahmini sınırsız).
    4. Parola adımı hatalı deneme sayacını sıfırlarsa "doğru parola → 4 yanlış kod" döngüsü kilide hiç takılmaz (kod kaba kuvvetle denenir).
    5. Kurulum eski oturumları düşürmezse kurulumdan önce açık kalmış bir oturum kurulumdan sonra geçerli olur.
-   6. Dondurma müşteri oturumlarını silmezse dondurulmuş firmanın müşteri oturumu kalır. */
+   6. Dondurma müşteri oturumlarını silmezse dondurulmuş firmanın müşteri oturumu kalır.
+   393 (göç 0075, iki adım ayarı; yukarıdakiler ayar AÇIKKEN):
+   7. Giriş ayarı okumazsa iki adım açıkken parola tek başına yönetim oturumu açar (doğrulama kodu atlanır).
+   8. yonetim_kim ayara bakmazsa iki adım açıkken anahtarı kurulmamış ("ilk") yönetici yönetim işlemi yapar. */
 import assert from "node:assert/strict";
 import { copyFileSync, mkdirSync, mkdtempSync, readdirSync, readFileSync, rmSync, writeFileSync } from "node:fs";
 import { createHash, randomBytes } from "node:crypto";
@@ -33,13 +36,13 @@ async function bozukGiris(eski: string, yeni: string): Promise<Giris> {
   writeFileSync(yol, KAYNAK.replace(eski, () => yeni));
   return import(pathToFileURL(yol).href);
 }
-/** göçlerin kopyası; 0050'de `eski` → `yeni` */
-function bozukGocler(ad: string, eski: string, yeni: string): string {
+/** göçlerin kopyası; `dosya` (başlangıç 0050) göçünde `eski` → `yeni` */
+function bozukGocler(ad: string, eski: string, yeni: string, dosya = "0050_"): string {
   const klasor = join(gecici, ad);
   mkdirSync(klasor);
   for (const d of readdirSync(GOC_KLASORU)) {
     if (!d.endsWith(".sql")) continue;
-    if (d.startsWith("0050_")) {
+    if (d.startsWith(dosya)) {
       const k = readFileSync(join(GOC_KLASORU, d), "utf8");
       assert.ok(k.includes(eski), `bozulacak satır göçte yok: ${eski}`);
       writeFileSync(join(klasor, d), k.replace(eski, () => yeni));
@@ -60,6 +63,8 @@ before(async () => {
   try {
     Y = (await s.query<{ id: string }>("INSERT INTO yonetici (eposta, ad, parola_ozeti) VALUES ('y@probata.example', 'Deneme', $1) RETURNING id::text", [await parolaOzeti(PAROLA)])).rows[0].id;
     await s.query("UPDATE yonetici SET totp_sir = $2, durum = 'etkin' WHERE id = $1", [Y, sifrele(ANAHTAR, "yonetim", `totp:${Y}`)]);
+    /* 393: iki adımlı akışın bozmaları ayar AÇIKKEN (başlangıç kapalı) */
+    await s.query("UPDATE yonetim_ayar SET iki_adim = true");
   } finally { await s.end(); }
 });
 after(async () => { await havuz?.end(); await kume?.durdur(); rmSync(gecici, { recursive: true, force: true }); });
@@ -143,5 +148,27 @@ test("6. dondurma müşteri oturumlarını silmezse dondurulmuş firmanın müş
     const r = (await yonetimIcinde(h, (db) => db.sorgu<{ s: { durum?: string } }>("SELECT yonetim_firma_durum($1, 'dondu') AS s", [f]), { yoneticiId: y })).rows[0].s;
     assert.equal(r.durum, "dondu");
     assert.equal((await supa.sahip.query("SELECT 1 FROM musteri_oturum WHERE firma_id = $1", [f])).rowCount, 1, "bozuk: müşteri oturumu kaldı");
+  } finally { await h.end(); await supa.kapat(); }
+});
+
+test("7. giriş ayarı okumazsa iki adım açıkken parola tek başına yönetim oturumu açar (kod atlanır)", async () => {
+  const g = await bozukGiris("    if (!(await ikiAdim(db))) {\n", "    if (true) {\n");
+  const p = await g.yoneticiGiris(havuz, { eposta: "y@probata.example", parola: PAROLA, ip: "10.7.0.1", simdi: new Date(T0.getTime() + 7 * 3600_000) });
+  assert.ok(p.tamam && p.sonraki === "tamam", "bozuk: iki adım açıkken kodsuz giriş");
+  assert.equal((await g.yonetimOturumOku(havuz, p.tamam ? p.belirtec : "", new Date(T0.getTime() + 7 * 3600_000)))?.id, Y, "bozuk: parola tek başına yönetim oturumu");
+});
+
+test("8. yonetim_kim ayara bakmazsa iki adım açıkken anahtarı kurulmamış ('ilk') yönetici yönetim işlemi yapar", async () => {
+  const klasor = bozukGocler("g8",
+    "    AND (durum = 'etkin' OR (durum = 'ilk' AND NOT coalesce((SELECT a.iki_adim FROM yonetim_ayar a WHERE a.tek), true)));",
+    "    AND durum IN ('etkin', 'ilk');", "0075_");
+  const supa = await supabaseBenzeri(kume, "yonetim_bozuk_8", klasor);
+  const h = havuzKur({ ...kume.uygulama, database: "yonetim_bozuk_8" });
+  try {
+    await supa.sahip.query("UPDATE yonetim_ayar SET iki_adim = true");
+    const y = (await supa.sahip.query<{ id: string }>("INSERT INTO yonetici (eposta, ad, parola_ozeti) VALUES ('y8@probata.example', 'Deneme', $1) RETURNING id::text",
+      [await parolaOzeti(PAROLA)])).rows[0].id;
+    const r = await yonetimIcinde(h, (db) => db.sorgu("SELECT * FROM yonetim_firmalar()"), { yoneticiId: y });
+    assert.ok(r.rowCount !== null, "bozuk: 'ilk' yönetici iki adım açıkken yönetim işlemi yaptı");
   } finally { await h.end(); await supa.kapat(); }
 });

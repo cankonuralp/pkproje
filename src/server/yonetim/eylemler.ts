@@ -6,7 +6,7 @@ import { cookies } from "next/headers";
 import { parola as parolaSemasi, z } from "../../sema/ortak.ts";
 import { havuz } from "../db/havuz.ts";
 import { ayniKoken, istemciIp } from "../kimlik/koken.ts";
-import { bekleyenOturum, kodDogrula, kurulumTamamla, yoneticiGiris } from "./giris.ts";
+import { bekleyenOturum, ikiAdimAcik, kodDogrula, kurulumTamamla, yoneticiGiris } from "./giris.ts";
 import { yonetimAdresinde, yonetimCerezAyari, YONETIM_CEREZ } from "./istek.ts";
 
 export interface YGirisDurumu { hata?: string; eposta?: string; yonlendir?: string }
@@ -29,11 +29,13 @@ export async function yonetimGirisEylemi(_onceki: YGirisDurumu, form: FormData):
     return { eposta: g.data.eposta, hata: r.neden === "kilitli" ? KILITLI : "E-posta ya da parola yanlış. 5 hatalı denemeden sonra giriş 15 dakika kilitlenir." };
   }
   (await cookies()).set(YONETIM_CEREZ, r.belirtec, yonetimCerezAyari());
-  return { yonlendir: r.sonraki === "kurulum" ? "/yonetim/giris/kurulum" : "/yonetim/giris/kod" };
+  /* 393: iki adım kapalıyken belirteç yönetim oturumunun kendisi → doğrudan panele */
+  return { yonlendir: r.sonraki === "tamam" ? "/yonetim" : r.sonraki === "kurulum" ? "/yonetim/giris/kurulum" : "/yonetim/giris/kod" };
 }
 
 export async function yonetimKodEylemi(_onceki: YKodDurumu, form: FormData): Promise<YKodDurumu> {
   if (!(await yonetimAdresinde()) || !(await ayniKoken())) return { hata: REDDEDILDI };
+  if (!(await ikiAdimAcik(havuz()))) return { yonlendir: "/yonetim/giris" };   // 393: iki adım kapalı — kod adımı yok
   const c = await cookies();
   const belirtec = c.get(YONETIM_CEREZ)?.value;
   const kod = kodTemiz(form.get("kod"));
@@ -52,6 +54,7 @@ export async function yonetimKodEylemi(_onceki: YKodDurumu, form: FormData): Pro
 
 export async function yonetimKurulumEylemi(_onceki: YKurulumDurumu, form: FormData): Promise<YKurulumDurumu> {
   if (!(await yonetimAdresinde()) || !(await ayniKoken())) return { hata: { genel: REDDEDILDI } };
+  if (!(await ikiAdimAcik(havuz()))) return { yonlendir: "/yonetim/giris" };   // 393: iki adım kapalı — kurulum yok
   const kod = kodTemiz(form.get("kod"));
   const p1 = String(form.get("p1") ?? ""), p2 = String(form.get("p2") ?? "");
   const hata: NonNullable<YKurulumDurumu["hata"]> = {};

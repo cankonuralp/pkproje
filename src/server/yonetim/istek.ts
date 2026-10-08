@@ -10,7 +10,7 @@ import { havuz } from "../db/havuz.ts";
 import { ayniKoken } from "../kimlik/koken.ts";
 import { yonetimIcinde, type Sorgulayici } from "../db/kiraci.ts";
 import { yonetimAdresiMi } from "./adres.ts";
-import { bekleyenOturum, kurulumBilgisi, yonetimCikis, yonetimOturumOku, type YoneticiOturumu } from "./giris.ts";
+import { bekleyenOturum, ikiAdimAcik, kurulumBilgisi, yonetimCikis, yonetimOturumOku, type YoneticiOturumu } from "./giris.ts";
 
 const YAYIN = process.env.NODE_ENV === "production";
 export const YONETIM_CEREZ = YAYIN ? "__Host-probata-y" : "probata-yonetim";
@@ -37,6 +37,9 @@ export async function yonetimOturumGerekli(): Promise<YoneticiOturumu> {
 export function yonetimIslemi<T>(o: YoneticiOturumu, is: (db: Sorgulayici) => Promise<T>): Promise<T> {
   return yonetimIcinde(havuz(), is, { yoneticiId: o.id });
 }
+
+/** iki adımlı giriş açık mı (393; göç 0075 yonetim_ayar) — kapalıyken kod / kurulum sayfaları girişe döner */
+export const yonetimIkiAdim = (): Promise<boolean> => ikiAdimAcik(havuz());
 
 /** girişin ikinci adımı / ilk kurulum: çerezdeki bekleyen (parola) oturumun yöneticisi */
 export async function yonetimBekleyen(): Promise<{ eposta: string; durum: "ilk" | "etkin" } | null> {

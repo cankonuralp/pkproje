@@ -2,7 +2,7 @@
    kod ve yeni parola. Kurulmuş yönetici kod adımına gider. */
 import type { Metadata } from "next";
 import { notFound, redirect } from "next/navigation";
-import { yonetimAdresinde, yonetimBekleyen, yonetimIstekOturumu, yonetimKurulumu } from "../../../../../server/yonetim/istek";
+import { yonetimAdresinde, yonetimBekleyen, yonetimIkiAdim, yonetimIstekOturumu, yonetimKurulumu } from "../../../../../server/yonetim/istek";
 import { YonetimKurulumFormu } from "../YonetimGirisFormlari";
 
 export const metadata: Metadata = { title: { absolute: "İki adımlı giriş kurulumu · probata yönetim" } };
@@ -10,6 +10,7 @@ export const metadata: Metadata = { title: { absolute: "İki adımlı giriş kur
 export default async function YonetimKurulumSayfasi() {
   if (!(await yonetimAdresinde())) notFound();
   if (await yonetimIstekOturumu()) redirect("/yonetim");
+  if (!(await yonetimIkiAdim())) redirect("/yonetim/giris");   // 393: iki adım kapalı
   const k = await yonetimKurulumu();
   if (!k) redirect((await yonetimBekleyen())?.durum === "etkin" ? "/yonetim/giris/kod" : "/yonetim/giris?neden=oturum");
   return <YonetimKurulumFormu eposta={k.eposta} anahtar={k.anahtar} adres={k.adres} />;

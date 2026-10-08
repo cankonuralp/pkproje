@@ -2,9 +2,11 @@
    firma adresinde /yonetim yok, yönetim adresinde firma ekranı yok; ilk yönetici geçici parolayla girer, doğrulama uygulamasının anahtarını görür,
    kod + yeni parolayla kurulumu bitirir; Firmalar; Firma aç (boş form ve ayrılmış ad reddedilir, ünvandan öneri, başka firmanın kodu sunucuda
    reddedilir) → geçici parola bir kez → yeni firmanın adresine o parolayla girilir; Dondur (firma adresi kapanır) / Etkinleştir / yeni geçici
-   parola; Çıkış. Kurulmuş yönetici: yanlış kod reddedilir, doğru kodla girer. */
+   parola; Çıkış. Kurulmuş yönetici: yanlış kod reddedilir, doğru kodla girer.
+   2026-10-08 (393; reisim: "ikii aşamalı doğrulamayı şimdilik kaldır, belirlediğin mail şifre ile direk girebileyim"): iki adım bir ayar
+   (göç 0075, başlangıçta KAPALI) — uçtan uca yayındaki hâli sınar: geçici parolalı ilk yönetici de kurulmuş yönetici de parolayla doğrudan
+   Firmalar'a; kod ve kurulum sayfaları girişe döner. İki adımlı akış (ayar açık) gerçek PostgreSQL kilidinde (tests/yonetim.test.ts). */
 import { expect, test, type Page } from "@playwright/test";
-import { totpKodu, zamanAdimi } from "../src/server/yonetim/totp";
 import { E2E_FIRMA, E2E_KAPI, E2E_PAROLA, E2E_YONETIM } from "./hesaplar";
 import { hazir } from "./yardimci";
 
@@ -15,7 +17,7 @@ async function parolaAdimi(page: Page, eposta: string, parola: string) {
   await hazir(page);
   await page.getByLabel("E-posta").fill(eposta);
   await page.getByLabel("Parola", { exact: true }).fill(parola);
-  await page.getByRole("button", { name: "Devam" }).click();
+  await page.getByRole("button", { name: "Giriş yap" }).click();
 }
 
 test("yönetim: ayrı adres; ilk kurulum; firma aç → geçici parolayla yeni firmaya giriş; dondur / etkinleştir / yeni parola; çıkış", async ({ page, browser }, bilgi) => {
@@ -32,21 +34,18 @@ test("yönetim: ayrı adres; ilk kurulum; firma aç → geçici parolayla yeni f
   await page.goto(`${Y}/`);
   await expect(page).toHaveURL(/\/yonetim\/giris$/);
 
-  /* ilk yönetici: geçici parola → kurulum (anahtar + kod + yeni parola) */
+  /* 393: iki adım kapalı — giriş sayfası iki adım demez; kod ve kurulum sayfaları girişe döner */
+  await expect(page.getByText("Bu sayfa yalnız probata ekibine açık.")).toBeVisible();
+  for (const y of ["kod", "kurulum"]) {
+    await page.goto(`${Y}/yonetim/giris/${y}`);
+    await expect(page).toHaveURL(/\/yonetim\/giris$/);
+  }
+  /* ilk yönetici: geçici parolayla doğrudan Firmalar (kurulum yok) */
   await parolaAdimi(page, P.ilk, "yanlis-parola-2026");
   await expect(page.getByText("E-posta ya da parola yanlış.", { exact: false })).toBeVisible();
   await expect(page.getByLabel("Parola", { exact: true })).toBeFocused();   // 2026-10-08: hata dönünce odak alana (e-posta dolu → parola)
   await expect(page.getByLabel("Parola", { exact: true })).toHaveAttribute("aria-invalid", "true");
   await parolaAdimi(page, P.ilk, E2E_YONETIM.geciciParola);
-  await expect(page).toHaveURL(/\/yonetim\/giris\/kurulum$/);
-  await hazir(page);
-  await expect(page.getByRole("heading", { level: 1, name: "İki adımlı giriş kurulumu" })).toBeVisible();
-  const anahtar = (await page.locator("#y-anahtar").innerText()).replace(/\s/g, "");
-  expect(anahtar).toMatch(/^[A-Z2-7]{32}$/);
-  await page.getByLabel("Doğrulama kodu").fill(totpKodu(anahtar, zamanAdimi(new Date())));
-  await page.getByLabel("Yeni parola", { exact: true }).fill(E2E_YONETIM.yeniParola);
-  await page.getByLabel("Yeni parola (tekrar)").fill(E2E_YONETIM.yeniParola);
-  await page.getByRole("button", { name: "Kurulumu tamamla" }).click();
   await expect(page).toHaveURL(/\/yonetim$/);
   await hazir(page);
   await expect(page.getByRole("heading", { level: 1, name: "Firmalar" })).toBeVisible();
@@ -130,16 +129,9 @@ test("yönetim: ayrı adres; ilk kurulum; firma aç → geçici parolayla yeni f
   await expect(page).toHaveURL(/\/yonetim\/giris/);
 });
 
-test("yönetim: kurulmuş yönetici — parola, yanlış kod reddedilir, doğru kodla girer", async ({ page }, bilgi) => {
+test("yönetim: kurulmuş yönetici — iki adım kapalıyken parolayla doğrudan girer (393)", async ({ page }, bilgi) => {
   await parolaAdimi(page, E2E_YONETIM.proje(bilgi.project.name).etkin, E2E_PAROLA);
-  await expect(page).toHaveURL(/\/yonetim\/giris\/kod$/);
-  await hazir(page);
-  const dogru = totpKodu(E2E_YONETIM.anahtar, zamanAdimi(new Date()));
-  await page.getByLabel("Doğrulama kodu").fill(dogru === "000000" ? "111111" : "000000");
-  await page.getByRole("button", { name: "Doğrula" }).click();
-  await expect(page.getByText("Kod yanlış ya da süresi geçti.", { exact: false })).toBeVisible();
-  await page.getByLabel("Doğrulama kodu").fill(totpKodu(E2E_YONETIM.anahtar, zamanAdimi(new Date())));
-  await page.getByRole("button", { name: "Doğrula" }).click();
   await expect(page).toHaveURL(/\/yonetim$/);
+  await hazir(page);
   await expect(page.getByRole("heading", { level: 1, name: "Firmalar" })).toBeVisible();
 });

@@ -73,7 +73,8 @@ function KodAlani({ hata }: { hata?: string }) {
   );
 }
 
-export function YonetimGirisFormu({ neden, adres }: { neden?: "oturum" | "cikis"; adres: string }) {
+/** ikiAdim (393): kapalıyken tuş "Giriş yap", altta iki adım yazmaz */
+export function YonetimGirisFormu({ neden, adres, ikiAdim }: { neden?: "oturum" | "cikis"; adres: string; ikiAdim: boolean }) {
   const [durum, eylem, gonderiyor] = useActionState<YGirisDurumu, FormData>(yonetimGirisEylemi, {});
   useEffect(() => yonlendir(durum.yonlendir), [durum.yonlendir]);
   /* hata dönünce odak alana (firma girişiyle aynı — 2026-10-08 canlı denetim): e-posta boşsa oraya, yoksa parolaya */
@@ -94,9 +95,9 @@ export function YonetimGirisFormu({ neden, adres }: { neden?: "oturum" | "cikis"
       </div>
       <ParolaAlani id="yg-parola" ad="parola" etiket="Parola" otomatik="current-password" gecersiz={!!durum.hata} />
       <div className={stil.tuslar}>
-        <Tus type="submit" ikon="log-in" disabled={gonderiyor || !!durum.yonlendir} aria-busy={gonderiyor || undefined}>Devam</Tus>
+        <Tus type="submit" ikon="log-in" disabled={gonderiyor || !!durum.yonlendir} aria-busy={gonderiyor || undefined}>{ikiAdim ? "Devam" : "Giriş yap"}</Tus>
       </div>
-      <p className={stil.ayrac}>Bu sayfa yalnız probata ekibine açık; giriş iki adımlıdır (parola + doğrulama kodu).</p>
+      <p className={stil.ayrac}>Bu sayfa yalnız probata ekibine açık{ikiAdim ? "; giriş iki adımlıdır (parola + doğrulama kodu)" : ""}.</p>
     </Kart>
   );
 }

@@ -2355,6 +2355,16 @@ revizyon, alan kopyalama, hafif kusur devri, meslek eşleşme denetimi).
 - Emsal ürünler: https://opwire.app/iso-17020-periyodik-kontrol-yazilimi/ · https://17020muayene.vidco.com.tr/ · https://akuple.com/asansor-kontrol-yazilimi/ · https://ensyazilim.com/
 
 ## 11 · Değişiklik günlüğü
+- 2026-10-08 (393): **Yönetim girişinde iki adım şimdilik kapalı** (reisim birebir: *"2 aşamalı doğrulama için Google Authenticator kullanıyorum
+  ama sürekli hata veriyor süre geçmemesine rağmen süre geçti diyor yönetim paneline giremiyorum ikii aşamalı doğrulamayı şimdilik kaldır,
+  belirlediğin mail şifre ile direk girebileyim"*). Neden: kurulum sayfasında karekod yoktu, 32 harflik anahtar uygulamaya elle yazılıyordu; tek
+  harf yanlışsa her kod "yanlış ya da süresi geçti" der (yönetim izinde tek parola girişi, ardından iki kod hatası). Değişen: iki adım bir ayar
+  (göç 0075 `yonetim_ayar.iki_adim`, başlangıçta KAPALI; satır yoksa açık sayılır). Kapalıyken e-posta + parola doğruysa yönetim oturumu hemen
+  açılır — geçici parolalı ("ilk") yönetici de; 5 hatalı denemede 15 dk kilit, IP kilidi ve yönetim izi aynen; veritabanının yönetim kapısı
+  (yonetim_kim) aynı ayara bakar. Kod ve kurulum sayfaları girişe döner, giriş tuşu "Giriş yap". Açılınca eski akış aynen (ilk yöneticinin
+  oturumu düşer, kuruluma gider); ayarı uygulama ve yönetim rolü değiştiremez (yalnız göç / veritabanı sahibi). Yeniden açmadan önce kurulum
+  sayfasına karekod eklenecek (açık iş). Kilit yonetim.test (iki adımlı testler ayarı açar; yeni test kapalı hâli); olumsuz kanıt yonetim.bozan
+  7–8; e2e yonetim (üç genişlik: doğrudan giriş, kod / kurulum sayfası girişe döner).
 - 2026-10-08 (391): **Deneme yayını güncellendi (389–390).** CI d1c13af yeşil — ilk paralel koşu: denetim 5 dk, uçtan uca masaüstü / tablet / telefon
   aynı anda 22'şer dk, koşu toplam ~23 dk (önceki ~80 dk). Supabase'e göç 0074 (`goc` kaydıyla, özet d1c13af'teki dosyadan; 75 göç), işlev
   gövdesi dosyayla md5 aynı, yalnız uygulama rolüne açık. main = d1c13af, Vercel yayında. Doğrulama: duman 9/9 · gece ucu 200 (çöp + saklama,

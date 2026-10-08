@@ -14,6 +14,16 @@ import { yonetimIcinde, type Havuz, type Sorgulayici } from "../db/kiraci.ts";
 import { parolaDogru, parolaOzeti, sahteDenetim } from "../kimlik/parola.ts";
 import { otpauthAdresi, totpDogrula, yeniAnahtar } from "./totp.ts";
 
+/** iki adımlı giriş açık mı (göç 0075 yonetim_ayar.iki_adim; satır yoksa AÇIK sayılır) — reisim 2026-10-08: *"ikii aşamalı doğrulamayı şimdilik
+    kaldır, belirlediğin mail şifre ile direk girebileyim"* (Google Authenticator'a elle yazılan 32 harflik anahtarda hata → her kod "yanlış").
+    KAPALIYKEN parola doğruysa yönetim oturumu hemen açılır (geçici parolalı "ilk" yönetici de; veritabanı yonetim_kim aynı ayara bakar); kilit, IP
+    kilidi, hatalı deneme sayacı ve yönetim izi aynen. Açılınca eski akış: ilk kurulum (anahtar + kod + yeni parola) ve kod adımı; "ilk" yöneticinin
+    oturumu düşer, kuruluma gider. */
+async function ikiAdim(db: Sorgulayici): Promise<boolean> {
+  return (await db.sorgu<{ v: boolean }>("SELECT iki_adim AS v FROM yonetim_ayar")).rows[0]?.v ?? true;
+}
+export const ikiAdimAcik = (havuz: Havuz): Promise<boolean> => yonetimIcinde(havuz, ikiAdim);
+
 export const Y_KILIT_ESIGI = 5;
 export const Y_KILIT_DK = 15;
 export const BEKLEYEN_DK = 10;
@@ -28,7 +38,8 @@ const BAG = "yonetim";
 const sirAdi = (yoneticiId: string) => `totp:${yoneticiId}`;
 
 export interface YoneticiOturumu { id: string; ad: string; eposta: string }
-export type YGirisSonucu = { tamam: true; belirtec: string; sonraki: "kod" | "kurulum" } | { tamam: false; neden: "hatali" | "kilitli" };
+/** sonraki "tamam": iki adım kapalı — belirteç yönetim oturumunun kendisi */
+export type YGirisSonucu = { tamam: true; belirtec: string; sonraki: "kod" | "kurulum" | "tamam" } | { tamam: false; neden: "hatali" | "kilitli" };
 export type YKodSonucu = { tamam: true; belirtec: string } | { tamam: false; neden: "hatali" | "kilitli" | "oturum" | "ayni" };
 
 interface YSatir { id: string; eposta: string; ad: string; durum: "ilk" | "etkin" | "kapali"; parola_ozeti: string; totp_sir: string | null; totp_son: string; hatali_deneme: number; kilit_bitis: Date | null }
@@ -92,6 +103,15 @@ export async function yoneticiGiris(havuz: Havuz, g: { eposta: string; parola: s
        "doğru parola → 4 yanlış kod → doğru parola …" döngüsüyle kod denemesini sınırsız sürdüremez (347–348 incelemesi) */
     /* önceki yarım kalmış parola oturumları düşer (aynı anda tek bekleyen adım) */
     await db.sorgu("DELETE FROM yonetim_oturum WHERE yonetici_id = $1 AND adim = 'parola'", [y.id]);
+    /* iki adım kapalı: parola tam giriştir — sayaçlar sıfırlanır, yönetim oturumu açılır (kod adımındaki gibi) */
+    if (!(await ikiAdim(db))) {
+      await db.sorgu("UPDATE yonetici SET hatali_deneme = 0, kilit_bitis = NULL WHERE id = $1", [y.id]);
+      await db.sorgu("DELETE FROM yonetim_kilit WHERE ip = $1", [ip]);
+      const tam = await tamOturumAc(db, y, ip, simdi);
+      await db.sorgu("SELECT set_config('app.yonetici_id', $1, true)", [y.id]);
+      await iz(db, y.eposta, "giris.yapildi", { ip, iki_adim: false });
+      return { tamam: true, belirtec: tam, sonraki: "tamam" };
+    }
     const belirtec = randomBytes(32).toString("base64url");
     await db.sorgu("INSERT INTO yonetim_oturum (ozet, yonetici_id, adim, olustu, son_kullanim, bitis, ip) VALUES ($1, $2, 'parola', $3, $3, $4, $5)",
       [ozet(belirtec), y.id, simdi, new Date(simdi.getTime() + dk(BEKLEYEN_DK)), ip]);
@@ -202,7 +222,7 @@ export async function kurulumTamamla(havuz: Havuz, g: { belirtec: string | undef
   });
 }
 
-/** çerezdeki belirteçten yönetim oturumu (yalnız "tamam" adımı, etkin yönetici); süresi dolan silinir */
+/** çerezdeki belirteçten yönetim oturumu (yalnız "tamam" adımı, etkin yönetici — iki adım kapalıyken geçici parolalı "ilk" de); süresi dolan silinir */
 export async function yonetimOturumOku(havuz: Havuz, belirtec: string | undefined, simdi = new Date()): Promise<YoneticiOturumu | null> {
   if (!belirtec || !BELIRTEC.test(belirtec)) return null;
   const oz = ozet(belirtec);
@@ -211,7 +231,8 @@ export async function yonetimOturumOku(havuz: Havuz, belirtec: string | undefine
       `SELECT y.id, y.ad, y.eposta, y.durum, o.son_kullanim, o.bitis FROM yonetim_oturum o JOIN yonetici y ON y.id = o.yonetici_id
        WHERE o.ozet = $1 AND o.adim = 'tamam'`, [oz])).rows[0];
     if (!r) return null;
-    if (r.bitis <= simdi || simdi.getTime() - r.son_kullanim.getTime() > dk(Y_HAREKETSIZ_DK) || r.durum !== "etkin") {
+    const girebilir = r.durum === "etkin" || (r.durum === "ilk" && !(await ikiAdim(db)));
+    if (r.bitis <= simdi || simdi.getTime() - r.son_kullanim.getTime() > dk(Y_HAREKETSIZ_DK) || !girebilir) {
       await db.sorgu("DELETE FROM yonetim_oturum WHERE ozet = $1", [oz]);
       return null;
     }
