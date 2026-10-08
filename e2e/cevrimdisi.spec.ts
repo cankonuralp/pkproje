@@ -203,3 +203,24 @@ test("çevrimdışı: bağlantı kes → Kaydet cihaza → bağlantı gelince gi
   await expect(page.getByText("cihazda bekleyen kabul gitti", { exact: false }).first()).toBeVisible({ timeout: 30_000 });
   await expect(page.getByText("Tarafsızlık beyanı onaylandı · beyanı gör")).toBeVisible({ timeout: 30_000 });
 });
+
+/* 403 (402'nin kilidi): ofis rolünde (firma yöneticisi) servis çalışanı KURULMAZ, önceden indirme olmaz — cihaz ve sunucu boşuna yorulmaz;
+   bağlantısız kuyruk ve gösterge yine çalışır */
+test("ofis rolü: servis çalışanı kurulmaz, önceden indirme olmaz; çevrimdışı göstergesi yine çalışır", async ({ page }) => {
+  await page.goto(`${Y}/giris`);
+  await hazir(page);
+  await page.getByLabel("E-posta").fill(E2E_YZ.yonetici.eposta);
+  await page.getByLabel("Parola", { exact: true }).fill(E2E_PAROLA);
+  await page.getByRole("button", { name: "Giriş yap" }).click();
+  await expect(page.locator("header")).toContainText(E2E_YZ.yonetici.ad);
+  await page.goto(`${Y}/planlar`);
+  await hazir(page);
+  /* önceden indirme açılıştan 3 sn sonra başlardı */
+  await page.waitForTimeout(5_000);
+  expect(await page.evaluate(async () => (await navigator.serviceWorker.getRegistrations()).length), "servis çalışanı kurulmadı").toBe(0);
+  await expect(page.locator("html[data-cevrimdisi-hazir]")).toHaveCount(0);
+  await page.context().setOffline(true);
+  await expect(page.getByRole("button", { name: /^Çevrimdışı/ })).toBeVisible();
+  await page.context().setOffline(false);
+  await expect(page.getByRole("button", { name: /^Çevrimdışı/ })).toHaveCount(0);
+});
