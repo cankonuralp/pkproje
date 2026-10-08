@@ -340,6 +340,8 @@ export function swEksikleri(sw: string, depo: string, proxy: string): string[] {
   const sakla = /async function sayfaSakla[\s\S]*?\n}\n/.exec(sw)?.[0] ?? "";
   const dosyaYeri = sakla.indexOf("await dosyalariSakla("), kayitYeri = sakla.indexOf("objectStore(SAYFALAR).put(");
   if (dosyaYeri < 0 || kayitYeri < 0 || dosyaYeri > kayitYeri) eksik.push("saklanan sayfanın uygulama dosyaları önce saklanmıyor");
+  /* 401: cihazdaki sayfa sayısı sınırlı (davranışı tests/sw.test.ts sahte depoyla sınar) */
+  if (!sakla.includes("await sayfalariKirp(db);")) eksik.push("saklanan sayfa sayısı sınırsız");
   /* dosya önbelleği yolla (sorgu dizgisiz) anahtarlanır: geliştirmede her istekte değişen "?v=" yüzünden aynı dosya yeniden yeniden inmesin,
      bağlantısız açılışta bulunsun */
   if (!sw.includes("caches.match(anahtarAdresi(r.url))") || !sw.includes("c.put(anahtarAdresi(r.url), kopya)")) eksik.push("dosya önbelleği sorgu dizgisine bağlı");

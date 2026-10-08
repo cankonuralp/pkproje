@@ -2355,6 +2355,10 @@ revizyon, alan kopyalama, hafif kusur devri, meslek eşleşme denetimi).
 - Emsal ürünler: https://opwire.app/iso-17020-periyodik-kontrol-yazilimi/ · https://17020muayene.vidco.com.tr/ · https://akuple.com/asansor-kontrol-yazilimi/ · https://ensyazilim.com/
 
 ## 11 · Değişiklik günlüğü
+- 2026-10-08 (401): **Cihazda saklanan sayfalar sınırlı** — servis çalışanı açılan her saha sayfasını (rapor, plan) cihazda şifreli saklıyordu,
+  sınırsızdı (aylarca açılan her rapor birikirdi). Artık en çok 300 sayfa; aşınca en eski açılanlar 250'ye inene kadar silinir (aradaki pay her
+  yeni sayfada bütün depoyu taramasın). Önceden indirilen paket (en çok 20 plan + 100 rapor) sınırın içinde kalır. Kilit sw.test (çalışanın kendi
+  işlevi sahte depoyla: 300'de dokunulmaz, 301'de en eski 51 silinir, en yeni kalır) + swEksikleri / bozan kilitler (sınır çağrısı kalkarsa).
 - 2026-10-08 (400): **Çevrimdışı çalışma — plan kabul / red** (ARKA-UC §4.1 "plan kabul / red (kuyruğa)"). Plan içinde bağlantı yokken (ya da istek
   ağda düşerse) Kabul et / Reddet cihaz kuyruğuna şifreli yazılır: kabulde tarafsızlık beyanının onayı ve OKUNAN metnin özeti, redde gerekçe; kabul
   adımında "Kabulünüz / Reddiniz bu cihazda bekliyor" (tuşlar kalkar; gönderilemezse nedeni ve "üst çubuktan yeniden deneyin ya da kaldırın"); bağlantı

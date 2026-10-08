@@ -168,4 +168,6 @@ test("servis çalışanı: depo şeması ayrışınca, API saklanınca, GET dene
     ["saklanan sayfanın uygulama dosyaları önce saklanmıyor"]);
   /* dosya önbelleği tam adresle (sorgu dizgisiyle) aranırsa yakalanır */
   assert.deepEqual(swEksikleri(sw.replace("caches.match(anahtarAdresi(r.url))", "caches.match(r)"), depo, proxy), ["dosya önbelleği sorgu dizgisine bağlı"]);
+  /* 401: sayfa sayısı sınırı kalkarsa yakalanır */
+  assert.deepEqual(swEksikleri(sw.replace("  await sayfalariKirp(db);\n", ""), depo, proxy), ["saklanan sayfa sayısı sınırsız"]);
 });

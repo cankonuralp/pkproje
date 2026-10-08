@@ -6,7 +6,7 @@
    · /api, giriş, müşteri paneli, yönetim, POST (sunucu eylemleri, kuyruk) DOKUNULMAZ — hep ağ.
    Saklama yanıtı BEKLETMEZ (398 öncesi düzeltme): tarayıcı sayfayı / dosyayı ağdan geldiği gibi akarak alır, kopyası arka planda (waitUntil)
    saklanır — sayfa bitmeden hiçbir şey göstermeyen çalışan yavaş sunucuda sayfayı takılı bırakıyordu (CI 2177156, tablet ısınması).
-   Saklanan sayfalar çıkışta ve cihazda başka kişi girince silinir (src/components/cevrimdisi/depo.ts). Depo şeması depo.ts ile ORTAK (aynı ad,
+   Saklanan sayfalar çıkışta ve cihazda başka kişi girince silinir; en çok 300 sayfa (aşınca en eskiler, 250'ye inene kadar — 401) (src/components/cevrimdisi/depo.ts). Depo şeması depo.ts ile ORTAK (aynı ad,
    sürüm, bölmeler — tests/sw.test.ts kilitler). */
 /* global self, caches, indexedDB, crypto */
 
@@ -106,6 +106,25 @@ async function sayfaSakla(yol, y) {
   const sifreli = await crypto.subtle.encrypt({ name: "AES-GCM", iv }, k, govde);
   const basliklar = SAKLANAN_BASLIKLAR.flatMap((ad) => { const d = y.headers.get(ad); return d ? [[ad, d]] : []; });
   await istek(db.transaction(SAYFALAR, "readwrite").objectStore(SAYFALAR).put({ iv, sifreli, basliklar, zaman: Date.now() }, yol));
+  await sayfalariKirp(db);
+}
+
+/** cihazda en çok SAYFA_EN_COK sayfa: aşınca en eski açılanlar SAYFA_KIRP'a inene kadar silinir (açılan her rapor cihazda birikmesin; aradaki
+    pay her yeni sayfada bütün depoyu taramasın) — 401 */
+const SAYFA_EN_COK = 300, SAYFA_KIRP = 250;
+async function sayfalariKirp(db) {
+  const t = db.transaction(SAYFALAR, "readwrite"), d = t.objectStore(SAYFALAR);
+  const n = await istek(d.count());
+  if (n <= SAYFA_EN_COK) return;
+  const hepsi = [];
+  await new Promise((coz, red) => {
+    const k = d.openCursor();
+    k.onsuccess = () => { const c = k.result; if (!c) { coz(); return; } hepsi.push([c.key, c.value.zaman ?? 0]); c.continue(); };
+    k.onerror = () => red(k.error);
+  });
+  hepsi.sort((a, b) => a[1] - b[1]);
+  for (const [yol] of hepsi.slice(0, n - SAYFA_KIRP)) d.delete(yol);
+  await new Promise((coz, red) => { t.oncomplete = () => coz(); t.onerror = () => red(t.error); });
 }
 
 /** sayfanın kullandığı uygulama dosyaları (betik, stil, yazı tipi — sayfanın içinde ve sunucu bileşeni verisinde adı geçen /_next/static yolları)
