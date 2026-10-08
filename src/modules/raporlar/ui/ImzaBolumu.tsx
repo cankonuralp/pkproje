@@ -2,7 +2,7 @@
 /* SON İMZA — indir, imzala, yükle (317; maket raporlar.html imza penceresi "İndir, imzala, yükle"; karar 99 her rapor ayrı PDF): yazanın onaylanmış
    raporunda 1) İmzala → kesin imzasız PDF sunucuda bir kez üretilir, 2) indirilir, e-imza aracıyla imzalanır, 3) imzalı PDF yüklenir. Sunucu
    imzalı PDF'in ilk baytlarının hazırlanan PDF'in kendisi olduğuna ve imza taşıdığına bakar; tutarsa rapor Tamamlandı, müşteriye açılır.
-   Tamamlanan raporda imzalı PDF. Mobil imza ve imza aracı sonraki fazda. Yetki ve kural sunucuda. */
+   Tamamlanan raporda imzalı PDF (saklama süresi dolup silindiyse söylenir — 387). Mobil imza ve imza aracı sonraki fazda. Yetki ve kural sunucuda. */
 import { useRef, type TransitionStartFunction } from "react";
 import { useBildir } from "../../../components/bildirim/Bildirim";
 import { DosyaAcTusu } from "../../../components/gizli-resim/GizliResim";
@@ -20,9 +20,18 @@ export function ImzaBolumu({ v, mesgul, baslat, yenile, hata }: {
   const bildir = useBildir();
   const girdi = useRef<HTMLInputElement>(null);
   if (v.imzali) {
+    const imza = TR.format(new Date(v.imzali.zaman)).replace(",", "");
+    /* saklama süresi doldu (387): PDF firmanın deposundan silindi, rapor kaydı duruyor */
+    if (!v.imzali.dosya) {
+      return (
+        <Serit tur="bilgi" ikon="archive">
+          Tamamlandı · son imza {imza} · saklama süresi dolduğu için PDF {v.imzali.silindi ? TR.format(new Date(v.imzali.silindi)).replace(",", "") : ""} silindi
+        </Serit>
+      );
+    }
     return (
       <Serit tur="onay" ikon="circle-check" eylem={<DosyaAcTusu dosyaId={v.imzali.dosya} ikon="file-check">İmzalı PDF</DosyaAcTusu>}>
-        Tamamlandı · son imza {TR.format(new Date(v.imzali.zaman)).replace(",", "")} · müşteriye açık
+        Tamamlandı · son imza {imza} · müşteriye açık
       </Serit>
     );
   }

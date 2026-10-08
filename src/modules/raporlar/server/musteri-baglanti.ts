@@ -21,8 +21,9 @@ export interface MusteriRaporu {
   kontrol: string | null; sonraki: string | null; sonuc: "uygun" | "uygun_degil" | null; imzalandi: string;
   /** imza günü — Türkiye takvimi (gece imzalanan rapor bir gün önce görünmesin — 319 incelemesi) */
   imzaGunu: string;
-  /** imzalı PDF dosyasının kimliği (tek indirme ucundan, müşteri rolünde — kendi raporu); boyut: bayt (toplu indirmenin sınırı) */
-  dosya: string; boyut: number;
+  /** imzalı PDF dosyasının kimliği (tek indirme ucundan, müşteri rolünde — kendi raporu); boyut: bayt (toplu indirmenin sınırı). null: saklama
+      süresi dolduğu için PDF silindi (387 — imzalı sürümün dosyası yalnız saklama silmesiyle gider, 0073) */
+  dosya: string | null; boyut: number;
 }
 /** kriter: kusurun ölçütü (metnin başı; 0036 — eski kayıtta null) */
 export interface MusteriUygunsuzlugu { id: string; raporId: string; kaynak: string; kriter: string | null; metin: string; agir: boolean; tarih: string | null; acik: boolean }
@@ -47,7 +48,8 @@ export async function musteriRaporlari(db: Sorgulayici, s: { id?: string } = {})
     id: x.rapor_id, no: x.no, revizyon: x.revizyon, yerine: yerine(x.no, x.revizyon),
     ekipmanId: x.ekipman_id, ekipmanKod: ek.get(x.ekipman_id)?.kod ?? "—", ekipmanPasif: ek.get(x.ekipman_id)?.pasif ?? false, turAd: tur.get(x.tur_id) ?? "—",
     tesisId: x.tesis_id, tesis: tesis.get(x.tesis_id) ?? "—",
-    kontrol: x.kontrol_tarihi, sonraki: x.sonraki, sonuc: x.sonuc, imzalandi: x.imzalandi.toISOString(), imzaGunu: x.imza_gunu, dosya: x.imzali_dosya,
+    kontrol: x.kontrol_tarihi, sonraki: x.sonraki, sonuc: x.sonuc, imzalandi: x.imzalandi.toISOString(), imzaGunu: x.imza_gunu,
+    dosya: x.boyut === null ? null : x.imzali_dosya,
     boyut: Number(x.boyut ?? 0),
   }));
 }
@@ -92,7 +94,7 @@ export async function musteriUygunsuzluklari(db: Sorgulayici): Promise<MusteriUy
   return l.map((x) => {
     const e = ek.get(x.ekipman_id);
     return {
-      id: x.id, raporId: x.rapor_id, raporNo: x.surum_no ?? son.get(x.rapor_id)?.no ?? "—", raporDosya: son.get(x.rapor_id)?.dosya ?? null,
+      id: x.id, raporId: x.rapor_id, raporNo: x.surum_no ?? son.get(x.rapor_id)?.no ?? "—", raporDosya: son.get(x.rapor_id)?.boyut == null ? null : son.get(x.rapor_id)!.dosya,
       raporBoyut: Number(son.get(x.rapor_id)?.boyut ?? 0), ekipmanKod: e?.kod ?? "—", turAd: e ? tur.get(e.turId) ?? "—" : "—",
       tesisId: x.tesis_id, tesis: tesis.get(x.tesis_id) ?? "—", kriter: x.kriter, metin: x.metin, agir: x.agir, tarih: x.tarih, acik: x.kapanis === null,
       giderildi: x.kapanis === "giderildi" ? x.kapatan_tarih : null,

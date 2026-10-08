@@ -1,6 +1,7 @@
 /* RAPOR ÖN İZLEME (maket rapor.html "Ön izle", reisim 2026-09-28: "en sağ üstte ön izleme tuşu olmalı PDF çıktısını ön izleyebilmeliyim"):
    raporun belgesi — kesin PDF'le aynı çiziciden (src/belge). Görme yetkisi sunucuda (raporBelgesiVerisi: Raporlar düzeyi); göremeyene "bulunamadı".
-   İmzasızdır; muayene uzmanının son imzasıyla geçerli olur. Tamamlanan raporda "PDF indir" yerine imzalı PDF (315–317 incelemesi). */
+   İmzasızdır; muayene uzmanının son imzasıyla geçerli olur. Tamamlanan raporda "PDF indir" yerine imzalı PDF (315–317 incelemesi); saklama
+   süresi dolup silindiyse PDF yok (387). */
 import "../../../../../belge/belge.css";
 import type { Metadata } from "next";
 import { notFound } from "next/navigation";
@@ -27,12 +28,14 @@ export default async function Sayfa({ params }: { params: Promise<{ id: string }
   return (
     <>
       <Kirinti ogeler={[["Planlar", "/planlar"], [v.plan.no, `/planlar/${v.plan.id}`], [v.no, `/raporlar/${v.id}`], ["Ön izleme"]]} />
-      <NesneBasi baslik={`${v.no} · ön izleme`} altIkon="file-text" alt="Kesin PDF bu belgeyle aynı çiziciden üretilir."
+      <NesneBasi baslik={`${v.no} · ön izleme`} altIkon="file-text"
+        alt={v.imzaliSilindi ? "Saklama süresi dolduğu için imzalı PDF silindi." : "Kesin PDF bu belgeyle aynı çiziciden üretilir."}
         tuslar={<>
           <TusBaglanti ikon="arrow-left" href={`/raporlar/${v.id}`}>Rapora dön</TusBaglanti>
           {/* PDF indir (reisim 2026-09-28: "ön izle halinde PDF halini indirebilmeliyim"): imzasız, kesin PDF motoruyla; düz bağlantı (indirme) */}
           {v.imzaliDosya
             ? <DosyaAcTusu dosyaId={v.imzaliDosya} ikon="file-check">İmzalı PDF</DosyaAcTusu>
+            : v.imzaliSilindi ? null
             : <a className={tusSinifi("birincil")} href={`/raporlar/${v.id}/pdf`} download><Ikon ad="download" kucuk />PDF indir</a>}
         </>} />
       <div className="rb-onizleme">{raporBelgesi(v.belge)}</div>

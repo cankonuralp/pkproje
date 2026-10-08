@@ -243,7 +243,8 @@ export interface SahaRaporu {
   revize: { bekleyen: { id: string; zaman: string; gerekce: string; surum: number } | null; red: { kim: string; zaman: string; gerekce: string | null } | null; iste: boolean } | null;
   /** son imza (317): yazanın onaylanmış raporunda imzasız kesin PDF (hazırlandıysa) · tamamlanan raporda imzalı PDF */
   imza: { hazir: boolean; pdf: string | null } | null;
-  imzali: { dosya: string; zaman: string; no: string } | null;
+  /** tamamlanan raporun imzalı sürümü; dosya null = saklama süresi dolduğu için PDF silindi (387; silindi: o an) */
+  imzali: { dosya: string | null; zaman: string; no: string; silindi: string | null } | null;
   izin: { duzenle: boolean; sil: boolean; kopyala: boolean };
   /** fotoğraftan okuma (351): düzenleyebilene, firmada yapay zekâ açık ve anahtar girilmişse */
   yz: boolean;
@@ -681,6 +682,8 @@ export interface RaporBelgesiSayfasi {
   id: string; no: string; plan: { id: string; no: string }; belge: BelgeVerisi;
   /** tamamlanan raporda imzalı PDF (ön izleme onu indirir; imzasız PDF basılmaz — sahte "imzalı" görünmesin) */
   imzaliDosya: string | null;
+  /** imzalı PDF saklama süresi dolduğu için silindiyse o an (387) — imzasız kopya da basılmaz */
+  imzaliSilindi: string | null;
 }
 /** raporu görebilene belgenin verisi: raporun kendi kayıtları + açıldığı format sürümü; fotoğraflar raporun kendi dosyalarından okunup veri
     adresi olarak gömülür (yalnız JPEG / PNG — sunucuda denetlenmiş türler). Göremeyene null. */
@@ -713,6 +716,7 @@ export async function raporBelgesiVerisi(db: Sorgulayici, depo: Depo, kim: Kisi,
   const imzali = r.durum === "imzali" ? await imzaliSurum(db, r.id, r.revizyon) : null;
   return {
     id: r.id, no: gorunenNo(r.no, r.revizyon), plan: { id: r.plan_id, no: plan?.no ?? "—" }, imzaliDosya: imzali?.dosya ?? null,
+    imzaliSilindi: imzali?.silindi ?? null,
     belge: {
       /* 334: başlıkta ticari ad, adres, akreditasyon no ve logo (Firma ayarları › Firma bilgileri) */
       firma: await firmaBelgeKunyesi(db, depo),
@@ -741,10 +745,12 @@ async function bekleyenIstek(db: Sorgulayici, raporId: string, revizyon: number)
   return (await db.sorgu<{ id: string; pdf_dosya: string; pdf_sha256: string; surum: number; kopya: IstekKopyasi }>(
     "SELECT id::text, pdf_dosya::text, pdf_sha256, surum, kopya FROM imza_istegi WHERE rapor_id = $1 AND revizyon = $2 AND durum = 'bekliyor'", [raporId, revizyon])).rows[0] ?? null;
 }
+/** imzalı sürüm; PDF'i saklama süresi dolduğu için silindiyse (387, 0073 saklama_silme) dosya null + silinme anı */
 async function imzaliSurum(db: Sorgulayici, raporId: string, revizyon: number) {
-  const x = (await db.sorgu<{ dosya: string; zaman: Date; no: string; yontem: string }>(
-    "SELECT imzali_dosya::text AS dosya, imzalandi AS zaman, no, imza_yontem AS yontem FROM rapor_surumu WHERE rapor_id = $1 AND revizyon = $2", [raporId, revizyon])).rows[0];
-  return x ? { dosya: x.dosya, zaman: x.zaman.toISOString(), no: x.no, yontem: x.yontem } : null;
+  const x = (await db.sorgu<{ dosya: string; zaman: Date; no: string; yontem: string; silindi: Date | null }>(
+    `SELECT s.imzali_dosya::text AS dosya, s.imzalandi AS zaman, s.no, s.imza_yontem AS yontem, k.silindi
+     FROM rapor_surumu s LEFT JOIN saklama_silme k ON k.firma_id = s.firma_id AND k.surum_id = s.id WHERE s.rapor_id = $1 AND s.revizyon = $2`, [raporId, revizyon])).rows[0];
+  return x ? { dosya: x.silindi ? null : x.dosya, zaman: x.zaman.toISOString(), no: x.no, yontem: x.yontem, silindi: x.silindi?.toISOString() ?? null } : null;
 }
 const IMZA_GECERSIZ = "Yüklenen PDF bu raporun imzaya hazırlanan PDF'i değil ya da imza taşımıyor.";
 

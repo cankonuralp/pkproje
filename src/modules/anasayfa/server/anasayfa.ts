@@ -141,12 +141,13 @@ export async function anaSayfa(db: Sorgulayici, kim: Kisi): Promise<AnaSayfa> {
     const acik = planlar.filter(acikMi), bugunku = acik.filter((p) => p.baslangic === bugun);
     const o = await onayListeleri(db, kim), tumu = o?.tumu ?? [];
     const kal = uyarilar.filter((u) => u.tur === "kal").length, egt = uyarilar.filter((u) => u.tur === "egt").length, arac = uyarilar.filter((u) => u.tur === "arac").length;
+    const sak = uyarilar.filter((u) => u.tur === "sak").length;
     const eksik = ((await personelListesi(db, kim)) ?? []).filter((p) => p.durum === "etkin" && eksikBilgi(p).length);
     bolumler.push({ rol: "firma_yoneticisi", yuzler: [
       { ikon: "calendar-check", ad: "Açık plan", sayi: acik.length, href: "/planlar" },
       { ikon: "badge-check", ad: "Onayda rapor", sayi: tumu.filter((x) => x.durum === "onayda").length, href: "/onaylar" },
       { ikon: "file-signature", ad: "Muayene uzmanı imzası", sayi: tumu.filter((x) => x.durum === "onaylandi").length, href: "/raporlar", not: "imza bekliyor" },
-      { ikon: "alarm-clock", ad: "Uyarı", sayi: uyarilar.length, href: "/uyarilar", not: `${kal} kalibrasyon · ${egt} eğitim tekrarı · ${arac} araç belgesi`, uyari: uyarilar.length > 0 },
+      { ikon: "alarm-clock", ad: "Uyarı", sayi: uyarilar.length, href: "/uyarilar", not: `${kal} kalibrasyon · ${egt} eğitim tekrarı · ${arac} araç belgesi${sak ? ` · ${sak} saklama süresi` : ""}`, uyari: uyarilar.length > 0 },
       { ikon: "users", ad: "Bilgisi eksik personel", sayi: eksik.length, href: "/personel", not: eksik.length ? eksik.map((p) => p.ad).join(", ") : "yok", uyari: eksik.length > 0 },
     ], liste: { tur: "plan", baslik: "Bugün başlayan planlar", kayitlar: bugunku.map(planSatiri), bos: "Bugün başlayan plan yok.", tumu: ["Planlar", "/planlar"] } });
   }

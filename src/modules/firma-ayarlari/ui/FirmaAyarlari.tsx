@@ -3,6 +3,7 @@
    ekranda solda bölüm listesi, bölümler kart, iki sütunlu yerleşim (sabit giderler tam genişlik); telefonda tek sütun. Değişiklik bölümün
    Kaydet tuşuyla kaydedilir; geçersiz değer kaydedilmez, alanın altında söylenir. Dosyalar (logo, ön bilgilendirme formu, bordro formatı)
    seçilince hemen yüklenir; kaldırmak önce sorulur. "Gör" düzeyinde salt okunur. Karar ve doğrulama sunucuda (server/ayarlar.ts). */
+import Link from "next/link";
 import { useRouter } from "next/navigation";
 import { useRef, useState, useTransition, type ReactNode } from "react";
 import { useBildir } from "../../../components/bildirim/Bildirim";
@@ -186,7 +187,10 @@ function Saklama({ v }: { v: Veri }) {
         <SecimAlani id={ID.yil} ad="Saklama süresi" deger={s.d.yil} kapali={!v.yaz} gecersiz={!!s.h.yil} tanim={s.h.yil ? ipucuId(ID.yil) : undefined}
           secenekler={SAKLAMA_YIL.map((y) => [String(y), `${y} yıl${y === 5 ? " (yasal en az)" : ""}`] as const)} degistir={(x) => s.setD({ yil: x })} />
       </Alan>
-      <p className={stil.ipucu}>Süre dolunca imzalı rapor PDF&apos;leri ve aylık arşiv yedekleri deponuzdan silinir; silinecekler 30 gün önce size listelenir.</p>
+      <p className={stil.ipucu}>Süre dolunca imzalı rapor PDF&apos;leri ve aylık arşiv yedekleri deponuzdan silinir; silinecekler 30 gün önce size listelenir.
+        Süreyi kısaltırsanız yeni süre 30 gün sonra işler (silinecekler önce listelenir).</p>
+      {/* 387: silinecekler listesi yalnız firma yöneticisine (Firma ayarları "yaz") */}
+      {v.yaz && <p className={stil.ipucu}><Link href="/firma-ayarlari/saklama">Saklama süresi dolacak raporlar</Link></p>}
     </Kart>
   );
 }

@@ -2355,6 +2355,19 @@ revizyon, alan kopyalama, hafif kusur devri, meslek eşleşme denetimi).
 - Emsal ürünler: https://opwire.app/iso-17020-periyodik-kontrol-yazilimi/ · https://17020muayene.vidco.com.tr/ · https://akuple.com/asansor-kontrol-yazilimi/ · https://ensyazilim.com/
 
 ## 11 · Değişiklik günlüğü
+- 2026-10-08 (387): **Saklama süresi işi** (KOD-GECIS ENGEL 11, ARKA-UC §7 "Arşiv / silme (5 yıl, firma seçimi), 30 gün önce liste"; reisim
+  2026-10-03 *"depoda 5 sene sonra silcek şekilde kodla"*). İmzalı raporun PDF'i (ve imzaya hazırlanan PDF'i) saklama süresi dolunca gece işiyle
+  firmanın deposundan silinir; raporun kaydı (künye, içerik, uygunsuzluklar) kalır, ekranlar "saklama süresi dolduğu için PDF silindi" der
+  (rapor ekranı, ön izleme, müşteri paneli; imzasız kopya da basılmaz, toplu ZIP'e girmez). Süre Firma ayarları › Rapor saklama süresi (yoksa 5;
+  veritabanında her durumda 5–20 yıl); süre dolan an = imza + süre — firma süreyi değiştirdiyse en erken değişiklikten 30 gün sonra (kısaltınca
+  bile her silinecek rapor 30 gün önce listede görünür; ayarın değişme zamanını veritabanı damgalar). **Liste:** Firma ayarları › Saklama süresi
+  dolacak raporlar (yalnız firma yöneticisi; rapor, müşteri / tesis, imza günü, süre dolan gün, kalan, PDF indir) ve Uyarılar'da süre dolan gün
+  başına "n raporun PDF'i" (yalnız firma yöneticisine; Ana sayfa uyarı yüzünde sayı). **Koruma veritabanında:** imzalı sürümün PDF'i çöpe
+  alınamaz, süresi dolmadan hiçbir yoldan (süper kullanıcı dahil) silinemez; silme yalnız saklama_sil (firma işleminde, firma süzgeçli, süre
+  kendi içinde denetlenir), kayıt saklama_silme'de. Gece işi /api/is/gece'de çöp temizliğinden sonra (ayrı iş kaydı "saklama_silme"); iş çatısı
+  ortak (src/server/is/firmalar.ts). Aylık arşiv yedeği henüz yok (firmanın deposu K7) — gelince aynı süreyle. Göç 0073. Kilit saklama.test
+  (gerçek PostgreSQL, iki firma); olumsuz kanıt saklama.bozan (7 bozma); e2e saklama (üç genişlik: Uyarılar → liste → rapor; denetçi yetkisiz),
+  api (gece ucunda "saklama").
 - 2026-10-08 (386): **Deneme yayını güncellendi (376–385).** CI 5152a1c yeşil (tip · lint · test · olumsuz kanıt · derleme · uçtan uca üç genişlik);
   Supabase'e göç 0069–0072 sırayla uygulandı (her biri `goc` kaydıyla, özet 5152a1c'deki dosyadan; 73 göç), işlevler yalnız uygulama rolüne açık,
   API rolleri kapalı, yz_sohbet RLS + FORCE. main = 5152a1c, Vercel yayında. Doğrulama: `node tools/duman.mjs` 9/9 (sağlıkta yeni "isler" dahil) ·

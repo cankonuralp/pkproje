@@ -380,10 +380,11 @@ test("imzalı PDF: önek ve imza sözlüğü şart; tamamlanınca imzalı sürü
   /* rapor ekranı: tamamlandı, imzalı PDF; içerik değişmez */
   const v = (await a(FA.den, (db) => sahaRaporu(db, FA.den, h1)))!;
   assert.deepEqual([v.durum, v.imza, !!v.imzali?.dosya], ["imzali", null, true]);
-  const indir = (k: Kisi) => a(k, (db) => dosyaIndirilebilir(db, k, v.imzali!.dosya, DOSYA_ERISIMI));
+  const pdf = v.imzali!.dosya!;   // 387: null yalnız saklama süresi dolup silinince
+  const indir = (k: Kisi) => a(k, (db) => dosyaIndirilebilir(db, k, pdf, DOSYA_ERISIMI));
   assert.ok(await indir(FA.den)); assert.ok(await indir(FA.mek)); assert.ok(await indir(FA.yon));
   assert.equal(await indir(FA.elk), null); assert.equal(await indir(FA.muh), null);
-  assert.equal(await b(FB.den, (db) => dosyaIndirilebilir(db, FB.den, v.imzali!.dosya, DOSYA_ERISIMI)), null);
+  assert.equal(await b(FB.den, (db) => dosyaIndirilebilir(db, FB.den, pdf, DOSYA_ERISIMI)), null);
   assert.equal((await yukle(FA.den, h1, (await satir(h1)).surum, imzala(ham))).durum, "red", "tamamlanan rapor yeniden imzalanmaz");
 });
 

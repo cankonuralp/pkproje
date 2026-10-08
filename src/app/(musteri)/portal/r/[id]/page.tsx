@@ -34,12 +34,14 @@ export default async function Sayfa({ params }: { params: Promise<{ id: string }
       <Kirinti ogeler={[["Raporlarınız", "/portal"], [r.no]]} />
       <NesneBasi baslik={r.no} rozet={<SonucYazisi sonuc={r.sonuc} />} altIkon="wrench"
         alt={<><Kod>{r.ekipmanKod}</Kod> · {r.turAd} · {r.tesis}{r.kontrol ? ` · kontrol ${tarihNo(r.kontrol)}` : ""}</>}
-        tuslar={<>
+        tuslar={r.dosya ? <>
           <DosyaAcTusu dosyaId={r.dosya} ikon="eye">PDF&apos;i aç</DosyaAcTusu>
           <DosyaAcTusu dosyaId={r.dosya} ikon="download" indir>PDF indir</DosyaAcTusu>
-        </>} />
-      {(r.yerine || acik.length > 0) && (
+        </> : undefined} />
+      {(r.yerine || acik.length > 0 || !r.dosya) && (
         <SeritKap>
+          {/* 387: saklama süresi dolunca imzalı PDF firmanın deposundan silinir; rapor bilgisi kalır */}
+          {!r.dosya && <Serit tur="bilgi" ikon="archive">Bu raporun PDF&apos;i saklama süresi dolduğu için silindi.</Serit>}
           {r.yerine && <Serit tur="bilgi" ikon="file-pen-line">Bu rapor {r.no}, {r.yerine} raporunun yerine geçer.</Serit>}
           {acik.length > 0 && <Serit tur="uyari" ikon="triangle-alert">Açık uygunsuzluk: {acik.length}. Ağır kusurlu ekipman giderilene kadar kullanılamaz; giderilince ikinci kontrol istenir.</Serit>}
         </SeritKap>

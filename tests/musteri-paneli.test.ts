@@ -258,9 +258,12 @@ test("İKİNCİ KATMAN (09-E5): müşteri rolü yalnız kendi müşterisinin, ke
   assert.equal(await m(FA.m2, null, (db) => panelRaporu(db, r1)), null, "başka müşterinin raporu yok sayılır");
   const v = (await m(FA.m1, null, (db) => panelRaporu(db, r1)))!;
   assert.match(v.r.no, /^DA-/);
-  assert.ok(await m(FA.m1, null, (db) => musteriDosyasi(db, v.r.dosya)), "kendi imzalı PDF'i");
-  assert.equal(await m(FA.m2, null, (db) => musteriDosyasi(db, v.r.dosya)), null, "başkasının imzalı PDF'i");
-  assert.equal(await m(FA.m1, [FA.t2], (db) => musteriDosyasi(db, v.r.dosya)), null, "kapsam dışı tesisin PDF'i");
+  /* 387: dosya null yalnız saklama süresi dolup PDF silinince — burada var */
+  const pdf = v.r.dosya;
+  assert.ok(pdf, "imzalı PDF var");
+  assert.ok(await m(FA.m1, null, (db) => musteriDosyasi(db, pdf)), "kendi imzalı PDF'i");
+  assert.equal(await m(FA.m2, null, (db) => musteriDosyasi(db, pdf)), null, "başkasının imzalı PDF'i");
+  assert.equal(await m(FA.m1, [FA.t2], (db) => musteriDosyasi(db, pdf)), null, "kapsam dışı tesisin PDF'i");
   /* ham SQL müşteri rolünde: panel dışı tablo yok, yazma yok, satırlar süzülü */
   for (const t of ["rapor", "hesap", "musteri_hesap", "musteri_oturum", "personel", "imza_istegi", "denetim_izi", "plan_ekip"]) {
     await assert.rejects(m(FA.m1, null, (db) => db.sorgu(`SELECT 1 FROM ${t} LIMIT 1`)), /permission denied/, t);
@@ -282,7 +285,7 @@ test("İKİNCİ KATMAN (09-E5): müşteri rolü yalnız kendi müşterisinin, ke
   const yeni = (await m(FA.m1, null, (db) => panelRaporu(db, r1)))!.r;
   assert.deepEqual([yeni.revizyon, yeni.no.endsWith("-R1"), yeni.yerine], [1, true, v.r.no], "yalnız son sürüm, yerine geçtiği numarayla");
   assert.equal((await m(FA.m1, null, (db) => panelRaporlari(db))).raporlar.filter((x) => x.id === r1).length, 1, "listede tek satır");
-  assert.equal(await m(FA.m1, null, (db) => musteriDosyasi(db, v.r.dosya)), null, "eski sürümün PDF'i artık inmez");
+  assert.equal(await m(FA.m1, null, (db) => musteriDosyasi(db, pdf)), null, "eski sürümün PDF'i artık inmez");
   /* geçersiz bağlam: işlem açılmaz */
   await assert.rejects(m("kotu", null, async () => 1), /Geçersiz müşteri/);
   await assert.rejects(m(FA.m1, [], async () => 1), /Geçersiz müşteri/);

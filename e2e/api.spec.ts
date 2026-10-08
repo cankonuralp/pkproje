@@ -32,8 +32,9 @@ test("sağlık ucu: bütün denetimler doğru, firma / kişi bilgisi yok", async
   expect(j).toEqual({ durum: "tamam", surum: "yerel", denetimler: { veritabani: true, goc_guncel: true, rls: true, api_kapali: true, uygulama_kisitli: true, isler: true } });
 });
 
-/* 378 (K5, 09-A5): gece işi ucu yalnız zamanlayıcının sırrıyla; sırsız / yanlış sırla 401 ve iş koşmaz; doğru sırla çöp temizliği koşar, yanıt
-   yalnız sayılar (firma / kişi bilgisi yok); ikinci koşu da "tamam" (iş bitince kilit kalkar). Uçtan uca: yol, ara katman, göç 0069, veritabanı deposu */
+/* 378 (K5, 09-A5): gece işi ucu yalnız zamanlayıcının sırrıyla; sırsız / yanlış sırla 401 ve iş koşmaz; doğru sırla çöp temizliği ve saklama
+   süresi işi (387) koşar, yanıt yalnız sayılar (firma / kişi bilgisi yok); ikinci koşu da "tamam" (iş bitince kilit kalkar). Uçtan uca: yol, ara
+   katman, göç 0069 / 0073, veritabanı deposu */
 test("gece işi ucu: yalnız sırla; sayılar döner", async ({ request }) => {
   expect((await request.get("/api/is/gece")).status()).toBe(401);
   expect((await request.get("/api/is/gece", { headers: { Authorization: "Bearer yanlis-sir-yanlis-sir-yanlis-sir-00" } })).status()).toBe(401);
@@ -43,9 +44,13 @@ test("gece işi ucu: yalnız sırla; sayılar döner", async ({ request }) => {
     expect(r.status()).toBe(200);
     expect(r.headers()["cache-control"]).toBe("no-store");
     const j = await r.json() as Record<string, unknown>;
-    expect(Object.keys(j).sort()).toEqual(["bagli", "bayt", "durum", "firma", "hatali_firma", "kalan", "oksuz", "silinen"]);
+    /* 2026-10-08 (387): saklama süresi işi aynı uçta, sayıları "saklama"da (süresi yaklaşan tohum raporu silinmez — 30 gün kala listede) */
+    expect(Object.keys(j).sort()).toEqual(["bagli", "bayt", "durum", "firma", "hatali_firma", "kalan", "oksuz", "saklama", "silinen"]);
     expect(j.durum).toBe("tamam");
     expect(j.hatali_firma).toBe(0);
     expect(j.firma).toBeGreaterThanOrEqual(2);
+    const s = j.saklama as Record<string, unknown>;
+    expect(Object.keys(s).sort()).toEqual(["bayt", "dosya", "durum", "firma", "hatali_firma", "kalan", "silinen"]);
+    expect([s.durum, s.hatali_firma, s.silinen]).toEqual(["tamam", 0, 0]);
   }
 });

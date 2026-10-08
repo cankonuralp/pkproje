@@ -153,6 +153,28 @@ process.env.PROBATA_SIR_ANAHTARI = sirAnahtari;
   const v = (await kiraciIcinde(havuz, yzFirma, (db) => planIci(db, den, plan), { hesapId: den.id }))!;
   kesin(await kiraciIcinde(havuz, yzFirma, (db) => planKabul(db, den, plan, v.surum, true), { hesapId: den.id }), "plan kabul");
   for (const id of Object.values(t.ekp)) kesin(await kiraciIcinde(havuz, yzFirma, (db) => raporOlustur(db, den, plan, id), { hesapId: den.id }), "rapor");
+  /* saklama süresi (387): süresi 10 gün sonra dolacak imzalı rapor — AYRI tesiste (öteki YZ testlerinin planına dokunmaz); Uyarılar'da ve Firma
+     ayarları › Saklama süresi dolacak raporlar'da görünür, gece işi silmez. Süper kullanıcıyla, tetiksiz (imza anı geçmişte), geçici veritabanı */
+  const ss = kume.sahipIstemci();
+  await ss.connect();
+  try {
+    await ss.query("SET session_replication_role = replica");
+    const q = async (sql: string, p: unknown[]) => (await ss.query<{ id: string }>(sql, p)).rows[0].id;
+    const musteri = await q("SELECT musteri_id::text AS id FROM tesis WHERE id = $1", [t.tesis]);
+    const tesis = await q("INSERT INTO tesis (firma_id, musteri_id, ad) VALUES ($1, $2, $3) RETURNING id::text", [yzFirma, musteri, E2E_YZ.saklama.tesis]);
+    const e = await q("INSERT INTO ekipman (firma_id, tesis_id, tur_id, kod, ekleyen) VALUES ($1, $2, $3, $4, 'Deneme') RETURNING id::text",
+      [yzFirma, tesis, t.tur, E2E_YZ.saklama.ekipman]);
+    const format = await q("SELECT id::text FROM rapor_format WHERE firma_id = $1 AND tur_id = $2 AND durum = 'yayinda'", [yzFirma, t.tur]);
+    const pl = await q(`INSERT INTO plan (firma_id, no, tesis_id, baslangic, bitis, durum, firma_adi, acan, kabul, kabul_eden, beyan, kontrol_tamam, bitti)
+      VALUES ($1, $2, $3, current_date - 1815, current_date - 1815, 'tamamlandi', 'YZ Deneme', 'Deneme', now(), 'Deneme Denetçi', 'Deneme tarafsızlık beyanı metni.',
+      now(), now()) RETURNING id::text`, [yzFirma, E2E_YZ.saklama.plan, tesis]);
+    const r = await q(`INSERT INTO rapor (firma_id, no, plan_id, ekipman_id, tur_id, format_id, personel_id, durum, kunye, rapor_tarihi, sonuc, onay)
+      VALUES ($1, $2, $3, $4, $5, $6, $7, 'imzali', '{}', current_date - 1815, 'uygun', now()) RETURNING id::text`, [yzFirma, E2E_YZ.saklama.rapor, pl, e, t.tur, format, t.den.p]);
+    await ss.query(`INSERT INTO rapor_surumu (firma_id, rapor_id, revizyon, no, plan_id, ekipman_id, tur_id, format_id, tesis_id, musteri_id, imzasiz_dosya, imzali_dosya,
+      imzali_sha256, imza_yontem, imzalandi, sonuc, kontrol_tarihi, kunye, personel, icerik) VALUES ($1, $2, 0, $3, $4, $5, $6, $7, $8, $9, gen_random_uuid(), gen_random_uuid(),
+      repeat('0', 64), 'dosya', now() - interval '5 years' + interval '10 days', 'uygun', current_date - 1815, '{}', '{}', '{}')`,
+      [yzFirma, r, E2E_YZ.saklama.rapor, pl, e, t.tur, format, tesis, musteri]);
+  } finally { await ss.end(); }
 }
 await havuz.end();
 

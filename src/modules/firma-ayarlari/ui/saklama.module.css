@@ -1,0 +1,8 @@
+/* Saklama süresi dolacak raporlar (387; Uyarılar listesinin biçimi — uyarilar.module.css) — ⛔ çıplak renk yok (2.9) */
+.ad {
+  color: var(--onay-yazi); font-weight: 600; text-decoration: underline; text-decoration-color: transparent; text-underline-offset: 3px;
+}
+.ad:hover { text-decoration-color: currentColor; }
+.sayi { font-variant-numeric: tabular-nums; }
+.uyari { color: var(--uyari-yazi); font-weight: 600; }
+.hata { color: var(--hata-yazi); font-weight: 600; }

@@ -37,6 +37,8 @@ export const E2E_YZ = {
   anahtar: "sk-ant-e2e-deneme-anahtar-0001",
   tesis: "YZ Tesisi",
   ekipman: { masaustu: "EP-0301", tablet: "EP-0302", telefon: "EP-0303" } as Record<string, string>,
+  /* saklama süresi (387): ayrı tesiste, süresi 10 gün sonra dolacak imzalı rapor (Uyarılar + Firma ayarları › Saklama süresi dolacak raporlar) */
+  saklama: { tesis: "YZ Arşiv Tesisi", ekipman: "EP-0950", plan: "P-0121-950", rapor: "YZ-0121-950-00001" },
 } as const;
 /* gece işi (378): uçtan uca sunucunun zamanlayıcı sırrı — UYDURMA, yalnız geçici test sunucusunda (yayında Vercel ortam değişkeni CRON_SECRET) */
 export const E2E_ZAMANLI_SIR = "e2e-zamanli-is-sirri-uydurma-0000000001";

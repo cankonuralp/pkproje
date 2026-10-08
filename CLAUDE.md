@@ -130,6 +130,8 @@ pkproje/
                             denetimi imza-pdf.ts (saf, beyaz liste: ek ayrıştırılır, trailer kökü aynı, özgün nesneden yalnız katalog / sayfa /Annots
                             değişir, yeni imza sözlüğü şart — 0028 ve 318 incelemeleri) · revize isteği server/revize.ts (318, göç 0029
                             rapor_revize_istegi; ui/RevizeIstePenceresi.tsx; 0031: imza günü ≥ muayene tarihi, eskimiş sürüm uygunsuzluk kapatmaz)
+                            · SAKLAMA SÜRESİ (387, göç 0073; ENGEL 11): server/saklama.ts (gece işi saklamaIsi — süresi dolan imzalı sürümün PDF'leri
+                            saklama_sil ile, liste, Uyarılar günleri); okuyucular uyari-baglanti.ts, ayar-baglanti.ts; koruma veritabanında (dosya_saklama_koru)
   src/modules/onaylar/      ONAYLAR (2026-10-05, 314; modül 15): kuyruk, onay ekranı (gözden geçirme), Onayla / Geri gönder / Onayı geri al /
                             Durumu değiştir (göç 0026: geçişler, onay damgası, Yeni'ye gerekçe ≥ 10 veritabanında); rapora raporlar/server/onay-baglanti.ts'ten
                             · İmzamı bekleyen raporlar /onaylar/imza (318, C5: denetçinin Onaylar'ı yalnız bu; kuyruk ve onay ekranı yöneticinin)
@@ -171,6 +173,7 @@ pkproje/
   src/modules/firma-ayarlari/ FİRMA AYARLARI (2026-10-06, 334; modül 22): sema.ts (bölüm şemaları, seçenekler) · server/ayarlar.ts (ekran verisi, bölüm
                             kaydet, firma kodu — çekirdek firmaKoduYaz, göç 0045; logo / ön bilgilendirme / bordro formatı dosyaları) · ui/FirmaAyarlari.tsx
                             (bölüm kartı + taslak Kaydet / Vazgeç) · belge başlığı künyesi src/server/ayar/ayar.ts firmaBelgeKunyesi (ticari ad, adres, akr., logo)
+                            · 387 Saklama süresi dolacak raporlar /firma-ayarlari/saklama (server/saklama.ts, ui/SaklamaListesi.tsx; yalnız firma yöneticisi)
                             · TOPLU İÇE AKTARMA (337, göç 0047 ice_aktarim + ice_aktarim_geri_al): ice-aktar.ts (saf: türler, şablon, satır denetimi) ·
                             server/ice-aktar.ts (denetle, içe aktar — tek işlem, geri al) · ui/IceAktarma.tsx · bağlantılar <modül>/server/ice-aktar-baglanti.ts
                             (musteriler, ekipman, olcum-cihazlari — ilk_bitis, personel, araclar)
@@ -206,8 +209,9 @@ pkproje/
                             ayırma: yzAyir satır kilidiyle, yzOkumaYaz, yzAyirmaBirak; yzAyKullanimi firma ayarlarına) · modülde raporlar/server/foto-oku.ts
                             (hazırla + ayır → çağrı → kullanım → öneri; pano fotoğrafı rapora) + foto-eslestir.ts (saf: okunan → boş satır) + ui/FotoOkuma.tsx
                             · etiket.ts (385: etiket plakası — marka / model / seri / imal; istek + cevap süzme, saf) → raporlar/server/etiket-oku.ts + ui/EtiketOkuma.tsx
-  src/server/is/            ARKA PLAN İŞLERİ (378; K5): gece.ts (geceIsleri — firma başına kiracı işlemi, is_calisma kaydı, süre sınırı) ·
-                            yetki.ts (zamanliYetkili: "Bearer <CRON_SECRET>", sır ≥ 32) · uç src/app/api/is/gece (Vercel Cron, vercel.json crons) ·
+  src/server/is/            ARKA PLAN İŞLERİ (378; K5): firmalar.ts (firmalardaKos — ortak çatı: firma başına kiracı işlemi, is_calisma kaydı,
+                            süre sınırı; 387) · gece.ts (geceIsleri: çöp temizliği) · yetki.ts (zamanliYetkili: "Bearer <CRON_SECRET>", sır ≥ 32) ·
+                            uç src/app/api/is/gece (Vercel Cron, vercel.json crons; çöp + saklama süresi — raporlar/server/saklama.ts) ·
                             db/is.ts (isBasla / isBitir / geceFirmalari; göç 0069) · çöp temizliği src/server/dosya/cop.ts (30 gün, A5)
   src/server/duyuru/        DUYURULAR (379; K5): ayristir.ts (saf: İSGGM / İSGÜM / iş ekipmanları portalı HTML → başlık, tarih, Bakanlık
                             bağlantısı) · okuma.ts (duyurulariOku — üç kaynak, 10 sn / 3 MB, yönlendirme yok, is_calisma "duyuru_okuma";

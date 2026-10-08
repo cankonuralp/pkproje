@@ -17,6 +17,8 @@ export async function GET(_istek: Request, { params }: { params: Promise<{ id: s
   const v = await oturumIslemi(o, (db) => raporBelgesiVerisi(db, depo(), o, id));
   if (!v) return new Response("Bulunamadı", { status: 404, headers: DUZ });
   if (v.imzaliDosya) return new Response("Rapor imzalı; imzalı PDF rapor ekranından iner.", { status: 409, headers: DUZ });
+  /* saklama süresi dolup imzalı PDF silindiyse (387) imzasız kopyası da basılmaz */
+  if (v.imzaliSilindi) return new Response("Rapor imzalı; saklama süresi dolduğu için PDF'i silindi.", { status: 409, headers: DUZ });
   const pdf = await belgePdf(v.belge);
   const ad = `${v.no}-imzasiz.pdf`;
   return new Response(Buffer.from(pdf), { status: 200, headers: {
