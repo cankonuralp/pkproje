@@ -290,7 +290,10 @@ export function testKapisiEksikleri(paketJson: string, ciYml: string): string[] 
    `export const maxDuration = 60;` taşımalı: Vercel aynı ayarlı uçları tek işlevde toplar — biri eksikse Chromium varsayılan sayfa işlevine düşer
    (bütün sayfalar 74 MB). Ayrıca PDF basan modül eylemi (belge/pdf içe aktaran "use server" dosyası) kullanan sayfa da listede olmalı. */
 export function pdfPaketEksikleri(nextConfig: string, sayfalar: readonly { ad: string; metin: string }[]): string[] {
-  const liste = [...nextConfig.matchAll(/(?:String\.raw`([^`]+)`|"(\/[^"]*)")/g)].map((m) => (m[1] ?? m[2]).replace(/\\/g, ""))
+  /* yalnız listenin kendisi okunur (411: başka ayarlardaki adresler — 409 /favicon.ico yönlendirmesi — uç sanılıyordu) */
+  const bas = nextConfig.indexOf("outputFileTracingIncludes:"), son = bas < 0 ? -1 : nextConfig.indexOf("].map(", bas);
+  const blok = bas < 0 || son < 0 ? "" : nextConfig.slice(bas, son);
+  const liste = [...blok.matchAll(/(?:String\.raw`([^`]+)`|"(\/[^"]*)")/g)].map((m) => (m[1] ?? m[2]).replace(/\\/g, ""))
     .filter((u) => u.startsWith("/") && !u.startsWith("/./") && !u.includes("*"));
   const eksik: string[] = [];
   /* liste okunamazsa (biçim değişti) denetim boşa dönmesin */

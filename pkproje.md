@@ -2360,7 +2360,8 @@ revizyon, alan kopyalama, hafif kusur devri, meslek eşleşme denetimi).
   personel formu, saha raporu — ciddi ve kritik ihlal 0 (e2e/erisilebilirlik.spec.ts; düşerse hangi kuralın hangi öğede bozulduğunu söyler).
 - 2026-10-08 (409): **Tarayıcı simgesi** — tarayıcılar sayfanın simgesinden bağımsız /favicon.ico'yu da istiyor; canlıda 404 dönüyordu (408
   yayın denetiminde konsolda görüldü). Artık sitenin simgesine (/icon.svg) kalıcı yönlenir (next.config.ts redirects). Kilit: e2e hata
-  (/favicon.ico → 200, svg) + duman testi yeni denetim (308 → /icon.svg).
+  (/favicon.ico → 200, svg) + duman testi yeni denetim (308 → /icon.svg). Devamı: PDF paketi denetimi (352) ayar dosyasındaki her adresi
+  PDF ucu sanıyordu, yönlendirmenin iki adresini "sayfa yok" diye düşürdü — artık yalnız kendi listesini okur.
 - 2026-10-08 (408): **YAYIN — 392–407 canlıda** (bağlantısız çalışma tamamı + yönetim karekodu). Supabase 0076 (77 göç; işlev gövdeleri md5
   dosyayla aynı; uygulama rolü islem'de yalnız SELECT + INSERT; satır güvenliği açık + zorunlu; kimlik işlevi tanımlayıcı-yetkili, arama yolu
   sabit, anon yetkisiz) · main 1077980 (Vercel, /api/saglik sürüm 1077980) · duman 9/9 · /sw.js 200 · CSP worker-src 'self' · /api/islem başka
