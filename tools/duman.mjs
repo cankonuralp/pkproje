@@ -4,7 +4,7 @@
    Varsayılan: https://probata-deneme.vercel.app ve https://probata-yonetim.vercel.app (deneme yayını).
    Denetimler: sağlık ucu (veritabanı, göç güncel, RLS, Supabase API rolleri kapalı, uygulama rolü kısıtlı) · giriş sayfası + güvenlik başlıkları
    (CSP nonce'lu, HSTS, çerçeveye gömülmez, nosniff) · oturumsuz sayfa girişe yönlenir · anonim dosya isteği 403 · oturumsuz tanım dizini 403 ·
-   firma adresinde /yonetim yok · yönetim adresinde yalnız /yonetim (firma ekranı ve API 404 — önceden yükleme başlığıyla da). */
+   firma adresinde /yonetim yok · /favicon.ico simgeye yönlenir (409) · yönetim adresinde yalnız /yonetim (firma ekranı ve API 404 — önceden yükleme başlığıyla da). */
 const FIRMA = (process.argv[2] ?? "https://probata-deneme.vercel.app").replace(/\/$/, "");
 const YONETIM = (process.argv[3] ?? "https://probata-yonetim.vercel.app").replace(/\/$/, "");
 const sonuclar = [];
@@ -35,6 +35,10 @@ await denet("giriş sayfası 200 + güvenlik başlıkları", async () => {
     h("x-frame-options") !== "DENY" && "X-Frame-Options",
   ].filter(Boolean);
   return r.status === 200 && !eksik.length ? true : `HTTP ${r.status}; eksik: ${eksik.join(", ")}`;
+});
+await denet("simge: /favicon.ico sitenin simgesine yönlenir (404 değil)", async () => {
+  const r = await al(`${FIRMA}/favicon.ico`);
+  return (r.status === 308 || r.status === 301) && /\/icon\.svg$/.test(r.headers.get("location") ?? "") ? true : `HTTP ${r.status} → ${r.headers.get("location")}`;
 });
 await denet("oturumsuz sayfa girişe yönlenir", async () => {
   const r = await al(`${FIRMA}/planlar`);

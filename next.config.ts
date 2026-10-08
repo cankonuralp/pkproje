@@ -32,6 +32,8 @@ const ortak: NextConfig = {
      incelemesi), araç listesi ve araç sayfası da (Tutanağı kaydet eylemi tutanağın PDF'ini orada basar, 342), personel kartı da (zimmet formu İmzaya gönder, 344), eğitim kayıtları da (katılım formu, 345) */
   /* 352 (Vercel Functions Storage kotası): bu sayfalar ve PDF uçları `maxDuration = 60` taşır — Vercel aynı ayarlı uçları tek işlevde toplar, Chromium
      ikilisi yalnız o işlevde kalır; öteki sayfaların ortak işlevi küçülür (kilit: tests/pdf-paket.test.ts) */
+  /* 409: tarayıcılar sayfanın simgesinden bağımsız /favicon.ico'yu da ister — 404 yerine sitenin simgesine (src/app/icon.svg) yönlenir */
+  async redirects() { return [{ source: "/favicon.ico", destination: "/icon.svg", permanent: true }]; },
   serverExternalPackages: ["playwright-core", "@sparticuz/chromium"],
   outputFileTracingIncludes: Object.fromEntries([String.raw`/raporlar/\[id\]`, String.raw`/raporlar/\[id\]/pdf`, String.raw`/teklifler/\[id\]/pdf`, String.raw`/muhasebe/f/\[id\]/pdf`, String.raw`/talepler/pdf/\[tip\]/\[id\]`, "/araclar", String.raw`/araclar/\[id\]`, String.raw`/araclar/tutanak/\[id\]/pdf`,
     String.raw`/personel/\[id\]`, String.raw`/personel/\[id\]/zimmet-formu/pdf`, "/dokumanlar/egitimler", "/api/olcum/pdf"].map((u) =>

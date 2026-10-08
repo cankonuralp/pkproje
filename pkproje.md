@@ -2355,6 +2355,9 @@ revizyon, alan kopyalama, hafif kusur devri, meslek eşleşme denetimi).
 - Emsal ürünler: https://opwire.app/iso-17020-periyodik-kontrol-yazilimi/ · https://17020muayene.vidco.com.tr/ · https://akuple.com/asansor-kontrol-yazilimi/ · https://ensyazilim.com/
 
 ## 11 · Değişiklik günlüğü
+- 2026-10-08 (409): **Tarayıcı simgesi** — tarayıcılar sayfanın simgesinden bağımsız /favicon.ico'yu da istiyor; canlıda 404 dönüyordu (408
+  yayın denetiminde konsolda görüldü). Artık sitenin simgesine (/icon.svg) kalıcı yönlenir (next.config.ts redirects). Kilit: e2e hata
+  (/favicon.ico → 200, svg) + duman testi yeni denetim (308 → /icon.svg).
 - 2026-10-08 (408): **YAYIN — 392–407 canlıda** (bağlantısız çalışma tamamı + yönetim karekodu). Supabase 0076 (77 göç; işlev gövdeleri md5
   dosyayla aynı; uygulama rolü islem'de yalnız SELECT + INSERT; satır güvenliği açık + zorunlu; kimlik işlevi tanımlayıcı-yetkili, arama yolu
   sabit, anon yetkisiz) · main 1077980 (Vercel, /api/saglik sürüm 1077980) · duman 9/9 · /sw.js 200 · CSP worker-src 'self' · /api/islem başka

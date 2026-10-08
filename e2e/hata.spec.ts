@@ -18,3 +18,11 @@ test("beklenmeyen hata: yol gösteren ekran, iç ayrıntı sızmaz", async ({ pa
   await page.context().setOffline(false);
   await expect(ana.getByText("Bu sayfa açılamadı")).toBeVisible();
 });
+
+/* 409: tarayıcının kendiliğinden istediği /favicon.ico 404 değil — sitenin simgesine yönlenir */
+test("tarayıcı simgesi: /favicon.ico sitenin simgesine yönlenir", async ({ page }) => {
+  const r = await page.request.get("/favicon.ico");
+  expect(r.status()).toBe(200);
+  expect(r.url()).toMatch(/\/icon\.svg$/);
+  expect(r.headers()["content-type"] ?? "").toContain("svg");
+});
