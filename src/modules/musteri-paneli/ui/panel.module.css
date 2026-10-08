@@ -7,7 +7,8 @@
   color: var(--onay-yazi); font-weight: 600; font-variant-numeric: tabular-nums; text-decoration: underline; text-decoration-color: transparent; text-underline-offset: 3px;
 }
 .no:hover { text-decoration-color: currentColor; }
-.hucreSatir { display: inline-flex; align-items: center; flex-wrap: wrap; gap: 6px 8px; min-width: 0; }
+/* 415: inline-flex içerik kadar genişliyordu — uzun tür / konu adı kısaltılamayıp yandaki sütuna taşardı (Planlar'da 411 görüntüsünde görüldü, 414) */
+.hucreSatir { display: flex; align-items: center; flex-wrap: wrap; gap: 6px 8px; min-width: 0; }
 .sonucUygun { color: var(--onay-yazi); font-weight: 600; }
 .sonucHata { color: var(--hata-yazi); font-weight: 600; }
 .sonucYok { color: var(--yazi2); }

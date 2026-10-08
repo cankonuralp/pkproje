@@ -2355,6 +2355,9 @@ revizyon, alan kopyalama, hafif kusur devri, meslek eşleşme denetimi).
 - Emsal ürünler: https://opwire.app/iso-17020-periyodik-kontrol-yazilimi/ · https://17020muayene.vidco.com.tr/ · https://akuple.com/asansor-kontrol-yazilimi/ · https://ensyazilim.com/
 
 ## 11 · Değişiklik günlüğü
+- 2026-10-08 (415): **Aynı taşma üç listede daha** (414'ün taraması): Raporlar listesi ve müşteri panelinin rapor listesi (ekipman kodu + tür
+  adı), Uyarılar listesi (konu bağlantısı) — ikon / kod + metin satırı içerik kadar genişliyordu, uzun ad kısaltılamayıp yandaki sütuna
+  taşardı. Satır artık hücre kadar (maket .a-hucre-satir / .a-adres); sığmayan ad alt satıra iner ve "…" ile kısalır.
 - 2026-10-08 (414): **Planlar listesi tablette taşıyordu** — 411'in tablet (1080) görüntüsünde: müşteri adı adres sütununun üstüne taşıyor,
   "Görüntüle" tuşu durum rozetinin üstüne biniyordu, proje no ikiye bölünüyordu. Sebep: sütun oranları donmuş maketten alınmamıştı (işlem %8 —
   makette %17,75) ve ikon + metin satırı içerik kadar genişliyordu (metin kısaltılamıyordu). Artık maketin oranları (no 11,25 · ad 12,5 · müşteri

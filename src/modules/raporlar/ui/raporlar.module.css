@@ -141,7 +141,8 @@ button.silTus { color: var(--hata-yazi); }
 /* ölçüm cihazları (maket CIHAZ_SATIR, .a-cihaz-grup): satırda cihaz ya da "Cihaz ekle"; pencerede zimmetteki geçerli cihazlar */
 .cihazKap { display: grid; gap: 10px; min-width: 0; }
 .ustTuslar { display: flex; justify-content: flex-end; flex-wrap: wrap; gap: 8px; }
-.hucreSatir { display: inline-flex; align-items: center; flex-wrap: wrap; gap: 6px 8px; min-width: 0; }
+/* 415: inline-flex içerik kadar genişliyordu — uzun tür / konu adı kısaltılamayıp yandaki sütuna taşardı (Planlar'da 411 görüntüsünde görüldü, 414) */
+.hucreSatir { display: flex; align-items: center; flex-wrap: wrap; gap: 6px 8px; min-width: 0; }
 .eylemHucre { display: flex; justify-content: flex-end; }
 .cihazGrup { margin: 0; padding: 0; border: 0; min-width: 0; }
 .secimListesi { display: grid; gap: 4px; margin: 0; padding: 0; list-style: none; }

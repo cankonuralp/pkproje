@@ -36,7 +36,7 @@ function tanim(l: readonly Uyari[]): SuzgecTanimi<Uyari> {
 }
 const SUTUN: Sutun<Uyari>[] = [
   { k: "konu", genislik: "34%", baslik: "Uyarı", kart: "ust", sira: 1, hucre: (u) => (
-    <span className={stil.satir}><Ikon ad={UYARI_TUR[u.tur].ikon} kucuk /><span><Link className={stil.ad} href={u.href}><Kirp>{u.konu}</Kirp></Link><AltSatir>{u.alt}</AltSatir></span></span>
+    <span className={stil.satir}><Ikon ad={UYARI_TUR[u.tur].ikon} kucuk /><span className={stil.esnek}><Link className={stil.ad} href={u.href}><Kirp>{u.konu}</Kirp></Link><AltSatir>{u.alt}</AltSatir></span></span>
   ) },
   /* saklama süresi (387): kişi yok — PDF'ler firmanın deposunda */
   { k: "kisi", genislik: "20%", baslik: "Kimde / kim", kart: "govde", sira: 2, hucre: (u) => u.tur === "sak" ? <><KartEtiket>Nerede</KartEtiket><span>Firmanın deposu</span></>

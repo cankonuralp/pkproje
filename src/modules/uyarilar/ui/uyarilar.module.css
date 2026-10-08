@@ -1,5 +1,7 @@
 /* Uyarılar (maket uyarilar.html: .a-hucre-satir, .a-ad-bag, .a-uyari-metin, .a-hata-metin) — ⛔ çıplak renk yok (2.9) */
-.satir { display: inline-flex; align-items: flex-start; gap: 8px; min-width: 0; }
+/* 415: inline-flex içerik kadar genişliyordu — uzun tür / konu adı kısaltılamayıp yandaki sütuna taşardı (Planlar'da 411 görüntüsünde görüldü, 414) */
+.satir { display: flex; align-items: flex-start; gap: 8px; min-width: 0; }
+.esnek { flex: 1 1 auto; min-width: 0; }   /* maket .a-adres */
 .ad {
   color: var(--onay-yazi); font-weight: 600; text-decoration: underline; text-decoration-color: transparent; text-underline-offset: 3px;
 }
