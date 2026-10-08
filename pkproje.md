@@ -2355,6 +2355,12 @@ revizyon, alan kopyalama, hafif kusur devri, meslek eşleşme denetimi).
 - Emsal ürünler: https://opwire.app/iso-17020-periyodik-kontrol-yazilimi/ · https://17020muayene.vidco.com.tr/ · https://akuple.com/asansor-kontrol-yazilimi/ · https://ensyazilim.com/
 
 ## 11 · Değişiklik günlüğü
+- 2026-10-08 (419): **Telefonda yan menünün son maddesine basılamıyordu** (reisim: *"mobilde … chrome da iken yan bar da en aşağıya kaydırıpta
+  firma ayarları kısmına tıklayamadım"*). Sebep: çekmecenin yüksekliği 100vh — telefon tarayıcısında vh adres çubuğu GİZLİYKENki boy; çubuk
+  görünürken çekmecenin alt ~56 px'i ekran dışında kalıyor, menü en alta kaysa da son modül (Firma ayarları) o şeride düşüyordu. Artık
+  yükseklik görünen boy (100dvh; eski tarayıcı 100vh'ye düşer), menünün altında iPhone ev çubuğu payı (güvenli alan), menü kayarken arkadaki
+  sayfa kaymaz. Kilit: kalip-sayilari "çekmece görünen boyda" + bozan. Uçtan uca tarayıcıda adres çubuğu olmadığından bu hata orada
+  görünmez — kilit CSS'te.
 - 2026-10-08 (418): **Rapor belgesinin görsel karşılaştırması** (KOD-GECIS §11 "Bakanlık formatlı PDF için ekran görüntüsü karşılaştırması"; ekranlar
   411'de). Üç şablon (ZPKR01, ZPKR02, kompresör): PDF'e basılan HTML'in aynısı (aynı çizici, aynı CSS, gömülü Carlito) baskı görünümünde, A4
   genişliğinde çekilir, kayıtlı görüntüyle karşılaştırılır (e2e/belge-gorsel.spec.ts → e2e/goruntu/masaustu/belge-*.png). Veri uydurma.

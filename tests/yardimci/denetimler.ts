@@ -310,6 +310,15 @@ export function pdfPaketEksikleri(nextConfig: string, sayfalar: readonly { ad: s
   return eksik;
 }
 
+/* ── ÇEKMECE BOYU (419) ── yan menü (.cubuk) yüksekliği görünen ekran boyunda (dvh) olmalı: yalnız 100vh telefonda adres çubuğu gizliyken boydur,
+   çubuk görünürken çekmecenin altı ekran dışında kalır — reisim Chrome'da en alttaki "Firma ayarları"na basamadı. Hata yoksa null. */
+export function cekmeceBoyuHatasi(kabukCss: string): string | null {
+  const govde = /(?:^|\n)\.cubuk \{([^}]*)\}/.exec(kabukCss)?.[1];
+  if (govde === undefined) return ".cubuk kuralı bulunamadı";
+  const boylar = [...govde.matchAll(/(?:^|[;\s])height:\s*([^;]+);/g)].map((m) => m[1].trim());
+  return boylar.at(-1) === "100dvh" ? null : `.cubuk yüksekliği ${boylar.at(-1) ?? "yok"} — görünen boy (100dvh) olmalı`;
+}
+
 /* ── BAĞLANTI RENGİ (412) ── `<Link className={stil.x} href…>` / `<a className={stil.x} href…>`: x sınıfının CSS modülünde renk (color) olmalı —
    yoksa bağlantı tarayıcının mavisine düşer (411 görsel karşılaştırmasında Planlar'ın proje no'sunda görüldü; Raporlar, Onaylar, müşteri paneli
    aynıydı). Sınıfsız bağlantı temel.css'teki `:where(a)` tabanından renk alır: taban da denetlenir. */

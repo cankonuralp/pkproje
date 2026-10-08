@@ -8,7 +8,7 @@ import { MODUL_GRUPLARI } from "../../src/modules/moduller.ts";
 import {
   bantDisiDaraltma, ciftIdler, ciftSeciciler, ciftTanimliDegiskenler, daralmisSerit, degiskenDegeri, dosyalar, eksikIkonlar, girdiYaziHatalari, kalipDisiEsikler,
   hamYazma, kiraciDisiErisim, kullanilanIkonlar, maketIkonlari, maketMenusu, oku, parantezHatasi, rlsEksikTablolar, tanimsizDegiskenler, testKapisiEksikleri, tokenGovdesi, pdfPaketEksikleri,
-  swEksikleri, baglantiRengiEksikleri,
+  swEksikleri, baglantiRengiEksikleri, cekmeceBoyuHatasi,
 } from "../yardimci/denetimler.ts";
 
 const kabuk = oku("src/components/kabuk/Kabuk.module.css");
@@ -182,4 +182,10 @@ test("bağlantı rengi: renksiz sınıflı bağlantı ve silinen bağlantı taba
   assert.deepEqual(baglantiRengiEksikleri(bozuk, oku, temel), [`${liste}: .kod bağlantısında renk yok (src/modules/planlar/ui/planlar.module.css)`]);
   assert.deepEqual(baglantiRengiEksikleri(tsx, oku, temel.replace("color: var(--onay-yazi); text-underline-offset", "text-underline-offset")),
     ["temel.css: :where(a) bağlantı tabanında renk yok"]);
+});
+
+/* 419: çekmece boyu — yan menü yüksekliği yalnız 100vh'ye dönünce yakalanır (telefonda son modül ekran dışında kalıyordu) */
+test("çekmece boyu: yan menü yüksekliği 100vh'ye dönünce yakalanır", () => {
+  assert.equal(cekmeceBoyuHatasi(kabuk), null);
+  assert.equal(cekmeceBoyuHatasi(kabuk.replace("height: 100vh; height: 100dvh;", "height: 100vh;")), ".cubuk yüksekliği 100vh — görünen boy (100dvh) olmalı");
 });

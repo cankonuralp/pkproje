@@ -10,7 +10,7 @@
 import assert from "node:assert/strict";
 import { test } from "node:test";
 import { KALIP } from "../src/styles/kalip.ts";
-import { bantDisiDaraltma, daralmisSerit, degiskenDegeri, dosyalar, girdiYaziHatalari, kalipDisiEsikler, oku } from "./yardimci/denetimler.ts";
+import { bantDisiDaraltma, cekmeceBoyuHatasi, daralmisSerit, degiskenDegeri, dosyalar, girdiYaziHatalari, kalipDisiEsikler, oku } from "./yardimci/denetimler.ts";
 
 const tokens = oku("src/styles/tokens.css");
 const kabuk = oku("src/components/kabuk/Kabuk.module.css");
@@ -70,4 +70,10 @@ test("daraltılmış yan menü 64 px ve YALNIZ geniş bantta — uygulama ve ona
 test("onaylı maket aynı sayıları taşıyor: kart eşiği 600, sayfa ekipman 10 · rapor 20", () => {
   assert.ok(maketCss.includes(`@container liste (max-width: ${KALIP.kartEsigi - 0.02}px)`));
   assert.ok(oku("docs/assets/maket.js").includes(`var SAYFA = { e: ${KALIP.sayfa.ekipman}, r: ${KALIP.sayfa.rapor} };`));
+});
+
+/* 419 (reisim telefonda Chrome'da: "yan barda en aşağıya kaydırıp Firma ayarları kısmına tıklayamadım"): çekmece yüksekliği 100vh idi — telefonda
+   vh adres çubuğu gizliyken boy, son modül ekran dışında kalıyordu. Görünen boy (dvh) şart. Olumsuz kanıt: kilitler.bozan "çekmece boyu". */
+test("çekmece görünen boyda: yan menü yüksekliği 100dvh (telefonda adres çubuğu açıkken de son modül ekranda)", () => {
+  assert.equal(cekmeceBoyuHatasi(kabuk), null);
 });
