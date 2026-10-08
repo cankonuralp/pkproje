@@ -2355,6 +2355,12 @@ revizyon, alan kopyalama, hafif kusur devri, meslek eşleşme denetimi).
 - Emsal ürünler: https://opwire.app/iso-17020-periyodik-kontrol-yazilimi/ · https://17020muayene.vidco.com.tr/ · https://akuple.com/asansor-kontrol-yazilimi/ · https://ensyazilim.com/
 
 ## 11 · Değişiklik günlüğü
+- 2026-10-08 (386): **Deneme yayını güncellendi (376–385).** CI 5152a1c yeşil (tip · lint · test · olumsuz kanıt · derleme · uçtan uca üç genişlik);
+  Supabase'e göç 0069–0072 sırayla uygulandı (her biri `goc` kaydıyla, özet 5152a1c'deki dosyadan; 73 göç), işlevler yalnız uygulama rolüne açık,
+  API rolleri kapalı, yz_sohbet RLS + FORCE. main = 5152a1c, Vercel yayında. Doğrulama: `node tools/duman.mjs` 9/9 (sağlıkta yeni "isler" dahil) ·
+  çalışma zamanı hatası yok · /api/is/gece sırsız ve yanlış sırla 401, POST 405; gerçek sırla bir kez koşturuldu → 1 firma, silinen 0, öksüz 0, iş
+  kaydı "tamam" · firma ve yönetim girişinde boş gönderince odak E-posta'da (376), konsol temiz. Oturum isteyen ekranlar (Ana sayfa duyuruları,
+  S.A.Y, etiketten okuma): ölçemedim (parolayı ben yazmam); İSGGM sayfasının Vercel'den (fra1) okunup okunmadığı ilk Ana sayfa açılışında belli olur.
 - 2026-10-08 (385): **Etiket plakasından okuma** (K5 yapay zekâ; ARKA-UC §5.2 "aynı çatı: ekipman etiket plakası"; maket rapor "Etiketten oku" ·
   "Etiket plakasından okunan"). Saha raporunda Ekipman bilgileri bölümünün başında **Etiketten oku** (kamera / galeri): plakadan marka, model, seri
   no ve imal yılı okunur, **öneri kartına** düşer — emin olunanlar "Önerileri uygula (n)" ile toplu, "Emin değil" olan tek tek "Uygula" ile alana
