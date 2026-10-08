@@ -182,6 +182,8 @@ pkproje/
                             kabukta, yazan etiketiyle) · saha raporu Kaydet / Onaya gönder bağlantısızken kuyruğa (raporlar/ui/SahaRaporu.tsx)
                             · SERVİS ÇALIŞANI public/sw.js (395): saha sayfaları önce ağ, cihazda şifreli; bağlantısız açılır; şema depo.ts ile ortak
                             (tests/sw.test.ts); çıkışta / kişi değişince silinir (kabuk); CSP worker-src 'self' (src/proxy.ts)
+                            · ÖNCEDEN İNDİRME (396): planlar/server/cevrimdisi.ts (kişinin 7 günlük planları + Yeni raporları, yalnız adres) → eylem
+                            cevrimdisiPaketiEylemi → kabuk → Cevrimdisi.tsx onceIndir (30 dk'da bir; "Çevrimdışı hazır: n plan")
   src/components/grafik/    TEK GRAFİK ÜRETİCİSİ (329): dikey sütun (maket T9), etiket ölçülerek, gizli tablo (ekran okuyucu)
   src/modules/yonetim/      probata YÖNETİM (2026-10-06, 348; KOD-GECIS Y1): firmalar, firma aç (ilk yönetici + geçici parola), dondur / etkinleştir,
                             yeni geçici parola — server/yonetim.ts yalnız 0050 işlevleriyle (yönetim rolü); sema.ts (ayrılmış adlar göçle aynı) · ui/ ·

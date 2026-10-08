@@ -32,8 +32,45 @@ const DURUM: Record<IsDurumu, [RozetTuru, string]> = {
   baska_hesap: ["notr", "Başka hesap"],
 };
 
-/** `yazan`: oturumdaki kişinin etiketi (sunucudan; kimlik değil) */
-export function CevrimdisiGosterge({ yazan }: { yazan: string }) {
+/* ── ÖNCEDEN İNDİRME (396; ARKA-UC §4.2, maket "Çevrimdışı hazır: 3 plan · son eşitleme 08:42") ── bağlantı varken kişinin önümüzdeki 7 gündeki
+   planlarının ve Yeni raporlarının sayfaları arka planda açılır; servis çalışanı şifreli saklar. Açılıştan 3 sn sonra, bağlantı gelince ve 30
+   dakikada bir; son indirmeden 30 dakika geçmediyse yapılmaz (sunucuyu boşuna yormasın). Son durum bu cihazda (tarayıcı deposu yoksa yalnız bu sayfada). */
+export type PaketEylemi = () => Promise<{ planlar: { id: string }[]; raporlar: { id: string }[] } | null>;
+interface Hazir { plan: number; zaman: string }
+const HAZIR = "probata-cevrimdisi-hazir";
+const ARALIK = 30 * 60_000;
+const hazirOku = (): Hazir | null => { try { return JSON.parse(localStorage.getItem(HAZIR) ?? "null") as Hazir | null; } catch { return null; } };
+const hazirYaz = (h: Hazir) => { try { localStorage.setItem(HAZIR, JSON.stringify(h)); } catch { /* depo yok: yalnız bu sayfada */ } };
+const hazirDinleyen = new Set<() => void>();
+let hazirSon: Hazir | null | undefined;
+const hazirAbone = (f: () => void) => { hazirDinleyen.add(f); return () => { hazirDinleyen.delete(f); }; };
+const hazirAnlik = () => (hazirSon === undefined ? (hazirSon = hazirOku()) : hazirSon);
+let indiriliyor = false;
+const bagliMi = () => navigator.onLine !== false;
+async function onceIndir(paket: PaketEylemi): Promise<void> {
+  if (indiriliyor || !bagliMi() || !("serviceWorker" in navigator)) return;
+  const son = hazirAnlik();
+  if (son && Date.now() - Date.parse(son.zaman) < ARALIK) return;
+  indiriliyor = true;
+  try {
+    /* çalışan devrede değilse sayfalar saklanmaz: en çok 10 sn bekle */
+    const hazirCalisan = await Promise.race([navigator.serviceWorker.ready.then(() => true), new Promise<boolean>((c) => setTimeout(() => c(false), 10_000))]);
+    if (!hazirCalisan) return;
+    const p = await paket();
+    if (!p) return;
+    for (const a of ["/planlar", ...p.planlar.map((x) => `/planlar/${x.id}`), ...p.raporlar.map((x) => `/raporlar/${x.id}`)]) {
+      if (!bagliMi()) return;
+      await fetch(a, { headers: { "x-probata-onindirme": "1", accept: "text/html" }, credentials: "same-origin", cache: "no-store" }).catch(() => undefined);
+    }
+    hazirSon = { plan: p.planlar.length, zaman: new Date().toISOString() };
+    hazirYaz(hazirSon);
+    document.documentElement.setAttribute("data-cevrimdisi-hazir", String(hazirSon.plan));
+    for (const f of hazirDinleyen) f();
+  } catch { /* bağlantı koptu: sonra */ } finally { indiriliyor = false; }
+}
+
+/** `yazan`: oturumdaki kişinin etiketi (sunucudan; kimlik değil) · `paket`: önceden indirilecek sayfaları veren sunucu eylemi (396) */
+export function CevrimdisiGosterge({ yazan, paket }: { yazan: string; paket?: PaketEylemi }) {
   const cevrimdisi = useSyncExternalStore(baglantiAbone, cevrimdisiMi, () => false);
   const k = useSyncExternalStore(kuyrukAbone, kuyrukAnlik, kuyrukSunucuAnlik);
   const [acik, setAcik] = useState(false);
@@ -44,6 +81,17 @@ export function CevrimdisiGosterge({ yazan }: { yazan: string }) {
     if ("serviceWorker" in navigator) navigator.serviceWorker.register("/sw.js", { scope: "/" }).catch(() => undefined);
     return kuyrukBaslat();
   }, [yazan]);
+  /* son önceden indirmenin sonucu sayfanın kökünde (yenilenen sayfada da) — uçtan uca test ve ölçüm bekler */
+  const hazir = useSyncExternalStore(hazirAbone, hazirAnlik, () => null);
+  useEffect(() => { if (hazir) document.documentElement.setAttribute("data-cevrimdisi-hazir", String(hazir.plan)); }, [hazir]);
+  useEffect(() => {
+    if (!paket) return;
+    const indir = () => { void onceIndir(paket); };
+    const ilk = window.setTimeout(indir, 3_000);
+    const tekrar = window.setInterval(indir, ARALIK);
+    window.addEventListener("online", indir);
+    return () => { window.clearTimeout(ilk); window.clearInterval(tekrar); window.removeEventListener("online", indir); };
+  }, [paket]);
   const goster = cevrimdisi || k.isler.length > 0;
   /* telefonda şerit içeriğin üstüne binmesin (temel.css) */
   useEffect(() => {
@@ -73,6 +121,7 @@ function KuyrukPenceresi({ acik, kapat, cevrimdisi }: { acik: boolean; kapat: ()
   const onayla = useOnayla();
   /* bu cihazda bağlantısız açılabilen sayfa sayısı (395; maket "Çevrimdışı hazır") — pencere açılınca */
   const [sayfa, setSayfa] = useState<number | null>(null);
+  const hazir = useSyncExternalStore(hazirAbone, hazirAnlik, () => null);
   useEffect(() => { if (acik) void sayfaSayisi().then(setSayfa).catch(() => setSayfa(null)); }, [acik]);
   const bekleyen = k.isler.filter((x) => x.durum === "bekliyor").length;
   const gonder = async () => {
@@ -94,7 +143,8 @@ function KuyrukPenceresi({ acik, kapat, cevrimdisi }: { acik: boolean; kapat: ()
       {k.depoYok && <Serit tur="uyari" ikon="triangle-alert">Bu tarayıcı cihaz deposuna izin vermiyor (gizli pencere ya da kapalı site verisi): bekleyenler yalnız bu sayfa açıkken durur.</Serit>}
       {k.oturum && <Serit tur="uyari" ikon="log-in">Oturumunuz kapandı; yeniden giriş yapınca bekleyenler gönderilir.</Serit>}
       {k.saatFarkiDk !== null && <Serit tur="uyari" ikon="clock">Cihazınızın saati sunucudan {Math.abs(k.saatFarkiDk)} dakika {k.saatFarkiDk > 0 ? "ileri" : "geri"}. Rapordaki resmî tarihler sunucu saatinden yazılır; cihaz saatini düzeltin.</Serit>}
-      {sayfa !== null && <p className={stil.ipucu}>Bu cihazda bağlantısız açılabilen sayfa: <b>{sayfa}</b> (açtığınız Planlar, plan içi ve raporlar).</p>}
+      {hazir && <p className={stil.ipucu}>Çevrimdışı hazır: <b>{hazir.plan} plan</b> · son eşitleme {ZAMAN.format(new Date(hazir.zaman)).replace(",", "")}</p>}
+      {sayfa !== null && <p className={stil.ipucu}>Bu cihazda bağlantısız açılabilen sayfa: <b>{sayfa}</b> (Planlar, plan içi ve raporlar).</p>}
       {cevrimdisi && <p className={stil.ipucu}>Bağlantı gerektirenler: son imza, onay, fotoğraftan okuma, S.A.Y.</p>}
       {k.isler.length ? (
         <>

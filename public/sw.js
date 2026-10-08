@@ -32,7 +32,9 @@ self.addEventListener("fetch", (e) => {
   if (r.method !== "GET") return;
   const u = new URL(r.url);
   if (u.origin !== self.location.origin) return;
-  if (r.mode === "navigate" && !u.search && SAYFA_YOLLARI.some((x) => x.test(u.pathname))) { e.respondWith(sayfa(r, u.pathname)); return; }
+  /* sayfanın kendisi: gezinme ya da önceden indirme (396 — uygulama bağlantı varken kişinin planlarını açar) */
+  const sayfaIstegi = r.mode === "navigate" || r.headers.get("x-probata-onindirme") === "1";
+  if (sayfaIstegi && !u.search && SAYFA_YOLLARI.some((x) => x.test(u.pathname))) { e.respondWith(sayfa(r, u.pathname)); return; }
   if (u.pathname.startsWith("/_next/static/") || u.pathname.startsWith("/vendor/")) e.respondWith(statik(r));
 });
 

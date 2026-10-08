@@ -8,13 +8,20 @@ import {
   ekipmanPasif, ekipmanSil, kayitliEkle, kodDurumu, kontrolListesi, kunyeDuzenle, kunyeGuncelle, notEkle, planKabul, planReddet, planSil, planTamamla, tamamlamaGeriAl, yeniEkipman,
   type KodDurumu, type PlanYazma,
 } from "../server/plan-ici";
-import { planAc, tesisPlanBilgisi, type TesisPlanBilgisi } from "../server/planlar";
+import { cevrimdisiPaketi, type CevrimdisiPaketi } from "../server/cevrimdisi";
+import { bugunTr, planAc, tesisPlanBilgisi, type TesisPlanBilgisi } from "../server/planlar";
 
 export interface PlanAcYaniti { tamam?: boolean; id?: string; no?: string; hatalar?: Record<string, string>; genel?: string }
 
 async function oturum() {
   if (!(await ayniKoken())) return "İstek reddedildi. Sayfayı yenileyip yeniden deneyin.";
   return (await istekOturumu()) ?? "Oturumunuz kapandı. Yeniden giriş yapın.";
+}
+
+/** çevrimdışı paket (396): kişinin önümüzdeki 7 gündeki planları ve Yeni raporları — cihaz bu sayfaları önceden açar */
+export async function cevrimdisiPaketiEylemi(): Promise<CevrimdisiPaketi | null> {
+  const o = await oturum(); if (typeof o === "string") return null;
+  return oturumIslemi(o, (db) => cevrimdisiPaketi(db, o, bugunTr()));
 }
 
 export async function tesisPlanBilgisiEylemi(tesisId: string): Promise<TesisPlanBilgisi | null> {

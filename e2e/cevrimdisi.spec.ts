@@ -5,6 +5,7 @@
    · bağlantı gelince kendiliğinden gider, gösterge kalkar; sayfa yenilenince değer sunucuda;
    · ÇAKIŞMA: bağlantısızken yazılan kayıt, bu arada başka sekmede değişen raporu ezmez — "Çakışma" çıkar; "Benimkini yaz" açık seçimle gönderir;
    · 395: açılmış rapor bağlantı kesikken yenilenince açılır (servis çalışanı, cihazda şifreli); açılmamış sayfa "bu cihazda yok";
+   · 396: kişinin planı önceden iner — hiç açılmamış plan sayfası bağlantı kesikken açılır, pencere "Çevrimdışı hazır: 1 plan";
    · Onaya gönder bağlantısızken: rapor salt okunur, "Gönderilmedi · bağlantı bekleniyor"; bağlantı gelince gider (eksikse alanlar işaretlenir). */
 import { expect, test, type Page } from "@playwright/test";
 import { E2E_KAPI, E2E_PAROLA, E2E_YZ } from "./hesaplar";
@@ -100,7 +101,24 @@ test("çevrimdışı: bağlantı kes → Kaydet cihaza → bağlantı gelince gi
   await hazir(page);
   await page.context().setOffline(false);
 
-  /* 5) Onaya gönder bağlantısızken: rapor salt okunur, bağlantı gelince gider (eksikse alanlar işaretlenir) */
+  /* 5) önceden indirme (396): kişinin planı bağlantı varken cihaza iner — HİÇ AÇILMAMIŞ plan sayfası bağlantı kesikken açılır; pencere
+     "Çevrimdışı hazır: 1 plan" der */
+  const planAdresi = await page.getByRole("navigation", { name: "Konum" }).getByRole("link").nth(1).getAttribute("href");
+  expect(planAdresi).toMatch(/^\/planlar\/[0-9a-f-]{36}$/);
+  await expect(page.locator("html[data-cevrimdisi-hazir]")).toHaveCount(1, { timeout: 60_000 });
+  await page.context().setOffline(true);
+  await page.goto(`${Y}${planAdresi}`);
+  await hazir(page);
+  await expect(page.getByRole("heading", { name: "Bu sayfa bu cihazda yok" })).toHaveCount(0);
+  await expect(page.getByRole("heading", { level: 1 })).toBeVisible();
+  await cip.click();
+  await expect(page.getByRole("dialog", { name: "Çevrimdışı" }).getByText("Çevrimdışı hazır:", { exact: false })).toContainText("1 plan");
+  await page.getByRole("dialog", { name: "Çevrimdışı" }).getByRole("button", { name: "Kapat" }).last().click();
+  await page.goto(adres);
+  await hazir(page);
+  await page.context().setOffline(false);
+
+  /* 6) Onaya gönder bağlantısızken: rapor salt okunur, bağlantı gelince gider (eksikse alanlar işaretlenir) */
   await page.context().setOffline(true);
   await page.getByRole("button", { name: "Onaya gönder" }).click();
   await page.getByRole("dialog").getByRole("button", { name: "Onaya gönder" }).click();

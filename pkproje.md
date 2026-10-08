@@ -2355,6 +2355,14 @@ revizyon, alan kopyalama, hafif kusur devri, meslek eşleşme denetimi).
 - Emsal ürünler: https://opwire.app/iso-17020-periyodik-kontrol-yazilimi/ · https://17020muayene.vidco.com.tr/ · https://akuple.com/asansor-kontrol-yazilimi/ · https://ensyazilim.com/
 
 ## 11 · Değişiklik günlüğü
+- 2026-10-08 (396): **Çevrimdışı çalışma — önceden indirme** (ARKA-UC §4.2 "kullanıcı çevrimiçiyken kabul ettiği / denetimdeki planların
+  önümüzdeki 7 günü cihaza iner … 'Çevrimdışı hazır: 3 plan · son eşitleme 08:42'"). Bağlantı varken (açılıştan 3 sn sonra, bağlantı gelince, 30
+  dakikada bir; son indirmeden 30 dk geçmediyse yapılmaz) kişinin EKİBİNDE olduğu, kabul edilmiş ya da denetimdeki, başlangıcı önümüzdeki 7 gün
+  içinde ya da başlamış planların (en çok 20) ve bu planlarda KENDİ yazdığı Yeni raporların (en çok 100) sayfaları arka planda açılır; servis
+  çalışanı bunları da şifreli saklar — sahada HİÇ AÇILMAMIŞ plan / rapor sayfası bağlantısız açılır. Çevrimdışı penceresinde "Çevrimdışı hazır: n
+  plan · son eşitleme SS:DD". Sunucu yalnız adres listesi verir (planlar/server/cevrimdisi.ts — sayfaların verisi kendi yetki denetiminden geçer).
+  Kilit cevrimdisi-paket.test (gerçek PostgreSQL, iki firma: kabul bekleyen, 7 günden sonraki, ekibinde olmadığı plan; başkasının ya da gönderilmiş
+  raporu; başka firma; personelsiz hesap — girmez); e2e cevrimdisi (hiç açılmamış plan sayfası bağlantı kesikken açılır, "Çevrimdışı hazır: 1 plan").
 - 2026-10-08 (395): **Çevrimdışı çalışma — sayfalar bağlantısız açılır** (ARKA-UC §4.1 "Planlar listesi ve plan içi (indirilmiş planlar),
   raporu doldurma … çevrimdışı çalışır", K4). Firma adresinde tarayıcının arka plan yardımcısı (servis çalışanı, public/sw.js): saha sayfaları
   (Ana sayfa, Planlar, plan içi, rapor) önce ağdan gelir ve cihaz deposuna ŞİFRELİ yazılır (kuyrukla aynı, dışarı alınamaz anahtar); bağlantı

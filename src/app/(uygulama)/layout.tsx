@@ -4,6 +4,7 @@
 import type { ReactNode } from "react";
 import { Kabuk } from "../../components/kabuk/Kabuk";
 import { menuTakipEylemi } from "../../modules/anasayfa/ui/eylemler";
+import { cevrimdisiPaketiEylemi } from "../../modules/planlar/ui/eylemler";
 import { SayAsistan } from "../../modules/say/ui/SayAsistan";
 import { MODULLER } from "../../modules/moduller";
 import { yazanEtiketi } from "../../server/islem/yazan";
@@ -16,5 +17,5 @@ export default async function UygulamaDuzeni({ children }: { children: ReactNode
   const gorunur = MODULLER.filter((m) => modulGorur(o, m.no as ModulAnahtari)).map((m) => m.no);
   const rol = o.roller.map((r) => ROL_ADI[r]).join(" · ") || "Rolsüz";
   /* 394: çevrimdışı kuyruğun yazan etiketi (kimlik değil, ondan türetilen özet) */
-  return <><Kabuk kullanici={{ ad: o.ad, rol, yazan: yazanEtiketi(o.id) }} gorunur={gorunur} takip={menuTakipEylemi}>{children}</Kabuk><SayAsistan /></>;
+  return <><Kabuk kullanici={{ ad: o.ad, rol, yazan: yazanEtiketi(o.id) }} gorunur={gorunur} takip={menuTakipEylemi} paket={cevrimdisiPaketiEylemi}>{children}</Kabuk><SayAsistan /></>;
 }

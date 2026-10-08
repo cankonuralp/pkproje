@@ -116,7 +116,7 @@ export function KullaniciMenusu({ kullanici, cikis = cikisEylemi }: { kullanici:
   );
 }
 
-export function Kabuk({ children, kullanici, gorunur, takip }: {
+export function Kabuk({ children, kullanici, gorunur, takip, paket }: {
   children: ReactNode;
   /** oturumdaki kişi (yoksa — geliştirme vitrini — kullanıcı alanı çizilmez) */
   kullanici?: KabukKullanicisi;
@@ -124,6 +124,8 @@ export function Kabuk({ children, kullanici, gorunur, takip }: {
   gorunur?: readonly number[];
   /** takip balonlarını getiren sunucu eylemi (verilmezse balon yok — vitrin) */
   takip?: () => Promise<KabukTakip>;
+  /** çevrimdışı paketi getiren sunucu eylemi (396; verilmezse önceden indirme yok) */
+  paket?: () => Promise<{ planlar: { id: string }[]; raporlar: { id: string }[] } | null>;
 }) {
   const [acik, setAcik] = useState(false);
   const dar = useSyncExternalStore(menuAboneOl, menuDarMi, () => false);
@@ -210,7 +212,7 @@ export function Kabuk({ children, kullanici, gorunur, takip }: {
           <Image className={`${stil.ustIsaret} ${stil.isaretAcik}`} src={isaretRenkli} alt="probata" unoptimized />
           <Image className={`${stil.ustIsaret} ${stil.isaretKoyu}`} src={isaretKoyu} alt="probata" unoptimized />
           <div className={stil.ustBosluk} />
-          {kullanici?.yazan && <CevrimdisiGosterge yazan={kullanici.yazan} />}
+          {kullanici?.yazan && <CevrimdisiGosterge yazan={kullanici.yazan} paket={paket} />}
           <TemaTusu />
           {kullanici && <KullaniciMenusu kullanici={kullanici} cikis={cikisVeTemizle} />}
         </header>
