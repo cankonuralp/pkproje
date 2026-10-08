@@ -21,6 +21,9 @@ const ortak: NextConfig = {
   experimental: { serverActions: { bodySizeLimit: "26mb" }, proxyClientMaxBodySize: "26mb", webpackMemoryOptimizations: process.env.PROBATA_WEBPACK_BELLEK === "1",
     reactDebugChannel: process.env.PROBATA_HATA_KANALI !== "0" },
   env: { NEXT_PUBLIC_IKON_ADRESI: `/${IKON_DOSYASI}?v=${ikonOzeti}` },
+  /* geliştirme göstergesi (sol altta yüzen rozet): uçtan uca sunucusunda kapalı — telefonda altta yapışkan tuş çubuğunun üstüne binip tıklamayı
+     engelliyordu (402); hata olursa geliştirme hata penceresi yine açılır. Yayında zaten yok. */
+  ...(process.env.PROBATA_HATA_KANALI === "0" ? { devIndicators: false as const } : {}),
   /* PDF motoru (src/belge/pdf.ts, 316): Chromium paketleri derlemeye katılmaz (düğüm modülü olarak yüklenir); belge CSS'i, yazı tipi ve sunucusuz
      Chromium ikilisi yalnız PDF basan uçların izine eklenir (teklif PDF'i — 325; fatura özeti — 340; talep formu — 341; araç tutanağı — 342) — rapor sayfası da (İmzala sunucu eylemi orada koşar; 315–317
      incelemesi), araç listesi ve araç sayfası da (Tutanağı kaydet eylemi tutanağın PDF'ini orada basar, 342), personel kartı da (zimmet formu İmzaya gönder, 344), eğitim kayıtları da (katılım formu, 345) */

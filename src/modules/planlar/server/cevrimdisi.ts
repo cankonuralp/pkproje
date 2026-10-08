@@ -9,6 +9,8 @@ import { hesabinPersoneli } from "../../../server/kimlik/hesap.ts";
 import { planRaporlari } from "../../raporlar/server/plan-baglanti.ts";
 
 export const PAKET_GUN = 7;
+/** önceden inen rapor sayfası en çok (402: 100'den indi — her açılışta sunucuda sayfa çizimi; sahada bir haftada açık Yeni rapor bundan azdır) */
+export const RAPOR_EN_COK = 50;
 
 export interface CevrimdisiPaketi { planlar: { id: string; no: string }[]; raporlar: { id: string; no: string }[] }
 
@@ -23,5 +25,5 @@ export async function cevrimdisiPaketi(db: Sorgulayici, kim: { id: string }, bug
   for (const p of planlar) {
     for (const r of await planRaporlari(db, p.id)) if (r.hesapId === kim.id && r.durum === "taslak") raporlar.push({ id: r.id, no: r.no });
   }
-  return { planlar, raporlar: raporlar.slice(0, 100) };
+  return { planlar, raporlar: raporlar.slice(0, RAPOR_EN_COK) };
 }

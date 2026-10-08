@@ -2364,6 +2364,11 @@ revizyon, alan kopyalama, hafif kusur devri, meslek eşleşme denetimi).
   Next'in geliştirme kipi sayfa açılınca sunucuya ayrı bir canlı "hata ayıklama kanalı" açar ve sayfayı onunla bağlar
   (next/dist/client/dev/debug-channel.js) — bağlantı yokken sayfa hiç bağlanamaz; yayında bu kanal yok. Uçtan uca sunucusunda kapatıldı
   (next.config.ts reactDebugChannel, scripts/e2e-sunucu.ts PROBATA_HATA_KANALI=0); yayın etkilenmez.
+  Aynı turda: (a) deneme sunucusu koşunun sonunda bellek sınırına dayanıp kendini yeniden başlatıyordu (zimmetler düşüyordu) — önceden indirme
+  her denetçi testinde onlarca sayfa çiziyordu; öteki testlerde cihaz "az önce indirildi" sayılır (e2e/yardimci.ts girisYap; önceden indirme
+  yalnız e2e/cevrimdisi.spec.ts'te sınanır), önceden inen rapor sınırı 100'den 50'ye indi (planlar/server/cevrimdisi.ts RAPOR_EN_COK);
+  (b) geliştirme göstergesi rozeti telefonda altta yapışkan tuş çubuğunun üstüne binip tıklamayı engelliyordu — uçtan uca sunucusunda kapalı;
+  (c) rapor ekranı cihazda gönderilemeyen işi (çakışma / yapılamadı) sayfa yenilense de kalıcı şeritte söyler (önce yalnız anlık bildirim).
 - 2026-10-08 (401): **Cihazda saklanan sayfalar sınırlı** — servis çalışanı açılan her saha sayfasını (rapor, plan) cihazda şifreli saklıyordu,
   sınırsızdı (aylarca açılan her rapor birikirdi). Artık en çok 300 sayfa; aşınca en eski açılanlar 250'ye inene kadar silinir (aradaki pay her
   yeni sayfada bütün depoyu taramasın). Önceden indirilen paket (en çok 20 plan + 100 rapor) sınırın içinde kalır. Kilit sw.test (çalışanın kendi
@@ -2406,7 +2411,7 @@ revizyon, alan kopyalama, hafif kusur devri, meslek eşleşme denetimi).
 - 2026-10-08 (396): **Çevrimdışı çalışma — önceden indirme** (ARKA-UC §4.2 "kullanıcı çevrimiçiyken kabul ettiği / denetimdeki planların
   önümüzdeki 7 günü cihaza iner … 'Çevrimdışı hazır: 3 plan · son eşitleme 08:42'"). Bağlantı varken (açılıştan 3 sn sonra, bağlantı gelince, 30
   dakikada bir; son indirmeden 30 dk geçmediyse yapılmaz) kişinin EKİBİNDE olduğu, kabul edilmiş ya da denetimdeki, başlangıcı önümüzdeki 7 gün
-  içinde ya da başlamış planların (en çok 20) ve bu planlarda KENDİ yazdığı Yeni raporların (en çok 100) sayfaları arka planda açılır; servis
+  içinde ya da başlamış planların (en çok 20) ve bu planlarda KENDİ yazdığı Yeni raporların (en çok 100 — 402'de 50) sayfaları arka planda açılır; servis
   çalışanı bunları da şifreli saklar — sahada HİÇ AÇILMAMIŞ plan / rapor sayfası bağlantısız açılır. Çevrimdışı penceresinde "Çevrimdışı hazır: n
   plan · son eşitleme SS:DD". Sunucu yalnız adres listesi verir (planlar/server/cevrimdisi.ts — sayfaların verisi kendi yetki denetiminden geçer).
   Kilit cevrimdisi-paket.test (gerçek PostgreSQL, iki firma: kabul bekleyen, 7 günden sonraki, ekibinde olmadığı plan; başkasının ya da gönderilmiş

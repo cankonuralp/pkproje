@@ -99,6 +99,7 @@ export function SahaRaporu({ v }: { v: Gorunum }) {
   const gonderimBekliyor = kuyruk.isler.some((x) => x.kayit === v.id && x.durum === "bekliyor" && x.tur === "rapor.gonder");
   /* 398: cihazda bekleyen fotoğraflar (yerleri "bölüm|madde") — canlı değerlendirmede sayılır, başlıkta söylenir */
   const bekleyenFotolar = useMemo(() => kuyruk.isler.filter((x) => x.kayit === v.id && x.durum === "bekliyor" && x.tur === "rapor.foto"), [kuyruk.isler, v.id]);
+  const sorunluIs = kuyruk.isler.find((x) => x.kayit === v.id && (x.durum === "cakisma" || x.durum === "hata"));
   const formBekliyor = kuyruk.isler.some((x) => x.kayit === v.id && x.durum === "bekliyor" && x.tur !== "rapor.foto");
   const duzenle = v.izin.duzenle && !gonderimBekliyor;
   const [ekipman, setEkipman] = useState(() => bosla(v.ekipmanBilgi));
@@ -377,6 +378,8 @@ export function SahaRaporu({ v }: { v: Gorunum }) {
   /* ── şeritler ── */
   const seritler: ReactNode[] = [];
   if (genel) seritler.push(<Serit key="hata" tur="hata" ikon="circle-alert">{genel}</Serit>);
+  /* 402: cihazda gönderilemeyen iş (çakışma, yapılamadı) sayfa yenilense de söylenir — anlık bildirim kaybolsa da kullanıcı bilir */
+  else if (sorunluIs) seritler.push(<Serit key="kuyruk" tur="hata" ikon="circle-alert">{v.no}: cihazda bekleyen iş gönderilemedi{sorunluIs.ileti ? ` — ${sorunluIs.ileti}` : ""}. Üst çubuktaki bekleyen işlemlerden seçin.</Serit>);
   if (duzenle && v.kunyeFark.length) {
     seritler.push(
       <Serit key="kunye" tur="bilgi" ikon="refresh-cw" eylem={<Tus tur="ikincil" ikon="refresh-cw" disabled={mesgul} onClick={kunyeGuncelle}>Güncelle</Tus>}>

@@ -66,6 +66,9 @@ async function raporuAc(page: Page, kod: string): Promise<string> {
 
 test("çevrimdışı: bağlantı kes → Kaydet cihaza → bağlantı gelince gider; çakışma ezmez, 'Benimkini yaz'; Onaya gönder bekler", async ({ page, browser }, bilgi) => {
   test.setTimeout(180_000);
+  /* tarayıcının hata iletileri deneme kaydına (düşerse nedeni görünsün; bağlantısızken beklenen ağ hataları da yazılır) */
+  page.on("console", (m) => { if (m.type() === "error") console.log(`[tarayıcı hatası · ${bilgi.project.name}] ${m.text().slice(0, 300)}`); });
+  page.on("pageerror", (e) => { console.log(`[sayfa hatası · ${bilgi.project.name}] ${e.message.slice(0, 300)}`); });
   const adres = await raporuAc(page, E2E_YZ.cevrimdisi[bilgi.project.name]);
   const marka = page.getByLabel("Marka", { exact: true });
   const cip = page.getByRole("button", { name: /^Çevrimdışı/ });
@@ -186,8 +189,8 @@ test("çevrimdışı: bağlantı kes → Kaydet cihaza → bağlantı gelince gi
   /* 8) plan kabulü bağlantısızken (400): kabul cihaza; bağlantı gelince gider, plan "kabul edildi" */
   await page.goto(`${Y}/planlar`);
   await hazir(page);
-  await page.getByRole("searchbox", { name: "Planlarda ara" }).fill(E2E_YZ.kabulPlan[bilgi.project.name]);
-  await page.getByRole("link", { name: /^P-/ }).first().click();
+  /* planın satırı müşterisinin adıyla (satır tabloda da kartta da <tr>; süzgeç kutusu dar ekranda kapalı olabilir) */
+  await page.locator("tr", { hasText: E2E_YZ.kabulPlan[bilgi.project.name] }).getByRole("link", { name: /^P-/ }).click();
   await expect(page).toHaveURL(/\/planlar\/[0-9a-f-]{36}$/, { timeout: 30_000 });
   await hazir(page);
   await page.context().setOffline(true);
