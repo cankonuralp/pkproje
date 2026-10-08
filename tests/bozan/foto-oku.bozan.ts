@@ -1,7 +1,8 @@
 /* OLUMSUZ KANIT — tests/foto-oku.test.ts (351) neyi koruyor. Kaynak diskte DEĞİŞTİRİLMEZ (anayasa 13.11): foto-oku.ts bellekte bozulup geçici klasörden
    içe aktarılır (göreli içe aktarmalar mutlak yola çevrilir); 0052 göçü geçici kopyada bozulur.
    1. Aylık sınır denetimi kalkınca sınırı dolmuş kişi okumaya devam eder (firmanın Anthropic hesabından sınırsız harcama).
-   2. Tetikteki hesap damgası kalkınca kişi kullanımı başkasının hanesine yazar (sınırı başkasına yükler). (Tetiğin geçerli tanımı 0053.)
+   2. Tetikteki hesap damgası kalkınca kişi kullanımı başkasının hanesine yazar (sınırı başkasına yükler). (Tetiğin tanımı 0053; 2026-10-08 (380) 0071
+      tetiği mesaj sayacıyla yeniden tanımlıyor — bozma ikisinde birden, yoksa 0071 düzgün hâli geri kurar.)
    3. (354) Ayırmadaki satır kilidi (FOR UPDATE) kalkınca eşzamanlı ikinci okuma birincinin ayırmasını görmez, sınır aşılır. kullanim.ts bellekte bozulur. */
 import assert from "node:assert/strict";
 import { copyFileSync, mkdirSync, mkdtempSync, readdirSync, readFileSync, rmSync, writeFileSync } from "node:fs";
@@ -93,7 +94,7 @@ test("2. tetikteki hesap damgası kalkınca kullanım başkasının hanesine yaz
   const ESKI = "    NEW.hesap_id := ben;\n";
   for (const ad of readdirSync(GOC_KLASORU)) {
     if (!ad.endsWith(".sql")) continue;
-    if (ad.startsWith("0053_")) {
+    if (ad.startsWith("0053_") || ad.startsWith("0071_")) {
       const k = readFileSync(join(GOC_KLASORU, ad), "utf8");
       assert.ok(k.includes(ESKI), "bozulacak satır göçte yok");
       writeFileSync(join(klasor, ad), k.replace(ESKI, () => ""));
