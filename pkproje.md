@@ -2355,6 +2355,9 @@ revizyon, alan kopyalama, hafif kusur devri, meslek eşleşme denetimi).
 - Emsal ürünler: https://opwire.app/iso-17020-periyodik-kontrol-yazilimi/ · https://17020muayene.vidco.com.tr/ · https://akuple.com/asansor-kontrol-yazilimi/ · https://ensyazilim.com/
 
 ## 11 · Değişiklik günlüğü
+- 2026-10-08 (410): **Erişilebilirlik taraması** (EKSIKLER-VE-ONERILER §7; CLAUDE.md §6 "Sonra: Playwright + erişilebilirlik"). Uçtan uca, üç
+  genişlikte, axe (@axe-core/playwright 4.13.0, MPL-2.0, yalnız geliştirme paketi; WCAG 2.1 A + AA): giriş, Ana sayfa, Planlar, plan içi,
+  personel formu, saha raporu — ciddi ve kritik ihlal 0 (e2e/erisilebilirlik.spec.ts; düşerse hangi kuralın hangi öğede bozulduğunu söyler).
 - 2026-10-08 (409): **Tarayıcı simgesi** — tarayıcılar sayfanın simgesinden bağımsız /favicon.ico'yu da istiyor; canlıda 404 dönüyordu (408
   yayın denetiminde konsolda görüldü). Artık sitenin simgesine (/icon.svg) kalıcı yönlenir (next.config.ts redirects). Kilit: e2e hata
   (/favicon.ico → 200, svg) + duman testi yeni denetim (308 → /icon.svg).
