@@ -2355,6 +2355,14 @@ revizyon, alan kopyalama, hafif kusur devri, meslek eşleşme denetimi).
 - Emsal ürünler: https://opwire.app/iso-17020-periyodik-kontrol-yazilimi/ · https://17020muayene.vidco.com.tr/ · https://akuple.com/asansor-kontrol-yazilimi/ · https://ensyazilim.com/
 
 ## 11 · Değişiklik günlüğü
+- 2026-10-08 (388): **Deneme yayını güncellendi (387 saklama süresi).** CI 7c8ad00 yeşil (üç genişlik; ilk koşuda yeni e2e'nin seçicisi aynı
+  satırdaki "PDF indir" bağlantısını da buluyordu — tam adla düzeltildi); Supabase'e göç 0073 (`goc` kaydıyla, özet 7c8ad00'daki dosyadan; 74
+  göç) — beş işlevin gövdesi dosyayla bayt bayt aynı (md5), tetikler dosya ve firma_ayar'da, saklama_silme RLS + FORCE, uygulama yalnız okur,
+  API rolleri kapalı. main = 7c8ad00, Vercel yayında. Doğrulama: duman 9/9 · gece ucu gerçek sırla 200, yanıtta "saklama" (1 firma, silinen 0),
+  iş kayıtları "cop_temizligi" ve "saklama_silme" tamam · /firma-ayarlari/saklama oturumsuz girişe yönlenir. **Duyurular canlıda ilk kez
+  okundu** (06:29, birinin Ana sayfa açılışıyla): İSGGM 33 ve İSGÜM 50 duyuru alındı; iş ekipmanları portalı Vercel'den (Frankfurt) okunamadı —
+  bağlantı 10 sn'de düştü; aynı adres Türkiye'den 0,15 sn'de açılıyor (yönlendirme yok, sertifika sağlam) → portal büyük olasılıkla yurt dışı
+  bağlantıyı kabul etmiyor (kodla çözülmez; Türkiye'de bir ara sunucu ister — açık soru). Oturum isteyen ekranlar: ölçemedim.
 - 2026-10-08 (387): **Saklama süresi işi** (KOD-GECIS ENGEL 11, ARKA-UC §7 "Arşiv / silme (5 yıl, firma seçimi), 30 gün önce liste"; reisim
   2026-10-03 *"depoda 5 sene sonra silcek şekilde kodla"*). İmzalı raporun PDF'i (ve imzaya hazırlanan PDF'i) saklama süresi dolunca gece işiyle
   firmanın deposundan silinir; raporun kaydı (künye, içerik, uygunsuzluklar) kalır, ekranlar "saklama süresi dolduğu için PDF silindi" der
