@@ -39,14 +39,10 @@ jobs:
           cache: npm
       - run: npm ci
       # Chromium testten ÖNCE (2026-10-05, 316): PDF motoru (src/belge/pdf.ts) npm test'te de basar; uçtan uca da aynısını kullanır
-      # 413: kurulum (sistem paketleri) GitHub makinesinde bazen asılı kalıyor — her deneme en çok 4 dk, üç deneme (olağanı 20 sn, en kötü 3 dk)
-      - run: |
-          for i in 1 2 3; do
-            timeout -k 10 240 npx playwright install --with-deps chromium && exit 0
-            echo "tarayıcı kurulumu $i. denemede bitmedi"
-          done
-          exit 1
-        timeout-minutes: 13
+      # 413 devamı: sistem paketi (apt) KURULMAZ — eksik olanlar yalnız yazı tipleri (makinede kütüphaneler hazır; PDF Carlito'yu gömer). GitHub'ın
+      # paket sunucusu yavaşlayınca kurulum dakikalarca sürüyor, yarıda kesilince kilit sonraki denemeyi de düşürüyordu (60547a0)
+      - run: npx playwright install chromium
+        timeout-minutes: 8
       - run: npm run check
       - run: npm run lint
       - run: npm test
@@ -77,14 +73,10 @@ jobs:
           node-version: 24
           cache: npm
       - run: npm ci
-      # 413: kurulum (sistem paketleri) GitHub makinesinde bazen asılı kalıyor — her deneme en çok 4 dk, üç deneme (olağanı 20 sn, en kötü 3 dk)
-      - run: |
-          for i in 1 2 3; do
-            timeout -k 10 240 npx playwright install --with-deps chromium && exit 0
-            echo "tarayıcı kurulumu $i. denemede bitmedi"
-          done
-          exit 1
-        timeout-minutes: 13
+      # 413: görsel karşılaştırmanın görüntüleri sistem yazı tipleriyle kaydedildi → paketler (--with-deps) burada kurulur. Yavaş paket sunucusunda
+      # ~6 dk sürebilir; asılı kalırsa 15 dk'da kesilir (yarıda kesilen kurulum kilit bıraktığından yeniden deneme yok)
+      - run: npx playwright install --with-deps chromium
+        timeout-minutes: 15
       - id: e2e
         run: npm run test:e2e -- --project=${{ matrix.proje }}
       - if: ${{ !cancelled() && steps.e2e.outcome == 'failure' }}

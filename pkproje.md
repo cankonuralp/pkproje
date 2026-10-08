@@ -2367,6 +2367,10 @@ revizyon, alan kopyalama, hafif kusur devri, meslek eşleşme denetimi).
 - 2026-10-08 (413): **Deneme makinesine süre sınırı** (reisim: *"1 saat 12 dakika olmuş normal mi ?"*). 0f1ee47'nin turunda denetim işi tarayıcı
   kurulumunda 71 dk asılı kaldı (GitHub makinesinin paket indirmesi; olağanı 20 sn) — sınır yoktu, 6 saat bekleyecekti. Artık: kurulum her
   denemede en çok 4 dk, üç deneme; denetim işi en çok 20 dk (olağan 5–8), her genişlik en çok 40 dk (olağan 19–26). Ölçü son üç yeşil turdan.
+  Devamı (60547a0'ın turunda görüldü): paket sunucusu saniyede ~70 KB'ye düşünce kurulum 4 dk'yı aştı, yarıda kesilen kurulum kilidi tuttu,
+  yeniden denemeler hemen düştü. Asıl çözüm: denetim işi sistem paketi hiç kurmaz (eksik olanlar yalnız yazı tipleriydi; kütüphaneler
+  makinede hazır, PDF Carlito'yu gömer) — yalnız tarayıcı, 8 dk sınır. Uçtan uca işler paketleri kurar (görüntüler o yazı tipleriyle
+  kaydedildi), tek deneme, 15 dk sınır.
 - 2026-10-08 (412): **Bağlantılar maketteki gibi** — 411'in ilk görüntülerinde görüldü: Planlar listesinde proje no tarayıcının mavisiyle,
   altı çizili çıkıyordu (makette yeşil, kalın, çizgi yalnız üstüne gelince). Aynı hata Raporlar, Onaylar (kuyruk + imzamı bekleyenler) ve müşteri
   panelinin (raporlar, uygunsuzluklar, sözleşmeler) numara bağlantılarındaydı: bağlantı renksiz "kod" biçimini kullanıyordu → her modülde
