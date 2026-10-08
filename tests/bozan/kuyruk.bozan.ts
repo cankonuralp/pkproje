@@ -4,7 +4,8 @@
       çakışır (kullanıcıya sahte "başka yerde değiştirildi");
    2) oturum kapandığında (401) durmazsa iş "yapılamadı"ya düşer — giriş yapınca gitmesi gereken iş takılı kalır;
    3) 398: "fotoğrafsız gönderim olmaz" kalkınca raporun fotoğrafı gidemediği hâlde Onaya gönder gider;
-   4) 398: fotoğraftan sonra bekleyen işin sürümü taşınmazsa Kaydet kendi fotoğrafıyla sahte çakışmaya düşer. */
+   4) 398: fotoğraftan sonra bekleyen işin sürümü taşınmazsa Kaydet kendi fotoğrafıyla sahte çakışmaya düşer;
+   5) 404: bekleyen içerik "eksik" işi de sayarsa sunucunun kaydettiği hâlin yerine cihazdaki kopya gösterilir. */
 import assert from "node:assert/strict";
 import { mkdtempSync, readFileSync, rmSync, writeFileSync } from "node:fs";
 import { tmpdir } from "node:os";
@@ -81,4 +82,14 @@ test("4) fotoğraftan sonra bekleyen işin sürümü taşınmazsa Kaydet kendi f
     : g.surum === surum ? json({ sonuc: { durum: "tamam", id: "R6", bildirim: "x" } }) : json({ sonuc: { durum: "cakisma" }, guncel: surum }));
   await K.kuyrukGonder();
   assert.deepEqual(K.kuyrukAnlik().isler.map((x) => x.durum), ["cakisma"], "bozuk: kendi fotoğrafıyla sahte çakışma");
+});
+
+test("5) 404: bekleyen içerik 'eksik' işi de sayarsa sunucunun zaten kaydettiği hâlin yerine cihazdaki eski kopya gösterilir", async () => {
+  const K = await bozuk('(y.durum === "bekliyor" || y.durum === "cakisma" || y.durum === "hata")', 'y.durum !== "baska_hesap"');
+  K.kuyrukYazani("etiketDeneme00000000000");
+  agYok();
+  await K.kuyrugaEkle({ tur: "rapor.kaydet", kayit: "R10", surum: 1, girdi: { ekipman: { marka: "Eski" } }, ad: "R10" }); await sakin(K);
+  cevap = () => json({ sonuc: { durum: "eksik", eksikler: [{ bolum: "b", alan: "a", ad: "A" }] } });
+  await K.kuyrukGonder();
+  assert.notEqual(await K.bekleyenIcerik("R10"), null, "bozuk: sunucuya yazılmış kayıt cihazdan yeniden gösterildi");
 });

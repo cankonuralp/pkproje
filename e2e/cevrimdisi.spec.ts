@@ -133,6 +133,15 @@ test("çevrimdışı: bağlantı kes → Kaydet cihaza → bağlantı gelince gi
   expect(olaylar.filter((x) => x.startsWith("sayfa hatası")), olaylar.join("\n")).toEqual([]);
   await expect(marka).toHaveValue("Cihazdaki Marka");
   await expect(cip).toBeVisible();
+  /* 404: bağlantısızken yazılıp kaydedilen içerik, sayfa yeniden açılınca CİHAZDAN gelir (saklanan sayfadaki eski hâl değil) — yoksa eski hâl
+     düzenlenip kaydedilince bekleyen kaydın yerine geçer, bağlantısız yazılanlar kaybolurdu */
+  await marka.fill("Bağlantısız Marka");
+  await page.getByRole("button", { name: "Kaydet", exact: true }).click();
+  await expect(page.getByText("Cihaza kaydedildi; bağlantı gelince gönderilecek.").first()).toBeVisible();
+  await page.reload();
+  await hazir(page);
+  await expect(marka).toHaveValue("Bağlantısız Marka");
+  await expect(page.getByText("Bu ekranda cihazda bekleyen kaydınız gösteriliyor", { exact: false })).toBeVisible();
   await page.goto(`${Y}/raporlar/00000000-0000-4000-8000-000000000000`);
   await expect(page.getByRole("heading", { name: "Bu sayfa bu cihazda yok" })).toBeVisible();
   await page.goto(adres);

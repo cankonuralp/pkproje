@@ -2355,6 +2355,12 @@ revizyon, alan kopyalama, hafif kusur devri, meslek eşleşme denetimi).
 - Emsal ürünler: https://opwire.app/iso-17020-periyodik-kontrol-yazilimi/ · https://17020muayene.vidco.com.tr/ · https://akuple.com/asansor-kontrol-yazilimi/ · https://ensyazilim.com/
 
 ## 11 · Değişiklik günlüğü
+- 2026-10-08 (404): **Rapor ekranı cihazda bekleyen kaydı gösterir — sessiz veri kaybı önlendi.** Bağlantısız kaydedilen rapor, cihazda yeniden
+  açılınca saklanan sayfadaki ESKİ hâliyle görünüyordu; kullanıcı onu düzenleyip kaydedince yeni iş bekleyen kaydın yerine geçer, bağlantısız
+  yazılanlar sessizce kaybolurdu. Artık ekran açılınca (ve sayfa tazelenince) raporun sunucuya henüz yazılmamış son içeriği (bekliyor / çakışma /
+  yapılamadı) cihazdan yüklenir, şeritte "Bu ekranda cihazda bekleyen kaydınız gösteriliyor"; kullanıcı o sırada yazıyorsa onun yazdığı kalır;
+  "eksik"te (sunucu kaydetti, gönderilmedi) sunucudaki gösterilir. kuyruk.ts bekleyenIcerik · SahaRaporu. Kilitler: kuyruk.test (son içerik;
+  eksikte / fotoğrafta yok; çakışmada var) · bozan kuyruk 5 · e2e cevrimdisi (bağlantı kesik: yaz, Kaydet, yenile → yazılan görünür).
 - 2026-10-08 (403): **Ofis rolünde cihaz saklayıcısı kurulmuyor — kilit** (402'nin uçtan uca kanıtı): firma yöneticisi oturumunda servis
   çalışanı kaydı yok, önceden indirme olmaz; bağlantı kesilince "Çevrimdışı" göstergesi yine çıkar, gelince kalkar (e2e cevrimdisi, ikinci test).
 - 2026-10-08 (402): **Sayfa saklama ve önceden indirme yalnız sahada çalışana** — servis çalışanı ve önceden indirme her oturumda kuruluyordu;

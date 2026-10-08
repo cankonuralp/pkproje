@@ -205,3 +205,23 @@ test("400 plan kabul / red: aynı planın bekleyen işinin yerine geçer, rapor 
     ["P2", "hata", "Plan bulunamadı (silinmiş ya da size açık değil)."],
   ]);
 });
+
+test("404 bekleyen içerik: kaydın sunucuya yazılmamış son form içeriği (bekliyor / çakışma / yapılamadı); 'eksik'te ve fotoğrafta yok", async () => {
+  await ekle("R8", "rapor.kaydet", 1, { ekipman: { marka: "İlk" } });
+  await ekle("R8", "rapor.kaydet", 1, { ekipman: { marka: "Son" } });
+  await ekleFoto("R8", 1);
+  assert.deepEqual(await K.bekleyenIcerik("R8"), { girdi: { ekipman: { marka: "Son" } }, durum: "bekliyor", tur: "rapor.kaydet" });
+  assert.equal(await K.bekleyenIcerik("R-yok"), null);
+  /* sunucu kaydetti ama gönderilmedi ("eksik"): içerik sunucuda — cihazdaki gösterilmez */
+  istekler = [];
+  cevap = (g) => json(g.tur === "rapor.foto" ? { tekrar: false, sonuc: { durum: "tamam", id: "R8", bildirim: "x", surum: { once: 1, sonra: 2 } } }
+    : { tekrar: false, sonuc: { durum: "eksik", eksikler: [{ bolum: "b", alan: "a", ad: "A" }] } });
+  await K.kuyrukGonder();
+  assert.equal(await K.bekleyenIcerik("R8"), null);
+  /* çakışmada cihazdaki içerik gösterilir (kullanıcı hangisini seçeceğini görür) */
+  agYok();
+  await ekle("R9", "rapor.gonder", 4, { ekipman: { marka: "Cihazda" } });
+  cevap = () => json({ tekrar: false, sonuc: { durum: "cakisma" }, guncel: 5 });
+  await K.kuyrukGonder();
+  assert.deepEqual(await K.bekleyenIcerik("R9"), { girdi: { ekipman: { marka: "Cihazda" } }, durum: "cakisma", tur: "rapor.gonder" });
+});

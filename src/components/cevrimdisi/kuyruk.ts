@@ -81,6 +81,17 @@ export async function kuyrugaEkle(g: { tur: KuyrukTuru; kayit: string; surum: nu
   void kuyrukGonder();
 }
 
+/** kaydın cihazda bekleyen, sunucuya henüz YAZILMAMIŞ form içeriği (bekliyor · çakışma · yapılamadı; "eksik"te sunucu zaten kaydetti) — ekran
+    yeniden açılınca bu gösterilir, sunucudaki eski hâl değil: yoksa kullanıcı eski hâli düzenleyip kaydeder, bu yeni iş bekleyenin yerine geçer
+    ve bağlantısız yazılanlar sessizce kaybolurdu (404) */
+export async function bekleyenIcerik(kayit: string): Promise<{ girdi: unknown; durum: IsDurumu; tur: KuyrukTuru } | null> {
+  await yukle();
+  const x = [...bellek].reverse().find((y) => y.kayit === kayit && FORM.has(y.tur) && (y.durum === "bekliyor" || y.durum === "cakisma" || y.durum === "hata"));
+  if (!x) return null;
+  const db = await depoAc();
+  return { girdi: db ? await coz(db, x) : x.girdi, durum: x.durum, tur: x.tur as KuyrukTuru };
+}
+
 /** kullanıcı kaldırdı (eksik / hata bilgisi okundu, ya da çakışmada "sunucudakini kullan") */
 export async function kuyruktanCikar(id: string): Promise<void> {
   const db = await depoAc();

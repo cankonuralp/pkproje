@@ -22,7 +22,7 @@
 import { useRouter } from "next/navigation";
 import { useEffect, useMemo, useRef, useState, useSyncExternalStore, useTransition, type ReactNode, type TransitionStartFunction } from "react";
 import { useBildir } from "../../../components/bildirim/Bildirim";
-import { kayitBilgileriniKapat, kuyrugaEkle, kuyrukAbone, kuyrukAnlik, kuyrukSunucuAnlik, type KuyrukSonucOlayi, type KuyrukTuru } from "../../../components/cevrimdisi/kuyruk";
+import { bekleyenIcerik, kayitBilgileriniKapat, kuyrugaEkle, kuyrukAbone, kuyrukAnlik, kuyrukSunucuAnlik, type KuyrukSonucOlayi, type KuyrukTuru } from "../../../components/cevrimdisi/kuyruk";
 import { Girdi, ipucuId } from "../../../components/form/Form";
 import { Ikon } from "../../../components/ikon/Ikon";
 import { useOnayla } from "../../../components/pencere/Onay";
@@ -112,6 +112,23 @@ export function SahaRaporu({ v }: { v: Gorunum }) {
     return { sonraki: !!v.tarih.sonraki && v.tarih.sonraki !== ayEkle(basGun, v.tur.periyot), rapor: !!v.tarih.rapor && v.tarih.rapor !== basGun };
   });
   const [kirli, setKirli] = useState(false);
+  /* 404: cihazda bekleyen (gönderilmemiş) kayıt varsa ekran onu gösterir — sunucudaki eski hâl değil (açılışta ve sayfa tazelenince; kullanıcı o
+     sırada yazıyorsa onun yazdığı kalır) */
+  const [cihazdaki, setCihazdaki] = useState(false);
+  const kirliRef = useRef(false);
+  useEffect(() => { kirliRef.current = kirli; }, [kirli]);
+  useEffect(() => {
+    let iptal = false;
+    void bekleyenIcerik(v.id).then((b) => {
+      if (iptal || !b || kirliRef.current) { if (!iptal && !b) setCihazdaki(false); return; }
+      const g = b.girdi as Partial<{ ekipman: Record<string, string>; tarih: Record<string, string>; cevaplar: Cevaplar }>;
+      if (g.ekipman) setEkipman((e) => ({ ...e, ...g.ekipman }) as typeof e);
+      if (g.tarih) setTarih((t) => ({ ...t, ...g.tarih }) as typeof t);
+      if (g.cevaplar) setCevaplar(g.cevaplar);
+      setCihazdaki(true);
+    }).catch(() => undefined);
+    return () => { iptal = true; };
+  }, [v.id, v.surum]);
   const [sonKayit, setSonKayit] = useState<string | null>(v.surum > 0 ? v.degisti : null);
   const [isaretli, setIsaretli] = useState<ReadonlySet<string>>(() => new Set());
   const [eksikler, setEksikler] = useState<Eksik[] | null>(null);
@@ -379,6 +396,7 @@ export function SahaRaporu({ v }: { v: Gorunum }) {
   const seritler: ReactNode[] = [];
   if (genel) seritler.push(<Serit key="hata" tur="hata" ikon="circle-alert">{genel}</Serit>);
   /* 402: cihazda gönderilemeyen iş (çakışma, yapılamadı) sayfa yenilense de söylenir — anlık bildirim kaybolsa da kullanıcı bilir */
+  else if (cihazdaki && formBekliyor) seritler.push(<Serit key="cihazdaki" tur="bilgi" ikon="wifi-off">Bu ekranda cihazda bekleyen kaydınız gösteriliyor; bağlantı gelince gönderilecek.</Serit>);
   else if (sorunluIs) seritler.push(<Serit key="kuyruk" tur="hata" ikon="circle-alert">{v.no}: cihazda bekleyen iş gönderilemedi{sorunluIs.ileti ? ` — ${sorunluIs.ileti}` : ""}. Üst çubuktaki bekleyen işlemlerden seçin.</Serit>);
   if (duzenle && v.kunyeFark.length) {
     seritler.push(
