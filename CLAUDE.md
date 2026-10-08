@@ -225,6 +225,9 @@ pkproje/
                             cevaplar) · rapor-ozeti.ts (384, saf: yapay zekâya yalnız formatın adları / seçenekler / sayılar) · raporlar/server/say-baglanti.ts
                             (raporSayBilgisi: yalnız yazanın Yeni raporu) · ui/eylemler.ts · çekirdek
                             src/server/yz/say.ts (istek: önbellekli talimat + bağlam, cevap çözme; saf) + sohbet.ts (geçmiş; göç 0071 yz_sohbet)
+  src/server/islem/         TEK SEFERLİK İŞLEM (392; 09-D2, çevrimdışı kuyruk): islem.ts tekSeferlik (kimliğe danışma kilidi, iş + sonuç aynı veritabanı
+                            işleminde; göç 0076 islem) · yazan.ts (işi yazanın etiketi — kimlik tarayıcıya gitmez) · uç src/app/api/islem (köken, oturum,
+                            yazan kapıları) · iş türleri modülde: raporlar/server/islem-baglanti.ts
   src/server/saglik.ts      SAĞLIK (350; 09-G5): /api/saglik denetimleri (db/saglik.ts → saglik_denetimi + 383 is_denetimi — takılı iş, 0072; geçerli tanım 0053 — bağlanan rol, göç sayısı;
                             db/son-goc.ts SON_GOC + GOC_SAYISI — her yeni göçte ikisi güncellenir, testle kilitli) · canlı duman testi: node tools/duman.mjs (salt okunur, çıkış kodu)
   src/server/db/havuz.ts    ortamdan bağlantı: ağda şifresiz bağlantı YOK (PROBATA_VT_SSL=dogrula → kok-sertifika.ts Supabase kökü); Vercel'de boşta bekleme

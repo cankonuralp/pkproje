@@ -2355,6 +2355,17 @@ revizyon, alan kopyalama, hafif kusur devri, meslek eşleşme denetimi).
 - Emsal ürünler: https://opwire.app/iso-17020-periyodik-kontrol-yazilimi/ · https://17020muayene.vidco.com.tr/ · https://akuple.com/asansor-kontrol-yazilimi/ · https://ensyazilim.com/
 
 ## 11 · Değişiklik günlüğü
+- 2026-10-08 (392): **Çevrimdışı çalışma — sunucu tarafı: tek seferlik işlem ucu** (KOD-GECIS K3 "çevrimdışı kuyruk ölçüldü" eksik kalmıştı;
+  09-D2, ARKA-UC §4.3–4.5, maket Z4; reisim: *"devam et sıradaki işlere geç"*). Cihaz bağlantısızken yaptığı işi (şimdilik rapor Kaydet ve Onaya
+  gönder) kendi ürettiği kimlikle kuyruğa yazacak, bağlantı gelince `/api/islem`'e gönderecek. Sunucu işi ve sonucunu aynı veritabanı
+  işleminde yazar (göç 0076 `islem`): aynı kimlik yeniden gelirse iş tekrar yapılmaz, saklanan sonuç döner; aynı anda iki istekte iş bir kez
+  (kimliğe danışma kilidi); kimlik başka kişinin işleminde ya da başka işte kullanılmışsa iş yapılmaz. İş modülün kendi işlevi — yetki, ENGEL'ler,
+  sürüm kilidi aynen: cihazın gördüğü sürüm başka yerde değiştiyse "çakışma" (sessiz ezme yok), kullanıcı yeniden göndermeyi seçerse yeni kimlik.
+  Kapılar: aynı köken, JSON, gövde sınırı, biçim, oturum; işi yazanın etiketi oturumdaki kişininki değilse işlenmez (cihaz saklar; etiket
+  kimlikten türetilen özet — tarayıcıya hesap kimliği gitmez). Cihaz saati 10 dk'dan
+  fazla saparsa yanıtta söylenir. Kişi yalnız kendi işlemlerini görür (RLS firma + hesap); kayıt değişmez / silinmez. Kilit islem.test (gerçek
+  PostgreSQL, iki firma); olumsuz kanıt islem.bozan (4 bozma); e2e islem (üç genişlik: kapılar). Sıradaki: cihazdaki kuyruk (şifreli IndexedDB),
+  üst çubukta "Çevrimdışı · n bekliyor", saha raporunda Kaydet / Onaya gönder bağlantısızken kuyruğa; ardından sayfaların bağlantısız açılması.
 - 2026-10-08 (393): **Yönetim girişinde iki adım şimdilik kapalı** (reisim birebir: *"2 aşamalı doğrulama için Google Authenticator kullanıyorum
   ama sürekli hata veriyor süre geçmemesine rağmen süre geçti diyor yönetim paneline giremiyorum ikii aşamalı doğrulamayı şimdilik kaldır,
   belirlediğin mail şifre ile direk girebileyim"*). Neden: kurulum sayfasında karekod yoktu, 32 harflik anahtar uygulamaya elle yazılıyordu; tek

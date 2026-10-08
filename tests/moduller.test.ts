@@ -56,8 +56,9 @@ const GELISTIRME_ROTALARI = ["vitrin"];
 /* 2026-10-04 (K1, dosya ucu): api/ yalnız tanımlı uçları taşır — her uç oturumu ve yetkiyi kendisi denetler (09-A2).
    2026-10-05 (316): olcum — PDF motorunun Vercel ölçümü, oturumsuz ama YALNIZ önizleme dağıtımında (aşağıdaki test kilitler; yayında 404)
    2026-10-06 (350, 09-G5): saglik — oturumsuz sağlık ucu; yalnız evet / hayır denetimleri ve sürüm (firma / kişi bilgisi yok — e2e/api.spec)
-   2026-10-08 (378, K5): is — zamanlayıcı uçları (gece işi); oturumsuz ama YALNIZ CRON_SECRET'le (aşağıdaki test: ilk iş zamanliYetkili) */
-const API_UCLARI = ["dosya", "is", "olcum", "saglik", "surum", "tanim"];
+   2026-10-08 (378, K5): is — zamanlayıcı uçları (gece işi); oturumsuz ama YALNIZ CRON_SECRET'le (aşağıdaki test: ilk iş zamanliYetkili)
+   2026-10-08 (392, 09-D2): islem — çevrimdışı kuyruğun tek seferlik işlem ucu; ilk iş aynı köken, oturum ister, yalnız POST (aşağıdaki test) */
+const API_UCLARI = ["dosya", "is", "islem", "olcum", "saglik", "surum", "tanim"];
 const klasorlerOf = (yol: string) => readdirSync(yol).filter((ad) => statSync(join(yol, ad)).isDirectory()).sort();
 
 test("her modülün rota klasörü var ve src/app'te modül dışı rota yok", () => {
@@ -140,6 +141,17 @@ test("api/is yalnız zamanlayıcının sırrıyla: ilk iş zamanliYetkili, deği
   const govde = kaynak.slice(kaynak.indexOf("export async function GET"));
   assert.match(govde, /^export async function GET\(istek: Request\) \{\n {2}if \(!zamanliYetkili\(istek\.headers\.get\("authorization"\), process\.env\.CRON_SECRET\)\) \{\n {4}return Response\.json\(\{ hata: "Yetkisiz\." \}, \{ status: 401/);
   assert.doesNotMatch(kaynak, /export (async )?function (POST|PUT|PATCH|DELETE)/);
+});
+
+/* 2026-10-08 (392): çevrimdışı işlem ucu — ilk iş aynı köken (kiracılar arası sahte istek iş yapmadan 403), sonra JSON / sınır / biçim, oturum,
+   işi yazan hesap = oturumdaki hesap; iş tek seferlik çatıdan (tekSeferlik) ve oturumun işleminde; yalnız POST */
+test("api/islem: ilk iş aynı köken; oturum ve hesap denetimi işten önce; iş tek seferlik ve oturumun işleminde; yalnız POST", () => {
+  const kaynak = readFileSync(join(KOK, "src", "app", "api", "islem", "route.ts"), "utf8");
+  const govde = kaynak.slice(kaynak.indexOf("export async function POST"));
+  assert.match(govde, /^export async function POST\(istek: Request\) \{\n {2}if \(!\(await ayniKoken\(\)\)\) return yanit\(\{ hata: "koken" \}, 403\);/);
+  const sira = ["istekOturumu()", "b.yazan !== yazanEtiketi(o.id)", "oturumIslemi(o, async (db) => {", "await tekSeferlik(db,"].map((x) => govde.indexOf(x));
+  assert.ok(sira.every((i, n) => i > 0 && (n === 0 || i > sira[n - 1])), `sıra: ${sira.join(", ")}`);
+  assert.doesNotMatch(kaynak, /export (async )?function (GET|PUT|PATCH|DELETE)/);
 });
 
 /* 2026-10-06 (348; reisim: "rol değiştirme, sızma, veri çalma"): yönetim sayfası yalnız yönetim adresinde ve yönetim oturumuyla, veri yönetim
