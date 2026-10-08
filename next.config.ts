@@ -16,7 +16,10 @@ const ortak: NextConfig = {
   /* webpackMemoryOptimizations: yalnız uçtan uca geliştirme sunucusunda (scripts/e2e-sunucu.ts) — uzun koşuda bellek eşiğine dayanıp yeniden
      başlamasın (Next belgesi: düşük riskli, derlemeyi biraz yavaşlatır) */
   /* proxyClientMaxBodySize: ara katman (src/proxy.ts) gövdeyi varsayılan 10 MB'ta keser — imzalı PDF yüklemesi sunucu eylemine tam ulaşsın */
-  experimental: { serverActions: { bodySizeLimit: "26mb" }, proxyClientMaxBodySize: "26mb", webpackMemoryOptimizations: process.env.PROBATA_WEBPACK_BELLEK === "1" },
+  /* reactDebugChannel: yalnız geliştirme kipinde var (sayfa açılınca sunucuya ayrı canlı bağlantı); uçtan uca sunucusunda kapalı — açıkken
+     bağlantısız sunulan sayfa bağlanamıyor (402, scripts/e2e-sunucu.ts PROBATA_HATA_KANALI=0) */
+  experimental: { serverActions: { bodySizeLimit: "26mb" }, proxyClientMaxBodySize: "26mb", webpackMemoryOptimizations: process.env.PROBATA_WEBPACK_BELLEK === "1",
+    reactDebugChannel: process.env.PROBATA_HATA_KANALI !== "0" },
   env: { NEXT_PUBLIC_IKON_ADRESI: `/${IKON_DOSYASI}?v=${ikonOzeti}` },
   /* PDF motoru (src/belge/pdf.ts, 316): Chromium paketleri derlemeye katılmaz (düğüm modülü olarak yüklenir); belge CSS'i, yazı tipi ve sunucusuz
      Chromium ikilisi yalnız PDF basan uçların izine eklenir (teklif PDF'i — 325; fatura özeti — 340; talep formu — 341; araç tutanağı — 342) — rapor sayfası da (İmzala sunucu eylemi orada koşar; 315–317

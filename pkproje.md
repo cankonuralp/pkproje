@@ -2360,7 +2360,10 @@ revizyon, alan kopyalama, hafif kusur devri, meslek eşleşme denetimi).
   arka planda onlarca plan / rapor sayfası çizilip son testler zaman aşımına düştü). Artık yalnız denetçi ve branş yöneticisi rolünde (denetime
   çıkan, rapor yazan) kurulur; bağlantısız kuyruk herkeste çalışır. Uygulama düzeni karar verir (src/app/(uygulama)/layout.tsx SAHA_ROLLERI).
   Ayrıca /api/islem'in sıra kilidi (moduller.test) türlü çağrıyla bozulmuştu — düzeltildi; e2e cevrimdisi bağlantısız açılışta konsol / sayfa
-  hatalarını ve düşen istekleri iletiye yazar (nedeni deneme kaydında görünsün).
+  hatalarını ve düşen istekleri iletiye yazar (nedeni deneme kaydında görünsün). Bağlantısız açılan sayfanın bağlanmamasının NEDENİ bulundu:
+  Next'in geliştirme kipi sayfa açılınca sunucuya ayrı bir canlı "hata ayıklama kanalı" açar ve sayfayı onunla bağlar
+  (next/dist/client/dev/debug-channel.js) — bağlantı yokken sayfa hiç bağlanamaz; yayında bu kanal yok. Uçtan uca sunucusunda kapatıldı
+  (next.config.ts reactDebugChannel, scripts/e2e-sunucu.ts PROBATA_HATA_KANALI=0); yayın etkilenmez.
 - 2026-10-08 (401): **Cihazda saklanan sayfalar sınırlı** — servis çalışanı açılan her saha sayfasını (rapor, plan) cihazda şifreli saklıyordu,
   sınırsızdı (aylarca açılan her rapor birikirdi). Artık en çok 300 sayfa; aşınca en eski açılanlar 250'ye inene kadar silinir (aradaki pay her
   yeni sayfada bütün depoyu taramasın). Önceden indirilen paket (en çok 20 plan + 100 rapor) sınırın içinde kalır. Kilit sw.test (çalışanın kendi

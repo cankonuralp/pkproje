@@ -275,9 +275,11 @@ const u = kume.uygulama;
 /* 2026-10-05 (CI kayıtları): 180 testlik koşunun sonuna doğru geliştirme sunucusunun yığını, Next'in kendi eşiğine (bellek sınırının %80'i; sınır
    varsayılan olarak makine belleğinin yarısı) dayanıp sunucu test ortasında kendini yeniden başlatıyordu ("Server is approaching the used memory
    threshold, restarting...") — o anda koşan test düşüyordu (telefon saha raporu, tür bağlantısı). Uçtan uca sunucusuna daha geniş yığın (12 GB;
-   CI makinesi 16 GB) ve webpack bellek iyileştirmesi (yalnız bu sunucu: PROBATA_WEBPACK_BELLEK, next.config.ts) */
+   CI makinesi 16 GB) ve webpack bellek iyileştirmesi (yalnız bu sunucu: PROBATA_WEBPACK_BELLEK, next.config.ts).
+   2026-10-08 (402): geliştirme kipinin "hata ayıklama kanalı" (sayfa açılınca sunucuya ayrı canlı bağlantı) kapalı — açıkken servis çalışanının
+   bağlantısız sunduğu sayfa hiç bağlanamıyor (next/dist/client/dev/debug-channel.js; yayında bu kanal yok): PROBATA_HATA_KANALI=0 */
 const kod = await nextCalistir("dev", {
-  NODE_OPTIONS: [process.env.NODE_OPTIONS, "--max-old-space-size=12288"].filter(Boolean).join(" "), PROBATA_WEBPACK_BELLEK: "1",
+  NODE_OPTIONS: [process.env.NODE_OPTIONS, "--max-old-space-size=12288"].filter(Boolean).join(" "), PROBATA_WEBPACK_BELLEK: "1", PROBATA_HATA_KANALI: "0",
   PROBATA_VT_SUNUCU: u.host, PROBATA_VT_KAPI: String(u.port), PROBATA_VT_AD: u.database, PROBATA_VT_KULLANICI: u.user, PROBATA_VT_PAROLA: u.password,
   PROBATA_ANA_ALAN: "localhost", NEXT_TELEMETRY_DISABLED: "1", PROBATA_DEPO_KLASOR: mkdtempSync(join(tmpdir(), "probata-e2e-depo-")),
   PROBATA_DEPO: "vt",   // 347: uçtan uca deneme yayınındaki gibi veritabanı deposuyla
