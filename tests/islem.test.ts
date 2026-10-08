@@ -89,7 +89,8 @@ before(async () => {
   });
   plan = tamam(await a(PLAN, (db) => planAc(db, depo, PLAN, A, { tesis: t1, baslangic: bugunTr(), bitis: bugunTr(),
     ekip: [{ personel: denP, isgNo: "ISG-1", kaydet: false }, { personel: den2P, isgNo: "ISG-2", kaydet: false }] }))).id;
-  for (const k of [DEN, DEN2]) tamam(await a(k, async (db) => planKabul(db, k, plan, (await planIci(db, k, plan))!.surum, true)));
+  /* plan ekibinden biri kabul eder (plan "kabul edildi" olur; ekipteki öteki denetçi de o plana rapor açar) */
+  tamam(await a(DEN, async (db) => planKabul(db, DEN, plan, (await planIci(db, DEN, plan))!.surum, true)));
 });
 after(async () => { await havuz?.end(); await kume?.durdur(); rmSync(klasor, { recursive: true, force: true }); });
 
