@@ -2355,6 +2355,13 @@ revizyon, alan kopyalama, hafif kusur devri, meslek eşleşme denetimi).
 - Emsal ürünler: https://opwire.app/iso-17020-periyodik-kontrol-yazilimi/ · https://17020muayene.vidco.com.tr/ · https://akuple.com/asansor-kontrol-yazilimi/ · https://ensyazilim.com/
 
 ## 11 · Değişiklik günlüğü
+- 2026-10-08 (408): **YAYIN — 392–407 canlıda** (bağlantısız çalışma tamamı + yönetim karekodu). Supabase 0076 (77 göç; işlev gövdeleri md5
+  dosyayla aynı; uygulama rolü islem'de yalnız SELECT + INSERT; satır güvenliği açık + zorunlu; kimlik işlevi tanımlayıcı-yetkili, arama yolu
+  sabit, anon yetkisiz) · main 1077980 (Vercel, /api/saglik sürüm 1077980) · duman 9/9 · /sw.js 200 · CSP worker-src 'self' · /api/islem başka
+  köken 403, oturumsuz 401, GET 405 · /raporlar/yeni oturumsuz girişe yönlenir · son 1 saatte çalışma hatası yok · giriş sayfası tarayıcıda temiz
+  (konsolda yalnız /favicon.ico 404 — eskiden beri, sayfa icon.svg kullanır). Oturum isteyen ekranlar (bağlantısız rapor, plan kabulü, yeni rapor,
+  karekod) canlıda ölçemedim — uçtan uca üç genişlikte deneme makinesinde geçti (1077980; masaüstü işi bir kez yeniden koşuldu: ilk koşuda YZ
+  giriş sayfası 15 sn'de açılmadı, kodla ilgisiz anlık yavaşlık — yeniden koşuda 93/93).
 - 2026-10-08 (407): **Yönetim iki adımlı girişine karekod** (reisim: Google Authenticator'a anahtar elle yazılınca "süre geçti" hatası — 393'te
   iki adım kapatıldı). Kurulum ekranında anahtarın karekodu (doğrulama uygulamasıyla "karekod tara"; okutulamazsa anahtar yine yazılı). Sunucuda
   üretilir (qrcode 1.5.4, MIT — yalnız modül dizisi), ekran SVG yolu olarak çizer (HTML enjekte edilmez), her temada koyu modül açık zemin (marka
