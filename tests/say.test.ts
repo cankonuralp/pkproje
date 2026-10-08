@@ -229,9 +229,12 @@ test("384 açık rapor özeti: yalnız raporu yazanın Yeni raporunda, adres o r
     const ekp = (await db.sorgu<{ id: string }>("INSERT INTO ekipman (tesis_id, tur_id, kod, ekleyen) VALUES ($1, $2, 'EP-S1', 'x') RETURNING id::text", [tesis, tur])).rows[0].id;
     const t = tamam(await taslakBaslat(db, FA.yon, tur, "sablon:ZPKR02", null));
     tamam(await yayinla(db, FA.yon, t.id, t.surum, ""));
-    return { ekp };
+    const per = (await db.sorgu<{ p: string }>("SELECT personel_id::text AS p FROM hesap WHERE id = $1", [FA.den.id])).rows[0].p;
+    return { ekp, tesis, per };
   });
-  const plan = (await ile(A, FA.den, (db) => db.sorgu<{ id: string }>("SELECT id::text FROM plan LIMIT 1"))).rows[0].id;
+  /* ekipman plan açılınca plana girer: ekipmandan sonra yeni plan */
+  const g = bugunTr();
+  const plan = tamam(await ile(A, FA.plan, (db) => planAc(db, depo, FA.plan, A, { tesis: f.tesis, baslangic: g, bitis: g, ekip: [{ personel: f.per, isgNo: "ISG-2", kaydet: false }] }))).id;
   const v = (await ile(A, FA.den, (db) => planIci(db, FA.den, plan)))!;
   tamam(await ile(A, FA.den, (db) => planKabul(db, FA.den, plan, v.surum, true)));
   const rapor = tamam(await ile(A, FA.den, (db) => raporOlustur(db, FA.den, plan, f.ekp))).id;
