@@ -93,6 +93,7 @@ pkproje/
                             · 364 müşteri / tesis Sil (silmeDurumu, musteriSil, tesisSil — silici.ts, 0060; yalnız firma yöneticisi, kullanılmamış kayıt)
   src/modules/ekipman-turleri/ EKİPMAN TÜRLERİ (2026-10-04): katalog (Mekanik / Elektrik), tür sayfası, rapor formatı PDF sürümleri
                             · 361 turSil / turSilmeDurumu (kullanılmamış tür, yönetici; 0057) · cihazTurKullanimi (Ölçüm cihazları T7 penceresi için)
+                            · 450: "Rapor formatı" = yayındaki şablon; PDF "Basılı format PDF'i — isteğe bağlı"
                             · 436 HAZIR / BAKANLIK RAPOR FORMATLARI listede (ui/HazirFormatlar.tsx; "Tür olarak ekle" → rapor-format sablondanTurEkle:
                             tür + şablondan taslak tek işlemde; sablonKullanimi) · önizleme /ekipman-turleri/sablon/<anahtar>
   src/modules/olcum-cihazlari/ ÖLÇÜM CİHAZLARI (2026-10-04): cihaz, cihaz türü, kalibrasyon kaydı + sertifika, kalibrasyon durumu (eşik firma ayarı)
@@ -128,6 +129,10 @@ pkproje/
                             SurumDuzenleTusu: o sürümden taslak → kurucu; açık taslak varsa devam / yeniden başla)
                             · 440 Bakanlık türlerinde ölçüm cihazı türleri (src/tanim/standartlar.ts formatCihazTurleri → olcum-cihazlari hazirCihazTuru) +
                             boş bağlantı tamamlama (ekipman-turleri hazirBaglantiTamamla; ayar kurulum.baglanti; eylemde bakanlikTamamla)
+                            · 450 YENİ TÜRE HAZIR FORMAT: sablonlar.ts grupFormati (Ek-III grubuna göre) → formatlar.ts varsayilanFormatKur (yetkisiz; kurulum
+                            ve yeniTureFormat) — tür ekleme eylemi aynı işlemde yayınlar; kurulum formatsız eski türleri bir kez (ayar kurulum.varsayilan)
+                            · 451 KURUCU KÂĞIT: ui/Kagit.tsx (belgenin görünümünde yerinde yazı / ekle / çıkar; kagit.module.css) + FormatKurucu.tsx (Düzenle ·
+                            Belge önizlemesi — src/belge/belge.ts tarayıcıda, ui/kurucuOrnegi.ts boş rapor); eski üç sütunlu düzenleyici kalktı
   src/modules/planlar/      PLANLAR (2026-10-04, 309–310; modül 13): plan + plan ekibi (göç 0023; proje no sunucuda, değişmez; künye kayıttan) ·
                             Plan aç /planlar/ac (uyarılar sema.ts'te saf, engel değil) · liste /planlar · plan içi /planlar/<id> (server/plan-ici.ts:
                             akış kabul/red/kontrol/tamamla, künye düzenle/güncelle, plan ekipmanı, proje notları; geçişler göç 0024 tetiğinde) · 372 planSil
@@ -289,7 +294,8 @@ pkproje/
   src/components/disa/      DIŞA / İÇE AKTARMA (tarayıcıda, saf): zip.ts (STORE yazıcı) · xlsx.ts (yazıcı) · oku.ts (325: .xlsx / .csv OKUYUCU — DEFLATE
                             DecompressionStream ile, ortak dizgi, tarih biçimi, Türkçe Windows CSV; 10 MB / 50 MB açılmış / 5 000 satır sınırı) · indir.ts
   src/components/           TEK ÜRETİCİLER: sayfa/ (kırıntı, sayfa / nesne başlığı, bölüm, rozet, sekmeler) · kabuk (yan menü + üst çubuk) · ikon · boş durum · tuş · şerit · bildirim · pencere + onay ·
-                            liste (tablo↔kart, süzgeç mantığı liste/suzgec.ts) · fotoğraf küçültme (foto/kucult.ts) · filtre satırı · sayfalayıcı · seçim alanı + tarih/saat (secim/) · bilgi yüzleri / bilgi listesi / koşullar (bilgi/) · form sayfası (form/) · uzun tuş (tus/UzunTus) · kopyala (pencere/Kopyala: sonuç pencerenin içinde) · dışa aktarma (disa/: ZIP + .xlsx yazıcı, saf; tarayıcıda indirme — 320) · kesin silme / pasif (sil/: SilTusu, PasifPenceresi — engel, metin.ts kullanimMetni, odak.ts — 357/365)
+                            liste (tablo↔kart, süzgeç mantığı liste/suzgec.ts) · YÜZEN KATMAN secim/yuzen.ts (452: seçim listesi, süzgeç seçicisi, takvim,
+                            saat önerileri üst katmanda — sayfayı / pencereyi itmez, kesilmez; tarama açılır katman denetimi) · fotoğraf küçültme (foto/kucult.ts) · filtre satırı · sayfalayıcı · seçim alanı + tarih/saat (secim/) · bilgi yüzleri / bilgi listesi / koşullar (bilgi/) · form sayfası (form/) · uzun tuş (tus/UzunTus) · kopyala (pencere/Kopyala: sonuç pencerenin içinde) · dışa aktarma (disa/: ZIP + .xlsx yazıcı, saf; tarayıcıda indirme — 320) · kesin silme / pasif (sil/: SilTusu, PasifPenceresi — engel, metin.ts kullanimMetni, odak.ts — 357/365)
                             (geliştirme vitrini /vitrin: yalnız geliştirmede, yayında 404)
   src/styles/               tokens.css (TEK KAYNAK; docs kopyası testle aynı) · yazi.css (Sora) · temel.css · kalip.ts
   public/vendor/            üçüncü parti kendi kökenimizden, adında sürüm (lucide-1.47.0 ikonları)
