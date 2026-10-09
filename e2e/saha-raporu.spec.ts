@@ -59,6 +59,8 @@ async function planAc(page: Page) {
 const girdi = (kap: Page | Locator, ad: string) => kap.getByRole("textbox", { name: ad }).or(kap.getByRole("spinbutton", { name: ad }));
 
 /** tarih + saat alanı (TarihAlani, src/components/secim): tarih kutusu, saat ve dakika ayrı kutular */
+/** 431: rapor ekranının ve onay ekranının aşama çizgisinde ŞİMDİKİ adım (öteki adımların adları da sayfada — durum yalnız buradan okunur) */
+const asama = (page: Page) => page.getByRole("list", { name: "Raporun aşaması" }).locator('[aria-current="step"]');
 const zamanAlani = (page: Page, ad: string) => page.locator("[data-zaman]").filter({ has: page.getByLabel(ad) });
 async function zamanYaz(page: Page, ad: string, gun: string, saat: string, dakika: string) {
   const kap = zamanAlani(page, ad);
@@ -89,7 +91,7 @@ test("saha raporu: rapor oluştur, eksikle gönderilmez, doldur + cihaz ekle, on
   await page.getByRole("region", { name: "Raporlar", exact: true }).getByRole("link", { name: "Raporu düzenle" }).click();
   await expect(page).toHaveURL(new RegExp(`/raporlar/${UUID}$`), { timeout: 30_000 });
   await expect(page.getByRole("heading", { level: 1 })).toHaveText(`${E2E_SAHA.ekipman} · ${E2E_SAHA.tur}`, { timeout: 30_000 });
-  await expect(page.getByText("Yeni", { exact: true }).filter({ visible: true }).first()).toBeVisible();
+  await expect(asama(page)).toContainText("Yeni");
   const raporAdresi = new URL(page.url()).pathname;
   const raporNo = (await page.getByText(RAPOR_NO).first().textContent())!.match(RAPOR_NO)![0];
   const gun = bugunTr();
@@ -124,6 +126,22 @@ test("saha raporu: rapor oluştur, eksikle gönderilmez, doldur + cihaz ekle, on
   await expect(soru).toBeVisible();
   await soru.getByRole("button", { name: "Vazgeç" }).click();
   await expect(page.getByRole("dialog", { name: "Standart", exact: true })).toHaveCount(0);
+  /* 430: kontrol başlığında ünlem her zaman (adsız grupta bölüm başlığında), maddede yalnız talimat varsa; tıklayınca sormadan talimat */
+  await page.getByRole("button", { name: "Muayene kriterleri talimatı" }).click();
+  const talimat = page.getByRole("dialog", { name: "Talimat · Muayene kriterleri" });
+  await expect(talimat).toContainText("Kap basınçsız ve soğukken muayene edilir.");
+  await expect(talimat).toContainText("1,5 katıdır");
+  await talimat.getByRole("button", { name: "Kapat" }).click();
+  await expect(page.getByRole("button", { name: "Tahliye düzeni talimatı" })).toHaveCount(0);
+  await page.getByRole("button", { name: "Hidrostatik deney (deney basıncı) talimatı" }).click();
+  await expect(page.getByRole("dialog", { name: /^Talimat · / })).toContainText("sızıntı ve kalıcı şekil değişikliği");
+  await page.getByRole("dialog", { name: /^Talimat · / }).getByRole("button", { name: "Kapat" }).click();
+  /* 431: sağ üstte genel muayene talimatı (kompresör şablonunda yazılmamış — pencere söyler); aşama çizgisinde 5 adım, şimdiki Yeni */
+  await page.getByRole("button", { name: "Genel muayene talimatı" }).click();
+  const genelTalimat = page.getByRole("dialog", { name: "Genel muayene talimatı" });
+  await expect(genelTalimat).toContainText("talimat yazılmamış");
+  await genelTalimat.getByRole("button", { name: "Kapat" }).click();
+  await expect(page.getByRole("list", { name: "Raporun aşaması" }).getByRole("listitem")).toHaveCount(5);
   await stdTus.click();
   await soru.getByRole("button", { name: "Aç", exact: true }).click();
   const stdPencere = page.getByRole("dialog", { name: "Standart", exact: true });
@@ -174,7 +192,7 @@ test("saha raporu: rapor oluştur, eksikle gönderilmez, doldur + cihaz ekle, on
   /* onaya gönder: durum Teknik yönetici onayında, rapor artık düzenlenmez */
   await onayaGonder(page);
   await expect(page.getByText(/^Onaya gönderildi: /).first()).toBeVisible({ timeout: 30_000 });
-  await expect(page.getByText("Teknik yönetici onayında", { exact: true }).filter({ visible: true }).first()).toBeVisible();
+  await expect(asama(page)).toContainText("Teknik yönetici onayında");
   await expect(page.getByRole("button", { name: "Onaya gönder" })).toHaveCount(0);
 
   /* kırıntıdan plana: plan Denetimde, Raporlar listesinde rapor no + durum; kendi raporu gönderildi → "Raporu aç"; ekipmanda Rapor oluştur yok */
@@ -208,7 +226,7 @@ test("saha raporu: rapor oluştur, eksikle gönderilmez, doldur + cihaz ekle, on
   await expect(page).toHaveURL(new RegExp(`/raporlar/${UUID}$`));
   expect(new URL(page.url()).pathname).not.toBe(raporAdresi);
   await expect(page.getByText(/raporundan kopyalandı; test değerleri, fotoğraflar ve sonuç bu ekipman için girilir\./)).toBeVisible();
-  await expect(page.getByText("Yeni", { exact: true }).filter({ visible: true }).first()).toBeVisible();
+  await expect(asama(page)).toContainText("Yeni");
   await expect(page.getByRole("button", { name: "Onaya gönder" }).first()).toBeVisible();
 
   /* 314 Onaylar: mekanik yönetici kuyruktan açar, gerekçeyle geri gönderir */
@@ -254,7 +272,7 @@ test("saha raporu: rapor oluştur, eksikle gönderilmez, doldur + cihaz ekle, on
   await expect(page.getByText(`${raporNo} onaylandı; muayene uzmanı imzasında`, { exact: false }).first()).toBeVisible({ timeout: 30_000 });
   await page.goto(`/onaylar/${raporAdresi.split("/").pop()}`);
   await hazir(page);
-  await expect(page.getByText("Muayene uzmanı imzası", { exact: true }).filter({ visible: true }).first()).toBeVisible({ timeout: 30_000 });
+  await expect(asama(page)).toContainText("Muayene uzmanı imzası", { timeout: 30_000 });
   await expect(page.getByRole("button", { name: "Onayı geri al" })).toBeVisible();
   await expect(page.getByRole("button", { name: "Onayla", exact: true })).toHaveCount(0);
 
@@ -268,7 +286,7 @@ test("saha raporu: rapor oluştur, eksikle gönderilmez, doldur + cihaz ekle, on
   /* Raporlar alan alan aranır (rapor no · ekipman kodu · tür · tesis): ana arama kutusu yok, kutu alanın adıyla */
   await page.getByRole("searchbox", { name: "Rapor no" }).fill(raporNo);
   await expect(page.getByRole("link", { name: raporNo }).first()).toBeVisible({ timeout: 30_000 });
-  await expect(page.getByText("Muayene uzmanı imzası", { exact: true }).filter({ visible: true }).first()).toBeVisible();
+  await expect(page.getByText("Muayene uzmanı imzası", { exact: true }).filter({ visible: true }).first()).toBeVisible();   // listede durum rozeti (aşama çizgisi rapor ekranında)
   await expect(page.getByText(/\d+ rapor imzanızı bekliyor/).first()).toBeVisible();
   /* C5: Onaylar → İmzamı bekleyen raporlar → rapor */
   await page.getByRole("link", { name: "İmzamı bekleyen raporlar" }).click();
@@ -289,7 +307,7 @@ test("saha raporu: rapor oluştur, eksikle gönderilmez, doldur + cihaz ekle, on
   await page.getByLabel("İmzalı PDF'i yükle").setInputFiles({ name: "imzali.pdf", mimeType: "application/pdf", buffer: imzali });
   await expect(page.getByText(`${raporNo} imzalandı, tamamlandı ve müşteriye açıldı.`).first()).toBeVisible({ timeout: 60_000 });
   await expect(page.getByRole("link", { name: "İmzalı PDF" })).toBeVisible({ timeout: 30_000 });
-  await expect(page.getByText("Tamamlandı", { exact: true }).filter({ visible: true }).first()).toBeVisible();
+  await expect(asama(page)).toContainText("Tamamlandı");
 
   /* 319 müşteri paneli */
   await context.clearCookies();
@@ -382,6 +400,6 @@ test("saha raporu: rapor oluştur, eksikle gönderilmez, doldur + cihaz ekle, on
   await page.goto(raporAdresi);
   await hazir(page);
   await expect(page.getByText(/Revizeye gönderildi \(R1\) · Deneme Mekanik .*Seri numarası yanlış yazılmış/)).toBeVisible({ timeout: 30_000 });
-  await expect(page.getByText("Yeni", { exact: true }).filter({ visible: true }).first()).toBeVisible();
+  await expect(asama(page)).toContainText("Yeni");
   await expect(page.getByText(`${raporNo}-R1`).first()).toBeVisible();
 });

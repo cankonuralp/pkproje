@@ -28,7 +28,7 @@ import { meslek } from "../../personel/sema";
 import { SONUC_AD } from "../sema";
 import type { SahaRaporu } from "../server/raporlar";
 import { FotoOkuma } from "./FotoOkuma";
-import { StandartTusu } from "./Kaynaklar";
+import { StandartTusu, TalimatTusu, type TalimatParcasi } from "./Kaynaklar";
 import stil from "./raporlar.module.css";
 
 /** alan anahtarı → ekrandaki girdinin id'si. Anahtarlar motorun ve sunucunun eksik listesiyle aynı: madde / alan / değer kimliği, "tarih.bas",
@@ -69,14 +69,17 @@ export interface Baglam {
 
 /* ── ORTAK PARÇALAR ──────────────────────────────────────────────────────────────────────────────────────────── */
 /** bölüm kartı: "N · ad" başlığı, eksik rozeti, sayaç, başlık tuşları, aç / kapat (her başlık açılır kapanır — reisim 2026-09-26) */
-export function RaporBolumu({ id, no, baslik, acik, degistir, eksik = false, sayac, tuslar, children }: {
-  id: string; no: string | null; baslik: string; acik: boolean; degistir: (acik: boolean) => void; eksik?: boolean; sayac?: ReactNode; tuslar?: ReactNode; children: ReactNode;
+export function RaporBolumu({ id, no, baslik, acik, degistir, eksik = false, sayac, tuslar, ek, children }: {
+  id: string; no: string | null; baslik: string; acik: boolean; degistir: (acik: boolean) => void; eksik?: boolean; sayac?: ReactNode; tuslar?: ReactNode;
+  /** başlığın hemen yanında (430: adsız tek gruplu kontrol listesinin talimat ünlemi) */
+  ek?: ReactNode; children: ReactNode;
 }) {
   const b = `b-${id}`;
   return (
     <section className={stil.bolum} id={b} aria-labelledby={`${b}-b`}>
       <div className={stil.bolumBas}>
         <h2 className={stil.bolumBaslik} id={`${b}-b`} tabIndex={-1}>{no && <span className={stil.bolumNo}>{no} · </span>}{baslik}</h2>
+        {ek}
         {eksik && <Rozet tur="red">Eksik</Rozet>}
         {sayac}
         <div className={stil.bolumSag}>
@@ -170,8 +173,11 @@ function TopluMenu({ cevaplar, sec }: { cevaplar: readonly string[]; sec: (c: st
 export function FormatBolumu({ b, no, bag, acik, degistir, eksik }:
   { b: Bolum; no: string | null; bag: Baglam; acik: boolean; degistir: (acik: boolean) => void; eksik: boolean }) {
   const bildir = useBildir();
-  let sayac: ReactNode = null, tuslar: ReactNode = null;
+  let sayac: ReactNode = null, tuslar: ReactNode = null, ek: ReactNode = null;
   if (b.blok === "liste") {
+    /* 430: adsız grubun başlığı yok — kontrolün talimat ünlemi bölüm başlığında (her zaman) */
+    const adsiz = b.gruplar.find((g) => !g.ad);
+    if (adsiz) ek = <TalimatTusu ad={b.ad} baslik={`Talimat · ${b.ad}`} parcalar={grupTalimati(adsiz, (m) => m.metin)} />;
     const maddeler = b.gruplar.flatMap((g) => g.maddeler);
     const n = maddeler.filter((m) => b.cevaplar.includes(bag.c.madde[m.id]?.c ?? "")).length;
     sayac = <span className={stil.sayac}><b>{n}</b> / {maddeler.length} madde</span>;
@@ -182,7 +188,7 @@ export function FormatBolumu({ b, no, bag, acik, degistir, eksik }:
   }
   if (b.blok === "kusur") sayac = <span className={stil.sayac}><b>{bag.d.kusurlar.length}</b> kusur</span>;
   return (
-    <RaporBolumu id={b.id} no={no} baslik={b.ad} acik={acik} degistir={degistir} eksik={eksik} sayac={sayac} tuslar={tuslar}>
+    <RaporBolumu id={b.id} no={no} baslik={b.ad} acik={acik} degistir={degistir} eksik={eksik} sayac={sayac} tuslar={tuslar} ek={ek}>
       <BlokIcerik b={b} no={no} bag={bag} />
     </RaporBolumu>
   );
@@ -255,6 +261,11 @@ function BilgiAlani({ a, bag }: { a: BolumOf<"bilgi">["alanlar"][number]; bag: B
 
 /* ── KONTROL MADDELERİ ── */
 type GrupT = BolumOf<"liste">["gruplar"][number];
+/** grubun talimat penceresi (430): önce grubun talimatı, sonra talimatı olan maddeler (numarasıyla) */
+const grupTalimati = (g: GrupT, ad: (m: GrupT["maddeler"][number], i: number) => string): TalimatParcasi[] => [
+  { metin: g.talimat ?? "" },
+  ...g.maddeler.flatMap((m, i) => (m.talimat?.trim() ? [{ baslik: ad(m, i), metin: m.talimat }] : [])),
+];
 /** grubun bütün maddelerinin ortak standardı (428): grup başlığında bir kez gösterilir, maddede yalnız farklıysa */
 const ortakStd = (g: GrupT) => {
   const l = g.maddeler.map((m) => m.std?.trim() ?? "");
@@ -271,7 +282,12 @@ function ListeBlok({ b, no, bag }: { b: BolumOf<"liste">; no: string | null; bag
         const std = ortakStd(g);
         return (
           <div key={g.id} className={stil.grup}>
-            {g.ad && <h3 className={stil.grupBaslik}>{on}{gi + 1} · {g.ad}</h3>}
+            {g.ad && (
+              <div className={stil.grupBas}>
+                <h3 className={stil.grupBaslik}>{on}{gi + 1} · {g.ad}</h3>
+                <TalimatTusu ad={g.ad} baslik={`Talimat · ${on}${gi + 1} ${g.ad}`} parcalar={grupTalimati(g, (m, mi) => `${on}${gi + 1}.${mi + 1} ${m.metin}`)} />
+              </div>
+            )}
             {std && <p className={stil.grupStd}><StandartTusu std={std} kaynak={bag.v.kaynak} /></p>}
             {g.maddeler.map((m, mi) => <Madde key={m.id} m={m} numara={gruplu ? `${on}${gi + 1}.${mi + 1}` : `${on}${mi + 1}`} b={b} bag={bag} grupStd={std} />)}
           </div>
@@ -291,7 +307,8 @@ function Madde({ m, numara, b, bag, grupStd }: { m: GrupT["maddeler"][number]; n
   return (
     <div className={stil.madde}>
       <div className={stil.maddeSol}>
-        <p className={stil.maddeAd}><span className={stil.maddeNo}>{numara}</span><span>{m.metin}</span></p>
+        <p className={stil.maddeAd}><span className={stil.maddeNo}>{numara}</span><span>{m.metin}</span>
+          {m.talimat?.trim() && <TalimatTusu ad={m.metin} baslik={`Talimat · ${numara}`} parcalar={[{ baslik: m.metin, metin: m.talimat }]} />}</p>
         {m.std?.trim() && m.std.trim() !== grupStd && <p className={stil.maddeStd}><StandartTusu std={m.std.trim()} kaynak={bag.v.kaynak} /></p>}
         {m.aciklama && (
           <details className={stil.maddeBilgi}>

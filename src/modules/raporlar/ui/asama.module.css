@@ -1,0 +1,27 @@
+/* RAPOR AŞAMA ÇİZGİSİ (431) — beş adım yan yana, aralarında çizgi; geçilen onay renginde, şimdiki vurgulu, sonrakiler soluk. Renk / ölçü yalnız
+   tokens.css değişkenlerinden. Telefonda yalnız şimdiki adımın adı görünür. */
+.asamalar {
+  display: grid; grid-template-columns: repeat(5, minmax(0, 1fr)); gap: 0; margin: 0 0 16px; padding: 12px 8px; list-style: none;
+  background: var(--kart); border: 1px solid var(--kenar); border-radius: var(--r-buyuk);
+}
+.asama { position: relative; display: grid; justify-items: center; gap: 6px; min-width: 0; text-align: center; color: var(--yazi2); }
+/* adımlar arası çizgi: noktanın ortasından bir sonrakinin ortasına */
+.asama + .asama::before {
+  content: ""; position: absolute; top: 13px; right: 50%; width: 100%; height: 2px; background: var(--kenar);
+}
+.gecti + .asama::before { background: var(--onay); }
+.nokta {
+  position: relative; z-index: 1; display: inline-flex; align-items: center; justify-content: center; width: 28px; height: 28px;
+  border: 2px solid var(--kenar-alan); border-radius: var(--r-tam); background: var(--kart); font-size: var(--boy-kucuk); font-weight: 700;
+  font-variant-numeric: tabular-nums;
+}
+.ad { font-size: var(--boy-kucuk); line-height: 1.3; overflow-wrap: anywhere; }
+.gecti .nokta { border-color: var(--onay); background: var(--onay); color: var(--onay-uzeri); }
+.simdi { color: var(--yazi); }
+.simdi .nokta { border-color: var(--vurgu); background: var(--vurgu); color: var(--vurgu-uzeri); }
+.simdi .ad { font-weight: 700; }
+
+@media (max-width: 767.98px) {
+  .asamalar { padding: 10px 4px; }
+  .asama:not(.simdi) .ad { position: absolute; width: 1px; height: 1px; margin: -1px; overflow: hidden; clip: rect(0 0 0 0); white-space: nowrap; }
+}

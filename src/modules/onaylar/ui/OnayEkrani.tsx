@@ -12,6 +12,7 @@ import { useBildir } from "../../../components/bildirim/Bildirim";
 import { Alan, ipucuId } from "../../../components/form/Form";
 import { Pencere } from "../../../components/pencere/Pencere";
 import { Bolum, Kirinti, Kod, NesneBasi, Rozet, SeritKap } from "../../../components/sayfa/Sayfa";
+import { AsamaCizgisi } from "../../raporlar/ui/AsamaCizgisi";
 import { Serit } from "../../../components/serit/Serit";
 import { Tus, TusBaglanti } from "../../../components/tus/Tus";
 import { RAPOR_DURUM } from "../../raporlar/sema";
@@ -65,6 +66,7 @@ export function OnayEkrani({ v, belge }: { v: Veri; belge: ReactNode }) {
       <Kirinti ogeler={r.durum === "onayda" ? [["Onaylar", "/onaylar"], [r.no]] : [["Onaylar", "/onaylar"], ["Tüm raporlar", "/onaylar/tum"], [r.no]]} />
       <NesneBasi baslik={r.no} rozet={<Rozet tur={rozet}>{durumAd}</Rozet>} altIkon="wrench"
         alt={<><Kod>{r.ekipmanKod}</Kod> · {r.turAd} · {r.tesis} · {r.denetci}{v.sira ? ` · ${v.sira} / ${v.kuyrukBoyu}` : ""}</>} tuslar={tuslar} />
+      <AsamaCizgisi durum={r.durum} />
       {(genel || r.durum === "taslak" || v.istek) && (
         <SeritKap>
           {genel && <Serit tur="hata" ikon="circle-alert">{genel}</Serit>}

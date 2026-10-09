@@ -69,6 +69,35 @@ function Atif({ atif, kaynak }: { atif: string; kaynak: RaporKaynaklari }) {
   );
 }
 
+/* ── TALİMAT (430; reisim 2026-10-09: "kontrol madde başlıklarında ve başlıkların yanında küçük ünlemler olmalı ve talimat yazılabilmeli, eğer o
+   madde için bir talimat yoksa ünlem olmasın ama kontrol başlığında her daim o ünlem olsun tıklayınca yine pop-up talimatlar gözüksün
+   talimatlar o işlemlerin nasıl yapılacağına dair açıklamalardır"). Talimat formatta yazılır (Format kurucu: madde / grup / genel); PDF'e
+   basılmaz. Tıklayınca sormadan açılır (yalnız okunur, rapora dokunmaz). ── */
+export interface TalimatParcasi { baslik?: string; metin: string }
+/** ünlem tuşu → talimat penceresi; parçalar boşsa pencere "talimat yazılmamış" der */
+export function TalimatTusu({ ad, baslik, parcalar, buyuk = false }: { ad: string; baslik: string; parcalar: TalimatParcasi[]; buyuk?: boolean }) {
+  const [acik, setAcik] = useState(false);
+  const dolu = parcalar.filter((p) => p.metin.trim());
+  return (
+    <>
+      <button type="button" className={buyuk ? `${stil.talimatTus} ${stil.talimatBuyuk}` : stil.talimatTus} aria-haspopup="dialog" aria-label={`${ad} talimatı`}
+        title="Talimat" data-talimat={dolu.length ? "var" : "yok"} onClick={() => setAcik(true)}>
+        <Ikon ad="circle-alert" kucuk={!buyuk} />
+      </button>
+      {acik && (
+        <Pencere acik baslik={baslik} genis={dolu.length > 1} onKapat={() => setAcik(false)}>
+          {dolu.length ? dolu.map((p, i) => (
+            <section key={i} className={stil.talimatBolum}>
+              {p.baslik && <h3>{p.baslik}</h3>}
+              {p.metin.trim().split("\n").filter(Boolean).map((s, j) => <p key={j}>{s}</p>)}
+            </section>
+          )) : <p className={stil.stdNot}>Bu kontrol için talimat yazılmamış. Talimat rapor formatında yazılır (Ekipman türleri › Rapor şablonu › Format kurucu).</p>}
+        </Pencere>
+      )}
+    </>
+  );
+}
+
 /** Bakanlık kriter belgesi (kodda; src/tanim/kriterler.ts) — kapsam, maddeler, notlar */
 function KriterMetni({ k }: { k: KriterBelgesi }) {
   return (

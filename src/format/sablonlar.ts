@@ -165,10 +165,14 @@ const KOMPRESOR: FormatGirdisi = {
       { id: "calisma", ad: "Çalışma basıncı", tur: "sayi", birim: "bar", zorunlu: true }, { id: "hacim", ad: "Tank hacmi", tur: "sayi", birim: "L" },
     ] },
     { id: "cihaz", ad: "Ölçüm cihazları", blok: "cihaz" },
-    { id: "kriter", ad: "Muayene kriterleri", blok: "liste", cevaplar: CEVAP, gruplar: [{ id: "k", ad: "", maddeler: [
-      "Gövde ve kaynaklar: gözle muayene (korozyon, ezik)", "Emniyet ventili: ayar basıncı ve fonksiyon", "Manometre: okunabilirlik ve kalibrasyon işareti",
-      "Tahliye düzeni", "Etiket plakası ve izlenebilirlik", "Hidrostatik deney (deney basıncı)",
-    ].map((metin, i) => ({ id: `k${i + 1}`, metin, std: "TS EN 286-1" })) }] },
+    /* 430: talimat örneği — grubun ve hidrostatik deney maddesinin (firma kurucuda değiştirir) */
+    { id: "kriter", ad: "Muayene kriterleri", blok: "liste", cevaplar: CEVAP, gruplar: [{ id: "k", ad: "",
+      talimat: "Kap basınçsız ve soğukken muayene edilir. Gövde, kaynaklar ve bağlantılar gözle; emniyet ventili ve manometre yerinde kontrol edilir.",
+      maddeler: [
+        "Gövde ve kaynaklar: gözle muayene (korozyon, ezik)", "Emniyet ventili: ayar basıncı ve fonksiyon", "Manometre: okunabilirlik ve kalibrasyon işareti",
+        "Tahliye düzeni", "Etiket plakası ve izlenebilirlik", "Hidrostatik deney (deney basıncı)",
+      ].map((metin, i) => ({ id: `k${i + 1}`, metin, std: "TS EN 286-1",
+        ...(i === 5 ? { talimat: "Deney basıncı çalışma basıncının 1,5 katıdır. Deney süresince sızıntı ve kalıcı şekil değişikliği olmamalıdır." } : {}) })) }] },
     { id: "test", ad: "Test değerleri", blok: "test", degerler: [
       { id: "hidro", ad: "Hidrostatik deney basıncı", birim: "bar", op: ">=", sinir: 16.5, not: "1,5 × 11 bar çalışma" },
       { id: "ventil", ad: "Emniyet ventili açma basıncı", birim: "bar", op: "<=", sinir: 11, not: "çalışma basıncı" },

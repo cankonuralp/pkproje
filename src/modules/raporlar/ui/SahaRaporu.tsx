@@ -42,7 +42,8 @@ import { EtiketOkuma } from "./EtiketOkuma";
 import { FotoListesi } from "./FotoListesi";
 import { ImzaBolumu } from "./ImzaBolumu";
 import { KopyaPenceresi } from "./KopyaPenceresi";
-import { StandartTusu } from "./Kaynaklar";
+import { StandartTusu, TalimatTusu } from "./Kaynaklar";
+import { AsamaCizgisi } from "./AsamaCizgisi";
 import { RevizeIstePenceresi } from "./RevizeIstePenceresi";
 import {
   onayaGonderEylemi, raporFormatGuncelleEylemi, raporKaydetEylemi, raporKopyalaEylemi, raporKunyeGuncelleEylemi, raporSilEylemi, revizeIstegiGeriCekEylemi,
@@ -497,7 +498,10 @@ export function SahaRaporu({ v, yeni }: { v: Gorunum; yeni?: { plan: string; eki
             ? <Tus tur="ikincil" ikon="eye" disabled={mesgul} onClick={onizle}>Ön izle</Tus>
             : <TusBaglanti ikon="eye" href={`/raporlar/${v.id}/onizle`}>Ön izle</TusBaglanti>}
           {v.revize?.iste && <Tus tur="ikincil" ikon="file-pen-line" disabled={mesgul} onClick={() => setRevizeAc(true)}>Revize iste</Tus>}
+          {/* 431: genel muayene talimatı (formatın; PDF'e basılmaz) — sağ üstte her zaman */}
+          <TalimatTusu buyuk ad="Genel muayene" baslik="Genel muayene talimatı" parcalar={[{ metin: v.tanim.gorunum.talimat }]} />
         </>} />
+      <AsamaCizgisi durum={v.durum} />
       {seritler.length > 0 && <SeritKap>{seritler}</SeritKap>}
 
       <div className={stil.bolumler}>

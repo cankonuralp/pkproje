@@ -2355,6 +2355,16 @@ revizyon, alan kopyalama, hafif kusur devri, meslek eşleşme denetimi).
 - Emsal ürünler: https://opwire.app/iso-17020-periyodik-kontrol-yazilimi/ · https://17020muayene.vidco.com.tr/ · https://akuple.com/asansor-kontrol-yazilimi/ · https://ensyazilim.com/
 
 ## 11 · Değişiklik günlüğü
+- 2026-10-09 (431): **Rapor aşama çizgisi + genel muayene talimatı** (reisim, örnek görselle: *"raporların hangi aşamada oldukları gözüksün ayrıca
+  sağ üstte uygun bir yerde ünlem işareti olacak ve genel muayene talimatı oradan görünebilecek"*). Saha rapor ekranında ve onay ekranında başlığın
+  altında beş adım: Yeni → Teknik yönetici onayında → Muayene uzmanı imzası → İmzaya gönderildi → Tamamlandı (geçilen işaretli, şimdiki vurgulu;
+  telefonda yalnız şimdikinin adı). Rapor ekranının sağ üstünde (tuşların yanında) her zaman ünlem: formatın genel muayene talimatı (Format
+  kurucu › Belge; yazılmamışsa söyler; PDF'e basılmaz).
+- 2026-10-09 (430): **Talimat ünlemleri** (reisim: *"kontrol madde başlıklarında ve başlıkların yanında küçük ünlemler olmalı ve talimat yazılabilmeli,
+  eğer o madde için bir talimat yoksa ünlem olmasın ama kontrol başlığında her daim o ünlem olsun tıklayınca yine pop-up talimatlar gözüksün"*).
+  Kontrol listesinde her grup başlığının yanında ünlem (adsız tek grupta bölüm başlığında) — basınca grubun talimatı ve talimatı olan maddeler;
+  talimatı olan maddenin yanında ünlem — basınca o maddenin talimatı. Talimat yoksa grup penceresi "talimat yazılmamış" der. Talimatlar
+  formatta yazılır (Format kurucu; 426), Bakanlık şablonlarında kriter belgelerinden (427); kompresör şablonuna örnek talimat.
 - 2026-10-09 (429): **Günlük süre raporun kontrol gününe sayılır** (reisim: *"Hangi güne rapor yazılırsa süreler o günden gitsin (480dk+mesai)"*).
   Mesai takibinde rapor, açıldığı güne değil kontrol başlangıcının gününe sayılır (önce açılış günüydü). Denetçi kontrol başlangıcını başka güne
   alırsa raporun süresi o güne geçer; o günün süresi (bu rapor hariç) doluysa alınamaz — alanın altında "GG.AA.YYYY günü için günlük süre dolu"

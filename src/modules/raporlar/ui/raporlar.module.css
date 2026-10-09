@@ -55,6 +55,20 @@ input.oku { background: var(--zemin2); border-color: var(--kenar); color: var(--
 /* kontrol maddeleri (maket .a-kriter): solda madde, sağda cevap; "Uygun değil"de altında kusur açıklaması (ve formatta açıksa derece) */
 .grup { min-width: 0; }
 .grupBaslik { margin: 8px 0 0; padding-bottom: 4px; font-size: var(--boy-govde); font-weight: 700; color: var(--yazi2); overflow-wrap: anywhere; }
+/* 430: grup başlığı + talimat ünlemi (her zaman); maddede yalnız talimat varsa */
+.grupBas { display: flex; align-items: center; gap: 2px; margin-top: 8px; }
+.grupBas > .grupBaslik { margin: 0; padding-bottom: 0; min-width: 0; }
+.talimatTus {
+  display: inline-flex; align-items: center; justify-content: center; flex: none; width: 32px; height: 32px; margin: -6px 0; padding: 0;
+  border: 0; border-radius: 50%; background: transparent; color: var(--uyari-yazi); vertical-align: middle; cursor: pointer;
+}
+.talimatTus:hover { background: var(--uyari-zemin); }
+.talimatTus[data-talimat="yok"] { color: var(--yazi2); }
+.talimatBuyuk { width: var(--tus-y); height: var(--tus-y); margin: 0; border: 1px solid var(--kenar); border-radius: var(--r-orta); }
+.talimatBolum { display: grid; gap: 6px; padding: 6px 0 10px; border-bottom: 1px solid var(--kenar); }
+.talimatBolum:last-child { border-bottom: 0; }
+.talimatBolum h3 { margin: 0; font-size: var(--boy-govde); font-weight: 700; overflow-wrap: anywhere; }
+.talimatBolum p { margin: 0; overflow-wrap: anywhere; }
 .madde { display: grid; grid-template-columns: minmax(0, 1fr) 13rem; align-items: center; gap: 8px 16px; padding: 12px 0; border-top: 1px solid var(--kenar); }
 .maddeSonuc { border-top: 0; padding-top: 0; }
 .maddeSol { min-width: 0; }
