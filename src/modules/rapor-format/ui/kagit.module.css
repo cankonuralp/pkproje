@@ -46,6 +46,9 @@
 @media (pointer: coarse) { .ekle { min-height: 40px; } }
 .kagit .ekleSatir td { border-style: dashed; background: #fbfcfe; }
 .kagit .ekleSutun { width: 92px; border-style: dashed; background: #fbfcfe; text-align: center; }
+/* 460: ekipman bölümünün ekle satırı — "Alan ekle" + "Ekipman kaydından alan" seçimi yan yana (dar ekranda alt alta) */
+.ekleSira { display: flex; flex-wrap: wrap; align-items: center; gap: 6px 12px; }
+.ekleSecim { width: 260px; max-width: 100%; }
 .altSatir { display: flex; flex-wrap: wrap; align-items: center; gap: 6px 12px; margin: -6px 0 10px; }
 .altNot { margin: -6px 0 10px; font-size: 10px; color: #3d3d3d; }
 

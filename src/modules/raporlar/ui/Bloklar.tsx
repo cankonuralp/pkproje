@@ -57,6 +57,8 @@ export interface Baglam {
   gecersiz: (alan: string) => boolean;
   /** kayıttan gelen alanın ekrandaki değeri (seri no, kullanım yeri, kontrol tarihi raporun güncel hâliyle) */
   kaynak: (k: Kaynak) => string | null;
+  /** ekipman kaydına bağlı alanın satırı (460): değeri raporun ekipman bilgisinde — SahaRaporu çizer */
+  ekipmanAlani: (a: BolumOf<"bilgi">["alanlar"][number]) => ReactNode;
   /** formatın cihaz bölümü (CihazBolumu; SahaRaporu verir — döngüsel içe aktarma olmasın) */
   cihaz: (bolumId: string) => ReactNode;
   /** fotoğraf listesi: bölümün (madde null) ya da "Uygun değil" maddenin (FotoListesi; SahaRaporu verir) */
@@ -221,7 +223,9 @@ export function BilgiBlok({ b, bag }: { b: BolumOf<"bilgi">; bag: Baglam }) {
   return <Satirlar>{b.alanlar.map((a) => <BilgiAlani key={a.id} a={a} bag={bag} />)}</Satirlar>;
 }
 
-function BilgiAlani({ a, bag }: { a: BolumOf<"bilgi">["alanlar"][number]; bag: Baglam }) {
+/** bilgi bölümünün tek satırı (460: tam ekipman bölümü 2. bölümün satırları arasında çizilir) */
+export function BilgiAlani({ a, bag }: { a: BolumOf<"bilgi">["alanlar"][number]; bag: Baglam }) {
+  if (a.ekipman) return <>{bag.ekipmanAlani(a)}</>;
   const id = alanId(a.id);
   const etiket = a.birim ? `${a.ad} (${a.birim})` : a.ad;
   if (a.kaynak) {

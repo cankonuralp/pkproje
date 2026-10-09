@@ -15,6 +15,13 @@ const metin = z.string().max(2000);
 export const ALAN_TURLERI = ["metin", "sayi", "tarih", "secim", "coklu", "evet"] as const;
 /** kayıttan gelen alanlar (raporda salt okunur): plan, tesis, müşteri, sözleşme ve ekipmandan */
 export const KAYNAKLAR = ["firma_adi", "tesis_adresi", "sgk", "isg_id", "kontrol_tarihi", "rapor_no", "ekipman_kodu", "ekipman_adi", "seri_no", "kullanim_yeri"] as const;
+/** 460: ekipman kaydına BAĞLI alanlar — değeri raporun ekipman bilgisinde durur (raporlar/sema.ts EkipmanBilgisi: etiketten okunur, kopyada
+    gelir, seri no / kullanım yeri kayıttan alanlara yansır), formattaki adı ve yeri serbest. Yalnız "tam" ekipman bölümünde olur. */
+export const EKIPMAN_ALANLARI = ["marka", "model", "seri", "imal", "konum", "amac", "bolum"] as const;
+export type EkipmanAlani = (typeof EKIPMAN_ALANLARI)[number];
+export const EKIPMAN_ALAN_ADI: Record<EkipmanAlani, string> = {
+  marka: "Marka", model: "Model", seri: "Seri no", imal: "İmal yılı", konum: "Kullanım yeri", amac: "Kullanım amacı", bolum: "Ekipman bölümü",
+};
 /** ölçüm tablosunun adıyla seçilen hesabı (hesap.ts) */
 export const HESAPLAR = ["nokta", "selektivite", "linye", "pd", "zi"] as const;
 export const BLOKLAR = ["bilgi", "liste", "olcum", "test", "cihaz", "foto", "kusur", "sonuc", "not", "imza"] as const;
@@ -28,6 +35,7 @@ export type Blok = (typeof BLOKLAR)[number];
 const Alan = z.object({
   id: kimlik, ad, tur: z.enum(ALAN_TURLERI), zorunlu: z.boolean().default(false), kilit: z.boolean().default(false),
   secenekler: z.array(z.string().trim().min(1).max(200)).max(40).optional(), birim: kisa.optional(), kaynak: z.enum(KAYNAKLAR).optional(),
+  ekipman: z.enum(EKIPMAN_ALANLARI).optional(),
 });
 const Madde = z.object({ id: kimlik, metin: ad, aciklama: metin.optional(), std: z.string().max(200).optional(), talimat: talimat.optional(), kilit: z.boolean().default(false) });
 const Grup = z.object({ id: kimlik, ad: z.string().max(200), talimat: talimat.optional(), maddeler: z.array(Madde).max(200) });
@@ -51,7 +59,10 @@ const Not = z.object({ metin: z.string().trim().min(1).max(400), kusur: z.boolea
    değerlendirmeler" › 5.1 / 5.2); numarasiz: bölüm numara almaz (ZPKR04 "Fotoğraflar") — src/format/duzen.ts */
 const ortak = { id: kimlik, ad, kilit: z.boolean().default(false), ust: z.string().max(200).optional(), numarasiz: z.boolean().optional() };
 export const Bolum = z.discriminatedUnion("blok", [
-  z.object({ ...ortak, blok: z.literal("bilgi"), alanlar: z.array(Alan).max(60) }),
+  /* tam (460; reisim 2026-10-09: "ekipman bilgileri kısmıda değiştirilebilir olsun zira yangın dolabı gibi ekipmanlarda farklı girdiler
+     olabiliyor"): raporun 2. bölümü YALNIZ bu bölümün alanlarıdır — ekipman kodu ve türü dışında sabit satır yok; marka, model … ekipman
+     kaydına bağlı alan olarak eklenir, çıkarılır, adı değişir. Tam bölümsüz (eski) formatlar eskisi gibi çizilir (format/duzen.ts). */
+  z.object({ ...ortak, blok: z.literal("bilgi"), alanlar: z.array(Alan).max(60), tam: z.boolean().optional() }),
   z.object({ ...ortak, blok: z.literal("liste"), cevaplar: z.array(z.string().trim().min(1).max(40)).min(2).max(6), gruplar: z.array(Grup).max(40) }),
   z.object({
     ...ortak, blok: z.literal("olcum"), satir: z.enum(["sabit", "ekle"]).default("ekle"), sutunlar: z.array(Sutun).max(20),
@@ -95,11 +106,20 @@ export const FormatTanimi = z.object({
     if (gorulen.has(id)) bag.addIssue({ code: "custom", path: yol, message: `Kimlik iki kez kullanılmış: ${id}` });
     gorulen.add(id);
   };
+  const bagli = new Set<string>();
+  let tamSayisi = 0;
   t.bolumler.forEach((b, i) => {
     tek(b.id, ["bolumler", i, "id"]);
+    if (b.blok === "bilgi" && b.tam && ++tamSayisi > 1) bag.addIssue({ code: "custom", path: ["bolumler", i, "tam"], message: "Ekipman bölümü bir tane olur." });
     if (b.blok === "bilgi") b.alanlar.forEach((a, j) => {
       tek(a.id, ["bolumler", i, "alanlar", j, "id"]);
       if ((a.tur === "secim" || a.tur === "coklu") && !a.secenekler?.length) bag.addIssue({ code: "custom", path: ["bolumler", i, "alanlar", j], message: "Seçim alanının seçenekleri yok." });
+      if (a.ekipman) {
+        if (!b.tam) bag.addIssue({ code: "custom", path: ["bolumler", i, "alanlar", j, "ekipman"], message: "Ekipman kaydına bağlı alan yalnız ekipman bölümünde olur." });
+        if (a.kaynak || a.tur !== "metin") bag.addIssue({ code: "custom", path: ["bolumler", i, "alanlar", j, "ekipman"], message: `Ekipman kaydına bağlı alan yazı alanıdır: ${a.ad}` });
+        if (bagli.has(a.ekipman)) bag.addIssue({ code: "custom", path: ["bolumler", i, "alanlar", j, "ekipman"], message: `Ekipman alanı iki kez: ${EKIPMAN_ALAN_ADI[a.ekipman]}` });
+        bagli.add(a.ekipman);
+      }
     });
     if (b.blok === "liste") b.gruplar.forEach((g, j) => { tek(g.id, ["bolumler", i, "gruplar", j, "id"]); g.maddeler.forEach((m, k) => tek(m.id, ["bolumler", i, "gruplar", j, "maddeler", k, "id"])); });
     if (b.blok === "olcum") {

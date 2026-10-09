@@ -67,7 +67,8 @@ export function degerlendir(t: FormatTanimi, c: Cevaplar): Degerlendirme {
   for (const b of t.bolumler) {
     switch (b.blok) {
       case "bilgi":
-        for (const a of b.alanlar) if (a.zorunlu && !a.kaynak && bos(c.alan[a.id])) eksikler.push({ bolum: b.id, alan: a.id, ad: a.ad });
+        /* ekipman kaydına bağlı alanın (460) değeri cevaplarda değil, raporun ekipman bilgisinde */
+        for (const a of b.alanlar) if (a.zorunlu && !a.kaynak && !a.ekipman && bos(c.alan[a.id])) eksikler.push({ bolum: b.id, alan: a.id, ad: a.ad });
         break;
       case "liste":
         for (const g of b.gruplar) for (const m of g.maddeler) {
@@ -183,7 +184,7 @@ type AlanT = BolumOf<"bilgi">["alanlar"][number];
 type MaddeT = BolumOf<"liste">["gruplar"][number]["maddeler"][number];
 type DegerT = BolumOf<"test">["degerler"][number];
 type SutunT = BolumOf<"olcum">["sutunlar"][number];
-const alanOzu = (a: AlanT) => oz({ ad: a.ad, tur: a.tur, secenekler: a.secenekler, kaynak: a.kaynak, birim: a.birim });
+const alanOzu = (a: AlanT) => oz({ ad: a.ad, tur: a.tur, secenekler: a.secenekler, kaynak: a.kaynak, ekipman: a.ekipman, birim: a.birim });
 const maddeOzu = (m: MaddeT) => oz({ metin: m.metin, std: m.std });
 const degerOzu = (d: DegerT) => oz({ ad: d.ad, birim: d.birim, metin: d.metin, op: d.op, sinir: d.sinir, secenekler: d.secenekler, olumsuz: d.olumsuz, agir: d.agir || undefined });
 const sutunOzu = (s: SutunT) => oz({ ad: s.ad, birim: s.birim, giris: s.giris, secenekler: s.secenekler, op: s.op, sinir: s.sinir, olumsuz: s.olumsuz, agir: s.agir || undefined });

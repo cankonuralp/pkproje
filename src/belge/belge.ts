@@ -8,9 +8,9 @@
    JSX değil createElement: düğüm test koşucusu (node --test) bu dosyayı doğrudan yükler (tests/belge.test.ts). */
 import { createElement as h, Fragment, type ReactNode } from "react";
 import { SINIR_ISARETI } from "../format/hesap.ts";
-import { raporDuzeni } from "../format/duzen.ts";
+import { raporDuzeni, sabitEkipmanAlanlari } from "../format/duzen.ts";
 import { degerlendir } from "../format/motor.ts";
-import type { Bolum, BolumOf } from "../format/tanim.ts";
+import { EKIPMAN_ALAN_ADI, type Bolum, type BolumOf } from "../format/tanim.ts";
 /* veri.ts: saf tanımlar (tanimlar.ts node:crypto kullanır — 451: Format kurucunun belge önizlemesi bu çiziciyi tarayıcıda koşar) */
 import { TANIMLAR } from "../tanim/veri.ts";
 import type { BelgeFotosu, BelgeVerisi } from "./veri.ts";
@@ -80,12 +80,12 @@ export function raporBelgesi(v: BelgeVerisi): ReactNode {
   const cihazEk = !t.bolumler.some((b) => b.blok === "cihaz") && v.cihazlar.length > 0;
   const duzen = raporDuzeni(t, cihazEk);
   const katilan = duzen.katilan;
-  const formatAdlari = t.bolumler.flatMap((b) => (b.blok === "bilgi" ? b.alanlar.filter((a) => !a.kaynak).map((a) => kucuk(a.ad)) : []));
-  const formatta = (x: string) => formatAdlari.some((ad) => ad.includes(x));
   const imzaVar = t.bolumler.some((b) => b.blok === "imza");
   const maddeFotolari = v.fotolar.filter((f) => f.madde);
 
   const alanDegeri = (a: BolumOf<"bilgi">["alanlar"][number]): ReactNode => {
+    /* 460: ekipman kaydına bağlı alan — raporun ekipman bilgisinden */
+    if (a.ekipman) return deger(v.ekipman[a.ekipman]);
     if (a.kaynak) return kaynak[a.kaynak] ?? "-";
     const x = c.alan[a.id];
     if (a.tur === "secim" || a.tur === "coklu") return secenekler(Array.isArray(x) ? x : x ? [x] : [], a.secenekler ?? []);
@@ -172,12 +172,12 @@ export function raporBelgesi(v: BelgeVerisi): ReactNode {
     }
   };
 
+  /* 2. bölüm: kod ve tür; tam ekipman bölümlü formatta (460) ardından YALNIZ o bölümün alanları, formatın sırasıyla ve adıyla; eski formatta
+     kayıttan başlayan sabit satırlar (formatın aynı adlı alanı yoksa — saha ekranıyla aynı liste), "Ekipman bölümü", sonra formatın ekipman alanları */
   const ekipman: Cift[] = [
     ["Ekipman kodu", v.ekipman.kod], ["Ekipman türü", v.tur.ad],
-    ...([["marka", "Marka", v.ekipman.marka], ["model", "Model", v.ekipman.model], ["seri no", "Seri no", v.ekipman.seri], ["imal", "İmal yılı", v.ekipman.imal],
-      ["kullanım yeri", "Kullanım yeri", v.ekipman.konum], ["kullanım amacı", "Kullanım amacı", v.ekipman.amac]] as const)
-      .filter(([k]) => !formatta(k)).map(([, e, x]) => [e, deger(x)] as const),
-    ["Ekipman bölümü", deger(v.ekipman.bolum)],
+    ...(duzen.tam ? duzen.tam.alanlar.map((a): Cift => [a.ad, alanDegeri(a), a.tur === "coklu" || (a.secenekler?.length ?? 0) > 3])
+      : [...sabitEkipmanAlanlari(t).map((k): Cift => [EKIPMAN_ALAN_ADI[k], deger(v.ekipman[k])]), ["Ekipman bölümü", deger(v.ekipman.bolum)] as Cift]),
   ];
   return h("article", { className: "rb-sayfa", "aria-label": `${no} rapor belgesi` },
     h("table", { className: "rb-bas" }, kolonlar(["11%", "27%", "10%", "27%", "25%"]), h("tbody", null, h("tr", null,
@@ -197,7 +197,7 @@ export function raporBelgesi(v: BelgeVerisi): ReactNode {
       ["Bir sonraki periyodik kontrol tarihi", tarihNo(v.tarih.sonraki)], ["Takip kontrol tarihi", tarihNo(v.tarih.takip)],
       ["Periyodik kontrol metodu ve kapsamı", metot.length ? metot.join(" · ") : "-", true],
     ])),
-    bolum("2", duzen.ekipmanBaslik, bilgiTablosu(ekipman), ...katilan.map((b) => h(Fragment, { key: b.id }, bilgi(b, true)))),
+    bolum("2", duzen.ekipmanBaslik, bilgiTablosu(ekipman), ...(duzen.tam ? [] : katilan).map((b) => h(Fragment, { key: b.id }, bilgi(b, true)))),
     duzen.cihazNo ? bolum(duzen.cihazNo, "Ölçüm cihazları", cihazTablosu()) : null,
     ...duzen.bolumler.flatMap((x) => [x.ust ? ustBaslik(x.ust.no, x.ust.ad) : null, bolum(x.no, x.b.ad, formatBolumu(x.b))]),
     imzaVar ? null : bolum(duzen.sonraki, "Yetkili kişi", imza()),

@@ -2355,6 +2355,13 @@ revizyon, alan kopyalama, hafif kusur devri, meslek eşleşme denetimi).
 - Emsal ürünler: https://opwire.app/iso-17020-periyodik-kontrol-yazilimi/ · https://17020muayene.vidco.com.tr/ · https://akuple.com/asansor-kontrol-yazilimi/ · https://ensyazilim.com/
 
 ## 11 · Değişiklik günlüğü
+- 2026-10-09 (460): **Ekipman bilgileri serbest** (reisim: *"rapor format oluşturucuyu beğendim, böyle kalsın ama değişiklikler yapalım, ekipman
+  bilgileri kısmıda değiştirilebilir olsun zira yangın dolabı gibi ekipmanlarda farklı girdiler olabiliyor sabit olan tek şey firma bilgileri,
+  cihazlar ve standartlar"*). Format tanımında "tam" ekipman bölümü: raporun 2. bölümü ekipman kodu ve türü dışında YALNIZ formatın alanlarıdır.
+  Marka, model, seri no, imal yılı, kullanım yeri, kullanım amacı, ekipman bölümü "ekipman kaydına bağlı alan" — Format kurucuda adı değişir,
+  çıkarılır, "Ekipman kaydından alan ekle" ile geri gelir; değeri sahada yazılır, ekipman kaydından başlar, etiketten okunur, kopyada gelir. Yeni
+  türlerin hazır formatı ve boş format tam bölümlü; eski format Format kurucu açılınca çevrilir (belgenin metni aynı kalır — Bakanlık beşi ve
+  kompresörde testle kilitli; Bakanlık kilitleri geçer). Tam bölümsüz eski formatlar ve onlarla açılmış raporlar eskisi gibi çizilir.
 - 2026-10-09 (457–458): **Grup başlıkları sola; "AKR." yeri** (reisim: *"Grup başlıkları sola dayalı olsun"*, *"Firma adı ile başlık arasındaki AKR
   yazan yere anlam veremedim"*). Kontrol listesinin grup başlıkları belgede ve kâğıtta sola dayalı (saha ekranında zaten soldaydı). Başlık
   tablosundaki üçüncü hücre firmanın akreditasyon (TÜRKAK) numarasıdır (Firma ayarları); numara yoksa belgede artık boş (eskiden "AKR." yazıyordu),

@@ -17,7 +17,8 @@ import { raporOlustur } from "../src/modules/raporlar/server/raporlar.ts";
 import { ayarOku, ayarYaz } from "../src/server/ayar/ayar.ts";
 import { sirYaz } from "../src/server/ayar/sir.ts";
 import { klasorDepo } from "../src/server/dosya/depo.ts";
-import { taslakBaslat, yayinla, type Kisi } from "../src/modules/rapor-format/server/formatlar.ts";
+import { ekipmanTamYap } from "../src/format/duzen.ts";
+import { formatAyrintisi, taslakBaslat, taslakKaydet, yayinla, type Kisi } from "../src/modules/rapor-format/server/formatlar.ts";
 import { sifrele } from "../src/server/ayar/sir.ts";
 import { gomuluBaslat } from "../src/server/db/gomulu.ts";
 import { havuzKur, kiraciIcinde } from "../src/server/db/kiraci.ts";
@@ -143,7 +144,12 @@ process.env.PROBATA_SIR_ANAHTARI = sirAnahtari;
   const kesin = <R extends { durum: string }>(r: R, ne: string) => { if (r.durum !== "tamam") throw new Error(`${ne}: ${JSON.stringify(r)}`); return r as Extract<R, { durum: "tamam" }>; };
   await kiraciIcinde(havuz, yzFirma, async (db) => {
     const f = kesin(await taslakBaslat(db, yon, t.tur, "sablon:ZPKR02", null), "ZPKR02 taslak");
-    kesin(await yayinla(db, yon, f.id, f.surum, ""), "ZPKR02 yayın");
+    /* 460: bu firmanın formatı Format kurucunun çevirdiği gibi TAM ekipman bölümlü (marka, model, seri no … ekipman kaydına bağlı alan) — saha
+       ekranının bu kipi foto-oku / çevrimdışı / S.A.Y uçtan uca testlerinde koşar; HT (KOMPRESOR) eski kipte kalır */
+    const tanim = (await formatAyrintisi(db, yon, f.id))?.tanim;
+    if (!tanim) throw new Error("ZPKR02 taslak okunamadı");
+    const k = kesin(await taslakKaydet(db, yon, f.id, f.surum, ekipmanTamYap(tanim)), "ZPKR02 tam ekipman bölümü");
+    kesin(await yayinla(db, yon, k.id, k.surum, ""), "ZPKR02 yayın");
     const y = await ayarOku(db, "yapay_zeka");
     kesin(await ayarYaz(db, "yapay_zeka", y.surum, { ...y.deger, acik: true, sinir: null }, { kim: yon.ad, ne: "ayar.yapay_zeka" }), "yapay zekâ ayarı");
     await sirYaz(db, "yapay_zeka_anahtari", E2E_YZ.anahtar, { kim: yon.ad });

@@ -102,12 +102,27 @@ test("rapor şablonu: şablondan başlat, önizle, yayınla; yeni sürümle eski
     /* firma bilgileri sabit: yalnız metot satırı yazılır, bölüm silinmez */
     const firma = kagit.locator("#kb-firma");
     await expect(firma.getByRole("button", { name: /bölümü sil$/ })).toHaveCount(0);
+    /* 460: ekipman bilgileri serbest — kod ve tür sabit; Marka çıkar, "Ekipman kaydından alan" ile geri gelir; Model'in adı yerinde değişir */
+    const ekip = kagit.locator("#kb-ekipman");
+    await expect(ekip.getByText("Ekipman kodu")).toBeVisible();
+    await ekip.getByRole("button", { name: "Marka · çıkar" }).click();
+    await expect(ekip.getByRole("button", { name: "Marka", exact: true })).toHaveCount(0);
+    await ekip.getByRole("combobox", { name: "Ekipman kaydından alan ekle" }).click();
+    await page.getByRole("option", { name: /^Marka/ }).click();
+    await expect(ekip.getByRole("button", { name: "Marka", exact: true })).toBeVisible();
+    await ekip.getByRole("button", { name: "Model", exact: true }).click();
+    const alanAdi = page.getByRole("textbox", { name: "Alan adı" });
+    await expect(alanAdi).toBeFocused();
+    await alanAdi.fill("Model / tip");
+    await alanAdi.press("Enter");
+    await expect(ekip.getByRole("button", { name: "Model / tip", exact: true })).toBeVisible();
     expect(await page.evaluate(() => document.documentElement.scrollWidth <= window.innerWidth), "yana taşma yok").toBe(true);
     await goz(page, "kurucu-duzen", bilgi.project.name);
     /* belge önizlemesi: kesin belgenin çizicisinden, yazılanlarla */
     await page.getByRole("button", { name: "Belge önizlemesi" }).click();
     const belge = page.getByRole("region", { name: "Belge önizlemesi" });
     await expect(belge.getByText("Deneme sütunu")).toBeVisible();
+    await expect(belge.getByText("Model / tip")).toBeVisible();
     await expect(belge.getByText("Deneme yorumu", { exact: false }).first()).toBeVisible();
     await goz(page, "kurucu-belge", bilgi.project.name);
     await page.getByRole("button", { name: "Düzenle", exact: true }).click();

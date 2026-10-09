@@ -32,7 +32,7 @@ function Icerik({ b }: { b: Bolum }) {
   switch (b.blok) {
     case "bilgi":
       return <ul className={stil.ogeler}>{b.alanlar.map((a) => <Oge key={a.id} ad={a.ad} kilit={a.kilit}
-        alt={ekler(ALAN_TUR[a.tur], a.birim, a.kaynak && "kayıttan", a.zorunlu && !a.kaynak && "zorunlu", a.secenekler?.join(" / "))} />)}</ul>;
+        alt={ekler(ALAN_TUR[a.tur], a.birim, a.kaynak && "kayıttan", a.ekipman && "ekipman kaydından", a.zorunlu && !a.kaynak && !a.ekipman && "zorunlu", a.secenekler?.join(" / "))} />)}</ul>;
     case "liste":
       return <>
         <p className={stil.satir}>Cevaplar: <b>{b.cevaplar.join(" · ")}</b></p>

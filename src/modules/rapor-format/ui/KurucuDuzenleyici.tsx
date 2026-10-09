@@ -53,7 +53,10 @@ export function OgeDuzenleyici({ t, i, b, id, degis }: { t: FormatTanimi; i: num
   if (b.blok === "bilgi") {
     const a = b.alanlar.find((x) => x.id === id);
     if (!a) return null;
-    if (a.kilit || a.kaynak) return <p className={stil.satir}>{a.kaynak ? "Kayıttan gelen alan: yalnız adı değişir." : "Bakanlık alanı: değişmez."}</p>;
+    if (a.kilit || a.kaynak || a.ekipman) {
+      return <p className={stil.satir}>{a.ekipman ? "Ekipman kaydına bağlı alan: denetçi sahada yazar, değeri ekipman kaydından başlar; yalnız adı değişir, çıkarılabilir."
+        : a.kaynak ? "Kayıttan gelen alan: yalnız adı değişir." : "Bakanlık alanı: değişmez."}</p>;
+    }
     const secmeli = a.tur === "secim" || a.tur === "coklu";
     return (
       <div className={stil.duzenleyici}>

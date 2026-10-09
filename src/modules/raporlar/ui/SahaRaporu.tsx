@@ -13,7 +13,8 @@
    gönderilmez: "Zorunlu alanlar doldurulmadı" penceresi eksikleri sayar, her biri alanına götürür; boş alanlar kırmızı (aria-invalid), doldurdukça işaret
    kalkar (maket UY / zorunluEksik). Göndermeden önce sorulur (maket gonder: "Rapor onaya gönderilsin mi?"). Gönderilen rapor salt okunur (kilit
    şeridi). Formatın kendi ekipman bilgi bölümü (ör. kompresör) 2. bölüme katılır; formatın sorduğu alan sabit satırda tekrar edilmez (marka,
-   model, imal yılı …). Yetki, kural ve ENGEL sunucuda; buradaki tuşlar yalnız izinli olanı gösterir.
+   model, imal yılı …); 460: tam ekipman bölümlü formatta 2. bölüm yalnız kod, tür, metot ve formatın alanlarıdır (marka, model … ekipman
+   kaydına bağlı alan olarak formatın koyduğu yerde ve adla). Yetki, kural ve ENGEL sunucuda; buradaki tuşlar yalnız izinli olanı gösterir.
    313: "Kaydet ve kopyala" (Yeni) / "Kopyala" (gönderilmiş) yeni ekipmanın raporunu açar ve oraya gider (karar 204–209); kopyadan açılan Yeni
    raporda kaynak şeridi (U7); daha yeni format sürümü yayınlandıysa "Formatı güncelle" şeridi (U6, 211); günlük süre dolduysa neden şeridi (212).
    318 revizyon (maket raporlar.html 192, 131): tamamlanan raporda yazana "Revize iste" (gerekçe) → "Revize isteğiniz teknik yöneticide" şeridi
@@ -31,12 +32,12 @@ import { DegerYok, Kirinti, Kod, NesneBasi, Rozet, SeritKap } from "../../../com
 import { tarihNo } from "../../../components/secim/tarih";
 import { Serit } from "../../../components/serit/Serit";
 import { Tus, TusBaglanti } from "../../../components/tus/Tus";
-import { raporDuzeni } from "../../../format/duzen";
+import { raporDuzeni, sabitEkipmanAlanlari } from "../../../format/duzen";
 import { degerlendir } from "../../../format/motor";
-import type { Cevaplar } from "../../../format/tanim";
+import { EKIPMAN_ALAN_ADI, type Cevaplar } from "../../../format/tanim";
 import { ayEkle, RAPOR_DURUM, type EkipmanBilgisi, type RaporDurumu, type RaporTarihleri } from "../sema";
 import type { SahaRaporu as SahaRaporuVerisi } from "../server/raporlar";
-import { alanId, BilgiBlok, FormatBolumu, OkuGirdi, RaporBolumu, Satir, Satirlar, TarihKutusu, type Baglam, type Kaynak } from "./Bloklar";
+import { alanId, BilgiAlani, BilgiBlok, FormatBolumu, OkuGirdi, RaporBolumu, Satir, Satirlar, TarihKutusu, type Baglam, type Kaynak } from "./Bloklar";
 import { CihazBolumu } from "./CihazBolumu";
 import { EtiketOkuma } from "./EtiketOkuma";
 import { FotoListesi } from "./FotoListesi";
@@ -60,6 +61,9 @@ interface Eksik { bolum: string; alan: string; ad: string }
 /** sabit bölümlerin kimliği (format kimliklerinde tire olmaz → çakışmaz) */
 const SABIT = { firma: "sabit-firma", ekipman: "sabit-ekipman", cihaz: "sabit-cihaz" } as const;
 const EID = (k: EkipmanAnahtari) => `r-ek-${k}`;
+/** ekipman bilgisinin en çok uzunluğu (sema.ts EkipmanBilgisi ile aynı) */
+const EN: Record<EkipmanAnahtari, number> = { marka: 40, model: 40, seri: 30, imal: 4, konum: 60, amac: 120, bolum: 60 };
+const ETIKET = ["marka", "model", "seri", "imal"] as const;
 const TID = (k: TarihAnahtari) => alanId(`tarih.${k}`);
 const KILIT: Record<Exclude<RaporDurumu, "taslak">, string> = {
   onayda: "Teknik yönetici onayında", onaylandi: "Muayene uzmanı imzası bekleniyor", imzada: "İmzaya gönderildi",
@@ -181,6 +185,7 @@ export function SahaRaporu({ v, yeni }: { v: Gorunum; yeni?: { plan: string; eki
   const yaz = (f: (c: Cevaplar) => Cevaplar) => { setCevaplar(f); setKirli(true); };
   const bag: Baglam = {
     v, c: cevaplar, yaz, d, oku, gecersiz, kaynak: (k) => kaynaklar[k], yz: !oku && v.yz, islem: { mesgul, baslat, yenile },
+    ekipmanAlani: (a) => (a.ekipman ? metinSatiri(a.ekipman, a.ad, EN[a.ekipman], a.ekipman === "imal") : null),
     cihaz: (bolumId) => <CihazBolumu v={v} bolumId={bolumId} oku={oku || !!yeni} gecersiz={gecersiz} mesgul={mesgul} baslat={baslat} yenile={yenile} />,
     foto: (bolumId, madde) => <FotoListesi key={`${bolumId}-${madde ?? ""}`} v={v} bolumId={bolumId} madde={madde} oku={oku} yeniAc={yeni ? yeniAc : undefined}
       gecersiz={gecersiz(madde ? `${madde}.foto` : bolumId)} mesgul={mesgul} baslat={baslat} yenile={yenile} />,
@@ -188,15 +193,14 @@ export function SahaRaporu({ v, yeni }: { v: Gorunum; yeni?: { plan: string; eki
 
   /* format bölümleri ve numaraları belgeyle ortak (format/duzen.ts, 427): yalnız kayıttan gelen alanlı bilgi bölümü 1. bölümün kopyası — çizilmez;
      ekipman bilgi bölümü 2. bölüme katılır ve adı 2. bölümün başlığı olur; üst başlıklı bölümler N.1, N.2; numarasız bölüm numarasız */
-  const tr = (x: string) => x.toLocaleLowerCase("tr");
-  /* formatın elle sorduğu alan sabit satırda tekrar edilmez (kayıttan gelen alan sabit satırdan okunur, gizlenmez) */
-  const formatAdlari = v.tanim.bolumler.flatMap((b) => (b.blok === "bilgi" ? b.alanlar.filter((a) => !a.kaynak).map((a) => tr(a.ad)) : []));
-  const formatta = (...l: string[]) => formatAdlari.some((ad) => l.some((x) => ad.includes(x)));
-  /* etiketten okunabilen ve ekranda sabit satırı olan alanlar (385) */
-  const etiketAlanlari = ([["marka", "marka"], ["model", "model"], ["seri", "seri no"], ["imal", "imal"]] as const).filter(([, ad]) => !formatta(ad)).map(([k]) => k);
+  /* 2. bölüm: eski formatta kayıttan başlayan sabit satırlar (formatın aynı adlı alanı varsa o satır yok — belgeyle aynı liste); tam ekipman
+     bölümlü formatta (460) yalnız kod, tür, metot ve formatın alanları — marka, model … ekipman kaydına bağlı alan olarak yerinde */
   const cihazEk = !v.tanim.bolumler.some((b) => b.blok === "cihaz") && v.cihazlar.length > 0;
   const duzen = raporDuzeni(v.tanim, cihazEk);
   const katilan = duzen.katilan;
+  const sabit = sabitEkipmanAlanlari(v.tanim);
+  /* etiketten okunabilen ve ekranda satırı olan alanlar (385) */
+  const etiketAlanlari = ETIKET.filter((k) => (duzen.tam ? duzen.tam.alanlar.some((a) => a.ekipman === k) : sabit.includes(k)));
   const cihazEksik = v.cihazlar.some((x) => gecersiz(`cihaz.${x.turId}`));
   const bolumEksik = (id: string) => d.eksikler.some((e) => e.bolum === id && gecersiz(e.alan));
   const acik = (id: string) => !kapali.has(id);
@@ -524,7 +528,7 @@ export function SahaRaporu({ v, yeni }: { v: Gorunum; yeni?: { plan: string; eki
             <Satir etiket="E-posta">{v.kunye.eposta ?? <DegerYok>-</DegerYok>}</Satir>
             <Satir etiket="Telefon">{v.kunye.tel ?? <DegerYok>-</DegerYok>}</Satir>
             <Satir etiket="Periyodik kontrol metodu ve kapsamı">{metot}</Satir>
-            {metinSatiri("bolum", "Ekipman bölümü", 60)}
+            {!duzen.tam && metinSatiri("bolum", "Ekipman bölümü", 60)}
           </Satirlar>
         </RaporBolumu>
 
@@ -538,17 +542,13 @@ export function SahaRaporu({ v, yeni }: { v: Gorunum; yeni?: { plan: string; eki
             <Satir etiket="Kod"><Kod>{v.ekipman.kod}</Kod></Satir>
             <Satir etiket="Ekipman türü">{v.tur.ad}</Satir>
             <Satir etiket="Kontrol metodu">{metot}</Satir>
-            {!formatta("marka") && metinSatiri("marka", "Marka", 40)}
-            {!formatta("model") && metinSatiri("model", "Model", 40)}
-            {!formatta("seri no") && metinSatiri("seri", "Seri no", 30)}
-            {!formatta("imal") && metinSatiri("imal", "İmal yılı", 4, true)}
-            {!formatta("kullanım yeri") && metinSatiri("konum", "Kullanım yeri", 60)}
-            {!formatta("kullanım amacı") && metinSatiri("amac", "Kullanım amacı", 120)}
+            {duzen.tam ? duzen.tam.alanlar.map((a) => <BilgiAlani key={a.id} a={a} bag={bag} />)
+              : sabit.map((k) => metinSatiri(k, EKIPMAN_ALAN_ADI[k], EN[k], k === "imal"))}
             <Satir etiket="Önceki kontrol">
               {onceki ? `${tarihNo(onceki.tarih)} · ${onceki.sonuc ?? "-"} · eski kayıt (Excel)` : "İlk kontrol"}
             </Satir>
           </Satirlar>
-          {katilan.map((b) => <BilgiBlok key={b.id} b={b} bag={bag} />)}
+          {!duzen.tam && katilan.map((b) => <BilgiBlok key={b.id} b={b} bag={bag} />)}
         </RaporBolumu>
 
         {cihazEk && (

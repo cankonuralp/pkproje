@@ -5,7 +5,7 @@
    şablondan yeniden denetler (ENGEL), burası yalnız ekranın kolaylığı. */
 import { SINIR_ISARETI } from "../../format/hesap.ts";
 import { kilitliKimlikler } from "../../format/motor.ts";
-import { Bolum, kurucudan, type Blok, type BolumOf, type FormatTanimi, type Sinir } from "../../format/tanim.ts";
+import { Bolum, EKIPMAN_ALAN_ADI, kurucudan, type Blok, type BolumOf, type EkipmanAlani, type FormatTanimi, type Sinir } from "../../format/tanim.ts";
 
 export { kurucudan };
 
@@ -53,7 +53,7 @@ export function tasi<T>(l: readonly T[], i: number, j: number): T[] {
 /** bölümün öğeleri (bilgi: alanlar · liste: bütün gruplardaki maddeler · ölçüm: sütunlar · test: değerler) — ekranda tek liste */
 export type Oge = { id: string; ad: string; alt: string; kilit: boolean };
 export function bolumOgeleri(b: Bolum): Oge[] {
-  if (b.blok === "bilgi") return b.alanlar.map((a) => ({ id: a.id, ad: a.ad, alt: a.kaynak ? `${a.tur} · kayıttan` : a.tur, kilit: a.kilit }));
+  if (b.blok === "bilgi") return b.alanlar.map((a) => ({ id: a.id, ad: a.ad, alt: a.ekipman ? "ekipman kaydından" : a.kaynak ? `${a.tur} · kayıttan` : a.tur, kilit: a.kilit }));
   if (b.blok === "liste") return b.gruplar.flatMap((g) => g.maddeler.map((m) => ({ id: m.id, ad: m.metin, alt: [g.ad, m.std].filter(Boolean).join(" · "), kilit: m.kilit })));
   if (b.blok === "olcum") return b.sutunlar.map((c) => ({ id: c.id, ad: c.ad, alt: c.op && c.sinir !== undefined ? `sınır ${SINIR_ISARETI[c.op]} ${c.sinir}` : c.olumsuz?.length ? `uygun değil: ${c.olumsuz.join(" / ")}` : "sınır yok", kilit: b.kilit && !kurucudan(c.id) }));
   if (b.blok === "test") return b.degerler.map((d) => ({ id: d.id, ad: d.ad, alt: d.op && d.sinir !== undefined ? `sınır ${SINIR_ISARETI[d.op]} ${d.sinir}` : d.olumsuz?.length ? `uygun değil: ${d.olumsuz.join(" / ")}` : "sınır yok", kilit: d.kilit }));
@@ -74,6 +74,14 @@ export function ogeEkle(t: FormatTanimi, i: number, ad: string): FormatTanimi {
     y = { ...b, gruplar: [...gruplar.slice(0, -1), { ...son, maddeler: [...son.maddeler, { id: yeniKimlik(t, "m", ek), metin: a, kilit: false }] }] };
   } else if (b.blok === "olcum") y = { ...b, sutunlar: [...b.sutunlar, { id: yeniKimlik(t, "s"), ad: a, giris: "sayi", zorunlu: false, agir: false }] };
   else if (b.blok === "test") y = { ...b, degerler: [...b.degerler, { id: yeniKimlik(t, "d"), ad: a, metin: false, zorunlu: true, kilit: false, agir: false }] };
+  return { ...t, bolumler: t.bolumler.map((x, j) => (j === i ? y : x)) };
+}
+
+/** 460: tam ekipman bölümüne ekipman kaydına bağlı alan ekler (marka, model …; bölümde yoksa) — adı hazır, sonra değişir */
+export function ekipmanAlaniEkle(t: FormatTanimi, i: number, k: EkipmanAlani): FormatTanimi {
+  const b = t.bolumler[i];
+  if (!b || b.blok !== "bilgi" || !b.tam || t.bolumler.some((x) => x.blok === "bilgi" && x.alanlar.some((a) => a.ekipman === k))) return t;
+  const y = { ...b, alanlar: [...b.alanlar, { id: yeniKimlik(t, "a"), ad: EKIPMAN_ALAN_ADI[k], tur: "metin" as const, zorunlu: false, kilit: false, ekipman: k }] };
   return { ...t, bolumler: t.bolumler.map((x, j) => (j === i ? y : x)) };
 }
 
@@ -131,7 +139,7 @@ export function ogeYaz(t: FormatTanimi, i: number, id: string, y: OgeYamasi): Fo
   if (b.blok === "bilgi") {
     n = { ...b, alanlar: b.alanlar.map((a) => {
       if (a.id !== id || a.kilit) return a;
-      if (a.kaynak) return y.ad !== undefined ? { ...a, ad: kirp(y.ad, 200) || a.ad } : a;
+      if (a.kaynak || a.ekipman) return y.ad !== undefined ? { ...a, ad: kirp(y.ad, 200) || a.ad } : a;
       const tur = y.tur ?? a.tur, secmeli = tur === "secim" || tur === "coklu";
       return {
         ...a, ad: y.ad !== undefined ? kirp(y.ad, 200) || a.ad : a.ad, tur,

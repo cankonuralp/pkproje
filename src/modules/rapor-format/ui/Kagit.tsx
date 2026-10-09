@@ -10,15 +10,20 @@
      (üst başlık, numarasız, cevap seti, uygunluk notları, fotoğraf sayısı, imza yerleri) bölüm şeridindeki ayar tuşundan;
    · bölüm şeridinde yukarı / aşağı ve sil; bölümler arasında ve sonda "Bölüm ekle".
    Kilitli (Bakanlık) öğe kilit simgeli ve değişmez (sunucu yayında yeniden denetler — ENGEL). 1 Firma bilgileri her formatta aynı (sabit); yalnız
-   "Periyodik kontrol metodu ve kapsamı" satırı yazılır. Kâğıdın renkleri belgenin kendi renkleri — açık / koyu temada aynı kâğıt. */
+   "Periyodik kontrol metodu ve kapsamı" satırı yazılır. 460 (reisim 2026-10-09: "ekipman bilgileri kısmıda değiştirilebilir olsun zira yangın
+   dolabı gibi ekipmanlarda farklı girdiler olabiliyor sabit olan tek şey firma bilgileri, cihazlar ve standartlar"): 2. bölüm serbest — ekipman
+   kodu ve türü dışındaki her satırın adı değişir, çıkarılır, yeni alan eklenir; marka, model, seri no … "Ekipman kaydından alan ekle" ile geri
+   gelir (değeri ekipman kaydından başlar; kâğıt eski formatı açılışta çevirir — format/duzen.ts ekipmanTamYap). Kâğıdın renkleri belgenin kendi
+   renkleri — açık / koyu temada aynı kâğıt. */
 import { Fragment, useEffect, useRef, useState, type ReactNode } from "react";
 import { Ikon } from "../../../components/ikon/Ikon";
 import { SecimAlani } from "../../../components/secim/SecimAlani";
 import { SINIR_ISARETI } from "../../../format/hesap";
-import { kayittanBolumMu, raporDuzeni } from "../../../format/duzen";
-import { BLOKLAR, Bolum as BolumSema, type Blok, type Bolum, type BolumOf, type FormatTanimi } from "../../../format/tanim";
+import { raporDuzeni } from "../../../format/duzen";
+import { BLOKLAR, EKIPMAN_ALAN_ADI, EKIPMAN_ALANLARI, type Blok, type Bolum, type BolumOf, type FormatTanimi } from "../../../format/tanim";
 import {
-  bolumAdi, bolumDuzeni, gorunumYaz, grupEkle, grupSil, grupYaz, kurucudan, maddeEkle, ogeEkle, ogeSil, ogeYaz, resmiFormat, satirlar, tasi, yeniBolum, yeniKimlik,
+  bolumAdi, bolumDuzeni, ekipmanAlaniEkle, gorunumYaz, grupEkle, grupSil, grupYaz, kurucudan, maddeEkle, ogeEkle, ogeSil, ogeYaz, resmiFormat, satirlar, tasi,
+  yeniBolum, yeniKimlik,
 } from "../kurucu";
 import { ListeDuzenleyici, NotDuzenleyici, OgeDuzenleyici, SonucAciklamasi } from "./KurucuDuzenleyici";
 import { BLOK_ADI } from "./ortak";
@@ -72,13 +77,16 @@ function Tus({ ikon, ad, onClick, disabled = false, basili }: { ikon: string; ad
 function Ekle({ ad, onClick, erisimAdi }: { ad: string; onClick: () => void; erisimAdi?: string }) {
   return <button type="button" className={k.ekle} aria-label={erisimAdi} onClick={onClick}><Ikon ad="plus" kucuk />{ad}</button>;
 }
-const Kilit = () => <span className={k.kilitIkon} title="Bakanlık alanı · değişmez"><Ikon ad="lock" kucuk /><span className="gizli">Bakanlık alanı</span></span>;
+const Kilit = ({ ad = "Bakanlık alanı" }: { ad?: string }) => (
+  <span className={k.kilitIkon} title={`${ad} · değişmez`}><Ikon ad="lock" kucuk /><span className="gizli">{ad}</span></span>
+);
 
 /** seçenekler belgedeki gibi (○ A ○ B) */
 const Secenekler = ({ l }: { l: readonly string[] }) => <>{l.map((x) => <span key={x} className="rb-sec"><span className="rb-isaret" /> {x}</span>)}</>;
 
 /** bilgi alanının belgedeki boş değeri (türüne göre) */
 function AlanOrnegi({ a }: { a: BolumOf<"bilgi">["alanlar"][number] }) {
+  if (a.ekipman) return <span className={k.ornek}>sahada · ekipman kaydından başlar</span>;
   if (a.kaynak) return <span className={k.ornek}>kayıttan</span>;
   if (a.tur === "secim" || a.tur === "coklu") return a.secenekler?.length ? <Secenekler l={a.secenekler} /> : <span className={k.ornek}>seçenek yok — ayarlardan</span>;
   if (a.tur === "evet") return <Secenekler l={["Evet", "Hayır"]} />;
@@ -351,23 +359,17 @@ export function Kagit({ t, degis, tur, bolumuSil, bildir }: KagitOzellik) {
     </div>
   );
 
-  /* ── 2 · Ekipman bilgileri: kayıttan gelen sabit satırlar + formatın ekipman bölümünün alanları (yazılır) ── */
-  const katilan = duzen.katilan[0] ?? null, ki = katilan ? sira(katilan.id) : -1;
-  const formatAdlari = t.bolumler.flatMap((b) => (b.blok === "bilgi" ? b.alanlar.filter((a) => !a.kaynak).map((a) => a.ad.toLocaleLowerCase("tr")) : []));
-  const formatta = (x: string) => formatAdlari.some((ad) => ad.includes(x));
-  const sabitEkipman: Hucre[] = [
-    ["Ekipman kodu", <span key="k" className={k.ornek}>kayıttan</span>], ["Ekipman türü", tur.ad],
-    ...([["marka", "Marka"], ["model", "Model"], ["seri no", "Seri no"], ["imal", "İmal yılı"], ["kullanım yeri", "Kullanım yeri"], ["kullanım amacı", "Kullanım amacı"]] as const)
-      .filter(([x]) => !formatta(x)).map(([, e]) => [e, <span key={e} className={k.ornek}>kayıttan</span>] as const),
-  ];
-  const ekipmanAlanEkle = () => {
-    if (katilan) { ogeKoy(ki, "a", "Yeni alan"); return; }
-    /* formatta ekipman bölümü yok: "Ekipman bilgileri" bilgi bölümü 1. bölümden sonra açılır */
-    const b = yeniBolum(t, "bilgi", "Ekipman bilgileri"), aid = yeniKimlik(t, "a", new Set([b.id]));
-    const yeni = BolumSema.parse({ ...b, alanlar: [{ id: aid, ad: "Yeni alan", tur: "metin" }] });
-    const p = t.bolumler.findIndex((x) => kayittanBolumMu(x)) + 1;
-    const l = [...t.bolumler]; l.splice(p, 0, yeni);
-    degis({ ...t, bolumler: l }); setYeniId(aid);
+  /* ── 2 · Ekipman bilgileri (460): ekipman kodu ve türü sabit; öteki her satır formatın ekipman bölümünün alanı (kâğıt eski formatı açılışta
+     çevirir — tam bölüm her zaman var) ── */
+  const ekip = duzen.tam, ki = ekip ? sira(ekip.id) : -1;
+  const eksikBagli = ekip ? EKIPMAN_ALANLARI.filter((x) => !ekip.alanlar.some((a) => a.ekipman === x)) : [];
+  /* listede yalnız eksik olanlar var; eklenen satırın ad tuşuna odak */
+  const bagliEkle = (x: string) => {
+    const e = EKIPMAN_ALANLARI.find((y) => y === x);
+    if (!ekip || !e) return;
+    const id = yeniKimlik(t, "a"); degis(ekipmanAlaniEkle(t, ki, e));
+    bildir(`“${EKIPMAN_ALAN_ADI[e]}” eklendi (taslak).`);
+    requestAnimationFrame(() => document.getElementById("kb-ekipman")?.querySelector<HTMLElement>(`[data-alan="${id}"] button`)?.focus());
   };
 
   return (
@@ -408,17 +410,26 @@ export function Kagit({ t, degis, tur, bolumuSil, bildir }: KagitOzellik) {
         ]} />
       </section>
 
-      {/* 2 · Ekipman bilgileri — kayıttan gelen satırlar + formatın sorduğu alanlar */}
+      {/* 2 · Ekipman bilgileri — kod ve tür sabit; öteki satırlar formatın (adı yazılır, çıkarılır, eklenir) */}
       <section className={`rb-bolum ${k.bolum}`} id="kb-ekipman">
-        <div className={k.bolumBas}><h2>2. {katilan ? <Yazi deger={katilan.ad} ad="Bölüm adı" kilit={katilan.kilit} yaz={(s) => degis(bolumAdi(t, ki, s))} /> : duzen.ekipmanBaslik}</h2>
-          {katilan && <span className={k.araclar}>{katilan.kilit && <span className={k.sabit}><Ikon ad="lock" kucuk />Bakanlık bölümü</span>}</span>}</div>
-        <BilgiTablosu l={[...sabitEkipman, ...(katilan ? katilan.alanlar.filter((a) => !a.kaynak).map((a) => [
-          <span key={a.id} className={k.etiket}><Yazi deger={a.ad} ad="Alan adı" kilit={a.kilit} ac={yeniId === a.id} yaz={(s) => degis(ogeYaz(t, ki, a.id, { ad: s }))} />
-            {ogeTuslari(katilan, ki, a.id, a.ad, a.kilit)}</span>,
-          <AlanOrnegi key={`${a.id}-d`} a={a} />, a.tur === "coklu" || (a.secenekler?.length ?? 0) > 3] as const) : []),
-          ["Ekipman bölümü", <span key="eb" className={k.ornek}>sahada</span>]]}
-          son={<Ekle ad="Alan ekle" onClick={ekipmanAlanEkle} />} />
-        {katilan && ogePaneli(katilan, ki)}
+        <div className={k.bolumBas}><h2>2. {ekip ? <Yazi deger={ekip.ad} ad="Bölüm adı" kilit={ekip.kilit} yaz={(s) => degis(bolumAdi(t, ki, s))} /> : duzen.ekipmanBaslik}</h2>
+          {ekip?.kilit && <span className={k.araclar}><span className={k.sabit}><Ikon ad="lock" kucuk />Bakanlık bölümü</span></span>}</div>
+        <BilgiTablosu l={[
+          [<span key="kod" className={k.etiket}>Ekipman kodu<span className={k.ogeTus}><Kilit ad="Sabit · her raporda" /></span></span>, <span key="k" className={k.ornek}>kayıttan</span>],
+          [<span key="tur" className={k.etiket}>Ekipman türü<span className={k.ogeTus}><Kilit ad="Sabit · her raporda" /></span></span>, tur.ad],
+          ...(ekip ? ekip.alanlar.map((a): Hucre => [
+            <span key={a.id} className={k.etiket} data-alan={a.id}><Yazi deger={a.ad} ad="Alan adı" kilit={a.kilit} ac={yeniId === a.id} yaz={(s) => degis(ogeYaz(t, ki, a.id, { ad: s }))} />
+              {ogeTuslari(ekip, ki, a.id, a.ad, a.kilit)}</span>,
+            <AlanOrnegi key={`${a.id}-d`} a={a} />, a.tur === "coklu" || (a.secenekler?.length ?? 0) > 3]) : []),
+        ]}
+          son={ekip && <span className={k.ekleSira}>
+            <Ekle ad="Alan ekle" onClick={() => ogeKoy(ki, "a", "Yeni alan")} />
+            {eksikBagli.length > 0 && <span className={k.ekleSecim}>
+              <SecimAlani id="kb-ekipman-kayit" ad="Ekipman kaydından alan ekle" etiketsiz deger="" ipucu="+ Ekipman kaydından alan"
+                secenekler={eksikBagli.map((x) => [x, EKIPMAN_ALAN_ADI[x], "sahada · kayıttan başlar"] as const)} degistir={bagliEkle} />
+            </span>}
+          </span>} />
+        {ekip && ogePaneli(ekip, ki)}
       </section>
 
       {araEkle(duzen.bolumler.length ? sira(duzen.bolumler[0].b.id) : t.bolumler.length, "Buraya bölüm ekle (ekipman bilgilerinden sonra)", "kb-ekle-0")}

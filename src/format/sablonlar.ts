@@ -2,7 +2,7 @@
    topraklama, ZPKR02 elektrik iç tesisatı; 427: ZPKR03 yıldırımdan korunma, ZPKR04 yangın algılama, ZPKR05 trafo) ve bir genel tür (kompresör). Bölüm, alan, seçenek ve kriter yazımları Bakanlık PDF'lerinden birebir
    (maket maket-veri.js MV.FORMAT_YAPI, 2026-09-27/28 — reisim: "birebir aynı pdf çıktısı olmalı"). Bakanlık formatlı şablonda zorunlu öğeler
    KİLİTLİ: silinemez (yayın denetimi), yalnız sırası / görünümü değişir. Örnek değer YOK (AA11: formlar boş açılır). */
-import { FormatTanimi, type FormatGirdisi } from "./tanim.ts";
+import { EKIPMAN_ALAN_ADI, EKIPMAN_ALANLARI, FormatTanimi, type FormatGirdisi } from "./tanim.ts";
 
 const VAR_YOK = ["Var", "Yok"], NEDEN = ["Periyodik Kontrol", "İlk Kontrol"], YAPI = ["Ev", "Ticari", "Endüstri", "Diğer"];
 const SEBEKE = ["TT", "IT", "TN-CS", "TN-C", "TN-S"], TOPRAKLAYICI = ["Ring", "Yüzeysel", "Temel", "Derin", "Belirlenemedi"];
@@ -12,6 +12,9 @@ const CEVAP = ["Uygun", "Uygun değil", "Uygulanamaz"];
 type AlanG = { id: string; ad: string; tur: "metin" | "sayi" | "tarih" | "secim" | "coklu" | "evet"; secenekler?: string[]; birim?: string; zorunlu?: boolean };
 const kilitli = <T extends object>(l: T[], kilit: boolean) => l.map((x) => ({ ...x, kilit }));
 const m = (id: string, ad: string, secenekler?: string[]): AlanG => ({ id, ad, tur: secenekler ? "secim" : "metin", secenekler, zorunlu: true });
+/** 460: tam ekipman bölümünün ekipman kaydına bağlı alanları (marka, model, seri no, imal yılı, kullanım yeri, kullanım amacı, ekipman bölümü) —
+    Format kurucuda adı değişir, çıkarılır; değeri raporun ekipman bilgisinde */
+const bagliAlanlar = () => EKIPMAN_ALANLARI.map((k) => ({ id: `e_${k}`, ad: EKIPMAN_ALAN_ADI[k], tur: "metin" as const, ekipman: k }));
 
 /** 1 · firma bilgileri: kayıttan (salt okunur) */
 const firma = (kilit: boolean) => ({
@@ -537,17 +540,15 @@ export const SABLONLAR: Readonly<Record<string, SablonKaydi>> = Object.freeze({
 });
 
 /** 437 · SIFIRDAN (reisim 2026-10-09: "RAPOR ŞABLONUNDA SIFIRDAN RAPOR ŞABLONU OLUŞTURMAK YOK") — kitaplıkta değil, boş iskelet: firma ve ekipman
-    bilgileri (kayıttan), ölçüm cihazları, kontrol maddeleri (boş grup — Format kurucuda eklenir), fotoğraf, kusur, not, sonuç, imza. Kilit yok. */
+    bilgileri (460: tam ekipman bölümü — ekipman kaydına bağlı alanlar), ölçüm cihazları, kontrol maddeleri (boş grup — Format kurucuda eklenir),
+    fotoğraf, kusur, not, sonuç, imza. Kilit yok. */
 export const bosFormat = (baslik: string): FormatTanimi => FormatTanimi.parse({
   sema: 1,
   gorunum: { formKodu: "", baslik: baslik.slice(0, 200), dayanak: [] },
   kurallar: { foto: false, derece: false, oneri: true },
   bolumler: [
     firma(false),
-    { id: "ekipman", ad: "Ekipman bilgileri", blok: "bilgi", alanlar: [
-      { id: "ekipman_kodu", ad: "Ekipman kodu", tur: "metin", kaynak: "ekipman_kodu" }, { id: "seri", ad: "Seri no", tur: "metin", kaynak: "seri_no" },
-      { id: "yer", ad: "Kullanım yeri", tur: "metin", kaynak: "kullanim_yeri" },
-    ] },
+    { id: "ekipman", ad: "Ekipman bilgileri", blok: "bilgi", tam: true, alanlar: bagliAlanlar() },
     { id: "cihaz", ad: "Ölçüm cihazları", blok: "cihaz" },
     { id: "kontrol", ad: "Kontrol maddeleri", blok: "liste", cevaplar: CEVAP, gruplar: [{ id: "k", ad: "", maddeler: [] }] },
     ...sonBolumler(false, "Periyodik kontrol tarihi itibarıyla yukarıda teknik özellikleri belirtilen ekipmanın muayenesi sonrasında mevcut şartlar altında kullanımı", true),
@@ -592,11 +593,8 @@ export function grupFormati(tur: { ad: string; grup: string }): FormatTanimi {
     kurallar: { foto: false, derece: false, oneri: true },
     bolumler: [
       firma(false),
-      { id: "ekipman", ad: "Ekipman bilgileri", blok: "bilgi", alanlar: [
-        { id: "ekipman_kodu", ad: "Ekipman kodu", tur: "metin", kaynak: "ekipman_kodu" }, m("marka", "Marka / model"),
-        { id: "seri", ad: "Seri no", tur: "metin", kaynak: "seri_no" }, { id: "imal", ad: "İmal yılı", tur: "sayi", zorunlu: true },
-        { id: "yer", ad: "Kullanım yeri", tur: "metin", kaynak: "kullanim_yeri" }, ...(GRUP_EK[g] ?? []),
-      ] },
+      /* 460: tam ekipman bölümü — ekipman kaydına bağlı alanlar + grubun kendi alanları (yangın dolabı gibi farklı türde firma değiştirir) */
+      { id: "ekipman", ad: "Ekipman bilgileri", blok: "bilgi", tam: true, alanlar: [...bagliAlanlar(), ...(GRUP_EK[g] ?? [])] },
       { id: "cihaz", ad: "Ölçüm cihazları", blok: "cihaz" },
       { id: "kriter", ad: "Muayene kriterleri", blok: "liste", cevaplar: CEVAP, gruplar: [{ id: "k", ad: "",
         maddeler: GRUP_KRITER[g].map((metin, i) => ({ id: `k${i + 1}`, metin })) }] },
