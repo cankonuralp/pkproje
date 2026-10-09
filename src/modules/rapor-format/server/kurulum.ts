@@ -14,6 +14,9 @@
    cihazı türleri boşsa formatın cihaz türleri. Kurulumda bir kez bütün firmada (ayar "kurulum.pdf", "kurulum.baglanti"), sonra "Şablondan
    başlat" ve "Tür olarak ekle"de o türe (bakanlikTamamla, tür + format yetkisiyle). Firmanın yüklediği / kaldırdığı PDF'e ve seçtiği bağlantıya
    dokunulmaz.
+   450 HAZIR FORMAT (reisim 2026-10-09: "yeni tür ekleyince, default olarak makette yaptıklarımız gibi olacak"): formatı HİÇ olmayan türe Ek-III
+   grubuna göre hazır format, yayında sürüm 1 (formatlar.ts varsayilanFormatKur) — kurulumda bir kez bütün firmada (ayar "kurulum.varsayilan"),
+   sonra her yeni türde tür ekleme eyleminde.
    Aynı anda iki istek: firma başına danışma kilidi, ikincisi kayıtta görür ve bir şey yapmaz. Tetik: Ana sayfa ve Ekipman türleri açılınca (ilk
    açılışta kurulur; sonra yalnız ayar okunur, süreçte bellekte de tutulur). Kurulum düşerse sayfa düşmez (kayda yazılır, sonraki açılışta yeniden). */
 import { SABLONLAR } from "../../../format/sablonlar.ts";
@@ -25,14 +28,14 @@ import { formatCihazTurleri, formatStandartlari } from "../../../tanim/standartl
 import { hazirBaglantiTamamla, hazirPdfEkle, hazirTurKur, turDegistirir } from "../../ekipman-turleri/server/turler.ts";
 import { hazirCihazTuru } from "../../olcum-cihazlari/server/cihazlar.ts";
 import { sablonBul } from "../sema.ts";
-import { formatDegistirir, hazirFormatYayinla, sablonKullaniliyor, sablonTurleri, turunSablonu, type Kisi } from "./formatlar.ts";
+import { formatDegistirir, formatsizTurler, hazirFormatYayinla, sablonKullaniliyor, sablonTurleri, turunSablonu, varsayilanFormatKur, type Kisi } from "./formatlar.ts";
 
 export const KURULUM_KIM = "probata · hazır kurulum";
 export const KURULUM_NOTU = "Bakanlık formatı";
 /** kurulan şablonlar: kitaplıktaki Bakanlık formatları, kitaplık sırasıyla */
 export const HAZIR_SABLONLAR: readonly string[] = Object.entries(SABLONLAR).filter(([, s]) => s.bakanlik).map(([k]) => k);
 
-export interface KurulumSonucu { kurulan: number; atlanan: number; pdf: number; baglanti: number }
+export interface KurulumSonucu { kurulan: number; atlanan: number; pdf: number; baglanti: number; varsayilan: number }
 export interface Tamamlama { pdf: boolean; baglanti: boolean }
 
 /** şablonun Bakanlık form kodu (ZPKR…; Bakanlık formatı değilse null) */
@@ -70,9 +73,9 @@ export async function bakanlikTamamla(db: Sorgulayici, depo: Depo, kim: Kisi, fi
 
 /** firmanın işleminde: eksik Bakanlık türlerini kurar, Bakanlık şablonlu türleri tamamlar (hepsi yapıldıysa hiçbir şey yazmaz) */
 export async function bakanlikKurulumu(db: Sorgulayici, depo: Depo): Promise<KurulumSonucu> {
-  const sonuc = { kurulan: 0, atlanan: 0, pdf: 0, baglanti: 0 };
+  const sonuc = { kurulan: 0, atlanan: 0, pdf: 0, baglanti: 0, varsayilan: 0 };
   const eksik = (k: { bakanlik: string[] }) => HAZIR_SABLONLAR.filter((s) => !k.bakanlik.includes(s));
-  const bitti = (k: { bakanlik: string[]; pdf: boolean; baglanti: boolean }) => !eksik(k).length && k.pdf && k.baglanti;
+  const bitti = (k: { bakanlik: string[]; pdf: boolean; baglanti: boolean; varsayilan: boolean }) => !eksik(k).length && k.pdf && k.baglanti && k.varsayilan;
   if (bitti((await ayarOku(db, "kurulum")).deger)) return sonuc;
   await db.sorgu("SELECT pg_advisory_xact_lock(hashtext('probata.kurulum.' || gecerli_firma()::text))");
   const a = await ayarOku(db, "kurulum");   // kilitten SONRA yeniden: beklerken öteki istek kurmuş olabilir
@@ -97,7 +100,11 @@ export async function bakanlikKurulumu(db: Sorgulayici, depo: Depo): Promise<Kur
       if (x.baglanti) sonuc.baglanti++;
     }
   }
-  const y = await ayarYaz(db, "kurulum", a.surum, { bakanlik: [...a.deger.bakanlik, ...kurulacak], pdf: true, baglanti: true },
+  /* 450: formatı hiç olmayan türler (firmanın önceden açtığı) — Ek-III grubuna göre hazır format, yayında */
+  if (!a.deger.varsayilan) {
+    for (const t of await formatsizTurler(db)) if (await varsayilanFormatKur(db, KURULUM_KIM, t)) sonuc.varsayilan++;
+  }
+  const y = await ayarYaz(db, "kurulum", a.surum, { bakanlik: [...a.deger.bakanlik, ...kurulacak], pdf: true, baglanti: true, varsayilan: true },
     { kim: KURULUM_KIM, ne: "firma_ayar.kurulum" });
   if (y.durum !== "tamam") throw new Error(`kurulum kaydı yazılamadı: ${y.durum}`);
   return sonuc;

@@ -553,3 +553,55 @@ export const bosFormat = (baslik: string): FormatTanimi => FormatTanimi.parse({
     ...sonBolumler(false, "Periyodik kontrol tarihi itibarıyla yukarıda teknik özellikleri belirtilen ekipmanın muayenesi sonrasında mevcut şartlar altında kullanımı", true),
   ],
 } satisfies FormatGirdisi);
+
+/* ── 450 · YENİ TÜRÜN HAZIR FORMATI (reisim 2026-10-09: "standart olarak pdf formatı yükleyin diyor hala yeni tür ekleyince, default olarak makette
+   yaptıklarımız gibi olacak") — maketteki gibi (maket-veri.js MV.formatTanim + MV.KRITER / MV.TESTLER): yeni tür eklenince Ek-III grubuna göre
+   kurulmuş format kendiliğinden YAYINDA gelir, rapor hemen açılır; belge Bakanlık rapor görünümünde (src/belge) çizilir. Firma Format kurucuda
+   değiştirir. Kriterler grubun genel maddeleri; ekipmana bağlı sınırlar (yük deneyi, deney basıncı) sabit sayı değil, not olarak yazılır. Kilit yok. */
+const GRUP_KRITER: Record<string, readonly string[]> = {
+  kaldirma: ["Taşıyıcı konstrüksiyon: çatlak, deformasyon, korozyon", "Kaldırma elemanları (zincir, halat, çatal): aşınma ve uzama", "Kanca ve emniyet mandalı",
+    "Frenler: fonksiyon deneyi", "Sınır anahtarları ve acil durdurma", "Yük diyagramı, etiket ve uyarı işaretleri", "Yük deneyi (dinamik ve statik)"],
+  basincli: ["Gövde ve kaynaklar: gözle muayene (korozyon, ezik)", "Emniyet ventili: ayar basıncı ve fonksiyon", "Manometre: okunabilirlik ve kalibrasyon işareti",
+    "Tahliye düzeni", "Etiket plakası ve izlenebilirlik", "Hidrostatik deney (deney basıncı)"],
+  elektrik: ["Koruma iletkeni sürekliliği", "Topraklama direnci ölçümü", "Kaçak akım koruma: açma akımı ve süresi", "Yalıtım direnci ölçümü",
+    "Pano: işaretleme, kapak, kilit, kablo girişleri", "Çevrim (döngü) empedansı"],
+  iskele: ["Taban plakaları ve zemin", "Dikme, yatay ve çapraz bağlantılar", "Korkuluk ve topuk levhası", "Ankraj ve duvar bağlantıları", "Erişim merdivenleri"],
+  diger: ["Koruyucular ve kilitleme düzenleri", "Acil durdurma", "Kumanda elemanları ve işaretler", "Elektrik donanımı: gözle muayene"],
+};
+type DegerG = { id: string; ad: string; birim?: string; op?: "<=" | ">="; sinir?: number; not?: string };
+const GRUP_TEST: Record<string, readonly DegerG[]> = {
+  kaldirma: [{ id: "dinamik", ad: "Dinamik yük deneyi", birim: "kg", not: "anma yükünün %110'u" }, { id: "statik", ad: "Statik yük deneyi", birim: "kg", not: "anma yükünün %125'i" }],
+  basincli: [{ id: "hidro", ad: "Hidrostatik deney basıncı", birim: "bar", not: "çalışma basıncının 1,5 katı" },
+    { id: "ventil", ad: "Emniyet ventili açma basıncı", birim: "bar", not: "çalışma basıncını aşmaz" }],
+  elektrik: [{ id: "topraklama", ad: "Topraklama direnci", birim: "Ω" }, { id: "yalitim", ad: "Yalıtım direnci", birim: "MΩ", op: ">=", sinir: 1 },
+    { id: "rcd", ad: "Kaçak akım rölesi açma süresi (IΔn)", birim: "ms", op: "<=", sinir: 300 }],
+  iskele: [{ id: "duseylik", ad: "Dikme düşeylik sapması", birim: "mm/m" }],
+  diger: [{ id: "acil", ad: "Acil durdurma tepki süresi", birim: "s" }],
+};
+const GRUP_EK: Record<string, readonly AlanG[]> = {
+  kaldirma: [{ id: "kapasite", ad: "Kaldırma kapasitesi", tur: "sayi", birim: "kg", zorunlu: true }],
+  basincli: [{ id: "calisma", ad: "Çalışma basıncı", tur: "sayi", birim: "bar", zorunlu: true }, { id: "hacim", ad: "Hacim", tur: "sayi", birim: "L" }],
+};
+
+/** Ek-III grubuna göre yeni türün formatı (grup anahtarı tanınmazsa "diğer") */
+export function grupFormati(tur: { ad: string; grup: string }): FormatTanimi {
+  const g = GRUP_KRITER[tur.grup] ? tur.grup : "diger";
+  return FormatTanimi.parse({
+    sema: 1,
+    gorunum: { formKodu: "", baslik: `${tur.ad} Periyodik Kontrol Raporu`.slice(0, 200), dayanak: [] },
+    kurallar: { foto: false, derece: false, oneri: true },
+    bolumler: [
+      firma(false),
+      { id: "ekipman", ad: "Ekipman bilgileri", blok: "bilgi", alanlar: [
+        { id: "ekipman_kodu", ad: "Ekipman kodu", tur: "metin", kaynak: "ekipman_kodu" }, m("marka", "Marka / model"),
+        { id: "seri", ad: "Seri no", tur: "metin", kaynak: "seri_no" }, { id: "imal", ad: "İmal yılı", tur: "sayi", zorunlu: true },
+        { id: "yer", ad: "Kullanım yeri", tur: "metin", kaynak: "kullanim_yeri" }, ...(GRUP_EK[g] ?? []),
+      ] },
+      { id: "cihaz", ad: "Ölçüm cihazları", blok: "cihaz" },
+      { id: "kriter", ad: "Muayene kriterleri", blok: "liste", cevaplar: CEVAP, gruplar: [{ id: "k", ad: "",
+        maddeler: GRUP_KRITER[g].map((metin, i) => ({ id: `k${i + 1}`, metin })) }] },
+      { id: "test", ad: "Test değerleri", blok: "test", degerler: GRUP_TEST[g].map((d) => ({ ...d })) },
+      ...sonBolumler(false, "Periyodik kontrol tarihi itibarıyla yukarıda teknik özellikleri belirtilen ekipmanın muayenesi sonrasında mevcut şartlar altında kullanımı", true),
+    ],
+  } satisfies FormatGirdisi);
+}

@@ -4,6 +4,7 @@
 import { depo } from "../../../server/dosya/depo";
 import { ayniKoken } from "../../../server/kimlik/koken";
 import { istekOturumu, oturumIslemi } from "../../../server/kimlik/istek";
+import { yeniTureFormat } from "../../rapor-format/server/formatlar";
 import { baglantiKaydet, formatKaldir, formatYukle, turKaydet, turSil } from "../server/turler";
 
 export interface PencereDurumu { tamam?: boolean; id?: string; sira?: number; hatalar?: Record<string, string>; genel?: string }
@@ -25,7 +26,14 @@ export async function turKaydetEylemi(turId: string | null, surum: number, girdi
   const o = await oturum(); if (typeof o === "string") return { genel: o };
   const g = (girdi && typeof girdi === "object" ? girdi : {}) as Record<string, unknown>;
   const temiz = Object.fromEntries(ALANLAR.map((k) => [k, typeof g[k] === "string" ? g[k] : ""]));
-  const r = await oturumIslemi(o, (db) => turKaydet(db, o, typeof turId === "string" && turId ? turId : null, Number(surum), temiz));
+  const yeni = !(typeof turId === "string" && turId);
+  /* 450 (reisim 2026-10-09: "yeni tür ekleyince, default olarak makette yaptıklarımız gibi olacak"): yeni türe Ek-III grubuna göre hazır format,
+     yayında — aynı işlemde (format kurulamazsa tür de yazılmaz) */
+  const r = await oturumIslemi(o, async (db) => {
+    const t = await turKaydet(db, o, yeni ? null : turId, Number(surum), temiz);
+    if (t.durum === "tamam" && yeni) await yeniTureFormat(db, o, t.id);
+    return t;
+  });
   if (r.durum === "tamam") return { tamam: true, id: r.id };
   if (r.durum === "gecersiz") return { hatalar: r.hatalar };
   return { genel: SONUC[r.durum] };

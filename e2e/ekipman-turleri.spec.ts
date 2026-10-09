@@ -1,6 +1,6 @@
 /* NEREDEN GELDİ: K2 Ekipman türleri (2026-10-04) — maket ekipman-turleri.html (M3, onaylı 2026-09-26; AA5 Mekanik / Elektrik sekmeleri).
-   Gerçek tarayıcıda, üç genişlikte: tür ekle (hatalı periyot alanın altında söylenir) → tür sayfası · rapor formatı PDF yükle → "Sürüm 1 ·
-   Kullanımda", PDF açılır (yeni sekme, oturumlu uç) · Ek-III dışı türde branş seçilir, Elektrik sekmesinde görünür · denetçi görür, ekleyemez. */
+   Gerçek tarayıcıda, üç genişlikte: tür ekle (hatalı periyot alanın altında söylenir) → tür sayfası: 450 rapor formatı Ek-III grubuna göre
+   hazır, yayında (PDF istenmez) · isteğe bağlı format PDF'i yükle → "Sürüm 1 · Güncel", PDF açılır (yeni sekme, oturumlu uç) · Ek-III dışı türde branş seçilir, Elektrik sekmesinde görünür · denetçi görür, ekleyemez. */
 import { expect, test } from "@playwright/test";
 import { girisli, hazir } from "./yardimci";
 
@@ -26,16 +26,21 @@ test("ekipman türü: ekle, rapor formatı yükle, elektrik sekmesi; denetçi ya
   /* ilk açılışta geliştirme sunucusu tür sayfasını derler (yavaş makinede 5 sn aşılıyor) */
   await expect(page).toHaveURL(/\/ekipman-turleri\/[0-9a-f-]{36}$/, { timeout: 30_000 });
   await expect(page.getByRole("heading", { level: 1, name: `Deneme Vinç ${kod}` })).toBeVisible();
-  await expect(page.getByText("Bu türün rapor formatı yüklenmedi.")).toBeVisible();
+  /* 450 (reisim 2026-10-09: "standart olarak pdf formatı yükleyin diyor hala yeni tür ekleyince, default olarak makette yaptıklarımız gibi
+     olacak"): rapor formatı hazır ve yayında — kaldırma grubunun maddeleri; PDF istenmez (isteğe bağlı) */
+  await expect(page.getByRole("link", { name: /Rapor formatı\s*Sürüm 1/ })).toBeVisible();
+  await expect(page.getByText("Ek-III grubuna göre hazır format").first()).toBeVisible();
+  await expect(page.getByText("PDF gerekmez", { exact: false })).toBeVisible();
+  await expect(page.getByText("yüklenmedi", { exact: false })).toHaveCount(0);
 
   await hazir(page);
-  await page.getByRole("button", { name: "Rapor formatı yükle" }).click();
-  const f = page.getByRole("dialog", { name: "Rapor formatı yükle" });
-  await f.getByLabel("Rapor formatı (PDF)").setInputFiles({ name: "vinc-formati.pdf", mimeType: "application/pdf", buffer: PDF });
+  await page.getByRole("button", { name: "Format PDF'i yükle" }).click();
+  const f = page.getByRole("dialog", { name: "Format PDF'i yükle" });
+  await f.getByLabel("Format PDF'i").setInputFiles({ name: "vinc-formati.pdf", mimeType: "application/pdf", buffer: PDF });
   await f.getByLabel("Sürüm notu").fill("ilk sürüm");
   await f.getByRole("button", { name: "Yükle" }).click();
-  await expect(page.getByText("Rapor formatı yüklendi: sürüm 1.")).toBeVisible();
-  await expect(page.getByText("Kullanımda")).toBeVisible();
+  await expect(page.getByText("Format PDF'i yüklendi: sürüm 1.")).toBeVisible();
+  await expect(page.getByText("Güncel", { exact: true })).toBeVisible();
   const ac = page.getByRole("link", { name: "PDF'i aç" });
   await expect(ac).toHaveAttribute("target", "_blank");
   /* oturumlu uç tarayıcının içinden istenir (test sürecinin kendi isteği firma adresini çözemez) */
@@ -155,7 +160,7 @@ test("Bakanlık türleri hazır: resmî PDF ve yayındaki şablon; sıfırdan ra
   await page.getByRole("link", { name: "Trafo", exact: true }).first().click();
   await expect(page.getByRole("heading", { level: 1, name: "Trafo" })).toBeVisible({ timeout: 30_000 });
   await expect(page.getByText("Bakanlık formatı", { exact: true }).first()).toBeVisible();
-  await expect(page.getByText("Kullanımda")).toBeVisible();
+  await expect(page.getByText("Güncel", { exact: true })).toBeVisible();
   expect(await pdfMi(await page.getByRole("link", { name: "PDF'i aç" }).getAttribute("href"))).toEqual([200, "application/pdf"]);
   await expect(page.getByText("Yayında", { exact: true }).first()).toBeVisible();
   await expect(page.getByText("TS EN 50522").first()).toBeVisible();   // kontrol metodu standardı hazır listeden
@@ -189,5 +194,6 @@ test("Bakanlık türleri hazır: resmî PDF ve yayındaki şablon; sıfırdan ra
   await onay.getByRole("button", { name: "Oluştur" }).click();
   await expect(page).toHaveURL(/\/sablon\/[0-9a-f-]{36}\/kurucu$/, { timeout: 30_000 });
   await expect(page.getByRole("heading", { level: 1, name: /^Format kurucu · / })).toBeVisible();
-  await expect(page.getByText("Kontrol maddeleri").first()).toBeVisible();
+  /* 451: kâğıtta (geniş ekran) ya da belge önizlemesinde (telefon) — görünen ilk eşleşme */
+  await expect(page.getByText("Kontrol maddeleri").filter({ visible: true }).first()).toBeVisible();
 });

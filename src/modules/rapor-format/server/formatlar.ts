@@ -9,14 +9,14 @@
      uyarıdır; boş bölüm, sınırsız tablo …). Yayındaki eskiye düşer, sıra en büyük + 1; aynı türün işlemleri tür satırı kilitlenerek sıraya girer.
    · Yayınlanan sürüm DEĞİŞMEZ ve silinmez (0022 tetiği); yayın zamanı ve yayınlayan hesap veritabanında damgalanır. */
 import { kilitDenetimi, kilitNormallestir, yayinDenetimi } from "../../../format/motor.ts";
-import { bosFormat } from "../../../format/sablonlar.ts";
+import { bosFormat, grupFormati } from "../../../format/sablonlar.ts";
 import { FormatTanimi } from "../../../format/tanim.ts";
 import type { Sorgulayici } from "../../../server/db/kiraci.ts";
 import { kesinSil } from "../../../server/db/silici.ts";
 import { ekle, guncelle, tablo } from "../../../server/db/yazici.ts";
 import { canDoEylem, duzey, type YetkiHesabi } from "../../../server/yetki/canDo.ts";
 import { dogrula, hatalar, type DogrulamaHatalari } from "../../../sema/ortak.ts";
-import { turDegistirir, turKaydet, turOzeti } from "../../ekipman-turleri/server/turler.ts";
+import { turDegistirir, turKaydet, turOzeti, turOzetleri, turRaporBilgisi } from "../../ekipman-turleri/server/turler.ts";
 import { BaslatGirdisi, sablonBul, YayinNotu } from "../sema.ts";
 
 const MODUL = 5;
@@ -106,12 +106,41 @@ export async function sablondanTurEkle(db: Sorgulayici, kim: Kisi, sablon: strin
 export async function hazirFormatYayinla(db: Sorgulayici, kim: string, turId: string, sablon: string, notu: string): Promise<string> {
   const s = sablonBul(sablon);
   if (!s || !UUID.test(turId)) throw new Error(`hazır format kurulamadı: ${sablon}`);
-  const tanim = structuredClone(s.tanim);
-  const { id, surum } = await ekle(db, FORMAT, { tur_id: turId, durum: "taslak", sema: tanim.sema, tanim, kaynak: sablon, olusturan: kim },
-    { kim, ne: "rapor_format.taslak_baslat", gerekce: `şablon ${sablon}` });
+  return ilkSurumYayinla(db, kim, turId, structuredClone(s.tanim), sablon, notu, `şablon ${sablon}`);
+}
+
+/** taslak olarak açar (0022: yeni satır yalnız taslak), aynı işlemde sürüm 1 olarak yayınlar */
+async function ilkSurumYayinla(db: Sorgulayici, kim: string, turId: string, tanim: FormatTanimi, kaynak: string | null, notu: string, gerekce: string): Promise<string> {
+  const { id, surum } = await ekle(db, FORMAT, { tur_id: turId, durum: "taslak", sema: tanim.sema, tanim, kaynak, olusturan: kim },
+    { kim, ne: "rapor_format.taslak_baslat", gerekce });
   const g = await guncelle(db, FORMAT, id, surum, { durum: "yayinda", sira: 1, notu, yayinlayan: kim }, { kim, ne: "rapor_format.yayinla", gerekce: notu });
-  if (g.durum !== "tamam") throw new Error(`hazır format yayınlanamadı: ${sablon} (${g.durum})`);
+  if (g.durum !== "tamam") throw new Error(`hazır format yayınlanamadı: ${gerekce} (${g.durum})`);
   return id;
+}
+
+/** 450 (reisim 2026-10-09: "yeni tür ekleyince, default olarak makette yaptıklarımız gibi olacak"): formatı HİÇ olmayan türe Ek-III grubuna göre
+    hazır format (src/format/sablonlar.ts grupFormati), YAYINDA sürüm 1 — rapor hemen açılır, firma Format kurucuda değiştirir. Türün bir sürümü
+    (taslak / eski dahil) varsa dokunmaz → null. Yetki çağıranda: tür ekleme eylemi (türü ekleyebilen formatı da değiştirir — ikisi de modül 5
+    "yaz") ve hazır kurulum (sistem). */
+export const VARSAYILAN_NOT = "Ek-III grubuna göre hazır format";
+export async function varsayilanFormatKur(db: Sorgulayici, kim: string, turId: string): Promise<string | null> {
+  if (!UUID.test(turId)) return null;
+  if (!(await turOzeti(db, turId, { kilitle: true }))) return null;
+  const t = await turRaporBilgisi(db, turId);
+  if (!t || (await db.sorgu("SELECT 1 FROM rapor_format WHERE tur_id = $1 LIMIT 1", [turId])).rowCount) return null;
+  return ilkSurumYayinla(db, kim, turId, grupFormati({ ad: t.ad, grup: t.grup }), null, VARSAYILAN_NOT, "Ek-III grubuna göre hazır format");
+}
+
+/** 450 · tür ekleme eyleminden (aynı işlemde): yeni türe hazır format — tür ve format değiştirebilene (yetkisize hiçbir şey) */
+export async function yeniTureFormat(db: Sorgulayici, kim: Kisi, turId: string): Promise<string | null> {
+  if (!degistirir(kim) || !turDegistirir(kim)) return null;
+  return varsayilanFormatKur(db, kim.ad, turId);
+}
+
+/** 450: hiç format sürümü olmayan türler (hazır kurulum bir kez tamamlar) — türler Ekipman türleri'nin okuyucusundan */
+export async function formatsizTurler(db: Sorgulayici): Promise<string[]> {
+  const var_ = new Set((await db.sorgu<{ tur_id: string }>("SELECT DISTINCT tur_id::text FROM rapor_format")).rows.map((x) => x.tur_id));
+  return (await turOzetleri(db)).filter((t) => !var_.has(t.id)).map((t) => t.id);
 }
 
 /** 438: türün taslak ya da yayındaki sürümünün başladığı şablon (yayındaki önce); yoksa null */
@@ -130,6 +159,13 @@ export async function sablonTurleri(db: Sorgulayici, sablonlar: readonly string[
 /** 437: bu şablondan başlamış bir sürüm firmada var mı (kurulum: firma o türü kendisi açtıysa yenisi kurulmaz) */
 export async function sablonKullaniliyor(db: Sorgulayici, sablon: string): Promise<boolean> {
   return !!(await db.sorgu("SELECT 1 FROM rapor_format WHERE kaynak = $1 LIMIT 1", [sablon])).rowCount;
+}
+
+/** 450: türlerin YAYINDAKİ sürümü (Ekipman türleri listesi — rapor formatı sütunu): tür → sıra, yayın günü. Görmeyene null. */
+export async function yayindakiSurumler(db: Sorgulayici, kim: YetkiHesabi): Promise<Record<string, { sira: number; yayin: string | null }> | null> {
+  if (!gorur(kim)) return null;
+  const l = (await db.sorgu<{ tur_id: string; sira: number; yayin: Date | null }>("SELECT tur_id::text, sira, yayin FROM rapor_format WHERE durum = 'yayinda'")).rows;
+  return Object.fromEntries(l.map((x) => [x.tur_id, { sira: x.sira, yayin: iso(x.yayin) }]));
 }
 
 /** türün format sürümleri (liste; tanımın kendisi inmez). Görmeyen ya da tür yoksa null. */

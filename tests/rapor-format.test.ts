@@ -5,12 +5,16 @@
    zaman sunucuda; istemciden gelen kimlik ve sürüm yetki vermez". GERÇEK PostgreSQL, iki firma (308). */
 import assert from "node:assert/strict";
 import { after, before, test } from "node:test";
-import { SABLONLAR } from "../src/format/sablonlar.ts";
+import { grupFormati, SABLONLAR } from "../src/format/sablonlar.ts";
+import { yayinDenetimi } from "../src/format/motor.ts";
+import type { BolumOf } from "../src/format/tanim.ts";
+import { GRUPLAR } from "../src/modules/ekipman-turleri/sema.ts";
 import type { GomuluKume } from "../src/server/db/gomulu.ts";
 import { havuzKur, kiraciIcinde, type Havuz, type Sorgulayici } from "../src/server/db/kiraci.ts";
 import { baglantiKaydet, formatYukle, turKaydet, type Kisi as TurKisi } from "../src/modules/ekipman-turleri/server/turler.ts";
 import {
-  formatAyrintisi, formatSurumleri, formatSurumuOku, sablondanTurEkle, sablonKullanimi, taslakBaslat, taslakKaydet, yayinDenetle, yayindakiFormat, yayinla, type Kisi,
+  formatAyrintisi, formatSurumleri, formatSurumuOku, sablondanTurEkle, sablonKullanimi, taslakBaslat, taslakKaydet, VARSAYILAN_NOT, yayinDenetle, yayindakiFormat,
+  yayinla, yeniTureFormat, type Kisi,
 } from "../src/modules/rapor-format/server/formatlar.ts";
 import { createHash } from "node:crypto";
 import { mkdtempSync, readFileSync } from "node:fs";
@@ -312,11 +316,11 @@ test("437 hazır kurulum: tür + resmî PDF + yayında şablon; ikinci kez yazma
       WHERE t.kod = ANY($1) ORDER BY t.kod`, [KODLAR]))).rows;
   assert.deepEqual(p.map((x) => [x.kod, x.sira, x.ad]), [["AGT", 1, "ZPKR01.pdf"], ["EIT", 1, "ZPKR02.pdf"], ["TRF", 1, "ZPKR05.pdf"], ["YAS", 1, "ZPKR04.pdf"], ["YKT", 1, "ZPKR03.pdf"]]);
   assert.equal(p[0].sha256, createHash("sha256").update(readFileSync(join(import.meta.dirname, "..", "src", "tanim", "bakanlik", "ZPKR01.pdf"))).digest("hex"), "resmî PDF baytı baytına");
-  assert.deepEqual((await b(MEK_B, (db) => ayarOku(db, "kurulum"))).deger, { bakanlik: [...HAZIR_SABLONLAR], pdf: true, baglanti: true });
+  assert.deepEqual((await b(MEK_B, (db) => ayarOku(db, "kurulum"))).deger, { bakanlik: [...HAZIR_SABLONLAR], pdf: true, baglanti: true, varsayilan: true });
   /* ikinci kez: hiçbir şey yazılmaz */
   const say = async (f: string) => (await kiraciIcinde(havuz, f, (db) => db.sorgu<{ n: number }>("SELECT (SELECT count(*) FROM ekipman_turu) + (SELECT count(*) FROM rapor_format) + (SELECT count(*) FROM dosya) AS n"))).rows[0].n;
   const once = await say(B);
-  assert.deepEqual(await kiraciIcinde(havuz, B, (db) => bakanlikKurulumu(db, depo)), { kurulan: 0, atlanan: 0, pdf: 0, baglanti: 0 });
+  assert.deepEqual(await kiraciIcinde(havuz, B, (db) => bakanlikKurulumu(db, depo)), { kurulan: 0, atlanan: 0, pdf: 0, baglanti: 0, varsayilan: 0 });
   assert.equal(await say(B), once);
   /* A: 436 testinde ZPKR03'ten tür açılmıştı (YKT) — o şablon atlanır, YKT ikinci kez açılmaz; B değişmez */
   const r2 = await kiraciIcinde(havuz, A, (db) => bakanlikKurulumu(db, depo));
@@ -386,4 +390,48 @@ test("438 / 440 Bakanlık varsayılanları: PDF'siz türe resmî PDF, boş bağl
   assert.deepEqual(await baglanti(kendi), { s: formatStandartlari("ZPKR01"), c: [CIHAZ_LUKSMETRE] }, "firmanın cihaz seçimi kaldı");
   /* başka firmanın türü: görünmez, değişmez */
   assert.deepEqual(await b(MEK_B, (db) => bakanlikTamamla(db, depo, MEK_B, B, tur)), YOK);
+});
+
+/* 2026-10-09 (450; reisim: "standart olarak pdf formatı yükleyin diyor hala yeni tür ekleyince, default olarak makette yaptıklarımız gibi olacak"):
+   yeni türe Ek-III grubuna göre hazır format, YAYINDA sürüm 1 (kaynaksız, kilitsiz; yayın denetiminde uyarı bile yok) — rapor hemen açılır;
+   bir kez; yetkisize, sürümü olan türe ve başka firmaya hayır; hazır kurulum formatı hiç olmayan ESKİ türleri bir kez tamamlar. */
+test("450 yeni türün hazır formatı: grubuna göre, yayında; bir kez; yetkisize / sürümü olana / başka firmaya hayır; kurulum eski türleri tamamlar", async () => {
+  for (const g of GRUPLAR) {
+    const t = grupFormati({ ad: `Deneme ${g.ad}`, grup: g.k });
+    assert.deepEqual(yayinDenetimi(t), [], g.k);
+    assert.ok(!t.bolumler.some((b) => b.kilit), `${g.k}: kilit yok`);
+  }
+  assert.equal((grupFormati({ ad: "Vinç", grup: "kaldirma" }).bolumler.find((b) => b.id === "kriter") as BolumOf<"liste">).gruplar[0].maddeler.length, 7);
+  const tur = await yeniTur();
+  for (const k of [PLAN, DENETCI, MUH]) assert.equal(await a(k, (db) => yeniTureFormat(db, k, tur)), null, k.roller.join());
+  assert.equal(await a(MEK, (db) => yayindakiFormat(db, tur)), null);
+  const id = await a(MEK, (db) => yeniTureFormat(db, MEK, tur));
+  assert.ok(id);
+  const y = (await a(MEK, (db) => yayindakiFormat(db, tur)))!;
+  assert.equal(y.sira, 1);
+  assert.deepEqual(y.tanim.bolumler.map((b) => b.id), ["firma", "ekipman", "cihaz", "kriter", "test", "foto", "kusur", "yorum", "sonuc", "imza"]);
+  assert.equal((y.tanim.bolumler[3] as BolumOf<"liste">).gruplar[0].maddeler[0].metin, "Koruma iletkeni sürekliliği", "elektrik grubunun maddeleri");
+  assert.match(y.tanim.gorunum.baslik, /^Deneme Tesisat R[A-Z] Periyodik Kontrol Raporu$/);
+  const d = (await a(MEK, (db) => formatAyrintisi(db, MEK, id!)))!;
+  assert.deepEqual([d.kaynak, d.notu, d.durum], [null, VARSAYILAN_NOT, "yayinda"]);
+  assert.equal(await a(MEK, (db) => yeniTureFormat(db, MEK, tur)), null, "ikinci kez yok");
+  const taslakli = await yeniTur();
+  tamam(await a(MEK, (db) => taslakBaslat(db, MEK, taslakli, "bos", null)));
+  assert.equal(await a(MEK, (db) => yeniTureFormat(db, MEK, taslakli)), null, "taslağı olan türe dokunulmaz");
+  const bTur = await yeniTur("B");
+  assert.equal(await a(MEK, (db) => yeniTureFormat(db, MEK, bTur)), null, "başka firmanın türü görünmez");
+  assert.equal(await b(MEK_B, (db) => yayindakiFormat(db, bTur)), null);
+  /* hazır kurulum: yeni firmanın formatı olmayan eski türü bir kez tamamlanır */
+  const s = kume.sahipIstemci(); await s.connect();
+  let D: string;
+  try { D = (await s.query<{ id: string }>("INSERT INTO firma (kisa_ad, ad, rapor_kodu) VALUES ('deneme-d', 'Deneme D', 'DD') RETURNING id")).rows[0].id; } finally { await s.end(); }
+  const MEK_D = kisi(await hesapli(D, "mekanik@deneme-d.example", ["mekanik_yonetici"]), "mekanik_yonetici");
+  const eski = tamam(await kiraciIcinde(havuz, D, (db) => turKaydet(db, MEK_D as TurKisi, null, 0, { ...T, ad: "Deneme Vinç", kod: "DV", grup: "kaldirma" }), { hesapId: MEK_D.id })).id;
+  const depo = klasorDepo(mkdtempSync(join(tmpdir(), "varsayilan-")));
+  const k1 = await kiraciIcinde(havuz, D, (db) => bakanlikKurulumu(db, depo));
+  assert.equal(k1.varsayilan, 1, JSON.stringify(k1));
+  const ey = (await kiraciIcinde(havuz, D, (db) => yayindakiFormat(db, eski)))!;
+  assert.equal((ey.tanim.bolumler.find((b) => b.id === "kriter") as BolumOf<"liste">).gruplar[0].maddeler[0].metin, "Taşıyıcı konstrüksiyon: çatlak, deformasyon, korozyon");
+  assert.ok(ey.tanim.bolumler.some((b) => b.blok === "bilgi" && b.alanlar.some((x) => x.id === "kapasite")), "kaldırma: kapasite alanı");
+  assert.equal((await kiraciIcinde(havuz, D, (db) => bakanlikKurulumu(db, depo))).varsayilan, 0, "ikinci kez yok");
 });

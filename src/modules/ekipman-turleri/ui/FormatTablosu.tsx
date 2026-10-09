@@ -14,7 +14,7 @@ export function FormatTablosu({ formatlar, kaldirabilir }: { formatlar: FormatSu
   const sutunlar: Sutun<FormatSurumu>[] = [
     { k: "surum", genislik: "34%", baslik: "Sürüm", kart: "ust", sira: 1, hucre: (x) => <><b>Sürüm {x.sira}</b><AltSatir><Kirp>{x.dosyaAd}</Kirp></AltSatir></> },
     { k: "tarih", genislik: "26%", baslik: "Yüklendi", kart: "govde", sira: 2, hucre: (x) => <><KartEtiket>Yüklendi</KartEtiket>{tarihYaz(x.olustu)}{x.notu && <AltSatir>{x.notu}</AltSatir>}</> },
-    { k: "durum", genislik: "14%", baslik: "Durum", kart: "rozet", sira: 1, hucre: (x) => x === p ? <Rozet tur="tamam">Kullanımda</Rozet> : <Rozet tur="notr">Önceki</Rozet> },
+    { k: "durum", genislik: "14%", baslik: "Durum", kart: "rozet", sira: 1, hucre: (x) => x === p ? <Rozet tur="tamam">Güncel</Rozet> : <Rozet tur="notr">Önceki</Rozet> },
     { k: "eylem", genislik: "26%", baslik: "İşlem", gizliBaslik: true, kart: "eylem", sira: 9, hucre: (x) => (
       <span className={stil.tuslar}>
         <DosyaAcTusu dosyaId={x.dosyaId}>PDF&apos;i aç</DosyaAcTusu>

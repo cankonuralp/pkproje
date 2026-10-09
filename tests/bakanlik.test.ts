@@ -97,7 +97,7 @@ test("hazır kurulum: kurulan şablonlar yalnız Bakanlık formatları; kurulum 
   assert.deepEqual([...HAZIR_SABLONLAR], ["ZPKR01", "ZPKR02", "ZPKR03", "ZPKR04", "ZPKR05"]);
   /* yetki denetimi olmayan yazıcılar: yalnız kurulum.ts çağırır, o da yalnız sayfalardan (eylem dosyası değil); eylemler yalnız yetkili
      resmiPdfEkle'yi çağırır (438) */
-  const KURUCU = /\b(hazirTurKur|hazirPdfEkle|hazirBaglantiTamamla|hazirCihazTuru|hazirFormatYayinla|bakanlikKurulumu|hazirKurulum)\b/;
+  const KURUCU = /\b(hazirTurKur|hazirPdfEkle|hazirBaglantiTamamla|hazirCihazTuru|hazirFormatYayinla|varsayilanFormatKur|bakanlikKurulumu|hazirKurulum)\b/;
   const kaynak = dosyalar("src", [".ts", ".tsx"]).map((ad) => ({ ad, metin: oku(ad) }));
   const eylem = kaynak.filter((d) => /^\s*["']use server["']/m.test(d.metin) && KURUCU.test(d.metin)).map((d) => d.ad);
   assert.deepEqual(eylem, []);

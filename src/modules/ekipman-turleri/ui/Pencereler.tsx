@@ -1,5 +1,5 @@
 "use client";
-/* EKİPMAN TÜRÜ PENCERELERİ (maket ekipman-turleri.html pencereCiz): tür ekle / düzenle · rapor formatı yükle. Kaydı durduran ad, kod, grup,
+/* EKİPMAN TÜRÜ PENCERELERİ (maket ekipman-turleri.html pencereCiz): tür ekle / düzenle · basılı format PDF'i yükle (450: isteğe bağlı). Kaydı durduran ad, kod, grup,
    branş (Ek-III dışında), periyot; iletiler alanın altında. Kod yalnız eklerken (düzenlemede salt okunur). Karar ve dosya denetimi sunucuda. */
 import { useRouter } from "next/navigation";
 import { useRef, useState, useTransition } from "react";
@@ -47,7 +47,7 @@ export function TurPenceresi({ kapat, tur, brans, sablon }: { kapat: () => void;
     else if (sablon && "formatId" in r && r.formatId) {
       bildir(`${d.ad.trim()} eklendi; rapor şablonu ${sablon.ad} formatından taslak olarak hazırlandı. Önizleyip yayınlayın.`);
       router.push(`/ekipman-turleri/${r.id}/sablon/${r.formatId}`);
-    } else { bildir(`${d.ad.trim()} eklendi.`); router.push(`/ekipman-turleri/${r.id}`); }
+    } else { bildir(`${d.ad.trim()} eklendi; rapor formatı Ek-III grubuna göre hazır, yayında.`); router.push(`/ekipman-turleri/${r.id}`); }
   });
   const G = (k: "ad" | "kod" | "periyot" | "sure", etiket: string, o: { zorunlu?: boolean; genis?: boolean; sonuc?: string; tip?: React.InputHTMLAttributes<HTMLInputElement> } = {}) => (
     <Alan id={ID[k]} etiket={etiket} zorunlu={o.zorunlu} genis={o.genis} hata={h[k]} sonuc={o.sonuc}>
@@ -92,16 +92,16 @@ export function FormatPenceresi({ kapat, turId, turAd, kod, kullanimda }: { kapa
     const r = await formatYukleEylemi(f);
     setH(r.hatalar ?? {}); setGenel(r.genel ?? null);
     if (!r.tamam) return;
-    kapat(); bildir(`Rapor formatı yüklendi: sürüm ${r.sira}.`); router.refresh();
+    kapat(); bildir(`Format PDF'i yüklendi: sürüm ${r.sira}.`); router.refresh();
   });
   return (
-    <Pencere acik baslik={kullanimda ? "Yeni rapor formatı yükle" : "Rapor formatı yükle"} onKapat={kapat} odak={`#${DOSYA_ID}`}
+    <Pencere acik baslik={kullanimda ? "Yeni PDF yükle" : "Format PDF'i yükle"} onKapat={kapat} odak={`#${DOSYA_ID}`}
       alt={<><Tus tur="ikincil" onClick={kapat}>Vazgeç</Tus><Tus ikon="upload" disabled={bekliyor} aria-busy={bekliyor || undefined} onClick={yukle}>Yükle</Tus></>}>
-      <p className={pencereMetinSinifi}><b>{turAd}</b> · kod {kod}{kullanimda ? <><br />Kullanımdaki sürüm {kullanimda}; yeni yüklenen sonraki raporlarda kullanılır.</> : null}</p>
+      <p className={pencereMetinSinifi}><b>{turAd}</b> · kod {kod}{kullanimda ? <><br />Son yüklenen sürüm {kullanimda}; öncekiler saklanır.</> : null}</p>
       {genel && <Serit tur="hata" ikon="circle-alert">{genel}</Serit>}
       <form ref={form} onSubmit={(e) => { e.preventDefault(); yukle(); }}>
         <FormIzgara>
-          <Alan id={DOSYA_ID} etiket="Rapor formatı (PDF)" zorunlu genis hata={h.dosya} sonuc="En çok 25 MB.">
+          <Alan id={DOSYA_ID} etiket="Format PDF'i" zorunlu genis hata={h.dosya} sonuc="En çok 25 MB.">
             <input id={DOSYA_ID} className={stil.dosya} name="dosya" type="file" accept="application/pdf,.pdf" aria-invalid={!!h.dosya || undefined} aria-describedby={ipucuId(DOSYA_ID)} />
           </Alan>
           <Alan id={NOT_ID} etiket="Sürüm notu" genis hata={h.not} sonuc="İsteğe bağlı (ör. basınç testi bölümü eklendi).">
