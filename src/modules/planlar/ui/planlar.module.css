@@ -80,6 +80,7 @@
 .duzTablo th, .duzTablo td { padding: 6px 8px; text-align: left; border-bottom: 1px solid var(--kenar); }
 .duzTablo th { color: var(--yazi2); font-weight: 600; }
 .duzTablo td:last-child, .duzTablo th:last-child { text-align: right; font-variant-numeric: tabular-nums; }
+.solTablo td:last-child, .solTablo th:last-child { text-align: left; }
 .planBolum { padding-top: 16px; border-top: 2px solid var(--kenar-alan); min-width: 0; }
 .planBolum + .planBolum { margin-top: 16px; }
 .altBas { display: flex; align-items: center; flex-wrap: wrap; gap: 6px 12px; margin: 0 0 12px; }

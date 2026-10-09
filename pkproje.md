@@ -2355,6 +2355,10 @@ revizyon, alan kopyalama, hafif kusur devri, meslek eşleşme denetimi).
 - Emsal ürünler: https://opwire.app/iso-17020-periyodik-kontrol-yazilimi/ · https://17020muayene.vidco.com.tr/ · https://akuple.com/asansor-kontrol-yazilimi/ · https://ensyazilim.com/
 
 ## 11 · Değişiklik günlüğü
+- 2026-10-09 (453): **Deneme makinesinin bulguları**. Plan içinde kabulden önce de "Plandaki ekipmanlar" (kod · tür · konum; elle eklenenler dahil) —
+  eskiden ekipmanlar ancak kabulden sonra Denetim adımında görünüyordu, elle eklenen ekipmanın plana girdiği görülemiyordu. Site taramasının dengesiz
+  kart denetimi artık bulgu (kilit): ilk koşuda tek bulgu Firma ayarlarının sütunlu (gazete) yerleşimiydi — orada kartlar alt alta oturur, kısa kartın
+  altı boş kalmaz; sütunlu yerleşim sayılmaz.
 - 2026-10-09 (452): **Açılır listeler ve takvim artık hiçbir şeyi itmiyor, kesilmiyor** (reisim: *"böyle sekme mi açılır gözünü seviyim seçmeli yere
   tıklıyoruz tüm sayfa kayıyor ?"*, *"bu ve benzeri kaymalar kabul edilemez siteyi tam teşekküllü tarama istiyorum"*; Araç ekle penceresinde Yakıt
   listesi altındaki alanları itiyor, Muayene bitişi takvimi pencerenin altında kesiliyordu). Seçim listesi, süzgeç seçicisi, takvim ve saat / dakika

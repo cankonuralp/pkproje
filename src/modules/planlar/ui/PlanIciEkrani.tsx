@@ -209,6 +209,18 @@ export function PlanIciEkrani({ v }: { v: PlanIci }) {
           ) : <p className={stil.bosSatir}>Plan açılırken tesiste kayıtlı ekipman yoktu; denetçi sahada ekler.</p>}
         </div>
       </section>
+      {/* 452: kabulden önce de plandaki ekipmanlar görünür (kod · tür · konum; elle eklenenler dahil) — kabulden sonra Denetim adımında listelenir */}
+      {(d === "bekliyor" || d === "reddedildi") && v.ekipman.length > 0 && (
+        <section className={stil.teklif} aria-labelledby={`ekipman-${k.id}`}>
+          <h3 className={stil.teklifBaslik} id={`ekipman-${k.id}`}>Plandaki ekipmanlar ({v.ekipman.length})</h3>
+          <div className={stil.teklifKap} role="region" aria-labelledby={`ekipman-${k.id}`} tabIndex={0}>
+            <table className={`${stil.duzTablo} ${stil.solTablo}`}>
+              <thead><tr><th scope="col">Kod</th><th scope="col">Tür</th><th scope="col">Konum</th></tr></thead>
+              <tbody>{v.ekipman.map((e) => <tr key={e.id}><td><Kod>{e.kod}</Kod></td><td>{e.tur}</td><td>{e.konum ?? <DegerYok>-</DegerYok>}</td></tr>)}</tbody>
+            </table>
+          </div>
+        </section>
+      )}
       {k.turUyarilari.length > 0 && <Kosullar ogeler={k.turUyarilari.map((metin) => ({ tur: "eksik" as const, metin }))} />}
     </Adim>
   );

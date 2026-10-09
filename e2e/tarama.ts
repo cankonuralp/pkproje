@@ -68,6 +68,9 @@ function dengesizKartlar(): string[] {
   const kaplar = new Set<Element>();
   for (const e of document.querySelectorAll("main *")) if (e.parentElement) kaplar.add(e.parentElement);
   for (const kap of kaplar) {
+    /* 452: sütunlu (gazete) yerleşimde kartlar alt alta oturur, kısa kartın altı boş kalmaz — dengesiz sayılmaz (Firma ayarları) */
+    const ks = getComputedStyle(kap);
+    if (ks.columnWidth !== "auto" || ks.columnCount !== "auto") continue;
     const l = [...kap.children].filter(kart).map((e) => ({ e, r: e.getBoundingClientRect() }));
     if (l.length < 2) continue;
     let en: { a: typeof l[0]; b: typeof l[0] } | null = null;
@@ -212,7 +215,7 @@ async function cekmece(page: Page, yer: string, bulgular: Bulgu[]) {
  * değil, `kalan` olarak döner (sessiz kırpma yok).
  */
 export async function siteyiTara(page: Page, baslangic: string[], { enCok = 90, sure = 20 * 60_000 } = {}) {
-  const bulgular: Bulgu[] = [], dengesiz: Bulgu[] = [];
+  const bulgular: Bulgu[] = [];
   const kuyruk = [...baslangic], gorulen = new Set(baslangic.map(kalip)), gezilen: string[] = [];
   const bitis = Date.now() + sure;
   let yer = "";
@@ -254,8 +257,8 @@ export async function siteyiTara(page: Page, baslangic: string[], { enCok = 90, 
       const tasan = await page.evaluate(tasanlar);
       if (tasan.length) bulgular.push({ sayfa: yer, tur: "yatay taşma", ayrinti: tasan.join(" · ") });
       for (const o of await page.evaluate(ortuluOgeler)) bulgular.push({ sayfa: yer, tur: "basılamıyor", ayrinti: `${o.ad} — ${o.neden}` });
-      /* 446: önce yalnız rapor (deneme makinesinin günlüğünde) — bulunanlar düzeltilince bulguya (kilide) çevrilir */
-      for (const x of await page.evaluate(dengesizKartlar)) dengesiz.push({ sayfa: yer, tur: "dengesiz kartlar", ayrinti: x });
+      /* 446 → 452: ilk koşuda yalnız günlükteydi (tek bulgu: Firma ayarlarının sütunlu yerleşimi — sayılmaz); artık bulgu (kilit) */
+      for (const x of await page.evaluate(dengesizKartlar)) bulgular.push({ sayfa: yer, tur: "dengesiz kartlar", ayrinti: x });
       await page.evaluate(() => scrollTo(0, 0));
       await acilirKatmanlar(page, yer, bulgular);
       await page.evaluate(() => scrollTo(0, 0));
@@ -271,7 +274,7 @@ export async function siteyiTara(page: Page, baslangic: string[], { enCok = 90, 
     page.off("console", konsol);
     page.off("response", yanitlar);
   }
-  return { bulgular, gezilen, kalan: kuyruk, dengesiz };
+  return { bulgular, gezilen, kalan: kuyruk };
 }
 
 /** bulguları okunur tek metin (düşen testin iletisi) */

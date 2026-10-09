@@ -10,11 +10,8 @@ import { girisli } from "./yardimci";
 test("site taraması: her sayfa açılır, sunucu / konsol hatası yok, yana taşmaz, her öğe basılabilir, erişilebilir; çekmece tam; açılır katman kaydırmaz", async ({ page }) => {
   test.setTimeout(30 * 60_000);
   await girisli(page, "yonetici");
-  const { bulgular, gezilen, kalan, dengesiz } = await siteyiTara(page, ["/", ...MODULLER.map((m) => "/" + m.yol)]);
+  const { bulgular, gezilen, kalan } = await siteyiTara(page, ["/", ...MODULLER.map((m) => "/" + m.yol)]);
   console.log(`site taraması: ${gezilen.length} sayfa gezildi${kalan.length ? `, süre / sayı sınırında ${kalan.length} sayfa kaldı: ${kalan.join(", ")}` : ""}`);
-  /* 446: dengesiz kartlar şimdilik yalnız günlükte (düzeltilince bulguya geçer) */
-  console.log(`DENGESIZ KARTLAR ${test.info().project.name} (${dengesiz.length}):
-${bulguMetni(dengesiz)}`);
   expect(gezilen.length, "tarama boş geçti").toBeGreaterThan(20);
   expect(bulgular, `site taraması ${bulgular.length} bulgu:\n${bulguMetni(bulgular)}`).toEqual([]);
   expect(kalan, "gezilemeyen sayfa kaldı (sınır)").toEqual([]);
