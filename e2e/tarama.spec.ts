@@ -7,8 +7,8 @@ import { MODULLER } from "../src/modules/moduller";
 import { bulguMetni, siteyiTara } from "./tarama";
 import { girisli } from "./yardimci";
 
-test("site taraması: her sayfa açılır, sunucu / konsol hatası yok, yana taşmaz, her öğe basılabilir, erişilebilir; çekmece tam", async ({ page }) => {
-  test.setTimeout(25 * 60_000);
+test("site taraması: her sayfa açılır, sunucu / konsol hatası yok, yana taşmaz, her öğe basılabilir, erişilebilir; çekmece tam; açılır katman kaydırmaz", async ({ page }) => {
+  test.setTimeout(30 * 60_000);
   await girisli(page, "yonetici");
   const { bulgular, gezilen, kalan, dengesiz } = await siteyiTara(page, ["/", ...MODULLER.map((m) => "/" + m.yol)]);
   console.log(`site taraması: ${gezilen.length} sayfa gezildi${kalan.length ? `, süre / sayı sınırında ${kalan.length} sayfa kaldı: ${kalan.join(", ")}` : ""}`);

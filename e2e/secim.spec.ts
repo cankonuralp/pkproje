@@ -1,5 +1,6 @@
 /* NEREDEN GELDİ: K0 (2026-10-03) — seçim alanı (kalıp 19: yerli açılır liste YOK; ↑ ↓ Home End Enter Esc Tab + harfle atlama; 8'den fazla
-   seçenekte arama; pencerede liste akış içinde, Esc pencereyi kapatmaz) ve tarih / saat alanı (reisim 2026-09-27: takvim, Bugün, saat ve
+   seçenekte arama; Esc pencereyi kapatmaz; 452: liste ve takvim ÜST KATMANDA yüzer — pencerede altındaki alanları itmez, pencerenin kenarında
+   kesilmez — reisim 2026-10-09: "seçmeli yere tıklıyoruz tüm sayfa kayıyor", "bu ve benzeri kaymalar kabul edilemez") ve tarih / saat alanı (reisim 2026-09-27: takvim, Bugün, saat ve
    dakika ayrı, yazılır ya da seçilir; yazarken uyan saatler önerilir; 2026-10-03: kutuya tıklayınca da takvim açılır, yazmak serbest). */
 import { expect, test, type Page } from "@playwright/test";
 
@@ -59,17 +60,43 @@ test("uzun liste: arama süzer; Esc kapatır, odak alana; harfle atlama; liste a
   expect(await deger(page, "tur")).toBe("t10");
 });
 
-test("pencerede: liste akış içinde, Esc yalnız listeyi kapatır", async ({ page }) => {
+/** öğenin kutusu ekranın tamamen içinde ve görünür (üstünde başka öğe yok — orta ve köşelere yakın noktalar) */
+const ekrandaTamam = (e: Element) => {
+  const r = e.getBoundingClientRect();
+  if (r.top < 0 || r.left < 0 || r.bottom > innerHeight || r.right > innerWidth) return `ekran dışı: ${Math.round(r.top)}–${Math.round(r.bottom)} / ${innerHeight}`;
+  for (const [x, y] of [[r.left + r.width / 2, r.top + r.height / 2], [r.left + 6, r.top + 6], [r.right - 6, r.bottom - 6], [r.left + 6, r.bottom - 6]]) {
+    const ust = document.elementFromPoint(x, y);
+    if (!ust || !e.contains(ust)) return `(${Math.round(x)}, ${Math.round(y)}) noktasında başka öğe`;
+  }
+  return "tamam";
+};
+
+test("pencerede: liste ve takvim yüzer — alttaki alan yerinden oynamaz, katman kesilmez; Esc yalnız listeyi kapatır", async ({ page }) => {
   await page.locator('[data-v="pencere"]').click();
   const pencere = page.locator("dialog[open]");
   const tur = pencere.getByRole("combobox", { name: "Not türü" });
+  const alttaki = pencere.locator('[data-v="not-gun"]');
+  const once = await alttaki.boundingBox();
   await tur.click();
   const liste = pencere.getByRole("listbox", { name: "Not türü" });
-  await expect(liste).toHaveCSS("position", "static");
+  await expect(liste).toBeVisible();
+  await expect(liste).toHaveCSS("position", "fixed");
+  expect(await alttaki.boundingBox(), "liste açılınca alttaki alan yerinden oynamaz").toEqual(once);
+  expect(await liste.evaluate(ekrandaTamam), "liste tamamen görünür").toBe("tamam");
   await page.keyboard.press("Escape");
   await expect(liste).toHaveCount(0);
   await expect(pencere).toBeVisible();
   await expect(tur).toBeFocused();
+  /* pencerenin en altındaki tarih: takvim pencereyi büyütmez / kaydırmaz, kenarında kesilmez */
+  const govdeOnce = await pencere.boundingBox();
+  await pencere.getByRole("button", { name: "Takvimden seç" }).click();
+  const takvim = pencere.getByRole("dialog", { name: "Not tarihi" });
+  await expect(takvim).toBeVisible();
+  expect(await pencere.boundingBox(), "takvim pencereyi büyütmez").toEqual(govdeOnce);
+  expect(await takvim.evaluate(ekrandaTamam), "takvim tamamen görünür").toBe("tamam");
+  await takvim.getByRole("button", { name: "Bugün" }).click();
+  await expect(takvim).toHaveCount(0);
+  await expect(pencere).toBeVisible();
 });
 
 test("tarih: kutuya tıklayınca takvim, yazınca takvim gider; ay geçişi; gün seçimi; geçersiz gün işaretlenir; Bugün", async ({ page }) => {

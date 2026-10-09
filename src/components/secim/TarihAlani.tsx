@@ -8,6 +8,7 @@
 import { useCallback, useId, useRef, useState } from "react";
 import { Ikon } from "../ikon/Ikon";
 import { useDisariTiklama } from "./SecenekListesi";
+import { useYuzen, type YuzenAyar } from "./yuzen";
 import { ayBasligi, ayGunleri, ayKaydir, bugunIso, GUN_KISA, iki, parcaGecerli, saatliKur, simdiIso, tarihNo, tarihOku } from "./tarih";
 import stil from "./Secim.module.css";
 
@@ -60,7 +61,7 @@ export function TarihAlani({ id, ad, deger, degistir, saat = false, tanim }: {
           <Ikon ad="calendar" kucuk />
         </button>
         {acik && (
-          <div className={stil.takvim} id={takvimId} role="dialog" aria-label={ad}>
+          <Yuzen className={stil.takvim} id={takvimId} role="dialog" aria-label={ad} ayar={TAKVIM}>
             <div className={stil.takvimBas}>
               <button className={stil.ayTus} type="button" aria-label="Önceki ay" onClick={() => setAy(ayKaydir(ay, -1))}><Ikon ad="chevron-left" /></button>
               <span className={stil.ayAd} aria-live="polite">{ayBasligi(ay)}</span>
@@ -70,7 +71,7 @@ export function TarihAlani({ id, ad, deger, degistir, saat = false, tanim }: {
             <div className={stil.takvimAlt}>
               <button className={stil.bugunTus} type="button" onClick={() => gunSec(bugunIso())}>Bugün</button>
             </div>
-          </div>
+          </Yuzen>
         )}
       </div>
       {/* saat : dakika tek grup — ayrı satıra düşmez; saatin önerileri dakikanın üstüne binmez (2026-10-03, e2e yakaladı) */}
@@ -135,12 +136,24 @@ function Parca({ tur, ad, deger, sec }: { tur: "saat" | "dakika"; ad: string; de
         <Ikon ad="clock" kucuk />
       </button>
       {acik && gorunen.length > 0 && (
-        <div className={`${stil.liste} ${stil.parcaListe}`} id={listeId} role="listbox" aria-label={ad2}>
+        <Yuzen className={`${stil.liste} ${stil.parcaListe}`} id={listeId} role="listbox" aria-label={ad2} ayar={PARCA}>
           {gorunen.map((v) => (
             <button key={v} className={stil.secenek} type="button" role="option" aria-selected={v === deger} onClick={() => bitir(v)}>{v}</button>
           ))}
-        </div>
+        </Yuzen>
       )}
     </div>
   );
+}
+
+/* 452: takvim alanın altında yüzer — alan kadar, en az 340 px (telefonda alanın genişliği; ekrandan taşmaz); saat / dakika önerileri alan
+   kadar (en az 96 px) */
+const TAKVIM: YuzenAyar = { enAzGenislik: 340, enCokYukseklik: 440 };
+const PARCA: YuzenAyar = { enAzGenislik: 96, enCokYukseklik: 240 };
+
+/** yüzen katman kabı (koşullu çizilen katmanlar için: kanca bileşenin içinde) */
+function Yuzen({ ayar, ...p }: React.HTMLAttributes<HTMLDivElement> & { ayar: YuzenAyar }) {
+  const ref = useRef<HTMLDivElement>(null);
+  useYuzen(ref, ayar);
+  return <div ref={ref} popover="manual" {...p} />;
 }

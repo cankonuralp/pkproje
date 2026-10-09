@@ -74,7 +74,6 @@
 .seciciDeger { font-weight: 600; font-size: var(--boy-kucuk); }
 .seciciTus[aria-expanded="true"] > svg { transform: rotate(180deg); }
 /* filtre seçicisinin listesi sağa yaslı, içerik kadar (ortak liste alanın altında soldan açılır) — iki sınıf: ortak kuralı ezer */
-.secici .seciciListe { left: auto; right: 0; width: auto; }
 
 .temizle, .filtreTus {
   height: var(--tus-y); padding: 0 10px;

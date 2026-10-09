@@ -128,7 +128,8 @@ input.oku { background: var(--zemin2); border-color: var(--kenar); color: var(--
 .menuOge:hover, .menuOge:focus-visible { background: var(--zemin2); }
 
 /* ölçüm tablosu: satır başına bir ölçüm; dar ekranda yalnız tablo kabı yatay kayar */
-.tabloKap { min-width: 0; overflow-x: auto; border: 1px solid var(--kenar); border-radius: var(--r-orta); }
+/* 452: konumlu — gizli tablo başlığı (caption.gizli, mutlak konum) kabın içinde kalır, sayfayı yana taşırmaz */
+.tabloKap { position: relative; min-width: 0; overflow-x: auto; border: 1px solid var(--kenar); border-radius: var(--r-orta); }
 .olcumTablo { width: 100%; border-collapse: collapse; font-size: var(--boy-kucuk); }
 .olcumTablo th, .olcumTablo td { padding: 6px 8px; text-align: left; vertical-align: top; border-bottom: 1px solid var(--kenar); }
 .olcumTablo th { background: var(--zemin2); color: var(--yazi2); font-weight: 600; white-space: nowrap; }

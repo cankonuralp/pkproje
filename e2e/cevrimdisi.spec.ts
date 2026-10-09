@@ -14,13 +14,15 @@
      sunucuda açılır (numara sunucudan), ekran raporun kendi sayfasına geçer, yazılan gelir. */
 import { expect, test, type ConsoleMessage, type Page, type Request } from "@playwright/test";
 import { E2E_KAPI, E2E_PAROLA, E2E_YZ } from "./hesaplar";
+import { tasanlar } from "./tarama";
 import { hazir } from "./yardimci";
 
 /* bu dosyada servis çalışanı AÇIK (öteki testlerde kapalı — playwright.config.ts) */
 test.use({ serviceWorkers: "allow" });
 
 const Y = `http://${E2E_YZ.firma.kisaAd}.localhost:${E2E_KAPI}`;
-const TASMA = () => document.documentElement.scrollWidth <= window.innerWidth;
+/* 452: taşma varsa taşan öğeler adlarıyla (deneme kaydında nedeni görünsün) */
+const TASMA = tasanlar;
 /* uydurma, en küçük yapısı doğru JPEG (e2e/foto-oku.spec.ts ile aynı; tarayıcı çözemez → küçültülmeden gider, sunucu türü baytlardan tanır) */
 const JPEG = Buffer.from([0xff, 0xd8, 0xff, 0xdb, 0x00, 0x03, 0x01, 0xff, 0xda, 0x00, 0x02, 0x01, 0x02, 0x03, 0xff, 0xd9]);
 
@@ -86,7 +88,7 @@ test("çevrimdışı: bağlantı kes → Kaydet cihaza → bağlantı gelince gi
   await expect(page.getByText("Cihaza kaydedildi; bağlantı gelince gönderilecek.").first()).toBeVisible();
   await expect(page.getByRole("button", { name: "Çevrimdışı, 1 işlem gönderilmeyi bekliyor; ayrıntı" })).toBeVisible();
   await expect(page.getByText("Cihazda kayıt · gönderilmedi")).toBeVisible();
-  expect(await page.evaluate(TASMA), "çevrimdışı şeridiyle yana taşma yok").toBe(true);
+  expect(await page.evaluate(TASMA), "çevrimdışı şeridiyle yana taşma yok").toEqual([]);
   await cip.click();
   const pencere = page.getByRole("dialog", { name: "Çevrimdışı" });
   await expect(pencere.getByText("İnternet yok.", { exact: false })).toBeVisible();
@@ -180,7 +182,7 @@ test("çevrimdışı: bağlantı kes → Kaydet cihaza → bağlantı gelince gi
   const fotoSatiri = page.getByRole("listitem").filter({ hasText: "saha.jpg" });
   await expect(fotoSatiri.getByText("Gönderilmedi", { exact: true })).toBeVisible();
   await expect(fotoSatiri.getByRole("button", { name: "saha.jpg kaldır" })).toBeVisible();
-  expect(await page.evaluate(TASMA), "bekleyen fotoğraf satırıyla yana taşma yok").toBe(true);
+  expect(await page.evaluate(TASMA), "bekleyen fotoğraf satırıyla yana taşma yok").toEqual([]);
   await page.context().setOffline(false);
   await expect(page.getByText("cihazda bekleyen fotoğraf gönderildi", { exact: false }).first()).toBeVisible({ timeout: 30_000 });
   await expect(fotoSatiri.getByRole("link", { name: "Görüntüle" })).toBeVisible({ timeout: 30_000 });

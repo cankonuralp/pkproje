@@ -366,8 +366,9 @@ function OlcumBlok({ b, bag }: { b: BolumOf<"olcum">; bag: Baglam }) {
   return (
     <>
       {/* 447 (reisim: "satır eklemediğin sürece neyin nereye yazılacağı bile gözükmüyor tablo başlıkları gözükmüyor"): başlıklar her zaman */}
+      {/* 452: kendi içinde yatay kayan kap klavyeyle de kaydırılır (odaklanır; ekran okuyucuya bölge adıyla) — boş tabloda odaklanacak alan yok */}
       {(
-        <div className={stil.tabloKap}>
+        <div className={stil.tabloKap} role="region" aria-label={`${b.ad} tablosu`} tabIndex={0}>
           <table className={stil.olcumTablo}>
             <caption className="gizli">{b.ad}</caption>
             <thead>

@@ -1,5 +1,6 @@
 /* SEÇİM ALANI · SEÇENEK LİSTESİ · TARİH / SAAT — maketteki .a-secim, .a-secici-liste, .a-secenek, .a-zaman ailesiyle aynı
-   (docs/assets/maket.css). Liste konumu kabın: alanın altı, sığmazsa üstü (.ust); pencerede akış içinde (kayan pencere listeyi kesmesin). */
+   (docs/assets/maket.css). 452: liste, takvim ve saat önerileri ÜST KATMANDA yüzer (yuzen.ts konumlar: alanın altı, sığmazsa üstü) — sayfayı ya
+   da pencereyi itmez, kayan pencere kesmez (eskiden pencerede akış içindeydi: altındaki alanları itiyordu; takvim pencerenin altında kesiliyordu). */
 .girdi {
   width: 100%; height: var(--tus-y); padding: 0 12px;
   border: 1px solid var(--kenar-alan); border-radius: var(--r-orta); background: var(--kart); color: var(--yazi);
@@ -14,13 +15,12 @@
 .bos { color: var(--yazi3); }
 .kirp { display: block; min-width: 0; overflow: hidden; text-overflow: ellipsis; white-space: nowrap; }
 
+/* yüzen katman (üst katman — tarayıcının popover kalıbı ezilir: konum, kenar, renk bizim) */
+.liste, .takvim { position: fixed; inset: auto; z-index: 1000; margin: 0; color: var(--yazi); }
 .liste {
-  position: absolute; left: 0; top: calc(100% + 6px); z-index: 40;
-  width: 100%; min-width: 220px; max-height: 320px; overflow-y: auto; padding: 6px;
+  min-width: 220px; max-height: 320px; overflow-y: auto; padding: 6px;
   background: var(--kart); border: 1px solid var(--kenar); border-radius: var(--r-orta); box-shadow: var(--golge-2);
 }
-.ust { top: auto; bottom: calc(100% + 6px); }
-dialog .secim .liste { position: static; margin-top: 6px; box-shadow: none; max-height: 240px; }
 .secenek {
   width: 100%; min-height: var(--tus-y); padding: 0 12px;
   display: flex; align-items: center; gap: 10px; text-align: left;
@@ -57,11 +57,10 @@ dialog .secim .liste { position: static; margin-top: 6px; box-shadow: none; max-
 .zamanSimge { flex: none; width: 36px; display: grid; place-items: center; border: 0; border-radius: 0 calc(var(--r-orta) - 1px) calc(var(--r-orta) - 1px) 0; background: transparent; color: var(--yazi2); }
 .zamanSimge:hover, .zamanSimge[aria-expanded="true"] { background: var(--zemin2); color: var(--yazi); }
 .ikiNokta { font-size: var(--boy-bolum); font-weight: 700; }
-.parcaListe { min-width: 0; max-height: 240px; }
+.parcaListe { min-width: 0; }
 
 .takvim {
-  position: absolute; left: 0; top: calc(100% + 6px); z-index: 40;
-  width: 340px; max-width: calc(100vw - 32px); padding: 10px;
+  overflow-y: auto; padding: 10px;
   background: var(--kart); border: 1px solid var(--kenar); border-radius: var(--r-orta); box-shadow: var(--golge-2);
 }
 .takvimBas { display: flex; align-items: center; justify-content: space-between; gap: 8px; margin-bottom: 6px; }
@@ -88,6 +87,6 @@ dialog .secim .liste { position: static; margin-top: 6px; box-shadow: none; max-
 /* telefonda tarih tam satır, saat : dakika altında; takvim alanın genişliğinde, gün tuşları arası boşluksuz (yükseklik 44 kalır) */
 @media (max-width: 767.98px) {
   .zamanTarih { flex-basis: 100%; }
-  .takvim { width: 100%; max-width: none; padding: 6px; }
+  .takvim { padding: 6px; }
   .gunler { gap: 0; }
 }

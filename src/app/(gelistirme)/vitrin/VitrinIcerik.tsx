@@ -6,6 +6,7 @@ import { useBildir } from "../../../components/bildirim/Bildirim";
 import { useOnayla } from "../../../components/pencere/Onay";
 import { Pencere } from "../../../components/pencere/Pencere";
 import { SecimAlani } from "../../../components/secim/SecimAlani";
+import { TarihAlani } from "../../../components/secim/TarihAlani";
 import { Serit } from "../../../components/serit/Serit";
 import { Tus, TusBaglanti } from "../../../components/tus/Tus";
 import stil from "./vitrin.module.css";
@@ -19,6 +20,7 @@ export function VitrinIcerik() {
   const [sonuc, setSonuc] = useState("—");
   const [pencere, setPencere] = useState(false);
   const [notTur, setNotTur] = useState("genel");
+  const [notGun, setNotGun] = useState("");
   return (
     <>
       <div className={stil.sayfaBas}><h1>Vitrin</h1></div>
@@ -67,6 +69,11 @@ export function VitrinIcerik() {
         <div className={stil.alanGrup}>
           <label className={stil.etiket} htmlFor="v-not-tur">Not türü</label>
           <SecimAlani id="v-not-tur" ad="Not türü" deger={notTur} secenekler={[["genel", "Genel"], ["eksik", "Eksik belge"], ["randevu", "Randevu"]]} degistir={setNotTur} />
+        </div>
+        {/* 452: pencerenin en altındaki tarih — takvim pencereyi itmez, pencerenin kenarında kesilmez */}
+        <div className={stil.alanGrup} data-v="not-gun">
+          <label className={stil.etiket} htmlFor="v-not-gun">Not tarihi</label>
+          <TarihAlani id="v-not-gun" ad="Not tarihi" deger={notGun} degistir={setNotGun} />
         </div>
       </Pencere>
     </>

@@ -2,8 +2,9 @@
 /* SEÇENEK LİSTESİ — seçim alanının ve filtre seçicisinin açılır listesi (tek üretici; kalıp 19). 8'den fazla seçenekte arama kutusu
    (yazdıkça süzer, eşleşme yoksa söyler); klavye: ↑ ↓ Home End seçenekler arasında, Enter / boşluk seçer, Esc kapatır (odak tetikleyiciye
    döner), Tab kapatır, harfe basınca o harfle başlayan sonraki seçenek. Açılınca odak aramaya, yoksa seçili seçeneğe. Liste yalnız açıkken
-   çizilir; konumu çağıranın kabından (alanın altı, sığmazsa üstü — ust). */
+   çizilir; 452: ÜST KATMANDA yüzer (yuzen.ts — alanın altı, sığmazsa üstü; sayfayı / pencereyi itmez, kesilmez). */
 import { useEffect, useRef, useState } from "react";
+import { useYuzen, type YuzenAyar } from "./yuzen";
 import { Ikon } from "../ikon/Ikon";
 import { tr } from "../liste/suzgec";
 import { EN_COK_GORUNEN, gorunenSecenekler, type SecimSecenegi } from "./gorunen";
@@ -13,7 +14,7 @@ export { EN_COK_GORUNEN, gorunenSecenekler, type SecimSecenegi };
 
 export const UZUN_LISTE = 8;
 
-export function SecenekListesi({ id, ad, secenekler, deger, sec, kapat, ust = false, sinif }: {
+export function SecenekListesi({ id, ad, secenekler, deger, sec, kapat, yuzen, sinif }: {
   id: string;
   ad: string;
   secenekler: readonly SecimSecenegi[];
@@ -21,11 +22,13 @@ export function SecenekListesi({ id, ad, secenekler, deger, sec, kapat, ust = fa
   sec: (v: string) => void;
   /** odakGeri: Esc ile kapandıysa odak tetikleyiciye döner */
   kapat: (odakGeri: boolean) => void;
-  ust?: boolean;
+  /** yüzen katmanın genişliği / hizası (süzgeç seçicisi: içerik kadar, sağa hizalı) */
+  yuzen?: YuzenAyar;
   sinif?: string;
 }) {
   const [ara, setAra] = useState("");
   const kap = useRef<HTMLDivElement>(null);
+  useYuzen(kap, yuzen);
   const uzun = secenekler.length > UZUN_LISTE;
   const { liste: gorunen, kalan, hic } = gorunenSecenekler(secenekler, deger, ara);
 
@@ -55,7 +58,7 @@ export function SecenekListesi({ id, ad, secenekler, deger, sec, kapat, ust = fa
   };
 
   return (
-    <div className={[stil.liste, ust ? stil.ust : "", sinif].filter(Boolean).join(" ")} id={id} role="listbox" aria-label={ad} ref={kap} onKeyDown={klavye}>
+    <div className={[stil.liste, sinif].filter(Boolean).join(" ")} id={id} role="listbox" aria-label={ad} ref={kap} onKeyDown={klavye} popover="manual">
       {uzun && <SecenekArama ad={ad} deger={ara} degistir={setAra} bos={hic} />}
       {gorunen.map((o) => <SecenekTusu key={o[0]} o={o} secili={o[0] === deger} sec={() => sec(o[0])} />)}
       <KalanNotu kalan={kalan} />
@@ -98,12 +101,4 @@ export function useDisariTiklama(acik: boolean, kap: React.RefObject<HTMLElement
     document.addEventListener("pointerdown", dinle);
     return () => document.removeEventListener("pointerdown", dinle);
   }, [acik, kap, kapat]);
-}
-
-/** liste alanın altına sığmıyorsa ve üstte daha çok yer varsa üstte açılır (kalıp 19) */
-export function ustteMi(tetik: HTMLElement | null, yukseklik = 320): boolean {
-  if (!tetik) return false;
-  const r = tetik.getBoundingClientRect();
-  const alt = window.innerHeight - r.bottom, ust = r.top;
-  return alt < yukseklik && ust > alt;
 }

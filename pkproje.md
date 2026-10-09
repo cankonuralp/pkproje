@@ -2355,6 +2355,14 @@ revizyon, alan kopyalama, hafif kusur devri, meslek eşleşme denetimi).
 - Emsal ürünler: https://opwire.app/iso-17020-periyodik-kontrol-yazilimi/ · https://17020muayene.vidco.com.tr/ · https://akuple.com/asansor-kontrol-yazilimi/ · https://ensyazilim.com/
 
 ## 11 · Değişiklik günlüğü
+- 2026-10-09 (452): **Açılır listeler ve takvim artık hiçbir şeyi itmiyor, kesilmiyor** (reisim: *"böyle sekme mi açılır gözünü seviyim seçmeli yere
+  tıklıyoruz tüm sayfa kayıyor ?"*, *"bu ve benzeri kaymalar kabul edilemez siteyi tam teşekküllü tarama istiyorum"*; Araç ekle penceresinde Yakıt
+  listesi altındaki alanları itiyor, Muayene bitişi takvimi pencerenin altında kesiliyordu). Seçim listesi, süzgeç seçicisi, takvim ve saat / dakika
+  önerileri tarayıcının üst katmanında yüzer (tek parça: `src/components/secim/yuzen.ts`): alanın altında, sığmazsa üstünde; ekrandan taşmaz; sayfa /
+  pencere kayınca izler. Pencerede "liste akış içinde" kuralı kalktı. Site taramasına 7. denetim: her sayfada ve sayfanın "… ekle / … düzenle /
+  Yeni …" pencerelerinde seçim listeleri ve takvimler açılır — öğe yerinden oynarsa ya da katman kesilir / örtülürse bulgu (pencere kaydedilmeden
+  kapatılır). Deneme makinesinde çıkan iki telefon hatası: boş ölçüm tablosunun kayan kabı klavyeyle odaklanır (erişilebilirlik), kap konumlu (gizli
+  tablo başlığı sayfayı yana taşırmasın); yana taşma denetimi artık taşan öğeyi adıyla yazar.
 - 2026-10-09 (449): **Sözleşmeler balonunun sebebi görünür** (reisim: *"sözleşmeler kısmında 1 yazan bir uyarı var ama sebebini anlayamıyorum ? içeride
   hiç bir şey yok ?"*). Yan menüdeki kırmızı sayı, açık bir planın ekibinde İSG-KATİP SÖZLEŞME ID'si eksik ya da bitmiş kişi sayısıdır; sayfada ise yalnız
   sözleşmeler vardı. Artık Sözleşmeler sayfasının üstünde kırmızı şerit: hangi plan (bağlantılı), hangi müşteri, hangi gün, kaç kişi ve ne yapılacağı

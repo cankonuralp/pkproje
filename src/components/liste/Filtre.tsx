@@ -8,7 +8,7 @@ import { usePathname } from "next/navigation";
 import { useCallback, useEffect, useId, useRef, useState } from "react";
 import { Ikon } from "../ikon/Ikon";
 import { Pencere } from "../pencere/Pencere";
-import { gorunenSecenekler, KalanNotu, SecenekArama, SecenekListesi, SecenekTusu, UZUN_LISTE, useDisariTiklama, ustteMi } from "../secim/SecenekListesi";
+import { gorunenSecenekler, KalanNotu, SecenekArama, SecenekListesi, SecenekTusu, UZUN_LISTE, useDisariTiklama } from "../secim/SecenekListesi";
 import { Tus } from "../tus/Tus";
 import type { ListeKipi } from "./Liste";
 import { aktifSecici, suzgecVar, temizle, uygulanan, type Secici, type SuzgecDurumu, type SuzgecTanimi } from "./suzgec";
@@ -134,7 +134,6 @@ function Arama({ ad, ipucu, deger, degistir }: { ad: string; ipucu: string; dege
 /* seçici: etiket + değer + ortak seçenek listesi (klavye, uzun listede arama; kalıp 19). Dışarı tıklama ve Esc kapatır. */
 function FiltreSecici<K>({ secici, deger, degistir }: { secici: Secici<K>; deger: string; degistir: (v: string) => void }) {
   const [acik, setAcik] = useState(false);
-  const [ust, setUst] = useState(false);
   const kap = useRef<HTMLDivElement>(null);
   const tus = useRef<HTMLButtonElement>(null);
   const listeId = useId();
@@ -145,13 +144,13 @@ function FiltreSecici<K>({ secici, deger, degistir }: { secici: Secici<K>; deger
   return (
     <div className={secici.siralama ? `${stil.secici} ${stil.seciciSira}` : stil.secici} ref={kap} data-secici={secici.k}>
       <button ref={tus} className={stil.seciciTus} type="button" aria-haspopup="listbox" aria-expanded={acik} aria-controls={acik ? listeId : undefined}
-        onClick={() => { if (!acik) setUst(ustteMi(tus.current)); setAcik(!acik); }}>
+        onClick={() => setAcik(!acik)}>
         <span className={stil.seciciEtiket}>{secici.ad}</span>
         <span className={stil.seciciDeger}>{gor?.[1]}</span>
         <Ikon ad="chevron-down" kucuk />
       </button>
       {acik && (
-        <SecenekListesi id={listeId} ad={secici.ad} secenekler={secenekler} deger={deger} ust={ust} sinif={stil.seciciListe}
+        <SecenekListesi id={listeId} ad={secici.ad} secenekler={secenekler} deger={deger} yuzen={{ genislik: "dogal", hiza: "sag" }}
           sec={(v) => { degistir(v); setAcik(false); tus.current?.focus(); }}
           kapat={(geri) => { setAcik(false); if (geri) tus.current?.focus(); }} />
       )}

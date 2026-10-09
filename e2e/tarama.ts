@@ -10,9 +10,13 @@
      6. dengesiz kartlar (446; reisim 2026-10-09: "bi taraf uzun bi taraf kısa çok kötü, bunlar kabul edilemez siteyi gez … çok uzun bir şey ise
         bile kaydırabilir olsun kendi içinde"): aynı satırda yan yana duran kartlardan (kenarlı + zeminli kutu) biri ötekinden belirgin uzunsa
         (fark > 120 px ve oran > 1,4) — eşit boy (stretch) ya da uzun içerik kendi içinde kaydırılmalı
+     7. açılır katmanlar (452; reisim 2026-10-09: "seçmeli yere tıklıyoruz tüm sayfa kayıyor", "bu ve benzeri kaymalar kabul edilemez siteyi tam
+        teşekküllü tarama istiyorum"): sayfadaki ve sayfanın "… ekle / … düzenle / Yeni …" pencerelerindeki seçim listeleri ve takvimler açılır —
+        açılınca hiçbir öğe yerinden oynamaz (sayfa / pencere itilmez, kaymaz), katman ekranın içinde ve tamamen görünür (kesilmez, örtülmez).
+        Pencereler kaydedilmeden Esc ile kapatılır.
    Bulgular toplanır, sonda tek listede düşer (ilk hatada durmaz — hepsi bir koşuda görünsün). Gezilmez: /api, PDF, çıkış, giriş, indirme. */
 import AxeBuilder from "@axe-core/playwright";
-import type { ConsoleMessage, Page, Response } from "@playwright/test";
+import type { ConsoleMessage, Locator, Page, Response } from "@playwright/test";
 
 export interface Bulgu { sayfa: string; tur: string; ayrinti: string }
 
@@ -81,15 +85,98 @@ function dengesizKartlar(): string[] {
   return sonuc;
 }
 
-/** sayfadan ekrandan taşan öğeler (en geniş üç) */
-function tasanlar(): string[] {
+/** sayfadan ekrandan taşan öğeler (en geniş üç; kendi kabında kayan — kesilen — öğe sayılmaz). 452: yana taşma denetleyen testler de kullanır */
+export function tasanlar(): string[] {
   const g = document.documentElement.clientWidth;
   if (document.documentElement.scrollWidth <= g + 1) return [];
+  const kesik = (e: HTMLElement) => {
+    for (let a = e.parentElement; a && a !== document.body; a = a.parentElement) {
+      const o = getComputedStyle(a).overflowX;
+      if (o !== "visible" && a.getBoundingClientRect().right <= g + 1) return true;
+    }
+    return false;
+  };
   return [...document.querySelectorAll<HTMLElement>("body *")]
-    .filter((e) => e.getBoundingClientRect().right > g + 1 && e.checkVisibility())
+    .filter((e) => e.getBoundingClientRect().right > g + 1 && e.checkVisibility() && !kesik(e))
     .map((e) => ({ e, r: e.getBoundingClientRect().right }))
     .sort((a, b) => b.r - a.r).slice(0, 3)
-    .map(({ e, r }) => `${e.tagName.toLowerCase()}${e.className && typeof e.className === "string" ? "." + e.className.split(" ")[0] : ""} sağ kenar ${Math.round(r)} > ${g}`);
+    .map(({ e, r }) => `${e.tagName.toLowerCase()}${e.className && typeof e.className === "string" ? "." + e.className.split(" ")[0] : ""} sağ kenar ${Math.round(r)} > ${g}`)
+    .concat(`sayfa genişliği ${document.documentElement.scrollWidth} > ${g}`);
+}
+
+/** 452: kökteki (pencere ya da sayfa) basılabilir öğelerin yerleri — açılır katman açılınca kıyaslanır (katmanın kendi içi hariç) */
+function yerler(kokSecici: string): [string, number, number][] {
+  const kok = document.querySelector(kokSecici) ?? document.body;
+  const l: [string, number, number][] = [];
+  for (const e of kok.querySelectorAll<HTMLElement>("a[href], button, input:not([type=hidden]), textarea, [role=combobox], h1, h2, h3, label")) {
+    if (e.closest("[popover]") || !e.checkVisibility()) continue;
+    const r = e.getBoundingClientRect();
+    l.push([`${e.tagName.toLowerCase()} "${(e.getAttribute("aria-label") ?? e.innerText ?? "").trim().replace(/\s+/g, " ").slice(0, 30)}"`, Math.round(r.left), Math.round(r.top)]);
+    if (l.length >= 300) break;
+  }
+  return l;
+}
+
+/** 452: katman ekranın içinde ve tamamen görünür mü (orta ve köşelere yakın noktalarda üstte kendisi) */
+function katmanGorunur(e: Element): string {
+  const r = e.getBoundingClientRect();
+  if (r.top < -0.5 || r.left < -0.5 || r.bottom > innerHeight + 0.5 || r.right > innerWidth + 0.5) {
+    return `ekrandan taşıyor (${Math.round(r.left)}, ${Math.round(r.top)}) – (${Math.round(r.right)}, ${Math.round(r.bottom)}), ekran ${innerWidth} × ${innerHeight}`;
+  }
+  for (const [x, y] of [[r.left + r.width / 2, r.top + r.height / 2], [r.left + 6, r.top + 6], [r.right - 6, r.bottom - 6], [r.left + 6, r.bottom - 6], [r.right - 6, r.top + 6]]) {
+    const ust = document.elementFromPoint(x, y);
+    if (!ust || !e.contains(ust)) return `(${Math.round(x)}, ${Math.round(y)}) noktasında üstünde ${ust?.tagName.toLowerCase() ?? "hiçbir şey"} (kesik ya da örtülü)`;
+  }
+  return "";
+}
+
+/** 452: kökteki seçim listeleri ve takvimler (en çok 4): aç → yerinden oynayan öğe yok, katman tamamen görünür → Esc */
+async function katmanlariDene(page: Page, kok: Locator, kokSecici: string, yer: string, nerede: string, bulgular: Bulgu[]) {
+  const tetikler = kok.locator('[role=combobox]:not([disabled]), button[aria-label="Takvimden seç"]');
+  const n = Math.min(await tetikler.count(), 4);
+  for (let i = 0; i < n; i++) {
+    const t = tetikler.nth(i);
+    if (!(await t.isVisible().catch(() => false))) continue;
+    await t.scrollIntoViewIfNeeded({ timeout: 2000 }).catch(() => undefined);
+    const ad = ((await t.getAttribute("aria-label")) ?? (await t.innerText().catch(() => ""))).trim().replace(/\s+/g, " ").slice(0, 40);
+    const once = await page.evaluate(yerler, kokSecici);
+    if (!(await t.click({ timeout: 3000 }).then(() => true, () => false))) continue;
+    const katman = page.locator("[popover]:popover-open").last();
+    if (!(await katman.waitFor({ state: "visible", timeout: 2000 }).then(() => true, () => false))) {
+      bulgular.push({ sayfa: yer, tur: "açılır katman", ayrinti: `${nerede} "${ad}": üst katmanda açılmadı (akış içinde açılan liste sayfayı iter)` });
+    } else {
+      const sonra = await page.evaluate(yerler, kokSecici);
+      const oynayan = once.filter((x, j) => sonra[j] && sonra[j][0] === x[0] && (Math.abs(sonra[j][1] - x[1]) > 1 || Math.abs(sonra[j][2] - x[2]) > 1));
+      if (sonra.length !== once.length || oynayan.length) {
+        bulgular.push({ sayfa: yer, tur: "açılır katman", ayrinti: `${nerede} "${ad}" açılınca öğeler yerinden oynadı: ${oynayan.slice(0, 3).map((x) => x[0]).join(", ") || `öğe sayısı ${once.length} → ${sonra.length}`}` });
+      }
+      const g = await katman.evaluate(katmanGorunur);
+      if (g) bulgular.push({ sayfa: yer, tur: "açılır katman", ayrinti: `${nerede} "${ad}": ${g}` });
+    }
+    await page.keyboard.press("Escape");
+    await katman.waitFor({ state: "hidden", timeout: 2000 }).catch(() => undefined);
+  }
+}
+
+/** 452: sayfanın ve "… ekle / … düzenle / Yeni …" pencerelerinin (en çok 2; açılır, denenir, kaydedilmeden kapatılır) açılır katmanları */
+async function acilirKatmanlar(page: Page, yer: string, bulgular: Bulgu[]) {
+  await katmanlariDene(page, page.locator("main"), "main", yer, "sayfada", bulgular);
+  const acanlar = page.locator("main button:not([type=submit]):not([disabled])").filter({ hasText: /(^|\s)(ekle|düzenle)\s*$|^\s*Yeni\s/i });
+  const n = Math.min(await acanlar.count(), 2);
+  for (let i = 0; i < n; i++) {
+    const t = acanlar.nth(i);
+    if (!(await t.isVisible().catch(() => false))) continue;
+    const ad = (await t.innerText().catch(() => "")).trim().replace(/\s+/g, " ").slice(0, 40);
+    if (!(await t.click({ timeout: 3000 }).then(() => true, () => false))) continue;
+    const pencere = page.locator("dialog[open]").last();
+    const acildi = await pencere.waitFor({ state: "visible", timeout: 1500 }).then(() => true, () => false);
+    if (new URL(page.url()).pathname !== yer.split("?")[0]) { await page.goto(yer, { waitUntil: "load" }).catch(() => undefined); return; }
+    if (!acildi) continue;
+    await katmanlariDene(page, pencere, "dialog[open]", yer, `"${ad}" penceresinde`, bulgular);
+    await page.keyboard.press("Escape");
+    if (await pencere.isVisible().catch(() => false)) await pencere.getByRole("button", { name: /^(Vazgeç|Kapat)$/ }).first().click({ timeout: 2000 }).catch(() => undefined);
+    await pencere.waitFor({ state: "hidden", timeout: 2000 }).catch(() => undefined);
+  }
 }
 
 async function erisilebilirlik(page: Page, yer: string, tema: string, bulgular: Bulgu[]) {
@@ -124,7 +211,7 @@ async function cekmece(page: Page, yer: string, bulgular: Bulgu[]) {
  * siteyi `baslangic`tan gezer; bulguları döndürür. `enCok` sayfa (kalıp) ve `sure` ms ile sınırlı — sınıra takılırsa gezilmeyenler de bulgu
  * değil, `kalan` olarak döner (sessiz kırpma yok).
  */
-export async function siteyiTara(page: Page, baslangic: string[], { enCok = 90, sure = 15 * 60_000 } = {}) {
+export async function siteyiTara(page: Page, baslangic: string[], { enCok = 90, sure = 20 * 60_000 } = {}) {
   const bulgular: Bulgu[] = [], dengesiz: Bulgu[] = [];
   const kuyruk = [...baslangic], gorulen = new Set(baslangic.map(kalip)), gezilen: string[] = [];
   const bitis = Date.now() + sure;
@@ -169,6 +256,8 @@ export async function siteyiTara(page: Page, baslangic: string[], { enCok = 90, 
       for (const o of await page.evaluate(ortuluOgeler)) bulgular.push({ sayfa: yer, tur: "basılamıyor", ayrinti: `${o.ad} — ${o.neden}` });
       /* 446: önce yalnız rapor (deneme makinesinin günlüğünde) — bulunanlar düzeltilince bulguya (kilide) çevrilir */
       for (const x of await page.evaluate(dengesizKartlar)) dengesiz.push({ sayfa: yer, tur: "dengesiz kartlar", ayrinti: x });
+      await page.evaluate(() => scrollTo(0, 0));
+      await acilirKatmanlar(page, yer, bulgular);
       await page.evaluate(() => scrollTo(0, 0));
       await erisilebilirlik(page, yer, "açık", bulgular);
       const tema = await page.evaluate(() => document.documentElement.getAttribute("data-tema"));
