@@ -280,7 +280,7 @@ test("444 plan aç: elle ekipman tesise kaydedilir ve plana girer; kod denetimi;
 /* 2026-10-09 (465; reisim, hata listesi 7: "mevcutta otomatik gelen ekipmanlarıda silebilmek istiyorum"): formda çıkarılan tesis ekipmanı bu plana
    girmez, tesiste kalır; başka tesisin ya da bilinmeyen kimlik yok sayılır (plan yine açılır) */
 test("465 plan aç: çıkarılan tesis ekipmanı plana girmez, tesiste kalır; başka tesisin kimliği yok sayılır", async () => {
-  const tesis2 = (await sql<{ id: string; kod: string }>(A, "SELECT id::text, kod FROM ekipman WHERE tesis_id = $1 AND NOT pasif ORDER BY kod", [FA.tesis2])).rows;
+  const tesis2 = (await sql<{ id: string; kod: string }>(A, "SELECT id::text, kod FROM ekipman WHERE tesis_id = $1 AND pasif IS NULL ORDER BY kod", [FA.tesis2])).rows;
   assert.ok(tesis2.length >= 2, JSON.stringify(tesis2));
   const cik = tesis2[0];
   const baska = (await sql<{ id: string }>(A, "SELECT id::text FROM ekipman WHERE tesis_id <> $1 LIMIT 1", [FA.tesis2])).rows[0]?.id ?? "00000000-0000-4000-8000-000000000000";
