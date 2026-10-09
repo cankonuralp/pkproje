@@ -28,6 +28,7 @@ import {
   kontrolListesiEylemi, kunyeDuzenleEylemi, kunyeGuncelleEylemi, planKabulEylemi, planReddetEylemi, planTamamlaEylemi, tamamlamaGeriAlEylemi, type PlanYaniti,
 } from "./eylemler";
 import { ProjeNotlari } from "./ProjeNotlari";
+import { PlanEpostalari } from "./PlanEpostalari";
 import { RaporBolumu } from "./RaporBolumu";
 import stil from "./planlar.module.css";
 
@@ -287,6 +288,7 @@ export function PlanIciEkrani({ v }: { v: PlanIci }) {
       {genel && <Serit tur="hata" ikon="circle-alert">{genel}</Serit>}
       <ol className={stil.akis} aria-label="Plan akışı">{a1}{a2}{a3}{a4}</ol>
       {v.notlar && <ProjeNotlari planId={k.id} notlar={v.notlar} />}
+      {v.epostalar && v.epostalar.length > 0 && <PlanEpostalari epostalar={v.epostalar} />}
       {eylem && <div className={stil.cubukAlt}>{eylem}</div>}
       <Pencere acik={!!red} baslik="Planı reddet" onKapat={() => setRed(null)}
         alt={<>

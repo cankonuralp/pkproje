@@ -35,6 +35,11 @@ export async function hesapAdlari(db: Sorgulayici, idler: readonly (string | nul
   return new Map((await db.sorgu<{ id: string; ad: string }>("SELECT id::text, ad FROM hesap WHERE id = ANY ($1::uuid[])", [l])).rows.map((x) => [x.id, x.ad]));
 }
 
+/** 432: firmanın açık (ilk / etkin) hesaplarının adı ve e-postası — plan açarken bilgilendirme listesi önerisi (yetki ÇAĞIRANDA) */
+export async function epostaRehberi(db: Sorgulayici): Promise<{ ad: string; eposta: string }[]> {
+  return (await db.sorgu<{ ad: string; eposta: string }>("SELECT ad, eposta FROM hesap WHERE durum <> 'pasif' ORDER BY ad, eposta")).rows;
+}
+
 /** oturumdaki hesabın personel kaydı (yoksa null) — "kendi" düzeyi için */
 export async function hesabinPersoneli(db: Sorgulayici, hesapId: string): Promise<string | null> {
   return (await db.sorgu<{ p: string | null }>("SELECT personel_id::text AS p FROM hesap WHERE id = $1", [hesapId])).rows[0]?.p ?? null;

@@ -1,6 +1,7 @@
 "use client";
 /* PLAN AÇ (maket plan-ac.html M6 2. tur; L6 kapsam seçimi yok; G1 geçmiş tarih uyarı; Ö5b sözleşme dışı uyarı; L4 atama uyarısı): tek sayfa —
-   1 Müşteri ve tesis · 2 Tarihler · 3 Denetçi (İSG-KATİP SÖZLEŞME ID sözleşmeden gelir; yoksa el ile + "sözleşmeye de kaydet") · 4 Özet ve uyarılar.
+   1 Müşteri ve tesis · 2 Tarihler · 3 Denetçi (İSG-KATİP SÖZLEŞME ID sözleşmeden gelir; yoksa el ile + "sözleşmeye de kaydet") · 4 Bilgilendirme (432:
+   ekibe e-posta kendiliğinden; başka alıcılar elle ya da listeden) · 5 Özet ve uyarılar.
    Uyarılar canlı (sema.ts saf kuralları) ve ENGEL DEĞİL; engel yalnız tesis, tarih, bitiş ≥ başlangıç, en az bir denetçi. Karar ve numara sunucuda. */
 import { useRouter } from "next/navigation";
 import { useEffect, useState, useTransition } from "react";
@@ -13,6 +14,7 @@ import { SecimAlani } from "../../../components/secim/SecimAlani";
 import { TarihAlani } from "../../../components/secim/TarihAlani";
 import { Serit } from "../../../components/serit/Serit";
 import { Tus, TusBaglanti } from "../../../components/tus/Tus";
+import { Ikon } from "../../../components/ikon/Ikon";
 import { meslek } from "../../personel/sema";
 import { adayUyarilari, isgDurumu, kapsamHesapla, sozlesmeUyarisi, tarihNo, turUyarilari, type Aday } from "../sema";
 import type { PlanAcVerisi, TesisPlanBilgisi } from "../server/planlar";
@@ -21,7 +23,9 @@ import { KapsamTablosu } from "./KapsamTablosu";
 import stil from "./planlar.module.css";
 
 const OZET = "pa-ozet";
-const ID = { musteri: "pa-musteri", tesis: "pa-tesis", baslangic: "pa-baslangic", bitis: "pa-bitis", aciklama: "pa-aciklama" } as const;
+const ID = { musteri: "pa-musteri", tesis: "pa-tesis", baslangic: "pa-baslangic", bitis: "pa-bitis", aciklama: "pa-aciklama", bilgilendirme: "pa-eposta", rehber: "pa-rehber" } as const;
+const EPOSTA_BICIMI = /^[^\s@<>(),;:"\\]+@[^\s@<>(),;:"\\]+\.[^\s@<>(),;:"\\]{2,}$/;
+const EN_COK_BILGI = 20;
 const meslekAd = (a: Aday) => (a.meslek === "diger" ? a.meslekMetin ?? "Diğer" : meslek(a.meslek)?.ad ?? a.meslek);
 
 export function PlanAcFormu({ veri, baslangic }: { veri: PlanAcVerisi; baslangic: { musteri?: string; tesis?: string } }) {
@@ -35,6 +39,9 @@ export function PlanAcFormu({ veri, baslangic }: { veri: PlanAcVerisi; baslangic
   const [kaydet, setKaydet] = useState<Record<string, boolean>>({});
   const [yuklenen, setYuklenen] = useState<{ tesis: string; bilgi: TesisPlanBilgisi | null } | null>(null);
   const [h, setH] = useState<Record<string, string>>({});
+  /* 432: bilgilendirme listesi (ekibe ayrıca kendiliğinden gider) — elle yazılan ya da listeden seçilen e-postalar */
+  const [bilgi_, setBilgi] = useState<string[]>([]);
+  const [yeniEposta, setYeniEposta] = useState("");
   const [genel, setGenel] = useState<string | null>(null);
 
   /* tesis seçilince o tesisin İSG-KATİP ID'leri, sözleşmeleri ve ekipmanı sunucudan; yalnız seçili tesisinki kullanılır */
@@ -102,18 +109,33 @@ export function PlanAcFormu({ veri, baslangic }: { veri: PlanAcVerisi; baslangic
   const ac = () => baslat(async () => {
     const yerel: Record<string, string> = {};
     if (!d.musteri) yerel.musteri = "Müşteri seçilmeli.";
-    const r = await planAcEylemi({ tesis: d.tesis, baslangic: d.baslangic, bitis: d.bitis, aciklama: d.aciklama, ekip: ekip.map((k) => ({ personel: k, isgNo: isg[k] ?? "", kaydet: !!kaydet[k] })) });
+    const r = await planAcEylemi({ tesis: d.tesis, baslangic: d.baslangic, bitis: d.bitis, aciklama: d.aciklama, ekip: ekip.map((k) => ({ personel: k, isgNo: isg[k] ?? "", kaydet: !!kaydet[k] })),
+      bilgilendirme: bilgi_ });
     const hatalar = { ...yerel, ...(r.hatalar ?? {}) };
     setH(hatalar); setGenel(r.genel ?? null);
     if (!r.tamam) {
       const k = Object.keys(hatalar)[0];
-      requestAnimationFrame(() => (k === "ekip" ? document.querySelector<HTMLInputElement>("[data-aday]") : document.getElementById(ID[k as keyof typeof ID] ?? OZET))?.focus());
+      const odakId = k?.startsWith("bilgilendirme") ? ID.bilgilendirme : ID[k as keyof typeof ID];
+      requestAnimationFrame(() => (k === "ekip" ? document.querySelector<HTMLInputElement>("[data-aday]") : document.getElementById(odakId ?? OZET))?.focus());
       return;
     }
-    bildir(`${r.no} açıldı.`);
+    bildir(`${r.no} açıldı.${r.eposta ? ` ${r.eposta} kişiye e-posta gönderiliyor.` : ""}`);
     router.push(`/planlar/${r.id}`);
   });
   const hataSayisi = Object.keys(h).length;
+  const bilgiEkle = (x: string) => {
+    const a = x.trim().toLowerCase();
+    if (!a) return;
+    if (!EPOSTA_BICIMI.test(a) || a.length > 254) { setH((o) => ({ ...o, bilgilendirme: "Geçerli bir e-posta adresi yazın." })); return; }
+    if (bilgi_.includes(a)) { setH((o) => ({ ...o, bilgilendirme: "Bu e-posta listede var." })); return; }
+    if (bilgi_.length >= EN_COK_BILGI) { setH((o) => ({ ...o, bilgilendirme: `En çok ${EN_COK_BILGI} e-posta.` })); return; }
+    setBilgi([...bilgi_, a]); setYeniEposta(""); setH(({ bilgilendirme: _, ...o }) => o);
+  };
+  const ekipEposta = ekipAday.length;
+  const rehber = [
+    ...(bilgi?.musteriEposta ? [[bilgi.musteriEposta, `${m?.kisa ?? "Müşteri"} (müşteri)`, bilgi.musteriEposta] as const] : []),
+    ...veri.rehber.map((x) => [x.eposta, x.ad, x.eposta] as const),
+  ].filter((x, i, l) => !bilgi_.includes(x[0]) && l.findIndex((y) => y[0] === x[0]) === i);
 
   return (
     <form onSubmit={(e) => { e.preventDefault(); ac(); }} noValidate>
@@ -180,12 +202,41 @@ export function PlanAcFormu({ veri, baslangic }: { veri: PlanAcVerisi; baslangic
             </>}
           </>}
         </FormBolum>
-        <FormBolum baslik="4 · Özet ve uyarılar" id="pa-b4">
+        <FormBolum baslik="4 · Bilgilendirme (e-posta)" id="pa-b5">
+          <p className={stil.bosSatir}>Plan açılınca ekipteki denetçilere e-posta kendiliğinden gider{ekipEposta ? ` (${ekipEposta} kişi)` : ""}. Başkalarını da
+            bilgilendirmek için e-posta yazın ya da listeden seçin.</p>
+          <FormIzgara>
+            <Alan id={ID.bilgilendirme} etiket="E-posta ekle" hata={h.bilgilendirme ?? Object.entries(h).find(([k]) => k.startsWith("bilgilendirme."))?.[1]}>
+              <div className={stil.epostaEkle}>
+                <Girdi id={ID.bilgilendirme} type="email" inputMode="email" autoComplete="off" maxLength={254} value={yeniEposta} placeholder="ad@ornek.com.tr"
+                  hata={!!h.bilgilendirme} onChange={(e) => setYeniEposta(e.target.value)}
+                  onKeyDown={(e) => { if (e.key === "Enter" || e.key === ",") { e.preventDefault(); bilgiEkle(yeniEposta); } }} />
+                <Tus tur="ikincil" ikon="plus" onClick={() => bilgiEkle(yeniEposta)}>Ekle</Tus>
+              </div>
+            </Alan>
+            <Alan id={ID.rehber} etiket="Listeden ekle">
+              <SecimAlani id={ID.rehber} ad="Listeden ekle" deger="" ipucu={rehber.length ? "Kişi seçin" : "Listede kişi yok"} kapali={!rehber.length}
+                secenekler={rehber} degistir={(x) => bilgiEkle(x)} />
+            </Alan>
+          </FormIzgara>
+          {bilgi_.length > 0 && (
+            <ul className={stil.epostaListe} aria-label="Bilgilendirilecekler">
+              {bilgi_.map((a) => (
+                <li key={a}>
+                  <span>{a}</span>
+                  <button type="button" className={stil.epostaKaldir} aria-label={`${a} kaldır`} onClick={() => setBilgi(bilgi_.filter((x) => x !== a))}><Ikon ad="x" kucuk /></button>
+                </li>
+              ))}
+            </ul>
+          )}
+        </FormBolum>
+        <FormBolum baslik="5 · Özet ve uyarılar" id="pa-b4">
           {!d.tesis ? <p className={stil.bosSatir}>Önce tesis seçin.</p> : <>
             <BilgiListesi>
               <Bilgi etiket="Başlangıç">{gun ? tarihNo(gun) : <DegerYok>Tarih eksik</DegerYok>}</Bilgi>
               <Bilgi etiket="Bitiş">{bit ? tarihNo(bit) : <DegerYok>Tarih eksik</DegerYok>}</Bilgi>
               <Bilgi etiket="Ekip" genis>{ekipAday.length ? ekipAday.map((a) => a.ad).join(", ") : <DegerYok>Seçilmedi</DegerYok>}</Bilgi>
+              <Bilgi etiket="E-posta" genis>{ekipAday.length || bilgi_.length ? `Ekip${bilgi_.length ? ` + ${bilgi_.length} bilgilendirme` : ""}` : <DegerYok>Ekip seçilince</DegerYok>}</Bilgi>
               <Bilgi etiket="Ekipman" genis>{toplam ? `${toplam} ekipman · ${kapsam.length} tür · hepsi plana girer` : <DegerYok>Tesiste kayıtlı ekipman yok; denetçi sahada ekler</DegerYok>}</Bilgi>
             </BilgiListesi>
             {kapsam.length > 0 && <div className={stil.tablo}><KapsamTablosu kapsam={kapsam} ekip={ekipAday} /></div>}

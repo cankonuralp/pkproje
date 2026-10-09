@@ -45,12 +45,16 @@ test("gece işi ucu: yalnız sırla; sayılar döner", async ({ request }) => {
     expect(r.headers()["cache-control"]).toBe("no-store");
     const j = await r.json() as Record<string, unknown>;
     /* 2026-10-08 (387): saklama süresi işi aynı uçta, sayıları "saklama"da (süresi yaklaşan tohum raporu silinmez — 30 gün kala listede) */
-    expect(Object.keys(j).sort()).toEqual(["bagli", "bayt", "durum", "firma", "hatali_firma", "kalan", "oksuz", "saklama", "silinen"]);
+    /* 2026-10-09 (432): bekleyen e-postaların yeniden denenmesi de aynı uçta, sayıları "eposta"da */
+    expect(Object.keys(j).sort()).toEqual(["bagli", "bayt", "durum", "eposta", "firma", "hatali_firma", "kalan", "oksuz", "saklama", "silinen"]);
     expect(j.durum).toBe("tamam");
     expect(j.hatali_firma).toBe(0);
     expect(j.firma).toBeGreaterThanOrEqual(2);
     const s = j.saklama as Record<string, unknown>;
     expect(Object.keys(s).sort()).toEqual(["bayt", "dosya", "durum", "firma", "hatali_firma", "kalan", "silinen"]);
     expect([s.durum, s.hatali_firma, s.silinen]).toEqual(["tamam", 0, 0]);
+    const e = j.eposta as Record<string, unknown>;
+    expect(Object.keys(e).sort()).toEqual(["bekleyen", "durum", "firma", "gonderilen", "hatali", "hatali_firma", "kalan"]);
+    expect([e.durum, e.hatali_firma]).toEqual(["tamam", 0]);
   }
 });

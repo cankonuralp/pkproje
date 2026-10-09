@@ -10,7 +10,7 @@ import { tmpdir } from "node:os";
 import { join } from "node:path";
 import { createServer } from "node:http";
 import { ornekSayfa } from "../e2e/duyuru-ornek.ts";
-import { E2E_FIRMA, E2E_GORSEL, E2E_HESAPLAR, E2E_ILK, E2E_KAPI, E2E_MUHASEBE, E2E_PAROLA, E2E_PLAN, E2E_SAHA, E2E_YONETIM, E2E_YONETIM_PROJELER, E2E_YZ, E2E_ZAMANLI_SIR } from "../e2e/hesaplar.ts";
+import { E2E_FIRMA, E2E_GORSEL, E2E_HESAPLAR, E2E_ILK, E2E_KAPI, E2E_MUHASEBE, E2E_PAROLA, E2E_PLAN, E2E_SAHA, E2E_YONETIM, E2E_YONETIM_PROJELER, E2E_YZ, E2E_ZAMANLI_SIR, E2E_EPOSTA } from "../e2e/hesaplar.ts";
 import { planKabul, planIci } from "../src/modules/planlar/server/plan-ici.ts";
 import { planAc } from "../src/modules/planlar/server/planlar.ts";
 import { raporOlustur } from "../src/modules/raporlar/server/raporlar.ts";
@@ -198,6 +198,15 @@ const yzTaklit = createServer((istek, yanit) => {
   const duyuruSayfasi = istek.method === "GET" ? ornekSayfa(istek.url ?? "") : null;
   if (duyuruSayfasi) { yanit.writeHead(200, { "content-type": "text/html; charset=utf-8" }).end(duyuruSayfasi); return; }
   let govde = ""; istek.on("data", (p) => { govde += p; }).on("end", () => {
+    /* 432: e-posta sağlayıcısının taklidi (Resend biçimi) — yalnız uydurma anahtarla ve yalnız .example alıcıya; gerçek adrese gitmez */
+    if (istek.url === "/emails") {
+      let e: { from?: unknown; to?: unknown; subject?: unknown; text?: unknown } = {};
+      try { e = JSON.parse(govde); } catch { /* boş kalır → 422 */ }
+      const tamam = istek.headers.authorization === `Bearer ${E2E_EPOSTA.anahtar}` && e.from === E2E_EPOSTA.kimden && Array.isArray(e.to) && e.to.length === 1
+        && e.to.every((x) => typeof x === "string" && x.endsWith(".example")) && typeof e.subject === "string" && typeof e.text === "string";
+      yanit.writeHead(tamam ? 200 : 422, { "content-type": "application/json" }).end(JSON.stringify(tamam ? { id: "e2e" } : { message: "taklit: geçersiz istek" }));
+      return;
+    }
     if (istek.url !== "/v1/messages" || istek.headers["x-api-key"] !== E2E_YZ.anahtar) { yanit.writeHead(401).end("{}"); return; }
     let g: { system?: unknown; messages?: { content?: unknown }[]; tool_choice?: { type?: string }; output_config?: { format?: { type?: string; schema?: { properties?: { satirlar?: { items?: { properties?: { tip?: { anyOf?: { enum?: string[] }[] } } } } } } } } };
     try { g = JSON.parse(govde); } catch { yanit.writeHead(400).end(JSON.stringify({ type: "error", error: { type: "invalid_request_error", message: "invalid json" } })); return; }
@@ -320,5 +329,6 @@ const kod = await nextCalistir("dev", {
   PROBATA_YZ_UC: `http://127.0.0.1:${yzKapi}`,   // 351: yerel Anthropic taklidi
   CRON_SECRET: E2E_ZAMANLI_SIR,   // 378: gece işi ucu (uydurma sır)
   PROBATA_DUYURU_UC: `http://127.0.0.1:${yzKapi}`,   // 379: duyuru sayfalarının yerel taklidi
+  PROBATA_EPOSTA_UC: `http://127.0.0.1:${yzKapi}/emails`, PROBATA_EPOSTA_ANAHTAR: E2E_EPOSTA.anahtar, PROBATA_EPOSTA_KIMDEN: E2E_EPOSTA.kimden,   // 432
 }, ["--hostname", "127.0.0.1", "--port", String(E2E_KAPI)]);
 await kapat(kod);

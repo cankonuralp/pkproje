@@ -23,7 +23,8 @@ import { musteriOzetleri } from "../../musteriler/server/musteriler.ts";
 import { personelOzetleri } from "../../personel/server/personel.ts";
 import { ekipmanRaporuVar, mesaiDurumu, planRaporlari, raporKunyeleriniYaz, type PlanRaporu } from "../../raporlar/server/plan-baglanti.ts";
 import { KunyeGirdisi, kodBicimi, kodNormal, NotGirdisi, RedGirdisi, YeniEkipmanGirdisi, type KodTuru, type PlanDurumu } from "../sema.ts";
-import { bugunTr, EKIP, MODUL, PLAN, PLAN_EKIPMAN, planKarti, UUID, type Kisi, type PlanKarti } from "./planlar.ts";
+import { bugunTr, EKIP, MODUL, PLAN, PLAN_EKIPMAN, planAcabilir, planKarti, UUID, type Kisi, type PlanKarti } from "./planlar.ts";
+import { kaynakEpostalari, type EpostaDurumu } from "../../../server/eposta/eposta.ts";
 
 const NOT = tablo({ ad: "plan_not", sutunlar: ["plan_id", "metin", "yazan"] });
 const EKIPMAN_MODULU = 7;
@@ -177,6 +178,8 @@ export interface PlanIci {
   mesai: { normal: number; mesai: number } | null;
   /** proje notları; göremeyene null */
   notlar: { id: string; metin: string; yazan: string; zaman: string }[] | null;
+  /** 432: plan açılınca giden e-postalar (alıcı, durum) — yalnız plan açabilene (planlama, yönetici); öteki null */
+  epostalar: EpostaDurumu[] | null;
   izin: PlanIzni;
 }
 
@@ -242,7 +245,8 @@ export async function planIci(db: Sorgulayici, kim: Kisi, id: string): Promise<P
     raporlar: duzey(kim, RAPORLAR_MODULU) === "yok" ? [] : tumRaporlar
       .filter((r) => canDo(kim, RAPORLAR_MODULU, "gor", { sahip: r.hesapId, brans: turBul.get(r.turId)?.brans ?? null }))
       .map(({ hesapId, personelId: _p, ...r }) => ({ ...r, benim: !!hesapId && hesapId === kim.id })),
-    raporluEkipman: [...new Set(tumRaporlar.map((r) => r.ekipmanId))], erken: p.baslangic > bugunTr(), mesai: m?.dolu ? { normal: m.normal, mesai: m.mesai } : null, notlar, izin,
+    raporluEkipman: [...new Set(tumRaporlar.map((r) => r.ekipmanId))], erken: p.baslangic > bugunTr(), mesai: m?.dolu ? { normal: m.normal, mesai: m.mesai } : null, notlar,
+    epostalar: planAcabilir(kim) ? await kaynakEpostalari(db, "plan", p.id) : null, izin,
   };
 }
 

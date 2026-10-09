@@ -10,6 +10,11 @@ import { yonetimAdresiMi } from "../yonetim/adres.ts";
 import { kiraciAdiCoz } from "./coz.ts";
 
 export const anaAlan = () => process.env.PROBATA_ANA_ALAN || "localhost";
+/** 432: firmanın adresi (e-postadaki bağlantılar) — istek başlığından değil, kısa ad + ana alandan (başlıkla sahte bağlantı üretilemez) */
+export const firmaAdresi = (kisaAd: string) => {
+  const a = anaAlan();
+  return `${a === "localhost" || a.endsWith(".localhost") ? "http" : "https"}://${kisaAd}.${a}`;
+};
 export interface IstekKiracisi { firmaId: string; kisaAd: string }
 
 export const istekKiracisi = cache(async (): Promise<IstekKiracisi | null> => {

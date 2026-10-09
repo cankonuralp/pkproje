@@ -4,6 +4,8 @@
 import { depo } from "../../../server/dosya/depo";
 import { ayniKoken } from "../../../server/kimlik/koken";
 import { istekOturumu, oturumIslemi } from "../../../server/kimlik/istek";
+import { firmaAdresi } from "../../../server/kiraci/istek";
+import { epostalariSonraGonder } from "../../../server/eposta/sonra";
 import {
   ekipmanPasif, ekipmanSil, kayitliEkle, kodDurumu, kontrolListesi, kunyeDuzenle, kunyeGuncelle, notEkle, planKabul, planReddet, planSil, planTamamla, tamamlamaGeriAl, yeniEkipman,
   type KodDurumu, type PlanYazma,
@@ -11,7 +13,7 @@ import {
 import { cevrimdisiPaketi, type CevrimdisiPaketi } from "../server/cevrimdisi";
 import { bugunTr, planAc, tesisPlanBilgisi, type TesisPlanBilgisi } from "../server/planlar";
 
-export interface PlanAcYaniti { tamam?: boolean; id?: string; no?: string; hatalar?: Record<string, string>; genel?: string }
+export interface PlanAcYaniti { tamam?: boolean; id?: string; no?: string; eposta?: number; hatalar?: Record<string, string>; genel?: string }
 
 async function oturum() {
   if (!(await ayniKoken())) return "İstek reddedildi. Sayfayı yenileyip yeniden deneyin.";
@@ -31,8 +33,9 @@ export async function tesisPlanBilgisiEylemi(tesisId: string): Promise<TesisPlan
 
 export async function planAcEylemi(girdi: unknown): Promise<PlanAcYaniti> {
   const o = await oturum(); if (typeof o === "string") return { genel: o };
-  const r = await oturumIslemi(o, (db) => planAc(db, depo(), o, o.kiraci.firmaId, girdi));
-  if (r.durum === "tamam") return { tamam: true, id: r.id, no: r.no };
+  const r = await oturumIslemi(o, (db) => planAc(db, depo(), o, o.kiraci.firmaId, girdi, { kok: firmaAdresi(o.kiraci.kisaAd) }));
+  /* 432: kuyruğa yazılan e-postalar yanıttan sonra gönderilir (plan açan beklemez) */
+  if (r.durum === "tamam") { if (r.eposta) epostalariSonraGonder(o.kiraci.firmaId, "plan", r.id); return { tamam: true, id: r.id, no: r.no, eposta: r.eposta ?? 0 }; }
   if (r.durum === "gecersiz") return { hatalar: r.hatalar };
   return { genel: "Plan açma yetkiniz yok." };
 }

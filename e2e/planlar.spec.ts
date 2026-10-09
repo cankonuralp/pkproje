@@ -35,6 +35,19 @@ test("plan aç: engel, canlı uyarılar, proje no ve künye; denetçi yalnız ke
   await page.getByRole("textbox", { name: denetci }).fill(isgNo);
   await expect(page.getByText(`${denetci} — uyarı: EKİPNET kayıt numarası yok.`)).toBeVisible();
 
+  /* 432: bilgilendirme — ekibe e-posta kendiliğinden; başkası elle yazılır (biçim denetlenir) ya da listeden seçilir */
+  const bilgiEposta = `bilgi-${bilgi.project.name}-${bilgi.retry}@deneme.example`;
+  await expect(page.getByText("Plan açılınca ekipteki denetçilere e-posta kendiliğinden gider (1 kişi).", { exact: false })).toBeVisible();
+  const epostaGirdi = page.getByRole("textbox", { name: "E-posta ekle" });
+  await epostaGirdi.fill("yanlis-adres");
+  await page.getByRole("button", { name: "Ekle", exact: true }).click();
+  await expect(page.getByText("Geçerli bir e-posta adresi yazın.")).toBeVisible();
+  await epostaGirdi.fill(bilgiEposta);
+  await epostaGirdi.press("Enter");
+  const liste = page.getByRole("list", { name: "Bilgilendirilecekler" });
+  await expect(liste).toContainText(bilgiEposta);
+  await expect(page.getByText("Geçerli bir e-posta adresi yazın.")).toHaveCount(0);
+
   /* aç → plan sayfası: sunucunun verdiği proje no, künye kayıttan, ID planda */
   await page.getByRole("button", { name: "Planı aç" }).click();
   await expect(page).toHaveURL(/\/planlar\/[0-9a-f-]{36}$/, { timeout: 30_000 });
@@ -46,6 +59,13 @@ test("plan aç: engel, canlı uyarılar, proje no ve künye; denetçi yalnız ke
   await expect(page.getByText("Deneme Cad. No 1, Gebze / Kocaeli")).toBeVisible();
   await expect(page.getByText(isgNo)).toBeVisible();
   await expect(page.getByRole("row", { name: /Hava tankı\s+Periyodik kontrol\s+2/ })).toBeVisible();
+  /* 432: e-postalar yanıttan sonra gönderilir (sağlayıcı taklidi) — plan sayfasında alıcı başına durum */
+  const epostalar = page.getByRole("region", { name: "Bilgilendirme e-postaları" });
+  await expect(async () => {
+    await page.reload();
+    await expect(epostalar).toContainText(bilgiEposta, { timeout: 5_000 });
+    await expect(epostalar).toContainText("2 / 2 gönderildi", { timeout: 5_000 });
+  }).toPass({ timeout: 60_000 });
 
   /* denetçi: Plan aç yok, form yetkisiz, içinde olduğu planı görür */
   await context.clearCookies();

@@ -2355,6 +2355,13 @@ revizyon, alan kopyalama, hafif kusur devri, meslek eşleşme denetimi).
 - Emsal ürünler: https://opwire.app/iso-17020-periyodik-kontrol-yazilimi/ · https://17020muayene.vidco.com.tr/ · https://akuple.com/asansor-kontrol-yazilimi/ · https://ensyazilim.com/
 
 ## 11 · Değişiklik günlüğü
+- 2026-10-09 (432): **Plan açılınca e-posta** (reisim: *"Plan açıldığında planın açıldığı denetçilere otomatik mail gidecek gerekirse bilgilendirme
+  kısmına elle ya da listeden mail girilebilecek"* — anayasa 1.3: bildirimi reisim açtı). Plan aç'ta "4 · Bilgilendirme (e-posta)": ekipteki
+  denetçilere kendiliğinden gider; başka alıcı elle yazılır (biçim denetlenir) ya da listeden seçilir (firmanın açık hesapları + tesisin müşterisinin
+  e-postası); en çok 20. Alıcı başına bir e-posta (alıcılar birbirini görmez), plan açılırken aynı işlemde kuyruğa (göç 0077 `eposta`; metin değişmez,
+  silinmez), yanıttan sonra gönderilir, gece işi bekleyenleri yeniden dener (kalıcı ret ya da 5 deneme → "Gönderilemedi"). Ekibe "planı gör, kabul /
+  reddet" bağlantısı, bilgilendirilene yalnız bilgi. Plan sayfasında (planlama / yönetici) "Bilgilendirme e-postaları": alıcı, durum, zaman / neden.
+  **Sağlayıcı hesabı yok (KOD-GECIS Y4):** anahtar girilene dek e-postalar "Bekliyor — e-posta servisi kurulmadı" kalır, kaybolmaz.
 - 2026-10-09 (431): **Rapor aşama çizgisi + genel muayene talimatı** (reisim, örnek görselle: *"raporların hangi aşamada oldukları gözüksün ayrıca
   sağ üstte uygun bir yerde ünlem işareti olacak ve genel muayene talimatı oradan görünebilecek"*). Saha rapor ekranında ve onay ekranında başlığın
   altında beş adım: Yeni → Teknik yönetici onayında → Muayene uzmanı imzası → İmzaya gönderildi → Tamamlandı (geçilen işaretli, şimdiki vurgulu;

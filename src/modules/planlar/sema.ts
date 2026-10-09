@@ -2,7 +2,7 @@
    Uyarılar ENGEL DEĞİL (genel ilke, reisim 38–39; L2 İSG-KATİP de uyarı): plan açılır, uyarılar planın üstünde yazar. Engel yalnız veri bütünlüğü:
    tesis, geçerli tarih, bitiş ≥ başlangıç, en az bir denetçi. Uyarı hesabı SAF (istemci formda canlı, sunucu plan sayfasında aynı sonuç). */
 import { meslek, yetkiliOlabilir } from "../personel/sema.ts";
-import { tarih, z } from "../../sema/ortak.ts";
+import { eposta, tarih, z } from "../../sema/ortak.ts";
 
 const UUID = /^[0-9a-f]{8}-[0-9a-f]{4}-[0-9a-f]{4}-[0-9a-f]{4}-[0-9a-f]{12}$/;
 const kirp = (s: unknown) => (typeof s === "string" ? s.trim().replace(/\s+/g, " ") : s);
@@ -20,9 +20,12 @@ export const PlanAcGirdisi = z.object({
     isgNo: z.preprocess(bos, z.string().max(30, "İSG-KATİP SÖZLEŞME ID en çok 30 karakter.").nullable()),
     kaydet: z.boolean().default(false),
   }), { error: "En az bir denetçi seçilmeli." }).min(1, "En az bir denetçi seçilmeli.").max(20, "En çok 20 denetçi."),
+  /* 432: plan açılınca ekipteki denetçilere e-posta kendiliğinden gider; bilgilendirme listesindekilere de (elle ya da listeden; en çok 20) */
+  bilgilendirme: z.array(eposta).max(20, "En çok 20 e-posta.").default([]),
 }).superRefine((p, bag) => {
   if (tarih.safeParse(p.baslangic).success && tarih.safeParse(p.bitis).success && p.bitis < p.baslangic) bag.addIssue({ code: "custom", path: ["bitis"], message: "Bitiş başlangıçtan önce olamaz." });
   if (new Set(p.ekip.map((e) => e.personel)).size !== p.ekip.length) bag.addIssue({ code: "custom", path: ["ekip"], message: "Aynı denetçi iki kez seçilmiş." });
+  if (new Set(p.bilgilendirme).size !== p.bilgilendirme.length) bag.addIssue({ code: "custom", path: ["bilgilendirme"], message: "Aynı e-posta iki kez yazılmış." });
 });
 export type PlanAcGirdisi = z.output<typeof PlanAcGirdisi>;
 
@@ -178,4 +181,23 @@ export function akisAdimlari(d: PlanDurumu, kontrolTamam: boolean): [AdimDurumu,
     d === "tamamlandi" || kt ? "tamam" : d === "kabul" || d === "denetimde" ? "aktif" : "bekliyor",
     d === "tamamlandi" ? "tamam" : kt ? "aktif" : "bekliyor",
   ];
+}
+
+/* ── PLAN E-POSTASI (432; saf) — plan açılınca ekipteki denetçilere ve bilgilendirme listesine giden metin (alıcı başına bir e-posta). Düz metin;
+   iç bilgi (kimlik, ID) yok, bağlantı oturum ister. Ekip için "kabul / red" çağrısı, bilgilendirilene yalnız bilgi. */
+export interface PlanEpostaBilgisi {
+  firma: string; no: string; musteri: string; tesis: string; adres: string | null; baslangic: string; bitis: string; ekip: string[]; aciklama: string | null;
+  baglanti: string | null; ekipten: boolean;
+}
+export function planEpostasi(p: PlanEpostaBilgisi): { konu: string; govde: string } {
+  const tarihler = p.baslangic === p.bitis ? tarihNo(p.baslangic) : `${tarihNo(p.baslangic)} – ${tarihNo(p.bitis)}`;
+  const satirlar = [
+    "Merhaba,", "",
+    p.ekipten ? `${p.firma} sizin için yeni bir periyodik kontrol planı açtı.` : `${p.firma} yeni bir periyodik kontrol planı açtı; bilginize sunulur.`, "",
+    `Plan: ${p.no}`, `Müşteri / tesis: ${p.musteri} · ${p.tesis}`, ...(p.adres ? [`Adres: ${p.adres}`] : []), `Tarih: ${tarihler}`,
+    `Ekip: ${p.ekip.join(", ") || "-"}`, ...(p.aciklama ? [`Açıklama: ${p.aciklama}`] : []), "",
+    ...(p.baglanti ? [p.ekipten ? `Planı görmek, kabul ya da reddetmek için: ${p.baglanti}` : `Planı uygulamada görmek için (hesabınız varsa): ${p.baglanti}`, ""] : []),
+    "Bu e-posta probata tarafından kendiliğinden gönderildi; yanıtlamayın.",
+  ];
+  return { konu: `${p.ekipten ? "Yeni plan" : "Bilgi: yeni plan"} ${p.no} · ${p.tesis} · ${tarihler}`.slice(0, 300), govde: satirlar.join("\n") };
 }

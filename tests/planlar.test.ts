@@ -12,6 +12,9 @@ import { havuzKur, kiraciIcinde, type Havuz, type Sorgulayici } from "../src/ser
 import { klasorDepo } from "../src/server/dosya/depo.ts";
 import { bugunTr, planAc, planAcVerisi, planKarti, tesisPlanBilgisi, type Kisi } from "../src/modules/planlar/server/planlar.ts";
 import { MATRIS_ONERI } from "../src/server/yetki/tanim.ts";
+import { planIci, planKabul } from "../src/modules/planlar/server/plan-ici.ts";
+import { bekleyenleriGonder } from "../src/server/eposta/gonder.ts";
+import { SAGLAYICI_YOK, type EpostaSaglayici } from "../src/server/eposta/saglayici.ts";
 import { testKumesi } from "./yardimci/kume.ts";
 
 let kume: GomuluKume;
@@ -187,4 +190,52 @@ test("EKİPMAN KODU: firmada eşsiz; değiştirilen eski kod başkasına verilme
   const k = (await a(FA.plan, (db) => planKarti(db, FA.plan, r.id)))!;
   assert.deepEqual(k.kapsam.map((y) => [y.tur.ad, y.ekipman, y.geliyor]), [["Hava tankı", 1, 1]]);
   assert.equal(k.ekipman, 1);
+});
+
+/* 2026-10-09 (432; reisim: "Plan açıldığında planın açıldığı denetçilere otomatik mail gidecek gerekirse bilgilendirme kısmına elle ya da listeden
+   mail girilebilecek"): plan açılırken ekipteki denetçilerin giriş e-postasına ve bilgilendirme listesine ALICI BAŞINA bir e-posta aynı işlemde
+   kuyruğa (göç 0077); bozuk / tekrarlı adres reddedilir, ekipte olan bilgilendirmede tekrar edilmez; başka firma göremez; plan sayfasında yalnız plan
+   açabilen görür. Gönderim: sağlayıcı yoksa bekler (nedeniyle), kalıcı ret "hata", geçici hata 5 denemede "hata". Metin değişmez, kayıt silinmez. */
+test("432 plan e-postası: ekip + bilgilendirme alıcı başına kuyrukta; bozuk adres reddedilir; başka firma görmez; gönderim sonucu yazılır; metin değişmez", async () => {
+  const ac = (girdi: object, kok?: string) => a(FA.plan, (db) => planAc(db, depo, FA.plan, A, { tesis: FA.tesis, baslangic: bugun, bitis: gunEkle(1), ...girdi }, { kok }));
+  assert.equal((await ac({ ekip: [{ personel: FA.den1P }], bilgilendirme: ["yanlis"] })).durum, "gecersiz", "bozuk adres");
+  assert.equal((await ac({ ekip: [{ personel: FA.den1P }], bilgilendirme: ["x@deneme.example", "X@Deneme.example"] })).durum, "gecersiz", "aynı adres iki kez");
+  const r = tamam(await ac({ ekip: [{ personel: FA.den1P }, { personel: FA.den2P }], bilgilendirme: ["Musteri@Deneme.example", "den1@deneme-a.example"] },
+    "https://deneme-a.probata.example"));
+  assert.equal(r.eposta, 3, "den1, den2 (ekip) + müşteri; ekipteki den1 bilgilendirmede tekrar etmez");
+  const l = (await sql<{ kime: string; konu: string; govde: string; durum: string }>(A,
+    "SELECT kime, konu, govde, durum FROM eposta WHERE kaynak = 'plan' AND kaynak_id = $1 ORDER BY kime", [r.id])).rows;
+  assert.deepEqual(l.map((x) => [x.kime, x.durum]), [["den1@deneme-a.example", "bekliyor"], ["den2@deneme-a.example", "bekliyor"], ["musteri@deneme.example", "bekliyor"]]);
+  assert.match(l[0].konu, new RegExp(`^Yeni plan ${r.no} · Merkez · `));
+  assert.ok(l[0].govde.includes(`kabul ya da reddetmek için: https://deneme-a.probata.example/planlar/${r.id}`), l[0].govde);
+  assert.ok(l[2].konu.startsWith("Bilgi: yeni plan") && l[2].govde.includes("bilginize sunulur"));
+  assert.ok(!l.some((x) => x.govde.includes(FA.den1P)), "iç kimlik e-postaya girmez");
+  assert.deepEqual((await sql<{ b: string[] }>(A, "SELECT bilgilendirme AS b FROM plan WHERE id = $1", [r.id])).rows[0].b, ["musteri@deneme.example", "den1@deneme-a.example"]);
+  assert.equal((await sql(B, "SELECT 1 FROM eposta WHERE kaynak_id = $1", [r.id])).rowCount, 0, "başka firma görmez");
+  assert.equal((await a(FA.plan, (db) => planIci(db, FA.plan, r.id)))!.epostalar!.length, 3);
+  tamam(await a(FA.den1, async (db) => planKabul(db, FA.den1, r.id, (await planIci(db, FA.den1, r.id))!.surum, true)));
+  assert.equal((await a(FA.den1, (db) => planIci(db, FA.den1, r.id)))!.epostalar, null, "denetçi e-posta listesini görmez");
+
+  /* sağlayıcı yok: bekler, nedeni yazılır (bir kez) */
+  const gonder = (s: EpostaSaglayici | null) => kiraciIcinde(havuz, A, (db) => bekleyenleriGonder(db, s, { kaynak: "plan", kaynakId: r.id }));
+  assert.deepEqual(await gonder(null), { gonderilen: 0, bekleyen: 3, hatali: 0 });
+  assert.ok((await sql<{ son_hata: string }>(A, "SELECT son_hata FROM eposta WHERE kaynak_id = $1", [r.id])).rows.every((x) => x.son_hata === SAGLAYICI_YOK));
+  /* sahte sağlayıcı: den1 gider, den2 kalıcı ret, müşteri geçici hata → 5. denemede hata */
+  const giden: string[] = [];
+  const sahte: EpostaSaglayici = { async gonder(e) {
+    giden.push(e.kime);
+    return e.kime.startsWith("den1") ? { tamam: true } : e.kime.startsWith("den2") ? { tamam: false, neden: "Sağlayıcı reddetti (HTTP 422).", kalici: true }
+      : { tamam: false, neden: "Sağlayıcı 10 sn'de yanıt vermedi.", kalici: false };
+  } };
+  assert.deepEqual(await gonder(sahte), { gonderilen: 1, bekleyen: 1, hatali: 1 });
+  for (let i = 0; i < 4; i++) await gonder(sahte);
+  const son = (await sql<{ kime: string; durum: string; deneme: number; gonderildi: Date | null }>(A,
+    "SELECT kime, durum, deneme, gonderildi FROM eposta WHERE kaynak_id = $1 ORDER BY kime", [r.id])).rows;
+  assert.deepEqual(son.map((x) => [x.kime.slice(0, 4), x.durum, x.deneme, !!x.gonderildi]), [["den1", "gonderildi", 1, true], ["den2", "hata", 1, false], ["must", "hata", 5, false]]);
+  assert.equal(giden.filter((x) => x.startsWith("den1")).length, 1, "gönderilen ikinci kez gitmez");
+
+  /* metin değişmez, gönderilmiş geri alınmaz, kayıt silinmez (veritabanı tetiği) */
+  await assert.rejects(sql(A, "UPDATE eposta SET konu = 'değişti' WHERE kaynak_id = $1", [r.id]), /değişmez/);
+  await assert.rejects(sql(A, "UPDATE eposta SET durum = 'bekliyor', gonderildi = NULL WHERE kaynak_id = $1 AND durum = 'gonderildi'", [r.id]), /geri alınmaz/);
+  await assert.rejects(sql(A, "DELETE FROM eposta WHERE kaynak_id = $1", [r.id]), /silinmez|permission denied/);
 });

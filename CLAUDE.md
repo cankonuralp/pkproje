@@ -244,6 +244,9 @@ pkproje/
                             cevaplar) · rapor-ozeti.ts (384, saf: yapay zekâya yalnız formatın adları / seçenekler / sayılar) · raporlar/server/say-baglanti.ts
                             (raporSayBilgisi: yalnız yazanın Yeni raporu) · ui/eylemler.ts · çekirdek
                             src/server/yz/say.ts (istek: önbellekli talimat + bağlam, cevap çözme; saf) + sohbet.ts (geçmiş; göç 0071 yz_sohbet)
+  src/server/eposta/        E-POSTA (432; göç 0077): eposta.ts kuyruk (alıcı başına bir satır; metin değişmez, silinmez) · saglayici.ts tek bağdaştırıcı
+                            (Resend biçimi HTTP; PROBATA_EPOSTA_ANAHTAR / _KIMDEN / _UC — yoksa bekler) · gonder.ts bekleyenleriGonder · sonra.ts (after) ·
+                            gece işi epostaIsi yeniden dener. İlk kullanım: plan açılınca ekip + bilgilendirme (planlar planAc, sema planEpostasi)
   src/server/islem/         TEK SEFERLİK İŞLEM (392; 09-D2, çevrimdışı kuyruk): islem.ts tekSeferlik (kimliğe danışma kilidi, iş + sonuç aynı veritabanı
                             işleminde; göç 0076 islem) · yazan.ts (işi yazanın etiketi — kimlik tarayıcıya gitmez) · uç src/app/api/islem (köken, oturum,
                             yazan kapıları) · iş türleri modülde: raporlar/server/islem-baglanti.ts

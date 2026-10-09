@@ -49,6 +49,8 @@ export const E2E_YZ = {
 } as const;
 /* gece işi (378): uçtan uca sunucunun zamanlayıcı sırrı — UYDURMA, yalnız geçici test sunucusunda (yayında Vercel ortam değişkeni CRON_SECRET) */
 export const E2E_ZAMANLI_SIR = "e2e-zamanli-is-sirri-uydurma-0000000001";
+/** 432: e-posta sağlayıcısının yerel taklidi (scripts/e2e-sunucu.ts; PROBATA_EPOSTA_UC) — uydurma anahtar, gerçek sağlayıcıya istek gitmez */
+export const E2E_EPOSTA = { anahtar: "e2e-eposta-anahtari-uydurma-0001", kimden: "probata <bildirim@probata.example>" };
 /* yönetim (348): yönetim adresi ve uydurma yöneticiler (yalnız geçici test veritabanı). Doğrulama anahtarı uydurma Base32; test kodu onunla üretir.
    347–348 incelemesi: üç genişlik tek sunucuda da koşabilsin (yerelde `npm run test:e2e`) — her proje KENDİ "ilk" ve kurulmuş yöneticisini ve kendi
    açacağı firmayı kullanır (E2E_ILK gibi); kurulmuş yönetici de proje başına (aynı zaman adımındaki kod yeniden oynatma sayılmasın). */

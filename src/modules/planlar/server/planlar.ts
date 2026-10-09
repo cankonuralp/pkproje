@@ -18,16 +18,19 @@ import { turOzetleri } from "../../ekipman-turleri/server/turler.ts";
 import { musteriOzetleri } from "../../musteriler/server/musteriler.ts";
 import { atamaHaritasi } from "../../personel/server/dosyalar.ts";
 import { denetciAdaylari, personelOzetleri } from "../../personel/server/personel.ts";
-import { personelHesaplari } from "../../../server/kimlik/hesap.ts";
+import { epostaRehberi, personelHesaplari } from "../../../server/kimlik/hesap.ts";
+import { firmaBelgeKunyesi } from "../../../server/ayar/ayar.ts";
+import { epostaKuyruga } from "../../../server/eposta/eposta.ts";
+import { tesisMusteriIletisim } from "../../musteriler/server/musteriler.ts";
 import { isgKaydet, isgKullanildi, sozlesmeDegistirir, tesisIsgKayitlari, tesisSozlesmeleri } from "../../sozlesmeler/server/sozlesmeler.ts";
 import {
-  adayUyarilari, isgDurumu, kapsamHesapla, PlanAcGirdisi, sozlesmeUyarisi, turUyarilari,
+  adayUyarilari, isgDurumu, kapsamHesapla, PlanAcGirdisi, planEpostasi, sozlesmeUyarisi, turUyarilari,
   type AcikPlan, type Aday, type IsgKaydi, type KapsamSatiri, type PlanDurumu, type Tur,
 } from "../sema.ts";
 
 export const MODUL = 13;
 export const PLAN = tablo({ ad: "plan", sutunlar: ["no", "tesis_id", "baslangic", "bitis", "aciklama", "durum", "firma_adi", "adres", "sgk", "acan",
-  "beyan", "kabul_eden", "red_eden", "red_gerekce", "kontrol_tamam", "kunye_surum"] });
+  "beyan", "kabul_eden", "red_eden", "red_gerekce", "kontrol_tamam", "kunye_surum", "bilgilendirme"] });
 export const EKIP = tablo({ ad: "plan_ekip", sutunlar: ["plan_id", "personel_id", "isg_no", "isg_id", "kunye_surum", "gorulen"] });
 export const PLAN_EKIPMAN = tablo({ ad: "plan_ekipman", sutunlar: ["plan_id", "ekipman_id", "sonradan", "ekleyen"] });
 export const UUID = /^[0-9a-f]{8}-[0-9a-f]{4}-[0-9a-f]{4}-[0-9a-f]{4}-[0-9a-f]{12}$/;
@@ -40,7 +43,7 @@ export interface Kisi extends YetkiHesabi { ad: string }
 export const planAcabilir = (kim: YetkiHesabi) => canDoEylem(kim, "plan_ac");
 
 export type Yazma =
-  | { durum: "tamam"; id: string; no: string }
+  | { durum: "tamam"; id: string; no: string; eposta?: number }
   | { durum: "gecersiz"; hatalar: DogrulamaHatalari }
   | { durum: "yetkisiz" };
 
@@ -49,6 +52,8 @@ export interface PlanAcVerisi {
   adaylar: Aday[]; turler: Tur[]; atamalar: Record<string, string[]>; acikPlanlar: AcikPlan[]; esik: number; bugun: string;
   /** "sözleşmeye de kaydet" gösterilir mi (Sözleşmeler "yaz") */
   isgYazar: boolean;
+  /** 432: bilgilendirme listesi için firmanın açık hesapları (ad + e-posta) */
+  rehber: { ad: string; eposta: string }[];
 }
 
 export async function acikPlanlar(db: Sorgulayici): Promise<AcikPlan[]> {
@@ -67,7 +72,7 @@ export async function planAcVerisi(db: Sorgulayici, kim: Kisi): Promise<PlanAcVe
   return {
     musteriler, adaylar: await denetciAdaylari(db), turler: (await turOzetleri(db)).map(({ id, ad, brans, grup, periyot }) => ({ id, ad, brans, grup, periyot })),
     atamalar: await atamaHaritasi(db), acikPlanlar: await acikPlanlar(db), esik: (await ayarOku(db, "uyari_esikleri")).deger.plan_kontrolu_geliyor,
-    bugun: bugunTr(), isgYazar: sozlesmeDegistirir(kim),
+    bugun: bugunTr(), isgYazar: sozlesmeDegistirir(kim), rehber: await epostaRehberi(db),
   };
 }
 
@@ -76,6 +81,8 @@ export interface TesisPlanBilgisi {
   ekipmanlar: { turId: string; sonKontrol: string | null; pasif: boolean }[];
   /** "sözleşmeye de kaydet" için bugün yürürlükte iş sözleşmesi var mı */
   yururlukte: boolean;
+  /** 432: bilgilendirme listesi önerisi — tesisin müşterisinin e-postası */
+  musteriEposta: string | null;
 }
 
 /** tesis seçilince: İSG-KATİP ID'leri, iş sözleşmeleri, ekipmanı; plan açamayana ya da tesis yoksa null */
@@ -87,11 +94,13 @@ export async function tesisPlanBilgisi(db: Sorgulayici, kim: Kisi, tesisId: stri
     isg: await tesisIsgKayitlari(db, tesisId), sozlesmeler: soz.map(({ no, baslangic, bitis }) => ({ no, baslangic, bitis })),
     ekipmanlar: (await tesisEkipmanlari(db, tesisId)).map((e) => ({ turId: e.turId, sonKontrol: e.disKontrol, pasif: e.pasif })),
     yururlukte: soz.some((s) => s.baslangic <= bugun && s.bitis >= bugun),
+    musteriEposta: (await tesisMusteriIletisim(db, tesisId))?.eposta ?? null,
   };
 }
 
-/** planı aç: denetim → numara → plan + ekip (+ sözleşmeye kaydedilen ID) aynı işlemde */
-export async function planAc(db: Sorgulayici, depo: Depo, kim: Kisi, firmaId: string, girdi: unknown): Promise<Yazma> {
+/** planı aç: denetim → numara → plan + ekip (+ sözleşmeye kaydedilen ID) aynı işlemde. 432: ekipteki denetçilere ve bilgilendirme listesine
+    e-posta aynı işlemde kuyruğa yazılır (gönderim yanıttan sonra — src/server/eposta); kok: firmanın adresi (e-postadaki plan bağlantısı) */
+export async function planAc(db: Sorgulayici, depo: Depo, kim: Kisi, firmaId: string, girdi: unknown, secenek: { kok?: string } = {}): Promise<Yazma> {
   if (!planAcabilir(kim)) return { durum: "yetkisiz" };
   const g = dogrula(PlanAcGirdisi, girdi);
   if (!g.tamam) return { durum: "gecersiz", hatalar: g.hatalar };
@@ -114,8 +123,8 @@ export async function planAc(db: Sorgulayici, depo: Depo, kim: Kisi, firmaId: st
   const onek = (await ayarOku(db, "numara")).deger.proje;
   const no = await numaraAl(db, "proje", { onek });
   const adres = [t.adres, [t.ilce, t.il].filter(Boolean).join(" / ")].filter(Boolean).join(", ") || null;
-  const p = await ekle(db, PLAN, { no, tesis_id: v.tesis, baslangic: v.baslangic, bitis: v.bitis, aciklama: v.aciklama, durum: "bekliyor", firma_adi: m.unvan, adres, sgk: t.sgk, acan: kim.ad },
-    { kim: kim.ad, ne: "plan.ac", gerekce: no });
+  const p = await ekle(db, PLAN, { no, tesis_id: v.tesis, baslangic: v.baslangic, bitis: v.bitis, aciklama: v.aciklama, durum: "bekliyor", firma_adi: m.unvan, adres, sgk: t.sgk, acan: kim.ad,
+    bilgilendirme: v.bilgilendirme }, { kim: kim.ad, ne: "plan.ac", gerekce: no });
   for (const e of v.ekip) {
     let kayit = isg.find((x) => x.personelId === e.personel);
     if (!kayit && e.isgNo && e.kaydet) {
@@ -130,7 +139,19 @@ export async function planAc(db: Sorgulayici, depo: Depo, kim: Kisi, firmaId: st
   for (const e of (await tesisEkipmanlari(db, v.tesis)).filter((x) => !x.pasif)) {
     await ekle(db, PLAN_EKIPMAN, { plan_id: p.id, ekipman_id: e.id, sonradan: false, ekleyen: kim.ad }, { kim: kim.ad, ne: "plan.ekipman", gerekce: no });
   }
-  return { durum: "tamam", id: p.id, no };
+  /* 432 (reisim 2026-10-09: "Plan açıldığında planın açıldığı denetçilere otomatik mail gidecek gerekirse bilgilendirme kısmına elle ya da listeden
+     mail girilebilecek"): ekipteki denetçilerin giriş e-postasına ve bilgilendirme listesine; alıcı başına bir e-posta, aynı işlemde kuyruğa */
+  const hesap = await personelHesaplari(db, v.ekip.map((e) => e.personel));
+  const ekipAd = v.ekip.map((e) => adaylar.find((a) => a.id === e.personel)?.ad ?? "");
+  const ekipEposta = v.ekip.map((e) => hesap.get(e.personel)?.eposta).filter((x): x is string => !!x);
+  const ortak = { firma: (await firmaBelgeKunyesi(db, null)).ad, no, musteri: m.kisa, tesis: t.ad, adres, baslangic: v.baslangic, bitis: v.bitis, ekip: ekipAd.filter(Boolean),
+    aciklama: v.aciklama, baglanti: secenek.kok ? `${secenek.kok}/planlar/${p.id}` : null };
+  const iz = { kim: kim.ad, ne: "plan.eposta", gerekce: no };
+  const e1 = planEpostasi({ ...ortak, ekipten: true });
+  await epostaKuyruga(db, { kime: ekipEposta, konu: e1.konu, govde: e1.govde, kaynak: "plan", kaynakId: p.id }, iz);
+  const e2 = planEpostasi({ ...ortak, ekipten: false });
+  const bilgi = await epostaKuyruga(db, { kime: v.bilgilendirme.filter((x) => !ekipEposta.includes(x)), konu: e2.konu, govde: e2.govde, kaynak: "plan", kaynakId: p.id }, iz);
+  return { durum: "tamam", id: p.id, no, eposta: ekipEposta.length + bilgi.length };
 }
 
 export interface PlanKarti {
