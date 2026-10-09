@@ -69,8 +69,8 @@ function Tus({ ikon, ad, onClick, disabled = false, basili }: { ikon: string; ad
   );
 }
 /** "+ … ekle" (kâğıtta yerinde) */
-function Ekle({ ad, onClick }: { ad: string; onClick: () => void }) {
-  return <button type="button" className={k.ekle} onClick={onClick}><Ikon ad="plus" kucuk />{ad}</button>;
+function Ekle({ ad, onClick, erisimAdi }: { ad: string; onClick: () => void; erisimAdi?: string }) {
+  return <button type="button" className={k.ekle} aria-label={erisimAdi} onClick={onClick}><Ikon ad="plus" kucuk />{ad}</button>;
 }
 const Kilit = () => <span className={k.kilitIkon} title="Bakanlık alanı · değişmez"><Ikon ad="lock" kucuk /><span className="gizli">Bakanlık alanı</span></span>;
 
@@ -196,7 +196,7 @@ export function Kagit({ t, degis, tur, bolumuSil, bildir }: KagitOzellik) {
                     </tr>
                   ))}
                   <tr className={k.ekleSatir}><td /><td colSpan={2}>
-                    <Ekle ad={cok ? `Madde ekle (${g.ad || `${gi + 1}. grup`})` : "Madde ekle"} onClick={() => maddeKoy(i, g.id)} />
+                    <Ekle ad="Madde ekle" erisimAdi={cok ? `Madde ekle (${g.ad || `${gi + 1}. grup`})` : undefined} onClick={() => maddeKoy(i, g.id)} />
                   </td></tr>
                 </Fragment>;
               })}

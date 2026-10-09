@@ -39,13 +39,13 @@
 /* "+ … ekle": kâğıtta yerinde, kesik çizgili */
 .ekle {
   display: inline-flex; align-items: center; gap: 4px; min-height: 30px; padding: 2px 10px; margin: 2px 0;
-  border: 1px dashed #6d88b8; border-radius: 4px; background: #f4f7fb; color: #1e3a6e; font: inherit; font-weight: 700; text-transform: none; cursor: pointer;
+  border: 1px dashed #6d88b8; border-radius: 4px; background: #f4f7fb; color: #1e3a6e; font: inherit; font-weight: 700; text-transform: none; white-space: nowrap; cursor: pointer;
 }
 .ekle:hover { background: #e3ebf7; border-style: solid; }
 .ekle:focus-visible { outline: 2px solid #1d4ed8; outline-offset: 1px; }
 @media (pointer: coarse) { .ekle { min-height: 40px; } }
 .kagit .ekleSatir td { border-style: dashed; background: #fbfcfe; }
-.kagit .ekleSutun { width: 74px; border-style: dashed; background: #fbfcfe; text-align: center; }
+.kagit .ekleSutun { width: 92px; border-style: dashed; background: #fbfcfe; text-align: center; }
 .altSatir { display: flex; flex-wrap: wrap; align-items: center; gap: 6px 12px; margin: -6px 0 10px; }
 .altNot { margin: -6px 0 10px; font-size: 10px; color: #3d3d3d; }
 
