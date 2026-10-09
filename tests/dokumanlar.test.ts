@@ -14,6 +14,7 @@ import { dosyaIndirilebilir } from "../src/server/dosya/dosya.ts";
 import { DOSYA_ERISIMI } from "../src/server/dosya/erisim.ts";
 import { dokumanKaldir, dokumanKaydet, dokumanListesi, DosyaHatasi, guncelStandartlar, standartKaldir, standartKarti, standartListesi, standartYukle, type Kisi }
   from "../src/modules/dokumanlar/server/dokumanlar.ts";
+import { SABLONLAR } from "../src/format/sablonlar.ts";
 import { KRITER_BELGELERI } from "../src/tanim/kriterler.ts";
 import { testKumesi } from "./yardimci/kume.ts";
 
@@ -51,8 +52,11 @@ before(async () => {
 });
 after(async () => { await havuz?.end(); await kume?.durdur(); rmSync(klasor, { recursive: true, force: true }); });
 
-test("kriter belgeleri kodda: iki belge, maddeler ve notlar dolu", () => {
-  assert.deepEqual(KRITER_BELGELERI.map((x) => x.kod), ["ZPKK01", "ZPKK02"]);
+/* 2026-10-09 (427): Bakanlık elektrik tarafının zorunlu formatları — ZPKK03 yıldırımdan korunma, ZPKK04 yangın algılama, ZPKK05 trafo eklendi;
+   her belgenin rapor formatı kitaplıkta hazır şablon olarak var */
+test("kriter belgeleri kodda: beş belge, maddeler ve notlar dolu, rapor formatı kitaplıkta", () => {
+  assert.deepEqual(KRITER_BELGELERI.map((x) => x.kod), ["ZPKK01", "ZPKK02", "ZPKK03", "ZPKK04", "ZPKK05"]);
+  for (const x of KRITER_BELGELERI) assert.ok(Object.hasOwn(SABLONLAR, x.rapor), `${x.kod}: ${x.rapor} şablonu yok`);
   assert.ok(KRITER_BELGELERI.every((x) => x.maddeler.length > 5 && x.notlar.length > 0 && x.maddeler.every((m) => m.no && m.baslik && m.icerik)));
 });
 

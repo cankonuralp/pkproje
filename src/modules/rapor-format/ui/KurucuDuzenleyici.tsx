@@ -214,17 +214,18 @@ export function SonucAciklamasi({ t, i, b, degis }: { t: FormatTanimi; i: number
     uygula={(s) => degis({ ...t, bolumler: t.bolumler.map((x, j) => (j === i && x.blok === "sonuc" ? { ...x, aciklama: s.slice(0, 4000) } : x)) })} />;
 }
 
+const GID = { formKodu: "kb-formkodu", baslik: "kb-belgeadi" } as const;
 /** görünüm: form kodu, başlık, metot ve kapsam, genel muayene talimatı (Bakanlık formatında kod ve başlık değişmez) */
 export function GorunumDuzenleyici({ t, degis }: { t: FormatTanimi; degis: (y: FormatTanimi) => void }) {
   const resmi = resmiFormat(t);
   return (
     <div className={stil.duzenleyici}>
       <FormIzgara>
-        <Alan id="kb-formkodu" etiket="Form kodu" sonuc={resmi ? "Bakanlık formatı: değişmez." : "Boşsa firma kodundan üretilir."}>
-          <Girdi id="kb-formkodu" value={t.gorunum.formKodu} maxLength={20} disabled={resmi} mesajli onChange={(e) => degis(gorunumYaz(t, { formKodu: e.target.value }))} />
+        <Alan id={GID.formKodu} etiket="Form kodu" sonuc={resmi ? "Bakanlık formatı: değişmez." : "Boşsa firma kodundan üretilir."}>
+          <Girdi id={GID.formKodu} value={t.gorunum.formKodu} maxLength={20} disabled={resmi} mesajli onChange={(e) => degis(gorunumYaz(t, { formKodu: e.target.value }))} />
         </Alan>
-        <Alan id="kb-belgeadi" etiket="Belge başlığı" genis sonuc={resmi ? "Bakanlık formatı: değişmez." : undefined}>
-          <Girdi id="kb-belgeadi" value={t.gorunum.baslik} maxLength={200} disabled={resmi} mesajli={resmi} onChange={(e) => degis(gorunumYaz(t, { baslik: e.target.value }))} />
+        <Alan id={GID.baslik} etiket="Belge başlığı" genis sonuc={resmi ? "Bakanlık formatı: değişmez." : undefined}>
+          <Girdi id={GID.baslik} value={t.gorunum.baslik} maxLength={200} disabled={resmi} mesajli={resmi} onChange={(e) => degis(gorunumYaz(t, { baslik: e.target.value }))} />
         </Alan>
       </FormIzgara>
       <SatirAlani id="kb-dayanak" etiket="Periyodik kontrol metodu ve kapsamı" deger={t.gorunum.dayanak.join("\n")} ipucu="Her satıra bir standart / yönetmelik (PDF'te 1. bölümde)." uygula={(s) => degis(gorunumYaz(t, { dayanak: satirlar(s, 20, 300) }))} />

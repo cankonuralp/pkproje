@@ -7,7 +7,7 @@ import { test } from "node:test";
 import { BLOKLAR, FormatTanimi, type BolumOf } from "../src/format/tanim.ts";
 import { SABLONLAR } from "../src/format/sablonlar.ts";
 import { kilitDenetimi, kilitNormallestir } from "../src/format/motor.ts";
-import { bolumAdi, bolumOgeleri, bolumSil, cevaplarYaz, gorunumYaz, grupEkle, grupSil, grupYaz, kimlikler, maddeEkle, notlarYaz, ogeEkle, ogeSil, ogeYaz, satirlar, tasi, yeniBolum, yeniKimlik } from "../src/modules/rapor-format/kurucu.ts";
+import { bolumAdi, bolumDuzeni, bolumOgeleri, bolumSil, cevaplarYaz, gorunumYaz, grupEkle, grupSil, grupYaz, kimlikler, maddeEkle, notlarYaz, ogeEkle, ogeSil, ogeYaz, satirlar, tasi, yeniBolum, yeniKimlik } from "../src/modules/rapor-format/kurucu.ts";
 
 const zpkr02 = () => structuredClone(SABLONLAR.ZPKR02.tanim);
 const gecerli = (t: unknown) => { const r = FormatTanimi.safeParse(t); assert.ok(r.success, JSON.stringify(!r.success && r.error.issues.slice(0, 3))); };
@@ -161,4 +161,20 @@ test("426: uygunluk notları ve görünüm — Bakanlık formatında form kodu /
   const z = gorunumYaz(SABLONLAR.ZPKR02.tanim, { formKodu: "X", baslik: "Y", talimat: "Genel talimat" });
   assert.deepEqual([z.gorunum.formKodu, z.gorunum.talimat], ["ZPKR02", "Genel talimat"]);
   assert.deepEqual(kilitDenetimi(z, SABLONLAR.ZPKR02.tanim), []);
+});
+
+/* 427: bölümün belgedeki düzeni (üst başlık, numarasızlık) kurucudan — firma kendi formatını Bakanlık formatları gibi 5.1 / 5.2 diye kurabilir;
+   Bakanlık bölümünde değişmez (kilit denetimi de özde tutar) */
+test("427: bölüm düzeni — üst başlık ve numarasızlık yazılır, boş üst başlık kalkar; kilitli bölümde değişmez", () => {
+  let t = FormatTanimi.parse({ sema: 1, bolumler: [{ id: "a", ad: "Gözle", blok: "not" }, { id: "b", ad: "Testler", blok: "not" }, { id: "c", ad: "Foto", blok: "foto" }] });
+  t = bolumDuzeni(t, 0, { ust: "Tespitler" });
+  t = bolumDuzeni(t, 1, { ust: "Tespitler" });
+  t = bolumDuzeni(t, 2, { numarasiz: true });
+  assert.deepEqual(t.bolumler.map((b) => [b.ust, b.numarasiz]), [["Tespitler", undefined], ["Tespitler", undefined], [undefined, true]]);
+  t = bolumDuzeni(bolumDuzeni(t, 0, { ust: "" }), 2, { numarasiz: false });
+  assert.deepEqual(t.bolumler.map((b) => [b.ust, b.numarasiz]), [[undefined, undefined], ["Tespitler", undefined], [undefined, undefined]]);
+  assert.ok(FormatTanimi.safeParse(t).success);
+  const z = SABLONLAR.ZPKR04.tanim, i = z.bolumler.findIndex((b) => b.id === "gozle");
+  assert.equal(bolumDuzeni(z, i, { ust: "Başka" }), z, "Bakanlık bölümünün üst başlığı değişmez");
+  assert.deepEqual(kilitDenetimi(bolumDuzeni(z, i, { ust: "Başka" }), z), []);
 });

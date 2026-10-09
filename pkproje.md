@@ -2355,6 +2355,14 @@ revizyon, alan kopyalama, hafif kusur devri, meslek eşleşme denetimi).
 - Emsal ürünler: https://opwire.app/iso-17020-periyodik-kontrol-yazilimi/ · https://17020muayene.vidco.com.tr/ · https://akuple.com/asansor-kontrol-yazilimi/ · https://ensyazilim.com/
 
 ## 11 · Değişiklik günlüğü
+- 2026-10-09 (427): **Elektrik tarafının üç zorunlu Bakanlık formatı hazır şablon** (reisim: *"Elektrik tarafında zorunlu formatlar yayınlandı, bu
+  formatları probataya ekle"*): ZPKR03 yıldırımdan korunma, ZPKR04 yangın algılama ve uyarı, ZPKR05 trafo (yayım 18.07.2025, yürürlük 01.09.2025;
+  Bakanlık sitesinden indirilen PDF'lerden). Bölüm adları, sıraları ve numaraları resmî formdaki gibi ("ana başlıklar ve sıralamaları değişmeyecek"):
+  bölüme **üst başlık** (aynı üst başlıklı ardışık bölümler belgede ve saha ekranında 4.1, 4.2 / 5.1, 5.2) ve **numarasız bölüm** (Fotoğraflar)
+  eklendi; 2. bölümün başlığı formatın ekipman bölümünden (ZPKR04 "Tesis bilgileri"). Belge ve saha ekranı aynı düzeni tek yerden alır
+  (`src/format/duzen.ts`). Bütün maddeler kilitli ve standartlı; grup / madde / genel talimatlar kriter belgelerinden özet; sonuç bölümünde formun
+  sabit metni (ağır kusurlar tanımı, açıklamalar); kusur derecesi (* / **) sorulur. ZPKK03/04/05 kriter belgeleri Dökümanlar › Kriterler'de.
+  Format kurucuda bölüme üst başlık ve "numarasız" yazılır (Bakanlık bölümünde değişmez — kilit denetimi de özde tutar). RAPOR-FORMAT.md §2.
 - 2026-10-09 (426): **Format motoru + format kurucu genişledi** (reisim: *"Elektrik tarafında zorunlu formatlar yayınlandı … eklerken bir kullanıcı
   da bu ve benzeri rapor formatlarını isterse kendi eli ile format yapıcıdan yapabileceği şekilde format yapıcıyı düzenle"*). Yeni üç Bakanlık
   formatı (ZPKR03/04/05 — 427) ve benzerleri için motorda: seçmeli sütun / değerde "uygun değil" sayılan seçenekler + ağır kusur, kesin küçük /

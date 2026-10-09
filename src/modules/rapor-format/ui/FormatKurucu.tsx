@@ -18,7 +18,7 @@ import { Serit } from "../../../components/serit/Serit";
 import { Tus, TusBaglanti } from "../../../components/tus/Tus";
 import { yayinDenetimi } from "../../../format/motor";
 import { BLOKLAR, type Blok, type FormatTanimi } from "../../../format/tanim";
-import { bolumAdi, bolumOgeleri, bolumSil, maddeEkle, ogeEkle, ogeliBlok, ogeSil, tasi, yeniBolum } from "../kurucu";
+import { bolumAdi, bolumDuzeni, bolumOgeleri, bolumSil, maddeEkle, ogeEkle, ogeliBlok, ogeSil, tasi, yeniBolum } from "../kurucu";
 import { taslakKaydetEylemi } from "./eylemler";
 import { FormatOnizleme } from "./FormatOnizleme";
 import { GorunumDuzenleyici, ListeDuzenleyici, NotDuzenleyici, OgeDuzenleyici, SonucAciklamasi } from "./KurucuDuzenleyici";
@@ -32,7 +32,7 @@ const BLOK_ACIKLAMA: Partial<Record<Blok, string>> = {
   kusur: "Kendiliğinden dolar: Uygun değil maddeler ve sınır dışı ölçümler, fotoğraflarıyla.",
 };
 const OGE: Record<"bilgi" | "liste" | "olcum" | "test", readonly [string, string]> = { bilgi: ["Alanlar", "Alan ekle"], liste: ["Maddeler", "Madde ekle"], olcum: ["Sütunlar", "Sütun ekle"], test: ["Değerler", "Değer ekle"] };
-const ID = { ad: "kb-ad", yeni: "kb-yeni", ekle: "kb-ekle", enAz: "kb-enaz", enCok: "kb-encok", cumle: "kb-cumle", baslik: "kb-baslik" } as const;
+const ID = { ad: "kb-ad", ust: "kb-ust", yeni: "kb-yeni", ekle: "kb-ekle", enAz: "kb-enaz", enCok: "kb-encok", cumle: "kb-cumle", baslik: "kb-baslik" } as const;
 const odak = (q: string) => requestAnimationFrame(() => document.querySelector<HTMLElement>(q)?.focus());
 
 /** sunucunun alan yolu (bolumler.2.ad) → okunur yer ("3. bölüm (Ad): ") */
@@ -184,7 +184,15 @@ export function FormatKurucu({ turId, turAd, format, tanim, kaynakAd }: {
               <Alan id={ID.ad} etiket="Bölüm adı" zorunlu genis sonuc={b.kilit ? "Bakanlık alanı: adı değişmez." : undefined}>
                 <Girdi id={ID.ad} value={b.ad} maxLength={200} disabled={b.kilit} mesajli={b.kilit} onChange={(e) => degis(bolumAdi(t, i, e.target.value))} />
               </Alan>
+              {/* 427: belgedeki numara düzeni — aynı üst başlıklı ardışık bölümler "5.1, 5.2" olur; numarasız bölüm numara almaz */}
+              <Alan id={ID.ust} etiket="Üst başlık" genis sonuc={b.kilit ? "Bakanlık alanı: başlık düzeni değişmez." : "Aynı üst başlığı taşıyan ardışık bölümler belgede tek numaranın altında 5.1, 5.2 diye sıralanır."}>
+                <Girdi id={ID.ust} value={b.ust ?? ""} maxLength={200} disabled={b.kilit} mesajli onChange={(e) => degis(bolumDuzeni(t, i, { ust: e.target.value }))} />
+              </Alan>
             </FormIzgara>
+            <label className={stil.secenek}>
+              <input type="checkbox" checked={!!b.numarasiz} disabled={b.kilit} onChange={(e) => degis(bolumDuzeni(t, i, { numarasiz: e.target.checked }))} />
+              <span>Numarasız bölüm (belgede numara almaz, ör. “Fotoğraflar”)</span>
+            </label>
             {b.blok === "liste" && <ListeDuzenleyici t={t} i={i} b={b} degis={degis} />}
             {ogeliBlok(b.blok) && (() => {
               const l = bolumOgeleri(b), [baslik, ekleAd] = OGE[b.blok as keyof typeof OGE];

@@ -47,7 +47,9 @@ const Deger = z.object({
 /** seçmeli uygunluk notu (ZPKR01 Not-1 … Not-11): kusur mu, ağır mı */
 const Not = z.object({ metin: z.string().trim().min(1).max(400), kusur: z.boolean(), agir: z.boolean().default(false) });
 
-const ortak = { id: kimlik, ad, kilit: z.boolean().default(false) };
+/* ust (427): ardışık bölümlerin ortak üst başlığı — belgede ve ekranda N.1, N.2 numarasıyla tek başlık altında (ZPKR04 "5. Tespit ve
+   değerlendirmeler" › 5.1 / 5.2); numarasiz: bölüm numara almaz (ZPKR04 "Fotoğraflar") — src/format/duzen.ts */
+const ortak = { id: kimlik, ad, kilit: z.boolean().default(false), ust: z.string().max(200).optional(), numarasiz: z.boolean().optional() };
 export const Bolum = z.discriminatedUnion("blok", [
   z.object({ ...ortak, blok: z.literal("bilgi"), alanlar: z.array(Alan).max(60) }),
   z.object({ ...ortak, blok: z.literal("liste"), cevaplar: z.array(z.string().trim().min(1).max(40)).min(2).max(6), gruplar: z.array(Grup).max(40) }),

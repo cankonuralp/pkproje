@@ -13,6 +13,8 @@
   scroll-margin-top: calc(var(--ust-y) + 12px);
 }
 .bolumNo { color: var(--yazi2); font-variant-numeric: tabular-nums; }
+/* 427: üst başlık (Bakanlık "5. …" › 5.1 / 5.2) — kartların üstünde düz başlık */
+.ustBaslik { margin: 4px 0 -8px; font-size: var(--boy-bolum); font-weight: var(--kal-bolum); overflow-wrap: anywhere; }
 .bolumSag { display: flex; align-items: center; flex-wrap: wrap; justify-content: flex-end; gap: 8px; margin-left: auto; }
 .acTus, .ikonTus {
   display: inline-flex; align-items: center; justify-content: center; flex: none; width: var(--tus-y); height: var(--tus-y); padding: 0;

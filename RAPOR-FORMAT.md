@@ -48,6 +48,11 @@ büyük** eklendi (ZPKR05 RB < 2 Ω). Sonuç bölümünün **sabit metni** (Baka
 Bakanlık şablonunda kilitlidir. Madde, grup ve formatın tamamı için **talimat** (kontrolün nasıl yapılacağı) — saha ekranında ünlemden açılır,
 PDF'e basılmaz.
 
+**2026-10-09 (427):** hazır şablonlara ZPKR03 (yıldırımdan korunma), ZPKR04 (yangın algılama ve uyarı), ZPKR05 (trafo) eklendi. Bölüme **üst başlık**
+(aynı üst başlıklı ardışık bölümler belgede ve saha ekranında N.1, N.2 — resmî formdaki 4.1 / 5.1 gibi) ve **numarasız** işareti (Fotoğraflar);
+2. bölümün başlığı formatın ekipman bölümünün adı (ZPKR04 "Tesis bilgileri"). Numaralar belge ile saha ekranında tek kaynaktan
+(`src/format/duzen.ts`). Kilitli bölümde üst başlık ve numarasızlık da özdür (değiştirilirse ENGEL).
+
 ## 3 · Kurallar (format başına)
 
 - Alan / madde / ölçüm bazında **zorunlu**; zorunlu boşken Onaya gönder uyarır ve alanı işaretler (bugünkü davranış).

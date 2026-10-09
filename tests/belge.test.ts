@@ -96,8 +96,8 @@ test("belge: kullanıcının yazdığı değerler kaçışlı — betik, olay ö
   assert.ok(html.includes("&lt;script&gt;"));
 });
 
-test("belge: Bakanlık şablonları (ZPKR01, ZPKR02) boş raporla çizilir — form kodu ve başlık formatın, ölçüm tablosu ve uygunluk notları", () => {
-  for (const k of ["ZPKR01", "ZPKR02"] as const) {
+test("belge: Bakanlık şablonları (ZPKR01–05) boş raporla çizilir — form kodu ve başlık formatın, ölçüm tablosu ve uygunluk notları", () => {
+  for (const k of ["ZPKR01", "ZPKR02", "ZPKR03", "ZPKR04", "ZPKR05"] as const) {
     const t = SABLONLAR[k].tanim;
     const m = metin(ciz({ tanim: t, cevaplar: Cevaplar.parse({}), sonuc: null, fotolar: [], cihazlar: [] }));
     assert.ok(m.includes(`Doküman Kodu : ${k}`), k);
@@ -105,13 +105,20 @@ test("belge: Bakanlık şablonları (ZPKR01, ZPKR02) boş raporla çizilir — f
     for (const b of t.bolumler.filter((x) => x.blok !== "bilgi")) assert.ok(m.includes(b.ad), `${k}: ${b.ad}`);
     if (k === "ZPKR01") assert.ok(m.includes("Not-1: Uygun."), "uygunluk notları");
   }
+  /* 427: resmî formun numaraları — üst başlık h2, alt bölümler h3 "N.1 Ad", fotoğraf numarasız, 2. bölüm başlığı formattan */
+  const z4 = ciz({ tanim: SABLONLAR.ZPKR04.tanim, cevaplar: Cevaplar.parse({}), sonuc: null, fotolar: [], cihazlar: [] });
+  for (const p of ["<h2>2. Tesis bilgileri</h2>", "<h2>3. Test değerleri</h2>", "<h2>5. Tespit ve değerlendirmeler</h2>", "<h3>5.1 Gözle muayeneler ve belge kontrolleri</h3>",
+    "<h2>6. Kusur açıklamaları</h2>", "<h2>Fotoğraflar</h2>", "<h2>7. Notlar</h2>", "<h2>9. Periyodik kontrolleri yapmaya yetkili kişi bilgileri ve onay</h2>"]) assert.ok(z4.includes(p), p);
+  assert.ok(metin(z4).includes("Ağır kusurlar tanımı: a) Dedektörler"), "sonuç bölümünün sabit metni basılır");
+  const z3 = ciz({ tanim: SABLONLAR.ZPKR03.tanim, cevaplar: Cevaplar.parse({}), sonuc: null, fotolar: [], cihazlar: [] });
+  for (const p of ["<h2>4. Kontrol kriterleri ve testler</h2>", "<h3>4.3 ESE (Aktif-Radyoaktif) Paratoner</h3>", "<h2>8. Periyodik kontrolleri"]) assert.ok(z3.includes(p), p);
 });
 
 /* 2026-10-05 (316): kesin PDF için belge ağacı kendi yazıcımızla HTML'e çevrilir (Next'in sunucu katmanında react-dom/server yok) — React'in
    çıktısıyla BİREBİR aynı olmalı (önizleme = PDF), kaçış dahil */
 test("HTML yazıcı: üç şablonda ve kaçış isteyen değerlerle React'in çıktısıyla birebir aynı; bilinmeyen bileşen, olay özniteliği ve ham HTML reddedilir", () => {
   const kotu = `A&B <script>x</script> "q" 'y'`;
-  for (const k of ["ZPKR01", "ZPKR02", "KOMPRESOR"] as const) {
+  for (const k of ["ZPKR01", "ZPKR02", "ZPKR03", "ZPKR04", "ZPKR05", "KOMPRESOR"] as const) {
     const v = veri({ tanim: SABLONLAR[k].tanim, kunye: { firmaAdi: kotu, adres: kotu, sgk: null, isgNo: kotu }, firma: { ad: kotu, kod: "DA", nusha: 3 } });
     assert.equal(htmlYaz(raporBelgesi(v)), renderToStaticMarkup(raporBelgesi(v) as never), k);
   }
@@ -134,7 +141,7 @@ test("yazı tipi kapsamı: üç şablonda belgenin her karakteri gömülü Carli
   }));
   assert.ok(araliklar.length > 4, "belge.css'te unicode-range yok");
   const kapsar = (k: number) => araliklar.some(([a, b]) => k >= a && k <= b);
-  for (const k of ["ZPKR01", "ZPKR02", "KOMPRESOR"] as const) {
+  for (const k of ["ZPKR01", "ZPKR02", "ZPKR03", "ZPKR04", "ZPKR05", "KOMPRESOR"] as const) {
     const disari = [...new Set([...metin(ciz({ tanim: SABLONLAR[k].tanim, durum: "imzali", imza: { zaman: "2026-10-05T10:00:00.000Z", yontem: "e-imzalı PDF" } }))]
       .filter((c) => !kapsar(c.codePointAt(0)!)))];
     assert.deepEqual(disari, [], `${k}: gömülü yazı tipinde olmayan karakter`);

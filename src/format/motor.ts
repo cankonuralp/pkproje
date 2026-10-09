@@ -171,8 +171,9 @@ export function kilitNormallestir(t: FormatTanimi, kaynaklar: readonly FormatTan
    zorunlu olan isteğe bağlıya, en az satır sayısı aşağıya çekilemez. Sırası serbest, kilitli bölüme yeni (kilitsiz) öğe eklenebilir. Kaynak
    SUNUCUDA seçilir (hazır şablon koddan, önceki yayın veritabanından) — istemcinin yolladığı tanımdaki "kilit" bayrağına güvenilmez. */
 const oz = (o: Record<string, unknown>) => JSON.stringify(o, (_k, v) => (v === undefined ? undefined : v));
+/* 427: üst başlık ve numarasızlık da öz — Bakanlık formatının başlık düzeni ("ana başlıklar ve sıralamaları değişmeyecek") değiştirilemez */
 const bolumOzu = (b: Bolum) => oz({
-  blok: b.blok, ad: b.ad,
+  blok: b.blok, ad: b.ad, ust: b.ust, numarasiz: b.numarasiz,
   ...(b.blok === "liste" ? { cevaplar: b.cevaplar } : {}),
   ...(b.blok === "olcum" ? { hesap: b.hesap, notlar: b.notlar, satir: b.satir } : {}),
   ...(b.blok === "sonuc" ? { cumle: b.cumle, aciklama: b.aciklama } : {}),
@@ -267,7 +268,9 @@ export function yayinDenetimi(t: FormatTanimi, kaynak?: FormatTanimi | null): st
     if (b.blok === "test" && !b.degerler.length) bosBolum(b);
     if (b.blok === "olcum") {
       if (!b.sutunlar.length) bosBolum(b);
-      else if (!b.hesap && !b.notlar?.length && !b.sutunlar.some((c) => c.op && c.sinir !== undefined)) l.push(`“${b.ad}” tablosunda sınırı olan sütun, hesap ya da uygunluk notu yok.`);
+      /* 427: "uygun değil" seçeneği olan seçmeli sütun da değerlendirir (ZPKR04 5.2: U / UD / UG) */
+      else if (!b.hesap && !b.notlar?.length && !b.sutunlar.some((c) => (c.op && c.sinir !== undefined) || c.olumsuz?.length))
+        l.push(`“${b.ad}” tablosunda sınırı ya da “uygun değil” seçeneği olan sütun, hesap ya da uygunluk notu yok.`);
     }
   }
   if (!t.bolumler.some((b) => b.blok === "sonuc")) l.push("Sonuç ve kanaat bölümü yok.");

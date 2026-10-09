@@ -41,6 +41,10 @@
 .rb-bolum { margin: 0 0 10px; break-inside: auto; }
 .rb-bolum h2 { margin: 0; padding: 1px 3px; border: 1px solid #000; background: #f1dbdb; font-size: 12px; font-weight: 700; text-transform: uppercase; break-after: avoid; }
 .rb-bolum h2 + table, .rb-bolum h2 + .rb-kutu-metin, .rb-bolum h2 + .rb-fotolar { margin-top: -1px; }
+/* 427: üst başlık (5. …) altındaki alt bölümler (5.1, 5.2) — başlık bitişik, alt başlık açık zeminli */
+.rb-ust { margin-bottom: 0; }
+.rb-bolum h3 { margin: -1px 0 0; padding: 1px 3px; border: 1px solid #000; background: #f8eded; font-size: 11px; font-weight: 700; break-after: avoid; }
+.rb-bolum h3 + table, .rb-bolum h3 + .rb-kutu-metin, .rb-bolum h3 + .rb-fotolar { margin-top: -1px; }
 .rb-sayfa .rb-e { background: #dbe4f0; }
 .rb-sayfa .rb-ab { background: #dbe4f0; font-weight: 700; }
 .rb-sayfa .rb-grup { text-align: center; font-weight: 700; }

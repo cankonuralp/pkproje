@@ -77,6 +77,9 @@ export function FormatOnizleme({ tanim }: { tanim: FormatTanimi }) {
             <h3 className={stil.bolumAd}>{i + 1} · {b.ad}</h3>
             <Rozet tur="notr">{BLOK_ADI[b.blok]}</Rozet>
             {b.kilit && <Rozet tur="kabul">Bakanlık alanı</Rozet>}
+            {/* 427: belgedeki numara düzeni (format/duzen.ts) */}
+            {b.ust && <Rozet tur="notr">Üst başlık: {b.ust}</Rozet>}
+            {b.numarasiz && <Rozet tur="notr">Numarasız</Rozet>}
           </div>
           <Icerik b={b} />
         </li>

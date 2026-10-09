@@ -112,7 +112,8 @@ pkproje/
                             belge.css A4 Bakanlık görünümü (Carlito ./carlito-5.3.0, OFL) · veri.ts (BelgeVerisi; Raporlar raporBelgesiVerisi doldurur)
                             · html.ts (ağaç → HTML, React'le birebir) · pdf.ts kesin PDF (316: başsız Chromium — Vercel'de @sparticuz/chromium) · ornek.ts (uydurma)
   src/format/               FORMAT MOTORU (2026-10-04, RAPOR-FORMAT.md): tanim.ts (şema) · hesap.ts (ZPKK formülleri, saf) · motor.ts (değerlendir,
-                            yayın denetimi) · sablonlar.ts (ZPKR01, ZPKR02, kompresör) — saha ekranı ve PDF aynı tanımdan
+                            yayın denetimi) · sablonlar.ts (ZPKR01–05, kompresör; 427) · duzen.ts (427: bölüm düzeni ve numaraları — üst
+                            başlık N.1 / N.2, numarasız bölüm; belge ve saha ekranı ortak) — saha ekranı ve PDF aynı tanımdan
   src/modules/rapor-format/ RAPOR FORMATI (2026-10-04, 308): sürümlü tanım (rapor_format, göç 0022: taslak → yayında → eski; yayınlanan değişmez) ·
                             şablondan başlat · taslak kaydet · yayınla (kilitli Bakanlık öğesi ENGEL, öteki denetim uyarı) · yayındaki format;
                             ekran: tür sayfası "Rapor şablonu" + önizleme /ekipman-turleri/<tür>/sablon/<sürüm> · FORMAT KURUCU (338, K4):

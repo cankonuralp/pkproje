@@ -4,9 +4,10 @@
 import assert from "node:assert/strict";
 import { test } from "node:test";
 import { linyeHesap, noktaHesap, pdHesap, rcdTestYeter, sayiOku, sinirSonucu, ziHesap } from "../src/format/hesap.ts";
+import { raporDuzeni } from "../src/format/duzen.ts";
 import { degerlendir, kilitDenetimi, kilitliKimlikler, yayinDenetimi } from "../src/format/motor.ts";
 import { SABLONLAR } from "../src/format/sablonlar.ts";
-import { Cevaplar, FormatTanimi, type FormatGirdisi } from "../src/format/tanim.ts";
+import { Cevaplar, FormatTanimi, type BolumOf, type FormatGirdisi } from "../src/format/tanim.ts";
 
 const T = (k: string) => structuredClone(SABLONLAR[k].tanim);
 const C = (x: object = {}) => Cevaplar.parse(x);
@@ -234,4 +235,64 @@ test("426: sonuç bölümünün sabit metni kilitli Bakanlık öğesinin özünd
   assert.deepEqual(kilitDenetimi(kaynak, kaynak), []);
   const degisik = FormatTanimi.parse({ ...kaynak, bolumler: [{ ...kaynak.bolumler[0], aciklama: "başka" }] });
   assert.equal(kilitDenetimi(degisik, kaynak).length, 1);
+});
+
+/* 427 (reisim 2026-10-09: "Elektrik tarafında zorunlu formatlar yayınlandı, bu formatları probataya ekle"): ZPKR03 / 04 / 05 hazır şablonları —
+   Bakanlık "ana başlıklar ve sıralamaları değişmeyecek": belge ve saha ekranı ortak düzenle (format/duzen.ts) resmî formun numaralarını verir
+   (üst başlıklı alt bölümler N.1, N.2; fotoğraf numarasız; 2. bölümün başlığı formatın ekipman bölümünden — ZPKR04 "Tesis bilgileri").
+   Olumsuz kanıt: tests/bozan/format-duzen.bozan.ts. */
+test("427: ZPKR03 / 04 / 05 resmî formun numaralarıyla — üst başlık N.1, N.2; numarasız fotoğraf; 2. bölüm başlığı formattan", () => {
+  const ozet = (k: string) => {
+    const d = raporDuzeni(T(k), false);
+    return [d.ekipmanBaslik, ...d.bolumler.map((x) => `${x.ust ? `[${x.ust.no} ${x.ust.ad}] ` : ""}${x.no ?? "-"} ${x.b.ad}`), `son ${d.sonraki}`];
+  };
+  assert.deepEqual(ozet("ZPKR03"), ["Ekipman bilgileri", "3 Ölçüm aletleri bilgileri", "[4 Kontrol kriterleri ve testler] 4.1 Kapsama alanı bağlamında uygunluk",
+    "4.2 Fiziki uygunluk ve ölçüm metodu", "4.3 ESE (Aktif-Radyoaktif) Paratoner", "4.4 Faraday kafesi", "5 Kusur açıklamaları", "- Fotoğraflar", "6 Notlar",
+    "7 Sonuç ve kanaat", "8 Periyodik kontrolleri yapmaya yetkili kişi bilgileri ve onay", "son 9"]);
+  assert.deepEqual(ozet("ZPKR04").slice(0, 7), ["Tesis bilgileri", "3 Test değerleri", "4 Ölçüm aletleri bilgileri",
+    "[5 Tespit ve değerlendirmeler] 5.1 Gözle muayeneler ve belge kontrolleri", "5.2 Yangın algılama ve uyarı cihazları kontrolü ve testler (örnekleme yapılmadan tüm ekipmanlar)",
+    "6 Kusur açıklamaları", "- Fotoğraflar"]);
+  assert.deepEqual(ozet("ZPKR05").slice(1, 4), ["3 Ölçüm aletleri bilgileri", "[4 Gözle kontrol kriterleri] 4.1 Gözle kontrol", "4.2 Trafo işletme ve koruma topraklamaları"]);
+  /* eski şablonlar değişmedi: üst başlıksız düz numara */
+  assert.deepEqual(raporDuzeni(T("ZPKR01"), false).bolumler.map((x) => x.no), ["3", "4", "5", "6", "7", "8", "9"]);
+  const genel = raporDuzeni(T("KOMPRESOR"), false);
+  assert.deepEqual([genel.ekipmanBaslik, genel.cihazNo, genel.bolumler[0].no], ["Ekipman bilgileri", null, "3"]);
+  const cihazsiz = T("KOMPRESOR");
+  cihazsiz.bolumler = cihazsiz.bolumler.filter((b) => b.blok !== "cihaz");
+  assert.deepEqual([raporDuzeni(cihazsiz, true).cihazNo, raporDuzeni(cihazsiz, true).bolumler[0].no], ["3", "4"], "formatta cihaz yoksa sabit 3. bölüm araya girer");
+  /* madde sayıları resmî formla aynı */
+  const madde = (k: string, id: string) => (T(k).bolumler.find((b) => b.id === id) as BolumOf<"liste">).gruplar.map((g) => g.maddeler.length);
+  assert.deepEqual([madde("ZPKR03", "kapsam"), madde("ZPKR03", "ese"), madde("ZPKR03", "faraday")], [[2], [8, 7, 4, 4, 6], [4, 6, 4, 2]]);
+  assert.deepEqual([madde("ZPKR04", "gozle"), madde("ZPKR05", "gozle")], [[6, 11, 8, 11], [32, 16, 11, 4]]);
+  for (const k of ["ZPKR03", "ZPKR04", "ZPKR05"]) {
+    const t = T(k);
+    assert.equal(t.kurallar.derece, true, `${k}: kusur derecesi (* / **) sorulur`);
+    assert.ok(t.gorunum.talimat.length > 100, `${k}: genel muayene talimatı`);
+    assert.ok(t.bolumler.every((b) => b.blok !== "liste" || b.gruplar.every((g) => g.maddeler.every((m) => m.kilit && m.std))), `${k}: madde kilitli ve standartlı`);
+    assert.ok((t.bolumler.find((b) => b.blok === "sonuc") as BolumOf<"sonuc">).aciklama.length > 100, `${k}: sonuç metni`);
+  }
+});
+
+test("427: ZPKR04 cihaz testinde UD ve ZPKR05 Rb ≥ 2 Ω / Not 2 ağır kusur; boş değer kusur değil", () => {
+  const t4 = T("ZPKR04");
+  const satir = { kod: "Loop 1", ekipman_adi: "Optik duman dedektörü / 12", proje: "U", erisim: "U", montaj: "U", test: "UD", sesli: "UG", isikli: "UG", adres: "U" };
+  const r4 = degerlendir(t4, C({ tablo: { cihaz_test: [satir, { ...satir, test: "U" }] } }));
+  assert.deepEqual(r4.satirlar.cihaz_test.map((s) => [s.uygun, s.agir]), [[false, true], [true, false]]);
+  const t5 = T("ZPKR05");
+  const r5 = degerlendir(t5, C({ deger: { duzen: "1- İşletme ve koruma topraklaması ayrık", rb: "2,4", ie: "1", te: "0,5", utp: "0,2", ue: "0,3", deger_not: "Not 2: Yetersiz" } }));
+  assert.deepEqual(r5.kusurlar.map((k) => [k.kriter, k.agir]), [["Trafo işletme topraklaması Rb", true], ["Değerlendirme", true]]);
+  assert.equal(r5.degerler.u2, null, "TT değilse U2 boş: kusur değil, eksik değil");
+  assert.ok(!r5.eksikler.some((e) => e.alan === "u2" || e.alan === "rbe"));
+});
+
+test("427: kilitli bölümün üst başlığı ve numarasızlığı Bakanlık özünde — değiştirilirse ENGEL; seçmeli olumsuz sütun yayın denetimini geçer", () => {
+  const k = T("ZPKR04");
+  const ust = { ...k, bolumler: k.bolumler.map((b) => (b.id === "gozle" ? { ...b, ust: "Başka" } : b)) };
+  const foto = { ...k, bolumler: k.bolumler.map((b) => (b.id === "foto" ? { ...b, numarasiz: undefined } : b)) };
+  assert.equal(kilitDenetimi(ust, k).length, 1);
+  assert.equal(kilitDenetimi(foto, k).length, 1);
+  assert.deepEqual(yayinDenetimi(k), []);
+  const yalniz = FormatTanimi.parse({ sema: 1, bolumler: [{ id: "x", ad: "Tablo", blok: "olcum", sutunlar: [{ id: "a", ad: "A", giris: "secim", secenekler: ["U", "UD"] }] },
+    { id: "s", ad: "Sonuç", blok: "sonuc" }, { id: "i", ad: "İmza", blok: "imza" }] });
+  assert.ok(yayinDenetimi(yalniz).some((x) => x.includes("Tablo")), "olumsuz seçeneği olmayan seçmeli sütun değerlendirmez");
 });

@@ -69,13 +69,13 @@ export interface Baglam {
 /* ── ORTAK PARÇALAR ──────────────────────────────────────────────────────────────────────────────────────────── */
 /** bölüm kartı: "N · ad" başlığı, eksik rozeti, sayaç, başlık tuşları, aç / kapat (her başlık açılır kapanır — reisim 2026-09-26) */
 export function RaporBolumu({ id, no, baslik, acik, degistir, eksik = false, sayac, tuslar, children }: {
-  id: string; no: number; baslik: string; acik: boolean; degistir: (acik: boolean) => void; eksik?: boolean; sayac?: ReactNode; tuslar?: ReactNode; children: ReactNode;
+  id: string; no: string | null; baslik: string; acik: boolean; degistir: (acik: boolean) => void; eksik?: boolean; sayac?: ReactNode; tuslar?: ReactNode; children: ReactNode;
 }) {
   const b = `b-${id}`;
   return (
     <section className={stil.bolum} id={b} aria-labelledby={`${b}-b`}>
       <div className={stil.bolumBas}>
-        <h2 className={stil.bolumBaslik} id={`${b}-b`} tabIndex={-1}><span className={stil.bolumNo}>{no} · </span>{baslik}</h2>
+        <h2 className={stil.bolumBaslik} id={`${b}-b`} tabIndex={-1}>{no && <span className={stil.bolumNo}>{no} · </span>}{baslik}</h2>
         {eksik && <Rozet tur="red">Eksik</Rozet>}
         {sayac}
         <div className={stil.bolumSag}>
@@ -167,7 +167,7 @@ function TopluMenu({ cevaplar, sec }: { cevaplar: readonly string[]; sec: (c: st
 
 /* ── FORMAT BÖLÜMÜ ───────────────────────────────────────────────────────────────────────────────────────────── */
 export function FormatBolumu({ b, no, bag, acik, degistir, eksik }:
-  { b: Bolum; no: number; bag: Baglam; acik: boolean; degistir: (acik: boolean) => void; eksik: boolean }) {
+  { b: Bolum; no: string | null; bag: Baglam; acik: boolean; degistir: (acik: boolean) => void; eksik: boolean }) {
   const bildir = useBildir();
   let sayac: ReactNode = null, tuslar: ReactNode = null;
   if (b.blok === "liste") {
@@ -187,7 +187,7 @@ export function FormatBolumu({ b, no, bag, acik, degistir, eksik }:
   );
 }
 
-function BlokIcerik({ b, no, bag }: { b: Bolum; no: number; bag: Baglam }) {
+function BlokIcerik({ b, no, bag }: { b: Bolum; no: string | null; bag: Baglam }) {
   switch (b.blok) {
     case "bilgi": return <BilgiBlok b={b} bag={bag} />;
     case "liste": return <ListeBlok b={b} no={no} bag={bag} />;
@@ -253,14 +253,16 @@ function BilgiAlani({ a, bag }: { a: BolumOf<"bilgi">["alanlar"][number]; bag: B
 }
 
 /* ── KONTROL MADDELERİ ── */
-function ListeBlok({ b, no, bag }: { b: BolumOf<"liste">; no: number; bag: Baglam }) {
+/* numarasız bölümde (no null) madde numarası bölüm numarasız: "1", "1.2" */
+function ListeBlok({ b, no, bag }: { b: BolumOf<"liste">; no: string | null; bag: Baglam }) {
+  const on = no ? `${no}.` : "";
   const gruplu = b.gruplar.length > 1 || b.gruplar.some((g) => g.ad);
   return (
     <>
       {b.gruplar.map((g, gi) => (
         <div key={g.id} className={stil.grup}>
-          {g.ad && <h3 className={stil.grupBaslik}>{no}.{gi + 1} · {g.ad}</h3>}
-          {g.maddeler.map((m, mi) => <Madde key={m.id} m={m} numara={gruplu ? `${no}.${gi + 1}.${mi + 1}` : `${no}.${mi + 1}`} b={b} bag={bag} />)}
+          {g.ad && <h3 className={stil.grupBaslik}>{on}{gi + 1} · {g.ad}</h3>}
+          {g.maddeler.map((m, mi) => <Madde key={m.id} m={m} numara={gruplu ? `${on}${gi + 1}.${mi + 1}` : `${on}${mi + 1}`} b={b} bag={bag} />)}
         </div>
       ))}
     </>

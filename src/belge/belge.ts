@@ -8,6 +8,7 @@
    JSX değil createElement: düğüm test koşucusu (node --test) bu dosyayı doğrudan yükler (tests/belge.test.ts). */
 import { createElement as h, Fragment, type ReactNode } from "react";
 import { SINIR_ISARETI } from "../format/hesap.ts";
+import { raporDuzeni } from "../format/duzen.ts";
 import { degerlendir } from "../format/motor.ts";
 import type { Bolum, BolumOf } from "../format/tanim.ts";
 import { TANIMLAR } from "../tanim/tanimlar.ts";
@@ -45,7 +46,10 @@ function bilgiTablosu(l: readonly Cift[]): ReactNode {
   }
   return h("table", null, kolonlar(["22%", "28%", "22%", "28%"]), h("tbody", null, ...satirlar));
 }
-const bolum = (no: string, ad: string, ...icerik: ReactNode[]) => h("section", { className: "rb-bolum", key: `${no}-${ad}` }, h("h2", null, `${no}. ${ad}`), ...icerik);
+/* 427: numara "5" → "5. Ad" (h2) · alt bölüm "5.1" → "5.1 Ad" (h3, üst başlığın altında) · numarasız (null) → yalnız ad */
+const bolum = (no: string | null, ad: string, ...icerik: ReactNode[]) => h("section", { className: "rb-bolum", key: `${no ?? "-"}-${ad}` },
+  no?.includes(".") ? h("h3", null, `${no} ${ad}`) : h("h2", null, no ? `${no}. ${ad}` : ad), ...icerik);
+const ustBaslik = (no: string, ad: string) => h("section", { className: "rb-bolum rb-ust", key: `ust-${no}` }, h("h2", null, `${no}. ${ad}`));
 /* seçenek işareti yazı tipinden bağımsız, CSS ile çizilir: gömülü Carlito alt kümelerinde ● / ○ yok — sunucusuz Chromium'da sistem yazı tipi de
    yok, kutu basılırdı (315–317 incelemesi; kilit tests/belge.test.ts "yazı tipi kapsamı") */
 const secenekler = (secilen: readonly string[], liste: readonly string[]) =>
@@ -70,18 +74,15 @@ export function raporBelgesi(v: BelgeVerisi): ReactNode {
   };
   const maddeAdi = new Map(t.bolumler.flatMap((b) => (b.blok === "liste" ? b.gruplar.flatMap((g) => g.maddeler.map((m) => [m.id, m.metin] as const)) : [])));
 
-  /* saha ekranıyla aynı düzen (SahaRaporu.tsx): kayıttan gelen alanlı bilgi bölümü 1. bölümün kopyası (çizilmez); adında "ekipman" geçen bilgi
-     bölümü 2. bölüme katılır; formatın sorduğu alan sabit satırda tekrar edilmez */
-  const ekipmanBlogu = (b: Bolum) => b.blok === "bilgi" && kucuk(b.ad).includes("ekipman") && b.alanlar.some((a) => !a.kaynak);
-  const katilan = t.bolumler.filter(ekipmanBlogu).flatMap((b) => (b.blok === "bilgi" ? [b] : []));
-  const bolumler = t.bolumler.filter((b) => !ekipmanBlogu(b) && !(b.blok === "bilgi" && b.alanlar.length > 0 && b.alanlar.every((a) => a.kaynak)));
+  /* saha ekranıyla aynı düzen ve numaralar (format/duzen.ts, 427): kayıttan gelen alanlı bilgi bölümü 1. bölümün kopyası (çizilmez); ekipman
+     bilgi bölümü 2. bölüme katılır ve adı 2. bölümün başlığı olur; formatın sorduğu alan sabit satırda tekrar edilmez */
+  const cihazEk = !t.bolumler.some((b) => b.blok === "cihaz") && v.cihazlar.length > 0;
+  const duzen = raporDuzeni(t, cihazEk);
+  const katilan = duzen.katilan;
   const formatAdlari = t.bolumler.flatMap((b) => (b.blok === "bilgi" ? b.alanlar.filter((a) => !a.kaynak).map((a) => kucuk(a.ad)) : []));
   const formatta = (x: string) => formatAdlari.some((ad) => ad.includes(x));
-  const cihazEk = !t.bolumler.some((b) => b.blok === "cihaz") && v.cihazlar.length > 0;
   const imzaVar = t.bolumler.some((b) => b.blok === "imza");
   const maddeFotolari = v.fotolar.filter((f) => f.madde);
-  let sira = 0;
-  const yeniNo = () => String(++sira);
 
   const alanDegeri = (a: BolumOf<"bilgi">["alanlar"][number]): ReactNode => {
     if (a.kaynak) return kaynak[a.kaynak] ?? "-";
@@ -186,7 +187,7 @@ export function raporBelgesi(v: BelgeVerisi): ReactNode {
         h("div", null, h("span", null, "Doküman Kodu"), `: ${formKod}`), h("div", null, h("span", null, "Format sürümü"), `: ${v.formatSira}`),
         h("div", null, h("span", null, "Rapor No"), `: ${no}`), h("div", null, h("span", null, "Rapor Tarihi"), `: ${tarihNo(v.tarih.rapor)}`))))),
     v.imza || v.kesin ? null : h("p", { className: "rb-taslak" }, "İmzasız önizleme — muayene uzmanının son imzasıyla geçerli olur."),
-    bolum(yeniNo(), "Firma bilgileri", bilgiTablosu([
+    bolum("1", "Firma bilgileri", bilgiTablosu([
       ["Firma adı", v.kunye.firmaAdi, true], ["Periyodik kontrol adresi", deger(v.kunye.adres), true],
       ["Rapor numarası", no], ["Rapor tarihi", tarihNo(v.tarih.rapor)],
       ["İSG-KATİP sözleşme ID", v.kunye.isgNo ?? "Yok"], ["SGK sicil numarası", v.kunye.sgk ?? "Yok"],
@@ -194,10 +195,10 @@ export function raporBelgesi(v: BelgeVerisi): ReactNode {
       ["Bir sonraki periyodik kontrol tarihi", tarihNo(v.tarih.sonraki)], ["Takip kontrol tarihi", tarihNo(v.tarih.takip)],
       ["Periyodik kontrol metodu ve kapsamı", metot.length ? metot.join(" · ") : "-", true],
     ])),
-    bolum(yeniNo(), "Ekipman bilgileri", bilgiTablosu(ekipman), ...katilan.map((b) => h(Fragment, { key: b.id }, bilgi(b, true)))),
-    cihazEk ? bolum(yeniNo(), "Ölçüm cihazları", cihazTablosu()) : null,
-    ...bolumler.map((b) => bolum(yeniNo(), b.ad, formatBolumu(b))),
-    imzaVar ? null : bolum(yeniNo(), "Yetkili kişi", imza()),
+    bolum("2", duzen.ekipmanBaslik, bilgiTablosu(ekipman), ...katilan.map((b) => h(Fragment, { key: b.id }, bilgi(b, true)))),
+    duzen.cihazNo ? bolum(duzen.cihazNo, "Ölçüm cihazları", cihazTablosu()) : null,
+    ...duzen.bolumler.flatMap((x) => [x.ust ? ustBaslik(x.ust.no, x.ust.ad) : null, bolum(x.no, x.b.ad, formatBolumu(x.b))]),
+    imzaVar ? null : bolum(duzen.sonraki, "Yetkili kişi", imza()),
     maddeFotolari.length ? bolum("Ek", "Kontrol maddelerinin fotoğrafları", fotolar(maddeFotolari, (f) => `${f.ad} · ${maddeAdi.get(f.madde!) ?? ""}`)) : null,
     h("footer", { className: "rb-alt" }, `${v.firma.ad} · ${formKod}`));
 }

@@ -20,7 +20,7 @@
    + "Revize isteğini geri çek"; reddedilirse "Revize isteği reddedildi" şeridi; revizeye gönderilen rapor Yeni açılır, üstünde "Revizeye
    gönderildi (R1)" + gerekçe; rapor no revizyon ekiyle. */
 import { useRouter } from "next/navigation";
-import { useEffect, useMemo, useRef, useState, useSyncExternalStore, useTransition, type ReactNode, type TransitionStartFunction } from "react";
+import { Fragment, useEffect, useMemo, useRef, useState, useSyncExternalStore, useTransition, type ReactNode, type TransitionStartFunction } from "react";
 import { useBildir } from "../../../components/bildirim/Bildirim";
 import { bekleyenIcerik, kayitBilgileriniKapat, kuyrugaEkle, kuyrukAbone, kuyrukAnlik, kuyrukSunucuAnlik, type KuyrukSonucOlayi, type KuyrukTuru } from "../../../components/cevrimdisi/kuyruk";
 import { Girdi, ipucuId } from "../../../components/form/Form";
@@ -31,6 +31,7 @@ import { DegerYok, Kirinti, Kod, NesneBasi, Rozet, SeritKap } from "../../../com
 import { tarihNo } from "../../../components/secim/tarih";
 import { Serit } from "../../../components/serit/Serit";
 import { Tus, TusBaglanti } from "../../../components/tus/Tus";
+import { raporDuzeni } from "../../../format/duzen";
 import { degerlendir } from "../../../format/motor";
 import type { Cevaplar } from "../../../format/tanim";
 import { ayEkle, RAPOR_DURUM, type EkipmanBilgisi, type RaporDurumu, type RaporTarihleri } from "../sema";
@@ -183,19 +184,17 @@ export function SahaRaporu({ v, yeni }: { v: Gorunum; yeni?: { plan: string; eki
       gecersiz={gecersiz(madde ? `${madde}.foto` : bolumId)} mesgul={mesgul} baslat={baslat} yenile={yenile} />,
   };
 
-  /* format bölümleri: yalnız kayıttan gelen alanlı bilgi bölümü 1. bölümün kopyası — çizilmez; adında "ekipman" geçen bilgi bölümü 2. bölüme
-     katılır (maket: formatlı türde "Ekipman bilgileri" formattan) */
+  /* format bölümleri ve numaraları belgeyle ortak (format/duzen.ts, 427): yalnız kayıttan gelen alanlı bilgi bölümü 1. bölümün kopyası — çizilmez;
+     ekipman bilgi bölümü 2. bölüme katılır ve adı 2. bölümün başlığı olur; üst başlıklı bölümler N.1, N.2; numarasız bölüm numarasız */
   const tr = (x: string) => x.toLocaleLowerCase("tr");
-  const ekipmanBlogu = (b: (typeof v.tanim.bolumler)[number]) => b.blok === "bilgi" && tr(b.ad).includes("ekipman") && b.alanlar.some((a) => !a.kaynak);
-  const katilan = v.tanim.bolumler.filter(ekipmanBlogu).flatMap((b) => (b.blok === "bilgi" ? [b] : []));
-  const bolumler = v.tanim.bolumler.filter((b) => !ekipmanBlogu(b) && !(b.blok === "bilgi" && b.alanlar.length > 0 && b.alanlar.every((a) => a.kaynak)));
   /* formatın elle sorduğu alan sabit satırda tekrar edilmez (kayıttan gelen alan sabit satırdan okunur, gizlenmez) */
   const formatAdlari = v.tanim.bolumler.flatMap((b) => (b.blok === "bilgi" ? b.alanlar.filter((a) => !a.kaynak).map((a) => tr(a.ad)) : []));
   const formatta = (...l: string[]) => formatAdlari.some((ad) => l.some((x) => ad.includes(x)));
   /* etiketten okunabilen ve ekranda sabit satırı olan alanlar (385) */
   const etiketAlanlari = ([["marka", "marka"], ["model", "model"], ["seri", "seri no"], ["imal", "imal"]] as const).filter(([, ad]) => !formatta(ad)).map(([k]) => k);
   const cihazEk = !v.tanim.bolumler.some((b) => b.blok === "cihaz") && v.cihazlar.length > 0;
-  const sabitSay = cihazEk ? 3 : 2;
+  const duzen = raporDuzeni(v.tanim, cihazEk);
+  const katilan = duzen.katilan;
   const cihazEksik = v.cihazlar.some((x) => gecersiz(`cihaz.${x.turId}`));
   const bolumEksik = (id: string) => d.eksikler.some((e) => e.bolum === id && gecersiz(e.alan));
   const acik = (id: string) => !kapali.has(id);
@@ -499,7 +498,7 @@ export function SahaRaporu({ v, yeni }: { v: Gorunum; yeni?: { plan: string; eki
       {seritler.length > 0 && <SeritKap>{seritler}</SeritKap>}
 
       <div className={stil.bolumler}>
-        <RaporBolumu id={SABIT.firma} no={1} baslik="Firma bilgileri" acik={acik(SABIT.firma)} degistir={degistir(SABIT.firma)}
+        <RaporBolumu id={SABIT.firma} no="1" baslik="Firma bilgileri" acik={acik(SABIT.firma)} degistir={degistir(SABIT.firma)}
           eksik={gecersiz("tarih.bas") || gecersiz("tarih.bit")}>
           <Satirlar>
             <Satir etiket="Firma adı">{v.kunye.firmaAdi}</Satir>
@@ -519,7 +518,7 @@ export function SahaRaporu({ v, yeni }: { v: Gorunum; yeni?: { plan: string; eki
           </Satirlar>
         </RaporBolumu>
 
-        <RaporBolumu id={SABIT.ekipman} no={2} baslik="Ekipman bilgileri" acik={acik(SABIT.ekipman)} degistir={degistir(SABIT.ekipman)}
+        <RaporBolumu id={SABIT.ekipman} no="2" baslik={duzen.ekipmanBaslik} acik={acik(SABIT.ekipman)} degistir={degistir(SABIT.ekipman)}
           eksik={katilan.some((b) => bolumEksik(b.id))}>
           {/* 385: etiket plakasından okuma — yazılabilir raporda, firmada yapay zekâ açıksa, ekranda satırı olan etiket alanları için */}
           {bag.yz && etiketAlanlari.length > 0 && (
@@ -543,14 +542,17 @@ export function SahaRaporu({ v, yeni }: { v: Gorunum; yeni?: { plan: string; eki
         </RaporBolumu>
 
         {cihazEk && (
-          <RaporBolumu id={SABIT.cihaz} no={3} baslik="Ölçüm cihazları" acik={acik(SABIT.cihaz)} degistir={degistir(SABIT.cihaz)} eksik={cihazEksik}>
+          <RaporBolumu id={SABIT.cihaz} no="3" baslik="Ölçüm cihazları" acik={acik(SABIT.cihaz)} degistir={degistir(SABIT.cihaz)} eksik={cihazEksik}>
             {bag.cihaz(SABIT.cihaz)}
           </RaporBolumu>
         )}
 
-        {bolumler.map((b, i) => (
-          <FormatBolumu key={b.id} b={b} no={sabitSay + i + 1} bag={bag} acik={acik(b.id)} degistir={degistir(b.id)}
-            eksik={bolumEksik(b.id) || (b.blok === "cihaz" && cihazEksik)} />
+        {duzen.bolumler.map(({ b, no, ust }) => (
+          <Fragment key={b.id}>
+            {ust && <h2 className={stil.ustBaslik}><span className={stil.bolumNo}>{ust.no} · </span>{ust.ad}</h2>}
+            <FormatBolumu b={b} no={no} bag={bag} acik={acik(b.id)} degistir={degistir(b.id)}
+              eksik={bolumEksik(b.id) || (b.blok === "cihaz" && cihazEksik)} />
+          </Fragment>
         ))}
       </div>
 

@@ -95,6 +95,15 @@ export const bolumSil = (t: FormatTanimi, i: number): FormatTanimi => (t.bolumle
 export const bolumAdi = (t: FormatTanimi, i: number, ad: string): FormatTanimi =>
   (t.bolumler[i]?.kilit ? t : { ...t, bolumler: t.bolumler.map((b, j) => (j === i ? { ...b, ad: ad.slice(0, 200) } : b)) });
 
+/** 427: bölümün belgedeki düzeni — üst başlık (aynı üst başlıklı ardışık bölümler N.1, N.2 olur) ve numarasızlık; Bakanlık bölümünde değişmez */
+export function bolumDuzeni(t: FormatTanimi, i: number, y: { ust?: string; numarasiz?: boolean }): FormatTanimi {
+  const b = t.bolumler[i];
+  if (!b || b.kilit) return t;
+  const ust = y.ust === undefined ? b.ust : y.ust.slice(0, 200) || undefined;
+  const numarasiz = y.numarasiz === undefined ? b.numarasiz : y.numarasiz || undefined;
+  return { ...t, bolumler: t.bolumler.map((x, j) => (j === i ? { ...x, ust, numarasiz } : x)) };
+}
+
 /* ── ÖĞE DÜZENLEME (426; reisim 2026-10-09: "kullanıcı bu ve benzeri rapor formatlarını isterse kendi eli ile format yapıcıdan yapabilsin") ──
    Öğenin bütün özellikleri: alan türü ve seçenekleri, madde standardı / açıklaması / talimatı / grubu, sütun ve değer türü, seçenekleri, uygun
    değil sayılan seçenekleri, ağırlığı, sınırı, birimi, zorunluluğu. Kilitli (Bakanlık) öğede YALNIZ talimat değişir (resmî formatın içeriği
