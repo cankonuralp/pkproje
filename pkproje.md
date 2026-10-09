@@ -2355,6 +2355,12 @@ revizyon, alan kopyalama, hafif kusur devri, meslek eşleşme denetimi).
 - Emsal ürünler: https://opwire.app/iso-17020-periyodik-kontrol-yazilimi/ · https://17020muayene.vidco.com.tr/ · https://akuple.com/asansor-kontrol-yazilimi/ · https://ensyazilim.com/
 
 ## 11 · Değişiklik günlüğü
+- 2026-10-09 (465): **Plan aç: kendiliğinden gelen ekipman çıkarılır; Excel'den ekipman** (reisim, hata listesi 7: *"mevcutta otomatik gelen
+  ekipmanlarıda silebilmek istiyorum, belki ekstra bir plan geldi ve zaten yapılan ekipmanlar listede yine oluyor gereksiz yere? ayrıca excelden
+  aktarma gibi seçenekler de olmalı."*). Tesisteki her ekipmanda "Çıkar / Geri al" (son kontrol tarihiyle); "Kontrolü yakın olmayanları çıkar"
+  (son kontrol + periyot, firmanın eşiği — kapsamla aynı kural); "Çıkarılanları geri al". Çıkarılan tesiste kalır, yalnız bu plana girmez (L6
+  "hepsi plana girer" bu kadar gevşedi). Elle eklenecekler "Excel'den yükle" ile de (Kod · Ekipman türü · Konum; şablon, satır satır önizleme;
+  kod biçimi ve tekrar denetimi; en çok 200).
 - 2026-10-09 (464): **Rapor ekranında kontrol tarihleri alt alta, kendiliğinden dolu** (reisim, hata listesi 9: *"Periyodik kontrol başlangıç ve
   bitiş tarihleri alt alta olmalı, hemen ardından bir sonraki kontrol tarihi olmalı ve bunlar o günkü tarihe ve saate göre otomatik dolmalı
   istenirse elle düzeltilebilmeli"*). Firma bilgilerinde başlangıç, bitiş ve sonraki kontrol tam satır, alt alta. Başlangıç rapor açılınca yazılır

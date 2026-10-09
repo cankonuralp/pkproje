@@ -29,7 +29,10 @@ export const PlanAcGirdisi = z.object({
     kod: z.preprocess((s) => (typeof s === "string" ? kodNormal(s) : s), z.string({ error: "Ekipman kodu boş" })
       .superRefine((k, bag) => { const b = kodBicimi(k); if (b) bag.addIssue({ code: "custom", message: b.metin }); })),
     konum: z.preprocess(bos, z.string().max(60, "En çok 60 karakter.").nullable()),
-  })).max(50, "En çok 50 ekipman.").default([]),
+  })).max(200, "En çok 200 ekipman.").default([]),
+  /* 465 (reisim 2026-10-09, hata listesi 7: "mevcutta otomatik gelen ekipmanlarıda silebilmek istiyorum, belki ekstra bir plan geldi ve zaten
+     yapılan ekipmanlar listede yine oluyor gereksiz yere"): tesiste kayıtlı olup BU plana alınmayan ekipmanlar (tesis kaydı değişmez) */
+  haric: z.array(z.string().regex(UUID)).max(2000).default([]),
 }).superRefine((p, bag) => {
   p.yeniEkipman.forEach((e, i) => {
     if (p.yeniEkipman.findIndex((x) => x.kod === e.kod) !== i) bag.addIssue({ code: "custom", path: ["yeniEkipman", i, "kod"], message: `${e.kod} listede iki kez yazılmış.` });
@@ -99,7 +102,11 @@ export function adayUyarilari(a: Aday, isg: ReturnType<typeof isgDurumu>, gun: s
 /** türe yetkili: meslek Ek-III grubuna izin veriyor; Ek-III dışı türde meslek kuralı yok (N4) */
 export const turYetkili = (a: Pick<Aday, "meslek">, t: Pick<Tur, "grup">) => t.grup === "ekdisi" || (meslek(a.meslek)?.g ?? []).includes(t.grup);
 
-/** tesisin ekipmanı tür başına (hepsi plana girer — L6); "kontrolü geliyor": sonraki kontrol plan gününden en çok eşik gün sonra (bilinmiyorsa geliyor) */
+/** "kontrolü geliyor": sonraki kontrol (son kontrol + türün periyodu) plan gününden en çok eşik gün sonra; son kontrol bilinmiyorsa geliyor */
+export const kontrolGeliyor = (sonKontrol: string | null, t: Pick<Tur, "periyot">, gun: string, esik: number) =>
+  !sonKontrol || ayEkle(sonKontrol, t.periyot) <= gunEkle(gun, esik);
+
+/** tesisin ekipmanı tür başına (465'ten beri plandan çıkarılanlar çağıranda süzülür); "kontrolü geliyor": kontrolGeliyor */
 export function kapsamHesapla(ekipmanlar: readonly { turId: string; sonKontrol: string | null; pasif: boolean }[], turler: readonly Tur[], gun: string, esik: number): KapsamSatiri[] {
   const m = new Map<string, KapsamSatiri>();
   for (const e of ekipmanlar) {
@@ -108,7 +115,7 @@ export function kapsamHesapla(ekipmanlar: readonly { turId: string; sonKontrol: 
     if (!t) continue;
     const s = m.get(t.id) ?? { tur: t, ekipman: 0, geliyor: 0 };
     s.ekipman++;
-    if (!e.sonKontrol || ayEkle(e.sonKontrol, t.periyot) <= gunEkle(gun, esik)) s.geliyor++;
+    if (kontrolGeliyor(e.sonKontrol, t, gun, esik)) s.geliyor++;
     m.set(t.id, s);
   }
   return [...m.values()].sort((a, b) => (a.tur.brans === b.tur.brans ? a.tur.ad.localeCompare(b.tur.ad, "tr") : a.tur.brans === "m" ? -1 : 1));

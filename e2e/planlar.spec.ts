@@ -28,7 +28,14 @@ test("plan aç: engel, canlı uyarılar, proje no ve künye; denetçi yalnız ke
   await page.getByRole("combobox", { name: "Tesis" }).click();
   await page.getByRole("option", { name: new RegExp(E2E_PLAN.tesis) }).click();
   await expect(page.getByText("Bu tesiste İSG-KATİP SÖZLEŞME ID'si yok.")).toBeVisible();
-  await expect(page.getByText("2 ekipman · 1 tür · hepsi plana girer")).toBeVisible();
+  await expect(page.getByText("2 ekipman · 1 tür plana girer")).toBeVisible();
+  /* 465: kendiliğinden gelen ekipman çıkarılır (tesiste kalır), geri alınır */
+  const tesisteki = page.getByRole("list", { name: "Tesisteki ekipmanlar" });
+  await tesisteki.getByRole("button", { name: /plandan çıkar$/ }).first().click();
+  await expect(page.getByText("1 ekipman · 1 tür plana girer · 1 çıkarıldı")).toBeVisible();
+  await expect(tesisteki.getByText("bu plana alınmayacak", { exact: false })).toBeVisible();
+  await page.getByRole("button", { name: "Çıkarılanları geri al (1)" }).click();
+  await expect(page.getByText("2 ekipman · 1 tür plana girer")).toBeVisible();
   await page.getByRole("checkbox", { name: denetci }).check();
   await expect(page.getByText(`${denetci} — uyarı: İSG-KATİP SÖZLEŞME ID'si yok · EKİPNET kayıt numarası yok.`)).toBeVisible();
   await expect(page.getByText("Hava tankı: ekipte bu türe atanmış denetçi yok (Personel › Ekipman atamaları).")).toBeVisible();
@@ -109,7 +116,7 @@ test("plan aç: elle ekipman satırı plana ve tesise girer; seçilen denetçini
   await page.getByRole("option", { name: /Hava tankı/ }).click();
   await page.getByRole("textbox", { name: "1. ekipman kodu" }).fill(kod.toLowerCase());
   await page.getByRole("textbox", { name: "1. konum" }).fill("Kazan dairesi");
-  await expect(page.getByText("1 ekipman · 1 tür · hepsi plana girer (1 elle eklendi)")).toBeVisible();
+  await expect(page.getByText("1 ekipman · 1 tür plana girer (1 elle eklendi)")).toBeVisible();
   /* geniş ekranda aynı satırdaki bölümler eşit boy (444: "bi taraf uzun bi taraf kısa") */
   if (bilgi.project.name === "masaustu") {
     const boylar = await page.locator("section[id^='pa-b']").evaluateAll((l) => l.map((e) => { const r = e.getBoundingClientRect(); return [Math.round(r.top), Math.round(r.height)]; }));

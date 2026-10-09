@@ -276,3 +276,20 @@ test("444 plan aç: elle ekipman tesise kaydedilir ve plana girer; kod denetimi;
   assert.ok(v.adayEposta[FA.den1P], JSON.stringify(v.adayEposta));
   assert.equal((await a(FA.plan, (db) => tesisPlanBilgisi(db, FA.plan, FA.tesis2)))!.ekipmanlar.find((e) => e.kod === "HT-ELLE-1")?.konum, "Kazan dairesi");
 });
+
+/* 2026-10-09 (465; reisim, hata listesi 7: "mevcutta otomatik gelen ekipmanlarıda silebilmek istiyorum"): formda çıkarılan tesis ekipmanı bu plana
+   girmez, tesiste kalır; başka tesisin ya da bilinmeyen kimlik yok sayılır (plan yine açılır) */
+test("465 plan aç: çıkarılan tesis ekipmanı plana girmez, tesiste kalır; başka tesisin kimliği yok sayılır", async () => {
+  const tesis2 = (await sql<{ id: string; kod: string }>(A, "SELECT id::text, kod FROM ekipman WHERE tesis_id = $1 AND NOT pasif ORDER BY kod", [FA.tesis2])).rows;
+  assert.ok(tesis2.length >= 2, JSON.stringify(tesis2));
+  const cik = tesis2[0];
+  const baska = (await sql<{ id: string }>(A, "SELECT id::text FROM ekipman WHERE tesis_id <> $1 LIMIT 1", [FA.tesis2])).rows[0]?.id ?? "00000000-0000-4000-8000-000000000000";
+  const r = tamam(await a(FA.plan, (db) => planAc(db, depo, FA.plan, A, { tesis: FA.tesis2, baslangic: bugun, bitis: bugun, ekip: [{ personel: FA.den1P }],
+    haric: [cik.id, baska, "00000000-0000-4000-8000-000000000000"] })));
+  const plandaki = (await sql<{ kod: string }>(A, "SELECT e.kod FROM plan_ekipman pe JOIN ekipman e ON e.id = pe.ekipman_id WHERE pe.plan_id = $1 ORDER BY e.kod", [r.id])).rows.map((x) => x.kod);
+  assert.deepEqual(plandaki, tesis2.slice(1).map((x) => x.kod), "çıkarılan plana girmedi, ötekiler girdi");
+  assert.equal((await sql(A, "SELECT 1 FROM ekipman WHERE id = $1 AND tesis_id = $2", [cik.id, FA.tesis2])).rowCount, 1, "tesiste kaldı");
+  /* şema: kimlik değilse geçmez */
+  const g = await a(FA.plan, (db) => planAc(db, depo, FA.plan, A, { tesis: FA.tesis2, baslangic: bugun, bitis: bugun, ekip: [{ personel: FA.den1P }], haric: ["x"] }));
+  assert.equal(g.durum, "gecersiz");
+});

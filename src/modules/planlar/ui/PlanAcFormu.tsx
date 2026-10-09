@@ -5,6 +5,8 @@
    444 (reisim 2026-10-09): kartlar aynı satırda eşit boy, uzun liste kendi içinde kayar (FormBolum kaydir); denetçiler kısa satırlar; seçilen
    denetçinin e-postası Bilgilendirme'de kendiliğinden ("seçilen denetçinin mailleri bilgilendirme maili kısmına otomatik gelsin"); Ekipmanlar:
    tesiste kayıtlılar kendiliğinden + elle satır satır ("el ile de girilebilmeli liste gibi" — açılışta tesise kayıt + plana).
+   465 (hata listesi 7): kendiliğinden gelen ekipman tek tek "Çıkar" / "Geri al"; "Kontrolü yakın olmayanları çıkar" (son kontrol + periyot, eşik
+   firma ayarı — kapsamla aynı kural); elle eklenecekler "Excel'den yükle" ile de (EkipmanExcel.tsx). Çıkarılan tesiste kalır, yalnız bu plana girmez.
    Uyarılar canlı (sema.ts saf kuralları) ve ENGEL DEĞİL; engel yalnız tesis, tarih, bitiş ≥ başlangıç, en az bir denetçi. Karar ve numara sunucuda. */
 import { useRouter } from "next/navigation";
 import { useEffect, useState, useTransition } from "react";
@@ -18,9 +20,10 @@ import { Serit } from "../../../components/serit/Serit";
 import { Tus, TusBaglanti } from "../../../components/tus/Tus";
 import { Ikon } from "../../../components/ikon/Ikon";
 import { meslek } from "../../personel/sema";
-import { adayUyarilari, isgDurumu, kapsamHesapla, kodBicimi, kodNormal, sozlesmeUyarisi, tarihNo, turUyarilari, type Aday } from "../sema";
+import { adayUyarilari, isgDurumu, kapsamHesapla, kodBicimi, kodNormal, kontrolGeliyor, sozlesmeUyarisi, tarihNo, turUyarilari, type Aday } from "../sema";
 import type { PlanAcVerisi, TesisPlanBilgisi } from "../server/planlar";
 import { planAcEylemi, tesisPlanBilgisiEylemi } from "./eylemler";
+import { PlanExcelYukle } from "./EkipmanExcel";
 import { KapsamTablosu } from "./KapsamTablosu";
 import stil from "./planlar.module.css";
 
@@ -50,6 +53,8 @@ export function PlanAcFormu({ veri, baslangic }: { veri: PlanAcVerisi; baslangic
   /* 444: elle eklenen ekipman satırları (tesise kayıtlı olmayan) */
   const [yeni, setYeni] = useState<{ a: number; tur: string; kod: string; konum: string }[]>([]);
   const [sayac, setSayac] = useState(0);
+  /* 465: bu plana alınmayan (tesiste kayıtlı) ekipmanlar */
+  const [haric, setHaric] = useState<ReadonlySet<string>>(() => new Set());
 
   /* tesis seçilince o tesisin İSG-KATİP ID'leri, sözleşmeleri ve ekipmanı sunucudan; yalnız seçili tesisinki kullanılır */
   useEffect(() => {
@@ -67,9 +72,16 @@ export function PlanAcFormu({ veri, baslangic }: { veri: PlanAcVerisi; baslangic
     return [a.id, { isg: isgD, ...adayUyarilari(a, isgD, gun, bit, veri.acikPlanlar) }] as const;
   }));
   const tesisteki = (bilgi?.ekipmanlar ?? []).filter((e) => !e.pasif);
+  const alinan = tesisteki.filter((e) => !haric.has(e.id)), cikarilan = tesisteki.length - alinan.length;
   const elleTam = yeni.filter((e) => e.tur);
-  const kapsam = bilgi ? kapsamHesapla([...bilgi.ekipmanlar, ...elleTam.map((e) => ({ turId: e.tur, sonKontrol: null, pasif: false }))], veri.turler, gun ?? veri.bugun, veri.esik) : [];
+  const kapsam = bilgi ? kapsamHesapla([...alinan, ...elleTam.map((e) => ({ turId: e.tur, sonKontrol: null, pasif: false }))], veri.turler, gun ?? veri.bugun, veri.esik) : [];
   const turAd = (id: string) => veri.turler.find((t) => t.id === id)?.ad ?? "—";
+  /* 465: kontrolü plan gününe yakın olmayan (yakında kontrol edilmiş) ekipmanlar — kapsamdaki "kontrolü geliyor" kuralının tersi */
+  const yakinDegil = tesisteki.filter((e) => {
+    const t = veri.turler.find((x) => x.id === e.turId);
+    return !!t && !kontrolGeliyor(e.sonKontrol, t, gun ?? veri.bugun, veri.esik);
+  });
+  const haricDegistir = (id: string, cikar: boolean) => setHaric((s) => { const y = new Set(s); if (cikar) y.add(id); else y.delete(id); return y; });
   const ekipAday = veri.adaylar.filter((a) => ekip.includes(a.id));
   const toplam = kapsam.reduce((n, k) => n + k.ekipman, 0);
   const acik = veri.acikPlanlar.filter((p) => p.tesis === d.tesis);
@@ -117,7 +129,7 @@ export function PlanAcFormu({ veri, baslangic }: { veri: PlanAcVerisi; baslangic
     const yerel: Record<string, string> = {};
     if (!d.musteri) yerel.musteri = "Müşteri seçilmeli.";
     const r = await planAcEylemi({ tesis: d.tesis, baslangic: d.baslangic, bitis: d.bitis, aciklama: d.aciklama, ekip: ekip.map((k) => ({ personel: k, isgNo: isg[k] ?? "", kaydet: !!kaydet[k] })),
-      bilgilendirme: bilgi_, yeniEkipman: yeni.map(({ tur, kod, konum }) => ({ tur, kod, konum })) });
+      bilgilendirme: bilgi_, yeniEkipman: yeni.map(({ tur, kod, konum }) => ({ tur, kod, konum })), haric: tesisteki.filter((e) => haric.has(e.id)).map((e) => e.id) });
     const hatalar = { ...yerel, ...(r.hatalar ?? {}) };
     setH(hatalar); setGenel(r.genel ?? null);
     if (!r.tamam) {
@@ -252,10 +264,27 @@ export function PlanAcFormu({ veri, baslangic }: { veri: PlanAcVerisi; baslangic
         </FormBolum>
         <FormBolum baslik="5 · Ekipmanlar" id="pa-b6" kaydir={!!d.tesis}>
           {!d.tesis ? <p className={stil.bosSatir}>Önce tesis seçin.</p> : <>
-            <p className={stil.bosSatir}>Tesiste kayıtlı ekipmanın hepsi plana girer{tesisteki.length ? ` (${tesisteki.length})` : ""}. Kayıtlı olmayanı aşağıya
-              satır satır ekleyin: plan açılınca tesise de kaydedilir.</p>
+            <p className={stil.bosSatir}>Tesiste kayıtlı ekipman kendiliğinden plana girer{tesisteki.length ? ` (${alinan.length} / ${tesisteki.length})` : ""}; bu planda
+              kontrol edilmeyecek olanı çıkarın (tesiste kalır). Kayıtlı olmayanı aşağıya satır satır ya da Excel&apos;den ekleyin: plan açılınca tesise de kaydedilir.</p>
+            {tesisteki.length > 0 && <div className={stil.ekleSatiri}>
+              {yakinDegil.some((e) => !haric.has(e.id)) && <Tus tur="ikincil" ikon="filter-x"
+                onClick={() => setHaric((s) => new Set([...s, ...yakinDegil.map((e) => e.id)]))}>Kontrolü yakın olmayanları çıkar ({yakinDegil.filter((e) => !haric.has(e.id)).length})</Tus>}
+              {cikarilan > 0 && <Tus tur="ikincil" ikon="undo-2" onClick={() => setHaric(new Set())}>Çıkarılanları geri al ({cikarilan})</Tus>}
+            </div>}
             {tesisteki.length > 0 && <ul className={stil.ekipmanlar} aria-label="Tesisteki ekipmanlar">
-              {tesisteki.map((e) => <li key={e.id}><span className={stil.kod}>{e.kod}</span><span>{turAd(e.turId)}{e.konum ? <span className={stil.altMetin}>{e.konum}</span> : null}</span></li>)}
+              {tesisteki.map((e) => {
+                const cik = haric.has(e.id), t = veri.turler.find((x) => x.id === e.turId);
+                return (
+                  <li key={e.id} className={cik ? stil.cikarilan : undefined}>
+                    <span className={stil.kod}>{e.kod}</span>
+                    <span>{turAd(e.turId)}{e.konum ? <span className={stil.altMetin}>{e.konum}</span> : null}
+                      <span className={stil.altMetin}>{e.sonKontrol ? `Son kontrol ${tarihNo(e.sonKontrol)}` : "Son kontrol bilinmiyor"}
+                        {t && e.sonKontrol && !kontrolGeliyor(e.sonKontrol, t, gun ?? veri.bugun, veri.esik) ? " · kontrolü yakın değil" : ""}{cik ? " · bu plana alınmayacak" : ""}</span></span>
+                    <Tus tur="ikincil" ikon={cik ? "undo-2" : "x"} aria-label={cik ? `${e.kod} · plana geri al` : `${e.kod} · plandan çıkar`}
+                      onClick={() => haricDegistir(e.id, !cik)}>{cik ? "Geri al" : "Çıkar"}</Tus>
+                  </li>
+                );
+              })}
             </ul>}
             {yeni.length > 0 && <ul className={stil.yeniEkipmanlar} aria-label="Elle eklenecek ekipmanlar">
               {yeni.map((e, i) => {
@@ -278,8 +307,11 @@ export function PlanAcFormu({ veri, baslangic }: { veri: PlanAcVerisi; baslangic
               })}
             </ul>}
             <div className={stil.ekleSatiri}>
-              <Tus tur="ikincil" ikon="plus" disabled={yeni.length >= 50} onClick={() => { setYeni([...yeni, { a: sayac, tur: "", kod: "", konum: "" }]); setSayac(sayac + 1);
+              <Tus tur="ikincil" ikon="plus" disabled={yeni.length >= 200} onClick={() => { setYeni([...yeni, { a: sayac, tur: "", kod: "", konum: "" }]); setSayac(sayac + 1);
                 requestAnimationFrame(() => document.getElementById(`pa-yeni-tur-${sayac}`)?.focus()); }}>Ekipman ekle (elle)</Tus>
+              <PlanExcelYukle turler={veri.turler} tesiste={tesisteki.map((e) => e.kod)} listede={yeni.map((e) => kodNormal(e.kod))} bos={200 - yeni.length}
+                onEkle={(l) => { setYeni([...yeni, ...l.map((x, i) => ({ a: sayac + i, tur: x.tur, kod: x.kod, konum: x.konum }))]); setSayac(sayac + l.length);
+                  bildir(`${l.length} ekipman listeye eklendi; plan açılınca tesise de kaydedilir.`); }} />
             </div>
           </>}
         </FormBolum>
@@ -290,7 +322,7 @@ export function PlanAcFormu({ veri, baslangic }: { veri: PlanAcVerisi; baslangic
               <Bilgi etiket="Bitiş">{bit ? tarihNo(bit) : <DegerYok>Tarih eksik</DegerYok>}</Bilgi>
               <Bilgi etiket="Ekip" genis>{ekipAday.length ? ekipAday.map((a) => a.ad).join(", ") : <DegerYok>Seçilmedi</DegerYok>}</Bilgi>
               <Bilgi etiket="E-posta" genis>{ekipAday.length || bilgi_.length ? `Ekip${bilgi_.length ? ` + ${bilgi_.length} bilgilendirme` : ""}` : <DegerYok>Ekip seçilince</DegerYok>}</Bilgi>
-              <Bilgi etiket="Ekipman" genis>{toplam ? `${toplam} ekipman · ${kapsam.length} tür · hepsi plana girer${elleTam.length ? ` (${elleTam.length} elle eklendi)` : ""}`
+              <Bilgi etiket="Ekipman" genis>{toplam ? `${toplam} ekipman · ${kapsam.length} tür plana girer${elleTam.length ? ` (${elleTam.length} elle eklendi)` : ""}${cikarilan ? ` · ${cikarilan} çıkarıldı` : ""}`
                 : <DegerYok>Tesiste kayıtlı ekipman yok; elle ekleyin ya da denetçi sahada ekler</DegerYok>}</Bilgi>
             </BilgiListesi>
             {kapsam.length > 0 && <div className={stil.tablo}><KapsamTablosu kapsam={kapsam} ekip={ekipAday} /></div>}

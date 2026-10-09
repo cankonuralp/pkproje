@@ -150,8 +150,9 @@ export async function planAc(db: Sorgulayici, depo: Depo, kim: Kisi, firmaId: st
     await ekle(db, EKIP, { plan_id: p.id, personel_id: e.personel, isg_no: kayit?.no ?? e.isgNo, isg_id: kayit?.id ?? null }, { kim: kim.ad, ne: "plan.ekip", gerekce: no });
     if (kayit) await isgKullanildi(db, kim, kayit.id, bugun);
   }
-  /* tesisin etkin ekipmanının hepsi plana girer (L6; kapsam seçimi yok) */
-  for (const e of (await tesisEkipmanlari(db, v.tesis)).filter((x) => !x.pasif)) {
+  /* tesisin etkin ekipmanı plana girer (L6); 465: formda çıkarılanlar hariç (tesis kaydı değişmez; başka tesisin kimliği yok sayılır) */
+  const haric = new Set(v.haric);
+  for (const e of (await tesisEkipmanlari(db, v.tesis)).filter((x) => !x.pasif && !haric.has(x.id))) {
     await ekle(db, PLAN_EKIPMAN, { plan_id: p.id, ekipman_id: e.id, sonradan: false, ekleyen: kim.ad }, { kim: kim.ad, ne: "plan.ekipman", gerekce: no });
   }
   /* 444: elle eklenenler tesise kalıcı kayıt + plana (açılışta — "sonradan" değil) */
