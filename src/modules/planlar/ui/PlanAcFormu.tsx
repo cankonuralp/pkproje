@@ -42,6 +42,8 @@ export function PlanAcFormu({ veri, baslangic }: { veri: PlanAcVerisi; baslangic
   /* 432: bilgilendirme listesi (ekibe ayrıca kendiliğinden gider) — elle yazılan ya da listeden seçilen e-postalar */
   const [bilgi_, setBilgi] = useState<string[]>([]);
   const [yeniEposta, setYeniEposta] = useState("");
+  /* ekleme hatası formun gönderim hatalarından ayrı: yanlış yazılan adres "Plan açılmadı" şeridi çıkarmaz */
+  const [epostaHata, setEpostaHata] = useState<string | null>(null);
   const [genel, setGenel] = useState<string | null>(null);
 
   /* tesis seçilince o tesisin İSG-KATİP ID'leri, sözleşmeleri ve ekipmanı sunucudan; yalnız seçili tesisinki kullanılır */
@@ -126,10 +128,10 @@ export function PlanAcFormu({ veri, baslangic }: { veri: PlanAcVerisi; baslangic
   const bilgiEkle = (x: string) => {
     const a = x.trim().toLowerCase();
     if (!a) return;
-    if (!EPOSTA_BICIMI.test(a) || a.length > 254) { setH((o) => ({ ...o, bilgilendirme: "Geçerli bir e-posta adresi yazın." })); return; }
-    if (bilgi_.includes(a)) { setH((o) => ({ ...o, bilgilendirme: "Bu e-posta listede var." })); return; }
-    if (bilgi_.length >= EN_COK_BILGI) { setH((o) => ({ ...o, bilgilendirme: `En çok ${EN_COK_BILGI} e-posta.` })); return; }
-    setBilgi([...bilgi_, a]); setYeniEposta(""); setH(({ bilgilendirme: _, ...o }) => o);
+    if (!EPOSTA_BICIMI.test(a) || a.length > 254) { setEpostaHata("Geçerli bir e-posta adresi yazın."); return; }
+    if (bilgi_.includes(a)) { setEpostaHata("Bu e-posta listede var."); return; }
+    if (bilgi_.length >= EN_COK_BILGI) { setEpostaHata(`En çok ${EN_COK_BILGI} e-posta.`); return; }
+    setBilgi([...bilgi_, a]); setYeniEposta(""); setEpostaHata(null);
   };
   const ekipEposta = ekipAday.length;
   const rehber = [
@@ -206,10 +208,10 @@ export function PlanAcFormu({ veri, baslangic }: { veri: PlanAcVerisi; baslangic
           <p className={stil.bosSatir}>Plan açılınca ekipteki denetçilere e-posta kendiliğinden gider{ekipEposta ? ` (${ekipEposta} kişi)` : ""}. Başkalarını da
             bilgilendirmek için e-posta yazın ya da listeden seçin.</p>
           <FormIzgara>
-            <Alan id={ID.bilgilendirme} etiket="E-posta ekle" hata={h.bilgilendirme ?? Object.entries(h).find(([k]) => k.startsWith("bilgilendirme."))?.[1]}>
+            <Alan id={ID.bilgilendirme} etiket="E-posta ekle" hata={epostaHata ?? h.bilgilendirme ?? Object.entries(h).find(([k]) => k.startsWith("bilgilendirme."))?.[1]}>
               <div className={stil.epostaEkle}>
                 <Girdi id={ID.bilgilendirme} type="email" inputMode="email" autoComplete="off" maxLength={254} value={yeniEposta} placeholder="E-posta adresi yazın"
-                  hata={!!h.bilgilendirme} onChange={(e) => setYeniEposta(e.target.value)}
+                  hata={!!(epostaHata ?? h.bilgilendirme)} onChange={(e) => { setYeniEposta(e.target.value); setEpostaHata(null); }}
                   onKeyDown={(e) => { if (e.key === "Enter" || e.key === ",") { e.preventDefault(); bilgiEkle(yeniEposta); } }} />
                 <Tus tur="ikincil" ikon="plus" onClick={() => bilgiEkle(yeniEposta)}>Ekle</Tus>
               </div>
