@@ -16,7 +16,7 @@ import stil from "./yonetim.module.css";
 
 /* aranan metin listede görünen tam adresi de taşır (ana alan sunucudan — 347–348 incelemesi: yapıştırılan adres bulunmuyordu) */
 const tanimKur = (anaAlan: string): SuzgecTanimi<FirmaSatiri> => ({
-  ad: "Firmalarda ara", ipucu: "Ünvan, adres, kısa kod", birim: "firma", imkansiz: "",
+  ad: "Firmalarda ara", ipucu: "Ünvan, adres, kısa kod", birim: "firma", sayfa: 20, imkansiz: "",
   metin: (f) => `${f.ad} ${firmaAdresi(f.kisaAd, anaAlan)} ${f.kod} ${f.yonetici?.eposta ?? ""}`,
   cipler: [],
   seciciler: [

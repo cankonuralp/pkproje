@@ -29,7 +29,7 @@ function tanim(kayitlar: readonly PlanSatir[], bugun: string): SuzgecTanimi<Plan
   /* hafta pazartesi başlar (tarih.ts ile aynı) */
   const gun = new Date(`${bugun}T00:00:00Z`).getUTCDay(), pzt = gunEkle(bugun, -((gun + 6) % 7)), paz = gunEkle(pzt, 6), yedi = gunEkle(bugun, 7);
   return {
-    ad: "Planlarda ara", ipucu: "Proje, müşteri, il", birim: "plan", imkansiz: "Bir plan aynı anda iki durumda olamaz",
+    ad: "Planlarda ara", ipucu: "Proje, müşteri, il", birim: "plan", sayfa: 20, imkansiz: "Bir plan aynı anda iki durumda olamaz",
     metin: (p) => [p.no, p.ad, p.musteri, p.adres ?? "", p.ilce ?? "", p.il ?? ""].join(" "),
     alanlar: [
       { k: "ad", ad: "Proje adı", ipucu: "ör. fabrika", metin: (p) => p.ad },

@@ -22,7 +22,7 @@ const eksikVar = (m: MusteriSatiri) => eksikMusteri(m).length > 0 || etkinTesisl
 
 function tanim(kayitlar: readonly MusteriSatiri[]): SuzgecTanimi<MusteriSatiri> {
   return {
-    ad: "Müşterilerde ara", ipucu: "Ünvan, vergi no, tesis, il", birim: "müşteri", imkansiz: "",
+    ad: "Müşterilerde ara", ipucu: "Ünvan, vergi no, tesis, il", birim: "müşteri", sayfa: 20, imkansiz: "",
     metin: (m) => [m.unvan, m.kisa, m.vno ?? "", ...m.tesisler.map((t) => `${t.ad} ${t.ilce ?? ""} ${t.il ?? ""}`)].join(" "),
     cipler: [
       { k: "eksik", ad: "Bilgisi eksik", test: eksikVar },

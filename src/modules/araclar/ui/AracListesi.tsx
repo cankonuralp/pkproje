@@ -24,7 +24,7 @@ import stil from "./araclar.module.css";
 
 function aracTanim(): SuzgecTanimi<AracSatiri> {
   return {
-    ad: "Araçlarda ara", ipucu: "Plaka, marka, kişi", birim: "araç", imkansiz: "Bir araç aynı anda hem depoda hem zimmette olamaz",
+    ad: "Araçlarda ara", ipucu: "Plaka, marka, kişi", birim: "araç", sayfa: 20, imkansiz: "Bir araç aynı anda hem depoda hem zimmette olamaz",
     metin: (v) => `${v.plaka} ${v.tur} ${v.marka} ${v.model} ${kimdeAd(v.kimde)}`,
     cipler: [
       { k: "depo", ad: "Depoda", grup: "yer", test: (v) => v.kimde.tip === "depo" },

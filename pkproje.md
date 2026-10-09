@@ -2355,6 +2355,14 @@ revizyon, alan kopyalama, hafif kusur devri, meslek eşleşme denetimi).
 - Emsal ürünler: https://opwire.app/iso-17020-periyodik-kontrol-yazilimi/ · https://17020muayene.vidco.com.tr/ · https://akuple.com/asansor-kontrol-yazilimi/ · https://ensyazilim.com/
 
 ## 11 · Değişiklik günlüğü
+- 2026-10-09 (425): **Uzun seçenek listeleri ve sayfasız listeler** (reisim telefon ekranıyla: *"tek tek müşteriler gözüküyordu … çok müşteri olunca
+  kullanışsız olur ve donmalara sebep olur bu ve benzeri kurgusal bozuklukları düzenle"*). Ekran görüntüsündeki "Süzgeç" levhası maketin ESKİ
+  sürümü (telefondaki sekme eski kopyayı tutuyordu): güncel maket ve uygulama 8'den çok seçenekte zaten aranır kayan liste gösteriyor. Asıl kusur
+  ölçekte: (1) aranır liste de BÜTÜN seçenekleri çiziyordu — artık en çok 50 eşleşme çizilir, seçili olan hep görünür, "N seçenek daha — aramayla
+  daraltın" (tek hesap src/components/secim/gorunen.ts; her seçim alanı, süzgeç seçicisi ve telefon levhası); (2) dokuz liste sayfasızdı, bütün
+  kayıtları çiziyordu (Planlar, Müşteriler, Personel, Sözleşmeler, Araçlar, Ekipman türleri, Dökümanlar › Standartlar, Performans, yönetimde
+  Firmalar) → raporlardaki gibi 20'şer sayfa (20'den azsa sayfalayıcı görünmez). Kilit: tests/secim-gorunen + bozan. Açık iş (ölçek): listeler
+  kaydın tamamını sunucudan alıyor; çok büyük firmada sunucu tarafı sayfalama gerekecek.
 - 2026-10-08 (424): **YAYIN — 417–423 canlıda** (resmî tatiller, rapor belgesi görsel karşılaştırması, telefonda yan menü 100dvh, site
   taraması, vh → dvh genel kilit + S.A.Y düğmesi, taramanın iki erişilebilirlik bulgusu). 417–418 önce (main 9b88013), sonra main 55a40b2
   (deneme turu 37834166631 tamamen yeşil: denetim, üç genişlik, site taraması firma 58 sayfa × 3 + müşteri paneli, S.A.Y) · /api/saglik

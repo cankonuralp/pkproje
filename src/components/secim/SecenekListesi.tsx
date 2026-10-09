@@ -6,10 +6,10 @@
 import { useEffect, useRef, useState } from "react";
 import { Ikon } from "../ikon/Ikon";
 import { tr } from "../liste/suzgec";
+import { EN_COK_GORUNEN, gorunenSecenekler, type SecimSecenegi } from "./gorunen";
 import stil from "./Secim.module.css";
 
-/** [değer, etiket, ek (sağda soluk; ör. "3 rapor")] */
-export type SecimSecenegi = readonly [deger: string, etiket: string, ek?: string];
+export { EN_COK_GORUNEN, gorunenSecenekler, type SecimSecenegi };
 
 export const UZUN_LISTE = 8;
 
@@ -27,8 +27,7 @@ export function SecenekListesi({ id, ad, secenekler, deger, sec, kapat, ust = fa
   const [ara, setAra] = useState("");
   const kap = useRef<HTMLDivElement>(null);
   const uzun = secenekler.length > UZUN_LISTE;
-  const q = tr(ara.trim());
-  const gorunen = secenekler.filter((o) => !q || tr(o[1]).includes(q));
+  const { liste: gorunen, kalan, hic } = gorunenSecenekler(secenekler, deger, ara);
 
   useEffect(() => {
     const k = kap.current; if (!k) return;
@@ -57,8 +56,9 @@ export function SecenekListesi({ id, ad, secenekler, deger, sec, kapat, ust = fa
 
   return (
     <div className={[stil.liste, ust ? stil.ust : "", sinif].filter(Boolean).join(" ")} id={id} role="listbox" aria-label={ad} ref={kap} onKeyDown={klavye}>
-      {uzun && <SecenekArama ad={ad} deger={ara} degistir={setAra} bos={!gorunen.length} />}
+      {uzun && <SecenekArama ad={ad} deger={ara} degistir={setAra} bos={hic} />}
       {gorunen.map((o) => <SecenekTusu key={o[0]} o={o} secili={o[0] === deger} sec={() => sec(o[0])} />)}
+      <KalanNotu kalan={kalan} />
     </div>
   );
 }
@@ -72,6 +72,11 @@ export function SecenekTusu({ o, secili, sec }: { o: SecimSecenegi; secili: bool
       {o[2] && <span className={stil.ek}>{o[2]}</span>}
     </button>
   );
+}
+
+/** çizilmeyen eşleşmeler (425): kaç seçenek daha var, aramayla daraltılır */
+export function KalanNotu({ kalan }: { kalan: number }) {
+  return kalan > 0 ? <p className={stil.yok} role="status">{kalan.toLocaleString("tr-TR")} seçenek daha — aramayla daraltın.</p> : null;
 }
 
 /** arama kutusu (listenin başında; levhada da) */

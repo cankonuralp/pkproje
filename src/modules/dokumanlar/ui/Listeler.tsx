@@ -22,7 +22,7 @@ import stil from "./dokumanlar.module.css";
 
 function stdTanim(): SuzgecTanimi<StandartSatiri> {
   return {
-    ad: "Standartlarda ara", ipucu: "No, konu, sürüm", birim: "standart", imkansiz: "Bir standart aynı anda iki durumda olamaz",
+    ad: "Standartlarda ara", ipucu: "No, konu, sürüm", birim: "standart", sayfa: 20, imkansiz: "Bir standart aynı anda iki durumda olamaz",
     metin: (s) => `${s.no} ${s.konu} ${s.surumAdi}`,
     cipler: [],
     seciciler: [{ k: "gorunum", ad: "Görünüm", bas: "guncel", secenek: () => [["guncel", "Güncel sürümler"], ["onceki", "Önceki sürümler"], ["hepsi", "Hepsi"]],

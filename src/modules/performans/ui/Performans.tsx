@@ -103,7 +103,7 @@ function ZamanGrafigi({ d, z, kazanc }: { d: Donem; z: ZamanGrubu[]; kazanc: boo
 /* ── PANO ── */
 function kisiTanim(kazanc: boolean) {
   return {
-    ad: "Personelde ara", ipucu: "Ad, meslek", birim: "kişi", imkansiz: "", cipler: [],
+    ad: "Personelde ara", ipucu: "Ad, meslek", birim: "kişi", sayfa: 20, imkansiz: "", cipler: [],
     metin: (p: PanoKisisi) => `${p.ad} ${p.meslek}`,
     seciciler: [
       { k: "gorunum", ad: "Görünüm", bas: "yazan", secenek: () => [["yazan", "Rapor yazanlar"], ["hepsi", "Bütün denetçiler"]] as [string, string][],

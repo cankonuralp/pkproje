@@ -8,10 +8,10 @@ import { usePathname } from "next/navigation";
 import { useCallback, useEffect, useId, useRef, useState } from "react";
 import { Ikon } from "../ikon/Ikon";
 import { Pencere } from "../pencere/Pencere";
-import { SecenekArama, SecenekListesi, SecenekTusu, UZUN_LISTE, useDisariTiklama, ustteMi } from "../secim/SecenekListesi";
+import { gorunenSecenekler, KalanNotu, SecenekArama, SecenekListesi, SecenekTusu, UZUN_LISTE, useDisariTiklama, ustteMi } from "../secim/SecenekListesi";
 import { Tus } from "../tus/Tus";
 import type { ListeKipi } from "./Liste";
-import { aktifSecici, suzgecVar, temizle, tr, uygulanan, type Secici, type SuzgecDurumu, type SuzgecTanimi } from "./suzgec";
+import { aktifSecici, suzgecVar, temizle, uygulanan, type Secici, type SuzgecDurumu, type SuzgecTanimi } from "./suzgec";
 import stil from "./Filtre.module.css";
 
 
@@ -175,15 +175,15 @@ function LevhaGrubu<K>({ secici, deger, degistir }: { secici: Secici<K>; deger: 
       </div>
     );
   }
-  const q = tr(ara.trim());
-  const sirali = [...secenekler.filter((o) => o[0] === deger), ...secenekler.filter((o) => o[0] !== deger)].filter((o) => !q || tr(o[1]).includes(q));
+  const { liste: sirali, kalan, hic } = gorunenSecenekler(secenekler, deger, ara, true);
   return (
     <div className={stil.levhaGrup}>
       <p className={stil.levhaAd}>{secici.ad}</p>
       <div className={stil.levhaListe} role="listbox" aria-label={secici.ad}>
-        <SecenekArama ad={secici.ad} deger={ara} degistir={setAra} bos={!sirali.length} />
+        <SecenekArama ad={secici.ad} deger={ara} degistir={setAra} bos={hic} />
         <div className={stil.levhaKayan}>
           {sirali.map((o) => <SecenekTusu key={o[0]} o={o} secili={o[0] === deger} sec={() => degistir(o[0])} />)}
+          <KalanNotu kalan={kalan} />
         </div>
       </div>
     </div>

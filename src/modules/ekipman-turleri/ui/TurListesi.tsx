@@ -16,7 +16,7 @@ import stil from "./turler.module.css";
 
 function tanim(brans: "m" | "e"): SuzgecTanimi<TurSatiri> {
   return {
-    ad: "Türlerde ara", ipucu: "Tür, kod", birim: "tür", imkansiz: "",
+    ad: "Türlerde ara", ipucu: "Tür, kod", birim: "tür", sayfa: 20, imkansiz: "",
     metin: (t) => `${t.ad} ${t.kod}`,
     cipler: [{ k: "pdfsiz", ad: "Rapor formatı yüklenmedi", test: (t) => !t.format }],
     seciciler: [{ k: "grup", ad: "Ek-III grubu", secenek: () => [["tumu", "Tümü"], ...GRUPLAR.filter((g) => !g.b || g.b === brans).map((g) => [g.k, g.ad] as const)],

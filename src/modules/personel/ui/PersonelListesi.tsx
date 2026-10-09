@@ -18,7 +18,7 @@ const denetci = (p: ListeSatiri) => !!p.hesap?.roller.includes("denetci");
 
 function tanim(kayitlar: readonly ListeSatiri[]): SuzgecTanimi<ListeSatiri> {
   return {
-    ad: "Personelde ara", ipucu: "Ad, meslek, EKİPNET", birim: "kişi", imkansiz: "Bir kişinin branşı hem mekanik hem elektrik olamaz",
+    ad: "Personelde ara", ipucu: "Ad, meslek, EKİPNET", birim: "kişi", sayfa: 20, imkansiz: "Bir kişinin branşı hem mekanik hem elektrik olamaz",
     metin: (p) => [p.ad, meslekAdi(p), p.ekipnet ?? "", p.eposta ?? ""].join(" "),
     cipler: [
       { k: "inspector", ad: "Denetçi", test: denetci },
