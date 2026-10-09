@@ -19,3 +19,12 @@ test("Chromium eklenen her uç maxDuration = 60 taşır (PDF işlevi ayrı, sayf
     assert.ok(cfg.includes(`"${yol}"`) || cfg.includes(`\`${yol}/\\[id\\]\``) || cfg.includes(`\`${yol}/\\[id\\]`), `${e}: ${yol} PDF listesinde değil`);
   }
 });
+
+/* 454 (canlıda araç teslim tutanağı PDF'i "spawn ETXTBSY" ile düştü): sunucusuz Chromium ikili dosyası örnek başına BİR kez açılır (paylaşılan
+   söz), aynı anda iki PDF ikiliyi yazılırken çalıştırmaya kalkmaz; meşgulse bir kez yeniden denenir */
+test("454 sunucusuz Chromium: ikili dosya bir kez açılır, meşgulse bir kez yeniden denenir", () => {
+  const pdf = oku("src/belge/pdf.ts");
+  assert.match(pdf, /sunucusuzYol \?\?= import\("@sparticuz\/chromium"\)/, "açma paylaşılan söz");
+  assert.equal((pdf.match(/\.executablePath\(\)/g) ?? []).length, 1, "executablePath tek yerden");
+  assert.match(pdf, /ETXTBSY/, "meşgul ikiliye bir kez daha");
+});

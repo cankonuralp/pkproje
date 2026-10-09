@@ -35,11 +35,27 @@ export function sayfaHtml(baslik: string, agac: ReactNode): string {
 }
 export const belgeHtml = (v: BelgeVerisi) => sayfaHtml(v.no, raporBelgesi(v));
 
+/* 454 (canlıda, araç teslim tutanağı PDF'i: "spawn ETXTBSY"): aynı sunucu örneğinde iki PDF aynı anda istenince @sparticuz/chromium ikili
+   dosyayı iki kez /tmp'ye açıyor, biri yazılırken öteki çalıştırmaya kalkıyordu. Açma örnek başına BİR kez (paylaşılan söz); çalıştırma yine
+   meşgul derse kısa beklemeyle bir kez daha denenir. */
+let sunucusuzYol: Promise<{ yol: string; args: string[] }> | null = null;
+async function sunucusuz() {
+  sunucusuzYol ??= import("@sparticuz/chromium").then(async ({ default: s }) => ({ yol: await s.executablePath(), args: s.args }))
+    .catch((h: unknown) => { sunucusuzYol = null; throw h; });
+  return sunucusuzYol;
+}
+const mesgul = (h: unknown) => /ETXTBSY/.test(String((h as Error)?.message ?? h));
+
 async function tarayici(): Promise<Browser> {
   if (process.env.PROBATA_CHROMIUM) return chromium.launch({ executablePath: process.env.PROBATA_CHROMIUM });
   if (process.env.VERCEL) {
-    const s = (await import("@sparticuz/chromium")).default;
-    return chromium.launch({ executablePath: await s.executablePath(), args: s.args, headless: true });
+    const { yol, args } = await sunucusuz();
+    try { return await chromium.launch({ executablePath: yol, args, headless: true }); }
+    catch (h) {
+      if (!mesgul(h)) throw h;
+      await new Promise((tamam) => setTimeout(tamam, 400));
+      return chromium.launch({ executablePath: yol, args, headless: true });
+    }
   }
   return chromium.launch();
 }
