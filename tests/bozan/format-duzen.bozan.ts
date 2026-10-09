@@ -4,7 +4,8 @@
    2. Numarasız bölüm numara alınca ZPKR04 "Fotoğraflar" 7 olur, Notlar 8'e kayar.
    3. Ekipman bölümü yalnız adından tanınınca ZPKR04 "Tesis bilgileri" 2. bölüme katılmaz, ayrı bölüm olur.
    4–5 (tests/ekipman-bolumu.test.ts, 460): eski format çevrilirken sabit satırlar bağlı alana dönmezse marka, model … belgeden düşer; 2. bölümde
-   sabit satırı olan kayıttan alanlar çıkmazsa "Ekipman kodu" belgede iki kez basılır. */
+   sabit satırı olan kayıttan alanlar çıkmazsa "Ekipman kodu" belgede iki kez basılır.
+   6 (tests/alt-baslik.test.ts, 461): alt başlık dalı kalkınca alt başlık ana numara alır, sonraki bölümlerin numarası kayar. */
 import assert from "node:assert/strict";
 import { mkdtempSync, readFileSync, rmSync, writeFileSync } from "node:fs";
 import { tmpdir } from "node:os";
@@ -12,6 +13,7 @@ import { join, resolve } from "node:path";
 import { pathToFileURL } from "node:url";
 import { after, test } from "node:test";
 import { SABLONLAR } from "../../src/format/sablonlar.ts";
+import { FormatTanimi } from "../../src/format/tanim.ts";
 
 type Modul = typeof import("../../src/format/duzen.ts");
 const KOK = resolve("src/format");
@@ -34,7 +36,7 @@ test("üst başlık yok sayılınca 5.1 / 5.2 düz numara olur", async () => {
 });
 
 test("numarasız bölüm numara alınca Fotoğraflar numaralanır, Notlar kayar", async () => {
-  const m = await bozuk("if (b.numarasiz) { sonUst = null; return { b, no: null, ust: null }; }", "");
+  const m = await bozuk("if (b.numarasiz) { sonUst = null; anaVar = false; return { b, no: null, ust: null }; }", "");
   assert.equal(no(m, "Fotoğraflar"), "7", "bozuk: fotoğraf numaralı");
   assert.equal(no(m, "Notlar"), "8");
 });
@@ -59,4 +61,10 @@ test("çevirmede kayıttan alanlar kalınca kompresörde 'Ekipman kodu' ikinci k
   const tam = m.ekipmanTamYap(SABLONLAR.KOMPRESOR.tanim).bolumler.find((b) => b.blok === "bilgi" && b.tam);
   assert.ok(tam && tam.blok === "bilgi");
   assert.deepEqual(tam.alanlar.filter((a) => a.kaynak).map((a) => a.kaynak), ["ekipman_kodu", "seri_no", "kullanim_yeri"], "bozuk: kayıttan alanlar kaldı");
+});
+
+test("alt başlık dalı kalkınca 3.1 / 3.2 düz numara olur, sonraki ana bölüm kayar", async () => {
+  const m = await bozuk("if (!ust && b.alt && anaVar) { alt++; return { b, no: `${n}.${alt}`, ust: null }; }", "");
+  const t = FormatTanimi.parse({ sema: 1, bolumler: [{ id: "a", ad: "A", blok: "not" }, { id: "b", ad: "B", blok: "not", alt: true }, { id: "c", ad: "C", blok: "not" }] });
+  assert.deepEqual(m.raporDuzeni(t, false).bolumler.map((x) => x.no), ["3", "4", "5"], "bozuk: alt başlık ana numara aldı");
 });

@@ -15,7 +15,10 @@
    kodu ve türü dışındaki her satırın adı değişir, çıkarılır, yeni alan eklenir; marka, model, seri no … "Ekipman kaydından alan ekle" ile geri
    gelir (değeri ekipman kaydından başlar; kâğıt eski formatı açılışta çevirir — format/duzen.ts ekipmanTamYap). 459: standartlar ve cihazlar
    sabit ve TÜRDEN — metot satırında türün kontrol metodu standartları, ölçüm cihazları bölümünde türün cihaz türleri kendiliğinden (tür
-   sayfasında değişince burada da); cihaz bölümü silinmez, tektir. Kâğıdın renkleri belgenin kendi renkleri — açık / koyu temada aynı kâğıt. */
+   sayfasında değişince burada da); cihaz bölümü silinmez, tektir. 461 (reisim: "üst başlık ekleme olayı kullanımı zorlaştırıyor alt başlık
+   ekleme olayı olmadığı için anlamsız oluyor alt başlık ekleme olsun"): bölümün altına "Alt başlık ekle" (5 → 5.1, 5.2 …); şeritte "alt başlık
+   yap / ana başlık yap"; üst başlık yazma kutusu kalktı (var olan üst başlık görünür, kaldırılır). Kâğıdın renkleri belgenin kendi renkleri —
+   açık / koyu temada aynı kâğıt. */
 import { Fragment, useEffect, useRef, useState, type ReactNode } from "react";
 import { Ikon } from "../../../components/ikon/Ikon";
 import { SecimAlani } from "../../../components/secim/SecimAlani";
@@ -139,11 +142,21 @@ export function Kagit({ t, degis, tur, bolumuSil, bildir }: KagitOzellik) {
   const maddeKoy = (i: number, gid: string) => { const id = yeniKimlik(t, "m"); degis(maddeEkle(t, i, gid, "Yeni madde")); setYeniId(id); };
   const cikar = (i: number, id: string, ad: string) => { degis(ogeSil(t, i, id)); if (ayar?.endsWith(`:${id}`)) setAyar(null); bildir(`“${ad}” çıkarıldı (taslak).`); };
   /** p: yeni bölümün t.bolumler'deki yeri */
-  const bolumKoy = (blok: Blok, p: number) => {
-    const b = yeniBolum(t, blok, BLOK_ADI[blok]);
+  const bolumKoy = (blok: Blok, p: number, alt = false) => {
+    const y = yeniBolum(t, blok, BLOK_ADI[blok]), b: Bolum = alt ? { ...y, alt: true } : y;
     const l = [...t.bolumler]; l.splice(Math.max(0, Math.min(p, l.length)), 0, b);
-    degis({ ...t, bolumler: l }); setYeniId(b.id); bildir(`${BLOK_ADI[blok]} bölümü eklendi (taslak).`);
+    degis({ ...t, bolumler: l }); setYeniId(b.id); bildir(`${BLOK_ADI[blok]} ${alt ? "alt başlık olarak" : "bölümü"} eklendi (taslak).`);
     requestAnimationFrame(() => document.getElementById(`kb-${b.id}`)?.scrollIntoView({ block: "center", behavior: "smooth" }));
+  };
+  /** 461: v. bölümden sonra eklenen alt başlığın ana bölümü — v ana bölümse kendisi, alt başlıksa onun ana bölümü; üst başlıklı grup ya da
+      numarasız bölümden sonra alt başlık olmaz (null) */
+  const anaBolum = (v: number): Bolum | null => {
+    const x = duzen.bolumler[v];
+    if (!x?.no) return null;
+    if (!x.no.includes(".")) return x.b.ust ? null : x.b;
+    if (!x.b.alt) return null;
+    for (let j = v - 1; j >= 0; j--) { const y = duzen.bolumler[j]; if (y.no && !y.no.includes(".")) return y.b; }
+    return null;
   };
   const tasiGorunen = (id: string, yon: -1 | 1) => {
     const v = gorunen.indexOf(id), hedef = gorunen[v + yon];
@@ -329,12 +342,12 @@ export function Kagit({ t, degis, tur, bolumuSil, bildir }: KagitOzellik) {
     <div className={k.panel} role="group" aria-label={`${b.ad} · bölüm ayarları`}>
       <div className={k.panelBas}><b>{b.ad} · bölüm ayarları</b><Tus ikon="x" ad="Bölüm ayarlarını kapat" onClick={() => setAyar(null)} /></div>
       {!b.kilit && <div className={k.panelSatir}>
-        <label className={k.panelAlan}>Üst başlık
-          <input className={k.panelGirdi} value={b.ust ?? ""} maxLength={200} onChange={(e) => degis(bolumDuzeni(t, i, { ust: e.target.value }))} />
-          <span className={k.panelIpucu}>Aynı üst başlığı taşıyan ardışık bölümler belgede 5.1, 5.2 diye sıralanır.</span>
-        </label>
-        <label className={k.panelKutu}><input type="checkbox" checked={!!b.numarasiz} onChange={(e) => degis(bolumDuzeni(t, i, { numarasiz: e.target.checked }))} />
-          Numarasız bölüm (belgede numara almaz)</label>
+        <label className={k.panelKutu}><input type="checkbox" checked={!!b.alt} onChange={(e) => degis(bolumDuzeni(t, i, { alt: e.target.checked }))} />
+          Alt başlık (üstündeki bölümün altında 5.1, 5.2 … diye numaralanır)</label>
+        {!b.alt && <label className={k.panelKutu}><input type="checkbox" checked={!!b.numarasiz} onChange={(e) => degis(bolumDuzeni(t, i, { numarasiz: e.target.checked }))} />
+          Numarasız bölüm (belgede numara almaz)</label>}
+        {b.ust && <span className={k.panelIpucu}>Üst başlık: <b>{b.ust}</b>{" "}
+          <button type="button" className={k.ekle} onClick={() => degis(bolumDuzeni(t, i, { ust: "" }))}>Üst başlığı kaldır</button></span>}
       </div>}
       {b.blok === "liste" && <ListeDuzenleyici t={t} i={i} b={b} degis={degis} />}
       {b.blok === "olcum" && <>
@@ -363,12 +376,17 @@ export function Kagit({ t, degis, tur, bolumuSil, bildir }: KagitOzellik) {
 
   /** bölümler arası "Bölüm ekle" (p: yeni bölümün yeri); ölçüm cihazları bölümü tektir (459) */
   const cihazVar = t.bolumler.some((b) => b.blok === "cihaz");
-  const araEkle = (p: number, ad: string, id: string, son = false) => (
-    <div className={son ? `${k.araEkle} ${k.sonEkle}` : k.araEkle}>
-      <SecimAlani id={id} ad={ad} etiketsiz deger="" ipucu={son ? "+ Bölüm ekle" : "+ Buraya bölüm ekle"} degistir={(x) => bolumKoy(x as Blok, p)}
-        secenekler={cihazVar ? BOLUM_SECENEK.filter(([b]) => b !== "cihaz") : BOLUM_SECENEK} />
-    </div>
-  );
+  /* ana: buraya eklenen alt başlığın ana bölümü (461; yoksa yalnız "Bölüm ekle") */
+  const araEkle = (p: number, ad: string, id: string, son = false, ana: Bolum | null = null) => {
+    const secenekler = cihazVar ? BOLUM_SECENEK.filter(([b]) => b !== "cihaz") : BOLUM_SECENEK;
+    return (
+      <div className={son ? `${k.araEkle} ${k.sonEkle}` : k.araEkle}>
+        <SecimAlani id={id} ad={ad} etiketsiz deger="" ipucu={son ? "+ Bölüm ekle" : "+ Buraya bölüm ekle"} degistir={(x) => bolumKoy(x as Blok, p)} secenekler={secenekler} />
+        {ana && <SecimAlani id={`${id}-alt`} ad={`Alt başlık ekle (${ana.ad} altına)`} etiketsiz deger="" ipucu="+ Alt başlık ekle"
+          degistir={(x) => bolumKoy(x as Blok, p, true)} secenekler={secenekler} />}
+      </div>
+    );
+  };
 
   /* ── 2 · Ekipman bilgileri (460): ekipman kodu ve türü sabit; öteki her satır formatın ekipman bölümünün alanı (kâğıt eski formatı açılışta
      çevirir — tam bölüm her zaman var) ── */
@@ -460,6 +478,10 @@ export function Kagit({ t, degis, tur, bolumuSil, bildir }: KagitOzellik) {
                   <span className={k.tur}>{BLOK_ADI[b.blok]}</span>
                   <span data-yon="-1" className={k.yonKap}><Tus ikon="arrow-up" ad={`${b.ad} · yukarı`} disabled={v === 0} onClick={() => tasiGorunen(b.id, -1)} /></span>
                   <span data-yon="1" className={k.yonKap}><Tus ikon="arrow-down" ad={`${b.ad} · aşağı`} disabled={v === gorunen.length - 1} onClick={() => tasiGorunen(b.id, 1)} /></span>
+                  {!b.kilit && (b.alt && x.no?.includes(".")
+                    ? <Tus ikon="chevron-left" ad={`${b.ad} · ana başlık yap`} onClick={() => degis(bolumDuzeni(t, i, { alt: false }))} />
+                    : v > 0 && anaBolum(v - 1) && <Tus ikon="chevron-right" ad={`${b.ad} · alt başlık yap (${anaBolum(v - 1)!.ad} altına)`}
+                      onClick={() => degis(bolumDuzeni(t, i, { alt: true }))} />)}
                   <Tus ikon="settings" ad={`${b.ad} · bölüm ayarları`} basili={ayar === anahtar} onClick={() => ac(anahtar)} />
                   {!b.kilit && b.blok !== "cihaz" && <Tus ikon="trash-2" ad={`${b.ad} · bölümü sil`} onClick={() => bolumuSil(i)} />}
                 </span>
@@ -468,11 +490,11 @@ export function Kagit({ t, degis, tur, bolumuSil, bildir }: KagitOzellik) {
               {icerik(b, i)}
               {ogePaneli(b, i)}
             </section>
-            {v < duzen.bolumler.length - 1 && araEkle(i + 1, `Buraya bölüm ekle (${b.ad} bölümünden sonra)`, `kb-ekle-${b.id}`)}
+            {v < duzen.bolumler.length - 1 && araEkle(i + 1, `Buraya bölüm ekle (${b.ad} bölümünden sonra)`, `kb-ekle-${b.id}`, false, anaBolum(v))}
           </Fragment>
         );
       })}
-      {araEkle(t.bolumler.length, "Bölüm ekle", "kb-ekle", true)}
+      {araEkle(t.bolumler.length, "Bölüm ekle", "kb-ekle", true, duzen.bolumler.length ? anaBolum(duzen.bolumler.length - 1) : null)}
       <footer className="rb-alt">Firmanızın adı · {t.gorunum.formKodu || `doküman kodu kendiliğinden (${tur.kod})`}</footer>
     </article>
   );

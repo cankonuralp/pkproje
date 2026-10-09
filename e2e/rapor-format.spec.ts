@@ -99,6 +99,14 @@ test("rapor şablonu: şablondan başlat, önizle, yayınla; yeni sürümle eski
     await ad.fill("Deneme yorumu");
     await ad.press("Enter");
     await expect(kagit.getByRole("region", { name: /Deneme yorumu$/ })).toBeVisible();
+    /* 461: alt başlık ekle — sondaki bölümün altına, numarası N.1, adı yerinde yazılır */
+    await page.getByRole("combobox", { name: "Alt başlık ekle (Deneme yorumu altına)" }).click();
+    await page.getByRole("option", { name: /Not \/ yorum/ }).click();
+    const altAd = page.getByRole("textbox", { name: "Bölüm adı" });
+    await expect(altAd).toBeFocused();
+    await altAd.fill("Deneme alt başlık");
+    await altAd.press("Enter");
+    await expect(kagit.getByRole("region", { name: /^\d+\.1 Deneme alt başlık$/ })).toBeVisible();
     /* firma bilgileri sabit: yalnız metot satırı yazılır, bölüm silinmez */
     const firma = kagit.locator("#kb-firma");
     await expect(firma.getByRole("button", { name: /bölümü sil$/ })).toHaveCount(0);
@@ -129,6 +137,7 @@ test("rapor şablonu: şablondan başlat, önizle, yayınla; yeni sürümle eski
     const belge = page.getByRole("region", { name: "Belge önizlemesi" });
     await expect(belge.getByText("Deneme sütunu")).toBeVisible();
     await expect(belge.getByText("Model / tip")).toBeVisible();
+    await expect(belge.getByText(/^\d+\.1 Deneme alt başlık$/)).toBeVisible();
     await expect(belge.getByText("Deneme yorumu", { exact: false }).first()).toBeVisible();
     await goz(page, "kurucu-belge", bilgi.project.name);
     await page.getByRole("button", { name: "Düzenle", exact: true }).click();

@@ -6,6 +6,8 @@
    · Formatta cihaz bölümü yoksa ve rapora cihaz eklendiyse 3 "Ölçüm cihazları" sabit bölümü araya girer.
    · Numaralar: üst başlığı (ust) aynı olan ARDIŞIK bölümler tek numaranın altında N.1, N.2 … (Bakanlık: "Ana başlıklar ve sıralamaları
      değişmeyecek" — ZPKR04 5.1 / 5.2); numarasız bölüm numara almaz (ZPKR04 "Fotoğraflar"), sonrakilerin numarası kaymaz.
+   · 461: alt başlık (alt) — üstündeki ANA bölümün (numaralı, üst başlıksız, kendisi alt olmayan) altında N.1, N.2 …; ana bölüm yoksa (ilk
+     bölüm, numarasız bölümden sonra, üst başlıklı grubun ardından) alt bayrağı yok sayılır, bölüm ana numarasını alır.
    · 460: "tam" ekipman bölümü varsa 2. bölüme YALNIZ o katılır ve 2. bölümde ekipman kodu ve türü dışında sabit satır yoktur (marka, model …
      onun ekipman kaydına bağlı alanlarıdır). Tam bölümsüz eski formatta 2. bölümün sabit satırları: kod, tür ve formatın aynı adlı alanı
      olmayan marka, model, seri no, imal yılı, kullanım yeri, kullanım amacı (sabitEkipmanAlanlari) — belge ve saha ekranı aynı listeden. */
@@ -89,14 +91,17 @@ export function raporDuzeni(t: FormatTanimi, cihazEk: boolean): RaporDuzeni {
   const tam = tamBolum(t);
   const katilan = tam ? [tam] : t.bolumler.filter(ekipmanBolumuMu);
   const kalan = t.bolumler.filter((b) => !katilan.includes(b as BolumOf<"bilgi">) && !kayittanBolumMu(b));
-  let n = cihazEk ? 3 : 2, alt = 0, sonUst: string | null = null;
+  let n = cihazEk ? 3 : 2, alt = 0, sonUst: string | null = null, anaVar = false;
   const bolumler = kalan.map((b): DuzenBolumu => {
-    if (b.numarasiz) { sonUst = null; return { b, no: null, ust: null }; }
+    if (b.numarasiz) { sonUst = null; anaVar = false; return { b, no: null, ust: null }; }
     const ust = b.ust?.trim() || null;
     if (ust && ust === sonUst) { alt++; return { b, no: `${n}.${alt}`, ust: null }; }
+    if (!ust && b.alt && anaVar) { alt++; return { b, no: `${n}.${alt}`, ust: null }; }
     n++;
     sonUst = ust;
+    anaVar = !ust;
     if (ust) { alt = 1; return { b, no: `${n}.1`, ust: { no: String(n), ad: ust } }; }
+    alt = 0;
     return { b, no: String(n), ust: null };
   });
   return { ekipmanBaslik: katilan[0]?.ad || "Ekipman bilgileri", katilan, tam, cihazNo: cihazEk ? "3" : null, bolumler, sonraki: String(n + 1) };

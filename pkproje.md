@@ -2355,6 +2355,11 @@ revizyon, alan kopyalama, hafif kusur devri, meslek eşleşme denetimi).
 - Emsal ürünler: https://opwire.app/iso-17020-periyodik-kontrol-yazilimi/ · https://17020muayene.vidco.com.tr/ · https://akuple.com/asansor-kontrol-yazilimi/ · https://ensyazilim.com/
 
 ## 11 · Değişiklik günlüğü
+- 2026-10-09 (461): **Alt başlık ekleme** (reisim: *"üst başlık ekleme olayı kullanımı zorlaştırıyor alt başlık ekleme olayı olmadığı için anlamsız
+  oluyor alt başlık ekleme olsun"*). Bölüm "alt başlık" olabilir: üstündeki ana bölümün altında 5.1, 5.2 … (ana bölümün kendi içeriği kalır; belgede
+  alt başlık, saha ekranında aynı numara). Format kurucuda her bölümün altında "+ Alt başlık ekle" (bölüm türü seçilir, adı yerinde yazılır),
+  şeritte "alt başlık yap / ana başlık yap"; bölüm ayarlarında "Alt başlık" kutusu. Üst başlık yazma kutusu kalktı (Bakanlık formatlarının üst
+  başlıkları aynen; firmanın elle verdiği üst başlık görünür, "Üst başlığı kaldır"). Bakanlık bölümü alt başlık yapılamaz (kilitli öz).
 - 2026-10-09 (459): **Standartlar ve cihazlar türden, kendiliğinden** (reisim: *"cihazlar ve standartlar ekipman türü sayfasından seçilirse otomatik
   olarak gelsin güncellensin şablon"*). Format kurucuda "Periyodik kontrol metodu ve kapsamı" satırı türün kontrol metodu standartlarını, ölçüm
   cihazları bölümü türün ölçüm cihazı türlerini kendiliğinden gösterir (tür sayfasında değişince kâğıtta ve belge önizlemesinde de; raporda

@@ -56,8 +56,11 @@ const Deger = z.object({
 const Not = z.object({ metin: z.string().trim().min(1).max(400), kusur: z.boolean(), agir: z.boolean().default(false) });
 
 /* ust (427): ardışık bölümlerin ortak üst başlığı — belgede ve ekranda N.1, N.2 numarasıyla tek başlık altında (ZPKR04 "5. Tespit ve
-   değerlendirmeler" › 5.1 / 5.2); numarasiz: bölüm numara almaz (ZPKR04 "Fotoğraflar") — src/format/duzen.ts */
-const ortak = { id: kimlik, ad, kilit: z.boolean().default(false), ust: z.string().max(200).optional(), numarasiz: z.boolean().optional() };
+   değerlendirmeler" › 5.1 / 5.2); numarasiz: bölüm numara almaz (ZPKR04 "Fotoğraflar"); alt (461; reisim 2026-10-09: "alt başlık ekleme olsun"):
+   bölüm üstündeki ana bölümün ALT BAŞLIĞIDIR — ana bölüm 5 ise 5.1, 5.2 … (ana bölümün kendi içeriği kalır) — src/format/duzen.ts */
+const ortak = {
+  id: kimlik, ad, kilit: z.boolean().default(false), ust: z.string().max(200).optional(), numarasiz: z.boolean().optional(), alt: z.boolean().optional(),
+};
 export const Bolum = z.discriminatedUnion("blok", [
   /* tam (460; reisim 2026-10-09: "ekipman bilgileri kısmıda değiştirilebilir olsun zira yangın dolabı gibi ekipmanlarda farklı girdiler
      olabiliyor"): raporun 2. bölümü YALNIZ bu bölümün alanlarıdır — ekipman kodu ve türü dışında sabit satır yok; marka, model … ekipman

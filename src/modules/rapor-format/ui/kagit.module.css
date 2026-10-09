@@ -78,9 +78,9 @@
 .tur { padding: 0 6px; color: #3d3d3d; }
 
 /* bölümler arası "Bölüm ekle": ince, kâğıdın ortasında; sondaki belirgin */
-.araEkle { display: flex; justify-content: center; margin: -4px 0 6px; opacity: .55; }
+.araEkle { display: flex; flex-wrap: wrap; justify-content: center; gap: 4px 8px; margin: -4px 0 6px; opacity: .55; }
 .araEkle:hover, .araEkle:focus-within { opacity: 1; }
-.araEkle > * { width: 240px; }
+.araEkle > * { width: 240px; max-width: 100%; }
 .sonEkle { margin: 4px 0 12px; opacity: 1; }
 @media (pointer: coarse) { .araEkle { opacity: 1; } }
 

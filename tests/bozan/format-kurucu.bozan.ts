@@ -58,7 +58,7 @@ test("olumsuz seçenek süzgeci kalkınca seçeneklerde olmayan değer kalır, t
 
 /* 427: bölüm düzeni kilidi kalkınca Bakanlık bölümünün üst başlığı kurucudan değişir (resmî numaralar kayar) */
 test("bölüm düzeninde kilit denetimi kalkınca Bakanlık bölümünün üst başlığı değişir", async () => {
-  const m = await bozuk("  if (!b || b.kilit) return t;\n  const ust", "  if (!b) return t;\n  const ust");
+  const m = await bozuk("  if (!b || b.kilit) return t;\n  const alt", "  if (!b) return t;\n  const alt");
   const z = SABLONLAR.ZPKR04.tanim, i = z.bolumler.findIndex((b) => b.id === "gozle");
   assert.equal(m.bolumDuzeni(z, i, { ust: "Başka" }).bolumler[i].ust, "Başka", "bozuk: kilitli bölümün üst başlığı değişti");
 });

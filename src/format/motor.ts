@@ -174,7 +174,7 @@ export function kilitNormallestir(t: FormatTanimi, kaynaklar: readonly FormatTan
 const oz = (o: Record<string, unknown>) => JSON.stringify(o, (_k, v) => (v === undefined ? undefined : v));
 /* 427: üst başlık ve numarasızlık da öz — Bakanlık formatının başlık düzeni ("ana başlıklar ve sıralamaları değişmeyecek") değiştirilemez */
 const bolumOzu = (b: Bolum) => oz({
-  blok: b.blok, ad: b.ad, ust: b.ust, numarasiz: b.numarasiz,
+  blok: b.blok, ad: b.ad, ust: b.ust, numarasiz: b.numarasiz, alt: b.alt,
   ...(b.blok === "liste" ? { cevaplar: b.cevaplar } : {}),
   ...(b.blok === "olcum" ? { hesap: b.hesap, notlar: b.notlar, satir: b.satir } : {}),
   ...(b.blok === "sonuc" ? { cumle: b.cumle, aciklama: b.aciklama } : {}),
