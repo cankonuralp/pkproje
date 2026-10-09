@@ -36,7 +36,8 @@ export function Liste<K>({ baslik, sutunlar, kayitlar, anahtar, href, siralama, 
   sutunlar: readonly Sutun<K>[];
   kayitlar: readonly K[];
   anahtar: (kayit: K) => string;
-  href?: (kayit: K) => string;
+  /** satırın adresi; boş / undefined dönen satır bağlantı değildir (437: henüz yüklenmemiş hazır standart) */
+  href?: (kayit: K) => string | undefined;
   siralama?: ListeSiralama;
   kipDegisti?: (kip: ListeKipi) => void;
 }) {

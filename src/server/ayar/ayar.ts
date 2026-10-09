@@ -98,6 +98,8 @@ export const AYAR_BOLUMLERI = {
   }),
   /** Rol yetkileri (Personel › Rol yetkileri; reisim 32): modül → rol sırasıyla 6 düzey. Boş = önerilen düzen. Okuma / yazma src/server/yetki/matris.ts */
   rol_yetki: z.object({ matris: z.record(z.string().regex(/^(\d{1,2}|hareket)$/), z.array(z.enum(DUZEYLER)).length(6)).default({}) }),
+  /** 437 · hazır kurulum (rapor-format/server/kurulum.ts): kurulmuş Bakanlık şablonları — bir şablon bir kez kurulur; ekranda yok, kişi yazmaz */
+  kurulum: z.object({ bakanlik: z.array(z.string().regex(/^[A-Z][A-Z0-9_]{1,23}$/)).max(100).default([]) }),
 } as const;
 export type AyarBolumu = keyof typeof AYAR_BOLUMLERI;
 export type Ayar<B extends AyarBolumu> = z.infer<(typeof AYAR_BOLUMLERI)[B]>;

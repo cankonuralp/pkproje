@@ -17,7 +17,7 @@ import { tarihYaz } from "../../../../modules/ekipman-turleri/ui/ortak";
 import { modulBul } from "../../../../modules/moduller";
 import { SABLONLAR } from "../../../../format/sablonlar";
 import { formatDegistirir, formatSurumleri, formatSilebilir } from "../../../../modules/rapor-format/server/formatlar";
-import { SablonBaslatTusu, SablonTablosu } from "../../../../modules/rapor-format/ui/SablonBolumu";
+import { SablonBaslatTusu, SablonTablosu, SifirdanTusu } from "../../../../modules/rapor-format/ui/SablonBolumu";
 import { surumAdi, tarihYaz as sablonTarihi } from "../../../../modules/rapor-format/ui/ortak";
 import { modulOturumu, oturumIslemi } from "../../../../server/kimlik/istek";
 
@@ -52,8 +52,11 @@ export default async function Sayfa({ params }: { params: Promise<{ id: string }
           : <SeritKap><Serit tur="uyari" ikon="file-plus">Bu türün rapor formatı yüklenmedi. PDF yüklenince bu türde rapor oluşturulur.</Serit></SeritKap>}
       </Bolum>
       <Bolum id="b-sablon" baslik="Rapor şablonu" sayac={surumler.length ? <><b>{surumler.length}</b> sürüm</> : undefined}
-        tuslar={sablonYaz && <SablonBaslatTusu turId={t.id} turAd={t.ad} taslak={taslak ? { surum: taslak.surum, degisti: taslak.degisti } : null}
-          surumler={surumler} sablonlar={SABLON_SECENEKLERI} />}>
+        tuslar={sablonYaz && <>
+          <SifirdanTusu turId={t.id} turAd={t.ad} taslak={taslak ? { surum: taslak.surum, degisti: taslak.degisti } : null} />
+          <SablonBaslatTusu turId={t.id} turAd={t.ad} taslak={taslak ? { surum: taslak.surum, degisti: taslak.degisti } : null}
+            surumler={surumler} sablonlar={SABLON_SECENEKLERI} />
+        </>}>
         {surumler.length ? <SablonTablosu turId={t.id} surumler={surumler} yaz={sablonYaz} sil={formatSilebilir(o)} />
           : <SeritKap><Serit tur="uyari" ikon="layout-list">Rapor şablonu yayınlanmadı.</Serit></SeritKap>}
       </Bolum>

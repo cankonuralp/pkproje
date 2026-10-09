@@ -42,7 +42,7 @@ export function SuzgecliListe<K>({ s, on, baslik, sutunlar, anahtar, href, bosVe
   baslik: string;
   sutunlar: readonly Sutun<K>[];
   anahtar: (kayit: K) => string;
-  href?: (kayit: K) => string;
+  href?: (kayit: K) => string | undefined;
   /** hiç kayıt yokken (ilk kullanım) */
   bosVeri: { ikon: string; baslik: string; metin: string; eylem?: BosDurumEylemi };
   /** sütun başlığı sıralar (tanımda siralama seçicisi ve siraAnahtari olmalı) */

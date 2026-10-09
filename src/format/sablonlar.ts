@@ -535,3 +535,21 @@ export const SABLONLAR: Readonly<Record<string, SablonKaydi>> = Object.freeze({
   ZPKR05: { ad: "Trafo (ZPKR05, Bakanlık)", tanim: FormatTanimi.parse(ZPKR05), bakanlik: true, kriter: "ZPKK05", tur: elektrik("Trafo", "TRF") },
   KOMPRESOR: { ad: "Kompresör (genel)", tanim: FormatTanimi.parse(KOMPRESOR), bakanlik: false, kriter: null, tur: { ad: "Kompresör", kod: "KMP", grup: "basincli", periyot: 12 } },
 });
+
+/** 437 · SIFIRDAN (reisim 2026-10-09: "RAPOR ŞABLONUNDA SIFIRDAN RAPOR ŞABLONU OLUŞTURMAK YOK") — kitaplıkta değil, boş iskelet: firma ve ekipman
+    bilgileri (kayıttan), ölçüm cihazları, kontrol maddeleri (boş grup — Format kurucuda eklenir), fotoğraf, kusur, not, sonuç, imza. Kilit yok. */
+export const bosFormat = (baslik: string): FormatTanimi => FormatTanimi.parse({
+  sema: 1,
+  gorunum: { formKodu: "", baslik: baslik.slice(0, 200), dayanak: [] },
+  kurallar: { foto: false, derece: false, oneri: true },
+  bolumler: [
+    firma(false),
+    { id: "ekipman", ad: "Ekipman bilgileri", blok: "bilgi", alanlar: [
+      { id: "ekipman_kodu", ad: "Ekipman kodu", tur: "metin", kaynak: "ekipman_kodu" }, { id: "seri", ad: "Seri no", tur: "metin", kaynak: "seri_no" },
+      { id: "yer", ad: "Kullanım yeri", tur: "metin", kaynak: "kullanim_yeri" },
+    ] },
+    { id: "cihaz", ad: "Ölçüm cihazları", blok: "cihaz" },
+    { id: "kontrol", ad: "Kontrol maddeleri", blok: "liste", cevaplar: CEVAP, gruplar: [{ id: "k", ad: "", maddeler: [] }] },
+    ...sonBolumler(false, "Periyodik kontrol tarihi itibarıyla yukarıda teknik özellikleri belirtilen ekipmanın muayenesi sonrasında mevcut şartlar altında kullanımı", true),
+  ],
+} satisfies FormatGirdisi);

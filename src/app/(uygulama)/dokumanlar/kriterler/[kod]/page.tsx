@@ -1,9 +1,11 @@
-/* KONTROL KRİTERLERİ BELGESİ (maket standartlar.html #/k/<kod>): belge bilgileri · maddeler (no, başlık, içerik, standart / yönetmelik) · notlar. */
+/* KONTROL KRİTERLERİ BELGESİ (maket standartlar.html #/k/<kod>): belge bilgileri · maddeler (no, başlık, içerik, standart / yönetmelik) · notlar.
+   437: başlıkta Bakanlığın resmî belgesi (PDF, …/pdf) yeni sekmede. */
 import type { Metadata } from "next";
 import { notFound } from "next/navigation";
 import { Bilgi, BilgiListesi } from "../../../../../components/bilgi/Bilgi";
 import { Yetkisiz } from "../../../../../components/hata/Hata";
 import { Bolum, Kirinti, Kod, NesneBasi, Rozet } from "../../../../../components/sayfa/Sayfa";
+import { TusBaglanti } from "../../../../../components/tus/Tus";
 import { modulBul } from "../../../../../modules/moduller";
 import { tarihYaz } from "../../../../../modules/dokumanlar/ui/ortak";
 import stil from "../../../../../modules/dokumanlar/ui/dokumanlar.module.css";
@@ -21,7 +23,8 @@ export default async function Sayfa({ params }: { params: Promise<{ kod: string 
   return (
     <>
       <Kirinti ogeler={[["Muayene kriterleri", "/dokumanlar/kriterler"], [x.kod]]} />
-      <NesneBasi baslik={x.kod} rozet={<Rozet tur="tamam">Yürürlükte</Rozet>} altIkon="list-checks" alt={x.ad} />
+      <NesneBasi baslik={x.kod} rozet={<Rozet tur="tamam">Yürürlükte</Rozet>} altIkon="list-checks" alt={x.ad}
+        tuslar={<TusBaglanti ikon="file-text" href={`/dokumanlar/kriterler/${x.kod}/pdf`} yeniSekme>Bakanlık belgesi (PDF)</TusBaglanti>} />
       <Bolum id="b-krt-belge" baslik="Belge">
         <BilgiListesi>
           <Bilgi etiket="Doküman kodu"><Kod>{x.kod}</Kod></Bilgi>

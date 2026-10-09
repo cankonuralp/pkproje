@@ -120,6 +120,9 @@ pkproje/
                             şablondan başlat · taslak kaydet · yayınla (kilitli Bakanlık öğesi ENGEL, öteki denetim uyarı) · yayındaki format;
                             ekran: tür sayfası "Rapor şablonu" + önizleme /ekipman-turleri/<tür>/sablon/<sürüm> · FORMAT KURUCU (338, K4):
                             …/sablon/<taslak>/kurucu (ui/FormatKurucu.tsx; saf düzenleme kurucu.ts — yeni kimlik tekil, kilitli bölüm / öğe silinmez) · 370 taslakSil (0065)
+                            · 436 hazır şablonlar Ekipman türleri'nde (ui/HazirFormatlar, sablondanTurEkle; önizleme /ekipman-turleri/sablon/<ZPKR…>)
+                            · 437 HAZIR KURULUM server/kurulum.ts: firmanın ilk açılışında (Ana sayfa, Ekipman türleri) Bakanlık türleri — tür + resmî PDF +
+                            yayında şablon (sistem, hesapsız, danışma kilidi; firma ayarı "kurulum") · "bos" başlangıç = sıfırdan (sablonlar.ts bosFormat)
   src/modules/planlar/      PLANLAR (2026-10-04, 309–310; modül 13): plan + plan ekibi (göç 0023; proje no sunucuda, değişmez; künye kayıttan) ·
                             Plan aç /planlar/ac (uyarılar sema.ts'te saf, engel değil) · liste /planlar · plan içi /planlar/<id> (server/plan-ici.ts:
                             akış kabul/red/kontrol/tamamla, künye düzenle/güncelle, plan ekipmanı, proje notları; geçişler göç 0024 tetiğinde) · 372 planSil
@@ -216,6 +219,9 @@ pkproje/
                             325: excel.ts (saf: Excel'den yükle → kalemler, Excel'e aktar, şablon) + ui/EkipmanExcel.tsx · teklif belgesi
                             src/belge/teklif.ts (temel format <kod>-FR-TKL-01) → PDF /teklifler/<id>/pdf (src/belge/pdf.ts teklifPdf) · 368 teklifSil (taslak; 0063)
   src/tanim/iller.ts        81 il + 973 ilçe (açık veri, MIT; bir kez alındı)
+  src/tanim/bakanlik/       Bakanlığın resmî PDF'leri ZPKR01–05 (rapor formatı) + ZPKK01–05 (kriterler) — okuyucu src/server/bakanlik.ts; okuyan uçlar
+                            next.config.ts izinde (437)
+  src/tanim/standartlar.ts  Bakanlık formatlarının standartları (437; Dökümanlar › Standartlar hazır satırları "Yükle" → "Görüntüle", türün metot standartları)
   src/modules/<modül>/      ★ her iş modülü: server/ (veri erişimi + iş kuralları, dışa açılan fonksiyonlar) · ui/ · şema · testler
   src/tanim/tanimlar.ts     SABİT TANIMLAR (durum adları, eğri çarpanları, mesai sınırları, resmî tatiller — 417, yıllık güncelleme …): şemalı, karma adlı JSON → /api/tanim (2026-10-04)
   src/sema/ortak.ts         ORTAK ŞEMA (zod): girdi doğrulamanın tek kaynağı, sunucu ve istemci aynı şemayı kullanır (2026-10-03)

@@ -4,6 +4,8 @@
   color: var(--onay-yazi); font-weight: 600; font-variant-numeric: tabular-nums; text-decoration: underline; text-decoration-color: transparent; text-underline-offset: 3px;
 }
 .no:hover { text-decoration-color: currentColor; }
+/* 437: henüz yüklenmemiş hazır standardın numarası (bağlantı değil) */
+.hazirNo { display: inline-flex; align-items: center; min-height: var(--tus-y); font-weight: 600; font-variant-numeric: tabular-nums; }
 .dosya { width: 100%; min-height: var(--tus-y); font: inherit; color: var(--yazi); }
 .tuslar { display: flex; flex-wrap: wrap; justify-content: flex-end; gap: 8px; }
 .surumler { list-style: none; margin: 0; padding: 0; display: grid; }

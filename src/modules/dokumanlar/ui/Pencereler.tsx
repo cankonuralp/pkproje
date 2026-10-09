@@ -17,11 +17,12 @@ import stil from "./dokumanlar.module.css";
 const SID = { no: "stw-no", surum: "stw-surum", konu: "stw-konu", dosya: "stw-dosya" } as const;
 const DID = { ad: "dkw-ad", tur: "dkw-tur", kod: "dkw-kod", rev: "dkw-rev", dosya: "dkw-dosya" } as const;
 
-export function StandartPenceresi({ kapat, guncel, guncelListe }: { kapat: () => void; guncel?: StandartSatiri; guncelListe: StandartSatiri[] }) {
+/** 437: `oneri` — listedeki hazır Bakanlık standardının "Yükle"si: numara ve konu dolu; yüklenince listede kalınır (satır "Görüntüle" olur) */
+export function StandartPenceresi({ kapat, guncel, guncelListe, oneri }: { kapat: () => void; guncel?: StandartSatiri; guncelListe: StandartSatiri[]; oneri?: { no: string; konu: string } }) {
   const router = useRouter();
   const bildir = useBildir();
   const [bekliyor, baslat] = useTransition();
-  const [d, setD] = useState({ no: guncel?.no ?? "", surum: "", konu: guncel?.konu ?? "" });
+  const [d, setD] = useState({ no: guncel?.no ?? oneri?.no ?? "", surum: "", konu: guncel?.konu ?? oneri?.konu ?? "" });
   const [h, setH] = useState<Record<string, string>>({});
   const [genel, setGenel] = useState<string | null>(null);
   const form = useRef<HTMLFormElement>(null);
@@ -35,11 +36,12 @@ export function StandartPenceresi({ kapat, guncel, guncelListe }: { kapat: () =>
     if (!r.tamam) { const k = Object.keys(r.hatalar ?? {})[0] as keyof typeof SID | undefined; if (k && SID[k]) requestAnimationFrame(() => document.getElementById(SID[k])?.focus()); return; }
     kapat();
     bildir(`${noDuz}:${d.surum.trim().toUpperCase()} ${ayni ? "yüklendi; önceki sürüm saklandı." : "kütüphaneye eklendi."}`);
-    router.push(`/dokumanlar/standart/${r.id}`);
+    if (!oneri) router.push(`/dokumanlar/standart/${r.id}`);
     router.refresh();
   });
   return (
-    <Pencere acik baslik={guncel ? `Yeni sürüm yükle · ${guncel.no}` : "Standart yükle"} onKapat={kapat} odak={`#${guncel ? SID.surum : SID.no}`} genis
+    <Pencere acik baslik={guncel ? `Yeni sürüm yükle · ${guncel.no}` : oneri ? `Standart yükle · ${oneri.no}` : "Standart yükle"} onKapat={kapat}
+      odak={`#${guncel || oneri ? SID.surum : SID.no}`} genis
       alt={<><Tus tur="ikincil" onClick={kapat}>Vazgeç</Tus><Tus ikon="check" disabled={bekliyor} aria-busy={bekliyor || undefined} onClick={kaydet}>{guncel ? "Yeni sürümü yükle" : "Yükle"}</Tus></>}>
       {genel && <Serit tur="hata" ikon="circle-alert">{genel}</Serit>}
       <form ref={form} onSubmit={(e) => { e.preventDefault(); kaydet(); }}>

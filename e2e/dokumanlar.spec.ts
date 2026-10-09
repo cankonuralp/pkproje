@@ -1,6 +1,6 @@
 /* NEREDEN GELDİ: K2 Dökümanlar (2026-10-04) — maket standartlar.html (M7). Gerçek tarayıcıda, üç genişlikte: standart yükle (PDF zorunlu,
    numara büyük harfe) → standart sayfası "Güncel" → yeni sürüm yükle → eskisi "Önceki" · muayene kriterleri belgesi açılır · diğer döküman
-   yükle · denetçi görür, yükleyemez. Her proje kendi uydurma standart numarasını açar. */
+   yükle · denetçi görür, yükleyemez. Her proje kendi uydurma standart numarasını açar. 437: hazır Bakanlık standardı Yükle → Görüntüle. */
 import { expect, test } from "@playwright/test";
 import { girisli, hazir } from "./yardimci";
 
@@ -32,6 +32,26 @@ test("dökümanlar: standart ve yeni sürümü, kriter belgesi, diğer döküman
   await y.getByRole("button", { name: "Yeni sürümü yükle" }).click();
   await expect(page.getByRole("heading", { level: 1, name: `${no}:2020` })).toBeVisible({ timeout: 30_000 });
   await expect(page.getByRole("link", { name: `${no}:2016` })).toBeVisible();
+
+  /* 437: Bakanlık formatlarının standartları hazır — kütüphanede yoksa "Yükle" (numara, konu dolu) → yüklenince listede "Görüntüle" (PDF) */
+  const hazirNo = [["TS EN 50522", "TS EN 62423", "TS 622"], ["TS EN 61008-1", "TS EN 61009-1", "TS EN 62561"], ["TS EN 12464-1", "TS IEC 61439", "TS EN 60079-14"]]
+    [Math.max(0, ["masaustu", "tablet", "telefon"].indexOf(bilgi.project.name))][bilgi.retry % 3];
+  await page.goto("/dokumanlar");
+  await hazir(page);
+  await page.getByRole("searchbox", { name: "Standartlarda ara" }).fill(hazirNo);
+  await expect(page.getByText("Yüklenmedi").first()).toBeVisible();
+  await page.getByRole("button", { name: `${hazirNo} · Yükle` }).click();
+  const h = page.getByRole("dialog", { name: `Standart yükle · ${hazirNo}` });
+  await expect(h.getByLabel("Standart no")).toHaveValue(hazirNo);
+  await expect(h.getByLabel("Konu")).not.toHaveValue("");
+  await h.getByLabel("Sürüm").fill("2011");
+  await h.getByLabel("Dosya (PDF)").setInputFiles(PDF);
+  await h.getByRole("button", { name: "Yükle" }).click();
+  const gor = page.getByRole("link", { name: `${hazirNo}:2011 · Görüntüle` });
+  await expect(gor).toBeVisible({ timeout: 30_000 });
+  await expect(gor).toHaveAttribute("href", /^\/api\/dosya\/[0-9a-f-]{36}$/);
+  await expect(page).toHaveURL(/\/dokumanlar$/);
+  await expect(page.getByRole("button", { name: `${hazirNo} · Yükle` })).toHaveCount(0);
 
   await page.goto("/dokumanlar/kriterler");
   await hazir(page);

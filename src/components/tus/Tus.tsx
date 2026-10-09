@@ -21,11 +21,9 @@ export function Tus({ tur = "birincil", ikon, children, className, type = "butto
   );
 }
 
-export function TusBaglanti({ tur = "ikincil", ikon, href, children }: { tur?: TusTuru; ikon?: string; href: string; children: ReactNode }) {
-  return (
-    <Link className={tusSinifi(tur)} href={href}>
-      {ikon && <Ikon ad={ikon} kucuk />}
-      {children}
-    </Link>
-  );
+/** 437: `yeniSekme` — belge (PDF) yeni sekmede açılır: istemci yönlendiricisi değil, düz bağlantı */
+export function TusBaglanti({ tur = "ikincil", ikon, href, children, yeniSekme = false }: { tur?: TusTuru; ikon?: string; href: string; children: ReactNode; yeniSekme?: boolean }) {
+  const ic = <>{ikon && <Ikon ad={ikon} kucuk />}{children}</>;
+  if (yeniSekme) return <a className={tusSinifi(tur)} href={href} target="_blank" rel="noopener">{ic}</a>;
+  return <Link className={tusSinifi(tur)} href={href}>{ic}</Link>;
 }

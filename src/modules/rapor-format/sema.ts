@@ -10,8 +10,9 @@ export const sablonBul = (k: string) => (SABLON_ANAHTARI.test(k) && Object.hasOw
 
 const kirp = (s: unknown) => (typeof s === "string" ? s.trim().replace(/\s+/g, " ") : s);
 
-/** başlangıç: "sablon:<anahtar>" ya da "surum:<kimlik>" — pencerenin tek seçim alanının değeri */
-export const BaslatGirdisi = z.string({ error: "Başlangıç seçilmeli." }).transform((s, bag): { sablon: string } | { surumId: string } => {
+/** başlangıç: "sablon:<anahtar>" ya da "surum:<kimlik>" — pencerenin tek seçim alanının değeri · 437: "bos" — sıfırdan (boş iskelet) */
+export const BaslatGirdisi = z.string({ error: "Başlangıç seçilmeli." }).transform((s, bag): { sablon: string } | { surumId: string } | { bos: true } => {
+  if (s === "bos") return { bos: true };
   const [tur, deger = ""] = s.split(/:(.*)/s);
   if (tur === "sablon" && sablonBul(deger)) return { sablon: deger };
   if (tur === "surum" && /^[0-9a-f]{8}-[0-9a-f]{4}-[0-9a-f]{4}-[0-9a-f]{4}-[0-9a-f]{12}$/.test(deger)) return { surumId: deger };

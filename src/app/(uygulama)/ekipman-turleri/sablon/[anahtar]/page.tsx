@@ -1,13 +1,14 @@
 /* HAZIR RAPOR FORMATI ÖNİZLEMESİ (436; reisim 2026-10-09: "EKİPMAN TÜRLERİNDE BAKANLIK FORMATLARINI DA GÖREMEDİM") — probata kitaplığındaki bir şablon
    (src/format/sablonlar.ts): başlık, form kodu, Bakanlık formatı mı, kriter belgesi bağlantısı · yüzler (bölüm, madde, kilitli öğe) · görünüm
    (dayanak) · saha ekranı önizlemesi (FormatOnizleme). "Tür olarak ekle" yalnız tür ve format değiştirebilene; karar sunucuda. Kitaplıkta olmayan
-   anahtar: bulunamadı. */
+   anahtar: bulunamadı. 437: Bakanlık formatında resmî form (PDF, …/pdf) yeni sekmede. */
 import type { Metadata } from "next";
 import Link from "next/link";
 import { notFound } from "next/navigation";
 import { Bilgi, BilgiListesi, Yuz, Yuzler } from "../../../../../components/bilgi/Bilgi";
 import { Yetkisiz } from "../../../../../components/hata/Hata";
 import { Bolum, DegerYok, Kirinti, NesneBasi, Rozet } from "../../../../../components/sayfa/Sayfa";
+import { TusBaglanti } from "../../../../../components/tus/Tus";
 import { kilitliKimlikler } from "../../../../../format/motor";
 import { bransAd, grupBul } from "../../../../../modules/ekipman-turleri/sema";
 import { turDegistirir } from "../../../../../modules/ekipman-turleri/server/turler";
@@ -17,6 +18,7 @@ import { formatDegistirir } from "../../../../../modules/rapor-format/server/for
 import { sablonBul } from "../../../../../modules/rapor-format/sema";
 import { FormatOnizleme } from "../../../../../modules/rapor-format/ui/FormatOnizleme";
 import stil from "../../../../../modules/rapor-format/ui/format.module.css";
+import { bakanlikBelgesiMi } from "../../../../../server/bakanlik";
 import { modulOturumu } from "../../../../../server/kimlik/istek";
 import { kriterBelgesi } from "../../../../../tanim/kriterler";
 
@@ -38,7 +40,10 @@ export default async function Sayfa({ params }: { params: Promise<{ anahtar: str
       <NesneBasi baslik={t.gorunum.baslik || s.ad} altIkon="layout-list"
         rozet={s.bakanlik ? <Rozet tur="kabul">Bakanlık formatı</Rozet> : <Rozet tur="notr">Hazır şablon</Rozet>}
         alt={<>{t.gorunum.formKodu ? `${t.gorunum.formKodu} · ` : ""}{kriter ? <Link href={`/dokumanlar/kriterler/${kriter.kod}`}>{kriter.kod} kontrol kriterleri</Link> : s.ad}</>}
-        tuslar={turDegistirir(o) && formatDegistirir(o) && <SablonTurEkleTusu sablon={{ anahtar, ad: t.gorunum.formKodu || s.ad, tur: s.tur }} />} />
+        tuslar={<>
+          {s.bakanlik && bakanlikBelgesiMi(t.gorunum.formKodu) && <TusBaglanti ikon="file-text" href={`/ekipman-turleri/sablon/${anahtar}/pdf`} yeniSekme>Resmî form (PDF)</TusBaglanti>}
+          {turDegistirir(o) && formatDegistirir(o) && <SablonTurEkleTusu sablon={{ anahtar, ad: t.gorunum.formKodu || s.ad, tur: s.tur }} />}
+        </>} />
       <Yuzler>
         <Yuz ikon="list" ad="Bölüm" sayi={t.bolumler.length} />
         <Yuz ikon="list-checks" ad="Kontrol maddesi" sayi={madde} />

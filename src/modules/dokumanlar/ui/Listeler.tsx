@@ -1,52 +1,77 @@
 "use client";
 /* DÖKÜMANLAR LİSTELERİ (maket standartlar.html #/ · #/kriterler · #/diger): standartlar (süzgeç: Görünüm güncel / önceki / hepsi), muayene
-   kriterleri (koddaki belgeler), diğer dökümanlar (aç · değiştir · kaldır). Yükleme tuşları yalnız "değiştirir" düzeyine; karar sunucuda. */
+   kriterleri (koddaki belgeler), diğer dökümanlar (aç · değiştir · kaldır). Yükleme tuşları yalnız "değiştirir" düzeyine; karar sunucuda.
+   437 (reisim 2026-10-09: "BAKANLIK RAPOR FORMATLARI İLGİLİ STANDARTLAR VS DEFAULT GELSİN STANDART İÇİN YÜKLEME TUŞU OLSUN YÜKLENİNCE
+   GÖRÜNTÜLEYE DÖNÜŞLSÜN"): standartlar listesinde Bakanlık formatlarının standartları (src/tanim/standartlar.ts) her firmada hazır — kütüphanede
+   güncel sürümü yoksa "Yüklenmedi" ve "Yükle" (numara ve konu dolu pencere), yüklenince satır kütüphanenin satırı olur: "Görüntüle" (PDF). */
 import Link from "next/link";
 import { useRouter } from "next/navigation";
-import { useState, useTransition } from "react";
+import { useMemo, useState, useTransition } from "react";
 import { useBildir } from "../../../components/bildirim/Bildirim";
 import { DosyaAcTusu } from "../../../components/gizli-resim/GizliResim";
 import { KartEtiket, Kirp, Liste, type Sutun } from "../../../components/liste/Liste";
 import { Sayac, SuzgecliListe, useSuzgec } from "../../../components/liste/SuzgecliListe";
 import type { SuzgecTanimi } from "../../../components/liste/suzgec";
 import { useOnayla } from "../../../components/pencere/Onay";
-import { AltSatir, Kod, Rozet, SayfaBasi, Sekmeler } from "../../../components/sayfa/Sayfa";
+import { AltSatir, DegerYok, Kod, Rozet, SayfaBasi, Sekmeler } from "../../../components/sayfa/Sayfa";
 import { BosDurum } from "../../../components/bos/BosDurum";
 import { Tus } from "../../../components/tus/Tus";
 import type { KriterBelgesi } from "../../../tanim/kriterler";
+import { BAKANLIK_STANDARTLARI } from "../../../tanim/standartlar";
 import type { DokumanSatiri, StandartSatiri } from "../server/dokumanlar";
 import { dokumanKaldirEylemi, standartKaldirEylemi } from "./eylemler";
 import { DOKUMAN_SEKMELERI, tarihYaz } from "./ortak";
 import { DokumanPenceresi, StandartPenceresi } from "./Pencereler";
 import stil from "./dokumanlar.module.css";
 
-function stdTanim(): SuzgecTanimi<StandartSatiri> {
+/** listenin satırı: kütüphanedeki sürüm (kayit) ya da kütüphanede güncel sürümü olmayan hazır Bakanlık standardı (kayit null) */
+interface StdSatir { anahtar: string; no: string; konu: string; kayit: StandartSatiri | null; formatlar: readonly string[] }
+
+function stdTanim(): SuzgecTanimi<StdSatir> {
   return {
-    ad: "Standartlarda ara", ipucu: "No, konu, sürüm", birim: "standart", sayfa: 20, imkansiz: "Bir standart aynı anda iki durumda olamaz",
-    metin: (s) => `${s.no} ${s.konu} ${s.surumAdi}`,
+    ad: "Standartlarda ara", ipucu: "No, konu, sürüm, rapor formatı", birim: "standart", sayfa: 20, imkansiz: "Bir standart aynı anda iki durumda olamaz",
+    metin: (s) => `${s.no} ${s.konu} ${s.kayit?.surumAdi ?? ""} ${s.formatlar.join(" ")}`,
     cipler: [],
-    seciciler: [{ k: "gorunum", ad: "Görünüm", bas: "guncel", secenek: () => [["guncel", "Güncel sürümler"], ["onceki", "Önceki sürümler"], ["hepsi", "Hepsi"]],
-      gecer: (s, v) => v === "hepsi" || (v === "guncel" ? s.guncel : !s.guncel) }],
+    seciciler: [{ k: "gorunum", ad: "Görünüm", bas: "guncel",
+      secenek: () => [["guncel", "Güncel ve yüklenecekler"], ["yuklenmedi", "Yüklenmemiş"], ["onceki", "Önceki sürümler"], ["hepsi", "Hepsi"]],
+      gecer: (s, v) => v === "hepsi" || (v === "guncel" ? !s.kayit || s.kayit.guncel : v === "yuklenmedi" ? !s.kayit : !!s.kayit && !s.kayit.guncel) }],
   };
 }
 
 export function StandartListesi({ standartlar, yaz }: { standartlar: StandartSatiri[]; yaz: boolean }) {
-  const s = useSuzgec(stdTanim(), standartlar);
-  const [acik, setAcik] = useState(false);
-  const sutunlar: Sutun<StandartSatiri>[] = [
-    { k: "std", genislik: "44%", baslik: "Standart", kart: "ust", sira: 1, hucre: (x) => <span><Link className={stil.no} href={`/dokumanlar/standart/${x.id}`}>{x.no}</Link><AltSatir><Kirp>{x.konu}</Kirp></AltSatir></span> },
-    { k: "surum", genislik: "16%", baslik: "Sürüm", kart: "govde", sira: 2, hucre: (x) => <><KartEtiket>Sürüm</KartEtiket><Kod>{x.surumAdi}</Kod></> },
-    { k: "yuklendi", genislik: "22%", baslik: "Yüklendi", kart: "govde", sira: 3, hucre: (x) => <><KartEtiket>Yüklendi</KartEtiket><span>{tarihYaz(x.tarih)}<AltSatir><Kirp>{x.yukleyen}</Kirp></AltSatir></span></> },
-    { k: "durum", genislik: "18%", baslik: "Durum", kart: "rozet", sira: 1, hucre: (x) => x.guncel ? <Rozet tur="tamam">Güncel</Rozet>
-      : <span><Rozet tur="notr">Önceki sürüm</Rozet><AltSatir>{tarihYaz(x.bitti)} tarihine kadar</AltSatir></span> },
+  const satirlar = useMemo(() => {
+    const guncel = new Set(standartlar.filter((x) => x.guncel).map((x) => x.no));
+    const bakanlik = new Map(BAKANLIK_STANDARTLARI.map((h) => [h.no, h.formatlar]));
+    return [
+      ...standartlar.map((x): StdSatir => ({ anahtar: x.id, no: x.no, konu: x.konu, kayit: x, formatlar: bakanlik.get(x.no) ?? [] })),
+      ...BAKANLIK_STANDARTLARI.filter((h) => !guncel.has(h.no)).map((h): StdSatir => ({ anahtar: `hazir:${h.no}`, no: h.no, konu: h.konu, kayit: null, formatlar: h.formatlar })),
+    ].sort((a, b) => a.no.localeCompare(b.no, "tr", { numeric: true }) || (b.kayit?.tarih ?? "").localeCompare(a.kayit?.tarih ?? ""));
+  }, [standartlar]);
+  const s = useSuzgec(stdTanim(), satirlar);
+  const [pencere, setPencere] = useState<{ no: string; konu: string } | true | null>(null);
+  const sutunlar: Sutun<StdSatir>[] = [
+    { k: "std", genislik: "36%", baslik: "Standart", kart: "ust", sira: 1, hucre: (x) => <span>
+      {x.kayit ? <Link className={stil.no} href={`/dokumanlar/standart/${x.kayit.id}`}>{x.no}</Link> : <b className={stil.hazirNo}>{x.no}</b>}
+      <AltSatir><Kirp>{x.konu}</Kirp></AltSatir></span> },
+    { k: "surum", genislik: "12%", baslik: "Sürüm", kart: "govde", sira: 2, hucre: (x) => <><KartEtiket>Sürüm</KartEtiket>{x.kayit ? <Kod>{x.kayit.surumAdi}</Kod> : <DegerYok>—</DegerYok>}</> },
+    { k: "format", genislik: "14%", baslik: "Rapor formatı", kart: "govde", sira: 3, hucre: (x) => <><KartEtiket>Rapor formatı</KartEtiket>
+      {x.formatlar.length ? <span>{x.formatlar.join(" · ")}</span> : <DegerYok>—</DegerYok>}</> },
+    { k: "yuklendi", genislik: "16%", baslik: "Yüklendi", kart: "govde", sira: 4, hucre: (x) => <><KartEtiket>Yüklendi</KartEtiket>
+      {x.kayit ? <span>{tarihYaz(x.kayit.tarih)}<AltSatir><Kirp>{x.kayit.yukleyen}</Kirp></AltSatir></span> : <DegerYok>Yüklenmedi</DegerYok>}</> },
+    { k: "durum", genislik: "12%", baslik: "Durum", kart: "rozet", sira: 1, hucre: (x) => !x.kayit ? <Rozet tur="bekliyor">Yüklenmedi</Rozet>
+      : x.kayit.guncel ? <Rozet tur="tamam">Güncel</Rozet>
+      : <span><Rozet tur="notr">Önceki sürüm</Rozet><AltSatir>{tarihYaz(x.kayit.bitti)} tarihine kadar</AltSatir></span> },
+    { k: "eylem", genislik: "10%", baslik: "İşlem", gizliBaslik: true, kart: "eylem", sira: 9, hucre: (x) => x.kayit
+      ? <DosyaAcTusu dosyaId={x.kayit.dosyaId} etiket={`${x.no}:${x.kayit.surumAdi} · Görüntüle`}>Görüntüle</DosyaAcTusu>
+      : yaz ? <Tus tur="ikincil" ikon="upload" aria-label={`${x.no} · Yükle`} onClick={() => setPencere({ no: x.no, konu: x.konu })}>Yükle</Tus> : null },
   ];
   return (
     <>
-      <SayfaBasi baslik="Dökümanlar" sayac={<Sayac s={s} />} tuslar={yaz && <Tus ikon="file-plus" onClick={() => setAcik(true)}>Standart yükle</Tus>} />
+      <SayfaBasi baslik="Dökümanlar" sayac={<Sayac s={s} />} tuslar={yaz && <Tus ikon="file-plus" onClick={() => setPencere(true)}>Standart yükle</Tus>} />
       <Sekmeler ad="Döküman bölümleri" ogeler={DOKUMAN_SEKMELERI} secili="/dokumanlar" />
-      <SuzgecliListe s={s} on="std" baslik="Standartlar" sutunlar={sutunlar} anahtar={(x) => x.id} href={(x) => `/dokumanlar/standart/${x.id}`}
+      <SuzgecliListe s={s} on="std" baslik="Standartlar" sutunlar={sutunlar} anahtar={(x) => x.anahtar} href={(x) => x.kayit ? `/dokumanlar/standart/${x.kayit.id}` : undefined}
         bosVeri={{ ikon: "book-open", baslik: "Kütüphane boş", metin: "“Standart yükle” ile firmanın standart kopyası (PDF) eklenir; ekipman türlerinde kontrol metodu buradan seçilir." }} />
-      {acik && <StandartPenceresi kapat={() => setAcik(false)} guncelListe={standartlar} />}
+      {pencere && <StandartPenceresi kapat={() => setPencere(null)} guncelListe={standartlar} oneri={pencere === true ? undefined : pencere} />}
     </>
   );
 }

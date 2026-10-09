@@ -136,3 +136,57 @@ test("Bakanlık rapor formatları: listede görünür, önizlenir, tür olarak e
   await expect(page.getByRole("region", { name: "Hazır rapor formatları" }).getByRole("link", { name: "Kompresör (genel)" })).toBeVisible();
   await expect(page.getByRole("region", { name: "Bakanlık rapor formatları" })).toHaveCount(0);
 });
+
+/* 437 (reisim 2026-10-09: "HALA BAKANLIK FORMATLARI YOK DEFAULT OLARAK GELMESİ GEREKİYOR … RAPOR ŞABLONUNDA SIFIRDAN RAPOR ŞABLONU OLUŞTURMAK YOK
+   … RAPOR FORMATI PDFLERİ DE STANDART OLARAK BAKANLIKTAN GELECEK"): firmada Bakanlık türleri hazır (Elektrik sekmesinde beş tür); tür sayfasında
+   Bakanlığın resmî PDF'i (sürüm 1, "Bakanlık formatı") ve yayındaki rapor şablonu; şablon önizlemesinde resmî form, kriter belgesinde Bakanlık
+   belgesi açılır (oturumlu uç, PDF). Sıfırdan oluştur: onay → boş taslak Format kurucuda. */
+test("Bakanlık türleri hazır: resmî PDF ve yayındaki şablon; sıfırdan rapor şablonu", async ({ page }, bilgi) => {
+  test.setTimeout(180_000);   // ilk açılışta kurulum + soğuk derleme
+  const on = { masaustu: "MS", tablet: "TB", telefon: "TL" }[bilgi.project.name] ?? "XX";
+  const kod = `Z${on.slice(0, 1)}${"ABCDEFGH"[bilgi.retry]}`;
+  const pdfMi = async (href: string | null) => page.evaluate(async (h) => { const r = await fetch(h!); return [r.status, r.headers.get("content-type")]; }, href);
+  await girisli(page, "yonetici");
+  await page.goto("/ekipman-turleri?brans=e");
+  await hazir(page);
+  for (const ad of ["Alçak gerilim topraklama tesisatı", "Elektrik iç tesisatı", "Yıldırımdan korunma tesisatı", "Yangın algılama ve uyarı sistemi", "Trafo"]) {
+    await expect(page.getByRole("link", { name: ad, exact: true }).first()).toBeAttached({ timeout: 30_000 });
+  }
+  await page.getByRole("link", { name: "Trafo", exact: true }).first().click();
+  await expect(page.getByRole("heading", { level: 1, name: "Trafo" })).toBeVisible({ timeout: 30_000 });
+  await expect(page.getByText("Bakanlık formatı", { exact: true }).first()).toBeVisible();
+  await expect(page.getByText("Kullanımda")).toBeVisible();
+  expect(await pdfMi(await page.getByRole("link", { name: "PDF'i aç" }).getAttribute("href"))).toEqual([200, "application/pdf"]);
+  await expect(page.getByText("Yayında", { exact: true }).first()).toBeVisible();
+  await expect(page.getByText("TS EN 50522").first()).toBeVisible();   // kontrol metodu standardı hazır listeden
+
+  await page.goto("/ekipman-turleri/sablon/ZPKR05");
+  await hazir(page);
+  const resmi = page.getByRole("link", { name: "Resmî form (PDF)" });
+  await expect(resmi).toHaveAttribute("target", "_blank");
+  expect(await pdfMi(await resmi.getAttribute("href"))).toEqual([200, "application/pdf"]);
+  await page.goto("/dokumanlar/kriterler/ZPKK05");
+  await hazir(page);
+  expect(await pdfMi(await page.getByRole("link", { name: "Bakanlık belgesi (PDF)" }).getAttribute("href"))).toEqual([200, "application/pdf"]);
+
+  /* sıfırdan: yeni türde onay → boş taslak kurucuda */
+  await page.goto("/ekipman-turleri");
+  await hazir(page);
+  await page.getByRole("button", { name: "Tür ekle" }).click();
+  const p = page.getByRole("dialog", { name: "Tür ekle" });
+  await p.getByLabel("Tür adı").fill(`Deneme Sıfırdan ${kod}`);
+  await p.getByLabel("Kod").fill(kod);
+  await p.getByRole("combobox", { name: "Ek-III grubu" }).click();
+  await p.getByRole("option", { name: /Kaldırma ve iletme/ }).click();
+  await p.getByLabel("Periyot (ay)").fill("12");
+  await p.getByRole("button", { name: "Kaydet" }).click();
+  await expect(page.getByRole("heading", { level: 1, name: `Deneme Sıfırdan ${kod}` })).toBeVisible({ timeout: 30_000 });
+  await hazir(page);
+  await page.getByRole("button", { name: "Sıfırdan oluştur" }).click();
+  const onay = page.getByRole("dialog", { name: "Sıfırdan oluştur" });
+  await expect(onay).toContainText("boş bir rapor şablonu taslağı açılır");
+  await onay.getByRole("button", { name: "Oluştur" }).click();
+  await expect(page).toHaveURL(/\/sablon\/[0-9a-f-]{36}\/kurucu$/, { timeout: 30_000 });
+  await expect(page.getByRole("heading", { level: 1, name: /^Format kurucu · / })).toBeVisible();
+  await expect(page.getByText("Kontrol maddeleri").first()).toBeVisible();
+});

@@ -1,7 +1,7 @@
 "use client";
 /* TÜR SAYFASI › RAPOR ŞABLONU (RAPOR-FORMAT.md §4–5; maket ekipman-turleri.html Format kurucu: "Taslak · vN" / "Yayında · vN", Yayınla onaylı,
    yayın öncesi denetim). Sürüm tablosu (taslak üstte, sonra yeniden eskiye) · Şablondan başlat penceresi (hazır şablon ya da yayınlanmış sürüm;
-   varsa taslağın yerine geçer) · Yayınla penceresi (engeller + uyarılar sunucudan, sürüm notu). Tuşlar yalnız "değiştirir" düzeyine çizilir;
+   varsa taslağın yerine geçer) · 437 Sıfırdan oluştur (boş iskelet; onaylı, taslak varsa yerine geçer) · Yayınla penceresi (engeller + uyarılar sunucudan, sürüm notu). Tuşlar yalnız "değiştirir" düzeyine çizilir;
    karar ve denetim yine sunucuda. Taslak Format kurucuda düzenlenir (…/sablon/<sürüm>/kurucu, K4). */
 import { useRouter } from "next/navigation";
 import { useEffect, useState, useTransition } from "react";
@@ -12,6 +12,7 @@ import { KartEtiket, Liste, type Sutun } from "../../../components/liste/Liste";
 import { Pencere, pencereMetinSinifi } from "../../../components/pencere/Pencere";
 import { AltSatir, Rozet } from "../../../components/sayfa/Sayfa";
 import { SecimAlani } from "../../../components/secim/SecimAlani";
+import { useOnayla } from "../../../components/pencere/Onay";
 import { Serit } from "../../../components/serit/Serit";
 import { SilTusu } from "../../../components/sil/SilTusu";
 import { Tus, TusBaglanti } from "../../../components/tus/Tus";
@@ -54,6 +55,7 @@ export function SablonBaslatTusu({ turId, turAd, taslak, surumler, sablonlar }:
   const [h, setH] = useState<Record<string, string>>({});
   const [genel, setGenel] = useState<string | null>(null);
   const secenekler = [
+    ["bos", "Boş format (sıfırdan)", "Sıfırdan"] as const,
     ...sablonlar.map(([k, ad]) => [`sablon:${k}`, ad, "Hazır şablon"] as const),
     ...surumler.filter((x) => x.durum !== "taslak").map((x) => [`surum:${x.id}`, `${surumAdi(x)} · ${x.durum === "yayinda" ? "yayında" : "eski"}`, x.kaynakAd ?? "Firma formatı"] as const),
   ];
@@ -79,6 +81,26 @@ export function SablonBaslatTusu({ turId, turAd, taslak, surumler, sablonlar }:
         </FormIzgara>
       </Pencere>}
     </>
+  );
+}
+
+/** 437 (reisim 2026-10-09: "RAPOR ŞABLONUNDA SIFIRDAN RAPOR ŞABLONU OLUŞTURMAK YOK"): boş iskeletten taslak — onaylanınca Format kurucuya gider */
+export function SifirdanTusu({ turId, turAd, taslak }: { turId: string; turAd: string; taslak: { surum: number; degisti: string } | null }) {
+  const router = useRouter();
+  const bildir = useBildir();
+  const onayla = useOnayla();
+  const [bekliyor, baslat] = useTransition();
+  return (
+    <Tus tur="ikincil" ikon="file-plus" disabled={bekliyor} aria-busy={bekliyor || undefined} onClick={async () => {
+      if (!(await onayla({ baslik: "Sıfırdan oluştur", tus: "Oluştur",
+        metin: `${turAd} için boş bir rapor şablonu taslağı açılır: firma ve ekipman bilgileri, ölçüm cihazları, kontrol maddeleri (boş), fotoğraf, kusur, ` +
+          `not, sonuç ve imza bölümleri. Maddeleri ve alanları Format kurucuda eklersiniz.${taslak ? ` Taslak (${tarihYaz(taslak.degisti)}) bununla değiştirilir.` : ""}` }))) return;
+      baslat(async () => {
+        const r = await taslakBaslatEylemi(turId, taslak?.surum ?? null, "bos");
+        if (!r.tamam) { bildir(r.genel ?? Object.values(r.hatalar ?? {})[0] ?? "Taslak açılamadı."); return; }
+        bildir("Boş taslak hazırlandı; Format kurucuda düzenleyin."); router.push(`/ekipman-turleri/${turId}/sablon/${r.id}/kurucu`);
+      });
+    }}>Sıfırdan oluştur</Tus>
   );
 }
 

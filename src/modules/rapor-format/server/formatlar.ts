@@ -9,6 +9,7 @@
      uyarıdır; boş bölüm, sınırsız tablo …). Yayındaki eskiye düşer, sıra en büyük + 1; aynı türün işlemleri tür satırı kilitlenerek sıraya girer.
    · Yayınlanan sürüm DEĞİŞMEZ ve silinmez (0022 tetiği); yayın zamanı ve yayınlayan hesap veritabanında damgalanır. */
 import { kilitDenetimi, kilitNormallestir, yayinDenetimi } from "../../../format/motor.ts";
+import { bosFormat } from "../../../format/sablonlar.ts";
 import { FormatTanimi } from "../../../format/tanim.ts";
 import type { Sorgulayici } from "../../../server/db/kiraci.ts";
 import { kesinSil } from "../../../server/db/silici.ts";
@@ -100,6 +101,24 @@ export async function sablondanTurEkle(db: Sorgulayici, kim: Kisi, sablon: strin
   return { durum: "tamam", turId: t.id, formatId: f.id };
 }
 
+/** 437 · hazır kurulum (kurulum.ts): yeni türe şablondan YAYINDA sürüm 1 — taslak olarak açılır (0022: yeni satır yalnız taslak), aynı işlemde
+    yayınlanır. YETKİ DENETİMİ YOK: kişinin eylemi değil, firmanın başlangıç verisi — yalnız kurulumdan çağrılır, eylemden değil. */
+export async function hazirFormatYayinla(db: Sorgulayici, kim: string, turId: string, sablon: string, notu: string): Promise<string> {
+  const s = sablonBul(sablon);
+  if (!s || !UUID.test(turId)) throw new Error(`hazır format kurulamadı: ${sablon}`);
+  const tanim = structuredClone(s.tanim);
+  const { id, surum } = await ekle(db, FORMAT, { tur_id: turId, durum: "taslak", sema: tanim.sema, tanim, kaynak: sablon, olusturan: kim },
+    { kim, ne: "rapor_format.taslak_baslat", gerekce: `şablon ${sablon}` });
+  const g = await guncelle(db, FORMAT, id, surum, { durum: "yayinda", sira: 1, notu, yayinlayan: kim }, { kim, ne: "rapor_format.yayinla", gerekce: notu });
+  if (g.durum !== "tamam") throw new Error(`hazır format yayınlanamadı: ${sablon} (${g.durum})`);
+  return id;
+}
+
+/** 437: bu şablondan başlamış bir sürüm firmada var mı (kurulum: firma o türü kendisi açtıysa yenisi kurulmaz) */
+export async function sablonKullaniliyor(db: Sorgulayici, sablon: string): Promise<boolean> {
+  return !!(await db.sorgu("SELECT 1 FROM rapor_format WHERE kaynak = $1 LIMIT 1", [sablon])).rowCount;
+}
+
 /** türün format sürümleri (liste; tanımın kendisi inmez). Görmeyen ya da tür yoksa null. */
 export async function formatSurumleri(db: Sorgulayici, kim: Kisi, turId: string): Promise<FormatOzeti[] | null> {
   if (!gorur(kim) || !(await turOzeti(db, turId))) return null;
@@ -136,11 +155,16 @@ export async function formatAyrintisi(db: Sorgulayici, kim: Kisi, id: string): P
     sürümüyle (taslakSurumu); görmediği taslağı ezmez. */
 export async function taslakBaslat(db: Sorgulayici, kim: Kisi, turId: string, girdi: unknown, taslakSurumu: number | null): Promise<Yazma> {
   if (!degistirir(kim)) return { durum: "yetkisiz" };
-  if (!(await turOzeti(db, turId, { kilitle: true }))) return { durum: "yok" };
+  const tur = await turOzeti(db, turId, { kilitle: true });
+  if (!tur) return { durum: "yok" };
   const g = dogrula(BaslatGirdisi, girdi);
   if (!g.tamam) return { durum: "gecersiz", hatalar: { baslangic: Object.values(g.hatalar)[0] ?? "Başlangıç seçilmeli." } };
   let tanim: FormatTanimi, kaynak: string | null, nereden: string;
-  if ("sablon" in g.veri) {
+  if ("bos" in g.veri) {
+    /* 437: sıfırdan — boş iskelet, başlık türün adından; kaynak yok (kilitli öğe yok) */
+    tanim = bosFormat(`${tur.ad} Periyodik Kontrol Raporu`);
+    kaynak = null; nereden = "sıfırdan";
+  } else if ("sablon" in g.veri) {
     tanim = structuredClone(sablonBul(g.veri.sablon)!.tanim);
     kaynak = g.veri.sablon; nereden = `şablon ${kaynak}`;
   } else {

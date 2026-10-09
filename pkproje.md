@@ -2355,6 +2355,26 @@ revizyon, alan kopyalama, hafif kusur devri, meslek eşleşme denetimi).
 - Emsal ürünler: https://opwire.app/iso-17020-periyodik-kontrol-yazilimi/ · https://17020muayene.vidco.com.tr/ · https://akuple.com/asansor-kontrol-yazilimi/ · https://ensyazilim.com/
 
 ## 11 · Değişiklik günlüğü
+- 2026-10-09 (437): **Bakanlık formatları her firmada hazır; sıfırdan rapor şablonu; hazır standart listesi** (reisim: *"HALA BAKANLIK FORMATLARI
+  YOK DEFAULT OLARAK GELMESİ GEREKİYOR, ? RAPOR ŞABLONUNDA SIFIRDAN RAPOR ŞABLONU OLUŞTURMAK YOK, RAPOR FORMATI PDFLERİ DE STANDART OLARAK
+  BAKANLIKTAN GELECEK ŞEKİLDE KONUŞMUŞTUK ÖRNEK PDFLERİ ATMIŞTIM SANA ONLARDA DEFAULT OLARAK GELSİN, BAKANLIK RAPOR FORMATLARI İLGİLİ
+  STANDARTLAR VS DEFAULT GELSİN STANDART İÇİN YÜKLEME TUŞU OLSUN YÜKLENİNCE GÖRÜNTÜLEYE DÖNÜŞLSÜN (DÖKÜMANLAR EKRANI İÇİN KONUŞUYORUM)"*).
+  · **Hazır kurulum** (rapor-format/server/kurulum.ts): firmanın ilk açılışında (Ana sayfa ya da Ekipman türleri) her Bakanlık formatı için tür
+  kendiliğinden kurulur — AGT Alçak gerilim topraklama tesisatı (ZPKR01), EIT Elektrik iç tesisatı (ZPKR02), YKT Yıldırımdan korunma tesisatı
+  (ZPKR03), YAS Yangın algılama ve uyarı sistemi (ZPKR04), TRF Trafo (ZPKR05); 12 ay. Her türde: **rapor formatı = Bakanlığın resmî PDF'i**
+  (sürüm 1, "Bakanlık formatı"), **rapor şablonu yayında** (sürüm 1, kitaplıktaki şablondan — denetçi hemen rapor yazar), kontrol metodu
+  standartları hazır listeden. Firma sonra her şeyi değiştirir ya da kullanılmamış türü siler; silinen yeniden kurulmaz (firma ayarı "kurulum":
+  kurulan şablonlar; kitaplığa yeni Bakanlık formatı girerse yalnız o kurulur). Firma o şablonu / kodu zaten kullanıyorsa atlanır. Kim: sistem
+  ("probata · hazır kurulum"), hesapsız; aynı anda iki istek tek kurulum (danışma kilidi); düşerse sayfa düşmez, sonraki açılışta yeniden.
+  · **Resmî PDF'ler** (reisim'in gönderdiği ZPKR01–02 / ZPKK01–02 ve Bakanlığın 18.07.2025 tarihli ZPKR03–05 / ZPKK03–05): src/tanim/bakanlik/.
+  Şablon önizlemesinde "Resmî form (PDF)", kriter belgesinde "Bakanlık belgesi (PDF)" — oturumlu uç, tarayıcıda açılır.
+  · **Sıfırdan oluştur** (tür sayfası › Rapor şablonu): onay → boş iskelet taslak (firma / ekipman bilgileri, ölçüm cihazları, boş kontrol
+  maddeleri, fotoğraf, kusur, not, sonuç, imza; başlık türün adından, kilit yok) → Format kurucu. "Şablondan başlat" penceresinde de "Boş format
+  (sıfırdan)" seçeneği.
+  · **Dökümanlar › Standartlar**: Bakanlık formatlarının 23 standardı (src/tanim/standartlar.ts — TS HD 60364 bölümleri, TS EN 62305-1…4,
+  TS EN 50522, TS CEN/TS 54-14 …) her firmada listede; kütüphanede yoksa "Yüklenmedi" + **"Yükle"** (numara ve konu dolu; firma kendi
+  kopyasının yılını ve PDF'ini verir — standart metni TSE'nin telifli yayını, probata vermez), yüklenince satır **"Görüntüle"** (PDF) olur.
+  Yeni sütun "Rapor formatı" (hangi ZPKR'de anıldığı); Görünüm: Güncel ve yüklenecekler / Yüklenmemiş / Önceki sürümler / Hepsi.
 - 2026-10-09 (436): **Bakanlık rapor formatları Ekipman türleri'nde** (reisim: *"EKİPMAN TÜRLERİNDE BAKANLIK FORMATLARINI DA GÖREMEDİM ?"*). Şablonlar
   yalnız bir türün içinden "Şablondan başlat"la açılıyordu; canlıdaki firmada henüz hiç tür yok → hiçbir yerde görünmüyordu. Ekipman türleri'nde
   Elektrik sekmesinin altında **"Bakanlık rapor formatları"** (ZPKR01–05), Mekanik sekmesinde "Hazır rapor formatları" (kompresör): form kodu ve

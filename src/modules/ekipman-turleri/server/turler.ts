@@ -97,6 +97,26 @@ export async function turKaydet(db: Sorgulayici, kim: Kisi, id: string | null, s
   return { durum: "tamam", id: mevcut.id, surum: r.surum };
 }
 
+/** 437 · hazır kurulum (rapor-format/server/kurulum.ts): Bakanlık formatlı tür + kontrol metodu standartları + Bakanlığın resmî rapor formatı
+    PDF'i (sürüm 1). YETKİ DENETİMİ YOK: kişinin eylemi değil, firmanın başlangıç verisi — yalnız kurulumdan çağrılır, eylemden değil. Girdi türün
+    kendi şemasından geçer; kod firmada varsa tür açılmaz (null). */
+export async function hazirTurKur(db: Sorgulayici, depo: Depo, firmaId: string, kim: string,
+  tur: { ad: string; kod: string; grup: string; periyot: number; standartlar: string[] }, pdf: { ad: string; bayt: Uint8Array } | null): Promise<string | null> {
+  const g = dogrula(TurGirdisi, { ad: tur.ad, kod: tur.kod, grup: tur.grup, brans: "", periyot: String(tur.periyot), sure: "" });
+  const b = dogrula(BaglantiGirdisi, { standartlar: tur.standartlar, cihazTurleri: [] });
+  if (!g.tamam || !b.tamam) throw new Error(`hazır tür geçersiz: ${tur.kod}`);
+  const v = g.veri;
+  if ((await db.sorgu("SELECT 1 FROM ekipman_turu WHERE kod = $1", [v.kod])).rowCount) return null;
+  const { id } = await ekle(db, TUR, { kod: v.kod, ad: v.ad, grup: v.grup, brans: turBransi(v), periyot: v.periyot, sure: v.sure, kontrol_std: b.veri.standartlar },
+    { kim, ne: "ekipman_turu.ekle", gerekce: "hazır kurulum" });
+  if (pdf) {
+    const y = await dosyaYukle(db, depo, { firmaId, modul: DOSYA_MODULU, kayitId: id, ad: pdf.ad, bayt: pdf.bayt, izinli: ["pdf"], kim });
+    if (!y.tamam) throw new Error(`hazır rapor formatı PDF'i yüklenemedi: ${tur.kod} (${y.neden})`);
+    await ekle(db, FORMAT, { tur_id: id, sira: 1, dosya_id: y.id, notu: "Bakanlık formatı" }, { kim, ne: "ekipman_turu.format_yukle", gerekce: "hazır kurulum" });
+  }
+  return id;
+}
+
 export type FormatSonucu = { durum: "tamam"; sira: number } | { durum: "gecersiz"; hatalar: DogrulamaHatalari } | { durum: "yok" } | { durum: "yetkisiz" };
 
 /** rapor formatı yükle: yalnız PDF (baytlardan), 25 MB; yeni sürüm = en büyük sıra + 1 (kaldırılanlar dahil — numara yeniden verilmez) */
