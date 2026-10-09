@@ -8,6 +8,9 @@
   scroll-margin-top: calc(var(--ust-y) + 12px);
 }
 .bolumBas { display: flex; align-items: center; flex-wrap: wrap; gap: 6px 12px; min-height: var(--tus-y); }
+/* 445: başlık satırının her yeri açar / kapar */
+.bolumBasTik { cursor: pointer; margin: -4px -6px; padding: 4px 6px; border-radius: var(--r-orta); }
+.bolumBasTik:hover { background: var(--zemin2); }
 .bolumBaslik {
   margin: 0; min-width: 0; font-size: var(--boy-bolum); font-weight: var(--kal-bolum); overflow-wrap: anywhere;
   scroll-margin-top: calc(var(--ust-y) + 12px);

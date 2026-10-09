@@ -142,6 +142,15 @@ test("saha raporu: rapor oluştur, eksikle gönderilmez, doldur + cihaz ekle, on
   await expect(genelTalimat).toContainText("talimat yazılmamış");
   await genelTalimat.getByRole("button", { name: "Kapat" }).click();
   await expect(page.getByRole("list", { name: "Raporun aşaması" }).getByRole("listitem")).toHaveCount(5);
+  /* 445 (reisim 2026-10-09: "açılır kapanır ekranların başlık satırına basınca açılıp kapanmalı"): başlığın kendisine basınca kapanır / açılır */
+  const bolumTus = page.getByRole("button", { name: "Muayene kriterleri bölümü" });
+  await expect(bolumTus).toHaveAttribute("aria-expanded", "true");
+  await page.getByRole("heading", { level: 2, name: /Muayene kriterleri$/ }).click();
+  await expect(bolumTus).toHaveAttribute("aria-expanded", "false");
+  await expect(page.getByRole("combobox", { name: "Tahliye düzeni" })).toBeHidden();
+  await page.getByRole("heading", { level: 2, name: /Muayene kriterleri$/ }).click();
+  await expect(bolumTus).toHaveAttribute("aria-expanded", "true");
+  await expect(page.getByRole("combobox", { name: "Tahliye düzeni" })).toBeVisible();
   await stdTus.click();
   await soru.getByRole("button", { name: "Aç", exact: true }).click();
   const stdPencere = page.getByRole("dialog", { name: "Standart", exact: true });

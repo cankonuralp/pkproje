@@ -68,7 +68,10 @@ export interface Baglam {
 }
 
 /* ── ORTAK PARÇALAR ──────────────────────────────────────────────────────────────────────────────────────────── */
-/** bölüm kartı: "N · ad" başlığı, eksik rozeti, sayaç, başlık tuşları, aç / kapat (her başlık açılır kapanır — reisim 2026-09-26) */
+/** bölüm kartı: "N · ad" başlığı, eksik rozeti, sayaç, başlık tuşları, aç / kapat (her başlık açılır kapanır — reisim 2026-09-26).
+    445 (reisim 2026-10-09: "açılır kapanır ekranların başlık satırına basınca açılıp kapanmalı sadece kenardaki küçük bir açma kapama tuşu ile
+    olmaz"): başlık satırının HER yerine basınca açılır / kapanır; satırdaki öteki tuş ve bağlantılar (talimat, standart, Hepsini işaretle …) kendi
+    işini yapar. Klavye ve ekran okuyucu için kenardaki tuş kalır (aria-expanded); tıklaması da satıra kabarır — tek kez değişir. */
 export function RaporBolumu({ id, no, baslik, acik, degistir, eksik = false, sayac, tuslar, ek, children }: {
   id: string; no: string | null; baslik: string; acik: boolean; degistir: (acik: boolean) => void; eksik?: boolean; sayac?: ReactNode; tuslar?: ReactNode;
   /** başlığın hemen yanında (430: adsız tek gruplu kontrol listesinin talimat ünlemi) */
@@ -77,15 +80,18 @@ export function RaporBolumu({ id, no, baslik, acik, degistir, eksik = false, say
   const b = `b-${id}`;
   return (
     <section className={stil.bolum} id={b} aria-labelledby={`${b}-b`}>
-      <div className={stil.bolumBas}>
+      <div className={`${stil.bolumBas} ${stil.bolumBasTik}`} onClick={(e) => {
+        const t = e.target as HTMLElement, tus = t.closest("button, a, input, select, textarea, label, summary, [role=button], [role=menuitem], [role=combobox], dialog");
+        if (tus && !tus.classList.contains(stil.acTus)) return;
+        degistir(!acik);
+      }}>
         <h2 className={stil.bolumBaslik} id={`${b}-b`} tabIndex={-1}>{no && <span className={stil.bolumNo}>{no} · </span>}{baslik}</h2>
         {ek}
         {eksik && <Rozet tur="red">Eksik</Rozet>}
         {sayac}
         <div className={stil.bolumSag}>
           {tuslar}
-          <button className={stil.acTus} type="button" aria-expanded={acik} aria-controls={`${b}-ic`} aria-label={`${baslik} bölümü`} title={acik ? "Kapat" : "Aç"}
-            onClick={() => degistir(!acik)}>
+          <button className={stil.acTus} type="button" aria-expanded={acik} aria-controls={`${b}-ic`} aria-label={`${baslik} bölümü`} title={acik ? "Kapat" : "Aç"}>
             <Ikon ad="chevron-down" kucuk />
           </button>
         </div>
