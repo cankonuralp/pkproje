@@ -24,19 +24,29 @@ export const acikMi = (p: { durum: PlanDurumu }) => ACIK.includes(p.durum);
 
 /** açık planlarda İSG-KATİP ID'si eksik (yok), geç onaylı ya da bitmiş ekip üyesi sayısı (el ile yazılan ID eksik sayılmaz) */
 export async function isgEksikSayisi(db: Sorgulayici, planlar: readonly AnaPlan[]): Promise<number> {
-  let n = 0;
+  return (await isgEksikPlanlar(db, planlar)).reduce((n, p) => n + p.eksik, 0);
+}
+
+/** 449 (reisim 2026-10-09: "sözleşmeler kısmında 1 yazan bir uyarı var ama sebebini anlayamıyorum"): sayının planları — Sözleşmeler sayfası gösterir */
+export interface IsgEksikPlan { id: string; no: string; baslangic: string; firmaAdi: string; eksik: number }
+export async function isgEksikPlanlar(db: Sorgulayici, planlar: readonly AnaPlan[]): Promise<IsgEksikPlan[]> {
+  const sonuc: IsgEksikPlan[] = [];
   const acik = planlar.filter(acikMi);
   const ekip = new Map((await db.sorgu<{ plan_id: string; personel_id: string; isg_no: string | null; isg_id: string | null }>(
     "SELECT plan_id::text, personel_id::text, isg_no, isg_id::text FROM plan_ekip WHERE plan_id = ANY ($1::uuid[])", [acik.map((p) => p.id)])).rows
     .map((x) => [`${x.plan_id}|${x.personel_id}`, x]));
   const kayit = new Map<string, Awaited<ReturnType<typeof tesisIsgKayitlari>>>();
+  const ad = new Map((await db.sorgu<{ id: string; firma_adi: string }>("SELECT id::text, firma_adi FROM plan WHERE id = ANY ($1::uuid[])", [acik.map((p) => p.id)])).rows
+    .map((x) => [x.id, x.firma_adi]));
   for (const p of acik) {
     if (!kayit.has(p.tesisId)) kayit.set(p.tesisId, await tesisIsgKayitlari(db, p.tesisId));
+    let n = 0;
     for (const k of p.ekip) {
       const e = ekip.get(`${p.id}|${k}`);
       const d = isgDurumu(e?.isg_id ? kayit.get(p.tesisId)!.find((x) => x.id === e.isg_id) : undefined, e?.isg_no ?? null, p.baslangic);
       if (d.tur === "yok" || d.tur === "gec" || d.tur === "bitti") n++;
     }
+    if (n) sonuc.push({ id: p.id, no: p.no, baslangic: p.baslangic, firmaAdi: ad.get(p.id) ?? "", eksik: n });
   }
-  return n;
+  return sonuc;
 }

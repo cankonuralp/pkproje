@@ -6,7 +6,8 @@ import { useState } from "react";
 import { KartEtiket, Kirp, type Sutun } from "../../../components/liste/Liste";
 import { Sayac, SuzgecliListe, useSuzgec } from "../../../components/liste/SuzgecliListe";
 import type { SuzgecTanimi } from "../../../components/liste/suzgec";
-import { AltSatir, SayfaBasi } from "../../../components/sayfa/Sayfa";
+import { AltSatir, SayfaBasi, SeritKap } from "../../../components/sayfa/Sayfa";
+import { Serit } from "../../../components/serit/Serit";
 import { Tus, TusBaglanti } from "../../../components/tus/Tus";
 import type { SablonSatiri, SozlesmeSatiri } from "../server/sozlesmeler";
 import { DurumRozeti, tarihYaz } from "./ortak";
@@ -31,7 +32,9 @@ function tanim(l: readonly SozlesmeSatiri[]): SuzgecTanimi<SozlesmeSatiri> {
   };
 }
 
-export function SozlesmeListesi({ sozlesmeler, yaz, sablonlar }: { sozlesmeler: SozlesmeSatiri[]; yaz: boolean; sablonlar: SablonSatiri[] }) {
+/** 449: isgEksik — yan menüdeki kırmızı sayının planları (açık planda İSG-KATİP ID'si eksik ya da bitmiş) */
+export function SozlesmeListesi({ sozlesmeler, yaz, sablonlar, isgEksik = [] }:
+  { sozlesmeler: SozlesmeSatiri[]; yaz: boolean; sablonlar: SablonSatiri[]; isgEksik?: { id: string; no: string; baslangic: string; firmaAdi: string; eksik: number }[] }) {
   const s = useSuzgec(tanim(sozlesmeler), sozlesmeler);
   const [sablon, setSablon] = useState(false);
   const sutunlar: Sutun<SozlesmeSatiri>[] = [
@@ -48,6 +51,11 @@ export function SozlesmeListesi({ sozlesmeler, yaz, sablonlar }: { sozlesmeler: 
         <Tus tur="ikincil" ikon="file-text" onClick={() => setSablon(true)}>Sözleşme şablonu</Tus>
         <TusBaglanti tur="birincil" ikon="plus" href="/sozlesmeler/yeni">Yeni sözleşme</TusBaglanti>
       </>} />
+      {isgEksik.length > 0 && <SeritKap><Serit tur="hata" ikon="triangle-alert">
+        <span>Açık planda İSG-KATİP SÖZLEŞME ID&apos;si eksik ya da bitmiş (yan menüdeki kırmızı sayı):{" "}
+          {isgEksik.map((p, i) => <span key={p.id}>{i > 0 && ", "}<Link href={`/planlar/${p.id}`}>{p.no}</Link> · {p.firmaAdi} · {tarihYaz(p.baslangic)}{p.eksik > 1 ? ` (${p.eksik} kişi)` : ""}</span>)}.
+          {" "}Planın ekibine ID&apos;yi yazın ya da tesisin iş sözleşmesine ekleyin.</span>
+      </Serit></SeritKap>}
       <SuzgecliListe s={s} on="s" baslik="İş sözleşmeleri" sutunlar={sutunlar} anahtar={(x) => x.id} href={(x) => `/sozlesmeler/${x.id}`}
         bosVeri={{ ikon: "file-signature", baslik: "İş sözleşmesi yok", metin: "“Yeni sözleşme” ile müşteri ve tesisler seçilerek hazırlanır." }} />
       {sablon && <SablonPenceresi kapat={() => setSablon(false)} sablonlar={sablonlar} />}

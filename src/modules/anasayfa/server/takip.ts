@@ -11,7 +11,7 @@ import { giderListesi } from "../../muhasebe/server/giderler.ts";
 import { faturaListesi } from "../../muhasebe/server/muhasebe.ts";
 import { aracTakip } from "../../araclar/server/araclar.ts";
 import { onayListeleri } from "../../onaylar/server/onaylar.ts";
-import { anaPlanlar, isgEksikSayisi } from "../../planlar/server/anasayfa-baglanti.ts";
+import { anaPlanlar, isgEksikPlanlar, type IsgEksikPlan } from "../../planlar/server/anasayfa-baglanti.ts";
 import { kendiYeniRaporlarim } from "../../raporlar/server/anasayfa-baglanti.ts";
 import { izinTalepleri } from "../../talepler/server/talepler.ts";
 import { uyariListesi } from "../../uyarilar/server/uyarilar.ts";
@@ -22,6 +22,14 @@ export interface TakipBalonu { kirmizi: number; sari: number; ad: { kirmizi: str
 export type MenuTakip = Record<number, TakipBalonu>;
 
 const saatGecti = (iso: string | null, saat: number) => !!iso && Date.now() - Date.parse(iso) > saat * 36e5;
+
+/** 449: Sözleşmeler balonunun planları — kişinin gördüğü açık planlardan İSG-KATİP ID'si eksik / bitmiş olanlar (balonla AYNI süzgeç;
+    Sözleşmeler sayfası gösterir: "1 yazıyor ama sebebini anlayamıyorum") */
+export async function isgEksikTakip(db: Sorgulayici, kim: Kisi & YetkiHesabi): Promise<IsgEksikPlan[]> {
+  if (duzey(kim, 13) === "yok" || duzey(kim, 12) === "yok") return [];
+  const d = duzey(kim, 13), hep = d === "gor" || d === "yaz", ben = await hesabinPersoneli(db, kim.id);
+  return isgEksikPlanlar(db, (await anaPlanlar(db)).filter((p) => hep || (!!ben && p.ekip.includes(ben))));
+}
 
 export async function menuTakip(db: Sorgulayici, kim: Kisi & YetkiHesabi): Promise<MenuTakip> {
   const t: MenuTakip = {}, bugun = bugunTr();
@@ -46,8 +54,8 @@ export async function menuTakip(db: Sorgulayici, kim: Kisi & YetkiHesabi): Promi
     const planlar = (await anaPlanlar(db)).filter((p) => hep || (!!ben && p.ekip.includes(ben)));
     const bek = planlar.filter((p) => p.durum === "bekliyor" && !!ben && p.ekip.includes(ben)), gec = bek.filter((p) => p.baslangic <= bugun).length;
     koy(13, gec, bek.length - gec, { kirmizi: "plan günü gelmiş, kabul bekleyen plan", sari: "kabul bekleyen plan" });
-    /* sözleşmeler (12): açık planda İSG-KATİP ID'si eksik ya da bitmiş (görebildiği planlar) */
-    if (gor(12)) koy(12, await isgEksikSayisi(db, planlar), 0, { kirmizi: "İSG-KATİP eksik ya da bitmiş", sari: "" });
+    /* sözleşmeler (12): açık planda İSG-KATİP ID'si eksik ya da bitmiş (görebildiği planlar) — 449: hangi planlar olduğu Sözleşmeler sayfasında */
+    if (gor(12)) koy(12, (await isgEksikPlanlar(db, planlar)).reduce((n, p) => n + p.eksik, 0), 0, { kirmizi: "açık planda İSG-KATİP SÖZLEŞME ID'si eksik ya da bitmiş", sari: "" });
   }
 
   /* raporlar (14, kişiye göre): kendi geri gönderilen (kırmızı) · onaya gönderilmemiş Yeni (sarı); imza bekleyen Onaylar'da */

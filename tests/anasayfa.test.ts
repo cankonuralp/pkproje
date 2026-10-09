@@ -7,7 +7,7 @@ import type { GomuluKume } from "../src/server/db/gomulu.ts";
 import { havuzKur, kiraciIcinde, type Havuz, type Sorgulayici } from "../src/server/db/kiraci.ts";
 import { gunEkle } from "../src/modules/muhasebe/sema.ts";
 import { anaSayfa, bugunTr, type AnaSayfa, type Kisi } from "../src/modules/anasayfa/server/anasayfa.ts";
-import { menuTakip } from "../src/modules/anasayfa/server/takip.ts";
+import { isgEksikTakip, menuTakip } from "../src/modules/anasayfa/server/takip.ts";
 import { taslakBaslat, yayinla } from "../src/modules/rapor-format/server/formatlar.ts";
 import { testKumesi } from "./yardimci/kume.ts";
 
@@ -139,6 +139,14 @@ test("yan menü balonları: planlar (kabul bekleyen sarı, plan günü gelmiş k
   const KISITLI = { ...PLAN, matris: { 13: ["kendi", "kendi", "gor", "gor", "yaz", "yok"] } } as Kisi;
   assert.equal((await a(KISITLI, (db) => menuTakip(db, KISITLI)))[13], undefined, "'kendi' düzeyi, ekipte değil: balon yok");
   assert.deepEqual(await a(YON_B, (db) => menuTakip(db, YON_B), B), {}, "B'de A'nın verisi yok");
+  /* 449 (reisim 2026-10-09: "sözleşmeler kısmında 1 yazan bir uyarı var ama sebebini anlayamıyorum"): Sözleşmeler sayfası balonun planlarını
+     gösterir — balonla aynı sayı, aynı süzgeç; el ile yazılmış ID'li plan listede yok */
+  const y = await a(YON, (db) => menuTakip(db, YON)), yl = await a(YON, (db) => isgEksikTakip(db, YON));
+  assert.ok(yl.length > 0 && yl.every((p) => p.no && p.firmaAdi === "Deneme Bir A.Ş." && p.eksik > 0), "planlar no ve firmayla");
+  assert.equal(yl.reduce((n, p) => n + p.eksik, 0), y[12]?.kirmizi, "sayfadaki planların toplamı = balon");
+  assert.ok(yl.some((p) => p.no === "P-1026-001") && !yl.some((p) => p.no === "P-1026-002" || p.no === "P-1026-006"), "ID'siz plan var, ID'li yok");
+  assert.match(y[12]!.ad.kirmizi, /İSG-KATİP SÖZLEŞME ID/);
+  assert.deepEqual(await a(YON_B, (db) => isgEksikTakip(db, YON_B), B), [], "B'de A'nın planı yok");
 });
 
 /* 337–339 incelemesi (N5): Onaylar balonu yalnız kişinin ONAYLAYABİLDİĞİ raporları sayar — firma yöneticisi kuyruğu görür, onaylamaz: balon yok */

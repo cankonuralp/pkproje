@@ -2355,6 +2355,11 @@ revizyon, alan kopyalama, hafif kusur devri, meslek eşleşme denetimi).
 - Emsal ürünler: https://opwire.app/iso-17020-periyodik-kontrol-yazilimi/ · https://17020muayene.vidco.com.tr/ · https://akuple.com/asansor-kontrol-yazilimi/ · https://ensyazilim.com/
 
 ## 11 · Değişiklik günlüğü
+- 2026-10-09 (449): **Sözleşmeler balonunun sebebi görünür** (reisim: *"sözleşmeler kısmında 1 yazan bir uyarı var ama sebebini anlayamıyorum ? içeride
+  hiç bir şey yok ?"*). Yan menüdeki kırmızı sayı, açık bir planın ekibinde İSG-KATİP SÖZLEŞME ID'si eksik ya da bitmiş kişi sayısıdır; sayfada ise yalnız
+  sözleşmeler vardı. Artık Sözleşmeler sayfasının üstünde kırmızı şerit: hangi plan (bağlantılı), hangi müşteri, hangi gün, kaç kişi ve ne yapılacağı
+  ("planın ekibine ID'yi yazın ya da tesisin iş sözleşmesine ekleyin"). Şeritteki planlar balonla aynı süzgeçten gelir (kişinin gördüğü açık planlar;
+  toplamı = balon, testle kilitli); balonun açıklaması da aynı cümle.
 - 2026-10-09 (448): **Tarih / saat alanı görsel bozukluğu** (reisim: *"ekranda takvim kısmında gördüğün gibi görsel bozukluklar oluyor,bu vb hataları
   düzelt"*). Tarih alanının çerçevesi içe gölgeydi: takvim simgesinin üstüne gelince simgenin zemini çerçeveyi örtüyor (köşede gri kutu taşması), odakta
   halka yalnız girdinin çevresinde kalıp simge dışarıda görünüyordu → çerçeve gerçek kenar (simge zemini içinde kalır), odak halkası girdi + simge birlikte
