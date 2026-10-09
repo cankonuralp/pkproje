@@ -288,7 +288,7 @@ function ListeBlok({ b, no, bag }: { b: BolumOf<"liste">; no: string | null; bag
                 <TalimatTusu ad={g.ad} baslik={`Talimat · ${on}${gi + 1} ${g.ad}`} parcalar={grupTalimati(g, (m, mi) => `${on}${gi + 1}.${mi + 1} ${m.metin}`)} />
               </div>
             )}
-            {std && <p className={stil.grupStd}><StandartTusu std={std} kaynak={bag.v.kaynak} /></p>}
+            {std && <div className={stil.grupStd}><StandartTusu std={std} kaynak={bag.v.kaynak} /></div>}
             {g.maddeler.map((m, mi) => <Madde key={m.id} m={m} numara={gruplu ? `${on}${gi + 1}.${mi + 1}` : `${on}${mi + 1}`} b={b} bag={bag} grupStd={std} />)}
           </div>
         );
@@ -309,7 +309,7 @@ function Madde({ m, numara, b, bag, grupStd }: { m: GrupT["maddeler"][number]; n
       <div className={stil.maddeSol}>
         <p className={stil.maddeAd}><span className={stil.maddeNo}>{numara}</span><span>{m.metin}</span>
           {m.talimat?.trim() && <TalimatTusu ad={m.metin} baslik={`Talimat · ${numara}`} parcalar={[{ baslik: m.metin, metin: m.talimat }]} />}</p>
-        {m.std?.trim() && m.std.trim() !== grupStd && <p className={stil.maddeStd}><StandartTusu std={m.std.trim()} kaynak={bag.v.kaynak} /></p>}
+        {m.std?.trim() && m.std.trim() !== grupStd && <div className={stil.maddeStd}><StandartTusu std={m.std.trim()} kaynak={bag.v.kaynak} /></div>}
         {m.aciklama && (
           <details className={stil.maddeBilgi}>
             <summary><Ikon ad="info" kucuk /><span className="gizli">Madde {numara} açıklaması</span></summary>

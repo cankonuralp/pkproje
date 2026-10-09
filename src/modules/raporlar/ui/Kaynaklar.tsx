@@ -7,6 +7,7 @@
    tuşa döner). */
 import Link from "next/link";
 import { useState } from "react";
+import { createPortal } from "react-dom";
 import { DosyaAcTusu, dosyaCerceveAdresi } from "../../../components/gizli-resim/GizliResim";
 import { Ikon } from "../../../components/ikon/Ikon";
 import { useOnayla } from "../../../components/pencere/Onay";
@@ -32,11 +33,12 @@ export function StandartTusu({ std, kaynak }: { std: string; kaynak: RaporKaynak
       <button type="button" className={stil.stdTus} aria-haspopup="dialog" onClick={() => void ac()}>
         <Ikon ad="book-open" kucuk /><span>{std}</span>
       </button>
-      {acik && (
+      {/* pencere belgenin köküne: tuş paragrafın / başlığın içinde durabilir — <dialog> orada geçersiz iç içelik olurdu (uçtan uca telefon:
+          geliştirme kipinin hata katmanı ekranı kapatıyordu) */}
+      {acik && createPortal(
         <Pencere acik baslik="Standart" genis onKapat={() => setAcik(false)}>
           {atiflar(std).map((a, i) => <Atif key={i} atif={a} kaynak={kaynak} />)}
-        </Pencere>
-      )}
+        </Pencere>, document.body)}
     </>
   );
 }
@@ -88,7 +90,7 @@ export function TalimatTusu({ ad, baslik, parcalar, buyuk = false }: { ad: strin
         title="Talimat" data-talimat={dolu.length ? "var" : "yok"} onClick={() => setAcik(true)}>
         <Ikon ad="circle-alert" kucuk={!buyuk} />
       </button>
-      {acik && (
+      {acik && createPortal(
         <Pencere acik baslik={baslik} genis={dolu.length > 1} onKapat={() => setAcik(false)}>
           {dolu.length ? dolu.map((p, i) => (
             <section key={i} className={stil.talimatBolum}>
@@ -96,8 +98,7 @@ export function TalimatTusu({ ad, baslik, parcalar, buyuk = false }: { ad: strin
               {p.metin.trim().split("\n").filter(Boolean).map((s, j) => <p key={j}>{s}</p>)}
             </section>
           )) : <p className={stil.stdNot}>Bu kontrol için talimat yazılmamış. Talimat rapor formatında yazılır (Ekipman türleri › Rapor şablonu › Format kurucu).</p>}
-        </Pencere>
-      )}
+        </Pencere>, document.body)}
     </>
   );
 }
