@@ -8,7 +8,6 @@
    (masaüstü işi): belge önizlemesi görünür. Karar ve şema sunucuda. */
 import { useRouter } from "next/navigation";
 import { useEffect, useMemo, useState, useTransition } from "react";
-import "../../../belge/belge.css";
 import { raporBelgesi } from "../../../belge/belge";
 import { useBildir } from "../../../components/bildirim/Bildirim";
 import { useOnayla } from "../../../components/pencere/Onay";

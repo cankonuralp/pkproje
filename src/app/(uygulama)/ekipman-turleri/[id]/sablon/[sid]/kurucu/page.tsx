@@ -3,6 +3,8 @@
    denetimi modül işlevinde (rapor-format/server/formatlar.ts). */
 import type { Metadata } from "next";
 import { notFound, redirect } from "next/navigation";
+/* 451: kâğıt ve belge önizlemesi belgenin görünümüyle (.rb- sınıfları) */
+import "../../../../../../../belge/belge.css";
 import { Yetkisiz } from "../../../../../../../components/hata/Hata";
 import { Kirinti } from "../../../../../../../components/sayfa/Sayfa";
 import { bransAd } from "../../../../../../../modules/ekipman-turleri/sema";
