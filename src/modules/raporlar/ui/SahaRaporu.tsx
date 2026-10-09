@@ -42,6 +42,7 @@ import { EtiketOkuma } from "./EtiketOkuma";
 import { FotoListesi } from "./FotoListesi";
 import { ImzaBolumu } from "./ImzaBolumu";
 import { KopyaPenceresi } from "./KopyaPenceresi";
+import { StandartTusu } from "./Kaynaklar";
 import { RevizeIstePenceresi } from "./RevizeIstePenceresi";
 import {
   onayaGonderEylemi, raporFormatGuncelleEylemi, raporKaydetEylemi, raporKopyalaEylemi, raporKunyeGuncelleEylemi, raporSilEylemi, revizeIstegiGeriCekEylemi,
@@ -407,7 +408,9 @@ export function SahaRaporu({ v, yeni }: { v: Gorunum; yeni?: { plan: string; eki
       </Satir>
     );
   };
-  const metot = v.tur.kontrolStd.length ? v.tur.kontrolStd.join(" · ") : <DegerYok>-</DegerYok>;
+  /* 428: türün kontrol metodu standartları da standart penceresini açar (önce sorar) */
+  const metot = v.tur.kontrolStd.length
+    ? <span className={stil.stdListe}>{v.tur.kontrolStd.map((x) => <StandartTusu key={x} std={x} kaynak={v.kaynak} />)}</span> : <DegerYok>-</DegerYok>;
   const onceki = v.ekipman.onceki;
 
   /* ── şeritler ── */

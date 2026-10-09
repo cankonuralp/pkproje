@@ -131,6 +131,8 @@ pkproje/
                             denetimi imza-pdf.ts (saf, beyaz liste: ek ayrıştırılır, trailer kökü aynı, özgün nesneden yalnız katalog / sayfa /Annots
                             değişir, yeni imza sözlüğü şart — 0028 ve 318 incelemeleri) · revize isteği server/revize.ts (318, göç 0029
                             rapor_revize_istegi; ui/RevizeIstePenceresi.tsx; 0031: imza günü ≥ muayene tarihi, eskimiş sürüm uygunsuzluk kapatmaz)
+                            · STANDART PENCERESİ (428): ui/Kaynaklar.tsx (önce sorar; kütüphanedeki PDF çerçevede / kriter belgesi metni) ·
+                            eşleme dokumanlar/eslestir.ts (saf) · kütüphane dokumanlar raporStandartlari · formatKriterleri src/tanim/kriterler.ts
                             · SAKLAMA SÜRESİ (387, göç 0073; ENGEL 11): server/saklama.ts (gece işi saklamaIsi — süresi dolan imzalı sürümün PDF'leri
                             saklama_sil ile, liste, Uyarılar günleri); okuyucular uyari-baglanti.ts, ayar-baglanti.ts; koruma veritabanında (dosya_saklama_koru)
   src/modules/onaylar/      ONAYLAR (2026-10-05, 314; modül 15): kuyruk, onay ekranı (gözden geçirme), Onayla / Geri gönder / Onayı geri al /

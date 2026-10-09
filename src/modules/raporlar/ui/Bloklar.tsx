@@ -28,6 +28,7 @@ import { meslek } from "../../personel/sema";
 import { SONUC_AD } from "../sema";
 import type { SahaRaporu } from "../server/raporlar";
 import { FotoOkuma } from "./FotoOkuma";
+import { StandartTusu } from "./Kaynaklar";
 import stil from "./raporlar.module.css";
 
 /** alan anahtarı → ekrandaki girdinin id'si. Anahtarlar motorun ve sunucunun eksik listesiyle aynı: madde / alan / değer kimliği, "tarih.bas",
@@ -253,23 +254,34 @@ function BilgiAlani({ a, bag }: { a: BolumOf<"bilgi">["alanlar"][number]; bag: B
 }
 
 /* ── KONTROL MADDELERİ ── */
+type GrupT = BolumOf<"liste">["gruplar"][number];
+/** grubun bütün maddelerinin ortak standardı (428): grup başlığında bir kez gösterilir, maddede yalnız farklıysa */
+const ortakStd = (g: GrupT) => {
+  const l = g.maddeler.map((m) => m.std?.trim() ?? "");
+  return l.length && l[0] && l.every((x) => x === l[0]) ? l[0] : null;
+};
+
 /* numarasız bölümde (no null) madde numarası bölüm numarasız: "1", "1.2" */
 function ListeBlok({ b, no, bag }: { b: BolumOf<"liste">; no: string | null; bag: Baglam }) {
   const on = no ? `${no}.` : "";
   const gruplu = b.gruplar.length > 1 || b.gruplar.some((g) => g.ad);
   return (
     <>
-      {b.gruplar.map((g, gi) => (
-        <div key={g.id} className={stil.grup}>
-          {g.ad && <h3 className={stil.grupBaslik}>{on}{gi + 1} · {g.ad}</h3>}
-          {g.maddeler.map((m, mi) => <Madde key={m.id} m={m} numara={gruplu ? `${on}${gi + 1}.${mi + 1}` : `${on}${mi + 1}`} b={b} bag={bag} />)}
-        </div>
-      ))}
+      {b.gruplar.map((g, gi) => {
+        const std = ortakStd(g);
+        return (
+          <div key={g.id} className={stil.grup}>
+            {g.ad && <h3 className={stil.grupBaslik}>{on}{gi + 1} · {g.ad}</h3>}
+            {std && <p className={stil.grupStd}><StandartTusu std={std} kaynak={bag.v.kaynak} /></p>}
+            {g.maddeler.map((m, mi) => <Madde key={m.id} m={m} numara={gruplu ? `${on}${gi + 1}.${mi + 1}` : `${on}${mi + 1}`} b={b} bag={bag} grupStd={std} />)}
+          </div>
+        );
+      })}
     </>
   );
 }
 
-function Madde({ m, numara, b, bag }: { m: BolumOf<"liste">["gruplar"][number]["maddeler"][number]; numara: string; b: BolumOf<"liste">; bag: Baglam }) {
+function Madde({ m, numara, b, bag, grupStd }: { m: GrupT["maddeler"][number]; numara: string; b: BolumOf<"liste">; bag: Baglam; grupStd: string | null }) {
   const x = bag.c.madde[m.id];
   const cevap = x?.c ?? "";
   const kusurlu = cevap !== "" && cevap === b.cevaplar[1];
@@ -280,11 +292,11 @@ function Madde({ m, numara, b, bag }: { m: BolumOf<"liste">["gruplar"][number]["
     <div className={stil.madde}>
       <div className={stil.maddeSol}>
         <p className={stil.maddeAd}><span className={stil.maddeNo}>{numara}</span><span>{m.metin}</span></p>
-        {(m.aciklama || m.std) && (
+        {m.std?.trim() && m.std.trim() !== grupStd && <p className={stil.maddeStd}><StandartTusu std={m.std.trim()} kaynak={bag.v.kaynak} /></p>}
+        {m.aciklama && (
           <details className={stil.maddeBilgi}>
             <summary><Ikon ad="info" kucuk /><span className="gizli">Madde {numara} açıklaması</span></summary>
-            {m.aciklama && <p>{m.aciklama}</p>}
-            {m.std && <p>{m.std}</p>}
+            <p>{m.aciklama}</p>
           </details>
         )}
       </div>

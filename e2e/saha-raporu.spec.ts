@@ -117,6 +117,21 @@ test("saha raporu: rapor oluştur, eksikle gönderilmez, doldur + cihaz ekle, on
   await page.getByText(/^Hepsini uygun yap$/i).click();
   await expect(page.getByRole("combobox", { name: "Tahliye düzeni" })).toContainText("Uygun");
   await expect(page.getByRole("combobox", { name: "Etiket plakası ve izlenebilirlik" })).toContainText("Uygun");
+  /* 428: standarda basınca önce sorulur; Vazgeç → pencere açılmaz; Aç → standart penceresi (kütüphanede yoksa söyler), kapanınca odak tuşta */
+  const stdTus = page.getByRole("button", { name: "TS EN 286-1" }).first();
+  await stdTus.click();
+  const soru = page.getByRole("dialog", { name: "Standart açılsın mı?" });
+  await expect(soru).toBeVisible();
+  await soru.getByRole("button", { name: "Vazgeç" }).click();
+  await expect(page.getByRole("dialog", { name: "Standart", exact: true })).toHaveCount(0);
+  await stdTus.click();
+  await soru.getByRole("button", { name: "Aç", exact: true }).click();
+  const stdPencere = page.getByRole("dialog", { name: "Standart", exact: true });
+  await expect(stdPencere).toContainText("TS EN 286-1");
+  await expect(stdPencere).toContainText("standart kütüphanesinde yok");
+  await stdPencere.getByRole("button", { name: "Kapat" }).click();
+  await expect(stdPencere).toHaveCount(0);
+  await expect(stdTus).toBeFocused();
   await girdi(page, "Hidrostatik deney basıncı").first().fill("17");
   await girdi(page, "Emniyet ventili açma basıncı").first().fill("10");
   await page.getByRole("combobox", { name: "Sonuç ve kanaat" }).click();

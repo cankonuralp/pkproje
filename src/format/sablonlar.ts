@@ -168,7 +168,7 @@ const KOMPRESOR: FormatGirdisi = {
     { id: "kriter", ad: "Muayene kriterleri", blok: "liste", cevaplar: CEVAP, gruplar: [{ id: "k", ad: "", maddeler: [
       "Gövde ve kaynaklar: gözle muayene (korozyon, ezik)", "Emniyet ventili: ayar basıncı ve fonksiyon", "Manometre: okunabilirlik ve kalibrasyon işareti",
       "Tahliye düzeni", "Etiket plakası ve izlenebilirlik", "Hidrostatik deney (deney basıncı)",
-    ].map((metin, i) => ({ id: `k${i + 1}`, metin })) }] },
+    ].map((metin, i) => ({ id: `k${i + 1}`, metin, std: "TS EN 286-1" })) }] },
     { id: "test", ad: "Test değerleri", blok: "test", degerler: [
       { id: "hidro", ad: "Hidrostatik deney basıncı", birim: "bar", op: ">=", sinir: 16.5, not: "1,5 × 11 bar çalışma" },
       { id: "ventil", ad: "Emniyet ventili açma basıncı", birim: "bar", op: "<=", sinir: 11, not: "çalışma basıncı" },

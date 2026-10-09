@@ -47,6 +47,9 @@ import { cihazKalibrasyonlari } from "../../olcum-cihazlari/server/cihazlar.ts";
 import { personelBelgeBilgisi } from "../../personel/server/personel.ts";
 import type { BelgeVerisi } from "../../../belge/veri.ts";
 import { imzaliPdfGecerli } from "../imza-pdf.ts";
+import { raporStandartlari } from "../../dokumanlar/server/dokumanlar.ts";
+import type { StandartOzeti } from "../../dokumanlar/eslestir.ts";
+import { formatKriterleri, type KriterBelgesi } from "../../../tanim/kriterler.ts";
 
 const MODUL = 14;
 /** rapor fotoğrafının dosya modülü (dosya erişim kaydında: raporu gören açar) */
@@ -248,6 +251,13 @@ export interface SahaRaporu {
   izin: { duzenle: boolean; sil: boolean; kopyala: boolean };
   /** fotoğraftan okuma (351): düzenleyebilene, firmada yapay zekâ açık ve anahtar girilmişse */
   yz: boolean;
+  /** standart penceresi (428): firmanın güncel standartları (Dökümanlar'ı görmeyene null) ve formatın atıf yaptığı Bakanlık kriter belgeleri */
+  kaynak: RaporKaynaklari;
+}
+export interface RaporKaynaklari { standartlar: StandartOzeti[] | null; kriterler: KriterBelgesi[] }
+
+async function raporKaynaklari(db: Sorgulayici, kim: Kisi, t: FormatTanimi): Promise<RaporKaynaklari> {
+  return { standartlar: await raporStandartlari(db, kim), kriterler: formatKriterleri(t) };
 }
 
 const kunyeFarki = (a: Kunye, b: Kunye) => [
@@ -341,6 +351,7 @@ export async function sahaRaporu(db: Sorgulayici, kim: Kisi, id: string): Promis
     imzali: r.durum === "imzali" ? await imzaliSurum(db, r.id, r.revizyon) : null,
     izin: { duzenle, sil: r.durum === "taslak" && r.revizyon === 0 && canDoEylem(kim, "rapor_sil", { sahip: r.hesap_id, durum: "Yeni", brans: tur.brans }), kopyala },
     yz: duzenle ? await yzHazirMi(db) : false,
+    kaynak: await raporKaynaklari(db, kim, format.tanim),
   };
 }
 
@@ -355,7 +366,9 @@ export interface YeniRaporPaketi {
   /** rapor açılamıyorsa nedeni (plan kabul edilmemiş, plan günü gelmemiş, günlük süre dolmuş) — ekran söyler, kuyruğa iş yazılmaz */
   neden: string | null;
   ekipmanlar: { id: string; kod: string; turId: string; ekipmanBilgi: EkipmanBilgisi; onceki: SahaRaporu["ekipman"]["onceki"] }[];
-  turler: Record<string, { tur: SahaRaporu["tur"]; tanim: FormatTanimi; formatSira: number; ilk: Cevaplar; cihazlar: CihazSatiri[] }>;
+  turler: Record<string, { tur: SahaRaporu["tur"]; tanim: FormatTanimi; formatSira: number; ilk: Cevaplar; cihazlar: CihazSatiri[]; kriterler: KriterBelgesi[] }>;
+  /** 428: firmanın güncel standartları (Dökümanlar'ı görmeyene null) — bağlantısız da standart penceresi listeyi bilir */
+  standartlar: StandartOzeti[] | null;
 }
 /** planın bağlantısız yeni rapor paketi; rapor açamayan (ekipte değil, yetkisiz) ya da planı göremeyene null */
 export async function yeniRaporPaketi(db: Sorgulayici, kim: Kisi, planId: string): Promise<YeniRaporPaketi | null> {
@@ -380,7 +393,7 @@ export async function yeniRaporPaketi(db: Sorgulayici, kim: Kisi, planId: string
       if (!tur || !format) continue;
       turler[e.turId] = {
         tur: { id: tur.id, ad: tur.ad, kod: tur.kod, brans: tur.brans, kontrolStd: tur.kontrolStd, periyot: tur.periyot },
-        tanim: format.tanim, formatSira: format.sira, ilk: ilkCevaplar(format.tanim),
+        tanim: format.tanim, formatSira: format.sira, ilk: ilkCevaplar(format.tanim), kriterler: formatKriterleri(format.tanim),
         cihazlar: tur.cihazTurleri.map((turId) => ({ turId, turAd: turAdi.get(turId) ?? "Ölçüm cihazı", cihaz: null })),
       };
     }
@@ -396,7 +409,7 @@ export async function yeniRaporPaketi(db: Sorgulayici, kim: Kisi, planId: string
     plan: { id: plan.id, no: plan.no, tesisAd: iletisim?.tesisAd ?? "—", musteriKisa: iletisim?.kisa ?? "—" },
     yazan: { ad: yazan?.ad ?? "—", meslek: yazan?.meslek ?? "diger", meslekMetin: yazan?.meslekMetin ?? null, ekipnet: yazan?.ekipnet ?? null },
     kunye: { firmaAdi: plan.kunye.firma_adi, adres: plan.kunye.adres, sgk: plan.kunye.sgk, isgNo: plan.kunye.isg_no, eposta: iletisim?.eposta ?? null, tel: iletisim?.tel ?? null },
-    bugun, neden, ekipmanlar, turler,
+    bugun, neden, ekipmanlar, turler, standartlar: await raporStandartlari(db, kim),
   };
 }
 

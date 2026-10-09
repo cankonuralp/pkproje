@@ -10,6 +10,7 @@ import { dosyaYukle } from "../../../server/dosya/dosya.ts";
 import { duzey, type YetkiHesabi } from "../../../server/yetki/canDo.ts";
 import { dogrula, type DogrulamaHatalari } from "../../../sema/ortak.ts";
 import { DokumanGirdisi, StandartGirdisi } from "../sema.ts";
+import type { StandartOzeti } from "../eslestir.ts";
 
 const MODUL = 4;
 export const DOSYA = { standart: "standart", dokuman: "dokuman" } as const;
@@ -48,6 +49,13 @@ export async function standartListesi(db: Sorgulayici, kim: Kisi): Promise<Stand
   if (!gorur(kim)) return null;
   return (await db.sorgu<StdDb>(STD_SEC)).rows.map(stdSatiri)
     .sort((a, b) => a.no.localeCompare(b.no, "tr", { numeric: true }) || b.tarih.localeCompare(a.tarih));
+}
+
+/** 428: saha raporunun standart penceresi için güncel standartlar (Raporlar okur — src/modules/dokumanlar/eslestir.ts eşler). Dökümanlar'ı
+    görmeyen null alır: PDF'i zaten açamaz (dosya ucu aynı yetkiye bakar — standartDosyasiGorulur) */
+export async function raporStandartlari(db: Sorgulayici, kim: YetkiHesabi): Promise<StandartOzeti[] | null> {
+  if (!gorur(kim)) return null;
+  return (await db.sorgu<StdDb>(`${STD_SEC} AND s.bitti IS NULL`)).rows.map((x) => ({ id: x.id, no: x.no, surumAdi: x.surum_adi, konu: x.konu, dosyaId: x.dosya_id }));
 }
 
 export async function standartKarti(db: Sorgulayici, kim: Kisi, id: string): Promise<StandartKarti | null> {

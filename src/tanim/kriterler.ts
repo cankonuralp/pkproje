@@ -2,6 +2,8 @@
    sistem de muhafaza edilecek … bunlar ilgili ekipmanın muayenesi ile alakalı tariflerdir"). Belgeler KODDA tutulur, site içinde düzenlenmez
    (yayımlanmış mevzuat metni; firma verisi değil). Maketteki veriden bir kez aktarıldı (docs/assets/maket-veri.js KONTROL_BELGELERI).
    427 (2026-10-09): ZPKK03 yıldırımdan korunma, ZPKK04 yangın algılama, ZPKK05 trafo — Bakanlığın 18.07.2025 tarihli belgelerinden özet. */
+import type { FormatTanimi } from "../format/tanim.ts";
+
 export interface KriterMaddesi { no: string; baslik: string; icerik: string; kaynak: string }
 export interface KriterBelgesi { kod: string; ad: string; tur: string; rapor: string; yayim: string; yururluk: string; kapsam: string; maddeler: KriterMaddesi[]; notlar: string[] }
 
@@ -459,3 +461,14 @@ export const KRITER_BELGELERI: readonly KriterBelgesi[] = [
 ];
 
 export const kriterBelgesi = (kod: string) => KRITER_BELGELERI.find((x) => x.kod === kod) ?? null;
+
+/** 428: formatın atıf yaptığı kriter belgeleri — madde standardındaki ZPKKnn ve formatın Bakanlık form kodu (ZPKR03 → ZPKK03); saha raporunun
+    standart penceresi bunları metniyle açar */
+export function formatKriterleri(t: FormatTanimi): KriterBelgesi[] {
+  const kodlar = new Set<string>();
+  for (const b of t.bolumler) if (b.blok === "liste") for (const g of b.gruplar) for (const m of g.maddeler) {
+    const k = /\bZPKK\d{2}\b/i.exec(m.std ?? "")?.[0].toUpperCase();
+    if (k) kodlar.add(k);
+  }
+  return KRITER_BELGELERI.filter((x) => kodlar.has(x.kod) || (!!t.gorunum.formKodu && x.rapor === t.gorunum.formKodu));
+}

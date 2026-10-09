@@ -65,6 +65,28 @@ input.oku { background: var(--zemin2); border-color: var(--kenar); color: var(--
 .maddeBilgi > summary { display: inline-flex; align-items: center; gap: 6px; min-height: var(--tus-y); cursor: pointer; list-style: none; }
 .maddeBilgi > summary::-webkit-details-marker { display: none; }
 .maddeBilgi p { margin: 0 0 8px; overflow-wrap: anywhere; }
+/* 428: standart tuşu (bağlantı görünümünde, basınca önce sorar) ve standart penceresi */
+.grupStd, .maddeStd { margin: 0; }
+.maddeStd { margin: 2px 0 -6px 28px; }
+.stdTus {
+  display: inline-flex; align-items: center; gap: 6px; min-height: var(--tus-y); max-width: 100%; margin-left: -6px; padding: 0 6px;
+  border: 0; border-radius: var(--r-orta); background: transparent; color: var(--onay-yazi); font: inherit; font-size: var(--boy-kucuk);
+  text-align: left; text-decoration: underline; text-underline-offset: 3px; overflow-wrap: anywhere; cursor: pointer;
+}
+.stdTus:hover { background: var(--zemin2); }
+.stdTus > :global(svg) { flex: none; }
+.stdListe { display: flex; flex-wrap: wrap; gap: 0 12px; }
+.stdBolum { display: grid; gap: 8px; padding: 8px 0 12px; border-bottom: 1px solid var(--kenar); }
+.stdBolum:last-child { border-bottom: 0; }
+.stdBolum h3 { margin: 0; font-size: var(--boy-govde); font-weight: 700; overflow-wrap: anywhere; }
+.stdBolum p { margin: 0; overflow-wrap: anywhere; }
+.stdNot { color: var(--yazi2); font-size: var(--boy-kucuk); }
+.stdCerceve { width: 100%; height: 65vh; height: 65dvh; border: 1px solid var(--kenar); border-radius: var(--r-orta); background: var(--zemin2); }
+.stdTelefon { display: none; color: var(--yazi2); font-size: var(--boy-kucuk); }
+.kriterMaddeleri { display: grid; gap: 10px; margin: 0; padding-left: 0; list-style: none; }
+.kriterMaddeleri p { margin: 2px 0 0; }
+.kriterNotBas { margin: 4px 0 0; font-size: var(--boy-govde); }
+.kriterNotlar { margin: 0; padding-left: 20px; display: grid; gap: 6px; }
 .maddeKusur { grid-column: 1 / -1; display: grid; grid-template-columns: minmax(0, 1fr) 13rem; align-items: start; gap: 8px 16px; }
 .maddeKusur > :only-child { grid-column: 1 / -1; }
 .maddeUyari { grid-column: 1 / -1; margin: 0; font-size: var(--boy-kucuk); }
@@ -172,6 +194,10 @@ button.silTus { color: var(--hata-yazi); }
   .madde { grid-template-columns: minmax(0, 1fr); }
   .maddeKusur { grid-template-columns: minmax(0, 1fr); }
   .maddeBilgi { margin-left: 0; }
+  .maddeStd { margin-left: 0; }
+  /* telefonda tarayıcı PDF'i çerçevede çizmez (Android) — yeni sekmede açılır */
+  .stdCerceve { display: none; }
+  .stdTelefon { display: block; }
   .eylem > * { flex: 1 1 auto; }
 }
 /* Raporlar listesi (318) */

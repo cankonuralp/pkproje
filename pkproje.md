@@ -2355,6 +2355,12 @@ revizyon, alan kopyalama, hafif kusur devri, meslek eşleşme denetimi).
 - Emsal ürünler: https://opwire.app/iso-17020-periyodik-kontrol-yazilimi/ · https://17020muayene.vidco.com.tr/ · https://akuple.com/asansor-kontrol-yazilimi/ · https://ensyazilim.com/
 
 ## 11 · Değişiklik günlüğü
+- 2026-10-09 (428): **Standart penceresi** (reisim: *"Denetçi muayene yaparken standarta tıklayınca pop-up olarak standart açılmalı okuyabilmeli
+  yanlışlıkla tıklaması ihtimaline karşı önceden sorsun evet denirse açılsın"*). Saha raporunda madde / grup standardı ve türün kontrol metodu
+  bağlantı görünümlü tuş; basınca "Standart açılsın mı?" sorulur, Aç denirse pencere: her atıf firmanın standart kütüphanesindeki güncel PDF'le
+  (Dökümanlar › Standartlar; uygulama içinde çerçevede, telefonda "Yeni sekmede aç") ya da Bakanlık kriter belgesinin metniyle (ZPKKnn) açılır;
+  kütüphanede yoksa söylenir. Grubun bütün maddeleri aynı standarda bağlıysa standart grup başlığında bir kez görünür. Eşleme en uzun numara,
+  numaranın ardından rakam / harf gelmez ("TS 622", "TS 6225"i tutmaz). Kompresör şablonunun maddelerine TS EN 286-1 yazıldı.
 - 2026-10-09 (427): **Elektrik tarafının üç zorunlu Bakanlık formatı hazır şablon** (reisim: *"Elektrik tarafında zorunlu formatlar yayınlandı, bu
   formatları probataya ekle"*): ZPKR03 yıldırımdan korunma, ZPKR04 yangın algılama ve uyarı, ZPKR05 trafo (yayım 18.07.2025, yürürlük 01.09.2025;
   Bakanlık sitesinden indirilen PDF'lerden). Bölüm adları, sıraları ve numaraları resmî formdaki gibi ("ana başlıklar ve sıralamaları değişmeyecek"):
