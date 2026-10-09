@@ -56,11 +56,11 @@ test("dökümanlar: standart ve yeni sürümü, kriter belgesi, diğer döküman
   await expect(page).toHaveURL(/\/dokumanlar\?brans=e$/);
   await expect(page.getByRole("button", { name: `${hazirNo} · Yükle` })).toHaveCount(0);
 
-  /* 442: Muayene kriterleri'nde de Mekanik / Elektrik alt sekmesi — Bakanlık belgeleri Elektrik'te, Mekanik boş */
+  /* 442: Muayene kriterleri'nde de Mekanik / Elektrik alt sekmesi; 467: Mekanik'te kule kren, asılı erişim ve LPG belgeleri */
   await page.goto("/dokumanlar/kriterler");
   await hazir(page);
-  await expect(page.getByRole("navigation", { name: "Branşlar" }).getByRole("link", { name: "Mekanik (0)" })).toHaveAttribute("aria-current", "page");
-  await expect(page.getByText("Mekanik muayene kriteri belgesi yok")).toBeVisible();
+  await expect(page.getByRole("navigation", { name: "Branşlar" }).getByRole("link", { name: "Mekanik (4)" })).toHaveAttribute("aria-current", "page");
+  for (const k of ["ZPKK06", "ZPKK07", "ZPMK01", "ZYDK01"]) await expect(page.getByRole("link", { name: k })).toBeVisible();
   await page.getByRole("navigation", { name: "Branşlar" }).getByRole("link", { name: /^Elektrik \(\d+\)$/ }).click();
   await expect(page).toHaveURL(/\/dokumanlar\/kriterler\?brans=e$/, { timeout: 30_000 });
   await page.getByRole("link", { name: "ZPKK01" }).click();

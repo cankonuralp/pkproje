@@ -54,8 +54,9 @@ after(async () => { await havuz?.end(); await kume?.durdur(); rmSync(klasor, { r
 
 /* 2026-10-09 (427): Bakanlık elektrik tarafının zorunlu formatları — ZPKK03 yıldırımdan korunma, ZPKK04 yangın algılama, ZPKK05 trafo eklendi;
    her belgenin rapor formatı kitaplıkta hazır şablon olarak var */
-test("kriter belgeleri kodda: beş belge, maddeler ve notlar dolu, rapor formatı kitaplıkta", () => {
-  assert.deepEqual(KRITER_BELGELERI.map((x) => x.kod), ["ZPKK01", "ZPKK02", "ZPKK03", "ZPKK04", "ZPKK05"]);
+/* 467: + mekanik ZPKK06 kule kren, ZPKK07 asılı erişim, ZPMK01 / ZYDK01 LPG tankı (ZYDK01 sekiz madde) */
+test("kriter belgeleri kodda: dokuz belge, maddeler ve notlar dolu, rapor formatı kitaplıkta", () => {
+  assert.deepEqual(KRITER_BELGELERI.map((x) => x.kod), ["ZPKK01", "ZPKK02", "ZPKK03", "ZPKK04", "ZPKK05", "ZPKK06", "ZPKK07", "ZPMK01", "ZYDK01"]);
   for (const x of KRITER_BELGELERI) assert.ok(Object.hasOwn(SABLONLAR, x.rapor), `${x.kod}: ${x.rapor} şablonu yok`);
   assert.ok(KRITER_BELGELERI.every((x) => x.maddeler.length > 5 && x.notlar.length > 0 && x.maddeler.every((m) => m.no && m.baslik && m.icerik)));
 });
