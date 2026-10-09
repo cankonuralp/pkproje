@@ -36,8 +36,11 @@ test("dökümanlar: standart ve yeni sürümü, kriter belgesi, diğer döküman
   /* 437: Bakanlık formatlarının standartları hazır — kütüphanede yoksa "Yükle" (numara, konu dolu) → yüklenince listede "Görüntüle" (PDF) */
   const hazirNo = [["TS EN 50522", "TS EN 62423", "TS 622"], ["TS EN 61008-1", "TS EN 61009-1", "TS EN 62561"], ["TS EN 12464-1", "TS IEC 61439", "TS EN 60079-14"]]
     [Math.max(0, ["masaustu", "tablet", "telefon"].indexOf(bilgi.project.name))][bilgi.retry % 3];
-  await page.goto("/dokumanlar");
+  /* 440: Mekanik / Elektrik sekmeleri — yukarıda yüklenen (mekanik sekmede yüklendi) Elektrik'te yok; Bakanlık standartları Elektrik'te */
+  await page.goto("/dokumanlar?brans=e");
   await hazir(page);
+  await expect(page.getByRole("link", { name: /^Elektrik \(\d+\)$/ })).toHaveAttribute("aria-current", "page");
+  await expect(page.getByRole("link", { name: no, exact: true })).toHaveCount(0);
   await page.getByRole("searchbox", { name: "Standartlarda ara" }).fill(hazirNo);
   await expect(page.getByText("Yüklenmedi").first()).toBeVisible();
   await page.getByRole("button", { name: `${hazirNo} · Yükle` }).click();
@@ -50,7 +53,7 @@ test("dökümanlar: standart ve yeni sürümü, kriter belgesi, diğer döküman
   const gor = page.getByRole("link", { name: `${hazirNo}:2011 · Görüntüle` });
   await expect(gor).toBeVisible({ timeout: 30_000 });
   await expect(gor).toHaveAttribute("href", /^\/api\/dosya\/[0-9a-f-]{36}$/);
-  await expect(page).toHaveURL(/\/dokumanlar$/);
+  await expect(page).toHaveURL(/\/dokumanlar\?brans=e$/);
   await expect(page.getByRole("button", { name: `${hazirNo} · Yükle` })).toHaveCount(0);
 
   await page.goto("/dokumanlar/kriterler");
@@ -68,6 +71,11 @@ test("dökümanlar: standart ve yeni sürümü, kriter belgesi, diğer döküman
   await d.getByLabel("Dosya (PDF)").setInputFiles(PDF);
   await d.getByRole("button", { name: "Yükle" }).click();
   await expect(page.getByText(`Prosedür ${bilgi.project.name}`, { exact: true }).first()).toBeAttached({ timeout: 30_000 });
+
+  await page.goto("/dokumanlar");
+  await hazir(page);
+  await expect(page.getByRole("link", { name: no, exact: true }).first()).toBeAttached();
+  await expect(page.getByRole("button", { name: `${hazirNo} · Yükle` })).toHaveCount(0);
 
   /* denetçi: görür, yükleyemez */
   await context.clearCookies();

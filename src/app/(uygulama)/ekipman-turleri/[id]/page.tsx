@@ -61,13 +61,13 @@ export default async function Sayfa({ params }: { params: Promise<{ id: string }
           : <SeritKap><Serit tur="uyari" ikon="layout-list">Rapor şablonu yayınlanmadı.</Serit></SeritKap>}
       </Bolum>
       <Bolum id="b-tur-cihaz" baslik="Kullanılacak ölçüm cihazları" sayac={<><b>{t.cihazTurleri.length}</b> cihaz türü</>}
-        tuslar={yaz && sec && <BaglantiTusu turId={t.id} surum={t.surum} standartlar={t.standartlar.map((x) => x.no)} cihazTurleri={t.cihazTurleri.map((x) => x.id)} secenekler={sec} />}>
+        tuslar={yaz && sec && <BaglantiTusu turId={t.id} surum={t.surum} standartlar={t.standartlar.map((x) => x.no)} cihazTurleri={t.cihazTurleri.map((x) => x.id)} secenekler={sec} brans={t.brans} />}>
         {t.cihazTurleri.length ? <ul className={stil.bagListe}>{t.cihazTurleri.map((c) => <li key={c.id}>{c.ad}</li>)}</ul>
           : <SeritKap><Serit tur="uyari" ikon="gauge">Ölçüm cihazı seçilmemiş; raporda cihaz şartı aranmaz.</Serit></SeritKap>}
       </Bolum>
       <Bolum id="b-tur-std" baslik="Kontrol metodu standartları" sayac={<><b>{t.standartlar.length}</b> standart</>}>
         {t.standartlar.length ? <ul className={stil.bagListe}>{t.standartlar.map((s) => <li key={s.no}><span>{s.id ? `${s.no}:${s.surumAdi}` : s.no}
-          <span className={stil.altMetin}>{s.konu ?? "Kütüphanede güncel sürüm yok"}</span></span></li>)}</ul>
+          <span className={stil.altMetin}>{s.konu ?? "Kütüphanede güncel sürüm yok — Dökümanlar › Standartlar’dan yüklenir"}</span></span></li>)}</ul>
           : <SeritKap><Serit tur="uyari" ikon="triangle-alert">Standart seçilmemiş; raporda kontrol metodu “Üretici talimatı” yazar.</Serit></SeritKap>}
       </Bolum>
       <Bolum id="b-kural" baslik="Kontrol kuralları">

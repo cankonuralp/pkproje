@@ -13,6 +13,8 @@ export const StandartGirdisi = z.object({
   surum: z.preprocess((s) => (typeof s === "string" ? s.trim().toUpperCase() : s),
     z.string({ error: "Yıl ve varsa tadil: ör. 2016 ya da 2013+A1:2015." }).regex(SURUM, "Yıl ve varsa tadil: ör. 2016 ya da 2013+A1:2015.")),
   konu: z.preprocess(bos, z.string({ error: "Konu yazılmalı (raporda standart adı olarak görünür)." }).min(2, "Konu yazılmalı (raporda standart adı olarak görünür).").max(120, "En çok 120 karakter.")),
+  /** 440: branş (Standartlar'ın Mekanik / Elektrik sekmesi); boşsa sunucu karar verir — yeni sürüm güncel sürümünkini alır */
+  brans: z.preprocess((s) => (s === "" || s === null ? undefined : s), z.enum(["m", "e"], { error: "Branş seçilmeli." }).optional()),
 });
 export type StandartGirdisi = z.output<typeof StandartGirdisi>;
 

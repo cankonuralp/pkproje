@@ -12,6 +12,7 @@ import { klasorDepo } from "../src/server/dosya/depo.ts";
 import { standartYukle } from "../src/modules/dokumanlar/server/dokumanlar.ts";
 import { baglantiKaydet, baglantiSecenekleri, standardiKullananTurler, turKaydet, turKarti, type Kisi } from "../src/modules/ekipman-turleri/server/turler.ts";
 import { cihazKaydet } from "../src/modules/olcum-cihazlari/server/cihazlar.ts";
+import { BAKANLIK_STANDARTLARI } from "../src/tanim/standartlar.ts";
 import { testKumesi } from "./yardimci/kume.ts";
 
 let kume: GomuluKume;
@@ -76,4 +77,23 @@ test("ret: kütüphanede olmayan standart, başka firmanın cihaz türü; yalnı
   assert.deepEqual(await b((db) => baglantiKaydet(db, YON_B, tur, k.surum, { standartlar: [], cihazTurleri: [ctB] })), { durum: "yok" });
   assert.deepEqual(await b((db) => standardiKullananTurler(db, "TS EN 280")), []);
   await assert.rejects(a((db) => db.sorgu("UPDATE ekipman_turu SET kontrol_std = array_fill('X'::text, ARRAY[21])")), /check/i);
+});
+
+/* 2026-10-09 (440): Bakanlık listesindeki standart kütüphaneye yüklenmeden de türe bağlanır (hazır kurulum bağlar; pencerede "yüklenmedi"),
+   türde seçili olup kütüphanede olmayan standart kayıtta kalabilir (pencere düşürmesin); seçenekler branşıyla */
+test("440 bağlantı: Bakanlık standardı yüklenmeden seçilir; seçenekler branşı ve yüklü bilgisiyle; seçili olan kalabilir", async () => {
+  const sec = (await a((db) => baglantiSecenekleri(db, YON)))!;
+  assert.deepEqual(sec.standartlar.find((s) => s.no === "TS EN 280"), { no: "TS EN 280", konu: "Deneme konu", brans: "m", yuklu: true });
+  assert.deepEqual(sec.standartlar.find((s) => s.no === "TS HD 60364-6"), { no: "TS HD 60364-6", konu: BAKANLIK_STANDARTLARI.find((h) => h.no === "TS HD 60364-6")!.konu, brans: "e", yuklu: false });
+  let k = (await a((db) => turKarti(db, YON, tur)))!;
+  tamam(await a((db) => baglantiKaydet(db, YON, tur, k.surum, { standartlar: ["TS HD 60364-6", "TS EN 280"], cihazTurleri: [] })));
+  k = (await a((db) => turKarti(db, YON, tur)))!;
+  assert.deepEqual(k.standartlar.map((s) => [s.no, s.id === null]), [["TS HD 60364-6", true], ["TS EN 280", false]], "yüklenmemiş: kütüphane kimliği yok");
+  /* listede olmayan ama türde seçili olan (ör. kütüphaneden kaldırılmış) kayıtta kalabilir; yenisi eklenemez */
+  await a((db) => db.sorgu("UPDATE ekipman_turu SET kontrol_std = kontrol_std || ARRAY['TS EN 999'], surum = surum + 1 WHERE id = $1", [tur]));
+  k = (await a((db) => turKarti(db, YON, tur)))!;
+  tamam(await a((db) => baglantiKaydet(db, YON, tur, k.surum, { standartlar: ["TS EN 999"], cihazTurleri: [] })));
+  k = (await a((db) => turKarti(db, YON, tur)))!;
+  assert.deepEqual(await a((db) => baglantiKaydet(db, YON, tur, k.surum, { standartlar: ["TS EN 999", "TS EN 998"], cihazTurleri: [] })),
+    { durum: "gecersiz", hatalar: { standartlar: "Standart kütüphanede yok." } });
 });

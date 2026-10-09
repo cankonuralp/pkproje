@@ -285,6 +285,14 @@ export async function cihazTuruListesi(db: Sorgulayici, kim: Kisi): Promise<Ciha
     .sort((a, b) => a.ad.localeCompare(b.ad, "tr"));
 }
 
+/** 440 · hazır kurulum (rapor-format/server/kurulum.ts): adıyla cihaz türü — aynı adlı (Türkçe büyük / küçük harf farkı yok sayılır) varsa o, yoksa
+    açılır. YETKİ DENETİMİ YOK: Bakanlık formatının varsayılanı; yalnız kurulum.ts çağırır (o da sistemden ya da tür + format yetkisiyle). */
+export async function hazirCihazTuru(db: Sorgulayici, kim: string, ad: string): Promise<string> {
+  const g = dogrula(CihazTuruGirdisi, { ad });
+  if (!g.tamam) throw new Error(`hazır cihaz türü geçersiz: ${ad}`);
+  return (await ayniAdliTur(db, g.veri.ad))?.id ?? (await ekle(db, TUR, { ad: g.veri.ad }, { kim, ne: "cihaz_turu.ekle", gerekce: "Bakanlık formatı" })).id;
+}
+
 /** tür ekle (id boş) ya da adını değiştir; ad firmada eşsiz (Türkçe büyük / küçük harf farkı yok sayılır — cihazKaydet ile aynı) */
 export async function cihazTuruKaydet(db: Sorgulayici, kim: Kisi, id: string | null, surum: number, girdi: unknown): Promise<Yazma> {
   if (!degistirir(kim)) return { durum: "yetkisiz" };

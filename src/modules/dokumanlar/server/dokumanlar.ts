@@ -9,18 +9,19 @@ import type { Depo } from "../../../server/dosya/depo.ts";
 import { dosyaYukle } from "../../../server/dosya/dosya.ts";
 import { duzey, type YetkiHesabi } from "../../../server/yetki/canDo.ts";
 import { dogrula, type DogrulamaHatalari } from "../../../sema/ortak.ts";
+import { BAKANLIK_STANDARTLARI } from "../../../tanim/standartlar.ts";
 import { DokumanGirdisi, StandartGirdisi } from "../sema.ts";
 import type { StandartOzeti } from "../eslestir.ts";
 
 const MODUL = 4;
 export const DOSYA = { standart: "standart", dokuman: "dokuman" } as const;
-const STD = tablo({ ad: "standart", sutunlar: ["no", "surum_adi", "konu", "dosya_id", "yukleyen", "bitti", "kaldirildi"] });
+const STD = tablo({ ad: "standart", sutunlar: ["no", "surum_adi", "konu", "brans", "dosya_id", "yukleyen", "bitti", "kaldirildi"] });
 const DOK = tablo({ ad: "dokuman", sutunlar: ["ad", "tur", "kod", "rev", "dosya_id", "tarih", "kaldirildi"] });
 const UUID = /^[0-9a-f]{8}-[0-9a-f]{4}-[0-9a-f]{4}-[0-9a-f]{4}-[0-9a-f]{12}$/;
 
 export interface Kisi extends YetkiHesabi { ad: string }
 export interface StandartSatiri {
-  id: string; no: string; surumAdi: string; konu: string; dosyaId: string; boyut: number; yukleyen: string; tarih: string; bitti: string | null; guncel: boolean; surum: number;
+  id: string; no: string; surumAdi: string; konu: string; brans: "m" | "e"; dosyaId: string; boyut: number; yukleyen: string; tarih: string; bitti: string | null; guncel: boolean; surum: number;
 }
 export interface StandartKarti extends StandartSatiri { surumler: StandartSatiri[]; guncelId: string | null }
 export interface DokumanSatiri { id: string; ad: string; tur: string; kod: string | null; rev: string | null; dosyaId: string; tarih: string; surum: number }
@@ -37,11 +38,11 @@ const bugunTr = () => new Intl.DateTimeFormat("en-CA", { timeZone: "Europe/Istan
 const surumGecerli = (s: number) => Number.isSafeInteger(s) && s >= 0;
 const pdfHatasi = (neden: string) => (neden === "buyuk" ? "PDF en çok 25 MB." : "Dosya PDF değil ya da bozuk.");
 
-type StdDb = { id: string; no: string; surum_adi: string; konu: string; dosya_id: string; boyut: string | null; yukleyen: string; olustu: Date; bitti: string | null; surum: number };
-const STD_SEC = `SELECT s.id::text, s.no, s.surum_adi, s.konu, s.dosya_id::text, d.boyut::text AS boyut, s.yukleyen, s.olustu, s.bitti::text, s.surum
+type StdDb = { id: string; no: string; surum_adi: string; konu: string; brans: "m" | "e"; dosya_id: string; boyut: string | null; yukleyen: string; olustu: Date; bitti: string | null; surum: number };
+const STD_SEC = `SELECT s.id::text, s.no, s.surum_adi, s.konu, s.brans, s.dosya_id::text, d.boyut::text AS boyut, s.yukleyen, s.olustu, s.bitti::text, s.surum
   FROM standart s LEFT JOIN dosya d ON d.id = s.dosya_id AND d.firma_id = s.firma_id WHERE s.kaldirildi IS NULL AND s.dosya_id IS NOT NULL`;
 const stdSatiri = (x: StdDb): StandartSatiri => ({
-  id: x.id, no: x.no, surumAdi: x.surum_adi, konu: x.konu, dosyaId: x.dosya_id, boyut: Number(x.boyut ?? 0), yukleyen: x.yukleyen, tarih: x.olustu.toISOString(),
+  id: x.id, no: x.no, surumAdi: x.surum_adi, konu: x.konu, brans: x.brans, dosyaId: x.dosya_id, boyut: Number(x.boyut ?? 0), yukleyen: x.yukleyen, tarih: x.olustu.toISOString(),
   bitti: x.bitti, guncel: !x.bitti, surum: x.surum,
 });
 
@@ -67,13 +68,14 @@ export async function standartKarti(db: Sorgulayici, kim: Kisi, id: string): Pro
 }
 
 /** Ekipman türleri ve raporlar için: güncel sürümler (numara → sürüm). Yetki ÇAĞIRANDA. */
-export async function guncelStandartlar(db: Sorgulayici): Promise<{ id: string; no: string; surumAdi: string; konu: string }[]> {
-  return (await db.sorgu<{ id: string; no: string; surum_adi: string; konu: string }>(
-    "SELECT id::text, no, surum_adi, konu FROM standart WHERE kaldirildi IS NULL AND bitti IS NULL")).rows
-    .map((x) => ({ id: x.id, no: x.no, surumAdi: x.surum_adi, konu: x.konu })).sort((a, b) => a.no.localeCompare(b.no, "tr", { numeric: true }));
+export async function guncelStandartlar(db: Sorgulayici): Promise<{ id: string; no: string; surumAdi: string; konu: string; brans: "m" | "e" }[]> {
+  return (await db.sorgu<{ id: string; no: string; surum_adi: string; konu: string; brans: "m" | "e" }>(
+    "SELECT id::text, no, surum_adi, konu, brans FROM standart WHERE kaldirildi IS NULL AND bitti IS NULL")).rows
+    .map((x) => ({ id: x.id, no: x.no, surumAdi: x.surum_adi, konu: x.konu, brans: x.brans })).sort((a, b) => a.no.localeCompare(b.no, "tr", { numeric: true }));
 }
 
-/** standart yükle: aynı numarada güncel sürüm varsa o "önceki" olur (bitti = bugün), konu boşsa eskisinden. Aynı numara + sürüm ikinci kez yüklenmez. */
+/** standart yükle: aynı numarada güncel sürüm varsa o "önceki" olur (bitti = bugün), konu boşsa eskisinden. Aynı numara + sürüm ikinci kez yüklenmez.
+    440 branş: yeni sürüm güncel sürümünkini alır (formdaki yok sayılır); ilk sürümde formdaki, o da yoksa Bakanlık listesindeyse elektrik, değilse mekanik. */
 export async function standartYukle(db: Sorgulayici, depo: Depo, kim: Kisi, firmaId: string, girdi: unknown, pdf: { ad: string; bayt: Uint8Array } | null): Promise<Yazma> {
   if (!degistirir(kim)) return { durum: "yetkisiz" };
   const g = dogrula(StandartGirdisi, girdi);
@@ -81,12 +83,13 @@ export async function standartYukle(db: Sorgulayici, depo: Depo, kim: Kisi, firm
   if (!pdf) hatalar.dosya = "PDF dosyası eklenmeli.";
   if (!g.tamam || !pdf) return { durum: "gecersiz", hatalar };
   const v = g.veri;
-  const ayni = (await db.sorgu<{ id: string; surum_adi: string; surum: number; bitti: string | null }>(
-    "SELECT id::text, surum_adi, surum, bitti::text FROM standart WHERE no = $1 AND kaldirildi IS NULL FOR UPDATE", [v.no])).rows;
+  const ayni = (await db.sorgu<{ id: string; surum_adi: string; surum: number; bitti: string | null; brans: "m" | "e" }>(
+    "SELECT id::text, surum_adi, surum, bitti::text, brans FROM standart WHERE no = $1 AND kaldirildi IS NULL FOR UPDATE", [v.no])).rows;
   if (ayni.some((x) => x.surum_adi === v.surum)) return { durum: "gecersiz", hatalar: { surum: "Bu sürüm kütüphanede var." } };
   const guncel = ayni.find((x) => !x.bitti);
+  const brans = guncel?.brans ?? v.brans ?? BAKANLIK_STANDARTLARI.find((h) => h.no === v.no)?.brans ?? "m";
   if (guncel) await guncelle(db, STD, guncel.id, guncel.surum, { bitti: bugunTr() }, { kim: kim.ad, ne: "standart.onceki", gerekce: `${v.no}:${v.surum} yüklendi` });
-  const r = await ekle(db, STD, { no: v.no, surum_adi: v.surum, konu: v.konu, yukleyen: kim.ad }, { kim: kim.ad, ne: "standart.yukle" });
+  const r = await ekle(db, STD, { no: v.no, surum_adi: v.surum, konu: v.konu, brans, yukleyen: kim.ad }, { kim: kim.ad, ne: "standart.yukle" });
   const y = await dosyaYukle(db, depo, { firmaId, modul: DOSYA.standart, kayitId: r.id, ad: pdf.ad, bayt: pdf.bayt, izinli: ["pdf"], kim: kim.ad, yukleyen: kim.id });
   if (!y.tamam) throw new DosyaHatasi(pdfHatasi(y.neden));
   await guncelle(db, STD, r.id, r.surum, { dosya_id: y.id }, { kim: kim.ad, ne: "standart.dosya" });

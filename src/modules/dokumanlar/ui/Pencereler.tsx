@@ -14,15 +14,18 @@ import type { DokumanSatiri, StandartSatiri } from "../server/dokumanlar";
 import { dokumanKaydetEylemi, standartYukleEylemi } from "./eylemler";
 import stil from "./dokumanlar.module.css";
 
-const SID = { no: "stw-no", surum: "stw-surum", konu: "stw-konu", dosya: "stw-dosya" } as const;
+const SID = { no: "stw-no", surum: "stw-surum", konu: "stw-konu", brans: "stw-brans", dosya: "stw-dosya" } as const;
+const BRANSLAR = [["m", "Mekanik"], ["e", "Elektrik"]] as const;
 const DID = { ad: "dkw-ad", tur: "dkw-tur", kod: "dkw-kod", rev: "dkw-rev", dosya: "dkw-dosya" } as const;
 
-/** 437: `oneri` — listedeki hazır Bakanlık standardının "Yükle"si: numara ve konu dolu; yüklenince listede kalınır (satır "Görüntüle" olur) */
-export function StandartPenceresi({ kapat, guncel, guncelListe, oneri }: { kapat: () => void; guncel?: StandartSatiri; guncelListe: StandartSatiri[]; oneri?: { no: string; konu: string } }) {
+/** 437: `oneri` — listedeki hazır Bakanlık standardının "Yükle"si: numara, konu ve branş dolu; yüklenince listede kalınır (satır "Görüntüle" olur)
+    · 440: `brans` — açık sekmenin branşı (yeni standardın başlangıç değeri); yeni sürümde güncel sürümünki, değişmez */
+export function StandartPenceresi({ kapat, guncel, guncelListe, oneri, brans = "m" }:
+  { kapat: () => void; guncel?: StandartSatiri; guncelListe: StandartSatiri[]; oneri?: { no: string; konu: string; brans: "m" | "e" }; brans?: "m" | "e" }) {
   const router = useRouter();
   const bildir = useBildir();
   const [bekliyor, baslat] = useTransition();
-  const [d, setD] = useState({ no: guncel?.no ?? oneri?.no ?? "", surum: "", konu: guncel?.konu ?? oneri?.konu ?? "" });
+  const [d, setD] = useState({ no: guncel?.no ?? oneri?.no ?? "", surum: "", konu: guncel?.konu ?? oneri?.konu ?? "", brans: guncel?.brans ?? oneri?.brans ?? brans });
   const [h, setH] = useState<Record<string, string>>({});
   const [genel, setGenel] = useState<string | null>(null);
   const form = useRef<HTMLFormElement>(null);
@@ -54,6 +57,10 @@ export function StandartPenceresi({ kapat, guncel, guncelListe, oneri }: { kapat
           </Alan>
           <Alan id={SID.konu} etiket="Konu" zorunlu genis hata={h.konu} sonuc="Raporun metot alanında numarayla birlikte yazılır.">
             <Girdi id={SID.konu} value={d.konu} maxLength={120} hata={!!h.konu} mesajli onChange={(e) => setD({ ...d, konu: e.target.value })} />
+          </Alan>
+          <Alan id={SID.brans} etiket="Branş" zorunlu hata={h.brans} sonuc={guncel ? "Sürümler aynı branşta kalır." : "Standartlar'da bu sekmede görünür."}>
+            <SecimAlani id={SID.brans} ad="Branş" deger={d.brans} secenekler={BRANSLAR} kapali={!!guncel} gecersiz={!!h.brans} tanim={ipucuId(SID.brans)}
+              degistir={(v) => setD({ ...d, brans: v as "m" | "e" })} />
           </Alan>
           <Alan id={SID.dosya} etiket="Dosya (PDF)" zorunlu genis hata={h.dosya}>
             <input id={SID.dosya} className={stil.dosya} name="dosya" type="file" accept="application/pdf" aria-describedby={h.dosya ? ipucuId(SID.dosya) : undefined} />

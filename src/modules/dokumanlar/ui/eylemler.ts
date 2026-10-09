@@ -28,7 +28,7 @@ export async function standartYukleEylemi(form: FormData): Promise<PencereDurumu
   const o = await oturum(); if (typeof o === "string") return { genel: o };
   const d = await pdfOku(form.get("dosya"));
   if (d === "buyuk") return { hatalar: { dosya: "PDF en çok 25 MB." } };
-  const girdi = { no: yazi(form.get("no")), surum: yazi(form.get("surum")), konu: yazi(form.get("konu")) };
+  const girdi = { no: yazi(form.get("no")), surum: yazi(form.get("surum")), konu: yazi(form.get("konu")), brans: yazi(form.get("brans")) };
   return dosyali(async () => cevir(await oturumIslemi(o, (db) => standartYukle(db, depo(), o, o.kiraci.firmaId, girdi, d))));
 }
 

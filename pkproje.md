@@ -2355,6 +2355,22 @@ revizyon, alan kopyalama, hafif kusur devri, meslek eşleşme denetimi).
 - Emsal ürünler: https://opwire.app/iso-17020-periyodik-kontrol-yazilimi/ · https://17020muayene.vidco.com.tr/ · https://akuple.com/asansor-kontrol-yazilimi/ · https://ensyazilim.com/
 
 ## 11 · Değişiklik günlüğü
+- 2026-10-09 (440): **Bakanlık türlerinde ölçüm cihazları hazır; Standartlar Mekanik / Elektrik ayrı** (reisim: *"AYRICA KULLANILACAK ÖLÇÜM
+  CİHAZLARINI DA EKLE , STANDARTLARIDA KENDİ ALTINDA MEKANİK ELEKTRİK OLARAK AYIR"*).
+  · **Ölçüm cihazları:** Bakanlık formları cihaz türü adı vermez ("Ölçüm aletleri bilgileri": ad, seri no, kalibrasyon); türler formun ölçüm
+  yöntemlerinden, yalnız ŞART olanlar (raporda her birinden kalibrasyonu geçerli cihaz istenir — ENGEL 2): ZPKR01 / ZPKR02 → "Tesisat test cihazı
+  (çevrim empedansı / RCD)", ZPKR03 / ZPKR05 → "Topraklama ölçer (3 uçlu / pens)", ZPKR04 → "Lüksmetre" (acil aydınlatmanın aydınlık seviyesi). Termal
+  kamera Bakanlıkça isteğe bağlı (ZPKK02 / ZPKK05 Not 4), akü gerilimi panelin test tuşuyla da ölçülür — şart konmadı. Cihaz türü adıyla bulunur,
+  yoksa Ölçüm cihazları'nda açılır. Kurulan türlere girer; firmanın kendi açtığı Bakanlık şablonlu türlerde (canlıda ET) **boş** standart / cihaz
+  bağlantısı formatınkiyle tamamlanır — kurulumda bir kez (ayar kurulum.baglanti), "Şablondan başlat" / "Tür olarak ekle"de o türe. Firmanın seçtiği
+  bağlantıya dokunulmaz; "Metot ve cihazlar"dan değiştirilir.
+  · **Metot ve cihazlar penceresi:** standartlar branşa göre gruplu (türün branşı önce); Bakanlık listesindeki standart kütüphaneye yüklenmeden
+  seçilebilir ("yüklenmedi — Dökümanlar › Standartlar"); türde seçili olup listede olmayan da görünür ve kayıtta kalabilir (eskiden kurulumun
+  bağladığı yüklenmemiş standart "Standart kütüphanede yok" diye kaydı düşürecekti).
+  · **Dökümanlar › Standartlar:** Mekanik (n) / Elektrik (n) sekmeleri (adreste ?brans=e — Ekipman türleri gibi). Her standart sürümü bir branşta
+  (göç 0078 standart.brans; var olan satırlar: yalnız elektrik türlerinde kontrol metodu olan elektrik, öteki mekanik — yayında standart yoktu).
+  Yükleme penceresinde "Branş" (açık sekmeden gelir); yeni sürüm güncel sürümün branşında kalır; Bakanlık standartları Elektrik'te. Standart
+  sayfasının kırıntısı branşıyla.
 - 2026-10-09 (439): **Yayındaki rapor şablonunda "Düzenle"** (reisim: *"REİSİM ŞABLONU DÜZENLEME YOK SADECE ÖN İZLEME VAR DÜZENLEME DE
   OLMALI"*). Yayınlanmış sürüm değişmez kuralı korunur (açılmış ve imzalanmış raporlar onu kullanır): tür sayfasında yayındaki sürüm satırında ve
   sürümün önizleme sayfasında **"Düzenle"** — pencere açıklar, "Taslak aç ve düzenle" o sürümü taslağa kopyalar ve Format kurucuya götürür;

@@ -8,7 +8,7 @@ import { after, before, test } from "node:test";
 import { SABLONLAR } from "../src/format/sablonlar.ts";
 import type { GomuluKume } from "../src/server/db/gomulu.ts";
 import { havuzKur, kiraciIcinde, type Havuz, type Sorgulayici } from "../src/server/db/kiraci.ts";
-import { formatYukle, turKaydet, type Kisi as TurKisi } from "../src/modules/ekipman-turleri/server/turler.ts";
+import { baglantiKaydet, formatYukle, turKaydet, type Kisi as TurKisi } from "../src/modules/ekipman-turleri/server/turler.ts";
 import {
   formatAyrintisi, formatSurumleri, formatSurumuOku, sablondanTurEkle, sablonKullanimi, taslakBaslat, taslakKaydet, yayinDenetle, yayindakiFormat, yayinla, type Kisi,
 } from "../src/modules/rapor-format/server/formatlar.ts";
@@ -16,11 +16,11 @@ import { createHash } from "node:crypto";
 import { mkdtempSync, readFileSync } from "node:fs";
 import { tmpdir } from "node:os";
 import { join } from "node:path";
-import { bakanlikKurulumu, HAZIR_SABLONLAR, KURULUM_KIM, resmiPdfEkle } from "../src/modules/rapor-format/server/kurulum.ts";
+import { bakanlikKurulumu, bakanlikTamamla, HAZIR_SABLONLAR, KURULUM_KIM } from "../src/modules/rapor-format/server/kurulum.ts";
 import { ayarOku } from "../src/server/ayar/ayar.ts";
 import { klasorDepo } from "../src/server/dosya/depo.ts";
 import { MATRIS_ONERI } from "../src/server/yetki/tanim.ts";
-import { formatStandartlari } from "../src/tanim/standartlar.ts";
+import { CIHAZ_LUKSMETRE, CIHAZ_TESISAT, CIHAZ_TOPRAKLAMA, formatStandartlari } from "../src/tanim/standartlar.ts";
 import { testKumesi } from "./yardimci/kume.ts";
 
 let kume: GomuluKume;
@@ -294,6 +294,13 @@ test("437 hazır kurulum: tür + resmî PDF + yayında şablon; ikinci kez yazma
   assert.deepEqual(t.map((x) => [x.kod, x.periyot, x.brans]), KODLAR.map((k) => [k, 12, "e"]));
   assert.equal(t.find((x) => x.kod === "YKT")!.ad, "Yıldırımdan korunma tesisatı");
   assert.deepEqual(t.find((x) => x.kod === "YKT")!.kontrol_std, formatStandartlari("ZPKR03"));
+  /* 440: ölçüm cihazı türleri adıyla açıldı (aynı ad bir kez — AGT ile EIT aynı türü kullanır) ve türlere bağlandı */
+  const ct = new Map((await b(MEK_B, (db) => db.sorgu<{ id: string; ad: string }>("SELECT id::text, ad FROM cihaz_turu"))).rows.map((x) => [x.ad, x.id]));
+  assert.deepEqual([...ct.keys()].sort(), [CIHAZ_LUKSMETRE, CIHAZ_TESISAT, CIHAZ_TOPRAKLAMA].sort());
+  const bag = new Map((await b(MEK_B, (db) => db.sorgu<{ kod: string; c: string[] }>(
+    "SELECT kod, cihaz_turleri::text[] AS c FROM ekipman_turu WHERE kod = ANY($1)", [KODLAR]))).rows.map((x) => [x.kod, x.c]));
+  assert.deepEqual(Object.fromEntries(bag), { AGT: [ct.get(CIHAZ_TESISAT)], EIT: [ct.get(CIHAZ_TESISAT)], YKT: [ct.get(CIHAZ_TOPRAKLAMA)],
+    YAS: [ct.get(CIHAZ_LUKSMETRE)], TRF: [ct.get(CIHAZ_TOPRAKLAMA)] });
   const f = (await b(MEK_B, (db) => db.sorgu<{ kod: string; durum: string; sira: number; kaynak: string; yayinlayan: string; yayinlayan_id: string | null; notu: string }>(
     `SELECT t.kod, f.durum, f.sira, f.kaynak, f.yayinlayan, f.yayinlayan_id::text, f.notu FROM rapor_format f JOIN ekipman_turu t ON t.id = f.tur_id
       WHERE t.kod = ANY($1) ORDER BY t.kod`, [KODLAR]))).rows;
@@ -305,19 +312,22 @@ test("437 hazır kurulum: tür + resmî PDF + yayında şablon; ikinci kez yazma
       WHERE t.kod = ANY($1) ORDER BY t.kod`, [KODLAR]))).rows;
   assert.deepEqual(p.map((x) => [x.kod, x.sira, x.ad]), [["AGT", 1, "ZPKR01.pdf"], ["EIT", 1, "ZPKR02.pdf"], ["TRF", 1, "ZPKR05.pdf"], ["YAS", 1, "ZPKR04.pdf"], ["YKT", 1, "ZPKR03.pdf"]]);
   assert.equal(p[0].sha256, createHash("sha256").update(readFileSync(join(import.meta.dirname, "..", "src", "tanim", "bakanlik", "ZPKR01.pdf"))).digest("hex"), "resmî PDF baytı baytına");
-  assert.deepEqual((await b(MEK_B, (db) => ayarOku(db, "kurulum"))).deger, { bakanlik: [...HAZIR_SABLONLAR], pdf: true });
+  assert.deepEqual((await b(MEK_B, (db) => ayarOku(db, "kurulum"))).deger, { bakanlik: [...HAZIR_SABLONLAR], pdf: true, baglanti: true });
   /* ikinci kez: hiçbir şey yazılmaz */
   const say = async (f: string) => (await kiraciIcinde(havuz, f, (db) => db.sorgu<{ n: number }>("SELECT (SELECT count(*) FROM ekipman_turu) + (SELECT count(*) FROM rapor_format) + (SELECT count(*) FROM dosya) AS n"))).rows[0].n;
   const once = await say(B);
-  assert.deepEqual(await kiraciIcinde(havuz, B, (db) => bakanlikKurulumu(db, depo)), { kurulan: 0, atlanan: 0, pdf: 0 });
+  assert.deepEqual(await kiraciIcinde(havuz, B, (db) => bakanlikKurulumu(db, depo)), { kurulan: 0, atlanan: 0, pdf: 0, baglanti: 0 });
   assert.equal(await say(B), once);
   /* A: 436 testinde ZPKR03'ten tür açılmıştı (YKT) — o şablon atlanır, YKT ikinci kez açılmaz; B değişmez */
   const r2 = await kiraciIcinde(havuz, A, (db) => bakanlikKurulumu(db, depo));
   assert.equal(r2.kurulan + r2.atlanan, 5);
   assert.ok(r2.atlanan >= 1, JSON.stringify(r2));
   assert.equal((await a(ELK, (db) => db.sorgu("SELECT 1 FROM ekipman_turu WHERE kod = 'YKT'"))).rowCount, 1);
-  /* 438: firmanın kendi açtığı Bakanlık şablonlu PDF'siz türüne (436'daki YKT) resmî PDF eklendi */
-  assert.ok(r2.pdf >= 1, JSON.stringify(r2));
+  /* 438: firmanın kendi açtığı Bakanlık şablonlu PDF'siz türüne (436'daki YKT) resmî PDF eklendi · 440: boş standart ve cihazı tamamlandı */
+  assert.ok(r2.pdf >= 1 && r2.baglanti >= 1, JSON.stringify(r2));
+  const ykt = (await a(ELK, (db) => db.sorgu<{ s: string[]; c: string[] }>(
+    "SELECT t.kontrol_std AS s, ARRAY(SELECT c.ad FROM cihaz_turu c WHERE c.id = ANY (t.cihaz_turleri)) AS c FROM ekipman_turu t WHERE t.kod = 'YKT'"))).rows[0];
+  assert.deepEqual(ykt, { s: formatStandartlari("ZPKR03"), c: [CIHAZ_TOPRAKLAMA] });
   assert.deepEqual((await a(ELK, (db) => db.sorgu<{ sira: number; ad: string; notu: string }>(
     `SELECT tf.sira, d.ad, tf.notu FROM tur_format tf JOIN ekipman_turu t ON t.id = tf.tur_id JOIN dosya d ON d.id = tf.dosya_id WHERE t.kod = 'YKT'`))).rows,
     [{ sira: 1, ad: "ZPKR03.pdf", notu: "Bakanlık formatı" }]);
@@ -343,29 +353,37 @@ test("437 hazır kurulum: tür + resmî PDF + yayında şablon; ikinci kez yazma
 
 /* 2026-10-09 (438; canlıda firma ZPKR02'yi kendi türünde kullanıyordu, PDF'i yoktu): "Şablondan başlat" / "Tür olarak ekle" sonrası türe Bakanlığın
    resmî PDF'i — yalnız tür ve format değiştirebilene, yalnız Bakanlık şablonunda, yalnız türün hiç PDF'i yokken (bir kez). */
-test("438 resmî PDF: Bakanlık şablonlu PDF'siz türe bir kez; yetkisize, genel şablona, PDF'i olan türe hayır", async () => {
+test("438 / 440 Bakanlık varsayılanları: PDF'siz türe resmî PDF, boş bağlantıya standart + cihaz, bir kez; yetkisize, genel şablona hayır; firmanın seçimine dokunulmaz", async () => {
   const depo = klasorDepo(mkdtempSync(join(tmpdir(), "resmi-pdf-")));
+  const YOK = { pdf: false, baglanti: false };
   const pdfler = async (tur: string) => (await a(ELK, (db) => db.sorgu<{ ad: string }>(
     "SELECT d.ad FROM tur_format tf JOIN dosya d ON d.id = tf.dosya_id WHERE tf.tur_id = $1 ORDER BY tf.sira", [tur]))).rows.map((x) => x.ad);
+  const baglanti = async (tur: string) => (await a(ELK, (db) => db.sorgu<{ s: string[]; c: string[] }>(
+    "SELECT t.kontrol_std AS s, ARRAY(SELECT c.ad FROM cihaz_turu c WHERE c.id = ANY (t.cihaz_turleri) ORDER BY c.ad) AS c FROM ekipman_turu t WHERE t.id = $1", [tur]))).rows[0];
   const tur = await yeniTur();
   tamam(await a(ELK, (db) => taslakBaslat(db, ELK, tur, "sablon:ZPKR04", null)));
-  for (const k of [PLAN, DENETCI, MUH]) assert.equal(await a(k, (db) => resmiPdfEkle(db, depo, k, A, tur)), false, k.roller.join());
+  for (const k of [PLAN, DENETCI, MUH]) assert.deepEqual(await a(k, (db) => bakanlikTamamla(db, depo, k, A, tur)), YOK, k.roller.join());
   assert.deepEqual(await pdfler(tur), [], "yetkisiz eklemedi");
-  assert.equal(await a(ELK, (db) => resmiPdfEkle(db, depo, ELK, A, tur)), true);
+  assert.deepEqual(await baglanti(tur), { s: [], c: [] }, "yetkisiz bağlamadı");
+  assert.deepEqual(await a(ELK, (db) => bakanlikTamamla(db, depo, ELK, A, tur)), { pdf: true, baglanti: true });
   assert.deepEqual(await pdfler(tur), ["ZPKR04.pdf"]);
-  assert.equal(await a(ELK, (db) => resmiPdfEkle(db, depo, ELK, A, tur)), false, "ikinci kez eklenmez");
-  /* genel şablon (kompresör) ve şablonsuz tür: PDF yok */
+  assert.deepEqual(await baglanti(tur), { s: formatStandartlari("ZPKR04"), c: [CIHAZ_LUKSMETRE] });
+  assert.deepEqual(await a(ELK, (db) => bakanlikTamamla(db, depo, ELK, A, tur)), YOK, "ikinci kez hiçbir şey");
+  /* genel şablon (kompresör) ve şablonsuz tür: hiçbir şey */
   const genel = await yeniTur();
   tamam(await a(ELK, (db) => taslakBaslat(db, ELK, genel, "sablon:KOMPRESOR", null)));
-  assert.equal(await a(ELK, (db) => resmiPdfEkle(db, depo, ELK, A, genel)), false);
+  assert.deepEqual(await a(ELK, (db) => bakanlikTamamla(db, depo, ELK, A, genel)), YOK);
   const sablonsuz = await yeniTur();
-  assert.equal(await a(ELK, (db) => resmiPdfEkle(db, depo, ELK, A, sablonsuz)), false);
-  /* firmanın kendi PDF'i olan türe dokunulmaz */
+  assert.deepEqual(await a(ELK, (db) => bakanlikTamamla(db, depo, ELK, A, sablonsuz)), YOK);
+  /* firmanın kendi PDF'i ve seçtiği cihazı olan türe dokunulmaz (boş standart yine tamamlanır) */
   const kendi = await yeniTur();
   tamam(await a(ELK, (db) => formatYukle(db, depo, ELK as TurKisi, A, kendi, { ad: "kendi.pdf", bayt: readFileSync(join(import.meta.dirname, "..", "src", "tanim", "bakanlik", "ZPKK01.pdf")) }, "")));
+  const lk = (await a(ELK, (db) => db.sorgu<{ id: string; surum: number }>("SELECT c.id::text, t.surum FROM cihaz_turu c, ekipman_turu t WHERE c.ad = $1 AND t.id = $2", [CIHAZ_LUKSMETRE, kendi]))).rows[0];
+  tamam(await a(ELK, (db) => baglantiKaydet(db, ELK as TurKisi, kendi, lk.surum, { standartlar: [], cihazTurleri: [lk.id] })));
   tamam(await a(ELK, (db) => taslakBaslat(db, ELK, kendi, "sablon:ZPKR01", null)));
-  assert.equal(await a(ELK, (db) => resmiPdfEkle(db, depo, ELK, A, kendi)), false);
+  assert.deepEqual(await a(ELK, (db) => bakanlikTamamla(db, depo, ELK, A, kendi)), { pdf: false, baglanti: true });
   assert.deepEqual(await pdfler(kendi), ["kendi.pdf"]);
-  /* başka firmanın türü: görünmez, eklenmez */
-  assert.equal(await b(MEK_B, (db) => resmiPdfEkle(db, depo, MEK_B, B, tur)), false);
+  assert.deepEqual(await baglanti(kendi), { s: formatStandartlari("ZPKR01"), c: [CIHAZ_LUKSMETRE] }, "firmanın cihaz seçimi kaldı");
+  /* başka firmanın türü: görünmez, değişmez */
+  assert.deepEqual(await b(MEK_B, (db) => bakanlikTamamla(db, depo, MEK_B, B, tur)), YOK);
 });

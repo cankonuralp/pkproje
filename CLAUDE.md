@@ -107,6 +107,7 @@ pkproje/
   src/modules/sozlesmeler/  SÖZLEŞMELER (2026-10-04): iş sözleşmesi + kapsam + imzalı PDF, İSG-KATİP ID (tesis × denetçi), sözleşme şablonu ·
                             Dayanak teklif (326, göç 0038; kabul edilmiş teklifler teklifler/server/sozlesme-baglanti.ts'ten; ?teklif= ön doldurma) · 369 sozlesmeSil (imza bekleyen; 0064)
   src/modules/dokumanlar/   DÖKÜMANLAR (2026-10-04): standart kütüphanesi (sürümlü PDF), diğer dökümanlar; kriter belgeleri src/tanim/kriterler.ts
+                            · 437 hazır Bakanlık standartları Yükle → Görüntüle · 440 Mekanik / Elektrik sekmeleri (?brans=e; göç 0078 standart.brans)
   src/modules/egitimler/    EĞİTİMLER (2026-10-04; Dökümanlar sekmesi, modül 10): eğitim türleri, kayıtlar, tekrar tarihi, sertifika
                             · katılım formu (345): src/belge/egitim.ts (temel <kod>-FR-EGT-01), katilimFormuGonder → Onaylar › Diğer (kaynak eğitim kaydı)
                             · 371 egitimTuruSil / egitimKaydiSil (kullanılmamış; güncel silinince önceki geri gelir; 0066)
@@ -125,6 +126,8 @@ pkproje/
                             yayında şablon (sistem, hesapsız, danışma kilidi; firma ayarı "kurulum") · "bos" başlangıç = sıfırdan (sablonlar.ts bosFormat)
                             · 438 resmî PDF Bakanlık şablonlu PDF'siz türlere (kurulum.pdf, resmiPdfEkle) · 439 yayındaki sürümde Düzenle (ui/SablonBolumu
                             SurumDuzenleTusu: o sürümden taslak → kurucu; açık taslak varsa devam / yeniden başla)
+                            · 440 Bakanlık türlerinde ölçüm cihazı türleri (src/tanim/standartlar.ts formatCihazTurleri → olcum-cihazlari hazirCihazTuru) +
+                            boş bağlantı tamamlama (ekipman-turleri hazirBaglantiTamamla; ayar kurulum.baglanti; eylemde bakanlikTamamla)
   src/modules/planlar/      PLANLAR (2026-10-04, 309–310; modül 13): plan + plan ekibi (göç 0023; proje no sunucuda, değişmez; künye kayıttan) ·
                             Plan aç /planlar/ac (uyarılar sema.ts'te saf, engel değil) · liste /planlar · plan içi /planlar/<id> (server/plan-ici.ts:
                             akış kabul/red/kontrol/tamamla, künye düzenle/güncelle, plan ekipmanı, proje notları; geçişler göç 0024 tetiğinde) · 372 planSil

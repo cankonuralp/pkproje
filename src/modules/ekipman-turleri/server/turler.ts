@@ -10,6 +10,7 @@ import { dosyaYukle } from "../../../server/dosya/dosya.ts";
 import { canDo, canDoEylem, duzey, type YetkiHesabi } from "../../../server/yetki/canDo.ts";
 import { kullanimMetni } from "../../../components/sil/metin.ts";
 import { dogrula, type DogrulamaHatalari } from "../../../sema/ortak.ts";
+import { BAKANLIK_STANDARTLARI } from "../../../tanim/standartlar.ts";
 import { guncelStandartlar } from "../../dokumanlar/server/dokumanlar.ts";
 import { cihazTuruOzetleri } from "../../olcum-cihazlari/server/cihazlar.ts";
 import { BaglantiGirdisi, TurGirdisi, turBransi } from "../sema.ts";
@@ -101,16 +102,37 @@ export async function turKaydet(db: Sorgulayici, kim: Kisi, id: string | null, s
     PDF'i (sürüm 1). YETKİ DENETİMİ YOK: kişinin eylemi değil, firmanın başlangıç verisi — yalnız kurulumdan çağrılır, eylemden değil. Girdi türün
     kendi şemasından geçer; kod firmada varsa tür açılmaz (null). */
 export async function hazirTurKur(db: Sorgulayici, depo: Depo, firmaId: string, kim: string,
-  tur: { ad: string; kod: string; grup: string; periyot: number; standartlar: string[] }, pdf: { ad: string; bayt: Uint8Array } | null): Promise<string | null> {
+  tur: { ad: string; kod: string; grup: string; periyot: number; standartlar: string[]; cihazTurleri: string[] }, pdf: { ad: string; bayt: Uint8Array } | null): Promise<string | null> {
   const g = dogrula(TurGirdisi, { ad: tur.ad, kod: tur.kod, grup: tur.grup, brans: "", periyot: String(tur.periyot), sure: "" });
-  const b = dogrula(BaglantiGirdisi, { standartlar: tur.standartlar, cihazTurleri: [] });
+  const b = dogrula(BaglantiGirdisi, { standartlar: tur.standartlar, cihazTurleri: tur.cihazTurleri });
   if (!g.tamam || !b.tamam) throw new Error(`hazır tür geçersiz: ${tur.kod}`);
   const v = g.veri;
   if ((await db.sorgu("SELECT 1 FROM ekipman_turu WHERE kod = $1", [v.kod])).rowCount) return null;
-  const { id } = await ekle(db, TUR, { kod: v.kod, ad: v.ad, grup: v.grup, brans: turBransi(v), periyot: v.periyot, sure: v.sure, kontrol_std: b.veri.standartlar },
+  const { id } = await ekle(db, TUR, { kod: v.kod, ad: v.ad, grup: v.grup, brans: turBransi(v), periyot: v.periyot, sure: v.sure, kontrol_std: b.veri.standartlar,
+    cihaz_turleri: b.veri.cihazTurleri },
     { kim, ne: "ekipman_turu.ekle", gerekce: "hazır kurulum" });
   if (pdf) await hazirPdfEkle(db, depo, firmaId, kim, id, pdf);
   return id;
+}
+
+/** 440 · boş bağlantıyı tamamlar (rapor-format/server/kurulum.ts): kontrol metodu standartları boşsa `standartlar`, ölçüm cihazı türleri boşsa
+    `cihazTurleri()` (yalnız gerekince çağrılır — dolu türde boşuna cihaz türü açılmaz). Firmanın seçtiği bağlantıya dokunulmaz. YETKİ DENETİMİ YOK
+    — çağıran denetler. Değiştiyse true. */
+export async function hazirBaglantiTamamla(db: Sorgulayici, kim: string, turId: string, standartlar: string[], cihazTurleri: () => Promise<string[]>): Promise<boolean> {
+  if (!UUID.test(turId)) return false;
+  const x = (await db.sorgu<BagDb & { surum: number }>(
+    "SELECT kontrol_std, cihaz_turleri::text[] AS cihaz_turleri, surum FROM ekipman_turu WHERE id = $1 FOR UPDATE", [turId])).rows[0];
+  if (!x) return false;
+  const std = x.kontrol_std.length ? x.kontrol_std : standartlar;
+  const cihaz = x.cihaz_turleri.length ? x.cihaz_turleri : await cihazTurleri();
+  if (std === x.kontrol_std && cihaz === x.cihaz_turleri) return false;
+  const b = dogrula(BaglantiGirdisi, { standartlar: std, cihazTurleri: cihaz });
+  if (!b.tamam) throw new Error("hazır bağlantı geçersiz");
+  if (!b.veri.standartlar.length && !b.veri.cihazTurleri.length) return false;
+  const r = await guncelle(db, TUR, turId, x.surum, { kontrol_std: b.veri.standartlar, cihaz_turleri: b.veri.cihazTurleri },
+    { kim, ne: "ekipman_turu.baglanti", gerekce: "Bakanlık formatı" });
+  if (r.durum !== "tamam") throw new Error(`hazır bağlantı yazılamadı: ${r.durum}`);
+  return true;
 }
 
 /** 438 · Bakanlığın resmî rapor formatı PDF'i türe sürüm 1 olarak (rapor-format/server/kurulum.ts). YETKİ DENETİMİ YOK — çağıran denetler.
@@ -151,19 +173,27 @@ export async function formatKaldir(db: Sorgulayici, kim: Kisi, formatId: string,
   return { durum: "tamam", id: formatId, surum: r.surum };
 }
 
-/** bağlantı seçenekleri (pencere için): güncel standartlar + firmanın cihaz türleri; yalnız "yaz" */
-export async function baglantiSecenekleri(db: Sorgulayici, kim: Kisi): Promise<{ standartlar: { no: string; konu: string }[]; cihazTurleri: { id: string; ad: string }[] } | null> {
+export interface StandartSecenegi { no: string; konu: string; brans: "m" | "e"; yuklu: boolean }
+/** bağlantı seçenekleri (pencere için): güncel standartlar + 440 kütüphanede olmayan Bakanlık standartları (yuklu: false — Dökümanlar'da "Yükle"),
+    branşıyla + firmanın cihaz türleri; yalnız "yaz" */
+export async function baglantiSecenekleri(db: Sorgulayici, kim: Kisi): Promise<{ standartlar: StandartSecenegi[]; cihazTurleri: { id: string; ad: string }[] } | null> {
   if (!degistirir(kim)) return null;
-  return { standartlar: (await guncelStandartlar(db)).map(({ no, konu }) => ({ no, konu })), cihazTurleri: await cihazTuruOzetleri(db) };
+  const kut = await guncelStandartlar(db), var_ = new Set(kut.map((x) => x.no));
+  const standartlar: StandartSecenegi[] = [...kut.map(({ no, konu, brans }) => ({ no, konu, brans, yuklu: true })),
+    ...BAKANLIK_STANDARTLARI.filter((h) => !var_.has(h.no)).map(({ no, konu, brans }) => ({ no, konu, brans, yuklu: false }))];
+  return { standartlar: standartlar.sort((a, b) => a.no.localeCompare(b.no, "tr", { numeric: true })), cihazTurleri: await cihazTuruOzetleri(db) };
 }
 
 /** kontrol metodu standartları + kullanılacak ölçüm cihazı türleri: standart kütüphanede güncel sürümü olan numara, cihaz türü bu firmanın olmalı */
 export async function baglantiKaydet(db: Sorgulayici, kim: Kisi, id: string, surum: number, girdi: unknown): Promise<Yazma> {
   if (!degistirir(kim)) return { durum: "yetkisiz" };
-  if (!UUID.test(id) || !(await db.sorgu("SELECT 1 FROM ekipman_turu WHERE id = $1", [id])).rowCount) return { durum: "yok" };
+  const mevcut = UUID.test(id) ? (await db.sorgu<{ kontrol_std: string[] }>("SELECT kontrol_std FROM ekipman_turu WHERE id = $1", [id])).rows[0] : undefined;
+  if (!mevcut) return { durum: "yok" };
   const g = dogrula(BaglantiGirdisi, girdi);
   if (!g.tamam) return { durum: "gecersiz", hatalar: g.hatalar };
-  const nolar = new Set((await guncelStandartlar(db)).map((x) => x.no)), turler = new Set((await cihazTuruOzetleri(db)).map((x) => x.id));
+  /* 440: kütüphanedeki güncel standart, Bakanlık listesindeki (henüz yüklenmemiş olabilir) ya da türde zaten seçili olan */
+  const nolar = new Set([...(await guncelStandartlar(db)).map((x) => x.no), ...BAKANLIK_STANDARTLARI.map((h) => h.no), ...mevcut.kontrol_std]);
+  const turler = new Set((await cihazTuruOzetleri(db)).map((x) => x.id));
   if (g.veri.standartlar.some((n) => !nolar.has(n))) return { durum: "gecersiz", hatalar: { standartlar: "Standart kütüphanede yok." } };
   if (g.veri.cihazTurleri.some((c) => !turler.has(c))) return { durum: "gecersiz", hatalar: { cihazTurleri: "Cihaz türü bulunamadı." } };
   /* 365 (352–361 incelemesi): seçilen türler paylaşımlı kilitlenir — aynı anda koşan cihaz türü silme (FOR UPDATE) ile sıraya girer; silme önce

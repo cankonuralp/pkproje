@@ -32,7 +32,7 @@ export default async function Sayfa({ params }: { params: Promise<{ id: string }
   const ad = `${s.no}:${s.surumAdi}`;
   return (
     <>
-      <Kirinti ogeler={[["Standartlar", "/dokumanlar"], [ad]]} />
+      <Kirinti ogeler={[[`Standartlar · ${s.brans === "e" ? "Elektrik" : "Mekanik"}`, s.brans === "e" ? "/dokumanlar?brans=e" : "/dokumanlar"], [ad]]} />
       <NesneBasi baslik={ad} rozet={s.guncel ? <Rozet tur="tamam">Güncel</Rozet> : <Rozet tur="notr">Önceki sürüm</Rozet>} altIkon="book-open" alt={s.konu}
         tuslar={<StandartTuslari s={s} yaz={dokumanDegistirir(o)} guncelListe={s.surumler} />} />
       {!s.guncel && <SeritKap><Serit tur="bilgi" ikon="history">Önceki sürüm: {tarihYaz(s.bitti)} tarihinde {guncel

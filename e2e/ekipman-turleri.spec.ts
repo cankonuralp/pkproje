@@ -159,6 +159,7 @@ test("Bakanlık türleri hazır: resmî PDF ve yayındaki şablon; sıfırdan ra
   expect(await pdfMi(await page.getByRole("link", { name: "PDF'i aç" }).getAttribute("href"))).toEqual([200, "application/pdf"]);
   await expect(page.getByText("Yayında", { exact: true }).first()).toBeVisible();
   await expect(page.getByText("TS EN 50522").first()).toBeVisible();   // kontrol metodu standardı hazır listeden
+  await expect(page.getByRole("listitem").filter({ hasText: "Topraklama ölçer (3 uçlu / pens)" })).toBeVisible();   // 440: ölçüm cihazı türü hazır
 
   await page.goto("/ekipman-turleri/sablon/ZPKR05");
   await hazir(page);

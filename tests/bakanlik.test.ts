@@ -14,7 +14,9 @@ import { HAZIR_SABLONLAR } from "../src/modules/rapor-format/server/kurulum.ts";
 import { BaslatGirdisi } from "../src/modules/rapor-format/sema.ts";
 import { BAKANLIK_BELGELERI, bakanlikBelgesiMi, bakanlikPdf, bakanlikPdfYaniti } from "../src/server/bakanlik.ts";
 import { KRITER_BELGELERI } from "../src/tanim/kriterler.ts";
-import { BAKANLIK_STANDARTLARI, formatStandartlari } from "../src/tanim/standartlar.ts";
+import { BAKANLIK_STANDARTLARI, CIHAZ_TESISAT, formatCihazTurleri, formatStandartlari } from "../src/tanim/standartlar.ts";
+import { grupBul } from "../src/modules/ekipman-turleri/sema.ts";
+import { CihazTuruGirdisi } from "../src/modules/olcum-cihazlari/sema.ts";
 import { dosyalar, oku } from "./yardimci/denetimler.ts";
 
 test("resmî PDF'ler: her Bakanlık şablonunun formu ve her kriter belgesi var, PDF olarak okunuyor; listede olmayan kod okunmaz", async () => {
@@ -51,10 +53,27 @@ test("hazır standartlar: yükleme şemasından geçer, tekrar yok, her biri for
     assert.ok(metin.includes(s.no), `${s.no} ${s.formatlar.join(",")} içinde geçmiyor`);
   }
   for (const f of formlar) assert.ok(formatStandartlari(f).length > 0, f);
+  /* 440: branş — standardın formatlarının şablonundaki önerilen türün branşı (beş format elektrik) */
+  for (const s of BAKANLIK_STANDARTLARI) for (const f of s.formatlar) {
+    const k = Object.values(SABLONLAR).find((x) => x.tanim.gorunum.formKodu === f)!;
+    assert.equal(s.brans, grupBul(k.tur.grup)?.b, `${s.no} ${f}`);
+  }
   /* saha raporundaki madde atfı ("TS CEN/TS 54-14 · …") yüklenen standarda eşlenir */
   const kutuphane = BAKANLIK_STANDARTLARI.map((s, i) => ({ id: String(i), no: s.no, surumAdi: "2016", konu: s.konu, dosyaId: "d" }));
   assert.equal(standartBul("TS CEN/TS 54-14 · Binaların Yangından Korunması Hakkında Yönetmelik", kutuphane)?.no, "TS CEN/TS 54-14");
   assert.equal(standartBul("TS HD 60364-6", kutuphane)?.no, "TS HD 60364-6");
+});
+
+test("440 ölçüm cihazları: her Bakanlık formatının en az bir cihaz türü, adları cihaz türü şemasından geçer; Bakanlık dışı formatta yok", () => {
+  const formlar = Object.values(SABLONLAR).filter((s) => s.bakanlik).map((s) => s.tanim.gorunum.formKodu);
+  for (const f of formlar) {
+    const l = formatCihazTurleri(f);
+    assert.ok(l.length >= 1 && l.length <= 3, f);
+    for (const ad of l) assert.ok(CihazTuruGirdisi.safeParse({ ad }).success, ad);
+  }
+  for (const k of ["", "ZPKR06", "KOMPRESOR", "__proto__", "toString"]) assert.deepEqual(formatCihazTurleri(k), [], k);
+  formatCihazTurleri("ZPKR01").push("bozma");
+  assert.deepEqual(formatCihazTurleri("ZPKR01"), [CIHAZ_TESISAT], "dönen dizi kopya");
 });
 
 test("sıfırdan: 'bos' başlangıcı; iskelet geçerli, kilitsiz, başlık türden; kitaplıkta değil", () => {
@@ -73,14 +92,14 @@ test("hazır kurulum: kurulan şablonlar yalnız Bakanlık formatları; kurulum 
   assert.deepEqual([...HAZIR_SABLONLAR], ["ZPKR01", "ZPKR02", "ZPKR03", "ZPKR04", "ZPKR05"]);
   /* yetki denetimi olmayan yazıcılar: yalnız kurulum.ts çağırır, o da yalnız sayfalardan (eylem dosyası değil); eylemler yalnız yetkili
      resmiPdfEkle'yi çağırır (438) */
-  const KURUCU = /\b(hazirTurKur|hazirPdfEkle|turaResmiPdf|hazirFormatYayinla|bakanlikKurulumu|hazirKurulum)\b/;
+  const KURUCU = /\b(hazirTurKur|hazirPdfEkle|hazirBaglantiTamamla|hazirCihazTuru|hazirFormatYayinla|bakanlikKurulumu|hazirKurulum)\b/;
   const kaynak = dosyalar("src", [".ts", ".tsx"]).map((ad) => ({ ad, metin: oku(ad) }));
   const eylem = kaynak.filter((d) => /^\s*["']use server["']/m.test(d.metin) && KURUCU.test(d.metin)).map((d) => d.ad);
   assert.deepEqual(eylem, []);
   const cagiran = kaynak.filter((d) => KURUCU.test(d.metin)).map((d) => d.ad).sort();
   assert.deepEqual(cagiran, [
     "src/app/(uygulama)/ekipman-turleri/page.tsx", "src/app/(uygulama)/page.tsx", "src/modules/ekipman-turleri/server/turler.ts",
-    "src/modules/rapor-format/server/formatlar.ts", "src/modules/rapor-format/server/kurulum.ts",
+    "src/modules/olcum-cihazlari/server/cihazlar.ts", "src/modules/rapor-format/server/formatlar.ts", "src/modules/rapor-format/server/kurulum.ts",
   ]);
   /* yayın paketi: dosyayı okuyan her uç next.config.ts izinde (yoksa yayında kurulum düşer — sessizce değil, kayda) */
   const cfg = oku("next.config.ts");
@@ -93,6 +112,6 @@ test("hazır kurulum: kurulan şablonlar yalnız Bakanlık formatları; kurulum 
   assert.ok(okuyan.length >= 4, okuyan.join(", "));
   for (const u of okuyan) assert.ok(uclar.includes(u === "/" ? "/" : u), `${u} izde yok (${uclar.join(", ")})`);
   /* 438: resmiPdfEkle'yi çağıran eylemler tür sayfasında (Şablondan başlat), listede ve şablon önizlemesinde (Tür olarak ekle) koşar */
-  assert.deepEqual(kaynak.filter((d) => /^\s*["']use server["']/m.test(d.metin) && /\bresmiPdfEkle\(/.test(d.metin)).map((d) => d.ad), ["src/modules/rapor-format/ui/eylemler.ts"]);
+  assert.deepEqual(kaynak.filter((d) => /^\s*["']use server["']/m.test(d.metin) && /\bbakanlikTamamla\(/.test(d.metin)).map((d) => d.ad), ["src/modules/rapor-format/ui/eylemler.ts"]);
   for (const u of ["/ekipman-turleri", "/ekipman-turleri/[id]", "/ekipman-turleri/sablon/[anahtar]"]) assert.ok(uclar.includes(u), `${u} izde yok`);
 });

@@ -117,3 +117,24 @@ test("YETKİ: denetçi ve planlama görür ve PDF açar, yükleyemez; muhasebe g
   assert.deepEqual(await b((db) => standartListesi(db, YON_B)), []);
   assert.deepEqual(await b((db) => standartKaldir(db, YON_B, ilk, std.surum)), { durum: "yok" });
 });
+
+/* 2026-10-09 (440; reisim: "STANDARTLARIDA KENDİ ALTINDA MEKANİK ELEKTRİK OLARAK AYIR"): standart sürümünün branşı — formdaki; yoksa Bakanlık
+   listesindeyse elektrik, değilse mekanik; YENİ SÜRÜM güncel sürümünkini alır (formdaki yok sayılır); geçersiz branş reddedilir; veritabanı da
+   yalnız m / e kabul eder, branşsız satır mekanik. Güncel standartlar branşıyla döner (Ekipman türleri penceresi gruplar). */
+test("440 standart branşı: formdaki, Bakanlık listesi elektrik, öteki mekanik; yeni sürüm güncelinkini alır; geçersiz branş yok", async () => {
+  const brans = async (no: string) => (await a((db) => standartListesi(db, YON)))!.filter((x) => x.no === no).map((x) => [x.surumAdi, x.brans]);
+  tamam(await a((db) => standartYukle(db, depo, YON, A, { no: "TS EN 1501", surum: "2010", konu: "Çöp toplama araçları", brans: "e" }, PDF)));
+  tamam(await a((db) => standartYukle(db, depo, YON, A, { no: "TS EN 1501", surum: "2021", konu: "Çöp toplama araçları", brans: "m" }, PDF)));
+  assert.deepEqual(await brans("TS EN 1501"), [["2021", "e"], ["2010", "e"]], "yeni sürüm güncel sürümün branşında");
+  tamam(await a((db) => standartYukle(db, depo, YON, A, { no: "TS HD 60364-6", surum: "2016", konu: "Doğrulama" }, PDF)));
+  assert.deepEqual(await brans("TS HD 60364-6"), [["2016", "e"]], "Bakanlık listesindeki: elektrik");
+  tamam(await a((db) => standartYukle(db, depo, YON, A, { no: "TS EN 13001-1", surum: "2015", konu: "Vinçler" }, PDF)));
+  assert.deepEqual(await brans("TS EN 13001-1"), [["2015", "m"]], "öteki: mekanik");
+  const g = await a((db) => standartYukle(db, depo, YON, A, { no: "TS EN 818-1", surum: "2008", konu: "Zincirler", brans: "x" }, PDF));
+  assert.equal(g.durum, "gecersiz");
+  assert.ok(g.durum === "gecersiz" && g.hatalar.brans, JSON.stringify(g));
+  assert.equal((await a((db) => guncelStandartlar(db))).find((x) => x.no === "TS HD 60364-6")?.brans, "e");
+  await assert.rejects(a((db) => db.sorgu("UPDATE standart SET brans = 'x' WHERE no = 'TS EN 13001-1'")), /standart_brans|check/i);
+  assert.equal((await a((db) => db.sorgu<{ brans: string }>(
+    "INSERT INTO standart (no, surum_adi, konu, yukleyen) VALUES ('TS EN 818-2', '2008', 'Zincirler', 'Deneme') RETURNING brans"))).rows[0].brans, "m");
+});
