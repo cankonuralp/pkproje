@@ -2361,6 +2361,8 @@ revizyon, alan kopyalama, hafif kusur devri, meslek eşleşme denetimi).
   bütün firmada (Bakanlık şablonu taslak ya da yayında olan, hiç PDF'i olmayan tür → Bakanlığın PDF'i sürüm 1; firma ayarı "kurulum.pdf"), sonra
   "Şablondan başlat" ve "Tür olarak ekle"de o türe (yalnız tür ve format değiştirebilene, aynı işlemde). Firmanın yüklediği ya da kaldırdığı
   PDF'e dokunulmaz.
+  **438 YAYINDA** (main fb576c6; deneme makinesi 7/7 yeşil, sağlık "tamam", duman 10/10, çalışma hatası yok). Canlıdaki firmada kurulum bir
+  sonraki açılışta koşar (Ana sayfa ya da Ekipman türleri); oturumlu ekranlar: ölçemedim.
 - 2026-10-09 (437): **Bakanlık formatları her firmada hazır; sıfırdan rapor şablonu; hazır standart listesi** (reisim: *"HALA BAKANLIK FORMATLARI
   YOK DEFAULT OLARAK GELMESİ GEREKİYOR, ? RAPOR ŞABLONUNDA SIFIRDAN RAPOR ŞABLONU OLUŞTURMAK YOK, RAPOR FORMATI PDFLERİ DE STANDART OLARAK
   BAKANLIKTAN GELECEK ŞEKİLDE KONUŞMUŞTUK ÖRNEK PDFLERİ ATMIŞTIM SANA ONLARDA DEFAULT OLARAK GELSİN, BAKANLIK RAPOR FORMATLARI İLGİLİ
