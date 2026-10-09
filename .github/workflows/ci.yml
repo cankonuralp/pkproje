@@ -56,8 +56,12 @@ jobs:
   # her genişlik AYRI işte, aynı anda (ayrı makine, kendi sunucusu — önceki yalıtımın aynısı). Geliştirme sunucusuyla koşar, derleme çıktısına
   # bağlı değil: denetimi beklemez. Biri düşse de ötekiler koşar (fail-fast kapalı); koşu yine kırmızı biter (yayın şartı bütün koşunun yeşili).
   # 355: düşen testin sayfa anlık görüntüsü (error-context.md) ve izi saklanır, 3 gün (uydurma veri). Günlükteki "Error Context" yolu buradaki dosyadır.
+  # 434 (2026-10-09; a38d50a, 2658414): genişlik başına tek geliştirme sunucusunun belleği koşunun sonunda doluyordu — "JavaScript heap out of
+  # memory" (12 GB sınırı), koşucu kapanıyor, son dosyalar (yönetim, zimmetler, tarama) düşüyordu. Her genişlik İKİ PARÇA (Playwright --shard,
+  # dosya dosya): her parça kendi makinesinde, kendi taze sunucusu ve veritabanıyla (tohumlar spec başına ayrı — dosyalar birbirine dayanmaz),
+  # yarı yük ve yarı sürede. Altı iş aynı anda.
   uctan_uca:
-    name: Uçtan uca (${{ matrix.proje }})
+    name: Uçtan uca (${{ matrix.proje }} ${{ matrix.parca }}/2)
     if: github.ref != 'refs/heads/main'
     runs-on: ubuntu-latest
     # 413: olağan süre 19–26 dk (+ yavaş paket sunucusunda kurulum ~10 dk — 7ed6e25 telefon 34 dk); asılı kalan iş kesilir. 420: site taraması
@@ -67,6 +71,7 @@ jobs:
       fail-fast: false
       matrix:
         proje: [masaustu, tablet, telefon]
+        parca: [1, 2]
     steps:
       - uses: actions/checkout@v7
       - uses: actions/setup-node@v7
@@ -79,12 +84,12 @@ jobs:
       - run: npx playwright install --with-deps chromium
         timeout-minutes: 20
       - id: e2e
-        run: npm run test:e2e -- --project=${{ matrix.proje }}
+        run: npm run test:e2e -- --project=${{ matrix.proje }} --shard=${{ matrix.parca }}/2
       - if: ${{ !cancelled() && steps.e2e.outcome == 'failure' }}
         uses: actions/upload-artifact@v7
         # 411: görsel karşılaştırmanın o koşuda yazdığı (eksik ya da farklı) görüntüler de — yeni kayıt buradan alınır, gözden geçirilip commit'e girer
         with:
-          name: "e2e-${{ matrix.proje }}"
+          name: "e2e-${{ matrix.proje }}-${{ matrix.parca }}"
           path: |
             test-results/
             e2e/goruntu/
