@@ -5,7 +5,8 @@
    3. Sunucuda cihaz eklerken kalibrasyon denetimi olmasaydı kalibrasyonu geçmiş cihaz rapora eklenirdi (ENGEL 2'nin ilk kapısı).
    4. (312) Fotoğraf / cihaz sayısı istemciden alınsaydı fotoğrafsız, cihazsız rapor onaya giderdi.
    5. (313) Sunucuda günlük süre (ENGEL 3) denetimi olmasaydı süre dolmuşken kopya ve yeni rapor açılırdı.
-   6. (318) Raporlar listesinde kayıt kayıt görme süzgeci olmasaydı denetçi başka denetçinin raporunu listede görürdü. */
+   6. (318) Raporlar listesinde kayıt kayıt görme süzgeci olmasaydı denetçi başka denetçinin raporunu listede görürdü.
+   7. (429) Kontrol günü değişince o günün süresi denetlenmeseydi rapor dolu güne alınır, günün sınırı aşılırdı. */
 import assert from "node:assert/strict";
 import { copyFileSync, mkdirSync, mkdtempSync, readdirSync, readFileSync, rmSync, writeFileSync } from "node:fs";
 import { tmpdir } from "node:os";
@@ -176,6 +177,30 @@ test("sunucuda günlük süre denetimi kalkınca süre dolmuşken kopya açılı
     assert.ok(r.durum === "tamam", JSON.stringify(r));
     const k = await is(den, (db) => m.raporKopyala(db, den, r.id, 0, { kod: "HT-2", konum: null }, null));
     assert.equal(k.durum, "tamam", `süre dolmuşken kopya açıldı: ${JSON.stringify(k)}`);
+  } finally { await h.end(); }
+});
+
+/* 2026-10-09 (429): rapor kontrol gününe sayılır; gün değişiminde o günün süresi denetlenmeseydi rapor dolu güne alınırdı. */
+test("kontrol günü değişiminde günlük süre denetimi kalkınca rapor dolu güne alınır", async () => {
+  const m = await bozukModul<Raporlar>(RAPORLAR, "  const gd = await gunDegisimi(db, e, v.tarih.bas);\n  if (gd) return gd;\n  const cevaplar", "  const cevaplar");
+  const dun = gun(-1);
+  const { h, den, id, ekipman, tur, is } = await saglam(dun);
+  try {
+    await is(den, (db) => db.sorgu("UPDATE ekipman_turu SET sure = 60 WHERE id = $1", [tur]));
+    const y = await is(den, (db) => ayarYaz(db, "mesai", -1, { acik: true, normal_dk: 60, mesai_dk: 0, yillik_fazla_saat: 0, gunluk_ust_dk: 660 }, { kim: "Deneme", ne: "ayar.mesai" }));
+    assert.equal(y.durum, "tamam", JSON.stringify(y));
+    const kayit = (bas: string) => ({
+      ekipman: { marka: null, model: null, seri: null, imal: null, konum: null, amac: null, bolum: null },
+      tarih: { bas, bit: null, sonraki: null, takip: null, rapor: null }, cevaplar: {},
+    });
+    const r1 = await is(den, (db) => m.raporOlustur(db, den, id, ekipman));
+    assert.ok(r1.durum === "tamam", JSON.stringify(r1));
+    const k1 = await is(den, (db) => m.raporKaydet(db, den, r1.id, 0, kayit(`${dun}T09:00`)));
+    assert.equal(k1.durum, "tamam", JSON.stringify(k1));
+    const r2 = await is(den, (db) => m.raporKopyala(db, den, r1.id, 1, { kod: "HT-2", konum: null }, null));
+    assert.ok(r2.durum === "tamam", JSON.stringify(r2));
+    const k2 = await is(den, (db) => m.raporKaydet(db, den, r2.id, 0, kayit(`${dun}T11:00`)));
+    assert.equal(k2.durum, "tamam", `dolu güne alındı: ${JSON.stringify(k2)}`);
   } finally { await h.end(); }
 });
 

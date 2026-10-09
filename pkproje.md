@@ -2355,6 +2355,10 @@ revizyon, alan kopyalama, hafif kusur devri, meslek eşleşme denetimi).
 - Emsal ürünler: https://opwire.app/iso-17020-periyodik-kontrol-yazilimi/ · https://17020muayene.vidco.com.tr/ · https://akuple.com/asansor-kontrol-yazilimi/ · https://ensyazilim.com/
 
 ## 11 · Değişiklik günlüğü
+- 2026-10-09 (429): **Günlük süre raporun kontrol gününe sayılır** (reisim: *"Hangi güne rapor yazılırsa süreler o günden gitsin (480dk+mesai)"*).
+  Mesai takibinde rapor, açıldığı güne değil kontrol başlangıcının gününe sayılır (önce açılış günüydü). Denetçi kontrol başlangıcını başka güne
+  alırsa raporun süresi o güne geçer; o günün süresi (bu rapor hariç) doluysa alınamaz — alanın altında "GG.AA.YYYY günü için günlük süre dolu"
+  (ENGEL 3, yeni rapor açmakla aynı ölçü). Gün değişmeyen kayıt sorulmaz. Yeni rapor ve kopya bugünün süresine bakar (rapor bugünle açılır).
 - 2026-10-09 (428): **Standart penceresi** (reisim: *"Denetçi muayene yaparken standarta tıklayınca pop-up olarak standart açılmalı okuyabilmeli
   yanlışlıkla tıklaması ihtimaline karşı önceden sorsun evet denirse açılsın"*). Saha raporunda madde / grup standardı ve türün kontrol metodu
   bağlantı görünümlü tuş; basınca "Standart açılsın mı?" sorulur, Aç denirse pencere: her atıf firmanın standart kütüphanesindeki güncel PDF'le

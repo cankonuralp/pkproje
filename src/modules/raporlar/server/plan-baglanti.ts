@@ -46,18 +46,23 @@ export async function raporKunyeleriniYaz(db: Sorgulayici, iz: Iz, planId: strin
 }
 
 /* ── MESAİ (212, AA2; KOD-GECIS ENGEL 3; maket MV.gunlukSure) ─────────────────────────────────────────────────────────
-   Günlük süre = o gün (Türkiye) denetçinin AÇTIĞI, silinmemiş raporların tür süreleri toplamı. Hak = günlük mesai ile yıllık kalan fazla
+   Günlük süre = o gün (Türkiye) denetçinin silinmemiş raporlarının tür süreleri toplamı; rapor KONTROL GÜNÜNE sayılır (başlangıç tarihi — 429,
+   reisim 2026-10-09: "Hangi güne rapor yazılırsa süreler o günden gitsin (480dk+mesai)"; önce açıldığı güne sayılıyordu). Hak = günlük mesai ile yıllık kalan fazla
    çalışmanın (yasal en çok 270 saat; firma ayarı) küçüğü, günlük üst sınırı (660 dk) aşmadan. Ayar açıkken toplam ≥ normal + hak olunca yeni
    rapor ve kopya açılmaz (reisim'in açık kararı: engel). Yıllık kullanılan: bu yılın önceki günlerinde normalin üstünde kalan süre (günlük
    mesai sınırıyla). Süresi tanımsız tür mesaiye sayılmaz. Raporlar ve Planlar buradan sorar (Planlar'ı içe aktarmaz). Yetki ÇAĞIRANDA. */
 export interface MesaiDurumu { acik: boolean; normal: number; mesai: number; hak: number; toplam: number; dolu: boolean }
-export async function mesaiDurumu(db: Sorgulayici, personelId: string, bugun: string): Promise<MesaiDurumu> {
+/** gun: hesaplanan gün (YYYY-AA-GG; yeni rapor için bugün, kontrol günü değişen rapor için yeni gün) · haric: sayılmayacak rapor (günü
+    değişen raporun kendisi) */
+export async function mesaiDurumu(db: Sorgulayici, personelId: string, gun: string, haric: string | null = null): Promise<MesaiDurumu> {
+  const bugun = gun;
   const m = (await ayarOku(db, "mesai")).deger;
   if (!m.acik || !UUID.test(personelId)) return { acik: m.acik, normal: m.normal_dk, mesai: m.mesai_dk, hak: 0, toplam: 0, dolu: false };
   const yil = bugun.slice(0, 4);
   const l = (await db.sorgu<{ gun: string; tur_id: string }>(
-    `SELECT (olustu AT TIME ZONE 'Europe/Istanbul')::date::text AS gun, tur_id::text FROM rapor
-     WHERE personel_id = $1 AND silindi IS NULL AND olustu >= ($2 || '-01-01')::date - interval '1 day'`, [personelId, yil])).rows;
+    `SELECT (bas AT TIME ZONE 'Europe/Istanbul')::date::text AS gun, tur_id::text FROM rapor
+     WHERE personel_id = $1 AND silindi IS NULL AND bas >= ($2 || '-01-01')::date - interval '1 day' AND ($3::uuid IS NULL OR id <> $3::uuid)`,
+    [personelId, yil, haric && UUID.test(haric) ? haric : null])).rows;
   const sure = await turSureleri(db);
   const gunler = new Map<string, number>();
   for (const x of l) if (x.gun.startsWith(yil)) gunler.set(x.gun, (gunler.get(x.gun) ?? 0) + (sure.get(x.tur_id) ?? 0));

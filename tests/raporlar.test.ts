@@ -808,6 +808,49 @@ test("ENGEL 3 günlük süre: mesai açıkken bugünkü raporların tür sürele
   }
 });
 
+/* 2026-10-09 (429; reisim: "Hangi güne rapor yazılırsa süreler o günden gitsin (480dk+mesai)"): rapor KONTROL GÜNÜNE sayılır (başlangıç tarihi),
+   açıldığı güne değil. Kontrol başlangıcı başka güne alınınca süre o güne geçer; o günün süresi (bu rapor hariç) doluysa alınamaz (ENGEL 3,
+   yeni rapor açmakla aynı ölçü); gün değişmeyen kayıt sorulmaz. */
+test("429 günlük süre kontrol gününe sayılır: düne alınan rapor bugünü boşaltır; dolu güne alınamaz (alan hatası); gün değişmeyen kayıt geçer", async () => {
+  const [P4, H4] = await kiraciIcinde(havuz, A, async (db) => {
+    const p = (await db.sorgu<{ id: string }>("INSERT INTO personel (ad, basla, meslek, ekipnet) VALUES ('Deneme Dört', '2024-01-01', 'mak-muh', '124') RETURNING id::text")).rows[0].id;
+    const h = (await db.sorgu<{ id: string }>("INSERT INTO hesap (eposta, ad, roller, durum, personel_id) VALUES ('den4@deneme-a.example', 'Deneme', $1, 'etkin', $2) RETURNING id::text",
+      [["denetci"], p])).rows[0].id;
+    return [p, h];
+  });
+  const den4 = kisi(H4, "denetci");
+  const id = tamam(await a(FA.plan, (db) => planAc(db, depo, FA.plan, A, { tesis: FA.tesis, baslangic: dun, bitis: bugun, ekip: [{ personel: P4, isgNo: "ISG-4", kaydet: false }] }))).id;
+  tamam(await a(den4, async (db) => planKabul(db, den4, id, (await planIci(db, den4, id))!.surum, true)));
+  const mesai = (d: object) => a(FA.yon, async (db) => { const m = await ayarOku(db, "mesai"); return ayarYaz(db, "mesai", m.surum, { ...m.deger, ...d }, { kim: "Deneme", ne: "ayar.mesai" }); });
+  const ac = (kod: string) => a(den4, (db) => raporOlustur(db, den4, id, FA.ekp[kod]));
+  const kaydet = (r: string, bas: string) => a(den4, async (db) => {
+    const v = (await sahaRaporu(db, den4, r))!, g = girdi();
+    return raporKaydet(db, den4, r, v.surum, { ...g, tarih: { ...g.tarih, bas, bit: null, rapor: null } });
+  });
+  await sql(A, "UPDATE ekipman_turu SET sure = 60 WHERE id = $1", [FA.tur]);
+  try {
+    tamam(await mesai({ acik: true, normal_dk: 60, mesai_dk: 60, yillik_fazla_saat: 0 }));
+    const r1 = tamam(await ac("HT-A1"));
+    assert.equal((await ac("HT-A2")).durum, "red", "bugün 60 dk doldu");
+    /* r1 düne alınır: süre düne geçer, bugün boşalır */
+    tamam(await kaydet(r1.id, `${dun}T09:00`));
+    const r2 = tamam(await ac("HT-A2"));
+    /* r2 de düne alınamaz: dün r1 ile dolu */
+    const y = await kaydet(r2.id, `${dun}T11:00`);
+    assert.equal(y.durum, "gecersiz");
+    assert.match(y.durum === "gecersiz" ? y.hatalar["tarih.bas"] ?? "" : "", /günlük süre dolu/);
+    assert.equal((await sql(A, "SELECT (bas AT TIME ZONE 'Europe/Istanbul')::date::text AS g FROM rapor WHERE id = $1", [r2.id])).rows[0].g, bugun, "kayıt yazılmadı");
+    /* gün değişmeyen kayıt (bugün dolu olsa da) geçer */
+    tamam(await kaydet(r2.id, `${bugun}T00:05`));
+    /* mesai kapalıyken gün serbest */
+    tamam(await mesai({ acik: false }));
+    tamam(await kaydet(r2.id, `${dun}T11:00`));
+  } finally {
+    await mesai({ acik: false });
+    await sql(A, "UPDATE ekipman_turu SET sure = NULL WHERE id = $1", [FA.tur]);
+  }
+});
+
 /* 2026-10-05 (313; maket format-guncelle, şerit "r-format-serit"; 211; RAPOR-FORMAT §5): rapor açıldığı sürümle kalır; yazan Yeni raporunu daha
    yeni yayınlanmış sürüme geçirebilir — eşleşen cevaplar korunur, yeni madde ilk cevapla. BU TEST SONDA: türün formatını değiştirir. */
 test("formatı güncelle: yalnız yazanın Yeni raporu, daha yeni yayınlanmış sürüm varsa; ekran hâli kaydedilir, eşleşen cevaplar korunur, yeni madde Uygun; fotoğraf yerinde; veritabanı eski sürüme döndürmez; yeni rapor yeni sürümle açılır", async () => {

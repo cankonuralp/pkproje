@@ -455,10 +455,22 @@ function degerle(tanim: FormatTanimi, c: Cevaplar, r: Pick<RaporSatiri, "cihazla
   return degerlendir(tanim, sayiliCevaplar(c, r));
 }
 
+/** 429: kontrol başlangıcı başka güne alınıyorsa süre o güne sayılır — o günün süresi (bu rapor hariç) doluysa alınamaz (ENGEL 3; yeni rapor
+    açmakla aynı ölçü). Gün değişmiyorsa sorulmaz (açılışta sınırı aşan rapor yine kaydedilir). */
+async function gunDegisimi(db: Sorgulayici, e: Erisim, bas: string | null): Promise<RaporYazma | null> {
+  const yeni = bas?.slice(0, 10);
+  if (!yeni || yeni === GUN.format(e.r.bas)) return null;
+  await db.sorgu("SELECT pg_advisory_xact_lock(hashtext('mesai:' || $1))", [e.r.personel_id]);
+  if (!(await mesaiDurumu(db, e.r.personel_id, yeni, e.r.id)).dolu) return null;
+  return { durum: "gecersiz", hatalar: { "tarih.bas": `${tarihNo(yeni)} günü için günlük süre dolu (mesai takibi); kontrol başlangıcı o güne alınamaz.` } };
+}
+
 async function kaydetIc(db: Sorgulayici, kim: Kisi, e: Erisim, surum: number, girdi: unknown): Promise<RaporYazma> {
   const g = dogrula(RaporKaydi, girdi);
   if (!g.tamam) return { durum: "gecersiz", hatalar: g.hatalar };
   const v = g.veri;
+  const gd = await gunDegisimi(db, e, v.tarih.bas);
+  if (gd) return gd;
   const cevaplar = sayiliCevaplar(v.cevaplar, e.r);
   const r = await guncelle(db, RAPOR, e.r.id, surum, {
     ekipman_bilgi: v.ekipman, bas: zamanYaz(v.tarih.bas), bit: zamanYaz(v.tarih.bit), sonraki: v.tarih.sonraki, takip: v.tarih.takip, rapor_tarihi: v.tarih.rapor,
@@ -696,6 +708,8 @@ export async function raporFormatGuncelle(db: Sorgulayici, kim: Kisi, id: string
   const g = dogrula(RaporKaydi, kayit);
   if (!g.tamam) return { durum: "gecersiz", hatalar: g.hatalar };
   const v = g.veri;
+  const gd = await gunDegisimi(db, e, v.tarih.bas);
+  if (gd) return gd;
   const { cevaplar, eklenen, dusen } = formataUyarla(yeni.tanim, v.cevaplar);
   const fotolar = fotolariUyarla(yeni.tanim, e.r.fotolar);
   const c = sayiliCevaplar(cevaplar, { cihazlar: e.r.cihazlar, fotolar });
