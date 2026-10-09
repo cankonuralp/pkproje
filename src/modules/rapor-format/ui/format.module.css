@@ -64,6 +64,8 @@
 }
 /* 451: kâğıt üstünde kurucu — görünüm seçici (Düzenle · Belge önizlemesi), kurallar açılır kutusu, belge önizlemesinin kabı */
 .gorunumSecici { display: inline-flex; flex-wrap: wrap; gap: 4px; }
+/* telefonda kurucu yok — görünüm seçici de yok (yalnizGenis'ten SONRA tanımlandığı için ayrıca gizlenir) */
+@media (max-width: 767.98px) { .gorunumSecici { display: none; } }
 .gizliHer { display: none; }
 .kurallar { margin-top: 12px; padding: 0; }
 .kurallarBas { display: flex; align-items: center; min-height: var(--tus-y); padding: 6px 14px; font-weight: 600; cursor: pointer; }
