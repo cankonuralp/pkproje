@@ -2355,6 +2355,11 @@ revizyon, alan kopyalama, hafif kusur devri, meslek eşleşme denetimi).
 - Emsal ürünler: https://opwire.app/iso-17020-periyodik-kontrol-yazilimi/ · https://17020muayene.vidco.com.tr/ · https://akuple.com/asansor-kontrol-yazilimi/ · https://ensyazilim.com/
 
 ## 11 · Değişiklik günlüğü
+- 2026-10-09 (464): **Rapor ekranında kontrol tarihleri alt alta, kendiliğinden dolu** (reisim, hata listesi 9: *"Periyodik kontrol başlangıç ve
+  bitiş tarihleri alt alta olmalı, hemen ardından bir sonraki kontrol tarihi olmalı ve bunlar o günkü tarihe ve saate göre otomatik dolmalı
+  istenirse elle düzeltilebilmeli"*). Firma bilgilerinde başlangıç, bitiş ve sonraki kontrol tam satır, alt alta. Başlangıç rapor açılınca yazılır
+  (değişmedi); bitiş elle seçilene kadar ŞİMDİ'yi gösterir ve ilerler (onaya gönderilince o anın saati yazılır); sonraki kontrol (başlangıç +
+  periyot) ve rapor tarihi açılışta dolu gelir. Hepsi elle değişir.
 - 2026-10-09 (463): **Rapor ekranında bölümler kapalı gelir** (reisim, hata listesi 8: *"ama her bölüm açık geliyor, her bölüm kapalı gelmeli"*).
   Rapor açılınca bütün bölümler kapalı; başlığa basınca açılır. Bölümlerin üstünde "Tümünü aç / Tümünü kapat". Açılanlar aynı sekmede aynı raporda
   (yenileme, geri geliş, bağlantısız açılış) açık kalır. "Onaya gönder" eksik bulursa ya da S.A.Y / eksik listesinden "Git"e basılınca hepsi açılır.

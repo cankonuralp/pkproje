@@ -29,7 +29,7 @@ import { Ikon } from "../../../components/ikon/Ikon";
 import { useOnayla } from "../../../components/pencere/Onay";
 import { Pencere, pencereMetinSinifi } from "../../../components/pencere/Pencere";
 import { DegerYok, Kirinti, Kod, NesneBasi, Rozet, SeritKap } from "../../../components/sayfa/Sayfa";
-import { tarihNo } from "../../../components/secim/tarih";
+import { simdiIso, tarihNo } from "../../../components/secim/tarih";
 import { Serit } from "../../../components/serit/Serit";
 import { Tus, TusBaglanti } from "../../../components/tus/Tus";
 import { raporDuzeni, sabitEkipmanAlanlari } from "../../../format/duzen";
@@ -118,7 +118,15 @@ export function SahaRaporu({ v, yeni }: { v: Gorunum; yeni?: { plan: string; eki
   }, [acildi, kuyruk, router]);
   const duzenle = v.izin.duzenle && !gonderimBekliyor && !acildi;
   const [ekipman, setEkipman] = useState(() => bosla(v.ekipmanBilgi));
-  const [tarih, setTarih] = useState(() => bosla(v.tarih));
+  /* 464 (reisim 2026-10-09, hata listesi 9: "… bir sonraki kontrol tarihi olmalı ve bunlar o günkü tarihe ve saate göre otomatik dolmalı istenirse
+     elle düzeltilebilmeli"): sonraki kontrol (başlangıç + tür periyodu) ve rapor tarihi (başlangıç günü) açılışta yazılı gelir — eskiden boş
+     görünüp gönderilirken dolardı */
+  const [tarih, setTarih] = useState(() => {
+    const t = bosla(v.tarih), g = t.bas.slice(0, 10);
+    if (g && !t.sonraki) t.sonraki = ayEkle(g, v.tur.periyot);
+    if (g && !t.rapor) t.rapor = g;
+    return t;
+  });
   const [cevaplar, setCevaplar] = useState<Cevaplar>(v.cevaplar);
   /* sonraki kontrol ve rapor tarihi elle seçilene kadar başlangıçtan gelir (maket sonrakiEl / rtarihEl) */
   /* kaydedilmiş değer başlangıçtan türetilenle aynıysa elle seçilmemiş sayılır (yeniden açılışta da başlangıca bağlı kalır) */
@@ -241,6 +249,18 @@ export function SahaRaporu({ v, yeni }: { v: Gorunum; yeni?: { plan: string; eki
     setKirli(true);
   };
   const girdi = () => ({ ekipman, tarih, cevaplar });
+  /* 464: bitiş elle seçilene kadar ŞİMDİ gösterilir (yarım dakikada bir ilerler, başlangıçtan önce olmaz) ve kaydedilmez — gönderilirken sunucu
+     gönderme anını yazar (değişmedi). Sunucu saati Türkiye saati değil: değer tarayıcıda, çizimden sonra gelir */
+  const [simdi, setSimdi] = useState("");
+  const bitOto = !oku && !tarih.bit;
+  useEffect(() => {
+    if (!bitOto) return;
+    const g = () => setSimdi(simdiIso());
+    queueMicrotask(g);
+    const z = window.setInterval(g, 30_000);
+    return () => window.clearInterval(z);
+  }, [bitOto]);
+  const gorunen = (k: TarihAnahtari) => (k === "bit" && bitOto ? (simdi && simdi < tarih.bas ? tarih.bas : simdi) : tarih[k]);
   const kaydedildi = () => { setKirli(false); setSonKayit(new Date().toISOString()); setGenel(null); setAlanHata({}); };
   const yanitHatasi = (r: RaporYaniti) => {
     const h = r.hatalar ?? {}, ilk = Object.keys(h)[0];
@@ -420,14 +440,18 @@ export function SahaRaporu({ v, yeni }: { v: Gorunum; yeni?: { plan: string; eki
   const tarihUyari = (k: TarihAnahtari) =>
     k === "bit" && tarih.bas && tarih.bit && tarih.bit < tarih.bas ? "Bitiş başlangıçtan önce."
       : k === "sonraki" && tarih.bas && tarih.sonraki && tarih.sonraki <= tarih.bas.slice(0, 10) ? "Kontrol tarihinden sonra olmalı." : null;
-  const tarihSatiri = (k: TarihAnahtari, etiket: string, saat: boolean, zorunlu = false) => {
+  /* genis (464): başlangıç, bitiş ve sonraki kontrol alt alta, tam satır */
+  const tarihSatiri = (k: TarihAnahtari, etiket: string, saat: boolean, zorunlu = false, genis = false) => {
     const id = TID(k), alan = `tarih.${k}`, gec = gecersiz(alan);
     const h = alanHata[alan] ?? (gec ? "Tarih ve saat seçilmeli." : null), u = h ? null : tarihUyari(k);
+    const oto = k === "bit" && bitOto && !h && !u;
     return (
-      <Satir key={k} etiket={etiket} htmlFor={id} zorunlu={zorunlu && !oku}>
+      <Satir key={k} etiket={etiket} htmlFor={id} zorunlu={zorunlu && !oku} genis={genis}>
         {oku ? <OkuGirdi id={id} deger={tarih[k] ? (saat ? saatliNo(tarih[k]) : tarihNo(tarih[k])) : ""} /> : <>
-          <TarihKutusu id={id} ad={etiket} saat={saat} deger={tarih[k]} degistir={(x) => tarihYaz(k, x)} gecersiz={gec} tanim={h || u ? ipucuId(id) : undefined} />
+          <TarihKutusu id={id} ad={etiket} saat={saat} deger={gorunen(k)} degistir={(x) => tarihYaz(k, x)} gecersiz={gec}
+            tanim={h || u || oto ? ipucuId(id) : undefined} />
           {(h || u) && <p className={h ? stil.alanHata : stil.alanUyari} id={ipucuId(id)}>{h ?? u}</p>}
+          {oto && <p className={stil.ipucuMetin} id={ipucuId(id)}>Şimdi · onaya gönderilince o anın saati yazılır; değiştirmek için seçin.</p>}
         </>}
       </Satir>
     );
@@ -544,9 +568,11 @@ export function SahaRaporu({ v, yeni }: { v: Gorunum; yeni?: { plan: string; eki
             {tarihSatiri("rapor", "Rapor tarihi", false)}
             <Satir etiket="İSG-KATİP SÖZLEŞME ID">{v.kunye.isgNo ? <span className={stil.kodUzun}>{v.kunye.isgNo}</span> : <span className={stil.uyari}>Yok</span>}</Satir>
             <Satir etiket="SGK DETSİS NO">{v.kunye.sgk ? <span className={stil.kodUzun}>{v.kunye.sgk}</span> : <span className={stil.uyari}>Yok</span>}</Satir>
-            {tarihSatiri("bas", "Periyodik kontrol başlangıç tarihi ve saati", true, true)}
-            {tarihSatiri("bit", "Periyodik kontrol bitiş tarihi ve saati", true)}
-            {tarihSatiri("sonraki", "Bir sonraki periyodik kontrol tarihi", false)}
+            {/* 464 (reisim, hata listesi 9: "Periyodik kontrol başlangıç ve bitiş tarihleri alt alta olmalı, hemen ardından bir sonraki kontrol
+                tarihi olmalı"): üçü alt alta, tam satır */}
+            {tarihSatiri("bas", "Periyodik kontrol başlangıç tarihi ve saati", true, true, true)}
+            {tarihSatiri("bit", "Periyodik kontrol bitiş tarihi ve saati", true, false, true)}
+            {tarihSatiri("sonraki", "Bir sonraki periyodik kontrol tarihi", false, false, true)}
             {tarihSatiri("takip", "Takip kontrol tarihi", false)}
             <Satir etiket="E-posta">{v.kunye.eposta ?? <DegerYok>-</DegerYok>}</Satir>
             <Satir etiket="Telefon">{v.kunye.tel ?? <DegerYok>-</DegerYok>}</Satir>
