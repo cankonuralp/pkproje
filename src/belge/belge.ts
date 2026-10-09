@@ -11,7 +11,8 @@ import { SINIR_ISARETI } from "../format/hesap.ts";
 import { raporDuzeni } from "../format/duzen.ts";
 import { degerlendir } from "../format/motor.ts";
 import type { Bolum, BolumOf } from "../format/tanim.ts";
-import { TANIMLAR } from "../tanim/tanimlar.ts";
+/* veri.ts: saf tanımlar (tanimlar.ts node:crypto kullanır — 451: Format kurucunun belge önizlemesi bu çiziciyi tarayıcıda koşar) */
+import { TANIMLAR } from "../tanim/veri.ts";
 import type { BelgeFotosu, BelgeVerisi } from "./veri.ts";
 
 const tarihNo = (s: string | null | undefined) => (s ? `${s.slice(8, 10)}.${s.slice(5, 7)}.${s.slice(0, 4)}` : "-");
