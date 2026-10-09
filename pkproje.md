@@ -2369,8 +2369,9 @@ revizyon, alan kopyalama, hafif kusur devri, meslek eşleşme denetimi).
   giriş (6 000'i önbellekten) / 500. Fiyatlar (1 milyon token, $; Ekim 2026): Claude Opus 5.5 4 / 20 · Sonnet 5.5 2 / 10 · **Haiku 5.5 0,10 / 0,50** ·
   GPT-5 mini 0,25 / 2 · Gemini 3.8 Flash 0,75 / 3,75 (1 Ocak 2027'de iki katı) · Gemini 3.1 Flash-Lite 0,25 / 1,50 · DeepSeek V4.1 Flash 0,30 / 1,20
   (görsel girdisi resmî değil). İşlem başına: pano okuma Opus $0,045 · Sonnet $0,023 · Haiku $0,0011 · GPT-5 mini ~$0,004 · Gemini Flash ~$0,007 ·
-  Flash-Lite ~$0,003. 10 denetçili firmada ayda ~1 100 pano + ~1 000 etiket + ~4 400 S.A.Y sorusu: Opus ~$158 · Sonnet ~$81 · **Haiku ~$4** ·
-  GPT-5 mini ~$14 · Gemini 3.8 Flash ~$28 (1 $ ≈ 49 TL, 7 Ekim 2026). **Öneri:** Anthropic'te kal (kod, yapılandırılmış çıktı, firma başına model
+  Flash-Lite ~$0,003 · DeepSeek V4.1 Flash ~$0,003 (görsel resmî değilse yalnız S.A.Y). 10 denetçili firmada ayda ~1 100 pano + ~1 000 etiket +
+  ~4 400 S.A.Y sorusu: Opus ~$158 · Sonnet ~$81 · **Haiku ~$4** · GPT-5 mini ~$14 · Gemini 3.8 Flash ~$28 · DeepSeek ~$10 (gece indirimli saatte
+  ~$5) (1 $ ≈ 49 TL, 7 Ekim 2026). **Öneri:** Anthropic'te kal (kod, yapılandırılmış çıktı, firma başına model
   seçimi ve aylık üst sınır hazır); Haiku 5.5'i seçenek olarak ekle — etiket ve S.A.Y için varsayılan, pano okumada 20–30 gerçek fotoğraflık deneme
   setiyle Sonnet 5.5'e karşı ölç (alan başına doğruluk); tutarsa varsayılan. DeepSeek önerilmez (görsel resmî değil, veri Çin'de işlenir, şema
   garantisi zayıf); Gemini / GPT ikinci sağlayıcı entegrasyonu ister, Haiku 5.5'ten ucuz değil.
