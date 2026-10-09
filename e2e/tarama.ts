@@ -22,8 +22,10 @@ export interface Bulgu { sayfa: string; tur: string; ayrinti: string }
 
 const ATLA = [/^\/api\//, /\/pdf(\/|$)/, /^\/giris/, /^\/cikis/, /^\/yonetim\/cikis/, /^\/_next\//, /\.(pdf|xlsx|zip|csv|png|jpe?g|svg|ico)$/i];
 const UUID = /[0-9a-f]{8}-[0-9a-f]{4}-[0-9a-f]{4}-[0-9a-f]{4}-[0-9a-f]{12}/gi;
-/** aynı kalıptaki adres bir kez gezilir (her plan / rapor / personel sayfası değil, birer tanesi) */
-export const kalip = (yol: string) => yol.replace(UUID, ":id").replace(/\/\d+(?=\/|$)/g, "/:n");
+/** aynı kalıptaki adres bir kez gezilir (her plan / rapor / personel sayfası değil, birer tanesi). 467: Bakanlık belge kodlu sayfalar (şablon
+    önizlemesi /ekipman-turleri/sablon/ZPKR06, kriter belgesi /dokumanlar/kriterler/ZPKK06 …) da tek kalıp — dokuz format + dokuz kriter belgesiyle
+    taramanın masaüstü parçası 50 dakikalık iş sınırını aştı; sayfaların çizicisi ortak, biri taranınca hepsi taranmış olur */
+export const kalip = (yol: string) => yol.replace(UUID, ":id").replace(/\/\d+(?=\/|$)/g, "/:n").replace(/\/(?:ZP[KM][RK]|ZYD[RK])\d{2}(?=\/|$)/g, "/:kod");
 
 /** sayfanın görünür, basılabilir öğelerinden üstü örtülü olanlar (tarayıcıda koşar) */
 function ortuluOgeler(): { ad: string; neden: string }[] {
