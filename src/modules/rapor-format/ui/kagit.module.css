@@ -1,0 +1,95 @@
+/* FORMAT KURUCU · KÂĞIT (451) — belge.css'in .rb- görünümünün (Bakanlık rapor belgesi) üstüne yalnız DÜZENLEME işaretleri: yerinde yazı,
+   kâğıttaki küçük tuşlar, "+ ekle" satırları, bölüm şeridinin araçları. Kâğıdın üstündeki işaretlerin renkleri belgenin kendi renkleri gibi
+   sabittir (belge.css: kâğıt açık / koyu temada aynı kâğıttır — tokens.css'in koyu renkleri beyaz kâğıtta okunmaz). Ayar panelleri
+   uygulamanın bileşenlerini taşır: onlar uygulama renkleriyle (tokens). */
+.kap { min-width: 0; padding: 4px 0 24px; }
+/* kâğıt kabın genişliğinde (A4 oranı yerine; en çok 920 px) — .rb-sayfa'nın sabit 794 px'ini ezer */
+.kagit.kagit { width: 100%; max-width: 920px; min-height: 0; margin: 0 auto; }
+
+/* yerinde yazı: düz metin gibi; üstüne gelince sarı zemin + çizgi, basınca yazı alanı */
+.yazi {
+  display: inline; padding: 0 1px; margin: 0; border: 0; border-radius: 2px; background: transparent; color: inherit; font: inherit;
+  text-align: inherit; text-transform: inherit; letter-spacing: inherit; cursor: text; box-shadow: 0 0 0 1px transparent; overflow-wrap: anywhere;
+}
+.yazi:hover { background: #fff6cc; box-shadow: 0 0 0 1px #b58900; }
+.yazi:focus-visible { outline: 2px solid #1d4ed8; outline-offset: 1px; }
+.bos { color: #5f5f5f; font-style: italic; font-weight: 400; text-transform: none; }
+.girdi {
+  box-sizing: border-box; display: block; width: 100%; min-height: 1.6em; field-sizing: content; padding: 1px 3px; margin: 0;
+  border: 1px solid #1d4ed8; border-radius: 2px; background: #fff; color: #000; font: inherit; text-transform: none; text-align: left; resize: none;
+}
+.girdi:focus { outline: 2px solid #1d4ed8; outline-offset: 1px; }
+.kilitli { overflow-wrap: anywhere; }
+.kilitIkon { display: inline-flex; color: #1f6b4f; }
+.ornek { color: #5f5f5f; font-style: italic; text-transform: none; font-weight: 400; }
+.sinir { color: #5f5f5f; font-weight: 400; font-size: 10px; }
+
+/* kâğıttaki küçük tuşlar (ikon): görünür ama sade; dokunmatikte büyük */
+.tus {
+  display: inline-flex; align-items: center; justify-content: center; flex: none; width: 30px; height: 30px; padding: 0; margin: 0;
+  border: 1px solid transparent; border-radius: 4px; background: transparent; color: #3d3d3d; cursor: pointer;
+}
+.tus:hover:not(:disabled) { background: #ececec; border-color: #b8b8b8; color: #000; }
+.tus:disabled { opacity: .35; cursor: default; }
+.tus[aria-pressed="true"] { background: #dbe4f0; border-color: #6d88b8; color: #000; }
+.tus:focus-visible { outline: 2px solid #1d4ed8; outline-offset: 1px; }
+@media (pointer: coarse) { .tus { width: 40px; height: 40px; } }
+.yonKap { display: inline-flex; }
+
+/* "+ … ekle": kâğıtta yerinde, kesik çizgili */
+.ekle {
+  display: inline-flex; align-items: center; gap: 4px; min-height: 30px; padding: 2px 10px; margin: 2px 0;
+  border: 1px dashed #6d88b8; border-radius: 4px; background: #f4f7fb; color: #1e3a6e; font: inherit; font-weight: 700; text-transform: none; cursor: pointer;
+}
+.ekle:hover { background: #e3ebf7; border-style: solid; }
+.ekle:focus-visible { outline: 2px solid #1d4ed8; outline-offset: 1px; }
+@media (pointer: coarse) { .ekle { min-height: 40px; } }
+.kagit .ekleSatir td { border-style: dashed; background: #fbfcfe; }
+.kagit .ekleSutun { width: 74px; border-style: dashed; background: #fbfcfe; text-align: center; }
+.altSatir { display: flex; flex-wrap: wrap; align-items: center; gap: 6px 12px; margin: -6px 0 10px; }
+.altNot { margin: -6px 0 10px; font-size: 10px; color: #3d3d3d; }
+
+/* satır içinde yazı + tuşlar */
+.satir, .etiket, .grupSatir, .sutun { display: flex; align-items: flex-start; gap: 4px; min-width: 0; }
+.satir > :first-child, .etiket > :first-child { flex: 1 1 auto; min-width: 0; }
+.grupSatir { justify-content: center; align-items: center; }
+.sutun { flex-wrap: wrap; align-items: center; }
+.ogeTus { display: inline-flex; flex: none; gap: 0; margin-left: auto; opacity: .55; }
+.satir:hover .ogeTus, .etiket:hover .ogeTus, .sutun:hover .ogeTus, .ogeTus:focus-within { opacity: 1; }
+@media (pointer: coarse) { .ogeTus { opacity: 1; } }
+.metot { display: flex; flex-direction: column; gap: 2px; white-space: pre-line; }
+.foto { width: 160px; }
+.foto :global(.rb-foto-bos) { height: 100px; }
+
+/* bölüm şeridi (belge.css .rb-bolum h2 görünümü) + araçlar */
+.bolum { position: relative; }
+.bolumBas { display: flex; flex-wrap: wrap; align-items: center; gap: 4px 8px; margin: 0 0 -1px; padding: 1px 3px; border: 1px solid #000; background: #f1dbdb; }
+.altBas { background: #f8eded; }
+.kagit .bolumBas h2 { flex: 1 1 14rem; min-width: 0; margin: 0; padding: 0; border: 0; background: none; }
+.bolumBas + table, .bolumBas + :global(.rb-kutu-metin), .bolumBas + :global(.rb-fotolar) { margin-top: 0; }
+.no { font-variant-numeric: tabular-nums; }
+.araclar { display: inline-flex; flex-wrap: wrap; align-items: center; gap: 2px 4px; margin-left: auto; font-size: 11px; text-transform: none; }
+.sabit { display: inline-flex; align-items: center; gap: 4px; padding: 0 6px; color: #1f4b3a; font-weight: 700; }
+.tur { padding: 0 6px; color: #3d3d3d; }
+
+/* bölümler arası "Bölüm ekle": ince, kâğıdın ortasında; sondaki belirgin */
+.araEkle { display: flex; justify-content: center; margin: -4px 0 6px; opacity: .55; }
+.araEkle:hover, .araEkle:focus-within { opacity: 1; }
+.araEkle > * { width: 240px; }
+.sonEkle { margin: 4px 0 12px; opacity: 1; }
+@media (pointer: coarse) { .araEkle { opacity: 1; } }
+
+/* ayar panelleri — uygulamanın bileşenleri, uygulama renkleri (tokens) */
+.panel {
+  display: grid; gap: 10px; margin: 6px 0 12px; padding: 12px 14px; border: 1px solid var(--kenar); border-radius: var(--r-orta);
+  background: var(--kart); color: var(--yazi); font: var(--boy-govde)/1.45 var(--yazi-tipi); text-transform: none; box-shadow: var(--golge-2);
+}
+.panelBas { display: flex; align-items: center; justify-content: space-between; gap: 8px; }
+.panelBas .tus { color: var(--yazi2); }
+.panelBas .tus:hover:not(:disabled) { background: var(--zemin2); border-color: var(--kenar); color: var(--yazi); }
+.panelSatir { display: flex; flex-wrap: wrap; align-items: flex-end; gap: 8px 16px; }
+.panelAlan { display: grid; gap: 4px; flex: 1 1 16rem; min-width: 0; font-weight: 600; }
+.panelGirdi { height: var(--tus-y); padding: 0 10px; border: 1px solid var(--kenar-alan); border-radius: var(--r-orta); background: var(--kart); color: var(--yazi); font: inherit; font-weight: 400; }
+.panelIpucu { margin: 0; color: var(--yazi2); font-size: var(--boy-kucuk); font-weight: 400; }
+.panelKutu { display: inline-flex; align-items: center; gap: 8px; min-height: var(--tus-y); cursor: pointer; }
+.panelKutu input { width: 18px; height: 18px; margin: 0; accent-color: var(--birincil); }

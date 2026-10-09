@@ -16,7 +16,7 @@
         Pencereler kaydedilmeden Esc ile kapatılır.
    Bulgular toplanır, sonda tek listede düşer (ilk hatada durmaz — hepsi bir koşuda görünsün). Gezilmez: /api, PDF, çıkış, giriş, indirme. */
 import AxeBuilder from "@axe-core/playwright";
-import type { ConsoleMessage, Locator, Page, Response } from "@playwright/test";
+import type { ConsoleMessage, Dialog, Locator, Page, Response } from "@playwright/test";
 
 export interface Bulgu { sayfa: string; tur: string; ayrinti: string }
 
@@ -164,7 +164,8 @@ async function katmanlariDene(page: Page, kok: Locator, kokSecici: string, yer: 
 /** 452: sayfanın ve "… ekle / … düzenle / Yeni …" pencerelerinin (en çok 2; açılır, denenir, kaydedilmeden kapatılır) açılır katmanları */
 async function acilirKatmanlar(page: Page, yer: string, bulgular: Bulgu[]) {
   await katmanlariDene(page, page.locator("main"), "main", yer, "sayfada", bulgular);
-  const acanlar = page.locator("main button:not([type=submit]):not([disabled])").filter({ hasText: /(^|\s)(ekle|düzenle)\s*$|^\s*Yeni\s/i });
+  /* kâğıt üstündeki "+ … ekle" (Format kurucu, 451) pencere açmaz, taslağa yazar — denenmez */
+  const acanlar = page.locator("main button:not([type=submit]):not([disabled]):not(article button)").filter({ hasText: /(^|\s)(ekle|düzenle)\s*$|^\s*Yeni\s/i });
   const n = Math.min(await acanlar.count(), 2);
   for (let i = 0; i < n; i++) {
     const t = acanlar.nth(i);
@@ -225,9 +226,12 @@ export async function siteyiTara(page: Page, baslangic: string[], { enCok = 90, 
     const u = new URL(r.url());
     if (u.origin === new URL(page.url() || "http://x").origin && r.status() >= 500) bulgular.push({ sayfa: yer, tur: `sunucu ${r.status()}`, ayrinti: u.pathname });
   };
+  /* taslağı kirlenen sayfadan çıkarken tarayıcının "sayfadan ayrılınsın mı" sorusu: ayrılınır (tarama kayıt yapmaz) */
+  const diyalog = (d: Dialog) => { void d.accept().catch(() => undefined); };
   page.on("pageerror", sayfaHatasi);
   page.on("console", konsol);
   page.on("response", yanitlar);
+  page.on("dialog", diyalog);
   try {
     let cekmeceBakildi = false;
     while (kuyruk.length && gezilen.length < enCok && Date.now() < bitis) {
@@ -273,6 +277,7 @@ export async function siteyiTara(page: Page, baslangic: string[], { enCok = 90, 
     page.off("pageerror", sayfaHatasi);
     page.off("console", konsol);
     page.off("response", yanitlar);
+    page.off("dialog", diyalog);
   }
   return { bulgular, gezilen, kalan: kuyruk };
 }

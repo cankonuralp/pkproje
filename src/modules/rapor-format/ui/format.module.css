@@ -62,6 +62,14 @@
   .yalnizGenis { display: none; }
   .yalnizDar { display: block; }
 }
+/* 451: kâğıt üstünde kurucu — görünüm seçici (Düzenle · Belge önizlemesi), kurallar açılır kutusu, belge önizlemesinin kabı */
+.gorunumSecici { display: inline-flex; flex-wrap: wrap; gap: 4px; }
+.gizliHer { display: none; }
+.kurallar { margin-top: 12px; padding: 0; }
+.kurallarBas { display: flex; align-items: center; min-height: var(--tus-y); padding: 6px 14px; font-weight: 600; cursor: pointer; }
+.kurallarIc { display: grid; gap: 12px; padding: 0 14px 14px; }
+.belgeKap { min-width: 0; margin-top: 12px; }
+.belgeKap:focus-visible { outline: 3px solid var(--odak); outline-offset: 2px; }
 
 @media (max-width: 767.98px) {
   .bolum { padding: 12px; }

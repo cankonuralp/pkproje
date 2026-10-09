@@ -30,7 +30,7 @@ export default async function Sayfa({ params }: { params: Promise<{ id: string; 
     <>
       <Kirinti ogeler={[[`Ekipman türleri · ${bransAd(tur.brans)}`, tur.brans === "e" ? "/ekipman-turleri?brans=e" : "/ekipman-turleri"],
         [tur.ad, `/ekipman-turleri/${tur.id}`], ["Format kurucu"]]} />
-      <FormatKurucu turId={tur.id} turAd={tur.ad} format={{ id: f.id, surum: f.surum }} tanim={f.tanim} kaynakAd={f.kaynakAd} />
+      <FormatKurucu turId={tur.id} turAd={tur.ad} turKod={tur.kod} format={{ id: f.id, surum: f.surum }} tanim={f.tanim} kaynakAd={f.kaynakAd} />
     </>
   );
 }

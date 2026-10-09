@@ -2,9 +2,20 @@
    Yayınla onaylı). Gerçek tarayıcıda, üç genişlikte: tür sayfasında "Rapor şablonu" boş → Şablondan başlat (ZPKR02) → önizleme sayfası (taslak,
    Bakanlık bölümleri) → Yayınla (sürüm notu) → Sürüm 1 yayında → yayındaki sürümden yeni taslak → Sürüm 2 yayında, Sürüm 1 eski · denetçi
    bölümü ve önizlemeyi görür, başlatamaz / yayınlayamaz. K4 Format kurucu (2026-10-06): taslak kurucuda açılır; geniş ekranda bölüm eklenir,
-   adı yazılır → "Kaydedilmedi" (Yayınla yok) → Taslağı kaydet; Bakanlık bölümü silinemez; telefonda yalnız önizleme. */
+   adı yazılır → "Kaydedilmedi" (Yayınla yok) → Taslağı kaydet; Bakanlık bölümü silinemez; telefonda yalnız önizleme.
+   450: yeni türün rapor şablonu Ek-III grubuna göre hazır, YAYINDA sürüm 1 (Bakanlık şablonundan başlatılan sürüm 2 olur).
+   451 (reisim 2026-10-09: "format kurucu hiç kullanışlı değil, mantıksız zor ve karmaşık"; "formatı oluştururken nasıl gözükeceği zihnimde
+   canlanmıyor bile"): kurucu RAPORUN KENDİSİ — kâğıt belgenin görünümünde; bölüm adına / sütun başlığına / maddeye basılıp yerinde yazılır, "+"
+   yerinde ekler; "Belge önizlemesi" PDF'le aynı çiziciden. Görüntüler e2e-goz/ altına (deneme makinesi her koşuda yükler — gözle bakılır). */
+import { mkdirSync } from "node:fs";
 import { expect, test, type Page } from "@playwright/test";
 import { girisli, hazir } from "./yardimci";
+
+/** gözle bakılacak görüntü (deneme makinesi e2e-goz/ klasörünü her koşuda yükler) */
+async function goz(page: Page, ad: string, proje: string) {
+  mkdirSync("e2e-goz", { recursive: true });
+  await page.screenshot({ path: `e2e-goz/${proje}-${ad}.png`, fullPage: true });
+}
 
 async function basla(page: Page, secenek: RegExp) {
   await hazir(page);
@@ -45,60 +56,91 @@ test("rapor şablonu: şablondan başlat, önizle, yayınla; yeni sürümle eski
   await expect(page).toHaveURL(/\/ekipman-turleri\/[0-9a-f-]{36}$/, { timeout: 30_000 });
   const turAdresi = new URL(page.url()).pathname;
   await expect(page.getByRole("heading", { level: 2, name: "Rapor şablonu" })).toBeVisible();
-  await expect(page.getByText("Rapor şablonu yayınlanmadı.")).toBeVisible();
+  /* 450: yeni türün şablonu Ek-III grubuna göre hazır, yayında (sürüm 1) */
+  await expect(page.getByText("Ek-III grubuna göre hazır format").first()).toBeVisible();
+  await expect(page.getByRole("link", { name: /Rapor formatı\s*Sürüm 1/ })).toBeVisible();
 
-  /* hazır şablondan taslak → önizleme: Bakanlık bölümleri ve maddeleri */
+  /* hazır şablondan taslak → Format kurucu: kâğıt belgenin görünümünde, Bakanlık bölümleri ve maddeleri */
   await basla(page, /Elektrik iç tesisatı \(ZPKR02/);
-  await expect(page.getByRole("heading", { level: 3, name: "5 · Gözle kontrol" })).toBeVisible();
-  await expect(page.getByText("Kablo şebeke tarafı")).toBeVisible();
-  await expect(page.getByRole("heading", { level: 3, name: "1 · Firma bilgileri" })).toBeVisible();
+  const kagit = page.getByRole("article", { name: "Rapor formatı · düzenlenebilir belge" });
   if (bilgi.project.name !== "telefon") {
-    /* Format kurucu: bölüm ekle, adını yaz → kaydedilmedi (yayınlanmaz) → taslağı kaydet; Bakanlık bölümü silinemez */
-    await page.getByRole("combobox", { name: "Bölüm ekle" }).click();
-    await page.getByRole("option", { name: "Not / yorum" }).click();
+    await expect(kagit).toBeVisible();
+    await expect(kagit.getByText("1. Firma bilgileri")).toBeVisible();
+    await expect(kagit.getByText("Sabit · her raporda aynı")).toBeVisible();
+    await expect(kagit.getByText("Kablo şebeke tarafı").first()).toBeVisible();
+    await goz(page, "kurucu-ilk", bilgi.project.name);
+    /* Bakanlık bölümü kilitli: silinmez */
+    const gozle = kagit.getByRole("region", { name: /Gözle kontrol$/ });
+    await expect(gozle.getByText("Bakanlık bölümü").first()).toBeVisible();
+    await expect(gozle.getByRole("button", { name: /bölümü sil$/ })).toHaveCount(0);
+    /* yerinde madde ekle (Bakanlık listesine firma maddesi eklenebilir) */
+    await gozle.getByRole("button", { name: /^Madde ekle/ }).first().click();
+    const madde = page.getByRole("textbox", { name: "Madde metni" });
+    await expect(madde).toBeFocused();
+    await madde.fill("Deneme maddesi");
+    await madde.press("Enter");
+    await expect(gozle.getByRole("button", { name: "Deneme maddesi" })).toBeVisible();
+    /* ölçüm tablosu TABLO gibi: başlıklar sütun; "+ Sütun" yerinde yeni sütun açar, adı başlıkta yazılır */
+    const linye = kagit.getByRole("region", { name: /Pano sigortaları \(linye\)$/ });
+    await expect(linye.getByRole("columnheader", { name: /Devre/ })).toBeVisible();
+    await linye.getByRole("button", { name: "Sütun", exact: true }).click();
+    const sutun = page.getByRole("textbox", { name: "Sütun adı" });
+    await expect(sutun).toBeFocused();
+    await sutun.fill("Deneme sütunu");
+    await sutun.press("Enter");
+    await expect(linye.getByRole("columnheader", { name: /Deneme sütunu/ })).toBeVisible();
+    /* bölüm ekle (sonda) → adı yerinde yazılır → kaydedilmedi (yayınlanmaz) → taslağı kaydet */
+    await page.getByRole("combobox", { name: "Bölüm ekle", exact: true }).click();
+    await page.getByRole("option", { name: /Not \/ yorum/ }).click();
     await expect(page.getByText("Kaydedilmedi")).toBeVisible();
     await expect(page.getByRole("button", { name: "Yayınla" })).toHaveCount(0);
-    await page.getByLabel("Bölüm adı").fill("Deneme yorumu");
+    const ad = page.getByRole("textbox", { name: "Bölüm adı" });
+    await expect(ad).toBeFocused();
+    await ad.fill("Deneme yorumu");
+    await ad.press("Enter");
+    await expect(kagit.getByRole("region", { name: /Deneme yorumu$/ })).toBeVisible();
+    /* firma bilgileri sabit: yalnız metot satırı yazılır, bölüm silinmez */
+    const firma = kagit.locator("#kb-firma");
+    await expect(firma.getByRole("button", { name: /bölümü sil$/ })).toHaveCount(0);
+    expect(await page.evaluate(() => document.documentElement.scrollWidth <= window.innerWidth), "yana taşma yok").toBe(true);
+    await goz(page, "kurucu-duzen", bilgi.project.name);
+    /* belge önizlemesi: kesin belgenin çizicisinden, yazılanlarla */
+    await page.getByRole("button", { name: "Belge önizlemesi" }).click();
+    const belge = page.getByRole("region", { name: "Belge önizlemesi" });
+    await expect(belge.getByText("Deneme sütunu")).toBeVisible();
+    await expect(belge.getByText("Deneme yorumu", { exact: false }).first()).toBeVisible();
+    await goz(page, "kurucu-belge", bilgi.project.name);
+    await page.getByRole("button", { name: "Düzenle", exact: true }).click();
     await page.getByRole("button", { name: "Taslağı kaydet" }).click();
     await expect(page.getByText("Taslak kaydedildi.").first()).toBeVisible({ timeout: 30_000 });
     await expect(page.getByText("Kaydedilmedi")).toHaveCount(0);
-    await expect(page.getByRole("heading", { level: 3, name: /· Deneme yorumu$/ })).toBeVisible({ timeout: 30_000 });
-    await page.getByRole("navigation", { name: "Bölümler" }).getByRole("button", { name: /^5 · Gözle kontrol/ }).click();
-    await expect(page.getByText("Bakanlık alanı · silinemez")).toBeVisible();
-    await expect(page.getByRole("button", { name: "Bölümü sil" })).toHaveCount(0);
-    /* 447 (reisim: "tablo gibi gözükmeli format yapıcısıda"; "firma bilgileri kısmı her formatta aynı olacak şekilde sabit olmalı"): ölçüm bölümünün
-       sütunları tablo başlığı (düzenle tuşu başlıkta); firma bilgileri sabit — düzenlenmez, silinmez */
-    await page.getByRole("navigation", { name: "Bölümler" }).getByRole("button", { name: /· Pano sigortaları \(linye\)/ }).click();
-    const sutunlar = page.getByRole("table", { name: /Pano sigortaları \(linye\) · sütunlar/ }).first();
-    await expect(sutunlar.getByRole("columnheader", { name: /Devre/ })).toBeVisible();
-    await expect(sutunlar.getByRole("button", { name: "Devre düzenle" })).toBeVisible();
-    await page.getByRole("navigation", { name: "Bölümler" }).getByRole("button", { name: /^1 · Firma bilgileri/ }).click();
-    await expect(page.getByText("Firma bilgileri her formatta ve her raporda aynıdır", { exact: false })).toBeVisible();
-    await expect(page.getByRole("button", { name: "Bölümü sil" })).toHaveCount(0);
-    await expect(page.getByRole("textbox", { name: "Bölüm adı" })).toHaveCount(0);
-    expect(await page.evaluate(() => document.documentElement.scrollWidth <= window.innerWidth), "yana taşma yok").toBe(true);
-  } else await expect(page.getByText("Format kurucu masaüstünde kullanılır; burada önizleme görünür.")).toBeVisible();
-  await yayinla(page, "ilk sürüm", 1);
+    await expect(kagit.getByRole("region", { name: /Deneme yorumu$/ })).toBeVisible({ timeout: 30_000 });
+  } else {
+    await expect(page.getByText("Format kurucu masaüstünde kullanılır; burada önizleme görünür.")).toBeVisible();
+    await expect(page.getByRole("region", { name: "Belge önizlemesi" }).getByText("Kablo şebeke tarafı").first()).toBeVisible();
+    await goz(page, "kurucu-telefon", bilgi.project.name);
+  }
+  await yayinla(page, "ilk sürüm", 2);
   await expect(page.getByRole("button", { name: "Yayınla" })).toHaveCount(0);
 
   /* tür sayfası: yüz ve sürüm satırı */
   await page.goto(turAdresi);
   await hazir(page);
-  await expect(page.getByRole("link", { name: /Rapor şablonu\s*Sürüm 1/ })).toBeVisible();
+  await expect(page.getByRole("link", { name: /Rapor formatı\s*Sürüm 2/ })).toBeVisible();
   await expect(page.getByText("ilk sürüm")).toBeVisible();
 
-  /* yayındaki sürümden yeni taslak → Sürüm 2; Sürüm 1 eskiye düşer */
-  await basla(page, /Sürüm 1 · yayında/);
-  await yayinla(page, "ikinci sürüm", 2);
+  /* yayındaki sürümden yeni taslak → Sürüm 3; Sürüm 2 eskiye düşer */
+  await basla(page, /Sürüm 2 · yayında/);
+  await yayinla(page, "ikinci sürüm", 3);
   await page.goto(turAdresi);
   await hazir(page);
-  await expect(page.getByText("Eski", { exact: true })).toBeVisible();
+  await expect(page.getByText("Eski", { exact: true }).first()).toBeVisible();
   await expect(page.getByText("Yayında", { exact: true })).toBeVisible();
 
   /* 439 (reisim: "ŞABLONU DÜZENLEME YOK SADECE ÖN İZLEME VAR DÜZENLEME DE OLMALI"): yayındaki sürümde Düzenle → o sürümden taslak → Format
      kurucu; açık taslak varken yeniden Düzenle → "Taslağa devam et" aynı taslağa götürür */
-  await page.getByRole("button", { name: "Sürüm 2 · Düzenle" }).click();
-  const d = page.getByRole("dialog", { name: "Sürüm 2 · düzenle" });
+  await page.getByRole("button", { name: "Sürüm 3 · Düzenle" }).click();
+  const d = page.getByRole("dialog", { name: "Sürüm 3 · düzenle" });
   await expect(d).toContainText("Yayınlanmış sürüm değişmez");
   await d.getByRole("button", { name: "Taslak aç ve düzenle" }).click();
   await expect(page).toHaveURL(/\/sablon\/[0-9a-f-]{36}\/kurucu$/, { timeout: 30_000 });
@@ -106,7 +148,7 @@ test("rapor şablonu: şablondan başlat, önizle, yayınla; yeni sürümle eski
   const kurucu = new URL(page.url()).pathname;
   await page.goto(turAdresi);
   await hazir(page);
-  await page.getByRole("button", { name: "Sürüm 2 · Düzenle" }).click();
+  await page.getByRole("button", { name: "Sürüm 3 · Düzenle" }).click();
   await expect(d).toContainText("Açık bir taslak var");
   await expect(d.getByRole("link", { name: "Taslağa devam et" })).toHaveAttribute("href", kurucu);
   await d.getByRole("button", { name: "Vazgeç" }).click();
@@ -129,8 +171,8 @@ test("rapor şablonu: şablondan başlat, önizle, yayınla; yeni sürümle eski
   await hazir(page);
   await expect(page.getByRole("heading", { level: 2, name: "Rapor şablonu" })).toBeVisible();
   await expect(page.getByRole("button", { name: "Şablondan başlat" })).toHaveCount(0);
-  await expect(page.getByRole("button", { name: "Sürüm 2 · Düzenle" })).toHaveCount(0);
+  await expect(page.getByRole("button", { name: "Sürüm 3 · Düzenle" })).toHaveCount(0);
   await page.getByRole("link", { name: "Önizle" }).first().click();
-  await expect(page.getByRole("heading", { level: 1, name: "Rapor şablonu · Sürüm 2" })).toBeVisible({ timeout: 30_000 });
+  await expect(page.getByRole("heading", { level: 1, name: "Rapor şablonu · Sürüm 3" })).toBeVisible({ timeout: 30_000 });
   await expect(page.getByRole("button", { name: "Yayınla" })).toHaveCount(0);
 });

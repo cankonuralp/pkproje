@@ -95,6 +95,15 @@ jobs:
             e2e/goruntu/
           retention-days: 3
           if-no-files-found: ignore
+      # 451: gözle bakılacak görüntüler (e2e-goz/ — ör. Format kurucunun kâğıdı ve belge önizlemesi) her koşuda; PC'de yerel sunucu yok, ekranı
+      # buradan görürüz
+      - if: ${{ !cancelled() }}
+        uses: actions/upload-artifact@v7
+        with:
+          name: "goz-${{ matrix.proje }}-${{ matrix.parca }}"
+          path: e2e-goz/
+          retention-days: 3
+          if-no-files-found: ignore
 
   # main: maket / sunum (Pages sitesinin kaynakları) değişti mi — değişmediyse yayın işi hiç açılmaz (boş Pages yayını yok)
   degisiklik:

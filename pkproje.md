@@ -2355,6 +2355,23 @@ revizyon, alan kopyalama, hafif kusur devri, meslek eşleşme denetimi).
 - Emsal ürünler: https://opwire.app/iso-17020-periyodik-kontrol-yazilimi/ · https://17020muayene.vidco.com.tr/ · https://akuple.com/asansor-kontrol-yazilimi/ · https://ensyazilim.com/
 
 ## 11 · Değişiklik günlüğü
+- 2026-10-09 (451): **Format kurucu baştan: raporun kendisinin üstünde düzenleme** (reisim: *"format kurucu hiç kullanışlı değil, mantıksız zor ve
+  karmaşık"*, *"formatı oluştururken nasıl gözükeceği zihnimde canlanmıyor bile"*). Üç sütunlu düzenleyici (solda bölüm listesi, ortada form, sağda
+  önizleme) kalktı. Kurucu artık KÂĞIT: belgenin Bakanlık görünümü (başlık tablosu, pembe bölüm şeridi, mavi etiket hücreleri — PDF'teki gibi) ve
+  aynı numaralar; 1. Firma bilgileri sabit (yalnız metot satırı yazılır), 2. Ekipman bilgileri, sonra bölümler. Bölüm adına, etikete, maddeye, grup
+  adına, sütun başlığına, değer adına, sonuç cümlesine basıp orada yazılır; "+ Madde ekle / + Sütun / + Alan ekle / + Değer ekle" yerinde yeni
+  satır / sütun açar ve adını yazdırır; "×" çıkarır; ayrıntılar (tür, seçenek, sınır, birim, standart, talimat) öğenin ayar tuşunda; bölüm şeridinde
+  yukarı / aşağı, ayarlar, sil; bölümler arasında "Buraya bölüm ekle", sonda "Bölüm ekle". "Belge önizlemesi" aynı taslağı PDF'le aynı çiziciden
+  boş bir raporda gösterir. Telefonda belge önizlemesi. Kaydet / Vazgeç / Yayınla ve kilitli (Bakanlık) öğe kuralları aynı. Deneme makinesi
+  kurucunun ekran görüntülerini her koşuda yükler (e2e-goz/) — PC'de yerel sunucu olmadığından ekrana oradan bakılır.
+- 2026-10-09 (450): **Yeni türde "PDF yükleyin" kalktı; rapor formatı hazır gelir** (reisim: *"her raporun görüntüsü, bakanlık formatından sana
+  attığım pdf deki gibi olacak demiştim standart olarak pdf formatı yükleyin diyor hala yeni tür ekleyince, default olarak makette yaptıklarımız gibi
+  olacak"*). Rapor yayındaki şablondan yazılır, belge Bakanlık görünümünde çizilir — PDF hiç gerekmiyordu, ekran yine de "PDF yüklenince bu türde
+  rapor oluşturulur" diyordu. Artık yeni tür eklenince maketteki gibi Ek-III grubuna göre kurulmuş format (firma bilgileri, ekipman bilgileri +
+  grubun alanları, ölçüm cihazları, grubun muayene kriterleri, test değerleri, fotoğraf, kusur, yorum, sonuç, imza) kendiliğinden YAYINDA (sürüm 1)
+  gelir, aynı işlemde; formatı hiç olmayan eski türler hazır kurulumda bir kez tamamlanır. Ekipman yüke / basınca bağlı sınırlar sabit sayı değil not
+  ("anma yükünün %110'u"). Tür sayfasında "Rapor formatı" yüzü yayındaki şablonu gösterir; PDF bölümü "Basılı format PDF'i — isteğe bağlı" oldu
+  (tuşu "Format PDF'i yükle"); listede "Rapor formatı: Yayında / Yayında değil".
 - 2026-10-09 (453): **Deneme makinesinin bulguları**. Plan içinde kabulden önce de "Plandaki ekipmanlar" (kod · tür · konum; elle eklenenler dahil) —
   eskiden ekipmanlar ancak kabulden sonra Denetim adımında görünüyordu, elle eklenen ekipmanın plana girdiği görülemiyordu. Site taramasının dengesiz
   kart denetimi artık bulgu (kilit): ilk koşuda tek bulgu Firma ayarlarının sütunlu (gazete) yerleşimiydi — orada kartlar alt alta oturur, kısa kartın

@@ -20,7 +20,7 @@ const DEGER_TUR: readonly (readonly [OgeTuru, string])[] = [["sayi", "Sayı"], [
 const SINIR_SECENEK = [["", "Sınır yok"], ...SINIRLAR.map((o) => [o, `${SINIR_ISARETI[o]} ${o === "<=" ? "(en çok)" : o === ">=" ? "(en az)" : o === "<" ? "(küçük)" : "(büyük)"}`] as const)] as const;
 
 /** çok satırlı metin: yazarken kendi durumunda, alandan çıkınca işlenir */
-function SatirAlani({ id, etiket, deger, uygula, ipucu, kapali = false, satir = 4 }:
+export function SatirAlani({ id, etiket, deger, uygula, ipucu, kapali = false, satir = 4 }:
   { id: string; etiket: string; deger: string; uygula: (s: string) => void; ipucu?: string; kapali?: boolean; satir?: number }) {
   const [taslak, setTaslak] = useState<string | null>(null);
   return (

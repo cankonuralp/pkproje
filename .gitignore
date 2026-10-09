@@ -31,4 +31,5 @@ Claude outputs/
 
 # uçtan uca test çıktıları (Playwright)
 /test-results/
+/e2e-goz/
 /playwright-report/
