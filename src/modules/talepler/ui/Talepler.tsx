@@ -2,6 +2,7 @@
 /* TALEPLERİM (maket talepler.html — SUTUN, ozetCiz, izinCiz, masrafCiz, talepCiz; 330): yıllık izin özeti, izin talepleri ve masraf formları tek
    listede (en yeni üstte; tür ve durum çipleri, yıl seçicisi), "İzin talebi" ve "Masraf formu" pencereleri, talep penceresi (ayrıntı, belge —
    onay beklerken eklenir / değiştirilir / kaldırılır, "Talebi geri çek"). Karar sunucuda; talep yalnız kişinin kendi adına. */
+import Link from "next/link";
 import { useRouter } from "next/navigation";
 import { useRef, useState, useTransition } from "react";
 import { Bilgi, BilgiListesi, Yuz, Yuzler } from "../../../components/bilgi/Bilgi";
@@ -23,6 +24,7 @@ import { Tus, tusSinifi } from "../../../components/tus/Tus";
 import { tutar as tutarSema } from "../../../sema/ortak";
 import { GIDER_DURUM, GIDER_TUR, giderKdv, KDV_ORAN, para, type GiderTuru } from "../../muhasebe/sema";
 import type { MasrafFormu } from "../../muhasebe/server/talep-baglanti";
+import type { BekleyenTalep } from "../../anasayfa/server/takip";
 import { isGunu, IZIN_DURUM, IZIN_TUR, type IzinTuru } from "../sema";
 import type { IzinTalebi, Taleplerim } from "../server/talepler";
 import { izinBelgesiEylemi, izinGeriCekEylemi, izinGonderEylemi, masrafBelgesiEylemi, masrafGeriCekEylemi, masrafGonderEylemi, type TalepYaniti } from "./eylemler";
@@ -61,7 +63,8 @@ function tanim(l: readonly Talep[]): SuzgecTanimi<Talep> {
 }
 
 type Pen = null | { tip: "izin" } | { tip: "masraf" } | { tip: "talep"; t: Talep };
-export function TaleplerSayfasi({ v, bugun }: { v: Taleplerim; bugun: string }) {
+/** 456: bekleyen — kişiye iletilen, karar bekleyen talepler (yan menüdeki sarı sayı); kişinin kendi talepleri listede */
+export function TaleplerSayfasi({ v, bugun, bekleyen = [] }: { v: Taleplerim; bugun: string; bekleyen?: BekleyenTalep[] }) {
   const l: Talep[] = [...v.izinler.map((x) => ({ tip: "izin" as const, x })), ...v.masraflar.map((x) => ({ tip: "masraf" as const, x }))];
   const s = useSuzgec(tanim(l), l);
   const [p, setP] = useState<Pen>(null);
@@ -80,6 +83,18 @@ export function TaleplerSayfasi({ v, bugun }: { v: Taleplerim; bugun: string }) 
         <Tus tur="ikincil" ikon="plus" onClick={() => setP({ tip: "izin" })}>İzin talebi</Tus>
         <Tus ikon="plus" onClick={() => setP({ tip: "masraf" })}>Masraf formu</Tus>
       </>} />
+      {bekleyen.length > 0 && <div className={stil.bekleyen}><Serit tur="uyari" ikon="inbox">
+        <span>Onayınızı bekleyen {bekleyen.length} talep (yan menüdeki sarı sayı):{" "}
+          {bekleyen.filter((b) => b.tip === "izin").length > 0 && <>
+            <Link href="/personel/izinler">{bekleyen.filter((b) => b.tip === "izin").length} izin talebi</Link>{" "}
+            ({bekleyen.filter((b) => b.tip === "izin").map((b) => `${b.no} · ${b.kisi} · ${b.ozet}`).join("; ")})
+          </>}
+          {bekleyen.some((b) => b.tip === "izin") && bekleyen.some((b) => b.tip === "masraf") && " · "}
+          {bekleyen.filter((b) => b.tip === "masraf").length > 0 && <>
+            <Link href="/muhasebe/giderler">{bekleyen.filter((b) => b.tip === "masraf").length} masraf formu</Link>{" "}
+            ({bekleyen.filter((b) => b.tip === "masraf").map((b) => `${b.no} · ${b.kisi}${b.ozet ? ` · ${b.ozet}` : ""}`).join("; ")})
+          </>}. Aşağıdaki liste sizin kendi talepleriniz.</span>
+      </Serit></div>}
       <Yuzler>
         <Yuz ikon="calendar" ad="Yıllık izin hakkı" sayi={`${o.hak} gün`} not={o.yil} />
         <Yuz ikon="calendar-check" ad="Kullanılan" sayi={`${o.kullanilan} gün`} not={o.bekleyen ? `${o.bekleyen} gün onay bekliyor` : undefined} />

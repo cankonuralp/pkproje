@@ -7,7 +7,7 @@ import type { GomuluKume } from "../src/server/db/gomulu.ts";
 import { havuzKur, kiraciIcinde, type Havuz, type Sorgulayici } from "../src/server/db/kiraci.ts";
 import { gunEkle } from "../src/modules/muhasebe/sema.ts";
 import { anaSayfa, bugunTr, type AnaSayfa, type Kisi } from "../src/modules/anasayfa/server/anasayfa.ts";
-import { isgEksikTakip, menuTakip } from "../src/modules/anasayfa/server/takip.ts";
+import { isgEksikTakip, menuTakip, talepTakip } from "../src/modules/anasayfa/server/takip.ts";
 import { taslakBaslat, yayinla } from "../src/modules/rapor-format/server/formatlar.ts";
 import { testKumesi } from "./yardimci/kume.ts";
 
@@ -187,4 +187,16 @@ test("Araçlar balonu: geçen hafta girilmeyen kilometre ve süresi geçen muaye
   assert.equal((await a(PLAN, (db) => menuTakip(db, PLAN)))[23], undefined, "planlama: kendi aracı yok");
   assert.equal((await a(MUH, (db) => menuTakip(db, MUH)))[23], undefined, "muhasebe Araçlar'ı görmez");
   assert.equal((await a(YON_B, (db) => menuTakip(db, YON_B), B))[23], undefined, "B'de A'nın aracı yok");
+});
+
+/* 456 (reisim 2026-10-09: "Talpelerde 3 yazıyor baloncuk içinde ama tıklayınca hiç bir şey gözükmüyor"): Talepler sayfası balonun taleplerini
+   gösterir — balonla aynı süzgeç (izin talebi: karar veren firma yöneticisi), sayısı balonla aynı; talep eden kendi balonunda görmez */
+test("456 Talepler balonu: onay bekleyen talepler sayfada, sayısı balonla aynı; talep eden ve başka firma görmez", async () => {
+  const denP = (await a(DEN, (db) => db.sorgu<{ id: string }>("SELECT personel_id::text AS id FROM hesap WHERE id = $1", [DEN.id]))).rows[0].id;
+  await a(DEN, (db) => db.sorgu("INSERT INTO izin_talebi (no, personel_id, tur, bas, bit, gun) VALUES ('I-1026-901', $1, 'yillik', $2, $2, 1) RETURNING id::text", [denP, g(20)]));
+  const l = await a(YON, (db) => talepTakip(db, YON));
+  assert.ok(l.some((x) => x.tip === "izin" && x.no === "I-1026-901" && x.kisi), JSON.stringify(l));
+  assert.equal((await a(YON, (db) => menuTakip(db, YON)))[21]?.sari, l.length, "sayfadaki talepler = balon");
+  assert.deepEqual(await a(DEN, (db) => talepTakip(db, DEN)), [], "talep eden karar vermez");
+  assert.deepEqual(await a(YON_B, (db) => talepTakip(db, YON_B), B), [], "B'de A'nın talebi yok");
 });

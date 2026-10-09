@@ -31,6 +31,20 @@ export async function isgEksikTakip(db: Sorgulayici, kim: Kisi & YetkiHesabi): P
   return isgEksikPlanlar(db, (await anaPlanlar(db)).filter((p) => hep || (!!ben && p.ekip.includes(ben))));
 }
 
+/** 456: Talepler balonunun talepleri — kişiye iletilen, karar bekleyen izin talepleri (karar veren) ve masraf formları (Muhasebe'yi
+    değiştiren); balonla AYNI süzgeç. Talepler sayfası gösterir (reisim 2026-10-09: "Talpelerde 3 yazıyor baloncuk içinde ama tıklayınca hiç
+    bir şey gözükmüyor") — sayfa kişinin KENDİ taleplerini listeliyordu. */
+export interface BekleyenTalep { tip: "izin" | "masraf"; id: string; no: string; kisi: string; ozet: string }
+export async function talepTakip(db: Sorgulayici, kim: Kisi & YetkiHesabi): Promise<BekleyenTalep[]> {
+  if (duzey(kim, 21) === "yok") return [];
+  const d18 = duzey(kim, 18);
+  const izin = ((await izinTalepleri(db, kim)) ?? []).filter((x) => x.durum === "bekliyor")
+    .map((x): BekleyenTalep => ({ tip: "izin", id: x.id, no: x.no, kisi: x.personel, ozet: `${x.gun} gün` }));
+  const masraf = d18 === "yaz" ? ((await giderListesi(db, kim)) ?? []).filter((g) => g.kaynak === "form" && g.durum === "bekliyor")
+    .map((g): BekleyenTalep => ({ tip: "masraf", id: g.id, no: g.no, kisi: g.personel?.ad ?? "", ozet: g.aciklama ?? "" })) : [];
+  return [...izin, ...masraf];
+}
+
 export async function menuTakip(db: Sorgulayici, kim: Kisi & YetkiHesabi): Promise<MenuTakip> {
   const t: MenuTakip = {}, bugun = bugunTr();
   const gor = (m: Parameters<typeof duzey>[1]) => duzey(kim, m) !== "yok";
@@ -73,12 +87,8 @@ export async function menuTakip(db: Sorgulayici, kim: Kisi & YetkiHesabi): Promi
       { kirmizi: "24 saati geçen imza / onay bekleyen rapor", sari: "imzanızı ya da onayınızı bekleyen rapor / belge" });
   }
 
-  /* talepler (21): size iletilen bekleyen — izin (karar veren) ve masraf formu (Muhasebe'yi değiştiren) */
-  if (gor(21)) {
-    const izin = (await izinTalepleri(db, kim))?.filter((x) => x.durum === "bekliyor").length ?? 0;
-    const masraf = hepsi(18) && duzey(kim, 18) === "yaz" ? ((await giderListesi(db, kim)) ?? []).filter((g) => g.kaynak === "form" && g.durum === "bekliyor").length : 0;
-    koy(21, 0, izin + masraf, { kirmizi: "", sari: "size iletilen bekleyen talep" });
-  }
+  /* talepler (21): size iletilen bekleyen — izin (karar veren) ve masraf formu (Muhasebe'yi değiştiren); 456: hangileri olduğu Talepler sayfasında */
+  if (gor(21)) koy(21, 0, (await talepTakip(db, kim)).length, { kirmizi: "", sari: "onayınızı bekleyen izin talebi / masraf formu" });
 
   /* muhasebe (18): vadesi geçen fatura */
   if (hepsi(18)) koy(18, ((await faturaListesi(db, kim)) ?? []).filter((f) => f.durum === "gecikti").length, 0, { kirmizi: "vadesi geçen fatura", sari: "" });

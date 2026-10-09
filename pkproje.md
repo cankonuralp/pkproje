@@ -2355,6 +2355,11 @@ revizyon, alan kopyalama, hafif kusur devri, meslek eşleşme denetimi).
 - Emsal ürünler: https://opwire.app/iso-17020-periyodik-kontrol-yazilimi/ · https://17020muayene.vidco.com.tr/ · https://akuple.com/asansor-kontrol-yazilimi/ · https://ensyazilim.com/
 
 ## 11 · Değişiklik günlüğü
+- 2026-10-09 (456): **Talepler balonunun sebebi sayfada** (reisim: *"Talpelerde 3 yazıyor baloncuk içinde ama tıklayınca hiç bir şey gözükmüyor. ?"*).
+  Sayı, kişiye iletilen ve kararını bekleyen izin talepleri (firma yöneticisi) ile masraf formlarıdır (Muhasebe'yi değiştiren); Talepler sayfası
+  ise kişinin KENDİ taleplerini listeliyordu. Artık sayfanın üstünde sarı şerit: kaç izin talebi (İzin talepleri ekranına bağlantı), kaç masraf
+  formu (Muhasebe › Giderler'e bağlantı), numara · kişi · gün. Şeritteki talepler balonla aynı süzgeçten (anasayfa takip.ts talepTakip; testle
+  kilitli: sayı = balon, talep eden ve başka firma görmez).
 - 2026-10-09 (455): **442–453 YAYINDA** (main 806c3da; göç yok — 0078 / 79; sağlık "tamam", duman 10/10). Reisim: *"reisim önce sunum yapıyoduk
   sonra onay alıp yapıyorduk ? tüm kurallarımızı unuttun heralde direk dalmışssın işe ? … ben isteyenin istediği gibi bir şey yapabileceği bir sistem
   düşünüyorum"* → ANAYASA 2.1 / 2.10 / 0.12 çiğnendi: 450 (yeni türe hazır format) ve 451 (kâğıt kurucu) maket ve onay olmadan kodlandı. Reisim:

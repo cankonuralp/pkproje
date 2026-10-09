@@ -12,3 +12,5 @@
 .metin { width: 100%; min-height: 96px; padding: 8px 10px; border: 1px solid var(--kenar-alan); border-radius: var(--r-orta); background: var(--kart); color: var(--yazi); font: inherit; resize: vertical; }
 .sayi { font-variant-numeric: tabular-nums; }
 .uyari { color: var(--uyari-yazi); font-weight: 600; }
+/* 456: onay bekleyen talepler şeridi (sayfa başlığıyla yüzler arasında) */
+.bekleyen { margin: 12px 0 0; }
