@@ -1,7 +1,9 @@
 "use client";
 /* ANA SAYFA (maket anasayfa.html M1 2. tur — BOLUM, PLAN_SUTUN, KUYRUK_SUTUN, TESIS_SUTUN, duyurularHtml; 332): rol başına bölüm (bilgi yüzleri +
    iş listesi), birden çok rolü olan alt alta; "Plan aç" yalnız plan açabilene; duyurular (379: okunan Bakanlık duyuruları, en yeni üstte, yeni
-   sekmede; okunamadıysa uyarı şeridi, son liste durur) ve kaynak bağlantıları. Yalnız ekranda; hitap yok. */
+   sekmede; okunamazsa son liste durur, tazeliği sayaçtaki "güncellendi" zamanından) ve kaynak bağlantıları. Yalnız ekranda; hitap yok.
+   462 (reisim 2026-10-09, hata listesi: "böyle kalsın ama uyarı yazısı kalksın"): "… duyuruları alınamadı" şeridi kalktı — iş ekipmanları
+   portalı yurt dışından (sunucu Frankfurt'ta) hiç okunamıyor, şerit hep görünüyordu; okunamayan kaynak sağlık denetiminde ve iş kaydında kalır. */
 import Link from "next/link";
 import { Kosullar, Yuz, Yuzler } from "../../../components/bilgi/Bilgi";
 import { Ikon } from "../../../components/ikon/Ikon";
@@ -73,10 +75,6 @@ function Duyurular({ d }: { d: Veri["duyuru"] }) {
       sayac={<span className={stil.alt}><b>{d.liste.length}</b> duyuru{d.guncellendi ? ` · güncellendi ${zamanYaz(d.guncellendi)}` : ""}</span>}
       tuslar={<>{KAYNAKLAR.map(([ad, url]) => (
         <a key={ad} className={tusSinifi("ikincil")} href={url} target="_blank" rel="noopener noreferrer"><Ikon ad="arrow-right" kucuk />{ad}</a>))}</>}>
-      {/* 390: hangi kaynak alınamadı (ötekiler okunduysa "Duyurular alınamadı" hepsi gibi okunuyordu); takılan okumada ad yok */}
-      {d.hata && <SeritKap><Serit tur="uyari" ikon="triangle-alert">{d.hatali.length && d.hatali.length < KAYNAKLAR.length
-        ? `${d.hatali.map((k) => KAYNAK_AD[k]).join(", ")} duyuruları alınamadı; son alınan liste gösteriliyor.`
-        : "Duyurular alınamadı; son alınan liste gösteriliyor."}</Serit></SeritKap>}
       {d.liste.length
         ? <Kosullar ogeler={d.liste.map((x) => ({ tur: "bilgi" as const, ikon: "scroll-text", metin: <>
             <a className={stil.baglanti} href={x.url} target="_blank" rel="noopener noreferrer">{x.baslik}</a>
