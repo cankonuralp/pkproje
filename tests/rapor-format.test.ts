@@ -10,7 +10,7 @@ import type { GomuluKume } from "../src/server/db/gomulu.ts";
 import { havuzKur, kiraciIcinde, type Havuz, type Sorgulayici } from "../src/server/db/kiraci.ts";
 import { turKaydet, type Kisi as TurKisi } from "../src/modules/ekipman-turleri/server/turler.ts";
 import {
-  formatAyrintisi, formatSurumleri, formatSurumuOku, taslakBaslat, taslakKaydet, yayinDenetle, yayindakiFormat, yayinla, type Kisi,
+  formatAyrintisi, formatSurumleri, formatSurumuOku, sablondanTurEkle, sablonKullanimi, taslakBaslat, taslakKaydet, yayinDenetle, yayindakiFormat, yayinla, type Kisi,
 } from "../src/modules/rapor-format/server/formatlar.ts";
 import { MATRIS_ONERI } from "../src/server/yetki/tanim.ts";
 import { testKumesi } from "./yardimci/kume.ts";
@@ -245,4 +245,29 @@ test("KİRACI: B, A'nın sürümlerini göremez, başlatamaz, kaydedemez, yayın
   await assert.rejects(b(MEK_B, (db) => db.sorgu("INSERT INTO rapor_format (firma_id, tur_id, sema, tanim, olusturan) VALUES ($1, $2, 1, '{}', 'x')", [A, tur])), /row-level security|satır düzeyi/i);
   const g = (await b(MEK_B, (db) => db.sorgu("UPDATE rapor_format SET notu = 'ele geçirdim' WHERE id = $1", [t.id]))).rowCount;
   assert.equal(g, 0, "RLS: başka firmanın satırı görünmez, güncellenmez");
+});
+
+/* 2026-10-09 (436; reisim: "EKİPMAN TÜRLERİNDE BAKANLIK FORMATLARINI DA GÖREMEDİM"): hazır şablondan tür — tür + şablondan taslak TEK işlemde
+   (kod çakışırsa hiçbiri yazılmaz), iki yetki de gerekir; şablon kullanımı türün yayındaki (yoksa taslak) sürümünün kaynağından, başka firma görmez. */
+test("436 şablondan tür: tür + taslak tek işlemde; kod çakışırsa hiçbiri; yetkisiz eklemez; kullanım haritası firmaya özel", async () => {
+  const girdi = { ad: "Yıldırımdan korunma tesisatı", kod: "YKT", grup: "elektrik", brans: "", periyot: "12", sure: "" };
+  assert.deepEqual(await a(PLAN, (db) => sablondanTurEkle(db, PLAN, "ZPKR03", girdi)), { durum: "yetkisiz" }, "planlama türe yazamaz");
+  assert.deepEqual(await a(ELK, (db) => sablondanTurEkle(db, ELK, "YOK", girdi)), { durum: "gecersiz", hatalar: { sablon: "Şablon bulunamadı." } });
+  const r = tamam(await a(ELK, (db) => sablondanTurEkle(db, ELK, "ZPKR03", girdi)));
+  const l = (await a(ELK, (db) => formatSurumleri(db, ELK, r.turId)))!;
+  assert.deepEqual(l.map((x) => [x.id, x.durum, x.kaynak]), [[r.formatId, "taslak", "ZPKR03"]]);
+  /* aynı kodla ikinci kez: tür yazılmaz, taslak da yok */
+  const once = (await a(ELK, (db) => db.sorgu("SELECT count(*)::int AS n FROM rapor_format"))).rows[0];
+  const iki = await a(ELK, (db) => sablondanTurEkle(db, ELK, "ZPKR04", { ...girdi, ad: "Başka tür" }));
+  assert.equal(iki.durum, "gecersiz");
+  assert.match(iki.durum === "gecersiz" ? iki.hatalar.kod ?? "" : "", /YKT kodu/);
+  assert.deepEqual((await a(ELK, (db) => db.sorgu("SELECT count(*)::int AS n FROM rapor_format"))).rows[0], once, "taslak yazılmadı");
+  /* kullanım: taslak → yayında; başka firma boş */
+  assert.deepEqual((await a(ELK, (db) => sablonKullanimi(db, ELK)))!.ZPKR03, [{ turId: r.turId, durum: "taslak" }]);
+  tamam(await a(ELK, (db) => yayinla(db, ELK, r.formatId, 0, "")));
+  assert.deepEqual((await a(ELK, (db) => sablonKullanimi(db, ELK)))!.ZPKR03, [{ turId: r.turId, durum: "yayinda" }]);
+  assert.equal((await b(MEK_B, (db) => sablonKullanimi(db, MEK_B)))!.ZPKR03, undefined, "başka firma görmez");
+  assert.equal(await a(MUH, (db) => sablonKullanimi(db, MUH)), null, "muhasebe görmez");
+  /* kitaplıkta her şablonun önerdiği tür şemadan geçer (2–3 harf kod, Ek-III grubu, periyot) */
+  for (const [k, s] of Object.entries(SABLONLAR)) assert.match(s.tur.kod, /^[A-Z]{2,3}$/, k);
 });

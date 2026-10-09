@@ -2355,6 +2355,13 @@ revizyon, alan kopyalama, hafif kusur devri, meslek eşleşme denetimi).
 - Emsal ürünler: https://opwire.app/iso-17020-periyodik-kontrol-yazilimi/ · https://17020muayene.vidco.com.tr/ · https://akuple.com/asansor-kontrol-yazilimi/ · https://ensyazilim.com/
 
 ## 11 · Değişiklik günlüğü
+- 2026-10-09 (436): **Bakanlık rapor formatları Ekipman türleri'nde** (reisim: *"EKİPMAN TÜRLERİNDE BAKANLIK FORMATLARINI DA GÖREMEDİM ?"*). Şablonlar
+  yalnız bir türün içinden "Şablondan başlat"la açılıyordu; canlıdaki firmada henüz hiç tür yok → hiçbir yerde görünmüyordu. Ekipman türleri'nde
+  Elektrik sekmesinin altında **"Bakanlık rapor formatları"** (ZPKR01–05), Mekanik sekmesinde "Hazır rapor formatları" (kompresör): form kodu ve
+  başlık (önizleme sayfasına), formatı kullanan tür (Yayında / Taslak) ve **"Tür olarak ekle"** — pencere önerili ad / kod / periyotla açılır
+  (ör. "Yıldırımdan korunma tesisatı" · YKT · 12 ay), kaydedince tür + o formattan taslak TEK işlemde, taslağın sayfasına gider (önizleyip
+  yayınlanır). Önizleme sayfası /ekipman-turleri/sablon/<ZPKR…>: başlık, Bakanlık formatı rozeti, kriter belgesi bağlantısı, bölüm / madde /
+  kilitli öğe sayısı, dayanak, saha ekranı önizlemesi. Şablon kaydında önerilen tür (src/format/sablonlar.ts SablonKaydi.tur).
 - 2026-10-09 (435): **425–434 YAYINDA** — Supabase göç 0077 (e-posta kuyruğu + plan.bilgilendirme; 78 göç; satır kilidi, dış API kapalı,
   uygulama rolüne silme yok — denetlendi), main = bbb50b9 (Vercel READY), sağlık ucu "tamam" (göç güncel), duman 10/10, çalışma hatası yok.
   Deneme makinesinde son tur bütün işler yeşil (masaüstü 2/2 yönetim testi bir kez zaman aşımına düştü — benim değiştirmediğim akış; yalnız o

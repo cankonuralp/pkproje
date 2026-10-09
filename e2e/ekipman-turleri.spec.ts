@@ -101,3 +101,38 @@ test("ekipman türü: kullanılmamış tür silinir, kod serbest kalır", async 
   await expect(page.getByRole("link", { name: ad })).toHaveCount(0);
   await ekle();
 });
+
+/* 436 (reisim 2026-10-09: "EKİPMAN TÜRLERİNDE BAKANLIK FORMATLARINI DA GÖREMEDİM"): Elektrik sekmesinde Bakanlık rapor formatları listelenir
+   (tür eklenmeden de) → önizleme sayfası → "Tür olarak ekle" (ad / kod / periyot önerili) → tür + şablondan taslak → taslağın sayfası; listede
+   formatı kullanan tür görünür. Mekanik sekmesinde hazır şablon (kompresör), Bakanlık formatı yok. */
+test("Bakanlık rapor formatları: listede görünür, önizlenir, tür olarak eklenir (taslak hazır)", async ({ page }, bilgi) => {
+  const on = { masaustu: "MS", tablet: "TB", telefon: "TL" }[bilgi.project.name] ?? "XX";
+  const kod = `Y${on.slice(0, 1)}${"ABCDEFGH"[bilgi.retry]}`;
+  await girisli(page, "yonetici");
+  await page.goto("/ekipman-turleri?brans=e");
+  await hazir(page);
+  const liste = page.getByRole("region", { name: "Bakanlık rapor formatları" });
+  for (const k of ["ZPKR01", "ZPKR02", "ZPKR03", "ZPKR04", "ZPKR05"]) await expect(liste.getByRole("link", { name: k })).toBeVisible();
+  await liste.getByRole("link", { name: "ZPKR03" }).click();
+  await expect(page.getByRole("heading", { level: 1, name: "Yıldırımdan Korunma Tesisatı Periyodik Kontrol Raporu" })).toBeVisible({ timeout: 30_000 });
+  await expect(page.getByText("Bakanlık formatı", { exact: true })).toBeVisible();
+  await expect(page.getByRole("link", { name: "ZPKK03 kontrol kriterleri" })).toBeVisible();
+  await expect(page.getByText("Koruma borusu tesis edilmiş midir?").first()).toBeVisible();
+  await page.getByRole("button", { name: "Tür olarak ekle" }).click();
+  const p = page.getByRole("dialog", { name: "Tür ekle · ZPKR03" });
+  await expect(p.getByLabel("Tür adı")).toHaveValue("Yıldırımdan korunma tesisatı");
+  await expect(p.getByLabel("Kod")).toHaveValue("YKT");
+  await p.getByLabel("Tür adı").fill(`Yıldırımdan korunma ${kod}`);
+  await p.getByLabel("Kod").fill(kod);
+  await p.getByRole("button", { name: "Kaydet" }).click();
+  await expect(page).toHaveURL(/\/ekipman-turleri\/[0-9a-f-]{36}\/sablon\/[0-9a-f-]{36}$/, { timeout: 30_000 });
+  await expect(page.getByText("Taslak", { exact: true }).first()).toBeVisible();
+  await expect(page.getByText("Koruma borusu tesis edilmiş midir?").first()).toBeVisible();
+  await page.goto("/ekipman-turleri?brans=e");
+  await hazir(page);
+  await expect(liste.getByRole("link", { name: `Yıldırımdan korunma ${kod}` })).toBeVisible();
+  await page.goto("/ekipman-turleri");
+  await hazir(page);
+  await expect(page.getByRole("region", { name: "Hazır rapor formatları" }).getByRole("link", { name: "Kompresör (genel)" })).toBeVisible();
+  await expect(page.getByRole("region", { name: "Bakanlık rapor formatları" })).toHaveCount(0);
+});

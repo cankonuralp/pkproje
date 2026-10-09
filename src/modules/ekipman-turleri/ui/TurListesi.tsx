@@ -10,6 +10,7 @@ import { AltSatir, Rozet, SayfaBasi, Sekmeler } from "../../../components/sayfa/
 import { Tus } from "../../../components/tus/Tus";
 import { GRUPLAR, grupBul } from "../sema";
 import type { TurSatiri } from "../server/turler";
+import { HazirFormatlar, type HazirFormat } from "./HazirFormatlar";
 import { TurPenceresi } from "./Pencereler";
 import { tarihYaz } from "./ortak";
 import stil from "./turler.module.css";
@@ -33,7 +34,8 @@ const SUTUNLAR: Sutun<TurSatiri>[] = [
     : <Rozet tur="bekliyor">Yüklenmedi</Rozet> },
 ];
 
-export function TurListesi({ kayitlar, brans, sayilar, ekleyebilir }: { kayitlar: TurSatiri[]; brans: "m" | "e"; sayilar: { m: number; e: number }; ekleyebilir: boolean }) {
+export function TurListesi({ kayitlar, brans, sayilar, ekleyebilir, hazir, sablondanEkler }:
+  { kayitlar: TurSatiri[]; brans: "m" | "e"; sayilar: { m: number; e: number }; ekleyebilir: boolean; hazir: HazirFormat[]; sablondanEkler: boolean }) {
   const s = useSuzgec(tanim(brans), kayitlar);
   const [pencere, setPencere] = useState(false);
   return (
@@ -42,7 +44,8 @@ export function TurListesi({ kayitlar, brans, sayilar, ekleyebilir }: { kayitlar
       <Sekmeler ad="Branşlar" ogeler={[[`Mekanik (${sayilar.m})`, "/ekipman-turleri"], [`Elektrik (${sayilar.e})`, "/ekipman-turleri?brans=e"]]}
         secili={brans === "e" ? "/ekipman-turleri?brans=e" : "/ekipman-turleri"} />
       <SuzgecliListe s={s} on="t" baslik="Ekipman türleri" sutunlar={SUTUNLAR} anahtar={(t) => t.id} href={(t) => `/ekipman-turleri/${t.id}`}
-        bosVeri={{ ikon: "layers", baslik: "Ekipman türü yok", metin: "“Tür ekle” ile ilk tür ve rapor formatı eklenir." }} />
+        bosVeri={{ ikon: "layers", baslik: "Ekipman türü yok", metin: hazir.length ? "“Tür ekle” ile ya da aşağıdaki hazır rapor formatlarından tür eklenir." : "“Tür ekle” ile ilk tür ve rapor formatı eklenir." }} />
+      <HazirFormatlar formatlar={hazir} brans={brans} ekleyebilir={sablondanEkler} />
       {pencere && <TurPenceresi kapat={() => setPencere(false)} brans={brans} />}
     </>
   );

@@ -10,6 +10,7 @@ import { SecimAlani } from "../../../components/secim/SecimAlani";
 import { Serit } from "../../../components/serit/Serit";
 import { Tus } from "../../../components/tus/Tus";
 import { bransAd, GRUPLAR, grupBul } from "../sema";
+import { sablondanTurEkleEylemi } from "../../rapor-format/ui/eylemler";
 import { formatYukleEylemi, turKaydetEylemi } from "./eylemler";
 import stil from "./turler.module.css";
 
@@ -22,24 +23,31 @@ const GRUP_SEC = GRUPLAR.map((g) => [g.k, g.ad, g.b ? bransAd(g.b) : "branş se�
 const BRANS_SEC = [["m", "Mekanik"], ["e", "Elektrik"]] as const;
 
 export interface TurDegeri { id: string; surum: number; kod: string; ad: string; grup: string; brans: "m" | "e"; periyot: number; sure: number | null }
+/** 436: hazır şablondan tür — pencere önerilen ad / kod / grup / periyotla açılır; kaydedince tür + şablondan taslak (rapor-format) */
+export interface SablonOnerisi { anahtar: string; ad: string; tur: { ad: string; kod: string; grup: string; periyot: number } }
 
-export function TurPenceresi({ kapat, tur, brans }: { kapat: () => void; tur?: TurDegeri; brans?: "m" | "e" }) {
+export function TurPenceresi({ kapat, tur, brans, sablon }: { kapat: () => void; tur?: TurDegeri; brans?: "m" | "e"; sablon?: SablonOnerisi }) {
   const router = useRouter();
   const bildir = useBildir();
   const [bekliyor, baslat] = useTransition();
   const [d, setD] = useState<Record<Alan_, string>>({
-    ad: tur?.ad ?? "", kod: tur?.kod ?? "", grup: tur?.grup ?? "", brans: tur?.brans ?? brans ?? "",
-    periyot: tur ? String(tur.periyot) : "", sure: tur?.sure ? String(tur.sure) : "",
+    ad: tur?.ad ?? sablon?.tur.ad ?? "", kod: tur?.kod ?? sablon?.tur.kod ?? "", grup: tur?.grup ?? sablon?.tur.grup ?? "", brans: tur?.brans ?? brans ?? "",
+    periyot: tur ? String(tur.periyot) : sablon ? String(sablon.tur.periyot) : "", sure: tur?.sure ? String(tur.sure) : "",
   });
   const [h, setH] = useState<Record<string, string>>({});
   const [genel, setGenel] = useState<string | null>(null);
   const ekdisi = !!d.grup && grupBul(d.grup)?.b === null;
   const kaydet = () => baslat(async () => {
-    const r = await turKaydetEylemi(tur?.id ?? null, tur?.surum ?? 0, { ...d, brans: ekdisi ? d.brans : "" });
-    setH(r.hatalar ?? {}); setGenel(r.genel ?? null);
+    const girdi = { ...d, brans: ekdisi ? d.brans : "" };
+    const r = sablon ? await sablondanTurEkleEylemi(sablon.anahtar, girdi) : await turKaydetEylemi(tur?.id ?? null, tur?.surum ?? 0, girdi);
+    setH(r.hatalar ?? {}); setGenel(r.genel ?? r.hatalar?.sablon ?? null);
     if (!r.tamam) { const k = Object.keys(r.hatalar ?? {})[0] as Alan_ | undefined; if (k && ID[k]) requestAnimationFrame(() => document.getElementById(ID[k])?.focus()); return; }
     kapat();
-    if (tur) { bildir("Tür güncellendi."); router.refresh(); } else { bildir(`${d.ad.trim()} eklendi.`); router.push(`/ekipman-turleri/${r.id}`); }
+    if (tur) { bildir("Tür güncellendi."); router.refresh(); }
+    else if (sablon && "formatId" in r && r.formatId) {
+      bildir(`${d.ad.trim()} eklendi; rapor şablonu ${sablon.ad} formatından taslak olarak hazırlandı. Önizleyip yayınlayın.`);
+      router.push(`/ekipman-turleri/${r.id}/sablon/${r.formatId}`);
+    } else { bildir(`${d.ad.trim()} eklendi.`); router.push(`/ekipman-turleri/${r.id}`); }
   });
   const G = (k: "ad" | "kod" | "periyot" | "sure", etiket: string, o: { zorunlu?: boolean; genis?: boolean; sonuc?: string; tip?: React.InputHTMLAttributes<HTMLInputElement> } = {}) => (
     <Alan id={ID[k]} etiket={etiket} zorunlu={o.zorunlu} genis={o.genis} hata={h[k]} sonuc={o.sonuc}>
@@ -47,8 +55,9 @@ export function TurPenceresi({ kapat, tur, brans }: { kapat: () => void; tur?: T
     </Alan>
   );
   return (
-    <Pencere acik baslik={tur ? `${tur.ad} · düzenle` : "Tür ekle"} onKapat={kapat} odak={`#${ID.ad}`} genis
+    <Pencere acik baslik={tur ? `${tur.ad} · düzenle` : sablon ? `Tür ekle · ${sablon.ad}` : "Tür ekle"} onKapat={kapat} odak={`#${ID.ad}`} genis
       alt={<><Tus tur="ikincil" onClick={kapat}>Vazgeç</Tus><Tus ikon="check" disabled={bekliyor} aria-busy={bekliyor || undefined} onClick={kaydet}>Kaydet</Tus></>}>
+      {sablon && <p className={pencereMetinSinifi}>Tür eklenir ve rapor şablonu <b>{sablon.ad}</b> formatından taslak olarak hazırlanır; önizleyip yayınlarsınız.</p>}
       {genel && <Serit tur="hata" ikon="circle-alert">{genel}</Serit>}
       <FormIzgara>
         {G("ad", "Tür adı", { zorunlu: true, genis: true, tip: { maxLength: 60 } })}

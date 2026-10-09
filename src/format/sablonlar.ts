@@ -519,12 +519,19 @@ const ZPKR05: FormatGirdisi = {
   ],
 };
 
-/** kitaplık: anahtar → { ad, tanım } (tanım şemadan geçmiş; bozuk şablon yüklemede düşer) */
-export const SABLONLAR: Readonly<Record<string, { ad: string; tanim: FormatTanimi }>> = Object.freeze({
-  ZPKR01: { ad: "AG topraklama (ZPKR01, Bakanlık)", tanim: FormatTanimi.parse(ZPKR01) },
-  ZPKR02: { ad: "Elektrik iç tesisatı (ZPKR02, Bakanlık)", tanim: FormatTanimi.parse(ZPKR02) },
-  ZPKR03: { ad: "Yıldırımdan korunma tesisatı (ZPKR03, Bakanlık)", tanim: FormatTanimi.parse(ZPKR03) },
-  ZPKR04: { ad: "Yangın algılama ve uyarı sistemi (ZPKR04, Bakanlık)", tanim: FormatTanimi.parse(ZPKR04) },
-  ZPKR05: { ad: "Trafo (ZPKR05, Bakanlık)", tanim: FormatTanimi.parse(ZPKR05) },
-  KOMPRESOR: { ad: "Kompresör (genel)", tanim: FormatTanimi.parse(KOMPRESOR) },
+/** kitaplıktaki şablon: ad, tanım (şemadan geçmiş; bozuk şablon yüklemede düşer), Bakanlık formatı mı, kriter belgesi (src/tanim/kriterler.ts) ve
+    436: "Tür olarak ekle"nin önerdiği ekipman türü (ad, 2–3 harf kod, Ek-III grubu, periyot ay) — firma pencerede değiştirir */
+export interface SablonKaydi {
+  ad: string; tanim: FormatTanimi; bakanlik: boolean; kriter: string | null;
+  tur: { ad: string; kod: string; grup: string; periyot: number };
+}
+const elektrik = (ad: string, kod: string) => ({ ad, kod, grup: "elektrik", periyot: 12 });
+/** kitaplık: anahtar → şablon */
+export const SABLONLAR: Readonly<Record<string, SablonKaydi>> = Object.freeze({
+  ZPKR01: { ad: "AG topraklama (ZPKR01, Bakanlık)", tanim: FormatTanimi.parse(ZPKR01), bakanlik: true, kriter: "ZPKK01", tur: elektrik("Alçak gerilim topraklama tesisatı", "AGT") },
+  ZPKR02: { ad: "Elektrik iç tesisatı (ZPKR02, Bakanlık)", tanim: FormatTanimi.parse(ZPKR02), bakanlik: true, kriter: "ZPKK02", tur: elektrik("Elektrik iç tesisatı", "EIT") },
+  ZPKR03: { ad: "Yıldırımdan korunma tesisatı (ZPKR03, Bakanlık)", tanim: FormatTanimi.parse(ZPKR03), bakanlik: true, kriter: "ZPKK03", tur: elektrik("Yıldırımdan korunma tesisatı", "YKT") },
+  ZPKR04: { ad: "Yangın algılama ve uyarı sistemi (ZPKR04, Bakanlık)", tanim: FormatTanimi.parse(ZPKR04), bakanlik: true, kriter: "ZPKK04", tur: elektrik("Yangın algılama ve uyarı sistemi", "YAS") },
+  ZPKR05: { ad: "Trafo (ZPKR05, Bakanlık)", tanim: FormatTanimi.parse(ZPKR05), bakanlik: true, kriter: "ZPKK05", tur: elektrik("Trafo", "TRF") },
+  KOMPRESOR: { ad: "Kompresör (genel)", tanim: FormatTanimi.parse(KOMPRESOR), bakanlik: false, kriter: null, tur: { ad: "Kompresör", kod: "KMP", grup: "basincli", periyot: 12 } },
 });

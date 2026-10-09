@@ -93,6 +93,8 @@ pkproje/
                             · 364 müşteri / tesis Sil (silmeDurumu, musteriSil, tesisSil — silici.ts, 0060; yalnız firma yöneticisi, kullanılmamış kayıt)
   src/modules/ekipman-turleri/ EKİPMAN TÜRLERİ (2026-10-04): katalog (Mekanik / Elektrik), tür sayfası, rapor formatı PDF sürümleri
                             · 361 turSil / turSilmeDurumu (kullanılmamış tür, yönetici; 0057) · cihazTurKullanimi (Ölçüm cihazları T7 penceresi için)
+                            · 436 HAZIR / BAKANLIK RAPOR FORMATLARI listede (ui/HazirFormatlar.tsx; "Tür olarak ekle" → rapor-format sablondanTurEkle:
+                            tür + şablondan taslak tek işlemde; sablonKullanimi) · önizleme /ekipman-turleri/sablon/<anahtar>
   src/modules/olcum-cihazlari/ ÖLÇÜM CİHAZLARI (2026-10-04): cihaz, cihaz türü, kalibrasyon kaydı + sertifika, kalibrasyon durumu (eşik firma ayarı)
                             · 357 Sil (kullanılmamış, yönetici; silici.ts) · 358 Pasife al / Etkinleştir (depoda olmalı; liste Görünüm; raporCihazlari pasifDahil)
                             · 359 Cihaz türleri penceresi (ui/TurPencereleri.tsx; ad düzenle, kullanılmamış tür Sil — ekipman türlerinden de çıkar, 0055)

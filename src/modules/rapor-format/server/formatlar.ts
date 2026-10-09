@@ -15,7 +15,7 @@ import { kesinSil } from "../../../server/db/silici.ts";
 import { ekle, guncelle, tablo } from "../../../server/db/yazici.ts";
 import { canDoEylem, duzey, type YetkiHesabi } from "../../../server/yetki/canDo.ts";
 import { dogrula, hatalar, type DogrulamaHatalari } from "../../../sema/ortak.ts";
-import { turOzeti } from "../../ekipman-turleri/server/turler.ts";
+import { turDegistirir, turKaydet, turOzeti } from "../../ekipman-turleri/server/turler.ts";
 import { BaslatGirdisi, sablonBul, YayinNotu } from "../sema.ts";
 
 const MODUL = 5;
@@ -69,6 +69,35 @@ const sirala = (l: FormatOzeti[]) => l.sort((a, b) => (a.sira === null ? -1 : b.
 function tanimOku(v: unknown): FormatTanimi | null {
   const r = FormatTanimi.safeParse(v);
   return r.success ? r.data : null;
+}
+
+/* ── 436 · HAZIR ŞABLONLAR EKİPMAN TÜRLERİNDE (reisim 2026-10-09: "EKİPMAN TÜRLERİNDE BAKANLIK FORMATLARINI DA GÖREMEDİM") ── Şablonlar yalnız bir
+   türün içinden "Şablondan başlat"la açılıyordu; türü olmayan firma Bakanlık formatlarını hiç görmüyordu. Ekipman türleri sayfası kitaplığı listeler:
+   hangi türün o şablondan geldiği (türün yayındaki — yoksa taslak — sürümünün kaynağı) ve "Tür olarak ekle": tür + şablondan taslak tek işlemde. */
+export type SablonKullanimi = Record<string, { turId: string; durum: "taslak" | "yayinda" }[]>;
+/** şablon anahtarı → onu kullanan türler (türün yayındaki sürümü, yoksa taslağı). Görmeyene null. */
+export async function sablonKullanimi(db: Sorgulayici, kim: YetkiHesabi): Promise<SablonKullanimi | null> {
+  if (!gorur(kim)) return null;
+  const l = (await db.sorgu<{ tur_id: string; kaynak: string | null; durum: "taslak" | "yayinda" }>(
+    `SELECT DISTINCT ON (tur_id) tur_id::text, kaynak, durum FROM rapor_format WHERE durum IN ('yayinda', 'taslak')
+     ORDER BY tur_id, (durum = 'yayinda') DESC, olustu DESC`)).rows;
+  const s: SablonKullanimi = {};
+  for (const x of l) if (x.kaynak && sablonBul(x.kaynak)) (s[x.kaynak] ??= []).push({ turId: x.tur_id, durum: x.durum });
+  return s;
+}
+
+export type SablonTurYazma = { durum: "tamam"; turId: string; formatId: string } | { durum: "gecersiz"; hatalar: DogrulamaHatalari } | { durum: "yetkisiz" };
+/** şablondan tür: türü ekler (Ekipman türleri'nin kendi denetimi — ad, kod eşsizliği, grup, periyot) ve o şablondan TASLAK başlatır, aynı işlemde
+    (taslak düşerse tür de yazılmaz). İkisinin yetkisi de gerekir (önerilen düzende branş yöneticileri + firma yöneticisi). Yayın ayrı adım. */
+export async function sablondanTurEkle(db: Sorgulayici, kim: Kisi, sablon: string, girdi: unknown): Promise<SablonTurYazma> {
+  if (!degistirir(kim) || !turDegistirir(kim)) return { durum: "yetkisiz" };
+  if (!sablonBul(sablon)) return { durum: "gecersiz", hatalar: { sablon: "Şablon bulunamadı." } };
+  const t = await turKaydet(db, kim, null, 0, girdi);
+  if (t.durum === "gecersiz" || t.durum === "yetkisiz") return t;
+  if (t.durum !== "tamam") throw new Error(`şablondan tür eklenemedi: ${t.durum}`);
+  const f = await taslakBaslat(db, kim, t.id, `sablon:${sablon}`, null);
+  if (f.durum !== "tamam") throw new Error(`şablondan taslak başlatılamadı: ${f.durum}`);
+  return { durum: "tamam", turId: t.id, formatId: f.id };
 }
 
 /** türün format sürümleri (liste; tanımın kendisi inmez). Görmeyen ya da tür yoksa null. */
