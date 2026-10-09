@@ -3,7 +3,7 @@
    atıflara bölünür ve her atıf firmanın standart kütüphanesindeki (Dökümanlar › Standartlar, güncel sürüm) en uzun eşleşen numarayla ya da
    Bakanlık kriter belgesiyle (ZPKKnn, src/tanim/kriterler.ts) eşlenir. Saf: istemci ve sunucu aynı işlevi kullanır. */
 
-/** rapora giden kütüphane özeti (yalnız güncel sürüm; dosya kısa ömürlü yetkili indirmeyle — /api/dosya) */
+/** rapora giden kütüphane özeti (yalnız güncel sürüm; dosya kısa ömürlü yetkili indirmeyle — tek dosya ucu) */
 export interface StandartOzeti { id: string; no: string; surumAdi: string; konu: string; dosyaId: string }
 
 const duz = (s: string) => s.toLocaleUpperCase("tr").replace(/\s+/g, " ").trim();

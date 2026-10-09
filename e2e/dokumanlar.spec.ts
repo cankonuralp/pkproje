@@ -7,7 +7,7 @@ import { girisli, hazir } from "./yardimci";
 const PDF = { name: "standart.pdf", mimeType: "application/pdf", buffer: Buffer.from("%PDF-1.4\n1 0 obj<<>>endobj\ntrailer<<>>\n%%EOF\n") };
 
 test("dökümanlar: standart ve yeni sürümü, kriter belgesi, diğer döküman; denetçi yalnız görür", async ({ page, context }, bilgi) => {
-  test.setTimeout(90_000);   // ilk koşuda sayfalar soğuk derlenir
+  test.setTimeout(180_000);   // ilk koşuda sayfalar soğuk derlenir (434: parçalı koşuda bu sunucuda ilk kez — 1,5 dk sürdü)
   const no = `TS EN ${100 + ["masaustu", "tablet", "telefon"].indexOf(bilgi.project.name) * 10 + bilgi.retry}`;
   await girisli(page, "yonetici");
   await page.goto("/dokumanlar");

@@ -7,7 +7,7 @@
    tuşa döner). */
 import Link from "next/link";
 import { useState } from "react";
-import { DosyaAcTusu } from "../../../components/gizli-resim/GizliResim";
+import { DosyaAcTusu, dosyaCerceveAdresi } from "../../../components/gizli-resim/GizliResim";
 import { Ikon } from "../../../components/ikon/Ikon";
 import { useOnayla } from "../../../components/pencere/Onay";
 import { Pencere } from "../../../components/pencere/Pencere";
@@ -21,7 +21,11 @@ export function StandartTusu({ std, kaynak }: { std: string; kaynak: RaporKaynak
   const onayla = useOnayla();
   const [acik, setAcik] = useState(false);
   const ac = async () => {
-    if (await onayla({ baslik: "Standart açılsın mı?", metin: `“${std}” bir pencerede açılır; rapordaki yeriniz ve yazdıklarınız değişmez.`, tus: "Aç" })) setAcik(true);
+    /* soru penceresi kapanıp odağı tuşa geri verdikten sonra açılır — yoksa yeni pencere odağı kapanan sorudaki "Aç"a bağlar, kapanınca odak
+       sayfaya düşerdi (uçtan uca saha-raporu) */
+    if (await onayla({ baslik: "Standart açılsın mı?", metin: `“${std}” bir pencerede açılır; rapordaki yeriniz ve yazdıklarınız değişmez.`, tus: "Aç" })) {
+      requestAnimationFrame(() => setAcik(true));
+    }
   };
   return (
     <>
@@ -62,7 +66,7 @@ function Atif({ atif, kaynak }: { atif: string; kaynak: RaporKaynaklari }) {
     <section className={stil.stdBolum}>
       <h3>{s.no}:{s.surumAdi}</h3>
       <p className={stil.stdNot}>{s.konu}{atif.trim() !== s.no ? ` · atıf: ${atif}` : ""}</p>
-      <iframe className={stil.stdCerceve} src={`/api/dosya/${s.dosyaId}`} title={`${s.no} standardı`} />
+      {dosyaCerceveAdresi(s.dosyaId) && <iframe className={stil.stdCerceve} src={dosyaCerceveAdresi(s.dosyaId)!} title={`${s.no} standardı`} />}
       <p className={stil.stdTelefon}>Telefonda PDF yeni sekmede açılır.</p>
       <DosyaAcTusu dosyaId={s.dosyaId} ikon="file-text">Yeni sekmede aç</DosyaAcTusu>
     </section>

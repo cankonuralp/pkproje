@@ -64,6 +64,10 @@ export function GizliResim({ dosyaId, alt, className }: { dosyaId: string; alt: 
 /** DOSYAYI AÇ (PDF): depodaki dosyanın adresi yalnız bu dosyada üretilir (tests/dosya.test.ts TARAMA). Yeni sekmede, oturumlu tek uçtan
     (yetki ve kiracı orada); kalıcı herkese açık bağlantı değildir. indir: aynı uç, ek olarak indirilir (312). etiket: tuş metni ("Aç") art arda
     tekrarlanıyorsa ayırt edici erişilebilir ad (maket: "<kişi> · <belge> aç" — 320–323 incelemesi). */
+/** 428: uygulama içinde çerçevede açılacak dosyanın adresi (yalnız PDF; dosya ucu çerçeveye yalnız kendi kökenini izin verir — frame-ancestors
+    'self'). Adres tek yerde üretilir (tests/dosya.test.ts TARAMA) */
+export const dosyaCerceveAdresi = (dosyaId: string) => (UUID.test(dosyaId) ? `/api/dosya/${dosyaId}` : null);
+
 export function DosyaAcTusu({ dosyaId, children, ikon = "eye", indir = false, etiket }: { dosyaId: string; children: ReactNode; ikon?: string; indir?: boolean; etiket?: string }) {
   if (!UUID.test(dosyaId)) return null;
   if (indir) return <a className={tusSinifi("ikincil")} href={`/api/dosya/${dosyaId}?indir=1`} aria-label={etiket}><Ikon ad={ikon} kucuk />{children}</a>;
