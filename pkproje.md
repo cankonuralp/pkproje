@@ -2355,6 +2355,20 @@ revizyon, alan kopyalama, hafif kusur devri, meslek eşleşme denetimi).
 - Emsal ürünler: https://opwire.app/iso-17020-periyodik-kontrol-yazilimi/ · https://17020muayene.vidco.com.tr/ · https://akuple.com/asansor-kontrol-yazilimi/ · https://ensyazilim.com/
 
 ## 11 · Değişiklik günlüğü
+- 2026-10-09 (443): **Deneme ortamı (canlı deneme firması probata-deneme'ye UYDURMA veri)** (reisim: *"bir deneme ortamı oluştur, 2-3 firma, gerekli
+  ölçüm cihazları , denetçi planlamacı hesapları vs , makette oluşturmuştuk benzeri daha az kalabalık olanı ve bu günü geçecek planlar olmasın"*).
+  Kod değişmedi; veri tek veritabanı işleminde (düşerse hiçbir şey yazılmaz; ikinci kez koşmaz), uygulamanın kurallarıyla: numara sayacı (P-AAYY-SIRA),
+  plan ekibi İSG-KATİP ID'siyle (kayıt "kullanıldı"), tesisin bütün etkin ekipmanı plana, denetim izine tek satır ("probata · deneme ortamı").
+  · Kişiler + hesaplar (hepsi etkin, ortak deneme parolası — depoda yok, reisim'e sohbette verildi; e-postalar …@probata-deneme.example): Selin Arslan
+  (planlama), Murat Demir (mekanik yönetici, makine müh.), Elif Yıldız (elektrik yönetici, elektrik müh.), Kerem Aydın (denetçi, makine müh.), Burak
+  Koç (denetçi, elektrik müh.), Zeynep Şahin (denetçi, elektrik-elektronik müh.), Hakan Öztürk (muhasebe).
+  · Müşteriler: Anadolu Metal (Gebze Fabrika: 2 kompresör, AG topraklama, iç tesisat · Dilovası Depo: AG topraklama, iç tesisat, yangın algılama) ·
+  Ege Gıda (Kemalpaşa Tesisi: iç tesisat, AG topraklama, yıldırımlık, yangın algılama, trafo) · Marmara Lojistik (Tuzla Depo: kompresör, yangın
+  algılama, yıldırımlık, AG topraklama) — 16 ekipman, yalnız rapor şablonu yayında olan türler (transpalet şablonsuz — kullanılmadı).
+  · Ölçüm cihazları (marka "Örnek Ölçü", kalibrasyon 45 gün önce, 320 gün geçerli): tesisat test ×2, topraklama ölçer ×2, lüksmetre ×2 (Burak ve
+  Zeynep'in zimmetinde), manometre ×2 (biri Kerem'de, biri depoda). Kompresör türüne gerekli cihaz manometre (boştu). Fiyat listesi (yoksa).
+  · Planlar (hiçbiri geçmiş tarihli değil; hepsi "kabul bekliyor"): bugün Anadolu Metal / Gebze (Kerem + Burak) · +3–4 gün Ege Gıda (Zeynep) ·
+  +7 gün Marmara Lojistik (Kerem + Burak) · +14 gün Anadolu Metal / Dilovası (Zeynep).
 - 2026-10-09 (442): **Mekanik / Elektrik alt sekme olarak; Muayene kriterleri'nde de** (reisim: *"bu şekilde olmaz altında bir sekme gibi olacak ve
   sadece standartlarda değil muayene kriterlerinde de olacak"*). Branş sekmeleri ana sekmelerle (Standartlar · Muayene kriterleri · Diğer
   dökümanlar · Eğitimler) yan yana duruyordu → ortak sekme bileşenine `alt` biçimi: ana sekmenin ALTINDA kendi satırında, çizgili, seçilinin altı
