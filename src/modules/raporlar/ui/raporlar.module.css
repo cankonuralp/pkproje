@@ -113,6 +113,8 @@ input.oku { background: var(--zemin2); border-color: var(--kenar); color: var(--
 .kusurListe li { overflow-wrap: anywhere; }
 .cumle { margin: 0; color: var(--yazi2); overflow-wrap: anywhere; }
 .cumle b { color: var(--yazi); }
+/* sonuç bölümünün sabit metni (426: ağır kusurlar tanımı, açıklamalar) — satır sonları korunur */
+.aciklama { margin: 8px 0 0; color: var(--yazi2); font-size: var(--boy-kucuk); white-space: pre-line; overflow-wrap: anywhere; }
 .imzalar { display: grid; grid-template-columns: repeat(auto-fit, minmax(min(100%, 14rem), 1fr)); gap: 12px; margin: 0; padding: 0; list-style: none; }
 .imza { display: grid; gap: 6px; min-width: 0; }
 .imzaKutu {

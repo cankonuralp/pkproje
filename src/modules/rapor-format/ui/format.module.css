@@ -7,6 +7,7 @@
 .bolumBas { display: flex; align-items: center; flex-wrap: wrap; gap: 6px 10px; margin: 0 0 8px; }
 .bolumAd { margin: 0; font-size: var(--boy-govde); font-weight: 700; overflow-wrap: anywhere; }
 .satir { margin: 0 0 8px; color: var(--yazi2); overflow-wrap: anywhere; }
+.aciklama { font-size: var(--boy-kucuk); white-space: pre-line; }   /* sonuç bölümünün sabit metni (426) */
 .grup { margin: 0 0 8px; }
 .grupAd { margin: 8px 0 4px; font-size: var(--boy-kucuk); font-weight: 700; color: var(--yazi2); overflow-wrap: anywhere; }
 .ogeler, .maddeler { margin: 0; padding: 0; list-style: none; columns: 3 280px; column-gap: 24px; }
@@ -66,3 +67,9 @@
   .bolum { padding: 12px; }
   .ogeler, .maddeler { columns: 1; }
 }
+/* 426: kurucunun öğe düzenleyicisi — öğe satırının altında açılır */
+.ogeSatir { flex-wrap: wrap; }
+.ogeTuslar { display: inline-flex; gap: 2px; flex: none; }
+.duzenleyici { flex: 1 1 100%; display: grid; gap: 10px; margin: 6px 0 4px; padding: 10px 12px; border: 1px solid var(--kenar); border-radius: var(--r-orta); background: var(--zemin); }
+.kurucuOgeler > .grupSatir { display: grid; justify-content: stretch; gap: 6px; padding: 8px 0; }
+.metin { width: 100%; min-height: 64px; padding: 8px 10px; border: 1px solid var(--kenar-alan); border-radius: var(--r-orta); background: var(--kart); color: var(--yazi); font: inherit; resize: vertical; }

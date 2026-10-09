@@ -2,7 +2,8 @@
    alanlar, kontrol maddeleri, ölçüm sütunları ve sınırları, test değerleri, kurallar. Salt okunur; React kancası yok (sunucuda çizilir, Format
    kurucu K4'te de kullanır). Kilitli (Bakanlık) öğe kilit simgesiyle. PDF çizimi PDF kaleminde aynı tanımdan. */
 import type { ReactNode } from "react";
-import type { Bolum, FormatTanimi } from "../../../format/tanim";
+import { SINIR_ISARETI } from "../../../format/hesap";
+import type { Bolum, FormatTanimi, Sinir } from "../../../format/tanim";
 import { Ikon } from "../../../components/ikon/Ikon";
 import { Rozet } from "../../../components/sayfa/Sayfa";
 import { BLOK_ADI } from "./ortak";
@@ -13,7 +14,8 @@ const GIRIS = { sayi: "sayı", metin: "metin", secim: "seçim", evet: "evet / ha
 const HESAP = { nokta: "Ia · Zs · Ik1 hesabı", selektivite: "RCD testi", linye: "Linye hesabı", pd: "Potansiyel dengeleme hesabı", zi: "Zemin izolasyonu hesabı" } as const;
 const IMZA = { uzman: "Muayene uzmanı", teknik: "Teknik yönetici" } as const;
 const virgul = (n: number) => String(n).replace(".", ",");
-const sinir = (op?: "<=" | ">=", s?: number, birim?: string) => (op && s !== undefined ? `${op === "<=" ? "≤" : "≥"} ${virgul(s)}${birim ? ` ${birim}` : ""}` : null);
+const sinir = (op?: Sinir, s?: number, birim?: string) => (op && s !== undefined ? `${SINIR_ISARETI[op]} ${virgul(s)}${birim ? ` ${birim}` : ""}` : null);
+const olumsuz = (l?: readonly string[], agir?: boolean) => (l?.length ? `uygun değil: ${l.join(" / ")}${agir ? " (ağır)" : ""}` : null);
 const ekler = (...l: (string | null | false | undefined)[]) => l.filter(Boolean).join(" · ");
 
 function Oge({ ad, alt, kilit }: { ad: ReactNode; alt?: string; kilit?: boolean }) {
@@ -43,16 +45,19 @@ function Icerik({ b }: { b: Bolum }) {
     case "olcum":
       return <>
         <p className={stil.satir}>{ekler(b.satir === "ekle" ? "Satırı denetçi ekler" : "Sabit satırlar", b.enAz > 0 && `en az ${b.enAz} satır`, b.hesap && HESAP[b.hesap])}</p>
-        <ul className={stil.ogeler}>{b.sutunlar.map((s) => <Oge key={s.id} ad={s.ad} alt={ekler(GIRIS[s.giris], s.birim, sinir(s.op, s.sinir, s.birim), s.zorunlu && "zorunlu", s.secenekler?.join(" / "))} />)}</ul>
+        <ul className={stil.ogeler}>{b.sutunlar.map((s) => <Oge key={s.id} ad={s.ad} alt={ekler(GIRIS[s.giris], s.birim, sinir(s.op, s.sinir, s.birim), s.zorunlu && "zorunlu", s.secenekler?.join(" / "), olumsuz(s.olumsuz, s.agir))} />)}</ul>
         {b.notlar?.length ? <ul className={stil.ogeler}>{b.notlar.map((n, i) => <Oge key={i} ad={`Not-${i + 1}`} alt={ekler(n.metin, n.kusur && (n.agir ? "ağır kusur" : "kusur"))} />)}</ul> : null}
       </>;
     case "test":
       return <ul className={stil.ogeler}>{b.degerler.map((d) => <Oge key={d.id} ad={d.ad} kilit={d.kilit}
-        alt={ekler(d.metin ? "metin" : d.birim, sinir(d.op, d.sinir, d.birim), d.not, !d.zorunlu && "isteğe bağlı")} />)}</ul>;
+        alt={ekler(d.secenekler?.length ? `seçim: ${d.secenekler.join(" / ")}` : d.metin ? "metin" : d.birim, sinir(d.op, d.sinir, d.birim), olumsuz(d.olumsuz, d.agir), d.not, !d.zorunlu && "isteğe bağlı")} />)}</ul>;
     case "foto":
       return <p className={stil.satir}>{ekler(b.enAz > 0 ? `En az ${b.enAz}` : "İsteğe bağlı", `en çok ${b.enCok} fotoğraf`)}</p>;
     case "sonuc":
-      return <p className={stil.satir}>{b.cumle ? `${b.cumle} uygundur / uygun değildir.` : "Uygun / Uygun değil"}</p>;
+      return <>
+        <p className={stil.satir}>{b.cumle ? `${b.cumle} uygundur / uygun değildir.` : "Uygun / Uygun değil"}</p>
+        {b.aciklama && <p className={`${stil.satir} ${stil.aciklama}`}>{b.aciklama}</p>}
+      </>;
     case "not":
       return <p className={stil.satir}>{b.zorunlu ? "Zorunlu" : "İsteğe bağlı"}</p>;
     case "imza":

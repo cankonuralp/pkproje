@@ -7,6 +7,7 @@
    varsa basılır (karar 105). SAF ve React'in kaçışıyla (ham HTML yok): aynı veri → aynı belge — önizleme ve PDF aynı çiziciden.
    JSX değil createElement: düğüm test koşucusu (node --test) bu dosyayı doğrudan yükler (tests/belge.test.ts). */
 import { createElement as h, Fragment, type ReactNode } from "react";
+import { SINIR_ISARETI } from "../format/hesap.ts";
 import { degerlendir } from "../format/motor.ts";
 import type { Bolum, BolumOf } from "../format/tanim.ts";
 import { TANIMLAR } from "../tanim/tanimlar.ts";
@@ -143,7 +144,8 @@ export function raporBelgesi(v: BelgeVerisi): ReactNode {
       }
       case "test": return h("table", null, baslikSatiri("Ölçüm", "Değer", "Sınır", "Sonuç"), h("tbody", null, ...b.degerler.map((x) => {
         const s = c.deger[x.id], r = d.degerler[x.id];
-        const sinir = x.op && x.sinir !== undefined ? `${x.op === "<=" ? "≤" : "≥"} ${String(x.sinir).replace(".", ",")}${x.birim ? ` ${x.birim}` : ""}` : deger(x.not);
+        const sinir = x.op && x.sinir !== undefined ? `${SINIR_ISARETI[x.op]} ${String(x.sinir).replace(".", ",")}${x.birim ? ` ${x.birim}` : ""}`
+          : x.olumsuz?.length ? (x.secenekler ?? []).filter((o) => !x.olumsuz!.includes(o)).join(" / ") || "-" : deger(x.not);
         return h("tr", { key: x.id }, h("td", null, x.ad), h("td", null, s && s.trim() ? `${s}${x.birim ? ` ${x.birim}` : ""}` : "-"), h("td", null, sinir),
           h("td", null, r === true ? "Uygun" : r === false ? "Uygun değil" : "-"));
       })));
@@ -156,10 +158,12 @@ export function raporBelgesi(v: BelgeVerisi): ReactNode {
         }))
         : kutu("Kusur yok.");
       case "sonuc": {
-        const cumle = b.cumle.trim();
-        return cumle
+        const cumle = b.cumle.trim(), aciklama = b.aciklama.trim();
+        return h(Fragment, null, cumle
           ? kutu(`${cumle} `, h("b", null, v.sonuc === "uygun" ? "uygundur" : v.sonuc === "uygun_degil" ? "uygun değildir" : "-"), ".")
-          : kutu("Sonuç: ", h("b", null, v.sonuc ? SONUC[v.sonuc] : "-"));
+          : kutu("Sonuç: ", h("b", null, v.sonuc ? SONUC[v.sonuc] : "-")),
+          /* 426: Bakanlık formatının sonuç metni (ağır kusurlar tanımı, açıklamalar) satır satır */
+          aciklama ? h("div", { className: "rb-aciklama" }, ...aciklama.split("\n").map((s, i) => h("p", { key: i }, s))) : null);
       }
       case "not": return kutu(deger(c.yorum));
       case "imza": return imza(b);

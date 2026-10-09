@@ -2355,6 +2355,13 @@ revizyon, alan kopyalama, hafif kusur devri, meslek eşleşme denetimi).
 - Emsal ürünler: https://opwire.app/iso-17020-periyodik-kontrol-yazilimi/ · https://17020muayene.vidco.com.tr/ · https://akuple.com/asansor-kontrol-yazilimi/ · https://ensyazilim.com/
 
 ## 11 · Değişiklik günlüğü
+- 2026-10-09 (426): **Format motoru + format kurucu genişledi** (reisim: *"Elektrik tarafında zorunlu formatlar yayınlandı … eklerken bir kullanıcı
+  da bu ve benzeri rapor formatlarını isterse kendi eli ile format yapıcıdan yapabileceği şekilde format yapıcıyı düzenle"*). Yeni üç Bakanlık
+  formatı (ZPKR03/04/05 — 427) ve benzerleri için motorda: seçmeli sütun / değerde "uygun değil" sayılan seçenekler + ağır kusur, kesin küçük /
+  büyük sınır, sonuç bölümünün sabit metni (ağır kusurlar tanımı; Bakanlık şablonunda kilitli), madde / grup / genel talimat alanları (430–431
+  ekranda). Format kurucuda her öğe düzenlenir (tür, seçenekler, olumsuzlar, ağırlık, sınır, birim, zorunlu, standart, açıklama, talimat,
+  grup), gruplar, cevap seti, uygunluk notları, sonuç metni, belge görünümü (form kodu, başlık, dayanak, genel talimat). Kilitli öğede yalnız
+  talimat. Kayıtlı formatlar ve açık raporlar aynen okunur (yeni alanlar isteğe bağlı). RAPOR-FORMAT.md §2, §6.
 - 2026-10-09 (425): **Uzun seçenek listeleri ve sayfasız listeler** (reisim telefon ekranıyla: *"tek tek müşteriler gözüküyordu … çok müşteri olunca
   kullanışsız olur ve donmalara sebep olur bu ve benzeri kurgusal bozuklukları düzenle"*). Ekran görüntüsündeki "Süzgeç" levhası maketin ESKİ
   sürümü (telefondaki sekme eski kopyayı tutuyordu): güncel maket ve uygulama 8'den çok seçenekte zaten aranır kayan liste gösteriyor. Asıl kusur

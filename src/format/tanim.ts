@@ -18,22 +18,31 @@ export const KAYNAKLAR = ["firma_adi", "tesis_adresi", "sgk", "isg_id", "kontrol
 /** ölçüm tablosunun adıyla seçilen hesabı (hesap.ts) */
 export const HESAPLAR = ["nokta", "selektivite", "linye", "pd", "zi"] as const;
 export const BLOKLAR = ["bilgi", "liste", "olcum", "test", "cihaz", "foto", "kusur", "sonuc", "not", "imza"] as const;
+/** sınır kuralı (426: kesin küçük / büyük eklendi — ZPKR05 "RB < 2 Ω"): en çok · en az · küçük · büyük */
+export const SINIRLAR = ["<=", ">=", "<", ">"] as const;
+export type Sinir = (typeof SINIRLAR)[number];
+/** talimat (430): maddenin / grubun / genel muayenenin NASIL yapılacağı — saha ekranında ünlemle açılır, PDF'e basılmaz */
+const talimat = z.string().max(4000);
 export type Blok = (typeof BLOKLAR)[number];
 
 const Alan = z.object({
   id: kimlik, ad, tur: z.enum(ALAN_TURLERI), zorunlu: z.boolean().default(false), kilit: z.boolean().default(false),
   secenekler: z.array(z.string().trim().min(1).max(200)).max(40).optional(), birim: kisa.optional(), kaynak: z.enum(KAYNAKLAR).optional(),
 });
-const Madde = z.object({ id: kimlik, metin: ad, aciklama: metin.optional(), std: z.string().max(200).optional(), kilit: z.boolean().default(false) });
-const Grup = z.object({ id: kimlik, ad: z.string().max(200), maddeler: z.array(Madde).max(200) });
+const Madde = z.object({ id: kimlik, metin: ad, aciklama: metin.optional(), std: z.string().max(200).optional(), talimat: talimat.optional(), kilit: z.boolean().default(false) });
+const Grup = z.object({ id: kimlik, ad: z.string().max(200), talimat: talimat.optional(), maddeler: z.array(Madde).max(200) });
+/** seçmeli hücre / değerde "uygun değil" sayılan seçenekler (426; ör. ZPKR04 "UD", ZPKR05 "Not 2: Yetersiz") ve kusurun ağırlığı */
+const secenekListesi = z.array(z.string().trim().min(1).max(60)).max(20);
 const Sutun = z.object({
   id: kimlik, ad, birim: kisa.optional(), giris: z.enum(["sayi", "metin", "secim", "evet"]).default("sayi"),
-  secenekler: z.array(z.string().max(60)).max(20).optional(), zorunlu: z.boolean().default(false),
-  op: z.enum(["<=", ">="]).optional(), sinir: z.number().finite().optional(),
+  secenekler: secenekListesi.optional(), olumsuz: secenekListesi.optional(), agir: z.boolean().default(false), zorunlu: z.boolean().default(false),
+  op: z.enum(SINIRLAR).optional(), sinir: z.number().finite().optional(),
 });
 const Deger = z.object({
   id: kimlik, ad, birim: kisa.optional(), metin: z.boolean().default(false), zorunlu: z.boolean().default(true), kilit: z.boolean().default(false),
-  op: z.enum(["<=", ">="]).optional(), sinir: z.number().finite().optional(), not: z.string().max(120).optional(),
+  /** seçmeli değer (426): değer bu seçeneklerden biri; olumsuz olanı kusur */
+  secenekler: secenekListesi.optional(), olumsuz: secenekListesi.optional(), agir: z.boolean().default(false),
+  op: z.enum(SINIRLAR).optional(), sinir: z.number().finite().optional(), not: z.string().max(120).optional(),
 });
 /** seçmeli uygunluk notu (ZPKR01 Not-1 … Not-11): kusur mu, ağır mı */
 const Not = z.object({ metin: z.string().trim().min(1).max(400), kusur: z.boolean(), agir: z.boolean().default(false) });
@@ -50,7 +59,8 @@ export const Bolum = z.discriminatedUnion("blok", [
   z.object({ ...ortak, blok: z.literal("cihaz") }),
   z.object({ ...ortak, blok: z.literal("foto"), enAz: z.number().int().min(0).max(50).default(0), enCok: z.number().int().min(1).max(50).default(20) }),
   z.object({ ...ortak, blok: z.literal("kusur") }),
-  z.object({ ...ortak, blok: z.literal("sonuc"), cumle: z.string().max(400).default("") }),
+  /* aciklama (426): sonuç bölümünün sabit metni — Bakanlık formatlarındaki "Ağır kusurlar tanımı", "Açıklamalar" (PDF'e basılır) */
+  z.object({ ...ortak, blok: z.literal("sonuc"), cumle: z.string().max(400).default(""), aciklama: z.string().max(4000).default("") }),
   z.object({ ...ortak, blok: z.literal("not"), zorunlu: z.boolean().default(false) }),
   z.object({ ...ortak, blok: z.literal("imza"), imzalar: z.array(z.enum(["uzman", "teknik"])).min(1).max(2).default(["uzman"]) }),
 ]);
@@ -68,13 +78,15 @@ export const Kurallar = z.object({
 
 export const Gorunum = z.object({
   formKodu: z.string().max(20).default(""), baslik: z.string().max(200).default(""), dayanak: z.array(z.string().max(300)).max(20).default([]),
+  /** genel muayene talimatı (431): rapor ekranının sağ üstündeki ünlemden açılır; PDF'e basılmaz */
+  talimat: z.string().max(8000).default(""),
 });
 
 export const FormatTanimi = z.object({
   sema: z.literal(SEMA_SURUMU),
   bolumler: z.array(Bolum).max(40),
   kurallar: Kurallar.default({ foto: false, derece: false, oneri: true }),
-  gorunum: Gorunum.default({ formKodu: "", baslik: "", dayanak: [] }),
+  gorunum: Gorunum.default({ formKodu: "", baslik: "", dayanak: [], talimat: "" }),
 }).superRefine((t, bag) => {
   const gorulen = new Set<string>();
   const tek = (id: string, yol: (string | number)[]) => {
@@ -90,9 +102,16 @@ export const FormatTanimi = z.object({
     if (b.blok === "liste") b.gruplar.forEach((g, j) => { tek(g.id, ["bolumler", i, "gruplar", j, "id"]); g.maddeler.forEach((m, k) => tek(m.id, ["bolumler", i, "gruplar", j, "maddeler", k, "id"])); });
     if (b.blok === "olcum") {
       const s = new Set<string>();
-      b.sutunlar.forEach((c, j) => { if (s.has(c.id)) bag.addIssue({ code: "custom", path: ["bolumler", i, "sutunlar", j, "id"], message: `Sütun iki kez: ${c.id}` }); s.add(c.id); });
+      b.sutunlar.forEach((c, j) => {
+        if (s.has(c.id)) bag.addIssue({ code: "custom", path: ["bolumler", i, "sutunlar", j, "id"], message: `Sütun iki kez: ${c.id}` }); s.add(c.id);
+        if (c.giris === "secim" && !c.secenekler?.length) bag.addIssue({ code: "custom", path: ["bolumler", i, "sutunlar", j], message: `Seçmeli sütunun seçenekleri yok: ${c.ad}` });
+        if (c.olumsuz?.some((o) => !(c.giris === "evet" ? ["evet", "hayir"] : c.secenekler ?? []).includes(o))) bag.addIssue({ code: "custom", path: ["bolumler", i, "sutunlar", j, "olumsuz"], message: `Olumsuz seçenek sütunun seçeneklerinde yok: ${c.ad}` });
+      });
     }
-    if (b.blok === "test") b.degerler.forEach((d, j) => tek(d.id, ["bolumler", i, "degerler", j, "id"]));
+    if (b.blok === "test") b.degerler.forEach((d, j) => {
+      tek(d.id, ["bolumler", i, "degerler", j, "id"]);
+      if (d.olumsuz?.some((o) => !(d.secenekler ?? []).includes(o))) bag.addIssue({ code: "custom", path: ["bolumler", i, "degerler", j, "olumsuz"], message: `Olumsuz seçenek değerin seçeneklerinde yok: ${d.ad}` });
+    });
     if (b.blok === "foto" && b.enAz > b.enCok) bag.addIssue({ code: "custom", path: ["bolumler", i, "enAz"], message: "En az, en çoktan büyük olamaz." });
   });
 });

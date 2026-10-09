@@ -9,14 +9,14 @@
    Yayın denetimi (§5): boş bölüm, cevap seti eksik liste, sınırı / hesabı / notu olmayan ölçüm tablosu — UYARI (yayın olur).
    Kilitli öğe denetimi (§3, 2026-10-04): kilitli (Bakanlık) öğe silinmiş / değiştirilmiş / kilidi kaldırılmış — ENGEL (yayınlanmaz).
    ⛔ Bu dosya yalnız ./hesap.ts ve ./tanim.ts'i içe aktarır (olumsuz kanıt kopyası bu iki yolu çevirir). */
-import { linyeHesap, noktaHesap, pdHesap, rcdTestYeter, sayiOku, sinirSonucu, ziHesap } from "./hesap.ts";
+import { linyeHesap, noktaHesap, pdHesap, rcdTestYeter, sayiOku, SINIR_ISARETI, sinirSonucu, ziHesap } from "./hesap.ts";
 import { kurucudan, type Bolum, type BolumOf, type Cevaplar, type FormatTanimi } from "./tanim.ts";
 
 export interface Eksik { bolum: string; alan: string; ad: string }
 /** kriter: kusurun ölçütü (madde metni, ölçüm satırının etiketi, test değerinin adı); metin "kriter: açıklama" ya da yalnız kriter — kriter ayrı
     tutulur, metinden geri ayrıştırılmaz (kriterin kendisinde ": " olabilir; 320–323 incelemesi) */
 export interface Kusur { bolum: string; ref: string; kriter: string; metin: string; agir: boolean }
-export interface SatirDegerlendirmesi { uygun: boolean | null; neden: string[]; oneriNot: number | null }
+export interface SatirDegerlendirmesi { uygun: boolean | null; neden: string[]; oneriNot: number | null; agir: boolean }
 export interface Degerlendirme {
   eksikler: Eksik[]; kusurlar: Kusur[]; oneri: "uygun" | "uygun_degil";
   satirlar: Record<string, SatirDegerlendirmesi[]>;
@@ -33,6 +33,7 @@ function satirDegerlendir(b: BolumOf<"olcum">, s: Record<string, string>, ik3: s
   const neden: string[] = [];
   let uygun: boolean | null = null;
   let oneriNot: number | null = null;
+  let agir = false;
   if (b.hesap === "nokta") {
     const h = noktaHesap({ egri: s.egri ?? "", In: s.inom, zx: s.zx, rcd: s.rcd, priz: s.priz === "evet" });
     oneriNot = h.not;
@@ -46,12 +47,18 @@ function satirDegerlendir(b: BolumOf<"olcum">, s: Record<string, string>, ik3: s
     if (h) { uygun = h.uygun; neden.push(...h.neden); }
   }
   for (const c of b.sutunlar) {
+    /* seçmeli hücre (426): olumsuz seçeneklerden biri seçildiyse satır uygun değil; öteki seçenek seçildiyse uygun */
+    if (c.olumsuz?.length && !bos(s[c.id])) {
+      if (c.olumsuz.includes(s[c.id])) { neden.push(`${c.ad}: ${s[c.id]}`); uygun = false; agir ||= c.agir; }
+      else if (uygun === null) uygun = true;
+      continue;
+    }
     const r = sinirSonucu(c.op, c.sinir, s[c.id]);
     if (r === null) continue;
-    if (!r) { neden.push(`${c.ad} ${s[c.id]}${c.birim ? ` ${c.birim}` : ""} (sınır ${c.op === "<=" ? "≤" : "≥"} ${virgul(c.sinir!)})`); uygun = false; }
+    if (!r) { neden.push(`${c.ad} ${s[c.id]}${c.birim ? ` ${c.birim}` : ""} (sınır ${SINIR_ISARETI[c.op!]} ${virgul(c.sinir!)})`); uygun = false; agir ||= c.agir; }
     else if (uygun === null) uygun = true;
   }
-  return { uygun, neden, oneriNot };
+  return { uygun, neden, oneriNot, agir };
 }
 
 export function degerlendir(t: FormatTanimi, c: Cevaplar): Degerlendirme {
@@ -85,7 +92,7 @@ export function degerlendir(t: FormatTanimi, c: Cevaplar): Degerlendirme {
             const not = Number.isInteger(n) && n >= 1 ? b.notlar[n - 1] : undefined;
             if (!not) eksikler.push({ bolum: b.id, alan: satirAnahtari(b.id, i, "not"), ad: `${b.ad} · ${i + 1}. satır · uygunluk notu` });
             else if (not.kusur) kusurlar.push({ bolum: b.id, ref: `${b.id}#${i}`, kriter: etiket, metin: `${etiket}: Not-${n} — ${not.metin}`, agir: not.agir });
-          } else if (d.uygun === false) kusurlar.push({ bolum: b.id, ref: `${b.id}#${i}`, kriter: etiket, metin: `${etiket}: ${d.neden.join("; ")}`, agir: false });
+          } else if (d.uygun === false) kusurlar.push({ bolum: b.id, ref: `${b.id}#${i}`, kriter: etiket, metin: `${etiket}: ${d.neden.join("; ")}`, agir: d.agir });
           return d;
         });
         break;
@@ -93,11 +100,20 @@ export function degerlendir(t: FormatTanimi, c: Cevaplar): Degerlendirme {
       case "test":
         for (const d of b.degerler) {
           const v = c.deger[d.id];
+          /* seçmeli değer (426): seçeneklerden biri olmalı; olumsuz seçenek kusur (ağırlığı değerin kendisinde) */
+          if (d.secenekler?.length) {
+            const dolu = !bos(v) && d.secenekler.includes(v!);
+            if (d.zorunlu && !dolu) eksikler.push({ bolum: b.id, alan: d.id, ad: d.ad });
+            const r = !dolu ? null : d.olumsuz?.length ? !d.olumsuz.includes(v!) : null;
+            degerler[d.id] = r;
+            if (r === false) kusurlar.push({ bolum: b.id, ref: d.id, kriter: d.ad, metin: `${d.ad}: ${v}`, agir: d.agir });
+            continue;
+          }
           const dolu = d.metin ? !bos(v) : !Number.isNaN(sayiOku(v));
           if (d.zorunlu && !dolu) eksikler.push({ bolum: b.id, alan: d.id, ad: d.ad });
           const r = d.metin ? null : sinirSonucu(d.op, d.sinir, v);
           degerler[d.id] = r;
-          if (r === false) kusurlar.push({ bolum: b.id, ref: d.id, kriter: d.ad, metin: `${d.ad}: ${v}${d.birim ? ` ${d.birim}` : ""} (sınır ${d.op === "<=" ? "≤" : "≥"} ${virgul(d.sinir!)}${d.birim ? ` ${d.birim}` : ""})`, agir: false });
+          if (r === false) kusurlar.push({ bolum: b.id, ref: d.id, kriter: d.ad, metin: `${d.ad}: ${v}${d.birim ? ` ${d.birim}` : ""} (sınır ${SINIR_ISARETI[d.op!]} ${virgul(d.sinir!)}${d.birim ? ` ${d.birim}` : ""})`, agir: d.agir });
         }
         break;
       case "cihaz":
@@ -159,7 +175,7 @@ const bolumOzu = (b: Bolum) => oz({
   blok: b.blok, ad: b.ad,
   ...(b.blok === "liste" ? { cevaplar: b.cevaplar } : {}),
   ...(b.blok === "olcum" ? { hesap: b.hesap, notlar: b.notlar, satir: b.satir } : {}),
-  ...(b.blok === "sonuc" ? { cumle: b.cumle } : {}),
+  ...(b.blok === "sonuc" ? { cumle: b.cumle, aciklama: b.aciklama } : {}),
   ...(b.blok === "imza" ? { imzalar: b.imzalar } : {}),
 });
 type AlanT = BolumOf<"bilgi">["alanlar"][number];
@@ -168,8 +184,8 @@ type DegerT = BolumOf<"test">["degerler"][number];
 type SutunT = BolumOf<"olcum">["sutunlar"][number];
 const alanOzu = (a: AlanT) => oz({ ad: a.ad, tur: a.tur, secenekler: a.secenekler, kaynak: a.kaynak, birim: a.birim });
 const maddeOzu = (m: MaddeT) => oz({ metin: m.metin, std: m.std });
-const degerOzu = (d: DegerT) => oz({ ad: d.ad, birim: d.birim, metin: d.metin, op: d.op, sinir: d.sinir });
-const sutunOzu = (s: SutunT) => oz({ ad: s.ad, birim: s.birim, giris: s.giris, secenekler: s.secenekler, op: s.op, sinir: s.sinir });
+const degerOzu = (d: DegerT) => oz({ ad: d.ad, birim: d.birim, metin: d.metin, op: d.op, sinir: d.sinir, secenekler: d.secenekler, olumsuz: d.olumsuz, agir: d.agir || undefined });
+const sutunOzu = (s: SutunT) => oz({ ad: s.ad, birim: s.birim, giris: s.giris, secenekler: s.secenekler, op: s.op, sinir: s.sinir, olumsuz: s.olumsuz, agir: s.agir || undefined });
 
 interface Ogeler { bolum: Map<string, Bolum>; alan: Map<string, AlanT>; madde: Map<string, MaddeT>; deger: Map<string, DegerT> }
 function ogeler(t: FormatTanimi): Ogeler {

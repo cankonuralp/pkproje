@@ -39,3 +39,9 @@ test("zemin izolasyonu 50 kΩ sınırı gevşeyince 50 kΩ uygun sayılır", asy
   const m = await bozuk("return d > 50 ?", "return d >= 50 ?");
   assert.equal(m.ziHesap({ direnc: "50" })!.uygun, true);
 });
+
+/* 426: kesin küçük sınırı (ZPKR05 RB < 2 Ω) küçük-eşite dönünce RB = 2 Ω uygun sayılır */
+test("kesin küçük sınırı küçük-eşite dönünce sınırdaki değer uygun sayılır", async () => {
+  const m = await bozuk('op === "<" ? n < sinir', 'op === "<" ? n <= sinir');
+  assert.equal(m.sinirSonucu("<", 2, "2"), true);
+});

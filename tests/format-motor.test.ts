@@ -59,7 +59,7 @@ test("yayın denetimi: boş bölüm, sınırsız tablo, sonuç / imza yok, kilit
   t.bolumler = t.bolumler.filter((b) => b.id !== "fonk" && b.id !== "imza");
   const gozle = t.bolumler.find((b) => b.id === "gozle");
   if (gozle?.blok === "liste") gozle.gruplar[0].maddeler.splice(0, 1);
-  t.bolumler.push({ id: "bos", ad: "Boş tablo", blok: "olcum", kilit: false, satir: "ekle", enAz: 0, sutunlar: [{ id: "a", ad: "A", giris: "sayi", zorunlu: false }] });
+  t.bolumler.push({ id: "bos", ad: "Boş tablo", blok: "olcum", kilit: false, satir: "ekle", enAz: 0, sutunlar: [{ id: "a", ad: "A", giris: "sayi", zorunlu: false, agir: false }] });
   const l = yayinDenetimi(t, SABLONLAR.ZPKR02.tanim);
   for (const p of ["“Boş tablo” tablosunda", "İmza alanları bölümü yok.", "zorunlu öğesi silinmiş: fonk", "silinmiş: g1_1", "silinmiş: ik3", "silinmiş: imza"])
     assert.ok(l.some((x) => x.includes(p)), `${p} — ${l.join(" | ")}`);
@@ -124,7 +124,7 @@ test("değerlendirme ZPKR02: boş rapor eksikleri listeler; olumsuz madde, sın�
   assert.ok(r.kusurlar.every((k) => k.metin.startsWith(`${k.kriter}: `)));
   assert.equal(r.oneri, "uygun_degil");
   assert.deepEqual([r.degerler.zx, r.degerler.npe, r.degerler.zln], [false, true, null]);
-  assert.deepEqual(r.satirlar.zi, [{ uygun: true, neden: [], oneriNot: null }]);
+  assert.deepEqual(r.satirlar.zi, [{ uygun: true, neden: [], oneriNot: null, agir: false }]);
   /* kural kapalıysa öneri yok */
   const k = structuredClone(t); k.kurallar.oneri = false;
   assert.equal(degerlendir(k, C({ madde })).oneri, "uygun");
@@ -194,4 +194,44 @@ test("cevaplar: eski raporun sayı olan foto alanı okunur (boş kayıt), madde 
   assert.deepEqual([c.foto, c.madde.k1], [{}, { c: "Uygun değil", not: "Korozyon" }]);
   assert.deepEqual(Cevaplar.parse({ foto: 3 }).foto, {});
   assert.equal(Cevaplar.safeParse({ foto: "3" }).success, false, "sayı dışında yanlış tür yine reddedilir");
+});
+
+/* 426 (reisim 2026-10-09: "zorunlu formatları probataya ekle … kullanıcı benzerini format yapıcıdan kendi eli ile yapabilsin"): seçmeli hücrede
+   olumsuz seçenek (ZPKR04 U / UD / UG), seçmeli test değeri (ZPKR05 Not 1 / Not 2), ağır kusur, kesin küçük / büyük sınır (ZPKR05 RB < 2 Ω),
+   sonuç bölümünün sabit metni (ağır kusurlar tanımı) — kilitli Bakanlık öğesinin özüne dahil */
+test("426: olumsuz seçenekli sütun satırı uygun değil yapar (ağır işaretiyle); seçmeli değer; < ve > sınırı", () => {
+  const t = FormatTanimi.parse({
+    sema: 1, bolumler: [
+      { id: "tb", ad: "Cihaz testleri", blok: "olcum", satir: "ekle", sutunlar: [
+        { id: "kod", ad: "Kod", giris: "metin" }, { id: "test", ad: "Test", giris: "secim", secenekler: ["U", "UD", "UG"], olumsuz: ["UD"], agir: true },
+      ] },
+      { id: "tp", ad: "Topraklama", blok: "test", degerler: [
+        { id: "rb", ad: "RB", birim: "Ω", op: "<", sinir: 2 }, { id: "u2", ad: "U2", birim: "kV", op: ">", sinir: 0 },
+        { id: "not", ad: "Değerlendirme", secenekler: ["Not 1: Uygun", "Not 2: Yetersiz"], olumsuz: ["Not 2: Yetersiz"], agir: true },
+      ] },
+    ],
+  });
+  const c = Cevaplar.parse({ tablo: { tb: [{ kod: "L1-1", test: "U" }, { kod: "L1-2", test: "UD" }, { kod: "L1-3", test: "UG" }] }, deger: { rb: "2", u2: "0,5", not: "Not 2: Yetersiz" } });
+  const r = degerlendir(t, c);
+  assert.deepEqual(r.satirlar.tb.map((s) => [s.uygun, s.agir]), [[true, false], [false, true], [true, false]]);
+  assert.deepEqual([r.degerler.rb, r.degerler.u2, r.degerler.not], [false, true, false], "RB = 2 kesin küçük değil; seçmeli değer olumsuz");
+  assert.deepEqual(r.kusurlar.map((k) => [k.kriter, k.agir]), [["L1-2", true], ["RB", false], ["Değerlendirme", true]]);
+  assert.equal(degerlendir(t, Cevaplar.parse({ deger: { rb: "1,9", u2: "0,5", not: "Not 1: Uygun" } })).degerler.rb, true);
+  assert.ok(degerlendir(t, Cevaplar.parse({})).eksikler.some((e) => e.alan === "not"), "seçmeli zorunlu değer boşsa eksik");
+  assert.ok(degerlendir(t, Cevaplar.parse({ deger: { not: "uydurma" } })).eksikler.some((e) => e.alan === "not"), "listede olmayan seçenek eksik sayılır");
+});
+
+test("426: şema — olumsuz seçenek seçeneklerde olmalı; seçmeli sütunun seçeneği olmalı", () => {
+  const sutun = (s: object) => FormatTanimi.safeParse({ sema: 1, bolumler: [{ id: "x", ad: "X", blok: "olcum", sutunlar: [{ id: "a", ad: "A", ...s }] }] });
+  assert.equal(sutun({ giris: "secim", secenekler: ["U", "UD"], olumsuz: ["UD"] }).success, true);
+  assert.equal(sutun({ giris: "secim", secenekler: ["U", "UD"], olumsuz: ["YOK"] }).success, false);
+  assert.equal(sutun({ giris: "secim" }).success, false);
+  assert.equal(sutun({ giris: "evet", olumsuz: ["hayir"] }).success, true);
+});
+
+test("426: sonuç bölümünün sabit metni kilitli Bakanlık öğesinin özünde — değiştirilirse ENGEL", () => {
+  const kaynak = FormatTanimi.parse({ sema: 1, bolumler: [{ id: "sonuc", ad: "Sonuç ve kanaat", blok: "sonuc", kilit: true, cumle: "… kullanımı", aciklama: "Ağır kusurlar tanımı: a) …" }] });
+  assert.deepEqual(kilitDenetimi(kaynak, kaynak), []);
+  const degisik = FormatTanimi.parse({ ...kaynak, bolumler: [{ ...kaynak.bolumler[0], aciklama: "başka" }] });
+  assert.equal(kilitDenetimi(degisik, kaynak).length, 1);
 });

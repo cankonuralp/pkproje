@@ -9,13 +9,15 @@ export function sayiOku(v: unknown): number {
   return /^\d+([.,]\d+)?$/.test(s) ? Number.parseFloat(s.replace(",", ".")) : Number.NaN;
 }
 
-/** sınır kuralı: en çok (≤) / en az (≥); sınırı yoksa ya da değer boşsa null */
-export function sinirSonucu(op: "<=" | ">=" | undefined, sinir: number | undefined, deger: unknown): boolean | null {
+/** sınır kuralı: en çok (≤) / en az (≥) / küçük (<) / büyük (>) (426); sınırı yoksa ya da değer boşsa null */
+export function sinirSonucu(op: "<=" | ">=" | "<" | ">" | undefined, sinir: number | undefined, deger: unknown): boolean | null {
   if (!op || sinir === undefined) return null;
   const n = sayiOku(deger);
   if (Number.isNaN(n)) return null;
-  return op === "<=" ? n <= sinir : n >= sinir;
+  return op === "<=" ? n <= sinir : op === ">=" ? n >= sinir : op === "<" ? n < sinir : n > sinir;
 }
+/** sınır işaretinin ekrandaki / belgedeki yazımı */
+export const SINIR_ISARETI: Readonly<Record<"<=" | ">=" | "<" | ">", string>> = Object.freeze({ "<=": "≤", ">=": "≥", "<": "<", ">": ">" });
 
 /** açma eğrisi çarpanı (ZPKK02 madde 3: B = 5 × In · C = 10 × In · D = 15 × In) */
 export const EGRI_KAT: Readonly<Record<string, number>> = Object.freeze({ B: 5, C: 10, D: 15 });

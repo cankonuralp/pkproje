@@ -18,9 +18,10 @@ import { Serit } from "../../../components/serit/Serit";
 import { Tus, TusBaglanti } from "../../../components/tus/Tus";
 import { yayinDenetimi } from "../../../format/motor";
 import { BLOKLAR, type Blok, type FormatTanimi } from "../../../format/tanim";
-import { bolumAdi, bolumOgeleri, bolumSil, ogeEkle, ogeliBlok, ogeSil, tasi, yeniBolum } from "../kurucu";
+import { bolumAdi, bolumOgeleri, bolumSil, maddeEkle, ogeEkle, ogeliBlok, ogeSil, tasi, yeniBolum } from "../kurucu";
 import { taslakKaydetEylemi } from "./eylemler";
 import { FormatOnizleme } from "./FormatOnizleme";
+import { GorunumDuzenleyici, ListeDuzenleyici, NotDuzenleyici, OgeDuzenleyici, SonucAciklamasi } from "./KurucuDuzenleyici";
 import { BLOK_ADI } from "./ortak";
 import { YayinlaTusu } from "./SablonBolumu";
 import stil from "./format.module.css";
@@ -55,6 +56,9 @@ export function FormatKurucu({ turId, turAd, format, tanim, kaynakAd }: {
   const [son, setSon] = useState(ilkJson);
   const [sec, setSec] = useState(0);
   const [yeni, setYeni] = useState("");
+  /* 426: açık öğe düzenleyicisi (bir anda bir öğe) ve maddenin ekleneceği grup */
+  const [acikOge, setAcikOge] = useState<string | null>(null);
+  const [grupSec, setGrupSec] = useState("");
   const [hatalar, setHatalar] = useState<string[]>([]);
   if (son !== ilkJson) { setSon(ilkJson); setT(tanim); setHatalar([]); }
   const kirli = JSON.stringify(t) !== ilkJson;
@@ -95,7 +99,7 @@ export function FormatKurucu({ turId, turAd, format, tanim, kaynakAd }: {
     bildir("Taslak kaydedildi."); router.refresh();
   });
   const vazgec = () => { setT(tanim); setHatalar([]); bildir("Değişiklikler geri alındı."); };
-  const sec_ = (j: number) => { setSec(j); setYeni(""); odak(`#${ID.baslik}`); };
+  const sec_ = (j: number) => { setSec(j); setYeni(""); setAcikOge(null); setGrupSec(""); odak(`#${ID.baslik}`); };
   const sira = (j: number, k: number, yon: "yukari" | "asagi") => {
     degis({ ...t, bolumler: tasi(t.bolumler, j, k) }); setSec(k);
     /* önce aynı yönün tuşu (art arda taşınabilsin), o kapalıysa karşı yönün — iki ayrı sorgu (virgüllü seçici belge sırasını alırdı) */
@@ -114,7 +118,9 @@ export function FormatKurucu({ turId, turAd, format, tanim, kaynakAd }: {
   const ekle = () => {
     const a = yeni.trim();
     if (!a) { bildir("Önce adını yazın."); odak(`#${ID.yeni}`); return; }
-    degis(ogeEkle(t, i, a)); setYeni(""); bildir(`“${a}” eklendi (taslak).`); odak(`#${ID.yeni}`);
+    /* kontrol listesinde seçilen gruba (seçilmediyse son gruba) */
+    const grup = b?.blok === "liste" ? (b.gruplar.find((g) => g.id === grupSec) ?? b.gruplar[b.gruplar.length - 1]) : null;
+    degis(grup ? maddeEkle(t, i, grup.id, a) : ogeEkle(t, i, a)); setYeni(""); bildir(`“${a}” eklendi (taslak).`); odak(`#${ID.yeni}`);
   };
   const bolumYaz = (y: Partial<Record<string, unknown>>) => degis({ ...t, bolumler: t.bolumler.map((x, j) => (j === i ? ({ ...x, ...y } as typeof x) : x)) });
   const sayi = (s: string) => (/^\d{1,2}$/.test(s.trim()) ? Number(s.trim()) : null);
@@ -179,25 +185,33 @@ export function FormatKurucu({ turId, turAd, format, tanim, kaynakAd }: {
                 <Girdi id={ID.ad} value={b.ad} maxLength={200} disabled={b.kilit} mesajli={b.kilit} onChange={(e) => degis(bolumAdi(t, i, e.target.value))} />
               </Alan>
             </FormIzgara>
-            {b.blok === "liste" && <p className={stil.satir}>Cevap seti: <b>{b.cevaplar.join(" · ")}</b> · madde başına açıklama ve referans standart (raporda (i) penceresi)</p>}
+            {b.blok === "liste" && <ListeDuzenleyici t={t} i={i} b={b} degis={degis} />}
             {ogeliBlok(b.blok) && (() => {
               const l = bolumOgeleri(b), [baslik, ekleAd] = OGE[b.blok as keyof typeof OGE];
               return <>
                 <p className={stil.etiket}>{baslik} ({l.length})</p>
                 {l.length ? <ul className={stil.kurucuOgeler}>
                   {l.map((x) => (
-                    <li key={x.id}>
+                    <li key={x.id} className={stil.ogeSatir}>
                       <span className={stil.kurucuOge}><span>{x.kilit && <span className={stil.kilit} title="Bakanlık alanı"><Ikon ad="lock" kucuk /><span className="gizli">Bakanlık alanı</span></span>}{x.ad}</span>
                         {x.alt && <span className={stil.ogeAlt}>{x.alt}</span>}</span>
-                      {!x.kilit && <button type="button" className={stil.ikonTus} aria-label={`${x.ad} sil`} onClick={() => { degis(ogeSil(t, i, x.id)); bildir(`“${x.ad}” çıkarıldı (taslak).`); odak(`#${ID.yeni}`); }}><Ikon ad="x" kucuk /></button>}
+                      <span className={stil.ogeTuslar}>
+                        <button type="button" className={stil.ikonTus} aria-label={`${x.ad} düzenle`} aria-expanded={acikOge === x.id} title="Düzenle"
+                          onClick={() => setAcikOge(acikOge === x.id ? null : x.id)}><Ikon ad="pencil" kucuk /></button>
+                        {!x.kilit && <button type="button" className={stil.ikonTus} aria-label={`${x.ad} sil`} onClick={() => { degis(ogeSil(t, i, x.id)); setAcikOge(null); bildir(`“${x.ad}” çıkarıldı (taslak).`); odak(`#${ID.yeni}`); }}><Ikon ad="x" kucuk /></button>}
+                      </span>
+                      {acikOge === x.id && <OgeDuzenleyici t={t} i={i} b={b} id={x.id} degis={degis} />}
                     </li>
                   ))}
                 </ul> : <p className={stil.satir}>Henüz yok.</p>}
                 <div className={stil.ekleSatir}>
                   <Girdi id={ID.yeni} aria-label={ekleAd} maxLength={120} value={yeni}
                     onChange={(e) => setYeni(e.target.value)} onKeyDown={(e) => { if (e.key === "Enter") { e.preventDefault(); ekle(); } }} />
+                  {b.blok === "liste" && b.gruplar.length > 1 && <SecimAlani id="kb-grupsec" ad="Eklenecek grup" ipucu="Son grup"
+                    deger={grupSec} secenekler={b.gruplar.map((g, j) => [g.id, g.ad || `${j + 1}. grup (adsız)`] as const)} degistir={setGrupSec} />}
                   <Tus tur="ikincil" ikon="plus" onClick={ekle}>{ekleAd}</Tus>
                 </div>
+                {b.blok === "olcum" && <NotDuzenleyici t={t} i={i} b={b} degis={degis} />}
               </>;
             })()}
             {b.blok === "foto" && <FormIzgara>
@@ -208,11 +222,12 @@ export function FormatKurucu({ turId, turAd, format, tanim, kaynakAd }: {
                 <Girdi id={ID.enCok} inputMode="numeric" maxLength={2} value={String(b.enCok)} onChange={(e) => { const n = sayi(e.target.value); if (n !== null) bolumYaz({ enCok: n }); }} />
               </Alan>
             </FormIzgara>}
-            {b.blok === "sonuc" && <FormIzgara>
+            {b.blok === "sonuc" && <><FormIzgara>
               <Alan id={ID.cumle} etiket="Sonuç cümlesi" genis sonuc={b.kilit ? "Bakanlık alanı: cümle değişmez." : "“… kullanılması uygundur / uygun değildir” — kurallardaki sonuç önerisiyle."}>
                 <Girdi id={ID.cumle} value={b.cumle} maxLength={400} disabled={b.kilit} mesajli onChange={(e) => bolumYaz({ cumle: e.target.value })} />
               </Alan>
-            </FormIzgara>}
+            </FormIzgara>
+            <SonucAciklamasi t={t} i={i} b={b} degis={degis} /></>}
             {b.blok === "not" && <label className={stil.secenek}>
               <input type="checkbox" checked={b.zorunlu} onChange={(e) => bolumYaz({ zorunlu: e.target.checked })} /><span>Yorum zorunlu</span>
             </label>}
@@ -229,6 +244,10 @@ export function FormatKurucu({ turId, turAd, format, tanim, kaynakAd }: {
         </section>
 
         <div className={stil.kurucuSag}>
+          <section className={`${stil.bolum} ${stil.yalnizGenis}`} aria-labelledby="kb-gorunum">
+            <h2 className={stil.bolumAd} id="kb-gorunum">Belge</h2>
+            <GorunumDuzenleyici t={t} degis={degis} />
+          </section>
           <section className={`${stil.bolum} ${stil.yalnizGenis}`} aria-labelledby="kb-kural">
             <h2 className={stil.bolumAd} id="kb-kural">Kurallar</h2>
             <div className={stil.secenekler}>

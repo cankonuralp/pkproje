@@ -51,6 +51,9 @@
 .rb-secili { background: #000; }
 .rb-kutu-metin { margin: 0 0 10px; padding: 3px; border: 1px solid #000; min-height: 22px; white-space: pre-wrap; }
 .rb-notlar { margin: -6px 0 10px; padding-left: 18px; font-size: 11px; }
+/* sonuç bölümünün sabit metni (426: ağır kusurlar tanımı, açıklamalar) — kutunun altında, küçük */
+.rb-aciklama { margin: -6px 0 10px; padding: 3px; border: 1px solid #000; border-top: 0; font-size: 10px; line-height: 1.35; }
+.rb-aciklama p { margin: 0 0 2px; }
 .rb-kusurlar { margin: 0; padding: 3px 3px 3px 6px; border: 1px solid #000; list-style: none; }
 .rb-fotolar { display: flex; flex-wrap: wrap; gap: 6px; margin: 0 0 10px; padding: 4px; border: 1px solid #000; }
 .rb-foto { width: 236px; margin: 0; break-inside: avoid; }

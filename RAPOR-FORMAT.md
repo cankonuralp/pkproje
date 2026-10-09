@@ -41,6 +41,13 @@ kusur listesini hesaplar. Firmalar arasında motor ortak, tanım firmaya özel.
 9. **Not / yorum** — serbest metin (muayene uzmanı yorumu).
 10. **İmza alanları** — muayene uzmanı, teknik yönetici; imza yöntemi firma ayarından.
 
+**2026-10-09 (426; reisim: *"bir kullanıcı da bu ve benzeri rapor formatlarını isterse kendi eli ile format yapıcıdan yapabileceği şekilde format
+yapıcıyı düzenle"*):** ölçüm tablosu sütunu ve test değeri **seçmeli** olabilir; seçeneklerden hangilerinin **"uygun değil"** sayılacağı ve kusurun
+**ağır** olup olmadığı formatta yazılır (ZPKR04 U / UD / UG tablosu, ZPKR05 "Not 1: Uygun / Not 2: Yetersiz"). Sınır kuralına **kesin küçük / kesin
+büyük** eklendi (ZPKR05 RB < 2 Ω). Sonuç bölümünün **sabit metni** (Bakanlık formatlarındaki "ağır kusurlar tanımı", "açıklamalar") PDF'e basılır;
+Bakanlık şablonunda kilitlidir. Madde, grup ve formatın tamamı için **talimat** (kontrolün nasıl yapılacağı) — saha ekranında ünlemden açılır,
+PDF'e basılmaz.
+
 ## 3 · Kurallar (format başına)
 
 - Alan / madde / ölçüm bazında **zorunlu**; zorunlu boşken Onaya gönder uyarır ve alanı işaretler (bugünkü davranış).
@@ -72,6 +79,11 @@ kusur listesini hesaplar. Firmalar arasında motor ortak, tanım firmaya özel.
   saha ekranı (tablet / telefon) ↔ PDF sayfası.
 - Üstte: tür adı · sürüm · taslak / yayında · **Yayınla** · **Kurallar** · **Görünüm**.
 - Telefonda kurucu açılmaz (masaüstü işi); önizleme açılır.
+- **2026-10-09 (426):** her öğe "Düzenle" ile açılır — alan türü / seçenekleri / birimi / zorunluluğu; madde metni, grubu, standardı, açıklaması,
+  talimatı; sütun / değer türü, seçenekleri, uygun değil sayılanlar, ağırlığı, sınırı. Kontrol listesinde grup ekle / adlandır / talimat / boşsa
+  sil, maddeyi seçilen gruba ekle, cevap seti; ölçüm tablosunda uygunluk notları (Not-1 …; kusur / ağır); sonuçta sabit metin; "Belge":
+  form kodu, başlık, metot ve kapsam (dayanak), genel muayene talimatı. Kilitli (Bakanlık) öğede yalnız talimat yazılır; form kodu ve başlık
+  değişmez. Saf işlevler `src/modules/rapor-format/kurucu.ts`, ekran `ui/KurucuDuzenleyici.tsx`.
 
 ## 7 · Veri
 

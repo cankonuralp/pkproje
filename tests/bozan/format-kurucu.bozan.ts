@@ -37,3 +37,20 @@ test("kilit denetimi kalkınca Bakanlık bölümü kurucudan silinir", async () 
   const t = structuredClone(SABLONLAR.ZPKR02.tanim), k = t.bolumler.findIndex((b) => b.kilit);
   assert.equal(m.bolumSil(t, k).bolumler.length, t.bolumler.length - 1, "bozuk: kilitli bölüm silindi");
 });
+
+/* 426: öğe düzenleyicide kilit koruması kalkınca Bakanlık maddesinin metni kurucudan değişir; olumsuz seçenek süzgeci kalkınca seçeneklerde
+   olmayan değer "uygun değil" listesine girer (tanım şemadan geçmez) */
+test("öğe düzenleyicinin kilit koruması kalkınca Bakanlık maddesinin metni değişir", async () => {
+  const m = await bozuk("const yeni = m.kilit ? {", "const yeni = false ? {");
+  const t = SABLONLAR.ZPKR02.tanim, i = t.bolumler.findIndex((b) => b.id === "gozle");
+  const y = m.ogeYaz(t, i, "g1_1", { ad: "değişti" });
+  const b = y.bolumler[i];
+  assert.ok(b.blok === "liste" && b.gruplar[0].maddeler[0].metin === "değişti", "bozuk: kilitli madde değişti");
+});
+
+test("olumsuz seçenek süzgeci kalkınca seçeneklerde olmayan değer kalır, tanım şemadan geçmez", async () => {
+  const m = await bozuk("const olumsuz = (y.olumsuz ?? c.olumsuz)?.filter((o) => gecerli.includes(o));", "const olumsuz = (y.olumsuz ?? c.olumsuz);");
+  const t = FormatTanimi.parse({ sema: 1, bolumler: [{ id: "x", ad: "X", blok: "olcum", sutunlar: [{ id: "a", ad: "A" }] }] });
+  const y = m.ogeYaz(t, 0, "a", { tur: "secim", secenekler: ["U", "UD"], olumsuz: ["YOK"] });
+  assert.equal(FormatTanimi.safeParse(y).success, false, "bozuk: geçersiz tanım üretildi");
+});

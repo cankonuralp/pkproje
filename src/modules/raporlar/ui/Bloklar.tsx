@@ -21,8 +21,9 @@ import { SecimAlani } from "../../../components/secim/SecimAlani";
 import { TarihAlani } from "../../../components/secim/TarihAlani";
 import { tarihNo } from "../../../components/secim/tarih";
 import { Tus, tusSinifi } from "../../../components/tus/Tus";
+import { SINIR_ISARETI } from "../../../format/hesap";
 import { satirAnahtari, type Degerlendirme } from "../../../format/motor";
-import type { Bolum, BolumOf, Cevaplar } from "../../../format/tanim";
+import type { Bolum, BolumOf, Cevaplar, Sinir } from "../../../format/tanim";
 import { meslek } from "../../personel/sema";
 import { SONUC_AD } from "../sema";
 import type { SahaRaporu } from "../server/raporlar";
@@ -33,7 +34,7 @@ import stil from "./raporlar.module.css";
     "<madde>.derece", satirAnahtari ("<bölüm>#<sıra>.<sütun>"), "cihaz.<tür>". Kimlikte tire olmaz (tanim.ts) → ayraç tire, çakışma yok. */
 export const alanId = (alan: string) => `r-${alan.replace(/[#.]/g, "-")}`;
 const virgul = (n: number) => String(n).replace(".", ",");
-const sinirMetni = (op?: "<=" | ">=", s?: number, birim?: string) => (op && s !== undefined ? `${op === "<=" ? "≤" : "≥"} ${virgul(s)}${birim ? ` ${birim}` : ""}` : null);
+const sinirMetni = (op?: Sinir, s?: number, birim?: string) => (op && s !== undefined ? `${SINIR_ISARETI[op]} ${virgul(s)}${birim ? ` ${birim}` : ""}` : null);
 const EVET: readonly SecimSecenegi[] = [["evet", "Evet"], ["hayir", "Hayır"]];
 const DERECE: readonly SecimSecenegi[] = [["hafif", "Hafif kusur"], ["agir", "Ağır kusur"]];
 const SONUC: readonly SecimSecenegi[] = [["uygun", SONUC_AD.uygun], ["uygun_degil", SONUC_AD.uygun_degil]];
@@ -423,12 +424,15 @@ function TestBlok({ b, bag }: { b: BolumOf<"test">; bag: Baglam }) {
         const id = alanId(d.id), deger = bag.c.deger[d.id] ?? "", r = bag.d.degerler[d.id] ?? null, gec = bag.gecersiz(d.id);
         const sinir = sinirMetni(d.op, d.sinir, d.birim);
         const ipucu = [sinir && `Sınır ${sinir}`, d.not].filter(Boolean).join(" · ");
-        const sonuc = ipucu || r !== null ? <>{ipucu}{r !== null && <>{ipucu && " · "}<span className={r ? stil.onay : stil.hataMetin}>{r ? "Uygun" : "Sınır dışı"}</span></>}</> : undefined;
+        const secmeli = !!d.secenekler?.length;
+        const sonuc = ipucu || r !== null ? <>{ipucu}{r !== null && <>{ipucu && " · "}<span className={r ? stil.onay : stil.hataMetin}>{r ? "Uygun" : secmeli ? (d.agir ? "Ağır kusur" : "Uygun değil") : "Sınır dışı"}</span></>}</> : undefined;
+        const yaz = (x: string) => bag.yaz((c) => ({ ...c, deger: { ...c.deger, [d.id]: x } }));
         return (
-          <Alan key={d.id} id={id} etiket={d.birim ? `${d.ad} (${d.birim})` : d.ad} zorunlu={d.zorunlu && !bag.oku} hata={gec ? "Değer yazılmalı." : undefined} sonuc={sonuc}>
+          <Alan key={d.id} id={id} etiket={d.birim ? `${d.ad} (${d.birim})` : d.ad} zorunlu={d.zorunlu && !bag.oku} hata={gec ? (secmeli ? "Seçilmeli." : "Değer yazılmalı.") : undefined} sonuc={sonuc}>
             {bag.oku ? <OkuGirdi id={id} deger={deger} />
-              : <Girdi id={id} value={deger} maxLength={d.metin ? 60 : 12} inputMode={d.metin ? undefined : "decimal"} hata={gec || r === false} mesajli={!!sonuc}
-                onChange={(e) => bag.yaz((c) => ({ ...c, deger: { ...c.deger, [d.id]: e.target.value } }))} />}
+              : secmeli ? <SecimAlani id={id} ad={d.ad} deger={deger} gecersiz={gec} degistir={yaz} secenekler={d.secenekler!.map((s) => [s, s] as const)} />
+                : <Girdi id={id} value={deger} maxLength={d.metin ? 60 : 12} inputMode={d.metin ? undefined : "decimal"} hata={gec || r === false} mesajli={!!sonuc}
+                  onChange={(e) => yaz(e.target.value)} />}
           </Alan>
         );
       })}
@@ -453,6 +457,7 @@ function SonucBlok({ b, bag }: { b: BolumOf<"sonuc">; bag: Baglam }) {
       {cumle && (
         <p className={stil.cumle}>{cumle} {s === "uygun" ? <b>uygundur</b> : s === "uygun_degil" ? <b>uygun değildir</b> : "uygundur / uygun değildir"}.</p>
       )}
+      {b.aciklama.trim() && <p className={stil.aciklama}>{b.aciklama.trim()}</p>}
       <div className={`${stil.madde} ${stil.maddeSonuc}`}>
         <label className={stil.maddeAd} htmlFor={id}>Sonuç ve kanaat</label>
         <div className={stil.maddeCevap}>

@@ -4,10 +4,10 @@
    bölüm / öğe silinmez. Sunucunun taslak kaydı ve yayın engeli tests/rapor-format.test.ts. Olumsuz kanıt tests/bozan/format-kurucu.bozan.ts. */
 import assert from "node:assert/strict";
 import { test } from "node:test";
-import { BLOKLAR, FormatTanimi } from "../src/format/tanim.ts";
+import { BLOKLAR, FormatTanimi, type BolumOf } from "../src/format/tanim.ts";
 import { SABLONLAR } from "../src/format/sablonlar.ts";
 import { kilitDenetimi, kilitNormallestir } from "../src/format/motor.ts";
-import { bolumAdi, bolumOgeleri, bolumSil, kimlikler, ogeEkle, ogeSil, tasi, yeniBolum, yeniKimlik } from "../src/modules/rapor-format/kurucu.ts";
+import { bolumAdi, bolumOgeleri, bolumSil, cevaplarYaz, gorunumYaz, grupEkle, grupSil, grupYaz, kimlikler, maddeEkle, notlarYaz, ogeEkle, ogeSil, ogeYaz, satirlar, tasi, yeniBolum, yeniKimlik } from "../src/modules/rapor-format/kurucu.ts";
 
 const zpkr02 = () => structuredClone(SABLONLAR.ZPKR02.tanim);
 const gecerli = (t: unknown) => { const r = FormatTanimi.safeParse(t); assert.ok(r.success, JSON.stringify(!r.success && r.error.issues.slice(0, 3))); };
@@ -96,4 +96,69 @@ test("340–345 incelemesi: kilitli tabloya kurucuda eklenen sütun yayınlansa 
   const sablonSutunu = bolumOgeleri(yayinda.bolumler[nokta])[0].id;
   const bozuk = { ...yayinda, bolumler: yayinda.bolumler.map((b, i) => (i === nokta && b.blok === "olcum" ? { ...b, sutunlar: b.sutunlar.filter((c) => c.id !== sablonSutunu) } : b)) };
   assert.ok(kilitDenetimi(bozuk, yayinda).some((x) => x.includes(`silinmiş: ${yayinda.bolumler[nokta].id}.${sablonSutunu}`)), "şablon sütunu yine zorunlu");
+});
+
+/* 426 (reisim 2026-10-09: "kullanıcı bu ve benzeri rapor formatlarını isterse kendi eli ile format yapıcıdan yapabilsin"): öğe düzenleyici, gruplar,
+   cevap seti, uygunluk notları, görünüm. Kilitli (Bakanlık) maddede yalnız talimat değişir; şablon sütunu değişmez; olumsuz seçenek seçeneklerin
+   dışına çıkmaz; tür değişince sınır / seçenekler temizlenir; her adımın sonucu şemadan geçer. Olumsuz kanıt: tests/bozan/kurucu.bozan.ts. */
+test("426: kilitli madde yalnız talimat alır; kurucu maddesi metin / standart / grup değiştirir", () => {
+  let t = SABLONLAR.ZPKR02.tanim;
+  const i = t.bolumler.findIndex((b) => b.id === "gozle");
+  const once = JSON.stringify(t.bolumler[i]);
+  t = ogeYaz(t, i, "g1_1", { ad: "değişmesin", std: "x", talimat: "Kabloyu gözle kontrol et." });
+  const g = t.bolumler[i];
+  assert.ok(g.blok === "liste");
+  const m = g.gruplar[0].maddeler[0], ilk = (SABLONLAR.ZPKR02.tanim.bolumler[i] as BolumOf<"liste">).gruplar[0].maddeler[0];
+  assert.deepEqual([m.metin, m.std, m.talimat], [ilk.metin, ilk.std, "Kabloyu gözle kontrol et."], "metin ve standart aynı, talimat yazıldı");
+  assert.notEqual(JSON.stringify(t.bolumler[i]), once);
+  assert.deepEqual(kilitDenetimi(t, SABLONLAR.ZPKR02.tanim), [], "talimat kilidi bozmaz");
+  t = grupEkle(t, i, "Firma ek kontrolleri");
+  const yeni = (t.bolumler[i] as BolumOf<"liste">).gruplar.at(-1)!;
+  t = maddeEkle(t, i, yeni.id, "Pano kapağı kilitli mi");
+  const mid = (t.bolumler[i] as BolumOf<"liste">).gruplar.at(-1)!.maddeler[0].id;
+  t = ogeYaz(t, i, mid, { ad: "Pano kapağı kilitli mi?", std: "TS HD 60364", talimat: "Anahtarla dene.", grup: (t.bolumler[i] as BolumOf<"liste">).gruplar[0].id });
+  const gl = (t.bolumler[i] as BolumOf<"liste">).gruplar;
+  assert.equal(gl.at(-1)!.maddeler.length, 0, "madde başka gruba taşındı");
+  assert.ok(gl[0].maddeler.some((x) => x.id === mid && x.metin === "Pano kapağı kilitli mi?" && x.std === "TS HD 60364"));
+  assert.equal(grupSil(t, i, gl[0].id), t, "dolu grup silinmez");
+  assert.equal((grupSil(t, i, gl.at(-1)!.id).bolumler[i] as BolumOf<"liste">).gruplar.length, gl.length - 1, "boş grup silinir");
+  assert.equal((grupYaz(t, i, gl[0].id, { ad: "değişmesin" }).bolumler[i] as BolumOf<"liste">).gruplar[0].ad, gl[0].ad, "Bakanlık grubunun adı değişmez");
+  assert.equal((grupYaz(t, i, gl[0].id, { talimat: "Grup talimatı" }).bolumler[i] as BolumOf<"liste">).gruplar[0].talimat, "Grup talimatı", "talimat yazılır");
+  assert.equal(cevaplarYaz(t, i, ["A", "B"]), t, "kilitli bölümün cevap seti değişmez");
+  assert.ok(FormatTanimi.safeParse(t).success);
+});
+
+test("426: sütun ve değer düzenleyici — seçenekler, olumsuz (seçeneklerle sınırlı), ağır, sınır; tür değişince temizlenir", () => {
+  let t = FormatTanimi.parse({ sema: 1, bolumler: [
+    { id: "x", ad: "Testler", blok: "olcum", sutunlar: [] },
+    { id: "y", ad: "Değerler", blok: "test", degerler: [] },
+    { id: "z", ad: "Kontroller", blok: "liste", cevaplar: ["Uygun", "Uygun değil"], gruplar: [{ id: "g", ad: "", maddeler: [] }] },
+  ] });
+  t = ogeEkle(t, 0, "Test"); t = ogeEkle(t, 1, "RB");
+  const s = (t.bolumler[0] as BolumOf<"olcum">).sutunlar[0].id, d = (t.bolumler[1] as BolumOf<"test">).degerler[0].id;
+  t = ogeYaz(t, 0, s, { tur: "secim", secenekler: satirlar("U\nUD\n\nUG\nU"), olumsuz: ["UD", "YOK"], agir: true });
+  let c = (t.bolumler[0] as BolumOf<"olcum">).sutunlar[0];
+  assert.deepEqual([c.giris, c.secenekler, c.olumsuz, c.agir], ["secim", ["U", "UD", "UG"], ["UD"], true]);
+  t = ogeYaz(t, 0, s, { tur: "sayi", op: "<", sinir: 2 });
+  c = (t.bolumler[0] as BolumOf<"olcum">).sutunlar[0];
+  assert.deepEqual([c.giris, c.secenekler, c.olumsuz, c.op, c.sinir], ["sayi", undefined, undefined, "<", 2]);
+  t = ogeYaz(t, 1, d, { op: ">=", sinir: 1.5, birim: "Ω" });
+  t = ogeYaz(t, 1, d, { tur: "secim", secenekler: ["Not 1: Uygun", "Not 2: Yetersiz"], olumsuz: ["Not 2: Yetersiz"] });
+  const v = (t.bolumler[1] as BolumOf<"test">).degerler[0];
+  assert.deepEqual([v.secenekler, v.olumsuz, v.op, v.sinir, v.metin], [["Not 1: Uygun", "Not 2: Yetersiz"], ["Not 2: Yetersiz"], undefined, undefined, false]);
+  t = cevaplarYaz(t, 2, ["U", "UD", "UG"]);
+  assert.deepEqual((t.bolumler[2] as BolumOf<"liste">).cevaplar, ["U", "UD", "UG"]);
+  assert.equal(cevaplarYaz(t, 2, ["Tek"]), t, "tek cevap olmaz");
+  assert.ok(FormatTanimi.safeParse(t).success);
+});
+
+test("426: uygunluk notları ve görünüm — Bakanlık formatında form kodu / başlık değişmez, dayanak ve talimat değişir", () => {
+  let t = FormatTanimi.parse({ sema: 1, bolumler: [{ id: "x", ad: "Noktalar", blok: "olcum", sutunlar: [{ id: "a", ad: "A" }] }] });
+  t = notlarYaz(t, 0, [{ metin: "Uygun", kusur: false, agir: true }, { metin: "Yetersiz", kusur: true, agir: true }, { metin: " ", kusur: true, agir: false }]);
+  assert.deepEqual((t.bolumler[0] as BolumOf<"olcum">).notlar, [{ metin: "Uygun", kusur: false, agir: false }, { metin: "Yetersiz", kusur: true, agir: true }]);
+  t = gorunumYaz(t, { formKodu: "FR-01", baslik: "Firma raporu", dayanak: satirlar("TS 1\nTS 2", 20, 300), talimat: "Önce enerjiyi kes." });
+  assert.deepEqual([t.gorunum.formKodu, t.gorunum.baslik, t.gorunum.dayanak, t.gorunum.talimat], ["FR-01", "Firma raporu", ["TS 1", "TS 2"], "Önce enerjiyi kes."]);
+  const z = gorunumYaz(SABLONLAR.ZPKR02.tanim, { formKodu: "X", baslik: "Y", talimat: "Genel talimat" });
+  assert.deepEqual([z.gorunum.formKodu, z.gorunum.talimat], ["ZPKR02", "Genel talimat"]);
+  assert.deepEqual(kilitDenetimi(z, SABLONLAR.ZPKR02.tanim), []);
 });
