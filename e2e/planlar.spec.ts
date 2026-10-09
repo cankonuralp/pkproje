@@ -87,6 +87,42 @@ test("plan aç: engel, canlı uyarılar, proje no ve künye; denetçi yalnız ke
   await expect(page.getByText("Bu sayfayı görme yetkiniz yok")).toBeVisible();
 });
 
+/* 444 (reisim 2026-10-09: "plan açılırken ekipmanlar tesise girilenler kadar otomatik geliyor el ile de girilebilmeli liste gibi"; "seçilen
+   denetçinin mailleri bilgilendirme maili kısmına otomatik gelsin"): ekipmansız tesiste elle ekipman satırı (tür + kod + konum) → plan açılınca
+   tesise kayıt ve plana girer; seçilen denetçinin e-postası Bilgilendirilecekler'de kendiliğinden (kaldırılmaz); bölümler aynı satırda eşit boy */
+test("plan aç: elle ekipman satırı plana ve tesise girer; seçilen denetçinin e-postası bilgilendirmede; kartlar eşit boy", async ({ page }, bilgi) => {
+  const kod = `HT-EL${bilgi.project.name.slice(0, 1).toUpperCase()}${bilgi.retry}`;
+  await girisli(page, "yonetici");
+  await page.goto("/planlar/ac");
+  await hazir(page);
+  await page.getByRole("combobox", { name: "Müşteri" }).click();
+  await page.getByRole("option", { name: /Plan Deneme/ }).click();
+  await page.getByRole("combobox", { name: "Tesis" }).click();
+  await page.getByRole("option", { name: new RegExp(E2E_PLAN.tesisElle) }).click();
+  await expect(page.getByText("Tesiste kayıtlı ekipman yok; elle ekleyin ya da denetçi sahada ekler")).toBeVisible();
+  await page.getByRole("checkbox", { name: E2E_HESAPLAR.denetci.ad }).check();
+  const liste = page.getByRole("list", { name: "Bilgilendirilecekler" });
+  await expect(liste).toContainText(E2E_HESAPLAR.denetci.eposta);
+  await expect(liste.getByRole("button", { name: `${E2E_HESAPLAR.denetci.eposta} kaldır` })).toHaveCount(0);
+  await page.getByRole("button", { name: "Ekipman ekle (elle)" }).click();
+  await page.getByRole("combobox", { name: "1. ekipman türü" }).click();
+  await page.getByRole("option", { name: /Hava tankı/ }).click();
+  await page.getByRole("textbox", { name: "1. ekipman kodu" }).fill(kod.toLowerCase());
+  await page.getByRole("textbox", { name: "1. konum" }).fill("Kazan dairesi");
+  await expect(page.getByText("1 ekipman · 1 tür · hepsi plana girer (1 elle eklendi)")).toBeVisible();
+  /* geniş ekranda aynı satırdaki bölümler eşit boy (444: "bi taraf uzun bi taraf kısa") */
+  if (bilgi.project.name === "masaustu") {
+    const boylar = await page.locator("section[id^='pa-b']").evaluateAll((l) => l.map((e) => { const r = e.getBoundingClientRect(); return [Math.round(r.top), Math.round(r.height)]; }));
+    const satirlar = new Map<number, number[]>();
+    for (const [ust, boy] of boylar) satirlar.set(ust, [...(satirlar.get(ust) ?? []), boy]);
+    for (const l of satirlar.values()) expect(Math.max(...l) - Math.min(...l), `aynı satırdaki bölümler: ${l.join(", ")}`).toBeLessThanOrEqual(2);
+  }
+  await page.getByRole("button", { name: "Planı aç" }).click();
+  await expect(page).toHaveURL(/\/planlar\/[0-9a-f-]{36}$/, { timeout: 30_000 });
+  await expect(page.getByRole("row", { name: /Hava tankı\s+Periyodik kontrol\s+1/ })).toBeVisible();
+  await expect(page.getByText(kod).first()).toBeVisible();
+});
+
 /* 372 (§9 elli üçüncü tur): yanlış açılan, raporsuz plan yönetici tarafından silinir → Planlar'a dönülür */
 test("plan: raporsuz plan silinir", async ({ page }) => {
   test.setTimeout(120_000);

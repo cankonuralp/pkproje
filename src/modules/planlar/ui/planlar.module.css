@@ -156,3 +156,21 @@
   background: transparent; color: var(--yazi2); cursor: pointer;
 }
 .epostaKaldir:hover { background: var(--kenar); }
+
+/* 444 Plan aç: denetçi kısa satır · seçilen denetçinin e-postası (kaldırılmaz) · ekipmanlar (tesisteki + elle satırlar) */
+.adaylar { display: grid; gap: 0; margin: 0; padding: 0; list-style: none; }
+.aday { display: grid; gap: 2px; padding: 8px 0; border-top: 1px solid var(--kenar); }
+.aday:first-child { border-top: 0; padding-top: 0; }
+.adayUst { display: flex; align-items: flex-start; justify-content: space-between; gap: 8px; }
+.adayAlt { display: flex; flex-wrap: wrap; gap: 2px 14px; margin: 0 0 0 26px; color: var(--yazi2); font-size: var(--boy-kucuk); }
+.epostaEkip { padding-right: 4px; }
+.epostaEtiket { margin-left: 6px; padding: 0 8px; border-radius: var(--r-tam); background: var(--kart); color: var(--yazi2); font-size: var(--boy-etiket); font-weight: 600; }
+.ekipmanlar { display: grid; gap: 0; margin: 0; padding: 0; list-style: none; }
+.ekipmanlar li { display: grid; grid-template-columns: minmax(6.5rem, max-content) minmax(0, 1fr); gap: 2px 12px; padding: 6px 0; border-top: 1px solid var(--kenar); }
+.ekipmanlar li:first-child { border-top: 0; }
+.yeniEkipmanlar { display: grid; gap: 12px; margin: 12px 0 0; padding: 0; list-style: none; }
+.yeniSatir { display: grid; grid-template-columns: minmax(0, 1.3fr) minmax(0, 1fr) minmax(0, 1fr) auto; gap: 8px 10px; align-items: end; padding-top: 12px; border-top: 1px dashed var(--kenar-alan); }
+.ekleSatiri { display: flex; margin: 12px 0 0; }
+@media (max-width: 767.98px) {
+  .yeniSatir { grid-template-columns: minmax(0, 1fr); align-items: stretch; }
+}

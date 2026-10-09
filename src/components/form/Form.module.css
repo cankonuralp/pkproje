@@ -1,7 +1,13 @@
 /* maketteki .a-form-sayfa / .a-form-bolum / .a-form / .a-alan-grup / .a-girdi / .a-form-eylem ile aynı (docs/assets/maket.css). */
-.sayfa { display: grid; grid-template-columns: repeat(auto-fit, minmax(min(100%, 440px), 1fr)); gap: 16px; align-items: start; }
+/* 444 (reisim 2026-10-09: "bi taraf uzun bi taraf kısa çok kötü … çok uzun bir şey ise bile kaydırabilir olsun kendi içinde"): aynı satırdaki
+   kartlar EŞİT boy (stretch); uzun içerik bölümün kendi içinde kayar (.kaydir — yalnız yan yana dizilen genişlikte; telefonda sayfa akışında) */
+.sayfa { display: grid; grid-template-columns: repeat(auto-fit, minmax(min(100%, 440px), 1fr)); gap: 16px; align-items: stretch; }
 .bolum { min-width: 0; padding: 12px 14px 14px; background: var(--kart); border: 1px solid var(--kenar); border-radius: var(--r-buyuk); }
 .bolum > h2 { margin: 0 0 10px; font-size: var(--boy-bolum); font-weight: var(--kal-bolum); }
+.kaydir { min-width: 0; }
+@media (min-width: 768px) {
+  .kaydir { max-height: 440px; overflow: auto; overscroll-behavior: contain; margin-right: -6px; padding-right: 6px; }
+}
 .izgara { display: grid; grid-template-columns: repeat(2, minmax(0, 1fr)); gap: 12px 16px; }
 .alan { min-width: 0; }
 .genis { grid-column: 1 / -1; }

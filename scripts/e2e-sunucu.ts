@@ -55,6 +55,8 @@ for (const f of firmalar) {
     for (const kod of ["HT-0001", "HT-0002"]) await db.sorgu("INSERT INTO ekipman (tesis_id, tur_id, kod, ekleyen) VALUES ($1, $2, $3, 'Deneme')", [t, u, kod]);
     const ti = (await db.sorgu<{ id: string }>("INSERT INTO tesis (musteri_id, ad, adres, il, ilce) VALUES ($1, $2, 'Deneme Cad. No 2', 'Kocaeli', 'Gebze') RETURNING id::text", [m, E2E_PLAN.tesisIci])).rows[0].id;
     for (const kod of ["HT-0101", "HT-0102"]) await db.sorgu("INSERT INTO ekipman (tesis_id, tur_id, kod, ekleyen) VALUES ($1, $2, $3, 'Deneme')", [ti, u, kod]);
+    /* 444: ekipmansız tesis — Plan aç'ta elle ekipman (e2e/planlar.spec) */
+    await db.sorgu("INSERT INTO tesis (musteri_id, ad, adres, il, ilce) VALUES ($1, $2, 'Deneme Cad. No 5', 'Kocaeli', 'Gebze')", [m, E2E_PLAN.tesisElle]);
     /* saha raporu (311): üçüncü tesis + tek ekipman; türün gerekli ölçüm cihazı türü, geçerli kalibrasyonlu cihaz, denetçinin zimmetinde (depodan) */
     const ts = (await db.sorgu<{ id: string }>("INSERT INTO tesis (musteri_id, ad, adres, il, ilce) VALUES ($1, $2, 'Deneme Cad. No 3', 'Kocaeli', 'Gebze') RETURNING id::text",
       [m, E2E_PLAN.tesisSaha])).rows[0].id;

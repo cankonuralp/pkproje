@@ -11,11 +11,13 @@ export function FormSayfa({ children }: { children: ReactNode }) {
   return <div className={stil.sayfa}>{children}</div>;
 }
 
-/** genis: sayfa ızgarasında tam satır (maket a-alan-genis — ör. teklif kalemleri) */
-export function FormBolum({ baslik, children, id, genis = false }: { baslik: string; children: ReactNode; id?: string; genis?: boolean }) {
+/** genis: sayfa ızgarasında tam satır (maket a-alan-genis — ör. teklif kalemleri) · 444 kaydir: uzun içerik bölümün kendi içinde kayar
+    (yan yana dizilen genişlikte en çok 440 px; klavyeyle de kaydırılır — odaklanabilir bölge) */
+export function FormBolum({ baslik, children, id, genis = false, kaydir = false }: { baslik: string; children: ReactNode; id?: string; genis?: boolean; kaydir?: boolean }) {
   return (
     <section className={genis ? `${stil.bolum} ${stil.genis}` : stil.bolum} aria-labelledby={id ? `${id}-baslik` : undefined} id={id}>
-      <h2 id={id ? `${id}-baslik` : undefined}>{baslik}</h2>{children}
+      <h2 id={id ? `${id}-baslik` : undefined}>{baslik}</h2>
+      {kaydir ? <div className={stil.kaydir} role="region" tabIndex={0} aria-label={`${baslik} · liste`}>{children}</div> : children}
     </section>
   );
 }

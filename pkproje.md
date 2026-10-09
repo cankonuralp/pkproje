@@ -2355,6 +2355,16 @@ revizyon, alan kopyalama, hafif kusur devri, meslek eşleşme denetimi).
 - Emsal ürünler: https://opwire.app/iso-17020-periyodik-kontrol-yazilimi/ · https://17020muayene.vidco.com.tr/ · https://akuple.com/asansor-kontrol-yazilimi/ · https://ensyazilim.com/
 
 ## 11 · Değişiklik günlüğü
+- 2026-10-09 (444): **Plan aç düzeni; elle ekipman; denetçi e-postası bilgilendirmede** (reisim: *"bu sayfadaki kargaşa- kayıklık bi taraf uzun bi
+  taraf kısa çok kötü … çok uzun bir şey ise bile kaydırabilir olsun kendi içinde"*; *"seçilen denetçinin mailleri bilgilendirme maili kısmına otomatik
+  gelsin"*; *"plan açılırken ekipmanlar tesise girilenler kadar otomatik geliyor el ile de girilebilmeli liste gibi"*).
+  · Form sayfaları (ortak FormSayfa): aynı satırdaki kartlar EŞİT boy (stretch); FormBolum `kaydir`: uzun içerik bölümün kendi içinde kayar (yan yana
+  dizilen genişlikte en çok 440 px; telefonda sayfa akışında; klavyeyle kaydırılabilir bölge).
+  · Plan aç: denetçiler kısa satırlar (seçim, ad, meslek, durum; altında İSG-KATİP ID · EKİPNET · aynı gün · uyarı — eskiden kişi başı beş satırlık kart);
+  bölümler: 1 Müşteri ve tesis · 2 Tarihler · 3 Denetçi · 4 Bilgilendirme · 5 Ekipmanlar · 6 Özet ve uyarılar. Seçilen denetçinin giriş e-postası
+  Bilgilendirilecekler'de kendiliğinden ("denetçi" etiketli, kaldırılmaz — e-posta ekibe zaten gider). Ekipmanlar: tesiste kayıtlılar listede (hepsi plana
+  girer) + "Ekipman ekle (elle)" satırları (tür, kod, konum) — plan açılınca aynı işlemde tesise kalıcı kayıt + plana; kod denetimi plan içi "Yeni ekipman"
+  ile aynı (listede iki kez, tesiste kayıtlı, başka tesiste, eski kod → açılmaz, hiçbir şey yazılmaz).
 - 2026-10-09 (443): **Deneme ortamı (canlı deneme firması probata-deneme'ye UYDURMA veri)** (reisim: *"bir deneme ortamı oluştur, 2-3 firma, gerekli
   ölçüm cihazları , denetçi planlamacı hesapları vs , makette oluşturmuştuk benzeri daha az kalabalık olanı ve bu günü geçecek planlar olmasın"*).
   Kod değişmedi; veri tek veritabanı işleminde (düşerse hiçbir şey yazılmaz; ikinci kez koşmaz), uygulamanın kurallarıyla: numara sayacı (P-AAYY-SIRA),

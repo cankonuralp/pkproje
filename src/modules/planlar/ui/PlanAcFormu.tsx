@@ -1,14 +1,16 @@
 "use client";
 /* PLAN AÇ (maket plan-ac.html M6 2. tur; L6 kapsam seçimi yok; G1 geçmiş tarih uyarı; Ö5b sözleşme dışı uyarı; L4 atama uyarısı): tek sayfa —
    1 Müşteri ve tesis · 2 Tarihler · 3 Denetçi (İSG-KATİP SÖZLEŞME ID sözleşmeden gelir; yoksa el ile + "sözleşmeye de kaydet") · 4 Bilgilendirme (432:
-   ekibe e-posta kendiliğinden; başka alıcılar elle ya da listeden) · 5 Özet ve uyarılar.
+   ekibe e-posta kendiliğinden; başka alıcılar elle ya da listeden) · 5 Ekipmanlar · 6 Özet ve uyarılar.
+   444 (reisim 2026-10-09): kartlar aynı satırda eşit boy, uzun liste kendi içinde kayar (FormBolum kaydir); denetçiler kısa satırlar; seçilen
+   denetçinin e-postası Bilgilendirme'de kendiliğinden ("seçilen denetçinin mailleri bilgilendirme maili kısmına otomatik gelsin"); Ekipmanlar:
+   tesiste kayıtlılar kendiliğinden + elle satır satır ("el ile de girilebilmeli liste gibi" — açılışta tesise kayıt + plana).
    Uyarılar canlı (sema.ts saf kuralları) ve ENGEL DEĞİL; engel yalnız tesis, tarih, bitiş ≥ başlangıç, en az bir denetçi. Karar ve numara sunucuda. */
 import { useRouter } from "next/navigation";
 import { useEffect, useState, useTransition } from "react";
 import { BilgiListesi, Bilgi, Kosullar } from "../../../components/bilgi/Bilgi";
 import { useBildir } from "../../../components/bildirim/Bildirim";
 import { Alan, FormBolum, FormEylem, FormIzgara, FormSayfa, Girdi, ipucuId } from "../../../components/form/Form";
-import { KartEtiket, Liste, type Sutun } from "../../../components/liste/Liste";
 import { DegerYok, Kirinti, Rozet, SayfaBasi } from "../../../components/sayfa/Sayfa";
 import { SecimAlani } from "../../../components/secim/SecimAlani";
 import { TarihAlani } from "../../../components/secim/TarihAlani";
@@ -16,7 +18,7 @@ import { Serit } from "../../../components/serit/Serit";
 import { Tus, TusBaglanti } from "../../../components/tus/Tus";
 import { Ikon } from "../../../components/ikon/Ikon";
 import { meslek } from "../../personel/sema";
-import { adayUyarilari, isgDurumu, kapsamHesapla, sozlesmeUyarisi, tarihNo, turUyarilari, type Aday } from "../sema";
+import { adayUyarilari, isgDurumu, kapsamHesapla, kodBicimi, kodNormal, sozlesmeUyarisi, tarihNo, turUyarilari, type Aday } from "../sema";
 import type { PlanAcVerisi, TesisPlanBilgisi } from "../server/planlar";
 import { planAcEylemi, tesisPlanBilgisiEylemi } from "./eylemler";
 import { KapsamTablosu } from "./KapsamTablosu";
@@ -45,6 +47,9 @@ export function PlanAcFormu({ veri, baslangic }: { veri: PlanAcVerisi; baslangic
   /* ekleme hatası formun gönderim hatalarından ayrı: yanlış yazılan adres "Plan açılmadı" şeridi çıkarmaz */
   const [epostaHata, setEpostaHata] = useState<string | null>(null);
   const [genel, setGenel] = useState<string | null>(null);
+  /* 444: elle eklenen ekipman satırları (tesise kayıtlı olmayan) */
+  const [yeni, setYeni] = useState<{ a: number; tur: string; kod: string; konum: string }[]>([]);
+  const [sayac, setSayac] = useState(0);
 
   /* tesis seçilince o tesisin İSG-KATİP ID'leri, sözleşmeleri ve ekipmanı sunucudan; yalnız seçili tesisinki kullanılır */
   useEffect(() => {
@@ -61,7 +66,10 @@ export function PlanAcFormu({ veri, baslangic }: { veri: PlanAcVerisi; baslangic
     const isgD = isgDurumu(bilgi?.isg.find((x) => x.personelId === a.id), isg[a.id]?.trim() || null, gun);
     return [a.id, { isg: isgD, ...adayUyarilari(a, isgD, gun, bit, veri.acikPlanlar) }] as const;
   }));
-  const kapsam = bilgi ? kapsamHesapla(bilgi.ekipmanlar, veri.turler, gun ?? veri.bugun, veri.esik) : [];
+  const tesisteki = (bilgi?.ekipmanlar ?? []).filter((e) => !e.pasif);
+  const elleTam = yeni.filter((e) => e.tur);
+  const kapsam = bilgi ? kapsamHesapla([...bilgi.ekipmanlar, ...elleTam.map((e) => ({ turId: e.tur, sonKontrol: null, pasif: false }))], veri.turler, gun ?? veri.bugun, veri.esik) : [];
+  const turAd = (id: string) => veri.turler.find((t) => t.id === id)?.ad ?? "—";
   const ekipAday = veri.adaylar.filter((a) => ekip.includes(a.id));
   const toplam = kapsam.reduce((n, k) => n + k.ekipman, 0);
   const acik = veri.acikPlanlar.filter((p) => p.tesis === d.tesis);
@@ -79,45 +87,43 @@ export function PlanAcFormu({ veri, baslangic }: { veri: PlanAcVerisi; baslangic
     ...turUyarilari(kapsam, ekipAday, veri.atamalar).map((metin) => ({ tur: "eksik" as const, metin })),
   ];
 
-  const sutunlar: Sutun<Aday>[] = [
-    { k: "ad", genislik: "26%", baslik: "Denetçi", kart: "ust", sira: 1, hucre: (a) => (
-      <label className={stil.secim}>
-        <input type="checkbox" data-aday={a.id} checked={ekip.includes(a.id)} aria-label={a.ad}
-          onChange={(e) => { setEkip(e.target.checked ? [...ekip, a.id] : ekip.filter((x) => x !== a.id)); setH(({ ekip: _, ...r }) => r); }} />
-        <span>{a.ad}<span className={stil.altMetin}>{meslekAd(a)}</span></span>
-      </label>
-    ) },
-    { k: "isg", genislik: "18%", baslik: "İSG-KATİP SÖZLEŞME ID", kart: "govde", sira: 2, hucre: (a) => {
-      const x = durumlar.get(a.id)!.isg;
-      return <><KartEtiket>İSG-KATİP SÖZLEŞME ID</KartEtiket>{x.tur === "yok" ? <span className={stil.uyari}>Yok</span> : x.tur === "elle" ? <span className={stil.kod}>{x.no}</span>
-        : <span><span className={stil.kod}>{x.kayit.no}</span>{x.tur === "gec" && <span className={`${stil.uyari} ${stil.altMetin}`}>Geç onay · {tarihNo(x.kayit.onay!)}</span>}
-          {x.tur === "bitti" && <span className={`${stil.uyari} ${stil.altMetin}`}>Bitmiş · {tarihNo(x.kayit.bitis!)}</span>}</span>}</>;
-    } },
-    { k: "ekipnet", genislik: "13%", baslik: "EKİPNET", kart: "govde", sira: 3, hucre: (a) => <><KartEtiket>EKİPNET</KartEtiket>{a.ekipnet ? <span className={stil.kod}>{a.ekipnet}</span> : <span className={stil.uyari}>Eksik</span>}</> },
-    { k: "gun", genislik: "15%", baslik: "Aynı gün", kart: "govde", sira: 5, hucre: (a) => {
-      const c = durumlar.get(a.id)!.cakisma;
-      return <><KartEtiket>Aynı gün</KartEtiket>{c.length ? <span>{c.map((p) => <span key={p.id} className={`${stil.uyari} ${stil.altMetin}`}>{p.no} · {tarihNo(p.baslangic)}</span>)}</span> : <DegerYok>Başka plan yok</DegerYok>}</>;
-    } },
-    { k: "uyari", genislik: "18%", baslik: "Uyarı", kart: "govde", sira: 6, hucre: (a) => {
-      const e = durumlar.get(a.id)!.eksik;
-      return <><KartEtiket>Uyarı</KartEtiket>{e.length ? <span className={stil.uyari}>{e.join(" · ")}</span> : <DegerYok>Yok</DegerYok>}</>;
-    } },
-    { k: "durum", genislik: "10%", baslik: "Durum", kart: "rozet", sira: 1, hucre: (a) => {
-      const n = durumlar.get(a.id)!.eksik.length;
-      return n ? <Rozet tur="bekliyor">{n} uyarı</Rozet> : <Rozet tur="tamam">Uygun</Rozet>;
-    } },
-  ];
+  /* 444: denetçi kısa satır — seçim, ad, meslek, durum rozeti; altında İSG-KATİP ID · EKİPNET · aynı gün · uyarı (eski kart hâli bir kişide beş satırdı) */
+  const adaySatiri = (a: Aday) => {
+    const u = durumlar.get(a.id)!, x = u.isg;
+    const isgMetin = x.tur === "yok" ? <span className={stil.uyari}>Yok</span> : x.tur === "elle" ? <span className={stil.kod}>{x.no}</span>
+      : <><span className={stil.kod}>{x.kayit.no}</span>{x.tur === "gec" && <span className={stil.uyari}> · geç onay {tarihNo(x.kayit.onay!)}</span>}
+        {x.tur === "bitti" && <span className={stil.uyari}> · bitmiş {tarihNo(x.kayit.bitis!)}</span>}</>;
+    return (
+      <li key={a.id} className={stil.aday}>
+        <div className={stil.adayUst}>
+          <label className={stil.secim}>
+            <input type="checkbox" data-aday={a.id} checked={ekip.includes(a.id)} aria-label={a.ad}
+              onChange={(e) => { setEkip(e.target.checked ? [...ekip, a.id] : ekip.filter((y) => y !== a.id)); setH(({ ekip: _, ...r }) => r); }} />
+            <span>{a.ad}<span className={stil.altMetin}>{meslekAd(a)}</span></span>
+          </label>
+          {u.eksik.length ? <Rozet tur="bekliyor">{u.eksik.length} uyarı</Rozet> : <Rozet tur="tamam">Uygun</Rozet>}
+        </div>
+        <p className={stil.adayAlt}>
+          <span>İSG-KATİP ID: {isgMetin}</span>
+          <span>EKİPNET: {a.ekipnet ? <span className={stil.kod}>{a.ekipnet}</span> : <span className={stil.uyari}>Eksik</span>}</span>
+          {u.cakisma.length > 0 && <span className={stil.uyari}>Aynı gün: {u.cakisma.map((p) => `${p.no} · ${tarihNo(p.baslangic)}`).join(", ")}</span>}
+          {u.eksik.length > 0 && <span className={stil.uyari}>{u.eksik.join(" · ")}</span>}
+        </p>
+      </li>
+    );
+  };
 
   const ac = () => baslat(async () => {
     const yerel: Record<string, string> = {};
     if (!d.musteri) yerel.musteri = "Müşteri seçilmeli.";
     const r = await planAcEylemi({ tesis: d.tesis, baslangic: d.baslangic, bitis: d.bitis, aciklama: d.aciklama, ekip: ekip.map((k) => ({ personel: k, isgNo: isg[k] ?? "", kaydet: !!kaydet[k] })),
-      bilgilendirme: bilgi_ });
+      bilgilendirme: bilgi_, yeniEkipman: yeni.map(({ tur, kod, konum }) => ({ tur, kod, konum })) });
     const hatalar = { ...yerel, ...(r.hatalar ?? {}) };
     setH(hatalar); setGenel(r.genel ?? null);
     if (!r.tamam) {
       const k = Object.keys(hatalar)[0];
-      const odakId = k?.startsWith("bilgilendirme") ? ID.bilgilendirme : ID[k as keyof typeof ID];
+      const ek = /^yeniEkipman\.(\d+)\.(tur|kod)$/.exec(k ?? "");
+      const odakId = ek ? `pa-yeni-${ek[2]}-${yeni[Number(ek[1])]?.a}` : k?.startsWith("bilgilendirme") ? ID.bilgilendirme : ID[k as keyof typeof ID];
       requestAnimationFrame(() => (k === "ekip" ? document.querySelector<HTMLInputElement>("[data-aday]") : document.getElementById(odakId ?? OZET))?.focus());
       return;
     }
@@ -134,10 +140,16 @@ export function PlanAcFormu({ veri, baslangic }: { veri: PlanAcVerisi; baslangic
     setBilgi([...bilgi_, a]); setYeniEposta(""); setEpostaHata(null);
   };
   const ekipEposta = ekipAday.length;
+  /* 444: seçilen denetçilerin e-postası (giriş hesabı) — e-posta ekibe kendiliğinden gider; listede görünür, kaldırılmaz */
+  const ekipAdresleri = ekipAday.map((a) => ({ ad: a.ad, eposta: veri.adayEposta[a.id] })).filter((x): x is { ad: string; eposta: string } => !!x.eposta);
+  const yeniDegistir = (a: number, alan: "tur" | "kod" | "konum", deger: string) => {
+    setYeni(yeni.map((e) => (e.a === a ? { ...e, [alan]: deger } : e)));
+    setH((x) => Object.fromEntries(Object.entries(x).filter(([k]) => !k.startsWith("yeniEkipman."))));
+  };
   const rehber = [
     ...(bilgi?.musteriEposta ? [[bilgi.musteriEposta, `${m?.kisa ?? "Müşteri"} (müşteri)`, bilgi.musteriEposta] as const] : []),
     ...veri.rehber.map((x) => [x.eposta, x.ad, x.eposta] as const),
-  ].filter((x, i, l) => !bilgi_.includes(x[0]) && l.findIndex((y) => y[0] === x[0]) === i);
+  ].filter((x, i, l) => !bilgi_.includes(x[0]) && !ekipAdresleri.some((e) => e.eposta === x[0]) && l.findIndex((y) => y[0] === x[0]) === i);
 
   return (
     <form onSubmit={(e) => { e.preventDefault(); ac(); }} noValidate>
@@ -180,9 +192,10 @@ export function PlanAcFormu({ veri, baslangic }: { veri: PlanAcVerisi; baslangic
             {sozUyari && <Serit tur="uyari" ikon="triangle-alert">{sozUyari}</Serit>}
           </div>}
         </FormBolum>
-        <FormBolum baslik="3 · Denetçi" id="pa-b3">
+        <FormBolum baslik="3 · Denetçi" id="pa-b3" kaydir={!!d.tesis}>
           {!d.tesis ? <p className={stil.bosSatir}>Önce tesis seçin.</p> : <>
-            <Liste baslik="Denetçiler" sutunlar={sutunlar} kayitlar={veri.adaylar} anahtar={(a) => a.id} />
+            {veri.adaylar.length ? <ul className={stil.adaylar} aria-label="Denetçiler">{veri.adaylar.map(adaySatiri)}</ul>
+              : <p className={stil.bosSatir}>Denetçi yok: Personel&apos;de denetçi rolünde hesabı olan kişi gerekir.</p>}
             {h.ekip && <p className={stil.uyari} id="pa-ekip-ipucu">{h.ekip}</p>}
             {elle.length > 0 && <>
               <h3 className={stil.altBaslik}>İSG-KATİP SÖZLEŞME ID</h3>
@@ -221,8 +234,13 @@ export function PlanAcFormu({ veri, baslangic }: { veri: PlanAcVerisi; baslangic
                 secenekler={rehber} degistir={(x) => bilgiEkle(x)} />
             </Alan>
           </FormIzgara>
-          {bilgi_.length > 0 && (
+          {(bilgi_.length > 0 || ekipAdresleri.length > 0) && (
             <ul className={stil.epostaListe} aria-label="Bilgilendirilecekler">
+              {ekipAdresleri.map((x) => (
+                <li key={`ekip-${x.eposta}`} className={stil.epostaEkip} title={`${x.ad} — denetçi; e-posta kendiliğinden gider`}>
+                  <span>{x.eposta}</span><span className={stil.epostaEtiket}>denetçi</span>
+                </li>
+              ))}
               {bilgi_.map((a) => (
                 <li key={a}>
                   <span>{a}</span>
@@ -232,14 +250,48 @@ export function PlanAcFormu({ veri, baslangic }: { veri: PlanAcVerisi; baslangic
             </ul>
           )}
         </FormBolum>
-        <FormBolum baslik="5 · Özet ve uyarılar" id="pa-b4">
+        <FormBolum baslik="5 · Ekipmanlar" id="pa-b6" kaydir={!!d.tesis}>
+          {!d.tesis ? <p className={stil.bosSatir}>Önce tesis seçin.</p> : <>
+            <p className={stil.bosSatir}>Tesiste kayıtlı ekipmanın hepsi plana girer{tesisteki.length ? ` (${tesisteki.length})` : ""}. Kayıtlı olmayanı aşağıya
+              satır satır ekleyin: plan açılınca tesise de kaydedilir.</p>
+            {tesisteki.length > 0 && <ul className={stil.ekipmanlar} aria-label="Tesisteki ekipmanlar">
+              {tesisteki.map((e) => <li key={e.id}><span className={stil.kod}>{e.kod}</span><span>{turAd(e.turId)}{e.konum ? <span className={stil.altMetin}>{e.konum}</span> : null}</span></li>)}
+            </ul>}
+            {yeni.length > 0 && <ul className={stil.yeniEkipmanlar} aria-label="Elle eklenecek ekipmanlar">
+              {yeni.map((e, i) => {
+                const kb = e.kod ? kodBicimi(kodNormal(e.kod)) : null, ht = h[`yeniEkipman.${i}.tur`], hk = h[`yeniEkipman.${i}.kod`] ?? (kb?.tur === "hata" ? kb.metin : undefined);
+                return (
+                  <li key={e.a} className={stil.yeniSatir}>
+                    <Alan id={`pa-yeni-tur-${e.a}`} etiket={`${i + 1}. ekipman türü`} zorunlu hata={ht}>
+                      <SecimAlani id={`pa-yeni-tur-${e.a}`} ad={`${i + 1}. ekipman türü`} deger={e.tur} ipucu="Tür seçin" gecersiz={!!ht} tanim={ht ? ipucuId(`pa-yeni-tur-${e.a}`) : undefined}
+                        secenekler={veri.turler.map((t) => [t.id, t.ad, t.brans === "e" ? "Elektrik" : "Mekanik"] as const)} degistir={(x) => yeniDegistir(e.a, "tur", x)} />
+                    </Alan>
+                    <Alan id={`pa-yeni-kod-${e.a}`} etiket={`${i + 1}. ekipman kodu`} zorunlu hata={hk}>
+                      <Girdi id={`pa-yeni-kod-${e.a}`} value={e.kod} maxLength={20} placeholder="Etiketteki kod" hata={!!hk} onChange={(x) => yeniDegistir(e.a, "kod", x.target.value)} />
+                    </Alan>
+                    <Alan id={`pa-yeni-konum-${e.a}`} etiket={`${i + 1}. konum`}>
+                      <Girdi id={`pa-yeni-konum-${e.a}`} value={e.konum} maxLength={60} placeholder="ör. Kompresör dairesi" onChange={(x) => yeniDegistir(e.a, "konum", x.target.value)} />
+                    </Alan>
+                    <Tus tur="ikincil" ikon="x" aria-label={`${i + 1}. ekipmanı listeden çıkar`} onClick={() => setYeni(yeni.filter((y) => y.a !== e.a))}>Çıkar</Tus>
+                  </li>
+                );
+              })}
+            </ul>}
+            <div className={stil.ekleSatiri}>
+              <Tus tur="ikincil" ikon="plus" disabled={yeni.length >= 50} onClick={() => { setYeni([...yeni, { a: sayac, tur: "", kod: "", konum: "" }]); setSayac(sayac + 1);
+                requestAnimationFrame(() => document.getElementById(`pa-yeni-tur-${sayac}`)?.focus()); }}>Ekipman ekle (elle)</Tus>
+            </div>
+          </>}
+        </FormBolum>
+        <FormBolum baslik="6 · Özet ve uyarılar" id="pa-b4" kaydir={!!d.tesis}>
           {!d.tesis ? <p className={stil.bosSatir}>Önce tesis seçin.</p> : <>
             <BilgiListesi>
               <Bilgi etiket="Başlangıç">{gun ? tarihNo(gun) : <DegerYok>Tarih eksik</DegerYok>}</Bilgi>
               <Bilgi etiket="Bitiş">{bit ? tarihNo(bit) : <DegerYok>Tarih eksik</DegerYok>}</Bilgi>
               <Bilgi etiket="Ekip" genis>{ekipAday.length ? ekipAday.map((a) => a.ad).join(", ") : <DegerYok>Seçilmedi</DegerYok>}</Bilgi>
               <Bilgi etiket="E-posta" genis>{ekipAday.length || bilgi_.length ? `Ekip${bilgi_.length ? ` + ${bilgi_.length} bilgilendirme` : ""}` : <DegerYok>Ekip seçilince</DegerYok>}</Bilgi>
-              <Bilgi etiket="Ekipman" genis>{toplam ? `${toplam} ekipman · ${kapsam.length} tür · hepsi plana girer` : <DegerYok>Tesiste kayıtlı ekipman yok; denetçi sahada ekler</DegerYok>}</Bilgi>
+              <Bilgi etiket="Ekipman" genis>{toplam ? `${toplam} ekipman · ${kapsam.length} tür · hepsi plana girer${elleTam.length ? ` (${elleTam.length} elle eklendi)` : ""}`
+                : <DegerYok>Tesiste kayıtlı ekipman yok; elle ekleyin ya da denetçi sahada ekler</DegerYok>}</Bilgi>
             </BilgiListesi>
             {kapsam.length > 0 && <div className={stil.tablo}><KapsamTablosu kapsam={kapsam} ekip={ekipAday} /></div>}
             {uyarilar.length > 0 && <div className={stil.tablo}><Kosullar ogeler={uyarilar} /></div>}

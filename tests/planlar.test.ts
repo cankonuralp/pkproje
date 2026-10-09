@@ -239,3 +239,40 @@ test("432 plan e-postası: ekip + bilgilendirme alıcı başına kuyrukta; bozuk
   await assert.rejects(sql(A, "UPDATE eposta SET durum = 'bekliyor', gonderildi = NULL WHERE kaynak_id = $1 AND durum = 'gonderildi'", [r.id]), /geri alınmaz/);
   await assert.rejects(sql(A, "DELETE FROM eposta WHERE kaynak_id = $1", [r.id]), /silinmez|permission denied/);
 });
+
+/* 2026-10-09 (444; reisim: "plan açılırken ekipmanlar tesise girilenler kadar otomatik geliyor el ile de girilebilmeli liste gibi"): plan açılırken
+   elle yazılan ekipman tesise kalıcı kayıt + plana (aynı işlemde); kod denetimi plan içi "Yeni ekipman" ile aynı: listede iki kez, tesiste kayıtlı,
+   başka tesiste kayıtlı, eski kod, geçersiz tür → plan açılmaz, hiçbir şey yazılmaz. Seçilen denetçinin e-postası forma gelir (adayEposta). */
+test("444 plan aç: elle ekipman tesise kaydedilir ve plana girer; kod denetimi; düşerse hiçbir şey yazılmaz; denetçi e-postası formda", async () => {
+  const tesisteki = (await sql<{ kod: string }>(A, "SELECT kod FROM ekipman WHERE tesis_id = $1 ORDER BY kod", [FA.tesis2])).rows.map((x) => x.kod);
+  const temel = { tesis: FA.tesis2, baslangic: bugun, bitis: bugun, aciklama: "", ekip: [{ personel: FA.den1P, isgNo: "", kaydet: false }] };
+  const ac = (yeniEkipman: object[]) => a(FA.plan, (db) => planAc(db, depo, FA.plan, A, { ...temel, yeniEkipman }));
+  const r = tamam(await ac([{ tur: FA.tur, kod: "ht-elle-1", konum: "Kazan dairesi" }, { tur: FA.tur, kod: "HT-ELLE-2", konum: "" }]));
+  assert.deepEqual((await sql<{ kod: string; konum: string | null; sonradan: boolean }>(A,
+    `SELECT e.kod, e.konum, pe.sonradan FROM plan_ekipman pe JOIN ekipman e ON e.id = pe.ekipman_id WHERE pe.plan_id = $1 AND e.kod LIKE 'HT-ELLE-%' ORDER BY e.kod`, [r.id])).rows,
+    [{ kod: "HT-ELLE-1", konum: "Kazan dairesi", sonradan: false }, { kod: "HT-ELLE-2", konum: null, sonradan: false }]);
+  assert.deepEqual((await sql<{ kod: string }>(A, "SELECT kod FROM ekipman WHERE tesis_id = $1 ORDER BY kod", [FA.tesis2])).rows.map((x) => x.kod),
+    [...tesisteki, "HT-ELLE-1", "HT-ELLE-2"].sort(), "tesise kalıcı kayıt");
+  /* hatalar: plan açılmaz, ekipman yazılmaz */
+  const say = async () => Number((await sql<{ n: string }>(A, "SELECT (SELECT count(*) FROM plan) + (SELECT count(*) FROM ekipman) AS n")).rows[0].n);
+  const once = await say();
+  const g1 = await ac([{ tur: FA.tur, kod: "HT-YENI-9" }, { tur: FA.tur, kod: "ht-yeni-9" }]);
+  assert.equal(g1.durum === "gecersiz" && g1.hatalar["yeniEkipman.1.kod"], "HT-YENI-9 listede iki kez yazılmış.");
+  const g2 = await ac([{ tur: FA.tur, kod: "HT-ELLE-1" }]);
+  assert.equal(g2.durum === "gecersiz" && g2.hatalar["yeniEkipman.0.kod"], "HT-ELLE-1 bu tesiste kayıtlı; zaten plana girer.");
+  const g3 = await a(FA.plan, (db) => planAc(db, depo, FA.plan, A, { ...temel, tesis: FA.tesis, yeniEkipman: [{ tur: FA.tur, kod: "HT-ELLE-2" }] }));
+  assert.equal(g3.durum === "gecersiz" && g3.hatalar["yeniEkipman.0.kod"], "HT-ELLE-2 başka bir tesiste kayıtlı; aynı kod iki ekipmana verilemez.");
+  const g4 = await ac([{ tur: "00000000-0000-4000-8000-000000000000", kod: "HT-YENI-8" }, { tur: FA.tur, kod: "ç" }]);
+  assert.equal(g4.durum, "gecersiz");
+  assert.ok(g4.durum === "gecersiz" && g4.hatalar["yeniEkipman.1.kod"], JSON.stringify(g4));
+  const g5 = await ac([{ tur: "00000000-0000-4000-8000-000000000000", kod: "HT-YENI-8" }]);
+  assert.deepEqual(g5.durum === "gecersiz" && g5.hatalar, { "yeniEkipman.0.tur": "Ekipman türü seçilmeli." });
+  assert.equal(await say(), once, "hiçbir şey yazılmadı");
+  /* başka firmanın türü geçmez */
+  const g6 = await b(FB.plan, (db) => planAc(db, depo, FB.plan, B, { tesis: FB.tesis, baslangic: bugun, bitis: bugun, ekip: [{ personel: FB.den1P }], yeniEkipman: [{ tur: FA.tur, kod: "HT-BASKA-1" }] }));
+  assert.deepEqual(g6.durum === "gecersiz" && g6.hatalar, { "yeniEkipman.0.tur": "Ekipman türü seçilmeli." });
+  /* formun verisi: denetçi adayının giriş e-postası */
+  const v = (await a(FA.plan, (db) => planAcVerisi(db, FA.plan)))!;
+  assert.ok(v.adayEposta[FA.den1P], JSON.stringify(v.adayEposta));
+  assert.equal((await a(FA.plan, (db) => tesisPlanBilgisi(db, FA.plan, FA.tesis2)))!.ekipmanlar.find((e) => e.kod === "HT-ELLE-1")?.konum, "Kazan dairesi");
+});

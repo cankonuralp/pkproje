@@ -13,7 +13,7 @@ import { ayarOku } from "../../../server/ayar/ayar.ts";
 import { numaraAl } from "../../../server/numara/numara.ts";
 import { canDo, canDoEylem, duzey, type YetkiHesabi } from "../../../server/yetki/canDo.ts";
 import { dogrula, type DogrulamaHatalari } from "../../../sema/ortak.ts";
-import { tesisEkipmanlari } from "../../ekipman/server/ekipman.ts";
+import { ekipmanEkle, koduKullanan, tesisEkipmanlari } from "../../ekipman/server/ekipman.ts";
 import { turOzetleri } from "../../ekipman-turleri/server/turler.ts";
 import { musteriOzetleri } from "../../musteriler/server/musteriler.ts";
 import { atamaHaritasi } from "../../personel/server/dosyalar.ts";
@@ -54,6 +54,8 @@ export interface PlanAcVerisi {
   isgYazar: boolean;
   /** 432: bilgilendirme listesi için firmanın açık hesapları (ad + e-posta) */
   rehber: { ad: string; eposta: string }[];
+  /** 444: denetçi adayının giriş e-postası (personel → e-posta) — seçilince Bilgilendirme'de görünür (e-posta ekibe kendiliğinden gider) */
+  adayEposta: Record<string, string>;
 }
 
 export async function acikPlanlar(db: Sorgulayici): Promise<AcikPlan[]> {
@@ -69,16 +71,19 @@ export async function planAcVerisi(db: Sorgulayici, kim: Kisi): Promise<PlanAcVe
   if (!planAcabilir(kim)) return null;
   const musteriler = (await musteriOzetleri(db)).filter((m) => !m.pasif)
     .map((m) => ({ id: m.id, kisa: m.kisa, unvan: m.unvan, tesisler: m.tesisler.filter((t) => !t.pasif).map((t) => ({ id: t.id, ad: t.ad, il: t.il, ilce: t.ilce })) }));
+  const adaylar = await denetciAdaylari(db);
   return {
-    musteriler, adaylar: await denetciAdaylari(db), turler: (await turOzetleri(db)).map(({ id, ad, brans, grup, periyot }) => ({ id, ad, brans, grup, periyot })),
+    musteriler, adaylar, turler: (await turOzetleri(db)).map(({ id, ad, brans, grup, periyot }) => ({ id, ad, brans, grup, periyot })),
     atamalar: await atamaHaritasi(db), acikPlanlar: await acikPlanlar(db), esik: (await ayarOku(db, "uyari_esikleri")).deger.plan_kontrolu_geliyor,
     bugun: bugunTr(), isgYazar: sozlesmeDegistirir(kim), rehber: await epostaRehberi(db),
+    adayEposta: Object.fromEntries([...(await personelHesaplari(db, adaylar.map((a) => a.id))).values()].map((h) => [h.personelId, h.eposta])),
   };
 }
 
 export interface TesisPlanBilgisi {
   isg: IsgKaydi[]; sozlesmeler: { no: string; baslangic: string; bitis: string }[];
-  ekipmanlar: { turId: string; sonKontrol: string | null; pasif: boolean }[];
+  /** 444: kod ve konum da (Plan aç › Ekipmanlar listesi) */
+  ekipmanlar: { id: string; kod: string; konum: string | null; turId: string; sonKontrol: string | null; pasif: boolean }[];
   /** "sözleşmeye de kaydet" için bugün yürürlükte iş sözleşmesi var mı */
   yururlukte: boolean;
   /** 432: bilgilendirme listesi önerisi — tesisin müşterisinin e-postası */
@@ -92,7 +97,7 @@ export async function tesisPlanBilgisi(db: Sorgulayici, kim: Kisi, tesisId: stri
   const soz = await tesisSozlesmeleri(db, tesisId), bugun = bugunTr();
   return {
     isg: await tesisIsgKayitlari(db, tesisId), sozlesmeler: soz.map(({ no, baslangic, bitis }) => ({ no, baslangic, bitis })),
-    ekipmanlar: (await tesisEkipmanlari(db, tesisId)).map((e) => ({ turId: e.turId, sonKontrol: e.disKontrol, pasif: e.pasif })),
+    ekipmanlar: (await tesisEkipmanlari(db, tesisId)).map((e) => ({ id: e.id, kod: e.kod, konum: e.konum, turId: e.turId, sonKontrol: e.disKontrol, pasif: e.pasif })),
     yururlukte: soz.some((s) => s.baslangic <= bugun && s.bitis >= bugun),
     musteriEposta: (await tesisMusteriIletisim(db, tesisId))?.eposta ?? null,
   };
@@ -119,6 +124,16 @@ export async function planAc(db: Sorgulayici, depo: Depo, kim: Kisi, firmaId: st
     sozlesmeId = (await tesisSozlesmeleri(db, v.tesis)).find((s) => s.baslangic <= bugun && s.bitis >= bugun)?.id ?? null;
     if (!sozlesmeId) return { durum: "gecersiz", hatalar: { ekip: "Tesisin yürürlükte iş sözleşmesi yok; ID sözleşmeye kaydedilemez." } };
   }
+  /* 444: elle eklenen ekipman — tür firmada, kod firmada eşsiz (eski kod başkasına verilmez; tesiste kayıtlıysa zaten plana girer) */
+  const turIdler = new Set((await turOzetleri(db)).map((x) => x.id)), ekHata: DogrulamaHatalari = {};
+  for (const [i, e] of v.yeniEkipman.entries()) {
+    if (!turIdler.has(e.tur)) { ekHata[`yeniEkipman.${i}.tur`] = "Ekipman türü seçilmeli."; continue; }
+    const u = await koduKullanan(db, e.kod);
+    if (!u) continue;
+    ekHata[`yeniEkipman.${i}.kod`] = u.eski ? `${e.kod} daha önce başka bir ekipmanın koduydu; eski kod başka ekipmana verilmez.`
+      : u.ekipman.tesisId === v.tesis ? `${e.kod} bu tesiste kayıtlı${u.ekipman.pasif ? " ama pasif" : "; zaten plana girer"}.` : `${e.kod} başka bir tesiste kayıtlı; aynı kod iki ekipmana verilemez.`;
+  }
+  if (Object.keys(ekHata).length) return { durum: "gecersiz", hatalar: ekHata };
   /* ── yazma: buradan sonrası beklenmeyen hata dışında düşmez; düşerse işlem bütünüyle geri alınır ── */
   const onek = (await ayarOku(db, "numara")).deger.proje;
   const no = await numaraAl(db, "proje", { onek });
@@ -138,6 +153,12 @@ export async function planAc(db: Sorgulayici, depo: Depo, kim: Kisi, firmaId: st
   /* tesisin etkin ekipmanının hepsi plana girer (L6; kapsam seçimi yok) */
   for (const e of (await tesisEkipmanlari(db, v.tesis)).filter((x) => !x.pasif)) {
     await ekle(db, PLAN_EKIPMAN, { plan_id: p.id, ekipman_id: e.id, sonradan: false, ekleyen: kim.ad }, { kim: kim.ad, ne: "plan.ekipman", gerekce: no });
+  }
+  /* 444: elle eklenenler tesise kalıcı kayıt + plana (açılışta — "sonradan" değil) */
+  for (const e of v.yeniEkipman) {
+    const iz = { kim: kim.ad, ne: "plan.ekipman_ekle", gerekce: no };
+    const ekipmanId = await ekipmanEkle(db, iz, { tesisId: v.tesis, turId: e.tur, kod: e.kod, seri: null, konum: e.konum });
+    await ekle(db, PLAN_EKIPMAN, { plan_id: p.id, ekipman_id: ekipmanId, sonradan: false, ekleyen: kim.ad }, iz);
   }
   /* 432 (reisim 2026-10-09: "Plan açıldığında planın açıldığı denetçilere otomatik mail gidecek gerekirse bilgilendirme kısmına elle ya da listeden
      mail girilebilecek"): ekipteki denetçilerin giriş e-postasına ve bilgilendirme listesine; alıcı başına bir e-posta, aynı işlemde kuyruğa */

@@ -22,7 +22,18 @@ export const PlanAcGirdisi = z.object({
   }), { error: "En az bir denetçi seçilmeli." }).min(1, "En az bir denetçi seçilmeli.").max(20, "En çok 20 denetçi."),
   /* 432: plan açılınca ekipteki denetçilere e-posta kendiliğinden gider; bilgilendirme listesindekilere de (elle ya da listeden; en çok 20) */
   bilgilendirme: z.array(eposta).max(20, "En çok 20 e-posta.").default([]),
+  /* 444 (reisim 2026-10-09: "plan açılırken ekipmanlar tesise girilenler kadar otomatik geliyor el ile de girilebilmeli liste gibi"): tesiste
+     kayıtlı olmayan ekipman satır satır — plan açılırken tesise kalıcı kayıt + plana (plan içi "Yeni ekipman" ile aynı kurallar) */
+  yeniEkipman: z.array(z.object({
+    tur: z.string({ error: "Ekipman türü seçilmeli." }).regex(UUID, "Ekipman türü seçilmeli."),
+    kod: z.preprocess((s) => (typeof s === "string" ? kodNormal(s) : s), z.string({ error: "Ekipman kodu boş" })
+      .superRefine((k, bag) => { const b = kodBicimi(k); if (b) bag.addIssue({ code: "custom", message: b.metin }); })),
+    konum: z.preprocess(bos, z.string().max(60, "En çok 60 karakter.").nullable()),
+  })).max(50, "En çok 50 ekipman.").default([]),
 }).superRefine((p, bag) => {
+  p.yeniEkipman.forEach((e, i) => {
+    if (p.yeniEkipman.findIndex((x) => x.kod === e.kod) !== i) bag.addIssue({ code: "custom", path: ["yeniEkipman", i, "kod"], message: `${e.kod} listede iki kez yazılmış.` });
+  });
   if (tarih.safeParse(p.baslangic).success && tarih.safeParse(p.bitis).success && p.bitis < p.baslangic) bag.addIssue({ code: "custom", path: ["bitis"], message: "Bitiş başlangıçtan önce olamaz." });
   if (new Set(p.ekip.map((e) => e.personel)).size !== p.ekip.length) bag.addIssue({ code: "custom", path: ["ekip"], message: "Aynı denetçi iki kez seçilmiş." });
   if (new Set(p.bilgilendirme).size !== p.bilgilendirme.length) bag.addIssue({ code: "custom", path: ["bilgilendirme"], message: "Aynı e-posta iki kez yazılmış." });
