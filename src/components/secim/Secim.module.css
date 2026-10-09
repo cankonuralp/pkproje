@@ -36,18 +36,25 @@ dialog .secim .liste { position: static; margin-top: 6px; box-shadow: none; max-
 
 /* tarih / saat (reisim 2026-09-27, örnek ekranla): tarih · saat · dakika ayrı kutu, yazılır ya da simgeyle seçilir; gün tuşu --tus-y */
 .zaman { display: flex; flex-wrap: wrap; align-items: center; gap: 8px; }
-.zamanTarih, .zamanParca { position: relative; display: flex; box-shadow: inset 0 0 0 1px var(--kenar-alan); border-radius: var(--r-orta); background: var(--kart); }
-.zamanTarih:focus-within, .zamanParca:focus-within { box-shadow: inset 0 0 0 1px var(--yazi2); }
+/* 448 (reisim 2026-10-09: "ekranda takvim kısmında gördüğün gibi görsel bozukluklar oluyor"): çerçeve GERÇEK kenar — eskiden içe gölgeydi,
+   simgenin üstüne gelince zemini çerçeveyi örtüyordu; odak halkası girdi + simge birlikte tüm alanın etrafında (eskiden yalnız girdinin
+   çevresinde, simge halkanın dışında kalıyordu) */
+.zamanTarih, .zamanParca { position: relative; display: flex; border: 1px solid var(--kenar-alan); border-radius: var(--r-orta); background: var(--kart); }
+.zamanTarih:focus-within, .zamanParca:focus-within { border-color: var(--yazi2); }
+.zamanTarih:has(> .zamanGirdi:focus-visible, > .zamanSimge:focus-visible), .zamanParca:has(> .zamanGirdi:focus-visible, > .zamanSimge:focus-visible) {
+  outline: 3px solid var(--odak); outline-offset: 2px;
+}
+.zamanGirdi:focus-visible, .zamanSimge:focus-visible { outline: none; }
 .zamanTarih { flex: 2 1 11rem; min-width: 0; }
 .saatGrup { flex: 2 1 12.5rem; display: flex; align-items: center; gap: 8px; min-width: 0; }
 .zamanParca { flex: 1 1 5.75rem; min-width: 0; }
 .zamanGirdi {
-  flex: 1 1 0; min-width: 0; width: 100%; height: var(--tus-y); padding: 0 4px 0 12px;
-  border: 0; border-radius: var(--r-orta) 0 0 var(--r-orta); background: transparent; color: var(--yazi); font-variant-numeric: tabular-nums;
+  flex: 1 1 0; min-width: 0; width: 100%; height: calc(var(--tus-y) - 2px); padding: 0 4px 0 11px;
+  border: 0; border-radius: calc(var(--r-orta) - 1px) 0 0 calc(var(--r-orta) - 1px); background: transparent; color: var(--yazi); font-variant-numeric: tabular-nums;
 }
 .zamanGirdi::placeholder { color: var(--yazi3); }
 .zamanGirdi[aria-invalid="true"] { box-shadow: inset 0 -2px 0 var(--hata-yazi); }
-.zamanSimge { flex: none; width: 36px; display: grid; place-items: center; border: 0; border-radius: 0 var(--r-orta) var(--r-orta) 0; background: transparent; color: var(--yazi2); }
+.zamanSimge { flex: none; width: 36px; display: grid; place-items: center; border: 0; border-radius: 0 calc(var(--r-orta) - 1px) calc(var(--r-orta) - 1px) 0; background: transparent; color: var(--yazi2); }
 .zamanSimge:hover, .zamanSimge[aria-expanded="true"] { background: var(--zemin2); color: var(--yazi); }
 .ikiNokta { font-size: var(--boy-bolum); font-weight: 700; }
 .parcaListe { min-width: 0; max-height: 240px; }

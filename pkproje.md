@@ -2355,6 +2355,10 @@ revizyon, alan kopyalama, hafif kusur devri, meslek eşleşme denetimi).
 - Emsal ürünler: https://opwire.app/iso-17020-periyodik-kontrol-yazilimi/ · https://17020muayene.vidco.com.tr/ · https://akuple.com/asansor-kontrol-yazilimi/ · https://ensyazilim.com/
 
 ## 11 · Değişiklik günlüğü
+- 2026-10-09 (448): **Tarih / saat alanı görsel bozukluğu** (reisim: *"ekranda takvim kısmında gördüğün gibi görsel bozukluklar oluyor,bu vb hataları
+  düzelt"*). Tarih alanının çerçevesi içe gölgeydi: takvim simgesinin üstüne gelince simgenin zemini çerçeveyi örtüyor (köşede gri kutu taşması), odakta
+  halka yalnız girdinin çevresinde kalıp simge dışarıda görünüyordu → çerçeve gerçek kenar (simge zemini içinde kalır), odak halkası girdi + simge birlikte
+  tüm alanın etrafında (`:has`); saat ve dakika parçaları da aynı (ortak bileşen — her ekranda).
 - 2026-10-09 (447): **Rapor ekranı ve format kurucu düzeni** (reisim: *"rapor tasarımcısında tasarım yapmak zor tek tek sütun girdiriyorsun mesela ama
   sütun gibi gözükmüyor kafa karıştırıcı tablo gibi gözükmeli format yapıcısıda, satır eklemediğin sürece neyin nereye yazılacağı bile gözükmüyor tablo
   başlıkları gözükmüyor … yetkili kişiler ve imzalar kısmının denetim raporu ekranında gözükmesine gerek yok … sıralama hatası yok mu … firma bilgileri
