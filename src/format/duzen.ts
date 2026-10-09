@@ -68,6 +68,22 @@ export function ekipmanTamYap(t: FormatTanimi): FormatTanimi {
   return { ...t, bolumler: [...t.bolumler.slice(0, p), yeni, ...t.bolumler.slice(p)] };
 }
 
+/** 459: ölçüm cihazları bölümü SABİT (reisim 2026-10-09: "sabit olan tek şey firma bilgileri, cihazlar ve standartlar") — formatta yoksa Format
+    kurucu açılırken 2. bölümden hemen sonra eklenir (3. bölüm; cihazlı raporda belge onu zaten orada basıyordu — raporDuzeni cihazEk). Satırları
+    türün ölçüm cihazı türlerinden (tür sayfası), denetçi sahada zimmetindeki cihazı ekler. */
+export function cihazBolumuEkle(t: FormatTanimi): FormatTanimi {
+  if (t.bolumler.some((b) => b.blok === "cihaz")) return t;
+  const ilk = raporDuzeni(t, false).bolumler[0]?.b;
+  const p = ilk ? t.bolumler.indexOf(ilk) : t.bolumler.length;
+  const kimlikler = new Set(t.bolumler.map((b) => b.id));
+  let id = "cihaz";
+  for (let n = 2; kimlikler.has(id); n++) id = `cihaz${n}`;
+  const yeni: Bolum = { id, ad: "Ölçüm cihazları", blok: "cihaz", kilit: false };
+  return { ...t, bolumler: [...t.bolumler.slice(0, p), yeni, ...t.bolumler.slice(p)] };
+}
+/** Format kurucu açılırken: ekipman bölümü serbest (460), ölçüm cihazları bölümü var (459) */
+export const kurucuyaHazirla = (t: FormatTanimi): FormatTanimi => cihazBolumuEkle(ekipmanTamYap(t));
+
 /** cihazEk: formatta cihaz bölümü yok ama rapora cihaz eklendi (sabit "Ölçüm cihazları" bölümü) */
 export function raporDuzeni(t: FormatTanimi, cihazEk: boolean): RaporDuzeni {
   const tam = tamBolum(t);

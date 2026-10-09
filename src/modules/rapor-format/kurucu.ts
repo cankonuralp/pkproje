@@ -97,8 +97,9 @@ export function ogeSil(t: FormatTanimi, i: number, id: string): FormatTanimi {
   return { ...t, bolumler: t.bolumler.map((x, j) => (j === i ? y : x)) };
 }
 
-/** bölüm sil (kilitli silinmez) */
-export const bolumSil = (t: FormatTanimi, i: number): FormatTanimi => (t.bolumler[i]?.kilit ? t : { ...t, bolumler: t.bolumler.filter((_, j) => j !== i) });
+/** bölüm sil (kilitli silinmez; 459: ölçüm cihazları bölümü sabit — silinmez) */
+export const bolumSil = (t: FormatTanimi, i: number): FormatTanimi => (t.bolumler[i]?.blok === "cihaz" ? t
+  : (t.bolumler[i]?.kilit ? t : { ...t, bolumler: t.bolumler.filter((_, j) => j !== i) }));
 /** bölüm adı (kilitli bölümün adı değişmez) */
 export const bolumAdi = (t: FormatTanimi, i: number, ad: string): FormatTanimi =>
   (t.bolumler[i]?.kilit ? t : { ...t, bolumler: t.bolumler.map((b, j) => (j === i ? { ...b, ad: ad.slice(0, 200) } : b)) });

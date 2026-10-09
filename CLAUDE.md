@@ -120,6 +120,7 @@ pkproje/
                             başlık N.1 / N.2, numarasız bölüm; belge ve saha ekranı ortak) — saha ekranı ve PDF aynı tanımdan
                             · 460: "tam" ekipman bölümü + ekipman kaydına bağlı alan (tanim.ts EKIPMAN_ALANLARI; değeri raporun ekipman
                             bilgisinde) — 2. bölüm kod + tür + formatın alanları; eski format duzen.ts ekipmanTamYap ile kurucuda çevrilir
+                            · 459: ölçüm cihazları bölümü sabit (cihazBolumuEkle; kurucuyaHazirla = ikisi, kurucu sayfası açılışta)
   src/modules/rapor-format/ RAPOR FORMATI (2026-10-04, 308): sürümlü tanım (rapor_format, göç 0022: taslak → yayında → eski; yayınlanan değişmez) ·
                             şablondan başlat · taslak kaydet · yayınla (kilitli Bakanlık öğesi ENGEL, öteki denetim uyarı) · yayındaki format;
                             ekran: tür sayfası "Rapor şablonu" + önizleme /ekipman-turleri/<tür>/sablon/<sürüm> · FORMAT KURUCU (338, K4):

@@ -116,6 +116,12 @@ test("rapor şablonu: şablondan başlat, önizle, yayınla; yeni sürümle eski
     await alanAdi.fill("Model / tip");
     await alanAdi.press("Enter");
     await expect(ekip.getByRole("button", { name: "Model / tip", exact: true })).toBeVisible();
+    /* 459: standartlar ve cihazlar türden, kendiliğinden — ZPKR02'den başlatınca türün boş bağlantısı Bakanlık formatınkiyle doldu (440);
+       ölçüm cihazları bölümü silinmez */
+    await expect(firma.getByText(/TS HD 60364-6/).first()).toBeVisible();
+    const cihaz = kagit.getByRole("region", { name: /Ölçüm cihazları$/ });
+    await expect(cihaz.getByText("Tesisat test cihazı (çevrim empedansı / RCD)")).toBeVisible();
+    await expect(cihaz.getByRole("button", { name: /bölümü sil$/ })).toHaveCount(0);
     expect(await page.evaluate(() => document.documentElement.scrollWidth <= window.innerWidth), "yana taşma yok").toBe(true);
     await goz(page, "kurucu-duzen", bilgi.project.name);
     /* belge önizlemesi: kesin belgenin çizicisinden, yazılanlarla */

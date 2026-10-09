@@ -1,7 +1,8 @@
 /* OLUMSUZ KANIT — tests/format-kurucu.test.ts neyi koruyor (K4 Format kurucu). Kaynak diskte DEĞİŞTİRİLMEZ (anayasa 13.11): kurucu.ts bellekte
    bozulup geçici klasörden içe aktarılır (göreli içe aktarmalar mutlak yola çevrilir).
    1. Yeni kimlik var olanlara bakmadan verilince iki bölüm aynı kimliği alır — cevaplar karışır, tanım şemadan geçmez.
-   2. Kilit denetimi kalkınca Bakanlık bölümü kurucudan silinir. */
+   2. Kilit denetimi kalkınca Bakanlık bölümü kurucudan silinir.
+   459: cihaz bölümü koruması kalkınca sabit ölçüm cihazları bölümü silinir (tests/kurucu-turden.test.ts). */
 import assert from "node:assert/strict";
 import { mkdtempSync, readFileSync, rmSync, writeFileSync } from "node:fs";
 import { tmpdir } from "node:os";
@@ -60,4 +61,11 @@ test("bölüm düzeninde kilit denetimi kalkınca Bakanlık bölümünün üst b
   const m = await bozuk("  if (!b || b.kilit) return t;\n  const ust", "  if (!b) return t;\n  const ust");
   const z = SABLONLAR.ZPKR04.tanim, i = z.bolumler.findIndex((b) => b.id === "gozle");
   assert.equal(m.bolumDuzeni(z, i, { ust: "Başka" }).bolumler[i].ust, "Başka", "bozuk: kilitli bölümün üst başlığı değişti");
+});
+
+test("459: cihaz bölümü koruması kalkınca ölçüm cihazları bölümü kurucudan silinir (tests/kurucu-turden.test.ts)", async () => {
+  const m = await bozuk(`(t.bolumler[i]?.blok === "cihaz" ? t
+  : (`, `((`);
+  const t = structuredClone(SABLONLAR.KOMPRESOR.tanim), i = t.bolumler.findIndex((b) => b.blok === "cihaz");
+  assert.equal(m.bolumSil(t, i).bolumler.some((b) => b.blok === "cihaz"), false, "bozuk: sabit cihaz bölümü silindi");
 });

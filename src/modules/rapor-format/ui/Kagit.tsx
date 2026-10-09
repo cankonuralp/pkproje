@@ -13,8 +13,9 @@
    "Periyodik kontrol metodu ve kapsamı" satırı yazılır. 460 (reisim 2026-10-09: "ekipman bilgileri kısmıda değiştirilebilir olsun zira yangın
    dolabı gibi ekipmanlarda farklı girdiler olabiliyor sabit olan tek şey firma bilgileri, cihazlar ve standartlar"): 2. bölüm serbest — ekipman
    kodu ve türü dışındaki her satırın adı değişir, çıkarılır, yeni alan eklenir; marka, model, seri no … "Ekipman kaydından alan ekle" ile geri
-   gelir (değeri ekipman kaydından başlar; kâğıt eski formatı açılışta çevirir — format/duzen.ts ekipmanTamYap). Kâğıdın renkleri belgenin kendi
-   renkleri — açık / koyu temada aynı kâğıt. */
+   gelir (değeri ekipman kaydından başlar; kâğıt eski formatı açılışta çevirir — format/duzen.ts ekipmanTamYap). 459: standartlar ve cihazlar
+   sabit ve TÜRDEN — metot satırında türün kontrol metodu standartları, ölçüm cihazları bölümünde türün cihaz türleri kendiliğinden (tür
+   sayfasında değişince burada da); cihaz bölümü silinmez, tektir. Kâğıdın renkleri belgenin kendi renkleri — açık / koyu temada aynı kâğıt. */
 import { Fragment, useEffect, useRef, useState, type ReactNode } from "react";
 import { Ikon } from "../../../components/ikon/Ikon";
 import { SecimAlani } from "../../../components/secim/SecimAlani";
@@ -115,7 +116,8 @@ function BilgiTablosu({ l, son }: { l: readonly Hucre[]; son?: ReactNode }) {
 export interface KagitOzellik {
   t: FormatTanimi;
   degis: (y: FormatTanimi) => void;
-  tur: { ad: string; kod: string };
+  /** std / cihaz (459): türün kontrol metodu standartları ve ölçüm cihazı türleri — tür sayfasında seçilir, kâğıtta kendiliğinden */
+  tur: { ad: string; kod: string; std: readonly string[]; cihaz: readonly string[] };
   /** bölümü sil (onay sorar) */
   bolumuSil: (i: number) => void;
   bildir: (s: string) => void;
@@ -276,10 +278,17 @@ export function Kagit({ t, degis, tur, bolumuSil, bildir }: KagitOzellik) {
           </table>
         );
       case "cihaz":
+        /* 459: satırlar türün ölçüm cihazı türlerinden (tür sayfası); cihazın kendisi sahada zimmetten seçilir, kalibrasyonu denetlenir */
         return (
           <table>
             <thead><tr>{["Cihaz", "Kod / seri no", "Kalibrasyon tarihi", "Geçerlilik", "Sertifika no"].map((x) => <th key={x} className="rb-ab">{x}</th>)}</tr></thead>
-            <tbody><tr><td colSpan={5}><span className={k.ornek}>Rapor yazılırken zimmetteki cihazlardan eklenir; türün cihaz türleri tür sayfasında seçilir.</span></td></tr></tbody>
+            <tbody>
+              {tur.cihaz.map((ad) => (
+                <tr key={ad}><td className={k.turdan}>{ad}</td><td colSpan={4}><span className={k.ornek}>sahada zimmetten seçilir · kalibrasyonu denetlenir</span></td></tr>
+              ))}
+              <tr><td colSpan={5}><span className={k.ornek}>{tur.cihaz.length ? "Cihaz türleri tür sayfasından, kendiliğinden; orada değişince burada da değişir."
+                : "Bu türe ölçüm cihazı türü seçilmemiş — tür sayfasında seçilince burada kendiliğinden görünür."}</span></td></tr>
+            </tbody>
           </table>
         );
       case "foto":
@@ -347,15 +356,17 @@ export function Kagit({ t, degis, tur, bolumuSil, bildir }: KagitOzellik) {
           </label>
         ))}
       </div>}
-      {b.blok === "cihaz" && <p className={k.panelIpucu}>Türün ölçüm cihazı türleri tür sayfasında seçilir; denetçi raporda zimmetindeki cihazı ekler, kalibrasyonu denetlenir.</p>}
+      {b.blok === "cihaz" && <p className={k.panelIpucu}>Sabit bölüm: satırları türün ölçüm cihazı türleri (tür sayfasında seçilir, burada kendiliğinden); denetçi raporda zimmetindeki cihazı ekler, kalibrasyonu denetlenir.</p>}
       {b.blok === "kusur" && <p className={k.panelIpucu}>Kendiliğinden dolar; ayarı yok.</p>}
     </div>
   );
 
-  /** bölümler arası "Bölüm ekle" (p: yeni bölümün yeri) */
+  /** bölümler arası "Bölüm ekle" (p: yeni bölümün yeri); ölçüm cihazları bölümü tektir (459) */
+  const cihazVar = t.bolumler.some((b) => b.blok === "cihaz");
   const araEkle = (p: number, ad: string, id: string, son = false) => (
     <div className={son ? `${k.araEkle} ${k.sonEkle}` : k.araEkle}>
-      <SecimAlani id={id} ad={ad} etiketsiz deger="" ipucu={son ? "+ Bölüm ekle" : "+ Buraya bölüm ekle"} secenekler={BOLUM_SECENEK} degistir={(x) => bolumKoy(x as Blok, p)} />
+      <SecimAlani id={id} ad={ad} etiketsiz deger="" ipucu={son ? "+ Bölüm ekle" : "+ Buraya bölüm ekle"} degistir={(x) => bolumKoy(x as Blok, p)}
+        secenekler={cihazVar ? BOLUM_SECENEK.filter(([b]) => b !== "cihaz") : BOLUM_SECENEK} />
     </div>
   );
 
@@ -406,7 +417,8 @@ export function Kagit({ t, degis, tur, bolumuSil, bildir }: KagitOzellik) {
           ["Periyodik kontrol metodu ve kapsamı", <span key="m" className={k.metot}>
             <Yazi deger={t.gorunum.dayanak.join("\n")} ad="Periyodik kontrol metodu ve kapsamı" bos="Standart / yönetmelik yazın (her satıra bir tane)" cok uzun={6000}
               yaz={(s) => degis(gorunumYaz(t, { dayanak: satirlar(s, 20, 300) }))} />
-            <span className={k.ornek}>+ türün kontrol metodu standartları (tür sayfasında)</span></span>, true],
+            {tur.std.length ? <span className={k.turdan}>{tur.std.join(" · ")}<span className={k.ornek}> — türün standartları (tür sayfasından, kendiliğinden)</span></span>
+              : <span className={k.ornek}>Türün kontrol metodu standardı seçilmemiş — tür sayfasında seçilince burada kendiliğinden görünür.</span>}</span>, true],
         ]} />
       </section>
 
@@ -444,11 +456,12 @@ export function Kagit({ t, degis, tur, bolumuSil, bildir }: KagitOzellik) {
                   <Yazi deger={b.ad} ad="Bölüm adı" bos="Bölüm adı" kilit={b.kilit} ac={yeniId === b.id} yaz={(s) => degis(bolumAdi(t, i, s))} /></h2>
                 <span className={k.araclar}>
                   {b.kilit && <span className={k.sabit}><Ikon ad="lock" kucuk />Bakanlık bölümü</span>}
+                  {!b.kilit && b.blok === "cihaz" && <span className={k.sabit}><Ikon ad="lock" kucuk />Sabit · türün cihazları</span>}
                   <span className={k.tur}>{BLOK_ADI[b.blok]}</span>
                   <span data-yon="-1" className={k.yonKap}><Tus ikon="arrow-up" ad={`${b.ad} · yukarı`} disabled={v === 0} onClick={() => tasiGorunen(b.id, -1)} /></span>
                   <span data-yon="1" className={k.yonKap}><Tus ikon="arrow-down" ad={`${b.ad} · aşağı`} disabled={v === gorunen.length - 1} onClick={() => tasiGorunen(b.id, 1)} /></span>
                   <Tus ikon="settings" ad={`${b.ad} · bölüm ayarları`} basili={ayar === anahtar} onClick={() => ac(anahtar)} />
-                  {!b.kilit && <Tus ikon="trash-2" ad={`${b.ad} · bölümü sil`} onClick={() => bolumuSil(i)} />}
+                  {!b.kilit && b.blok !== "cihaz" && <Tus ikon="trash-2" ad={`${b.ad} · bölümü sil`} onClick={() => bolumuSil(i)} />}
                 </span>
               </div>
               {ayar === anahtar && bolumAyari(b, i)}

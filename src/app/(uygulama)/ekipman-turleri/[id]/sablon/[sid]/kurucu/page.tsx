@@ -1,16 +1,17 @@
 /* FORMAT KURUCU (K4; RAPOR-FORMAT.md §6; maket ekipman-turleri.html #/tur/<kod>/kurucu): türün TASLAK rapor şablonu düzenlenir. Kapı ve yetki
    sunucuda (Ekipman türleri "değiştirir"); yayınlanmış ya da eski sürüm, başka tür / firma: önizlemeye döner ya da bulunamadı. Kayıt ve yayın
    denetimi modül işlevinde (rapor-format/server/formatlar.ts). 460: eski formatın ekipman bölümü açılışta serbest bölüme çevrilir (format/duzen.ts
-   ekipmanTamYap; belgenin satırları aynı kalır) — kaydedilince taslağa yazılır. */
+   ekipmanTamYap; belgenin satırları aynı kalır); 459: ölçüm cihazları bölümü yoksa eklenir — kaydedilince taslağa yazılır. 459: türün kontrol
+   metodu standartları ve ölçüm cihazı türleri (tür sayfasında seçilir) kâğıtta ve belge önizlemesinde kendiliğinden görünür. */
 import type { Metadata } from "next";
 import { notFound, redirect } from "next/navigation";
 /* 451: kâğıt ve belge önizlemesi belgenin görünümüyle (.rb- sınıfları) */
 import "../../../../../../../belge/belge.css";
 import { Yetkisiz } from "../../../../../../../components/hata/Hata";
 import { Kirinti } from "../../../../../../../components/sayfa/Sayfa";
-import { ekipmanTamYap } from "../../../../../../../format/duzen";
+import { kurucuyaHazirla } from "../../../../../../../format/duzen";
 import { bransAd } from "../../../../../../../modules/ekipman-turleri/sema";
-import { turOzeti } from "../../../../../../../modules/ekipman-turleri/server/turler";
+import { turKarti } from "../../../../../../../modules/ekipman-turleri/server/turler";
 import { modulBul } from "../../../../../../../modules/moduller";
 import { formatAyrintisi, formatDegistirir } from "../../../../../../../modules/rapor-format/server/formatlar";
 import { FormatKurucu } from "../../../../../../../modules/rapor-format/ui/FormatKurucu";
@@ -25,7 +26,7 @@ export default async function Sayfa({ params }: { params: Promise<{ id: string; 
   const { id, sid } = await params;
   const [f, tur] = await oturumIslemi(o, async (db) => {
     const f = await formatAyrintisi(db, o, sid);
-    return [f, f && f.turId === id ? await turOzeti(db, id) : null] as const;
+    return [f, f && f.turId === id ? await turKarti(db, o, id) : null] as const;
   });
   if (!f || !tur) notFound();
   /* yalnız taslak ve yalnız "değiştirir": öteki durumda salt okunur önizleme */
@@ -34,7 +35,8 @@ export default async function Sayfa({ params }: { params: Promise<{ id: string; 
     <>
       <Kirinti ogeler={[[`Ekipman türleri · ${bransAd(tur.brans)}`, tur.brans === "e" ? "/ekipman-turleri?brans=e" : "/ekipman-turleri"],
         [tur.ad, `/ekipman-turleri/${tur.id}`], ["Format kurucu"]]} />
-      <FormatKurucu turId={tur.id} turAd={tur.ad} turKod={tur.kod} format={{ id: f.id, surum: f.surum }} tanim={ekipmanTamYap(f.tanim)} kaynakAd={f.kaynakAd} />
+      <FormatKurucu turId={tur.id} turAd={tur.ad} turKod={tur.kod} format={{ id: f.id, surum: f.surum }} tanim={kurucuyaHazirla(f.tanim)} kaynakAd={f.kaynakAd}
+        turStd={tur.standartlar.map((s) => s.no)} turCihaz={tur.cihazTurleri.map((c) => c.ad)} />
     </>
   );
 }

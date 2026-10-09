@@ -2355,6 +2355,11 @@ revizyon, alan kopyalama, hafif kusur devri, meslek eşleşme denetimi).
 - Emsal ürünler: https://opwire.app/iso-17020-periyodik-kontrol-yazilimi/ · https://17020muayene.vidco.com.tr/ · https://akuple.com/asansor-kontrol-yazilimi/ · https://ensyazilim.com/
 
 ## 11 · Değişiklik günlüğü
+- 2026-10-09 (459): **Standartlar ve cihazlar türden, kendiliğinden** (reisim: *"cihazlar ve standartlar ekipman türü sayfasından seçilirse otomatik
+  olarak gelsin güncellensin şablon"*). Format kurucuda "Periyodik kontrol metodu ve kapsamı" satırı türün kontrol metodu standartlarını, ölçüm
+  cihazları bölümü türün ölçüm cihazı türlerini kendiliğinden gösterir (tür sayfasında değişince kâğıtta ve belge önizlemesinde de; raporda
+  zaten türden okunuyordu). Ölçüm cihazları bölümü sabit: silinmez, tektir; formatta yoksa kurucu açılınca 3. bölüm olarak eklenir. Seçilmemişse
+  kâğıt söyler ("tür sayfasında seçilince burada kendiliğinden görünür").
 - 2026-10-09 (460): **Ekipman bilgileri serbest** (reisim: *"rapor format oluşturucuyu beğendim, böyle kalsın ama değişiklikler yapalım, ekipman
   bilgileri kısmıda değiştirilebilir olsun zira yangın dolabı gibi ekipmanlarda farklı girdiler olabiliyor sabit olan tek şey firma bilgileri,
   cihazlar ve standartlar"*). Format tanımında "tam" ekipman bölümü: raporun 2. bölümü ekipman kodu ve türü dışında YALNIZ formatın alanlarıdır.

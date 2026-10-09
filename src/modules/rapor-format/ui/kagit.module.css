@@ -46,6 +46,8 @@
 @media (pointer: coarse) { .ekle { min-height: 40px; } }
 .kagit .ekleSatir td { border-style: dashed; background: #fbfcfe; }
 .kagit .ekleSutun { width: 92px; border-style: dashed; background: #fbfcfe; text-align: center; }
+/* 459: türden kendiliğinden gelen (standartlar, cihaz türleri) — koyu yazı, düzenlenmez */
+.turdan { font-weight: 700; color: #1f4b3a; }
 /* 460: ekipman bölümünün ekle satırı — "Alan ekle" + "Ekipman kaydından alan" seçimi yan yana (dar ekranda alt alta) */
 .ekleSira { display: flex; flex-wrap: wrap; align-items: center; gap: 6px 12px; }
 .ekleSecim { width: 260px; max-width: 100%; }

@@ -34,8 +34,10 @@ function yer(k: string, t: FormatTanimi): string {
   return `${Number(m[1]) + 1}. bölüm${b?.ad ? ` (${b.ad})` : ""}: `;
 }
 
-export function FormatKurucu({ turId, turAd, turKod, format, tanim, kaynakAd }: {
+/** turStd / turCihaz (459): türün kontrol metodu standartları ve ölçüm cihazı türleri (tür sayfasında seçilir) — kâğıtta ve önizlemede */
+export function FormatKurucu({ turId, turAd, turKod, format, tanim, kaynakAd, turStd, turCihaz }: {
   turId: string; turAd: string; turKod: string; format: { id: string; surum: number }; tanim: FormatTanimi; kaynakAd: string | null;
+  turStd: string[]; turCihaz: string[];
 }) {
   const router = useRouter();
   const bildir = useBildir();
@@ -50,7 +52,9 @@ export function FormatKurucu({ turId, turAd, turKod, format, tanim, kaynakAd }: 
   if (son !== ilkJson) { setSon(ilkJson); setT(tanim); setHatalar([]); }
   const kirli = JSON.stringify(t) !== ilkJson;
   const degis = (y: FormatTanimi) => { setT(y); setHatalar([]); };
-  const tur = useMemo(() => ({ ad: turAd, kod: turKod }), [turAd, turKod]);
+  const stdAnahtar = turStd.join("\n"), cihazAnahtar = turCihaz.join("\n");
+  const tur = useMemo(() => ({ ad: turAd, kod: turKod, std: stdAnahtar ? stdAnahtar.split("\n") : [], cihaz: cihazAnahtar ? cihazAnahtar.split("\n") : [] }),
+    [turAd, turKod, stdAnahtar, cihazAnahtar]);
 
   /* kaydedilmemiş taslakla sayfadan çıkarken tarayıcı sorar */
   useEffect(() => {
@@ -89,7 +93,7 @@ export function FormatKurucu({ turId, turAd, turKod, format, tanim, kaynakAd }: 
   const vazgec = () => { setT(tanim); setHatalar([]); bildir("Değişiklikler geri alındı."); };
   const bolumuSil = async (i: number) => {
     const b = t.bolumler[i];
-    if (!b || b.kilit) return;
+    if (!b || b.kilit || b.blok === "cihaz") return;
     if (!(await onayla({ baslik: "Bölüm silinsin mi?", metin: `${b.ad} taslaktan çıkar. Yayınlanana kadar raporlar etkilenmez.`, tus: "Sil", tehlike: true }))) return;
     degis(bolumSil(t, i)); bildir(`${b.ad} bölümü silindi (taslak).`);
   };
