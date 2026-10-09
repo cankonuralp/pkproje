@@ -2355,6 +2355,11 @@ revizyon, alan kopyalama, hafif kusur devri, meslek eşleşme denetimi).
 - Emsal ürünler: https://opwire.app/iso-17020-periyodik-kontrol-yazilimi/ · https://17020muayene.vidco.com.tr/ · https://akuple.com/asansor-kontrol-yazilimi/ · https://ensyazilim.com/
 
 ## 11 · Değişiklik günlüğü
+- 2026-10-09 (441): **439–440 YAYINDA** — Supabase göç 0078 (standart.brans; 79 göç; özet aynı, dış API'ye hak yok — denetlendi), main = 30fdd6a,
+  sağlık "tamam" (göç güncel), duman 10/10, çalışma hatası yok. Deneme makinesinde telefon 2/2 bir kez girişte düştü (geliştirme sunucusu sayfanın
+  kod parçasını yüklerken bağlantıyı kopardı — ECONNRESET; aynı test önceki turda geçmişti), yalnız o iş yeniden koştu, geçti; öteki altısı ilk
+  koşuda yeşil. Canlı firmada cihaz / standart taraması bir sonraki açılışta koşar (kurulum.baglanti henüz yok): ET'ye ZPKR02 standartları ve
+  tesisat test cihazı, AGT / YKT / YAS / TRF'ye cihaz türleri; kompresör (KMP) Bakanlık formatı değil — dokunulmaz. Oturumlu ekranlar: ölçemedim.
 - 2026-10-09 (440): **Bakanlık türlerinde ölçüm cihazları hazır; Standartlar Mekanik / Elektrik ayrı** (reisim: *"AYRICA KULLANILACAK ÖLÇÜM
   CİHAZLARINI DA EKLE , STANDARTLARIDA KENDİ ALTINDA MEKANİK ELEKTRİK OLARAK AYIR"*).
   · **Ölçüm cihazları:** Bakanlık formları cihaz türü adı vermez ("Ölçüm aletleri bilgileri": ad, seri no, kalibrasyon); türler formun ölçüm
