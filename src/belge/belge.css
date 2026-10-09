@@ -47,7 +47,8 @@
 .rb-bolum h3 + table, .rb-bolum h3 + .rb-kutu-metin, .rb-bolum h3 + .rb-fotolar { margin-top: -1px; }
 .rb-sayfa .rb-e { background: #dbe4f0; }
 .rb-sayfa .rb-ab { background: #dbe4f0; font-weight: 700; }
-.rb-sayfa .rb-grup { text-align: center; font-weight: 700; }
+/* 457 (reisim 2026-10-09: "Grup başlıkları sola dayalı olsun") */
+.rb-sayfa .rb-grup { text-align: left; font-weight: 700; }
 .rb-sayfa .rb-orta { text-align: center; }
 .rb-sayfa .rb-sag { text-align: right; font-variant-numeric: tabular-nums; }
 .rb-sec { margin-right: 10px; white-space: nowrap; }

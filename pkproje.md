@@ -2355,6 +2355,10 @@ revizyon, alan kopyalama, hafif kusur devri, meslek eşleşme denetimi).
 - Emsal ürünler: https://opwire.app/iso-17020-periyodik-kontrol-yazilimi/ · https://17020muayene.vidco.com.tr/ · https://akuple.com/asansor-kontrol-yazilimi/ · https://ensyazilim.com/
 
 ## 11 · Değişiklik günlüğü
+- 2026-10-09 (457–458): **Grup başlıkları sola; "AKR." yeri** (reisim: *"Grup başlıkları sola dayalı olsun"*, *"Firma adı ile başlık arasındaki AKR
+  yazan yere anlam veremedim"*). Kontrol listesinin grup başlıkları belgede ve kâğıtta sola dayalı (saha ekranında zaten soldaydı). Başlık
+  tablosundaki üçüncü hücre firmanın akreditasyon (TÜRKAK) numarasıdır (Firma ayarları); numara yoksa belgede artık boş (eskiden "AKR." yazıyordu),
+  kâğıtta ne olduğu yazılı. Rapor belgesinin görsel karşılaştırma görüntüleri yenilendi.
 - 2026-10-09 (456): **Talepler balonunun sebebi sayfada** (reisim: *"Talpelerde 3 yazıyor baloncuk içinde ama tıklayınca hiç bir şey gözükmüyor. ?"*).
   Sayı, kişiye iletilen ve kararını bekleyen izin talepleri (firma yöneticisi) ile masraf formlarıdır (Muhasebe'yi değiştiren); Talepler sayfası
   ise kişinin KENDİ taleplerini listeliyordu. Artık sayfanın üstünde sarı şerit: kaç izin talebi (İzin talepleri ekranına bağlantı), kaç masraf

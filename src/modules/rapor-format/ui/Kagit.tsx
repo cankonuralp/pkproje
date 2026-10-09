@@ -378,7 +378,7 @@ export function Kagit({ t, degis, tur, bolumuSil, bildir }: KagitOzellik) {
         <tbody><tr>
           <td className="rb-logo">LOGO</td>
           <td className="rb-firma"><b>Firmanızın adı</b><br /><span className={k.ornek}>adres, logo ve akreditasyon Firma ayarlarından</span></td>
-          <td className="rb-logo">AKR.</td>
+          <td className="rb-logo"><span className={k.ornek}>Akreditasyon (TÜRKAK) no · Firma ayarlarından; yoksa boş</span></td>
           <td className="rb-bas-ad"><Yazi deger={t.gorunum.baslik} ad="Belge başlığı" bos={`${tur.ad} periyodik kontrol raporu`} kilit={resmi}
             yaz={(s) => degis(gorunumYaz(t, { baslik: s }))} /></td>
           <td className="rb-dok">

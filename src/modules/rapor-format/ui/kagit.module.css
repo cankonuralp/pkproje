@@ -52,7 +52,7 @@
 /* satır içinde yazı + tuşlar */
 .satir, .etiket, .grupSatir, .sutun { display: flex; align-items: flex-start; gap: 4px; min-width: 0; }
 .satir > :first-child, .etiket > :first-child { flex: 1 1 auto; min-width: 0; }
-.grupSatir { justify-content: center; align-items: center; }
+.grupSatir { justify-content: flex-start; align-items: center; }
 .sutun { flex-wrap: wrap; align-items: center; }
 .ogeTus { display: inline-flex; flex: none; gap: 0; margin-left: auto; opacity: .55; }
 .satir:hover .ogeTus, .etiket:hover .ogeTus, .sutun:hover .ogeTus, .ogeTus:focus-within { opacity: 1; }

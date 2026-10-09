@@ -182,7 +182,8 @@ export function raporBelgesi(v: BelgeVerisi): ReactNode {
   return h("article", { className: "rb-sayfa", "aria-label": `${no} rapor belgesi` },
     h("table", { className: "rb-bas" }, kolonlar(["11%", "27%", "10%", "27%", "25%"]), h("tbody", null, h("tr", null,
       h("td", { className: "rb-logo" }, firmaLogosu(v.firma)), h("td", { className: "rb-firma" }, h("b", null, v.firma.ad), ...firmaAdresi(v.firma)),
-      h("td", { className: "rb-logo" }, v.firma.akr ? `AKR. ${v.firma.akr}` : "AKR."),
+      /* akreditasyon (TÜRKAK) numarası Firma ayarlarından; yoksa hücre boş (458: "AKR." yer tutucusu anlaşılmıyordu) */
+      h("td", { className: "rb-logo" }, v.firma.akr ? `AKR. ${v.firma.akr}` : ""),
       h("td", { className: "rb-bas-ad" }, t.gorunum.baslik || `${v.tur.ad} periyodik kontrol raporu`),
       h("td", { className: "rb-dok" },
         h("div", null, h("span", null, "Doküman Kodu"), `: ${formKod}`), h("div", null, h("span", null, "Format sürümü"), `: ${v.formatSira}`),
