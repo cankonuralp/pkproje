@@ -79,7 +79,7 @@ test("rapor şablonu: şablondan başlat, önizle, yayınla; yeni sürümle eski
     await expect(madde).toBeFocused();
     await madde.fill("Deneme maddesi");
     await madde.press("Enter");
-    await expect(gozle.getByRole("button", { name: "Deneme maddesi" })).toBeVisible();
+    await expect(gozle.getByRole("button", { name: "Deneme maddesi", exact: true })).toBeVisible();
     /* ölçüm tablosu TABLO gibi: başlıklar sütun; "+ Sütun" yerinde yeni sütun açar, adı başlıkta yazılır */
     const linye = kagit.getByRole("region", { name: /Pano sigortaları \(linye\)$/ });
     await expect(linye.getByRole("columnheader", { name: /Devre/ })).toBeVisible();
