@@ -365,7 +365,8 @@ function OlcumBlok({ b, bag }: { b: BolumOf<"olcum">; bag: Baglam }) {
   const azEksik = bag.gecersiz(b.id);
   return (
     <>
-      {satirlar.length ? (
+      {/* 447 (reisim: "satır eklemediğin sürece neyin nereye yazılacağı bile gözükmüyor tablo başlıkları gözükmüyor"): başlıklar her zaman */}
+      {(
         <div className={stil.tabloKap}>
           <table className={stil.olcumTablo}>
             <caption className="gizli">{b.ad}</caption>
@@ -382,6 +383,10 @@ function OlcumBlok({ b, bag }: { b: BolumOf<"olcum">; bag: Baglam }) {
               </tr>
             </thead>
             <tbody>
+              {!satirlar.length && (
+                <tr><td className={stil.bosHucre} colSpan={2 + b.sutunlar.length + (notlar.length ? 1 : 0) + (bag.oku ? 0 : 1)}>
+                  Satır yok{bag.oku ? "." : " — “Satır ekle” ile ekleyin; her satır bir ölçüm noktası."}</td></tr>
+              )}
               {satirlar.map((s, i) => {
                 const r = sonuclar[i], notAnahtar = satirAnahtari(b.id, i, "not");
                 return (
@@ -432,7 +437,7 @@ function OlcumBlok({ b, bag }: { b: BolumOf<"olcum">; bag: Baglam }) {
             </tbody>
           </table>
         </div>
-      ) : <p className={stil.bosSatir}>Satır yok.</p>}
+      )}
       {notlar.length > 0 && (
         <details className={stil.notlar}>
           <summary>Uygunluk notları (Not-1 … Not-{notlar.length})</summary>

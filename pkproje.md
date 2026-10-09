@@ -2355,6 +2355,17 @@ revizyon, alan kopyalama, hafif kusur devri, meslek eşleşme denetimi).
 - Emsal ürünler: https://opwire.app/iso-17020-periyodik-kontrol-yazilimi/ · https://17020muayene.vidco.com.tr/ · https://akuple.com/asansor-kontrol-yazilimi/ · https://ensyazilim.com/
 
 ## 11 · Değişiklik günlüğü
+- 2026-10-09 (447): **Rapor ekranı ve format kurucu düzeni** (reisim: *"rapor tasarımcısında tasarım yapmak zor tek tek sütun girdiriyorsun mesela ama
+  sütun gibi gözükmüyor kafa karıştırıcı tablo gibi gözükmeli format yapıcısıda, satır eklemediğin sürece neyin nereye yazılacağı bile gözükmüyor tablo
+  başlıkları gözükmüyor … yetkili kişiler ve imzalar kısmının denetim raporu ekranında gözükmesine gerek yok … sıralama hatası yok mu … firma bilgileri
+  kısmı her formatta aynı olacak şekilde sabit olmalı, yeni format oluştur dese bile firma bilgileri kısmı sabit gelmeli"*).
+  · Ölçüm tabloları rapor ekranında satır yokken de başlıklarıyla ("Satır yok — Satır ekle ile ekleyin").
+  · Format önizlemesi ve kurucu: ölçüm bölümünün sütunları TABLO (başlıkta ad / birim / sınır, kurucuda başlıkta düzenle · sil; altında örnek satır).
+  · "Yetkili kişiler ve imzalar" (imza bölümü) rapor ekranında yok, belgede (PDF) var; önizlemede "rapor ekranında görünmez, belgede basılır".
+  · Firma bilgileri rapor ekranında Bakanlık formunun ve belgenin sırasıyla: firma adı | periyodik kontrol adresi · rapor no | rapor tarihi ·
+  İSG-KATİP | SGK · başlangıç | bitiş · sonraki | takip · e-posta | telefon · metot · ekipman bölümü.
+  · Firma bilgileri bölümü (yalnız kayıttan alanlı bilgi bölümü — format/duzen.ts kayittanBolumMu) kurucuda SABİT: düzenlenmez, silinmez, taşınmaz;
+  rapor ve belge onu her formatta aynı çizer (zaten formattan çizilmiyordu); sıfırdan format da onunla gelir.
 - 2026-10-09 (446): **Site taramasına "dengesiz kartlar"** (reisim: *"siteyi gez ve bu vb şeyleri hemen düzelt"*). e2e/tarama.ts her sayfada, üç
   genişlikte: aynı satırda yan yana duran kartlardan (kenarlı + zeminli kutu) biri ötekinden belirgin uzunsa (fark > 120 px ve oran > 1,4) kap + iki kartın
   başlığı. İlk tur yalnız deneme makinesinin günlüğüne yazar ("DENGESIZ KARTLAR"); bulunanlar düzeltilince bulguya (kilide) çevrilir.

@@ -5,7 +5,11 @@
    Vazgeç · Kaydet — kalıp Z1); kaydedilmemiş taslak yayınlanmaz. Kilitli (Bakanlık) bölüm silinmez, adı değişmez; kilitli öğe silinmez — sunucu
    yayında kaynak şablondan yeniden denetler (ENGEL). Telefonda kurucu açılmaz (masaüstü işi), önizleme görünür. Karar ve şema sunucuda.
    337–339 incelemesi: kaydedilmemiş taslakla uygulama içi bağlantıya basınca sorulur (tarayıcının sekme kapatma sorusuna ek); taslakta sorun varsa
-   üstte "Yayından önce bakılacak" (maket kurucuCiz → denetim; motorun saf yayın denetimi). */
+   üstte "Yayından önce bakılacak" (maket kurucuCiz → denetim; motorun saf yayın denetimi).
+   447 (reisim 2026-10-09: "tek tek sütun girdiriyorsun mesela ama sütun gibi gözükmüyor kafa karıştırıcı tablo gibi gözükmeli format yapıcısıda";
+   "firma bilgileri kısmı her formatta aynı olacak şekilde sabit olmalı"): ölçüm bölümünün sütunları TABLO gibi (başlıkta düzenle / sil); firma
+   bilgileri bölümü (yalnız kayıttan alanlı — format/duzen.ts kayittanBolumMu) SABİT: düzenlenmez, silinmez, taşınmaz; rapor ve belge onu her
+   formatta aynı çizer. */
 import { useRouter } from "next/navigation";
 import { useEffect, useMemo, useState, useTransition } from "react";
 import { useBildir } from "../../../components/bildirim/Bildirim";
@@ -16,11 +20,12 @@ import { NesneBasi, Rozet } from "../../../components/sayfa/Sayfa";
 import { SecimAlani } from "../../../components/secim/SecimAlani";
 import { Serit } from "../../../components/serit/Serit";
 import { Tus, TusBaglanti } from "../../../components/tus/Tus";
+import { kayittanBolumMu } from "../../../format/duzen";
 import { yayinDenetimi } from "../../../format/motor";
 import { BLOKLAR, type Blok, type FormatTanimi } from "../../../format/tanim";
 import { bolumAdi, bolumDuzeni, bolumOgeleri, bolumSil, maddeEkle, ogeEkle, ogeliBlok, ogeSil, tasi, yeniBolum } from "../kurucu";
 import { taslakKaydetEylemi } from "./eylemler";
-import { FormatOnizleme } from "./FormatOnizleme";
+import { FormatOnizleme, OlcumOnizleme } from "./FormatOnizleme";
 import { GorunumDuzenleyici, ListeDuzenleyici, NotDuzenleyici, OgeDuzenleyici, SonucAciklamasi } from "./KurucuDuzenleyici";
 import { BLOK_ADI } from "./ortak";
 import { YayinlaTusu } from "./SablonBolumu";
@@ -63,6 +68,7 @@ export function FormatKurucu({ turId, turAd, format, tanim, kaynakAd }: {
   if (son !== ilkJson) { setSon(ilkJson); setT(tanim); setHatalar([]); }
   const kirli = JSON.stringify(t) !== ilkJson;
   const i = Math.max(0, Math.min(sec, t.bolumler.length - 1)), b = t.bolumler[i];
+  const sabit = !!b && kayittanBolumMu(b);
   const degis = (y: FormatTanimi) => { setT(y); setHatalar([]); };
 
   /* kaydedilmemiş taslakla sayfadan çıkarken tarayıcı sorar */
@@ -157,12 +163,12 @@ export function FormatKurucu({ turId, turAd, format, tanim, kaynakAd }: {
               <li key={x.id} className={j === i ? `${stil.kurucuBolum} ${stil.kurucuSecili}` : stil.kurucuBolum}>
                 <button type="button" className={stil.kurucuBolumTus} aria-current={j === i ? "true" : undefined} onClick={() => sec_(j)}>
                   <Ikon ad={BLOK_IKON[x.blok]} kucuk />
-                  <span className={stil.kurucuBolumAd}><b>{j + 1} · {x.ad || "Adsız bölüm"}</b><span className={stil.ogeAlt}>{BLOK_ADI[x.blok]}{x.kilit ? " · Bakanlık alanı" : ""}</span></span>
+                  <span className={stil.kurucuBolumAd}><b>{j + 1} · {x.ad || "Adsız bölüm"}</b><span className={stil.ogeAlt}>{kayittanBolumMu(x) ? "Sabit · her raporda aynı" : `${BLOK_ADI[x.blok]}${x.kilit ? " · Bakanlık alanı" : ""}`}</span></span>
                 </button>
-                <span className={stil.kurucuSira}>
-                  <button type="button" className={stil.ikonTus} data-kb-yukari={j} aria-label={`${x.ad} yukarı`} disabled={j === 0} onClick={() => sira(j, j - 1, "yukari")}><Ikon ad="arrow-up" kucuk /></button>
+                {!kayittanBolumMu(x) && <span className={stil.kurucuSira}>
+                  <button type="button" className={stil.ikonTus} data-kb-yukari={j} aria-label={`${x.ad} yukarı`} disabled={j === 0 || kayittanBolumMu(t.bolumler[j - 1])} onClick={() => sira(j, j - 1, "yukari")}><Ikon ad="arrow-up" kucuk /></button>
                   <button type="button" className={stil.ikonTus} data-kb-asagi={j} aria-label={`${x.ad} aşağı`} disabled={j === t.bolumler.length - 1} onClick={() => sira(j, j + 1, "asagi")}><Ikon ad="arrow-down" kucuk /></button>
-                </span>
+                </span>}
               </li>
             ))}
           </ol>
@@ -174,7 +180,15 @@ export function FormatKurucu({ turId, turAd, format, tanim, kaynakAd }: {
         </nav>
 
         <section className={`${stil.bolum} ${stil.kurucuOrta} ${stil.yalnizGenis}`} aria-labelledby={ID.baslik}>
-          {!b ? <p className={stil.satir}>Bölüm yok; soldan ekleyin.</p> : <>
+          {!b ? <p className={stil.satir}>Bölüm yok; soldan ekleyin.</p> : sabit ? <>
+            <div className={stil.bolumBas}>
+              <h2 className={stil.bolumAd} id={ID.baslik} tabIndex={-1}>{i + 1} · {b.ad}</h2>
+              <Rozet tur="notr">Sabit · her raporda aynı</Rozet>
+            </div>
+            <Serit tur="bilgi" ikon="lock">Firma bilgileri her formatta ve her raporda aynıdır: firma adı, adres, rapor no ve tarihi, İSG-KATİP ID, SGK sicil no,
+              kontrol tarihleri ve metot plandan ve kayıttan gelir. Bu bölüm değiştirilemez, silinmez.</Serit>
+            <ul className={stil.kurucuOgeler}>{b.alanlar.map((a) => <li key={a.id}><span className={stil.kurucuOge}><span>{a.ad}</span><span className={stil.ogeAlt}>kayıttan</span></span></li>)}</ul>
+          </> : <>
             <div className={stil.bolumBas}>
               <h2 className={stil.bolumAd} id={ID.baslik} tabIndex={-1}>{i + 1} · {b.ad || "Adsız bölüm"}</h2>
               {b.kilit ? <Rozet tur="notr">Bakanlık alanı · silinemez</Rozet>
@@ -196,9 +210,21 @@ export function FormatKurucu({ turId, turAd, format, tanim, kaynakAd }: {
             {b.blok === "liste" && <ListeDuzenleyici t={t} i={i} b={b} degis={degis} />}
             {ogeliBlok(b.blok) && (() => {
               const l = bolumOgeleri(b), [baslik, ekleAd] = OGE[b.blok as keyof typeof OGE];
+              const tuslar = (x: (typeof l)[number]) => (
+                <span className={stil.ogeTuslar}>
+                  {x.kilit && <span className={stil.kilit} title="Bakanlık alanı"><Ikon ad="lock" kucuk /><span className="gizli">Bakanlık alanı</span></span>}
+                  <button type="button" className={stil.ikonTus} aria-label={`${x.ad} düzenle`} aria-expanded={acikOge === x.id} title="Düzenle"
+                    onClick={() => setAcikOge(acikOge === x.id ? null : x.id)}><Ikon ad="pencil" kucuk /></button>
+                  {!x.kilit && <button type="button" className={stil.ikonTus} aria-label={`${x.ad} sil`} onClick={() => { degis(ogeSil(t, i, x.id)); setAcikOge(null); bildir(`“${x.ad}” çıkarıldı (taslak).`); odak(`#${ID.yeni}`); }}><Ikon ad="x" kucuk /></button>}
+                </span>
+              );
               return <>
                 <p className={stil.etiket}>{baslik} ({l.length})</p>
-                {l.length ? <ul className={stil.kurucuOgeler}>
+                {b.blok === "olcum" ? <>
+                  {l.length ? <OlcumOnizleme b={b} secili={acikOge} tuslar={(id) => { const x = l.find((o) => o.id === id); return x ? tuslar(x) : null; }} />
+                    : <p className={stil.satir}>Henüz sütun yok; aşağıdan ekleyin. Her sütun raporda tablonun bir başlığı olur.</p>}
+                  {acikOge && l.some((x) => x.id === acikOge) && <div className={stil.sutunDuzenle}><OgeDuzenleyici t={t} i={i} b={b} id={acikOge} degis={degis} /></div>}
+                </> : l.length ? <ul className={stil.kurucuOgeler}>
                   {l.map((x) => (
                     <li key={x.id} className={stil.ogeSatir}>
                       <span className={stil.kurucuOge}><span>{x.kilit && <span className={stil.kilit} title="Bakanlık alanı"><Ikon ad="lock" kucuk /><span className="gizli">Bakanlık alanı</span></span>}{x.ad}</span>

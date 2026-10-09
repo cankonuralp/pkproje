@@ -137,6 +137,7 @@ input.oku { background: var(--zemin2); border-color: var(--kenar); color: var(--
 .olcumTablo td.satirNo { min-width: 0; padding-top: 14px; color: var(--yazi2); font-variant-numeric: tabular-nums; }
 .olcumTablo td.sonucHucre { min-width: 9rem; }
 .olcumTablo td.islemHucre { min-width: 0; }
+.olcumTablo td.bosHucre { padding: 14px 8px; color: var(--yazi2); text-align: center; }
 /* tablo içindeki seçim listesi akışta açılır — kayan kap kesmesin (pencere içindeki seçimle aynı karar: Secim.module.css "dialog .secim .liste") */
 .olcumTablo [data-secim-kap] [role="listbox"] { position: static; margin-top: 6px; box-shadow: none; max-height: 240px; }
 .birim { font-weight: 400; }

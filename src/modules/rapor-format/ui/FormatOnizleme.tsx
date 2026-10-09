@@ -3,6 +3,7 @@
    kurucu K4'te de kullanır). Kilitli (Bakanlık) öğe kilit simgesiyle. PDF çizimi PDF kaleminde aynı tanımdan. */
 import type { ReactNode } from "react";
 import { SINIR_ISARETI } from "../../../format/hesap";
+import { kayittanBolumMu } from "../../../format/duzen";
 import type { Bolum, FormatTanimi, Sinir } from "../../../format/tanim";
 import { Ikon } from "../../../components/ikon/Ikon";
 import { Rozet } from "../../../components/sayfa/Sayfa";
@@ -45,7 +46,8 @@ function Icerik({ b }: { b: Bolum }) {
     case "olcum":
       return <>
         <p className={stil.satir}>{ekler(b.satir === "ekle" ? "Satırı denetçi ekler" : "Sabit satırlar", b.enAz > 0 && `en az ${b.enAz} satır`, b.hesap && HESAP[b.hesap])}</p>
-        <ul className={stil.ogeler}>{b.sutunlar.map((s) => <Oge key={s.id} ad={s.ad} alt={ekler(GIRIS[s.giris], s.birim, sinir(s.op, s.sinir, s.birim), s.zorunlu && "zorunlu", s.secenekler?.join(" / "), olumsuz(s.olumsuz, s.agir))} />)}</ul>
+        {/* 447 (reisim: "sütun gibi gözükmüyor kafa karıştırıcı tablo gibi gözükmeli"): sütunlar tablo başlığı; altında örnek satır */}
+        <OlcumOnizleme b={b} />
         {b.notlar?.length ? <ul className={stil.ogeler}>{b.notlar.map((n, i) => <Oge key={i} ad={`Not-${i + 1}`} alt={ekler(n.metin, n.kusur && (n.agir ? "ağır kusur" : "kusur"))} />)}</ul> : null}
       </>;
     case "test":
@@ -61,10 +63,43 @@ function Icerik({ b }: { b: Bolum }) {
     case "not":
       return <p className={stil.satir}>{b.zorunlu ? "Zorunlu" : "İsteğe bağlı"}</p>;
     case "imza":
-      return <p className={stil.satir}>{b.imzalar.map((i) => IMZA[i]).join(" · ")}</p>;
+      return <p className={stil.satir}>{b.imzalar.map((i) => IMZA[i]).join(" · ")} · rapor ekranında görünmez, belgede (PDF) basılır</p>;
     default:
       return null;
   }
+}
+
+/** 447: ölçüm bölümü tablo gibi — başlıkta sütun adı, birim ve sınır; altında örnek satır (girişin türü) */
+export function OlcumOnizleme({ b, tuslar, secili }: { b: Extract<Bolum, { blok: "olcum" }>; tuslar?: (id: string) => ReactNode; secili?: string | null }) {
+  return (
+    <div className={stil.tabloKap}>
+      <table className={stil.onizTablo}>
+        <caption className="gizli">{b.ad} · sütunlar</caption>
+        <thead>
+          <tr>
+            <th scope="col">No</th>
+            {b.sutunlar.map((s) => (
+              <th key={s.id} scope="col" className={secili === s.id ? stil.sutunSecili : undefined}>
+                <span className={stil.sutunAd}>{s.ad}{s.birim ? ` (${s.birim})` : ""}</span>
+                {(sinir(s.op, s.sinir, s.birim) || s.zorunlu) && <span className={stil.ogeAlt}>{ekler(sinir(s.op, s.sinir, s.birim) && `sınır ${sinir(s.op, s.sinir, s.birim)}`, s.zorunlu && "zorunlu")}</span>}
+                {tuslar?.(s.id)}
+              </th>
+            ))}
+            {b.notlar?.length ? <th scope="col">Uygunluk notu</th> : null}
+            <th scope="col">Sonuç</th>
+          </tr>
+        </thead>
+        <tbody>
+          <tr>
+            <td>1</td>
+            {b.sutunlar.map((s) => <td key={s.id}><span className={stil.ornekHucre}>{s.giris === "secim" && s.secenekler?.length ? s.secenekler.join(" / ") : GIRIS[s.giris]}</span></td>)}
+            {b.notlar?.length ? <td><span className={stil.ornekHucre}>Not-1 … Not-{b.notlar.length}</span></td> : null}
+            <td><span className={stil.ornekHucre}>Uygun / Uygun değil</span></td>
+          </tr>
+        </tbody>
+      </table>
+    </div>
+  );
 }
 
 /** bölümler, sırasıyla */
@@ -76,7 +111,7 @@ export function FormatOnizleme({ tanim }: { tanim: FormatTanimi }) {
           <div className={stil.bolumBas}>
             <h3 className={stil.bolumAd}>{i + 1} · {b.ad}</h3>
             <Rozet tur="notr">{BLOK_ADI[b.blok]}</Rozet>
-            {b.kilit && <Rozet tur="kabul">Bakanlık alanı</Rozet>}
+            {kayittanBolumMu(b) ? <Rozet tur="notr">Sabit · her raporda aynı</Rozet> : b.kilit && <Rozet tur="kabul">Bakanlık alanı</Rozet>}
             {/* 427: belgedeki numara düzeni (format/duzen.ts) */}
             {b.ust && <Rozet tur="notr">Üst başlık: {b.ust}</Rozet>}
             {b.numarasiz && <Rozet tur="notr">Numarasız</Rozet>}

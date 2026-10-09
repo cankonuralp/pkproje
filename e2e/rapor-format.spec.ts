@@ -66,6 +66,16 @@ test("rapor şablonu: şablondan başlat, önizle, yayınla; yeni sürümle eski
     await page.getByRole("navigation", { name: "Bölümler" }).getByRole("button", { name: /^5 · Gözle kontrol/ }).click();
     await expect(page.getByText("Bakanlık alanı · silinemez")).toBeVisible();
     await expect(page.getByRole("button", { name: "Bölümü sil" })).toHaveCount(0);
+    /* 447 (reisim: "tablo gibi gözükmeli format yapıcısıda"; "firma bilgileri kısmı her formatta aynı olacak şekilde sabit olmalı"): ölçüm bölümünün
+       sütunları tablo başlığı (düzenle tuşu başlıkta); firma bilgileri sabit — düzenlenmez, silinmez */
+    await page.getByRole("navigation", { name: "Bölümler" }).getByRole("button", { name: /· Pano sigortaları \(linye\)/ }).click();
+    const sutunlar = page.getByRole("table", { name: /Pano sigortaları \(linye\) · sütunlar/ }).first();
+    await expect(sutunlar.getByRole("columnheader", { name: /Devre/ })).toBeVisible();
+    await expect(sutunlar.getByRole("button", { name: "Devre düzenle" })).toBeVisible();
+    await page.getByRole("navigation", { name: "Bölümler" }).getByRole("button", { name: /^1 · Firma bilgileri/ }).click();
+    await expect(page.getByText("Firma bilgileri her formatta ve her raporda aynıdır", { exact: false })).toBeVisible();
+    await expect(page.getByRole("button", { name: "Bölümü sil" })).toHaveCount(0);
+    await expect(page.getByRole("textbox", { name: "Bölüm adı" })).toHaveCount(0);
     expect(await page.evaluate(() => document.documentElement.scrollWidth <= window.innerWidth), "yana taşma yok").toBe(true);
   } else await expect(page.getByText("Format kurucu masaüstünde kullanılır; burada önizleme görünür.")).toBeVisible();
   await yayinla(page, "ilk sürüm", 1);

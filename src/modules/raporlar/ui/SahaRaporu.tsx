@@ -507,19 +507,22 @@ export function SahaRaporu({ v, yeni }: { v: Gorunum; yeni?: { plan: string; eki
       <div className={stil.bolumler}>
         <RaporBolumu id={SABIT.firma} no="1" baslik="Firma bilgileri" acik={acik(SABIT.firma)} degistir={degistir(SABIT.firma)}
           eksik={gecersiz("tarih.bas") || gecersiz("tarih.bit")}>
+          {/* 447 (reisim 2026-10-09: "görselde attığım ekranda bi bak sıralama hatası yok mu"): Bakanlık formunun ve belgenin (src/belge/belge.ts)
+              sırasıyla, iki sütunda satır satır eşleşir — firma adı | adres · rapor no | rapor tarihi · İSG-KATİP | SGK · başlangıç | bitiş ·
+              sonraki | takip; sonra müşterinin e-posta | telefonu, metot ve ekipman bölümü */}
           <Satirlar>
             <Satir etiket="Firma adı">{v.kunye.firmaAdi}</Satir>
-            <Satir etiket="E-posta">{v.kunye.eposta ?? <DegerYok>-</DegerYok>}</Satir>
-            <Satir etiket="Telefon">{v.kunye.tel ?? <DegerYok>-</DegerYok>}</Satir>
-            {tarihSatiri("bas", "Periyodik kontrol başlangıç tarihi ve saati", true, true)}
-            {tarihSatiri("bit", "Periyodik kontrol bitiş tarihi ve saati", true)}
-            {tarihSatiri("sonraki", "Bir sonraki periyodik kontrol tarihi", false)}
-            {tarihSatiri("takip", "Takip kontrol tarihi", false)}
-            <Satir etiket="Adres">{v.kunye.adres ?? <DegerYok>-</DegerYok>}</Satir>
+            <Satir etiket="Periyodik kontrol adresi">{v.kunye.adres ?? <DegerYok>-</DegerYok>}</Satir>
             <Satir etiket="Rapor no"><Kod>{v.no}</Kod></Satir>
             {tarihSatiri("rapor", "Rapor tarihi", false)}
             <Satir etiket="İSG-KATİP SÖZLEŞME ID">{v.kunye.isgNo ? <span className={stil.kodUzun}>{v.kunye.isgNo}</span> : <span className={stil.uyari}>Yok</span>}</Satir>
             <Satir etiket="SGK DETSİS NO">{v.kunye.sgk ? <span className={stil.kodUzun}>{v.kunye.sgk}</span> : <span className={stil.uyari}>Yok</span>}</Satir>
+            {tarihSatiri("bas", "Periyodik kontrol başlangıç tarihi ve saati", true, true)}
+            {tarihSatiri("bit", "Periyodik kontrol bitiş tarihi ve saati", true)}
+            {tarihSatiri("sonraki", "Bir sonraki periyodik kontrol tarihi", false)}
+            {tarihSatiri("takip", "Takip kontrol tarihi", false)}
+            <Satir etiket="E-posta">{v.kunye.eposta ?? <DegerYok>-</DegerYok>}</Satir>
+            <Satir etiket="Telefon">{v.kunye.tel ?? <DegerYok>-</DegerYok>}</Satir>
             <Satir etiket="Periyodik kontrol metodu ve kapsamı">{metot}</Satir>
             {metinSatiri("bolum", "Ekipman bölümü", 60)}
           </Satirlar>
@@ -554,7 +557,8 @@ export function SahaRaporu({ v, yeni }: { v: Gorunum; yeni?: { plan: string; eki
           </RaporBolumu>
         )}
 
-        {duzen.bolumler.map(({ b, no, ust }) => (
+        {/* 447 (reisim: "yetkili kişiler ve imzalar kısmının denetim raporu ekranında gözükmesine gerek yok"): imza bölümü yalnız belgede (PDF) */}
+        {duzen.bolumler.filter(({ b }) => b.blok !== "imza").map(({ b, no, ust }) => (
           <Fragment key={b.id}>
             {ust && <h2 className={stil.ustBaslik}><span className={stil.bolumNo}>{ust.no} · </span>{ust.ad}</h2>}
             <FormatBolumu b={b} no={no} bag={bag} acik={acik(b.id)} degistir={degistir(b.id)}

@@ -23,11 +23,13 @@ export interface RaporDuzeni { ekipmanBaslik: string; katilan: BolumOf<"bilgi">[
 export const ekipmanBolumuMu = (b: Bolum): b is BolumOf<"bilgi"> =>
   b.blok === "bilgi" && (b.id === "ekipman" || kucuk(b.ad).includes("ekipman")) && b.alanlar.some((a) => !a.kaynak);
 
+/** yalnız kayıttan gelen alanlı bilgi bölümü = 1 · Firma bilgileri'nin kopyası: çizilmez; 447: Format kurucuda SABİT (her formatta aynı, düzenlenmez) */
+export const kayittanBolumMu = (b: Bolum): b is BolumOf<"bilgi"> => b.blok === "bilgi" && b.alanlar.length > 0 && b.alanlar.every((a) => a.kaynak);
+
 /** cihazEk: formatta cihaz bölümü yok ama rapora cihaz eklendi (sabit "Ölçüm cihazları" bölümü) */
 export function raporDuzeni(t: FormatTanimi, cihazEk: boolean): RaporDuzeni {
   const katilan = t.bolumler.filter(ekipmanBolumuMu);
-  const kayittan = (b: Bolum) => b.blok === "bilgi" && b.alanlar.length > 0 && b.alanlar.every((a) => a.kaynak);
-  const kalan = t.bolumler.filter((b) => !katilan.includes(b as BolumOf<"bilgi">) && !kayittan(b));
+  const kalan = t.bolumler.filter((b) => !katilan.includes(b as BolumOf<"bilgi">) && !kayittanBolumMu(b));
   let n = cihazEk ? 3 : 2, alt = 0, sonUst: string | null = null;
   const bolumler = kalan.map((b): DuzenBolumu => {
     if (b.numarasiz) { sonUst = null; return { b, no: null, ust: null }; }

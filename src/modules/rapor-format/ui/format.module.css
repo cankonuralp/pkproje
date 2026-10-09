@@ -73,3 +73,15 @@
 .duzenleyici { flex: 1 1 100%; display: grid; gap: 10px; margin: 6px 0 4px; padding: 10px 12px; border: 1px solid var(--kenar); border-radius: var(--r-orta); background: var(--zemin); }
 .kurucuOgeler > .grupSatir { display: grid; justify-content: stretch; gap: 6px; padding: 8px 0; }
 .metin { width: 100%; min-height: 64px; padding: 8px 10px; border: 1px solid var(--kenar-alan); border-radius: var(--r-orta); background: var(--kart); color: var(--yazi); font: inherit; resize: vertical; }
+
+/* 447 ölçüm bölümü tablo gibi (önizleme ve kurucu): başlıkta sütun adı / birim / sınır, kurucuda düzenle · sil; altında örnek satır */
+.tabloKap { min-width: 0; margin: 4px 0 8px; overflow-x: auto; border: 1px solid var(--kenar); border-radius: var(--r-orta); }
+.onizTablo { width: 100%; border-collapse: collapse; font-size: var(--boy-kucuk); }
+.onizTablo th, .onizTablo td { padding: 6px 8px; text-align: left; vertical-align: top; border-bottom: 1px solid var(--kenar); border-left: 1px solid var(--kenar); }
+.onizTablo th:first-child, .onizTablo td:first-child { border-left: 0; color: var(--yazi2); }
+.onizTablo th { background: var(--zemin2); color: var(--yazi); font-weight: 600; min-width: 7rem; }
+.onizTablo tbody tr:last-child td { border-bottom: 0; }
+.onizTablo .sutunSecili { box-shadow: inset 0 -2px 0 var(--onay); }
+.sutunAd { display: block; overflow-wrap: anywhere; }
+.ornekHucre { color: var(--yazi3); font-style: italic; }
+.sutunDuzenle { margin: 0 0 8px; padding: 8px 10px; border: 1px solid var(--kenar); border-radius: var(--r-orta); }
