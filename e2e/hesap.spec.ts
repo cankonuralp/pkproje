@@ -53,9 +53,15 @@ test("hesap aç → geçici parola bir kez → kişi girer; roller; kapat / yeni
   await kisi.goto("/planlar");
   await expect(kisi).toHaveURL(/\/giris\?neden=oturum/);
 
-  /* kapat (onay penceresi) → giremez; yeniden aç → girer */
-  await page.getByRole("button", { name: "Hesabı kapat" }).click();
-  await page.locator("dialog[open]").getByRole("button", { name: "Hesabı kapat" }).click();
+  /* kapat (onay penceresi) → giremez; yeniden aç → girer. 2026-10-10: deneme makinesinde iki kez (526c88c telefon, 2dc1e81 masaüstü) tıklama
+     geldi, pencere açılmadı — öteki sekme ilk kez /planlar'ı derletirken geliştirme sunucusu bu sayfayı yeniden yüklüyor (iz: aynı sayfanın beş
+     yüklemesi, hata yok). Pencere açılana dek tıklanır; açılması şartı aynı */
+  const onay = page.locator("dialog[open]").getByRole("button", { name: "Hesabı kapat" });
+  await expect(async () => {
+    if (!(await onay.isVisible())) await page.getByRole("button", { name: "Hesabı kapat" }).click();
+    await expect(onay).toBeVisible({ timeout: 3_000 });
+  }).toPass({ timeout: 45_000 });
+  await onay.click();
   await expect(page.getByText("Hesap kapalı: giriş yapamaz.")).toBeVisible();
   await kisi.goto("/giris");
   await expect(kisi.getByRole("button", { name: "Giriş yap" })).toBeEnabled();
