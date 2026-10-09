@@ -56,8 +56,13 @@ test("dökümanlar: standart ve yeni sürümü, kriter belgesi, diğer döküman
   await expect(page).toHaveURL(/\/dokumanlar\?brans=e$/);
   await expect(page.getByRole("button", { name: `${hazirNo} · Yükle` })).toHaveCount(0);
 
+  /* 442: Muayene kriterleri'nde de Mekanik / Elektrik alt sekmesi — Bakanlık belgeleri Elektrik'te, Mekanik boş */
   await page.goto("/dokumanlar/kriterler");
   await hazir(page);
+  await expect(page.getByRole("navigation", { name: "Branşlar" }).getByRole("link", { name: "Mekanik (0)" })).toHaveAttribute("aria-current", "page");
+  await expect(page.getByText("Mekanik muayene kriteri belgesi yok")).toBeVisible();
+  await page.getByRole("navigation", { name: "Branşlar" }).getByRole("link", { name: /^Elektrik \(\d+\)$/ }).click();
+  await expect(page).toHaveURL(/\/dokumanlar\/kriterler\?brans=e$/, { timeout: 30_000 });
   await page.getByRole("link", { name: "ZPKK01" }).click();
   await expect(page.getByRole("heading", { level: 1, name: "ZPKK01" })).toBeVisible({ timeout: 30_000 });
 

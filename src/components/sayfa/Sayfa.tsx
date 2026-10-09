@@ -60,11 +60,12 @@ export function Kod({ children }: { children: ReactNode }) { return <span classN
 export function AltSatir({ children, uyari = false }: { children: ReactNode; uyari?: boolean }) { return <span className={uyari ? stil.uyariMetin : stil.altSatir}>{children}</span>; }
 export function DegerYok({ children = "—" }: { children?: ReactNode }) { return <span className={stil.yok}>{children}</span>; }
 
-/** sayfa sekmeleri (bağlantı; bulunulan aria-current) */
-export function Sekmeler({ ad, ogeler, secili }: { ad: string; ogeler: readonly (readonly [ad: string, href: string])[]; secili: string }) {
+/** sayfa sekmeleri (bağlantı; bulunulan aria-current). 442 `alt`: üst sekmenin ALTINDA ikinci düzey (reisim 2026-10-09: "altında bir sekme gibi
+    olacak") — kendi satırında, çizgili; üst sekmeyle yan yana dizilmez */
+export function Sekmeler({ ad, ogeler, secili, alt = false }: { ad: string; ogeler: readonly (readonly [ad: string, href: string])[]; secili: string; alt?: boolean }) {
   return (
-    <nav className={stil.sekmeler} aria-label={ad}>
-      {ogeler.map(([a, href]) => <Link key={href} className={stil.sekme} href={href} aria-current={href === secili ? "page" : undefined}>{a}</Link>)}
+    <nav className={alt ? stil.altSekmeler : stil.sekmeler} aria-label={ad}>
+      {ogeler.map(([a, href]) => <Link key={href} className={alt ? stil.altSekme : stil.sekme} href={href} aria-current={href === secili ? "page" : undefined}>{a}</Link>)}
     </nav>
   );
 }

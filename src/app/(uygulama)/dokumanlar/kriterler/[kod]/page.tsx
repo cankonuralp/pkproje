@@ -22,7 +22,7 @@ export default async function Sayfa({ params }: { params: Promise<{ kod: string 
   if (!x) notFound();
   return (
     <>
-      <Kirinti ogeler={[["Muayene kriterleri", "/dokumanlar/kriterler"], [x.kod]]} />
+      <Kirinti ogeler={[[`Muayene kriterleri · ${x.brans === "e" ? "Elektrik" : "Mekanik"}`, x.brans === "e" ? "/dokumanlar/kriterler?brans=e" : "/dokumanlar/kriterler"], [x.kod]]} />
       <NesneBasi baslik={x.kod} rozet={<Rozet tur="tamam">Yürürlükte</Rozet>} altIkon="list-checks" alt={x.ad}
         tuslar={<TusBaglanti ikon="file-text" href={`/dokumanlar/kriterler/${x.kod}/pdf`} yeniSekme>Bakanlık belgesi (PDF)</TusBaglanti>} />
       <Bolum id="b-krt-belge" baslik="Belge">

@@ -78,7 +78,7 @@ export function StandartListesi({ standartlar, yaz, brans }: { standartlar: Stan
     <>
       <SayfaBasi baslik="Dökümanlar" sayac={<Sayac s={s} />} tuslar={yaz && <Tus ikon="file-plus" onClick={() => setPencere(true)}>Standart yükle</Tus>} />
       <Sekmeler ad="Döküman bölümleri" ogeler={DOKUMAN_SEKMELERI} secili="/dokumanlar" />
-      <Sekmeler ad="Branşlar" ogeler={[[`Mekanik (${sayi("m")})`, SEKME.m], [`Elektrik (${sayi("e")})`, SEKME.e]]} secili={SEKME[brans]} />
+      <Sekmeler alt ad="Branşlar" ogeler={[[`Mekanik (${sayi("m")})`, SEKME.m], [`Elektrik (${sayi("e")})`, SEKME.e]]} secili={SEKME[brans]} />
       <SuzgecliListe key={brans} s={s} on="std" baslik={`Standartlar · ${brans === "e" ? "Elektrik" : "Mekanik"}`} sutunlar={sutunlar} anahtar={(x) => x.anahtar}
         href={(x) => x.kayit ? `/dokumanlar/standart/${x.kayit.id}` : undefined}
         bosVeri={{ ikon: "book-open", baslik: "Kütüphane boş", metin: `“Standart yükle” ile firmanın ${brans === "e" ? "elektrik" : "mekanik"} standart kopyası (PDF) eklenir; ekipman türlerinde kontrol metodu buradan seçilir.` }} />
@@ -87,7 +87,11 @@ export function StandartListesi({ standartlar, yaz, brans }: { standartlar: Stan
   );
 }
 
-export function KriterListesi({ belgeler }: { belgeler: readonly KriterBelgesi[] }) {
+const KRITER_SEKME = { m: "/dokumanlar/kriterler", e: "/dokumanlar/kriterler?brans=e" } as const;
+
+/** 442 (reisim 2026-10-09: "sadece standartlarda değil muayene kriterlerinde de olacak"): Mekanik / Elektrik alt sekmesi */
+export function KriterListesi({ belgeler: tum, brans }: { belgeler: readonly KriterBelgesi[]; brans: "m" | "e" }) {
+  const belgeler = tum.filter((x) => x.brans === brans), sayi = (b: "m" | "e") => tum.filter((x) => x.brans === b).length;
   const sutunlar: Sutun<KriterBelgesi>[] = [
     { k: "kod", genislik: "46%", baslik: "Belge", kart: "ust", sira: 1, hucre: (x) => <span><Link className={stil.no} href={`/dokumanlar/kriterler/${x.kod}`}>{x.kod}</Link><AltSatir><Kirp>{x.ad}</Kirp></AltSatir></span> },
     { k: "rapor", genislik: "16%", baslik: "Rapor formatı", kart: "govde", sira: 2, hucre: (x) => <><KartEtiket>Rapor formatı</KartEtiket><Kod>{x.rapor}</Kod></> },
@@ -98,7 +102,11 @@ export function KriterListesi({ belgeler }: { belgeler: readonly KriterBelgesi[]
     <>
       <SayfaBasi baslik="Dökümanlar" sayac={<><b>{belgeler.length}</b> belge</>} />
       <Sekmeler ad="Döküman bölümleri" ogeler={DOKUMAN_SEKMELERI} secili="/dokumanlar/kriterler" />
-      <Liste baslik="Muayene kriterleri" sutunlar={sutunlar} kayitlar={belgeler} anahtar={(x) => x.kod} href={(x) => `/dokumanlar/kriterler/${x.kod}`} />
+      <Sekmeler alt ad="Branşlar" ogeler={[[`Mekanik (${sayi("m")})`, KRITER_SEKME.m], [`Elektrik (${sayi("e")})`, KRITER_SEKME.e]]} secili={KRITER_SEKME[brans]} />
+      {belgeler.length ? <Liste baslik={`Muayene kriterleri · ${brans === "e" ? "Elektrik" : "Mekanik"}`} sutunlar={sutunlar} kayitlar={belgeler} anahtar={(x) => x.kod}
+        href={(x) => `/dokumanlar/kriterler/${x.kod}`} />
+        : <BosDurum ikon="list-checks" baslik={`${brans === "e" ? "Elektrik" : "Mekanik"} muayene kriteri belgesi yok`}
+          metin="Bakanlığın bu branşta yayımladığı periyodik kontrol kriterleri belgesi henüz yok; yayımlandıkça burada görünür." />}
     </>
   );
 }

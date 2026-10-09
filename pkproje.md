@@ -2355,6 +2355,11 @@ revizyon, alan kopyalama, hafif kusur devri, meslek eşleşme denetimi).
 - Emsal ürünler: https://opwire.app/iso-17020-periyodik-kontrol-yazilimi/ · https://17020muayene.vidco.com.tr/ · https://akuple.com/asansor-kontrol-yazilimi/ · https://ensyazilim.com/
 
 ## 11 · Değişiklik günlüğü
+- 2026-10-09 (442): **Mekanik / Elektrik alt sekme olarak; Muayene kriterleri'nde de** (reisim: *"bu şekilde olmaz altında bir sekme gibi olacak ve
+  sadece standartlarda değil muayene kriterlerinde de olacak"*). Branş sekmeleri ana sekmelerle (Standartlar · Muayene kriterleri · Diğer
+  dökümanlar · Eğitimler) yan yana duruyordu → ortak sekme bileşenine `alt` biçimi: ana sekmenin ALTINDA kendi satırında, çizgili, seçilinin altı
+  çizili. Muayene kriterleri'nde Mekanik (0) / Elektrik (5) (?brans=e; kriter belgesinde branş — rapor formatının türüyle aynı, testle kilitli);
+  Mekanik boşken "Mekanik muayene kriteri belgesi yok" (Bakanlık yayımladıkça görünür). Kriter belgesinin kırıntısı branşıyla.
 - 2026-10-09 (441): **439–440 YAYINDA** — Supabase göç 0078 (standart.brans; 79 göç; özet aynı, dış API'ye hak yok — denetlendi), main = 30fdd6a,
   sağlık "tamam" (göç güncel), duman 10/10, çalışma hatası yok. Deneme makinesinde telefon 2/2 bir kez girişte düştü (geliştirme sunucusu sayfanın
   kod parçasını yüklerken bağlantıyı kopardı — ECONNRESET; aynı test önceki turda geçmişti), yalnız o iş yeniden koştu, geçti; öteki altısı ilk

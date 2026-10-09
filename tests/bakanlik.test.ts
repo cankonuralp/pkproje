@@ -53,6 +53,11 @@ test("hazır standartlar: yükleme şemasından geçer, tekrar yok, her biri for
     assert.ok(metin.includes(s.no), `${s.no} ${s.formatlar.join(",")} içinde geçmiyor`);
   }
   for (const f of formlar) assert.ok(formatStandartlari(f).length > 0, f);
+  /* 442: kriter belgesinin branşı (Muayene kriterleri alt sekmesi) — rapor formatının şablonundaki önerilen türün branşı */
+  for (const k of KRITER_BELGELERI) {
+    const s = Object.values(SABLONLAR).find((x) => x.tanim.gorunum.formKodu === k.rapor)!;
+    assert.equal(k.brans, grupBul(s.tur.grup)?.b, k.kod);
+  }
   /* 440: branş — standardın formatlarının şablonundaki önerilen türün branşı (beş format elektrik) */
   for (const s of BAKANLIK_STANDARTLARI) for (const f of s.formatlar) {
     const k = Object.values(SABLONLAR).find((x) => x.tanim.gorunum.formKodu === f)!;

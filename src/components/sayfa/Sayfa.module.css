@@ -38,6 +38,13 @@
   border: 0; border-radius: var(--r-tam); background: transparent; color: var(--yazi2); font-weight: 600; white-space: nowrap; text-decoration: none;
 }
 .sekme[aria-current="page"] { background: var(--zemin2); color: var(--yazi); }
+/* 442 alt sekmeler: üst sekmenin altında kendi satırında (blok), çizgili; seçili olanın altı çizili */
+.altSekmeler { display: flex; flex-wrap: wrap; gap: 4px; margin: -2px 0 12px; border-bottom: 1px solid var(--kenar); }
+.altSekme {
+  min-height: var(--tus-y); padding: 0 12px; margin-bottom: -1px; display: inline-flex; align-items: center;
+  border-bottom: 2px solid transparent; color: var(--yazi2); font-weight: 600; white-space: nowrap; text-decoration: none;
+}
+.altSekme[aria-current="page"] { border-bottom-color: var(--onay); color: var(--yazi); }
 .kod { font-weight: 700; font-variant-numeric: tabular-nums; letter-spacing: .01em; white-space: nowrap; }
 .altSatir { display: block; color: var(--yazi2); font-size: var(--boy-kucuk); font-weight: 400; }
 .yok { color: var(--yazi3); }

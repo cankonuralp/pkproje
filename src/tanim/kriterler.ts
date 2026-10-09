@@ -5,7 +5,8 @@
 import type { FormatTanimi } from "../format/tanim.ts";
 
 export interface KriterMaddesi { no: string; baslik: string; icerik: string; kaynak: string }
-export interface KriterBelgesi { kod: string; ad: string; tur: string; rapor: string; yayim: string; yururluk: string; kapsam: string; maddeler: KriterMaddesi[]; notlar: string[] }
+/** 442: brans — Dökümanlar › Muayene kriterleri'nin Mekanik / Elektrik alt sekmesi (rapor formatının türüyle aynı — tests/bakanlik.test.ts) */
+export interface KriterBelgesi { kod: string; ad: string; tur: string; rapor: string; brans: "m" | "e"; yayim: string; yururluk: string; kapsam: string; maddeler: KriterMaddesi[]; notlar: string[] }
 
 export const KRITER_BELGELERI: readonly KriterBelgesi[] = [
   {
@@ -13,6 +14,7 @@ export const KRITER_BELGELERI: readonly KriterBelgesi[] = [
     "ad": "Alçak Gerilim Topraklama Tesisatı Periyodik Kontrol Kriterleri",
     "tur": "AT",
     "rapor": "ZPKR01",
+    "brans": "e",
     "yayim": "2025-07-18",
     "yururluk": "2025-09-01",
     "kapsam": "Elektrik İç Tesisleri Yönetmeliği kapsamındaki tesislerde bulunan ekipmanların periyodik kontrolleri. Elektrik İç Tesisatı Gözle Kontrol ve Fonksiyon Testleri Periyodik Kontrol Raporu bu raporun tamamlayıcısıdır; tek başına uygunluk değerlendirmesi yapılamaz. Rapor her ekipman (pano) için ayrı düzenlenir; grup panolarda tek rapor, bulgular pano numarasıyla notlarda.",
@@ -84,6 +86,7 @@ export const KRITER_BELGELERI: readonly KriterBelgesi[] = [
     "ad": "Elektrik İç Tesisatı Gözle Kontrol ve Fonksiyon Testleri Periyodik Kontrol Kriterleri",
     "tur": "ET",
     "rapor": "ZPKR02",
+    "brans": "e",
     "yayim": "2025-07-18",
     "yururluk": "2025-09-01",
     "kapsam": "Elektrik İç Tesisleri Yönetmeliği kapsamındaki tesislerde bulunan ekipmanların periyodik kontrolleri. Alçak Gerilim Topraklama Tesisatı Periyodik Kontrol Raporu bu raporun tamamlayıcısıdır; tek başına uygunluk değerlendirmesi yapılamaz. Rapor her ekipman (pano) için ayrı; pano dışındaki priz, kablo tavası, buat, eşpotansiyel bara, motor, regülatör gibi ekipmanlar notlarda.",
@@ -205,6 +208,7 @@ export const KRITER_BELGELERI: readonly KriterBelgesi[] = [
     "ad": "Yıldırımdan Korunma Tesisatı Periyodik Kontrol Kriterleri",
     "tur": "YK",
     "rapor": "ZPKR03",
+    "brans": "e",
     "yayim": "2025-07-18",
     "yururluk": "2025-09-01",
     "kapsam": "Tesislerde bulunan yıldırımdan korunma ekipmanlarının periyodik kontrolleri. Kontrol raporu her ekipman (ESE paratoner, yakalama ucu, Faraday kafesi gibi) için ayrı düzenlenir; uygunsuzluk bulguları raporun ekinde fotoğrafla gösterilebilir.",
@@ -307,6 +311,7 @@ export const KRITER_BELGELERI: readonly KriterBelgesi[] = [
     "ad": "Yangın Algılama ve Uyarı Sistemi Periyodik Kontrol Kriterleri",
     "tur": "YA",
     "rapor": "ZPKR04",
+    "brans": "e",
     "yayim": "2025-07-18",
     "yururluk": "2025-09-01",
     "kapsam": "Binaların Yangından Korunması Hakkında Yönetmelik kapsamındaki yapıların yangın algılama ve uyarı, acil aydınlatma ve yönlendirme sistemi ekipmanlarının periyodik kontrolleri. Kontrol raporu her yangın kontrol paneli bölgesi için ayrı düzenlenir; uygunsuzluklar fotoğrafla gösterilebilir.",
@@ -385,6 +390,7 @@ export const KRITER_BELGELERI: readonly KriterBelgesi[] = [
     "ad": "Trafo Periyodik Kontrol Kriterleri",
     "tur": "TR",
     "rapor": "ZPKR05",
+    "brans": "e",
     "yayim": "2025-07-18",
     "yururluk": "2025-09-01",
     "kapsam": "Elektrik Kuvvetli Akım Tesisleri Yönetmeliği kapsamındaki 1–36 kV arası tesislerde bulunan ekipmanların periyodik kontrolleri. Kontrol raporu her ekipman (trafo, kesici, hücre) için ayrı düzenlenir; uygunsuzluklar fotoğrafla gösterilebilir.",
