@@ -7,6 +7,9 @@
         ortalanamayıp ekran dışında kalıyorsa
      4. erişilebilirlik (axe, WCAG 2.1 A + AA, ciddi / kritik) açık VE koyu temada
      5. çekmece (orta / dar bant): her menü maddesi ekranın içinde ve basılabilir
+     6. dengesiz kartlar (446; reisim 2026-10-09: "bi taraf uzun bi taraf kısa çok kötü, bunlar kabul edilemez siteyi gez … çok uzun bir şey ise
+        bile kaydırabilir olsun kendi içinde"): aynı satırda yan yana duran kartlardan (kenarlı + zeminli kutu) biri ötekinden belirgin uzunsa
+        (fark > 120 px ve oran > 1,4) — eşit boy (stretch) ya da uzun içerik kendi içinde kaydırılmalı
    Bulgular toplanır, sonda tek listede düşer (ilk hatada durmaz — hepsi bir koşuda görünsün). Gezilmez: /api, PDF, çıkış, giriş, indirme. */
 import AxeBuilder from "@axe-core/playwright";
 import type { ConsoleMessage, Page, Response } from "@playwright/test";
@@ -40,6 +43,40 @@ function ortuluOgeler(): { ad: string; neden: string }[] {
     const label = ust.closest("label");
     if (label && (label.contains(e) || (e.id && label.htmlFor === e.id))) continue;
     sonuc.push({ ad: ad(e), neden: `üstünde ${ad(ust)}` });
+  }
+  return sonuc;
+}
+
+/** 446: aynı satırda yan yana duran kartların boyu belirgin farklıysa (tarayıcıda koşar) — kap ve kartların başlığıyla */
+function dengesizKartlar(): string[] {
+  const kart = (e: Element) => {
+    if (e.closest("dialog, [inert], [aria-hidden=true]")) return false;
+    const s = getComputedStyle(e), r = e.getBoundingClientRect();
+    if (r.width < 160 || r.height < 60 || s.display === "none" || s.visibility === "hidden") return false;
+    const zemin = s.backgroundColor !== "rgba(0, 0, 0, 0)" && s.backgroundColor !== "transparent";
+    return (zemin && parseFloat(s.borderTopWidth) >= 1 && s.borderTopStyle !== "none") || s.boxShadow !== "none";
+  };
+  const ad = (e: Element) => {
+    const b = e.querySelector("h1, h2, h3, legend, caption, [role=heading]");
+    return `"${((b as HTMLElement | null)?.innerText ?? (e as HTMLElement).innerText ?? "").trim().replace(/\s+/g, " ").slice(0, 40)}"`;
+  };
+  const sonuc: string[] = [];
+  const kaplar = new Set<Element>();
+  for (const e of document.querySelectorAll("main *")) if (e.parentElement) kaplar.add(e.parentElement);
+  for (const kap of kaplar) {
+    const l = [...kap.children].filter(kart).map((e) => ({ e, r: e.getBoundingClientRect() }));
+    if (l.length < 2) continue;
+    let en: { a: typeof l[0]; b: typeof l[0] } | null = null;
+    for (const [i, a] of l.entries()) for (const b of l.slice(i + 1)) {
+      const yanYana = Math.abs(a.r.top - b.r.top) <= 2 && (a.r.right <= b.r.left + 1 || b.r.right <= a.r.left + 1);
+      if (!yanYana) continue;
+      const [kisa, uzun] = a.r.height <= b.r.height ? [a, b] : [b, a];
+      if (uzun.r.height - kisa.r.height > 120 && uzun.r.height / kisa.r.height > 1.4 && (!en || uzun.r.height - kisa.r.height > Math.abs(en.a.r.height - en.b.r.height))) en = { a: kisa, b: uzun };
+    }
+    if (en) {
+      const sinif = typeof kap.className === "string" && kap.className ? "." + kap.className.split(" ")[0] : "";
+      sonuc.push(`${kap.tagName.toLowerCase()}${sinif}: ${ad(en.b.e)} ${Math.round(en.b.r.height)} px, yanındaki ${ad(en.a.e)} ${Math.round(en.a.r.height)} px`);
+    }
   }
   return sonuc;
 }
@@ -88,7 +125,7 @@ async function cekmece(page: Page, yer: string, bulgular: Bulgu[]) {
  * değil, `kalan` olarak döner (sessiz kırpma yok).
  */
 export async function siteyiTara(page: Page, baslangic: string[], { enCok = 90, sure = 15 * 60_000 } = {}) {
-  const bulgular: Bulgu[] = [];
+  const bulgular: Bulgu[] = [], dengesiz: Bulgu[] = [];
   const kuyruk = [...baslangic], gorulen = new Set(baslangic.map(kalip)), gezilen: string[] = [];
   const bitis = Date.now() + sure;
   let yer = "";
@@ -130,6 +167,8 @@ export async function siteyiTara(page: Page, baslangic: string[], { enCok = 90, 
       const tasan = await page.evaluate(tasanlar);
       if (tasan.length) bulgular.push({ sayfa: yer, tur: "yatay taşma", ayrinti: tasan.join(" · ") });
       for (const o of await page.evaluate(ortuluOgeler)) bulgular.push({ sayfa: yer, tur: "basılamıyor", ayrinti: `${o.ad} — ${o.neden}` });
+      /* 446: önce yalnız rapor (deneme makinesinin günlüğünde) — bulunanlar düzeltilince bulguya (kilide) çevrilir */
+      for (const x of await page.evaluate(dengesizKartlar)) dengesiz.push({ sayfa: yer, tur: "dengesiz kartlar", ayrinti: x });
       await page.evaluate(() => scrollTo(0, 0));
       await erisilebilirlik(page, yer, "açık", bulgular);
       const tema = await page.evaluate(() => document.documentElement.getAttribute("data-tema"));
@@ -143,7 +182,7 @@ export async function siteyiTara(page: Page, baslangic: string[], { enCok = 90, 
     page.off("console", konsol);
     page.off("response", yanitlar);
   }
-  return { bulgular, gezilen, kalan: kuyruk };
+  return { bulgular, gezilen, kalan: kuyruk, dengesiz };
 }
 
 /** bulguları okunur tek metin (düşen testin iletisi) */

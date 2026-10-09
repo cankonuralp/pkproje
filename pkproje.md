@@ -2355,6 +2355,13 @@ revizyon, alan kopyalama, hafif kusur devri, meslek eşleşme denetimi).
 - Emsal ürünler: https://opwire.app/iso-17020-periyodik-kontrol-yazilimi/ · https://17020muayene.vidco.com.tr/ · https://akuple.com/asansor-kontrol-yazilimi/ · https://ensyazilim.com/
 
 ## 11 · Değişiklik günlüğü
+- 2026-10-09 (446): **Site taramasına "dengesiz kartlar"** (reisim: *"siteyi gez ve bu vb şeyleri hemen düzelt"*). e2e/tarama.ts her sayfada, üç
+  genişlikte: aynı satırda yan yana duran kartlardan (kenarlı + zeminli kutu) biri ötekinden belirgin uzunsa (fark > 120 px ve oran > 1,4) kap + iki kartın
+  başlığı. İlk tur yalnız deneme makinesinin günlüğüne yazar ("DENGESIZ KARTLAR"); bulunanlar düzeltilince bulguya (kilide) çevrilir.
+- 2026-10-09 (445): **Açılır kapanır bölümler başlık satırına basınca** (reisim: *"açılır kapanır ekranların başlık satırına basınca açılıp kapanmalı
+  sadece kenardaki küçük bir açma kapama tuşu ile olmaz o iş"*). Rapor ekranının (saha raporu, onay, format önizlemesi — ortak RaporBolumu) başlık
+  satırının her yeri açar / kapar (üstüne gelince zemin); satırdaki öteki tuşlar (talimat, standart, Hepsini işaretle) kendi işini yapar, açılan pencere
+  de bölümü kapatmaz; kenardaki tuş klavye / ekran okuyucu için kalır.
 - 2026-10-09 (444): **Plan aç düzeni; elle ekipman; denetçi e-postası bilgilendirmede** (reisim: *"bu sayfadaki kargaşa- kayıklık bi taraf uzun bi
   taraf kısa çok kötü … çok uzun bir şey ise bile kaydırabilir olsun kendi içinde"*; *"seçilen denetçinin mailleri bilgilendirme maili kısmına otomatik
   gelsin"*; *"plan açılırken ekipmanlar tesise girilenler kadar otomatik geliyor el ile de girilebilmeli liste gibi"*).
