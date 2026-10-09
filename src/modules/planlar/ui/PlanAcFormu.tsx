@@ -208,7 +208,7 @@ export function PlanAcFormu({ veri, baslangic }: { veri: PlanAcVerisi; baslangic
           <FormIzgara>
             <Alan id={ID.bilgilendirme} etiket="E-posta ekle" hata={h.bilgilendirme ?? Object.entries(h).find(([k]) => k.startsWith("bilgilendirme."))?.[1]}>
               <div className={stil.epostaEkle}>
-                <Girdi id={ID.bilgilendirme} type="email" inputMode="email" autoComplete="off" maxLength={254} value={yeniEposta} placeholder="ad@ornek.com.tr"
+                <Girdi id={ID.bilgilendirme} type="email" inputMode="email" autoComplete="off" maxLength={254} value={yeniEposta} placeholder="E-posta adresi yazın"
                   hata={!!h.bilgilendirme} onChange={(e) => setYeniEposta(e.target.value)}
                   onKeyDown={(e) => { if (e.key === "Enter" || e.key === ",") { e.preventDefault(); bilgiEkle(yeniEposta); } }} />
                 <Tus tur="ikincil" ikon="plus" onClick={() => bilgiEkle(yeniEposta)}>Ekle</Tus>
