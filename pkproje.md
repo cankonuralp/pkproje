@@ -2355,6 +2355,11 @@ revizyon, alan kopyalama, hafif kusur devri, meslek eşleşme denetimi).
 - Emsal ürünler: https://opwire.app/iso-17020-periyodik-kontrol-yazilimi/ · https://17020muayene.vidco.com.tr/ · https://akuple.com/asansor-kontrol-yazilimi/ · https://ensyazilim.com/
 
 ## 11 · Değişiklik günlüğü
+- 2026-10-09 (463): **Rapor ekranında bölümler kapalı gelir** (reisim, hata listesi 8: *"ama her bölüm açık geliyor, her bölüm kapalı gelmeli"*).
+  Rapor açılınca bütün bölümler kapalı; başlığa basınca açılır. Bölümlerin üstünde "Tümünü aç / Tümünü kapat". Açılanlar aynı sekmede aynı raporda
+  (yenileme, geri geliş, bağlantısız açılış) açık kalır. "Onaya gönder" eksik bulursa ya da S.A.Y / eksik listesinden "Git"e basılınca hepsi açılır.
+- 2026-10-09 (462): **Ana sayfa duyurularında "alınamadı" uyarısı kalktı** (reisim, hata listesi 32: *"böyle kalsın ama uyarı yazısı kalksın"*).
+  İş ekipmanları portalı yurt dışından okunamadığı için şerit hep görünüyordu; okunamayan kaynak sağlık denetiminde ve iş kaydında kalır.
 - 2026-10-09 (461): **Alt başlık ekleme** (reisim: *"üst başlık ekleme olayı kullanımı zorlaştırıyor alt başlık ekleme olayı olmadığı için anlamsız
   oluyor alt başlık ekleme olsun"*). Bölüm "alt başlık" olabilir: üstündeki ana bölümün altında 5.1, 5.2 … (ana bölümün kendi içeriği kalır; belgede
   alt başlık, saha ekranında aynı numara). Format kurucuda her bölümün altında "+ Alt başlık ekle" (bölüm türü seçilir, adı yerinde yazılır),

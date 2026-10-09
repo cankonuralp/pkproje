@@ -3,6 +3,8 @@
    ekipman bilgileri etiket üstte, iki sütun yan yana (2026-09-29), telefonda tek sütun. Madde satırı solda madde, sağda cevap; telefonda alt
    alta. Ölçüm tablosu yalnız kendi kabında yatay kayar (sayfa kaymaz). Renk / ölçü yalnız tokens.css değişkenlerinden. */
 .bolumler { display: grid; gap: 16px; min-width: 0; }
+/* 463: "Tümünü aç / kapat" — bölümlerin üstünde, sağda */
+.bolumAraclari { display: flex; justify-content: flex-end; margin-bottom: -8px; }
 .bolum {
   min-width: 0; padding: 10px 14px 14px; background: var(--kart); border: 1px solid var(--kenar); border-radius: var(--r-buyuk);
   scroll-margin-top: calc(var(--ust-y) + 12px);

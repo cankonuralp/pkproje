@@ -21,7 +21,7 @@ import { readFileSync } from "node:fs";
 import { expect, test, type Locator, type Page } from "@playwright/test";
 import { E2E_FIRMA, E2E_HESAPLAR, E2E_PLAN, E2E_SAHA } from "./hesaplar";
 import { bulguMetni, siteyiTara } from "./tarama";
-import { girisli, hazir } from "./yardimci";
+import { bolumleriAc, girisli, hazir } from "./yardimci";
 
 const UUID = "[0-9a-f]{8}-[0-9a-f]{4}-[0-9a-f]{4}-[0-9a-f]{4}-[0-9a-f]{12}";
 /* uydurma JPEG (tests/dosya.test.ts ile aynı yapı) */
@@ -93,6 +93,9 @@ test("saha raporu: rapor oluştur, eksikle gönderilmez, doldur + cihaz ekle, on
   await expect(page.getByRole("heading", { level: 1 })).toHaveText(`${E2E_SAHA.ekipman} · ${E2E_SAHA.tur}`, { timeout: 30_000 });
   await expect(asama(page)).toContainText("Yeni");
   const raporAdresi = new URL(page.url()).pathname;
+  /* 463: bölümler kapalı açılır — "Tümünü aç" hepsini açar (aynı sekmede aynı rapor için hatırlanır) */
+  await expect(page.getByRole("button", { name: "Firma bilgileri bölümü" })).toHaveAttribute("aria-expanded", "false");
+  await bolumleriAc(page);
   const raporNo = (await page.getByText(RAPOR_NO).first().textContent())!.match(RAPOR_NO)![0];
   const gun = bugunTr();
   await expect(zamanAlani(page, BASLANGIC).locator("input:not([data-parca])")).toHaveValue(gun);   // başlangıç rapor açılınca yazılır

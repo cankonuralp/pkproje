@@ -28,3 +28,11 @@ export async function hazir(page: Page) {
   /* 422: 30 sn — deneme sunucusu yükteyken başka alt alan adındaki giriş sayfası 15 sn'de bağlanmadı (408 ve 9cf7f54'te S.A.Y; beklenen aynı) */
   await expect(page.locator("html[data-hazir]")).toHaveCount(1, { timeout: 30_000 });
 }
+
+/** 463: rapor ekranının bölümleri kapalı açılır — hepsini aç (bu sekmede aynı rapor için hatırlanır: yenileme ve geri gelişte açık kalır) */
+export async function bolumleriAc(page: Page) {
+  const tus = page.getByRole("button", { name: /^Tümünü (aç|kapat)$/ });
+  await expect(tus).toBeVisible({ timeout: 30_000 });
+  if ((await tus.textContent())?.includes("aç")) await tus.click();
+  await expect(page.getByRole("button", { name: "Tümünü kapat" })).toBeVisible();
+}

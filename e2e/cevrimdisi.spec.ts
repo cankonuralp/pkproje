@@ -15,7 +15,7 @@
 import { expect, test, type ConsoleMessage, type Page, type Request } from "@playwright/test";
 import { E2E_KAPI, E2E_PAROLA, E2E_YZ } from "./hesaplar";
 import { tasanlar } from "./tarama";
-import { hazir } from "./yardimci";
+import { bolumleriAc, hazir } from "./yardimci";
 
 /* bu dosyada servis çalışanı AÇIK (öteki testlerde kapalı — playwright.config.ts) */
 test.use({ serviceWorkers: "allow" });
@@ -68,6 +68,7 @@ async function raporuAc(page: Page, kod: string): Promise<string> {
   await page.getByRole("link", { name: /^YZ-/ }).first().click();
   await expect(page).toHaveURL(/\/raporlar\/[0-9a-f-]{36}$/, { timeout: 30_000 });
   await hazir(page);
+  await bolumleriAc(page);   // 463: bölümler kapalı açılır; bu sekmede aynı raporda açık kalır
   return page.url();
 }
 
@@ -230,6 +231,7 @@ test("çevrimdışı: bağlantı kes → Kaydet cihaza → bağlantı gelince gi
   await expect(page).toHaveURL(/\/raporlar\/yeni\/[0-9a-f-]{36}#/, { timeout: 30_000 });
   await hazir(page);
   await expect(page.getByText("Bu rapor bu cihazda açıldı", { exact: false })).toBeVisible();
+  await bolumleriAc(page);
   await marka.fill("Yeni Bağlantısız Marka");
   await page.getByRole("button", { name: "Kaydet", exact: true }).click();
   await expect(page.getByText("Cihaza kaydedildi; bağlantı gelince gönderilecek.").first()).toBeVisible();

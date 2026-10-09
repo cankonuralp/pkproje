@@ -5,7 +5,7 @@
    temizle" önce sorar. Yapay zekâsı kapalı firmada düğme yok. Telefonda panel tam ekran; yana taşma yok. */
 import { expect, test } from "@playwright/test";
 import { E2E_KAPI, E2E_PAROLA, E2E_YZ } from "./hesaplar";
-import { girisli, hazir } from "./yardimci";
+import { bolumleriAc, girisli, hazir } from "./yardimci";
 
 const Y = `http://${E2E_YZ.firma.kisaAd}.localhost:${E2E_KAPI}`;
 const TASMA = () => document.documentElement.scrollWidth <= window.innerWidth;
@@ -117,6 +117,7 @@ test("S.A.Y rapor ekranında: eksik alanlar + Git, sonuç önerisi + Uygula", as
   await page.getByRole("link", { name: /^YZ-/ }).first().click();
   await expect(page).toHaveURL(/\/raporlar\/[0-9a-f-]{36}$/, { timeout: 30_000 });
   await hazir(page);
+  await bolumleriAc(page);   // 463: bölümler kapalı açılır
 
   const fab = page.getByRole("button", { name: "S.A.Y — saha asistanı" });
   const panel = page.getByRole("dialog", { name: "S.A.Y" });

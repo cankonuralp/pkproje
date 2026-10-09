@@ -149,7 +149,23 @@ export function SahaRaporu({ v, yeni }: { v: Gorunum; yeni?: { plan: string; eki
   const [eksikler, setEksikler] = useState<Eksik[] | null>(null);
   const [genel, setGenel] = useState<string | null>(null);
   const [alanHata, setAlanHata] = useState<Record<string, string>>({});
-  const [kapali, setKapali] = useState<ReadonlySet<string>>(() => new Set());
+  /* 463 (reisim 2026-10-09, hata listesi 8: "her bölüm açık geliyor, her bölüm kapalı gelmeli"): bölümler KAPALI açılır; bu sekmede aynı raporda
+     açılanlar yenilemede ve geri gelişte açık kalır (sessionStorage, rapor başına); "Tümünü aç / kapat"; eksik bulununca hepsi açılır */
+  const acikAnahtar = `probata-rapor-acik:${v.id}`;
+  const [acikSet, setAcikSet] = useState<ReadonlySet<string>>(() => new Set());
+  useEffect(() => {
+    let l: string[] = [];
+    try {
+      const s = sessionStorage.getItem(acikAnahtar);
+      if (s) l = (JSON.parse(s) as unknown[]).filter((x): x is string => typeof x === "string").slice(0, 60);
+    } catch { /* okunamazsa kapalı */ }
+    if (l.length) queueMicrotask(() => setAcikSet(new Set(l)));
+  }, [acikAnahtar]);
+  const acikYaz = (y: ReadonlySet<string>) => {
+    setAcikSet(y);
+    try { sessionStorage.setItem(acikAnahtar, JSON.stringify([...y])); } catch { /* saklanamazsa yalnız bu ekranda */ }
+  };
+  const hepsiniAc = () => acikYaz(new Set([SABIT.firma, SABIT.ekipman, SABIT.cihaz, ...v.tanim.bolumler.map((b) => b.id)]));
   const [kopya, setKopya] = useState(false);
   const [revizeAc, setRevizeAc] = useState(false);
   /* yazmadan sonra sayfa yenilenip yeni sürüm gelene kadar yazan tuşlar kapalı: bildirim yenilemeden önce çıkar, hemen basılan ikinci tuş eski
@@ -203,8 +219,11 @@ export function SahaRaporu({ v, yeni }: { v: Gorunum; yeni?: { plan: string; eki
   const etiketAlanlari = ETIKET.filter((k) => (duzen.tam ? duzen.tam.alanlar.some((a) => a.ekipman === k) : sabit.includes(k)));
   const cihazEksik = v.cihazlar.some((x) => gecersiz(`cihaz.${x.turId}`));
   const bolumEksik = (id: string) => d.eksikler.some((e) => e.bolum === id && gecersiz(e.alan));
-  const acik = (id: string) => !kapali.has(id);
-  const degistir = (id: string) => (a: boolean) => setKapali((k) => { const y = new Set(k); if (a) y.delete(id); else y.add(id); return y; });
+  const acik = (id: string) => acikSet.has(id);
+  const degistir = (id: string) => (a: boolean) => { const y = new Set(acikSet); if (a) y.add(id); else y.delete(id); acikYaz(y); };
+  /* ekranda görünen bölümler (imza bölümü yalnız belgede — 447): "Tümünü aç / kapat" */
+  const gorunenBolumler = [SABIT.firma, SABIT.ekipman, ...(cihazEk ? [SABIT.cihaz] : []), ...duzen.bolumler.filter(({ b }) => b.blok !== "imza").map(({ b }) => b.id)];
+  const hepsiAcik = gorunenBolumler.every((id) => acikSet.has(id));
 
   /* ── yazma ── */
   const ekipmanYaz = (k: EkipmanAnahtari, x: string) => { setEkipman((e) => ({ ...e, [k]: x })); setKirli(true); };
@@ -269,7 +288,7 @@ export function SahaRaporu({ v, yeni }: { v: Gorunum; yeni?: { plan: string; eki
         yenile();
         return;
       }
-      if (d.durum === "eksik" && d.eksikler) { setIsaretli(new Set(d.eksikler.map((e) => e.alan))); setKapali(new Set()); setEksikler(d.eksikler); yenile(); return; }
+      if (d.durum === "eksik" && d.eksikler) { setIsaretli(new Set(d.eksikler.map((e) => e.alan))); hepsiniAc(); setEksikler(d.eksikler); yenile(); return; }
       setGenel(`${v.no}: cihazda bekleyen iş gönderilemedi — ${d.ileti ?? "üst çubuktaki bekleyen işlemlere bakın"}.`);
     };
   });
@@ -293,7 +312,7 @@ export function SahaRaporu({ v, yeni }: { v: Gorunum; yeni?: { plan: string; eki
       return;
     }
     if (r.eksikler) {   /* rapor kaydedildi, gönderilmedi */
-      kaydedildi(); setIsaretli(new Set(r.eksikler.map((e) => e.alan))); setKapali(new Set()); setEksikler(r.eksikler); yenile();
+      kaydedildi(); setIsaretli(new Set(r.eksikler.map((e) => e.alan))); hepsiniAc(); setEksikler(r.eksikler); yenile();
       return;
     }
     if (r.tamam) { kaydedildi(); void kayitBilgileriniKapat(v.id); setIsaretli(new Set()); bildir(r.bildirim ?? "Rapor onaya gönderildi."); yenile(); window.scrollTo({ top: 0 }); return; }
@@ -346,7 +365,7 @@ export function SahaRaporu({ v, yeni }: { v: Gorunum; yeni?: { plan: string; eki
      eksiğe ya da Tamam'a basınca; X / Esc yalnız kapatır (odak Onaya gönder'e döner, kişi nereye gideceğini kendi seçer) */
   const git = (e: Eksik) => {
     setEksikler(null);
-    setKapali(new Set());
+    hepsiniAc();
     window.setTimeout(() => {
       const el = document.getElementById(alanId(e.alan)) ?? document.getElementById(`b-${e.bolum}-b`);
       if (!el) return;
@@ -509,6 +528,10 @@ export function SahaRaporu({ v, yeni }: { v: Gorunum; yeni?: { plan: string; eki
       {seritler.length > 0 && <SeritKap>{seritler}</SeritKap>}
 
       <div className={stil.bolumler}>
+        <div className={stil.bolumAraclari}>
+          <Tus tur="ikincil" ikon={hepsiAcik ? "chevron-up" : "chevron-down"} onClick={() => (hepsiAcik ? acikYaz(new Set()) : hepsiniAc())}>
+            {hepsiAcik ? "Tümünü kapat" : "Tümünü aç"}</Tus>
+        </div>
         <RaporBolumu id={SABIT.firma} no="1" baslik="Firma bilgileri" acik={acik(SABIT.firma)} degistir={degistir(SABIT.firma)}
           eksik={gecersiz("tarih.bas") || gecersiz("tarih.bit")}>
           {/* 447 (reisim 2026-10-09: "görselde attığım ekranda bi bak sıralama hatası yok mu"): Bakanlık formunun ve belgenin (src/belge/belge.ts)

@@ -5,7 +5,7 @@
    reddeder (istek yapılandırılmış çıktıyla); pano okumasında fotoğraf rapora eklenir (§11 92 — Fotoğraflar bölümü); uygulamadan sonra odak kartta. */
 import { expect, test } from "@playwright/test";
 import { E2E_KAPI, E2E_PAROLA, E2E_YZ } from "./hesaplar";
-import { hazir } from "./yardimci";
+import { bolumleriAc, hazir } from "./yardimci";
 
 const Y = `http://${E2E_YZ.firma.kisaAd}.localhost:${E2E_KAPI}`;
 /* uydurma, en küçük yapısı doğru JPEG — SOI · DQT · SOS (kalanı görüntü) · EOI (içerik önemsiz: okuma yerel taklitte; tarayıcı çözemez,
@@ -26,6 +26,7 @@ test("fotoğraftan okuma: öneri kartı; emin olunanlar toplu, emin olunmayan te
   await page.getByRole("link", { name: /^YZ-/ }).first().click();
   await expect(page).toHaveURL(/\/raporlar\/[0-9a-f-]{36}$/, { timeout: 30_000 });
   await hazir(page);
+  await bolumleriAc(page);   // 463: bölümler kapalı açılır
 
   const linye = page.locator("#b-linye");
   await linye.getByLabel("Pano sigortaları (linye): fotoğraftan oku").setInputFiles({ name: "pano.jpg", mimeType: "image/jpeg", buffer: JPEG });
@@ -73,6 +74,7 @@ test("etiket plakası: öneri kartı; emin olunanlar toplu, emin olunmayan tek t
   await page.getByRole("link", { name: /^YZ-/ }).first().click();
   await expect(page).toHaveURL(/\/raporlar\/[0-9a-f-]{36}$/, { timeout: 30_000 });
   await hazir(page);
+  await bolumleriAc(page);   // 463: bölümler kapalı açılır
 
   await page.getByLabel("Etiketten oku").setInputFiles({ name: "etiket.jpg", mimeType: "image/jpeg", buffer: JPEG });
   const kart = page.getByRole("region", { name: "Etiket plakasından okunan" });
