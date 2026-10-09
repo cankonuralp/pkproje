@@ -46,7 +46,7 @@ function YeniIc({ p, e, onceki }: { p: YeniRaporPaketi; e: YeniRaporPaketi["ekip
     ekipmanBilgi: e.ekipmanBilgi, tarih: { bas, bit: null, sonraki: null, takip: null, rapor: null },
     cevaplar: t.ilk, tanim: t.tanim, formatSira: t.formatSira, cihazlar: t.cihazlar, fotolar: [], secilebilir: {},
     kopyaKaynak: null, guncelFormat: null, mesaiDolu: false, geri: null, revize: null, imza: null, imzali: null,
-    izin: { duzenle: true, sil: false, kopyala: false }, yz: false, kaynak: { standartlar: p.standartlar, kriterler: t.kriterler },
+    izin: { duzenle: true, sil: false, kopyala: false }, yz: false, kaynak: { standartlar: p.standartlar ?? null, kriterler: t.kriterler ?? [] },   // cihazda eski paket (428 öncesi) bu alanları taşımaz
   }), [id, p, e, t, bas]);
   const yeni = useMemo(() => ({ plan: p.plan.id, ekipman: e.id, kod: e.kod }), [p.plan.id, e.id, e.kod]);
   return (
