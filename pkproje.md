@@ -2355,6 +2355,13 @@ revizyon, alan kopyalama, hafif kusur devri, meslek eşleşme denetimi).
 - Emsal ürünler: https://opwire.app/iso-17020-periyodik-kontrol-yazilimi/ · https://17020muayene.vidco.com.tr/ · https://akuple.com/asansor-kontrol-yazilimi/ · https://ensyazilim.com/
 
 ## 11 · Değişiklik günlüğü
+- 2026-10-09 (435): **425–434 YAYINDA** — Supabase göç 0077 (e-posta kuyruğu + plan.bilgilendirme; 78 göç; satır kilidi, dış API kapalı,
+  uygulama rolüne silme yok — denetlendi), main = bbb50b9 (Vercel READY), sağlık ucu "tamam" (göç güncel), duman 10/10, çalışma hatası yok.
+  Deneme makinesinde son tur bütün işler yeşil (masaüstü 2/2 yönetim testi bir kez zaman aşımına düştü — benim değiştirmediğim akış; yalnız o
+  iş yeniden koşturuldu, geçti; bildirimin beklemesi 30 sn'ye çıkarıldı). 434: uçtan uca her genişlikte iki parça (bellek taşması bitti; iş
+  11–28 dk). E-posta sağlayıcısı kurulmadı (KOD-GECIS Y4): plan e-postaları kuyrukta "Bekliyor" — anahtar Vercel ortamına girilince gider.
+  0077 başlık yorumundaki kilit adı (tests/eposta-kuyruk.test.ts) yanlış — kilit tests/planlar.test.ts "432" + tests/eposta-saf.test.ts
+  (uygulanmış göç değiştirilmez).
 - 2026-10-09 (433): **Yapay zekâ maliyeti ve fiyat / performans analizi** (reisim: *"Yapay zeka maaliyetlerini hesaplayalım bu iş için en mantıklı yapay
   zeka (üstesinden gelebilecek ve uygun fiyatlı) hangisi ise (deepseek,chatgpt vb.) ve hangi model ise fiyat performans analizi yapalım"*). Kod
   değişmedi; karar reisim'de. Yayındaki veritabanında henüz gerçek okuma yok (yz_okuma boş) → tahmin. İşlem başına varsayım (fotoğraf uygulamada
