@@ -1,9 +1,12 @@
 "use server";
 /* RAPOR FORMATI SUNUCU EYLEMLERİ — kişi ve kiracı oturumdan; yetki, doğrulama, kilitli öğe denetimi modül işlevinde (formatlar.ts). İstemciden
-   gelen kimlik / sürüm yalnız "hangi kayıt, hangi sürümü gördüm" bilgisidir; yayının engeli ve uyarıları sunucuda yeniden hesaplanır. */
+   gelen kimlik / sürüm yalnız "hangi kayıt, hangi sürümü gördüm" bilgisidir; yayının engeli ve uyarıları sunucuda yeniden hesaplanır.
+   438: Bakanlık şablonundan başlatma / tür eklemede türün PDF'i yoksa Bakanlığın resmî PDF'i aynı işlemde (kurulum.ts resmiPdfEkle). */
 import { ayniKoken } from "../../../server/kimlik/koken";
+import { depo } from "../../../server/dosya/depo";
 import { istekOturumu, oturumIslemi } from "../../../server/kimlik/istek";
 import { sablondanTurEkle, taslakBaslat, taslakKaydet, taslakSil, yayinDenetle, yayinla } from "../server/formatlar";
+import { resmiPdfEkle } from "../server/kurulum";
 
 export interface FormatDurumuYaniti { tamam?: boolean; id?: string; sira?: number; uyarilar?: string[]; engeller?: string[]; hatalar?: Record<string, string>; genel?: string }
 
@@ -24,7 +27,11 @@ const metin = (x: unknown) => (typeof x === "string" ? x : "");
 export async function taslakBaslatEylemi(turId: string, taslakSurumu: number | null, baslangic: string): Promise<FormatDurumuYaniti> {
   const o = await oturum(); if (typeof o === "string") return { genel: o };
   const ts = taslakSurumu === null ? null : Number(taslakSurumu);
-  const r = await oturumIslemi(o, (db) => taslakBaslat(db, o, metin(turId), metin(baslangic), ts));
+  const r = await oturumIslemi(o, async (db) => {
+    const t = await taslakBaslat(db, o, metin(turId), metin(baslangic), ts);
+    if (t.durum === "tamam") await resmiPdfEkle(db, depo(), o, o.kiraci.firmaId, metin(turId));
+    return t;
+  });
   if (r.durum === "tamam") return { tamam: true, id: r.id };
   if (r.durum === "gecersiz") return { hatalar: r.hatalar };
   return { genel: SONUC[r.durum] };
@@ -68,7 +75,11 @@ export async function sablondanTurEkleEylemi(sablon: string, girdi: unknown): Pr
   const o = await oturum(); if (typeof o === "string") return { genel: o };
   const g = (girdi && typeof girdi === "object" ? girdi : {}) as Record<string, unknown>;
   const temiz = Object.fromEntries(["ad", "kod", "grup", "brans", "periyot", "sure"].map((k) => [k, metin(g[k])]));
-  const r = await oturumIslemi(o, (db) => sablondanTurEkle(db, o, metin(sablon), temiz));
+  const r = await oturumIslemi(o, async (db) => {
+    const t = await sablondanTurEkle(db, o, metin(sablon), temiz);
+    if (t.durum === "tamam") await resmiPdfEkle(db, depo(), o, o.kiraci.firmaId, t.turId);
+    return t;
+  });
   if (r.durum === "tamam") return { tamam: true, id: r.turId, formatId: r.formatId };
   if (r.durum === "gecersiz") return { hatalar: r.hatalar };
   return { genel: SONUC[r.durum] };

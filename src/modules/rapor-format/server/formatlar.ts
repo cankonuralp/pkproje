@@ -114,6 +114,19 @@ export async function hazirFormatYayinla(db: Sorgulayici, kim: string, turId: st
   return id;
 }
 
+/** 438: türün taslak ya da yayındaki sürümünün başladığı şablon (yayındaki önce); yoksa null */
+export async function turunSablonu(db: Sorgulayici, turId: string): Promise<string | null> {
+  if (!UUID.test(turId)) return null;
+  return (await db.sorgu<{ kaynak: string }>(`SELECT kaynak FROM rapor_format WHERE tur_id = $1 AND durum IN ('taslak', 'yayinda') AND kaynak IS NOT NULL
+    ORDER BY (durum = 'yayinda') DESC LIMIT 1`, [turId])).rows[0]?.kaynak ?? null;
+}
+
+/** 438: bu şablonları kullanan türler (taslak ya da yayındaki sürümü bu şablondan) */
+export async function sablonTurleri(db: Sorgulayici, sablonlar: readonly string[]): Promise<string[]> {
+  return (await db.sorgu<{ tur_id: string }>(`SELECT DISTINCT tur_id::text FROM rapor_format WHERE durum IN ('taslak', 'yayinda') AND kaynak = ANY($1)`,
+    [[...sablonlar]])).rows.map((x) => x.tur_id);
+}
+
 /** 437: bu şablondan başlamış bir sürüm firmada var mı (kurulum: firma o türü kendisi açtıysa yenisi kurulmaz) */
 export async function sablonKullaniliyor(db: Sorgulayici, sablon: string): Promise<boolean> {
   return !!(await db.sorgu("SELECT 1 FROM rapor_format WHERE kaynak = $1 LIMIT 1", [sablon])).rowCount;

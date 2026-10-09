@@ -39,8 +39,9 @@ const ortak: NextConfig = {
     String.raw`/personel/\[id\]`, String.raw`/personel/\[id\]/zimmet-formu/pdf`, "/dokumanlar/egitimler", "/api/olcum/pdf"].map((u) =>
     [u, ["./src/belge/belge.css", "./src/belge/carlito-5.3.0/*", "./node_modules/@sparticuz/chromium/bin/**"]])),
     /* 437: Bakanlığın resmî PDF'leri (src/server/bakanlik.ts) yalnız onları okuyan uçların izinde — hazır kurulum (Ana sayfa, Ekipman türleri) ve
-       resmî belgeyi gösteren uçlar */
-    ...Object.fromEntries(["/", "/ekipman-turleri", String.raw`/ekipman-turleri/sablon/\[anahtar\]/pdf`, String.raw`/dokumanlar/kriterler/\[kod\]/pdf`]
+       resmî belgeyi gösteren uçlar · 438: "Şablondan başlat" (tür sayfası) ve "Tür olarak ekle" (liste, şablon önizlemesi) eylemleri de okur */
+    ...Object.fromEntries(["/", "/ekipman-turleri", String.raw`/ekipman-turleri/\[id\]`, String.raw`/ekipman-turleri/sablon/\[anahtar\]`,
+      String.raw`/ekipman-turleri/sablon/\[anahtar\]/pdf`, String.raw`/dokumanlar/kriterler/\[kod\]/pdf`]
       .map((u) => [u, ["./src/tanim/bakanlik/*.pdf"]])) },
 };
 

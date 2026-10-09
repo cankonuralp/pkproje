@@ -109,12 +109,19 @@ export async function hazirTurKur(db: Sorgulayici, depo: Depo, firmaId: string, 
   if ((await db.sorgu("SELECT 1 FROM ekipman_turu WHERE kod = $1", [v.kod])).rowCount) return null;
   const { id } = await ekle(db, TUR, { kod: v.kod, ad: v.ad, grup: v.grup, brans: turBransi(v), periyot: v.periyot, sure: v.sure, kontrol_std: b.veri.standartlar },
     { kim, ne: "ekipman_turu.ekle", gerekce: "hazır kurulum" });
-  if (pdf) {
-    const y = await dosyaYukle(db, depo, { firmaId, modul: DOSYA_MODULU, kayitId: id, ad: pdf.ad, bayt: pdf.bayt, izinli: ["pdf"], kim });
-    if (!y.tamam) throw new Error(`hazır rapor formatı PDF'i yüklenemedi: ${tur.kod} (${y.neden})`);
-    await ekle(db, FORMAT, { tur_id: id, sira: 1, dosya_id: y.id, notu: "Bakanlık formatı" }, { kim, ne: "ekipman_turu.format_yukle", gerekce: "hazır kurulum" });
-  }
+  if (pdf) await hazirPdfEkle(db, depo, firmaId, kim, id, pdf);
   return id;
+}
+
+/** 438 · Bakanlığın resmî rapor formatı PDF'i türe sürüm 1 olarak (rapor-format/server/kurulum.ts). YETKİ DENETİMİ YOK — çağıran denetler.
+    Türün hiç format PDF'i yoksa eklenir; kaldırılmış sürüm dahil bir tane bile varsa (firma kendi yüklemiş ya da kaldırmış) dokunulmaz → false. */
+export async function hazirPdfEkle(db: Sorgulayici, depo: Depo, firmaId: string, kim: string, turId: string, pdf: { ad: string; bayt: Uint8Array }): Promise<boolean> {
+  if (!UUID.test(turId) || !(await db.sorgu("SELECT 1 FROM ekipman_turu WHERE id = $1 FOR UPDATE", [turId])).rowCount) return false;
+  if ((await db.sorgu("SELECT 1 FROM tur_format WHERE tur_id = $1", [turId])).rowCount) return false;
+  const y = await dosyaYukle(db, depo, { firmaId, modul: DOSYA_MODULU, kayitId: turId, ad: pdf.ad, bayt: pdf.bayt, izinli: ["pdf"], kim });
+  if (!y.tamam) throw new Error(`Bakanlık rapor formatı PDF'i yüklenemedi (${y.neden})`);
+  await ekle(db, FORMAT, { tur_id: turId, sira: 1, dosya_id: y.id, notu: "Bakanlık formatı" }, { kim, ne: "ekipman_turu.format_yukle", gerekce: "Bakanlık formatı" });
+  return true;
 }
 
 export type FormatSonucu = { durum: "tamam"; sira: number } | { durum: "gecersiz"; hatalar: DogrulamaHatalari } | { durum: "yok" } | { durum: "yetkisiz" };

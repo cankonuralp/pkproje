@@ -2355,6 +2355,12 @@ revizyon, alan kopyalama, hafif kusur devri, meslek eşleşme denetimi).
 - Emsal ürünler: https://opwire.app/iso-17020-periyodik-kontrol-yazilimi/ · https://17020muayene.vidco.com.tr/ · https://akuple.com/asansor-kontrol-yazilimi/ · https://ensyazilim.com/
 
 ## 11 · Değişiklik günlüğü
+- 2026-10-09 (438): **436–437 YAYINDA** (main 3c94135; göç yok; sağlık "tamam", duman 10/10, çalışma hatası yok; resmî PDF uçları oturumsuz 403).
+  Canlıdaki firmada kurulum henüz koşmadı (ilk açılışta koşar); firmanın kendi açtığı iki tür var — biri (ET) ZPKR02 şablonunu yayında kullanıyor
+  ama rapor formatı PDF'i yok, kurulum o şablonu "kullanılıyor" diye atlayacaktı → **resmî PDF Bakanlık şablonlu türlere de**: kurulumda bir kez
+  bütün firmada (Bakanlık şablonu taslak ya da yayında olan, hiç PDF'i olmayan tür → Bakanlığın PDF'i sürüm 1; firma ayarı "kurulum.pdf"), sonra
+  "Şablondan başlat" ve "Tür olarak ekle"de o türe (yalnız tür ve format değiştirebilene, aynı işlemde). Firmanın yüklediği ya da kaldırdığı
+  PDF'e dokunulmaz.
 - 2026-10-09 (437): **Bakanlık formatları her firmada hazır; sıfırdan rapor şablonu; hazır standart listesi** (reisim: *"HALA BAKANLIK FORMATLARI
   YOK DEFAULT OLARAK GELMESİ GEREKİYOR, ? RAPOR ŞABLONUNDA SIFIRDAN RAPOR ŞABLONU OLUŞTURMAK YOK, RAPOR FORMATI PDFLERİ DE STANDART OLARAK
   BAKANLIKTAN GELECEK ŞEKİLDE KONUŞMUŞTUK ÖRNEK PDFLERİ ATMIŞTIM SANA ONLARDA DEFAULT OLARAK GELSİN, BAKANLIK RAPOR FORMATLARI İLGİLİ

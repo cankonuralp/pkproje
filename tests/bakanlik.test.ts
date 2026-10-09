@@ -71,8 +71,9 @@ test("sıfırdan: 'bos' başlangıcı; iskelet geçerli, kilitsiz, başlık tür
 
 test("hazır kurulum: kurulan şablonlar yalnız Bakanlık formatları; kurulum işlevleri hiçbir sunucu eyleminden çağrılmaz; resmî PDF'i okuyan uçlar pakette", () => {
   assert.deepEqual([...HAZIR_SABLONLAR], ["ZPKR01", "ZPKR02", "ZPKR03", "ZPKR04", "ZPKR05"]);
-  /* yetki denetimi olmayan yazıcılar: yalnız kurulum.ts çağırır, o da yalnız sayfalardan (eylem dosyası değil) */
-  const KURUCU = /\b(hazirTurKur|hazirFormatYayinla|bakanlikKurulumu|hazirKurulum)\b/;
+  /* yetki denetimi olmayan yazıcılar: yalnız kurulum.ts çağırır, o da yalnız sayfalardan (eylem dosyası değil); eylemler yalnız yetkili
+     resmiPdfEkle'yi çağırır (438) */
+  const KURUCU = /\b(hazirTurKur|hazirPdfEkle|turaResmiPdf|hazirFormatYayinla|bakanlikKurulumu|hazirKurulum)\b/;
   const kaynak = dosyalar("src", [".ts", ".tsx"]).map((ad) => ({ ad, metin: oku(ad) }));
   const eylem = kaynak.filter((d) => /^\s*["']use server["']/m.test(d.metin) && KURUCU.test(d.metin)).map((d) => d.ad);
   assert.deepEqual(eylem, []);
@@ -91,4 +92,7 @@ test("hazır kurulum: kurulan şablonlar yalnız Bakanlık formatları; kurulum 
     .map((d) => "/" + d.ad.replace(/^src\/app\//, "").replace(/\/?(page|route)\.tsx?$/, "").split("/").filter((p) => p && !/^\(.*\)$/.test(p)).join("/"));
   assert.ok(okuyan.length >= 4, okuyan.join(", "));
   for (const u of okuyan) assert.ok(uclar.includes(u === "/" ? "/" : u), `${u} izde yok (${uclar.join(", ")})`);
+  /* 438: resmiPdfEkle'yi çağıran eylemler tür sayfasında (Şablondan başlat), listede ve şablon önizlemesinde (Tür olarak ekle) koşar */
+  assert.deepEqual(kaynak.filter((d) => /^\s*["']use server["']/m.test(d.metin) && /\bresmiPdfEkle\(/.test(d.metin)).map((d) => d.ad), ["src/modules/rapor-format/ui/eylemler.ts"]);
+  for (const u of ["/ekipman-turleri", "/ekipman-turleri/[id]", "/ekipman-turleri/sablon/[anahtar]"]) assert.ok(uclar.includes(u), `${u} izde yok`);
 });
