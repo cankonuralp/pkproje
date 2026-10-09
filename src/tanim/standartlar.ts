@@ -5,11 +5,12 @@
    Bakanlık türleri kurulurken (rapor-format/server/kurulum.ts) türün kontrol metodu standartları da bu listeden gelir.
    No yazımı şablonlardaki madde atıflarıyla aynı (dokumanlar/eslestir.ts standardı atıftan bulur); konu en çok 120 karakter (yükleme formu).
    440: branş — beş format da elektrik (Ek-III elektrik tesisatları); Standartlar'ın Elektrik sekmesinde (tests/bakanlik.test.ts şablonun türüyle
-   karşılaştırır). */
+   karşılaştırır). 467: mekanik formatlar (ZPKR06 kule kren, ZPKR07 asılı erişim, ZPMR01 / ZYDR01 LPG tankı) — standartları kriter belgelerinin
+   "Standart Maddesi" sütunundan; branş Mekanik. Tadil (ör. 14439+A2) numarada değil, yüklenen sürümde. */
 
 export interface HazirStandart { no: string; konu: string; formatlar: readonly string[]; brans: "m" | "e" }
 
-const LISTE: readonly Omit<HazirStandart, "brans">[] = [
+const LISTE: readonly (Omit<HazirStandart, "brans"> & { brans?: "m" })[] = [
   { no: "TS HD 60364-4-41", konu: "Alçak gerilim elektrik tesisleri – Bölüm 4-41: Güvenlik için koruma – Elektrik çarpmasına karşı koruma", formatlar: ["ZPKR01", "ZPKR02"] },
   { no: "TS HD 60364-4-43", konu: "Alçak gerilim elektrik tesisatları – Bölüm 4-43: Güvenlik için koruma – Aşırı akıma karşı koruma", formatlar: ["ZPKR02"] },
   { no: "TS HD 60364-5-51", konu: "Alçak gerilim elektrik tesisatları – Bölüm 5-51: Elektrik donanımının seçimi ve tesisi – Genel kurallar", formatlar: ["ZPKR02"] },
@@ -33,8 +34,22 @@ const LISTE: readonly Omit<HazirStandart, "brans">[] = [
   { no: "TS CEN/TS 54-14", konu: "Yangın algılama ve yangın alarm sistemleri – Bölüm 14: Planlama, tasarım, kurulum, devreye alma, kullanım ve bakım", formatlar: ["ZPKR04"] },
   { no: "TS EN 12464-1", konu: "Işık ve aydınlatma – Çalışma yerlerinin aydınlatılması – Bölüm 1: Kapalı çalışma alanları", formatlar: ["ZPKR04"] },
   { no: "TS EN 50522", konu: "1 kV AC üzerindeki güç tesislerinin topraklanması", formatlar: ["ZPKR05"] },
+  /* 467 · mekanik */
+  { no: "TS EN 14439", konu: "Krenler – Güvenlik – Kule krenler", formatlar: ["ZPKR06"], brans: "m" },
+  { no: "TS ISO 9927-1", konu: "Krenler – Muayeneler – Bölüm 1: Genel", formatlar: ["ZPKR06"], brans: "m" },
+  { no: "TS ISO 4309", konu: "Krenler – Tel halatlar – Bakım, muayene ve iptal", formatlar: ["ZPKR06", "ZPKR07"], brans: "m" },
+  { no: "TS 10116", konu: "Krenlerin statik ve dinamik deneyleri (ZPKK06 statik / dinamik test atfı)", formatlar: ["ZPKR06"], brans: "m" },
+  { no: "TS EN 1808", konu: "Asılı erişim donanımı için güvenlik kuralları – Tasarım, kararlılık, yapım – Muayeneler ve deneyler", formatlar: ["ZPKR07"], brans: "m" },
+  { no: "TS EN 12817", konu: "LPG donanımı ve aksesuarları – 13 m³'e kadar LPG depolama tanklarının muayenesi ve yeniden değerlendirilmesi", formatlar: ["ZPMR01", "ZYDR01"], brans: "m" },
+  { no: "TS EN 12819", konu: "LPG donanımı ve aksesuarları – 13 m³'ten büyük LPG depolama tanklarının muayenesi ve yeniden değerlendirilmesi", formatlar: ["ZPMR01", "ZYDR01"], brans: "m" },
+  { no: "TS 1446", konu: "Sıvılaştırılmış petrol gazları (LPG) depolama tesisleri – Güvenlik kuralları", formatlar: ["ZPMR01", "ZYDR01"], brans: "m" },
+  { no: "TS 11939", konu: "LPG tanklarının yerleşimi (ZPMK01 yerleşim atfı)", formatlar: ["ZPMR01"], brans: "m" },
+  { no: "TS EN 12542", konu: "LPG donanımı ve aksesuarları – 13 m³'e kadar yer üstü silindirik çelik LPG tankları – Tasarım ve imalat", formatlar: ["ZPMR01"], brans: "m" },
+  { no: "TS EN 14129", konu: "LPG donanımı ve aksesuarları – LPG tankları için basınç tahliye valfleri", formatlar: ["ZPMR01"], brans: "m" },
+  { no: "TS EN 13445-5", konu: "Alevle temas etmeyen basınçlı kaplar – Bölüm 5: Muayene ve deney", formatlar: ["ZPMR01"], brans: "m" },
+  { no: "TS EN 14570", konu: "LPG donanımı ve aksesuarları – Yer üstü ve yer altı LPG tanklarının donatılması", formatlar: ["ZPMR01"], brans: "m" },
 ];
-export const BAKANLIK_STANDARTLARI: readonly HazirStandart[] = LISTE.map((s) => ({ ...s, brans: "e" as const }));
+export const BAKANLIK_STANDARTLARI: readonly HazirStandart[] = LISTE.map((s) => ({ ...s, brans: s.brans ?? ("e" as const) }));
 
 /** formatın (ZPKR…) standart numaraları — kurulan türün kontrol metodu standartları */
 export const formatStandartlari = (formKodu: string): string[] => BAKANLIK_STANDARTLARI.filter((s) => s.formatlar.includes(formKodu)).map((s) => s.no);
@@ -48,8 +63,15 @@ export const formatStandartlari = (formKodu: string): string[] => BAKANLIK_STAND
 export const CIHAZ_TESISAT = "Tesisat test cihazı (çevrim empedansı / RCD)";
 export const CIHAZ_TOPRAKLAMA = "Topraklama ölçer (3 uçlu / pens)";
 export const CIHAZ_LUKSMETRE = "Lüksmetre";
+/* 467: mekanik formatların kriter belgelerindeki "Kullanılacak ölçüm cihazı" — kule kren: şerit metre, kumpas, aydınlık ölçer · asılı erişim:
+   şerit metre, kumpas, eğim / açı ölçer · LPG muayene: mesafe ölçer · LPG yeniden değerlendirme: hidrostatik test manometresi */
+export const CIHAZ_SERIT = "Şerit metre / mesafe ölçer";
+export const CIHAZ_KUMPAS = "Kumpas";
+export const CIHAZ_EGIM = "Eğim / açı ölçer";
+export const CIHAZ_MANOMETRE = "Manometre";
 const CIHAZLAR: Readonly<Record<string, readonly string[]>> = {
   ZPKR01: [CIHAZ_TESISAT], ZPKR02: [CIHAZ_TESISAT], ZPKR03: [CIHAZ_TOPRAKLAMA], ZPKR04: [CIHAZ_LUKSMETRE], ZPKR05: [CIHAZ_TOPRAKLAMA],
+  ZPKR06: [CIHAZ_SERIT, CIHAZ_KUMPAS, CIHAZ_LUKSMETRE], ZPKR07: [CIHAZ_SERIT, CIHAZ_KUMPAS, CIHAZ_EGIM], ZPMR01: [CIHAZ_SERIT], ZYDR01: [CIHAZ_MANOMETRE],
 };
 /** formatın (ZPKR…) ölçüm cihazı türlerinin adları (Bakanlık formatı değilse boş) */
 export const formatCihazTurleri = (formKodu: string): string[] => [...(Object.hasOwn(CIHAZLAR, formKodu) ? CIHAZLAR[formKodu] : [])];

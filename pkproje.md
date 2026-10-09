@@ -2355,6 +2355,17 @@ revizyon, alan kopyalama, hafif kusur devri, meslek eşleşme denetimi).
 - Emsal ürünler: https://opwire.app/iso-17020-periyodik-kontrol-yazilimi/ · https://17020muayene.vidco.com.tr/ · https://akuple.com/asansor-kontrol-yazilimi/ · https://ensyazilim.com/
 
 ## 11 · Değişiklik günlüğü
+- 2026-10-09 (467): **Mekanik zorunlu Bakanlık formatları** (reisim, hata listesi 25–26: *"mekanik tarafındaki zorunlu formatlar hala yok, kule vinç
+  vb."*; *"eklenti kullanarak indir izin veriyorum"*). Bakanlığın sitesinden indirildi (2026-10-09): ZPKR06 kule kren (yürürlük 01.01.2026), ZPKR07 asılı
+  erişim donanımı (01.02.2026), ZPMR01 LPG tankı periyodik muayene ve ZYDR01 LPG tankı yeterliliğin yeniden değerlendirilmesi (18.07.2025) + kriter
+  belgeleri ZPKK06 / ZPKK07 / ZPMK01 / ZYDK01. Şablonlar formdan birebir (bölüm, alan, kriter adları; numaralar 1–9); her kriterin ünlem talimatı
+  kriter belgesindeki içerik (** ağır, * hafif); ekipman bölümü "tam" (marka / seri / imal / kullanım yeri ekipman kaydına bağlı). Hazır kurulumda
+  her firmaya dört mekanik tür: Kule kren (KKR), Asılı erişim donanımı (AED), LPG tankı (LPG), LPG tankı yeniden değerlendirme (LPY, 120 ay);
+  resmî PDF'leri, standartları (TS EN 14439, TS ISO 9927-1, TS ISO 4309, TS 10116, TS EN 1808, TS EN 12817, TS EN 12819, TS 1446 …) ve ölçüm cihazı
+  türleri (şerit metre, kumpas, lüksmetre, eğim ölçer, manometre). Dökümanlar › Muayene kriterleri › Mekanik'te dört kriter belgesi. Formdaki alt
+  başlıklar (2.1 / 2.2) tek ekipman bölümünde; LPG'nin 1.1 yazılı plan ve 2.3 fotoğrafları numarasız bölüm (resmî numaralar kaymaz); formun sabit
+  notları sonuç açıklamasında. Bakanlığın 12 TASLAK mekanik formatı (2021; hava tankı, kazan, forklift, krenler …) indirildi, şablon yapılmadı
+  (reisim: *"bazı taslaklar çok eski … düzeneğimize uymuyorsa düzeneğimizi bozma"*) — sırası gelince yalnız kriter maddeleri hazır formatlara.
 - 2026-10-09 (466): **Yönetim girişinde iki adım AÇILDI** (reisim, hata listesi 33: *"açalım"*). Deneme veritabanında yonetim_ayar.iki_adim = true
   (göç 0075'in dediği gibi veritabanı sahibi yazdı). Yönetici "ilk" durumda, anahtarı yok: sonraki girişte parola → karekod (Google Authenticator)
   → 6 haneli kod. Sorun çıkarsa aynı satır false yapılır. Ayrıca (hata listesi 25–26, 42): Bakanlık sitesinde mekanik zorunlu belgeler ZPKR06 kule

@@ -24,7 +24,7 @@ import { bakanlikKurulumu, bakanlikTamamla, HAZIR_SABLONLAR, KURULUM_KIM } from 
 import { ayarOku } from "../src/server/ayar/ayar.ts";
 import { klasorDepo } from "../src/server/dosya/depo.ts";
 import { MATRIS_ONERI } from "../src/server/yetki/tanim.ts";
-import { CIHAZ_LUKSMETRE, CIHAZ_TESISAT, CIHAZ_TOPRAKLAMA, formatStandartlari } from "../src/tanim/standartlar.ts";
+import { CIHAZ_EGIM, CIHAZ_KUMPAS, CIHAZ_LUKSMETRE, CIHAZ_MANOMETRE, CIHAZ_SERIT, CIHAZ_TESISAT, CIHAZ_TOPRAKLAMA, formatStandartlari } from "../src/tanim/standartlar.ts";
 import { testKumesi } from "./yardimci/kume.ts";
 
 let kume: GomuluKume;
@@ -290,32 +290,35 @@ test("436 şablondan tür: tür + taslak tek işlemde; kod çakışırsa hiçbir
    anda iki istek tek kurulum; başka firmaya dokunmaz. Sıfırdan: boş iskelet taslak, kaynaksız, yayınlanır (kilit yok — engel yok). */
 test("437 hazır kurulum: tür + resmî PDF + yayında şablon; ikinci kez yazmaz; kullanılan şablon atlanır; aynı anda tek kurulum; sıfırdan taslak", async () => {
   const depo = klasorDepo(mkdtempSync(join(tmpdir(), "kurulum-depo-")));
-  const KODLAR = ["AGT", "EIT", "TRF", "YAS", "YKT"];
+  /* 467: + mekanik — AED (ZPKR07), KKR (ZPKR06), LPG (ZPMR01), LPY (ZYDR01) */
+  const KODLAR = ["AED", "AGT", "EIT", "KKR", "LPG", "LPY", "TRF", "YAS", "YKT"];
   const r1 = await kiraciIcinde(havuz, B, (db) => bakanlikKurulumu(db, depo));
-  assert.deepEqual([r1.kurulan, r1.atlanan], [5, 0], JSON.stringify(r1));
+  assert.deepEqual([r1.kurulan, r1.atlanan], [9, 0], JSON.stringify(r1));
   const t = (await b(MEK_B, (db) => db.sorgu<{ id: string; kod: string; ad: string; periyot: number; brans: string; kontrol_std: string[] }>(
     "SELECT id::text, kod, ad, periyot, brans, kontrol_std FROM ekipman_turu WHERE kod = ANY($1) ORDER BY kod", [KODLAR]))).rows;
-  assert.deepEqual(t.map((x) => [x.kod, x.periyot, x.brans]), KODLAR.map((k) => [k, 12, "e"]));
+  assert.deepEqual(t.map((x) => [x.kod, x.periyot, x.brans]), KODLAR.map((k) => [k, k === "LPY" ? 120 : 12, ["AED", "KKR", "LPG", "LPY"].includes(k) ? "m" : "e"]));
   assert.equal(t.find((x) => x.kod === "YKT")!.ad, "Yıldırımdan korunma tesisatı");
   assert.deepEqual(t.find((x) => x.kod === "YKT")!.kontrol_std, formatStandartlari("ZPKR03"));
   /* 440: ölçüm cihazı türleri adıyla açıldı (aynı ad bir kez — AGT ile EIT aynı türü kullanır) ve türlere bağlandı */
   const ct = new Map((await b(MEK_B, (db) => db.sorgu<{ id: string; ad: string }>("SELECT id::text, ad FROM cihaz_turu"))).rows.map((x) => [x.ad, x.id]));
-  assert.deepEqual([...ct.keys()].sort(), [CIHAZ_LUKSMETRE, CIHAZ_TESISAT, CIHAZ_TOPRAKLAMA].sort());
+  assert.deepEqual([...ct.keys()].sort(), [CIHAZ_LUKSMETRE, CIHAZ_TESISAT, CIHAZ_TOPRAKLAMA, CIHAZ_SERIT, CIHAZ_KUMPAS, CIHAZ_EGIM, CIHAZ_MANOMETRE].sort());
   const bag = new Map((await b(MEK_B, (db) => db.sorgu<{ kod: string; c: string[] }>(
     "SELECT kod, cihaz_turleri::text[] AS c FROM ekipman_turu WHERE kod = ANY($1)", [KODLAR]))).rows.map((x) => [x.kod, x.c]));
   assert.deepEqual(Object.fromEntries(bag), { AGT: [ct.get(CIHAZ_TESISAT)], EIT: [ct.get(CIHAZ_TESISAT)], YKT: [ct.get(CIHAZ_TOPRAKLAMA)],
-    YAS: [ct.get(CIHAZ_LUKSMETRE)], TRF: [ct.get(CIHAZ_TOPRAKLAMA)] });
+    YAS: [ct.get(CIHAZ_LUKSMETRE)], TRF: [ct.get(CIHAZ_TOPRAKLAMA)], KKR: [ct.get(CIHAZ_SERIT), ct.get(CIHAZ_KUMPAS), ct.get(CIHAZ_LUKSMETRE)],
+    AED: [ct.get(CIHAZ_SERIT), ct.get(CIHAZ_KUMPAS), ct.get(CIHAZ_EGIM)], LPG: [ct.get(CIHAZ_SERIT)], LPY: [ct.get(CIHAZ_MANOMETRE)] });
   const f = (await b(MEK_B, (db) => db.sorgu<{ kod: string; durum: string; sira: number; kaynak: string; yayinlayan: string; yayinlayan_id: string | null; notu: string }>(
     `SELECT t.kod, f.durum, f.sira, f.kaynak, f.yayinlayan, f.yayinlayan_id::text, f.notu FROM rapor_format f JOIN ekipman_turu t ON t.id = f.tur_id
       WHERE t.kod = ANY($1) ORDER BY t.kod`, [KODLAR]))).rows;
-  assert.deepEqual(f, [["AGT", "ZPKR01"], ["EIT", "ZPKR02"], ["TRF", "ZPKR05"], ["YAS", "ZPKR04"], ["YKT", "ZPKR03"]].map(([kod, kaynak]) =>
+  const KAYNAK = [["AED", "ZPKR07"], ["AGT", "ZPKR01"], ["EIT", "ZPKR02"], ["KKR", "ZPKR06"], ["LPG", "ZPMR01"], ["LPY", "ZYDR01"], ["TRF", "ZPKR05"], ["YAS", "ZPKR04"], ["YKT", "ZPKR03"]];
+  assert.deepEqual(f, KAYNAK.map(([kod, kaynak]) =>
     ({ kod, durum: "yayinda", sira: 1, kaynak, yayinlayan: KURULUM_KIM, yayinlayan_id: null, notu: "Bakanlık formatı" })));
   for (const x of t) assert.ok(await b(MEK_B, (db) => yayindakiFormat(db, x.id)), `${x.kod}: rapor yazılabilir`);
   const p = (await b(MEK_B, (db) => db.sorgu<{ kod: string; sira: number; ad: string; sha256: string }>(
     `SELECT t.kod, tf.sira, d.ad, d.sha256 FROM tur_format tf JOIN ekipman_turu t ON t.id = tf.tur_id JOIN dosya d ON d.id = tf.dosya_id
       WHERE t.kod = ANY($1) ORDER BY t.kod`, [KODLAR]))).rows;
-  assert.deepEqual(p.map((x) => [x.kod, x.sira, x.ad]), [["AGT", 1, "ZPKR01.pdf"], ["EIT", 1, "ZPKR02.pdf"], ["TRF", 1, "ZPKR05.pdf"], ["YAS", 1, "ZPKR04.pdf"], ["YKT", 1, "ZPKR03.pdf"]]);
-  assert.equal(p[0].sha256, createHash("sha256").update(readFileSync(join(import.meta.dirname, "..", "src", "tanim", "bakanlik", "ZPKR01.pdf"))).digest("hex"), "resmî PDF baytı baytına");
+  assert.deepEqual(p.map((x) => [x.kod, x.sira, x.ad]), KAYNAK.map(([kod, kaynak]) => [kod, 1, `${kaynak}.pdf`]));
+  assert.equal(p[1].sha256, createHash("sha256").update(readFileSync(join(import.meta.dirname, "..", "src", "tanim", "bakanlik", "ZPKR01.pdf"))).digest("hex"), "resmî PDF baytı baytına");
   assert.deepEqual((await b(MEK_B, (db) => ayarOku(db, "kurulum"))).deger, { bakanlik: [...HAZIR_SABLONLAR], pdf: true, baglanti: true, varsayilan: true });
   /* ikinci kez: hiçbir şey yazılmaz */
   const say = async (f: string) => (await kiraciIcinde(havuz, f, (db) => db.sorgu<{ n: number }>("SELECT (SELECT count(*) FROM ekipman_turu) + (SELECT count(*) FROM rapor_format) + (SELECT count(*) FROM dosya) AS n"))).rows[0].n;
@@ -324,7 +327,7 @@ test("437 hazır kurulum: tür + resmî PDF + yayında şablon; ikinci kez yazma
   assert.equal(await say(B), once);
   /* A: 436 testinde ZPKR03'ten tür açılmıştı (YKT) — o şablon atlanır, YKT ikinci kez açılmaz; B değişmez */
   const r2 = await kiraciIcinde(havuz, A, (db) => bakanlikKurulumu(db, depo));
-  assert.equal(r2.kurulan + r2.atlanan, 5);
+  assert.equal(r2.kurulan + r2.atlanan, 9);
   assert.ok(r2.atlanan >= 1, JSON.stringify(r2));
   assert.equal((await a(ELK, (db) => db.sorgu("SELECT 1 FROM ekipman_turu WHERE kod = 'YKT'"))).rowCount, 1);
   /* 438: firmanın kendi açtığı Bakanlık şablonlu PDF'siz türüne (436'daki YKT) resmî PDF eklendi · 440: boş standart ve cihazı tamamlandı */
@@ -341,8 +344,8 @@ test("437 hazır kurulum: tür + resmî PDF + yayında şablon; ikinci kez yazma
   let C: string;
   try { C = (await s.query<{ id: string }>("INSERT INTO firma (kisa_ad, ad, rapor_kodu) VALUES ('deneme-c', 'Deneme C', 'DC') RETURNING id")).rows[0].id; } finally { await s.end(); }
   const ikisi = await Promise.all([0, 1].map(() => kiraciIcinde(havuz, C, (db) => bakanlikKurulumu(db, depo))));
-  assert.equal(ikisi[0].kurulan + ikisi[1].kurulan, 5, JSON.stringify(ikisi));
-  assert.equal((await kiraciIcinde(havuz, C, (db) => db.sorgu<{ n: number }>("SELECT count(*)::int AS n FROM ekipman_turu"))).rows[0].n, 5);
+  assert.equal(ikisi[0].kurulan + ikisi[1].kurulan, 9, JSON.stringify(ikisi));
+  assert.equal((await kiraciIcinde(havuz, C, (db) => db.sorgu<{ n: number }>("SELECT count(*)::int AS n FROM ekipman_turu"))).rows[0].n, 9);
   /* sıfırdan: boş iskelet, kaynak yok, başlık türün adından; kilit yok → yayınlanır (boş madde listesi yalnız uyarı) */
   const tur = await yeniTur("B");
   const bos = tamam(await b(MEK_B, (db) => taslakBaslat(db, MEK_B, tur, "bos", null)));

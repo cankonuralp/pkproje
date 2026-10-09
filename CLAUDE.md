@@ -116,7 +116,7 @@ pkproje/
                             belge.css A4 Bakanlık görünümü (Carlito ./carlito-5.3.0, OFL) · veri.ts (BelgeVerisi; Raporlar raporBelgesiVerisi doldurur)
                             · html.ts (ağaç → HTML, React'le birebir) · pdf.ts kesin PDF (316: başsız Chromium — Vercel'de @sparticuz/chromium) · ornek.ts (uydurma)
   src/format/               FORMAT MOTORU (2026-10-04, RAPOR-FORMAT.md): tanim.ts (şema) · hesap.ts (ZPKK formülleri, saf) · motor.ts (değerlendir,
-                            yayın denetimi) · sablonlar.ts (ZPKR01–05, kompresör; 427) · duzen.ts (427: bölüm düzeni ve numaraları — üst
+                            yayın denetimi) · sablonlar.ts (ZPKR01–05, kompresör; 427; 467 mekanik ZPKR06 / ZPKR07 / ZPMR01 / ZYDR01) · duzen.ts (427: bölüm düzeni ve numaraları — üst
                             başlık N.1 / N.2, numarasız bölüm; belge ve saha ekranı ortak) — saha ekranı ve PDF aynı tanımdan
                             · 460: "tam" ekipman bölümü + ekipman kaydına bağlı alan (tanim.ts EKIPMAN_ALANLARI; değeri raporun ekipman
                             bilgisinde) — 2. bölüm kod + tür + formatın alanları; eski format duzen.ts ekipmanTamYap ile kurucuda çevrilir
@@ -234,7 +234,8 @@ pkproje/
                             325: excel.ts (saf: Excel'den yükle → kalemler, Excel'e aktar, şablon) + ui/EkipmanExcel.tsx · teklif belgesi
                             src/belge/teklif.ts (temel format <kod>-FR-TKL-01) → PDF /teklifler/<id>/pdf (src/belge/pdf.ts teklifPdf) · 368 teklifSil (taslak; 0063)
   src/tanim/iller.ts        81 il + 973 ilçe (açık veri, MIT; bir kez alındı)
-  src/tanim/bakanlik/       Bakanlığın resmî PDF'leri ZPKR01–05 (rapor formatı) + ZPKK01–05 (kriterler) — okuyucu src/server/bakanlik.ts; okuyan uçlar
+  src/tanim/bakanlik/       Bakanlığın resmî PDF'leri ZPKR01–05 (rapor formatı) + ZPKK01–05 (kriterler); 467: ZPKR06 / ZPKK06 kule kren,
+                            ZPKR07 / ZPKK07 asılı erişim, ZPMR01 / ZPMK01 + ZYDR01 / ZYDK01 LPG tankı — okuyucu src/server/bakanlik.ts; okuyan uçlar
                             next.config.ts izinde (437)
   src/tanim/standartlar.ts  Bakanlık formatlarının standartları (437; Dökümanlar › Standartlar hazır satırları "Yükle" → "Görüntüle", türün metot standartları)
   src/modules/<modül>/      ★ her iş modülü: server/ (veri erişimi + iş kuralları, dışa açılan fonksiyonlar) · ui/ · şema · testler

@@ -21,7 +21,7 @@ import { dosyalar, oku } from "./yardimci/denetimler.ts";
 
 test("resmî PDF'ler: her Bakanlık şablonunun formu ve her kriter belgesi var, PDF olarak okunuyor; listede olmayan kod okunmaz", async () => {
   const bakanlik = Object.values(SABLONLAR).filter((s) => s.bakanlik);
-  assert.equal(bakanlik.length, 5);
+  assert.equal(bakanlik.length, 9);   // 467: + ZPKR06, ZPKR07, ZPMR01, ZYDR01
   for (const s of bakanlik) assert.ok(bakanlikBelgesiMi(s.tanim.gorunum.formKodu), s.tanim.gorunum.formKodu);
   for (const k of KRITER_BELGELERI) assert.ok(bakanlikBelgesiMi(k.kod), k.kod);
   for (const k of BAKANLIK_BELGELERI) {
@@ -32,7 +32,7 @@ test("resmî PDF'ler: her Bakanlık şablonunun formu ve her kriter belgesi var,
   const y = await bakanlikPdfYaniti("ZPKR01");
   assert.equal(y.headers.get("content-type"), "application/pdf");
   assert.equal(y.headers.get("content-disposition"), 'inline; filename="ZPKR01.pdf"');
-  for (const kotu of ["../package", "ZPKR06", "zpkr01", "", "__proto__"]) {
+  for (const kotu of ["../package", "ZPKR99", "zpkr01", "", "__proto__"]) {
     assert.equal(bakanlikBelgesiMi(kotu), false, kotu);
     await assert.rejects(bakanlikPdf(kotu as "ZPKR01"), /Bakanlık belgesi değil/, kotu);
   }
@@ -76,7 +76,7 @@ test("440 ölçüm cihazları: her Bakanlık formatının en az bir cihaz türü
     assert.ok(l.length >= 1 && l.length <= 3, f);
     for (const ad of l) assert.ok(CihazTuruGirdisi.safeParse({ ad }).success, ad);
   }
-  for (const k of ["", "ZPKR06", "KOMPRESOR", "__proto__", "toString"]) assert.deepEqual(formatCihazTurleri(k), [], k);
+  for (const k of ["", "ZPKR99", "KOMPRESOR", "__proto__", "toString"]) assert.deepEqual(formatCihazTurleri(k), [], k);
   formatCihazTurleri("ZPKR01").push("bozma");
   assert.deepEqual(formatCihazTurleri("ZPKR01"), [CIHAZ_TESISAT], "dönen dizi kopya");
 });
@@ -94,7 +94,7 @@ test("sıfırdan: 'bos' başlangıcı; iskelet geçerli, kilitsiz, başlık tür
 });
 
 test("hazır kurulum: kurulan şablonlar yalnız Bakanlık formatları; kurulum işlevleri hiçbir sunucu eyleminden çağrılmaz; resmî PDF'i okuyan uçlar pakette", () => {
-  assert.deepEqual([...HAZIR_SABLONLAR], ["ZPKR01", "ZPKR02", "ZPKR03", "ZPKR04", "ZPKR05"]);
+  assert.deepEqual([...HAZIR_SABLONLAR], ["ZPKR01", "ZPKR02", "ZPKR03", "ZPKR04", "ZPKR05", "ZPKR06", "ZPKR07", "ZPMR01", "ZYDR01"]);
   /* yetki denetimi olmayan yazıcılar: yalnız kurulum.ts çağırır, o da yalnız sayfalardan (eylem dosyası değil); eylemler yalnız yetkili
      resmiPdfEkle'yi çağırır (438) */
   const KURUCU = /\b(hazirTurKur|hazirPdfEkle|hazirBaglantiTamamla|hazirCihazTuru|hazirFormatYayinla|varsayilanFormatKur|bakanlikKurulumu|hazirKurulum)\b/;

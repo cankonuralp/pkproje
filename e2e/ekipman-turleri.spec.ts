@@ -109,7 +109,7 @@ test("ekipman türü: kullanılmamış tür silinir, kod serbest kalır", async 
 
 /* 436 (reisim 2026-10-09: "EKİPMAN TÜRLERİNDE BAKANLIK FORMATLARINI DA GÖREMEDİM"): Elektrik sekmesinde Bakanlık rapor formatları listelenir
    (tür eklenmeden de) → önizleme sayfası → "Tür olarak ekle" (ad / kod / periyot önerili) → tür + şablondan taslak → taslağın sayfası; listede
-   formatı kullanan tür görünür. Mekanik sekmesinde hazır şablon (kompresör), Bakanlık formatı yok. */
+   formatı kullanan tür görünür. Mekanik sekmesinde (467) Bakanlığın mekanik formatları (kule kren, asılı erişim, LPG) ve hazır şablon (kompresör). */
 test("Bakanlık rapor formatları: listede görünür, önizlenir, tür olarak eklenir (taslak hazır)", async ({ page }, bilgi) => {
   const on = { masaustu: "MS", tablet: "TB", telefon: "TL" }[bilgi.project.name] ?? "XX";
   const kod = `Y${on.slice(0, 1)}${"ABCDEFGH"[bilgi.retry]}`;
@@ -138,8 +138,9 @@ test("Bakanlık rapor formatları: listede görünür, önizlenir, tür olarak e
   await expect(liste.getByRole("link", { name: `Yıldırımdan korunma ${kod}` })).toBeVisible();
   await page.goto("/ekipman-turleri");
   await hazir(page);
-  await expect(page.getByRole("region", { name: "Hazır rapor formatları" }).getByRole("link", { name: "Kompresör (genel)" })).toBeVisible();
-  await expect(page.getByRole("region", { name: "Bakanlık rapor formatları" })).toHaveCount(0);
+  const mekanik = page.getByRole("region", { name: "Bakanlık rapor formatları" });
+  for (const k of ["ZPKR06", "ZPKR07", "ZPMR01", "ZYDR01"]) await expect(mekanik.getByRole("link", { name: k })).toBeVisible();
+  await expect(mekanik.getByRole("link", { name: "Kompresör (genel)" })).toBeVisible();
 });
 
 /* 437 (reisim 2026-10-09: "HALA BAKANLIK FORMATLARI YOK DEFAULT OLARAK GELMESİ GEREKİYOR … RAPOR ŞABLONUNDA SIFIRDAN RAPOR ŞABLONU OLUŞTURMAK YOK
