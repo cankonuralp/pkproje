@@ -2355,6 +2355,14 @@ revizyon, alan kopyalama, hafif kusur devri, meslek eşleşme denetimi).
 - Emsal ürünler: https://opwire.app/iso-17020-periyodik-kontrol-yazilimi/ · https://17020muayene.vidco.com.tr/ · https://akuple.com/asansor-kontrol-yazilimi/ · https://ensyazilim.com/
 
 ## 11 · Değişiklik günlüğü
+- 2026-10-09 (466): **Yönetim girişinde iki adım AÇILDI** (reisim, hata listesi 33: *"açalım"*). Deneme veritabanında yonetim_ayar.iki_adim = true
+  (göç 0075'in dediği gibi veritabanı sahibi yazdı). Yönetici "ilk" durumda, anahtarı yok: sonraki girişte parola → karekod (Google Authenticator)
+  → 6 haneli kod. Sorun çıkarsa aynı satır false yapılır. Ayrıca (hata listesi 25–26, 42): Bakanlık sitesinde mekanik zorunlu belgeler ZPKR06 kule
+  kren (01.01.2026), ZPKR07 asılı erişim donanımı (01.02.2026), LPG ZPMR01 / ZYDR01; 12 mekanik ekipmanın resmî taslak formatı. Site PDF'i yalnız
+  kendi sayfa etkileşimiyle veriyor (ASP.NET geri gönderimi; dışarıdan istek boş sayfa döndü) — PDF'ler reisim'den beklenir.
+- 2026-10-09 (maket): **Denetçi gözünden saha ekranı + sürüm sayfası maketi** (reisim: *"sahada denetçinin kullanacağı ekranı göremiyoruz, denetçi
+  gözünden de görebilmemiz lazım … Sürüm sayfası şu an kullanışsız"*). Anayasa 2.1 / 2.10: önce maket, onay, sonra kod —
+  https://claude.ai/artifact/TTNZMvz2HTaHqFerpF3a9F (sunum, tıklanır maket masaüstü + telefon, karar soruları K1–K5; seçimler sayfada saklanır).
 - 2026-10-09 (465): **Plan aç: kendiliğinden gelen ekipman çıkarılır; Excel'den ekipman** (reisim, hata listesi 7: *"mevcutta otomatik gelen
   ekipmanlarıda silebilmek istiyorum, belki ekstra bir plan geldi ve zaten yapılan ekipmanlar listede yine oluyor gereksiz yere? ayrıca excelden
   aktarma gibi seçenekler de olmalı."*). Tesisteki her ekipmanda "Çıkar / Geri al" (son kontrol tarihiyle); "Kontrolü yakın olmayanları çıkar"
