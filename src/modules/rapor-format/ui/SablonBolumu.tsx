@@ -1,7 +1,8 @@
 "use client";
 /* TÜR SAYFASI › RAPOR ŞABLONU (RAPOR-FORMAT.md §4–5; maket ekipman-turleri.html Format kurucu: "Taslak · vN" / "Yayında · vN", Yayınla onaylı,
    yayın öncesi denetim). Sürüm tablosu (taslak üstte, sonra yeniden eskiye) · Şablondan başlat penceresi (hazır şablon ya da yayınlanmış sürüm;
-   varsa taslağın yerine geçer) · 437 Sıfırdan oluştur (boş iskelet; onaylı, taslak varsa yerine geçer) · Yayınla penceresi (engeller + uyarılar sunucudan, sürüm notu). Tuşlar yalnız "değiştirir" düzeyine çizilir;
+   varsa taslağın yerine geçer) · 437 Sıfırdan oluştur (boş iskelet; onaylı, taslak varsa yerine geçer) · 439 yayındaki sürümde Düzenle (o sürümden
+   taslak → Format kurucu; açık taslak varsa "Taslağa devam et" ya da yeniden başla) · Yayınla penceresi (engeller + uyarılar sunucudan, sürüm notu). Tuşlar yalnız "değiştirir" düzeyine çizilir;
    karar ve denetim yine sunucuda. Taslak Format kurucuda düzenlenir (…/sablon/<sürüm>/kurucu, K4). */
 import { useRouter } from "next/navigation";
 import { useEffect, useState, useTransition } from "react";
@@ -25,6 +26,7 @@ const BASLA_ID = "sb-baslangic", NOT_ID = "sb-not";
 
 /** 370: `sil` — taslağı kesin silebilir (yönetici; yayınlanmış sürüm silinmez) */
 export function SablonTablosu({ turId, surumler, yaz, sil = false }: { turId: string; surumler: FormatOzeti[]; yaz: boolean; sil?: boolean }) {
+  const taslak = surumler.find((x) => x.durum === "taslak") ?? null;
   const sutunlar: Sutun<FormatOzeti>[] = [
     { k: "surum", genislik: "26%", baslik: "Sürüm", kart: "ust", sira: 1, hucre: (x) => <><b>{surumAdi(x)}</b><AltSatir>{x.kaynakAd ?? "Firma formatı"} · {x.bolum} bölüm</AltSatir></> },
     { k: "tarih", genislik: "24%", baslik: "Tarih", kart: "govde", sira: 2, hucre: (x) => <>
@@ -35,6 +37,7 @@ export function SablonTablosu({ turId, surumler, yaz, sil = false }: { turId: st
       <span className={stil.tuslar}>
         <TusBaglanti ikon="eye" href={`/ekipman-turleri/${turId}/sablon/${x.id}`}>Önizle</TusBaglanti>
         {yaz && x.durum === "taslak" && <TusBaglanti ikon="pencil" href={`/ekipman-turleri/${turId}/sablon/${x.id}/kurucu`}>Düzenle</TusBaglanti>}
+        {yaz && x.durum === "yayinda" && <SurumDuzenleTusu turId={turId} surum={x} taslak={taslak} />}
         {yaz && x.durum === "taslak" && <YayinlaTusu format={x} />}
         {sil && x.durum === "taslak" && <SilTusu kucuk ikon="trash-2" ad="Taslak" erisimAdi="Taslağı sil" baslik="Rapor formatı taslağını sil" yanEtki="yayınlanmış sürümler etkilenmez"
           sil={() => taslakSilEylemi(x.id)} odak="#b-sablon" />}
@@ -79,6 +82,41 @@ export function SablonBaslatTusu({ turId, turAd, taslak, surumler, sablonlar }:
               tanim={ipucuId(BASLA_ID)} degistir={setSecim} />
           </Alan>
         </FormIzgara>
+      </Pencere>}
+    </>
+  );
+}
+
+/** 439 (reisim 2026-10-09: "ŞABLONU DÜZENLEME YOK SADECE ÖN İZLEME VAR DÜZENLEME DE OLMALI"): yayınlanmış sürüm DEĞİŞMEZ (açılmış ve imzalanmış
+    raporlar onu kullanır) — "Düzenle" o sürümü taslağa kopyalar ve Format kurucuya götürür; yayınlayınca yeni sürüm olur. Açık taslak varsa
+    sorar: taslağa devam et ya da bu sürümden yeniden başla (taslağın yerine geçer — gördüğü taslak sürümüyle, görmediğini ezmez). */
+export function SurumDuzenleTusu({ turId, surum, taslak }:
+  { turId: string; surum: Pick<FormatOzeti, "id" | "sira">; taslak: Pick<FormatOzeti, "id" | "surum" | "degisti"> | null }) {
+  const router = useRouter();
+  const bildir = useBildir();
+  const [acik, setAcik] = useState(false);
+  const [bekliyor, baslat] = useTransition();
+  const [genel, setGenel] = useState<string | null>(null);
+  const ad = surumAdi(surum);
+  const ac = () => baslat(async () => {
+    const r = await taslakBaslatEylemi(turId, taslak?.surum ?? null, `surum:${surum.id}`);
+    if (!r.tamam) { setGenel(r.genel ?? Object.values(r.hatalar ?? {})[0] ?? "Taslak açılamadı."); return; }
+    setAcik(false); bildir(`${ad} taslağa kopyalandı; Format kurucuda düzenleyip yayınlayın.`); router.push(`/ekipman-turleri/${turId}/sablon/${r.id}/kurucu`);
+  });
+  return (
+    <>
+      <Tus tur="ikincil" ikon="pencil" aria-label={`${ad} · Düzenle`} onClick={() => { setGenel(null); setAcik(true); }}>Düzenle</Tus>
+      {acik && <Pencere acik baslik={`${ad} · düzenle`} onKapat={() => setAcik(false)}
+        alt={<>
+          <Tus tur="ikincil" onClick={() => setAcik(false)}>Vazgeç</Tus>
+          {taslak && <TusBaglanti ikon="pencil" href={`/ekipman-turleri/${turId}/sablon/${taslak.id}/kurucu`}>Taslağa devam et</TusBaglanti>}
+          <Tus ikon="pencil" disabled={bekliyor} aria-busy={bekliyor || undefined} onClick={ac}>{taslak ? "Bu sürümden yeniden başla" : "Taslak aç ve düzenle"}</Tus>
+        </>}>
+        <p className={pencereMetinSinifi}>Yayınlanmış sürüm değişmez; açılmış ve imzalanmış raporlar onu kullanır. {ad} bir taslağa kopyalanır, Format
+          kurucuda değiştirip yayınlayınca yeni sürüm olur.</p>
+        {taslak && <Serit tur="uyari" ikon="triangle-alert">Açık bir taslak var ({tarihYaz(taslak.degisti)}). “Bu sürümden yeniden başla” o taslağın
+          yerine geçer; taslaktaki değişiklikleri korumak için “Taslağa devam et”.</Serit>}
+        {genel && <Serit tur="hata" ikon="circle-alert">{genel}</Serit>}
       </Pencere>}
     </>
   );

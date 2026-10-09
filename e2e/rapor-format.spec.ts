@@ -85,10 +85,24 @@ test("rapor şablonu: şablondan başlat, önizle, yayınla; yeni sürümle eski
   await expect(page.getByText("Eski", { exact: true })).toBeVisible();
   await expect(page.getByText("Yayında", { exact: true })).toBeVisible();
 
-  /* 370: vazgeçilen taslak yönetici tarafından silinir; yayınlanmış sürümlerde Sil yok */
-  await basla(page, /Sürüm 2 · yayında/);
+  /* 439 (reisim: "ŞABLONU DÜZENLEME YOK SADECE ÖN İZLEME VAR DÜZENLEME DE OLMALI"): yayındaki sürümde Düzenle → o sürümden taslak → Format
+     kurucu; açık taslak varken yeniden Düzenle → "Taslağa devam et" aynı taslağa götürür */
+  await page.getByRole("button", { name: "Sürüm 2 · Düzenle" }).click();
+  const d = page.getByRole("dialog", { name: "Sürüm 2 · düzenle" });
+  await expect(d).toContainText("Yayınlanmış sürüm değişmez");
+  await d.getByRole("button", { name: "Taslak aç ve düzenle" }).click();
+  await expect(page).toHaveURL(/\/sablon\/[0-9a-f-]{36}\/kurucu$/, { timeout: 30_000 });
+  await expect(page.getByRole("heading", { level: 1, name: /^Format kurucu · / })).toBeVisible();
+  const kurucu = new URL(page.url()).pathname;
   await page.goto(turAdresi);
   await hazir(page);
+  await page.getByRole("button", { name: "Sürüm 2 · Düzenle" }).click();
+  await expect(d).toContainText("Açık bir taslak var");
+  await expect(d.getByRole("link", { name: "Taslağa devam et" })).toHaveAttribute("href", kurucu);
+  await d.getByRole("button", { name: "Vazgeç" }).click();
+  await expect(d).toHaveCount(0);
+
+  /* 370: vazgeçilen taslak yönetici tarafından silinir; yayınlanmış sürümlerde Sil yok */
   await expect(page.getByRole("button", { name: "Taslağı sil" })).toHaveCount(1);
   await page.getByRole("button", { name: "Taslağı sil" }).click();
   const onay = page.locator("dialog[open]");
@@ -105,6 +119,7 @@ test("rapor şablonu: şablondan başlat, önizle, yayınla; yeni sürümle eski
   await hazir(page);
   await expect(page.getByRole("heading", { level: 2, name: "Rapor şablonu" })).toBeVisible();
   await expect(page.getByRole("button", { name: "Şablondan başlat" })).toHaveCount(0);
+  await expect(page.getByRole("button", { name: "Sürüm 2 · Düzenle" })).toHaveCount(0);
   await page.getByRole("link", { name: "Önizle" }).first().click();
   await expect(page.getByRole("heading", { level: 1, name: "Rapor şablonu · Sürüm 2" })).toBeVisible({ timeout: 30_000 });
   await expect(page.getByRole("button", { name: "Yayınla" })).toHaveCount(0);

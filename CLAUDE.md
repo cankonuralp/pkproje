@@ -123,6 +123,8 @@ pkproje/
                             · 436 hazır şablonlar Ekipman türleri'nde (ui/HazirFormatlar, sablondanTurEkle; önizleme /ekipman-turleri/sablon/<ZPKR…>)
                             · 437 HAZIR KURULUM server/kurulum.ts: firmanın ilk açılışında (Ana sayfa, Ekipman türleri) Bakanlık türleri — tür + resmî PDF +
                             yayında şablon (sistem, hesapsız, danışma kilidi; firma ayarı "kurulum") · "bos" başlangıç = sıfırdan (sablonlar.ts bosFormat)
+                            · 438 resmî PDF Bakanlık şablonlu PDF'siz türlere (kurulum.pdf, resmiPdfEkle) · 439 yayındaki sürümde Düzenle (ui/SablonBolumu
+                            SurumDuzenleTusu: o sürümden taslak → kurucu; açık taslak varsa devam / yeniden başla)
   src/modules/planlar/      PLANLAR (2026-10-04, 309–310; modül 13): plan + plan ekibi (göç 0023; proje no sunucuda, değişmez; künye kayıttan) ·
                             Plan aç /planlar/ac (uyarılar sema.ts'te saf, engel değil) · liste /planlar · plan içi /planlar/<id> (server/plan-ici.ts:
                             akış kabul/red/kontrol/tamamla, künye düzenle/güncelle, plan ekipmanı, proje notları; geçişler göç 0024 tetiğinde) · 372 planSil

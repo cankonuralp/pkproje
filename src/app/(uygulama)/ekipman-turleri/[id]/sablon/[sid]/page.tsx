@@ -1,7 +1,8 @@
 /* RAPOR ŞABLONU SÜRÜMÜ (RAPOR-FORMAT.md §5–6; maket ekipman-turleri.html #/tur/<kod>/kurucu — salt okunur önizleme; taslağın düzenleyicisi
    Format kurucu …/kurucu, K4): başlık +
    durum (Taslak / Yayında / Eski) · yüzler · taslakta yayın denetimi (kilitli öğe engeli, uyarılar) · kurallar · görünüm · saha ekranı önizlemesi.
-   Görmeyen, başka firmanın ya da başka türün sürümü: bulunamadı. Yayınla yalnız "değiştirir" düzeyine çizilir; karar sunucuda. */
+   Görmeyen, başka firmanın ya da başka türün sürümü: bulunamadı. Yayınla yalnız "değiştirir" düzeyine çizilir; karar sunucuda.
+   439: yayındaki sürümde "Düzenle" (o sürümden taslak → Format kurucu; açık taslak varsa sorar) — yalnız "değiştirir". */
 import type { Metadata } from "next";
 import { notFound } from "next/navigation";
 import { Bilgi, BilgiListesi, Kosullar, Yuz, Yuzler } from "../../../../../../components/bilgi/Bilgi";
@@ -13,10 +14,10 @@ import { kilitliKimlikler } from "../../../../../../format/motor";
 import { bransAd } from "../../../../../../modules/ekipman-turleri/sema";
 import { turOzeti } from "../../../../../../modules/ekipman-turleri/server/turler";
 import { modulBul } from "../../../../../../modules/moduller";
-import { formatAyrintisi, formatDegistirir } from "../../../../../../modules/rapor-format/server/formatlar";
+import { formatAyrintisi, formatDegistirir, formatSurumleri } from "../../../../../../modules/rapor-format/server/formatlar";
 import { FormatOnizleme } from "../../../../../../modules/rapor-format/ui/FormatOnizleme";
 import { DURUM_ROZET, surumAdi, tarihYaz } from "../../../../../../modules/rapor-format/ui/ortak";
-import { YayinlaTusu } from "../../../../../../modules/rapor-format/ui/SablonBolumu";
+import { SurumDuzenleTusu, YayinlaTusu } from "../../../../../../modules/rapor-format/ui/SablonBolumu";
 import stil from "../../../../../../modules/rapor-format/ui/format.module.css";
 import { modulOturumu, oturumIslemi } from "../../../../../../server/kimlik/istek";
 
@@ -28,12 +29,14 @@ export default async function Sayfa({ params }: { params: Promise<{ id: string; 
   const o = await modulOturumu(MODUL.no);
   if (!o) return <Yetkisiz />;
   const { id, sid } = await params;
-  const [f, tur] = await oturumIslemi(o, async (db) => {
+  const [f, tur, surumler] = await oturumIslemi(o, async (db) => {
     const f = await formatAyrintisi(db, o, sid);
-    return [f, f && f.turId === id ? await turOzeti(db, id) : null] as const;
+    const tur = f && f.turId === id ? await turOzeti(db, id) : null;
+    return [f, tur, tur && f?.durum === "yayinda" && formatDegistirir(o) ? await formatSurumleri(db, o, id) : null] as const;
   });
   if (!f || !tur) notFound();
   const t = f.tanim, yaz = formatDegistirir(o) && f.durum === "taslak";
+  const taslak = surumler?.find((x) => x.durum === "taslak") ?? null;
   const madde = t ? t.bolumler.reduce((n, b) => n + (b.blok === "liste" ? b.gruplar.reduce((k, g) => k + g.maddeler.length, 0) : 0), 0) : 0;
   const kilit = t ? kilitliKimlikler(t).size : 0;
   const [rozetTur, rozetAd] = DURUM_ROZET[f.durum];
@@ -42,10 +45,10 @@ export default async function Sayfa({ params }: { params: Promise<{ id: string; 
       <Kirinti ogeler={[[`Ekipman türleri · ${bransAd(tur.brans)}`, tur.brans === "e" ? "/ekipman-turleri?brans=e" : "/ekipman-turleri"],
         [tur.ad, `/ekipman-turleri/${tur.id}`], [`Rapor şablonu · ${surumAdi(f)}`]]} />
       <NesneBasi baslik={`Rapor şablonu · ${surumAdi(f)}`} rozet={<Rozet tur={rozetTur}>{rozetAd}</Rozet>} altIkon="layout-list"
-        alt={`${tur.ad} · ${f.kaynakAd ?? "Firma formatı"}`} tuslar={yaz && <>
+        alt={`${tur.ad} · ${f.kaynakAd ?? "Firma formatı"}`} tuslar={yaz ? <>
           <TusBaglanti ikon="pencil" href={`/ekipman-turleri/${tur.id}/sablon/${f.id}/kurucu`}>Format kurucu</TusBaglanti>
           <YayinlaTusu format={{ id: f.id, surum: f.surum }} />
-        </>} />
+        </> : surumler && <SurumDuzenleTusu turId={tur.id} surum={f} taslak={taslak} />} />
       <Yuzler>
         <Yuz ikon="list" ad="Bölüm" sayi={f.bolum} />
         <Yuz ikon="list-checks" ad="Kontrol maddesi" sayi={madde} />

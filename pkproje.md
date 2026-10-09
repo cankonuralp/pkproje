@@ -2355,6 +2355,11 @@ revizyon, alan kopyalama, hafif kusur devri, meslek eşleşme denetimi).
 - Emsal ürünler: https://opwire.app/iso-17020-periyodik-kontrol-yazilimi/ · https://17020muayene.vidco.com.tr/ · https://akuple.com/asansor-kontrol-yazilimi/ · https://ensyazilim.com/
 
 ## 11 · Değişiklik günlüğü
+- 2026-10-09 (439): **Yayındaki rapor şablonunda "Düzenle"** (reisim: *"REİSİM ŞABLONU DÜZENLEME YOK SADECE ÖN İZLEME VAR DÜZENLEME DE
+  OLMALI"*). Yayınlanmış sürüm değişmez kuralı korunur (açılmış ve imzalanmış raporlar onu kullanır): tür sayfasında yayındaki sürüm satırında ve
+  sürümün önizleme sayfasında **"Düzenle"** — pencere açıklar, "Taslak aç ve düzenle" o sürümü taslağa kopyalar ve Format kurucuya götürür;
+  yayınlayınca yeni sürüm olur. Açık taslak varsa sorar: "Taslağa devam et" (aynı taslak) ya da "Bu sürümden yeniden başla" (taslağın yerine
+  geçer). Bakanlık şablonundan gelen sürümde resmî PDF yoksa yine eklenir (438). Yalnız tür ve format değiştirebilene; karar sunucuda.
 - 2026-10-09 (438): **436–437 YAYINDA** (main 3c94135; göç yok; sağlık "tamam", duman 10/10, çalışma hatası yok; resmî PDF uçları oturumsuz 403).
   Canlıdaki firmada kurulum henüz koşmadı (ilk açılışta koşar); firmanın kendi açtığı iki tür var — biri (ET) ZPKR02 şablonunu yayında kullanıyor
   ama rapor formatı PDF'i yok, kurulum o şablonu "kullanılıyor" diye atlayacaktı → **resmî PDF Bakanlık şablonlu türlere de**: kurulumda bir kez
