@@ -40,7 +40,8 @@ export default async function Sayfa({ params }: { params: Promise<{ id: string }
     <>
       <Kirinti ogeler={[["Müşteriler", "/musteriler"], [m.kisa]]} />
       <NesneBasi baslik={m.unvan} rozet={m.pasif ? <PasifRozeti /> : undefined} altIkon="building-2"
-        alt={`${m.vd ? `${m.vd} VD · ` : ""}${m.vno ? `VKN ${m.vno}` : "Vergi no yok"}`}
+        /* 482: eksik vergi no şeritte ve Müşteri bilgileri'nde söylenir — başlığın altında üçüncü kez yazılmaz (kalıp 10: tekrar göz karmaşası) */
+        alt={[m.vd && `${m.vd} VD`, m.vno && `VKN ${m.vno}`].filter(Boolean).join(" · ") || undefined}
         tuslar={yaz && <MusteriTuslari pasif={!!m.pasif} sil={silme.sil} kullanim={silme.kullanim ? kullanimMetni(silme.kullanim) : null} musteri={{ id: m.id, surum: m.surum, unvan: m.unvan, kisa: m.kisa, vd: m.vd, vno: m.vno, eposta: m.eposta, tel: m.tel, ilgili: m.ilgili }} />} />
       {m.pasif && <SeritKap><Serit tur="bilgi" ikon="ban"><b>Pasif</b> · {tarihYaz(m.pasif)} · Müşteri listelerden kalktı; raporları ve arşivi duruyor. “Etkinleştir” ile geri gelir.</Serit></SeritKap>}
       {e.length > 0 && <SeritKap><Serit tur="uyari" ikon="triangle-alert">Eksik bilgi: {e.join(" · ")}.</Serit></SeritKap>}

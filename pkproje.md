@@ -2372,6 +2372,12 @@ revizyon, alan kopyalama, hafif kusur devri, meslek eşleşme denetimi).
 - Emsal ürünler: https://opwire.app/iso-17020-periyodik-kontrol-yazilimi/ · https://17020muayene.vidco.com.tr/ · https://akuple.com/asansor-kontrol-yazilimi/ · https://ensyazilim.com/
 
 ## 11 · Değişiklik günlüğü
+- 2026-10-10 (482): **GÖRSEL TUTARLILIK** (site taraması). (1) Sağ alttaki yüzen S.A.Y düğmesi sayfanın son satırındaki tuşları örtüyordu (personel
+  kartı rol Kaydet, muhasebe iş kartı) → içeriğin altında düğme kadar boşluk (Kabuk.module.css, body:has([data-say-fab])); altta yapışkan
+  çubuklu sayfada düğme zaten çubuğun üstünde. (2) Müşteriler'de "vergi no eksik" üç kez: listede adın altında + Durum sütununda, kartta başlık
+  altında + şeritte + Müşteri bilgileri'nde → listede yalnız Durum sütunu, kartta şerit ve alanın kendisi (kalıp 10: tekrar göz karmaşası).
+  (3) Araçlar › Şablon sayfa zemininde çıplak madde listesiydi (ekranın çoğu boş) → kalemler kartta, kabı dolduran ızgarada, ikonlu
+  (araclar.module.css .sablonKalemleri). Görsel karşılaştırma görüntüleri (Planlar, plan içi) alt boşlukla yeniden kaydedilir.
 - 2026-10-10 (481): **SÜZGEÇSİZ LİSTELER VE BOŞ KENAR** (site taraması; kalıp 10 kap tam genişlik, kalıp 14 süzgeç sabit, kalıp 15 tek üretici).
   Taramada: Onaylar › Talepler 1920'de kabın %60'ı (sağ boş — ayrıntı paneli seçimsizken de yer tutuyordu) ve süzgeçsiz; süzgeçsiz ana listeler:
   Personel › İzin talepleri, Araçlar › Tutanaklar, Onaylar › Diğer belgeler, Dökümanlar › Diğer dökümanlar / Muayene kriterleri / Eğitim türleri,

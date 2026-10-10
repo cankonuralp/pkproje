@@ -214,7 +214,7 @@ export function SayAsistan() {
   return (
     <>
       {!acik && (
-        <button ref={fab} className={stil.fab} type="button" onClick={() => ac()} aria-haspopup="dialog" aria-controls="say-panel" aria-expanded={false}
+        <button ref={fab} className={stil.fab} type="button" data-say-fab="" onClick={() => ac()} aria-haspopup="dialog" aria-controls="say-panel" aria-expanded={false}
           aria-label="S.A.Y — saha asistanı">
           <span className={stil.fabIkon}><Ikon ad="sparkles" /></span>
           <span className={stil.fabYazi}>S.A.Y<small>Asistan</small></span>

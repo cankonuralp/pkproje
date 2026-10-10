@@ -41,7 +41,7 @@ function tanim(kayitlar: readonly MusteriSatiri[]): SuzgecTanimi<MusteriSatiri> 
 
 const SUTUNLAR: Sutun<MusteriSatiri>[] = [
   { k: "unvan", genislik: "44%", baslik: "Müşteri", kart: "ust", sira: 1, hucre: (m) => (
-    <><Link className={stil.ad} href={`/musteriler/${m.id}`}>{m.unvan}</Link>{m.vno ? <AltSatir>VKN {m.vno}</AltSatir> : <AltSatir uyari>Vergi no eksik</AltSatir>}</>
+    <><Link className={stil.ad} href={`/musteriler/${m.id}`}>{m.unvan}</Link>{m.vno && <AltSatir>VKN {m.vno}</AltSatir>}</>
   ) },
   { k: "tesis", genislik: "32%", baslik: "Tesisler", kart: "govde", sira: 2, hucre: (m) => (
     <span className={stil.hucreSatir}><Ikon ad="map-pin" kucuk /><span><span className={stil.sayi}>{etkinTesisler(m).length} tesis</span><AltSatir><Kirp>{iller(m).join(" · ") || "—"}</Kirp></AltSatir></span></span>

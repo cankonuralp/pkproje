@@ -62,6 +62,10 @@
 .ustIsaret { display: none; height: 32px; width: auto; }
 .ustBosluk { flex: 1 1 auto; }
 .icerik { padding: var(--bosluk-sayfa); min-width: 0; }
+/* 482 (site taraması): sağ alttaki yüzen S.A.Y düğmesi (56 px, kenardan 16–20 px) sayfanın son satırının tuşlarını örtüyordu (personel kartı Kaydet,
+   muhasebe iş kartı) — içeriğin altında düğme kadar boşluk; son satır düğmenin üstüne kaydırılabilir (altta yapışkan çubuklu sayfada düğme çubuğun
+   üstünde durur — say.module.css) */
+:global(body:has([data-say-fab])) .icerik { padding-bottom: calc(var(--bosluk-sayfa) + 72px); }
 
 /* ══ BANTLAR — taban kuralların ARDINDA (anayasa 3.2) ══════════════════════════════════════════════════ */
 

@@ -1,9 +1,11 @@
 /* ARAÇLAR › Şablon (maket araclar.html #/sablon): teslim tutanağının kalemleri ve fotoğraf açıları. ÖRNEK şablon (reisim: "örnek bi şablon
-   oluştur inceleyip düzenleriz"); firmanın düzenlemesi Format kurucu kaleminde. Yalnız "değiştirir" düzeyi. */
+   oluştur inceleyip düzenleriz"); firmanın düzenlemesi Format kurucu kaleminde. Yalnız "değiştirir" düzeyi. 482: kalemler kartta, kabı dolduran
+   ızgarada (çıplak madde listesiydi). */
 import type { Metadata } from "next";
 import { Yetkisiz } from "../../../../components/hata/Hata";
 import { Bolum, SayfaBasi, SeritKap, Sekmeler } from "../../../../components/sayfa/Sayfa";
 import { Serit } from "../../../../components/serit/Serit";
+import { Ikon } from "../../../../components/ikon/Ikon";
 import { modulBul } from "../../../../modules/moduller";
 import { ARAC_FOTO, ARAC_KONTROL, YAKIT_SEVIYE } from "../../../../modules/araclar/sema";
 import { aracDegistirir } from "../../../../modules/araclar/server/araclar";
@@ -24,18 +26,18 @@ export default async function Sayfa() {
       <Sekmeler ad="Araç bölümleri" ogeler={aracSekmeleri(true, false)} secili="/araclar/sablon" />
       <SeritKap><Serit tur="bilgi" ikon="info">Örnek şablon: kontrol kalemleri ({ARAC_KONTROL.length}) ve fotoğraf açıları ({ARAC_FOTO.length}) öneri. Teslimde doldurulan tutanak bu düzenle çıkar.</Serit></SeritKap>
       <Bolum id="b-arac-alan" baslik="Tutanak alanları">
-        <ul className={stil.liste}>
-          <li>Araç, teslim eden (kendiliğinden), teslim alan (kişi ya da depo), tarih ve saat</li>
-          <li>Kilometre (son bilinenden küçük olamaz)</li>
-          <li>Yakıt seviyesi: {YAKIT_SEVIYE.map((x) => x[1]).join(" · ")}</li>
-          <li>Hasar ve notlar</li>
+        <ul className={stil.sablonKalemleri}>
+          <li><Ikon ad="car" kucuk />Araç, teslim eden (kendiliğinden), teslim alan (kişi ya da depo), tarih ve saat</li>
+          <li><Ikon ad="gauge" kucuk />Kilometre (son bilinenden küçük olamaz)</li>
+          <li><Ikon ad="gauge" kucuk />Yakıt seviyesi: {YAKIT_SEVIYE.map((x) => x[1]).join(" · ")}</li>
+          <li><Ikon ad="pencil" kucuk />Hasar ve notlar</li>
         </ul>
       </Bolum>
       <Bolum id="b-arac-kontrol" baslik="Araçta olanlar" sayac={<><b>{ARAC_KONTROL.length}</b> kalem</>}>
-        <ul className={stil.liste}>{ARAC_KONTROL.map(([k, ad]) => <li key={k}>{ad}</li>)}</ul>
+        <ul className={stil.sablonKalemleri}>{ARAC_KONTROL.map(([k, ad]) => <li key={k}><Ikon ad="check" kucuk />{ad}</li>)}</ul>
       </Bolum>
       <Bolum id="b-arac-foto" baslik="Fotoğraf açıları" sayac={<><b>{ARAC_FOTO.length}</b> açı</>}>
-        <ul className={stil.liste}>{ARAC_FOTO.map(([k, ad]) => <li key={k}>{ad}</li>)}</ul>
+        <ul className={stil.sablonKalemleri}>{ARAC_FOTO.map(([k, ad]) => <li key={k}><Ikon ad="camera" kucuk />{ad}</li>)}</ul>
       </Bolum>
     </>
   );

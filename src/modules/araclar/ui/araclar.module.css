@@ -25,4 +25,12 @@
 .foto { width: 120px; height: 90px; border-radius: var(--r-orta); overflow: hidden; border: 1px solid var(--kenar); }
 .fotoKap { display: grid; gap: 4px; font-size: var(--boy-kucuk); color: var(--yazi2); }
 .liste { margin: 0; padding-left: 18px; }
+/* 482 (site taraması: Şablon sayfası sayfa zemininde çıplak madde listesiydi, ekranın çoğu boş — kalıp 10, anayasa 2.9): şablonun kalemleri kart
+   içinde, kabı dolduran ızgarada; her kalem ikonla */
+.sablonKalemleri {
+  display: grid; grid-template-columns: repeat(auto-fill, minmax(220px, 1fr)); gap: 8px; margin: 0; padding: 12px 14px; list-style: none;
+  background: var(--kart); border: 1px solid var(--kenar); border-radius: var(--r-buyuk);
+}
+.sablonKalemleri li { display: flex; align-items: flex-start; gap: 8px; min-width: 0; overflow-wrap: anywhere; }
+.sablonKalemleri li > svg { flex: none; margin-top: 3px; color: var(--yazi3); }
 .tuslar { display: flex; flex-wrap: wrap; justify-content: flex-end; gap: 8px; }
