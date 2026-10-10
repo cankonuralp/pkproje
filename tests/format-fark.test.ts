@@ -68,14 +68,14 @@ test("sıra değişince tek satır", () => {
   assert.deepEqual(metinler(t0, t1), ["degis: Bölümlerin sırası değişti"]);
 });
 
-test("kullanım özeti: madde sayısı, dokunuş, yazılan / seçilen kutu, ölçüm tabloları", () => {
+test("kullanım özeti: bölüm, madde sayısı, dokunuş (açılır liste 2, tuş 1), yazılan / seçilen kutu, ölçüm tabloları", () => {
   const t = zpkr02();
   const k = kullanim(t);
   const madde = t.bolumler.reduce((n, b) => n + (b.blok === "liste" ? b.gruplar.reduce((x, g) => x + g.maddeler.length, 0) : 0), 0);
   assert.equal(k.madde, madde);
   assert.ok(k.madde > 0);
-  assert.equal(k.dokunus, 2);
-  assert.equal(kullanim(gorunumYaz(t, { cevap: "tus" })).dokunus, 1);
+  assert.deepEqual([k.acilir, k.tus], [madde * 2, madde]);
+  assert.ok(k.bolum > 2 && k.bolum <= t.bolumler.length + 2);
   assert.deepEqual(k.tablolar.map((x) => x.ad), t.bolumler.filter((b) => b.blok === "olcum").map((b) => b.ad));
 });
 

@@ -152,17 +152,22 @@ test("rapor şablonu: şablondan başlat, önizle, yayınla; yeni sürümle eski
     const saha = page.frameLocator('iframe[title^="Saha ekranı"]');
     await expect(saha.getByRole("heading", { name: /Deneme yorumu/ })).toBeVisible({ timeout: 60_000 });
     await expect(saha.getByText("Deneme maddesi").first()).toBeVisible();
-    await expect(page.getByLabel("Bu formatla bir rapor")).toContainText("Kontrol maddesi");
+    await expect(page.getByRole("region", { name: "Kullanım" })).toContainText("Kontrol maddesi");
     await saha.getByRole("button", { name: "Bölüm adı değiştir: Deneme yorumu" }).click();
     const sahaAd = saha.getByRole("textbox", { name: "Bölüm adı" });
     await sahaAd.fill("Saha yorumu");
     await sahaAd.press("Enter");
     await expect(saha.getByRole("heading", { name: /Saha yorumu/ })).toBeVisible();
+    /* 473 (maket): saha ekranında bölüm taşınır (ilk bölümde yukarı kapalı), alt başlık grubunun sonunda alt başlık eklenir */
+    await expect(saha.getByRole("button", { name: /· yukarı$/ }).first()).toBeDisabled();
+    await saha.getByRole("button", { name: "Alt başlık ekle (Saha yorumu altına)" }).click();
+    await expect(saha.getByRole("heading", { name: /\d+\.2 · Yeni alt başlık/ })).toBeVisible();
     await page.getByRole("button", { name: "Yan yana tuşlar" }).click();
     await expect(saha.getByRole("radiogroup", { name: "Deneme maddesi" })).toBeVisible();
     await goz(page, "kurucu-saha", bilgi.project.name);
     await page.getByRole("button", { name: "Denetçi gibi dene" }).click();
     await expect(saha.getByRole("button", { name: /^Bölüm adı değiştir/ })).toHaveCount(0);
+    await expect(page.getByRole("region", { name: "Kullanım" })).toContainText("Deneme:");
     await saha.getByRole("button", { name: "Onaya gönder" }).click();
     const eksik = saha.getByRole("dialog", { name: "Zorunlu alanlar doldurulmadı" });
     await expect(eksik.or(saha.getByText(/Örnek rapor eksiksiz/))).toBeVisible();
@@ -172,6 +177,7 @@ test("rapor şablonu: şablondan başlat, önizle, yayınla; yeni sürümle eski
     }
     await page.getByRole("button", { name: "Kâğıt", exact: true }).click();
     await expect(kagit.getByRole("region", { name: /Saha yorumu$/ })).toBeVisible();
+    await expect(kagit.getByRole("region", { name: /\d+\.2 Yeni alt başlık$/ })).toBeVisible();
     await page.getByRole("button", { name: "Taslağı kaydet" }).click();
     await expect(page.getByText("Taslak kaydedildi.").first()).toBeVisible({ timeout: 30_000 });
     await expect(page.getByText("Kaydedilmedi")).toHaveCount(0);
@@ -182,8 +188,13 @@ test("rapor şablonu: şablondan başlat, önizle, yayınla; yeni sürümle eski
     expect(sahaYanit.headers()["content-security-policy"]).toContain("frame-ancestors 'self'");
     expect(sahaYanit.headers()["x-frame-options"]).toBe("SAMEORIGIN");
   } else {
-    await expect(page.getByText("Format kurucu masaüstünde kullanılır; burada önizleme görünür.")).toBeVisible();
+    await expect(page.getByText("Format kurucu masaüstünde düzenlenir; burada belge önizlemesi ve saha ekranı (denetçi gibi dene) açılır.")).toBeVisible();
     await expect(page.getByRole("region", { name: "Belge önizlemesi" }).getByText("Kablo şebeke tarafı").first()).toBeVisible();
+    /* 473 (maket): telefonda saha ekranı — telefon genişliğinde, yalnız denetçi gibi dene (düzenleme / kip seçici yok) */
+    await page.getByRole("button", { name: "Saha ekranı" }).click();
+    await expect(page.frameLocator('iframe[title="Saha ekranı · telefon"]').getByRole("button", { name: "Onaya gönder" })).toBeVisible({ timeout: 60_000 });
+    await expect(page.getByRole("button", { name: "Denetçi gibi dene" })).toHaveCount(0);
+    await page.getByRole("button", { name: "Belge", exact: true }).click();
     await goz(page, "kurucu-telefon", bilgi.project.name);
   }
   await yayinla(page, "ilk sürüm", 2);

@@ -7,7 +7,7 @@ import { test } from "node:test";
 import { renderToStaticMarkup } from "react-dom/server";
 import { raporBelgesi } from "../src/belge/belge.ts";
 import { ornekBelge } from "../src/belge/ornek.ts";
-import { raporDuzeni } from "../src/format/duzen.ts";
+import { altBaslikAnasi, altGrupSonu, raporDuzeni } from "../src/format/duzen.ts";
 import { kilitDenetimi } from "../src/format/motor.ts";
 import { SABLONLAR } from "../src/format/sablonlar.ts";
 import { FormatTanimi, type FormatGirdisi } from "../src/format/tanim.ts";
@@ -71,4 +71,13 @@ test("kurucu: alt başlık ekle ana bölümün türünde doğrudan alt başlık 
   /* sonuç / fotoğraf gibi bölümün altına kontrol listesi */
   const si = z.bolumler.findIndex((b) => b.blok === "sonuc");
   assert.equal(altBaslikEkle(z, si + 1, z.bolumler[si]).t.bolumler[si + 1].blok, "liste");
+});
+
+/* 2026-10-10 (473, maket kararı k1 — saha ekranında da "+ Alt başlık ekle"): kâğıt ve saha ekranı alt başlık grubunu ve ana bölümü aynı yardımcıyla
+   bulur (format/duzen.ts altBaslikAnasi / altGrupSonu — eskiden Kagit.tsx'in içindeydi) */
+test("alt başlık grubu: ana bölümün grubu son alt başlıkta biter; ana bölüm alt başlıktan geri bulunur; üst başlıklı / numarasız bölüme alt başlık yok", () => {
+  const t = tanim([not("a"), not("b", { alt: true }), not("c", { alt: true }), not("d"), not("e", { ust: "Üst" }), not("f", { numarasiz: true })]);
+  const l = raporDuzeni(t, false).bolumler;
+  assert.deepEqual(l.map((_, v) => altGrupSonu(l, v)), [false, false, true, true, true, true]);
+  assert.deepEqual(l.map((_, v) => altBaslikAnasi(l, v)?.id ?? null), ["a", "a", "a", "d", null, null]);
 });

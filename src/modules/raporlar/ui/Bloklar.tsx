@@ -79,6 +79,10 @@ export interface Yerinde {
   /** bölüme öğe ekler (liste: verilen gruba madde) */
   ekle: (bolum: string, grup?: string) => void;
   cikar: (id: string) => void;
+  /** bölümü ekranda görünen bölümler arasında bir yukarı / aşağı taşır */
+  tasi: (bolum: string, yon: -1 | 1) => void;
+  /** ana bölümün altına, `sonra` bölümünden hemen sonra alt başlık (469: tür sordurmaz, ana bölümün türünde) */
+  altEkle: (ana: string, sonra: string) => void;
 }
 
 /** 473: yerinde yazı — görünen metin + kalem tuşu; basınca yazı kutusu (Enter ya da dışarı tıklama yazar, Esc vazgeçer). Tuşların tıklaması
@@ -87,7 +91,7 @@ export function YerindeYazi({ deger, ad, yaz, gorunum, uzun = 200 }: { deger: st
   const [m, setM] = useState<string | null>(null);
   const kutu = useRef<HTMLInputElement>(null);
   const yazilacak = m !== null;
-  useEffect(() => { if (yazilacak) kutu.current?.select(); }, [yazilacak]);
+  useEffect(() => { if (yazilacak) { kutu.current?.focus(); kutu.current?.select(); } }, [yazilacak]);
   const dur = (e: MouseEvent) => e.stopPropagation();
   if (m === null) {
     return <>{gorunum ?? deger}<button className={stil.yerindeTus} type="button" aria-label={`${ad} değiştir: ${deger}`} title="Adı değiştir"
@@ -104,6 +108,17 @@ function CikarTus({ ad, cikar }: { ad: string; cikar: () => void }) {
 }
 function EkleTus({ ad, ekle }: { ad: string; ekle: () => void }) {
   return <div className={stil.yerindeEkle}><Tus tur="ikincil" ikon="plus" onClick={ekle}>{ad}</Tus></div>;
+}
+/** 473: bölümün başlık satırında yukarı / aşağı (ilk / son bölümde kapalı) */
+export function YerindeTasi({ ad, ilk, son, tasi }: { ad: string; ilk: boolean; son: boolean; tasi: (yon: -1 | 1) => void }) {
+  return <>
+    <button className={stil.yerindeTus} type="button" aria-label={`${ad} · yukarı`} title="Yukarı" disabled={ilk} onClick={(e) => { e.stopPropagation(); tasi(-1); }}><Ikon ad="arrow-up" kucuk /></button>
+    <button className={stil.yerindeTus} type="button" aria-label={`${ad} · aşağı`} title="Aşağı" disabled={son} onClick={(e) => { e.stopPropagation(); tasi(1); }}><Ikon ad="arrow-down" kucuk /></button>
+  </>;
+}
+/** 473: ana bölümün alt başlık grubunun sonunda "+ Alt başlık ekle" (kâğıttaki gibi) */
+export function YerindeAltEkle({ ana, ekle }: { ana: string; ekle: () => void }) {
+  return <EkleTus ad={`Alt başlık ekle (${ana} altına)`} ekle={ekle} />;
 }
 
 /* ── ORTAK PARÇALAR ──────────────────────────────────────────────────────────────────────────────────────────── */
@@ -220,8 +235,8 @@ function TopluMenu({ cevaplar, sec }: { cevaplar: readonly string[]; sec: (c: st
 }
 
 /* ── FORMAT BÖLÜMÜ ───────────────────────────────────────────────────────────────────────────────────────────── */
-export function FormatBolumu({ b, no, bag, acik, degistir, eksik }:
-  { b: Bolum; no: string | null; bag: Baglam; acik: boolean; degistir: (acik: boolean) => void; eksik: boolean }) {
+export function FormatBolumu({ b, no, bag, acik, degistir, eksik, yerindeTuslar }:
+  { b: Bolum; no: string | null; bag: Baglam; acik: boolean; degistir: (acik: boolean) => void; eksik: boolean; yerindeTuslar?: ReactNode }) {
   const bildir = useBildir();
   let sayac: ReactNode = null, tuslar: ReactNode = null, ek: ReactNode = null;
   if (b.blok === "liste") {
@@ -238,7 +253,7 @@ export function FormatBolumu({ b, no, bag, acik, degistir, eksik }:
   }
   if (b.blok === "kusur") sayac = <span className={stil.sayac}><b>{bag.d.kusurlar.length}</b> kusur</span>;
   return (
-    <RaporBolumu id={b.id} no={no} baslik={b.ad} acik={acik} degistir={degistir} eksik={eksik} sayac={sayac} tuslar={tuslar} ek={ek}
+    <RaporBolumu id={b.id} no={no} baslik={b.ad} acik={acik} degistir={degistir} eksik={eksik} sayac={sayac} tuslar={<>{tuslar}{yerindeTuslar}</>} ek={ek}
       baslikIcerik={bag.yerinde ? <YerindeYazi deger={b.ad} ad="Bölüm adı" yaz={(s) => bag.yerinde?.ad(b.id, s)} /> : undefined}>
       <BlokIcerik b={b} no={no} bag={bag} />
     </RaporBolumu>

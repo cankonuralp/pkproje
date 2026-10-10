@@ -25,7 +25,7 @@ import { Ikon } from "../../../components/ikon/Ikon";
 import { useOnayla } from "../../../components/pencere/Onay";
 import { SecimAlani } from "../../../components/secim/SecimAlani";
 import { SINIR_ISARETI } from "../../../format/hesap";
-import { raporDuzeni } from "../../../format/duzen";
+import { altBaslikAnasi, altGrupSonu, raporDuzeni } from "../../../format/duzen";
 import { BLOKLAR, EKIPMAN_ALAN_ADI, EKIPMAN_ALANLARI, type Blok, type Bolum, type BolumOf, type FormatTanimi } from "../../../format/tanim";
 import {
   altBaslikEkle, bolumAdi, bolumDuzeni, ekipmanAlaniEkle, gorunumYaz, grupEkle, grupSil, grupYaz, kurucudan, maddeEkle, ogeEkle, ogeSil, ogeYaz, satirlar, tasi,
@@ -163,14 +163,7 @@ export function Kagit({ t, degis, tur, bolumuSil, bildir }: KagitOzellik) {
   };
   /** 461: v. bölümden sonra eklenen alt başlığın ana bölümü — v ana bölümse kendisi, alt başlıksa onun ana bölümü; üst başlıklı grup ya da
       numarasız bölümden sonra alt başlık olmaz (null) */
-  const anaBolum = (v: number): Bolum | null => {
-    const x = duzen.bolumler[v];
-    if (!x?.no) return null;
-    if (!x.no.includes(".")) return x.b.ust ? null : x.b;
-    if (!x.b.alt) return null;
-    for (let j = v - 1; j >= 0; j--) { const y = duzen.bolumler[j]; if (y.no && !y.no.includes(".")) return y.b; }
-    return null;
-  };
+  const anaBolum = (v: number): Bolum | null => altBaslikAnasi(duzen.bolumler, v);
   const tasiGorunen = (id: string, yon: -1 | 1) => {
     const v = gorunen.indexOf(id), hedef = gorunen[v + yon];
     if (!hedef) return;
@@ -400,7 +393,7 @@ export function Kagit({ t, degis, tur, bolumuSil, bildir }: KagitOzellik) {
     );
   };
   /** v. bölümden sonra ana bölümün alt başlık grubu bitiyor mu (sonraki bölüm aynı ananın alt başlığı değil) */
-  const grupSonu = (v: number) => { const s = duzen.bolumler[v + 1]; return !(s?.b.alt && s.no?.includes(".")); };
+  const grupSonu = (v: number) => altGrupSonu(duzen.bolumler, v);
 
   /* ── 2 · Ekipman bilgileri (460): ekipman kodu ve türü sabit; öteki her satır formatın ekipman bölümünün alanı (kâğıt eski formatı açılışta
      çevirir — tam bölüm her zaman var) ── */

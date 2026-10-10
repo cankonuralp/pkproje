@@ -3,17 +3,19 @@
    değişiklik kağıtta etki etsin"). Çerçeve sayfasında (src/app/(cerceve)/…/saha) gerçek saha ekranını örnek raporla çizer; format kurucusu
    (SahaGorunumu.tsx) ile iletiyle konuşur:
    · gelen  { tur: "probata-format", tanim, kip, tema, temizle? } — kurucunun canlı taslağı (şemadan geçmeyen tanım alınmaz), kip, tema;
-   · giden  { tur: "probata-hazir" } açılınca · { tur: "probata-degis", tanim } saha ekranında yerinde düzenleme olunca (473).
+   · giden  { tur: "probata-hazir" } açılınca · { tur: "probata-degis", tanim } saha ekranında yerinde düzenleme olunca (473) ·
+            { tur: "probata-durum", eksik, kusur } denemenin canlı sayıları (kullanım kutusu).
    İletiler YALNIZ aynı kökenden ve yalnız üst pencereden alınır / üst pencereye gönderilir. Taşınan tek şey formatın tanımıdır — yetki
    sunucuda: taslak "Taslağı kaydet" ile, kurucunun kendi eylemiyle yazılır (çerçeve hiçbir şey yazmaz). */
-import { useEffect, useMemo, useState } from "react";
+import { useCallback, useEffect, useMemo, useState } from "react";
 import { useOnayla } from "../../../components/pencere/Onay";
+import { raporDuzeni } from "../../../format/duzen";
 import { FormatTanimi } from "../../../format/tanim";
 import { SahaRaporu } from "../../raporlar/ui/SahaRaporu";
 import type { Yerinde } from "../../raporlar/ui/Bloklar";
 import type { SahaRaporu as SahaRaporuVerisi } from "../../raporlar/server/raporlar";
 import { ilkCevaplar } from "../../raporlar/ornek";
-import { bolumAdi, grupYaz, maddeEkle, ogeEkle, ogeSil, ogeYaz } from "../kurucu";
+import { altBaslikEkle, bolumAdi, grupYaz, maddeEkle, ogeEkle, ogeSil, ogeYaz, tasi } from "../kurucu";
 
 export type SahaKipi = "duzenle" | "dene";
 export interface FormatIletisi { tur: "probata-format"; tanim: unknown; kip: SahaKipi; tema?: string; temizle?: number }
@@ -80,8 +82,22 @@ export function SahaCerceve({ v, duzenlenir }: { v: SahaRaporuVerisi; duzenlenir
         metin: `“${x.ad}” Bakanlık formatının parçası. Çıkarılırsa bu formatla yazılan raporlar Bakanlık formatına uymaz; yayınlarken uyarı çıkar.` }))) return;
       degis(ogeSil(tanim, x.i, id));
     })(),
+    /* ekranda görünen bölümler arasında (imza bölümü ekranda yok, ekipman ve kayıttan bölümler 1–2'de) */
+    tasi: (bolum, yon) => {
+      const g = raporDuzeni(tanim, false).bolumler.filter((x) => x.b.blok !== "imza").map((x) => x.b.id);
+      const v = g.indexOf(bolum), hedef = g[v + yon];
+      if (v < 0 || !hedef) return;
+      degis({ ...tanim, bolumler: tasi(tanim.bolumler, tanim.bolumler.findIndex((b) => b.id === bolum), tanim.bolumler.findIndex((b) => b.id === hedef)) });
+    },
+    altEkle: (ana, sonra) => {
+      const a = tanim.bolumler.find((b) => b.id === ana), p = tanim.bolumler.findIndex((b) => b.id === sonra) + 1;
+      if (a && p > 0) degis(altBaslikEkle(tanim, p, a).t);
+    },
   } : undefined;
+  const durum = useCallback((x: { eksik: number; kusur: number }) => {
+    if (window.parent !== window) window.parent.postMessage({ tur: "probata-durum", ...x }, location.origin);
+  }, []);
   /* başlangıç cevapları güncel tanımdan ("Denemeyi temizle" ekranı yeniden kurar — kurucuda eklenen maddeler de "Uygun" gelir) */
   const gorunum = useMemo(() => ({ ...v, tanim, cevaplar: ilkCevaplar(tanim) }), [v, tanim]);
-  return <SahaRaporu key={temiz} v={gorunum} deneme={{ kip: duzenlenir && gomulu ? kip : "dene", yerinde }} />;
+  return <SahaRaporu key={temiz} v={gorunum} deneme={{ kip: duzenlenir && gomulu ? kip : "dene", yerinde, durum }} />;
 }

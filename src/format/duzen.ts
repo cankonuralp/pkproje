@@ -106,3 +106,16 @@ export function raporDuzeni(t: FormatTanimi, cihazEk: boolean): RaporDuzeni {
   });
   return { ekipmanBaslik: katilan[0]?.ad || "Ekipman bilgileri", katilan, tam, cihazNo: cihazEk ? "3" : null, bolumler, sonraki: String(n + 1) };
 }
+
+/** 461 / 473: v. bölümden sonra eklenen alt başlığın ANA bölümü — v ana bölümse kendisi, alt başlıksa onun ana bölümü; üst başlıklı grup ya da
+    numarasız bölümden sonra alt başlık olmaz (null). Kâğıt ve saha ekranı ortak. */
+export function altBaslikAnasi(l: readonly DuzenBolumu[], v: number): Bolum | null {
+  const x = l[v];
+  if (!x?.no) return null;
+  if (!x.no.includes(".")) return x.b.ust ? null : x.b;
+  if (!x.b.alt) return null;
+  for (let j = v - 1; j >= 0; j--) { const y = l[j]; if (y.no && !y.no.includes(".")) return y.b; }
+  return null;
+}
+/** v. bölümden sonra ana bölümün alt başlık grubu bitiyor mu (sonraki bölüm aynı ananın alt başlığı değil) */
+export const altGrupSonu = (l: readonly DuzenBolumu[], v: number) => { const s = l[v + 1]; return !(s?.b.alt && s.no?.includes(".")); };

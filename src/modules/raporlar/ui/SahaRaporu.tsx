@@ -36,13 +36,16 @@ import { DegerYok, Kirinti, Kod, NesneBasi, Rozet, SeritKap } from "../../../com
 import { simdiIso, tarihNo } from "../../../components/secim/tarih";
 import { Serit } from "../../../components/serit/Serit";
 import { Tus, TusBaglanti } from "../../../components/tus/Tus";
-import { raporDuzeni, sabitEkipmanAlanlari } from "../../../format/duzen";
+import { altBaslikAnasi, altGrupSonu, raporDuzeni, sabitEkipmanAlanlari } from "../../../format/duzen";
 import { degerlendir } from "../../../format/motor";
 import { EKIPMAN_ALAN_ADI, type Cevaplar } from "../../../format/tanim";
 import { ayEkle, RAPOR_DURUM, type EkipmanBilgisi, type RaporDurumu, type RaporTarihleri } from "../sema";
 import { cevaplariTamamla } from "../ornek";
 import type { SahaRaporu as SahaRaporuVerisi } from "../server/raporlar";
-import { alanId, BilgiAlani, BilgiBlok, FormatBolumu, OkuGirdi, RaporBolumu, Satir, Satirlar, TarihKutusu, YerindeEkle, yerindeAlan, YerindeYazi, type Baglam, type Kaynak, type Yerinde } from "./Bloklar";
+import {
+  alanId, BilgiAlani, BilgiBlok, FormatBolumu, OkuGirdi, RaporBolumu, Satir, Satirlar, TarihKutusu, YerindeAltEkle, YerindeEkle, yerindeAlan, YerindeTasi, YerindeYazi,
+  type Baglam, type Kaynak, type Yerinde,
+} from "./Bloklar";
 import { CihazBolumu } from "./CihazBolumu";
 import { EtiketOkuma } from "./EtiketOkuma";
 import { FotoListesi } from "./FotoListesi";
@@ -59,8 +62,9 @@ import { sayRaporBagla } from "../../say/ui/baglam";
 import stil from "./raporlar.module.css";
 
 type Gorunum = SahaRaporuVerisi;
-/** 472: format kurucusunun saha görünümü (örnek rapor; yerinde: formatı yerinde düzenleme — 473) */
-export interface Deneme { kip: "duzenle" | "dene"; yerinde?: Yerinde }
+/** 472: format kurucusunun saha görünümü (örnek rapor; yerinde: formatı yerinde düzenleme — 473; durum: denemenin canlı eksik / kusur sayısı
+    kurucunun kullanım kutusuna) */
+export interface Deneme { kip: "duzenle" | "dene"; yerinde?: Yerinde; durum?: (x: { eksik: number; kusur: number }) => void }
 type EkipmanAnahtari = keyof EkipmanBilgisi;
 type TarihAnahtari = keyof RaporTarihleri;
 interface Eksik { bolum: string; alan: string; ad: string }
@@ -225,6 +229,9 @@ export function SahaRaporu({ v, yeni, deneme }: { v: Gorunum; yeni?: { plan: str
     return s;
   }, [d, tarih.bas, v.cihazlar]);
   const gecersiz = (alan: string) => isaretli.has(alan) && canli.has(alan);
+  /* 473: denemenin canlı eksik / kusur sayısı kurucuya */
+  const durumBildir = deneme?.durum, eksikSay = canli.size, kusurSay = d.kusurlar.length;
+  useEffect(() => { durumBildir?.({ eksik: eksikSay, kusur: kusurSay }); }, [durumBildir, eksikSay, kusurSay]);
 
   const kaynaklar: Record<Kaynak, string | null> = {
     firma_adi: v.kunye.firmaAdi, tesis_adresi: v.kunye.adres, sgk: v.kunye.sgk, isg_id: v.kunye.isgNo,
@@ -260,7 +267,8 @@ export function SahaRaporu({ v, yeni, deneme }: { v: Gorunum; yeni?: { plan: str
   const acik = (id: string) => acikSet.has(id);
   const degistir = (id: string) => (a: boolean) => { const y = new Set(acikSet); if (a) y.add(id); else y.delete(id); acikYaz(y); };
   /* ekranda görünen bölümler (imza bölümü yalnız belgede — 447): "Tümünü aç / kapat" */
-  const gorunenBolumler = [SABIT.firma, SABIT.ekipman, ...(cihazEk ? [SABIT.cihaz] : []), ...duzen.bolumler.filter(({ b }) => b.blok !== "imza").map(({ b }) => b.id)];
+  const gorunurBolumler = duzen.bolumler.filter(({ b }) => b.blok !== "imza");
+  const gorunenBolumler = [SABIT.firma, SABIT.ekipman, ...(cihazEk ? [SABIT.cihaz] : []), ...gorunurBolumler.map(({ b }) => b.id)];
   const hepsiAcik = gorunenBolumler.every((id) => acikSet.has(id));
 
   /* ── yazma ── */
@@ -654,13 +662,19 @@ export function SahaRaporu({ v, yeni, deneme }: { v: Gorunum; yeni?: { plan: str
         )}
 
         {/* 447 (reisim: "yetkili kişiler ve imzalar kısmının denetim raporu ekranında gözükmesine gerek yok"): imza bölümü yalnız belgede (PDF) */}
-        {duzen.bolumler.filter(({ b }) => b.blok !== "imza").map(({ b, no, ust }) => (
-          <Fragment key={b.id}>
-            {ust && <h2 className={stil.ustBaslik}><span className={stil.bolumNo}>{ust.no} · </span>{ust.ad}</h2>}
-            <FormatBolumu b={b} no={no} bag={bag} acik={acik(b.id)} degistir={degistir(b.id)}
-              eksik={bolumEksik(b.id) || (b.blok === "cihaz" && cihazEksik)} />
-          </Fragment>
-        ))}
+        {gorunurBolumler.map(({ b, no, ust }, v) => {
+          /* 473: kurucunun saha görünümünde bölüm taşınır, ana bölümün alt başlık grubunun sonunda alt başlık eklenir (kâğıttaki gibi) */
+          const ana = bag.yerinde && altGrupSonu(gorunurBolumler, v) ? altBaslikAnasi(gorunurBolumler, v) : null;
+          return (
+            <Fragment key={b.id}>
+              {ust && <h2 className={stil.ustBaslik}><span className={stil.bolumNo}>{ust.no} · </span>{ust.ad}</h2>}
+              <FormatBolumu b={b} no={no} bag={bag} acik={acik(b.id)} degistir={degistir(b.id)}
+                eksik={bolumEksik(b.id) || (b.blok === "cihaz" && cihazEksik)}
+                yerindeTuslar={bag.yerinde ? <YerindeTasi ad={b.ad} ilk={v === 0} son={v === gorunurBolumler.length - 1} tasi={(yon) => bag.yerinde?.tasi(b.id, yon)} /> : undefined} />
+              {ana && <YerindeAltEkle ana={ana.ad} ekle={() => bag.yerinde?.altEkle(ana.id, b.id)} />}
+            </Fragment>
+          );
+        })}
       </div>
 
       {deneme ? (

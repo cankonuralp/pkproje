@@ -2355,6 +2355,11 @@ revizyon, alan kopyalama, hafif kusur devri, meslek eşleşme denetimi).
 - Emsal ürünler: https://opwire.app/iso-17020-periyodik-kontrol-yazilimi/ · https://17020muayene.vidco.com.tr/ · https://akuple.com/asansor-kontrol-yazilimi/ · https://ensyazilim.com/
 
 ## 11 · Değişiklik günlüğü
+- 2026-10-10 (473): **Saha ekranı onaylı maketle eşitlendi** (k1–k4 maketindeki eksikler): saha ekranının "Düzenle" kipinde bölüm yukarı / aşağı
+  taşınır (ilk / son bölümde kapalı) ve her ana bölümün alt başlık grubunun sonunda "+ Alt başlık ekle (… altına)" — kâğıttaki gibi (alt başlık
+  grubu ve ana bölüm bulucu format/duzen.ts altBaslikAnasi / altGrupSonu'ya taşındı, kâğıt ve saha ortak). KULLANIM kutusu maketteki gibi aygıtın
+  yanında: bölüm, kontrol maddesi, yazılan / seçilen kutu, ölçüm tablosu, zorunlu fotoğraf; cevap dokunuşu açılır liste ↔ yan yana tuş (çubukla);
+  "Denetçi gibi dene"de canlı "n eksik · m kusur" (çerçeveden ileti). Telefonda kurucu: Belge · Saha ekranı (telefon genişliğinde, yalnız dene).
 - 2026-10-10 (471): **Sürüm sayfası yeniden** (reisim maket kararları formu k5 *"evet"* — sürüm sayfasında önceki sürüme göre değişenler). Sayfa formatın
   kimliğini söyler: yayınlanma (kim, ne zaman) · **bu sürümle yazılan rapor** (Raporlar'ın raporlar/server/format-baglanti.ts okuyucusundan, silinmemiş
   raporlar) · doküman kodu · bölüm · madde · sürüm notu · taslakta "Yayından önce bakılacak" · **önceki sürüme göre değişenler** (taslak yayındaki sürümle,

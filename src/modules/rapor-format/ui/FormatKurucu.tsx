@@ -9,7 +9,7 @@
    (masaüstü işi): belge önizlemesi görünür. Karar ve şema sunucuda.
    472–474 (reisim 2026-10-10, maket kararları k1–k4): üç görünüm — Kâğıt (açılışta) · Saha ekranı (denetçinin tabletinde / telefonunda göreceği
    gerçek ekran, örnek raporla; orada da yerinde düzenlenir — SahaGorunumu.tsx) · Belge önizlemesi. Üçü aynı taslağı gösterir: birinde yapılan
-   değişiklik ötekilerde görünür. */
+   değişiklik ötekilerde görünür. Telefonda (maket): Belge · Saha ekranı — saha ekranı yalnız "denetçi gibi dene" (telefon genişliğinde). */
 import { useRouter } from "next/navigation";
 import { useEffect, useMemo, useState, useTransition } from "react";
 import { raporBelgesi } from "../../../belge/belge";
@@ -122,6 +122,10 @@ export function FormatKurucu({ turId, turAd, turKod, format, tanim, kaynakAd, tu
             <Tus tur={gorunum === "saha" ? "birincil" : "ikincil"} ikon="tablet-smartphone" aria-pressed={gorunum === "saha"} onClick={() => setGorunum("saha")}>Saha ekranı</Tus>
             <Tus tur={gorunum === "belge" ? "birincil" : "ikincil"} ikon="file-text" aria-pressed={gorunum === "belge"} onClick={() => setGorunum("belge")}>Belge önizlemesi</Tus>
           </span>
+          <span className={stil.darSecici} role="group" aria-label="Görünüm">
+            <Tus tur={gorunum !== "saha" ? "birincil" : "ikincil"} ikon="file-text" aria-pressed={gorunum !== "saha"} onClick={() => setGorunum("belge")}>Belge</Tus>
+            <Tus tur={gorunum === "saha" ? "birincil" : "ikincil"} ikon="smartphone" aria-pressed={gorunum === "saha"} onClick={() => setGorunum("saha")}>Saha ekranı</Tus>
+          </span>
           <TusBaglanti tur="ikincil" ikon="eye" href={`/ekipman-turleri/${turId}/sablon/${format.id}`}>Sürüm sayfası</TusBaglanti>
           {kirli ? <>
             <span className={stil.kaydetNot}>Kaydedilmedi</span>
@@ -134,7 +138,7 @@ export function FormatKurucu({ turId, turAd, turKod, format, tanim, kaynakAd, tu
           <span className={stil.yalnizGenis}>Raporun kendisini düzenliyorsunuz: başlığa, maddeye, sütun başlığına basıp yazın; “+” ile ekleyin, “×” ile çıkarın,
             ayrıntılar ayar tuşunda. Kilit simgeli yerler Bakanlık formatının; onlar da değişir, yayınlarken uyarı çıkar. Firma bilgileri her formatta aynıdır.
             Açık raporlar başladıkları sürümle kalır, yeni raporlar yayındaki sürümle açılır.</span>
-          <span className={stil.yalnizDar}>Format kurucu masaüstünde kullanılır; burada önizleme görünür.</span>
+          <span className={stil.yalnizDar}>Format kurucu masaüstünde düzenlenir; burada belge önizlemesi ve saha ekranı (denetçi gibi dene) açılır.</span>
         </Serit>
         {hatalar.length > 0 && <div id="kb-hatalar" tabIndex={-1}><Serit tur="hata" ikon="circle-alert">Taslak kaydedilmedi: {hatalar.join(" · ")}</Serit></div>}
         {bakilacak.length > 0 && <Serit tur="uyari" ikon="triangle-alert">Yayından önce bakılacak: {bakilacak.join(" · ")}</Serit>}
@@ -154,9 +158,9 @@ export function FormatKurucu({ turId, turAd, turKod, format, tanim, kaynakAd, tu
       <div className={gorunum === "duzen" ? stil.yalnizGenis : stil.gizliHer}>
         <Kagit t={t} degis={degis} tur={tur} bolumuSil={(i) => void bolumuSil(i)} bildir={bildir} />
       </div>
-      {/* saha ekranı yalnız seçilince kurulur (çerçeve sayfası o zaman yüklenir); telefonda kurucu yok */}
-      {gorunum === "saha" && <div className={stil.yalnizGenis}><SahaGorunumu turId={turId} formatId={format.id} t={t} degis={degis} /></div>}
-      <div className={gorunum === "belge" ? stil.belgeKap : `${stil.belgeKap} ${stil.yalnizDar}`} aria-label="Belge önizlemesi" role="region" tabIndex={0}>
+      {/* saha ekranı yalnız seçilince kurulur (çerçeve sayfası o zaman yüklenir); telefonda yalnız dene (SahaGorunumu) */}
+      {gorunum === "saha" && <SahaGorunumu turId={turId} formatId={format.id} t={t} degis={degis} />}
+      <div className={gorunum === "belge" ? stil.belgeKap : gorunum === "saha" ? stil.gizliHer : `${stil.belgeKap} ${stil.yalnizDar}`} aria-label="Belge önizlemesi" role="region" tabIndex={0}>
         <div className="rb-onizleme">{belge}</div>
       </div>
     </>

@@ -66,6 +66,9 @@
 .gorunumSecici { display: inline-flex; flex-wrap: wrap; gap: 4px; }
 /* telefonda kurucu yok — görünüm seçici de yok (yalnizGenis'ten SONRA tanımlandığı için ayrıca gizlenir) */
 @media (max-width: 767.98px) { .gorunumSecici { display: none; } }
+/* 473: telefonda görünüm seçici (Belge · Saha ekranı — maket) */
+.darSecici { display: none; }
+@media (max-width: 767.98px) { .darSecici { display: inline-flex; flex-wrap: wrap; gap: 4px; } }
 .gizliHer { display: none; }
 .kurallar { margin-top: 12px; padding: 0; }
 .kurallarBas { display: flex; align-items: center; min-height: var(--tus-y); padding: 6px 14px; font-weight: 600; cursor: pointer; }
@@ -74,11 +77,23 @@
 /* 472–474: saha ekranı görünümü — araç çubuğu, kullanım özeti, aygıt çerçevesi (gerçek genişlikte çizilir, sayfaya sığacak kadar küçülür) */
 .saha { display: grid; gap: 12px; min-width: 0; margin-top: 12px; }
 .sahaArac { display: flex; flex-wrap: wrap; align-items: center; gap: 8px 16px; }
-.kullanim { display: flex; flex-wrap: wrap; gap: 4px 20px; margin: 0; color: var(--yazi2); font-size: var(--boy-kucuk); }
-.kullanim > div { display: flex; gap: 6px; }
-.kullanim dt { font-weight: 600; color: var(--yazi); }
-.kullanim dt::after { content: ":"; }
-.kullanim dd { margin: 0; }
+/* aygıt solda, kullanım kutusu sağda (maket .sahne / .olcuk); dar alanda alt alta */
+.sahaSahne { display: grid; grid-template-columns: minmax(0, 1fr); gap: 16px; align-items: start; }
+@media (min-width: 1280px) { .sahaSahne { grid-template-columns: minmax(0, 1fr) 260px; } }
+.sahaSahneTek { display: grid; grid-template-columns: minmax(0, 1fr); }
+.kullanim {
+  display: grid; gap: 10px; min-width: 0; padding: 14px; border: 1px solid var(--kenar); border-radius: var(--r-buyuk); background: var(--kart);
+  font-size: var(--boy-kucuk);
+}
+@media (min-width: 1280px) { .kullanim { position: sticky; top: 12px; } }
+.kullanimBaslik { margin: 0; font-size: var(--boy-govde); font-weight: 700; }
+.kullanimEtiket { margin: 0 0 4px; color: var(--yazi2); font-weight: 600; }
+.olcu { display: grid; grid-template-columns: minmax(0, 1fr) auto; gap: 4px 12px; margin: 0; font-variant-numeric: tabular-nums; }
+.olcu dt { color: var(--yazi2); }
+.olcu dd { margin: 0; font-weight: 700; text-align: right; }
+.cubuk { height: 8px; margin-top: 6px; overflow: hidden; border-radius: var(--r-tam); background: var(--zemin2); }
+.cubuk > i { display: block; height: 100%; background: var(--onay); }
+.kullanimDeneme { margin: 0; padding-top: 8px; border-top: 1px dashed var(--kenar); }
 .sahaKap { min-width: 0; }
 .sahaAygit { margin: 0 auto; overflow: hidden; border: 1px solid var(--kenar); border-radius: var(--r-buyuk); background: var(--zemin); }
 .sahaCerceve { display: block; border: 0; transform-origin: 0 0; }
