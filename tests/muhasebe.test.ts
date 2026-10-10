@@ -389,7 +389,8 @@ test("kârlılık: işe bağlı masraf (KDV hariç, red hariç), denetçinin bor
   assert.deepEqual(k.kisiler, [{ kisi: denP, ad: "Deneme Denetçi", gun, gunluk: 100_000 }], "denetçi günü o gün yazdığı raporlara bölünür");
   assert.deepEqual([k.gelir, k.rapor, k.dogrudan, k.tahmini], [225000, 2, 100000 + 10000, false], "işe bağlı: elle 1.200,00 (%20) + Excel 120,00 (%20), KDV hariç");
   const genel = (await a(MUH, (db) => giderListesi(db, MUH)))!.filter((g) => !g.is && g.durum !== "red" && g.tarih.slice(0, 7) === ay).reduce((n, g) => n + giderKdv(g.tutar, g.oran).haric, 0);
-  assert.equal(genel, 200000 + 5000, "genel: konaklama 2.200,00 (%10) + onaylanan masraf formu 60,00 (%20); reddedilen girmez");
+  /* 2026-10-10 (477): masraf formu gönderildiği gibi onaylanır (50,00 — Muhasebe tutarı değiştiremez; önce 60,00'a düzeltilip onaylanıyordu) */
+  assert.equal(genel, 200000 + 4167, "genel: konaklama 2.200,00 (%10) + onaylanan masraf formu 50,00 (%20, KDV hariç 41,67); reddedilen girmez");
   assert.equal(k.gunPay, Math.round((2_200_000 + genel) / 1 / 22), "tek denetçi: (sabit + genel) ÷ 22");
   assert.deepEqual([k.personel, k.genel, k.kar], [Math.round(gun * 100_000), Math.round(k.gunPay * gun), k.gelir - k.dogrudan - k.personel - k.genel]);
   assert.equal(x.kar, k.kar);
