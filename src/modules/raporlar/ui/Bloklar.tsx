@@ -26,10 +26,13 @@ import { tarihNo } from "../../../components/secim/tarih";
 import { Tus, tusSinifi } from "../../../components/tus/Tus";
 import { SINIR_ISARETI } from "../../../format/hesap";
 import { satirAnahtari, type Degerlendirme } from "../../../format/motor";
-import type { Bolum, BolumOf, Cevaplar, Sinir } from "../../../format/tanim";
+import { doldurma, type Bolum, type BolumOf, type Cevaplar, type Sinir } from "../../../format/tanim";
 import { meslek } from "../../personel/sema";
 import { SONUC_AD } from "../sema";
 import type { SahaRaporu } from "../server/raporlar";
+import { bilgiAlanlari, testAlanlari } from "../doldur";
+import { okunanHedefleri, okunanlariUygula } from "../foto-eslestir";
+import { AlanDoldurma, ExcelYukle, OkumaFotolari, YzKapali } from "./Doldurma";
 import { FotoOkuma } from "./FotoOkuma";
 import { StandartTusu, TalimatTusu, type TalimatParcasi } from "./Kaynaklar";
 import stil from "./raporlar.module.css";
@@ -68,6 +71,8 @@ export interface Baglam {
   foto: (bolumId: string, madde: string | null) => ReactNode;
   /** ölçüm tablolarında "Fotoğraftan oku" (351): düzenleyebilene, firmada yapay zekâ açık ve anahtar girilmişse */
   yz: boolean;
+  /** 484: format kurucusunun saha ekranındaki örnek rapor (fotoğraf okunmaz, ne olacağı söylenir; Excel yalnız ekranda) */
+  deneme: boolean;
   /** üst ekranın işlemi (354): okuma sürerken Kaydet / Onaya gönder / öteki okumalar kapalı (FotoListesi gibi); okuma rapora fotoğraf ekleyince yenile */
   islem: { mesgul: boolean; baslat: TransitionStartFunction; yenile: () => void };
 }
@@ -225,7 +230,12 @@ function BlokIcerik({ b, no, bag }: { b: Bolum; no: string | null; bag: Baglam }
 
 /* ── BİLGİ ── */
 export function BilgiBlok({ b, bag }: { b: BolumOf<"bilgi">; bag: Baglam }) {
-  return <Satirlar>{b.alanlar.map((a) => <BilgiAlani key={a.id} a={a} bag={bag} />)}</Satirlar>;
+  return <>
+    {/* 484: formatta açıksa fotoğraftan doldur / Excel'den yükle */}
+    <AlanDoldurma bag={bag} bolumId={b.id} baslik={b.ad} alanlar={bilgiAlanlari(b)} ayar={doldurma(b)}
+      yaz={(id, x) => bag.yaz((c) => ({ ...c, alan: { ...c.alan, [id]: x } }))} dolu={(id) => !!bag.c.alan[id]?.length} />
+    <Satirlar>{b.alanlar.map((a) => <BilgiAlani key={a.id} a={a} bag={bag} />)}</Satirlar>
+  </>;
 }
 
 /** bilgi bölümünün tek satırı (460: tam ekipman bölümü 2. bölümün satırları arasında çizilir) */
@@ -475,15 +485,22 @@ function OlcumBlok({ b, bag }: { b: BolumOf<"olcum">; bag: Baglam }) {
         </details>
       )}
       {!bag.oku && (() => {
+        /* 484: formatın bölüm ayarı — fotoğraftan doldur (yapay zekâ) ve Excel'den yükle; ikisinin satırları da aynı yerleştirmeyle (foto-eslestir.ts:
+           değeri boş var olan satıra ya da tablonun sonuna) */
+        const ayar = doldurma(b);
         const tuslar = <>
           <Tus tur="ikincil" ikon="plus" id={alanId(b.id)} onClick={() => tablo((l) => [...l, {}])}>Satır ekle</Tus>
+          {ayar.excel && <ExcelYukle tur="tablo" baslik={b.ad} sutunlar={b.sutunlar} mesgul={bag.islem.mesgul} uygula={(l) => tablo((m) => {
+            const o = l.map((degerler) => ({ degerler })), h = okunanHedefleri(m, o);
+            return okunanlariUygula(m, o.map((x, i) => ({ ...x, hedef: h[i] ?? null })));
+          })} />}
           {b.enAz > 0 && <span className={azEksik ? stil.hataMetin : stil.ipucuMetin}>En az {b.enAz} satır.</span>}
         </>;
-        /* fotoğraftan okunanlar: değeri boş var olan satıra ya da tablonun sonuna (foto-eslestir.ts) */
-        return bag.yz
-          ? <FotoOkuma raporId={bag.v.id} b={b} satirlar={satirlar} tablo={tablo} islem={bag.islem} cubuk={stil.tabloAlt} tuslar={tuslar} />
-          : <div className={stil.tabloAlt}>{tuslar}</div>;
+        return ayar.foto && (bag.yz || bag.deneme)
+          ? <FotoOkuma raporId={bag.v.id} b={b} satirlar={satirlar} tablo={tablo} islem={bag.islem} cubuk={stil.tabloAlt} tuslar={tuslar} deneme={bag.deneme} />
+          : <><div className={stil.tabloAlt}>{tuslar}</div>{ayar.foto && <YzKapali />}</>;
       })()}
+      <OkumaFotolari v={bag.v} bolumId={b.id} oku={bag.oku} islem={bag.islem} />
     </>
   );
 }
@@ -492,6 +509,9 @@ function OlcumBlok({ b, bag }: { b: BolumOf<"olcum">; bag: Baglam }) {
 function TestBlok({ b, bag }: { b: BolumOf<"test">; bag: Baglam }) {
   return (
     <>
+    {/* 484: formatta açıksa fotoğraftan doldur / Excel'den yükle */}
+    <AlanDoldurma bag={bag} bolumId={b.id} baslik={b.ad} alanlar={testAlanlari(b)} ayar={doldurma(b)}
+      yaz={(id, x) => bag.yaz((c) => ({ ...c, deger: { ...c.deger, [id]: x } }))} dolu={(id) => !!bag.c.deger[id]} />
     <FormIzgara>
       {b.degerler.map((d) => {
         const id = alanId(d.id), deger = bag.c.deger[d.id] ?? "", r = bag.d.degerler[d.id] ?? null, gec = bag.gecersiz(d.id);

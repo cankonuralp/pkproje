@@ -219,6 +219,11 @@ button.silTus { color: var(--hata-yazi); }
 .fotoEkle { justify-self: start; cursor: pointer; }
 /* etiketten okuma (385): Ekipman bilgileri bölümünün başında, solda */
 .etiketCubuk { display: flex; flex-wrap: wrap; gap: 8px; margin: 0 0 10px; }
+/* 484: okunan bölümün okuma fotoğrafları (belgede görünmez) ve yapay zekâ kapalı notu */
+.okumaFoto { display: grid; gap: 6px; margin: 10px 0 0; }
+.doldurma { display: grid; gap: 6px; margin: 0 0 10px; }
+.doldurma > .etiketCubuk { margin: 0; }
+.okumaFoto > p, .ipucuMetin > svg { vertical-align: -2px; }
 .fotoEkle[aria-disabled] { opacity: .55; cursor: default; }
 
 @media (max-width: 767.98px) {

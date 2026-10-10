@@ -21,7 +21,9 @@ import { dosyaCope, dosyaYukle } from "../../../server/dosya/dosya.ts";
 import { canDo, canDoEylem, duzey, type YetkiHesabi } from "../../../server/yetki/canDo.ts";
 import { dogrula, type DogrulamaHatalari } from "../../../sema/ortak.ts";
 import { degerlendir, type Degerlendirme } from "../../../format/motor.ts";
-import { Cevaplar, type BolumOf, type FormatTanimi } from "../../../format/tanim.ts";
+import { Cevaplar, doldurma, type BolumOf, type FormatTanimi } from "../../../format/tanim.ts";
+import type { OkunacakAlan } from "../../../format/deger.ts";
+import { bilgiAlanlari, ekipmanAlanlari, testAlanlari } from "../doldur.ts";
 import { yzHazirMi } from "../../../server/yz/kullanim.ts";
 import { ekipmanEtiketi, ekipmanKilitle } from "../../ekipman/server/ekipman.ts";
 import { turRaporBilgisi } from "../../ekipman-turleri/server/turler.ts";
@@ -58,7 +60,11 @@ export const DOSYA_MODULU = "rapor";
 /** imzaya hazırlanan kesin imzasız PDF ve yüklenen imzalı PDF (317; kayıt = rapor; raporu gören açar) */
 export const PDF_MODULU = "rapor_pdf", IMZALI_MODULU = "rapor_imzali";
 /** raporda fotoğraf: fotoğraf bölümüne ya da "Uygun değil" maddeye bağlı (madde fotoğrafı Kusur açıklamalarına düşer — O2) */
-export interface RaporFoto { dosya: string; ad: string; bolum: string; madde: string | null }
+/** okuma (484): fotoğraftan doldurmada okunan fotoğraf — raporda kanıt olarak durur, BELGEDE (PDF) GÖRÜNMEZ (reisim: "fotoğraf eklenince belgede
+    gözükmeyecek"); bolum okunan bölümün kimliği (ekipman bilgileri için "ekipman") */
+export interface RaporFoto { dosya: string; ad: string; bolum: string; madde: string | null; okuma?: boolean }
+/** bir rapora en çok bu kadar okuma fotoğrafı */
+export const OKUMA_FOTO_EN_COK = 20;
 const FOTO_MADDE_EN_COK = 10;
 const RAPOR = tablo({
   ad: "rapor", sutunlar: ["no", "plan_id", "ekipman_id", "tur_id", "format_id", "personel_id", "durum", "kunye", "kunye_surum", "ekipman_bilgi", "bas", "bit",
@@ -429,22 +435,40 @@ export async function okunabilirOlcum(db: Sorgulayici, kim: Kisi, id: string, bo
   if (e.r.durum !== "taslak") return { durum: "red", neden: "Rapor gönderildi; yalnız Yeni rapor düzenlenir." };
   const b = (await formatSurumuOku(db, e.r.format_id))?.tanim.bolumler.find((x) => x.id === bolumId);
   if (!b || b.blok !== "olcum") return { durum: "gecersiz", hatalar: { foto: "Okunacak tablo bulunamadı." } };
+  /* 484: formatta bu tablonun fotoğraftan doldurulması kapalıysa okunmaz (kâğıtta bölüm ayarı) */
+  if (!doldurma(b).foto) return { durum: "red", neden: "Bu tabloda fotoğraftan doldurma kapalı (formatın bölüm ayarı)." };
   return { raporId: e.r.id, bolum: b };
 }
 
-/** etiket plakasından okuma (385): yazanın Yeni raporu (fotoğraftan okumayla aynı kapı, tablo yerine ekipman bilgileri) */
-export async function etiketOkunabilir(db: Sorgulayici, kim: Kisi, id: string): Promise<{ raporId: string } | RaporYazma> {
+/** 484: fotoğraftan alan okuma (385'in etiket plakası okumasının genel hâli) — yazanın Yeni raporunda, bölümün okunacak alanları. bolumId "ekipman":
+    ekipman bilgileri (formatın ekipman bölümü — ekipman kaydına bağlı alanlar EkipmanBilgisi anahtarıyla, öteki alanlar kendi kimliğiyle; eski
+    biçimli formatta sabit ekipman alanları); öteki: formatın bilgi bölümü (kayıttan gelen ve çok seçimli alan hariç) ya da test bölümü. Bölümün
+    fotoğraftan doldurulması formatta kapalıysa okunmaz. KİLİTLEMEZ (çağrı sürerken satır kilidi yok; öneri rapora yazılmaz). */
+export async function alanOkunabilir(db: Sorgulayici, kim: Kisi, id: string, bolumId: string): Promise<{ raporId: string; baslik: string; alanlar: OkunacakAlan[] } | RaporYazma> {
   const e = await erisim(db, kim, id);
   if (!e) return { durum: "yok" };
   if (!e.sahip || !canDoEylem(kim, "rapor_yaz", { sahip: e.r.hesap_id })) return { durum: "yetkisiz" };
   if (e.r.durum !== "taslak") return { durum: "red", neden: "Rapor gönderildi; yalnız Yeni rapor düzenlenir." };
-  return { raporId: e.r.id };
+  const tanim = (await formatSurumuOku(db, e.r.format_id))?.tanim;
+  if (!tanim) return { durum: "yok" };
+  const KAPALI: RaporYazma = { durum: "red", neden: "Bu bölümde fotoğraftan doldurma kapalı (formatın bölüm ayarı)." };
+  if (bolumId === "ekipman") {
+    const x = ekipmanAlanlari(tanim);
+    if (x.tam && !doldurma(x.tam).foto) return KAPALI;
+    return { raporId: e.r.id, baslik: x.baslik, alanlar: x.alanlar };
+  }
+  const b = tanim.bolumler.find((y) => y.id === bolumId);
+  if (!b || (b.blok !== "bilgi" && b.blok !== "test") || (b.blok === "bilgi" && b.tam)) return { durum: "gecersiz", hatalar: { foto: "Okunacak bölüm bulunamadı." } };
+  if (!doldurma(b).foto) return KAPALI;
+  const alanlar = b.blok === "bilgi" ? bilgiAlanlari(b) : testAlanlari(b);
+  if (!alanlar.length) return { durum: "gecersiz", hatalar: { foto: "Bu bölümde fotoğraftan okunacak alan yok." } };
+  return { raporId: e.r.id, baslik: b.ad, alanlar };
 }
 
 /** cihaz ve fotoğraf sayıları raporun KENDİ listesinden (istemcinin sayısına güvenilmez): bölüm başına fotoğraf, madde başına fotoğraf */
 function sayiliCevaplar(c: Cevaplar, r: Pick<RaporSatiri, "cihazlar" | "fotolar">): Cevaplar {
   const bolum: Record<string, number> = {}, madde: Record<string, number> = {};
-  for (const f of r.fotolar) { if (f.madde) madde[f.madde] = (madde[f.madde] ?? 0) + 1; else bolum[f.bolum] = (bolum[f.bolum] ?? 0) + 1; }
+  for (const f of r.fotolar) { if (f.okuma) continue; if (f.madde) madde[f.madde] = (madde[f.madde] ?? 0) + 1; else bolum[f.bolum] = (bolum[f.bolum] ?? 0) + 1; }
   return { ...c, cihaz: r.cihazlar.length, foto: bolum, madde: Object.fromEntries(Object.entries(c.madde).map(([k, x]) => [k, { ...x, foto: madde[k] ?? 0 }])) };
 }
 function degerle(tanim: FormatTanimi, c: Cevaplar, r: Pick<RaporSatiri, "cihazlar" | "fotolar">): Degerlendirme {
@@ -602,16 +626,22 @@ export async function fotoEkle(db: Sorgulayici, depo: Depo, kim: Kisi, firmaId: 
   return sonuc(await guncelle(db, RAPOR, id, surum, { fotolar: jsonDizi(yeni), cevaplar }, { kim: kim.ad, ne: "rapor.foto_ekle", gerekce: `${gorunenNo(e.r.no, e.r.revizyon)} · ${y.ad}` }), id, `${y.ad} eklendi.`);
 }
 
-/** fotoğraftan okunan PANO fotoğrafı rapora (354; pkproje §11 92 "sigorta okununca pano fotoğrafı rapora eklenir", maket sigorta-oku r.pano): formatın
-    son fotoğraf bölümüne (termal görüntü bölümü değil, yer varsa), raporun o anki sürümüyle — yazanın kendi okuması, ekran sonra yenilenir. Yer yoksa
-    eklenmez, nedeni döner (okunan değerler yine öneri olarak gelir). */
-export async function okunanFotografiEkle(db: Sorgulayici, depo: Depo, kim: Kisi, firmaId: string, id: string, dosya: { ad: string; bayt: Uint8Array }): Promise<RaporYazma> {
+/** fotoğraftan okunan fotoğraf rapora (354 pano okuması; 484 her okuma — reisim 2026-10-10: "fotoğraf eklenince belgede gözükmeyecek yapay zeka buradan
+    okuma yapıp tabloyu dolduracak"): okunan bölümün kimliğiyle, OKUMA fotoğrafı olarak — raporda kanıt olarak durur, okunan bölümün altında görünür ve
+    kaldırılır, BELGEYE (PDF) basılmaz, fotoğraf bölümlerinin sayısına girmez. Raporun o anki sürümüyle (yazanın kendi okuması; ekran sonra yenilenir).
+    Rapor başına en çok OKUMA_FOTO_EN_COK; dolarsa eklenmez, nedeni döner (okunan değerler yine öneri olarak gelir). */
+export async function okumaFotografiEkle(db: Sorgulayici, depo: Depo, kim: Kisi, firmaId: string, id: string, bolum: string, dosya: { ad: string; bayt: Uint8Array }): Promise<RaporYazma> {
   const e = await yazilabilir(db, kim, id);
   if (hataMi(e)) return e;
-  const bolumler = (await formatSurumuOku(db, e.r.format_id))?.tanim.bolumler ?? [];
-  const yer = bolumler.filter((b) => b.blok === "foto" && !/termal/i.test(b.ad) && e.r.fotolar.filter((f) => f.bolum === b.id && !f.madde).length < b.enCok).at(-1);
-  if (!yer) return { durum: "gecersiz", hatalar: { foto: "Raporda fotoğrafın ekleneceği yer yok (fotoğraf bölümü yok ya da dolu)." } };
-  return fotoEkle(db, depo, kim, firmaId, id, e.r.surum, { bolum: yer.id, madde: null }, dosya);
+  if (e.r.fotolar.filter((f) => f.okuma).length >= OKUMA_FOTO_EN_COK) return { durum: "gecersiz", hatalar: { foto: `Rapora en çok ${OKUMA_FOTO_EN_COK} okuma fotoğrafı eklenir.` } };
+  const cev = Cevaplar.safeParse(e.r.cevaplar);
+  if (!cev.success) return { durum: "red", neden: "Raporun cevapları okunamadı; raporu yenileyip yeniden deneyin." };
+  const y = await dosyaYukle(db, depo, { firmaId, modul: DOSYA_MODULU, kayitId: id, ad: dosya.ad, bayt: dosya.bayt, izinli: ["jpeg", "png"], kim: kim.ad, yukleyen: kim.id });
+  if (!y.tamam) return { durum: "gecersiz", hatalar: { foto: y.neden === "tur" ? "Yalnız JPEG ya da PNG fotoğraf." : y.neden === "buyuk" ? "Fotoğraf çok büyük (en çok 8 MB)." : "Fotoğraf okunamadı." } };
+  const yeni = [...e.r.fotolar, { dosya: y.id, ad: y.ad, bolum, madde: null, okuma: true }];
+  const cevaplar = sayiliCevaplar(cev.data, { cihazlar: e.r.cihazlar, fotolar: yeni });
+  return sonuc(await guncelle(db, RAPOR, id, e.r.surum, { fotolar: jsonDizi(yeni), cevaplar }, { kim: kim.ad, ne: "rapor.okuma_foto", gerekce: `${gorunenNo(e.r.no, e.r.revizyon)} · ${y.ad}` }),
+    id, `${y.ad} eklendi (belgede görünmez).`);
 }
 
 /** fotoğraf sil: listeden çıkar, dosya çöpe (indirilemez). Yalnız yazan, Yeni raporda. */
@@ -690,6 +720,7 @@ function fotolariUyarla(t: FormatTanimi, l: RaporFoto[]): RaporFoto[] {
   const fotoBolum = new Set(t.bolumler.filter((b) => b.blok === "foto").map((b) => b.id)), ilk = [...fotoBolum][0];
   const maddeBolum = new Map(t.bolumler.flatMap((b) => (b.blok === "liste" ? b.gruplar.flatMap((g) => g.maddeler.map((m) => [m.id, b.id] as const)) : [])));
   return l.map((f) => {
+    if (f.okuma) return f;   // 484: okuma fotoğrafı okunan bölümünde kalır (belgede görünmez)
     if (f.madde && maddeBolum.has(f.madde)) return { ...f, bolum: maddeBolum.get(f.madde)! };
     if (!f.madde && fotoBolum.has(f.bolum)) return f;
     return ilk ? { ...f, bolum: ilk, madde: null } : f;
@@ -748,7 +779,8 @@ export async function gozdenGecirme(db: Sorgulayici, id: string): Promise<Gozden
   l.push(cihazlar.length
     ? { tamam: !gecti.length, metin: `${cihazlar.length} ölçüm cihazı · ${gecti.length ? `kalibrasyonu geçmiş ya da geçersiz: ${gecti.map((x) => x.kod).join(", ")}` : "kalibrasyonu geçerli"}` }
     : { tamam: !tur.cihazTurleri.length, metin: "Ölçüm cihazı yok" });
-  l.push({ tamam: true, metin: `${r.fotolar.length} fotoğraf` });
+  const okumaFoto = r.fotolar.filter((f) => f.okuma).length;
+  l.push({ tamam: true, metin: `${r.fotolar.length - okumaFoto} fotoğraf${okumaFoto ? ` · ${okumaFoto} okuma fotoğrafı (belgede yok)` : ""}` });
   l.push({ tamam: yetkili, metin: `Denetçi: ${yazan?.ad ?? "—"} · ${meslek?.ad ?? yazan?.meslekMetin ?? "meslek yok"}${yetkili ? "" : " · bu türe yetkili meslekler arasında değil"}` });
   const sonucAd = r.sonuc ? SONUC_AD[r.sonuc as keyof typeof SONUC_AD] : null;
   l.push({ tamam: r.sonuc !== "uygun_degil", metin: `Sonuç: ${sonucAd ?? "seçilmedi"}${r.sonuc && r.sonuc_oto ? " (kriterlere göre)" : ""}` });
@@ -784,7 +816,7 @@ export async function raporBelgesiVerisi(db: Sorgulayici, depo: Depo, kim: Kisi,
       kalTarih: k?.tarih ?? null, kalBitis: k?.bitis ?? null, sertifika: k?.sertifika ?? null };
   });
   const fotolar = [];
-  for (const f of r.fotolar) {
+  for (const f of r.fotolar.filter((x) => !x.okuma)) {   // 484: okuma fotoğrafı belgeye basılmaz
     const d = await kayitDosyasi(db, DOSYA_MODULU, r.id, f.dosya);
     const src = d && (d.tur === "image/jpeg" || d.tur === "image/png") ? `data:${d.tur};base64,${Buffer.from(await depo.oku(d.anahtar, db)).toString("base64")}` : null;
     fotolar.push({ ad: f.ad, bolum: f.bolum, madde: f.madde, src });

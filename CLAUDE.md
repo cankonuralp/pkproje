@@ -158,6 +158,9 @@ pkproje/
                             denetimi imza-pdf.ts (saf, beyaz liste: ek ayrıştırılır, trailer kökü aynı, özgün nesneden yalnız katalog / sayfa /Annots
                             değişir, yeni imza sözlüğü şart — 0028 ve 318 incelemeleri) · revize isteği server/revize.ts (318, göç 0029
                             rapor_revize_istegi; ui/RevizeIstePenceresi.tsx; 0031: imza günü ≥ muayene tarihi, eskimiş sürüm uygunsuzluk kapatmaz)
+                            · FOTOĞRAFTAN / EXCEL'DEN DOLDURMA (484): formatta bölüm ayarı (tanim.ts doldur / doldurma — varsayılan tablo ve ekipman
+                            bölümü açık; kâğıtta bölüm ayarı) · ui/Doldurma.tsx (AlanOkuma "Fotoğraftan doldur", ExcelYukle + şablon, OkumaFotolari, YzKapali)
+                            · doldur.ts (saf: Excel eşleme, sunucu ve ekranın ortak alan listeleri) · okuma fotoğrafı (RaporFoto.okuma) belgede görünmez
                             · STANDART PENCERESİ (428): ui/Kaynaklar.tsx (önce sorar; kütüphanedeki PDF çerçevede / kriter belgesi metni) ·
                             eşleme dokumanlar/eslestir.ts (saf) · kütüphane dokumanlar raporStandartlari · formatKriterleri src/tanim/kriterler.ts
                             · SAKLAMA SÜRESİ (387, göç 0073; ENGEL 11): server/saklama.ts (gece işi saklamaIsi — süresi dolan imzalı sürümün PDF'leri
@@ -262,7 +265,8 @@ pkproje/
                             cevap süzme / maliyet, saf; anthropicCagir — uç PROBATA_YZ_UC, hata ücretli mi) · kullanim.ts (0052 yz_kullanim / yz_okuma; 0053
                             ayırma: yzAyir satır kilidiyle, yzOkumaYaz, yzAyirmaBirak; yzAyKullanimi firma ayarlarına) · modülde raporlar/server/foto-oku.ts
                             (hazırla + ayır → çağrı → kullanım → öneri; pano fotoğrafı rapora) + foto-eslestir.ts (saf: okunan → boş satır) + ui/FotoOkuma.tsx
-                            · etiket.ts (385: etiket plakası — marka / model / seri / imal; istek + cevap süzme, saf) → raporlar/server/etiket-oku.ts + ui/EtiketOkuma.tsx
+                            · alanlar.ts (484; 385'in etiket okumasının genel hâli — bölümün alanları: ekipman bilgileri / etiket, bilgi, test; istek + cevap
+                            süzme, saf; değer denetimi src/format/deger.ts) → raporlar/server/alan-oku.ts + ui/Doldurma.tsx
   src/server/is/            ARKA PLAN İŞLERİ (378; K5): firmalar.ts (firmalardaKos — ortak çatı: firma başına kiracı işlemi, is_calisma kaydı,
                             süre sınırı; 387) · gece.ts (geceIsleri: çöp temizliği) · yetki.ts (zamanliYetkili: "Bearer <CRON_SECRET>", sır ≥ 32) ·
                             uç src/app/api/is/gece (Vercel Cron, vercel.json crons; çöp + saklama süresi — raporlar/server/saklama.ts) ·

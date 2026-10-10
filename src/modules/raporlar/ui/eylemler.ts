@@ -12,8 +12,8 @@ import {
 } from "../server/raporlar";
 import { anthropicCagir, type OkunanSatir } from "../../../server/yz/okuma";
 import { FOTO_OKU_EN_BUYUK, fotoOkuBirak, fotoOkuHazirla, fotoOkuKaydet, fotoOkuKullanimYaz } from "../server/foto-oku";
-import { etiketOkuBirak, etiketOkuHazirla, etiketOkuKullanimYaz, etiketOkuSonuc } from "../server/etiket-oku";
-import type { EtiketOkunan } from "../../../server/yz/etiket";
+import { alanOkuBirak, alanOkuHazirla, alanOkuKullanimYaz, alanOkuSonuc } from "../server/alan-oku";
+import type { AlanOkunan } from "../../../server/yz/alanlar";
 
 export interface RaporYaniti {
   tamam?: boolean; id?: string; bildirim?: string; hatalar?: Record<string, string>; eksikler?: { bolum: string; alan: string; ad: string }[]; genel?: string;
@@ -98,31 +98,32 @@ export async function fotoOkuEylemi(form: FormData): Promise<FotoOkuYaniti> {
     return { genel: "Fotoğraftan okunamadı (beklenmeyen hata). Değerleri elle girebilirsiniz." };
   }
 }
-/** etiket plakasından okuma (385; form: id, dosya): öneri döner, rapora yazmaz */
-export interface EtiketOkuYaniti { okunan?: EtiketOkunan[]; bildirim?: string; genel?: string }
-export async function etiketOkuEylemi(form: FormData): Promise<EtiketOkuYaniti> {
+/** fotoğraftan alan okuma (484; 385'in etiket plakası okumasının genel hâli — form: id, bolum ("ekipman" ya da bölümün kimliği), dosya): öneri döner,
+    rapora yazmaz; bir alan okunduysa fotoğraf rapora okuma fotoğrafı olarak (belgede görünmez) — ekran yenilenir */
+export interface AlanOkuYaniti { okunan?: AlanOkunan[]; bildirim?: string; genel?: string; yenile?: boolean }
+export async function alanOkuEylemi(form: FormData): Promise<AlanOkuYaniti> {
   if (!(await ayniKoken())) return { genel: "İstek reddedildi. Sayfayı yenileyip yeniden deneyin." };
   const o = await istekOturumu();
   if (!o) return { genel: "Oturumunuz kapandı. Yeniden giriş yapın." };
   const dosya = form.get("dosya");
   if (!(dosya instanceof File) || dosya.size === 0) return { genel: "Fotoğraf seçilmeli." };
   if (dosya.size > FOTO_OKU_EN_BUYUK) return { genel: "Fotoğraf çok büyük (en çok 5 MB)." };
-  const id = metin(form.get("id"));
+  const id = metin(form.get("id")), bolum = metin(form.get("bolum"));
   try {
     const bayt = new Uint8Array(await dosya.arrayBuffer());
-    const h = await oturumIslemi(o, (db) => etiketOkuHazirla(db, o, id, { bayt }));
-    if (h.durum !== "hazir") return { genel: yanit(h).genel ?? Object.values(yanit(h).hatalar ?? {})[0] ?? "Etiketten okunamadı." };
+    const h = await oturumIslemi(o, (db) => alanOkuHazirla(db, o, id, bolum, { bayt }));
+    if (h.durum !== "hazir") return { genel: yanit(h).genel ?? Object.values(yanit(h).hatalar ?? {})[0] ?? "Fotoğraftan okunamadı." };
     const y = await anthropicCagir(h.istek, h.anahtar);
     if (y.durum === "hata") {
-      await oturumIslemi(o, (db) => etiketOkuBirak(db, h, y.ucret));
-      return { genel: `Etiketten okunamadı: ${y.neden} Bilgileri elle girebilirsiniz.` };
+      await oturumIslemi(o, (db) => alanOkuBirak(db, h, y.ucret));
+      return { genel: `Fotoğraftan okunamadı: ${y.neden} Bilgileri elle girebilirsiniz.` };
     }
-    const kullanim = await oturumIslemi(o, (db) => etiketOkuKullanimYaz(db, id, h, y.govde));
-    const k = await oturumIslemi(o, (db) => etiketOkuSonuc(db, o, id, kullanim));
-    return k.durum === "tamam" ? { okunan: k.okunan, bildirim: k.bildirim } : { genel: yanit(k).genel ?? "Etiketten okunamadı." };
+    const kullanim = await oturumIslemi(o, (db) => alanOkuKullanimYaz(db, id, h, y.govde));
+    const k = await oturumIslemi(o, (db) => alanOkuSonuc(db, depo(), o, o.kiraci.firmaId, id, h, kullanim));
+    return k.durum === "tamam" ? { okunan: k.okunan, bildirim: k.bildirim, yenile: k.fotoEklendi } : { genel: yanit(k).genel ?? "Fotoğraftan okunamadı." };
   } catch (e) {
-    console.error("[etiketten okuma] beklenmeyen hata:", (e as Error)?.message);
-    return { genel: "Etiketten okunamadı (beklenmeyen hata). Bilgileri elle girebilirsiniz." };
+    console.error("[fotoğraftan alan okuma] beklenmeyen hata:", (e as Error)?.message);
+    return { genel: "Fotoğraftan okunamadı (beklenmeyen hata). Bilgileri elle girebilirsiniz." };
   }
 }
 export async function fotoSilEylemi(id: string, surum: number, dosyaId: string): Promise<RaporYaniti> {

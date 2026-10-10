@@ -7,9 +7,9 @@
         (yalnız sunucuda kalır).
      2. çağrı (src/server/yz/okuma.ts anthropicCagir) → fotoOkuKaydet: önce (kendi işleminde) ayırma gerçek maliyetle kapanır ve okuma kaydı yazılır —
         rapor okuma sürerken silinmiş / gönderilmiş olsa da ödenen çağrı kişinin kullanımına yazılır (354); sonra (ayrı işlemde) rapor hâlâ yazanın Yeni
-        raporuysa satırlar ÖNERİ olarak döner (rapora yazılmaz — denetçi uygulayıp Kaydet'le yazar) ve okunan PANO tablosuysa (format hesabı
-        "linye") fotoğraf rapora eklenir (pkproje §11 92). Çağrı cevapsız biterse fotoOkuBirak: ücretsizse ayırma bırakılır, sonucu bilinmiyorsa
-        harcamaya yazılır.
+        raporuysa satırlar ÖNERİ olarak döner (rapora yazılmaz — denetçi uygulayıp Kaydet'le yazar) ve fotoğraf rapora OKUMA fotoğrafı olarak
+        eklenir (484: her tabloda; belgede görünmez — eskiden yalnız pano tablosunda, Fotoğraflar bölümüne). Çağrı cevapsız biterse fotoOkuBirak:
+        ücretsizse ayırma bırakılır, sonucu bilinmiyorsa harcamaya yazılır.
    Elle giriş her zaman açık: okuma yapılamazsa nedeni söylenir. */
 import { ayarOku } from "../../../server/ayar/ayar.ts";
 import { sirKullan } from "../../../server/ayar/sir.ts";
@@ -19,7 +19,7 @@ import { jpegTemizle, pngTemizle, turBul } from "../../../server/dosya/tur.ts";
 import { yzAyi, yzAyir, yzAyirmaBirak, yzOkumaYaz } from "../../../server/yz/kullanim.ts";
 import { enCokMaliyet, maliyetHesapla, okumaIstegi, okumaYanitiCoz, type OkumaIstegi, type OkunanSatir, type YzModel } from "../../../server/yz/okuma.ts";
 import type { BolumOf } from "../../../format/tanim.ts";
-import { okunabilirOlcum, okunanFotografiEkle, type Kisi, type RaporYazma } from "./raporlar.ts";
+import { okumaFotografiEkle, okunabilirOlcum, type Kisi, type RaporYazma } from "./raporlar.ts";
 
 export const FOTO_OKU_EN_BUYUK = 5 << 20;
 const ELLE = "Değerleri elle girebilirsiniz.";
@@ -47,7 +47,7 @@ export async function fotoOkuHazirla(db: Sorgulayici, kim: Kisi, raporId: string
   if (!(await yzAyir(db, ay, yz.sinir, ust))) {
     return { durum: "red", neden: `Bu ay yapay zekâ sınırınız (${dolar(yz.sinir ?? 0)} $) doldu; firma yöneticisi Firma ayarları › Yapay zekâ'dan artırabilir. ${ELLE}` };
   }
-  const ad = `${o.bolum.ad.replace(/[^\p{L}\p{N} ()-]/gu, "").trim().slice(0, 60) || "Pano"} fotoğrafı.${tur === "png" ? "png" : "jpg"}`;
+  const ad = `${o.bolum.ad.replace(/[^\p{L}\p{N} ()-]/gu, "").trim().slice(0, 60) || "Tablo"} fotoğrafı.${tur === "png" ? "png" : "jpg"}`;
   return { durum: "hazir", istek: okumaIstegi({ model: yz.model, bolum: o.bolum, resim: temiz, tur }), anahtar, model: yz.model, bolum: o.bolum, ay, ust, foto: { ad, bayt: temiz } };
 }
 
@@ -68,8 +68,8 @@ export async function fotoOkuKullanimYaz(db: Sorgulayici, raporId: string, h: Pi
 /** öneri ya da raporun yazma hatası (okunabilirOlcum "tamam" döndürmez) */
 export type FotoOkuSonucu = { durum: "tamam"; satirlar: OkunanSatir[]; bildirim: string; fotoEklendi: boolean } | Exclude<RaporYazma, { durum: "tamam" }>;
 
-/** kayıt adımı 2 (ayrı işlemde): rapor hâlâ yazanın Yeni raporu ve tablo formatta mı (okuma sürerken gönderildiyse öneri dönmez); pano tablosunda
-    fotoğraf rapora eklenir (yer yoksa söylenir, öneri yine döner) */
+/** kayıt adımı 2 (ayrı işlemde): rapor hâlâ yazanın Yeni raporu ve tablo formatta mı (okuma sürerken gönderildiyse öneri dönmez); satır okunduysa
+    fotoğraf rapora OKUMA fotoğrafı olarak eklenir (484 — belgede görünmez; eklenemezse söylenir, öneri yine döner) */
 export async function fotoOkuKaydet(db: Sorgulayici, depo: Depo, kim: Kisi, firmaId: string, raporId: string, h: Pick<FotoOkuHazir, "bolum" | "foto">, k: FotoOkuKullanim): Promise<FotoOkuSonucu> {
   const o = await okunabilirOlcum(db, kim, raporId, h.bolum.id);
   if ("durum" in o) return o.durum === "tamam" ? { durum: "yok" } : o;
@@ -78,11 +78,11 @@ export async function fotoOkuKaydet(db: Sorgulayici, depo: Depo, kim: Kisi, firm
   else if (!k.satirlar.length) parcalar.push(k.durum === "kesik" ? `Okuma yarım kaldı ve satır çıkmadı; tabloyu parça parça fotoğraflayın ya da ${ELLE.toLocaleLowerCase("tr")}` : `Fotoğrafta bu tablonun satırı okunamadı. ${ELLE}`);
   else parcalar.push(`${k.satirlar.length} satır okundu; önerileri gözden geçirip uygulayın.${k.durum === "kesik" ? " Okuma yarım kaldı: kalan satırları ayrı fotoğrafla okutun." : ""}`);
   let fotoEklendi = false;
-  if (o.bolum.hesap === "linye" && k.satirlar.length) {
-    const f = await okunanFotografiEkle(db, depo, kim, firmaId, raporId, h.foto);
+  if (k.satirlar.length) {
+    const f = await okumaFotografiEkle(db, depo, kim, firmaId, raporId, h.bolum.id, h.foto);
     fotoEklendi = f.durum === "tamam";
     const neden = f.durum === "gecersiz" ? Object.values(f.hatalar)[0] : f.durum === "red" ? f.neden : "rapor şu an yazılamıyor";
-    parcalar.push(fotoEklendi ? "Pano fotoğrafı rapora eklendi." : `Pano fotoğrafı eklenemedi: ${neden?.replace(/\.$/, "")}.`);
+    parcalar.push(fotoEklendi ? "Fotoğraf rapora eklendi (belgede görünmez)." : `Fotoğraf eklenemedi: ${neden?.replace(/\.$/, "")}.`);
   }
   return { durum: "tamam", satirlar: k.satirlar, bildirim: parcalar.join(" "), fotoEklendi };
 }

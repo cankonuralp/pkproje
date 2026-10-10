@@ -106,6 +106,13 @@ PDF'e basılmaz.
   **tek düzenleme yeri kâğıt.** Saha ekranı salt önizleme (aygıt + "Denemeyi temizle"; denetçi gibi denenir, hiçbir şey kaydedilmez); 472'nin
   "Düzenle" kipi ve saha ekranındaki yerinde düzenleme kalktı. Sahaya özgü ayarlar kâğıtta, öğenin ya da formatın ayarı olarak: madde cevabının
   biçimi "Kurallar, saha ekranı ve genel muayene talimatı"nda; bölümün fotoğraftan / Excel'den doldurulması bölümün ayarında (484).
+- **2026-10-10 (484; reisim: *"test tablosu olarak kullanılan yerlere excelden yükle ve fotoğraf ekleme özelliği olsun fotoğraf eklenince belgede
+  gözükmeyecek yapay zeka buradan okuma yapıp tabloyu dolduracak, aynı şekilde ekipman bilgilerinde de olsun bunu istediğim başlığa da
+  ekleyebiliyim rapor tasarımcısında da olsun"*):** bölümün **doldur** ayarı (`{ foto, excel }`; bilgi / ölçüm tablosu / test bölümünde) — kâğıtta
+  bölüm ayarlarında iki kutu, başlıkta "Fotoğraf · Excel" işareti; verilmemişse ölçüm tablosu ve ekipman bölümü açık, öteki kapalı (`doldurma`).
+  Sahada: **Fotoğraftan doldur** (tabloda satır satır — 351; alanlı bölümde alan alan — 385'in genel hâli) yapay zekâyla okur, değerler ÖNERİ,
+  denetçi uygular; fotoğraf raporda **okuma fotoğrafı** olarak durur, **belgede (PDF) görünmez**; firmada yapay zekâ kapalıysa yerine nereden
+  açılacağı yazar. **Excel'den yükle** (.xlsx / .csv; tablo başlık satırıyla, alanlar "Alan | Değer"; türüne uymayan yazılmaz) + **Excel şablonu**.
 
 ## 7 · Veri
 

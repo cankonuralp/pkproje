@@ -2334,6 +2334,11 @@ tasarımcısını da kullanacak kullanıcılar tam bir yapboz gibi olmalı ve ko
 işlevli olmalı; (2) ölçüm / test tablolarına **Excel'den yükle** ve **fotoğraf ekle** — fotoğraf belgede görünmez, yapay zekâ okuyup tabloyu doldurur
 (öneri olarak; §8.10 ilkesi); (3) aynısı **ekipman bilgilerinde**; (4) bu özellik kurucuda **istenen başlığa** eklenebilmeli; (5) **rapor tasarımcısı
 yapay zekâyla** da kullanılabilmeli; (6) kurucu **yapboz gibi**, kolay. Hata listesine açık madde olarak girdi.
+**Aynı gün sonra (reisim: *"rapor düzenlemede sadece saha ekranı gözüksün o ekranda düzenleme yapılamasın … sadece sahada personelin nasıl göreceği
+gözüksün"*; *"kağıttan düzenleyebiliyoruz ama sahadaki görüntü nasıl oluyor düzenleyemiyoruz burası çok karmaşık bir çözüm öner"*; *"bahsettiğim
+fotoğraf mekanizması vs eklenmemişti bile … söylediğim hiç bir şeyi es geçme"*):** (1) DEĞİŞTİ → saha ekranı salt önizleme, tek düzenleme yeri kâğıt,
+sahaya özgü ayarlar kâğıtta (§11 483); (2) (3) (4) YAPILDI (§11 484 — bölüm ayarı "Fotoğraftan doldur" / "Excel'den yükle"; fotoğraf belgede
+görünmez); (5) (6) açık (hata listesi 46; madde 29 ile birlikte, önce maket).
 
 **Açık kalanlar:** ~~Ana sayfada İSGGM duyuruları~~ (2026-09-27: makette eklendi; okuma işi uygulamada) (reisim 2026-09-26: *"Ana sayfada isgüm duyurularını gösterebilir miyiz ? Bunu
 yapılacaklar listesine ekle"*; öneri: ÇSGB İSGGM duyurular sayfası — https://www.csgb.gov.tr/isggm/duyurular/ — sunucuda günde birkaç kez
@@ -2372,6 +2377,25 @@ revizyon, alan kopyalama, hafif kusur devri, meslek eşleşme denetimi).
 - Emsal ürünler: https://opwire.app/iso-17020-periyodik-kontrol-yazilimi/ · https://17020muayene.vidco.com.tr/ · https://akuple.com/asansor-kontrol-yazilimi/ · https://ensyazilim.com/
 
 ## 11 · Değişiklik günlüğü
+- 2026-10-10 (484): **FOTOĞRAFTAN / EXCEL'DEN DOLDURMA, İSTENEN BAŞLIĞA** (reisim: *"test tablosu olarak kullanılan yerlere excelden yükle ve fotoğraf
+  ekleme özelliği olsun fotoğraf eklenince belgede gözükmeyecek yapay zeka buradan okuma yapıp tabloyu dolduracak, aynı şekilde ekipman bilgilerinde
+  de olsun bunu istediğim başlığa da ekleyebiliyim rapor tasarımcısında da olsun"*; *"bahsettiğim fotoğraf mekanizması vs eklenmemişti bile"*).
+  Taramada neden: 351 / 385'in fotoğraftan okuması YALNIZ firmada yapay zekâ açık ve anahtar girilmişken çiziliyordu — deneme firmasında kapalı,
+  iz yoktu; Excel'den yükleme hiç yoktu; pano fotoğrafı belgede (Fotoğraflar bölümünde) görünüyordu. Yapılan: (1) **format**: bölümün `doldur`
+  ayarı (tanim.ts `doldurma` — bilgi / ölçüm tablosu / test; varsayılan tablo ve ekipman bölümü açık) — **kâğıtta** bölüm ayarlarında "Fotoğraftan
+  doldur" / "Excel'den yükle" kutuları, başlıkta "Fotoğraf · Excel" işareti (ekipman bölümüne de ayar tuşu). (2) **saha**: alanlı bölümde
+  (ekipman bilgileri — etiket plakası dahil —, bilgi, test) "Fotoğraftan doldur" (385'in "Etiketten oku"su genelleşti: yz/alanlar.ts,
+  raporlar/server/alan-oku.ts, ui/Doldurma.tsx AlanOkuma; etiket.ts / etiket-oku.ts / EtiketOkuma.tsx kullanım 0, silindi), tabloda 351'in
+  "Fotoğraftan oku"su — ikisi de ÖNERİ, denetçi uygular; okunan fotoğraf rapora **okuma fotoğrafı** (RaporFoto.okuma; bölümün altında Görüntüle /
+  Sil) — **belge verisinde yok**, fotoğraf bölümü sayısına girmez, format güncellemede yerinde kalır; firmada yapay zekâ kapalıysa tuşun yerine
+  "Firma ayarları › Yapay zekâ" notu (7.4: yapılamayan tuş çizilmez). (3) **Excel'den yükle** + **Excel şablonu** (doldur.ts: tablo başlık satırı
+  sütun adlarıyla — harf / birim / noktalama önemsiz; alanlar "Alan | Değer"; değer türüne uymuyorsa yazılmaz — src/format/deger.ts, fotoğrafla
+  aynı kural; dolu alan değişecekse sorulur). (4) Format kurucusunun saha ekranında (örnek rapor) tuşlar görünür: fotoğraf okunmaz, ne olacağı
+  söylenir; Excel ekranda çalışır. Kilitler: tests/alan-okuma.test.ts (istek / cevap, değer türleri, Excel eşleme, doldurma varsayılanı, ortak alan
+  listeleri), tests/foto-oku.test.ts (okuma fotoğrafı tablonun kimliğiyle, belgede yok, sayıya girmez; ekipman alan okuması), olumsuz kanıt
+  tests/bozan/alan-okuma.bozan.ts (yıl / tarih denetimi), e2e foto-oku.spec (tablo okuma fotoğrafı Fotoğraflar'da değil; ekipman "Fotoğraftan
+  doldur"; tabloya Excel'den yükle + şablon), rapor-format.spec (kâğıtta doldurma ayarı ve işareti). **Not:** deneme firmasında fotoğraftan okuma
+  için Firma ayarları › Yapay zekâ açılıp Anthropic API anahtarı girilmeli (anahtarı ben girmem — açık iş).
 - 2026-10-10 (483): **FORMAT KURUCU: SAHA EKRANI SALT ÖNİZLEME, TEK DÜZENLEME YERİ KÂĞIT** (reisim: *"rapor düzenlemede sadece saha ekranı
   gözüksün o ekranda düzenleme yapılamasın belliki beceremiyeceğiz bu işi istediğim gibi yapamamışsın çünkü sadece sahada personelin nasıl
   göreceği gözüksün"*; *"kağıttan düzenleyebiliyoruz ama sahadaki görüntü nasıl oluyor düzenleyemiyoruz burası çok karmaşık bir çözüm öner"*).

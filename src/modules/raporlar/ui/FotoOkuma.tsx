@@ -7,7 +7,9 @@
    354 (350–351 incelemesi): okuma üst ekranın işleminde (o sürerken Kaydet / Onaya gönder / öteki okumalar kapalı); bağlantı yoksa istek gitmez (maket
    "Bağlantı yok …"); eylem düşerse (bağlantı koptu, sunucu yanıt vermedi) sayfa hata ekranına düşmez, kaydedilmemiş girişler kalır; uzun iş (kalıp
    12): dönen simge + 3 sn sonra geçen süre, girdi odağını korur (disabled değil, aria-busy); uygulamadan sonra odak kalan ilk tuşa, kart kapanınca
-   "Fotoğraftan oku"ya. Okuma rapora pano fotoğrafı eklediyse ekran yenilenir (yeni sürüm). */
+   "Fotoğraftan oku"ya. Okuma rapora pano fotoğrafı eklediyse ekran yenilenir (yeni sürüm).
+   484: formatta tablonun "Fotoğraftan doldur"u açıksa çizilir (Bloklar — tanim.ts doldurma); okunan fotoğraf her tabloda rapora OKUMA fotoğrafı olarak
+   eklenir (belgede görünmez; tablonun altında Doldurma.tsx OkumaFotolari). */
 import { useEffect, useRef, useState, type ReactNode } from "react";
 import { useBildir } from "../../../components/bildirim/Bildirim";
 import { fotografiKucult } from "../../../components/foto/kucult";
@@ -26,9 +28,11 @@ const SURE_GOSTER_SN = 3;
 type Oneri = OkunanSatir & { kimlik: number };
 
 /** `tuslar`: tablonun öteki tuşları (Satır ekle …) — maketteki gibi aynı çubukta, "Fotoğraftan oku" önce; öneri kartı çubuğun üstünde */
-export function FotoOkuma({ raporId, b, satirlar, tablo, islem, tuslar, cubuk }: {
+export function FotoOkuma({ raporId, b, satirlar, tablo, islem, tuslar, cubuk, deneme = false }: {
   raporId: string; b: BolumOf<"olcum">; satirlar: readonly Satir[]; tablo: (f: (l: Satir[]) => Satir[]) => void; islem: Baglam["islem"];
   tuslar: ReactNode; cubuk: string;
+  /** 484: format kurucusunun saha ekranındaki örnek rapor — fotoğraf okunmaz, ne olacağı söylenir */
+  deneme?: boolean;
 }) {
   const bildir = useBildir();
   const girdi = useRef<HTMLInputElement>(null);
@@ -49,6 +53,7 @@ export function FotoOkuma({ raporId, b, satirlar, tablo, islem, tuslar, cubuk }:
   const oku = (dosya: File) => {
     if (girdi.current) girdi.current.value = "";
     if (okunuyor || islem.mesgul) return;
+    if (deneme) { bildir("Örnek raporda fotoğraf okunmaz; gerçek raporda yapay zekâ tablonun satırlarını okur, öneri olarak gelir, fotoğraf belgede görünmez."); return; }
     if (typeof navigator !== "undefined" && navigator.onLine === false) {
       bildir("Bağlantı yok: fotoğraftan okuma bağlantı gelince yapılır. Değerleri elle girebilirsiniz.");
       return;

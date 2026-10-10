@@ -38,7 +38,8 @@ import { Serit } from "../../../components/serit/Serit";
 import { Tus, TusBaglanti } from "../../../components/tus/Tus";
 import { raporDuzeni, sabitEkipmanAlanlari } from "../../../format/duzen";
 import { degerlendir } from "../../../format/motor";
-import { EKIPMAN_ALAN_ADI, type Cevaplar } from "../../../format/tanim";
+import { doldurma, EKIPMAN_ALAN_ADI, type Cevaplar } from "../../../format/tanim";
+import { ekipmanAlanlari, ekipmanAnahtari } from "../doldur";
 import { ayEkle, RAPOR_DURUM, type EkipmanBilgisi, type RaporDurumu, type RaporTarihleri } from "../sema";
 import { cevaplariTamamla } from "../ornek";
 import type { SahaRaporu as SahaRaporuVerisi } from "../server/raporlar";
@@ -46,7 +47,7 @@ import {
   alanId, BilgiAlani, BilgiBlok, FormatBolumu, OkuGirdi, RaporBolumu, Satir, Satirlar, TarihKutusu, type Baglam, type Kaynak,
 } from "./Bloklar";
 import { CihazBolumu } from "./CihazBolumu";
-import { EtiketOkuma } from "./EtiketOkuma";
+import { AlanDoldurma } from "./Doldurma";
 import { FotoListesi } from "./FotoListesi";
 import { ImzaBolumu } from "./ImzaBolumu";
 import { KopyaPenceresi } from "./KopyaPenceresi";
@@ -72,7 +73,6 @@ const SABIT = { firma: "sabit-firma", ekipman: "sabit-ekipman", cihaz: "sabit-ci
 const EID = (k: EkipmanAnahtari) => `r-ek-${k}`;
 /** ekipman bilgisinin en çok uzunluğu (sema.ts EkipmanBilgisi ile aynı) */
 const EN: Record<EkipmanAnahtari, number> = { marka: 40, model: 40, seri: 30, imal: 4, konum: 60, amac: 120, bolum: 60 };
-const ETIKET = ["marka", "model", "seri", "imal"] as const;
 const TID = (k: TarihAnahtari) => alanId(`tarih.${k}`);
 const KILIT: Record<Exclude<RaporDurumu, "taslak">, string> = {
   onayda: "Teknik yönetici onayında", onaylandi: "Muayene uzmanı imzası bekleniyor", imzada: "İmzaya gönderildi",
@@ -234,7 +234,7 @@ export function SahaRaporu({ v, yeni, deneme }: { v: Gorunum; yeni?: { plan: str
   };
   const yaz = (f: (c: Cevaplar) => Cevaplar) => { setCevaplar(f); setKirli(true); };
   const bag: Baglam = {
-    v, c: cevaplar, yaz, d, oku, gecersiz, kaynak: (k) => kaynaklar[k], yz: !oku && v.yz, islem: { mesgul, baslat, yenile },
+    v, c: cevaplar, yaz, d, oku, gecersiz, kaynak: (k) => kaynaklar[k], yz: !oku && !yeni && v.yz, deneme: denemede, islem: { mesgul, baslat, yenile },
     ekipmanAlani: (a) => (a.ekipman ? metinSatiri(a.ekipman, a.ad, EN[a.ekipman], a.ekipman === "imal") : null),
     cihaz: (bolumId) => <CihazBolumu v={v} bolumId={bolumId} oku={oku || !!yeni || denemede} gecersiz={gecersiz} mesgul={mesgul} baslat={baslat} yenile={yenile} />,
     foto: (bolumId, madde) => (denemede
@@ -253,8 +253,8 @@ export function SahaRaporu({ v, yeni, deneme }: { v: Gorunum; yeni?: { plan: str
   const duzen = raporDuzeni(v.tanim, cihazEk);
   const katilan = duzen.katilan;
   const sabit = sabitEkipmanAlanlari(v.tanim);
-  /* etiketten okunabilen ve ekranda satırı olan alanlar (385) */
-  const etiketAlanlari = ETIKET.filter((k) => (duzen.tam ? duzen.tam.alanlar.some((a) => a.ekipman === k) : sabit.includes(k)));
+  /* 484: 2. bölümün fotoğraftan / Excel'den doldurulan alanları (sunucuyla aynı liste — doldur.ts); formatta tam ekipman bölümü yoksa açık */
+  const ekipAlan = ekipmanAlanlari(v.tanim);
   const cihazEksik = v.cihazlar.some((x) => gecersiz(`cihaz.${x.turId}`));
   const bolumEksik = (id: string) => d.eksikler.some((e) => e.bolum === id && gecersiz(e.alan));
   const acik = (id: string) => acikSet.has(id);
@@ -627,10 +627,11 @@ export function SahaRaporu({ v, yeni, deneme }: { v: Gorunum; yeni?: { plan: str
 
         <RaporBolumu id={SABIT.ekipman} no="2" baslik={duzen.ekipmanBaslik} acik={acik(SABIT.ekipman)} degistir={degistir(SABIT.ekipman)}
           eksik={katilan.some((b) => bolumEksik(b.id))}>
-          {/* 385: etiket plakasından okuma — yazılabilir raporda, firmada yapay zekâ açıksa, ekranda satırı olan etiket alanları için */}
-          {bag.yz && etiketAlanlari.length > 0 && (
-            <EtiketOkuma raporId={v.id} alanlar={etiketAlanlari} yaz={(k, x) => ekipmanYaz(k, x)} islem={bag.islem} />
-          )}
+          {/* 385 → 484: fotoğraftan doldur (etiket plakası dahil) ve Excel'den yükle — formatın bölüm ayarıyla */}
+          <AlanDoldurma bag={bag} bolumId="ekipman" baslik={ekipAlan.baslik} alanlar={ekipAlan.alanlar}
+            ayar={ekipAlan.tam ? doldurma(ekipAlan.tam) : { foto: true, excel: true }}
+            yaz={(id, x) => (ekipmanAnahtari(id) ? ekipmanYaz(id, x) : yaz((c) => ({ ...c, alan: { ...c.alan, [id]: x } })))}
+            dolu={(id) => (ekipmanAnahtari(id) ? !!ekipman[id] : !!cevaplar.alan[id]?.length)} />
           <Satirlar>
             <Satir etiket="Kod"><Kod>{v.ekipman.kod}</Kod></Satir>
             <Satir etiket="Ekipman türü">{v.tur.ad}</Satir>

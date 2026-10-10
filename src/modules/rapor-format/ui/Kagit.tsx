@@ -26,7 +26,7 @@ import { useOnayla } from "../../../components/pencere/Onay";
 import { SecimAlani } from "../../../components/secim/SecimAlani";
 import { SINIR_ISARETI } from "../../../format/hesap";
 import { altBaslikAnasi, altGrupSonu, raporDuzeni } from "../../../format/duzen";
-import { BLOKLAR, EKIPMAN_ALAN_ADI, EKIPMAN_ALANLARI, type Blok, type Bolum, type BolumOf, type FormatTanimi } from "../../../format/tanim";
+import { BLOKLAR, doldurma, DOLDURULUR, EKIPMAN_ALAN_ADI, EKIPMAN_ALANLARI, type Blok, type Bolum, type BolumOf, type FormatTanimi } from "../../../format/tanim";
 import {
   altBaslikEkle, bolumAdi, bolumDuzeni, ekipmanAlaniEkle, gorunumYaz, grupEkle, grupSil, grupYaz, kurucudan, maddeEkle, ogeEkle, ogeSil, ogeYaz, satirlar, tasi,
   yeniBolum, yeniKimlik,
@@ -343,6 +343,21 @@ export function Kagit({ t, degis, tur, bolumuSil, bildir }: KagitOzellik) {
   };
 
   /** bölüm ayarları (şeritteki ayar tuşu) */
+  /* 484 (reisim 2026-10-10: "test tablosu olarak kullanılan yerlere excelden yükle ve fotoğraf ekleme özelliği olsun … aynı şekilde ekipman
+     bilgilerinde de olsun bunu istediğim başlığa da ekleyebiliyim rapor tasarımcısında da olsun"): bilgi / ölçüm tablosu / test bölümünde sahada
+     fotoğraftan (yapay zekâ okur, fotoğraf belgede görünmez) ve Excel'den doldurma — bölümün ayarı (tanim.ts doldur / doldurma) */
+  const doldurmaAyari = (b: Bolum, i: number) => {
+    if (!DOLDURULUR.includes(b.blok)) return null;
+    const d = doldurma(b), yaz = (y: Partial<typeof d>) => degis(bolumYaz(t, i, { doldur: { ...d, ...y } }));
+    return (
+      <div className={k.panelSatir} role="group" aria-label={`${b.ad} · sahada doldurma`}>
+        <label className={k.panelKutu}><input type="checkbox" checked={d.foto} onChange={(e) => yaz({ foto: e.target.checked })} />
+          Fotoğraftan doldur (yapay zekâ okur, denetçi onaylar; fotoğraf raporda durur, belgede görünmez)</label>
+        <label className={k.panelKutu}><input type="checkbox" checked={d.excel} onChange={(e) => yaz({ excel: e.target.checked })} />
+          Excel&apos;den yükle (sütun başlıkları ya da “Alan | Değer” satırlarıyla)</label>
+      </div>
+    );
+  };
   const bolumAyari = (b: Bolum, i: number) => (
     <div className={k.panel} role="group" aria-label={`${b.ad} · bölüm ayarları`}>
       <div className={k.panelBas}><b>{b.ad} · bölüm ayarları</b><Tus ikon="x" ad="Bölüm ayarlarını kapat" onClick={() => setAyar(null)} /></div>
@@ -354,6 +369,7 @@ export function Kagit({ t, degis, tur, bolumuSil, bildir }: KagitOzellik) {
         {b.ust && <span className={k.panelIpucu}>Üst başlık: <b>{b.ust}</b>{" "}
           <button type="button" className={k.ekle} onClick={() => degis(bolumDuzeni(t, i, { ust: "" }))}>Üst başlığı kaldır</button></span>}
       </div>}
+      {doldurmaAyari(b, i)}
       {b.blok === "liste" && <ListeDuzenleyici t={t} i={i} b={b} degis={degis} />}
       {b.blok === "olcum" && <>
         {<div className={k.panelSatir}>
@@ -450,7 +466,17 @@ export function Kagit({ t, degis, tur, bolumuSil, bildir }: KagitOzellik) {
       {/* 2 · Ekipman bilgileri — kod ve tür sabit; öteki satırlar formatın (adı yazılır, çıkarılır, eklenir) */}
       <section className={`rb-bolum ${k.bolum}`} id="kb-ekipman">
         <div className={k.bolumBas}><h2>2. {ekip ? <Yazi deger={ekip.ad} ad="Bölüm adı" yaz={(s) => degis(bolumAdi(t, ki, s))} /> : duzen.ekipmanBaslik}</h2>
-          {ekip?.kilit && <span className={k.araclar}><span className={k.sabit}><Ikon ad="lock" kucuk />Bakanlık bölümü</span></span>}</div>
+          <span className={k.araclar}>
+            {ekip?.kilit && <span className={k.sabit}><Ikon ad="lock" kucuk />Bakanlık bölümü</span>}
+            {ekip && <DoldurmaIsareti b={ekip} />}
+            {ekip && <Tus ikon="settings" ad={`${ekip.ad} · bölüm ayarları`} basili={ayar === "b:ekipman"} onClick={() => ac("b:ekipman")} />}
+          </span></div>
+        {ekip && ayar === "b:ekipman" && (
+          <div className={k.panel} role="group" aria-label={`${ekip.ad} · bölüm ayarları`}>
+            <div className={k.panelBas}><b>{ekip.ad} · bölüm ayarları</b><Tus ikon="x" ad="Bölüm ayarlarını kapat" onClick={() => setAyar(null)} /></div>
+            {doldurmaAyari(ekip, ki)}
+          </div>
+        )}
         <BilgiTablosu l={[
           [<span key="kod" className={k.etiket}>Ekipman kodu<span className={k.ogeTus}><Kilit ad="Sabit · her raporda" not="değişmez" /></span></span>, <span key="k" className={k.ornek}>kayıttan</span>],
           [<span key="tur" className={k.etiket}>Ekipman türü<span className={k.ogeTus}><Kilit ad="Sabit · her raporda" not="değişmez" /></span></span>, tur.ad],
@@ -483,6 +509,7 @@ export function Kagit({ t, degis, tur, bolumuSil, bildir }: KagitOzellik) {
                   {b.kilit && <span className={k.sabit}><Ikon ad="lock" kucuk />Bakanlık bölümü</span>}
                   {!b.kilit && b.blok === "cihaz" && <span className={k.sabit}><Ikon ad="lock" kucuk />Sabit · türün cihazları</span>}
                   <span className={k.tur}>{BLOK_ADI[b.blok]}</span>
+                  <DoldurmaIsareti b={b} />
                   <span data-yon="-1" className={k.yonKap}><Tus ikon="arrow-up" ad={`${b.ad} · yukarı`} disabled={v === 0} onClick={() => tasiGorunen(b.id, -1)} /></span>
                   <span data-yon="1" className={k.yonKap}><Tus ikon="arrow-down" ad={`${b.ad} · aşağı`} disabled={v === gorunen.length - 1} onClick={() => tasiGorunen(b.id, 1)} /></span>
                   {(b.alt && x.no?.includes(".")
@@ -524,3 +551,10 @@ function SayiGirdi({ deger, en, enCok, ad, yaz }: { deger: number; en: number; e
     onBlur={() => { if (taslak === null) return; const n = Number.parseInt(taslak, 10); if (Number.isFinite(n) && n >= en && n <= enCok) yaz(n); setTaslak(null); }} />;
 }
 
+/** 484: başlıkta bölümün sahada doldurma ayarı (açıksa) — "Fotoğraf · Excel" */
+function DoldurmaIsareti({ b }: { b: Bolum }) {
+  const d = doldurma(b);
+  if (!d.foto && !d.excel) return null;
+  return <span className={k.tur} title="Sahada bu bölüm fotoğraftan ya da Excel'den doldurulur (bölüm ayarı)">
+    <Ikon ad={d.foto ? "camera" : "file-spreadsheet"} kucuk />{[d.foto && "Fotoğraf", d.excel && "Excel"].filter(Boolean).join(" · ")}</span>;
+}

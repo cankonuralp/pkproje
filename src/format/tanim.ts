@@ -58,8 +58,13 @@ const Not = z.object({ metin: z.string().trim().min(1).max(400), kusur: z.boolea
 /* ust (427): ardışık bölümlerin ortak üst başlığı — belgede ve ekranda N.1, N.2 numarasıyla tek başlık altında (ZPKR04 "5. Tespit ve
    değerlendirmeler" › 5.1 / 5.2); numarasiz: bölüm numara almaz (ZPKR04 "Fotoğraflar"); alt (461; reisim 2026-10-09: "alt başlık ekleme olsun"):
    bölüm üstündeki ana bölümün ALT BAŞLIĞIDIR — ana bölüm 5 ise 5.1, 5.2 … (ana bölümün kendi içeriği kalır) — src/format/duzen.ts */
+/* doldur (484; reisim 2026-10-10: "test tablosu olarak kullanılan yerlere excelden yükle ve fotoğraf ekleme özelliği olsun fotoğraf eklenince
+   belgede gözükmeyecek yapay zeka buradan okuma yapıp tabloyu dolduracak, aynı şekilde ekipman bilgilerinde de olsun bunu istediğim başlığa da
+   ekleyebiliyim rapor tasarımcısında da olsun"): bölümün sahada fotoğraftan (yapay zekâ okur, öneri) ve Excel'den doldurulması — kâğıtta bölüm
+   ayarı; yalnız bilgi / ölçüm tablosu / test bölümünde anlamlı. Verilmemişse doldurma() varsayılanı. */
 const ortak = {
   id: kimlik, ad, kilit: z.boolean().default(false), ust: z.string().max(200).optional(), numarasiz: z.boolean().optional(), alt: z.boolean().optional(),
+  doldur: z.object({ foto: z.boolean(), excel: z.boolean() }).optional(),
 };
 export const Bolum = z.discriminatedUnion("blok", [
   /* tam (460; reisim 2026-10-09: "ekipman bilgileri kısmıda değiştirilebilir olsun zira yangın dolabı gibi ekipmanlarda farklı girdiler
@@ -82,6 +87,16 @@ export const Bolum = z.discriminatedUnion("blok", [
 ]);
 export type Bolum = z.output<typeof Bolum>;
 export type BolumOf<B extends Blok> = Extract<Bolum, { blok: B }>;
+
+/** 484: fotoğraftan / Excel'den doldurulabilen bölümler */
+export const DOLDURULUR: readonly Blok[] = ["bilgi", "olcum", "test"];
+/** 484: bölümün doldurma ayarı — kâğıtta seçilmemişse ölçüm tablosunda ve ekipman bölümünde açık (351 / 385'te hep açıktı), ötekilerde kapalı */
+export function doldurma(b: Bolum): { foto: boolean; excel: boolean } {
+  if (!DOLDURULUR.includes(b.blok)) return { foto: false, excel: false };
+  if (b.doldur) return b.doldur;
+  const acik = b.blok === "olcum" || (b.blok === "bilgi" && !!b.tam);
+  return { foto: acik, excel: acik };
+}
 
 export const Kurallar = z.object({
   /** "Uygun değil" maddede fotoğraf zorunlu (AA9: başlangıçta kapalı) */

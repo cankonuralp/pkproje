@@ -6,7 +6,11 @@
    çağrı cevapsız biterse ücretsizse ayırma bırakılır, sonucu bilinmiyorsa harcamaya yazılır; ödenen okuma rapor okuma sürerken silinse de kullanıma
    yazılır; pano okumasında fotoğraf rapora eklenir (§11 92); firma ayarlarında kişi başı kullanım. 385: etiket plakasından okuma aynı kapı ve
    kullanımla (yalnız yazan, Yeni raporunda; istekte kişi / firma yok; öneri döner, rapora yazılmaz; okuma kaydı "etiket"; kapalıyken okunmaz).
-   Olumsuz kanıt: tests/bozan/foto-oku.bozan.ts, tests/bozan/etiket-okuma.bozan.ts. */
+   484 (reisim 2026-10-10: "fotoğraf eklenince belgede gözükmeyecek … aynı şekilde ekipman bilgilerinde de olsun bunu istediğim başlığa da
+   ekleyebiliyim"): etiket okuması genel ALAN okumasına geçti (alan-oku.ts; ekipman bilgileri bölüm "ekipman", okuma kaydı bölümün kimliği);
+   okunan fotoğraf her okumada rapora OKUMA fotoğrafı olarak eklenir — okunan bölümün kimliğiyle, BELGE VERİSİNDE YOK, fotoğraf bölümü sayısına
+   girmez; formatta bölümün "Fotoğraftan doldur"u kapalıysa okunmaz.
+   Olumsuz kanıt: tests/bozan/foto-oku.bozan.ts, tests/bozan/alan-okuma.bozan.ts. */
 import assert from "node:assert/strict";
 import { mkdtempSync, rmSync } from "node:fs";
 import { randomBytes } from "node:crypto";
@@ -18,8 +22,8 @@ import { planKabul, planIci } from "../src/modules/planlar/server/plan-ici.ts";
 import { bugunTr, planAc, type Kisi } from "../src/modules/planlar/server/planlar.ts";
 import { taslakBaslat, yayinla } from "../src/modules/rapor-format/server/formatlar.ts";
 import { fotoOkuBirak, fotoOkuHazirla, fotoOkuKaydet, fotoOkuKullanimYaz, type FotoOkuHazir } from "../src/modules/raporlar/server/foto-oku.ts";
-import { etiketOkuHazirla, etiketOkuKullanimYaz, etiketOkuSonuc } from "../src/modules/raporlar/server/etiket-oku.ts";
-import { raporOlustur, raporSil, sahaRaporu } from "../src/modules/raporlar/server/raporlar.ts";
+import { alanOkuHazirla, alanOkuKullanimYaz, alanOkuSonuc } from "../src/modules/raporlar/server/alan-oku.ts";
+import { raporBelgesiVerisi, raporOlustur, raporSil, sahaRaporu } from "../src/modules/raporlar/server/raporlar.ts";
 import { ayarOku, ayarYaz } from "../src/server/ayar/ayar.ts";
 import { sirYaz } from "../src/server/ayar/sir.ts";
 import type { GomuluKume } from "../src/server/db/gomulu.ts";
@@ -146,9 +150,12 @@ test("kayıt: öneri şemaya göre süzülür, maliyet kişinin aylık kullanım
   assert.deepEqual(r.satirlar, [{ degerler: { no: "F1", devre: "Aydınlatma", tip: TIP, akim: "16" }, guven: "yuksek" }, { degerler: { no: "F2" }, guven: "dusuk" }]);
   const sonra = (await a(FA.den1, (db) => sahaRaporu(db, FA.den1, FA.rapor)))!;
   assert.deepEqual(sonra.cevaplar.tablo, once, "öneri rapora yazılmaz");
-  /* pano okuması (format hesabı linye): fotoğraf rapora — termal değil, Fotoğraflar bölümüne (§11 92) */
-  assert.ok(r.fotoEklendi && /Pano fotoğrafı rapora eklendi/.test(r.bildirim), r.bildirim);
-  assert.deepEqual(sonra.fotolar.map((f) => [f.bolum, f.madde, f.ad]), [["foto", null, "Pano sigortaları (linye) fotoğrafı.jpg"]]);
+  /* 484: okunan fotoğraf rapora OKUMA fotoğrafı olarak — okunan tablonun kimliğiyle; belgede yok, fotoğraf bölümünün sayısına girmez */
+  assert.ok(r.fotoEklendi && /Fotoğraf rapora eklendi \(belgede görünmez\)/.test(r.bildirim), r.bildirim);
+  assert.deepEqual(sonra.fotolar.map((f) => [f.bolum, f.madde, f.ad, f.okuma]), [["linye", null, "Pano sigortaları (linye) fotoğrafı.jpg", true]]);
+  assert.equal(sonra.cevaplar.foto.linye, undefined, "okuma fotoğrafı fotoğraf sayısına girmez");
+  const belge = await a(FA.den1, (db) => raporBelgesiVerisi(db, depo, FA.den1, FA.rapor));
+  assert.ok(belge && belge.belge.fotolar.length === 0, "okuma fotoğrafı belgede yok");
   assert.equal((await oku(FA.den1, cevap([]))).durum, "tamam", "0,6 $ < 1 $");
   assert.deepEqual(await kullanim(FA.den1), { okuma: 2, maliyet: "1200000", ayrilan: "0" });
   assert.equal((await a(FA.den1, (db) => sahaRaporu(db, FA.den1, FA.rapor)))!.fotolar.length, 1, "satır okunamadıysa fotoğraf eklenmez");
@@ -209,16 +216,17 @@ test("kullanım yalnız artar ve kişinin kendi hanesine; okuma kaydı değişme
   assert.deepEqual(b.rows[0], { k: 0, o: 0 });
 });
 
-/* 385: etiket plakasından okuma (rapor silinmeden önce) */
-test("385 etiket plakası: yalnız yazan, Yeni raporunda; istekte kişi / firma yok; öneri döner, rapora yazılmaz; kullanım ve okuma kaydı", async () => {
+/* 385 → 484: ekipman bilgileri (etiket plakası dahil) fotoğraftan alan okuması (rapor silinmeden önce) */
+test("484 alan okuması (ekipman bilgileri): yalnız yazan, Yeni raporunda; istekte kişi / firma yok; öneri döner, rapora yazılmaz; okuma fotoğrafı belgede yok", async () => {
   /* sınır önceki testten kalanla aynı bırakılır (sonraki test kendi sınırını kurar) */
   const ayarla = async (d: object) => assert.match((await yzAyari(d)).durum, /^(tamam|degisiklik_yok)$/);
   const onceki = (await a(FA.yon, (db) => ayarOku(db, "yapay_zeka"))).deger.sinir;
   await ayarla({ sinir: null });
-  const et = (k: Kisi, rapor = FA.rapor, foto = JPEG) => a(k, (db) => etiketOkuHazirla(db, k, rapor, { bayt: foto }));
+  const et = (k: Kisi, rapor = FA.rapor, foto = JPEG, bolum = "ekipman") => a(k, (db) => alanOkuHazirla(db, k, rapor, bolum, { bayt: foto }));
   assert.equal((await et(FA.den2)).durum, "yok", "başka denetçi");
   assert.equal((await et(FA.plan)).durum, "yetkisiz", "raporu gören planlamacı okutamaz");
-  assert.equal((await kiraciIcinde(havuz, B, (db) => etiketOkuHazirla(db, FB.den1, FA.rapor, { bayt: JPEG }), { hesapId: FB.den1.id })).durum, "yok");
+  assert.equal((await kiraciIcinde(havuz, B, (db) => alanOkuHazirla(db, FB.den1, FA.rapor, "ekipman", { bayt: JPEG }), { hesapId: FB.den1.id })).durum, "yok");
+  assert.match(JSON.stringify(await et(FA.den1, FA.rapor, JPEG, "yok-boyle")), /Okunacak bölüm bulunamadı/);
   assert.deepEqual(await et(FA.den1, FA.rapor, PDF), { durum: "gecersiz", hatalar: { foto: "Yalnız JPEG ya da PNG fotoğraf." } });
   const k0 = await kullanim(FA.den1);
   const h = await et(FA.den1);
@@ -230,14 +238,20 @@ test("385 etiket plakası: yalnız yazan, Yeni raporunda; istekte kişi / firma 
   const once = (await a(FA.den1, (db) => sahaRaporu(db, FA.den1, FA.rapor)))!.ekipmanBilgi;
   const govde = { content: [{ type: "text", text: JSON.stringify({ alanlar: [{ alan: "marka", deger: "Deneme Marka", guven: "yuksek" }, { alan: "imal", deger: "2019", guven: "dusuk" }], not: null }) }],
     stop_reason: "end_turn", usage: { input_tokens: 100_000, output_tokens: 10_000 } };
-  const ku = await a(FA.den1, (db) => etiketOkuKullanimYaz(db, FA.rapor, h, govde));
+  assert.ok(h.alanlar.some((x) => x.id === "marka") && h.alanlar.some((x) => x.id === "imal" && x.tur === "yil"), "ekipman alanları (etiket dahil)");
+  const ku = await a(FA.den1, (db) => alanOkuKullanimYaz(db, FA.rapor, h, govde));
   const k1 = await kullanim(FA.den1);
   assert.deepEqual([k1.okuma, Number(k1.maliyet), k1.ayrilan], [k0.okuma + 1, Number(k0.maliyet) + 600_000, k0.ayrilan], "ayırma gerçek maliyetle kapandı");
-  assert.deepEqual(await a(FA.den1, (db) => etiketOkuSonuc(db, FA.den1, FA.rapor, ku)), { durum: "tamam",
-    okunan: [{ alan: "marka", deger: "Deneme Marka", guven: "yuksek" }, { alan: "imal", deger: "2019", guven: "dusuk" }], bildirim: "Etiketten 2 bilgi okundu; uygulamadan rapora yazılmaz." });
+  const fotoOnce = (await a(FA.den1, (db) => sahaRaporu(db, FA.den1, FA.rapor)))!.fotolar.length;
+  assert.deepEqual(await a(FA.den1, (db) => alanOkuSonuc(db, depo, FA.den1, A, FA.rapor, h, ku)), { durum: "tamam",
+    okunan: [{ alan: "marka", deger: "Deneme Marka", guven: "yuksek" }, { alan: "imal", deger: "2019", guven: "dusuk" }],
+    bildirim: "2 bilgi okundu; uygulamadan rapora yazılmaz. Fotoğraf rapora eklendi (belgede görünmez).", fotoEklendi: true });
+  const fl = (await a(FA.den1, (db) => sahaRaporu(db, FA.den1, FA.rapor)))!.fotolar;
+  assert.equal(fl.length, fotoOnce + 1);
+  assert.deepEqual([fl.at(-1)!.bolum, fl.at(-1)!.okuma], ["ekipman", true], "okuma fotoğrafı ekipman bölümünde");
   assert.deepEqual((await a(FA.den1, (db) => sahaRaporu(db, FA.den1, FA.rapor)))!.ekipmanBilgi, once, "öneri rapora yazılmaz");
   const kayit = (await a(FA.den1, (db) => db.sorgu<{ bolum: string; oneri: unknown }>("SELECT bolum, oneri FROM yz_okuma WHERE rapor_id = $1 ORDER BY zaman DESC LIMIT 1", [FA.rapor]))).rows[0];
-  assert.deepEqual(kayit, { bolum: "etiket", oneri: [{ degerler: { marka: "Deneme Marka" }, guven: "yuksek" }, { degerler: { imal: "2019" }, guven: "dusuk" }] });
+  assert.deepEqual(kayit, { bolum: "ekipman", oneri: [{ degerler: { marka: "Deneme Marka" }, guven: "yuksek" }, { degerler: { imal: "2019" }, guven: "dusuk" }] });
   tamam(await yzAyari({ acik: false }));
   assert.match(JSON.stringify(await et(FA.den1)), /firmada kapalı/);
   tamam(await yzAyari({ acik: true }));

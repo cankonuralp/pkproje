@@ -95,6 +95,15 @@ test("rapor şablonu: şablondan başlat, önizle, yayınla; yeni sürümle eski
     await expect(gozle.getByRole("button", { name: "Deneme maddesi", exact: true })).toBeVisible();
     /* ölçüm tablosu TABLO gibi: başlıklar sütun; "+ Sütun" yerinde yeni sütun açar, adı başlıkta yazılır */
     const linye = kagit.getByRole("region", { name: /Pano sigortaları \(linye\)$/ });
+    /* 484: sahada doldurma bölümün ayarı — tabloda varsayılan "Fotoğraf · Excel"; ayarda fotoğraf kapatılınca başlıkta yalnız Excel */
+    await expect(linye.getByText("Fotoğraf · Excel")).toBeVisible();
+    await linye.getByRole("button", { name: "Pano sigortaları (linye) · bölüm ayarları" }).click();
+    const doldur = page.getByRole("group", { name: "Pano sigortaları (linye) · sahada doldurma" });
+    await doldur.getByRole("checkbox", { name: /^Fotoğraftan doldur/ }).uncheck();
+    await expect(linye.getByText("Excel", { exact: true })).toBeVisible();
+    await doldur.getByRole("checkbox", { name: /^Fotoğraftan doldur/ }).check();
+    await expect(linye.getByText("Fotoğraf · Excel")).toBeVisible();
+    await page.getByRole("button", { name: "Bölüm ayarlarını kapat" }).click();
     await expect(linye.getByRole("columnheader", { name: /Devre/ })).toBeVisible();
     await linye.getByRole("button", { name: "Sütun", exact: true }).click();
     const sutun = page.getByRole("textbox", { name: "Sütun adı" });
