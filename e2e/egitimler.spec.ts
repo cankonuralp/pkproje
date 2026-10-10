@@ -10,6 +10,11 @@ test("eğitimler: tür ekle, kayıt ekle; denetçi yalnız kendi kaydını gör�
   await girisli(page, "yonetici");
   await page.goto("/dokumanlar/egitimler/turler");
   await hazir(page);
+  /* 479: Eğitim türleri üst sırada değil, Eğitimler'in alt sekmesinde (üstte Eğitimler seçili) */
+  const ust = page.getByRole("navigation", { name: "Döküman bölümleri" });
+  await expect(ust.getByRole("link", { name: "Eğitimler" })).toHaveAttribute("aria-current", "page");
+  await expect(ust.getByRole("link", { name: /Eğitim türleri/ })).toHaveCount(0);
+  await expect(page.getByRole("navigation", { name: "Eğitim bölümleri" }).getByRole("link", { name: /^Eğitim türleri \(\d+\)$/ })).toHaveAttribute("aria-current", "page");
   await page.getByRole("button", { name: "Eğitim türü ekle" }).click();
   const t = page.getByRole("dialog", { name: "Eğitim türü ekle" });
   await t.getByLabel("Eğitim").fill(ad);

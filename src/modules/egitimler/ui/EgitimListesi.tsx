@@ -21,7 +21,8 @@ import { Tus } from "../../../components/tus/Tus";
 import { ayEkle, kalanGun, KURUMLAR } from "../sema";
 import type { EgitimKaydi, EgitimTuru } from "../server/egitimler";
 import { egitimKaydetEylemi, egitimTuruKaydetEylemi, katilimFormuGonderEylemi, sertifikaYukleEylemi, egitimKaydiSilEylemi, egitimTuruSilEylemi } from "./eylemler";
-import { EGITIM_SEKMELERI, tarihYaz } from "./ortak";
+import { DOKUMAN_SEKMELERI } from "../../dokumanlar/ui/ortak";
+import { egitimAltSekmeleri, tarihYaz } from "./ortak";
 import stil from "./egitimler.module.css";
 
 const KID = { personel: "ekw-personel", tur: "ekw-tur", tarih: "ekw-tarih", kurum: "ekw-kurum", dosya: "ekw-dosya" } as const;
@@ -69,7 +70,8 @@ export function EgitimListesi({ kayitlar, turler, kisiler, esik, bugun, yaz, kis
   return (
     <>
       <SayfaBasi baslik="Dökümanlar" sayac={<Sayac s={s} />} tuslar={yaz && turler.length > 0 && <Tus ikon="plus" onClick={() => setP({ tip: "ekle" })}>Eğitim kaydı ekle</Tus>} />
-      <Sekmeler ad="Döküman bölümleri" ogeler={EGITIM_SEKMELERI} secili="/dokumanlar/egitimler" />
+      <Sekmeler ad="Döküman bölümleri" ogeler={DOKUMAN_SEKMELERI} secili="/dokumanlar/egitimler" />
+      <Sekmeler alt ad="Eğitim bölümleri" ogeler={egitimAltSekmeleri(guncel.length, turler.length)} secili="/dokumanlar/egitimler" />
       {(gec.length > 0 || yak.length > 0) && <div className={stil.seritler}><Serit tur={gec.length ? "hata" : "uyari"} ikon="graduation-cap">
         {gec.length > 0 && <><b>{gec.length} eğitimin tekrarı geçti</b> ({gec.map((x) => `${x.personel} · ${x.tur}`).join(", ")}){yak.length ? "; " : "."}</>}
         {yak.length > 0 && `${yak.length} eğitimin tekrarı ${esik} gün içinde.`}</Serit></div>}
@@ -205,7 +207,7 @@ function KayitGorunumu({ x, kayitlar, bugun, yaz, kapat, tekrar }: { x: EgitimKa
   );
 }
 
-export function TurListesi({ turler, yaz }: { turler: EgitimTuru[]; yaz: boolean }) {
+export function TurListesi({ turler, yaz, kayitSayisi }: { turler: EgitimTuru[]; yaz: boolean; kayitSayisi: number }) {
   const [p, setP] = useState<null | { t?: EgitimTuru }>(null);
   const sutunlar: Sutun<EgitimTuru>[] = [
     { k: "ad", genislik: "40%", baslik: "Eğitim", kart: "ust", sira: 1, hucre: (t) => <Kirp>{t.ad}</Kirp> },
@@ -221,7 +223,8 @@ export function TurListesi({ turler, yaz }: { turler: EgitimTuru[]; yaz: boolean
   return (
     <>
       <SayfaBasi baslik="Dökümanlar" sayac={<><b>{turler.length}</b> eğitim türü</>} tuslar={yaz && <Tus ikon="plus" onClick={() => setP({})}>Eğitim türü ekle</Tus>} />
-      <Sekmeler ad="Döküman bölümleri" ogeler={EGITIM_SEKMELERI} secili="/dokumanlar/egitimler/turler" />
+      <Sekmeler ad="Döküman bölümleri" ogeler={DOKUMAN_SEKMELERI} secili="/dokumanlar/egitimler" />
+      <Sekmeler alt ad="Eğitim bölümleri" ogeler={egitimAltSekmeleri(kayitSayisi, turler.length)} secili="/dokumanlar/egitimler/turler" />
       {turler.length ? <Liste baslik="Eğitim türleri" sutunlar={sutunlar} kayitlar={turler} anahtar={(t) => t.id} />
         : <div className={stil.seritler}><Serit tur="bilgi" ikon="info">Eğitim türü yok. Firmanın eğitimlerini ve tekrar sürelerini ekleyin.</Serit></div>}
       {p && <TurPenceresi kapat={() => setP(null)} t={p.t} />}

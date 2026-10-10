@@ -1,4 +1,5 @@
-/* DÖKÜMANLAR › Eğitim türleri (maket egitimler.html #/turler) — firmanın eğitimleri ve tekrar süreleri (153: firma ekler / düzenler). */
+/* DÖKÜMANLAR › Eğitim türleri (maket egitimler.html #/turler) — firmanın eğitimleri ve tekrar süreleri (153: firma ekler / düzenler). 479: Eğitimler'in alt
+   sekmesi (üst sırada Eğitimler seçili). */
 import type { Metadata } from "next";
 import { Yetkisiz } from "../../../../../components/hata/Hata";
 import { egitimDegistirir, egitimListesi } from "../../../../../modules/egitimler/server/egitimler";
@@ -13,5 +14,5 @@ export default async function Sayfa() {
   if (!o) return <Yetkisiz />;
   const l = await oturumIslemi(o, (db) => egitimListesi(db, o));
   if (!l) return <Yetkisiz />;
-  return <TurListesi turler={l.turler} yaz={egitimDegistirir(o)} />;
+  return <TurListesi turler={l.turler} yaz={egitimDegistirir(o)} kayitSayisi={l.kayitlar.filter((x) => !x.onceki).length} />;
 }

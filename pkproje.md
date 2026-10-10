@@ -2372,6 +2372,10 @@ revizyon, alan kopyalama, hafif kusur devri, meslek eşleşme denetimi).
 - Emsal ürünler: https://opwire.app/iso-17020-periyodik-kontrol-yazilimi/ · https://17020muayene.vidco.com.tr/ · https://akuple.com/asansor-kontrol-yazilimi/ · https://ensyazilim.com/
 
 ## 11 · Değişiklik günlüğü
+- 2026-10-10 (479): Dökümanlar sekmeleri (reisim: *"bu ekranda eğitimlere tıklayınca alt sekme gibi gözüksün eğitim türleri yana gelmesin"*).
+  Üst sırada yalnız Dökümanlar'ın dört bölümü (Standartlar · Muayene kriterleri · Diğer dökümanlar · Eğitimler); Eğitimler seçilince ALTINDA
+  "Eğitim kayıtları (n) · Eğitim türleri (n)" (442 alt sekme deseni — egitimler/ui/ortak.tsx egitimAltSekmeleri). Kilit: e2e/egitimler.spec.ts
+  (üst sırada Eğitim türleri yok, Eğitimler seçili; alt sekmede Eğitim türleri seçili).
 - 2026-10-10 (478): **477 YAYINDA** — Supabase göç 0079 (`goc` kaydıyla, 80 göç; uygulamadan sonra ölçüldü: altı kısıt, iki işlevin yeni gövdesi ve
   arama yolu, uygulama rolünün `geri` sütun hakkı, API rolleri tabloları okuyamaz ve işlevi çalıştıramaz, RLS açık + zorunlu), main 1aab228, sağlık
   "tamam" (sürüm 1aab228), duman 10/10; yeni rotalar oturumsuz girişe yönlenir (/onaylar/talepler, /talepler, /muhasebe/giderler, /personel/izinler).
