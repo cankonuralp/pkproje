@@ -10,7 +10,8 @@
    · K1 (2026-10-04): menüde yalnız kişinin görebildiği modüller (gorunur: sunucuda canDo ile hesaplanır — yapamayacağı yer çizilmez, anayasa 7.4;
      KAPI değildir, her sayfa sunucuda ayrıca denetler). Sağ üstte kullanıcı (baş harfler, ad, rol) ve menüsünde Çıkış yap (maket).
    · Takip balonları (339; maket takipHtml, T6): modül başına kırmızı (süresi geçen) / sarı (bekleyen, yaklaşan) sayı; 0 olan çizilmez; sayfa
-     açılınca sunucudan istenir (çizimi bekletmez; sayılar yetkiye duyarlı — anasayfa/server/takip.ts). Daraltılmış şeritte yalnız en önemlisi. */
+     açılınca sunucudan istenir (çizimi bekletmez; sayılar yetkiye duyarlı — anasayfa/server/takip.ts). Daraltılmış şeritte yalnız en önemlisi.
+     480: aynı sayılar bağlamla (TakipBaglami) sayfaya da gider — modülün sayfa başlığının altında sebebi yazar (TakipSeridi). */
 import Image from "next/image";
 import Link from "next/link";
 import { usePathname } from "next/navigation";
@@ -22,11 +23,12 @@ import { CevrimdisiGosterge } from "../cevrimdisi/Cevrimdisi";
 import { sayfalariSil } from "../cevrimdisi/depo";
 import { Ikon } from "../ikon/Ikon";
 import stil from "./Kabuk.module.css";
+import { TakipBaglami, type KabukTakip } from "./TakipSeridi";
 import isaretKoyu from "./marka/probata-isaret-koyu-zemin.svg";
 import isaretRenkli from "./marka/probata-isaret-renkli.svg";
 import logoKoyu from "./marka/probata-yatay-koyu-zemin.svg";
+import { temizYol } from "./takip";
 
-const temizYol = (yol: string) => (yol.length > 1 ? yol.replace(/\/+$/, "") : yol);
 /* 395: çıkışta bu cihazda saklanan (bağlantısız açılan) sayfalar silinir; bekleyen işler kalır (o kişi girince gider) */
 const cikisVeTemizle = async () => { await sayfalariSil().catch(() => undefined); await cikisEylemi(); };
 
@@ -51,8 +53,7 @@ function bantAboneOl(bildir: () => void) {
 }
 const genisBantMi = () => matchMedia(GENIS_BANT).matches;
 
-/** modül (§3.1 no) → balon; ad: ekran okuyucunun ve ipucunun okuduğu anlam */
-export type KabukTakip = Record<number, { kirmizi: number; sari: number; ad: { kirmizi: string; sari: string } }>;
+export type { KabukTakip } from "./TakipSeridi";
 function Balonlar({ b }: { b: KabukTakip[number] | undefined }) {
   if (!b || (b.kirmizi <= 0 && b.sari <= 0)) return null;
   return (
@@ -216,7 +217,7 @@ export function Kabuk({ children, kullanici, gorunur, takip, paket }: {
           <TemaTusu />
           {kullanici && <KullaniciMenusu kullanici={kullanici} cikis={cikisVeTemizle} />}
         </header>
-        <main className={stil.icerik}>{children}</main>
+        <main className={stil.icerik}><TakipBaglami.Provider value={balon}>{children}</TakipBaglami.Provider></main>
       </div>
     </div>
   );

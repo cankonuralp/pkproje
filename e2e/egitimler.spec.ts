@@ -47,6 +47,15 @@ test("eğitimler: tür ekle, kayıt ekle; denetçi yalnız kendi kaydını gör�
   await g.getByRole("button", { name: "Katılım formunu imzaya gönder" }).click();
   await page.getByRole("dialog", { name: "Katılım formunu imzaya gönder" }).getByRole("button", { name: "İmzaya gönder" }).click();
   await expect(page.getByText(`${ad} katılım formu Deneme Denetçi imzasına gönderildi.`)).toBeVisible({ timeout: 90_000 });
+  /* 480 (reisim: "dökümanlarda 1 uyarı gözüküyor ama …"): Dökümanlar'ın öteki sekmesinde yan menü sayısının sebebi yazar, Eğitimler'e götürür;
+     Eğitimler'in kendi şeridi olduğundan orada ikinci kez yazmaz */
+  await page.goto("/dokumanlar");
+  await hazir(page);
+  await expect(page.getByText("Yan menüdeki Dökümanlar sayısı:")).toBeVisible({ timeout: 30_000 });
+  await page.getByRole("link", { name: /\d+ eğitimin tekrarı geçti/ }).click();
+  await expect(page).toHaveURL(/\/dokumanlar\/egitimler$/, { timeout: 30_000 });
+  await hazir(page);
+  await expect(page.getByText("Yan menüdeki Dökümanlar sayısı:")).toHaveCount(0);
 
   /* denetçi: kendi kaydını görür, ekleyemez */
   await context.clearCookies();

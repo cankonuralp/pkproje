@@ -133,6 +133,12 @@ test("yan menü balonları: planlar (kabul bekleyen sarı, plan günü gelmiş k
   await sahip("INSERT INTO plan_ekip (firma_id, plan_id, personel_id, isg_no) VALUES ($1, $2, $3, 'ISG-9') RETURNING id::text", [A, pid, denP]);
   const d = await a(DEN, (db) => menuTakip(db, DEN));
   assert.deepEqual([d[13]?.kirmizi, d[13]?.sari], [1, 1], "denetçinin kendi planları: P-006 günü geçti, P-001 bekliyor");
+  /* 480: balonun sayıları sebeplerin toplamı (her balonda) */
+  for (const [no, b] of Object.entries(d)) {
+    assert.equal(b.neden.filter((x) => x.tur === "kirmizi").reduce((n, x) => n + x.sayi, 0), b.kirmizi, `modül ${no} kırmızı`);
+    assert.equal(b.neden.filter((x) => x.tur === "sari").reduce((n, x) => n + x.sayi, 0), b.sari, `modül ${no} sarı`);
+    assert.ok(b.neden.every((x) => x.sayi > 0 && x.yer.startsWith("/") && x.metin), `modül ${no} sebepleri`);
+  }
   assert.equal(d[14], undefined, "Yeni raporu yok");
   /* 337–339 incelemesi (U4): planı atanan kabul eder — planlamacı firma genelini görür ama ekibinde olmadığı planın balonu yok */
   assert.equal((await a(PLAN, (db) => menuTakip(db, PLAN)))[13], undefined, "planlamacının kendi kabul edeceği plan yok");
@@ -182,6 +188,9 @@ test("Araçlar balonu: geçen hafta girilmeyen kilometre ve süresi geçen muaye
     [A, g(10)]);
   const d = await a(DEN, (db) => menuTakip(db, DEN));
   assert.deepEqual([d[23]?.kirmizi, d[23]?.sari], [2, 0], "sürücü: kendi aracı — km eksik + muayene geçti");
+  /* 480: sebepleriyle — Araçlar listesi sebebi yazmadığı için şerit orada da çizilir (sayfada: false) */
+  assert.deepEqual(d[23]!.neden.map((x) => [x.tur, x.sayi, x.yer, x.sayfada]), [["kirmizi", 1, "/araclar", false], ["kirmizi", 1, "/araclar", false]]);
+  assert.match(d[23]!.neden.map((x) => x.metin).join(" | "), /kilometresi girilmedi .*belgesinin .*süresi geçti/);
   assert.match(d[23]!.ad.kirmizi, /geçen hafta girilmeyen kilometre/);
   const y = await a(YON, (db) => menuTakip(db, YON));
   assert.deepEqual([y[23]?.kirmizi, y[23]?.sari], [2, 1], "yönetici: bütün araçlar — depodaki aracın yaklaşan sigortası sarı");
@@ -202,6 +211,12 @@ test("477 talepler balonu: onay bekleyen izin talebi Onaylar › Talepler'de ve 
   assert.equal((m[15]?.kirmizi ?? 0) + (m[15]?.sari ?? 0), o.imzaBekleyen.length + o.kuyruk.filter((x) => x.izin.onayla).length + o.talepler.length + o.belgeBekleyen,
     "Onaylar balonu = onaylayabildiği rapor + talep + belge");
   assert.equal(m[21], undefined, "Talepler'de balon yok");
+  /* 480: balonun sebebi — talepler Onaylar › Talepler'e götürür, o sayfa talepleri zaten listeler (orada şerit yok) */
+  const tn = m[15]!.neden.filter((x) => x.yer === "/onaylar/talepler");
+  assert.ok(tn.length > 0 && tn.every((x) => x.sayfada && /kararınızı bekliyor/.test(x.metin)), JSON.stringify(m[15]!.neden));
+  assert.equal(tn.reduce((n, x) => n + x.sayi, 0), o.talepler.length, "şeritteki talep sayısı = Talepler sekmesindeki");
+  const ana = await a(YON, (db) => anaSayfa(db, YON));
+  assert.equal(sayi(ana, "firma_yoneticisi", "Karar bekleyen talep"), o.talepler.length, "480: Ana sayfada da karar bekleyen talep");
   assert.deepEqual((await a(DEN, (db) => onayListeleri(db, DEN)))!.talepler, [], "talep eden karar vermez");
   assert.equal((await a(DEN, (db) => menuTakip(db, DEN)))[21], undefined);
   assert.deepEqual((await a(YON_B, (db) => onayListeleri(db, YON_B), B))!.talepler, [], "B'de A'nın talebi yok");

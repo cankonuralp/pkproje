@@ -73,6 +73,12 @@ test("talepler: masraf formu ve izin talebi; karar Onaylar'da — düzeltmeye ge
   await expect(page.getByRole("navigation", { name: "Personel bölümleri" }).getByRole("link", { name: "İzin talepleri" })).toBeVisible();
   await expect(page.getByRole("button", { name: `${no} onayla` })).toHaveCount(0);
   await expect(page.getByRole("link", { name: `${no} Onaylar'da aç` })).toBeVisible();
+  /* 480: Onaylar'ın kuyruk sekmesinde yan menü sayısının sebebi yazar ve Talepler'e götürür */
+  await page.goto("/onaylar");
+  await hazir(page);
+  await expect(page.getByText("Yan menüdeki Onaylar sayısı:")).toBeVisible({ timeout: 30_000 });
+  await page.getByRole("link", { name: /\d+ talep \(izin \/ masraf formu\) kararınızı bekliyor/ }).click();
+  await expect(page).toHaveURL(/\/onaylar\/talepler$/, { timeout: 30_000 });
   await talebiAc(page, no);
   await expect(page.getByText("Talep salt okunur")).toBeVisible();
   /* yeni ekran: erişilebilirlik taraması (410 ile aynı kurallar; ciddi / kritik 0) */

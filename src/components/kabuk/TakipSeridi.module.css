@@ -1,0 +1,5 @@
+/* YAN MENÜ SAYISININ SEBEBİ (480) — sayfa başlığının altında; bağlantılar şeridin yazı renginde, altı çizili (şerit zemininde karşıtlık şeridin
+   kendi çiftiyle: --uyari-yazi / --hata-yazi, tests/kontrast.test.ts) */
+.kap { margin: -4px 0 12px; }
+.etiket { font-weight: 700; }
+.baglanti { color: inherit; font-weight: 700; text-decoration: underline; text-underline-offset: 3px; }

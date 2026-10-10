@@ -146,6 +146,8 @@ export async function anaSayfa(db: Sorgulayici, kim: Kisi): Promise<AnaSayfa> {
     bolumler.push({ rol: "firma_yoneticisi", yuzler: [
       { ikon: "calendar-check", ad: "Açık plan", sayi: acik.length, href: "/planlar" },
       { ikon: "badge-check", ad: "Onayda rapor", sayi: tumu.filter((x) => x.durum === "onayda").length, href: "/onaylar" },
+      /* 480: karar bekleyen izin talepleri / masraf formları (Onaylar balonunda sayılıyordu, Ana sayfada yoktu) */
+      { ikon: "inbox", ad: "Karar bekleyen talep", sayi: o?.talepler.length ?? 0, href: "/onaylar/talepler", not: o?.talepler.length ? "izin / masraf formu" : "yok", uyari: (o?.talepler.length ?? 0) > 0 },
       { ikon: "file-signature", ad: "Muayene uzmanı imzası", sayi: tumu.filter((x) => x.durum === "onaylandi").length, href: "/raporlar", not: "imza bekliyor" },
       { ikon: "alarm-clock", ad: "Uyarı", sayi: uyarilar.length, href: "/uyarilar", not: `${kal} kalibrasyon · ${egt} eğitim tekrarı · ${arac} araç belgesi${sak ? ` · ${sak} saklama süresi` : ""}`, uyari: uyarilar.length > 0 },
       { ikon: "users", ad: "Bilgisi eksik personel", sayi: eksik.length, href: "/personel", not: eksik.length ? eksik.map((p) => p.ad).join(", ") : "yok", uyari: eksik.length > 0 },

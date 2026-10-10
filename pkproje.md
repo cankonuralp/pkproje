@@ -2372,6 +2372,18 @@ revizyon, alan kopyalama, hafif kusur devri, meslek eşleşme denetimi).
 - Emsal ürünler: https://opwire.app/iso-17020-periyodik-kontrol-yazilimi/ · https://17020muayene.vidco.com.tr/ · https://akuple.com/asansor-kontrol-yazilimi/ · https://ensyazilim.com/
 
 ## 11 · Değişiklik günlüğü
+- 2026-10-10 (480): **YAN MENÜ SAYISININ SEBEBİ HER MODÜLDE** (reisim: *"dökümanlarda 1 uyarı gözüküyor ama bir sürü eksik var, tüm siteyi
+  komple tara bir sürü böyle eksikler var"*; anayasa 0.8 hata = sınıf, 2.8 sayaç dürüst). Taramada aynı sınıf: Dökümanlar 1 (eğitim tekrarı —
+  yalnız Eğitimler sekmesinde yazıyordu), Onaylar 3 (talepler — Onaylar açılınca "Onay kuyruğu (0) · Onay bekleyen rapor yok"), Araçlar 3 (km +
+  belge — sayfada şerit yok), Ana sayfa firma yöneticisinde karar bekleyen talepler yoktu. Düzeltme mekanizmada: balonlar SEBEPLERİYLE döner
+  (anasayfa/server/takip.ts — sayı, ne olduğu, listelendiği sayfa; balonun sayısı sebeplerin toplamı), kabuk sayıları bağlamla verir, sayfa
+  başlığı üreticisi (SayfaBasi) altına "Yan menüdeki <modül> sayısı: …" şeridini çizer (components/kabuk/TakipSeridi.tsx; her sebep kendi
+  sayfasına bağlantı; sebebin sayfası onu zaten gösteriyorsa orada çizilmez — Uyarılar, Ölçüm cihazları, Sözleşmeler, Onaylar sekmeleri,
+  Eğitimler). Bütün balonlu modüller: Planlar, Raporlar, Onaylar (imza / kuyruk / talep / belge ayrı), Uyarılar, Sözleşmeler, Ölçüm cihazları,
+  Araçlar (km eksik / bekliyor, belge geçti / yaklaşıyor), Dökümanlar, Muhasebe. Ana sayfa firma yöneticisine "Karar bekleyen talep" yüzü.
+  Kilitler: tests/takip-seridi.test.ts (adresin modülü, sayfada süzgeci, üretici bağlantısı, her balon sebepli), tests/anasayfa.test.ts (balon =
+  sebeplerin toplamı; Onaylar talep sebebi = Talepler sekmesi; Araçlar sebepleri; Ana sayfa yüzü), e2e egitimler.spec (Dökümanlar'da şerit →
+  Eğitimler, orada ikinci kez yok), talepler.spec (Onaylar kuyruğunda şerit → Talepler).
 - 2026-10-10 (479): Dökümanlar sekmeleri (reisim: *"bu ekranda eğitimlere tıklayınca alt sekme gibi gözüksün eğitim türleri yana gelmesin"*).
   Üst sırada yalnız Dökümanlar'ın dört bölümü (Standartlar · Muayene kriterleri · Diğer dökümanlar · Eğitimler); Eğitimler seçilince ALTINDA
   "Eğitim kayıtları (n) · Eğitim türleri (n)" (442 alt sekme deseni — egitimler/ui/ortak.tsx egitimAltSekmeleri). Kilit: e2e/egitimler.spec.ts

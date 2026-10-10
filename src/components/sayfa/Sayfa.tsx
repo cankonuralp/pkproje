@@ -3,6 +3,7 @@
 import Link from "next/link";
 import { Fragment, type ReactNode } from "react";
 import { Ikon } from "../ikon/Ikon";
+import { TakipSeridi } from "../kabuk/TakipSeridi";
 import stil from "./Sayfa.module.css";
 
 export type RozetTuru = "bekliyor" | "kabul" | "denetimde" | "tamam" | "red" | "notr";
@@ -13,8 +14,9 @@ export function Rozetler({ children }: { children: ReactNode }) {
   return <span className={stil.rozetler}>{children}</span>;
 }
 
+/** 480: başlığın altında yan menü sayısının sebebi (TakipSeridi — modülün balonu varsa; kabuk dışında çizilmez) */
 export function SayfaBasi({ baslik, sayac, tuslar }: { baslik: string; sayac?: ReactNode; tuslar?: ReactNode }) {
-  return <div className={stil.sayfaBas}><h1 tabIndex={-1}>{baslik}</h1>{sayac}{tuslar && <div className={stil.sagda}>{tuslar}</div>}</div>;
+  return <><div className={stil.sayfaBas}><h1 tabIndex={-1}>{baslik}</h1>{sayac}{tuslar && <div className={stil.sagda}>{tuslar}</div>}</div><TakipSeridi /></>;
 }
 
 /** kırıntı: son öğe bulunulan sayfa (bağlantısız) */
