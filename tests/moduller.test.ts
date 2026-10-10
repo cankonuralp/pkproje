@@ -26,7 +26,7 @@ import { existsSync, readdirSync, readFileSync, statSync } from "node:fs";
 import { join } from "node:path";
 import { test } from "node:test";
 import { MODULLER, MODUL_GRUPLARI } from "../src/modules/moduller.ts";
-import { dosyalar, KOK, maketMenusu, oku } from "./yardimci/denetimler.ts";
+import { cerceveIzniEksikleri, dosyalar, KOK, maketMenusu, oku } from "./yardimci/denetimler.ts";
 
 test("menü onaylı maketle birebir (grup · sıra · ad · ikon · §3.1 no)", () => {
   const maket = maketMenusu(oku("docs/assets/maket-ortak.js"));
@@ -66,7 +66,11 @@ test("her modülün rota klasörü var ve src/app'te modül dışı rota yok", (
   /* 2026-10-05 (319, 0030): müşteri paneli kendi rota grubunda — "(musteri)" (yalnız /portal; müşteri oturumu, kapısı aşağıdaki testte) */
   /* 2026-10-06 (348, KOD-GECIS Y1): probata yönetim sayfası kendi rota grubunda — "(yonetim)" (yalnız /yonetim: giriş adımları + oturumlu
      panel; yalnız yönetim adresinde, kapısı aşağıdaki testte) */
-  assert.deepEqual(klasorlerOf(app), ["(acik)", "(gelistirme)", "(musteri)", "(uygulama)", "(yonetim)", "api"]);
+  /* 2026-10-10 (472, maket kararları k1–k4): "(cerceve)" — kabuksuz, yalnız kendi sayfamızın çerçevesinde açılan saha ekranı önizlemesi
+     (/ekipman-turleri/<tür>/sablon/<sürüm>/saha; oturum ve modül kapısı aşağıdaki testte, gömme izni src/proxy.ts yalnız bu yolda) */
+  assert.deepEqual(klasorlerOf(app), ["(acik)", "(cerceve)", "(gelistirme)", "(musteri)", "(uygulama)", "(yonetim)", "api"]);
+  assert.deepEqual(klasorlerOf(join(app, "(cerceve)")), ["ekipman-turleri"]);
+  assert.deepEqual(klasorlerOf(join(app, "(cerceve)", "ekipman-turleri", "[id]", "sablon", "[sid]")), ["saha"]);
   assert.deepEqual(klasorlerOf(join(app, "(musteri)")), ["portal"]);
   assert.deepEqual(klasorlerOf(join(app, "(yonetim)")), ["yonetim"]);
   /* 355: çıkış düz form isteği (route.ts, yalnız POST) — sunucu eyleminin yönlendirmesi yönetim adresini kaybediyordu */
@@ -79,6 +83,10 @@ test("her modülün rota klasörü var ve src/app'te modül dışı rota yok", (
   assert.ok(existsSync(join(uygulama, "page.tsx")), "Ana sayfa yok");
   assert.deepEqual(klasorlerOf(join(app, "(acik)")), ACIK_ROTALAR);
   assert.deepEqual(klasorlerOf(join(app, "(gelistirme)")), GELISTIRME_ROTALARI);
+});
+
+test("çerçeve sayfası (472): modül kapısı sayfada; gömme izni yalnız o yolda", () => {
+  assert.deepEqual(cerceveIzniEksikleri(oku("src/proxy.ts"), oku("src/app/(cerceve)/ekipman-turleri/[id]/sablon/[sid]/saha/page.tsx")), []);
 });
 
 test("oturum kapısı: uygulama düzeni oturum ister, modül sayfası modül numarasıyla yetki denetler", () => {

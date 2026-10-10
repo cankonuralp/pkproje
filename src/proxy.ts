@@ -12,6 +12,9 @@ import { yonetimAdresiMi } from "./server/yonetim/adres";
    paneli, API orada yok). Öteki her adreste /yonetim yoktur. Bulunamadı sayfasına çevrilir (404); sayfa da adresi ayrıca denetler. */
 const YONETIM_YOLU = /^\/yonetim(\/|$)/;
 const YOK_YOLU = "/_bulunamadi";
+/* 472: format kurucusunun saha ekranı önizlemesi (src/app/(cerceve)) YALNIZ kendi sayfamızın çerçevesinde açılır — bu yolda frame-ancestors
+   'self' + SAMEORIGIN; öteki her sayfa 'none' + DENY (tıklama hırsızlığı yok) */
+const CERCEVE_YOLU = /^\/ekipman-turleri\/[^/]+\/sablon\/[^/]+\/saha$/;
 
 export function proxy(istek: NextRequest) {
   const yol = istek.nextUrl.pathname;
@@ -30,6 +33,7 @@ export function proxy(istek: NextRequest) {
   }
   const nonce = Buffer.from(crypto.randomUUID()).toString("base64");
   const gelistirme = process.env.NODE_ENV === "development";
+  const cerceve = !yasak && CERCEVE_YOLU.test(yol);
   const csp = [
     "default-src 'self'",
     `script-src 'self' 'nonce-${nonce}' 'strict-dynamic'${gelistirme ? " 'unsafe-eval'" : ""}`,
@@ -43,7 +47,7 @@ export function proxy(istek: NextRequest) {
     "object-src 'none'",
     "base-uri 'self'",
     "form-action 'self'",
-    "frame-ancestors 'none'",
+    `frame-ancestors ${cerceve ? "'self'" : "'none'"}`,
     ...(gelistirme ? [] : ["upgrade-insecure-requests"]),
   ].join("; ");
 
@@ -61,7 +65,7 @@ export function proxy(istek: NextRequest) {
   yanit.headers.set("Referrer-Policy", "same-origin");
   yanit.headers.set("Permissions-Policy", "camera=(self), microphone=(), geolocation=(), payment=(), usb=()");
   yanit.headers.set("Cross-Origin-Opener-Policy", "same-origin");
-  if (!dosyaUcu) yanit.headers.set("X-Frame-Options", "DENY");
+  if (!dosyaUcu) yanit.headers.set("X-Frame-Options", cerceve ? "SAMEORIGIN" : "DENY");
   if (!gelistirme) yanit.headers.set("Strict-Transport-Security", "max-age=63072000; includeSubDomains");
   if (api) yanit.headers.set("X-Probata-Api", String(API_SURUMU));
   return yanit;

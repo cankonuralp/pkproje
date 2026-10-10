@@ -257,12 +257,14 @@ export function notlarYaz(t: FormatTanimi, i: number, l: readonly NotGirdisi[]):
 /** görünüm: form kodu, başlık, metot ve kapsam (dayanak), genel muayene talimatı. resmiFormat: Bakanlık formatı mı (kilitli öğesi ve form kodu
     var) — 470'ten beri yalnız işaret: kod ve başlık da değişir, yayın denetimi uyarır */
 export const resmiFormat = (t: FormatTanimi) => kilitliKimlikler(t).size > 0 && !!t.gorunum.formKodu;
-export function gorunumYaz(t: FormatTanimi, y: { formKodu?: string; baslik?: string; dayanak?: string[]; talimat?: string }): FormatTanimi {
+export function gorunumYaz(t: FormatTanimi, y: { formKodu?: string; baslik?: string; dayanak?: string[]; talimat?: string; cevap?: "acilir" | "tus" }): FormatTanimi {
   return { ...t, gorunum: {
     ...t.gorunum,
     formKodu: y.formKodu !== undefined ? kirp(y.formKodu, 20) : t.gorunum.formKodu,
     baslik: y.baslik !== undefined ? kirp(y.baslik, 200) : t.gorunum.baslik,
     dayanak: y.dayanak ? y.dayanak.map((x) => kirp(x, 300)).filter(Boolean).slice(0, 20) : t.gorunum.dayanak,
     talimat: y.talimat !== undefined ? y.talimat.slice(0, 8000) : t.gorunum.talimat,
+    /* 472: madde cevabının saha ekranındaki biçimi (açılır liste / yan yana tuşlar) */
+    cevap: y.cevap === "acilir" || y.cevap === "tus" ? y.cevap : t.gorunum.cevap,
   } };
 }

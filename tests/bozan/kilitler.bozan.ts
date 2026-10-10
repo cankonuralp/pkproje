@@ -8,7 +8,7 @@ import { MODUL_GRUPLARI } from "../../src/modules/moduller.ts";
 import {
   bantDisiDaraltma, ciftIdler, ciftSeciciler, ciftTanimliDegiskenler, daralmisSerit, degiskenDegeri, dosyalar, eksikIkonlar, girdiYaziHatalari, kalipDisiEsikler,
   hamYazma, kiraciDisiErisim, kullanilanIkonlar, maketIkonlari, maketMenusu, oku, parantezHatasi, rlsEksikTablolar, tanimsizDegiskenler, testKapisiEksikleri, tokenGovdesi, pdfPaketEksikleri,
-  swEksikleri, baglantiRengiEksikleri, cekmeceBoyuHatasi, vhYukseklikHatalari,
+  swEksikleri, baglantiRengiEksikleri, cekmeceBoyuHatasi, vhYukseklikHatalari, cerceveIzniEksikleri,
 } from "../yardimci/denetimler.ts";
 
 const kabuk = oku("src/components/kabuk/Kabuk.module.css");
@@ -199,4 +199,16 @@ test("vh yükseklik: telefondaki levhanın dvh'si kalkınca yakalanır", () => {
   const bozuk = vhYukseklikHatalari([{ ad, metin: metin.replace("max-height: 88vh; max-height: 88dvh;", "max-height: 88vh;") }]);
   assert.equal(bozuk.length, 1);
   assert.match(bozuk[0], /Pencere\.module\.css: \.pencere max-height: 88vh$/);
+});
+
+/* 472: çerçeve izni — her sayfaya gömme izni verilince, yol genişleyince, X-Frame-Options koşulsuzlaşınca, sayfanın kapısı kalkınca yakalanır */
+test("çerçeve izni: koşulsuz 'self', geniş yol, koşulsuz SAMEORIGIN ya da kapısız sayfa yakalanır", () => {
+  const proxy = oku("src/proxy.ts"), sayfa = oku("src/app/(cerceve)/ekipman-turleri/[id]/sablon/[sid]/saha/page.tsx");
+  assert.deepEqual(cerceveIzniEksikleri(proxy, sayfa), []);
+  assert.deepEqual(cerceveIzniEksikleri(proxy.replace("`frame-ancestors ${cerceve ? \"'self'\" : \"'none'\"}`,", "\"frame-ancestors 'self'\","), sayfa), ["frame-ancestors koşulsuz"]);
+  assert.ok(cerceveIzniEksikleri(proxy.replace(String.raw`/^\/ekipman-turleri\/[^/]+\/sablon\/[^/]+\/saha$/`, String.raw`/^\/ekipman-turleri\//`), sayfa)
+    .includes("gömme izni fazla geniş: /ekipman-turleri/a/sablon/b/kurucu"));
+  assert.ok(cerceveIzniEksikleri(proxy.replace(String.raw`\/saha$/`, String.raw`\/saha/`), sayfa).includes("gömme izni fazla geniş: /ekipman-turleri/a/sablon/b/saha/c"));
+  assert.deepEqual(cerceveIzniEksikleri(proxy.replace(`cerceve ? "SAMEORIGIN" : "DENY"`, `"SAMEORIGIN"`), sayfa), ["X-Frame-Options koşulsuz"]);
+  assert.deepEqual(cerceveIzniEksikleri(proxy, sayfa.replace("if (!o) return <Yetkisiz />;", "")), ["çerçeve sayfasında modül kapısı yok"]);
 });

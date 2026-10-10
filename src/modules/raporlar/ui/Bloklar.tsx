@@ -10,8 +10,11 @@
    · olcum: satır ekle / kaldır; satır sonucu formatın hesabından ve sütun sınırlarından; uygunluk notu formatta varsa seçilir (P2, Not-1 …).
    · foto: bölümün fotoğrafları (FotoListesi; en az formatın enAz'ı — hazır şablonlarda 1); "Uygun değil" maddede de fotoğraf eklenir, Kusur
      açıklamalarında adıyla görünür (O2). Her girdinin etiketi var (görünür ya da aria-label); Onaya gönder'in işaretlediği
-     boş zorunlu alan aria-invalid + kırmızı çerçeve, doldurulunca kalkar (maket zorunluEksik / uyar). */
-import { useCallback, useEffect, useId, useRef, useState, type KeyboardEvent, type ReactNode, type TransitionStartFunction } from "react";
+     boş zorunlu alan aria-invalid + kırmızı çerçeve, doldurulunca kalkar (maket zorunluEksik / uyar).
+   472 (maket kararı k2): formatta "yan yana tuşlar" seçildiyse madde cevabı açılır liste yerine tuşlardır (tek dokunuş).
+   473 (maket kararı k1): format kurucusunun saha görünümünde (yalnız orada — Baglam.yerinde) formatın kendisi yerinde düzenlenir: bölüm, grup,
+   madde, alan, sütun, değer adı kalem tuşuyla yazılır; madde / alan / sütun / değer eklenir, çıkarılır. Gerçek raporda yerinde yok. */
+import { useCallback, useEffect, useId, useRef, useState, type KeyboardEvent, type MouseEvent, type ReactNode, type TransitionStartFunction } from "react";
 import { useBildir } from "../../../components/bildirim/Bildirim";
 import { Alan, FormIzgara, Girdi } from "../../../components/form/Form";
 import { Ikon } from "../../../components/ikon/Ikon";
@@ -67,6 +70,40 @@ export interface Baglam {
   yz: boolean;
   /** üst ekranın işlemi (354): okuma sürerken Kaydet / Onaya gönder / öteki okumalar kapalı (FotoListesi gibi); okuma rapora fotoğraf ekleyince yenile */
   islem: { mesgul: boolean; baslat: TransitionStartFunction; yenile: () => void };
+  /** 473: format kurucusunun saha görünümünde formatın yerinde düzenlenmesi (yalnız orada; gerçek raporda undefined) */
+  yerinde?: Yerinde;
+}
+/** 473 (maket kararı k1): kimlikler bütün tanımda tekil — ad / çıkar kimlikle bulur (bölüm, grup, madde, alan, sütun, değer) */
+export interface Yerinde {
+  ad: (id: string, ad: string) => void;
+  /** bölüme öğe ekler (liste: verilen gruba madde) */
+  ekle: (bolum: string, grup?: string) => void;
+  cikar: (id: string) => void;
+}
+
+/** 473: yerinde yazı — görünen metin + kalem tuşu; basınca yazı kutusu (Enter ya da dışarı tıklama yazar, Esc vazgeçer). Tuşların tıklaması
+    bölüm başlığına kabarmaz (başlık açılıp kapanmasın) */
+export function YerindeYazi({ deger, ad, yaz, gorunum, uzun = 200 }: { deger: string; ad: string; yaz: (s: string) => void; gorunum?: ReactNode; uzun?: number }) {
+  const [m, setM] = useState<string | null>(null);
+  const kutu = useRef<HTMLInputElement>(null);
+  const yazilacak = m !== null;
+  useEffect(() => { if (yazilacak) kutu.current?.select(); }, [yazilacak]);
+  const dur = (e: MouseEvent) => e.stopPropagation();
+  if (m === null) {
+    return <>{gorunum ?? deger}<button className={stil.yerindeTus} type="button" aria-label={`${ad} değiştir: ${deger}`} title="Adı değiştir"
+      onClick={(e) => { dur(e); setM(deger); }}><Ikon ad="pencil" kucuk /></button></>;
+  }
+  const bitir = () => { const s = m.trim().replace(/\s+/g, " "); setM(null); if (s && s !== deger) yaz(s); };
+  return <input ref={kutu} className={stil.yerindeGirdi} value={m} maxLength={uzun} aria-label={ad} onClick={dur}
+    onChange={(e) => setM(e.target.value)} onBlur={bitir}
+    onKeyDown={(e) => { if (e.key === "Enter") { e.preventDefault(); bitir(); } else if (e.key === "Escape") { e.preventDefault(); e.stopPropagation(); setM(null); } }} />;
+}
+/** 473: öğe çıkar (×) ve öğe ekle (+) tuşları — yalnız yerinde düzenlemede */
+function CikarTus({ ad, cikar }: { ad: string; cikar: () => void }) {
+  return <button className={stil.yerindeTus} type="button" aria-label={`${ad} · çıkar`} title="Çıkar" onClick={(e) => { e.stopPropagation(); cikar(); }}><Ikon ad="x" kucuk /></button>;
+}
+function EkleTus({ ad, ekle }: { ad: string; ekle: () => void }) {
+  return <div className={stil.yerindeEkle}><Tus tur="ikincil" ikon="plus" onClick={ekle}>{ad}</Tus></div>;
 }
 
 /* ── ORTAK PARÇALAR ──────────────────────────────────────────────────────────────────────────────────────────── */
@@ -74,10 +111,12 @@ export interface Baglam {
     445 (reisim 2026-10-09: "açılır kapanır ekranların başlık satırına basınca açılıp kapanmalı sadece kenardaki küçük bir açma kapama tuşu ile
     olmaz"): başlık satırının HER yerine basınca açılır / kapanır; satırdaki öteki tuş ve bağlantılar (talimat, standart, Hepsini işaretle …) kendi
     işini yapar. Klavye ve ekran okuyucu için kenardaki tuş kalır (aria-expanded); tıklaması da satıra kabarır — tek kez değişir. */
-export function RaporBolumu({ id, no, baslik, acik, degistir, eksik = false, sayac, tuslar, ek, children }: {
+export function RaporBolumu({ id, no, baslik, acik, degistir, eksik = false, sayac, tuslar, ek, baslikIcerik, children }: {
   id: string; no: string | null; baslik: string; acik: boolean; degistir: (acik: boolean) => void; eksik?: boolean; sayac?: ReactNode; tuslar?: ReactNode;
   /** başlığın hemen yanında (430: adsız tek gruplu kontrol listesinin talimat ünlemi) */
-  ek?: ReactNode; children: ReactNode;
+  ek?: ReactNode;
+  /** 473: başlığın yerinde yazılan hâli (kurucunun saha görünümü) */
+  baslikIcerik?: ReactNode; children: ReactNode;
 }) {
   const b = `b-${id}`;
   return (
@@ -87,7 +126,7 @@ export function RaporBolumu({ id, no, baslik, acik, degistir, eksik = false, say
         if (tus && !tus.classList.contains(stil.acTus)) return;
         degistir(!acik);
       }}>
-        <h2 className={stil.bolumBaslik} id={`${b}-b`} tabIndex={-1}>{no && <span className={stil.bolumNo}>{no} · </span>}{baslik}</h2>
+        <h2 className={stil.bolumBaslik} id={`${b}-b`} tabIndex={-1}>{no && <span className={stil.bolumNo}>{no} · </span>}{baslikIcerik ?? baslik}</h2>
         {ek}
         {eksik && <Rozet tur="red">Eksik</Rozet>}
         {sayac}
@@ -107,12 +146,15 @@ export function Satirlar({ children }: { children: ReactNode }) {
   return <dl className={stil.satirlar}>{children}</dl>;
 }
 
-/** etiket : değer satırı. Etiket metni alanın tam adıdır ("zorunlu" işareti etiketin dışında — erişilebilir ad değişmesin) */
-export function Satir({ etiket, htmlFor, zorunlu = false, genis = false, children }:
-  { etiket: string; htmlFor?: string; zorunlu?: boolean; genis?: boolean; children: ReactNode }) {
+/** etiket : değer satırı. Etiket metni alanın tam adıdır ("zorunlu" işareti etiketin dışında — erişilebilir ad değişmesin). yerinde (473): alanın
+    adı kalemle yazılır, alan çıkarılır (kurucunun saha görünümü) */
+export function Satir({ etiket, htmlFor, zorunlu = false, genis = false, yerinde, children }:
+  { etiket: string; htmlFor?: string; zorunlu?: boolean; genis?: boolean; yerinde?: { ad: string; yaz: (s: string) => void; cikar: () => void }; children: ReactNode }) {
+  const gorunum = htmlFor ? <label htmlFor={htmlFor}>{etiket}</label> : etiket;
   return (
     <div className={genis ? `${stil.satir} ${stil.satirGenis}` : stil.satir}>
-      <dt>{htmlFor ? <label htmlFor={htmlFor}>{etiket}</label> : etiket}{zorunlu && <span className={stil.zorunlu}> zorunlu</span>}</dt>
+      <dt>{yerinde ? <><YerindeYazi deger={yerinde.ad} ad="Alan adı" yaz={yerinde.yaz} gorunum={gorunum} /><CikarTus ad={yerinde.ad} cikar={yerinde.cikar} /></> : gorunum}
+        {zorunlu && <span className={stil.zorunlu}> zorunlu</span>}</dt>
       <dd>{children}</dd>
     </div>
   );
@@ -196,7 +238,8 @@ export function FormatBolumu({ b, no, bag, acik, degistir, eksik }:
   }
   if (b.blok === "kusur") sayac = <span className={stil.sayac}><b>{bag.d.kusurlar.length}</b> kusur</span>;
   return (
-    <RaporBolumu id={b.id} no={no} baslik={b.ad} acik={acik} degistir={degistir} eksik={eksik} sayac={sayac} tuslar={tuslar} ek={ek}>
+    <RaporBolumu id={b.id} no={no} baslik={b.ad} acik={acik} degistir={degistir} eksik={eksik} sayac={sayac} tuslar={tuslar} ek={ek}
+      baslikIcerik={bag.yerinde ? <YerindeYazi deger={b.ad} ad="Bölüm adı" yaz={(s) => bag.yerinde?.ad(b.id, s)} /> : undefined}>
       <BlokIcerik b={b} no={no} bag={bag} />
     </RaporBolumu>
   );
@@ -220,7 +263,17 @@ function BlokIcerik({ b, no, bag }: { b: Bolum; no: string | null; bag: Baglam }
 
 /* ── BİLGİ ── */
 export function BilgiBlok({ b, bag }: { b: BolumOf<"bilgi">; bag: Baglam }) {
-  return <Satirlar>{b.alanlar.map((a) => <BilgiAlani key={a.id} a={a} bag={bag} />)}</Satirlar>;
+  return <>
+    <Satirlar>{b.alanlar.map((a) => <BilgiAlani key={a.id} a={a} bag={bag} />)}</Satirlar>
+    {bag.yerinde && <EkleTus ad="Alan ekle" ekle={() => bag.yerinde?.ekle(b.id)} />}
+  </>;
+}
+/** 473: alanın yerinde adı ve çıkarılması (yalnız kurucunun saha görünümünde) */
+export const yerindeAlan = (bag: Baglam, a: { id: string; ad: string }) =>
+  bag.yerinde ? { ad: a.ad, yaz: (s: string) => bag.yerinde?.ad(a.id, s), cikar: () => bag.yerinde?.cikar(a.id) } : undefined;
+/** 473: yalnız yerinde düzenlemede bölümün sonuna "… ekle" */
+export function YerindeEkle({ bag, bolum, ad }: { bag: Baglam; bolum: string; ad: string }) {
+  return bag.yerinde ? <EkleTus ad={ad} ekle={() => bag.yerinde?.ekle(bolum)} /> : null;
 }
 
 /** bilgi bölümünün tek satırı (460: tam ekipman bölümü 2. bölümün satırları arasında çizilir) */
@@ -228,9 +281,10 @@ export function BilgiAlani({ a, bag }: { a: BolumOf<"bilgi">["alanlar"][number];
   if (a.ekipman) return <>{bag.ekipmanAlani(a)}</>;
   const id = alanId(a.id);
   const etiket = a.birim ? `${a.ad} (${a.birim})` : a.ad;
+  const yerinde = yerindeAlan(bag, a);
   if (a.kaynak) {
     const d = bag.kaynak(a.kaynak);
-    return <Satir etiket={etiket}>{d ?? <DegerYok>-</DegerYok>}</Satir>;
+    return <Satir etiket={etiket} yerinde={yerinde}>{d ?? <DegerYok>-</DegerYok>}</Satir>;
   }
   const deger = bag.c.alan[a.id];
   const metin = typeof deger === "string" ? deger : "";
@@ -240,7 +294,7 @@ export function BilgiAlani({ a, bag }: { a: BolumOf<"bilgi">["alanlar"][number];
   const zorunlu = a.zorunlu && !bag.oku;
   if (a.tur === "coklu") {
     return (
-      <Satir etiket={etiket} zorunlu={zorunlu} genis>
+      <Satir etiket={etiket} zorunlu={zorunlu} genis yerinde={yerinde}>
         {bag.oku ? (liste.length ? <ul className={stil.cokluOku}>{liste.map((s, i) => <li key={i}>{s}</li>)}</ul> : <DegerYok>-</DegerYok>) : (
           <div className={gec ? `${stil.coklu} ${stil.gecersiz}` : stil.coklu} role="group" aria-label={a.ad} id={id}>
             {(a.secenekler ?? []).map((s, i) => (
@@ -266,7 +320,7 @@ export function BilgiAlani({ a, bag }: { a: BolumOf<"bilgi">["alanlar"][number];
     girdi = <Girdi id={id} value={metin} maxLength={a.tur === "sayi" ? 20 : 500} inputMode={a.tur === "sayi" ? "decimal" : undefined}
       aria-invalid={gec || undefined} onChange={(e) => yaz(e.target.value)} />;
   }
-  return <Satir etiket={etiket} htmlFor={id} zorunlu={zorunlu}>{girdi}</Satir>;
+  return <Satir etiket={etiket} htmlFor={id} zorunlu={zorunlu} yerinde={yerinde}>{girdi}</Satir>;
 }
 
 /* ── KONTROL MADDELERİ ── */
@@ -294,15 +348,17 @@ function ListeBlok({ b, no, bag }: { b: BolumOf<"liste">; no: string | null; bag
           <div key={g.id} className={stil.grup}>
             {g.ad && (
               <div className={stil.grupBas}>
-                <h3 className={stil.grupBaslik}>{on}{gi + 1} · {g.ad}</h3>
+                <h3 className={stil.grupBaslik}>{on}{gi + 1} · {bag.yerinde ? <YerindeYazi deger={g.ad} ad="Grup adı" yaz={(s) => bag.yerinde?.ad(g.id, s)} /> : g.ad}</h3>
                 <TalimatTusu ad={g.ad} baslik={`Talimat · ${on}${gi + 1} ${g.ad}`} parcalar={grupTalimati(g, (m, mi) => `${on}${gi + 1}.${mi + 1} ${m.metin}`)} />
               </div>
             )}
             {std && <div className={stil.grupStd}><StandartTusu std={std} kaynak={bag.v.kaynak} /></div>}
             {g.maddeler.map((m, mi) => <Madde key={m.id} m={m} numara={gruplu ? `${on}${gi + 1}.${mi + 1}` : `${on}${mi + 1}`} b={b} bag={bag} grupStd={std} />)}
+            {bag.yerinde && <EkleTus ad={g.ad ? `Madde ekle (${g.ad})` : "Madde ekle"} ekle={() => bag.yerinde?.ekle(b.id, g.id)} />}
           </div>
         );
       })}
+      {bag.yerinde && !b.gruplar.length && <EkleTus ad="Madde ekle" ekle={() => bag.yerinde?.ekle(b.id)} />}
     </>
   );
 }
@@ -313,11 +369,14 @@ function Madde({ m, numara, b, bag, grupStd }: { m: GrupT["maddeler"][number]; n
   const kusurlu = cevap !== "" && cevap === b.cevaplar[1];
   const id = alanId(m.id), notId = alanId(`${m.id}.not`), dereceId = alanId(`${m.id}.derece`);
   const derece = bag.v.tanim.kurallar.derece;
+  /* 472: formatın cevap biçimi — yan yana tuşlar (tek dokunuş) ya da açılır liste */
+  const tusla = bag.v.tanim.gorunum.cevap === "tus" && !bag.oku;
   const yaz = (y: Partial<MaddeCevabi>) => bag.yaz((c) => ({ ...c, madde: { ...c.madde, [m.id]: { ...((c.madde[m.id] as MaddeCevabi | undefined) ?? { c: "" }), ...y } } }));
   return (
-    <div className={stil.madde}>
+    <div className={tusla ? `${stil.madde} ${stil.maddeTusla}` : stil.madde}>
       <div className={stil.maddeSol}>
-        <p className={stil.maddeAd}><span className={stil.maddeNo}>{numara}</span><span>{m.metin}</span>
+        <p className={stil.maddeAd}><span className={stil.maddeNo}>{numara}</span>
+          <span>{bag.yerinde ? <><YerindeYazi deger={m.metin} ad="Madde" yaz={(s) => bag.yerinde?.ad(m.id, s)} /><CikarTus ad={m.metin} cikar={() => bag.yerinde?.cikar(m.id)} /></> : m.metin}</span>
           {m.talimat?.trim() && <TalimatTusu ad={m.metin} baslik={`Talimat · ${numara}`} parcalar={[{ baslik: m.metin, metin: m.talimat }]} />}</p>
         {m.std?.trim() && m.std.trim() !== grupStd && <div className={stil.maddeStd}><StandartTusu std={m.std.trim()} kaynak={bag.v.kaynak} /></div>}
         {m.aciklama && (
@@ -329,6 +388,7 @@ function Madde({ m, numara, b, bag, grupStd }: { m: GrupT["maddeler"][number]; n
       </div>
       <div className={stil.maddeCevap}>
         {bag.oku ? <OkuGirdi id={id} deger={cevap} ad={m.metin} />
+          : tusla ? <CevapTuslari id={id} ad={m.metin} deger={cevap} cevaplar={b.cevaplar} gecersiz={bag.gecersiz(m.id)} degistir={(c) => yaz({ c })} />
           : <SecimAlani id={id} ad={m.metin} etiketsiz deger={cevap} gecersiz={bag.gecersiz(m.id)} secenekler={b.cevaplar.map((c) => [c, c] as const)}
             degistir={(c) => yaz({ c })} />}
       </div>
@@ -358,6 +418,22 @@ function Madde({ m, numara, b, bag, grupStd }: { m: GrupT["maddeler"][number]; n
   );
 }
 
+/** 472 (maket kararı k2): madde cevabı yan yana tuşlar — tek dokunuşla seçilir; doğal seçim düğmeleri (ok tuşlarıyla gezilir, ekran okuyucu
+    grubu maddenin adıyla okur). 2. cevap (Uygun değil) seçiliyken kırmızı. */
+function CevapTuslari({ id, ad, deger, cevaplar, gecersiz, degistir }:
+  { id: string; ad: string; deger: string; cevaplar: readonly string[]; gecersiz: boolean; degistir: (c: string) => void }) {
+  return (
+    <div className={gecersiz ? `${stil.cevapTuslari} ${stil.gecersiz}` : stil.cevapTuslari} role="radiogroup" aria-label={ad} id={id} aria-invalid={gecersiz || undefined}>
+      {cevaplar.map((c, i) => (
+        <label key={c} className={i === 1 ? `${stil.cevapTus} ${stil.cevapOlumsuz}` : stil.cevapTus}>
+          <input type="radio" name={id} value={c} checked={deger === c} onChange={() => degistir(c)} />
+          <span>{c}</span>
+        </label>
+      ))}
+    </div>
+  );
+}
+
 /* ── ÖLÇÜM TABLOSU ── */
 function OlcumBlok({ b, bag }: { b: BolumOf<"olcum">; bag: Baglam }) {
   const satirlar = bag.c.tablo[b.id] ?? [];
@@ -379,7 +455,8 @@ function OlcumBlok({ b, bag }: { b: BolumOf<"olcum">; bag: Baglam }) {
               <tr>
                 <th scope="col">No</th>
                 {b.sutunlar.map((s) => (
-                  <th key={s.id} scope="col">{s.ad}{s.birim && <span className={stil.birim}> ({s.birim})</span>}
+                  <th key={s.id} scope="col">{bag.yerinde ? <><YerindeYazi deger={s.ad} ad="Sütun adı" yaz={(x) => bag.yerinde?.ad(s.id, x)} />
+                    <CikarTus ad={s.ad} cikar={() => bag.yerinde?.cikar(s.id)} /></> : s.ad}{s.birim && <span className={stil.birim}> ({s.birim})</span>}
                     {sinirMetni(s.op, s.sinir) && <span className={stil.sinir}>sınır {sinirMetni(s.op, s.sinir, s.birim)}</span>}</th>
                 ))}
                 {notlar.length > 0 && <th scope="col">Uygunluk notu</th>}
@@ -452,6 +529,7 @@ function OlcumBlok({ b, bag }: { b: BolumOf<"olcum">; bag: Baglam }) {
       {!bag.oku && (() => {
         const tuslar = <>
           <Tus tur="ikincil" ikon="plus" id={alanId(b.id)} onClick={() => tablo((l) => [...l, {}])}>Satır ekle</Tus>
+          {bag.yerinde && <Tus tur="ikincil" ikon="plus" onClick={() => bag.yerinde?.ekle(b.id)}>Sütun ekle</Tus>}
           {b.enAz > 0 && <span className={azEksik ? stil.hataMetin : stil.ipucuMetin}>En az {b.enAz} satır.</span>}
         </>;
         /* fotoğraftan okunanlar: değeri boş var olan satıra ya da tablonun sonuna (foto-eslestir.ts) */
@@ -466,6 +544,7 @@ function OlcumBlok({ b, bag }: { b: BolumOf<"olcum">; bag: Baglam }) {
 /* ── TEST DEĞERLERİ ── */
 function TestBlok({ b, bag }: { b: BolumOf<"test">; bag: Baglam }) {
   return (
+    <>
     <FormIzgara>
       {b.degerler.map((d) => {
         const id = alanId(d.id), deger = bag.c.deger[d.id] ?? "", r = bag.d.degerler[d.id] ?? null, gec = bag.gecersiz(d.id);
@@ -476,6 +555,9 @@ function TestBlok({ b, bag }: { b: BolumOf<"test">; bag: Baglam }) {
         const yaz = (x: string) => bag.yaz((c) => ({ ...c, deger: { ...c.deger, [d.id]: x } }));
         return (
           <Alan key={d.id} id={id} etiket={d.birim ? `${d.ad} (${d.birim})` : d.ad} zorunlu={d.zorunlu && !bag.oku} hata={gec ? (secmeli ? "Seçilmeli." : "Değer yazılmalı.") : undefined} sonuc={sonuc}>
+            {/* 473: değerin adı ve çıkarılması (kurucunun saha görünümü) — etiket girdinin etiketi olarak kalır */}
+            {bag.yerinde && <span className={stil.yerindeAraclar}><YerindeYazi deger={d.ad} ad="Değer adı" yaz={(s) => bag.yerinde?.ad(d.id, s)} gorunum={<></>} />
+              <CikarTus ad={d.ad} cikar={() => bag.yerinde?.cikar(d.id)} /></span>}
             {bag.oku ? <OkuGirdi id={id} deger={deger} />
               : secmeli ? <SecimAlani id={id} ad={d.ad} deger={deger} gecersiz={gec} degistir={yaz} secenekler={d.secenekler!.map((s) => [s, s] as const)} />
                 : <Girdi id={id} value={deger} maxLength={d.metin ? 60 : 12} inputMode={d.metin ? undefined : "decimal"} hata={gec || r === false} mesajli={!!sonuc}
@@ -484,6 +566,8 @@ function TestBlok({ b, bag }: { b: BolumOf<"test">; bag: Baglam }) {
         );
       })}
     </FormIzgara>
+    {bag.yerinde && <EkleTus ad="Değer ekle" ekle={() => bag.yerinde?.ekle(b.id)} />}
+    </>
   );
 }
 

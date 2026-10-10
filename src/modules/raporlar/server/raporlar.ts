@@ -47,6 +47,7 @@ import { cihazKalibrasyonlari } from "../../olcum-cihazlari/server/cihazlar.ts";
 import { personelBelgeBilgisi } from "../../personel/server/personel.ts";
 import type { BelgeVerisi } from "../../../belge/veri.ts";
 import { imzaliPdfGecerli } from "../imza-pdf.ts";
+import { ilkCevaplar } from "../ornek.ts";
 import { raporStandartlari } from "../../dokumanlar/server/dokumanlar.ts";
 import type { StandartOzeti } from "../../dokumanlar/eslestir.ts";
 import { formatKriterleri, type KriterBelgesi } from "../../../tanim/kriterler.ts";
@@ -87,12 +88,7 @@ const jsonDizi = (x: unknown[]) => JSON.stringify(x);
 const sonuc = (r: GuncelleSonucu, id: string, bildirim: string): RaporYazma =>
   r.durum === "tamam" || r.durum === "degisiklik_yok" ? { durum: "tamam", id, bildirim } : r.durum === "cakisma" ? { durum: "cakisma" } : { durum: "yok" };
 
-/** yeni raporun başlangıç cevapları: bütün maddeler cevap setinin ilk öğesiyle ("Uygun") dolu (§3.8-3) */
-function ilkCevaplar(t: FormatTanimi): Cevaplar {
-  const madde: Cevaplar["madde"] = {};
-  for (const b of t.bolumler) if (b.blok === "liste") for (const g of b.gruplar) for (const m of g.maddeler) madde[m.id] = { c: b.cevaplar[0] };
-  return Cevaplar.parse({ madde });
-}
+/* yeni raporun başlangıç cevapları (§3.8-3): ../ornek.ts ilkCevaplar — format kurucusunun saha görünümüyle ortak (472) */
 
 /* ── RAPOR OLUŞTUR ───────────────────────────────────────────────────────────────────────────────────────────── */
 const MESAI_DOLU = "Günlük süre doldu (mesai takibi); bugün yeni rapor oluşturulamaz.";

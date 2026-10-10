@@ -2355,6 +2355,18 @@ revizyon, alan kopyalama, hafif kusur devri, meslek eşleşme denetimi).
 - Emsal ürünler: https://opwire.app/iso-17020-periyodik-kontrol-yazilimi/ · https://17020muayene.vidco.com.tr/ · https://akuple.com/asansor-kontrol-yazilimi/ · https://ensyazilim.com/
 
 ## 11 · Değişiklik günlüğü
+- 2026-10-10 (472): **Format kurucuda "Saha ekranı"** (reisim maket kararları formu: k1 *"evet"* — saha ekranında da düzenleme · k2 *"format"* — madde
+  cevabının biçimi format başına · k3 *"ikiside olsun ama kağıt açılsın kağıtta yapılan değişiklik saha ekranında saha ekranında yapılan değişiklik
+  kağıtta etki etsin"* · k4 *"tablet"*). Kurucunun üç görünümü: **Kâğıt** (açılışta) · **Saha ekranı** · **Belge önizlemesi**; üçü aynı taslak.
+  Saha ekranı denetçinin göreceği GERÇEK ekran (raporlar/ui/SahaRaporu, deneme kipi), uydurma bir örnek raporla (raporlar/ornek.ts), çerçevede
+  gerçek aygıt genişliğinde (Tablet 820 · Telefon 390; sayfaya sığacak kadar küçülür): sunucuya hiçbir şey gitmez, Kaydet / Onaya gönder yalnız
+  denetler (eksikler penceresi aynı), fotoğraf dosyası yüklenmez. Kip **Düzenle**: bölüm / grup / madde / alan / sütun / değer adı kalemle yazılır,
+  madde · alan · sütun · değer eklenir, çıkarılır (Bakanlık öğesi sorarak) — değişiklik kâğıda geçer, kâğıttaki saha ekranına. Kip **Denetçi gibi
+  dene**. Formatın yeni ayarı **madde cevabı: Açılır liste · Yan yana tuşlar** (format/tanim.ts gorunum.cevap; tuşta tek dokunuş, "Uygun değil"
+  seçiliyken kırmızı; belgeye etkisi yok) — gerçek saha ekranında da geçerli. Altında kullanım özeti (madde, dokunuş, yazılan / seçilen kutu,
+  ölçüm tabloları; rapor-format/kullanim.ts). Çerçeve sayfası yeni kabuksuz rota grubu `(cerceve)` (oturum + Ekipman türleri kapısı sayfada); yalnız
+  bu yolda frame-ancestors 'self' / SAMEORIGIN, öteki sayfalar hiç gömülmez (src/proxy.ts). Kilitler: tests/moduller.test (rota grubu, kapı, gömme
+  izni), uçtan uca rapor-format.spec (saha ekranı, iki yönlü eşitleme, cevap tuşları, başlıklar).
 - 2026-10-10 (470): **Bakanlık formatında serbestlik** (reisim, hata listesi 38: *"ama hala istediğim gibi değil başlık komple silmek vb hala
   imkansız biraz daha serbestlik lütfen"*). Hazır kurulan Bakanlık türlerinin bütün bölümleri kilitliydi; hiçbiri silinmiyordu. Genel ilkeyle ("kural
   uyarıdır, engel değil"): Bakanlık bölümü ve öğesi de silinir, adı, cevap seti, sütunları, sonuç metni, form kodu ve başlığı değişir; silmeden /

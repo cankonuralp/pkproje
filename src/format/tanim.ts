@@ -96,13 +96,16 @@ export const Gorunum = z.object({
   formKodu: z.string().max(20).default(""), baslik: z.string().max(200).default(""), dayanak: z.array(z.string().max(300)).max(20).default([]),
   /** genel muayene talimatı (431): rapor ekranının sağ üstündeki ünlemden açılır; PDF'e basılmaz */
   talimat: z.string().max(8000).default(""),
+  /** 472 (reisim 2026-10-10, maket kararı k2: "format başına"): saha ekranında madde cevabının biçimi — açılır liste ya da yan yana tuşlar
+      (tuşta bir dokunuş). Belgeye (PDF) etkisi yok. */
+  cevap: z.enum(["acilir", "tus"]).default("acilir"),
 });
 
 export const FormatTanimi = z.object({
   sema: z.literal(SEMA_SURUMU),
   bolumler: z.array(Bolum).max(40),
   kurallar: Kurallar.default({ foto: false, derece: false, oneri: true }),
-  gorunum: Gorunum.default({ formKodu: "", baslik: "", dayanak: [], talimat: "" }),
+  gorunum: Gorunum.default({ formKodu: "", baslik: "", dayanak: [], talimat: "", cevap: "acilir" }),
 }).superRefine((t, bag) => {
   const gorulen = new Set<string>();
   const tek = (id: string, yol: (string | number)[]) => {

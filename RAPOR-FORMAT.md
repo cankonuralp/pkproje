@@ -92,6 +92,11 @@ PDF'e basılmaz.
   sil, maddeyi seçilen gruba ekle, cevap seti; ölçüm tablosunda uygunluk notları (Not-1 …; kusur / ağır); sonuçta sabit metin; "Belge":
   form kodu, başlık, metot ve kapsam (dayanak), genel muayene talimatı. Kilitli (Bakanlık) öğede yalnız talimat yazılır; form kodu ve başlık
   değişmez. Saf işlevler `src/modules/rapor-format/kurucu.ts`, ekran `ui/KurucuDuzenleyici.tsx`.
+- **2026-10-10 (472; maket kararları k1–k4):** üç görünüm — **Kâğıt** (açılışta; 451) · **Saha ekranı** · **Belge önizlemesi**, üçü aynı taslak.
+  Saha ekranı gerçek saha ekranı örnek raporla (çerçeve sayfası `src/app/(cerceve)/ekipman-turleri/[id]/sablon/[sid]/saha`; aygıt Tablet / Telefon,
+  varsayılan tablet); "Düzenle" kipinde orada da yerinde düzenlenir (ad, ekle, çıkar) ve kâğıda geçer; "Denetçi gibi dene". Görünüm ayarı
+  `cevap`: madde cevabı açılır liste ya da yan yana tuşlar (format başına; belgeye etkisi yok). Ekran `ui/SahaGorunumu.tsx` + `ui/SahaCerceve.tsx`,
+  kullanım özeti `kullanim.ts`.
 
 ## 7 · Veri
 

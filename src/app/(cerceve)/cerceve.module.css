@@ -1,0 +1,2 @@
+/* çerçeve sayfası (472): uygulama kabuğunun içerik alanıyla aynı kenar boşluğu — saha ekranı gerçek sayfadaki gibi çizilir */
+.icerik { min-width: 0; min-height: 100dvh; padding: var(--bosluk-sayfa); }

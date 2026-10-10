@@ -6,7 +6,10 @@
    Değişiklik "Taslağı kaydet" ile yazılır (Kaydedilmedi · Vazgeç · Kaydet — kalıp Z1); kaydedilmemiş taslak yayınlanmaz; kaydedilmemiş taslakla
    sayfadan çıkarken sorulur. 470: Bakanlık öğesi de değişir ve silinir (sorarak) — sunucu yayında kaynak şablondan ayrılanları UYARI olarak
    listeler. Telefonda kurucu açılmaz
-   (masaüstü işi): belge önizlemesi görünür. Karar ve şema sunucuda. */
+   (masaüstü işi): belge önizlemesi görünür. Karar ve şema sunucuda.
+   472–474 (reisim 2026-10-10, maket kararları k1–k4): üç görünüm — Kâğıt (açılışta) · Saha ekranı (denetçinin tabletinde / telefonunda göreceği
+   gerçek ekran, örnek raporla; orada da yerinde düzenlenir — SahaGorunumu.tsx) · Belge önizlemesi. Üçü aynı taslağı gösterir: birinde yapılan
+   değişiklik ötekilerde görünür. */
 import { useRouter } from "next/navigation";
 import { useEffect, useMemo, useState, useTransition } from "react";
 import { raporBelgesi } from "../../../belge/belge";
@@ -21,6 +24,7 @@ import { bolumSil, gorunumYaz } from "../kurucu";
 import { taslakKaydetEylemi } from "./eylemler";
 import { Kagit } from "./Kagit";
 import { SatirAlani } from "./KurucuDuzenleyici";
+import { SahaGorunumu } from "./SahaGorunumu";
 import { kurucuOrnegi } from "./kurucuOrnegi";
 import { YayinlaTusu } from "./SablonBolumu";
 import stil from "./format.module.css";
@@ -49,7 +53,7 @@ export function FormatKurucu({ turId, turAd, turKod, format, tanim, kaynakAd, tu
   const [t, setT] = useState<FormatTanimi>(tanim);
   const [son, setSon] = useState(ilkJson);
   const [hatalar, setHatalar] = useState<string[]>([]);
-  const [gorunum, setGorunum] = useState<"duzen" | "belge">("duzen");
+  const [gorunum, setGorunum] = useState<"duzen" | "saha" | "belge">("duzen");
   if (son !== ilkJson) { setSon(ilkJson); setT(tanim); setHatalar([]); }
   const kirli = JSON.stringify(t) !== ilkJson;
   const degis = (y: FormatTanimi) => { setT(y); setHatalar([]); };
@@ -114,7 +118,8 @@ export function FormatKurucu({ turId, turAd, turKod, format, tanim, kaynakAd, tu
         alt={`${t.bolumler.length} bölüm · ${kaynakAd ?? "Firma formatı"}`}
         tuslar={<>
           <span className={`${stil.gorunumSecici} ${stil.yalnizGenis}`} role="group" aria-label="Görünüm">
-            <Tus tur={gorunum === "duzen" ? "birincil" : "ikincil"} ikon="pencil" aria-pressed={gorunum === "duzen"} onClick={() => setGorunum("duzen")}>Düzenle</Tus>
+            <Tus tur={gorunum === "duzen" ? "birincil" : "ikincil"} ikon="pencil" aria-pressed={gorunum === "duzen"} onClick={() => setGorunum("duzen")}>Kâğıt</Tus>
+            <Tus tur={gorunum === "saha" ? "birincil" : "ikincil"} ikon="tablet-smartphone" aria-pressed={gorunum === "saha"} onClick={() => setGorunum("saha")}>Saha ekranı</Tus>
             <Tus tur={gorunum === "belge" ? "birincil" : "ikincil"} ikon="file-text" aria-pressed={gorunum === "belge"} onClick={() => setGorunum("belge")}>Belge önizlemesi</Tus>
           </span>
           <TusBaglanti tur="ikincil" ikon="eye" href={`/ekipman-turleri/${turId}/sablon/${format.id}`}>Sürüm sayfası</TusBaglanti>
@@ -149,6 +154,8 @@ export function FormatKurucu({ turId, turAd, turKod, format, tanim, kaynakAd, tu
       <div className={gorunum === "duzen" ? stil.yalnizGenis : stil.gizliHer}>
         <Kagit t={t} degis={degis} tur={tur} bolumuSil={(i) => void bolumuSil(i)} bildir={bildir} />
       </div>
+      {/* saha ekranı yalnız seçilince kurulur (çerçeve sayfası o zaman yüklenir); telefonda kurucu yok */}
+      {gorunum === "saha" && <div className={stil.yalnizGenis}><SahaGorunumu turId={turId} formatId={format.id} t={t} degis={degis} /></div>}
       <div className={gorunum === "belge" ? stil.belgeKap : `${stil.belgeKap} ${stil.yalnizDar}`} aria-label="Belge önizlemesi" role="region" tabIndex={0}>
         <div className="rb-onizleme">{belge}</div>
       </div>

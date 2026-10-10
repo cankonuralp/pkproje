@@ -78,7 +78,8 @@ pkproje/
   ARKA-UC.md                arka uç kurgusu (2026-10-01; K1–K6 kabul, K7–K8 kabul edilmedi — 2026-10-02): veri, dosya, çevrimdışı, uygulama, yapay zekâ, yedek
   ANAYASA.md · TASARIM-KALIBI.md · 00–08-*.md · 09-SUNUCU-VE-VERI.md · EKSIKLER-VE-ONERILER.md
                             kural dosyaları (ANAYASA/KALIP'a madde yalnız reisim onayıyla eklenir)
-  src/app/                  sayfalar (iş mantığı YOK), beş rota grubu (348: (yonetim)/yonetim — yalnız yönetim adresinde, kendi oturumu): (uygulama)/ oturum ister — Planlar ana sayfa + modül başına bir
+  src/app/                  sayfalar (iş mantığı YOK), altı rota grubu (472: (cerceve) — kabuksuz, yalnız kendi sayfamızın çerçevesinde: kurucunun saha
+                            ekranı önizlemesi …/sablon/<sürüm>/saha; 348: (yonetim)/yonetim — yalnız yönetim adresinde, kendi oturumu): (uygulama)/ oturum ister — Planlar ana sayfa + modül başına bir
                             rota klasörü (kayıtla birebir) · (acik)/giris · (gelistirme)/vitrin (yayında 404) · (musteri)/portal müşteri paneli (319:
                             müşteri oturumu, veri müşteri işleminde — veritabanında probata_musteri rolü, kısıtlayıcı politikalar; göç 0030)
   src/proxy.ts              ara katman: her istekte nonce'lu CSP + güvenlik başlıkları (Next 16'da middleware'in adı proxy) · /api sürüm başlığı,
@@ -137,6 +138,9 @@ pkproje/
                             ve yeniTureFormat) — tür ekleme eylemi aynı işlemde yayınlar; kurulum formatsız eski türleri bir kez (ayar kurulum.varsayilan)
                             · 451 KURUCU KÂĞIT: ui/Kagit.tsx (belgenin görünümünde yerinde yazı / ekle / çıkar; kagit.module.css) + FormatKurucu.tsx (Düzenle ·
                             Belge önizlemesi — src/belge/belge.ts tarayıcıda, ui/kurucuOrnegi.ts boş rapor); eski üç sütunlu düzenleyici kalktı
+                            · 472 SAHA EKRANI: Kâğıt · Saha ekranı · Belge önizlemesi — ui/SahaGorunumu.tsx (aygıt, kip, cevap biçimi, kullanim.ts) →
+                            çerçeve (cerceve)/…/saha → ui/SahaCerceve.tsx (iletiler; yerinde düzenleme kurucu.ts ile) → raporlar SahaRaporu deneme kipi
+                            + raporlar/ornek.ts (ilkCevaplar, örnek rapor); tanım gorunum.cevap (açılır / tuş)
   src/modules/planlar/      PLANLAR (2026-10-04, 309–310; modül 13): plan + plan ekibi (göç 0023; proje no sunucuda, değişmez; künye kayıttan) ·
                             Plan aç /planlar/ac (uyarılar sema.ts'te saf, engel değil) · liste /planlar · plan içi /planlar/<id> (server/plan-ici.ts:
                             akış kabul/red/kontrol/tamamla, künye düzenle/güncelle, plan ekipmanı, proje notları; geçişler göç 0024 tetiğinde) · 372 planSil

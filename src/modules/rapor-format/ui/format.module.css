@@ -71,6 +71,17 @@
 .kurallarBas { display: flex; align-items: center; min-height: var(--tus-y); padding: 6px 14px; font-weight: 600; cursor: pointer; }
 .kurallarIc { display: grid; gap: 12px; padding: 0 14px 14px; }
 .belgeKap { min-width: 0; margin-top: 12px; }
+/* 472–474: saha ekranı görünümü — araç çubuğu, kullanım özeti, aygıt çerçevesi (gerçek genişlikte çizilir, sayfaya sığacak kadar küçülür) */
+.saha { display: grid; gap: 12px; min-width: 0; margin-top: 12px; }
+.sahaArac { display: flex; flex-wrap: wrap; align-items: center; gap: 8px 16px; }
+.kullanim { display: flex; flex-wrap: wrap; gap: 4px 20px; margin: 0; color: var(--yazi2); font-size: var(--boy-kucuk); }
+.kullanim > div { display: flex; gap: 6px; }
+.kullanim dt { font-weight: 600; color: var(--yazi); }
+.kullanim dt::after { content: ":"; }
+.kullanim dd { margin: 0; }
+.sahaKap { min-width: 0; }
+.sahaAygit { margin: 0 auto; overflow: hidden; border: 1px solid var(--kenar); border-radius: var(--r-buyuk); background: var(--zemin); }
+.sahaCerceve { display: block; border: 0; transform-origin: 0 0; }
 .belgeKap:focus-visible { outline: 3px solid var(--odak); outline-offset: 2px; }
 
 @media (max-width: 767.98px) {

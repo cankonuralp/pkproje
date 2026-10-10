@@ -19,7 +19,11 @@
    raporda kaynak şeridi (U7); daha yeni format sürümü yayınlandıysa "Formatı güncelle" şeridi (U6, 211); günlük süre dolduysa neden şeridi (212).
    318 revizyon (maket raporlar.html 192, 131): tamamlanan raporda yazana "Revize iste" (gerekçe) → "Revize isteğiniz teknik yöneticide" şeridi
    + "Revize isteğini geri çek"; reddedilirse "Revize isteği reddedildi" şeridi; revizeye gönderilen rapor Yeni açılır, üstünde "Revizeye
-   gönderildi (R1)" + gerekçe; rapor no revizyon ekiyle. */
+   gönderildi (R1)" + gerekçe; rapor no revizyon ekiyle.
+   472 (reisim 2026-10-10, maket kararları k1–k4): `deneme` — format kurucusunun "Saha ekranı" görünümü taslak formatı bu ekranla, UYDURMA bir
+   raporla (../ornek.ts) gösterir: sunucuya hiçbir şey gitmez (Kaydet / Onaya gönder yalnız denetler, cihaz kuyruğu ve S.A.Y yok), fotoğraf
+   dosyası yüklenmez (sayı artar), kırıntı yok. kip "duzenle": bölümler açık gelir ve formatın kendisi yerinde düzenlenir (473, Baglam.yerinde);
+   kip "dene": denetçinin göreceği gibi. */
 import { useRouter } from "next/navigation";
 import { Fragment, useEffect, useMemo, useRef, useState, useSyncExternalStore, useTransition, type ReactNode, type TransitionStartFunction } from "react";
 import { useBildir } from "../../../components/bildirim/Bildirim";
@@ -36,8 +40,9 @@ import { raporDuzeni, sabitEkipmanAlanlari } from "../../../format/duzen";
 import { degerlendir } from "../../../format/motor";
 import { EKIPMAN_ALAN_ADI, type Cevaplar } from "../../../format/tanim";
 import { ayEkle, RAPOR_DURUM, type EkipmanBilgisi, type RaporDurumu, type RaporTarihleri } from "../sema";
+import { cevaplariTamamla } from "../ornek";
 import type { SahaRaporu as SahaRaporuVerisi } from "../server/raporlar";
-import { alanId, BilgiAlani, BilgiBlok, FormatBolumu, OkuGirdi, RaporBolumu, Satir, Satirlar, TarihKutusu, type Baglam, type Kaynak } from "./Bloklar";
+import { alanId, BilgiAlani, BilgiBlok, FormatBolumu, OkuGirdi, RaporBolumu, Satir, Satirlar, TarihKutusu, YerindeEkle, yerindeAlan, YerindeYazi, type Baglam, type Kaynak, type Yerinde } from "./Bloklar";
 import { CihazBolumu } from "./CihazBolumu";
 import { EtiketOkuma } from "./EtiketOkuma";
 import { FotoListesi } from "./FotoListesi";
@@ -54,6 +59,8 @@ import { sayRaporBagla } from "../../say/ui/baglam";
 import stil from "./raporlar.module.css";
 
 type Gorunum = SahaRaporuVerisi;
+/** 472: format kurucusunun saha görünümü (örnek rapor; yerinde: formatı yerinde düzenleme — 473) */
+export interface Deneme { kip: "duzenle" | "dene"; yerinde?: Yerinde }
 type EkipmanAnahtari = keyof EkipmanBilgisi;
 type TarihAnahtari = keyof RaporTarihleri;
 interface Eksik { bolum: string; alan: string; ad: string }
@@ -88,7 +95,8 @@ const saatliNo = (s: string) => `${tarihNo(s)} ${s.slice(11, 16)}`;
 const bosla = <T extends Record<string, string | null>>(o: T) => Object.fromEntries(Object.entries(o).map(([k, x]) => [k, x ?? ""])) as { [K in keyof T]: string };
 
 /** `yeni` (405): bağlantısız açılan YENİ rapor (v cihazda kuruldu, kimlik geçici) — planı, ekipmanı ve kodu; bütün işler kuyruktan gider */
-export function SahaRaporu({ v, yeni }: { v: Gorunum; yeni?: { plan: string; ekipman: string; kod: string } }) {
+export function SahaRaporu({ v, yeni, deneme }: { v: Gorunum; yeni?: { plan: string; ekipman: string; kod: string }; deneme?: Deneme }) {
+  const denemede = !!deneme, denemeKip = deneme?.kip ?? null;
   const router = useRouter();
   const bildir = useBildir();
   const onayla = useOnayla();
@@ -141,6 +149,7 @@ export function SahaRaporu({ v, yeni }: { v: Gorunum; yeni?: { plan: string; eki
   const kirliRef = useRef(false);
   useEffect(() => { kirliRef.current = kirli; }, [kirli]);
   useEffect(() => {
+    if (denemede) return;
     let iptal = false;
     void bekleyenIcerik(v.id).then((b) => {
       if (iptal || !b || kirliRef.current) { if (!iptal && !b) setCihazdaki(false); return; }
@@ -151,7 +160,7 @@ export function SahaRaporu({ v, yeni }: { v: Gorunum; yeni?: { plan: string; eki
       setCihazdaki(true);
     }).catch(() => undefined);
     return () => { iptal = true; };
-  }, [v.id, v.surum]);
+  }, [v.id, v.surum, denemede]);
   const [sonKayit, setSonKayit] = useState<string | null>(v.surum > 0 ? v.degisti : null);
   const [isaretli, setIsaretli] = useState<ReadonlySet<string>>(() => new Set());
   const [eksikler, setEksikler] = useState<Eksik[] | null>(null);
@@ -162,17 +171,33 @@ export function SahaRaporu({ v, yeni }: { v: Gorunum; yeni?: { plan: string; eki
   const acikAnahtar = `probata-rapor-acik:${v.id}`;
   const [acikSet, setAcikSet] = useState<ReadonlySet<string>>(() => new Set());
   useEffect(() => {
+    if (denemede) return;
     let l: string[] = [];
     try {
       const s = sessionStorage.getItem(acikAnahtar);
       if (s) l = (JSON.parse(s) as unknown[]).filter((x): x is string => typeof x === "string").slice(0, 60);
     } catch { /* okunamazsa kapalı */ }
     if (l.length) queueMicrotask(() => setAcikSet(new Set(l)));
-  }, [acikAnahtar]);
+  }, [acikAnahtar, denemede]);
+  /* 472: örnek raporda düzenleme kipinde bölümler açık gelir; kurucuda eklenen bölüm de açık gelir (dene kipinde gerçek ekran gibi kapalı) */
+  const gorulen = useRef<ReadonlySet<string> | null>(null);
+  useEffect(() => {
+    if (!denemeKip) return;
+    const l = [SABIT.firma, SABIT.ekipman, SABIT.cihaz, ...v.tanim.bolumler.map((b) => b.id)];
+    const once = gorulen.current;
+    gorulen.current = new Set(l);
+    const yeniler = l.filter((id) => !once?.has(id));
+    if (denemeKip === "duzenle" && yeniler.length) queueMicrotask(() => setAcikSet((s) => new Set([...s, ...yeniler])));
+    /* kurucuda eklenen maddeye ilk cevap, çıkarılan maddenin cevabı düşer */
+    if (once) queueMicrotask(() => setCevaplar((c) => cevaplariTamamla(v.tanim, c)));
+  }, [denemeKip, v.tanim]);
   const acikYaz = (y: ReadonlySet<string>) => {
     setAcikSet(y);
+    if (denemede) return;
     try { sessionStorage.setItem(acikAnahtar, JSON.stringify([...y])); } catch { /* saklanamazsa yalnız bu ekranda */ }
   };
+  /* 472: örnek raporun fotoğrafları — dosya yüklenmez, yalnız yerleri sayılır (zorunlu fotoğraf denenebilsin) */
+  const [denemeFoto, setDenemeFoto] = useState<{ bolum: string; madde: string | null }[]>([]);
   const hepsiniAc = () => acikYaz(new Set([SABIT.firma, SABIT.ekipman, SABIT.cihaz, ...v.tanim.bolumler.map((b) => b.id)]));
   const [kopya, setKopya] = useState(false);
   const [revizeAc, setRevizeAc] = useState(false);
@@ -187,11 +212,11 @@ export function SahaRaporu({ v, yeni }: { v: Gorunum; yeni?: { plan: string; eki
   const d = useMemo(() => {
     /* sayılar sunucudaki gibi raporun kendi listesinden: bölüm başına ve madde başına fotoğraf */
     const foto: Record<string, number> = {}, mf: Record<string, number> = {};
-    const yerler = [...v.fotolar, ...bekleyenFotolar.map((x) => { const [bolum, m] = (x.yer ?? "|").split("|"); return { bolum, madde: m || null }; })];
+    const yerler = [...v.fotolar, ...denemeFoto, ...bekleyenFotolar.map((x) => { const [bolum, m] = (x.yer ?? "|").split("|"); return { bolum, madde: m || null }; })];
     for (const f of yerler) { if (f.madde) mf[f.madde] = (mf[f.madde] ?? 0) + 1; else foto[f.bolum] = (foto[f.bolum] ?? 0) + 1; }
     const madde = Object.fromEntries(Object.entries(cevaplar.madde).map(([k, x]) => [k, { ...x, foto: mf[k] ?? 0 }]));
     return degerlendir(v.tanim, { ...cevaplar, madde, cihaz: v.cihazlar.filter((x) => x.cihaz).length, foto });
-  }, [v.tanim, v.cihazlar, v.fotolar, bekleyenFotolar, cevaplar]);
+  }, [v.tanim, v.cihazlar, v.fotolar, denemeFoto, bekleyenFotolar, cevaplar]);
   /* şu an boş olan zorunlu alanlar (format + sabit tarihler + gerekli cihazlar); işaret yalnız Onaya gönder'in dediği VE hâlâ boş olanda */
   const canli = useMemo(() => {
     const s = new Set(d.eksikler.map((e) => e.alan));
@@ -209,10 +234,15 @@ export function SahaRaporu({ v, yeni }: { v: Gorunum; yeni?: { plan: string; eki
   const yaz = (f: (c: Cevaplar) => Cevaplar) => { setCevaplar(f); setKirli(true); };
   const bag: Baglam = {
     v, c: cevaplar, yaz, d, oku, gecersiz, kaynak: (k) => kaynaklar[k], yz: !oku && v.yz, islem: { mesgul, baslat, yenile },
-    ekipmanAlani: (a) => (a.ekipman ? metinSatiri(a.ekipman, a.ad, EN[a.ekipman], a.ekipman === "imal") : null),
-    cihaz: (bolumId) => <CihazBolumu v={v} bolumId={bolumId} oku={oku || !!yeni} gecersiz={gecersiz} mesgul={mesgul} baslat={baslat} yenile={yenile} />,
-    foto: (bolumId, madde) => <FotoListesi key={`${bolumId}-${madde ?? ""}`} v={v} bolumId={bolumId} madde={madde} oku={oku} yeniAc={yeni ? yeniAc : undefined}
-      gecersiz={gecersiz(madde ? `${madde}.foto` : bolumId)} mesgul={mesgul} baslat={baslat} yenile={yenile} />,
+    ekipmanAlani: (a) => (a.ekipman ? metinSatiri(a.ekipman, a.ad, EN[a.ekipman], a.ekipman === "imal", a) : null),
+    cihaz: (bolumId) => <CihazBolumu v={v} bolumId={bolumId} oku={oku || !!yeni || denemede} gecersiz={gecersiz} mesgul={mesgul} baslat={baslat} yenile={yenile} />,
+    foto: (bolumId, madde) => (denemede
+      ? <DenemeFoto key={`${bolumId}-${madde ?? ""}`} adet={denemeFoto.filter((f) => f.bolum === bolumId && f.madde === madde).length}
+        gecersiz={gecersiz(madde ? `${madde}.foto` : bolumId)} ekle={() => setDenemeFoto((l) => [...l, { bolum: bolumId, madde }])}
+        cikar={() => setDenemeFoto((l) => { const i = l.findIndex((f) => f.bolum === bolumId && f.madde === madde); return i < 0 ? l : l.filter((_, j) => j !== i); })} />
+      : <FotoListesi key={`${bolumId}-${madde ?? ""}`} v={v} bolumId={bolumId} madde={madde} oku={oku} yeniAc={yeni ? yeniAc : undefined}
+        gecersiz={gecersiz(madde ? `${madde}.foto` : bolumId)} mesgul={mesgul} baslat={baslat} yenile={yenile} />),
+    yerinde: deneme?.yerinde,
   };
 
   /* format bölümleri ve numaraları belgeyle ortak (format/duzen.ts, 427): yalnız kayıttan gelen alanlı bilgi bölümü 1. bölümün kopyası — çizilmez;
@@ -338,6 +368,15 @@ export function SahaRaporu({ v, yeni }: { v: Gorunum; yeni?: { plan: string; eki
     if (r.tamam) { kaydedildi(); void kayitBilgileriniKapat(v.id); setIsaretli(new Set()); bildir(r.bildirim ?? "Rapor onaya gönderildi."); yenile(); window.scrollTo({ top: 0 }); return; }
     yanitHatasi(r);
   });
+  /* 472: örnek raporda Onaya gönder yalnız denetler — gerçek Onaya gönder'in eksik listesi (boş zorunlu alan, cihaz) aynı pencerede */
+  const denemeGonder = () => {
+    const l: Eksik[] = [];
+    if (!tarih.bas) l.push({ bolum: SABIT.firma, alan: "tarih.bas", ad: "Periyodik kontrol başlangıç tarihi ve saati" });
+    for (const e of d.eksikler) l.push(e);
+    for (const x of v.cihazlar) if (!x.cihaz || x.cihaz.eksik || x.cihaz.gecti) l.push({ bolum: SABIT.cihaz, alan: `cihaz.${x.turId}`, ad: `${x.turAd}: ölçüm cihazı` });
+    if (!l.length) { setIsaretli(new Set()); bildir("Örnek rapor eksiksiz: gerçek raporda onaya giderdi. Örnek rapor kaydedilmez."); return; }
+    setIsaretli(new Set(l.map((e) => e.alan))); hepsiniAc(); setEksikler(l);
+  };
   const sil = async () => {
     if (!(await onayla({ baslik: "Raporu sil", metin: `${v.no} · ${v.ekipman.kod} raporu ve içine yazılan her şey silinir; geri alınamaz.`, tus: "Sil", tehlike: true }))) return;
     baslat(async () => {
@@ -401,7 +440,7 @@ export function SahaRaporu({ v, yeni }: { v: Gorunum; yeni?: { plan: string; eki
   const sayGuncel = useRef({ d, cevaplar, tarih, yaz, git });
   useEffect(() => { sayGuncel.current = { d, cevaplar, tarih, yaz, git }; });
   useEffect(() => {
-    if (oku || yeni) return;
+    if (oku || yeni || denemede) return;
     const bolumAdi = (id: string) => v.tanim.bolumler.find((b) => b.id === id)?.ad ?? id;
     return sayRaporBagla({
       id: v.id, no: v.no,
@@ -424,13 +463,14 @@ export function SahaRaporu({ v, yeni }: { v: Gorunum; yeni?: { plan: string; eki
       git: (e) => sayGuncel.current.git({ bolum: e.bolum, alan: e.alan, ad: e.ad }),
       cevaplar: () => sayGuncel.current.cevaplar,
     });
-  }, [oku, yeni, v.id, v.no, v.tanim, v.cihazlar]);
+  }, [oku, yeni, denemede, v.id, v.no, v.tanim, v.cihazlar]);
 
   /* ── alan çizicileri ── */
-  const metinSatiri = (k: EkipmanAnahtari, etiket: string, en: number, sayisal = false) => {
+  /* a (473): formatın ekipman kaydına bağlı alanı — kurucunun saha görünümünde adı yerinde yazılır, alan çıkarılır */
+  const metinSatiri = (k: EkipmanAnahtari, etiket: string, en: number, sayisal = false, a?: { id: string; ad: string }) => {
     const id = EID(k), h = alanHata[`ekipman.${k}`];
     return (
-      <Satir key={k} etiket={etiket} htmlFor={id}>
+      <Satir key={k} etiket={etiket} htmlFor={id} yerinde={a ? yerindeAlan(bag, a) : undefined}>
         {oku ? <OkuGirdi id={id} deger={ekipman[k]} /> : <Girdi id={id} value={ekipman[k]} maxLength={en} inputMode={sayisal ? "numeric" : undefined} hata={!!h}
           onChange={(e) => ekipmanYaz(k, e.target.value)} />}
         {h && <p className={stil.alanHata} id={ipucuId(id)}>{h}</p>}
@@ -463,6 +503,11 @@ export function SahaRaporu({ v, yeni }: { v: Gorunum; yeni?: { plan: string; eki
 
   /* ── şeritler ── */
   const seritler: ReactNode[] = [];
+  if (deneme) {
+    seritler.push(<Serit key="deneme" tur="bilgi" ikon="flask-conical">
+      {deneme.kip === "duzenle" ? "Örnek rapor · düzenleme: kalemle adları yazın, “+” ile ekleyin, “×” ile çıkarın; değişiklik kâğıda da geçer. "
+        : "Örnek rapor · denetçinin göreceği gibi deneyin. "}Yazdıklarınız kaydedilmez; müşteri, tesis ve cihazlar uydurmadır.</Serit>);
+  }
   if (genel) seritler.push(<Serit key="hata" tur="hata" ikon="circle-alert">{genel}</Serit>);
   /* 405: yeni rapor cihazda — numara ve kimlik sunucuda, bağlantı gelince */
   else if (acildi) seritler.push(<Serit key="acildi" tur="onay" ikon="circle-check" eylem={<TusBaglanti tur="ikincil" href={`/raporlar/${acildi}`}>Raporu aç</TusBaglanti>}>Rapor sunucuda açıldı; cihazda bekleyen kaydı gidince raporun sayfasına geçilir.</Serit>);
@@ -530,18 +575,18 @@ export function SahaRaporu({ v, yeni }: { v: Gorunum; yeni?: { plan: string; eki
   const [durumAd, rozet] = RAPOR_DURUM[v.durum];
   return (
     <>
-      <Kirinti ogeler={[["Planlar", "/planlar"], [v.plan.no, `/planlar/${v.plan.id}`], [v.no]]} />
+      {!deneme && <Kirinti ogeler={[["Planlar", "/planlar"], [v.plan.no, `/planlar/${v.plan.id}`], [v.no]]} />}
       <NesneBasi baslik={`${v.ekipman.kod} · ${v.tur.ad}`} altIkon="file-text"
         rozet={<><Rozet tur={rozet}>{durumAd}</Rozet>{bekleyenIs && <Rozet tur="bekliyor">{gonderimBekliyor ? "Gönderilmedi · bağlantı bekleniyor" : formBekliyor ? "Cihazda kayıt · gönderilmedi" : `Cihazda ${bekleyenFotolar.length} fotoğraf · gönderilmedi`}</Rozet>}</>}
         alt={<><Kod>{v.no}</Kod> · {v.plan.musteriKisa} · {v.plan.tesisAd} · {v.yazan.ad}</>}
         tuslar={<>
-          {duzenle && (
+          {duzenle && !deneme && (
             <p className={kirli ? `${stil.kayit} ${stil.kirli}` : stil.kayit} aria-live="polite">
               {kirli ? "Kaydedilmemiş değişiklik var" : sonKayit ? `Son kayıt ${zamanNo(sonKayit)}` : "Kaydedildi"}
             </p>
           )}
           {/* Ön izle (reisim 2026-09-28): kaydedilmiş hâl; kesin PDF'le aynı çizici. Kaydedilmemiş değişiklik varsa önce kaydedilir (atılmaz) */}
-          {yeni ? null : duzenle && kirli
+          {yeni || deneme ? null : duzenle && kirli
             ? <Tus tur="ikincil" ikon="eye" disabled={mesgul} onClick={onizle}>Ön izle</Tus>
             : <TusBaglanti ikon="eye" href={`/raporlar/${v.id}/onizle`}>Ön izle</TusBaglanti>}
           {v.revize?.iste && <Tus tur="ikincil" ikon="file-pen-line" disabled={mesgul} onClick={() => setRevizeAc(true)}>Revize iste</Tus>}
@@ -582,7 +627,8 @@ export function SahaRaporu({ v, yeni }: { v: Gorunum; yeni?: { plan: string; eki
         </RaporBolumu>
 
         <RaporBolumu id={SABIT.ekipman} no="2" baslik={duzen.ekipmanBaslik} acik={acik(SABIT.ekipman)} degistir={degistir(SABIT.ekipman)}
-          eksik={katilan.some((b) => bolumEksik(b.id))}>
+          eksik={katilan.some((b) => bolumEksik(b.id))}
+          baslikIcerik={bag.yerinde && duzen.tam ? <YerindeYazi deger={duzen.tam.ad} ad="Bölüm adı" yaz={(s) => duzen.tam && bag.yerinde?.ad(duzen.tam.id, s)} /> : undefined}>
           {/* 385: etiket plakasından okuma — yazılabilir raporda, firmada yapay zekâ açıksa, ekranda satırı olan etiket alanları için */}
           {bag.yz && etiketAlanlari.length > 0 && (
             <EtiketOkuma raporId={v.id} alanlar={etiketAlanlari} yaz={(k, x) => ekipmanYaz(k, x)} islem={bag.islem} />
@@ -598,6 +644,7 @@ export function SahaRaporu({ v, yeni }: { v: Gorunum; yeni?: { plan: string; eki
             </Satir>
           </Satirlar>
           {!duzen.tam && katilan.map((b) => <BilgiBlok key={b.id} b={b} bag={bag} />)}
+          {duzen.tam && <YerindeEkle bag={bag} bolum={duzen.tam.id} ad="Alan ekle" />}
         </RaporBolumu>
 
         {cihazEk && (
@@ -616,7 +663,12 @@ export function SahaRaporu({ v, yeni }: { v: Gorunum; yeni?: { plan: string; eki
         ))}
       </div>
 
-      {(duzenle || v.izin.sil || v.izin.kopyala) && (
+      {deneme ? (
+        <div className={stil.eylem} data-alt-cubuk="her">
+          <Tus tur="ikincil" ikon="check" onClick={() => bildir("Örnek rapor kaydedilmez.")}>Kaydet</Tus>
+          <Tus ikon="send" onClick={denemeGonder}>Onaya gönder</Tus>
+        </div>
+      ) : (duzenle || v.izin.sil || v.izin.kopyala) && (
         <div className={stil.eylem} data-alt-cubuk="her">
           {v.izin.sil && <Tus tur="ikincil" ikon="trash-2" className={stil.silTus} disabled={mesgul} onClick={sil}>Sil</Tus>}
           {v.izin.kopyala && <Tus tur="ikincil" ikon="copy" disabled={mesgul} onClick={() => setKopya(true)}>{duzenle ? "Kaydet ve kopyala" : "Kopyala"}</Tus>}
@@ -633,7 +685,7 @@ export function SahaRaporu({ v, yeni }: { v: Gorunum; yeni?: { plan: string; eki
         onKapat={() => setKopya(false)} kopyala={kopyala} />}
 
       <Pencere acik={!!eksikler} baslik="Zorunlu alanlar doldurulmadı" onKapat={() => setEksikler(null)} alt={<Tus onClick={tamam}>Tamam</Tus>}>
-        <p className={pencereMetinSinifi}>Eksik alanlar kırmızıyla işaretlendi. Rapor kaydedildi, gönderilmedi.</p>
+        <p className={pencereMetinSinifi}>Eksik alanlar kırmızıyla işaretlendi. {deneme ? "Örnek rapor kaydedilmez." : "Rapor kaydedildi, gönderilmedi."}</p>
         <ul className={stil.eksikListe}>
           {(eksikler ?? []).map((e, i) => (
             <li key={`${e.alan}-${i}`}>
@@ -645,5 +697,16 @@ export function SahaRaporu({ v, yeni }: { v: Gorunum; yeni?: { plan: string; eki
         </ul>
       </Pencere>
     </>
+  );
+}
+
+/** 472: örnek raporun fotoğrafı — dosya seçilmez, yüklenmez; "Fotoğraf ekle" yalnız sayar (zorunlu fotoğraf kuralı denensin) */
+function DenemeFoto({ adet, gecersiz, ekle, cikar }: { adet: number; gecersiz: boolean; ekle: () => void; cikar: () => void }) {
+  return (
+    <div className={stil.tabloAlt}>
+      <span className={gecersiz ? stil.hataMetin : stil.ipucuMetin}>{adet ? `${adet} örnek fotoğraf` : "Fotoğraf yok"} · örnek raporda dosya yüklenmez</span>
+      <Tus tur="ikincil" ikon="camera" onClick={ekle}>Fotoğraf ekle</Tus>
+      {adet > 0 && <Tus tur="ikincil" ikon="x" onClick={cikar}>Fotoğrafı çıkar</Tus>}
+    </div>
   );
 }

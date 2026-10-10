@@ -345,6 +345,28 @@ export function baglantiRengiEksikleri(tsx: readonly { ad: string; metin: string
   return [...new Set(eksik)];
 }
 
+/* ── ÇERÇEVE İZNİ (472) ── kurucunun saha ekranı önizlemesi kendi sayfamızın çerçevesinde açılır: gömme izni (frame-ancestors 'self' +
+   SAMEORIGIN) YALNIZ /ekipman-turleri/<tür>/sablon/<sürüm>/saha yolunda; öteki her yol 'none' + DENY (tıklama hırsızlığı yok). Çerçeve sayfası
+   oturum ve modül kapısını kendisi denetler. */
+export function cerceveIzniEksikleri(proxy: string, sayfa: string): string[] {
+  const eksik: string[] = [];
+  const kaynak = /const CERCEVE_YOLU = \/(.+)\/;\n/.exec(proxy)?.[1];
+  let yol: RegExp | null = null;
+  try { yol = kaynak ? new RegExp(kaynak) : null; } catch { /* aşağıda */ }
+  if (!yol) eksik.push("CERCEVE_YOLU okunamadı");
+  else {
+    if (!yol.test("/ekipman-turleri/a/sablon/b/saha")) eksik.push("saha önizlemesi gömülemiyor");
+    for (const y of ["/ekipman-turleri/a/sablon/b/kurucu", "/ekipman-turleri/a/sablon/b", "/ekipman-turleri/a/sablon/b/saha/c", "/planlar", "/giris", "/x/ekipman-turleri/a/sablon/b/saha"]) {
+      if (yol.test(y)) eksik.push(`gömme izni fazla geniş: ${y}`);
+    }
+  }
+  if (!proxy.includes("const cerceve = !yasak && CERCEVE_YOLU.test(yol);")) eksik.push("çerçeve yolu denetimi yok");
+  if (!proxy.includes("`frame-ancestors ${cerceve ? \"'self'\" : \"'none'\"}`,") || /"frame-ancestors 'self'"/.test(proxy)) eksik.push("frame-ancestors koşulsuz");
+  if (!proxy.includes(`yanit.headers.set("X-Frame-Options", cerceve ? "SAMEORIGIN" : "DENY");`)) eksik.push("X-Frame-Options koşulsuz");
+  if (!/const MODUL = modulBul\("ekipman-turleri"\)!/.test(sayfa) || !/await modulOturumu\(MODUL\.no\)[\s\S]*if \(!o\) return <Yetkisiz \/>/.test(sayfa)) eksik.push("çerçeve sayfasında modül kapısı yok");
+  return eksik;
+}
+
 /* ── ÇEVRİMDIŞI SERVİS ÇALIŞANI (395) ── public/sw.js düz betik: cihaz deposunun şeması src/components/cevrimdisi/depo.ts ile ORTAK (ad, sürüm,
    bölmeler aynı olmalı — biri artarsa öteki eski şemayla açar); yalnız saha sayfaları saklanır (API, giriş, müşteri paneli, yönetim ASLA); yalnız
    aynı kökenden GET; sayfa CSP'si çalışana izin verir. */
