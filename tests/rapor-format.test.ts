@@ -117,7 +117,9 @@ test("taslak kaydet: tanım şemadan geçmeden yazılmaz (kimlik tekrarı, bilin
   assert.ok(k.surum > t.surum);
 });
 
-test("YAYIN: kilitli (Bakanlık) öğe silinmiş / değiştirilmiş / kilidi kaldırılmışsa yayınlanmaz (sunucu kaynağı kendisi seçer); öteki maddeler yalnız uyarı", async () => {
+/* 2026-10-10 (470, reisim hata listesi 38: "biraz daha serbestlik"; genel ilke "kural uyarıdır, engel değil"): Bakanlık formatından ayrılan yerler
+   artık yayını DURDURMAZ — uyarı listesinin başında (eskiden "yayınlanmaz", engel). Kaynak yine sunucuda seçilir. */
+test("YAYIN: Bakanlık öğesi silinmiş / değiştirilmiş / kilidi kaldırılmışsa UYARI (sunucu kaynağı kendisi seçer), yayın durmaz; öteki maddeler de uyarı", async () => {
   const tur = await yeniTur();
   const t = tamam(await a(MEK, (db) => taslakBaslat(db, MEK, tur, "sablon:ZPKR02", null)));
   /* istemci kilit bayraklarını kaldırıp öğeleri silse de kaynak (ZPKR02) koddan gelir */
@@ -127,11 +129,15 @@ test("YAYIN: kilitli (Bakanlık) öğe silinmiş / değiştirilmiş / kilidi kal
   if (gozle?.blok === "liste") { gozle.gruplar[0].maddeler.splice(0, 1); gozle.gruplar[1].maddeler[0] = { ...gozle.gruplar[1].maddeler[0], metin: "Değiştirildi", kilit: false }; }
   const k = tamam(await a(MEK, (db) => taslakKaydet(db, MEK, t.id, t.surum, bozuk)));
   const d = (await a(MEK, (db) => yayinDenetle(db, MEK, t.id)))!;
-  for (const p of ["silinmiş: fonk", "silinmiş: g1_1", "değiştirilmiş: g2_1", "kilidi kaldırılmış: firma"]) assert.ok(d.engeller.some((x) => x.includes(p)), `${p} — ${d.engeller.join(" | ")}`);
-  const r = await a(MEK, (db) => yayinla(db, MEK, t.id, k.surum, ""));
-  assert.equal(r.durum, "engel");
-  assert.deepEqual(r.durum === "engel" && r.engeller, d.engeller, "yayın engeli denetimle aynı");
-  assert.equal(await a(MEK, (db) => yayindakiFormat(db, tur)), null, "yayınlanmadı");
+  assert.deepEqual(d.engeller, [], "Bakanlık farkı engel değil");
+  for (const p of ["silinmiş: fonk", "silinmiş: g1_1", "değiştirilmiş: g2_1", "kilidi kaldırılmış: firma"]) assert.ok(d.uyarilar.some((x) => x.includes(p)), `${p} — ${d.uyarilar.join(" | ")}`);
+  /* bu taslak yayınlanmaz (aşağıda başka tanımla yayınlanır): yalnız uyarının yayında da döndüğü — ayrı türde */
+  const tur9 = await yeniTur();
+  const t9 = tamam(await a(MEK, (db) => taslakBaslat(db, MEK, tur9, "sablon:ZPKR02", null)));
+  const k9 = tamam(await a(MEK, (db) => taslakKaydet(db, MEK, t9.id, t9.surum, bozuk)));
+  const r9 = tamam(await a(MEK, (db) => yayinla(db, MEK, t9.id, k9.surum, "")));
+  assert.ok(r9.uyarilar.some((x) => x.includes("silinmiş: fonk")), "yayın sonucu uyarıyı taşır");
+  assert.equal((await a(MEK, (db) => yayindakiFormat(db, tur9)))!.sira, 1, "Bakanlık formatından ayrılan sürüm yayınlandı");
   /* sıralama serbest; kilitsiz yeni bölüm eklenebilir; boş bölüm yalnız uyarı */
   const iyi = structuredClone(SABLONLAR.ZPKR02.tanim);
   iyi.bolumler.reverse();
@@ -166,7 +172,8 @@ test("SÜRÜM: yayındaki eskiye düşer, sıra artar; yayındaki sürümden yen
   assert.equal((await a(MEK, (db) => formatAyrintisi(db, MEK, t2.id)))!.kaynak, "ZPKR01");
   const kayip = structuredClone(y1.tanim); kayip.bolumler = kayip.bolumler.filter((x) => x.id !== "nokta");
   const k = tamam(await a(MEK, (db) => taslakKaydet(db, MEK, t2.id, t2.surum, kayip)));
-  assert.equal((await a(MEK, (db) => yayinla(db, MEK, t2.id, k.surum, ""))).durum, "engel");
+  /* 470: Bakanlık bölümü silinmiş taslak yayın denetiminde UYARI (engel değil) */
+  assert.ok((await a(MEK, (db) => yayinDenetle(db, MEK, t2.id)))!.uyarilar.some((x) => x.includes("silinmiş: nokta")), "silinen Bakanlık bölümü uyarıda");
   const k2 = tamam(await a(MEK, (db) => taslakKaydet(db, MEK, t2.id, k.surum, y1.tanim)));
   assert.equal(tamam(await a(ELK, (db) => yayinla(db, ELK, t2.id, k2.surum, "ikinci"))).sira, 2, "elektrik yöneticisi de yayınlar");
   const l = (await a(MEK, (db) => formatSurumleri(db, MEK, tur)))!;

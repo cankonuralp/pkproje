@@ -7,7 +7,8 @@
      sınır dışı test değeri. Kusur açıklamaları bölümü bundan dolar.
    · öneri: kural açıksa herhangi kusur → "uygun_degil", yoksa "uygun". Denetçi sonucu kendisi seçer.
    Yayın denetimi (§5): boş bölüm, cevap seti eksik liste, sınırı / hesabı / notu olmayan ölçüm tablosu — UYARI (yayın olur).
-   Kilitli öğe denetimi (§3, 2026-10-04): kilitli (Bakanlık) öğe silinmiş / değiştirilmiş / kilidi kaldırılmış — ENGEL (yayınlanmaz).
+   Kilitli öğe denetimi (§3, 2026-10-04): kilitli (Bakanlık) öğe silinmiş / değiştirilmiş / kilidi kaldırılmış — 470'ten beri UYARI (yayın durmaz;
+   reisim 2026-10-10 "biraz daha serbestlik").
    ⛔ Bu dosya yalnız ./hesap.ts ve ./tanim.ts'i içe aktarır (olumsuz kanıt kopyası bu iki yolu çevirir). */
 import { linyeHesap, noktaHesap, pdHesap, rcdTestYeter, sayiOku, SINIR_ISARETI, sinirSonucu, ziHesap } from "./hesap.ts";
 import { kurucudan, type Bolum, type BolumOf, type Cevaplar, type FormatTanimi } from "./tanim.ts";
@@ -167,7 +168,8 @@ export function kilitNormallestir(t: FormatTanimi, kaynaklar: readonly FormatTan
 }
 
 /* ── KİLİTLİ ÖĞE DENETİMİ (RAPOR-FORMAT §1 "Bakanlık formatlı türde zorunlu alanlar kilitli", §3 "silinemez, yalnız sırası / görünümü değişir;
-   eksikse yayınlanmaz (bu tek engel: resmî formatın kendisi)"). 2026-10-04 (308): yalnız "silinmiş mi" değil — kilitli öğe yerinde, kilidi
+   eksikse yayınlanmaz"). 470 (reisim 2026-10-10, hata listesi 38): kurucuda silinir ve değişir; bu denetimin listesi yayında UYARI olur
+   (src/modules/rapor-format/server/formatlar.ts) — engel değil. 2026-10-04 (308): yalnız "silinmiş mi" değil — kilitli öğe yerinde, kilidi
    duruyor ve ÖZÜ aynı (ad, alan türü, seçenekler, kayıttan gelen kaynak, sınır, madde metni, cevap seti, hesap, uygunluk notları, sonuç cümlesi);
    zorunlu olan isteğe bağlıya, en az satır sayısı aşağıya çekilemez. Sırası serbest, kilitli bölüme yeni (kilitsiz) öğe eklenebilir. Kaynak
    SUNUCUDA seçilir (hazır şablon koddan, önceki yayın veritabanından) — istemcinin yolladığı tanımdaki "kilit" bayrağına güvenilmez. */
@@ -254,7 +256,7 @@ export function kilitDenetimi(t: FormatTanimi, kaynak: FormatTanimi): string[] {
   }
   /* resmî formatın kimliği: form kodu ve başlık (PDF üst bilgisi) — kilitli öğesi olan kaynakta değişmez */
   if (kilitVar && kaynak.gorunum.formKodu && (t.gorunum.formKodu !== kaynak.gorunum.formKodu || t.gorunum.baslik !== kaynak.gorunum.baslik)) {
-    l.push(`Bakanlık formatının form kodu ve başlığı değiştirilemez: ${kaynak.gorunum.formKodu} (“${kaynak.gorunum.baslik}”).`);
+    l.push(`Bakanlık formatının form kodu ve başlığı değiştirilmiş: ${kaynak.gorunum.formKodu} (“${kaynak.gorunum.baslik}”).`);
   }
   return l;
 }

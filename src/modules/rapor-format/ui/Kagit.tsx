@@ -9,7 +9,8 @@
    · ayrıntı (alan türü, seçenekler, sınır, birim, zorunlu, standart, talimat) öğenin ayar tuşundan bölümün altında açılır; bölümün ayarları
      (üst başlık, numarasız, cevap seti, uygunluk notları, fotoğraf sayısı, imza yerleri) bölüm şeridindeki ayar tuşundan;
    · bölüm şeridinde yukarı / aşağı ve sil; bölümler arasında ve sonda "Bölüm ekle".
-   Kilitli (Bakanlık) öğe kilit simgeli ve değişmez (sunucu yayında yeniden denetler — ENGEL). 1 Firma bilgileri her formatta aynı (sabit); yalnız
+   Bakanlık öğesi kilit simgeli; 470 (reisim 2026-10-10, hata listesi 38: "biraz daha serbestlik") o da yazılır, çıkarılır, silinir — çıkarmadan /
+   silmeden önce sorulur, yayında uyarı çıkar (engel değil). 1 Firma bilgileri her formatta aynı (sabit); yalnız
    "Periyodik kontrol metodu ve kapsamı" satırı yazılır. 460 (reisim 2026-10-09: "ekipman bilgileri kısmıda değiştirilebilir olsun zira yangın
    dolabı gibi ekipmanlarda farklı girdiler olabiliyor sabit olan tek şey firma bilgileri, cihazlar ve standartlar"): 2. bölüm serbest — ekipman
    kodu ve türü dışındaki her satırın adı değişir, çıkarılır, yeni alan eklenir; marka, model, seri no … "Ekipman kaydından alan ekle" ile geri
@@ -21,12 +22,13 @@
    açık / koyu temada aynı kâğıt. */
 import { Fragment, useEffect, useRef, useState, type ReactNode } from "react";
 import { Ikon } from "../../../components/ikon/Ikon";
+import { useOnayla } from "../../../components/pencere/Onay";
 import { SecimAlani } from "../../../components/secim/SecimAlani";
 import { SINIR_ISARETI } from "../../../format/hesap";
 import { raporDuzeni } from "../../../format/duzen";
 import { BLOKLAR, EKIPMAN_ALAN_ADI, EKIPMAN_ALANLARI, type Blok, type Bolum, type BolumOf, type FormatTanimi } from "../../../format/tanim";
 import {
-  altBaslikEkle, bolumAdi, bolumDuzeni, ekipmanAlaniEkle, gorunumYaz, grupEkle, grupSil, grupYaz, kurucudan, maddeEkle, ogeEkle, ogeSil, ogeYaz, resmiFormat, satirlar, tasi,
+  altBaslikEkle, bolumAdi, bolumDuzeni, ekipmanAlaniEkle, gorunumYaz, grupEkle, grupSil, grupYaz, kurucudan, maddeEkle, ogeEkle, ogeSil, ogeYaz, satirlar, tasi,
   yeniBolum, yeniKimlik,
 } from "../kurucu";
 import { ListeDuzenleyici, NotDuzenleyici, OgeDuzenleyici, SonucAciklamasi } from "./KurucuDuzenleyici";
@@ -43,14 +45,13 @@ const virgul = (n: number) => String(n).replace(".", ",");
 
 /* ── YERİNDE YAZI ── düz metin gibi görünür; basınca yazı alanı olur. Tek satırlıda Enter yazar; çok satırlıda Enter yeni satır, dışarı
    tıklama yazar. Esc vazgeçer. Yazılan değer çıkarken işlenir (kırpma yazarken boşluğu yutmasın). */
-function Yazi({ deger, yaz, ad, bos = "Yazın", kilit = false, cok = false, ac = false, uzun = 200 }: {
-  deger: string; yaz: (s: string) => void; ad: string; bos?: string; kilit?: boolean; cok?: boolean; ac?: boolean; uzun?: number;
+function Yazi({ deger, yaz, ad, bos = "Yazın", cok = false, ac = false, uzun = 200 }: {
+  deger: string; yaz: (s: string) => void; ad: string; bos?: string; cok?: boolean; ac?: boolean; uzun?: number;
 }) {
   const [acik, setAcik] = useState(ac);
   const [taslak, setTaslak] = useState(deger);
   const alan = useRef<HTMLTextAreaElement>(null);
   useEffect(() => { if (acik) { alan.current?.focus(); alan.current?.select(); } }, [acik]);
-  if (kilit) return <span className={k.kilitli}>{deger || <span className={k.bos}>{bos}</span>}</span>;
   if (!acik) {
     return (
       <button type="button" className={k.yazi} title="Değiştirmek için basın" onClick={() => { setTaslak(deger); setAcik(true); }}>
@@ -81,8 +82,9 @@ function Tus({ ikon, ad, onClick, disabled = false, basili }: { ikon: string; ad
 function Ekle({ ad, onClick, erisimAdi }: { ad: string; onClick: () => void; erisimAdi?: string }) {
   return <button type="button" className={k.ekle} aria-label={erisimAdi} onClick={onClick}><Ikon ad="plus" kucuk />{ad}</button>;
 }
-const Kilit = ({ ad = "Bakanlık alanı" }: { ad?: string }) => (
-  <span className={k.kilitIkon} title={`${ad} · değişmez`}><Ikon ad="lock" kucuk /><span className="gizli">{ad}</span></span>
+/* 470: Bakanlık öğesinin işareti (değişir, yayında uyarı) — "Sabit" satırlar (ekipman kodu, türü) değişmez */
+const Kilit = ({ ad = "Bakanlık formatının parçası", not = "değiştirilirse yayında uyarı çıkar" }: { ad?: string; not?: string }) => (
+  <span className={k.kilitIkon} title={`${ad} · ${not}`}><Ikon ad="lock" kucuk /><span className="gizli">{ad}</span></span>
 );
 
 /** seçenekler belgedeki gibi (○ A ○ B) */
@@ -131,8 +133,8 @@ export function Kagit({ t, degis, tur, bolumuSil, bildir }: KagitOzellik) {
   const [ayar, setAyar] = useState<string | null>(null);
   /* yeni eklenen öğe / bölüm: adı yazma kipinde açılır */
   const [yeniId, setYeniId] = useState<string | null>(null);
+  const onayla = useOnayla();
   const duzen = raporDuzeni(t, false);
-  const resmi = resmiFormat(t);
   const sira = (id: string) => t.bolumler.findIndex((b) => b.id === id);
   const ac = (key: string) => setAyar(ayar === key ? null : key);
   const gorunen = duzen.bolumler.map((x) => x.b.id);
@@ -140,7 +142,12 @@ export function Kagit({ t, degis, tur, bolumuSil, bildir }: KagitOzellik) {
   /** yeni öğe: kimliği önceden hesaplanır (ogeEkle aynısını verir), adı yazma kipinde açılır */
   const ogeKoy = (i: number, onek: "a" | "s" | "d", ad: string) => { const id = yeniKimlik(t, onek); degis(ogeEkle(t, i, ad)); setYeniId(id); };
   const maddeKoy = (i: number, gid: string) => { const id = yeniKimlik(t, "m"); degis(maddeEkle(t, i, gid, "Yeni madde")); setYeniId(id); };
-  const cikar = (i: number, id: string, ad: string) => { degis(ogeSil(t, i, id)); if (ayar?.endsWith(`:${id}`)) setAyar(null); bildir(`“${ad}” çıkarıldı (taslak).`); };
+  /* 470: Bakanlık öğesi de çıkar — önce sorulur */
+  const cikar = async (i: number, id: string, ad: string, bakanlik: boolean) => {
+    if (bakanlik && !(await onayla({ baslik: "Bakanlık öğesi çıkarılsın mı?", tus: "Çıkar", tehlike: true,
+      metin: `“${ad}” Bakanlık formatının parçası. Çıkarılırsa bu formatla yazılan raporlar Bakanlık formatına uymaz; yayınlarken uyarı çıkar.` }))) return;
+    degis(ogeSil(t, i, id)); if (ayar?.endsWith(`:${id}`)) setAyar(null); bildir(`“${ad}” çıkarıldı (taslak).`);
+  };
   /** p: yeni bölümün t.bolumler'deki yeri */
   const bolumKoy = (blok: Blok, p: number) => {
     const b = yeniBolum(t, blok, BLOK_ADI[blok]);
@@ -182,12 +189,12 @@ export function Kagit({ t, degis, tur, bolumuSil, bildir }: KagitOzellik) {
       </div>
     );
   };
-  /** öğe satırının küçük tuşları: ayrıntı · çıkar (kilitliyse kilit) */
+  /** öğe satırının küçük tuşları: Bakanlık işareti · ayrıntı · çıkar (470: Bakanlık öğesinde de, sorarak) */
   const ogeTuslari = (b: Bolum, i: number, id: string, ad: string, kilit: boolean) => (
     <span className={k.ogeTus}>
       {kilit && <Kilit />}
       <Tus ikon="settings" ad={`${ad} · ayrıntılar`} basili={ayar === `o:${b.id}:${id}`} onClick={() => ac(`o:${b.id}:${id}`)} />
-      {!kilit && <Tus ikon="x" ad={`${ad} · çıkar`} onClick={() => cikar(i, id, ad)} />}
+      <Tus ikon="x" ad={`${ad} · çıkar`} onClick={() => void cikar(i, id, ad, kilit)} />
     </span>
   );
 
@@ -196,7 +203,7 @@ export function Kagit({ t, degis, tur, bolumuSil, bildir }: KagitOzellik) {
     switch (b.blok) {
       case "bilgi":
         return <BilgiTablosu l={b.alanlar.map((a) => [
-          <span key={a.id} className={k.etiket}><Yazi deger={a.ad} ad="Alan adı" kilit={a.kilit} ac={yeniId === a.id} yaz={(s) => degis(ogeYaz(t, i, a.id, { ad: s }))} />
+          <span key={a.id} className={k.etiket}><Yazi deger={a.ad} ad="Alan adı" ac={yeniId === a.id} yaz={(s) => degis(ogeYaz(t, i, a.id, { ad: s }))} />
             {ogeTuslari(b, i, a.id, a.ad, a.kilit)}</span>,
           <AlanOrnegi key={`${a.id}-d`} a={a} />, a.tur === "coklu" || (a.secenekler?.length ?? 0) > 3] as const)}
           son={<Ekle ad="Alan ekle" onClick={() => ogeKoy(i, "a", "Yeni alan")} />} />;
@@ -208,18 +215,17 @@ export function Kagit({ t, degis, tur, bolumuSil, bildir }: KagitOzellik) {
             <thead><tr><th className="rb-ab">No</th><th className="rb-ab">Kontrol maddesi</th><th className="rb-ab">Sonuç</th></tr></thead>
             <tbody>
               {b.gruplar.map((g, gi) => {
-                const resmiGrup = b.kilit && g.maddeler.some((m) => m.kilit);
                 return <Fragment key={g.id}>
                   {(cok || g.ad) && <tr><td colSpan={3} className="rb-grup">
                     <span className={k.grupSatir}>
-                      <Yazi deger={g.ad} ad="Grup adı" bos="Grup adı (isteğe bağlı)" kilit={resmiGrup} yaz={(s) => degis(grupYaz(t, i, g.id, { ad: s }))} />
+                      <Yazi deger={g.ad} ad="Grup adı" bos="Grup adı (isteğe bağlı)" yaz={(s) => degis(grupYaz(t, i, g.id, { ad: s }))} />
                       {cok && !g.maddeler.length && <Tus ikon="x" ad={`${g.ad || `${gi + 1}. grup`} · boş grubu çıkar`} onClick={() => degis(grupSil(t, i, g.id))} />}
                     </span>
                   </td></tr>}
                   {g.maddeler.map((m, mi) => (
                     <tr key={m.id}>
                       <td className="rb-orta">{cok ? `${gi + 1}.${mi + 1}` : mi + 1}</td>
-                      <td><span className={k.satir}><Yazi deger={m.metin} ad="Madde metni" kilit={m.kilit} ac={yeniId === m.id} yaz={(s) => degis(ogeYaz(t, i, m.id, { ad: s }))} />
+                      <td><span className={k.satir}><Yazi deger={m.metin} ad="Madde metni" ac={yeniId === m.id} yaz={(s) => degis(ogeYaz(t, i, m.id, { ad: s }))} />
                         {ogeTuslari(b, i, m.id, m.metin, m.kilit)}</span></td>
                       <td><Secenekler l={b.cevaplar} /></td>
                     </tr>
@@ -249,7 +255,7 @@ export function Kagit({ t, degis, tur, bolumuSil, bildir }: KagitOzellik) {
                 return (
                   <th key={s.id} className="rb-ab">
                     <span className={k.sutun}>
-                      <Yazi deger={s.ad} ad="Sütun adı" kilit={kilit} ac={yeniId === s.id} yaz={(x) => degis(ogeYaz(t, i, s.id, { ad: x }))} />
+                      <Yazi deger={s.ad} ad="Sütun adı" ac={yeniId === s.id} yaz={(x) => degis(ogeYaz(t, i, s.id, { ad: x }))} />
                       {s.birim && <span>({s.birim})</span>}
                       {s.op && s.sinir !== undefined && <span className={k.sinir}>sınır {SINIR_ISARETI[s.op]} {virgul(s.sinir)}</span>}
                       {ogeTuslari(b, i, s.id, s.ad, kilit)}
@@ -285,7 +291,7 @@ export function Kagit({ t, degis, tur, bolumuSil, bildir }: KagitOzellik) {
             <tbody>
               {b.degerler.map((d) => (
                 <tr key={d.id}>
-                  <td><span className={k.satir}><Yazi deger={d.ad} ad="Değer adı" kilit={d.kilit} ac={yeniId === d.id} yaz={(s) => degis(ogeYaz(t, i, d.id, { ad: s }))} />
+                  <td><span className={k.satir}><Yazi deger={d.ad} ad="Değer adı" ac={yeniId === d.id} yaz={(s) => degis(ogeYaz(t, i, d.id, { ad: s }))} />
                     {ogeTuslari(b, i, d.id, d.ad, d.kilit)}</span></td>
                   <td><span className={k.ornek}>{d.secenekler?.length ? d.secenekler.join(" / ") : d.metin ? "yazı" : `sayı${d.birim ? ` · ${d.birim}` : ""}`}</span></td>
                   <td>{d.op && d.sinir !== undefined ? `${SINIR_ISARETI[d.op]} ${virgul(d.sinir)}${d.birim ? ` ${d.birim}` : ""}` : d.not || <span className={k.ornek}>sınır yok</span>}</td>
@@ -323,11 +329,11 @@ export function Kagit({ t, degis, tur, bolumuSil, bildir }: KagitOzellik) {
       case "sonuc":
         return <>
           <p className="rb-kutu-metin">
-            <Yazi deger={b.cumle} ad="Sonuç cümlesi" bos="Sonuç cümlesi (ör. … ekipmanın kullanımı)" kilit={b.kilit} uzun={400}
+            <Yazi deger={b.cumle} ad="Sonuç cümlesi" bos="Sonuç cümlesi (ör. … ekipmanın kullanımı)" uzun={400}
               yaz={(s) => degis(bolumYaz(t, i, { cumle: s.trim() }))} /> <b>uygundur / uygun değildir</b>.
           </p>
-          {(b.aciklama || !b.kilit) && <div className="rb-aciklama">
-            <Yazi deger={b.aciklama} ad="Sonuç açıklaması" bos="Açıklama (isteğe bağlı: ağır kusurların tanımı, notlar)" kilit={b.kilit} cok uzun={4000}
+          {<div className="rb-aciklama">
+            <Yazi deger={b.aciklama} ad="Sonuç açıklaması" bos="Açıklama (isteğe bağlı: ağır kusurların tanımı, notlar)" cok uzun={4000}
               yaz={(s) => degis(bolumYaz(t, i, { aciklama: s.slice(0, 4000) }))} />
           </div>}
         </>;
@@ -347,7 +353,7 @@ export function Kagit({ t, degis, tur, bolumuSil, bildir }: KagitOzellik) {
   const bolumAyari = (b: Bolum, i: number) => (
     <div className={k.panel} role="group" aria-label={`${b.ad} · bölüm ayarları`}>
       <div className={k.panelBas}><b>{b.ad} · bölüm ayarları</b><Tus ikon="x" ad="Bölüm ayarlarını kapat" onClick={() => setAyar(null)} /></div>
-      {!b.kilit && <div className={k.panelSatir}>
+      {<div className={k.panelSatir}>
         <label className={k.panelKutu}><input type="checkbox" checked={!!b.alt} onChange={(e) => degis(bolumDuzeni(t, i, { alt: e.target.checked }))} />
           Alt başlık (üstündeki bölümün altında 5.1, 5.2 … diye numaralanır)</label>
         {!b.alt && <label className={k.panelKutu}><input type="checkbox" checked={!!b.numarasiz} onChange={(e) => degis(bolumDuzeni(t, i, { numarasiz: e.target.checked }))} />
@@ -357,7 +363,7 @@ export function Kagit({ t, degis, tur, bolumuSil, bildir }: KagitOzellik) {
       </div>}
       {b.blok === "liste" && <ListeDuzenleyici t={t} i={i} b={b} degis={degis} />}
       {b.blok === "olcum" && <>
-        {!b.kilit && <div className={k.panelSatir}>
+        {<div className={k.panelSatir}>
           <label className={k.panelKutu}><input type="checkbox" checked={b.satir === "ekle"} onChange={(e) => degis(bolumYaz(t, i, { satir: e.target.checked ? "ekle" : "sabit" }))} />
             Satırları denetçi ekler</label>
           <label className={k.panelAlan}>En az satır
@@ -370,7 +376,7 @@ export function Kagit({ t, degis, tur, bolumuSil, bildir }: KagitOzellik) {
       {b.blok === "imza" && <div className={k.panelSatir} role="group" aria-label="İmza yerleri">
         {([["uzman", "Muayene uzmanı"], ["teknik", "Teknik yönetici"]] as const).map(([x, ad]) => (
           <label key={x} className={k.panelKutu}>
-            <input type="checkbox" checked={b.imzalar.includes(x)} disabled={b.kilit || (b.imzalar.length === 1 && b.imzalar.includes(x))}
+            <input type="checkbox" checked={b.imzalar.includes(x)} disabled={b.imzalar.length === 1 && b.imzalar.includes(x)}
               onChange={(e) => degis(bolumYaz(t, i, { imzalar: e.target.checked ? [...b.imzalar, x] : b.imzalar.filter((y) => y !== x) }))} />{ad}
           </label>
         ))}
@@ -418,10 +424,10 @@ export function Kagit({ t, degis, tur, bolumuSil, bildir }: KagitOzellik) {
           <td className="rb-logo">LOGO</td>
           <td className="rb-firma"><b>Firmanızın adı</b><br /><span className={k.ornek}>adres, logo ve akreditasyon Firma ayarlarından</span></td>
           <td className="rb-logo"><span className={k.ornek}>Akreditasyon (TÜRKAK) no · Firma ayarlarından; yoksa boş</span></td>
-          <td className="rb-bas-ad"><Yazi deger={t.gorunum.baslik} ad="Belge başlığı" bos={`${tur.ad} periyodik kontrol raporu`} kilit={resmi}
+          <td className="rb-bas-ad"><Yazi deger={t.gorunum.baslik} ad="Belge başlığı" bos={`${tur.ad} periyodik kontrol raporu`}
             yaz={(s) => degis(gorunumYaz(t, { baslik: s }))} /></td>
           <td className="rb-dok">
-            <div><span>Doküman Kodu</span>: <Yazi deger={t.gorunum.formKodu} ad="Doküman kodu" bos="kendiliğinden" kilit={resmi} uzun={20}
+            <div><span>Doküman Kodu</span>: <Yazi deger={t.gorunum.formKodu} ad="Doküman kodu" bos="kendiliğinden" uzun={20}
               yaz={(s) => degis(gorunumYaz(t, { formKodu: s }))} /></div>
             <div><span>Format sürümü</span>: taslak</div>
             <div><span>Rapor No</span>: —</div>
@@ -450,13 +456,13 @@ export function Kagit({ t, degis, tur, bolumuSil, bildir }: KagitOzellik) {
 
       {/* 2 · Ekipman bilgileri — kod ve tür sabit; öteki satırlar formatın (adı yazılır, çıkarılır, eklenir) */}
       <section className={`rb-bolum ${k.bolum}`} id="kb-ekipman">
-        <div className={k.bolumBas}><h2>2. {ekip ? <Yazi deger={ekip.ad} ad="Bölüm adı" kilit={ekip.kilit} yaz={(s) => degis(bolumAdi(t, ki, s))} /> : duzen.ekipmanBaslik}</h2>
+        <div className={k.bolumBas}><h2>2. {ekip ? <Yazi deger={ekip.ad} ad="Bölüm adı" yaz={(s) => degis(bolumAdi(t, ki, s))} /> : duzen.ekipmanBaslik}</h2>
           {ekip?.kilit && <span className={k.araclar}><span className={k.sabit}><Ikon ad="lock" kucuk />Bakanlık bölümü</span></span>}</div>
         <BilgiTablosu l={[
-          [<span key="kod" className={k.etiket}>Ekipman kodu<span className={k.ogeTus}><Kilit ad="Sabit · her raporda" /></span></span>, <span key="k" className={k.ornek}>kayıttan</span>],
-          [<span key="tur" className={k.etiket}>Ekipman türü<span className={k.ogeTus}><Kilit ad="Sabit · her raporda" /></span></span>, tur.ad],
+          [<span key="kod" className={k.etiket}>Ekipman kodu<span className={k.ogeTus}><Kilit ad="Sabit · her raporda" not="değişmez" /></span></span>, <span key="k" className={k.ornek}>kayıttan</span>],
+          [<span key="tur" className={k.etiket}>Ekipman türü<span className={k.ogeTus}><Kilit ad="Sabit · her raporda" not="değişmez" /></span></span>, tur.ad],
           ...(ekip ? ekip.alanlar.map((a): Hucre => [
-            <span key={a.id} className={k.etiket} data-alan={a.id}><Yazi deger={a.ad} ad="Alan adı" kilit={a.kilit} ac={yeniId === a.id} yaz={(s) => degis(ogeYaz(t, ki, a.id, { ad: s }))} />
+            <span key={a.id} className={k.etiket} data-alan={a.id}><Yazi deger={a.ad} ad="Alan adı" ac={yeniId === a.id} yaz={(s) => degis(ogeYaz(t, ki, a.id, { ad: s }))} />
               {ogeTuslari(ekip, ki, a.id, a.ad, a.kilit)}</span>,
             <AlanOrnegi key={`${a.id}-d`} a={a} />, a.tur === "coklu" || (a.secenekler?.length ?? 0) > 3]) : []),
         ]}
@@ -479,19 +485,19 @@ export function Kagit({ t, degis, tur, bolumuSil, bildir }: KagitOzellik) {
             <section className={`rb-bolum ${k.bolum}`} id={`kb-${b.id}`} aria-label={`${x.no ? `${x.no} ` : ""}${b.ad}`}>
               <div className={x.no?.includes(".") ? `${k.bolumBas} ${k.altBas}` : k.bolumBas}>
                 <h2>{x.no && <span className={k.no}>{x.no.includes(".") ? `${x.no} ` : `${x.no}. `}</span>}
-                  <Yazi deger={b.ad} ad="Bölüm adı" bos="Bölüm adı" kilit={b.kilit} ac={yeniId === b.id} yaz={(s) => degis(bolumAdi(t, i, s))} /></h2>
+                  <Yazi deger={b.ad} ad="Bölüm adı" bos="Bölüm adı" ac={yeniId === b.id} yaz={(s) => degis(bolumAdi(t, i, s))} /></h2>
                 <span className={k.araclar}>
                   {b.kilit && <span className={k.sabit}><Ikon ad="lock" kucuk />Bakanlık bölümü</span>}
                   {!b.kilit && b.blok === "cihaz" && <span className={k.sabit}><Ikon ad="lock" kucuk />Sabit · türün cihazları</span>}
                   <span className={k.tur}>{BLOK_ADI[b.blok]}</span>
                   <span data-yon="-1" className={k.yonKap}><Tus ikon="arrow-up" ad={`${b.ad} · yukarı`} disabled={v === 0} onClick={() => tasiGorunen(b.id, -1)} /></span>
                   <span data-yon="1" className={k.yonKap}><Tus ikon="arrow-down" ad={`${b.ad} · aşağı`} disabled={v === gorunen.length - 1} onClick={() => tasiGorunen(b.id, 1)} /></span>
-                  {!b.kilit && (b.alt && x.no?.includes(".")
+                  {(b.alt && x.no?.includes(".")
                     ? <Tus ikon="chevron-left" ad={`${b.ad} · ana başlık yap`} onClick={() => degis(bolumDuzeni(t, i, { alt: false }))} />
                     : v > 0 && anaBolum(v - 1) && <Tus ikon="chevron-right" ad={`${b.ad} · alt başlık yap (${anaBolum(v - 1)!.ad} altına)`}
                       onClick={() => degis(bolumDuzeni(t, i, { alt: true }))} />)}
                   <Tus ikon="settings" ad={`${b.ad} · bölüm ayarları`} basili={ayar === anahtar} onClick={() => ac(anahtar)} />
-                  {!b.kilit && b.blok !== "cihaz" && <Tus ikon="trash-2" ad={`${b.ad} · bölümü sil`} onClick={() => bolumuSil(i)} />}
+                  {b.blok !== "cihaz" && <Tus ikon="trash-2" ad={`${b.ad} · bölümü sil`} onClick={() => bolumuSil(i)} />}
                 </span>
               </div>
               {ayar === anahtar && bolumAyari(b, i)}

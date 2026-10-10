@@ -24,7 +24,9 @@ test("her blok eklenir; yeni kimlikler tanımda tekil ve tanım şemadan geçer"
   assert.notEqual(yeniKimlik(t, "b"), t.bolumler.at(-1)!.id);
 });
 
-test("öğe ekle / sil: alan, madde (son gruba), sütun, değer; kilitli öğe ve kilitli ölçüm tablosunun sütunu silinmez", () => {
+/* 2026-10-10 (470, reisim hata listesi 38: "başlık komple silmek vb hala imkansız biraz daha serbestlik lütfen"): Bakanlık öğesi ve şablon
+   sütunu da kurucudan silinir — kilit denetimi bunu "silinmiş" diye listeler, yayında UYARI olur (eskiden "silinmez" denetleniyordu) */
+test("öğe ekle / sil: alan, madde (son gruba), sütun, değer; Bakanlık maddesi ve şablon sütunu da silinir, kilit denetimi listeler", () => {
   let t = zpkr02();
   t = { ...t, bolumler: [...t.bolumler, yeniBolum(t, "bilgi", "Ek bilgiler")] };
   t = { ...t, bolumler: [...t.bolumler, yeniBolum(t, "olcum", "Ek ölçüm")] };   // ekran bölümleri birer birer ekler
@@ -40,9 +42,13 @@ test("öğe ekle / sil: alan, madde (son gruba), sütun, değer; kilitli öğe v
   const gozle = t.bolumler.findIndex((b) => b.id === "gozle"), nokta = t.bolumler.findIndex((b) => b.blok === "olcum" && b.kilit);
   const madde = bolumOgeleri(t.bolumler[gozle])[0];
   assert.ok(madde.kilit);
-  assert.equal(bolumOgeleri(ogeSil(t, gozle, madde.id).bolumler[gozle]).length, bolumOgeleri(t.bolumler[gozle]).length, "kilitli madde silinmez");
+  const md = ogeSil(t, gozle, madde.id);
+  assert.equal(bolumOgeleri(md.bolumler[gozle]).length, bolumOgeleri(t.bolumler[gozle]).length - 1, "Bakanlık maddesi silindi");
+  assert.ok(kilitDenetimi(md, zpkr02()).some((x) => x.includes(`silinmiş: ${madde.id}`)), "yayın denetimi silinen Bakanlık maddesini listeler");
   const sutun = bolumOgeleri(t.bolumler[nokta])[0];
-  assert.equal(bolumOgeleri(ogeSil(t, nokta, sutun.id).bolumler[nokta]).length, bolumOgeleri(t.bolumler[nokta]).length, "kilitli tablonun sütunu silinmez");
+  const sd = ogeSil(t, nokta, sutun.id);
+  assert.equal(bolumOgeleri(sd.bolumler[nokta]).length, bolumOgeleri(t.bolumler[nokta]).length - 1, "şablon sütunu silindi");
+  assert.ok(kilitDenetimi(sd, zpkr02()).some((x) => x.includes(`silinmiş: ${t.bolumler[nokta].id}.${sutun.id}`)), "yayın denetimi silinen sütunu listeler");
   /* 337–339 incelemesi: kilitli tabloya kurucuda eklenen sütun çıkarılır (şablonunki çıkmaz) */
   const t3 = ogeEkle(t, nokta, "Ek sütun"), ek = bolumOgeleri(t3.bolumler[nokta]).at(-1)!;
   assert.deepEqual([ek.ad, ek.kilit], ["Ek sütun", false]);
@@ -53,14 +59,17 @@ test("öğe ekle / sil: alan, madde (son gruba), sütun, değer; kilitli öğe v
   assert.equal(bolumOgeleri(t2.bolumler[gozle]).at(-1)!.kilit, false);
 });
 
-test("bölüm sırala, sil, adlandır: kilitli bölüm silinmez, adı değişmez; sıra değişince kimlikler aynı", () => {
+/* 2026-10-10 (470): Bakanlık bölümü de silinir ve adı değişir — kilit denetimi listeler (eskiden "silinmez, adı değişmez") */
+test("bölüm sırala, sil, adlandır: Bakanlık bölümü de silinir / adı değişir, kilit denetimi listeler; sıra değişince kimlikler aynı", () => {
   const t = zpkr02();
   const k = t.bolumler.findIndex((b) => b.kilit), s = tasi(t.bolumler, 0, 2);
   assert.deepEqual(s.map((b) => b.id).sort(), t.bolumler.map((b) => b.id).sort());
   assert.equal(s[2].id, t.bolumler[0].id);
   assert.deepEqual(tasi(t.bolumler, 0, 99).map((b) => b.id), t.bolumler.map((b) => b.id), "sınır dışı taşıma değiştirmez");
-  assert.equal(bolumSil(t, k), t, "kilitli bölüm silinmez");
-  assert.equal(bolumAdi(t, k, "Başka ad"), t, "kilitli bölümün adı değişmez");
+  assert.equal(bolumSil(t, k).bolumler.length, t.bolumler.length - 1, "Bakanlık bölümü silindi");
+  assert.ok(kilitDenetimi(bolumSil(t, k), t).some((x) => x.includes(`silinmiş: ${t.bolumler[k].id}`)));
+  assert.equal(bolumAdi(t, k, "Başka ad").bolumler[k].ad, "Başka ad", "Bakanlık bölümünün adı değişti");
+  assert.ok(kilitDenetimi(bolumAdi(t, k, "Başka ad"), t).some((x) => x.includes(`değiştirilmiş: ${t.bolumler[k].id}`)));
   const y = { ...t, bolumler: [...t.bolumler, yeniBolum(t, "not", "Yorum")] }, n = y.bolumler.length - 1;
   assert.equal(bolumAdi(y, n, "Uzman yorumu").bolumler[n].ad, "Uzman yorumu");
   assert.equal(bolumSil(y, n).bolumler.length, t.bolumler.length);
@@ -101,17 +110,22 @@ test("340–345 incelemesi: kilitli tabloya kurucuda eklenen sütun yayınlansa 
 /* 426 (reisim 2026-10-09: "kullanıcı bu ve benzeri rapor formatlarını isterse kendi eli ile format yapıcıdan yapabilsin"): öğe düzenleyici, gruplar,
    cevap seti, uygunluk notları, görünüm. Kilitli (Bakanlık) maddede yalnız talimat değişir; şablon sütunu değişmez; olumsuz seçenek seçeneklerin
    dışına çıkmaz; tür değişince sınır / seçenekler temizlenir; her adımın sonucu şemadan geçer. Olumsuz kanıt: tests/bozan/kurucu.bozan.ts. */
-test("426: kilitli madde yalnız talimat alır; kurucu maddesi metin / standart / grup değiştirir", () => {
+/* 2026-10-10 (470): Bakanlık maddesinin metni / standardı da değişir — kilit denetimi "değiştirilmiş" listeler (yayında uyarı); talimat denetime
+   girmez (eskiden "kilitli madde yalnız talimat alır") */
+test("426 / 470: Bakanlık maddesine talimat yazmak denetime girmez; metni değişirse listelenir; kurucu maddesi metin / standart / grup değiştirir", () => {
   let t = SABLONLAR.ZPKR02.tanim;
   const i = t.bolumler.findIndex((b) => b.id === "gozle");
   const once = JSON.stringify(t.bolumler[i]);
-  t = ogeYaz(t, i, "g1_1", { ad: "değişmesin", std: "x", talimat: "Kabloyu gözle kontrol et." });
+  t = ogeYaz(t, i, "g1_1", { talimat: "Kabloyu gözle kontrol et." });
   const g = t.bolumler[i];
   assert.ok(g.blok === "liste");
   const m = g.gruplar[0].maddeler[0], ilk = (SABLONLAR.ZPKR02.tanim.bolumler[i] as BolumOf<"liste">).gruplar[0].maddeler[0];
   assert.deepEqual([m.metin, m.std, m.talimat], [ilk.metin, ilk.std, "Kabloyu gözle kontrol et."], "metin ve standart aynı, talimat yazıldı");
   assert.notEqual(JSON.stringify(t.bolumler[i]), once);
-  assert.deepEqual(kilitDenetimi(t, SABLONLAR.ZPKR02.tanim), [], "talimat kilidi bozmaz");
+  assert.deepEqual(kilitDenetimi(t, SABLONLAR.ZPKR02.tanim), [], "talimat denetime girmez");
+  const degisik = ogeYaz(t, i, "g1_1", { ad: "Başka metin", std: "x" });
+  assert.equal((degisik.bolumler[i] as BolumOf<"liste">).gruplar[0].maddeler[0].metin, "Başka metin", "470: Bakanlık maddesinin metni değişti");
+  assert.ok(kilitDenetimi(degisik, SABLONLAR.ZPKR02.tanim).some((x) => x.includes("değiştirilmiş: g1_1")), "yayında uyarı");
   t = grupEkle(t, i, "Firma ek kontrolleri");
   const yeni = (t.bolumler[i] as BolumOf<"liste">).gruplar.at(-1)!;
   t = maddeEkle(t, i, yeni.id, "Pano kapağı kilitli mi");
@@ -122,9 +136,10 @@ test("426: kilitli madde yalnız talimat alır; kurucu maddesi metin / standart 
   assert.ok(gl[0].maddeler.some((x) => x.id === mid && x.metin === "Pano kapağı kilitli mi?" && x.std === "TS HD 60364"));
   assert.equal(grupSil(t, i, gl[0].id), t, "dolu grup silinmez");
   assert.equal((grupSil(t, i, gl.at(-1)!.id).bolumler[i] as BolumOf<"liste">).gruplar.length, gl.length - 1, "boş grup silinir");
-  assert.equal((grupYaz(t, i, gl[0].id, { ad: "değişmesin" }).bolumler[i] as BolumOf<"liste">).gruplar[0].ad, gl[0].ad, "Bakanlık grubunun adı değişmez");
+  assert.equal((grupYaz(t, i, gl[0].id, { ad: "Başka grup" }).bolumler[i] as BolumOf<"liste">).gruplar[0].ad, "Başka grup", "470: Bakanlık grubunun adı da değişir");
   assert.equal((grupYaz(t, i, gl[0].id, { talimat: "Grup talimatı" }).bolumler[i] as BolumOf<"liste">).gruplar[0].talimat, "Grup talimatı", "talimat yazılır");
-  assert.equal(cevaplarYaz(t, i, ["A", "B"]), t, "kilitli bölümün cevap seti değişmez");
+  assert.deepEqual((cevaplarYaz(t, i, ["A", "B"]).bolumler[i] as BolumOf<"liste">).cevaplar, ["A", "B"], "470: Bakanlık bölümünün cevap seti de değişir");
+  assert.ok(kilitDenetimi(cevaplarYaz(t, i, ["A", "B"]), SABLONLAR.ZPKR02.tanim).some((x) => x.includes("değiştirilmiş: gozle")), "yayında uyarı");
   assert.ok(FormatTanimi.safeParse(t).success);
 });
 
@@ -152,20 +167,25 @@ test("426: sütun ve değer düzenleyici — seçenekler, olumsuz (seçeneklerle
   assert.ok(FormatTanimi.safeParse(t).success);
 });
 
-test("426: uygunluk notları ve görünüm — Bakanlık formatında form kodu / başlık değişmez, dayanak ve talimat değişir", () => {
+/* 2026-10-10 (470): Bakanlık formatında form kodu / başlık da değişir — kilit denetimi listeler (eskiden "değişmez") */
+test("426 / 470: uygunluk notları ve görünüm — Bakanlık formatında form kodu / başlık değişince listelenir; dayanak ve talimat denetime girmez", () => {
   let t = FormatTanimi.parse({ sema: 1, bolumler: [{ id: "x", ad: "Noktalar", blok: "olcum", sutunlar: [{ id: "a", ad: "A" }] }] });
   t = notlarYaz(t, 0, [{ metin: "Uygun", kusur: false, agir: true }, { metin: "Yetersiz", kusur: true, agir: true }, { metin: " ", kusur: true, agir: false }]);
   assert.deepEqual((t.bolumler[0] as BolumOf<"olcum">).notlar, [{ metin: "Uygun", kusur: false, agir: false }, { metin: "Yetersiz", kusur: true, agir: true }]);
   t = gorunumYaz(t, { formKodu: "FR-01", baslik: "Firma raporu", dayanak: satirlar("TS 1\nTS 2", 20, 300), talimat: "Önce enerjiyi kes." });
   assert.deepEqual([t.gorunum.formKodu, t.gorunum.baslik, t.gorunum.dayanak, t.gorunum.talimat], ["FR-01", "Firma raporu", ["TS 1", "TS 2"], "Önce enerjiyi kes."]);
-  const z = gorunumYaz(SABLONLAR.ZPKR02.tanim, { formKodu: "X", baslik: "Y", talimat: "Genel talimat" });
+  const z = gorunumYaz(SABLONLAR.ZPKR02.tanim, { talimat: "Genel talimat", dayanak: ["TS HD 60364-6"] });
   assert.deepEqual([z.gorunum.formKodu, z.gorunum.talimat], ["ZPKR02", "Genel talimat"]);
-  assert.deepEqual(kilitDenetimi(z, SABLONLAR.ZPKR02.tanim), []);
+  assert.deepEqual(kilitDenetimi(z, SABLONLAR.ZPKR02.tanim), [], "talimat ve dayanak denetime girmez");
+  const kod = gorunumYaz(SABLONLAR.ZPKR02.tanim, { formKodu: "X", baslik: "Y" });
+  assert.deepEqual([kod.gorunum.formKodu, kod.gorunum.baslik], ["X", "Y"]);
+  assert.ok(kilitDenetimi(kod, SABLONLAR.ZPKR02.tanim).some((x) => x.includes("form kodu ve başlığı değiştirilmiş")), "yayında uyarı");
 });
 
 /* 427: bölümün belgedeki düzeni (üst başlık, numarasızlık) kurucudan — firma kendi formatını Bakanlık formatları gibi 5.1 / 5.2 diye kurabilir;
    Bakanlık bölümünde değişmez (kilit denetimi de özde tutar) */
-test("427: bölüm düzeni — üst başlık ve numarasızlık yazılır, boş üst başlık kalkar; kilitli bölümde değişmez", () => {
+/* 2026-10-10 (470): Bakanlık bölümünün düzeni de değişir — kilit denetimi listeler (eskiden "kilitli bölümde değişmez") */
+test("427 / 470: bölüm düzeni — üst başlık ve numarasızlık yazılır, boş üst başlık kalkar; Bakanlık bölümünde değişince listelenir", () => {
   let t = FormatTanimi.parse({ sema: 1, bolumler: [{ id: "a", ad: "Gözle", blok: "not" }, { id: "b", ad: "Testler", blok: "not" }, { id: "c", ad: "Foto", blok: "foto" }] });
   t = bolumDuzeni(t, 0, { ust: "Tespitler" });
   t = bolumDuzeni(t, 1, { ust: "Tespitler" });
@@ -175,6 +195,6 @@ test("427: bölüm düzeni — üst başlık ve numarasızlık yazılır, boş �
   assert.deepEqual(t.bolumler.map((b) => [b.ust, b.numarasiz]), [[undefined, undefined], ["Tespitler", undefined], [undefined, undefined]]);
   assert.ok(FormatTanimi.safeParse(t).success);
   const z = SABLONLAR.ZPKR04.tanim, i = z.bolumler.findIndex((b) => b.id === "gozle");
-  assert.equal(bolumDuzeni(z, i, { ust: "Başka" }), z, "Bakanlık bölümünün üst başlığı değişmez");
-  assert.deepEqual(kilitDenetimi(bolumDuzeni(z, i, { ust: "Başka" }), z), []);
+  assert.equal(bolumDuzeni(z, i, { ust: "Başka" }).bolumler[i].ust, "Başka", "Bakanlık bölümünün üst başlığı değişti");
+  assert.ok(kilitDenetimi(bolumDuzeni(z, i, { ust: "Başka" }), z).some((x) => x.includes("değiştirilmiş: gozle")), "yayında uyarı");
 });

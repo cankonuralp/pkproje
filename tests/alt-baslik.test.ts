@@ -38,13 +38,15 @@ test("belge: alt başlık h3 'N.k ad', ana bölüm h2 'N. AD'", () => {
   assert.match(html, new RegExp(`<h3>${ana}\\.1 ALT1</h3>`));
 });
 
-test("kurucu: alt başlık yapılınca üst başlık ve numarasızlık düşer; kilitli bölüm değişmez; Bakanlık bölümünün alt bayrağı kilitli öz", () => {
+/* 2026-10-10 (470, reisim hata listesi 38: "biraz daha serbestlik"): Bakanlık bölümü de alt başlık yapılır — kurucu engellemez, yayın denetimi
+   uyarır (eskiden "kilitli bölüm değişmez" denetleniyordu) */
+test("kurucu: alt başlık yapılınca üst başlık ve numarasızlık düşer; Bakanlık bölümü de alt başlık yapılır ve yayın denetiminde görünür", () => {
   const t = tanim([not("a"), not("b", { ust: "Üst", numarasiz: true })]);
   const y = bolumDuzeni(t, 1, { alt: true });
   assert.deepEqual([y.bolumler[1].alt, y.bolumler[1].ust, y.bolumler[1].numarasiz], [true, undefined, undefined]);
   assert.equal(bolumDuzeni(y, 1, { alt: false }).bolumler[1].alt, undefined);
   const z = SABLONLAR.ZPKR02.tanim, k = z.bolumler.findIndex((b) => b.kilit);
-  assert.equal(bolumDuzeni(z, k, { alt: true }), z, "kilitli bölüm alt başlık yapılamaz");
+  assert.ok(kilitDenetimi(bolumDuzeni(z, k, { alt: true }), z).some((x) => x.includes("değiştirilmiş")), "Bakanlık bölümü alt başlık yapıldı — yayında uyarı");
   const elle = { ...z, bolumler: z.bolumler.map((b, j) => (j === k ? { ...b, alt: true } : b)) };
   assert.ok(kilitDenetimi(elle, z).some((x) => x.includes("değiştirilmiş")), "istemciden gelen alt bayrağı yayında yakalanır");
 });

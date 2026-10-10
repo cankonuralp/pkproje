@@ -60,8 +60,11 @@ PDF'e basılmaz.
 - **Kusur derecesi** (hafif / ağır) sorulur mu — aç / kapa (başlangıçta kapalı; reisim AA9). Açıksa hafif kusur devri (V4) çalışır.
 - **Sonuç önerisi**: herhangi Uygun değil / sınır dışı → "Uygun değil"; firma seçerse denetçi değiştirir.
 - **Periyot** ve sonraki kontrol tarihi (türden).
-- Bakanlık formatlı türde (ZPKR01 …): Bakanlığın zorunlu alanları **kilitli** — silinemez, yalnız sırası / görünümü değişir; eksikse yayınlanmaz
-  (bu tek engel: resmî formatın kendisi).
+- Bakanlık formatlı türde (ZPKR01 …): Bakanlığın zorunlu alanları **işaretli** (kilit simgesi). ~~Silinemez, yalnız sırası / görünümü değişir;
+  eksikse yayınlanmaz (bu tek engel: resmî formatın kendisi).~~ **2026-10-10 (470, reisim hata listesi 38: *"başlık komple silmek vb hala imkansız
+  biraz daha serbestlik lütfen"*; genel ilke "kural uyarıdır, engel değil"):** Bakanlık bölümü ve öğesi de silinir, adı ve özellikleri değişir —
+  silmeden önce sorulur; yayında Bakanlık formatından ayrılan yerler **uyarı** listesinin başında (yayın durmaz). Sabit kalan: ölçüm cihazları
+  bölümü (459) ve firma bilgileri.
 
 ## 4 · Başlangıç yolları
 

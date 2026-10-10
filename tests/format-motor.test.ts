@@ -91,7 +91,7 @@ test("kilit denetimi: sıra serbest, kilitsiz ekleme serbest; kilitli öğe sili
   d.gorunum.formKodu = "ZPKR99";
   const l = kilitDenetimi(d, k);
   for (const p of ["değiştirilmiş: sebeke", "zorunluluğu kaldırılmış: kurulus", "kilidi kaldırılmış: gerilim", "değiştirilmiş: zx", "silinmiş: linye.icu",
-    "değiştirilmiş: linye", "değiştirilmiş: gozle", "değiştirilmiş: sonuc", "form kodu ve başlığı değiştirilemez: ZPKR02"]) {
+    "değiştirilmiş: linye", "değiştirilmiş: gozle", "değiştirilmiş: sonuc", "form kodu ve başlığı değiştirilmiş: ZPKR02"]) {
     assert.ok(l.some((x) => x.includes(p)), `${p} — ${l.join(" | ")}`);
   }
   assert.deepEqual(kilitDenetimi(T("KOMPRESOR"), SABLONLAR.KOMPRESOR.tanim), []);

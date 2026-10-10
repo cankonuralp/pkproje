@@ -1,11 +1,12 @@
 /* FORMAT KURUCU — saf düzenleme işlemleri (RAPOR-FORMAT.md §6; maket maket-kurucu.js kb-ekle / kb-yukari / kb-asagi / kb-sil / kb-alan-ekle /
    kb-madde-ekle / kb-sutun-ekle / kb-oge-sil / kurallar). Tanım her adımda şemadan geçer (src/format/tanim.ts); yeni öğenin kimliği BÜTÜN tanımda
-   tekildir (cevaplar kimlikle saklanır). Kilitli (Bakanlık) bölüm silinmez, adı değişmez; kilitli öğe silinmez; kilitli ölçüm tablosunun ŞABLON
-   sütunu silinmez — kurucuda eklenen (kimliği "k_" ile başlayan) sütun çıkarılır (337–339 incelemesi) — sunucu yayında aynı kuralı kaynak
-   şablondan yeniden denetler (ENGEL), burası yalnız ekranın kolaylığı. */
+   tekildir (cevaplar kimlikle saklanır). 470 (reisim 2026-10-10, hata listesi 38: "başlık komple silmek vb hala imkansız biraz daha serbestlik
+   lütfen"; genel ilke "kural uyarıdır, engel değil"): Bakanlık (kilitli) bölüm ve öğe de silinir, adı ve özellikleri değişir — ekran önce sorar,
+   sunucu yayında kaynak şablondan ayrılan yerleri UYARI olarak listeler (src/format/motor.ts kilitDenetimi; yayını durdurmaz). "kilit" bayrağı
+   yalnız "Bakanlık formatının parçası" işaretidir. Sabit kalanlar reisim'in kararı: ölçüm cihazları bölümü (459; firma bilgileri kâğıtta sabit). */
 import { SINIR_ISARETI } from "../../format/hesap.ts";
 import { kilitliKimlikler } from "../../format/motor.ts";
-import { Bolum, EKIPMAN_ALAN_ADI, kurucudan, type Blok, type BolumOf, type EkipmanAlani, type FormatTanimi, type Sinir } from "../../format/tanim.ts";
+import { Bolum, EKIPMAN_ALAN_ADI, kurucudan, type Blok, type EkipmanAlani, type FormatTanimi, type Sinir } from "../../format/tanim.ts";
 
 export { kurucudan };
 
@@ -105,29 +106,29 @@ export function ekipmanAlaniEkle(t: FormatTanimi, i: number, k: EkipmanAlani): F
   return { ...t, bolumler: t.bolumler.map((x, j) => (j === i ? y : x)) };
 }
 
-/** bölümden öğe çıkarır (kilitli öğe ve kilitli ölçüm tablosunun şablon sütunu çıkmaz; kurucuda eklenen sütun çıkar) */
+/** bölümden öğe çıkarır (470: Bakanlık öğesi de çıkar — ekran önce sorar, yayında uyarı) */
 export function ogeSil(t: FormatTanimi, i: number, id: string): FormatTanimi {
   const b = t.bolumler[i];
   if (!b) return t;
   let y: Bolum = b;
-  if (b.blok === "bilgi") y = { ...b, alanlar: b.alanlar.filter((a) => a.id !== id || a.kilit) };
-  else if (b.blok === "liste") y = { ...b, gruplar: b.gruplar.map((g) => ({ ...g, maddeler: g.maddeler.filter((m) => m.id !== id || m.kilit) })) };
-  else if (b.blok === "olcum") y = { ...b, sutunlar: b.sutunlar.filter((c) => c.id !== id || (b.kilit && !kurucudan(c.id))) };
-  else if (b.blok === "test") y = { ...b, degerler: b.degerler.filter((d) => d.id !== id || d.kilit) };
+  if (b.blok === "bilgi") y = { ...b, alanlar: b.alanlar.filter((a) => a.id !== id) };
+  else if (b.blok === "liste") y = { ...b, gruplar: b.gruplar.map((g) => ({ ...g, maddeler: g.maddeler.filter((m) => m.id !== id) })) };
+  else if (b.blok === "olcum") y = { ...b, sutunlar: b.sutunlar.filter((c) => c.id !== id) };
+  else if (b.blok === "test") y = { ...b, degerler: b.degerler.filter((d) => d.id !== id) };
   return { ...t, bolumler: t.bolumler.map((x, j) => (j === i ? y : x)) };
 }
 
-/** bölüm sil (kilitli silinmez; 459: ölçüm cihazları bölümü sabit — silinmez) */
+/** bölüm sil (470: Bakanlık bölümü de — ekran önce sorar; 459: ölçüm cihazları bölümü sabit — silinmez) */
 export const bolumSil = (t: FormatTanimi, i: number): FormatTanimi => (t.bolumler[i]?.blok === "cihaz" ? t
-  : (t.bolumler[i]?.kilit ? t : { ...t, bolumler: t.bolumler.filter((_, j) => j !== i) }));
-/** bölüm adı (kilitli bölümün adı değişmez) */
+  : { ...t, bolumler: t.bolumler.filter((_, j) => j !== i) });
+/** bölüm adı (470: Bakanlık bölümünün de) */
 export const bolumAdi = (t: FormatTanimi, i: number, ad: string): FormatTanimi =>
-  (t.bolumler[i]?.kilit ? t : { ...t, bolumler: t.bolumler.map((b, j) => (j === i ? { ...b, ad: ad.slice(0, 200) } : b)) });
+  ({ ...t, bolumler: t.bolumler.map((b, j) => (j === i ? { ...b, ad: ad.slice(0, 200) } : b)) });
 
-/** 427: bölümün belgedeki düzeni — üst başlık (aynı üst başlıklı ardışık bölümler N.1, N.2 olur) ve numarasızlık; Bakanlık bölümünde değişmez */
+/** 427: bölümün belgedeki düzeni — üst başlık (aynı üst başlıklı ardışık bölümler N.1, N.2 olur) ve numarasızlık (470: Bakanlık bölümünde de) */
 export function bolumDuzeni(t: FormatTanimi, i: number, y: { ust?: string; numarasiz?: boolean; alt?: boolean }): FormatTanimi {
   const b = t.bolumler[i];
-  if (!b || b.kilit) return t;
+  if (!b) return t;
   const alt = y.alt === undefined ? b.alt : y.alt || undefined;
   /* 461: alt başlık üst başlıklı gruba girmez, numarasız olmaz (ikisi aynı anda anlamsız) */
   const ust = alt ? undefined : y.ust === undefined ? b.ust : y.ust.slice(0, 200) || undefined;
@@ -137,8 +138,8 @@ export function bolumDuzeni(t: FormatTanimi, i: number, y: { ust?: string; numar
 
 /* ── ÖĞE DÜZENLEME (426; reisim 2026-10-09: "kullanıcı bu ve benzeri rapor formatlarını isterse kendi eli ile format yapıcıdan yapabilsin") ──
    Öğenin bütün özellikleri: alan türü ve seçenekleri, madde standardı / açıklaması / talimatı / grubu, sütun ve değer türü, seçenekleri, uygun
-   değil sayılan seçenekleri, ağırlığı, sınırı, birimi, zorunluluğu. Kilitli (Bakanlık) öğede YALNIZ talimat değişir (resmî formatın içeriği
-   değişmez); kilitli ölçüm tablosunun şablon sütunu hiç değişmez. Sunucu yayında aynı kuralı kaynaktan yeniden denetler (ENGEL). */
+   değil sayılan seçenekleri, ağırlığı, sınırı, birimi, zorunluluğu. 470: Bakanlık öğesi de değişir — sunucu yayında kaynaktan ayrılanları
+   UYARI olarak listeler. Kayıttan gelen ve ekipman kaydına bağlı alanın yalnız adı değişir. */
 export type OgeTuru = "metin" | "sayi" | "tarih" | "secim" | "coklu" | "evet";
 export interface OgeYamasi {
   ad?: string; tur?: OgeTuru; secenekler?: string[]; olumsuz?: string[]; agir?: boolean; birim?: string; zorunlu?: boolean;
@@ -161,7 +162,7 @@ export function ogeYaz(t: FormatTanimi, i: number, id: string, y: OgeYamasi): Fo
   let n: Bolum = b;
   if (b.blok === "bilgi") {
     n = { ...b, alanlar: b.alanlar.map((a) => {
-      if (a.id !== id || a.kilit) return a;
+      if (a.id !== id) return a;
       if (a.kaynak || a.ekipman) return y.ad !== undefined ? { ...a, ad: kirp(y.ad, 200) || a.ad } : a;
       const tur = y.tur ?? a.tur, secmeli = tur === "secim" || tur === "coklu";
       return {
@@ -173,11 +174,11 @@ export function ogeYaz(t: FormatTanimi, i: number, id: string, y: OgeYamasi): Fo
   } else if (b.blok === "liste") {
     const m = b.gruplar.flatMap((g) => g.maddeler).find((x) => x.id === id);
     if (!m) return t;
-    const yeni = m.kilit ? { ...m, talimat: y.talimat !== undefined ? istege(y.talimat.slice(0, 4000)) : m.talimat } : {
+    const yeni = {
       ...m, metin: y.ad !== undefined ? kirp(y.ad, 200) || m.metin : m.metin, std: y.std !== undefined ? istege(kirp(y.std, 200)) : m.std,
       aciklama: y.aciklama !== undefined ? istege(y.aciklama.slice(0, 2000)) : m.aciklama, talimat: y.talimat !== undefined ? istege(y.talimat.slice(0, 4000)) : m.talimat,
     };
-    const hedef = !m.kilit && y.grup && b.gruplar.some((g) => g.id === y.grup) ? y.grup : null;
+    const hedef = y.grup && b.gruplar.some((g) => g.id === y.grup) ? y.grup : null;
     n = { ...b, gruplar: b.gruplar.map((g) => {
       const icinde = g.maddeler.some((x) => x.id === id);
       if (hedef && hedef !== g.id && icinde) return { ...g, maddeler: g.maddeler.filter((x) => x.id !== id) };
@@ -186,7 +187,7 @@ export function ogeYaz(t: FormatTanimi, i: number, id: string, y: OgeYamasi): Fo
     }) };
   } else if (b.blok === "olcum") {
     n = { ...b, sutunlar: b.sutunlar.map((c) => {
-      if (c.id !== id || (b.kilit && !kurucudan(c.id))) return c;
+      if (c.id !== id) return c;
       const giris = y.tur === "metin" || y.tur === "sayi" || y.tur === "secim" || y.tur === "evet" ? y.tur : c.giris;
       const secenekler = giris === "secim" ? (y.secenekler ?? c.secenekler) : undefined;
       const gecerli = giris === "evet" ? ["evet", "hayir"] : secenekler ?? [];
@@ -198,7 +199,7 @@ export function ogeYaz(t: FormatTanimi, i: number, id: string, y: OgeYamasi): Fo
     }) };
   } else if (b.blok === "test") {
     n = { ...b, degerler: b.degerler.map((d) => {
-      if (d.id !== id || d.kilit) return d;
+      if (d.id !== id) return d;
       const tur = y.tur ?? (d.secenekler?.length ? "secim" : d.metin ? "metin" : "sayi");
       const secenekler = tur === "secim" ? (y.secenekler ?? d.secenekler) : undefined;
       const olumsuz = (y.olumsuz ?? d.olumsuz)?.filter((o) => (secenekler ?? []).includes(o));
@@ -212,8 +213,7 @@ export function ogeYaz(t: FormatTanimi, i: number, id: string, y: OgeYamasi): Fo
   return n === b ? t : { ...t, bolumler: t.bolumler.map((x, j) => (j === i ? n : x)) };
 }
 
-/* ── GRUPLAR (kontrol listesi) ── kilitli bölümde Bakanlık grubunun adı değişmez; talimat her grupta yazılır */
-const kilitliGrup = (b: BolumOf<"liste">, g: BolumOf<"liste">["gruplar"][number]) => b.kilit && g.maddeler.some((m) => m.kilit);
+/* ── GRUPLAR (kontrol listesi) ── ad ve talimat her grupta yazılır (470: Bakanlık grubunda da) */
 export function grupEkle(t: FormatTanimi, i: number, ad: string): FormatTanimi {
   const b = t.bolumler[i];
   if (b?.blok !== "liste") return t;
@@ -223,7 +223,7 @@ export function grupYaz(t: FormatTanimi, i: number, gid: string, y: { ad?: strin
   const b = t.bolumler[i];
   if (b?.blok !== "liste") return t;
   return { ...t, bolumler: t.bolumler.map((x, j) => (j !== i ? x : { ...b, gruplar: b.gruplar.map((g) => (g.id !== gid ? g : {
-    ...g, ad: y.ad !== undefined && !kilitliGrup(b, g) ? kirp(y.ad, 200) : g.ad, talimat: y.talimat !== undefined ? istege(y.talimat.slice(0, 4000)) : g.talimat,
+    ...g, ad: y.ad !== undefined ? kirp(y.ad, 200) : g.ad, talimat: y.talimat !== undefined ? istege(y.talimat.slice(0, 4000)) : g.talimat,
   })) })) };
 }
 /** boş grup silinir (maddesi olan grup silinmez — önce maddeleri taşınır ya da çıkarılır); tek grup kalır */
@@ -240,29 +240,28 @@ export function maddeEkle(t: FormatTanimi, i: number, gid: string, ad: string): 
   return { ...t, bolumler: t.bolumler.map((x, j) => (j === i ? { ...b, gruplar: b.gruplar.map((g) => (g.id === gid ? { ...g, maddeler: [...g.maddeler, { id, metin: a, kilit: false }] } : g)) } : x)) };
 }
 
-/** cevap seti (2–6; 2. seçenek olumsuz sayılır) — kilitli bölümde değişmez */
+/** cevap seti (2–6; 2. seçenek olumsuz sayılır) */
 export function cevaplarYaz(t: FormatTanimi, i: number, l: readonly string[]): FormatTanimi {
   const b = t.bolumler[i], c = [...new Set(l.map((x) => kirp(x, 40)).filter(Boolean))].slice(0, 6);
-  if (b?.blok !== "liste" || b.kilit || c.length < 2) return t;
+  if (b?.blok !== "liste" || c.length < 2) return t;
   return { ...t, bolumler: t.bolumler.map((x, j) => (j === i ? { ...b, cevaplar: c } : x)) };
 }
-/** ölçüm tablosunun uygunluk notları (Not-1 …) — kilitli bölümde değişmez */
+/** ölçüm tablosunun uygunluk notları (Not-1 …) */
 export type NotGirdisi = { metin: string; kusur: boolean; agir: boolean };
 export function notlarYaz(t: FormatTanimi, i: number, l: readonly NotGirdisi[]): FormatTanimi {
   const b = t.bolumler[i];
-  if (b?.blok !== "olcum" || b.kilit) return t;
+  if (b?.blok !== "olcum") return t;
   const notlar = l.map((x) => ({ metin: kirp(x.metin, 400), kusur: x.kusur, agir: x.kusur && x.agir })).filter((x) => x.metin).slice(0, 20);
   return { ...t, bolumler: t.bolumler.map((x, j) => (j === i ? { ...b, notlar: notlar.length ? notlar : undefined } : x)) };
 }
-/** görünüm: form kodu, başlık, metot ve kapsam (dayanak), genel muayene talimatı. Kilitli öğesi olan (Bakanlık) formatta form kodu ve başlık
-    değişmez (yayın denetimi aynısını ENGEL sayar); dayanak ve talimat her formatta yazılır */
+/** görünüm: form kodu, başlık, metot ve kapsam (dayanak), genel muayene talimatı. resmiFormat: Bakanlık formatı mı (kilitli öğesi ve form kodu
+    var) — 470'ten beri yalnız işaret: kod ve başlık da değişir, yayın denetimi uyarır */
 export const resmiFormat = (t: FormatTanimi) => kilitliKimlikler(t).size > 0 && !!t.gorunum.formKodu;
 export function gorunumYaz(t: FormatTanimi, y: { formKodu?: string; baslik?: string; dayanak?: string[]; talimat?: string }): FormatTanimi {
-  const resmi = resmiFormat(t);
   return { ...t, gorunum: {
     ...t.gorunum,
-    formKodu: y.formKodu !== undefined && !resmi ? kirp(y.formKodu, 20) : t.gorunum.formKodu,
-    baslik: y.baslik !== undefined && !resmi ? kirp(y.baslik, 200) : t.gorunum.baslik,
+    formKodu: y.formKodu !== undefined ? kirp(y.formKodu, 20) : t.gorunum.formKodu,
+    baslik: y.baslik !== undefined ? kirp(y.baslik, 200) : t.gorunum.baslik,
     dayanak: y.dayanak ? y.dayanak.map((x) => kirp(x, 300)).filter(Boolean).slice(0, 20) : t.gorunum.dayanak,
     talimat: y.talimat !== undefined ? y.talimat.slice(0, 8000) : t.gorunum.talimat,
   } };

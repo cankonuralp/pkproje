@@ -2,7 +2,7 @@
    Yayınla onaylı). Gerçek tarayıcıda, üç genişlikte: tür sayfasında "Rapor şablonu" boş → Şablondan başlat (ZPKR02) → önizleme sayfası (taslak,
    Bakanlık bölümleri) → Yayınla (sürüm notu) → Sürüm 1 yayında → yayındaki sürümden yeni taslak → Sürüm 2 yayında, Sürüm 1 eski · denetçi
    bölümü ve önizlemeyi görür, başlatamaz / yayınlayamaz. K4 Format kurucu (2026-10-06): taslak kurucuda açılır; geniş ekranda bölüm eklenir,
-   adı yazılır → "Kaydedilmedi" (Yayınla yok) → Taslağı kaydet; Bakanlık bölümü silinemez; telefonda yalnız önizleme.
+   adı yazılır → "Kaydedilmedi" (Yayınla yok) → Taslağı kaydet; Bakanlık bölümü sorarak silinir (470; burada Vazgeç); telefonda yalnız önizleme.
    450: yeni türün rapor şablonu Ek-III grubuna göre hazır, YAYINDA sürüm 1 (Bakanlık şablonundan başlatılan sürüm 2 olur).
    451 (reisim 2026-10-09: "format kurucu hiç kullanışlı değil, mantıksız zor ve karmaşık"; "formatı oluştururken nasıl gözükeceği zihnimde
    canlanmıyor bile"): kurucu RAPORUN KENDİSİ — kâğıt belgenin görünümünde; bölüm adına / sütun başlığına / maddeye basılıp yerinde yazılır, "+"
@@ -69,10 +69,14 @@ test("rapor şablonu: şablondan başlat, önizle, yayınla; yeni sürümle eski
     await expect(kagit.getByText("Sabit · her raporda aynı")).toBeVisible();
     await expect(kagit.getByText("Kablo şebeke tarafı").first()).toBeVisible();
     await goz(page, "kurucu-ilk", bilgi.project.name);
-    /* Bakanlık bölümü kilitli: silinmez */
+    /* 470 (reisim hata listesi 38: "biraz daha serbestlik"): Bakanlık bölümü işaretli ama silinir — önce sorulur (burada Vazgeç) */
     const gozle = kagit.getByRole("region", { name: /Gözle kontrol$/ });
     await expect(gozle.getByText("Bakanlık bölümü").first()).toBeVisible();
-    await expect(gozle.getByRole("button", { name: /bölümü sil$/ })).toHaveCount(0);
+    await gozle.getByRole("button", { name: /bölümü sil$/ }).click();
+    const sor = page.locator("dialog[open]");
+    await expect(sor).toContainText("Bakanlık formatının zorunlu bölümü");
+    await sor.getByRole("button", { name: "Vazgeç" }).click();
+    await expect(kagit.getByRole("region", { name: /Gözle kontrol$/ })).toBeVisible();
     /* yerinde madde ekle (Bakanlık listesine firma maddesi eklenebilir) */
     await gozle.getByRole("button", { name: /^Madde ekle/ }).first().click();
     const madde = page.getByRole("textbox", { name: "Madde metni" });

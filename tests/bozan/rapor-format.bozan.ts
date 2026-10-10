@@ -2,7 +2,8 @@
    (anayasa 13.11): göçler / modül dosyaları geçici klasöre kopyalanır, bellekte bozulur, kopyadan koşulur.
    1. 0022'deki koruma tetiği olmasaydı yayınlanan sürümün tanımı sonradan değişirdi → imzalı raporun PDF'i başka formatla çizilirdi.
    2. Motorda "değiştirilmiş" denetimi olmasaydı Bakanlık maddesinin metni değiştirilip yayınlanırdı (yalnız silme yakalanırdı).
-   3. Sunucu kilit kaynağını hazır şablondan almasaydı, ilk yayında istemci kilitli öğeleri silip yayınlayabilirdi (karşılaştıracak önceki yayın yok). */
+   3. Sunucu kilit kaynağını hazır şablondan almasaydı, ilk yayında istemci kilitli öğeleri silip yayınlayabilirdi (karşılaştıracak önceki yayın yok).
+      2026-10-10 (470): yayın artık durmuyor (uyarı) — bozuk sunucuda Bakanlık maddelerinin silindiği UYARIDA görünmez. */
 import assert from "node:assert/strict";
 import { copyFileSync, mkdirSync, mkdtempSync, readdirSync, readFileSync, rmSync, writeFileSync } from "node:fs";
 import { tmpdir } from "node:os";
@@ -71,7 +72,7 @@ test("motorda 'değiştirilmiş' denetimi kalkınca Bakanlık maddesinin metni d
   assert.deepEqual(m.kilitDenetimi(t, SABLONLAR.ZPKR02.tanim), [], "bozuk motor değişikliği görmüyor");
 });
 
-test("sunucu kilit kaynağını şablondan almayınca ilk yayında kilitli öğeleri silinmiş taslak yayınlanır", async () => {
+test("sunucu kilit kaynağını şablondan almayınca ilk yayında Bakanlık öğeleri silinmiş taslak UYARISIZ yayınlanır", async () => {
   type Formatlar = typeof import("../../src/modules/rapor-format/server/formatlar.ts");
   const f = await bozukModul<Formatlar>("src/modules/rapor-format/server/formatlar.ts", "  if (s) l.push(s.tanim);\n", "");
   /* bu denemede göçler BOZULMAMIŞ (tetik yerinde): kümenin kendi veritabanı */
@@ -92,6 +93,6 @@ test("sunucu kilit kaynağını şablondan almayınca ilk yayında kilitli öğe
     const k = await is((db) => f.taslakKaydet(db, kim, b.id, b.surum, eksik));
     assert.ok(k.durum === "tamam");
     const y = await is((db) => f.yayinla(db, kim, k.id, k.surum, ""));
-    assert.equal(y.durum, "tamam", "Bakanlık maddeleri silinmiş format yayınlandı");
+    assert.ok(y.durum === "tamam" && !y.uyarilar.some((x) => x.includes("silinmiş")), "bozuk: Bakanlık maddeleri silinmiş format uyarısız yayınlandı");
   } finally { await h.end(); }
 });

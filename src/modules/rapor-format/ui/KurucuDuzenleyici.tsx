@@ -3,7 +3,7 @@
    yapıcıdan yapabileceği şekilde format yapıcıyı düzenle"). Öğe düzenleyici (alan / madde / sütun / değer — tür, seçenekler, uygun değil sayılan
    seçenekler, ağır kusur, sınır, birim, zorunlu, standart, açıklama, talimat, grup), kontrol listesinin grupları ve cevap seti, ölçüm tablosunun
    uygunluk notları, sonuç bölümünün sabit metni, görünüm (form kodu, başlık, metot ve kapsam, genel muayene talimatı). Değişiklik saf
-   işlevlerle (../kurucu.ts) taslağa yazılır; kilitli (Bakanlık) öğede yalnız talimat yazılır. Çok satırlı listeler (seçenekler, dayanak) alandan
+   işlevlerle (../kurucu.ts) taslağa yazılır; 470: Bakanlık öğesi de değişir (yayında uyarı). Çok satırlı listeler (seçenekler, dayanak) alandan
    çıkınca işlenir — yazarken satır sonu kaybolmasın. */
 import { useState } from "react";
 import { Alan, FormIzgara, Girdi } from "../../../components/form/Form";
@@ -46,16 +46,16 @@ function OlumsuzSecici({ ad, secenekler, secili, degis, kapali }: { ad: string; 
   );
 }
 
-/** öğenin özellikleri (bölümün türüne göre); kilitli öğede yalnız talimat */
+/** öğenin özellikleri (bölümün türüne göre); 470: Bakanlık öğesinde de hepsi — değişince yayında uyarı */
 export function OgeDuzenleyici({ t, i, b, id, degis }: { t: FormatTanimi; i: number; b: Bolum; id: string; degis: (y: FormatTanimi) => void }) {
   const yaz = (y: OgeYamasi) => degis(ogeYaz(t, i, id, y));
   const k = `kb-${id}`;
   if (b.blok === "bilgi") {
     const a = b.alanlar.find((x) => x.id === id);
     if (!a) return null;
-    if (a.kilit || a.kaynak || a.ekipman) {
+    if (a.kaynak || a.ekipman) {
       return <p className={stil.satir}>{a.ekipman ? "Ekipman kaydına bağlı alan: denetçi sahada yazar, değeri ekipman kaydından başlar; yalnız adı değişir, çıkarılabilir."
-        : a.kaynak ? "Kayıttan gelen alan: yalnız adı değişir." : "Bakanlık alanı: değişmez."}</p>;
+        : "Kayıttan gelen alan: yalnız adı değişir."}</p>;
     }
     const secmeli = a.tur === "secim" || a.tur === "coklu";
     return (
@@ -75,7 +75,8 @@ export function OgeDuzenleyici({ t, i, b, id, degis }: { t: FormatTanimi; i: num
     if (!g || !m) return null;
     return (
       <div className={stil.duzenleyici}>
-        {m.kilit ? <p className={stil.satir}>Bakanlık maddesi: metni ve standardı değişmez; talimat yazılır.</p> : <>
+        {m.kilit && <p className={stil.satir}>Bakanlık maddesi: değiştirirseniz yayında uyarı çıkar.</p>}
+        <>
           <FormIzgara>
             <Alan id={`${k}-ad`} etiket="Madde metni" zorunlu genis><Girdi id={`${k}-ad`} value={m.metin} maxLength={200} onChange={(e) => yaz({ ad: e.target.value })} /></Alan>
             {b.gruplar.length > 1 && <Alan id={`${k}-grup`} etiket="Grup">
@@ -84,7 +85,7 @@ export function OgeDuzenleyici({ t, i, b, id, degis }: { t: FormatTanimi; i: num
             <Alan id={`${k}-std`} etiket="Standart / yönetmelik maddesi" genis><Girdi id={`${k}-std`} value={m.std ?? ""} maxLength={200} onChange={(e) => yaz({ std: e.target.value })} /></Alan>
           </FormIzgara>
           <SatirAlani id={`${k}-ack`} etiket="Açıklama (raporda madde bilgisi)" deger={m.aciklama ?? ""} satir={2} uygula={(s) => yaz({ aciklama: s })} />
-        </>}
+        </>
         <SatirAlani id={`${k}-tal`} etiket="Talimat (kontrol nasıl yapılır)" deger={m.talimat ?? ""} ipucu="Saha ekranında maddenin yanındaki ünlemden açılır; PDF'e basılmaz." uygula={(s) => yaz({ talimat: s })} />
       </div>
     );
@@ -92,11 +93,11 @@ export function OgeDuzenleyici({ t, i, b, id, degis }: { t: FormatTanimi; i: num
   if (b.blok === "olcum") {
     const c = b.sutunlar.find((x) => x.id === id);
     if (!c) return null;
-    const kapali = b.kilit && !c.id.startsWith("k_");
-    if (kapali) return <p className={stil.satir}>Bakanlık sütunu: değişmez.</p>;
+    const bakanlik = b.kilit && !c.id.startsWith("k_");
     const secenek = c.giris === "evet" ? [["evet", "Evet"], ["hayir", "Hayır"]] as const : (c.secenekler ?? []).map((s) => [s, s] as const);
     return (
       <div className={stil.duzenleyici}>
+        {bakanlik && <p className={stil.satir}>Bakanlık sütunu: değiştirirseniz yayında uyarı çıkar.</p>}
         <FormIzgara>
           <Alan id={`${k}-ad`} etiket="Sütun adı" zorunlu><Girdi id={`${k}-ad`} value={c.ad} maxLength={200} onChange={(e) => yaz({ ad: e.target.value })} /></Alan>
           <Alan id={`${k}-tur`} etiket="Giriş"><SecimAlani id={`${k}-tur`} ad="Giriş" deger={c.giris} secenekler={SUTUN_TUR} degistir={(v) => yaz({ tur: v as OgeTuru })} /></Alan>
@@ -115,10 +116,10 @@ export function OgeDuzenleyici({ t, i, b, id, degis }: { t: FormatTanimi; i: num
   if (b.blok === "test") {
     const d = b.degerler.find((x) => x.id === id);
     if (!d) return null;
-    if (d.kilit) return <p className={stil.satir}>Bakanlık değeri: değişmez.</p>;
     const tur: OgeTuru = d.secenekler?.length ? "secim" : d.metin ? "metin" : "sayi";
     return (
       <div className={stil.duzenleyici}>
+        {d.kilit && <p className={stil.satir}>Bakanlık değeri: değiştirirseniz yayında uyarı çıkar.</p>}
         <FormIzgara>
           <Alan id={`${k}-ad`} etiket="Değer adı" zorunlu><Girdi id={`${k}-ad`} value={d.ad} maxLength={200} onChange={(e) => yaz({ ad: e.target.value })} /></Alan>
           <Alan id={`${k}-tur`} etiket="Giriş"><SecimAlani id={`${k}-tur`} ad="Giriş" deger={tur} secenekler={DEGER_TUR} degistir={(v) => yaz({ tur: v as OgeTuru })} /></Alan>
@@ -163,8 +164,8 @@ export function ListeDuzenleyici({ t, i, b, degis }: { t: FormatTanimi; i: numbe
           return (
             <li key={g.id} className={stil.grupSatir}>
               <FormIzgara>
-                <Alan id={`kb-${g.id}-ad`} etiket={`${j + 1}. grup adı`} sonuc={resmi ? "Bakanlık grubu: adı değişmez." : undefined}>
-                  <Girdi id={`kb-${g.id}-ad`} value={g.ad} maxLength={200} disabled={resmi} mesajli={resmi} onChange={(e) => degis(grupYaz(t, i, g.id, { ad: e.target.value }))} />
+                <Alan id={`kb-${g.id}-ad`} etiket={`${j + 1}. grup adı`} sonuc={resmi ? "Bakanlık grubu: değiştirirseniz yayında uyarı çıkar." : undefined}>
+                  <Girdi id={`kb-${g.id}-ad`} value={g.ad} maxLength={200} mesajli={resmi} onChange={(e) => degis(grupYaz(t, i, g.id, { ad: e.target.value }))} />
                 </Alan>
               </FormIzgara>
               <SatirAlani id={`kb-${g.id}-tal`} etiket={`${j + 1}. grup talimatı`} deger={g.talimat ?? ""} satir={2} ipucu="Grup başlığındaki ünlemden açılır." uygula={(s) => degis(grupYaz(t, i, g.id, { talimat: s }))} />
@@ -177,8 +178,8 @@ export function ListeDuzenleyici({ t, i, b, degis }: { t: FormatTanimi; i: numbe
         <Girdi id={`kb-${b.id}-grup`} aria-label="Yeni grup adı" maxLength={200} value={yeni} onChange={(e) => setYeni(e.target.value)} />
         <Tus tur="ikincil" ikon="plus" onClick={() => { degis(grupEkle(t, i, yeni)); setYeni(""); }}>Grup ekle</Tus>
       </div>
-      <SatirAlani id={`kb-${b.id}-cevap`} etiket="Cevap seti" deger={b.cevaplar.join("\n")} kapali={b.kilit} satir={3}
-        ipucu={b.kilit ? "Bakanlık bölümü: cevap seti değişmez." : "Her satıra bir cevap (2–6). İkinci cevap olumsuz (kusur) sayılır."} uygula={(s) => degis(cevaplarYaz(t, i, satirlar(s, 6, 40)))} />
+      <SatirAlani id={`kb-${b.id}-cevap`} etiket="Cevap seti" deger={b.cevaplar.join("\n")} satir={3}
+        ipucu={b.kilit ? "Bakanlık bölümü: değiştirirseniz yayında uyarı çıkar. Her satıra bir cevap (2–6)." : "Her satıra bir cevap (2–6). İkinci cevap olumsuz (kusur) sayılır."} uygula={(s) => degis(cevaplarYaz(t, i, satirlar(s, 6, 40)))} />
     </div>
   );
 }
@@ -187,10 +188,9 @@ export function ListeDuzenleyici({ t, i, b, degis }: { t: FormatTanimi; i: numbe
 export function NotDuzenleyici({ t, i, b, degis }: { t: FormatTanimi; i: number; b: BolumOf<"olcum">; degis: (y: FormatTanimi) => void }) {
   const notlar: NotGirdisi[] = (b.notlar ?? []).map((n) => ({ metin: n.metin, kusur: n.kusur, agir: n.agir }));
   const yaz = (l: NotGirdisi[]) => degis(notlarYaz(t, i, l));
-  if (b.kilit) return notlar.length ? <p className={stil.satir}>Bakanlık uygunluk notları: değişmez ({notlar.length} not).</p> : null;
   return (
     <div className={stil.duzenleyici}>
-      <p className={stil.etiket}>Uygunluk notları ({notlar.length}) — denetçi satır başına not seçer</p>
+      <p className={stil.etiket}>Uygunluk notları ({notlar.length}) — denetçi satır başına not seçer{b.kilit ? " · Bakanlık notları: değiştirirseniz yayında uyarı çıkar" : ""}</p>
       <ol className={stil.kurucuOgeler}>
         {notlar.map((n, j) => (
           <li key={j} className={stil.grupSatir}>
@@ -210,25 +210,25 @@ export function NotDuzenleyici({ t, i, b, degis }: { t: FormatTanimi; i: number;
   );
 }
 
-/** sonuç bölümünün sabit metni (ağır kusurlar tanımı, açıklamalar) — kilitli bölümde değişmez */
+/** sonuç bölümünün sabit metni (ağır kusurlar tanımı, açıklamalar) — 470: Bakanlık bölümünde de yazılır, yayında uyarı */
 export function SonucAciklamasi({ t, i, b, degis }: { t: FormatTanimi; i: number; b: BolumOf<"sonuc">; degis: (y: FormatTanimi) => void }) {
-  return <SatirAlani id={`kb-${b.id}-aciklama`} etiket="Sonuç açıklaması (ağır kusurlar tanımı, açıklamalar)" deger={b.aciklama} kapali={b.kilit} satir={5}
-    ipucu={b.kilit ? "Bakanlık bölümü: metin değişmez." : "PDF'te sonuç cümlesinin altında, satır satır."}
+  return <SatirAlani id={`kb-${b.id}-aciklama`} etiket="Sonuç açıklaması (ağır kusurlar tanımı, açıklamalar)" deger={b.aciklama} satir={5}
+    ipucu={b.kilit ? "Bakanlık bölümü: değiştirirseniz yayında uyarı çıkar. PDF'te sonuç cümlesinin altında." : "PDF'te sonuç cümlesinin altında, satır satır."}
     uygula={(s) => degis({ ...t, bolumler: t.bolumler.map((x, j) => (j === i && x.blok === "sonuc" ? { ...x, aciklama: s.slice(0, 4000) } : x)) })} />;
 }
 
 const GID = { formKodu: "kb-formkodu", baslik: "kb-belgeadi" } as const;
-/** görünüm: form kodu, başlık, metot ve kapsam, genel muayene talimatı (Bakanlık formatında kod ve başlık değişmez) */
+/** görünüm: form kodu, başlık, metot ve kapsam, genel muayene talimatı (470: Bakanlık formatında kod ve başlık da değişir, yayında uyarı) */
 export function GorunumDuzenleyici({ t, degis }: { t: FormatTanimi; degis: (y: FormatTanimi) => void }) {
   const resmi = resmiFormat(t);
   return (
     <div className={stil.duzenleyici}>
       <FormIzgara>
-        <Alan id={GID.formKodu} etiket="Form kodu" sonuc={resmi ? "Bakanlık formatı: değişmez." : "Boşsa firma kodundan üretilir."}>
-          <Girdi id={GID.formKodu} value={t.gorunum.formKodu} maxLength={20} disabled={resmi} mesajli onChange={(e) => degis(gorunumYaz(t, { formKodu: e.target.value }))} />
+        <Alan id={GID.formKodu} etiket="Form kodu" sonuc={resmi ? "Bakanlık formatı: değiştirirseniz yayında uyarı çıkar." : "Boşsa firma kodundan üretilir."}>
+          <Girdi id={GID.formKodu} value={t.gorunum.formKodu} maxLength={20} mesajli onChange={(e) => degis(gorunumYaz(t, { formKodu: e.target.value }))} />
         </Alan>
-        <Alan id={GID.baslik} etiket="Belge başlığı" genis sonuc={resmi ? "Bakanlık formatı: değişmez." : undefined}>
-          <Girdi id={GID.baslik} value={t.gorunum.baslik} maxLength={200} disabled={resmi} mesajli={resmi} onChange={(e) => degis(gorunumYaz(t, { baslik: e.target.value }))} />
+        <Alan id={GID.baslik} etiket="Belge başlığı" genis sonuc={resmi ? "Bakanlık formatı: değiştirirseniz yayında uyarı çıkar." : undefined}>
+          <Girdi id={GID.baslik} value={t.gorunum.baslik} maxLength={200} mesajli={resmi} onChange={(e) => degis(gorunumYaz(t, { baslik: e.target.value }))} />
         </Alan>
       </FormIzgara>
       <SatirAlani id="kb-dayanak" etiket="Periyodik kontrol metodu ve kapsamı" deger={t.gorunum.dayanak.join("\n")} ipucu="Her satıra bir standart / yönetmelik (PDF'te 1. bölümde)." uygula={(s) => degis(gorunumYaz(t, { dayanak: satirlar(s, 20, 300) }))} />

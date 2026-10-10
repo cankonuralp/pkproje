@@ -4,7 +4,8 @@
    format RAPORUN KENDİSİNİN ÜSTÜNDE kurulur (Kagit.tsx: belgenin Bakanlık görünümü, yerinde yazı, yerinde ekle / çıkar). "Belge önizlemesi"
    aynı taslağı kesin belgenin çizicisiyle (src/belge/belge.ts — PDF'le aynı) boş bir raporda gösterir. Kurallar ve genel muayene talimatı üstte.
    Değişiklik "Taslağı kaydet" ile yazılır (Kaydedilmedi · Vazgeç · Kaydet — kalıp Z1); kaydedilmemiş taslak yayınlanmaz; kaydedilmemiş taslakla
-   sayfadan çıkarken sorulur. Kilitli (Bakanlık) öğe değişmez — sunucu yayında kaynak şablondan yeniden denetler (ENGEL). Telefonda kurucu açılmaz
+   sayfadan çıkarken sorulur. 470: Bakanlık öğesi de değişir ve silinir (sorarak) — sunucu yayında kaynak şablondan ayrılanları UYARI olarak
+   listeler. Telefonda kurucu açılmaz
    (masaüstü işi): belge önizlemesi görünür. Karar ve şema sunucuda. */
 import { useRouter } from "next/navigation";
 import { useEffect, useMemo, useState, useTransition } from "react";
@@ -91,10 +92,13 @@ export function FormatKurucu({ turId, turAd, turKod, format, tanim, kaynakAd, tu
     bildir("Taslak kaydedildi."); router.refresh();
   });
   const vazgec = () => { setT(tanim); setHatalar([]); bildir("Değişiklikler geri alındı."); };
+  /* 470: Bakanlık bölümü de silinir — uyarıyla sorulur, yayında uyarı çıkar (engel değil) */
   const bolumuSil = async (i: number) => {
     const b = t.bolumler[i];
-    if (!b || b.kilit || b.blok === "cihaz") return;
-    if (!(await onayla({ baslik: "Bölüm silinsin mi?", metin: `${b.ad} taslaktan çıkar. Yayınlanana kadar raporlar etkilenmez.`, tus: "Sil", tehlike: true }))) return;
+    if (!b || b.blok === "cihaz") return;
+    const metin = b.kilit ? `${b.ad} Bakanlık formatının zorunlu bölümü. Silinirse bu formatla yazılan raporlar Bakanlık formatına uymaz; yayınlarken uyarı çıkar.`
+      : `${b.ad} taslaktan çıkar. Yayınlanana kadar raporlar etkilenmez.`;
+    if (!(await onayla({ baslik: b.kilit ? "Bakanlık bölümü silinsin mi?" : "Bölüm silinsin mi?", metin, tus: "Sil", tehlike: true }))) return;
     degis(bolumSil(t, i)); bildir(`${b.ad} bölümü silindi (taslak).`);
   };
   const kural = (k: keyof FormatTanimi["kurallar"], ad: string, alt: string) => (
@@ -123,7 +127,8 @@ export function FormatKurucu({ turId, turAd, turKod, format, tanim, kaynakAd, tu
       <div className={stil.seritKap}>
         <Serit tur="bilgi" ikon="info">
           <span className={stil.yalnizGenis}>Raporun kendisini düzenliyorsunuz: başlığa, maddeye, sütun başlığına basıp yazın; “+” ile ekleyin, “×” ile çıkarın,
-            ayrıntılar ayar tuşunda. Firma bilgileri her formatta aynıdır. Açık raporlar başladıkları sürümle kalır, yeni raporlar yayındaki sürümle açılır.</span>
+            ayrıntılar ayar tuşunda. Kilit simgeli yerler Bakanlık formatının; onlar da değişir, yayınlarken uyarı çıkar. Firma bilgileri her formatta aynıdır.
+            Açık raporlar başladıkları sürümle kalır, yeni raporlar yayındaki sürümle açılır.</span>
           <span className={stil.yalnizDar}>Format kurucu masaüstünde kullanılır; burada önizleme görünür.</span>
         </Serit>
         {hatalar.length > 0 && <div id="kb-hatalar" tabIndex={-1}><Serit tur="hata" ikon="circle-alert">Taslak kaydedilmedi: {hatalar.join(" · ")}</Serit></div>}

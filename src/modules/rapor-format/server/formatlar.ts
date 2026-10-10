@@ -4,9 +4,11 @@
      görür (denetçi raporu bu tanımdan yazar); BAŞLATMAK, TASLAK KAYDETMEK, YAYINLAMAK yalnız "yaz" (önerilen düzende branş yöneticileri + firma
      yöneticisi). Muhasebe görmez. İstemciden gelen kimlik / sürüm yalnız "hangi kayıt, hangi sürümü gördüm" bilgisidir.
    · Tanım şemadan geçmeden yazılmaz (src/format/tanim.ts); okurken de şemadan geçer.
-   · Yayın: KİLİTLİ (Bakanlık) öğe denetimi ENGEL — kaynak SUNUCUDA seçilir: taslağın başladığı hazır şablon (koddan) + türün o an yayındaki
-     sürümü (veritabanından); istemcinin yolladığı tanımdaki "kilit" bayrağına güvenilmez. Yayın denetiminin öteki maddeleri UYARI (kural
-     uyarıdır; boş bölüm, sınırsız tablo …). Yayındaki eskiye düşer, sıra en büyük + 1; aynı türün işlemleri tür satırı kilitlenerek sıraya girer.
+   · Yayın: Bakanlık (kilitli) öğe denetimi — kaynak SUNUCUDA seçilir: taslağın başladığı hazır şablon (koddan) + türün o an yayındaki sürümü
+     (veritabanından); istemcinin yolladığı tanımdaki "kilit" bayrağına güvenilmez. 470 (reisim 2026-10-10, hata listesi 38: "biraz daha
+     serbestlik"; genel ilke "kural uyarıdır, engel değil"): Bakanlık formatından ayrılan yerler de UYARI — listenin başında; yayın durmaz.
+     Öteki maddeler de UYARI (boş bölüm, sınırsız tablo …). Yayındaki eskiye düşer, sıra en büyük + 1; aynı türün işlemleri tür satırı
+     kilitlenerek sıraya girer.
    · Yayınlanan sürüm DEĞİŞMEZ ve silinmez (0022 tetiği); yayın zamanı ve yayınlayan hesap veritabanında damgalanır. */
 import { kilitDenetimi, kilitNormallestir, yayinDenetimi } from "../../../format/motor.ts";
 import { bosFormat, grupFormati } from "../../../format/sablonlar.ts";
@@ -185,9 +187,10 @@ async function kilitKaynaklari(db: Sorgulayici, turId: string, kaynak: string | 
   return l;
 }
 
+/* 470: Bakanlık formatından ayrılan yerler uyarı (listenin başında); engel listesi boş kalır (ekran ve eski istemci aynı biçimi okur) */
 async function denetle(db: Sorgulayici, turId: string, kaynak: string | null, id: string, t: FormatTanimi): Promise<YayinDenetimi> {
-  const engeller = [...new Set((await kilitKaynaklari(db, turId, kaynak, id)).flatMap((k) => kilitDenetimi(t, k)))];
-  return { engeller, uyarilar: yayinDenetimi(t) };
+  const bakanlik = [...new Set((await kilitKaynaklari(db, turId, kaynak, id)).flatMap((k) => kilitDenetimi(t, k)))];
+  return { engeller: [], uyarilar: [...bakanlik, ...yayinDenetimi(t)] };
 }
 
 /** bir sürümün tanımı + (taslaksa) yayın denetimi. Görmeyen ya da yoksa null. */
@@ -257,7 +260,8 @@ export async function taslakKaydet(db: Sorgulayici, kim: Kisi, id: string, surum
   return { durum: "tamam", id, surum: g.surum };
 }
 
-/** yayından önce: engeller (kilitli öğe) ve uyarılar — pencerede gösterilir; yayında sunucu yeniden hesaplar. Yalnız "yaz", yalnız taslak. */
+/** yayından önce: uyarılar (470: Bakanlık formatından ayrılan yerler dahil; engel yok) — pencerede gösterilir; yayında sunucu yeniden hesaplar.
+    Yalnız "yaz", yalnız taslak. */
 export async function yayinDenetle(db: Sorgulayici, kim: Kisi, id: string): Promise<YayinDenetimi | null> {
   if (!degistirir(kim) || !UUID.test(id)) return null;
   const r = (await db.sorgu<{ tur_id: string; kaynak: string | null; durum: FormatDurumu; tanim: unknown }>(
@@ -266,7 +270,7 @@ export async function yayinDenetle(db: Sorgulayici, kim: Kisi, id: string): Prom
   return r && t ? denetle(db, r.tur_id, r.kaynak, id, t) : null;
 }
 
-/** taslağı yayınla: kilitli öğe engeli varsa yayınlanmaz (liste döner); varsa yayındaki eskiye düşer; yeni sıra en büyük + 1 */
+/** taslağı yayınla (470: Bakanlık formatından ayrılan yerler uyarı — yayın durmaz); varsa yayındaki eskiye düşer; yeni sıra en büyük + 1 */
 export async function yayinla(db: Sorgulayici, kim: Kisi, id: string, surum: number, notu: unknown): Promise<YayinSonucu> {
   if (!degistirir(kim)) return { durum: "yetkisiz" };
   if (!UUID.test(id)) return { durum: "yok" };

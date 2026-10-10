@@ -2355,6 +2355,13 @@ revizyon, alan kopyalama, hafif kusur devri, meslek eşleşme denetimi).
 - Emsal ürünler: https://opwire.app/iso-17020-periyodik-kontrol-yazilimi/ · https://17020muayene.vidco.com.tr/ · https://akuple.com/asansor-kontrol-yazilimi/ · https://ensyazilim.com/
 
 ## 11 · Değişiklik günlüğü
+- 2026-10-10 (470): **Bakanlık formatında serbestlik** (reisim, hata listesi 38: *"ama hala istediğim gibi değil başlık komple silmek vb hala
+  imkansız biraz daha serbestlik lütfen"*). Hazır kurulan Bakanlık türlerinin bütün bölümleri kilitliydi; hiçbiri silinmiyordu. Genel ilkeyle ("kural
+  uyarıdır, engel değil"): Bakanlık bölümü ve öğesi de silinir, adı, cevap seti, sütunları, sonuç metni, form kodu ve başlığı değişir; silmeden /
+  çıkarmadan önce "Bakanlık formatının zorunlu parçası" diye sorulur; kilit simgesi yalnız işaret. Sunucu yayında Bakanlık formatından ayrılan yerleri
+  UYARI olarak listeler (önceden ENGEL — yayınlanmazdı). Sabit kalan: ölçüm cihazları bölümü (459) ve firma bilgileri (reisim'in kararı). RAPOR-FORMAT.md
+  §3 yerinde düzeltildi. Testler tarih ve gerekçeyle güncellendi (format-kurucu, alt-baslik, format-motor, rapor-format, iki olumsuz kanıt); kurucudaki
+  kaldırılan üç korumanın olumsuz kanıtı kalktı. Karar formunda B1 sorusu olarak reisim'e de soruldu (Talepler ve Onaylar sunumu).
 - 2026-10-10 (469): **Alt başlık ekle doğrudan** (reisim, hata listesi 40: *"hayır istediğim gibi olmamış alt başlık ekle dediğin gibi alt başlık
   oluşturacak bunu anlamanın nesi zor reisim ?"*). Format kurucuda her ana bölümün alt başlık grubunun sonunda "+ Alt başlık ekle" tuşu: tür
   sordurmaz, ana bölümün türünde alt başlık açar (kontrol listesi cevap setiyle, ölçüm tablosu aynı sütunlarla, test değeri, bilgi alanı; öteki
