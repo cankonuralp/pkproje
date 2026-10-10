@@ -2377,6 +2377,14 @@ revizyon, alan kopyalama, hafif kusur devri, meslek eşleşme denetimi).
 - Emsal ürünler: https://opwire.app/iso-17020-periyodik-kontrol-yazilimi/ · https://17020muayene.vidco.com.tr/ · https://akuple.com/asansor-kontrol-yazilimi/ · https://ensyazilim.com/
 
 ## 11 · Değişiklik günlüğü
+- 2026-10-10 (485): **479–484 YAYINDA** — main 6b32015 (göç yok; 80 göç), sağlık "tamam" (sürüm 6b32015), duman 10/10; deneme makinesi 14/14
+  yeşil (6b32015; bir önceki koşuda 6a8136b iki iş bellek sıkışıklığı / çerçeve gecikmesiyle düştü, kod değişikliğiyle ilgisiz). Canlıda reisim'in
+  Chrome oturumuyla (yalnız okuma) ölçüldü: Dökümanlar'da ve Eğitim türleri'nde "Yan menüdeki Dökümanlar sayısı: 1 eğitimin tekrarı yaklaşıyor"
+  şeridi, Eğitimler alt sekmeleri; Onaylar kuyruğunda kırmızı "3 talep … kararınızı bekliyor (24 saati geçti)" şeridi; Onaylar › Talepler kabın
+  tamamında, süzgeçli; Araçlar'da "2 aracın bu haftaki kilometresi bekliyor · 1 araç belgesinin süresi yaklaşıyor" şeridi; saha raporunda Ekipman
+  bilgileri'nde "Excel'den yükle" / "Excel şablonu" ve "Fotoğraftan doldurma için firmada yapay zekâ açık … olmalı" notu (deneme firmasında yapay
+  zekâ kapalı). Son 3 saatte çalışma hatası yalnız bilinen duyuru zaman aşımı. Telefon / tablet canlıda gözle ölçülemedi (Chrome penceresi
+  küçülmüyor, sayfalar çerçeveye gömülmüyor) — deneme makinesinin site taraması üç genişlikte taşma / örtülü öğe / erişilebilirlik ölçtü, yeşil.
 - 2026-10-10 (484): **FOTOĞRAFTAN / EXCEL'DEN DOLDURMA, İSTENEN BAŞLIĞA** (reisim: *"test tablosu olarak kullanılan yerlere excelden yükle ve fotoğraf
   ekleme özelliği olsun fotoğraf eklenince belgede gözükmeyecek yapay zeka buradan okuma yapıp tabloyu dolduracak, aynı şekilde ekipman bilgilerinde
   de olsun bunu istediğim başlığa da ekleyebiliyim rapor tasarımcısında da olsun"*; *"bahsettiğim fotoğraf mekanizması vs eklenmemişti bile"*).
