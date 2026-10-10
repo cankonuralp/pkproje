@@ -4,7 +4,9 @@
    yok) · reisim 2026-10-04: "rol değiştirme, sızma, veri çalma; yetki her zaman sunucuda". GERÇEK PostgreSQL, iki firma (göç 0039; 327).
    328 (göç 0040): giderler (KOD-GECIS §5 "onay bekliyor → onaylandı (ödenecek) → ödendi · reddedildi (gerekçe ≥ 5). Elle girilen: ödendi /
    ödenecek"), belge, Excel'den yükle, kârlılık ve gelir-gider (saf hesap tests/karlilik.test.ts). Olumsuz kanıt: tests/bozan/muhasebe.bozan.ts,
-   tests/bozan/gider.bozan.ts. */
+   tests/bozan/gider.bozan.ts.
+   2026-10-10 (477; reisim, Talepler–Onaylar kararları T2 · T4 · T5 — göç 0079): masraf formunun kararı Onaylar'da (talep-baglanti.ts masrafKarar),
+   Muhasebe formun içeriğini değiştiremez; Giderler'deki form onayı (giderKaydet "onaylandi") ve giderReddet kalktı, ödeme giderOdendi. */
 import assert from "node:assert/strict";
 import { mkdtempSync, rmSync } from "node:fs";
 import { tmpdir } from "node:os";
@@ -20,8 +22,9 @@ import { taslakBaslat, yayinla } from "../src/modules/rapor-format/server/format
 import { imzaHazirla, imzaliYukle, raporOlustur } from "../src/modules/raporlar/server/raporlar.ts";
 import { giderKdv, gunEkle } from "../src/modules/muhasebe/sema.ts";
 import { faturaBelgesiVerisi, faturaKarti, faturaKaydet, faturaListesi, gelirGider, isKarti, isListesi, tahsilatKaydet, type Kisi } from "../src/modules/muhasebe/server/muhasebe.ts";
-import { giderDosyasiGorulur, giderExceliYukle, giderKaydet, giderListesi, giderReddet, giderSecenekleri, isGiderleri, type GiderBelgesi, type GiderSonra }
+import { giderDosyasiGorulur, giderExceliYukle, giderKaydet, giderListesi, giderOdendi, giderSecenekleri, isGiderleri, type GiderBelgesi, type GiderSonra }
   from "../src/modules/muhasebe/server/giderler.ts";
+import { masrafKarar } from "../src/modules/muhasebe/server/talep-baglanti.ts";
 import { ayarOku, ayarYaz } from "../src/server/ayar/ayar.ts";
 import { testKumesi } from "./yardimci/kume.ts";
 
@@ -269,7 +272,8 @@ test("gider (yetki): muhasebe ve firma yöneticisi yazar; 'gör' düzeyi yalnız
   assert.ok(Array.isArray(await a(gor, (db) => giderListesi(db, gor))), "gör düzeyi listeyi görür");
   assert.equal(await a(gor, (db) => giderSecenekleri(db, gor)), null);
   assert.equal((await gk(gor, null, 0, G())).durum, "yetkisiz", "gör düzeyi yazamaz");
-  assert.equal((await a(gor, (db) => giderReddet(db, gor, P1, 0, { gerekce: "Deneme gerekçe" }))).durum, "yetkisiz");
+  assert.equal((await a(gor, (db) => giderOdendi(db, gor, P1, 0))).durum, "yetkisiz");
+  assert.equal((await a(gor, (db) => masrafKarar(db, gor, P1, 0, "red", "Deneme gerekçe"))).durum, "yetkisiz", "gör düzeyi karar vermez (477)");
 });
 
 test("gider (elle): ödendi / ödenecek doğar, numara G-AAYY-SIRA, KDV dahil tutardan KDV; belge isteğe bağlı (türü baytlardan); ileri tarih, yabancı iş yok; düzenle + ödendi", async () => {
@@ -310,7 +314,7 @@ test("gider (elle): ödendi / ödenecek doğar, numara G-AAYY-SIRA, KDV dahil tu
   assert.deepEqual((await a(MUH, (db) => isGiderleri(db, MUH, P1)))!.map((x) => x.id), [G1]);
 });
 
-test("gider (masraf formu): onay bekler → Onayla (içerikle aynı işlemde) → ödendi; Reddet gerekçe ≥ 5; reddedilen değişmez; veritabanı geçişleri ve damgaları", async () => {
+test("gider (masraf formu): onay bekler → karar Onaylar'da (masrafKarar; içerik Muhasebe'de değişmez — 477) → ödendi; Reddet gerekçeyle; reddedilen değişmez; veritabanı geçişleri ve damgaları", async () => {
   const form = async (no: string) => (await sql<{ id: string }>(A,
     "INSERT INTO gider (no, tarih, tur, tutar, oran, kaynak, durum, personel_id) VALUES ($1, $2, 'yol', 5000, 20, 'form', 'bekliyor', $3) RETURNING id::text", [no, BUGUN(), denP], DEN.id)).rows[0].id;
   F_BEK = await form("G-0001-901");
@@ -326,20 +330,25 @@ test("gider (masraf formu): onay bekler → Onayla (içerikle aynı işlemde) �
   await assert.rejects(sql(A, "DELETE FROM gider WHERE id = $1", [F_BEK]), /permission denied|silinmez/);
   let x = await gider(F_BEK);
   assert.equal((await gk(MUH, F_BEK, x.surum, G({ tur: "yol", tutar: "50,00" }), null, "odendi")).durum, "red", "onay bekleyen doğrudan ödenmez");
-  const on = tamam(await gk(MUH, F_BEK, x.surum, G({ tur: "yol", tutar: "60,00", personel: denP, aciklama: "Köprü" }), null, "onaylandi"));
-  assert.match(on.bildirim!, /onaylandı; ödenecek: 60,00 TL\.$/);
+  assert.equal((await a(MUH, (db) => giderOdendi(db, MUH, F_BEK, x.surum))).durum, "red", "onay bekleyen ödendi işaretlenmez");
+  /* 477 (T2): Muhasebe formun içeriğini değiştiremez — karar yalnız durum ve gerekçe yazar */
+  assert.equal((await gk(MUH, F_BEK, x.surum, G({ tur: "yol", tutar: "60,00", personel: denP, aciklama: "Köprü" }))).durum, "red", "form Muhasebe'de düzenlenmez");
+  await assert.rejects(sql(A, "UPDATE gider SET tutar = 6000 WHERE id = $1", [F_BEK], MUH.id), /içeriği değişmez/);
+  assert.equal((await a(MUH, (db) => masrafKarar(db, MUH, F_BEK, x.surum, "red", null))).durum, "gecersiz", "gerekçesiz red yok");
+  const on = tamam(await a(MUH, (db) => masrafKarar(db, MUH, F_BEK, x.surum, "onayla", null)));
+  assert.match(on.bildirim!, /onaylandı; ödenecek: 50,00 TL — ödeme Muhasebe › Giderler'de işaretlenir\.$/);
   x = await gider(F_BEK);
-  assert.deepEqual([x.durum, x.tutar, x.kaynak, x.aciklama], ["onaylandi", 6000, "form", "Köprü"]);
+  assert.deepEqual([x.durum, x.tutar, x.kaynak, x.aciklama], ["onaylandi", 5000, "form", null]);
   const d1 = (await sql<{ k: string; o: string; t: string | null }>(A, "SELECT kaydeden::text AS k, onaylayan::text AS o, karar::text AS t FROM gider WHERE id = $1", [F_BEK])).rows[0];
   assert.deepEqual([d1.k, d1.o, !!d1.t], [DEN.id, MUH.id, true], "onaylayan ve karar zamanı oturumdan");
-  tamam(await gk(YON, F_BEK, x.surum, G({ tur: "yol", tutar: "60,00", personel: denP, aciklama: "Köprü" }), null, "odendi"));
+  tamam(await a(YON, (db) => giderOdendi(db, YON, F_BEK, x.surum)));
   const x2 = await gider(F_BEK);
   assert.deepEqual([x2.durum, x2.odeme], ["odendi", BUGUN()]);
   /* reddet */
   const y = await gider(f2);
-  assert.equal((await a(MUH, (db) => giderReddet(db, MUH, f2, y.surum, { gerekce: "Kısa" }))).durum, "gecersiz");
-  assert.equal((await a(MUH, (db) => giderReddet(db, MUH, F_BEK, x2.surum, { gerekce: "Fiş okunmuyor" }))).durum, "red", "yalnız onay bekleyen reddedilir");
-  const rd = tamam(await a(MUH, (db) => giderReddet(db, MUH, f2, y.surum, { gerekce: "  Fiş okunmuyor  " })));
+  assert.deepEqual(await a(MUH, (db) => masrafKarar(db, MUH, F_BEK, x2.surum, "red", "Fiş okunmuyor")), { durum: "red", neden: "Bu masraf formu için karar verilmiş." },
+    "yalnız onay bekleyen reddedilir");
+  const rd = tamam(await a(MUH, (db) => masrafKarar(db, MUH, f2, y.surum, "red", "Fiş okunmuyor")));
   assert.equal(rd.bildirim, "G-0001-902 reddedildi.");
   const z = await gider(f2);
   assert.deepEqual([z.durum, z.red], ["red", "Fiş okunmuyor"]);
@@ -400,7 +409,8 @@ test("gider sızıntısı: B, A'nın giderini görmez, düzenleyemez, reddedemez
   assert.deepEqual(await b((db) => giderListesi(db, YON_B)), []);
   assert.deepEqual((await b((db) => giderSecenekleri(db, YON_B)))!.isler, []);
   assert.equal((await b((db) => giderKaydet(db, depo, YON_B, B, G1, 0, G()))).durum, "yok");
-  assert.equal((await b((db) => giderReddet(db, YON_B, F_BEK, 0, { gerekce: "Deneme gerekçe" }))).durum, "yok");
+  assert.equal((await b((db) => masrafKarar(db, YON_B, F_BEK, 0, "red", "Deneme gerekçe"))).durum, "yok");
+  assert.equal((await b((db) => giderOdendi(db, YON_B, F_BEK, 0))).durum, "yok");
   assert.equal(await b((db) => giderDosyasiGorulur(db, YON_B, G1)), false);
   assert.deepEqual(await b((db) => giderKaydet(db, depo, YON_B, B, null, 0, G({ is: P1 }))), { durum: "gecersiz", hatalar: { is: "İş seçilmeli." } });
   const no = (await a(MUH, (db) => isKarti(db, MUH, P1)))!.no;

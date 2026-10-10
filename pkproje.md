@@ -1738,8 +1738,8 @@ ekranları örnekleri atacağım"*
 
 **Otuz birinci tur (2026-09-28, reisim birebir):** *"1 önerini kabul ediyorum/ 2 tür de belirlensin"* (1: izin onayı firma yöneticisinde,
 Personel'de · 2: ölçüm metodu raporda değil ekipman türünde belirlenir).
-→ **Kararlar:** izin talebini firma yöneticisi onaylar ya da gerekçeyle reddeder (Personel › İzin talepleri; bekleyen üstte, yıllık izinde
-kalan hak yanında, aşıyorsa uyarı); ölçüm metodu (formattaki: üç uçlu, çevrim empedansı, klamp) ekipman türünde seçilir, raporda türden
+→ **Kararlar:** izin talebini firma yöneticisi onaylar ya da gerekçeyle reddeder (~~Personel › İzin talepleri~~ — 2026-10-10 elli dördüncü tur:
+karar **Onaylar › Talepler**'de, İzin talepleri liste ve geçmiş; bekleyen üstte, yıllık izinde kalan hak yanında, aşıyorsa uyarı); ölçüm metodu (formattaki: üç uçlu, çevrim empedansı, klamp) ekipman türünde seçilir, raporda türden
 okunur, seçilmez. Planlar'da "en üstte" sorusu (denetimdeki plan hep üstte mi, "Denetimde" süzgeci seçili mi gelsin) cevaplanmadı; sıralama aynı.
 
 **Otuz ikinci tur (2026-09-28, reisim birebir):** *"raporların çıktıları ön izleme olarak baktığımda sana verdiğim pdfler gibi gözükmüyor hala ?
@@ -2318,6 +2318,23 @@ gider. Ekran dili: **Sil** yalnız kesin silme; kayıt saklanıyorsa **Kaldır**
 ekipman türü → demirbaş, araç, müşteri / tesis, personel, teklif taslağı, imza bekleyen sözleşme, format taslağı, eğitim, plan. Karar 48 ("müşteri
 silinmez") kullanılmış müşteri için geçerli kalır; kullanılmamış (deneme) müşteri bu kararla silinir.
 
+**Elli dördüncü tur (2026-10-10, reisim birebir; Talepler–Onaylar sunumunun karar formu doldurularak):** *"formları doldurdum maketlere baktım
+onaylıyorum , şimdilik bunları yap ilerde detaylandıracağız ve yapacağımız başka işler de var"* → **Kararlar** (§11 477): **T1 evet** — onay bekleyen
+her şey (raporlar, belgeler, izin talepleri, masraf formları) **Onaylar**'da; yan menüde tek balon (Onaylar'ın). **T2 hayır** — onaylayan talebi
+**değiştiremez**: Onayla · **Düzeltmeye geri gönder** (gerekçe ≥ 10; talep eden Talepler'de düzeltip yeniden gönderir ya da geri çeker) · Reddet
+(gerekçe ≥ 10). **T3 yok** — Talepler'de balon yok (kişinin kendi talepleri). **T4 kalksın** — Personel › İzin talepleri ve Muhasebe › Giderler'deki
+onay tuşları kalkar; liste ve geçmiş kalır ("Onaylar'da aç" bağlantısı). **T5 muhasebe** — onaylanan masrafın "Ödendi"si Muhasebe › Giderler'de.
+**B1 evet** — Bakanlık bölümü / öğesi serbestliği (470) kalır. Yetki: masrafa karar Muhasebe'yi değiştirende olduğundan Onaylar önerilen düzende
+muhasebe rolüne de açıldı (kendi; planlama da kendi — Diğer belgeler'i için).
+**B1 notu — ileride detaylandırılacak istekler (şimdi YAPILMADI, sıradaki turlarda maketle):** *"format yapıcıda kağıt üzerinde değişiklik
+yapabildiğim kadar saha ekranında yapamıyorum istediğim kadar işlevli değil kağıt ekranı daha işlevli, ayrıca test tablosu olarak kullanılan yerlere
+excelden yükle ve fotoğraf ekleme özelliği olsun fotoğraf eklenince belgede gözükmeyecek yapay zeka buradan okuma yapıp tabloyu dolduracak, aynı
+şekilde ekipman bilgilerinde de olsun bunu istediğim başlığa da ekleyebiliyim rapor tasarımcısında da olsun ayrıca yapay zeka ile rapor
+tasarımcısını da kullanacak kullanıcılar tam bir yapboz gibi olmalı ve kolay kullanışlı olmalı"* → (1) kurucunun **saha ekranı** kâğıt kadar
+işlevli olmalı; (2) ölçüm / test tablolarına **Excel'den yükle** ve **fotoğraf ekle** — fotoğraf belgede görünmez, yapay zekâ okuyup tabloyu doldurur
+(öneri olarak; §8.10 ilkesi); (3) aynısı **ekipman bilgilerinde**; (4) bu özellik kurucuda **istenen başlığa** eklenebilmeli; (5) **rapor tasarımcısı
+yapay zekâyla** da kullanılabilmeli; (6) kurucu **yapboz gibi**, kolay. Hata listesine açık madde olarak girdi.
+
 **Açık kalanlar:** ~~Ana sayfada İSGGM duyuruları~~ (2026-09-27: makette eklendi; okuma işi uygulamada) (reisim 2026-09-26: *"Ana sayfada isgüm duyurularını gösterebilir miyiz ? Bunu
 yapılacaklar listesine ekle"*; öneri: ÇSGB İSGGM duyurular sayfası — https://www.csgb.gov.tr/isggm/duyurular/ — sunucuda günde birkaç kez
 okunur (pg-boss işi, §8.9), Ana sayfada son 5 duyuru başlık + tarih + kaynağa bağlantı; yalnız ekranda, bildirim yok; sayfa RSS vermiyorsa
@@ -2355,6 +2372,20 @@ revizyon, alan kopyalama, hafif kusur devri, meslek eşleşme denetimi).
 - Emsal ürünler: https://opwire.app/iso-17020-periyodik-kontrol-yazilimi/ · https://17020muayene.vidco.com.tr/ · https://akuple.com/asansor-kontrol-yazilimi/ · https://ensyazilim.com/
 
 ## 11 · Değişiklik günlüğü
+- 2026-10-10 (477): **TALEPLER–ONAYLAR** (§9 elli dördüncü tur, T1–T5 · B1). Göç **0079** (izin_talebi ve gider): yeni durum **"duzeltme"** +
+  gerekçe sütunu `geri` (10–200); izin_talebi_koru ve gider_koru baştan: karar (onay / ret / düzeltmeye geri) yalnız bekleyen talebe, onay damgası;
+  **onaylayan içeriği değiştiremez** (izin: tarih, tür, açıklama; masraf formu: tarih, tür, tutar, oran, iş, açıklama, fiş); düzeltmedeki talebi
+  yalnız talep eden düzeltir ve yeniden gönderir (önceki düzeltme isteği notta kalır), düzeltmedeki talebe karar verilmez; masrafın ödenmesi
+  onaylanmış formda, damga korunur. Ekran: **Onaylar › Talepler** (`/onaylar/talepler`; onaylar/ui/TalepOnaylari.tsx: liste + salt okunur ayrıntı,
+  Onayla · Düzeltmeye geri gönder · Reddet, gerekçe, PDF; geniş ekranda iki sütun, telefonda liste → ayrıntı) — izin firma yöneticisine, masraf
+  Muhasebe'yi değiştirene (talepler/server/talepler.ts onayTalepleri / talepKarar; muhasebe/server/talep-baglanti.ts onayBekleyenMasraflar /
+  masrafKarar / masrafDuzelt). Yan menüde Onaylar balonu talepleri de sayar, Talepler balonu kalktı (anasayfa/server/takip.ts). Talepler: "Düzeltilecek"
+  çipi, düzeltme şeridi, talep penceresinde **Düzelt ve yeniden gönder** (izinDuzelt, masrafFormuDuzelt). Personel › İzin talepleri ve Muhasebe ›
+  Giderler: onay / red tuşları kalktı, "Onaylar'da aç"; Giderler'de masraf formu salt okunur, **Ödendi** orada (giderOdendi). Onaylar önerilen düzende
+  muhasebe ve planlama rolüne "kendi" (yetki tanımı · maket · KOD-GECIS §4 aynı); Onaylar'ı açan ofis rolü kendi bölümüne yönlenir. Kilitler:
+  talepler / muhasebe / ana sayfa / onaylar testleri (iki firma, gerçek PostgreSQL — deneme makinesinde), olumsuz kanıt talepler 7, gider 6 (0079'u
+  bozar), uçtan uca talepler.spec (geri gönder → düzelt → onay; muhasebe Onaylar'da onaylar; yeni ekranda erişilebilirlik taraması). PC'de: tip,
+  lint, veritabanısız testler 239/239, veritabanısız olumsuz kanıt 102/102.
 - 2026-10-10 (476): **469–475 YAYINDA** — main 2cd1e96 (göç yok, 79 göç), sağlık "tamam" (sürüm 2cd1e96), duman 10/10; canlıda ölçüldü: saha
   ekranı sayfası oturumsuz girişe yönlenir, gömme izni yalnız kendi kökenimiz (frame-ancestors 'self' + SAMEORIGIN), kurucu ve öteki sayfalar
   'none' + DENY. Son 12 saatte çalışma hatası yalnız bilinen duyuru zaman aşımı (önceki yayın). Deneme makinesi 13/13 yeşil (tablet 3 bir kez

@@ -4,7 +4,9 @@
    2. Masraf formu onay beklemeseydi denetçinin formu "ödendi" doğardı (muhasebe onayı atlanır).
    3. İleri tarih denetimi olmasaydı yarının tarihiyle gider yazılırdı.
    4. Kaydeden veritabanında damgalanmasaydı istemcinin yazdığı kimlik "kaydeden" olurdu.
-   5. Ödemede onay damgası korunmasaydı "ödendi" işaretlenirken onaylayan başkası yazılırdı (328 incelemesi). */
+   5. Ödemede onay damgası korunmasaydı "ödendi" işaretlenirken onaylayan başkası yazılırdı (328 incelemesi).
+   2026-10-10 (477): gider_koru'nun son hâli 0079'da (düzeltmeye geri gönder) — bozulan göç 0079. Yeni: 6. masraf formunun içerik kilidi olmasaydı
+   onaylayan (muhasebe) formun tutarını değiştirirdi (Talepler–Onaylar kararı T2). */
 import assert from "node:assert/strict";
 import { copyFileSync, mkdirSync, mkdtempSync, readdirSync, readFileSync, rmSync, writeFileSync } from "node:fs";
 import { tmpdir } from "node:os";
@@ -21,13 +23,13 @@ const gecici = mkdtempSync(join(tmpdir(), "gider-bozan-"));
 const acilan: { supa: SupabaseBenzeri; havuz: Havuz }[] = [];
 const BUGUN = "(now() AT TIME ZONE 'Europe/Istanbul')::date";
 
-/** 0040'ı bozarak Supabase taklidi veritabanı açar; A firması */
+/** gider_koru'nun son tanımını (0079) bozarak Supabase taklidi veritabanı açar; A firması */
 async function bozuk(ad: string, eski: string, yeni: string) {
   const klasor = join(gecici, ad);
   mkdirSync(klasor);
   for (const g of readdirSync(GOC_KLASORU)) {
     if (!g.endsWith(".sql")) continue;
-    if (g.startsWith("0043_")) {
+    if (g.startsWith("0079_")) {
       const k = readFileSync(join(GOC_KLASORU, g), "utf8");
       assert.ok(k.includes(eski), "bozulacak satır kaynakta yok");
       writeFileSync(join(klasor, g), k.replace(eski, () => yeni));   // işlevle: yeni metindeki "$$" (plpgsql) "$" olmasın
@@ -47,7 +49,7 @@ after(async () => {
   rmSync(gecici, { recursive: true, force: true });
 });
 
-test("0043'te red değişmezliği kalkınca reddedilen giderin tutarı değiştirilir (kilidin koruduğu açık)", async () => {
+test("0079'da red değişmezliği kalkınca reddedilen giderin tutarı değiştirilir (kilidin koruduğu açık)", async () => {
   const { havuz, A } = await bozuk("gider_bozuk1", "  IF OLD.durum = 'red' THEN RAISE EXCEPTION 'reddedilen gider değişmez' USING ERRCODE = '23514'; END IF;\n", "");
   const r = await kiraciIcinde(havuz, A, async (db) => {
     const id = (await db.sorgu<{ id: string }>(`INSERT INTO gider (no, tarih, tur, tutar, oran, kaynak, durum) VALUES ('G-1026-001', ${BUGUN}, 'yol', 100, 20, 'form', 'bekliyor')
@@ -58,29 +60,30 @@ test("0043'te red değişmezliği kalkınca reddedilen giderin tutarı değişti
   assert.equal(r.rowCount, 1, "reddedilen gider değişti");
 });
 
-test("0043'te masraf formunun onay beklemesi kalkınca form 'ödendi' doğar", async () => {
+test("0079'da masraf formunun onay beklemesi kalkınca form 'ödendi' doğar", async () => {
   const { havuz, A } = await bozuk("gider_bozuk2", "      IF NEW.durum <> 'bekliyor' THEN RAISE EXCEPTION 'masraf formu onay bekler'", "      IF false THEN RAISE EXCEPTION 'masraf formu onay bekler'");
   const r = await kiraciIcinde(havuz, A, (db) => db.sorgu(
     `INSERT INTO gider (no, tarih, tur, tutar, oran, kaynak, durum, odeme) VALUES ('G-1026-001', ${BUGUN}, 'yol', 100, 20, 'form', 'odendi', ${BUGUN})`));
   assert.equal(r.rowCount, 1, "onaysız ödenmiş masraf formu yazıldı");
 });
 
-test("0043'te ileri tarih denetimi kalkınca yarının tarihiyle gider yazılır", async () => {
+test("0079'da ileri tarih denetimi kalkınca yarının tarihiyle gider yazılır", async () => {
   const { havuz, A } = await bozuk("gider_bozuk3", "  IF NEW.tarih > bugun THEN RAISE EXCEPTION 'ileri tarihli gider kaydedilmez'", "  IF false THEN RAISE EXCEPTION 'ileri tarihli gider kaydedilmez'");
   const r = await kiraciIcinde(havuz, A, (db) => db.sorgu(
     `INSERT INTO gider (no, tarih, tur, tutar, oran, kaynak, durum, odeme) VALUES ('G-1026-001', ${BUGUN} + 1, 'yol', 100, 20, 'muhasebe', 'onaylandi', NULL)`));
   assert.equal(r.rowCount, 1, "ileri tarihli gider yazıldı");
 });
 
-test("0043'te kaydeden damgası kalkınca istemcinin yazdığı kimlik kaydeden olur", async () => {
-  const { havuz, A } = await bozuk("gider_bozuk4", "    NEW.kaydeden := ben; NEW.onaylayan := NULL;", "    NEW.onaylayan := NULL;");
+test("0079'da kaydeden damgası kalkınca istemcinin yazdığı kimlik kaydeden olur", async () => {
+  const { havuz, A } = await bozuk("gider_bozuk4", "    NEW.kaydeden := ben; NEW.onaylayan := NULL; NEW.karar := NULL; NEW.geri := NULL;",
+    "    NEW.onaylayan := NULL; NEW.karar := NULL; NEW.geri := NULL;");
   const sahte = "00000000-0000-4000-8000-000000000001";
   const r = await kiraciIcinde(havuz, A, (db) => db.sorgu<{ k: string }>(
     `INSERT INTO gider (no, tarih, tur, tutar, oran, kaynak, durum, kaydeden) VALUES ('G-1026-001', ${BUGUN}, 'yol', 100, 20, 'form', 'bekliyor', $1) RETURNING kaydeden::text AS k`, [sahte]));
   assert.equal(r.rows[0].k, sahte, "istemcinin kimliği yazıldı");
 });
 
-test("0043'te ödemede onay damgası korunmayınca ödendi işaretlenirken onaylayan değiştirilir", async () => {
+test("0079'da ödemede onay damgası korunmayınca ödendi işaretlenirken onaylayan değiştirilir", async () => {
   const { havuz, A } = await bozuk("gider_bozuk5", "        RAISE EXCEPTION 'onay damgası ödemede değişmez' USING ERRCODE = '23514';", "        NULL;");
   const sahte = "00000000-0000-4000-8000-000000000001";
   const r = await kiraciIcinde(havuz, A, async (db) => {
@@ -89,4 +92,14 @@ test("0043'te ödemede onay damgası korunmayınca ödendi işaretlenirken onayl
     return db.sorgu<{ o: string }>("UPDATE gider SET durum = 'odendi', onaylayan = $2 WHERE id = $1 RETURNING onaylayan::text AS o", [id, sahte]);
   });
   assert.equal(r.rows[0].o, sahte, "onaylayan ödemede değişti");
+});
+
+test("0079'da masraf formunun içerik kilidi kalkınca onaylayan formun tutarını değiştirir", async () => {
+  const { havuz, A } = await bozuk("gider_bozuk6", "    RAISE EXCEPTION 'masraf formunun içeriği değişmez (düzeltmeye geri gönderilince talep eden düzeltir)' USING ERRCODE = '23514';", "    NULL;");
+  const r = await kiraciIcinde(havuz, A, async (db) => {
+    const id = (await db.sorgu<{ id: string }>(`INSERT INTO gider (no, tarih, tur, tutar, oran, kaynak, durum) VALUES ('G-1026-001', ${BUGUN}, 'yol', 100, 20, 'form', 'bekliyor')
+      RETURNING id::text`)).rows[0].id;
+    return db.sorgu("UPDATE gider SET tutar = 999999 WHERE id = $1", [id]);
+  });
+  assert.equal(r.rowCount, 1, "onaylayan formun tutarını değiştirdi");
 });

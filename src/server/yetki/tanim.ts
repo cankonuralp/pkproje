@@ -15,7 +15,7 @@ export type Matris = Record<ModulAnahtari, readonly Duzey[]>;
 
 /** başlangıç düzeni (reisim 2026-09-25, 32) — sıra ROLLER ile aynı: planlama · denetçi · mek. yön. · elk. yön. · firma yön. · muhasebe */
 export const MATRIS_ONERI: Matris = {
-  13: ["yaz", "kendi", "gor", "gor", "yaz", "yok"], 14: ["gor", "kendi", "brans", "brans", "gor", "yok"], 15: ["yok", "kendi", "brans", "brans", "gor", "yok"],
+  13: ["yaz", "kendi", "gor", "gor", "yaz", "yok"], 14: ["gor", "kendi", "brans", "brans", "gor", "yok"], 15: ["kendi", "kendi", "brans", "brans", "gor", "kendi"],
   20: ["gor", "kendi", "gor", "gor", "gor", "yok"], 3: ["yaz", "gor", "gor", "gor", "yaz", "gor"], 11: ["yaz", "yok", "gor", "gor", "yaz", "gor"],
   12: ["yaz", "kendi", "gor", "gor", "yaz", "gor"], 7: ["yaz", "yaz", "gor", "gor", "yaz", "yok"], 8: ["gor", "kendi", "yaz", "yaz", "yaz", "yok"],
   9: ["gor", "kendi", "yaz", "yaz", "yaz", "yok"], 2: ["gor", "kendi", "gor", "gor", "yaz", "yok"], 10: ["gor", "kendi", "yaz", "yaz", "yaz", "yok"],

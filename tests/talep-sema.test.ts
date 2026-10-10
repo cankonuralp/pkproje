@@ -2,7 +2,7 @@
    330. Şema saf (veritabanısız); veritabanı tarafı tests/talepler.test.ts. */
 import assert from "node:assert/strict";
 import { test } from "node:test";
-import { isGunu, IzinGirdisi, RedGirdisi, tatilMi } from "../src/modules/talepler/sema.ts";
+import { GerekceGirdisi, isGunu, IzinGirdisi, tatilMi } from "../src/modules/talepler/sema.ts";
 
 test("iş günü: başlangıç ve bitiş dahil, cumartesi ve pazar sayılmaz; ters aralık 0", () => {
   assert.equal(isGunu("2026-11-02", "2026-11-06"), 5, "pazartesi – cuma");
@@ -22,8 +22,11 @@ test("izin şeması: tür, bitiş başlangıçtan önce olamaz, iş günü olmal
   assert.deepEqual(hata({ bit: "2027-11-06" }), ["bit: En çok bir yıllık izin."]);
   assert.ok(hata({ tur: "tatil" })![0].startsWith("tur:"));
   assert.ok(hata({ aciklama: "a".repeat(161) })![0].startsWith("aciklama:"));
-  assert.equal(RedGirdisi.safeParse({ gerekce: " kısa " }).success, false);
-  assert.equal(RedGirdisi.safeParse({ gerekce: "Yoğun dönem" }).success, true);
+  /* 2026-10-10 (477; Talepler–Onaylar sunumu kuralı "Geri gönder ve Reddet gerekçe ister (en az 10 karakter)"): red ve düzeltme gerekçesi tek
+     şema, en az 10 (önce 5) */
+  assert.equal(GerekceGirdisi.safeParse({ gerekce: " kısa " }).success, false);
+  assert.equal(GerekceGirdisi.safeParse({ gerekce: "Kısa olan" }).success, false, "9 karakter");
+  assert.equal(GerekceGirdisi.safeParse({ gerekce: "Yoğun dönem" }).success, true);
 });
 
 /* 417 (KOD-GECIS Y9): resmî tatiller iş günü sayılmaz — 2429 sayılı Kanun'un sabit günleri + Diyanet takviminden dini bayramlar; yarım gün iş günü */

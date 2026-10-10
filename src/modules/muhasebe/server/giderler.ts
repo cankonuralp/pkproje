@@ -1,7 +1,10 @@
 /* MUHASEBE › GİDERLER (328; maket muhasebe.html #/giderler, gider penceresi; göç 0040). Gider: tarih, tür (varsayılan KDV oranıyla), KDV dahil tutar
    + oran, açıklama, isteğe bağlı iş (plan) ve personel, belge (fiş / fatura — PDF ya da fotoğraf; yoksa uyarı, engel değil). Elle girilen gider
    "ödendi" ya da "ödenecek" doğar; denetçinin masraf formu (Talepler) onay bekler → onaylandı → ödendi, ya da reddedilir (gerekçe). Yetki: modül 18
-   (önerilen düzende firma yöneticisi ve muhasebe). Kurallar veritabanında da (gider_koru). Excel'den yükleme satır satır yeniden denetlenir. */
+   (önerilen düzende firma yöneticisi ve muhasebe). Kurallar veritabanında da (gider_koru). Excel'den yükleme satır satır yeniden denetlenir.
+   477 (reisim 2026-10-10, Talepler–Onaylar kararları T2 · T4 · T5): masraf formunun kararı Onaylar'da (talep-baglanti.ts masrafKarar) — burada
+   onay / red yok; formun içeriği Muhasebe'de DEĞİŞMEZ (düzeltilecekse Onaylar'dan düzeltmeye geri gönderilir; veritabanı 0079). Onaylanan
+   formun ödemesi burada: Ödendi (giderOdendi). Elle girilen gider eskisi gibi düzenlenir. */
 import type { Depo } from "../../../server/dosya/depo.ts";
 import { dosyaYukle } from "../../../server/dosya/dosya.ts";
 import { SINIR, turBul } from "../../../server/dosya/tur.ts";
@@ -16,12 +19,12 @@ import { personelOzetleri, personelSecenekleri } from "../../personel/server/per
 import { muhasebePlanlari } from "../../planlar/server/muhasebe-baglanti.ts";
 import { muhasebeRaporlari } from "../../raporlar/server/muhasebe-baglanti.ts";
 import { GIDER_EXCEL_SINIR, giderSatirlari } from "../excel.ts";
-import { GiderGirdisi, GiderRedGirdisi, giderKdv, para, type GiderDurumu, type GiderTuru } from "../sema.ts";
+import { GiderGirdisi, giderKdv, para, type GiderDurumu, type GiderTuru } from "../sema.ts";
 import { bugunTr, type Kisi, type Yazma } from "./muhasebe.ts";
 
 const MODUL = 18;
 export const GIDER_DOSYA = "gider";
-export const GIDER = tablo({ ad: "gider", sutunlar: ["no", "tarih", "tur", "tutar", "oran", "aciklama", "plan_id", "personel_id", "belge", "kaynak", "durum", "red", "odeme"] });
+export const GIDER = tablo({ ad: "gider", sutunlar: ["no", "tarih", "tur", "tutar", "oran", "aciklama", "plan_id", "personel_id", "belge", "kaynak", "durum", "red", "odeme", "geri"] });
 const UUID = /^[0-9a-f]{8}-[0-9a-f]{4}-[0-9a-f]{4}-[0-9a-f]{4}-[0-9a-f]{12}$/;
 const gorur = (kim: YetkiHesabi) => ["gor", "yaz"].includes(duzey(kim, MODUL));
 const yazar = (kim: YetkiHesabi) => duzey(kim, MODUL) === "yaz";
@@ -31,10 +34,12 @@ export interface GiderSatiri {
   id: string; no: string; tarih: string; tur: GiderTuru; tutar: number; oran: number; kdv: number; haric: number; aciklama: string | null;
   is: { id: string; no: string; musteri: string } | null; personel: { id: string; ad: string } | null; belge: string | null;
   kaynak: "muhasebe" | "form"; durum: GiderDurumu; red: string | null; odeme: string | null; surum: number;
+  /** 477: masraf formunun son düzeltme isteği */
+  geri: string | null;
 }
 type GiderDb = { id: string; no: string; tarih: string; tur: GiderTuru; tutar: string; oran: number; aciklama: string | null; plan_id: string | null; personel_id: string | null;
-  belge: string | null; kaynak: "muhasebe" | "form"; durum: GiderDurumu; red: string | null; odeme: string | null; surum: number };
-const SEC = `SELECT id::text, no, tarih::text, tur, tutar::text, oran, aciklama, plan_id::text, personel_id::text, belge::text, kaynak, durum, red, odeme::text, surum FROM gider`;
+  belge: string | null; kaynak: "muhasebe" | "form"; durum: GiderDurumu; red: string | null; odeme: string | null; surum: number; geri: string | null };
+const SEC = `SELECT id::text, no, tarih::text, tur, tutar::text, oran, aciklama, plan_id::text, personel_id::text, belge::text, kaynak, durum, red, odeme::text, surum, geri FROM gider`;
 
 async function satirlar(db: Sorgulayici, kosul = "", p: unknown[] = []): Promise<GiderSatiri[]> {
   const l = (await db.sorgu<GiderDb>(`${SEC} ${kosul} ORDER BY tarih DESC, no DESC`, p)).rows;
@@ -46,7 +51,7 @@ async function satirlar(db: Sorgulayici, kosul = "", p: unknown[] = []): Promise
     const tutar = Number(g.tutar), k = giderKdv(tutar, g.oran), pl = g.plan_id ? planlar.get(g.plan_id) : undefined;
     return { id: g.id, no: g.no, tarih: g.tarih, tur: g.tur, tutar, oran: g.oran, kdv: k.kdv, haric: k.haric, aciklama: g.aciklama,
       is: pl ? { id: pl.id, no: pl.no, musteri: tesisMusteri.get(pl.tesisId) ?? "—" } : null, personel: g.personel_id ? { id: g.personel_id, ad: kisi.get(g.personel_id) ?? "—" } : null,
-      belge: g.belge, kaynak: g.kaynak, durum: g.durum, red: g.red, odeme: g.odeme, surum: g.surum };
+      belge: g.belge, kaynak: g.kaynak, durum: g.durum, red: g.red, odeme: g.odeme, surum: g.surum, geri: g.geri };
   });
 }
 
@@ -94,13 +99,13 @@ export async function belgeYaz(db: Sorgulayici, depo: Depo, kim: Kisi, firmaId: 
   return r.durum === "tamam" ? r.surum : { durum: r.durum === "yok" ? "yok" : "cakisma" };
 }
 
-export type GiderSonra = "onaylandi" | "odendi" | null;
-const GECIS: Record<Exclude<GiderSonra, null>, GiderDurumu> = { onaylandi: "bekliyor", odendi: "onaylandi" };
-const gecisRed = (sonra: Exclude<GiderSonra, null>): Yazma =>
-  ({ durum: "red", neden: sonra === "odendi" ? "Yalnız onaylanmış (ödenecek) gider ödendi olarak işaretlenir." : "Yalnız onay bekleyen gider onaylanır." });
+/** 477: masraf formunun onayı Onaylar'da — burada yalnız ödenecek gider "Ödendi" (T5) */
+export type GiderSonra = "odendi" | null;
+const ODENDI_RED: Yazma = { durum: "red", neden: "Yalnız onaylanmış (ödenecek) gider ödendi olarak işaretlenir." };
+const FORM_DEGISMEZ: Yazma = { durum: "red", neden: "Masraf formu Muhasebe'de değiştirilmez: düzeltilmesi gerekiyorsa Onaylar'dan düzeltmeye geri gönderin." };
 
-/** gider ekle (id boş; elle — ödendi ya da ödenecek) ya da düzenle (içerik; reddedilen değişmez); belge isteğe bağlı. sonra: aynı işlemde
-    onayla (onay bekleyen) ya da ödendi (ödenecek) — maket penceresindeki "Onayla" / "Ödendi" */
+/** gider ekle (id boş; elle — ödendi ya da ödenecek) ya da düzenle (içerik; reddedilen değişmez; masraf formu hiç — 477); belge isteğe bağlı.
+    sonra: aynı işlemde ödendi (ödenecek) — maket penceresindeki "Ödendi" */
 export async function giderKaydet(db: Sorgulayici, depo: Depo, kim: Kisi, firmaId: string, id: string | null, surum: number, girdi: unknown,
   belge: GiderBelgesi = null, sonra: GiderSonra = null): Promise<Yazma> {
   if (!yazar(kim)) return { durum: "yetkisiz" };
@@ -127,36 +132,34 @@ export async function giderKaydet(db: Sorgulayici, depo: Depo, kim: Kisi, firmaI
   const x = (await db.sorgu<{ no: string; durum: GiderDurumu; odeme: string | null; kaynak: string }>("SELECT no, durum, odeme::text, kaynak FROM gider WHERE id = $1 FOR UPDATE", [id])).rows[0];
   if (!x) return { durum: "yok" };
   if (x.durum === "red") return { durum: "red", neden: "Reddedilen gider değişmez." };
+  /* 477 (T2): masraf formunun içeriğini onaylayan değiştiremez (veritabanı da 0079); ödemesi giderOdendi ile */
+  if (x.kaynak === "form") return FORM_DEGISMEZ;
   if (x.odeme && v.tarih > x.odeme) return { durum: "gecersiz", hatalar: { tarih: `Ödeme gününden (${x.odeme.split("-").reverse().join(".")}) sonra olamaz.` } };
-  if (sonra && x.durum !== GECIS[sonra]) return gecisRed(sonra);
+  if (sonra && x.durum !== "onaylandi") return ODENDI_RED;
   if (!Number.isSafeInteger(surum) || surum < 0) return { durum: "cakisma" };
-  /* masraf formunun kişisi değişmez (gönderenin Talepler'inden düşmesin — 329–332 incelemesi; veritabanı da 0043) */
-  const r = await guncelle(db, GIDER, id, surum, x.kaynak === "form" ? { ...icerik, personel_id: undefined } : icerik, iz(kim, "gider.duzenle", x.no));
+  const r = await guncelle(db, GIDER, id, surum, icerik, iz(kim, "gider.duzenle", x.no));
   if (r.durum !== "tamam") return { durum: r.durum === "yok" ? "yok" : "cakisma" };
   const b = await belgeYaz(db, depo, kim, firmaId, id, r.surum, belge);
   if (typeof b !== "number") return b;
-  if (sonra) return durumYaz(db, kim, id, b, sonra === "onaylandi" ? "onaylandi" : "odendi", sonra === "odendi" ? { odeme: bugunTr() } : {});
+  if (sonra) return odendiYaz(db, kim, id, b);
   return { durum: "tamam", id, no: x.no, bildirim: `${x.no} güncellendi.` };
 }
 
-async function durumYaz(db: Sorgulayici, kim: Kisi, id: string, surum: number, hedef: GiderDurumu, ek: Record<string, unknown> = {}): Promise<Yazma> {
+async function odendiYaz(db: Sorgulayici, kim: Kisi, id: string, surum: number): Promise<Yazma> {
   const x = (await db.sorgu<{ no: string; tutar: string }>("SELECT no, tutar::text FROM gider WHERE id = $1", [id])).rows[0];
-  const r = await guncelle(db, GIDER, id, surum, { durum: hedef, ...ek }, iz(kim, `gider.${hedef}`, (ek.red as string | undefined) ?? undefined));
+  const r = await guncelle(db, GIDER, id, surum, { durum: "odendi", odeme: bugunTr() }, iz(kim, "gider.odendi", x.no));
   if (r.durum !== "tamam") return { durum: r.durum === "yok" ? "yok" : "cakisma" };
-  const tl = para(Number(x.tutar));
-  return { durum: "tamam", id, no: x.no, bildirim: hedef === "onaylandi" ? `${x.no} onaylandı; ödenecek: ${tl}.` : hedef === "odendi" ? `${x.no} ödendi: ${tl}.` : `${x.no} reddedildi.` };
+  return { durum: "tamam", id, no: x.no, bildirim: `${x.no} ödendi: ${para(Number(x.tutar))}.` };
 }
-/** onay bekleyen gideri reddet (gerekçe 5–200; denetçi plan içinde görür) */
-export async function giderReddet(db: Sorgulayici, kim: Kisi, id: string, surum: number, girdi: unknown): Promise<Yazma> {
+/** 477 (T5): onaylanmış (ödenecek) gideri ödendi işaretle — içerik değişmez; masraf formu da elle girilen de (ödeme Muhasebe'nin işi) */
+export async function giderOdendi(db: Sorgulayici, kim: Kisi, id: string, surum: number): Promise<Yazma> {
   if (!yazar(kim)) return { durum: "yetkisiz" };
   if (!UUID.test(id)) return { durum: "yok" };
-  const g = dogrula(GiderRedGirdisi, girdi);
-  if (!g.tamam) return { durum: "gecersiz", hatalar: g.hatalar };
   const x = (await db.sorgu<{ durum: GiderDurumu }>("SELECT durum FROM gider WHERE id = $1 FOR UPDATE", [id])).rows[0];
   if (!x) return { durum: "yok" };
-  if (x.durum !== "bekliyor") return { durum: "red", neden: "Yalnız onay bekleyen gider reddedilir." };
+  if (x.durum !== "onaylandi") return ODENDI_RED;
   if (!Number.isSafeInteger(surum) || surum < 0) return { durum: "cakisma" };
-  return durumYaz(db, kim, id, surum, "red", { red: g.veri.gerekce });
+  return odendiYaz(db, kim, id, surum);
 }
 
 /** Excel'den yükle: satırlar sunucuda yeniden denetlenir (giderSatirlari), yalnız geçerliler girer (elle, ödendi) */

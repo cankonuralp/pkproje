@@ -1,8 +1,10 @@
 /* ONAYLAR (modül 15; maket onaylar.html M9; KOD-GECIS §4 rapor_onayla / rapor_geri_gonder / rapor_durum_degistir, §5 Rapor; karar 102, 190,
    191; N7 — vekil yok, her yönetici kendi branşını görür). Yetki her işlevde SUNUCUDA:
    · Görme: Onaylar düzeyi — "gör" (firma yöneticisi) hepsi, "branşı" (branş yöneticisi) türün branşı; denetçi "kendi" (C5, 2026-10-05: imzanın
-     tek merkezi Onaylar — yalnız İMZASINI BEKLEYEN kendi raporları; kuyruk, tüm raporlar ve onay ekranı yöneticinin); planlama, muhasebe yok.
-     Göremeyen rapor "yok" (var olduğu söylenmez).
+     tek merkezi Onaylar — yalnız İMZASINI BEKLEYEN kendi raporları; kuyruk, tüm raporlar ve onay ekranı yöneticinin); planlama, muhasebe "kendi"
+     (477: kendi belgeleri ve karar verebildiği talepler). Göremeyen rapor "yok" (var olduğu söylenmez).
+   · 477 (reisim 2026-10-10, Talepler–Onaylar kararları T1 "onay bekleyen her şey Onaylar'da", T2 talep değiştirilmez): Talepler sekmesi — kişinin
+     karar verebildiği izin talepleri (firma yöneticisi) ve masraf formları (Muhasebe'yi değiştiren); karar Talepler modülünde (talepKarar).
    · Onayla / Onayı geri al: rapor_onayla — türün branş yöneticisi. Kendi yazdığı raporu da onaylar (C1, reisim kararı pkproje §1: "hazırlayanın
      kendi raporunu onaylaması da engellenmez"). Geri gönder: rapor_geri_gonder, gerekçe ≥ 10. Durumu değiştir: rapor_durum_degistir, Yeni /
      onayda / onaylandı arasında (Tamamlandı'ya yalnız imzayla); Yeni'ye ise gerekçe ≥ 10; Onaylandı'ya almak onay sayılır (191).
@@ -23,6 +25,8 @@ import { gorunenNo, RAPOR_DURUM, RevizeGirdisi, RevizeRedGirdisi } from "../../r
 import { hesapAdlari } from "../../../server/kimlik/hesap.ts";
 import { DurumGirdisi, GeriGirdisi } from "../sema.ts";
 import { bekleyenBelgeSayisi } from "./belgeler.ts";
+import { onayTalepleri, talepOnaylar, type OnayTalebi } from "../../talepler/server/talepler.ts";
+import type { Rol } from "../../../server/yetki/tanim.ts";
 
 const MODUL = 15;
 export interface Kisi extends YetkiHesabi { ad: string }
@@ -35,6 +39,10 @@ export type OnayYazma =
 export interface OnayIzni { onayla: boolean; geriGonder: boolean; onayGeriAl: boolean; durumDegistir: boolean; revize: boolean }
 /** ekrana giden satır: yazan hesabın kimliği gitmez */
 export type OnaySatiri = Omit<RaporOzeti, "hesapId"> & { bekleme: string | null; eski: boolean; izin: OnayIzni };
+/** 477: Onaylar › Talepler satırı (bekleme sunucuda) */
+export type OnayTalebiSatiri = OnayTalebi & { bekleme: string | null; eski: boolean };
+/** sahada rapor yazan roller — "İmzamı bekleyen raporlar" sekmesi onların (uygulama düzeninin SAHA_ROLLERI ile aynı) */
+const RAPOR_YAZAN: readonly Rol[] = ["denetci", "mekanik_yonetici", "elektrik_yonetici"];
 
 const kayit = (r: RaporOzeti) => ({ sahip: r.hesapId, brans: r.brans, durum: RAPOR_DURUM[r.durum][0] });
 const gorur = (kim: Kisi, r: RaporOzeti) => canDo(kim, MODUL, "gor", { sahip: r.hesapId, brans: r.brans });
@@ -81,6 +89,10 @@ export interface OnayListeleri {
   istekler: RevizeIstekSatiri[];
   /** imzasını bekleyen diğer belgeler (333; bordro, eğitim / zimmet formu, araç tutanağı — kişinin kendi) */
   belgeBekleyen: number;
+  /** 477: karar verebildiği bekleyen izin talepleri ve masraf formları (eski önce) · karar verebilir mi (sekme boşken de görünür) */
+  talepler: OnayTalebiSatiri[]; talepOnaylar: boolean;
+  /** rapor yazan (İmzamı bekleyen raporlar sekmesi onun) */
+  imzaci: boolean;
 }
 /** revize isteği: isteyenin adı, zaman, gerekçe; isteğin sürümü (Reddet onunla yazılır) */
 export interface RevizeIstekBilgisi { id: string; surum: number; kim: string; zaman: string; gerekce: string }
@@ -106,6 +118,9 @@ export async function onayListeleri(db: Sorgulayici, kim: Kisi): Promise<OnayLis
     imzaBekleyen,
     istekler,
     belgeBekleyen: await bekleyenBelgeSayisi(db, kim),
+    talepler: (await onayTalepleri(db, kim)).map((t) => ({ ...t, ...beklemesi(t.gonderildi, simdi) })),
+    talepOnaylar: talepOnaylar(kim),
+    imzaci: imzaBekleyen.length > 0 || kim.roller.some((r) => RAPOR_YAZAN.includes(r)),
   };
 }
 

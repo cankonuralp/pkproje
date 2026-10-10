@@ -1,12 +1,13 @@
 "use server";
 /* TALEPLER SUNUCU EYLEMLERİ — kişi ve kiracı oturumdan; talep kimin adına olduğu istemciden ALINMAZ (oturumun personeli). Yetki, doğrulama ve
-   kurallar modül işlevinde (talepler.ts, muhasebe talep-baglanti.ts) ve veritabanında (0040, 0042). */
+   kurallar modül işlevinde (talepler.ts, muhasebe talep-baglanti.ts) ve veritabanında (0040, 0042, 0079). 477: karar Onaylar'da
+   (onaylar/ui/eylemler.ts talepKararEylemi); burada talep edenin düzelt ve yeniden gönder eylemleri. */
 import { depo } from "../../../server/dosya/depo";
 import { ayniKoken } from "../../../server/kimlik/koken";
 import { istekOturumu, oturumIslemi } from "../../../server/kimlik/istek";
 import { BelgeHatasi } from "../../muhasebe/server/giderler";
 import {
-  izinBelgesi, izinGeriCek, izinGonder, izinOnayla, izinReddet, masrafFormuBelgesi, masrafFormuGeriCek, masrafFormuGonder, TalepBelgeHatasi,
+  izinBelgesi, izinDuzelt, izinGeriCek, izinGonder, masrafFormuBelgesi, masrafFormuDuzelt, masrafFormuGeriCek, masrafFormuGonder, TalepBelgeHatasi,
   type TalepBelgesi, type Yazma,
 } from "../server/talepler";
 
@@ -65,9 +66,18 @@ export async function masrafBelgesiEylemi(form: FormData): Promise<TalepYaniti> 
   if (b === "buyuk") return BUYUK;
   return islem((o) => oturumIslemi(o, (db) => masrafFormuBelgesi(db, depo(), o, o.kiraci.firmaId, yazi(form.get("id")), Number(form.get("surum")), b)));
 }
-export async function izinOnaylaEylemi(id: string, surum: number): Promise<TalepYaniti> {
-  return islem((o) => oturumIslemi(o, (db) => izinOnayla(db, o, yazi(id), Number(surum))));
+/** 477: düzeltmeye geri gönderilen izin talebini düzelt ve yeniden gönder */
+export async function izinDuzeltEylemi(form: FormData): Promise<TalepYaniti> {
+  const b = await belgeOku(form);
+  if (b === "buyuk") return BUYUK;
+  const girdi = { tur: yazi(form.get("tur")), bas: yazi(form.get("bas")), bit: yazi(form.get("bit")), aciklama: yazi(form.get("aciklama")) };
+  return islem((o) => oturumIslemi(o, (db) => izinDuzelt(db, depo(), o, o.kiraci.firmaId, yazi(form.get("id")), Number(form.get("surum")), girdi, b)));
 }
-export async function izinReddetEylemi(id: string, surum: number, girdi: unknown): Promise<TalepYaniti> {
-  return islem((o) => oturumIslemi(o, (db) => izinReddet(db, o, yazi(id), Number(surum), girdi)));
+/** 477: düzeltmeye geri gönderilen masraf formunu düzelt ve yeniden gönder */
+export async function masrafDuzeltEylemi(form: FormData): Promise<TalepYaniti> {
+  const b = await belgeOku(form);
+  if (b === "buyuk") return BUYUK;
+  const girdi = { is: yazi(form.get("is")), tarih: yazi(form.get("tarih")), tur: yazi(form.get("tur")), tutar: yazi(form.get("tutar")), oran: yazi(form.get("oran")),
+    aciklama: yazi(form.get("aciklama")) };
+  return islem((o) => oturumIslemi(o, (db) => masrafFormuDuzelt(db, depo(), o, o.kiraci.firmaId, yazi(form.get("id")), Number(form.get("surum")), girdi, b)));
 }

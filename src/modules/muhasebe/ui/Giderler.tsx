@@ -1,9 +1,10 @@
 "use client";
 /* MUHASEBE › GİDERLER (maket muhasebe.html #/giderler — G_SUTUN, suzgecTanimla "g", giderPencere, gider-excel-*; 328): en yeni üstte; onay bekleyen
    masraf ve belgesi olmayan gider şeridi (yalnız ekranda — anayasa 1.3); listenin altında süzülen satırların KDV hariç / KDV / toplamı. Gider
-   penceresi: ekle (ödendi / ödenecek), düzenle, onay bekleyeni "Onayla" ya da "Reddet" (gerekçe), ödeneceği "Ödendi". Excel'e aktar (süzülen
-   liste) ve Excel'den yükle (tarayıcıda okunur, satır satır önizleme; sunucu yeniden denetler). İş sayfasının "Giderler" bölümü de buradan.
-   Görme ve karar sunucuda (modül 18). */
+   penceresi: ekle (ödendi / ödenecek), düzenle, ödeneceği "Ödendi". Excel'e aktar (süzülen liste) ve Excel'den yükle (tarayıcıda okunur,
+   satır satır önizleme; sunucu yeniden denetler). İş sayfasının "Giderler" bölümü de buradan. Görme ve karar sunucuda (modül 18).
+   477 (reisim 2026-10-10, Talepler–Onaylar kararları T2 · T4 · T5): masraf formunun onayı / reddi / düzeltmeye geri gönderilmesi ONAYLAR'DA —
+   buradan onay tuşları kalktı; masraf formu salt okunur (onaylayan değiştirmez), onay bekliyorsa "Onaylar'da aç", onaylandıysa "Ödendi". */
 import Link from "next/link";
 import { useRouter } from "next/navigation";
 import { useRef, useState, useTransition } from "react";
@@ -24,13 +25,13 @@ import { TarihAlani } from "../../../components/secim/TarihAlani";
 import { tarihNo } from "../../../components/secim/tarih";
 import { Serit } from "../../../components/serit/Serit";
 import { Ikon } from "../../../components/ikon/Ikon";
-import { Tus, tusSinifi } from "../../../components/tus/Tus";
+import { Tus, TusBaglanti, tusSinifi } from "../../../components/tus/Tus";
 import { tutar as tutarSema } from "../../../sema/ortak";
 import { GIDER_EXCEL_SINIR, GIDER_SABLON, giderExceli, giderSablonu, giderSatirlari, type GiderExcelSatiri } from "../excel";
 import { ayAd } from "../karlilik";
 import { GIDER_DURUM, GIDER_TUR, giderKdv, KDV_ORAN, para, type GiderTuru } from "../sema";
 import type { GiderSatiri, GiderSecenekleri } from "../server/giderler";
-import { giderExceliYukleEylemi, giderKaydetEylemi, giderReddetEylemi } from "./eylemler";
+import { giderExceliYukleEylemi, giderKaydetEylemi, giderOdendiEylemi } from "./eylemler";
 import { BordroGonderTusu } from "./BordroGonder";
 import { MuhasebeSekmeleri } from "./ortak";
 import stil from "./muhasebe.module.css";
@@ -112,8 +113,9 @@ export function GiderListesi({ giderler, secenekler, bugun, bordro = false }: { 
       </>} />
       <MuhasebeSekmeleri secili="/muhasebe/giderler" />
       {(bek.length > 0 || bel.length > 0) && <SeritKap>
-        {bek.length > 0 && <Serit tur="bilgi" ikon="receipt"><b>Onay bekleyen masraf:</b> {bek.length} · {toplamTL(bek)}{" "}
-          <Tus tur="ikincil" onClick={() => goster("bekliyor")}>Göster</Tus></Serit>}
+        {/* 477 (T1): onay Onaylar'da — burada liste */}
+        {bek.length > 0 && <Serit tur="bilgi" ikon="receipt"><b>Onay bekleyen masraf:</b> {bek.length} · {toplamTL(bek)} · kararı Onaylar&apos;da{" "}
+          <Tus tur="ikincil" onClick={() => goster("bekliyor")}>Göster</Tus>{secenekler && <> <TusBaglanti tur="ikincil" href="/onaylar/talepler">Onaylar&apos;da aç</TusBaglanti></>}</Serit>}
         {bel.length > 0 && <Serit tur="uyari" ikon="triangle-alert"><b>Belgesi yok:</b> {bel.length} gider · {toplamTL(bel)}{" "}
           <Tus tur="ikincil" onClick={() => goster("belgesiz")}>Göster</Tus></Serit>}
       </SeritKap>}
@@ -140,7 +142,7 @@ export function IsGiderleri({ giderler, secenekler, isId, isNo, bugun }: { gider
 
 /* ── GİDER PENCERESİ ── */
 const GID = { tarih: "w-gider-tarih", tur: "w-gider-tur", tutar: "w-gider-tutar", oran: "w-gider-oran", aciklama: "w-gider-aciklama", is: "w-gider-is",
-  personel: "w-gider-personel", belge: "w-gider-belge", odeme: "w-gider-odeme", gerekce: "w-gider-gerekce" } as const;
+  personel: "w-gider-personel", belge: "w-gider-belge", odeme: "w-gider-odeme" } as const;
 const tlYaz = (kurus: number) => (kurus / 100).toLocaleString("tr-TR", { minimumFractionDigits: 2, maximumFractionDigits: 2 });
 function GiderPenceresi({ g, sabitIs, sabitIsNo, secenekler, bugun, kapat }: {
   g: GiderSatiri | null; sabitIs?: string; sabitIsNo?: string; secenekler: GiderSecenekleri | null; bugun: string; kapat: () => void;
@@ -151,11 +153,12 @@ function GiderPenceresi({ g, sabitIs, sabitIsNo, secenekler, bugun, kapat }: {
   const [d, setD] = useState({ tarih: g?.tarih ?? bugun, tur: g?.tur ?? "", tutar: g ? tlYaz(g.tutar) : "", oran: String(g?.oran ?? 20), aciklama: g?.aciklama ?? "",
     is: g?.is?.id ?? sabitIs ?? "", personel: g?.personel?.id ?? "", odeme: "odendi" });
   const [belge, setBelge] = useState<"var" | "kaldir" | null>(g?.belge ? "var" : null);
-  const [red, setRed] = useState<string | null>(null);
   const [h, setH] = useState<Record<string, string>>({});
   const [genel, setGenel] = useState<string | null>(null);
   const dosya = useRef<HTMLInputElement>(null);
-  const yaz = !!secenekler && g?.durum !== "red";
+  /* 477 (T2): masraf formu Muhasebe'de değiştirilmez — kararı Onaylar'da; yalnız ödenecekse "Ödendi" */
+  const form = g?.kaynak === "form";
+  const yaz = !!secenekler && g?.durum !== "red" && !form;
   const tp = tutarSema.safeParse(d.tutar);
   const kdv = tp.success && tp.data > 0 ? giderKdv(tp.data, Number(d.oran)) : null;
   /* ayrılan personel ya da eski iş seçeneklerde yoksa kayıttaki değer korunur */
@@ -164,7 +167,7 @@ function GiderPenceresi({ g, sabitIs, sabitIsNo, secenekler, bugun, kapat }: {
   const kisiler = [...(secenekler?.kisiler ?? [])];
   if (g?.personel && !kisiler.some((x) => x.id === g.personel!.id)) kisiler.push(g.personel);
   const odakla = (k?: string) => { if (k) requestAnimationFrame(() => document.getElementById(GID[k as keyof typeof GID] ?? GID.tutar)?.focus()); };
-  const kaydet = (sonra: "onaylandi" | "odendi" | null) => baslat(async () => {
+  const kaydet = (sonra: "odendi" | null) => baslat(async () => {
     const f = new FormData();
     for (const [k, v] of Object.entries(d)) f.set(k, v);
     if (g) { f.set("id", g.id); f.set("surum", String(g.surum)); }
@@ -176,44 +179,33 @@ function GiderPenceresi({ g, sabitIs, sabitIsNo, secenekler, bugun, kapat }: {
     if (!r.tamam) { odakla(Object.keys(r.hatalar ?? {})[0]); return; }
     kapat(); bildir(r.bildirim ?? "Gider kaydedildi."); router.refresh();
   });
-  const reddet = () => baslat(async () => {
-    const r = await giderReddetEylemi(g!.id, g!.surum, { gerekce: red ?? "" });
-    setH(r.hatalar ?? {}); setGenel(r.genel ?? null);
-    if (!r.tamam) { odakla(r.hatalar?.gerekce ? "gerekce" : undefined); return; }
-    kapat(); bildir(r.bildirim ?? "Gider reddedildi."); router.refresh();
+  /* masraf formu ödendi: içerik gönderilmez (477) */
+  const odendi = () => baslat(async () => {
+    const r = await giderOdendiEylemi(g!.id, g!.surum);
+    setGenel(r.genel ?? null);
+    if (!r.tamam) return;
+    kapat(); bildir(r.bildirim ?? "Ödendi."); router.refresh();
   });
   const baslik = g ? `Gider · ${g.no}` : `Gider ekle${sabitIsNo ? ` · ${sabitIsNo}` : ""}`;
-  if (red !== null && g) {
-    return (
-      <Pencere acik baslik={baslik} onKapat={() => { if (!bekliyor) kapat(); }} odak={`#${GID.gerekce}`}
-        alt={<><Tus tur="ikincil" disabled={bekliyor} onClick={() => { setRed(null); setH({}); odakla("tutar"); }}>Vazgeç</Tus>
-          <Tus ikon="ban" disabled={bekliyor} aria-busy={bekliyor || undefined} onClick={reddet}>Reddet</Tus></>}>
-        <p className={pencereMetinSinifi}><b>{g.no}</b> · {GIDER_TUR[g.tur][0]} · {para(g.tutar)}{g.personel && ` · ${g.personel.ad}`}</p>
-        {genel && <Serit tur="hata" ikon="circle-alert">{genel}</Serit>}
-        <Alan id={GID.gerekce} etiket="Red gerekçesi" zorunlu hata={h.gerekce} sonuc={h.gerekce ? undefined : "En az 5 karakter; denetçi plan içinde görür."}>
-          <textarea id={GID.gerekce} className={stil.metin} maxLength={200} value={red} aria-invalid={!!h.gerekce || undefined} aria-describedby={ipucuId(GID.gerekce)}
-            onChange={(e) => setRed(e.target.value)} />
-        </Alan>
-      </Pencere>
-    );
-  }
   return (
     <Pencere acik genis baslik={baslik} onKapat={() => { if (!bekliyor) kapat(); }} odak={`#${g ? GID.tutar : GID.tur}`}
       alt={<>
         <Tus tur="ikincil" disabled={bekliyor} onClick={kapat}>{yaz ? "Vazgeç" : "Kapat"}</Tus>
         {/* 341: masraf formunun PDF'i (talep edenle aynı form) */}
         {g?.kaynak === "form" && <a className={tusSinifi("ikincil")} href={`/talepler/pdf/masraf/${g.id}`} download><Ikon ad="file-text" kucuk />PDF</a>}
-        {yaz && (g?.durum === "bekliyor" ? <>
-          <Tus tur="ikincil" ikon="ban" disabled={bekliyor} onClick={() => { setRed(""); setH({}); setGenel(null); odakla("gerekce"); }}>Reddet</Tus>
-          <Tus ikon="check" disabled={bekliyor} aria-busy={bekliyor || undefined} onClick={() => kaydet("onaylandi")}>Onayla</Tus>
-        </> : g?.durum === "onaylandi" ? <>
+        {/* 477 (T1 · T4): masraf formunun kararı Onaylar'da; ödemesi burada (T5) */}
+        {form && secenekler && g?.durum === "bekliyor" && <TusBaglanti ikon="circle-check" href={`/onaylar/talepler?sec=masraf-${g.id}`}>Onaylar&apos;da aç</TusBaglanti>}
+        {form && secenekler && g?.durum === "onaylandi" && <Tus ikon="wallet" disabled={bekliyor} aria-busy={bekliyor || undefined} onClick={odendi}>Ödendi</Tus>}
+        {yaz && (g?.durum === "onaylandi" ? <>
           <Tus tur="ikincil" ikon="check" disabled={bekliyor} onClick={() => kaydet(null)}>Kaydet</Tus>
           <Tus ikon="wallet" disabled={bekliyor} aria-busy={bekliyor || undefined} onClick={() => kaydet("odendi")}>Ödendi</Tus>
         </> : <Tus ikon="check" disabled={bekliyor} aria-busy={bekliyor || undefined} onClick={() => kaydet(null)}>{g ? "Kaydet" : "Gideri kaydet"}</Tus>)}
       </>}>
       {g && <p className={pencereMetinSinifi}><Rozet tur={GIDER_DURUM[g.durum][1]}>{GIDER_DURUM[g.durum][0]}</Rozet>{" "}
         {g.kaynak === "form" ? `Masraf formu${g.personel ? ` · ${g.personel.ad}` : ""}` : "Muhasebe kaydı"}{g.durum === "odendi" && g.odeme && ` · ödendi ${tarihNo(g.odeme)}`}
-        {g.red && <><br /><span className={stil.uyari}>Red gerekçesi: {g.red}</span></>}</p>}
+        {g.red && <><br /><span className={stil.uyari}>Red gerekçesi: {g.red}</span></>}
+        {g.durum === "duzeltme" && g.geri && <><br /><span className={stil.uyari}>Düzeltme isteği: {g.geri}</span></>}
+        {form && <><br />Masraf formunu Muhasebe değiştirmez: karar Onaylar&apos;da, düzeltilecekse gönderene geri gönderilir.</>}</p>}
       {genel && <Serit tur="hata" ikon="circle-alert">{genel}</Serit>}
       {!yaz && g ? <BilgiListesi>
         <Bilgi etiket="Tarih">{tarihNo(g.tarih)}</Bilgi>

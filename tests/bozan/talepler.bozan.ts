@@ -4,7 +4,10 @@
    2. Karar verilmiş talebin değişmezliği olmasaydı reddedilen izin sonradan onaylanırdı.
    3. Masraf formunda "kendi adına" denetimi olmasaydı başkası adına masraf yazılırdı.
    4. (329–332 incelemesi) Belge denetimi karar anına bakmasaydı talebin belgesi onayla aynı anda değiştirilirdi.
-   5. (329–332 incelemesi) Masraf formunun kişi kilidi olmasaydı form başkasının üstüne geçerdi. */
+   5. (329–332 incelemesi) Masraf formunun kişi kilidi olmasaydı form başkasının üstüne geçerdi.
+   2026-10-10 (477): izin_talebi_koru ve gider_koru işlevlerinin son hâli 0079'da (düzeltmeye geri gönder) — bozulan göç 0079; 2. kanıtın satırı
+   "OLD.durum IN ('onaylandi', 'red')" oldu. Yeni: 6. içerik kilidi olmasaydı onaylayan izin talebinin tarihini değiştirirdi (T2); 7. yeniden gönderme
+   kilidi olmasaydı onaylayan düzeltmedeki talebi talep edenin yerine yeniden gönderirdi. */
 import assert from "node:assert/strict";
 import { copyFileSync, mkdirSync, mkdtempSync, readdirSync, readFileSync, rmSync, writeFileSync } from "node:fs";
 import { tmpdir } from "node:os";
@@ -51,16 +54,16 @@ after(async () => {
   rmSync(gecici, { recursive: true, force: true });
 });
 
-test("0042'de 'kendi adına' denetimi kalkınca başkası adına izin talebi yazılır (kilidin koruduğu açık)", async () => {
-  const { havuz, A, baska, hesap } = await bozuk("talep_bozuk1", "0042_",
+test("0079'da 'kendi adına' denetimi kalkınca başkası adına izin talebi yazılır (kilidin koruduğu açık)", async () => {
+  const { havuz, A, baska, hesap } = await bozuk("talep_bozuk1", "0079_",
     "    IF NEW.personel_id IS DISTINCT FROM (SELECT h.personel_id FROM hesap h WHERE h.firma_id = NEW.firma_id AND h.id = ben) THEN\n      RAISE EXCEPTION 'izin talebi yalnız kendi adına gönderilir' USING ERRCODE = '23514';\n    END IF;\n", "");
   const r = await kiraciIcinde(havuz, A, (db) => db.sorgu(`INSERT INTO izin_talebi (no, personel_id, tur, bas, bit, gun) VALUES ('I-1026-001', $1, 'mazeret', ${BUGUN}, ${BUGUN}, 1)`, [baska]),
     { hesapId: hesap });
   assert.equal(r.rowCount, 1, "başkası adına izin yazıldı");
 });
 
-test("0042'de karar değişmezliği kalkınca reddedilen izin sonradan onaylanır", async () => {
-  const { havuz, A, ben, hesap } = await bozuk("talep_bozuk2", "0042_", "  IF OLD.durum <> 'bekliyor' THEN RAISE EXCEPTION 'karar verilmiş izin talebi değişmez' USING ERRCODE = '23514'; END IF;\n", "");
+test("0079'da karar değişmezliği kalkınca reddedilen izin sonradan onaylanır", async () => {
+  const { havuz, A, ben, hesap } = await bozuk("talep_bozuk2", "0079_", "  IF OLD.durum IN ('onaylandi', 'red') THEN RAISE EXCEPTION 'karar verilmiş izin talebi değişmez' USING ERRCODE = '23514'; END IF;\n", "");
   const r = await kiraciIcinde(havuz, A, async (db) => {
     const id = (await db.sorgu<{ id: string }>(`INSERT INTO izin_talebi (no, personel_id, tur, bas, bit, gun) VALUES ('I-1026-001', $1, 'mazeret', ${BUGUN}, ${BUGUN}, 1) RETURNING id::text`, [ben])).rows[0].id;
     await db.sorgu("UPDATE izin_talebi SET durum = 'red', red = 'Yoğun dönem' WHERE id = $1", [id]);
@@ -69,8 +72,8 @@ test("0042'de karar değişmezliği kalkınca reddedilen izin sonradan onaylanı
   assert.equal(r.rowCount, 1, "reddedilen izin onaylandı");
 });
 
-test("0043'te masraf formunun 'kendi adına' denetimi kalkınca başkası adına masraf yazılır", async () => {
-  const { havuz, A, baska, hesap } = await bozuk("talep_bozuk3", "0043_",
+test("0079'da masraf formunun 'kendi adına' denetimi kalkınca başkası adına masraf yazılır", async () => {
+  const { havuz, A, baska, hesap } = await bozuk("talep_bozuk3", "0079_",
     "      IF NEW.personel_id IS DISTINCT FROM (SELECT h.personel_id FROM hesap h WHERE h.firma_id = NEW.firma_id AND h.id = ben) THEN\n        RAISE EXCEPTION 'masraf formu yalnız kendi adına gönderilir' USING ERRCODE = '23514';\n      END IF;\n", "");
   const r = await kiraciIcinde(havuz, A, (db) => db.sorgu(
     `INSERT INTO gider (no, tarih, tur, tutar, oran, kaynak, durum, personel_id) VALUES ('G-1026-001', ${BUGUN}, 'yol', 100, 20, 'form', 'bekliyor', $1)`, [baska]), { hesapId: hesap });
@@ -78,8 +81,9 @@ test("0043'te masraf formunun 'kendi adına' denetimi kalkınca başkası adına
 });
 
 /* 2026-10-06 (329–332 incelemesi) */
-test("0042'de belge denetimi karar anına bakmazsa talebin belgesi onayla aynı anda değiştirilir", async () => {
-  const { havuz, A, ben, hesap } = await bozuk("talep_bozuk4", "0042_", " OR NEW.durum IS DISTINCT FROM OLD.durum) THEN\n    RAISE EXCEPTION 'talebin belgesini", ") THEN\n    RAISE EXCEPTION 'talebin belgesini");
+test("0079'da belge denetimi karar anına bakmazsa talebin belgesi onayla aynı anda değiştirilir", async () => {
+  const { havuz, A, ben, hesap } = await bozuk("talep_bozuk4", "0079_",
+    " OR (NEW.durum IS DISTINCT FROM OLD.durum AND NOT (OLD.durum = 'duzeltme' AND NEW.durum = 'bekliyor'))) THEN\n    RAISE EXCEPTION 'talebin belgesini", ") THEN\n    RAISE EXCEPTION 'talebin belgesini");
   const r = await kiraciIcinde(havuz, A, async (db) => {
     const id = (await db.sorgu<{ id: string }>(`INSERT INTO izin_talebi (no, personel_id, tur, bas, bit, gun) VALUES ('I-1026-001', $1, 'rapor', ${BUGUN}, ${BUGUN}, 1) RETURNING id::text`, [ben])).rows[0].id;
     const d = (await db.sorgu<{ id: string }>("SELECT gen_random_uuid()::text AS id")).rows[0].id;
@@ -90,12 +94,34 @@ test("0042'de belge denetimi karar anına bakmazsa talebin belgesi onayla aynı 
   assert.equal(r.rowCount, 1, "karar anında belge değişti");
 });
 
-test("0043'te masraf formunun kişi kilidi kalkınca form başkasının üstüne geçer", async () => {
-  const { havuz, A, ben, baska, hesap } = await bozuk("talep_bozuk5", "0043_", "    RAISE EXCEPTION 'masraf formunun personeli değişmez' USING ERRCODE = '23514';\n", "");
+test("0079'da masraf formunun kişi kilidi kalkınca form başkasının üstüne geçer", async () => {
+  const { havuz, A, ben, baska, hesap } = await bozuk("talep_bozuk5", "0079_", "    RAISE EXCEPTION 'masraf formunun personeli değişmez' USING ERRCODE = '23514';\n", "");
   const r = await kiraciIcinde(havuz, A, async (db) => {
     const id = (await db.sorgu<{ id: string }>(`INSERT INTO gider (no, tarih, tur, tutar, oran, kaynak, durum, personel_id) VALUES ('G-1026-001', ${BUGUN}, 'yol', 100, 20, 'form', 'bekliyor', $1)
       RETURNING id::text`, [ben])).rows[0].id;
     return db.sorgu("UPDATE gider SET personel_id = $2 WHERE id = $1", [id, baska]);
   }, { hesapId: hesap });
   assert.equal(r.rowCount, 1, "formun kişisi değişti");
+});
+
+/* 2026-10-10 (477, Talepler–Onaylar kararı T2: onaylayan talebi değiştirmez; düzeltmeye geri gönderilince talep eden düzeltir) */
+test("0079'da içerik kilidi kalkınca onaylayan (talep eden olmayan) izin talebinin tarihini değiştirir", async () => {
+  const { havuz, A, ben, hesap } = await bozuk("talep_bozuk6", "0079_",
+    "    RAISE EXCEPTION 'gönderilen izin talebinin içeriği değişmez (düzeltmeye geri gönderilince talep eden düzeltir)' USING ERRCODE = '23514';\n", "    NULL;\n");
+  const id = await kiraciIcinde(havuz, A, async (db) => (await db.sorgu<{ id: string }>(
+    `INSERT INTO izin_talebi (no, personel_id, tur, bas, bit, gun) VALUES ('I-1026-001', $1, 'mazeret', ${BUGUN}, ${BUGUN}, 1) RETURNING id::text`, [ben])).rows[0].id, { hesapId: hesap });
+  const r = await kiraciIcinde(havuz, A, (db) => db.sorgu(`UPDATE izin_talebi SET bas = ${BUGUN} + 1, bit = ${BUGUN} + 1 WHERE id = $1`, [id]));
+  assert.equal(r.rowCount, 1, "onaylayan talebi değiştirdi");
+});
+
+test("0079'da yeniden gönderme kilidi kalkınca onaylayan düzeltmedeki talebi talep edenin yerine yeniden gönderir", async () => {
+  const { havuz, A, ben, hesap } = await bozuk("talep_bozuk7", "0079_",
+    "      IF OLD.durum <> 'duzeltme' OR ben IS NULL OR OLD.kaydeden IS DISTINCT FROM ben THEN\n        RAISE EXCEPTION 'düzeltilen izin talebini yalnız talep eden yeniden gönderir' USING ERRCODE = '23514';\n      END IF;\n", "");
+  const id = await kiraciIcinde(havuz, A, async (db) => (await db.sorgu<{ id: string }>(
+    `INSERT INTO izin_talebi (no, personel_id, tur, bas, bit, gun) VALUES ('I-1026-001', $1, 'mazeret', ${BUGUN}, ${BUGUN}, 1) RETURNING id::text`, [ben])).rows[0].id, { hesapId: hesap });
+  const r = await kiraciIcinde(havuz, A, async (db) => {
+    await db.sorgu("UPDATE izin_talebi SET durum = 'duzeltme', geri = 'Tarihi düzeltip gönderin' WHERE id = $1", [id]);
+    return db.sorgu("UPDATE izin_talebi SET durum = 'bekliyor' WHERE id = $1", [id]);
+  });
+  assert.equal(r.rowCount, 1, "onaylayan talebi yeniden gönderdi");
 });

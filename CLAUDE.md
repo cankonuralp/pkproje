@@ -169,6 +169,8 @@ pkproje/
                             raporRevizeYaz) · Diğer belgeler /onaylar/diger (333, göç 0044 belge_onay: server/belgeler.ts — kişinin kendi belgeleri,
                             geri gönder, imzalı PDF yükle; server/belge-baglanti.ts — gönderen modüller: Personel bordro "Onaya gönder", Muhasebe
                             muhasebe/server/bordro-gonder.ts + ui/BordroGonder.tsx; ui/DigerBelgeler.tsx; sayfa modülden bağımsız, oturum kapısı)
+                            · TALEPLER /onaylar/talepler (477, göç 0079): ui/TalepOnaylari.tsx — izin talebi (firma yöneticisi) ve masraf formu (Muhasebe'yi
+                            değiştiren) salt okunur; Onayla · Düzeltmeye geri gönder · Reddet (gerekçe ≥ 10); veri talepler onayTalepleri / talepKarar
   src/modules/musteri-paneli/ MÜŞTERİ PANELİ (2026-10-05, 319; modül 17): server/panel.ts (yalnız musteriIslemi içinde; Raporlar'ın musteri-baglanti.ts
                             ve Müşteriler'den okur; 0033 uygunsuzluk yalnız açık sürümün, pasif müşterinin oturumu hemen düşer) · ui/ (Raporlarınız; 320: Uygunsuzluklar /portal/uygunsuz, Excel tarayıcıda — ui/kusur.ts; 321: Planlanan kontroller /portal/plan — Planlar'ın
                             server/musteri-baglanti.ts, göç 0032 sütun sınırlı —, toplu ZIP ui/topluIndir.ts + ui/zipla.ts (saf; 300 rapor / 500 MB) + ui/ad.ts; 322: Sözleşmeler /portal/sozlesme + /portal/s/<id> — Sözleşmeler'in
@@ -179,7 +181,7 @@ pkproje/
                             olamaz) · server/muhasebe.ts (işler = planlar, iş / fatura kartı, fatura kaydet / toplu, tahsilat) · ui/ (listeler, iş ve fatura
                             parçaları, pencereler) · okuyucular: planlar/server/muhasebe-baglanti.ts, raporlar/server/muhasebe-baglanti.ts,
                             teklifler/server/rapor-bagi.ts (birim fiyat), sozlesmeler tesisSozlesmesi (vade) · 328: göç 0040 gider (elle ödendi /
-                            ödenecek; masraf formu onay → ödendi / red) · server/giderler.ts · karlilik.ts (saf: iş kârı, ay / dönem gelir-gider) ·
+                            ödenecek; masraf formu: karar Onaylar'da, burada salt okunur + Ödendi — 477) · server/giderler.ts · karlilik.ts (saf: iş kârı, ay / dönem gelir-gider) ·
                             excel.ts (gider içe / dışa) · ui/Giderler.tsx, ui/Karlilik.tsx · personel/server/muhasebe-baglanti.ts (bordro maliyeti)
                             · fatura özeti PDF (340): src/belge/fatura.ts (temel format <kod>-FR-FOZ-01) → /muhasebe/f/<id>/pdf (pdf.ts faturaPdf;
                             veri muhasebe.ts faturaBelgesiVerisi)
@@ -193,7 +195,9 @@ pkproje/
                             olcum-cihazlari / egitimler / araclar server/uyari-baglanti.ts); sema.ts (türler, görünürlük) · server/uyarilar.ts · ui/
   src/modules/talepler/     TALEPLER (2026-10-06, 330; modül 21): göç 0042 izin_talebi (yalnız kendi adına; karar firma yöneticisinde) · sema.ts
                             (izin şeması, iş günü — hafta sonu ve resmî tatil sayılmaz, 417) · server/talepler.ts (taleplerim, izin gönder / geri çek / belge, masraf formu — Muhasebe'nin
-                            muhasebe/server/talep-baglanti.ts'i, izin onay / red) · ui/Talepler.tsx, ui/IzinTalepleri.tsx (/personel/izinler) ·
+                            muhasebe/server/talep-baglanti.ts'i) · ui/Talepler.tsx, ui/IzinTalepleri.tsx (/personel/izinler — liste ve geçmiş) ·
+                            477 (göç 0079): karar Onaylar › Talepler'de (onayTalepleri, talepKarar: onayla / düzeltmeye geri / red); onaylayan talebi
+                            değiştirmez; "duzeltme" durumundaki talebi talep eden düzeltip yeniden gönderir (izinDuzelt, masrafFormuDuzelt) ·
                             okuyucular: planlar/server/talep-baglanti.ts, personel/server/talep-baglanti.ts
                             · talep formu PDF (341): src/belge/talep.ts (temel <kod>-FR-IZN-01 / MSR-01) → /talepler/pdf/<izin|masraf>/<id>
                             (talepFormuVerisi: talep eden; izinde firma yöneticisi; masrafta Muhasebe'yi gören)

@@ -24,3 +24,25 @@
 .indir { display: flex; flex-wrap: wrap; gap: 8px; }
 .dosyaSec { position: relative; cursor: pointer; }
 .dosyaSec[aria-disabled="true"] { opacity: .6; cursor: default; }
+/* 477 Onaylar › Talepler (maket "Talepler ve Onaylar" .sahne / .ayrinti): ayrıntı geniş ekranda listenin sağında, dar ekranda üstünde, telefonda
+   listenin yerine ("Listeye dön") */
+.talepSahne { display: grid; grid-template-columns: minmax(0, 1fr); gap: 16px; align-items: start; }
+.talepListe { min-width: 0; }
+.talepAyrinti { display: grid; gap: 12px; min-width: 0; padding: 14px 16px; border: 1px solid var(--kenar); border-radius: var(--r-buyuk); background: var(--kart); }
+.talepBaslik { margin: 0; font-size: var(--boy-govde); font-weight: 700; overflow-wrap: anywhere; }
+.talepBaslik:focus { outline: none; }
+.talepSeritler { display: grid; gap: 8px; }
+.talepNot { margin: 0; color: var(--yazi2); font-size: var(--boy-kucuk); }
+.talepGerekce { display: grid; gap: 8px; }
+.talepTuslar { display: flex; flex-wrap: wrap; gap: 8px; }
+button.reddetTus { color: var(--hata-yazi); }
+.yalnizTelefon { display: none; }
+@media (min-width: 1280px) {
+  .talepSahne { grid-template-columns: minmax(0, 1fr) minmax(0, 400px); }
+  .talepAyrinti { grid-column: 2; grid-row: 1; position: sticky; top: 12px; }
+  .talepListe { grid-column: 1; grid-row: 1; }
+}
+@media (max-width: 767.98px) {
+  .talepSahne[data-secili] .talepListe { display: none; }
+  .yalnizTelefon { display: inline-flex; }
+}

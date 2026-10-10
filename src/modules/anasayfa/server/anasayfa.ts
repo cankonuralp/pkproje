@@ -159,7 +159,8 @@ export async function anaSayfa(db: Sorgulayici, kim: Kisi): Promise<AnaSayfa> {
     bolumler.push({ rol: "muhasebe", yuzler: [
       { ikon: "file-check", ad: "Faturaya hazır iş", sayi: hazir.length, href: "/muhasebe", not: hazir.length ? hazir.slice(0, 3).map((x) => x.no).join(", ") : "yok", uyari: hazir.length > 0 },
       { ikon: "clock", ad: "Vadesi geçen fatura", sayi: gec.length, href: "/muhasebe/faturalar?durum=gecikti", not: gec.length ? tl(gec.reduce((n, f) => n + f.kalan, 0)) : "yok", uyari: gec.length > 0 },
-      { ikon: "receipt", ad: "Onay bekleyen masraf", sayi: bek.length, href: "/muhasebe/giderler", not: bek.length ? tl(bek.reduce((n, g) => n + g.tutar, 0)) : "yok", uyari: bek.length > 0 },
+      /* 477 (T1): masraf formunun kararı Onaylar'da */
+      { ikon: "receipt", ad: "Onay bekleyen masraf", sayi: bek.length, href: "/onaylar/talepler", not: bek.length ? tl(bek.reduce((n, g) => n + g.tutar, 0)) : "yok", uyari: bek.length > 0 },
     ], liste: null });
   }
   return { bugun, ad: kim.ad, planAc: planAcabilir(kim), bolumler, belgeBekleyen: await bekleyenBelgeSayisi(db, kim), duyuru: await duyuruBolumu(db) };

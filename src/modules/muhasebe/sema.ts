@@ -55,7 +55,11 @@ export type GiderTuru = keyof typeof GIDER_TUR;
 export const KDV_ORAN = [20, 10, 1, 0] as const;
 /** gider tutarının üst sınırı (KURUŞ; 1 milyar TL — 0040 CHECK ile aynı) */
 export const GIDER_TUTAR_UST = 100_000_000_000;
-export const GIDER_DURUM = { bekliyor: ["Onay bekliyor", "bekliyor"], onaylandi: ["Onaylandı", "kabul"], odendi: ["Ödendi", "tamam"], red: ["Reddedildi", "red"] } as const;
+/* 477 (Talepler–Onaylar kararları T2): masraf formunda "duzeltme" — onaylayan gerekçeyle geri gönderdi, talep eden düzeltip yeniden gönderir */
+export const GIDER_DURUM = {
+  bekliyor: ["Onay bekliyor", "bekliyor"], onaylandi: ["Onaylandı", "kabul"], odendi: ["Ödendi", "tamam"], red: ["Reddedildi", "red"],
+  duzeltme: ["Düzeltmeye geri gönderildi", "bekliyor"],
+} as const;
 export type GiderDurumu = keyof typeof GIDER_DURUM;
 /** fişteki KDV dahil tutardan KDV ve KDV hariç (KURUŞ) */
 export const giderKdv = (tutar: number, oran: number) => { const kdv = Math.round((tutar * oran) / (100 + oran)); return { kdv, haric: tutar - kdv }; };
@@ -73,6 +77,3 @@ export const GiderGirdisi = z.object({
   odeme: z.enum(["odendi", "onaylandi"]).default("odendi"),
 });
 export type GiderGirdisi = z.output<typeof GiderGirdisi>;
-export const GiderRedGirdisi = z.object({
-  gerekce: z.preprocess((s) => (typeof s === "string" ? s.trim() : s), z.string({ error: "Gerekçe yazılmalı." }).min(5, "Gerekçe en az 5 karakter.").max(200, "En çok 200 karakter.")),
-});

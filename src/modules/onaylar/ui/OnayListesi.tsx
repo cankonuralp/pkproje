@@ -93,16 +93,24 @@ function tumTanimi(l: readonly OnaySatiri[]): SuzgecTanimi<OnaySatiri> {
   };
 }
 
-/** secili: bulunulan sekme — liste boşken de kendi sekmesi görünür (318 incelemesi: İmzamı bekleyen sayfasında hiçbir sekme seçili değildi) */
-export function onaySekmeleri(v: Pick<OnayListeleri, "yonetici" | "kuyruk" | "tumu" | "branslar" | "imzaBekleyen" | "istekler" | "belgeBekleyen">, secili?: string) {
+/** secili: bulunulan sekme — liste boşken de kendi sekmesi görünür (318 incelemesi: İmzamı bekleyen sayfasında hiçbir sekme seçili değildi).
+    477 (Talepler–Onaylar kararları T1): "Talepler" — karar verebildiği izin talepleri ve masraf formları; rapor yazmayanda (planlama, muhasebe)
+    İmzamı bekleyen raporlar sekmesi yok */
+export function onaySekmeleri(v: Pick<OnayListeleri, "yonetici" | "kuyruk" | "tumu" | "branslar" | "imzaBekleyen" | "istekler" | "belgeBekleyen" | "talepler"
+  | "talepOnaylar" | "imzaci">, secili?: string) {
   /* 333: Diğer belgeler (bordro, eğitim / zimmet formu, araç tutanağı) — herkesin kendi; denetçinin iki sekmesi (maket onaylar.html BB4) */
   const diger = [`Diğer belgeler (${v.belgeBekleyen})`, "/onaylar/diger"] as const;
-  if (!v.yonetici) return [[`İmzamı bekleyen raporlar (${v.imzaBekleyen.length})`, "/onaylar/imza"] as const, diger];
+  const imza = [`İmzamı bekleyen raporlar (${v.imzaBekleyen.length})`, "/onaylar/imza"] as const;
+  const talep = [`Talepler (${v.talepler.length})`, "/onaylar/talepler"] as const;
+  const talepVar = v.talepOnaylar || secili === "/onaylar/talepler";
+  if (!v.yonetici) {
+    return [...(v.imzaci || secili === "/onaylar/imza" ? [imza] : []), ...(talepVar ? [talep] : []), diger];
+  }
   const brans = v.branslar.length === 1 ? ` · ${v.branslar[0] === "m" ? "mekanik" : "elektrik"}` : "";
-  const l: (readonly [string, string])[] = [[`Onay kuyruğu${brans} (${v.kuyruk.length})`, "/onaylar"], [`Tüm raporlar (${v.tumu.length})`, "/onaylar/tum"],
-    [`Revize istekleri (${v.istekler.length})`, "/onaylar/istekler"]];
+  const l: (readonly [string, string])[] = [[`Onay kuyruğu${brans} (${v.kuyruk.length})`, "/onaylar"], ...(talepVar ? [talep] : []),
+    [`Tüm raporlar (${v.tumu.length})`, "/onaylar/tum"], [`Revize istekleri (${v.istekler.length})`, "/onaylar/istekler"]];
   /* yönetici aynı zamanda rapor yazıyorsa (ör. mekanik yönetici + denetçi) kendi imzası ayrı sekmede */
-  if (v.imzaBekleyen.length || secili === "/onaylar/imza") l.push([`İmzamı bekleyen raporlar (${v.imzaBekleyen.length})`, "/onaylar/imza"]);
+  if (v.imzaBekleyen.length || secili === "/onaylar/imza") l.push(imza);
   l.push(diger);
   return l;
 }

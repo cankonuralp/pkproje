@@ -132,7 +132,7 @@ muhasebe. **Müşteri kullanıcısı** ayrı tür (yalnız müşteri paneli). Bi
 | Planlar | değiştirir | kendi | görür | görür | değiştirir | — |
 | Ekipman (plan içinde) | değiştirir | değiştirir | görür | görür | değiştirir | — |
 | Raporlar | görür | kendi | branşı | branşı | görür | — |
-| Onaylar | — | kendi | branşı | branşı | görür | — |
+| Onaylar | kendi | kendi | branşı | branşı | görür | kendi |
 | Uyarılar | görür | kendi | görür | görür | görür | — |
 | Müşteriler | değiştirir | görür | görür | görür | değiştirir | görür |
 | Teklifler | değiştirir | — | görür | görür | değiştirir | görür |
@@ -150,13 +150,17 @@ muhasebe. **Müşteri kullanıcısı** ayrı tür (yalnız müşteri paneli). Bi
 | Firma ayarları | — | — | — | — | değiştirir | — |
 | Hareket kaydı | — | — | — | — | görür | — |
 
+*2026-10-10 (477; reisim, Talepler–Onaylar kararları T1 "onay bekleyen her şey Onaylar'da"): Onaylar'da planlama ve muhasebe "kendi" — kendi imzalayacağı
+belgeler ve karar verebildiği talepler (muhasebe: masraf formları); izin talebi ve masraf formunun kararı Onaylar › Talepler'de (Personel / Muhasebe'deki
+onay tuşları kalktı), onaylayan talebi değiştirmez: Onayla · Düzeltmeye geri gönder · Reddet.*
+
 **Özel eylemler** (düzeyin üstünde, tek tek `canDo` eylemi; sunucuda zorlanır; yapamayacağı tuş **çizilmez** — anayasa 7.4):
 plan aç (planlama yetkisi) · plan kabul / red (plandaki denetçi; beyan okunmadan kabul yok) · ekipman pasife al (denetçi), ekipman sil (kayit_sil: Ekipman'da "yaz" + yönetici — 365) ·
 **kayit_sil** (357: hiç kullanılmamış kaydın kesin silinmesi — kaydın modülünde "yaz" VE firma / mekanik / elektrik yöneticisi; matris başka role "yaz" verse de) ·
 rapor oluştur / kaydet / onaya gönder / Kaydet ve kopyala (raporu yazan) · rapor sil (denetçi kendi oluşturduğu Yeni raporu; yönetici) · rapor pasife
 al (denetçi), aktife al ve sil (teknik yönetici) · onayla / geri gönder (türün branş yöneticisi; vekil: öteki branş "Tüm raporlar") · **durum değiştir**
 (teknik yönetici, Tamamlandı hariç) · **revizeye gönder** (teknik yönetici, Tamamlandı'dan) · revize iste (denetçi) · onayı geri al · son imza (raporu
-yazan, firma yöntemiyle) · izin onayı (firma yöneticisi) · masraf onayı / ödendi (muhasebe) · bordro yükle ve gör (yönetici + muhasebe) · rol
+yazan, firma yöntemiyle) · izin onayı (firma yöneticisi; 477: Onaylar'da) · masraf onayı (muhasebe; 477: Onaylar'da) / ödendi (muhasebe, Giderler'de) · bordro yükle ve gör (yönetici + muhasebe) · rol
 yetkilerini değiştir, hesap aç / kapat, geçici parola (firma yöneticisi) · mesai ayarı, yapay zekâ ayarı, saklama seçimi (firma yöneticisi) · araç ekle /
 düzenle (yönetici) · haftalık km (aracı kullanan + yönetici).
 

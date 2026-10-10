@@ -4,7 +4,7 @@
 import { depo } from "../../../server/dosya/depo";
 import { ayniKoken } from "../../../server/kimlik/koken";
 import { istekOturumu, oturumIslemi } from "../../../server/kimlik/istek";
-import { BelgeHatasi, giderExceliYukle, giderKaydet, giderReddet, type GiderBelgesi, type GiderSonra } from "../server/giderler";
+import { BelgeHatasi, giderExceliYukle, giderKaydet, giderOdendi, type GiderBelgesi, type GiderSonra } from "../server/giderler";
 import { faturaKaydet, tahsilatKaydet, type Yazma } from "../server/muhasebe";
 import { bordroGonder, bordroGonderimi, type BordroGonderimi } from "../server/bordro-gonder";
 
@@ -30,7 +30,7 @@ export async function tahsilatKaydetEylemi(faturaId: string, girdi: unknown): Pr
 }
 
 /* ── GİDERLER (328) ── */
-const SONRA: readonly GiderSonra[] = ["onaylandi", "odendi"];
+const SONRA: readonly GiderSonra[] = ["odendi"];
 async function belgeOku(form: FormData): Promise<GiderBelgesi | "buyuk"> {
   if (form.get("belgeKaldir") === "1") return "kaldir";
   const f = form.get("belge");
@@ -53,8 +53,9 @@ export async function giderKaydetEylemi(form: FormData): Promise<MuhasebeYaniti>
     throw h;
   }
 }
-export async function giderReddetEylemi(id: string, surum: number, girdi: unknown): Promise<MuhasebeYaniti> {
-  return islem((o) => oturumIslemi(o, (db) => giderReddet(db, o, yazi(id), Number(surum), girdi)));
+/** 477 (T5): onaylanmış (ödenecek) gideri ödendi işaretle — içerik değişmez (masraf formu da) */
+export async function giderOdendiEylemi(id: string, surum: number): Promise<MuhasebeYaniti> {
+  return islem((o) => oturumIslemi(o, (db) => giderOdendi(db, o, yazi(id), Number(surum))));
 }
 /** Excel'den yükle: tarayıcıda okunan satırlar; sunucuda yeniden denetlenir */
 export async function giderExceliYukleEylemi(ham: unknown): Promise<MuhasebeYaniti> {

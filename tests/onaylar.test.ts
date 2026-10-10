@@ -132,7 +132,17 @@ test("kuyruk: branş yöneticisi yalnız kendi branşının onaydaki raporların
      "denetçi Onaylar'ı görmez" beklentisi bu kararla değişti; denetçi yine kuyruğu, tüm raporları ve onay ekranını görmez. */
   const den = (await a(FA.den, (db) => onayListeleri(db, FA.den)))!;
   assert.deepEqual([den.yonetici, den.kuyruk, den.tumu, den.branslar, den.imzaBekleyen], [false, [], [], [], []], "denetçi: kuyruk ve tüm raporlar yok");
-  for (const k of [FA.plan, FA.muh]) assert.equal(await a(k, (db) => onayListeleri(db, k)), null, `${k.roller[0]} Onaylar'ı görmez`);
+  /* 2026-10-10 (477; reisim, Talepler–Onaylar kararları T1 "onay bekleyen her şey Onaylar'da"): planlama ve muhasebe Onaylar'da "kendi" — kendi
+     belgeleri ve karar verebildiği talepler (muhasebe: masraf formları); rapor kuyruğu, tüm raporlar ve onay ekranı yine yok. Önceki "planlama,
+     muhasebe Onaylar'ı görmez" beklentisi bu kararla değişti. */
+  for (const k of [FA.plan, FA.muh]) {
+    const v = (await a(k, (db) => onayListeleri(db, k)))!;
+    assert.deepEqual([v.yonetici, v.kuyruk, v.tumu, v.imzaBekleyen, v.imzaci], [false, [], [], [], false], `${k.roller[0]}: rapor kuyruğu yok`);
+    assert.equal(v.talepOnaylar, k === FA.muh, `${k.roller[0]}: talep kararı yalnız muhasebede`);
+    assert.equal(await a(k, (db) => onayEkrani(db, k, h1)), null, `${k.roller[0]} onay ekranını açamaz`);
+  }
+  assert.deepEqual([den.imzaci, den.talepOnaylar], [true, false], "denetçi imzalar, talebe karar vermez");
+  assert.deepEqual([yon.talepOnaylar, mek.talepOnaylar], [true, false], "izin talebine firma yöneticisi karar verir, branş yöneticisi vermez");
   assert.equal(await a(FA.den, (db) => onayEkrani(db, FA.den, h1)), null, "denetçi onay ekranını açamaz");
   assert.equal((await a(FA.den, (db) => onayla(db, FA.den, h1, 1))).durum, "yok", "denetçi onaylayamaz");
   assert.equal(await a(FA.elk, (db) => onayEkrani(db, FA.elk, h1)), null, "öteki branşın raporu");

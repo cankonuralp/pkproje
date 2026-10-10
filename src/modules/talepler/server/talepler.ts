@@ -2,7 +2,11 @@
    onayı yönetici, masraf onayı muhasebe", §4 Talepler: herkes "kendi", firma yöneticisi "değiştirir"). Personelin kendi talepleri: izin talebi
    (göç 0042) ve masraf formu (Muhasebe'nin gider kaydı — talep-baglanti.ts). Talep YALNIZ kişinin kendi adına (personeli hesabının personeli;
    istemciden personel kimliği alınmaz — veritabanı da denetler). Onay bekleyen talebi yalnız talep eden geri çeker; belgesini o değiştirir.
-   İzin onayı / reddi firma yöneticisinde (Personel › İzin talepleri; Talepler "değiştirir"). Masrafın onayı Muhasebe'de. */
+   İzin onayı / reddi firma yöneticisinde (Talepler "değiştirir"). Masrafın onayı Muhasebe'yi değiştirende.
+   477 (reisim 2026-10-10, Talepler–Onaylar kararları T1–T4): KARAR ONAYLAR'DA — onayTalepleri (kişinin karar verebildiği bekleyen izin talepleri
+   ve masraf formları) ve talepKarar: Onayla · Düzeltmeye geri gönder (gerekçe ≥ 10) · Reddet (gerekçe ≥ 10); onaylayan talebi DEĞİŞTİRMEZ
+   (veritabanı 0079). Personel › İzin talepleri ve Muhasebe › Giderler liste ve geçmiş olarak kaldı. Talep eden düzeltmeye geri gönderilen talebi
+   düzeltip yeniden gönderir (izinDuzelt, masrafFormuDuzelt) ya da geri çeker. Talepler'de balon yok (T3); onaylayanın balonu Onaylar'da. */
 import type { Depo } from "../../../server/dosya/depo.ts";
 import { dosyaCope, dosyaYukle, kayitDosyasi } from "../../../server/dosya/dosya.ts";
 import { SINIR, turBul } from "../../../server/dosya/tur.ts";
@@ -14,18 +18,20 @@ import { numaraAl } from "../../../server/numara/numara.ts";
 import { duzey, type YetkiHesabi } from "../../../server/yetki/canDo.ts";
 import { dogrula, type DogrulamaHatalari } from "../../../sema/ortak.ts";
 import { musteriOzetleri } from "../../musteriler/server/musteriler.ts";
-import { masrafBelgesi, masrafFormlari, masrafFormuKaydi, masrafGeriCek, masrafGonder, type MasrafFormu } from "../../muhasebe/server/talep-baglanti.ts";
+import {
+  masrafBelgesi, masrafDuzelt, masrafFormlari, masrafFormuKaydi, masrafGeriCek, masrafGonder, masrafKarar, masrafOnaylar, onayBekleyenMasraflar, type MasrafFormu,
+} from "../../muhasebe/server/talep-baglanti.ts";
 import { GIDER_DURUM, GIDER_TUR, giderKdv, para } from "../../muhasebe/sema.ts";
 import { personelOzetleri } from "../../personel/server/personel.ts";
 import { meslek } from "../../personel/sema.ts";
 import type { TalepFormuVerisi, TalepTipi } from "../../../belge/talep.ts";
 import { izinHaklari } from "../../personel/server/talep-baglanti.ts";
 import { personelinPlanlari } from "../../planlar/server/talep-baglanti.ts";
-import { isGunu, IzinGirdisi, RedGirdisi, IZIN_DURUM, IZIN_TUR, type IzinDurumu, type IzinTuru } from "../sema.ts";
+import { GerekceGirdisi, isGunu, IzinGirdisi, IZIN_DURUM, IZIN_TUR, TALEP_KARARLARI, type IzinDurumu, type IzinTuru, type TalepKarari } from "../sema.ts";
 
 const MODUL = 21;
 export const IZIN_DOSYA = "izin";
-const IZIN = tablo({ ad: "izin_talebi", sutunlar: ["no", "personel_id", "tur", "bas", "bit", "gun", "aciklama", "belge", "durum", "red"] });
+const IZIN = tablo({ ad: "izin_talebi", sutunlar: ["no", "personel_id", "tur", "bas", "bit", "gun", "aciklama", "belge", "durum", "red", "geri"] });
 const UUID = /^[0-9a-f]{8}-[0-9a-f]{4}-[0-9a-f]{4}-[0-9a-f]{4}-[0-9a-f]{12}$/;
 const GUN = new Intl.DateTimeFormat("en-CA", { timeZone: "Europe/Istanbul", year: "numeric", month: "2-digit", day: "2-digit" });
 export const bugunTr = () => GUN.format(new Date());
@@ -56,8 +62,8 @@ export class TalepBelgeHatasi extends Error {}
 /* ── İZİN ÖZETİ (maket MV.izinOzet): yıllık izin hakkı, bu yıl onaylanan ve bekleyen yıllık izin günleri, kalan ── */
 export interface IzinOzeti { yil: string; hak: number; kullanilan: number; bekleyen: number; kalan: number }
 interface IzinDb { id: string; no: string; personel_id: string; tur: IzinTuru; bas: string; bit: string; gun: number; aciklama: string | null; belge: string | null;
-  durum: IzinDurumu; red: string | null; karar: Date | null; onaylayan: string | null; kaydeden: string | null; olustu: Date; surum: number }
-const IZIN_SEC = `SELECT id::text, no, personel_id::text, tur, bas::text, bit::text, gun, aciklama, belge::text, durum, red, karar, onaylayan::text, kaydeden::text, olustu, surum
+  durum: IzinDurumu; red: string | null; geri: string | null; karar: Date | null; onaylayan: string | null; kaydeden: string | null; olustu: Date; surum: number }
+const IZIN_SEC = `SELECT id::text, no, personel_id::text, tur, bas::text, bit::text, gun, aciklama, belge::text, durum, red, geri, karar, onaylayan::text, kaydeden::text, olustu, surum
   FROM izin_talebi`;
 function ozet(l: readonly Pick<IzinDb, "tur" | "bas" | "durum" | "gun">[], hak: number, yil: string): IzinOzeti {
   const y = l.filter((x) => x.tur === "yillik" && x.bas.slice(0, 4) === yil);
@@ -68,6 +74,8 @@ function ozet(l: readonly Pick<IzinDb, "tur" | "bas" | "durum" | "gun">[], hak: 
 /* ── TALEPLERİM ───────────────────────────────────────────────────────────────────────────────────────────────────────────────────── */
 export interface IzinTalebi {
   id: string; no: string; tur: IzinTuru; bas: string; bit: string; gun: number; aciklama: string | null; belge: string | null; durum: IzinDurumu; red: string | null;
+  /** 477: son düzeltme isteği (yeniden gönderince not kalır) */
+  geri: string | null;
   karar: string | null; kararVeren: string | null; gonderildi: string; surum: number;
 }
 export interface Taleplerim {
@@ -94,7 +102,7 @@ export async function taleplerim(db: Sorgulayici, kim: Kisi): Promise<Taleplerim
   };
 }
 const izinSatiri = (x: IzinDb, ad: ReadonlyMap<string, string>): IzinTalebi => ({
-  id: x.id, no: x.no, tur: x.tur, bas: x.bas, bit: x.bit, gun: x.gun, aciklama: x.aciklama, belge: x.belge, durum: x.durum, red: x.red,
+  id: x.id, no: x.no, tur: x.tur, bas: x.bas, bit: x.bit, gun: x.gun, aciklama: x.aciklama, belge: x.belge, durum: x.durum, red: x.red, geri: x.geri,
   karar: x.karar?.toISOString() ?? null, kararVeren: x.onaylayan ? ad.get(x.onaylayan) ?? "—" : null, gonderildi: x.olustu.toISOString(), surum: x.surum,
 });
 
@@ -128,21 +136,23 @@ async function kendiIzni(db: Sorgulayici, kim: Kisi, id: string) {
   if (!p || !UUID.test(id)) return null;
   return (await db.sorgu<IzinDb>(`${IZIN_SEC} WHERE id = $1 AND personel_id = $2 FOR UPDATE`, [id, p])).rows[0] ?? null;
 }
-/** onay bekleyen izin talebini geri çek (silinir; belgesi çöpe) */
+/** karar bekleyen (onay bekleyen ya da düzeltmeye geri gönderilmiş — 477) */
+const kararsiz = (d: IzinDurumu) => d === "bekliyor" || d === "duzeltme";
+/** onay bekleyen ya da düzeltmedeki izin talebini geri çek (silinir; belgesi çöpe) */
 export async function izinGeriCek(db: Sorgulayici, kim: Kisi, id: string): Promise<Yazma> {
   const x = await kendiIzni(db, kim, id);
   if (!x) return { durum: "yok" };
-  if (x.durum !== "bekliyor") return { durum: "red", neden: "Karar verilmiş talep geri çekilmez." };
+  if (!kararsiz(x.durum)) return { durum: "red", neden: "Karar verilmiş talep geri çekilmez." };
   if (x.kaydeden !== kim.id) return { durum: "yetkisiz" };
   if (!(await sil(db, IZIN, id, iz(kim, "izin.geri", x.no)))) return { durum: "yok" };
   if (x.belge) await dosyaCope(db, x.belge, { kim: kim.ad, ne: "dosya.cop", gerekce: x.no });
   return { durum: "tamam", id, no: x.no, bildirim: `${x.no} geri çekildi.` };
 }
-/** onay bekleyen izin talebinin belgesini ekle / değiştir / kaldır */
+/** onay bekleyen ya da düzeltmedeki izin talebinin belgesini ekle / değiştir / kaldır */
 export async function izinBelgesi(db: Sorgulayici, depo: Depo, kim: Kisi, firmaId: string, id: string, surum: number, belge: TalepBelgesi): Promise<Yazma> {
   const x = await kendiIzni(db, kim, id);
   if (!x) return { durum: "yok" };
-  if (x.durum !== "bekliyor") return { durum: "red", neden: "Karar verilmiş talebin belgesi değişmez." };
+  if (!kararsiz(x.durum)) return { durum: "red", neden: "Karar verilmiş talebin belgesi değişmez." };
   if (x.kaydeden !== kim.id) return { durum: "yetkisiz" };
   if (!belge) return { durum: "gecersiz", hatalar: { belge: "Belge seçilmeli." } };
   const bh = belgeHatasi(belge);
@@ -154,6 +164,25 @@ export async function izinBelgesi(db: Sorgulayici, depo: Depo, kim: Kisi, firmaI
   if (x.belge) await dosyaCope(db, x.belge, { kim: kim.ad, ne: "dosya.cop", gerekce: x.no });
   return { durum: "tamam", id, no: x.no, bildirim: belge === "kaldir" ? "Belge kaldırıldı." : "Belge kaydedildi." };
 }
+/** 477: düzeltmeye geri gönderilen izin talebini düzelt ve yeniden gönder (içerik + "bekliyor" tek yazmada; belge isteğe bağlı) */
+export async function izinDuzelt(db: Sorgulayici, depo: Depo, kim: Kisi, firmaId: string, id: string, surum: number, girdi: unknown, belge: TalepBelgesi = null): Promise<Yazma> {
+  const x = await kendiIzni(db, kim, id);
+  if (!x) return { durum: "yok" };
+  if (x.durum !== "duzeltme") return { durum: "red", neden: "Yalnız düzeltmeye geri gönderilen talep düzeltilir." };
+  if (x.kaydeden !== kim.id) return { durum: "yetkisiz" };
+  const g = dogrula(IzinGirdisi, girdi);
+  if (!g.tamam) return { durum: "gecersiz", hatalar: g.hatalar };
+  const bh = belgeHatasi(belge);
+  if (bh) return { durum: "gecersiz", hatalar: { belge: bh } };
+  if (!Number.isSafeInteger(surum) || surum < 0) return { durum: "cakisma" };
+  const v = g.veri, gun = isGunu(v.bas, v.bit);
+  const yeniBelge = belge === "kaldir" ? null : belge ? await belgeYukle(db, depo, kim, firmaId, id, belge) : undefined;
+  const u = await guncelle(db, IZIN, id, surum, { tur: v.tur, bas: v.bas, bit: v.bit, gun, aciklama: v.aciklama, durum: "bekliyor",
+    ...(yeniBelge !== undefined ? { belge: yeniBelge } : {}) }, iz(kim, "izin.duzelt", x.no));
+  if (u.durum !== "tamam") return { durum: u.durum === "yok" ? "yok" : "cakisma" };
+  if (yeniBelge !== undefined && x.belge) await dosyaCope(db, x.belge, { kim: kim.ad, ne: "dosya.cop", gerekce: x.no });
+  return { durum: "tamam", id, no: x.no, bildirim: `${x.no} düzeltildi ve yeniden gönderildi: ${gun} iş günü ${IZIN_TUR[v.tur].toLocaleLowerCase("tr")}; yöneticinin onayında.` };
+}
 
 /* ── MASRAF FORMU (Muhasebe'nin gider kaydına) ── */
 export async function masrafFormuGonder(db: Sorgulayici, depo: Depo, kim: Kisi, firmaId: string, girdi: unknown, belge: TalepBelgesi = null): Promise<Yazma> {
@@ -161,6 +190,13 @@ export async function masrafFormuGonder(db: Sorgulayici, depo: Depo, kim: Kisi, 
   if (!p) return { durum: "yetkisiz" };
   const isler = new Set((await personelinPlanlari(db, p, bugunTr(), 50)).map((x) => x.id));
   return masrafGonder(db, depo, kim, firmaId, p, isler, girdi, belge);
+}
+/** 477: düzeltmeye geri gönderilen masraf formunu düzelt ve yeniden gönder (iş yalnız ekibinde olduğu plan) */
+export async function masrafFormuDuzelt(db: Sorgulayici, depo: Depo, kim: Kisi, firmaId: string, id: string, surum: number, girdi: unknown, belge: TalepBelgesi = null): Promise<Yazma> {
+  const p = await benimPersonelim(db, kim);
+  if (!p) return { durum: "yetkisiz" };
+  const isler = new Set((await personelinPlanlari(db, p, bugunTr(), 50)).map((x) => x.id));
+  return masrafDuzelt(db, depo, kim, firmaId, p, isler, id, surum, girdi, belge);
 }
 export async function masrafFormuGeriCek(db: Sorgulayici, kim: Kisi, id: string): Promise<Yazma> {
   const p = await benimPersonelim(db, kim);
@@ -173,8 +209,8 @@ export async function masrafFormuBelgesi(db: Sorgulayici, depo: Depo, kim: Kisi,
   return masrafBelgesi(db, depo, kim, firmaId, p, id, surum, belge);
 }
 
-/* ── YÖNETİCİ: Personel › İzin talepleri (maket personel.html #/izinler) ──────────────────────────────────────────────────────────── */
-export interface IzinSatiri extends IzinTalebi { personelId: string; personel: string; ozet: IzinOzeti }
+/* ── YÖNETİCİ: Personel › İzin talepleri (maket personel.html #/izinler; 477: liste ve geçmiş — karar Onaylar'da) ──────────────────────── */
+export interface IzinSatiri extends IzinTalebi { personelId: string; personel: string; ozet: IzinOzeti; kendi: boolean }
 /** bütün izin talepleri, bekleyen üstte; yalnız firma yöneticisine (Talepler "değiştirir") */
 export async function izinTalepleri(db: Sorgulayici, kim: Kisi): Promise<IzinSatiri[] | null> {
   if (!izinYonetir(kim)) return null;
@@ -183,28 +219,81 @@ export async function izinTalepleri(db: Sorgulayici, kim: Kisi): Promise<IzinSat
   const kisi = await izinHaklari(db, l.map((x) => x.personel_id));
   /* özet talebin başlangıç yılının (gelecek yıl başlayan izin bu yılın kalanıyla karşılaştırılmaz — 329–332 incelemesi) */
   return l.map((x) => ({ ...izinSatiri(x, ad), personelId: x.personel_id, personel: kisi.get(x.personel_id)?.ad ?? "—",
-    ozet: ozet(l.filter((y) => y.personel_id === x.personel_id), kisi.get(x.personel_id)?.hak ?? 14, x.bas.slice(0, 4)) }));
+    ozet: ozet(l.filter((y) => y.personel_id === x.personel_id), kisi.get(x.personel_id)?.hak ?? 14, x.bas.slice(0, 4)), kendi: !!x.kaydeden && x.kaydeden === kim.id }));
 }
-async function karar(db: Sorgulayici, kim: Kisi, id: string, surum: number, durum: "onaylandi" | "red", red: string | null): Promise<Yazma> {
+async function izinKarar(db: Sorgulayici, kim: Kisi, id: string, surum: number, karar: TalepKarari, gerekce: string | null): Promise<Yazma> {
   if (!izinYonetir(kim)) return { durum: "yetkisiz" };
   if (!UUID.test(id)) return { durum: "yok" };
   const x = (await db.sorgu<IzinDb>(`${IZIN_SEC} WHERE id = $1 FOR UPDATE`, [id])).rows[0];
   if (!x) return { durum: "yok" };
-  if (x.durum !== "bekliyor") return { durum: "red", neden: "Bu talep için karar verilmiş." };
+  if (x.durum !== "bekliyor") {
+    return { durum: "red", neden: x.durum === "duzeltme" ? "Talep düzeltmede: talep eden düzeltip yeniden gönderince karar verilir." : "Bu talep için karar verilmiş." };
+  }
   if (!Number.isSafeInteger(surum) || surum < 0) return { durum: "cakisma" };
-  const u = await guncelle(db, IZIN, id, surum, { durum, red }, iz(kim, durum === "red" ? "izin.red" : "izin.onay", x.no));
+  const deger = karar === "onayla" ? { durum: "onaylandi" } : karar === "red" ? { durum: "red", red: gerekce } : { durum: "duzeltme", geri: gerekce };
+  const u = await guncelle(db, IZIN, id, surum, deger, iz(kim, karar === "onayla" ? "izin.onay" : karar === "red" ? "izin.red" : "izin.duzeltme", x.no));
   if (u.durum !== "tamam") return { durum: u.durum === "yok" ? "yok" : "cakisma" };
   const k = (await izinHaklari(db, [x.personel_id])).get(x.personel_id)?.ad ?? "—";
-  return { durum: "tamam", id, no: x.no, bildirim: durum === "onaylandi"
+  return { durum: "tamam", id, no: x.no, bildirim: karar === "onayla"
     ? `${x.no} onaylandı: ${k}, ${x.gun} iş günü ${IZIN_TUR[x.tur].toLocaleLowerCase("tr")} (${tarihYaz(x.bas)}${x.bit !== x.bas ? ` – ${tarihYaz(x.bit)}` : ""}).`
-    : `${x.no} reddedildi.` };
+    : karar === "red" ? `${x.no} reddedildi.` : `${x.no} düzeltmeye geri gönderildi; ${k} Talepler'inde görür.` };
 }
-export const izinOnayla = (db: Sorgulayici, kim: Kisi, id: string, surum: number) => karar(db, kim, id, surum, "onaylandi", null);
-export async function izinReddet(db: Sorgulayici, kim: Kisi, id: string, surum: number, girdi: unknown): Promise<Yazma> {
-  if (!izinYonetir(kim)) return { durum: "yetkisiz" };
-  const g = dogrula(RedGirdisi, girdi);
-  if (!g.tamam) return { durum: "gecersiz", hatalar: g.hatalar };
-  return karar(db, kim, id, surum, "red", g.veri.gerekce);
+
+/* ── 477: ONAYLAR › TALEPLER — kişinin karar verebildiği bekleyen talepler ve karar ─────────────────────────────────────────────────── */
+export type OnayTalepTipi = "izin" | "masraf";
+export interface OnayTalebi {
+  tip: OnayTalepTipi; id: string; no: string; surum: number; kisi: string;
+  /** "Yıllık izin" · "Masraf formu · Yakıt" */
+  baslik: string;
+  /** listede tek satır: "3 iş günü · 14.10.2026 – 16.10.2026" · "1.250,00 TL · P-1026-003" */
+  ozet: string;
+  gonderildi: string;
+  /** salt okunur ayrıntı (T2: onaylayan değiştirmez) */
+  alanlar: [string, string][];
+  belge: string | null;
+  /** onaylayanın dikkatine (yıllık izin kalan hakkı aşıyor, kendi talebi) — engel değil */
+  uyari: string | null;
+  /** önceki düzeltme isteği (düzeltilip yeniden gönderildiyse) */
+  geri: string | null;
+}
+/** karar verebilen mi (izin: Talepler "değiştirir"; masraf: Muhasebe "değiştirir") */
+export const talepOnaylar = (kim: YetkiHesabi) => izinYonetir(kim) || masrafOnaylar(kim);
+/** kişinin karar verebildiği bekleyen izin talepleri ve masraf formları, eski önce; karar veremeyene boş */
+export async function onayTalepleri(db: Sorgulayici, kim: Kisi): Promise<OnayTalebi[]> {
+  const l: OnayTalebi[] = [];
+  for (const x of izinYonetir(kim) ? ((await izinTalepleri(db, kim)) ?? []).filter((y) => y.durum === "bekliyor") : []) {
+    const asim = x.tur === "yillik" && x.gun > x.ozet.kalan;
+    l.push({ tip: "izin", id: x.id, no: x.no, surum: x.surum, kisi: x.personel, baslik: IZIN_TUR[x.tur], gonderildi: x.gonderildi,
+      ozet: `${x.gun} iş günü · ${tarihYaz(x.bas)}${x.bit !== x.bas ? ` – ${tarihYaz(x.bit)}` : ""}`,
+      alanlar: [["Talep eden", x.personel], ["İzin türü", IZIN_TUR[x.tur]], ["Tarihler", `${tarihYaz(x.bas)}${x.bit !== x.bas ? ` – ${tarihYaz(x.bit)}` : ""}`],
+        ["İş günü", String(x.gun)], ...(x.tur === "yillik" ? [["Kalan yıllık izin", `${x.ozet.kalan} gün (${x.ozet.yil}; talep sonrası ${x.ozet.kalan - x.gun})`] as [string, string]] : []),
+        ["Açıklama", x.aciklama ?? "—"]],
+      belge: x.belge, geri: x.geri,
+      uyari: [asim ? `Kalan yıllık izin hakkını aşıyor (kalan ${x.ozet.kalan} gün).` : "", x.kendi ? "Kendi talebiniz." : ""].filter(Boolean).join(" ") || null });
+  }
+  for (const g of await onayBekleyenMasraflar(db, kim)) {
+    const k = giderKdv(g.tutar, g.oran);
+    l.push({ tip: "masraf", id: g.id, no: g.no, surum: g.surum, kisi: g.kisi, baslik: `Masraf formu · ${GIDER_TUR[g.tur]?.[0] ?? g.tur}`, gonderildi: g.gonderildi,
+      ozet: `${para(g.tutar)}${g.is ? ` · ${g.is.no}` : " · genel"}`,
+      alanlar: [["Talep eden", g.kisi], ["Tür", GIDER_TUR[g.tur]?.[0] ?? g.tur], ["Masraf tarihi", tarihYaz(g.tarih)],
+        ["Tutar (KDV dahil)", `${para(g.tutar)} · KDV %${g.oran} (${para(k.kdv)})`], ["İş", g.is ? `${g.is.no} · ${g.is.musteri}` : "Genel (işe bağlı değil)"],
+        ["Açıklama", g.aciklama ?? "—"]],
+      belge: g.belge, geri: g.geri, uyari: [g.belge ? "" : "Fiş eklenmemiş.", g.kendi ? "Kendi talebiniz." : ""].filter(Boolean).join(" ") || null });
+  }
+  return l.sort((a, b) => a.gonderildi.localeCompare(b.gonderildi));
+}
+/** karar: Onayla · Düzeltmeye geri gönder (gerekçe) · Reddet (gerekçe); yetki önce (izin firma yöneticisi, masraf Muhasebe'yi değiştiren) */
+export async function talepKarar(db: Sorgulayici, kim: Kisi, tip: string, id: string, surum: number, karar: string, girdi: unknown): Promise<Yazma> {
+  if (!(TALEP_KARARLARI as readonly string[]).includes(karar)) return { durum: "red", neden: "Geçersiz karar." };
+  if (tip === "izin" ? !izinYonetir(kim) : tip === "masraf" ? !masrafOnaylar(kim) : true) return { durum: "yetkisiz" };
+  let gerekce: string | null = null;
+  if (karar !== "onayla") {
+    const g = dogrula(GerekceGirdisi, girdi);
+    if (!g.tamam) return { durum: "gecersiz", hatalar: g.hatalar };
+    gerekce = g.veri.gerekce;
+  }
+  const k = karar as TalepKarari;
+  return tip === "izin" ? izinKarar(db, kim, id, surum, k, gerekce) : masrafKarar(db, kim, id, surum, k, gerekce);
 }
 
 /** izin talebinin belgesi: talep eden ya da firma yöneticisi açar (09-A2 erişim kaydı) */
@@ -230,7 +319,7 @@ export async function talepFormuVerisi(db: Sorgulayici, kim: Kisi, tip: string, 
     personelId = x.personel_id; no = x.no; gonderildi = x.olustu.toISOString(); durum = IZIN_DURUM[x.durum][0]; red = x.red;
     alanlar = [["İzin türü", IZIN_TUR[x.tur]], ["Başlangıç", tarihNo(x.bas)], ["Bitiş", tarihNo(x.bit)], ["Süre", `${x.gun} iş günü`], ["Açıklama", x.aciklama ?? ""],
       ["Ek belge", belge?.ad ?? "-"]];
-    if (x.durum !== "bekliyor") karar = { hesap: x.onaylayan, zaman: x.karar?.toISOString() ?? null, sonuc: x.durum === "red" ? "reddedildi" : "onaylandi" };
+    if (x.durum === "onaylandi" || x.durum === "red") karar = { hesap: x.onaylayan, zaman: x.karar?.toISOString() ?? null, sonuc: x.durum === "red" ? "reddedildi" : "onaylandi" };
   } else {
     const g = await masrafFormuKaydi(db, id);
     const muhasebe = ["gor", "yaz"].includes(duzey(kim, 18));
@@ -240,7 +329,7 @@ export async function talepFormuVerisi(db: Sorgulayici, kim: Kisi, tip: string, 
     alanlar = [["İş", g.isNo ?? "Genel (işe bağlı değil)"], ["Masraf tarihi", tarihNo(g.tarih)], ["Tür", GIDER_TUR[g.tur]?.[0] ?? g.tur],
       ["Tutar (KDV dahil)", para(g.tutar)], ["KDV", `%${g.oran} · ${para(k.kdv)} (KDV hariç ${para(k.haric)})`], ["Açıklama", g.aciklama ?? ""], ["Fiş", belge?.ad ?? "-"],
       ...(g.odeme ? [["Ödendi", tarihNo(g.odeme)] as [string, string]] : [])];
-    if (g.durum !== "bekliyor") karar = { hesap: g.onaylayan, zaman: g.karar, sonuc: g.durum === "red" ? "reddedildi" : "onaylandi" };
+    if (g.durum !== "bekliyor" && g.durum !== "duzeltme") karar = { hesap: g.onaylayan, zaman: g.karar, sonuc: g.durum === "red" ? "reddedildi" : "onaylandi" };
   }
   const [p] = await personelOzetleri(db, [personelId]);
   const ad = karar?.hesap ? (await hesapAdlari(db, [karar.hesap])).get(karar.hesap) ?? "—" : null;

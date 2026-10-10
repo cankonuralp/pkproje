@@ -6,7 +6,10 @@ import { TANIMLAR } from "../../tanim/veri.ts";
 
 export const IZIN_TUR = { yillik: "Yıllık izin", mazeret: "Mazeret izni", rapor: "Hastalık (sağlık raporu)", ucretsiz: "Ücretsiz izin" } as const;
 export type IzinTuru = keyof typeof IZIN_TUR;
-export const IZIN_DURUM = { bekliyor: ["Onay bekliyor", "bekliyor"], onaylandi: ["Onaylandı", "tamam"], red: ["Reddedildi", "red"] } as const;
+/* 477 (reisim 2026-10-10, Talepler–Onaylar kararları T2): "duzeltme" — onaylayan gerekçeyle geri gönderdi, talep eden düzeltip yeniden gönderir */
+export const IZIN_DURUM = {
+  bekliyor: ["Onay bekliyor", "bekliyor"], onaylandi: ["Onaylandı", "tamam"], red: ["Reddedildi", "red"], duzeltme: ["Düzeltmeye geri gönderildi", "bekliyor"],
+} as const;
 export type IzinDurumu = keyof typeof IZIN_DURUM;
 
 const SABIT_TATIL = new Set(TANIMLAR.resmi_tatiller.sabit.map((t) => t.gun));
@@ -36,6 +39,11 @@ export const IzinGirdisi = z.object({
   else if (!isGunu(v.bas, v.bit)) c.addIssue({ code: "custom", path: ["bit"], message: "Seçilen aralıkta iş günü yok." });
 });
 export type IzinGirdisi = z.output<typeof IzinGirdisi>;
-export const RedGirdisi = z.object({
-  gerekce: z.preprocess((s) => (typeof s === "string" ? s.trim() : s), z.string({ error: "Gerekçe yazılmalı." }).min(5, "Gerekçe en az 5 karakter.").max(200, "En çok 200 karakter.")),
+/** 477 (Talepler–Onaylar sunumu, kurallar: "Geri gönder ve Reddet gerekçe ister (en az 10 karakter); gerekçe talep edene görünür") — izin talebi
+    ve masraf formu için tek şema (Onaylar › Talepler) */
+export const GerekceGirdisi = z.object({
+  gerekce: z.preprocess((s) => (typeof s === "string" ? s.trim() : s), z.string({ error: "Gerekçe yazılmalı." }).min(10, "Gerekçe en az 10 karakter.").max(200, "En çok 200 karakter.")),
 });
+/** onaylayanın üç kararı (talep DEĞİŞTİRİLMEZ — T2) */
+export const TALEP_KARARLARI = ["onayla", "geri", "red"] as const;
+export type TalepKarari = (typeof TALEP_KARARLARI)[number];

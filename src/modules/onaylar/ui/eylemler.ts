@@ -6,6 +6,7 @@ import { istekOturumu, oturumIslemi } from "../../../server/kimlik/istek";
 import { depo } from "../../../server/dosya/depo";
 import { belgeGeriGonder, belgeImzaliYukle, type BelgeYazma } from "../server/belgeler";
 import { durumDegistir, geriGonder, onayGeriAl, onayla, revizeIstegiReddet, revizeyeGonder, type OnayYazma } from "../server/onaylar";
+import { talepKarar, type Yazma as TalepYazma } from "../../talepler/server/talepler";
 
 export interface OnayYaniti { tamam?: boolean; bildirim?: string; sonraki?: string | null; hatalar?: Record<string, string>; genel?: string }
 const SONUC = {
@@ -67,4 +68,16 @@ export async function belgeImzaliYukleEylemi(form: FormData): Promise<OnayYaniti
   if (dosya.size > 25 << 20) return { hatalar: { dosya: "PDF çok büyük (en çok 25 MB)." } };
   const bayt = new Uint8Array(await dosya.arrayBuffer());
   return belgeIslem((o) => oturumIslemi(o, (db) => belgeImzaliYukle(db, depo(), o, o.kiraci.firmaId, metin(form.get("id")), Number(form.get("surum")), { ad: dosya.name, bayt })));
+}
+
+/* 477 (reisim 2026-10-10, Talepler–Onaylar kararları T1 · T2): izin talebi ve masraf formunun kararı Onaylar › Talepler'de — talep DEĞİŞTİRİLMEZ;
+   yetki Talepler modülünde (izin firma yöneticisi, masraf Muhasebe'yi değiştiren), geçişler veritabanında (0079) */
+const TALEP_SONUC = { yetkisiz: "Bu işlem için yetkiniz yok.", yok: "Talep bulunamadı.", cakisma: "Talep siz açtıktan sonra değişti. Sayfayı yenileyip yeniden deneyin." } as const;
+export async function talepKararEylemi(tip: string, id: string, surum: number, karar: string, girdi: unknown): Promise<OnayYaniti> {
+  if (!(await ayniKoken())) return { genel: "İstek reddedildi. Sayfayı yenileyip yeniden deneyin." };
+  const o = await istekOturumu();
+  if (!o) return { genel: "Oturumunuz kapandı. Yeniden giriş yapın." };
+  const r: TalepYazma = await oturumIslemi(o, (db) => talepKarar(db, o, metin(tip), metin(id), Number(surum), metin(karar), girdi));
+  return r.durum === "tamam" ? { tamam: true, bildirim: r.bildirim, sonraki: null } : r.durum === "gecersiz" ? { hatalar: r.hatalar }
+    : r.durum === "red" ? { genel: r.neden } : { genel: TALEP_SONUC[r.durum] };
 }
