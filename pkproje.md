@@ -2358,7 +2358,10 @@ revizyon, alan kopyalama, hafif kusur devri, meslek eşleşme denetimi).
 - 2026-10-10 (468): **Deneme makinesinde telefon takılması** (reisim: *"tüm işlemler"*). Sebep geliştirme sunucusu: 60 sn açılmayan sayfayı
   bellekten atıyor, test o sayfaya dönünce yeniden derleyip açık sayfayı yeniden yüklüyordu (zimmet testinde sayfa açma yarıda kesildi, hesap
   testinde onay penceresi açılmadı, telefonda site taraması 50 dk'yı aştı). Uçtan uca sunucusunda derlenen sayfa koşu boyunca bellekte kalır
-  (next.config.ts onDemandEntries, yalnız bu sunucu); yayın ve uygulama davranışı değişmez.
+  (next.config.ts onDemandEntries, yalnız bu sunucu); yayın ve uygulama davranışı değişmez. İkinci koşuda (927228e) telefon 55 → 25 dk, site
+  taraması 4,6 dk; ama elle yazılmış hazırlık listesinde olmayan iki sayfa (Yeni rapor, "bulunamadı") testte ilk kez derlenirken sunucu 30 sn'den
+  uzun meşgul kaldı. Hazırlık artık src/app'teki BÜTÜN sayfa ve uçları klasörden bulup testlerden önce ister (e2e/rotalar.ts; kilit
+  tests/e2e-hazirlik.test.ts + olumsuz kanıt — yeni rota parametresi tanımlanmadan hazırlık durur).
 - 2026-10-09 (467): **Mekanik zorunlu Bakanlık formatları** (reisim, hata listesi 25–26: *"mekanik tarafındaki zorunlu formatlar hala yok, kule vinç
   vb."*; *"eklenti kullanarak indir izin veriyorum"*). Bakanlığın sitesinden indirildi (2026-10-09): ZPKR06 kule kren (yürürlük 01.01.2026), ZPKR07 asılı
   erişim donanımı (01.02.2026), ZPMR01 LPG tankı periyodik muayene ve ZYDR01 LPG tankı yeterliliğin yeniden değerlendirilmesi (18.07.2025) + kriter
