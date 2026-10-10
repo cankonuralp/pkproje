@@ -8,7 +8,7 @@ import { MODUL_GRUPLARI } from "../../src/modules/moduller.ts";
 import {
   bantDisiDaraltma, ciftIdler, ciftSeciciler, ciftTanimliDegiskenler, daralmisSerit, degiskenDegeri, dosyalar, eksikIkonlar, girdiYaziHatalari, kalipDisiEsikler,
   hamYazma, kiraciDisiErisim, kullanilanIkonlar, maketIkonlari, maketMenusu, oku, parantezHatasi, rlsEksikTablolar, tanimsizDegiskenler, testKapisiEksikleri, tokenGovdesi, pdfPaketEksikleri,
-  swEksikleri, baglantiRengiEksikleri, cekmeceBoyuHatasi, vhYukseklikHatalari, cerceveIzniEksikleri,
+  swEksikleri, baglantiRengiEksikleri, cekmeceBoyuHatasi, vhYukseklikHatalari, cerceveIzniEksikleri, suzgecsizListeler, SUZGECSIZ_BOLUMLER, takipSeridiEksikleri,
 } from "../yardimci/denetimler.ts";
 
 const kabuk = oku("src/components/kabuk/Kabuk.module.css");
@@ -211,4 +211,25 @@ test("çerçeve izni: koşulsuz 'self', geniş yol, koşulsuz SAMEORIGIN ya da k
   assert.ok(cerceveIzniEksikleri(proxy.replace(String.raw`\/saha$/`, String.raw`\/saha/`), sayfa).includes("gömme izni fazla geniş: /ekipman-turleri/a/sablon/b/saha/c"));
   assert.deepEqual(cerceveIzniEksikleri(proxy.replace(`cerceve ? "SAMEORIGIN" : "DENY"`, `"SAMEORIGIN"`), sayfa), ["X-Frame-Options koşulsuz"]);
   assert.deepEqual(cerceveIzniEksikleri(proxy, sayfa.replace("if (!o) return <Yetkisiz />;", "")), ["çerçeve sayfasında modül kapısı yok"]);
+});
+
+/* 480: yan menü sayısının sebebi — sayfa başlığından şerit kalkınca, kabuk bağlamı kalkınca, bir balon sayıyla (sebepsiz) kurulunca yakalanır */
+test("sebep şeridi: SayfaBasi şeridi çizmeyince, kabuk bağlamı vermeyince, sebepsiz balon kurulunca yakalanır", () => {
+  const sayfa = oku("src/components/sayfa/Sayfa.tsx"), kabuk = oku("src/components/kabuk/Kabuk.tsx"), takip = oku("src/modules/anasayfa/server/takip.ts");
+  assert.deepEqual(takipSeridiEksikleri(sayfa, kabuk, takip), []);
+  assert.deepEqual(takipSeridiEksikleri(sayfa.replace("<TakipSeridi />", ""), kabuk, takip), ["SayfaBasi şeridi çizmiyor"]);
+  assert.deepEqual(takipSeridiEksikleri(sayfa, kabuk.replace("<TakipBaglami.Provider value={balon}>{children}</TakipBaglami.Provider>", "{children}"), takip),
+    ["kabuk sayıları bağlamla vermiyor"]);
+  assert.deepEqual(takipSeridiEksikleri(sayfa, kabuk, `${takip}\nkoy(99, 1, 0, { kirmizi: "x", sari: "" });\n`), ["sebepsiz balon: 1"]);
+});
+
+/* 481: süzgeçsiz liste — sayfanın ana listesi süzgeçsiz <Liste>'ye dönünce ve izinli bölümün sayısı artınca yakalanır */
+test("süzgeç kapsamı: ana liste süzgeçsize dönünce, izinli bölüm artınca yakalanır", () => {
+  const tsx = dosyalar("src", [".tsx"]).map((ad) => ({ ad, metin: oku(ad) }));
+  assert.deepEqual(suzgecsizListeler(tsx, SUZGECSIZ_BOLUMLER), []);
+  const izin = "src/modules/talepler/ui/IzinTalepleri.tsx", ana = "src/modules/anasayfa/ui/AnaSayfa.tsx";
+  const bozuk = tsx.map((d) => (d.ad === izin ? { ...d, metin: d.metin.replace("<SuzgecliListe s={s} on=\"izn\"", "<Liste") } : d));
+  assert.deepEqual(suzgecsizListeler(bozuk, SUZGECSIZ_BOLUMLER), ["modules/talepler/ui/IzinTalepleri.tsx: sayfa başlıklı bileşende süzgeçsiz <Liste> (1)"]);
+  const fazla = tsx.map((d) => (d.ad === ana ? { ...d, metin: `${d.metin}\n<Liste />` } : d));
+  assert.deepEqual(suzgecsizListeler(fazla, SUZGECSIZ_BOLUMLER), ["modules/anasayfa/ui/AnaSayfa.tsx: süzgeçsiz liste sayısı arttı (3 → 4)"]);
 });

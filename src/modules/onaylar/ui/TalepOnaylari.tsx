@@ -3,17 +3,21 @@
    onaylayan talebi değiştirmez). Kişinin karar verebildiği bekleyen izin talepleri (firma yöneticisi) ve masraf formları (Muhasebe'yi değiştiren),
    eski önce; satır ayrıntıyı açar (?sec=<tip>-<kimlik>; masaüstünde listenin yanında, dar ekranda listenin üstünde, telefonda listenin yerine).
    Ayrıntı SALT OKUNUR: Onayla · Düzeltmeye geri gönder (gerekçe ≥ 10, talep eden düzeltip yeniden gönderir) · Reddet (gerekçe ≥ 10) · PDF; belge /
-   fiş tek uçtan. Yetki ve kurallar sunucuda (talepler/server/talepler.ts talepKarar) ve veritabanında (0079). */
+   fiş tek uçtan. Yetki ve kurallar sunucuda (talepler/server/talepler.ts talepKarar) ve veritabanında (0079).
+   481 (site taraması, anayasa 0.9 / kalıp 10 ve 14–15): talep seçili değilken liste kabın TAMAMINI kullanır (1920'de sağ %40 boş kalıyordu);
+   ayrıntı yalnız seçilince yanda açılır. Süzgeç her listede olduğu gibi (arama · Tür çipleri · 24 saatten eski · fişi / belgesi yok · ve/veya ·
+   Gönderen), boşken de görünür. */
 import Link from "next/link";
 import { useRouter } from "next/navigation";
 import { useState, useTransition } from "react";
 import { Bilgi, BilgiListesi } from "../../../components/bilgi/Bilgi";
 import { useBildir } from "../../../components/bildirim/Bildirim";
-import { BosDurum } from "../../../components/bos/BosDurum";
 import { Alan, ipucuId } from "../../../components/form/Form";
 import { DosyaAcTusu } from "../../../components/gizli-resim/GizliResim";
 import { Ikon } from "../../../components/ikon/Ikon";
-import { KartEtiket, Kirp, Liste, type Sutun } from "../../../components/liste/Liste";
+import { KartEtiket, Kirp, type Sutun } from "../../../components/liste/Liste";
+import { Sayac, SuzgecliListe, useSuzgec } from "../../../components/liste/SuzgecliListe";
+import type { SuzgecTanimi } from "../../../components/liste/suzgec";
 import { AltSatir, Rozet, SayfaBasi, Sekmeler, SeritKap } from "../../../components/sayfa/Sayfa";
 import { Serit } from "../../../components/serit/Serit";
 import { Tus, TusBaglanti, tusSinifi } from "../../../components/tus/Tus";
@@ -40,21 +44,36 @@ const SUTUNLAR: Sutun<OnayTalebiSatiri>[] = [
   ) },
 ];
 
+function tanim(l: readonly OnayTalebiSatiri[]): SuzgecTanimi<OnayTalebiSatiri> {
+  const kisiler = [...new Set(l.map((t) => t.kisi))].sort((a, b) => a.localeCompare(b, "tr"));
+  return {
+    ad: "Taleplerde ara", ipucu: "No, kişi, konu", birim: "talep", sayfa: 20, imkansiz: "Bir talep aynı anda iki türde olamaz",
+    metin: (t) => `${t.no} ${t.kisi} ${t.baslik} ${t.ozet}`,
+    cipler: [
+      { k: "izin", ad: "İzin talebi", grup: "tur", test: (t) => t.tip === "izin" },
+      { k: "masraf", ad: "Masraf formu", grup: "tur", test: (t) => t.tip === "masraf" },
+      { k: "eski", ad: "24 saatten eski", test: (t) => t.eski },
+      { k: "belgesiz", ad: "Belgesi / fişi yok", test: (t) => !t.belge },
+    ],
+    seciciler: [{ k: "kisi", ad: "Gönderen", secenek: () => [["tumu", "Tümü"], ...kisiler.map((k) => [k, k] as const)], gecer: (t, s) => s === "tumu" || t.kisi === s }],
+  };
+}
+
 export function TalepOnaylari({ v, sec }: { v: OnayListeleri; sec: string | null }) {
   const secili = sec ? v.talepler.find((t) => anahtar(t) === sec) ?? null : null;
+  const s = useSuzgec(tanim(v.talepler), v.talepler);
   return (
     <>
-      <SayfaBasi baslik="Onaylar" sayac={<span className={stil.sayi}><b>{v.talepler.length}</b> talep</span>} />
+      <SayfaBasi baslik="Onaylar" sayac={<Sayac s={s} />} />
       <Sekmeler ad="Onaylar bölümleri" ogeler={onaySekmeleri(v, ADRES)} secili={ADRES} />
       {sec && !secili && <SeritKap><Serit tur="bilgi" ikon="info">Bu talep artık karar bekleyenler arasında değil (karar verilmiş, düzeltmede ya da geri çekilmiş).</Serit></SeritKap>}
-      {v.talepler.length ? (
-        <div className={stil.talepSahne} data-secili={secili ? "" : undefined}>
-          {secili && <TalepAyrinti key={anahtar(secili)} t={secili} />}
-          <div className={stil.talepListe}>
-            <Liste baslik="Karar bekleyen talepler" sutunlar={SUTUNLAR} kayitlar={v.talepler} anahtar={anahtar} href={(t) => `${ADRES}?sec=${anahtar(t)}`} />
-          </div>
+      <div className={stil.talepSahne} data-secili={secili ? "" : undefined}>
+        {secili && <TalepAyrinti key={anahtar(secili)} t={secili} />}
+        <div className={stil.talepListe}>
+          <SuzgecliListe s={s} on="tlp" baslik="Karar bekleyen talepler" sutunlar={SUTUNLAR} anahtar={anahtar} href={(t) => `${ADRES}?sec=${anahtar(t)}`}
+            bosVeri={{ ikon: "circle-check", baslik: "Karar bekleyen talep yok", metin: "İzin talebi ya da masraf formu gönderilince burada görünür." }} />
         </div>
-      ) : <BosDurum ikon="circle-check" baslik="Karar bekleyen talep yok" metin="İzin talebi ya da masraf formu gönderilince burada görünür." />}
+      </div>
     </>
   );
 }

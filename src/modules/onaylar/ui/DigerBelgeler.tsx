@@ -5,15 +5,16 @@
 import { useRouter } from "next/navigation";
 import { useRef, useState, useTransition } from "react";
 import { useBildir } from "../../../components/bildirim/Bildirim";
-import { BosDurum } from "../../../components/bos/BosDurum";
 import { DosyaAcTusu } from "../../../components/gizli-resim/GizliResim";
-import { KartEtiket, Kirp, Liste, type Sutun } from "../../../components/liste/Liste";
+import { KartEtiket, Kirp, type Sutun } from "../../../components/liste/Liste";
+import { SuzgecliListe, useSuzgec } from "../../../components/liste/SuzgecliListe";
+import type { SuzgecTanimi } from "../../../components/liste/suzgec";
 import { useOnayla } from "../../../components/pencere/Onay";
 import { Pencere, pencereMetinSinifi } from "../../../components/pencere/Pencere";
 import { AltSatir, Rozet, SayfaBasi, SeritKap, Sekmeler } from "../../../components/sayfa/Sayfa";
 import { Serit } from "../../../components/serit/Serit";
 import { Tus, tusSinifi } from "../../../components/tus/Tus";
-import { BELGE_DURUM, BELGE_TUR } from "../sema";
+import { BELGE_DURUM, BELGE_TUR, type BelgeDurumu } from "../sema";
 import type { BelgeSatiri, DigerBelgeler as Veri } from "../server/belgeler";
 import type { OnayListeleri } from "../server/onaylar";
 import { belgeGeriGonderEylemi, belgeImzaliYukleEylemi } from "./eylemler";
@@ -28,6 +29,21 @@ const odakla = () => setTimeout(() => {
   const h = document.querySelector<HTMLElement>('nav[aria-label="Onaylar bölümleri"] [aria-current="page"]') ?? document.querySelector<HTMLElement>("main h1");
   if (h) { if (h.tagName === "H1") h.tabIndex = -1; h.focus(); }
 }, 50);
+
+/** 481 (site taraması, kalıp 14–15): Diğer belgeler süzgeçli — arama · durum çipleri · ve/veya · Tür · Gönderen; boşken de görünür */
+function belgeTanimi(l: readonly BelgeSatiri[]): SuzgecTanimi<BelgeSatiri> {
+  const tekil = (x: string[]) => [...new Set(x)].sort((a, b) => a.localeCompare(b, "tr")).map((k) => [k, k] as const);
+  const durum = (d: BelgeDurumu) => ({ k: d, ad: BELGE_DURUM[d][0], grup: "durum", test: (x: BelgeSatiri) => x.durum === d });
+  return {
+    ad: "Belgelerde ara", ipucu: "Belge, gönderen", birim: "belge", sayfa: 20, imkansiz: "Bir belge aynı anda iki durumda olamaz",
+    metin: (x) => `${x.ad} ${x.gonderen} ${BELGE_TUR[x.tur]}`,
+    cipler: [durum("bekliyor"), durum("imzali"), durum("geri")],
+    seciciler: [
+      { k: "tur", ad: "Tür", secenek: () => [["tumu", "Tümü"], ...[...new Set(l.map((x) => x.tur))].map((t) => [t, BELGE_TUR[t]] as const)], gecer: (x, s) => s === "tumu" || x.tur === s },
+      { k: "gonderen", ad: "Gönderen", secenek: () => [["tumu", "Tümü"], ...tekil(l.map((x) => x.gonderen))], gecer: (x, s) => s === "tumu" || x.gonderen === s },
+    ],
+  };
+}
 
 export function DigerBelgeler({ v, sekmeler }: { v: Veri; sekmeler: OnayListeleri | null }) {
   const router = useRouter();
@@ -54,6 +70,7 @@ export function DigerBelgeler({ v, sekmeler }: { v: Veri; sekmeler: OnayListeler
       setImza({ ...imza, hata: r.hatalar?.dosya ?? r.genel ?? "İmzalı PDF yüklenemedi." });
     } catch { setImza({ ...imza, hata: "Bağlantı ya da sunucu hatası; yeniden deneyin." }); } finally { if (girdi.current) girdi.current.value = ""; }
   });
+  const s = useSuzgec(belgeTanimi(v.belgeler), v.belgeler);
   const sutunlar: Sutun<BelgeSatiri>[] = [
     { k: "belge", genislik: "30%", baslik: "Belge", kart: "ust", sira: 1, hucre: (x) => <span><Kirp>{x.ad}</Kirp><AltSatir>{BELGE_TUR[x.tur]}</AltSatir></span> },
     { k: "gonderen", genislik: "16%", baslik: "Gönderen", kart: "govde", sira: 2, hucre: (x) => <><KartEtiket>Gönderen</KartEtiket><Kirp>{x.gonderen}</Kirp></> },
@@ -77,8 +94,8 @@ export function DigerBelgeler({ v, sekmeler }: { v: Veri; sekmeler: OnayListeler
       {sekmeler && <Sekmeler ad="Onaylar bölümleri" ogeler={onaySekmeleri(sekmeler, "/onaylar/diger")} secili="/onaylar/diger" />}
       {!v.personel && <SeritKap><Serit tur="bilgi" ikon="info">Hesabınız bir personel kaydına bağlı değil; size belge gönderilemez.</Serit></SeritKap>}
       {v.bekleyen > 0 && <SeritKap><Serit tur="uyari" ikon="file-signature"><b>{v.bekleyen} belge imzanızı bekliyor</b> · her belge ayrı imzalanır.</Serit></SeritKap>}
-      {v.belgeler.length ? <Liste baslik="Diğer belgeler" sutunlar={sutunlar} kayitlar={v.belgeler} anahtar={(x) => x.id} />
-        : <BosDurum ikon="circle-check" baslik="Onayınızı bekleyen belge yok" metin="Bordro, eğitim ve zimmet formları onayınıza gönderildikçe burada görünür." />}
+      <SuzgecliListe s={s} on="dgr" baslik="Diğer belgeler" sutunlar={sutunlar} anahtar={(x) => x.id}
+        bosVeri={{ ikon: "circle-check", baslik: "Onayınızı bekleyen belge yok", metin: "Bordro, eğitim ve zimmet formları onayınıza gönderildikçe burada görünür." }} />
       {imza && <Pencere acik baslik="Onayla ve imzala" onKapat={() => { if (!bekliyorMu) setImza(null); }} odak="[data-belge-indir] a"
         alt={<>
           <Tus tur="ikincil" disabled={bekliyorMu} onClick={() => setImza(null)}>Vazgeç</Tus>

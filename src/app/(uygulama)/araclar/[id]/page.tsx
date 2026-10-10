@@ -70,7 +70,7 @@ export default async function Sayfa({ params }: { params: Promise<{ id: string }
         <KmGecmisi satirlar={v.kmGecmisi} />
       </Bolum>
       <Bolum id="b-arac-tutanak" baslik="Teslim tutanakları" sayac={<><b>{v.tutanaklar.length}</b> tutanak</>}>
-        {v.tutanaklar.length ? <TutanakTablosu tutanaklar={v.tutanaklar} aracli={false} /> : <p className={stil.bosSatir}>Bu aracın tutanağı yok; depoda.</p>}
+        {v.tutanaklar.length ? <TutanakTablosu tutanaklar={v.tutanaklar} /> : <p className={stil.bosSatir}>Bu aracın tutanağı yok; depoda.</p>}
       </Bolum>
     </>
   );

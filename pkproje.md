@@ -2372,6 +2372,14 @@ revizyon, alan kopyalama, hafif kusur devri, meslek eşleşme denetimi).
 - Emsal ürünler: https://opwire.app/iso-17020-periyodik-kontrol-yazilimi/ · https://17020muayene.vidco.com.tr/ · https://akuple.com/asansor-kontrol-yazilimi/ · https://ensyazilim.com/
 
 ## 11 · Değişiklik günlüğü
+- 2026-10-10 (481): **SÜZGEÇSİZ LİSTELER VE BOŞ KENAR** (site taraması; kalıp 10 kap tam genişlik, kalıp 14 süzgeç sabit, kalıp 15 tek üretici).
+  Taramada: Onaylar › Talepler 1920'de kabın %60'ı (sağ boş — ayrıntı paneli seçimsizken de yer tutuyordu) ve süzgeçsiz; süzgeçsiz ana listeler:
+  Personel › İzin talepleri, Araçlar › Tutanaklar, Onaylar › Diğer belgeler, Dökümanlar › Diğer dökümanlar / Muayene kriterleri / Eğitim türleri,
+  müşteri panelinin Planlanan kontroller / Sözleşmeler / Muayene personeli. Hepsi SuzgecliListe'ye geçti (arama + konuya göre çipler, ve/veya,
+  seçiciler; boşken de görünür; sayaç süzgeçle "n / toplam"); Talepler'de ayrıntı yalnız seçilince yanda (seçimsiz tek sütun). Araç kartındaki
+  tutanaklar bölüm olarak kaldı (TutanakTablosu), sayfa TutanakSayfasi. Kilit: tests/suzgec-kapsami.test.ts (sayfa başlığı çizen bileşende
+  süzgeçsiz <Liste> yalnız gerekçeli bölümlerde, cırcır — tests/yardimci/denetimler.ts SUZGECSIZ_BOLUMLER); olumsuz kanıt kilitler.bozan.ts
+  (ana liste süzgeçsize dönünce, izinli bölüm artınca; 480'in sebep şeridi kilidi de burada: şerit / bağlam / sebepsiz balon).
 - 2026-10-10 (480): **YAN MENÜ SAYISININ SEBEBİ HER MODÜLDE** (reisim: *"dökümanlarda 1 uyarı gözüküyor ama bir sürü eksik var, tüm siteyi
   komple tara bir sürü böyle eksikler var"*; anayasa 0.8 hata = sınıf, 2.8 sayaç dürüst). Taramada aynı sınıf: Dökümanlar 1 (eğitim tekrarı —
   yalnız Eğitimler sekmesinde yazıyordu), Onaylar 3 (talepler — Onaylar açılınca "Onay kuyruğu (0) · Onay bekleyen rapor yok"), Araçlar 3 (km +

@@ -2,11 +2,13 @@
 /* MUAYENE PERSONELİ (323; maket musteri.html #/personel — personelCiz; P3 2026-10-01 reisim: "o müşteriye giden muayene personelinin firmanın
    izin verdiği belgelerini görür (ekipnet belgesi isg belgeleri vs)"): müşterinin tesislerine giden kişiler (son imzalı raporu yazan ya da açık
    planın ekibinde) — ad, meslek; son gidiş ve tesisler; firmanın müşteriye açtığı belgeler (geçerlilik; "Aç" oturumlu tek uçtan). Görme
-   veritabanında (müşteri rolü personel tablolarına dokunmaz; iki işlev yalnız gerekeni döndürür — 0035). */
+   veritabanında (müşteri rolü personel tablolarına dokunmaz; iki işlev yalnız gerekeni döndürür — 0035). 481 (site taraması, kalıp 14–15):
+   süzgeç — arama · süresi geçen belgesi olan çipi; boşken de görünür. */
 import { DosyaAcTusu } from "../../../components/gizli-resim/GizliResim";
-import { KartEtiket, Kirp, Liste, type Sutun } from "../../../components/liste/Liste";
+import { KartEtiket, Kirp, type Sutun } from "../../../components/liste/Liste";
+import { SuzgecliListe, useSuzgec } from "../../../components/liste/SuzgecliListe";
+import type { SuzgecTanimi } from "../../../components/liste/suzgec";
 import { AltSatir, SayfaBasi } from "../../../components/sayfa/Sayfa";
-import { BosDurum } from "../../../components/bos/BosDurum";
 import { tarihNo } from "../../../components/secim/tarih";
 import type { PanelPersoneli, PanelPersonelSatiri } from "../server/panel";
 import { gunFarki, PanelSekmeleri } from "./ortak";
@@ -34,15 +36,22 @@ const SUTUNLAR: Sutun<PanelPersonelSatiri>[] = [
   ) },
 ];
 
+const TANIM: SuzgecTanimi<PanelPersonelSatiri> = {
+  ad: "Personelde ara", ipucu: "Ad, meslek, tesis", birim: "kişi", sayfa: 20, imkansiz: "",
+  metin: (x) => `${x.ad} ${x.meslek} ${x.tesisAdlari.join(" ")}`,
+  cipler: [{ k: "gecti", ad: "Süresi geçen belgesi var", test: (x) => x.belgeler.some((b) => !!b.gecerli && gunFarki(b.gecerli) < 0) }],
+  seciciler: [],
+};
+
 export function PanelPersonelListesi({ v }: { v: PanelPersoneli }) {
+  const s = useSuzgec(TANIM, v.kisiler);
   return (
     <>
       <SayfaBasi baslik="Muayene personeli" sayac={<span className={stil.sayac} role="status"><b>{v.kisiler.length}</b> kişi</span>} />
       <p className={stil.alt}>{v.musteri?.unvan ?? "—"}</p>
       <PanelSekmeleri acikUygunsuz={v.acikUygunsuz} secili="/portal/personel" />
-      {v.kisiler.length
-        ? <Liste baslik="Muayene personeli" sutunlar={SUTUNLAR} kayitlar={v.kisiler} anahtar={(x) => x.id} />
-        : <BosDurum ikon="users" baslik="Henüz personel yok" metin="Tesislerinize kontrole gelen muayene personeli burada görünür." />}
+      <SuzgecliListe s={s} on="pps" baslik="Muayene personeli" sutunlar={SUTUNLAR} anahtar={(x) => x.id}
+        bosVeri={{ ikon: "users", baslik: "Henüz personel yok", metin: "Tesislerinize kontrole gelen muayene personeli burada görünür." }} />
     </>
   );
 }

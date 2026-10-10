@@ -3,11 +3,9 @@
    (components/kabuk/TakipSeridi.tsx), sayfa başlığı üreticisinin (SayfaBasi) içinde, kabuğun bağlamından. Saf parçalar ve bağlantı kilitlenir;
    sayıların sebeplerle aynı olduğu tests/anasayfa.test.ts'te (gerçek PostgreSQL). */
 import assert from "node:assert/strict";
-import { readFileSync } from "node:fs";
 import test from "node:test";
 import { sayfaNedenleri, yolunModulu, type TakipNedeni } from "../src/components/kabuk/takip.ts";
-
-const oku = (y: string) => readFileSync(new URL(`../${y}`, import.meta.url), "utf8");
+import { oku, takipSeridiEksikleri } from "./yardimci/denetimler.ts";
 
 test("adresin modülü: kök ve alt sayfalar (Onaylar › Talepler, Dökümanlar › Eğitimler); başka modülün ön ekine takılmaz", () => {
   assert.equal(yolunModulu("/onaylar")?.no, 15);
@@ -29,12 +27,6 @@ test("sebebin kendi sayfası onu gösteriyorsa orada yazılmaz; öteki sayfalard
   assert.deepEqual(sayfaNedenleri(undefined, "/araclar"), []);
 });
 
-test("bağlantı: sayfa başlığı üreticisi şeridi çizer, kabuk sayıları bağlamla verir, sayılar takip.ts'ten sebepleriyle gelir", () => {
-  assert.match(oku("src/components/sayfa/Sayfa.tsx"), /export function SayfaBasi[\s\S]{0,400}<TakipSeridi \/>/);
-  assert.match(oku("src/components/kabuk/Kabuk.tsx"), /<TakipBaglami\.Provider value=\{balon\}>\{children\}<\/TakipBaglami\.Provider>/);
-  const t = oku("src/modules/anasayfa/server/takip.ts");
-  /* her balon koy(no, ad, ...sebepler) ile kurulur: sayıyı elle veren eski biçim (koy(no, kırmızı, sarı, ad)) kalmadı */
-  const sebepli = [...t.matchAll(/\bkoy\(\d+, \{/g)].length;
-  assert.equal(sebepli, [...t.matchAll(/\bkoy\(/g)].length, "her koy çağrısı sebeplerle");
-  assert.ok(sebepli >= 9, `balonlu modüller (Uyarılar, Ölçüm, Dökümanlar, Araçlar, Planlar, Sözleşmeler, Raporlar, Onaylar, Muhasebe): ${sebepli}`);
+test("bağlantı: sayfa başlığı üreticisi şeridi çizer, kabuk sayıları bağlamla verir, her balon sebepleriyle kurulur", () => {
+  assert.deepEqual(takipSeridiEksikleri(oku("src/components/sayfa/Sayfa.tsx"), oku("src/components/kabuk/Kabuk.tsx"), oku("src/modules/anasayfa/server/takip.ts")), []);
 });

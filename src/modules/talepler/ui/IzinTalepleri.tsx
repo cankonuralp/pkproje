@@ -2,18 +2,20 @@
 /* PERSONEL › İZİN TALEPLERİ (maket personel.html #/izinler — IZIN_SUTUN, izinCiz; 2026-09-28 reisim: izin onayı firma yöneticisinde; 330). Talepler'den
    gelen izin talepleri, bekleyen üstte; yıllık izinde kişinin kalan hakkı yanında (aşıyorsa uyarı, engel değil).
    477 (reisim 2026-10-10, Talepler–Onaylar kararları T1 · T4 "kalksın"): KARAR ONAYLAR'DA — burada liste ve geçmiş; onay bekleyen satırda "Onaylar'da
-   aç". Görme sunucuda (Talepler "değiştirir" — firma yöneticisi). */
+   aç". Görme sunucuda (Talepler "değiştirir" — firma yöneticisi).
+   481 (site taraması, kalıp 14–15): süzgeç — arama · durum çipleri · ve/veya · Personel · İzin türü · Yıl; boşken de görünür. */
 import Link from "next/link";
 import { DosyaAcTusu } from "../../../components/gizli-resim/GizliResim";
-import { KartEtiket, Kirp, Liste, type Sutun } from "../../../components/liste/Liste";
+import { KartEtiket, Kirp, type Sutun } from "../../../components/liste/Liste";
+import { Sayac, SuzgecliListe, useSuzgec } from "../../../components/liste/SuzgecliListe";
+import type { SuzgecTanimi } from "../../../components/liste/suzgec";
 import { AltSatir, Rozet, SayfaBasi, SeritKap } from "../../../components/sayfa/Sayfa";
 import { tarihNo } from "../../../components/secim/tarih";
 import { Serit } from "../../../components/serit/Serit";
 import { Ikon } from "../../../components/ikon/Ikon";
 import { TusBaglanti, tusSinifi } from "../../../components/tus/Tus";
-import { BosDurum } from "../../../components/bos/BosDurum";
 import { PersonelSekmeleri } from "../../personel/ui/ortak";
-import { IZIN_DURUM, IZIN_TUR } from "../sema";
+import { IZIN_DURUM, IZIN_TUR, type IzinDurumu } from "../sema";
 import type { IzinSatiri } from "../server/talepler";
 import stil from "./talepler.module.css";
 
@@ -23,8 +25,25 @@ const GUN = new Intl.DateTimeFormat("en-CA", { timeZone: "Europe/Istanbul", year
 const gunTr = (iso: string) => GUN.format(new Date(iso));
 const onayAdresi = (x: IzinSatiri) => `/onaylar/talepler?sec=izin-${x.id}`;
 
+function tanim(l: readonly IzinSatiri[]): SuzgecTanimi<IzinSatiri> {
+  const tekil = (x: [string, string][]) => [...new Map(x)].sort((a, b) => a[1].localeCompare(b[1], "tr"));
+  const durum = (d: IzinDurumu, ad: string) => ({ k: d, ad, grup: "durum", test: (x: IzinSatiri) => x.durum === d });
+  return {
+    ad: "İzin taleplerinde ara", ipucu: "No, personel, açıklama", birim: "talep", sayfa: 20, imkansiz: "Bir talep aynı anda iki durumda olamaz",
+    metin: (x) => `${x.no} ${x.personel} ${IZIN_TUR[x.tur]} ${x.aciklama ?? ""}`,
+    cipler: [durum("bekliyor", "Onay bekliyor"), durum("duzeltme", "Düzeltmede"), durum("onaylandi", "Onaylandı"), durum("red", "Reddedildi")],
+    seciciler: [
+      { k: "kisi", ad: "Personel", secenek: () => [["tumu", "Tümü"], ...tekil(l.map((x) => [x.personelId, x.personel]))], gecer: (x, s) => s === "tumu" || x.personelId === s },
+      { k: "tur", ad: "İzin türü", secenek: () => [["tumu", "Tümü"], ...Object.entries(IZIN_TUR)], gecer: (x, s) => s === "tumu" || x.tur === s },
+      { k: "yil", ad: "Yıl", secenek: () => [["tumu", "Tümü"], ...[...new Set(l.map((x) => x.bas.slice(0, 4)))].sort().reverse().map((y) => [y, y] as const)],
+        gecer: (x, s) => s === "tumu" || x.bas.startsWith(s) },
+    ],
+  };
+}
+
 export function IzinTalepleri({ l }: { l: IzinSatiri[] }) {
   const bek = l.filter((x) => x.durum === "bekliyor").length;
+  const s = useSuzgec(tanim(l), l);
   const sutunlar: Sutun<IzinSatiri>[] = [
     { k: "no", genislik: "16%", baslik: "Talep no", kart: "ust", sira: 1, hucre: (x) => <><span className={stil.sayi}>{x.no}</span><AltSatir>{tarihNo(gunTr(x.gonderildi))}</AltSatir></> },
     { k: "kisi", genislik: "26%", baslik: "Personel / izin", kart: "govde", sira: 2, hucre: (x) => (
@@ -47,12 +66,12 @@ export function IzinTalepleri({ l }: { l: IzinSatiri[] }) {
   ];
   return (
     <>
-      <SayfaBasi baslik="Personel" sayac={<span className={stil.sayi}><b>{l.length}</b> talep</span>} />
+      <SayfaBasi baslik="Personel" sayac={<Sayac s={s} />} />
       <PersonelSekmeleri secili="/personel/izinler" izinler />
       {bek > 0 && <SeritKap><Serit tur="uyari" ikon="inbox" eylem={<TusBaglanti tur="ikincil" href="/onaylar/talepler">Onaylar&apos;da aç</TusBaglanti>}>
         <b>{bek} izin talebi onayınızı bekliyor.</b> Karar Onaylar&apos;da verilir.</Serit></SeritKap>}
-      {l.length ? <Liste baslik="İzin talepleri" sutunlar={sutunlar} kayitlar={l} anahtar={(x) => x.id} />
-        : <BosDurum ikon="inbox" baslik="İzin talebi yok" metin="Personel izin talebini Talepler'den gönderir." />}
+      <SuzgecliListe s={s} on="izn" baslik="İzin talepleri" sutunlar={sutunlar} anahtar={(x) => x.id}
+        bosVeri={{ ikon: "inbox", baslik: "İzin talebi yok", metin: "Personel izin talebini Talepler'den gönderir." }} />
     </>
   );
 }

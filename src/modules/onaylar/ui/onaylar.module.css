@@ -25,7 +25,7 @@
 .dosyaSec { position: relative; cursor: pointer; }
 .dosyaSec[aria-disabled="true"] { opacity: .6; cursor: default; }
 /* 477 Onaylar › Talepler (maket "Talepler ve Onaylar" .sahne / .ayrinti): ayrıntı geniş ekranda listenin sağında, dar ekranda üstünde, telefonda
-   listenin yerine ("Listeye dön") */
+   listenin yerine ("Listeye dön"). 481: talep seçili değilken liste tek sütun, kabın tamamı (kalıp 10) */
 .talepSahne { display: grid; grid-template-columns: minmax(0, 1fr); gap: 16px; align-items: start; }
 .talepListe { min-width: 0; }
 .talepAyrinti { display: grid; gap: 12px; min-width: 0; padding: 14px 16px; border: 1px solid var(--kenar); border-radius: var(--r-buyuk); background: var(--kart); }
@@ -38,7 +38,7 @@
 button.reddetTus { color: var(--hata-yazi); }
 .yalnizTelefon { display: none; }
 @media (min-width: 1280px) {
-  .talepSahne { grid-template-columns: minmax(0, 1fr) minmax(0, 400px); }
+  .talepSahne[data-secili] { grid-template-columns: minmax(0, 1fr) minmax(0, 400px); }
   .talepAyrinti { grid-column: 2; grid-row: 1; position: sticky; top: 12px; }
   .talepListe { grid-column: 1; grid-row: 1; }
 }

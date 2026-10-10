@@ -1,11 +1,10 @@
-/* ARAÇLAR › Tutanaklar (maket araclar.html #/tutanaklar): her teslim alma / teslim etme bir tutanak. Sürücü yalnız taraf olduklarını görür. */
+/* ARAÇLAR › Tutanaklar (maket araclar.html #/tutanaklar): her teslim alma / teslim etme bir tutanak. Sürücü yalnız taraf olduklarını görür.
+   481: süzgeçli liste (TutanakSayfasi). */
 import type { Metadata } from "next";
 import { Yetkisiz } from "../../../../components/hata/Hata";
-import { SayfaBasi, Sekmeler } from "../../../../components/sayfa/Sayfa";
-import { BosDurum } from "../../../../components/bos/BosDurum";
 import { modulBul } from "../../../../modules/moduller";
 import { aracDegistirir, aracListesi, tutanakListesi } from "../../../../modules/araclar/server/araclar";
-import { TutanakTablosu } from "../../../../modules/araclar/ui/AracListesi";
+import { TutanakSayfasi } from "../../../../modules/araclar/ui/AracListesi";
 import { aracSekmeleri } from "../../../../modules/araclar/ui/ortak";
 import { modulOturumu, oturumIslemi } from "../../../../server/kimlik/istek";
 
@@ -17,12 +16,5 @@ export default async function Sayfa() {
   if (!o) return <Yetkisiz />;
   const [t, l] = await oturumIslemi(o, async (db) => [await tutanakListesi(db, o), await aracListesi(db, o)] as const);
   if (!t || !l) return <Yetkisiz />;
-  return (
-    <>
-      <SayfaBasi baslik={l.kendi ? "Aracım" : "Araçlar"} sayac={<><b>{t.length}</b> tutanak</>} />
-      <Sekmeler ad="Araç bölümleri" ogeler={aracSekmeleri(aracDegistirir(o), l.kendi)} secili="/araclar/tutanaklar" />
-      {t.length ? <TutanakTablosu tutanaklar={t} />
-        : <BosDurum ikon="file-text" baslik="Tutanak yok" metin="Her teslim alma ve teslim etme bir tutanak olarak burada birikir." />}
-    </>
-  );
+  return <TutanakSayfasi tutanaklar={t} baslik={l.kendi ? "Aracım" : "Araçlar"} sekmeler={aracSekmeleri(aracDegistirir(o), l.kendi)} />;
 }

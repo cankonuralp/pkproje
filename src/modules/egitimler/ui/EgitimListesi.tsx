@@ -207,8 +207,20 @@ function KayitGorunumu({ x, kayitlar, bugun, yaz, kapat, tekrar }: { x: EgitimKa
   );
 }
 
+/** 481 (site taraması, kalıp 14–15): Eğitim türleri süzgeçli — arama · tekrarı geçen / yaklaşan çipleri; boşken de görünür */
+const TUR_TANIMI: SuzgecTanimi<EgitimTuru> = {
+  ad: "Eğitim türlerinde ara", ipucu: "Eğitim", birim: "eğitim türü", sayfa: 20, imkansiz: "",
+  metin: (t) => t.ad,
+  cipler: [
+    { k: "gecti", ad: "Tekrarı geçen var", test: (t) => t.gecti > 0 },
+    { k: "yakin", ad: "Tekrarı yaklaşan var", test: (t) => t.yakin > 0 },
+  ],
+  seciciler: [],
+};
+
 export function TurListesi({ turler, yaz, kayitSayisi }: { turler: EgitimTuru[]; yaz: boolean; kayitSayisi: number }) {
   const [p, setP] = useState<null | { t?: EgitimTuru }>(null);
+  const s = useSuzgec(TUR_TANIMI, turler);
   const sutunlar: Sutun<EgitimTuru>[] = [
     { k: "ad", genislik: "40%", baslik: "Eğitim", kart: "ust", sira: 1, hucre: (t) => <Kirp>{t.ad}</Kirp> },
     { k: "tekrar", genislik: "18%", baslik: "Tekrar süresi", kart: "govde", sira: 2, hucre: (t) => <><KartEtiket>Tekrar süresi</KartEtiket>{t.tekrarAy} ay</> },
@@ -222,11 +234,11 @@ export function TurListesi({ turler, yaz, kayitSayisi }: { turler: EgitimTuru[];
   ];
   return (
     <>
-      <SayfaBasi baslik="Dökümanlar" sayac={<><b>{turler.length}</b> eğitim türü</>} tuslar={yaz && <Tus ikon="plus" onClick={() => setP({})}>Eğitim türü ekle</Tus>} />
+      <SayfaBasi baslik="Dökümanlar" sayac={<Sayac s={s} />} tuslar={yaz && <Tus ikon="plus" onClick={() => setP({})}>Eğitim türü ekle</Tus>} />
       <Sekmeler ad="Döküman bölümleri" ogeler={DOKUMAN_SEKMELERI} secili="/dokumanlar/egitimler" />
       <Sekmeler alt ad="Eğitim bölümleri" ogeler={egitimAltSekmeleri(kayitSayisi, turler.length)} secili="/dokumanlar/egitimler/turler" />
-      {turler.length ? <Liste baslik="Eğitim türleri" sutunlar={sutunlar} kayitlar={turler} anahtar={(t) => t.id} />
-        : <div className={stil.seritler}><Serit tur="bilgi" ikon="info">Eğitim türü yok. Firmanın eğitimlerini ve tekrar sürelerini ekleyin.</Serit></div>}
+      <SuzgecliListe s={s} on="egtt" baslik="Eğitim türleri" sutunlar={sutunlar} anahtar={(t) => t.id}
+        bosVeri={{ ikon: "graduation-cap", baslik: "Eğitim türü yok", metin: "Firmanın eğitimlerini ve tekrar sürelerini “Eğitim türü ekle” ile ekleyin." }} />
       {p && <TurPenceresi kapat={() => setP(null)} t={p.t} />}
     </>
   );

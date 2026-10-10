@@ -113,9 +113,8 @@ export function KmGecmisi({ satirlar }: { satirlar: KmSatiri[] }) {
   return <Liste baslik="Haftalık kilometre" sutunlar={sutunlar} kayitlar={satirlar} anahtar={(x) => x.hafta} />;
 }
 
-export function TutanakTablosu({ tutanaklar, aracli = true }: { tutanaklar: TutanakSatiri[]; aracli?: boolean }) {
-  const [goster, setGoster] = useState<TutanakSatiri | null>(null);
-  const sutunlar: Sutun<TutanakSatiri>[] = [
+function tutanakSutunlari(aracli: boolean, setGoster: (t: TutanakSatiri) => void): Sutun<TutanakSatiri>[] {
+  return [
     { k: "tarih", genislik: "18%", baslik: "Tarih", kart: "ust", sira: 1, hucre: (t) => <span>{zamanYaz(t.zaman)}<AltSatir>{t.no ?? "Tutanaksız teslim"}</AltSatir></span> },
     ...(aracli ? [{ k: "arac", genislik: "14%", baslik: "Araç", kart: "govde" as const, sira: 2, hucre: (t: TutanakSatiri) => <><KartEtiket>Araç</KartEtiket><Link className={stil.ad} href={`/araclar/${t.aracId}`}>{t.plaka}</Link></> }] : []),
     { k: "kim", genislik: aracli ? "28%" : "36%", baslik: "Teslim eden → alan", kart: "govde", sira: 3, hucre: (t) => (
@@ -130,9 +129,46 @@ export function TutanakTablosu({ tutanaklar, aracli = true }: { tutanaklar: Tuta
       </span>
     ) },
   ];
+}
+
+/** aracın kartındaki tutanakları (yalnız o araç) */
+export function TutanakTablosu({ tutanaklar }: { tutanaklar: TutanakSatiri[] }) {
+  const [goster, setGoster] = useState<TutanakSatiri | null>(null);
   return (
     <>
-      <Liste baslik="Teslim tutanakları" sutunlar={sutunlar} kayitlar={tutanaklar} anahtar={(t) => t.id} />
+      <Liste baslik="Teslim tutanakları" sutunlar={tutanakSutunlari(false, setGoster)} kayitlar={tutanaklar} anahtar={(t) => t.id} />
+      {goster && <TutanakGorunumu t={goster} kapat={() => setGoster(null)} />}
+    </>
+  );
+}
+
+function tutanakTanimi(l: readonly TutanakSatiri[]): SuzgecTanimi<TutanakSatiri> {
+  const tekil = (x: string[]) => [...new Set(x)].sort((a, b) => a.localeCompare(b, "tr")).map((k) => [k, k] as const);
+  return {
+    ad: "Tutanaklarda ara", ipucu: "Plaka, kişi, tutanak no", birim: "tutanak", sayfa: 20, imkansiz: "Bir tutanak aynı anda iki imza durumunda olamaz",
+    metin: (t) => `${t.plaka} ${t.eden} ${t.alan} ${t.no ?? ""}`,
+    cipler: [
+      { k: "imza", ad: "İmza bekliyor", grup: "imza", test: (t) => t.imza === "bekliyor" },
+      { k: "imzali", ad: "İmzalandı", grup: "imza", test: (t) => t.imza === "imzali" },
+      { k: "tutanaksiz", ad: "Tutanaksız teslim", test: (t) => !t.no },
+    ],
+    seciciler: [
+      { k: "arac", ad: "Araç", secenek: () => [["tumu", "Tümü"], ...tekil(l.map((t) => t.plaka))], gecer: (t, s) => s === "tumu" || t.plaka === s },
+      { k: "kisi", ad: "Kişi", secenek: () => [["tumu", "Tümü"], ...tekil(l.flatMap((t) => [t.eden, t.alan]))], gecer: (t, s) => s === "tumu" || t.eden === s || t.alan === s },
+    ],
+  };
+}
+
+/** 481 (site taraması, kalıp 14–15): Araçlar › Tutanaklar — süzgeçli (arama · imza çipleri · ve/veya · Araç · Kişi), boşken de görünür */
+export function TutanakSayfasi({ tutanaklar, baslik, sekmeler }: { tutanaklar: TutanakSatiri[]; baslik: string; sekmeler: readonly (readonly [string, string])[] }) {
+  const [goster, setGoster] = useState<TutanakSatiri | null>(null);
+  const s = useSuzgec(tutanakTanimi(tutanaklar), tutanaklar);
+  return (
+    <>
+      <SayfaBasi baslik={baslik} sayac={<Sayac s={s} />} />
+      <Sekmeler ad="Araç bölümleri" ogeler={sekmeler} secili="/araclar/tutanaklar" />
+      <SuzgecliListe s={s} on="ttn" baslik="Teslim tutanakları" sutunlar={tutanakSutunlari(true, setGoster)} anahtar={(t) => t.id}
+        bosVeri={{ ikon: "file-text", baslik: "Tutanak yok", metin: "Her teslim alma ve teslim etme bir tutanak olarak burada birikir." }} />
       {goster && <TutanakGorunumu t={goster} kapat={() => setGoster(null)} />}
     </>
   );

@@ -1,11 +1,13 @@
 "use client";
 /* SÖZLEŞMELER (322; maket musteri.html #/sozlesme — sozCiz; karar 134 "müşteri panelinde görünür, panelden imza atılmaz"): görebildiği iş
    sözleşmeleri — numara (sözleşme sayfasını açar), kapsamdaki tesisler (yalnız görebildikleri), dönem, durum. Salt görüntü. Görme sunucuda
-   (müşteri rolü — sözleşmenin yalnız numara / dönem / imza tarihi / imzalı PDF sütunları, 0034). */
+   (müşteri rolü — sözleşmenin yalnız numara / dönem / imza tarihi / imzalı PDF sütunları, 0034). 481 (site taraması, kalıp 14–15): süzgeç —
+   arama · durum çipleri; boşken de görünür. */
 import Link from "next/link";
-import { KartEtiket, Kirp, Liste, type Sutun } from "../../../components/liste/Liste";
+import { KartEtiket, Kirp, type Sutun } from "../../../components/liste/Liste";
+import { SuzgecliListe, useSuzgec } from "../../../components/liste/SuzgecliListe";
+import type { SuzgecTanimi } from "../../../components/liste/suzgec";
 import { Rozet, SayfaBasi } from "../../../components/sayfa/Sayfa";
-import { BosDurum } from "../../../components/bos/BosDurum";
 import { tarihNo } from "../../../components/secim/tarih";
 import type { PanelSozlesmeleri, PanelSozlesmesi } from "../server/panel";
 import { PanelSekmeleri, SOZ_DURUM } from "./ortak";
@@ -20,15 +22,25 @@ const SUTUNLAR: Sutun<PanelSozlesmesi>[] = [
   { k: "durum", genislik: "16%", baslik: "Durum", kart: "rozet", sira: 1, hucre: (x) => <Rozet tur={SOZ_DURUM[x.durum][1]}>{SOZ_DURUM[x.durum][0]}</Rozet> },
 ];
 
+function tanim(l: readonly PanelSozlesmesi[]): SuzgecTanimi<PanelSozlesmesi> {
+  const durumlar = [...new Set(l.map((x) => x.durum))];
+  return {
+    ad: "Sözleşmelerde ara", ipucu: "Sözleşme no, tesis", birim: "sözleşme", sayfa: 20, imkansiz: "Bir sözleşme aynı anda iki durumda olamaz",
+    metin: (x) => `${x.no} ${x.tesisAdlari.join(" ")}`,
+    cipler: durumlar.map((d) => ({ k: d, ad: SOZ_DURUM[d][0], grup: "durum", test: (x: PanelSozlesmesi) => x.durum === d })),
+    seciciler: [],
+  };
+}
+
 export function PanelSozlesmeListesi({ v }: { v: PanelSozlesmeleri }) {
+  const s = useSuzgec(tanim(v.sozlesmeler), v.sozlesmeler);
   return (
     <>
       <SayfaBasi baslik="Sözleşmeler" sayac={<span className={stil.sayac} role="status"><b>{v.sozlesmeler.length}</b> sözleşme</span>} />
       <p className={stil.alt}>{v.musteri?.unvan ?? "—"}</p>
       <PanelSekmeleri acikUygunsuz={v.acikUygunsuz} secili="/portal/sozlesme" />
-      {v.sozlesmeler.length
-        ? <Liste baslik="Sözleşmeler" sutunlar={SUTUNLAR} kayitlar={v.sozlesmeler} anahtar={(x) => x.id} href={(x) => `/portal/s/${x.id}`} />
-        : <BosDurum ikon="scroll-text" baslik="Sözleşme yok" metin="Size açılmış bir sözleşme yok." />}
+      <SuzgecliListe s={s} on="psz" baslik="Sözleşmeler" sutunlar={SUTUNLAR} anahtar={(x) => x.id} href={(x) => `/portal/s/${x.id}`}
+        bosVeri={{ ikon: "scroll-text", baslik: "Sözleşme yok", metin: "Size açılmış bir sözleşme yok." }} />
     </>
   );
 }

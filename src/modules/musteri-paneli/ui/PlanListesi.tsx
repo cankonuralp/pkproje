@@ -2,10 +2,11 @@
 /* PLANLANAN KONTROLLER (321; maket musteri.html #/plan — planCiz; karar 81 "müşteri panelinde planlanan kontrol"): görebildiği her tesis — açık
    planın tarihi (yoksa "Yok"; aynı tesiste başka açık plan da varsa sayısı), sonraki kontrol (tesisteki ekipmanların son raporlarından en yakını;
    60 gün içindeyse uyarı) ve planın durumu. Salt görüntü; planı firma açar. Görme sunucuda (müşteri rolü — planın yalnız tarih ve durum
-   sütunları, 0032). */
-import { KartEtiket, Kirp, Liste, type Sutun } from "../../../components/liste/Liste";
+   sütunları, 0032). 481 (site taraması, kalıp 14–15): süzgeç — arama · Planlı / Planı yok / 60 gün içinde çipleri; boşken de görünür. */
+import { KartEtiket, Kirp, type Sutun } from "../../../components/liste/Liste";
+import { SuzgecliListe, useSuzgec } from "../../../components/liste/SuzgecliListe";
+import type { SuzgecTanimi } from "../../../components/liste/suzgec";
 import { AltSatir, DegerYok, Rozet, SayfaBasi } from "../../../components/sayfa/Sayfa";
-import { BosDurum } from "../../../components/bos/BosDurum";
 import { tarihNo } from "../../../components/secim/tarih";
 import { PLAN_DURUM } from "../../planlar/sema";
 import type { PanelPlanlari, PanelPlanSatiri } from "../server/panel";
@@ -28,16 +29,27 @@ const SUTUNLAR: Sutun<PanelPlanSatiri>[] = [
     ? <Rozet tur={PLAN_DURUM[x.plan.durum][1]}>{PLAN_DURUM[x.plan.durum][0]}</Rozet> : <DegerYok /> },
 ];
 
+const TANIM: SuzgecTanimi<PanelPlanSatiri> = {
+  ad: "Tesislerde ara", ipucu: "Tesis, yer", birim: "tesis", sayfa: 20, imkansiz: "Bir tesis aynı anda planlı ve plansız olamaz",
+  metin: (x) => `${x.tesis} ${x.yer ?? ""}`,
+  cipler: [
+    { k: "planli", ad: "Planlı", grup: "plan", test: (x) => !!x.plan },
+    { k: "plansiz", ad: "Planı yok", grup: "plan", test: (x) => !x.plan },
+    { k: "yakin", ad: `Sonraki kontrol ${YAKIN} gün içinde`, test: (x) => !!x.sonraki && gunFarki(x.sonraki) <= YAKIN },
+  ],
+  seciciler: [],
+};
+
 export function PanelPlanListesi({ v }: { v: PanelPlanlari }) {
   const planli = v.satirlar.filter((x) => x.plan).length;
+  const s = useSuzgec(TANIM, v.satirlar);
   return (
     <>
       <SayfaBasi baslik="Planlanan kontroller" sayac={<span className={stil.sayac} role="status"><b>{planli}</b> planlı</span>} />
       <p className={stil.alt}>{v.musteri?.unvan ?? "—"}</p>
       <PanelSekmeleri acikUygunsuz={v.acikUygunsuz} secili="/portal/plan" />
-      {v.satirlar.length
-        ? <Liste baslik="Planlanan kontroller" sutunlar={SUTUNLAR} kayitlar={v.satirlar} anahtar={(x) => x.tesisId} />
-        : <BosDurum ikon="calendar" baslik="Planlanan kontrol yok" metin="Tesisleriniz eklendiğinde planlanan kontroller burada görünür." />}
+      <SuzgecliListe s={s} on="ppl" baslik="Planlanan kontroller" sutunlar={SUTUNLAR} anahtar={(x) => x.tesisId}
+        bosVeri={{ ikon: "calendar", baslik: "Planlanan kontrol yok", metin: "Tesisleriniz eklendiğinde planlanan kontroller burada görünür." }} />
     </>
   );
 }

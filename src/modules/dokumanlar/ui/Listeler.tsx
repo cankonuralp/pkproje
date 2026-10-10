@@ -11,12 +11,11 @@ import { useRouter } from "next/navigation";
 import { useMemo, useState, useTransition } from "react";
 import { useBildir } from "../../../components/bildirim/Bildirim";
 import { DosyaAcTusu } from "../../../components/gizli-resim/GizliResim";
-import { KartEtiket, Kirp, Liste, type Sutun } from "../../../components/liste/Liste";
+import { KartEtiket, Kirp, type Sutun } from "../../../components/liste/Liste";
 import { Sayac, SuzgecliListe, useSuzgec } from "../../../components/liste/SuzgecliListe";
 import type { SuzgecTanimi } from "../../../components/liste/suzgec";
 import { useOnayla } from "../../../components/pencere/Onay";
 import { AltSatir, DegerYok, Kod, Rozet, SayfaBasi, Sekmeler } from "../../../components/sayfa/Sayfa";
-import { BosDurum } from "../../../components/bos/BosDurum";
 import { Tus } from "../../../components/tus/Tus";
 import type { KriterBelgesi } from "../../../tanim/kriterler";
 import { BAKANLIK_STANDARTLARI } from "../../../tanim/standartlar";
@@ -90,8 +89,15 @@ export function StandartListesi({ standartlar, yaz, brans }: { standartlar: Stan
 const KRITER_SEKME = { m: "/dokumanlar/kriterler", e: "/dokumanlar/kriterler?brans=e" } as const;
 
 /** 442 (reisim 2026-10-09: "sadece standartlarda değil muayene kriterlerinde de olacak"): Mekanik / Elektrik alt sekmesi */
+/** 481: Muayene kriterleri süzgeçli — arama (kod, ad, rapor formatı, madde metni) */
+const KRITER_TANIMI: SuzgecTanimi<KriterBelgesi> = {
+  ad: "Kriterlerde ara", ipucu: "Kod, ad, rapor formatı, madde", birim: "belge", imkansiz: "", cipler: [], seciciler: [],
+  metin: (x) => `${x.kod} ${x.ad} ${x.rapor} ${x.maddeler.map((m) => JSON.stringify(m)).join(" ")}`,
+};
+
 export function KriterListesi({ belgeler: tum, brans }: { belgeler: readonly KriterBelgesi[]; brans: "m" | "e" }) {
-  const belgeler = tum.filter((x) => x.brans === brans), sayi = (b: "m" | "e") => tum.filter((x) => x.brans === b).length;
+  const belgeler = useMemo(() => tum.filter((x) => x.brans === brans), [tum, brans]), sayi = (b: "m" | "e") => tum.filter((x) => x.brans === b).length;
+  const s = useSuzgec(KRITER_TANIMI, belgeler);
   const sutunlar: Sutun<KriterBelgesi>[] = [
     { k: "kod", genislik: "46%", baslik: "Belge", kart: "ust", sira: 1, hucre: (x) => <span><Link className={stil.no} href={`/dokumanlar/kriterler/${x.kod}`}>{x.kod}</Link><AltSatir><Kirp>{x.ad}</Kirp></AltSatir></span> },
     { k: "rapor", genislik: "16%", baslik: "Rapor formatı", kart: "govde", sira: 2, hucre: (x) => <><KartEtiket>Rapor formatı</KartEtiket><Kod>{x.rapor}</Kod></> },
@@ -100,13 +106,13 @@ export function KriterListesi({ belgeler: tum, brans }: { belgeler: readonly Kri
   ];
   return (
     <>
-      <SayfaBasi baslik="Dökümanlar" sayac={<><b>{belgeler.length}</b> belge</>} />
+      <SayfaBasi baslik="Dökümanlar" sayac={<Sayac s={s} />} />
       <Sekmeler ad="Döküman bölümleri" ogeler={DOKUMAN_SEKMELERI} secili="/dokumanlar/kriterler" />
       <Sekmeler alt ad="Branşlar" ogeler={[[`Mekanik (${sayi("m")})`, KRITER_SEKME.m], [`Elektrik (${sayi("e")})`, KRITER_SEKME.e]]} secili={KRITER_SEKME[brans]} />
-      {belgeler.length ? <Liste baslik={`Muayene kriterleri · ${brans === "e" ? "Elektrik" : "Mekanik"}`} sutunlar={sutunlar} kayitlar={belgeler} anahtar={(x) => x.kod}
-        href={(x) => `/dokumanlar/kriterler/${x.kod}`} />
-        : <BosDurum ikon="list-checks" baslik={`${brans === "e" ? "Elektrik" : "Mekanik"} muayene kriteri belgesi yok`}
-          metin="Bakanlığın bu branşta yayımladığı periyodik kontrol kriterleri belgesi henüz yok; yayımlandıkça burada görünür." />}
+      <SuzgecliListe key={brans} s={s} on="krt" baslik={`Muayene kriterleri · ${brans === "e" ? "Elektrik" : "Mekanik"}`} sutunlar={sutunlar} anahtar={(x) => x.kod}
+        href={(x) => `/dokumanlar/kriterler/${x.kod}`}
+        bosVeri={{ ikon: "list-checks", baslik: `${brans === "e" ? "Elektrik" : "Mekanik"} muayene kriteri belgesi yok`,
+          metin: "Bakanlığın bu branşta yayımladığı periyodik kontrol kriterleri belgesi henüz yok; yayımlandıkça burada görünür." }} />
     </>
   );
 }
@@ -130,8 +136,23 @@ function DokumanTuslari({ d, yaz }: { d: DokumanSatiri; yaz: boolean }) {
   );
 }
 
+/** 481 (site taraması, kalıp 14–15): Diğer dökümanlar süzgeçli — arama · Tür · Yıl; boşken de görünür */
+function dokumanTanimi(l: readonly DokumanSatiri[]): SuzgecTanimi<DokumanSatiri> {
+  const tekil = (x: string[]) => [...new Set(x)].sort((a, b) => a.localeCompare(b, "tr")).map((k) => [k, k] as const);
+  return {
+    ad: "Dökümanlarda ara", ipucu: "Ad, kod, tür", birim: "döküman", sayfa: 20, imkansiz: "",
+    metin: (d) => `${d.ad} ${d.kod ?? ""} ${d.tur} ${d.rev ?? ""}`,
+    cipler: [],
+    seciciler: [
+      { k: "tur", ad: "Tür", secenek: () => [["tumu", "Tümü"], ...tekil(l.map((d) => d.tur))], gecer: (d, s) => s === "tumu" || d.tur === s },
+      { k: "yil", ad: "Yıl", secenek: () => [["tumu", "Tümü"], ...tekil(l.map((d) => d.tarih.slice(0, 4))).reverse()], gecer: (d, s) => s === "tumu" || d.tarih.startsWith(s) },
+    ],
+  };
+}
+
 export function DokumanListesi({ dokumanlar, yaz }: { dokumanlar: DokumanSatiri[]; yaz: boolean }) {
   const [acik, setAcik] = useState(false);
+  const s = useSuzgec(dokumanTanimi(dokumanlar), dokumanlar);
   const sutunlar: Sutun<DokumanSatiri>[] = [
     { k: "ad", genislik: "34%", baslik: "Döküman", kart: "ust", sira: 1, hucre: (d) => <span><b>{d.ad}</b>{d.kod && <AltSatir>{d.kod}</AltSatir>}</span> },
     { k: "tur", genislik: "16%", baslik: "Tür", kart: "govde", sira: 2, hucre: (d) => <><KartEtiket>Tür</KartEtiket>{d.tur}</> },
@@ -141,10 +162,10 @@ export function DokumanListesi({ dokumanlar, yaz }: { dokumanlar: DokumanSatiri[
   ];
   return (
     <>
-      <SayfaBasi baslik="Dökümanlar" sayac={<><b>{dokumanlar.length}</b> döküman</>} tuslar={yaz && <Tus ikon="file-plus" onClick={() => setAcik(true)}>Döküman yükle</Tus>} />
+      <SayfaBasi baslik="Dökümanlar" sayac={<Sayac s={s} />} tuslar={yaz && <Tus ikon="file-plus" onClick={() => setAcik(true)}>Döküman yükle</Tus>} />
       <Sekmeler ad="Döküman bölümleri" ogeler={DOKUMAN_SEKMELERI} secili="/dokumanlar/diger" />
-      {dokumanlar.length ? <Liste baslik="Diğer dökümanlar" sutunlar={sutunlar} kayitlar={dokumanlar} anahtar={(d) => d.id} />
-        : <BosDurum ikon="file-text" baslik="Döküman yok" metin="Kalite el kitabı, prosedür, talimat gibi firma belgeleri burada tutulur." />}
+      <SuzgecliListe s={s} on="dok" baslik="Diğer dökümanlar" sutunlar={sutunlar} anahtar={(d) => d.id}
+        bosVeri={{ ikon: "file-text", baslik: "Döküman yok", metin: "Kalite el kitabı, prosedür, talimat gibi firma belgeleri burada tutulur." }} />
       {acik && <DokumanPenceresi kapat={() => setAcik(false)} />}
     </>
   );

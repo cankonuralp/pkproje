@@ -425,3 +425,46 @@ export function vhYukseklikHatalari(dosyalarCss: readonly { ad: string; metin: s
   }
   return hatalar;
 }
+
+
+/** 481: süzgeçsiz <Liste> izni — dosya (src/'ye göre) → sayı ve gerekçe (sayfanın ana listesi değil: özet, rapor tablosu, kartın bölümü, pencere) */
+export const SUZGECSIZ_BOLUMLER_GEREKCE: Record<string, [number, string]> = {
+  "modules/anasayfa/ui/AnaSayfa.tsx": [3, "Ana sayfa özet listeleri (ilk 5; tamamı modülün süzgeçli listesinde)"],
+  "modules/araclar/ui/AracListesi.tsx": [2, "araç kartının bölümleri: haftalık kilometre geçmişi, aracın tutanakları"],
+  "modules/egitimler/ui/EgitimListesi.tsx": [1, "kayıt penceresinde kaydın geçmişi"],
+  "modules/firma-ayarlari/ui/FirmaAyarlari.tsx": [1, "Yapay zekâ bölümündeki aylık kullanım tablosu"],
+  "modules/muhasebe/ui/Giderler.tsx": [1, "iş kartındaki işin giderleri bölümü"],
+  "modules/muhasebe/ui/Karlilik.tsx": [3, "gelir-gider rapor tabloları (dönem seçicisiyle)"],
+  "modules/performans/ui/Performans.tsx": [1, "kişi sayfasının günlük iş bölümü (dönem seçicisiyle)"],
+  "modules/personel/ui/RolYetkileri.tsx": [1, "rol × modül yetki tablosu (liste değil, matris)"],
+};
+export const SUZGECSIZ_BOLUMLER: Readonly<Record<string, number>> = Object.fromEntries(Object.entries(SUZGECSIZ_BOLUMLER_GEREKCE).map(([k, [n]]) => [k, n]));
+
+/** 481 (kalıp 14–15): sayfa başlığı (SayfaBasi) çizen bileşende süzgeçsiz <Liste> — yalnız gerekçeli bölümlerde, en çok izin verilen sayıda.
+    dosya adı src/'ye göre ("modules/…/X.tsx"); bulgu: izinsiz dosya, sayısı artan dosya, artık listesi olmayan izin satırı */
+export function suzgecsizListeler(tsx: readonly { ad: string; metin: string }[], izin: Readonly<Record<string, number>>): string[] {
+  const bulunan = new Map<string, number>();
+  for (const d of tsx) {
+    if (!d.metin.includes("<SayfaBasi")) continue;
+    const n = (d.metin.match(/<Liste\b/g) ?? []).length;
+    if (n) bulunan.set(d.ad.replace(/^src\//, ""), n);
+  }
+  const hata: string[] = [];
+  for (const [ad, n] of bulunan) {
+    if (!(ad in izin)) hata.push(`${ad}: sayfa başlıklı bileşende süzgeçsiz <Liste> (${n})`);
+    else if (n > izin[ad]) hata.push(`${ad}: süzgeçsiz liste sayısı arttı (${izin[ad]} → ${n})`);
+  }
+  for (const ad of Object.keys(izin)) if (!bulunan.has(ad)) hata.push(`${ad}: artık süzgeçsiz liste yok — izinden çıkar`);
+  return hata;
+}
+
+/** 480: yan menü sayısının sebebi — sayfa başlığı şeridi çizer, kabuk sayıları bağlamla verir, her balon sebepli kurulur */
+export function takipSeridiEksikleri(sayfa: string, kabuk: string, takip: string): string[] {
+  const hata: string[] = [];
+  if (!/export function SayfaBasi[\s\S]{0,400}<TakipSeridi \/>/.test(sayfa)) hata.push("SayfaBasi şeridi çizmiyor");
+  if (!/<TakipBaglami\.Provider value=\{balon\}>\{children\}<\/TakipBaglami\.Provider>/.test(kabuk)) hata.push("kabuk sayıları bağlamla vermiyor");
+  const sebepli = [...takip.matchAll(/\bkoy\(\d+, \{/g)].length, hepsi = [...takip.matchAll(/\bkoy\(/g)].length;
+  if (sebepli !== hepsi) hata.push(`sebepsiz balon: ${hepsi - sebepli}`);
+  if (sebepli < 9) hata.push(`balonlu modül sayısı düştü: ${sebepli}`);
+  return hata;
+}
