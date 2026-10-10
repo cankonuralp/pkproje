@@ -2365,7 +2365,12 @@ revizyon, alan kopyalama, hafif kusur devri, meslek eşleşme denetimi).
   Üçüncü koşuda (5fb113a) 9 işin 8'i yeşil; tablet 3. parça iki kez üst üste site taraması sırasında makineyle birlikte kapandı ("runner has
   received a shutdown signal"). Site taraması her genişlikte kendi işinde (parçalar onu dışarıda bırakır — PROBATA_E2E_TARAMA; kapı denetimi:
   tarama parçalardan çıkarılınca kendi işi şart); sunucu dakikada bir "[bellek]" satırı yazar (kalan bellek, süreç türü başına). 8 Ekim'deki
-  (423) aynı ayarın geri alınma sebebi de buydu: testte derlenen sayfa (o gün çevrimdışı denemesinin Yeni rapor sayfası) — artık testte derleme yok.
+  (423) aynı ayarın geri alınma sebebi de buydu: testte derlenen sayfa (o gün çevrimdışı denemesinin Yeni rapor sayfası).
+  **Dördüncü koşu (3e9326f) ölçtü:** sayfaları bellekte tutunca geliştirme sunucusu hazırlıkta 3 → 13 GB (sayfa başına ~110 MB); 16 GB'lık makine
+  testler başlamadan kapanıyor. Bellekte tutma GERİ ALINDI (ikinci kez — next.config.ts'te not: kullanılmaz). Kalan: hazırlık bütün sayfaları bir kez
+  derler (derleme önbelleği ısınır), site taraması kendi işinde, bellek izi. Kalıcı çözüm (sonra, ayrı iş): uçtan uca testleri yayın derlemesinde
+  koşmak — derleme bir kez, testte derleme / yeniden yükleme yok, bellek az. Engelleri: vitrin sayfaları yayında kapalı (5 test dosyası), yayının
+  güvenlik başlığı (upgrade-insecure-requests) http'de, "standalone" çıktının başlatılması, görsel karşılaştırma görüntüleri yeniden.
 - 2026-10-09 (467): **Mekanik zorunlu Bakanlık formatları** (reisim, hata listesi 25–26: *"mekanik tarafındaki zorunlu formatlar hala yok, kule vinç
   vb."*; *"eklenti kullanarak indir izin veriyorum"*). Bakanlığın sitesinden indirildi (2026-10-09): ZPKR06 kule kren (yürürlük 01.01.2026), ZPKR07 asılı
   erişim donanımı (01.02.2026), ZPMR01 LPG tankı periyodik muayene ve ZYDR01 LPG tankı yeterliliğin yeniden değerlendirilmesi (18.07.2025) + kriter

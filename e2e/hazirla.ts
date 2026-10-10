@@ -78,7 +78,9 @@ export default async function hazirla(_ayar: FullConfig) {
   /* 468 (2026-10-10, deneme makinesi 927228e): elle yazılan liste eksik kalıyordu — testte ilk kez derlenen sayfa (Yeni rapor: çevrimdışı önceden
      indirme; "bulunamadı": yönetim adresi ayrımı) geliştirme sunucusunu 30 sn'den uzun meşgul etti, o anki istek düştü. Uygulamanın BÜTÜN sayfa ve
      uçları klasörden bulunur (src/app: page / route; yönetim grubu aşağıda kendi adresinde) ve testlerden önce bir kez istenir — oturumlu çerezle,
-     127.0.0.1 + Host başlığıyla (sonucu değil, derlemeyi bekleriz). Yeni bir rota parametresinin değeri e2e/rotalar.ts'te tanımlanmadan hazırlık durur. */
+     127.0.0.1 + Host başlığıyla (sonucu değil, derlemeyi bekleriz). Yeni bir rota parametresinin değeri e2e/rotalar.ts'te tanımlanmadan hazırlık durur.
+     Geliştirme sunucusu 60 sn açılmayan sayfayı yine bellekten atar (hepsini tutmak 13 GB — next.config.ts notu); bu istekler derleme önbelleğini
+     ısıtır: testte yeniden derlenen sayfa ilk (soğuk) derlemenin süresini beklemez. */
   const cerez = (await sayfa.context().cookies()).map((c) => `${c.name}=${c.value}`).join("; ");
   const oturumlu = await request.newContext({ baseURL: `http://127.0.0.1:${E2E_KAPI}`,
     extraHTTPHeaders: { Host: `${E2E_FIRMA.kisaAd}.localhost:${E2E_KAPI}`, Cookie: cerez }, maxRedirects: 0 });

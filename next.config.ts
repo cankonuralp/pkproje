@@ -27,12 +27,10 @@ const ortak: NextConfig = {
   /* geliştirme göstergesi (sol altta yüzen rozet): uçtan uca sunucusunda kapalı — telefonda altta yapışkan tuş çubuğunun üstüne binip tıklamayı
      engelliyordu (402); hata olursa geliştirme hata penceresi yine açılır. Yayında zaten yok. */
   ...(process.env.PROBATA_HATA_KANALI === "0" ? { devIndicators: false as const } : {}),
-  /* 468 (2026-10-10, deneme makinesi 8cc4798 / 37992985151): geliştirme sunucusu 60 sn açılmayan sayfayı bellekten atıyor (onDemandEntries
-     varsayılanı: 60 sn, son 5 sayfa) — e2e/hazirla.ts'in önceden derlediği sayfalar test sırasına gelene dek atılıyor, test o sayfaya gidince
-     yeniden derleniyor ve açık sayfa yeniden yükleniyordu: sayfa açma "ERR_ABORTED" (telefon zimmetler), onay penceresi açılmadı (hesap), site
-     taraması her sayfada yeniden derlemeyle telefonda 50 dk'yı aştı. Yalnız uçtan uca sunucusunda: derlenen sayfa koşu boyunca bellekte kalır.
-     Yayında geçersiz (yalnız geliştirme kipi). */
-  ...(process.env.PROBATA_WEBPACK_BELLEK === "1" ? { onDemandEntries: { maxInactiveAge: 24 * 60 * 60 * 1000, pagesBufferLength: 1000 } } : {}),
+  /* onDemandEntries (derlenen sayfaları bellekte tutma) uçtan uca sunucusunda KULLANILMAZ — iki kez denendi, ikisinde de geri alındı: 423
+     (2026-10-08) ve 468 (2026-10-10). Ölçüldü (3e9326f, scripts/e2e-sunucu.ts "[bellek]"): bütün sayfalar tutulunca geliştirme sunucusu
+     hazırlıkta 3 GB'tan 13 GB'a çıkıyor (sayfa başına ~110 MB), 16 GB'lık deneme makinesi testler başlamadan kapanıyor. Varsayılan (60 sn, son
+     5 sayfa) kalır; hazırlık bütün sayfaları bir kez derleyip derleme önbelleğini ısıtır (e2e/rotalar.ts), sonraki derleme önbellekten. */
   /* PDF motoru (src/belge/pdf.ts, 316): Chromium paketleri derlemeye katılmaz (düğüm modülü olarak yüklenir); belge CSS'i, yazı tipi ve sunucusuz
      Chromium ikilisi yalnız PDF basan uçların izine eklenir (teklif PDF'i — 325; fatura özeti — 340; talep formu — 341; araç tutanağı — 342) — rapor sayfası da (İmzala sunucu eylemi orada koşar; 315–317
      incelemesi), araç listesi ve araç sayfası da (Tutanağı kaydet eylemi tutanağın PDF'ini orada basar, 342), personel kartı da (zimmet formu İmzaya gönder, 344), eğitim kayıtları da (katılım formu, 345) */

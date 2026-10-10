@@ -61,10 +61,10 @@ jobs:
   # dosya dosya): her parça kendi makinesinde, kendi taze sunucusu ve veritabanıyla (tohumlar spec başına ayrı — dosyalar birbirine dayanmaz),
   # yarı yük ve yarı sürede. Altı iş aynı anda. 2026-10-10: ÜÇ PARÇA — 467'den sonra (dokuz Bakanlık türü, büyüyen paketler) ikinci parçanın
   # sonundaki dosya (zimmetler) iki koşuda makine belleği bitince düştü ("frame detached", "browser has been closed"); dokuz iş aynı anda.
-  # 468 (2026-10-10): uçtan uca sunucusu derlenen sayfaları koşu boyunca tutar ve hazırlık bütün sayfaları önceden derler (e2e/rotalar.ts) —
-  # testte derleme yok. Tablet 3. parçada site taraması iki koşuda üst üste makineyle birlikte kapandı (5fb113a: "runner has received a shutdown
-  # signal"). SİTE TARAMASI (e2e/tarama.spec.ts, en uzun ve en ağır test) her genişlikte KENDİ işinde; parçalar onu dışarıda bırakır
-  # (PROBATA_E2E_TARAMA=haric, playwright.config.ts). On iki iş aynı anda. Sunucu dakikada bir "[bellek]" satırı yazar (scripts/e2e-sunucu.ts).
+  # 468 (2026-10-10): hazırlık bütün sayfaları bir kez derler (e2e/rotalar.ts; derleme önbelleği ısınır). SİTE TARAMASI (e2e/tarama.spec.ts, en
+  # uzun ve en ağır test) her genişlikte KENDİ işinde; parçalar onu dışarıda bırakır (PROBATA_E2E_TARAMA=haric, playwright.config.ts). On iki iş
+  # aynı anda. Sunucu dakikada bir "[bellek]" satırı yazar (scripts/e2e-sunucu.ts) — derlenen sayfaları bellekte tutmak ölçüldü: 13 GB, makine
+  # (16 GB) kapanıyordu; kullanılmaz (next.config.ts notu).
   uctan_uca:
     name: Uçtan uca (${{ matrix.proje }} ${{ matrix.parca }})
     if: github.ref != 'refs/heads/main'
