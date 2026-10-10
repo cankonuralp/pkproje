@@ -2355,6 +2355,13 @@ revizyon, alan kopyalama, hafif kusur devri, meslek eşleşme denetimi).
 - Emsal ürünler: https://opwire.app/iso-17020-periyodik-kontrol-yazilimi/ · https://17020muayene.vidco.com.tr/ · https://akuple.com/asansor-kontrol-yazilimi/ · https://ensyazilim.com/
 
 ## 11 · Değişiklik günlüğü
+- 2026-10-10 (476): **469–475 YAYINDA** — main 2cd1e96 (göç yok, 79 göç), sağlık "tamam" (sürüm 2cd1e96), duman 10/10; canlıda ölçüldü: saha
+  ekranı sayfası oturumsuz girişe yönlenir, gömme izni yalnız kendi kökenimiz (frame-ancestors 'self' + SAMEORIGIN), kurucu ve öteki sayfalar
+  'none' + DENY. Son 12 saatte çalışma hatası yalnız bilinen duyuru zaman aşımı (önceki yayın). Deneme makinesi 13/13 yeşil (tablet 3 bir kez
+  bellek sıkışıklığında giriş zaman aşımı — o anda 1 GB boş bellek, takasa geçilmişti → yalnız o iş yeniden koştu; kalıcı çözüm hata listesi 43,
+  reisim kararı bekliyor). Hata listesi: 38, 40, 41 "bu yayında"; 35 (Talepler–Onaylar sunumu, karar formu boş) ve 9 (otomatik alanların yeri,
+  sonraki tur) açık; önceki yayının maddeleri "önceden yayında". Oturum isteyen ekranlara (kurucu, saha ekranı, sürüm sayfası) canlıda giriş
+  reisim'in — gözle ölçemedim; aynı ekranlar deneme makinesinde üç genişlikte uçtan uca geçti (görüntüler e2e-goz).
 - 2026-10-10 (475): Deneme makinesi (9d7aa74) buldu: saha ekranı kâğıttaki değişikliği alıyordu ama çerçeve "dene" ile açılıp ilk iletiyle "Düzenle"ye
   geçince yalnız yeni eklenen bölümler açılıyor, var olanlar kapalı kalıyordu — Düzenle'ye her geçişte bütün bölümler açılır. Format kurucu uçtan uca
   akışı (471–473 adımlarıyla) tablette 120 sn'lik toplam test süresini aştı → bu testin süresi 300 sn (beklentiler aynı).
