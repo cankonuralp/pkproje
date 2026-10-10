@@ -283,6 +283,8 @@ export function testKapisiEksikleri(paketJson: string, ciYml: string): string[] 
   const matris = /\bproje:\s*\[([^\]]*)\]/.exec(ciYml)?.[1].split(",").map((x) => x.trim()) ?? [];
   for (const g of ["masaustu", "tablet", "telefon"]) if (!matris.includes(g)) eksik.push(`CI'da uçtan uca ${g} yok`);
   if (!ciYml.includes("run: npm run test:e2e -- --project=${{ matrix.proje }}")) eksik.push("CI'da uçtan uca koşusu yok");
+  /* 468: site taraması parçalardan çıkarılınca kendi işi olmalı — yoksa tarama hiç koşmaz, koşu yine yeşil görünür */
+  if (ciYml.includes("'haric'") && !/\bparca:\s*\[[^\]]*\btarama\b/.test(ciYml)) eksik.push("CI'da site taraması parçalardan çıkarılmış ama kendi işi yok");
   return eksik;
 }
 

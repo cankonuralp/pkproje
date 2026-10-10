@@ -14,6 +14,8 @@ const hazir = process.env.PROBATA_CHROMIUM || (existsSync("/opt/pw-browsers/chro
 
 export default defineConfig({
   testDir: "e2e",
+  /* 468: deneme makinesinde site taraması (en ağır test) kendi işinde — parçalar onu dışarıda bırakır, tarama işi yalnız onu koşar; yerelde hepsi */
+  ...(process.env.PROBATA_E2E_TARAMA === "haric" ? { testIgnore: ["**/tarama.spec.ts"] } : process.env.PROBATA_E2E_TARAMA === "yalniz" ? { testMatch: ["**/tarama.spec.ts"] } : {}),
   fullyParallel: false,
   workers: 1,
   retries: 0,

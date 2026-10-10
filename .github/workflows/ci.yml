@@ -61,8 +61,12 @@ jobs:
   # dosya dosya): her parça kendi makinesinde, kendi taze sunucusu ve veritabanıyla (tohumlar spec başına ayrı — dosyalar birbirine dayanmaz),
   # yarı yük ve yarı sürede. Altı iş aynı anda. 2026-10-10: ÜÇ PARÇA — 467'den sonra (dokuz Bakanlık türü, büyüyen paketler) ikinci parçanın
   # sonundaki dosya (zimmetler) iki koşuda makine belleği bitince düştü ("frame detached", "browser has been closed"); dokuz iş aynı anda.
+  # 468 (2026-10-10): uçtan uca sunucusu derlenen sayfaları koşu boyunca tutar ve hazırlık bütün sayfaları önceden derler (e2e/rotalar.ts) —
+  # testte derleme yok. Tablet 3. parçada site taraması iki koşuda üst üste makineyle birlikte kapandı (5fb113a: "runner has received a shutdown
+  # signal"). SİTE TARAMASI (e2e/tarama.spec.ts, en uzun ve en ağır test) her genişlikte KENDİ işinde; parçalar onu dışarıda bırakır
+  # (PROBATA_E2E_TARAMA=haric, playwright.config.ts). On iki iş aynı anda. Sunucu dakikada bir "[bellek]" satırı yazar (scripts/e2e-sunucu.ts).
   uctan_uca:
-    name: Uçtan uca (${{ matrix.proje }} ${{ matrix.parca }}/3)
+    name: Uçtan uca (${{ matrix.proje }} ${{ matrix.parca }})
     if: github.ref != 'refs/heads/main'
     runs-on: ubuntu-latest
     # 413: olağan süre 19–26 dk (+ yavaş paket sunucusunda kurulum ~10 dk — 7ed6e25 telefon 34 dk); asılı kalan iş kesilir. 420: site taraması
@@ -72,7 +76,7 @@ jobs:
       fail-fast: false
       matrix:
         proje: [masaustu, tablet, telefon]
-        parca: [1, 2, 3]
+        parca: [1, 2, 3, tarama]
     steps:
       - uses: actions/checkout@v7
       - uses: actions/setup-node@v7
@@ -85,7 +89,9 @@ jobs:
       - run: npx playwright install --with-deps chromium
         timeout-minutes: 20
       - id: e2e
-        run: npm run test:e2e -- --project=${{ matrix.proje }} --shard=${{ matrix.parca }}/3
+        env:
+          PROBATA_E2E_TARAMA: ${{ matrix.parca == 'tarama' && 'yalniz' || 'haric' }}
+        run: npm run test:e2e -- --project=${{ matrix.proje }} ${{ matrix.parca != 'tarama' && format('--shard={0}/3', matrix.parca) || '' }}
       - if: ${{ !cancelled() && steps.e2e.outcome == 'failure' }}
         uses: actions/upload-artifact@v7
         # 411: görsel karşılaştırmanın o koşuda yazdığı (eksik ya da farklı) görüntüler de — yeni kayıt buradan alınır, gözden geçirilip commit'e girer

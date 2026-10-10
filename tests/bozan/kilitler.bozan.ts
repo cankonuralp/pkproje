@@ -142,6 +142,8 @@ test("test kapısı: derleme betiği testsiz kalınca, yayın denetimden kopunca
   assert.equal(testKapisiEksikleri(paket, ci.replace("status=success", "status=completed")).length, 1);
   /* 2026-10-08: uçtan uca genişlikleri ayrı işlerde — telefon matristen düşerse yakalanır */
   assert.deepEqual(testKapisiEksikleri(paket, ci.replace("proje: [masaustu, tablet, telefon]", "proje: [masaustu, tablet]")), ["CI'da uçtan uca telefon yok"]);
+  /* 468: site taraması parçalardan çıkarılıp kendi işi kalkınca yakalanır */
+  assert.deepEqual(testKapisiEksikleri(paket, ci.replace("parca: [1, 2, 3, tarama]", "parca: [1, 2, 3]")), ["CI'da site taraması parçalardan çıkarılmış ama kendi işi yok"]);
 });
 
 test("pdf paketi: Chromium eklenen bir sayfadan maxDuration kalkınca yakalanır (Chromium bütün sayfalara düşerdi)", () => {
