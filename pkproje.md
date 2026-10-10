@@ -2372,6 +2372,14 @@ revizyon, alan kopyalama, hafif kusur devri, meslek eşleşme denetimi).
 - Emsal ürünler: https://opwire.app/iso-17020-periyodik-kontrol-yazilimi/ · https://17020muayene.vidco.com.tr/ · https://akuple.com/asansor-kontrol-yazilimi/ · https://ensyazilim.com/
 
 ## 11 · Değişiklik günlüğü
+- 2026-10-10 (478): **477 YAYINDA** — Supabase göç 0079 (`goc` kaydıyla, 80 göç; uygulamadan sonra ölçüldü: altı kısıt, iki işlevin yeni gövdesi ve
+  arama yolu, uygulama rolünün `geri` sütun hakkı, API rolleri tabloları okuyamaz ve işlevi çalıştıramaz, RLS açık + zorunlu), main 1aab228, sağlık
+  "tamam" (sürüm 1aab228), duman 10/10; yeni rotalar oturumsuz girişe yönlenir (/onaylar/talepler, /talepler, /muhasebe/giderler, /personel/izinler).
+  Son 12 saatte çalışma hatası yalnız bilinen duyuru zaman aşımı. Deneme makinesi: ilk koşu (995b15b) kârlılık kilidinin eski beklentisinde düştü
+  (onaylanan masraf formu 60,00 — Muhasebe artık tutarı değiştiremiyor, 50,00 onaylanır → 1aab228 düzeltmesi); aynı koşudaki iki uçtan uca düşüş
+  girişte bellek sıkışıklığı; ikinci koşu 14/14 yeşil. Canlı deneme verisindeki 2 bekleyen izin talebi ve 1 bekleyen masraf formu artık Onaylar ›
+  Talepler'de. Oturum isteyen ekranları canlıda gözle ölçemedim (giriş reisim'in); aynı ekranlar deneme makinesinde üç genişlikte uçtan uca ve
+  erişilebilirlik taramasıyla geçti. Hata listesi: 35 "bu yayında"; B1 notu 44–46 açık (sonraki tur, önce maket).
 - 2026-10-10 (477): **TALEPLER–ONAYLAR** (§9 elli dördüncü tur, T1–T5 · B1). Göç **0079** (izin_talebi ve gider): yeni durum **"duzeltme"** +
   gerekçe sütunu `geri` (10–200); izin_talebi_koru ve gider_koru baştan: karar (onay / ret / düzeltmeye geri) yalnız bekleyen talebe, onay damgası;
   **onaylayan içeriği değiştiremez** (izin: tarih, tür, açıklama; masraf formu: tarih, tür, tutar, oran, iş, açıklama, fiş); düzeltmedeki talebi
