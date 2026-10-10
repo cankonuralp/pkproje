@@ -2355,6 +2355,9 @@ revizyon, alan kopyalama, hafif kusur devri, meslek eşleşme denetimi).
 - Emsal ürünler: https://opwire.app/iso-17020-periyodik-kontrol-yazilimi/ · https://17020muayene.vidco.com.tr/ · https://akuple.com/asansor-kontrol-yazilimi/ · https://ensyazilim.com/
 
 ## 11 · Değişiklik günlüğü
+- 2026-10-10 (475): Deneme makinesi (9d7aa74) buldu: saha ekranı kâğıttaki değişikliği alıyordu ama çerçeve "dene" ile açılıp ilk iletiyle "Düzenle"ye
+  geçince yalnız yeni eklenen bölümler açılıyor, var olanlar kapalı kalıyordu — Düzenle'ye her geçişte bütün bölümler açılır. Format kurucu uçtan uca
+  akışı (471–473 adımlarıyla) tablette 120 sn'lik toplam test süresini aştı → bu testin süresi 300 sn (beklentiler aynı).
 - 2026-10-10 (474): Site taraması (telefon) sürüm sayfasında buldu: belge önizlemesi telefonda yana kayıyor ama klavyeyle kaydırılamıyordu (odak dış
   kapta, kayan belgenin kendisi). Odak ve ad kayan öğeye (rapor önizlemesi ve onay ekranındaki gibi) — sürüm sayfası ve format kurucu.
 - 2026-10-10 (473): **Saha ekranı onaylı maketle eşitlendi** (k1–k4 maketindeki eksikler): saha ekranının "Düzenle" kipinde bölüm yukarı / aşağı

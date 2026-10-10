@@ -44,6 +44,9 @@ async function yayinla(page: Page, notu: string, sira: number) {
 }
 
 test("rapor şablonu: şablondan başlat, önizle, yayınla; yeni sürümle eskisi düşer; denetçi yalnız görür", async ({ page, context }, bilgi) => {
+  /* 2026-10-10 (475): 471–473 saha ekranı (çerçeve sayfası ilk açılışta derlenir) ve sürüm sayfası adımları eklendi — tablette toplam 120 sn'lik
+     test süresi aşıldı (beklemeler ve beklentiler aynı; yalnız bu uzun akışın toplam süresi) */
+  test.setTimeout(300_000);
   const on = { masaustu: "MS", tablet: "TB", telefon: "TL" }[bilgi.project.name] ?? "XX";
   const kod = `${on}${"KLMNOPQR"[bilgi.retry]}`;
   await girisli(page, "yonetici");

@@ -183,14 +183,18 @@ export function SahaRaporu({ v, yeni, deneme }: { v: Gorunum; yeni?: { plan: str
     } catch { /* okunamazsa kapalı */ }
     if (l.length) queueMicrotask(() => setAcikSet(new Set(l)));
   }, [acikAnahtar, denemede]);
-  /* 472: örnek raporda düzenleme kipinde bölümler açık gelir; kurucuda eklenen bölüm de açık gelir (dene kipinde gerçek ekran gibi kapalı) */
+  /* 472: örnek raporda düzenleme kipinde bölümler açık gelir; kurucuda eklenen bölüm de açık gelir (dene kipinde gerçek ekran gibi kapalı).
+     475 (deneme makinesi, masaüstü): çerçeve "dene" ile açılıp ilk iletiyle "duzenle"ye geçince yalnız YENİ bölümler açılıyordu, var olanlar kapalı
+     kalıyordu — düzenleme kipine her geçişte bütün bölümler açılır */
   const gorulen = useRef<ReadonlySet<string> | null>(null);
+  const oncekiKip = useRef<string | null>(null);
   useEffect(() => {
     if (!denemeKip) return;
     const l = [SABIT.firma, SABIT.ekipman, SABIT.cihaz, ...v.tanim.bolumler.map((b) => b.id)];
-    const once = gorulen.current;
+    const once = gorulen.current, kipDegisti = oncekiKip.current !== denemeKip;
     gorulen.current = new Set(l);
-    const yeniler = l.filter((id) => !once?.has(id));
+    oncekiKip.current = denemeKip;
+    const yeniler = kipDegisti ? l : l.filter((id) => !once?.has(id));
     if (denemeKip === "duzenle" && yeniler.length) queueMicrotask(() => setAcikSet((s) => new Set([...s, ...yeniler])));
     /* kurucuda eklenen maddeye ilk cevap, çıkarılan maddenin cevabı düşer */
     if (once) queueMicrotask(() => setCevaplar((c) => cevaplariTamamla(v.tanim, c)));
