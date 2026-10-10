@@ -92,18 +92,6 @@ input.oku { background: var(--zemin2); border-color: var(--kenar); color: var(--
 .cevapTus input:checked + span { border-color: var(--vurgu); background: var(--vurgu); color: var(--vurgu-uzeri); }
 .cevapOlumsuz input:checked + span { border-color: var(--hata-yazi); background: var(--hata-zemin); color: var(--hata-yazi); }
 .cevapTus input:focus-visible + span { outline: 3px solid var(--odak); outline-offset: 2px; }
-/* 473 (maket kararı k1): kurucunun saha görünümünde yerinde düzenleme — kalem / çıkar tuşu, yazı kutusu, "… ekle" */
-.yerindeTus {
-  display: inline-flex; align-items: center; justify-content: center; width: 28px; height: 28px; margin-left: 4px; padding: 0; vertical-align: middle;
-  border: 1px dashed var(--kenar); border-radius: var(--r-kucuk); background: transparent; color: var(--yazi2); cursor: pointer;
-}
-.yerindeTus:hover { background: var(--zemin2); color: var(--yazi); }
-.yerindeGirdi {
-  width: min(100%, 28rem); min-height: 36px; padding: 4px 8px; border: 1px solid var(--vurgu); border-radius: var(--r-kucuk);
-  background: var(--kart); color: var(--yazi); font: inherit;
-}
-.yerindeEkle { display: flex; padding-top: 8px; }
-.yerindeAraclar { display: flex; align-items: center; gap: 2px; }
 .maddeBilgi { margin: -4px 0 -6px 28px; color: var(--yazi2); font-size: var(--boy-kucuk); }
 .maddeBilgi > summary { display: inline-flex; align-items: center; gap: 6px; min-height: var(--tus-y); cursor: pointer; list-style: none; }
 .maddeBilgi > summary::-webkit-details-marker { display: none; }

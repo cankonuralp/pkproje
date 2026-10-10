@@ -22,8 +22,8 @@
    gönderildi (R1)" + gerekçe; rapor no revizyon ekiyle.
    472 (reisim 2026-10-10, maket kararları k1–k4): `deneme` — format kurucusunun "Saha ekranı" görünümü taslak formatı bu ekranla, UYDURMA bir
    raporla (../ornek.ts) gösterir: sunucuya hiçbir şey gitmez (Kaydet / Onaya gönder yalnız denetler, cihaz kuyruğu ve S.A.Y yok), fotoğraf
-   dosyası yüklenmez (sayı artar), kırıntı yok. kip "duzenle": bölümler açık gelir ve formatın kendisi yerinde düzenlenir (473, Baglam.yerinde);
-   kip "dene": denetçinin göreceği gibi. */
+   dosyası yüklenmez (sayı artar), kırıntı yok; denetçinin göreceği gibi. 483 (reisim 2026-10-10: "rapor düzenlemede sadece saha ekranı gözüksün
+   o ekranda düzenleme yapılamasın"): 473'ün "duzenle" kipi (formatın saha ekranında yerinde düzenlenmesi) kalktı — format yalnız kâğıtta. */
 import { useRouter } from "next/navigation";
 import { Fragment, useEffect, useMemo, useRef, useState, useSyncExternalStore, useTransition, type ReactNode, type TransitionStartFunction } from "react";
 import { useBildir } from "../../../components/bildirim/Bildirim";
@@ -36,15 +36,14 @@ import { DegerYok, Kirinti, Kod, NesneBasi, Rozet, SeritKap } from "../../../com
 import { simdiIso, tarihNo } from "../../../components/secim/tarih";
 import { Serit } from "../../../components/serit/Serit";
 import { Tus, TusBaglanti } from "../../../components/tus/Tus";
-import { altBaslikAnasi, altGrupSonu, raporDuzeni, sabitEkipmanAlanlari } from "../../../format/duzen";
+import { raporDuzeni, sabitEkipmanAlanlari } from "../../../format/duzen";
 import { degerlendir } from "../../../format/motor";
 import { EKIPMAN_ALAN_ADI, type Cevaplar } from "../../../format/tanim";
 import { ayEkle, RAPOR_DURUM, type EkipmanBilgisi, type RaporDurumu, type RaporTarihleri } from "../sema";
 import { cevaplariTamamla } from "../ornek";
 import type { SahaRaporu as SahaRaporuVerisi } from "../server/raporlar";
 import {
-  alanId, BilgiAlani, BilgiBlok, FormatBolumu, OkuGirdi, RaporBolumu, Satir, Satirlar, TarihKutusu, YerindeAltEkle, YerindeEkle, yerindeAlan, YerindeTasi, YerindeYazi,
-  type Baglam, type Kaynak, type Yerinde,
+  alanId, BilgiAlani, BilgiBlok, FormatBolumu, OkuGirdi, RaporBolumu, Satir, Satirlar, TarihKutusu, type Baglam, type Kaynak,
 } from "./Bloklar";
 import { CihazBolumu } from "./CihazBolumu";
 import { EtiketOkuma } from "./EtiketOkuma";
@@ -62,9 +61,8 @@ import { sayRaporBagla } from "../../say/ui/baglam";
 import stil from "./raporlar.module.css";
 
 type Gorunum = SahaRaporuVerisi;
-/** 472: format kurucusunun saha görünümü (örnek rapor; yerinde: formatı yerinde düzenleme — 473; durum: denemenin canlı eksik / kusur sayısı
-    kurucunun kullanım kutusuna) */
-export interface Deneme { kip: "duzenle" | "dene"; yerinde?: Yerinde; durum?: (x: { eksik: number; kusur: number }) => void }
+/** 472: format kurucusunun saha görünümü (örnek rapor; durum: denemenin canlı eksik / kusur sayısı kurucunun kullanım kutusuna) */
+export interface Deneme { durum?: (x: { eksik: number; kusur: number }) => void }
 type EkipmanAnahtari = keyof EkipmanBilgisi;
 type TarihAnahtari = keyof RaporTarihleri;
 interface Eksik { bolum: string; alan: string; ad: string }
@@ -100,7 +98,7 @@ const bosla = <T extends Record<string, string | null>>(o: T) => Object.fromEntr
 
 /** `yeni` (405): bağlantısız açılan YENİ rapor (v cihazda kuruldu, kimlik geçici) — planı, ekipmanı ve kodu; bütün işler kuyruktan gider */
 export function SahaRaporu({ v, yeni, deneme }: { v: Gorunum; yeni?: { plan: string; ekipman: string; kod: string }; deneme?: Deneme }) {
-  const denemede = !!deneme, denemeKip = deneme?.kip ?? null;
+  const denemede = !!deneme;
   const router = useRouter();
   const bildir = useBildir();
   const onayla = useOnayla();
@@ -183,22 +181,14 @@ export function SahaRaporu({ v, yeni, deneme }: { v: Gorunum; yeni?: { plan: str
     } catch { /* okunamazsa kapalı */ }
     if (l.length) queueMicrotask(() => setAcikSet(new Set(l)));
   }, [acikAnahtar, denemede]);
-  /* 472: örnek raporda düzenleme kipinde bölümler açık gelir; kurucuda eklenen bölüm de açık gelir (dene kipinde gerçek ekran gibi kapalı).
-     475 (deneme makinesi, masaüstü): çerçeve "dene" ile açılıp ilk iletiyle "duzenle"ye geçince yalnız YENİ bölümler açılıyordu, var olanlar kapalı
-     kalıyordu — düzenleme kipine her geçişte bütün bölümler açılır */
-  const gorulen = useRef<ReadonlySet<string> | null>(null);
-  const oncekiKip = useRef<string | null>(null);
+  /* 472: örnek raporda (kurucunun saha ekranı) bölümler gerçek ekran gibi kapalı gelir; kâğıtta eklenen maddeye ilk cevap, çıkarılan maddenin
+     cevabı düşer (taslak her değiştiğinde) */
+  const ilkTanim = useRef(true);
   useEffect(() => {
-    if (!denemeKip) return;
-    const l = [SABIT.firma, SABIT.ekipman, SABIT.cihaz, ...v.tanim.bolumler.map((b) => b.id)];
-    const once = gorulen.current, kipDegisti = oncekiKip.current !== denemeKip;
-    gorulen.current = new Set(l);
-    oncekiKip.current = denemeKip;
-    const yeniler = kipDegisti ? l : l.filter((id) => !once?.has(id));
-    if (denemeKip === "duzenle" && yeniler.length) queueMicrotask(() => setAcikSet((s) => new Set([...s, ...yeniler])));
-    /* kurucuda eklenen maddeye ilk cevap, çıkarılan maddenin cevabı düşer */
-    if (once) queueMicrotask(() => setCevaplar((c) => cevaplariTamamla(v.tanim, c)));
-  }, [denemeKip, v.tanim]);
+    if (!denemede) return;
+    if (ilkTanim.current) { ilkTanim.current = false; return; }
+    queueMicrotask(() => setCevaplar((c) => cevaplariTamamla(v.tanim, c)));
+  }, [denemede, v.tanim]);
   const acikYaz = (y: ReadonlySet<string>) => {
     setAcikSet(y);
     if (denemede) return;
@@ -245,7 +235,7 @@ export function SahaRaporu({ v, yeni, deneme }: { v: Gorunum; yeni?: { plan: str
   const yaz = (f: (c: Cevaplar) => Cevaplar) => { setCevaplar(f); setKirli(true); };
   const bag: Baglam = {
     v, c: cevaplar, yaz, d, oku, gecersiz, kaynak: (k) => kaynaklar[k], yz: !oku && v.yz, islem: { mesgul, baslat, yenile },
-    ekipmanAlani: (a) => (a.ekipman ? metinSatiri(a.ekipman, a.ad, EN[a.ekipman], a.ekipman === "imal", a) : null),
+    ekipmanAlani: (a) => (a.ekipman ? metinSatiri(a.ekipman, a.ad, EN[a.ekipman], a.ekipman === "imal") : null),
     cihaz: (bolumId) => <CihazBolumu v={v} bolumId={bolumId} oku={oku || !!yeni || denemede} gecersiz={gecersiz} mesgul={mesgul} baslat={baslat} yenile={yenile} />,
     foto: (bolumId, madde) => (denemede
       ? <DenemeFoto key={`${bolumId}-${madde ?? ""}`} adet={denemeFoto.filter((f) => f.bolum === bolumId && f.madde === madde).length}
@@ -253,7 +243,6 @@ export function SahaRaporu({ v, yeni, deneme }: { v: Gorunum; yeni?: { plan: str
         cikar={() => setDenemeFoto((l) => { const i = l.findIndex((f) => f.bolum === bolumId && f.madde === madde); return i < 0 ? l : l.filter((_, j) => j !== i); })} />
       : <FotoListesi key={`${bolumId}-${madde ?? ""}`} v={v} bolumId={bolumId} madde={madde} oku={oku} yeniAc={yeni ? yeniAc : undefined}
         gecersiz={gecersiz(madde ? `${madde}.foto` : bolumId)} mesgul={mesgul} baslat={baslat} yenile={yenile} />),
-    yerinde: deneme?.yerinde,
   };
 
   /* format bölümleri ve numaraları belgeyle ortak (format/duzen.ts, 427): yalnız kayıttan gelen alanlı bilgi bölümü 1. bölümün kopyası — çizilmez;
@@ -478,11 +467,10 @@ export function SahaRaporu({ v, yeni, deneme }: { v: Gorunum; yeni?: { plan: str
   }, [oku, yeni, denemede, v.id, v.no, v.tanim, v.cihazlar]);
 
   /* ── alan çizicileri ── */
-  /* a (473): formatın ekipman kaydına bağlı alanı — kurucunun saha görünümünde adı yerinde yazılır, alan çıkarılır */
-  const metinSatiri = (k: EkipmanAnahtari, etiket: string, en: number, sayisal = false, a?: { id: string; ad: string }) => {
+  const metinSatiri = (k: EkipmanAnahtari, etiket: string, en: number, sayisal = false) => {
     const id = EID(k), h = alanHata[`ekipman.${k}`];
     return (
-      <Satir key={k} etiket={etiket} htmlFor={id} yerinde={a ? yerindeAlan(bag, a) : undefined}>
+      <Satir key={k} etiket={etiket} htmlFor={id}>
         {oku ? <OkuGirdi id={id} deger={ekipman[k]} /> : <Girdi id={id} value={ekipman[k]} maxLength={en} inputMode={sayisal ? "numeric" : undefined} hata={!!h}
           onChange={(e) => ekipmanYaz(k, e.target.value)} />}
         {h && <p className={stil.alanHata} id={ipucuId(id)}>{h}</p>}
@@ -517,8 +505,7 @@ export function SahaRaporu({ v, yeni, deneme }: { v: Gorunum; yeni?: { plan: str
   const seritler: ReactNode[] = [];
   if (deneme) {
     seritler.push(<Serit key="deneme" tur="bilgi" ikon="flask-conical">
-      {deneme.kip === "duzenle" ? "Örnek rapor · düzenleme: kalemle adları yazın, “+” ile ekleyin, “×” ile çıkarın; değişiklik kâğıda da geçer. "
-        : "Örnek rapor · denetçinin göreceği gibi deneyin. "}Yazdıklarınız kaydedilmez; müşteri, tesis ve cihazlar uydurmadır.</Serit>);
+      Örnek rapor · denetçinin sahada göreceği ekran. Format kâğıtta düzenlenir; burada yazdıklarınız kaydedilmez, müşteri, tesis ve cihazlar uydurmadır.</Serit>);
   }
   if (genel) seritler.push(<Serit key="hata" tur="hata" ikon="circle-alert">{genel}</Serit>);
   /* 405: yeni rapor cihazda — numara ve kimlik sunucuda, bağlantı gelince */
@@ -639,8 +626,7 @@ export function SahaRaporu({ v, yeni, deneme }: { v: Gorunum; yeni?: { plan: str
         </RaporBolumu>
 
         <RaporBolumu id={SABIT.ekipman} no="2" baslik={duzen.ekipmanBaslik} acik={acik(SABIT.ekipman)} degistir={degistir(SABIT.ekipman)}
-          eksik={katilan.some((b) => bolumEksik(b.id))}
-          baslikIcerik={bag.yerinde && duzen.tam ? <YerindeYazi deger={duzen.tam.ad} ad="Bölüm adı" yaz={(s) => duzen.tam && bag.yerinde?.ad(duzen.tam.id, s)} /> : undefined}>
+          eksik={katilan.some((b) => bolumEksik(b.id))}>
           {/* 385: etiket plakasından okuma — yazılabilir raporda, firmada yapay zekâ açıksa, ekranda satırı olan etiket alanları için */}
           {bag.yz && etiketAlanlari.length > 0 && (
             <EtiketOkuma raporId={v.id} alanlar={etiketAlanlari} yaz={(k, x) => ekipmanYaz(k, x)} islem={bag.islem} />
@@ -656,7 +642,6 @@ export function SahaRaporu({ v, yeni, deneme }: { v: Gorunum; yeni?: { plan: str
             </Satir>
           </Satirlar>
           {!duzen.tam && katilan.map((b) => <BilgiBlok key={b.id} b={b} bag={bag} />)}
-          {duzen.tam && <YerindeEkle bag={bag} bolum={duzen.tam.id} ad="Alan ekle" />}
         </RaporBolumu>
 
         {cihazEk && (
@@ -666,19 +651,13 @@ export function SahaRaporu({ v, yeni, deneme }: { v: Gorunum; yeni?: { plan: str
         )}
 
         {/* 447 (reisim: "yetkili kişiler ve imzalar kısmının denetim raporu ekranında gözükmesine gerek yok"): imza bölümü yalnız belgede (PDF) */}
-        {gorunurBolumler.map(({ b, no, ust }, v) => {
-          /* 473: kurucunun saha görünümünde bölüm taşınır, ana bölümün alt başlık grubunun sonunda alt başlık eklenir (kâğıttaki gibi) */
-          const ana = bag.yerinde && altGrupSonu(gorunurBolumler, v) ? altBaslikAnasi(gorunurBolumler, v) : null;
-          return (
-            <Fragment key={b.id}>
-              {ust && <h2 className={stil.ustBaslik}><span className={stil.bolumNo}>{ust.no} · </span>{ust.ad}</h2>}
-              <FormatBolumu b={b} no={no} bag={bag} acik={acik(b.id)} degistir={degistir(b.id)}
-                eksik={bolumEksik(b.id) || (b.blok === "cihaz" && cihazEksik)}
-                yerindeTuslar={bag.yerinde ? <YerindeTasi ad={b.ad} ilk={v === 0} son={v === gorunurBolumler.length - 1} tasi={(yon) => bag.yerinde?.tasi(b.id, yon)} /> : undefined} />
-              {ana && <YerindeAltEkle ana={ana.ad} ekle={() => bag.yerinde?.altEkle(ana.id, b.id)} />}
-            </Fragment>
-          );
-        })}
+        {gorunurBolumler.map(({ b, no, ust }) => (
+          <Fragment key={b.id}>
+            {ust && <h2 className={stil.ustBaslik}><span className={stil.bolumNo}>{ust.no} · </span>{ust.ad}</h2>}
+            <FormatBolumu b={b} no={no} bag={bag} acik={acik(b.id)} degistir={degistir(b.id)}
+              eksik={bolumEksik(b.id) || (b.blok === "cihaz" && cihazEksik)} />
+          </Fragment>
+        ))}
       </div>
 
       {deneme ? (

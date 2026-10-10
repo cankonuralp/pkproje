@@ -8,9 +8,11 @@
    canlanmıyor bile"): kurucu RAPORUN KENDİSİ — kâğıt belgenin görünümünde; bölüm adına / sütun başlığına / maddeye basılıp yerinde yazılır, "+"
    yerinde ekler; "Belge önizlemesi" PDF'le aynı çiziciden. Görüntüler e2e-goz/ altına (deneme makinesi her koşuda yükler — gözle bakılır).
    472–474 (reisim 2026-10-10, maket kararları k1–k4): "Saha ekranı" — taslak gerçek saha ekranında (çerçeve, tablet genişliği) örnek raporla;
-   kâğıtta eklenen bölüm orada; saha ekranında yerinde yazılan ad kâğıda geçer; madde cevabı "Yan yana tuşlar" olunca tuş; "Denetçi gibi dene"de
+   kâğıtta eklenen bölüm orada; madde cevabı "Yan yana tuşlar" olunca tuş; "Denetçi gibi dene"de
    Onaya gönder yalnız denetler. Çerçeve sayfası yalnız kendi kökenimize gömülür (frame-ancestors 'self').
-   471 (maket kararı k5): sürüm sayfası — önceki sürüme göre değişenler, bu sürümle yazılan rapor, Belge ↔ Saha ekranı önizlemesi, öteki sürümler. */
+   471 (maket kararı k5): sürüm sayfası — önceki sürüme göre değişenler, bu sürümle yazılan rapor, Belge ↔ Saha ekranı önizlemesi, öteki sürümler.
+   483 (reisim 2026-10-10: "rapor düzenlemede sadece saha ekranı gözüksün o ekranda düzenleme yapılamasın"): saha ekranı SALT ÖNİZLEME — kalem /
+   taşı / alt başlık / kip seçicisi yok; madde cevabının biçimi kâğıtta ("Kurallar, saha ekranı ve genel muayene talimatı"). */
 import { mkdirSync } from "node:fs";
 import { expect, test, type Page } from "@playwright/test";
 import { girisli, hazir } from "./yardimci";
@@ -150,26 +152,22 @@ test("rapor şablonu: şablondan başlat, önizle, yayınla; yeni sürümle eski
     await expect(belge.getByText(/^\d+\.1 Deneme alt başlık$/)).toBeVisible();
     await expect(belge.getByText("Deneme yorumu", { exact: false }).first()).toBeVisible();
     await goz(page, "kurucu-belge", bilgi.project.name);
-    /* 472–474: saha ekranı — kâğıttaki değişiklik orada; orada yazılan ad kâğıda geçer; cevap biçimi; denetçi gibi dene */
+    /* 483: madde cevabının biçimi KÂĞITTA (saha ekranı salt önizleme) */
+    await page.getByText("Kurallar, saha ekranı ve genel muayene talimatı").click();
+    await page.getByRole("radio", { name: /^Yan yana tuşlar/ }).check();
+    /* 472–474 → 483: saha ekranı — kâğıttaki değişiklik orada; düzenleme tuşu yok; denetçi gibi denenir */
     await page.getByRole("button", { name: "Saha ekranı" }).click();
     const saha = page.frameLocator('iframe[title^="Saha ekranı"]');
     await expect(saha.getByRole("heading", { name: /Deneme yorumu/ })).toBeVisible({ timeout: 60_000 });
-    await expect(saha.getByText("Deneme maddesi").first()).toBeVisible();
     await expect(page.getByRole("region", { name: "Kullanım" })).toContainText("Kontrol maddesi");
-    await saha.getByRole("button", { name: "Bölüm adı değiştir: Deneme yorumu" }).click();
-    const sahaAd = saha.getByRole("textbox", { name: "Bölüm adı" });
-    await sahaAd.fill("Saha yorumu");
-    await sahaAd.press("Enter");
-    await expect(saha.getByRole("heading", { name: /Saha yorumu/ })).toBeVisible();
-    /* 473 (maket): saha ekranında bölüm taşınır (ilk bölümde yukarı kapalı), alt başlık grubunun sonunda alt başlık eklenir */
-    await expect(saha.getByRole("button", { name: /· yukarı$/ }).first()).toBeDisabled();
-    await saha.getByRole("button", { name: "Alt başlık ekle (Saha yorumu altına)" }).click();
-    await expect(saha.getByRole("heading", { name: /\d+\.2 · Yeni alt başlık/ })).toBeVisible();
-    await page.getByRole("button", { name: "Yan yana tuşlar" }).click();
+    await expect(saha.getByRole("button", { name: /^Bölüm adı değiştir/ })).toHaveCount(0);
+    await expect(saha.getByRole("button", { name: /· yukarı$/ })).toHaveCount(0);
+    await expect(page.getByRole("button", { name: "Düzenle", exact: true })).toHaveCount(0);
+    await expect(page.getByRole("button", { name: "Yan yana tuşlar" })).toHaveCount(0);
+    /* saha ekranında bölümler gerçek ekran gibi kapalı gelir (463) — kâğıtta maddesi eklenen Gözle kontrol açılır */
+    await saha.getByRole("button", { name: "Gözle kontrol bölümü", exact: true }).click();
     await expect(saha.getByRole("radiogroup", { name: "Deneme maddesi" })).toBeVisible();
     await goz(page, "kurucu-saha", bilgi.project.name);
-    await page.getByRole("button", { name: "Denetçi gibi dene" }).click();
-    await expect(saha.getByRole("button", { name: /^Bölüm adı değiştir/ })).toHaveCount(0);
     await expect(page.getByRole("region", { name: "Kullanım" })).toContainText("Deneme:");
     await saha.getByRole("button", { name: "Onaya gönder" }).click();
     const eksik = saha.getByRole("dialog", { name: "Zorunlu alanlar doldurulmadı" });
@@ -179,12 +177,10 @@ test("rapor şablonu: şablondan başlat, önizle, yayınla; yeni sürümle eski
       await eksik.getByRole("button", { name: "Tamam" }).click();
     }
     await page.getByRole("button", { name: "Kâğıt", exact: true }).click();
-    await expect(kagit.getByRole("region", { name: /Saha yorumu$/ })).toBeVisible();
-    await expect(kagit.getByRole("region", { name: /\d+\.2 Yeni alt başlık$/ })).toBeVisible();
     await page.getByRole("button", { name: "Taslağı kaydet" }).click();
     await expect(page.getByText("Taslak kaydedildi.").first()).toBeVisible({ timeout: 30_000 });
     await expect(page.getByText("Kaydedilmedi")).toHaveCount(0);
-    await expect(kagit.getByRole("region", { name: /Saha yorumu$/ })).toBeVisible({ timeout: 30_000 });
+    await expect(kagit.getByRole("region", { name: /Deneme yorumu$/ })).toBeVisible({ timeout: 30_000 });
     /* çerçeve sayfası: yalnız kendi kökenimize gömülür; öteki sayfalar hiç gömülmez (e2e/giris.spec) */
     const sahaYanit = await page.request.get(page.url().replace(/\/kurucu$/, "/saha"));
     expect(sahaYanit.status()).toBe(200);

@@ -2372,6 +2372,15 @@ revizyon, alan kopyalama, hafif kusur devri, meslek eşleşme denetimi).
 - Emsal ürünler: https://opwire.app/iso-17020-periyodik-kontrol-yazilimi/ · https://17020muayene.vidco.com.tr/ · https://akuple.com/asansor-kontrol-yazilimi/ · https://ensyazilim.com/
 
 ## 11 · Değişiklik günlüğü
+- 2026-10-10 (483): **FORMAT KURUCU: SAHA EKRANI SALT ÖNİZLEME, TEK DÜZENLEME YERİ KÂĞIT** (reisim: *"rapor düzenlemede sadece saha ekranı
+  gözüksün o ekranda düzenleme yapılamasın belliki beceremiyeceğiz bu işi istediğim gibi yapamamışsın çünkü sadece sahada personelin nasıl
+  göreceği gözüksün"*; *"kağıttan düzenleyebiliyoruz ama sahadaki görüntü nasıl oluyor düzenleyemiyoruz burası çok karmaşık bir çözüm öner"*).
+  **Çözüm:** format yalnız kâğıtta düzenlenir; saha ekranı denetçinin göreceği ekranı gösterir (aygıt Tablet / Telefon, "Denemeyi temizle",
+  kullanım kutusu; denetçi gibi denenir, hiçbir şey kaydedilmez). Sahaya özgü her ayar kâğıtta, öğenin ya da formatın ayarı olarak: madde cevabının
+  biçimi (açılır liste / yan yana tuşlar) "Kurallar, saha ekranı ve genel muayene talimatı"nda; bölümün fotoğraftan / Excel'den doldurulması
+  bölümün ayarında (484). 472–475'in "Düzenle" kipi, saha ekranındaki kalem / ekle / çıkar / taşı / alt başlık tuşları ve "probata-degis" iletisi
+  kalktı (raporlar/ui/Bloklar.tsx Yerinde*, SahaRaporu deneme.kip, SahaCerceve yerinde — kullanım 0, silindi; CSS .yerinde*). Kilit: e2e/
+  rapor-format.spec.ts (cevap biçimi kâğıttan; saha ekranında düzenleme tuşu, kip ve cevap seçicisi yok; denetçi gibi deneme).
 - 2026-10-10 (482): **GÖRSEL TUTARLILIK** (site taraması). (1) Sağ alttaki yüzen S.A.Y düğmesi sayfanın son satırındaki tuşları örtüyordu (personel
   kartı rol Kaydet, muhasebe iş kartı) → içeriğin altında düğme kadar boşluk (Kabuk.module.css, body:has([data-say-fab])); altta yapışkan
   çubuklu sayfada düğme zaten çubuğun üstünde. (2) Müşteriler'de "vergi no eksik" üç kez: listede adın altında + Durum sütununda, kartta başlık

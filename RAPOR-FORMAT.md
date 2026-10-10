@@ -101,6 +101,11 @@ PDF'e basılmaz.
   varsayılan tablet); "Düzenle" kipinde orada da yerinde düzenlenir (ad, ekle, çıkar) ve kâğıda geçer; "Denetçi gibi dene". Görünüm ayarı
   `cevap`: madde cevabı açılır liste ya da yan yana tuşlar (format başına; belgeye etkisi yok). Ekran `ui/SahaGorunumu.tsx` + `ui/SahaCerceve.tsx`,
   kullanım özeti `kullanim.ts`.
+- **2026-10-10 (483; reisim: *"rapor düzenlemede sadece saha ekranı gözüksün o ekranda düzenleme yapılamasın … sadece sahada personelin nasıl
+  göreceği gözüksün"*; *"kağıttan düzenleyebiliyoruz ama sahadaki görüntü nasıl oluyor düzenleyemiyoruz burası çok karmaşık bir çözüm öner"*):
+  **tek düzenleme yeri kâğıt.** Saha ekranı salt önizleme (aygıt + "Denemeyi temizle"; denetçi gibi denenir, hiçbir şey kaydedilmez); 472'nin
+  "Düzenle" kipi ve saha ekranındaki yerinde düzenleme kalktı. Sahaya özgü ayarlar kâğıtta, öğenin ya da formatın ayarı olarak: madde cevabının
+  biçimi "Kurallar, saha ekranı ve genel muayene talimatı"nda; bölümün fotoğraftan / Excel'den doldurulması bölümün ayarında (484).
 
 ## 7 · Veri
 

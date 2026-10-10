@@ -7,13 +7,17 @@
    kâğıda geçer. Araç çubuğu: aygıt (Tablet · Telefon) · kip (Düzenle · Denetçi gibi dene) · madde cevabı (Açılır liste · Yan yana tuşlar —
    formatın ayarı) · Denemeyi temizle. Yanda KULLANIM kutusu (maket): bu formatla bir rapor — bölüm, madde, yazılan / seçilen kutu, cevap
    dokunuşu açılır liste ↔ yan yana tuş; denemede canlı eksik / kusur sayısı. degis yoksa salt görünüm (sürüm sayfası): aygıt ve dene.
-   Telefonda (maket: "telefonda kurucu yalnız önizler ve denetçi gibi deneyi açar") aygıt telefon, kip dene, kullanım kutusu yok. */
+   Telefonda (maket: "telefonda kurucu yalnız önizler ve denetçi gibi deneyi açar") aygıt telefon, kip dene, kullanım kutusu yok.
+   483 (reisim 2026-10-10: "rapor düzenlemede sadece saha ekranı gözüksün o ekranda düzenleme yapılamasın … sadece sahada personelin nasıl göreceği
+   gözüksün"; "kağıttan düzenleyebiliyoruz ama sahadaki görüntü nasıl oluyor düzenleyemiyoruz burası çok karmaşık bir çözüm öner"): SALT ÖNİZLEME —
+   "Düzenle" kipi ve madde cevabı seçicisi kalktı; araç çubuğunda yalnız aygıt ve "Denemeyi temizle". Çözüm: sahaya özgü her ayar KÂĞITTA, öğenin
+   ya da formatın ayarı olarak (madde cevabının biçimi "Kurallar, saha ekranı ve talimat" bölümünde; bölümün "Fotoğraftan / Excel'den doldur"
+   seçeneği bölüm ayarında — 484); saha ekranı o ayarların sonucunu gösterir. */
 import { useCallback, useEffect, useRef, useState, useSyncExternalStore } from "react";
 import { Tus } from "../../../components/tus/Tus";
-import { FormatTanimi } from "../../../format/tanim";
-import { gorunumYaz } from "../kurucu";
+import type { FormatTanimi } from "../../../format/tanim";
 import { kullanim } from "../kullanim";
-import type { FormatIletisi, SahaKipi } from "./SahaCerceve";
+import type { FormatIletisi } from "./SahaCerceve";
 import stil from "./format.module.css";
 
 const AYGIT = {
@@ -25,12 +29,10 @@ type Aygit = keyof typeof AYGIT;
 const DAR = "(max-width: 767.98px)";
 const darAbone = (f: () => void) => { const m = matchMedia(DAR); m.addEventListener("change", f); return () => m.removeEventListener("change", f); };
 
-export function SahaGorunumu({ turId, formatId, t, degis }: { turId: string; formatId: string; t: FormatTanimi; degis?: (t: FormatTanimi) => void }) {
+export function SahaGorunumu({ turId, formatId, t }: { turId: string; formatId: string; t: FormatTanimi }) {
   const dar = useSyncExternalStore(darAbone, () => matchMedia(DAR).matches, () => false);
   const [aygitSecim, setAygit] = useState<Aygit>("tablet");
-  const [kipSecim, setKip] = useState<SahaKipi>(degis ? "duzenle" : "dene");
   const aygit: Aygit = dar ? "telefon" : aygitSecim;
-  const kip: SahaKipi = degis && !dar ? kipSecim : "dene";
   const [temizle, setTemizle] = useState(0);
   const [durum, setDurum] = useState<{ eksik: number; kusur: number } | null>(null);
   const cerceve = useRef<HTMLIFrameElement>(null);
@@ -52,9 +54,9 @@ export function SahaGorunumu({ turId, formatId, t, degis }: { turId: string; for
     if (w && ileti.current) w.postMessage(ileti.current, location.origin);
   }, []);
   useEffect(() => {
-    ileti.current = { tur: "probata-format", tanim: t, kip, tema: document.documentElement.getAttribute("data-tema") ?? undefined, temizle };
+    ileti.current = { tur: "probata-format", tanim: t, tema: document.documentElement.getAttribute("data-tema") ?? undefined, temizle };
     gonder();
-  }, [t, kip, temizle, gonder]);
+  }, [t, temizle, gonder]);
   /* tema değişince çerçeve de değişir */
   useEffect(() => {
     const g = new MutationObserver(() => {
@@ -64,20 +66,13 @@ export function SahaGorunumu({ turId, formatId, t, degis }: { turId: string; for
     g.observe(document.documentElement, { attributes: true, attributeFilter: ["data-tema"] });
     return () => g.disconnect();
   }, [gonder]);
-  const degisRef = useRef(degis);
-  useEffect(() => { degisRef.current = degis; });
   useEffect(() => {
     const al = (e: MessageEvent) => {
       if (e.origin !== location.origin || !cerceve.current || e.source !== cerceve.current.contentWindow) return;
-      const m = e.data as { tur?: unknown; tanim?: unknown; eksik?: unknown; kusur?: unknown } | null;
+      const m = e.data as { tur?: unknown; eksik?: unknown; kusur?: unknown } | null;
       if (!m || typeof m !== "object") return;
       if (m.tur === "probata-hazir") gonder();
       else if (m.tur === "probata-durum" && typeof m.eksik === "number" && typeof m.kusur === "number") setDurum({ eksik: m.eksik, kusur: m.kusur });
-      else if (m.tur === "probata-degis" && degisRef.current) {
-        /* çerçeveden gelen tanım da şemadan geçer (taslak yine sunucuda, kaydederken denetlenir) */
-        const y = FormatTanimi.safeParse(m.tanim);
-        if (y.success) degisRef.current(y.data);
-      }
     };
     window.addEventListener("message", al);
     return () => window.removeEventListener("message", al);
@@ -97,12 +92,9 @@ export function SahaGorunumu({ turId, formatId, t, degis }: { turId: string; for
     <section className={stil.saha} aria-label="Saha ekranı">
       <div className={stil.sahaArac}>
         {!dar && secici("Aygıt", aygit, [["tablet", AYGIT.tablet.ad, AYGIT.tablet.ikon], ["telefon", AYGIT.telefon.ad, AYGIT.telefon.ikon]] as const, setAygit)}
-        {degis && !dar && secici("Kip", kip, [["duzenle", "Düzenle", "pencil"], ["dene", "Denetçi gibi dene", "eye"]] as const, setKip)}
-        {degis && !dar && secici("Madde cevabı", t.gorunum.cevap, [["acilir", "Açılır liste", "chevron-down"], ["tus", "Yan yana tuşlar", "list-checks"]] as const,
-          (cevap) => degis(gorunumYaz(t, { cevap })))}
         <Tus tur="ikincil" ikon="rotate-ccw" onClick={() => setTemizle((x) => x + 1)}>Denemeyi temizle</Tus>
       </div>
-      {kip === "dene" && <p className={stil.bosMetin}>Denetçi gibi deniyorsunuz: ekran sahadaki gibi çalışır, hiçbir şey kaydedilmez.</p>}
+      <p className={stil.bosMetin}>Denetçinin sahada göreceği ekran: denetçi gibi deneyebilirsiniz, hiçbir şey kaydedilmez. Format kâğıtta düzenlenir.</p>
       <div className={dar ? stil.sahaSahneTek : stil.sahaSahne}>
         <div ref={kap} className={stil.sahaKap}>
           <div className={stil.sahaAygit} style={{ width: a.en * olcek, height: a.boy * olcek }}>
@@ -130,7 +122,7 @@ export function SahaGorunumu({ turId, formatId, t, degis }: { turId: string; for
               <div className={stil.cubuk} aria-hidden="true"><i style={{ width: `${k.acilir ? Math.round((k.tus / k.acilir) * 100) : 0}%` }} /></div>
             </div>
             {k.tablolar.length > 0 && <p className={stil.ogeAlt}>Tablolar: {k.tablolar.map((x) => `${x.ad} (satır başına ${x.sutun})`).join(" · ")}</p>}
-            {kip === "dene" && durum && <p className={stil.kullanimDeneme} aria-live="polite">Deneme: <b>{durum.eksik}</b> eksik · <b>{durum.kusur}</b> kusur</p>}
+            {durum && <p className={stil.kullanimDeneme} aria-live="polite">Deneme: <b>{durum.eksik}</b> eksik · <b>{durum.kusur}</b> kusur</p>}
           </section>
         )}
       </div>

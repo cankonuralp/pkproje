@@ -9,7 +9,11 @@
    (masaüstü işi): belge önizlemesi görünür. Karar ve şema sunucuda.
    472–474 (reisim 2026-10-10, maket kararları k1–k4): üç görünüm — Kâğıt (açılışta) · Saha ekranı (denetçinin tabletinde / telefonunda göreceği
    gerçek ekran, örnek raporla; orada da yerinde düzenlenir — SahaGorunumu.tsx) · Belge önizlemesi. Üçü aynı taslağı gösterir: birinde yapılan
-   değişiklik ötekilerde görünür. Telefonda (maket): Belge · Saha ekranı — saha ekranı yalnız "denetçi gibi dene" (telefon genişliğinde). */
+   değişiklik ötekilerde görünür. Telefonda (maket): Belge · Saha ekranı — saha ekranı yalnız "denetçi gibi dene" (telefon genişliğinde).
+   483 (reisim 2026-10-10: "rapor düzenlemede sadece saha ekranı gözüksün o ekranda düzenleme yapılamasın"; "kağıttan düzenleyebiliyoruz ama sahadaki
+   görüntü nasıl oluyor düzenleyemiyoruz burası çok karmaşık bir çözüm öner"): TEK DÜZENLEME YERİ KÂĞIT. Saha ekranı salt önizleme; sahaya özgü
+   ayarlar kâğıtta — madde cevabının biçimi "Kurallar, saha ekranı ve genel muayene talimatı"nda, bölümün fotoğraftan / Excel'den doldurulması
+   bölümün ayarında (484). */
 import { useRouter } from "next/navigation";
 import { useEffect, useMemo, useState, useTransition } from "react";
 import { raporBelgesi } from "../../../belge/belge";
@@ -144,13 +148,23 @@ export function FormatKurucu({ turId, turAd, turKod, format, tanim, kaynakAd, tu
         {bakilacak.length > 0 && <Serit tur="uyari" ikon="triangle-alert">Yayından önce bakılacak: {bakilacak.join(" · ")}</Serit>}
       </div>
       <details className={`${stil.bolum} ${stil.kurallar} ${stil.yalnizGenis}`}>
-        <summary className={stil.kurallarBas}>Kurallar ve genel muayene talimatı</summary>
+        <summary className={stil.kurallarBas}>Kurallar, saha ekranı ve genel muayene talimatı</summary>
         <div className={stil.kurallarIc}>
           <div className={stil.secenekler}>
             {kural("foto", "“Uygun değil” maddede fotoğraf zorunlu", "kapalıyken fotoğraf isteğe bağlı")}
             {kural("derece", "Kusur derecesi sorulsun (hafif / ağır)", "açıksa hafif kusur devri çalışır")}
             {kural("oneri", "Sonuç önerisi", "“Uygun değil” madde ya da sınır dışı ölçüm varsa sonuç “Uygun değil” önerilir")}
           </div>
+          {/* 483: sahaya özgü ayar kâğıtta (saha ekranı salt önizleme) — madde cevabının biçimi; belgeye (PDF) etkisi yok */}
+          <fieldset className={stil.secenekler}>
+            <legend className={stil.kullanimEtiket}>Saha ekranında madde cevabı (belgeye etkisi yok)</legend>
+            {([["acilir", "Açılır liste", "cevap listeden seçilir"], ["tus", "Yan yana tuşlar", "tek dokunuşla — sahada daha hızlı"]] as const).map(([k, ad, alt]) => (
+              <label key={k} className={stil.secenek}>
+                <input type="radio" name="kb-cevap" checked={t.gorunum.cevap === k} onChange={() => degis(gorunumYaz(t, { cevap: k }))} />
+                <span>{ad}<span className={stil.ogeAlt}>{alt}</span></span>
+              </label>
+            ))}
+          </fieldset>
           <SatirAlani id="kb-talimat" etiket="Genel muayene talimatı" deger={t.gorunum.talimat} satir={4}
             ipucu="Rapor ekranının sağ üstündeki ünlemden açılır; belgeye (PDF) basılmaz." uygula={(s) => degis(gorunumYaz(t, { talimat: s }))} />
         </div>
@@ -159,7 +173,7 @@ export function FormatKurucu({ turId, turAd, turKod, format, tanim, kaynakAd, tu
         <Kagit t={t} degis={degis} tur={tur} bolumuSil={(i) => void bolumuSil(i)} bildir={bildir} />
       </div>
       {/* saha ekranı yalnız seçilince kurulur (çerçeve sayfası o zaman yüklenir); telefonda yalnız dene (SahaGorunumu) */}
-      {gorunum === "saha" && <SahaGorunumu turId={turId} formatId={format.id} t={t} degis={degis} />}
+      {gorunum === "saha" && <SahaGorunumu turId={turId} formatId={format.id} t={t} />}
       <div className={gorunum === "belge" ? stil.belgeKap : gorunum === "saha" ? stil.gizliHer : `${stil.belgeKap} ${stil.yalnizDar}`}>
         {/* kayan öğe belgenin kendisi (telefonda A4 yana kayar): klavyeyle kaydırılsın diye odak ve ad onda (rapor önizlemesi gibi) */}
         <div className="rb-onizleme" aria-label="Belge önizlemesi" role="region" tabIndex={0}>{belge}</div>

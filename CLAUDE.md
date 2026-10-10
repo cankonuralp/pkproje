@@ -138,10 +138,10 @@ pkproje/
                             ve yeniTureFormat) — tür ekleme eylemi aynı işlemde yayınlar; kurulum formatsız eski türleri bir kez (ayar kurulum.varsayilan)
                             · 451 KURUCU KÂĞIT: ui/Kagit.tsx (belgenin görünümünde yerinde yazı / ekle / çıkar; kagit.module.css) + FormatKurucu.tsx (Düzenle ·
                             Belge önizlemesi — src/belge/belge.ts tarayıcıda, ui/kurucuOrnegi.ts boş rapor); eski üç sütunlu düzenleyici kalktı
-                            · 472 SAHA EKRANI: Kâğıt · Saha ekranı · Belge önizlemesi — ui/SahaGorunumu.tsx (aygıt, kip, cevap biçimi, kullanim.ts) →
-                            çerçeve (cerceve)/…/saha → ui/SahaCerceve.tsx (iletiler; yerinde düzenleme kurucu.ts ile) → raporlar SahaRaporu deneme kipi
-                            + raporlar/ornek.ts (ilkCevaplar, örnek rapor); tanım gorunum.cevap (açılır / tuş) · 473 saha ekranında taşı / alt başlık
-                            (format/duzen.ts altBaslikAnasi, altGrupSonu — kâğıtla ortak), kullanım kutusu yanda, telefonda Belge · Saha (dene)
+                            · 472 SAHA EKRANI: Kâğıt · Saha ekranı · Belge önizlemesi — ui/SahaGorunumu.tsx (aygıt, kullanim.ts) → çerçeve
+                            (cerceve)/…/saha → ui/SahaCerceve.tsx (iletiler) → raporlar SahaRaporu deneme kipi + raporlar/ornek.ts (ilkCevaplar, örnek
+                            rapor); kullanım kutusu yanda, telefonda Belge · Saha · 483: saha ekranı SALT ÖNİZLEME (473'ün yerinde düzenlemesi kalktı);
+                            sahaya özgü ayarlar kâğıtta — tanım gorunum.cevap (açılır / tuş) "Kurallar, saha ekranı ve genel muayene talimatı"nda
                             · 471 SÜRÜM SAYFASI: fark.ts (önceki sürüme göre değişenler, saf) · ui/SurumOnizleme.tsx (Belge ↔ Saha) · rapor sayısı
                             raporlar/server/format-baglanti.ts formatRaporSayilari
   src/modules/planlar/      PLANLAR (2026-10-04, 309–310; modül 13): plan + plan ekibi (göç 0023; proje no sunucuda, değişmez; künye kayıttan) ·
