@@ -2373,7 +2373,10 @@ revizyon, alan kopyalama, hafif kusur devri, meslek eşleşme denetimi).
   güvenlik başlığı (upgrade-insecure-requests) http'de, "standalone" çıktının başlatılması, görsel karşılaştırma görüntüleri yeniden.
   **Beşinci koşu (bfc6fe0) kök sebebi gösterdi:** bellekte tutma kapalıyken de sunucu hazırlıkta 13 GB'a çıkıyor — sunucuya verilen 12 GB'lık
   üst sınır yüzünden çöp toplayıcı ancak sınıra gelince temizliyor; makinede kalan bellek 0,0 GB, tarayıcı takasa düşüyor (tablet tarama kapandı,
-  tablet 3 zaman aşımı). 434'teki "frame detached / browser has been closed" düşmeleri de aynı aile. Yığın 12 → 9 GB (scripts/e2e-sunucu.ts).
+  tablet 3 zaman aşımı). 434'teki "frame detached / browser has been closed" düşmeleri de aynı aile. Altıncı koşu (de71682): 9 GB yığında sunucu
+  "heap out of memory" ile çöktü — gerçek ihtiyaç 9 GB'ın üstünde. Yığın 12 GB'a döndü; deneme makinesine 12 GB TAKAS ALANI (ci.yml): bellek dolunca
+  makine kapanmaz, az kullanılan kısım diske iner. **Karar bekleyen kalıcı çözüm:** uçtan uca yayın derlemesinde — vitrin ve http için güvenlik
+  başlığı (upgrade-insecure-requests) test ortamında gevşetilmeli; "önizleme / güvenlik atlama bayrağı kodda bulunmaz" ilkesine dokunduğu için reisim'in kararı.
 - 2026-10-09 (467): **Mekanik zorunlu Bakanlık formatları** (reisim, hata listesi 25–26: *"mekanik tarafındaki zorunlu formatlar hala yok, kule vinç
   vb."*; *"eklenti kullanarak indir izin veriyorum"*). Bakanlığın sitesinden indirildi (2026-10-09): ZPKR06 kule kren (yürürlük 01.01.2026), ZPKR07 asılı
   erişim donanımı (01.02.2026), ZPMR01 LPG tankı periyodik muayene ve ZYDR01 LPG tankı yeterliliğin yeniden değerlendirilmesi (18.07.2025) + kriter

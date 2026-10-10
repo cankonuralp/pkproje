@@ -88,6 +88,16 @@ jobs:
       # ~10 dk sürebilir (7ed6e25 telefon: 591 sn); asılı kalırsa 20 dk'da kesilir (yarıda kesilen kurulum kilit bıraktığından yeniden deneme yok)
       - run: npx playwright install --with-deps chromium
         timeout-minutes: 20
+      # 468 (2026-10-10): ölçüldü ("[bellek]" satırları) — geliştirme sunucusu hazırlıkta ~13 GB'a çıkıyor (9 GB yığında "heap out of memory" ile
+      # çöktü: gerçek ihtiyaç); 16 GB'lık makinede kalan 0,0 GB olunca makine kapanıyor ya da tarayıcı takasa düşüp zaman aşımı. 12 GB ek takas
+      # alanı: az kullanılan bellek diske iner, makine kapanmaz. Kalıcı çözüm (yayın derlemesinde uçtan uca) pkproje.md §11 468'de, karar bekliyor.
+      - name: Takas alanı (12 GB)
+        run: |
+          sudo fallocate -l 12G /mnt/probata-takas
+          sudo chmod 600 /mnt/probata-takas
+          sudo mkswap /mnt/probata-takas
+          sudo swapon /mnt/probata-takas
+          free -h
       - id: e2e
         env:
           PROBATA_E2E_TARAMA: ${{ matrix.parca == 'tarama' && 'yalniz' || 'haric' }}

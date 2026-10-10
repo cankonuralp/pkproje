@@ -328,9 +328,8 @@ const u = kume.uygulama;
    CI makinesi 16 GB) ve webpack bellek iyileştirmesi (yalnız bu sunucu: PROBATA_WEBPACK_BELLEK, next.config.ts).
    2026-10-08 (402): geliştirme kipinin "hata ayıklama kanalı" (sayfa açılınca sunucuya ayrı canlı bağlantı) kapalı — açıkken servis çalışanının
    bağlantısız sunduğu sayfa hiç bağlanamıyor (next/dist/client/dev/debug-channel.js; yayında bu kanal yok): PROBATA_HATA_KANALI=0
-   2026-10-10 (468): YIĞIN 12 → 9 GB. Ölçüldü (bfc6fe0, "[bellek]" satırları): çöp toplayıcı yığını sınıra dek büyütüyor — sunucu hazırlıkta 3 →
-   13 GB, makinede kalan 0,0 GB; tarayıcı ve veritabanı takasa düşüp testler zaman aşımına uğruyor ya da makine kapanıyordu ("runner has received a
-   shutdown signal"; 434'teki "frame detached", "browser has been closed" de aynı aile). 9 GB'ta sunucu + tarayıcı (~1,5) + öteki (~1,5) makineye sığar. */
+   2026-10-10 (468): ölçüldü ("[bellek]"): sunucu hazırlıkta ~13 GB'a çıkıyor; 9 GB yığında "heap out of memory" ile çöktü (de71682) — gerçek
+   ihtiyaç 9 GB'ın üstünde, yığın 12 GB kalır. Makine (16 GB) dolunca kapanmasın diye deneme makinesine 12 GB takas alanı eklenir (ci.yml). */
 /* 468 (2026-10-10): BELLEK İZİ — deneme makinesi (16 GB) site taraması sırasında iki koşuda üst üste kapandı ("runner has received a shutdown
    signal"); bellek mi, ölçülmeden söylenemez. Linux'ta dakikada bir satır: makinede kalan bellek ve süreç türü başına toplam (node · tarayıcı ·
    veritabanı) — hata akışına (Playwright sunucunun yalnız onu günlüğe basar). Yalnız okur (/proc/meminfo, ps); hata olursa susar. */
@@ -338,7 +337,9 @@ if (process.platform === "linux") {
   const gb = (kb: number) => (kb / 1048576).toFixed(1);
   setInterval(() => {
     try {
-      const bos = Number(/MemAvailable:\s+(\d+)/.exec(readFileSync("/proc/meminfo", "utf8"))?.[1] ?? 0);
+      const mi = readFileSync("/proc/meminfo", "utf8");
+      const alan = (ad: string) => Number(new RegExp(`${ad}:\\s+(\\d+)`).exec(mi)?.[1] ?? 0);
+      const bos = alan("MemAvailable"), takas = alan("SwapTotal") - alan("SwapFree");
       const tur = new Map<string, number>();
       let enBuyukNode = 0;
       for (const s of execFileSync("ps", ["-eo", "rss=,comm="], { encoding: "utf8" }).split("\n")) {
@@ -349,12 +350,12 @@ if (process.platform === "linux") {
         tur.set(k, (tur.get(k) ?? 0) + rss);
         if (k === "node") enBuyukNode = Math.max(enBuyukNode, rss);
       }
-      console.error(`[bellek] kalan ${gb(bos)} GB · node ${gb(tur.get("node") ?? 0)} (en büyük ${gb(enBuyukNode)}) · tarayıcı ${gb(tur.get("tarayıcı") ?? 0)} · veritabanı ${gb(tur.get("veritabanı") ?? 0)} · öteki ${gb(tur.get("öteki") ?? 0)} GB`);
+      console.error(`[bellek] kalan ${gb(bos)} GB · takasta ${gb(takas)} GB · node ${gb(tur.get("node") ?? 0)} (en büyük ${gb(enBuyukNode)}) · tarayıcı ${gb(tur.get("tarayıcı") ?? 0)} · veritabanı ${gb(tur.get("veritabanı") ?? 0)} · öteki ${gb(tur.get("öteki") ?? 0)} GB`);
     } catch { /* ölçüm yoksa sessiz */ }
   }, 60_000).unref();
 }
 const kod = await nextCalistir("dev", {
-  NODE_OPTIONS: [process.env.NODE_OPTIONS, "--max-old-space-size=9216"].filter(Boolean).join(" "), PROBATA_WEBPACK_BELLEK: "1", PROBATA_HATA_KANALI: "0",
+  NODE_OPTIONS: [process.env.NODE_OPTIONS, "--max-old-space-size=12288"].filter(Boolean).join(" "), PROBATA_WEBPACK_BELLEK: "1", PROBATA_HATA_KANALI: "0",
   PROBATA_VT_SUNUCU: u.host, PROBATA_VT_KAPI: String(u.port), PROBATA_VT_AD: u.database, PROBATA_VT_KULLANICI: u.user, PROBATA_VT_PAROLA: u.password,
   PROBATA_ANA_ALAN: "localhost", NEXT_TELEMETRY_DISABLED: "1", PROBATA_DEPO_KLASOR: mkdtempSync(join(tmpdir(), "probata-e2e-depo-")),
   PROBATA_DEPO: "vt",   // 347: uçtan uca deneme yayınındaki gibi veritabanı deposuyla

@@ -20,7 +20,7 @@ const ortak: NextConfig = {
      bağlantısız sunulan sayfa bağlanamıyor (402, scripts/e2e-sunucu.ts PROBATA_HATA_KANALI=0) */
   /* devMemoryThresholdRestart: uçtan uca sunucusunda KAPALI (2026-10-08) — yığın sınırın %80'ini geçince geliştirme sunucusu kendini yeniden
      başlatıyor, o anki test düşüyordu (deneme makinesi 92a79de: masaüstü ve telefonda 95. testte). 2026-10-06'da tek sunucuda ~200 testte kapatmak
-     sunucuyu çökertmişti; şimdi genişlik başına ayrı sunucu, parçalı, 9 GB yığın (468 — 12 GB makineyi doldurdu). Yayında geçersiz. */
+     sunucuyu çökertmişti; şimdi genişlik başına ayrı sunucu, parçalı, 12 GB yığın + deneme makinesinde takas alanı (468). Yayında geçersiz. */
   experimental: { serverActions: { bodySizeLimit: "26mb" }, proxyClientMaxBodySize: "26mb", webpackMemoryOptimizations: process.env.PROBATA_WEBPACK_BELLEK === "1",
     reactDebugChannel: process.env.PROBATA_HATA_KANALI !== "0", devMemoryThresholdRestart: process.env.PROBATA_WEBPACK_BELLEK !== "1" },
   env: { NEXT_PUBLIC_IKON_ADRESI: `/${IKON_DOSYASI}?v=${ikonOzeti}` },
