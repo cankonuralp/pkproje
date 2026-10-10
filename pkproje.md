@@ -2355,6 +2355,11 @@ revizyon, alan kopyalama, hafif kusur devri, meslek eşleşme denetimi).
 - Emsal ürünler: https://opwire.app/iso-17020-periyodik-kontrol-yazilimi/ · https://17020muayene.vidco.com.tr/ · https://akuple.com/asansor-kontrol-yazilimi/ · https://ensyazilim.com/
 
 ## 11 · Değişiklik günlüğü
+- 2026-10-10 (469): **455–468 YAYINDA** — main eca9998 (göç yok, 79 göç), Vercel READY, sağlık "tamam" (sürüm eca9998), duman 10/10; son 2 saatte
+  çalışma hatası yalnız bilinen duyuru zaman aşımı (iş ekipmanları portalı yurt dışından; eski sürümde). Deneme makinesi 13/13 yeşil (telefon 3 bir
+  kez bellek sıkışıklığında giriş zaman aşımı → yalnız o iş yeniden koştu). Hata listesi: bu turun 12 maddesi "bu yayında", önceki yayınınkiler
+  "önceki"; madde 43 — deneme makinesinin kalıcı çözümü için karar. Mekanik Bakanlık türleri canlı firmada ilk açılışta (Ana sayfa / Ekipman
+  türleri) kurulur — oturum istediği için ölçemedim. Maketin karar soruları (saha görünümü + sürüm sayfası) kayıtsız: hiçbir seçim gelmedi.
 - 2026-10-10 (468): **Deneme makinesinde telefon takılması** (reisim: *"tüm işlemler"*). Sebep geliştirme sunucusu: 60 sn açılmayan sayfayı
   bellekten atıyor, test o sayfaya dönünce yeniden derleyip açık sayfayı yeniden yüklüyordu (zimmet testinde sayfa açma yarıda kesildi, hesap
   testinde onay penceresi açılmadı, telefonda site taraması 50 dk'yı aştı). Uçtan uca sunucusunda derlenen sayfa koşu boyunca bellekte kalır
