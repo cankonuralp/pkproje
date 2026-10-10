@@ -160,8 +160,9 @@ export function FormatKurucu({ turId, turAd, turKod, format, tanim, kaynakAd, tu
       </div>
       {/* saha ekranı yalnız seçilince kurulur (çerçeve sayfası o zaman yüklenir); telefonda yalnız dene (SahaGorunumu) */}
       {gorunum === "saha" && <SahaGorunumu turId={turId} formatId={format.id} t={t} degis={degis} />}
-      <div className={gorunum === "belge" ? stil.belgeKap : gorunum === "saha" ? stil.gizliHer : `${stil.belgeKap} ${stil.yalnizDar}`} aria-label="Belge önizlemesi" role="region" tabIndex={0}>
-        <div className="rb-onizleme">{belge}</div>
+      <div className={gorunum === "belge" ? stil.belgeKap : gorunum === "saha" ? stil.gizliHer : `${stil.belgeKap} ${stil.yalnizDar}`}>
+        {/* kayan öğe belgenin kendisi (telefonda A4 yana kayar): klavyeyle kaydırılsın diye odak ve ad onda (rapor önizlemesi gibi) */}
+        <div className="rb-onizleme" aria-label="Belge önizlemesi" role="region" tabIndex={0}>{belge}</div>
       </div>
     </>
   );

@@ -2355,6 +2355,8 @@ revizyon, alan kopyalama, hafif kusur devri, meslek eşleşme denetimi).
 - Emsal ürünler: https://opwire.app/iso-17020-periyodik-kontrol-yazilimi/ · https://17020muayene.vidco.com.tr/ · https://akuple.com/asansor-kontrol-yazilimi/ · https://ensyazilim.com/
 
 ## 11 · Değişiklik günlüğü
+- 2026-10-10 (474): Site taraması (telefon) sürüm sayfasında buldu: belge önizlemesi telefonda yana kayıyor ama klavyeyle kaydırılamıyordu (odak dış
+  kapta, kayan belgenin kendisi). Odak ve ad kayan öğeye (rapor önizlemesi ve onay ekranındaki gibi) — sürüm sayfası ve format kurucu.
 - 2026-10-10 (473): **Saha ekranı onaylı maketle eşitlendi** (k1–k4 maketindeki eksikler): saha ekranının "Düzenle" kipinde bölüm yukarı / aşağı
   taşınır (ilk / son bölümde kapalı) ve her ana bölümün alt başlık grubunun sonunda "+ Alt başlık ekle (… altına)" — kâğıttaki gibi (alt başlık
   grubu ve ana bölüm bulucu format/duzen.ts altBaslikAnasi / altGrupSonu'ya taşındı, kâğıt ve saha ortak). KULLANIM kutusu maketteki gibi aygıtın

@@ -106,7 +106,6 @@
 .farkEkle > svg { color: var(--onay-yazi); }
 .farkCikar > svg { color: var(--hata-yazi); }
 .farkDegis > svg { color: var(--yazi2); }
-.belgeKap:focus-visible { outline: 3px solid var(--odak); outline-offset: 2px; }
 
 @media (max-width: 767.98px) {
   .bolum { padding: 12px; }

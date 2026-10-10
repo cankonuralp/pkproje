@@ -16,7 +16,8 @@ export function SurumOnizleme({ turId, formatId, t, belge }: { turId: string; fo
         <Tus tur={g === "saha" ? "birincil" : "ikincil"} ikon="tablet-smartphone" aria-pressed={g === "saha"} onClick={() => setG("saha")}>Saha ekranı</Tus>
       </span>
       {g === "belge"
-        ? <div className={stil.belgeKap} aria-label="Belge önizlemesi" role="region" tabIndex={0}><div className="rb-onizleme">{belge}</div></div>
+        /* kayan öğe belgenin kendisi (telefonda A4 genişliği yana kayar): klavyeyle kaydırılsın diye odak ve ad onda (rapor önizlemesi gibi) */
+        ? <div className={stil.belgeKap}><div className="rb-onizleme" aria-label="Belge önizlemesi" role="region" tabIndex={0}>{belge}</div></div>
         : <SahaGorunumu turId={turId} formatId={formatId} t={t} />}
     </>
   );
