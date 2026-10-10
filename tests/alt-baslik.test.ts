@@ -11,7 +11,7 @@ import { raporDuzeni } from "../src/format/duzen.ts";
 import { kilitDenetimi } from "../src/format/motor.ts";
 import { SABLONLAR } from "../src/format/sablonlar.ts";
 import { FormatTanimi, type FormatGirdisi } from "../src/format/tanim.ts";
-import { bolumDuzeni } from "../src/modules/rapor-format/kurucu.ts";
+import { altBaslikEkle, bolumDuzeni } from "../src/modules/rapor-format/kurucu.ts";
 
 const not = (id: string, ek: Record<string, unknown> = {}) => ({ id, ad: id.toUpperCase(), blok: "not", ...ek });
 const tanim = (bolumler: unknown[]) => FormatTanimi.parse({ sema: 1, bolumler } as FormatGirdisi);
@@ -47,4 +47,26 @@ test("kurucu: alt başlık yapılınca üst başlık ve numarasızlık düşer; 
   assert.equal(bolumDuzeni(z, k, { alt: true }), z, "kilitli bölüm alt başlık yapılamaz");
   const elle = { ...z, bolumler: z.bolumler.map((b, j) => (j === k ? { ...b, alt: true } : b)) };
   assert.ok(kilitDenetimi(elle, z).some((x) => x.includes("değiştirilmiş")), "istemciden gelen alt bayrağı yayında yakalanır");
+});
+
+/* 469 (reisim 2026-10-10, hata listesi 40: "alt başlık ekle dediğin gibi alt başlık oluşturacak"): "+ Alt başlık ekle" tür sordurmaz — ana bölümün
+   türünde alt başlık doğrudan açılır, adı yazılır; kimlikler tekil, tanım şemadan geçer */
+test("kurucu: alt başlık ekle ana bölümün türünde doğrudan alt başlık açar (liste: cevap seti; ölçüm: sütunlar yeni kimlikle)", () => {
+  const z = SABLONLAR.ZPKR02.tanim;
+  const li = z.bolumler.findIndex((b) => b.blok === "liste"), oi = z.bolumler.findIndex((b) => b.blok === "olcum");
+  const y = altBaslikEkle(z, li + 1, z.bolumler[li]);
+  const b = y.t.bolumler[li + 1];
+  assert.equal(b.id, y.id);
+  assert.deepEqual([b.blok, b.alt, b.kilit, b.ad], ["liste", true, false, "Yeni alt başlık"]);
+  assert.deepEqual(b.blok === "liste" && b.cevaplar, (z.bolumler[li] as { cevaplar: string[] }).cevaplar);
+  FormatTanimi.parse(y.t);
+  const no = raporDuzeni(y.t, false).bolumler.find((x) => x.b.id === y.id)!.no;
+  assert.match(no ?? "", /^\d+\.1$/, "ana bölümün altında N.1");
+  const o = altBaslikEkle(z, oi + 1, z.bolumler[oi]);
+  const ob = o.t.bolumler[oi + 1], ana = z.bolumler[oi];
+  assert.ok(ob.blok === "olcum" && ana.blok === "olcum" && ob.sutunlar.length === ana.sutunlar.length && ob.sutunlar.every((c, j) => c.ad === ana.sutunlar[j].ad && c.id !== ana.sutunlar[j].id));
+  FormatTanimi.parse(o.t);
+  /* sonuç / fotoğraf gibi bölümün altına kontrol listesi */
+  const si = z.bolumler.findIndex((b) => b.blok === "sonuc");
+  assert.equal(altBaslikEkle(z, si + 1, z.bolumler[si]).t.bolumler[si + 1].blok, "liste");
 });

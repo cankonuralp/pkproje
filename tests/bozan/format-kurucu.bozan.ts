@@ -69,3 +69,11 @@ test("459: cihaz bölümü koruması kalkınca ölçüm cihazları bölümü kur
   const t = structuredClone(SABLONLAR.KOMPRESOR.tanim), i = t.bolumler.findIndex((b) => b.blok === "cihaz");
   assert.equal(m.bolumSil(t, i).bolumler.some((b) => b.blok === "cihaz"), false, "bozuk: sabit cihaz bölümü silindi");
 });
+
+test("469: alt başlık ekle alt bayrağını koymazsa yeni bölüm ana numara alır (tests/alt-baslik.test.ts)", async () => {
+  const m = await bozuk('blok, alt: true, ...govde });', "blok, ...govde });");
+  const { raporDuzeni } = await import("../../src/format/duzen.ts");
+  const z = SABLONLAR.ZPKR02.tanim, li = z.bolumler.findIndex((b) => b.blok === "liste");
+  const y = m.altBaslikEkle(z, li + 1, z.bolumler[li]);
+  assert.doesNotMatch(raporDuzeni(y.t, false).bolumler.find((x) => x.b.id === y.id)!.no ?? "", /\./, "bozuk: alt başlık değil, ana bölüm");
+});

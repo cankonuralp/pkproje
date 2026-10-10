@@ -42,6 +42,26 @@ export function yeniBolum(t: FormatTanimi, blok: Blok, ad: string): Bolum {
   return Bolum.parse({ id, ad, blok, ...ek[blok] });
 }
 
+/** 469 (reisim 2026-10-10, hata listesi 40: "alt başlık ekle dediğin gibi alt başlık oluşturacak bunu anlamanın nesi zor"): ana bölümün altına
+    DOĞRUDAN alt başlık — tür sordurmaz: ana bölümün türünde (kontrol listesi cevap setiyle; ölçüm tablosu sütunlarıyla, yeni kimliklerle; test
+    değeri, bilgi alanı), içinde bir boş satır; ana bölüm başka türdeyse kontrol listesi. p: yeni bölümün t.bolumler'deki yeri. Bölümün kimliği de
+    döner (adı yazma kipinde açılsın). */
+export function altBaslikEkle(t: FormatTanimi, p: number, ana: Bolum, ad = "Yeni alt başlık"): { t: FormatTanimi; id: string } {
+  const al = new Set<string>();
+  const yeni = (onek: "b" | "a" | "g" | "m" | "s" | "d") => { const k = yeniKimlik(t, onek, al); al.add(k); return k; };
+  const id = yeni("b");
+  const govde: Record<string, unknown> =
+    ana.blok === "olcum" ? { satir: ana.satir, sutunlar: ana.sutunlar.map((c) => ({ ...c, id: yeni("s") })) }
+      : ana.blok === "test" ? { degerler: [{ id: yeni("d"), ad: "Yeni değer", metin: false, zorunlu: true, kilit: false, agir: false }] }
+        : ana.blok === "bilgi" && !ana.tam ? { alanlar: [{ id: yeni("a"), ad: "Yeni alan", tur: "metin", zorunlu: false, kilit: false }] }
+          : { cevaplar: ana.blok === "liste" ? ana.cevaplar : ["Uygun", "Uygun değil", "Uygulanamaz"], gruplar: [{ id: yeni("g"), ad: "", maddeler: [{ id: yeni("m"), metin: "Yeni madde", kilit: false }] }] };
+  const blok = ana.blok === "olcum" || ana.blok === "test" || (ana.blok === "bilgi" && !ana.tam) ? ana.blok : "liste";
+  const b = Bolum.parse({ id, ad: kirp(ad, 200) || "Yeni alt başlık", blok, alt: true, ...govde });
+  const l = [...t.bolumler];
+  l.splice(Math.max(0, Math.min(p, l.length)), 0, b);
+  return { t: { ...t, bolumler: l }, id };
+}
+
 /** listede i'yi j'ye taşır (yeni dizi) */
 export function tasi<T>(l: readonly T[], i: number, j: number): T[] {
   if (i < 0 || j < 0 || i >= l.length || j >= l.length) return [...l];

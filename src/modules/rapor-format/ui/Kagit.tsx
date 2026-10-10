@@ -16,7 +16,7 @@
    gelir (değeri ekipman kaydından başlar; kâğıt eski formatı açılışta çevirir — format/duzen.ts ekipmanTamYap). 459: standartlar ve cihazlar
    sabit ve TÜRDEN — metot satırında türün kontrol metodu standartları, ölçüm cihazları bölümünde türün cihaz türleri kendiliğinden (tür
    sayfasında değişince burada da); cihaz bölümü silinmez, tektir. 461 (reisim: "üst başlık ekleme olayı kullanımı zorlaştırıyor alt başlık
-   ekleme olayı olmadığı için anlamsız oluyor alt başlık ekleme olsun"): bölümün altına "Alt başlık ekle" (5 → 5.1, 5.2 …); şeritte "alt başlık
+   ekleme olayı olmadığı için anlamsız oluyor alt başlık ekleme olsun"): bölümün altına "Alt başlık ekle" (5 → 5.1, 5.2 …; 469: doğrudan — tür sordurmaz, ana bölümün türünde); şeritte "alt başlık
    yap / ana başlık yap"; üst başlık yazma kutusu kalktı (var olan üst başlık görünür, kaldırılır). Kâğıdın renkleri belgenin kendi renkleri —
    açık / koyu temada aynı kâğıt. */
 import { Fragment, useEffect, useRef, useState, type ReactNode } from "react";
@@ -26,7 +26,7 @@ import { SINIR_ISARETI } from "../../../format/hesap";
 import { raporDuzeni } from "../../../format/duzen";
 import { BLOKLAR, EKIPMAN_ALAN_ADI, EKIPMAN_ALANLARI, type Blok, type Bolum, type BolumOf, type FormatTanimi } from "../../../format/tanim";
 import {
-  bolumAdi, bolumDuzeni, ekipmanAlaniEkle, gorunumYaz, grupEkle, grupSil, grupYaz, kurucudan, maddeEkle, ogeEkle, ogeSil, ogeYaz, resmiFormat, satirlar, tasi,
+  altBaslikEkle, bolumAdi, bolumDuzeni, ekipmanAlaniEkle, gorunumYaz, grupEkle, grupSil, grupYaz, kurucudan, maddeEkle, ogeEkle, ogeSil, ogeYaz, resmiFormat, satirlar, tasi,
   yeniBolum, yeniKimlik,
 } from "../kurucu";
 import { ListeDuzenleyici, NotDuzenleyici, OgeDuzenleyici, SonucAciklamasi } from "./KurucuDuzenleyici";
@@ -142,11 +142,17 @@ export function Kagit({ t, degis, tur, bolumuSil, bildir }: KagitOzellik) {
   const maddeKoy = (i: number, gid: string) => { const id = yeniKimlik(t, "m"); degis(maddeEkle(t, i, gid, "Yeni madde")); setYeniId(id); };
   const cikar = (i: number, id: string, ad: string) => { degis(ogeSil(t, i, id)); if (ayar?.endsWith(`:${id}`)) setAyar(null); bildir(`“${ad}” çıkarıldı (taslak).`); };
   /** p: yeni bölümün t.bolumler'deki yeri */
-  const bolumKoy = (blok: Blok, p: number, alt = false) => {
-    const y = yeniBolum(t, blok, BLOK_ADI[blok]), b: Bolum = alt ? { ...y, alt: true } : y;
+  const bolumKoy = (blok: Blok, p: number) => {
+    const b = yeniBolum(t, blok, BLOK_ADI[blok]);
     const l = [...t.bolumler]; l.splice(Math.max(0, Math.min(p, l.length)), 0, b);
-    degis({ ...t, bolumler: l }); setYeniId(b.id); bildir(`${BLOK_ADI[blok]} ${alt ? "alt başlık olarak" : "bölümü"} eklendi (taslak).`);
+    degis({ ...t, bolumler: l }); setYeniId(b.id); bildir(`${BLOK_ADI[blok]} bölümü eklendi (taslak).`);
     requestAnimationFrame(() => document.getElementById(`kb-${b.id}`)?.scrollIntoView({ block: "center", behavior: "smooth" }));
+  };
+  /** 469: ana bölümün altına doğrudan alt başlık (tür sordurmaz; ana bölümün türünde) — adı yazma kipinde açılır */
+  const altKoy = (p: number, ana: Bolum) => {
+    const y = altBaslikEkle(t, p, ana);
+    degis(y.t); setYeniId(y.id); bildir(`${ana.ad} altına alt başlık eklendi (taslak).`);
+    requestAnimationFrame(() => document.getElementById(`kb-${y.id}`)?.scrollIntoView({ block: "center", behavior: "smooth" }));
   };
   /** 461: v. bölümden sonra eklenen alt başlığın ana bölümü — v ana bölümse kendisi, alt başlıksa onun ana bölümü; üst başlıklı grup ya da
       numarasız bölümden sonra alt başlık olmaz (null) */
@@ -376,17 +382,19 @@ export function Kagit({ t, degis, tur, bolumuSil, bildir }: KagitOzellik) {
 
   /** bölümler arası "Bölüm ekle" (p: yeni bölümün yeri); ölçüm cihazları bölümü tektir (459) */
   const cihazVar = t.bolumler.some((b) => b.blok === "cihaz");
-  /* ana: buraya eklenen alt başlığın ana bölümü (461; yoksa yalnız "Bölüm ekle") */
+  /* ana: buraya eklenen alt başlığın ana bölümü (461; yoksa yalnız "Bölüm ekle"). 469: "+ Alt başlık ekle" DOĞRUDAN alt başlık açar (tür
+     sordurmaz) ve yalnız ana bölümün grubunun sonunda görünür — yeni alt başlık var olanların ardına eklenir */
   const araEkle = (p: number, ad: string, id: string, son = false, ana: Bolum | null = null) => {
     const secenekler = cihazVar ? BOLUM_SECENEK.filter(([b]) => b !== "cihaz") : BOLUM_SECENEK;
     return (
       <div className={son ? `${k.araEkle} ${k.sonEkle}` : k.araEkle}>
+        {ana && <Ekle ad="Alt başlık ekle" erisimAdi={`Alt başlık ekle (${ana.ad} altına)`} onClick={() => altKoy(p, ana)} />}
         <SecimAlani id={id} ad={ad} etiketsiz deger="" ipucu={son ? "+ Bölüm ekle" : "+ Buraya bölüm ekle"} degistir={(x) => bolumKoy(x as Blok, p)} secenekler={secenekler} />
-        {ana && <SecimAlani id={`${id}-alt`} ad={`Alt başlık ekle (${ana.ad} altına)`} etiketsiz deger="" ipucu="+ Alt başlık ekle"
-          degistir={(x) => bolumKoy(x as Blok, p, true)} secenekler={secenekler} />}
       </div>
     );
   };
+  /** v. bölümden sonra ana bölümün alt başlık grubu bitiyor mu (sonraki bölüm aynı ananın alt başlığı değil) */
+  const grupSonu = (v: number) => { const s = duzen.bolumler[v + 1]; return !(s?.b.alt && s.no?.includes(".")); };
 
   /* ── 2 · Ekipman bilgileri (460): ekipman kodu ve türü sabit; öteki her satır formatın ekipman bölümünün alanı (kâğıt eski formatı açılışta
      çevirir — tam bölüm her zaman var) ── */
@@ -490,7 +498,7 @@ export function Kagit({ t, degis, tur, bolumuSil, bildir }: KagitOzellik) {
               {icerik(b, i)}
               {ogePaneli(b, i)}
             </section>
-            {v < duzen.bolumler.length - 1 && araEkle(i + 1, `Buraya bölüm ekle (${b.ad} bölümünden sonra)`, `kb-ekle-${b.id}`, false, anaBolum(v))}
+            {v < duzen.bolumler.length - 1 && araEkle(i + 1, `Buraya bölüm ekle (${b.ad} bölümünden sonra)`, `kb-ekle-${b.id}`, false, grupSonu(v) ? anaBolum(v) : null)}
           </Fragment>
         );
       })}

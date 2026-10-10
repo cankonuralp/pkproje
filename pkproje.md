@@ -2355,6 +2355,11 @@ revizyon, alan kopyalama, hafif kusur devri, meslek eşleşme denetimi).
 - Emsal ürünler: https://opwire.app/iso-17020-periyodik-kontrol-yazilimi/ · https://17020muayene.vidco.com.tr/ · https://akuple.com/asansor-kontrol-yazilimi/ · https://ensyazilim.com/
 
 ## 11 · Değişiklik günlüğü
+- 2026-10-10 (469): **Alt başlık ekle doğrudan** (reisim, hata listesi 40: *"hayır istediğim gibi olmamış alt başlık ekle dediğin gibi alt başlık
+  oluşturacak bunu anlamanın nesi zor reisim ?"*). Format kurucuda her ana bölümün alt başlık grubunun sonunda "+ Alt başlık ekle" tuşu: tür
+  sordurmaz, ana bölümün türünde alt başlık açar (kontrol listesi cevap setiyle, ölçüm tablosu aynı sütunlarla, test değeri, bilgi alanı; öteki
+  türlerde kontrol listesi), içinde bir boş satır, adı hemen yazılır; numarası N.1, N.2 … (kurucu.ts altBaslikEkle; kilit tests/alt-baslik.test.ts +
+  olumsuz kanıt). Eski "Alt başlık ekle" seçim listesi (önce tür sorardı) kalktı; "Buraya bölüm ekle" yerinde.
 - 2026-10-10 (469): **455–468 YAYINDA** — main eca9998 (göç yok, 79 göç), Vercel READY, sağlık "tamam" (sürüm eca9998), duman 10/10; son 2 saatte
   çalışma hatası yalnız bilinen duyuru zaman aşımı (iş ekipmanları portalı yurt dışından; eski sürümde). Deneme makinesi 13/13 yeşil (telefon 3 bir
   kez bellek sıkışıklığında giriş zaman aşımı → yalnız o iş yeniden koştu). Hata listesi: bu turun 12 maddesi "bu yayında", önceki yayınınkiler

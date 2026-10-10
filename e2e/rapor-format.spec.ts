@@ -99,9 +99,8 @@ test("rapor şablonu: şablondan başlat, önizle, yayınla; yeni sürümle eski
     await ad.fill("Deneme yorumu");
     await ad.press("Enter");
     await expect(kagit.getByRole("region", { name: /Deneme yorumu$/ })).toBeVisible();
-    /* 461: alt başlık ekle — sondaki bölümün altına, numarası N.1, adı yerinde yazılır */
-    await page.getByRole("combobox", { name: "Alt başlık ekle (Deneme yorumu altına)" }).click();
-    await page.getByRole("option", { name: /Not \/ yorum/ }).click();
+    /* 461 / 469: alt başlık ekle — sondaki bölümün altına DOĞRUDAN (tür sordurmaz), numarası N.1, adı yerinde yazılır */
+    await page.getByRole("button", { name: "Alt başlık ekle (Deneme yorumu altına)" }).click();
     const altAd = page.getByRole("textbox", { name: "Bölüm adı" });
     await expect(altAd).toBeFocused();
     await altAd.fill("Deneme alt başlık");
