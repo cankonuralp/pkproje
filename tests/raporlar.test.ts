@@ -30,6 +30,7 @@ import {
   raporListesi, raporSil, sahaRaporu, type RaporYazma,
 } from "../src/modules/raporlar/server/raporlar.ts";
 import { raporDurumYaz } from "../src/modules/raporlar/server/onay-baglanti.ts";
+import { formatRaporSayilari } from "../src/modules/raporlar/server/format-baglanti.ts";
 import { ayarOku, ayarYaz } from "../src/server/ayar/ayar.ts";
 import { dosyaIndirilebilir } from "../src/server/dosya/dosya.ts";
 import { DOSYA_ERISIMI } from "../src/server/dosya/erisim.ts";
@@ -199,6 +200,7 @@ test("rapor oluştur: yalnız plandaki denetçi, kabul edilmiş planda, plandaki
   assert.equal((await olustur(FA.den1, id, "kotu")).durum, "yok");
   assert.deepEqual(await olustur(FA.den1, id, FA.ekp["EP-A1"]), { durum: "red", neden: "Bu türün yayınlanmış rapor formatı yok." }, "taslak format yetmez");
   /* oluşur */
+  const once = (await a(FA.yon, (db) => formatRaporSayilari(db, [FA.format])))[FA.format] ?? 0;
   const r = tamam(await olustur(FA.den1, id, a1));
   const s = (await sql<{
     no: string; durum: string; plan_id: string; ekipman_id: string; tur_id: string; format_id: string; personel_id: string; hesap_id: string;
@@ -233,6 +235,9 @@ test("rapor oluştur: yalnız plandaki denetçi, kabul edilmiş planda, plandaki
   assert.deepEqual(await olustur(FA.den1, id, a1), { durum: "red", neden: "Bu ekipmanın bu planda raporu var." });
   tamam(await olustur(FA.den1, id, FA.ekp["HT-A3"]));
   assert.equal((await ici(FA.den1, id))!.durum, "denetimde");
+  /* 2026-10-10 (471): sürüm sayfasının rapor sayısı — bu sürümle açılan silinmemiş raporlar; başka firma saymaz; geçersiz kimlik yok sayılır */
+  assert.deepEqual(await a(FA.yon, (db) => formatRaporSayilari(db, [FA.format, "kotu"])), { [FA.format]: once + 2 });
+  assert.deepEqual(await b(FB.den1, (db) => formatRaporSayilari(db, [FA.format])), {}, "başka firma");
   /* Planlar: raporu olan ekipman pasife alınmaz; pasif ekipmana rapor açılmaz */
   const e1 = p.ekipman.find((x) => x.kod === "HT-A1")!, e2 = p.ekipman.find((x) => x.kod === "HT-A2")!;
   assert.deepEqual(await a(FA.den1, (db) => ekipmanPasif(db, FA.den1, id, e1.id, e1.surum, true)),

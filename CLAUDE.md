@@ -141,6 +141,8 @@ pkproje/
                             · 472 SAHA EKRANI: Kâğıt · Saha ekranı · Belge önizlemesi — ui/SahaGorunumu.tsx (aygıt, kip, cevap biçimi, kullanim.ts) →
                             çerçeve (cerceve)/…/saha → ui/SahaCerceve.tsx (iletiler; yerinde düzenleme kurucu.ts ile) → raporlar SahaRaporu deneme kipi
                             + raporlar/ornek.ts (ilkCevaplar, örnek rapor); tanım gorunum.cevap (açılır / tuş)
+                            · 471 SÜRÜM SAYFASI: fark.ts (önceki sürüme göre değişenler, saf) · ui/SurumOnizleme.tsx (Belge ↔ Saha) · rapor sayısı
+                            raporlar/server/format-baglanti.ts formatRaporSayilari
   src/modules/planlar/      PLANLAR (2026-10-04, 309–310; modül 13): plan + plan ekibi (göç 0023; proje no sunucuda, değişmez; künye kayıttan) ·
                             Plan aç /planlar/ac (uyarılar sema.ts'te saf, engel değil) · liste /planlar · plan içi /planlar/<id> (server/plan-ici.ts:
                             akış kabul/red/kontrol/tamamla, künye düzenle/güncelle, plan ekipmanı, proje notları; geçişler göç 0024 tetiğinde) · 372 planSil

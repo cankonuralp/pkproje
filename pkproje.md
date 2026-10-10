@@ -2355,6 +2355,14 @@ revizyon, alan kopyalama, hafif kusur devri, meslek eşleşme denetimi).
 - Emsal ürünler: https://opwire.app/iso-17020-periyodik-kontrol-yazilimi/ · https://17020muayene.vidco.com.tr/ · https://akuple.com/asansor-kontrol-yazilimi/ · https://ensyazilim.com/
 
 ## 11 · Değişiklik günlüğü
+- 2026-10-10 (471): **Sürüm sayfası yeniden** (reisim maket kararları formu k5 *"evet"* — sürüm sayfasında önceki sürüme göre değişenler). Sayfa formatın
+  kimliğini söyler: yayınlanma (kim, ne zaman) · **bu sürümle yazılan rapor** (Raporlar'ın raporlar/server/format-baglanti.ts okuyucusundan, silinmemiş
+  raporlar) · doküman kodu · bölüm · madde · sürüm notu · taslakta "Yayından önce bakılacak" · **önceki sürüme göre değişenler** (taslak yayındaki sürümle,
+  sürüm N bir öncekiyle; bölüm / madde / grup / alan / sütun / değer eklendi · çıkarıldı · adı · ayarları, cevap seti, kurallar, doküman kodu, başlık,
+  metot ve kapsam, talimat, madde cevabı biçimi — rapor-format/fark.ts, öğeler kimlikle eşlenir) · önizleme **Belge ↔ Saha ekranı** (472'nin görünümü,
+  salt) · kurallar · öteki sürümler (rapor sayısıyla). Tek "Düzenle" (taslakta Format kurucu, yayındakinde o sürümden taslak). Görünüm listesi ve
+  "Bakanlık alanı" yüzü kalktı. Kilitler: tests/format-fark.test (+ olumsuz kanıt), tests/raporlar.test (rapor sayısı, başka firma saymaz), uçtan uca
+  rapor-format.spec (değişenler, rapor sayısı, sürüm notu, iki önizleme, öteki sürümler).
 - 2026-10-10 (472): **Format kurucuda "Saha ekranı"** (reisim maket kararları formu: k1 *"evet"* — saha ekranında da düzenleme · k2 *"format"* — madde
   cevabının biçimi format başına · k3 *"ikiside olsun ama kağıt açılsın kağıtta yapılan değişiklik saha ekranında saha ekranında yapılan değişiklik
   kağıtta etki etsin"* · k4 *"tablet"*). Kurucunun üç görünümü: **Kâğıt** (açılışta) · **Saha ekranı** · **Belge önizlemesi**; üçü aynı taslak.

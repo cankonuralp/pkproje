@@ -82,6 +82,15 @@
 .sahaKap { min-width: 0; }
 .sahaAygit { margin: 0 auto; overflow: hidden; border: 1px solid var(--kenar); border-radius: var(--r-buyuk); background: var(--zemin); }
 .sahaCerceve { display: block; border: 0; transform-origin: 0 0; }
+/* 471: sürüm sayfası — önizleme seçici (telefonda da), önceki sürüme göre değişenler */
+.onizlemeSecici { display: inline-flex; flex-wrap: wrap; gap: 4px; }
+.bosMetin { margin: 0; color: var(--yazi2); }
+.farkListe { display: grid; gap: 2px; margin: 0; padding: 0; list-style: none; }
+.farkListe > li { display: flex; align-items: flex-start; gap: 8px; padding: 6px 0; border-bottom: 1px solid var(--kenar); overflow-wrap: anywhere; }
+.farkListe > li > svg { flex: none; margin-top: 3px; }
+.farkEkle > svg { color: var(--onay-yazi); }
+.farkCikar > svg { color: var(--hata-yazi); }
+.farkDegis > svg { color: var(--yazi2); }
 .belgeKap:focus-visible { outline: 3px solid var(--odak); outline-offset: 2px; }
 
 @media (max-width: 767.98px) {

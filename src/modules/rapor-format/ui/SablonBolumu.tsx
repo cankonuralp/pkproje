@@ -24,11 +24,12 @@ import stil from "./format.module.css";
 
 const BASLA_ID = "sb-baslangic", NOT_ID = "sb-not";
 
-/** 370: `sil` — taslağı kesin silebilir (yönetici; yayınlanmış sürüm silinmez) */
-export function SablonTablosu({ turId, surumler, yaz, sil = false }: { turId: string; surumler: FormatOzeti[]; yaz: boolean; sil?: boolean }) {
+/** 370: `sil` — taslağı kesin silebilir (yönetici; yayınlanmış sürüm silinmez). 471: `raporlar` — sürüm başına bu sürümle yazılan rapor sayısı */
+export function SablonTablosu({ turId, surumler, yaz, sil = false, raporlar }:
+  { turId: string; surumler: FormatOzeti[]; yaz: boolean; sil?: boolean; raporlar?: Record<string, number> }) {
   const taslak = surumler.find((x) => x.durum === "taslak") ?? null;
   const sutunlar: Sutun<FormatOzeti>[] = [
-    { k: "surum", genislik: "26%", baslik: "Sürüm", kart: "ust", sira: 1, hucre: (x) => <><b>{surumAdi(x)}</b><AltSatir>{x.kaynakAd ?? "Firma formatı"} · {x.bolum} bölüm</AltSatir></> },
+    { k: "surum", genislik: "26%", baslik: "Sürüm", kart: "ust", sira: 1, hucre: (x) => <><b>{surumAdi(x)}</b><AltSatir>{x.kaynakAd ?? "Firma formatı"} · {x.bolum} bölüm{raporlar ? ` · ${raporlar[x.id] ?? 0} rapor` : ""}</AltSatir></> },
     { k: "tarih", genislik: "24%", baslik: "Tarih", kart: "govde", sira: 2, hucre: (x) => <>
       <KartEtiket>{x.yayin ? "Yayınlandı" : "Son değişiklik"}</KartEtiket>{tarihYaz(x.yayin ?? x.degisti)}{x.notu && <AltSatir>{x.notu}</AltSatir>}</> },
     { k: "kisi", genislik: "20%", baslik: "Kişi", kart: "govde", sira: 3, hucre: (x) => <><KartEtiket>{x.yayinlayan ? "Yayınlayan" : "Hazırlayan"}</KartEtiket>{x.yayinlayan ?? x.olusturan}</> },

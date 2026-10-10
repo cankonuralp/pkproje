@@ -9,7 +9,8 @@
    yerinde ekler; "Belge önizlemesi" PDF'le aynı çiziciden. Görüntüler e2e-goz/ altına (deneme makinesi her koşuda yükler — gözle bakılır).
    472–474 (reisim 2026-10-10, maket kararları k1–k4): "Saha ekranı" — taslak gerçek saha ekranında (çerçeve, tablet genişliği) örnek raporla;
    kâğıtta eklenen bölüm orada; saha ekranında yerinde yazılan ad kâğıda geçer; madde cevabı "Yan yana tuşlar" olunca tuş; "Denetçi gibi dene"de
-   Onaya gönder yalnız denetler. Çerçeve sayfası yalnız kendi kökenimize gömülür (frame-ancestors 'self'). */
+   Onaya gönder yalnız denetler. Çerçeve sayfası yalnız kendi kökenimize gömülür (frame-ancestors 'self').
+   471 (maket kararı k5): sürüm sayfası — önceki sürüme göre değişenler, bu sürümle yazılan rapor, Belge ↔ Saha ekranı önizlemesi, öteki sürümler. */
 import { mkdirSync } from "node:fs";
 import { expect, test, type Page } from "@playwright/test";
 import { girisli, hazir } from "./yardimci";
@@ -187,6 +188,16 @@ test("rapor şablonu: şablondan başlat, önizle, yayınla; yeni sürümle eski
   }
   await yayinla(page, "ilk sürüm", 2);
   await expect(page.getByRole("button", { name: "Yayınla" })).toHaveCount(0);
+  /* 471 (k5): sürüm sayfası — Sürüm 1'e göre değişenler (Ek-III hazır formattan ZPKR02'ye), rapor sayısı, sürüm notu, önizleme, öteki sürümler */
+  const fark = page.getByRole("region", { name: "Sürüm 1 ile karşılaştırma — değişenler" });
+  await expect(fark.getByRole("listitem").first()).toBeVisible();
+  await expect(page.getByText("Bu sürümle yazılan rapor")).toBeVisible();
+  await expect(page.getByText("Sürüm notu: ilk sürüm")).toBeVisible();
+  await expect(page.getByRole("region", { name: "Belge önizlemesi" }).getByText("Kablo şebeke tarafı").first()).toBeVisible();
+  await page.getByRole("button", { name: "Saha ekranı" }).click();
+  await expect(page.frameLocator('iframe[title^="Saha ekranı"]').getByRole("button", { name: "Onaya gönder" })).toBeVisible({ timeout: 60_000 });
+  await expect(page.getByRole("region", { name: "Öteki sürümler" })).toContainText("Sürüm 1");
+  await goz(page, "surum-sayfasi", bilgi.project.name);
 
   /* tür sayfası: yüz ve sürüm satırı */
   await page.goto(turAdresi);

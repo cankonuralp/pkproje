@@ -80,6 +80,10 @@ PDF'e basılmaz.
   (bugünkü "Formatı güncelle" — 211 — taslak raporu yeni sürüme taşır).
 - Yayın öncesi denetim: boş bölüm, sınırı olmayan ölçüm sütunu, cevap seti olmayan liste, kilitli alan eksik → liste hâlinde söylenir.
 - Eski sürümler saklanır (imzalı raporun PDF'i hangi sürümle çizildiyse o sürümle yeniden üretilebilir).
+- **2026-10-10 (471; maket kararı k5):** sürüm sayfası formatın kimliğini söyler — yayınlanma (kim, ne zaman), bu sürümle yazılan rapor sayısı,
+  doküman kodu, bölüm · madde, sürüm notu; **önceki sürüme göre değişenler** (taslak yayındaki sürümle, sürüm N bir öncekiyle; öğeler kimlikle
+  eşlenir — `src/modules/rapor-format/fark.ts`); önizleme Belge ↔ Saha ekranı; kurallar; öteki sürümler. Tek "Düzenle". Eski teknik listeler
+  (Görünüm, Bakanlık alanı sayısı) kalktı.
 
 ## 6 · Ekran (format kurucu)
 
