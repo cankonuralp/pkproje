@@ -179,6 +179,16 @@ test("rapor şablonu: şablondan başlat, önizle, yayınla; yeni sürümle eski
     await expect(firma.getByText("Ekipman kodu")).toHaveCount(0);
     await ekip.getByRole("button", { name: "Marka · çıkar" }).click();
     await expect(ekip.getByRole("button", { name: "Marka", exact: true })).toHaveCount(0);
+    /* 493 (hata listesi 29 + 46 maketi): Geri al çıkarılanı geri getirir, Yinele yeniden çıkarır; Ctrl+Z / Ctrl+Y de (yazı alanı dışında) */
+    const arac = page.getByRole("toolbar", { name: "Taslak araçları" });
+    await arac.getByRole("button", { name: "Geri al" }).click();
+    await expect(ekip.getByRole("button", { name: "Marka", exact: true })).toBeVisible();
+    await arac.getByRole("button", { name: "Yinele" }).click();
+    await expect(ekip.getByRole("button", { name: "Marka", exact: true })).toHaveCount(0);
+    await page.keyboard.press("Control+z");
+    await expect(ekip.getByRole("button", { name: "Marka", exact: true })).toBeVisible();
+    await page.keyboard.press("Control+y");
+    await expect(ekip.getByRole("button", { name: "Marka", exact: true })).toHaveCount(0);
     await ekip.getByRole("combobox", { name: "Ekipman kaydından alan ekle" }).click();
     await page.getByRole("option", { name: /^Marka/ }).click();
     await expect(ekip.getByRole("button", { name: "Marka", exact: true })).toBeVisible();

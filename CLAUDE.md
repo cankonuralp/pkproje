@@ -148,6 +148,8 @@ pkproje/
                             · 486: kâğıtta sahadaki doldurma tuşları bölümün altında (Kagit.tsx sahaTuslari); ekipman bilgileri bölümü silinir / geri eklenir
                             (kurucu.ts ekipmanBolumuKaldir / ekipmanBolumuGeriEkle — tanim.ts gorunum.ekipman, duzen.ts ekipmanBolumuVar); alt başlık türü
                             seçilir (kurucu.ts ALT_TURLER)
+                            · 493 GERİ AL / YİNELE: gecmis.ts (saf; adım, geri al, yinele, kısayol — en çok 100 adım) → FormatKurucu araç çubuğu
+                            "Taslak araçları" (Ctrl+Z / Ctrl+Y; yazı alanında yok)
                             · 471 SÜRÜM SAYFASI: fark.ts (önceki sürüme göre değişenler, saf) · ui/SurumOnizleme.tsx (Belge ↔ Saha) · rapor sayısı
                             raporlar/server/format-baglanti.ts formatRaporSayilari
   src/modules/planlar/      PLANLAR (2026-10-04, 309–310; modül 13): plan + plan ekibi (göç 0023; proje no sunucuda, değişmez; künye kayıttan) ·

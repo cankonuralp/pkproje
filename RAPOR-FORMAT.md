@@ -124,6 +124,7 @@ PDF'e basılmaz.
 - **2026-10-12 (492; hata listesi 9):** raporun **künyesi** (firma adı, adres, SGK, İSG-KATİP, e-posta, telefon, metot ve kapsam) sahada raporun kendi
   kopyasında değiştirilir; formatın **"Sahada denetçi değiştiremez"** seçimi (gorunum.kilitli; başlangıç SGK ve İSG-KATİP) kilitler — kâğıtta 1.
   bölümün altında. Kilitli bilgiyi sunucu da reddeder (src/format/kunye.ts).
+- **2026-10-12 (493; 29 + 46 maketi):** kâğıdın üstünde **Geri al / Yinele** (Ctrl+Z / Ctrl+Y); her değişiklik bir adım, en çok 100 (gecmis.ts).
 
 ## 7 · Veri
 

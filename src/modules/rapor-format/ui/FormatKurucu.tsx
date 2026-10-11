@@ -15,9 +15,11 @@
    ayarlar kâğıtta — madde cevabının biçimi "Kurallar, saha ekranı ve genel muayene talimatı"nda, bölümün fotoğraftan / Excel'den doldurulması
    bölümün ayarında (484).
    486: seçili görünüm (Kâğıt / Saha ekranı / Belge) bu sekmede taslak başına hatırlanır (sessionStorage) — sayfa yenilenince aynı görünüm açılır
-   (deneme makinesinin geliştirme sunucusu saha ekranını derlerken sayfayı baştan yüklüyordu; kullanıcı için de F5'te görünüm kaybolmaz). */
+   (deneme makinesinin geliştirme sunucusu saha ekranını derlerken sayfayı baştan yüklüyordu; kullanıcı için de F5'te görünüm kaybolmaz).
+   493 (hata listesi 29 + 46 maketi onaylandı, reisim 2026-10-11: "mevcuttaki sistemi koruyalım gelişmiş seçenekler tuşu olsun"): kâğıdın üstünde
+   araç çubuğu — Geri al / Yinele (Ctrl+Z, Ctrl+Y; yazı alanındayken alanın kendi geri alması); her değişiklik bir adım (../gecmis.ts). */
 import { useRouter } from "next/navigation";
-import { useEffect, useMemo, useState, useTransition } from "react";
+import { useEffect, useMemo, useRef, useState, useTransition } from "react";
 import { raporBelgesi } from "../../../belge/belge";
 import { useBildir } from "../../../components/bildirim/Bildirim";
 import { useOnayla } from "../../../components/pencere/Onay";
@@ -27,6 +29,7 @@ import { Tus, TusBaglanti } from "../../../components/tus/Tus";
 import { yayinDenetimi } from "../../../format/motor";
 import type { FormatTanimi } from "../../../format/tanim";
 import { bolumSil, gorunumYaz } from "../kurucu";
+import { adimEkle, bosGecmis, geriAl, kisayol, yinele, type Gecmis } from "../gecmis";
 import { taslakKaydetEylemi } from "./eylemler";
 import { Kagit } from "./Kagit";
 import { SatirAlani } from "./KurucuDuzenleyici";
@@ -70,9 +73,27 @@ export function FormatKurucu({ turId, turAd, turKod, format, tanim, kaynakAd, tu
     setGorunumDurum(g);
     try { sessionStorage.setItem(gorunumAnahtar, g); } catch { /* saklanamazsa yalnız bu ekranda */ }
   };
-  if (son !== ilkJson) { setSon(ilkJson); setT(tanim); setHatalar([]); }
+  /* 493: geri al / yinele — her değişiklik bir adım; kaydedilince (sunucu tanımı değişince) ya da Vazgeç'le sıfırlanır */
+  const [gecmis, setGecmis] = useState<Gecmis<FormatTanimi>>(bosGecmis);
+  if (son !== ilkJson) { setSon(ilkJson); setT(tanim); setHatalar([]); setGecmis(bosGecmis()); }
   const kirli = JSON.stringify(t) !== ilkJson;
-  const degis = (y: FormatTanimi) => { setT(y); setHatalar([]); };
+  const degis = (y: FormatTanimi) => { setGecmis((g) => adimEkle(g, t)); setT(y); setHatalar([]); };
+  const geri = () => { const x = geriAl(gecmis, t); if (!x) return; setGecmis(x.gecmis); setT(x.deger); setHatalar([]); bildir("Geri alındı."); };
+  const ileri = () => { const x = yinele(gecmis, t); if (!x) return; setGecmis(x.gecmis); setT(x.deger); setHatalar([]); bildir("Yinelendi."); };
+  const kisayolGuncel = useRef({ geri, ileri });
+  useEffect(() => { kisayolGuncel.current = { geri, ileri }; });
+  useEffect(() => {
+    const bas = (e: KeyboardEvent) => {
+      const h = e.target as HTMLElement | null;
+      const hedefYazi = !!h && (h.isContentEditable || /^(INPUT|TEXTAREA|SELECT)$/.test(h.tagName));
+      const k = kisayol({ key: e.key, ctrlKey: e.ctrlKey, metaKey: e.metaKey, shiftKey: e.shiftKey, altKey: e.altKey, hedefYazi });
+      if (!k) return;
+      e.preventDefault();
+      if (k === "geri") kisayolGuncel.current.geri(); else kisayolGuncel.current.ileri();
+    };
+    document.addEventListener("keydown", bas);
+    return () => document.removeEventListener("keydown", bas);
+  }, []);
   const stdAnahtar = turStd.join("\n"), cihazAnahtar = turCihaz.join("\n");
   const tur = useMemo(() => ({ ad: turAd, kod: turKod, std: stdAnahtar ? stdAnahtar.split("\n") : [], cihaz: cihazAnahtar ? cihazAnahtar.split("\n") : [] }),
     [turAd, turKod, stdAnahtar, cihazAnahtar]);
@@ -111,7 +132,7 @@ export function FormatKurucu({ turId, turAd, turKod, format, tanim, kaynakAd, tu
     }
     bildir("Taslak kaydedildi."); router.refresh();
   });
-  const vazgec = () => { setT(tanim); setHatalar([]); bildir("Değişiklikler geri alındı."); };
+  const vazgec = () => { setT(tanim); setHatalar([]); setGecmis(bosGecmis()); bildir("Değişiklikler geri alındı."); };
   /* 470: Bakanlık bölümü de silinir — uyarıyla sorulur, yayında uyarı çıkar (engel değil) */
   const bolumuSil = async (i: number) => {
     const b = t.bolumler[i];
@@ -181,6 +202,11 @@ export function FormatKurucu({ turId, turAd, turKod, format, tanim, kaynakAd, tu
             ipucu="Rapor ekranının sağ üstündeki ünlemden açılır; belgeye (PDF) basılmaz." uygula={(s) => degis(gorunumYaz(t, { talimat: s }))} />
         </div>
       </details>
+      {/* 493: araç çubuğu (geniş ekranda; telefonda kurucu yok) */}
+      <div className={`${stil.aracCubugu} ${stil.yalnizGenis}`} role="toolbar" aria-label="Taslak araçları">
+        <Tus tur="ikincil" ikon="undo-2" disabled={!gecmis.geri.length} aria-keyshortcuts="Control+Z" title="Geri al (Ctrl+Z)" onClick={geri}>Geri al</Tus>
+        <Tus tur="ikincil" ikon="redo-2" disabled={!gecmis.ileri.length} aria-keyshortcuts="Control+Y" title="Yinele (Ctrl+Y)" onClick={ileri}>Yinele</Tus>
+      </div>
       <div className={gorunum === "duzen" ? stil.yalnizGenis : stil.gizliHer}>
         <Kagit t={t} degis={degis} tur={tur} bolumuSil={(i) => void bolumuSil(i)} bildir={bildir} />
       </div>

@@ -2405,6 +2405,13 @@ revizyon, alan kopyalama, hafif kusur devri, meslek eşleşme denetimi).
 - Emsal ürünler: https://opwire.app/iso-17020-periyodik-kontrol-yazilimi/ · https://17020muayene.vidco.com.tr/ · https://akuple.com/asansor-kontrol-yazilimi/ · https://ensyazilim.com/
 
 ## 11 · Değişiklik günlüğü
+- 2026-10-12 (493): **FORMAT KURUCUDA GERİ AL / YİNELE** (hata listesi 29 + 46 maketi onaylı — reisim 2026-10-11: *"maketi onaylıyorum … mevcuttaki
+  sistemi koruyalım gelişmiş seçenekler tuşu olsun"*; maketteki Geri al / Yinele). Kâğıdın üstünde araç çubuğu "Taslak araçları": Geri al · Yinele
+  (Ctrl+Z, Ctrl+Y ya da Ctrl+Shift+Z — yazı alanındayken alanın kendi geri alması). Kâğıtta yazılan, eklenen, çıkarılan, taşınan, kurallar ve
+  kilit dahil her değişiklik bir adım; en çok 100 adım; taslak kaydedilince ya da Vazgeç'le sıfırlanır. Saf işlevler src/modules/rapor-format/
+  gecmis.ts (gelişmiş görünüm de aynı geçmişi kullanacak). Yeni ikonlar (Lucide 1.47.0, tools/ikon-ekle.mjs): redo-2 ve gelişmiş görünüm için
+  grip-vertical, puzzle, calculator, type, bookmark-plus, scan-text. Kilitler tests/gecmis.test.ts (4) + olumsuz kanıt tests/bozan/gecmis.bozan.ts
+  (2); e2e rapor-format (Marka çıkar → Geri al → Yinele → Ctrl+Z → Ctrl+Y).
 - 2026-10-12 (492): **KÜNYE SAHADA DEĞİŞİR; SGK VE İSG-KATİP KİLİTLİ, KİLİT FORMATTA** (hata listesi 9; reisim 2026-10-11: *"kayıttan geliyor diye
   değiştirilemez olmasın kayıttan gelenlerde değiştirilebilir olsun sadece sgk no ve isg katip no değiştirilemez olsun ve format yapıcıda bu
   belirlenebilir olsun belki başka bir firma onuda değiştirilebilir isteyecek"*). Saha raporunun 1. bölümünde firma adı, adres, e-posta, telefon,

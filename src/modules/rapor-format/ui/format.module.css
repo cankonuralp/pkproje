@@ -129,3 +129,7 @@
 .sutunAd { display: block; overflow-wrap: anywhere; }
 .ornekHucre { color: var(--yazi3); font-style: italic; }
 .sutunDuzenle { margin: 0 0 8px; padding: 8px 10px; border: 1px solid var(--kenar); border-radius: var(--r-orta); }
+
+/* 493: kâğıdın üstündeki araç çubuğu (Geri al / Yinele; gelişmiş seçenekler) — telefonda kurucu yok (yalnizGenis'ten SONRA tanımlandığı için ayrıca) */
+.aracCubugu { display: flex; flex-wrap: wrap; align-items: center; gap: 8px; margin-top: 12px; }
+@media (max-width: 767.98px) { .aracCubugu { display: none; } }
