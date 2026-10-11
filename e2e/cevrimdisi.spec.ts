@@ -155,6 +155,10 @@ test("çevrimdışı: bağlantı kes → Kaydet cihaza → bağlantı gelince gi
   await page.goto(adres);
   await hazir(page);
   await page.context().setOffline(false);
+  /* 491: bağlantısız yazılan kayıt gitmeden 5. adım bağlantıyı yeniden kesmesin — yayın derlemesinde (489) sayfa hızlı, aradaki bağlantılı süre
+     kısalınca kayıt kuyrukta kalıyor, 6. adımın göstergesi "1 işlem ve 1 fotoğraf" oluyordu (koşu 38141597651, masaüstü 1) */
+  await expect(page.getByText("cihazda bekleyen kayıt gönderildi", { exact: false }).first()).toBeVisible({ timeout: 30_000 });
+  await expect(page.getByRole("button", { name: /Çevrimdışı|bekleyen işlem/ })).toHaveCount(0);
 
   /* 5) önceden indirme (396): kişinin planı bağlantı varken cihaza iner — HİÇ AÇILMAMIŞ plan sayfası bağlantı kesikken açılır; pencere
      "Çevrimdışı hazır: 1 plan" der */
