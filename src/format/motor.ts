@@ -74,7 +74,7 @@ export function sonucKurallari(b: BolumOf<"olcum">): string[] {
   else if (b.hesap === "linye") {
     l.push("Icu ≥ hesaplanan 3 fazlı kısa devre akımı (Fonksiyon testlerindeki değer)", "Ib ≤ In ≤ Iz", "N/PEN kesiti ≥ faz kesiti",
       "PE kesiti ≥ faz kesitine göre en az (16 mm²'ye kadar faz kesiti kadar, 16–35 mm² arası 16 mm², 35 mm² üstü yarısı)",
-      `RCD IΔn yazılmışsa ${rcd.charAt(0).toLocaleLowerCase("tr")}${rcd.slice(1)} (ZPKK02)`);
+      `RCD IΔn yazılmışsa ${rcd} (ZPKK02)`);
   } else if (b.hesap === "pd") l.push("PD kesiti 6–25 mm²", "Tamamlayıcı PD kesiti ≥ 4 mm² (ZPKK02)");
   else if (b.hesap === "zi") l.push("Zemin izolasyon direnci > 50 kΩ (ZPKK02)");
   for (const c of b.sutunlar) {

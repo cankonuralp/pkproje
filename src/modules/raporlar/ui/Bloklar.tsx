@@ -439,7 +439,7 @@ function OlcumBlok({ b, bag }: { b: BolumOf<"olcum">; bag: Baglam }) {
                 ))}
                 {notlar.length > 0 && <th scope="col">Uygunluk notu</th>}
                 <th scope="col">Sonuç</th>
-                {!bag.oku && <th scope="col"><span className="gizli">İşlem</span></th>}
+                {!bag.oku && <th scope="col" className={stil.islemBas}><span className="gizli">İşlem</span></th>}
               </tr>
             </thead>
             <tbody>
