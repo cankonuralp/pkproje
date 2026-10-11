@@ -2389,6 +2389,14 @@ revizyon, alan kopyalama, hafif kusur devri, meslek eşleşme denetimi).
 - Emsal ürünler: https://opwire.app/iso-17020-periyodik-kontrol-yazilimi/ · https://17020muayene.vidco.com.tr/ · https://akuple.com/asansor-kontrol-yazilimi/ · https://ensyazilim.com/
 
 ## 11 · Değişiklik günlüğü
+- 2026-10-11 (487): **486 YAYINDA** — main e505f49 (göç yok; 80 göç), sağlık "tamam" (sürüm e505f49), duman 10/10, son 3 saatte çalışma hatası
+  yok. Deneme makinesi e505f49'da 13/13 yeşil (telefon 3'teki "raporsuz plan silinir" giriş zaman aşımı bir yeniden koşuyla geçti — 3. parçada
+  bilinen bellek gecikmesi). Gözle: deneme makinesinin görüntüleri (masaüstü: Tip listesi X2 alanının hemen altında, sayfa kaymadı; telefon:
+  kopyala X3, "Satırlar zaten No sırasında"; kâğıt: "Sahada:" şeritleri, ekipman bölümü geri eklenmiş, 15.1 tablo türünde alt başlık). Canlıda
+  reisim'in Chrome'uyla etkileşim denemesi YAPILAMADI (eklenti bağlı değildi) — ölçemedim. Canlı deneme firmasında yapay zekâ açık ama API anahtarı
+  girilmemiş (firma_sir boş; ölçüldü): "Fotoğraf ekle" fotoğrafı okumadan saklar. Hata listesi: 38, 40, 44, 45 güncellendi; 51 (anahtar yok), yeni
+  52–55 (54: tablo sonucu elle değiştirilsin mi — karar). Deneme makinesindeki geliştirme sunucusu sayfaları yeniden derlerken açık sayfayı baştan
+  yükleyebiliyor (iz kayıtları) — kalıcı çözüm hata listesi 43 (yayın derlemesinde deneme) reisim kararında.
 - 2026-10-11 (486): **TABLO VE FORMAT YAPICI İSTEKLERİ** (§9 elli dördüncü tur, son paragraf; hata listesi 38, 40, 44, 45). (1) **Tip listesi başa
   atıyordu:** rapor tablosunun CSS'inde 452'den önce kalan ".olcumTablo [data-secim-kap] [role=listbox] { position: static }" ezmesi listeyi akışa
   alıyordu — üst katmanda akıştaki öğe sayfanın başında çizilir, odak sayfayı oraya kaydırır. Ezme silindi; yuzen.ts konumu katmanın satır içi
