@@ -17,7 +17,10 @@
    486: seçili görünüm (Kâğıt / Saha ekranı / Belge) bu sekmede taslak başına hatırlanır (sessionStorage) — sayfa yenilenince aynı görünüm açılır
    (deneme makinesinin geliştirme sunucusu saha ekranını derlerken sayfayı baştan yüklüyordu; kullanıcı için de F5'te görünüm kaybolmaz).
    493 (hata listesi 29 + 46 maketi onaylandı, reisim 2026-10-11: "mevcuttaki sistemi koruyalım gelişmiş seçenekler tuşu olsun"): kâğıdın üstünde
-   araç çubuğu — Geri al / Yinele (Ctrl+Z, Ctrl+Y; yazı alanındayken alanın kendi geri alması); her değişiklik bir adım (../gecmis.ts). */
+   araç çubuğu — Geri al / Yinele (Ctrl+Z, Ctrl+Y; yazı alanındayken alanın kendi geri alması); her değişiklik bir adım (../gecmis.ts).
+   494: araç çubuğunda "Gelişmiş seçenekler" — kâğıt AYNI kalır, soluna parça kutusu (sürükle-bırak ya da bas-yerini seç), sağına seçili bölüm
+   gelir (Yapboz.tsx, ../yapboz.ts); bölümler tutamaktan taşınır. Aynı taslak, aynı geçmiş; "Basit görünüme dön" ile kâğıt tek başına. Seçim bu
+   sekmede taslak başına hatırlanır. Telefonda kurucu yok. */
 import { useRouter } from "next/navigation";
 import { useEffect, useMemo, useRef, useState, useTransition } from "react";
 import { raporBelgesi } from "../../../belge/belge";
@@ -30,6 +33,8 @@ import { yayinDenetimi } from "../../../format/motor";
 import type { FormatTanimi } from "../../../format/tanim";
 import { bolumSil, gorunumYaz } from "../kurucu";
 import { adimEkle, bosGecmis, geriAl, kisayol, yinele, type Gecmis } from "../gecmis";
+import { alanaParcaEkle, bolumKopyala, bolumuTasi, parcaBul, parcaYerlestir } from "../yapboz";
+import { Parcalar, SeciliBolum } from "./Yapboz";
 import { taslakKaydetEylemi } from "./eylemler";
 import { Kagit } from "./Kagit";
 import { SatirAlani } from "./KurucuDuzenleyici";
@@ -37,6 +42,7 @@ import { SahaGorunumu } from "./SahaGorunumu";
 import { kurucuOrnegi } from "./kurucuOrnegi";
 import { YayinlaTusu } from "./SablonBolumu";
 import stil from "./format.module.css";
+import ys from "./yapboz.module.css";
 
 const odak = (q: string) => requestAnimationFrame(() => document.querySelector<HTMLElement>(q)?.focus());
 
@@ -133,6 +139,47 @@ export function FormatKurucu({ turId, turAd, turKod, format, tanim, kaynakAd, tu
     bildir("Taslak kaydedildi."); router.refresh();
   });
   const vazgec = () => { setT(tanim); setHatalar([]); setGecmis(bosGecmis()); bildir("Değişiklikler geri alındı."); };
+
+  /* ── 494: gelişmiş görünüm (yapboz) ── */
+  const gelismisAnahtar = `probata-kurucu-gelismis:${format.id}`;
+  const [gelismis, setGelismisDurum] = useState(false);
+  useEffect(() => {
+    let g: string | null = null;
+    try { g = sessionStorage.getItem(gelismisAnahtar); } catch { /* okunamazsa basit */ }
+    if (g === "1") queueMicrotask(() => setGelismisDurum(true));
+  }, [gelismisAnahtar]);
+  const [tutulan, setTutulan] = useState<string | null>(null);
+  const [secili, setSecili] = useState<string | null>(null);
+  const setGelismis = (x: boolean) => {
+    setGelismisDurum(x); setTutulan(null);
+    try { sessionStorage.setItem(gelismisAnahtar, x ? "1" : "0"); } catch { /* saklanamazsa yalnız bu ekranda */ }
+    if (x && gorunum !== "duzen") setGorunum("duzen");
+  };
+  /* tutulan parça Esc ile bırakılır */
+  useEffect(() => {
+    if (!tutulan) return;
+    const bas = (e: KeyboardEvent) => { if (e.key === "Escape") setTutulan(null); };
+    document.addEventListener("keydown", bas);
+    return () => document.removeEventListener("keydown", bas);
+  }, [tutulan]);
+  const goster = (id: string) => requestAnimationFrame(() => document.getElementById(`kb-${id}`)?.scrollIntoView({ block: "center", behavior: "smooth" }));
+  const birak = (p: number, v: { parca?: string; bolum?: string }) => {
+    if (v.bolum) { const y = bolumuTasi(t, v.bolum, p); if (y !== t) { degis(y); setSecili(v.bolum); bildir("Bölüm taşındı (taslak)."); } return; }
+    if (!v.parca) return;
+    const x = parcaYerlestir(t, v.parca, p);
+    if (!x) return;
+    degis(x.t); setSecili(x.bolum); setTutulan(null); bildir(`${parcaBul(t, v.parca)?.ad ?? "Parça"} eklendi (taslak).`); goster(x.bolum);
+  };
+  const alanaBirak = (i: number, k: string) => {
+    const x = alanaParcaEkle(t, i, k);
+    if (!x) return;
+    degis(x.t); setSecili(t.bolumler[i].id); setTutulan(null); bildir(`${parcaBul(t, k)?.ad ?? "Alan"} ${t.bolumler[i].ad} bölümüne eklendi (taslak).`);
+  };
+  const kopyala = (i: number) => {
+    const x = bolumKopyala(t, i);
+    if (!x) return;
+    degis(x.t); setSecili(x.id); bildir(`${t.bolumler[i].ad} kopyalandı (taslak).`); goster(x.id);
+  };
   /* 470: Bakanlık bölümü de silinir — uyarıyla sorulur, yayında uyarı çıkar (engel değil) */
   const bolumuSil = async (i: number) => {
     const b = t.bolumler[i];
@@ -206,10 +253,23 @@ export function FormatKurucu({ turId, turAd, turKod, format, tanim, kaynakAd, tu
       <div className={`${stil.aracCubugu} ${stil.yalnizGenis}`} role="toolbar" aria-label="Taslak araçları">
         <Tus tur="ikincil" ikon="undo-2" disabled={!gecmis.geri.length} aria-keyshortcuts="Control+Z" title="Geri al (Ctrl+Z)" onClick={geri}>Geri al</Tus>
         <Tus tur="ikincil" ikon="redo-2" disabled={!gecmis.ileri.length} aria-keyshortcuts="Control+Y" title="Yinele (Ctrl+Y)" onClick={ileri}>Yinele</Tus>
+        <Tus tur={gelismis ? "birincil" : "ikincil"} ikon="puzzle" aria-pressed={gelismis} onClick={() => setGelismis(!gelismis)}>
+          {gelismis ? "Basit görünüme dön" : "Gelişmiş seçenekler"}</Tus>
       </div>
-      <div className={gorunum === "duzen" ? stil.yalnizGenis : stil.gizliHer}>
-        <Kagit t={t} degis={degis} tur={tur} bolumuSil={(i) => void bolumuSil(i)} bildir={bildir} />
-      </div>
+      {gelismis && gorunum === "duzen" ? (
+        <div className={`${ys.yapboz} ${stil.yalnizGenis}`}>
+          <Parcalar t={t} tutulan={tutulan} tut={setTutulan} />
+          <div className={ys.orta}>
+            <Kagit t={t} degis={degis} tur={tur} bolumuSil={(i) => void bolumuSil(i)} bildir={bildir}
+              yapboz={{ tutulan: tutulan ? parcaBul(t, tutulan) : null, birak, alanaBirak, secili, sec: setSecili }} />
+          </div>
+          <div className={ys.sag}><SeciliBolum t={t} secili={secili} kopyala={kopyala} sil={(i) => void bolumuSil(i)} /></div>
+        </div>
+      ) : (
+        <div className={gorunum === "duzen" ? stil.yalnizGenis : stil.gizliHer}>
+          <Kagit t={t} degis={degis} tur={tur} bolumuSil={(i) => void bolumuSil(i)} bildir={bildir} />
+        </div>
+      )}
       {/* saha ekranı yalnız seçilince kurulur (çerçeve sayfası o zaman yüklenir); telefonda yalnız dene (SahaGorunumu) */}
       {gorunum === "saha" && <SahaGorunumu turId={turId} formatId={format.id} t={t} />}
       <div className={gorunum === "belge" ? stil.belgeKap : gorunum === "saha" ? stil.gizliHer : `${stil.belgeKap} ${stil.yalnizDar}`}>

@@ -125,6 +125,9 @@ PDF'e basılmaz.
   kopyasında değiştirilir; formatın **"Sahada denetçi değiştiremez"** seçimi (gorunum.kilitli; başlangıç SGK ve İSG-KATİP) kilitler — kâğıtta 1.
   bölümün altında. Kilitli bilgiyi sunucu da reddeder (src/format/kunye.ts).
 - **2026-10-12 (493; 29 + 46 maketi):** kâğıdın üstünde **Geri al / Yinele** (Ctrl+Z / Ctrl+Y); her değişiklik bir adım, en çok 100 (gecmis.ts).
+- **2026-10-12 (494; 29 + 46 maketi, reisim: "mevcuttaki sistemi koruyalım gelişmiş seçenekler tuşu olsun"):** **Gelişmiş seçenekler** — aynı kâğıdın
+  solunda **parçalar** (bölümler, tek alanlar, kayıttan gelen alanlar; sürükle-bırak ya da bas-yerini seç), sağında **seçili bölüm** (kopyala, sil);
+  bölüm tutamaktan taşınır. Kâğıt (basit görünüm) değişmedi.
 
 ## 7 · Veri
 

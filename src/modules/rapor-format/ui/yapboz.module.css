@@ -1,0 +1,29 @@
+/* GELİŞMİŞ GÖRÜNÜM (494) — solda parçalar, ortada kâğıt, sağda seçili bölüm (geniş ekranda); orta genişlikte parçalar solda, seçili bölüm altta.
+   Telefonda kurucu yok (FormatKurucu: yalnız ≥ 768). Uygulama renkleri (tokens); kâğıdın kendi renkleri kagit.module.css'te. */
+.yapboz { display: grid; gap: 12px; margin-top: 12px; grid-template-columns: minmax(0, 1fr); align-items: start; }
+.orta { display: grid; gap: 10px; min-width: 0; }
+/* telefonda kurucu yok (belge önizlemesi görünür) — format.module.css yalnizGenis ile aynı eşik, bu dosyada da (modüllerin sırası belirsiz) */
+@media (max-width: 767.98px) { .yapboz { display: none; } }
+@media (min-width: 768px) { .yapboz { grid-template-columns: 220px minmax(0, 1fr); } .sag { grid-column: 1 / -1; } }
+@media (min-width: 1280px) {
+  .yapboz { grid-template-columns: 236px minmax(0, 1fr) 248px; }
+  .sag { grid-column: auto; }
+  .yan { position: sticky; top: calc(var(--ust-y) + 8px); max-height: calc(100vh - var(--ust-y) - 16px); max-height: calc(100dvh - var(--ust-y) - 16px); overflow-y: auto; }
+}
+.yan { display: grid; gap: 10px; align-content: start; min-width: 0; padding: 12px; border: 1px solid var(--kenar); border-radius: var(--r-kucuk); background: var(--kart); }
+.baslik { display: flex; align-items: center; gap: 6px; margin: 0; font-size: var(--boy-bolum); }
+.not { margin: 0; color: var(--yazi2); font-size: var(--boy-kucuk); }
+.grup { display: grid; gap: 6px; }
+.grupAd { color: var(--yazi2); font-size: var(--boy-etiket); font-weight: 600; }
+.liste { display: grid; gap: 6px; }
+.parca {
+  display: grid; gap: 1px; min-height: var(--tus-y); padding: 6px 10px; border: 1px solid var(--kenar-alan); border-radius: var(--r-kucuk);
+  background: var(--zemin); color: var(--yazi); font: inherit; text-align: left; cursor: grab;
+}
+.parca:hover { border-color: var(--yazi2); }
+.parca:focus-visible { outline: 2px solid var(--odak); outline-offset: 2px; }
+.parca[aria-pressed="true"] { border-color: var(--onay); background: var(--onay-zemin); box-shadow: inset 0 0 0 1px var(--onay); }
+.parcaAd { font-weight: 600; }
+.parcaAcik { color: var(--yazi2); font-size: var(--boy-kucuk); }
+.secAd { margin: 0; font-weight: 700; overflow-wrap: anywhere; }
+.tuslar { display: flex; flex-wrap: wrap; gap: 8px; }

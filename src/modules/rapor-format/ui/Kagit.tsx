@@ -20,7 +20,7 @@
    ekleme olayı olmadığı için anlamsız oluyor alt başlık ekleme olsun"): bölümün altına "Alt başlık ekle" (5 → 5.1, 5.2 …; 469: doğrudan — tür sordurmaz, ana bölümün türünde); şeritte "alt başlık
    yap / ana başlık yap"; üst başlık yazma kutusu kalktı (var olan üst başlık görünür, kaldırılır). Kâğıdın renkleri belgenin kendi renkleri —
    açık / koyu temada aynı kâğıt. */
-import { Fragment, useEffect, useRef, useState, type ReactNode } from "react";
+import { Fragment, useEffect, useRef, useState, type DragEvent, type ReactNode } from "react";
 import { Ikon } from "../../../components/ikon/Ikon";
 import { useOnayla } from "../../../components/pencere/Onay";
 import { SecimAlani } from "../../../components/secim/SecimAlani";
@@ -33,6 +33,7 @@ import {
   yeniBolum, yeniKimlik,
 } from "../kurucu";
 import { ListeDuzenleyici, NotDuzenleyici, OgeDuzenleyici, SonucAciklamasi } from "./KurucuDuzenleyici";
+import { SURUKLE, type Parca } from "../yapboz";
 import { BLOK_ADI } from "./ortak";
 import k from "./kagit.module.css";
 
@@ -142,6 +143,17 @@ function BilgiTablosu({ l, son }: { l: readonly Hucre[]; son?: ReactNode }) {
   );
 }
 
+/** 494 (hata listesi 29 + 46 maketi; reisim 2026-10-11: "gelişmiş seçenekler tuşu olsun ve tıklayınca buraya gitsin"): GELİŞMİŞ görünümde kâğıdın
+    yapboz bağı — parça kutusundan sürüklenen ya da tutulan (dokun-yerleştir) parça bölümler arasına (p: yeni bölümün yeri) ya da bilgi bölümünün
+    üstüne bırakılır; bölüm tutamaktan sürüklenip taşınır; basılan bölüm seçilir (sağdaki Ayarlar). Basit görünümde yok. */
+export interface YapbozBagi {
+  tutulan: Parca | null;
+  birak: (p: number, v: { parca?: string; bolum?: string }) => void;
+  alanaBirak: (i: number, parca: string) => void;
+  secili: string | null;
+  sec: (id: string) => void;
+}
+
 export interface KagitOzellik {
   t: FormatTanimi;
   degis: (y: FormatTanimi) => void;
@@ -150,9 +162,10 @@ export interface KagitOzellik {
   /** bölümü sil (onay sorar) */
   bolumuSil: (i: number) => void;
   bildir: (s: string) => void;
+  yapboz?: YapbozBagi;
 }
 
-export function Kagit({ t, degis, tur, bolumuSil, bildir }: KagitOzellik) {
+export function Kagit({ t, degis, tur, bolumuSil, bildir, yapboz }: KagitOzellik) {
   /* açık ayar: "b:<bölüm>" bölümün ayarları · "o:<bölüm>:<öğe>" öğenin ayrıntıları · "metot" */
   const [ayar, setAyar] = useState<string | null>(null);
   /* yeni eklenen öğe / bölüm: adı yazma kipinde açılır */
@@ -162,6 +175,37 @@ export function Kagit({ t, degis, tur, bolumuSil, bildir }: KagitOzellik) {
   const sira = (id: string) => t.bolumler.findIndex((b) => b.id === id);
   const ac = (key: string) => setAyar(ayar === key ? null : key);
   const gorunen = duzen.bolumler.map((x) => x.b.id);
+  /* 494: sürüklenen parça / bölüm şu an hangi yerin üstünde ("y:<p>" ekleme yeri · "b:<bölüm>" bilgi bölümü) */
+  const [hedef, setHedef] = useState<string | null>(null);
+  const turVar = (e: DragEvent, ...l: string[]) => l.some((x) => e.dataTransfer.types.includes(x));
+  /** ekleme yeri (bölümler arası): parça ya da bölüm bırakılır */
+  const yuva = (p: number) => !yapboz ? {} : {
+    "data-yuva": p,
+    onDragOver: (e: DragEvent) => { if (!turVar(e, SURUKLE.bolumParca, SURUKLE.alanParca, SURUKLE.bolum)) return; e.preventDefault(); e.dataTransfer.dropEffect = turVar(e, SURUKLE.bolum) ? "move" : "copy"; if (hedef !== `y:${p}`) setHedef(`y:${p}`); },
+    onDragLeave: () => setHedef((h) => (h === `y:${p}` ? null : h)),
+    onDrop: (e: DragEvent) => {
+      e.preventDefault(); setHedef(null);
+      const bolum = e.dataTransfer.getData(SURUKLE.bolum), parca = e.dataTransfer.getData(SURUKLE.bolumParca) || e.dataTransfer.getData(SURUKLE.alanParca);
+      if (bolum) yapboz.birak(p, { bolum }); else if (parca) yapboz.birak(p, { parca });
+    },
+  };
+  /** bilgi bölümü (i): alan parçası bırakılır */
+  const alanHedefi = (b: Bolum, i: number) => !yapboz || b.blok !== "bilgi" ? {} : {
+    onDragOver: (e: DragEvent) => { if (!turVar(e, SURUKLE.alanParca)) return; e.preventDefault(); e.stopPropagation(); e.dataTransfer.dropEffect = "copy"; if (hedef !== `b:${b.id}`) setHedef(`b:${b.id}`); },
+    onDragLeave: (e: DragEvent) => { if (!(e.currentTarget as Element).contains(e.relatedTarget as Node | null)) setHedef((h) => (h === `b:${b.id}` ? null : h)); },
+    onDrop: (e: DragEvent) => { const k = e.dataTransfer.getData(SURUKLE.alanParca); if (!k) return; e.preventDefault(); e.stopPropagation(); setHedef(null); yapboz.alanaBirak(i, k); },
+  };
+  /** bölümün sınıfı: seçili ve bırakma hedefi (gelişmiş görünümde) */
+  const bolumSinifi = (b: Bolum, ek = "") => [`rb-bolum ${k.bolum}`, ek, yapboz?.secili === b.id && k.secili, hedef === `b:${b.id}` && k.hedef].filter(Boolean).join(" ");
+  /** tutulan parçayı bu bilgi bölümüne ekleyen tuş (dokun-yerleştir) */
+  const buBolumeEkle = (b: Bolum, i: number) => yapboz?.tutulan?.tur === "alan" && b.blok === "bilgi"
+    ? <button type="button" className={k.yuvaTus} onClick={() => yapboz.alanaBirak(i, yapboz.tutulan!.k)}><Ikon ad="plus" kucuk />Bu bölüme ekle: {yapboz.tutulan.ad}</button> : null;
+  /** bölümün tutamağı (sürükleyip taşıma; klavyede yukarı / aşağı tuşları) */
+  const tutamak = (b: Bolum) => !yapboz ? null : (
+    <span className={k.tutamak} draggable title="Sürükleyip taşıyın" aria-hidden="true"
+      onDragStart={(e) => { e.dataTransfer.setData(SURUKLE.bolum, b.id); e.dataTransfer.setData("text/plain", b.ad); e.dataTransfer.effectAllowed = "move"; }}
+      onDragEnd={() => setHedef(null)}><Ikon ad="grip-vertical" kucuk /></span>
+  );
 
   /** yeni öğe: kimliği önceden hesaplanır (ogeEkle aynısını verir), adı yazma kipinde açılır */
   const ogeKoy = (i: number, onek: "a" | "s" | "d", ad: string) => { const id = yeniKimlik(t, onek); degis(ogeEkle(t, i, ad)); setYeniId(id); };
@@ -449,7 +493,9 @@ export function Kagit({ t, degis, tur, bolumuSil, bildir }: KagitOzellik) {
   const araEkle = (p: number, ad: string, id: string, son = false, ana: Bolum | null = null) => {
     const secenekler = cihazVar ? BOLUM_SECENEK.filter(([b]) => b !== "cihaz") : BOLUM_SECENEK;
     return (
-      <div className={son ? `${k.araEkle} ${k.sonEkle}` : k.araEkle}>
+      <div className={[k.araEkle, son && k.sonEkle, hedef === `y:${p}` && k.hedef].filter(Boolean).join(" ")} {...yuva(p)}>
+        {yapboz?.tutulan && <button type="button" className={k.yuvaTus} onClick={() => yapboz.birak(p, { parca: yapboz.tutulan!.k })}>
+          <Ikon ad="plus" kucuk />Buraya ekle: {yapboz.tutulan.ad}</button>}
         {/* 486 (hata listesi 40): "+ Alt başlık ekle" seçenek açar — en başta ana bölümün türü, ardından öteki türler */}
         {ana && <SecimAlani id={`${id}-alt`} ad={`Alt başlık ekle (${ana.ad} altına)`} etiketsiz deger="" ipucu="+ Alt başlık ekle"
           degistir={(x) => altKoy(p, ana, x as (typeof ALT_TURLER)[number])}
@@ -531,7 +577,8 @@ export function Kagit({ t, degis, tur, bolumuSil, bildir }: KagitOzellik) {
           <Ekle ad="Ekipman bilgileri bölümünü geri ekle" onClick={() => { degis(ekipmanBolumuGeriEkle(t)); bildir("Ekipman bilgileri bölümü geri eklendi (taslak)."); }} />
         </div>
       )}
-      {duzen.ekipman && <section className={`rb-bolum ${k.bolum}`} id="kb-ekipman">
+      {duzen.ekipman && <section className={ekip ? bolumSinifi(ekip) : `rb-bolum ${k.bolum}`} id="kb-ekipman"
+        onClickCapture={ekip && yapboz ? () => yapboz.sec(ekip.id) : undefined} {...(ekip ? alanHedefi(ekip, ki) : {})}>
         <div className={k.bolumBas}><h2>2. {ekip ? <Yazi deger={ekip.ad} ad="Bölüm adı" yaz={(s) => degis(bolumAdi(t, ki, s))} /> : duzen.ekipmanBaslik}</h2>
           <span className={k.araclar}>
             {ekip?.kilit && <span className={k.sabit}><Ikon ad="lock" kucuk />Bakanlık bölümü</span>}
@@ -560,6 +607,7 @@ export function Kagit({ t, degis, tur, bolumuSil, bildir }: KagitOzellik) {
                 secenekler={eksikBagli.map((x) => [x, EKIPMAN_ALAN_ADI[x], "sahada · kayıttan başlar"] as const)} degistir={bagliEkle} />
             </span>}
           </span>} />
+        {ekip && buBolumeEkle(ekip, ki)}
         {ekip && sahaTuslari(ekip, ki)}
         {ekip && ogePaneli(ekip, ki)}
       </section>}
@@ -570,11 +618,13 @@ export function Kagit({ t, degis, tur, bolumuSil, bildir }: KagitOzellik) {
         return (
           <Fragment key={b.id}>
             {x.ust && <section className="rb-bolum rb-ust"><h2>{x.ust.no}. {x.ust.ad}</h2></section>}
-            <section className={`rb-bolum ${k.bolum}`} id={`kb-${b.id}`} aria-label={`${x.no ? `${x.no} ` : ""}${b.ad}`}>
+            <section className={bolumSinifi(b)} id={`kb-${b.id}`} aria-label={`${x.no ? `${x.no} ` : ""}${b.ad}`}
+              onClickCapture={yapboz ? () => yapboz.sec(b.id) : undefined} {...alanHedefi(b, i)}>
               <div className={x.no?.includes(".") ? `${k.bolumBas} ${k.altBas}` : k.bolumBas}>
                 <h2>{x.no && <span className={k.no}>{x.no.includes(".") ? `${x.no} ` : `${x.no}. `}</span>}
                   <Yazi deger={b.ad} ad="Bölüm adı" bos="Bölüm adı" ac={yeniId === b.id} yaz={(s) => degis(bolumAdi(t, i, s))} /></h2>
                 <span className={k.araclar}>
+                  {tutamak(b)}
                   {b.kilit && <span className={k.sabit}><Ikon ad="lock" kucuk />Bakanlık bölümü</span>}
                   {!b.kilit && b.blok === "cihaz" && <span className={k.sabit}><Ikon ad="lock" kucuk />Sabit · türün cihazları</span>}
                   <span className={k.tur}>{BLOK_ADI[b.blok]}</span>
@@ -591,6 +641,7 @@ export function Kagit({ t, degis, tur, bolumuSil, bildir }: KagitOzellik) {
               </div>
               {ayar === anahtar && bolumAyari(b, i)}
               {icerik(b, i)}
+              {buBolumeEkle(b, i)}
               {sahaTuslari(b, i)}
               {ogePaneli(b, i)}
             </section>

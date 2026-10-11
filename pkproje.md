@@ -2405,6 +2405,18 @@ revizyon, alan kopyalama, hafif kusur devri, meslek eşleşme denetimi).
 - Emsal ürünler: https://opwire.app/iso-17020-periyodik-kontrol-yazilimi/ · https://17020muayene.vidco.com.tr/ · https://akuple.com/asansor-kontrol-yazilimi/ · https://ensyazilim.com/
 
 ## 11 · Değişiklik günlüğü
+- 2026-10-12 (494): **FORMAT KURUCUDA "GELİŞMİŞ SEÇENEKLER" — YAPBOZ** (hata listesi 29 + 46 maketi onaylı; reisim 2026-10-11: *"maketi onaylıyorum ama
+  bu da çok karmaşık olmuş, şöyle yapalım mevcuttaki sistemi koruyalım gelişmiş seçenekler tuşu olsun ve tıklayınca buraya gitsin"*). Kurucu
+  bugünkü gibi açılır; araç çubuğundaki "Gelişmiş seçenekler" (puzzle) AYNI kâğıdın soluna PARÇALAR, sağına SEÇİLİ BÖLÜM koyar ("Basit görünüme
+  dön"; seçim sekmede taslak başına hatırlanır; telefonda kurucu yok). Parçalar: 9 bölüm türü (her biri bir başlangıç öğesiyle — boş bölüm yayında
+  uyarı verirdi; ölçüm cihazları tektir), 6 tek alan (metin, sayı, tarih, seçim, çoklu, evet / hayır), 10 kayıttan gelen alan. Parça kâğıda
+  SÜRÜKLENİR (bölümler arasına: bölüm; tek alan → içinde o alanla bilgi bölümü; bilgi bölümünün üstüne: alan o bölüme) ya da BASILIR ve yeri
+  seçilir ("Buraya ekle: …" / "Bu bölüme ekle: …" — tablet ve klavye; Esc bırakır). Bölüm şeritteki tutamaktan sürüklenip taşınır (klavyede yukarı /
+  aşağı). Seçili bölüm: özet, Kâğıtta göster, Kopyala (iç kimlikler yeni — tablo sütunları tablo içinde tekil olduğundan aynı, tablonun hesabı
+  bozulmaz; Bakanlık işareti kopyada yok), Sil. Aynı taslak, aynı Geri al / Yinele. Saf işlevler src/modules/rapor-format/yapboz.ts; paneller
+  ui/Yapboz.tsx; kâğıdın yapboz bağı Kagit.tsx YapbozBagi. Kilitler tests/yapboz.test.ts (5) + olumsuz kanıt tests/bozan/yapboz.bozan.ts (3); e2e
+  rapor-format (bas-yerleştir, sürükle-bırak, seçili bölüm, Geri al, Basit görünüme dön; görüntü kurucu-gelismis). Formül, serbest metin, parça
+  kitaplığı, yapay zekâ sonraki kalemler.
 - 2026-10-12 (493): **FORMAT KURUCUDA GERİ AL / YİNELE** (hata listesi 29 + 46 maketi onaylı — reisim 2026-10-11: *"maketi onaylıyorum … mevcuttaki
   sistemi koruyalım gelişmiş seçenekler tuşu olsun"*; maketteki Geri al / Yinele). Kâğıdın üstünde araç çubuğu "Taslak araçları": Geri al · Yinele
   (Ctrl+Z, Ctrl+Y ya da Ctrl+Shift+Z — yazı alanındayken alanın kendi geri alması). Kâğıtta yazılan, eklenen, çıkarılan, taşınan, kurallar ve

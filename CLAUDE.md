@@ -148,6 +148,8 @@ pkproje/
                             · 486: kâğıtta sahadaki doldurma tuşları bölümün altında (Kagit.tsx sahaTuslari); ekipman bilgileri bölümü silinir / geri eklenir
                             (kurucu.ts ekipmanBolumuKaldir / ekipmanBolumuGeriEkle — tanim.ts gorunum.ekipman, duzen.ts ekipmanBolumuVar); alt başlık türü
                             seçilir (kurucu.ts ALT_TURLER)
+                            · 494 GELİŞMİŞ SEÇENEKLER (yapboz): yapboz.ts (saf: parça kutusu, bırak / bölüme ekle / taşı / kopyala) · ui/Yapboz.tsx
+                            (Parçalar, Seçili bölüm) · Kagit.tsx YapbozBagi (bırakma yerleri, tutamak, "Buraya ekle") — aynı taslak, aynı geçmiş
                             · 493 GERİ AL / YİNELE: gecmis.ts (saf; adım, geri al, yinele, kısayol — en çok 100 adım) → FormatKurucu araç çubuğu
                             "Taslak araçları" (Ctrl+Z / Ctrl+Y; yazı alanında yok)
                             · 471 SÜRÜM SAYFASI: fark.ts (önceki sürüme göre değişenler, saf) · ui/SurumOnizleme.tsx (Belge ↔ Saha) · rapor sayısı

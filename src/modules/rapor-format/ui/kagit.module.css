@@ -115,3 +115,15 @@
 .kilitCip[aria-pressed="true"] { border-style: solid; background: #dbe4f0; color: #000; }
 .kilitCip:focus-visible { outline: 2px solid #1d4ed8; outline-offset: 1px; }
 @media (pointer: coarse) { .kilitCip { min-height: 40px; } }
+
+/* 494: gelişmiş görünüm (yapboz) — seçili bölüm, bırakma hedefi, "Buraya ekle" / "Bu bölüme ekle" (tutulan parça), bölüm tutamağı */
+.secili { outline: 2px solid #137050; outline-offset: 3px; }
+.hedef { outline: 2px dashed #137050; outline-offset: 3px; background: #eaf7f0; }
+.yuvaTus {
+  display: inline-flex; align-items: center; gap: 4px; min-height: 30px; padding: 2px 10px; margin: 2px 0;
+  border: 2px dashed #137050; border-radius: 4px; background: #eaf7f0; color: #0d4f38; font: inherit; font-weight: 700; text-transform: none; cursor: pointer;
+}
+.yuvaTus:focus-visible { outline: 2px solid #1d4ed8; outline-offset: 1px; }
+@media (pointer: coarse) { .yuvaTus { min-height: 40px; } }
+.tutamak { display: inline-flex; align-items: center; justify-content: center; width: 26px; height: 30px; color: #3d3d3d; cursor: grab; }
+.tutamak:active { cursor: grabbing; }

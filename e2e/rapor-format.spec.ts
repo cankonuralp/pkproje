@@ -189,6 +189,29 @@ test("rapor şablonu: şablondan başlat, önizle, yayınla; yeni sürümle eski
     await expect(ekip.getByRole("button", { name: "Marka", exact: true })).toBeVisible();
     await page.keyboard.press("Control+y");
     await expect(ekip.getByRole("button", { name: "Marka", exact: true })).toHaveCount(0);
+    /* 494 (hata listesi 29 + 46 maketi: "gelişmiş seçenekler tuşu olsun ve tıklayınca buraya gitsin"): kâğıt aynı, solunda parçalar — basıp yerini seç
+       ("Buraya ekle"), sürükle-bırak (Sayı alanı ekipman bilgilerine); sağda seçili bölüm; Geri al taslağı eski hâline; Basit görünüme dön */
+    await arac.getByRole("button", { name: "Gelişmiş seçenekler" }).click();
+    const parcalar = page.getByRole("complementary", { name: "Parçalar" });
+    await expect(parcalar).toBeVisible();
+    const bolumler = kagit.locator("section.rb-bolum[id^='kb-']");
+    const say = await bolumler.count();
+    const listeParca = parcalar.getByRole("button", { name: /^Kontrol listesi/ });
+    await listeParca.click();
+    await expect(listeParca).toHaveAttribute("aria-pressed", "true");
+    await kagit.getByRole("button", { name: "Buraya ekle: Kontrol listesi" }).first().click();
+    await expect(bolumler).toHaveCount(say + 1);
+    await expect(listeParca).toHaveAttribute("aria-pressed", "false");
+    await expect(page.getByRole("complementary", { name: "Seçili bölüm" })).toContainText("Kontrol listesi");
+    await parcalar.getByRole("button", { name: /^Sayı/ }).dragTo(ekip);
+    await expect(ekip.getByRole("button", { name: "Yeni sayı", exact: true })).toBeVisible();
+    await goz(page, "kurucu-gelismis", bilgi.project.name);
+    await arac.getByRole("button", { name: "Geri al" }).click();
+    await arac.getByRole("button", { name: "Geri al" }).click();
+    await expect(bolumler).toHaveCount(say);
+    await expect(ekip.getByRole("button", { name: "Yeni sayı", exact: true })).toHaveCount(0);
+    await arac.getByRole("button", { name: "Basit görünüme dön" }).click();
+    await expect(parcalar).toHaveCount(0);
     await ekip.getByRole("combobox", { name: "Ekipman kaydından alan ekle" }).click();
     await page.getByRole("option", { name: /^Marka/ }).click();
     await expect(ekip.getByRole("button", { name: "Marka", exact: true })).toBeVisible();
