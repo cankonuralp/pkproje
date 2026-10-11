@@ -2389,6 +2389,10 @@ revizyon, alan kopyalama, hafif kusur devri, meslek eşleşme denetimi).
 - Emsal ürünler: https://opwire.app/iso-17020-periyodik-kontrol-yazilimi/ · https://17020muayene.vidco.com.tr/ · https://akuple.com/asansor-kontrol-yazilimi/ · https://ensyazilim.com/
 
 ## 11 · Değişiklik günlüğü
+- 2026-10-11 (491): **ÇEVRİMDIŞI TESTİNDE YARIŞ** — yayın kaydı koşusunda (38141597651, yalnız belge değişikliği) masaüstü 1'de e2e/cevrimdisi.spec
+  6. adımı düştü: gösterge "1 fotoğraf" yerine "1 işlem ve 1 fotoğraf" (hata bağlamı okundu). Neden: 4. adımda bağlantısız yazılan kayıt, bağlantı
+  gelince gitmeden 5. adım bağlantıyı yeniden kesiyordu; yayın derlemesinde (489) sayfa hızlı, aradaki süre kısaldı. Uygulamada hata yok; test 4.
+  adımın sonunda "cihazda bekleyen kayıt gönderildi" ve göstergenin sıfırlanmasını bekliyor. Öteki adımlar bağlantı gelince zaten bekliyor (tarandı).
 - 2026-10-11 (490): **488 + 489 YAYINDA** — main dc763ee (göç yok), sağlık "tamam" (sürüm dc763ee), duman **11/11** (489'un iki yeni denetimi:
   CSP'de upgrade-insecure-requests var, /vitrin 404), son 1 saatte yalnız bilinen duyuru kaynağı zaman aşımı (eski yayından). 489'un ilk koşusunda
   (4ff286a) 10 iş iki beklenen yayın farkından düştü — oturum çerezi yayında "__Host-probata" + Secure (giris.spec adı arıyordu), taramanın
