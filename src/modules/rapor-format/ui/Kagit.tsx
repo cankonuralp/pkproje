@@ -34,6 +34,7 @@ import {
 } from "../kurucu";
 import { ListeDuzenleyici, NotDuzenleyici, OgeDuzenleyici, SonucAciklamasi } from "./KurucuDuzenleyici";
 import { SURUKLE, type Parca } from "../yapboz";
+import { bolumeKaydir } from "./kaydir";
 import { BLOK_ADI } from "./ortak";
 import k from "./kagit.module.css";
 
@@ -221,13 +222,13 @@ export function Kagit({ t, degis, tur, bolumuSil, bildir, yapboz }: KagitOzellik
     const b = yeniBolum(t, blok, BLOK_ADI[blok]);
     const l = [...t.bolumler]; l.splice(Math.max(0, Math.min(p, l.length)), 0, b);
     degis({ ...t, bolumler: l }); setYeniId(b.id); bildir(`${BLOK_ADI[blok]} bölümü eklendi (taslak).`);
-    requestAnimationFrame(() => document.getElementById(`kb-${b.id}`)?.scrollIntoView({ block: "center", behavior: "smooth" }));
+    bolumeKaydir(`kb-${b.id}`);
   };
   /** 469: ana bölümün altına alt başlık — adı yazma kipinde açılır; 486: seçilen türde (ana bölümünkiyle aynı ya da başka) */
   const altKoy = (p: number, ana: Bolum, tur?: (typeof ALT_TURLER)[number]) => {
     const y = altBaslikEkle(t, p, ana, undefined, tur);
     degis(y.t); setYeniId(y.id); bildir(`${ana.ad} altına alt başlık eklendi (taslak).`);
-    requestAnimationFrame(() => document.getElementById(`kb-${y.id}`)?.scrollIntoView({ block: "center", behavior: "smooth" }));
+    bolumeKaydir(`kb-${y.id}`);
   };
   /** 461: v. bölümden sonra eklenen alt başlığın ana bölümü — v ana bölümse kendisi, alt başlıksa onun ana bölümü; üst başlıklı grup ya da
       numarasız bölümden sonra alt başlık olmaz (null) */

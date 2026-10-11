@@ -191,6 +191,7 @@ test("rapor şablonu: şablondan başlat, önizle, yayınla; yeni sürümle eski
     await expect(ekip.getByRole("button", { name: "Marka", exact: true })).toHaveCount(0);
     /* 494 (hata listesi 29 + 46 maketi: "gelişmiş seçenekler tuşu olsun ve tıklayınca buraya gitsin"): kâğıt aynı, solunda parçalar — basıp yerini seç
        ("Buraya ekle"), sürükle-bırak (Sayı alanı ekipman bilgilerine); sağda seçili bölüm; Geri al taslağı eski hâline; Basit görünüme dön */
+    await page.emulateMedia({ reducedMotion: "reduce" });   // 494 düzeltmesi: kâğıttaki kaydırmalar anında (bkz. sürükle-bırak)
     await arac.getByRole("button", { name: "Gelişmiş seçenekler" }).click();
     const parcalar = page.getByRole("complementary", { name: "Parçalar" });
     await expect(parcalar).toBeVisible();
@@ -203,6 +204,10 @@ test("rapor şablonu: şablondan başlat, önizle, yayınla; yeni sürümle eski
     await expect(bolumler).toHaveCount(say + 1);
     await expect(listeParca).toHaveAttribute("aria-pressed", "false");
     await expect(page.getByRole("complementary", { name: "Seçili bölüm" })).toContainText("Kontrol listesi");
+    /* 494 düzeltmesi: eklenen bölüme kaydırma bitmeden sürükleme başlarsa hedef yerinden kayıyordu (masaüstü, "element is not stable") — kaydırma
+       hareketi azalt tercihine uyar (gelişmiş görünüm açılmadan önce ayarlandı); hedef görünürken sürüklenir */
+    await ekip.scrollIntoViewIfNeeded();
+    await expect(ekip).toBeInViewport();
     await parcalar.getByRole("button", { name: /^Sayı/ }).dragTo(ekip);
     await expect(ekip.getByRole("button", { name: "Yeni sayı", exact: true })).toBeVisible();
     await goz(page, "kurucu-gelismis", bilgi.project.name);

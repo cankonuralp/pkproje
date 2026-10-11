@@ -10,6 +10,7 @@ import type { FormatTanimi } from "../../../format/tanim";
 import { bolumOgeleri } from "../kurucu";
 import { parcaGruplari, surukleTuru } from "../yapboz";
 import { BLOK_ADI } from "./ortak";
+import { bolumeKaydir } from "./kaydir";
 import stil from "./yapboz.module.css";
 
 export function Parcalar({ t, tutulan, tut }: { t: FormatTanimi; tutulan: string | null; tut: (k: string | null) => void }) {
@@ -56,7 +57,7 @@ export function SeciliBolum({ t, secili, kopyala, sil }: {
       <p className={stil.secAd}>{b.ad}</p>
       <p className={stil.not}>{tam ? "Ekipman bilgileri" : BLOK_ADI[b.blok]}{b.kilit ? " · Bakanlık bölümü" : ""}{oge ? ` · ${oge} öğe` : ""}</p>
       <div className={stil.tuslar}>
-        <Tus tur="ikincil" ikon="eye" onClick={() => document.getElementById(yer)?.scrollIntoView({ block: "center", behavior: "smooth" })}>Kâğıtta göster</Tus>
+        <Tus tur="ikincil" ikon="eye" onClick={() => bolumeKaydir(yer)}>Kâğıtta göster</Tus>
         {!tam && b.blok !== "cihaz" && <Tus tur="ikincil" ikon="copy" onClick={() => kopyala(i)}>Kopyala</Tus>}
         {!tam && b.blok !== "cihaz" && <Tus tur="tehlike" ikon="trash-2" onClick={() => sil(i)}>Sil</Tus>}
       </div>

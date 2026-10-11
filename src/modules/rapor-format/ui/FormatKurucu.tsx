@@ -35,6 +35,7 @@ import { bolumSil, gorunumYaz } from "../kurucu";
 import { adimEkle, bosGecmis, geriAl, kisayol, yinele, type Gecmis } from "../gecmis";
 import { alanaParcaEkle, bolumKopyala, bolumuTasi, parcaBul, parcaYerlestir } from "../yapboz";
 import { Parcalar, SeciliBolum } from "./Yapboz";
+import { bolumeKaydir } from "./kaydir";
 import { taslakKaydetEylemi } from "./eylemler";
 import { Kagit } from "./Kagit";
 import { SatirAlani } from "./KurucuDuzenleyici";
@@ -162,7 +163,7 @@ export function FormatKurucu({ turId, turAd, turKod, format, tanim, kaynakAd, tu
     document.addEventListener("keydown", bas);
     return () => document.removeEventListener("keydown", bas);
   }, [tutulan]);
-  const goster = (id: string) => requestAnimationFrame(() => document.getElementById(`kb-${id}`)?.scrollIntoView({ block: "center", behavior: "smooth" }));
+  const goster = (id: string) => bolumeKaydir(`kb-${id}`);
   const birak = (p: number, v: { parca?: string; bolum?: string }) => {
     if (v.bolum) { const y = bolumuTasi(t, v.bolum, p); if (y !== t) { degis(y); setSecili(v.bolum); bildir("Bölüm taşındı (taslak)."); } return; }
     if (!v.parca) return;
