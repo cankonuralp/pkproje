@@ -39,7 +39,7 @@ import { adimEkle, bosGecmis, geriAl, kisayol, yinele, type Gecmis } from "../ge
 import { alanaParcaEkle, bolumKopyala, bolumuTasi, parcaBul, parcaYerlestir, type FirmaParcasi, type HazirParca } from "../yapboz";
 import { Parcalar, SeciliBolum } from "./Yapboz";
 import { bolumeKaydir } from "./kaydir";
-import { formatYzEylemi, parcaKaydetEylemi, parcaSilEylemi, taslakKaydetEylemi } from "./eylemler";
+import { formatBelgeEylemi, formatYzEylemi, parcaKaydetEylemi, parcaSilEylemi, taslakKaydetEylemi } from "./eylemler";
 import { oneriEkle, oneriUygula, oneriYeri, type Oneri } from "../yz-oneri";
 import { YzKutusu } from "./YzKutusu";
 import { Kagit } from "./Kagit";
@@ -209,12 +209,18 @@ export function FormatKurucu({ turId, turAd, turKod, format, tanim, kaynakAd, tu
   /* 497: yapay zekâya anlat — öneriler bu ekranda; yazılmaz, "Ekle" / "Uygula" taslağa ekler */
   const [oneriler, setOneriler] = useState<Oneri[]>([]);
   const [yzCevap, setYzCevap] = useState("");
-  const oner = (istek: string) => baslat(async () => {
-    setYzCevap("");
-    const r = await formatYzEylemi(istek, t, turAd);
+  const oneriAl = (r: Awaited<ReturnType<typeof formatYzEylemi>>) => {
     if (r.durum !== "tamam") { setYzCevap(r.neden); bildir(r.neden); return; }
     setOneriler(r.oneriler); setYzCevap(r.cevap);
     bildir(r.oneriler.length ? `${r.oneriler.length} öneri geldi; kâğıtta kesik çizgiyle.` : "Öneri gelmedi.");
+  };
+  const oner = (istek: string) => baslat(async () => { setYzCevap(""); oneriAl(await formatYzEylemi(istek, t, turAd)); });
+  /* 498: belgeden başlat — belge yalnız yapay zekâya gider, saklanmaz */
+  const belgeden = (f: File) => baslat(async () => {
+    setYzCevap(`${f.name} okunuyor…`);
+    const fd = new FormData();
+    fd.set("dosya", f); fd.set("tanim", JSON.stringify(t)); fd.set("turAd", turAd);
+    oneriAl(await formatBelgeEylemi(fd));
   });
   const oneriAt = (id: string) => setOneriler((l) => l.filter((x) => x.id !== id));
   const yzEkle = (id: string, p: number) => {
@@ -328,7 +334,7 @@ export function FormatKurucu({ turId, turAd, turKod, format, tanim, kaynakAd, tu
         <div className={`${ys.yapboz} ${stil.yalnizGenis}`}>
           <Parcalar t={t} kitaplik={kitaplik} tutulan={tutulan} tut={setTutulan} sil={parcaSilebilir ? (id, ad) => void parcaSil(id, ad) : null} />
           <div className={ys.orta}>
-            <YzKutusu t={t} yz={yz} mesgul={mesgul} cevap={yzCevap} oneriler={oneriler} oner={oner} uygula={yzUygula} vazgec={oneriAt} />
+            <YzKutusu t={t} yz={yz} mesgul={mesgul} cevap={yzCevap} oneriler={oneriler} oner={oner} uygula={yzUygula} vazgec={oneriAt} belgeden={belgeden} />
             <Kagit t={t} degis={degis} tur={tur} bolumuSil={(i) => void bolumuSil(i)} bildir={bildir}
               yapboz={{ tutulan: tutulan ? parcaBul(t, tutulan, kitaplik) : null, birak, alanaBirak, secili, sec: setSecili,
                 oneriler: oneriler.flatMap((o) => (o.tur === "ekle" ? [{ id: o.id, p: oneriYeri(t, o), aciklama: o.aciklama, bolum: o.bolum }] : [])),

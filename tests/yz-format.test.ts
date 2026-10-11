@@ -8,6 +8,7 @@
      seçim yazıya döner; formül yalnız sayıda;
    · "Ekle": öneri kimliğiyle yerini bulur, kimlikler şimdiki taslağa göre yeniden; iki kez eklense de tekil;
    · "Uygula": bölümün kimliği, Bakanlık işareti, tablo hesabı, cevap seti korunur; adı aynı kalan öğe kimliğini ve işaretini korur.
+   · 498 belgeden başlat: belge türü içerikten (PDF, fotoğraf, Word metni), başka dosya / boş Word / 4 MB üstü red.
    Olumsuz kanıt: tests/bozan/yz-format.bozan.ts. Sunucu tarafı (yetki, ayar, sınır): tests/format-yz.test.ts. */
 import assert from "node:assert/strict";
 import { test } from "node:test";
@@ -16,6 +17,8 @@ import { FormatTanimi, type BolumOf } from "../src/format/tanim.ts";
 import { kimlikler } from "../src/modules/rapor-format/kurucu.ts";
 import { hamdanBolum, oneriEkle, onerileriKur, oneriUygula, oneriYeri, type Oneri } from "../src/modules/rapor-format/yz-oneri.ts";
 import { FORMAT_SEMASI, formatIstegi, formatOzeti, formatYanitiCoz } from "../src/server/yz/format.ts";
+import { BELGE_EN_BUYUK, formatBelgesi } from "../src/modules/rapor-format/server/yz.ts";
+import { zipBayt } from "../src/components/disa/zip.ts";
 
 const T = FormatTanimi.parse(SABLONLAR.KOMPRESOR.tanim);
 const Z = FormatTanimi.parse(SABLONLAR.ZPKR02.tanim);
@@ -135,4 +138,19 @@ test("Uygula: kimlik, Bakanlık işareti, cevap seti ve tablo hesabı korunur; a
   assert.deepEqual(yo.sutunlar.slice(0, -1).map((s) => s.id), linye.sutunlar.map((s) => s.id));
   assert.equal(new Set(yo.sutunlar.map((s) => s.id)).size, yo.sutunlar.length, "sütun kimlikleri tabloda tekil");
   assert.equal(oneriUygula(Z, { ...o, hedef: "olmayan" }), null);
+});
+
+/* 498 "Belgeden başlat": belge türü içerikten — PDF olduğu gibi, fotoğraf konum bilgisi silinmiş, Word'ün yalnız metni; başka dosya ve 4 MB üstü red */
+test("belgeden başlat: PDF / fotoğraf / Word ayrılır; başka dosya, boş Word ve 4 MB üstü reddedilir", () => {
+  const pdf = new Uint8Array(Buffer.from("%PDF-1.4\n%%EOF"));
+  assert.deepEqual(formatBelgesi(pdf, "format.pdf"), { tur: "pdf", bayt: pdf });
+  const jpeg = new Uint8Array([0xff, 0xd8, 0xff, 0xdb, 0x00, 0x03, 0x01, 0xff, 0xda, 0x00, 0x02, 0x01, 0x02, 0x03, 0xff, 0xd9]);
+  assert.equal((formatBelgesi(jpeg, "foto.jpg") as { tur: string }).tur, "jpeg");
+  const word = zipBayt([["[Content_Types].xml", "<Types/>"], ["word/document.xml", "<w:document><w:body><w:p><w:r><w:t>Fren etkili</w:t></w:r></w:p></w:body></w:document>"]]);
+  assert.deepEqual(formatBelgesi(word, "format<>.docx"), { tur: "metin", ad: "format.docx", metin: "Fren etkili" });
+  const bos = zipBayt([["word/document.xml", "<w:document><w:body></w:body></w:document>"]]);
+  assert.match((formatBelgesi(bos, "b.docx") as { neden: string }).neden, /metin bulunamadı/);
+  assert.match((formatBelgesi(new Uint8Array(Buffer.from("<svg/>")), "x.svg") as { neden: string }).neden, /Yalnız PDF, Word/);
+  assert.match((formatBelgesi(new Uint8Array(BELGE_EN_BUYUK + 1), "b.pdf") as { neden: string }).neden, /en çok 4 MB/);
+  assert.match((formatBelgesi(new Uint8Array(), "b.pdf") as { neden: string }).neden, /boş/);
 });

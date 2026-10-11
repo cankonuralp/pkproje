@@ -3,7 +3,7 @@
    çizgiyle görünür; Ekle / Uygula demeden yazılmaz"). Gelişmiş görünümde kâğıdın üstünde: istek yazılır ya da örnek seçilir → "Öner" → yapay zekânın
    "ekle" önerileri kâğıtta yerinde kesik çizgiyle (Kagit.tsx), "değiştir" önerileri burada — "Uygula" / "Vazgeç". Firmada yapay zekâ kapalıysa
    ya da anahtar yoksa kutunun yerinde nereden açılacağı yazar (maket). Karar ve yetki sunucuda (server/yz.ts). */
-import { useState, type ReactNode } from "react";
+import { useRef, useState } from "react";
 import { Ikon } from "../../../components/ikon/Ikon";
 import { Tus } from "../../../components/tus/Tus";
 import type { FormatTanimi } from "../../../format/tanim";
@@ -14,16 +14,17 @@ import stil from "./yapboz.module.css";
 const ORNEKLER = ["Zincir uzaması için ölçüm tablosu ekle, sınır %3", "Lastik ve tekerlek kontrol maddeleri ekle", "Fotoğraf en az 1 olsun",
   "Raporun sonuna teknik yönetici imzası ekle"];
 
-export function YzKutusu({ t, yz, mesgul, cevap, oneriler, oner, uygula, vazgec, belge }: {
+export function YzKutusu({ t, yz, mesgul, cevap, oneriler, oner, uygula, vazgec, belgeden }: {
   t: FormatTanimi;
   /** sunucudan: hazır mı, değilse kullanıcıya ne söylenecek */
   yz: { hazir: boolean; neden: string };
   mesgul: boolean; cevap: string; oneriler: readonly Oneri[];
   oner: (istek: string) => void; uygula: (id: string) => void; vazgec: (id: string) => void;
-  /** 498: "Belgeden başlat…" (yoksa tuş yok) */
-  belge?: ReactNode;
+  /** 498: "Belgeden başlat…" — firmanın format belgesi (PDF / Word / fotoğraf); yoksa tuş yok */
+  belgeden?: (f: File) => void;
 }) {
   const [metin, setMetin] = useState("");
+  const dosya = useRef<HTMLInputElement>(null);
   if (!yz.hazir) {
     return (
       <section className={stil.yz} aria-label="Yapay zekâya anlat">
@@ -41,8 +42,14 @@ export function YzKutusu({ t, yz, mesgul, cevap, oneriler, oner, uygula, vazgec,
         <input id="kb-yz" className={stil.yzGirdi} value={metin} maxLength={500} autoComplete="off" disabled={mesgul}
           placeholder="Yapay zekâya anlatın: “zincir uzaması için ölçüm tablosu ekle, sınır %3”" onChange={(e) => setMetin(e.target.value)} />
         <Tus type="submit" ikon="sparkles" disabled={mesgul || !metin.trim()} aria-busy={mesgul || undefined}>{mesgul ? "Düşünüyor…" : "Öner"}</Tus>
-        {belge}
+        {belgeden && <>
+          <Tus tur="ikincil" ikon="scan-text" disabled={mesgul} onClick={() => dosya.current?.click()}>Belgeden başlat…</Tus>
+          <input ref={dosya} type="file" className="gizli" tabIndex={-1} aria-label="Format belgesi (PDF, Word, fotoğraf)"
+            accept=".pdf,.docx,application/pdf,application/vnd.openxmlformats-officedocument.wordprocessingml.document,image/jpeg,image/png"
+            onChange={(e) => { const f = e.target.files?.[0]; e.target.value = ""; if (f) belgeden(f); }} />
+        </>}
       </form>
+      {belgeden && <p className={stil.not}>Belgeden başlat: firmanızın kendi rapor formatı (PDF, Word, fotoğraf; en çok 4 MB) — bölümleri öneri olarak çıkar; belge saklanmaz.</p>}
       <div className={stil.ornekler} role="group" aria-label="Örnek istekler">
         {ORNEKLER.map((x) => <button key={x} type="button" className={stil.ornek} disabled={mesgul} onClick={() => { setMetin(x); gonder(x); }}>{x}</button>)}
       </div>

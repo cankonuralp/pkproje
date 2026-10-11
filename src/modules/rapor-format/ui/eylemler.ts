@@ -9,7 +9,7 @@ import { istekOturumu, oturumIslemi } from "../../../server/kimlik/istek";
 import { sablondanTurEkle, taslakBaslat, taslakKaydet, taslakSil, yayinDenetle, yayinla } from "../server/formatlar";
 import { bakanlikTamamla } from "../server/kurulum";
 import { parcaKaydet, parcaSil } from "../server/parcalar";
-import { formatYzBirak, formatYzHazirla, formatYzKapat, type FormatYzSonucu } from "../server/yz";
+import { BELGE_EN_BUYUK, formatBelgesi, formatYzBirak, formatYzHazirla, formatYzKapat, type FormatYzSonucu } from "../server/yz";
 import { anthropicCagir } from "../../../server/yz/okuma";
 import type { FirmaParcasi } from "../yapboz";
 
@@ -110,8 +110,24 @@ export async function parcaSilEylemi(id: string): Promise<{ tamam?: boolean; gen
 /** 497 "Yapay zekâya anlat": istek + kurucudaki taslak (yalnız istemin kurulması için; şemadan geçer) → öneriler. Hiçbir şey yazılmaz — kurucuda
     "Ekle" / "Uygula". Yetki, ayar, sınır sunucuda; çağrı veritabanı işleminin DIŞINDA (S.A.Y deseni). */
 export async function formatYzEylemi(istek: unknown, tanim: unknown, turAd: unknown): Promise<FormatYzSonucu> {
+  return yzCagir({ istek, tanim, turAd });
+}
+
+/** 498 "Belgeden başlat": firmanın format belgesi (PDF / Word / fotoğraf) → öneriler. Belge saklanmaz; tür içerikten, sunucuda. */
+export async function formatBelgeEylemi(form: FormData): Promise<FormatYzSonucu> {
+  const d = form.get("dosya");
+  if (!(d instanceof File)) return { durum: "red", neden: "Belge seçin." };
+  if (d.size > BELGE_EN_BUYUK) return { durum: "red", neden: "Belge çok büyük (en çok 4 MB). PDF'i küçültün ya da sayfaları ayırın." };
+  const belge = formatBelgesi(new Uint8Array(await d.arrayBuffer()), d.name);
+  if ("durum" in belge) return belge;
+  let tanim: unknown = null;
+  try { tanim = JSON.parse(String(form.get("tanim") ?? "null")); } catch { tanim = null; }
+  return yzCagir({ istek: "", tanim, turAd: form.get("turAd"), belge });
+}
+
+async function yzCagir(p: Parameters<typeof formatYzHazirla>[2]): Promise<FormatYzSonucu> {
   const o = await oturum(); if (typeof o === "string") return { durum: "red", neden: o };
-  const h = await oturumIslemi(o, (db) => formatYzHazirla(db, o, { istek, tanim, turAd }));
+  const h = await oturumIslemi(o, (db) => formatYzHazirla(db, o, p));
   if (h.durum !== "hazir") return h;
   const y = await anthropicCagir(h.istek, h.anahtar);
   if (y.durum === "hata") {

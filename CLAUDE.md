@@ -154,7 +154,8 @@ pkproje/
                             (Parçalar, Seçili bölüm) · Kagit.tsx YapbozBagi (bırakma yerleri, tutamak, "Buraya ekle") — aynı taslak, aynı geçmiş
                             · 497 YAPAY ZEKÂYA ANLAT: src/server/yz/format.ts (saf: format özeti — yalnız adlar / sayılar —, istek, cevap) · yz-oneri.ts
                             (saf: öneri → bölüm, şemadan; yer kimlikle; Ekle / Uygula) · server/yz.ts (hazırla → ayırma, kapat, bırak; S.A.Y deseni) ·
-                            ui/YzKutusu.tsx + Kagit.tsx öneri kutusu (kesik çizgi) — gelişmiş görünümde
+                            ui/YzKutusu.tsx + Kagit.tsx öneri kutusu (kesik çizgi) — gelişmiş görünümde · 498 BELGEDEN BAŞLAT: server/yz.ts formatBelgesi
+                            (PDF / fotoğraf / Word — tür içerikten, 4 MB) + src/server/yz/word.ts (.docx metni, ek paketsiz, ZIP bombası sınırı); belge saklanmaz
                             · 496 PARÇA KİTAPLIĞI: hazır formatların bölümleri (kitaplik.ts hazirParcalar — sunucuda; şablon dosyası tarayıcıya gitmez) +
                             firmanın parçaları (server/parcalar.ts; göç 0080 format_parca — RLS, değişmez, kesin silme silici.ts); yapboz.ts parcaHazirla
                             (Bakanlık işareti / üst-alt başlık kalkar; cihaz, ekipman, kayıttan bölüm parça olmaz), parcaKopyasi (yeni kimlik)

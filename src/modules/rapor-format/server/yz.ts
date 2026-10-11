@@ -5,6 +5,8 @@
    harcamaya yazılır). Öneriler taslağa YAZILMAZ: kurucu ekranında kullanıcı "Ekle" / "Uygula" der, taslak yine "Taslağı kaydet"le yazılır.
    Yapay zekâya yalnız formatın adları ve sayıları + istek (498'de firmanın format belgesi) gider (src/server/yz/format.ts). */
 import { ayarOku } from "../../../server/ayar/ayar.ts";
+import { jpegTemizle, pngTemizle, turBul } from "../../../server/dosya/tur.ts";
+import { wordMetni } from "../../../server/yz/word.ts";
 import { sirDurumu, sirKullan } from "../../../server/ayar/sir.ts";
 import type { Sorgulayici } from "../../../server/db/kiraci.ts";
 import { formatEnCokMaliyet, formatIstegi, formatOzeti, formatYanitiCoz, ISTEK_SINIRI, type FormatBelgesi } from "../../../server/yz/format.ts";
@@ -66,4 +68,21 @@ export async function formatYzKapat(db: Sorgulayici, h: Pick<FormatYzHazir, "mod
 /** çağrı cevapsız bitti: ücretsizse ayırma bırakılır; sonucu bilinmiyorsa (zaman aşımı) harcamaya ve mesaja yazılır */
 export async function formatYzBirak(db: Sorgulayici, h: Pick<FormatYzHazir, "ay" | "ust">, ucret: "yok" | "bilinmiyor"): Promise<void> {
   await yzAyirmaBirak(db, h.ay, h.ust, ucret === "bilinmiyor", "mesaj");
+}
+
+/* ── 498 BELGEDEN BAŞLAT: firmanın kendi format belgesi (PDF / Word / fotoğraf) — tür içerikten (uzantıya güvenilmez), fotoğrafın konum bilgisi
+   silinir, Word'ün yalnız metni; belge SAKLANMAZ, yalnız yapay zekâya gider. Üst sınır 4 MB (barındırmanın istek gövdesi sınırı 4,5 MB). ── */
+export const BELGE_EN_BUYUK = 4 << 20;
+export function formatBelgesi(b: Uint8Array, ad: string): FormatBelgesi | FormatYzRed {
+  if (!b.length) return { durum: "red", neden: "Dosya boş." };
+  if (b.length > BELGE_EN_BUYUK) return { durum: "red", neden: "Belge çok büyük (en çok 4 MB). PDF'i küçültün ya da sayfaları ayırın." };
+  const tur = turBul(b, ["pdf", "jpeg", "png"]);
+  if (tur === "pdf") return { tur: "pdf", bayt: b };
+  if (tur === "jpeg" || tur === "png") {
+    try { return { tur, bayt: tur === "jpeg" ? jpegTemizle(b) : pngTemizle(b) }; } catch { return { durum: "red", neden: "Fotoğraf bozuk; başka bir dosya deneyin." }; }
+  }
+  const metin = wordMetni(b);
+  if (metin === null) return { durum: "red", neden: "Yalnız PDF, Word (.docx), JPEG ya da PNG belge." };
+  if (!metin.trim()) return { durum: "red", neden: "Word belgesinde metin bulunamadı." };
+  return { tur: "metin", ad: ad.replace(/[^\p{L}\p{N} ._()-]/gu, "").slice(0, 120) || "belge.docx", metin };
 }

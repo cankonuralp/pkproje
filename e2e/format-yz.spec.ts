@@ -2,7 +2,8 @@
    "öneri kâğıtta kesik çizgiyle görünür; Ekle / Uygula demeden yazılmaz". Gerçek tarayıcıda, yapay zekâsı açık uydurma firmada (yerel Anthropic
    taklidi — gerçek hizmete istek gitmez; istekte kişi / müşteri bilgisi olursa taklit reddeder): Format kurucu › Gelişmiş seçenekler → isteği yaz
    → "Öner" → "ekle" önerisi kâğıtta yerinde, kesik çizgiyle (henüz bölüm değil) → "Ekle" taslağa ekler (Kaydedilmedi) · "değiştir" önerisi
-   kutuda → "Uygula" · örnekten yeni öneri → "Vazgeç" atar. Yapay zekâsı kapalı firmada kutu nedeni söyler: e2e/rapor-format.spec.ts.
+   kutuda → "Uygula" · örnekten yeni öneri → "Vazgeç" atar · 498 "Belgeden başlat…" (uydurma PDF) → belgeden çıkan bölüm öneri → "Ekle".
+   Yapay zekâsı kapalı firmada kutu nedeni söyler: e2e/rapor-format.spec.ts.
    Telefonda kurucu yok (yalnız önizleme). */
 import { mkdirSync } from "node:fs";
 import { expect, test, type Page } from "@playwright/test";
@@ -88,4 +89,14 @@ test("yapay zekâya anlat: öneri kâğıtta kesik çizgiyle; Ekle ve Uygula tas
   await page.getByRole("button", { name: "Taslağı kaydet" }).click();
   await expect(page.getByText("Taslak kaydedildi.").first()).toBeVisible({ timeout: 30_000 });
   await expect(kagit.getByRole("region", { name: /^\d+ Zincir uzaması$/ })).toBeVisible();
+
+  /* 498 belgeden başlat: firmanın PDF formatı (uydurma) → belgeden çıkan bölüm kâğıtta öneri → Ekle */
+  await yz.getByLabel("Format belgesi (PDF, Word, fotoğraf)").setInputFiles({ name: "format.pdf", mimeType: "application/pdf", buffer: Buffer.from("%PDF-1.4 %%EOF") });
+  const belgeden = kagit.getByRole("region", { name: "Yapay zekâ önerisi: Mast ve kaldırma sistemi" });
+  await expect(belgeden).toBeVisible({ timeout: 30_000 });
+  await expect(yz.getByRole("status")).toContainText("Belgeden 1 bölüm çıkarıldı");
+  await expect(belgeden.getByText("Mast kanallarında çatlak yok")).toBeVisible();
+  await belgeden.getByRole("button", { name: "Ekle", exact: true }).click();
+  await expect(kagit.getByRole("region", { name: /^\d+ Mast ve kaldırma sistemi$/ })).toBeVisible();
+  await expect(page.getByText("Kaydedilmedi")).toBeVisible();
 });

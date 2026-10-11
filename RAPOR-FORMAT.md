@@ -130,6 +130,8 @@ PDF'e basılmaz.
   kopyasında değiştirilir; formatın **"Sahada denetçi değiştiremez"** seçimi (gorunum.kilitli; başlangıç SGK ve İSG-KATİP) kilitler — kâğıtta 1.
   bölümün altında. Kilitli bilgiyi sunucu da reddeder (src/format/kunye.ts).
 - **2026-10-12 (493; 29 + 46 maketi):** kâğıdın üstünde **Geri al / Yinele** (Ctrl+Z / Ctrl+Y); her değişiklik bir adım, en çok 100 (gecmis.ts).
+- **2026-10-12 (498):** **Belgeden başlat** (§4.3) — yapay zekâ kutusunda; firmanın PDF / Word / fotoğraf formatından bölüm önerileri (kâğıtta
+  kesik çizgiyle, "Ekle" ile). Belge saklanmaz; Word'ün yalnız metni gider.
 - **2026-10-12 (497):** gelişmiş görünümde **Yapay zekâya anlat** — istek → öneriler; yeni bölüm kâğıtta kesik çizgiyle ("Ekle"), değişiklik
   kutuda ("Uygula"); onaysız yazılmaz. Yapay zekâya yalnız formatın adları ve sayıları gider; öneri şemadan geçer.
 - **2026-10-12 (496):** gelişmiş görünümün parça kutusunda **hazır formatlardan bölümler** (Bakanlık ZPKR / ZPMR / ZYDR ve genel şablonlar, şablon

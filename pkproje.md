@@ -2405,6 +2405,15 @@ revizyon, alan kopyalama, hafif kusur devri, meslek eşleşme denetimi).
 - Emsal ürünler: https://opwire.app/iso-17020-periyodik-kontrol-yazilimi/ · https://17020muayene.vidco.com.tr/ · https://akuple.com/asansor-kontrol-yazilimi/ · https://ensyazilim.com/
 
 ## 11 · Değişiklik günlüğü
+- 2026-10-12 (498): **BELGEDEN BAŞLAT** (hata listesi 29 + 46 maketi onaylı; K7: "Evet — sıranın sonunda"; RAPOR-FORMAT §4.3'ün yapılmamış adımı).
+  "Yapay zekâya anlat" kutusunda "Belgeden başlat…": firmanın kendi rapor formatı — PDF, Word (.docx) ya da fotoğraf (JPEG / PNG), en çok 4 MB
+  (barındırmanın istek gövdesi sınırı 4,5 MB). Tür içerikten (uzantıya güvenilmez); fotoğrafın konum bilgisi silinir; Word'ün yalnız METNİ gider
+  (src/server/yz/word.ts — ek paket yok: ZIP'in merkez dizininden word/document.xml, açarken 8 MB sınır — ZIP bombası; şifreli / ZIP64 / başka ZIP
+  red; paragraflar, tablo hücreleri "|"). Belge SAKLANMAZ, yalnız yapay zekâya gider; belgedeki yazılar veri sayılır (talimat değil). Belgedeki
+  bölümler "ekle" önerisi olarak kâğıtta kesik çizgiyle — "Ekle" demeden yazılmaz (497 ile aynı yol, aynı kullanım sınırı; belgeli istekte ayırma
+  belge payıyla). Kilitler: tests/word-metni.test.ts (2), olumsuz kanıt word-metni.bozan (2: açarken sınır, girdi adı), tests/yz-format.test.ts
+  (+1: belge türleri, boş Word, 4 MB), tests/format-yz.test.ts (+1: belge bloğu, belgeli ayırma, Word metni veri olarak), e2e format-yz (uydurma PDF
+  → öneri → Ekle).
 - 2026-10-12 (497): **YAPAY ZEKÂYA ANLAT** (hata listesi 29 + 46 maketi onaylı; K6: "öneri kâğıtta kesik çizgiyle görünür; Ekle / Uygula demeden
   yazılmaz"). Format kurucunun gelişmiş görünümünde kâğıdın üstünde kutu: istek yazılır ya da örnek seçilir → "Öner". Yeni bölüm önerisi KÂĞITTA
   yerinde, kesik çizgiyle (belgenin görünümüne yakın: sütunlar, birimler, sınırlar, formüller) — "Ekle" taslağa ekler (geçmişe bir adım; yine
