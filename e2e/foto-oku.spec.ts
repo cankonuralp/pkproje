@@ -142,7 +142,9 @@ test("ölçüm tablosu Excel'den: başlıklar sütunlara eşlenir, satırlar tab
   await expect(linye.getByRole("columnheader", { name: "Sıra", exact: true })).toBeVisible();
   /* 486 (reisim: "tip seçin kısmına tıklayınca saçma sapan başa atıp"): tablodaki seçim listesi alanın hemen altında / üstünde açılır, sayfa kaymaz */
   const tip = linye.getByRole("combobox", { name: /· Tip$/ }).last();
-  await tip.scrollIntoViewIfNeeded();
+  /* alan ekranın ve tablonun ortasına: tıklamadan önce test aracı kendisi kaydırmasın (alttaki sabit tuş çubuğu ya da tablonun yapışık sütunu
+     alanı örtünce tıklama kaydırıp yeniden dener — 1515d85 telefon izi; ölçülen kayma uygulamanın değil aracın olurdu) */
+  await tip.evaluate((e) => e.scrollIntoView({ block: "center", inline: "center" }));
   const y0 = await page.evaluate(() => scrollY);
   await tip.click();
   const tipListe = page.getByRole("listbox", { name: /· Tip$/ });

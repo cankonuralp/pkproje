@@ -154,8 +154,11 @@ input.oku { background: var(--zemin2); border-color: var(--kenar); color: var(--
 .olcumTablo td.islemHucre { min-width: 0; background: var(--kart); }
 .satirTuslari { display: inline-flex; gap: 2px; }
 /* 486: satırın Kopyala / Kaldır tuşları geniş tabloda da görünür — sütun kayan kabın sağına yapışık (gözle bakıldı: 15 sütunlu linye tablosunda
-   tuşlar ekranın dışında kalıyordu) */
-.olcumTablo td.islemHucre, .olcumTablo th.islemBas { position: sticky; right: 0; z-index: 1; box-shadow: -1px 0 0 var(--kenar); }
+   tuşlar ekranın dışında kalıyordu). YALNIZ tablet ve masaüstünde: telefonda yapışık sütun dar kabın içinde hücrelerin (Tip) üstüne biniyordu —
+   "Kaldır" seçim alanını örtüyordu (deneme makinesi izi); telefonda tuşlar satırın sonunda, tablo yana kaydırılır */
+@media (min-width: 768px) {
+  .olcumTablo td.islemHucre, .olcumTablo th.islemBas { position: sticky; right: 0; z-index: 1; box-shadow: -1px 0 0 var(--kenar); }
+}
 .olcumTablo td.bosHucre { padding: 14px 8px; color: var(--yazi2); text-align: center; }
 /* 486: tablodaki seçim listesi de ÜST KATMANDA yüzer (yuzen.ts) — buradaki eski "akışta açıl" ezmesi (452 öncesinden) listeyi sayfanın başına
    atıyor, odak sayfayı oraya kaydırıyordu (reisim 2026-10-10: "tip seçin kısmına tıklayınca saçma sapan başa atıp"). Yüzen katmanın biçemi
