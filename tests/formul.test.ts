@@ -12,7 +12,7 @@ import { formulAdDegistir, formulDenet, formulHesapla, formulUygula } from "../s
 import { degerlendir, sonucKurallari, yayinDenetimi } from "../src/format/motor.ts";
 import { SABLONLAR } from "../src/format/sablonlar.ts";
 import { Bolum, Cevaplar, FormatTanimi, type BolumOf } from "../src/format/tanim.ts";
-import { ogeYaz } from "../src/modules/rapor-format/kurucu.ts";
+import { formuleEkle, ogeYaz } from "../src/modules/rapor-format/kurucu.ts";
 import { parcaYerlestir } from "../src/modules/rapor-format/yapboz.ts";
 import { bilgiAlanlari, tabloExceli, tabloSablonu, testAlanlari } from "../src/modules/raporlar/doldur.ts";
 
@@ -139,4 +139,21 @@ test("yayın denetimi formül hatasını söyler; belge hesaplanan değeri ve se
   assert.match(html, /Deney basıncı 1,5 katıdır\./);
   assert.match(html, /İkinci satır\./);
   assert.ok(yayinDenetimi({ ...m.t, bolumler: m.t.bolumler.map((b) => (b.blok === "metin" ? { ...b, metin: " " } : b)) }).some((s) => s.includes("bölümü boş")));
+});
+
+/* 495 düzeltmesi (deneme makinesi b51af0f, masaüstü ve tablet: "[Iz] −[Ib]") — saklanan formülün sonundaki boşluk kırpılıyor, işaretten sonra
+   eklenen adın önündeki boşluk kayboluyordu */
+test("kurucu: formüle ad / işaret ekleme tek boşlukla birleşir, kırpılmış sondan sonra da; parantezin içine boşluk yok; imleç eklenenin sonunda", () => {
+  let f = "", i = 0;
+  /* kurucu.ts istege: saklanan formül kırpılır — imleç kırpılmış değerin içinde kalır */
+  const bas = (x: string) => { const r = formuleEkle(f, i, i, x); f = r.formul.trim(); i = Math.min(r.imlec, f.length); };
+  for (const x of ["[Iz]", "−", "[Ib]"]) bas(x);
+  assert.equal(f, "[Iz] − [Ib]");
+  f = ""; i = 0;
+  for (const x of ["(", "[A]", "+", "[B]", ")", "÷", "2"]) bas(x);
+  assert.equal(f, "([A] + [B]) ÷ 2");
+  assert.equal(formulHesapla(f, (a) => ({ A: 3, B: 5 } as Record<string, number>)[a]), 4);
+  /* ortaya ekleme: imleç eklenenin sonunda, sağdaki parça yerinde */
+  assert.deepEqual(formuleEkle("[A] + [C]", 6, 6, "[B]"), { formul: "[A] + [B] [C]", imlec: 9 });
+  assert.deepEqual(formuleEkle("[A]", 0, 3, "[B]"), { formul: "[B]", imlec: 3 }, "seçili parça yerine");
 });

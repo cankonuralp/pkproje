@@ -174,6 +174,17 @@ const kirp = (s: string, n: number) => s.trim().replace(/\s+/g, " ").slice(0, n)
 /** çok satırlı metinden seçenekler: kırpılmış, boşsuz, tekil, en çok `adet` tane, her biri en çok `uzun` karakter */
 export const satirlar = (s: string, adet = 20, uzun = 60): string[] => [...new Set(s.split(/\r?\n/).map((x) => kirp(x, uzun)).filter(Boolean))].slice(0, adet);
 const istege = (s: string | undefined) => (s && s.trim() ? s.trim() : undefined);
+
+/** 495 düzeltmesi (deneme makinesi b51af0f: "[Iz] −[Ib]"): formül alanında ada / işarete basınca imlecin yerine eklenir — parçalar tek boşlukla
+    birleşir (saklanan formülün sonundaki boşluk istege'de kırpıldığından "−"den sonraki boşluk eklenecek adda yeniden konur); parantezin içine
+    boşluk konmaz. Yeni değer ve imlecin yeri döner. */
+export function formuleEkle(metin: string, a: number, b: number, s: string): { formul: string; imlec: number } {
+  const ara = (x: string, y: string) => (!x || !y || x.endsWith("(") || y.startsWith(")") ? "" : " ");
+  const once = metin.slice(0, a).trimEnd(), sonra = metin.slice(b).trimStart(), p = s.trim();
+  const bas = once + ara(once, p) + p;
+  const formul = (bas + ara(p, sonra) + sonra).slice(0, FORMUL_EN_UZUN);
+  return { formul, imlec: Math.min(bas.length, formul.length) };
+}
 function sinirli<T extends { op?: Sinir; sinir?: number }>(o: T, y: { op?: Sinir | ""; sinir?: number | null }): T {
   if (y.op === undefined && y.sinir === undefined) return o;
   const op = y.op === undefined ? o.op : y.op || undefined;

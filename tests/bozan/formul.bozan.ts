@@ -2,7 +2,8 @@
    aktarılır (göreli içe aktarmalar asıl dosyalara çevrilir).
    · Motor formülü uygulamasaydı formüllü değerin sınırı hiç değerlendirilmez — 1,5 × çalışma basıncı tutmayan kap "Uygun" kalırdı.
    · Formüllü değer eksik sayılsaydı denetçinin yazamadığı alan için rapor onaya gidemezdi.
-   · Yüzde işareti yok sayılsaydı "50%" 50 olurdu (sonuç 100 kat yanlış). */
+   · Yüzde işareti yok sayılsaydı "50%" 50 olurdu (sonuç 100 kat yanlış).
+   · 495 düzeltmesi: formüle ekleme boşluksuz birleşseydi işaretten sonra eklenen ad bitişik kalırdı ("[Iz] −[Ib]" — deneme makinesi b51af0f). */
 import assert from "node:assert/strict";
 import { mkdtempSync, readFileSync, rmSync, writeFileSync } from "node:fs";
 import { tmpdir } from "node:os";
@@ -25,6 +26,7 @@ async function bozuk<M>(kaynak: string, eski: string, yeni: string): Promise<M> 
 }
 type Motor = typeof import("../../src/format/motor.ts");
 type Formul = typeof import("../../src/format/formul.ts");
+type Kurucu = typeof import("../../src/modules/rapor-format/kurucu.ts");
 
 function formullu(): FormatTanimi {
   const t = structuredClone(FormatTanimi.parse(SABLONLAR.KOMPRESOR.tanim));
@@ -48,4 +50,12 @@ test("2. formüllü değer eksik sayılınca denetçinin yazamadığı alan onay
 test("3. yüzde işareti yok sayılınca 50% 50 olur (kilidin koruduğu açık)", async () => {
   const m = await bozuk<Formul>("src/format/formul.ts", "return (f) => a(f) / 100; }", "return a; }");
   assert.equal(m.formulHesapla("50%", () => undefined), 50, "bozuk: yüzde yok");
+});
+
+test("4. formüle ekleme boşluksuz birleşince işaretten sonraki ad bitişik kalır (kilidin koruduğu açık)", async () => {
+  const m = await bozuk<Kurucu>("src/modules/rapor-format/kurucu.ts", 'const ara = (x: string, y: string) => (!x || !y || x.endsWith("(") || y.startsWith(")") ? "" : " ");',
+    "const ara = (_x: string, _y: string) => \"\";");
+  let f = "", i = 0;
+  for (const x of ["[Iz]", "−", "[Ib]"]) { const r = m.formuleEkle(f, i, i, x); f = r.formul.trim(); i = Math.min(r.imlec, f.length); }
+  assert.notEqual(f, "[Iz] − [Ib]", "bozuk: boşluk kayboldu");
 });

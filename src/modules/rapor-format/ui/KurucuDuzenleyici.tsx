@@ -12,7 +12,7 @@ import { Tus } from "../../../components/tus/Tus";
 import { SINIR_ISARETI } from "../../../format/hesap";
 import { SINIRLAR, type Bolum, type BolumOf, type FormatTanimi } from "../../../format/tanim";
 import { FORMUL_EN_UZUN, formulDenet, genelSayiAdlari, tabloSayiAdlari } from "../../../format/formul";
-import { cevaplarYaz, gorunumYaz, grupEkle, grupSil, grupYaz, notlarYaz, ogeYaz, resmiFormat, satirlar, type NotGirdisi, type OgeTuru, type OgeYamasi } from "../kurucu";
+import { cevaplarYaz, formuleEkle, gorunumYaz, grupEkle, grupSil, grupYaz, notlarYaz, ogeYaz, resmiFormat, satirlar, type NotGirdisi, type OgeTuru, type OgeYamasi } from "../kurucu";
 import stil from "./format.module.css";
 
 const ALAN_TUR: readonly (readonly [OgeTuru, string])[] = [["metin", "Metin"], ["sayi", "Sayı"], ["tarih", "Tarih"], ["secim", "Seçim (tek)"], ["coklu", "Seçim (çoklu)"], ["evet", "Evet / hayır"]];
@@ -154,10 +154,9 @@ function FormulAlani({ k, deger, adlar, kendi, yaz, tablo = false }: {
   const hata = metin.trim() ? formulDenet(metin, adlar, kendi) : null;
   const ekle = (s: string) => {
     const el = document.getElementById(id) as HTMLInputElement | null;
-    const a = el?.selectionStart ?? metin.length, b = el?.selectionEnd ?? metin.length;
-    const y = (metin.slice(0, a) + s + metin.slice(b)).slice(0, FORMUL_EN_UZUN);
+    const { formul: y, imlec } = formuleEkle(metin, el?.selectionStart ?? metin.length, el?.selectionEnd ?? metin.length, s);
     setTaslak(null); yaz({ formul: y });
-    requestAnimationFrame(() => { const g = document.getElementById(id) as HTMLInputElement | null; g?.focus(); g?.setSelectionRange(a + s.length, a + s.length); });
+    requestAnimationFrame(() => { const g = document.getElementById(id) as HTMLInputElement | null; g?.focus(); g?.setSelectionRange(imlec, imlec); });
   };
   const digerleri = adlar.filter((x) => x.trim().toLocaleLowerCase("tr") !== kendi.trim().toLocaleLowerCase("tr"));
   return (
@@ -169,7 +168,7 @@ function FormulAlani({ k, deger, adlar, kendi, yaz, tablo = false }: {
       </Alan>
       <div className={stil.formulAdlar} role="group" aria-label="Formüle ekle">
         {digerleri.map((x) => <button key={`a-${x}`} type="button" className={stil.formulTus} onClick={() => ekle(`[${x}]`)}>{x}</button>)}
-        {["+", "−", "×", "÷", "(", ")"].map((o) => <button key={`o-${o}`} type="button" className={stil.formulTus} aria-label={`Formüle ekle: ${o}`} onClick={() => ekle(` ${o} `)}>{o}</button>)}
+        {["+", "−", "×", "÷", "(", ")"].map((o) => <button key={`o-${o}`} type="button" className={stil.formulTus} aria-label={`Formüle ekle: ${o}`} onClick={() => ekle(o)}>{o}</button>)}
         {!digerleri.length && <span className={stil.satir}>{tablo ? "Tabloda başka sayı sütunu yok — önce bir sayı sütunu ekleyin." : "Formatta başka sayı alanı ya da test değeri yok."}</span>}
       </div>
     </div>

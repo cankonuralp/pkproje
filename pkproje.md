@@ -2405,6 +2405,10 @@ revizyon, alan kopyalama, hafif kusur devri, meslek eşleşme denetimi).
 - Emsal ürünler: https://opwire.app/iso-17020-periyodik-kontrol-yazilimi/ · https://17020muayene.vidco.com.tr/ · https://akuple.com/asansor-kontrol-yazilimi/ · https://ensyazilim.com/
 
 ## 11 · Değişiklik günlüğü
+- 2026-10-12 (495 düzeltmesi 2): sütun ayrıntıları açılınca (495 düzeltmesi) deneme makinesi bir adım ileride düştü — formülde "−"ye sonra ada
+  basınca "[Iz] −[Ib]" oluyordu: saklanan formülün sonundaki boşluk kırpılıyor, imlecin yerine eklenen ad bitişik kalıyordu (gerçek kullanıcıda
+  da). Ekleme artık parçaları tek boşlukla birleştirir (parantezin içine boşluk yok) — kurucu.ts formuleEkle (saf); kilit tests/formul.test.ts,
+  olumsuz kanıt formul.bozan 4.
 - 2026-10-12 (496): **PARÇA KİTAPLIĞI** (hata listesi 29 + 46 maketi onaylı; maketteki "Parça olarak kaydet" ve Bakanlık bölümleri). Format
   kurucunun gelişmiş görünümünde parça kutusunun altında: **Firmanızın parçaları** (seçili bölümde "Parça olarak kaydet" — bölüm firmanın bütün
   formatlarında kutuda çıkar; yönetici siler) ve **Hazır formatlardan bölümler** (ZPKR01–07, ZPMR01, ZYDR01, Kompresör — şablon başına katlanır;
