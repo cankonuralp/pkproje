@@ -243,7 +243,7 @@ test("rapor şablonu: şablondan başlat, önizle, yayınla; yeni sürümle eski
     await expect(seciliBolum).not.toContainText("Bakanlık bölümü");
     await seciliBolum.getByRole("button", { name: "Parça olarak kaydet" }).click();
     await expect(page.getByText(/firmanızın parçalarına kaydedildi/).first()).toBeVisible();
-    await expect(firmaGrubu.getByRole("button", { name: /^Muayene kriterleri ve testler/ })).toBeVisible();
+    await expect(firmaGrubu.getByRole("button", { name: "Muayene kriterleri ve testler Kontrol listesi", exact: true })).toBeVisible();
     await firmaGrubu.getByRole("button", { name: "Muayene kriterleri ve testler parçasını sil" }).click();
     await page.locator("dialog[open]").getByRole("button", { name: "Sil", exact: true }).click();
     await expect(firmaGrubu).toContainText("Henüz yok");
