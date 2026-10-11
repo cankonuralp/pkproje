@@ -4,7 +4,7 @@
    · kaydı yalnız modül 5'te "yaz" olan (branş / firma yöneticisi) yapar; denetçi, planlama yetkisiz ve listesi boş;
    · istemciden gelen bölüm şemadan ve parcaHazirla'dan geçer: Bakanlık işareti silinir; ölçüm cihazları / ekipman bilgileri / bozuk bölüm reddedilir;
    · firma yalnız kendi parçalarını görür ve siler (RLS); başka firmaya satır yazılamaz;
-   · parça değişmez (tetik), uygulama rolünün DELETE'i yok; kesin silme yalnız yönetici, denetim izinde;
+   · parça değişmez (uygulama rolünün UPDATE'i yok, sahibinde tetik durdurur), DELETE'i yok; kesin silme yalnız yönetici, denetim izinde;
    · firma başına en çok 200 parça. Saf kurallar: tests/yapboz.test.ts. */
 import assert from "node:assert/strict";
 import { after, before, test } from "node:test";
@@ -87,7 +87,10 @@ test("kaydet reddi: yetkisiz rol, parça olamayan / bozuk bölüm, uzun ad", asy
 });
 
 test("değişmez ve sızdırmaz: güncelleme tetikte düşer, uygulama rolü silemez, başka firmaya satır yazılamaz, başka firmanın parçası silinmez", async () => {
-  await assert.rejects(a(MEK, (db) => db.sorgu("UPDATE format_parca SET ad = 'değişti' WHERE id = $1", [ilk])), /değişmez/);
+  /* uygulama rolünün UPDATE hakkı yok; sahibinde de tetik durdurur (başka bir yol açılsa da parça değişmez) */
+  await assert.rejects(a(MEK, (db) => db.sorgu("UPDATE format_parca SET ad = 'değişti' WHERE id = $1", [ilk])), /permission denied|izin/i);
+  const sahip = kume.sahipIstemci(); await sahip.connect();
+  try { await assert.rejects(sahip.query("UPDATE format_parca SET ad = 'değişti' WHERE id = $1", [ilk]), /değişmez/); } finally { await sahip.end(); }
   await assert.rejects(a(MEK, (db) => db.sorgu("DELETE FROM format_parca WHERE id = $1", [ilk])), /permission denied|izin/i);
   await assert.rejects(b(MEK_B, (db) => db.sorgu("INSERT INTO format_parca (firma_id, ad, bolum, olusturan) VALUES ($1, 'x', '{}'::jsonb, 'x')", [A])),
     /row-level security|satır düzeyi/i);
