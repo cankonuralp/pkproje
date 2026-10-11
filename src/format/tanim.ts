@@ -15,6 +15,18 @@ const metin = z.string().max(2000);
 export const ALAN_TURLERI = ["metin", "sayi", "tarih", "secim", "coklu", "evet"] as const;
 /** kayıttan gelen alanlar (raporda salt okunur): plan, tesis, müşteri, sözleşme ve ekipmandan */
 export const KAYNAKLAR = ["firma_adi", "tesis_adresi", "sgk", "isg_id", "kontrol_tarihi", "rapor_no", "ekipman_kodu", "ekipman_adi", "seri_no", "kullanim_yeri"] as const;
+/** 492 (reisim 2026-10-11, hata listesi 9: "kayıttan geliyor diye değiştirilemez olmasın kayıttan gelenlerde değiştirilebilir olsun sadece sgk no ve
+    isg katip no değiştirilemez olsun ve format yapıcıda bu belirlenebilir olsun"): raporun KÜNYESİ — plandan / kayıttan gelir, denetçi raporun
+    KENDİ kopyasında değiştirir (kayıt değişmez; cevaplar.kunye). Formatın gorunum.kilitli listesindekiler sahada değişmez; verilmemişse SGK ve
+    İSG-KATİP. Rapor no, ekipman kodu ve türü raporun kimliği — künye değil, değişmez. */
+export const KUNYE_ALANLARI = ["firma", "adres", "sgk", "isg", "eposta", "tel", "metot"] as const;
+export type KunyeAlani = (typeof KUNYE_ALANLARI)[number];
+export const KUNYE_ALAN_ADI: Record<KunyeAlani, string> = {
+  firma: "Firma adı", adres: "Periyodik kontrol adresi", sgk: "SGK DETSİS NO", isg: "İSG-KATİP SÖZLEŞME ID", eposta: "E-posta", tel: "Telefon",
+  metot: "Periyodik kontrol metodu ve kapsamı",
+};
+export const KUNYE_EN_COK: Record<KunyeAlani, number> = { firma: 200, adres: 400, sgk: 40, isg: 60, eposta: 200, tel: 40, metot: 1000 };
+export const VARSAYILAN_KILITLI: readonly KunyeAlani[] = ["sgk", "isg"];
 /** 460: ekipman kaydına BAĞLI alanlar — değeri raporun ekipman bilgisinde durur (raporlar/sema.ts EkipmanBilgisi: etiketten okunur, kopyada
     gelir, seri no / kullanım yeri kayıttan alanlara yansır), formattaki adı ve yeri serbest. Yalnız "tam" ekipman bölümünde olur. */
 export const EKIPMAN_ALANLARI = ["marka", "model", "seri", "imal", "konum", "amac", "bolum"] as const;
@@ -117,6 +129,9 @@ export const Gorunum = z.object({
   /** 486 (reisim 2026-10-10, hata listesi 38: "silinemiyor hala ekipman bilgileri tablosu"): 2. bölüm (ekipman bilgileri) var mı — false: bölüm
       belgede ve saha ekranında yok, ekipman kodu ve türü 1. bölümde (Firma bilgileri) yazar, sonraki numaralar bir kayar. Verilmemişse var. */
   ekipman: z.boolean().optional(),
+  /** 492: sahada denetçinin DEĞİŞTİREMEDİĞİ künye bilgileri (öteki künye bilgisi raporun kendi kopyasında değişir). Verilmemişse SGK ve İSG-KATİP
+      (VARSAYILAN_KILITLI); boş liste: hepsi değişir. */
+  kilitli: z.array(z.enum(KUNYE_ALANLARI)).max(KUNYE_ALANLARI.length).optional(),
 });
 
 export const FormatTanimi = z.object({
@@ -183,5 +198,13 @@ export const Cevaplar = z.object({
   cihaz: z.number().int().min(0).max(50).default(0),
   sonuc: z.enum(["", "uygun", "uygun_degil"]).default(""),
   yorum: z.string().max(4000).default(""),
+  /** 492: denetçinin raporda değiştirdiği künye bilgileri (anahtar varsa değer o; yoksa raporun künye kopyası). Firma adı boş olamaz; kilitli
+      olanlar sunucuda reddedilir (format/kunye.ts kunyeKilitHatalari) */
+  kunye: z.object({
+    firma: z.string().trim().min(1, "Firma adı boş olamaz.").max(KUNYE_EN_COK.firma).optional(),
+    adres: z.string().trim().max(KUNYE_EN_COK.adres).optional(), sgk: z.string().trim().max(KUNYE_EN_COK.sgk).optional(),
+    isg: z.string().trim().max(KUNYE_EN_COK.isg).optional(), eposta: z.string().trim().max(KUNYE_EN_COK.eposta).optional(),
+    tel: z.string().trim().max(KUNYE_EN_COK.tel).optional(), metot: z.string().trim().max(KUNYE_EN_COK.metot).optional(),
+  }).default({}),
 });
 export type Cevaplar = z.output<typeof Cevaplar>;

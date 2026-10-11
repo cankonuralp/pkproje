@@ -122,6 +122,16 @@ test("saha raporu: rapor oluştur, eksikle gönderilmez, doldur + cihaz ekle, on
   /* doldur: kontrol tarihleri, format alanları (KOMPRESOR: Marka / model, İmal yılı, Çalışma basıncı), kriterler, test değerleri, sonuç */
   await zamanYaz(page, BASLANGIC, gun, "00", "10");   // gece yarısına yakın: bitiş ileri saate düşmesin, başlangıçtan önce olmasın
   await zamanYaz(page, BITIS, gun, "00", "40");
+  /* 492 (reisim 2026-10-11, hata listesi 9: "kayıttan gelenlerde değiştirilebilir olsun sadece sgk no ve isg katip no değiştirilemez olsun"): künye
+     raporun kendi kopyasında değişir — altında kayıttaki değer ve "Kayıttakine dön"; SGK ve İSG-KATİP kilitli (girdi yok) */
+  const firmaAdi = page.getByRole("textbox", { name: "Firma adı", exact: true });
+  const kayittaki = await firmaAdi.inputValue();
+  expect(kayittaki.length).toBeGreaterThan(0);
+  await firmaAdi.fill(`${kayittaki} (düzeltildi)`);
+  await expect(page.getByText(`Kayıtta: ${kayittaki}`)).toBeVisible();
+  await expect(page.getByRole("button", { name: "Kayıttakine dön" })).toBeVisible();
+  await expect(page.getByRole("textbox", { name: "SGK DETSİS NO" })).toHaveCount(0);
+  await expect(page.getByRole("textbox", { name: "İSG-KATİP SÖZLEŞME ID" })).toHaveCount(0);
   await girdi(page, "Marka / model").first().fill("Deneme K1");
   const imal = girdi(page, "İmal yılı");
   await expect(imal.first()).toBeVisible();
@@ -201,6 +211,7 @@ test("saha raporu: rapor oluştur, eksikle gönderilmez, doldur + cihaz ekle, on
   await expect(belge).toBeVisible({ timeout: 30_000 });
   await expect(belge).toContainText("Hidrostatik deney basıncı");
   await expect(belge).toContainText(E2E_SAHA.cihaz);
+  await expect(belge).toContainText(`${kayittaki} (düzeltildi)`);   // 492: denetçinin düzelttiği firma adı
   await expect(belge.getByRole("img", { name: "on.jpg" })).toBeVisible();
   /* 316 PDF indir: imzasız, kesin PDF motoruyla (başsız Chromium) */
   const [indirme] = await Promise.all([page.waitForEvent("download", { timeout: 60_000 }), page.getByRole("link", { name: "PDF indir" }).click()]);

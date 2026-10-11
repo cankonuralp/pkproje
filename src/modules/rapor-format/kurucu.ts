@@ -7,7 +7,8 @@
 import { SINIR_ISARETI } from "../../format/hesap.ts";
 import { kilitliKimlikler } from "../../format/motor.ts";
 import { ekipmanTamYap } from "../../format/duzen.ts";
-import { Bolum, EKIPMAN_ALAN_ADI, kurucudan, type Blok, type EkipmanAlani, type FormatTanimi, type Sinir } from "../../format/tanim.ts";
+import { Bolum, EKIPMAN_ALAN_ADI, KUNYE_ALANLARI, kurucudan, type Blok, type EkipmanAlani, type FormatTanimi, type KunyeAlani, type Sinir } from "../../format/tanim.ts";
+import { kilitliKunye } from "../../format/kunye.ts";
 
 export { kurucudan };
 
@@ -289,3 +290,12 @@ export function gorunumYaz(t: FormatTanimi, y: { formKodu?: string; baslik?: str
     cevap: y.cevap === "acilir" || y.cevap === "tus" ? y.cevap : t.gorunum.cevap,
   } };
 }
+
+/** 492 (reisim 2026-10-11, hata listesi 9: "sadece sgk no ve isg katip no değiştirilemez olsun ve format yapıcıda bu belirlenebilir olsun"): künye
+    bilgisinin sahada kilidi — kilitli: denetçi değiştiremez; açık: raporun kendi kopyasında değiştirir (başlangıç SGK ve İSG-KATİP kilitli) */
+export function kunyeKilitYaz(t: FormatTanimi, a: KunyeAlani, kilitli: boolean): FormatTanimi {
+  const k = new Set(kilitliKunye(t));
+  if (kilitli) k.add(a); else k.delete(a);
+  return { ...t, gorunum: { ...t.gorunum, kilitli: KUNYE_ALANLARI.filter((x) => k.has(x)) } };
+}
+

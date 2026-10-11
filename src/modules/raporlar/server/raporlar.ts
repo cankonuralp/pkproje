@@ -21,6 +21,7 @@ import { dosyaCope, dosyaYukle } from "../../../server/dosya/dosya.ts";
 import { canDo, canDoEylem, duzey, type YetkiHesabi } from "../../../server/yetki/canDo.ts";
 import { dogrula, type DogrulamaHatalari } from "../../../sema/ortak.ts";
 import { degerlendir, type Degerlendirme } from "../../../format/motor.ts";
+import { gecerliKunye, kilitliKunye, kunyeKilitHatalari, kunyeKilitTemizle, metotMetni } from "../../../format/kunye.ts";
 import { Cevaplar, doldurma, type BolumOf, type FormatTanimi } from "../../../format/tanim.ts";
 import type { OkunacakAlan } from "../../../format/deger.ts";
 import { bilgiAlanlari, ekipmanAlanlari, testAlanlari } from "../doldur.ts";
@@ -491,6 +492,11 @@ async function kaydetIc(db: Sorgulayici, kim: Kisi, e: Erisim, surum: number, gi
   const g = dogrula(RaporKaydi, girdi);
   if (!g.tamam) return { durum: "gecersiz", hatalar: g.hatalar };
   const v = g.veri;
+  /* 492: formatın kilitli künye bilgisi (başlangıç SGK, İSG-KATİP) değiştirilmez — ekranda girdisi yok; yetki ve kural sunucuda */
+  const format = await formatSurumuOku(db, e.r.format_id);
+  if (!format) return { durum: "yok" };
+  const kilit = kunyeKilitHatalari(format.tanim, v.cevaplar.kunye);
+  if (Object.keys(kilit).length) return { durum: "gecersiz", hatalar: kilit };
   const gd = await gunDegisimi(db, e, v.tarih.bas);
   if (gd) return gd;
   const cevaplar = sayiliCevaplar(v.cevaplar, e.r);
@@ -725,7 +731,8 @@ function formataUyarla(t: FormatTanimi, c: Cevaplar): { cevaplar: Cevaplar; ekle
     if (b.blok === "olcum" && Object.hasOwn(c.tablo, b.id)) y.tablo[b.id] = c.tablo[b.id];
     if (b.blok === "test") for (const d of b.degerler) if (Object.hasOwn(c.deger, d.id)) y.deger[d.id] = c.deger[d.id];
   }
-  return { cevaplar: { ...y, sonuc: c.sonuc, yorum: c.yorum }, eklenen, dusen };
+  /* 492: künye değişiklikleri kalır — yeni sürümde kilitlenen bilgininki düşer (kayıttakine döner) */
+  return { cevaplar: { ...y, sonuc: c.sonuc, yorum: c.yorum, kunye: kunyeKilitTemizle(c.kunye, t) }, eklenen, dusen };
 }
 /** fotoğrafların yeri yeni sürümde yoksa (bölüm ya da madde kalktı) formatın ilk fotoğraf bölümüne taşınır — fotoğraf kaybolmaz, silinebilir kalır */
 function fotolariUyarla(t: FormatTanimi, l: RaporFoto[]): RaporFoto[] {
@@ -747,6 +754,9 @@ export async function raporFormatGuncelle(db: Sorgulayici, kim: Kisi, id: string
   const g = dogrula(RaporKaydi, kayit);
   if (!g.tamam) return { durum: "gecersiz", hatalar: g.hatalar };
   const v = g.veri;
+  /* 492: ekrandaki hâl raporun ŞİMDİKİ formatının kilidiyle denetlenir; yeni sürümde kilitlenen bilginin değişikliği formataUyarla'da düşer */
+  const kilit = kunyeKilitHatalari(eski.tanim, v.cevaplar.kunye);
+  if (Object.keys(kilit).length) return { durum: "gecersiz", hatalar: kilit };
   const gd = await gunDegisimi(db, e, v.tarih.bas);
   if (gd) return gd;
   const { cevaplar, eklenen, dusen } = formataUyarla(yeni.tanim, v.cevaplar);
@@ -771,7 +781,11 @@ export async function gozdenGecirme(db: Sorgulayici, id: string): Promise<Gozden
   const tur = await turRaporBilgisi(db, r.tur_id), format = await formatSurumuOku(db, r.format_id);
   if (!tur || !format) return null;
   const c = Cevaplar.safeParse(r.cevaplar);
-  const d = degerle(format.tanim, c.success ? c.data : Cevaplar.parse({}), r);
+  const cv = c.success ? c.data : Cevaplar.parse({});
+  const d = degerle(format.tanim, cv, r);
+  /* 492: denetçinin raporda değiştirdiği künye (kilitli değilse) — belgeyle aynı */
+  const kn = gecerliKunye({ firmaAdi: r.kunye.firma_adi, adres: r.kunye.adres, sgk: r.kunye.sgk, isgNo: r.kunye.isg_no }, metotMetni(format.tanim, tur.kontrolStd),
+    cv.kunye, kilitliKunye(format.tanim));
   const bloklar = (b: string) => new Set(format.tanim.bolumler.filter((x) => x.blok === b).map((x) => x.id));
   const kusur = (b: string) => { const l = bloklar(b); return d.kusurlar.filter((k) => l.has(k.bolum)).length; };
   const maddeSay = format.tanim.bolumler.reduce((n, b) => n + (b.blok === "liste" ? b.gruplar.reduce((m, g) => m + g.maddeler.length, 0) : 0), 0);
@@ -782,8 +796,8 @@ export async function gozdenGecirme(db: Sorgulayici, id: string): Promise<Gozden
   const yazan = (await personelOzetleri(db, [r.personel_id]))[0];
   const meslek = TANIMLAR.meslekler.find((m) => m.k === yazan?.meslek), yetkili = !!meslek && meslek.g.includes(tur.grup);
   const l: GozdenGecirmeMaddesi[] = [
-    r.kunye.isg_no ? { tamam: true, metin: `İSG-KATİP ${r.kunye.isg_no}` } : { tamam: false, metin: "İSG-KATİP kaydı yok" },
-    { tamam: true, metin: `Kontrol metodu: ${tur.kontrolStd.length ? tur.kontrolStd.join(" · ") : "-"}` },
+    kn.isg ? { tamam: true, metin: `İSG-KATİP ${kn.isg}` } : { tamam: false, metin: "İSG-KATİP kaydı yok" },
+    { tamam: true, metin: `Kontrol metodu: ${kn.metot || "-"}` },
   ];
   if (maddeSay) { const k = kusur("liste"); l.push({ tamam: !k, metin: `${maddeSay} kriter yapıldı · ${k ? `${k} uygun değil madde` : "hepsi uygun"}` }); }
   if (bloklar("olcum").size) { const k = kusur("olcum"); l.push({ tamam: !k, metin: `${satirSay} ölçüm satırı · ${k ? `${k} uygun değil satır` : "hepsi uygun"}` }); }

@@ -932,6 +932,36 @@ test("belge verisi: raporu gören alır (yazan, branş yöneticisi, planlama); �
   assert.equal((await bv(FA.den1))!.belge.fotolar.length, 0, "silinen fotoğraf belgede yok");
 });
 
+/* 2026-10-11 (492; reisim, hata listesi 9: "kayıttan geliyor diye değiştirilemez olmasın kayıttan gelenlerde değiştirilebilir olsun sadece sgk no ve isg
+   katip no değiştirilemez olsun"): denetçi künyeyi raporun KENDİ kopyasında değiştirir (kayıt ve plan değişmez); formatın kilitli bilgisi (başlangıç SGK,
+   İSG-KATİP) sunucuda reddedilir; belge ve gözden geçirme geçerli künyeyle; planlamacının yeni künyesi gelince değişen bilgideki değişiklik düşer */
+test("künye düzeltme: yazan raporun kendi kopyasında değiştirir; SGK / İSG-KATİP kilitli (sunucu reddeder); belge düzeltilmiş künyeyle; Güncelle değişen bilgininkini düşürür", async () => {
+  const id = await yeniPlan();
+  const r = tamam(await olustur(FA.den1, id, FA.ekp["HT-A2"]));
+  const g = girdi();
+  const kunye = { firma: "Düzeltilmiş Ünvan A.Ş.", adres: "Elle Cad. 7", tel: "0 000 000 00 01", metot: "Elle yazılan metot" };
+  /* kilitli bilgi: alan hatası, hiçbir şey yazılmaz */
+  assert.deepEqual(await kaydet(FA.den1, r.id, 0, { ...g, cevaplar: { ...g.cevaplar, kunye: { ...kunye, sgk: "9999", isg: "X" } } }), { durum: "gecersiz", hatalar: {
+    "cevaplar.kunye.sgk": "SGK DETSİS NO bu formatta sahada değiştirilmez.", "cevaplar.kunye.isg": "İSG-KATİP SÖZLEŞME ID bu formatta sahada değiştirilmez." } });
+  assert.deepEqual(await kaydet(FA.den1, r.id, 0, { ...g, cevaplar: { ...g.cevaplar, kunye: { firma: " " } } }), { durum: "gecersiz", hatalar: { "cevaplar.kunye.firma": "Firma adı boş olamaz." } });
+  /* başkası (planlama) yazamaz */
+  assert.equal((await kaydet(FA.plan, r.id, 0, { ...g, cevaplar: { ...g.cevaplar, kunye } })).durum, "yetkisiz");
+  tamam(await kaydet(FA.den1, r.id, 0, { ...g, cevaplar: { ...g.cevaplar, kunye } }));
+  const v = (await sr(FA.den1, r.id))!;
+  assert.deepEqual(v.cevaplar.kunye, kunye);
+  assert.equal(v.kunye.firmaAdi, "Deneme Sanayi A.Ş.", "raporun künye kopyası (kayıt) değişmez");
+  assert.equal((await ici(FA.plan, id))!.kunye.firmaAdi, "Deneme Sanayi A.Ş.", "plan değişmez");
+  const b = (await a(FA.den1, (db) => raporBelgesiVerisi(db, depo, FA.den1, r.id)))!;
+  assert.deepEqual(b.belge.cevaplar.kunye, kunye, "belge düzeltilmiş künyeyi çizer (src/belge — tests/kunye.test.ts)");
+  /* planlamacı adresi değiştirir → Güncelle: adresteki düzeltme düşer (yeni kayıt görünür), firma adı ve telefondaki kalır */
+  const p = (await ici(FA.plan, id))!;
+  tamam(await a(FA.plan, (db) => kunyeDuzenle(db, FA.plan, id, p.surum, { firmaAdi: "Deneme Sanayi A.Ş.", adres: "Başka Cad. 9", sgk: SGK, isg: { [FA.den1P]: "ISG-1" } })));
+  tamam(await a(FA.den1, (db) => raporKunyeGuncelle(db, FA.den1, r.id)));
+  const y = (await sr(FA.den1, r.id))!;
+  assert.equal(y.kunye.adres, "Başka Cad. 9");
+  assert.deepEqual(y.cevaplar.kunye, { firma: "Düzeltilmiş Ünvan A.Ş.", tel: "0 000 000 00 01", metot: "Elle yazılan metot" });
+});
+
 /* 2026-10-05 (313-314 çapraz inceleme): yeni sürümde cevap seti değişmişse eski cevap sessizce "Uygun"a dönmez — seçim boşalır (Onaya gönder
    yeniden seçtirir), açıklama kalır, bildirim söyler */
 test("formatı güncelle: cevabı yeni cevap setinde olmayan madde boşalır, açıklaması kalır; bildirim yeniden seçtirir", async () => {

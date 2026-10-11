@@ -124,6 +124,8 @@ pkproje/
                             · 459: ölçüm cihazları bölümü sabit (cihazBolumuEkle; kurucuyaHazirla = ikisi, kurucu sayfası açılışta)
                             · 486: ekipman bölümü kaldırılabilir (gorunum.ekipman false → 2. bölüm yok, kod / tür 1. bölümde, numaralar kayar) · siraBasligi
                             · 461: bölümün "alt" bayrağı — üstündeki ana bölümün altında N.1, N.2 (duzen.ts raporDuzeni)
+                            · 492: kunye.ts (saf) — raporun künyesi denetçinin değiştirdiğiyle (cevaplar.kunye); formatın gorunum.kilitli bilgisi
+                            (başlangıç SGK, İSG-KATİP) değişmez, sunucu reddeder (kunyeKilitHatalari); saha ekranı, belge, gözden geçirme aynı işlevden
   src/modules/rapor-format/ RAPOR FORMATI (2026-10-04, 308): sürümlü tanım (rapor_format, göç 0022: taslak → yayında → eski; yayınlanan değişmez) ·
                             şablondan başlat · taslak kaydet · yayınla (kilitli Bakanlık öğesi ENGEL, öteki denetim uyarı) · yayındaki format;
                             ekran: tür sayfası "Rapor şablonu" + önizleme /ekipman-turleri/<tür>/sablon/<sürüm> · FORMAT KURUCU (338, K4):

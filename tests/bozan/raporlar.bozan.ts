@@ -6,7 +6,8 @@
    4. (312) Fotoğraf / cihaz sayısı istemciden alınsaydı fotoğrafsız, cihazsız rapor onaya giderdi.
    5. (313) Sunucuda günlük süre (ENGEL 3) denetimi olmasaydı süre dolmuşken kopya ve yeni rapor açılırdı.
    6. (318) Raporlar listesinde kayıt kayıt görme süzgeci olmasaydı denetçi başka denetçinin raporunu listede görürdü.
-   7. (429) Kontrol günü değişince o günün süresi denetlenmeseydi rapor dolu güne alınır, günün sınırı aşılırdı. */
+   7. (429) Kontrol günü değişince o günün süresi denetlenmeseydi rapor dolu güne alınır, günün sınırı aşılırdı.
+   8. (492) Sunucuda künye kilidi denetlenmeseydi formatın kilitli bilgisi (SGK, İSG-KATİP) elle kurulmuş istekle raporda değişirdi. */
 import assert from "node:assert/strict";
 import { copyFileSync, mkdirSync, mkdtempSync, readdirSync, readFileSync, rmSync, writeFileSync } from "node:fs";
 import { tmpdir } from "node:os";
@@ -216,3 +217,23 @@ test("sunucuda listenin görme süzgeci kalkınca denetçi başka denetçinin ra
     assert.ok(l?.some((x) => x.id === r.id), "başka denetçinin raporu listede");
   } finally { await h.end(); }
 });
+
+/* 2026-10-11 (492; reisim, hata listesi 9: "sadece sgk no ve isg katip no değiştirilemez olsun"): ekranda kilitli bilginin girdisi yok; sunucu denetimi
+   kalkarsa elle kurulmuş istekle SGK raporda değişir */
+test("sunucuda künye kilidi denetimi kalkınca kilitli SGK raporda değişir", async () => {
+  const m = await bozukModul<Raporlar>(RAPORLAR, "  if (Object.keys(kilit).length) return { durum: \"gecersiz\", hatalar: kilit };\n  const gd", "  void kilit;\n  const gd");
+  const { h, den, id, ekipman, is } = await saglam(bugunTr());
+  try {
+    const r = await is(den, (db) => m.raporOlustur(db, den, id, ekipman));
+    assert.ok(r.durum === "tamam", JSON.stringify(r));
+    const kayit = {
+      ekipman: { marka: null, model: null, seri: null, imal: null, konum: null, amac: null, bolum: null },
+      tarih: { bas: `${bugunTr()}T09:00`, bit: null, sonraki: null, takip: null, rapor: null }, cevaplar: { kunye: { sgk: "9999" } },
+    };
+    const k = await is(den, (db) => m.raporKaydet(db, den, r.id, 0, kayit));
+    assert.equal(k.durum, "tamam", `kilitli SGK değişti: ${JSON.stringify(k)}`);
+    const sgk = (await is(den, (db) => db.sorgu<{ s: string }>("SELECT cevaplar->'kunye'->>'sgk' AS s FROM rapor WHERE id = $1", [r.id]))).rows[0].s;
+    assert.equal(sgk, "9999");
+  } finally { await h.end(); }
+});
+

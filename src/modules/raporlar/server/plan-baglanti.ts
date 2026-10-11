@@ -5,9 +5,11 @@ import type { Sorgulayici } from "../../../server/db/kiraci.ts";
 import { guncelle, tablo, type Iz } from "../../../server/db/yazici.ts";
 import { ayarOku } from "../../../server/ayar/ayar.ts";
 import { turSureleri } from "../../ekipman-turleri/server/turler.ts";
+import { kunyeFarkTemizle } from "../../../format/kunye.ts";
+import { Cevaplar } from "../../../format/tanim.ts";
 
 const UUID = /^[0-9a-f]{8}-[0-9a-f]{4}-[0-9a-f]{4}-[0-9a-f]{4}-[0-9a-f]{12}$/;
-const KUNYE = tablo({ ad: "rapor", sutunlar: ["kunye", "kunye_surum"] });
+const KUNYE = tablo({ ad: "rapor", sutunlar: ["kunye", "kunye_surum", "cevaplar"] });
 
 export type RaporDurumu = "taslak" | "onayda" | "onaylandi" | "imzada" | "imzali";
 export interface PlanRaporu {
@@ -33,13 +35,18 @@ export async function ekipmanRaporuVar(db: Sorgulayici, planId: string, ekipmanI
 }
 
 /** denetçi plan künyesinde Güncelle'ye basınca yeni künye YALNIZ kendi Yeni raporlarına geçer (§3.4); onaydaki / imzalı rapor ve başkasının raporu
-    değişmez. E-posta ve telefon raporun kendi kopyasında kalır. */
+    değişmez. E-posta ve telefon raporun kendi kopyasında kalır. 492: değişen bilgide denetçinin raporda yaptığı değişiklik düşer (yeni kayıt
+    görünür); değişmeyende kalır. */
 export async function raporKunyeleriniYaz(db: Sorgulayici, iz: Iz, planId: string, personelId: string,
   kunye: { firma_adi: string; adres: string | null; sgk: string | null; isg_no: string | null }, kunyeSurum: number): Promise<number> {
-  const l = (await db.sorgu<{ id: string; surum: number; kunye: Record<string, unknown> }>(
-    "SELECT id::text, surum, kunye FROM rapor WHERE plan_id = $1 AND personel_id = $2 AND durum = 'taslak' AND silindi IS NULL FOR UPDATE", [planId, personelId])).rows;
+  const l = (await db.sorgu<{ id: string; surum: number; kunye: Record<string, unknown>; cevaplar: unknown }>(
+    "SELECT id::text, surum, kunye, cevaplar FROM rapor WHERE plan_id = $1 AND personel_id = $2 AND durum = 'taslak' AND silindi IS NULL FOR UPDATE", [planId, personelId])).rows;
+  const kopya = (k: Record<string, unknown>) => ({ firmaAdi: String(k.firma_adi ?? ""), adres: (k.adres as string | null) ?? null, sgk: (k.sgk as string | null) ?? null, isgNo: (k.isg_no as string | null) ?? null });
   for (const r of l) {
-    const x = await guncelle(db, KUNYE, r.id, r.surum, { kunye: { ...r.kunye, ...kunye }, kunye_surum: kunyeSurum }, iz);
+    const c = Cevaplar.safeParse(r.cevaplar);
+    const cevaplar = c.success && Object.keys(c.data.kunye).length
+      ? { cevaplar: { ...(r.cevaplar as object), kunye: kunyeFarkTemizle(c.data.kunye, kopya(r.kunye), kopya(kunye)) } } : {};
+    const x = await guncelle(db, KUNYE, r.id, r.surum, { kunye: { ...r.kunye, ...kunye }, kunye_surum: kunyeSurum, ...cevaplar }, iz);
     if (x.durum === "cakisma" || x.durum === "yok") throw new Error(`rapor künyesi yazılamadı: ${x.durum}`);
   }
   return l.length;

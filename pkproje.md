@@ -2359,6 +2359,14 @@ parçaları, yapay zekâya anlat, belgeden başlat, sağda ayarlar). Önerim (ce
 orada yapılan kâğıtta görünür, geri dönünce hiçbir şey kaybolmaz; varsayılan her zaman kâğıt; telefonda tuş yok (K9). Öteki sorular cevapsız →
 önerilerim (K2–K11): dokun-yerleştir de, formül evet, Bakanlık parçaları tek tek, firmanın parçaları, yapay zekâ önerisi onaysız yazılmaz, belgeden
 başlat sıranın sonunda, koşullu bölüm sonraki tur, madde 9 → A (sahada üstte katlanır "Kayıttan gelenler" kartı), sıra: önce madde 9.
+**Aynı akşam — madde 9 DEĞİŞTİ** (reisim, A seçeneğinin sunumuna: *"hayır böyle olmaz kayıttan geliyor diye değiştirilemez olmasın kayıttan
+gelenlerde değiştirilebilir olsun sadece sgk no ve isg katip no değiştirilemez olsun ve format yapıcıda bu belirlenebilir olsun belki başka bir firma
+onuda değiştirilebilir isteyecek bu çok ta önemli bi konu değilmiş, bu söylediklerime göre hareket et ve elindeki işleri bitir kalan işleri
+sırala"*): "Kayıttan gelenler" kartı YOK. Saha raporunda kayıttan gelen bilgiler (firma adı, adres, e-posta, telefon, metot ve kapsam; formatın
+kayıttan alanları) denetçi tarafından raporun kendi kopyasında değiştirilebilir; **SGK ve İSG-KATİP başlangıçta kilitli**; hangi alanın kilitli
+olduğu formatın ayarı (format yapıcıda açılıp kapanır). Rapor no, ekipman kodu ve türü kayıt bilgisi değil raporun kimliği — değişmez (numara
+kesintisizliği, ekipman bağı). Sıra: madde 9 → Geri al / Yinele → Gelişmiş seçenekler → formül + serbest metin → parçalar → yapay zekâya anlat →
+belgeden başlat; bitince kalan işler sıralanır.
 
 **Açık kalanlar:** ~~Ana sayfada İSGGM duyuruları~~ (2026-09-27: makette eklendi; okuma işi uygulamada) (reisim 2026-09-26: *"Ana sayfada isgüm duyurularını gösterebilir miyiz ? Bunu
 yapılacaklar listesine ekle"*; öneri: ÇSGB İSGGM duyurular sayfası — https://www.csgb.gov.tr/isggm/duyurular/ — sunucuda günde birkaç kez
@@ -2397,6 +2405,19 @@ revizyon, alan kopyalama, hafif kusur devri, meslek eşleşme denetimi).
 - Emsal ürünler: https://opwire.app/iso-17020-periyodik-kontrol-yazilimi/ · https://17020muayene.vidco.com.tr/ · https://akuple.com/asansor-kontrol-yazilimi/ · https://ensyazilim.com/
 
 ## 11 · Değişiklik günlüğü
+- 2026-10-12 (492): **KÜNYE SAHADA DEĞİŞİR; SGK VE İSG-KATİP KİLİTLİ, KİLİT FORMATTA** (hata listesi 9; reisim 2026-10-11: *"kayıttan geliyor diye
+  değiştirilemez olmasın kayıttan gelenlerde değiştirilebilir olsun sadece sgk no ve isg katip no değiştirilemez olsun ve format yapıcıda bu
+  belirlenebilir olsun belki başka bir firma onuda değiştirilebilir isteyecek"*). Saha raporunun 1. bölümünde firma adı, adres, e-posta, telefon,
+  metot ve kapsam girdi olur (kayıttaki değerle başlar); değiştirilince altında "Kayıtta: …" ve "Kayıttakine dön". Değişiklik raporun KENDİ
+  kopyasında (cevaplar.kunye; kayıt ve plan değişmez); belge (PDF), gözden geçirme ve formatın kayıttan alanları değiştirilmiş hâli gösterir.
+  Kilitli bilgi (formatın gorunum.kilitli; verilmemişse SGK ve İSG-KATİP) kilit simgesiyle salt okunur; sunucu kilitli bilgiye yazılanı alan
+  hatasıyla reddeder (src/format/kunye.ts kunyeKilitHatalari; kaydet, onaya gönder, kopya, formatı güncelle). Kurucuda 1. bölümün altında "Sahada
+  denetçi değiştiremez:" seçimi (basılı = kilitli; kurucu.ts kunyeKilitYaz); sürüm farkında satır. Planlamacının yeni künyesi "Güncelle"yle gelince
+  DEĞİŞEN bilgideki düzeltme düşer, öteki kalır; yeni sürümde kilitlenen bilginin düzeltmesi format güncellenince düşer. Rapor no, ekipman kodu ve
+  türü raporun kimliği — değişmez. Formatın kayıttan gelen alanları (başka bölümde "Firma adı" gibi) ikinci girdi açmaz, 1. bölümdeki değeri
+  gösterir. Göç yok (cevaplar JSON). Kilitler: tests/kunye.test.ts (6), tests/raporlar.test.ts "künye düzeltme" (gerçek PostgreSQL), olumsuz
+  kanıt tests/bozan/kunye.bozan.ts (3) + raporlar.bozan (8); e2e saha-raporu (firma adı düzeltilir, belgede görünür; SGK / İSG girdisi yok),
+  rapor-format (kilit seçimi).
 - 2026-10-11 (491): **ÇEVRİMDIŞI TESTİNDE YARIŞ** — yayın kaydı koşusunda (38141597651, yalnız belge değişikliği) masaüstü 1'de e2e/cevrimdisi.spec
   6. adımı düştü: gösterge "1 fotoğraf" yerine "1 işlem ve 1 fotoğraf" (hata bağlamı okundu). Neden: 4. adımda bağlantısız yazılan kayıt, bağlantı
   gelince gitmeden 5. adım bağlantıyı yeniden kesiyordu; yayın derlemesinde (489) sayfa hızlı, aradaki süre kısaldı. Uygulamada hata yok; test 4.

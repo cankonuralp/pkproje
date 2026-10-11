@@ -26,9 +26,10 @@ import { useOnayla } from "../../../components/pencere/Onay";
 import { SecimAlani } from "../../../components/secim/SecimAlani";
 import { SINIR_ISARETI } from "../../../format/hesap";
 import { altBaslikAnasi, altGrupSonu, raporDuzeni, siraBasligi } from "../../../format/duzen";
-import { BLOKLAR, doldurma, DOLDURULUR, EKIPMAN_ALAN_ADI, EKIPMAN_ALANLARI, type Blok, type Bolum, type BolumOf, type FormatTanimi } from "../../../format/tanim";
+import { BLOKLAR, doldurma, DOLDURULUR, EKIPMAN_ALAN_ADI, EKIPMAN_ALANLARI, KUNYE_ALAN_ADI, KUNYE_ALANLARI, type Blok, type Bolum, type BolumOf, type FormatTanimi } from "../../../format/tanim";
+import { kilitliKunye } from "../../../format/kunye";
 import {
-  ALT_TURLER, altBaslikEkle, bolumAdi, ekipmanBolumuGeriEkle, ekipmanBolumuKaldir, bolumDuzeni, ekipmanAlaniEkle, gorunumYaz, grupEkle, grupSil, grupYaz, kurucudan, maddeEkle, ogeEkle, ogeSil, ogeYaz, satirlar, tasi,
+  ALT_TURLER, altBaslikEkle, bolumAdi, ekipmanBolumuGeriEkle, ekipmanBolumuKaldir, bolumDuzeni, ekipmanAlaniEkle, gorunumYaz, grupEkle, grupSil, grupYaz, kunyeKilitYaz, kurucudan, maddeEkle, ogeEkle, ogeSil, ogeYaz, satirlar, tasi,
   yeniBolum, yeniKimlik,
 } from "../kurucu";
 import { ListeDuzenleyici, NotDuzenleyici, OgeDuzenleyici, SonucAciklamasi } from "./KurucuDuzenleyici";
@@ -91,6 +92,24 @@ function Ekle({ ad, onClick, erisimAdi }: { ad: string; onClick: () => void; eri
 const Kilit = ({ ad = "Bakanlık formatının parçası", not = "değiştirilirse yayında uyarı çıkar" }: { ad?: string; not?: string }) => (
   <span className={k.kilitIkon} title={`${ad} · ${not}`}><Ikon ad="lock" kucuk /><span className="gizli">{ad}</span></span>
 );
+
+/** 492 (reisim 2026-10-11, hata listesi 9: "sadece sgk no ve isg katip no değiştirilemez olsun ve format yapıcıda bu belirlenebilir olsun belki
+    başka bir firma onuda değiştirilebilir isteyecek"): 1. bölümün altında künye bilgilerinin sahada kilidi — basılı (kilitli): denetçi
+    değiştiremez; öteki bilgiyi raporun kendi kopyasında değiştirir (kayıt değişmez). Başlangıç SGK ve İSG-KATİP. */
+function KunyeKilitleri({ t, degis }: { t: FormatTanimi; degis: (y: FormatTanimi) => void }) {
+  const kilit = kilitliKunye(t);
+  return (
+    <div className={k.sahaTuslari} id="kb-kunye-kilit" role="group" aria-label="Sahada denetçinin değiştiremediği bilgiler">
+      <span className={k.sahaBas}>Sahada denetçi değiştiremez:</span>
+      {KUNYE_ALANLARI.map((a) => (
+        <button key={a} type="button" className={k.kilitCip} aria-pressed={kilit.has(a)} onClick={() => degis(kunyeKilitYaz(t, a, !kilit.has(a)))}>
+          <Ikon ad={kilit.has(a) ? "lock" : "pencil"} kucuk />{KUNYE_ALAN_ADI[a]}
+        </button>
+      ))}
+      <span className={k.ornek}>Basılı olan sahada kilitli; öteki bilgiyi denetçi raporun kendi kopyasında değiştirir, kayıt değişmez.</span>
+    </div>
+  );
+}
 
 /** seçenekler belgedeki gibi (○ A ○ B) */
 const Secenekler = ({ l }: { l: readonly string[] }) => <>{l.map((x) => <span key={x} className="rb-sec"><span className="rb-isaret" /> {x}</span>)}</>;
@@ -501,6 +520,7 @@ export function Kagit({ t, degis, tur, bolumuSil, bildir }: KagitOzellik) {
             {tur.std.length ? <span className={k.turdan}>{tur.std.join(" · ")}<span className={k.ornek}> — türün standartları (tür sayfasından, kendiliğinden)</span></span>
               : <span className={k.ornek}>Türün kontrol metodu standardı seçilmemiş — tür sayfasında seçilince burada kendiliğinden görünür.</span>}</span>, true],
         ]} />
+        <KunyeKilitleri t={t} degis={degis} />
       </section>
 
       {/* 2 · Ekipman bilgileri — kod ve tür sabit; öteki satırlar formatın (adı yazılır, çıkarılır, eklenir). 486: bölümün tamamı silinir

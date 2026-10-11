@@ -121,6 +121,9 @@ PDF'e basılmaz.
 - **2026-10-11 (488; hata listesi 54 kararı):** ölçüm tablosunda satırın sonucu denetçi tarafından **gerekçeyle elle** değiştirilir (Kurala göre /
   Uygun / Uygun değil; gerekçe en az 10 harf). Kural sonucu saklanır; belgede "(elle; kural: …)" ve tablonun altında gerekçe. Uygunluk notlu tabloda
   yok (not zaten elle seçilir). Satırın Kopyala işareti ve "Sırala" kalktı (reisim); "Son satırı kopyala" kaldı.
+- **2026-10-12 (492; hata listesi 9):** raporun **künyesi** (firma adı, adres, SGK, İSG-KATİP, e-posta, telefon, metot ve kapsam) sahada raporun kendi
+  kopyasında değiştirilir; formatın **"Sahada denetçi değiştiremez"** seçimi (gorunum.kilitli; başlangıç SGK ve İSG-KATİP) kilitler — kâğıtta 1.
+  bölümün altında. Kilitli bilgiyi sunucu da reddeder (src/format/kunye.ts).
 
 ## 7 · Veri
 

@@ -9,6 +9,7 @@
 import { createElement as h, Fragment, type ReactNode } from "react";
 import { SINIR_ISARETI } from "../format/hesap.ts";
 import { raporDuzeni, sabitEkipmanAlanlari, siraBasligi } from "../format/duzen.ts";
+import { gecerliKunye, kilitliKunye, metotMetni } from "../format/kunye.ts";
 import { degerlendir } from "../format/motor.ts";
 import { EKIPMAN_ALAN_ADI, type Bolum, type BolumOf } from "../format/tanim.ts";
 /* veri.ts: saf tanımlar (tanimlar.ts node:crypto kullanır — 451: Format kurucunun belge önizlemesi bu çiziciyi tarayıcıda koşar) */
@@ -67,10 +68,11 @@ export function raporBelgesi(v: BelgeVerisi): ReactNode {
   const d = degerlendir(t, { ...c, foto, cihaz: v.cihazlar.length, madde: Object.fromEntries(Object.entries(c.madde).map(([k, x]) => [k, { ...x, foto: mf[k] ?? 0 }])) });
   const formKod = t.gorunum.formKodu || `${v.firma.kod}-FR-${v.tur.kod}-${v.formatSira}`;
   const no = v.revizyon ? `${v.no}-R${v.revizyon}` : v.no;
-  const metot = [...t.gorunum.dayanak, ...v.tur.kontrolStd];
+  /* 492: denetçinin raporda değiştirdiği künye bilgisi (formatın kilitli bilgisi hariç) — saha ekranıyla aynı işlev */
+  const kunye = gecerliKunye(v.kunye, metotMetni(t, v.tur.kontrolStd), c.kunye, kilitliKunye(t));
   const meslek = TANIMLAR.meslekler.find((m) => m.k === v.yazan.meslek)?.ad ?? v.yazan.meslek;
   const kaynak: Record<string, string> = {
-    firma_adi: v.kunye.firmaAdi, tesis_adresi: deger(v.kunye.adres), sgk: deger(v.kunye.sgk), isg_id: deger(v.kunye.isgNo), kontrol_tarihi: tarihNo(v.tarih.bas),
+    firma_adi: kunye.firma, tesis_adresi: deger(kunye.adres), sgk: deger(kunye.sgk), isg_id: deger(kunye.isg), kontrol_tarihi: tarihNo(v.tarih.bas),
     rapor_no: no, ekipman_kodu: v.ekipman.kod, ekipman_adi: v.tur.ad, seri_no: deger(v.ekipman.seri), kullanim_yeri: deger(v.ekipman.konum),
   };
   const maddeAdi = new Map(t.bolumler.flatMap((b) => (b.blok === "liste" ? b.gruplar.flatMap((g) => g.maddeler.map((m) => [m.id, m.metin] as const)) : [])));
@@ -194,12 +196,12 @@ export function raporBelgesi(v: BelgeVerisi): ReactNode {
         h("div", null, h("span", null, "Rapor No"), `: ${no}`), h("div", null, h("span", null, "Rapor Tarihi"), `: ${tarihNo(v.tarih.rapor)}`))))),
     v.imza || v.kesin ? null : h("p", { className: "rb-taslak" }, "İmzasız önizleme — muayene uzmanının son imzasıyla geçerli olur."),
     bolum("1", "Firma bilgileri", bilgiTablosu([
-      ["Firma adı", v.kunye.firmaAdi, true], ["Periyodik kontrol adresi", deger(v.kunye.adres), true],
+      ["Firma adı", kunye.firma, true], ["Periyodik kontrol adresi", deger(kunye.adres), true],
       ["Rapor numarası", no], ["Rapor tarihi", tarihNo(v.tarih.rapor)],
-      ["İSG-KATİP sözleşme ID", v.kunye.isgNo ?? "Yok"], ["SGK sicil numarası", v.kunye.sgk ?? "Yok"],
+      ["İSG-KATİP sözleşme ID", kunye.isg ?? "Yok"], ["SGK sicil numarası", kunye.sgk ?? "Yok"],
       ["Başlangıç tarihi ve saati", saatliNo(v.tarih.bas)], ["Bitiş tarihi ve saati", saatliNo(v.tarih.bit)],
       ["Bir sonraki periyodik kontrol tarihi", tarihNo(v.tarih.sonraki)], ["Takip kontrol tarihi", tarihNo(v.tarih.takip)],
-      ["Periyodik kontrol metodu ve kapsamı", metot.length ? metot.join(" · ") : "-", true],
+      ["Periyodik kontrol metodu ve kapsamı", kunye.metot || "-", true],
       /* 486: formatta ekipman bölümü kaldırıldıysa kod ve tür burada (rapor hangi ekipmanın — her belgede) */
       ...(duzen.ekipman ? [] : ekipman.slice(0, 2)),
     ])),

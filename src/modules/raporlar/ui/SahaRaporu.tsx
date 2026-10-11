@@ -2,7 +2,8 @@
 /* SAHA RAPORU (modül 14; maket rapor.html M8 + maket-rapor.js ciz, eylemHtml, gonder, zorunluEksik, eksikeGit; KOD-GECIS §5 Rapor, §9 ENGEL 2 · 5;
    RAPOR-FORMAT §7). Kırıntı Planlar › plan no › rapor no · başlıkta "<ekipman kodu> · <tür>" + durum rozeti · altında rapor no · müşteri · tesis ·
    yazan (L7: firma önce, tesis sonra) · düzenlenirken son kayıt.
-   Bölümler: 1 Firma bilgileri (künye raporun KENDİ kopyası, salt okunur — planlamacı değiştirdiyse şeritte "Güncelle"; kontrol tarihleri
+   Bölümler: 1 Firma bilgileri (künye raporun KENDİ kopyası — 492: denetçi değiştirir, formatın kilitli bilgisi (başlangıç SGK, İSG-KATİP) değişmez;
+   planlamacı değiştirdiyse şeritte "Güncelle"; kontrol tarihleri
    burada: başlangıç rapor açılınca yazılır, zorunlu; bitiş, sonraki kontrol ve rapor tarihi elle seçilmediyse Onaya gönderde sunucu yazar —
    ekranda başlangıç değişince sonraki kontrol ve rapor tarihi ondan önerilir, elle seçilen kalır), 2 Ekipman bilgileri (elle; ekipman
    kaydından başlar), sonra türün formatının bölümleri sırasıyla (Bloklar). Formatın yalnız kayıttan gelen alanlardan oluşan bilgi bölümü
@@ -38,7 +39,8 @@ import { Serit } from "../../../components/serit/Serit";
 import { Tus, TusBaglanti } from "../../../components/tus/Tus";
 import { raporDuzeni, sabitEkipmanAlanlari } from "../../../format/duzen";
 import { degerlendir } from "../../../format/motor";
-import { doldurma, EKIPMAN_ALAN_ADI, type Cevaplar } from "../../../format/tanim";
+import { doldurma, EKIPMAN_ALAN_ADI, KUNYE_ALAN_ADI, KUNYE_ALANLARI, KUNYE_EN_COK, type Cevaplar, type KunyeAlani } from "../../../format/tanim";
+import { gecerliKunye, kayitKunyesi, kilitliKunye, metotMetni } from "../../../format/kunye";
 import { ekipmanAlanlari, ekipmanAnahtari } from "../doldur";
 import { ayEkle, RAPOR_DURUM, type EkipmanBilgisi, type RaporDurumu, type RaporTarihleri } from "../sema";
 import { cevaplariTamamla } from "../ornek";
@@ -87,6 +89,7 @@ const ALAN_ADI: Record<string, string> = {
   "ekipman.marka": "Marka", "ekipman.model": "Model", "ekipman.seri": "Seri no", "ekipman.imal": "İmal yılı", "ekipman.konum": "Kullanım yeri",
   "ekipman.amac": "Kullanım amacı", "ekipman.bolum": "Ekipman bölümü", "tarih.bas": "Başlangıç tarihi", "tarih.bit": "Bitiş tarihi",
   "tarih.sonraki": "Bir sonraki periyodik kontrol tarihi", "tarih.takip": "Takip kontrol tarihi", "tarih.rapor": "Rapor tarihi",
+  ...Object.fromEntries(KUNYE_ALANLARI.map((a) => [`cevaplar.kunye.${a}`, KUNYE_ALAN_ADI[a]])),
 };
 
 const TR_ZAMAN = new Intl.DateTimeFormat("en-CA", { timeZone: "Europe/Istanbul", year: "numeric", month: "2-digit", day: "2-digit", hour: "2-digit", minute: "2-digit", hourCycle: "h23" });
@@ -227,12 +230,25 @@ export function SahaRaporu({ v, yeni, deneme }: { v: Gorunum; yeni?: { plan: str
   const durumBildir = deneme?.durum, eksikSay = canli.size, kusurSay = d.kusurlar.length;
   useEffect(() => { durumBildir?.({ eksik: eksikSay, kusur: kusurSay }); }, [durumBildir, eksikSay, kusurSay]);
 
+  /* 492 (reisim 2026-10-11, hata listesi 9: "kayıttan geliyor diye değiştirilemez olmasın … sadece sgk no ve isg katip no değiştirilemez olsun ve
+     format yapıcıda bu belirlenebilir olsun"): künye raporun kendi kopyasında değişir (cevaplar.kunye); formatın kilitli bilgisi değişmez. Künye 1.
+     bölümde yazılır; formatın kayıttan gelen alanları (ör. başka bölümde "Firma adı") değiştirilmiş hâli gösterir — aynı bilgiye ikinci girdi yok */
+  const kunyeKilit = useMemo(() => kilitliKunye(v.tanim), [v.tanim]);
+  const kayitMetot = metotMetni(v.tanim, v.tur.kontrolStd);
+  const kayit = kayitKunyesi(v.kunye, kayitMetot);
+  const kn = gecerliKunye(v.kunye, kayitMetot, cevaplar.kunye, kunyeKilit);
   const kaynaklar: Record<Kaynak, string | null> = {
-    firma_adi: v.kunye.firmaAdi, tesis_adresi: v.kunye.adres, sgk: v.kunye.sgk, isg_id: v.kunye.isgNo,
+    firma_adi: kn.firma, tesis_adresi: kn.adres, sgk: kn.sgk, isg_id: kn.isg,
     kontrol_tarihi: tarih.bas ? tarihNo(tarih.bas) : null, rapor_no: v.no, ekipman_kodu: v.ekipman.kod, ekipman_adi: v.tur.ad,
     seri_no: ekipman.seri || null, kullanim_yeri: ekipman.konum || null,
   };
   const yaz = (f: (c: Cevaplar) => Cevaplar) => { setCevaplar(f); setKirli(true); };
+  /* kayıttakiyle aynı yazılırsa değişiklik düşer (kayıt değişirse "Güncelle" onu getirir) */
+  const kunyeYaz = (a: KunyeAlani, x: string) => yaz((c) => {
+    const k = { ...c.kunye };
+    if (x === (kayit[a] ?? "")) delete k[a]; else k[a] = x;
+    return { ...c, kunye: k };
+  });
   const bag: Baglam = {
     v, c: cevaplar, yaz, d, oku, gecersiz, kaynak: (k) => kaynaklar[k], okumaKipi: denemede ? "deneme" : oku || yeni ? null : v.yz ? "oku" : "sakla", deneme: denemede, islem: { mesgul, baslat, yenile },
     ekipmanAlani: (a) => (a.ekipman ? metinSatiri(a.ekipman, a.ad, EN[a.ekipman], a.ekipman === "imal") : null),
@@ -470,10 +486,38 @@ export function SahaRaporu({ v, yeni, deneme }: { v: Gorunum; yeni?: { plan: str
   const metinSatiri = (k: EkipmanAnahtari, etiket: string, en: number, sayisal = false) => {
     const id = EID(k), h = alanHata[`ekipman.${k}`];
     return (
-      <Satir key={k} etiket={etiket} htmlFor={id}>
+      <Satir key={id} etiket={etiket} htmlFor={id}>
         {oku ? <OkuGirdi id={id} deger={ekipman[k]} /> : <Girdi id={id} value={ekipman[k]} maxLength={en} inputMode={sayisal ? "numeric" : undefined} hata={!!h}
           onChange={(e) => ekipmanYaz(k, e.target.value)} />}
         {h && <p className={stil.alanHata} id={ipucuId(id)}>{h}</p>}
+      </Satir>
+    );
+  };
+  /** 492: künye satırı — düzenlenebilir raporda kilitli değilse yazılır (kayıttan başlar; değişince altında kayıttaki ve "Kayıttakine dön"); kilitliyse
+      kilit simgesiyle salt okunur. gosterim: değiştirilmemişken değerin görünümü (SGK / İSG kod biçimi, metodun standart tuşları) */
+  const kunyeSatiri = (a: KunyeAlani, o: { etiket?: string; id?: string; gosterim?: ReactNode; cok?: boolean; genis?: boolean } = {}) => {
+    const etiket = o.etiket ?? KUNYE_ALAN_ADI[a], id = o.id ?? alanId(`kunye.${a}`), deger = kn[a];
+    const kilitli = kunyeKilit.has(a), degisti = !kilitli && cevaplar.kunye[a] !== undefined;
+    const goster = (degisti ? null : o.gosterim) ?? (deger || <DegerYok>-</DegerYok>);
+    if (oku || kilitli) {
+      return (
+        <Satir key={id} etiket={etiket} genis={o.genis}>
+          {goster}
+          {kilitli && !oku && <span className={stil.kunyeKilit} title="Bu formatta sahada değiştirilmez (format yapıcıdan açılır)"><Ikon ad="lock" kucuk /><span className="gizli">sahada değiştirilmez</span></span>}
+        </Satir>
+      );
+    }
+    const h = alanHata[`cevaplar.kunye.${a}`];
+    return (
+      <Satir key={id} etiket={etiket} htmlFor={id} genis={o.genis}>
+        {o.cok ? <textarea id={id} className={stil.metinAlan} rows={2} maxLength={KUNYE_EN_COK[a]} value={deger ?? ""} aria-invalid={h ? true : undefined}
+          aria-describedby={h || degisti ? ipucuId(id) : undefined} onChange={(e) => kunyeYaz(a, e.target.value)} />
+          : <Girdi id={id} value={deger ?? ""} maxLength={KUNYE_EN_COK[a]} hata={!!h} mesajli={degisti} onChange={(e) => kunyeYaz(a, e.target.value)} />}
+        {h ? <p className={stil.alanHata} id={ipucuId(id)}>{h}</p> : degisti && (
+          <p className={stil.kunyeDegisti} id={ipucuId(id)}><span>Kayıtta: {kayit[a] || "-"}</span>
+            <Tus tur="ikincil" ikon="undo-2" onClick={() => kunyeYaz(a, kayit[a] ?? "")}>Kayıttakine dön</Tus></p>
+        )}
+        {a === "metot" && o.gosterim ? <div className={stil.metotStd}>{o.gosterim}</div> : null}
       </Satir>
     );
   };
@@ -606,21 +650,21 @@ export function SahaRaporu({ v, yeni, deneme }: { v: Gorunum; yeni?: { plan: str
               sırasıyla, iki sütunda satır satır eşleşir — firma adı | adres · rapor no | rapor tarihi · İSG-KATİP | SGK · başlangıç | bitiş ·
               sonraki | takip; sonra müşterinin e-posta | telefonu, metot ve ekipman bölümü */}
           <Satirlar>
-            <Satir etiket="Firma adı">{v.kunye.firmaAdi}</Satir>
-            <Satir etiket="Periyodik kontrol adresi">{v.kunye.adres ?? <DegerYok>-</DegerYok>}</Satir>
+            {kunyeSatiri("firma")}
+            {kunyeSatiri("adres", { cok: true })}
             <Satir etiket="Rapor no"><Kod>{v.no}</Kod></Satir>
             {tarihSatiri("rapor", "Rapor tarihi", false)}
-            <Satir etiket="İSG-KATİP SÖZLEŞME ID">{v.kunye.isgNo ? <span className={stil.kodUzun}>{v.kunye.isgNo}</span> : <span className={stil.uyari}>Yok</span>}</Satir>
-            <Satir etiket="SGK DETSİS NO">{v.kunye.sgk ? <span className={stil.kodUzun}>{v.kunye.sgk}</span> : <span className={stil.uyari}>Yok</span>}</Satir>
+            {kunyeSatiri("isg", { gosterim: kn.isg ? <span className={stil.kodUzun}>{kn.isg}</span> : <span className={stil.uyari}>Yok</span> })}
+            {kunyeSatiri("sgk", { gosterim: kn.sgk ? <span className={stil.kodUzun}>{kn.sgk}</span> : <span className={stil.uyari}>Yok</span> })}
             {/* 464 (reisim, hata listesi 9: "Periyodik kontrol başlangıç ve bitiş tarihleri alt alta olmalı, hemen ardından bir sonraki kontrol
                 tarihi olmalı"): üçü alt alta, tam satır */}
             {tarihSatiri("bas", "Periyodik kontrol başlangıç tarihi ve saati", true, true, true)}
             {tarihSatiri("bit", "Periyodik kontrol bitiş tarihi ve saati", true, false, true)}
             {tarihSatiri("sonraki", "Bir sonraki periyodik kontrol tarihi", false, false, true)}
             {tarihSatiri("takip", "Takip kontrol tarihi", false)}
-            <Satir etiket="E-posta">{v.kunye.eposta ?? <DegerYok>-</DegerYok>}</Satir>
-            <Satir etiket="Telefon">{v.kunye.tel ?? <DegerYok>-</DegerYok>}</Satir>
-            <Satir etiket="Periyodik kontrol metodu ve kapsamı">{metot}</Satir>
+            {kunyeSatiri("eposta")}
+            {kunyeSatiri("tel")}
+            {kunyeSatiri("metot", { gosterim: metot, cok: true })}
             {duzen.ekipman && !duzen.tam && metinSatiri("bolum", "Ekipman bölümü", 60)}
             {/* 486: formatta ekipman bölümü kaldırıldıysa kod ve tür burada (belgeyle aynı) */}
             {!duzen.ekipman && <><Satir etiket="Ekipman kodu"><Kod>{v.ekipman.kod}</Kod></Satir><Satir etiket="Ekipman türü">{v.tur.ad}</Satir></>}

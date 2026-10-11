@@ -68,10 +68,12 @@ export interface Baglam {
   oku: boolean;
   /** Onaya gönder bu alanı eksik dedi ve alan hâlâ boş */
   gecersiz: (alan: string) => boolean;
-  /** kayıttan gelen alanın ekrandaki değeri (seri no, kullanım yeri, kontrol tarihi raporun güncel hâliyle) */
+  /** kayıttan gelen alanın ekrandaki değeri (seri no, kullanım yeri, kontrol tarihi raporun güncel hâliyle; 492: künye bilgisi denetçinin 1. bölümde
+      değiştirdiği hâliyle) */
   kaynak: (k: Kaynak) => string | null;
   /** ekipman kaydına bağlı alanın satırı (460): değeri raporun ekipman bilgisinde — SahaRaporu çizer */
   ekipmanAlani: (a: BolumOf<"bilgi">["alanlar"][number]) => ReactNode;
+
   /** formatın cihaz bölümü (CihazBolumu; SahaRaporu verir — döngüsel içe aktarma olmasın) */
   cihaz: (bolumId: string) => ReactNode;
   /** fotoğraf listesi: bölümün (madde null) ya da "Uygun değil" maddenin (FotoListesi; SahaRaporu verir) */

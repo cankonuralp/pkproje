@@ -2,7 +2,8 @@
    değişiklikler okunur cümleler olarak: bölüm ve öğe (madde, grup, alan, sütun, değer) eklendi / çıkarıldı / adı değişti / ayarları değişti,
    cevap seti, kurallar, görünüm (form kodu, başlık, metot ve kapsam, genel muayene talimatı, madde cevabının biçimi). Öğeler KİMLİKLE eşlenir
    (kimlikler bütün tanımda tekil — ad değişse de aynı öğe). Saf; sürüm sayfası çizer. */
-import type { Bolum, FormatTanimi } from "../../format/tanim.ts";
+import { KUNYE_ALAN_ADI, KUNYE_ALANLARI, type Bolum, type FormatTanimi, type KunyeAlani } from "../../format/tanim.ts";
+import { kilitliKunye } from "../../format/kunye.ts";
 import { BLOK_ADI } from "./ui/ortak.ts";
 
 export interface Fark { tur: "ekle" | "cikar" | "degis"; metin: string }
@@ -84,5 +85,9 @@ export function surumFarki(once: FormatTanimi, simdi: FormatTanimi): Fark[] {
   if (g0.cevap !== g1.cevap) ekle("degis", `Madde cevabı: ${CEVAP_AD[g0.cevap]} → ${CEVAP_AD[g1.cevap]}`);
   /* 486: ekipman bilgileri bölümü kaldırıldı / geri eklendi */
   if ((g0.ekipman !== false) !== (g1.ekipman !== false)) ekle("degis", `Ekipman bilgileri bölümü ${g1.ekipman === false ? "kaldırıldı (kod ve tür 1. bölümde)" : "geri eklendi"}`);
+  /* 492: künye bilgilerinin sahada kilidi */
+  const k0 = kilitliKunye(once), k1 = kilitliKunye(simdi);
+  const kilitAdlari = (k: ReadonlySet<KunyeAlani>) => KUNYE_ALANLARI.filter((a) => k.has(a)).map((a) => KUNYE_ALAN_ADI[a]).join(", ") || "yok";
+  if (KUNYE_ALANLARI.some((a) => k0.has(a) !== k1.has(a))) ekle("degis", `Sahada değiştirilemeyen künye bilgileri: ${kilitAdlari(k0)} → ${kilitAdlari(k1)}`);
   return l;
 }

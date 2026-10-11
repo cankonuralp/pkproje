@@ -269,3 +269,9 @@ button.silTus { color: var(--hata-yazi); }
 .oneriAd { flex: 1 1 auto; min-width: 0; overflow-wrap: anywhere; }
 .oneriSag { display: flex; align-items: center; gap: 8px; margin-left: auto; white-space: nowrap; }
 .oneriTuslar { display: flex; justify-content: flex-end; flex-wrap: wrap; gap: 8px; margin-top: 10px; }
+
+/* 492: künye — kilitli bilginin simgesi, değiştirilen bilginin altında kayıttaki değer ve "Kayıttakine dön", metot satırında standart tuşları */
+.kunyeKilit { display: inline-flex; vertical-align: -2px; margin-left: 6px; color: var(--yazi3); }
+.kunyeDegisti { display: flex; flex-wrap: wrap; align-items: center; gap: 4px 10px; margin: 6px 0 0; color: var(--yazi2); font-size: var(--boy-kucuk); }
+.kunyeDegisti > span { overflow-wrap: anywhere; }
+.metotStd { margin-top: 6px; }

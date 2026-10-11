@@ -153,6 +153,17 @@ test("rapor şablonu: şablondan başlat, önizle, yayınla; yeni sürümle eski
     /* firma bilgileri sabit: yalnız metot satırı yazılır, bölüm silinmez */
     const firma = kagit.locator("#kb-firma");
     await expect(firma.getByRole("button", { name: /bölümü sil$/ })).toHaveCount(0);
+    /* 492 (hata listesi 9: "sadece sgk no ve isg katip no değiştirilemez olsun ve format yapıcıda bu belirlenebilir olsun"): sahada kilit — başlangıçta
+       SGK ve İSG-KATİP basılı; basınca açılır, yeniden basınca kilitlenir */
+    const kilitler = firma.getByRole("group", { name: "Sahada denetçinin değiştiremediği bilgiler" });
+    const sgkKilit = kilitler.getByRole("button", { name: "SGK DETSİS NO" });
+    await expect(sgkKilit).toHaveAttribute("aria-pressed", "true");
+    await expect(kilitler.getByRole("button", { name: "İSG-KATİP SÖZLEŞME ID" })).toHaveAttribute("aria-pressed", "true");
+    await expect(kilitler.getByRole("button", { name: "Firma adı" })).toHaveAttribute("aria-pressed", "false");
+    await sgkKilit.click();
+    await expect(sgkKilit).toHaveAttribute("aria-pressed", "false");
+    await sgkKilit.click();
+    await expect(sgkKilit).toHaveAttribute("aria-pressed", "true");
     /* 460: ekipman bilgileri serbest — kod ve tür sabit; Marka çıkar, "Ekipman kaydından alan" ile geri gelir; Model'in adı yerinde değişir */
     const ekip = kagit.locator("#kb-ekipman");
     await expect(ekip.getByText("Ekipman kodu")).toBeVisible();
