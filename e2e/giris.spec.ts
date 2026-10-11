@@ -8,7 +8,7 @@
    · BAŞLIKLAR: nonce'lu CSP, çerçeveye gömme yok, nosniff. */
 import { expect, test } from "@playwright/test";
 import { E2E_FIRMA, E2E_HESAPLAR, E2E_KAPI, E2E_PAROLA } from "./hesaplar";
-import { girisli, girisYap } from "./yardimci";
+import { girisli, girisYap, OTURUM_CEREZI, YAYIN_DERLEMESI } from "./yardimci";
 
 test("oturumsuz uygulama sayfası girişe gider; yanlış parola tek ileti; doğru parola kaldığı sayfaya; çerez HttpOnly + Lax", async ({ page, context }) => {
   await page.goto("/planlar");
@@ -37,16 +37,17 @@ test("oturumsuz uygulama sayfası girişe gider; yanlış parola tek ileti; doğ
   await page.getByLabel("Parola", { exact: true }).fill(E2E_PAROLA);
   await page.getByRole("button", { name: "Giriş yap" }).click();
   await expect(page).toHaveURL(/\/planlar$/);
-  const cerez = (await context.cookies()).find((c) => c.name === "probata-oturum");
+  const cerez = (await context.cookies()).find((c) => c.name === OTURUM_CEREZI);
   expect(cerez?.httpOnly).toBe(true);
   expect(cerez?.sameSite).toBe("Lax");
   expect(cerez?.domain).toBe(`${E2E_FIRMA.kisaAd}.localhost`);   // alan adı yazılmadı: yalnız bu alt alan adına gider
-  expect(await page.evaluate(() => document.cookie)).not.toContain("probata-oturum");   // betik okuyamaz
+  expect(cerez?.secure).toBe(YAYIN_DERLEMESI);   // yayında Secure (489: uçtan uca yayın derlemesinde de ölçülür)
+  expect(await page.evaluate(() => document.cookie)).not.toContain(OTURUM_CEREZI);   // betik okuyamaz
 });
 
 test("çıkış: sunucu oturumu siler; eski çerez yeniden takılsa da geçmez", async ({ page, context }) => {
   await girisli(page, "yonetici");
-  const eski = (await context.cookies()).find((c) => c.name === "probata-oturum")!;
+  const eski = (await context.cookies()).find((c) => c.name === OTURUM_CEREZI)!;
   await page.getByRole("button", { name: /kendi işlemlerim/ }).click();
   await page.getByRole("menuitem", { name: "Çıkış yap" }).click();
   await expect(page).toHaveURL(/\/giris\?neden=cikis$/);
@@ -59,7 +60,7 @@ test("çıkış: sunucu oturumu siler; eski çerez yeniden takılsa da geçmez",
 
 test("KİRACI: bir firmanın çerezi öteki firmanın adresinde geçmez; kurcalanmış çerez geçmez", async ({ page, context }) => {
   await girisli(page, "yonetici");
-  const cerez = (await context.cookies()).find((c) => c.name === "probata-oturum")!;
+  const cerez = (await context.cookies()).find((c) => c.name === OTURUM_CEREZI)!;
   await context.addCookies([{ ...cerez, domain: `${E2E_FIRMA.baskaKisaAd}.localhost` }]);
   await page.goto(`http://${E2E_FIRMA.baskaKisaAd}.localhost:${E2E_KAPI}/planlar`);
   await expect(page).toHaveURL(/\/giris\?neden=oturum&donus=%2Fplanlar$/);
@@ -152,7 +153,7 @@ test("GİRİŞ EKRANI (2026-10-04): tema tuşu temayı değiştirir; 'Beni hatı
   await page.getByLabel("Parola", { exact: true }).fill(E2E_PAROLA);
   await page.getByRole("button", { name: "Giriş yap" }).click();
   await expect(page).not.toHaveURL(/\/giris/);
-  const oturumluk = (await context.cookies()).find((c) => c.name === "probata-oturum");
+  const oturumluk = (await context.cookies()).find((c) => c.name === OTURUM_CEREZI);
   expect(oturumluk?.expires).toBe(-1);   // tarayıcı kapanınca silinir
   await context.clearCookies();
   await page.goto("/giris");
@@ -161,6 +162,6 @@ test("GİRİŞ EKRANI (2026-10-04): tema tuşu temayı değiştirir; 'Beni hatı
   await page.getByLabel("Beni hatırla").check();
   await page.getByRole("button", { name: "Giriş yap" }).click();
   await expect(page).not.toHaveURL(/\/giris/);
-  const kalici = (await context.cookies()).find((c) => c.name === "probata-oturum");
+  const kalici = (await context.cookies()).find((c) => c.name === OTURUM_CEREZI);
   expect(kalici!.expires).toBeGreaterThan(Date.now() / 1000 + 13 * 86_400);
 });

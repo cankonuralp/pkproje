@@ -254,9 +254,15 @@ export async function siteyiTara(page: Page, baslangic: string[], { enCok = 90, 
         continue;
       }
       await page.waitForLoadState("networkidle", { timeout: 15_000 }).catch(() => undefined);
-      /* geçiş efektleri kapalı: tema değişince renk geçişi sürerken ölçülen karşıtlık yanlış olmasın (uçtan uca sunucusunun CSP'si satır içi stile izin
-         verir — geliştirme kipi, src/proxy.ts) */
-      await page.addStyleTag({ content: "*, *::before, *::after { transition: none !important; animation: none !important; }" });
+      /* geçiş efektleri kapalı: tema değişince renk geçişi sürerken ölçülen karşıtlık yanlış olmasın. 489: uçtan uca yayın derlemesinde — CSP satır
+         içi stile yalnız sayfanın nonce'uyla izin verir (src/proxy.ts); stil sayfanın kendi betiklerinin nonce'unu taşır, CSP gevşetilmez */
+      await page.evaluate((css) => {
+        const nonce = document.querySelector<HTMLScriptElement>("script[nonce]")?.nonce ?? "";
+        const s = document.createElement("style");
+        s.setAttribute("nonce", nonce);
+        s.textContent = css;
+        document.head.append(s);
+      }, "*, *::before, *::after { transition: none !important; animation: none !important; }");
       /* yeni adresler: aynı köken, yalnız yol; gezilmeyecekler ve görülen kalıplar dışarıda */
       const yollar = await page.evaluate(() => [...document.querySelectorAll<HTMLAnchorElement>("a[href]")]
         .filter((a) => !a.hasAttribute("download") && a.target !== "_blank" && a.origin === location.origin).map((a) => a.pathname));

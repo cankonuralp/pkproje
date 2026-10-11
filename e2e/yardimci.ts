@@ -2,6 +2,11 @@
 import { expect, type Page } from "@playwright/test";
 import { E2E_HESAPLAR, E2E_PAROLA } from "./hesaplar";
 
+/** 489: uçtan uca yayın derlemesinde (PROBATA_E2E_YAYIN=1) oturum çerezi yayındaki adıyla — "__Host-" önekli ve Secure (src/server/kimlik/istek.ts);
+    geliştirme kipinde öneksiz. Tarayıcı http://<firma>.localhost'u güvenli sayar, Secure çerez orada da yazılır. */
+export const YAYIN_DERLEMESI = process.env.PROBATA_E2E_YAYIN === "1";
+export const OTURUM_CEREZI = YAYIN_DERLEMESI ? "__Host-probata" : "probata-oturum";
+
 /* 2026-10-08 (402): önceden indirme (396) yalnız e2e/cevrimdisi.spec.ts'te sınanır; öteki testlerde cihaz "az önce indirildi" sayılır — her
    denetçi testinde arka planda onlarca plan / rapor sayfası çizilip geliştirme sunucusu bellek sınırına dayanıyordu (son testler düşüyordu).
    Uygulamanın davranışı değişmez (30 dakika kuralı, src/components/cevrimdisi/Cevrimdisi.tsx). */
