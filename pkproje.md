@@ -2405,6 +2405,14 @@ revizyon, alan kopyalama, hafif kusur devri, meslek eşleşme denetimi).
 - Emsal ürünler: https://opwire.app/iso-17020-periyodik-kontrol-yazilimi/ · https://17020muayene.vidco.com.tr/ · https://akuple.com/asansor-kontrol-yazilimi/ · https://ensyazilim.com/
 
 ## 11 · Değişiklik günlüğü
+- 2026-10-12 (499): **491–498 YAYINDA** — Supabase 0080 format_parca (81 göç; goc kaydı özeti 9dabe9e'deki dosyadan; ölçüldü: yalnız
+  probata_uygulama SELECT / INSERT, RLS açık + zorunlu, değişmezlik tetiği var, silme işlevlerini yalnız uygulama rolü çalıştırır — Supabase'in açık
+  rolleri erişemez), main 9dabe9e, sağlık "tamam" (sürüm 9dabe9e, göç güncel), duman **11/11**, son 1 saatte çalışma hatası yok. Yayında: 492 künye
+  sahada değişir (SGK / İSG-KATİP kilitli, format yapıcıda belirlenir), 493 Geri al / Yinele, 494 Gelişmiş seçenekler (parça kutusu, sürükle-bırak),
+  495 formül + serbest metin (+ iki düzeltme: dar sütunda tuşların binmesi, formüle eklerken boşluk), 496 parça kitaplığı (+ iki test düzeltmesi), 497
+  yapay zekâya anlat, 498 belgeden başlat. Deneme makinesi son koşu (9dabe9e) 14/14 yeşil, iş başına 2–5 dk. Gözle: ölçemedim (oturum isteyen
+  ekranlar; parolayı ben yazmam) — deneme makinesi kurucu-gelismis / kurucu-yz-oneri görüntülerini yükler. Gerçek firmada yapay zekâ anahtarı
+  girilmediğinden (madde 51) "Yapay zekâya anlat" orada nedenini söyler.
 - 2026-10-12 (498): **BELGEDEN BAŞLAT** (hata listesi 29 + 46 maketi onaylı; K7: "Evet — sıranın sonunda"; RAPOR-FORMAT §4.3'ün yapılmamış adımı).
   "Yapay zekâya anlat" kutusunda "Belgeden başlat…": firmanın kendi rapor formatı — PDF, Word (.docx) ya da fotoğraf (JPEG / PNG), en çok 4 MB
   (barındırmanın istek gövdesi sınırı 4,5 MB). Tür içerikten (uzantıya güvenilmez); fotoğrafın konum bilgisi silinir; Word'ün yalnız METNİ gider
