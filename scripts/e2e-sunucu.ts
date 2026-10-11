@@ -1,12 +1,14 @@
 /* Uçtan uca test sunucusu (playwright.config.ts webServer): GEÇİCİ gömülü PostgreSQL açar (durunca silinir), göçleri uygular, uydurma iki firma
-   ve rol başına hesap ekler (e2e/hesaplar.ts), sonra Next'i geliştirme kipinde 127.0.0.1:3100'de başlatır. Firma adresi http://deneme.localhost:3100
+   ve rol başına hesap ekler (e2e/hesaplar.ts), sonra Next'i geliştirme kipinde 127.0.0.1:3100'de başlatır — 489 (hata listesi 43 kararı):
+   PROBATA_E2E_YAYIN=1 iken YAYIN DERLEMESİNDEN (önceden `PROBATA_E2E_YAYIN=1 node scripts/next.ts build`; .next/standalone/server.js) — deneme
+   makinesinde böyle: geliştirme sunucusu 13 GB'a çıkıp makineyi kapatıyor, sayfaları yeniden derlerken açık sayfayı baştan yüklüyordu. Firma adresi http://deneme.localhost:3100
    (ikinci firma "baska": kiracılar arası denemeler için). Bağlantı bilgisi yalnız alt sürece ortam değişkeniyle geçer.
    311 saha raporu: Saha Tesisi + HT-0201, cihaz türü Manometre + MN-01 (geçerli kalibrasyon, denetçinin zimmetinde), HT'nin gerekli cihaz türü
    Manometre, HT'nin rapor formatı hazır şablon KOMPRESOR'dan yayında — format modülün kendi işlevleriyle (yönetici adına, denetim izi ve yayın
    damgasıyla); öteki tohumlar ham SQL (geçici veritabanı, yalnız bu betik). */
 import { randomBytes } from "node:crypto";
-import { execFileSync } from "node:child_process";
-import { mkdtempSync, readFileSync } from "node:fs";
+import { execFileSync, spawn } from "node:child_process";
+import { cpSync, existsSync, mkdtempSync, readFileSync } from "node:fs";
 import { tmpdir } from "node:os";
 import { join } from "node:path";
 import { createServer } from "node:http";
@@ -354,8 +356,7 @@ if (process.platform === "linux") {
     } catch { /* ölçüm yoksa sessiz */ }
   }, 60_000).unref();
 }
-const kod = await nextCalistir("dev", {
-  NODE_OPTIONS: [process.env.NODE_OPTIONS, "--max-old-space-size=12288"].filter(Boolean).join(" "), PROBATA_WEBPACK_BELLEK: "1", PROBATA_HATA_KANALI: "0",
+const ortam: Record<string, string> = {
   PROBATA_VT_SUNUCU: u.host, PROBATA_VT_KAPI: String(u.port), PROBATA_VT_AD: u.database, PROBATA_VT_KULLANICI: u.user, PROBATA_VT_PAROLA: u.password,
   PROBATA_ANA_ALAN: "localhost", NEXT_TELEMETRY_DISABLED: "1", PROBATA_DEPO_KLASOR: mkdtempSync(join(tmpdir(), "probata-e2e-depo-")),
   PROBATA_DEPO: "vt",   // 347: uçtan uca deneme yayınındaki gibi veritabanı deposuyla
@@ -365,5 +366,25 @@ const kod = await nextCalistir("dev", {
   CRON_SECRET: E2E_ZAMANLI_SIR,   // 378: gece işi ucu (uydurma sır)
   PROBATA_DUYURU_UC: `http://127.0.0.1:${yzKapi}`,   // 379: duyuru sayfalarının yerel taklidi
   PROBATA_EPOSTA_UC: `http://127.0.0.1:${yzKapi}/emails`, PROBATA_EPOSTA_ANAHTAR: E2E_EPOSTA.anahtar, PROBATA_EPOSTA_KIMDEN: E2E_EPOSTA.kimden,   // 432
+};
+
+/* 489: yayın derlemesiyle — Next'in bağımsız sunucusu (output "standalone"; Vercel'deki gibi derlenmiş). Statik dosyalar ve public/ sunucunun
+   klasörüne kopyalanır (Next'in bağımsız sunucusu onları kendisi taşımaz). Geliştirme kipinin bayrakları (bellek, hata kanalı) burada yok. */
+function derlenmisCalistir(ek: Record<string, string>): Promise<number> {
+  const kok = join(".next", "standalone");
+  if (!existsSync(join(kok, "server.js"))) throw new Error("uçtan uca yayın kipi: önce derleyin — PROBATA_E2E_YAYIN=1 node scripts/next.ts build");
+  cpSync(join(".next", "static"), join(kok, ".next", "static"), { recursive: true });
+  if (existsSync("public")) cpSync("public", join(kok, "public"), { recursive: true });
+  return new Promise((coz) => {
+    const c = spawn(process.execPath, [join(kok, "server.js")], {
+      stdio: "inherit", env: { ...process.env, ...ek, NODE_ENV: "production", PORT: String(E2E_KAPI), HOSTNAME: "127.0.0.1", PROBATA_E2E_YAYIN: "1" },
+    });
+    c.on("exit", (k) => coz(k ?? 1));
+  });
+}
+
+const kod = process.env.PROBATA_E2E_YAYIN === "1" ? await derlenmisCalistir(ortam) : await nextCalistir("dev", {
+  NODE_OPTIONS: [process.env.NODE_OPTIONS, "--max-old-space-size=12288"].filter(Boolean).join(" "), PROBATA_WEBPACK_BELLEK: "1", PROBATA_HATA_KANALI: "0",
+  ...ortam,
 }, ["--hostname", "127.0.0.1", "--port", String(E2E_KAPI)]);
 await kapat(kod);

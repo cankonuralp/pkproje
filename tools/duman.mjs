@@ -33,6 +33,8 @@ await denet("giriş sayfası 200 + güvenlik başlıkları", async () => {
     !/max-age=\d{8,}/.test(h("strict-transport-security")) && "HSTS",
     h("x-content-type-options") !== "nosniff" && "nosniff",
     h("x-frame-options") !== "DENY" && "X-Frame-Options",
+    /* 489: deneme ortamının gevşetmesi (PROBATA_E2E_YAYIN) canlıya sızmadı — http istekleri https'e çevrilir */
+    !/upgrade-insecure-requests/.test(h("content-security-policy")) && "upgrade-insecure-requests",
   ].filter(Boolean);
   return r.status === 200 && !eksik.length ? true : `HTTP ${r.status}; eksik: ${eksik.join(", ")}`;
 });
@@ -52,6 +54,11 @@ await denet("anonim dosya isteği 403", async () => {
 await denet("oturumsuz tanım dizini 403", async () => {
   const r = await al(`${FIRMA}/api/tanim/dizin`);
   return r.status === 403 ? true : `HTTP ${r.status}`;
+});
+/* 489: geliştirme vitrini canlıda kapalı (deneme ortamının gevşetmesi sızmadı) */
+await denet("geliştirme vitrini yok (404)", async () => {
+  const r = await al(`${FIRMA}/vitrin`);
+  return r.status === 404 ? true : `HTTP ${r.status}`;
 });
 await denet("firma adresinde /yonetim yok (404)", async () => {
   const r = await al(`${FIRMA}/yonetim/giris`);

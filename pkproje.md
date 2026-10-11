@@ -2389,6 +2389,15 @@ revizyon, alan kopyalama, hafif kusur devri, meslek eşleşme denetimi).
 - Emsal ürünler: https://opwire.app/iso-17020-periyodik-kontrol-yazilimi/ · https://17020muayene.vidco.com.tr/ · https://akuple.com/asansor-kontrol-yazilimi/ · https://ensyazilim.com/
 
 ## 11 · Değişiklik günlüğü
+- 2026-10-11 (489): **UÇTAN UCA YAYIN DERLEMESİNDE** (hata listesi 43 kararı — reisim *"karar bekleyen sorularda önerilerini kabul ediyorum"*; öneri:
+  *"denemeleri yayındaki gibi derlenmiş uygulamada koşmak … yalnız deneme ortamında iki güvenlik ayarını gevşetmek"*). Neden: geliştirme sunucusu
+  ~13 GB'a çıkıp deneme makinesini kapatıyor (468), sayfaları yeniden derlerken açık sayfayı baştan yüklüyordu (486 izleri — "[Fast Refresh]
+  rebuilding" → beforeunload). Yapılan: deneme makinesinin her uçtan uca işi önce `PROBATA_E2E_YAYIN=1 node scripts/next.ts build`, sonra
+  scripts/e2e-sunucu.ts derlenmiş bağımsız sunucuyu (.next/standalone/server.js; statik dosyalar ve public/ kopyalanır) başlatır. İki gevşetme
+  YALNIZ bu bayrakla ve YALNIZ yerel adreste (*.localhost / 127.0.0.1): ara katmanda "upgrade-insecure-requests" yazılmaz (src/proxy.ts), geliştirme
+  vitrini açılır (src/app/(gelistirme)/vitrin-acik.ts — kapı artık burada). Kilit tests/e2e-yayin.test.ts (bayrak yalnız iki dosyada, yerel sınır,
+  Vercel ayarında yok, ci.yml derleme adımı) + olumsuz kanıt; canlı duman testi iki yeni denetim: CSP'de upgrade-insecure-requests var, /vitrin
+  404 (bayrak canlıya sızarsa yakalanır). tests/moduller.test.ts vitrin kapısı satırı yeni kapıya güncellendi (tarih + gerekçe).
 - 2026-10-11 (488): **TABLO SONUCU ELLE + SATIR TUŞLARI SADELEŞTİ.** (1) Hata listesi 54 kararı (reisim 2026-10-11: *"karar bekleyen sorularda
   önerilerini kabul ediyorum"* — öneri: *"denetçi gerekçe yazarak sonucu elle değiştirebilsin, belgede kural sonucu da görünsün"*): ölçüm
   tablosunda satırın Sonuç hücresinde "Elle değiştir" → Kurala göre / Uygun / Uygun değil + gerekçe (en az 10 harf; yoksa Onaya gönder eksik der,

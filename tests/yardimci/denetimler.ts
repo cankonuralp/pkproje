@@ -500,3 +500,21 @@ export function yonlendirmeYarislari(tsx: readonly { ad: string; metin: string }
   }
   return hata;
 }
+
+/** 489 (hata listesi 43 kararı): uçtan uca yayın derlemesinde iki gevşetme — YALNIZ PROBATA_E2E_YAYIN=1 ve YALNIZ yerel adreste (*.localhost /
+    127.0.0.1): ara katmanda "upgrade-insecure-requests" yazılmaz, geliştirme vitrini açılır. Bayrak başka hiçbir dosyada okunmaz, Vercel ayarında
+    yok. Dönen: bulgu listesi. */
+export function e2eYayinBayragiEksikleri(p: { proxy: string; vitrinAcik: string; duzen: string; vercel: string; kaynaklar: readonly { ad: string; metin: string }[] }): string[] {
+  const hata: string[] = [];
+  const YEREL = String.raw`/(^|\.)localhost$|^127\.0\.0\.1$/`;
+  if (!p.proxy.includes(`const yerelDeneme = process.env.PROBATA_E2E_YAYIN === "1" && ${YEREL}.test(istek.nextUrl.hostname);`)) hata.push("ara katman: bayrak yerel adresle sınırlı değil");
+  if (!p.proxy.includes(`...(gelistirme || yerelDeneme ? [] : ["upgrade-insecure-requests"]),`)) hata.push("ara katman: upgrade-insecure-requests kuralı değişmiş");
+  if (!p.vitrinAcik.includes(`if (process.env.NODE_ENV !== "production") return true;`) || !p.vitrinAcik.includes(`if (process.env.PROBATA_E2E_YAYIN !== "1") return false;`)
+    || !p.vitrinAcik.includes(`return ${YEREL}.test(alan);`)) hata.push("vitrin kapısı: yayında kapalı / yalnız yerel adreste açık değil");
+  if (!/if \(!\(await vitrinAcik\(\)\)\) notFound\(\);/.test(p.duzen)) hata.push("geliştirme düzeni kapıyı beklemiyor");
+  if (p.vercel.includes("PROBATA_E2E_YAYIN")) hata.push("Vercel ayarında deneme bayrağı");
+  const izinli = new Set(["src/proxy.ts", "src/app/(gelistirme)/vitrin-acik.ts"]);
+  for (const d of p.kaynaklar) if (!izinli.has(d.ad) && d.metin.includes("PROBATA_E2E_YAYIN")) hata.push(`bayrak başka yerde okunuyor: ${d.ad}`);
+  return hata;
+}
+

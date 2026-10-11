@@ -9,7 +9,7 @@ import {
   bantDisiDaraltma, ciftIdler, ciftSeciciler, ciftTanimliDegiskenler, daralmisSerit, degiskenDegeri, dosyalar, eksikIkonlar, girdiYaziHatalari, kalipDisiEsikler,
   hamYazma, kiraciDisiErisim, kullanilanIkonlar, maketIkonlari, maketMenusu, oku, parantezHatasi, rlsEksikTablolar, tanimsizDegiskenler, testKapisiEksikleri, tokenGovdesi, pdfPaketEksikleri,
   swEksikleri, baglantiRengiEksikleri, cekmeceBoyuHatasi, vhYukseklikHatalari, cerceveIzniEksikleri, suzgecsizListeler, SUZGECSIZ_BOLUMLER, takipSeridiEksikleri,
-  yuzenEzmeleri, yonlendirmeYarislari,
+  yuzenEzmeleri, yonlendirmeYarislari, e2eYayinBayragiEksikleri,
 } from "../yardimci/denetimler.ts";
 
 const kabuk = oku("src/components/kabuk/Kabuk.module.css");
@@ -258,5 +258,20 @@ test("yönlendirme yarışı: router.push ardından router.refresh geri gelince 
   assert.match(yonlendirmeYarislari(bozuk)[0], /^src\/modules\/dokumanlar\/ui\/Pencereler\.tsx: \d+$/);
   assert.deepEqual(yonlendirmeYarislari([{ ad: "x.tsx", metin: "if (a) router.push(b); else router.refresh();" }]), []);
   assert.equal(yonlendirmeYarislari([{ ad: "x.tsx", metin: "router.push(`/a/${f(x)}`); // not\n router.refresh();" }]).length, 1);
+});
+
+/* 489: uçtan uca yayın bayrağı — yerel adres sınırı kalkınca, bayrak başka dosyada okununca, Vercel ayarına girince yakalanır */
+test("e2e yayın bayrağı: yerel sınır kalkınca, başka yerde okununca, Vercel'e girince yakalanır", () => {
+  const kaynaklar = dosyalar("src", [".ts", ".tsx"]).map((ad) => ({ ad, metin: oku(ad) }));
+  const temel = { proxy: oku("src/proxy.ts"), vitrinAcik: oku("src/app/(gelistirme)/vitrin-acik.ts"), duzen: oku("src/app/(gelistirme)/layout.tsx"), vercel: oku("vercel.json"), kaynaklar };
+  assert.deepEqual(e2eYayinBayragiEksikleri(temel), []);
+  const proxy = temel.proxy.replace(/ && \/\(\^\|\\\.\)localhost\$\|\^127\\\.0\\\.0\\\.1\$\/\.test\(istek\.nextUrl\.hostname\)/, "");
+  assert.notEqual(proxy, temel.proxy, "bozulacak satır bulunamadı");
+  assert.deepEqual(e2eYayinBayragiEksikleri({ ...temel, proxy }), ["ara katman: bayrak yerel adresle sınırlı değil"]);
+  const vitrinAcik = temel.vitrinAcik.replace("if (process.env.PROBATA_E2E_YAYIN !== \"1\") return false;", "");
+  assert.deepEqual(e2eYayinBayragiEksikleri({ ...temel, vitrinAcik }), ["vitrin kapısı: yayında kapalı / yalnız yerel adreste açık değil"]);
+  const sizan = kaynaklar.map((d) => (d.ad === "src/server/kimlik/istek.ts" ? { ...d, metin: `${d.metin}\nconst x = process.env.PROBATA_E2E_YAYIN;` } : d));
+  assert.deepEqual(e2eYayinBayragiEksikleri({ ...temel, kaynaklar: sizan }), ["bayrak başka yerde okunuyor: src/server/kimlik/istek.ts"]);
+  assert.deepEqual(e2eYayinBayragiEksikleri({ ...temel, vercel: temel.vercel.replace("{", '{ "env": { "PROBATA_E2E_YAYIN": "1" },') }), ["Vercel ayarında deneme bayrağı"]);
 });
 

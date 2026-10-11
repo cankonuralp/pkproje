@@ -111,8 +111,10 @@ test("oturum kapısı: uygulama düzeni oturum ister, modül sayfası modül num
     }
     assert.match(oku(ad), /await modulOturumu\(MODUL\.no\)[\s\S]*if \(!o\) return <Yetkisiz \/>/, ad);
   }
-  /* 2026-10-04: geliştirme sayfaları yayında kapalı — koruma düzende (altına eklenen her sayfa kapsanır) */
-  assert.match(oku("src/app/(gelistirme)/layout.tsx"), /if \(process\.env\.NODE_ENV === "production"\) notFound\(\);/);
+  /* 2026-10-04: geliştirme sayfaları yayında kapalı — koruma düzende (altına eklenen her sayfa kapsanır). 2026-10-11 (489, hata listesi 43
+     kararı): kapı vitrin-acik.ts'te — yayında kapalı, yalnız uçtan uca yayın derlemesinde (PROBATA_E2E_YAYIN) ve yerel adreste açık; kapının
+     kendisi tests/e2e-yayin.test.ts'te kilitli */
+  assert.match(oku("src/app/(gelistirme)/layout.tsx"), /if \(!\(await vitrinAcik\(\)\)\) notFound\(\);/);
 });
 
 test("adresler ASCII ve tekil", () => {

@@ -33,6 +33,10 @@ export function proxy(istek: NextRequest) {
   }
   const nonce = Buffer.from(crypto.randomUUID()).toString("base64");
   const gelistirme = process.env.NODE_ENV === "development";
+  /* 489 (reisim 2026-10-11, hata listesi 43 kararı — "denemeleri yayındaki gibi derlenmiş uygulamada koşmak"): uçtan uca deneme yayın derlemesinde
+   koşar; YALNIZ o ortamda (PROBATA_E2E_YAYIN=1, scripts/e2e-sunucu.ts) ve YALNIZ yerel adreste (*.localhost / 127.0.0.1) "upgrade-insecure-requests" yazılmaz — http
+     yerel adresi https'e çeviriyordu. Gerçek alan adında bayrak olsa da başlık yazılır; canlıda duman testi başlığı denetler (tools/duman.mjs) */
+  const yerelDeneme = process.env.PROBATA_E2E_YAYIN === "1" && /(^|\.)localhost$|^127\.0\.0\.1$/.test(istek.nextUrl.hostname);
   const cerceve = !yasak && CERCEVE_YOLU.test(yol);
   const csp = [
     "default-src 'self'",
@@ -48,7 +52,7 @@ export function proxy(istek: NextRequest) {
     "base-uri 'self'",
     "form-action 'self'",
     `frame-ancestors ${cerceve ? "'self'" : "'none'"}`,
-    ...(gelistirme ? [] : ["upgrade-insecure-requests"]),
+    ...(gelistirme || yerelDeneme ? [] : ["upgrade-insecure-requests"]),
   ].join("; ");
 
   const baslik = new Headers(istek.headers);

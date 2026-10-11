@@ -98,9 +98,17 @@ jobs:
           sudo mkswap /mnt/probata-takas
           sudo swapon /mnt/probata-takas
           free -h
+      # 489 (hata listesi 43 kararı, reisim 2026-10-11): uçtan uca YAYIN DERLEMESİNDE — geliştirme sunucusu ~13 GB'a çıkıyor, sayfaları yeniden
+      # derlerken açık sayfayı baştan yüklüyordu (486 izleri). Derleme bu işte (her iş kendi makinesinde); PROBATA_E2E_YAYIN yalnız burada ve yalnız
+      # yerel adreste iki şeyi gevşetir (src/proxy.ts upgrade-insecure-requests, src/app/(gelistirme)/vitrin-acik.ts) — canlıda duman testi denetler
+      - name: Yayın derlemesi (uçtan uca için)
+        env:
+          PROBATA_E2E_YAYIN: "1"
+        run: node scripts/next.ts build
       - id: e2e
         env:
           PROBATA_E2E_TARAMA: ${{ matrix.parca == 'tarama' && 'yalniz' || 'haric' }}
+          PROBATA_E2E_YAYIN: "1"
         run: npm run test:e2e -- --project=${{ matrix.proje }} ${{ matrix.parca != 'tarama' && format('--shard={0}/3', matrix.parca) || '' }}
       - if: ${{ !cancelled() && steps.e2e.outcome == 'failure' }}
         uses: actions/upload-artifact@v7

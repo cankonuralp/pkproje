@@ -336,6 +336,8 @@ pkproje/
                             bulut-hazirla.sh (yalnız bulut VM'i: Node 24 + başsız Chrome + npm ci) · olc-bulut.mjs (başsız
                             ölçüm + etkileşim + olumsuz kanıt, 2026-09-24) · ikon-ekle.mjs (Lucide 1.47.0 → iki ikon kopyası)
   .github/workflows/ci.yml  her push: tip · lint · test · olumsuz kanıt · derleme + uçtan uca üç genişlik ayrı işlerde aynı anda (389); main'de Pages önizlemesi
+                            · 489: uçtan uca YAYIN DERLEMESİNDE (PROBATA_E2E_YAYIN=1: önce derleme, scripts/e2e-sunucu.ts .next/standalone/server.js);
+                            gevşetme yalnız yerel adreste — src/proxy.ts upgrade-insecure-requests, src/app/(gelistirme)/vitrin-acik.ts (kilit e2e-yayin.test)
   docs/                     maket + sunum (Pages sitesinin kökü); maketlerin ortak kabuğu assets/maket-ortak.js, ortak uydurma
                             veri assets/maket-veri.js, ölçüm sonuçları assets/olcum/<maket>.json (2026-09-24)
   data/                     yerel veritabanı + dosya deposu (git dışı)
