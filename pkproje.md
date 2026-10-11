@@ -2411,7 +2411,11 @@ revizyon, alan kopyalama, hafif kusur devri, meslek eşleşme denetimi).
   (alt başlık türü, kâğıtta tuşlar, ekipman bölümü sil / geri ekle). (7) **Yönlendirme yarışı** (deneme makinesinde bulundu — telefon: standart
   yüklendi, sayfa listede kaldı): istemcide router.push'un hemen ardından router.refresh() bekleyen yönlendirmeyi iptal edebiliyordu; aynı desen
   beş yerde (Dökümanlar standart yükle / kaldır, Onaylar › Talepler kararı, zimmet teslimi, araç tutanağı) — tazeleme sunucu eyleminde (next/cache
-  refresh, 377 / 381 deseni). Kilit tests/yonlendirme-yarisi.test.ts + olumsuz kanıt.
+  refresh, 377 / 381 deseni). Kilit tests/yonlendirme-yarisi.test.ts + olumsuz kanıt. (8) Gözle doğrulamada (deneme makinesi görüntüleri): satır
+  tuşları geniş tabloda sağa yapışık (yalnız tablet / masaüstü — telefonda yapışık sütun Tip alanını örtüyordu, iz kaydında görüldü), kural metninde
+  "RCD" yazımı. (9) Format yapıcı seçili görünümü (Kâğıt / Saha ekranı / Belge) sekmede taslak başına hatırlar (yenilemede kaybolmaz) — deneme
+  makinesinin geliştirme sunucusu saha ekranını derlerken sayfayı baştan yüklüyordu (iz: "[Fast Refresh] rebuilding" → beforeunload); test saha
+  ekranından önce taslağı kaydeder.
 - 2026-10-10 (485): **479–484 YAYINDA** — main 6b32015 (göç yok; 80 göç), sağlık "tamam" (sürüm 6b32015), duman 10/10; deneme makinesi 14/14
   yeşil (6b32015; bir önceki koşuda 6a8136b iki iş bellek sıkışıklığı / çerçeve gecikmesiyle düştü, kod değişikliğiyle ilgisiz). Canlıda reisim'in
   Chrome oturumuyla (yalnız okuma) ölçüldü: Dökümanlar'da ve Eğitim türleri'nde "Yan menüdeki Dökümanlar sayısı: 1 eğitimin tekrarı yaklaşıyor"

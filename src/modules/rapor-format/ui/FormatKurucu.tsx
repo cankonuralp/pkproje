@@ -13,7 +13,9 @@
    483 (reisim 2026-10-10: "rapor düzenlemede sadece saha ekranı gözüksün o ekranda düzenleme yapılamasın"; "kağıttan düzenleyebiliyoruz ama sahadaki
    görüntü nasıl oluyor düzenleyemiyoruz burası çok karmaşık bir çözüm öner"): TEK DÜZENLEME YERİ KÂĞIT. Saha ekranı salt önizleme; sahaya özgü
    ayarlar kâğıtta — madde cevabının biçimi "Kurallar, saha ekranı ve genel muayene talimatı"nda, bölümün fotoğraftan / Excel'den doldurulması
-   bölümün ayarında (484). */
+   bölümün ayarında (484).
+   486: seçili görünüm (Kâğıt / Saha ekranı / Belge) bu sekmede taslak başına hatırlanır (sessionStorage) — sayfa yenilenince aynı görünüm açılır
+   (deneme makinesinin geliştirme sunucusu saha ekranını derlerken sayfayı baştan yüklüyordu; kullanıcı için de F5'te görünüm kaybolmaz). */
 import { useRouter } from "next/navigation";
 import { useEffect, useMemo, useState, useTransition } from "react";
 import { raporBelgesi } from "../../../belge/belge";
@@ -57,7 +59,17 @@ export function FormatKurucu({ turId, turAd, turKod, format, tanim, kaynakAd, tu
   const [t, setT] = useState<FormatTanimi>(tanim);
   const [son, setSon] = useState(ilkJson);
   const [hatalar, setHatalar] = useState<string[]>([]);
-  const [gorunum, setGorunum] = useState<"duzen" | "saha" | "belge">("duzen");
+  const [gorunum, setGorunumDurum] = useState<"duzen" | "saha" | "belge">("duzen");
+  const gorunumAnahtar = `probata-kurucu-gorunum:${format.id}`;
+  useEffect(() => {
+    let g: string | null = null;
+    try { g = sessionStorage.getItem(gorunumAnahtar); } catch { /* okunamazsa Kâğıt */ }
+    if (g === "saha" || g === "belge") queueMicrotask(() => setGorunumDurum(g));
+  }, [gorunumAnahtar]);
+  const setGorunum = (g: "duzen" | "saha" | "belge") => {
+    setGorunumDurum(g);
+    try { sessionStorage.setItem(gorunumAnahtar, g); } catch { /* saklanamazsa yalnız bu ekranda */ }
+  };
   if (son !== ilkJson) { setSon(ilkJson); setT(tanim); setHatalar([]); }
   const kirli = JSON.stringify(t) !== ilkJson;
   const degis = (y: FormatTanimi) => { setT(y); setHatalar([]); };

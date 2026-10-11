@@ -186,6 +186,12 @@ test("rapor şablonu: şablondan başlat, önizle, yayınla; yeni sürümle eski
     /* 483: madde cevabının biçimi KÂĞITTA (saha ekranı salt önizleme) */
     await page.getByText("Kurallar, saha ekranı ve genel muayene talimatı").click();
     await page.getByRole("radio", { name: /^Yan yana tuşlar/ }).check();
+    /* 486: taslak saha ekranından ÖNCE kaydedilir — deneme makinesinin geliştirme sunucusu saha ekranının sayfasını (bellekten atılmışsa) yeniden
+       derlerken açık sayfayı baştan yüklüyor (iz: "[Fast Refresh] rebuilding" → beforeunload → "[HMR] connected"; yayında yok); kaydedilmemiş
+       düzenlemeler kaybolmasın, görünüm yenilemede hatırlanır (FormatKurucu sessionStorage) */
+    await page.getByRole("button", { name: "Taslağı kaydet" }).click();
+    await expect(page.getByText("Taslak kaydedildi.").first()).toBeVisible({ timeout: 30_000 });
+    await expect(page.getByText("Kaydedilmedi")).toHaveCount(0);
     /* 472–474 → 483: saha ekranı — kâğıttaki değişiklik orada; düzenleme tuşu yok; denetçi gibi denenir */
     await page.getByRole("button", { name: "Saha ekranı" }).click();
     const saha = page.frameLocator('iframe[title^="Saha ekranı"]');
@@ -208,8 +214,6 @@ test("rapor şablonu: şablondan başlat, önizle, yayınla; yeni sürümle eski
       await eksik.getByRole("button", { name: "Tamam" }).click();
     }
     await page.getByRole("button", { name: "Kâğıt", exact: true }).click();
-    await page.getByRole("button", { name: "Taslağı kaydet" }).click();
-    await expect(page.getByText("Taslak kaydedildi.").first()).toBeVisible({ timeout: 30_000 });
     await expect(page.getByText("Kaydedilmedi")).toHaveCount(0);
     await expect(kagit.getByRole("region", { name: /Deneme yorumu$/ })).toBeVisible({ timeout: 30_000 });
     /* çerçeve sayfası: yalnız kendi kökenimize gömülür; öteki sayfalar hiç gömülmez (e2e/giris.spec) */
